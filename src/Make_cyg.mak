@@ -72,7 +72,7 @@ OBJ = \
 	$(GUI_OBJ) \
 	$(TERMLIB)
 
-all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstall.exe
+all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe
 
 $(EXE): $(OUTDIR) $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o $(EXE) version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32 $(GUI_LIBS)
@@ -88,8 +88,8 @@ vimrun.exe: vimrun.c
 install.exe: dosinst.c
 	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 -luuid -lcomctl32 -lole32
 
-uninstall.exe: uninstal.c
-	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
+uninstal.exe: uninstal.c
+	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
 $(OUTDIR):
 	mkdir $(OUTDIR)

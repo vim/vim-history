@@ -510,7 +510,7 @@ codepage_invalid:
 	     * API */
 	    n = IsDBCSLeadByteEx(enc_dbcs, (BYTE)i) ? 2 : 1;
 #else
-# ifdef macintosh
+# ifdef MACOS
 	    /*
 	     * if mblen() is not available, character which MSB is turned on
 	     * are treated as leading byte character. (note : This assumption
@@ -662,7 +662,7 @@ dbcs_class(lead, trail)
 		unsigned char tb = trail;
 
 		/* convert process code to JIS */
-# if defined(WIN3264) || defined(WIN32UNIX) || defined(macintosh)
+# if defined(WIN3264) || defined(WIN32UNIX) || defined(MACOS)
 		/* process code is SJIS */
 		if (lb <= 0x9f)
 		    lb = (lb - 0x81) * 2 + 0x21;
@@ -2586,6 +2586,122 @@ static int	xim_input_style;
 static gboolean	use_status_area = 0;
 #endif
 
+static int im_xim_str2keycode __ARGS((unsigned int *code, unsigned int *state));
+#ifdef FEAT_GUI_GTK
+static void im_xim_send_event_imactivate __ARGS((void));
+#endif
+
+/*
+ * Convert string to keycode and state for XKeyEvent.
+ * When string is valid return OK, when invalid return FAIL.
+ *
+ * See 'imactivatekey' documentation for the format.
+ */
+    static int
+im_xim_str2keycode(code, state)
+    unsigned int *code;
+    unsigned int *state;
+{
+    int		retval = OK;
+    int		len;
+    unsigned	keycode = 0, keystate = 0;
+    Window	window;
+    Display	*display;
+    char_u	*flag_end;
+    char_u	*str;
+
+    if (*p_imak != NUL)
+    {
+	len = STRLEN(p_imak);
+	for (flag_end = p_imak + len - 1;
+			    flag_end > p_imak && *flag_end != '-'; --flag_end)
+	    ;
+
+	/* Parse modifier keys */
+	for (str = p_imak; str < flag_end; ++str)
+	{
+	    switch (*str)
+	    {
+		case 's': case 'S':
+		    keystate |= ShiftMask;
+		    break;
+		case 'l': case 'L':
+		    keystate |= LockMask;
+		    break;
+		case 'c': case 'C':
+		    keystate |= ControlMask;
+		    break;
+		case '1':
+		    keystate |= Mod1Mask;
+		    break;
+		case '2':
+		    keystate |= Mod2Mask;
+		    break;
+		case '3':
+		    keystate |= Mod3Mask;
+		    break;
+		case '4':
+		    keystate |= Mod4Mask;
+		    break;
+		case '5':
+		    keystate |= Mod5Mask;
+		    break;
+		case '-':
+		    break;
+		default:
+		    retval = FAIL;
+	    }
+	}
+	if (*str == '-')
+	    ++str;
+
+	/* Get keycode from string. */
+	gui_get_x11_windis(&window, &display);
+	keycode = XKeysymToKeycode(display, XStringToKeysym((char *)str));
+	if (keycode == 0)
+	    retval = FAIL;
+
+	if (code != NULL)
+	    *code = keycode;
+	if (state != NULL)
+	    *state = keystate;
+    }
+    return retval;
+}
+
+#ifdef FEAT_GUI_GTK
+    static void
+im_xim_send_event_imactivate()
+{
+    /* Force turn on preedit state by symulate keypress event.
+     * Keycode and state is specified by 'imactivatekey'.
+     */
+    XKeyEvent ev;
+
+    gui_get_x11_windis(&ev.window, &ev.display);
+    ev.root = RootWindow(ev.display, DefaultScreen(ev.display));
+    ev.subwindow = None;
+    ev.time = CurrentTime;
+    ev.x = 1;
+    ev.y = 1;
+    ev.x_root = 1;
+    ev.y_root = 1;
+    ev.same_screen = 1;
+    ev.type = KeyPress;
+    if (im_xim_str2keycode(&ev.keycode, &ev.state) == OK)
+	XSendEvent(ev.display, ev.window, 1, KeyPressMask, (XEvent*)&ev);
+}
+#endif
+
+/*
+ * Return TRUE if 'imactivatekey' has a valid value.
+ */
+    int
+im_xim_isvalid_imactivate()
+{
+    return im_xim_str2keycode(NULL, NULL) == OK;
+}
+
 /*
  * Switch using XIM on/off.  This is used by the code that changes "State".
  */
@@ -2593,8 +2709,91 @@ static gboolean	use_status_area = 0;
 im_set_active(active)
     int		active;
 {
+    if (xic == NULL)
+	return;
+
     /* Remember the active state, it is needed when Vim gets keyboard focus. */
     xim_is_active = active;
+
+    /* When 'imactivatekey' has valid key-string, try to control XIM preedit
+     * state.  When 'imactivatekey' has no or invalid string, try old XIM
+     * focus control.
+     */
+    if (*p_imak != NUL)
+    {
+#ifdef FEAT_GUI_GTK
+	/* BASIC STRATEGY:
+	 * Destroy old Input Context (XIC), and create new one.  New XIC
+	 * would have a state of preedit that is off.  When argument:active
+	 * is false, that's all.  Else argument:active is true, send a key
+	 * event specified by 'imactivatekey' to activate XIM preedit state.
+	 */
+
+	xim_is_active = TRUE; /* Disable old XIM focus control */
+	/* If we can monitor preedit state with preedit callback functions,
+	 * try least creation of new XIC.
+	 */
+	if (xim_input_style & (int)GDK_IM_PREEDIT_CALLBACKS)
+	{
+	    if (xim_preediting && !active)
+	    {
+		/* Force turn off preedit state.  With some IM
+		 * implementations, we cannot turn off preedit state by
+		 * symulate keypress event.  It is why using such a method
+		 * that destroy old IC (input context), and create new one.
+		 * When create new IC, its preedit state is usually off.
+		 */
+		xim_set_focus(FALSE);
+		gdk_ic_destroy(xic);
+		xim_init();
+		xim_preediting = FALSE;
+	    }
+	    else if (!xim_preediting && active)
+		im_xim_send_event_imactivate();
+	}
+	else
+	{
+	    /* First, force destroy old IC, and create new one.  It
+	     * symulates "turning off preedit state".
+	     */
+	    xim_set_focus(FALSE);
+	    gdk_ic_destroy(xic);
+	    xim_init();
+	    xim_preediting = FALSE;
+
+	    /* 2nd, when requested to activate IM, symulate this by sending
+	     * the event.
+	     */
+	    if (active)
+	    {
+		im_xim_send_event_imactivate();
+		xim_preediting = TRUE;
+	    }
+	}
+#else
+# if 0
+	/* When had tested kinput2 + canna + Athena GUI version with
+	 * 'imactivatekey' is "s-space", im_xim_send_event_imactivate() did not
+	 * work correctly.  It just inserted one space.  I don't know why we
+	 * couldn't switch state of XIM preediting.  This is reason why these
+	 * codes are commented out.
+	 */
+	/* First, force destroy old IC, and create new one.  It symulates
+	 * "turning off preedit state".
+	 */
+	xim_set_focus(FALSE);
+	XDestroyIC(xic);
+	xic = NULL;
+	xim_init();
+
+	/* 2nd, when requested to activate IM, symulate this by sending the
+	 * event.
+	 */
+	if (active)
+	    im_xim_send_event_imactivate();
+# endif
+#endif
+    }
     xim_set_focus(TRUE);
 }
 

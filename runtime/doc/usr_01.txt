@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0am.  Last change: 2001 Jun 26
+*usr_01.txt*	For Vim version 6.0an.  Last change: 2001 Jul 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -111,6 +111,10 @@ from the shell:
 
 This will make a copy of the tutor file, so that you can edit it without
 the risk of damaging the original.
+   There are a few translated versions of the tutor.  To find out if yours is
+available, use the two-letter language code.  For French: >
+
+	vimtutor fr
 
 On non-Unix systems, you have to do a little work:
 

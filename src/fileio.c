@@ -42,7 +42,7 @@
 #endif
 
 /* Is there any system that doesn't have access()? */
-#ifndef macintosh /* Not available on MacOS 9 */
+#ifndef MACOS_CLASSIC /* Not available on MacOS 9 */
 # define USE_MCH_ACCESS
 #endif
 
@@ -424,7 +424,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		(void)mch_setperm(curbuf->b_ml.ml_mfp->mf_fname,
 					  (long)((st.st_mode & 0777) | 0600));
 #endif
-#ifdef macintosh
+#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
 	    /* Get the FSSpec on MacOS
 	     * TODO: Update it properly when the buffer name changes
 	     */
@@ -2190,7 +2190,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
     int		    attr;
     int		    fileformat;
-    struct bw_info write_info;		/* info for buf_write_bytes() */
+    struct bw_info  write_info;		/* info for buf_write_bytes() */
 #ifdef FEAT_MBYTE
     int		    converted = FALSE;
     int		    notconverted = FALSE;
@@ -2970,7 +2970,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 					      && !(exiting && backup != NULL))
 	ml_preserve(buf, FALSE);
 
-#ifdef macintosh
+#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
     /*
      * Before risking to lose the original file verify if there's
      * a resource fork to preserve, and if cannot be done warn
@@ -3183,7 +3183,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
     errmsg = NULL;
 
-#ifdef macintosh
+#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
     /*
      * On macintosh copy the original files attributes (i.e. the backup)
      * This is done in order to preserve the ressource fork and the
@@ -3559,7 +3559,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * If we kept a backup until now, and we are in patch mode, then we make
      * the backup file our 'original' file.
      */
-    if (*p_pm)
+    if (*p_pm && dobackup)
     {
 	char *org = (char *)buf_modname(
 #ifdef SHORT_FNAME
@@ -3704,7 +3704,7 @@ nofail:
 	aucmd_restbuf(&aco);
     }
 #endif
-#ifdef macintosh
+#ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
     /* Update machine specific information. */
     mch_post_buffer_write(buf);
 #endif
@@ -5167,6 +5167,11 @@ vim_tempname(extra_char)
 		 * doesn't exist. */
 		for (off = 0; off < 10000L; ++off)
 		{
+		    int		r;
+#if defined(UNIX) || defined(VMS)
+		    mode_t	umask_save;
+#endif
+
 		    sprintf((char *)itmp + STRLEN(itmp), "v%ld", nr + off);
 # ifndef EEXIST
 		    /* If mkdir() does not set errno to EEXIST, check for
@@ -5175,7 +5180,16 @@ vim_tempname(extra_char)
 		    if (mch_stat((char *)itmp, &st) >= 0)
 			continue;
 # endif
-		    if (vim_mkdir(itmp, 0700) == 0)
+#if defined(UNIX) || defined(VMS)
+		    /* Make sure the umask doesn't remove the executable bit.
+		     * "repl" has been reported to use "177". */
+		    umask_save = umask(077);
+#endif
+		    r = vim_mkdir(itmp, 0700);
+#if defined(UNIX) || defined(VMS)
+		    (void)umask(umask_save);
+#endif
+		    if (r == 0)
 		    {
 			/* Directory was created, use this name. */
 # ifdef __EMX__

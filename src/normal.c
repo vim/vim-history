@@ -87,9 +87,7 @@ static int	get_visual_text __ARGS((cmdarg_T *cap, char_u **pp, int *lenp));
 #endif
 static void	nv_tagpop __ARGS((cmdarg_T *cap));
 static void	nv_scroll __ARGS((cmdarg_T *cap));
-static void	nv_kright __ARGS((cmdarg_T *cap));
 static void	nv_right __ARGS((cmdarg_T *cap));
-static void	nv_kleft __ARGS((cmdarg_T *cap));
 static void	nv_left __ARGS((cmdarg_T *cap));
 static void	nv_up __ARGS((cmdarg_T *cap));
 static void	nv_down __ARGS((cmdarg_T *cap));
@@ -369,22 +367,26 @@ static const struct nv_cmd
     {K_S_UP,	nv_page,	NV_SS,			BACKWARD},
     {K_DOWN,	nv_down,	NV_SSS|NV_STS,		FALSE},
     {K_S_DOWN,	nv_page,	NV_SS,			FORWARD},
-    {K_LEFT,	nv_kleft,	NV_SSS|NV_STS|NV_RL,	0},
+    {K_LEFT,	nv_left,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_LEFT,	nv_bck_word,	NV_SS|NV_RL,		0},
-    {K_RIGHT,	nv_kright,	NV_SSS|NV_STS|NV_RL,	0},
+    {K_C_LEFT,	nv_bck_word,	NV_SS|NV_RL,		1},
+    {K_RIGHT,	nv_right,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_RIGHT,	nv_wordcmd,	NV_SS|NV_RL,		FALSE},
+    {K_C_RIGHT,	nv_wordcmd,	NV_SS|NV_RL,		TRUE},
     {K_PAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_KPAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_PAGEDOWN, nv_page,	NV_SSS|NV_STS,		FORWARD},
     {K_KPAGEDOWN, nv_page,	NV_SSS|NV_STS,		FORWARD},
-    {K_END,	nv_end,		NV_SSS|NV_STS,		0},
-    {K_KEND,	nv_end,		NV_SSS|NV_STS,		0},
-    {K_XEND,	nv_end,		NV_SSS|NV_STS,		0},
-    {K_S_END,	nv_end,		NV_SS,			0},
+    {K_END,	nv_end,		NV_SSS|NV_STS,		FALSE},
+    {K_KEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
+    {K_XEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
+    {K_S_END,	nv_end,		NV_SS,			FALSE},
+    {K_C_END,	nv_end,		NV_SS,			TRUE},
     {K_HOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_KHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_XHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_S_HOME,	nv_home,	NV_SS,			0},
+    {K_C_HOME,	nv_goto,	NV_SS,			FALSE},
     {K_DEL,	nv_abbrev,	0,			0},
     {K_KDEL,	nv_abbrev,	0,			0},
     {K_UNDO,	nv_kundo,	0,			0},
@@ -787,9 +789,11 @@ getcount:
 	    case 'l':	    ca.cmdchar = 'h'; break;
 	    case K_RIGHT:   ca.cmdchar = K_LEFT; break;
 	    case K_S_RIGHT: ca.cmdchar = K_S_LEFT; break;
+	    case K_C_RIGHT: ca.cmdchar = K_C_LEFT; break;
 	    case 'h':	    ca.cmdchar = 'l'; break;
 	    case K_LEFT:    ca.cmdchar = K_RIGHT; break;
 	    case K_S_LEFT:  ca.cmdchar = K_S_RIGHT; break;
+	    case K_C_LEFT:  ca.cmdchar = K_C_RIGHT; break;
 	    case '>':	    ca.cmdchar = '<'; break;
 	    case '<':	    ca.cmdchar = '>'; break;
 	}
@@ -981,7 +985,7 @@ getcount:
     if (ca.nchar == ESC)
     {
 	clearop(oap);
-	if (p_im && restart_edit == 0)
+	if (restart_edit == 0 && goto_im())
 	    restart_edit = 'a';
 	goto normal_end;
     }
@@ -1497,6 +1501,8 @@ do_pending_operator(cap, old_col, gui_yank)
 	     */
 	    if (oap->motion_force == NUL || oap->motion_type == MLINE)
 		oap->inclusive = TRUE;
+	    if (virtual_active() && curwin->w_curswant == MAXCOL)
+		oap->inclusive = FALSE;
 	    if (VIsual_mode == 'V')
 		oap->motion_type = MLINE;
 	    else
@@ -4789,22 +4795,6 @@ nv_scroll(cap)
 }
 
 /*
- * <Right> and <C-Right> commands.
- */
-    static void
-nv_kright(cap)
-    cmdarg_T	*cap;
-{
-    if (mod_mask & MOD_MASK_CTRL)
-    {
-	cap->arg = TRUE;
-	nv_wordcmd(cap);
-    }
-    else
-	nv_right(cap);
-}
-
-/*
  * Cursor right commands.
  */
     static void
@@ -4910,22 +4900,6 @@ nv_right(cap)
 					       && cap->oap->op_type == OP_NOP)
 	foldOpenCursor();
 #endif
-}
-
-/*
- * <Left> Command.
- */
-    static void
-nv_kleft(cap)
-    cmdarg_T	*cap;
-{
-    if (mod_mask & MOD_MASK_CTRL)
-    {
-	cap->arg = 1;
-	nv_bck_word(cap);
-    }
-    else
-	nv_left(cap);
 }
 
 /*
@@ -5092,9 +5066,8 @@ nv_gotofile(cap)
 nv_end(cap)
     cmdarg_T	*cap;
 {
-    if (mod_mask & MOD_MASK_CTRL)	/* CTRL-END = goto last line */
+    if (cap->arg)	/* CTRL-END = goto last line */
     {
-	cap->arg = TRUE;
 	nv_goto(cap);
 	cap->count1 = 1;		/* to end of current line */
     }
@@ -5111,7 +5084,7 @@ nv_dollar(cap)
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = TRUE;
 #ifdef FEAT_VIRTUALEDIT
-    /* In virtual mode when off the edge of a line and an operator 
+    /* In virtual mode when off the edge of a line and an operator
      * is pending (whew!) keep the cursor where it is.
      * Otherwise, send it to the end of the line. */
     if (!virtual_active() || gchar_cursor() != NUL ||
@@ -5745,7 +5718,7 @@ nv_replace(cap)
 	    coladvance_force((colnr_T)(getviscol() + cap->count1));
 	    curwin->w_cursor.col -= cap->count1;
 	}
-	else
+	else if (gchar_cursor() == TAB)
 	    coladvance_force(getviscol());
     }
 #endif
@@ -5964,8 +5937,10 @@ nv_Replace(cap)
  */
     static void
 nv_vreplace(cap)
-    cmdarg_T	    *cap;
+    cmdarg_T	*cap;
 {
+    int		restart_edit_save;
+
 #ifdef FEAT_VISUAL
     if (VIsual_active)
     {
@@ -5989,11 +5964,14 @@ nv_vreplace(cap)
 	    if (virtual_active())
 		coladvance(getviscol());
 #endif
-	    /* This is a new edit command, not a restart.  We don't edit
-	     * recursively. */
+	    /* This is a new edit command, not a restart.  Do allow using
+	     * CTRL-O rx from Insert mode. */
+	    restart_edit_save = restart_edit;
 	    restart_edit = 0;
 	    if (edit('v', FALSE, cap->count1))
 		cap->retval |= CA_COMMAND_BUSY;
+	    if (restart_edit == 0)
+		restart_edit = restart_edit_save;
 	}
     }
 }
@@ -7154,16 +7132,8 @@ nv_lineop(cap)
 nv_home(cap)
     cmdarg_T	*cap;
 {
-    if (mod_mask & MOD_MASK_CTRL)	    /* CTRL-HOME = goto line 1 */
-    {
-	cap->arg = FALSE;
-	nv_goto(cap);
-    }
-    else
-    {
-	cap->count0 = 1;
-	nv_pipe(cap);
-    }
+    cap->count0 = 1;
+    nv_pipe(cap);
 }
 
 /*
@@ -7423,6 +7393,7 @@ nv_normal(cap)
     if (safe_vgetc() == Ctrl_N)
     {
 	clearop(cap->oap);
+	restart_edit = 0;
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0)
 	    cmdwin_result = ESC;
@@ -7476,7 +7447,7 @@ nv_esc(cap)
 	    && !p_im)
 	vim_beep();
     clearop(cap->oap);
-    if (p_im && !restart_edit)
+    if (restart_edit == 0 && goto_im())
 	restart_edit = 'a';
 }
 

@@ -127,7 +127,10 @@ menut &Next\ Error<Tab>:cn		Errore\ S&uccessivo<Tab>:cn
 menut &Previous\ Error<Tab>:cp	Errore\ &Precedente<Tab>:cp
 menut &Older\ List<Tab>:cold	Lista\ men&o\ recente<Tab>:cold
 menut N&ewer\ List<Tab>:cnew	Lista\ più\ rece&nte<Tab>:cnew
-menut Error\ &Window<Tab>:cwin	&Finestra\ errori<Tab>:cwin
+menut Error\ &Window		&Finestra\ errori
+menut &Update<Tab>:cwin		A&ggiorna<Tab>:cwin
+menut &Open<Tab>:copen		&Apri<Tab>:copen
+menut &Close<Tab>:cclose	&Chiudi<Tab>:cclose
 menut &Convert\ to\ HEX<Tab>:%!xxd	&Converti\ a\ Esadecimale<Tab>:%!xxd
 menut Conve&rt\ back<Tab>:%!xxd\ -r	Conve&rti\ da\ Esadecimale<Tab>:%!xxd\ -r
 
@@ -264,7 +267,7 @@ endif
 menut &Syntax		&Sintassi
 menut Set\ '&syntax'\ only	Attiva\ solo\ \ '&syntax'
 menut Set\ '&filetype'\ too	Attiva\ anche\ '&filetype'
-menut &Off			&Basta
+menut &Off			&Disattiva
 menut &Manual		&Manuale
 menut A&utomatic		A&utomatico
 menut on/off\ for\ &This\ file  Attiva\ Sì/No\ su\ ques&to\ file

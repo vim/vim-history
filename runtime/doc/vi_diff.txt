@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
+*vi_diff.txt*   For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,7 +11,8 @@ curly braces, like "{not in Vi}".  This file only lists what has not been
 mentioned in other files and gives an overview.
 
 Vim is mostly POSIX 1003.2-1 compliant.  The only command known to be missing
-is ":open".  There are probably a lot of small differences.
+is ":open".  There are probably a lot of small differences (either because Vim
+is missing something or because Posix is beside the mark).
 
 1. Missing commands			|missing-commands|
 2. Missing options			|missing-options|

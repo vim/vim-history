@@ -1,15 +1,18 @@
-*repeat.txt*    For Vim version 6.0am.  Last change: 2001 Jun 29
+*repeat.txt*    For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Repeating commands					*repeating*
+Repeating commands, Vim scripts and debugging			*repeating*
+
+Chapter 26 of the user manual introduces repeating |usr_26.txt|.
 
 1. Single repeats	|single-repeat|
 2. Multiple repeats	|multi-repeat|
 3. Complex repeats	|complex-repeat|
-4. Debugging scripts	|debug-scripts|
+4. Using Vim scripts	|using-scripts|
+5. Debugging scripts	|debug-scripts|
 
 ==============================================================================
 1. Single repeats					*single-repeat*
@@ -122,6 +125,11 @@ q			Stops recording.  (Implementation note: The 'q' that
 :[addr]@@		Repeat the previous :@{0-9a-z"}.  First set cursor at
 			line [addr] (default is current line).  {Vi: only in
 			some versions}
+
+==============================================================================
+4. Using Vim scripts					*using-scripts*
+
+For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 
 					*:so* *:source* *load-vim-script*
 :so[urce] {file}	Read Ex commands from {file}.
@@ -313,7 +321,7 @@ Rationale:
 <	Therefore the unusual leading backslash is used.
 
 ==============================================================================
-4. Debugging scripts					*debug-scripts*
+5. Debugging scripts					*debug-scripts*
 
 Besides the obvious messages that you can add to your scripts to find out what
 they are doing, Vim offers a debug mode.  This allows you to step through a

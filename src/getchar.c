@@ -1521,7 +1521,7 @@ vpeekc_any()
     int		c;
 
     c = vpeekc();
-    if (c == NUL && typebuf.tb_len)
+    if (c == NUL && typebuf.tb_len > 0)
 	c = ESC;
     return c;
 }
@@ -4283,7 +4283,7 @@ static struct initmap
 # endif
 #endif
 
-#if defined(macintosh)
+#if defined(MACOS)
 	/* Use the Standard MacOS binding. */
 	/* paste, copy and cut */
 	{(char_u *)"<D-v> \"*P", NORMAL},

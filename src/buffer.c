@@ -2078,7 +2078,7 @@ buflist_list(eap)
 		buf == curbuf ? '%' :
 			(curwin->w_alt_fnum == buf->b_fnum ? '#' : ' '),
 		buf->b_ml.ml_mfp == NULL ? ' ' :
-			(buf->b_nwindows == 0 ? 'h' : 'l'),
+			(buf->b_nwindows == 0 ? 'h' : 'a'),
 		mod);
 
 	len = (int)STRLEN(IObuff);
@@ -3098,9 +3098,9 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    break;
 
 	case STL_BYTEVAL_X:
-	    base= 'X';
+	    base = 'X';
 	case STL_BYTEVAL:
-	    if ((State & INSERT) || empty_line)
+	    if (((State & INSERT) && wp == curwin) || empty_line)
 		num = 0;
 	    else
 	    {

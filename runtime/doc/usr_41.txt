@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
+*usr_41.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -16,16 +16,17 @@ script.  There are a lot of them, thus this is a long chapter.
 |41.5|	Executing an expression
 |41.6|	Using functions
 |41.7|	Defining a function
-|41.8|	Writing a plugin
-|41.9|	Writing a filetype plugin
-|41.10|	Writing a compiler plugin
+|41.8|  Various remarks
+|41.9|	Writing a plugin
+|41.10|	Writing a filetype plugin
+|41.11|	Writing a compiler plugin
 
      Next chapter: |usr_42.txt|  Add new menus
  Previous chapter: |usr_40.txt|  Make new commands
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*41.1*	Introduction
+*41.1*	Introduction			*vimrc-intro* *vim-script-intro*
 
 Your first experience with Vim scripts is the vimrc file.  Vim reads it when
 it starts up and executes the commands.  You can set options to values you
@@ -836,7 +837,165 @@ To delete the Show() function: >
 You get an error when the function doesn't exist.
 
 ==============================================================================
-*41.8*	Writing a plugin				*write-plugin*
+*41.8*  Various remarks
+
+Here is a summary of items that apply to Vim scripts.  They are also mentioned
+elsewhere, but form a nice checklist.
+
+The end-of-line character depends on the system.  For Unix a single <NL>
+character is used.  For MS-DOS, Windows, OS/2 and the like, <CR><LF> is used.
+This is important when using mappings that end in a <CR>.  See |:source_crnl|.
+
+
+WHITE SPACE
+
+Blank lines are allowed and ignored.
+
+Leading whitespace characters (blanks and TABs) are always ignored.  The
+whitespaces between parameters (e.g. between the 'set' and the 'number' in the
+example above) are reduced to one blank character and plays the role of a
+separator, the whitespaces after the last (visible) character may or may not
+be ignored depending on the situation, see below.
+
+For a ":set" command involving the "=" (equal) sign, such as in: >
+
+	:set cpoptions    =aABceFst
+
+The whitespace immediately before the "=" sign is ignored.  But there can be
+no whitespace after the "=" sign!
+
+To include a whitespace character in the value of an option, it must be
+escaped by a "\" (backslash)  as in the following example: >
+
+	:set tags=my\ nice\ file
+
+The same example written as >
+
+	:set tags=my nice file
+
+will issue an error, because it is interpreted as: >
+
+	:set tags=my
+	:set nice
+	:set file
+
+
+COMMENTS
+
+The character " (the double quote mark) starts a comment.  Everything after
+and including this character until the end-of-line is considered a comment and
+is ignored, except for commands that don't consider comments, as shown in
+examples below.  A comment can start on any character position on the line.
+
+There is a little "catch" with comments for some commands.  Examples: >
+
+	:abbrev dev development		" shorthand
+	:map <F3> o#include		" insert include
+	:execute cmd			" do it
+	:!ls *.c			" list C files
+
+The abbreviation 'dev' will be expanded to 'development     " shorthand'.  The
+mapping of <F3> will actually be the whole line after the 'o# ....' including
+the '" insert include'.  The "execute" command will give an error.  The "!"
+command will send everything after it to the shell, causing an error for an
+unmatched '"' character.
+   There can be no comment after ":map", ":abbreviate", ":execute" and "!"
+commands (there are a few more commands with this restriction).  For the
+"map", ":abbreviate" and "execute" commands there is a trick: >
+
+	:abbrev dev development|" shorthand
+	:map <F3> o#include|" insert include
+	:execute cmd			|" do it
+
+With the '|' character the command is separated from the next one.  And that
+next command is only a comment.
+
+Notice that there is no white space before the '|' in the abbreviation and
+mapping.  For these commands, any character until the end-of-line or '|' is
+included.  As a consequence of this behavior, you don't always see that
+trailing whitespace is included: >
+
+	:map <F4> o#include  
+
+To avoid these problems, you can set the 'list' option when editing vimrc
+files.
+
+
+PITFALLS
+
+Even bigger problem arises in the following example: >
+
+	:map ,ab o#include
+	:unmap ,ab 
+
+Here the unmap command will not work, because it tries to unmap ",ab ".  This
+does not exist as a mapped sequence.  An error will be issued, which is very
+hard to identify, because the ending whitespace character on the 'unmap ,ab '
+is not visible.
+
+And this is the same what happens when one uses a comment after an 'unmap'
+command: >
+
+	:unmap ,ab     " comment
+
+Here the comment part will be ignored.  However, Vim will try to unmap
+',ab     ', which does not exist.  Rewreite it as: >
+
+	:unmap ,ab|" comment
+
+
+RESTORING THE VIEW
+
+Sometimes you want to make a change and go back to where cursor was.
+Restoring the relative position would also be nice, so that the same line
+appears at the top of the window.
+   This example yanks the current line and puts it above the first line in the
+file: >
+
+	map ,p ma"aYHmbgg"aP`bzt`a
+
+What this does: >
+	ma"aYHmbgg"aP`bzt`a
+<	ma			set mark a at cursor position
+	  "aY			yank current line into register a
+	     Hmb		go to top line in window and set mark b there
+	        gg		go to first line in file
+	          "aP		put the yanked line above it
+	             `b		go back to top line in display
+		       zt	position the text in the window as before
+		         `a	go back to saved cursor position
+
+
+PACKAGING
+
+To avoid your function names to interfere with functions that you get from
+others, use this scheme:
+- Prepend a unique string before each function name.  I often use an
+  abbreviation.  For example, "OW_" is used for the option window functions.
+- Put the definition of your functions together in a file.  Set a global
+  variable to indicate that the functions have been loaded.  When sourcing the
+  file again, first unload the functions.
+Example: >
+
+	" This is the XXX package
+
+	if exists("XXX_loaded")
+	  delfun XXX_one
+	  delfun XXX_two
+	endif
+
+	function XXX_one(a)
+		... body of function ...
+	endfun
+
+	function XXX_two(b)
+		... body of function ...
+	endfun
+
+	let XXX_loaded = 1
+
+==============================================================================
+*41.9*	Writing a plugin				*write-plugin*
 
 You can write a Vim script in such a way that many people can use it.  This is
 called a plugin.  Vim users can drop your script in their plugin directory and
@@ -1209,7 +1368,7 @@ hasmapto()		Function to test if the user already defined a mapping
 exists(":cmd")		Check if a user command doesn't exist yet.
 
 ==============================================================================
-*41.9*	Writing a filetype plugin	*write-filetype-plugin* *ftplugin*
+*41.10*	Writing a filetype plugin	*write-filetype-plugin* *ftplugin*
 
 A filetype plugin is like a global plugin, except that it sets options and
 defines mappings for the current buffer only.  See |add-filetype-plugin| for
@@ -1363,7 +1522,7 @@ exists("*s:Func")	Check if a function was already defined.
 Also see |plugin-special|, the special things used for all plugins.
 
 ==============================================================================
-*41.10*	Writing a compiler plugin		*write-compiler-plugin*
+*41.11*	Writing a compiler plugin		*write-compiler-plugin*
 
 A compiler plugin sets options for use with a specific compiler.  The user can
 load it with the |:compiler| command.  The main use is to set the

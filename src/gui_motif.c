@@ -34,8 +34,15 @@
 
 #include "vim.h"
 
-#if defined(FEAT_GUI_DIALOG) && defined(HAVE_X11_XPM_H)
-# include <X11/xpm.h>
+#ifdef HAVE_XM_XPMP_H
+# include <Xm/XpmP.h>
+#else
+# ifdef HAVE_X11_XPM_H
+#  include <X11/xpm.h>
+# endif
+#endif
+
+#if defined(FEAT_GUI_DIALOG) && defined(HAVE_XPM)
 # include "../pixmaps/alert.xpm"
 # include "../pixmaps/error.xpm"
 # include "../pixmaps/generic.xpm"
@@ -313,8 +320,68 @@ gui_x11_set_back_color()
 #endif
 }
 
+/*
+ * Manage dialog centered on pointer. This could be used by the Athena code as
+ * well.
+ */
+static void manage_centered __ARGS((Widget dialog_child));
+
+static void
+manage_centered(dialog_child)
+    Widget dialog_child;
+{
+    Widget shell = XtParent(dialog_child);
+    Window root, child;
+    unsigned int mask;
+    unsigned int width, height, border_width, depth;
+    int x, y, win_x, win_y, maxX, maxY;
+    Boolean mappedWhenManaged;
+
+    /* Temporarily set value of XmNmappedWhenManaged
+       to stop the dialog from popping up right away */
+    XtVaGetValues(shell, XmNmappedWhenManaged, &mappedWhenManaged, 0);
+    XtVaSetValues(shell, XmNmappedWhenManaged, False, 0);
+
+    XtManageChild(dialog_child);
+
+    /* Get the pointer position (x, y) */
+    XQueryPointer(XtDisplay(shell), XtWindow(shell), &root, &child,
+		  &x, &y, &win_x, &win_y, &mask);
+
+    /* Translate the pointer position (x, y) into a position for the new
+       window that will place the pointer at its center */
+    XGetGeometry(XtDisplay(shell), XtWindow(shell), &root, &win_x, &win_y,
+		 &width, &height, &border_width, &depth);
+    width += 2 * border_width;
+    height += 2 * border_width;
+    x -= width / 2;
+    y -= height / 2;
+
+    /* Ensure that the dialog remains on screen */
+    maxX = XtScreen(shell)->width - width;
+    maxY = XtScreen(shell)->height - height;
+    if (x < 0)
+	x = 0;
+    if (x > maxX)
+	x = maxX;
+    if (y < 0)
+	y = 0;
+    if (y > maxY)
+	y = maxY;
+
+    /* Set desired window position in the DialogShell */
+    XtVaSetValues(shell, XmNx, x, XmNy, y, NULL);
+
+    /* Map the widget */
+    XtMapWidget(shell);
+
+    /* Restore the value of XmNmappedWhenManaged */
+    XtVaSetValues(shell, XmNmappedWhenManaged, mappedWhenManaged, 0);
+}
+
 #if defined(FEAT_MENU) || defined(FEAT_SUN_WORKSHOP) \
 	|| defined(FEAT_GUI_DIALOG) || defined(PROTO)
+
 /*
  * Encapsulate the way an XmFontList is created.
  */
@@ -783,7 +850,6 @@ gui_mch_add_menu_item(menu, idx)
 	     */
 	    type = xmFormWidgetClass;
 	    XtSetArg(args[n], XmNwidth, wid); n++;
-	    XtSetArg(args[n], XmNmappedWhenManaged, False); n++;
 	}
 	else
 	{
@@ -792,6 +858,17 @@ gui_mch_add_menu_item(menu, idx)
 	     * by changing the XmNlabelType resource. */
 	    xms = XmStringCreate((char *)menu->dname, STRING_TAG);
 	    XtSetArg(args[n], XmNlabelString, xms); n++;
+
+#ifndef FEAT_SUN_WORKSHOP
+
+	    /* Without shadows one can't sense whatever the button has been
+	     * pressed or not! However we wan't to save a bit of space...
+	     */
+	    XtSetArg(args[n], XmNhighlightThickness, 0); n++;
+	    XtSetArg(args[n], XmNhighlightOnEnter, True); n++;
+	    XtSetArg(args[n], XmNmarginWidth, 0); n++;
+	    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+#endif
 	    if (menu->image == 0)
 	    {
 		XtSetArg(args[n], XmNlabelType, XmSTRING); n++;
@@ -803,16 +880,6 @@ gui_mch_add_menu_item(menu, idx)
 		XtSetArg(args[n], XmNlabelPixmap, menu->image); n++;
 		XtSetArg(args[n], XmNlabelInsensitivePixmap, menu->image_ins); n++;
 		XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
-#ifndef FEAT_SUN_WORKSHOP
-
-		/* Without shadows one can't sense whatever the button has been
-		 * pressed or not! However we wan't to save a bit of space...
-		 */
-		XtSetArg(args[n], XmNhighlightThickness, 0); n++;
-		XtSetArg(args[n], XmNhighlightOnEnter, True); n++;
-		XtSetArg(args[n], XmNmarginWidth, 0); n++;
-		XtSetArg(args[n], XmNmarginHeight, 0); n++;
-#endif
 	    }
 	    type = xmPushButtonWidgetClass;
 	    XtSetArg(args[n], XmNwidth, 80); n++;
@@ -1001,7 +1068,13 @@ gui_mch_new_tooltip_font()
     if (toolBar == (Widget)0)
 	return;
 
-    gui_mch_submenu_change(root_menu, FALSE);
+    {
+	vimmenu_T   *toolbar;
+
+	toolbar = gui_find_menu((char_u *)"ToolBar");
+	if (toolbar != NULL)
+	    gui_mch_submenu_change(toolbar, FALSE);
+    }
 }
 
     void
@@ -1010,7 +1083,13 @@ gui_mch_new_tooltip_colors()
     if (toolBar == (Widget)0)
 	return;
 
-    gui_mch_submenu_change(root_menu, TRUE);
+    {
+	vimmenu_T   *toolbar;
+
+	toolbar = gui_find_menu((char_u *)"ToolBar");
+	if (toolbar != NULL)
+	    gui_mch_submenu_change(toolbar, TRUE);
+    }
 }
 #endif
 
@@ -1230,7 +1309,8 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 	    XtVaSetValues(sb->id,
 			  XmNtopOffset, y,
 			  XmNleftOffset, x,
-			  XmNrightOffset, gui.scrollbar_width,
+			  XmNrightOffset, gui.which_scrollbars[SBAR_RIGHT]
+						    ? gui.scrollbar_width : 0,
 			  XmNheight, h,
 			  NULL);
 	XtManageChild(sb->id);
@@ -1428,6 +1508,39 @@ static void DialogCancelCB __ARGS((Widget, XtPointer, XtPointer));
 static void DialogAcceptCB __ARGS((Widget, XtPointer, XtPointer));
 
 /*
+ * This function is used to translate the predefined label text of the
+ * precomposed dialogs. We do this explicitly to allow:
+ *
+ * - usage of gettext for translation, as in all the other places.
+ *
+ * - equalize the messages between different GUI implementations as far as
+ * possible.
+ */
+static void set_predefined_label __ARGS((Widget parent, String name, char * new_label));
+
+static void
+set_predefined_label(parent, name, new_label)
+    Widget parent;
+    String name;
+    char * new_label;
+{
+    XmString str;
+    Widget w;
+
+    w = XtNameToWidget(parent, name);
+
+    if (!w)
+	return;
+
+    str = XmStringCreate(new_label, STRING_TAG);
+
+    if (str) {
+	XtVaSetValues(w, XmNlabelString, str, NULL);
+	XmStringFree(str);
+    }
+}
+
+/*
  * Put up a file requester.
  * Returns the selected name in allocated memory, or NULL for Cancel.
  */
@@ -1486,17 +1599,17 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	    XmNpattern,	XmRString, (char *)pattern, STRLEN(pattern) + 1,
 	XtVaTypedArg,
 	    XmNdialogTitle, XmRString, (char *)title, STRLEN(title) + 1,
-/*
-    currently, the background color of the input and selection
-    fields are "motif blue".  i'm sure there must be a resource
-    that corresponds to this, but i don't know what it is.
-
-	XmNhighlightColor,	gui.norm_pixel,
-	XmNborderColor,		gui.back_pixel,
-	XmNtopShadowColor,	gui.menu_bg_pixel,
-	XmNbottomShadowColor,	gui.norm_pixel,
-*/
 	NULL);
+
+    set_predefined_label(dialog_wgt, "Apply", _("Filter"));
+    set_predefined_label(dialog_wgt, "Cancel", _("Cancel"));
+    set_predefined_label(dialog_wgt, "Dir", _("Directories"));
+    set_predefined_label(dialog_wgt, "FilterLabel", _("Filter"));
+    set_predefined_label(dialog_wgt, "Help", _("Help"));
+    set_predefined_label(dialog_wgt, "Items", _("Files"));
+    set_predefined_label(dialog_wgt, "OK", _("OK"));
+    set_predefined_label(dialog_wgt, "Selection", _("Selection"));
+
     gui_motif_menu_colors(dialog_wgt);
     if (gui.scroll_bg_pixel != -1)
 	XtVaSetValues(dialog_wgt, XmNtroughColor, gui.scroll_bg_pixel, NULL);
@@ -1507,7 +1620,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     XtUnmanageChild(XmFileSelectionBoxGetChild(dialog_wgt,
 					(unsigned char)XmDIALOG_HELP_BUTTON));
 
-    XtManageChild(dialog_wgt);
+    manage_centered(dialog_wgt);
 
     /* sit in a loop until the dialog box has gone away */
     do
@@ -1643,7 +1756,7 @@ gui_motif_set_fontlist(wg)
     }
 }
 
-#ifdef HAVE_X11_XPM_H
+#ifdef HAVE_XPM
 
 static Widget create_pixmap_label(Widget parent, String name, char **data, ArgList args, Cardinal arg);
 
@@ -1664,11 +1777,11 @@ create_pixmap_label(parent, name, data, args, arg)
     Boolean		rs;
     XpmColorSymbol	color[5] =
     {
-	{"background", NULL, 0},
-	{"foreground", NULL, 0},
-	{"bottomShadow", NULL, 0},
-	{"topShadow", NULL, 0},
-	{"highlight", NULL, 0}
+	{"none", NULL, 0},
+	{"iconColor1", NULL, 0},
+	{"bottomShadowColor", NULL, 0},
+	{"topShadowColor", NULL, 0},
+	{"selectColor", NULL, 0}
     };
 
     label = XmCreateLabelGadget(parent, name, args, arg);
@@ -1734,7 +1847,7 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
     Widget		separator = NULL;
     int			n;
     Arg			args[6];
-#ifdef HAVE_X11_XPM_H
+#ifdef HAVE_XPM
     char		**icon_data = NULL;
     Widget		dialogpixmap = NULL;
 #endif
@@ -1927,7 +2040,7 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 	    NULL);
     XtManageChild(form);
 
-#ifdef HAVE_X11_XPM_H
+#ifdef HAVE_XPM
     /* Add a pixmap, left of the message. */
     switch (type)
     {
@@ -1972,7 +2085,7 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 				XmNlabelString, label,
 				XmNtopAttachment, XmATTACH_FORM,
 				XmNtopOffset, 8,
-#ifdef HAVE_X11_XPM_H
+#ifdef HAVE_XPM
 				XmNleftAttachment, XmATTACH_WIDGET,
 				XmNleftWidget, dialogpixmap,
 #else
@@ -2014,17 +2127,8 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 	    XmNdefaultButton, buttons[dfltbutton - 1], NULL);
     if (textfield != NULL)
 	XtVaSetValues(dialogform, XmNinitialFocus, dialogtextfield, NULL);
-    XtManageChild(dialogform);
 
-    /* Need to make the dialog appear before we can move the pointer to it.
-     * The short delay is somehow needed (wait for window manager?). */
-    XtRealizeWidget(dialogform);
-    XSync(gui.dpy, False);
-    ui_delay(10L, FALSE);
-
-    /* Position the mouse pointer in the dialog, required for when focus
-     * follows mouse. */
-    XWarpPointer(gui.dpy, (Window)0, XtWindow(dialogform), 0, 0, 0, 0, 20, 40);
+    manage_centered(dialogform);
 
     if (textfield != NULL && *textfield != NUL)
     {

@@ -285,6 +285,12 @@ ex_menu(eap)
      * Skip the menu name, and translate <Tab> into a real TAB.
      */
     menu_path = arg;
+    if (*menu_path == '.')
+    {
+	EMSG2(_(e_invarg2), menu_path);
+	goto theend;
+    }
+
     while (*arg && !vim_iswhite(*arg))
     {
 	if ((*arg == '\\' || *arg == Ctrl_V) && arg[1] != NUL)
@@ -2126,7 +2132,7 @@ ex_emenu(eap)
 	EMSG2(_("E335: Menu not defined for %s mode"), mode);
 }
 
-#if defined(FEAT_GUI_MSWIN) || defined(PROTO)
+#if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
 /*
  * Given a menu descriptor, e.g. "File.New", find it in the menu hierarchy.
  */

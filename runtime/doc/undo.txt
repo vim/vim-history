@@ -1,10 +1,12 @@
-*undo.txt*      For Vim version 6.0am.  Last change: 2001 Jan 20
+*undo.txt*      For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 Undo and redo						*undo-redo*
+
+The basics are explained in section |02.5| of the user manual.
 
 1. Undo and redo commands	|undo-commands|
 2. Two ways of undo		|undo-two-ways|

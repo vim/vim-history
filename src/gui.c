@@ -33,7 +33,7 @@ static int can_update_cursor = TRUE; /* can display the cursor */
  * this makes the thumb indicate the part of the text that is shown.  Motif
  * can't do this.
  */
-#if defined(FEAT_GUI_ATHENA) || defined(macintosh)
+#if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MAC)
 # define SCROLL_PAST_END
 #endif
 
@@ -3143,9 +3143,12 @@ gui_update_scrollbars(force)
     /* Update the horizontal scrollbar */
     gui_update_horiz_scrollbar(force);
 
-    /* Return straight away if there is neither a left nor right scrollbar */
+#ifndef WIN3264
+    /* Return straight away if there is neither a left nor right scrollbar.
+     * On MS-Windows this is required anyway for scrollwheel messages. */
     if (!gui.which_scrollbars[SBAR_LEFT] && !gui.which_scrollbars[SBAR_RIGHT])
 	return;
+#endif
 
     /*
      * Don't want to update a scrollbar while we're dragging it.  But if we

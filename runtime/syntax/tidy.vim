@@ -3,9 +3,7 @@
 " Language:     HMTL Tidy configuration file (~/.tidyrc)
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
 " URL:          http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/tidy.vim
-" Last Change:  2001 June 18
-
-" TODO: color values for new*tags options
+" Last Change:  2001 Jul 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -28,6 +26,12 @@ syn keyword tidyTodo       TODO NOTE FIXME XXX contained
 syn match   tidyAssignment "^[a-z0-9-]\+:\s*.*$" contains=tidyOption,tidyDelimiter,tidyString,tidyBoolean,tidyNumber,tidyValue
 
 syn match   tidyDelimiter  ":" contained
+
+syn match   tidyNewTagAssignment "^new-\w\+-tags:\s*.*$" contains=tidyNewTagOption,tidyNewTagDelimiter,tidyNewTagValue,tidyDelimiter
+
+syn match   tidyNewTagValue      "\w" contained
+
+syn match   tidyNewTagDelimiter  "," contained
 
 syn region  tidyString     start=+"+ skip=+\\\\\|\\"+ end=+"+ contained oneline
 syn region  tidyString     start=+'+ skip=+\\\\\|\\'+ end=+'+ contained oneline
@@ -67,10 +71,6 @@ syn match   tidyOption     "^keep-time" contained
 syn match   tidyOption     "^literal-attributes" contained
 syn match   tidyOption     "^logical-emphasis" contained
 syn match   tidyOption     "^markup" contained
-syn match   tidyOption     "^new-blocklevel-tags" contained
-syn match   tidyOption     "^new-empty-tags" contained
-syn match   tidyOption     "^new-inline-tags" contained
-syn match   tidyOption     "^new-pre-tags" contained
 syn match   tidyOption     "^numeric-entities" contained
 syn match   tidyOption     "^output-xhtml" contained
 syn match   tidyOption     "^output-xml" contained
@@ -93,6 +93,11 @@ syn match   tidyOption     "^wrap-php" contained
 syn match   tidyOption     "^wrap-script-literals" contained
 syn match   tidyOption     "^write-back" contained
 
+syn match   tidyNewTagOption     "^new-blocklevel-tags" contained
+syn match   tidyNewTagOption     "^new-empty-tags" contained
+syn match   tidyNewTagOption     "^new-inline-tags" contained
+syn match   tidyNewTagOption     "^new-pre-tags" contained
+
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
@@ -112,6 +117,10 @@ if version >= 508 || !exists("did_tidy_syn_inits")
   HiLink tidyString     String
   HiLink tidyTodo       Todo
   HiLink tidyValue      Constant
+
+  HiLink tidyNewTagOption    Identifier
+  HiLink tidyNewTagValue     Constant
+  HiLink tidyNewTagDelimiter Special      
 
   delcommand HiLink
 endif

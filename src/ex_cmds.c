@@ -3099,16 +3099,25 @@ ex_z(eap)
     char_u	*x;
     int		bigness = curwin->w_height - 3;
     char_u	kind;
+    int		numbered = FALSE;
     int		minus = 0;
     linenr_T	start, end, curs, i;
+    int		j;
     linenr_T	lnum = eap->line2;
 
     if (bigness < 1)
 	bigness = 1;
 
     x = eap->arg;
-    if (*x == '-' || *x == '+' || *x == '=' || *x == '^' || *x == '.')
-	x++;
+    if (*x == '#')
+    {
+	numbered = TRUE;
+	++x;
+    }
+
+    kind = *x;
+    if (kind == '-' || kind == '+' || kind == '=' || kind == '^' || kind == '.')
+	++x;
 
     if (*x != 0)
     {
@@ -3120,8 +3129,6 @@ ex_z(eap)
 	else
 	    bigness = atoi((char *)x);
     }
-
-    kind = *eap->arg;
 
     switch (kind)
     {
@@ -3168,8 +3175,6 @@ ex_z(eap)
 
     for (i = start; i <= end; i++)
     {
-	int j;
-
 	if (minus && i == lnum)
 	{
 	    msg_putchar('\n');
@@ -3178,7 +3183,7 @@ ex_z(eap)
 		msg_putchar('-');
 	}
 
-	print_line(i, FALSE);
+	print_line(i, numbered);
 
 	if (minus && i == lnum)
 	{

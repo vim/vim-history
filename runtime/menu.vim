@@ -1,9 +1,8 @@
-
 " You can also use this as a start for your own set of menus.
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 26
+" Last Change:	2001 Jul 11
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -51,7 +50,7 @@ amenu 9999.30 &Help.&How-to\ links		:help how-to<CR>
 amenu 9999.40 &Help.&GUI			:help gui<CR>
 amenu 9999.50 &Help.&Credits			:help credits<CR>
 amenu 9999.60 &Help.Co&pying			:help uganda<CR>
-amenu 9999.70 &Help.&Find\.\.\.			:call <SID>Helpfind()<CR>
+amenu <silent> 9999.70 &Help.&Find\.\.\.	:call <SID>Helpfind()<CR>
 amenu 9999.75 &Help.-sep-			<nul>
 amenu 9999.80 &Help.&Version			:version<CR>
 amenu 9999.90 &Help.&About			:intro<CR>
@@ -97,9 +96,9 @@ elseif has("unix")
   vmenu &File.&Print				:w !lpr<CR>
 elseif has("vms")
   amenu 10.500 &File.-SEP3-                     :
-  amenu 10.510 &File.&Print			:call VMSPrint(":")<CR>
+  amenu <silent> 10.510 &File.&Print		:call VMSPrint(":")<CR>
   vunmenu &File.&Print
-  vmenu &File.&Print				<Esc>:call VMSPrint(":'<,'>")<CR>
+  vmenu <silent> &File.&Print			<Esc>:call VMSPrint(":'<,'>")<CR>
 endif
 amenu 10.600 &File.-SEP4-			:
 amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
@@ -139,7 +138,7 @@ imenu	     &Edit.Put\ &After<Tab>]p		<C-O>]p
 if has("win32") || has("win16")
   vmenu 20.390 &Edit.&Delete<Tab>x		x
 endif
-amenu 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
+amenu <silent> 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
 amenu 20.405 &Edit.-SEP2-			:
 if has("win32")  || has("win16") || has("gui_gtk") || has("gui_motif")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
@@ -175,15 +174,15 @@ amenu 20.440.130.60 &Edit.&Global\ Settings.&Virtual\ Edit.Insert\ mode :set ve=
 amenu 20.440.130.70 &Edit.&Global\ Settings.&Virtual\ Edit.Block\ and\ Insert :set ve=block,insert<CR>
 amenu 20.440.130.80 &Edit.&Global\ Settings.&Virtual\ Edit.Always :set ve=all<CR>
 amenu 20.440.140 &Edit.&Global\ Settings.Toggle\ Insert\ &Mode<Tab>:set\ im!	:set im!<CR>
-amenu 20.440.150 &Edit.&Global\ Settings.Search\ &Path\.\.\.  :call <SID>SearchP()<CR>
-amenu 20.440.160 &Edit.&Global\ Settings.Ta&g\ Files\.\.\.  :call <SID>TagFiles()<CR>
+amenu <silent> 20.440.150 &Edit.&Global\ Settings.Search\ &Path\.\.\.  :call <SID>SearchP()<CR>
+amenu <silent> 20.440.160 &Edit.&Global\ Settings.Ta&g\ Files\.\.\.  :call <SID>TagFiles()<CR>
 "
 " GUI options
 amenu 20.440.300 &Edit.&Global\ Settings.-SEP1-	    :
-amenu 20.440.310 &Edit.&Global\ Settings.Toggle\ &Toolbar		:call <SID>ToggleGuiOption("T")<CR>
-amenu 20.440.320 &Edit.&Global\ Settings.Toggle\ &Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
-amenu 20.440.330 &Edit.&Global\ Settings.Toggle\ &Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
-amenu 20.440.340 &Edit.&Global\ Settings.Toggle\ &Right\ Scrollbar	:call <SID>ToggleGuiOption("r")<CR>
+amenu <silent> 20.440.310 &Edit.&Global\ Settings.Toggle\ &Toolbar		:call <SID>ToggleGuiOption("T")<CR>
+amenu <silent> 20.440.320 &Edit.&Global\ Settings.Toggle\ &Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
+amenu <silent> 20.440.330 &Edit.&Global\ Settings.Toggle\ &Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
+amenu <silent> 20.440.340 &Edit.&Global\ Settings.Toggle\ &Right\ Scrollbar	:call <SID>ToggleGuiOption("r")<CR>
 
 fun! s:SearchP()
   if !exists("g:menutrans_path_dialog")
@@ -241,8 +240,8 @@ amenu 20.440.620.50 &Edit.F&ile\ Settings.Soft\ &Tabstop.5   :set sts=5 sts?<CR>
 amenu 20.440.620.60 &Edit.F&ile\ Settings.Soft\ &Tabstop.6   :set sts=6 sts?<CR>
 amenu 20.440.620.80 &Edit.F&ile\ Settings.Soft\ &Tabstop.8   :set sts=8 sts?<CR>
 
-amenu 20.440.630 &Edit.F&ile\ Settings.Te&xt\ Width\.\.\.  :call <SID>TextWidth()<CR>
-amenu 20.440.640 &Edit.F&ile\ Settings.&File\ Format\.\.\.  :call <SID>FileFormat()<CR>
+amenu <silent> 20.440.630 &Edit.F&ile\ Settings.Te&xt\ Width\.\.\.  :call <SID>TextWidth()<CR>
+amenu <silent> 20.440.640 &Edit.F&ile\ Settings.&File\ Format\.\.\.  :call <SID>FileFormat()<CR>
 fun! s:TextWidth()
   if !exists("g:menutrans_textwidth_dialog")
     let g:menutrans_textwidth_dialog = "Enter new text width (0 to disable formatting): "
@@ -265,7 +264,7 @@ fun! s:FileFormat()
   else
     let def = 1
   endif
-  let n = confirm(g:menutrans_fileformat_dialog, "&Unix\n&Dos\n&Mac", def, "Question")
+  let n = confirm(g:menutrans_fileformat_dialog, "&Unix\n&Dos\n&Mac\n&Cancel", def, "Question")
   if n == 1
     set ff=unix
   elseif n == 2
@@ -381,41 +380,46 @@ if has("diff")
   vmenu &Tools.&Diff.&Put\ Block 		:diffput<CR>
 endif
 
-amenu 40.358 &Tools.-SEP2-			:
-amenu 40.360 &Tools.&Make<Tab>:make		:make<CR>
-amenu 40.370 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
-amenu 40.380 &Tools.L&ist\ Messages<Tab>:cl!	:cl!<CR>
-amenu 40.390 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
-amenu 40.400 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
-amenu 40.410 &Tools.&Older\ List<Tab>:cold	:colder<CR>
-amenu 40.420 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
+amenu 40.358 &Tools.-SEP2-				:
+amenu 40.360 &Tools.&Make<Tab>:make			:make<CR>
+amenu 40.370 &Tools.&List\ Errors<Tab>:cl		:cl<CR>
+amenu 40.380 &Tools.L&ist\ Messages<Tab>:cl!		:cl!<CR>
+amenu 40.390 &Tools.&Next\ Error<Tab>:cn		:cn<CR>
+amenu 40.400 &Tools.&Previous\ Error<Tab>:cp		:cp<CR>
+amenu 40.410 &Tools.&Older\ List<Tab>:cold		:colder<CR>
+amenu 40.420 &Tools.N&ewer\ List<Tab>:cnew		:cnewer<CR>
 amenu 40.430.50 &Tools.Error\ &Window.&Update<Tab>:cwin	:cwin<CR>
 amenu 40.430.60 &Tools.Error\ &Window.&Open<Tab>:copen	:copen<CR>
-amenu 40.430.70 &Tools.Error\ &Window.&Close<Tab>:cclose	:cclose<CR>
+amenu 40.430.70 &Tools.Error\ &Window.&Close<Tab>:cclose :cclose<CR>
 amenu 40.520 &Tools.-SEP3-                      :
-if has("vms")
-  amenu 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
-	\ :let b:mod = &mod<CR>
-	\ :%!mc vim:xxd<CR>
-	\ :set ft=xxd<CR>
-	\ :let &mod = b:mod<CR>
-  amenu 40.540 &Tools.Conve&rt\ back<Tab>:%!mc\ vim:xxd\ -r
-	\ :let b:mod = &mod<CR>
-	\ :%!mc vim:xxd -r<CR>
-	\ :doautocmd filetypedetect BufReadPost<CR>
-	\ :let &mod = b:mod<CR>
-else
-  amenu 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!xxd
-	\ :let b:mod = &mod<CR>
-	\ :silent %!xxd<CR>
-	\ :set ft=xxd<CR>
-	\ :let &mod = b:mod<CR>
-  amenu 40.540 &Tools.Conve&rt\ back<Tab>:%!xxd\ -r
-	\ :let b:mod = &mod<CR>
-	\ :%!xxd -r<CR>
-	\ :doautocmd filetypedetect BufReadPost<CR>
-	\ :let &mod = b:mod<CR>
-endif
+amenu <silent> 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!xxd
+  	\ :call <SID>XxdConv()<CR>
+amenu <silent> 40.540 &Tools.Conve&rt\ back<Tab>:%!xxd\ -r
+  	\ :call <SID>XxdBack()<CR>
+
+" Use a function to do the conversion, so that it also works with 'insertmode'
+" set.
+func! s:XxdConv()
+  let mod = &mod
+  if has("vms")
+    %!mc vim:xxd
+  else
+    %!xxd
+  endif
+  set ft=xxd
+  let &mod = mod
+endfun
+
+func! s:XxdBack()
+  let mod = &mod
+  if has("vms")
+    %!mc vim:xxd -r
+  else
+    %!xxd -r
+  endif
+  doautocmd filetypedetect BufReadPost
+  let &mod = mod
+endfun
 
 " Setup the Tools.Compiler submenu
 let s:n = globpath(&runtimepath, "compiler/*.vim")
@@ -497,7 +501,7 @@ func! s:BMShow(...)
   " create new menu; set 'cpo' to include the <CR>
   let cpo_save = &cpo
   set cpo&vim
-  exe 'am ' . g:bmenu_priority . ".2 &Buffers.&Refresh\\ menu :call <SID>BMShow()<CR>"
+  exe 'am <silent> ' . g:bmenu_priority . ".2 &Buffers.&Refresh\\ menu :call <SID>BMShow()<CR>"
   exe 'am ' . g:bmenu_priority . ".4 &Buffers.&Delete :bd<CR>"
   exe 'am ' . g:bmenu_priority . ".6 &Buffers.&Alternate :b #<CR>"
   exe 'am ' . g:bmenu_priority . ".7 &Buffers.&Next :bnext<CR>"
@@ -648,7 +652,7 @@ amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
 amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
 amenu 70.330 &Window.Split\ &Vertically<Tab>^Wv	<C-W>v
 if has("vertsplit")
-  amenu 70.332 &Window.Split\ File\ E&xplorer	:call MenuExplOpen()<CR>
+  amenu <silent> 70.332 &Window.Split\ File\ E&xplorer	:call MenuExplOpen()<CR>
   if !exists("*MenuExplOpen")
     fun MenuExplOpen()
       if @% == ""
@@ -659,40 +663,40 @@ if has("vertsplit")
     endfun
   endif
 endif
-amenu 70.335 &Window.-SEP1-			:
-amenu 70.340 &Window.&Close<Tab>^Wc		:confirm close<CR>
-amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
-amenu 70.350 &Window.-SEP2-			:
-amenu 70.355 &Window.Move\ &To.&Top<Tab>^WK	<C-W>K
-amenu 70.355 &Window.Move\ &To.&Bottom<Tab>^WJ	<C-W>J
+amenu 70.335 &Window.-SEP1-				:
+amenu 70.340 &Window.&Close<Tab>^Wc			:confirm close<CR>
+amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo		:confirm only<CR>
+amenu 70.350 &Window.-SEP2-				:
+amenu 70.355 &Window.Move\ &To.&Top<Tab>^WK		<C-W>K
+amenu 70.355 &Window.Move\ &To.&Bottom<Tab>^WJ		<C-W>J
 amenu 70.355 &Window.Move\ &To.&Left\ side<Tab>^WH	<C-W>H
 amenu 70.355 &Window.Move\ &To.&Right\ side<Tab>^WL	<C-W>L
-amenu 70.360 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
-amenu 70.362 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
-amenu 70.365 &Window.-SEP3-			:
-amenu 70.370 &Window.&Equal\ Size<Tab>^W=	<C-W>=
-amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
-amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
-amenu 70.400 &Window.Max\ &Width<Tab>^W\|	<C-W>\|
-amenu 70.410 &Window.Min\ Widt&h<Tab>^W1\|	<C-W>1\|
+amenu 70.360 &Window.Rotate\ &Up<Tab>^WR		<C-W>R
+amenu 70.362 &Window.Rotate\ &Down<Tab>^Wr		<C-W>r
+amenu 70.365 &Window.-SEP3-				:
+amenu 70.370 &Window.&Equal\ Size<Tab>^W=		<C-W>=
+amenu 70.380 &Window.&Max\ Height<Tab>^W_		<C-W>_
+amenu 70.390 &Window.M&in\ Height<Tab>^W1_		<C-W>1_
+amenu 70.400 &Window.Max\ &Width<Tab>^W\|		<C-W>\|
+amenu 70.410 &Window.Min\ Widt&h<Tab>^W1\|		<C-W>1\|
 
 " The popup menu
-amenu 1.10 PopUp.&Undo		u
-amenu 1.15 PopUp.-SEP1-		:
-vmenu 1.20 PopUp.Cu&t		"+x
-vmenu 1.30 PopUp.&Copy		"+y
-cmenu 1.30 PopUp.&Copy		<C-Y>
-nmenu 1.40 PopUp.&Paste		<SID>Paste
-vmenu 1.40 PopUp.&Paste		"-cx<Esc><SID>Paste"_x
-imenu 1.40 PopUp.&Paste		x<Esc><SID>Paste"_s
-cmenu 1.40 PopUp.&Paste		<C-R>+
-vmenu 1.50 PopUp.&Delete	x
-amenu 1.55 PopUp.-SEP2-		:
-vmenu 1.60 PopUp.Select\ Blockwise <C-Q>
-amenu 1.70 PopUp.Select\ &Word	vaw
-amenu 1.80 PopUp.Select\ &Line	V
-amenu 1.90 PopUp.Select\ &Block	<C-Q>
-amenu 1.100 PopUp.Select\ &All	ggVG
+amenu 1.10 PopUp.&Undo			u
+amenu 1.15 PopUp.-SEP1-			:
+vmenu 1.20 PopUp.Cu&t			"+x
+vmenu 1.30 PopUp.&Copy			"+y
+cmenu 1.30 PopUp.&Copy			<C-Y>
+nmenu 1.40 PopUp.&Paste			<SID>Paste
+vmenu 1.40 PopUp.&Paste			"-cx<Esc><SID>Paste"_x
+imenu 1.40 PopUp.&Paste			x<Esc><SID>Paste"_s
+cmenu 1.40 PopUp.&Paste			<C-R>+
+vmenu 1.50 PopUp.&Delete		x
+amenu 1.55 PopUp.-SEP2-			:
+vmenu 1.60 PopUp.Select\ Blockwise 	<C-Q>
+amenu 1.70 PopUp.Select\ &Word		vaw
+amenu 1.80 PopUp.Select\ &Line		V
+amenu 1.90 PopUp.Select\ &Block		<C-Q>
+amenu 1.100 PopUp.Select\ &All		ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
@@ -705,9 +709,9 @@ if has("toolbar")
     vunmenu ToolBar.Print
     vmenu ToolBar.Print		:hardcopy<CR>
   elseif has("vms")
-    amenu 1.40 ToolBar.Print	:call VMSPrint(":")<CR>
+    amenu <silent> 1.40 ToolBar.Print	:call VMSPrint(":")<CR>
     vunmenu ToolBar.Print
-    vmenu ToolBar.Print		<Esc>:call VMSPrint(":'<,'>")<CR>
+    vmenu <silent> ToolBar.Print		<Esc>:call VMSPrint(":'<,'>")<CR>
   else
     amenu 1.40 ToolBar.Print	:w !lpr<CR>
     vunmenu ToolBar.Print
@@ -736,31 +740,31 @@ if has("toolbar")
   vmenu ToolBar.Replace		y:promptrepl <C-R>"<CR>
 
 if 0	" disabled; These are in the Windows menu
-  amenu 1.135 ToolBar.-sep4-	<nul>
-  amenu 1.140 ToolBar.New	<C-W>n
-  amenu 1.150 ToolBar.WinSplit	<C-W>s
-  amenu 1.160 ToolBar.WinMax	:resize 200<CR>
-  amenu 1.170 ToolBar.WinMin	:resize 1<CR>
-  amenu 1.180 ToolBar.WinVSplit	<C-W>v
+  amenu 1.135 ToolBar.-sep4-		<nul>
+  amenu 1.140 ToolBar.New		<C-W>n
+  amenu 1.150 ToolBar.WinSplit		<C-W>s
+  amenu 1.160 ToolBar.WinMax		:resize 200<CR>
+  amenu 1.170 ToolBar.WinMin		:resize 1<CR>
+  amenu 1.180 ToolBar.WinVSplit		<C-W>v
   amenu 1.190 ToolBar.WinMaxWidth	<C-W>500>
   amenu 1.200 ToolBar.WinMinWidth	<C-W>1\|
-  amenu 1.210 ToolBar.WinClose	:close<CR>
+  amenu 1.210 ToolBar.WinClose		:close<CR>
 endif
 
-  amenu 1.215 ToolBar.-sep5-	<nul>
-  amenu 1.220 ToolBar.LoadSesn	:call <SID>LoadVimSesn()<CR>
-  amenu 1.230 ToolBar.SaveSesn	:call <SID>SaveVimSesn()<CR>
-  amenu 1.240 ToolBar.RunScript	:browse so<CR>
+  amenu 1.215 ToolBar.-sep5-		<nul>
+  amenu <silent> 1.220 ToolBar.LoadSesn	:call <SID>LoadVimSesn()<CR>
+  amenu <silent> 1.230 ToolBar.SaveSesn	:call <SID>SaveVimSesn()<CR>
+  amenu 1.240 ToolBar.RunScript		:browse so<CR>
 
-  amenu 1.245 ToolBar.-sep6-	<nul>
-  amenu 1.250 ToolBar.Make	:make<CR>
-  amenu 1.260 ToolBar.Shell	:sh<CR>
-  amenu 1.270 ToolBar.RunCtags	:!ctags -R .<CR>
-  amenu 1.280 ToolBar.TagJump	g]
+  amenu 1.245 ToolBar.-sep6-		<nul>
+  amenu 1.250 ToolBar.Make		:make<CR>
+  amenu 1.260 ToolBar.Shell		:sh<CR>
+  amenu 1.270 ToolBar.RunCtags		:!ctags -R .<CR>
+  amenu 1.280 ToolBar.TagJump		g]
 
-  amenu 1.295 ToolBar.-sep7-	<nul>
-  amenu 1.300 ToolBar.Help	:help<CR>
-  amenu 1.310 ToolBar.FindHelp  :call <SID>Helpfind()<CR>
+  amenu 1.295 ToolBar.-sep7-		<nul>
+  amenu 1.300 ToolBar.Help		:help<CR>
+  amenu <silent> 1.310 ToolBar.FindHelp  :call <SID>Helpfind()<CR>
 
 " Only set the tooltips here if not done in a language menu file
 if exists("*Do_toolbar_tmenu")
@@ -826,7 +830,7 @@ endif " !exists("did_install_default_menus")
 " Define these items always, so that syntax can be switched on when it wasn't.
 am 50.212 &Syntax.&Manual		:syn manual<CR>
 am 50.214 &Syntax.A&utomatic		:syn on<CR>
-am 50.216 &Syntax.on/off\ for\ &This\ file	:call <SID>SynOnOff()<CR>
+am <silent> 50.216 &Syntax.on/off\ for\ &This\ file :call <SID>SynOnOff()<CR>
 if !exists("*s:SynOnOff")
   fun s:SynOnOff()
     if has("syntax_items")
@@ -907,10 +911,11 @@ am 50.10.380 &Syntax.AB.Ayacc :cal SetSyn("ayacc")<CR>
 am 50.10.400 &Syntax.AB.B :cal SetSyn("b")<CR>
 am 50.10.410 &Syntax.AB.BASIC :cal SetSyn("basic")<CR>
 am 50.10.420 &Syntax.AB.BC\ calculator :cal SetSyn("bc")<CR>
-am 50.10.430 &Syntax.AB.BibFile :cal SetSyn("bib")<CR>
-am 50.10.440 &Syntax.AB.BIND\ configuration :cal SetSyn("named")<CR>
-am 50.10.450 &Syntax.AB.BIND\ zone :cal SetSyn("bindzone")<CR>
-am 50.10.460 &Syntax.AB.Blank :cal SetSyn("blank")<CR>
+am 50.10.430 &Syntax.AB.BDF\ font :cal SetSyn("bdf")<CR>
+am 50.10.440 &Syntax.AB.BibFile :cal SetSyn("bib")<CR>
+am 50.10.450 &Syntax.AB.BIND\ configuration :cal SetSyn("named")<CR>
+am 50.10.460 &Syntax.AB.BIND\ zone :cal SetSyn("bindzone")<CR>
+am 50.10.470 &Syntax.AB.Blank :cal SetSyn("blank")<CR>
 am 50.20.100 &Syntax.CD.C :cal SetSyn("c")<CR>
 am 50.20.110 &Syntax.CD.C++ :cal SetSyn("cpp")<CR>
 am 50.20.120 &Syntax.CD.Crontab :cal SetSyn("crontab")<CR>
@@ -1053,18 +1058,19 @@ am 50.70.170 &Syntax.PQ.PHP\ 3-4 :cal SetSyn("php")<CR>
 am 50.70.180 &Syntax.PQ.Phtml :cal SetSyn("phtml")<CR>
 am 50.70.190 &Syntax.PQ.Pike :cal SetSyn("pike")<CR>
 am 50.70.200 &Syntax.PQ.Pine\ RC :cal SetSyn("pine")<CR>
-am 50.70.210 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
-am 50.70.220 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
-am 50.70.230 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
-am 50.70.240 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
-am 50.70.250 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
-am 50.70.260 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
-am 50.70.270 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
-am 50.70.280 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
-am 50.70.290 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
-am 50.70.300 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
-am 50.70.310 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
-am 50.70.320 &Syntax.PQ.Python :cal SetSyn("python")<CR>
+am 50.70.210 &Syntax.PQ.PL/M :cal SetSyn("plm")<CR>
+am 50.70.220 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
+am 50.70.230 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
+am 50.70.240 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
+am 50.70.250 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
+am 50.70.260 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
+am 50.70.270 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
+am 50.70.280 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
+am 50.70.290 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
+am 50.70.300 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
+am 50.70.310 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
+am 50.70.320 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
+am 50.70.330 &Syntax.PQ.Python :cal SetSyn("python")<CR>
 am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
 am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
 am 50.80.120 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
@@ -1108,14 +1114,15 @@ am 50.90.250 &Syntax.Sh-S.SNNS.SNNS\ result :cal SetSyn("snnsres")<CR>
 am 50.90.260 &Syntax.Sh-S.Snobol4 :cal SetSyn("snobol4")<CR>
 am 50.90.270 &Syntax.Sh-S.Snort\ Configuration :cal SetSyn("hog")<CR>
 am 50.90.280 &Syntax.Sh-S.SPEC\ (Linux\ RPM) :cal SetSyn("spec")<CR>
-am 50.90.290 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
-am 50.90.300 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
-am 50.90.310 &Syntax.Sh-S.Squid :cal SetSyn("squid")<CR>
-am 50.90.320 &Syntax.Sh-S.SQL :cal SetSyn("sql")<CR>
-am 50.90.330 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
-am 50.90.340 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
-am 50.90.350 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
-am 50.90.360 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
+am 50.90.290 &Syntax.Sh-S.Specman :cal SetSyn("specman")<CR>
+am 50.90.300 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
+am 50.90.310 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
+am 50.90.320 &Syntax.Sh-S.Squid :cal SetSyn("squid")<CR>
+am 50.90.330 &Syntax.Sh-S.SQL :cal SetSyn("sql")<CR>
+am 50.90.340 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
+am 50.90.350 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
+am 50.90.360 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
+am 50.90.370 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
 am 50.100.100 &Syntax.TUV.Tads :cal SetSyn("tads")<CR>
 am 50.100.110 &Syntax.TUV.Tags :cal SetSyn("tags")<CR>
 am 50.100.120 &Syntax.TUV.TAK.TAK\ compare :cal SetSyn("tak")<CR>
@@ -1169,7 +1176,7 @@ am 50.110.280 &Syntax.WXYZ.Zsh\ shell\ script :cal SetSyn("zsh")<CR>
 am 50.195 &Syntax.-SEP1-				:
 
 am 50.200 &Syntax.Set\ '&syntax'\ only		:let s:syntax_menu_synonly=1<CR>
-am 50.202 &Syntax.Set\ '&filetype'\ too		:call <SID>Nosynonly()<CR>
+am <silent> 50.202 &Syntax.Set\ '&filetype'\ too :call <SID>Nosynonly()<CR>
 fun! s:Nosynonly()
   if exists("s:syntax_menu_synonly")
     unlet s:syntax_menu_synonly

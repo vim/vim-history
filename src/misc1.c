@@ -20,6 +20,9 @@
 
 static char_u *vim_version_dir __ARGS((char_u *vimdir));
 static char_u *remove_tail __ARGS((char_u *p, char_u *pend, char_u *name));
+#if defined(USE_EXE_NAME) && defined(MACOS_X)
+static char_u *remove_tail_with_ext __ARGS((char_u *p, char_u *pend, char_u *name));
+#endif
 static int get_indent_str __ARGS((char_u *ptr, int ts));
 static int temporary_nolist __ARGS((void));
 
@@ -1558,7 +1561,8 @@ ins_char_bytes(buf, newlen)
     if (virtual_active())
     {
 	p = ml_get_cursor();
-	if (*p == NUL || (*p == TAB && (chartabsize(p, curwin->w_cursor.col) > 1)))
+	if (*p == NUL
+		|| (*p == TAB && (chartabsize(p, curwin->w_cursor.col) > 1)))
 	    coladvance_force(getviscol());
     }
 #endif
@@ -3115,10 +3119,14 @@ vim_getenv(name, mustfree)
 		pend = remove_tail(p, pend, (char_u *)"doc");
 
 #ifdef USE_EXE_NAME
-# ifdef TARGET_API_MAC_OSX /* && defined (__APPLE_CC__) ? */
+# ifdef MACOS_X
             /* remove "build/..." from exe_name, if present */
             if (p == exe_name)
-		pend = remove_tail(p, pend, (char_u *)"build/vim.app/Contents/MacOS");
+	    {
+		pend = remove_tail(p, pend, (char_u *)"Contents/MacOS");
+		pend = remove_tail_with_ext(p, pend, (char_u *)".app");
+		pend = remove_tail(p, pend, (char_u *)"build");
+	    }
 # endif
 	    /* remove "src/" from exe_name, if present */
 	    if (p == exe_name)
@@ -3133,7 +3141,7 @@ vim_getenv(name, mustfree)
 	    }
 
 	    /* remove trailing path separator */
-#ifndef macintosh
+#ifndef MACOS_CLASSIC
 	    /* With MacOS path (with  colons) the final colon is required */
             /* to avoid confusin between absoulute and relative path */
 	    if (pend > p && vim_ispathsep(*(pend - 1)))
@@ -3262,6 +3270,30 @@ remove_tail(p, pend, name)
 	return newend;
     return pend;
 }
+
+#if defined(USE_EXE_NAME) && defined(MACOS_X)
+/*
+ * If the string between "p" and "pend" ends in "???.ext/", return "pend" minus
+ * the length of "???.ext/".  Otherwise return "pend".
+ */
+    static char_u *
+remove_tail_with_ext(p, pend, ext)
+    char_u	*p;
+    char_u	*pend;
+    char_u	*ext;
+{
+    int		len = (int)STRLEN(ext) + 1;
+    char_u	*newend = pend - len;
+
+    if (newend >= p
+	    && fnamencmp(newend, ext, len - 1) == 0)
+	for (;newend != p && !vim_ispathsep(*(newend -1)); newend--);
+
+    if (newend == p || vim_ispathsep(*(newend - 1)))
+	return newend;
+    return pend;
+}
+#endif
 
 /*
  * Call expand_env() and store the result in an allocated string.
@@ -4579,6 +4611,11 @@ get_c_indent()
      */
     int	ind_java = 0;
 
+    /*
+     * handle blocked cases correctly
+     */
+    int ind_keep_case_label = 0;
+
     pos_T	cur_curpos;
     int		amount;
     int		scope_amount;
@@ -4670,6 +4707,7 @@ get_c_indent()
 	    case 'g': ind_scopedecl = n; break;
 	    case 'h': ind_scopedecl_code = n; break;
 	    case 'j': ind_java = n; break;
+	    case 'l': ind_keep_case_label = n; break;
 	}
     }
 
@@ -5029,7 +5067,10 @@ get_c_indent()
 	     *			ldfd) {
 	     *		    }
 	     */
-	    amount = skip_label(lnum, &l, ind_maxcomment);
+	    if (ind_keep_case_label && cin_iscase(skipwhite(ml_get_curline())))
+		amount = get_indent();
+	    else
+		amount = skip_label(lnum, &l, ind_maxcomment);
 
 	    start_brace = BRACE_AT_END;
 	}
@@ -6681,7 +6722,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	{
 	    char_u	*t = backslash_halve_save(p);
 
-#ifdef macintosh
+#if defined(MACOS_CLASSIC)
 	    slash_to_colon(t);
 #endif
 	    /* When EW_NOTFOUND is used, always add files and dirs.  Makes

@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0am.  Last change: 2001 Apr 07
+*scroll.txt*    For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,6 +13,8 @@ window minus two.  The mnemonics for these commands may be a bit confusing.
 Remember that the commands refer to moving the window (the part of the buffer
 that you see) upwards or downwards in the buffer.  When the window moves
 upwards in the buffer, the text in the window moves downwards on your screen.
+
+See section |03.7| of the user manual for an introduction.
 
 1. Scrolling downwards		|scroll-down|
 2. Scrolling upwards		|scroll-up|

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0am.  Last change: 2001 Jun 27
+*index.txt*     For Vim version 6.0an.  Last change: 2001 Jul 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1256,6 +1256,7 @@ The commands are sorted on the non-optional part of their name.
 				buffer list
 |:scriptnames|	:scrip[tnames]	list names of all sourced Vim scripts
 |:scriptencoding| :scripte[ncoding]	encoding used in sourced Vim script
+|:scscope|	:scs[cope]      split window and execute cscope command
 |:set|		:se[t]		show or set options
 |:setfiletype|	:setf[iletype]	set 'filetype', unless it was set already
 |:setglobal|	:setg[lobal]	show global values of options

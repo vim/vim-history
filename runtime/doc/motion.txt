@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0am.  Last change: 2001 Jun 30
+*motion.txt*    For Vim version 6.0an.  Last change: 2001 Jul 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -36,7 +36,7 @@ The 'virtualedit' option can be set to make it possible to move the cursor to
 positions where there is no character or halfway a character.
 
 ==============================================================================
-1. motions and operators				*operator*
+1. Motions and operators				*operator*
 
 The motion commands can be used after an operator command, to have the command
 operate on the text that was moved over.  That is the text between the cursor

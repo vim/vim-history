@@ -1,8 +1,8 @@
-*usr_43.txt*	For Vim version 6.0am.  Last change: 2001 Jun 21
+*usr_43.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
-			      Automatic settings
+			       Using filetypes
 
 
 When you are editing a file of a certain type, for example a C program or a

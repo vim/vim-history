@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jun 26
+" Last change:	2001 Jul 11
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -185,6 +185,9 @@ au BufNewFile,BufRead *.btm			setf btm
 " BC calculator
 au BufNewFile,BufRead *.bc			setf bc
 
+" BDF font
+au BufNewFile,BufRead *.bdf			setf bdf
+
 " BibTeX bibliography database file
 au BufNewFile,BufRead *.bib			setf bib
 
@@ -356,8 +359,20 @@ au BufNewFile,BufRead *.dtd			setf dtd
 " Embedix Component Description
 au BufNewFile,BufRead *.ecd			setf ecd
 
-" Eiffel
-au BufNewFile,BufRead *.e,*.E			setf eiffel
+" Eiffel or Specman
+au BufNewFile,BufRead *.e,*.E			call FTCheck_e()
+
+fun! FTCheck_e()
+  let n = 1
+  while n < 100 && n < line("$")
+    if getline(n) =~ "^\\s*\\(<'\\|'>\\)\\s*$"
+      set ft=specman
+      return
+    endif
+    let n = n + 1
+  endwhile
+  setf eiffel
+endfun
 
 " ERicsson LANGuage
 au BufNewFile,BufRead *.erl			setf erlang
@@ -688,6 +703,9 @@ au BufNewFile,BufRead *.pike,*.lpc,*.ulpc,*.pmod setf pike
 
 " Pine config
 au BufNewFile,BufRead .pinerc,pinerc		setf pine
+
+" PL/M (also: *.inp)
+au BufNewFile,BufRead *.plm,*.p36,*.pac		setf plm
 
 " PL/SQL
 au BufNewFile,BufRead *.pls,*.plsql		setf plsql

@@ -1574,7 +1574,7 @@ do_source(fname, check_other, is_vimrc)
 #endif
     if (fname_exp == NULL)
 	goto theend;
-#ifdef macintosh
+#ifdef MACOS_CLASSIC
     slash_n_colon_adjust(fname_exp);
 #endif
     if (mch_isdir(fname_exp))
@@ -3119,6 +3119,13 @@ ex_language(eap)
 	    EMSG2(_("E197: Cannot set language to \"%s\""), name);
 	else
 	{
+#ifdef HAVE_NL_MSG_CAT_CNTR
+	    /* Need to do this for GNU gettext, otherwise cached translations
+	     * will be used again. */
+	    extern int _nl_msg_cat_cntr;
+
+	    ++_nl_msg_cat_cntr;
+#endif
 	    /* Reset $LC_ALL, otherwise it would overrule everyting. */
 	    vim_setenv((char_u *)"LC_ALL", (char_u *)"");
 

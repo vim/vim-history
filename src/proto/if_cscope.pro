@@ -1,5 +1,6 @@
 /* if_cscope.c */
 void do_cscope __ARGS((exarg_T *eap));
+void do_scscope __ARGS((exarg_T *eap));
 void do_cstag __ARGS((exarg_T *eap));
 int cs_fgets __ARGS((char_u *buf, int size));
 void cs_free_tags __ARGS((void));

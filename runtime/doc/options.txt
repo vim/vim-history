@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0am.  Last change: 2001 Jun 30
+*options.txt*   For Vim version 6.0an.  Last change: 2001 Jul 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2866,6 +2866,36 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Can be overruled by using "\c" or "\C" in the pattern, see
 	|/ignorecase|.
 
+						*'imactivatekey'* *'imak'*
+'imactivatekey' 'imak'	string (default "")
+			global
+			{not in Vi}
+			{only available when compiled with |+xim| and
+			|+GUI_GTK|}
+	Specifies the key that activates your Input Method in X-Windows.  When
+	this is specified correctly, vim can fully control IM with
+	'imcmdline', 'iminsert' and 'imsearch'.
+	Format:
+		[MODIFIER_FLAG-]KEY_STRING
+
+	These characters can be used for MODIFIER_FLAG (case is ignored):
+		S	    Shift key
+		L	    Lock key
+		C	    Control key
+		1	    Mod1 key
+		2	    Mod2 key
+		3	    Mod3 key
+		4	    Mod4 key
+		5	    Mod5 key
+	Combinations are allowed, for example "S-C-space" or "SC-space" are
+	both shift+ctrl+space.
+	See <X11/keysymdef.h> and XStringToKeysym for KEY_STRING.
+
+	Example: >
+		:set imactivatekey=S-space
+<	"S-space" means shift+space.  This is the activation key for kinput2 +
+	canna (Japanese), and ami (Korean).
+
 				*'imcmdline'* *'imc'* *'noimcmdline'* *'noimc'*
 'imcmdline' 'imc'	boolean (default off)
 			global
@@ -2885,8 +2915,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Specifies whether langmap or an Input Method (IM) is to be used in
 	Insert mode.  Valid values:
 		0	langmap is off and IM is off
-		1	langmap is on and IM is off
-		2	IM is on and langmap is off
+		1	langmap is ON and IM is off
+		2	langmap is off and IM is ON
 	2 is available only when compiled with the |+multi_byte_ime|, |+xim|
 	or |global-ime|.
 	To always reset the option to zero when leaving Insert mode with <Esc>
@@ -2894,7 +2924,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:inoremap <ESC> <ESC>:set iminsert=0<CR>
 <	This makes langmap and IM turn off automatically when leaving Insert
 	mode.
-	Note that this option changes when using CTRL-^. |i_CTRL-^|
+	Note that this option changes when using CTRL-^ in Insert mode
+	|i_CTRL-^|.
 	The value is set to 1 when defining a new |:lmap| mapping.
 	It is also used for the argument of commands like "r" and "f".
 
@@ -2903,11 +2934,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to buffer
 			{not in Vi}
 	Specifies whether langmap or an Input Method (IM) is to be used when
-	entering a search pattern.
-	The value has the same meaning as 'iminsert'.  Additionally -1 can be
-	used.  This means that the value of 'iminsert' is used.  This makes it
-	look like 'iminsert' is also used when typing a search pattern.
-	Note that this option changes when using CTRL-^. |c_CTRL-^|
+	entering a search pattern.  Valid values:
+		-1	the value of 'iminsert' is used, makes it look like
+			'iminsert' is also used when typing a search pattern
+		0	langmap is off and IM is off
+		1	langmap is ON and IM is off
+		2	langmap is off and IM is ON
+	Note that this option changes when using CTRL-^ in Insert mode
+	|c_CTRL-^|.
 	The value is set to 1 when defining a new |:lmap| mapping.
 
 						*'include'* *'inc'*

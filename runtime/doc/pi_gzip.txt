@@ -1,4 +1,4 @@
-*pi_gzip.txt*    For Vim version 6.0am.  Last change: 2000 Oct 31
+*pi_gzip.txt*    For Vim version 6.0an.  Last change: 2001 Jul 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -25,6 +25,11 @@ with these extensions:
 	*.Z		compress (Lempel-Ziv)
 	*.gz		gzip
 	*.bz2		bzip2
+
+That's actually the only thing you need to know.  There are no options.
+
+After decompressing a file, the filetype will be detected again.  This will
+make a file like "foo.c.gz" get the "c" filetype.
 
 ==============================================================================
  vim:tw=78:

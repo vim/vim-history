@@ -1,10 +1,12 @@
-*autocmd.txt*   For Vim version 6.0am.  Last change: 2001 May 20
+*autocmd.txt*   For Vim version 6.0an.  Last change: 2001 Jul 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 Automatic commands					*autocommand*
+
+For a basic explanation, see section |40.3| in the user manual.
 
 1.  Introduction		|autocmd-intro|
 2.  Defining autocommands	|autocmd-define|
@@ -650,6 +652,7 @@ option will not cause any commands to be executed.
 
 For WRITING FILES there are four possible sets of events.  Vim uses only one
 of these sets for a write command:
+
 BufWriteCmd	BufWritePre	BufWritePost	writing the whole buffer
 		FilterWritePre	FilterWritePost	writing to filter temp file
 FileAppendCmd	FileAppendPre	FileAppendPost	appending to a file

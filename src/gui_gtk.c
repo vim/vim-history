@@ -10,18 +10,10 @@
 /*
  * Porting to GTK+ was done by:
  *
- * (C) 1998,1999 by Marcin Dalecki <dalecki@cs.net.pl>
- * with GREAT support and continuous encouragements by Andy Kahn and of
+ * (C) 1998,1999,2000 by Marcin Dalecki <dalecki@evision.ag>
+ *
+ * With GREAT support and continuous encouragements by Andy Kahn and of
  * course Bram Moolenaar!
- *
- *	"I'm a one-man software company. If you have anything UNIX, net or
- *	embedded systems related, which seems to cause some serious trouble for
- *	your's in-house developers, maybe we need to talk badly with each other
- *	:-) <dalecki@cs.net.pl> (My native language is polish and I speak
- *	native grade german too. I'm living in Göttingen.de.)
- *	--mdcki"
- *
- * This code requires GTK version 1.1.16 or later.
  */
 
 #ifdef FEAT_GUI_GTK

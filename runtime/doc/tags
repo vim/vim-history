@@ -256,6 +256,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'iconstring'	options.txt	/*'iconstring'*
 'ignorecase'	options.txt	/*'ignorecase'*
 'im'	options.txt	/*'im'*
+'imactivatekey'	options.txt	/*'imactivatekey'*
+'imak'	options.txt	/*'imak'*
 'imc'	options.txt	/*'imc'*
 'imcmdline'	options.txt	/*'imcmdline'*
 'imi'	options.txt	/*'imi'*
@@ -1380,6 +1382,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 40.3	usr_40.txt	/*40.3*
 41.1	usr_41.txt	/*41.1*
 41.10	usr_41.txt	/*41.10*
+41.11	usr_41.txt	/*41.11*
 41.2	usr_41.txt	/*41.2*
 41.3	usr_41.txt	/*41.3*
 41.4	usr_41.txt	/*41.4*
@@ -2103,6 +2106,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :scripte	repeat.txt	/*:scripte*
 :scriptencoding	repeat.txt	/*:scriptencoding*
 :scriptnames	repeat.txt	/*:scriptnames*
+:scs	if_cscope.txt	/*:scs*
+:scscope	if_cscope.txt	/*:scscope*
 :se	options.txt	/*:se*
 :search-args	tagsearch.txt	/*:search-args*
 :ser	gui_x11.txt	/*:ser*
@@ -2364,6 +2369,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :y	change.txt	/*:y*
 :yank	change.txt	/*:yank*
 :z	various.txt	/*:z*
+:z#	various.txt	/*:z#*
 :~	change.txt	/*:~*
 ;	motion.txt	/*;*
 <	change.txt	/*<*
@@ -2574,7 +2580,7 @@ BufWritePost	autocmd.txt	/*BufWritePost*
 BufWritePre	autocmd.txt	/*BufWritePre*
 C	change.txt	/*C*
 C-editing	tips.txt	/*C-editing*
-C-indenting	change.txt	/*C-indenting*
+C-indenting	indent.txt	/*C-indenting*
 COMSPEC	starting.txt	/*COMSPEC*
 CR-used-for-NL	pattern.txt	/*CR-used-for-NL*
 CTRL-A	change.txt	/*CTRL-A*
@@ -2936,6 +2942,7 @@ E315	message.txt	/*E315*
 E316	message.txt	/*E316*
 E317	message.txt	/*E317*
 E318	message.txt	/*E318*
+E319	message.txt	/*E319*
 E32	message.txt	/*E32*
 E320	message.txt	/*E320*
 E322	message.txt	/*E322*
@@ -3471,7 +3478,7 @@ argc()	eval.txt	/*argc()*
 argidx()	eval.txt	/*argidx()*
 arglist	editing.txt	/*arglist*
 arglist-position	editing.txt	/*arglist-position*
-arglist-quit	editing.txt	/*arglist-quit*
+arglist-quit	usr_07.txt	/*arglist-quit*
 argument-list	editing.txt	/*argument-list*
 argv()	eval.txt	/*argv()*
 as	motion.txt	/*as*
@@ -3662,8 +3669,8 @@ charconvert_from-variable	eval.txt	/*charconvert_from-variable*
 charconvert_to-variable	eval.txt	/*charconvert_to-variable*
 charset	multibyte.txt	/*charset*
 charset-conversion	multibyte.txt	/*charset-conversion*
-cinkeys-format	change.txt	/*cinkeys-format*
-cinoptions-values	change.txt	/*cinoptions-values*
+cinkeys-format	indent.txt	/*cinkeys-format*
+cinoptions-values	indent.txt	/*cinoptions-values*
 clipboard	gui.txt	/*clipboard*
 cmdarg-variable	eval.txt	/*cmdarg-variable*
 cmdline-arguments	vi_diff.txt	/*cmdline-arguments*
@@ -3694,6 +3701,7 @@ command-mode	intro.txt	/*command-mode*
 compatible-default	starting.txt	/*compatible-default*
 compile-changes	version5.txt	/*compile-changes*
 compile-changes-6	version6.txt	/*compile-changes-6*
+compiler-select	quickfix.txt	/*compiler-select*
 compl-current	insert.txt	/*compl-current*
 compl-define	insert.txt	/*compl-define*
 compl-dictionary	insert.txt	/*compl-dictionary*
@@ -3859,9 +3867,9 @@ e	motion.txt	/*e*
 ec1	message.txt	/*ec1*
 edit-a-file	editing.txt	/*edit-a-file*
 edit-binary	editing.txt	/*edit-binary*
+edit-dialogs	editing.txt	/*edit-dialogs*
 edit-files	editing.txt	/*edit-files*
 edit-intro	editing.txt	/*edit-intro*
-edit-no-break	tips.txt	/*edit-no-break*
 editing.txt	editing.txt	/*editing.txt*
 eiffel-syntax	syntax.txt	/*eiffel-syntax*
 eiffel.vim	syntax.txt	/*eiffel.vim*
@@ -3889,6 +3897,7 @@ errorformat-changed	version4.txt	/*errorformat-changed*
 errorformat-jade	quickfix.txt	/*errorformat-jade*
 errorformat-javac	quickfix.txt	/*errorformat-javac*
 errorformat-multi-line	quickfix.txt	/*errorformat-multi-line*
+errorformats	quickfix.txt	/*errorformats*
 escape	intro.txt	/*escape*
 escape()	eval.txt	/*escape()*
 escape-bar	version4.txt	/*escape-bar*
@@ -4057,7 +4066,7 @@ format-bullet-list	tips.txt	/*format-bullet-list*
 format-comments	change.txt	/*format-comments*
 formatting	change.txt	/*formatting*
 formfeed	intro.txt	/*formfeed*
-fortran-indent	change.txt	/*fortran-indent*
+fortran-indent	indent.txt	/*fortran-indent*
 fortran-plugin	filetype.txt	/*fortran-plugin*
 fortran-syntax	syntax.txt	/*fortran-syntax*
 fortran.vim	syntax.txt	/*fortran.vim*
@@ -4321,7 +4330,6 @@ howto	howto.txt	/*howto*
 howto.txt	howto.txt	/*howto.txt*
 hpterm	term.txt	/*hpterm*
 hpterm-color	syntax.txt	/*hpterm-color*
-html-editing	tips.txt	/*html-editing*
 html-syntax	syntax.txt	/*html-syntax*
 html.vim	syntax.txt	/*html.vim*
 htmlos-syntax	syntax.txt	/*htmlos-syntax*
@@ -4454,8 +4462,9 @@ inclusive	motion.txt	/*inclusive*
 incomp-small-6	version6.txt	/*incomp-small-6*
 incompatible-6	version6.txt	/*incompatible-6*
 indent()	eval.txt	/*indent()*
-indent-expression	change.txt	/*indent-expression*
-indentkeys-format	change.txt	/*indentkeys-format*
+indent-expression	indent.txt	/*indent-expression*
+indent.txt	indent.txt	/*indent.txt*
+indentkeys-format	indent.txt	/*indentkeys-format*
 index	index.txt	/*index*
 index.txt	index.txt	/*index.txt*
 inform-syntax	syntax.txt	/*inform-syntax*
@@ -4495,8 +4504,8 @@ iw	motion.txt	/*iw*
 i{	motion.txt	/*i{*
 i}	motion.txt	/*i}*
 j	motion.txt	/*j*
-java-cinoptions	change.txt	/*java-cinoptions*
-java-indenting	change.txt	/*java-indenting*
+java-cinoptions	indent.txt	/*java-cinoptions*
+java-indenting	indent.txt	/*java-indenting*
 java-syntax	syntax.txt	/*java-syntax*
 java.vim	syntax.txt	/*java.vim*
 jtags	tagsearch.txt	/*jtags*
@@ -4750,7 +4759,6 @@ new-session-files	version5.txt	/*new-session-files*
 new-unlisted-buffers	version6.txt	/*new-unlisted-buffers*
 new-user-defined	version5.txt	/*new-user-defined*
 new-user-manual	version6.txt	/*new-user-manual*
-new-user-manual	version6.txt	/*new-user-manual*
 new-utf-8	version6.txt	/*new-utf-8*
 new-vertsplit	version6.txt	/*new-vertsplit*
 new-vim-server	version6.txt	/*new-vim-server*
@@ -4856,6 +4864,7 @@ phtml.vim	syntax.txt	/*phtml.vim*
 pi_expl.txt	pi_expl.txt	/*pi_expl.txt*
 pi_gzip.txt	pi_gzip.txt	/*pi_gzip.txt*
 pi_netrw.txt	pi_netrw.txt	/*pi_netrw.txt*
+plugin	usr_05.txt	/*plugin*
 plugin-details	filetype.txt	/*plugin-details*
 plugin-special	usr_41.txt	/*plugin-special*
 popup-menu	gui.txt	/*popup-menu*
@@ -5416,6 +5425,7 @@ user-commands	map.txt	/*user-commands*
 user-functions	eval.txt	/*user-functions*
 user-manual	usr_toc.txt	/*user-manual*
 using-menus	gui.txt	/*using-menus*
+using-scripts	repeat.txt	/*using-scripts*
 using-xxd	tips.txt	/*using-xxd*
 using_CTRL-V	map.txt	/*using_CTRL-V*
 usr_01.txt	usr_01.txt	/*usr_01.txt*
@@ -5580,7 +5590,7 @@ various.txt	various.txt	/*various.txt*
 vb-syntax	syntax.txt	/*vb-syntax*
 vb.vim	syntax.txt	/*vb.vim*
 verbose	starting.txt	/*verbose*
-verilog-indent	change.txt	/*verilog-indent*
+verilog-indent	indent.txt	/*verilog-indent*
 version-5.1	version5.txt	/*version-5.1*
 version-5.2	version5.txt	/*version-5.2*
 version-5.3	version5.txt	/*version-5.3*
@@ -5609,7 +5619,7 @@ vim-mac	intro.txt	/*vim-mac*
 vim-modes	intro.txt	/*vim-modes*
 vim-modes-intro	intro.txt	/*vim-modes-intro*
 vim-multibyte	intro.txt	/*vim-multibyte*
-vim-script-intro	starting.txt	/*vim-script-intro*
+vim-script-intro	usr_41.txt	/*vim-script-intro*
 vim-variable	eval.txt	/*vim-variable*
 vim:	options.txt	/*vim:*
 vimdev	intro.txt	/*vimdev*
@@ -5624,8 +5634,8 @@ viminfo-read	starting.txt	/*viminfo-read*
 viminfo-write	starting.txt	/*viminfo-write*
 vimrc	starting.txt	/*vimrc*
 vimrc-filetype	usr_05.txt	/*vimrc-filetype*
-vimrc-intro	starting.txt	/*vimrc-intro*
-vimrc_example.vim	starting.txt	/*vimrc_example.vim*
+vimrc-intro	usr_41.txt	/*vimrc-intro*
+vimrc_example.vim	usr_05.txt	/*vimrc_example.vim*
 vimtutor	usr_01.txt	/*vimtutor*
 virtcol()	eval.txt	/*virtcol()*
 visual-block	visual.txt	/*visual-block*

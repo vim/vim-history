@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0am.  Last change: 2001 Jun 30
+*multibyte.txt* For Vim version 6.0an.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -835,6 +835,21 @@ If needed, you can set the XMODIFIERS environment variable:
 For example, when you are using kinput2 as |IM-server| and sh, >
 
 	export XMODIFIERS="@im=kinput2"
+<
+
+FULLY CONTROLED XIM
+
+You can fully control XIM, like with IME of MS-Windows (see |multibyte-ime|).
+This is currently only available for the GTK GUI.
+
+Before using fully controled XIM, one setting is required.  Set the
+'imactivatekey' option to the key that is used for the activation of the input
+method.  For example, when you are using kinput2 + canna as IM Server, the
+activation key is probably Shift+Space: >
+
+	:set imactivatekey=S-space
+
+See 'imactivatekey' for the format.
 
 ==============================================================================
 8.  Input on MS-Windows					*mbyte-IME*
@@ -1004,7 +1019,8 @@ meaning in the mappings.  Examples: >
 	\\	y	maps \ to y
 
 If you write a keymap file that will be useful for others, consider submitting
-it to the Vim author for inclusion in the distribution: <Bram@vim.org>
+it to the Vim maintainer for inclusion in the distribution:
+<maintainer@vim.org>
 
 ==============================================================================
 10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*

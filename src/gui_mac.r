@@ -6,7 +6,7 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
-#if 1 /* 1 for Carbon, 0 for non-Carbon */
+#ifdef environ_os_mac /* or 1 for Carbon, 0 for non-Carbon */
 # include <Carbon/Carbon.r>
 #else
 # include <SysTypes.r>

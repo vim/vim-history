@@ -24,9 +24,6 @@
 #include "vim.h"
 #include "gui_at_sb.h"
 
-#define puller_width	19
-#define puller_height	19
-
 extern Widget vimShell;
 
 static Widget vimForm = (Widget)0;
@@ -65,6 +62,7 @@ static void gui_athena_scroll_colors __ARGS((Widget id));
 #ifdef FEAT_MENU
 static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
 static Pixmap		pullerBitmap = None;
+static int		puller_width = 0;
 #endif
 
 /*
@@ -320,6 +318,7 @@ gui_athena_create_pullright_pixmap(w)
 
 	height = font->max_bounds.ascent + font->max_bounds.descent;
 	width = height - 2;
+	puller_width = width + 4;
 	retval = XCreatePixmap(gui.dpy,DefaultRootWindow(gui.dpy),width,
 			       height, 1);
 	gc_values.foreground = 1;
@@ -430,6 +429,7 @@ static Widget	submenu_widget __ARGS((Widget));
 static Boolean	has_submenu __ARGS((Widget));
 static void gui_mch_submenu_change __ARGS((vimmenu_T *mp, int colors));
 static void gui_athena_menu_font __ARGS((Widget id));
+static Boolean	gui_athena_menu_has_submenus __ARGS((Widget, Widget));
 
     void
 gui_mch_enable_menu(flag)
@@ -608,14 +608,32 @@ gui_mch_add_menu(menu, idx)
     {
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
-	    XtNrightMargin, puller_width,
 	    NULL);
 	if (menu->id == (Widget)0)
 	    return;
 	if (pullerBitmap == None)
 	    pullerBitmap = gui_athena_create_pullright_pixmap(menu->id);
 
-	XtVaSetValues(menu->id, XtNrightBitmap, pullerBitmap, NULL);
+	XtVaSetValues(menu->id, XtNrightBitmap, pullerBitmap,
+				NULL);
+	/* If there are other menu items that are not pulldown menus,
+	 * we need to adjust the right margins of those, too.
+	 */
+	{
+	    WidgetList	children;
+	    Cardinal	num_children;
+	    int		i;
+
+	    XtVaGetValues(parent->submenu_id, XtNchildren, &children,
+					      XtNnumChildren, &num_children,
+					      NULL);
+	    for (i = 0; i < num_children; ++i)
+	    {
+		XtVaSetValues(children[i],
+			      XtNrightMargin, puller_width,
+			      NULL);
+	    }
+	}
 	gui_athena_menu_colors(menu->id);
 	gui_athena_menu_font(menu->id);
 
@@ -634,6 +652,33 @@ gui_mch_add_menu(menu, idx)
 	    XtOverrideTranslations(parent->submenu_id, parentTrans);
     }
     a_cur_menu = NULL;
+}
+
+/* Used to determine whether a SimpleMenu has pulldown entries.
+ *
+ * "id" is the parent of the menu items.
+ * Ignore widget "ignore" in the pane.
+ */
+    static Boolean
+gui_athena_menu_has_submenus(id, ignore)
+    Widget	id;
+    Widget	ignore;
+{
+    WidgetList	children;
+    Cardinal	num_children;
+    int		i;
+
+    XtVaGetValues(id, XtNchildren, &children,
+		      XtNnumChildren, &num_children,
+		      NULL);
+    for (i = 0; i < num_children; ++i)
+    {
+	if (children[i] == ignore)
+	    continue;
+	if (has_submenu(children[i]))
+	    return True;
+    }
+    return False;
 }
 
     static void
@@ -768,7 +813,13 @@ gui_mch_new_tooltip_font()
     if (toolBar == (Widget)0)
 	return;
 
-    gui_mch_submenu_change(root_menu, FALSE);
+    {
+	vimmenu_T   *toolbar;
+
+	toolbar = gui_find_menu((char_u *)"ToolBar");
+	if (toolbar != NULL)
+	    gui_mch_submenu_change(toolbar, FALSE);
+    }
 }
 
     void
@@ -777,7 +828,13 @@ gui_mch_new_tooltip_colors()
     if (toolBar == (Widget)0)
 	return;
 
-    gui_mch_submenu_change(root_menu, TRUE);
+    {
+	vimmenu_T   *toolbar;
+
+	toolbar = gui_find_menu((char_u *)"ToolBar");
+	if (toolbar != NULL)
+	    gui_mch_submenu_change(toolbar, TRUE);
+    }
 }
 #endif
 
@@ -807,7 +864,7 @@ gui_mch_submenu_change(menu, colors)
 		}
 
 # ifdef FEAT_BEVAL
-		/* If we have a tooltip, then we need to change it's font */
+		/* If we have a tooltip, then we need to change it's colors */
 		if (mp->tip != NULL)
 		{
 		    Arg args[2];
@@ -825,9 +882,10 @@ gui_mch_submenu_change(menu, colors)
 	    else
 	    {
 		gui_athena_menu_font(mp->id);
-
 #ifdef FEAT_BEVAL
 		/* If we have a tooltip, then we need to change it's font */
+		/* Assume XtNinternational == True (in createBalloonEvalWindow)
+		 */
 		if (mp->tip != NULL)
 		{
 		    Arg args[1];
@@ -971,6 +1029,22 @@ gui_mch_add_menu_item(menu, idx)
 		    NULL);
 	    if (menu->id == (Widget)0)
 		return;
+
+	    /* If there are other "pulldown" items in this pane, then adjust
+	     * the right margin to accomodate the arrow pixmap, otherwise
+	     * the right margin will be the same as the left margin.
+	     */
+	    {
+		Dimension   left_margin;
+
+		XtVaGetValues(menu->id, XtNleftMargin, &left_margin, NULL);
+		XtVaSetValues(menu->id, XtNrightMargin,
+			gui_athena_menu_has_submenus(parent->submenu_id, NULL) ?
+			    puller_width :
+			    left_margin,
+			NULL);
+	    }
+
 	    gui_athena_menu_colors(menu->id);
 	    gui_athena_menu_font(menu->id);
 	    XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
@@ -1186,6 +1260,55 @@ gui_mch_new_menu_colors()
 gui_mch_destroy_menu(menu)
     vimmenu_T *menu;
 {
+    Widget	parent;
+
+    parent = XtParent(menu->id);
+
+    /* When removing the last "pulldown" menu item from a pane, adjust the
+     * right margins of the remaining widgets.
+     */
+    if (menu->submenu_id != (Widget)0)
+    {
+	/* Go through the menu items in the parent of this item and
+	 * adjust their margins, if necessary.
+	 * This takes care of the case when we delete the last menu item in a
+	 * pane that has a submenu.  In this case, there will be no arrow
+	 * pixmaps shown anymore.
+	 */
+	{
+	    WidgetList  children;
+	    Cardinal    num_children;
+	    int		i;
+	    Dimension	right_margin = 0;
+	    Boolean	get_left_margin = False;
+
+	    XtVaGetValues(parent, XtNchildren, &children,
+				  XtNnumChildren, &num_children,
+				  NULL);
+	    if (gui_athena_menu_has_submenus(parent, menu->id))
+		right_margin = puller_width;
+	    else
+		get_left_margin = True;
+
+	    for (i = 0; i < num_children; ++i)
+	    {
+		if (children[i] == menu->id)
+		    continue;
+		if (get_left_margin == True)
+		{
+		    Dimension left_margin;
+
+		    XtVaGetValues(children[i], XtNleftMargin, &left_margin,
+				  NULL);
+		    XtVaSetValues(children[i], XtNrightMargin, left_margin,
+				  NULL);
+		}
+		else
+		    XtVaSetValues(children[i], XtNrightMargin, right_margin,
+				  NULL);
+	    }
+	}
+    }
     /* Please be sure to destroy the parent widget first (i.e. menu->id).
      *
      * This code should be basically identical to that in the file gui_motif.c
@@ -1193,11 +1316,9 @@ gui_mch_destroy_menu(menu)
      */
     if (menu->id != (Widget)0)
     {
-	Widget	    parent;
 	Cardinal    num_children;
 	Dimension   height, space, border;
 
-	parent = XtParent(menu->id);
 	XtVaGetValues(menuBar,
 		XtNvSpace,	&space,
 		XtNborderWidth, &border,
@@ -1206,7 +1327,7 @@ gui_mch_destroy_menu(menu)
 		XtNheight,	&height,
 		NULL);
 #if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
-	if ((parent == toolBar) && (menu->tip != NULL))
+	if (parent == toolBar && menu->tip != NULL)
 	{
 	    /* We try to destroy this before the actual menu, because there are
 	     * callbacks, etc. that will be unregistered during the tooltip
@@ -1238,13 +1359,12 @@ gui_mch_destroy_menu(menu)
 	 * This happens in phase two of the widget destruction process.
 	 */
 	{
-	    Widget parent;
-
-	    parent = XtParent(menu->id);
-	    if ((parent != menuBar) && (parent != toolBar))
+	    if (parent != menuBar
+#ifdef FEAT_TOOLBAR
+		    && parent != toolBar
+#endif
+		    )
 	    {
-		Cardinal num_children;
-
 		XtVaGetValues(parent, XtNnumChildren, &num_children, NULL);
 		if (num_children > 1)
 		    XtDestroyWidget(menu->id);

@@ -57,6 +57,7 @@ int enc_default __ARGS((void));
 void *my_iconv_open __ARGS((char_u *to, char_u *from));
 int iconv_enabled __ARGS((void));
 void iconv_end __ARGS((void));
+int im_xim_isvalid_imactivate __ARGS((void));
 void im_set_active __ARGS((int active));
 void xim_set_focus __ARGS((int focus));
 void im_set_position __ARGS((int row, int col));

@@ -177,6 +177,7 @@ diff_mark_adjust(line1, line2, amount, amount_after)
     int		inserted, deleted;
     int		n, off;
     linenr_T	last;
+    linenr_T	lnum_deleted = line1;	/* lnum of remaining deletion */
     int		check_unchanged;
 
     /* Find the index for the current buffer. */
@@ -273,8 +274,7 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 		{
 		    if (dp->df_lnum[idx] >= line1)
 		    {
-			off = dp->df_lnum[idx] - line1;
-			dp->df_lnum[idx] = line1;
+			off = dp->df_lnum[idx] - lnum_deleted;
 			if (last <= line2)
 			{
 			    /* 4. delete all lines of diff */
@@ -283,10 +283,10 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 			    {
 				/* delete continues in next diff, only do
 				 * lines until that one */
-				n = dp->df_next->df_lnum[idx] - line1;
+				n = dp->df_next->df_lnum[idx] - lnum_deleted;
 				deleted -= n;
 				n -= dp->df_count[idx];
-				line1 = dp->df_next->df_lnum[idx];
+				lnum_deleted = dp->df_next->df_lnum[idx];
 			    }
 			    else
 				n = deleted - dp->df_count[idx];
@@ -294,12 +294,12 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 			}
 			else
 			{
-			    /* 5. delete lines at top of diff */
+			    /* 5. delete lines at or just before top of diff */
 			    n = off;
 			    dp->df_count[idx] -= line2 - dp->df_lnum[idx] + 1;
-			    dp->df_lnum[idx] = line1;
 			    check_unchanged = TRUE;
 			}
+			dp->df_lnum[idx] = line1;
 		    }
 		    else
 		    {
@@ -307,15 +307,16 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 			if (last < line2)
 			{
 			    /* 2. delete at end of of diff */
-			    dp->df_count[idx] -= last - line1 + 1;
+			    dp->df_count[idx] -= last - lnum_deleted + 1;
 			    if (dp->df_next != NULL
 				    && dp->df_next->df_lnum[idx] - 1 <= line2)
 			    {
 				/* delete continues in next diff, only do
 				 * lines until that one */
 				n = dp->df_next->df_lnum[idx] - 1 - last;
-				deleted -= dp->df_next->df_lnum[idx] - line1;
-				line1 = dp->df_next->df_lnum[idx];
+				deleted -= dp->df_next->df_lnum[idx]
+							       - lnum_deleted;
+				lnum_deleted = dp->df_next->df_lnum[idx];
 			    }
 			    else
 				n = line2 - last;
@@ -1609,6 +1610,8 @@ ex_diffgetput(eap)
     char_u	*p;
     aco_save_T	aco;
     buf_T	*buf;
+    int		start_skip, end_skip;
+    int		new_count;
 
     /* Find the current buffer in the list of diff buffers. */
     idx_cur = diff_buf_idx(curbuf);
@@ -1702,32 +1705,86 @@ ex_diffgetput(eap)
 		&& u_save(lnum - 1, lnum + count) != FAIL)
 	{
 	    /* Inside the specified range and saving for undo worked. */
-	    for (i = 0; i < count; ++i)
-		ml_delete(lnum, FALSE);
-	    for (i = 0; i < dp->df_count[idx_from]; ++i)
+	    start_skip = 0;
+	    end_skip = 0;
+	    if (eap->addr_count > 0)
 	    {
-		p = vim_strsave(ml_get_buf(diffbuf[idx_from],
-					    dp->df_lnum[idx_from] + i, FALSE));
-		ml_append(lnum + i - 1, p, 0, FALSE);
+		/* A range was specified: check if lines need to be skipped. */
+		start_skip = eap->line1 + off - dp->df_lnum[idx_cur];
+		if (start_skip > 0)
+		{
+		    /* range starts below start of current diff block */
+		    if (start_skip > count)
+		    {
+			lnum += count;
+			count = 0;
+		    }
+		    else
+		    {
+			count -= start_skip;
+			lnum += start_skip;
+		    }
+		}
+		else
+		    start_skip = 0;
+
+		end_skip = dp->df_lnum[idx_cur] + dp->df_count[idx_cur] - 1
+							 - (eap->line2 + off);
+		if (end_skip > 0)
+		{
+		    /* range ends above end of current/from diff block */
+		    if (idx_cur == idx_from)	/* :diffput */
+		    {
+			i = dp->df_count[idx_cur] - start_skip - end_skip;
+			if (count > i)
+			    count = i;
+		    }
+		    else			/* :diffget */
+		    {
+			count -= end_skip;
+			end_skip = dp->df_count[idx_from] - start_skip - count;
+			if (end_skip < 0)
+			    end_skip = 0;
+		    }
+		}
+		else
+		    end_skip = 0;
 	    }
 
-	    added = dp->df_count[idx_from] - count;
-
-	    /* Check if there are any other buffers and if the diff is equal
-	     * in them. */
-	    for (i = 0; i < DB_COUNT; ++i)
-		if (diffbuf[i] != NULL && i != idx_from && i != idx_to
-			&& !diff_equal_entry(dp, idx_from, i))
-		    break;
-	    if (i == DB_COUNT)
+	    added = 0;
+	    for (i = 0; i < count; ++i)
 	    {
-		/* delete the diff entry, the buffers are now equal here */
-		dfree = dp;
-		dp = dp->df_next;
-		if (dprev == NULL)
-		    first_diff = dp;
-		else
-		    dprev->df_next = dp;
+		ml_delete(lnum, FALSE);
+		--added;
+	    }
+	    for (i = 0; i < dp->df_count[idx_from] - start_skip - end_skip; ++i)
+	    {
+		p = vim_strsave(ml_get_buf(diffbuf[idx_from],
+			      dp->df_lnum[idx_from] + start_skip + i, FALSE));
+		ml_append(lnum + i - 1, p, 0, FALSE);
+		++added;
+	    }
+	    new_count = dp->df_count[idx_to] + added;
+	    dp->df_count[idx_to] = new_count;
+
+	    if (start_skip == 0 && end_skip == 0)
+	    {
+		/* Check if there are any other buffers and if the diff is
+		 * equal in them. */
+		for (i = 0; i < DB_COUNT; ++i)
+		    if (diffbuf[i] != NULL && i != idx_from && i != idx_to
+			    && !diff_equal_entry(dp, idx_from, i))
+			break;
+		if (i == DB_COUNT)
+		{
+		    /* delete the diff entry, the buffers are now equal here */
+		    dfree = dp;
+		    dp = dp->df_next;
+		    if (dprev == NULL)
+			first_diff = dp;
+		    else
+			dprev->df_next = dp;
+		}
 	    }
 
 	    /* Adjust marks.  This will change the following entries! */
@@ -1755,8 +1812,8 @@ ex_diffgetput(eap)
 		vim_free(dfree);
 	    }
 	    else
-		/* mark_adjust() may have changed the count */
-		dp->df_count[idx_to] = dp->df_count[idx_from];
+		/* mark_adjust() may have changed the count in a wrong way */
+		dp->df_count[idx_to] = new_count;
 
 	    /* When changing the current buffer, keep track of line numbers */
 	    if (idx_cur == idx_to)

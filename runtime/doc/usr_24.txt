@@ -1,4 +1,4 @@
-*usr_24.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
+*usr_24.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -545,7 +545,7 @@ character with a decimal number.  This defines the same digraph: >
 
 More information about digraphs here: |digraphs|
    Another way to insert special characters is with a keymap.  More about that
-here: 'keymap'.
+here: |45.5|
 
 ==============================================================================
 *24.10*	Normal mode commands

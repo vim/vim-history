@@ -222,9 +222,10 @@
 #undef HAVE_UTIL_MSGI18N_H
 #undef HAVE_UTIME_H
 #undef HAVE_X11_SUNKEYSYM_H
+#undef HAVE_XM_XM_H
+#undef HAVE_XM_XPMP_H
 #undef HAVE_X11_XPM_H
 #undef HAVE_X11_XMU_EDITRES_H
-#undef HAVE_XM_XM_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
@@ -307,6 +308,9 @@
 
 /* Define if there is a working gettext(). */
 #undef HAVE_GETTEXT
+
+/* Define if _nl_msg_cat_cntr is present. */
+#undef HAVE_NL_MSG_CAT_CNTR
 
 /* Define if we have dlopen() */
 #undef HAVE_DLOPEN

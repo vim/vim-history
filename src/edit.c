@@ -154,8 +154,8 @@ static void ins_mouse __ARGS((int c));
 static void ins_mousescroll __ARGS((int up));
 #endif
 static void ins_left __ARGS((void));
-static void ins_home __ARGS((void));
-static void ins_end __ARGS((void));
+static void ins_home __ARGS((int c));
+static void ins_end __ARGS((int c));
 static void ins_s_left __ARGS((void));
 static void ins_right __ARGS((void));
 static void ins_s_right __ARGS((void));
@@ -195,7 +195,7 @@ int	    revins_legal;		/* was the last char 'legal'? */
 int	    revins_scol;		/* start column of revins session */
 #endif
 
-#if defined(FEAT_MBYTE) && defined(macintosh)
+#if defined(FEAT_MBYTE) && defined(MACOS)
 static short	previous_script = smRoman;
 #endif
 
@@ -332,7 +332,7 @@ edit(cmdchar, startln, count)
     im_set_active(curbuf->b_p_iminsert == B_IMODE_IM);
 #endif
 
-#if defined(FEAT_MBYTE) && defined(macintosh)
+#if defined(FEAT_MBYTE) && defined(MACOS)
     KeyScript(previous_script);
 #endif
 
@@ -646,8 +646,10 @@ edit(cmdchar, startln, count)
 	    {
 		case K_LEFT:	c = K_RIGHT; break;
 		case K_S_LEFT:	c = K_S_RIGHT; break;
+		case K_C_LEFT:	c = K_C_RIGHT; break;
 		case K_RIGHT:	c = K_LEFT; break;
 		case K_S_RIGHT: c = K_S_LEFT; break;
+		case K_C_RIGHT: c = K_C_LEFT; break;
 	    }
 #endif
 
@@ -973,35 +975,33 @@ doESCkey:
 	case K_KHOME:
 	case K_XHOME:
 	case K_S_HOME:
-	    ins_home();
+	case K_C_HOME:
+	    ins_home(c);
 	    break;
 
 	case K_END:
 	case K_KEND:
 	case K_XEND:
 	case K_S_END:
-	    ins_end();
+	case K_C_END:
+	    ins_end(c);
 	    break;
 
 	case K_LEFT:
-	    if (mod_mask & MOD_MASK_CTRL)
-		ins_s_left();
-	    else
-		ins_left();
+	    ins_left();
 	    break;
 
 	case K_S_LEFT:
+	case K_C_LEFT:
 	    ins_s_left();
 	    break;
 
 	case K_RIGHT:
-	    if (mod_mask & MOD_MASK_CTRL)
-		ins_s_right();
-	    else
-		ins_right();
+	    ins_right();
 	    break;
 
 	case K_S_RIGHT:
+	case K_C_RIGHT:
 	    ins_s_right();
 	    break;
 
@@ -5509,7 +5509,7 @@ ins_esc(count, cmdchar)
 	composing_hangul = 0;
     }
 #endif
-#if defined(FEAT_MBYTE) && defined(macintosh)
+#if defined(FEAT_MBYTE) && defined(MACOS)
     previous_script = GetScriptManagerVariable(smKeyScript);
     KeyScript(smKeyRoman); /* or smKeySysScript */
 #endif
@@ -5668,8 +5668,8 @@ ins_start_select(c)
 	    case K_KPAGEUP:
 	    case K_PAGEDOWN:
 	    case K_KPAGEDOWN:
-# ifdef macintosh
-	    case K_LEFT:  /* LEFT, RIGHT, UP, DOWN may be required on HP */
+# ifdef MACOS
+	    case K_LEFT:
 	    case K_RIGHT:
 	    case K_UP:
 	    case K_DOWN:
@@ -6274,7 +6274,8 @@ ins_left()
 }
 
     static void
-ins_home()
+ins_home(c)
+    int		c;
 {
     pos_T	tpos;
 
@@ -6284,7 +6285,7 @@ ins_home()
 #endif
     undisplay_dollar();
     tpos = curwin->w_cursor;
-    if ((mod_mask & MOD_MASK_CTRL))
+    if (c == K_C_HOME)
 	curwin->w_cursor.lnum = 1;
     curwin->w_cursor.col = 0;
 #ifdef FEAT_VIRTUALEDIT
@@ -6295,7 +6296,8 @@ ins_home()
 }
 
     static void
-ins_end()
+ins_end(c)
+    int		c;
 {
     pos_T	tpos;
 
@@ -6305,7 +6307,7 @@ ins_end()
 #endif
     undisplay_dollar();
     tpos = curwin->w_cursor;
-    if ((mod_mask & MOD_MASK_CTRL))
+    if (c == K_C_END)
 	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
     coladvance((colnr_T)MAXCOL);
     curwin->w_curswant = MAXCOL;

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0am.  Last change: 2001 Jun 21
+*gui_x11.txt*   For Vim version 6.0an.  Last change: 2001 Jun 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -121,6 +121,10 @@ The "Vim*fontList" is to set the menu font for Motif.  Example: >
 With Athena: >
 	Vim*menuBar*SmeBSB*font:     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 	Vim*menuBar*MenuButton*font: -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+
+NOTE: A more portable, and indeed more correct, way to specify the menu font
+in either Motif or Athena is through the resource:
+	Vim.menuFont:        -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 
 Don't use "Vim*geometry" in the defaults.  This will break the menus.  Use
 "Vim.geometry" instead.

@@ -60,7 +60,7 @@
  */
 #if !defined(FEAT_TINY) && !defined(FEAT_SMALL) && !defined(FEAT_NORMAL) \
 	&& !defined(FEAT_BIG) && !defined(FEAT_HUGE)
-# if defined(MSWIN) || defined(DJGPP) || defined(OS2) || defined(VMS)
+# if defined(MSWIN) || defined(DJGPP) || defined(OS2) || defined(VMS) || defined(MACOS)
 #  define FEAT_BIG
 # else
 #  ifdef MSDOS
@@ -146,13 +146,13 @@
 #endif
 
 /*
- * +printer		":hardcopy" command
+ * +printer		":hardcopy" command (currently only for Win32)
  */
-#if defined(FEAT_NORMAL)
+#if defined(FEAT_NORMAL) && defined(MSWIN)
 # define FEAT_PRINTER
-# if !defined(MSWIN)
-#  define FEAT_POSTSCRIPT
-# endif
+#endif
+#if defined(FEAT_PRINTER) && !defined(MSWIN)
+# define FEAT_POSTSCRIPT
 #endif
 
 /*
@@ -653,6 +653,11 @@
 # endif
 #endif
 
+/* There are two ways to use XPM. */
+#if defined(HAVE_XM_XPMP_H) || defined(HAVE_X11_XPM_H)
+# define HAVE_XPM 1
+#endif
+
 /*
  * +toolbar		Include code for a toolbar (for the Win32 GUI, GTK
  *			always has it).  But only if menus are enabled.
@@ -661,7 +666,7 @@
 	&& (defined(FEAT_GUI_GTK) \
 		|| defined(FEAT_GUI_MSWIN) \
 		|| ((defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
-			&& defined(HAVE_X11_XPM_H)) \
+			&& defined(HAVE_XPM)) \
 		|| defined(FEAT_GUI_PHOTON))
 # define FEAT_TOOLBAR
 #endif
@@ -675,7 +680,7 @@
  * BROWSE_CURRBUF	Open file browser in the directory of the current
  *			buffer, instead of the current directory.
  */
-#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON))
+#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC))
 # define FEAT_BROWSE
 #endif
 #if defined(FEAT_NORMAL) && defined(FEAT_GUI_MSWIN)
@@ -688,10 +693,10 @@
  *			When none of these defined there is no dialog support.
  */
 #ifdef FEAT_NORMAL
-# if defined(FEAT_GUI_MSWIN) || defined(macintosh)
+# if defined(FEAT_GUI_MSWIN)
 #  define FEAT_GUI_DIALOG
 # else
-#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(HAVE_X11_XPM_H)) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
+#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(HAVE_X11_XPM_H)) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
 #   define FEAT_CON_DIALOG
 #   define FEAT_GUI_DIALOG
 #  else
@@ -896,7 +901,7 @@
  * +mouse		Any mouse support (any of the above enabled).
  */
 /* OS/2 and Amiga console have no mouse support */
-#if (!defined(AMIGA) && !defined(OS2)) || defined(FEAT_GUI_AMIGA)
+#if (!defined(AMIGA) && !defined(OS2) && !defined(MACOS)) || defined(FEAT_GUI_AMIGA)
 # ifdef FEAT_NORMAL
 #  define FEAT_MOUSE_XTERM
 # endif
@@ -941,12 +946,14 @@
 # define FEAT_MOUSE_GPM
 #endif
 /* Define FEAT_MOUSE when any of the above is defined */
-#if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_XTERM) \
+#if !defined(FEAT_MOUSE_TTY) && (defined(FEAT_MOUSE_XTERM) \
 	|| defined(FEAT_MOUSE_NET) || defined(FEAT_MOUSE_DEC) \
 	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM) \
-	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_MOUSE_PTERM) \
-	|| defined(FEAT_GUI))
-# define FEAT_MOUSE		/* include mouse support */
+	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_MOUSE_PTERM))
+# define FEAT_MOUSE_TTY		/* include non-GUI mouse support */
+#endif
+#if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_TTY) || defined(FEAT_GUI))
+# define FEAT_MOUSE		/* include generic mouse support */
 #endif
 
 /*

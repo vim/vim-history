@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
+*usr_02.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -32,13 +32,8 @@ To start Vim, enter this command: >
 In UNIX you can type this at any command prompt.  If you are running Microsoft
 Windows, open an MS-DOS prompt window and enter the command.
    In either case, Vim starts editing a file called file.txt.  Because this
-is a new file, you get a blank window. Figure 2.1 shows what your screen will
-look like.
-   The tilde (~) lines indicate lines not in the file.  In other words, when
-Vim runs out of file to display, it displays tilde lines.  At the bottom of
-the screen, a message line indicates the file is named file.txt and shows that
-you are creating a new file.  The message information is temporary and other
-information overwrites it.
+is a new file, you get a blank window. This is what your screen will look
+like:
 
 	+---------------------------------------+
 	|#					|
@@ -48,8 +43,14 @@ information overwrites it.
 	|~					|
 	|"file.txt" [New file]			|
 	+---------------------------------------+
-	     figure 2.1  Initial Vim window
-			 ('#" is the cursor position.)
+		('#" is the cursor position.)
+
+The tilde (~) lines indicate lines not in the file.  In other words, when Vim
+runs out of file to display, it displays tilde lines.  At the bottom of the
+screen, a message line indicates the file is named file.txt and shows that you
+are creating a new file.  The message information is temporary and other
+information overwrites it.
+
 
 THE VIM COMMAND
 
@@ -227,7 +228,7 @@ Move the cursor to the first line and press "J":
 ==============================================================================
 *02.5*  Undo and Redo
 
-Suppose you delete too much.  Well, you could type it in again, but an easier
+Suppose you delete too much.  Well, you can type it in again, but an easier
 way exists.  The "u" command undoes the last edit.  Take a look at this in
 action: After using "dd" to delete the first line, "u" brings it back.
    Another one: Move the cursor to the A in the first line:
@@ -338,7 +339,7 @@ If you now use the "o" command and type new text: >
 The result is:
 
 	A very intelligent turtle ~
-	That liked using Vim
+	That liked using Vim ~
 	Found programming UNIX a hurdle ~
 
 The "O" command (uppercase) opens a line above the cursor.
@@ -347,12 +348,12 @@ The "O" command (uppercase) opens a line above the cursor.
 USING A COUNT
 
 Suppose you want to move up nine lines.  You can type "kkkkkkkkk" or you can
-enter the command "9k".  In fact, you can precede all most commands with a
-number.  Earlier in this chapter, for instance, you added three exclamation
-points to the end of a line by typing "a!!!<Esc>".  Another way to do this is
-to use the command "3a!<Esc>".  The count of 3 tells the command that follows
-to triple its effect.  Similarly, to delete three characters, use the command
-"3x".  The count always comes before the command it applies to.
+enter the command "9k".  In fact, you can precede many commands with a number.
+Earlier in this chapter, for instance, you added three exclamation points to
+the end of a line by typing "a!!!<Esc>".  Another way to do this is to use the
+command "3a!<Esc>".  The count of 3 tells the command that follows to triple
+its effect.  Similarly, to delete three characters, use the command "3x".  The
+count always comes before the command it applies to.
 
 ==============================================================================
 *02.7*  Getting out
@@ -369,7 +370,7 @@ To exit, use the "ZZ" command.  This command writes the file and exits.
 DISCARDING CHANGES
 
 Sometimes you will make a sequence of changes and suddenly realize you were
-better off before you started.  Don t worry; Vim has a
+better off before you started.  Not to worry; Vim has a
 quit-and-throw-things-away command.  It is: >
 
 	:q!
@@ -383,10 +384,10 @@ editor to quit; and the override command modifier (!).
 away changes.  If you were to just type ":q", Vim would display an error
 message and refuse to exit:
 
-	E37: No write since last change (use !to override) ~
+	E37: No write since last change (use ! to override) ~
 
 By specifying the override, you are in effect telling Vim, "I know that what
-I'm doing looks stupid, but I m a big boy and really want to do this."
+I'm doing looks stupid, but I'm a big boy and really want to do this."
 
 If you want to continue editing with Vim: The ":e!" command reloads the
 original version of the file.
@@ -417,7 +418,8 @@ system takes you to the indicated subject. (For reasons not discussed here,
 the Vim terminology for a hyperlink is tag.  So CTRL-] jumps to the location
 of the tag given by the word under the cursor.)
    After a few jumps, you might want to go back.  CTRL-T (pop tag) takes you
-back to the preceding position.
+back to the preceding position.  CTRL-O (jump to older position) also works
+nicely here.
    At the top of the help screen, there is the notation *help.txt*.  This name
 between "*" characters is used by the help system to define a tag (hyperlink
 destination).
@@ -479,7 +481,7 @@ in Insert mode, for instance, use this command: >
 
 If you see an error message that you don't understand, for example:
 
-	E37: No write since last change (use !to override) ~
+	E37: No write since last change (use ! to override) ~
 
 You can use the error ID at the start to find help about it: >
 

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
+*cmdline.txt*   For Vim version 6.0an.  Last change: 2001 Jul 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9,6 +9,9 @@ Command-line mode		*Cmdline* *Command-line* *mode-cmdline* *:*
 
 Command-line mode is used to enter Ex commands (":"), search patterns
 ("/" and "?"), and filter commands ("!").
+
+Basic command line editing is explained in chapter 20 of the user manual
+|usr_20.txt|.
 
 1. Command-line editing		|cmdline-editing|
 2. Command-line completion	|cmdline-completion|
@@ -498,6 +501,8 @@ argument for the command, which has a different meaning.  For example:
 Some Ex commands accept a line range in front of them.  This is noted as
 [range].  It consists of one or more line specifiers, separated with ',' or
 ';'.
+
+The basics are explained in section |10.3| of the user manual.
 
 						*:,* *:;*
 When separated with ';' the cursor position will be set to that line

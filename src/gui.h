@@ -206,7 +206,7 @@ typedef struct GuiScrollbar
 #if FEAT_GUI_BEOS
     VimScrollBar *id;		/* Pointer to real scroll bar */
 #endif
-#if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
+#ifdef FEAT_GUI_MAC
     ControlHandle id;		/* A handle to the scrollbar */
 #endif
 #ifdef RISCOS

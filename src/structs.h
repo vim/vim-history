@@ -728,7 +728,7 @@ struct file_buffer
     int		b_dev;		/* device number (-1 if not set) */
     ino_t	b_ino;		/* inode number */
 #endif
-#if defined (macintosh) || defined (TARGET_API_MAC_CARBON)
+#ifdef MACOS
     FSSpec	b_FSSpec;	/* MacOS File Identification */
 #endif
 #ifdef VMS
@@ -1560,7 +1560,7 @@ struct VimMenu
     BMenuItem	*id;		    /* Id of menu item */
     BMenu	*submenu_id;	    /* If this is submenu, add children here */
 #endif
-#if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
+#ifdef FEAT_GUI_MAC
 /*  MenuHandle	id; */
 /*  short	index;	*/	    /* the item index within the father menu */
     short	menu_id;	    /* the menu id to which this item belong */

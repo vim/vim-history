@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
+*usr_03.txt*	For Vim version 6.0an.  Last change: 2001 Jul 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -491,8 +491,10 @@ If you now start Vim again, the 'hlsearh' option will already be set.
 The Vim editor uses regular expressions to specify what to search for.
 Regular expressions are an extremely powerful and compact way to specify a
 search pattern.  Unfortunately, this power comes at a price, because regular
-expressions are a bit tricky to specify.  In this section we mention only a
-few essential ones.  You can find the full explanation here: |pattern|.
+expressions are a bit tricky to specify.
+   In this section we mention only a few essential ones.  More about search
+patterns and commands in chapter 27 |usr_27.txt|.  You can find the full
+explanation here: |pattern|.
 
 
 BEGINNING AND END OF A LINE

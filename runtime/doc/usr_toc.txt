@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0am.  Last change: 2001 Jun 30
+*usr_toc.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -106,6 +106,7 @@ Read this from start to end to learn the essential commands.
 		|06.3|  Different colors
 		|06.4|  With colors or without colors
 		|06.5|  Printing with colors
+		|06.6|  Further reading
 
 |usr_07.txt|  Editing more than one file
 		|07.1|	Edit another file
@@ -124,6 +125,7 @@ Read this from start to end to learn the essential commands.
 		|08.5|	Moving windows
 		|08.6|	Commands for all windows
 		|08.7|	Viewing differences with vimdiff
+		|08.8|	Various
 
 |usr_09.txt|  Using the GUI
 		|09.1|	Parts of the GUI
@@ -208,12 +210,12 @@ Subjects that can be read independently.
 		|25.3|	Indents and tabs
 		|25.4|	Dealing with long lines
 		|25.5|	Editing tables
-		|26.4|	Using Vim from shell script
 
 |usr_26.txt|  Repeating
 		|26.1|	Repeating with Visual mode
 		|26.2|	Add and subtract
 		|26.3|	Making a change in many files
+		|26.4|	Using Vim from shell script
 
 |usr_27.txt|  Search commands and patterns
 		|27.1|	Ignoring case

@@ -484,14 +484,14 @@ xxd:
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
-install.exe: dosinst.c
+install.exe: dosinst.c $(OBJDIR)\bcc.cfg
 !if ($(OSTYPE)==WIN32)
 	$(CC) $(CCARG) -WC -DWIN32 -einstall dosinst.c
 !else
 	$(CC) $(CCARG) -WC -einstall dosinst.c
 !endif
 
-uninstal.exe: uninstal.c
+uninstal.exe: uninstal.c $(OBJDIR)\bcc.cfg
 !if ($(OSTYPE)==WIN32)
 	$(CC) $(CCARG) -WC -DWIN32 -O2 -euninstal uninstal.c
 !else

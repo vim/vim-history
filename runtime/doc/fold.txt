@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0am.  Last change: 2001 Jun 09
+*fold.txt*      For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,7 +6,8 @@
 
 Folding						*Folding* *folding*
 
-First read the User manual on folding: |usr_28.txt|
+You can find an introduction on folding in chapter 28 of the user manual.
+|usr_28.txt|
 
 1. Fold methods		|fold-methods|
 2. Fold commands	|fold-commands|

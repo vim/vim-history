@@ -132,7 +132,7 @@ static void fill_foldcolumn __ARGS((char_u *p, win_T *wp, int closed, linenr_T l
 static void copy_text_attr __ARGS((int off, char_u *buf, int len, int attr));
 #endif
 static int win_line __ARGS((win_T *, linenr_T, int, int));
-static int char_needs_redraw __ARGS((int off_from, int off_to, int len));
+static int char_needs_redraw __ARGS((int off_from, int off_to, int cols));
 #ifdef FEAT_RIGHTLEFT
 static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width, int rlflag));
 # define SCREEN_LINE(r, o, e, c, rl)    screen_line((r), (o), (e), (c), (rl))
@@ -2316,6 +2316,7 @@ win_line(wp, lnum, startrow, endrow)
     int		n_skip = 0;		/* nr of chars to skip for 'nowrap' */
 
     int		fromcol, tocol;		/* start/end of inverting */
+    int		fromcol_prev = -2;	/* start of inverting after cursor */
     int		noinvcur = FALSE;	/* don't invert the cursor */
 #ifdef FEAT_VISUAL
     pos_T	*top, *bot;
@@ -2640,6 +2641,29 @@ win_line(wp, lnum, startrow, endrow)
 #endif
     }
 
+    /*
+     * Correct highlighting for cursor that can't be disabled.
+     * Avoids having to check this for each character.
+     */
+    if (fromcol >= 0)
+    {
+	if (noinvcur)
+	{
+	    if ((colnr_T)fromcol == wp->w_virtcol)
+	    {
+		/* highlighting starts at cursor, let it start just after the
+		 * cursor */
+		fromcol_prev = fromcol;
+		fromcol = -1;
+	    }
+	    else if ((colnr_T)fromcol < wp->w_virtcol)
+		/* restart highlighting after the cursor */
+		fromcol_prev = wp->w_virtcol;
+	}
+	if (fromcol >= tocol)
+	    fromcol = -1;
+    }
+
 #ifdef FEAT_SEARCH_EXTRA
     /*
      * Handle highlighting the last used search pattern.
@@ -2905,20 +2929,17 @@ win_line(wp, lnum, startrow, endrow)
 	if (draw_state == WL_LINE && area_highlighting)
 	{
 	    /* handle Visual or match highlighting in this line */
-	    if (((vcol == fromcol
-			    && !(noinvcur
-				&& (colnr_T)vcol == wp->w_virtcol
-				))
-			|| (noinvcur
-			    && (colnr_T)vcol_prev == wp->w_virtcol
-			    && vcol >= fromcol))
-		    && vcol < tocol)
+	    if (vcol == fromcol
+#ifdef FEAT_MBYTE
+		    || (has_mbyte && vcol + 1 == fromcol && n_extra == 0
+			&& (*mb_ptr2cells)(ptr) > 1)
+#endif
+		    || ((int)vcol_prev == fromcol_prev
+			&& vcol < tocol))
 		area_attr = attr;		/* start highlighting */
-	    else if (area_attr
+	    else if (area_attr != 0
 		    && (vcol == tocol
-			|| (noinvcur
-			    && (colnr_T)vcol == wp->w_virtcol
-			    )))
+			|| (noinvcur && (colnr_T)vcol == wp->w_virtcol)))
 #ifdef LINE_ATTR
 		area_attr = line_attr;		/* stop highlighting */
 	    else if (line_attr && ((fromcol == -10 && tocol == MAXCOL)
@@ -3753,22 +3774,22 @@ win_line(wp, lnum, startrow, endrow)
  * - the character is multi-byte and the next byte is different
  */
     static int
-char_needs_redraw(off_from, off_to, len)
+char_needs_redraw(off_from, off_to, cols)
     int		off_from;
     int		off_to;
-    int		len;
+    int		cols;
 {
-    if (len > 0
+    if (cols > 0
 	    && ((ScreenLines[off_from] != ScreenLines[off_to]
 		    || ScreenAttrs[off_from] != ScreenAttrs[off_to])
 
 #ifdef FEAT_MBYTE
 		|| (enc_dbcs != 0
 		    && MB_BYTE2LEN(ScreenLines[off_from]) > 1
-		    && len > 1
 		    && (enc_dbcs == DBCS_JPNU && ScreenLines[off_from] == 0x8e
 			? ScreenLines2[off_from] != ScreenLines2[off_to]
-			: ScreenLines[off_from + 1] != ScreenLines[off_to + 1]))
+			: (cols > 1 && ScreenLines[off_from + 1]
+						 != ScreenLines[off_to + 1])))
 		|| (enc_utf8
 		    && (ScreenLinesUC[off_from] != ScreenLinesUC[off_to]
 			|| (ScreenLinesUC[off_from] != 0

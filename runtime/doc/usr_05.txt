@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
+*usr_05.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -61,15 +61,17 @@ This chapter only explains the most basic items.  For more information on how
 to write a Vim script file: |usr_41.txt|.
 
 ==============================================================================
-*05.2*  The example vimrc file explained
+*05.2*  The example vimrc file explained		*vimrc_example.vim*
 
 In the first chapter was explained how the example vimrc (included in the
 Vim distribution) file can be used to make Vim startup in not-compatible mode
-(see |not-compatible|).
-   In this section we will explain the various commands used in this file.
-This will give you hints about how to set up your own preferences.  Not
-everything will be explained though.  Use the ":help" command to find out
-more.
+(see |not-compatible|).  The file can be found here:
+
+	$VIMRUNTIME/vimrc_example.vim ~
+
+In this section we will explain the various commands used in this file.  This
+will give you hints about how to set up your own preferences.  Not everything
+will be explained though.  Use the ":help" command to find out more.
 
 >
 	set nocompatible
@@ -212,6 +214,8 @@ Another autocommand.  This time it is used after reading any file.  The
 complicated stuff after it checks if the '" mark is defined, and jumps to it
 if so.  The backslash at the start of a line is used to continue the command
 from the previous line.  That avoids a line getting very long.
+See |line-continuation|.  This only works in a Vim script file, not when
+typing commands at the command-line.
 
 ==============================================================================
 *05.3*  Simple mappings
@@ -261,11 +265,11 @@ The ":map" command (with no arguments) lists out your current mappings.  At
 least the ones for Normal mode.  More about mappings in section |40.1|.
 
 ==============================================================================
-*05.4*  Adding a plugin						*add-plugin*
+*05.4*  Adding a plugin					*add-plugin* *plugin*
 
 Vim's functionality can be extended by adding plugins.  A plugin is nothing
 more than a Vim script file that is loaded automatically when Vim starts.  You
-can add a plugin very easy by dropping it in a plugin directory.
+can add a plugin very easily by dropping it in your plugin directory.
 {not available when Vim was compiled without the |+eval| feature}
 
 There are two types of plugins:
@@ -405,36 +409,47 @@ Further reading:
 ==============================================================================
 *05.5*  Adding a help file			*add-local-help*
 
-If you are lucky, the plugin you installed also comes with a help file.
+If you are lucky, the plugin you installed also comes with a help file.  We
+will explain how to install the help file, so that you can easily find help
+for your new plugin.
+   Let us use the "matchit.vim" plugin as an example (it is included with
+Vim).  This plugin makes the "%" command jump to matching HTML tags,
+if/else/endif in Vim scripts, etc.  Very useful, although it's not backwards
+compatible (that's why it is not enabled by default).
+   This plugin comes with documentation: "matchit.txt".  Let's first copy the
+plugin to the right directory.  This time we will do it from inside Vim, so
+that we can use $VIMRUNTIME.  (You may skip some of the "mkdir" commands if
+you already have the directory.) >
 
-To add a help file locally (examples are for Unix): >
+	:!mkdir ~/.vim
+	:!mkdir ~/.vim/plugin
+	:!cp $VIMRUNTIME/macros/matchit.vim ~/.vim/plugin
 
-1. Create a "doc" directory in one of the directories in 'runtimepath'. >
+Now create a "doc" directory in one of the directories in 'runtimepath'. >
 
-	mkdir ~/.vim/doc
+	:!mkdir ~/.vim/doc
 
-2. Move your help file to the "doc" directory. >
+Copy the help file to the "doc" directory. >
 
-	mv ~/in/myhelp.txt ~/.vim/doc/myhelp.txt
+	:!cp $VIMRUNTIME/macros/matchit.txt ~/.vim/doc
 
-3. Now comes the trick, which allows you to jump to the subjects in the new
-   help file: Generate the local tags file with the |:helptags| command. >
+Now comes the trick, which allows you to jump to the subjects in the new help
+file: Generate the local tags file with the |:helptags| command. >
 
-	vim
 	:helptags ~/.vim/doc
 
 Now you can use the >
 
-	:help myhelp
+	:help g%
 
-command to find "myhelp" in the help file you just added.  You can see an
-entry for the local help file when you do >
+command to find help for "g%" in the help file you just added.  You can see an
+entry for the local help file when you do: >
 
 	:help
 
-and go down to the "LOCAL ADDITIONS" section.  The title lines from the local
-help files are automagically added to this section.  There you can see which
-local help files have been added and jump to them through the tag.
+Go down to the "LOCAL ADDITIONS" section.  The title lines from the local help
+files are automagically added to this section.  There you can see which local
+help files have been added and jump to them through the tag.
 
 For writing a local help file, see |write-local-help|.
 

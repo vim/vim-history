@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0am.  Last change: 2001 Jun 13
+*diff.txt*      For Vim version 6.0an.  Last change: 2001 Jul 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -7,6 +7,8 @@
 				*diff* *vimdiff* *gvimdiff* *diff-mode*
 This file describes the +diff feature: Showing differences between two or
 three versions of the same file.
+
+The basics are explained in section |08.7| of the user manual.
 
 1. Starting diff mode		|vimdiff|
 2. Viewing diffs		|view-diffs|
@@ -173,17 +175,18 @@ that the buffers will be equal within the specified range.
 		buffer.  If [bufspec] is given, that buffer is used.
 		Otherwise this only works if there is one other buffer in diff
 		mode.
-		[range] specifies the lines in the current buffer for which
-		differences are removed.  When omitted, the diff at the cursor
-		position and in the line above it is affected.
-		Partly included diffs are handled like they were included
-		completely.
+		See below for [range].
 
 							*:diffpu* *:diffput*
 :[range]diffpu[t] [bufspec]
 		Modify another buffer to undo difference with the current
 		buffer.  Just like ":diffget" but the other buffer is modified
 		instead of the current one.
+		See below for [range].
+
+When no [range] is given, the diff at the cursor position or just above it is
+affected.  When [range] is used, Vim tries to only put or get the specified
+lines.  When there are deleted lines, this may not always be possible.
 
 The [bufspec] argument above can be a buffer number, a pattern for a buffer
 name or a part of a buffer name.  Examples:

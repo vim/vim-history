@@ -1556,14 +1556,15 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    }
 	    else if (n == m)		/* doesn't contain curwin */
 		next_curwin_size = 0;
-	    else if ((room + (totwincount - 2)) / (totwincount - 1) > p_wiw)
-	    {
-		next_curwin_size = (room + p_wiw + (totwincount - 1) * p_wmw +
-					     (totwincount - 1)) / totwincount;
-		room -= next_curwin_size - p_wiw;
-	    }
 	    else
-		next_curwin_size = p_wiw;
+	    {
+		next_curwin_size = (room + p_wiw + (totwincount - 1) * p_wmw
+					   + (totwincount - 1)) / totwincount;
+		if (next_curwin_size  > p_wiw)
+		    room -= next_curwin_size - p_wiw;
+		else
+		    next_curwin_size = p_wiw;
+	    }
 	    if (n != m)
 		--totwincount;		/* don't count curwin */
 	}
@@ -1933,7 +1934,7 @@ winframe_remove(win, dirp)
     win_T	*win;
     int		*dirp;		/* set to 'v' or 'h' for direction if 'ea' */
 {
-    frame_T	*frp, *frp2;
+    frame_T	*frp, *frp2, *frp3;
     frame_T	*frp_close = win->w_frame;
     win_T	*wp;
 
@@ -2014,14 +2015,14 @@ winframe_remove(win, dirp)
 	    frp->fr_child->fr_prev = frp->fr_prev;
 	    if (frp->fr_prev != NULL)
 		frp->fr_prev->fr_next = frp->fr_child;
-	    for (frp2 = frp->fr_child; ; frp2 = frp2->fr_next)
+	    for (frp3 = frp->fr_child; ; frp3 = frp3->fr_next)
 	    {
-		frp2->fr_parent = frp2;
-		if (frp2->fr_next == NULL)
+		frp3->fr_parent = frp2;
+		if (frp3->fr_next == NULL)
 		{
-		    frp2->fr_next = frp->fr_next;
+		    frp3->fr_next = frp->fr_next;
 		    if (frp->fr_next != NULL)
-			frp->fr_next->fr_prev = frp2;
+			frp->fr_next->fr_prev = frp3;
 		    break;
 		}
 	    }
@@ -4532,7 +4533,7 @@ vim_FullName(fname, buf, len, force)
 	STRNCPY(buf, fname, len);
 	buf[len - 1] = NUL;
     }
-#if defined(macintosh) || defined(OS2) || defined(MSDOS) || defined(MSWIN)
+#if defined(MACOS_CLASSIC) || defined(OS2) || defined(MSDOS) || defined(MSWIN)
     slash_adjust(buf);
 #endif
     return retval;

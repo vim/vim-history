@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0am.  Last change: 2001 Jun 27
+*multilang.txt* For Vim version 6.0an.  Last change: 2001 Jul 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -146,7 +146,7 @@ If you want to do your own translations, you can use the |:menutrans| command,
 explained below.  It is recommended to put the translations for one language
 in a Vim script.  For a language that has no translation yet, please consider
 becoming the maintainer and make your translations available to all Vim users.
-Send an e-mail to Bram Moolenaar <Bram@vim.org>.
+Send an e-mail to the Vim maintainer <maintainer@vim.org>.
 
 					*:menut* *:menutrans* *:menutranslate*
 :menut[ranslate] clear

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0am.  Last change: 2001 Jun 28
+*quickfix.txt*  For Vim version 6.0an.  Last change: 2001 Jul 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9,8 +9,19 @@
 The quickfix commands are not available when the |+quickfix| feature was
 disabled at compile time.
 
+This subject is introduced in section |30.1| of the user manual.
 
-Using the QuickFix mode				*quickfix* *Quickfix* *E42*
+1. Using QuickFix commands		|quickfix|
+2. The error window			|quickfix-window|
+3. Selecting a compiler			|compiler-select|
+4. Using more than one list of errors	|quickfix-error-lists|
+5. Using :make				|:make_makeprg|
+6. The error file format		|error-file-format|
+7. The directory stack			|quickfix-directory-stack|
+8. Specific error file formats		|errorformats|
+
+=============================================================================
+1. Using QuickFix commands			*quickfix* *Quickfix* *E42*
 
 Vim has a special mode to speedup the edit-compile-edit cycle.  This is
 inspired by the quickfix option of the Manx's Aztec C compiler on the Amiga.
@@ -140,7 +151,9 @@ The following commands can be used if you are in QuickFix mode:
 			":grepadd" jumps to the first error, which is not
 			allowed with |:bufdo|.
 
-							*quickfix-window*
+=============================================================================
+2. The error window					*quickfix-window*
+
 							*:cope* *:copen*
 :cope[n] [height]	Open a window to show the current list of errors.
 			When [height] is given, the window becomes that high
@@ -195,7 +208,103 @@ error number is messed up.  If you really want to do this, you could write the
 contents of the quickfix window to a file and use ":cfile" to have it parsed
 and used as the new error list.
 
-							*error-file-format*
+=============================================================================
+3. Selecting a compiler					*compiler-select*
+
+							*:comp* *:compiler*
+:compiler {name}		Set options to work with comipler {name}.
+				{not available when compiled without the
+				|+eval| feature}
+
+
+What this command actually does is:
+- delete the "did_load_compiler" variable
+- execute ":runtime! compiler/{name}.vim"
+
+For writing a compiler plugin, see |write-compiler-plugin|.
+
+=============================================================================
+4. Using more than one list of errors			*quickfix-error-lists*
+
+So far has been assumed that there is only one list of errors.  Actually the
+ten last used lists are remembered.  When starting a new list, the previous
+ones are automatically kept.  Two commands can be used to access older error
+lists.  They set one of the existing error lists as the current one.
+
+						*:colder* *:col* *E380*
+:col[der] [count]	Go to older error list.  When [count] is given, do
+			this [count] times.  When already at the oldest error
+			list, an error message is given.
+
+						*:cnewer* *:cnew* *E381*
+:cnew[er] [count]	Go to newer error list.  When [count] is given, do
+			this [count] times.  When already at the newest error
+			list, an error message is given.
+
+When adding a new error list, it becomes the current list.
+
+When ":colder" has been used and ":make" or ":grep" is used to add a new error
+list, one newer list is overwritten.  This is especially useful if you are
+browsing with ":grep" |grep|.  If you want to keep the more recent error
+lists, use ":cnewer 99" first.
+
+=============================================================================
+5. Using :make						*:make_makeprg*
+
+The ":make" command executes the command given with the 'makeprg' option.
+This is done by passing the command to the shell given with the 'shell'
+option.  This works almost like typing
+
+	":!{makeprg} [arguments] {shellpipe} {errorfile}".
+
+{makeprg} is the string given with the 'makeprg' option.  Any command can be
+used, not just "make".  Characters '%' and '#' are expanded as usual on a
+command-line.  You can use "#<" to insert the current file name without
+extension, for example: >
+   :set makeprg=make\ #<.o
+
+[arguments] is anything that is typed after ":make".
+{shellpipe} is the 'shellpipe' option.
+{errorfile} is the 'makeef' option, with ## replaced to make it unique.
+
+The placeholder "$*" can be used for the argument list in {makeprog} if the
+command needs some additional characters after its arguments.  The $* is
+replaced then by all arguments.  Example: >
+   :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
+or simpler >
+   :let &mp = 'latex \\nonstopmode \\input\{$*}'
+"$*" can be given multiple times, for example: >
+   :set makeprg=gcc\ -o\ $*\ $*
+
+The 'shellpipe' option defaults to ">" for the Amiga, MS-DOS and Win32.  This
+means that the output of the compiler is saved in a file and not shown on the
+screen directly.  For Unix "| tee" is used.  The compiler output is shown on
+the screen and saved in a file the same time.  Depending on the shell used
+"|& tee" or "2>&1| tee" is the default, so stderr output will be included.
+
+If 'shellpipe' is empty, the {errorfile} part will be omitted.  This is useful
+for compilers that write to an errorfile themselves (Manx's Amiga C).
+
+There are some restrictions to the Quickfix mode on the Amiga.  The
+compiler only writes the first 25 errors to the errorfile (Manx's
+documentation does not say how to get more).  If you want to find the others,
+you will have to fix a few errors and exit the editor.  After recompiling,
+up to 25 remaining errors will be found.
+
+On the Amiga, if Vim was started from the compiler, the :sh and some :!
+commands will not work, because Vim is then running in the same process as the
+compiler and stdin (standard input) will not be interactive.
+
+If you insert or delete lines, mostly the correct error location is still
+found because hidden marks are used (Manx's Z editor does not do this).
+Sometimes, when the mark has been deleted for some reason, the message "line
+changed" is shown to warn you that the error location may not be correct.  If
+you quit Vim and start again the marks are lost and the error locations may
+not be correct anymore.
+
+=============================================================================
+6. The error file format				*error-file-format*
+
 A template for the errorfile name can be set with the 'makeef' option.  If it
 includes "##", Vim will replace this with a number to make it a unique name.
 
@@ -364,7 +473,9 @@ The backslashes before the pipe character are required to avoid it to be
 recognized as a command separator.  The backslash before each space is
 required for the set command.
 
-						*quickfix-directory-stack*
+=============================================================================
+7. The directory stack				*quickfix-directory-stack*
+
 Quickfix maintains a stack for saving all used directories parsed from the
 make output. For GNU-make this is rather simple, as it always prints the
 absolute path of all directories it enters and leaves. Regardless if this is
@@ -445,6 +556,8 @@ Note that Vim doesn't check if the directory name in a "leave directory"
 messages is the current directory. This is why you could just use the message
 "Leaving dir".
 
+=============================================================================
+8. Specific error file formats			*errorformats*
 
 						*errorformat-Jikes*
 Jikes(TM), a source-to-bytecode Java compiler published by IBM Research.
@@ -577,94 +690,5 @@ error messages into a format that quickfix mode will understand.  See the
 start of the file about how to use it.
 
 
-						*quickfix-error-lists*
-So far has been assumed that there is only one list of errors.  Actually the
-ten last used lists are remembered.  When starting a new list, the previous
-ones are automatically kept.  Two commands can be used to access older error
-lists.  They set one of the existing error lists as the current one.
-
-						*:colder* *:col* *E380*
-:col[der] [count]	Go to older error list.  When [count] is given, do
-			this [count] times.  When already at the oldest error
-			list, an error message is given.
-
-						*:cnewer* *:cnew* *E381*
-:cnew[er] [count]	Go to newer error list.  When [count] is given, do
-			this [count] times.  When already at the newest error
-			list, an error message is given.
-
-When adding a new error list, it becomes the current list.
-
-When ":colder" has been used and ":make" or ":grep" is used to add a new error
-list, one newer list is overwritten.  This is especially useful if you are
-browsing with ":grep" |grep|.  If you want to keep the more recent error
-lists, use ":cnewer 99" first.
-
-						*:make_makeprg*
-The ":make" command executes the command given with the 'makeprg' option.
-This is done by passing the command to the shell given with the 'shell'
-option.  This works almost like typing
-
-	":!{makeprg} [arguments] {shellpipe} {errorfile}".
-
-{makeprg} is the string given with the 'makeprg' option.  Any command can be
-used, not just "make".  Characters '%' and '#' are expanded as usual on a
-command-line.  You can use "#<" to insert the current file name without
-extension, for example: >
-   :set makeprg=make\ #<.o
-
-[arguments] is anything that is typed after ":make".
-{shellpipe} is the 'shellpipe' option.
-{errorfile} is the 'makeef' option, with ## replaced to make it unique.
-
-The placeholder "$*" can be used for the argument list in {makeprog} if the
-command needs some additional characters after its arguments.  The $* is
-replaced then by all arguments.  Example: >
-   :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
-or simpler >
-   :let &mp = 'latex \\nonstopmode \\input\{$*}'
-"$*" can be given multiple times, for example: >
-   :set makeprg=gcc\ -o\ $*\ $*
-
-The 'shellpipe' option defaults to ">" for the Amiga, MS-DOS and Win32.  This
-means that the output of the compiler is saved in a file and not shown on the
-screen directly.  For Unix "| tee" is used.  The compiler output is shown on
-the screen and saved in a file the same time.  Depending on the shell used
-"|& tee" or "2>&1| tee" is the default, so stderr output will be included.
-
-If 'shellpipe' is empty, the {errorfile} part will be omitted.  This is useful
-for compilers that write to an errorfile themselves (Manx's Amiga C).
-
-There are some restrictions to the Quickfix mode on the Amiga.  The
-compiler only writes the first 25 errors to the errorfile (Manx's
-documentation does not say how to get more).  If you want to find the others,
-you will have to fix a few errors and exit the editor.  After recompiling,
-up to 25 remaining errors will be found.
-
-On the Amiga, if Vim was started from the compiler, the :sh and some :!
-commands will not work, because Vim is then running in the same process as the
-compiler and stdin (standard input) will not be interactive.
-
-If you insert or delete lines, mostly the correct error location is still
-found because hidden marks are used (Manx's Z editor does not do this).
-Sometimes, when the mark has been deleted for some reason, the message "line
-changed" is shown to warn you that the error location may not be correct.  If
-you quit Vim and start again the marks are lost and the error locations may
-not be correct anymore.
-
-
-SELECTING A COMPILER
-
-							*:comp* *:compiler*
-:compiler {name}		Set options to work with comipler {name}.
-				{not available when compiled without the
-				|+eval| feature}
-
-
-What this command actually does is:
-- delete the "did_load_compiler" variable
-- execute ":runtime! compiler/{name}.vim"
-
-For writing a compiler plugin, see |write-compiler-plugin|.
 
  vim:tw=78:

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0am.  Last change: 2001 Jun 27
+*intro.txt*     For Vim version 6.0an.  Last change: 2001 Jul 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,18 +21,18 @@ Introduction to Vim					*ref* *reference*
 Vim stands for Vi IMproved.  It used to be Vi IMitation, but there are so many
 improvements that a name change was appropriate.  Vim is a text editor which
 includes almost all the commands from the Unix program "Vi" and a lot of new
-ones.  It is very useful for editing programs and other 8-bit ASCII text.  All
-commands are given with the keyboard.  This has the advantage that you can
-keep your fingers on the keyboard and your eyes on the screen.  For those who
-want it, there is mouse support and a GUI version with scrollbars and menus
-(see |gui.txt|).
+ones.  It is very useful for editing programs and other plain text.
+   All commands are given with the keyboard.  This has the advantage that you
+can keep your fingers on the keyboard and your eyes on the screen.  For those
+who want it, there is mouse support and a GUI version with scrollbars and
+menus (see |gui.txt|).
 
-A summary of this manual can be found in the file "help.txt", |help.txt|.  It
-can be accessed from within Vim with the <Help> or <F1> key and with the
-|:help| command (just type ":help", without the bars or quotes).  The
-'helpfile' option can be set to the name of the help file, in case it is not
-located in the default place.  You can jump to subjects like with tags: Use
-CTRL-] to jump to a subject under the cursor, use CTRL-T to jump back.
+An overview of this manual can be found in the file "help.txt", |help.txt|.
+It can be accessed from within Vim with the <Help> or <F1> key and with the
+|:help| command (just type ":help", without the bars or quotes).
+   The 'helpfile' option can be set to the name of the help file, in case it
+is not located in the default place.  You can jump to subjects like with tags:
+Use CTRL-] to jump to a subject under the cursor, use CTRL-T to jump back.
 
 Throughout this manual the differences between Vi and Vim are mentioned in
 curly braces, like this: {Vi does not have on-line help}.  See |vi_diff.txt|
@@ -45,26 +45,28 @@ document, there is a separate document for each supported system, see
 
 This manual is a reference for all the Vim commands and options.  This is not
 an introduction to the use of Vi or Vim, it gets a bit complicated here and
-there.  For beginners, there is a hands-on |tutor|.  For setting up your
-preferences and writing Vim scripts see |vimrc-intro|.
+there.  For beginners, there is a hands-on |tutor|.  To learn using Vim, read
+the user manual |usr_toc.txt|.
 
 							*book*
 There are many books on Vi that contain a section for beginners.  There are
 two books I can recommend:
 
 	"Vim - Vi Improved" by Steve Oualline
+
 This is the very first book completely dedicated to Vim.  It is very good for
 beginners.  The most often used commands are explained with pictures and
 examples.  The less often used commands are also explained, the more advanced
 features are summarized.  There is a comprehensive index and a quick
-reference.
+reference.  Parts of this book have been included in the user manual
+|frombook|.
 Published by New Riders Publishing.  ISBN: 0735710015
 For more information try one of these:
 	http://vim.iccf-holland.org
 	http://www.vim.org/iccf/click5.html
-	http://www.iccf.nl/click5.html
 
 	"Learning the Vi editor" by Linda Lamb and Arnold Robbins
+
 This is a book about Vi that includes a chapter on Vim (in the sixth edition).
 The first steps in Vi are explained very well.  The commands that Vim adds are
 only briefly mentioned.  There is also a German translation.
@@ -552,7 +554,7 @@ Ex mode			Like Command-line mode, but after entering a command
 			you remain in Ex mode.  Very limited editing of the
 			command line.  |Ex-mode|
 
-There are five ADDITIONAL modes:
+There are five ADDITIONAL modes.  These are variants of the BASIC modes:
 
 				*Operator-pending* *Operator-pending-mode*
 Operator-pending mode	This is like Normal mode, but after an operator
@@ -793,7 +795,8 @@ by Vim.  {Vi: not ok}
 8. Definitions						*definitions*
 
   screen		The whole area that Vim uses to work in.  This can be
-			a terminal emulator window.
+			a terminal emulator window.  Also called "the Vim
+			window".
   window		A view on a buffer.
 
 A screen contains one or more windows, separated by status lines and with the

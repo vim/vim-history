@@ -770,7 +770,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60am
+VIMRTDIR = /vim60an
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1059,7 +1059,8 @@ CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
 # flags for cproto
 #     This is for cproto 3 patchlevel 8 or below
 #     __inline, __attribute__ and __extension__ are not recognized by cproto
-NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D__extension__=
+NO_ATTR = -D__inline= -D"__attribute__\\(x\\)=" -D__extension__= \
+-D__restrict="" -D__gnuc_va_list=char -D__builtin_va_list=char
 
 #
 #     This is for cproto 3 patchlevel 9 or above (currently 4.6)
@@ -1474,7 +1475,7 @@ testclean:
 # If you want to keep an older version, rename it before running "make
 # install".
 #
-install: installvim installtools install-languages
+install: installvim installtools install-languages install-icons
 
 installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor $(INSTALLVIMDIFF)
 
@@ -1603,6 +1604,12 @@ installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
 	-chmod $(FILEMOD) $(DEST_TOOLS)/*
 	-chmod $(SCRIPTMOD) `grep -l "^#!" $(DEST_TOOLS)/*`
+# replace the path in some tools
+	perlpath=`which perl` && sed -e "s+/usr/bin/perl+$$perlpath+" $(TOOLSSOURCE)/efm_perl.pl >$(DEST_TOOLS)/efm_perl.pl
+	awkpath=`which nawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
+		awkpath=`which gawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
+		awkpath=`which awk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; fi; fi
+		
 
 # install the language specific files, if they were unpacked
 install-languages: languages $(DEST_LANG) $(DEST_KMAP)
@@ -1617,6 +1624,27 @@ install-languages: languages $(DEST_LANG) $(DEST_KMAP)
 	if test -d $(KMAPSOURCE); then \
 	   $(INSTALL_DATA) $(KMAPSOURCE)/README.txt $(KMAPSOURCE)/*.vim $(DEST_KMAP); \
 	   chmod $(FILEMOD) $(DEST_KMAP)/*.vim; \
+	fi
+
+# install the icons for KDE, if the directory exists and the icon doesn't.
+ICON48PATH = $(DATADIR)/icons/hicolor/48x48/apps
+ICON32PATH = $(DATADIR)/icons/locolor/32x32/apps
+ICON16PATH = $(DATADIR)/icons/locolor/16x16/apps
+KDEPATH = $(HOME)/.kde/share/icons
+install-icons:
+	if test -d $(ICON48PATH) -a ! -f $(ICON48PATH)/gvim.png; then \
+	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim48x48.png $(ICON48PATH)/gvim.png; \
+	fi
+	if test -d $(ICON32PATH) -a ! -f $(ICON32PATH)/gvim.png; then \
+	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim32x32.png $(ICON32PATH)/gvim.png; \
+	fi
+	if test -d $(ICON16PATH) -a ! -f $(ICON16PATH)/gvim.png; then \
+	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim16x16.png $(ICON16PATH)/gvim.png; \
+	fi
+# Let's assume that when the KDE directory is present, the user wants the Vim
+# icon there.  It's just a small file...
+	if test -d $(KDEPATH) -a ! -f $(KDEPATH)/gvim.xpm; then \
+	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim32x32.xpm $(KDEPATH)/gvim.xpm; \
 	fi
 
 
@@ -1858,6 +1886,10 @@ depend:
 
 lint:
 	lint $(LINT_OPTIONS) $(LINT_CFLAGS) -DUSE_SNIFF -DHANGUL_INPUT $(LINT_SRC)
+
+# Check dosinst.c with lint.
+lintinstall:
+	lint $(LINT_OPTIONS) -DWIN32 -DUNIX_LINT dosinst.c
 
 ###########################################################################
 

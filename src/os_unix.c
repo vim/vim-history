@@ -303,7 +303,7 @@ mch_inchar(buf, maxlen, wtime)
 
     /* Check if window changed size while we were busy, perhaps the ":set
      * columns=99" command was used. */
-    if (do_resize)
+    while (do_resize)
 	handle_resize();
 
     if (wtime >= 0)
@@ -356,7 +356,7 @@ mch_inchar(buf, maxlen, wtime)
 
     for (;;)	/* repeat until we got a character */
     {
-	if (do_resize)	    /* window changed size */
+	while (do_resize)    /* window changed size */
 	    handle_resize();
 	/*
 	 * we want to be interrupted by the winch signal
@@ -1569,11 +1569,12 @@ mch_settitle(title, icon)
     if (get_x11_windis() == OK)
 	type = 1;
 #else
-# ifdef FEAT_GUI_PHOTON
+# if defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
     if (gui.in_use)
 	type = 1;
 # endif
 # ifdef FEAT_GUI_BEOS
+    /* TODO: If this means (gui.in_use) why not merge with above? (Dany) */
     /* we always have a 'window' */
     type = 1;
 # endif
@@ -1599,7 +1600,7 @@ mch_settitle(title, icon)
 	else
 	    set_x11_title(title);		/* x11 */
 #else
-# if defined(FEAT_GUI_BEOS) || defined(FEAT_GUI_PHOTON)
+# if defined(FEAT_GUI_BEOS) || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
 	else
 	    gui_mch_settitle(title, icon);
 # endif
@@ -1666,7 +1667,7 @@ vim_is_xterm(name)
 		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
-#if defined(FEAT_MOUSE) || defined(PROTO)
+#if defined(FEAT_MOUSE_TTY) || defined(PROTO)
 /*
  * Return non-zero when using an xterm mouse, according to 'ttymouse'.
  * Return 1 for "xterm".
@@ -2513,7 +2514,7 @@ get_stty()
 
 #endif /* VMS  */
 
-#if defined(FEAT_MOUSE) || defined(PROTO)
+#if defined(FEAT_MOUSE_TTY) || defined(PROTO)
 /*
  * Set mouse clicks on or off.
  */
@@ -3946,7 +3947,11 @@ unix_expandpath(gap, path, wildoff, flags)
     }
 
     /* compile the regexp into a program */
+#ifdef MACOS_X
+    regmatch.rm_ic = TRUE;		/* Behave like Terminal.app */
+#else
     regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
+#endif
     regmatch.regprog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 

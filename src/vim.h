@@ -34,7 +34,27 @@
 # include "os_os2_cfg.h"
 #endif
 
-#if defined (macintosh)
+/*
+ * MACOS_CLASSIC compiling for MacOS prior to MacOS X
+ * MACOS_X_UNIX  compiling for MacOS X (using os_unix.c)
+ * MACOS_X       compiling for MacOS X (using os_unix.c or os_mac.c)
+ * MACOS	 compiling for either one
+ */
+#if defined(macintosh) && !defined(MACOS_CLASSIC)
+#  define MACOS_CLASSIC
+#endif
+#if defined(MACOS_X_UNIX)
+#  define MACOS_X
+#endif
+#if defined(MACOS_X) || defined(MACOS_CLASSIC)
+#  define MACOS
+#endif
+#if defined(MACOS_X) && defined(MACOS_CLASSIC)
+    Error: To compile for both MACOS X and Classic use a Classic Carbon
+#endif
+
+
+#if defined(MACOS)
 # define FEAT_GUI_MAC
 #endif
 #if defined(FEAT_GUI_MOTIF) \
@@ -51,13 +71,8 @@
 # endif
 #endif
 
-/*
- * SIZEOF_INT is used in feature.h, and the system-specific included files
- * need items from feature.h.  Therefore define SIZEOF_INT here.
- */
 #if defined(FEAT_GUI_W32) || defined(FEAT_GUI_W16)
 # define FEAT_GUI_MSWIN
-# define HAVE_DROP_FILE
 #endif
 #if defined(WIN16) || defined(WIN32) || defined(_WIN64)
 # define MSWIN
@@ -65,6 +80,13 @@
 /* Practically everything is common to both Win32 and Win64 */
 #if defined(WIN32) || defined(_WIN64)
 # define WIN3264
+#endif
+
+/*
+ * SIZEOF_INT is used in feature.h, and the system-specific included files
+ * need items from feature.h.  Therefore define SIZEOF_INT here.
+ */
+#ifdef WIN3264
 # define SIZEOF_INT 4
 #endif
 #ifdef MSDOS
@@ -88,12 +110,9 @@
 #  define SIZEOF_INT	2
 # endif
 #endif
-#ifdef __APPLE__ /* MacOS X (GUI and shell) */
-#  define SIZEOF_INT 4
-#endif
-#ifdef macintosh
-# if defined(__POWERPC__) || defined (__fourbyteints__) \
-  || defined(__MRC__) || defined (__SC__) /* MPW Compilers */
+#ifdef MACOS
+# if defined(__POWERPC__) || defined(__fourbyteints__) \
+  || defined(__MRC__) || defined(__SC__) || defined(__APPLE_CC__)/* MPW Compilers */
 #  define SIZEOF_INT 4
 # else
 #  define SIZEOF_INT 2
@@ -147,7 +166,7 @@
 # include "os_unix.h"	    /* bring lots of system header files */
 #endif
 
-#if defined(macintosh) && (defined(__MRC__) || defined(__SC__))
+#if defined(MACOS) && (defined(__MRC__) || defined(__SC__))
    /* Apple's Compilers support prototypes */
 # define __ARGS(x) x
 #endif
@@ -194,8 +213,8 @@
 # include "os_mint.h"
 #endif
 
-#if defined (macintosh) || (defined (__APPLE__) && defined(FEAT_GUI))
-# if defined(__MRC__) || defined (__SC__) /* MPW Compilers */
+#if defined(MACOS) || (defined(__APPLE__) && defined(FEAT_GUI))
+# if defined(__MRC__) || defined(__SC__) /* MPW Compilers */
 #  define HAVE_SETENV
 # endif
 # include "os_mac.h"
@@ -293,7 +312,7 @@ typedef unsigned short u8char_T;
 #ifdef _DCC
 # include <sys/stat.h>
 #endif
-#if defined MSDOS  ||  defined MSWIN
+#if defined(MSDOS) || defined(MSWIN)
 # include <sys/stat.h>
 #endif
 
@@ -1440,7 +1459,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
  * been seen at that stage.  But it must be before globals.h, where error_ga
  * is declared. */
 #if !defined(FEAT_GUI_W32) && !defined(FEAT_GUI_X11) \
-	&& !defined(FEAT_GUI_GTK) && !defined(macintosh)
+	&& !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MAC)
 # define mch_errmsg(str)	fprintf(stderr, "%s", (str))
 # define display_errors()	fflush(stderr)
 # define mch_msg(str)		printf("%s", (str))

@@ -110,7 +110,7 @@ static void mf_do_open __ARGS((memfile_T *, char_u *, int));
  */
 
 /*
- * mf_open: open an existing or new memory block file
+ * Open an existing or new memory block file.
  *
  *  fname:	name of file to use (NULL means no file at all)
  *		Note: fname must have been allocated, it is not copied!
@@ -197,12 +197,12 @@ mf_open(fname, flags)
 }
 
 /*
- * mf_open_file: open a file for an existing memfile. Used when updatecount
- *		 set from 0 to some value.
- *
- *  fname:	name of file to use (NULL means no file at all)
- *		Note: fname must have been allocated, it is not copied!
- *			If opening the file fails, fname is freed.
+ * Open a file for an existing memfile.  Used when updatecount set from 0 to
+ * some value.
+ * If the file already exists, this fails.
+ * "fname" is the name of file to use (NULL means no file at all)
+ * Note: "fname" must have been allocated, it is not copied!  If opening the
+ * file fails, "fname" is freed.
  *
  * return value: FAIL if file could not be opened, OK otherwise
  */

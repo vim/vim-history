@@ -506,7 +506,9 @@ shift_block(oap, amount)
 #endif
 
 #ifdef FEAT_VISUALEXTRA
-/* Insert string s (b_insert ? before : after) block :AKelly */
+/*
+ * Insert string "s" (b_insert ? before : after) block :AKelly
+ */
     static void
 block_insert(oap, s, b_insert, bdp)
     oparg_T		*oap;
@@ -537,17 +539,18 @@ block_insert(oap, s, b_insert, bdp)
 	if (b_insert)
 	{
 	    p_ts = bdp->start_char_vcols;
-	    if ((spaces = bdp->startspaces) != 0)
+	    spaces = bdp->startspaces;
+	    if (spaces != 0)
 		count = p_ts - 1; /* we're cutting a TAB */
 	    offset = bdp->textcol;
 	}
 	else /* append */
 	{
-	    p_ts =  bdp->end_char_vcols;
+	    p_ts = bdp->end_char_vcols;
 	    if (!bdp->is_short) /* spaces = padding after block */
 	    {
-		if ((spaces = (bdp->endspaces ? p_ts - bdp->endspaces : 0 ))
-									 != 0)
+		spaces = (bdp->endspaces ? p_ts - bdp->endspaces : 0);
+		if (spaces != 0)
 		    count = p_ts - 1; /* we're cutting a TAB */
 		offset = bdp->textcol + bdp->textlen - (spaces != 0);
 	    }
@@ -556,7 +559,7 @@ block_insert(oap, s, b_insert, bdp)
 		/* if $ used, just append to EOL (ie spaces==0)
 		 * else if cursor was on NUL, we need 1 less padding */
 		if (!bdp->is_MAX)
-		    spaces = bdp->endspaces + !bdp->is_EOL;
+		    spaces = !bdp->is_EOL + (oap->end_vcol - bdp->start_vcol);
 		count = spaces;
 		offset = bdp->textcol + bdp->textlen;
 	    }
@@ -2153,12 +2156,9 @@ op_insert(oap, count1)
 	    firstline += bd.textlen;
 	if ((ins_len = (long)STRLEN(firstline) - pre_textlen) > 0)
 	{
-	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
+	    ins_text = vim_strnsave(firstline, (int)ins_len);
+	    if (ins_text != NULL)
 	    {
-
-		STRNCPY(ins_text, firstline, ins_len);
-		*(ins_text + ins_len) = NUL;
-
 		/* block handled here */
 		block_insert(oap, ins_text, (oap->op_type == OP_INSERT), &bd);
 
@@ -2536,7 +2536,7 @@ fail:		     /* free the allocated lines */
 				{
 				    bd.endspaces = oap->end.coladd
 							     + oap->inclusive;
-				    endcol--;
+				    endcol -= oap->inclusive;
 				}
 			    }
 			}
@@ -3011,7 +3011,7 @@ do_put(regname, dir, count, flags)
 		incr = lbr_chartabsize_adv(&ptr, (colnr_T)vcol);
 		vcol += incr;
 	    }
-	    bd.textcol = (colnr_T) (ptr - oldp);
+	    bd.textcol = (colnr_T)(ptr - oldp);
 
 	    shortline = (vcol < col) || (vcol == col && !*ptr) ;
 
@@ -3023,6 +3023,18 @@ do_put(regname, dir, count, flags)
 		bd.startspaces = incr - bd.endspaces;
 		--bd.textcol;
 		delcount = 1;
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    bd.textcol -= (*mb_head_off)(oldp, oldp + bd.textcol);
+#endif
+		if (oldp[bd.textcol] != TAB)
+		{
+		    /* Only a Tab can be split into spaces.  Other
+		     * characters will have to be moved to after the
+		     * block, causing misalignment. */
+		    delcount = 0;
+		    bd.endspaces = 0;
+		}
 	    }
 
 	    yanklen = (int)STRLEN(y_array[i]);
@@ -3053,7 +3065,7 @@ do_put(regname, dir, count, flags)
 		ptr += yanklen;
 
 		/* insert block's trailing spaces only if there's text behind */
-		if (((j < count-1) || !shortline) && spaces)
+		if ((j < count - 1 || !shortline) && spaces)
 		{
 		    copy_spaces(ptr, (size_t)spaces);
 		    ptr += spaces;
@@ -4153,7 +4165,8 @@ block_prep(oap, bdp, lnum, is_del)
 		 * short where the text is put */
 		/* if (!is_del || oap->op_type == OP_APPEND) */
 		if (oap->op_type == OP_APPEND || virtual_active())
-		    bdp->endspaces = oap->end_vcol - bdp->end_vcol + 1;
+		    bdp->endspaces = oap->end_vcol - bdp->end_vcol
+					+ oap->inclusive;
 		else
 		    bdp->endspaces = 0; /* replace doesn't add characters */
 	    }

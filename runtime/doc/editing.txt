@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
+*editing.txt*   For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,15 +6,16 @@
 
 Editing files						*edit-files*
 
-1. Introduction			|edit-intro|
-2. Editing a file		|edit-a-file|
-3. The current directory	|current-directory|
-4. The argument list		|argument-list|
-5. Writing			|writing|
-6. Writing and quitting		|write-quit|
-7. Editing binary files		|edit-binary|
-8. Encryption			|encryption|
-9. Timestamps			|timestamps|
+1.  Introduction		|edit-intro|
+2.  Editing a file		|edit-a-file|
+3.  Dialogs			|edit-dialogs|
+4.  The current directory	|current-directory|
+5.  The argument list		|argument-list|
+6.  Writing			|writing|
+7.  Writing and quitting	|write-quit|
+8.  Editing binary files	|edit-binary|
+9.  Encryption			|encryption|
+10. Timestamps			|timestamps|
 
 ==============================================================================
 1. Introduction						*edit-intro*
@@ -155,74 +156,6 @@ that does not work for all commands.
 
 If you want to keep the changed buffer without saving it, switch on the
 'hidden' option.  See |hidden-buffer|.
-
-							*:confirm* *:conf*
-:conf[irm] {command}	Execute {command}, and use a dialog when an
-			operation has to be confirmed.  Can be used on the
-			":q", ":qa" and ":w" commands (the latter to over-ride
-			a read-only setting).
-
-Examples: >
-  :confirm w foo
-<	Will ask for confirmation when "foo" already exists. >
-  :confirm q
-<	Will ask for confirmation when there are changes. >
-  :confirm qa
-<	If any modified, unsaved buffers exist, you will be prompted to save
-	or abandon each one.  There are also choices to "save all" or "abandon
-	all".
-
-If you want to always use ":confirm", set the 'confirm' option.
-
-							*:browse* *:bro* *E338*
-:bro[wse] {command}	Open a file selection dialog for an argument to
-			{command}.  At present this works for ":e", ":w",
-			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
-			{only in Win32, Motif and Athena GUI}
-			When ":browse" is not supported it's ignored,
-			{command} is executed without a dialog.
-
-The syntax is best shown via some examples: >
-	:browse e $vim/foo
-<		Open the browser in the $vim/foo directory, and edit the
-		file chosen. >
-	:browse e
-<		Open the browser in the directory of the current buffer,
-		and edit the file chosen. >
-	:browse w
-<		Open the browser in the directory of the current buffer,
-		with the current buffer filename as default, and save the
-		buffer under the filename chosen. >
-	:browse w C:/bar
-<		Open the browser in the C:/bar directory, with the current
-		buffer filename as default, and save the buffer under the
-		filename chosen.
-Also see the |'browsedir'| option.
-For versions of Vim where browsing is not supported, the command is executed
-unmodified.
-
-							*browsefilter*
-For MS Windows, you can modify the filters that are used in the browse dialog.
-By setting the g:browsefilter or b:browsefilter variables, you can change the
-filters globally or locally to the buffer.  The variable is set to a string in
-the format "{filter label}\t{patter};{pattern}>\n" where {filter label} is the
-text that appears in the "Files of Type" comboBox, and {pattern} is the
-pattern which filters the filenames.  Several patterns can be given, separated
-by ';'.
-
-For Motif the same format is used, but only the very first pattern is actually
-used (Motif only offers one pattern, but you can edit it).
-
-For example, to have only Vim files in the dialog, you could use the following
-command: >
-
-     let g:browsefilter="Vim Scripts\t*.vim\nVim Startup Files\t*vimrc\n"
-
-You can override the filter setting on a per-buffer basis by setting the
-b:browsefilter variable.  You would most likely set b:browsefilter in a
-filetype plugin, so that the browse dialog would contain entries related to
-the type of file you are currently editing.  Disadvantage: This makes it
-difficult to start editing a file of a different type.
 
 ==============================================================================
 2. Editing a file					*edit-a-file*
@@ -582,7 +515,78 @@ options.  There are three different types of searching:
 <   This searches the same directories, but in a different order.
 
 ==============================================================================
-3. The current directory				*current-directory*
+3. Dialogs						*edit-dialogs*
+
+							*:confirm* *:conf*
+:conf[irm] {command}	Execute {command}, and use a dialog when an
+			operation has to be confirmed.  Can be used on the
+			":q", ":qa" and ":w" commands (the latter to over-ride
+			a read-only setting).
+
+Examples: >
+  :confirm w foo
+<	Will ask for confirmation when "foo" already exists. >
+  :confirm q
+<	Will ask for confirmation when there are changes. >
+  :confirm qa
+<	If any modified, unsaved buffers exist, you will be prompted to save
+	or abandon each one.  There are also choices to "save all" or "abandon
+	all".
+
+If you want to always use ":confirm", set the 'confirm' option.
+
+							*:browse* *:bro* *E338*
+:bro[wse] {command}	Open a file selection dialog for an argument to
+			{command}.  At present this works for ":e", ":w",
+			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
+			{only in Win32, Motif and Athena GUI}
+			When ":browse" is not supported it's ignored,
+			{command} is executed without a dialog.
+
+The syntax is best shown via some examples: >
+	:browse e $vim/foo
+<		Open the browser in the $vim/foo directory, and edit the
+		file chosen. >
+	:browse e
+<		Open the browser in the directory of the current buffer,
+		and edit the file chosen. >
+	:browse w
+<		Open the browser in the directory of the current buffer,
+		with the current buffer filename as default, and save the
+		buffer under the filename chosen. >
+	:browse w C:/bar
+<		Open the browser in the C:/bar directory, with the current
+		buffer filename as default, and save the buffer under the
+		filename chosen.
+Also see the |'browsedir'| option.
+For versions of Vim where browsing is not supported, the command is executed
+unmodified.
+
+							*browsefilter*
+For MS Windows, you can modify the filters that are used in the browse dialog.
+By setting the g:browsefilter or b:browsefilter variables, you can change the
+filters globally or locally to the buffer.  The variable is set to a string in
+the format "{filter label}\t{patter};{pattern}>\n" where {filter label} is the
+text that appears in the "Files of Type" comboBox, and {pattern} is the
+pattern which filters the filenames.  Several patterns can be given, separated
+by ';'.
+
+For Motif the same format is used, but only the very first pattern is actually
+used (Motif only offers one pattern, but you can edit it).
+
+For example, to have only Vim files in the dialog, you could use the following
+command: >
+
+     let g:browsefilter="Vim Scripts\t*.vim\nVim Startup Files\t*vimrc\n"
+
+You can override the filter setting on a per-buffer basis by setting the
+b:browsefilter variable.  You would most likely set b:browsefilter in a
+filetype plugin, so that the browse dialog would contain entries related to
+the type of file you are currently editing.  Disadvantage: This makes it
+difficult to start editing a file of a different type.
+
+==============================================================================
+4. The current directory				*current-directory*
 
 You may use the |:cd| and |:lcd| commands to change to another directory, so
 you will not have to type that directory name in front of the file names.  It
@@ -643,7 +647,7 @@ will be written, because you gave a new file name and did not refer to a
 filename before the ":cd".
 
 ==============================================================================
-4. The argument list				*argument-list* *arglist*
+5. The argument list				*argument-list* *arglist*
 
 If you give more than one file name when starting Vim, this list is remembered
 as the argument list.  You can jump to each file in this list.
@@ -652,6 +656,8 @@ Do not confuse this with the buffer list, which you can see with the
 |:buffers| command.  The argument list was already present in Vi, the buffer
 list is new in Vim.  A file name in the argument list will also be present in
 the buffer list (unless it was deleted with ":bdel").
+
+This subject is introduced in section |07.2| of the user manual.
 
 There is one global argument list, which is used for all windows by default.
 It is possible to create a new argument list local to a window, see
@@ -847,14 +853,6 @@ for example: >
 The backslashes before the star are required to prevent "*.c" to be expanded
 by the shell before executing the find program.
 
-							*arglist-quit*
-You are protected from leaving Vim if you have not been editing the last file
-in the argument list.  This prevents you from forgetting that you were editing
-one out of several files.  To exit anyway try to exit twice.  If there are
-changes in the current buffer this will fail.  You can exit anyway, and save
-any changes, with the ":wq!" command.  To lose any changes use the ":q!"
-command.
-
 							*arglist-position*
 When there is an argument list you can see which file you are editing in the
 title of the window (if there is one and 'title' is on) and with the file
@@ -941,7 +939,7 @@ flag is used for the ":substitute" command to avoid an error for files where
 "my_foo" isn't used.  ":update" writes the file only if changes were made.
 
 ==============================================================================
-5. Writing					*writing* *save-file*
+6. Writing					*writing* *save-file*
 
 Note: When the 'write' option is off, you are not able to write any file.
 
@@ -1085,7 +1083,7 @@ For MS-DOS and MS-Windows the device is detected by its name:
 The names can be in upper- or lowercase.
 
 ==============================================================================
-6. Writing and quitting					*write-quit* 
+7. Writing and quitting					*write-quit* 
 
 							*:q* *:quit*
 :q[uit]			Quit the current window.  Quit Vim if this is the last
@@ -1175,7 +1173,7 @@ MULTIPLE WINDOWS AND BUFFERS				*window-exit*
 		{not in Vi}
 
 ==============================================================================
-6. Editing binary files					*edit-binary*
+8. Editing binary files					*edit-binary*
 
 Although Vim was made to edit text files, it is possible to edit binary
 files.  The |-b| Vim argument (b for binary) makes Vim do file I/O in binary
@@ -1211,7 +1209,7 @@ There are a few things to remember when editing binary files:
   in the text).
 
 ==============================================================================
-7. Encryption						*encryption*
+9. Encryption						*encryption*
 
 Vim is able to write files encrypted, and read them back.  The encrypted text
 cannot be read without the right key.
@@ -1284,7 +1282,7 @@ Notes:
   Thus the encryption code is not exported from the USA.
 
 ==============================================================================
-8. Timestamps					*timestamp* *timestamps*
+10. Timestamps					*timestamp* *timestamps*
 
 Vim remembers the modification timestamp of a file when you begin editing it.
 This is used to avoid that you have two different versions of the same file

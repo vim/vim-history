@@ -15,18 +15,6 @@
 
 #include "vim.h"
 
-/* When compiled under MacOS X (including CARBON version)
- * we use the Unix File path style */
-#if defined (__APPLE_CC__) && defined(TARGET_API_MAC_OSX)
-# define USE_UNIXFILENAME
-#else
-# undef USE_UNIXFILENAME
-#endif
-
-#ifdef USE_UNIXFILENAME
-# include <dirent.h>
-#endif
-
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
 
 #include "StandardFile.h"
@@ -396,7 +384,12 @@ unix_expandpath(gap, path, wildoff, flags)
     }
 
     /* compile the regexp into a program */
+#ifdef MACOS_X
+    /* We want to behave like Terminal.app */
+    regmatch.rm_ic = TRUE;
+#else
     regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
+#endif
     regmatch.regprog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 
@@ -494,6 +487,32 @@ fname_case(name)
      *		    CASE_INSENSITIVE_FILENAME
      *       within setfname, fix_fname, do_ecmd
      */
+#ifdef USE_UNIXFILENAME
+    OSStatus	status;
+    OSErr	error;
+    FSRef	refFile;
+    FSRef	refParent;
+    FSSpec	specFile;
+    UInt32	pathSize = STRLEN(name) + 1;
+    char_u	*path;
+    Boolean	isDirectory;
+    
+    path = alloc(pathSize);
+    if (path == NULL)
+	return;
+
+    status=FSPathMakeRef ( (UInt8 *) name, &refFile, &isDirectory);
+    if (status)
+	return;
+
+    status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
+    if (status)
+	return;
+
+    /* Paranoid: Update the name if only the casing differ.*/
+    if (STRICMP(name, path) == 0)
+	STRCPY (name, path);
+#endif
 }
 static char_u	*oldtitle = (char_u *) "gVim";
 
@@ -622,21 +641,7 @@ mch_settitle(title, icon)
     char_u *title;
     char_u *icon;
 {
-    /*
-     *  TODO: Clean C-Pscal conversion
-     */
-    char_u   pascal_title[1024];
-
-    if (title == NULL)		/* nothing to do */
-	return;
-
-    if (title != NULL)
-    {
-	pascal_title[0] = (char_u) STRLEN(title);
-	pascal_title[1] = 0;
-	STRCAT (&pascal_title, title);
-	SetWTitle(gui.VimWindow, (char_u *) &pascal_title);
-    }
+    gui_mch_settitle(title, icon);
 }
 
 /*
@@ -956,7 +961,7 @@ mch_isFullName(fname)
 	char_u		*fname;
 {
 #ifdef USE_UNIXFILENAME
-    return (fname[0] == '/');
+    return ((fname[0] == '/') || (fname[0] == '~'));
 #else
     /*
      * TODO: Make sure fname is always of mac still
@@ -1180,6 +1185,10 @@ mch_call_shell(cmd, options)
 mch_has_wildcard(p)
 	char_u	*p;
 {
+#ifdef USE_UNIXFILENAME
+    if (*p == '~' && p[1] !=NUL)
+	return TRUE;
+#endif
     for ( ; *p; ++p)
     {
 	if (*p == '\\' && p[1] != NUL)
@@ -1190,154 +1199,6 @@ mch_has_wildcard(p)
     return FALSE;
 }
 
-/*
- * Convert a FSSpec to a fuill path
- */
-
-char_u *FullPathFromFSSpec_save (FSSpec file)
-{
-    /*
-     * TODO: Add protection for 256 char max.
-     *       Get rid of fname as we now allocate
-     */
-    CInfoPBRec  theCPB;
-    Str255      directoryName;
-    char_u      temporary[255];
- /* char        filename[255]; */
-    char_u       fname[256];
-    char_u	*temporaryPtr = temporary;
-    char_u      *filenamePtr = fname;
-    OSErr       error;
-    int		folder = 1;
-    char        *p;
-    SInt16	dfltVol_vRefNum;
-    SInt32      dfltVol_dirID;
-
-    /* Get the default volume */
-    /* TODO: Verify if default always root in MacOS X */
-    error=HGetVol ( NULL, &dfltVol_vRefNum, &dfltVol_dirID );
-
-    if (error)
-      return NULL;
-
-    /* Start filling fname with file.name  */
-    STRNCPY(filenamePtr, &file.name[1], file.name[0]);
-    filenamePtr[file.name[0]] = 0; /* NULL terminate the string */
-
-    /* Get the info about the file specified in FSSpec */
-    theCPB.dirInfo.ioFDirIndex = 0;
-    theCPB.dirInfo.ioNamePtr   = file.name;
-    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
-  /*theCPB.hFileInfo.ioDirID   = 0;*/
-    theCPB.dirInfo.ioDrDirID   = file.parID;
-     
-    /* As ioFDirIndex = 0, get the info of ioNamePtr,
-       which is relative to ioVrefNum, ioDirID */
-    error = PBGetCatInfo (&theCPB, false);
-
-    /* If we are called for a new file we expect fnfErr */
-    if ((error) && (error != fnfErr))
-      return NULL;
-
-    /* Check if it's a file or folder       */
-    /* default to file if file don't exist  */
-    if (((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0) || (error))
-      folder = 0; /* It's not a folder */
-    else
-      folder = 1;
-
-    /* Set ioNamePtr, it's the same area which is always reused. */
-    theCPB.dirInfo.ioNamePtr = directoryName;
-    
-    /* Trick for first entry, set ioDrParID to the first value
-     * we want for ioDrDirID*/
-    theCPB.dirInfo.ioDrParID = file.parID;
-    theCPB.dirInfo.ioDrDirID = file.parID;
-
-    if ((TRUE) && (file.parID != fsRtDirID /*fsRtParID*/ ))
-    do
-    {
-	theCPB.dirInfo.ioFDirIndex = -1;
-     /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
-	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
-     /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
-	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
-
-        /* As ioFDirIndex = -1, get the info of ioDrDirID, */
-        /*  *ioNamePtr[0 TO 31] will be updated            */
-	error = PBGetCatInfo (&theCPB,false);
-
-        if (error)
-          return NULL;
-
-        /* Put the new directoryName in front of the current fname */
-        STRCPY(temporaryPtr, filenamePtr);
-        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
-        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, ":");
-        STRCAT(filenamePtr, temporaryPtr);
-    }
-#if 1 /* def USE_UNIXFILENAME */
-    while ((theCPB.dirInfo.ioDrParID != fsRtDirID) /* && */
-         /*  (theCPB.dirInfo.ioDrDirID != fsRtDirID)*/);
-#else
-    while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
-#endif
-
-    /* Get the information about the volume on which the file reside */
-    theCPB.dirInfo.ioFDirIndex = -1;
- /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
-    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
- /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
-    theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
-
-    /* As ioFDirIndex = -1, get the info of ioDrDirID, */
-    /*  *ioNamePtr[0 TO 31] will be updated            */
-    error = PBGetCatInfo (&theCPB,false);
-
-    if (error)
-      return NULL;
-
-    /* For MacOS Classic always add the volume name          */
-    /* For MacOS X add the volume name preceded by "Volumes" */
-    /*  when we are not refering to the boot volume          */
-#ifdef USE_UNIXFILENAME
-    if (file.vRefNum != dfltVol_vRefNum)
-#endif
-    {
-        /* Add the volume name */
-        STRCPY(temporaryPtr, filenamePtr);
-        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
-        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, ":");
-        STRCAT(filenamePtr, temporaryPtr);
-        
-#ifdef USE_UNIXFILENAME
-        STRCPY(temporaryPtr, filenamePtr);
-        filenamePtr[0] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, "Volumes:");
-        STRCAT(filenamePtr, temporaryPtr);
-#endif
-    }
-
-    /* Append final path separator if it's a folder */
-    if (folder)
-        STRCAT (fname, ":");
-        
-    /* As we use Unix File Name for MacOS X convert it */
-#ifdef USE_UNIXFILENAME
-    /* Need to insert leading / */
-    /* TODO: get the above code to use directly the / */
-    STRCPY(&temporaryPtr[1], filenamePtr);
-    temporaryPtr[0] = '/';
-    STRCPY(filenamePtr, temporaryPtr);
-    for (p = fname; *p; p++)
-      if (*p == ':')
-        *p = '/';
-#endif
-
-    return (vim_strsave (fname));
-}
 
 /*
  * This procedure duplicate a file, it is used in order to keep
@@ -1401,56 +1262,6 @@ mch_copy_file(from, to)
 
 }
 
-    int
-C2PascalString (CString, PascalString)
-    char_u  *CString;
-    Str255  *PascalString;
-{
-    char_u *PascalPtr = (char_u *) PascalString;
-    int    len;
-    int    i;
-
-    PascalPtr[0] = 0;
-    if (CString == NULL)
-	return 0;
-
-    len = STRLEN(CString);
-    if (len > 255)
-	len = 255;
-
-    for (i = 0; i < len; i++)
-	PascalPtr[i+1] = CString[i];
-
-    PascalPtr[0] = len;
-
-    return 0;
-}
-
-    int
-GetFSSpecFromPath (file, fileFSSpec)
-    char_u *file;
-    FSSpec *fileFSSpec;
-{
-    /* From FAQ 8-12 */
-    Str255      filePascal;
-    CInfoPBRec	myCPB;
-    OSErr	err;
-
-    (void) C2PascalString (file, &filePascal);
-
-    myCPB.dirInfo.ioNamePtr   = filePascal;
-    myCPB.dirInfo.ioVRefNum   = 0;
-    myCPB.dirInfo.ioFDirIndex = 0;
-    myCPB.dirInfo.ioDrDirID   = 0;
-
-    err= PBGetCatInfo (&myCPB, false);
-
-    /*    vRefNum, dirID, name */
-    FSMakeFSSpec (0, 0, filePascal, fileFSSpec);
-
-    /* TODO: Use an error code mechanism */
-    return 0;
-}
 
     int
 mch_copy_file_attribute(from, to)
@@ -1487,7 +1298,7 @@ mch_copy_file_attribute(from, to)
 
      if (frRFid != -1)
      {
-	 FSpCreateResFile(&toFSSpec, 'TEXT', '????', nil);
+	 FSpCreateResFile(&toFSSpec, 'TEXT', UNKNOWN_CREATOR, nil);
 	 toRFid = FSpOpenResFile (&toFSSpec, fsRdWrPerm);
 
 	 UseResFile (frRFid);
@@ -1574,3 +1385,34 @@ mch_new_shellsize(void)
 {
     /* never used */
 }
+
+/*
+ * Those function were set as #define before, but in order
+ * to allow an easier us of os_unix.c for the MacOS X port,
+ * they are change to procedure. Thec ompile whould optimize
+ * them out.
+ */
+
+    int
+mch_can_restore_title()
+{
+    return TRUE; 
+}
+
+    int
+mch_can_restore_icon()
+{
+    return TRUE;
+}
+
+/*
+ * If the machine has job control, use it to suspend the program,
+ * otherwise fake it by starting a new shell.
+ */
+    void
+mch_suspend()
+{
+    /* TODO: get calle in #ifndef NO_CONSOLE */
+    gui_mch_iconify();
+};
+
