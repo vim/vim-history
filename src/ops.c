@@ -1570,7 +1570,12 @@ op_delete(oap)
 
 	    /* Adjust cursor position for tab replaced by spaces and 'lbr'. */
 	    if (lnum == curwin->w_cursor.lnum)
+	    {
 		curwin->w_cursor.col = bd.textcol + bd.startspaces;
+# ifdef FEAT_VIRTUALEDIT
+		curwin->w_cursor.coladd = 0;
+# endif
+	    }
 
 	    /* n == number of chars deleted
 	     * If we delete a TAB, it may be replaced by several characters.
@@ -2337,9 +2342,14 @@ op_change(oap)
     /* skip blank lines too */
     if (oap->block_mode)
     {
-	firstline = ml_get(oap->start.lnum);
-	pre_textlen = (long)STRLEN(firstline);
-	block_prep(oap, &bd, oap->start.lnum, TRUE);
+# ifdef FEAT_VIRTUALEDIT
+	/* Add spaces before getting the current line length. */
+	if (virtual_op && (curwin->w_cursor.coladd > 0
+						    || gchar_cursor() == NUL))
+	    coladvance_force(getviscol());
+# endif
+	pre_textlen = (long)STRLEN(ml_get(oap->start.lnum));
+	bd.textcol = curwin->w_cursor.col;
     }
 #endif
 
@@ -2367,26 +2377,48 @@ op_change(oap)
 	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != NULL)
 	    {
 		STRNCPY(ins_text, firstline + bd.textcol, ins_len);
-		*(ins_text + ins_len) = NUL;
+		ins_text[ins_len] = NUL;
 		for (linenr = oap->start.lnum + 1; linenr <= oap->end.lnum;
 								     linenr++)
 		{
 		    block_prep(oap, &bd, linenr, TRUE);
-		    if (!bd.is_short)
+		    if (!bd.is_short || virtual_op)
 		    {
+# ifdef FEAT_VIRTUALEDIT
+			pos_T vpos;
+
+			/* If the block starts in virtual space, count the
+			 * initial coladd offset as part of "startspaces" */
+			if (bd.is_short)
+			{
+			    linenr_T lnum = curwin->w_cursor.lnum;
+
+			    curwin->w_cursor.lnum = linenr;
+			    (void)getvpos(&vpos, oap->start_vcol);
+			    curwin->w_cursor.lnum = lnum;
+			}
+			else
+			    vpos.coladd = 0;
+# endif
 			oldp = ml_get(linenr);
 			newp = alloc_check((unsigned)(STRLEN(oldp)
+# ifdef FEAT_VIRTUALEDIT
+							+ vpos.coladd
+# endif
 							      + ins_len + 1));
 			if (newp == NULL)
 			    continue;
 			/* copy up to block start */
 			mch_memmove(newp, oldp, (size_t)bd.textcol);
-			for (offset = 0; offset < ins_len; offset++)
-			    *(newp + bd.textcol + offset) = *(ins_text
-								    + offset);
+			offset = bd.textcol;
+# ifdef FEAT_VIRTUALEDIT
+			copy_spaces(newp + offset, (size_t)vpos.coladd);
+			offset += vpos.coladd;
+# endif
+			mch_memmove(newp + offset, ins_text, ins_len);
+			offset += ins_len;
 			oldp += bd.textcol;
-			mch_memmove(newp + bd.textcol + offset, oldp,
-							    STRLEN(oldp) + 1);
+			mch_memmove(newp + offset, oldp, STRLEN(oldp) + 1);
 			ml_replace(linenr, newp, FALSE);
 		    }
 		}
