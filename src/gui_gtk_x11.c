@@ -204,8 +204,8 @@ static struct special_key
     {GDK_KP_Right,	'k', 'r'},
     {GDK_KP_Up,		'k', 'u'},
     {GDK_KP_Down,	'k', 'd'},
-    {GDK_KP_Insert,	KS_EXTRA, KE_KINS},
-    {GDK_KP_Delete,	KS_EXTRA, KE_KDEL},
+    {GDK_KP_Insert,	KS_EXTRA, (char_u)KE_KINS},
+    {GDK_KP_Delete,	KS_EXTRA, (char_u)KE_KDEL},
     {GDK_KP_Home,	'K', '1'},
     {GDK_KP_End,	'K', '4'},
     {GDK_KP_Prior,	'K', '3'},  /* page up */
