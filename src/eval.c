@@ -3346,6 +3346,9 @@ libcall_common(argvars, retvar, type)
     else
 	retvar->var_val.var_string = NULL;
 
+    if (check_restricted() || check_secure())
+	return;
+
 #ifdef FEAT_LIBCALL
     /* The first two args must be strings, otherwise its meaningless */
     if (argvars[0].var_type == VAR_STRING && argvars[1].var_type == VAR_STRING)
@@ -3378,7 +3381,10 @@ f_delete(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    retvar->var_val.var_number = mch_remove(get_var_string(&argvars[0]));
+    if (check_restricted() || check_secure())
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = mch_remove(get_var_string(&argvars[0]));
 }
 
 /*
@@ -4625,7 +4631,12 @@ f_histadd(argvars, retvar)
     int		histype;
     char_u	*str;
     char_u	buf[NUMBUFLEN];
+#endif
 
+    retvar->var_val.var_number = FALSE;
+    if (check_restricted() || check_secure())
+	return;
+#ifdef FEAT_CMDHIST
     histype = get_histtype(get_var_string(&argvars[0]));
     if (histype >= 0)
     {
@@ -4638,7 +4649,6 @@ f_histadd(argvars, retvar)
 	}
     }
 #endif
-    retvar->var_val.var_number = FALSE;
 }
 
 /*
@@ -5267,7 +5277,10 @@ f_rename(argvars, retvar)
 {
     char_u	buf[NUMBUFLEN];
 
-    retvar->var_val.var_number = vim_rename(get_var_string(&argvars[0]),
+    if (check_restricted() || check_secure())
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = vim_rename(get_var_string(&argvars[0]),
 					get_var_string_buf(&argvars[1], buf));
 }
 
@@ -5547,6 +5560,8 @@ f_setbufvar(argvars, retvar)
     VAR		varp;
     char_u	nbuf[NUMBUFLEN];
 
+    if (check_restricted() || check_secure())
+	return;
     ++emsg_off;
     buf = get_buf_var(&argvars[0]);
     varname = get_var_string(&argvars[1]);
@@ -5633,6 +5648,8 @@ f_setwinvar(argvars, retvar)
     VAR		varp;
     char_u	nbuf[NUMBUFLEN];
 
+    if (check_restricted() || check_secure())
+	return;
     ++emsg_off;
     win = find_win_by_nr(&argvars[0]);
     varname = get_var_string(&argvars[1]);
@@ -5765,6 +5782,11 @@ f_remote_peek(argvars, retvar)
     var		v;
     char_u	*s;
 
+    if (check_restricted() || check_secure())
+    {
+	retvar->var_val.var_number = -1;
+	return;
+    }
 # ifdef WIN32
     int		n = 0;
 
@@ -5805,20 +5827,22 @@ f_remote_read(argvars, retvar)
     char_u	*r = NULL;
 
 #ifdef FEAT_CLIENTSERVER
+    if (!check_restricted() && !check_secure())
+    {
 # ifdef WIN32
-    /* The server's HWND is encoded in the 'id' parameter */
-    int		n = 0;
+	/* The server's HWND is encoded in the 'id' parameter */
+	int		n = 0;
 
-    sscanf(get_var_string(&argvars[0]), "%x", &n);
-    if (n != 0)
-	r = serverGetReply((HWND)n, FALSE, TRUE, TRUE);
-    if (r == NULL)
+	sscanf(get_var_string(&argvars[0]), "%x", &n);
+	if (n != 0)
+	    r = serverGetReply((HWND)n, FALSE, TRUE, TRUE);
+	if (r == NULL)
 # else
-    if (check_connection() == FAIL
-	    || serverReadReply(X_DISPLAY,
+	if (check_connection() == FAIL || serverReadReply(X_DISPLAY,
 		  serverStrToWin(get_var_string(&argvars[0])), &r, FALSE) < 0)
 # endif
-	EMSG(_("E277: Unable to read a server reply"));
+	    EMSG(_("E277: Unable to read a server reply"));
+    }
 #endif
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = r;
@@ -5836,7 +5860,9 @@ f_server2client(argvars, retvar)
     char_u	*reply = get_var_string_buf(&argvars[1], buf);
 
     retvar->var_val.var_number = -1;
-# ifndef WIN32
+    if (check_restricted() || check_secure())
+	return;
+# ifdef FEAT_X11
     if (check_connection() == FAIL)
 	return;
 # endif
@@ -5870,6 +5896,9 @@ remote_common(argvars, retvar, expr)
 # else
     Window	w;
 # endif
+
+    if (check_restricted() || check_secure())
+	return;
 
 # ifdef FEAT_X11
     if (check_connection() == FAIL)
