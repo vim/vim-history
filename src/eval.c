@@ -8696,7 +8696,7 @@ ex_function(eap)
     ufunc_T	*fp;
     int		indent;
     int		nesting;
-    int		in_append = FALSE;
+    char_u	*skip_until = NULL;
     static char_u e_funcexts[] = N_("E122: Function %s already exists, add ! to replace it");
 
     /*
@@ -8899,11 +8899,15 @@ ex_function(eap)
 	    goto erret;
 	}
 
-	if (in_append)
+	if (skip_until != NULL)
 	{
-	    /* between ":append" and "." there is no check for ":endfunc". */
-	    if (theline[0] == '.' && theline[1] == NUL)
-		in_append = FALSE;
+	    /* between ":append" and "." and between ":python <<EOF" and "EOF"
+	     * don't check for ":endfunc". */
+	    if (STRCMP(theline, skip_until) == 0)
+	    {
+		vim_free(skip_until);
+		skip_until = NULL;
+	    }
 	}
 	else
 	{
@@ -8948,7 +8952,28 @@ ex_function(eap)
 		    || (p[0] == 'i'
 			&& (!ASCII_ISALPHA(p[1]) || (p[1] == 'n'
 				&& (!ASCII_ISALPHA(p[2]) || (p[2] == 's'))))))
-		in_append = TRUE;
+		skip_until = vim_strsave((char_u *)".");
+
+	    /* Check for ":python <<EOF", ":tcl <<EOF", etc. */
+	    arg = skipwhite(skiptowhite(p));
+	    if (arg[0] == '<' && arg[1] =='<'
+		    && ((p[0] == 'p' && p[1] == 'y'
+				    && (!ASCII_ISALPHA(p[2]) || p[2] == 't'))
+			|| (p[0] == 'p' && p[1] == 'e'
+				    && (!ASCII_ISALPHA(p[2]) || p[2] == 'r'))
+			|| (p[0] == 't' && p[1] == 'c'
+				    && (!ASCII_ISALPHA(p[2]) || p[2] == 'l'))
+			|| (p[0] == 'r' && p[1] == 'u' && p[2] == 'b'
+				    && (!ASCII_ISALPHA(p[3]) || p[3] == 'y'))
+			))
+	    {
+		/* ":python <<" continues until a dot, like ":append" */
+		p = skipwhite(arg + 2);
+		if (*p == NUL)
+		    skip_until = vim_strsave((char_u *)".");
+		else
+		    skip_until = vim_strsave(p);
+	    }
 	}
 
 	/* Add the line to the function. */
@@ -9004,9 +9029,11 @@ ex_function(eap)
 #ifdef FEAT_MAGIC_BRACES
     did_emsg |= saved_did_emsg;
 #endif
+    vim_free(skip_until);
     return;
 
 erret:
+    vim_free(skip_until);
     ga_clear_strings(&newargs);
     ga_clear_strings(&newlines);
 erret_name:
