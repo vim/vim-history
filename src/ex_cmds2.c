@@ -1397,6 +1397,7 @@ ex_listdo(eap)
     win_T	*win;
 #endif
     buf_T	*buf;
+    int		next_fnum = 0;
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
     char_u	*save_ei = vim_strsave(p_ei);
     char_u	*new_ei;
@@ -1458,6 +1459,18 @@ ex_listdo(eap)
 		win = win->w_next;
 	    }
 #endif
+	    else if (eap->cmdidx == CMD_bufdo)
+	    {
+		/* Remember the number of the next listed buffer, in case
+		 * ":bwipe" is used or autocommands do something strange. */
+		next_fnum = -1;
+		for (buf = curbuf->b_next; buf != NULL; buf = buf->b_next)
+		    if (buf->b_p_bl)
+		    {
+			next_fnum = buf->b_fnum;
+			break;
+		    }
+	    }
 
 	    /* execute the command */
 	    do_cmdline(eap->arg, eap->getline, eap->cookie,
@@ -1465,15 +1478,18 @@ ex_listdo(eap)
 
 	    if (eap->cmdidx == CMD_bufdo)
 	    {
-		/* Go to the next listed buffer.  Check that we really get
-		 * there (no autocommands confused us). */
-		for (buf = curbuf->b_next; buf != NULL; buf = buf->b_next)
-		    if (buf->b_p_bl)
+		/* Done? */
+		if (next_fnum < 0)
+		    break;
+		/* Check if the buffer still exists. */
+		for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+		    if (buf->b_fnum == next_fnum)
 			break;
 		if (buf == NULL)
 		    break;
-		goto_buffer(eap, DOBUF_CURRENT, FORWARD, 1);
-		if (curbuf != buf)
+		goto_buffer(eap, DOBUF_FIRST, FORWARD, next_fnum);
+		/* If autocommands took us elsewhere, quit here */
+		if (curbuf->b_fnum != next_fnum)
 		    break;
 	    }
 
