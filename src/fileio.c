@@ -5777,6 +5777,8 @@ static void forward_slash __ARGS((char_u *));
 forward_slash(fname)
     char_u	*fname;
 {
+    char_u	*p;
+
     for (p = fname; *p != NUL; ++p)
 # ifdef  FEAT_MBYTE
 	/* The Big5 encoding can have '\' in the trail byte. */
