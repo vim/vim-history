@@ -520,8 +520,13 @@ do_cmdline(cmdline, getline, cookie, flags)
 		else
 		    cstack.cs_had_continue = FALSE;
 
-		/* jump back to the matching ":while"? */
-		if (!did_emsg && cstack.cs_idx >= 0
+		/* Jump back to the matching ":while".  Be careful not to use
+		 * a cs_line[] from an entry that isn't a ":while": It would
+		 * make "current_line" invalid and can cause a crash. */
+		if (!did_emsg
+			&& cstack.cs_idx >= 0
+			&& (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
+			&& cstack.cs_line[cstack.cs_idx] >= 0
 			&& (cstack.cs_flags[cstack.cs_idx] & CSF_ACTIVE))
 		{
 		    current_line = cstack.cs_line[cstack.cs_idx];
@@ -7233,6 +7238,7 @@ do_while(eap, cstack)
 	{
 	    ++cstack->cs_idx;
 	    ++cstack->cs_whilelevel;
+	    cstack->cs_line[cstack->cs_idx] = -1;
 	}
 	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
 
@@ -7246,16 +7252,13 @@ do_while(eap, cstack)
 
 	if (!skip)
 	{
-	    if (result)
+	    if (result && !error)
 		cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
-	    if (error)
-		--cstack->cs_idx;
-	    else
-		/*
-		 * Set cs_had_while flag, so do_cmdline() will set the line
-		 * number in cs_line[].
-		 */
-		cstack->cs_had_while = TRUE;
+	    /*
+	     * Set cs_had_while flag, so do_cmdline() will set the line
+	     * number in cs_line[].
+	     */
+	    cstack->cs_had_while = TRUE;
 	}
     }
 
@@ -7332,7 +7335,7 @@ do_endwhile(cstack)
 	if (!(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
 	{
 	    errormsg = (char_u *)":endwhile without :while";
-	    while (cstack->cs_idx > 0
+	    while (cstack->cs_idx >= 0
 		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
 		--cstack->cs_idx;
 	}
