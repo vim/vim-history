@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0y.  Last change: 2001 Mar 16
+*windows.txt*   For Vim version 6.0z.  Last change: 2001 Mar 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -289,13 +289,13 @@ CTRL-W k	Move cursor to Nth window above current one.  Uses the cursor
 		position to select between alternatives.
 
 CTRL-W <Left>					*CTRL-W_<Left>*
-CTRL-W CTRL-H					*CTRL-W_CTRL_H*
+CTRL-W CTRL-H					*CTRL-W_CTRL-H*
 CTRL-W <BS>					*CTRL-W_<BS>* *CTRL-W_h*
 CTRL-W h	Move cursor to Nth window left of current one.  Uses the
 		cursor position to select between alternatives.
 
 CTRL-W <Right>					*CTRL-W_<Right>*
-CTRL-W CTRL-L					*CTRL-W_CTRL_L* *CTRL-W_l*
+CTRL-W CTRL-L					*CTRL-W_CTRL-L* *CTRL-W_l*
 CTRL-W l	Move cursor to Nth window right of current one.  Uses the
 		cursor position to select between alternatives.
 
@@ -344,16 +344,20 @@ These commands can also be executed with ":wincmd":
 5. Moving windows around				*window-moving*
 
 CTRL-W r					*CTRL-W_r* *CTRL-W_CTRL-R*
-CTRL-W CTRL-R	Rotate windows downwards.  The first window becomes the second
-		one, the second one becomes the third one, etc.  The last
-		window becomes the first window.  The cursor remains in the
-		same window.
+CTRL-W CTRL-R	Rotate windows downwards/rightwards.  The first window becomes
+		the second one, the second one becomes the third one, etc.
+		The last window becomes the first window.  The cursor remains
+		in the same window.
+		This only works within the row or column of windows that the
+		current window is in.
 
 						*CTRL-W_R*
-CTRL-W R	Rotate windows upwards.  The second window becomes the first
-		one, the third one becomes the second one, etc.  The first
-		window becomes the last window.  The cursor remains in the
-		same window.
+CTRL-W R	Rotate windows upwards/leftwards.  The second window becomes
+		the first one, the third one becomes the second one, etc.  The
+		first window becomes the last window.  The cursor remains in
+		the same window.
+		This only works within the row or column of windows that the
+		current window is in.
 
 CTRL-W x					*CTRL-W_x* *CTRL-W_CTRL-X*
 CTRL-W CTRL-X	Without count: Exchange current window with next one.  If there
@@ -363,6 +367,36 @@ CTRL-W CTRL-X	Without count: Exchange current window with next one.  If there
 		When vertical and horizontal window splits are mixed, the
 		exchange is only done in the row or column of windows that the
 		current window is in.
+
+						*CTRL-W_K*
+CTRL-W K	Move the current window to be at the very top, using the full
+		width of the screen.  This works like closing the current
+		window and then creating another one with ":topleft split",
+		except that the current window contents is used for the new
+		window.
+
+						*CTRL-W_J*
+CTRL-W J	Move the current window to be at the very bottom, using the
+		full width of the screen.  This works like closing the current
+		window and then creating another one with ":botright split",
+		except that the current window contents is used for the new
+		window.
+
+						*CTRL-W_H*
+CTRL-W H	Move the current window to be at the far left, using the
+		full height of the screen.  This works like closing the
+		current window and then creating another one with
+		":vert topleft split", except that the current window contents
+		is used for the new window.
+		{not available when compiled without the +vertsplit feature}
+
+						*CTRL-W_L*
+CTRL-W L	Move the current window to be at the far right, using the full
+		height of the screen.  This works like closing the
+		current window and then creating another one with
+		":vert botright split", except that the current window
+		contents is used for the new window.
+		{not available when compiled without the +vertsplit feature}
 
 ==============================================================================
 6. Window resizing					*window-resize*
@@ -779,7 +813,7 @@ is no word under the cursor, and a few other things: >
   :    " Delete any existing highlight before showing another tag
   :    silent! wincmd P			" jump to preview window
   :    if &previewwindow			" if we really get there...
-  :      silent! syn clear previewWord	" delete existing highlight
+  :      match none			" delete existing highlight
   :      wincmd p			" back to old window
   :    endif
   :
@@ -796,10 +830,11 @@ is no word under the cursor, and a few other things: >
   :	   silent! .foldopen		" don't want a closed fold
   :	 endif
   :	 call search("$", "b")		" to end of previous line
-  :	 call search('\<' . w . '\>')	" position cursor on match
-  :	 " Add a syntax item to the word at this position
-  :	 exe 'syn match previewWord "\%' . line(".") . 'l\%' . col(".") . 'c\k*" containedin=ALL'
+  :	 let w = substitute(w, '\\', '\\\\', "")
+  :	 call search('\<\V' . w . '\>')	" position cursor on match
+  :	 " Add a match highlight to the word at this position
   :      hi previewWord term=bold ctermbg=green guibg=green
+  :	 exe 'match previewWord "\%' . line(".") . 'l\%' . col(".") . 'c\k*"'
   :      wincmd p			" back to old window
   :    endif
   :  endif

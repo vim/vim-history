@@ -27,6 +27,7 @@ char_u *highlight_has_attr __ARGS((int id, int flag, int modec));
 char_u *highlight_color __ARGS((int id, char_u *what, int modec));
 int syn_name2id __ARGS((char_u *name));
 int highlight_exists __ARGS((char_u *name));
+int syn_namen2id __ARGS((char_u *linep, int len));
 int syn_check_group __ARGS((char_u *pp, int len));
 int syn_id2attr __ARGS((int hl_id));
 int syn_id2colors __ARGS((int hl_id, guicolor_t *fgp, guicolor_t *bgp));

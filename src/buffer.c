@@ -89,7 +89,7 @@ open_buffer(read_stdin, eap)
 	 */
 	if (curbuf == NULL)
 	{
-	    EMSG(_("Cannot allocate buffer, exiting..."));
+	    EMSG(_("Cannot allocate any buffer, exiting..."));
 	    getout(2);
 	}
 	EMSG(_("Cannot allocate buffer, using other one..."));
@@ -912,8 +912,11 @@ do_buffer(action, start, dir, count, forceit)
 #ifdef FEAT_AUTOCMD
 	if (au_new_curbuf != NULL && buf_valid(au_new_curbuf))
 	    buf = au_new_curbuf;
+# ifdef FEAT_JUMPLIST
 	else
+# endif
 #endif
+#ifdef FEAT_JUMPLIST
 	    if (curwin->w_jumplistlen > 0)
 	{
 	    int     jumpidx;
@@ -942,6 +945,7 @@ do_buffer(action, start, dir, count, forceit)
 		    break;
 	    }
 	}
+#endif
 
 	if (buf == NULL)	/* No previous buffer, Try 2'nd approach */
 	{
@@ -1265,8 +1269,11 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
 	if (top_file_num < 0)		/* wrap around (may cause duplicates) */
 	{
 	    EMSG(_("Warning: List of file names overflow"));
-	    out_flush();
-	    ui_delay(3000L, TRUE);	/* make sure it is noticed */
+	    if (emsg_silent == 0)
+	    {
+		out_flush();
+		ui_delay(3000L, TRUE);	/* make sure it is noticed */
+	    }
 	    top_file_num = 1;
 	}
 

@@ -282,9 +282,10 @@ gui_x11_set_back_color()
  */
 
 static char_u *make_pull_name __ARGS((char_u * name));
-static void gui_mch_submenu_colors __ARGS((vimmenu_t *mp));
 static void gui_athena_reorder_menus	__ARGS((void));
 static Widget get_popup_entry __ARGS((Widget w));
+static void gui_mch_submenu_change __ARGS((vimmenu_t *mp, int colors));
+static void gui_athena_menu_font __ARGS((Widget id));
 
     void
 gui_mch_enable_menu(flag)
@@ -351,11 +352,13 @@ gui_mch_add_menu(menu, idx)
 	    if (menu->id == (Widget)0)
 		return;
 	    gui_athena_menu_colors(menu->id);
+	    gui_athena_menu_font(menu->id);
 
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, menu->id,
 		NULL);
 	    gui_athena_menu_colors(menu->submenu_id);
+	    gui_athena_menu_font(menu->submenu_id);
 
 	    /* Don't update the menu height when it was set at a fixed value */
 	    if (!gui.menu_height_fixed)
@@ -387,6 +390,7 @@ gui_mch_add_menu(menu, idx)
 	if (menu->id == (Widget)0)
 	    return;
 	gui_athena_menu_colors(menu->id);
+	gui_athena_menu_font(menu->id);
 	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 	    (XtPointer)menu);
 
@@ -396,9 +400,131 @@ gui_mch_add_menu(menu, idx)
 	    XtNtranslations, menuTrans,
 	    NULL);
 	gui_athena_menu_colors(menu->submenu_id);
+	gui_athena_menu_font(menu->submenu_id);
 	vim_free(pullright_name);
 
 	XtOverrideTranslations(parent->submenu_id, parentTrans);
+    }
+}
+
+    static void
+gui_athena_menu_font(id)
+    Widget  id;
+{
+    if (gui.menu_font != NOFONT)
+    {
+	if (XtIsManaged(id))
+	{
+	    XtUnmanageChild(id);
+	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
+	    /* We should force the widget to recalculate it's
+	     * geometry now.
+	     */
+	    XtManageChild(id);
+	}
+	else
+	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
+    }
+}
+
+
+    void
+gui_mch_new_menu_font()
+{
+    if (menuBar == (Widget)0)
+	return;
+    gui_mch_submenu_change(root_menu, FALSE);
+    {
+	/* Iterate through the menubar menu items and get the height of
+	 * each one.  The menu bar height is set to the maximum of all
+	 * the heights.
+	 */
+	vimmenu_t *mp;
+	int max_height = INT_MAX;
+
+	for (mp = root_menu; mp != NULL; mp = mp->next)
+	{
+	    if (menu_is_menubar(mp->dname))
+	    {
+		Dimension height;
+
+		XtVaGetValues(mp->id,
+			XtNheight,(XtArgVal *)&height,
+			NULL);
+		if (height < max_height)
+		    max_height = height;
+	    }
+	}
+	if (max_height != INT_MAX)
+	{
+	    /* Don't update the menu height when it was set at a fixed value */
+	    if (!gui.menu_height_fixed)
+	    {
+		Dimension   space, border;
+
+		XtVaGetValues(menuBar,
+			XtNvSpace,	&space,
+			XtNborderWidth, &border,
+			NULL);
+		gui.menu_height = max_height + 2 * (space + border);
+	    }
+	}
+    }
+    /* Now, to simulate the window being resized.  Only, this
+     * will resize the window to it's current state.
+     *
+     * Hopefully, the menu bar will be resized correctly.
+     *
+     * There has to be a better way, but I do not see one at this time.
+     * (David Harrison)
+     */
+    {
+	Position w, h;
+
+	XtVaGetValues(vimShell,
+		XtNwidth, &w,
+		XtNheight, &h,
+		NULL);
+	gui_resize_shell(w, h
+#ifdef FEAT_XIM
+						- xim_get_status_area_height()
+#endif
+		     );
+    }
+    gui_set_shellsize(TRUE);
+    ui_new_shellsize();
+}
+
+
+    static void
+gui_mch_submenu_change(mp, colors)
+    vimmenu_t	*mp;
+    int		colors;		/* TRUE for colors, FALSE for font */
+{
+    while (mp != NULL)
+    {
+	if (mp->id != (Widget)0)
+	{
+	    if (colors)
+		gui_athena_menu_colors(mp->id);
+	    else
+		gui_athena_menu_font(mp->id);
+	}
+
+	if (mp->children != NULL)
+	{
+	    /* Set the colors/font for the tear off widget */
+	    if (mp->submenu_id != (Widget)0)
+	    {
+		if (colors)
+		    gui_athena_menu_colors(mp->submenu_id);
+		else
+		    gui_athena_menu_font(mp->submenu_id);
+	    }
+	    /* Set the colors for the children */
+	    gui_mch_submenu_change(mp->children, colors);
+	}
+	mp = mp->next;
     }
 }
 
@@ -444,6 +570,7 @@ gui_mch_add_menu_item(menu, idx)
 	if (menu->id == (Widget)0)
 	    return;
 	gui_athena_menu_colors(menu->id);
+	gui_athena_menu_font(menu->id);
 	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 		(XtPointer)menu);
     }
@@ -466,26 +593,9 @@ gui_mch_new_menu_colors()
 	XtVaSetValues(menuBar, XtNborderColor,	gui.menu_fg_pixel, NULL);
     gui_athena_menu_colors(menuBar);
 
-    gui_mch_submenu_colors(root_menu);
+    gui_mch_submenu_change(root_menu,TRUE);
 }
 
-    static void
-gui_mch_submenu_colors(mp)
-    vimmenu_t	*mp;
-{
-    while (mp != NULL)
-    {
-	if (mp->id != (Widget)0)
-	    gui_athena_menu_colors(mp->id);
-	if (mp->submenu_id != (Widget)0)
-	    gui_athena_menu_colors(mp->submenu_id);
-
-	/* Set the colors for the children */
-	if (mp->children != NULL)
-	    gui_mch_submenu_colors(mp->children);
-	mp = mp->next;
-    }
-}
 
 /*
  * We can't always delete widgets, it would cause a crash.

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0y.  Last change: 2001 Mar 16
+*pattern.txt*   For Vim version 6.0z.  Last change: 2001 Mar 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,6 +8,7 @@ Patterns and search commands				*pattern-searches*
 
 1. Search commands		|search-commands|
 2. The definition of a pattern	|search-pattern|
+3. Highlighting matches		|match-highlight|
 
 ==============================================================================
 1. Search commands					*search-commands*
@@ -702,16 +703,16 @@ $	At end of pattern or in front of "\|" or "\)": matches end-of-line
 						*/\%#* *cursor-position*
 \%#	Matches with the cursor position.  Only works when matching in a
 	buffer displayed in a window. {not in Vi}
-	Note that the cursor may move after the pattern was used, the result
-	becomes invalid then.  This is especially relevant for syntax
-	highlighting and 'hlsearch'.  In other words: When the cursor moves
-	the display isn't updated for this change.  An update is done for
-	lines which are changed (the whole line is updated) or when using the
-	|CTRL-L| command (the whole screen is updated).
-	Example, to highlight the word under the cursor: >
+	WARNING: When the cursor is moved after the pattern was used, the
+	result becomes invalid.  Vim doesn't automatically update the matches.
+	This is especially relevant for syntax highlighting and 'hlsearch'.
+	In other words: When the cursor moves the display isn't updated for
+	this change.  An update is done for lines which are changed (the whole
+	line is updated) or when using the |CTRL-L| command (the whole screen
+	is updated).  Example, to highlight the word under the cursor: >
 		/\k*\%#\k*
-<	When 'hlsearch' is set this will clearly show when the match is
-	actually updated.
+<	When 'hlsearch' is set and you move the cursor around and make changes
+	this will clearly show when the match is updated or not.
 
 						*/\%l* */\%>l* */\%<l*
 \%23l	Matches in a specific line.
@@ -719,12 +720,13 @@ $	At end of pattern or in front of "\|" or "\)": matches end-of-line
 \%>23l	Matches below a specific line.
 	These three can be used to match specific lines in a buffer.  The "23"
 	can be any line number.  The first line is 1. {not in Vi}
-	Note that inserting/deleting lines does not always cause the match to
-	be updated (in Syntax highlighting or when using 'hlsearch').
+	WARNING: When inserting or deleting lines Vim does not automatically
+	update the matches.  This means Syntax highlighting quickly becomes
+	wrong.
 	Example, to highlight the line where the cursor currently is: >
 		:exe '/\%' . line(".") . 'l.*'
-<	When 'hlsearch' is set this will clearly show when the match is
-	updated.
+<	When 'hlsearch' is set and you move the cursor around and make changes
+	this will clearly show when the match is updated or not.
 
 						*/\%c* */\%>c* */\%<c*
 \%23c	Matches in a specific column.
@@ -734,12 +736,13 @@ $	At end of pattern or in front of "\|" or "\)": matches end-of-line
 	string.  The "23" can be any column number.  The first column is 1.
 	Actually, the column is the byte number (thus it's not exactly right
 	for multi-byte characters).  {not in Vi}
-	Note that inserting/deleting text does not always cause the match to
-	be updated (in Syntax highlighting or when using 'hlsearch').
+	WARNING: When inserting or deleting text Vim does not automatically
+	update the matches.  This means Syntax highlighting quickly becomes
+	wrong.
 	Example, to highlight the column where the cursor currently is: >
 		:exe '/\%' . col(".") . 'c'
-<	When 'hlsearch' is set this will clearly show when the match is
-	updated.
+<	When 'hlsearch' is set and you move the cursor around and make changes
+	this will clearly show when the match is updated or not.
 
 						*/\%v* */\%>v* */\%<v*
 \%23v	Matches in a specific virtual column.
@@ -752,13 +755,20 @@ $	At end of pattern or in front of "\|" or "\)": matches end-of-line
 	Note that some virtual column positions will never match, because they
 	are halfway a Tab or other character that occupies more than one
 	screen character.  {not in Vi}
-	Note that inserting/deleting text does not always cause the match to
-	be updated (in Syntax highlighting or when using 'hlsearch').
+	WARNING: When inserting or deleting text Vim does not automatically
+	update the matches.  This means Syntax highlighting quickly becomes
+	wrong.
 	Example, to highlight the all characters after virtual column 72: >
 		/\%>72v.*
-<	When 'hlsearch' is set this will clearly show when the match is
-	updated.
-
+<	When 'hlsearch' is set and you move the cursor around and make changes
+	this will clearly show when the match is updated or not.
+	To match the text up to column 17: >
+		/.*\%17v
+<	Column 17 is not included, because that's where the "\%17v" matches,
+	and since this is a |/zero-width| match, column 17 isn't included in
+	the match.  This does the same: >
+		/.*\%<18v
+<
 
 Character classes: {not in Vi}
 \i	identifier character (see 'isident' option)	*/\i*
@@ -878,6 +888,7 @@ x	A single character, with no special meaning, matches itself
 	  plausible pattern for a UNIX filename: "[-./[:alnum:]_~]\+" That is,
 	  a list of at least one character, each of which is either '-', '.',
 	  '/', alphabetic, numeric, '_' or '~'.
+	  These items only work for 8-bit characters.
 							  */\]*
 	- To include a literal ']', '^', '-' or '\' in the collection, put a
 	  backslash before it: "[xyz\]]", "[\^xyz]", "[xy\-z]" and "[xyz\\]".
@@ -958,5 +969,36 @@ works similar to the usage of <NL> for a <Nul>.
 When working with expression evaluation, a <NL> character in the pattern
 matches a <NL> in the string.  The use of "\n" (backslash n) to match a <NL>
 doesn't work there, it only works to match text in the buffer.
+
+==============================================================================
+3. Highlighting matches					*match-highlight*
+
+							*:mat* *:match*
+:mat[ch] {group} /{pattern}/
+		Define a pattern to highlight in the current window.  It will
+		be highlighted with {group}.  Example: >
+			:highlight MyGroup ctermbg=green guibg=green
+			:match MyGroup /TODO/
+<		Instead of // any character can be used to mark the start and
+		end of the {pattern}.
+		{group} must exist at the moment this command is executed.
+		The match overrides the 'hlsearch' highlighting.
+		Note that highlighting the last used search pattern with
+		'hlsearch' is used in all windows, while the pattern defined
+		with ":match" only exists in the current window.  It is kept
+		when switching to another buffer.
+		Another example, which highlights all characters in virtual
+		column 72 and more: >
+			:highlight rightMargin term=bold ctermfg=blue guifg=blue
+			:match rightMargin /.\%>72v/
+<		To highlight all character that are in virtual column 7: >
+			:highlight col8 ctermbg=grey guibg=grey
+			:match col8 /\%<8v.\%>7v/
+<		Note the use of two items to also match a character that
+		occupies more than one virtual column, such as a TAB.
+
+:mat[ch]
+:mat[ch] none
+		Clear a previously defined match pattern.
 
  vim:tw=78:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
-" Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last Change:	2001 Jan 15
+" Maintainer:	Jody Goldberg <jgoldberg@home.com>
+" Last Change:	2001 Mar 19
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
@@ -76,7 +76,7 @@ syn keyword idlContext	contained context	skipempty skipwhite nextgroup=idlRaises
 " Operation
 syn match   idlParmList	contained "," skipempty skipwhite nextgroup=idlOpParms
 syn region  idlArraySize contained start="\[" end="\]"	skipempty skipwhite nextgroup=idlArraySize,idlParmList contains=idlArraySize,idlLiteral
-syn match   idlParmName contained "[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlParmList, idlArraySize
+syn match   idlParmName contained "[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlParmList,idlArraySize
 syn keyword idlParmInt	contained short long		skipempty skipwhite nextgroup=idlParmName
 syn keyword idlParmType	contained unsigned		skipempty skipwhite nextgroup=idlParmInt
 syn region  idlD3	contained start="<" end=">"	skipempty skipwhite nextgroup=idlParmName	contains=idlString,idlLiteral
@@ -97,7 +97,7 @@ syn keyword idlOp	contained void			skipempty skipwhite nextgroup=idlOpName
 syn keyword idlOneWayOp	contained oneway		skipempty skipwhite nextgroup=idOp
 
 " Enum
-syn region  idlEnumContents contained start="{" end="}"		skipempty skipwhite nextgroup=idlSemiColon, idlSimpDecl contains=idlId
+syn region  idlEnumContents contained start="{" end="}"		skipempty skipwhite nextgroup=idlSemiColon, idlSimpDecl contains=idlId,idlComment
 syn match   idlEnumName contained	"[a-zA-Z0-9_]\+"	skipempty skipwhite nextgroup=idlEnumContents
 syn keyword idlEnum			enum			skipempty skipwhite nextgroup=idlEnumName
 
@@ -113,7 +113,7 @@ syn keyword idlStruct			struct		 skipempty skipwhite nextgroup=idlStructName
 syn keyword idlException exception skipempty skipwhite nextgroup=idlStructName
 
 " Union
-syn match   idlColon contained ":"	skipempty skipwhite nextgroup=idlCase, idlSeqType,idlBaseType,idlBaseTypeInt
+syn match   idlColon contained ":"	skipempty skipwhite nextgroup=idlCase,idlSeqType,idlBaseType,idlBaseTypeInt
 syn region  idlCaseLabel contained start="" skip="::" end=":"me=e-1	skipempty skipwhite nextgroup=idlColon contains=idlLiteral,idlString
 syn keyword idlCase		contained case				skipempty skipwhite nextgroup=idlCaseLabel
 syn keyword idlCase		contained default			skipempty skipwhite nextgroup=idlColon

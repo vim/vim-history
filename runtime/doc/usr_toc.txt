@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0y.  Last change: 2001 Feb 08
+*usr_toc.txt*	For Vim version 6.0z.  Last change: 2001 Mar 23
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -96,6 +96,8 @@ Read this from start to end to learn the essential commands.
 |usr_09.txt|  Splitting windows
 		|09.1|  The help window
 		|09.2|  Two versions of a file
+		|09.3|  Vertical splits (example: edit tags file, map <Enter>
+			to show match in other window)
 
 ==============================================================================
 Editing Effictively ~
@@ -108,6 +110,9 @@ Subjects that can be read independently.
 
 |usr_21.txt|  Go away and come back
 		{viminfo, sessions, modelines)
+		session example: gvim with vertical split window, explorer on
+		the left, double click on name to chang dir or view file.
+		:set go+=l ssop+=resize
 
 |usr_22.txt|  Finding the file to edit
 		(file name completion, 'wildmenu', ":cd", :find, "gf", tags,
@@ -181,7 +186,8 @@ Make Vim work as you like it.
 		regions, synchronizing)
 
 |usr_45.txt|  Select your language
-		(multi-lang features, menutrans, 'encoding')
+		(multi-lang features, menutrans, 'encoding', how to enter text
+		with 'keymap', hints for other input methods)
 
 ==============================================================================
 Making Vim Run ~

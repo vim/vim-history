@@ -778,6 +778,7 @@ typedef unsigned short u8char_t;
 #define WSP_VERT	2	/* split vertically */
 #define WSP_TOP		4	/* window at top-left of shell */
 #define WSP_BOT		8	/* window at bottom-right of shell */
+#define WSP_HELP	16	/* creating the help window */
 
 /*
  * "flags" values for option-setting functions.
@@ -1227,15 +1228,16 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_TERMRESPONSE	10
 #define VV_FNAME	11
 #define VV_LANG		12
-#define VV_CC_FROM	13
-#define VV_CC_TO	14
-#define VV_CC_IN	15
-#define VV_CC_OUT	16
-#define VV_CMDARG	17
-#define VV_FOLDSTART	18
-#define VV_FOLDEND	19
-#define VV_FOLDDASHES	20
-#define VV_LEN		21	/* number of v: vars */
+#define VV_CTYPE	13
+#define VV_CC_FROM	14
+#define VV_CC_TO	15
+#define VV_CC_IN	16
+#define VV_CC_OUT	17
+#define VV_CMDARG	18
+#define VV_FOLDSTART	19
+#define VV_FOLDEND	20
+#define VV_FOLDDASHES	21
+#define VV_LEN		22	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

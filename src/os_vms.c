@@ -1577,7 +1577,11 @@ mch_setmouse(int on)
 check_mouse_termcode()
 {
 # ifdef FEAT_MOUSE_XTERM
-    if (use_xterm_mouse())
+    if (use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
     {
 	set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
 	if (*p_mouse != NUL)
@@ -1591,17 +1595,34 @@ check_mouse_termcode()
     else
 	del_mouse_termcode(KS_MOUSE);
 # endif
+
 # ifdef FEAT_MOUSE_GPM
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
 # endif
+
 # ifdef FEAT_MOUSE_NET
-    /* can be added always, there is no conflict */
-    set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)"\033}");
+    /* can be added always, there is no conflict, don't use it in the GUI
+     * though */
+#  ifdef FEAT_GUI
+    if (gui.in_use)
+	del_mouse_termcode(KS_NETTERM_MOUSE);
+    else
+#  endif
+	set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)"\033}");
 # endif
+
 # ifdef FEAT_MOUSE_DEC
     /* conflicts with xterm mouse: "\033[" and "\033[M" */
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
     else
 	del_mouse_termcode(KS_DEC_MOUSE);

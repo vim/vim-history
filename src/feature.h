@@ -126,6 +126,13 @@
 # define FEAT_CMDHIST
 #endif
 
+/*
+ * +jumplist		Jumplist, CTRL-O and CTRL-I commands.
+ */
+#ifdef FEAT_SMALL
+# define FEAT_JUMPLIST
+#endif
+
 /* the cmdline-window requires FEAT_VERTSPLIT and FEAT_CMDHIST */
 #if defined(FEAT_VERTSPLIT) && defined(FEAT_CMDHIST)
 # define FEAT_CMDWIN
@@ -530,13 +537,6 @@
 	&& SIZEOF_INT >= 4 && !defined(EBCDIC)
 # define FEAT_MBYTE
 #endif
-
-/*
- * Add "debug" for 'encoding': make uppercase ASCII characters be handled like
- * double-byte characters.  Simplistic way to test the double-byte code in a
- * latin1 environment.
- */
-/* #define MB_DEBUG */
 
 /*
  * +multi_byte_ime	Win32 IME input method.  Requires +multi_byte.

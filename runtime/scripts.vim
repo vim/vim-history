@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Feb 04
+" Last change:	2001 Mar 21
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -24,6 +24,12 @@ let s:cpo_save = &cpo
 set cpo&vim
 
 let s:line1 = getline(1)
+
+" Check for a line like "#!/usr/bin/env bash".  Turn it into "#!/usr/bin/bash"
+" to make matching easier.
+if s:line1 =~ '^#!.*[/\\]env\s'
+  let s:line1 = substitute(s:line1, '\<env\s\+', '', '')
+endif
 
 " Bourne-like shell scripts: sh ksh bash bash2
 if s:line1 =~ '^#!.*[/\\]\(bash\|bash2\|ksh\|sh\)\>' || s:line1 =~ '^:$'

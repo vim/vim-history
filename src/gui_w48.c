@@ -1542,6 +1542,7 @@ gui_mch_get_color(char_u *name)
 	{"Brown",		RGB(0x80, 0x40, 0x40)},
 	{"Yellow",		RGB(0xFF, 0xFF, 0x00)},
 	{"LightYellow",		RGB(0xFF, 0xFF, 0xA0)},
+	{"DarkYellow",		RGB(0xBB, 0xBB, 0x00)},
 	{"SeaGreen",		RGB(0x2E, 0x8B, 0x57)},
 	{"Orange",		RGB(0xFF, 0xA5, 0x00)},
 	{"Purple",		RGB(0xA0, 0x20, 0xF0)},
@@ -1815,7 +1816,10 @@ process_message(void)
 #ifdef MSWIN_FIND_REPLACE
     /* Don't process messages used by the dialog */
     if ((s_findrep_hwnd) && (IsDialogMessage(s_findrep_hwnd, &msg)))
+    {
+	HandleMouseHide(msg.message, msg.lParam);
 	return;
+    }
 #endif
 
     /*
@@ -2082,22 +2086,21 @@ gui_mch_wait_for_chars(int wtime)
  */
     void
 gui_mch_clear_block(
-    int	    row1,
-    int	    col1,
-    int	    row2,
-    int	    col2)
+    int		row1,
+    int		col1,
+    int		row2,
+    int		col2)
 {
-    RECT    rc;
+    RECT	rc;
 
     /*
-     * Clear one extra pixel at the right, for when bold characters have
-     * spilled over to the next column.  Note: FillRect() excludes right and
-     * bottom of rectangle.
-     * Can this ever erase part of the next character? - webb
+     * Clear one extra pixel at the far right, for when bold characters have
+     * spilled over to the window border.
+     * Note: FillRect() excludes right and bottom of rectangle.
      */
     rc.left = FILL_X(col1);
     rc.top = FILL_Y(row1);
-    rc.right = FILL_X(col2 + 1) + 1;
+    rc.right = FILL_X(col2 + 1) + (col2 == Columns - 1);
     rc.bottom = FILL_Y(row2 + 1);
     clear_rect(&rc);
 }

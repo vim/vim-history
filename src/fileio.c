@@ -921,7 +921,7 @@ retry:
 		}
 		if (new_buffer == NULL)
 		{
-		    do_outofmem_msg();
+		    do_outofmem_msg((long_u)(size * 2 + linerest + 1));
 		    error = TRUE;
 		    break;
 		}
@@ -4840,7 +4840,7 @@ buf_check_timestamp(buf, focus)
 	path = home_replace_save(buf, buf->b_fname);
 	if (path != NULL)
 	{
-	    tbuf = alloc((unsigned)STRLEN(path) + 65);
+	    tbuf = alloc((unsigned)STRLEN(path) + STRLEN(mesg));
 	    sprintf((char *)tbuf, mesg, path);
 	    if (State > NORMAL_BUSY || (State & CMDLINE) || already_warned)
 	    {
@@ -4860,15 +4860,18 @@ buf_check_timestamp(buf, focus)
 		    msg_puts_attr(tbuf, hl_attr(HLF_E) + MSG_HIST);
 		    msg_clr_eos();
 		    (void)msg_end();
-		    out_flush();
+		    if (emsg_silent == 0)
+		    {
+			out_flush();
 #ifdef FEAT_GUI
-		    if (!focus)
+			if (!focus)
 #endif
-			/* give the user some time to think about it */
-			ui_delay(1000L, TRUE);
+			    /* give the user some time to think about it */
+			    ui_delay(1000L, TRUE);
 
-		    /* don't redraw and erase the message */
-		    redraw_cmdline = FALSE;
+			/* don't redraw and erase the message */
+			redraw_cmdline = FALSE;
+		    }
 		}
 		already_warned = TRUE;
 #endif
@@ -5481,7 +5484,7 @@ au_find_group(name)
 }
 
 /*
- * Implementation of the ":augroup name" command.
+ * ":augroup {name}".
  */
     void
 do_augroup(arg)

@@ -1595,7 +1595,13 @@ do_source(fname, check_other, is_vimrc)
     if (cookie.fp == NULL)
     {
 	if (p_verbose > 0)
-	    smsg((char_u *)_("could not source \"%s\""), fname);
+	{
+	    if (sourcing_name == NULL)
+		smsg((char_u *)_("could not source \"%s\""), fname);
+	    else
+		smsg((char_u *)_("line %ld: could not source \"%s\""),
+			sourcing_lnum, fname);
+	}
 	goto theend;
     }
 
@@ -1605,7 +1611,13 @@ do_source(fname, check_other, is_vimrc)
      * - For a vimrc file, may want to set 'compatible', call vimrc_found().
      */
     if (p_verbose > 1)
-	smsg((char_u *)_("sourcing \"%s\""), fname);
+    {
+	if (sourcing_name == NULL)
+	    smsg((char_u *)_("sourcing \"%s\""), fname);
+	else
+	    smsg((char_u *)_("line %ld: sourcing \"%s\""),
+		    sourcing_lnum, fname);
+    }
     if (is_vimrc)
 	vimrc_found();
 

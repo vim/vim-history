@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 18
+" Last change:	2001 Mar 21
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -321,6 +321,9 @@ au BufNewFile,BufRead *.def			setf def
 " Dracula
 au BufNewFile,BufRead *.drac,*.drc,*lvs,*lpe	setf dracula
 
+" dsl
+au BufNewFile,BufRead *.dsl			setf dsl
+
 " DTD (Document Type Definition for XML)
 au BufNewFile,BufRead *.dtd			setf dtd
 
@@ -498,10 +501,8 @@ au BufNewFile,BufRead *.mgp			setf mgp
 " Mail (for Elm, trn, mutt, rn, slrn)
 au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt,/tmp/SLRN[0-9A-Z.]\+ setf mail
 
-" Makefile (but not Automake)
-au BufNewFile,BufRead [mM]akefile*
-	\ if expand("<afile>") !~? 'Makefile.am\>' | setf make | endif
-au BufNewFile,BufRead GNUmakefile,*.mk,*.mak,*.dsp setf make
+" Makefile
+au BufNewFile,BufRead [mM]akefile,GNUmakefile,*.mk,*.mak,*.dsp setf make
 
 " MakeIndex
 au BufNewFile,BufRead *.ist,*.mst		setf ist
@@ -1099,6 +1100,9 @@ au BufNewFile,BufRead *fvwm2rc*
 
 " Jam
 au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam
+
+" Makefile
+au BufNewFile,BufRead [mM]akefile*		setf make
 
 " Printcap and Termcap
 au BufNewFile,BufRead *printcap*

@@ -1346,23 +1346,25 @@ VimTextAreaView::mchDeleteLines(int row, int num_lines)
     if (row + num_lines > gui.scroll_region_bot)
     {
 	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1 + 1);
+	gui_clear_block(row, gui.scroll_region_left,
+		gui.scroll_region_bot, gui.scroll_region_right);
     }
     else
     {
 	/* copy one extra pixel, for when bold has spilled over */
-	int width = gui.char_width * (int)Columns + 1 - PEN_WIDTH;
+	int width = gui.char_width * (gui.scroll_region_right
+				- gui.scroll_region_left + 1) + 1 - PEN_WIDTH;
 	int height = gui.char_height *
 		     (gui.scroll_region_bot - row - num_lines + 1) - PEN_WIDTH;
 
 	BRect source, dest;
 
-	source.left = FILL_X(0);
+	source.left = FILL_X(gui.scroll_region_left);
 	source.top = FILL_Y(row + num_lines);
 	source.right = source.left + width;
 	source.bottom = source.top + height;
 
-	dest.left = FILL_X(0);
+	dest.left = FILL_X(gui.scroll_region_left);
 	dest.top = FILL_Y(row);
 	dest.right = dest.left + width;
 	dest.bottom = dest.top + height;
@@ -1390,7 +1392,9 @@ VimTextAreaView::mchDeleteLines(int row, int num_lines)
 	    //Sync();
 
 	    /* Update gui.cursor_row if the cursor scrolled or copied over */
-	    if (gui.cursor_row >= row)
+	    if (gui.cursor_row >= row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
 	    {
 		if (gui.cursor_row < row + num_lines)
 		    gui.cursor_is_valid = FALSE;
@@ -1399,8 +1403,9 @@ VimTextAreaView::mchDeleteLines(int row, int num_lines)
 	    }
 
 	    /* Clear one column more for when bold has spilled over */
-	    gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-		gui.scroll_region_bot, (int)Columns - 1 + 1);
+	    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+		gui.scroll_region_bot, gui.scroll_region_right);
 
 	    gui.vimWindow->Unlock();
 	    /*
@@ -1422,23 +1427,25 @@ VimTextAreaView::mchInsertLines(int row, int num_lines)
     if (row + num_lines > gui.scroll_region_bot)
     {
 	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1 + 1);
+	gui_clear_block(row, gui.scroll_region_left,
+		gui.scroll_region_bot, gui.scroll_region_right);
     }
     else
     {
 	/* copy one extra pixel, for when bold has spilled over */
-	int width = gui.char_width * (int)Columns + 1 - PEN_WIDTH;
+	int width = gui.char_width * (gui.scroll_region_right
+				- gui.scroll_region_left + 1) + 1 - PEN_WIDTH;
 	int height = gui.char_height *
 		     (gui.scroll_region_bot - row - num_lines + 1) - PEN_WIDTH;
 
 	BRect source, dest;
 
-	source.left = FILL_X(0);
+	source.left = FILL_X(gui.scroll_region_left);
 	source.top = FILL_Y(row);
 	source.right = source.left + width;
 	source.bottom = source.top + height;
 
-	dest.left = FILL_X(0);
+	dest.left = FILL_X(gui.scroll_region_left);
 	dest.top = FILL_Y(row + num_lines);
 	dest.right = dest.left + width;
 	dest.bottom = dest.top + height;
@@ -1460,7 +1467,9 @@ VimTextAreaView::mchInsertLines(int row, int num_lines)
 	    //Sync();
 
 	    /* Update gui.cursor_row if the cursor scrolled or copied over */
-	    if (gui.cursor_row >= gui.row)
+	    if (gui.cursor_row >= gui.row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
 	    {
 		if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
 		    gui.cursor_row += num_lines;
@@ -1468,7 +1477,8 @@ VimTextAreaView::mchInsertLines(int row, int num_lines)
 		    gui.cursor_is_valid = FALSE;
 	    }
 	    /* Clear one column more for when bold has spilled over */
-	    gui_clear_block(row, 0, row + num_lines - 1, (int)Columns - 1 + 1);
+	    gui_clear_block(row, gui.scroll_region_left,
+		    row + num_lines - 1, gui.scroll_region_right);
 
 	    gui.vimWindow->Unlock();
 	    /*
@@ -2474,7 +2484,7 @@ gui_mch_get_color(
 	guicolor_t     colour;
     } GuiColourTable;
 
-#define NSTATIC_COLOURS		31
+#define NSTATIC_COLOURS		32
 #define NDYNAMIC_COLOURS	33
 #define NCOLOURS		(NSTATIC_COLOURS + NDYNAMIC_COLOURS)
 
@@ -2506,6 +2516,7 @@ gui_mch_get_color(
 	{"Brown",	    RGB(0x80, 0x40, 0x40)},
 	{"Yellow",	    RGB(0xFF, 0xFF, 0x00)},
 	{"LightYellow",	    RGB(0xFF, 0xFF, 0xA0)},
+	{"DarkYellow",	    RGB(0xBB, 0xBB, 0x00)},
 	{"SeaGreen",	    RGB(0x2E, 0x8B, 0x57)},
 	{"Orange",	    RGB(0xFF, 0xA5, 0x00)},
 	{"Purple",	    RGB(0xA0, 0x20, 0xF0)},
@@ -2923,10 +2934,6 @@ gui_mch_delete_lines(
     int		row,
     int		num_lines)
 {
-
-    if (num_lines <= 0)
-	return;
-
     gui.vimTextArea->mchDeleteLines(row, num_lines);
 }
 
@@ -2939,9 +2946,6 @@ gui_mch_insert_lines(
     int		row,
     int		num_lines)
 {
-    if (num_lines <= 0)
-	return;
-
     gui.vimTextArea->mchInsertLines(row, num_lines);
 }
 
@@ -2954,7 +2958,8 @@ gui_mch_insert_lines(
 gui_mch_enable_menu(
     int		flag)
 {
-    if (gui.vimWindow->Lock()) {
+    if (gui.vimWindow->Lock())
+    {
 	BMenuBar *menubar = gui.vimForm->MenuBar();
 	menubar->SetEnabled(flag);
 	gui.vimWindow->Unlock();

@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0y.  Last change: 2001 Mar 07
+*term.txt*      For Vim version 6.0z.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -232,6 +232,7 @@ OUTPUT CODES
 	t_Co	number of colors				*t_Co* *'t_Co'*
 	t_CS	if non-empty, cursor relative to scroll region	*t_CS* *'t_CS'*
 	t_cs	define scrolling region				*t_cs* *'t_cs'*
+	t_CV	define vertical scrolling region		*t_CV* *'t_CV'*
 	t_da	if non-empty, lines from above scroll down	*t_da* *'t_da'*
 	t_db	if non-empty, lines from below scroll up	*t_db* *'t_db'*
 	t_DL	delete number of lines				*t_DL* *'t_DL'*
@@ -404,10 +405,19 @@ remove highlighting from a line.  This is required for "hpterm".  Setting the
 'weirdinvert' option has the same effect as making 't_xs' non-empty, and vice
 versa.
 
+							*scroll-region*
 Some termcaps do not include an entry for 'cs' (scroll region), although the
 terminal does support it.  For example: xterm on a sun.  You can use the
 builtin_xterm or define t_cs yourself.  For example: >
 	:set t_cs=^V^[[%i%d;%dr
+
+The vertical scroll region t_CV is not a standard termcap code.  Vim uses it
+internall in the GUI.  But it can also be defined for a terminal, if you can
+find one that supports it.  The two arguments are the left and right column of
+the region which to restrict the scrolling to.  Just like t_cs defines the top
+and bottom lines.  Defining t_CV will make scrolling in vertically split
+windows a lot faster.  Don't set t_CV when t_da or t_db is set (text isn't
+cleared when scrolling).
 
 Where ^V is CTRL-V and ^[ is <Esc>.
 

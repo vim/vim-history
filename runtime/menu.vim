@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 18
+" Last Change:	2001 Mar 23
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -15,7 +15,7 @@ if !exists("did_install_default_menus")
 let did_install_default_menus = 1
 
 
-if exists("v:lang")
+if exists("v:lang") || &langmenu != ""
   " Try to find a menu translation file for the current language.
   if &langmenu != ""
     let s:lang = &langmenu
@@ -381,6 +381,19 @@ amenu 70.300 &Window.&New<Tab>^Wn		<C-W>n
 amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
 amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
 amenu 70.330 &Window.Split\ &Vertically<Tab>^Wv	<C-W>v
+if has("vertsplit")
+  amenu 70.332 &Window.File\ E&xplorer		:call MenuExplOpen()<CR>
+  if !exists("*MenuExplOpen")
+    fun MenuExplOpen()
+      if @% == ""
+	20vsp .
+      else
+	exe "20vsp " . expand("%:p:h")
+      endif
+      set go+=lr
+    endfun
+  endif
+endif
 amenu 70.335 &Window.-SEP1-			:
 amenu 70.340 &Window.&Close<Tab>^Wc		:confirm close<CR>
 amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
@@ -682,6 +695,7 @@ SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva
 SynMenu CD.Dracula:dracula
+SynMenu CD.DSSSL:dsl
 SynMenu CD.DTD:dtd
 SynMenu CD.DTML\ (Zope):dtml
 SynMenu CD.Dylan.Dylan:dylan

@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0y.  Last change: 2001 Feb 18
+*filetype.txt*   For Vim version 6.0z.  Last change: 2001 Mar 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -332,7 +332,7 @@ Displays a manual page in a nice way.
 To start using the ":Man" command before any manual page was loaded, source
 this script from your startup vimrc file: >
 
-	runtime ftplugin/man/default.vim
+	runtime ftplugin/man.vim
 
 Options:
 'iskeyword'	the '.' character is added to be able to use CTRL-] on the

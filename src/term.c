@@ -163,9 +163,15 @@ struct builtin_term builtin_termcaps[] =
 # ifdef TERMINFO
     {(int)KS_CDL,	IF_EB("\033|%p1%dD", ESC_STR "|%p1%dD")},
     {(int)KS_CS,	IF_EB("\033|%p1%d;%p2%dR", ESC_STR "|%p1%d;%p2%dR")},
+#  ifdef FEAT_VERTSPLIT
+    {(int)KS_CSV,	IF_EB("\033|%p1%d;%p2%dV", ESC_STR "|%p1%d;%p2%dV")},
+#  endif
 # else
     {(int)KS_CDL,	IF_EB("\033|%dD", ESC_STR "|%dD")},
     {(int)KS_CS,	IF_EB("\033|%d;%dR", ESC_STR "|%d;%dR")},
+#  ifdef FEAT_VERTSPLIT
+    {(int)KS_CSV,	IF_EB("\033|%d;%dV", ESC_STR "|%d;%dV")},
+#  endif
 # endif
     {(int)KS_CL,	IF_EB("\033|C", ESC_STR "|C")},
 			/* attributes switched on with 'h', off with * 'H' */
@@ -1153,9 +1159,16 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CDL,	"[CDL%d]"},
 #  endif
 #  ifdef TERMINFO
-    {(int)KS_CS,	"[%dCS%p1%d]"},
+    {(int)KS_CS,	"[%p1%dCS%p2%d]"},
 #  else
     {(int)KS_CS,	"[%dCS%d]"},
+#  endif
+#  ifdef FEAT_VERTSPLIT
+#   ifdef TERMINFO
+    {(int)KS_CSV,	"[%p1%dCSV%p2%d]"},
+#   else
+    {(int)KS_CSV,	"[%dCSV%d]"},
+#   endif
 #  endif
 #  ifdef TERMINFO
     {(int)KS_CAB,	"[CAB%p1%d]"},
@@ -1714,9 +1727,12 @@ set_termname(term)
 		mch_errmsg(_("defaulting to '"));
 		mch_errmsg((char *)term);
 		mch_errmsg("'\r\n");
-		screen_start();		/* don't know where cursor is now */
-		out_flush();
-		ui_delay(2000L, TRUE);
+		if (emsg_silent == 0)
+		{
+		    screen_start();	/* don't know where cursor is now */
+		    out_flush();
+		    ui_delay(2000L, TRUE);
+		}
 		set_string_option_direct((char_u *)"term", -1, term, OPT_FREE);
 		mch_display_error();
 	    }
@@ -1812,7 +1828,7 @@ set_termname(term)
 #  ifdef FEAT_MOUSE_XTERM
 #   ifdef FEAT_CLIPBOARD
 #    ifdef FEAT_GUI
-	if (!term_is_gui(term))
+	if (!gui.in_use)
 #    endif
 	    clip_init(FALSE);
 #   endif
@@ -1829,7 +1845,11 @@ set_termname(term)
 #  endif
 	if (p != NULL)
 	    set_option_value((char_u *)"ttym", 0L, p, 0);
-	else
+	if (p == NULL
+#  ifdef FEAT_GUI
+		|| gui.in_use
+#  endif
+		)
 	    check_mouse_termcode();	/* set mouse termcode anyway */
     }
 # else
@@ -3259,6 +3279,8 @@ cursor_off()
 /*
  * Set scrolling region for window 'wp'.
  * The region starts 'off' lines from the start of the window.
+ * Also set the vertical scroll region for a vertically split window.  Always
+ * the full width of the window, excluding the vertical separator.
  */
     void
 scroll_region_set(wp, off)
@@ -3267,6 +3289,11 @@ scroll_region_set(wp, off)
 {
     OUT_STR(tgoto((char *)T_CS, W_WINROW(wp) + wp->w_height - 1,
 							 W_WINROW(wp) + off));
+#ifdef FEAT_VERTSPLIT
+    if (*T_CSV != NUL && wp->w_width != Columns)
+	OUT_STR(tgoto((char *)T_CSV, W_WINCOL(wp) + wp->w_width - 1,
+							       W_WINCOL(wp)));
+#endif
     screen_start();		    /* don't know where cursor is now */
 }
 
@@ -3277,6 +3304,10 @@ scroll_region_set(wp, off)
 scroll_region_reset()
 {
     OUT_STR(tgoto((char *)T_CS, (int)Rows - 1, 0));
+#ifdef FEAT_VERTSPLIT
+    if (*T_CSV != NUL)
+	OUT_STR(tgoto((char *)T_CSV, (int)Columns - 1, 0));
+#endif
     screen_start();		    /* don't know where cursor is now */
 }
 

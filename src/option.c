@@ -2059,6 +2059,9 @@ static struct vimoption options[] =
     p_term("t_Co", T_CCO)
     p_term("t_CS", T_CCS)
     p_term("t_cs", T_CS)
+#ifdef FEAT_VERTSPLIT
+    p_term("t_CV", T_CSV)
+#endif
     p_term("t_ut", T_UT)
     p_term("t_da", T_DA)
     p_term("t_db", T_DB)
@@ -5873,7 +5876,14 @@ get_option_value(name, numval, stringval, opt_flags)
     if (options[opt_idx].flags & P_NUM)
 	*numval = *(long *)varp;
     else
-	*numval = *(int *)varp;
+    {
+	/* Special case: 'modified' is b_changed, but we also want to consider
+	 * it set when 'ff' or 'fenc' changed. */
+	if ((int *)varp == &curbuf->b_changed)
+	    *numval = curbufIsChanged();
+	else
+	    *numval = *(int *)varp;
+    }
     return 1;
 }
 #endif
@@ -6118,7 +6128,9 @@ showoneopt(p, opt_flags)
 
     varp = get_varp_scope(p, opt_flags);
 
-    if ((p->flags & P_BOOL) && !*(int *)varp)
+    /* for 'modified' we also need to check if 'ff' or 'fenc' changed. */
+    if ((p->flags & P_BOOL) && ((int *)varp == &curbuf->b_changed
+					? !curbufIsChanged() : !*(int *)varp))
 	MSG_PUTS("no");
     else
 	MSG_PUTS("  ");

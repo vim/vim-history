@@ -1181,46 +1181,39 @@ gui_mch_delete_lines(
     int	    row,
     int	    num_lines)
 {
-    if (num_lines <= 0)
-	return;
+    RECT	rc;
 
-    if (row + num_lines > gui.scroll_region_bot)
+    #pragma warn -eff
+    rc.left = FILL_X(gui.scroll_region_left);
+    #pragma warn +eff
+    rc.right = FILL_X(gui.scroll_region_right + 1);
+    rc.top = FILL_Y(row);
+    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
+    /* The SW_INVALIDATE is required when part of the window is covered or
+     * off-screen.	How do we avoid it when it's not needed? */
+    ScrollWindowEx(s_textArea, 0, -num_lines * gui.char_height,
+	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, Columns - 1);
+	if (gui.cursor_row < row + num_lines)
+	    gui.cursor_is_valid = FALSE;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_row -= num_lines;
     }
-    else
-    {
-	RECT	rc;
-	#pragma warn -eff
-	rc.left = FILL_X(0);
-	#pragma warn +eff
-	rc.right = FILL_X(Columns);
-	rc.top = FILL_Y(row);
-	rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
-	/* The SW_INVALIDATE is required when part of the window is covered or
-	 * off-screen.	How do we avoid it when it's not needed? */
-	ScrollWindowEx(s_textArea, 0, -num_lines * gui.char_height,
-		&rc, &rc, NULL, NULL, SW_INVALIDATE);
+    gui_undraw_cursor();
+    UpdateWindow(s_textArea);
+    /* This seems to be required to avoid the cursor disappearing when
+     * scrolling such that the cursor ends up in the top-left character on
+     * the screen...   But why?  (Webb) */
+    gui.cursor_is_valid = FALSE;
 
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= row)
-	{
-	    if (gui.cursor_row < row + num_lines)
-		gui.cursor_is_valid = FALSE;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_row -= num_lines;
-	}
-	gui_undraw_cursor();
-	UpdateWindow(s_textArea);
-	/* This seems to be required to avoid the cursor disappearing when
-	 * scrolling such that the cursor ends up in the top-left character on
-	 * the screen...   But why?  (Webb) */
-	gui.cursor_is_valid = FALSE;
-
-	gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-	    gui.scroll_region_bot, Columns - 1);
-    }
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+	gui.scroll_region_bot, gui.scroll_region_right);
 }
 
 /*
@@ -1229,45 +1222,38 @@ gui_mch_delete_lines(
  */
     void
 gui_mch_insert_lines(
-    int	    row,
-    int	    num_lines)
+    int		row,
+    int		num_lines)
 {
-    if (num_lines <= 0)
-	return;
+    RECT	rc;
 
-    if (row + num_lines > gui.scroll_region_bot)
+    #pragma warn -eff
+    rc.left = FILL_X(gui.scroll_region_left);
+    #pragma warn +eff
+    rc.right = FILL_X(gui.scroll_region_right + 1);
+    rc.top = FILL_Y(row);
+    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
+    /* The SW_INVALIDATE is required when part of the window is covered or
+     * off-screen.	How do we avoid it when it's not needed? */
+    ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
+	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= gui.row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, Columns - 1);
+	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
+	    gui.cursor_row += num_lines;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_is_valid = FALSE;
     }
-    else
-    {
-	RECT	rc;
-	#pragma warn -eff
-	rc.left = FILL_X(0);
-	#pragma warn +eff
-	rc.right = FILL_X(Columns);
-	rc.top = FILL_Y(row);
-	rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
-	/* The SW_INVALIDATE is required when part of the window is covered or
-	 * off-screen.	How do we avoid it when it's not needed? */
-	ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
-		&rc, &rc, NULL, NULL, SW_INVALIDATE);
 
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= gui.row)
-	{
-	    if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-		gui.cursor_row += num_lines;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_is_valid = FALSE;
-	}
+    gui_undraw_cursor();
+    UpdateWindow(s_textArea);
 
-	gui_undraw_cursor();
-	UpdateWindow(s_textArea);
-
-	gui_clear_block(row, 0, row + num_lines - 1, Columns - 1);
-    }
+    gui_clear_block(row, gui.scroll_region_left,
+				row + num_lines - 1, gui.scroll_region_right);
 }
 
 

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0y.  Last change: 2001 Mar 09
+*quickfix.txt*  For Vim version 6.0z.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -451,6 +451,10 @@ This is what the second line (of a build.xml file) below does: >
 The 'errorformat' which handles ant with both javac and jikes is: >
   :set efm=\ %#[javac]\ %#%f:%l:%c:%*\\d:%*\\d:\ %t%[%^:]%#:%m,
            \%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
+<
+						*errorformat-jade*
+parsing jade (see http://www.jclark.com/) errors is simple: >
+  :set efm=jade:%f:%l:%c:%t:%m
 <
 						*errorformat-LaTeX*
 The following is an example how an 'errorformat' string can be specified

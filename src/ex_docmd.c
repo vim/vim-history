@@ -358,8 +358,10 @@ static void	ex_options __ARGS((exarg_t *eap));
 #endif
 #ifdef FEAT_SEARCH_EXTRA
 static void	ex_nohlsearch __ARGS((exarg_t *eap));
+static void	ex_match __ARGS((exarg_t *eap));
 #else
 # define ex_nohlsearch		ex_ni
+# define ex_match		ex_ni
 #endif
 static void	ex_silent __ARGS((exarg_t *eap));
 static void	ex_verbose __ARGS((exarg_t *eap));
@@ -377,7 +379,8 @@ static void	ex_folddo __ARGS((exarg_t *eap));
 # define ex_foldopen		ex_ni
 # define ex_folddo		ex_ni
 #endif
-#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+#if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+	&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))
 static void	ex_language __ARGS((exarg_t *eap));
 #else
 # define ex_language		ex_ni
@@ -399,6 +402,9 @@ static void	ex_language __ARGS((exarg_t *eap));
 
 #ifndef FEAT_CMDHIST
 # define ex_history		ex_ni
+#endif
+#ifndef FEAT_JUMPLIST
+# define ex_jumps		ex_ni
 #endif
 
 /*
@@ -1624,6 +1630,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_isearch:
 	    case CMD_isplit:
 	    case CMD_let:
+	    case CMD_match:
 	    case CMD_return:
 	    case CMD_substitute:
 	    case CMD_smagic:
@@ -2308,6 +2315,24 @@ set_one_cmd_context(xp, buff)
 	case CMD_folddoclosed:
 	    return arg;
 
+#ifdef FEAT_SEARCH_EXTRA
+	case CMD_match:
+	    if (*arg == NUL || !ends_excmd(*arg))
+	    {
+		/* Dummy call to clear variables. */
+		set_context_in_highlight_cmd(xp, (char_u *)"link n");
+		xp->xp_context = EXPAND_HIGHLIGHT;
+		xp->xp_pattern = arg;
+		arg = skipwhite(skiptowhite(arg));
+		if (*arg != NUL)
+		{
+		    xp->xp_context = EXPAND_NOTHING;
+		    arg = skip_regexp(arg + 1, *arg, p_magic);
+		}
+	    }
+	    return find_nextcmd(arg);
+#endif
+
 #ifdef FEAT_CMDL_COMPL
 /*
  * All completion for the +cmdline_compl feature goes here.
@@ -2389,18 +2414,20 @@ set_one_cmd_context(xp, buff)
 	case CMD_substitute:
 	    delim = *arg;
 	    if (delim)
-		++arg;
-	    for (i = 0; i < 2; i++)
 	    {
-		while (arg[0] != NUL && arg[0] != delim)
-		{
-		    if (arg[0] == '\\' && arg[1] != NUL)
-			++arg;
-		    ++arg;
-		}
-		if (arg[0] != NUL)	/* skip delimiter */
-		    ++arg;
+		/* skip "from" part */
+		++arg;
+		arg = skip_regexp(arg, delim, p_magic);
 	    }
+	    /* skip "to" part */
+	    while (arg[0] != NUL && arg[0] != delim)
+	    {
+		if (arg[0] == '\\' && arg[1] != NUL)
+		    ++arg;
+		++arg;
+	    }
+	    if (arg[0] != NUL)	/* skip delimiter */
+		++arg;
 	    while (arg[0] && vim_strchr((char_u *)"|\"#", arg[0]) == NULL)
 		++arg;
 	    if (arg[0] != NUL)
@@ -7196,7 +7223,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
     int		skip_mod = FALSE;
 #endif
     static char *(spec_str[]) =
-		{
+	{
 		    "%",
 #define SPEC_PERC   0
 		    "#",
@@ -7406,6 +7433,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
     if (resultlen == 0 || valid != VALID_HEAD + VALID_PATH)
     {
 	if (valid != VALID_HEAD + VALID_PATH)
+	    /* xgettext:no-c-format */
 	    *errormsg = (char_u *)_("Empty file name for '%' or '#', only works with \":p:h\"");
 	else
 	    *errormsg = (char_u *)_("Evaluates to an empty string");
@@ -7626,7 +7654,8 @@ makeopens(fd, dirnow)
 		&& buf->b_fname != NULL
 		&& buf->b_p_bl)
 	{
-	    if (fprintf(fd, "badd +%ld ", buf->b_wininfo->wi_fpos.lnum) < 0
+	    if (fprintf(fd, "badd +%ld ", buf->b_wininfo == NULL ? 1L
+					   : buf->b_wininfo->wi_fpos.lnum) < 0
 		    || ses_fname(fd, buf, &ssop_flags) == FAIL)
 		return FAIL;
 	}
@@ -8221,7 +8250,7 @@ get_view_file(c)
     for (p = sname; *p; ++p)
 	if (*p == '=' || vim_ispathsep(*p))
 	    ++len;
-    retval = alloc((unsigned)(STRLEN(sname) + len + STRLEN(p_vdir) + 5));
+    retval = alloc((unsigned)(STRLEN(sname) + len + STRLEN(p_vdir) + 9));
     if (retval != NULL)
     {
 	STRCPY(retval, p_vdir);
@@ -8254,7 +8283,7 @@ get_view_file(c)
 	}
 	*s++ = '=';
 	*s++ = c;
-	*s = NUL;
+	STRCPY(s, ".vim");
     }
 
     vim_free(sname);
@@ -8657,6 +8686,67 @@ ex_nohlsearch(eap)
     no_hlsearch = TRUE;
     redraw_all_later(NOT_VALID);
 }
+
+/*
+ * ":match {group} {pattern}"
+ * Sets nextcmd to the start of the next command, if any.  Also called when
+ * skipping commands to find the next command.
+ */
+    static void
+ex_match(eap)
+    exarg_t	*eap;
+{
+    char_u	*p;
+    char_u	*end;
+    int		c;
+
+    /* First clear any old pattern. */
+    if (!eap->skip)
+    {
+	vim_free(curwin->w_match.regprog);
+	curwin->w_match.regprog = NULL;
+    }
+
+    if (ends_excmd(*eap->arg)
+	    || (STRNICMP(eap->arg, "none", 4) == 0
+		&& (vim_iswhite(eap->arg[4]) || ends_excmd(eap->arg[4]))))
+	eap->nextcmd = find_nextcmd(eap->arg);
+    else
+    {
+	p = skiptowhite(eap->arg);
+	if (!eap->skip)
+	{
+	    curwin->w_match_id = syn_namen2id(eap->arg, p - eap->arg);
+	    if (curwin->w_match_id == 0)
+	    {
+		EMSG2(_(e_nogroup), eap->arg);
+		return;
+	    }
+	}
+	p = skipwhite(p);
+	if (*p == NUL)
+	{
+	    EMSG2(_(e_invarg2), eap->arg);
+	    return;
+	}
+	end = skip_regexp(p + 1, *p, TRUE);
+	if (!eap->skip)
+	{
+	    c = *end;
+	    *end = NUL;
+	    curwin->w_match.regprog = vim_regcomp(p + 1, TRUE);
+	    *end = c;
+	    if (curwin->w_match.regprog == NULL)
+	    {
+		EMSG2(_(e_invarg2), p);
+		return;
+	    }
+	    else
+		redraw_later(NOT_VALID);
+	}
+	eap->nextcmd = find_nextcmd(end);
+    }
+}
 #endif
 
 #ifdef FEAT_CRYPT
@@ -8713,40 +8803,63 @@ ex_folddo(eap)
 set_lang_var()
 {
     char_u	*loc;
+# if defined(LC_MESSAGES) || defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    int		what = LC_CTYPE;
+# endif
 
-# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
-    loc = (char_u *)setlocale(LC_CTYPE, NULL);
-#  if defined(__BORLANDC__)
-    if (loc != NULL)
+    /* first do LC_CTYPE, then LC_MESSAGES (if it's supported) */
+    for (;;)
     {
-	char_u	*p;
-
-	/* Borland returns something like "LC_CTYPE=<name>\n"
-	 * Let's try to fix that bug here... */
-	p = vim_strchr(loc, '=');
-	if (p != NULL)
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+	/* obtain the locale value from the libraries */
+	loc = (char_u *)setlocale(what, NULL);
+#  if defined(__BORLANDC__)
+	if (loc != NULL)
 	{
-	    loc = ++p;
-	    while (*p != NUL)	/* remove trailing newline */
+	    char_u	*p;
+
+	    /* Borland returns something like "LC_CTYPE=<name>\n"
+	     * Let's try to fix that bug here... */
+	    p = vim_strchr(loc, '=');
+	    if (p != NULL)
 	    {
-		if (*p < ' ')
+		loc = ++p;
+		while (*p != NUL)	/* remove trailing newline */
 		{
-		    *p = NUL;
-		    break;
+		    if (*p < ' ')
+		    {
+			*p = NUL;
+			break;
+		    }
+		    ++p;
 		}
-		++p;
 	    }
 	}
-    }
 #  endif
 # else
-    loc = (char_u *)"C";
+	/* setlocale() not supported: use the default value */
+	loc = (char_u *)"C";
 # endif
-    set_vim_var_string(VV_LANG, loc, -1);
+# ifdef LC_MESSAGES
+	if (what == LC_CTYPE)
+	{
+# endif
+	    set_vim_var_string(VV_CTYPE, loc, -1);
+# ifdef LC_MESSAGES
+	    what = LC_MESSAGES;
+	}
+	else
+#endif
+	{
+	    set_vim_var_string(VV_LANG, loc, -1);
+	    break;
+	}
+    }
 }
 #endif
 
-#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+#if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+	&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))
 /*
  * ":language":  Set the language (locale).
  */
@@ -8754,29 +8867,78 @@ set_lang_var()
 ex_language(eap)
     exarg_t	*eap;
 {
-    char *loc;
+    char	*loc;
+    char_u	*p;
+    char_u	*name;
+    int		what = LC_ALL;
+    char	*whatstr = "";
 
-    if (*eap->arg == NUL)
+    name = eap->arg;
+
+    /* Check for "messages name" or "ctype name" argument.  Allow
+     * abbreviation, but require at least 3 characters to avoid confusion
+     * with a two letter language name "me" or "ct". */
+    p = skiptowhite(eap->arg);
+    if ((*p == NUL || vim_iswhite(*p)) && p - eap->arg >= 3)
     {
-	smsg((char_u *)_("Current language: %s"), setlocale(LC_ALL, NULL));
+	if (STRNICMP(eap->arg, "messages", p - eap->arg) == 0)
+	{
+#ifdef LC_MESSAGES
+	    what = LC_MESSAGES;
+#else
+	    what = LC_CTYPE;
+#endif
+	    name = skipwhite(p);
+	    whatstr = "messages ";
+	}
+	else if (STRNICMP(eap->arg, "ctype", p - eap->arg) == 0)
+	{
+	    what = LC_CTYPE;
+	    name = skipwhite(p);
+	    whatstr = "ctype ";
+	}
+    }
+
+    if (*name == NUL)
+    {
+	smsg((char_u *)_("Current %slanguage: \"%s\""),
+		whatstr, setlocale(what, NULL));
     }
     else
     {
-	loc = setlocale(LC_ALL, (char *)eap->arg);
+	loc = setlocale(what, (char *)name);
 	if (loc == NULL)
-	    EMSG2(_("Cannot set language to \"%s\""), eap->arg);
+	    EMSG2(_("Cannot set language to \"%s\""), name);
 	else
 	{
-# ifdef FEAT_EVAL
-	    set_lang_var();
-# endif
+	    /* Reset $LC_ALL, otherwise it would overrule everyting. */
+	    vim_setenv((char_u *)"LC_ALL", (char_u *)"");
+
+	    /* Tell gettext() what to translate to.  It apparently doesn't
+	     * use the currently effective locale.  Also do this when
+	     * FEAT_GETTEXT isn't defined, so that shell commands use this
+	     * value. */
+	    if (what == LC_ALL)
+		vim_setenv((char_u *)"LANG", name);
+	    if (what != LC_CTYPE)
+		vim_setenv((char_u *)"LC_MESSAGES", name);
+
+	    /* Set $LC_CTYPE, because it overrules $LANG, and gtk_set_locale()
+	     * calls setlocale() again.  gnome_init() sets $LC_CTYPE to
+	     * "en_US" (that's a bug!). */
+#ifdef LC_MESSAGES
+	    if (what != LC_MESSAGES)
+#endif
+		vim_setenv((char_u *)"LC_CTYPE", name);
 # ifdef FEAT_GUI_GTK
+	    /* Let GTK know what locale we're using.  Not sure this is really
+	     * needed... */
 	    if (gui.in_use)
-		gtk_set_locale();
+		(void)gtk_set_locale();
 # endif
-# ifdef FEAT_GETTEXT
-	    /* Tell gettext() what to translate to. */
-	    vim_setenv((char_u *)"LANG", eap->arg);
+# ifdef FEAT_EVAL
+	    /* Set v:lang and v:ctype to the final result. */
+	    set_lang_var();
 # endif
 	}
     }

@@ -1123,6 +1123,7 @@ gui_mch_get_color(char_u *name)
 
 	{ "Yellow",		grgb(255,	255,	0)	},
 	{ "LightYellow",	grgb(255,	255,	224)	},
+	{ "DarkYellow",		grgb(139,	139,	0)	},
 	{ "Brown",		grgb(165,	42,	42)	},
 
 	{ "Gray",		grgb(190,	190,	190)	},
@@ -2555,43 +2556,37 @@ gui_mch_clear_all(void)
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    if (num_lines <= 0)
-	return;
-
     swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
 
-    if (row + num_lines > gui.scroll_region_bot)
+    int top_from = -row - num_lines;
+    int bot_from = -gui.scroll_region_bot - 1;
+    int bot_to   = bot_from + num_lines;
+
+    /* Changed without checking! */
+    swi(Wimp_BlockCopy, gui.window_handle,
+			    gui.scroll_region_left * gui.char_width,
+			    bot_from * gui.char_height,
+			    (gui.scroll_region_right - gui.scroll_region_left
+							+ 1) * gui.char_width,
+			    top_from * gui.char_height,
+
+			    gui.scroll_region_left * gui.char_width,
+			    bot_to * gui.char_height);
+
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
+	if (gui.cursor_row < row + num_lines)
+	    gui.cursor_is_valid = FALSE;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_row -= num_lines;
     }
-    else
-    {
-	int top_from = -row - num_lines;
-	int bot_from = -gui.scroll_region_bot - 1;
-	int bot_to   = bot_from + num_lines;
 
-	swi(Wimp_BlockCopy, gui.window_handle,
-				0,
-				bot_from * gui.char_height,
-				gui.num_cols * gui.char_width,
-				top_from * gui.char_height,
-
-				0,
-				bot_to * gui.char_height);
-
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= row)
-	{
-	    if (gui.cursor_row < row + num_lines)
-		gui.cursor_is_valid = FALSE;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_row -= num_lines;
-	}
-
-	gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-	    gui.scroll_region_bot, (int)Columns - 1);
-    }
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+	gui.scroll_region_bot, gui.scroll_region_right);
 }
 
 /*
@@ -2601,42 +2596,35 @@ gui_mch_delete_lines(int row, int num_lines)
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    if (num_lines <= 0)
-	return;
-
     swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
 
-    if (row + num_lines > gui.scroll_region_bot)
+    int top_from = -row;
+    int bot_to   = -gui.scroll_region_bot - 1;
+    int bot_from = bot_to + num_lines;
+
+    swi(Wimp_BlockCopy, gui.window_handle,
+			    gui.scroll_region_left * gui.char_width,
+			    bot_from * gui.char_height,
+			    (gui.scroll_region_right - gui.scroll_region_left
+							+ 1) * gui.char_width,
+			    top_from * gui.char_height,
+
+			    gui.scroll_region_left * gui.char_width,
+			    bot_to * gui.char_height);
+
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= gui.row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
+	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
+	    gui.cursor_row += num_lines;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_is_valid = FALSE;
     }
-    else
-    {
-	int top_from = -row;
-	int bot_to   = -gui.scroll_region_bot - 1;
-	int bot_from = bot_to + num_lines;
 
-	swi(Wimp_BlockCopy, gui.window_handle,
-				0,
-				bot_from * gui.char_height,
-				gui.num_cols * gui.char_width,
-				top_from * gui.char_height,
-
-				0,
-				bot_to * gui.char_height);
-
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= gui.row)
-	{
-	    if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-		gui.cursor_row += num_lines;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_is_valid = FALSE;
-	}
-
-	gui_clear_block(row, 0, row + num_lines - 1, (int)Columns - 1);
-    }
+    gui_clear_block(row, gui.scroll_region_left,
+				row + num_lines - 1, gui.scroll_region_right);
 }
 
 /* Put selection in clipboard buffer.

@@ -27,6 +27,8 @@ static void gui_do_scrollbar __ARGS((win_t *wp, int which, int enable));
 static void gui_update_horiz_scrollbar __ARGS((int));
 static win_t *xy2win __ARGS((int x, int y));
 
+static int do_update_cursor = TRUE; /* always update the cursor position */
+
 /*
  * The Athena scrollbars can move the thumb to after the end of the scrollbar,
  * this makes the thumb indicate the part of the text that is shown.  Motif
@@ -187,6 +189,8 @@ gui_init_check()
     gui.cursor_is_valid = FALSE;
     gui.scroll_region_top = 0;
     gui.scroll_region_bot = Rows - 1;
+    gui.scroll_region_left = 0;
+    gui.scroll_region_right = Columns - 1;
     gui.highlight_mask = HL_NORMAL;
     gui.char_width = 1;
     gui.char_height = 1;
@@ -734,6 +738,11 @@ gui_update_cursor(force, clear_selection)
     int		attr;
     attrentry_t *aep = NULL;
 
+    /* Don't update the cursor when halfway busy scrolling, ScreenLines[]
+     * isn't valid then. */
+    if (!do_update_cursor)
+	return;
+
     gui_check_pos();
     if (!gui.cursor_is_valid || force
 		    || gui.row != gui.cursor_row || gui.col != gui.cursor_col)
@@ -1222,6 +1231,8 @@ gui_reset_scroll_region()
 {
     gui.scroll_region_top = 0;
     gui.scroll_region_bot = gui.num_rows - 1;
+    gui.scroll_region_left = 0;
+    gui.scroll_region_right = gui.num_cols - 1;
 }
 
     void
@@ -1359,6 +1370,20 @@ gui_write(s, len)
 			gui.scroll_region_bot = arg1;
 		    }
 		    break;
+#ifdef FEAT_VERTSPLIT
+		case 'V':	/* Set vertical scroll region */
+		    if (arg1 < arg2)
+		    {
+			gui.scroll_region_left = arg1;
+			gui.scroll_region_right = arg2;
+		    }
+		    else
+		    {
+			gui.scroll_region_left = arg2;
+			gui.scroll_region_right = arg1;
+		    }
+		    break;
+#endif
 		case 'd':	/* Delete line */
 		    gui_delete_lines(gui.row, 1);
 		    break;
@@ -1445,8 +1470,14 @@ gui_write(s, len)
 	    s = p;
 	}
     }
-    gui_update_cursor(force, TRUE);
-    gui_update_scrollbars(force_scrollbar);
+
+    /* Don't update the cursor when ScreenLines[] is invalid (busy scrolling).
+     * Updating the scrollbar also doesn't make sense then. */
+    if (do_update_cursor)
+    {
+	gui_update_cursor(force, TRUE);
+	gui_update_scrollbars(force_scrollbar);
+    }
 
     /*
      * We need to make sure this is cleared since Athena doesn't tell us when
@@ -1457,6 +1488,25 @@ gui_write(s, len)
 #endif
 
     gui_mch_flush();		    /* In case vim decides to take a nap */
+}
+
+/*
+ * When ScreenLines[] is invalid, updating the cursor should not be done, it
+ * produces wrong results.  Call gui_dont_update_cursor() before that code and
+ * gui_can_update_cursor() afterwards.
+ */
+    void
+gui_dont_update_cursor()
+{
+    do_update_cursor = FALSE;
+}
+
+    void
+gui_can_update_cursor()
+{
+    do_update_cursor = TRUE;
+    /* No need to update the cursor right now, there is always more output
+     * after scrolling. */
 }
 
     static void
@@ -1999,16 +2049,9 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	if (enc_dbcs != 0)
 	{
 	    if (col1 > 0)
-	    {
-		/* For euc-jp an 0x8e byte in the previous cell always means
-		 * we have a lead byte in the current cell. */
-		if (enc_dbcs != DBCS_JPNU || ScreenLines[off + col1 - 1]
-								      != 0x8e)
-		    col1 -= (*mb_head_off)(ScreenLines + off,
+		col1 -= dbcs_screen_head_off(ScreenLines + off,
 						    ScreenLines + off + col1);
-	    }
-	    if (enc_dbcs != DBCS_JPNU || ScreenLines[off + col2] != 0x8e)
-		col2 += mb_tail_off(ScreenLines + off,
+	    col2 += dbcs_screen_tail_off(ScreenLines + off,
 						    ScreenLines + off + col2);
 	}
 	else if (enc_utf8)
@@ -2103,7 +2146,16 @@ gui_delete_lines(row, count)
 {
     if (row == 0)
 	clip_scroll_selection(count);
-    gui_mch_delete_lines(row, count);
+
+    if (count <= 0)
+	return;
+
+    if (row + count > gui.scroll_region_bot)
+	/* Scrolled out of region, just blank the lines out */
+	gui_clear_block(row, gui.scroll_region_left,
+			      gui.scroll_region_bot, gui.scroll_region_right);
+    else
+	gui_mch_delete_lines(row, count);
 }
 
     static void
@@ -2113,7 +2165,16 @@ gui_insert_lines(row, count)
 {
     if (row == 0)
 	clip_scroll_selection(-count);
-    gui_mch_insert_lines(row, count);
+
+    if (count <= 0)
+	return;
+
+    if (row + count > gui.scroll_region_bot)
+	/* Scrolled out of region, just blank the lines out */
+	gui_clear_block(row, gui.scroll_region_left,
+			      gui.scroll_region_bot, gui.scroll_region_right);
+    else
+	gui_mch_insert_lines(row, count);
 }
 
 /*
@@ -2741,7 +2802,7 @@ gui_create_scrollbar(sb, type, wp)
     sb->pixval = 0;
     sb->size = 1;
     sb->max = 1;
-    sb->top = 1;
+    sb->top = 0;
     sb->height = 0;
 #ifdef FEAT_VERTSPLIT
     sb->width = 0;

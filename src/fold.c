@@ -117,9 +117,6 @@ hasAnyFolding(win)
  * fold.
  * When returning TRUE, *firstp and *lastp are set to the first and last
  * lnum of the sequence of folded lines (skipped when NULL).
- * When "levelp" is not NULL and "cache" is FALSE, the level of the fold is
- * stored at it.  The level is zero if there is no closed fold.  The level is
- * negative if "lnum" is the first line of the fold.
  */
     int
 hasFolding(lnum, firstp, lastp)
@@ -132,13 +129,13 @@ hasFolding(lnum, firstp, lastp)
 
 /* hasFoldingWin() {{{2 */
     int
-hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
+hasFoldingWin(win, lnum, firstp, lastp, cache, infop)
     win_t	*win;
     linenr_t	lnum;
     linenr_t	*firstp;
     linenr_t	*lastp;
     int		cache;		/* when TRUE: use cached values of window */
-    int		*levelp;	/* where to store fold level at "lnum" */
+    foldinfo_t	*infop;		/* where to store fold info */
 {
     int		had_folded = FALSE;
     linenr_t	first = 0;
@@ -146,10 +143,11 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
     linenr_t	lnum_rel = lnum;
     int		x;
     fold_t	*fp;
-    int		level =  0;
+    int		level = 0;
     int		use_level = FALSE;
     int		maybe_small = FALSE;
     garray_t	*gap;
+    int		low_level = 0;;
 
     checkupdate(win);
     /*
@@ -157,8 +155,8 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
      */
     if (!hasAnyFolding(win))
     {
-	if (levelp != NULL)
-	    *levelp = 0;
+	if (infop != NULL)
+	    infop->fi_level = 0;
 	return FALSE;
     }
 
@@ -187,6 +185,11 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
 	{
 	    if (!foldFind(gap, lnum_rel, &fp))
 		break;
+
+	    /* Remember lowest level of fold that starts in "lnum". */
+	    if (lnum_rel == fp->fd_top && low_level == 0)
+		low_level = level + 1;
+
 	    first += fp->fd_top;
 	    last += fp->fd_top;
 
@@ -210,12 +213,11 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
 
     if (!had_folded)
     {
-	if (levelp != NULL)
+	if (infop != NULL)
 	{
-	    if (lnum_rel == 0)		/* "lnum" is first line of open fold */
-		*levelp = -level;
-	    else
-		*levelp = level;
+	    infop->fi_level = level;
+	    infop->fi_lnum = lnum - lnum_rel;
+	    infop->fi_low_level = low_level == 0 ? level : low_level;
 	}
 	return FALSE;
     }
@@ -224,12 +226,11 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
 	*lastp = last;
     if (firstp != NULL)
 	*firstp = first;
-    if (levelp != NULL)
+    if (infop != NULL)
     {
-	if (lnum_rel == 0)
-	    *levelp = -(level + 1);	/* open fold starts here too */
-	else
-	    *levelp = level + 1;
+	infop->fi_level = level + 1;
+	infop->fi_lnum = first;
+	infop->fi_low_level = low_level == 0 ? level + 1 : low_level;
     }
     return TRUE;
 }
@@ -278,18 +279,17 @@ lineFolded(win, lnum)
  * number is the number of lines in the fold.
  * Doesn't use caching from the displayed window.
  * Returns number of folded lines from "lnum", or 0 if line is not folded.
- * When "levelp" is not NULL, sets *levelp to the fold level.  Negative if
- * it's at the start of the fold.
+ * When "infop" is not NULL, fills *infop with the fold level info.
  */
     long
-foldedCount(win, lnum, levelp)
+foldedCount(win, lnum, infop)
     win_t	*win;
     linenr_t	lnum;
-    int		*levelp;
+    foldinfo_t	*infop;
 {
     linenr_t	last;
 
-    if (hasFoldingWin(win, lnum, NULL, &last, FALSE, levelp))
+    if (hasFoldingWin(win, lnum, NULL, &last, FALSE, infop))
 	return (long)(last - lnum + 1);
     return 0;
 }
@@ -2738,8 +2738,7 @@ foldlevelExpr(flp)
 		  break;
 
 	/* "<1", "<2", .. : end a fold with a certain level */
-	case '<': flp->lvl = n;
-		  flp->lvl_next = n - 1;
+	case '<': flp->lvl_next = n - 1;
 		  flp->end = n;
 		  break;
 

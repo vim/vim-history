@@ -21,6 +21,12 @@ static int nr2hex __ARGS((int c));
 
 static int    chartab_initialized = FALSE;
 
+/* b_chartab[] is an array of 32 bytes, each bit representing one of the
+ * characters 0-255. */
+#define SET_CHARTAB(buf, c) (buf)->b_chartab[(unsigned)(c) >> 3] |= (1 << ((c) & 0x7))
+#define RESET_CHARTAB(buf, c) (buf)->b_chartab[(unsigned)(c) >> 3] &= ~(1 << ((c) & 0x7))
+#define GET_CHARTAB(buf, c) ((buf)->b_chartab[(unsigned)(c) >> 3] & (1 << ((c) & 0x7)))
+
 /*
  * Fill chartab[].  Also fills curbuf->b_chartab[] with flags for keyword
  * characters for current buffer.
@@ -122,23 +128,22 @@ buf_init_chartab(buf, global)
     /*
      * Init word char flags all to FALSE
      */
+    vim_memset(buf->b_chartab, 0, 32);
+#ifdef FEAT_MBYTE
     for (c = 0; c < 256; ++c)
     {
-#ifdef FEAT_MBYTE
 	/* double-byte characters are probably word characters */
 	if (enc_dbcs != 0 && MB_BYTE2LEN(c) == 2)
-	    buf->b_chartab[c] = TRUE;
-	else
-#endif
-	    buf->b_chartab[c] = FALSE;
+	    SET_CHARTAB(buf, c);
     }
+#endif
 
 #ifdef FEAT_LISP
     /*
      * In lisp mode the '-' character is included in keywords.
      */
     if (buf->b_p_lisp)
-	buf->b_chartab['-'] = TRUE;
+	SET_CHARTAB(buf, '-');
 #endif
 
     /* Walk through the 'isident', 'iskeyword', 'isfname' and 'isprint'
@@ -252,7 +257,12 @@ buf_init_chartab(buf, global)
 			    chartab[c] |= CT_FNAME_CHAR;
 		    }
 		    else /* i == 3 */		/* (re)set keyword flag */
-			buf->b_chartab[c] = !tilde;
+		    {
+			if (tilde)
+			    RESET_CHARTAB(buf, c);
+			else
+			    SET_CHARTAB(buf, c);
+		    }
 		}
 		++c;
 	    }
@@ -677,7 +687,7 @@ vim_iswordc(c)
 	    return utf_class(c) >= 2;
     }
 #endif
-    return (c > 0 && c < 0x100 && curbuf->b_chartab[c]);
+    return (c > 0 && c < 0x100 && GET_CHARTAB(curbuf, c) != 0);
 }
 
 /*
@@ -691,7 +701,7 @@ vim_iswordp(p)
     if (has_mbyte && MB_BYTE2LEN(*p) > 1)
 	return mb_get_class(p) >= 2;
 #endif
-    return curbuf->b_chartab[*p];
+    return GET_CHARTAB(curbuf, *p) != 0;
 }
 
 #if defined(FEAT_SYN_HL) || defined(PROTO)
@@ -700,7 +710,7 @@ vim_iswordc_buf(c, buf)
     int		c;
     buf_t	*buf;
 {
-    return (c > 0 && c < 0x100 && buf->b_chartab[c]);
+    return (c > 0 && c < 0x100 && GET_CHARTAB(buf, c) != 0);
 }
 #endif
 

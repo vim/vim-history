@@ -946,6 +946,9 @@ EXTERN char_u e_nohebrew[]	INIT(=N_("Hebrew cannot be used: Not enabled at compi
 #ifndef FEAT_FKMAP
 EXTERN char_u e_nofarsi[]	INIT(=N_("Farsi cannot be used: Not enabled at compile time\n"));
 #endif
+#if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_SYN_HL)
+EXTERN char_u e_nogroup[]	INIT(=N_("No such highlight group name: %s"));
+#endif
 EXTERN char_u e_noinstext[]	INIT(=N_("No inserted text yet"));
 EXTERN char_u e_nolastcmd[]	INIT(=N_("No previous command line"));
 EXTERN char_u e_nomap[]		INIT(=N_("No such mapping"));

@@ -797,7 +797,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    len = 1;
 	}
 
-	if (modifiers)
+	if (modifiers != 0)
 	{
 	    string2[0] = CSI;
 	    string2[1] = KS_MODIFIER;
@@ -2663,6 +2663,7 @@ gui_mch_get_color(char_u * name)
 	{"DarkRed",	"#BB0000"},
 	{"DarkMagenta", "#BB00BB"},
 	{"DarkGrey",	"#BBBBBB"},
+	{"DarkYellow",	"#BBBB00"},
 	{NULL, NULL}
     };
 
@@ -3221,16 +3222,12 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
 				 gui.visibility != GDK_VISIBILITY_UNOBSCURED);
     gdk_gc_set_foreground(gui.text_gc, &color);
 
-    /*
-     * Clear one extra pixel at the right, for when bold characters have
-     * spilled over to the next column.  This can erase part of the next
-     * character however in the usage context of this function it will be
-     * overridden immediately by the correct character again.
-     */
-
+    /* Clear one extra pixel at the far right, for when bold characters have
+     * spilled over to the window border. */
     gdk_draw_rectangle(gui.drawarea->window, gui.text_gc, TRUE,
 		       FILL_X(col1), FILL_Y(row1),
-		       (col2 - col1 + 1) * gui.char_width + 1,
+		       (col2 - col1 + 1) * gui.char_width
+						      + (col2 == Columns - 1),
 		       (row2 - row1 + 1) * gui.char_height);
 }
 
@@ -3244,9 +3241,7 @@ gui_mch_clear_all(void)
 }
 
 /*
- * Scroll the text between gui.scroll_region_top & gui.scroll_region_bot by the
- * number of lines given.  Positive scrolls down (text goes up) and negative
- * scrolls up (text goes down).
+ * Redraw any text revealed by scrolling up/down.
  */
     static void
 check_copy_area(void)
@@ -3286,43 +3281,35 @@ gui_mch_delete_lines(int row, int num_lines)
     if (gui.visibility == GDK_VISIBILITY_FULLY_OBSCURED)
 	return;			/* Can't see the window */
 
-    if (num_lines <= 0)
-	return;
+    gdk_gc_set_exposures(gui.text_gc,
+			     gui.visibility != GDK_VISIBILITY_UNOBSCURED);
+    gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
+    gdk_gc_set_background(gui.text_gc, gui.bgcolor);
 
-    if (row + num_lines > gui.scroll_region_bot)
+    /* copy one extra pixel, for when bold has spilled over */
+    gdk_window_copy_area(gui.drawarea->window, gui.text_gc,
+	    FILL_X(gui.scroll_region_left), FILL_Y(row),
+	    gui.drawarea->window,
+	    FILL_X(gui.scroll_region_left),
+	    FILL_Y(row + num_lines),
+	    gui.char_width * (gui.scroll_region_right
+					    - gui.scroll_region_left + 1) + 1,
+	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1));
+
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
+	if (gui.cursor_row < row + num_lines)
+	    gui.cursor_is_valid = FALSE;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_row -= num_lines;
     }
-    else
-    {
-
-	gdk_gc_set_exposures(gui.text_gc,
-				 gui.visibility != GDK_VISIBILITY_UNOBSCURED);
-	gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
-	gdk_gc_set_background(gui.text_gc, gui.bgcolor);
-
-	/* copy one extra pixel, for when bold has spilled over */
-	gdk_window_copy_area(gui.drawarea->window, gui.text_gc,
-		FILL_X(0), FILL_Y(row),
-		gui.drawarea->window,
-		FILL_X(0), FILL_Y(row + num_lines),
-		gui.char_width * (int)Columns + 1,
-		gui.char_height *
-			       (gui.scroll_region_bot - row - num_lines + 1));
-
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= row)
-	{
-	    if (gui.cursor_row < row + num_lines)
-		gui.cursor_is_valid = FALSE;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_row -= num_lines;
-	}
-	gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-			gui.scroll_region_bot, (int)Columns - 1);
-	check_copy_area();
-    }
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+		    gui.scroll_region_bot, gui.scroll_region_right);
+    check_copy_area();
 }
 
 /*
@@ -3335,41 +3322,33 @@ gui_mch_insert_lines(int row, int num_lines)
     if (gui.visibility == GDK_VISIBILITY_FULLY_OBSCURED)
 	return;			/* Can't see the window */
 
-    if (num_lines <= 0)
-	return;
-
-    if (row + num_lines > gui.scroll_region_bot)
-    {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
-    }
-    else
-    {
-	gdk_gc_set_exposures(gui.text_gc,
+    gdk_gc_set_exposures(gui.text_gc,
 				 gui.visibility != GDK_VISIBILITY_UNOBSCURED);
-	gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
-	gdk_gc_set_background(gui.text_gc, gui.bgcolor);
+    gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
+    gdk_gc_set_background(gui.text_gc, gui.bgcolor);
 
-	/* copy one extra pixel, for when bold has spilled over */
-	gdk_window_copy_area(gui.drawarea->window, gui.text_gc,
-		FILL_X(0), FILL_Y(row + num_lines),
-		gui.drawarea->window,
-		FILL_X(0), FILL_Y(row),
-		gui.char_width * (int)Columns + 1,
-		gui.char_height *
-			       (gui.scroll_region_bot - row - num_lines + 1));
+    /* copy one extra pixel, for when bold has spilled over */
+    gdk_window_copy_area(gui.drawarea->window, gui.text_gc,
+	    FILL_X(gui.scroll_region_left), FILL_Y(row + num_lines),
+	    gui.drawarea->window,
+	    FILL_X(gui.scroll_region_left), FILL_Y(row),
+	    gui.char_width * (gui.scroll_region_right
+					    - gui.scroll_region_left + 1) + 1,
+	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1));
 
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= gui.row)
-	{
-	    if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-		gui.cursor_row += num_lines;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_is_valid = FALSE;
-	}
-	gui_clear_block(row, 0, row + num_lines - 1, (int)Columns - 1);
-	check_copy_area();
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= gui.row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
+    {
+	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
+	    gui.cursor_row += num_lines;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_is_valid = FALSE;
     }
+    gui_clear_block(row, gui.scroll_region_left,
+				row + num_lines - 1, gui.scroll_region_right);
+    check_copy_area();
 }
 
 /*

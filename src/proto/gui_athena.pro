@@ -6,6 +6,7 @@ void gui_x11_set_back_color __ARGS((void));
 void gui_mch_enable_menu __ARGS((int flag));
 void gui_mch_set_menu_pos __ARGS((int x, int y, int w, int h));
 void gui_mch_add_menu __ARGS((vimmenu_t *menu, int idx));
+void gui_mch_new_menu_font __ARGS((void));
 void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, int idx));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 void gui_mch_new_menu_colors __ARGS((void));

@@ -109,7 +109,7 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void *, const void *)));
 #endif
 # include "move.pro"
-# if defined(FEAT_MBYTE) || defined(FEAT_XIM)
+# if defined(FEAT_MBYTE) || defined(FEAT_XIM) || defined(FEAT_KEYMAP)
 #  include "mbyte.pro"
 # endif
 # include "normal.pro"

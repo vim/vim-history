@@ -73,9 +73,7 @@
 #	  configure reports "checking for location of gui... <not found>", you
 #	  have to set GUI_INC_LOC and GUI_LIB_LOC below.
 #	If you changed something, do this to run configure again:
-#		make distclean
-#		make config
-#		make
+#		make reconfig
 #
 #	- If you do not trust the automatic configuration code, then inspect
 #	  auto/config.h and auto/config.mk, before starting the actual build
@@ -83,7 +81,7 @@
 #	  especially look at the definition of VIMLOC below. Note that the
 #	  configure phase overwrites auto/config.mk and auto/config.h again.
 #	- If you get error messages, find out what is wrong and try to correct
-#	  it in this Makefile. You may need to do "make distclean" when you
+#	  it in this Makefile. You may need to do "make reconfig" when you
 #	  change anything that configure uses (e.g. switching from an old C
 #	  compiler to an ANSI C compiler). Only when auto/configure does
 #	  something wrong you may need to change one of the other files. If
@@ -274,12 +272,12 @@ CC=
 # These defines can contain a single directory (recommended) or a list of
 # directories (for when you are working with several systems). The LAST
 # directory that exists is used.
-# When changed, run "make distclean" next!
-#GUI_INC_LOC = /usr/include/Motif2.0 /usr/include/Motif1.2
-#GUI_LIB_LOC = /usr/lib/Motif2.0 /usr/lib/Motif1.2
+# When changed, run "make reconfig" next!
+#GUI_INC_LOC = -I/usr/include/Motif2.0 -I/usr/include/Motif1.2
+#GUI_LIB_LOC = -L/usr/lib/Motif2.0 -L/usr/lib/Motif1.2
 ### Use these two lines for Infomagic Motif (3)
-#GUI_INC_LOC = /usr/X11R6/include
-#GUI_LIB_LOC = /usr/X11R6/lib
+#GUI_INC_LOC = -I/usr/X11R6/include
+#GUI_LIB_LOC = -L/usr/X11R6/lib
 # }}}
 
 ######################## auto/config.mk ######################## {{{1
@@ -434,7 +432,7 @@ CClink = $(CC)
 # an example. If a compiler is defined here, configure will use it rather than
 # probing for one. It is dangerous to change this after configure was run.
 # Make will use your choice then -- but beware: Many things may change with
-# another compiler. It is wise to run 'make distclean' and start all over
+# another compiler.  It is wise to run 'make reconfig' to start all over
 # again.
 #CC = cc
 #CC = gcc
@@ -518,8 +516,8 @@ LINT_OPTIONS = -beprxzF
 ###	Information provided by: David Green
 #XROOT = /usr
 #CONF_OPT_X = --x-include=$(XROOT)/include/X11R6 --x-libraries=$(XROOT)/lib/X11R6
-#GUI_INC_LOC = /usr/include/Motif1.2
-#GUI_LIB_LOC = /usr/lib/Motif1.2_R6
+#GUI_INC_LOC = -I/usr/include/Motif1.2
+#GUI_LIB_LOC = -L/usr/lib/Motif1.2_R6
 
 ### (5) AIX 4.1.4 with cc
 #CFLAGS = -O -qmaxmem=8192
@@ -643,13 +641,13 @@ LINT_OPTIONS = -beprxzF
 #EXTRA_LIBS = -lsocket -ltermcap -lmalloc -lc_s
 
 ### (P)  SuperUX 6.2 on NEC SX-4 (Lennart Schultz)
-#GUI_INC_LOC = /usr/include
-#GUI_LIB_LOC = /usr/lib
+#GUI_INC_LOC = -I/usr/include
+#GUI_LIB_LOC = -L/usr/lib
 #EXTRA_LIBS = -lgen
 
 ### (Q) UNIXSVR 4.2MP on NEC UP4800 (Lennart Schultz)
-#GUI_INC_LOC = /usr/necccs/include
-#GUI_LIB_LOC = /usr/necccs/lib/X11R6
+#GUI_INC_LOC = -I/usr/necccs/include
+#GUI_LIB_LOC = -L/usr/necccs/lib/X11R6
 #XROOT = /usr/necccs
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib/X11R6
 #EXTRA_LIBS = -lsocket -lgen
@@ -685,7 +683,7 @@ LINT_OPTIONS = -beprxzF
 ###	Tested on R8000 IRIX6.1 Power Indigo2.
 ###	Check /etc/compiler.defaults for your compiler settings.
 # either (for 64 bit pointers) uncomment the following line
-#GUI_LIB_LOC = /usr/lib64
+#GUI_LIB_LOC = -L/usr/lib64
 # then
 # 1) make config
 # 2) edit auto/config.mk and delete the -lelf entry in the LIBS line
@@ -693,7 +691,7 @@ LINT_OPTIONS = -beprxzF
 #
 # or (for 32bit pointers) uncomment the following line
 #EXTRA_DEFS = -n32
-#GUI_LIB_LOC = /usr/lib32
+#GUI_LIB_LOC = -L/usr/lib32
 # then
 # 1) make config
 # 2) edit auto/config.mk, add -n32 to LDFLAGS
@@ -705,15 +703,15 @@ LINT_OPTIONS = -beprxzF
 ###	 error message "Termcap entry too long".  Uncomment the next line.
 ###	 On AIX 4.2.1 (and other versions probably), libtermcap is reported
 ###	 not to display properly.
-### after changing this, you need to do "make distclean; make".
+### after changing this, you need to do "make reconfig".
 #CONF_TERM_LIB = --with-tlib=curses
 
 ### (E)  If you want to use termlib library instead of the automatically found
-###	 one.  After changing this, you need to do "make distclean; make".
+###	 one.  After changing this, you need to do "make reconfig".
 #CONF_TERM_LIB = --with-tlib=termlib
 
 ### If you want to use ncurses library instead of the automatically found one
-### after changing this, you need to do "make distclean; make".
+### after changing this, you need to do "make reconfig".
 #CONF_TERM_LIB = --with-tlib=ncurses
 
 ### For GCC on MSDOS, the ".exe" suffix will be added.
@@ -786,7 +784,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60y
+VIMRTDIR = /vim60z
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1003,8 +1001,8 @@ MOTIF_SRC	= gui.c gui_motif.c gui_x11.c pty.c gui_beval.c
 MOTIF_OBJ	= objects/gui.o objects/gui_motif.o objects/gui_x11.o \
 			objects/pty.o objects/gui_beval.o
 MOTIF_DEFS	= -DFEAT_GUI_MOTIF $(NARROW_PROTO)
-MOTIF_IPATH	= -I$(GUI_INC_LOC)
-MOTIF_LIBS_DIR	= -L$(GUI_LIB_LOC)
+MOTIF_IPATH	= $(GUI_INC_LOC)
+MOTIF_LIBS_DIR	= $(GUI_LIB_LOC)
 MOTIF_LIBS1	=
 MOTIF_LIBS2	= $(MOTIF_LIBNAME) -lXt
 MOTIF_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
@@ -1016,9 +1014,6 @@ MOTIF_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 			$(MANSUBDIR)/$(RGVIMNAME).1 \
 			$(MANSUBDIR)/$(RGVIEWNAME).1
 MOTIF_TESTTARGET = gui
-
-#For SunOS (Solaris) you might want to use this line:
-#MOTIF_LIBS_DIR = -L$(GUI_LIB_LOC) -R$(GUI_LIB_LOC)
 
 ### Athena Widget GUI interface.
 ### Use Xaw3d to make the menus look a little bit nicer
@@ -1038,8 +1033,8 @@ ATHENA_OBJ	= objects/gui.o objects/gui_athena.o objects/gui_x11.o \
 			objects/pty.o objects/gui_at_sb.o objects/gui_at_fs.o
 ATHENA_DEFS	= -DFEAT_GUI_ATHENA $(NARROW_PROTO)
 
-ATHENA_IPATH	= -I$(GUI_INC_LOC)
-ATHENA_LIBS_DIR = -L$(GUI_LIB_LOC)
+ATHENA_IPATH	= $(GUI_INC_LOC)
+ATHENA_LIBS_DIR = $(GUI_LIB_LOC)
 ATHENA_LIBS1	= $(XAW_LIB)
 ATHENA_LIBS2	= -lXt
 ATHENA_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
@@ -1338,6 +1333,11 @@ config auto/config.mk: auto/configure
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
 		$(CONF_OPT_SNIFF) $(CONF_OPT_FEAT) $(CONF_TERM_LIB) \
 		$(CONF_OPT_COMPBY) $(CONF_ARGS)
+
+# Use "make reconfig" to rerun configure without cached values.
+# When config.h changes, most things will be recompiled automatically.
+# Use "myself" to make "all" with a possibly changed auto/config.mk.
+reconfig: scratch config myself
 
 # When configure.in has changed, run autoconf to produce configure.
 # If you don't have autoconf, use the existing configure script.
@@ -1755,11 +1755,12 @@ pixmaps:
 # Start configure from scratch
 scrub scratch:
 	-rm -f auto/config.status auto/config.cache auto/config.log
-	-rm -f auto/config.h auto/link.log tags
+	-rm -f auto/config.h auto/link.log auto/link.sed
 	touch auto/config.h
+	cp -f config.mk.dist auto/config.mk
 
 distclean: clean scratch
-	cp -f config.mk.dist auto/config.mk
+	-rm -f tags
 
 dist: distclean
 	@echo

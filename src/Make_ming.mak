@@ -197,7 +197,7 @@ endif
 GUI_LIB = $(LIB) -lcomdlg32 -lcomctl32
 
 
-all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe tee/tee.exe
+all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)

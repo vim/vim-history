@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0y.  Last change: 2001 Mar 15
+*index.txt*     For Vim version 6.0z.  Last change: 2001 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -503,9 +503,11 @@ tag		command		   action in Normal mode	~
 |CTRL-W_CTRL-D|	CTRL-W CTRL-D	   same as "CTRL-W d"
 |CTRL-W_CTRL-F|	CTRL-W CTRL-F	   same as "CTRL-W f"
 		CTRL-W CTRL-G	   same as "CTRL-W g .."
+|CTRL-W_CTRL-H|	CTRL-W CTRL-H	   same as "CTRL-W h"
 |CTRL-W_CTRL-I|	CTRL-W CTRL-I	   same as "CTRL-W i"
 |CTRL-W_CTRL-J|	CTRL-W CTRL-J	   same as "CTRL-W j"
 |CTRL-W_CTRL-K|	CTRL-W CTRL-K	   same as "CTRL-W k"
+|CTRL-W_CTRL-L|	CTRL-W CTRL-L	   same as "CTRL-W l"
 |CTRL-W_CTRL-N|	CTRL-W CTRL-N	   same as "CTRL-W n"
 |CTRL-W_CTRL-O|	CTRL-W CTRL-O	   same as "CTRL-W o"
 |CTRL-W_CTRL-P|	CTRL-W CTRL-P	   same as "CTRL-W p"
@@ -513,6 +515,7 @@ tag		command		   action in Normal mode	~
 |CTRL-W_CTRL-R|	CTRL-W CTRL-R	   same as "CTRL-W r"
 |CTRL-W_CTRL-S|	CTRL-W CTRL-S	   same as "CTRL-W s"
 |CTRL-W_CTRL-T|	CTRL-W CTRL-T	   same as "CTRL-W t"
+|CTRL-W_CTRL-V|	CTRL-W CTRL-V	   same as "CTRL-W v"
 |CTRL-W_CTRL-W|	CTRL-W CTRL-W	   same as "CTRL-W w"
 |CTRL-W_CTRL-X|	CTRL-W CTRL-X	   same as "CTRL-W x"
 |CTRL-W_CTRL-Z|	CTRL-W CTRL-Z	   same as "CTRL-W z"
@@ -521,7 +524,14 @@ tag		command		   action in Normal mode	~
 |CTRL-W_CTRL-_|	CTRL-W CTRL-_	   same as "CTRL-W _"
 |CTRL-W_+|	CTRL-W +	   increase current window height N lines
 |CTRL-W_-|	CTRL-W -	   decrease current window height N lines
+|CTRL-W_<|	CTRL-W <	   increase current window width N columns
 |CTRL-W_=|	CTRL-W =	   make all windows the same height
+|CTRL-W_>|	CTRL-W >	   decrease current window width N columns
+|CTRL-W_H|	CTRL-W H	   move current window to the far left
+|CTRL-W_J|	CTRL-W J	   move current window to the very bottom
+|CTRL-W_K|	CTRL-W K	   move current window to the very top
+|CTRL-W_L|	CTRL-W L	   move current window to the far right
+|CTRL-W_P|	CTRL-W P	   go to preview window
 |CTRL-W_R|	CTRL-W R	   rotate windows upwards N times
 |CTRL-W_S|	CTRL-W S	   same as "CTRL-W s"
 |CTRL-W_W|	CTRL-W W	   go to N previous window (wrap around)
@@ -541,11 +551,13 @@ tag		command		   action in Normal mode	~
 |CTRL-W_g]|	CTRL-W g ]	   split window and do |:tselect| for tag
 				   under cursor
 |CTRL-W_g}|	CTRL-W g }	   do a |:ptjump| to the tag under the cursor
+|CTRL-W_h|	CTRL-W h	   go to Nth left window (stop at first window)
 |CTRL-W_i|	CTRL-W i	   split window and jump to declaration of
 				   identifier under the cursor
 |CTRL-W_j|	CTRL-W j	   go to N next window (stop at last window)
 |CTRL-W_k|	CTRL-W k	   go to N previous window (stop at first
 				   window)
+|CTRL-W_l|	CTRL-W l	   go to Nth right window (stop at last window)
 |CTRL-W_n|	CTRL-W n	   open new window, N lines high
 |CTRL-W_o|	CTRL-W o	   close all but current window (like |:only|)
 |CTRL-W_p|	CTRL-W p	   go to previous (last accessed) window
@@ -554,13 +566,18 @@ tag		command		   action in Normal mode	~
 |CTRL-W_s|	CTRL-W s	   split current window in two parts, new
 				   window N lines high
 |CTRL-W_t|	CTRL-W t	   go to top window
+|CTRL-W_v|	CTRL-W v	   split current window vertically, new window
+				   N lines wide
 |CTRL-W_w|	CTRL-W w	   go to N next window (wrap around)
 |CTRL-W_x|	CTRL-W x	   exchange current window with window N
 				   (default: next window)
 |CTRL-W_z|	CTRL-W z	   close preview window
+|CTRL-W_bar|	CTRL-W |	   set window width to N columns
 |CTRL-W_}|	CTRL-W }	   show tag under cursor in preview window
 |CTRL-W_<Down>|	CTRL-W <Down>	   same as "CTRL-W j"
 |CTRL-W_<Up>|	CTRL-W <Up>	   same as "CTRL-W k"
+|CTRL-W_<Left>|	CTRL-W <Left>	   same as "CTRL-W h"
+|CTRL-W_<Right>| CTRL-W <Right>	   same as "CTRL-W l"
 
 ==============================================================================
 2.3 Square bracket commands					*[* *]*
@@ -1091,6 +1108,7 @@ The commands are sorted on the non-optional part of their name.
 |:map|		:map		show or enter a mapping
 |:mapclear|	:mapc[lear]	clear all mappings for Normal and Visual mode
 |:marks|	:marks		list all marks
+|:match|	:mat[ch]	define a match to highlight
 |:menu|		:me[nu]		enter a new menu item
 |:messages|	:mes[sages]	view previously displayed messages
 |:mkexrc|	:mk[exrc]	write current mappings and settings to a file

@@ -118,6 +118,7 @@ gui_mch_destroy_beval_area(beval)
     vim_free(beval);
 }
 
+#if defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
     void
 gui_mch_enable_beval_area(beval)
     BalloonEval	*beval;
@@ -179,8 +180,8 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 	row += wp->w_topline - 1;
 	if (col > 0)
 	{
-	    lbuf = ml_get_buf(wp->w_buffer, row, FALSE);
-	    win_linetabsize(wp, lbuf, MAXCOL);
+	    lbuf = ml_get_buf(wp->w_buffer, (linenr_t)row, FALSE);
+	    win_linetabsize(wp, lbuf, (colnr_t)MAXCOL);
 	    if (i >= col)		/* don't send if past end of line */
 	    {
 		*filename = wp->w_buffer->b_ffname;
@@ -210,6 +211,7 @@ gui_mch_post_balloon(beval, msg)
     else
 	undrawBalloon(beval);
 }
+#endif
 
     static void
 addEventHandler(target, beval)
@@ -240,7 +242,7 @@ removeEventHandler(beval)
 /*
  * The X event handler. All it does is call the real event handler.
  */
-
+/*ARGSUSED*/
     static void
 pointerEventEH(w, client_data, event, unused)
     Widget	w;
@@ -314,8 +316,8 @@ pointerEvent(beval, event)
 		    beval->x_root = event->xmotion.x_root;
 		    beval->y_root = event->xmotion.y_root;
 		    cancelBalloon(beval);
-		    beval->timerID = XtAppAddTimeOut(
-			    beval->appContext, p_bdlay, timerRoutine, beval);
+		    beval->timerID = XtAppAddTimeOut( beval->appContext,
+					(long_u)p_bdlay, timerRoutine, beval);
 		}
 	    }
 	    break;
@@ -379,6 +381,7 @@ pointerEvent(beval, event)
     }
 }
 
+/*ARGSUSED*/
     static void
 timerRoutine(dx, id)
     XtPointer	    dx;

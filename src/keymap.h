@@ -423,10 +423,10 @@ enum key_extra
 /* 0x01 cannot be used, because the modifier must be 0x02 or higher */
 #define MOD_MASK_SHIFT	    0x02
 #define MOD_MASK_CTRL	    0x04
-#define MOD_MASK_ALT	    0x08
-#define MOD_MASK_2CLICK	    0x10
-#define MOD_MASK_3CLICK	    0x20
-#define MOD_MASK_4CLICK	    0x40
+#define MOD_MASK_ALT	    0x08	/* aka META */
+#define MOD_MASK_2CLICK	    0x10	/* use MOD_MASK_MULTI_CLICK */
+#define MOD_MASK_3CLICK	    0x20	/* use MOD_MASK_MULTI_CLICK */
+#define MOD_MASK_4CLICK	    0x30	/* use MOD_MASK_MULTI_CLICK */
 #ifdef macintosh
 # define MOD_MASK_CMD	     0x80
 #endif

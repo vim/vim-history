@@ -186,7 +186,7 @@ garray_t error_ga = {0, 0, 0, 0, NULL};
 
 
 
-#ifdef FEAT_GUI_MSWIN
+#if defined(FEAT_GUI_MSWIN) || defined(PROTO)
 /*
  * GUI version of mch_windexit().
  * Shut down and exit with status `r'
@@ -410,7 +410,7 @@ vim_stat(const char *name, struct stat *stp)
     return stat(buf, stp);
 }
 
-#ifdef FEAT_GUI_MSWIN
+#if defined(FEAT_GUI_MSWIN) || defined(PROTO)
     void
 mch_settmode(int tmode)
 {
