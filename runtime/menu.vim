@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Jan 08
+" Last Change:	2004 Mar 01
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -145,6 +145,17 @@ else
   nnoremap <silent> <script> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
 endif
 
+" Use maps for items that are present both in Edit and Popup menu.
+if has("virtualedit")
+  vnoremap <script> <SID>vPaste	"-c<Esc><SID>Paste
+  inoremap <script> <SID>iPaste	<Esc><SID>Pastegi
+else
+  vnoremap <script> <SID>vPaste	"-c<Esc>gix<Esc><SID>Paste"_x
+  inoremap <script> <SID>iPaste	x<Esc><SID>Paste"_s
+endif
+nnoremap <SID>SelectAll	:exe "norm gg" . (&slm == "" ? "VG" : "gH\<C-O>G")<CR>
+
+
 " Edit menu
 an 20.310 &Edit.&Undo<Tab>u			u
 an 20.320 &Edit.&Redo<Tab>^R			<C-R>
@@ -156,13 +167,8 @@ vnoremenu 20.350 &Edit.&Copy<Tab>"+y		"+y
 cnoremenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
 nnoremenu 20.360 &Edit.&Paste<Tab>"+gP		"+gP
 cnoremenu	 &Edit.&Paste<Tab>"+gP		<C-R>+
-if has("virtualedit")
-  vnoremenu <script>	 &Edit.&Paste<Tab>"+gP	"-c<Esc><SID>Paste
-  inoremenu <script>	 &Edit.&Paste<Tab>"+gP	<Esc><SID>Pastegi
-else
-  vnoremenu <script>	 &Edit.&Paste<Tab>"+gP	"-c<Esc>gix<Esc><SID>Paste"_x
-  inoremenu <script>	 &Edit.&Paste<Tab>"+gP	x<Esc><SID>Paste"_s
-endif
+vnoremenu <script> &Edit.&Paste<Tab>"+gP	<SID>vPaste
+inoremenu <script> &Edit.&Paste<Tab>"+gP	<SID>iPaste
 nnoremenu 20.370 &Edit.Put\ &Before<Tab>[p	[p
 inoremenu	 &Edit.Put\ &Before<Tab>[p	<C-O>[p
 nnoremenu 20.380 &Edit.Put\ &After<Tab>]p	]p
@@ -170,7 +176,8 @@ inoremenu	 &Edit.Put\ &After<Tab>]p	<C-O>]p
 if has("win32") || has("win16")
   vnoremenu 20.390 &Edit.&Delete<Tab>x		x
 endif
-an <silent> 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
+noremenu  <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-\><C-N><SID>SelectAll
+noremenu! <script> <silent> 20.400 &Edit.&Select\ All<Tab>ggVG	<C-\><C-N><SID>SelectAll
 
 an 20.405	 &Edit.-SEP2-				<Nop>
 if has("win32")  || has("win16") || has("gui_gtk") || has("gui_motif")
@@ -756,20 +763,17 @@ vnoremenu 1.30 PopUp.&Copy		"+y
 cnoremenu 1.30 PopUp.&Copy		<C-Y>
 nnoremenu 1.40 PopUp.&Paste		"+gP
 cnoremenu 1.40 PopUp.&Paste		<C-R>+
-if has("virtualedit")
-  vnoremenu <script> 1.40 PopUp.&Paste	"-c<Esc><SID>Paste
-  inoremenu <script> 1.40 PopUp.&Paste	<Esc><SID>Pastegi
-else
-  vnoremenu <script> 1.40 PopUp.&Paste	"-c<Esc>gix<Esc><SID>Paste"_x
-  inoremenu <script> 1.40 PopUp.&Paste	x<Esc><SID>Paste"_s
-endif
+vnoremenu <script> 1.40 PopUp.&Paste	<SID>vPaste
+inoremenu <script> 1.40 PopUp.&Paste	<SID>iPaste
 vnoremenu 1.50 PopUp.&Delete		x
 an 1.55 PopUp.-SEP2-			<Nop>
 vnoremenu 1.60 PopUp.Select\ Blockwise	<C-V>
 an 1.70 PopUp.Select\ &Word		vaw
 an 1.80 PopUp.Select\ &Line		V
 an 1.90 PopUp.Select\ &Block		<C-V>
-an 1.100 PopUp.Select\ &All		ggVG
+noremenu  <script> <silent> 1.100 PopUp.Select\ &All	<C-\><C-N><SID>SelectAll
+noremenu! <script> <silent> 1.100 PopUp.Select\ &All	<C-\><C-N><SID>SelectAll
+
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
