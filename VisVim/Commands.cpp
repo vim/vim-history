@@ -524,9 +524,6 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 #ifdef SINGLE_WINDOW
 	// Update the current file in Vim if it has been modified
 	sprintf (VimCmdStart, ":up\n");
-#else
-	// Split the window if the current file has been modified
-	sprintf (VimCmdStart, ":if &mod | split | endif\n");
 #endif
 	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
 		goto OleError;
@@ -536,7 +533,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 		VimChangeDir (VimOle, DispatchId, FileName);
 
 	// Make Vim open the file
-	sprintf (VimCmd, ":e %S\n", (char*) FileName);
+	sprintf (VimCmd, ":drop %S\n", (char*) FileName);
 	// Convert all \ to /
 	for (s = VimCmd; *s; ++s)
 		if (*s == '\\')
