@@ -310,6 +310,10 @@ main
     setlocale(LC_ALL, "");	/* for ctype() and the like */
 #endif
 
+#ifdef MSWIN
+    win32_init();		/* init toupper() and tolower() tables */
+#endif
+
 #ifdef USE_GUI_MAC
     /* Macinthosh needs this before any memory is allocated. */
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */

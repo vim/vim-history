@@ -48,6 +48,7 @@
 
 /*
  * Return TRUE if the user types a 'y' or 'Y', FALSE otherwise.
+ * Eats white space first.
  */
     int
 confirm(void)
@@ -250,7 +251,6 @@ my_fullpath(char *buf, char *fname, int len)
 # define VER_PLATFORM_WIN32_WINDOWS 1
 #endif
 
-static void PlatformId(void);
 static DWORD g_PlatformId;
 
 /*
@@ -507,6 +507,7 @@ main(int argc, char **argv)
     int		vimdirend;
     int		need_vimvar = 1;	/* need to set $VIM */
     int		has_gvim = 0;		/* gvim.exe exists */
+    struct stat	st;
 
 #ifdef DJGPP
     /*
@@ -748,9 +749,11 @@ main(int argc, char **argv)
     /*
      * Add some entries to the registry to add "Edit with Vim" to the context
      * menu.
-     * Only do this when gvim.exe was found and regedit.exe exists.
+     * Only do this when gvim.exe was found and both gvimext.dll and
+     * regedit.exe exist.
      */
     if (has_gvim
+	    && stat("gvimext.dll", &st) >= 0
 #ifndef WIN32
 	    && searchpath("regedit.exe") != NULL
 #endif
@@ -758,10 +761,9 @@ main(int argc, char **argv)
     {
 	printf("\nI can install an entry in the popup menu for the right\n");
 	printf("mouse button, so that you can edit any file with Vim.\n");
-	printf("(NOTE: The MS-Office toolbar has a problem with this!)\n");
 	printf("Do you want me to do this? (Y/N) ");
 	if (!confirm())
-	    printf("didn't change popup menu\n");
+	    printf("didn't add Vim popup menu entry\n");
 	else
 	{
 	    fd = fopen("vim.reg", "w");
@@ -771,16 +773,31 @@ main(int argc, char **argv)
 	    {
 		char	buf[BUFSIZE];
 
-		/* The registry entries for the "Edit with Vim" menu */
-		fprintf(fd, "REGEDIT4\n\n");
-		fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shell\\Vim]\n");
-		fprintf(fd, "@=\"Edit with &Vim\"\n\n");
-		fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shell\\Vim\\command]\n");
+		/*
+		 * Write the registry entries for the "Edit with Vim" menu.
+		 */
+		fprintf(fd, "REGEDIT4\n");
+		fprintf(fd, "\n");
+		fprintf(fd, "HKEY_CLASSES_ROOT\\CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\n");
+		fprintf(fd, "@=\"Vim Shell Extension\"\n");
+		fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\\InProcServer32]\n");
+		double_bs(vimdir, buf); /* double the backslashes */
+		fprintf(fd, "@=\"%sgvimext.dll\"\n", buf);
+		fprintf(fd, "\"ThreadingModel\"=\"Apartment\"\n");
+		fprintf(fd, "\n");
+		fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shellex\\ContextMenuHandlers\\gvim]\n");
+		fprintf(fd, "@=\"{51EEE242-AD87-11d3-9C1E-0090278BBD99}\"\n");
+		fprintf(fd, "\n");
+		fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved]\n");
+		fprintf(fd, "\"{51EEE242-AD87-11d3-9C1E-0090278BBD99}\"=\"Vim Shell Extension\"\n");
+		fprintf(fd, "\n");
+		fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Vim\\Gvim]\n");
 		double_bs(exedir, buf); /* double the backslashes */
-		fprintf(fd, "@=\"%sgvim.exe \\\"%%L\\\"\"\n\n", buf);
+		fprintf(fd, "\"path\"=\"%sgvim.exe\"\n", buf);
+		fprintf(fd, "\n");
 
 		/* The registry entries for uninstalling the menu */
-		fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\vim %s]\n", VIM_VERSION_SHORT);
+		fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim %s]\n", VIM_VERSION_SHORT);
 		fprintf(fd, "\"DisplayName\"=\"Vim %s: Edit with Vim popup menu entry\"\n", VIM_VERSION_SHORT);
 		double_bs(vimdir, buf); /* double the backslashes */
 		fprintf(fd, "\"UninstallString\"=\"%suninstal.exe\"\n", buf);

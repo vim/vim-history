@@ -6,6 +6,7 @@ int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
 void mch_windinit __ARGS((void));
 void mch_windexit __ARGS((int r));
 int mch_check_win __ARGS((int argc, char **argv));
+void win32_init __ARGS((void));
 int mch_input_isatty __ARGS((void));
 void fname_case __ARGS((char_u *name));
 void mch_settitle __ARGS((char_u *title, char_u *icon));

@@ -473,8 +473,9 @@ win_split(new_height, redraw, req_room)
      */
     for (i = 0; i < curwin->w_tagstacklen; i++)
     {
-	wp->w_tagstack[i].fmark = curwin->w_tagstack[i].fmark;
-	wp->w_tagstack[i].tagname = vim_strsave(curwin->w_tagstack[i].tagname);
+	wp->w_tagstack[i] = curwin->w_tagstack[i];
+	if (wp->w_tagstack[i].tagname != NULL)
+	    wp->w_tagstack[i].tagname = vim_strsave(wp->w_tagstack[i].tagname);
     }
     wp->w_tagstackidx = curwin->w_tagstackidx;
     wp->w_tagstacklen = curwin->w_tagstacklen;

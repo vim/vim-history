@@ -203,9 +203,11 @@ do_tag(tag, type, count, forceit, verbose)
 	     */
 	    if ((tagstack[tagstackidx].tagname = vim_strsave(tag)) == NULL)
 	    {
-		--tagstacklen;
+		curwin->w_tagstacklen = tagstacklen - 1;
 		goto end_do_tag;
 	    }
+	    curwin->w_tagstacklen = tagstacklen;
+
 	    new_tag = TRUE;
 	    save_pos = TRUE;	/* save the cursor position below */
 	}
@@ -238,25 +240,29 @@ do_tag(tag, type, count, forceit, verbose)
 		    emsg(topmsg);
 		    goto end_do_tag;
 		}
-		if (tagstack[tagstackidx].fmark.fnum != curbuf->b_fnum)
+
+		/* Make a copy of the fmark, autocommands may invalidate the
+		 * tagstack before it's used. */
+		saved_fmark = tagstack[tagstackidx].fmark;
+		if (saved_fmark.fnum != curbuf->b_fnum)
 		{
 		    /*
 		     * Jump to other file. If this fails (e.g. because the
 		     * file was changed) keep original position in tag stack.
 		     */
-		    if (buflist_getfile(tagstack[tagstackidx].fmark.fnum,
-			    tagstack[tagstackidx].fmark.mark.lnum,
-			    GETF_SETMARK, forceit) == FAIL)
+		    if (buflist_getfile(saved_fmark.fnum, saved_fmark.mark.lnum,
+					       GETF_SETMARK, forceit) == FAIL)
 		    {
 			tagstackidx = oldtagstackidx;  /* back to old posn */
 			goto end_do_tag;
 		    }
 		}
 		else
-		    curwin->w_cursor.lnum
-				      = tagstack[tagstackidx].fmark.mark.lnum;
-		curwin->w_cursor.col = tagstack[tagstackidx].fmark.mark.col;
+		    curwin->w_cursor.lnum = saved_fmark.mark.lnum;
+		curwin->w_cursor.col = saved_fmark.mark.col;
 		curwin->w_set_curswant = TRUE;
+		adjust_cursor();
+
 		/* remove the old list of matches */
 		FreeWild(num_matches, matches);
 #ifdef USE_CSCOPE
@@ -322,9 +328,10 @@ do_tag(tag, type, count, forceit, verbose)
 	    tagstack[tagstackidx].fmark.fnum = curbuf->b_fnum;
 	}
 
-	/* curwin will change in the call to jumpto_tag() if ":stag" was used */
+	/* Curwin will change in the call to jumpto_tag() if ":stag" was used
+	 * or an autocommand jumps to another window; store value of
+	 * tagstackidx now. */
 	curwin->w_tagstackidx = tagstackidx;
-	curwin->w_tagstacklen = tagstacklen;
 	if (type != DT_SELECT && type != DT_JUMP)
 	    curwin->w_tagstack[tagstackidx].cur_match = cur_match;
     }
@@ -695,20 +702,24 @@ do_tag(tag, type, count, forceit, verbose)
 		}
 		EMSG2("File \"%s\" does not exist", nofile_fname);
 	    }
-#ifdef USE_CSCOPE
 	    else
+	    {
+		/* We may have jumped to another window, check that
+		 * tagstackidx is still valid. */
+		if (tagstackidx > curwin->w_tagstacklen)
+		    tagstackidx = curwin->w_tagstackidx;
+#ifdef USE_CSCOPE
 		jumped_to_tag = TRUE;
 #endif
+	    }
 	}
 	break;
     }
 
 end_do_tag:
-    if (use_tagstack)
-    {
+    /* Only store the new index when using tha tagstack and it's valid. */
+    if (use_tagstack && tagstackidx <= curwin->w_tagstacklen)
 	curwin->w_tagstackidx = tagstackidx;
-	curwin->w_tagstacklen = tagstacklen;
-    }
     postponed_split = 0;	/* don't split next time */
 
 #ifdef USE_CSCOPE

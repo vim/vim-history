@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.6a.  Last change: 1999 Oct 17
+*gui_w32.txt*   For Vim version 5.6a.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -77,12 +77,12 @@ If you want Vim to start full-screen, use this for the Open action:
 
 Another method, which also works When you put Vim in another directory (e.g.,
 when you have got a new version):
-1. Put focus on a file you want Vim to use with
+1. select a file you want to use Vim with
 2. <Shift-F10>
-3. <Open With...>
-4. <Other...>
-5. Browse to the (new) location of Vim and click <Open>
-6. <Always Use this program...> checked
+3. select "Open With..." menu entry
+4. click "Other..."
+5. browse to the (new) location of Vim and click "Open"
+6. make "Always Use this program..." checked
 7. <OK>
 
 						*send-to-menu* *sendto*
@@ -103,31 +103,57 @@ form.  This is a limitation of the Windows "Send To" mechanism.
 A more drastic approach is to install an "Edit with Vim" entry in the popup
 menu for the right mouse button.  With this you can edit any file with Vim.
 
+This can co-exist with the file associations mentioned above.  The difference
+is that the file associations will make starting Vim the default action.  With
+the "Edit with Vim" menu entry you can keep the existing file association for
+double clicking on the file, and edit the file with Vim when you want.  For
+example, you can associate "*.mak" with your make program.  You can execute
+the makefile by double clicking it and use the "Edit with Vim" entry to edit
+the makefile.
+
+You can select any files and right-click to see a menu option called "Edit
+with gvim".  Chosing this menu option will invoke gvim with the file you have
+selected.  If you select multiple files, you will find two gvim-related menu
+options:
+"Edit with multiple gvims"  -- one gvim for each file in the selection
+"Edit with single gvim"     -- one gvim for all the files in the selection
+
 						*install-registry*
-You can add this in an easy way by using the "install.exe" program.  It will
-add two registry entries for you.
+You can add the "Edit with Vim" menu entry in an easy way by using the
+"install.exe" program.  It will add several registry entries for you.
 
-You can also do this by hand:
+You can also do this by hand.  This is complicated!  Use the install.exe if
+you can.
+
 1. Start the registry editor with "regedit".
-2. Add two keys:
-   key					    value ~
-   HKEY_CLASSES_ROOT\*\shell\Vim	    Edit with &Vim
-   HKEY_CLASSES_ROOT\*\shell\Vim\command    {path}\gvim.exe "%L"
+2. Add these keys:
+   key		value name		    value ~
+   HKEY_CLASSES_ROOT\CLSID\{51EEE242-AD87-11d3-9C1E-0090278BBD99}
+		{default}		    Vim Shell Extension
+   HKEY_CLASSES_ROOT\CLSID\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\InProcServer32
+		{default}		    {path}\gvimext.dll
+		ThreadingModel		    Apartment
+   HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\gvim
+		{default}		    {51EEE242-AD87-11d3-9C1E-0090278BBD99}
+   HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved
+		{51EEE242-AD87-11d3-9C1E-0090278BBD99}
+					    Vim Shell Extension
+   HKEY_LOCAL_MACHINE\Software\Vim\Gvim
+		path			    {path}\gvim.exe
+   HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\vim 5.6
+		DisplayName		    Vim 5.6: Edit with Vim popup menu entry
+		UninstallString		    {path}\uninstal.exe
 
-   Replace {path} with the path that leads to gvim.exe.
-   Don't forget the double quotes around %L, file names with a space won't
-   work.
-
-NOTE: Problems have been reported with using this in combination with the
-      MS-Office taskbar.  This appears to be a problem in MS-Office.  Don't
-      use this if you want to use the MS-Office taskbar.
+   Replace {path} with the path that leads to the executable.
+   Don't type {default}, this is the value for the key itself.
 
 To remove "Edit with Vim" from the popup menu, just remove the registry
-entries mentioned above.
+entries mentioned above.  The "uninstal.exe" program can do this for you.  You
+can also use the entry in the Windows standard "Add/Remove Programs" list.
 
-If you notice that this entry overrules other file type associatons, set those
-associations again by hand (using Windows Explorer, see above).  This only
-seems to happen on some Windows NT versions (Windows bug?).  Procedure:
+If you notice that this entry overrules other file type associations, set
+those associations again by hand (using Windows Explorer, see above).  This
+only seems to happen on some Windows NT versions (Windows bug?).  Procedure:
 1. Find the name of the file type.  This can be done by starting the registry
    editor, and searching for the extension in \\HKEY_CLASSES_ROOT
 2. In a Windows Explorer, use View/Options/File Types.  Search for the file

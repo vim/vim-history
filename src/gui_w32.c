@@ -1958,6 +1958,11 @@ gui_mch_init(void)
     /* Display any pending error messages */
     mch_display_error();
 
+    /* Return here if the window was already opened (happens when
+     * gui_mch_dialog() is called early). */
+    if (s_hwnd != NULL)
+	return OK;
+
     /*
      * Load the tearoff bitmap
      */
@@ -4645,6 +4650,10 @@ gui_mch_dialog(
 	return dfltbutton;   /* return default option */
 #endif
 
+    /* If there is no window yet, open it. */
+    if (s_hwnd == NULL && gui_mch_init() == FAIL)
+	return dfltbutton;
+
     if ((type < 0) || (type > VIM_LAST_TYPE))
 	type = 0;
 
@@ -5005,6 +5014,19 @@ nCopyAnsiToWideChar(
 {
     int nChar = 0;
 
+#ifdef MULTI_BYTE
+    int len = lstrlen(lpAnsiIn) + 1;	/* include NUL character */
+    int i;
+
+    nChar = MultiByteToWideChar(
+	    CP_OEMCP,
+	    MB_PRECOMPOSED,
+	    lpAnsiIn, len,
+	    lpWCStr, len);
+    for (i = 0; i < nChar; ++i)
+	if (lpWCStr[i] == (WORD)'\t')	/* replace tabs with spaces */
+	    lpWCStr[i] = (WORD)' ';
+#else
     do
     {
 	if (*lpAnsiIn == '\t')
@@ -5013,6 +5035,7 @@ nCopyAnsiToWideChar(
 	    *lpWCStr++ = (WORD)*lpAnsiIn;
 	nChar++;
     } while (*lpAnsiIn++);
+#endif
 
     return nChar;
 }

@@ -2171,7 +2171,7 @@ mch_call_shell(cmd, options)
 
     char_u	*newcmd = NULL;
     pid_t	pid;
-    pid_t	wait_pid;
+    pid_t	wait_pid = 0;
 #ifdef HAVE_UNION_WAIT
     union wait	status;
 #else
@@ -2631,7 +2631,11 @@ mch_call_shell(cmd, options)
 #endif
 		    if ((wait_pid == (pid_t)-1 && errno == ECHILD)
 			    || (wait_pid == pid && WIFEXITED(status)))
+		    {
+			wait_pid = pid;
 			break;
+		    }
+		    wait_pid = 0;
 		}
 finished:
 		p_more = p_more_save;
@@ -2653,12 +2657,12 @@ finished:
 	     * Wait until our child has exited.
 	     * Ignore wait() returning pids of other children and returning
 	     * because of some signal like SIGWINCH.
+	     * Don't wait if wait_pid was already set above, indicating the
+	     * child already exited.
 	     */
-	    for (;;)
+	    while (wait_pid != pid)
 	    {
 		wait_pid = wait(&status);
-		if (wait_pid == pid)
-		    break;
 		if (wait_pid <= 0
 #ifdef ECHILD
 			&& errno == ECHILD
