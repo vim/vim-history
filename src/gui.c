@@ -3918,7 +3918,7 @@ gui_update_horiz_scrollbar(force)
 	if (virtual_active())
 	{
 	    /* May move the cursor even further to the right. */
-	    if (curwin->w_virtcol >= max)
+	    if (curwin->w_virtcol >= (colnr_T)max)
 		max = curwin->w_virtcol;
 	}
 #endif
