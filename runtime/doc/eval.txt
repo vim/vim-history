@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2002 Mar 21
+*eval.txt*      For Vim version 6.1.  Last change: 2002 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2492,6 +2492,7 @@ listcmds		Compiled with commands for the buffer list |:files|
 			and the argument list |arglist|.
 localmap		Compiled with local mappings and abbr. |:map-local|
 mac			Macintosh version of Vim.
+macunix			Macintosh version of Vim, using Unix files (OS-X).
 menu			Compiled with support for |:menu|.
 mksession		Compiled with support for |:mksession|.
 modify_fname		Compiled with file name modifiers. |filename-modifiers|
@@ -2560,6 +2561,7 @@ windows			Compiled with support for more than one window.
 winaltkeys		Compiled with 'winaltkeys' option.
 win16			Win16 version of Vim (MS-Windows 3.1).
 win32			Win32 version of Vim (MS-Windows 95/98/ME/NT/2000/XP).
+win32unix		Win32 version of Vim, using Unix files (Cygwin)
 win95			Win32 version for MS-Windows 95/98/ME.
 writebackup		Compiled with 'writebackup' default on.
 xfontset		Compiled with X fontset support |xfontset|.
