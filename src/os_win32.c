@@ -4418,6 +4418,7 @@ mch_fopen(char *name, char *mode)
 }
 #endif
 
+#ifdef FEAT_MBYTE
 /*
  * SUB STREAM (aka info stream) handling:
  *
@@ -4561,6 +4562,7 @@ copy_infostreams(char_u *from, char_u *to)
     vim_free(fromw);
     vim_free(tow);
 }
+#endif
 
 /*
  * Copy file attributes from file "from" to file "to".
@@ -4570,10 +4572,12 @@ copy_infostreams(char_u *from, char_u *to)
     int
 mch_copy_file_attribute(char_u *from, char_u *to)
 {
+#ifdef FEAT_MBYTE
     /* File streams only work on Windows NT and later. */
     PlatformId();
     if (g_PlatformId == VER_PLATFORM_WIN32_NT)
 	copy_infostreams(from, to);
+#endif
     return 0;
 }
 
