@@ -1,6 +1,6 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
-# Last updated by Dan Sharp.  Last Change: 2004 Feb 03
+# Last updated by Dan Sharp.  Last Change: 2004 Mar 09
 #
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
@@ -31,7 +31,7 @@
 #		For USEDLL=yes the cygwin1.dll is required to run Vim.
 # POSTSCRIPT	no or yes: set to yes for PostScript printing (no)
 # FEATURES	TINY, SMALL, NORMAL, BIG or HUGE (BIG)
-# WINVER	Lowest Win32 version to support.  (0x400)
+# WINVER	Lowest Win32 version to support.  (0x0400)
 # CSCOPE	no or yes: to include cscope interface support (yes)
 # OPTIMIZE	SPACE, SPEED, or MAXSPEED: set optimization level (MAXSPEED)
 # NETBEANS	no or yes: to include netbeans interface support (yes when GUI
@@ -71,7 +71,7 @@ ARCH = i386
 endif
 
 ifndef WINVER
-WINVER = 0x400
+WINVER = 0x0400
 endif
 
 ifndef CSCOPE

@@ -53,7 +53,7 @@
 #	See http://sourceforge.net/projects/gettext/
 #       PostScript printing: POSTSCRIPT=yes (default is no)
 #       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE] (default is BIG)
-#       Version Support: WINVER=[0x400, 0x500] (default is 0x400)
+#       Version Support: WINVER=[0x0400, 0x0500] (default is 0x0400)
 #       Processor Version: CPUNR=[i386, i486, i586, i686] (default is i386)
 #       Optimization: OPTIMIZE=[SPACE, SPEED, MAXSPEED] (default is MAXSPEED)
 #       Netbeans Support: NETBEANS=[yes or no] (default is yes if GUI is yes)
@@ -230,7 +230,7 @@ CON_LIB = $(CON_LIB) /DELAYLOAD:comdlg32.dll /DELAYLOAD:ole32.dll DelayImp.lib
 
 ### Set the default $(WINVER) to make it work with VC++7.0 (VS.NET)
 !ifndef WINVER
-WINVER = 0x400
+WINVER = 0x0400
 !endif
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
