@@ -480,10 +480,7 @@ _OnDeadChar(
  * Return the length.
  */
     static int
-char_to_string(ch, string, slen)
-    int		ch;
-    char_u	*string;
-    int		slen;
+char_to_string(int ch, char_u *string, int slen)
 {
     int		len;
     int		i;
@@ -2711,14 +2708,17 @@ gui_mch_settitle(
     if (title != NULL && enc_codepage >= 0 && enc_codepage != (int)GetACP())
     {
 	WCHAR	*wbuf;
+	int	n;
 
 	/* Convert the title from 'encoding' to ucs2. */
 	wbuf = (WCHAR *)enc_to_ucs2(title, NULL);
 	if (wbuf != NULL)
 	{
-	    SetWindowTextW(s_hwnd, wbuf);
+	    n = SetWindowTextW(s_hwnd, wbuf);
 	    vim_free(wbuf);
-	    return;
+	    if (n != 0 || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+		return;
+	    /* Retry with non-wide function (for Windows 98). */
 	}
     }
 #endif
@@ -3128,12 +3128,14 @@ _OnDropFiles(
 	for (i = 0; i < cFiles; ++i)
 	{
 #ifdef FEAT_MBYTE
-	    DragQueryFileW(hDrop, i, szFile, BUFPATHLEN);
-	    fnames[i] = ucs2_to_enc(szFile, NULL);
-#else
-	    DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
-	    fnames[i] = vim_strsave(szFile);
+	    if (DragQueryFileW(hDrop, i, szFile, BUFPATHLEN) > 0)
+		fnames[i] = ucs2_to_enc(szFile, NULL);
+	    else
 #endif
+	    {
+		DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
+		fnames[i] = vim_strsave(szFile);
+	    }
 	}
 
     DragFinish(hDrop);
