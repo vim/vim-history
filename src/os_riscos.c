@@ -42,7 +42,7 @@ map_colour(dos)
 	case 3: return rgb(0,139,139);		/* DarkCyan */
 	case 4: return rgb(139,0,0);		/* DarkRed */
 	case 5: return rgb(139,0,139);		/* DarkMagenta */
-	case 6: return rgb(165,42,42);		/* Brown */
+	case 6: return rgb(165,42,42);		/* Brown, DarkYellow */
 	case 7: return rgb(211,211,211);	/* LightGray, LightGrey, Gray, Grey */
 	case 8: return rgb(169,169,169);	/* DarkGray, DarkGrey */
 	case 9: return rgb(173,216,230);	/* Blue, LightBlue */

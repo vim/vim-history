@@ -1,4 +1,5 @@
 /* os_mswin.c */
+void mch_windexit __ARGS((int r));
 void mch_init __ARGS((void));
 int mch_input_isatty __ARGS((void));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
@@ -9,6 +10,10 @@ int mch_FullName __ARGS((char_u *fname, char_u *buf, int len, int force));
 int mch_isFullName __ARGS((char_u *fname));
 void slash_adjust __ARGS((char_u *p));
 int vim_stat __ARGS((const char *name, struct stat *stp));
+void mch_settmode __ARGS((int tmode));
+int mch_get_shellsize __ARGS((void));
+void mch_set_shellsize __ARGS((void));
+void mch_new_shellsize __ARGS((void));
 void mch_suspend __ARGS((void));
 void mch_errmsg __ARGS((char *str));
 void mch_display_error __ARGS((void));

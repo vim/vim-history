@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-"  Last Change: December 29, 2000
+"  Last Change: March 23, 2001
 "  Maintainer:  Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  Version:     2.08
+"  Version:     2.10
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
@@ -14,7 +14,7 @@
 "  If you'd like to try the built-in debugging commands...
 "   :g/DBG/s/^"//      to activate    debugging
 "   :g/DBG/s/^/"/      to de-activate debugging
-"  You'll need to <Decho.vim> and put it into your <.vim/plugin>
+"  You'll need to get <Decho.vim> and put it into your <.vim/plugin>
 "  (or <vimfiles\plugin> for Windows).  Its available at
 "  http://www.erols.com/astronaut/vim/vimscript/Decho.vim
 
@@ -58,7 +58,12 @@
 
 " Variables:
 "    b:netrw_lastfile : last file Network-read/written retained on 
-"                       per-buffer basis (supports bare :Nw )
+"                       a per-buffer basis (supports bare :Nw )
+"    b:netrw_line     : during Nw/NetWrite, holds current line   number
+"    b:netrw_col      : during Nw/NetWrite, holds current column number
+"                       b:netrw_line and b:netrw_col are used to restore
+"                       the cursor position on writes
+"
 "    g:netrw_uid      : (ftp) user id,      retained on a per-session basis
 "    g:netrw_passwd   : (ftp) password,     retained on a per-session basis
 "    g:netrw_ftp      : if it doesn't exist, use default ftp (user id pass)
@@ -93,7 +98,7 @@ endif
 
 " Commands: :Nread, :Nwrite, and :NetUserPass
 :com -nargs=* Nread call s:NetRead(<f-args>)
-:com -range=% -nargs=* Nwrite <line1>,<line2>call s:NetWrite(<f-args>)
+:com -range=% -nargs=* Nwrite let b:netrw_line=line(".")|let b:netrw_col=col(".")-1 | <line1>,<line2>call s:NetWrite(<f-args>)
 :com -nargs=* NetUserPass call NetUserPass(<f-args>)
 
 " ------------------------------------------------------------------------
@@ -107,9 +112,11 @@ function! s:NetRead(...)
  let aikeep=&ai
  let cinokeep=&cino
  let comkeep=&com
+ let cpokeep=&cpo
  set nocin noai
  set cino=
  set com=
+ set cpo-=aA
 
  " get temporary file
  let tmpfile = tempname()
@@ -255,6 +262,7 @@ function! s:NetRead(...)
  let &ai   = aikeep
  let &cino = cinokeep
  let &com  = comkeep
+ let &cpo  = cpokeep
 
 " Decho "DBG: return NetRead }"
 endfunction
@@ -271,7 +279,6 @@ function! s:NetGetFile(readcmd, fname)
     let dodel = 1
   endif
   exe a:readcmd . v:cmdarg . " " . a:fname
-"  exe a:readcmd . " " . a:fname
   if a:readcmd[0] == '0' && dodel && getline("$") == ""
     $d
     1
@@ -290,9 +297,11 @@ function! s:NetWrite(...) range
  let aikeep=&ai
  let cinokeep=&cino
  let comkeep=&com
+ let cpokeep=&cpo
  set nocin noai
  set cino=
  set com=
+ set cpo-=aA
 
  " Get Temporary Filename
  let tmpfile    = tempname()
@@ -306,7 +315,6 @@ function! s:NetWrite(...) range
 
  " write (selected portion of) file to temporary
  exe a:firstline . "," . a:lastline . "w!" . v:cmdarg . " " . tmpfile
-" exe a:firstline . "," . a:lastline . "w!" . " " . tmpfile
 
  while ichoice <= a:0
 
@@ -400,7 +408,7 @@ function! s:NetWrite(...) range
  endwhile
 
  " cleanup
-" Decho "DBG NetWrite: cleanup"
+" Decho "DBG: NetWrite: cleanup"
  let result=delete(tmpfile)
  if exists("s:netrw_method")
    unlet s:netrw_method
@@ -411,9 +419,17 @@ function! s:NetWrite(...) range
  let &ai   = aikeep
  let &cino = cinokeep
  let &com  = comkeep
+ let &cpo  = cpokeep
 
  if a:firstline == 1 && a:lastline == line("$")
    set nomod
+ endif
+
+ " restore position
+ if b:netrw_col == 0
+   exe "norm ".b:netrw_line."G0"
+ else
+   exe "norm ".b:netrw_line."G0".b:netrw_col."l"
  endif
 
 " Decho "DBG: return NetWrite }"
@@ -533,6 +549,10 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
    let s:netrw_machine = substitute(a:choice,mf,'\1',"")
    let s:netrw_fname   = substitute(a:choice,mf,'\2',"")
   endif
+
+ else
+   echoerr "***error*** cannot determine method"
+   let s:netrw_method  = -1
  endif
 
 " call Decho("DBG: NetMethod: a:choice       <".a:choice.">")

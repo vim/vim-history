@@ -15,6 +15,7 @@
 
 static int path_is_url __ARGS((char_u *p));
 #if defined(FEAT_WINDOWS) || defined(PROTO)
+static int win_split_ins __ARGS((int size, int flags, win_t *newwin, int dir));
 static int win_comp_pos __ARGS((void));
 static void frame_comp_pos __ARGS((frame_t *topfrp, int *row, int *col));
 static void frame_setheight __ARGS((frame_t *curfrp, int height));
@@ -23,7 +24,9 @@ static void frame_setwidth __ARGS((frame_t *curfrp, int width));
 #endif
 static void win_exchange __ARGS((long));
 static void win_rotate __ARGS((int, int));
+static void win_totop __ARGS((int size, int flags));
 static void win_equal_rec __ARGS((win_t *next_curwin, frame_t *topfr, int dir, int col, int row, int width, int height));
+static win_t *winframe_remove __ARGS((win_t *win, int *dirp));
 static frame_t *win_altframe __ARGS((win_t *win));
 static win_t *frame2win __ARGS((frame_t *frp));
 static void frame_new_height __ARGS((frame_t *topfrp, int height, int topfirst));
@@ -51,6 +54,14 @@ static void win_goto_hor __ARGS((int left, long count));
 #endif
 static void frame_add_height __ARGS((frame_t *frp, int n));
 static void last_status_rec __ARGS((frame_t *fr, int statusline));
+
+static void make_snapshot __ARGS((void));
+static void make_snapshot_rec __ARGS((frame_t *fr, frame_t **frp));
+static void clear_snapshot __ARGS((void));
+static void clear_snapshot_rec __ARGS((frame_t *fr));
+static void restore_snapshot __ARGS((void));
+static int check_snapshot_rec __ARGS((frame_t *sn, frame_t *fr));
+static win_t *restore_snapshot_rec __ARGS((frame_t *sn, frame_t *fr));
 
 static win_t	*prevwin = NULL;	/* previous window */
 #endif /* FEAT_WINDOWS */
@@ -337,6 +348,19 @@ do_window(nchar, Prenum)
 		win_rotate(TRUE, (int)Prenum1);	    /* upwards */
 		break;
 
+/* move window to the very top/bottom/left/right */
+    case 'K':
+    case 'J':
+#ifdef FEAT_VERTSPLIT
+    case 'H':
+    case 'L':
+#endif
+		CHECK_CMDWIN
+		win_totop((int)Prenum,
+			((nchar == 'H' || nchar == 'L') ? WSP_VERT : 0)
+			| ((nchar == 'H' || nchar == 'K') ? WSP_TOP : WSP_BOT));
+		break;
+
 /* make all windows the same height */
     case '=':
 #ifdef FEAT_GUI
@@ -392,7 +416,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 #endif
-		win_setwidth(Prenum ? (int)Prenum : 9999);
+		win_setwidth(Prenum != 0 ? (int)Prenum : 9999);
 		break;
 #endif
 
@@ -527,6 +551,7 @@ do_window(nchar, Prenum)
  * WSP_VERT: vertical split.
  * WSP_TOP:  open window at the top-left of the shell (help window).
  * WSP_BOT:  open window at the bottom-right of the shell (quickfix window).
+ * WSP_HELP: creating the help window, keep layout snapshot
  *
  * return FAIL for failure, OK otherwise
  */
@@ -535,7 +560,38 @@ win_split(size, flags)
     int		size;
     int		flags;
 {
-    win_t	*wp;
+    /* Add flags from ":vertical", ":topleft" and ":botright". */
+    flags |= cmdmod.split;
+    if ((flags & WSP_TOP) && (flags & WSP_BOT))
+    {
+	EMSG(_("Can't split topleft and botright at the same time"));
+	return FAIL;
+    }
+
+    /* When creating the help window make a snapshot of the window layout.
+     * Otherwise clear the snapshot, it's now invalid. */
+    if (flags & WSP_HELP)
+	make_snapshot();
+    else
+	clear_snapshot();
+
+    return win_split_ins(size, flags, NULL, 0);
+}
+
+/*
+ * When "newwin" is NULL: split a window in two.
+ * When "newwin" is not NULL: insert this window at the far
+ * top/left/right/bottom.
+ * return FAIL for failure, OK otherwise
+ */
+    static int
+win_split_ins(size, flags, newwin, dir)
+    int		size;
+    int		flags;
+    win_t	*newwin;
+    int		dir;
+{
+    win_t	*wp = newwin;
     win_t	*oldwin;
     int		new_size = size;
     int		i;
@@ -548,14 +604,6 @@ win_split(size, flags)
     frame_t	*frp, *curfrp;
     int		before;
 
-    /* Add flags from ":vertical", ":topleft" and ":botright". */
-    flags |= cmdmod.split;
-    if ((flags & WSP_TOP) && (flags & WSP_BOT))
-    {
-	EMSG(_("Can't split topleft and botright at the same time"));
-	return FAIL;
-    }
-
     if (flags & WSP_TOP)
 	oldwin = firstwin;
     else if (flags & WSP_BOT)
@@ -566,7 +614,7 @@ win_split(size, flags)
     /* add a status line when p_ls == 1 and splitting the first window */
     if (lastwin == firstwin && p_ls == 1 && oldwin->w_status_height == 0)
     {
-	if (oldwin->w_height <= p_wmh)
+	if (oldwin->w_height <= p_wmh && newwin == NULL)
 	{
 	    EMSG(_(e_noroom));
 	    return FAIL;
@@ -594,7 +642,7 @@ win_split(size, flags)
 	}
 	else
 	    available = oldwin->w_width;
-	if (available < needed)
+	if (available < needed && newwin == NULL)
 	{
 	    EMSG(_(e_noroom));
 	    return FAIL;
@@ -637,7 +685,7 @@ win_split(size, flags)
 	    available = oldwin->w_height;
 	    needed += p_wmh;
 	}
-	if (available < needed)
+	if (available < needed && newwin == NULL)
 	{
 	    EMSG(_(e_noroom));
 	    return FAIL;
@@ -679,52 +727,69 @@ win_split(size, flags)
 	    (flags & WSP_VERT) ? p_spr :
 #endif
 	    p_sb)))	/* new window below/right of current one */
-	wp = win_alloc(oldwin);
-    else
-	wp = win_alloc(oldwin->w_prev);
-    if (wp == NULL)
-	return FAIL;
-
-    /*
-     * make the contents of the new window the same as the current one
-     */
-    wp->w_buffer = curbuf;
-    curbuf->b_nwindows++;
-    wp->w_cursor = curwin->w_cursor;
-    wp->w_valid = 0;
-    wp->w_curswant = curwin->w_curswant;
-    wp->w_set_curswant = curwin->w_set_curswant;
-    wp->w_topline = curwin->w_topline;
-    wp->w_leftcol = curwin->w_leftcol;
-    wp->w_pcmark = curwin->w_pcmark;
-    wp->w_prev_pcmark = curwin->w_prev_pcmark;
-    wp->w_alt_fnum = curwin->w_alt_fnum;
-    wp->w_fraction = curwin->w_fraction;
-    wp->w_prev_fraction_row = curwin->w_prev_fraction_row;
-    copy_jumplist(curwin, wp);
-    if (curwin->w_localdir != NULL)
-	wp->w_localdir = vim_strsave(curwin->w_localdir);
-
-    /* Use the same argument list. */
-    wp->w_alist = curwin->w_alist;
-    ++wp->w_alist->al_refcount;
-    wp->w_arg_idx = curwin->w_arg_idx;
-
-    /*
-     * copy tagstack and options from existing window
-     */
-    for (i = 0; i < curwin->w_tagstacklen; i++)
     {
-	wp->w_tagstack[i] = curwin->w_tagstack[i];
-	if (wp->w_tagstack[i].tagname != NULL)
-	    wp->w_tagstack[i].tagname = vim_strsave(wp->w_tagstack[i].tagname);
+	if (newwin == NULL)
+	    wp = win_alloc(oldwin);
+	else
+	    win_append(oldwin, wp);
     }
-    wp->w_tagstackidx = curwin->w_tagstackidx;
-    wp->w_tagstacklen = curwin->w_tagstacklen;
-    win_copy_options(curwin, wp);
-#ifdef FEAT_FOLDING
-    copyFoldingState(curwin, wp);
+    else
+    {
+	if (newwin == NULL)
+	    wp = win_alloc(oldwin->w_prev);
+	else
+	    win_append(oldwin->w_prev, wp);
+    }
+
+    if (newwin == NULL)
+    {
+	if (wp == NULL)
+	    return FAIL;
+
+	/*
+	 * make the contents of the new window the same as the current one
+	 */
+	wp->w_buffer = curbuf;
+	curbuf->b_nwindows++;
+	wp->w_cursor = curwin->w_cursor;
+	wp->w_valid = 0;
+	wp->w_curswant = curwin->w_curswant;
+	wp->w_set_curswant = curwin->w_set_curswant;
+	wp->w_topline = curwin->w_topline;
+	wp->w_leftcol = curwin->w_leftcol;
+	wp->w_pcmark = curwin->w_pcmark;
+	wp->w_prev_pcmark = curwin->w_prev_pcmark;
+	wp->w_alt_fnum = curwin->w_alt_fnum;
+	wp->w_fraction = curwin->w_fraction;
+	wp->w_prev_fraction_row = curwin->w_prev_fraction_row;
+#ifdef FEAT_JUMPLIST
+	copy_jumplist(curwin, wp);
 #endif
+	if (curwin->w_localdir != NULL)
+	    wp->w_localdir = vim_strsave(curwin->w_localdir);
+
+	/* Use the same argument list. */
+	wp->w_alist = curwin->w_alist;
+	++wp->w_alist->al_refcount;
+	wp->w_arg_idx = curwin->w_arg_idx;
+
+	/*
+	 * copy tagstack and options from existing window
+	 */
+	for (i = 0; i < curwin->w_tagstacklen; i++)
+	{
+	    wp->w_tagstack[i] = curwin->w_tagstack[i];
+	    if (wp->w_tagstack[i].tagname != NULL)
+		wp->w_tagstack[i].tagname =
+				       vim_strsave(wp->w_tagstack[i].tagname);
+	}
+	wp->w_tagstackidx = curwin->w_tagstackidx;
+	wp->w_tagstacklen = curwin->w_tagstacklen;
+	win_copy_options(curwin, wp);
+#ifdef FEAT_FOLDING
+	copyFoldingState(curwin, wp);
+#endif
+    }
 
     /*
      * Reorganise the tree of frames to insert the new window.
@@ -776,12 +841,17 @@ win_split(size, flags)
 		frp->fr_parent = curfrp;
     }
 
-    /* Create a frame for the new window. */
-    frp = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
-    frp->fr_layout = FR_LEAF;
+    if (newwin == NULL)
+    {
+	/* Create a frame for the new window. */
+	frp = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
+	frp->fr_layout = FR_LEAF;
+	frp->fr_win = wp;
+	wp->w_frame = frp;
+    }
+    else
+	frp = newwin->w_frame;
     frp->fr_parent = curfrp->fr_parent;
-    frp->fr_win = wp;
-    wp->w_frame = frp;
 
     /* Insert the new frame at the right place in the frame list. */
     if (before)
@@ -916,10 +986,11 @@ win_split(size, flags)
     /*
      * make the new window the current window and redraw
      */
-    if (do_equal)
+    if (do_equal || dir != 0)
 	win_equal(wp,
 #ifdef FEAT_VERTSPLIT
-		(flags & WSP_VERT) ? 'h' :
+		(flags & WSP_VERT) ? (dir == 'v' ? 'b' : 'h')
+		: dir == 'h' ? 'b' :
 #endif
 		'v');
 
@@ -1280,8 +1351,33 @@ win_rotate(upwards, count)
 }
 
 /*
+ * Move the current window to the very top/bottom/left/right of the screen.
+ */
+    static void
+win_totop(size, flags)
+    int		size;
+    int		flags;
+{
+    int		dir;
+
+    if (lastwin == firstwin)
+    {
+	beep_flush();
+	return;
+    }
+
+    /* Remove the window and frame from the tree of frames. */
+    (void)winframe_remove(curwin, &dir);
+    win_remove(curwin);
+    (void)win_comp_pos();
+
+    /* Split a window on the right side and put the window there. */
+    (void)win_split_ins(size, flags, curwin, dir);
+}
+
+/*
  * Move window "win1" to below "win2" and make "win1" the current window.
- * Only works within one frame!
+ * Only works within the same frame!
  */
     void
 win_move_after(win1, win2)
@@ -1646,19 +1742,22 @@ win_close(win, free_buf)
     int		other_buffer = FALSE;
 #endif
     int		close_curwin = FALSE;
-    frame_t	*frp, *frp2;
-#ifdef FEAT_VERTSPLIT
+    frame_t	*frp;
     int		dir;
-#endif
-#ifdef FEAT_QUICKFIX
-    int		old_height = 0;
-#endif
+    int		help_window = FALSE;
 
     if (lastwin == firstwin)
     {
 	EMSG(_("Cannot close last window"));
 	return;
     }
+
+    /* When closing the help window, try restoring a snapshot after closing
+     * the window.  Otherwise clear the snapshot, it's now invalid. */
+    if (win->w_buffer->b_help)
+	help_window = TRUE;
+    else
+	clear_snapshot();
 
 #ifdef FEAT_AUTOCMD
     if (win == curwin)
@@ -1697,74 +1796,11 @@ win_close(win, free_buf)
     /* reduce the reference count to the argument list. */
     alist_unlink(curwin->w_alist);
 
-    /*
-     * Remove the window from its frame.
-     */
+    /* remove the window and its frame from the tree of frames. */
     frp = win->w_frame;
-    frp2 = win_altframe(win);
-    wp = frame2win(frp2);
-
-    /* Remove this frame from the list of frames. */
-    frame_remove(frp);
-
-    /* If rows/columns go to a window below/right its positions need to be
-     * updated. */
-    if (frp2 == frp->fr_next)
-    {
-	int row = win->w_winrow;
-	int col = W_WINCOL(win);
-
-	frame_comp_pos(frp2, &row, &col);
-    }
-
-#ifdef FEAT_VERTSPLIT
-    if (frp->fr_parent->fr_layout == FR_COL)
-    {
-#endif
-#ifdef FEAT_QUICKFIX
-	/* For a preview or quickfix window, remember its old size and restore
-	 * it later (it's a simplistic solution...).  Don't do this if the
-	 * window will occupy the full height of the screen. */
-	if (frp2->fr_win != NULL
-		&& (frp2->fr_next != NULL
-		    || frp2->fr_prev != NULL)
-		&& (frp2->fr_win->w_p_pvw
-		    || bt_quickfix(frp2->fr_win->w_buffer)))
-	    old_height = frp2->fr_win->w_height;
-#endif
-	frame_new_height(frp2, frp2->fr_height + frp->fr_height,
-					 frp2 == frp->fr_next ? TRUE : FALSE);
-#ifdef FEAT_QUICKFIX
-	if (old_height != 0)
-	    win_setheight_win(old_height, frp2->fr_win);
-#endif
-#ifdef FEAT_VERTSPLIT
-	dir = 'v';
-    }
-    else
-    {
-	frame_new_width(frp2, frp2->fr_width + frp->fr_width,
-					 frp2 == frp->fr_next ? TRUE : FALSE);
-	dir = 'h';
-    }
-#endif
-
+    wp = winframe_remove(win, &dir);
     vim_free(frp);
     win_free(win);
-
-    if (frp2->fr_next == NULL && frp2->fr_prev == NULL)
-    {
-	/* There is no other frame in this list, move its info to the parent
-	 * and remove it. */
-	frp2->fr_parent->fr_layout = frp2->fr_layout;
-	frp2->fr_parent->fr_child = frp2->fr_child;
-	for (frp = frp2->fr_child; frp != NULL; frp = frp->fr_next)
-	    frp->fr_parent = frp2->fr_parent;
-	frp2->fr_parent->fr_win = frp2->fr_win;
-	if (frp2->fr_win != NULL)
-	    frp2->fr_win->w_frame = frp2->fr_parent;
-	vim_free(frp2);
-    }
 
     /* Make sure curwin isn't invalid.  It can cause severe trouble when
      * printing an error message.  For win_equal() curbuf needs to be valid
@@ -1824,7 +1860,96 @@ win_close(win, free_buf)
      */
     last_status(FALSE);
 
+    /* After closing the help window, try restoring the window layout from
+     * before it was opened. */
+    if (help_window)
+	restore_snapshot();
+
     redraw_all_later(NOT_VALID);
+}
+
+/*
+ * Remove a window and its frame from the tree of frames.
+ * Returns a pointer to the window that got the freed up space.
+ */
+/*ARGSUSED*/
+    static win_t *
+winframe_remove(win, dirp)
+    win_t	*win;
+    int		*dirp;		/* set to 'v' or 'h' for direction if 'ea' */
+{
+    frame_t	*frp, *frp2;
+    frame_t	*frp_close = win->w_frame;
+    win_t	*wp;
+
+    /*
+     * Remove the window from its frame.
+     */
+    frp2 = win_altframe(win);
+    wp = frame2win(frp2);
+
+    /* Remove this frame from the list of frames. */
+    frame_remove(frp_close);
+
+    /* If rows/columns go to a window below/right its positions need to be
+     * updated. */
+    if (frp2 == frp_close->fr_next)
+    {
+	int row = win->w_winrow;
+	int col = W_WINCOL(win);
+
+	frame_comp_pos(frp2, &row, &col);
+    }
+
+#ifdef FEAT_VERTSPLIT
+    if (frp_close->fr_parent->fr_layout == FR_COL)
+    {
+#endif
+#ifdef FEAT_QUICKFIX
+	int	old_height = 0;
+
+	/* For a preview or quickfix window, remember its old size and restore
+	 * it later (it's a simplistic solution...).  Don't do this if the
+	 * window will occupy the full height of the screen. */
+	if (frp2->fr_win != NULL
+		&& (frp2->fr_next != NULL
+		    || frp2->fr_prev != NULL)
+		&& (frp2->fr_win->w_p_pvw
+		    || bt_quickfix(frp2->fr_win->w_buffer)))
+	    old_height = frp2->fr_win->w_height;
+#endif
+	frame_new_height(frp2, frp2->fr_height + frp_close->fr_height,
+				   frp2 == frp_close->fr_next ? TRUE : FALSE);
+#ifdef FEAT_QUICKFIX
+	if (old_height != 0)
+	    win_setheight_win(old_height, frp2->fr_win);
+#endif
+#ifdef FEAT_VERTSPLIT
+	*dirp = 'v';
+    }
+    else
+    {
+	frame_new_width(frp2, frp2->fr_width + frp_close->fr_width,
+				   frp2 == frp_close->fr_next ? TRUE : FALSE);
+	*dirp = 'h';
+    }
+#endif
+
+    if (frp2->fr_next == NULL && frp2->fr_prev == NULL)
+    {
+	/* There is no other frame in this list, move its info to the parent
+	 * and remove it. */
+	frp2->fr_parent->fr_layout = frp2->fr_layout;
+	frp2->fr_parent->fr_child = frp2->fr_child;
+	for (frp = frp2->fr_child; frp != NULL; frp = frp->fr_next)
+	    frp->fr_parent = frp2->fr_parent;
+	frp2->fr_parent->fr_win = frp2->fr_win;
+	if (frp2->fr_win != NULL)
+	    frp2->fr_win->w_frame = frp2->fr_parent;
+	vim_free(frp2);
+    }
+
+    return wp;
 }
 
 /*
@@ -2768,7 +2893,12 @@ win_free(wp)
 	vim_free(wp->w_tagstack[i].tagname);
 
     vim_free(wp->w_localdir);
+#ifdef FEAT_SEARCH_EXTRA
+    vim_free(wp->w_match.regprog);
+#endif
+#ifdef FEAT_JUMPLIST
     free_jumplist(wp);
+#endif
 
 #ifdef FEAT_GUI
     if (gui.in_use)
@@ -2913,7 +3043,8 @@ shell_new_rows()
     win_new_height(firstwin, (int)(Rows - p_ch));
 #endif
     compute_cmdrow();
-#ifdef FEAT_WINDOWS
+#if 0
+    /* Disabled: don't want making the screen smaller make a window larger. */
     if (p_ea)
 	win_equal(curwin, 'v');
 #endif
@@ -2930,8 +3061,11 @@ shell_new_columns()
 	return;
     frame_new_width(topframe, (int)Columns, FALSE);
     (void)win_comp_pos();		/* recompute w_winrow and w_wincol */
+#if 0
+    /* Disabled: don't want making the screen smaller make a window larger. */
     if (p_ea)
 	win_equal(curwin, 'h');
+#endif
 }
 #endif
 
@@ -4309,5 +4443,160 @@ check_lnums(do_curwin)
 	    if (wp->w_topline > curbuf->b_ml.ml_line_count)
 		wp->w_topline = curbuf->b_ml.ml_line_count;
 	}
+}
+#endif
+
+#if defined(FEAT_WINDOWS) || defined(PROTO)
+
+/*
+ * A snapshot of the window sizes, to restore them after closing the help
+ * window.
+ * Only these fields are used:
+ * fr_layout
+ * fr_width
+ * fr_height
+ * fr_next
+ * fr_child
+ * fr_win (only valid for the old curwin, NULL otherwise)
+ */
+static frame_t *snapshot = NULL;
+
+/*
+ * Create a snapshot of the current frame sizes.
+ */
+    static void
+make_snapshot()
+{
+    clear_snapshot();
+    make_snapshot_rec(topframe, &snapshot);
+}
+
+    static void
+make_snapshot_rec(fr, frp)
+    frame_t	*fr;
+    frame_t	**frp;
+{
+    *frp = (frame_t *)alloc_clear(sizeof(frame_t));
+    if (*frp == NULL)
+	return;
+    (*frp)->fr_layout = fr->fr_layout;
+# ifdef FEAT_VERTSPLIT
+    (*frp)->fr_width = fr->fr_width;
+# endif
+    (*frp)->fr_height = fr->fr_height;
+    if (fr->fr_next != NULL)
+	make_snapshot_rec(fr->fr_next, &((*frp)->fr_next));
+    if (fr->fr_child != NULL)
+	make_snapshot_rec(fr->fr_child, &((*frp)->fr_child));
+    if (fr->fr_layout == FR_LEAF && fr->fr_win == curwin)
+	(*frp)->fr_win = curwin;
+}
+
+/*
+ * Remove any existing snapshot.
+ */
+    static void
+clear_snapshot()
+{
+    clear_snapshot_rec(snapshot);
+    snapshot = NULL;
+}
+
+    static void
+clear_snapshot_rec(fr)
+    frame_t	*fr;
+{
+    if (fr != NULL)
+    {
+	clear_snapshot_rec(fr->fr_next);
+	clear_snapshot_rec(fr->fr_child);
+	vim_free(fr);
+    }
+}
+
+/*
+ * Restore a previously created snapshot, if there is any.
+ * This is only done if the screen size didn't change and the window layout is
+ * still the same.
+ */
+    static void
+restore_snapshot()
+{
+    win_t	*wp;
+
+    if (snapshot != NULL
+# ifdef FEAT_VERTSPLIT
+	    && snapshot->fr_width == topframe->fr_width
+# endif
+	    && snapshot->fr_height == topframe->fr_height
+	    && check_snapshot_rec(snapshot, topframe) == OK)
+    {
+	wp = restore_snapshot_rec(snapshot, topframe);
+	win_comp_pos();
+	if (wp != NULL)
+	    win_goto(wp);
+	redraw_all_later(CLEAR);
+    }
+    clear_snapshot();
+}
+
+/*
+ * Check if frames "sn" and "fr" have the same layout, same following frames
+ * and same children.
+ */
+    static int
+check_snapshot_rec(sn, fr)
+    frame_t	*sn;
+    frame_t	*fr;
+{
+    if (sn->fr_layout != fr->fr_layout
+	    || (sn->fr_next == NULL) != (fr->fr_next == NULL)
+	    || (sn->fr_child == NULL) != (fr->fr_child == NULL)
+	    || (sn->fr_next != NULL
+		&& check_snapshot_rec(sn->fr_next, fr->fr_next) == FAIL)
+	    || (sn->fr_child != NULL
+		&& check_snapshot_rec(sn->fr_child, fr->fr_child) == FAIL))
+	return FAIL;
+    return OK;
+}
+
+/*
+ * Copy the size of snapshot frame "sn" to frame "fr".  Do the same for all
+ * following frames and children.
+ * Returns a pointer to the old current window, or NULL.
+ */
+    static win_t *
+restore_snapshot_rec(sn, fr)
+    frame_t	*sn;
+    frame_t	*fr;
+{
+    win_t	*wp = NULL;
+    win_t	*wp2;
+
+    fr->fr_height = sn->fr_height;
+# ifdef FEAT_VERTSPLIT
+    fr->fr_width = sn->fr_width;
+# endif
+    if (fr->fr_layout == FR_LEAF)
+    {
+	frame_new_height(fr, fr->fr_height, FALSE);
+# ifdef FEAT_VERTSPLIT
+	frame_new_width(fr, fr->fr_width, FALSE);
+# endif
+	wp = sn->fr_win;
+    }
+    if (sn->fr_next != NULL)
+    {
+	wp2 = restore_snapshot_rec(sn->fr_next, fr->fr_next);
+	if (wp2 != NULL)
+	    wp = wp2;
+    }
+    if (sn->fr_child != NULL)
+    {
+	wp2 = restore_snapshot_rec(sn->fr_child, fr->fr_child);
+	if (wp2 != NULL)
+	    wp = wp2;
+    }
+    return wp;
 }
 #endif

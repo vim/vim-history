@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0y.  Last change: 2001 Mar 08
+*cmdline.txt*   For Vim version 6.0z.  Last change: 2001 Mar 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -145,10 +145,11 @@ CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 			'='	the expression register: you are prompted to
 				enter an expression (see |expression|)
 		See |registers| about registers.  {not in Vi}
-CTRL-R CTRL-F
-CTRL-R CTRL-P
-CTRL-R CTRL-W
-CTRL-R CTRL-A
+
+CTRL-R CTRL-F				*c_CTRL-R_CTRL-F* *c_<C-R>_<C-F>*
+CTRL-R CTRL-P				*c_CTRL-R_CTRL-P* *c_<C-R>_<C-P>*
+CTRL-R CTRL-W				*c_CTRL-R_CTRL-W* *c_<C-R>_<C-W>*
+CTRL-R CTRL-A				*c_CTRL-R_CTRL-A* *c_<C-R>_<C-A>*
 		Insert the object under the cursor:
 			CTRL-F	the Filename under the cursor
 			CTRL-P	the Filename under the cursor, expanded with

@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0y.  Last change: 2001   3 13
+*multibyte.txt* For Vim version 6.0z.  Last change: 2001 Mar 21
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -641,15 +641,12 @@ WHAT IS GLOBAL IME					*global-ime*
     Support Global IME is a experimental feature.
 
 ==============================================================================
-7. UTF-8						*UTF-8*
+7. UTF-8						*UTF-8* *utf-8*
 
-Vim currently has limited UTF-8 support.  It appears to work in an xterm and
-with the Athena and Motif GUI.  To use it:
-- set 'encoding' to "utf-8".
-- set 'guifont' or 'guifontset' to a font that contains the characters you
-  use.  For xterm see |UTF8-xterm|.  For the X11 GUI this should work: >
-	:set guifont=-misc-fixed-medium-r-normal--15-140-75-75-c-90-iso10646-1
-< This assumes you have installed this font, see below.
+Vim has comprehensive UTF-8 support.  It appears to work in:
+- xterm with utf-8 support enabled
+- Athena, Motif and GTK GUI
+- MS-Windows GUI
 
 Double-width characters are supported.  This works best with 'guifontwide' or
 'guifontset'.  When using only 'guifont' the wide characters are drawn in the
@@ -685,8 +682,91 @@ Useful commands:
 - "g8" shows the bytes used in a UTF-8 character, also the composing
   characters, as hex numbers.
 
-Known problems:
-- The GTK GUI crashes when the 'guifont' is set to the utf-8 font.
+
+USING UTF-8
+
+If your current locale is in an utf-8 encoding, Vim will automatically start
+in utf-8 mode.
+
+If you are using another locale: >
+
+	set encoding=utf-8
+
+You might also want to select the font used for the menus.  Unfortunately this
+doesn't always work.  See the system specific remarks below, and 'langmenu'.
+
+
+USING UTF-8 IN AN XTERM					*utf-8-in-xterm*
+
+When using Vim in an xterm, the xterm must have been compiled with utf-8
+support.  See |UTF8-xterm|.
+
+Start the xterm with the "-u8" argument.  You might also need so specify a
+font.  Example: >
+
+   xterm -u8 -fn -misc-fixed-medium-r-normal--18-120-100-100-c-90-iso10646-1
+
+
+USING UTF-8 IN X-Windows				*utf-8-in-xwindows*
+
+You need to specify a font to be used.  For double-wide characters another
+font is required, which is exactly twice as wide.  There are three ways to do
+this:
+
+1. Set 'guifont' and let Vim find a matching 'guifontwide'
+2. Set 'guifont' and 'guifontwide'
+3. Set 'guifontset'
+
+See the documentation for each option for details.  Example: >
+
+   :set guifont=-misc-fixed-medium-r-normal--15-140-75-75-c-90-iso10646-1
+
+You might also want to set the font used for the menus.  This only works for
+Motif.  Use the ":hi Menu font={fontname}" command for this. |:highlight|
+
+
+USING UTF-8 IN MS-WINDOWS				*utf-8-in-mswindows*
+
+Sorry, I don't know how to select Unicode fonts for MS-Windows.  It probably
+works a lot better on MS-Windows NT and 2000, compared to 95/98/ME.
+
+
+USING UTF-8 IN A NON-UNICODE TERMINAL			*utf-8-in-others*
+
+You can also edit utf-8 files in a normal terminal or in an environment that
+uses a different encoding.  Do this: >
+
+	let &termencoding = &encoding
+	set encoding=utf-8
+
+This makes it possible to edit utf-8 files while your locale is, for example,
+in a Japanese encoding or latin1.
+
+The first line causes Vim to translate characters from/to utf-8 when
+communicating with the terminal.  This only works when the conversion is
+possible (for "latin1" it's done internally, other conversions require the
+|+iconv| feature).
+
+Characters which can't be converted will be displayed with a '?', '_' or other
+character.  Use the "ga" or "g8" command to find out which character it really
+is.
+
+
+TYPING UTF-8						*utf-8-typing*
+
+If you are using X-Windows, you should find an input method that supports
+utf-8.
+
+If your system does not provide support for typing utf-8, you can use the
+'keymap' feature.  This allows writing a keymap file, which defines a utf-8
+character as a sequence of ASCII characters.  See |multilang-typing|.
+
+If everyting else fails, you can type any character as four hex bytes: >
+
+	CTRL-V u 1234
+
+"1234" is interpreted as a hex number.  You must type four characters, prepend
+a zero if necessary.
 
 ==============================================================================
 8. UTF-8 in XFree86 xterm				*UTF8-xterm*
@@ -720,7 +800,7 @@ and you will have a working UTF-8 terminal emulator. Try both >
 with the demo text that comes with ucs-fonts.tar.gz in order to see
 whether there are any problems with UTF-8 in your xterm.
 
-For Vim you may need to set 'encoding' to "utf-8".
+For Vim you may need to set 'encoding' to "utf-8", see |utf-8-in-xterm|.
 
 ==============================================================================
 9. Unfinished snippets					*mbyte-snippets*

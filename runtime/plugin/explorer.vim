@@ -24,6 +24,16 @@
 " See :help file-explorer for more details
 "
 "-----------------------------------------------------------------------------
+"Updates in version 2.4 by Mark Waggoner, Bram Moolenaar, & Thomas Köhler
+" - Respect the g:explVertical when running :Sexplore
+" - Doubleclick on filename to 'O' the file
+" - Added mapping for 'O' to open file in previous window
+" - Added mapping for 'p' to preview a file
+" - Used 'wincmd' instead of normal in a few places
+" Updates in version 2.4 by Mark Waggoner
+" - Added mapping for 'O' to open file in previous window
+" - Added mapping for 'p' to preview a file
+" - Used 'wincmd' instead of normal in a few places
 " Updates in version 2.3 by Mark Waggoner
 " - Change backslashes to slashes where needed when running on windows
 " - Fix incorrect display when insert mode abbreviations exist
@@ -141,12 +151,6 @@ else
 endif
 
 
-" Create a variable to use if splitting vertically
-let s:splitMode=""
-if g:explVertical==1
-  let s:splitMode="vertical"
-endif
-
 " A line to use for separating sections
 let s:separator='"---------------------------------------------------'
 
@@ -165,12 +169,31 @@ endif
 "
 function! s:StartExplorer(split)
   let startcmd = "edit"
+  let fname = expand("%:p:h")
+  if fname == ""
+    let fname = getcwd()
+  endif
+
+  " Create a variable to use if splitting vertically
+  let s:splitMode = ""
+  if g:explVertical == 1
+    let s:splitMode = "vertical"
+  endif
+
+  " Save the user's settings for splitbelow and splitright
+  let savesplitbelow = &splitbelow
+  let savesplitright = &splitright
+
   if a:split || &modified 
-    let startcmd = s:splitMode . " " . g:explWinSize . "new %:p:h"
+    let startcmd = s:splitMode . " " . g:explWinSize . "new " . fname
+    let &splitbelow = g:explSplitBelow
+    let &splitright = g:explSplitRight
   else
-    let startcmd = "edit %:p:h"
+    let startcmd = "edit " . fname
   endif
   execute startcmd
+  let &splitbelow = savesplitbelow
+  let &splitright = savesplitright
 endfunction
 
 "---
@@ -300,9 +323,11 @@ function! s:EditDir()
   call s:ShowDirectory()
 
   " Set up mappings for this buffer
-  nnoremap <buffer> <cr> :call <SID>EditEntry()<cr>
+  nnoremap <buffer> <cr> :call <SID>EditEntry("","edit")<cr>
   nnoremap <buffer> -    :exec ("silent e "  . b:parentDirEsc)<cr>
   nnoremap <buffer> o    :call <SID>OpenEntry()<cr>
+  nnoremap <buffer> O    :call <SID>OpenEntryPrevWindow()<cr>
+  nnoremap <buffer> p    :call <SID>EditEntry("","pedit")<cr>
   nnoremap <buffer> ?    :call <SID>ToggleHelp()<cr>
   nnoremap <buffer> a    :call <SID>ShowAllFiles()<cr>
   nnoremap <buffer> R    :call <SID>RenameFile()<cr>
@@ -312,10 +337,54 @@ function! s:EditDir()
   nnoremap <buffer> s    :call <SID>SortSelect()<cr>
   nnoremap <buffer> r    :call <SID>SortReverse()<cr>
   nnoremap <buffer> c    :exec ("cd ".b:completePathEsc)<cr>
+  nnoremap <buffer> <2-leftmouse> :call <SID>DoubleClick()<cr>
 
   " prevent the buffer from being modified
   setlocal nomodifiable
 endfunction
+
+"---
+" If this is the only window, open file in a new window
+" Otherwise, open file in the most recently visited window
+"
+function! s:OpenEntryPrevWindow()
+  " Figure out if there are any other windows
+  let n = winnr()
+  wincmd p
+  " No other window?  Then open a new one
+  if n == winnr()
+    call s:OpenEntry()
+  " Other windows exist
+  else
+    " Check if the previous buffer is modified - ask if they want to
+    " save!
+    let bufname = bufname(winbufnr(winnr()))
+    if &modified
+      let action=confirm("Save Changes in " . bufname . "?","&Yes\n&No\n&Cancel")
+      " Yes - try to save - if there is an error, cancel
+      if action == 1
+        let v:errmsg = ""
+        silent w
+        if v:errmsg != ""
+          echoerr "Unable to write buffer!"
+          wincmd p
+          return
+        endif
+      " No, abandon changes
+      elseif action == 2
+        set nomodified
+        echomsg "Warning, abandoning changes in " . bufname
+      " Cancel (or any other result), don't do the open
+      else
+        wincmd p
+        return
+      endif
+    endif
+    wincmd p
+    call s:EditEntry("wincmd p","edit")
+  endif
+endfunction
+
 
 "---
 " Open a file or directory in a new window.
@@ -358,25 +427,25 @@ function! s:OpenEntry()
   "
   if g:explVertical
     if g:explSplitRight
-      let there="normal! \<c-w>h"
-      let back ="normal! \<c-w>l"
+      let there="wincmd h"
+      let back ="wincmd l"
       let right=1
       let below=0
     else
-      let there="normal! \<c-w>l"
-      let back ="normal! \<c-w>h"
+      let there="wincmd l"
+      let back ="wincmd h"
       let right=0
       let below=0
     endif
   else
     if g:explSplitBelow
-      let there="normal! \<c-w>k"
-      let back ="normal! \<c-w>j"
+      let there="wincmd k"
+      let back ="wincmd j"
       let right=0
       let below=1
     else
-      let there="normal! \<c-w>j"
-      let back ="normal! \<c-w>k"
+      let there="wincmd j"
+      let back ="wincmd k"
       let right=0
       let below=0
     endif
@@ -422,12 +491,22 @@ function! s:OpenEntry()
 
 endfunction
 
+"---
+" Double click with the mouse
+"
+function s:DoubleClick()
+  if expand("<cfile>") =~ '[\\/]$'
+    call s:EditEntry("","edit")		" directory: open in this window
+  else
+    call s:OpenEntryPrevWindow()	" file: open in another window
+  endif
+endfun
 
 "---
 " Open file or directory in the same window as the explorer is
 " currently in
 "
-function! s:EditEntry()
+function! s:EditEntry(movefirst,editcmd)
   " Are we on a line with a file name?
   let l = getline(".")
   if l =~ '^"' 
@@ -448,9 +527,12 @@ function! s:EditEntry()
     exe "chdir" escape(origdir,s:escfilename)
   endif
 
+  " Move to desired window if needed
+  exec(a:movefirst)
   " Edit the file/dir
-  exec("e " . fn)
+  exec(a:editcmd . " " . fn)
 endfunction
+
 
 "---
 " Create a regular expression out of the suffixes option for sorting
@@ -646,6 +728,8 @@ function! s:AddHeader()
     if w:longhelp==1
       let @f="\" <enter> : open file or directory\n"
            \."\" o : open new window for file/directory\n"
+           \."\" O : open file in previously visited window\n"
+           \."\" p : preview the file\n"
            \."\" i : toggle size/date listing\n"
            \."\" s : select sort field    r : reverse sort\n"
            \."\" - : go up one level      c : cd to this dir\n"
@@ -703,7 +787,7 @@ function! s:AddFileInfo()
   call s:AddSeparators()
 
   " return to start
-  normal `t
+  normal! `t
 
   let &sc = save_sc
 endfunction

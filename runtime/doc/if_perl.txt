@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0y.  Last change: 2000 Jul 07
+*if_perl.txt*   For Vim version 6.0z.  Last change: 2001 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -23,10 +23,9 @@ line of a file, regardless of the filename suffix, to check if a file is a
 Perl script (see scripts.vim in Vim's syntax directory).  Vim assumes a file
 is POD text if the filename has a .POD suffix.
 
-To use tags with Perl, you need a script that generates the tags file from a
-Perl script.  Here are URLs for two scripts that do this:
-http://fohnix.metronet.com/perlinfo/scripts/text-processing/newptags.pl
-http://www.geek-girl.com/perl/coombs-scripts/ptags
+To use tags with Perl, you need a recent version of Exuberant ctags.  Look
+here:
+	http://ctags.sourceforge.net
 
 ==============================================================================
 2. Compiling VIM with Perl interface			*perl-compiling*

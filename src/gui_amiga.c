@@ -977,7 +977,7 @@ gui_mch_get_color(char_u *name)
 	{"Magenta",	22},
 	{"LightMagenta",23},
 	{"Yellow",	24},
-	{"LightYellow",	25},
+	{"LightYellow",	25},	/* TODO: add DarkYellow */
 	{"White",	26},
 	{"SeaGreen",	27},
 	{"Orange",	28},
@@ -1169,6 +1169,7 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
 {
     register int start;
 
+    /* TODO: this isn't using "col2"! */
     for (start = row1; start < row2; start ++)
     {
 	Move(gui.window->RPort, 0, posHeightCharToPoint(start));
@@ -1190,18 +1191,21 @@ gui_mch_clear_all(void)
 gui_mch_delete_lines(int row, int num_lines)
 {
     gui_clear_block(row, 0, row + num_lines, Columns - 1);
+    /* changed without checking! */
     ScrollRaster(gui.window->RPort,
-	    0,
+	    posWidthCharToPoint(gui.scroll_region_left),
 	    characterHeight * num_lines,
-	    0,
+	    posWidthCharToPoint(gui.scroll_region_left),
 	    posHeightCharToPoint(row - 1) + 2,
-	    posWidthCharToPoint(gui.num_cols),
+	    posWidthCharToPoint(gui.scroll_region_right + 1),
 	    posHeightCharToPoint(gui.scroll_region_bot) + 3);
 
-    if (gui.cursor_row >= row)
+    if (gui.cursor_row >= row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
     {
 	if (gui.cursor_row < row+num_lines)
-	    gui.cursor_is_valid=FALSE;
+	    gui.cursor_is_valid = FALSE;
 	else if (gui.cursor_row <= gui.scroll_region_bot)
 	    gui.cursor_row -= num_lines;
     }
@@ -1211,22 +1215,26 @@ gui_mch_delete_lines(int row, int num_lines)
 gui_mch_insert_lines(int row, int num_lines)
 {
     SetABPenDrMd(gui.window->RPort, 0, 0, JAM2);
+    /* changed without checking! */
     ScrollRaster(gui.window->RPort,
-	    0,
+	    posWidthCharToPoint(gui.scroll_region_left),
 	    -characterHeight*num_lines,
-	    0,
+	    posWidthCharToPoint(gui.scroll_region_left),
 	    posHeightCharToPoint(row-1)+2,
-	    posWidthCharToPoint(gui.num_cols),
+	    posWidthCharToPoint(gui.scroll_region_right + 1),
 	    posHeightCharToPoint(gui.scroll_region_bot-num_lines+1)+1);
 
-    if (gui.cursor_row >= gui.row)
+    if (gui.cursor_row >= gui.row
+		&& gui.cursor_col >= gui.scroll_region_left
+		&& gui.cursor_col <= gui.scroll_region_right)
     {
 	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
 	    gui.cursor_row += num_lines+1;
 	else if (gui.cursor_row <= gui.scroll_region_bot)
 	    gui.cursor_is_valid=FALSE;
     }
-    gui_clear_block(row, 0, row + num_lines, Columns - 1);
+    gui_clear_block(row, gui.scroll_region_left,
+				    row + num_lines, gui.scroll_region_right);
 }
 
     void

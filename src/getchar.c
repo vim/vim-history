@@ -1569,7 +1569,7 @@ vgetorpeek(advance)
     mapblock_t	*mp2;
 #endif
     mapblock_t	*mp_match;
-    int		mp_match_len;
+    int		mp_match_len = 0;
     int		timedout = FALSE;	    /* waited for more than 1 second
 						for mapping to complete */
     int		mapdepth = 0;	    /* check for recursive mapping */
@@ -1670,6 +1670,12 @@ vgetorpeek(advance)
 		    else
 			c = Ctrl_C;
 		    flush_buffers(TRUE);	/* flush all typeahead */
+
+		    /* Also record this character, it might be needed to
+		     * get out of Insert mode. */
+		    *typebuf = c;
+		    gotchars(typebuf, 1);
+
 		    break;
 		}
 		else if (typelen > 0)	/* check for a mappable key sequence */
@@ -1679,7 +1685,6 @@ vgetorpeek(advance)
 		     * entry that matches.
 		     *
 		     * Don't look for mappings if:
-		     * - timed out
 		     * - no_mapping set: mapping disabled (e.g. for CTRL-V)
 		     * - maphash_valid not set: no mappings present.
 		     * - typebuf[typeoff] should not be remapped
@@ -1691,7 +1696,7 @@ vgetorpeek(advance)
 		     */
 		    mp = NULL;
 		    max_mlen = 0;
-		    if (!timedout && no_mapping == 0 && maphash_valid
+		    if (no_mapping == 0 && maphash_valid
 			    && (typemaplen == 0 ||
 				    (p_remap && noremapbuf[typeoff] != RM_NONE))
 			    && !(p_paste && (State & (INSERT + CMDLINE)))
@@ -1790,11 +1795,14 @@ vgetorpeek(advance)
 
 				    if (keylen > typelen)
 				    {
-					/* break at a partly match */
-					keylen = KL_PART_MAP;
-					break;
+					if (!timedout)
+					{
+					    /* break at a partly match */
+					    keylen = KL_PART_MAP;
+					    break;
+					}
 				    }
-				    if (keylen > mp_match_len)
+				    else if (keylen > mp_match_len)
 				    {
 					/* found a longer match */
 					mp_match = mp;
@@ -1809,7 +1817,8 @@ vgetorpeek(advance)
 			    }
 			}
 
-			/* If no partly match found, use the full match. */
+			/* If no partly match found, use the longest full
+			 * match. */
 			if (keylen != KL_PART_MAP)
 			{
 			    mp = mp_match;
@@ -1852,10 +1861,13 @@ vgetorpeek(advance)
 			    max_mlen = mlen + 1;
 		    }
 
-		    if (mp == NULL && keylen != KL_PART_MAP)
+		    if ((mp == NULL || max_mlen >= mp_match_len)
+						     && keylen != KL_PART_MAP)
 		    {
 			/*
-			 * When no matching mapping found:
+			 * When no matching mapping found or found a
+			 * non-matching mapping that matches at least what the
+			 * matching mapping matched:
 			 * Check if we have a terminal code, when:
 			 *  mapping is allowed,
 			 *  keys have not been mapped,
@@ -1907,7 +1919,11 @@ vgetorpeek(advance)
 			    }
 			    if (keylen >= 0)
 #endif
-			    {
+			      /* When there was a matching mapping and no
+			       * termcode could be replaced after another one,
+			       * use that mapping. */
+			      if (mp == NULL)
+			      {
 /*
  * get a character: 2. from the typeahead buffer
  */
@@ -1925,7 +1941,7 @@ vgetorpeek(advance)
 				    del_typebuf(1, 0);
 				}
 				break;	    /* got character, break for loop */
-			    }
+			      }
 			}
 			if (keylen > 0)	    /* full matching terminal code */
 			{
@@ -1943,7 +1959,7 @@ vgetorpeek(advance)
 				idx = get_menu_index(current_menu, local_State);
 				if (idx != MENU_INDEX_INVALID)
 				{
-#ifdef FEAT_VISUAL
+# ifdef FEAT_VISUAL
 				    /*
 				     * In Select mode, a Visual mode menu is
 				     * used.  Switch to Visual mode
@@ -1956,7 +1972,7 @@ vgetorpeek(advance)
 					(void)ins_typebuf(K_SELECT_STRING,
 							  REMAP_NONE, 0, TRUE);
 				    }
-#endif
+# endif
 
 				    ins_typebuf(current_menu->strings[idx],
 					 current_menu->noremap[idx], 0, TRUE);
@@ -1966,8 +1982,12 @@ vgetorpeek(advance)
 			    continue;	/* try mapping again */
 			}
 
-			/* partial match: get some more characters */
-			keylen = KL_PART_KEY;
+			/* Partial match: get some more characters.  When a
+			 * matching mapping was found use that one. */
+			if (mp == NULL || keylen < 0)
+			    keylen = KL_PART_KEY;
+			else
+			    keylen = mp_match_len;
 		    }
 
 		    /* complete match */
@@ -3673,6 +3693,15 @@ makemap(fd, buf)
 		if (mp->m_noremap == REMAP_SCRIPT)
 		    continue;
 
+		/* skip mappings that contain a <SNR> (script-local thing),
+		 * they probably don't work when loaded again */
+		for (p = mp->m_str; *p != NUL; ++p)
+		    if (p[0] == K_SPECIAL && p[1] == KS_EXTRA
+						       && p[2] == (int)KE_SNR)
+			break;
+		if (*p != NUL)
+		    continue;
+
 		c1 = NUL;
 		c2 = NUL;
 		if (abbr)
@@ -3786,8 +3815,8 @@ put_escstr(fd, str, what)
     char_u	*str;
     int		what;
 {
-    int	    c;
-    int	    modifiers;
+    int		c;
+    int		modifiers;
 
     /* :map xx <Nop> */
     if (*str == NUL && what == 1)
@@ -3797,8 +3826,24 @@ put_escstr(fd, str, what)
 	return OK;
     }
 
-    for ( ; *str; ++str)
+    for ( ; *str != NUL; ++str)
     {
+#ifdef FEAT_MBYTE
+	char_u	*p;
+
+	/* Check for a multi-byte character, which may contain escaped
+	 * K_SPECIAL and CSI bytes */
+	p = mb_unescape(&str);
+	if (p != NULL)
+	{
+	    while (*p != NUL)
+		if (putc(*p++, fd) < 0)
+		    return FAIL;
+	    --str;
+	    continue;
+	}
+#endif
+
 	c = *str;
 	/*
 	 * Special key codes have to be translated to be able to make sense

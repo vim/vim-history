@@ -23,6 +23,8 @@ void gui_stop_highlight __ARGS((int mask));
 void gui_clear_block __ARGS((int row1, int col1, int row2, int col2));
 void gui_upd_cursor_shape __ARGS((void));
 void gui_write __ARGS((char_u *s, int len));
+void gui_dont_update_cursor __ARGS((void));
+void gui_can_update_cursor __ARGS((void));
 void gui_outstr_nowrap __ARGS((char_u *s, int len, int flags, guicolor_t fg, guicolor_t bg, int back));
 void gui_undraw_cursor __ARGS((void));
 void gui_redraw __ARGS((int x, int y, int w, int h));

@@ -355,8 +355,8 @@ static XtResource vim_resources[] =
 	XtRFontStruct,
 	sizeof(XFontStruct *),
 	XtOffsetOf(gui_t, menu_font),
-	XtRString,
-	XtDefaultFont
+	XtRImmediate,
+	(XtPointer)NOFONT
     },
 #endif
     {
@@ -893,7 +893,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    len = 1;
 	}
 
-	if (modifiers)
+	if (modifiers != 0)
 	{
 	    string2[0] = CSI;
 	    string2[1] = KS_MODIFIER;
@@ -901,6 +901,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    add_to_input_buf(string2, 3);
 	}
     }
+
     if (len == 1 && (string[0] == Ctrl_C
 #ifdef UNIX
 	    || (intr_char != 0 && string[0] == intr_char)
@@ -1931,6 +1932,7 @@ gui_mch_get_color(reqname)
 	{"DarkRed",	"#BB0000"},
 	{"DarkMagenta",	"#BB00BB"},
 	{"DarkGrey",	"#BBBBBB"},
+	{"DarkYellow",	"#BBBB00"},
 	{NULL, NULL}
     };
 
@@ -2456,22 +2458,19 @@ gui_mch_flush()
  */
     void
 gui_mch_clear_block(row1, col1, row2, col2)
-    int	    row1;
-    int	    col1;
-    int	    row2;
-    int	    col2;
+    int		row1;
+    int		col1;
+    int		row2;
+    int		col2;
 {
-    int	    x;
+    int		x;
 
     x = FILL_X(col1);
 
-    /*
-     * Clear one extra pixel at the right, for when bold characters have
-     * spilled over to the next column.
-     * Can this ever erase part of the next character? - webb
-     */
+    /* Clear one extra pixel at the far right, for when bold characters have
+     * spilled over to the next column. */
     XFillRectangle(gui.dpy, gui.wid, gui.back_gc, x, FILL_Y(row1),
-	    (col2 - col1 + 1) * gui.char_width + 1,
+	    (col2 - col1 + 1) * gui.char_width + (col2 == Columns - 1),
 	    (row2 - row1 + 1) * gui.char_height);
 }
 
@@ -2493,36 +2492,30 @@ gui_mch_delete_lines(row, num_lines)
     if (gui.visibility == VisibilityFullyObscured)
 	return;	    /* Can't see the window */
 
-    if (num_lines <= 0)
-	return;
+    /* copy one extra pixel at the far right, for when bold has spilled
+     * over */
+    XCopyArea(gui.dpy, gui.wid, gui.wid, gui.text_gc,
+	FILL_X(gui.scroll_region_left), FILL_Y(row + num_lines),
+	gui.char_width * (gui.scroll_region_right - gui.scroll_region_left + 1)
+			       + (gui.scroll_region_right == Columns - 1),
+	gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
+	FILL_X(gui.scroll_region_left), FILL_Y(row));
 
-    if (row + num_lines > gui.scroll_region_bot)
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
+	if (gui.cursor_row < row + num_lines)
+	    gui.cursor_is_valid = FALSE;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_row -= num_lines;
     }
-    else
-    {
-	/* copy one extra pixel, for when bold has spilled over */
-	XCopyArea(gui.dpy, gui.wid, gui.wid, gui.text_gc,
-	    0, FILL_Y(row + num_lines),
-	    gui.char_width * (int)Columns + 1,
-	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
-	    0, FILL_Y(row));
 
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= row)
-	{
-	    if (gui.cursor_row < row + num_lines)
-		gui.cursor_is_valid = FALSE;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_row -= num_lines;
-	}
-
-	gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-	    gui.scroll_region_bot, (int)Columns - 1);
-	gui_x11_check_copy_area();
-    }
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+			  gui.scroll_region_bot, gui.scroll_region_right);
+    gui_x11_check_copy_area();
 }
 
 /*
@@ -2537,41 +2530,33 @@ gui_mch_insert_lines(row, num_lines)
     if (gui.visibility == VisibilityFullyObscured)
 	return;	    /* Can't see the window */
 
-    if (num_lines <= 0)
-	return;
+    /* copy one extra pixel at the far right, for when bold has spilled
+     * over */
+    XCopyArea(gui.dpy, gui.wid, gui.wid, gui.text_gc,
+	FILL_X(gui.scroll_region_left), FILL_Y(row),
+	gui.char_width * (gui.scroll_region_right - gui.scroll_region_left + 1)
+			       + (gui.scroll_region_right == Columns - 1),
+	gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
+	FILL_X(gui.scroll_region_left), FILL_Y(row + num_lines));
 
-    if (row + num_lines > gui.scroll_region_bot)
+    /* Update gui.cursor_row if the cursor scrolled or copied over */
+    if (gui.cursor_row >= gui.row
+	    && gui.cursor_col >= gui.scroll_region_left
+	    && gui.cursor_col <= gui.scroll_region_right)
     {
-	/* Scrolled out of region, just blank the lines out */
-	gui_clear_block(row, 0, gui.scroll_region_bot, (int)Columns - 1);
+	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
+	    gui.cursor_row += num_lines;
+	else if (gui.cursor_row <= gui.scroll_region_bot)
+	    gui.cursor_is_valid = FALSE;
     }
-    else
-    {
-	/* copy one extra pixel, for when bold has spilled over */
-	XCopyArea(gui.dpy, gui.wid, gui.wid, gui.text_gc,
-	    0, FILL_Y(row),
-	    gui.char_width * (int)Columns + 1,
-	    gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
-	    0, FILL_Y(row + num_lines));
 
-	/* Update gui.cursor_row if the cursor scrolled or copied over */
-	if (gui.cursor_row >= gui.row)
-	{
-	    if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-		gui.cursor_row += num_lines;
-	    else if (gui.cursor_row <= gui.scroll_region_bot)
-		gui.cursor_is_valid = FALSE;
-	}
-
-	gui_clear_block(row, 0, row + num_lines - 1, (int)Columns - 1);
-	gui_x11_check_copy_area();
-    }
+    gui_clear_block(row, gui.scroll_region_left,
+				row + num_lines - 1, gui.scroll_region_right);
+    gui_x11_check_copy_area();
 }
 
 /*
- * Scroll the text between gui.scroll_region_top & gui.scroll_region_bot by the
- * number of lines given.  Positive scrolls down (text goes up) and negative
- * scrolls up (text goes down).
+ * Update the region revealed by scrolling up/down.
  */
     static void
 gui_x11_check_copy_area()

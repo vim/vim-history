@@ -2664,12 +2664,6 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	buf = curbuf;
 #endif
 	set_buflisted(FALSE);
-#ifdef FEAT_AUTOCMD
-	/* If autocommands change buffers under our fingers, forget about
-	 * editing the file. */
-	if (buf != curbuf)
-	    goto theend;
-#endif
     }
     else
     {
@@ -2677,13 +2671,18 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	buf = curbuf;
 #endif
 	set_buflisted(TRUE);
-#ifdef FEAT_AUTOCMD
-	/* If autocommands change buffers under our fingers, forget about
-	 * editing the file. */
-	if (buf != curbuf)
-	    goto theend;
-#endif
     }
+#ifdef FEAT_AUTOCMD
+    /* If autocommands change buffers under our fingers, forget about
+     * editing the file. */
+    if (buf != curbuf)
+	goto theend;
+
+    /* Since we are starting to edit a file, consider the filetype to be
+     * unset.  Helps for when an autocommand changes files and expects syntax
+     * highlighting to work in the other file. */
+    did_filetype = FALSE;
+#endif
 
 /*
  * other_file	oldbuf
@@ -4263,8 +4262,15 @@ ex_help(eap)
 	    fclose(helpfd);
 
 #ifdef FEAT_WINDOWS
-	    /* split off help window; put it at far top if not specified */
-	    if (win_split(0, cmdmod.split == 0 ? WSP_TOP : 0) == FAIL)
+	    /* Split off help window; put it at far top if no position
+	     * specified, the current window is vertically split and narrow. */
+	    n = WSP_HELP;
+# ifdef FEAT_VERTSPLIT
+	    if (cmdmod.split == 0 && curwin->w_width != Columns
+						      && curwin->w_width < 80)
+		n |= WSP_TOP;
+# endif
+	    if (win_split(0, n) == FAIL)
 #else
 	    /* use current window */
 	    if (!can_abandon(curbuf, FALSE))

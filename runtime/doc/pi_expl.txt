@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0y.  Last change: 2000 Dec 29
+*pi_expl.txt*    For Vim version 6.0z.  Last change: 2000 Dec 29
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -27,11 +27,21 @@ To launch the explorer in the directory of the file currently edited: >
 If the file has changes the window is split.  To always split the window: >
 	:Sexplore
 
-From inside the explorer, pressing <enter> on a filename will close the
-explorer and open the file chosen. To open the file in a new window, press
-'o'.  You can control where the split window will go relative to the explorer
-window using the variables g:explVertical, g:explSplitBelow and
-g:explSplitRight.
+From inside the explorer move your cursor to a line containing a file or
+directory name.  The following command keys are available:
+
+  <enter> will open the file in the window the explorer is currently
+      occupying.
+  'o' will split a new window and open the file in the new window.
+  'O' will open the file chosen using the window that the cursor was in just
+      before you started or entered the explorer window.  If the explorer is
+      the only window, it will first split a new window to use for the file to
+      be opened.
+  'p' will open (or use) the preview window showing the file
+
+When splitting off a new window, you can control where the split window will
+go relative to the explorer window using the variables g:explVertical,
+g:explSplitBelow and g:explSplitRight.
 
 							*g:explVertical*
 							*g:explSplitBelow*

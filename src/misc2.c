@@ -790,7 +790,7 @@ lalloc(size, message)
     }
 
     if (message && p == NULL)
-	do_outofmem_msg();
+	do_outofmem_msg(size);
 
 theend:
 #ifdef MEM_PROFILE
@@ -826,14 +826,15 @@ mem_realloc(ptr, size)
 * Did_outofmem_msg is reset when a character is read.
 */
     void
-do_outofmem_msg()
+do_outofmem_msg(size)
+    long_u	size;
 {
     if (!did_outofmem_msg)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSG(_(e_outofmem));
+	EMSG2(_("Out of memory!  (allocating %lu bytes)"), size);
 	did_outofmem_msg = TRUE;
     }
 }
@@ -1550,20 +1551,21 @@ ga_append(gap, c)
 
 static struct modmasktable
 {
-    int	    mod_mask;	    /* Bit-mask for particular key modifier */
-    char_u  name;	    /* Single letter name of modifier */
+    short	mod_mask;	/* Bit-mask for particular key modifier */
+    short	mod_flag;	/* Bit(s) for particular key modifier */
+    char_u	name;		/* Single letter name of modifier */
 } mod_mask_table[] =
 {
-    {MOD_MASK_ALT,	(char_u)'M'},
-    {MOD_MASK_CTRL,	(char_u)'C'},
-    {MOD_MASK_SHIFT,	(char_u)'S'},
-    {MOD_MASK_2CLICK,	(char_u)'2'},
-    {MOD_MASK_3CLICK,	(char_u)'3'},
-    {MOD_MASK_4CLICK,	(char_u)'4'},
+    {MOD_MASK_ALT,		MOD_MASK_ALT,		(char_u)'M'},
+    {MOD_MASK_CTRL,		MOD_MASK_CTRL,		(char_u)'C'},
+    {MOD_MASK_SHIFT,		MOD_MASK_SHIFT,		(char_u)'S'},
+    {MOD_MASK_MULTI_CLICK,	MOD_MASK_2CLICK,	(char_u)'2'},
+    {MOD_MASK_MULTI_CLICK,	MOD_MASK_3CLICK,	(char_u)'3'},
+    {MOD_MASK_MULTI_CLICK,	MOD_MASK_4CLICK,	(char_u)'4'},
 #ifdef macintosh
-    {MOD_MASK_CMD,      (char_u)'D'},
+    {MOD_MASK_CMD,		MOD_MASK_CMD,		(char_u)'D'},
 #endif
-    {0x0,		NUL}
+    {0, 0, NUL}
 };
 
 /*
@@ -1835,11 +1837,11 @@ name_to_mod_mask(c)
 {
     int	    i;
 
-    if (c <= 255)	/* avoid TO_LOWER() with number > 255 */
+    if (c <= 255)	/* avoid TO_UPPER() with number > 255 */
     {
-	for (i = 0; mod_mask_table[i].mod_mask; i++)
-	    if (TO_LOWER(c) == TO_LOWER(mod_mask_table[i].name))
-		return mod_mask_table[i].mod_mask;
+	for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
+	    if (TO_UPPER(c) == mod_mask_table[i].name)
+		return mod_mask_table[i].mod_flag;
     }
     return 0x0;
 }
@@ -1962,8 +1964,9 @@ get_special_key_name(c, modifiers)
     }
 
     /* translate the modifier into a string */
-    for (i = 0; mod_mask_table[i].mod_mask; i++)
-	if (modifiers & mod_mask_table[i].mod_mask)
+    for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
+	if ((modifiers & mod_mask_table[i].mod_mask)
+						== mod_mask_table[i].mod_flag)
 	{
 	    string[idx++] = mod_mask_table[i].name;
 	    string[idx++] = (char_u)'-';
@@ -2204,7 +2207,7 @@ extract_modifiers(key, modp)
     if ((modifiers & MOD_MASK_ALT) && key < 0x80)
     {
 	key |= 0x80;
-	modifiers &= ~MOD_MASK_ALT;
+	modifiers &= ~MOD_MASK_ALT;	/* remove the META modifier */
     }
 
     *modp = modifiers;

@@ -437,7 +437,9 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
     if (options & SEARCH_START)
 	extra_col = 0;
 #ifdef FEAT_MBYTE
-    else if (has_mbyte)
+    /* Watch out for the "col" being MAXCOL - 2, used in a closed fold. */
+    else if (has_mbyte && pos->lnum >= 1 && pos->lnum <= buf->b_ml.ml_line_count
+						     && pos->col < MAXCOL - 2)
 	extra_col = (*mb_ptr2len_check)(ml_get_buf(buf, pos->lnum, FALSE)
 								  + pos->col);
 #endif

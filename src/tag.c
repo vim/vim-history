@@ -789,7 +789,7 @@ do_tag(tag, type, count, forceit, verbose)
 		}
 		else
 		    give_warning(msg_buf, ic);
-		if (ic && !msg_scrolled)
+		if (ic && !msg_scrolled && msg_silent == 0)
 		{
 		    out_flush();
 		    ui_delay(1000L, TRUE);
@@ -2574,7 +2574,7 @@ jumpto_tag(lbuf, forceit)
 		    if (found == 2 || !save_p_ic)
 		    {
 			MSG(_("Couldn't find tag, just guessing!"));
-			if (!msg_scrolled)
+			if (!msg_scrolled && msg_silent == 0)
 			{
 			    out_flush();
 			    ui_delay(1000L, TRUE);

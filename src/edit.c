@@ -824,10 +824,13 @@ doESCkey:
 		    ctrl_x_mode = 0;
 		    msg_attr((char_u *)_("'thesaurus' option is empty"),
 			     hl_attr(HLF_E));
-		    vim_beep();
-		    setcursor();
-		    out_flush();
-		    ui_delay(2000L, FALSE);
+		    if (emsg_silent == 0)
+		    {
+			vim_beep();
+			setcursor();
+			out_flush();
+			ui_delay(2000L, FALSE);
+		    }
 		    break;
 		}
 		goto docomplete;
@@ -999,10 +1002,13 @@ doESCkey:
 		    ctrl_x_mode = 0;
 		    msg_attr((char_u *)_("'dictionary' option is empty"),
 			     hl_attr(HLF_E));
-		    vim_beep();
-		    setcursor();
-		    out_flush();
-		    ui_delay(2000L, FALSE);
+		    if (emsg_silent == 0)
+		    {
+			vim_beep();
+			setcursor();
+			out_flush();
+			ui_delay(2000L, FALSE);
+		    }
 		    break;
 		}
 		goto docomplete;
@@ -1994,12 +2000,13 @@ find_word_end(ptr)
     if (has_mbyte)
     {
 	start_class = mb_get_class(ptr);
-	while (*ptr != NUL)
-	{
-	    ptr += (*mb_ptr2len_check)(ptr);
-	    if (mb_get_class(ptr) != start_class)
-		break;
-	}
+	if (start_class > 1)
+	    while (*ptr != NUL)
+	    {
+		ptr += (*mb_ptr2len_check)(ptr);
+		if (mb_get_class(ptr) != start_class)
+		    break;
+	    }
     }
     else
 #endif
@@ -6606,7 +6613,7 @@ ins_copychar(lnum)
 {
     int	    c;
     int	    temp;
-    char_u  *ptr;
+    char_u  *ptr, *prev_ptr;
 
     if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
     {
@@ -6617,17 +6624,22 @@ ins_copychar(lnum)
     /* try to advance to the cursor column */
     temp = 0;
     ptr = ml_get(lnum);
+    prev_ptr = ptr;
     validate_virtcol();
-    while ((colnr_t)temp < curwin->w_virtcol && *ptr)
+    while ((colnr_t)temp < curwin->w_virtcol && *ptr != NUL)
+    {
+	prev_ptr = ptr;
 	temp += lbr_chartabsize_adv(&ptr, (colnr_t)temp);
-
+    }
     if ((colnr_t)temp > curwin->w_virtcol)
-	--ptr;
+	ptr = prev_ptr;
+
 #ifdef FEAT_MBYTE
-    if ((c = (*mb_ptr2char)(ptr)) == NUL)
+    c = (*mb_ptr2char)(ptr);
 #else
-    if ((c = *ptr) == NUL)
+    c = *ptr;
 #endif
+    if (c == NUL)
 	vim_beep();
     return c;
 }

@@ -31,7 +31,9 @@ static void fname2fnum __ARGS((xfmark_t *fm));
 static void fmarks_check_one __ARGS((xfmark_t *fm, char_u *name, buf_t *buf));
 static char_u *mark_line __ARGS((pos_t *mp, int lead_len));
 static void show_one_mark __ARGS((int, char_u *, pos_t *, char_u *, int current));
+#ifdef FEAT_JUMPLIST
 static void cleanup_jumplist __ARGS((void));
+#endif
 #ifdef FEAT_VIMINFO
 static void write_one_filemark __ARGS((FILE *fp, xfmark_t *fm, int c1, int c2));
 #endif
@@ -88,11 +90,13 @@ setmark(c)
     void
 setpcmark()
 {
+#ifdef FEAT_JUMPLIST
     int		i;
+    xfmark_t	*fm;
+#endif
 #ifdef JUMPLIST_ROTATE
     xfmark_t	tempmark;
 #endif
-    xfmark_t	*fm;
 
     /* for :global the mark is set only once */
     if (global_busy)
@@ -101,7 +105,8 @@ setpcmark()
     curwin->w_prev_pcmark = curwin->w_pcmark;
     curwin->w_pcmark = curwin->w_cursor;
 
-#ifdef JUMPLIST_ROTATE
+#ifdef FEAT_JUMPLIST
+# ifdef JUMPLIST_ROTATE
     /*
      * If last used entry is not at the top, put it at the top by rotating
      * the stack until it is (the newer entries will be at the bottom).
@@ -117,7 +122,7 @@ setpcmark()
 	curwin->w_jumplist[0] = tempmark;
 	++curwin->w_jumplistidx;
     }
-#endif
+# endif
 
     /* If jumplist is full: remove oldest entry */
     if (++curwin->w_jumplistlen > JUMPLISTSIZE)
@@ -133,6 +138,7 @@ setpcmark()
     fm->fmark.mark = curwin->w_pcmark;
     fm->fmark.fnum = curbuf->b_fnum;
     fm->fname = NULL;
+#endif
 }
 
 /*
@@ -153,6 +159,7 @@ checkpcmark()
     }
 }
 
+#if defined(FEAT_JUMPLIST) || defined(PROTO)
 /*
  * move "count" positions in the jump list (count may be negative)
  */
@@ -212,6 +219,7 @@ movemark(count)
 	return pos;
     }
 }
+#endif
 
 #if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
 static pos_t *getmark2 __ARGS((int c, int changefile, int fcoladd));
@@ -489,7 +497,9 @@ fmarks_check_names(buf)
 {
     char_u	*name;
     int		i;
+#ifdef FEAT_JUMPLIST
     win_t	*wp;
+#endif
 
     if (buf->b_ffname == NULL)
 	return;
@@ -501,13 +511,15 @@ fmarks_check_names(buf)
     for (i = 0; i < NMARKS + EXTRA_MARKS; ++i)
 	fmarks_check_one(&namedfm[i], name, buf);
 
-#ifndef FEAT_WINDOWS
+#ifdef FEAT_JUMPLIST
+# ifndef FEAT_WINDOWS
     wp = curwin;
-#else
+# else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+# endif
 	for (i = 0; i < wp->w_jumplistlen; ++i)
 	    fmarks_check_one(&wp->w_jumplist[i], name, buf);
+#endif
 
     vim_free(name);
 }
@@ -735,6 +747,7 @@ show_one_mark(c, arg, p, name, current)
     }
 }
 
+#if defined(FEAT_JUMPLIST) || defined(PROTO)
 /*
  * print the jumplist
  */
@@ -777,6 +790,7 @@ ex_jumps(eap)
     if (curwin->w_jumplistidx == curwin->w_jumplistlen)
 	MSG_PUTS("\n>");
 }
+#endif
 
 #define one_adjust(add) \
     { \
@@ -874,11 +888,13 @@ mark_adjust(line1, line2, amount, amount_after)
      */
     for (win = firstwin; win != NULL; win = W_NEXT(win))
     {
+#ifdef FEAT_JUMPLIST
 	/* Marks in the jumplist.  When deleting lines, this may create
 	 * duplicate marks in the jumplist, they will be removed later. */
 	for (i = 0; i < win->w_jumplistlen; ++i)
 	    if (win->w_jumplist[i].fmark.fnum == fnum)
 		one_adjust_nodel(&(win->w_jumplist[i].fmark.mark.lnum));
+#endif
 
 	if (win->w_buffer == curbuf)
 	{
@@ -930,6 +946,7 @@ mark_adjust(line1, line2, amount, amount_after)
     }
 }
 
+#ifdef FEAT_JUMPLIST
 /*
  * When deleting lines, this may create duplicate marks in the
  * jumplist. They will be removed here for the current window.
@@ -962,7 +979,7 @@ cleanup_jumplist()
     curwin->w_jumplistlen = to;
 }
 
-#if defined(FEAT_WINDOWS) || defined(PROTO)
+# if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * Copy the jumplist from window "from" to window "to".
  */
@@ -995,7 +1012,8 @@ free_jumplist(wp)
     for (i = 0; i < wp->w_jumplistlen; ++i)
 	vim_free(wp->w_jumplist[i].fname);
 }
-#endif
+# endif
+#endif /* FEAT_JUMPLIST */
 
     void
 set_last_cursor(win)
@@ -1026,6 +1044,7 @@ read_viminfo_filemark(virp, force)
     {
 	if (*str == '\'')
 	{
+#ifdef FEAT_JUMPLIST
 	    /* If the jumplist isn't full insert fmark as oldest entry */
 	    if (curwin->w_jumplistlen == JUMPLISTSIZE)
 		fm = NULL;
@@ -1039,6 +1058,9 @@ read_viminfo_filemark(virp, force)
 		fm->fmark.mark.lnum = 0;
 		fm->fname = NULL;
 	    }
+#else
+	    fm = NULL;
+#endif
 	}
 	else if (isdigit(*str))
 	    fm = &namedfm[*str - '0' + NMARKS];
@@ -1107,6 +1129,7 @@ write_viminfo_filemarks(fp)
 	write_one_filemark(fp, &namedfm[i], '\'',
 				     i < NMARKS ? i + 'A' : i - NMARKS + '0');
 
+#ifdef FEAT_JUMPLIST
     /* Write the jumplist with -' */
     fprintf(fp, _("\n# Jumplist (newest first):\n"));
     setpcmark();	/* add current cursor position */
@@ -1119,6 +1142,7 @@ write_viminfo_filemarks(fp)
 		    && !removable(buf->b_ffname)))
 	    write_one_filemark(fp, fm, '-', '\'');
     }
+#endif
 }
 
     static void

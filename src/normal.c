@@ -1034,6 +1034,7 @@ getcount:
      * In Visual mode, it's more important to keep the Visual area updated
      * than keeping a message (e.g. from a /pat search).
      * Only do this if the command was typed, not from a mapping.
+     * Don't wait when emsg_silent is non-zero.
      * Also wait a bit after an error message, e.g. for "^O:".
      * Don't redraw the screen, it would remove the message.
      */
@@ -1060,6 +1061,7 @@ getcount:
 	    && !(ca.retval & CA_COMMAND_BUSY)
 	    && stuff_empty()
 	    && typebuf_typed()
+	    && emsg_silent == 0
 	    && oap->op_type == OP_NOP)
     {
 	int	save_State = State;
@@ -2483,7 +2485,8 @@ do_mouse(oap, c, dir, count, fix_indent)
      * Ctrl-Mouse click or double click in a quickfix window jumps to the
      * error under the mouse pointer.
      */
-    else if (((mod_mask & MOD_MASK_CTRL) || (mod_mask & MOD_MASK_2CLICK))
+    else if (((mod_mask & MOD_MASK_CTRL)
+		|| (mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK)
 	    && bt_quickfix(curbuf))
     {
 	if (State & INSERT)
@@ -2497,8 +2500,8 @@ do_mouse(oap, c, dir, count, fix_indent)
      * Ctrl-Mouse click (or double click in a help window) jumps to the tag
      * under the mouse pointer.
      */
-    else if ((mod_mask & MOD_MASK_CTRL)
-			  || (curbuf->b_help && (mod_mask & MOD_MASK_2CLICK)))
+    else if ((mod_mask & MOD_MASK_CTRL) || (curbuf->b_help
+		     && (mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK))
     {
 	if (State & INSERT)
 	    stuffcharReadbuff(Ctrl_O);
@@ -2567,11 +2570,11 @@ do_mouse(oap, c, dir, count, fix_indent)
 		if (p_smd)
 		    redraw_cmdline = TRUE;  /* show visual mode later */
 	    }
-	    if (mod_mask & MOD_MASK_2CLICK)
+	    if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK)
 		VIsual_mode = 'v';
-	    else if (mod_mask & MOD_MASK_3CLICK)
+	    else if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_3CLICK)
 		VIsual_mode = 'V';
-	    else if (mod_mask & MOD_MASK_4CLICK)
+	    else if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_4CLICK)
 		VIsual_mode = Ctrl_V;
 #ifdef FEAT_CLIPBOARD
 	    /* Make sure the clipboard gets updated.  Needed because start and
@@ -2582,7 +2585,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	/*
 	 * A double click selects a word or a block.
 	 */
-	if (mod_mask & MOD_MASK_2CLICK)
+	if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK)
 	{
 	    pos_t	*pos = NULL;
 
@@ -5756,6 +5759,7 @@ nv_replace(cap)
 		ptr = ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE);
 		ptr[curwin->w_cursor.col] = cap->nchar;
 		if (       p_sm
+			&& msg_silent == 0
 			&& (cap->nchar == ')'
 			    || cap->nchar == '}'
 			    || cap->nchar == ']'))
@@ -6156,11 +6160,12 @@ nv_gomark(cap)
 nv_pcmark(cap)
     cmdarg_t	*cap;
 {
+#ifdef FEAT_JUMPLIST
     pos_t	*pos;
-#ifdef FEAT_FOLDING
+# ifdef FEAT_FOLDING
     linenr_t	lnum = curwin->w_cursor.lnum;
     int		old_KeyTyped = KeyTyped;    /* getting file may reset it */
-#endif
+# endif
 
     if (!checkclearopq(cap->oap))
     {
@@ -6174,14 +6179,17 @@ nv_pcmark(cap)
 	    nv_cursormark(cap, FALSE, pos);
 	else
 	    clearopbeep(cap->oap);
-#ifdef FEAT_FOLDING
+# ifdef FEAT_FOLDING
 	if (cap->oap->op_type == OP_NOP
 		&& (pos == (pos_t *)-1 || lnum != curwin->w_cursor.lnum)
 		&& (fdo_flags & FDO_MARK)
 		&& old_KeyTyped)
 	    foldOpenCursor();
-#endif
+# endif
     }
+#else
+    clearopbeep(cap->oap);
+#endif
 }
 
 /*

@@ -2338,7 +2338,11 @@ mch_setmouse(on)
 check_mouse_termcode()
 {
 # ifdef FEAT_MOUSE_XTERM
-    if (use_xterm_mouse())
+    if (use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
     {
 	set_mouse_termcode(KS_MOUSE, (char_u *)(term_is_8bit(T_NAME)
 		  ? IF_EB("\233M", CSI_STR "M") : IF_EB("\033[M", ESC_STR "[M")));
@@ -2353,25 +2357,48 @@ check_mouse_termcode()
     else
 	del_mouse_termcode(KS_MOUSE);
 # endif
+
 # ifdef FEAT_MOUSE_GPM
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_MOUSE, (char_u *)IF_EB("\033MG", ESC_STR "MG"));
 # endif
+
 # ifdef FEAT_MOUSE_JSB
     /* conflicts with xterm mouse: "\033[" and "\033[M" ??? */
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_JSBTERM_MOUSE,
 			       (char_u *)IF_EB("\033[0~zw", ESC_STR "[0~zw"));
     else
 	del_mouse_termcode(KS_JSBTERM_MOUSE);
 # endif
+
 # ifdef FEAT_MOUSE_NET
-    /* can be added always, there is no conflict */
-    set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)IF_EB("\033}", ESC_STR "}"));
+    /* can be added always, there is no conflict; don't do it in the GUI
+     * though */
+#  ifdef FEAT_GUI
+    if (gui.in_use)
+	del_mouse_termcode(KS_NETTERM_MOUSE);
+    else
+#  endif
+	set_mouse_termcode(KS_NETTERM_MOUSE,
+				       (char_u *)IF_EB("\033}", ESC_STR "}"));
 # endif
+
 # ifdef FEAT_MOUSE_DEC
     /* conflicts with xterm mouse: "\033[" and "\033[M" */
-    if (!use_xterm_mouse())
+    if (!use_xterm_mouse()
+#  ifdef FEAT_GUI
+	    && !gui.in_use
+#  endif
+	    )
 	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)IF_EB("\033[", ESC_STR "["));
     else
 	del_mouse_termcode(KS_DEC_MOUSE);

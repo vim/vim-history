@@ -234,6 +234,8 @@ typedef struct Gui
     int		num_rows;	    /* Number of rows */
     int		scroll_region_top;  /* Top (first) line of scroll region */
     int		scroll_region_bot;  /* Bottom (last) line of scroll region */
+    int		scroll_region_left;  /* Left (first) column of scroll region */
+    int		scroll_region_right;  /* Right (last) col. of scroll region */
     int		highlight_mask;	    /* Highlight attribute mask */
     int		scrollbar_width;    /* Width of vertical scrollbars */
     int		scrollbar_height;   /* Height of horizontal scrollbar */

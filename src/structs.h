@@ -184,6 +184,19 @@ struct wininfo
 };
 
 /*
+ * Info used to pass info about a fold from the fold-detection code to the
+ * code that displays the foldcolumn.
+ */
+typedef struct foldinfo
+{
+    int		fi_level;	/* level of the fold; when this is zero the
+				   other fields are invalid */
+    int		fi_lnum;	/* line number where fold starts */
+    int		fi_low_level;	/* lowest fold level that starts in the same
+				   line */
+} foldinfo_t;
+
+/*
  * stuctures used for undo
  */
 
@@ -731,8 +744,9 @@ struct file_buffer
 
     /*
      * Character table, only used in charset.c for 'iskeyword'
+     * 32 bytes of 8 bits: 1 bit per character 0-255.
      */
-    char	b_chartab[256];
+    char_u	b_chartab[32];
 
 #ifdef FEAT_LOCALMAP
     /* Table used for mappings local to a buffer. */
@@ -1193,11 +1207,13 @@ struct window
     int		w_redr_status;	    /* if TRUE status line must be redrawn */
 #endif
 
+#ifdef FEAT_CMDL_INFO
     /* remember what is shown in the ruler for this window (if 'ruler' set) */
     pos_t	w_ru_cursor;	    /* cursor position shown in ruler */
     colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
     linenr_t	w_ru_topline;	    /* topline shown in ruler */
     char	w_ru_empty;	    /* TRUE if ruler shows 0-1 (empty line) */
+#endif
 
     int		w_alt_fnum;	    /* alternate file (for # and CTRL-^) */
 
@@ -1240,15 +1256,22 @@ struct window
      * a new line after setting the w_pcmark.  If not, then we revert to
      * using the previous w_pcmark.
      */
-    pos_t	w_pcmark;	    /* previous context mark */
-    pos_t	w_prev_pcmark;	    /* previous w_pcmark */
+    pos_t	w_pcmark;	/* previous context mark */
+    pos_t	w_prev_pcmark;	/* previous w_pcmark */
 
+#ifdef FEAT_JUMPLIST
     /*
      * the jumplist contains old cursor positions
      */
     xfmark_t	w_jumplist[JUMPLISTSIZE];
     int		w_jumplistlen;		/* number of active entries */
     int		w_jumplistidx;		/* current position */
+#endif
+
+#ifdef FEAT_SEARCH_EXTRA
+    regmmatch_t	w_match;	/* regexp program for ":match" */
+    int		w_match_id;	/* highlight ID for ":match" */
+#endif
 
     /*
      * the tagstack grows from 0 upwards:
@@ -1266,28 +1289,28 @@ struct window
      * w_prev_fraction_row was the actual cursor row when w_fraction was last
      * calculated.
      */
-    int		    w_fraction;
-    int		    w_prev_fraction_row;
+    int		w_fraction;
+    int		w_prev_fraction_row;
 
 #ifdef FEAT_GUI
-    scrollbar_t	    w_scrollbars[2];	/* vert. Scrollbars for this window */
+    scrollbar_t	w_scrollbars[2];	/* vert. Scrollbars for this window */
 #endif
 
 #ifdef FEAT_PERL
-    void	    *perl_private;
+    void	*perl_private;
 #endif
 
 #ifdef FEAT_PYTHON
-    void	    *python_ref;	/* The Python value referring to this
+    void	*python_ref;	/* The Python value referring to this
 					   window */
 #endif
 
 #ifdef FEAT_TCL
-    void	    *tcl_ref;
+    void	*tcl_ref;
 #endif
 
 #ifdef FEAT_RUBY
-    void	    *ruby_ref;
+    void	*ruby_ref;
 #endif
 };
 

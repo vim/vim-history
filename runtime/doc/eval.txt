@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0y.  Last change: 2001 Mar 15
+*eval.txt*      For Vim version 6.0z.  Last change: 2001 Mar 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -437,7 +437,7 @@ This kind of variable is deleted when the buffer is unloaded.  If you want to
 keep it, avoid that the buffer is unloaded by setting the 'hidden' option.
 
 One local buffer variable is predefined:
-						*b:changedtick-variable*
+					*b:changedtick-variable* *changetick*
 b:changedtick	The total number of changes to the current buffer.  It is
 		incremented for each change.  An undo command is also a change
 		in this case.  This can be used to perform an action only when
@@ -608,9 +608,23 @@ v:foldstart	Used for 'foldtext': first line of closed fold.
 		Read-only. |fold-foldtext|
 
 						*v:lang* *lang-variable*
-v:lang		The current locale setting of the applications runtime
-		environment.  This facilitates making Vim scripts aware of it.
-		This variable can be set with the |:language| command.
+v:lang		The current locale setting for messages of the runtime
+		environment.  This allows Vim scripts to be aware of the
+		current language.  Technical: it's the value of LC_MESSAGES.
+		This variable can not be set directly, use the |:language|
+		command.
+		It can be different from |v:ctype| when messages are desired
+		in a different language than what is used for character
+		encoding.  See |multi-lang|.
+
+						*v:ctype* *ctype-variable*
+v:ctype		The current locale setting for characters of the runtime
+		environment.  This allows Vim scripts to be aware of the
+		current locale encoding.  Technical: it's the value of
+		LC_CTYPE.
+		This variable can not be set directly, use the |:language|
+		command.
+		Normally it's equal to 'encoding', but not always...
 		See |multi-lang|.
 
 						*v:lnum* *lnum-variable*
@@ -1005,6 +1019,11 @@ did_filetype()	Returns non-zero when autocommands are being executed and the
 		FileType event has been triggered at least once.  Can be used
 		to avoid triggering the FileType event again in the scripts
 		that detect the file type. |FileType|
+		When editing another file, the counter is reset, thus this
+		really checks if the FileType event has been triggered for the
+		current buffer.  This allows an autocommand that starts
+		editing another buffer to set 'filetype' and load a sytnax
+		file.
 
 escape({string}, {chars})				*escape()*
 		Escape the characters in {chars} that occur in {string} with a
@@ -1611,10 +1630,22 @@ mapcheck({name}[, {mode}])				*mapcheck()*
 		Check if there is a mapping that matches with {name} in mode
 		{mode}.  See |maparg()| for {mode} and special names in
 		{name}.
-		When there is no mapping that matches with {name}, an empty
+		A match happens with a mapping that starts with {name} and
+		with a mapping which is equal to the start of {name}.
+
+			matches mapping "a"     "ab"    "abc" ~
+		   mapcheck("a")        yes     yes      yes
+		   mapcheck("abc")      yes     yes      yes
+		   mapcheck("ax")       yes     no       no
+		   mapcheck("b")        no      no       no
+
+		The difference with maparg() is that mapcheck() finds a
+		mapping that matches with {name}, while maparg() only finds a
+		mapping for {name} exactly.
+		When there is no mapping that starts with {name}, an empty
 		String is returned.  If there is one, the rhs of that mapping
-		is returned.  If there are several matches, the rhs of one of
-		them is returned.
+		is returned.  If there are several mappings that start with
+		{name}, the rhs of one of them is returned.
 		The mappings local to the current buffer are checked first,
 		then the global mappings.
 		This function can be used to check if a mapping can be added
@@ -1622,8 +1653,8 @@ mapcheck({name}[, {mode}])				*mapcheck()*
 	:if mapcheck("_vv") == ""
 	:   map _vv :set guifont=7x13<CR>
 	:endif
-<		The "_vv" mapping may conflict with a mapping for "_v" or for
-		"_vvv".
+<		This avoids adding the "_vv" mapping when there already is a
+		mapping for "_v" or for "_vvv".
 
 match({expr}, {pat}[, {start}])				*match()*
 		The result is a Number, which gives the index in {expr} where
@@ -2157,6 +2188,7 @@ hangul_input		Compiled with Hangul input support. |hangul|
 iconv			Can use iconv() for coversion.
 insert_expand		Compiled with support for CTRL-X expansion commands in
 			Insert mode.
+jumplist		Compiled with |jumplist| support.
 keymap			Compiled with 'keymap' support.
 langmap			Compiled with 'langmap' support.
 libcall			Compiled with |libcall()| support.

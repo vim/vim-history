@@ -80,7 +80,6 @@ static int hl_attr_table[] =
     {HL_BOLD, HL_STANDOUT, HL_UNDERLINE, HL_ITALIC, HL_INVERSE, HL_INVERSE, 0};
 
 static int get_attr_entry  __ARGS((garray_t *table, attrentry_t *aep));
-static int syn_namen2id __ARGS((char_u *linep, int len));
 static void syn_unadd_group __ARGS((void));
 static void set_hl_attr __ARGS((int idx));
 static void highlight_list_one __ARGS((int id));
@@ -91,8 +90,8 @@ static int hl_has_settings __ARGS((int idx, int check_link));
 static void highlight_clear __ARGS((int idx));
 
 #ifdef FEAT_GUI
-static void gui_do_one_color __ARGS((int idx));
-static int  set_group_colors __ARGS((char_u *name, guicolor_t *fgp, guicolor_t *bgp));
+static void gui_do_one_color __ARGS((int idx, int do_menu));
+static int  set_group_colors __ARGS((char_u *name, guicolor_t *fgp, guicolor_t *bgp, int do_menu));
 static guicolor_t color_name2handle __ARGS((char_u *name));
 static GuiFont font_name2handle __ARGS((char_u *name));
 # ifdef FEAT_XFONTSET
@@ -3118,7 +3117,7 @@ syn_cmd_clear(eap, syncing)
 		id = syn_namen2id(arg, (int)(arg_end - arg));
 		if (id == 0)
 		{
-		    EMSG2(_("No such highlight group name: %s"), arg);
+		    EMSG2(_(e_nogroup), arg);
 		    break;
 		}
 		else
@@ -3321,7 +3320,7 @@ syn_cmd_list(eap, syncing)
 	    {
 		id = syn_namen2id(arg, (int)(arg_end - arg));
 		if (id == 0)
-		    EMSG2(_("No such highlight group name: %s"), arg);
+		    EMSG2(_(e_nogroup), arg);
 		else
 		    syn_list_one(id, syncing, TRUE);
 	    }
@@ -6139,36 +6138,41 @@ do_highlight(line, forceit, init)
 	    }
 	    else
 	    {
-		static char *(color_names[27]) = {
+		static char *(color_names[28]) = {
 			    "Black", "DarkBlue", "DarkGreen", "DarkCyan",
-			    "DarkRed", "DarkMagenta", "Brown", "Gray", "Grey",
+			    "DarkRed", "DarkMagenta", "Brown", "DarkYellow",
+			    "Gray", "Grey",
 			    "LightGray", "LightGrey", "DarkGray", "DarkGrey",
 			    "Blue", "LightBlue", "Green", "LightGreen",
 			    "Cyan", "LightCyan", "Red", "LightRed", "Magenta",
 			    "LightMagenta", "Yellow", "LightYellow", "White", "NONE"};
-		static int color_numbers_16[27] = {0, 1, 2, 3,
-						 4, 5, 6, 7, 7,
+		static int color_numbers_16[28] = {0, 1, 2, 3,
+						 4, 5, 6, 6,
+						 7, 7,
 						 7, 7, 8, 8,
 						 9, 9, 10, 10,
 						 11, 11, 12, 12, 13,
 						 13, 14, 14, 15, -1};
 		/* for xterm with 88 colors... */
-		static int color_numbers_88[27] = {0, 4, 2, 6,
-						 1, 5, 32, 84, 84,
+		static int color_numbers_88[28] = {0, 4, 2, 6,
+						 1, 5, 32, 72,
+						 84, 84,
 						 7, 7, 82, 82,
 						 12, 43, 10, 61,
 						 14, 63, 9, 74, 13,
 						 75, 11, 78, 15, -1};
 		/* for xterm with 256 colors... */
-		static int color_numbers_256[27] = {0, 4, 2, 6,
-						 1, 5, 130, 248, 248,
+		static int color_numbers_256[28] = {0, 4, 2, 6,
+						 1, 5, 130, 130,
+						 248, 248,
 						 7, 7, 242, 242,
 						 12, 81, 10, 121,
 						 14, 159, 9, 224, 13,
 						 225, 11, 229, 15, -1};
 		/* for terminals with less than 16 colors... */
-		static int color_numbers_8[27] = {0, 4, 2, 6,
-						 1, 5, 3, 7, 7,
+		static int color_numbers_8[28] = {0, 4, 2, 6,
+						 1, 5, 3, 3,
+						 7, 7,
 						 7, 7, 0+8, 0+8,
 						 4+8, 4+8, 2+8, 2+8,
 						 6+8, 6+8, 1+8, 1+8, 5+8,
@@ -6551,14 +6555,14 @@ highlight_clear(idx)
 set_normal_colors()
 {
     if (set_group_colors((char_u *)"Normal",
-					    &gui.norm_pixel, &gui.back_pixel))
+				     &gui.norm_pixel, &gui.back_pixel, FALSE))
     {
 	gui_mch_new_colors();
 	must_redraw = CLEAR;
     }
 #ifdef FEAT_GUI_X11
     if (set_group_colors((char_u *)"Menu",
-				      &gui.menu_fg_pixel, &gui.menu_bg_pixel))
+				&gui.menu_fg_pixel, &gui.menu_bg_pixel, TRUE))
     {
 # ifdef FEAT_MENU
 	gui_mch_new_menu_colors();
@@ -6566,7 +6570,7 @@ set_normal_colors()
 	must_redraw = CLEAR;
     }
     if (set_group_colors((char_u *)"Scrollbar",
-				  &gui.scroll_fg_pixel, &gui.scroll_bg_pixel))
+			   &gui.scroll_fg_pixel, &gui.scroll_bg_pixel, FALSE))
     {
 	gui_new_scrollbar_colors();
 	must_redraw = CLEAR;
@@ -6578,17 +6582,18 @@ set_normal_colors()
  * Set the colors for "Normal", "Menu" or "Scrollbar".
  */
     static int
-set_group_colors(name, fgp, bgp)
+set_group_colors(name, fgp, bgp, do_menu)
     char_u	*name;
     guicolor_t	*fgp;
     guicolor_t	*bgp;
+    int		do_menu;
 {
     int		idx;
 
     idx = syn_name2id(name) - 1;
     if (idx >= 0)
     {
-	gui_do_one_color(idx);
+	gui_do_one_color(idx, do_menu);
 
 	if (HL_TABLE()[idx].sg_gui_fg > 0)
 	    *fgp = HL_TABLE()[idx].sg_gui_fg - 1;
@@ -6734,7 +6739,7 @@ hl_do_font(idx, arg, do_normal, do_menu)
 	 * normal fontset.  Same for the Menu group. */
 	if (do_normal)
 	    gui_init_font(arg, TRUE);
-#ifdef FEAT_GUI_MOTIF
+#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
 	if (do_menu)
 	{
 	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
@@ -6752,7 +6757,7 @@ hl_do_font(idx, arg, do_normal, do_menu)
 	{
 	    if (do_normal)
 		gui_init_font(arg, FALSE);
-#if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
+#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
 	    if (do_menu)
 	    {
 		gui.menu_font = HL_TABLE()[idx].sg_font;
@@ -7329,7 +7334,7 @@ highlight_exists(name)
 /*
  * Like syn_name2id(), but take a pointer + length argument.
  */
-    static int
+    int
 syn_namen2id(linep, len)
     char_u  *linep;
     int	    len;
@@ -7514,20 +7519,21 @@ highlight_gui_started()
     set_normal_colors();
 
     for (idx = 0; idx < highlight_ga.ga_len; ++idx)
-	gui_do_one_color(idx);
+	gui_do_one_color(idx, FALSE);
 
     highlight_changed();
 }
 
     static void
-gui_do_one_color(idx)
-    int	    idx;
+gui_do_one_color(idx, do_menu)
+    int		idx;
+    int		do_menu;	/* TRUE: might set the menu font */
 {
-    int	    didit = FALSE;
+    int		didit = FALSE;
 
     if (HL_TABLE()[idx].sg_font_name != NULL)
     {
-	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE, FALSE);
+	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE, do_menu);
 	didit = TRUE;
     }
     if (HL_TABLE()[idx].sg_gui_fg_name != NULL)

@@ -43,64 +43,6 @@
 #undef DEBUG
 
 /*
- * Get around a problem with #defined char class functions.
- */
-#ifdef isalnum
-static int myisalnum __ARGS((int c));
-static int myisalnum(c) int c; { return isalnum(c); }
-# undef isalnum
-# define isalnum myisalnum
-#endif
-#ifdef isalpha
-static int myisalpha __ARGS((int c));
-static int myisalpha(c) int c; { return isalpha(c); }
-# undef isalpha
-# define isalpha myisalpha
-#endif
-#ifdef iscntrl
-static int myiscntrl __ARGS((int c));
-static int myiscntrl(c) int c; { return iscntrl(c); }
-# undef iscntrl
-# define iscntrl myiscntrl
-#endif
-#ifdef isdigit
-static int myisdigit __ARGS((int c));
-static int myisdigit(c) int c; { return isdigit(c); }
-# undef isdigit
-# define isdigit myisdigit
-#endif
-# ifdef isgraph
-static int myisgraph __ARGS((int c));
-static int myisgraph(c) int c; { return isgraph(c); }
-# undef isgraph
-# define isgraph myisgraph
-#endif
-#ifdef islower
-static int myislower __ARGS((int c));
-static int myislower(c) int c; { return islower(c); }
-# undef islower
-# define islower myislower
-#endif
-#ifdef ispunct
-static int myispunct __ARGS((int c));
-static int myispunct(c) int c; { return ispunct(c); }
-# undef ispunct
-# define ispunct myispunct
-#endif
-#ifdef isupper
-static int myisupper __ARGS((int c));
-static int myisupper(c) int c; { return isupper(c); }
-# undef isupper
-# define isupper myisupper
-#endif
-#ifdef isxdigit
-static int myisxdigit __ARGS((int c));
-static int myisxdigit(c) int c; { return isxdigit(c); }
-# undef isxdigit
-# define isxdigit myisxdigit
-#endif
-
-/*
  * The "internal use only" fields in regexp.h are present to pass info from
  * compile to execute that permits the execute phase to run lots faster on
  * simple cases.  They are:
@@ -439,12 +381,7 @@ static char_u REGEXP_INRANGE[] = "]^-n\\";
 static char_u REGEXP_ABBR[] = "nrteb";
 
 static int	backslash_trans __ARGS((int c));
-static int	my_isblank __ARGS((int c));
-static int	my_istab __ARGS((int c));
-static int	my_isbspace __ARGS((int c));
-static int	my_isreturn __ARGS((int c));
-static int	my_isesc __ARGS((int c));
-static int	(*skip_class_name __ARGS((char_u **pp)))__ARGS((int));
+static int	skip_class_name __ARGS((char_u **pp));
 static char_u	*skip_anyof __ARGS((char_u *p));
 static void	init_class_tab __ARGS((void));
 
@@ -466,73 +403,62 @@ backslash_trans(c)
 }
 
 /*
- * Function version of the macro vim_iswhite().
+ * Check for a character class name.  "pp" points to the '['.
+ * Returns one of the CLASS_ items. CLASS_NONE means that no item was
+ * recognized.  Otherwise "pp" is advanced to after the item.
  */
     static int
-my_isblank(c)
-    int		c;
-{
-    return vim_iswhite(c);
-}
-
-/*
- * Simplistic functions to recognize a single character.  It's a bit slow...
- */
-static int my_istab(c) int c; { return c == TAB; }
-static int my_isbspace(c) int c; { return c == BS; }
-static int my_isreturn(c) int c; { return c == CR; }
-static int my_isesc(c) int c; { return c == ESC; }
-
-/*
- * Check for a character class name.  "pp" is at the '['.
- * If not: NULL is returned; If so, a function of the sort is* is returned and
- * the name is skipped.
- */
-#if defined(macintosh) || defined(__BEOS__) || defined(__NeXT__) \
-	|| defined(__APPLE_CC__)
-/* the compiler doesn't understand the other one */
-    static int (*
-skip_class_name(char_u **pp))__ARGS((int))
-#else
-    static int (*
-skip_class_name(pp))__ARGS((int))
+skip_class_name(pp)
     char_u	**pp;
-#endif
 {
-    typedef struct
+    static const char *(class_names[]) =
     {
-	size_t	    len;
-	int	    (*func)__ARGS((int));
-	char_u	    name[sizeof("backspace:]")];
-    } namedata_t;
-
-#define t(n, func) { sizeof(n) - 1, func, n }
-    static const namedata_t class_names[] =
-    {
-	t("alnum:]", isalnum),		t("alpha:]", isalpha),
-	t("blank:]", my_isblank),	t("cntrl:]", iscntrl),
-	t("digit:]", isdigit),		t("graph:]", isgraph),
-	t("lower:]", islower),		t("print:]", vim_isprintc),
-	t("punct:]", ispunct),		t("space:]", vim_isspace),
-	t("upper:]", isupper),		t("xdigit:]", isxdigit),
-	t("tab:]",   my_istab),		t("return:]", my_isreturn),
-	t("backspace:]", my_isbspace),	t("escape:]", my_isesc)
+	"alnum:]",
+#define CLASS_ALNUM 0
+	"alpha:]",
+#define CLASS_ALPHA 1
+	"blank:]",
+#define CLASS_BLANK 2
+	"cntrl:]",
+#define CLASS_CNTRL 3
+	"digit:]",
+#define CLASS_DIGIT 4
+	"graph:]",
+#define CLASS_GRAPH 5
+	"lower:]",
+#define CLASS_LOWER 6
+	"print:]",
+#define CLASS_PRINT 7
+	"punct:]",
+#define CLASS_PUNCT 8
+	"space:]",
+#define CLASS_SPACE 9
+	"upper:]",
+#define CLASS_UPPER 10
+	"xdigit:]",
+#define CLASS_XDIGIT 11
+	"tab:]",
+#define CLASS_TAB 12
+	"return:]",
+#define CLASS_RETURN 13
+	"backspace:]",
+#define CLASS_BACKSPACE 14
+	"escape:]",
+#define CLASS_ESCAPE 15
     };
-#undef t
+#define CLASS_NONE 99
+    int i;
 
-    const namedata_t *np;
-
-    if ((*pp)[1] != ':')
-	return NULL;
-    for (   np = class_names;
-	    np < class_names + sizeof(class_names) / sizeof(*class_names);
-	    np++)
-	if (STRNCMP(*pp + 2, np->name, np->len) == 0)
-	{
-	    *pp += np->len + 2;
-	    return np->func;
-	}
-    return NULL;
+    if ((*pp)[1] == ':')
+    {
+	for (i = 0; i < sizeof(class_names) / sizeof(*class_names); ++i)
+	    if (STRNCMP(*pp + 2, class_names[i], STRLEN(class_names[i])) == 0)
+	    {
+		*pp += STRLEN(class_names[i]) + 2;
+		return i;
+	    }
+    }
+    return CLASS_NONE;
 }
 
 /*
@@ -581,7 +507,7 @@ skip_anyof(p)
 	    p += 2;
 	else if (*p == '[')
 	{
-	    if (skip_class_name(&p) == NULL)
+	    if (skip_class_name(&p) == CLASS_NONE)
 		++p; /* It was not a class name */
 	}
 	else
@@ -1849,22 +1775,90 @@ collection:
 		    }
 		    else if (*regparse == '[')
 		    {
-			int (*func)__ARGS((int));
+			int c_class;
 			int cu;
 
-			if ((func = skip_class_name(&regparse)) == NULL)
+			c_class = skip_class_name(&regparse);
+			startc = -1;
+			/* Characters assumed to be 8 bits! */
+			switch (c_class)
 			{
-			    /* literal '[', allow [[-x] as a range */
-			    startc = *regparse++;
-			    regc(startc);
-			}
-			else
-			{
-			    /* Characters assumed to be 8 bits! */
-			    for (cu = 1; cu <= 255; cu++)
-				if ((*func)(cu))
+			    case CLASS_NONE:
+				/* literal '[', allow [[-x] as a range */
+				startc = *regparse++;
+				regc(startc);
+				break;
+			    case CLASS_ALNUM:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isalnum(cu))
+					regc(cu);
+				break;
+			    case CLASS_ALPHA:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isalpha(cu))
+					regc(cu);
+				break;
+			    case CLASS_BLANK:
+				regc(' ');
+				regc('\t');
+				break;
+			    case CLASS_CNTRL:
+				for (cu = 1; cu <= 255; cu++)
+				    if (iscntrl(cu))
+					regc(cu);
+				break;
+			    case CLASS_DIGIT:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isdigit(cu))
+					regc(cu);
+				break;
+			    case CLASS_GRAPH:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isgraph(cu))
+					regc(cu);
+				break;
+			    case CLASS_LOWER:
+				for (cu = 1; cu <= 255; cu++)
+				    if (islower(cu))
+					regc(cu);
+				break;
+			    case CLASS_PRINT:
+				for (cu = 1; cu <= 255; cu++)
+				    if (vim_isprintc(cu))
+					regc(cu);
+				break;
+			    case CLASS_PUNCT:
+				for (cu = 1; cu <= 255; cu++)
+				    if (ispunct(cu))
+					regc(cu);
+				break;
+			    case CLASS_SPACE:
+				for (cu = 9; cu <= 13; cu++)
 				    regc(cu);
-			    startc = -1;
+				regc(' ');
+				break;
+			    case CLASS_UPPER:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isupper(cu))
+					regc(cu);
+				break;
+			    case CLASS_XDIGIT:
+				for (cu = 1; cu <= 255; cu++)
+				    if (isxdigit(cu))
+					regc(cu);
+				break;
+			    case CLASS_TAB:
+				regc('\t');
+				break;
+			    case CLASS_RETURN:
+				regc('\r');
+				break;
+			    case CLASS_BACKSPACE:
+				regc('\b');
+				break;
+			    case CLASS_ESCAPE:
+				regc('\033');
+				break;
 			}
 		    }
 		    else
@@ -2218,15 +2212,15 @@ peekchr()
 	case '|':
 	case '<':
 	case '>':
-	case '#':	/* future */
-	case '"':	/* future */
-	case '\'':	/* future */
-	case ',':	/* future */
-	case '-':	/* future */
-	case '/':	/* future */
-	case ':':	/* future */
-	case ';':	/* future */
-	case '`':	/* future */
+	case '#':	/* future ext. */
+	case '"':	/* future ext. */
+	case '\'':	/* future ext. */
+	case ',':	/* future ext. */
+	case '-':	/* future ext. */
+	case ':':	/* future ext. */
+	case ';':	/* future ext. */
+	case '`':	/* future ext. */
+	case '/':	/* Can't be used in / command */
 	    /* magic only after "\v" */
 	    if (reg_magic == MAGIC_ALL)
 		curchr = Magic(curchr);
@@ -3292,29 +3286,13 @@ regmatch(scan)
 	    break;
 
 	  case WORD:
-#ifdef FEAT_MBYTE
-	    if (c > 0x100)
-	    {
-		if (mb_get_class(reginput) <= 1)
-		    return FALSE;
-	    }
-	    else
-#endif
-		if (!ri_word(c))
+	    if (!ri_word(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NWORD:
-#ifdef FEAT_MBYTE
-	    if (c > 0x100)
-	    {
-		if (mb_get_class(reginput) >= 2)
-		    return FALSE;
-	    }
-	    else
-#endif
-		if (c == NUL || ri_word(c))
+	    if (c == NUL || ri_word(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -4205,6 +4183,9 @@ regrepeat(p, maxcount)
 do_class:
 	while (count < maxcount)
 	{
+#ifdef FEAT_MBYTE
+	    int		l;
+#endif
 	    if (*scan == NUL)
 	    {
 		if (!WITH_NL(OP(p)) || reglnum == reg_maxline)
@@ -4215,8 +4196,12 @@ do_class:
 		    break;
 	    }
 #ifdef FEAT_MBYTE
-	    else if (has_mbyte && (*mb_ptr2len_check)(scan) > 1)
-		break;
+	    else if (has_mbyte && (l = (*mb_ptr2len_check)(scan)) > 1)
+	    {
+		if (testval != 0)
+		    break;
+		scan += l;
+	    }
 #endif
 	    else if ((class_tab[*scan] & mask) == testval)
 		++scan;

@@ -373,7 +373,7 @@ emsg(s)
 	 * When using ":silent! cmd" ignore error messsages.
 	 * But do write it to the redirection file.
 	 */
-	if (emsg_silent)
+	if (emsg_silent != 0)
 	{
 	    redir_write(s);
 	    return TRUE;
@@ -1110,11 +1110,7 @@ str2special(sp, from)
     int		from;	/* TRUE for lhs of mapping */
 {
     int			c;
-#ifdef FEAT_MBYTE
-    static char_u	buf[MB_MAXBYTES + 1];
-#else
     static char_u	buf[2];
-#endif
     char_u		*str = *sp;
     int			modifiers = 0;
     int			special = FALSE;
@@ -1122,39 +1118,13 @@ str2special(sp, from)
 #ifdef FEAT_MBYTE
     if (has_mbyte)
     {
-	int	n, m = 0;
+	char_u	*p;
 
-	/* Must translate K_SPECIAL KS_SPECIAL KE_FILLER to K_SPECIAL and CSI
-	 * KS_EXTRA KE_CSI to CSI. */
-	for (n = 0; str[n] != NUL && m <= MB_MAXBYTES; ++n)
-	{
-	    if (str[n] == K_SPECIAL
-		    && str[n + 1] == KS_SPECIAL
-		    && str[n + 2] == KE_FILLER)
-	    {
-		buf[m++] = K_SPECIAL;
-		n += 2;
-	    }
-# ifdef FEAT_GUI
-	    else if (str[n] == CSI
-		    && str[n + 1] == KS_EXTRA
-		    && str[n + 2] == (int)KE_CSI)
-	    {
-		buf[m++] = CSI;
-		n += 2;
-	    }
-# endif
-	    else
-		buf[m++] = str[n];
-	    buf[m] = NUL;
-
-	    /* Return a multi-byte character. */
-	    if ((*mb_ptr2len_check)(buf) > 1)
-	    {
-		*sp = str + n + 1;
-		return buf;
-	    }
-	}
+	/* Try to un-escape a multi-byte character.  Return the un-escaped
+	 * string if it is a multi-byte character. */
+	p = mb_unescape(sp);
+	if (p != NULL)
+	    return p;
     }
 #endif
 
@@ -1517,7 +1487,8 @@ msg_puts_attr(s, attr)
 	    /* When no more prompt an no more room, truncate here */
 	    if (msg_no_more && lines_left == 0)
 		break;
-	    screen_del_lines(0, 0, 1, (int)Rows, TRUE);	/* always works */
+	    /* scrolling up always works */
+	    screen_del_lines(0, 0, 1, (int)Rows, TRUE, NULL);
 
 	    if (!can_clear((char_u *)" "))
 	    {
@@ -1782,7 +1753,7 @@ msg_check_screen()
 }
 
 /*
- * clear from current message position to end of screen
+ * Clear from current message position to end of screen.
  * Note: msg_col is not updated, so we remember the end of the message
  * for msg_check().
  */

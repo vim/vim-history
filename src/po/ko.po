@@ -1,148 +1,181 @@
 # Korean translation for Vim
 #
-# FIRST AUTHOR Sung-Hyun Nam <namsh@kldp.org>, 2000
+# FIRST AUTHOR Nam SungHyun <namsh@kldp.org>, 2000
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: vim 6.0\n"
-"POT-Creation-Date: 2000-12-06 21:41+0900\n"
-"PO-Revision-Date: 2000-12-06 13:04+0900\n"
-"Last-Translator: Sung-Hyun Nam <namsh@kldp.org>\n"
+"POT-Creation-Date: 2001-03-20 14:09+0900\n"
+"PO-Revision-Date: 2001-03-20 05:21+0900\n"
+"Last-Translator: Nam SungHyun <namsh@kldp.org>\n"
 "Language-Team: Korean <ko@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=euc-kr\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: buffer.c:91
+#: buffer.c:92
 msgid "Cannot allocate buffer, exiting..."
 msgstr "버퍼를 할당할 수 없어서 종료합니다..."
 
-#: buffer.c:94
+#: buffer.c:95
 msgid "Cannot allocate buffer, using other one..."
 msgstr "버퍼를 할당할 수 없어서 다른 걸 사용합니다..."
 
-#: buffer.c:488
+#: buffer.c:683
 msgid "No buffers were unloaded"
 msgstr "내려진 버퍼가 없습니다"
 
-#: buffer.c:490
+#: buffer.c:685
 msgid "No buffers were deleted"
 msgstr "삭제된 버퍼가 없습니다"
 
-#: buffer.c:498
+#: buffer.c:687
+msgid "No buffers were wiped out"
+msgstr "완전히 삭제된 버퍼가 없습니다"
+
+#: buffer.c:695
 msgid "1 buffer unloaded"
 msgstr "1 버퍼가 내려졌습니다"
 
-#: buffer.c:500
+#: buffer.c:697
 #, c-format
 msgid "%d buffers unloaded"
 msgstr "%d 버퍼들이 내려졌습니다"
 
-#: buffer.c:505
+#: buffer.c:702
 msgid "1 buffer deleted"
 msgstr "1 버퍼가 삭제되었습니다"
 
-#: buffer.c:507
+#: buffer.c:704
 #, c-format
 msgid "%d buffers deleted"
 msgstr "%d 버퍼들이 삭제되었습니다"
 
-#: buffer.c:562
+#: buffer.c:709
+msgid "1 buffer wiped out"
+msgstr "1 버퍼가 완전히 삭제되었습니다"
+
+#: buffer.c:711
+#, c-format
+msgid "%d buffers wiped out"
+msgstr "%d 버퍼들이 완전히 삭제되었습니다"
+
+#: buffer.c:768
 msgid "No modified buffer found"
 msgstr "바뀐 버퍼를 찾을 수 없습니다"
 
-#: buffer.c:599
+#: buffer.c:813
 #, c-format
 msgid "Cannot go to buffer %ld"
 msgstr "버퍼 %ld로 갈 수 없습니다"
 
-#: buffer.c:602
+#: buffer.c:816
 msgid "Cannot go beyond last buffer"
 msgstr "마지막 버퍼입니다"
 
-#: buffer.c:604
+#: buffer.c:818
 msgid "Cannot go before first buffer"
 msgstr "첫번째 버퍼입니다"
 
-#: buffer.c:623
+#: buffer.c:842
 #, c-format
 msgid "No write since last change for buffer %ld (use ! to override)"
 msgstr "버퍼 %ld를 마지막 수정후 저장하지 않았습니다 (덮어쓰려면 !을 사용)"
 
-#: buffer.c:636
+#: buffer.c:858
 msgid "Cannot unload last buffer"
 msgstr "마지막 버퍼를 내릴 수 없습니다"
 
-#: buffer.c:992
+#: buffer.c:1267
 msgid "Warning: List of file names overflow"
 msgstr "경고: 파일명 목록이 넘쳤습니다"
 
-#: buffer.c:1144
+#: buffer.c:1425
 #, c-format
 msgid "buffer %ld not found"
 msgstr "버퍼 %ld를 찾을 수 없습니다"
 
-#: buffer.c:1331
+#: buffer.c:1629
 #, c-format
 msgid "More than one match for %s"
 msgstr "%s를 하나 이상 찾았습니다"
 
-#: buffer.c:1333
+#: buffer.c:1631
 #, c-format
 msgid "No matching buffer for %s"
 msgstr "%s와 맞는 버퍼가 없습니다"
 
-#: buffer.c:1693 ex_docmd.c:7216
+#: buffer.c:2020 ex_docmd.c:5850
 #, c-format
 msgid "line %ld"
 msgstr "라인 %ld"
 
-#: buffer.c:1782
+#: buffer.c:2103
 msgid "Buffer with this name already exists"
 msgstr "이 이름을 가진 버퍼가 이미 있습니다"
 
-#: buffer.c:2033
+#: buffer.c:2383
 msgid " [Modified]"
 msgstr " [바뀜]"
 
-#: buffer.c:2034
+#: buffer.c:2388
 msgid "[Not edited]"
 msgstr "[편집 않됨]"
 
-#: buffer.c:2035
+#: buffer.c:2393
 msgid "[New file]"
 msgstr "[새 파일]"
 
-#: buffer.c:2036
+#: buffer.c:2394
 msgid "[Read errors]"
 msgstr "[읽기 에러]"
 
-#: buffer.c:2038 fileio.c:1564
+#: buffer.c:2396 fileio.c:1709
 msgid "[readonly]"
 msgstr "[읽기전용]"
 
-#: buffer.c:2054
+#: buffer.c:2412
 msgid "1 line --%d%%--"
 msgstr "1 라인 --%d%%--"
 
-#: buffer.c:2054
+#: buffer.c:2412
 msgid "%ld lines --%d%%--"
 msgstr "%ld 라인 --%d%%--"
 
-#: buffer.c:2062
+#: buffer.c:2420
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "%2$ld의 라인 %1$ld --%d%%-- 컬럼 "
 
-#: buffer.c:2214
+#: buffer.c:2506
 msgid "[No file]"
 msgstr "[파일 없음]"
 
 #. must be a help buffer
-#: buffer.c:2246
+#: buffer.c:2546
 msgid "help"
 msgstr "도움말"
 
-#: buffer.c:3015
+#: buffer.c:3040 screen.c:4161
+msgid "[help]"
+msgstr "[도움말]"
+
+#: buffer.c:3072 screen.c:4167
+msgid "[Preview]"
+msgstr "[미리보기]"
+
+#: buffer.c:3275
+msgid "All"
+msgstr "모두"
+
+#: buffer.c:3275
+msgid "Bot"
+msgstr "바닥"
+
+#: buffer.c:3277
+msgid "Top"
+msgstr "꼭대기"
+
+#: buffer.c:3995
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -150,279 +183,291 @@ msgstr ""
 "\n"
 "# 버퍼 목록:\n"
 
-#: buffer.c:3043
+#: buffer.c:4028
 msgid "[Error List]"
 msgstr "[에러 목록]"
 
-#: buffer.c:3060
-#~ msgid "[scratch]"
-#~ msgstr ""
-
-#: buffer.c:3064 memline.c:1502
+#: buffer.c:4041 memline.c:1505
 msgid "[No File]"
 msgstr "[파일 없음]"
 
-#: digraph.c:2155
+#: digraph.c:2161
 msgid "Escape not allowed in digraph"
 msgstr "겹자에는 Escape을 쓸 수 없습니다"
 
-#: edit.c:38
-msgid " Adding Keyword completion (^N/^P)"
-msgstr " 단어 완성 추가중 (^N/^P)"
+#: edit.c:40
+msgid " Keyword completion (^N/^P)"
+msgstr " 단어 완성 (^N/^P)"
 
 #. ctrl_x_mode == 0, ^P/^N compl.
-#: edit.c:39
-msgid " ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^N/^P)"
-msgstr " ^X 모드 (^E/^Y/^L/^]/^F/^I/^K/^D/^N/^P)"
+#: edit.c:41
+msgid " ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
+msgstr " ^X 모드 (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"
 
 #. Scroll has it's own msgs, in it's place there is the msg for local
 #. * ctrl_x_mode = 0 (eg continue_status & CONT_LOCAL)  -- Acevedo
-#: edit.c:42
-msgid " Adding Keyword Local completion (^N/^P)"
-msgstr " 단어 로컬 완성 추가중 (^N/^P)"
-
-#: edit.c:43
-msgid " Adding Whole line completion (^L/^N/^P)"
-msgstr " 전체 라인 완성 추가중 (^L/^N/^P)"
-
 #: edit.c:44
-msgid " Adding File name completion (^F/^N/^P)"
-msgstr " 파일 이름 완성 추가중 (^F/^N/^P)"
+msgid " Keyword Local completion (^N/^P)"
+msgstr " 단어 로컬 완성 (^N/^P)"
 
 #: edit.c:45
-msgid " Adding Tag completion (^]/^N/^P)"
-msgstr " 태그 완성 추가중 (^]/^N/^P)"
+msgid " Whole line completion (^L/^N/^P)"
+msgstr " 전체 라인 완성 (^L/^N/^P)"
 
 #: edit.c:46
-msgid " Adding Path pattern completion (^N/^P)"
-msgstr " 경로 패턴 완성 추가중 (^N/^P)"
+msgid " File name completion (^F/^N/^P)"
+msgstr " 파일 이름 완성 (^F/^N/^P)"
 
 #: edit.c:47
-msgid " Adding Definition completion (^D/^N/^P)"
-msgstr " 정의 완성 추가중 (^D/^N/^P)"
+msgid " Tag completion (^]/^N/^P)"
+msgstr " 태그 완성 (^]/^N/^P)"
+
+#: edit.c:48
+msgid " Path pattern completion (^N/^P)"
+msgstr " 경로 패턴 완성 (^N/^P)"
 
 #: edit.c:49
-msgid " Adding Dictionary completion (^K/^N/^P)"
-msgstr " 디렉토리 완성 추가중 (^K/^N/^P)"
+msgid " Definition completion (^D/^N/^P)"
+msgstr " 정의 완성 (^D/^N/^P)"
 
-#: edit.c:50
-msgid " Adding Thesaurus completion (^T/^N/^P)"
-msgstr " 백과사전 완성 추가중 (^T/^N/^P)"
+#: edit.c:51
+msgid " Dictionary completion (^K/^N/^P)"
+msgstr " 디렉토리 완성 (^K/^N/^P)"
+
+#: edit.c:52
+msgid " Thesaurus completion (^T/^N/^P)"
+msgstr " 백과사전 완성 (^T/^N/^P)"
 
 #: edit.c:53
+msgid " Command-line completion (^V/^N/^P)"
+msgstr " 명령행 완성 (^V/^N/^P)"
+
+#: edit.c:56
 msgid "Hit end of paragraph"
 msgstr "단락의 마지막 만남"
 
-#: edit.c:847
+#: edit.c:825
 msgid "'thesaurus' option is empty"
 msgstr "'thesaurus' 옵션이 비었습니다"
 
-#: edit.c:1014
+#: edit.c:1000
 msgid "'dictionary' option is empty"
 msgstr "'dictionary' 옵션이 비었습니다"
 
-#: edit.c:1929
+#: edit.c:1894
 #, c-format
 msgid "Scanning dictionary: %s"
 msgstr "사전 검색중: %s"
 
-#: edit.c:2063
+#: edit.c:2078
 msgid " (insert) Scroll (^E/^Y)"
 msgstr " (삽입) 스크롤 (^E/^Y)"
 
-#: edit.c:2065
+#: edit.c:2080
 msgid " (replace) Scroll (^E/^Y)"
 msgstr " (바꿈) 스크롤 (^E/^Y)"
 
-#: edit.c:2392
+#: edit.c:2381
 #, c-format
 msgid "Scanning: %s"
 msgstr "검색 중: %s"
 
-#: edit.c:2425
+#: edit.c:2414
 msgid "Scanning tags."
 msgstr "태그 검색 중."
 
+#: edit.c:3073
+msgid " Adding"
+msgstr " 추가"
+
 #. showmode might reset the internal line pointers, so it must
-#. * be called before ptr = ml_get, or when this address is no
+#. * be called before line = ml_get(), or when this address is no
 #. * longer needed.  -- Acevedo.
 #.
-#: edit.c:3070
+#: edit.c:3122
 msgid "-- Searching..."
 msgstr "-- 찾는 중..."
 
-#: edit.c:3126
+#: edit.c:3178
 msgid "Back at original"
 msgstr "원래대로 복구"
 
-#: edit.c:3131
+#: edit.c:3183
 msgid "Word from other line"
 msgstr "다른 줄에서의 단어"
 
-#: edit.c:3136
-#~ msgid "The only match"
-#~ msgstr ""
+#: edit.c:3188
+msgid "The only match"
+msgstr ""
 
-#: edit.c:3192
+#: edit.c:3244
 #, c-format
-#~ msgid "match %d of %d"
-#~ msgstr ""
+msgid "match %d of %d"
+msgstr ""
 
-#: edit.c:3195
+#: edit.c:3247
 #, c-format
-#~ msgid "match %d"
-#~ msgstr ""
+msgid "match %d"
+msgstr ""
 
-#: eval.c:552
+#: eval.c:671
 #, c-format
 msgid "Unknown variable: \"%s\""
 msgstr "모르는 변수: \"%s\""
 
-#: eval.c:807
+#: eval.c:950
 #, c-format
 msgid "Missing braces: %s"
 msgstr "괄호 없음: %s"
 
-#: eval.c:870
+#: eval.c:1018
 #, c-format
 msgid "No such variable: \"%s\""
 msgstr "이런 변수 없음: \"%s\""
 
-#: eval.c:1094
+#: eval.c:1242
 msgid "Missing ':' after '?'"
 msgstr "'?' 뒤에 ':'이 없습니다"
 
-#: eval.c:1697
+#: eval.c:1847
 msgid "Missing ')'"
 msgstr "')'가 없습니다"
 
-#: eval.c:1740
+#: eval.c:1897
 msgid "Missing ']'"
 msgstr "']'이 없습니다"
 
-#: eval.c:1814
+#: eval.c:1972
 #, c-format
 msgid "Option name missing: %s"
 msgstr "옵션 이름 없음: %s"
 
-#: eval.c:1832 option.c:5486
+#: eval.c:1990 option.c:5897
 #, c-format
 msgid "Unknown option: %s"
 msgstr "모르는 옵션: %s"
 
-#: eval.c:1889 eval.c:2006
+#: eval.c:2047 eval.c:2164
 #, c-format
 msgid "Missing quote: %s"
 msgstr "따옴표 없음: %s"
 
-#: eval.c:2293
+#: eval.c:2462
 #, c-format
 msgid "Invalid arguments for function %s"
 msgstr "함수 %s로 잘못된 인자 넘겨짐"
 
-#: eval.c:2294
+#: eval.c:2463
 #, c-format
 msgid "Unknown function: %s"
 msgstr "모르는 함수: %s"
 
-#: eval.c:2295
+#: eval.c:2464
 #, c-format
 msgid "Too many arguments for function: %s"
 msgstr "함수에 너무 많은 인자 넘김: %s"
 
-#: eval.c:2296
+#: eval.c:2465
 #, c-format
 msgid "Not enough arguments for function: %s"
 msgstr "함수에 적은 인자 넘김: %s"
 
-#: eval.c:2297
+#: eval.c:2466
 #, c-format
 msgid "Using <SID> not in a script context: %s"
 msgstr "스크립트 콘텍스트 밖에서 <SID> 사용: %s"
 
-#: eval.c:5333
+#: eval.c:5211
+msgid "(Invalid)"
+msgstr "(잘못됨)"
+
+#: eval.c:6152
 #, c-format
 msgid "Undefined variable: %s"
 msgstr "정의않된 변수: %s"
 
-#: eval.c:6034 eval.c:6441
+#: eval.c:6890 eval.c:7355
 #, c-format
 msgid "Undefined function: %s"
 msgstr "정의않된 함수: %s"
 
-#: eval.c:6045
+#: eval.c:6903
 #, c-format
 msgid "Missing '(': %s"
 msgstr "'('가 없음: %s"
 
-#: eval.c:6071 syntax.c:2911 syntax.c:6289
+#: eval.c:6933 syntax.c:2923 syntax.c:6430
 #, c-format
 msgid "Illegal argument: %s"
 msgstr "잘못된 인자: %s"
 
-#: eval.c:6144
+#: eval.c:7009
 msgid "Missing :endfunction"
 msgstr ":endfunction이 없습니다"
 
-#: eval.c:6197
+#: eval.c:7083
 #, c-format
 msgid "Function %s already exists, use ! to replace"
 msgstr "함수 %s가 이미 있습니다, 바꾸려면 !을 사용하세요"
 
-#: eval.c:6202
+#: eval.c:7088
 #, c-format
 msgid "Cannot redefine function %s: It is in use"
 msgstr "함수 %s를 다시 정의할 수 없습니다: 사용중입니다"
 
-#: eval.c:6256
+#: eval.c:7145
 #, c-format
 msgid "Function name must start with a capital: %s"
 msgstr "함수 이름은 대문자로 시작해야 함: %s"
 
-#: eval.c:6263
+#: eval.c:7151
 msgid "Function name required"
 msgstr "함수 이름이 필요합니다"
 
-#: eval.c:6279 term.c:4454
+#: eval.c:7178 term.c:4481
 msgid "Using <SID> not in a script context"
 msgstr "스크립트 콘텍스트 밖에서 <SID> 사용"
 
-#: eval.c:6343
+#: eval.c:7244
 msgid "function "
 msgstr "함수 "
 
-#: eval.c:6446
+#: eval.c:7360
 #, c-format
 msgid "Cannot delete function %s: It is in use"
 msgstr "함수 %s를 삭제할 수 없습니다: 사용중입니다"
 
-#: eval.c:6493
+#: eval.c:7407
 msgid "Function call depth is higher than 'maxfuncdepth'"
 msgstr "함수를 부른 깊이가 'maxfuncdepth'보다 큽니다"
 
 #. always scroll up, don't overwrite
-#: eval.c:6541
+#: eval.c:7458
 #, c-format
 msgid "calling %s"
 msgstr "%s 부르는 중"
 
 #. always scroll up, don't overwrite
-#: eval.c:6566 ex_docmd.c:4373
+#: eval.c:7483 ex_cmds2.c:1710
 #, c-format
 msgid "continuing in %s"
 msgstr "%s에서 계속"
 
-#: eval.c:6620
+#: eval.c:7537
 msgid ":return not inside a function"
 msgstr ":return이 함수 안에 있지 않습니다"
 
-#. always scroll up, don't overwrite
-#: eval.c:6689
+#: eval.c:7615
 #, c-format
-msgid "%s returning"
-msgstr "%s 되돌리는 중"
+msgid "%s returning #%ld"
+msgstr "%s가 #%ld를 돌려주었습니다"
 
-#: eval.c:6818
+#: eval.c:7618
+#, c-format
+msgid "%s returning \"%s\""
+msgstr "%s가 \"%s\"를 돌려주었습니다"
+
+#: eval.c:7759
 msgid ""
 "\n"
 "# global variables:\n"
@@ -430,46 +475,30 @@ msgstr ""
 "\n"
 "# 전역 변수:\n"
 
-#: eval.c:7199
-msgid "Can't find temp file for reading"
-msgstr "읽기위한 임시 파일을 찾을 수 없습니다"
-
-#: eval.c:7210 fileio.c:3106
-msgid "Conversion failed"
-msgstr "변환이 실패했습니다"
-
-#: eval.c:7218
-msgid "can't read output of 'charconvert'"
-msgstr "'charconvert'의 출력결과를 읽을 수 없습니다"
-
-#: eval.c:7225
-msgid "Security error: 'charconvert' output is a symbolic link"
-msgstr "안전 에러: 'charconvert' 출력이 심볼릭 링크입니다"
-
-#: ex_cmds.c:92
+#: ex_cmds.c:91
 #, c-format
 msgid "<%s>%s%s  %d,  Hex %02x,  Octal %03o"
 msgstr "<%s>%s%s  %d,  십육진 %02x,  팔진 %03o"
 
-#: ex_cmds.c:428
-#~ msgid "Move lines into themselves"
-#~ msgstr ""
+#: ex_cmds.c:427
+msgid "Move lines into themselves"
+msgstr ""
 
-#: ex_cmds.c:497
+#: ex_cmds.c:496
 msgid "1 line moved"
 msgstr "1 라인 이동됨"
 
-#: ex_cmds.c:499
+#: ex_cmds.c:498
 #, c-format
 msgid "%ld lines moved"
 msgstr "%ld 라인 이동됨"
 
-#: ex_cmds.c:889
+#: ex_cmds.c:888
 #, c-format
 msgid "%ld lines filtered"
 msgstr "%ld 라인이 필터링됨"
 
-#: ex_cmds.c:916
+#: ex_cmds.c:915
 msgid "*Filter* Autocommands must not change current buffer"
 msgstr "*Filter* 자동명령은 현재 버퍼를 바꾸어서는 않됩니다"
 
@@ -479,51 +508,51 @@ msgstr "[마지막 수정 후 저장 않함]\n"
 
 #: ex_cmds.c:1211
 #, c-format
-#~ msgid "viminfo: %s in line: "
-#~ msgstr ""
+msgid "viminfo: %s in line: "
+msgstr "viminfo: 라인에 %s: "
 
 #: ex_cmds.c:1216
 msgid "viminfo: Too many errors, skipping rest of file"
 msgstr "viminfo: 너무 많은 에러, 나머지 건너뜀"
 
-#: ex_cmds.c:1243
-#, c-format
-msgid "Reading viminfo file \"%s\"%s%s"
-msgstr "viminfo 파일 \"%s\"%s%s를 읽는 중"
-
-#: ex_cmds.c:1244
-#~ msgid " info"
-#~ msgstr ""
-
 #: ex_cmds.c:1245
-#~ msgid " marks"
-#~ msgstr ""
+#, c-format
+msgid "Reading viminfo file \"%s\"%s%s%s"
+msgstr "viminfo 파일 \"%s\"%s%s%s를 읽는 중"
 
-#: ex_cmds.c:1332
+#: ex_cmds.c:1246
+msgid " info"
+msgstr " 인포"
+
+#: ex_cmds.c:1247
+msgid " marks"
+msgstr " 마크"
+
+#: ex_cmds.c:1248
+msgid " FAILED"
+msgstr " 실패"
+
+#: ex_cmds.c:1339
 #, c-format
 msgid "Viminfo file is not writable: %s"
 msgstr "Viminfo 파일의 쓰기권한이 없습니다: %s"
 
-#: ex_cmds.c:1438
-msgid "Security error: new viminfo file is a symbolic link"
-msgstr "안전 에러: 새 viminfo 파일이 심볼릭 링크입니다"
-
-#: ex_cmds.c:1467
+#: ex_cmds.c:1464
 #, c-format
 msgid "Can't write viminfo file %s!"
 msgstr "Viminfo 파일 %s를 쓸 수 없습니다!"
 
-#: ex_cmds.c:1475
+#: ex_cmds.c:1472
 #, c-format
 msgid "Writing viminfo file \"%s\""
 msgstr "Viminfo 파일 \"%s\"을 쓰는 중"
 
 #. Write the info:
-#: ex_cmds.c:1568
+#: ex_cmds.c:1573
 msgid "# This viminfo file was generated by vim\n"
 msgstr "# 이 viminfo 파일은 빔이 생성한 것입니다\n"
 
-#: ex_cmds.c:1569
+#: ex_cmds.c:1574
 msgid ""
 "# You may edit it if you're careful!\n"
 "\n"
@@ -531,42 +560,46 @@ msgstr ""
 "# 조심만 한다면 수정하실 수도 있습니다!\n"
 "\n"
 
-#: ex_cmds.c:1652
+#: ex_cmds.c:1576
+msgid "# Value of 'encoding' when this file was written\n"
+msgstr "# 이 파일이 저장되었을 때의 'encoding'의 값\n"
+
+#: ex_cmds.c:1675
 msgid "Illegal starting char"
 msgstr "이상한 시작 문자"
 
-#: ex_cmds.c:1932 ex_cmds.c:2123 ex_docmd.c:3417
+#: ex_cmds.c:2014 ex_cmds.c:2205 ex_cmds2.c:582
 msgid "Save As"
 msgstr "다른 이름으로 저장"
 
-#: ex_cmds.c:1989
+#: ex_cmds.c:2071
 msgid "Write partial file?"
 msgstr "파일 일부만 저장할까요?"
 
-#: ex_cmds.c:1996
+#: ex_cmds.c:2078
 msgid "Use ! to write partial buffer"
 msgstr "버퍼 일부만 쓰려면 !을 사용하세요"
 
-#: ex_cmds.c:2048 ex_docmd.c:7790
+#: ex_cmds.c:2130 ex_docmd.c:6499
 #, c-format
 msgid "\"%s\" is a directory"
 msgstr "\"%s\"는 디렉토리입니다"
 
-#: ex_cmds.c:2057
+#: ex_cmds.c:2139
 #, c-format
 msgid "Overwrite existing file \"%.*s\"?"
 msgstr "이미 있는 \"%.*s\" 파일을 덮어쓸까요?"
 
-#: ex_cmds.c:2128
+#: ex_cmds.c:2210
 #, c-format
 msgid "No file name for buffer %ld"
 msgstr "버퍼 %ld의 파일 이름이 없습니다"
 
-#: ex_cmds.c:2166
+#: ex_cmds.c:2248
 msgid "File not written: Writing is disabled by 'write' option"
 msgstr "파일이 써지지 않음: 'write' 옵션에 의해 쓸 수가 없습니다"
 
-#: ex_cmds.c:2186
+#: ex_cmds.c:2268
 #, c-format
 msgid ""
 "'readonly' option is set for \"%.*s\".\n"
@@ -575,63 +608,63 @@ msgstr ""
 "'readonly' 옵션이 \"%.*s\"에 대해 설정되어 있습니다.\n"
 "이 옵션을 무시할까요?"
 
-#: ex_cmds.c:2346
+#: ex_cmds.c:2433
 msgid "Edit File"
 msgstr "파일 편집"
 
-#: ex_cmds.c:2788
+#: ex_cmds.c:2916
 #, c-format
 msgid "Autocommands unexpectedly deleted new buffer %s"
 msgstr "Autocommand가 뜻밖에 새 버퍼 %s를 삭제했습니다"
 
-#: ex_cmds.c:2907
+#: ex_cmds.c:3037
 msgid "non-numeric argument to :z"
 msgstr "숫자아닌 인자가 :z에 주어졌습니다"
 
-#: ex_cmds.c:2996
+#: ex_cmds.c:3126
 msgid "Shell commands not allowed in rvim"
 msgstr "rvim에서는 쉘 명령을 사용할 수 없습니다"
 
-#: ex_cmds.c:3124
+#: ex_cmds.c:3233
 msgid "Regular expressions can't be delimited by letters"
 msgstr "정규표현식은 문자로 구분될 수 없습니다"
 
-#: ex_cmds.c:3450
+#: ex_cmds.c:3558
 #, c-format
-msgid "replace with %s (y/n/a/q/^E/^Y)?"
-msgstr "%s로 바꿈 (y/n/a/q/^E/^Y)?"
+msgid "replace with %s (y/n/a/q/l/^E/^Y)?"
+msgstr "%s로 바꿈 (y/n/a/q/l/^E/^Y)?"
 
-#: ex_cmds.c:3792
+#: ex_cmds.c:3906
 msgid "(Interrupted) "
 msgstr "(중단됨) "
 
-#: ex_cmds.c:3796
+#: ex_cmds.c:3910
 msgid "1 substitution"
 msgstr "1 치환"
 
-#: ex_cmds.c:3798
+#: ex_cmds.c:3912
 #, c-format
 msgid "%ld substitutions"
 msgstr "%ld 치환"
 
-#: ex_cmds.c:3801
-#~ msgid " on 1 line"
-#~ msgstr ""
+#: ex_cmds.c:3915
+msgid " on 1 line"
+msgstr ""
 
-#: ex_cmds.c:3803
+#: ex_cmds.c:3917
 #, c-format
-#~ msgid " on %ld lines"
-#~ msgstr ""
+msgid " on %ld lines"
+msgstr ""
 
-#: ex_cmds.c:3854
+#: ex_cmds.c:3967
 msgid "Cannot do :global recursive"
 msgstr ":global은 재귀호출될 수 없습니다"
 
-#: ex_cmds.c:3889
+#: ex_cmds.c:4002
 msgid "Regular expression missing from global"
 msgstr "global에서 정규표현식이 빠졌습니다"
 
-#: ex_cmds.c:4008
+#: ex_cmds.c:4127
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -641,69 +674,65 @@ msgstr ""
 "# 마지막 치환 문자열:\n"
 "$"
 
-#: ex_cmds.c:4107
+#: ex_cmds.c:4226
 #, c-format
 msgid "Sorry, no help for %s"
 msgstr "죄송, %s에 대한 도움말이 없습니다"
 
-#: ex_cmds.c:4141
+#: ex_cmds.c:4260
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "죄송, 도움말 파일 \"%s\"을 찾을 수 없습니다"
 
-#: ex_cmds.c:4577
+#: ex_cmds.c:4692
 #, c-format
 msgid "Not a directory: %s"
 msgstr "디렉토리가 아님: %s"
 
-#: ex_cmds.c:4605
+#: ex_cmds.c:4720
 #, c-format
 msgid "Cannot open %s for writing"
 msgstr "쓰기 위한 %s를 열 수 없습니다"
 
-#: ex_cmds.c:4619
+#: ex_cmds.c:4734
 #, c-format
 msgid "Unable to open %s for reading"
 msgstr "읽기 위한 %s를 열 수 없습니다"
 
-#: ex_cmds.c:4698
+#: ex_cmds.c:4813
 #, c-format
 msgid "Duplicate tag \"%s\" in file %s"
 msgstr "파일 %s에 태그 \"%s\"가 중복되어 있습니다"
 
-#: ex_cmds.c:4790
-msgid "Missing sign id"
+#: ex_cmds.c:4905 ex_cmds.c:5009
+msgid "Missing sign ID"
 msgstr "기호 ID가 없습니다"
 
-#: ex_cmds.c:4823
+#: ex_cmds.c:4938
 msgid "Missing filename"
 msgstr "파일 이름이 없습니다"
 
-#: ex_cmds.c:4855
+#: ex_cmds.c:4970
 #, c-format
 msgid "Invalid line number: %ld"
 msgstr "잘못된 라인 번호: %ld"
 
-#: ex_cmds.c:4858
+#: ex_cmds.c:4973
 #, c-format
 msgid "Invalid buffer name: %s"
 msgstr "잘못된 버퍼 이름: %s"
 
-#: ex_cmds.c:4894
-msgid "Missing sign ID"
-msgstr "기호 ID가 없습니다"
-
-#: ex_cmds.c:4915
+#: ex_cmds.c:5030
 #, c-format
 msgid "Cannot find buffer: %s"
 msgstr "버퍼를 찾을 수 없음: %s"
 
-#: ex_cmds.c:4926
+#: ex_cmds.c:5041
 #, c-format
 msgid "    line %ld, id %d, type %d"
 msgstr "    라인 %ld, id %d, 형식 %d"
 
-#: ex_cmds.c:4940
+#: ex_cmds.c:5055
 msgid ""
 "\n"
 "--- Signs ---"
@@ -711,126 +740,173 @@ msgstr ""
 "\n"
 "--- 기호 ---"
 
-#: ex_cmds.c:4946
+#: ex_cmds.c:5061
 #, c-format
 msgid "Signs for %s:"
 msgstr "%s에 대한 기호:"
 
-#: ex_docmd.c:474
-msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
-msgstr "Ex 모드로 전환.  Normal 모드로 가려면 \"visual\"을 입력하세요."
+#: ex_cmds2.c:62
+msgid "Entering Debug mode.  Type \"cont\" to leave."
+msgstr "디버그 모드로 들어감.  빠져나가려면 \"cont\"를 입력하세요."
 
-#. must be at EOF
-#: ex_docmd.c:510
-#~ msgid "At end-of-file"
-#~ msgstr ""
-
-#: ex_docmd.c:731
-#, c-format
-msgid "line ~%ld: %s"
-msgstr "라인 ~%ld: %s"
-
-#: ex_docmd.c:736
+#: ex_cmds2.c:66 ex_docmd.c:764
 #, c-format
 msgid "line %ld: %s"
 msgstr "라인 %ld: %s"
 
-#: ex_docmd.c:870
-msgid "Missing :endwhile"
-msgstr ":endwhile이 없습니다"
+#: ex_cmds2.c:68
+#, c-format
+msgid "cmd: %s"
+msgstr "명령: %s"
 
-#: ex_docmd.c:872
-msgid "Missing :endif"
-msgstr ":endif가 없습니다"
+#: ex_cmds2.c:207
+#, c-format
+msgid "Breakpoint in \"%s%s\" line %ld"
+msgstr "중지점: \"%s%s\" 라인 %ld"
 
-#: ex_docmd.c:1157
-msgid "Ambiguous use of user-defined command"
-msgstr "사용자 정의 명령을 모호하게 사용하고 있습니다"
+#: ex_cmds2.c:371
+#, c-format
+msgid "Breakpoint not found: %s"
+msgstr "중지점을 찾을 수 없습니다: %s"
 
-#: ex_docmd.c:1171
-msgid "Not an editor command"
-msgstr "편집기 명령이 아닙니다"
+#: ex_cmds2.c:397
+msgid "No breakpoints defined"
+msgstr "중지점이 정의되어 있지 않습니다"
 
-#: ex_docmd.c:1233
-msgid "Don't panic!"
-msgstr "죽지 마세요!"
+#: ex_cmds2.c:402
+#, c-format
+msgid "%3d  %s %s  line %ld"
+msgstr "%3d  %s %s  라인 %ld"
 
-#: ex_docmd.c:1252
-#~ msgid "Backwards range given"
-#~ msgstr ""
-
-#: ex_docmd.c:1256
-#~ msgid "Backwards range given, OK to swap"
-#~ msgstr ""
-
-#: ex_docmd.c:1340
-msgid "Use w or w>>"
-msgstr "w 나 w>>를 사용하세요"
-
-#: ex_docmd.c:2915
-msgid "Sorry, this command is not implemented"
-msgstr "죄송, 이 명령은 구현되지 않았습니다"
-
-#: ex_docmd.c:3057
-msgid "Only one file name allowed"
-msgstr "오로지 하나의 파일 이름만 사용 가능합니다"
-
-#: ex_docmd.c:3342
+#: ex_cmds2.c:605
 #, c-format
 msgid "Save changes to \"%.*s\"?"
 msgstr "\"%.*s\"에 바뀐 내용을 저장할까요?"
 
-#: ex_docmd.c:3500
+#: ex_cmds2.c:743
 #, c-format
 msgid "No write since last change for buffer \"%s\""
 msgstr "버퍼 \"%s\"에 나중에 바뀐 내용이 써지지 않았습니다"
 
-#: ex_docmd.c:3549
+#: ex_cmds2.c:812
 msgid "Warning: Entered other buffer unexpectedly (check autocommands)"
 msgstr "경고: 뜻밖에 다른 버퍼로 들어갔습니다 (autocommand를 확인하세요)"
 
-#: ex_docmd.c:3793
-msgid "makeef option not set"
-msgstr "makeef 옵션이 설정되지 않았습니다"
+#: ex_cmds2.c:1188
+msgid "There is only one file to edit"
+msgstr "편집할 파일이 하나 밖에 없습니다"
 
-#: ex_docmd.c:4177
-#, c-format
-msgid "%d more files to edit.  Quit anyway?"
-msgstr "편집할 파일들이 %d개가 더 있습니다. 그래도 종료할까요?"
+#: ex_cmds2.c:1190
+msgid "Cannot go before first file"
+msgstr "첫번째 파일 이전으로는 갈 수 없습니다"
 
-#: ex_docmd.c:4184
-#, c-format
-msgid "%ld more files to edit"
-msgstr "편집할 파일들이 %ld개 더"
+#: ex_cmds2.c:1192
+msgid "Cannot go beyond last file"
+msgstr "마지막 파일 이후로는 갈 수 없습니다"
 
-#: ex_docmd.c:4276
+#: ex_cmds2.c:1598
 #, c-format
 msgid "could not source \"%s\""
 msgstr "\"%s\"를 불러들일 수 없습니다"
 
-#: ex_docmd.c:4286
+#: ex_cmds2.c:1608
 #, c-format
 msgid "sourcing \"%s\""
 msgstr "\"%s\"를 불러들이는 중"
 
-#: ex_docmd.c:4371
+#: ex_cmds2.c:1708
 #, c-format
 msgid "finished sourcing %s"
 msgstr "%s 불러들이기 끝"
 
-#: ex_docmd.c:4613
+#: ex_cmds2.c:2004
 msgid "Warning: Wrong line separator, ^M may be missing"
 msgstr "경고: 잘못된 라인 구분자. ^M이 없는 것 같습니다"
 
-#: ex_docmd.c:4658
-msgid ":finish used outsided of a sourced file"
+#: ex_cmds2.c:2053
+msgid ":scriptencoding used outside of a sourced file"
+msgstr ":scriptencoding이 불러들인 파일 밖에서 사용되었습니다"
+
+#: ex_cmds2.c:2086
+msgid ":finish used outside of a sourced file"
 msgstr ":finish가 불러들인 파일 밖에서 사용되었습니다"
 
-#: ex_docmd.c:4759
+#: ex_docmd.c:476
+msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
+msgstr "Ex 모드로 전환.  Normal 모드로 가려면 \"visual\"을 입력하세요."
+
+#. must be at EOF
+#: ex_docmd.c:512
+msgid "At end-of-file"
+msgstr ""
+
+#: ex_docmd.c:588
+msgid "Command too recursive"
+msgstr "명령이 너무 많이 재반복되었습니다"
+
+#: ex_docmd.c:904
+msgid "Missing :endwhile"
+msgstr ":endwhile이 없습니다"
+
+#: ex_docmd.c:906
+msgid "Missing :endif"
+msgstr ":endif가 없습니다"
+
+#: ex_docmd.c:916
+msgid "End of sourced file"
+msgstr "불러들인 파일의 마지막"
+
+#: ex_docmd.c:917
+msgid "End of function"
+msgstr "함수의 마지막"
+
+#: ex_docmd.c:1213
+msgid "Ambiguous use of user-defined command"
+msgstr "사용자 정의 명령을 모호하게 사용하고 있습니다"
+
+#: ex_docmd.c:1227
+msgid "Not an editor command"
+msgstr "편집기 명령이 아닙니다"
+
+#: ex_docmd.c:1297
+msgid "Don't panic!"
+msgstr "죽지 마세요!"
+
+#: ex_docmd.c:1316
+msgid "Backwards range given"
+msgstr ""
+
+#: ex_docmd.c:1320
+msgid "Backwards range given, OK to swap"
+msgstr ""
+
+#: ex_docmd.c:1428
+msgid "Use w or w>>"
+msgstr "w 나 w>>를 사용하세요"
+
+#: ex_docmd.c:2815
+msgid "Sorry, this command is not implemented"
+msgstr "죄송, 이 명령은 구현되지 않았습니다"
+
+#: ex_docmd.c:2981
+msgid "Only one file name allowed"
+msgstr "오로지 하나의 파일 이름만 사용 가능합니다"
+
+#: ex_docmd.c:3528
+#, c-format
+msgid "%d more files to edit.  Quit anyway?"
+msgstr "편집할 파일들이 %d개가 더 있습니다. 그래도 종료할까요?"
+
+#: ex_docmd.c:3535
+#, c-format
+msgid "%ld more files to edit"
+msgstr "편집할 파일들이 %ld개 더"
+
+#: ex_docmd.c:3629
 msgid "Command already exists: use ! to redefine"
 msgstr "명령이 이미 존재합니다: 다시 정의하려면 !을 사용하세요"
 
-#: ex_docmd.c:4862
+#: ex_docmd.c:3732
 msgid ""
 "\n"
 "    Name        Args Range Complete  Definition"
@@ -838,244 +914,236 @@ msgstr ""
 "\n"
 "    이름        인자 범위  완성      정의"
 
-#: ex_docmd.c:4951
+#: ex_docmd.c:3821
 msgid "No user-defined commands found"
 msgstr "사용자 정의 명령을 찾을 수 없습니다"
 
-#: ex_docmd.c:4982
+#: ex_docmd.c:3852
 msgid "No attribute specified"
 msgstr "명시된 속성이 없습니다"
 
-#: ex_docmd.c:5034
+#: ex_docmd.c:3904
 msgid "Invalid number of arguments"
 msgstr "잘못된 인자 갯수"
 
-#: ex_docmd.c:5049
+#: ex_docmd.c:3919
 msgid "Count cannot be specified twice"
 msgstr "카운트는 두번 이상 명시될 수 없습니다"
 
-#: ex_docmd.c:5059
+#: ex_docmd.c:3929
 msgid "Invalid default value for count"
 msgstr "잘못된 기본 카운트 값"
 
-#: ex_docmd.c:5087
+#: ex_docmd.c:3957
 msgid "argument required for complete"
 msgstr "끝내기 위해 인자가 필요합니다"
 
-#: ex_docmd.c:5106
+#: ex_docmd.c:3976
 #, c-format
 msgid "Invalid complete value: %s"
 msgstr "잘못된 끝내기 값: %s"
 
-#: ex_docmd.c:5114
+#: ex_docmd.c:3984
 #, c-format
 msgid "Invalid attribute: %s"
 msgstr "잘못된 속성: %s"
 
-#: ex_docmd.c:5155
+#: ex_docmd.c:4025
 msgid "Invalid command name"
 msgstr "잘못된 명령 이름"
 
-#: ex_docmd.c:5170
+#: ex_docmd.c:4040
 msgid "User defined commands must start with an uppercase letter"
 msgstr "사용자 정의 명령은 대문자로 시작해야 합니다"
 
-#: ex_docmd.c:5241
+#: ex_docmd.c:4111
 #, c-format
 msgid "No such user-defined command: %s"
 msgstr "그런 사용자 정의 명령 없음: %s"
 
-#: ex_docmd.c:6050
-msgid "There is only one file to edit"
-msgstr "편집할 파일이 하나 밖에 없습니다"
-
-#: ex_docmd.c:6052
-msgid "Cannot go before first file"
-msgstr "첫번째 파일 이전으로는 갈 수 없습니다"
-
-#: ex_docmd.c:6054
-msgid "Cannot go beyond last file"
-msgstr "마지막 파일 이후로는 갈 수 없습니다"
-
-#: ex_docmd.c:6684
+#: ex_docmd.c:5349
 msgid "Edit File in new window"
 msgstr "새 창에서 파일 편집"
 
-#: ex_docmd.c:6970
+#: ex_docmd.c:5604
 msgid "No swap file"
 msgstr "스왑 파일이 없습니다"
 
-#: ex_docmd.c:7074
+#: ex_docmd.c:5708
 msgid "Append File"
 msgstr "파일 추가"
 
-#: ex_docmd.c:7133
+#: ex_docmd.c:5767
 msgid "No previous directory"
 msgstr "이전 디렉토리가 없습니다"
 
-#: ex_docmd.c:7268
-msgid "Ambiguous mapping"
-msgstr "애매모호한 맵핑"
-
-#: ex_docmd.c:7271
-#, c-format
-msgid "Ambiguous mapping, conflicts with \"%s\""
-msgstr "애매모호한 맵핑, \"%s\"와 충돌 발생"
-
-#: ex_docmd.c:7309
+#: ex_docmd.c:5958
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "창 위치: X %d, Y %d"
 
-#: ex_docmd.c:7314
+#: ex_docmd.c:5963
 msgid "Obtaining window position not implemented for this platform"
 msgstr "이 플랫폼에 대한 창 위치 얻는 기능을 구현되지 않았습니다"
 
-#: ex_docmd.c:7574
-#~ msgid "Save Redirection"
-#~ msgstr ""
+#: ex_docmd.c:6223
+msgid "Save Redirection"
+msgstr "리디렉션 저장"
 
-#: ex_docmd.c:7681
+#: ex_docmd.c:6353
+msgid "Save View"
+msgstr "보기 저장"
+
+#: ex_docmd.c:6354
 msgid "Save Session"
 msgstr "세션 저장"
 
-#: ex_docmd.c:7683
+#: ex_docmd.c:6356
 msgid "Save Setup"
 msgstr "설정 저장"
 
-#: ex_docmd.c:7796
+#: ex_docmd.c:6505
 #, c-format
 msgid "\"%s\" exists (use ! to override)"
 msgstr "\"%s\"가 존재합니다 (무시하려면 ! 사용)"
 
-#: ex_docmd.c:7801
+#: ex_docmd.c:6510
 #, c-format
 msgid "Cannot open \"%s\" for writing"
 msgstr "쓰기 위한 \"%s\"를 열 수 없습니다"
 
 #. set mark
-#: ex_docmd.c:7825
+#: ex_docmd.c:6534
 msgid "Argument must be a letter or forward/backward quote"
 msgstr "인자는 문자이거나 전/후 인용부호여야 합니다"
 
-#: ex_docmd.c:7847
+#: ex_docmd.c:6562
 msgid "Recursive use of :normal too deep"
 msgstr ":normal의 재귀호출이 너무 많이 발생했습니다"
 
-#: ex_docmd.c:7854
+#: ex_docmd.c:6569
 msgid "Cannot use :normal from event handler"
 msgstr "이벤트 처리기에서는 :normal을 사용할 수 없습니다"
 
-#: ex_docmd.c:8116
-#~ msgid ":if nesting too deep"
-#~ msgstr ""
+#: ex_docmd.c:6908
+msgid ":if nesting too deep"
+msgstr ""
 
-#: ex_docmd.c:8151
+#: ex_docmd.c:6943
 msgid ":endif without :if"
 msgstr ":if없이 :endif가 있습니다"
 
-#: ex_docmd.c:8171
+#: ex_docmd.c:6963
 msgid ":else without :if"
 msgstr ":if없이 :else가 있습니다"
 
-#: ex_docmd.c:8173
+#: ex_docmd.c:6965
 msgid ":elseif without :if"
 msgstr ":if없이 :elseif가 있습니다"
 
-#: ex_docmd.c:8225
-#~ msgid ":while nesting too deep"
-#~ msgstr ""
+#: ex_docmd.c:7017
+msgid ":while nesting too deep"
+msgstr ""
 
-#: ex_docmd.c:8271
+#: ex_docmd.c:7063
 msgid ":continue without :while"
 msgstr ":while없이 :continue가 있습니다"
 
-#: ex_docmd.c:8298
+#: ex_docmd.c:7090
 msgid ":break without :while"
 msgstr ":while없이 :break가 있습니다"
 
-#: ex_docmd.c:8321 ex_docmd.c:8326
+#: ex_docmd.c:7113 ex_docmd.c:7118
 msgid ":endwhile without :while"
 msgstr ":while없이 :endwhile이 있습니다"
 
-#: ex_docmd.c:8347
+#: ex_docmd.c:7139
 msgid ":endfunction not inside a function"
 msgstr ":endfunction이 function 내에 없습니다"
 
-#: ex_docmd.c:8523
+#: ex_docmd.c:7315
 msgid "No alternate file name to substitute for '#'"
 msgstr "'#'에 대해 치환할 교체 파일 이름이 없습니다"
 
-#: ex_docmd.c:8554
+#: ex_docmd.c:7346
 msgid "no autocommand file name to substitute for \"<afile>\""
 msgstr "\"<afile>\"에 대해 치환할 자동명령 파일 이름이 없습니다"
 
-#: ex_docmd.c:8562
+#: ex_docmd.c:7354
 msgid "no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "\"<abuf>\"에 대해 치환할 자동명령 버퍼 번호가 없습니다"
 
-#: ex_docmd.c:8573
+#: ex_docmd.c:7365
 msgid "no autocommand match name to substitute for \"<amatch>\""
 msgstr "\"<amatch>\"에 대해 치환할 자동명령 매치 이름이 없습니다"
 
-#: ex_docmd.c:8583
+#: ex_docmd.c:7375
 msgid "no :source file name to substitute for \"<sfile>\""
 msgstr "\"<sfile>\"에 대해 치환할 :source 파일 이름이 없습니다"
 
-#: ex_docmd.c:8617
-#, c-format
+#: ex_docmd.c:7409
+#, no-c-format
 msgid "Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "'%'나 '#'에 대한 빈 파일 이름, 오로지 \":p:h\"와만 동작합니다"
 
-#: ex_docmd.c:8619
+#: ex_docmd.c:7411
 msgid "Evaluates to an empty string"
 msgstr "빈 문자열에서 값을 구하려고 합니다"
 
-#: ex_docmd.c:9121
+#: ex_docmd.c:8207 globals.h:954
+msgid "No file name"
+msgstr "파일 이름이 없습니다"
+
+#: ex_docmd.c:8317
 msgid "Cannot open viminfo file for reading"
 msgstr "읽을 viminfo 파일을 열 수 없습니다"
 
-#: ex_docmd.c:9160
+#: ex_docmd.c:8366
 #, c-format
 msgid "Searching for \"%s\" in \"%s\""
 msgstr "\"%s\"를 \"%s\"에서 찾는 중"
 
-#: ex_docmd.c:9192
+#: ex_docmd.c:8388
+#, c-format
+msgid "Searching for \"%s\""
+msgstr "\"%s\"를 찾는 중"
+
+#: ex_docmd.c:8408
 #, c-format
 msgid "not found in 'runtimepath': \"%s\""
 msgstr "'runtimepath'에서 찾을 수 없음: \"%s\""
 
-#: ex_docmd.c:9207
+#: ex_docmd.c:8429
 msgid "Run Macro"
 msgstr "매크로 실행"
 
-#: ex_docmd.c:9395
+#: ex_docmd.c:8613
 msgid "No digraphs in this version"
 msgstr "이 버전에는 digraph가 없습니다"
 
-#: ex_docmd.c:9526
+#: ex_docmd.c:8761
 #, c-format
 msgid "Current language: %s"
 msgstr "현재 언어: %s"
 
-#: ex_docmd.c:9532
+#: ex_docmd.c:8767
 #, c-format
 msgid "Cannot set language to \"%s\""
 msgstr "언어를 \"%s\"로 설정할 수 없습니다"
 
-#: ex_getln.c:2492
+#: ex_getln.c:2596
 msgid "tagname"
 msgstr "태그이름"
 
-#: ex_getln.c:2495
-#~ msgid " kind file\n"
-#~ msgstr ""
+#: ex_getln.c:2599
+msgid " kind file\n"
+msgstr ""
 
-#: ex_getln.c:3497
+#: ex_getln.c:3676
 msgid "'history' option is zero"
 msgstr "'history' 옵션이 0입니다"
 
-#: ex_getln.c:3736
+#: ex_getln.c:3915
 #, c-format
 msgid ""
 "\n"
@@ -1084,223 +1152,236 @@ msgstr ""
 "\n"
 "# %s 히스토리 (새것부터 오래된 것 순):\n"
 
-#: ex_getln.c:3737
+#: ex_getln.c:3916
 msgid "Command Line"
 msgstr "명령 라인"
 
-#: ex_getln.c:3738
+#: ex_getln.c:3917
 msgid "Search String"
 msgstr "찾기 문자열"
 
-#: ex_getln.c:3739
+#: ex_getln.c:3918
 msgid "Expression"
 msgstr "표현"
 
-#: ex_getln.c:3740
+#: ex_getln.c:3919
 msgid "Input Line"
 msgstr "입력 라인"
 
-#: ex_getln.c:3770
+#: ex_getln.c:3949
 msgid "cmd_pchar beyond the command length"
 msgstr "cmd_pchar가 명령 길이를 벗어났습니다"
 
-#: fileio.c:331
+#: ex_getln.c:4113
+msgid "Active window or buffer deleted"
+msgstr "활성된 창이나 버퍼가 삭제되었습니다"
+
+#: fileio.c:341
 msgid "Illegal file name"
 msgstr "잘못된 파일 이름"
 
-#: fileio.c:355 fileio.c:468 fileio.c:2192 fileio.c:2236
+#: fileio.c:365 fileio.c:483 fileio.c:2417 fileio.c:2461
 msgid "is a directory"
 msgstr "는 디렉토리입니다"
 
-#: fileio.c:357
+#: fileio.c:367
 msgid "is not a file"
 msgstr "는 파일이 아닙니다"
 
-#. may create swap file now
-#: fileio.c:481 fileio.c:3204
+#: fileio.c:503 fileio.c:3434
 msgid "[New File]"
 msgstr "[새 파일]"
 
-#: fileio.c:498
+#: fileio.c:520
 msgid "[Permission Denied]"
 msgstr "[허용 않됨]"
 
-#: fileio.c:578
+#: fileio.c:612
 msgid "*ReadPre autocommands made the file unreadable"
 msgstr "*ReadPre 자동명령이 파일을 읽지 못하게 만들었습니다"
 
-#: fileio.c:580
+#: fileio.c:614
 msgid "*ReadPre autocommands must not change current buffer"
 msgstr "*ReadPre 자동명령은 현재 버퍼를 바꾸면 않됩니다"
 
-#: fileio.c:596
-#, c-format
-msgid "Security error: filter output is a symbolic link: %s"
-msgstr "안전 에러: 필터 출력이 심볼릭 링크입니다: %s"
-
-#: fileio.c:615
+#: fileio.c:634
 msgid "Vim: Reading from stdin...\n"
 msgstr "빔: 표준입력에서 읽는 중...\n"
 
-#: fileio.c:621
+#: fileio.c:640
 msgid "Reading from stdin..."
 msgstr "표준입력에서 읽는 중..."
 
 #. Re-opening the original file failed!
-#: fileio.c:827
+#: fileio.c:847
 msgid "Conversion made file unreadable!"
 msgstr "변환된 파일을 읽을 수가 없어요!"
 
-#: fileio.c:1542
+#: fileio.c:1687
 msgid "[fifo/socket]"
 msgstr "[피포/소켓]"
 
-#: fileio.c:1549
+#: fileio.c:1694
 msgid "[fifo]"
 msgstr "[피포]"
 
-#: fileio.c:1556
+#: fileio.c:1701
 msgid "[socket]"
 msgstr "[소켓]"
 
-#: fileio.c:1564
+#: fileio.c:1709
 msgid "[RO]"
 msgstr "[읽기전용]"
 
-#: fileio.c:1574
+#: fileio.c:1719
 msgid "[CR missing]"
 msgstr "[CR 없음]"
 
-#: fileio.c:1579
+#: fileio.c:1724
 msgid "[NL found]"
 msgstr "[NL 포함]"
 
-#: fileio.c:1584
+#: fileio.c:1729
 msgid "[long lines split]"
 msgstr "[긴 줄 잘림]"
 
-#: fileio.c:1590
+#: fileio.c:1735 fileio.c:3418
 msgid "[NOT converted]"
 msgstr "[변환않됨]"
 
-#: fileio.c:1595 fileio.c:3193
+#: fileio.c:1740 fileio.c:3423
 msgid "[converted]"
 msgstr "[변환됨]"
 
-#: fileio.c:1602 fileio.c:3218
+#: fileio.c:1747 fileio.c:3448
 msgid "[crypted]"
 msgstr "[암호화됨]"
 
-#: fileio.c:1609
+#: fileio.c:1754
 msgid "[CONVERSION ERROR]"
 msgstr "[변환 에러]"
 
-#: fileio.c:1616
+#: fileio.c:1761
 msgid "[READ ERRORS]"
 msgstr "[읽기 에러]"
 
-#: fileio.c:2108
-#~ msgid "Autocommands deleted or unloaded buffer to be written"
-#~ msgstr ""
+#: fileio.c:1940
+msgid "Can't find temp file for conversion"
+msgstr "변환하기 위한 임시 파일을 찾을 수 없습니다"
 
-#: fileio.c:2131
-#~ msgid "Autocommand changed number of lines in unexpected way"
-#~ msgstr ""
+#: fileio.c:1947
+msgid "Conversion with 'charconvert' failed"
+msgstr "'charconvert'를 사용한 변환이 실패했습니다"
 
-#: fileio.c:2197 fileio.c:2220
-#~ msgid "is not a file or writable device"
-#~ msgstr ""
+#: fileio.c:1950
+msgid "can't read output of 'charconvert'"
+msgstr "'charconvert'의 출력결과를 읽을 수 없습니다"
 
-#: fileio.c:2248
-#~ msgid "is read-only (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2333
+msgid "Autocommands deleted or unloaded buffer to be written"
+msgstr ""
 
-#: fileio.c:2543
-#~ msgid "Can't write to backup file (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2356
+msgid "Autocommand changed number of lines in unexpected way"
+msgstr ""
 
-#: fileio.c:2549
-#~ msgid "Close error for backup file (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2422 fileio.c:2445
+msgid "is not a file or writable device"
+msgstr "파일 혹은 쓸 수 있는 장치가 아닙니다"
 
-#: fileio.c:2551
-#~ msgid "Can't read file for backup (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2473
+msgid "is read-only (use ! to override)"
+msgstr "읽기전용입니다 (무시하려면 ! 사용)"
 
-#: fileio.c:2567
-#~ msgid "Cannot create backup file (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2761
+msgid "Can't write to backup file (use ! to override)"
+msgstr "백업파일을 쓸 수 없습니다 (무시하려면 ! 사용)"
 
-#: fileio.c:2656
-#~ msgid "Can't make backup file (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2767
+msgid "Close error for backup file (use ! to override)"
+msgstr "백업파일 닫기 에러 (무시하려면 ! 사용)"
 
-#: fileio.c:2711
-#~ msgid "The resource fork will be lost (use ! to override)"
-#~ msgstr ""
+#: fileio.c:2769
+msgid "Can't read file for backup (use ! to override)"
+msgstr "백업할 파일을 읽을 수 없습니다 (무시하려면 ! 사용)"
 
-#: fileio.c:2793
+#: fileio.c:2785
+msgid "Cannot create backup file (use ! to override)"
+msgstr "백업파일을 생성할 수 없습니다 (무시하려면 ! 사용)"
+
+#: fileio.c:2874
+msgid "Can't make backup file (use ! to override)"
+msgstr "백업파일을 만들 수 없습니다 (무시하려면 ! 사용)"
+
+#: fileio.c:2929
+msgid "The resource fork will be lost (use ! to override)"
+msgstr "The resource fork will be lost (무시하려면 ! 사용)"
+
+#: fileio.c:3018
 msgid "Can't find temp file for writing"
 msgstr "쓸 임시 파일을 찾을 수 없습니다"
 
-#: fileio.c:2825
+#: fileio.c:3036
+msgid "Cannot convert (use ! to write without conversion)"
+msgstr "변환할 수 없습니다 (변환없이 저장하려면 ! 사용)"
+
+#: fileio.c:3066
 msgid "Can't open file for writing"
 msgstr "쓸 파일을 열 수 없습니다"
 
-#: fileio.c:2910
-#, c-format
-msgid "Security error: filter input is a symbolic link: %s"
-msgstr "안전 에러: 필터 입력이 심볼릭 링크입니다: %s"
-
-#: fileio.c:3060
+#: fileio.c:3289
 msgid "Close failed"
 msgstr "닫기가 실패했습니다"
 
-#: fileio.c:3124
+#: fileio.c:3344
+msgid "write error, conversion failed"
+msgstr "쓰기 에러, 변환이 실패했습니다"
+
+#: fileio.c:3347
 msgid "write error (file system full?)"
 msgstr "쓰기 에러 (파일 시스템이 꽉찾나?)"
 
-#: fileio.c:3188
+#: fileio.c:3413
 msgid " CONVERSION ERROR"
 msgstr " 변환 에러"
 
-#: fileio.c:3199
+#: fileio.c:3429
 msgid "[Device]"
 msgstr "[장치]"
 
-#: fileio.c:3204
+#: fileio.c:3434
 msgid "[New]"
 msgstr "[새로운]"
 
-#: fileio.c:3226
+#: fileio.c:3456
 msgid " [a]"
 msgstr " [a]"
 
-#: fileio.c:3226
+#: fileio.c:3456
 msgid " appended"
 msgstr " 추가됨"
 
-#: fileio.c:3228
+#: fileio.c:3458
 msgid " [w]"
 msgstr " [w]"
 
-#: fileio.c:3228
+#: fileio.c:3458
 msgid " written"
 msgstr " 저장됨"
 
-#: fileio.c:3278
+#: fileio.c:3508
 msgid "patchmode: can't save original file"
 msgstr "patchmode: 원래 파일을 저장할 수 없습니다"
 
-#: fileio.c:3299
+#: fileio.c:3529
 msgid "patchmode: can't touch empty original file"
 msgstr "patchmode: 빈 원래 파일을 생성할 수 없습니다"
 
-#: fileio.c:3314
+#: fileio.c:3544
 msgid "Can't delete backup file"
 msgstr "백업 파일을 삭제할 수 없습니다"
 
-#: fileio.c:3365
+#: fileio.c:3596
 msgid ""
 "\n"
 "WARNING: Original file may be lost or damaged\n"
@@ -1308,94 +1389,94 @@ msgstr ""
 "\n"
 "경고: 원래 파일이 없어졌거나 깨졌을 수 있습니다\n"
 
-#: fileio.c:3367
+#: fileio.c:3598
 msgid "don't quit the editor until the file is successfully written!"
 msgstr "파일이 성공적으로 저장될 때까지 편집기를 종료하지 마세요!"
 
-#: fileio.c:3431
+#: fileio.c:3666
 msgid "[dos]"
 msgstr "[도스]"
 
-#: fileio.c:3431
+#: fileio.c:3666
 msgid "[dos format]"
 msgstr "[도스 형식]"
 
-#: fileio.c:3438
+#: fileio.c:3673
 msgid "[mac]"
 msgstr "[맥]"
 
-#: fileio.c:3438
+#: fileio.c:3673
 msgid "[mac format]"
 msgstr "[맥 형식]"
 
-#: fileio.c:3445
+#: fileio.c:3680
 msgid "[unix]"
 msgstr "[유닉스]"
 
-#: fileio.c:3445
+#: fileio.c:3680
 msgid "[unix format]"
 msgstr "[유닉스 형식]"
 
-#: fileio.c:3489
+#: fileio.c:3724
 msgid "[noeol]"
 msgstr "[noeol]"
 
-#: fileio.c:3489
+#: fileio.c:3724
 msgid "[Incomplete last line]"
 msgstr "[불완전한 마지막 라인]"
 
 #. don't overwrite messages here
 #. don't use emsg() here, don't want to flush the buffers
-#: fileio.c:3505
+#: fileio.c:3740
 msgid "WARNING: The file has been changed since reading it!!!"
 msgstr "경고: 파일이 읽은 후에 바뀌었습니다!!!"
 
-#: fileio.c:3507
+#: fileio.c:3742
 msgid "Do you really want to write to it"
 msgstr "정말로 쓰기를 원하십니까"
 
-#: fileio.c:4415
+#: fileio.c:4695
 #, c-format
 msgid "Error writing to \"%s\""
 msgstr "\"%s\"에 쓰기 에러"
 
-#: fileio.c:4422
+#: fileio.c:4702
 #, c-format
 msgid "Error closing \"%s\""
 msgstr "\"%s\" 닫기 에러"
 
-#: fileio.c:4425
+#: fileio.c:4705
 #, c-format
 msgid "Error reading \"%s\""
 msgstr "\"%s\" 읽기 에러"
 
-#: fileio.c:4545
+#: fileio.c:4825
 #, c-format
 msgid "Warning: File \"%s\" no longer available"
 msgstr "경고: 파일 \"%s\"를 더이상 사용할 수 없습니다"
 
-#: fileio.c:4547
+#: fileio.c:4827
 #, c-format
 msgid "Warning: File \"%s\" has changed since editing started"
 msgstr "경고: 파일 \"%s\"가 편집을 시작한 후에 바뀌었습니다"
 
-#: fileio.c:4554
+#: fileio.c:4834
 #, c-format
 msgid "Warning: File \"%s\" has been created after editing started"
 msgstr "경고: 파일 \"%s\"가 편집을 시작한 후에 생성되었습니다"
 
-#: fileio.c:5222
+#: fileio.c:5576
 #, c-format
 msgid "Illegal character after *: %s"
 msgstr "* 뒤에 이상한 문자: %s"
 
-#: fileio.c:5233
+#: fileio.c:5587
 #, c-format
 msgid "No such event: %s"
 msgstr "그런 이벤트 없음: %s"
 
 #. Highlight title
-#: fileio.c:5382
+#: fileio.c:5736
 msgid ""
 "\n"
 "--- Auto-Commands ---"
@@ -1403,104 +1484,100 @@ msgstr ""
 "\n"
 "--- 자동-명령 ---"
 
-#: fileio.c:5646
+#: fileio.c:6000
 msgid "Can't execute autocommands for ALL events"
 msgstr "ALL 이벤트에 대해 자동명령을 실행할 수 없습니다"
 
-#: fileio.c:5669
+#: fileio.c:6023
 msgid "No matching autocommands"
 msgstr "맞는 자동명령이 없습니다"
 
-#: fileio.c:5908
-#~ msgid "autocommand nesting too deep"
-#~ msgstr ""
+#: fileio.c:6281
+msgid "autocommand nesting too deep"
+msgstr ""
 
-#: fileio.c:6166
+#: fileio.c:6550
 #, c-format
-#~ msgid "%s Auto commands for \"%s\""
-#~ msgstr ""
+msgid "%s Auto commands for \"%s\""
+msgstr ""
 
-#: fileio.c:6174
+#: fileio.c:6558
 #, c-format
 msgid "Executing %s"
 msgstr "%s 실행중"
 
 #. always scroll up, don't overwrite
-#: fileio.c:6242
+#: fileio.c:6626
 #, c-format
 msgid "autocommand %s"
 msgstr "자동명령 %s"
 
-#: fileio.c:6668
+#: fileio.c:7136
 msgid "Missing {."
 msgstr "{가 없습니다."
 
-#: fileio.c:6670
+#: fileio.c:7138
 msgid "Missing }."
 msgstr "}가 없습니다"
 
-#: fold.c:391
+#: fold.c:66
 msgid "No fold found"
 msgstr "fold가 없습니다"
 
-#: fold.c:441
-msgid "Fold must be at least two lines"
-msgstr "Fold는 적어도 두 라인이어야 합니다"
+#: fold.c:1662
+msgid "'commentstring' is empty"
+msgstr "'commentstring' 옵션이 비었습니다"
 
-#: fold.c:563 fold.c:913
-msgid "No fold at this line"
-msgstr "이 라인에는 fold가 없습니다"
+#: getchar.c:268
+msgid "Add to read buffer"
+msgstr ""
 
-#: getchar.c:241
-#~ msgid "Add to read buffer"
-#~ msgstr ""
-
-#: getchar.c:1732
+#: getchar.c:2003
 msgid "recursive mapping"
 msgstr "재귀 맵핑"
 
-#: getchar.c:2387
+#: getchar.c:2733
 #, c-format
 msgid "global abbreviation already exists for %s"
 msgstr "%s 전역 약어가 이미 존재합니다"
 
-#: getchar.c:2390
+#: getchar.c:2736
 #, c-format
 msgid "global mapping already exists for %s"
 msgstr "%s 전역 매핑이 이미 존재합니다"
 
-#: getchar.c:2526
+#: getchar.c:2863
 #, c-format
 msgid "abbreviation already exists for %s"
 msgstr "%s 약어가 이미 존재합니다"
 
-#: getchar.c:2529
+#: getchar.c:2866
 #, c-format
 msgid "mapping already exists for %s"
 msgstr "%s 매핑이 이미 존재합니다"
 
-#: getchar.c:2592
+#: getchar.c:2929
 msgid "No abbreviation found"
 msgstr "약어를 찾을 수 없습니다"
 
-#: getchar.c:2594
+#: getchar.c:2931
 msgid "No mapping found"
 msgstr "맵핑을 찾을 수 없습니다"
 
-#: getchar.c:3344
+#: getchar.c:3735
 msgid "makemap: Illegal mode"
 msgstr "makemap: 이상한 모드"
 
-#: gui.c:171
+#: gui.c:172
 msgid "Cannot start the GUI"
 msgstr "GUI를 시작할 수 없습니다"
 
-#: gui.c:285 main.c:1040
+#: gui.c:287 main.c:1059
 #, c-format
 msgid "Cannot read from \"%s\""
 msgstr "\"%s\"에서 읽을 수 없습니다"
 
-#: gui.c:402
+#: gui.c:404
 msgid "'guifontwide' invalid"
 msgstr "'guifontwide'가 이상합니다"
 
@@ -1521,12 +1598,12 @@ msgstr "vim_SelFile: 현재 디렉토리를 돌아갈 수 없습니다"
 msgid "Pathname:"
 msgstr "경로명:"
 
-#: gui_at_fs.c:2560 gui_gtk.c:2276
+#: gui_at_fs.c:2560 gui_gtk.c:2275
 msgid "OK"
 msgstr "확인"
 
 #. 'Cancel' button
-#: gui_at_fs.c:2560 gui_gtk.c:1728 gui_gtk.c:2270
+#: gui_at_fs.c:2560 gui_gtk.c:1727 gui_gtk.c:2269
 msgid "Cancel"
 msgstr "취소"
 
@@ -1535,123 +1612,126 @@ msgid "vim_SelFile: can't get current directory"
 msgstr "vim_SelFile: 현재 디렉토리를 얻을 수 없습니다"
 
 #: gui_at_sb.c:488
-#~ msgid "Scrollbar Widget: Could not get geometry of thumb pixmap."
-#~ msgstr ""
+msgid "Scrollbar Widget: Could not get geometry of thumb pixmap."
+msgstr "스크롤바 위젯: 썸 픽스맵의 지오미트리를 얻을 수 없습니다."
 
-#: gui_athena.c:948 gui_motif.c:1354
+#: gui_athena.c:945 gui_motif.c:1471
 msgid "Vim dialog"
 msgstr "빔 대화상자"
 
-#: gui_beval.c:66
-#~ msgid "Cannot create BalloonEval with both message and callback"
-#~ msgstr ""
+#: gui_beval.c:65
+msgid "Cannot create BalloonEval with both message and callback"
+msgstr ""
 
-#: gui_gtk.c:1185
+#: gui_gtk.c:1184
 msgid "Vim dialog..."
 msgstr "빔 대화상자..."
 
-#: gui_gtk.c:1565
+#: gui_gtk.c:1564
 msgid "VIM - Search and Replace..."
 msgstr "빔 - 찾아서 바꾸기..."
 
-#: gui_gtk.c:1570
+#: gui_gtk.c:1569
 msgid "VIM - Search..."
 msgstr "빔 - 찾기..."
 
-#: gui_gtk.c:1593
+#: gui_gtk.c:1592
 msgid "Find what:"
 msgstr "무얼 찾을까요:"
 
-#: gui_gtk.c:1611
+#: gui_gtk.c:1610
 msgid "Replace with:"
 msgstr "바꿀 문자열:"
 
 #. exact match only button
-#: gui_gtk.c:1643
+#: gui_gtk.c:1642
 msgid "Match exact word only"
 msgstr "똑같은 단어만"
 
-#: gui_gtk.c:1654
+#: gui_gtk.c:1653
 msgid "Direction"
 msgstr "방향"
 
 #. 'Up' and 'Down' buttons
-#: gui_gtk.c:1666
+#: gui_gtk.c:1665
 msgid "Up"
 msgstr "위로"
 
-#: gui_gtk.c:1670
+#: gui_gtk.c:1669
 msgid "Down"
 msgstr "아래로"
 
 #. 'Find Next' button
-#: gui_gtk.c:1692
+#: gui_gtk.c:1691
 msgid "Find Next"
 msgstr "다음 찾기"
 
 #. 'Replace' button
-#: gui_gtk.c:1709
+#: gui_gtk.c:1708
 msgid "Replace"
 msgstr "바꾸기"
 
 #. 'Replace All' button
-#: gui_gtk.c:1718
+#: gui_gtk.c:1717
 msgid "Replace All"
 msgstr "모두 바꾸기"
 
-#: gui_gtk.c:2231
+#: gui_gtk.c:2230
 msgid "VIM - Help on..."
 msgstr "빔 - 도움말..."
 
-#: gui_gtk.c:2253
+#: gui_gtk.c:2252
 msgid "Topic:"
 msgstr "주제:"
 
-#: gui_gtk_x11.c:985 gui_x11.c:1061
+#: gui_gtk_x11.c:1025 gui_x11.c:1143
 msgid "cannot open display"
 msgstr "디스플레이를 열 수 없습니다"
 
-#: gui_gtk_x11.c:2240 gui_x11.c:1721
+#: gui_gtk_x11.c:2312 gui_x11.c:1788
 #, c-format
 msgid "Unknown fontset: %s"
 msgstr "모르는 글꼴셋: %s"
 
-#: gui_gtk_x11.c:2266
+#: gui_gtk_x11.c:2338
 msgid "Font Selection"
 msgstr "글꼴 선택"
 
-#: gui_gtk_x11.c:2508 gui_mac.c:946 gui_w16.c:2401 gui_w32.c:2914
-#: gui_x11.c:1557
+#: gui_gtk_x11.c:2580 gui_mac.c:951 gui_w48.c:1484 gui_x11.c:1624
 #, c-format
 msgid "Unknown font: %s"
 msgstr "모르는 글꼴: %s"
 
-#: gui_gtk_x11.c:2519 gui_x11.c:1581
+#: gui_gtk_x11.c:2591 gui_x11.c:1648
 #, c-format
 msgid "Font \"%s\" is not fixed-width"
 msgstr "글꼴 \"%s\"는 고정넓이가 아닙니다"
 
-#: gui_gtk_x11.c:2648
+#: gui_gtk_x11.c:2720
 #, c-format
 msgid "Color name not recognized: %s"
 msgstr "색상 이름을 모르겠습니다: %s"
 
-#: gui_riscos.c:947
+#: gui_gtk_x11.c:3433 ui.c:1781
+msgid "Used CUT_BUFFER0 instead of empty selection"
+msgstr ""
+
+#: gui_riscos.c:948
 #, c-format
 msgid "Can't load Zap font '%s'"
 msgstr "Zap 글꼴 '%s'를 읽어들일 수 없습니다"
 
-#: gui_riscos.c:1043
+#: gui_riscos.c:1044
 #, c-format
 msgid "Can't use font %s"
 msgstr "글꼴 %s를 사용할 수 없습니다"
 
-#: gui_riscos.c:1162
+#: gui_riscos.c:1163
 #, c-format
 msgid "Missing colour : %s"
 msgstr "없는 색상 : %s"
 
-#: gui_riscos.c:3314
+#: gui_riscos.c:3316
 msgid ""
 "\n"
 "Sending message to terminate child process.\n"
@@ -1659,104 +1739,104 @@ msgstr ""
 "\n"
 "자식 프로세스를 끝내기 위해 메시지를 보냈습니다.\n"
 
-#: gui_w16.c:2299 gui_w32.c:2778
-#, c-format
-msgid "Illegal charset name \"%s\" in font name \"%s\""
-msgstr "잘못된 문자셋 이름 \"%s\"이 글꼴 이름 \"%s\"에 있습니다"
-
-#: gui_w16.c:2307 gui_w32.c:2786
-#, c-format
-msgid "Illegal char '%c' in font name \"%s\""
-msgstr "잘못된 문자 '%c'가 글꼴 이름 \"%s\"에 있습니다"
-
-#: gui_w32.c:1995
+#: gui_w32.c:1040
 #, c-format
 msgid "Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "지원되지 않는 인자: \"-%s\": OLE 버전을 사용하세요."
 
-#: gui_x11.c:1222
+#: gui_w48.c:1447
+#, c-format
+msgid "Illegal charset name \"%s\" in font name \"%s\""
+msgstr "잘못된 문자셋 이름 \"%s\"이 글꼴 이름 \"%s\"에 있습니다"
+
+#: gui_w48.c:1455
+#, c-format
+msgid "Illegal char '%c' in font name \"%s\""
+msgstr "잘못된 문자 '%c'가 글꼴 이름 \"%s\"에 있습니다"
+
+#: gui_x11.c:1293
 msgid "Vim: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr "빔: 색상맵 엔트리를 할당할 수 없습니다, 몇몇 색이 잘못될 수 있습니다"
 
-#: gui_x11.c:1710
+#: gui_x11.c:1777
 #, c-format
 msgid "Error: During loading fontset %s"
 msgstr "에러: 글꼴셋 %s를 읽어오는 중 에러"
 
-#: gui_x11.c:1711
+#: gui_x11.c:1778
 msgid "Font(s) for the following character sets are missing:"
 msgstr "다음 문자셋에 대한 글꼴이 없습니다:"
 
-#: gui_x11.c:1754
+#: gui_x11.c:1821
 msgid "locale is not set correctly"
 msgstr "로케일이 잘못 설정되었습니다"
 
-#: gui_x11.c:1755
+#: gui_x11.c:1822
 msgid "Set LANG environment variable to your locale"
 msgstr "LANG 환경변수를 당신의 로케일에 맞게 설정하세요"
 
-#: gui_x11.c:1756
+#: gui_x11.c:1823
 msgid "For korean:"
 msgstr "한국의 경우:"
 
-#: gui_x11.c:1757
+#: gui_x11.c:1824
 msgid "   csh: setenv LANG ko"
 msgstr "   C쉘: setenv LANG ko"
 
-#: gui_x11.c:1758
+#: gui_x11.c:1825
 msgid "   sh : export LANG=ko"
 msgstr "   본쉘: export LANG=ko"
 
-#: gui_x11.c:1760
+#: gui_x11.c:1827
 #, c-format
 msgid "fontset name: %s"
 msgstr "글꼴셋 이름: %s"
 
-#: gui_x11.c:1761
+#: gui_x11.c:1828
 msgid "Your language Font missing"
 msgstr "당신 언어에 대한 글꼴이 없습니다"
 
-#: gui_x11.c:1762
+#: gui_x11.c:1829
 #, c-format
 msgid "loaded fontname: %s"
 msgstr "읽어들인 글꼴이름: %s"
 
-#: gui_x11.c:1770
+#: gui_x11.c:1837
 #, c-format
 msgid "Fontset name: %s"
 msgstr "글꼴셋 이름: %s"
 
-#: gui_x11.c:1771
+#: gui_x11.c:1838
 #, c-format
 msgid "Font '%s' is not fixed-width"
 msgstr "글꼴 '%s'는 고정넓이가 아닙니다"
 
-#: gui_x11.c:1790
+#: gui_x11.c:1857
 #, c-format
 msgid "Fontset name: %s\n"
 msgstr "글꼴셋 이름: %s\n"
 
-#: gui_x11.c:1791
+#: gui_x11.c:1858
 #, c-format
 msgid "Font0: %s\n"
 msgstr "글꼴0: %s\n"
 
-#: gui_x11.c:1792
+#: gui_x11.c:1859
 #, c-format
 msgid "Font1: %s\n"
 msgstr "글꼴1: %s\n"
 
-#: gui_x11.c:1793
+#: gui_x11.c:1860
 #, c-format
 msgid "Font%d width is not twice that of font0\n"
 msgstr "글꼴%d 너비가 글꼴0의 두배가 아닙니다\n"
 
-#: gui_x11.c:1794
+#: gui_x11.c:1861
 #, c-format
 msgid "Font0 width: %ld\n"
 msgstr "글꼴0 너비: %ld\n"
 
-#: gui_x11.c:1795
+#: gui_x11.c:1862
 #, c-format
 msgid ""
 "Font1 width: %ld\n"
@@ -1765,215 +1845,215 @@ msgstr ""
 "글꼴1 너비: %ld\n"
 "\n"
 
-#: gui_x11.c:1898
+#: gui_x11.c:1966
 #, c-format
 msgid "Cannot allocate color %s"
 msgstr "색 %s를 할당할 수 없습니다"
 
-#: gui_x11.c:2948
-#~ msgid "Cannot allocate memory for debugger sign"
-#~ msgstr ""
+#: gui_x11.c:3033
+msgid "Cannot allocate memory for debugger sign"
+msgstr ""
 
-#: gui_x11.c:2973
-#~ msgid "Error -- couldn't read in sign data!"
-#~ msgstr ""
+#: gui_x11.c:3058
+msgid "Error -- couldn't read in sign data!"
+msgstr ""
 
-#: hangulin.c:603
+#: hangulin.c:604
 msgid "automata ERROR: internal"
 msgstr "오토마타 에러: 내부에러"
 
-#: if_cscope.c:64
+#: if_cscope.c:66
 msgid "Add a new database"
 msgstr "새 데이타베이스 추가"
 
-#: if_cscope.c:66
-#~ msgid "Query for a pattern"
-#~ msgstr ""
-
 #: if_cscope.c:68
+msgid "Query for a pattern"
+msgstr ""
+
+#: if_cscope.c:70
 msgid "Show this message"
 msgstr "이 메시지 보이기"
 
-#: if_cscope.c:70
+#: if_cscope.c:72
 msgid "Kill a connection"
 msgstr "연결 끊기"
 
-#: if_cscope.c:72
+#: if_cscope.c:74
 msgid "Reinit all connections"
 msgstr "모든 연결 재초기화"
 
-#: if_cscope.c:74
+#: if_cscope.c:76
 msgid "Show connections"
 msgstr "연결 보여주기"
 
-#: if_cscope.c:121
+#: if_cscope.c:123
 msgid "Usage: cstag <ident>"
 msgstr "사용법: cstag <ident>"
 
-#: if_cscope.c:177
+#: if_cscope.c:179
 msgid "cstag: tag not found"
 msgstr "cstag: 태그를 찾을 수 없습니다"
 
-#: if_cscope.c:373
+#: if_cscope.c:375
 msgid "cs_add_common: alloc fail #1"
 msgstr "cs_add_common: 할당 실패 #1"
 
-#: if_cscope.c:380
+#: if_cscope.c:382
 msgid "cs_add_common: alloc fail #2"
 msgstr "cs_add_common: 할당 실패 #2"
 
-#: if_cscope.c:390 if_cscope.c:413 if_cscope.c:447
+#: if_cscope.c:392 if_cscope.c:415 if_cscope.c:449
 #, c-format
 msgid "stat(%s) error: %d"
 msgstr "stat(%s) 에러: %d"
 
-#: if_cscope.c:403
+#: if_cscope.c:405
 msgid "cs_add_common: alloc fail #3"
 msgstr "cs_add_common: 할당 실패 #3"
 
-#: if_cscope.c:427
+#: if_cscope.c:429
 msgid "cs_add_common: alloc fail #4"
 msgstr "cs_add_common: 할당 실패 #4"
 
-#: if_cscope.c:456 if_cscope.c:463
+#: if_cscope.c:458 if_cscope.c:465
 #, c-format
 msgid "Added cscope database %s"
 msgstr "cscope 데이타베이스 %s에 추가하였습니다."
 
-#: if_cscope.c:470
+#: if_cscope.c:472
 #, c-format
 msgid "%s is not a directory or a valid cscope database"
 msgstr "%s는 디렉토리도 아니고 cscope 데이타베이스도 아닙니다"
 
-#: if_cscope.c:553 if_cscope.c:1335
+#: if_cscope.c:555 if_cscope.c:1340
 #, c-format
 msgid "error reading cscope connection %d"
 msgstr "cscope 연결 %d 읽기 에러"
 
-#: if_cscope.c:629
+#: if_cscope.c:631
 msgid "unknown cscope search type"
 msgstr "모르는 cscope 찾기 형식"
 
-#: if_cscope.c:676
+#: if_cscope.c:678
 msgid "Could not create cscope pipes"
 msgstr "cscope 파이프를 생성할 수 없습니다"
 
-#: if_cscope.c:741
+#: if_cscope.c:743
 msgid "cs_create_connection exec failed"
 msgstr "cs_create_connection 실행이 실패했습니다"
 
-#: if_cscope.c:751
+#: if_cscope.c:753
 msgid "cs_create_connection: fdopen for to_fp failed"
 msgstr "cs_create_connection: to_fp에 대한 fdopen 실패"
 
-#: if_cscope.c:753
+#: if_cscope.c:755
 msgid "cs_create_connection: fdopen for fr_fp failed"
 msgstr "cs_create_connection: fr_fp에 대한 fdopen 실패"
 
-#: if_cscope.c:781
+#: if_cscope.c:783
 msgid "no cscope connections"
 msgstr "cscope 연결이 없습니다"
 
-#: if_cscope.c:851
+#: if_cscope.c:853
 msgid "no matches found in cscope connections"
 msgstr "cscope 연결중에 맞는 걸 찾을 수 없습니다"
 
-#: if_cscope.c:862
+#: if_cscope.c:864
 #, c-format
-#~ msgid "no matches found for cscope query %s of %s"
-#~ msgstr ""
+msgid "no matches found for cscope query %s of %s"
+msgstr ""
 
-#: if_cscope.c:896
+#: if_cscope.c:898
 msgid "cscope commands:\n"
 msgstr "cscope 명령:\n"
 
-#: if_cscope.c:899
+#: if_cscope.c:901
 #, c-format
-#~ msgid "%-5s: %-30s (Usage: %s)\n"
-#~ msgstr ""
+msgid "%-5s: %-30s (Usage: %s)\n"
+msgstr "%-5s: %-30s (사용법: %s)\n"
 
-#: if_cscope.c:967
-#~ msgid "duplicate cscope database not added"
-#~ msgstr ""
+#: if_cscope.c:969
+msgid "duplicate cscope database not added"
+msgstr "중복된 cscope 데이타베이스는 추가되지 않았습니다"
 
-#: if_cscope.c:978
-#~ msgid "maximum number of cscope connections reached"
-#~ msgstr ""
+#: if_cscope.c:980
+msgid "maximum number of cscope connections reached"
+msgstr "cscope 연결 허용치의 최대값에 도달했습니다"
 
-#: if_cscope.c:1097
-#~ msgid "cscope connection not found"
-#~ msgstr ""
+#: if_cscope.c:1101
+msgid "cscope connection not found"
+msgstr "cscope 연결을 찾을 수 없습니다"
 
-#: if_cscope.c:1100
+#: if_cscope.c:1104
 #, c-format
-#~ msgid "cscope connection %s not found"
-#~ msgstr ""
+msgid "cscope connection %s not found"
+msgstr "cscope 연결 %s를 찾을 수 없습니다"
 
-#: if_cscope.c:1135
-#~ msgid "cscope connection closed"
-#~ msgstr ""
+#: if_cscope.c:1140
+msgid "cscope connection closed"
+msgstr "cscope 연결이 닫혔습니다"
 
-#: if_cscope.c:1143
+#: if_cscope.c:1148
 #, c-format
-#~ msgid "cscope connection %s closed\n"
-#~ msgstr ""
+msgid "cscope connection %s closed\n"
+msgstr "cscope 연결 %s가 닫혔습니다\n"
 
 #. should not reach here
-#: if_cscope.c:1284
-#~ msgid "fatal error in cs_manage_matches"
-#~ msgstr ""
-
-#: if_cscope.c:1423
-#~ msgid "couldn't malloc\n"
-#~ msgstr ""
+#: if_cscope.c:1289
+msgid "fatal error in cs_manage_matches"
+msgstr "cs_manage_matches에 심각한 에러"
 
 #: if_cscope.c:1428
+msgid "couldn't malloc\n"
+msgstr "메모리를 할당할 수 없습니다\n"
+
+#: if_cscope.c:1433
 #, c-format
-#~ msgid "Cscope tag: %s\n"
-#~ msgstr ""
+msgid "Cscope tag: %s\n"
+msgstr "Cscope 태그: %s\n"
 
-#: if_cscope.c:1432
-#~ msgid "   #   line"
-#~ msgstr ""
+#: if_cscope.c:1437
+msgid "   #   line"
+msgstr "   #   라인"
 
-#: if_cscope.c:1434
-#~ msgid "filename / context / line\n"
-#~ msgstr ""
+#: if_cscope.c:1439
+msgid "filename / context / line\n"
+msgstr "파일명 / 콘텍스트 / 라인\n"
 
-#: if_cscope.c:1685
-#~ msgid "All cscope databases reset"
-#~ msgstr ""
+#: if_cscope.c:1697
+msgid "All cscope databases reset"
+msgstr ""
 
-#: if_cscope.c:1752
-#~ msgid "no cscope connections\n"
-#~ msgstr ""
+#: if_cscope.c:1764
+msgid "no cscope connections\n"
+msgstr "cscope 연결이 없습니다\n"
 
-#: if_cscope.c:1756
-#~ msgid " # pid    database name                       prepend path\n"
-#~ msgstr ""
+#: if_cscope.c:1768
+msgid " # pid    database name                       prepend path\n"
+msgstr " # pid    데이타베이스 이름                   prepend path\n"
 
-#: if_cscope.c:1767
+#: if_cscope.c:1779
 #, c-format
-#~ msgid "%2d %-5ld  %-34s  <none>\n"
-#~ msgstr ""
+msgid "%2d %-5ld  %-34s  <none>\n"
+msgstr "%2d %-5ld  %-34s  <없음>\n"
 
 #: if_python.c:559
-#~ msgid "can't delete OutputObject attributes"
-#~ msgstr ""
+msgid "can't delete OutputObject attributes"
+msgstr "OutputObject 속성을 삭제할 수 없습니다"
 
 #: if_python.c:566
-#~ msgid "softspace must be an integer"
-#~ msgstr ""
+msgid "softspace must be an integer"
+msgstr "softspace는 정수여야만 합니다"
 
 #: if_python.c:574
-#~ msgid "invalid attribute"
-#~ msgstr ""
+msgid "invalid attribute"
+msgstr "잘못된 속성"
 
 #: if_python.c:613 if_python.c:627
-#~ msgid "writelines() requires list of strings"
-#~ msgstr ""
+msgid "writelines() requires list of strings"
+msgstr "writelines()은 문자열 목록이 필요합니다"
 
-#: globals.h:920 if_python.c:672
+#: globals.h:974 if_python.c:672
 msgid "Out of memory!"
 msgstr "메모리가 바닥났습니다!"
 
@@ -1981,30 +2061,30 @@ msgstr "메모리가 바닥났습니다!"
 msgid "Python: Error initialising I/O objects"
 msgstr "파이손: I/O 객체 초기화중 에러가 발생했습니다"
 
-#: if_python.c:942 if_tcl.c:1264
+#: if_python.c:942 if_tcl.c:1265
 msgid "invalid expression"
 msgstr "잘못된 표현식"
 
-#: if_python.c:956 if_tcl.c:1269
-#~ msgid "expressions disabled at compile time"
-#~ msgstr ""
+#: if_python.c:956 if_tcl.c:1270
+msgid "expressions disabled at compile time"
+msgstr ""
 
 #: if_python.c:969
 msgid "attempt to refer to deleted buffer"
 msgstr "삭제된 버퍼를 참조하려고 하였습니다"
 
-#: if_python.c:984 if_python.c:1025 if_python.c:1089 if_tcl.c:1078
+#: if_python.c:984 if_python.c:1025 if_python.c:1089 if_tcl.c:1079
 msgid "line number out of range"
 msgstr "라인 번호가 범위를 벗어났습니다"
 
 #: if_python.c:1222
 #, c-format
-#~ msgid "<buffer object (deleted) at %8lX>"
-#~ msgstr ""
+msgid "<buffer object (deleted) at %8lX>"
+msgstr ""
 
-#: if_python.c:1313 if_tcl.c:700
-#~ msgid "invalid mark name"
-#~ msgstr ""
+#: if_python.c:1313 if_tcl.c:701
+msgid "invalid mark name"
+msgstr "잘못된 마크 이름"
 
 #: if_python.c:1588
 msgid "no such buffer"
@@ -2024,13 +2104,13 @@ msgstr "퍼서 위치가 버퍼 밖에 있습니다"
 
 #: if_python.c:1811
 #, c-format
-#~ msgid "<window object (deleted) at %.8lX>"
-#~ msgstr ""
+msgid "<window object (deleted) at %.8lX>"
+msgstr ""
 
 #: if_python.c:1823
 #, c-format
-#~ msgid "<window object (unknown) at %.8lX>"
-#~ msgstr ""
+msgid "<window object (unknown) at %.8lX>"
+msgstr ""
 
 #: if_python.c:1825
 #, c-format
@@ -2041,246 +2121,246 @@ msgstr "<창 %d>"
 msgid "no such window"
 msgstr "그런 창은 없습니다"
 
-#: if_python.c:2129 if_python.c:2160 if_python.c:2210 if_python.c:2270
-#: if_python.c:2387 if_python.c:2439 if_tcl.c:548 if_tcl.c:593 if_tcl.c:667
-#: if_tcl.c:737 if_tcl.c:1845
-#~ msgid "cannot save undo information"
-#~ msgstr ""
+#: if_python.c:2131 if_python.c:2162 if_python.c:2212 if_python.c:2272
+#: if_python.c:2389 if_python.c:2441 if_tcl.c:549 if_tcl.c:594 if_tcl.c:668
+#: if_tcl.c:738 if_tcl.c:1846
+msgid "cannot save undo information"
+msgstr "undo 정보를 저장할 수 없습니다"
 
-#: if_python.c:2131 if_python.c:2217 if_python.c:2281
-#~ msgid "cannot delete line"
-#~ msgstr ""
+#: if_python.c:2133 if_python.c:2219 if_python.c:2283
+msgid "cannot delete line"
+msgstr "라인을 삭제할 수 없습니다"
 
-#: if_python.c:2162 if_python.c:2297 if_tcl.c:554 if_tcl.c:1867
-#~ msgid "cannot replace line"
-#~ msgstr ""
+#: if_python.c:2164 if_python.c:2299 if_tcl.c:555 if_tcl.c:1868
+msgid "cannot replace line"
+msgstr "라인을 치환할 수 없습니다"
 
-#: if_python.c:2313 if_python.c:2389 if_python.c:2447
-#~ msgid "cannot insert line"
-#~ msgstr ""
+#: if_python.c:2315 if_python.c:2391 if_python.c:2449
+msgid "cannot insert line"
+msgstr "라인을 삽입할 수 없습니다"
 
-#: if_python.c:2551
-#~ msgid "string cannot contain newlines"
-#~ msgstr ""
-
-#: if_sniff.c:57
-#~ msgid "Toggle implementation/definition"
-#~ msgstr ""
-
-#: if_sniff.c:58
-#~ msgid "Show base class of"
-#~ msgstr ""
-
-#: if_sniff.c:59
-#~ msgid "Show overridden member function"
-#~ msgstr ""
+#: if_python.c:2553
+msgid "string cannot contain newlines"
+msgstr "문자열은 newline을 포함할 수 없습니다"
 
 #: if_sniff.c:60
-#~ msgid "Retrieve from file"
-#~ msgstr ""
+msgid "Toggle implementation/definition"
+msgstr ""
 
 #: if_sniff.c:61
-#~ msgid "Retrieve from project"
-#~ msgstr ""
+msgid "Show base class of"
+msgstr ""
+
+#: if_sniff.c:62
+msgid "Show overridden member function"
+msgstr ""
 
 #: if_sniff.c:63
-#~ msgid "Retrieve from all projects"
-#~ msgstr ""
+msgid "Retrieve from file"
+msgstr ""
 
 #: if_sniff.c:64
-#~ msgid "Retrieve next symbol"
-#~ msgstr ""
-
-#: if_sniff.c:65
-#~ msgid "Show source of"
-#~ msgstr ""
+msgid "Retrieve from project"
+msgstr ""
 
 #: if_sniff.c:66
-#~ msgid "Find symbol"
-#~ msgstr ""
+msgid "Retrieve from all projects"
+msgstr ""
 
 #: if_sniff.c:67
-#~ msgid "Browse class"
-#~ msgstr ""
+msgid "Retrieve next symbol"
+msgstr ""
 
 #: if_sniff.c:68
-#~ msgid "Show class in hierarchy"
-#~ msgstr ""
+msgid "Show source of"
+msgstr ""
 
 #: if_sniff.c:69
-#~ msgid "Show class in restricted hierarchy"
-#~ msgstr ""
+msgid "Find symbol"
+msgstr ""
 
 #: if_sniff.c:70
-#~ msgid "Xref refers to"
-#~ msgstr ""
+msgid "Browse class"
+msgstr ""
 
 #: if_sniff.c:71
-#~ msgid "Xref referred by"
-#~ msgstr ""
+msgid "Show class in hierarchy"
+msgstr ""
 
 #: if_sniff.c:72
-#~ msgid "Xref has a"
-#~ msgstr ""
+msgid "Show class in restricted hierarchy"
+msgstr ""
 
 #: if_sniff.c:73
-#~ msgid "Xref used by"
-#~ msgstr ""
+msgid "Xref refers to"
+msgstr ""
 
 #: if_sniff.c:74
-#~ msgid "Show docu of"
-#~ msgstr ""
+msgid "Xref referred by"
+msgstr ""
 
 #: if_sniff.c:75
-#~ msgid "Generate docu for"
-#~ msgstr ""
+msgid "Xref has a"
+msgstr ""
 
-#: if_sniff.c:86
-#~ msgid ""
-#~ "Cannot connect to SNiFF+. Check environment (sniffemacs must be found in "
-#~ "$PATH).\n"
-#~ msgstr ""
+#: if_sniff.c:76
+msgid "Xref used by"
+msgstr ""
 
-#: if_sniff.c:404
-#~ msgid "Sniff: Error during read. Disconnected"
-#~ msgstr ""
+#: if_sniff.c:77
+msgid "Show docu of"
+msgstr ""
 
-#: if_sniff.c:442
-#~ msgid "-- SNiFF+ commands --"
-#~ msgstr ""
+#: if_sniff.c:78
+msgid "Generate docu for"
+msgstr ""
 
-#: if_sniff.c:471
-#~ msgid "SNiFF+ is currently "
-#~ msgstr ""
+#: if_sniff.c:89
+msgid ""
+"Cannot connect to SNiFF+. Check environment (sniffemacs must be found in "
+"$PATH).\n"
+msgstr ""
 
-#: if_sniff.c:473
-#~ msgid "not "
-#~ msgstr ""
+#: if_sniff.c:425
+msgid "Sniff: Error during read. Disconnected"
+msgstr ""
 
-#: if_sniff.c:474
-#~ msgid "connected"
-#~ msgstr ""
+#: if_sniff.c:459
+msgid "-- SNiFF+ commands --"
+msgstr ""
 
-#: if_sniff.c:484
+#: if_sniff.c:488
+msgid "SNiFF+ is currently "
+msgstr ""
+
+#: if_sniff.c:490
+msgid "not "
+msgstr ""
+
+#: if_sniff.c:491
+msgid "connected"
+msgstr ""
+
+#: if_sniff.c:498
 #, c-format
-#~ msgid "Unknown SNiFF+ request: %s"
-#~ msgstr ""
+msgid "Unknown SNiFF+ request: %s"
+msgstr ""
 
-#: if_sniff.c:496
-#~ msgid "Error connecting to SNiFF+"
-#~ msgstr ""
+#: if_sniff.c:509
+msgid "Error connecting to SNiFF+"
+msgstr ""
 
-#: if_sniff.c:775
+#: if_sniff.c:788
 #, c-format
-#~ msgid "Unrecognized sniff request [%s]"
-#~ msgstr ""
+msgid "Unrecognized sniff request [%s]"
+msgstr ""
 
-#: if_sniff.c:859
-#~ msgid "SNiFF+ not connected"
-#~ msgstr ""
+#: if_sniff.c:874
+msgid "SNiFF+ not connected"
+msgstr ""
 
-#: if_sniff.c:868
-#~ msgid "Not a SNiFF+ buffer"
-#~ msgstr ""
+#: if_sniff.c:883
+msgid "Not a SNiFF+ buffer"
+msgstr ""
 
-#: if_sniff.c:926
-#~ msgid "Sniff: Error during write. Disconnected"
-#~ msgstr ""
+#: if_sniff.c:942
+msgid "Sniff: Error during write. Disconnected"
+msgstr ""
 
-#: if_tcl.c:282
-#~ msgid "invalid buffer number"
-#~ msgstr ""
+#: if_tcl.c:283
+msgid "invalid buffer number"
+msgstr ""
 
-#: if_tcl.c:328 if_tcl.c:795 if_tcl.c:974
-#~ msgid "not implemented yet"
-#~ msgstr ""
+#: if_tcl.c:329 if_tcl.c:796 if_tcl.c:975
+msgid "not implemented yet"
+msgstr ""
 
-#: if_tcl.c:365
-#~ msgid "unknown option"
-#~ msgstr ""
+#: if_tcl.c:366
+msgid "unknown option"
+msgstr ""
 
 #. ???
-#: if_tcl.c:638
-#~ msgid "cannot set line(s)"
-#~ msgstr ""
+#: if_tcl.c:639
+msgid "cannot set line(s)"
+msgstr ""
 
-#: if_tcl.c:709
-#~ msgid "mark not set"
-#~ msgstr ""
+#: if_tcl.c:710
+msgid "mark not set"
+msgstr ""
 
-#: if_tcl.c:715 if_tcl.c:930
+#: if_tcl.c:716 if_tcl.c:931
 #, c-format
-#~ msgid "row %d column %d"
-#~ msgstr ""
+msgid "row %d column %d"
+msgstr ""
 
-#: if_tcl.c:745
-#~ msgid "cannot insert/append line"
-#~ msgstr ""
+#: if_tcl.c:746
+msgid "cannot insert/append line"
+msgstr ""
 
-#: if_tcl.c:1130
-#~ msgid "unknown flag: "
-#~ msgstr ""
+#: if_tcl.c:1131
+msgid "unknown flag: "
+msgstr ""
 
-#: if_tcl.c:1200
-#~ msgid "unknown vimOption"
-#~ msgstr ""
+#: if_tcl.c:1201
+msgid "unknown vimOption"
+msgstr ""
 
-#: if_tcl.c:1285
-#~ msgid "keyboard interrupt"
-#~ msgstr ""
+#: if_tcl.c:1286
+msgid "keyboard interrupt"
+msgstr ""
 
-#: if_tcl.c:1290
-#~ msgid "vim error"
-#~ msgstr ""
+#: if_tcl.c:1291
+msgid "vim error"
+msgstr ""
 
-#: if_tcl.c:1333
-#~ msgid "cannot create buffer/window command: object is being deleted"
-#~ msgstr ""
+#: if_tcl.c:1334
+msgid "cannot create buffer/window command: object is being deleted"
+msgstr ""
 
-#: if_tcl.c:1407
-#~ msgid ""
-#~ "cannot register callback command: buffer/window is already being deleted"
-#~ msgstr ""
+#: if_tcl.c:1408
+msgid ""
+"cannot register callback command: buffer/window is already being deleted"
+msgstr ""
 
 #. This should never happen.  Famous last word?
-#: if_tcl.c:1424
-#~ msgid ""
-#~ "TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"
-#~ msgstr ""
-
 #: if_tcl.c:1425
-#~ msgid "cannot register callback command: buffer/window reference not found"
-#~ msgstr ""
+msgid ""
+"TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"
+msgstr ""
 
-#: if_tcl.c:1740
-#~ msgid "TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"
-#~ msgstr ""
+#: if_tcl.c:1426
+msgid "cannot register callback command: buffer/window reference not found"
+msgstr ""
 
-#: if_tcl.c:1853
-#~ msgid "cannot get line"
-#~ msgstr ""
+#: if_tcl.c:1741
+msgid "TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"
+msgstr ""
 
-#: main.c:50 option.c:2752 option.c:2867
+#: if_tcl.c:1854
+msgid "cannot get line"
+msgstr ""
+
+#: main.c:51 option.c:2920 option.c:3027
 msgid "Unknown option"
 msgstr "모르는 옵션"
 
-#: main.c:51
+#: main.c:52
 msgid "Too many edit arguments"
 msgstr "너무 많은 편집 인자"
 
-#: main.c:52
+#: main.c:53
 msgid "Argument missing after"
 msgstr "뒤에 인자가 없음"
 
-#: main.c:53
+#: main.c:54
 msgid "Garbage after option"
 msgstr "옵션 뒤에 쓰레기값"
 
-#: main.c:54
+#: main.c:55
 msgid "Too many \"+command\" or \"-c command\" arguments"
 msgstr "너무 많은 \"+command\" 혹은 \"-c command\" 인자"
 
-#: main.c:70
+#: main.c:71
 msgid ""
 "\n"
 "More info with: \"vim -h\"\n"
@@ -2288,35 +2368,37 @@ msgstr ""
 "\n"
 "더 많은 정보를 원하시면: \"vim -h\"\n"
 
-#: main.c:93
+#: main.c:94
 msgid "[file ..]       edit specified file(s)"
 msgstr "[파일 ..]       주어진 파일 편집"
 
-#: main.c:94
+#: main.c:95
 msgid "-               read text from stdin"
 msgstr "-               표준입력에서 텍스트 읽기"
 
-#: main.c:95
+#: main.c:96
 msgid "-t tag          edit file where tag is defined"
 msgstr "-t tag          태그가 정의된 위치에서 파일 편집"
 
-#: main.c:97
+#: main.c:98
 msgid "-q [errorfile]  edit file with first error"
 msgstr "-q [에러파일]   첫번째 에러가 난 파일 편집"
 
-#: main.c:106
+#: main.c:107
 msgid ""
+"\n"
 "\n"
 "usage:"
 msgstr ""
 "\n"
+"\n"
 "사용법:"
 
-#: main.c:109
-msgid " vim [options] "
-msgstr " vim [옵션] "
+#: main.c:110
+msgid " vim [arguments] "
+msgstr " vim [인자] "
 
-#: main.c:113
+#: main.c:114
 msgid ""
 "\n"
 "   or:"
@@ -2324,406 +2406,480 @@ msgstr ""
 "\n"
 "   혹은:"
 
-#: main.c:116
+#: main.c:117
 msgid ""
 "\n"
 "\n"
-"Options:\n"
+"Arguments:\n"
 msgstr ""
 "\n"
 "\n"
-"옵션:\n"
+"인자:\n"
 
-#: main.c:117
-msgid "--\t\t\tEnd of options"
-msgstr "--\t\t\t옵션의 끝"
+#: main.c:118
+msgid "--\t\t\tOnly file names after this"
+msgstr "--\t\t\t이 후에는 파일 이름만"
 
-#: main.c:119
+#: main.c:120
 msgid "-register\t\tRegister this gvim for OLE"
 msgstr "-register\t\t이 gvim OLE에 등록"
 
-#: main.c:120
+#: main.c:121
 msgid "-unregister\t\tUnregister gvim for OLE"
 msgstr "-unregister\t\tgvim을 OLE에서 등록취소"
 
-#: main.c:123
+#: main.c:124
 msgid "-g\t\t\tRun using GUI (like \"gvim\")"
 msgstr "-g\t\t\tGUI로 실행 (\"gvim\"과 같음)"
 
-#: main.c:124
+#: main.c:125
 msgid "-f\t\t\tForeground: Don't fork when starting GUI"
 msgstr "-f\t\t\t포그라운드: GUI로 시작시에 포크하지 말 것"
 
-#: main.c:126
+#: main.c:127
 msgid "-v\t\t\tVi mode (like \"vi\")"
 msgstr "-v\t\t\tVi 모드 (\"vi\"와 같음)"
 
-#: main.c:127
+#: main.c:128
 msgid "-e\t\t\tEx mode (like \"ex\")"
 msgstr "-e\t\t\tEx 모드 (\"ex\"와 같음)"
 
-#: main.c:128
+#: main.c:129
 msgid "-s\t\t\tSilent (batch) mode (only for \"ex\")"
 msgstr "-s\t\t\t조용한 (배치) 모드 (\"ex\"만)"
 
-#: main.c:129
+#: main.c:130
 msgid "-R\t\t\tReadonly mode (like \"view\")"
 msgstr "-R\t\t\t읽기전용 모드 (\"view\"와 같음)"
 
-#: main.c:130
+#: main.c:131
 msgid "-Z\t\t\tRestricted mode (like \"rvim\")"
 msgstr "-Z\t\t\t제한된 모드 (\"rvim\"과 같음)"
 
-#: main.c:131
+#: main.c:132
 msgid "-m\t\t\tModifications (writing files) not allowed"
 msgstr "-m\t\t\t수정(파일 쓰기)이 허용되지 않음"
 
-#: main.c:132
+#: main.c:133
 msgid "-b\t\t\tBinary mode"
 msgstr "-b\t\t\t이진 모드"
 
-#: main.c:134
+#: main.c:135
 msgid "-l\t\t\tLisp mode"
 msgstr "-l\t\t\t리스프 모드"
 
-#: main.c:136
+#: main.c:137
 msgid "-C\t\t\tCompatible with Vi: 'compatible'"
 msgstr "-C\t\t\tVi 호환: 'compatible'"
 
-#: main.c:137
+#: main.c:138
 msgid "-N\t\t\tNot fully Vi compatible: 'nocompatible'"
 msgstr "-N\t\t\tVi와 호환되지 않음: 'nocompatible'"
 
-#: main.c:138
+#: main.c:139
 msgid "-V[N]\t\tVerbose level"
 msgstr "-V[N]\t\tVerbose 레벨"
 
-#: main.c:139
+#: main.c:140
+msgid "-D\t\t\tDebugging mode"
+msgstr "-D\t\t\t디버깅 모드"
+
+#: main.c:141
 msgid "-n\t\t\tNo swap file, use memory only"
 msgstr "-n\t\t\t스왑 파일 없이 메모리만 사용"
 
-#: main.c:140
+#: main.c:142
 msgid "-r\t\t\tList swap files and exit"
 msgstr "-r\t\t\t스왑 파일 목록 표시후 종료"
 
-#: main.c:141
+#: main.c:143
 msgid "-r (with file name)\tRecover crashed session"
 msgstr "-r (파일명과 함께)\t파손되었던 세션 복구"
 
-#: main.c:142
+#: main.c:144
 msgid "-L\t\t\tSame as -r"
 msgstr "-L\t\t\t-r과 같음"
 
-#: main.c:144
+#: main.c:146
 msgid "-f\t\t\tDon't use newcli to open window"
 msgstr "-f\t\t\t창을 열 때 newcli 사용하지 않음"
 
-#: main.c:145
+#: main.c:147
 msgid "-d <device>\t\tUse <device> for I/O"
 msgstr "-d <장치>\t\tI/O에 <장치> 사용"
 
-#: main.c:148
+#: main.c:150
 msgid "-H\t\t\tstart in Hebrew mode"
 msgstr "-H\t\t\tHebrew 모드로 시작"
 
-#: main.c:151
+#: main.c:153
 msgid "-F\t\t\tstart in Farsi mode"
 msgstr "-F\t\t\tFarsi 모드로 시작"
 
-#: main.c:153
+#: main.c:155
 msgid "-T <terminal>\tSet terminal type to <terminal>"
 msgstr "-T <terminal>\t터미널 종류를 <terminal>로 설정"
 
-#: main.c:154
-msgid "-o[N]\t\tOpen N windows (default: one for each file)"
-msgstr "-o[N]\t\tN개의 창 열기 (기본: 파일별로 하나)"
-
-#: main.c:155
-msgid "+\t\t\tStart at end of file"
-msgstr "+\t\t\t파일 마지막에서 시작"
-
 #: main.c:156
-msgid "+<lnum>\t\tStart at line <lnum>"
-msgstr "+<lnum>\t\t라인 <lnum>에서 시작"
-
-#: main.c:157
-msgid "-c <command>\t\tExecute <command> first"
-msgstr "-c <명령>\t\t먼저 <명령>을 실행"
-
-#: main.c:158
-msgid "-s <scriptin>\tRead commands from script file <scriptin>"
-msgstr "-s <scriptin>\t스크립트 파일 <scriptin>에서 명령 읽기"
-
-#: main.c:159
-msgid "-w <scriptout>\tAppend commands to script file <scriptout>"
-msgstr "-w <scriptout>\t명령을 스크립트 파일 <scriptout>에 추가"
-
-#: main.c:160
-msgid "-W <scriptout>\tWrite commands to script file <scriptout>"
-msgstr "-W <scriptout>\t명령을 스크립트 파일 <scriptout>에 저장"
-
-#: main.c:161
 msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
 msgstr "-u <vimrc>\t\t.vimrc 대신 <vimrc>를 사용"
 
-#: main.c:163
+#: main.c:158
 msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
 msgstr "-U <gvimrc>\t\t.gvimrc 대신 <gvimrc>를 사용"
 
+#: main.c:160
+msgid "--noplugin\t\tDon't load plugin scripts"
+msgstr "--noplugin\t\t플러그인 스크립트를 불러들이지 않음"
+
+#: main.c:161
+msgid "-o[N]\t\tOpen N windows (default: one for each file)"
+msgstr "-o[N]\t\tN개의 창 열기 (기본: 파일별로 하나)"
+
+#: main.c:162
+msgid "+\t\t\tStart at end of file"
+msgstr "+\t\t\t파일 마지막에서 시작"
+
+#: main.c:163
+msgid "+<lnum>\t\tStart at line <lnum>"
+msgstr "+<lnum>\t\t라인 <lnum>에서 시작"
+
+#: main.c:164
+msgid "-c <command>\t\tExecute <command> after loading the first file"
+msgstr "-c <명령>\t\t첫째 파일을 읽은 후 <명령>을 실행"
+
+#: main.c:165
+msgid ""
+"-S <session>\tExecute commands in file <session> after loading the first file"
+msgstr "-S <세션>\t첫째 파일을 읽은 후 <세션> 파일에서 명령 실행"
+
 #: main.c:166
+msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
+msgstr "-s <scriptin>\t<scriptin> 파일에서 Normal 모드 명령 읽기"
+
+#: main.c:167
+msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
+msgstr "-w <scriptout>\t모든 입력된 명령을 <scriptout> 파일에 추가"
+
+#: main.c:168
+msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
+msgstr "-W <scriptout>\t모든 입력된 명령을 <scriptout> 파일에 저장"
+
+#: main.c:170
 msgid "-x\t\t\tEdit encrypted files"
 msgstr "-x\t\t\t암호화된 파일 편집"
 
-#: main.c:169
+#: main.c:173
 msgid "-X\t\t\tDo not connect to X server"
 msgstr "-X\t\t\tX 서버에 연결하지 않음"
 
-#: main.c:172
+#: main.c:176
 msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
 msgstr "-i <viminfo>\t\t.viminfo 대신 <viminfo>를 사용"
 
-#: main.c:174
+#: main.c:178
 msgid "-h\t\t\tprint Help (this message) and exit"
 msgstr "-h\t\t\t도움말 (이 메시지) 출력후 종료"
 
-#: main.c:175
+#: main.c:179
 msgid "--version\t\tprint version information and exit"
 msgstr "--version\t\t버전 정보 출력후 종료"
 
-#: main.c:179
+#: main.c:183
 msgid ""
 "\n"
-"Options recognised by gvim (Motif version):\n"
+"Arguments recognised by gvim (Motif version):\n"
 msgstr ""
 "\n"
-"gvim (모티프 버전)을 위한 옵션:\n"
+"gvim이 알고 있는 인자 (모티프 버전):\n"
 
-#: main.c:182
+#: main.c:186
 msgid ""
 "\n"
-"Options recognised by gvim (Athena version):\n"
+"Arguments recognised by gvim (Athena version):\n"
 msgstr ""
 "\n"
-"gvim (아테네 버전)을 위한 옵션:\n"
+"gvim이 알고 있는 인자 (아테나 버전):\n"
 
-#: main.c:185
+#: main.c:189
 msgid "-display <display>\tRun vim on <display>"
 msgstr "-display <display>\t빔을 <display>에서 실행"
 
-#: main.c:186
+#: main.c:190
 msgid "-iconic\t\tStart vim iconified"
 msgstr "-iconic\t\t아이콘 상태로 빔 시작"
 
-#: main.c:188
+#: main.c:192
 msgid "-name <name>\t\tUse resource as if vim was <name>"
 msgstr "-name <name>\t\t빔이 <name>인 것처럼 리소스 사용"
 
-#: main.c:189
+#: main.c:193
 msgid "\t\t\t  (Unimplemented)\n"
 msgstr "\t\t\t  (구현되지 않음)\n"
 
-#: main.c:191
+#: main.c:195
 msgid "-background <color>\tUse <color> for the background (also: -bg)"
 msgstr "-background <color>\t배경색으로 <color> 사용 (also: -bg)"
 
-#: main.c:192
+#: main.c:196
 msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
 msgstr "-foreground <color>\t일반 색에 <color> 사용 (also: -fg)"
 
-#: main.c:193 main.c:211
+#: main.c:197 main.c:215
 msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
 msgstr "-font <font>\t\t일반 텍스트에 <font> 사용 (also: -fn)"
 
-#: main.c:194
+#: main.c:198
 msgid "-boldfont <font>\tUse <font> for bold text"
 msgstr "-boldfont <font>\t굵은 텍스트에 <font> 사용"
 
-#: main.c:195
+#: main.c:199
 msgid "-italicfont <font>\tUse <font> for italic text"
 msgstr "-italicfont <font>\t기울임 텍스트에 <font> 사용"
 
-#: main.c:196 main.c:212
+#: main.c:200 main.c:216
 msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
 msgstr "-geometry <geom>\t초기 지오미트리에 <geom> 사용 (also: -geom)"
 
-#: main.c:197
+#: main.c:201
 msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr "-borderwidth <width>\t가장자리 넓이에 <width> 사용 (also: -bw)"
 
-#: main.c:198
+#: main.c:202
 msgid "-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"
 msgstr "-scrollbarwidth <width>\t스크롤바 넓이에 <width> 사용 (also: -sw)"
 
-#: main.c:199
+#: main.c:203
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
 msgstr "-menuheight <height>\t메뉴 바 높이에 <height> 사용 (also: -mh)"
 
-#: main.c:200 main.c:213
+#: main.c:204 main.c:217
 msgid "-reverse\t\tUse reverse video (also: -rv)"
 msgstr "-reverse\t\t반전 비디오 사용 (also: -rv)"
 
-#: main.c:201
+#: main.c:205
 msgid "+reverse\t\tDon't use reverse video (also: +rv)"
 msgstr "+reverse\t\t반전 비디오 사용 않함 (also: +rv)"
 
-#: main.c:202
+#: main.c:206
 msgid "-xrm <resource>\tSet the specified resource"
 msgstr "-xrm <resource>\t명시된 리소스 설정"
 
-#: main.c:205
+#: main.c:209
 msgid ""
 "\n"
-"Options recognised by gvim (RISC OS version):\n"
+"Arguments recognised by gvim (RISC OS version):\n"
 msgstr ""
 "\n"
-"gvim이 인식하는 옵션 (RISC OS 버전):\n"
-
-#: main.c:206
-#~ msgid "--columns <number>\tInitial width of window in columns"
-#~ msgstr ""
-
-#: main.c:207
-#~ msgid "--rows <number>\tInitial height of window in rows"
-#~ msgstr ""
+"gvim이 알고있는 인자 (RISC OS 버전):\n"
 
 #: main.c:210
-msgid ""
-"\n"
-"Options recognised by gvim (GTK+ version):\n"
-msgstr ""
-"\n"
-"gvim (GTK+ 버전)을 위한 옵션:\n"
+msgid "--columns <number>\tInitial width of window in columns"
+msgstr "--columns <숫자>\t컬럼에서의 창의 초기 너비"
+
+#: main.c:211
+msgid "--rows <number>\tInitial height of window in rows"
+msgstr "--rows <숫자>\t행에서의 창의 초기 높이"
 
 #: main.c:214
+msgid ""
+"\n"
+"Arguments recognised by gvim (GTK+ version):\n"
+msgstr ""
+"\n"
+"gvim이 알고있는 인자 (GTK+ 버전):\n"
+
+#: main.c:218
 msgid "-display <display>\tRun vim on <display> (also: --display)"
 msgstr "-display <display>\t빔을 <display>에서 실행 (also: --display)"
 
-#: main.c:216
+#: main.c:220
 msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\t그놈 인자 보여줌"
 
-#: main.c:762 main.c:812
+#: main.c:799
 msgid "Attempt to open script file again: \""
 msgstr "스크립트 파일을 다시 열려고 시도: \""
 
-#: main.c:771
-msgid "Cannot open for reading: \""
-msgstr "읽기 위해 열 수 없음: \""
-
-#: main.c:822
-msgid "Cannot open for script output: \""
-msgstr "스크립트 출력을 열 수 없음: \""
-
-#: main.c:824
+#: main.c:803 main.c:810 main.c:854 memline.c:3609 memline.c:3613
+#: version.c:720 version.c:725 version.c:730 version.c:735 version.c:740
+#: version.c:745 version.c:751 version.c:755 version.c:759 version.c:764
+#: version.c:771 version.c:779 version.c:785
 msgid "\"\n"
 msgstr "\"\n"
 
-#: main.c:910
+#: main.c:808
+msgid "Cannot open for reading: \""
+msgstr "읽기 위해 열 수 없음: \""
+
+#: main.c:852
+msgid "Cannot open for script output: \""
+msgstr "스크립트 출력을 열 수 없음: \""
+
+#: main.c:929
 #, c-format
 msgid "%d files to edit\n"
 msgstr "%d 파일을 편집\n"
 
-#: main.c:968
+#: main.c:987
 msgid "Vim: Warning: Output is not to a terminal\n"
 msgstr "빔: 경고: 터미널로 출력할 수 없습니다\n"
 
-#: main.c:970
+#: main.c:989
 msgid "Vim: Warning: Input is not from a terminal\n"
 msgstr "빔: 경고: 터미널로 부터 입력받을 수 없습니다\n"
 
-#: mark.c:695
-#~ msgid "No marks set"
-#~ msgstr ""
+#: mark.c:701
+msgid "No marks set"
+msgstr "설정된 마크가 없습니다"
 
-#: mark.c:697
+#: mark.c:703
 #, c-format
-#~ msgid "No marks matching \"%s\""
-#~ msgstr ""
+msgid "No marks matching \"%s\""
+msgstr "\"%s\"에 맞는 마크가 없습니다"
 
 #. Highlight title
-#: mark.c:708
-#~ msgid ""
-#~ "\n"
-#~ "mark line  col file/text"
-#~ msgstr ""
+#: mark.c:714
+msgid ""
+"\n"
+"mark line  col file/text"
+msgstr ""
+"\n"
+"마크 라인  col 파일/텍스트"
 
 #. Highlight title
-#: mark.c:745
-#~ msgid ""
-#~ "\n"
-#~ " jump line  col file/text"
-#~ msgstr ""
+#: mark.c:751
+msgid ""
+"\n"
+" jump line  col file/text"
+msgstr ""
 
-#: mark.c:1065
-#~ msgid ""
-#~ "\n"
-#~ "# File marks:\n"
-#~ msgstr ""
+#: mark.c:1077
+msgid ""
+"\n"
+"# File marks:\n"
+msgstr ""
+"\n"
+"# 파일 마크:\n"
 
 #. Write the jumplist with -'
-#: mark.c:1102
-#~ msgid ""
-#~ "\n"
-#~ "# Jumplist (newest first):\n"
-#~ msgstr ""
+#: mark.c:1111
+msgid ""
+"\n"
+"# Jumplist (newest first):\n"
+msgstr ""
 
-#: mark.c:1194
-#~ msgid ""
-#~ "\n"
-#~ "# History of marks within files (newest to oldest):\n"
-#~ msgstr ""
+#: mark.c:1205
+msgid ""
+"\n"
+"# History of marks within files (newest to oldest):\n"
+msgstr ""
+"\n"
+"# 파일내의 마크 히스토리 (새것부터 오래된 순):\n"
 
-#: mark.c:1270
+#: mark.c:1288
 msgid "Missing '>'"
 msgstr "'>'이 없습니다"
 
+#: mbyte.c:394
+msgid "Not a valid codepage"
+msgstr "정상적인 코드페이지가 아닙니다"
+
+#: mbyte.c:2333
+msgid "Cannot set IC values"
+msgstr "IC 값을 설정할 수 없습니다"
+
+#: mbyte.c:2624
+msgid "Failed to open input method"
+msgstr "입력 방식을 여는 데 실패했습니다"
+
+#: mbyte.c:2635
+msgid "Warning: Could not set destroy callback to IM"
+msgstr "경고: IM에 파괴 콜백을 설정할 수 없습니다"
+
+#: mbyte.c:2641
+msgid "input method doesn't support any style"
+msgstr "입력 방식에 어떤 형식도 지원하지 않습니다"
+
+#: mbyte.c:2695
+msgid "input method doesn't support my preedit type"
+msgstr "입력 방식이 내 preedit 형식을 지원하지 않습니다"
+
+#: mbyte.c:2743
+msgid "Failed to create input context"
+msgstr "입력 콘텍스트를 생성할 수 없습니다"
+
+#: mbyte.c:2779
+msgid "Your GTK+ is older than 1.2.3. Status area disabled"
+msgstr "GTK+가 1.2.3 이전 버전입니다. 상태 영역을 사용할 수 없습니다"
+
+#: mbyte.c:3001
+msgid "Input Method Server is not running"
+msgstr "입력 서버가 실행되지 않고 있습니다"
+
+#: mbyte.c:3036 mbyte.c:3059
+msgid "over-the-spot style requires fontset"
+msgstr "over-the-spot 형식은 fontset이 사용되어야 합니다"
+
+#: mbyte.c:3082
+msgid "Can't create input context."
+msgstr "입력 콘텍스트를 생성할 수 없습니다."
+
+#: mbyte.c:3335
+msgid "Keymap file not found"
+msgstr "키맵 파일을 찾을 수 없습니다"
+
+#: mbyte.c:3361
+msgid "Using :loadkeymap not in a sourced file"
+msgstr "불러들인 파일에서 :loadkeymap을 사용하지 않았습니다"
+
 #. close the file
-#: memfile.c:239 memfile.c:289
+#: memfile.c:240 memfile.c:290
 msgid "Close error on swap file"
 msgstr "스왑 파일을 닫을 수 없습니다"
 
-#: memfile.c:472
-#~ msgid "block was not locked"
-#~ msgstr ""
+#: memfile.c:473
+msgid "block was not locked"
+msgstr "블럭이 잠궈지지 않았습니다"
 
-#: memfile.c:957
+#: memfile.c:958
 msgid "Seek error in swap file read"
 msgstr "스왑 파일을 읽기 위해 특정 위치로 갈 수 없습니다"
 
-#: memfile.c:962
+#: memfile.c:963
 msgid "Read error in swap file"
 msgstr "스왑 파일을 읽을 수 없습니다"
 
-#: memfile.c:1014
+#: memfile.c:1015
 msgid "Seek error in swap file write"
 msgstr "스왑 파일을 쓰기 위해 특정 위치로 갈 수 없습니다"
 
-#: memfile.c:1032
+#: memfile.c:1033
 msgid "Write error in swap file"
 msgstr "스왑 파일을 쓸 수 없습니다"
 
-#: memline.c:278
+#: memline.c:275
 msgid "didn't get block nr 0?"
 msgstr "블럭 번호 0를 얻지 못했었나요?"
 
-#: memline.c:318
+#: memline.c:315
 msgid "didn't get block nr 1?"
 msgstr "블럭 번호 1를 얻지 못했었나요?"
 
-#: memline.c:336
+#: memline.c:333
 msgid "didn't get block nr 2?"
 msgstr "블럭 번호 2를 얻지 못했었나요?"
 
 #. could not (re)open the swap file, what can we do????
-#: memline.c:446
+#: memline.c:443
 msgid "Oops, lost the swap file!!!"
 msgstr "으윽, 스왑 파일을 잃어버렸습니다!!!"
 
-#: memline.c:451
+#: memline.c:448
 msgid "Could not rename swap file"
 msgstr "스왑 파일 이름을 바꿀 수 없습니다"
 
-#: memline.c:522
+#: memline.c:515
 #, c-format
 msgid "Unable to open swap file for \"%s\", recovery impossible"
 msgstr "\"%s\"의 스왑 파일을 열 수 없어서 복구는 불가능합니다"
@@ -2747,8 +2903,8 @@ msgid "Cannot open %s"
 msgstr "%s를 열 수 없습니다"
 
 #: memline.c:828
-#~ msgid "Unable to read block 0 from "
-#~ msgstr ""
+msgid "Unable to read block 0 from "
+msgstr ""
 
 #: memline.c:831
 msgid ""
@@ -2759,8 +2915,8 @@ msgstr ""
 "어떤 수정도 없었거나 빔이 스왑 파일을 갱신하지 않은 것 같습니다."
 
 #: memline.c:841 memline.c:857
-#~ msgid " cannot be used with this version of Vim.\n"
-#~ msgstr ""
+msgid " cannot be used with this version of Vim.\n"
+msgstr ""
 
 #: memline.c:842
 msgid "Use Vim version 3.0.\n"
@@ -2772,28 +2928,28 @@ msgid "%s does not look like a Vim swap file"
 msgstr "%s는 빔 스왑 파일이 아닌 것 같습니다"
 
 #: memline.c:861
-#~ msgid " cannot be used on this computer.\n"
-#~ msgstr ""
+msgid " cannot be used on this computer.\n"
+msgstr " 이 컴퓨터에서는 사용될 수 없습니다.\n"
 
 #: memline.c:863
-#~ msgid "The file was created on "
-#~ msgstr ""
+msgid "The file was created on "
+msgstr ""
 
 #: memline.c:867
-#~ msgid ""
-#~ ",\n"
-#~ "or the file has been damaged."
-#~ msgstr ""
+msgid ""
+",\n"
+"or the file has been damaged."
+msgstr ""
 
 #: memline.c:896
 #, c-format
-#~ msgid "Using swap file \"%s\""
-#~ msgstr ""
+msgid "Using swap file \"%s\""
+msgstr "스왑 파일 \"%s\"를 사용합니다"
 
 #: memline.c:908
 #, c-format
-#~ msgid "Original file \"%s\""
-#~ msgstr ""
+msgid "Original file \"%s\""
+msgstr "원래 파일 \"%s\""
 
 #: memline.c:927
 msgid "Warning: Original file may have been changed"
@@ -2842,8 +2998,8 @@ msgid "???END"
 msgstr "???끝"
 
 #: memline.c:1136
-#~ msgid "Recovery Interrupted"
-#~ msgstr ""
+msgid "Recovery Interrupted"
+msgstr "복구 중단됨"
 
 #: memline.c:1138
 msgid "Errors detected while recovering; look for lines starting with ???"
@@ -2874,47 +3030,47 @@ msgstr ""
 "\n"
 
 #. use msg() to start the scrolling properly
-#: memline.c:1197
+#: memline.c:1200
 msgid "Swap files found:"
 msgstr "스왑 파일 찾아짐:"
 
-#: memline.c:1375
+#: memline.c:1378
 msgid "   In current directory:\n"
 msgstr "   현재 디렉토리에:\n"
 
-#: memline.c:1377
+#: memline.c:1380
 msgid "   Using specified name:\n"
 msgstr "   명시된 이름을 사용:\n"
 
-#: memline.c:1381
-#~ msgid "   In directory "
-#~ msgstr ""
+#: memline.c:1384
+msgid "   In directory "
+msgstr ""
 
-#: memline.c:1399
+#: memline.c:1402
 msgid "      -- none --\n"
 msgstr "      -- 없음 --\n"
 
-#: memline.c:1463 memline.c:3618
+#: memline.c:1466 memline.c:3616
 msgid "             dated: "
 msgstr "             날짜: "
 
-#: memline.c:1474
+#: memline.c:1477
 msgid "          owned by: "
 msgstr "          소유자: "
 
-#: memline.c:1492
+#: memline.c:1495
 msgid "         [from Vim version 3.0]"
 msgstr "         [빔 버전 3.0의 것]"
 
-#: memline.c:1496
+#: memline.c:1499
 msgid "         [does not look like a Vim swap file]"
 msgstr "         [빔 스왑 파일로 보이지 않습니다]"
 
-#: memline.c:1500
+#: memline.c:1503
 msgid "         file name: "
 msgstr "         파일 이름: "
 
-#: memline.c:1512
+#: memline.c:1515
 msgid ""
 "\n"
 "          modified: "
@@ -2922,15 +3078,15 @@ msgstr ""
 "\n"
 "          수정: "
 
-#: memline.c:1513
+#: memline.c:1516
 msgid "YES"
 msgstr "예"
 
-#: memline.c:1513
+#: memline.c:1516
 msgid "no"
 msgstr "아니오"
 
-#: memline.c:1517
+#: memline.c:1520
 msgid ""
 "\n"
 "         host name: "
@@ -2938,7 +3094,7 @@ msgstr ""
 "\n"
 "         호스트 이름: "
 
-#: memline.c:1523
+#: memline.c:1526
 msgid ""
 "\n"
 "         user name: "
@@ -2946,7 +3102,7 @@ msgstr ""
 "\n"
 "         사용자 이름: "
 
-#: memline.c:1529
+#: memline.c:1532
 msgid ""
 "\n"
 "        process ID: "
@@ -2954,11 +3110,11 @@ msgstr ""
 "\n"
 "        프로세스 ID: "
 
-#: memline.c:1535
+#: memline.c:1538
 msgid " (still running)"
 msgstr " (아직 실행중)"
 
-#: memline.c:1547
+#: memline.c:1550
 msgid ""
 "\n"
 "         [not usable with this version of Vim]"
@@ -2966,7 +3122,7 @@ msgstr ""
 "\n"
 "         [이 버전의 빔에서는 사용할 수 없음]"
 
-#: memline.c:1550
+#: memline.c:1553
 msgid ""
 "\n"
 "         [not usable on this computer]"
@@ -2974,159 +3130,169 @@ msgstr ""
 "\n"
 "         [이 컴퓨터에서는 사용할 수 없음]"
 
-#: memline.c:1555
+#: memline.c:1558
 msgid "         [cannot be read]"
 msgstr "         [읽을 수 없음]"
 
-#: memline.c:1559
+#: memline.c:1562
 msgid "         [cannot be opened]"
 msgstr "         [열 수 없음]"
 
-#: memline.c:1744
+#: memline.c:1747
 msgid "Cannot preserve, there is no swap file"
 msgstr "보존할 수 없습니다, 스왑 파일이 없습니다"
 
-#: memline.c:1791
+#: memline.c:1794
 msgid "File preserved"
 msgstr "파일이 보존되었습니다"
 
-#: memline.c:1793
+#: memline.c:1796
 msgid "Preserve failed"
 msgstr "파일 보존을 실패했습니다"
 
-#: memline.c:1857
+#: memline.c:1860
 #, c-format
 msgid "ml_get: invalid lnum: %ld"
 msgstr "ml_get: 잘못된 lnum: %ld"
 
-#: memline.c:1883
+#: memline.c:1886
 #, c-format
 msgid "ml_get: cannot find line %ld"
 msgstr "ml_get: 라인 %ld를 찾을 수 없습니다"
 
-#: memline.c:2271
-#~ msgid "pointer block id wrong 3"
-#~ msgstr ""
+#: memline.c:2274
+msgid "pointer block id wrong 3"
+msgstr ""
 
-#: memline.c:2351
+#: memline.c:2354
 msgid "stack_idx should be 0"
 msgstr "stack_idx는 0여야만 합니다"
 
-#: memline.c:2413
+#: memline.c:2416
 msgid "Updated too many blocks?"
 msgstr "너무 많은 블럭이 갱신되었나요?"
 
-#: memline.c:2570
-#~ msgid "pointer block id wrong 4"
-#~ msgstr ""
+#: memline.c:2573
+msgid "pointer block id wrong 4"
+msgstr ""
 
-#: memline.c:2597
+#: memline.c:2600
 msgid "deleted block 1?"
 msgstr "블럭 1이 삭제되었나요?"
 
-#: memline.c:2797
+#: memline.c:2800
 #, c-format
 msgid "Cannot find line %ld"
 msgstr "라인 %ld를 찾을 수 없습니다"
 
-#: memline.c:3040
-#~ msgid "pointer block id wrong"
-#~ msgstr ""
+#: memline.c:3043
+msgid "pointer block id wrong"
+msgstr ""
 
-#: memline.c:3056
+#: memline.c:3059
 msgid "pe_line_count is zero"
 msgstr "pe_line_count가 0입니다"
 
-#: memline.c:3085
+#: memline.c:3088
 #, c-format
-#~ msgid "line number out of range: %ld past the end"
-#~ msgstr ""
+msgid "line number out of range: %ld past the end"
+msgstr ""
 
-#: memline.c:3089
+#: memline.c:3092
 #, c-format
 msgid "line count wrong in block %ld"
 msgstr "블럭 %ld의 라인 갯수가 틀렸습니다"
 
-#: memline.c:3138
-#~ msgid "Stack size increases"
-#~ msgstr ""
+#: memline.c:3141
+msgid "Stack size increases"
+msgstr ""
 
-#: memline.c:3184
-#~ msgid "pointer block id wrong 2"
-#~ msgstr ""
+#: memline.c:3187
+msgid "pointer block id wrong 2"
+msgstr ""
 
-#: memline.c:3608
+#: memline.c:3606
 msgid "ATTENTION"
 msgstr "주목"
 
-#: memline.c:3609
-#~ msgid ""
-#~ "\n"
-#~ "Found a swap file by the name \""
-#~ msgstr ""
+#: memline.c:3607
+msgid ""
+"\n"
+"Found a swap file by the name \""
+msgstr ""
 
-#: memline.c:3613
-#~ msgid "While opening file \""
-#~ msgstr ""
+#: memline.c:3611
+msgid "While opening file \""
+msgstr ""
 
 #. Some of these messages are long to allow translation to
 #. * other languages.
+#: memline.c:3622
+msgid ""
+"\n"
+"(1) Another program may be editing the same file.\n"
+"    If this is the case, be careful not to end up with two\n"
+"    different instances of the same file when making changes.\n"
+msgstr ""
+"\n"
+"(1) 다른 프로그램이 같은 파일을 편집중일 수 있습니다.\n"
+"    만약 그렇다면 같은 파일을 두개의 프로그램에서 수정하지\n"
+"    않도록 조심하시기 바랍니다.\n"
+
+#: memline.c:3623
+msgid "    Quit, or continue with caution.\n"
+msgstr "    종료하거나 위험을 감수하시려면 계속하세요.\n"
+
 #: memline.c:3624
-#~ msgid ""
-#~ "\n"
-#~ "(1) Another program may be editing the same file.\n"
-#~ "    If this is the case, be careful not to end up with two\n"
-#~ "    different instances of the same file when making changes.\n"
-#~ msgstr ""
+msgid ""
+"\n"
+"(2) An edit session for this file crashed.\n"
+msgstr ""
+"\n"
+"(2) 이 파일에 대한 편집도중 죽었었습니다.\n"
 
 #: memline.c:3625
-#~ msgid "    Quit, or continue with caution.\n"
-#~ msgstr ""
-
-#: memline.c:3626
-#~ msgid ""
-#~ "\n"
-#~ "(2) An edit session for this file crashed.\n"
-#~ msgstr ""
+msgid "    If this is the case, use \":recover\" or \"vim -r "
+msgstr "    만약 그렇다면 \":recover\" 혹은 \"vim -r "
 
 #: memline.c:3627
-#~ msgid "    If this is the case, use \":recover\" or \"vim -r "
-#~ msgstr ""
+msgid ""
+"\"\n"
+"    to recover the changes (see \":help recovery\").\n"
+msgstr ""
+"\"\n"
+"    을 사용하여 복구하세요 (\":help recovery\" 참고).\n"
 
-#: memline.c:3629
-#~ msgid ""
-#~ "\"\n"
-#~ "    to recover the changes (see \":help recovery)\".\n"
-#~ msgstr ""
+#: memline.c:3628
+msgid "    If you did this already, delete the swap file \""
+msgstr "    이미 복구하셨었다면 스왑파일 \""
 
 #: memline.c:3630
-#~ msgid "    If you did this already, delete the swap file \""
-#~ msgstr ""
+msgid ""
+"\"\n"
+"    to avoid this message.\n"
+"\n"
+msgstr ""
+"\"를 지우시면\n"
+"    이 메시지가 다시 표시되지 않습니다.\n"
 
-#: memline.c:3632
-#~ msgid ""
-#~ "\"\n"
-#~ "    to avoid this message.\n"
-#~ "\n"
-#~ msgstr ""
+#: memline.c:3644 memline.c:3648
+msgid "Swap file \""
+msgstr "스왑 파일 \""
 
-#: memline.c:3646 memline.c:3650
-#~ msgid "Swap file \""
-#~ msgstr ""
+#: memline.c:3645 memline.c:3651
+msgid "\" already exists!"
+msgstr "\"이 이미 존재합니다!"
 
-#: memline.c:3647 memline.c:3653
-#~ msgid "\" already exists!"
-#~ msgstr ""
-
-#: memline.c:3656
+#: memline.c:3654
 msgid "VIM - ATTENTION"
 msgstr "빔 - 주목"
 
-#: memline.c:3658
+#: memline.c:3656
 msgid "Swap file already exists!"
 msgstr "스왑 파일이 이미 존재합니다!"
 
-#: memline.c:3662
+#: memline.c:3660
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -3138,7 +3304,7 @@ msgstr ""
 "복구(&R)\n"
 "종료(&Q)"
 
-#: memline.c:3664
+#: memline.c:3662
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -3152,45 +3318,45 @@ msgstr ""
 "종료(&Q)\n"
 "삭제(&D)"
 
-#: memline.c:3702
+#: memline.c:3706
 msgid "Too many swap files found"
 msgstr "너무 많은 스왑 파일이 발견되었습니다"
 
-#: globals.h:954 menu.c:220
+#: globals.h:1005 menu.c:221
 msgid "Trailing characters"
 msgstr "끝에 문자가 더 있습니다"
 
-#: menu.c:405
+#: menu.c:406
 msgid "Menu path must not lead to a sub-menu"
 msgstr "하위 메뉴 앞에는 메뉴 경로가 붙을 수 없습니다"
 
-#: menu.c:415 menu.c:656 menu.c:717 menu.c:892 menu.c:1876 menu.c:2003
+#: menu.c:416 menu.c:660 menu.c:726 menu.c:901 menu.c:1899 menu.c:2021
 msgid "Part of menu-item path is not sub-menu"
 msgstr "메뉴 항목 경로의 부분이 하위 메뉴가 아닙니다"
 
-#: menu.c:444
+#: menu.c:445
 msgid "Must not add menu items directly to menu bar"
 msgstr "메뉴바에 곧바로 메뉴 항목을 추가할 수는 없습니다"
 
-#: menu.c:450
+#: menu.c:451
 msgid "Separator cannot be part of a menu path"
 msgstr "구분자는 메뉴 경로의 부분이 될 수 없습니다"
 
-#: menu.c:681 menu.c:777 menu.c:908
+#: menu.c:685 menu.c:786 menu.c:917
 msgid "No menu of that name"
 msgstr "그런 이름의 메뉴가 없습니다"
 
-#: menu.c:739 menu.c:898
+#: menu.c:748 menu.c:907
 msgid "Menu only exists in another mode"
 msgstr "메뉴는 오로지 다른 모드에서만 존재합니다"
 
-#: menu.c:754
+#: menu.c:763
 msgid "Sorry, deleting a menu is not possible in the Athena version"
 msgstr "죄송, 아테네 버전에서는 메뉴를 삭제할 수 없습니다"
 
 #. Now we have found the matching menu, and we list the mappings
 #. Highlight title
-#: menu.c:919
+#: menu.c:928
 msgid ""
 "\n"
 "--- Menus ---"
@@ -3198,80 +3364,79 @@ msgstr ""
 "\n"
 "--- 메뉴 ---"
 
-#: menu.c:1806
+#: menu.c:1829
 msgid "Tear off this menu"
 msgstr "이 메뉴를 떼어냄"
 
-#: menu.c:1871
+#: menu.c:1894
 msgid "Menu path must lead to a menu item"
 msgstr "메뉴 항목 앞에는 메뉴 경로가 있어야 합니다"
 
-#: menu.c:1891
+#: menu.c:1914
 #, c-format
 msgid "Menu not found: %s"
 msgstr "메뉴를 찾을 수 없습니다: %s"
 
-#: menu.c:1960
+#: menu.c:1983
 #, c-format
 msgid "Menu not defined for %s mode"
 msgstr "%s 모드에 대한 메뉴가 정의되어 있지 않습니다"
 
-#. not allowed to tear off one item
-#: menu.c:1997
+#: menu.c:2019
 msgid "Menu path must lead to a sub-menu"
 msgstr "하위 메뉴 앞에 메뉴 경로가 있어야 합니다"
 
-#: menu.c:2019
+#: menu.c:2040
 msgid "Menu not found - check menu names"
 msgstr "메뉴를 찾을 수 없음 - 메뉴 이름을 확인하세요"
 
-#: message.c:403
+#: message.c:425
 #, c-format
 msgid "Error detected while processing %s:"
 msgstr "%s 수행중 에러 발견:"
 
-#: message.c:419
+#: message.c:441
 #, c-format
 msgid "line %4ld:"
 msgstr "라인 %4ld:"
 
-#: message.c:453
+#: message.c:479
 msgid "[string too long]"
 msgstr "[너무 긴 문자열"
 
-#: message.c:581
+#: message.c:611
 msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
 msgstr "메시지 번역: Sung-Hyun Nam <namsh@kldp.org>"
 
-#: message.c:781
+#: message.c:812
 msgid "Interrupt: "
 msgstr "중단: "
 
-#: message.c:784
+#: message.c:815
 msgid "Hit ENTER to continue"
 msgstr "계속하려면 엔터키를 누르세요"
 
-#: message.c:786
+#: message.c:817
 msgid "Hit ENTER or type command to continue"
 msgstr "계속하려면 엔터 혹은 명령을 입력하세요"
 
-#: message.c:1657
+#: message.c:1727
 msgid "-- More --"
 msgstr "-- 더 --"
 
-#: message.c:1660
+#: message.c:1730
 msgid " (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
 msgstr " (RET/BS: 라인, SPACE/b: 쪽, d/u: 반쪽, q: 종료)"
 
-#: message.c:1661
+#: message.c:1731
 msgid " (RET: line, SPACE: page, d: half page, q: quit)"
 msgstr " (RET: 라인, SPACE: 쪽, d: 반쪽, q: 종료)"
 
-#: message.c:2169 message.c:2184
+#: message.c:2234 message.c:2249
 msgid "Question"
 msgstr "질문"
 
-#: message.c:2171
+#: message.c:2236
 msgid ""
 "&Yes\n"
 "&No"
@@ -3279,7 +3444,7 @@ msgstr ""
 "예(&Y)\n"
 "아니오(&N)"
 
-#: message.c:2186
+#: message.c:2251
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3289,7 +3454,7 @@ msgstr ""
 "아니오(&N)\n"
 "취소(&C)"
 
-#: message.c:2204
+#: message.c:2269
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3303,110 +3468,114 @@ msgstr ""
 "모두 버림(&D)\n"
 "취소(&C)"
 
-#: message.c:2243
+#: message.c:2308
 msgid "Save File dialog"
 msgstr "파일 저장 대화상자"
 
-#: message.c:2245
+#: message.c:2310
 msgid "Open File dialog"
 msgstr "파일 열기 대화상자"
 
 #. TODO: non-GUI file selector here
-#: message.c:2278
+#: message.c:2347
 msgid "Sorry, no file browser in console mode"
 msgstr "죄송, 콘솔 모드에는 파일 브라우저가 없습니다"
 
-#: misc1.c:2308
+#: misc1.c:2406
 msgid "Warning: Changing a readonly file"
 msgstr "경고: 읽기전용 파일을 고치고 있습니다"
 
-#: misc1.c:2523
-#~ msgid "1 more line"
-#~ msgstr ""
+#: misc1.c:2621
+msgid "1 more line"
+msgstr ""
 
-#: misc1.c:2525
-#~ msgid "1 line less"
-#~ msgstr ""
+#: misc1.c:2623
+msgid "1 line less"
+msgstr ""
 
-#: misc1.c:2530
+#: misc1.c:2628
 #, c-format
 msgid "%ld more lines"
 msgstr "%ld보다 많은 라인"
 
-#: misc1.c:2532
+#: misc1.c:2630
 #, c-format
 msgid "%ld fewer lines"
 msgstr "%ld보다 적은 라인"
 
-#: misc1.c:2535
+#: misc1.c:2633
 msgid " (Interrupted)"
 msgstr " (중단됨)"
 
-#: misc1.c:5850
+#: misc1.c:6046
 msgid "Vim: preserving files...\n"
 msgstr "빔: 파일 보존중...\n"
 
 #. close all memfiles, without deleting
-#: misc1.c:5860
+#: misc1.c:6056
 msgid "Vim: Finished.\n"
 msgstr "빔: 끌났습니다.\n"
 
-#: misc1.c:6341
-msgid "Security error: shell command output is a symbolic link"
-msgstr "안전 에러: 쉘 명령 출력이 심볼릭 링크입니다"
-
-#: misc2.c:576 misc2.c:592
+#: misc2.c:603 misc2.c:619
 msgid "ERROR: "
 msgstr "에러: "
 
-#: misc2.c:596
+#: misc2.c:623
 #, c-format
-#~ msgid ""
-#~ "\n"
-#~ "[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\n"
-#~ msgstr ""
+msgid ""
+"\n"
+"[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\n"
+msgstr ""
 
-#: misc2.c:598
+#: misc2.c:625
 #, c-format
-#~ msgid ""
-#~ "[calls] total re/malloc()'s %lu, total free()'s %lu\n"
-#~ "\n"
-#~ msgstr ""
+msgid ""
+"[calls] total re/malloc()'s %lu, total free()'s %lu\n"
+"\n"
+msgstr ""
 
-#: misc2.c:656
+#: misc2.c:683
 msgid "Line is becoming too long"
 msgstr "라인이 너무 길어졌습니다"
 
-#: misc2.c:701
+#: misc2.c:728
 #, c-format
 msgid "Internal error: lalloc(%ld, )"
 msgstr "내부 에러: lalloc(%ld, )"
 
-#: misc2.c:2576 option.c:3981
+#: misc2.c:2630 option.c:4282
 msgid "Missing colon"
 msgstr "콜론이 없습니다"
 
-#: misc2.c:2602
+#: misc2.c:2656
 msgid "Illegal mode"
 msgstr "이상한 모드"
 
-#: misc2.c:2638
+#: misc2.c:2692
 msgid "Illegal mouseshape"
 msgstr "이상한 마우스모양"
 
-#: misc2.c:2674
+#: misc2.c:2728
 msgid "digit expected"
 msgstr "숫자가 필요합니다"
 
-#: misc2.c:2679
+#: misc2.c:2733
 msgid "Illegal percentage"
 msgstr "이상한 백분율"
 
-#: misc2.c:2983
+#: misc2.c:3004
 msgid "Enter encryption key: "
 msgstr "암호 키 입력: "
 
-#: misc2.c:3477
+#: misc2.c:3005
+msgid "Enter same key again: "
+msgstr "같은 키를 다시 입력: "
+
+#: misc2.c:3015
+msgid "Keys don't match!"
+msgstr "키가 맞지 않습니다!"
+
+#: misc2.c:3521
 #, c-format
 msgid ""
 "Invalid path: '**[number]' must be at the end of the path or be followed by "
@@ -3415,162 +3584,118 @@ msgstr ""
 "잘못된 경로: '**[번호]'는 경로의 마지막에 위치하거나 '%s' 뒤에 있어야 "
 "합니다. :help path를 보세요."
 
-#: misc2.c:4685
+#: misc2.c:4748
 #, c-format
 msgid "Can't find directory \"%s\" in cdpath"
 msgstr "cdpath에서 \"%s\" 디렉토리를 찾을 수 없습니다"
 
-#: misc2.c:4687
+#: misc2.c:4750 window.c:4140
 #, c-format
 msgid "Can't find file \"%s\" in path"
 msgstr "path에서 \"%s\" 파일을 찾을 수 없습니다"
 
-#: misc2.c:4692
+#: misc2.c:4755
 #, c-format
 msgid "No more directory \"%s\" found in cdpath"
 msgstr "cdpath에서 더 이상의 \"%s\" 디렉토리는 찾을 수 없습니다"
 
-#: misc2.c:4695
+#: misc2.c:4758
 #, c-format
 msgid "No more file \"%s\" found in path"
 msgstr "path에서 더 이상의 \"%s\" 파일을 찾을 수 없습니다"
 
-#: multibyte.c:143
-msgid "Not a valid codepage"
-msgstr "정상적인 코드페이지가 아닙니다"
-
-#: multibyte.c:1435
-msgid "Cannot set IC values"
-msgstr "IC 값을 설정할 수 없습니다"
-
-#: multibyte.c:1693
-msgid "XIM requires VIM compiled with +xfontset feature."
-msgstr "XIM을 사용하려면 빔이 +xfontset 기능과 함께 컴파일되어야 합니다"
-
-#: multibyte.c:1739
-msgid "Failed to open input method"
-msgstr "입력 방식을 여는 데 실패했습니다"
-
-#: multibyte.c:1750
-msgid "Warning: Could not set destroy callback to IM"
-msgstr "경고: IM에 파괴 콜백을 설정할 수 없습니다"
-
-#: multibyte.c:1756
-msgid "input method doesn't support any style"
-msgstr "입력 방식에 어떤 형식도 지원하지 않습니다"
-
-#: multibyte.c:1810
-msgid "input method doesn't support my preedit type"
-msgstr "입력 방식이 내 preedit 형식을 지원하지 않습니다"
-
-#: multibyte.c:1850
-msgid "Failed to create input context"
-msgstr "입력 콘텍스트를 생성할 수 없습니다"
-
-#: multibyte.c:1884
-msgid "Your GTK+ is older than 1.2.3. Status area disabled"
-msgstr "GTK+가 1.2.3 이전 버전입니다. 상태 영역을 사용할 수 없습니다"
-
-#: multibyte.c:2060
-msgid "Input Method Server is not running"
-msgstr "입력 서버가 실행되지 않고 있습니다"
-
-#: multibyte.c:2092 multibyte.c:2114
-msgid "over-the-spot style requires fontset"
-msgstr "over-the-spot 형식은 fontset이 사용되어야 합니다"
-
-#: multibyte.c:2137
-msgid "Can't create input context."
-msgstr "입력 콘텍스트를 생성할 수 없습니다."
-
-#: normal.c:2614
+#: normal.c:2754
 msgid "Warning: terminal cannot highlight"
 msgstr "경고: 터미널이 비쥬얼모드를 표시할 수 없습니다"
 
-#: normal.c:2747
+#: normal.c:2948
 msgid "No string under cursor"
 msgstr "커서 밑에 문자열이 없습니다"
 
-#: normal.c:2749
+#: normal.c:2950
 msgid "No identifier under cursor"
 msgstr "커서 밑에 식별자가 없습니다"
 
-#: normal.c:3761
+#: normal.c:4052
 msgid "Cannot create fold with current 'foldmethod'"
 msgstr "현재의 'foldmethod'으로 폴드를 생성할 수 없습니다"
 
-#: normal.c:3773 normal.c:3780
+#: normal.c:4070
 msgid "Cannot delete fold with current 'foldmethod'"
 msgstr "현재의 'foldmethod'으로 폴드를 삭제할 수 없습니다"
 
-#: ops.c:258
+#: normal.c:4083
+msgid "Cannot erase folds with current 'foldmethod'"
+msgstr "현재의 'foldmethod'으로 폴드를 지울 수 없습니다"
+
+#: ops.c:269
 #, c-format
-#~ msgid "1 line %sed 1 time"
-#~ msgstr ""
+msgid "1 line %sed 1 time"
+msgstr ""
 
-#: ops.c:260
+#: ops.c:271
 #, c-format
-#~ msgid "1 line %sed %d times"
-#~ msgstr ""
+msgid "1 line %sed %d times"
+msgstr ""
 
-#: ops.c:265
+#: ops.c:276
 #, c-format
-#~ msgid "%ld lines %sed 1 time"
-#~ msgstr ""
+msgid "%ld lines %sed 1 time"
+msgstr ""
 
-#: ops.c:268
+#: ops.c:279
 #, c-format
-#~ msgid "%ld lines %sed %d times"
-#~ msgstr ""
+msgid "%ld lines %sed %d times"
+msgstr ""
 
-#: ops.c:603
+#: ops.c:631
 #, c-format
-#~ msgid "%ld lines to indent... "
-#~ msgstr ""
+msgid "%ld lines to indent... "
+msgstr ""
 
-#: ops.c:647
-#~ msgid "1 line indented "
-#~ msgstr ""
+#: ops.c:675
+msgid "1 line indented "
+msgstr ""
 
-#: ops.c:649
+#: ops.c:677
 #, c-format
-#~ msgid "%ld lines indented "
-#~ msgstr ""
+msgid "%ld lines indented "
+msgstr ""
 
-#: ops.c:1408
-#~ msgid "cannot yank; delete anyway"
-#~ msgstr ""
+#: ops.c:1485
+msgid "cannot yank; delete anyway"
+msgstr ""
 
-#: ops.c:1765
-#~ msgid "1 line ~ed"
-#~ msgstr ""
+#: ops.c:1906
+msgid "1 line ~ed"
+msgstr ""
 
-#: ops.c:1767
+#: ops.c:1908
 #, c-format
-#~ msgid "%ld lines ~ed"
-#~ msgstr ""
+msgid "%ld lines ~ed"
+msgstr ""
 
-#: ops.c:2103
+#: ops.c:2248
 #, c-format
-#~ msgid "freeing %ld lines"
-#~ msgstr ""
+msgid "freeing %ld lines"
+msgstr ""
 
-#: ops.c:2347
-#~ msgid "1 line yanked"
-#~ msgstr ""
+#: ops.c:2491
+msgid "1 line yanked"
+msgstr ""
 
-#: ops.c:2349
+#: ops.c:2493
 #, c-format
-#~ msgid "%ld lines yanked"
-#~ msgstr ""
+msgid "%ld lines yanked"
+msgstr ""
 
-#: ops.c:2542
+#: ops.c:2732
 #, c-format
 msgid "Nothing in register %s"
 msgstr "%s 레지스터에 아무 것도 없습니다"
 
 #. Highlight title
-#: ops.c:3011
+#: ops.c:3260
 msgid ""
 "\n"
 "--- Registers ---"
@@ -3578,11 +3703,11 @@ msgstr ""
 "\n"
 "--- 레지스터 ---"
 
-#: ops.c:4067
+#: ops.c:4348
 msgid "Illegal register name"
 msgstr "이상한 레지스터 이름"
 
-#: ops.c:4147
+#: ops.c:4428
 msgid ""
 "\n"
 "# Registers:\n"
@@ -3590,143 +3715,181 @@ msgstr ""
 "\n"
 "# 레지스터:\n"
 
-#: ops.c:4173
+#: ops.c:4454
 #, c-format
 msgid "Unknown register type %d"
 msgstr "모르는 레지스터 형식 %d"
 
-#: ops.c:4469
+#: ops.c:4835
 #, c-format
 msgid "Invalid register name: '%s'"
 msgstr "잘못된 레지스터 이름: '%s'"
 
-#: option.c:1693
+#: ops.c:5174
+#, c-format
+msgid "%ld Cols; "
+msgstr ""
+
+#: ops.c:5181
+#, c-format
+msgid "Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Chars"
+msgstr ""
+
+#: ops.c:5197
+#, c-format
+msgid "Col %s of %s; Line %ld of %ld; Word %ld of %ld; Char %ld of %ld"
+msgstr ""
+
+#: ops.c:5208
+#, c-format
+msgid "(+%ld for BOM)"
+msgstr ""
+
+#: option.c:1832
 msgid "Thanks for flying Vim"
 msgstr "빔을 날게 해 주셔서 고맙습니다"
 
-#: option.c:2770
+#: option.c:2933
+msgid "Option not supported"
+msgstr "지원되지 않는 옵션입니다"
+
+#: option.c:2958
 msgid "Not allowed in a modeline"
 msgstr "모드라인에서 사용될 수 없습니다"
 
-#: option.c:2777
-#, c-format
-msgid "Warning: %s option changed from modeline"
-msgstr "경고: 옵션 %s가 모드라인에서 바뀌었습니다"
+#: option.c:3014
+msgid ""
+"\n"
+"\tLast set from "
+msgstr ""
 
-#: option.c:2994
+#: option.c:3138
 msgid "Number required after ="
 msgstr "= 뒤에 숫자가 필요합니다"
 
-#: option.c:3262 option.c:3747
+#: option.c:3417 option.c:4015
 msgid "Not found in termcap"
 msgstr "텀캡에서 찾을 수 없습니다"
 
-#: option.c:3328
+#: option.c:3483
 #, c-format
 msgid "Illegal character <%s>"
 msgstr "이상한 문자 <%s>"
 
-#: option.c:3739
+#: option.c:4000 option.c:5105
+msgid "Not allowed here"
+msgstr "여기에서 허용되지 않습니다"
+
+#: option.c:4007
 msgid "Cannot set 'term' to empty string"
 msgstr "'term'을 빈 문자열로 설정할 수 없습니다"
 
-#: option.c:3742
+#: option.c:4010
 msgid "Cannot change term in GUI"
 msgstr "GUI에서는 term을 바꿀 수 없습니다"
 
-#: option.c:3744
+#: option.c:4012
 msgid "Use \":gui\" to start the GUI"
 msgstr "GUI를 시작하려면 \":gui\"를 사용하세요"
 
-#: option.c:3765
+#: option.c:4033
 msgid "'backupext' and 'patchmode' are equal"
 msgstr "'backupext'와 'patchmode'는 동일합니다"
 
-#: option.c:3983
+#: option.c:4284
 msgid "Zero length string"
 msgstr "빈 문자열입니다"
 
-#: option.c:4043
+#: option.c:4352
 #, c-format
 msgid "Missing number after <%s>"
 msgstr "<%s> 뒤에 숫자가 없습니다"
 
-#: option.c:4057
+#: option.c:4366
 msgid "Missing comma"
 msgstr "코마가 없습니다"
 
-#: option.c:4064
+#: option.c:4373
 msgid "Must specify a ' value"
 msgstr "' 값을 명시해 주셔야 합니다"
 
-#: option.c:4104
+#: option.c:4413
 msgid "contains unprintable character"
 msgstr "출력할 수 없는 문자를 포함하고 있습니다"
 
-#: option.c:4117
+#: option.c:4426
 msgid "Invalid font(s)"
 msgstr "잘못된 글꼴"
 
-#: option.c:4123
+#: option.c:4432
 msgid "can't select fontset"
 msgstr "글꼴셋을 선택할 수 없습니다"
 
-#: option.c:4125
+#: option.c:4434
 msgid "Invalid fontset"
 msgstr "잘못된 글꼴셋"
 
-#: option.c:4132
+#: option.c:4441
 msgid "can't select wide font"
 msgstr "넓은 글꼴을 선택할 수 없습니다"
 
-#: option.c:4134
+#: option.c:4443
 msgid "Invalid wide font"
 msgstr "잘못된 넓은 글꼴"
 
-#: option.c:4387
+#: option.c:4707
 #, c-format
 msgid "Illegal character after <%c>"
 msgstr "<%c> 뒤에 이상한 문자"
 
-#: option.c:4458
+#: option.c:4779
 msgid "comma required"
 msgstr "코마가 필요합니다"
 
-#: option.c:4513
+#: option.c:4788
+#, c-format
+msgid "'commentstring' must be empty or contain %s"
+msgstr "'commentstring'은 비거나 %s를 포함해야 합니다"
+
+#: option.c:4833
 msgid "No mouse support"
 msgstr "마우스를 지원하지 않습니다"
 
-#: option.c:4739
-#~ msgid "Unclosed expression sequence"
-#~ msgstr ""
+#: option.c:5071
+msgid "Unclosed expression sequence"
+msgstr ""
 
-#: option.c:4743
+#: option.c:5075
 msgid "too many items"
 msgstr "너무 많은 항목"
 
-#: option.c:4745
-#~ msgid "unbalanced groups"
-#~ msgstr ""
+#: option.c:5077
+msgid "unbalanced groups"
+msgstr ""
 
-#: option.c:5067 option.c:5097
+#: option.c:5216
+msgid "A preview window already exists"
+msgstr "미리보기 창이 이미 존재합니다"
+
+#: option.c:5437 option.c:5467
 msgid "'winheight' cannot be smaller than 'winminheight'"
 msgstr "'winheight'는 'winminheight'보다 작을 수 없습니다"
 
-#: option.c:5113 option.c:5132
+#: option.c:5483 option.c:5502
 msgid "'winwidth' cannot be smaller than 'winminwidth'"
 msgstr "'winwidth'는 'winminwidth'보다 작을 수 없습니다"
 
-#: option.c:5179
+#: option.c:5617
 #, c-format
 msgid "Need at least %d lines"
 msgstr "적어도 %d 라인이 필요합니다"
 
-#: option.c:5188
+#: option.c:5626
 #, c-format
 msgid "Need at least %d columns"
 msgstr "적어도 %d 컬럼이 필요합니다"
 
-#: option.c:5595
+#: option.c:6006
 msgid ""
 "\n"
 "--- Terminal codes ---"
@@ -3734,7 +3897,7 @@ msgstr ""
 "\n"
 "--- 터미널 코드 ---"
 
-#: option.c:5597
+#: option.c:6008
 msgid ""
 "\n"
 "--- Global option values ---"
@@ -3742,7 +3905,15 @@ msgstr ""
 "\n"
 "--- 전역 옵션 값 ---"
 
-#: option.c:5599
+#: option.c:6010
+msgid ""
+"\n"
+"--- Local option values ---"
+msgstr ""
+"\n"
+"--- 지역 옵션 값 ---"
+
+#: option.c:6012
 msgid ""
 "\n"
 "--- Options ---"
@@ -3750,132 +3921,141 @@ msgstr ""
 "\n"
 "--- 옵션 ---"
 
-#: option.c:6038
+#: option.c:6667
 msgid "get_varp ERROR"
 msgstr "get_varp 에러"
 
-#: option.c:6835
+#: option.c:7528
 #, c-format
 msgid "'langmap': Matching character missing for %s"
 msgstr "'langmap': %s에 대한 맞는 문자가 없습니다"
 
-#: option.c:6862
+#: option.c:7562
 #, c-format
 msgid "'langmap': Extra characters after semicolon: %s"
 msgstr "'langmap': 세미콜론 뒤에 문자가 더 있음: %s"
 
-#: os_amiga.c:267
-#~ msgid "cannot open "
-#~ msgstr ""
+#: os_amiga.c:273
+msgid "cannot open "
+msgstr ""
 
-#: os_amiga.c:301
+#: os_amiga.c:307
 msgid "VIM: Can't open window!\n"
 msgstr "빔: 창을 열 수 없습니다!\n"
 
-#: os_amiga.c:323
+#: os_amiga.c:329
 msgid "Need Amigados version 2.04 or later\n"
 msgstr "아미가도스 2.04나 더 높은 버전이 필요합니다\n"
 
-#: os_amiga.c:329
+#: os_amiga.c:335
 #, c-format
-#~ msgid "Need %s version %ld\n"
-#~ msgstr ""
+msgid "Need %s version %ld\n"
+msgstr ""
 
-#: os_amiga.c:394
+#: os_amiga.c:400
 msgid "Cannot open NIL:\n"
 msgstr "NIL을 열 수 없음:\n"
 
-#: os_amiga.c:405
-#~ msgid "Cannot create "
-#~ msgstr ""
+#: os_amiga.c:411
+msgid "Cannot create "
+msgstr ""
 
-#: os_amiga.c:849
+#: os_amiga.c:882
 #, c-format
-#~ msgid "Vim exiting with %d\n"
-#~ msgstr ""
+msgid "Vim exiting with %d\n"
+msgstr ""
 
-#: os_amiga.c:881
+#: os_amiga.c:914
 msgid "cannot change console mode ?!\n"
 msgstr "콘솔 모드를 바꿀 수 없습니다 ?!\n"
 
-#: os_amiga.c:891 os_mac.c:909 os_riscos.c:727 os_unix.c:2350 os_vms.c:1651
-#: os_win16.c:1105 os_win32.c:4284
+#: os_amiga.c:924 os_mac.c:950 os_mswin.c:589 os_riscos.c:728 os_unix.c:2390
+#: os_vms.c:1634
 msgid "Screen mode setting not supported"
 msgstr "스크린 모드 설정은 지원되지 않습니다"
 
-#: os_amiga.c:947
+#: os_amiga.c:980
 msgid "mch_get_shellsize: not a console??\n"
 msgstr "mch_get_shellsize: 콘솔이 아닌가??\n"
 
 #. if Vim opened a window: Executing a shell may cause crashes
-#: os_amiga.c:1095
+#: os_amiga.c:1128
 msgid "Cannot execute shell with -f option"
 msgstr "-f 옵션이 사용된 경우 쉘을 실행할 수 없습니다"
 
-#: os_amiga.c:1136 os_amiga.c:1226
-#~ msgid "Cannot execute "
-#~ msgstr ""
+#: os_amiga.c:1169 os_amiga.c:1259
+msgid "Cannot execute "
+msgstr ""
 
-#: os_amiga.c:1139 os_amiga.c:1236
-#~ msgid "shell "
-#~ msgstr ""
+#: os_amiga.c:1172 os_amiga.c:1269
+msgid "shell "
+msgstr ""
 
-#: os_amiga.c:1159 os_amiga.c:1261
-#~ msgid " returned\n"
-#~ msgstr ""
+#: os_amiga.c:1192 os_amiga.c:1294
+msgid " returned\n"
+msgstr ""
 
-#: os_amiga.c:1348
+#: os_amiga.c:1381
 msgid "Out of memory"
 msgstr "메모리가 바닥났습니다"
 
-#: os_amiga.c:1404
+#: os_amiga.c:1437
 msgid "ANCHOR_BUF_SIZE too small."
 msgstr "ANCHOR_BUF_SIZE가 너무 작습니다."
 
-#: os_amiga.c:1407
+#: os_amiga.c:1441
 msgid "I/O ERROR"
 msgstr "I/O 에러"
 
-#: os_msdos.c:1439
+#: os_msdos.c:1450
 msgid "PC (32 bits Vim)"
 msgstr "PC (32비트 빔)"
 
-#: os_msdos.c:1441
+#: os_msdos.c:1452
 msgid "PC (16 bits Vim)"
 msgstr "PC (16비트 빔)"
 
-#: os_msdos.c:1818
+#: os_msdos.c:1845
 msgid "Unsupported screen mode"
 msgstr "지원되지 않는 스크린 모드"
 
-#: os_msdos.c:2012 os_unix.c:2546 os_unix.c:3085 os_vms.c:1732
-#~ msgid ""
-#~ "\n"
-#~ "shell returned "
-#~ msgstr ""
+#: os_msdos.c:2039 os_unix.c:2586 os_unix.c:3125 os_vms.c:1717
+msgid ""
+"\n"
+"shell returned "
+msgstr ""
 
-#: os_riscos.c:1211
+#: os_mswin.c:564
+msgid "'columns' is not 80, cannot execute external commands"
+msgstr "'columns'이 80이 아니어서, 외부 명령을 실행할 수 없습니다"
+
+#: os_mswin.c:676
+#, c-format
+msgid "Library call failed for \"%s\"()"
+msgstr "라이브러리 \"%s\"() 부르기 실패"
+
+#: os_riscos.c:1213
 msgid "Invalid 'filetype' option - using Text"
 msgstr "잘못된 'filetype' 옵션 - Text를 사용합니다"
 
-#: os_unix.c:735 os_vms.c:411
+#: os_unix.c:737 os_vms.c:398
 msgid "Vim: Double signal, exiting\n"
 msgstr "빔: 같은 시그널 두번, 종료합니다\n"
 
-#: os_unix.c:741 os_vms.c:417
+#: os_unix.c:743 os_vms.c:404
 #, c-format
-#~ msgid "Vim: Caught %s %s\n"
-#~ msgstr ""
+msgid "Vim: Caught %s %s\n"
+msgstr ""
 
-#: os_unix.c:743 os_unix.c:745 os_vms.c:419 os_vms.c:421
-#~ msgid "deadly signal"
-#~ msgstr ""
+#: os_unix.c:745 os_unix.c:747 os_vms.c:406 os_vms.c:408
+msgid "deadly signal"
+msgstr ""
 
-#: os_unix.c:745 os_vms.c:421
-#~ msgid "some"
-#~ msgstr ""
+#: os_unix.c:747 os_vms.c:408
+msgid "some"
+msgstr ""
 
-#: os_unix.c:974 os_vms.c:633
+#: os_unix.c:994 os_vms.c:620
 msgid ""
 "\n"
 "Vim: Got X error\n"
@@ -3883,13 +4063,13 @@ msgstr ""
 "\n"
 "빔: X 에러가 발생했습니다\n"
 
-#: os_unix.c:2515 os_unix.c:3079
-#~ msgid ""
-#~ "\n"
-#~ "Cannot execute shell "
-#~ msgstr ""
+#: os_unix.c:2555 os_unix.c:3119
+msgid ""
+"\n"
+"Cannot execute shell "
+msgstr ""
 
-#: os_unix.c:2541 os_vms.c:1729
+#: os_unix.c:2582 os_vms.c:1714
 msgid ""
 "\n"
 "Cannot execute shell sh\n"
@@ -3897,7 +4077,7 @@ msgstr ""
 "\n"
 "쉘 sh를 실행할 수 없습니다\n"
 
-#: os_unix.c:2680
+#: os_unix.c:2720
 msgid ""
 "\n"
 "Cannot create pipes\n"
@@ -3905,7 +4085,7 @@ msgstr ""
 "\n"
 "파이프를 생성할 수 없습니다\n"
 
-#: os_unix.c:2695
+#: os_unix.c:2735
 msgid ""
 "\n"
 "Cannot fork\n"
@@ -3913,7 +4093,7 @@ msgstr ""
 "\n"
 "자식 프로세스를 만들 수 없습니다\n"
 
-#: os_unix.c:3092
+#: os_unix.c:3132
 msgid ""
 "\n"
 "Command terminated\n"
@@ -3921,827 +4101,649 @@ msgstr ""
 "\n"
 "명령이 종료되었습니다\n"
 
-#: os_unix.c:4429
+#: os_unix.c:4529
 msgid "Library call failed"
 msgstr "라이브러리를 부르는 데 실패했습니다"
 
-#: os_vms.c:489
-#~ msgid ""
-#~ "\n"
-#~ "Detach failed"
-#~ msgstr ""
+#: os_vms.c:476
+msgid ""
+"\n"
+"Detach failed"
+msgstr ""
 
-#: os_vms.c:1111
+#: os_vms.c:1098
 #, c-format
 msgid "Error %d"
 msgstr "에러 %d"
 
 #: os_vms_mms.c:59
-#~ msgid "At line"
-#~ msgstr ""
+msgid "At line"
+msgstr ""
 
-#: os_w32exe.c:164
+#: os_w32exe.c:166
 msgid "Could not load vim32.dll!"
 msgstr "vim32.dll을 불러들일 수 없습니다!"
 
-#: os_w32exe.c:164 os_w32exe.c:174
+#: os_w32exe.c:166 os_w32exe.c:176
 msgid "VIM Error"
 msgstr "빔 에러"
 
-#: os_w32exe.c:174
+#: os_w32exe.c:176
 msgid "Could not fix up function pointers to the DLL!"
 msgstr "함수 포인터를 DLL로 바꿀 수 없습니다!"
 
-#: os_win16.c:831 os_win32.c:3188
+#: os_win16.c:582 os_win32.c:2771
 #, c-format
-#~ msgid "shell returned %d"
-#~ msgstr ""
+msgid "shell returned %d"
+msgstr ""
 
-#: os_win16.c:1184 os_win32.c:4363
-#, c-format
-msgid "Library call failed for \"%s\"()"
-msgstr "라이브러리 \"%s\"() 부르기 실패"
+#: os_win32.c:1300
+msgid ""
+"VIMRUN.EXE not found in your $PATH.\n"
+"External commands will not pause after completion.\n"
+"See  :help win32-vimrun  for more information."
+msgstr ""
 
-#: os_win32.c:1339
-#~ msgid ""
-#~ "VIMRUN.EXE not found in your $PATH.\n"
-#~ "External commands will not pause after completion.\n"
-#~ "See  :help win32-vimrun  for more information."
-#~ msgstr ""
-
-#: os_win32.c:1342
+#: os_win32.c:1303
 msgid "Vim Warning"
 msgstr "빔 경고"
 
-#: os_win32.c:2504
+#: os_win32.c:2269
 #, c-format
 msgid "Vim: Caught %s event\n"
 msgstr "빔: %s 이벤트를 잡았습니다\n"
 
-#: os_win32.c:2506
+#: os_win32.c:2271
 msgid "close"
 msgstr "닫기"
 
-#: os_win32.c:2508
+#: os_win32.c:2273
 msgid "logoff"
 msgstr "로그아웃"
 
-#: os_win32.c:2509
+#: os_win32.c:2274
 msgid "shutdown"
 msgstr "셧다운"
 
-#: os_win32.c:2808
-msgid ""
-"\n"
-"Press any key to close this window..."
-msgstr ""
-"\n"
-"이 창을 닫으려면 아무 글쇠나 누르세요..."
-
-#: os_win32.c:2814
-#, c-format
-#~ msgid ""
-#~ "\n"
-#~ "shell returned %ld."
-#~ msgstr ""
-
-#: os_win32.c:3152
+#: os_win32.c:2737
 msgid "Command not found"
 msgstr "명령을 찾을 수 없습니다"
 
-#: os_win32.c:3536
-msgid "'columns' is not 80, cannot execute external commands"
-msgstr "'columns'이 80이 아니어서, 외부 명령을 실행할 수 없습니다"
-
-#: quickfix.c:258
+#: quickfix.c:261
 msgid "Too many %%%c in format string"
 msgstr "형식 문자열에 %%%c가 너무 많습니다"
 
-#: quickfix.c:271
+#: quickfix.c:274
 msgid "Unexpected %%%c in format string"
 msgstr "형식 문자열에 %%%c가 잘못되었습니다"
 
-#: quickfix.c:300
+#: quickfix.c:328
 msgid "Missing ] in format string"
 msgstr "형식 문자열에 ]가 없습니다"
 
-#: quickfix.c:314
+#: quickfix.c:342
 msgid "Unsupported %%%c in format string"
 msgstr "형식 문자열에 지원되지 않는 %%%c가 있습니다"
 
-#: quickfix.c:332
+#: quickfix.c:360
 msgid "Invalid %%%c in format string prefix"
 msgstr "형식 문자열 서두에 잘못된 %%%c가 있습니다"
 
-#: quickfix.c:340
+#: quickfix.c:368
 msgid "Invalid %%%c in format string"
 msgstr "형식 문자열에 잘못된 %%%c가 있습니다"
 
-#: quickfix.c:366
+#: quickfix.c:394
 msgid "'errorformat' contains no pattern"
 msgstr "'errorformat'이 어떤 패턴도 포함하고 있지 않습니다"
 
-#: quickfix.c:381
-#~ msgid "Change dir debugging enabled."
-#~ msgstr ""
-
-#: quickfix.c:435
-#, c-format
-msgid "Not a proper file name: '%s'"
-msgstr "정상적인 파일 이름이 아닙니다: '%s'"
-
-#: quickfix.c:443
-#, c-format
-msgid "File name '%s' is valid"
-msgstr "파일 이름 '%s'은 비정상입니다"
-
-#: quickfix.c:480
+#: quickfix.c:494
 msgid "Missing or empty directory name"
 msgstr "빠졌거나 빈 디렉토리 이름"
 
-#: quickfix.c:486
-#, c-format
-msgid "Enter: %s"
-msgstr "들어감: %s"
-
-#: quickfix.c:493
-#, c-format
-msgid "Leave: %s"
-msgstr "나감: %s"
-
-#: quickfix.c:891
+#: quickfix.c:894
 msgid "No more items"
 msgstr "더 이상의 항목이 없습니다"
 
-#: quickfix.c:1084
+#: quickfix.c:1129
 #, c-format
-#~ msgid "(%d of %d)%s%s: "
-#~ msgstr ""
+msgid "(%d of %d)%s%s: "
+msgstr ""
 
-#: quickfix.c:1086
+#: quickfix.c:1131
 msgid " (line deleted)"
 msgstr " (라인 삭제됨)"
 
-#: quickfix.c:1290
+#: quickfix.c:1335
 msgid "At bottom of quickfix stack"
 msgstr "퀵픽스 스택의 바닥입니다"
 
-#: quickfix.c:1299
+#: quickfix.c:1344
 msgid "At top of quickfix stack"
 msgstr "퀵픽스 스택의 꼭대기입니다"
 
-#: quickfix.c:1311
+#: quickfix.c:1356
 #, c-format
-#~ msgid "error list %d of %d; %d errors"
-#~ msgstr ""
+msgid "error list %d of %d; %d errors"
+msgstr ""
 
-#: regexp.c:979
-#~ msgid "Unmatched \\)"
-#~ msgstr ""
+#: quickfix.c:1703
+msgid "Cannot write, 'buftype' option is set"
+msgstr "쓸 수 없음, 'buftype' 옵션이 설정되어 있습니다"
 
-#: regexp.c:1128
-#~ msgid "*, \\+ or \\{ operand could be empty"
-#~ msgstr ""
-
-#: regexp.c:1179
-msgid "invalid character after \\@"
-msgstr "\\@ 뒤에 잘못된 문자가 있습니다"
-
-#: regexp.c:1207
-#~ msgid "Too many complex \\{...}s"
-#~ msgstr ""
-
-#: regexp.c:1219
-#~ msgid "Nested *, \\=, \\+, \\! or \\{"
-#~ msgstr ""
-
-#: regexp.c:1316
-msgid "invalid use of \\_"
-msgstr "\\_가 잘못 사용되었습니다"
-
-#: regexp.c:1341
-msgid "\\= follows nothing"
-msgstr "\\= 앞에 아무것도 없습니다"
-
-#: regexp.c:1345
-msgid "\\+ follows nothing"
-msgstr "\\+ 앞에 아무것도 없습니다"
-
-#: regexp.c:1349
-msgid "\\@ follows nothing"
-msgstr "\\@ 앞에 아무것도 없습니다"
-
-#: regexp.c:1353
-msgid "\\{ follows nothing"
-msgstr "\\{ 앞에 아무것도 없습니다"
-
-#: regexp.c:1358
-msgid "* follows nothing"
-msgstr "* 앞에 아무것도 없습니다"
-
-#: regexp.c:1359
-msgid "\\* follows nothing"
-msgstr "\\* 앞에 아무것도 없습니다"
-
-#: regexp.c:1409
-#~ msgid "Illegal back reference"
-#~ msgstr ""
-
-#: regexp.c:1420
-msgid "\\z( not allowed here"
-msgstr "\\z(는 여기에서 사용될 수 없습니다"
-
-#: regexp.c:1437
-#~ msgid "\\z1 et al. not allowed here"
-#~ msgstr ""
-
-#: regexp.c:1448
-#~ msgid "unattached \\z"
-#~ msgstr ""
-
-#: regexp.c:1665
-#~ msgid "Unexpected magic character; check META."
-#~ msgstr ""
-
-#: regexp.c:2097
+#: regexp.c:1363
 #, c-format
-#~ msgid "Syntax error in \\%c...%c"
-#~ msgstr ""
+msgid "Nested %s*"
+msgstr ""
 
-#: regexp.c:2331
-#~ msgid "Crash intercepted; regexp too complex?"
-#~ msgstr ""
+#: regexp.c:1366
+#, c-format
+msgid "Nested %s%c"
+msgstr ""
 
-#: regexp.c:2448
-#~ msgid "pattern caused out-of-stack error"
-#~ msgstr ""
+#: regexp.c:1515
+#, c-format
+msgid "%s%c follows nothing"
+msgstr ""
 
-#: regexp.c:2672
-#~ msgid "External submatches:\n"
-#~ msgstr ""
+#: regexp.c:2433
+#, c-format
+msgid "Syntax error in %s{...}"
+msgstr "%s{...}에 구문 에러"
 
-#: screen.c:3821 screen.c:4407
-msgid "[help]"
-msgstr "[도움말]"
+#: regexp.c:2678
+msgid "Crash intercepted; regexp too complex?"
+msgstr "죽음 가로챔; 정규표현식이 너무 복잡한가요?"
 
-#: screen.c:3826 screen.c:4436
-msgid "[Preview]"
-msgstr "[미리보기]"
+#: regexp.c:2812
+msgid "pattern caused out-of-stack error"
+msgstr "패턴에 의해 스택넘침 에러가 발생했습니다"
 
-#: screen.c:8732
-msgid " REVERSE"
-msgstr " "
+#: regexp.c:3059
+msgid "External submatches:\n"
+msgstr ""
 
-#: screen.c:8734
-msgid " INSERT"
-msgstr " 삽입"
+#: screen.c:6515
+msgid " VREPLACE"
+msgstr " 선택치환"
 
-#: screen.c:8737
+#: screen.c:6517
 msgid " REPLACE"
 msgstr " 치환"
 
-#: screen.c:8739
-#~ msgid " VREPLACE"
-#~ msgstr ""
+#: screen.c:6522
+msgid " REVERSE"
+msgstr " 반대"
 
-#: screen.c:8741
+#: screen.c:6524
+msgid " INSERT"
+msgstr " 삽입"
+
+#: screen.c:6527
 msgid " (insert)"
 msgstr " (삽입)"
 
-#: screen.c:8743
+#: screen.c:6529
 msgid " (replace)"
 msgstr " (치환)"
 
-#: screen.c:8745
-#~ msgid " (vreplace)"
-#~ msgstr ""
+#: screen.c:6531
+msgid " (vreplace)"
+msgstr " (선택치환)"
 
-#: screen.c:8748
-#~ msgid " Hebrew"
-#~ msgstr ""
+#: screen.c:6534
+msgid " Hebrew"
+msgstr " 헤브루"
 
-#: screen.c:8755
+#: screen.c:6541
 msgid " (paste)"
 msgstr " (붙이기)"
 
-#: screen.c:8761
+#: screen.c:6547
 msgid " SELECT"
 msgstr " 선택"
 
-#: screen.c:8763
+#: screen.c:6549
 msgid " VISUAL"
 msgstr " 비주얼"
 
-#: screen.c:8765
+#: screen.c:6551
 msgid " BLOCK"
 msgstr " 블럭"
 
-#: screen.c:8767
+#: screen.c:6553
 msgid " LINE"
 msgstr " 라인"
 
-#: screen.c:8776 screen.c:8830
+#: screen.c:6562 screen.c:6616
 msgid "recording"
 msgstr "기록중"
 
-#: screen.c:9107
-msgid "All"
-msgstr "모두"
-
-#: screen.c:9107
-msgid "Bot"
-msgstr "바닥"
-
-#: screen.c:9109
-msgid "Top"
-msgstr "꼭대기"
-
-#: screen.c:9604
-msgid "VIM - Vi IMproved"
-msgstr "빔 - 향상된 Vi"
-
-#: screen.c:9606
-msgid "version "
-msgstr "버전 "
-
-#: screen.c:9607
-msgid "by Bram Moolenaar et al."
-msgstr "by Bram Moolenaar et al."
-
-#: screen.c:9609
-msgid "Vim is freely distributable"
-msgstr "빔은 공짜로 배포됩니다"
-
-#: screen.c:9610
-msgid "type  :help uganda<Enter>     if you like Vim "
-msgstr "빔을 좋아하시면            :help uganda<엔터>     입력"
-
-#: screen.c:9612
-msgid "type  :q<Enter>               to exit         "
-msgstr "종료하려면                 :q<엔터>               입력"
-
-#: screen.c:9613
-msgid "type  :help<Enter>  or  <F1>  for on-line help"
-msgstr "온라인 도움말을 보려면     :help<엔터> 혹은 <F1>  입력"
-
-#: screen.c:9614
-msgid "type  :help version6<Enter>   for version info"
-msgstr "버전 정보를 보려면         :help version6<엔터>   입력"
-
-#: screen.c:9617
-msgid "Running in Vi compatible mode"
-msgstr "Vi 호환모드로 실행중입니다"
-
-#: screen.c:9618
-msgid "type  :set nocp<Enter>        for Vim defaults"
-msgstr "빔 기본값을 사용하려면     :set nocp<엔터>        입력"
-
-#: screen.c:9619
-msgid "type  :help cp-default<Enter> for info on this"
-msgstr "이에 대한 정보를 보려면    :help cp-default<엔터> 입력"
-
-#: screen.c:9671
-msgid "WARNING: Windows 95 detected"
-msgstr "경고: 윈도우즈 95 찾아짐"
-
-#: screen.c:9673
-msgid "type  :help windows95<Enter>  for info on this"
-msgstr "이에 대한 정보를 보려면    :help windows95<엔터>  입력"
-
-#: screen.c:9678
-msgid "     WARNING: Intel CPU detected.    "
-msgstr "     경고: 인텔 CPU 찾아짐.     "
-
-#: screen.c:9680
-msgid " PPC has a much better architecture. "
-msgstr " PPC가 더 나은 구조를 가지고 있습니다. "
-
-#: search.c:32
+#: search.c:36
 msgid "search hit TOP, continuing at BOTTOM"
 msgstr "처음까지 찾아짐, 끝에서 계속"
 
-#: search.c:33
+#: search.c:37
 msgid "search hit BOTTOM, continuing at TOP"
 msgstr "끝까지 찾아짐, 처음부터 계속"
 
-#: search.c:421
+#: search.c:433
 #, c-format
 msgid "Invalid search string: %s"
 msgstr "잘못된 찾기 문자열: %s"
 
-#: search.c:684
+#: search.c:739
 #, c-format
 msgid "search hit TOP without match for: %s"
 msgstr "처음까지 맞는 문자열이 없습니다: %s"
 
-#: search.c:686
+#: search.c:741
 #, c-format
 msgid "search hit BOTTOM without match for: %s"
 msgstr "끝까지 맞는 문자열이 없습니다: %s"
 
-#: search.c:1020
+#: search.c:1099
 msgid "Expected '?' or '/'  after ';'"
 msgstr "';' 뒤에는 '?'나 '/'가 와야 합니다"
 
-#: search.c:3364
+#: search.c:3446
 msgid " (includes previously listed match)"
 msgstr " (이전에 맞았던 목록 포함)"
 
 #. cursor at status line
-#: search.c:3384
-#~ msgid "--- Included files "
-#~ msgstr ""
+#: search.c:3466
+msgid "--- Included files "
+msgstr ""
 
-#: search.c:3386
-#~ msgid "not found "
-#~ msgstr ""
+#: search.c:3468
+msgid "not found "
+msgstr ""
 
-#: search.c:3387
-#~ msgid "in path ---\n"
-#~ msgstr ""
+#: search.c:3469
+msgid "in path ---\n"
+msgstr ""
 
-#: search.c:3426
-#~ msgid "  (Already listed)"
-#~ msgstr ""
+#: search.c:3508
+msgid "  (Already listed)"
+msgstr ""
 
-#: search.c:3428
+#: search.c:3510
 msgid "  NOT FOUND"
 msgstr "  않 찾아짐"
 
-#: search.c:3480
+#: search.c:3562
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "포함된 파일 검색중: %s"
 
-#: search.c:3709
-#~ msgid "Match is on current line"
-#~ msgstr ""
+#: search.c:3785
+msgid "Match is on current line"
+msgstr ""
 
-#: search.c:3843
+#: search.c:3925
 msgid "All included files were found"
 msgstr "모든 포함된 파일들이 찾아졌습니다"
 
-#: search.c:3845
+#: search.c:3927
 msgid "No included files"
 msgstr "포함된 파일이 없습니다"
 
-#: search.c:3861
+#: search.c:3943
 msgid "Couldn't find definition"
 msgstr "정의를 찾을 수 없습니다"
 
-#: search.c:3863
+#: search.c:3945
 msgid "Couldn't find pattern"
 msgstr "패턴을 찾을 수 없습니다"
 
-#: syntax.c:3083 syntax.c:3271
+#: syntax.c:3100 syntax.c:3316
 #, c-format
-#~ msgid "No such syntax cluster: %s"
-#~ msgstr ""
+msgid "No such syntax cluster: %s"
+msgstr "이런 구문 클러스터는 없습니다: %s"
 
-#: syntax.c:3104 syntax.c:3279
+#: syntax.c:3121 syntax.c:3324
 #, c-format
-#~ msgid "No such highlight group name: %s"
-#~ msgstr ""
+msgid "No such highlight group name: %s"
+msgstr "이런 하이라이트 그룹 이름은 없습니다: %s"
 
-#: syntax.c:3215
-#~ msgid "No Syntax items defined for this buffer"
-#~ msgstr ""
+#: syntax.c:3260
+msgid "No Syntax items defined for this buffer"
+msgstr "이 버퍼에 대해 정의된 구문 항목이 없습니다"
 
-#: syntax.c:3223
-#~ msgid "syncing on C-style comments"
-#~ msgstr ""
+#: syntax.c:3268
+msgid "syncing on C-style comments"
+msgstr "C-형식 주석문에 동기맞춤"
 
-#: syntax.c:3231
-#~ msgid "no syncing"
-#~ msgstr ""
+#: syntax.c:3276
+msgid "no syncing"
+msgstr ""
 
-#: syntax.c:3234
-#~ msgid "syncing starts "
-#~ msgstr ""
+#: syntax.c:3279
+msgid "syncing starts "
+msgstr ""
 
-#: syntax.c:3236 syntax.c:3305
-#~ msgid " lines before top line"
-#~ msgstr ""
+#: syntax.c:3281 syntax.c:3350
+msgid " lines before top line"
+msgstr ""
 
-#: syntax.c:3240
-#~ msgid ""
-#~ "\n"
-#~ "--- Syntax sync items ---"
-#~ msgstr ""
+#: syntax.c:3285
+msgid ""
+"\n"
+"--- Syntax sync items ---"
+msgstr ""
 
-#: syntax.c:3243
-#~ msgid ""
-#~ "\n"
-#~ "syncing on items"
-#~ msgstr ""
+#: syntax.c:3288
+msgid ""
+"\n"
+"syncing on items"
+msgstr ""
 
-#: syntax.c:3248
-#~ msgid ""
-#~ "\n"
-#~ "--- Syntax items ---"
-#~ msgstr ""
+#: syntax.c:3293
+msgid ""
+"\n"
+"--- Syntax items ---"
+msgstr ""
 
-#: syntax.c:3295
-#~ msgid "minimal "
-#~ msgstr ""
+#: syntax.c:3340
+msgid "minimal "
+msgstr ""
 
-#: syntax.c:3302
-#~ msgid "maximal "
-#~ msgstr ""
+#: syntax.c:3347
+msgid "maximal "
+msgstr ""
 
-#: syntax.c:3888
-#~ msgid "group[t]here not accepted here"
-#~ msgstr ""
+#: syntax.c:3964
+msgid "group[t]here not accepted here"
+msgstr ""
 
-#: syntax.c:3912
+#: syntax.c:3988
 #, c-format
-#~ msgid "Didn't find region item for %s"
-#~ msgstr ""
+msgid "Didn't find region item for %s"
+msgstr ""
 
-#: syntax.c:3940
-#~ msgid "contains argument not accepted here"
-#~ msgstr ""
+#: syntax.c:4016
+msgid "contains argument not accepted here"
+msgstr ""
 
-#: syntax.c:4017
+#: syntax.c:4027
+msgid "containedin argument not accepted here"
+msgstr ""
+
+#: syntax.c:4104
 msgid "Filename required"
 msgstr "파일이름이 필요합니다"
 
-#: syntax.c:4325
+#: syntax.c:4419
 #, c-format
 msgid "Missing '=': %s"
 msgstr "'='이 없습니다: %s"
 
-#: syntax.c:4478
+#: syntax.c:4575
 #, c-format
 msgid "Not enough arguments: syntax region %s"
 msgstr "충분치 않은 인자: 구문 영역 %s"
 
-#: syntax.c:4809
+#: syntax.c:4906
 msgid "No cluster specified"
 msgstr "클러스터가 명시되지 않았습니다"
 
-#: syntax.c:4846
+#: syntax.c:4943
 #, c-format
 msgid "Pattern delimiter not found: %s"
 msgstr "패턴 구분자를 찾을 수 없습니다: %s"
 
-#: syntax.c:4921
+#: syntax.c:5018
 #, c-format
 msgid "Garbage after pattern: %s"
 msgstr "패턴 뒤에 쓰레기: %s"
 
-#: syntax.c:5003
-#~ msgid "syntax sync: line continuations pattern specified twice"
-#~ msgstr ""
+#: syntax.c:5100
+msgid "syntax sync: line continuations pattern specified twice"
+msgstr ""
 
-#: syntax.c:5060
+#: syntax.c:5157
 #, c-format
 msgid "Illegal arguments: %s"
 msgstr "비정상적인 인자: %s"
 
-#: syntax.c:5110
+#: syntax.c:5207
 #, c-format
-#~ msgid "Missing equal sign: %s"
-#~ msgstr ""
+msgid "Missing equal sign: %s"
+msgstr "이퀄 기호가 빠짐: %s"
 
-#: syntax.c:5116
+#: syntax.c:5213
 #, c-format
 msgid "Empty argument: %s"
 msgstr "빈 인자: %s"
 
-#: syntax.c:5141
+#: syntax.c:5240
 #, c-format
 msgid "%s not allowed here"
 msgstr "%s는 여기에서 허용되지 않습니다"
 
-#: syntax.c:5148
+#: syntax.c:5247
 #, c-format
 msgid "%s must be first in contains list"
 msgstr "%s는 contains 목록의 첫번째여야 합니다"
 
-#: syntax.c:5212
+#: syntax.c:5317
 #, c-format
 msgid "Unknown group name: %s"
 msgstr "모르는 그룹 이름: %s"
 
-#: syntax.c:5395
+#: syntax.c:5530
 #, c-format
 msgid "Invalid :syntax subcommand: %s"
 msgstr "잘못된 :syntax 하위명령: %s"
 
-#: syntax.c:5702
+#: syntax.c:5843
 #, c-format
 msgid "highlight group not found: %s"
 msgstr "하이라이트 그룹을 찾을 수 없습니다: %s"
 
-#: syntax.c:5726
+#: syntax.c:5867
 #, c-format
 msgid "Not enough arguments: \":highlight link %s\""
 msgstr "충분치 않은 인자: \":highlight link %s\""
 
-#: syntax.c:5733
+#: syntax.c:5874
 #, c-format
 msgid "Too many arguments: \":highlight link %s\""
 msgstr "너무 많은 인자: \":highlight link %s\""
 
-#: syntax.c:5753
-#~ msgid "group has settings, highlight link ignored"
-#~ msgstr ""
+#: syntax.c:5894
+msgid "group has settings, highlight link ignored"
+msgstr ""
 
-#: syntax.c:5775
-#~ msgid "Cannot clear all highlight groups"
-#~ msgstr ""
+#: syntax.c:5916
+msgid "Cannot clear all highlight groups"
+msgstr "모든 하이라이트 그룹을 지울 수 없습니다"
 
-#: syntax.c:5811
+#: syntax.c:5952
 #, c-format
-#~ msgid "unexpected equal sign: %s"
-#~ msgstr ""
+msgid "unexpected equal sign: %s"
+msgstr ""
 
-#: syntax.c:5847
+#: syntax.c:5988
 #, c-format
-#~ msgid "missing equal sign: %s"
-#~ msgstr ""
+msgid "missing equal sign: %s"
+msgstr "이퀄 기호가 빠짐: %s"
 
-#: syntax.c:5869
+#: syntax.c:6010
 #, c-format
 msgid "missing argument: %s"
 msgstr "인자가 빠짐: %s"
 
-#: syntax.c:5906
+#: syntax.c:6047
 #, c-format
 msgid "Illegal value: %s"
 msgstr "비정상적인 값: %s"
 
-#: syntax.c:5983
+#: syntax.c:6124
 msgid "FG color unknown"
 msgstr "모르는 FG 색상"
 
-#: syntax.c:5994
+#: syntax.c:6135
 msgid "BG color unknown"
 msgstr "모르는 BG 색상"
 
-#: syntax.c:6044
+#: syntax.c:6185
 #, c-format
 msgid "Color name or number not recognized: %s"
 msgstr "색 이름이나 숫자를 인식할 수 없음: %s"
 
-#: syntax.c:6222
+#: syntax.c:6363
 #, c-format
 msgid "terminal code too long: %s"
 msgstr "터미널 코드가 너무 김: %s"
 
-#: syntax.c:6735
-#~ msgid "Too many different highlighting attributes in use"
-#~ msgstr ""
-
-#: tag.c:89
-#~ msgid "at bottom of tag stack"
-#~ msgstr ""
+#: syntax.c:6895
+msgid "Too many different highlighting attributes in use"
+msgstr ""
 
 #: tag.c:90
-#~ msgid "at top of tag stack"
-#~ msgstr ""
+msgid "at bottom of tag stack"
+msgstr ""
 
-#: tag.c:324
-#~ msgid "Cannot go before first matching tag"
-#~ msgstr ""
+#: tag.c:91
+msgid "at top of tag stack"
+msgstr ""
 
-#: tag.c:430
+#: tag.c:389
+msgid "Cannot go before first matching tag"
+msgstr ""
+
+#: tag.c:509
 #, c-format
 msgid "tag not found: %s"
 msgstr "태그를 찾을 수 없음: %s"
 
-#: tag.c:462
-#~ msgid "  # pri kind tag"
-#~ msgstr ""
+#: tag.c:541
+msgid "  # pri kind tag"
+msgstr ""
 
-#: tag.c:465
+#: tag.c:544
 msgid "file\n"
 msgstr "파일\n"
 
 #.
 #. * Ask to select a tag from the list.
 #.
-#: tag.c:617
+#: tag.c:701
 msgid "Enter nr of choice (<CR> to abort): "
 msgstr "선택할 숫자 입력 (<CR>은 중지):"
 
-#: tag.c:653
+#: tag.c:741
 msgid "There is only one matching tag"
 msgstr "맞는 태그가 하나 밖에 없습니다"
 
-#: tag.c:655
-#~ msgid "Cannot go beyond last matching tag"
-#~ msgstr ""
+#: tag.c:743
+msgid "Cannot go beyond last matching tag"
+msgstr ""
 
-#: tag.c:671 tag.c:731
+#: tag.c:763 tag.c:823
 #, c-format
 msgid "File \"%s\" does not exist"
 msgstr "파일 \"%s\"가 존재하지 않습니다"
 
 #. Give an indication of the number of matching tags
-#: tag.c:683
+#: tag.c:775
 #, c-format
-#~ msgid "tag %d of %d%s"
-#~ msgstr ""
+msgid "tag %d of %d%s"
+msgstr ""
 
-#: tag.c:686
-#~ msgid " or more"
-#~ msgstr ""
+#: tag.c:778
+msgid " or more"
+msgstr ""
 
-#: tag.c:688
-#~ msgid "  Using tag with different case!"
-#~ msgstr ""
+#: tag.c:780
+msgid "  Using tag with different case!"
+msgstr ""
 
 #. Highlight title
-#: tag.c:800
-#~ msgid ""
-#~ "\n"
-#~ "  # TO tag         FROM line  in file/text"
-#~ msgstr ""
+#: tag.c:892
+msgid ""
+"\n"
+"  # TO tag         FROM line  in file/text"
+msgstr ""
 
-#: tag.c:1038
+#: tag.c:1131
 msgid "Linear tag search"
 msgstr "선형 태그 찾기"
 
-#: tag.c:1040
+#: tag.c:1133
 msgid "Binary tag search"
 msgstr "이진 태그 찾기"
 
-#: tag.c:1066
+#: tag.c:1159
 #, c-format
 msgid "Searching tags file %s"
 msgstr "태그 파일 %s 찾는 중"
 
-#: tag.c:1254
+#: tag.c:1343
 #, c-format
 msgid "Tag file path truncated for %s\n"
 msgstr "%s에 대한 태그파일 경로가 잘려졌습니다\n"
 
-#: tag.c:1745
+#: tag.c:1834
 #, c-format
 msgid "Format error in tags file \"%s\""
 msgstr "태그 파일 \"%s\"에 형식 에러가 있습니다"
 
-#: tag.c:1749
+#: tag.c:1838
 #, c-format
-#~ msgid "Before byte %ld"
-#~ msgstr ""
+msgid "Before byte %ld"
+msgstr ""
 
-#: tag.c:1770
+#: tag.c:1859
 #, c-format
 msgid "Tags file not sorted: %s"
 msgstr "태그 파일이 정렬되어 있지 않음: %s"
 
 #. never opened any tags file
-#: tag.c:1809
+#: tag.c:1898
 msgid "No tags file"
 msgstr "태그 파일이 없습니다"
 
-#: tag.c:2476
+#: tag.c:2565
 msgid "Can't find tag pattern"
 msgstr "태그 패턴을 찾을 수 없습니다"
 
-#: tag.c:2487
+#: tag.c:2576
 msgid "Couldn't find tag, just guessing!"
 msgstr "태그를 찾을 수 없지만 이거 같네요!"
 
-#: tag.c:2519
-msgid "WARNING: tag command changed a buffer!!!"
-msgstr "경고: 태그 명령이 버퍼를 바꾸었습니다!!!"
+#: term.c:1690
+msgid "' not known. Available builtin terminals are:"
+msgstr ""
 
-#: term.c:1669
-#~ msgid "' not known. Available builtin terminals are:"
-#~ msgstr ""
+#: term.c:1714
+msgid "defaulting to '"
+msgstr ""
 
-#: term.c:1693
-#~ msgid "defaulting to '"
-#~ msgstr ""
+#: term.c:2041
+msgid "Cannot open termcap file"
+msgstr "termcap 파일을 열 수 없습니다"
 
-#: term.c:2016
-#~ msgid "Cannot open termcap file"
-#~ msgstr ""
+#: term.c:2044
+msgid "Terminal entry not found in terminfo"
+msgstr "터미널 항목을 terminfo에서 찾을 수 없습니다"
 
-#: term.c:2019
-#~ msgid "Terminal entry not found in terminfo"
-#~ msgstr ""
+#: term.c:2046
+msgid "Terminal entry not found in termcap"
+msgstr "터미널 항목을 termcap에서 찾을 수 없습니다"
 
-#: term.c:2021
-#~ msgid "Terminal entry not found in termcap"
-#~ msgstr ""
-
-#: term.c:2180
+#: term.c:2205
 #, c-format
-#~ msgid "No \"%s\" entry in termcap"
-#~ msgstr ""
+msgid "No \"%s\" entry in termcap"
+msgstr "termcap에 \"%s\" 항목이 없습니다"
 
-#: term.c:2654
-#, c-format
-#~ msgid "terminal capability %s required"
-#~ msgstr ""
+#: term.c:2664
+msgid "terminal capability \"cm\" required"
+msgstr "터미널이 \"cm\" 기능을 지원해야 합니다"
 
 #. Highlight title
-#: term.c:4676
+#: term.c:4700
 msgid ""
 "\n"
 "--- Terminal keys ---"
@@ -4749,40 +4751,40 @@ msgstr ""
 "\n"
 "--- 터미널 글쇠 ---"
 
-#: ui.c:199
-#~ msgid "new shell started\n"
-#~ msgstr ""
+#: ui.c:224
+msgid "new shell started\n"
+msgstr "새 쉘이 시작되었습니다\n"
 
-#: ui.c:1397
+#: ui.c:1547
 msgid "Vim: Error reading input, exiting...\n"
 msgstr "빔: 입력 읽는 중 에러, 종료중...\n"
 
-#: undo.c:312
+#: undo.c:333
 msgid "No undo possible; continue anyway"
 msgstr "취소 불가능; 어쨌든 계속합니다"
 
-#: undo.c:460
+#: undo.c:487
 msgid "u_undo: line numbers wrong"
 msgstr "u_undo: 잘못된 라인 번호"
 
-#: undo.c:617
+#: undo.c:645
 msgid "1 change"
 msgstr "하나 바꾸었습니다"
 
-#: undo.c:619
+#: undo.c:647
 #, c-format
 msgid "%ld changes"
 msgstr "%ld개를 바꾸었습니다"
 
-#: undo.c:659
-#~ msgid "undo list corrupt"
-#~ msgstr ""
+#: undo.c:687
+msgid "undo list corrupt"
+msgstr ""
 
-#: undo.c:689
-#~ msgid "undo line missing"
-#~ msgstr ""
+#: undo.c:717
+msgid "undo line missing"
+msgstr ""
 
-#: version.c:575
+#: version.c:584
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -4790,7 +4792,7 @@ msgstr ""
 "\n"
 "MS-Windows 16/32 비트 GUI 버전"
 
-#: version.c:577
+#: version.c:586
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -4798,15 +4800,15 @@ msgstr ""
 "\n"
 "MS-Windows 32 비트 GUI 버전"
 
-#: version.c:580
-#~ msgid " in Win32s mode"
-#~ msgstr ""
+#: version.c:589
+msgid " in Win32s mode"
+msgstr ""
 
-#: version.c:582
-#~ msgid " with OLE support"
-#~ msgstr ""
+#: version.c:591
+msgid " with OLE support"
+msgstr ""
 
-#: version.c:585
+#: version.c:594
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -4814,7 +4816,7 @@ msgstr ""
 "\n"
 "MS-Windows 32 비트 콘솔 버전"
 
-#: version.c:589
+#: version.c:598
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -4822,7 +4824,7 @@ msgstr ""
 "\n"
 "MS-Windows 16 비트 버전"
 
-#: version.c:593
+#: version.c:602
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -4830,7 +4832,7 @@ msgstr ""
 "\n"
 "32 비트 MS-DOS 버전"
 
-#: version.c:595
+#: version.c:604
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -4838,7 +4840,7 @@ msgstr ""
 "\n"
 "16 비트 MS-DOS 버전"
 
-#: version.c:599
+#: version.c:608
 msgid ""
 "\n"
 "MacOS version"
@@ -4846,7 +4848,7 @@ msgstr ""
 "\n"
 "MacOS 버전"
 
-#: version.c:602
+#: version.c:611
 msgid ""
 "\n"
 "RISC OS version"
@@ -4854,7 +4856,7 @@ msgstr ""
 "\n"
 "RISC OS 버전"
 
-#: version.c:612
+#: version.c:621
 msgid ""
 "\n"
 "Included patches: "
@@ -4862,175 +4864,241 @@ msgstr ""
 "\n"
 "포함된 패치들: "
 
-#: version.c:639
-#~ msgid ""
-#~ "\n"
-#~ "Compiled "
-#~ msgstr ""
+#: version.c:648
+msgid ""
+"\n"
+"Compiled "
+msgstr ""
 
-#: version.c:642
-#~ msgid "by "
-#~ msgstr ""
-
-#: version.c:654
-#~ msgid ""
-#~ "\n"
-#~ "Huge"
-#~ msgstr ""
-
-#: version.c:657
-#~ msgid ""
-#~ "\n"
-#~ "Big"
-#~ msgstr ""
-
-#: version.c:660
-#~ msgid ""
-#~ "\n"
-#~ "Normal"
-#~ msgstr ""
+#: version.c:651
+msgid "by "
+msgstr ""
 
 #: version.c:663
-#~ msgid ""
-#~ "\n"
-#~ "Small"
-#~ msgstr ""
+msgid ""
+"\n"
+"Huge version "
+msgstr ""
+"\n"
+"거대한 버전 "
 
-#: version.c:665
-#~ msgid ""
-#~ "\n"
-#~ "Tiny"
-#~ msgstr ""
+#: version.c:666
+msgid ""
+"\n"
+"Big version "
+msgstr ""
+"\n"
+"큰 버전 "
 
-#: version.c:670
-#~ msgid " version "
-#~ msgstr ""
+#: version.c:669
+msgid ""
+"\n"
+"Normal version "
+msgstr ""
+"\n"
+"보통 버전 "
 
 #: version.c:672
-#~ msgid "without"
-#~ msgstr ""
+msgid ""
+"\n"
+"Small version "
+msgstr ""
+"\n"
+"작은 버전 "
 
-#: version.c:676
-#~ msgid "with GTK-GNOME"
-#~ msgstr ""
+#: version.c:674
+msgid ""
+"\n"
+"Tiny version "
+msgstr ""
+"\n"
+"아주 작은 버전 "
 
-#: version.c:678
-#~ msgid "with GTK"
-#~ msgstr ""
+#: version.c:680
+msgid "without GUI."
+msgstr "GUI 없음."
 
-#: version.c:682
-#~ msgid "with X11-Motif"
-#~ msgstr ""
+#: version.c:684
+msgid "with GTK-GNOME GUI."
+msgstr "GTK-GNOME GUI."
 
-#: version.c:685
-#~ msgid "with X11-Athena"
-#~ msgstr ""
+#: version.c:686
+msgid "with GTK GUI."
+msgstr "GTK GUI."
 
-#: version.c:688
-#~ msgid "with BeOS"
-#~ msgstr ""
+#: version.c:690
+msgid "with X11-Motif GUI."
+msgstr "X11-Motif GUI."
 
-#: version.c:691
-#~ msgid "with"
-#~ msgstr ""
+#: version.c:693
+msgid "with X11-Athena GUI."
+msgstr "X11-Athena GUI."
 
-#: version.c:698
-#~ msgid " GUI.  Features included (+) or not (-):\n"
-#~ msgstr ""
+#: version.c:696
+msgid "with BeOS GUI."
+msgstr "BeOS GUI."
 
-#: version.c:710
-#~ msgid "   system vimrc file: \""
-#~ msgstr ""
+#: version.c:699
+msgid "with GUI."
+msgstr "GUI."
 
-#: version.c:715
-#~ msgid "     user vimrc file: \""
-#~ msgstr ""
+#: version.c:706
+msgid "  Features included (+) or not (-):\n"
+msgstr "  기능들 (+: 포함됨, -: 포함않됨):\n"
 
-#: version.c:720
-#~ msgid " 2nd user vimrc file: \""
-#~ msgstr ""
+#: version.c:718
+msgid "   system vimrc file: \""
+msgstr "        시스템 vimrc 파일: \""
 
-#: version.c:725
-#~ msgid " 3rd user vimrc file: \""
-#~ msgstr ""
+#: version.c:723
+msgid "     user vimrc file: \""
+msgstr "        사용자 vimrc 파일: \""
 
-#: version.c:730
-#~ msgid "      user exrc file: \""
-#~ msgstr ""
+#: version.c:728
+msgid " 2nd user vimrc file: \""
+msgstr " 사용자 두번째 vimrc 파일: \""
 
-#: version.c:735
-#~ msgid "  2nd user exrc file: \""
-#~ msgstr ""
+#: version.c:733
+msgid " 3rd user vimrc file: \""
+msgstr " 사용자 세번째 vimrc 파일: \""
 
-#: version.c:741
-#~ msgid "  system gvimrc file: \""
-#~ msgstr ""
+#: version.c:738
+msgid "      user exrc file: \""
+msgstr "         사용자 exrc 파일: \""
 
-#: version.c:745
-#~ msgid "    user gvimrc file: \""
-#~ msgstr ""
+#: version.c:743
+msgid "  2nd user exrc file: \""
+msgstr "  사용자 두번째 exrc 파일: \""
 
 #: version.c:749
-#~ msgid "2nd user gvimrc file: \""
-#~ msgstr ""
+msgid "  system gvimrc file: \""
+msgstr "       시스템 gvimrc 파일: \""
 
-#: version.c:754
-#~ msgid "3rd user gvimrc file: \""
-#~ msgstr ""
+#: version.c:753
+msgid "    user gvimrc file: \""
+msgstr "       사용자 gvimrc 파일: \""
 
-#: version.c:761
-#~ msgid "    system menu file: \""
-#~ msgstr ""
+#: version.c:757
+msgid "2nd user gvimrc file: \""
+msgstr "사용자 두번째 gvimrc 파일: \""
+
+#: version.c:762
+msgid "3rd user gvimrc file: \""
+msgstr "사용자 세번째 gvimrc 파일: \""
 
 #: version.c:769
-#~ msgid "  fall-back for $VIM: \""
-#~ msgstr ""
+msgid "    system menu file: \""
+msgstr "         시스템 메뉴 파일: \""
 
-#: version.c:775
-#~ msgid " f-b for $VIMRUNTIME: \""
-#~ msgstr ""
+#: version.c:777
+msgid "  fall-back for $VIM: \""
+msgstr ""
 
-#: version.c:779
+#: version.c:783
+msgid " f-b for $VIMRUNTIME: \""
+msgstr ""
+
+#: version.c:787
 msgid "Compilation: "
 msgstr "컴파일: "
 
-#: version.c:785
+#: version.c:793
 msgid "Compiler: "
 msgstr "컴파일러: "
 
-#: version.c:790
+#: version.c:798
 msgid "Linking: "
 msgstr "링크: "
 
-#: version.c:795
-#~ msgid "  DEBUG BUILD"
-#~ msgstr ""
+#: version.c:803
+msgid "  DEBUG BUILD"
+msgstr "  디버그 빌드"
 
-#: window.c:509
+#: version.c:837
+msgid "VIM - Vi IMproved"
+msgstr "빔 - 향상된 Vi"
+
+#: version.c:839
+msgid "version "
+msgstr "버전 "
+
+#: version.c:840
+msgid "by Bram Moolenaar et al."
+msgstr "by Bram Moolenaar et al."
+
+#: version.c:841
+msgid "Vim is open source and freely distributable"
+msgstr "빔은 소스가 공개되어 있고 공짜로 배포됩니다"
+
+#: version.c:843
+msgid "Help poor children in Uganda!"
+msgstr "우간다의 가난한 아이들을 도와주세요!"
+
+#: version.c:844
+msgid "type  :help iccf<Enter>       for information "
+msgstr "이에 대한 정보를 보려면    :help iccf<엔터>       입력"
+
+#: version.c:846
+msgid "type  :q<Enter>               to exit         "
+msgstr "종료하려면                 :q<엔터>               입력"
+
+#: version.c:847
+msgid "type  :help<Enter>  or  <F1>  for on-line help"
+msgstr "온라인 도움말을 보려면     :help<엔터> 혹은 <F1>  입력"
+
+#: version.c:848
+msgid "type  :help version6<Enter>   for version info"
+msgstr "버전 정보를 보려면         :help version6<엔터>   입력"
+
+#: version.c:851
+msgid "Running in Vi compatible mode"
+msgstr "Vi 호환모드로 실행중입니다"
+
+#: version.c:852
+msgid "type  :set nocp<Enter>        for Vim defaults"
+msgstr "빔 기본값을 사용하려면     :set nocp<엔터>        입력"
+
+#: version.c:853
+msgid "type  :help cp-default<Enter> for info on this"
+msgstr "이에 대한 정보를 보려면    :help cp-default<엔터> 입력"
+
+#: version.c:885
+msgid "WARNING: Windows 95/98/ME detected"
+msgstr "경고: 윈도우즈 95/98/ME 찾아짐"
+
+#: version.c:888
+msgid "type  :help windows95<Enter>  for info on this"
+msgstr "이에 대한 정보를 보려면    :help windows95<엔터>  입력"
+
+#: window.c:189
+msgid "There is no preview window"
+msgstr "미리보기 창이 없습니다"
+
+#: window.c:555
 msgid "Can't split topleft and botright at the same time"
 msgstr "위 왼쪽과 아래 오른쪽을 동시에 분할할 수 없습니다"
 
-#: window.c:1129
+#: window.c:1222
 msgid "Cannot rotate when another window is split"
 msgstr "다른 창이 분할되었을 때는 회전할 수 없습니다"
 
-#: window.c:1521
+#: window.c:1659
 msgid "Cannot close last window"
 msgstr "마지막 창을 닫을 수 없습니다"
 
-#: window.c:2062
+#: window.c:2239
 msgid "Already only one window"
 msgstr "이미 하나의 창만 있습니다"
 
-#: window.c:2092
+#: window.c:2269
 msgid "Other window contains changes"
 msgstr "다른 창이 바뀌었습니다"
 
-#: window.c:3757
+#: window.c:4032
 msgid "No file name under cursor"
 msgstr "커서 밑에 파일 이름이 없습니다"
 
-#: globals.h:796
+#: globals.h:842
 msgid "--No lines in buffer--"
 msgstr "--버퍼에 라인 없음--"
 
@@ -5038,283 +5106,283 @@ msgstr "--버퍼에 라인 없음--"
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #.
-#: globals.h:858
+#: globals.h:908
 msgid "Command aborted"
 msgstr "명령이 중지되었습니다"
 
-#: globals.h:859
+#: globals.h:909
 msgid "Argument required"
 msgstr "인자가 필요합니다"
 
-#: globals.h:860
-#~ msgid "\\ should be followed by /, ? or &"
-#~ msgstr ""
+#: globals.h:910
+msgid "\\ should be followed by /, ? or &"
+msgstr ""
 
-#: globals.h:861
-#~ msgid "Command not allowed from exrc/vimrc in current dir or tag search"
-#~ msgstr ""
+#: globals.h:912
+msgid "Invalid in command-line window; <CR> executes, CTRL-C quits"
+msgstr ""
 
-#: globals.h:862
+#: globals.h:914
+msgid "Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr ""
+
+#: globals.h:915
 msgid "File exists (use ! to override)"
 msgstr "파일이 있습니다 (덮어쓰려면 ! 사용)"
 
-#: globals.h:863
+#: globals.h:916
 msgid "Command failed"
 msgstr "명령이 실패했습니다"
 
-#: globals.h:864
+#: globals.h:917
 msgid "Internal error"
 msgstr "내부 에러"
 
-#: globals.h:865
+#: globals.h:918
 msgid "Interrupted"
 msgstr "중단됨"
 
-#: globals.h:866
+#: globals.h:919
 msgid "Invalid address"
 msgstr "잘못된 주소"
 
-#: globals.h:867
+#: globals.h:920
 msgid "Invalid argument"
 msgstr "잘못된 인자"
 
-#: globals.h:868
+#: globals.h:921
 #, c-format
 msgid "Invalid argument: %s"
 msgstr "잘못된 인자: %s"
 
-#: globals.h:870
+#: globals.h:923
 #, c-format
 msgid "Invalid expression: %s"
 msgstr "잘못된 표현식: %s"
 
-#: globals.h:872
+#: globals.h:925
 msgid "Invalid range"
 msgstr "잘못된 범위"
 
-#: globals.h:873
+#: globals.h:926
 msgid "Invalid command"
 msgstr "잘못된 명령"
 
-#: globals.h:875
+#: globals.h:928
 msgid "Unexpected characters before '='"
 msgstr "'=' 전에 생각지 못한 문자"
 
-#: globals.h:877
-#~ msgid "Mark has invalid line number"
-#~ msgstr ""
+#: globals.h:930
+msgid "Mark has invalid line number"
+msgstr ""
 
-#: globals.h:878
-#~ msgid "Mark not set"
-#~ msgstr ""
+#: globals.h:931
+msgid "Mark not set"
+msgstr ""
 
-#: globals.h:880
+#: globals.h:932
+msgid "Cannot make changes, 'modifiable' is off"
+msgstr ""
+
+#: globals.h:934
 msgid "GUI is not running"
 msgstr "GUI가 실행되고 있지 않습니다"
 
-#: globals.h:882
-#~ msgid "Scripts nested too deep"
-#~ msgstr ""
+#: globals.h:936
+msgid "Scripts nested too deep"
+msgstr ""
 
-#: globals.h:883
-#~ msgid "No alternate file"
-#~ msgstr ""
+#: globals.h:937
+msgid "No alternate file"
+msgstr ""
 
-#: globals.h:884
+#: globals.h:938
 msgid "No such abbreviation"
 msgstr "그런 약어는 없습니다"
 
-#: globals.h:885
+#: globals.h:939
 msgid "No ! allowed"
 msgstr "!은 허용되지 않습니다"
 
-#: globals.h:887
+#: globals.h:941
 msgid "GUI cannot be used: Not enabled at compile time"
 msgstr "GUI는 사용할 수 없습니다: 컴파일 때 포함되지 않았습니다"
 
-#: globals.h:890
+#: globals.h:944
 msgid "Hebrew cannot be used: Not enabled at compile time\n"
 msgstr "Hebrew는 사용할 수 없습니다: 컴파일 때 포함되지 않았습니다\n"
 
-#: globals.h:893
+#: globals.h:947
 msgid "Farsi cannot be used: Not enabled at compile time\n"
 msgstr "Farsi는 사용할 수 없습니다: 컴파일 때 포함되지 않았습니다\n"
 
-#: globals.h:895
+#: globals.h:949
 msgid "No inserted text yet"
 msgstr "입력된 텍스트가 아직 없습니다"
 
-#: globals.h:896
+#: globals.h:950
 msgid "No previous command line"
 msgstr "이전 명령 라인이 없습니다"
 
-#: globals.h:897
+#: globals.h:951
 msgid "No such mapping"
 msgstr "그런 맵핑이 없습니다"
 
-#: globals.h:898
+#: globals.h:952
 msgid "No match"
 msgstr "맞지 않습니다"
 
-#: globals.h:899
+#: globals.h:953
 #, c-format
 msgid "No match: %s"
 msgstr "맞지 않음: %s"
 
-#: globals.h:900
-msgid "No file name"
-msgstr "파일 이름이 없습니다"
-
-#: globals.h:901
+#: globals.h:955
 msgid "No previous substitute regular expression"
 msgstr "이전 치환 정규표현식이 없습니다"
 
-#: globals.h:902
+#: globals.h:956
 msgid "No previous command"
 msgstr "이전 명령이 없습니다"
 
-#: globals.h:903
+#: globals.h:957
 msgid "No previous regular expression"
 msgstr "이전 정규표현식이 없습니다"
 
-#: globals.h:904
+#: globals.h:958
 msgid "No range allowed"
 msgstr "허용되지 않는 범위입니다"
 
-#: globals.h:906
+#: globals.h:960
 msgid "Not enough room"
 msgstr "빈 공간이 충분하지 않습니다"
 
-#: globals.h:908
+#: globals.h:962
 #, c-format
 msgid "Can't create file %s"
 msgstr "파일 %s를 생성할 수 없습니다"
 
-#: globals.h:909
+#: globals.h:963
 msgid "Can't get temp file name"
 msgstr "임시 파일 이름을 얻을 수 없습니다"
 
-#: globals.h:910
+#: globals.h:964
 #, c-format
 msgid "Can't open file %s"
 msgstr "파일 %s를 열 수 없습니다"
 
-#: globals.h:911
+#: globals.h:965
 #, c-format
 msgid "Can't read file %s"
 msgstr "파일 %s를 읽을 수 없습니다"
 
-#: globals.h:912
+#: globals.h:966
 msgid "No write since last change (use ! to override)"
 msgstr "마지막 수정후 저장되지 않았습니다 (무시하려면 !을 사용)"
 
-#: globals.h:913
+#: globals.h:967
 msgid "Null argument"
 msgstr "널 인자"
 
-#: globals.h:915
+#: globals.h:969
 msgid "Number expected"
 msgstr "숫자가 필요합니다"
 
-#: globals.h:918
+#: globals.h:972
 #, c-format
 msgid "Can't open errorfile %s"
 msgstr "에러파일 %s를 열 수 없습니다"
 
-#: globals.h:922
+#: globals.h:976
 msgid "Pattern not found"
 msgstr "패턴을 찾을 수 없습니다"
 
-#: globals.h:924
+#: globals.h:978
 #, c-format
 msgid "Pattern not found: %s"
 msgstr "패턴을 찾을 수 없습니다: %s"
 
-#: globals.h:925
-#~ msgid "Argument must be positive"
-#~ msgstr ""
+#: globals.h:979
+msgid "Argument must be positive"
+msgstr ""
 
-#: globals.h:927
+#: globals.h:981
 msgid "No Errors"
 msgstr "에러 없음"
 
-#: globals.h:929
-#~ msgid "Damaged match string"
-#~ msgstr ""
+#: globals.h:983
+msgid "Damaged match string"
+msgstr ""
 
-#: globals.h:930
+#: globals.h:984
 msgid "Corrupted regexp program"
 msgstr "깨진 정규표현식 프로그램"
 
-#: globals.h:931
+#: globals.h:985
 msgid "'readonly' option is set (use ! to override)"
 msgstr "'readonly' 옵션이 설정되어 있습니다 (덮어쓰려면 ! 사용)"
 
-#: globals.h:933
+#: globals.h:987
 #, c-format
 msgid "Cannot set read-only variable \"%s\""
 msgstr "읽기 전용 변수 \"%s\"를 설정할 수 없습니다"
 
-#: globals.h:936
+#: globals.h:990
 msgid "Error while reading errorfile"
 msgstr "에러파일 읽는 도중에 에러"
 
-#: globals.h:939
-#~ msgid "Not allowed in sandbox"
-#~ msgstr ""
+#: globals.h:993
+msgid "Not allowed in sandbox"
+msgstr ""
 
-#: globals.h:941
+#: globals.h:995
 msgid "Invalid scroll size"
 msgstr "스크롤 크기가 잘못되었습니다"
 
-#: globals.h:942
+#: globals.h:996
+msgid "'shell' option is empty"
+msgstr "'shell' 옵션이 비었습니다"
+
+#: globals.h:997
 msgid "tag stack empty"
 msgstr "태그 스택이 비었습니다"
 
-#: globals.h:943
+#: globals.h:998
 msgid "Command too complex"
 msgstr "명령이 너무 복잡합니다"
 
-#: globals.h:944
+#: globals.h:999
 msgid "Name too long"
 msgstr "이름이 너무 깁니다"
 
-#: globals.h:945
-msgid "Too many \\("
-msgstr "\\(가 너무 많습니다"
-
-#: globals.h:946
+#: globals.h:1000
 msgid "Too many ["
 msgstr "[가 너무 많습니다"
 
-#: globals.h:948
-msgid "Too many \\z("
-msgstr "\\z(가 너무 많습니다"
-
-#: globals.h:951
+#: globals.h:1002
 msgid "Command too long"
 msgstr "명령이 너무 깁니다"
 
-#: globals.h:953
+#: globals.h:1004
 msgid "Too many file names"
 msgstr "너무 많은 파일 이름들"
 
-#: globals.h:955
-#~ msgid "Unknown mark"
-#~ msgstr ""
+#: globals.h:1006
+msgid "Unknown mark"
+msgstr "모르는 마크"
 
-#: globals.h:956
+#: globals.h:1007
 msgid "Unknown"
 msgstr "모름"
 
-#: globals.h:957
-#~ msgid "Cannot expand wildcards"
-#~ msgstr ""
+#: globals.h:1008
+msgid "Cannot expand wildcards"
+msgstr ""
 
-#: globals.h:958
+#: globals.h:1009
 msgid "Error while writing"
 msgstr "쓰는 중에 에러"
 
-#: globals.h:959
-#~ msgid "Zero count"
-#~ msgstr ""
+#: globals.h:1010
+msgid "Zero count"
+msgstr ""

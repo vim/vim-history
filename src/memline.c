@@ -3624,7 +3624,7 @@ findswapname(buf, dirp, old_fname)
 		    MSG_PUTS(_("\n(2) An edit session for this file crashed.\n"));
 		    MSG_PUTS(_("    If this is the case, use \":recover\" or \"vim -r "));
 		    msg_outtrans(buf->b_fname);
-		    MSG_PUTS(_("\"\n    to recover the changes (see \":help recovery)\".\n"));
+		    MSG_PUTS(_("\"\n    to recover the changes (see \":help recovery\").\n"));
 		    MSG_PUTS(_("    If you did this already, delete the swap file \""));
 		    msg_outtrans(fname);
 		    MSG_PUTS(_("\"\n    to avoid this message.\n\n"));

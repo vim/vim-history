@@ -76,6 +76,9 @@ enum SpecialKey
     KS_CWP,	/* set window position in pixels */
     KS_CWS,	/* set window size in characters */
     KS_CRV,	/* request version string */
+#ifdef FEAT_VERTSPLIT
+    KS_CSV,	/* scroll region vertical */
+#endif
     KS_OP	/* original color pair */
 };
 
@@ -101,6 +104,7 @@ extern char_u *(term_strings[]);    /* current terminal strings */
 #define T_DL	(term_str(KS_DL))	/* delete line */
 #define T_CDL	(term_str(KS_CDL))	/* delete number of lines */
 #define T_CS	(term_str(KS_CS))	/* scroll region */
+#define T_CSV	(term_str(KS_CSV))	/* scroll region vertical */
 #define T_CL	(term_str(KS_CL))	/* clear screen */
 #define T_CD	(term_str(KS_CD))	/* clear to end of display */
 #define T_UT	(term_str(KS_UT))	/* clearing uses background color */

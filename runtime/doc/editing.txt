@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0y.  Last change: 2001 Mar 08
+*editing.txt*   For Vim version 6.0z.  Last change: 2001 Mar 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -491,10 +491,11 @@ options.  There are three different types of searching:
 		/usr/lib
 		/usr/lib/X11
 		....
-<	I does NOT match '/usr/include/g++/std' as this would be three levels.
+<	It does NOT match '/usr/include/g++/std' as this would be three
+	levels.
 	The allowed number range is 0 ('**0' is removed) to 255.
-	If the given number is smaller than 0 it defaults to 30, if it's bigger
-	than 255 it defaults to 255.
+	If the given number is smaller than 0 it defaults to 30, if it's
+	bigger than 255 it defaults to 255.
       - '**' can only be at the end of the path or be followed by a path
 	separator or by a number and a path separator.
 
@@ -516,11 +517,11 @@ options.  There are three different types of searching:
 	   /usr/include
 	   /usr
 <
-   If you use a relative path the upward search is started in Vims current
+   If you use a relative path the upward search is started in Vim's current
    directory or in the directory of the current file (if the relative path
    starts with './' and 'd' is not included in 'cpoptions').
 
-   If Vims current path is /u/user_x/work/release and you do >
+   If Vim's current path is /u/user_x/work/release and you do >
 	:set path=include;/u/user_x
 <  and then search for a file with |gf| the file is searched in: >
 	/u/user_x/work/release/include
@@ -528,7 +529,7 @@ options.  There are three different types of searching:
 	/u/user_x/include
 
 3) Combined up/downward search
-   If Vims current path is /u/user_x/work/release and you do >
+   If Vim's current path is /u/user_x/work/release and you do >
 	set path=**;/u/user_x
 <  and then search for a file with |gf| the file is searched in: >
 	/u/user_x/work/release/**

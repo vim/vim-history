@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0y.  Last change: 2001 Mar 05
+*intro.txt*     For Vim version 6.0z.  Last change: 2001 Mar 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -424,9 +424,9 @@ notation	meaning		    equivalent	decimal value(s)	~
 <kEnter>	keypad Enter			*keypad-enter*
 <kPoint>	keypad Decimal point		*keypad-point*
 <k0> - <k9>	keypad 0 to 9			*keypad-0* *keypad-9*
-<S-...>		shift-key			*shift*
-<C-...>		control-key			*control* *ctrl*
-<M-...>		alt-key or meta-key		*meta* *alt*
+<S-...>		shift-key			*shift* *<S-*
+<C-...>		control-key			*control* *ctrl* *<C-*
+<M-...>		alt-key or meta-key		*meta* *alt* *<M-*
 <t_xx>		key with "xx" entry in termcap
 -----------------------------------------------------------------------
 

@@ -422,7 +422,7 @@ main
     set_init_1();
 
 #ifdef FEAT_EVAL
-    set_lang_var();
+    set_lang_var();		/* set v:lang and v:ctype */
 #endif
 
     /*

@@ -31,6 +31,7 @@ static char_u	*qf_guess_filepath __ARGS((char_u *));
 static void	qf_fmt_text __ARGS((char_u *text, char_u *buf, int bufsize));
 static void	qf_clean_dir_stack __ARGS((struct dir_stack_t **));
 #ifdef FEAT_WINDOWS
+static int	qf_win_pos_update __ARGS((int old_qf_index));
 static buf_t	*qf_find_buf __ARGS((void));
 static void	qf_update_buffer __ARGS((void));
 static void	qf_fill_buffer __ARGS((void));
@@ -987,43 +988,11 @@ qf_jump(dir, errornr, forceit)
     }
 
 #ifdef FEAT_WINDOWS
-    /*
-     * Put the cursor on the current error in the quickfix window, so that
-     * it's viewable.
-     */
-    for (win = firstwin; win != NULL; win = win->w_next)
-	if (bt_quickfix(win->w_buffer))
-	    break;
-    if (win != NULL
-	    && qf_index <= win->w_buffer->b_ml.ml_line_count
-	    && old_qf_index != qf_index)
-    {
-	win_t	*old_curwin = curwin;
-
-	curwin = win;
-	curbuf = win->w_buffer;
-	if (qf_index > old_qf_index)
-	{
-	    curwin->w_redraw_top = old_qf_index;
-	    curwin->w_redraw_bot = qf_index;
-	}
-	else
-	{
-	    curwin->w_redraw_top = qf_index;
-	    curwin->w_redraw_bot = old_qf_index;
-	}
-	curwin->w_cursor.lnum = qf_index;
-	curwin->w_cursor.col = 0;
-	update_topline();		/* scroll to show the line */
-	redraw_later(VALID);
-	curwin->w_redr_status = TRUE;	/* update ruler */
-	curwin = old_curwin;
-	curbuf = curwin->w_buffer;
-
+    qf_lists[qf_curlist].qf_index = qf_index;
+    if (qf_win_pos_update(old_qf_index))
 	/* No need to print the error message if it's visible in the error
 	 * window */
 	print_message = FALSE;
-    }
 
     /*
      * If currently in the quickfix window, find another window to show the
@@ -1529,7 +1498,54 @@ ex_cwindow(eap)
     curwin->w_cursor.col = 0;
     check_cursor();
     update_topline();		/* scroll to show the line */
-    redraw_later(VALID);
+}
+
+/*
+ * Update the cursor position in the quickfix window to the current error.
+ * Return TRUE if there is a quickfix window.
+ */
+    static int
+qf_win_pos_update(old_qf_index)
+    int		old_qf_index;	/* previous qf_index or zero */
+{
+    win_t	*win;
+    int		qf_index = qf_lists[qf_curlist].qf_index;
+
+    /*
+     * Put the cursor on the current error in the quickfix window, so that
+     * it's viewable.
+     */
+    for (win = firstwin; win != NULL; win = win->w_next)
+	if (bt_quickfix(win->w_buffer))
+	    break;
+    if (win != NULL
+	    && qf_index <= win->w_buffer->b_ml.ml_line_count
+	    && old_qf_index != qf_index)
+    {
+	win_t	*old_curwin = curwin;
+
+	curwin = win;
+	curbuf = win->w_buffer;
+	if (qf_index > old_qf_index)
+	{
+	    curwin->w_redraw_top = old_qf_index;
+	    curwin->w_redraw_bot = qf_index;
+	}
+	else
+	{
+	    curwin->w_redraw_top = qf_index;
+	    curwin->w_redraw_bot = old_qf_index;
+	}
+	curwin->w_cursor.lnum = qf_index;
+	curwin->w_cursor.col = 0;
+	update_topline();		/* scroll to show the line */
+	redraw_later(VALID);
+	curwin->w_redr_status = TRUE;	/* update ruler */
+	curwin = old_curwin;
+	curbuf = curwin->w_buffer;
+	return TRUE;
+    }
+    return FALSE;
 }
 
 /*
@@ -1570,13 +1586,17 @@ qf_update_buffer()
 	save_curbuf = curbuf;
 	curbuf = buf;
 #endif
+
 	qf_fill_buffer();
+
 #ifdef FEAT_AUTOCMD
 	/* restore curwin/curbuf and a few other things */
 	aucmd_restbuf(&aco);
 #else
 	curbuf = save_curbuf;
 #endif
+
+	(void)qf_win_pos_update(0);
     }
 }
 

@@ -216,6 +216,11 @@ static char *(features[]) =
 #else
 	"-insert_expand",
 #endif
+#ifdef FEAT_JUMPLIST
+	"+jumplist",
+#else
+	"-jumplist",
+#endif
 #ifdef FEAT_KEYMAP
 	"+keymap",
 #else

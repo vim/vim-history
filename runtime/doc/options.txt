@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0y.  Last change: 2001 Mar 18
+*options.txt*   For Vim version 6.0z.  Last change: 2001 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -296,7 +296,8 @@ Setting the filetype
 
 :setf[iletype] {filetype}			*:setf* *:setfiletype*
 			Set the 'filetype' option to {filetype}, but only if
-			not done yet.  This is short for: >
+			not done yet in a sequence of (nested) autocommands.
+			This is short for: >
 				:if !did_filetype()
 				:  setlocal filetype={filetype}
 				:endif
@@ -2632,7 +2633,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'highlight' option.  This uses the "Search" highlight group by
 	default.  Note that only the matching text is highlighted, any offsets
 	are not applied.
-	See also: 'incsearch'.
+	See also: 'incsearch' and |:match|.
 	When you get bored looking at the highlighted matches, you can turn it
 	off with |:nohlsearch|.  As soon as you use a search command, the
 	highlighting comes back.
@@ -3076,12 +3077,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 <	This option must be set before loading menus, switching on filetype
 	detection or syntax highlighting.  Once the menus are defined setting
 	this option has no effect.  But you could do this: >
-		:aunmenu *
-		:unlet did_install_default_menus
-		:unlet did_install_syntax_menu
+		:source $VIMRUNTIME/delmenu.vim
 		:set langmenu=de_DE.ISO_8859-1
 		:source $VIMRUNTIME/menu.vim
-<	However, this deletes all menus that you defined yourself.
+<	Warning: This deletes all menus that you defined yourself!
 
 					*'laststatus'* *'ls'*
 'laststatus' 'ls'	number	(default 1)
@@ -3205,8 +3204,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 'magic'			boolean	(default on)
 			global
 	Changes the special characters that can be used in search patterns.
-	See |pattern|.  NOTE: To avoid portability problems with using
-	patterns, always keep this option at the default "on".
+	See |pattern|.
+	NOTE: To avoid portability problems with using patterns, always keep
+	this option at the default "on".  Only switch it off when working with
+	old Vi scripts.  In any other situation write patterns that work when
+	'magic' is on.
 
 						*'makeef'* *'mef'*
 'makeef' 'mef'		string	(Amiga default: "t:vim##.Err",
@@ -3342,9 +3344,19 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to buffer
 			{not in Vi}
 	When on, the buffer is considered to be modified.  This option is set
-	by every command that makes a change to the buffer.  The undo command
-	will reset it when all changes have been undone.  When 'buftype' is
-	"nowrite" or "nofile" this option may be set, but will be ignored.
+	when:
+	1. A change was made to the text since it was last written.  Using the
+	   |undo| command to go back to the original text will reset the
+	   option.  But undoing changes that were made before writing the
+	   buffer will set the option again, since the text is different from
+	   when it was written.
+	2. 'fileformat' or 'fileencoding' is different from its original
+	   value.  The original value is set when the buffer is read or
+	   written.  A ":set nomodified" command also resets the original
+	   values to the current values and the 'modified' option will be
+	   reset.
+	When 'buftype' is "nowrite" or "nofile" this option may be set, but
+	will be ignored.
 
 						*'more'* *'nomore'*
 'more'			boolean	(Vim default: on, Vi default: off)

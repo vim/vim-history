@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0y.  Last change: 2001 Mar 16
+*multilang.txt* For Vim version 6.0z.  Last change: 2001 Mar 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -93,21 +93,45 @@ a message adapt to language preferences of the user, >
 	:endif
 <
 						*:lan* *:lang* *:language*
-:lan[guage]		Print the current language (aka locale).
+:lan[guage]
+:lan[guage] mes[sages]
+:lan[guage] cty[pe]
+			Print the current language (aka locale).
+			With the "messages" argument the language used for
+			messages is printed.  Technical: LC_MESSAGES.
+			With the "ctype" argument the language used for
+			character encoding is printed.  Technical: LC_CTYPE.
+			Without argument one of the two is used (this is
+			system dependend).
 			The current language can also be obtained with the
-			|v:lang| variable. {not in Vi}
+			|v:lang| and |v:ctype| variables. {not in Vi}
 
-:lan[guage] {name}	Set the current language (aka locale) to {name}.
+:lan[guage] {name}
+:lan[guage] mes[sages] {name}
+:lan[guage] cty[pe] {name}
+			Set the current language (aka locale) to {name}.
+			With the "messages" argument the language used for
+			messages is set.  This can be different when you want,
+			for example, English messages while editing Japanese
+			text.  This sets $LC_MESSAGES.
+			With the "ctype" argument the language used for
+			character encoding is set.  This affects the libraries
+			that Vim was linked with.  It's unusual to set this to
+			a different value from 'encoding'.  This sets
+			$LC_CTYPE.
+			Without an argument both are set, and additionally
+			$LANG is set.
 			This will make a difference for items that depend on
 			the language (some messages, time and date format).
-			Not fully supported yet.
+			Not fully supported on all systems
 			If this fails there will be an error message.  If it
 			succeeds there is no message.  Example: >
 				:language
 				Current language: C
 				:language de_DE.ISO_8859-1
-				:language
-				Current language: de_DE.ISO_8859-1
+				:language mes
+				Current messages language: de_DE.ISO_8859-1
+				:lang mes en
 <
 ==============================================================================
 3. Typing						*multilang-typing*
@@ -166,6 +190,7 @@ You can check the result with this command: >
 	:lmap
 The two items must be separated by white space.  You cannot include white
 space inside an item, use the special names "<Tab>" and "<Space>" instead.
+The length of the two items together must not exceed 200 bytes.
 
 It's possible to have more than one character in the first column.  This works
 like a dead key.  Example: >

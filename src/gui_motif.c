@@ -935,8 +935,10 @@ gui_mch_new_menu_colors()
     if (menuBar == (Widget)0)
 	return;
     gui_motif_menu_colors(menuBar);
+#ifdef FEAT_TOOLBAR
     gui_motif_menu_colors(toolBarFrame);
     gui_motif_menu_colors(toolBar);
+#endif
 
     gui_mch_submenu_change(root_menu, TRUE);
 }
@@ -1183,15 +1185,6 @@ gui_mch_create_scrollbar(sb, orient)
     XtSetArg(args[n], XmNminimum, 0); n++;
     XtSetArg(args[n], XmNorientation,
 	    (orient == SBAR_VERT) ? XmVERTICAL : XmHORIZONTAL); n++;
-    if (gui.scroll_fg_pixel != -1)
-    {
-	XtSetArg(args[n], XmNforeground, gui.scroll_fg_pixel); n++;
-	XtSetArg(args[n], XmNbackground, gui.scroll_fg_pixel); n++;
-    }
-    if (gui.scroll_bg_pixel != -1)
-    {
-	XtSetArg(args[n], XmNtroughColor, gui.scroll_bg_pixel); n++;
-    }
 
     switch (sb->type)
     {
@@ -1219,6 +1212,7 @@ gui_mch_create_scrollbar(sb, orient)
 
     if (sb->id != (Widget)0)
     {
+	gui_mch_set_scrollbar_colors(sb);
 	XtAddCallback(sb->id, XmNvalueChangedCallback,
 		      scroll_cb, (XtPointer)sb->ident);
 	XtAddCallback(sb->id, XmNdragCallback,
@@ -2162,7 +2156,16 @@ gui_motif_menu_fontlist(id)
 	fl = gui_motif_create_fontlist((XFontStruct *)gui.menu_font);
 	if (fl != NULL)
 	{
-	    XtVaSetValues(id, XmNfontList, fl, NULL);
+	    if (XtIsManaged(id))
+	    {
+		XtUnmanageChild(id);
+		XtVaSetValues(id, XmNfontList, fl, NULL);
+		/* We should force the widget to recalculate it's
+		 * geometry now. */
+		XtManageChild(id);
+	    }
+	    else
+		XtVaSetValues(id, XmNfontList, fl, NULL);
 	    XmFontListFree(fl);
 	}
     }

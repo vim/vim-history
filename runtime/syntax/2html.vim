@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jan 14
+" Last Change:	2001 Mar 23
 
 " Transform a file into HTML, using the current syntax highlighting.
 
@@ -35,7 +35,7 @@ function! HTMLPutText(attr, bg, fg, txt)
 	  let fgs = '<FONT color=' . a:fg . ">"
 	  let fge = '</FONT>'
 	endif
-	return substitute(a:attr, '.', '<&>', 'g') . bgs . fgs . substitute(substitute(substitute(substitute(substitute(a:txt, '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<HR class=PAGE-BREAK>', 'g') . fge . bge . substitute(a:attr[2] . a:attr[1] . a:attr[0], '.', '</&>', 'g')
+        return substitute(a:attr, '.', '<&>', 'g') . bgs . fgs . substitute(substitute(substitute(substitute(substitute(a:txt, '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<HR class=PAGE-BREAK>', 'g') . fge . bge . substitute(a:attr[2] . a:attr[1] . a:attr[0], '.', '</&>', 'g')
 endfun
 
 
@@ -113,9 +113,11 @@ if bg == ""
    endif
 endif
 
-" Insert HTML header, with the background color.  Add the foreground color
-" only when it is defined.
-exe "normal a<HTML>\n<HEAD>\n<TITLE>".expand("%:t")."</TITLE>\n</HEAD>\n<BODY BGcolor=".bg."\e"
+" Insert HTML header, with the title and background color.  Add the foreground
+" color only when it is defined.
+exe "normal a<HTML>\n<HEAD>\n<TITLE>\e"
+exe "normal a" . substitute(substitute(substitute(substitute(expand("%:p:~"), '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g') . "\e"
+exe "normal a</TITLE>\n</HEAD>\n<BODY BGcolor=".bg."\e"
 if fg != ""
   exe "normal a TEXT=".fg."\e"
 endif

@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0y.  Last change: 2000 Aug 14
+*os_dos.txt*    For Vim version 6.0z.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -154,7 +154,7 @@ DarkGreen		    2		   32
 DarkCyan		    3		   48
 DarkRed			    4		   64
 DarkMagenta		    5		   80
-Brown			    6		   96
+Brown, DarkYellow	    6		   96
 LightGray		    7		  112
 DarkGray		    8		  128 *
 Blue, LightBlue		    9		  144 *
@@ -162,7 +162,7 @@ Green, LightGreen	   10		  160 *
 Cyan, LightCyan		   11		  176 *
 Red, LightRed		   12		  192 *
 Magenta, LightMagenta	   13		  208 *
-Yellow			   14		  224 *
+Yellow, LightYellow	   14		  224 *
 White			   15		  240 *
 
 * Depending on the display mode, the color codes above 128 may not be

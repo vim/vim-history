@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Sam, 16 Dez 2000 19:01:49 +0100
+" Last Change:	Die, 20 Mär 2001 21:19:54 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -127,7 +127,7 @@ syn region   xmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+
     \ end=+</\z1>+
     \ fold
-    \ contains=xmlTag,xmlEndTag,xmlCdata,@xmlRegionCluster,xmlComment,xmlEntity,@xmlRegionHook
+    \ contains=xmlTag,xmlEndTag,xmlCdata,@xmlRegionCluster,xmlComment,xmlEntity,xmlProcessing,@xmlRegionHook
     \ keepend
     \ extend
 
@@ -172,6 +172,7 @@ syn region    xmlCdata
     \ contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
     \ keepend
     \ extend
+
 " using the following line instead leads to corrupt folding at CDATA regions
 " syn match    xmlCdata      +<!\[CDATA\[\_.\{-}]]>+  contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
 syn match    xmlCdataStart +<!\[CDATA\[+  contained contains=xmlCdataCdata

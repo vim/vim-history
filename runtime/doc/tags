@@ -661,6 +661,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 't_AF'	term.txt	/*'t_AF'*
 't_AL'	term.txt	/*'t_AL'*
 't_CS'	term.txt	/*'t_CS'*
+'t_CV'	term.txt	/*'t_CV'*
 't_Co'	term.txt	/*'t_Co'*
 't_DL'	term.txt	/*'t_DL'*
 't_F1'	term.txt	/*'t_F1'*
@@ -913,6 +914,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +hangul_input	various.txt	/*+hangul_input*
 +iconv	various.txt	/*+iconv*
 +insert_expand	various.txt	/*+insert_expand*
++jumplist	various.txt	/*+jumplist*
 +keymap	various.txt	/*+keymap*
 +langmap	various.txt	/*+langmap*
 +libcall	various.txt	/*+libcall*
@@ -1024,7 +1026,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -italicfont	gui_x11.txt	/*-italicfont*
 -l	starting.txt	/*-l*
 -m	starting.txt	/*-m*
+-menufont	gui_x11.txt	/*-menufont*
 -menuheight	gui_x11.txt	/*-menuheight*
+-mf	gui_x11.txt	/*-mf*
 -mh	gui_x11.txt	/*-mh*
 -n	starting.txt	/*-n*
 -o	starting.txt	/*-o*
@@ -1640,6 +1644,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :mapclear!	map.txt	/*:mapclear!*
 :mark	motion.txt	/*:mark*
 :marks	motion.txt	/*:marks*
+:mat	pattern.txt	/*:mat*
+:match	pattern.txt	/*:match*
 :me	gui.txt	/*:me*
 :menu	gui.txt	/*:menu*
 :menu-<script>	gui.txt	/*:menu-<script>*
@@ -2111,6 +2117,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 <BS>	motion.txt	/*<BS>*
 <Bar>	intro.txt	/*<Bar>*
 <Bslash>	intro.txt	/*<Bslash>*
+<C-	intro.txt	/*<C-*
 <C-Del>	os_dos.txt	/*<C-Del>*
 <C-End>	motion.txt	/*<C-End>*
 <C-Home>	motion.txt	/*<C-Home>*
@@ -2161,6 +2168,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 <LeftMouse>	visual.txt	/*<LeftMouse>*
 <LeftRelease>	visual.txt	/*<LeftRelease>*
 <LocalLeader>	map.txt	/*<LocalLeader>*
+<M-	intro.txt	/*<M-*
 <MiddleMouse>	change.txt	/*<MiddleMouse>*
 <Mouse>	term.txt	/*<Mouse>*
 <MouseDown>	scroll.txt	/*<MouseDown>*
@@ -2175,6 +2183,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 <RightDrag>	term.txt	/*<RightDrag>*
 <RightMouse>	visual.txt	/*<RightMouse>*
 <RightRelease>	term.txt	/*<RightRelease>*
+<S-	intro.txt	/*<S-*
 <S-Del>	os_dos.txt	/*<S-Del>*
 <S-Down>	scroll.txt	/*<S-Down>*
 <S-End>	term.txt	/*<S-End>*
@@ -2346,9 +2355,11 @@ CTRL-W_CTRL-B	windows.txt	/*CTRL-W_CTRL-B*
 CTRL-W_CTRL-C	windows.txt	/*CTRL-W_CTRL-C*
 CTRL-W_CTRL-D	tagsearch.txt	/*CTRL-W_CTRL-D*
 CTRL-W_CTRL-F	windows.txt	/*CTRL-W_CTRL-F*
+CTRL-W_CTRL-H	windows.txt	/*CTRL-W_CTRL-H*
 CTRL-W_CTRL-I	tagsearch.txt	/*CTRL-W_CTRL-I*
 CTRL-W_CTRL-J	windows.txt	/*CTRL-W_CTRL-J*
 CTRL-W_CTRL-K	windows.txt	/*CTRL-W_CTRL-K*
+CTRL-W_CTRL-L	windows.txt	/*CTRL-W_CTRL-L*
 CTRL-W_CTRL-N	windows.txt	/*CTRL-W_CTRL-N*
 CTRL-W_CTRL-O	windows.txt	/*CTRL-W_CTRL-O*
 CTRL-W_CTRL-P	windows.txt	/*CTRL-W_CTRL-P*
@@ -2363,8 +2374,10 @@ CTRL-W_CTRL-Z	windows.txt	/*CTRL-W_CTRL-Z*
 CTRL-W_CTRL-]	windows.txt	/*CTRL-W_CTRL-]*
 CTRL-W_CTRL-^	windows.txt	/*CTRL-W_CTRL-^*
 CTRL-W_CTRL-_	windows.txt	/*CTRL-W_CTRL-_*
-CTRL-W_CTRL_H	windows.txt	/*CTRL-W_CTRL_H*
-CTRL-W_CTRL_L	windows.txt	/*CTRL-W_CTRL_L*
+CTRL-W_H	windows.txt	/*CTRL-W_H*
+CTRL-W_J	windows.txt	/*CTRL-W_J*
+CTRL-W_K	windows.txt	/*CTRL-W_K*
+CTRL-W_L	windows.txt	/*CTRL-W_L*
 CTRL-W_P	windows.txt	/*CTRL-W_P*
 CTRL-W_R	windows.txt	/*CTRL-W_R*
 CTRL-W_S	windows.txt	/*CTRL-W_S*
@@ -2871,7 +2884,11 @@ cW	change.txt	/*cW*
 c_<BS>	cmdline.txt	/*c_<BS>*
 c_<C-Left>	cmdline.txt	/*c_<C-Left>*
 c_<C-R>	cmdline.txt	/*c_<C-R>*
+c_<C-R>_<C-A>	cmdline.txt	/*c_<C-R>_<C-A>*
+c_<C-R>_<C-F>	cmdline.txt	/*c_<C-R>_<C-F>*
+c_<C-R>_<C-P>	cmdline.txt	/*c_<C-R>_<C-P>*
 c_<C-R>_<C-R>	cmdline.txt	/*c_<C-R>_<C-R>*
+c_<C-R>_<C-W>	cmdline.txt	/*c_<C-R>_<C-W>*
 c_<C-Right>	cmdline.txt	/*c_<C-Right>*
 c_<CR>	cmdline.txt	/*c_<CR>*
 c_<Del>	cmdline.txt	/*c_<Del>*
@@ -2907,7 +2924,11 @@ c_CTRL-N	cmdline.txt	/*c_CTRL-N*
 c_CTRL-P	cmdline.txt	/*c_CTRL-P*
 c_CTRL-Q	cmdline.txt	/*c_CTRL-Q*
 c_CTRL-R	cmdline.txt	/*c_CTRL-R*
+c_CTRL-R_CTRL-A	cmdline.txt	/*c_CTRL-R_CTRL-A*
+c_CTRL-R_CTRL-F	cmdline.txt	/*c_CTRL-R_CTRL-F*
+c_CTRL-R_CTRL-P	cmdline.txt	/*c_CTRL-R_CTRL-P*
 c_CTRL-R_CTRL-R	cmdline.txt	/*c_CTRL-R_CTRL-R*
+c_CTRL-R_CTRL-W	cmdline.txt	/*c_CTRL-R_CTRL-W*
 c_CTRL-U	cmdline.txt	/*c_CTRL-U*
 c_CTRL-V	cmdline.txt	/*c_CTRL-V*
 c_CTRL-W	cmdline.txt	/*c_CTRL-W*
@@ -2927,6 +2948,7 @@ changed-5.4	version5.txt	/*changed-5.4*
 changed-5.5	version5.txt	/*changed-5.5*
 changed-5.6	version5.txt	/*changed-5.6*
 changed-5.7	version5.txt	/*changed-5.7*
+changetick	eval.txt	/*changetick*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
 character-encode-scheme	multibyte.txt	/*character-encode-scheme*
@@ -3021,6 +3043,7 @@ ctags	tagsearch.txt	/*ctags*
 ctags-gone	version6.txt	/*ctags-gone*
 cterm-colors	syntax.txt	/*cterm-colors*
 ctrl	intro.txt	/*ctrl*
+ctype-variable	eval.txt	/*ctype-variable*
 curly-braces-function-names	eval.txt	/*curly-braces-function-names*
 curly-braces-names	eval.txt	/*curly-braces-names*
 curpos-visual	version6.txt	/*curpos-visual*
@@ -3149,6 +3172,7 @@ errorformat-Jikes	quickfix.txt	/*errorformat-Jikes*
 errorformat-LaTeX	quickfix.txt	/*errorformat-LaTeX*
 errorformat-ant	quickfix.txt	/*errorformat-ant*
 errorformat-changed	version4.txt	/*errorformat-changed*
+errorformat-jade	quickfix.txt	/*errorformat-jade*
 errorformat-javac	quickfix.txt	/*errorformat-javac*
 errorformat-multi-line	quickfix.txt	/*errorformat-multi-line*
 escape	intro.txt	/*escape*
@@ -3835,6 +3859,7 @@ mark-motions	motion.txt	/*mark-motions*
 masm-syntax	syntax.txt	/*masm-syntax*
 masm.vim	syntax.txt	/*masm.vim*
 match()	eval.txt	/*match()*
+match-highlight	pattern.txt	/*match-highlight*
 matchend()	eval.txt	/*matchend()*
 matchstr()	eval.txt	/*matchstr()*
 mbyte-snippets	multibyte.txt	/*mbyte-snippets*
@@ -4219,6 +4244,7 @@ scroll-down	scroll.txt	/*scroll-down*
 scroll-horizontal	scroll.txt	/*scroll-horizontal*
 scroll-insert	tips.txt	/*scroll-insert*
 scroll-mouse-wheel	scroll.txt	/*scroll-mouse-wheel*
+scroll-region	term.txt	/*scroll-region*
 scroll-smooth	tips.txt	/*scroll-smooth*
 scroll-up	scroll.txt	/*scroll-up*
 scroll.txt	scroll.txt	/*scroll.txt*
@@ -4343,6 +4369,7 @@ t_AB	term.txt	/*t_AB*
 t_AF	term.txt	/*t_AF*
 t_AL	term.txt	/*t_AL*
 t_CS	term.txt	/*t_CS*
+t_CV	term.txt	/*t_CV*
 t_Co	term.txt	/*t_Co*
 t_DL	term.txt	/*t_DL*
 t_F1	term.txt	/*t_F1*
@@ -4618,6 +4645,12 @@ usr_40.txt	usr_40.txt	/*usr_40.txt*
 usr_43.txt	usr_43.txt	/*usr_43.txt*
 usr_90.txt	usr_90.txt	/*usr_90.txt*
 usr_toc.txt	usr_toc.txt	/*usr_toc.txt*
+utf-8	multibyte.txt	/*utf-8*
+utf-8-in-mswindows	multibyte.txt	/*utf-8-in-mswindows*
+utf-8-in-others	multibyte.txt	/*utf-8-in-others*
+utf-8-in-xterm	multibyte.txt	/*utf-8-in-xterm*
+utf-8-in-xwindows	multibyte.txt	/*utf-8-in-xwindows*
+utf-8-typing	multibyte.txt	/*utf-8-typing*
 v	visual.txt	/*v*
 v:charconvert_from	eval.txt	/*v:charconvert_from*
 v:charconvert_in	eval.txt	/*v:charconvert_in*
@@ -4626,6 +4659,7 @@ v:charconvert_to	eval.txt	/*v:charconvert_to*
 v:cmdarg	eval.txt	/*v:cmdarg*
 v:count	eval.txt	/*v:count*
 v:count1	eval.txt	/*v:count1*
+v:ctype	eval.txt	/*v:ctype*
 v:errmsg	eval.txt	/*v:errmsg*
 v:folddashes	eval.txt	/*v:folddashes*
 v:foldend	eval.txt	/*v:foldend*

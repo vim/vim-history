@@ -1667,6 +1667,7 @@ ins_char_bytes(buf, newlen)
      * show the match for right parens and braces.
      */
     if (p_sm && (State & INSERT)
+	    && msg_silent == 0
 #ifdef FEAT_MBYTE
 	    && newlen == 1
 #endif
@@ -2066,7 +2067,7 @@ changed()
 	     * Wait two seconds, to make sure the user reads this unexpected
 	     * message.  Since we could be anywhere, call wait_return() now,
 	     * and don't let the emsg() set msg_scroll. */
-	    if (need_wait_return)
+	    if (need_wait_return && emsg_silent == 0)
 	    {
 		out_flush();
 		ui_delay(2000L, TRUE);
@@ -2407,8 +2408,11 @@ change_warning(col)
 						   hl_attr(HLF_W) | MSG_HIST);
 	msg_clr_eos();
 	(void)msg_end();
-	out_flush();
-	ui_delay(1000L, TRUE);	/* give him some time to think about it */
+	if (msg_silent == 0)
+	{
+	    out_flush();
+	    ui_delay(1000L, TRUE); /* give the user time to think about it */
+	}
 	curbuf->b_did_warn = TRUE;
 	redraw_cmdline = FALSE;	/* don't redraw and erase the message */
 	if (msg_row < Rows - 1)

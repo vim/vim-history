@@ -510,16 +510,6 @@ codepage_invalid:
 	    n = utf8len_tab[i];
 	else if (enc_dbcs == 0)
 	    n = 1;
-#ifdef MB_DEBUG
-	else if (enc_dbcs == -1)
-	{
-	    /* Debugging DBCS: make 0xc0-0xff chars double-width. */
-	    if (i >= 0xc0)
-		n = 2;
-	    else
-		n = 1;
-	}
-#endif
 	else
 	{
 #if defined(WIN32) || defined(WIN32UNIX)
@@ -1547,6 +1537,41 @@ dbcs_head_off(base, p)
     return (q == p) ? 0 : 1;
 }
 
+/*
+ * Special version of dbcs_head_off() that works for ScreenLines[], where
+ * single-width DBCS_JPNU characters are stored separately.
+ */
+    int
+dbcs_screen_head_off(base, p)
+    char_u	*base;
+    char_u	*p;
+{
+    char_u	*q;
+
+    /* It can't be a trailing byte when not using DBCS, at the start of the
+     * string or the previous byte can't start a double-byte.
+     * For euc-jp an 0x8e byte in the previous cell always means we have a
+     * lead byte in the current cell. */
+    if (p <= base
+	    || (enc_dbcs == DBCS_JPNU && p[-1] == 0x8e)
+	    || MB_BYTE2LEN(p[-1]) == 1)
+	return 0;
+
+    /* This is slow: need to start at the base and go forward until the
+     * byte we are looking for.  Return 1 when we went past it, 0 otherwise.
+     * For DBCS_JPNU look out for 0x8e, which means the second byte is not
+     * stored as the next byte. */
+    q = base;
+    while (q < p)
+    {
+	if (enc_dbcs == DBCS_JPNU && *q == 0x8e)
+	    ++q;
+	else
+	    q += dbcs_ptr2len_check(q);
+    }
+    return (q == p) ? 0 : 1;
+}
+
     int
 utf_head_off(base, p)
     char_u	*base;
@@ -1655,6 +1680,27 @@ mb_tail_off(base, p)
 }
 
 /*
+ * Special version of mb_tail_off() for use in ScreenLines[].
+ */
+    int
+dbcs_screen_tail_off(base, p)
+    char_u	*base;
+    char_u	*p;
+{
+    /* It can't be the first byte if a double-byte when not using DBCS, at the
+     * end of the string or the byte can't start a double-byte.
+     * For euc-jp an 0x8e byte always means we have a lead byte in the current
+     * cell. */
+    if (*p == NUL || p[1] == NUL
+	    || (enc_dbcs == DBCS_JPNU && *p == 0x8e)
+	    || MB_BYTE2LEN(*p) == 1)
+	return 0;
+
+    /* Return 1 when on the lead byte, 0 when on the tail byte. */
+    return 1 - dbcs_screen_head_off(base, p);
+}
+
+/*
  * If the cursor moves on an trail byte, set the cursor on the lead byte.
  * Thus it moves left if necessary.
  * Return TRUE when the cursor was adjusted.
@@ -1734,6 +1780,62 @@ mb_dec(lp)
 	return 1;
     }
     return -1;			/* at start of file */
+}
+
+/*
+ * Try to un-escape a multi-byte character.
+ * Used for the "to" and "from" part of a mapping.
+ * Return the un-escaped string if it is a multi-byte character, and advance
+ * "pp" to just after the bytes that formed it.
+ * Return NULL if no multi-byte char was found.
+ */
+    char_u *
+mb_unescape(pp)
+    char_u **pp;
+{
+    static char_u	buf[MB_MAXBYTES + 1];
+    int			n, m = 0;
+    char_u		*str = *pp;
+
+    /* Must translate K_SPECIAL KS_SPECIAL KE_FILLER to K_SPECIAL and CSI
+     * KS_EXTRA KE_CSI to CSI. */
+    for (n = 0; str[n] != NUL && m <= MB_MAXBYTES; ++n)
+    {
+	if (str[n] == K_SPECIAL
+		&& str[n + 1] == KS_SPECIAL
+		&& str[n + 2] == KE_FILLER)
+	{
+	    buf[m++] = K_SPECIAL;
+	    n += 2;
+	}
+# ifdef FEAT_GUI
+	else if (str[n] == CSI
+		&& str[n + 1] == KS_EXTRA
+		&& str[n + 2] == (int)KE_CSI)
+	{
+	    buf[m++] = CSI;
+	    n += 2;
+	}
+# endif
+	else if (str[n] == K_SPECIAL
+# ifdef FEAT_GUI
+		|| str[n] == CSI
+# endif
+		)
+	    break;		/* a special key can't be a multibyte char */
+	else
+	    buf[m++] = str[n];
+	buf[m] = NUL;
+
+	/* Return a multi-byte character if it's found.  An illegal sequence
+	 * will result in a 1 here. */
+	if ((*mb_ptr2len_check)(buf) > 1)
+	{
+	    *pp = str + n + 1;
+	    return buf;
+	}
+    }
+    return NULL;
 }
 
 #if defined(FEAT_GUI) || defined(PROTO)
@@ -2621,7 +2723,11 @@ xim_real_init(x11_window, x11_display)
 
     if (xim == NULL)
     {
+#if 0
+	/* This has been disabled, because too many people got this message
+	 * when they didn't want to use a XIM. */
 	EMSG(_("Failed to open input method"));
+#endif
 	return FALSE;
     }
 
@@ -2700,25 +2806,38 @@ xim_real_init(x11_window, x11_display)
     over_spot.x = TEXT_X(gui.col);
     over_spot.y = TEXT_Y(gui.row);
     input_style = this_input_style;
-    preedit_list = XVaCreateNestedList(0,
-			    XNSpotLocation, &over_spot,
-			    XNForeground, (Pixel)gui.def_norm_pixel,
-			    XNBackground, (Pixel)gui.def_back_pixel,
-			    XNFontSet,
+
+    /* A crash was reported when trying to pass gui.norm_font as XNFontSet,
+     * thus that has been removed.  Hopefully the default works... */
 #ifdef FEAT_XFONTSET
-			    gui.fontset != NOFONTSET ? (XFontSet)gui.fontset :
+    if (gui.fontset != NOFONTSET)
+    {
+	preedit_list = XVaCreateNestedList(0,
+				XNSpotLocation, &over_spot,
+				XNForeground, (Pixel)gui.def_norm_pixel,
+				XNBackground, (Pixel)gui.def_back_pixel,
+				XNFontSet, (XFontSet)gui.fontset,
+				NULL);
+	status_list = XVaCreateNestedList(0,
+				XNForeground, (Pixel)gui.def_norm_pixel,
+				XNBackground, (Pixel)gui.def_back_pixel,
+				XNFontSet, (XFontSet)gui.fontset,
+				NULL);
+    }
+    else
 #endif
-						      (XFontSet)gui.norm_font,
-			    NULL);
-    status_list = XVaCreateNestedList(0,
-			    XNForeground, (Pixel)gui.def_norm_pixel,
-			    XNBackground, (Pixel)gui.def_back_pixel,
-			    XNFontSet,
-#ifdef FEAT_XFONTSET
-			    gui.fontset != NOFONTSET ? (XFontSet)gui.fontset :
-#endif
-						      (XFontSet)gui.norm_font,
-			    NULL);
+    {
+	preedit_list = XVaCreateNestedList(0,
+				XNSpotLocation, &over_spot,
+				XNForeground, (Pixel)gui.def_norm_pixel,
+				XNBackground, (Pixel)gui.def_back_pixel,
+				NULL);
+	status_list = XVaCreateNestedList(0,
+				XNForeground, (Pixel)gui.def_norm_pixel,
+				XNBackground, (Pixel)gui.def_back_pixel,
+				NULL);
+    }
+
     xic = XCreateIC(xim,
 		    XNInputStyle, input_style,
 		    XNClientWindow, x11_window,
@@ -2766,13 +2885,14 @@ xim_decide_input_style()
 				 (int)GDK_IM_STATUS_NONE |
 				 (int)GDK_IM_STATUS_NOTHING;
 
-    if (!gdk_im_ready()) {
+    if (!gdk_im_ready())
 	xim_input_style = 0;
-    } else {
+    else
+    {
 	if (gtk_major_version > 1
-	    || (gtk_major_version == 1
-		&& (gtk_minor_version > 2
-		    || (gtk_minor_version == 2 && gtk_micro_version >= 3))))
+		|| (gtk_major_version == 1
+		    && (gtk_minor_version > 2
+			|| (gtk_minor_version == 2 && gtk_micro_version >= 3))))
 	    use_status_area = TRUE;
 	else
 	{
@@ -3319,13 +3439,18 @@ keymap_init()
 	/* Source the keymap file.  It will contain a ":loadkeymap" command
 	 * which will call ex_loadkeymap() below. */
 	buf = alloc((unsigned)(STRLEN(curbuf->b_p_keymap)
-						       + STRLEN(p_enc) + 14));
+# ifdef FEAT_MBYTE
+						       + STRLEN(p_enc)
+# endif
+						       + 14));
 	if (buf == NULL)
 	    return e_outofmem;
 
+# ifdef FEAT_MBYTE
 	/* try finding "keymap/'keymap'_'encoding'.vim"  in 'runtimepath' */
 	sprintf((char *)buf, "keymap/%s_%s.vim", curbuf->b_p_keymap, p_enc);
 	if (cmd_runtime(buf, FALSE) == FAIL)
+# endif
 	{
 	    /* try finding "keymap/'keymap'.vim" in 'runtimepath'  */
 	    sprintf((char *)buf, "keymap/%s.vim", curbuf->b_p_keymap);
@@ -3352,7 +3477,8 @@ ex_loadkeymap(eap)
     char_u	*p;
     char_u	*s;
     kmap_t	*kp;
-    char_u	buf[2 * KMAP_MAXLEN + 11];
+#define KMAP_LLEN   200	    /* max length of "to" and "from" together */
+    char_u	buf[KMAP_LLEN + 11];
     int		i;
     char_u	*save_cpo = p_cpo;
 
@@ -3392,8 +3518,8 @@ ex_loadkeymap(eap)
 	    s = skiptowhite(p);
 	    kp->to = vim_strnsave(p, (int)(s - p));
 
-	    if (kp->from == NULL || STRLEN(kp->from) >= KMAP_MAXLEN
-		    || kp->to == NULL || STRLEN(kp->to) >= KMAP_MAXLEN)
+	    if (kp->from == NULL || kp->to == NULL
+		    || STRLEN(kp->from) + STRLEN(kp->to) >= KMAP_LLEN)
 	    {
 		vim_free(kp->from);
 		vim_free(kp->to);

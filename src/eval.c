@@ -159,6 +159,7 @@ struct vimvar
     {"termresponse", sizeof("termresponse") - 1, NULL, VAR_STRING, VV_RO},
     {"fname", sizeof("fname") - 1, NULL, VAR_STRING, VV_RO},
     {"lang", sizeof("lang") - 1, NULL, VAR_STRING, VV_RO},
+    {"ctype", sizeof("ctype") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_from", sizeof("charconvert_from") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_to", sizeof("charconvert_to") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_in", sizeof("charconvert_in") - 1, NULL, VAR_STRING, VV_RO},
@@ -3950,6 +3951,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_INS_EXPAND
 	"insert_expand",
+#endif
+#ifdef FEAT_JUMPLIST
+	"jumplist",
 #endif
 #ifdef FEAT_KEYMAP
 	"keymap",

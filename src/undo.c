@@ -308,7 +308,8 @@ u_savecommon(top, bot, newbot)
 
     if (size)
     {
-	if ((uep->ue_array = (char_u **)u_alloc_line((unsigned)(sizeof(char_u *) * size))) == NULL)
+	if ((uep->ue_array = (char_u **)u_alloc_line(
+				(unsigned)(sizeof(char_u *) * size))) == NULL)
 	{
 	    u_freeentry(uep, 0L);
 	    goto nomem;
@@ -330,12 +331,13 @@ u_savecommon(top, bot, newbot)
     return OK;
 
 nomem:
-    if (ask_yesno((char_u *)_("No undo possible; continue anyway"), TRUE) == 'y')
+    if (ask_yesno((char_u *)_("No undo possible; continue anyway"), TRUE)
+								       == 'y')
     {
 	undo_off = TRUE;	    /* will be reset when character typed */
 	return OK;
     }
-    do_outofmem_msg();
+    do_outofmem_msg((long_u)0);
     return FAIL;
 }
 
@@ -505,7 +507,7 @@ u_undoredo()
 	    if ((newarray = (char_u **)u_alloc_line(
 			    (unsigned)(sizeof(char_u *) * oldsize))) == NULL)
 	    {
-		do_outofmem_msg();
+		do_outofmem_msg((long_u)(sizeof(char_u *) * oldsize));
 		/*
 		 * We have messed up the entry list, repair is impossible.
 		 * we have to free the rest of the list.
@@ -523,7 +525,7 @@ u_undoredo()
 	    {
 		/* what can we do when we run out of memory? */
 		if ((newarray[i] = u_save_line(lnum)) == NULL)
-		    do_outofmem_msg();
+		    do_outofmem_msg((long_u)0);
 		/* remember we deleted the last line in the buffer, and a
 		 * dummy empty line will be inserted */
 		if (curbuf->b_ml.ml_line_count == 1)
@@ -803,7 +805,7 @@ u_saveline(lnum)
     else
 	curbuf->b_u_line_colnr = 0;
     if ((curbuf->b_u_line_ptr = u_save_line(lnum)) == NULL)
-	do_outofmem_msg();
+	do_outofmem_msg((long_u)0);
 }
 
 /*
@@ -848,7 +850,7 @@ u_undoline()
     oldp = u_save_line(curbuf->b_u_line_lnum);
     if (oldp == NULL)
     {
-	do_outofmem_msg();
+	do_outofmem_msg((long_u)0);
 	return;
     }
     ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
@@ -1112,7 +1114,7 @@ u_free_line(ptr, keep)
  */
     static char_u *
 u_alloc_line(size)
-    unsigned	    size;
+    unsigned	size;
 {
     minfo_t	*mp, *mprev, *mp2;
     mblock_t	*mbp;

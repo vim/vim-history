@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0y.  Last change: 2001 Mar 18
+*gui_x11.txt*   For Vim version 6.0z.  Last change: 2001 Mar 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -145,6 +145,8 @@ The resources can also be set with arguments to vim:
    -fn {font}		idem				*-fn*
    -boldfont {font}	Use {font} for bold text	*-boldfont*
    -italicfont {font}	Use {font} for italic text	*-italicfont*
+   -menufont {font}	Use {font} for menu items	*-menufont*
+   -mf {font}		idem				*-mf*
    -geometry {geom}	Use {geom} for initial geometry	*-geometry*
    -geom {geom}		idem				*-geom*
    -borderwidth {width}	Use a border width of {width}	*-borderwidth*
