@@ -3055,7 +3055,12 @@ do_sub(eap)
 		break;
 	    }
 	    if (cmd[0] == '\\' && cmd[1] != 0)	/* skip escaped characters */
+	    {
+		/* Change "\^M" to "^V^M" to avoid a line split below */
+		if (cmd[1] == CR)
+		    cmd[0] = Ctrl('V');
 		++cmd;
+	    }
 	    ++cmd;
 	}
 
@@ -3362,9 +3367,10 @@ do_sub(eap)
 		/*
 		 * Now the trick is to replace CTRL-Ms with a real line break.
 		 * This would make it impossible to insert CTRL-Ms in the text.
-		 * That is the way vi works. In Vim the line break can be
-		 * avoided by preceding the CTRL-M with a CTRL-V. Now you can't
-		 * precede a line break with a CTRL-V, big deal.
+		 * The line break can be avoided by preceding the CTRL-M with
+		 * a CTRL-V. Now you can't precede a line break with a CTRL-V.
+		 * Above "\^M" is replaced with "^V^M", so that a backslash
+		 * can also be used to escape the CTRL-M (Vi compatible).
 		 */
 		while ((p1 = vim_strchr(new_end, CR)) != NULL)
 		{
