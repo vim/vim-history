@@ -1122,6 +1122,10 @@ EXTERN char_u e_patnotf[]	INIT(=N_("Pattern not found"));
 #endif
 EXTERN char_u e_patnotf2[]	INIT(=N_("Pattern not found: %s"));
 EXTERN char_u e_positive[]	INIT(=N_("Argument must be positive"));
+#if defined(UNIX) || defined(FEAT_SESSION)
+EXTERN char_u e_prev_dir[]	INIT(=N_("E459: Cannot go back to previous directory"));
+#endif
+
 #ifdef FEAT_QUICKFIX
 EXTERN char_u e_quickfix[]	INIT(=N_("E42: No Errors"));
 #endif
