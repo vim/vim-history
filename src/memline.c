@@ -932,6 +932,18 @@ ml_recover()
     while (!(curbuf->b_ml.ml_flags & ML_EMPTY))
 	ml_delete((linenr_T)1, FALSE);
 
+    /*
+     * Try reading the original file to obtain the values of 'fileformat',
+     * 'fileencoding', etc.  Ignore errors.  The text itself is not used.
+     */
+    if (curbuf->b_ffname != NULL)
+    {
+	(void)readfile(curbuf->b_ffname, NULL, (linenr_T)0,
+			      (linenr_T)0, (linenr_T)MAXLNUM, NULL, READ_NEW);
+	while (!(curbuf->b_ml.ml_flags & ML_EMPTY))
+	    ml_delete((linenr_T)1, FALSE);
+    }
+
     bnum = 1;		/* start with block 1 */
     page_count = 1;	/* which is 1 page */
     lnum = 0;		/* append after line 0 in curbuf */
