@@ -2686,6 +2686,14 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		++ptr;
 	}
+
+#ifdef FEAT_VIRTUALEDIT
+	/* When 'virtualedit' is set the end of the line may be before the
+	 * start of the displayed part. */
+	if (vcol < v && *ptr == NUL && virtual_active())
+	    vcol = v;
+#endif
+
 	/* Handle a character that's not completely on the screen: Put ptr at
 	 * that character but skip the first few screen characters. */
 	if (vcol > v)
