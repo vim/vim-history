@@ -1183,7 +1183,7 @@ clip_copy_modeless_selection(both)
 	}
 
 	/* If after the first row, we need to always add a newline */
-	if (row > row1)
+	if (row > row1 && !LineWraps[row - 1])
 	    *bufp++ = NL;
 
 	if (row < screen_Rows && end_col <= screen_Columns)

@@ -39,6 +39,7 @@ EXTERN long	Columns INIT(= 80);	/* nr of columns in the screen */
 EXTERN schar_T	*ScreenLines INIT(= NULL);
 EXTERN sattr_T	*ScreenAttrs INIT(= NULL);
 EXTERN unsigned	*LineOffset INIT(= NULL);
+EXTERN char_u	*LineWraps INIT(= NULL);
 
 #ifdef FEAT_MBYTE
 /*

@@ -14,10 +14,13 @@
  * by remembering what is already on the screen, and only updating the parts
  * that changed.
  *
- * ScreenLines[] contains a copy of the whole screen, as it is currently
- * displayed (excluding text written by external commands).
- * ScreenAttrs[] contains the associated attributes.
- * LineOffset[] contains the offset into ScreenLines[] for each line.
+ * ScreenLines[off]  Contains a copy of the whole screen, as it is currently
+ *		     displayed (excluding text written by external commands).
+ * ScreenAttrs[off]  Contains the associated attributes.
+ * LineOffset[row]   Contains the offset into ScreenLines*[] and ScreenAttrs[]
+ *		     for each line.
+ * LineWraps[row]    Flag for each line whether it wraps to the next line.
+ *
  * For double-byte characters, two consecutive bytes in ScreenLines[] can form
  * one character which occupies two display cells.
  * For UTF-8 a multi-byte character is converted to Unicode and stored in
@@ -4051,55 +4054,62 @@ win_line(wp, lnum, startrow, endrow)
 		break;
 	    }
 
-	    /*
-	     * Special trick to make copy/paste of wrapped lines work with
-	     * xterm/screen: write an extra character beyond the end of the
-	     * line. This will work with all terminal types (regardless of the
-	     * xn,am settings).
-	     * Only do this on a fast tty.
-	     * Only do this if the cursor is on the current line (something
-	     * has been written in it).
-	     * Don't do this for the GUI.
-	     * Don't do this for double-width characters.
-	     * Don't do this for a window not at the right screen border.
-	     */
-	    if (p_tf && screen_cur_row == screen_row - 1
-#ifdef FEAT_GUI
-		     && !gui.in_use
-#endif
+	    if (screen_cur_row == screen_row - 1
 #ifdef FEAT_DIFF
 		     && filler_todo <= 0
 #endif
-#ifdef FEAT_MBYTE
-		     && !(has_mbyte
-			 && ((*mb_off2cells)(LineOffset[screen_row]) == 2
-			     || (*mb_off2cells)(LineOffset[screen_row - 1]
-						    + (int)Columns - 2) == 2))
-#endif
 		     && W_WIDTH(wp) == Columns)
 	    {
-		/* First make sure we are at the end of the screen line, then
-		 * output the same character again to let the terminal know
-		 * about the wrap.  If the terminal doesn't auto-wrap, we
-		 * overwrite the character. */
-		if (screen_cur_col != W_WIDTH(wp))
-		    screen_char(LineOffset[screen_row - 1]
+		/* Remember that the line wraps, used for modeless copy. */
+		LineWraps[screen_row - 1] = TRUE;
+
+		/*
+		 * Special trick to make copy/paste of wrapped lines work with
+		 * xterm/screen: write an extra character beyond the end of
+		 * the line. This will work with all terminal types
+		 * (regardless of the xn,am settings).
+		 * Only do this on a fast tty.
+		 * Only do this if the cursor is on the current line
+		 * (something has been written in it).
+		 * Don't do this for the GUI.
+		 * Don't do this for double-width characters.
+		 * Don't do this for a window not at the right screen border.
+		 */
+		if (p_tf
+#ifdef FEAT_GUI
+			 && !gui.in_use
+#endif
+#ifdef FEAT_MBYTE
+			 && !(has_mbyte
+			     && ((*mb_off2cells)(LineOffset[screen_row]) == 2
+				 || (*mb_off2cells)(LineOffset[screen_row - 1]
+							+ (int)Columns - 2) == 2))
+#endif
+		   )
+		{
+		    /* First make sure we are at the end of the screen line,
+		     * then output the same character again to let the
+		     * terminal know about the wrap.  If the terminal doesn't
+		     * auto-wrap, we overwrite the character. */
+		    if (screen_cur_col != W_WIDTH(wp))
+			screen_char(LineOffset[screen_row - 1]
 						      + (unsigned)Columns - 1,
 					  screen_row - 1, (int)(Columns - 1));
 
 #ifdef FEAT_MBYTE
-		/* When there is a multi-byte character, just output a space
-		 * to keep it simple. */
-		if (has_mbyte && mb_off2cells(LineOffset[screen_row - 1]
+		    /* When there is a multi-byte character, just output a
+		     * space to keep it simple. */
+		    if (has_mbyte && mb_off2cells(LineOffset[screen_row - 1]
 						+ (unsigned)Columns - 1) != 1)
-		    out_char(' ');
-		else
+			out_char(' ');
+		    else
 #endif
-		    out_char(ScreenLines[LineOffset[screen_row - 1]
+			out_char(ScreenLines[LineOffset[screen_row - 1]
 							    + (Columns - 1)]);
-		/* force a redraw of the first char on the next line */
-		ScreenAttrs[LineOffset[screen_row]] = (sattr_T)-1;
-		screen_start();		/* don't know where cursor is now */
+		    /* force a redraw of the first char on the next line */
+		    ScreenAttrs[LineOffset[screen_row]] = (sattr_T)-1;
+		    screen_start();	/* don't know where cursor is now */
+		}
 	    }
 
 	    col = 0;
@@ -4509,9 +4519,9 @@ screen_line(row, coloff, endcol, clear_width
 	}
     }
 
-#ifdef FEAT_VERTSPLIT
     if (clear_width > 0)
     {
+#ifdef FEAT_VERTSPLIT
 	/* For a window that's left of another, draw the separator char. */
 	if (col + coloff < Columns)
 	{
@@ -4543,8 +4553,10 @@ screen_line(row, coloff, endcol, clear_width
 		screen_char(off_to, row, col + coloff);
 	    }
 	}
-    }
+	else
 #endif
+	    LineWraps[row] = FALSE;
+    }
 }
 
 #ifdef FEAT_RIGHTLEFT
@@ -6290,6 +6302,8 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 		c = c2;
 	    }
 	}
+	if (end_col == Columns)
+	    LineWraps[row] = FALSE;
 	if (row == Rows - 1)		/* overwritten the command line */
 	{
 	    redraw_cmdline = TRUE;
@@ -6363,6 +6377,7 @@ screenalloc(clear)
 #endif
     sattr_T	    *new_ScreenAttrs;
     unsigned	    *new_LineOffset;
+    char_u	    *new_LineWraps;
     static int	    entered = FALSE;		/* avoid recursiveness */
 
     /*
@@ -6436,6 +6451,7 @@ screenalloc(clear)
 			      (Rows + 1) * Columns * sizeof(sattr_T)), FALSE);
     new_LineOffset = (unsigned *)lalloc((long_u)(
 					 Rows * sizeof(unsigned)), FALSE);
+    new_LineWraps = (char_u *)lalloc((long_u)(Rows * sizeof(char_u)), FALSE);
 
     FOR_ALL_WINDOWS(wp)
     {
@@ -6456,6 +6472,7 @@ screenalloc(clear)
 #endif
 	    || new_ScreenAttrs == NULL
 	    || new_LineOffset == NULL
+	    || new_LineWraps == NULL
 	    || outofmem)
     {
 	do_outofmem_msg((long_u)((Rows + 1) * Columns));    /* guess the size */
@@ -6475,12 +6492,15 @@ screenalloc(clear)
 	new_ScreenAttrs = NULL;
 	vim_free(new_LineOffset);
 	new_LineOffset = NULL;
+	vim_free(new_LineWraps);
+	new_LineWraps = NULL;
     }
     else
     {
 	for (new_row = 0; new_row < Rows; ++new_row)
 	{
 	    new_LineOffset[new_row] = new_row * Columns;
+	    new_LineWraps[new_row] = FALSE;
 
 	    /*
 	     * If the screen is not going to be cleared, copy as much as
@@ -6564,6 +6584,7 @@ screenalloc(clear)
 #endif
     ScreenAttrs = new_ScreenAttrs;
     LineOffset = new_LineOffset;
+    LineWraps = new_LineWraps;
 
     /* It's important that screen_Rows and screen_Columns reflect the actual
      * size of ScreenLines[].  Set them before calling anything. */
@@ -6636,7 +6657,10 @@ screenclear2()
 
     /* blank out ScreenLines */
     for (i = 0; i < Rows; ++i)
+    {
 	lineclear(LineOffset[i], (int)Columns);
+	LineWraps[i] = FALSE;
+    }
 
     if (can_clear(T_CL))
     {
@@ -7462,6 +7486,7 @@ screen_ins_lines(off, row, line_count, end, wp)
 		lineclear(LineOffset[j] + wp->w_wincol, wp->w_width);
 	    else
 		lineinvalid(LineOffset[j] + wp->w_wincol, wp->w_width);
+	    LineWraps[j] = FALSE;
 	}
 	else
 #endif
@@ -7469,8 +7494,12 @@ screen_ins_lines(off, row, line_count, end, wp)
 	    j = end - 1 - i;
 	    temp = LineOffset[j];
 	    while ((j -= line_count) >= row)
+	    {
 		LineOffset[j + line_count] = LineOffset[j];
+		LineWraps[j + line_count] = LineWraps[j];
+	    }
 	    LineOffset[j + line_count] = temp;
+	    LineWraps[j + line_count] = FALSE;
 	    if (can_clear((char_u *)" "))
 		lineclear(temp, (int)Columns);
 	    else
@@ -7691,6 +7720,7 @@ screen_del_lines(off, row, line_count, end, force, wp)
 		lineclear(LineOffset[j] + wp->w_wincol, wp->w_width);
 	    else
 		lineinvalid(LineOffset[j] + wp->w_wincol, wp->w_width);
+	    LineWraps[j] = FALSE;
 	}
 	else
 #endif
@@ -7699,8 +7729,12 @@ screen_del_lines(off, row, line_count, end, force, wp)
 	    j = row + i;
 	    temp = LineOffset[j];
 	    while ((j += line_count) <= end - 1)
+	    {
 		LineOffset[j - line_count] = LineOffset[j];
+		LineWraps[j - line_count] = LineWraps[j];
+	    }
 	    LineOffset[j - line_count] = temp;
+	    LineWraps[j - line_count] = FALSE;
 	    if (can_clear((char_u *)" "))
 		lineclear(temp, (int)Columns);
 	    else
