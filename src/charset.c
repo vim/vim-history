@@ -10,9 +10,9 @@
 
 #include "vim.h"
 
-		char *
+	char *
 transchar(c)
-		unsigned c;
+	unsigned c;
 {
 		static char buf[3];
 
@@ -42,6 +42,7 @@ transchar(c)
  * output 'len' characters in 'str' with translation
  * if 'len' is -1, output upto a NUL character
  */
+	void
 outtrans(str, len)
 	register char *str;
 	register int   len;
@@ -83,5 +84,9 @@ chartabsize(c, col)
  */
 isidchar(c)
 {
+#ifdef __STDC__
+		return (isalnum(c) || c == '_');
+#else
 		return (isalpha(c) || isdigit(c) || c == '_');
+#endif
 }

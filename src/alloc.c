@@ -16,13 +16,16 @@
  */
 
 #include "vim.h"
-#undef FALSE			/* these are redefined in exec/types.h */
-#undef TRUE
-#include <exec/memory.h>
-#undef FALSE
-#define FALSE 0
-#undef TRUE
-#define TRUE 1
+#ifdef AMIGA
+# undef FALSE			/* these are redefined in exec/types.h */
+# undef TRUE
+# include <exec/types.h>
+# include <exec/memory.h>
+# undef FALSE
+# define FALSE 0
+# undef TRUE
+# define TRUE 1
+#endif /* AMIGA */
 
 #define PANIC_FACTOR_CHIP 8192L
 
@@ -30,24 +33,25 @@
 alloc(size)
 	unsigned		size;
 {
-
 	return (lalloc((u_long)size, TRUE));
 }
 
 	char *
 lalloc(size, message)
-	u_long	size;
+	u_long			size;
 	bool_t			message;
 {
 	register char   *p;			/* pointer to new storage space */
 
 	if ((p = malloc(size)) != NULL)
 	{
+#ifdef AMIGA
 		if (AvailMem((long)MEMF_CHIP) < PANIC_FACTOR_CHIP)
 		{ 								/* System is low... no go! */
 				free(p);
 				p = NULL;
 		}
+#endif
 	}
 	if (message && p == NULL)
 		emsg("out of memory!");
@@ -79,7 +83,7 @@ strnsave(string, len)
 	p = alloc((unsigned) (len + 1));
 	if (p != NULL)
 	{
-		strncpy(p, string, len);
+		strncpy(p, string, (size_t)len);
 		p[len] = NUL;
 	}
 	return p;

@@ -32,8 +32,8 @@ static int		Cline_size; 			/* size (in rows) of the cursor line */
 static int		Cline_row;				/* starting row of the cursor line */
 static int		redraw_msg = TRUE;		/* TRUE when "insert mode" needs updating */
 
-static void screenchar __ARGS((int, int, int));
 static int screenline __ARGS((linenr_t, int, int));
+static void screenchar __ARGS((int, int, int));
 static void screenfill __ARGS((int, int));
 
 /*
@@ -43,11 +43,13 @@ static void screenfill __ARGS((int, int));
  * the entire screen for changes. This occurs if the size of the cursor line
  * (in rows) hasn't changed.
  */
-void
+	void
 updateline()
 {
 	int 		row;
 	int 		n;
+
+	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL || RedrawingDisabled)
 		return;
@@ -56,20 +58,22 @@ updateline()
 #ifdef AUX
 	if (!Aux_Device)
 #endif
-	outstr(T_CI);				/* disable cursor */
+		outstr(T_CI);				/* disable cursor */
+
 	row = screenline(Curpos.lnum, Cline_row, Rows - 1);
+
 #ifdef AUX
 	if (!Aux_Device)
 #endif
-	outstr(T_CV);				/* enable cursor again */
+		outstr(T_CV);				/* enable cursor again */
 
 	n = row - Cline_row;
 	if (n != Cline_size)		/* line changed size */
 	{
 		if (n < Cline_size) 	/* got smaller: delete lines */
-				s_del(row, Cline_size - n, FALSE);
+				s_del(row, Cline_size - n, (bool_t)FALSE);
 		else					/* got bigger: insert lines */
-				s_ins(Cline_row + Cline_size, n - Cline_size, FALSE);
+				s_ins(Cline_row + Cline_size, n - Cline_size, (bool_t)FALSE);
 
 		updateScreen(VALID_TO_CURSCHAR);
 	}
@@ -82,7 +86,7 @@ updateline()
  * Filemem to Nextscreen, and update Botline.
  */
 
-void
+	void
 updateScreen(type)
 	int 			type;
 {
@@ -94,7 +98,9 @@ updateScreen(type)
 	int 			srow;		/* starting row of the current line */
 	int 			idx;
 	int 			i;
-	int 			j;
+	long 			j;
+
+	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL || RedrawingDisabled)
 		return;
@@ -137,7 +143,7 @@ updateScreen(type)
 						i = plines_m(Topline, (linenr_t)(LineNumbers[0] - 1));
 						if (i < Rows - 3)		/* less than a screen off */
 						{
-							s_ins(0, i, FALSE);
+							s_ins(0, i, (bool_t)FALSE);
 
 							endrow = i;
 
@@ -171,7 +177,7 @@ updateScreen(type)
 				else
 				{
 					if (row)	/* Topline is at LineNumbers[i] */
-						s_del(0, row, FALSE);
+						s_del(0, row, (bool_t)FALSE);
 					srow = row;
 					row = 0;
 					for (;;)
@@ -187,6 +193,7 @@ updateScreen(type)
 						if (++j >= NumLineSizes)
 							break;
 					}
+					NumLineSizes = idx;
 				}
 		}
 		if (endrow == Rows - 1 && idx == 0) 	/* no scrolling */
@@ -314,7 +321,6 @@ screenline(lnum, startrow, endrow)
 	char			extra[16];
 	char			*p_extra;
 	int 			n_extra;
-	int 			n;
 
 	row = startrow;
 	col = 0;
@@ -323,7 +329,7 @@ screenline(lnum, startrow, endrow)
 	screenp = (u_char *)LinePointers[row];
 	if (P(P_NU))
 	{
-		sprintf(extra, "%6d  ", lnum);
+		sprintf(extra, "%7ld ", (long)lnum);
 		p_extra = extra;
 		n_extra = 8;
 		vcol = -8;		/* so vcol is 0 when line number has been printed */
@@ -440,10 +446,19 @@ screenchar(c, row, col)
 				{
 					register int i;
 
-					outchar(CSI);
+#ifdef AMIGA
+# ifdef AUX
+					if (Aux_Device)
+						outstr("\033[");
+					else
+# endif /* AUX */
+						outchar(CSI);
+#else
+					outstr("\033[");
+#endif /* AMIGA */
 					i = col - oldcol;
 					if (i > 1)
-						outnum((short)i);
+						outnum((long)i);
 					outchar('C');
 					oldcol = col;
 				}
@@ -487,7 +502,7 @@ screenfill(srow, c)
 /*
  * prt_line() - print the given line
  */
-void
+	void
 prt_line(s)
 	char		   *s;
 {
@@ -534,10 +549,21 @@ prt_line(s)
 	}
 }
 
-void
+	void
 screenalloc()
 {
-	register int		i;
+	static int		old_Rows = 0;
+	static int		old_Columns = 0;
+	register int	i;
+
+	/*
+	 * Allocation of the sceen buffers is done only when the size changes
+	 */
+	if (Nextscreen != NULL && Rows == old_Rows && Columns == old_Columns)
+		return;
+
+	old_Rows = Rows;
+	old_Columns = Columns;
 
 	/*
 	 * If we're changing the size of the screen, free the old arrays
@@ -551,9 +577,9 @@ screenalloc()
 	if (LineSizes != NULL)
 		free(LineSizes);
 
-	Nextscreen = malloc((unsigned) (Rows * Columns));
-	LineNumbers = (linenr_t *) malloc((unsigned) (Rows * sizeof(linenr_t)));
-	LineSizes = malloc((unsigned) Rows);
+	Nextscreen = malloc((size_t) (Rows * Columns));
+	LineNumbers = (linenr_t *) malloc((size_t) (Rows * sizeof(linenr_t)));
+	LineSizes = malloc((size_t) Rows);
 	LinePointers = (char **)malloc(sizeof(char *) * Rows);
 
 	if (Nextscreen == NULL || LineNumbers == NULL || LineSizes == NULL ||
@@ -570,10 +596,10 @@ screenalloc()
 				LinePointers[i] = Nextscreen + i * Columns;
 	}
 
-	NumLineSizes = 0;
+	screenclear();
 }
 
-void
+	void
 screenclear()
 {
 	register char  *np;
@@ -581,6 +607,7 @@ screenclear()
 
 	if (Nextscreen == NULL)
 		return;
+
 	outstr(T_ED);				/* clear the display */
 
 	np = Nextscreen;
@@ -594,16 +621,22 @@ screenclear()
 	NumLineSizes = 0;
 }
 
-void
+	void
 cursupdate()
 {
 	linenr_t		p;
-	u_char			  c;
+	u_char			c;
 	u_char		   *ptr;
-	int 			incr, nlines;
+	int 			incr;
+	long 			nlines;
 	int 			i;
 	int 			didincr;
 	int 			temp;
+
+	screenalloc();		/* allocate screen buffers if size changed */
+
+	if (Nextscreen == NULL)
+		return;
 
 	if (Curpos.lnum > line_count)
 		Curpos.lnum = line_count;
@@ -737,11 +770,11 @@ cursupdate()
 	}
 }
 
-void
+	void
 scrolldown(nlines)
-	int 			nlines;
+	long	nlines;
 {
-	register int	done = 0;	/* total # of physical lines done */
+	register long	done = 0;	/* total # of physical lines done */
 
 	/* Scroll up 'nlines' lines. */
 	while (nlines--)
@@ -759,12 +792,12 @@ scrolldown(nlines)
 		Cursrow -= plines(Curpos.lnum--);
 }
 
-void
+	void
 scrollup(nlines)
-	int 			nlines;
+	long	nlines;
 {
 #ifdef NEVER
-	register int	done = 0;	/* total # of physical lines done */
+	register long	done = 0;	/* total # of physical lines done */
 
 	/* Scroll down 'nlines' lines. */
 	while (nlines--)
@@ -799,7 +832,7 @@ scrollup(nlines)
  * s_ins(row, nlines, invalid) - insert 'nlines' lines at 'row'
  * if 'invalid' is TRUE the LineNumbers[] is invalidated.
  */
-void
+	void
 s_ins(row, nlines, invalid)
 	int 			row;
 	int 			nlines;
@@ -808,6 +841,8 @@ s_ins(row, nlines, invalid)
 	int 			i;
 	int 			j;
 	char		*temp;
+
+	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL)
 		return;
@@ -837,7 +872,7 @@ s_ins(row, nlines, invalid)
 	{
 		windgoto(row, 0);
 		outstr(T_IL);
-		outnum((short)nlines);
+		outnum((long)nlines);
 		outstr(T_IL_B);
 	}
 
@@ -860,7 +895,7 @@ s_ins(row, nlines, invalid)
 		while ((j -= nlines) >= row)
 				LinePointers[j + nlines] = LinePointers[j];
 		LinePointers[j + nlines] = temp;
-		memset(temp, ' ', Columns);
+		memset(temp, ' ', (size_t)Columns);
 	}
 }
 
@@ -868,7 +903,7 @@ s_ins(row, nlines, invalid)
  * s_del(row, nlines, invalid) - delete 'nlines' lines at 'row'
  * If 'invalid' is TRUE LineNumbers[] is ivalidated.
  */
-void
+	void
 s_del(row, nlines, invalid)
 	int 			row;
 	int 			nlines;
@@ -877,6 +912,8 @@ s_del(row, nlines, invalid)
 	int 			j;
 	int 			i;
 	char		*temp;
+
+	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL)
 		return;
@@ -910,7 +947,7 @@ s_del(row, nlines, invalid)
 	{
 		windgoto(row, 0);
 		outstr(T_DL);
-		outnum((short)nlines);
+		outnum((long)nlines);
 		outstr(T_DL_B);
 	}
 #ifndef AMIGA
@@ -928,7 +965,7 @@ s_del(row, nlines, invalid)
 		while ((j += nlines) < Rows - 1)
 				LinePointers[j - nlines] = LinePointers[j];
 		LinePointers[j - nlines] = temp;
-		memset(temp, ' ', Columns);
+		memset(temp, ' ', (size_t)Columns);
 	}
 }
 

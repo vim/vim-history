@@ -24,6 +24,7 @@
 #define REGSTR	0x200			/* allow "x for register designation */
 #define COUNT	0x400			/* allow count in argument */
 #define NOTRLCOM 0x800			/* no trailing comment allowed */
+#define ZEROR	0x1000			/* zero line number allowed */
 #define FILES	(XFILE + EXTRA)	/* multiple extra files allowed */
 #define WORD1	(EXTRA + NOSPC)	/* one extra word allowed */
 #define FILE1	(FILES + NOSPC)	/* 1 file allowed, defaults to current file */
@@ -65,7 +66,7 @@ static struct
 #define CMD_cp 9
 	{"cq",			TRLBAR+BANG},
 #define CMD_cq 10
-	{"copy",		RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"copy",		RANGE+EXTRA+TRLBAR},
 #define CMD_copy 11
 	{"chdir",		NAMEDF+TRLBAR},
 #define CMD_chdir 12
@@ -89,88 +90,98 @@ static struct
 #define CMD_insert 21
 	{"join",		RANGE+COUNT+TRLBAR},
 #define CMD_join 22
-	{"k",			RANGE+WORD1+TRLBAR},		/* not supported */
-#define CMD_k 23
+	{"jumps",		TRLBAR},
+#define CMD_jumps 23
+	{"k",			RANGE+WORD1+TRLBAR},
+#define CMD_k 24
 	{"list",		RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_list 24
-	{"move",		RANGE+EXTRA+TRLBAR},		/* not supported */
-#define CMD_move 25
+#define CMD_list 25
+	{"move",		RANGE+EXTRA+TRLBAR},
+#define CMD_move 26
 	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
-#define CMD_map 26
-	{"mark",		RANGE+WORD1+TRLBAR},		/* not supported */
-#define CMD_mark 27
+#define CMD_map 27
+	{"mark",		RANGE+WORD1+TRLBAR},
+#define CMD_mark 28
+	{"marks",		TRLBAR},
+#define CMD_marks 29
 	{"mkexrc",		BANG+FILE1+TRLBAR},
-#define CMD_mkexrc 28
-	{"next",		BANG+NAMEDFS+TRLBAR},
-#define CMD_next 29
+#define CMD_mkexrc 30
+	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
+#define CMD_next 31
 	{"number",		RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_number 30
-	{"Next",		BANG+TRLBAR},
-#define CMD_Next 31
+#define CMD_number 32
+	{"Next",		RANGE+BANG+TRLBAR},
+#define CMD_Next 33
 	{"print",		RANGE+COUNT+TRLBAR},
-#define CMD_print 32
+#define CMD_print 34
+	{"pop",			RANGE+TRLBAR+ZEROR},
+#define CMD_pop 35
 	{"put",			RANGE+REGSTR+TRLBAR},
-#define CMD_put 33
-	{"previous",	BANG+TRLBAR},
-#define CMD_previous 34
+#define CMD_put 36
+	{"previous",	RANGE+BANG+TRLBAR},
+#define CMD_previous 37
 	{"quit",		BANG+TRLBAR},
-#define CMD_quit 35
-	{"read",		NAMEDF+NEEDARG+TRLBAR},
-#define CMD_read 36
+#define CMD_quit 38
+	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
+#define CMD_read 39
 	{"rewind",		BANG+TRLBAR},
-#define CMD_rewind 37
+#define CMD_rewind 40
 	{"recover",		FILE1+TRLBAR},				/* not supported */
-#define CMD_recover 38
+#define CMD_recover 41
 	{"substitute",	RANGE+EXTRA},
-#define CMD_substitute 39
+#define CMD_substitute 42
 	{"set",			EXTRA+TRLBAR},
-#define CMD_set 40
+#define CMD_set 43
+	{"setkeymap",	NAMEDF+TRLBAR},
+#define CMD_setkeymap 44
 	{"shell",		TRLBAR},
-#define CMD_shell 41
+#define CMD_shell 45
 	{"source",		NAMEDF+NEEDARG+TRLBAR},
-#define CMD_source 42
+#define CMD_source 46
 	{"stop",		TRLBAR},					/* not supported */
-#define CMD_stop 43
-	{"t",			RANGE+EXTRA+TRLBAR},		/* not supported */
-#define CMD_t 44
-	{"tag",			BANG+WORD1+TRLBAR},
-#define CMD_tag 45
+#define CMD_stop 47
+	{"t",			RANGE+EXTRA+TRLBAR},
+#define CMD_t 48
+	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
+#define CMD_tag 49
+	{"tags",		TRLBAR},
+#define CMD_tags 50
 	{"undo",		TRLBAR},
-#define CMD_undo 46
+#define CMD_undo 51
 	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
-#define CMD_unabbreviate 47
+#define CMD_unabbreviate 52
 	{"unmap",		BANG+EXTRA+TRLBAR},
-#define CMD_unmap 48
+#define CMD_unmap 53
 	{"vglobal",		RANGE+EXTRA+DFLALL},
-#define CMD_vglobal 49
+#define CMD_vglobal 54
 	{"version",		TRLBAR},
-#define CMD_version 50
-	{"visual",		BANG+FILE1+TRLBAR},
-#define CMD_visual 51
+#define CMD_version 55
+	{"visual",		RANGE+BANG+FILE1+TRLBAR},
+#define CMD_visual 56
 	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_write 52
+#define CMD_write 57
 	{"winsize",		EXTRA+NEEDARG+TRLBAR},
-#define CMD_winsize 53
+#define CMD_winsize 58
 	{"wq",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_wq 54
+#define CMD_wq 59
 	{"xit",			BANG+FILE1+DFLALL+TRLBAR},
-#define CMD_xit 55
+#define CMD_xit 60
 	{"yank",		RANGE+REGSTR+COUNT+TRLBAR},
-#define CMD_yank 56
+#define CMD_yank 61
 	{"z",			RANGE+COUNT+TRLBAR},		/* not supported */
-#define CMD_z 57
+#define CMD_z 62
 	{"!",			RANGE+NAMEDFS},
-#define CMD_bang 58
+#define CMD_bang 63
 	{"<",			RANGE+COUNT+TRLBAR},
-#define CMD_lshift 59
+#define CMD_lshift 64
 	{">",			RANGE+COUNT+TRLBAR},
-#define CMD_rshift 60
+#define CMD_rshift 65
 	{"=",			RANGE+TRLBAR},
-#define CMD_equal 61
+#define CMD_equal 66
 	{"&",			RANGE+EXTRA},
-#define CMD_and 62
+#define CMD_and 67
 	{"~",			RANGE+TRLBAR}				/* not supported */
-#define CMD_tilde 63
-#define CMD_SIZE 64
+#define CMD_tilde 68
+#define CMD_SIZE 69
 
 };

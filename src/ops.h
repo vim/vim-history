@@ -12,17 +12,18 @@
  * ops.h: things shared between normal.c, cmdline.c and ops.c
  */
 
-void doshift __ARGS((int));
-void	dodelete();
+void	doshift __ARGS((int));
 bool_t	dorecord __ARGS((int));
-void	dotilde();
-void	dochange();
+int		doexecbuf __ARGS((int));
+void	dodelete __ARGS((void));
+void	dotilde __ARGS((void));
+void	dochange __ARGS((void));
 bool_t	doyank __ARGS((bool_t));
-void	doput __ARGS((int, int));
-void	dodis();
-void	startinsert __ARGS((int, int, int));
-void	dodojoin __ARGS((int, bool_t));
+void	doput __ARGS((int, long));
+void	dodis __ARGS((void));
+void	dodojoin __ARGS((long, bool_t));
 bool_t	dojoin __ARGS((bool_t));
+void	startinsert __ARGS((int, int, long));
 
 /*
  * Operators
@@ -67,6 +68,6 @@ EXTERN bool_t	mincl;					/* true if char motion is inclusive */
 EXTERN int		oneless;				/* 1 if !mincl and startop != endop */
 EXTERN FPOS 	startop;				/* cursor pos. at start of operator */
 EXTERN FPOS		endop;					/* cursor pos. at end of operator */
-EXTERN int		nlines;					/* lines between startop and endop + 1 */
+EXTERN long		nlines;					/* lines between startop and endop + 1 */
 EXTERN int		yankbuffer INIT(= 0);	/* current yank buffer */
 

@@ -51,16 +51,22 @@ static char		typeahead[MAXMAPLEN + 2];
 static int		typelen = 0;	/* number of characters in typeahead[] */
 static char		*mapstr = NULL;	/* mapped characters */
 static int		maplen = 0;		/* number of characters in mapstr */
+
+static void		free_buff __ARGS((struct buffheader *));
+static void		add_buff __ARGS((struct buffheader *, char *));
+static void		add_num_buff __ARGS((struct buffheader *, long));
+static u_char	read_stuff __ARGS((bool_t));
+static bool_t	start_stuff __ARGS((void));
+static int		read_redo __ARGS((bool_t));
 static u_char	vgetorpeek __ARGS((bool_t));
-static void add_buff __ARGS((struct buffheader *, char *));
-static void showmap __ARGS((struct mapblock *, int));
+static void		showmap __ARGS((struct mapblock *));
 
 /*
  * free and clear a buffer
  */
-		static void
+	static void
 free_buff(buf)
-		struct buffheader *buf;
+	struct buffheader *buf;
 {
 		register struct bufblock *p, *np;
 
@@ -75,7 +81,7 @@ free_buff(buf)
 /*
  * return the contents of a buffer as a single string
  */
-u_char *
+	u_char *
 get_bufcont(buffer)
 	struct buffheader *buffer;
 {
@@ -99,7 +105,7 @@ get_bufcont(buffer)
 /*
  * return the contents of the record buffer as a single string
  */
-u_char *
+	u_char *
 get_recorded()
 {
 		u_char *p = NULL;
@@ -112,7 +118,7 @@ get_recorded()
 /*
  * return the contents of the redo buffer as a single string
  */
-u_char *
+	u_char *
 get_inserted()
 {
 		return(get_bufcont(&redobuff));
@@ -121,10 +127,10 @@ get_inserted()
 /*
  * add string "s" after the current block of buffer "buf"
  */
-		static void
+	static void
 add_buff(buf, s)
-		register struct buffheader *buf;
-		char *s;
+	register struct buffheader	*buf;
+	char						*s;
 {
 		struct bufblock *p;
 		int 			n;
@@ -158,7 +164,7 @@ add_buff(buf, s)
 						len = MINIMAL_SIZE;
 				else
 						len = n;
-				p = (struct bufblock *)alloc(sizeof(struct bufblock) + len);
+				p = (struct bufblock *)alloc((unsigned)(sizeof(struct bufblock) + len));
 				if (p == NULL)
 						return; /* no space, just forget it */
 				buf->bh_space = len - n;
@@ -171,14 +177,14 @@ add_buff(buf, s)
 		return;
 }
 
-		static void
+	static void
 add_num_buff(buf, n)
-		struct buffheader *buf;
-		int 			  n;
+	struct buffheader *buf;
+	long 			  n;
 {
 		char	number[32];
 
-		sprintf(number, "%d", n);
+		sprintf(number, "%ld", n);
 		add_buff(buf, number);
 }
 
@@ -186,9 +192,9 @@ add_num_buff(buf, n)
  * get one character from the stuff buffer
  * If advance == TRUE go to the next char.
  */
-		static u_char
+	static u_char
 read_stuff(advance)
-		bool_t			advance;
+	bool_t			advance;
 {
 		register u_char c;
 		register struct bufblock *curr;
@@ -215,7 +221,7 @@ read_stuff(advance)
 /*
  * prepare stuff buffer for reading (if it contains something)
  */
-		static bool_t
+	static bool_t
 start_stuff()
 {
 		if (stuffbuff.bh_first.b_next == NULL)
@@ -228,10 +234,11 @@ start_stuff()
 /*
  * remove all typeahead characters (used in case of an error).
  */
+	void
 flush_buffers()
 {
 	start_stuff();
-	while (read_stuff() != NUL)
+	while (read_stuff((bool_t)TRUE) != NUL)
 		;
 	typelen = 0;
 	maplen = 0;
@@ -239,14 +246,14 @@ flush_buffers()
 		*mapstr = 0;
 }
 
-void
+	void
 ResetBuffers()
 {
 	if (!redo_ins_busy)
 		free_buff(&redobuff);
 }
 
-void
+	void
 AppendToRedobuff(s)
 	char		   *s;
 {
@@ -254,24 +261,24 @@ AppendToRedobuff(s)
 		add_buff(&redobuff, s);
 }
 
-void
+	void
 AppendNumberToRedobuff(n)
-	int 			n;
+	long 			n;
 {
 	if (!redo_ins_busy)
 		add_num_buff(&redobuff, n);
 }
 
-void
+	void
 stuffReadbuff(s)
 	char		   *s;
 {
 	add_buff(&stuffbuff, s);
 }
 
-void
+	void
 stuffnumReadbuff(n)
-	int 			n;
+	long	n;
 {
 	add_num_buff(&stuffbuff, n);
 }
@@ -280,75 +287,77 @@ stuffnumReadbuff(n)
  * Read a character from the redo buffer.
  * The redo buffer is left as it is.
  */
+	static int
 read_redo(init)
-		bool_t init;
+	bool_t		init;
 {
-		static struct bufblock *bp;
-		static u_char *p;
-		int c;
+	static struct bufblock	*bp;
+	static u_char			*p;
+	int						c;
 
-		if (init)
+	if (init)
+	{
+		if ((bp = redobuff.bh_first.b_next) == NULL)
+			return TRUE;
+		p = bp->b_str;
+		return FALSE;
+	}
+	if ((c = *p) != NUL)
+	{
+		if (*++p == NUL && bp->b_next != NULL)
 		{
-				if ((bp = redobuff.bh_first.b_next) == NULL)
-						return TRUE;
-				p = bp->b_str;
-				return FALSE;
+			bp = bp->b_next;
+			p = bp->b_str;
 		}
-		if ((c = *p) != NUL)
-		{
-				if (*++p == NUL && bp->b_next != NULL)
-				{
-						bp = bp->b_next;
-						p = bp->b_str;
-				}
-		}
-		return c;
+	}
+	return c;
 }
 
 /*
  * copy the rest of the redo buffer into the stuff buffer (could be done faster)
  */
+	void
 copy_redo()
 {
-		register int c;
+	register int c;
 
-		while ((c = read_redo(FALSE)) != NUL)
-				stuffReadbuff(mkstr(c));
+	while ((c = read_redo((bool_t)FALSE)) != NUL)
+		stuffReadbuff(mkstr(c));
 }
 
 /*
  * Stuff the redo buffer into the stuffbuff.
  * Insert the redo count into the command.
  */
-		bool_t
+	bool_t
 start_redo(count)
-		int count;
+	long count;
 {
 		register int c;
 
-		if (read_redo(TRUE))	/* init the pointers; return if nothing to redo */
+		if (read_redo((bool_t)TRUE))	/* init the pointers; return if nothing to redo */
 				return FALSE;
 
-		c = read_redo(FALSE);
+		c = read_redo((bool_t)FALSE);
 
 /* copy the buffer name, if present */
 		if (c == '"')
 		{
 				add_buff(&stuffbuff, "\"");
-				c = read_redo(FALSE);
+				c = read_redo((bool_t)FALSE);
 
 		/* if a numbered buffer is used, increment the number */
 				if (c >= '1' && c < '9')
 						++c;
 				add_buff(&stuffbuff, mkstr(c));
-				c = read_redo(FALSE);
+				c = read_redo((bool_t)FALSE);
 		}
 
 /* try to enter the count (in place of a previous count) */
 		if (count)
 		{
 				while (isdigit(c))		/* skip "old" count */
-						c = read_redo(FALSE);
+						c = read_redo((bool_t)FALSE);
 				add_num_buff(&stuffbuff, count);
 		}
 
@@ -362,20 +371,20 @@ start_redo(count)
  * Repeat the last insert (R, o, O, a, A, i or I command) by stuffing the redo buffer
  * into the stuffbuff.
  */
-		bool_t
+	bool_t
 start_redo_ins()
 {
 		register u_char c;
 
-		if (read_redo(TRUE))
+		if (read_redo((bool_t)TRUE))
 				return FALSE;
 		start_stuff();
 
 /* skip the count and the command character */
-		while ((c = read_redo(FALSE)) != NUL)
+		while ((c = read_redo((bool_t)FALSE)) != NUL)
 		{
 			c = toupper(c);
-			if (index("AIRO", c) != NULL)
+			if (strchr("AIRO", c) != NULL)
 			{
 				if (c == 'O')
 					stuffReadbuff(NL_STR);
@@ -389,6 +398,7 @@ start_redo_ins()
 		return TRUE;
 }
 
+	void
 stop_redo_ins()
 {
 		redo_ins_busy = FALSE;
@@ -411,8 +421,15 @@ ins_mapbuf(str)
 	char *str;
 {
 	register char *s;
+	register int newlen;
 
-	s = alloc(maplen + strlen(str) + 1);
+	newlen = maplen + strlen(str) + 1;
+	if (newlen < 0)		/* string is getting too long */
+	{
+		emsg("command too complex");	/* also calls flush_buffers */
+		return -1;
+	}
+	s = alloc(newlen);
 	if (s == NULL)
 		return -1;
 	strcpy(s, str);
@@ -434,20 +451,21 @@ ins_mapbuf(str)
  * If advance is TRUE, we really get the character. Otherwise we just look
  * whether there is a character available.
  */
-static u_char
+	static u_char
 vgetorpeek(advance)
-		bool_t advance;
+	bool_t advance;
 {
 	register int	c;
 	int				n;
 	char			*str;
-	char			*s;
 	int				len;
 	struct mapblock *mp;
 	int				mode = State;
 
 	if (mode == REPLACE || mode == CMDLINE)
 		mode = INSERT;			/* treat replace mode just like insert mode */
+	else if (mode == NORMAL_BUSY)
+		mode = NORMAL;
 
 	start_stuff();
 	do
@@ -489,7 +507,7 @@ vgetorpeek(advance)
 						if (mp->m_mode != mode)
 							continue;
 						n = strlen(mp->m_keys);
-						if (!strncmp(mp->m_keys, str, n > len ? len : n))
+						if (!strncmp(mp->m_keys, str, (size_t)(n > len ? len : n)))
 							break;
 					}
 					if (mp == NULL || str == mapstr && (n > len ||
@@ -502,7 +520,7 @@ vgetorpeek(advance)
 							KeyTyped = TRUE;
 						if (advance)
 						{
-							strncpy(&str[0], &str[1], len);
+							strncpy(&str[0], &str[1], (size_t)len);
 							if (str == mapstr)
 								--maplen;
 							else
@@ -514,7 +532,7 @@ vgetorpeek(advance)
 					{
 							/* remove the mapped keys */
 						len -= n;
-						strncpy(&str[0], &str[n], len + 1);
+						strncpy(&str[0], &str[n], (size_t)(len + 1));
 						if (str == mapstr)
 							maplen = len;
 						else
@@ -563,16 +581,16 @@ vgetorpeek(advance)
 	return (u_char) c;
 }
 
-u_char
+	u_char
 vgetc()
 {
-		return (vgetorpeek(TRUE));
+	return (vgetorpeek((bool_t)TRUE));
 }
 
-u_char
+	u_char
 vpeekc()
 {
-		return (vgetorpeek(FALSE));
+	return (vgetorpeek((bool_t)FALSE));
 }
 
 /*
@@ -641,11 +659,11 @@ domap(unmap, arg, mode)
 				continue;
 			n = strlen(mp->m_keys);
 			if (*arg == NUL)
-				showmap(mp, n);
-			else if (!strncmp(mp->m_keys, arg, n < len ? n : len))
+				showmap(mp);
+			else if (!strncmp(mp->m_keys, arg, (size_t)(n < len ? n : len)))
 			{
 				if (!unmap && *p == NUL)
-					showmap(mp, n);
+					showmap(mp);
 				else
 					break;
 			}
@@ -653,7 +671,7 @@ domap(unmap, arg, mode)
 		if (*arg == NUL || !unmap && *p == NUL)
 		{
 				setmode(1);
-				wait_return(TRUE);
+				wait_return((bool_t)TRUE);
 				return 0;				/* listing finished */
 		}
 
@@ -663,7 +681,7 @@ domap(unmap, arg, mode)
 						return 2;		/* no match */
 
 				/* allocate a new entry for the maplist */
-				mp = (struct mapblock *)alloc(sizeof(struct mapblock));
+				mp = (struct mapblock *)alloc((unsigned)sizeof(struct mapblock));
 				if (mp == NULL)
 						return 4;		/* no mem */
 				mp->m_keys = strsave(arg);
@@ -707,14 +725,19 @@ domap(unmap, arg, mode)
 }
 
 	static void
-showmap(mp, len)
+showmap(mp)
 	struct mapblock *mp;
-	int len;
 {
-	outtrans(mp->m_keys, len);
+	char *p;
+	int len;
+
+	outtrans(mp->m_keys, -1);
+	len = 0;
+	for (p = mp->m_keys; *p; ++p)
+		len += charsize(*p);		/* count length of what we have written */
 	while (len < MAXMAPLEN)
 	{
-		outchar(' ');
+		outchar(' ');				/* padd with blanks */
 		++len;
 	}
 	outtrans(mp->m_str, -1);

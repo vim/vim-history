@@ -11,7 +11,7 @@
 #define EXTERN
 #include "vim.h"
 
-static void
+	static void
 usage()
 {
 	register int i, j;
@@ -34,9 +34,9 @@ usage()
 }
 
 #ifdef AMIGA
-void
+	void
 #else
-int
+	int
 #endif
 main(argc, argv)
 	int 			argc;
@@ -45,8 +45,8 @@ main(argc, argv)
 	char		   *initstr;		/* init string from the environment */
 	char		   *fname = NULL;	/* file name from command line */
 	int 			c;
-	FILE			*fp;
 	int				doqf = 0;
+	char		   *command = NULL;	/* command from + option */
 
 #ifdef AMIGA
 	/*
@@ -68,7 +68,7 @@ main(argc, argv)
 	 *		'-n'
 	 *		'-r'
 	 */
-	while (argc > 2 && argv[0][0] == '-' && index("swvnr", c = argv[0][1]) != NULL && c)
+	while (argc > 1 && argv[0][0] == '-' && strchr("swvnr", c = argv[0][1]) != NULL && c)
 	{
 		--argc;
 		if (c == 'v')
@@ -88,7 +88,7 @@ main(argc, argv)
 		{
 			++argv;
 			--argc;
-			if (argv[0] == NULL)
+			if (argc < 1)
 				usage();
 			if (c == 's')
 			{
@@ -127,36 +127,29 @@ main(argc, argv)
 		  case '-':
 		  	if (c == 'e')		/* -e QuickFix mode */
 			{
+				if (argc != 2)
+					usage();
 				if (qf_init(PS(P_EF)))
 					windexit(3);
 				doqf = 1;
 				break;
 			}
+			if (c != 't' || argc != 3)
+				usage();
 								/* -t tag */
 			++argv;
-			if (c != 't' || argv[0] == NULL)
-				usage();
 			stuffReadbuff(":ta ");
 			stuffReadbuff(argv[0]);
 			stuffReadbuff("\n");
 			break;
 
-		  case '+': 			/* +n or +/pat */
-			if (argv[1] == NULL)	/* no filename */
+		  case '+': 			/* + or +n or +/pat or +command */
+			if (argc < 3)		/* no filename */
 					usage();
-			if (c == '/')
-			{
-				stuffReadbuff(&(argv[0][1]));
-				stuffReadbuff("\n");
-			}
+			if (c == NUL)
+				command = "$";
 			else
-			{
-				if (c != NUL && !isdigit(c))
-					usage();
-				if (c != NUL)
-					stuffnumReadbuff(atoi(&(argv[0][1])));
-				stuffReadbuff("G");
-			}
+				command = &(argv[0][1]);
 
 			++argv;
 			--argc;
@@ -164,7 +157,7 @@ main(argc, argv)
 
 		  default:				/* must be a file name */
 #ifdef WILD_CARDS
-			ExpandWildCards(argc - 1, argv, &numfiles, &files, TRUE, TRUE);
+			ExpandWildCards(argc - 1, argv, &numfiles, &files, (bool_t)TRUE, (bool_t)TRUE);
 			if (numfiles != 0)
 				fname = files[0];
 #else
@@ -181,11 +174,9 @@ main(argc, argv)
 	if (numfiles == 0)
 		numfiles = 1;
 
-	screenalloc();
 	filealloc();				/* Initialize storage structure */
+	screenalloc();				/* allocate screen buffers */
 	init_yank();				/* init yank buffers */
-
-	screenclear();
 
 /*
  * Read the EXINIT environment variable (commands are to be separated with '|').
@@ -213,10 +204,10 @@ main(argc, argv)
 
 	setpcmark();
 	startscript();				/* start writing to auto script file */
+
 	if (recoverymode && !scriptin[curscript])	/* first do script file, then recover */
 		openrecover();
 
-	get_winsize();				/* writes window size into script file(s) */
 	updateScreen(NOT_VALID);
 
 	/* position the display and the cursor at the top of the file. */
@@ -227,6 +218,9 @@ main(argc, argv)
 
 	if (doqf)
 		qf_jump(0);
+
+	if (command)
+		docmdline(command);
 
 /*
  * main command loop
@@ -243,7 +237,7 @@ main(argc, argv)
 	/*NOTREACHED*/
 }
 
-void
+	void
 getout(r)
 	int 			r;
 {

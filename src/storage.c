@@ -142,7 +142,7 @@ free_line(ptr)
 	if (check_list())
 		return;
 #endif
-	if (ptr == NULL)
+	if (ptr == NULL || ptr == IObuff)	/* illegal address */
 		return;
 	if (*(ptr - 1) == NUL)		/* no size field */
 	{
@@ -242,7 +242,7 @@ alloc_line(size)
 		{
 			int		n = (size > (MEMBLOCKSIZE / 4) ? size : MEMBLOCKSIZE);
 
-			mp = (info_t *)m_blockalloc((u_long)n, TRUE);
+			mp = (info_t *)m_blockalloc((u_long)n, (bool_t)TRUE);
 			if (mp == NULL)
 				return (NULL);
 			mp->m_size = n;
@@ -258,7 +258,7 @@ alloc_line(size)
 		if (mp->m_size & 1)				/* remaining size must be even */
 			++size;
 		mp->m_size -= size;
-		(char *)mp += mp->m_size;
+		mp = (info_t *)((char *)mp + mp->m_size);
 		mp->m_size = size;
 	}
 	else								/* remove *mp from the free list */
@@ -268,7 +268,7 @@ alloc_line(size)
 	m_search = mprev;
 
 	*((char *)mp + size - 1) = NUL;		/* make sure the last byte is a NUL */
-	(char *)mp += M_SIZESIZE;
+	mp = (info_t *)((char *)mp + M_SIZESIZE);
 	*(char *)mp = NUL;					/* set the first byte to NUL */
 #ifdef DEBUG
 	check_list();
@@ -289,7 +289,7 @@ save_line(src)
 
 	len = strlen(src);
 	if ((dst = alloc_line(len)) != NULL)
-		movmem(src, dst, len + 1);
+		movmem(src, dst, (size_t)(len + 1));
 	return (dst);
 }
 
@@ -318,12 +318,14 @@ static block_t *last_block;		/* pointer to last block in block list */
 static block_t *curr_block;		/* block used by nr2ptr */
 static linenr_t curr_count;		/* first line number of block curr_block */
 
+static block_t *alloc_block __ARGS((void));
+
     static block_t *
 alloc_block()
 {
 	block_t *p;
 
-	p = (block_t *)alloc_line(sizeof(block_t));
+	p = (block_t *)alloc_line((unsigned)sizeof(block_t));
 	if (p != NULL)
 	{
 		memset(p, 0, sizeof(block_t));
@@ -347,6 +349,7 @@ filealloc()
 	line_count = 1;
 	curr_count = 0;
 	clrallmarks();
+	clrtags();
 }
 
 /*
@@ -359,7 +362,7 @@ freeall()
 {
 	m_blockfree();
 	line_count = 0;
-	s_ins(0, 0, TRUE);	/* invalidate Line arrays */
+	s_ins(0, 0, (bool_t)TRUE);	/* invalidate Line arrays */
 	u_clearall();
 }
 
@@ -446,6 +449,7 @@ nr2ptr(nr)
 /*
  * set the B_MARKED flag for line 'lnum'
  */
+	void
 setmarked(lnum)
 	linenr_t lnum;
 {
@@ -476,6 +480,7 @@ firstmarked()
 /*
  * clear all B_MARKED flags
  */
+	void
 clearmarked()
 {
 	register block_t	*bp;

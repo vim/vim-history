@@ -21,10 +21,12 @@
 #include "vim.h"
 #include "fcntl.h"
 
-#define BUFSIZE 4096
-static void do_mlines();
+extern char				emsg_interrupted[];
 
-void
+#define BUFSIZE 4096
+static void do_mlines __ARGS((void));
+
+	void
 filemess(name, s)
 	char		*name;
 	char		*s;
@@ -38,8 +40,10 @@ filemess(name, s)
  * 1. We allocate blocks with m_blockalloc, as big as possible.
  * 2. Each block is filled with characters from the file with a single read().
  * 3. The lines are inserted in the buffer with appendline().
+ *
+ * (caller must check that fname != NULL)
  */
-bool_t
+	bool_t
 readfile(fname, from)
 	char		   *fname;
 	linenr_t		from;
@@ -47,7 +51,7 @@ readfile(fname, from)
 	int 				fd;
 	register u_char 	c;
 	register linenr_t	lnum = from;
-	register u_char 	*ptr;					/* pointer into read buffer */
+	register u_char 	*ptr = NULL;			/* pointer into read buffer */
 	register u_char		*buffer;				/* read buffer */
 	register long		size;
 	long				filesize;
@@ -101,7 +105,7 @@ readfile(fname, from)
 
 		for ( ; size >= 10; size /= 2)
 		{
-			if ((buffer = (u_char *)m_blockalloc((u_long)(size + linerest + 2), FALSE))
+			if ((buffer = (u_char *)m_blockalloc((u_long)(size + linerest + 2), (bool_t)FALSE))
 						!= NULL)
 				break;
 		}
@@ -123,7 +127,7 @@ readfile(fname, from)
 		}
 		ptr = buffer + linerest;
 		
-		if ((size = (unsigned)read(fd, ptr, (unsigned)size)) <= 0)
+		if ((size = (unsigned)read(fd, ptr, (size_t)size)) <= 0)
 		{
 			error = 2;
 			break;
@@ -179,17 +183,17 @@ readfile(fname, from)
 
 	if (got_int)
 	{
-		filemess(fname, "Interrupted");
+		filemess(fname, emsg_interrupted);
 		return FALSE;			/* an interrupt isn't really an error */
 	}
 
 	linecnt = line_count - linecnt;
-	smsg("\"%s\" %s%s%s%d line%s, %ld character%s",
+	smsg("\"%s\" %s%s%s%ld line%s, %ld character%s",
 			fname,
 			P(P_RO) ? "[readonly] " : "",
 			incomplete ? "[Incomplete last line] " : "",
 			error ? "[READ ERRORS] " : "",
-			linecnt, plural(linecnt),
+			(long)linecnt, plural((long)linecnt),
 			filesize, plural(filesize));
 
 	u_clearline();		/* cannot use "U" command after adding lines */
@@ -207,7 +211,7 @@ readfile(fname, from)
  *
  * We do our own buffering here because fwrite() is so slow.
  */
-bool_t
+	bool_t
 writeit(fname, start, end, append)
 	char			*fname;
 	linenr_t		start, end;
@@ -216,7 +220,7 @@ writeit(fname, start, end, append)
 	int 				fd;
 	char			   *backup = NULL;
 	register char	   *s;
-	register char	   *ptr;
+	register u_char	   *ptr;
 	register u_char		c;
 	register int		len;
 	register linenr_t	lnum;
@@ -268,8 +272,8 @@ writeit(fname, start, end, append)
 		 * The next loop is done once for each character written.
 		 * Keep it fast!
 		 */
-		ptr = nr2ptr(lnum) - 1;
-		while ((c = *++(u_char *)ptr) != NUL)
+		ptr = (u_char *)nr2ptr(lnum) - 1;
+		while ((c = *++ptr) != NUL)
 		{
 			if (c == NL)
 				*s = NUL;		/* replace newlines with NULs */
@@ -278,7 +282,7 @@ writeit(fname, start, end, append)
 			++s;
 			if (++len != BUFSIZE)
 				continue;
-			if (write(fd, buffer, BUFSIZE) == -1)
+			if (write(fd, buffer, (size_t)BUFSIZE) == -1)
 			{
 				end = 0;				/* write error: break loop */
 				break;
@@ -291,7 +295,7 @@ writeit(fname, start, end, append)
 		++s;
 		if (++len == BUFSIZE)
 		{
-			if (write(fd, buffer, BUFSIZE) == -1)
+			if (write(fd, buffer, (size_t)BUFSIZE) == -1)
 				end = 0;				/* write error: break loop */
 			nchars += BUFSIZE;
 			s = buffer;
@@ -300,7 +304,7 @@ writeit(fname, start, end, append)
 	}
 	if (len)
 	{
-		if (write(fd, buffer, len) == -1)
+		if (write(fd, buffer, (size_t)len) == -1)
 			end = 0;				/* write error */
 		nchars += len;
 	}
@@ -316,9 +320,9 @@ writeit(fname, start, end, append)
 	}
 
 	lnum -= start;		/* compute number of written lines */
-	smsg("\"%s\" %s %d line%s, %ld character%s", fname,
+	smsg("\"%s\" %s %ld line%s, %ld character%s", fname,
 			backup == NULL && !append ? "[New File]" : "",
-			lnum, plural(lnum),
+			(long)lnum, plural((long)lnum),
 			nchars, plural(nchars));
 	if (start == 1 && end == line_count)		/* when written everything */
 	{
@@ -330,7 +334,7 @@ writeit(fname, start, end, append)
 	 * Remove the backup unless they want it left around
 	 */
 	if (!P(P_BK) && backup != NULL)
-#ifdef MCH_AMIGA
+#ifdef AMIGA
 		unlink(backup);
 #else
 		remove(backup);
@@ -376,18 +380,20 @@ do_mlines()
 /*
  * chk_mline() - check a single line for a mode string
  */
-		static void
+	static void
 chk_mline(lnum)
-		linenr_t lnum;
+	linenr_t lnum;
 {
 		register char	*s;
 		register char	*e;
 		char			*cs;			/* local copy of any modeline found */
+		char			prev;
 		bool_t			end;
 
+		prev = ' ';
 		for (s = nr2ptr(lnum); *s != NUL; ++s)
 		{
-				if (strncmp(s, "vi:", 3) == 0 || strncmp(s, "ex:", 3) == 0)
+				if (isspace(prev) && (strncmp(s, "vi:", (size_t)3) == 0 || strncmp(s, "ex:", (size_t)3) == 0))
 				{
 						s += 3;
 						end = FALSE;
@@ -411,5 +417,6 @@ chk_mline(lnum)
 						free(cs);
 						break;
 				}
+				prev = *s;
 		}
 }

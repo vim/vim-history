@@ -14,7 +14,7 @@
 
 #include "vim.h"
 
-static void qf_free();
+static void qf_free __ARGS((void));
 
 /*
  * for each error the next struct is allocated and linked in a list
@@ -23,7 +23,7 @@ struct qf_line
 {
 	struct qf_line	*qf_next;	/* pointer to next error in the list */
 	struct qf_line	*qf_prev;	/* pointer to previous error in the list */
-	int				 qf_lnum;	/* line number where the error occurred */
+	linenr_t		 qf_lnum;	/* line number where the error occurred */
 	char			*qf_mark;	/* pointer to that line (if != NULL) */
 	int				 qf_col;	/* column where the error occurred */
 	char			 qf_cleared;/* set to TRUE if qf_mark has been cleared */
@@ -53,7 +53,6 @@ qf_init(fname)
 	char			errmsg[CMDBUFFSIZE];
 	FILE			*fd;
 	struct qf_line	*qfp;
-	char			*p;
 
 	if (fname == NULL)
 	{
@@ -69,11 +68,11 @@ qf_init(fname)
 
 	while (fgets(IObuff, IOSIZE, fd) != NULL)
 	{
-		if ((qfp = (struct qf_line *)alloc(sizeof(struct qf_line))) == NULL)
+		if ((qfp = (struct qf_line *)alloc((unsigned)sizeof(struct qf_line))) == NULL)
 			goto error2;
 
 	/* parse the line: "filename>linenr:colnr:type:number:text" */
-		if (sscanf(IObuff, "%[^>]>%d:%d:%c:%d:%[^\n]", namebuf,
+		if (sscanf(IObuff, "%[^>]>%ld:%d:%c:%d:%[^\n]", namebuf,
 				&qfp->qf_lnum, &qfp->qf_col, &qfp->qf_type,
 								&qfp->qf_nr, errmsg) != 6)
 			goto error;
@@ -120,11 +119,12 @@ error2:
 /*
  * jump to quickfix line "errornr"; if "errornr" is zero, redisplay the same line
  */
+	void
 qf_jump(errornr)
 	int errornr;
 {
 	struct qf_line *qfp;
-	int				i;
+	linenr_t		i;
 	char			*msgp;
 
 	if (qf_count == 0)
@@ -148,7 +148,7 @@ qf_jump(errornr)
 	/*
 	 * read the wanted file if needed, and check autowrite etc.
 	 */
-	if (!getfile(qf_ptr->qf_fname))
+	if (!getfile(qf_ptr->qf_fname, (bool_t)TRUE))
 	{
 		/*
 		 * use mark if possible, because the line number may be invalid
@@ -156,7 +156,7 @@ qf_jump(errornr)
 		 */
 		i = 0;
 		msgp = "";
-		if (qf_ptr->qf_mark != NULL && (i = ptr2nr(qf_ptr->qf_mark, 0)) == 0 || qf_ptr->qf_cleared)
+		if (qf_ptr->qf_mark != NULL && (i = ptr2nr(qf_ptr->qf_mark, (linenr_t)0)) == 0 || qf_ptr->qf_cleared)
 			msgp = "(line changed) ";
 		if (i == 0)
 			i = qf_ptr->qf_lnum;
@@ -180,6 +180,7 @@ qf_jump(errornr)
 /*
  * list all errors
  */
+	void
 qf_list()
 {
 	struct qf_line *qfp;
@@ -191,18 +192,24 @@ qf_list()
 		return;
 	}
 	qfp = qf_start;
-	gotocmdline(TRUE, NUL);
+	gotocmdline((bool_t)TRUE, NUL);
 	setmode(0);
 	for (i = 1; i <= qf_count; ++i)
 	{
-		sprintf(IObuff, "%2d line %d col %2d %s %3d: %s", i, qfp->qf_lnum, qfp->qf_col, qfp->qf_type == 'E' ? "Error" : "Warning", qfp->qf_nr, qfp->qf_text);
+		sprintf(IObuff, "%2d line %ld col %2d %s %3d: %s",
+			i,
+			(long)qfp->qf_lnum,
+			qfp->qf_col,
+			qfp->qf_type == 'E' ? "Error" : "Warning",
+			qfp->qf_nr,
+			qfp->qf_text);
 		outstr(IObuff);
 		outchar('\n');
 		qfp = qfp->qf_next;
 		flushbuf();
 	}
 	setmode(1);
-	wait_return(TRUE);
+	wait_return((bool_t)TRUE);
 }
 
 /*
@@ -230,7 +237,7 @@ qf_free()
  *
  * Used mainly when trashing the entire buffer during ":e" type commands
  */
-void
+	void
 qf_clrallmarks()
 {
 	int 			i;
@@ -247,7 +254,7 @@ qf_clrallmarks()
  */
    void
 qf_adjustmark(old, new)
-		char *old, *new;
+	char		*old, *new;
 {
 	register int i;
 	struct qf_line *qfp;

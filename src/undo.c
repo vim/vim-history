@@ -55,7 +55,7 @@ struct u_entry
 	linenr_t		ue_bot;		/* number of line below undo block */
 	char			*ue_botptr;	/* pointer to line below undo block */
 	char			**ue_array;	/* array of lines in undo block */
-	int				ue_size;	/* number of lines in ue_array */
+	long			ue_size;	/* number of lines in ue_array */
 };
 
 struct u_header
@@ -79,11 +79,11 @@ static char	   *u_line_ptr = NULL;		/* saved line for "U" command */
 static linenr_t u_line_lnum;			/* line number of line in u_line */
 static colnr_t	u_line_colnr;			/* optional column number */
 
-static int u_getbot();
+static void u_getbot();
 static int u_savecommon __ARGS((linenr_t, linenr_t, int, char *));
 static void u_undoredo();
 static void u_freelist __ARGS((struct u_header *));
-static void u_freeentry __ARGS((struct u_entry *, int));
+static void u_freeentry __ARGS((struct u_entry *, long));
 
 /*
  * save the current line for both the "u" and "U" command
@@ -142,11 +142,11 @@ u_savecommon(top, bot, flag, ptr)
 	int flag;
 	char *ptr;
 {
-	linenr_t	lnum;
-	int			i;
+	linenr_t		lnum;
+	long			i;
 	struct u_header *uhp;
-	struct u_entry *uep;
-	int			size;
+	struct u_entry	*uep;
+	long			size;
 
 	/*
 	 * if u_synced == TRUE make a new header
@@ -169,7 +169,7 @@ u_savecommon(top, bot, flag, ptr)
 		/*
 		 * make a new header entry
 		 */
-		uhp = (struct u_header *)alloc_line(sizeof(struct u_header));
+		uhp = (struct u_header *)alloc_line((unsigned)sizeof(struct u_header));
 		if (uhp == NULL)
 			goto nomem;
 		uhp->uh_prev = NULL;
@@ -189,7 +189,7 @@ u_savecommon(top, bot, flag, ptr)
 	/*
 	 * add lines in front of entry list
 	 */
-	uep = (struct u_entry *)alloc_line(sizeof(struct u_entry));
+	uep = (struct u_entry *)alloc_line((unsigned)sizeof(struct u_entry));
 	if (uep == NULL)
 		goto nomem;
 
@@ -209,9 +209,9 @@ u_savecommon(top, bot, flag, ptr)
 
 	if (size)
 	{
-		if ((uep->ue_array = (char **)alloc_line(sizeof(char *) * size)) == NULL)
+		if ((uep->ue_array = (char **)alloc_line((unsigned)(sizeof(char *) * size))) == NULL)
 		{
-			u_freeentry(uep, 0);
+			u_freeentry(uep, 0L);
 			goto nomem;
 		}
 		if (flag)
@@ -238,35 +238,43 @@ nomem:
 }
 
 	void
-u_undo()
+u_undo(count)
+	int count;
 {
-	if (u_curhead == NULL)						/* first undo */
-		u_curhead = u_newhead;
-	else if (P(P_UL) != 0)						/* multi level undo */
-		u_curhead = u_curhead->uh_next;			/* get next undo */
-
-	if (u_numhead == 0 || u_curhead == NULL)	/* nothing to undo */
+	while (count--)
 	{
-		u_curhead = u_oldhead;					/* stick u_curhead at end */
-		beep();
-		return;
-	}
+		if (u_curhead == NULL)						/* first undo */
+			u_curhead = u_newhead;
+		else if (P(P_UL) != 0)						/* multi level undo */
+			u_curhead = u_curhead->uh_next;			/* get next undo */
 
-	u_undoredo();
+		if (u_numhead == 0 || u_curhead == NULL)	/* nothing to undo */
+		{
+			u_curhead = u_oldhead;					/* stick u_curhead at end */
+			beep();
+			return;
+		}
+
+		u_undoredo();
+	}
 }
 
 	void
-u_redo()
+u_redo(count)
+	int count;
 {
-	if (u_curhead == NULL || P(P_UL) == 0)		/* nothing to redo */
+	while (count--)
 	{
-		beep();
-		return;
+		if (u_curhead == NULL || P(P_UL) == 0)		/* nothing to redo */
+		{
+			beep();
+			return;
+		}
+
+		u_undoredo();
+
+		u_curhead = u_curhead->uh_prev;			/* advance for next redo */
 	}
-
-	u_undoredo();
-
-	u_curhead = u_curhead->uh_prev;			/* advance for next redo */
 }
 
 /*
@@ -283,9 +291,9 @@ u_undoredo()
 	linenr_t	newsize;
 	linenr_t	top, bot;
 	linenr_t	lnum;
-	linenr_t	newlnum = 0xffffffff;
-	int			i;
-	int			count = 0;
+	linenr_t	newlnum = INVLNUM;
+	long		i;
+	long		count = 0;
 	struct u_entry *uep, *nuep;
 	struct u_entry *newlist = NULL;
 
@@ -320,7 +328,7 @@ u_undoredo()
 			/* delete the lines between top and bot and save them in newarray */
 			if (oldsize)
 			{
-				if ((newarray = (char **)alloc_line(sizeof(char *) * oldsize)) == NULL)
+				if ((newarray = (char **)alloc_line((unsigned)(sizeof(char *) * oldsize))) == NULL)
 				{
 					/*
 					 * We have messed up the entry list, repair is impossible.
@@ -385,7 +393,7 @@ u_sync()
 /*
  * u_getbot(): compute the line number of the previous u_undo
  */
-	static int
+	static void
 u_getbot()
 {
 	register struct u_entry *uep;
@@ -414,7 +422,6 @@ u_freelist(uhp)
 	struct u_header *uhp;
 {
 	register struct u_entry *uep, *nuep;
-	register int i;
 
 	for (uep = uhp->uh_entry; uep != NULL; uep = nuep)
 	{
@@ -445,7 +452,7 @@ u_freelist(uhp)
 	static void
 u_freeentry(uep, n)
 	struct u_entry *uep;
-	register int n;
+	register long n;
 {
 	while (n)
 		free_line(uep->ue_array[--n]);

@@ -29,12 +29,14 @@ struct param params[] =
 		{"backspace",	"bs",	FALSE,	P_BOOL},
 		{"backup",		"bk",	TRUE,	P_BOOL},
 /*		{"beautify",	"bf",	FALSE,	P_BOOL}, */
-/* 		{"directory",	"dir",	0,		P_STRING}, */
+ 		{"directory",	"dir",	0,		P_STRING},
 		{"errorbells",	"eb",	FALSE,	P_BOOL},
 		{"errorfile",	"ef",   0,		P_STRING},
+		{"expandtab",	"et",	FALSE,	P_BOOL},
 /*		{"hardtabs",	"ht",	8,		P_NUM}, */
 		{"history", 	"hi",	20, 	P_NUM},
 		{"ignorecase",	"ic",	FALSE,	P_BOOL},
+		{"joinspaces", 	"js",	TRUE,	P_BOOL},
 		{"lines",		NULL,	25, 	P_NUM},
 /*		{"lisp",		NULL,	FALSE,	P_BOOL}, */
 		{"list",		NULL,	FALSE,	P_BOOL},
@@ -48,11 +50,15 @@ struct param params[] =
 		{"readonly",	"ro",	FALSE,	P_BOOL},
 /*		{"redraw",		NULL,	FALSE,	P_BOOL}, */
 		{"remap",		NULL,	TRUE,	P_BOOL},
+		{"repdel",		"rd",	TRUE,	P_BOOL},
 		{"report",		NULL,	5,		P_NUM},
 		{"scroll",		NULL,	12, 	P_NUM},
 		{"sections",	NULL,	0,		P_STRING},
 		{"shell",		"sh",	0,		P_STRING},
+		{"shelltype",	"st",	0,		P_NUM},
+		{"shiftround",	"sr",	FALSE,	P_BOOL},
 		{"shiftwidth",	"sw",	8,		P_NUM},
+		{"showcmd",		"sc",	TRUE,	P_BOOL},
 		{"showmatch",	"sm",	FALSE,	P_BOOL},
 		{"showmode",	"mo",	TRUE,	P_BOOL},
 /*		{"slowopen",	"slow", FALSE,	P_BOOL}, */
@@ -68,6 +74,7 @@ struct param params[] =
 		{"undolevels",	"ul",	100,	P_NUM},
 		{"updatecount",	"uc",	100,	P_NUM},
 		{"updatetime",	"ut",	2000,	P_NUM},
+		{"visualbell",	"vb",	FALSE,	P_BOOL},
 		{"warn",		NULL,	TRUE,	P_BOOL},
 /*		{"window",		NULL,	24, 	P_NUM}, */
 /*		{"w300",		NULL,	24, 	P_NUM}, */
@@ -85,18 +92,20 @@ struct param params[] =
  * We need this because string parameters are unions which cannot be initialized
  * by the compiler.
  */
+	void
 set_init()
 {
 		char *p;
 
 		PS(P_EF) = "AztecC.Err";
 		PS(P_PARA) = "IPLPPPQPP LIpplpipbp";
+		PS(P_DIR) = "";
 		PS(P_SECTIONS) = "SHNHH HUnhsh";
 		if ((p = getenv("SHELL")) == NULL)
 			PS(P_SHELL) = "sh";
 		else
 			PS(P_SHELL) = strsave(p);
-		PS(P_SU) = ".bak.o.h.info";
+		PS(P_SU) = ".bak.o.h.info.vim";
 		PS(P_TAGS) = "tags";
 }
 
@@ -104,7 +113,7 @@ static void	showparams __ARGS((bool_t));
 static void showonep __ARGS((struct param *));
 static char paramerr[] = "invalid 'set' parameter";
 
-void
+	void
 doset(arg)
 	char		*arg;	/* parameter string */
 {
@@ -119,25 +128,25 @@ doset(arg)
 
 	if (*arg == NUL)
 	{
-		showparams(FALSE);
+		showparams((bool_t)FALSE);
 		return;
 	}
 
 	while (*arg)		/* loop to process all parameters */
 	{
-		if (strncmp(arg, "all", 3) == 0)
-				showparams(TRUE);
+		if (strncmp(arg, "all", (size_t)3) == 0)
+				showparams((bool_t)TRUE);
 		else
 		{
 			state = TRUE;
-			if (strncmp(arg, "no", 2) == 0)
+			if (strncmp(arg, "no", (size_t)2) == 0)
 			{
 				state = FALSE;
 				arg += 2;
 			}
 			for (i = 0; (s = params[i].fullname) != NULL; i++)
 			{
-				if (strncmp(arg, s, len = strlen(s)) == 0) /* match full name */
+				if (strncmp(arg, s, (size_t)(len = strlen(s))) == 0) /* match full name */
 					break;
 			}
 			if (s == NULL)
@@ -145,7 +154,7 @@ doset(arg)
 				for (i = 0; params[i].fullname != NULL; i++)
 				{
 						s = params[i].shortname;
-						if (s != NULL && strncmp(arg, s, len = strlen(s)) == 0) /* match short name */
+						if (s != NULL && strncmp(arg, s, (size_t)(len = strlen(s))) == 0) /* match short name */
 							break;
 						s = NULL;
 				}
@@ -161,10 +170,10 @@ doset(arg)
 			nextchar = arg[len];
 			if (nextchar == '?' || nextchar != '=' && !(flags & P_BOOL))
 			{										/* print value */
-				gotocmdline(TRUE, NUL);
+				gotocmdline((bool_t)TRUE, NUL);
 				showonep(&params[i]);
 			}
-			else if (nextchar != NUL && index("= \t", nextchar) == NULL)
+			else if (nextchar != NUL && strchr("= \t", nextchar) == NULL)
 			{
 				emsg(paramerr);
 				break;
@@ -200,7 +209,7 @@ doset(arg)
 				else							/* string */
 				{
 					arg += len + 1;
-					s = alloc(strlen(arg) + 1); /* get a bit too much */
+					s = alloc((unsigned)(strlen(arg) + 1)); /* get a bit too much */
 					if (s == NULL)
 						break;
 					if (flags & P_CHANGED)
@@ -236,7 +245,7 @@ doset(arg)
 	if (P(P_SS) <= 0 || P(P_SS) > Rows)
 	{
 		emsg("Invalid scroll size specified");
-		P(P_SS) = 12;
+		P(P_SS) = Rows >> 1;
 	}
 	if (P(P_UL) < 0)
 	{
@@ -263,11 +272,7 @@ doset(arg)
 	 * "list" that will change its appearance.
 	 */
 	if (did_lines)
-	{
-		Rows = P(P_LI);
-		screenalloc();			/* allocate new screen buffers */
-		screenclear();
-	}
+		Rows = P(P_LI);		/* screen buffers will be allocated by updateScreen() */
 	updateScreen(NOT_VALID);
 }
 
@@ -275,12 +280,13 @@ doset(arg)
  * if 'all' == 1: show all parameters
  * if 'all' == 0: show changed parameters
  */
-static void
+	static void
 showparams(all)
 	bool_t			all;
 {
 	struct param   *p;
-	int i = 0;
+	int				col = 0;
+	int				inc;
 
 	gotocmdline(YES, NUL);
 	outstr("Parameters:\r\n");
@@ -289,18 +295,33 @@ showparams(all)
 	for (p = &params[0]; p->fullname != NULL; p++)
 		if (all || (p->flags & P_CHANGED))
 		{
-			showonep(p);
-			if ((++i & 1) && Columns > 70)
-				windgoto(Rows - 1, 35); /* make two columns */
+			if (p->flags & P_STRING)
+				inc = strlen(p->fullname) + strlen(p->val.strval) + 1;
 			else
+				inc = 1;
+			if (col + inc >= Columns)
+			{
+					outchar('\n');
+					col = 0;
+			}
+
+			showonep(p);
+			col += inc;
+			col += 19 - col % 19;
+			if (col < Columns - 19)
+				windgoto(Rows - 1, col); /* make columns */
+			else
+			{
 				outchar('\n');
+				col = 0;
+			}
 			flushbuf();
 		}
 
-	if ((i & 1) && Columns > 70)
+	if (col)
 		outchar('\n');
 	setmode(1);
-	wait_return(TRUE);
+	wait_return((bool_t)TRUE);
 }
 
 	static void

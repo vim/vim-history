@@ -17,7 +17,7 @@
 /*
  * msg(s) - displays the string 's' on the status line
  */
-void
+	void
 msg(s)
 	char		   *s;
 {
@@ -37,7 +37,7 @@ msg(s)
 }
 
 /* VARARGS */
-void
+	void
 smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 	char		*s;
 	long		a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
@@ -51,7 +51,7 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
  *
  * Rings the bell, if appropriate, and calls message() to do the real work
  */
-void
+	void
 emsg(s)
 	char		   *s;
 {
@@ -73,9 +73,9 @@ emsg(s)
 
 	void
 msgmore(n)
-		int n;
+	long n;
 {
-	int pn;
+	long pn;
 
 	if (n > 0)
 		pn = n;
@@ -83,11 +83,12 @@ msgmore(n)
 		pn = -n;
 
 	if (pn > P(P_RP))
-		smsg("%d %s lines %s", pn, n > 0 ? "more" : "fewer", got_int ? "(Interrupted)" : "");
+		smsg("%ld %s lines %s", pn, n > 0 ? "more" : "fewer", got_int ? "(Interrupted)" : "");
 }
 
-void
+	void
 wait_return(redraw)
+	bool_t	redraw;
 {
 	u_char			c;
 	int				oldstate;
@@ -107,6 +108,7 @@ wait_return(redraw)
 		set_winsize(0, 0);
 	}
 	State = oldstate;
+	script_winsize_pp();
 
 	if (c == ':')								 /* this can vi too  */
 	{

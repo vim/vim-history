@@ -42,41 +42,49 @@ extern struct param params[];
 #define P_AW			1		/* auto-write */
 #define P_BS			2		/* backspace over newlines in insert mode */
 #define P_BK			3		/* make backups when writing out files */
-#define P_EB			4		/* ring bell for errors */
-#define P_EF			5		/* name of errofile */
-#define P_HI			6		/* command line history size */
-#define P_IC			7		/* ignore case in searches */
-#define P_LI			8		/* lines */
-#define P_LS			9		/* show tabs and newlines graphically */
-#define P_MAGIC 		10		/* use some characters for pattern matching */
-#define P_ML			11		/* number of mode lines */
-#define P_NU			12		/* number lines on the screen */
-#define P_PARA			13		/* paragraphs */
-#define P_RO			14		/* readonly */
-#define P_REMAP			15		/* remap */
-#define P_RP			16		/* minimum number of lines for report */
-#define P_SS			17		/* scroll size */
-#define P_SECTIONS		18		/* sections */
-#define P_SHELL 		19		/* name of shell to use */
-#define P_SW			20		/* shiftwidth (for < and >) */
-#define P_SM			21		/* showmatch */
-#define P_MO			22		/* show mode */
-#define P_SI			23		/* smart-indent for c programs */
-#define P_SU			24		/* suffixes for wildcard expansion */
-#define P_TS			25		/* tab size in the file */
-#define P_TL			26		/* used tag length */
-#define P_TAGS			27		/* tags search path */
-#define P_TE			28		/* terse (not used) */
-#define P_TW			29		/* textwidth */
-#define P_TO			30		/* tilde is an operator */
-#define P_UL			31		/* number of Undo Levels */
-#define P_UC			32		/* update count for auto script file */
-#define P_UT			33		/* update time for auto script file */
-#define P_WARN			34		/* warn for changes at shell command */
-#define P_WS			35		/* wrap scan */
-#define P_WM			36		/* wrapmargin */
-#define P_WA			37		/* write any */
-#define P_YE			38		/* Y yanks to end of line */
+#define P_DIR			4		/* directory for autoscript file */
+#define P_EB			5		/* ring bell for errors */
+#define P_EF			6		/* name of errofile */
+#define P_ET			7		/* expand tabs into spaces */
+#define P_HI			8		/* command line history size */
+#define P_IC			9		/* ignore case in searches */
+#define P_JS			10		/* use two spaces after period with Join */
+#define P_LI			11		/* lines */
+#define P_LS			12		/* show tabs and newlines graphically */
+#define P_MAGIC 		13		/* use some characters for pattern matching */
+#define P_ML			14		/* number of mode lines */
+#define P_NU			15		/* number lines on the screen */
+#define P_PARA			16		/* paragraphs */
+#define P_RO			17		/* readonly */
+#define P_REMAP			18		/* remap */
+#define P_RD			19		/* delete when replacing */
+#define P_RP			20		/* minimum number of lines for report */
+#define P_SS			21		/* scroll size */
+#define P_SECTIONS		22		/* sections */
+#define P_SHELL 		23		/* name of shell to use */
+#define P_ST			24		/* type of shell */
+#define P_SR			25		/* shift round off (for < and >) */
+#define P_SW			26		/* shiftwidth (for < and >) */
+#define P_SC			27		/* show command in status line */
+#define P_SM			28		/* showmatch */
+#define P_MO			29		/* show mode */
+#define P_SI			30		/* smart-indent for c programs */
+#define P_SU			31		/* suffixes for wildcard expansion */
+#define P_TS			32		/* tab size in the file */
+#define P_TL			33		/* used tag length */
+#define P_TAGS			34		/* tags search path */
+#define P_TE			35		/* terse (not used) */
+#define P_TW			36		/* textwidth */
+#define P_TO			37		/* tilde is an operator */
+#define P_UL			38		/* number of Undo Levels */
+#define P_UC			39		/* update count for auto script file */
+#define P_UT			40		/* update time for auto script file */
+#define P_VB			41		/* visual bell only (no beep) */
+#define P_WARN			42		/* warn for changes at shell command */
+#define P_WS			43		/* wrap scan */
+#define P_WM			44		/* wrapmargin */
+#define P_WA			45		/* write any */
+#define P_YE			46		/* Y yanks to end of line */
 
 /*
  * Macro to get the value of a parameter

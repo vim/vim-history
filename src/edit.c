@@ -13,12 +13,14 @@
  */
 
 #include "vim.h"
+#include "ops.h"	/* for operator */
+
 extern u_char *get_inserted();
 static void insertchar __ARGS((unsigned));
 
-void
+	void
 edit(count)
-		int count;
+	long count;
 {
 	u_char		 c;
 	u_char		*ptr;
@@ -26,6 +28,7 @@ edit(count)
 	bool_t		 literal_next_flag = FALSE;
 	int 		 temp;
 	static u_char	*last_insert = NULL;
+	int			 oldstate;
 
 	for (;;)
 	{
@@ -38,6 +41,8 @@ edit(count)
 				literal_next_flag = TRUE;
 				outchar('^');
 				AppendToRedobuff("\x16");
+				oldstate = State;
+				State = NOMAPPING;		/* next character not mapped */
 				continue;
 		}
 		if (literal_next_flag)
@@ -45,6 +50,7 @@ edit(count)
 				u_char cc;
 
 				literal_next_flag = FALSE;
+				State = oldstate;
 				if ((cc = gcharCurpos()) == NUL)
 					outchar(' ');
 				else
@@ -94,6 +100,7 @@ edit(count)
 				if (Curpos.col != 0)
 						decCurpos();
 				State = NORMAL;
+				script_winsize_pp();
 				if (Recording)
 						showmode();
 				else
@@ -113,7 +120,7 @@ edit(count)
 					break;
 				}
 				ptr = last_insert;
-				while (*ptr && index("AIROaio", *ptr++) == NULL)
+				while (*ptr && strchr("AIROaio", *ptr++) == NULL)
 					;
 				stuffReadbuff((char *)ptr);
 				break;
@@ -143,7 +150,7 @@ edit(count)
 				if (inindent())			/* delete one shiftwidth */
 				{
 					AppendToRedobuff("\04");
-					shift_line(TRUE);
+					shift_line((bool_t)TRUE);
 					did_si = FALSE;
 					can_si = FALSE;
 					if (Curpos.col < 1)
@@ -153,6 +160,7 @@ edit(count)
 				/*FALLTHROUGH*/
 
 			  case BS:
+			  case DEL:
 nextbs:
 				/* can't backup past starting point */
 				/* can backup to a previous line if backspace option is set */
@@ -170,15 +178,15 @@ nextbs:
 				{
 					temp = gcharCurpos();		/* remember current char */
 					--Curpos.lnum;
-					dojoin(FALSE);
+					dojoin((bool_t)FALSE);
 					if (temp == NUL)
 						++Curpos.col;
 				}
 				else
 				{
 					decCurpos();
-					if (State != REPLACE)
-						delchar(TRUE);
+					if (State != REPLACE || P(P_RD))
+						delchar((bool_t)TRUE);
 				}
 				/*
 				 * It's a little strange to put backspaces into the redo
@@ -212,15 +220,15 @@ redraw:
 						decCurpos();
 						if (c == 1 && !isspace(gcharCurpos()))
 						{
-							c = CTRL('U');
+							c = 2;
 							temp = isidchar(gcharCurpos());
 						}
-						if (c == CTRL('U') && isidchar(gcharCurpos()) != temp)
+						if (c == 2 && isidchar(gcharCurpos()) != temp)
 						{
 							incCurpos();
 							break;
 						}
-						delchar(TRUE);
+						delchar((bool_t)TRUE);
 				}
 				did_ai = FALSE;
 				did_si = FALSE;
@@ -233,10 +241,21 @@ redraw:
 				AppendToRedobuff(mkstr(c));
 				goto redraw;
 
+			  case TAB:
+			  	if (!P(P_ET))
+					goto normalchar;
+										/* expand a tab into spaces */
+				did_ai = FALSE;
+				did_si = FALSE;
+				can_si = FALSE;
+				insstr("                " + 16 - (P(P_TS) - Curpos.col % P(P_TS)));
+				AppendToRedobuff("\t");
+				goto redraw;
+
 			  case CR:
 			  case NL:
 				if (State == REPLACE)           /* DMT added, 12/89 */
-					delchar(FALSE);
+					delchar((bool_t)FALSE);
 				AppendToRedobuff(NL_STR);
 				if (!Opencmd(FORWARD))
 					goto doESCkey;		/* out of memory */
@@ -276,10 +295,7 @@ copychar:
 			  default:
 normalchar:
 				if (Curpos.col > 0 && (can_si && c == '}' || did_si && c == '{'))
-				{
-						decCurpos();
-						delchar(TRUE);
-				}
+					shift_line((bool_t)TRUE);
 				insertchar(c);
 				break;
 			}
@@ -296,7 +312,7 @@ normalchar:
  */
 #define ISSPECIAL(c)	((c) < ' ')
 
-static void
+	static void
 insertchar(c)
 	unsigned	c;
 {
@@ -328,7 +344,7 @@ insertchar(c)
 					foundcol = Curpos.col + 1;
 					while (Curpos.col > 1 && isspace(gcharCurpos()))
 						--Curpos.col;
-					if (Curpos.col <= wantcol)
+					if (Curpos.col < wantcol)
 						break;
 				}
 				--Curpos.col;
@@ -362,7 +378,7 @@ insertchar(c)
 		p[0] = c;
 		i = 1;
 		while ((c = vpeekc()) != NUL && !ISSPECIAL(c) && i < MAX_COLUMNS &&
-					(Cursvcol += charsize(p[-1])) < P(P_TW))
+					(Cursvcol += charsize(p[i - 1])) < P(P_TW))
 			p[i++] = vgetc();
 		p[i] = '\0';
 		insstr(p);
@@ -384,7 +400,7 @@ insertchar(c)
  * we hit a boundary (of a line, or the file).
  */
 
-bool_t
+	bool_t
 oneright()
 {
 	char *ptr;
@@ -398,7 +414,7 @@ oneright()
 	return TRUE;
 }
 
-bool_t
+	bool_t
 oneleft()
 {
 	set_want_col = TRUE;
@@ -409,7 +425,7 @@ oneleft()
 	return TRUE;
 }
 
-void
+	void
 beginline(flag)
 	bool_t			flag;
 {
@@ -424,8 +440,9 @@ beginline(flag)
 	set_want_col = TRUE;
 }
 
-bool_t
+	bool_t
 oneup(n)
+	long n;
 {
 	if (n != 0 && Curpos.lnum == 1)
 		return FALSE;
@@ -434,16 +451,17 @@ oneup(n)
 	else
 		Curpos.lnum -= n;
 
-	cursupdate();				/* make sure Topline is valid */
+	if (operator == NOP)
+		cursupdate();				/* make sure Topline is valid */
 
 	/* try to advance to the column we want to be at */
 	coladvance(Curswant);
 	return TRUE;
 }
 
-bool_t
+	bool_t
 onedown(n)
-	int n;
+	long n;
 {
 	if (n != 0 && Curpos.lnum == line_count)
 		return FALSE;
@@ -451,7 +469,8 @@ onedown(n)
 	if (Curpos.lnum > line_count)
 		Curpos.lnum = line_count;
 
-	cursupdate();				/* make sure Topline is valid */
+	if (operator == NOP)
+		cursupdate();				/* make sure Topline is valid */
 
 	/* try to advance to the column we want to be at */
 	coladvance(Curswant);

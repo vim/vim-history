@@ -17,12 +17,11 @@
 static long helpfilepos;		/* position in help file */
 static FILE *helpfd;			/* file descriptor of help file */
 
-bool_t
+	void
 help()
 {
 	int c;
 	int eof;
-	int cnt;
 	int i;
 	long filepos[26];	/* seek position for each screen */
 	int	screennr;		/* screen number; 'c' == 1 */
@@ -81,6 +80,7 @@ help()
 		helpfilepos = filepos[screennr];
 	}
 	State = NORMAL;
+	script_winsize_pp();
 	fclose(helpfd);
 	screenclear();
 	updateScreen(NOT_VALID);
@@ -98,7 +98,7 @@ redrawhelp()
 		outstr(T_ED);
 		while ((nextc = getc(helpfd)) != -1 && nextc != '\f')
 				outchar((char)nextc);
-		windgoto(0, Columns - strlen(Version) - 1);
+		windgoto(0, (int)(Columns - strlen(Version) - 1));
 		outstr(Version);
 		windgoto(Rows - 1, col);
 		outstr("<space = next; return = quit; a = index; b = back>");

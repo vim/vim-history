@@ -114,7 +114,11 @@
 #define T_IL_B	"L"
 #define T_DL	"\033["			/* delete line */
 #define T_DL_B	"M"
-#define T_ED	"\014"			/* erase display (may optionally home cursor) */
+#ifdef AUX
+# define T_ED	"\033[2J\014"	/* erase display (may optionally home cursor) */
+#else
+# define T_ED	"\014"			/* erase display (may optionally home cursor) */
+#endif
 #define T_RC	""				/* restore the cursor position */
 #define T_SC	""				/* save the cursor position */
 #define T_CI	"\033[0 p"		/* invisible cursor (very optional) */

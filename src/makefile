@@ -3,17 +3,19 @@
 #
 
 INCL = vim.syms
-CFLAGS = -safmprs -ps -bs -qf -DAMIGA -DWILD_CARDS
+#use the next line for debugging
+#CFLAGS = -bs -wa -wc -ps -qf -DAMIGA -DWILD_CARDS -DAUX
+CFLAGS = -so -wa -wc -ps -qf -DAMIGA -DWILD_CARDS -DAUX
 LIBS = -lc16
 
 OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o cmdsearch.o edit.o \
 	fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
 	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
-	script.o search.o storage.o undo.o version.o
+	script.o search.o storage.o tag.o undo.o version.o
 
 /Vim: $(OBJ)
 	cc $(CFLAGS) version.c
-	ln +q -m -t -o /Vim $(OBJ) $(LIBS)
+	ln +q -m -o /Vim $(OBJ) $(LIBS)
 
 debug: $(OBJ)
 	cc $(CFLAGS) version.c
@@ -58,7 +60,7 @@ linefunc.o:	linefunc.c  $(INCL)
 main.o:	main.c  $(INCL)
 	cc $(CFLAGS) main.c
 
-mark.o:	mark.c  $(INCL)
+mark.o:	mark.c  $(INCL) mark.h
 	cc $(CFLAGS) -hi$(INCL) mark.c
 
 message.o:	message.c  $(INCL)
@@ -96,6 +98,9 @@ search.o:	search.c  $(INCL)
 
 storage.o:	storage.c  $(INCL)
 	cc $(CFLAGS) -hi$(INCL) storage.c
+
+tag.o:	tag.c  $(INCL) mark.h
+	cc $(CFLAGS) -hi$(INCL) tag.c
 
 undo.o:	undo.c  $(INCL)
 	cc $(CFLAGS) -hi$(INCL) undo.c

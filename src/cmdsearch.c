@@ -4,8 +4,8 @@
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ *							Tony Andrews			onecom!wldrdg!tony
+ *							G. R. (Fred) Walter     watmath!watcgl!grwalter
  */
 
 /*
@@ -19,10 +19,12 @@
 #include "regexp.h"
 
 extern char emsg_inval[];
-int global_busy = 0;	/* set to 1 if global busy, 2 if global has been called
-							during a global command */
-int global_wait;		/* set to 1 if wait_return has to be called after
-							global command */
+extern char emsg_interrupted[];
+int global_busy = 0;			/* set to 1 if global busy, 2 if global has
+									been called during a global command */
+int global_wait;				/* set to 1 if wait_return has to be called
+									after global command */
+extern regexp *myregcomp __ARGS((char *));
 
 /* dosub(lp, up, cmd)
  *
@@ -38,7 +40,7 @@ int global_wait;		/* set to 1 if wait_return has to be called after
  * The usual escapes are supported as described in the regexp docs.
  */
 
-void
+	void
 dosub(lp, up, cmd, nextcommand)
 	linenr_t	lp;
 	linenr_t	up;
@@ -46,25 +48,26 @@ dosub(lp, up, cmd, nextcommand)
 	u_char		**nextcommand;
 {
 	linenr_t		lnum;
-	int				i;
+	long			i;
 	char		   *ptr;
 	regexp		   *prog;
-	int				nsubs = 0;
-	int				nlines = 0;
+	long			nsubs = 0;
+	linenr_t		nlines = 0;
 	bool_t			do_all; 		/* do multiple substitutions per line */
 	bool_t			do_ask; 		/* ask for confirmation */
 	char		   *pat, *sub;
-	static char		*old_pat = NULL;
-	static char		*old_sub = NULL;
-	static char		intmsg[] = "Interrupted";
+	static char    *old_sub = NULL;
+	int 			delimiter;
+	int 			sublen;
 
-	if (*cmd == '/')				/* new pattern and substitution */
+	if (strchr("0123456789gc|\"#", *cmd) == NULL)       /* new pattern and substitution */
 	{
-		++cmd;	 					/* skip the delimiter */
+		delimiter = *cmd;			/* remember delimiter character */
+		++cmd;						/* skip the delimiter */
 		pat = cmd;					/* note the start of the regexp */
-		while (*cmd)				/* find the end of the regexp */
+		while (*cmd)                /* find the end of the regexp */
 		{
-			if (cmd[0] == '/' && cmd[-1] != '\\')
+			if (cmd[0] == delimiter && cmd[-1] != '\\')
 			{
 				*cmd++ = NUL;
 				break;
@@ -73,33 +76,28 @@ dosub(lp, up, cmd, nextcommand)
 		}
 
 		sub = cmd;					/* note the start of the substitution */
-		for (;;)					/* find the end of the substitution */
+		for (;;)                    /* find the end of the substitution */
 		{
-			if (*cmd == NUL)
-			{
-				emsg("missing delimiter");
-				return;
-			}
-			if (cmd[0] == '/' && cmd[-1] != '\\')
+			if (*cmd == NUL)        /* no end delimiter */
+				break;
+			if (cmd[0] == delimiter && cmd[-1] != '\\')
 			{
 				*cmd++ = NUL;
 				break;
 			}
 			cmd++;
 		}
-		free(old_pat);
 		free(old_sub);
-		old_pat = strsave(pat);
 		old_sub = strsave(sub);
 	}
 	else								/* use previous pattern and substitution */
 	{
-		if (old_pat == NULL || old_sub == NULL)	/* there is no previous command */
+		if (old_sub == NULL)    /* there is no previous command */
 		{
 			beep();
 			return;
 		}
-		pat = old_pat;
+		pat = NULL; 			/* myregcomp() will use previous pattern */
 		sub = old_sub;
 	}
 
@@ -122,18 +120,18 @@ dosub(lp, up, cmd, nextcommand)
 	/*
 	 * check for a trailing count
 	 */
-    skipspace(&cmd);
-    if (isdigit(*cmd))
-    {
+	skipspace(&cmd);
+	if (isdigit(*cmd))
+	{
 		i = getdigits(&cmd);
-        if (i <= 0)
-        {
-            emsg("zero count");
-            return;
-        }
-        lp = up;
-        up += i - 1;
-    }
+		if (i <= 0)
+		{
+			emsg("zero count");
+			return;
+		}
+		lp = up;
+		up += i - 1;
+	}
 
 	/*
 	 * check for trailing '|', '"' or '#'
@@ -141,7 +139,7 @@ dosub(lp, up, cmd, nextcommand)
 	skipspace(&cmd);
 	if (*cmd)
 	{
-		if (index("|\"#", *cmd) != NULL)
+		if (strchr("|\"#", *cmd) != NULL)
 		{
 			*nextcommand = (u_char *)cmd;
 		}
@@ -152,9 +150,7 @@ dosub(lp, up, cmd, nextcommand)
 		}
 	}
 
-	reg_ic = P(P_IC);			/* set "ignore case" flag appropriately */
-
-	if ((prog = regcomp(pat)) == NULL)
+	if ((prog = myregcomp(pat)) == NULL)
 	{
 		emsg(emsg_inval);
 		return;
@@ -163,11 +159,14 @@ dosub(lp, up, cmd, nextcommand)
 	for (lnum = lp; lnum <= up && !got_int; ++lnum)
 	{
 		ptr = nr2ptr(lnum);
-		if (regexec(prog, ptr, TRUE))	/* a match on this line */
+		if (regexec(prog, ptr, (int)TRUE))  /* a match on this line */
 		{
-			char		   *ns, *sns, *p, *prevp;
+			char		   *ns, *sns, *p, *prevp, *oldp;
 			bool_t		did_sub = FALSE;
 
+#ifdef LATTICE
+			oldp = NULL;	/* Lattice gives an error message without this */
+#endif
 			if (nsubs == 0)
 					setpcmark();
 			/*
@@ -180,6 +179,16 @@ dosub(lp, up, cmd, nextcommand)
 			do
 			{
 				Curpos.col = prog->startp[0] - ptr;
+				/*
+				 * First match empty string does not count, except for first match.
+				 * This reproduces the strange vi behaviour.
+				 * This also catches endless loops.
+				 */
+				if (did_sub && p == oldp && p == prog->endp[0])
+				{
+					++p;
+					goto skip2;
+				}
 				if (do_ask)
 				{
 						cursupdate();
@@ -195,16 +204,29 @@ dosub(lp, up, cmd, nextcommand)
 							goto skip;
 				}
 
+						/* get length of substitution part */
+				sublen = regsub(prog, sub, ptr, 0, (int)P(P_MAGIC));
 				if (did_sub == FALSE)
 				{
 					/*
 					 * Get some space for a temporary buffer to do the substitution
 					 * into.
 					 */
-					if ((sns = ns = alloc(strlen(ptr) + strlen(sub) + 5)) == NULL)
+					if ((sns = alloc((unsigned)(strlen(ptr) + sublen + 5))) == NULL)
 						goto outofmem;
 					*sns = NUL;
 					did_sub = TRUE;
+				}
+				else
+				{
+					/*
+					 * extend the temporary buffer to do the substitution into.
+					 */
+					if ((ns = alloc((unsigned)(strlen(sns) + strlen(prevp) + sublen + 1))) == NULL)
+						goto outofmem;
+					strcpy(ns, sns);
+					free(sns);
+					sns = ns;
 				}
 
 				for (ns = sns; *ns; ns++)
@@ -215,18 +237,25 @@ dosub(lp, up, cmd, nextcommand)
 				while (prevp < prog->startp[0])
 					*ns++ = *prevp++;
 
-				regsub(prog, sub, ns);
+				regsub(prog, sub, ns, 1, (int)P(P_MAGIC));
 				nsubs++;
 
 				prevp = prog->endp[0];	/* remember last copied character */
 				/*
 				 * continue searching after the match
+				 * prevent endless loop with patterns that match empty strings,
+				 * e.g. :s/$/pat/g or :s/[a-z]* /(&)/g
 				 */
 skip:
 				p = prog->endp[0];
+				oldp = p;
+				if (*p == NUL)      /* end of line: quit here */
+					break;
+
+skip2:
 				breakcheck();
 
-			} while (!got_int && do_all && regexec(prog, p, FALSE));
+			} while (!got_int && do_all && regexec(prog, p, (int)FALSE));
 
 			if (did_sub)
 			{
@@ -238,7 +267,7 @@ skip:
 					if ((ptr = save_line(sns)) != NULL)
 							u_savesub(lnum, replaceline(lnum, ptr));
 
-					free(sns);			/* free the temp buffer */
+					free(sns);          /* free the temp buffer */
 					++nlines;
 			}
 		}
@@ -249,20 +278,20 @@ outofmem:
 	if (nsubs)
 	{
 		CHANGED;
-		updateScreen(NOT_VALID);		/* need this to update LineSizes */
-		beginline(TRUE);
+		updateScreen(NOT_VALID);        /* need this to update LineSizes */
+		beginline((bool_t)TRUE);
 		if (nsubs >= P(P_RP))
-			smsg("%s%d substitution%s on %d line%s",
+			smsg("%s%ld substitution%s on %ld line%s",
 								got_int ? "(Interrupted) " : "",
 								nsubs, plural(nsubs),
-								nlines, plural(nlines));
+								(long)nlines, plural((long)nlines));
 		else if (got_int)
-				msg(intmsg);
+				msg(emsg_interrupted);
 		else if (do_ask)
 				msg("");
 	}
 	else if (got_int)
-		msg(intmsg);
+		msg(emsg_interrupted);
 	else
 		msg("No match");
 
@@ -288,17 +317,17 @@ outofmem:
  * lines we do not know where to search for the next match.
  */
 
-void
+	void
 doglob(type, lp, up, cmd)
-	int			type;
+	int 		type;
 	linenr_t	lp, up;
 	char		*cmd;
 {
-	linenr_t	   lnum;		/* line number according to old situation */
-	linenr_t	   old_lcount;	/* line_count before the command */
-	int				ndone;
+	linenr_t		lnum;		/* line number according to old situation */
+	linenr_t		old_lcount; /* line_count before the command */
+	int 			ndone;
 
-	char		   delim;		/* delimiter, normally '/' */
+	char			delim;		/* delimiter, normally '/' */
 	char		   *pat;
 	regexp		   *prog;
 	bool_t			match;
@@ -323,9 +352,9 @@ doglob(type, lp, up, cmd)
 		cmd++;
 	}
 
-	reg_ic = P(P_IC);			/* set "ignore case" flag appropriately */
+	reg_ic = P(P_IC);           /* set "ignore case" flag appropriately */
 
-	if ((prog = regcomp(pat)) == NULL)
+	if ((prog = myregcomp(pat)) == NULL)
 	{
 		emsg(emsg_inval);
 		return;
@@ -338,7 +367,7 @@ doglob(type, lp, up, cmd)
 	ndone = 0;
 	for (lnum = lp; lnum <= up && !got_int; ++lnum)
 	{
-		match = regexec(prog, nr2ptr(lnum), TRUE);		/* a match on this line? */
+		match = regexec(prog, nr2ptr(lnum), (int)TRUE);     /* a match on this line? */
 		if (type == 'g' && match || type == 'v' && !match)
 		{
 			setmarked(lnum);
@@ -372,15 +401,14 @@ doglob(type, lp, up, cmd)
 		}
 
 		RedrawingDisabled = FALSE;
-		if (global_wait)				/* wait for return */
-			wait_return(FALSE);
-		screenclear();					/* redraw */
+		if (global_wait)                /* wait for return */
+			wait_return((bool_t)FALSE);
+		screenclear();                  /* redraw */
 		updateScreen(NOT_VALID);
 		msgmore(line_count - old_lcount);
 	}
 
-	clearmarked();		/* clear rest of the marks */
+	clearmarked();      /* clear rest of the marks */
 	global_busy = 0;
 	free((char *) prog);
 }
-

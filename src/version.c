@@ -210,8 +210,42 @@
  *			  errors typahead and scripts are discarded. 'U' is now correctly
  *			  undone with 'u'. Fixed showmatch() handling of 'x' and '\x'.
  *			  Solved window size dependency for scripts by adding ":winsize"
- *			  commands to scripts.
+ *			  commands to scripts. Released on Fish disk 591.
+ *
+ * VIM 1.15 - No extra return in recording mode (MCHAR instead of MLINE buffer).
+ *			  plural() argument is now a long. Search patterns shared between
+ *			  :g, :s and /. After recovery a message is given. Overflow of mapbuf
+ *			  is detected. Line number possible with :read. Error message when
+ *			  characters follow a '$' in a search pattern. Cause for crash
+ *			  removed: ":s/pat/repl/g" allocated not enough memory. Option
+ *			  "directory" added. Option "expandtab" added. Solved showmode non-
+ *			  functioning. Solved bug with window resizing. Removed some *NULL
+ *			  references. CTRL-], * and # commands now skips non-identifier
+ *			  characters. Added tag list, CTRL-T, :pop and :tags commands.
+ *			  Added jump list, CTRL-O and CTRL-I commands. Added "shiftround"
+ *			  option. Applied AUX and Lattice mods from Juergen Weigert.
+ *			  Finally made linenr_t a long, files can be > 65000 lines!
+ *			  :win command could be written to script file halfway a command.
+ *			  Option shelltype added. With ^V no mapping anymore.
+ *			  Added :move, :copy, :t, :mark and :k. Improved Ex address parsing.
+ *			  Many delimiters possible with :s.
+ *
+ * VIM 1.16 - Solved bug with zero line number in Ex range. Added file-number to
+ *			  jump list. Solved bug when scrolling downwards. Made tagstack vi
+ *			  compatible. Cmdline editing: CTRL-U instead of '@'. Made Vim DICE
+ *			  compatible. Included regexp improvements from Olaf Seibert,
+ *			  mapstring() removed. Removed bug with CTRL-U in insert mode.
+ *			  Count allowed before ". Added uppercase (file) marks. Added
+ *			  :marks command. Added joinspaces option. Added :jumps command. Made
+ *			  jumplist compatible with tag list. Added count to :next and :Next.
+ *
+ * VIM 1.17 - Removed '"' for Ex register name. Repaired stupid bug in tag code.
+ *			  Now compiled with Aztec 5.2a. Changed Arpbase.h for use with 2.04
+ *			  includes. Added repdel option. Improved :set listing. Added count
+ *			  to 'u' and CTRL-R commands. "vi:" and "ex:" in modelines must now
+ *			  be preceded with a blank. Option "+command" for command line and
+ *		      :edit command added.
  */
 
-char		   *Version = "VIM v1.14";
-char		   *longVersion = "Vi IMitation v1.14 (" __DATE__ " " __TIME__ ") by Bram Moolenaar";
+char		   *Version = "VIM v1.17";
+char		   *longVersion = "Vi IMitation v1.17 (" __DATE__ " " __TIME__ ") by Bram Moolenaar";

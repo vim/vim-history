@@ -40,6 +40,7 @@ get_indent()
  * set the indent of the current line
  * leaves the cursor on the first non-blank in the line
  */
+	void
 set_indent(size, delete)
 	register int size;
 	int delete;
@@ -51,7 +52,7 @@ set_indent(size, delete)
 	if (delete)
 	{
 		while (isspace(gcharCurpos()))	/* delete old indent */
-			delchar(FALSE);
+			delchar((bool_t)FALSE);
 	}
 	while (size >= P(P_TS))
 	{
@@ -64,6 +65,7 @@ set_indent(size, delete)
 		--size;
 	}
 	State = oldstate;
+	script_winsize_pp();
 }
 
 /*
@@ -72,7 +74,7 @@ set_indent(size, delete)
  * Add a blank line below or above the current line.
  */
 
-bool_t
+	bool_t
 Opencmd(dir)
 	int 		dir;
 {
@@ -164,8 +166,12 @@ Opencmd(dir)
 	{
 		++Curpos.lnum;
 		if (did_si)
-			newindent += P(P_SW) - newindent % P(P_SW);
-		set_indent(newindent, FALSE);
+		{
+			if (P(P_SR))
+				newindent -= newindent % P(P_SW);
+			newindent += P(P_SW);
+		}
+		set_indent(newindent, (bool_t)FALSE);
 		newcol = Curpos.col;
 		if (no_si)
 			did_si = FALSE;
@@ -200,13 +206,13 @@ Opencmd(dir)
 		 */
 		n = Cursrow + plines(Curpos.lnum);
 		if (n == (Rows - 1))
-			scrollup(1);
+			scrollup(1L);
 		else
-			s_ins(n, 1, TRUE);
+			s_ins(n, 1, (bool_t)TRUE);
 		++Curpos.lnum;	/* cursor moves down */
 	}
 	else
-		s_ins(Cursrow, 1, TRUE); /* insert physical line */
+		s_ins(Cursrow, 1, (bool_t)TRUE); /* insert physical line */
 
 	Curpos.col = newcol;
 	updateScreen(VALID_TO_CURSCHAR);
@@ -219,7 +225,7 @@ Opencmd(dir)
 /*
  * plines(p) - return the number of physical screen lines taken by line 'p'
  */
-int
+	int
 plines(p)
 	linenr_t p;
 {
@@ -260,9 +266,9 @@ plines(p)
 /*
  * Count the physical lines (rows) for the lines "first" to "last" inclusive.
  */
-		int
+	int
 plines_m(first, last)
-		linenr_t first, last;
+	linenr_t		first, last;
 {
 		int count = 0;
 
@@ -271,7 +277,7 @@ plines_m(first, last)
 		return (count);
 }
 
-void
+	void
 fileinfo()
 {
 	if (bufempty())
@@ -279,10 +285,12 @@ fileinfo()
 		msg("Buffer Empty");
 		return;
 	}
-	sprintf(IObuff, "\"%s\"%s line %d of %d -- %d %% --",
+	sprintf(IObuff, "\"%s\"%s line %ld of %ld -- %d %% --",
 			(Filename != NULL) ? Filename : "No File",
 			Changed ? " [Modified]" : "",
-			Curpos.lnum, line_count, (int)(((long)Curpos.lnum * 100L) / (long)line_count));
+			(long)Curpos.lnum,
+			(long)line_count,
+			(int)(((long)Curpos.lnum * 100L) / (long)line_count));
 
 	if (numfiles > 1)
 		sprintf(IObuff + strlen(IObuff), " (file %d of %d)", curfile + 1, numfiles);
@@ -291,7 +299,7 @@ fileinfo()
 
 	void
 setfname(s)
-		char *s;
+	char *s;
 {
 		if (Filename != NULL)
 				free(Filename);
@@ -307,6 +315,7 @@ setfname(s)
 /*
  * put filename in title bar of window
  */
+	void
 maketitle()
 {
 #ifdef AMIGA
@@ -325,7 +334,7 @@ maketitle()
 #endif
 }
 
-void
+	void
 inschar(c)
 	int			c;
 {
@@ -368,6 +377,7 @@ inschar(c)
 			Curpos = *lpos; 	/* move to matching char */
 			cursupdate();
 			windgoto(Cursrow, Curscol);
+			flushbuf();
 			delay();			/* brief pause */
 			Curpos = csave; 	/* restore cursor position */
 			cursupdate();
@@ -378,7 +388,7 @@ inschar(c)
 	CHANGED;
 }
 
-void
+	void
 insstr(s)
 	register char  *s;
 {
@@ -405,7 +415,7 @@ insstr(s)
 	CHANGED;
 }
 
-bool_t
+	bool_t
 delchar(fixpos)
 	bool_t			fixpos; 	/* if TRUE fix the cursor position when done */
 {
@@ -435,9 +445,9 @@ delchar(fixpos)
 	return TRUE;
 }
 
-void
+	void
 delline(nlines, can_update)
-	int 			nlines;
+	long 			nlines;
 	bool_t			can_update;
 {
 	int 			doscreen;	/* if true, update the screen */
@@ -451,7 +461,7 @@ delline(nlines, can_update)
 	if (nlines > (Rows - 1) && can_update) {
 		doscreen = FALSE;
 		/* flaky way to clear rest of screen */
-		s_del(Cursrow, Rows - 1, TRUE);
+		s_del(Cursrow, Rows - 1, (bool_t)TRUE);
 	}
 	while (nlines-- > 0)
 	{
@@ -482,19 +492,19 @@ delline(nlines, can_update)
 	 */
 	if (doscreen && num_plines > 0)
 	{
-		s_del(Cursrow, num_plines, TRUE);
+		s_del(Cursrow, num_plines, (bool_t)TRUE);
 	}
 }
 
 gchar(pos)
 	FPOS *pos;
 {
-	return(*(nr2ptr(pos->lnum) + pos->col));
+	return (int)(*(nr2ptr(pos->lnum) + pos->col));
 }
 
 gcharCurpos()
 {
-	return(*(nr2ptr(Curpos.lnum) + Curpos.col));
+	return (int)(*(nr2ptr(Curpos.lnum) + Curpos.col));
 }
 
 /*
@@ -552,11 +562,11 @@ getdigits(pp)
 
 	char *
 plural(n)
-	int n;
+	long n;
 {
 	static char buf[2] = "s";
 
-	if (n > 1)
-		return &(buf[0]);
-	return &(buf[1]);
+	if (n == 1)
+		return &(buf[1]);
+	return &(buf[0]);
 }

@@ -1,0 +1,98 @@
+#
+# Makefile for VIM, using DICE 2.06.40 and 2.06.21
+#
+
+INCL = vim.syms
+PRE = -H${INCL}=vim.h
+CFLAGS = -DAMIGA -DWILD_CARDS #-DAUX
+LIBS = -lmanx -la
+CC = dcc -c
+LD = dcc
+
+.c.o:
+	${CC} ${PRE} ${CFLAGS} $*.c -o $@
+
+OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o cmdsearch.o edit.o \
+	fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o undo.o version.o
+
+/Vim: $(OBJ)
+	${CC} $(CFLAGS) version.c -o version.o
+	${LD} -o /Vim $(OBJ) $(LIBS)
+
+debug: $(OBJ)
+	${CC} $(CFLAGS) version.c -o version.o
+	${LD} -s -o /Vim $(OBJ) $(LIBS)
+
+tags:	$(OBJ)
+	csh -c ctags *.c *.h
+
+$(INCL)  : vim.h globals.h param.h keymap.h macros.h ascii.h term.h amiga.h
+	delete $(INCL)
+
+alloc.o:	alloc.c  $(INCL)
+
+amiga.o:	amiga.c  $(INCL) amiga.h
+
+buffers.o:	buffers.c  $(INCL)
+
+charset.o:	charset.c  $(INCL)
+
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+
+cmdsearch.o:	cmdsearch.c  $(INCL) regexp.h
+
+edit.o: edit.c	$(INCL)
+
+fileio.o:	fileio.c  $(INCL)
+
+help.o: help.c	$(INCL)
+
+linefunc.o:	linefunc.c  $(INCL)
+
+main.o: main.c	$(INCL)
+	${CC} ${CFLAGS} main.c -o main.o
+
+mark.o: mark.c	$(INCL) mark.h
+
+message.o:	message.c  $(INCL)
+
+misccmds.o:	misccmds.c  $(INCL)
+
+normal.o:	normal.c  $(INCL) ops.h
+
+ops.o:	ops.c  $(INCL) ops.h
+
+param.o:	param.c  $(INCL)
+# Because of a bug in DC1 2.06.40, initialisation of unions does not
+# work correctly. dc1-21 is DC1 2.06.21 which does work.
+	rename dc1-21 dc1
+	${CC} ${CFLAGS} param.c -o param.o
+	rename dc1 dc1-21
+
+quickfix.o:	quickfix.c  $(INCL)
+
+regexp.o:	regexp.c  $(INCL) regexp.h
+
+regsub.o:	regsub.c  $(INCL) regexp.h
+
+screen.o:	screen.c  $(INCL)
+
+script.o:	script.c  $(INCL)
+
+search.o:	search.c  $(INCL) regexp.h
+
+tag.o:	tags.c  $(INCL) mark.h
+
+storage.o:	storage.c  $(INCL)
+
+undo.o: undo.c	$(INCL)
+
+cmdtab.h: cmdtab.tab makecmdtab
+#	makecmdtab <cmdtab.tab >cmdtab.h
+	newcli from makecmdtab.cli
+	wait 10
+
+makecmdtab: makecmdtab.o
+	${LD} -o makecmdtab makecmdtab.o

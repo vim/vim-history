@@ -34,11 +34,12 @@ int cstrncmp __ARGS((char *, char *, int));
 char *cstrchr __ARGS((char *, int));
 
 /* regsub.c */
-void regsub __ARGS((regexp *, char *, char *));
+int regsub __ARGS((regexp *, char *, char *, int, int));
 
 /* search.c */
 extern void 	regerror __ARGS((char *));
 
 #ifndef ORIGINAL
 extern int		reg_ic; 		/* set non-zero to ignore case in searches */
+extern int		reg_magic;		/* set zero to disable magicness of .*[~& */
 #endif

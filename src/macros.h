@@ -41,4 +41,4 @@
 /*
  * bufempty() - return TRUE if the file buffer is empty
  */
-#define bufempty() (buf1line() && lineempty(1))
+#define bufempty() (buf1line() && lineempty((linenr_t)1))

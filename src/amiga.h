@@ -13,19 +13,19 @@
  */
 
 /* amiga.c */
-void	flushbuf();
+void	flushbuf __ARGS((void));
 void	outchar __ARGS((unsigned));
 void	outstr __ARGS((char *));
 int 	inchar __ARGS((bool_t));
-void	outnum __ARGS((unsigned));
-void	beep();
+void	outnum __ARGS((long));
+void	beep __ARGS((void));
 void	sleep __ARGS((int));
-void	delay();
-void	windinit();
+void	delay __ARGS((void));
+void	windinit __ARGS((void));
 void	check_win __ARGS((int, char **));
 void	fname_case __ARGS((char *));
 void	settitle __ARGS((char *));
-void	resettitle();
+void	resettitle __ARGS((void));
 void	setmode __ARGS((bool_t));
 int		dirname __ARGS((char *, int));
 int		FullName __ARGS((char *, char *, int));
@@ -35,9 +35,12 @@ int		isdir __ARGS((char *));
 void	windexit __ARGS((int));
 void	windgoto __ARGS((int, int));
 void	setmode __ARGS((bool_t));
-int		set_winsize __ARGS((int, int));
-int		call_shell __ARGS((char *));
-int		breakcheck();
-long	Chk_Abort();
+void	set_winsize __ARGS((int, int));
+#ifdef SETKEYMAP
+void	set_keymap __ARGS((char *));
+#endif
+void	call_shell __ARGS((char *, bool_t));
+void	breakcheck __ARGS((void));
+long	Chk_Abort __ARGS((void));
 int		ExpandWildCards __ARGS((int, char **, int *, char ***, bool_t, bool_t));
 void	FreeWild __ARGS((int, char **));

@@ -23,27 +23,27 @@
  */
 static struct yankbuf
 {
-		char	**y_array;		/* pointer to array of line pointers */
-		int 	y_size; 		/* number of lines in y_array */
-		char	y_type; 		/* MLINE or MCHAR */
+	char		**y_array;		/* pointer to array of line pointers */
+	linenr_t 	y_size; 		/* number of lines in y_array */
+	char		y_type; 		/* MLINE or MCHAR */
 } y_buf[36];					/* 0..9 = number buffers, 10..35 = char buffers */
 
 static struct yankbuf *y_current;		/* pointer to current yank buffer */
 static bool_t yankappend;				/* TRUE when appending */
 static struct yankbuf *y_delete = NULL; /* pointer to yank buffer of last delete */
 
+static void		get_yank_buffer __ARGS((void));
 static bool_t	stuff_yank __ARGS((int, char *));
-static void	free_yank __ARGS((int));
-static void	free_yank_all();
+static void		free_yank __ARGS((long));
+static void		free_yank_all __ARGS((void));
 
 /*
  * doshift - handle a shift operation
  */
-void
+	void
 doshift(op)
 	int 			op;
 {
-	register linenr_t	lnum;
 	register int i;
 
 	if (!u_save((linenr_t)(Curpos.lnum - 1), (linenr_t)(Curpos.lnum + nlines)))
@@ -60,13 +60,14 @@ doshift(op)
 	updateScreen(NOT_VALID);
 
 	if (nlines > P(P_RP))
-		smsg("%d lines %ced", nlines, (op == RSHIFT) ? '>' : '<');
+		smsg("%ld lines %ced", nlines, (op == RSHIFT) ? '>' : '<');
 }
 
 /*
  * shift the current line one shiftwidth left (if left != 0) or right
  * leaves cursor on first blank in the line
  */
+	void
 shift_line(left)
 	int left;
 {
@@ -75,28 +76,42 @@ shift_line(left)
 
 	count = get_indent();			/* get current indent */
 
-	i = count / P(P_SW);			/* compute new indent */
-	j = count % P(P_SW);
-	if (j)
+	if (P(P_SR))		/* round off indent */
 	{
-		if (!left)
+		i = count / P(P_SW);			/* compute new indent */
+		j = count % P(P_SW);
+		if (j)
+		{
+			if (!left)
+				++i;
+		}
+		else if (left)
+		{
+			if (i)
+				--i;
+		}
+		else
 			++i;
+		count = i * P(P_SW);
 	}
-	else if (left)
+	else				/* original vi indent */
 	{
-		if (i)
-			--i;
+		if (left)
+		{
+			count -= P(P_SW);
+			if (count < 0)
+				count = 0;
+		}
+		else
+			count += P(P_SW);
 	}
-	else
-		++i;
-
-	set_indent((int)(i * P(P_SW)), TRUE);		/* set new indent */
+	set_indent(count, (bool_t)TRUE);		/* set new indent */
 }
 
 /*
  * Set y_current and yankappend, according to the value of yankbuffer.
  */
-static int
+	static void
 get_yank_buffer()
 {
 		register int i;
@@ -122,9 +137,9 @@ get_yank_buffer()
 /*
  * (stop) recording into a yank buffer
  */
-		bool_t
+	bool_t
 dorecord(c)
-		int c;
+	int c;
 {
 		char *p, *lp;
 		static int bufname;
@@ -147,7 +162,7 @@ dorecord(c)
 				p = (char *)get_recorded();
 				if (p == NULL)
 						return FALSE;
-				lp = rindex(p, 'v');	/* delete the trailing 'v' */
+				lp = strrchr(p, 'v');	/* delete the trailing 'v' */
 				if (lp != NULL)
 						*lp = NUL;
 				return (stuff_yank(bufname, p));
@@ -158,10 +173,10 @@ dorecord(c)
  * stuff string 'p' into yank buffer 'bufname' (append if uppercase)
  * 'p' is assumed to be alloced.
  */
-		bool_t
+	static bool_t
 stuff_yank(bufname, p)
-		int bufname;
-		char *p;
+	int bufname;
+	char *p;
 {
 		char *lp;
 		char **pp;
@@ -171,7 +186,7 @@ stuff_yank(bufname, p)
 		if (yankappend && y_current->y_array != NULL)
 		{
 				pp = &(y_current->y_array[y_current->y_size - 1]);
-				lp = alloc(strlen(*pp) + strlen(p) + 1);
+				lp = alloc((unsigned)(strlen(*pp) + strlen(p) + 1));
 				if (lp == NULL)
 				{
 						free(p);
@@ -186,14 +201,14 @@ stuff_yank(bufname, p)
 		else
 		{
 				free_yank_all();
-				if ((y_current->y_array = (char **)alloc(sizeof(char *))) == NULL)
+				if ((y_current->y_array = (char **)alloc((unsigned)sizeof(char *))) == NULL)
 				{
 						free(p);
 						return FALSE;
 				}
 				y_current->y_array[0] = p;
 				y_current->y_size = 1;
-				y_current->y_type = MLINE;
+				y_current->y_type = MCHAR;	/* used to be MLINE, why? */
 		}
 		return TRUE;
 }
@@ -202,10 +217,10 @@ stuff_yank(bufname, p)
  * execute a yank buffer: copy it into the stuff buffer
  */
 doexecbuf(c)
-		int c;
+	int c;
 {
 		static int lastc = NUL;
-		int i;
+		long i;
 
 		if (c == '@')			/* repeat previous one */
 				c = lastc;
@@ -238,7 +253,7 @@ doexecbuf(c)
 /*
  * dodelete - handle a delete operation
  */
-void
+	void
 dodelete()
 {
 	register int	n;
@@ -262,7 +277,7 @@ dodelete()
 		get_yank_buffer();
 	y_delete = y_current;		/* remember the buffer we delete into for doput() */
 
-	if (!doyank(TRUE))
+	if (!doyank((bool_t)TRUE))
 	{
 		if (ask_yesno("cannot yank; delete anyway") != 'y')
 		{
@@ -279,40 +294,40 @@ dodelete()
 		u_clearline();	/* "U" command should not be possible after "dd" */
 		if (operator == CHANGE)
 		{
-			delline(nlines - 1, TRUE);
+			delline((long)(nlines - 1), (bool_t)TRUE);
 			Curpos.col = 0;
-			while (delchar(TRUE));
+			while (delchar((bool_t)TRUE));
 		}
 		else
 		{
-			delline(nlines, TRUE);
+			delline(nlines, (bool_t)TRUE);
 		}
 	}
 	else if (nlines == 1)		/* del. within line */
 	{
 		n = endop.col - startop.col + 1 - oneless;
 		while (n--)
-			if (!delchar(TRUE))
+			if (!delchar((bool_t)TRUE))
 				break;
 	}
 	else						/* del. between lines */
 	{
 		n = Curpos.col;
 		while (Curpos.col >= n)
-			if (!delchar(TRUE))
+			if (!delchar((bool_t)TRUE))
 				break;
 
 		startop = Curpos;		/* remember Curpos */
 		++Curpos.lnum;
-		delline(nlines - 2, TRUE);
+		delline((long)(nlines - 2), (bool_t)TRUE);
 		Curpos.col = 0;
 		n = endop.col - oneless;
 
 		while (n-- >= 0)
-			if (!delchar(TRUE))
+			if (!delchar((bool_t)TRUE))
 				break;
 		Curpos = startop;		/* restore Curpos */
-		dojoin(FALSE);
+		dojoin((bool_t)FALSE);
 	}
 
 	cursupdate();
@@ -328,7 +343,7 @@ dodelete()
 /*
  * dotilde - handle the (non-standard vi) tilde operator
  */
-void
+	void
 dotilde()
 {
 		register char	c;
@@ -366,13 +381,13 @@ dotilde()
 				updateScreen(NOT_VALID);
 
 		if (nlines > P(P_RP))
-				smsg("%d lines ~ed", nlines);
+				smsg("%ld lines ~ed", nlines);
 }
 
 /*
  * dochange - handle a change operation
  */
-void
+	void
 dochange()
 {
 	register colnr_t 		   l;
@@ -384,12 +399,13 @@ dochange()
 	if ((l > Curpos.col) && !lineempty(Curpos.lnum))
 		incCurpos();
 
-	startinsert(NUL, FALSE, 1);
+	startinsert(NUL, (bool_t)FALSE, (linenr_t)1);
 }
 
 /*
  * set all the yank buffers to empty (called from main())
  */
+	void
 init_yank()
 {
 		register int i;
@@ -402,22 +418,28 @@ init_yank()
  * Free "n" lines from the current yank buffer.
  * Called for normal freeing and in case of error.
  */
-void
+	static void
 free_yank(n)
-		int n;
+	long n;
 {
-		if (y_current->y_array != NULL)
-		{
-				register int i;
+	if (y_current->y_array != NULL)
+	{
+		register long i;
 
-				for (i = 0; i < n; ++i)
-						free(y_current->y_array[i]);
-				free((char *)y_current->y_array);
-				y_current->y_array = NULL;
+		for (i = n; --i >= 0; )
+		{
+			if (i % 1000 == 999)					/* this may take a while */
+				smsg("freeing %ld lines", i + 1);
+			free(y_current->y_array[i]);
 		}
+		free((char *)y_current->y_array);
+		y_current->y_array = NULL;
+		if (n >= 1000)
+			msg("");
+	}
 }
 
-	void
+	static void
 free_yank_all()
 {
 		free_yank(y_current->y_size);
@@ -429,16 +451,16 @@ free_yank_all()
  * then concatenate the old and the new one (so we keep the old one in case
  * of out-of-memory).
  */
-bool_t
+	bool_t
 doyank(deleting)
-		bool_t deleting;
+	bool_t deleting;
 {
-	int 		i;				/* index in y_array[] */
-	struct yankbuf *curr;		/* copy of y_current */
-	struct yankbuf new; 		/* new yank buffer when appending */
-	char		**new_ptr;
-	register int lnum;			/* current line number */
-	int 		j;
+	long 				i;				/* index in y_array[] */
+	struct yankbuf		*curr;		/* copy of y_current */
+	struct yankbuf		new; 		/* new yank buffer when appending */
+	char				**new_ptr;
+	register linenr_t	lnum;			/* current line number */
+	long 				j;
 
 	if (!deleting)
 	{
@@ -454,7 +476,7 @@ doyank(deleting)
 
 	y_current->y_size = nlines;
 	y_current->y_type = mtype;	/* set the yank buffer type */
-	y_current->y_array = (char **)alloc(sizeof(char *) * nlines);
+	y_current->y_array = (char **)alloc((unsigned)(sizeof(char *) * nlines));
 
 	if (y_current->y_array == NULL)
 	{
@@ -475,7 +497,7 @@ doyank(deleting)
 		if (nlines == 1)		/* startop and endop on same line */
 		{
 				j = endop.col - startop.col + 1 - oneless;
-				if ((y_current->y_array[0] = strnsave(nr2ptr(lnum) + startop.col, j)) == NULL)
+				if ((y_current->y_array[0] = strnsave(nr2ptr(lnum) + startop.col, (int)j)) == NULL)
 				{
 fail:
 						free_yank(i);	/* free the lines that we allocated */
@@ -504,7 +526,7 @@ fail:
 success:
 	if (curr != y_current)		/* append the new block to the old block */
 	{
-		new_ptr = (char **)alloc(sizeof(char *) * (curr->y_size + y_current->y_size));
+		new_ptr = (char **)alloc((unsigned)(sizeof(char *) * (curr->y_size + y_current->y_size)));
 		if (new_ptr == NULL)
 				goto fail;
 		for (j = 0; j < curr->y_size; ++j)
@@ -517,7 +539,7 @@ success:
 		if (curr->y_type == MCHAR)		/* concatenate the last line of the old
 										block with the first line of the new block */
 		{
-				new_ptr = (char **)alloc(strlen(curr->y_array[curr->y_size - 1]) + strlen(y_current->y_array[0]) + 1);
+				new_ptr = (char **)alloc((unsigned)(strlen(curr->y_array[curr->y_size - 1]) + strlen(y_current->y_array[0]) + 1));
 				if (new_ptr == NULL)
 				{
 						i = y_current->y_size - 1;
@@ -539,7 +561,7 @@ success:
 		y_current = curr;
 	}
 	if (operator == YANK && nlines > P(P_RP))
-			smsg("%d lines yanked", y_current->y_size);
+			smsg("%ld lines yanked", (long)(y_current->y_size));
 
 	return TRUE;
 }
@@ -547,18 +569,18 @@ success:
 	void
 doput(dir, count)
 	int dir;
-	int count;
+	long count;
 {
 	char		*ptr, *ep;
 	int 		newlen;
 	linenr_t	startlnum;
 	int 		startcol;
 	linenr_t	lnum;
-	int 		i;		/* index in y_array[] */
+	long 		i;		/* index in y_array[] */
 	int 		y_type;
-	int 		y_size;
+	long 		y_size;
 	char		**y_array;
-	int 		nlines = 0;
+	long 		nlines = 0;
 
 	if (!u_saveCurpos())
 		return;
@@ -610,7 +632,7 @@ doput(dir, count)
 	if (y_type == MCHAR && y_size == 1)
 	{
 		i = count * newlen;
-		if (!canincrease(i))
+		if (!canincrease((int)i))
 				return; 				/* alloc() will give error message */
 		ptr = nr2ptr(startlnum);
 		ep = ptr + startcol;
@@ -619,7 +641,7 @@ doput(dir, count)
 		Curpos.col += i - 1;		/* put cursor on last putted char */
 		for (i = 0; i < count; ++i)
 		{
-				strncpy(ep, y_array[0], newlen);
+				strncpy(ep, y_array[0], (size_t)newlen);
 				ep += newlen;
 		}
 		updateline();
@@ -660,7 +682,7 @@ doput(dir, count)
 			if (y_type == MCHAR)		/* insert last line */
 			{
 				ptr = nr2ptr(lnum);
-				ep = alloc_line(strlen(ptr) + strlen(y_array[i]));
+				ep = alloc_line((unsigned)(strlen(ptr) + strlen(y_array[i])));
 				if (ep == NULL)
 						goto error;
 				strcpy(ep, y_array[i]);
@@ -680,7 +702,7 @@ doput(dir, count)
 		}
 
 error:
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		cursupdate();
 		updateScreen(NOT_VALID);
 	}
@@ -695,7 +717,8 @@ error:
 	void
 dodis()
 {
-		register int i, j, n;
+		register int i, n;
+		register long j;
 		register char *p;
 		register struct yankbuf *yb;
 
@@ -739,15 +762,15 @@ dodis()
 				}
 		}
 		setmode(1);
-		wait_return(TRUE);
+		wait_return((bool_t)TRUE);
 }
 
 /*
  * join 'count' lines (minimal 2), including u_save()
  */
-void
+	void
 dodojoin(count, flag)
-	int		count;
+	long	count;
 	bool_t	flag;
 {
 		if (!u_save((linenr_t)(Curpos.lnum - 1), (linenr_t)(Curpos.lnum + count)))
@@ -763,7 +786,7 @@ dodojoin(count, flag)
 		updateScreen(VALID_TO_CURSCHAR);
 }
 
-bool_t
+	bool_t
 dojoin(insert_space)
 	bool_t			insert_space;
 {
@@ -771,6 +794,7 @@ dojoin(insert_space)
 	char		*next;
 	int 		currsize;		/* size of the current line */
 	int 		nextsize;		/* size of the next line */
+	int			spaces;			/* number of spaces to insert */
 
 	if (Curpos.lnum == line_count)		/* on last line */
 		return FALSE;
@@ -778,21 +802,30 @@ dojoin(insert_space)
 	curr = nr2ptr(Curpos.lnum);
 	currsize = strlen(curr);
 	next = nr2ptr((linenr_t)(Curpos.lnum + 1));
+	spaces = 0;
 	if (insert_space)
 	{
 		skipspace(&next);
-		if (currsize && *(curr + currsize - 1) == ' ' ||
-										*(curr + currsize - 1) == TAB)
-				insert_space = FALSE;
+		if (P(P_JS))
+			spaces = 2;		/* vi compatible */
+		else
+			spaces = 1;		/* what I like */
+		if (currsize && (*(curr + currsize - 1) == ' ' ||
+						*(curr + currsize - 1) == TAB) ||
+						*next == ')')
+				spaces = 0;
 	}
 	nextsize = strlen(next);
-	if (!canincrease(nextsize + (insert_space ? 1 : 0)))
+	if (!canincrease(nextsize + spaces))
 		return FALSE;
 
 	curr = nr2ptr(Curpos.lnum); /* canincrease() will have changed the pointer */
 
-	if (insert_space)
+	while (spaces)
+	{
 		*(curr + currsize++) = ' ';
+		--spaces;
+	}
 	strcpy(curr + currsize, next);
 
 	/*
@@ -804,11 +837,11 @@ dojoin(insert_space)
 
 	if (Curpos.lnum != line_count)
 	{
-		delline(1, TRUE);
+		delline(1L, (bool_t)TRUE);
 		--Curpos.lnum;
 	}
 	else
-		delline(1, TRUE);
+		delline(1L, (bool_t)TRUE);
 
 	if (currsize == 0)
 		Curpos.col = 0;
@@ -826,7 +859,7 @@ dojoin(insert_space)
 startinsert(initstr, startln, count)
 	int			initstr;
 	int 		startln;		/* if set, insert at start of line */
-	int 		count;
+	long 		count;
 {
 	Insstart = Curpos;
 	if (startln)

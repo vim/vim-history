@@ -26,6 +26,7 @@
 #define REGSTR	0x200			/* allow "x for register designation */
 #define COUNT	0x400			/* allow count in argument */
 #define NOTRLCOM 0x800			/* no trailing comment allowed */
+#define ZEROR	0x1000			/* zero line number allowed */
 #define FILES	(XFILE + EXTRA)	/* multiple extra files allowed */
 #define WORD1	(EXTRA + NOSPC)	/* one extra word allowed */
 #define FILE1	(FILES + NOSPC)	/* 1 file allowed, defaults to current file */
@@ -56,7 +57,7 @@ static struct
 	{"cn",			TRLBAR+BANG},
 	{"cp",			TRLBAR+BANG},
 	{"cq",			TRLBAR+BANG},
-	{"copy",		RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"copy",		RANGE+EXTRA+TRLBAR},
 	{"chdir",		NAMEDF+TRLBAR},
 	{"delete",		RANGE+REGSTR+COUNT+TRLBAR},
 	{"display",		TRLBAR},
@@ -68,35 +69,40 @@ static struct
 	{"help",		TRLBAR},
 	{"insert",		BANG+RANGE+TRLBAR},			/* not supported */
 	{"join",		RANGE+COUNT+TRLBAR},
-	{"k",			RANGE+WORD1+TRLBAR},		/* not supported */
+	{"jumps",		TRLBAR},
+	{"k",			RANGE+WORD1+TRLBAR},
 	{"list",		RANGE+COUNT+TRLBAR},		/* not supported */
-	{"move",		RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"move",		RANGE+EXTRA+TRLBAR},
 	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
-	{"mark",		RANGE+WORD1+TRLBAR},		/* not supported */
+	{"mark",		RANGE+WORD1+TRLBAR},
+	{"marks",		TRLBAR},
 	{"mkexrc",		BANG+FILE1+TRLBAR},
-	{"next",		BANG+NAMEDFS+TRLBAR},
+	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
 	{"number",		RANGE+COUNT+TRLBAR},		/* not supported */
-	{"Next",		BANG+TRLBAR},
+	{"Next",		RANGE+BANG+TRLBAR},
 	{"print",		RANGE+COUNT+TRLBAR},
+	{"pop",			RANGE+TRLBAR+ZEROR},
 	{"put",			RANGE+REGSTR+TRLBAR},
-	{"previous",	BANG+TRLBAR},
+	{"previous",	RANGE+BANG+TRLBAR},
 	{"quit",		BANG+TRLBAR},
-	{"read",		NAMEDF+NEEDARG+TRLBAR},
+	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
 	{"rewind",		BANG+TRLBAR},
 	{"recover",		FILE1+TRLBAR},				/* not supported */
 	{"substitute",	RANGE+EXTRA},
 	{"set",			EXTRA+TRLBAR},
+	{"setkeymap",	NAMEDF+TRLBAR},
 	{"shell",		TRLBAR},
 	{"source",		NAMEDF+NEEDARG+TRLBAR},
 	{"stop",		TRLBAR},					/* not supported */
-	{"t",			RANGE+EXTRA+TRLBAR},		/* not supported */
-	{"tag",			BANG+WORD1+TRLBAR},
+	{"t",			RANGE+EXTRA+TRLBAR},
+	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
+	{"tags",		TRLBAR},
 	{"undo",		TRLBAR},
 	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
 	{"unmap",		BANG+EXTRA+TRLBAR},
 	{"vglobal",		RANGE+EXTRA+DFLALL},
 	{"version",		TRLBAR},
-	{"visual",		BANG+FILE1+TRLBAR},
+	{"visual",		RANGE+BANG+FILE1+TRLBAR},
 	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
 	{"winsize",		EXTRA+NEEDARG+TRLBAR},
 	{"wq",			BANG+FILE1+DFLALL+TRLBAR},

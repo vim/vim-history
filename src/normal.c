@@ -40,14 +40,14 @@
  * called with a pending operator, the count in opnum (if present) overrides
  * any count that came later.
  */
-static int		opnum = 0;
-static int		Prenum; 		/* The (optional) number before a command. */
+static linenr_t	opnum = 0;
+static linenr_t	Prenum; 		/* The (optional) number before a command. */
 static bool_t	substituting = FALSE;	/* TRUE when in 'S' command */
 
-static void prep_redo __ARGS((int, int, int, int));
-static int checkclearop();
-static void clearopbeep();
-static void premsg __ARGS((int, int));
+static void		prep_redo __ARGS((long, int, int, int));
+static int		checkclearop();
+static void		clearopbeep();
+static void		premsg __ARGS((int, int));
 
 /*
  * normal
@@ -59,28 +59,28 @@ static void premsg __ARGS((int, int));
  *
  *	  0. Macros (v, @)
  *	  1. Screen positioning commands (^U, ^D, ^F, ^B, ^E, ^Y, z)
- *	  2. Control commands (:, <help>, ^L, ^G, ^^, ZZ, *, ^])
+ *	  2. Control commands (:, <help>, ^L, ^G, ^^, ZZ, *, ^], ^T)
  *	  3. Cursor motions (G, H, M, L, l, K_RARROW,  , h, K_LARROW, ^H, k, K_UARROW, ^P, +, CR, LF, j, K_DARROW, ^N, _, |, B, b, W, w, E, e, $, ^, 0)
  *	  4. Searches (?, /, n, N, T, t, F, f, ,, ;, ], [, %, (, ), {, })
  *	  5. Edits (., u, K_UNDO, ^R, U, r, J, p, P)
  *	  6. Inserts (A, a, I, i, o, O, R)
  *	  7. Operators (~, d, c, y, >, <, !, =)
  *	  8. Abbreviations (x, X, D, C, s, S, Y, &)
- *	  9. Marks (m, ', `)
+ *	  9. Marks (m, ', `, ^O, ^I)
  *	 10. Buffer setting (")
  */
 
-void
+	void
 normal()
 {
 	register u_char	c;
-	int 			n;
+	long 			n;
 	bool_t			flag = FALSE;
 	int 			type = 0;		/* used in some operations to modify type */
 	int 			dir = FORWARD;	/* search direction */
 	u_char			nchar = NUL;
 	bool_t			finish_op;
-	int 			Prenum1;
+	linenr_t		Prenum1;
 	char			searchbuff[CMDBUFFSIZE];		/* buffer for search string */
 	FPOS			*pos;
 	register char	*ptr;
@@ -94,11 +94,12 @@ normal()
 	 */
 	finish_op = (operator != NOP);
 
-	if (!finish_op)
+	if (!finish_op && !yankbuffer)
 		opnum = 0;
 
 	if (vpeekc() == NUL || KeyTyped == TRUE)
 		premsg(NUL, NUL);
+	State = NORMAL_BUSY;
 	c = vgetc();
 
 	/* Pick up any leading digits and compute 'Prenum' */
@@ -113,13 +114,14 @@ normal()
 	}
 
 	/*
-	 * If we're in the middle of an operator AND we had a count before the
+	 * If we're in the middle of an operator (including after entering a yank
+	 * buffer with ") AND we had a count before the
 	 * operator, then that count overrides the current value of Prenum. What
 	 * this means effectively, is that commands like "3dw" get turned into
 	 * "d3w" which makes things fall into place pretty neatly.
 	 * If you give a count before AND after the operator, they are multiplied.
 	 */
-	if (finish_op && opnum != 0)
+	if (opnum != 0)
 	{
 			if (Prenum)
 				Prenum *= opnum;
@@ -134,22 +136,26 @@ normal()
 	/*
 	 * get an additional character if we need one
 	 */
-	if (index("@zZtTfF[]rm'`\"", c) || c == 'v' && Recording == FALSE)
+	if (strchr("@zZtTfF[]rm'`\"", c) || c == 'v' && Recording == FALSE)
 	{
-		State = NOMAPPING;		/* no macro mapping for this char */
-		nchar = vgetc();
-		State = NORMAL;
-		if (nchar == ESC)
-		{
-				CLEAROP;
-				premsg(-1, NUL);
-				return;
-		}
+		State = NOMAPPING;
+		nchar = vgetc();		/* no macro mapping for this char */
 		premsg(c, nchar);
 	}
 	flushbuf();			/* flush the premsg() characters onto the screen so we can
 							see them while the command is being executed */
 
+	if (c != 'z')	/* the 'z' command gets another character */
+	{
+		State = NORMAL;
+		script_winsize_pp();
+	}
+	if (nchar == ESC)
+	{
+		CLEAROP;
+		premsg(-1, NUL);
+		return;
+	}
 	switch (c)
 	{
 
@@ -234,7 +240,7 @@ normal()
 			else
 				Topline = lp + 1;
 		}
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		updateScreen(VALID);
 		break;
 
@@ -264,13 +270,15 @@ normal()
 			{
 				premsg(' ', NUL);
 				nchar = vgetc();
+				State = NORMAL;
+				script_winsize_pp();
 				if (nchar == DEL)
 					Prenum /= 10;
 				else if (isdigit(nchar))
 					Prenum = Prenum * 10 + (nchar - '0');
 				else if (nchar == CR)
 				{
-					set_winsize(Columns, Prenum);
+					set_winsize(Columns, (int)Prenum);
 					break;
 				}
 				else
@@ -282,6 +290,8 @@ normal()
 			operator = NOP;
 			break;
 		}
+		State = NORMAL;
+		script_winsize_pp();
 		switch (nchar)
 		{
 		  case NL:				/* put Curpos at top of screen */
@@ -300,8 +310,8 @@ normal()
 
 	dozcmd:
 			{
-				register linenr_t  lp = Curpos.lnum;
-				register int	l = 0;
+				register linenr_t	lp = Curpos.lnum;
+				register long		l = 0;
 
 				while ((l < n) && (lp != 0))
 				{
@@ -344,11 +354,7 @@ normal()
 
 	  case K_CCIRCM:			/* shorthand command */
 		CHECKCLEAROP;
-		if (P(P_AW) && Changed)	/* autowrite */
-			stuffReadbuff(":w\n");
-		stuffReadbuff(":e #");
-		stuffnumReadbuff(Prenum);
-		stuffReadbuff("\n");
+		getaltfile((int)Prenum, (linenr_t)0, (bool_t)TRUE);
 		break;
 
 	  case 'Z': 		/* write, if changed, and exit */
@@ -365,27 +371,40 @@ normal()
 		CHECKCLEAROP;
 	  case '*': 				/* / to current identifier */
 	  case '#': 				/* ? to current identifier */
-		if (Prenum)
-			stuffnumReadbuff(Prenum);
-		if (c == '*')
-			stuffReadbuff("/");
-		else if (c == '#')
-			stuffReadbuff("?");
-		else
-			stuffReadbuff(":ta ");
 		{
 			register int 	col;
 
+			ptr = nr2ptr(Curpos.lnum);
+			col = Curpos.col;
+
 			/*
-			 * First back up to start of identifier. This doesn't match the
+			 * skip to start of identifier.
+			 */
+			while (ptr[col] != NUL && !isidchar(ptr[col]))
+				++col;
+
+			/*
+			 * Back up to start of identifier. This doesn't match the
 			 * real vi but I like it a little better and it shouldn't bother
 			 * anyone.
 			 */
-			ptr = nr2ptr(Curpos.lnum);
-			col = Curpos.col - 1;
-			while (col >= 0 && isidchar(ptr[col]))
+			while (col > 0 && isidchar(ptr[col - 1]))
 				--col;
-			++col;
+
+			if (!isidchar(ptr[col]))
+			{
+				CLEAROPBEEP;
+				break;
+			}
+
+			if (Prenum)
+				stuffnumReadbuff(Prenum);
+			if (c == '*')
+				stuffReadbuff("/");
+			else if (c == '#')
+				stuffReadbuff("?");
+			else
+				stuffReadbuff(":ta ");
 
 			/*
 			 * Now grab the chars in the identifier
@@ -399,6 +418,11 @@ normal()
 		}
 		break;
 
+	  case CTRL('T'):		/* backwards in tag stack */
+			CHECKCLEAROP;
+	  		dotag("", 2, (int)Prenum1);
+			break;
+
 /*
  * Cursor motions
  */
@@ -409,7 +433,7 @@ normal()
 				Curpos.lnum = line_count;
 		else
 				Curpos.lnum = Prenum;
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		break;
 
 	  case 'H':
@@ -420,17 +444,17 @@ normal()
 				n = Prenum;
 		mtype = MLINE;
 		Curpos.lnum = Topline;
-		while (n && onedown(1))
+		while (n && onedown((long)1))
 				--n;
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		break;
 
 	  case 'L':
 		mtype = MLINE;
 		Curpos.lnum = Botline - 1;
-		for (n = Prenum; n && oneup(1); n--)
+		for (n = Prenum; n && oneup((long)1); n--)
 				;
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		break;
 
 	  case 'l':
@@ -465,6 +489,7 @@ normal()
 	  case 'h':
 	  case K_LARROW:
 	  case CTRL('H'):
+	  case DEL:
 		mtype = MCHAR;
 		mincl = FALSE;
 		n = Prenum1;
@@ -493,7 +518,7 @@ normal()
 		if (!oneup(Prenum1))
 			CLEAROPBEEP;
 		else if (flag)
-			beginline(TRUE);
+			beginline((bool_t)TRUE);
 		break;
 
 	  case '+':
@@ -509,7 +534,7 @@ normal()
 		if (!onedown(Prenum1))
 			CLEAROPBEEP;
 		else if (flag)
-			beginline(TRUE);
+			beginline((bool_t)TRUE);
 		break;
 
 		/*
@@ -523,16 +548,16 @@ normal()
 	  case '_':
 lineop:
 		mtype = MLINE;
-		if (!onedown(Prenum1 - 1))
+		if (!onedown((long)(Prenum1 - 1)))
 			CLEAROPBEEP;
 		else
-			beginline(TRUE);
+			beginline((bool_t)TRUE);
 		break;
 
 	  case '|':
 		mtype = MCHAR;
 		mincl = TRUE;
-		beginline(FALSE);
+		beginline((bool_t)FALSE);
 		if (Prenum > 0)
 			coladvance((colnr_t)(Prenum - 1));
 		Curswant = Prenum - 1;
@@ -612,7 +637,7 @@ dowrdcmd:
 		mtype = MCHAR;
 		mincl = TRUE;
 		Curswant = 9999;				/* so we stay at the end */
-		if (!onedown(Prenum1 - 1))
+		if (!onedown((long)(Prenum1 - 1)))
 		{
 				CLEAROPBEEP;
 				break;
@@ -643,7 +668,7 @@ dowrdcmd:
 		mincl = FALSE;
 		set_want_col = TRUE;
 
-		n = dosearch(c == '/' ? FORWARD : BACKWARD, searchbuff, FALSE, Prenum1);
+		n = dosearch(c == '/' ? FORWARD : BACKWARD, searchbuff, (bool_t)FALSE, Prenum1);
 		if (n == 0)
 				CLEAROPBEEP;
 		else if (n == 2)
@@ -779,12 +804,12 @@ docsearch:
 	  case 'u':
 	  case K_UNDO:
 		CHECKCLEAROP;
-		u_undo();
+		u_undo((int)Prenum1);
 		break;
 
 	  case CTRL('R'):
 		CHECKCLEAROP;
-	  	u_redo();
+	  	u_redo((int)Prenum1);
 		break;
 
 	  case 'U':
@@ -819,7 +844,7 @@ docsearch:
 		}
 
 		prep_redo(Prenum, 'J', NUL, NUL);
-		dodojoin(Prenum, TRUE);
+		dodojoin(Prenum, (bool_t)TRUE);
 		break;
 
 	  case 'P':
@@ -848,37 +873,37 @@ docsearch:
 		{
 				if (!lineempty(Curpos.lnum))
 					incCurpos();
-				startinsert(c, FALSE, Prenum1);
+				startinsert(c, (bool_t)FALSE, Prenum1);
 		}
 		break;
 
 	  case 'I':
-		beginline(TRUE);
+		beginline((bool_t)TRUE);
 		/* FALLTHROUGH */
 
 	  case 'i':
 	  case K_INSERT:
 		CHECKCLEAROP;
 		if (u_saveCurpos())
-				startinsert(c, FALSE, Prenum1);
+				startinsert(c, (bool_t)FALSE, Prenum1);
 		break;
 
 	  case 'o':
 		CHECKCLEAROP;
 		if (u_save(Curpos.lnum, (linenr_t)(Curpos.lnum + 1)) && Opencmd(FORWARD))
-				startinsert('o', TRUE, Prenum1);
+				startinsert('o', (bool_t)TRUE, Prenum1);
 		break;
 
 	  case 'O':
 		CHECKCLEAROP;
 		if (u_save((linenr_t)(Curpos.lnum - 1), Curpos.lnum) && Opencmd(BACKWARD))
-				startinsert('O', TRUE, Prenum1);
+				startinsert('O', (bool_t)TRUE, Prenum1);
 		break;
 
 	  case 'R':
 		CHECKCLEAROP;
 		if (u_saveCurpos())
-				startinsert('R', FALSE, Prenum1);
+				startinsert('R', (bool_t)FALSE, Prenum1);
 		break;
 
 /*
@@ -924,7 +949,7 @@ docsearch:
 	  case '<':
 	  case '!':
 	  case '=':
-		n = index(opchars, c) - opchars + 1;
+		n = strchr(opchars, c) - opchars + 1;
 		if (n == operator)		/* double operator works on lines */
 			goto lineop;
 		CHECKCLEAROP;
@@ -961,7 +986,7 @@ docsearch:
 				static char *(ar[9]) = {"dl", "dh", "d$", "c$", "cl", "c$", "yy", "y$", ":s\r"};
 				static char *str = "xXDCsSYZ&";
 
-				stuffReadbuff(ar[index(str, c) - str]);
+				stuffReadbuff(ar[strchr(str, c) - str]);
 		}
 		break;
 
@@ -980,21 +1005,41 @@ docsearch:
 		/* FALLTHROUGH */
 
 	  case '`':
-		pos = getmark(nchar);
+		pos = getmark(nchar, (bool_t)(operator == NOP));
+		if (pos == (FPOS *)-1)	/* jumped to other file */
+		{
+			if (flag)
+				beginline((bool_t)TRUE);
+			break;
+		}
 
+		if (pos != NULL)
+			setpcmark();
+
+cursormark:
 		if (pos == NULL)
 			CLEAROPBEEP;
 		else
 		{
-			setpcmark();
 			Curpos = *pos;
 			if (flag)
-				beginline(TRUE);
+				beginline((bool_t)TRUE);
 		}
 		mtype = flag ? MLINE : MCHAR;
 		mincl = TRUE;		/* ignored if not MCHAR */
 		set_want_col = TRUE;
 		break;
+
+	case CTRL('O'):			/* goto older pcmark */
+		Prenum1 = -Prenum1;
+		/* FALLTHROUGH */
+
+	case CTRL('I'):			/* goto newer pcmark */
+		CHECKCLEAROP;
+		pos = movemark((int)Prenum1);
+		if (pos == (FPOS *)-1)	/* jump to other file */
+			break;
+		goto cursormark;
 
 /*
  * 10. Buffer setting
@@ -1002,9 +1047,12 @@ docsearch:
 	  case '"':
 		CHECKCLEAROP;
 		if (isalnum(nchar))
-				yankbuffer = nchar;
+		{
+			yankbuffer = nchar;
+			opnum = Prenum;		/* remember count before '"' */
+		}
 		else
-				CLEAROPBEEP;
+			CLEAROPBEEP;
 		break;
 
 	  default:					/* not a known command */
@@ -1017,7 +1065,7 @@ docsearch:
  * if we didn't start or finish an operator, reset yankbuffer, unless we
  * need it later.
  */
-	if (!finish_op && !operator && index("\"DCYSsXx", c) == NULL)
+	if (!finish_op && !operator && strchr("\"DCYSsXx", c) == NULL)
 		yankbuffer = 0;
 
 	/*
@@ -1064,7 +1112,7 @@ docsearch:
 			break;
 
 		  case YANK:
-			doyank(FALSE);
+			doyank((bool_t)FALSE);
 			break;
 
 		  case CHANGE:
@@ -1078,7 +1126,7 @@ docsearch:
 			{
 				if (mincl == FALSE && endop.col == 0 && endop.lnum > startop.lnum)
 					--endop.lnum;
-				sprintf(IObuff, ":%d,%d!", startop.lnum, endop.lnum);
+				sprintf(IObuff, ":%ld,%ld!", (long)startop.lnum, (long)endop.lnum);
 				stuffReadbuff(IObuff);
 				if (operator == INDENT)
 						stuffReadbuff("indent\n");
@@ -1099,15 +1147,13 @@ docsearch:
 	premsg(-1, NUL);
 }
 
-		static void
+	static void
 prep_redo(num, cmd, c, nchar)
-		int 	num;
-		int		cmd;
-		int		c;
-		int		nchar;
+	long 	num;
+	int		cmd;
+	int		c;
+	int		nchar;
 {
-		char	i;
-
 		if (substituting)	/* special case: 'S' command is done like 'c$' */
 		{
 			substituting = FALSE;
@@ -1157,22 +1203,25 @@ premsg(c1, c2)
 {
 		char c;
 
-		if (!KeyTyped)
+		if (!P(P_SC) || !KeyTyped)
 				return;
 
-		outstr(T_CI);			/* disable cursor */
+#ifdef AUX
+		if (!Aux_Device)
+#endif
+			outstr(T_CI);			/* disable cursor */
 		windgoto(Rows - 1, Columns - 12);
 		if (c1 == -1)
 				outstr("           ");
 		else
 		{
+			if (opnum)
+				outnum(opnum);
 			if (yankbuffer)
 			{
 				outchar('"');
 				outchar(yankbuffer);
 			}
-			if (opnum)
-				outnum(opnum);
 			if (operator == 'z')
 				outchar('z');
 			else if (operator)
@@ -1191,5 +1240,8 @@ premsg(c1, c2)
 			}
 		}
 		windgoto(Cursrow, Curscol);
-		outstr(T_CV);			/* enable cursor */
+#ifdef AUX
+		if (!Aux_Device)
+#endif
+			outstr(T_CV);			/* enable cursor */
 }
