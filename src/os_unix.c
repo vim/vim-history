@@ -4108,7 +4108,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 # ifdef USE_XSMP
-	if (xsmp_idx >= 0)
+	if (xsmp_idx >= 0 && (fds[gpm_idx].revents & (POLLIN | POLLHUP)))
 	{
 	    if (fds[xsmp_idx].revents & POLLIN)
 		xsmp_handle_requests();
@@ -4257,11 +4257,11 @@ RealWaitForChar(fd, msec, check_for_gpm)
 #endif /* HAVE_SELECT */
 
 #ifdef MAY_LOOP
-	if (finished)
+	if (finished || msec == 0)
 	    break;
 
 	/* We're going to loop around again, find out for how long */
-	if (msec >= 0)
+	if (msec > 0)
 	{
 # ifdef USE_START_TV
 	    struct timeval  tv;
