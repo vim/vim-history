@@ -112,7 +112,7 @@ do_debug(cmd)
 			++p;
 			++tail;
 		    }
-		    if (isalpha(*p))
+		    if (ASCII_ISALPHA(*p))
 			last_cmd = 0;
 		}
 	    }

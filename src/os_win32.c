@@ -201,6 +201,7 @@ static int suppress_winsize = 1;	/* don't fiddle with console */
 
 DWORD g_PlatformId;
 
+#ifdef HAVE_ACL
 /*
  * These are needed to dynamically load the ADVAPI DLL, which is not
  * implemented under Windows 95 (and causes VIM to crash)
@@ -213,6 +214,7 @@ typedef DWORD (WINAPI *PGNSECINFO) (LPSTR, enum SE_OBJECT_TYPE,
 static HANDLE advapi_lib = NULL;	/* Handle for ADVAPI library */
 static PSNSECINFO pSetNamedSecurityInfo;
 static PGNSECINFO pGetNamedSecurityInfo;
+#endif
 
 /*
  * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
@@ -232,6 +234,7 @@ PlatformId(void)
 
 	g_PlatformId = ovi.dwPlatformId;
 
+#ifdef HAVE_ACL
 	/*
 	 * Load the ADVAPI runtime if we are on anything
 	 * other than Windows 95
@@ -262,6 +265,7 @@ PlatformId(void)
 		}
 	    }
 	}
+#endif
 	done = TRUE;
     }
 }
@@ -384,7 +388,7 @@ const static struct
 
 #pragma optimize("", off)
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
+#if defined(__GNUC__) && !defined(__MINGW32__)  && !defined(__CYGWIN__)
 #define AChar AsciiChar
 #else
 #define AChar uChar.AsciiChar
@@ -648,6 +652,9 @@ decode_mouse_event(
     static int s_xOldMouse = -1;
     static int s_yOldMouse = -1;
     static linenr_t s_old_topline = 0;
+#ifdef FEAT_DIFF
+    static int s_old_topfill = 0;
+#endif
     static int s_cClicks = 1;
     static BOOL s_fReleased = TRUE;
     static s_dwLastClickTime = 0;
@@ -801,6 +808,9 @@ decode_mouse_event(
 		    || s_yOldMouse != g_yMouse
 		    || s_nOldButton != nButton
 		    || s_old_topline != curwin->w_topline
+#ifdef FEAT_DIFF
+		    || s_old_topfill != curwin->w_topfill
+#endif
 		    || (int)(dwCurrentTime - s_dwLastClickTime) > p_mouset)
 	    {
 		s_cClicks = 1;
@@ -851,6 +861,9 @@ decode_mouse_event(
     s_xOldMouse = g_xMouse;
     s_yOldMouse = g_yMouse;
     s_old_topline = curwin->w_topline;
+#ifdef FEAT_DIFF
+    s_old_topfill = curwin->w_topfill;
+#endif
     s_nOldMouseClick = g_nMouseClick;
 
     return TRUE;

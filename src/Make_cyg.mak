@@ -31,6 +31,7 @@ RCFLAGS = -D_MAX_PATH=256 -DWIN32 -DPC -O coff $(DEFINES) $(INCLUDES)
 OBJ = \
 	obj/buffer.o \
 	obj/charset.o \
+	obj/diff.o \
 	obj/digraph.o \
 	obj/edit.o \
 	obj/eval.o \
@@ -79,14 +80,14 @@ xxd/xxd.exe: xxd/xxd.c
 	$(MAKE) -f Make_cyg.mak
 	cd ..
 
-vimrun.exe: vimrun.c 
-	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 
+vimrun.exe: vimrun.c
+	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
-install.exe: dosinst.c 
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 
+install.exe: dosinst.c
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
-uninstall.exe: uninstal.c 
-	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 
+uninstall.exe: uninstal.c
+	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
 obj:
 	mkdir obj
@@ -108,6 +109,9 @@ obj/buffer.o:	buffer.c $(INCL)
 
 obj/charset.o:	charset.c $(INCL)
 	$(CC) -c $(CFLAGS) charset.c -o obj/charset.o
+
+obj/diff.o:	diff.c $(INCL)
+	$(CC) -c $(CFLAGS) diff.c -o obj/diff.o
 
 obj/digraph.o:	digraph.c $(INCL)
 	$(CC) -c $(CFLAGS) digraph.c -o obj/digraph.o

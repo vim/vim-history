@@ -39,9 +39,9 @@ menutrans &Edit				&Editieren
 menutrans &Undo<Tab>u			Z&urück<Tab>u
 menutrans &Redo<Tab>^R			Vo&r<Tab>^R
 menutrans Rep&eat<Tab>\.		&Wiederholen<Tab>\.
-menutrans Cu&t<Tab>"*x			&Ausschneiden<Tab>"*x
-menutrans &Copy<Tab>"*y			&Kopieren<Tab>"*y
-menutrans &Paste<Tab>"*p		Ein&fügen<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Ausschneiden<Tab>"+x
+menutrans &Copy<Tab>"+y			&Kopieren<Tab>"+y
+menutrans &Paste<Tab>"+p		Ein&fügen<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Da&vor\ Einfügen<Tab>[p
 menutrans Put\ &After<Tab>]p		Da&nach\ Einfügen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markieren<Tab>ggVG

@@ -71,7 +71,7 @@ do_ascii(eap)
     {
 	if (c == NL)	    /* NUL is stored as NL */
 	    c = NUL;
-	if (vim_isprintc(c) && (c < ' '
+	if (vim_isprintc_strict(c) && (c < ' '
 #ifndef EBCDIC
 		    || c > '~'
 #endif
@@ -1107,7 +1107,6 @@ make_filter_cmd(cmd, itmp, otmp)
 {
     char_u	*buf;
     long_u	len;
-    char_u	*p;
 
     len = STRLEN(cmd) + 3;				/* "()" + NUL */
     if (itmp != NULL)
@@ -1136,6 +1135,8 @@ make_filter_cmd(cmd, itmp, otmp)
     STRCPY(buf, cmd);
     if (itmp != NULL)
     {
+	char_u	*p;
+
 	/*
 	 * If there is a pipe, we have to put the '<' in front of it.
 	 * Don't do this when 'shellquote' is not empty, otherwise the
@@ -1147,14 +1148,14 @@ make_filter_cmd(cmd, itmp, otmp)
 	    if (p != NULL)
 		*p = NUL;
 	}
-#ifdef RISCOS
+# ifdef RISCOS
 	STRCAT(buf, " { < ");	/* Use RISC OS notation for input. */
 	STRCAT(buf, itmp);
 	STRCAT(buf, " } ");
-#else
+# else
 	STRCAT(buf, " <");	/* " < " causes problems on Amiga */
 	STRCAT(buf, itmp);
-#endif
+# endif
 	if (*p_shq == NUL)
 	{
 	    p = vim_strchr(cmd, '|');
@@ -1167,24 +1168,42 @@ make_filter_cmd(cmd, itmp, otmp)
     }
 #endif
     if (otmp != NULL)
-    {
-	if ((p = vim_strchr(p_srr, '%')) != NULL && p[1] == 's')
-	{
-	    p = buf + STRLEN(buf);
-	    *p++ = ' '; /* not really needed? Not with sh, ksh or bash */
-	    sprintf((char *)p, (char *)p_srr, (char *)otmp);
-	}
-	else
-	    sprintf((char *)buf + STRLEN(buf),
-#ifndef RISCOS
-		    " %s%s",	/* " %s %s" causes problems on Amiga */
-#else
-		    " %s %s",	/* But is needed for RISC OS */
-#endif
-		    (char *)p_srr, (char *)otmp);
-    }
+	append_redir(buf, otmp);
 
     return buf;
+}
+
+/*
+ * Append output redirection for file "fname" to the end of string buffer "buf"
+ * Uses the 'shellredir' option.
+ * The caller should make sure that there is enough room:
+ *	STRLEN(p_srr) + STRLEN(fname) + 3
+ */
+    void
+append_redir(buf, fname)
+    char_u	*buf;
+    char_u	*fname;
+{
+    char_u	*p;
+
+    buf += STRLEN(buf);
+    /* find "%s", skipping "%%" */
+    for (p = p_srr; (p = vim_strchr(p, '%')) != NULL; p = p + 1)
+	if (p[1] == 's')
+	    break;
+    if (p != NULL)
+    {
+	*buf = ' '; /* not really needed? Not with sh, ksh or bash */
+	sprintf((char *)buf + 1, (char *)p_srr, (char *)fname);
+    }
+    else
+	sprintf((char *)buf,
+#ifndef RISCOS
+		" %s%s",	/* " %s %s" causes problems on Amiga */
+#else
+		" %s %s",	/* But is needed for RISC OS */
+#endif
+		(char *)p_srr, (char *)fname);
 }
 
 #ifdef FEAT_VIMINFO
@@ -2659,6 +2678,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_FOLDING
 	curwin->w_p_fen = FALSE;	/* No folding in the help window */
 #endif
+#ifdef FEAT_DIFF
+	curwin->w_p_diff = FALSE;	/* No 'diff' */
+#endif
 
 #ifdef FEAT_AUTOCMD
 	buf = curbuf;
@@ -2672,6 +2694,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #endif
 	set_buflisted(TRUE);
     }
+
 #ifdef FEAT_AUTOCMD
     /* If autocommands change buffers under our fingers, forget about
      * editing the file. */
@@ -2820,6 +2843,14 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	maketitle();
 #endif
     }
+
+#ifdef FEAT_DIFF
+    /* Tell the diff stuff that this buffer is new and/or needs updating.
+     * Also needed when re-editing the same buffer, because unloading will
+     * have removed it as a diff buffer. */
+    diff_new_buffer();
+    diff_invalidate();
+#endif
 
     if (command == NULL)
     {
@@ -3531,6 +3562,11 @@ do_sub(eap)
 		     */
 		    while (do_ask)
 		    {
+#ifdef FEAT_FOLDING
+			int save_p_fen = curwin->w_p_fen;
+
+			curwin->w_p_fen = FALSE;
+#endif
 			/* Invert the matched string.
 			 * Remove the inversion afterwards. */
 			temp = RedrawingDisabled;
@@ -3546,6 +3582,9 @@ do_sub(eap)
 			highlight_match = FALSE;
 			redraw_later(NOT_VALID);
 
+#ifdef FEAT_FOLDING
+			curwin->w_p_fen = save_p_fen;
+#endif
 			if (msg_row == Rows - 1)
 			    msg_didout = FALSE;		/* avoid a scroll-up */
 			msg_starthere();
@@ -4351,7 +4390,7 @@ help_heuristic(matched_string, offset, wrong_case)
 
     num_letters = 0;
     for (p = matched_string; *p; p++)
-	if (isalnum(*p))
+	if (ASCII_ISALNUM(*p))
 	    num_letters++;
 
     /*
@@ -4363,8 +4402,8 @@ help_heuristic(matched_string, offset, wrong_case)
      * If the match is more than 2 chars from the start, multiply by 200 to
      * put it after matches at the start.
      */
-    if (isalnum(matched_string[offset]) && offset > 0 &&
-					  isalnum(matched_string[offset - 1]))
+    if (ASCII_ISALNUM(matched_string[offset]) && offset > 0
+				 && ASCII_ISALNUM(matched_string[offset - 1]))
 	offset += 10000;
     else if (offset > 2)
 	offset *= 200;
@@ -4488,7 +4527,7 @@ find_help_tags(arg, num_matches, matches)
 	     * ":help i_^_CTRL-D" work.
 	     * Insert '-' before and after "CTRL-X" when applicable.
 	     */
-	    if (*s < ' ' || (*s == '^' && s[1] && (isalpha(s[1])
+	    if (*s < ' ' || (*s == '^' && s[1] && (ASCII_ISALPHA(s[1])
 			   || vim_strchr((char_u *)"?@[\\]^", s[1]) != NULL)))
 	    {
 		if (d > IObuff && d[-1] != '_')

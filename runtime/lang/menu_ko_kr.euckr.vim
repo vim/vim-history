@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:		2001 Feb 11
+" Last Change:		2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Edit				편집(&E)
 menutrans &Undo<Tab>u			취소(&U)<Tab>u
 menutrans &Redo<Tab>^R			재실행(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		반복(&e)<Tab>\.
-menutrans Cu&t<Tab>"*x			자르기(&t)<Tab>"*x
-menutrans &Copy<Tab>"*y			복사(&C)<Tab>"*y
-menutrans &Paste<Tab>"*p		붙이기(&P)<Tab>"*p
+menutrans Cu&t<Tab>"+x			자르기(&t)<Tab>"+x
+menutrans &Copy<Tab>"+y			복사(&C)<Tab>"+y
+menutrans &Paste<Tab>"+p		붙이기(&P)<Tab>"+p
 menutrans Put\ &Before<Tab>[p		앞에\ 붙이기(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		뒤에\ 붙이기(&A)<Tab>]p
 menutrans &Select\ all<Tab>ggVG		모두\ 선택(&S)<Tab>ggVG

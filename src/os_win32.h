@@ -31,11 +31,12 @@
 #define HAVE_QSORT
 
 #if !defined(__MINGW32__) \
+	&& !defined(__CYGWIN__) \
 	&& (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550) \
 	&& (!defined(_MSC_VER) || _MSC_VER > 1010)
 /*
  * Access Control List (actually security info).
- * Mingw doesn't have the acl stuff.
+ * Mingw and Cygwin don't have the acl stuff.
  * Borland only in version 5.5 and later.
  */
 # define HAVE_ACL

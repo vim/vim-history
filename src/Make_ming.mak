@@ -44,7 +44,7 @@ CROSS=0
 #NLS_DYNAMIC=nls_dynamic
 #NLS_SAFE_DYNAMIC=nls_safe_dynamic (this don't work)
 #NLS_STATIC=nls_static
- 
+
 # uncomment 'PERL' if you want a perl-enabled version
 #PERL=perl
 DYNAMIC_PERL=perl56.dll
@@ -56,7 +56,7 @@ PERLLIBS=$(PERLLIB)/Core
 
 # Python support -- works with the ActiveState python 2.0 release (and others
 # too, probably)
-# 
+#
 # uncomment 'PYTHON' to make python-enabled version
 # Put the path to the python distro here.  If cross compiling from Linux, you
 # will also need to convert the header files to unix instead of dos format:
@@ -116,14 +116,14 @@ CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
 ifdef DYNAMIC_PERL
-CFLAGS += -DDYNAMIC_PERL 
+CFLAGS += -DDYNAMIC_PERL
 endif
 endif
 
 ifdef PYTHON
 CFLAGS += -DFEAT_PYTHON $(PYTHONINC)
 ifdef DYNAMIC_PYTHON
-CFLAGS += -DDYNAMIC_PYTHON 
+CFLAGS += -DDYNAMIC_PYTHON
 endif
 endif
 
@@ -149,7 +149,7 @@ DEFINES += $(DEF_MIN)
 endif
 
 GUISRC =  vimres.c gui.c gui_w32.c
-SRC    =  os_w32exe.c buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c \
+SRC    =  os_w32exe.c buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c \
 	  ex_cmds2.c ex_docmd.c ex_getln.c fileio.c fold.c getchar.c main.c \
 	  mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c \
 	  mbyte.c normal.c ops.c option.c os_win32.c os_mswin.c \
@@ -202,12 +202,12 @@ all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
 
-install.exe: dosinst.c 
+install.exe: dosinst.c
 	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB)
 
-uninstall.exe: uninstal.c 
+uninstall.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c $(LIB)
- 
+
 vim.exe: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
 

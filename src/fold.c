@@ -349,6 +349,17 @@ foldmethodIsSyntax(wp)
     return (wp->w_p_fdm[0] == 's');
 }
 
+/* foldmethodIsDiff() {{{2 */
+/*
+ * Return TRUE if 'foldmethod' is "diff"
+ */
+    int
+foldmethodIsDiff(wp)
+    win_t	*wp;
+{
+    return (wp->w_p_fdm[0] == 'd');
+}
+
 /* closeFold() {{{2 */
 /*
  * Close fold for current window at line "lnum".
@@ -404,14 +415,12 @@ opFoldRange(first, last, opening, recurse, had_visual)
 	    (void)hasFolding(lnum, NULL, &lnum_next);
     }
     if (done == DONE_NOTHING)
-    {
 	EMSG(_(e_nofold));
 #ifdef FEAT_VISUAL
-	/* Force a redraw to remove the Visual highlighting. */
-	if (had_visual)
-	    redraw_curbuf_later(INVERTED);
+    /* Force a redraw to remove the Visual highlighting. */
+    if (had_visual)
+	redraw_curbuf_later(INVERTED);
 #endif
-    }
 }
 
 /* openFold() {{{2 */
@@ -783,6 +792,9 @@ foldUpdate(wp, top, bot)
     if (foldmethodIsIndent(wp)
 	    || foldmethodIsExpr(wp)
 	    || foldmethodIsMarker(wp)
+#ifdef FEAT_DIFF
+	    || foldmethodIsDiff(wp)
+#endif
 	    || foldmethodIsSyntax(wp))
 	foldUpdateIEMS(wp, top, bot);
 }
@@ -1240,7 +1252,7 @@ setManualFold(lnum, opening, recurse, donep)
 		fp2[j].fd_flags = FD_LEVEL;
 	}
 
-	/* Simple case: Close recursively means closing the topmost fold. */
+	/* Simple case: Close recursively means closing the fold. */
 	if (!opening && recurse)
 	{
 	    if (fp->fd_flags != FD_CLOSED)
@@ -1248,10 +1260,8 @@ setManualFold(lnum, opening, recurse, donep)
 		done |= DONE_ACTION;
 		fp->fd_flags = FD_CLOSED;
 	    }
-	    break;
 	}
-
-	if (fp->fd_flags == FD_CLOSED)
+	else if (fp->fd_flags == FD_CLOSED)
 	{
 	    /* When opening, open topmost closed fold. */
 	    if (opening)
@@ -1801,7 +1811,7 @@ foldtext_cleanup(str)
 	cmtp_len = STRLEN(cmtp + 2);
     parseMarker(curwin);
 
-    for (s = str; *s != NUL; ++s)
+    for (s = str; *s != NUL; )
     {
 	len = 0;
 	if (STRNCMP(s, curwin->w_p_fmr, foldstartmarkerlen) == 0)
@@ -1828,7 +1838,15 @@ foldtext_cleanup(str)
 	    while (vim_iswhite(s[len]))
 		++len;
 	    mch_memmove(s, s + len, STRLEN(s + len) + 1);
-	    --s;
+	}
+	else
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		s += (*mb_ptr2len_check)(s);
+	    else
+#endif
+		++s;
 	}
     }
 }
@@ -1861,6 +1879,9 @@ static void foldSplit __ARGS((garray_t *gap, int i, linenr_t top, linenr_t bot))
 static void foldRemove __ARGS((garray_t *gap, linenr_t top, linenr_t bot));
 static void foldMerge __ARGS((fold_t *fp1, garray_t *gap, fold_t *fp2));
 static void foldlevelIndent __ARGS((fline_t *flp));
+#ifdef FEAT_DIFF
+static void foldlevelDiff __ARGS((fline_t *flp));
+#endif
 static void foldlevelExpr __ARGS((fline_t *flp));
 static void foldlevelMarker __ARGS((fline_t *flp));
 static void foldlevelSyntax __ARGS((fline_t *flp));
@@ -1957,6 +1978,10 @@ foldUpdateIEMS(wp, top, bot)
 	}
 	else if (foldmethodIsSyntax(wp))
 	    getlevel = foldlevelSyntax;
+#ifdef FEAT_DIFF
+	else if (foldmethodIsDiff(wp))
+	    getlevel = foldlevelDiff;
+#endif
 	else
 	    getlevel = foldlevelIndent;
 
@@ -2098,10 +2123,15 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 
     /*
      * If using the marker method, the start line is not the start of a fold
-     * and the level is non-zero, we must use the previous fold.
+     * and the level is non-zero, we must use the previous fold.  But ignore a
+     * fold that starts at or below startlnum, it must be deleted.
      */
     if (getlevel == foldlevelMarker && flp->start == 0 && flp->lvl > 0)
+    {
 	foldFind(gap, startlnum - 1, &fp);
+	if (fp->fd_top >= startlnum)
+	    fp = NULL;
+    }
 
     /*
      * Loop over all lines in this fold, or until "bot" is hit.
@@ -2681,6 +2711,23 @@ foldlevelIndent(flp)
     if (flp->lvl > flp->wp->w_p_fdn)
 	flp->lvl = flp->wp->w_p_fdn;
 }
+
+/* foldlevelDiff() {{{2 */
+#ifdef FEAT_DIFF
+/*
+ * Low level function to get the foldlevel for the "diff" method.
+ * Doesn't use any caching.
+ */
+    static void
+foldlevelDiff(flp)
+    fline_t	*flp;
+{
+    if (diff_infold(flp->wp, flp->lnum + flp->off))
+	flp->lvl = 1;
+    else
+	flp->lvl = 0;
+}
+#endif
 
 /* foldlevelExpr() {{{2 */
 /*

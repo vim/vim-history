@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0z.  Last change: 2001 Mar 22
+*eval.txt*      For Vim version 6.0aa.  Last change: 2001 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -543,19 +543,32 @@ v:charconvert_to
 		The name of the character encoding of a file after conversion.
 		Only valid while evaluating the 'charconvert' option.
 
-			*v:charconvert_in* *charconvert_in-variable*
-v:charconvert_in
-		The name of the file to be converted.  Only valid while
-		evaluating the 'charconvert' option.
+					*v:fname_in* *fname_in-variable*
+v:fname_in	The name of the input file.  Only valid while evaluating:
+			option		used for ~
+			'charconvert'	file to be converted
+			'diffexpr'	original file
+			'patchexpr'	original file
 
-			*v:charconvert_out* *charconvert_out-variable*
-v:charconvert_out
-		The name of the resulting converted file.  Only valid while
-		evaluating the 'charconvert' option.  When doing conversion
-		for a write command (e.g., ":w file") it will be equal to
-		v:charconvert_in.  When doing conversion for a read command
-		(e.g., ":e file") it will be a temporary file and different
-		from v:charconvert_in.
+					*v:fname_out* *fname_out-variable*
+v:fname_out	The name of the output file.  Only valid while
+		evaluating:
+			option		used for ~
+			'charconvert'	resulting converted file (*)
+			'diffexpr'	output of diff
+			'patchexpr'	resulting patched file
+		(*) When doing conversion for a write command (e.g., ":w
+		file") it will be equal to v:fname_in.  When doing conversion
+		for a read command (e.g., ":e file") it will be a temporary
+		file and different from v:fname_in.
+
+					*v:fname_new* *fname_new-variable*
+v:fname_new	The name of the new version of the file.  Only valid while
+		evaluating 'diffexpr'.
+
+					*v:fname_diff* *fname_diff-variable*
+v:fname_diff	The name of the diff (patch) file.  Only valid while
+		evaluating 'patchexpr'.
 
 					*v:cmdarg* *cmdarg-variable*
 v:cmdarg	The extra arguments given to a file read/write command.
@@ -2157,6 +2170,7 @@ compatible		Compiled to be very Vi compatible.
 debug			Compiled with "DEBUG" defined.
 dialog_con		Compiled with console dialog support.
 dialog_gui		Compiled with GUI dialog support.
+diff			Compiled with |vimdiff| and 'diff' support.
 digraphs		Compiled with support for digraphs.
 dos32			32 bits DOS (DJGPP) version of Vim.
 dos16			16 bits DOS version of Vim.
@@ -2181,6 +2195,7 @@ gui_beos		Compiled with BeOs GUI.
 gui_gtk			Compiled with GTK+ GUI.
 gui_mac			Compiled with Macintosh GUI.
 gui_motif		Compiled with Motif GUI.
+gui_photon		Compiled with Photon GUI.
 gui_win32		Compiled with MS Windows Win32 GUI.
 gui_win32s		idem, and Win32s system being used (Windows 3.1)
 gui_running		Vim is running in the GUI, or it will start soon.
@@ -2207,6 +2222,7 @@ mouseshape		Compiled with support for 'mouseshape'.
 mouse_dec		Compiled with support for Dec terminal mouse.
 mouse_gpm		Compiled with support for gpm (Linux console mouse)
 mouse_netterm		Compiled with support for netterm mouse.
+mouse_pterm		Compiled with support for qnx pterm mouse.
 mouse_xterm		Compiled with support for xterm mouse.
 multi_byte		Compiled with support for editing Korean et al.
 multi_byte_ime		Compiled with support for IME input method.
@@ -2217,6 +2233,7 @@ osfiletype		Compiled with support for osfiletypes |+osfiletype|
 path_extra		Compiled with up/downwards search in 'path' and 'tags'
 perl			Compiled with Perl interface.
 python			Compiled with Python interface.
+qnx			QNX version of vim.
 quickfix		Compiled with |quickfix| support.
 rightleft		Compiled with 'rightleft' support.
 scrollbind		Compiled with 'scrollbind' support.

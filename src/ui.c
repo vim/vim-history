@@ -1072,14 +1072,17 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
 		    if (ScreenLinesUC[off + i] == 0)
 			*bufp++ = ScreenLines[off + i];
 		    else
-			bufp += utf_char2bytes(ScreenLinesUC[off + i], bufp);
-		    if (ScreenLinesC1[off + i] != 0)
 		    {
-			/* Add one or two composing characters. */
-			bufp += utf_char2bytes(ScreenLinesC1[off + i], bufp);
-			if (ScreenLinesC2[off + i] != 0)
-			    bufp += utf_char2bytes(ScreenLinesC2[off + i],
+			bufp += utf_char2bytes(ScreenLinesUC[off + i], bufp);
+			if (ScreenLinesC1[off + i] != 0)
+			{
+			    /* Add one or two composing characters. */
+			    bufp += utf_char2bytes(ScreenLinesC1[off + i],
 									bufp);
+			    if (ScreenLinesC2[off + i] != 0)
+				bufp += utf_char2bytes(ScreenLinesC2[off + i],
+					bufp);
+			}
 		    }
 		    /* Skip right halve of double-wide character. */
 		    if (ScreenLines[off + i + 1] == 0)
@@ -2049,7 +2052,7 @@ retnomove:
 	    on_sep_line = 0;
 
 	/* The rightmost character of the status line might be a vertical
-	 * separator character if the is no connecting window to the right. */
+	 * separator character if there is no connecting window to the right. */
 	if (on_status_line && on_sep_line)
 	{
 	    if (stl_connected(wp))
@@ -2102,7 +2105,7 @@ retnomove:
 # ifdef CHECK_DOUBLE_CLICK
 	/* set topline, to be able to check for double click ourselves */
 	if (curwin != old_curwin)
-	    set_mouse_topline(curwin->w_topline);
+	    set_mouse_topline(curwin);
 # endif
 #endif
 	if (on_status_line)			/* In (or below) status line */
@@ -2128,6 +2131,9 @@ retnomove:
 #ifdef FEAT_GUI
 	/* remember topline, needed for double click */
 	gui_prev_topline = curwin->w_topline;
+# ifdef FEAT_DIFF
+	gui_prev_topfill = curwin->w_topfill;
+# endif
 #endif
     }
     else if (on_status_line)
@@ -2171,15 +2177,31 @@ retnomove:
 	if (row < 0)
 	{
 	    count = 0;
-	    for (first = TRUE; curwin->w_topline > 1; --curwin->w_topline)
+	    for (first = TRUE; curwin->w_topline > 1; )
 	    {
-		count += plines(curwin->w_topline - 1);
+#ifdef FEAT_DIFF
+		if (curwin->w_topfill < diff_check(curwin, curwin->w_topline))
+		    ++count;
+		else
+#endif
+		    count += plines(curwin->w_topline - 1);
 		if (!first && count > -row)
 		    break;
 		first = FALSE;
 #ifdef FEAT_FOLDING
 		hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
 #endif
+#ifdef FEAT_DIFF
+		if (curwin->w_topfill < diff_check(curwin, curwin->w_topline))
+		    ++curwin->w_topfill;
+		else
+#endif
+		{
+		    --curwin->w_topline;
+#ifdef FEAT_DIFF
+		    curwin->w_topfill = 0;
+#endif
+		}
 	    }
 	    curwin->w_valid &=
 		      ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
@@ -2189,10 +2211,14 @@ retnomove:
 	else if (row >= curwin->w_height)
 	{
 	    count = 0;
-	    for (first = TRUE; curwin->w_topline < curbuf->b_ml.ml_line_count;
-							++curwin->w_topline)
+	    for (first = TRUE; curwin->w_topline < curbuf->b_ml.ml_line_count; )
 	    {
-		count += plines(curwin->w_topline);
+#ifdef FEAT_DIFF
+		if (curwin->w_topfill > 0)
+		    ++count;
+		else
+#endif
+		    count += plines(curwin->w_topline);
 		if (!first && count > row - curwin->w_height + 1)
 		    break;
 		first = FALSE;
@@ -2201,6 +2227,18 @@ retnomove:
 			&& curwin->w_topline == curbuf->b_ml.ml_line_count)
 		    break;
 #endif
+#ifdef FEAT_DIFF
+		if (curwin->w_topfill > 0)
+		    --curwin->w_topfill;
+		else
+#endif
+		{
+		    ++curwin->w_topline;
+#ifdef FEAT_DIFF
+		    curwin->w_topfill =
+				   diff_check_fill(curwin, curwin->w_topline);
+#endif
+		}
 	    }
 	    redraw_later(VALID);
 	    curwin->w_valid &=
@@ -2304,59 +2342,48 @@ mouse_comp_pos(rowp, colp, lnump)
 #endif
 
     lnum = curwin->w_topline;
-    if (curwin->w_p_wrap)	/* lines wrap */
+
+    while (row > 0)
     {
-	while (row > 0)
+#ifdef FEAT_DIFF
+	/* Don't include filler lines in "count" */
+	if (curwin->w_p_diff && !hasFolding(lnum, NULL, NULL))
 	{
-	    count = plines(lnum);
-	    if (count > row)
-	    {
-		/* Position is in this buffer line.  Compute the column
-		 * without wrapping. */
-		off = curwin_col_off() - curwin_col_off2();
-		if (col < off)
-		    col = off;
-		col += row * (W_WIDTH(curwin) - off);
-		/* add skip column (for long wrapping line) */
-		col += curwin->w_skipcol;
-		break;
-	    }
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(lnum, NULL, &lnum);
-#endif
-	    if (lnum == curbuf->b_ml.ml_line_count)
-	    {
-		retval = TRUE;
-		break;		/* past end of file */
-	    }
-	    row -= count;
-	    ++lnum;
-	}
-    }
-    else			/* lines don't wrap */
-    {
-#ifdef FEAT_FOLDING
-	if (hasAnyFolding(curwin))
-	{
-	    while (row > 0)
-	    {
-		--row;
-		(void)hasFolding(lnum, NULL, &lnum);
-		++lnum;
-		if (lnum > curbuf->b_ml.ml_line_count)
-		    break;
-	    }
+	    if (lnum == curwin->w_topline)
+		row -= curwin->w_topfill;
+	    else
+		row -= diff_check_fill(curwin, lnum);
+	    count = plines_nofill(lnum);
 	}
 	else
 #endif
-	    lnum += row;
-	if (lnum > curbuf->b_ml.ml_line_count)
+	    count = plines(lnum);
+	if (count > row)
 	{
-	    lnum = curbuf->b_ml.ml_line_count;
-	    retval = TRUE;
+	    /* Position is in this buffer line.  Compute the column
+	     * without wrapping. */
+	    off = curwin_col_off() - curwin_col_off2();
+	    if (col < off)
+		col = off;
+	    col += row * (W_WIDTH(curwin) - off);
+	    /* add skip column (for long wrapping line) */
+	    col += curwin->w_skipcol;
+	    break;
 	}
-	col += curwin->w_leftcol;
+#ifdef FEAT_FOLDING
+	(void)hasFolding(lnum, NULL, &lnum);
+#endif
+	if (lnum == curbuf->b_ml.ml_line_count)
+	{
+	    retval = TRUE;
+	    break;		/* past end of file */
+	}
+	row -= count;
+	++lnum;
     }
+
+    if (!curwin->w_p_wrap)
+	col += curwin->w_leftcol;
 
     /* skip line number and fold column in front of the line */
     col -= curwin_col_off();
@@ -2413,7 +2440,8 @@ mouse_find_win(rowp, colp)
 #endif
 
 #if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) || defined (FEAT_GUI_MAC) \
-	|| defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MSWIN) || defined(PROTO)
+	|| defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MSWIN) \
+	|| defined(FEAT_GUI_PHOTON) || defined(PROTO)
 /*
  * Translate window coordinates to buffer position without any side effects
  */

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SDL
 " Maintainer:	Harald Böhme
-" Last Change:	Mon Mar 16 12:13:33 MET 1998
+" Last Change:	Tue Mar 27 15:47:45 CEST 2001
 " This syntax file is a adaption of the C syntax to SDL syntax
 
 " Quit when a syntax file was already loaded
@@ -9,25 +9,78 @@ if exists("b:current_syntax")
   finish
 endif
 
-syntax case ignore
+if !exists("sdl_2000")
+  syntax case ignore
+endif
 
 " A bunch of useful SDL keywords
 syn keyword sdlStatement	task else nextstate
 syn keyword sdlStatement	in out with from interface
-syn keyword sdlStatement	to via env and use fpar
+syn keyword sdlStatement	to via env and use
 syn keyword sdlStatement	process procedure block system service type
-syn keyword sdlStatement	endprocess endprocedure endblock endsystem endservice
-syn keyword sdlStatement	package endpackage
-syn keyword sdlStatement	channel endchannel signalroute connect
-syn keyword sdlStatement	synonym dcl signal gate timer signallist
+syn keyword sdlStatement	endprocess endprocedure endblock endsystem
+syn keyword sdlStatement	package endpackage connection endconnection
+syn keyword sdlStatement	channel endchannel connect
+syn keyword sdlStatement	synonym dcl signal gate timer signallist signalset
 syn keyword sdlStatement	create output set reset call
-syn keyword sdlStatement	operators literals all
+syn keyword sdlStatement	operators literals
+syn keyword sdlStatement	active alternative any as atleast constants
+syn keyword sdlStatement	default endalternative endmacro endoperator
+syn keyword sdlStatement	endselect endsubstructure external
+syn keyword sdlStatement	if then fi for import macro macrodefinition
+syn keyword sdlStatement	macroid mod nameclass nodelay not operator or
+syn keyword sdlStatement	parent provided referenced rem
+syn keyword sdlStatement	select spelling substructure xor
 syn keyword sdlNewState		state endstate
-syn keyword sdlInput		input start stop return none
+syn keyword sdlInput		input start stop return none save priority
 syn keyword sdlConditional	decision enddecision join
 syn keyword sdlVirtual		virtual redefined finalized adding inherits
-syn keyword sdlExported		remote exported imported
+syn keyword sdlExported		remote exported export
 
+if !exists("sdl_no_96")
+  syn keyword sdlStatement	all axioms constant endgenerator endrefinement endservice
+  syn keyword sdlStatement	error fpar generator literal map noequality ordering 
+  syn keyword sdlStatement	refinement returns revealed reverse service signalroute
+  syn keyword sdlStatement	view viewed 
+  syn keyword sdlExported	imported
+endif
+
+if exists("sdl_2000")
+  syn keyword sdlStatement	abstract aggregation association break choice composition
+  syn keyword sdlStatement	continue endmethod handle method
+  syn keyword sdlStatement	ordered private protected public
+  syn keyword sdlException	exceptionhandler endexceptionhandler onexception
+  syn keyword sdlException	catch new raise
+  " The same in uppercase
+  syn keyword sdlStatement	TASK ELSE NEXTSTATE
+  syn keyword sdlStatement	IN OUT WITH FROM INTERFACE
+  syn keyword sdlStatement	TO VIA ENV AND USE
+  syn keyword sdlStatement	PROCESS PROCEDURE BLOCK SYSTEM SERVICE TYPE
+  syn keyword sdlStatement	ENDPROCESS ENDPROCEDURE ENDBLOCK ENDSYSTEM
+  syn keyword sdlStatement	PACKAGE ENDPACKAGE CONNECTION ENDCONNECTION
+  syn keyword sdlStatement	CHANNEL ENDCHANNEL CONNECT
+  syn keyword sdlStatement	SYNONYM DCL SIGNAL GATE TIMER SIGNALLIST SIGNALSET
+  syn keyword sdlStatement	CREATE OUTPUT SET RESET CALL
+  syn keyword sdlStatement	OPERATORS LITERALS
+  syn keyword sdlStatement	ACTIVE ALTERNATIVE ANY AS ATLEAST CONSTANTS
+  syn keyword sdlStatement	DEFAULT ENDALTERNATIVE ENDMACRO ENDOPERATOR
+  syn keyword sdlStatement	ENDSELECT ENDSUBSTRUCTURE EXTERNAL
+  syn keyword sdlStatement	IF THEN FI FOR IMPORT MACRO MACRODEFINITION
+  syn keyword sdlStatement	MACROID MOD NAMECLASS NODELAY NOT OPERATOR OR
+  syn keyword sdlStatement	PARENT PROVIDED REFERENCED REM
+  syn keyword sdlStatement	SELECT SPELLING SUBSTRUCTURE XOR
+  syn keyword sdlNewState	STATE ENDSTATE
+  syn keyword sdlInput		INPUT START STOP RETURN NONE SAVE PRIORITY
+  syn keyword sdlConditional	DECISION ENDDECISION JOIN
+  syn keyword sdlVirtual	VIRTUAL REDEFINED FINALIZED ADDING INHERITS
+  syn keyword sdlExported	REMOTE EXPORTED EXPORT
+
+  syn keyword sdlStatement	ABSTRACT AGGREGATION ASSOCIATION BREAK CHOICE COMPOSITION
+  syn keyword sdlStatement	CONTINUE ENDMETHOD ENDOBJECT ENDVALUE HANDLE METHOD OBJECT
+  syn keyword sdlStatement	ORDERED PRIVATE PROTECTED PUBLIC
+  syn keyword sdlException	EXCEPTIONHANDLER ENDEXCEPTIONHANDLER ONEXCEPTION
+  syn keyword sdlException	CATCH NEW RAISE
+endif
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
@@ -45,17 +98,32 @@ syn region sdlComment		start="comment"  end=";"
 syn region sdlComment		start="--" end="--\|$"
 syn match  sdlCommentError	"\*/"
 
-syntax case ignore
-syn keyword sdlOperator		presend
-syn keyword sdlType		Integer Natural Duration Pid Boolean Time
-syn keyword sdlType		Charstring IA5String
+syn keyword sdlOperator		present
+syn keyword sdlType		integer real natural duration pid boolean time
+syn keyword sdlType		charstring ia5string
 syn keyword sdlType		self now sender offspring
 syn keyword sdlType		SET OF BOOLEAN INTEGER REAL BIT OCTET
 syn keyword sdlType		SEQUENCE CHOICE
 syn keyword sdlType		STRING OBJECT IDENTIFIER NULL
-syn keyword sdlStructure	newtype endnewtype asntype endasntype syntype endsyntype
-syn keyword sdlException	exceptionhandler endexceptionhandler onexception
-syn keyword sdlException	catch new
+syn keyword sdlStructure	asntype endasntype syntype endsyntype struct
+
+if !exists("sdl_no_96")
+  syn keyword sdlStructure	newtype endnewtype
+endif
+
+if exists("sdl_2000")
+  syn keyword sdlStructure	object endobject value endvalue
+  syn keyword sdlStructure	OBJECT ENDOBJECT VALUE ENDVALUE
+endif
+
+" The same in uppercase
+syn keyword sdlOperator		PRESENT
+syn keyword sdlType		INTEGER NATURAL DURATION PID BOOLEAN TIME
+syn keyword sdlType		CHARSTRING IA5STRING
+syn keyword sdlType		SELF NOW SENDER OFFSPRING
+syn keyword sdlStructure	NEWTYPE ENDNEWTYPE ASNTYPE ENDASNTYPE SYNTYPE ENDSYNTYPE STRUCT
+syn keyword sdlException	EXCEPTIONHANDLER ENDEXCEPTIONHANDLER ONEXCEPTION
+syn keyword sdlException	CATCH NEW
 
 syn sync ccomment sdlComment
 

@@ -28,6 +28,7 @@ LD = dcc
 SRC = \
 	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -66,6 +67,7 @@ SRC = \
 
 OBJ =	o/buffer.o \
 	o/charset.o \
+	o/diff.o \
 	o/digraph.o \
 	o/edit.o \
 	o/eval.o \
@@ -125,7 +127,9 @@ o/buffer.o:	buffer.c  $(SYMS)
 
 o/charset.o:	charset.c  $(SYMS)
 
-o/digraph.o: digraph.c	$(SYMS)
+o/diff.o: 	diff.c	$(SYMS)
+
+o/digraph.o: 	digraph.c  $(SYMS)
 
 o/edit.o:	edit.c	$(SYMS)
 

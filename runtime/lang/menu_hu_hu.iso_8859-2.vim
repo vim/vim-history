@@ -1,6 +1,6 @@
 " Menu Translations:	Hungarian
 " Translated By: 	Zoltan Arpadffy <arpadffy@altavista.net>
-" Last Change:		2001 Feb 11
+" Last Change:		2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -35,9 +35,9 @@ menutrans &Edit				&Szerkeszt
 menutrans &Undo<Tab>u			&Vissza<Tab>u
 menutrans &Redo<Tab>^R			&Elôre<Tab>^R
 menutrans Repea&t<Tab>\.		&Újra<Tab>\.
-menutrans Cu&t<Tab>"*x			&Vág<Tab>"*x
-menutrans &Copy<Tab>"*y			&Másol<Tab>"*y
-menutrans &Paste<Tab>"*p		&Bemásol<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Vág<Tab>"+x
+menutrans &Copy<Tab>"+y			&Másol<Tab>"+y
+menutrans &Paste<Tab>"+p		&Bemásol<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Betûz\ e&lé<Tab>[p
 menutrans Put\ &After<Tab>]p		Betûz\ m&ögé<Tab>]p
 menutrans &Select\ all<Tab>ggvG		Válaszd\ &mind<Tab>ggvG

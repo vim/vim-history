@@ -146,6 +146,13 @@
 #endif
 
 /*
+ * +diff		Displaying diffs in a nice way.  Requires +windows.
+ */
+#if defined(FEAT_NORMAL) && defined(FEAT_WINDOWS)
+# define FEAT_DIFF
+#endif
+
+/*
  * +digraphs		Digraphs.
  *			In insert mode and on the command line you will be
  *			able to use digraphs. The CTRL-K command will work.
@@ -627,15 +634,21 @@
  */
 #ifdef FEAT_NORMAL
 # define FEAT_MENU
+# ifdef FEAT_GUI_W32
+#  define FEAT_TEAROFF
+# endif
 #endif
 
 /*
  * +toolbar		Include code for a toolbar (for the Win32 GUI, GTK
  *			always has it).  But only if menus are enabled.
  */
-#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN) \
-		|| (defined(FEAT_GUI_MOTIF) && defined(HAVE_X11_XPM_H))) \
-		&& defined(FEAT_MENU)
+#if defined(FEAT_NORMAL) && defined(FEAT_MENU) \
+	&& (defined(FEAT_GUI_GTK) \
+		|| defined(FEAT_GUI_MSWIN) \
+		|| ((defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
+			&& defined(HAVE_X11_XPM_H)) \
+		|| defined(FEAT_GUI_PHOTON))
 # define FEAT_TOOLBAR
 #endif
 #if defined(FEAT_TOOLBAR) && !defined(FEAT_MENU)
@@ -648,7 +661,7 @@
  * BROWSE_CURRBUF	Open file browser in the directory of the current
  *			buffer, instead of the current directory.
  */
-#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK))
+#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON))
 # define FEAT_BROWSE
 #endif
 #if defined(FEAT_NORMAL) && defined(FEAT_GUI_MSWIN)
@@ -664,7 +677,7 @@
 # if defined(FEAT_GUI_MSWIN) || defined(macintosh)
 #  define FEAT_GUI_DIALOG
 # else
-#  if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK)
+#  if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
 #   define FEAT_CON_DIALOG
 #   define FEAT_GUI_DIALOG
 #  else
@@ -844,6 +857,7 @@
  * (none)		MS-DOS mouse support.
  * +mouse_gpm		Unix only: Include code for Linux console mouse
  *			handling.
+ * +mouse_pterm		PTerm mouse support for QNX
  * +mouse		Any mouse support (any of the above enabled).
  */
 /* OS/2 and Amiga console have no mouse support */
@@ -859,6 +873,9 @@
 # endif
 # if defined(FEAT_NORMAL) && (defined(MSDOS) || defined(WIN32))
 #  define DOS_MOUSE
+# endif
+# if defined(FEAT_NORMAL) && defined(__QNX__)
+#  define FEAT_MOUSE_PTERM
 # endif
 #endif
 
@@ -886,7 +903,8 @@
 #if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_XTERM) \
 	|| defined(FEAT_MOUSE_NET) || defined(FEAT_MOUSE_DEC) \
 	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM) \
-	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_GUI))
+	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_MOUSE_PTERM) \
+	|| defined(FEAT_GUI))
 # define FEAT_MOUSE		/* include mouse support */
 #endif
 

@@ -35,6 +35,9 @@
 #ifdef WIN16
 # include <commdlg.h>
 # include <shellapi.h>
+# ifdef WIN16_3DLOOK
+#  include <ctl3d.h>
+# endif
 #endif
 #include <windowsx.h>
 
@@ -118,6 +121,7 @@ typedef int LOGFONT[];
 
 static void _OnPaint( HWND hwnd);
 static void clear_rect(RECT *rcp);
+static int gui_mswin_get_menu_height(int fix_window);
 
 static WORD		s_dlgfntheight;		/* height of the dialog font */
 static WORD		s_dlgfntwidth;		/* width of the dialog font */
@@ -125,10 +129,16 @@ static WORD		s_dlgfntwidth;		/* width of the dialog font */
 #ifdef FEAT_MENU
 static HMENU		s_menuBar = NULL;
 #endif
+#ifdef FEAT_TEAROFF
+static void rebuild_tearoff(vimmenu_t *menu);
+static HBITMAP	s_htearbitmap;	    /* bitmap used to indicate tearoff */
+#endif
 
 /* Flag that is set while processing a message that must not be interupted by
  * processing another message. */
 static int		s_busy_processing = FALSE;
+
+static int		destroying = FALSE;	/* call DestroyWindow() ourselves */
 
 #ifdef MSWIN_FIND_REPLACE
 static UINT		s_findrep_msg = 0;
@@ -138,6 +148,7 @@ static FINDREPLACE	s_findrep_struct;
 static HINSTANCE	s_hinst = NULL;
 static HWND		s_hwnd = NULL;
 static HDC		s_hdc = NULL;
+static HBRUSH	s_brush = NULL;
 
 #ifdef FEAT_TOOLBAR
 static HWND		s_toolbarhwnd = NULL;
@@ -150,9 +161,7 @@ static HWND		s_textArea = NULL;
 static UINT		s_uMsg = 0;
 
 
-#ifdef WIN16
 static int		s_need_activate = FALSE;
-#endif
 
 #ifdef GLOBAL_IME
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
@@ -557,7 +566,7 @@ _OnSysChar(
     ch = simplify_key(ch, &modifiers);
     /* remove the SHIFT modifier for keys where it's already included, e.g.,
      * '(' and '*' */
-    if (ch < 0x100 && (!isalpha(ch)) && isprint(ch))
+    if (ch < 0x100 && !isalpha(ch) && isprint(ch))
 	modifiers &= ~MOD_MASK_SHIFT;
 
     /* Interpret the ALT key as making the key META, include SHIFT, etc. */
@@ -1213,22 +1222,22 @@ points_to_pixels(char_u *str, char_u **end, int vertical)
     HWND	hwnd;
     HDC		hdc;
 
-    while (*str)
+    while (*str != NUL)
     {
 	if (*str == '.' && divisor == 0)
 	{
 	    /* Start keeping a divisor, for later */
 	    divisor = 1;
-	    continue;
 	}
+	else
+	{
+	    if (!isdigit(*str))
+		break;
 
-	if (!isdigit(*str))
-	    break;
-
-	points *= 10;
-	points += *str - '0';
-	divisor *= 10;
-
+	    points *= 10;
+	    points += *str - '0';
+	    divisor *= 10;
+	}
 	++str;
     }
 
@@ -2047,12 +2056,10 @@ gui_mch_wait_for_chars(int wtime)
 	    focus = gui.in_focus;
 	}
 
-#ifdef WIN16
 	if (s_need_activate) {
 	    (void) SetActiveWindow(s_hwnd);
 	    s_need_activate = FALSE;
 	}
-#endif
 
 	/*
 	 * Don't use gui_mch_update() because then we will spin-lock until a
@@ -2468,6 +2475,18 @@ gui_mch_show_popupmenu_at(vimmenu_t *menu, int x, int y)
 }
 
 /*
+ * Got a message when the system will go down.
+ */
+    static void
+_OnEndSession(void)
+{
+    ml_close_notmod();		    /* close all not-modified buffers */
+    ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
+    ml_close_all(FALSE);	    /* close all memfiles, without deleting */
+    getout(1);			    /* exit Vim properly */
+}
+
+/*
  * Get this message when the user clicks on the cross in the top right corner
  * of a Windows95 window.
  */
@@ -2476,6 +2495,88 @@ _OnClose(
     HWND hwnd)
 {
     gui_shell_closed();
+}
+
+/*
+ * Get a message when the window is being destroyed.
+ */
+    static void
+_OnDestroy(
+    HWND hwnd)
+{
+#ifdef WIN16_3DLOOK
+    Ctl3dUnregister(s_hinst);
+#endif
+    if (!destroying)
+	_OnClose(hwnd);
+}
+
+    static void
+_OnPaint(
+    HWND hwnd)
+{
+    if (!IsMinimized(hwnd))
+    {
+	PAINTSTRUCT ps;
+
+	out_flush();	    /* make sure all output has been processed */
+	(void)BeginPaint(hwnd, &ps);
+
+#ifdef FEAT_MBYTE
+	/* prevent multi-byte characters from misprinting on an invalid
+	 * rectangle */
+	if (has_mbyte)
+	{
+	    RECT rect;
+
+	    GetClientRect(hwnd, &rect);
+	    ps.rcPaint.left = rect.left;
+	    ps.rcPaint.right = rect.right;
+	}
+#endif
+
+	if (!IsRectEmpty(&ps.rcPaint))
+	    gui_redraw(ps.rcPaint.left, ps.rcPaint.top,
+		    ps.rcPaint.right - ps.rcPaint.left + 1,
+		    ps.rcPaint.bottom - ps.rcPaint.top + 1);
+	EndPaint(hwnd, &ps);
+    }
+}
+
+    static void
+_OnSize(
+    HWND hwnd,
+    UINT state,
+    int cx,
+    int cy)
+{
+    if (!IsMinimized(hwnd))
+    {
+	gui_resize_shell(cx, cy);
+
+#ifdef FEAT_MENU
+	/* Menu bar may wrap differently now */
+	gui_mswin_get_menu_height(TRUE);
+#endif
+    }
+}
+
+    static void
+_OnSetFocus(
+    HWND hwnd,
+    HWND hwndOldFocus)
+{
+    gui_focus_change(TRUE);
+    (void)DefWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
+}
+
+    static void
+_OnKillFocus(
+    HWND hwnd,
+    HWND hwndNewFocus)
+{
+    gui_focus_change(FALSE);
+    (void)DefWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
 }
 
 /*
@@ -2535,6 +2636,191 @@ gui_mch_destroy_scrollbar(scrollbar_t *sb)
     DestroyWindow(sb->id);
 }
 #endif
+
+/*
+ * Get current x mouse coordinate in text window.
+ * Return -1 when unknown.
+ */
+    int
+gui_mch_get_mouse_x(void)
+{
+    RECT rct;
+    POINT mp;
+
+    (void)GetWindowRect(s_textArea, &rct);
+    (void)GetCursorPos((LPPOINT)&mp);
+    return (int)(mp.x - rct.left);
+}
+
+/*
+ * Get current y mouse coordinate in text window.
+ * Return -1 when unknown.
+ */
+    int
+gui_mch_get_mouse_y(void)
+{
+    RECT rct;
+    POINT mp;
+
+    (void)GetWindowRect(s_textArea, &rct);
+    (void)GetCursorPos((LPPOINT)&mp);
+    return (int)(mp.y - rct.top);
+}
+
+/*
+ * Move mouse pointer to character at (x, y).
+ */
+    void
+gui_mch_setmouse(int x, int y)
+{
+    RECT rct;
+
+    (void)GetWindowRect(s_textArea, &rct);
+    (void)SetCursorPos(x + gui.border_offset + rct.left,
+		       y + gui.border_offset + rct.top);
+}
+
+    static void
+gui_mswin_get_valid_dimensions(
+    int w,
+    int h,
+    int *valid_w,
+    int *valid_h)
+{
+    int	    base_width, base_height;
+
+    base_width = gui_get_base_width()
+	+ GetSystemMetrics(SM_CXFRAME) * 2;
+    base_height = gui_get_base_height()
+	+ GetSystemMetrics(SM_CYFRAME) * 2
+	+ GetSystemMetrics(SM_CYCAPTION)
+#ifdef FEAT_MENU
+	+ gui_mswin_get_menu_height(FALSE)
+#endif
+	;
+    *valid_w = base_width +
+		    ((w - base_width) / gui.char_width) * gui.char_width;
+    *valid_h = base_height +
+		    ((h - base_height) / gui.char_height) * gui.char_height;
+}
+
+    void
+gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+{
+
+    *screen_w = GetSystemMetrics(SM_CXSCREEN)
+	      - GetSystemMetrics(SM_CXFRAME) * 2;
+    *screen_h = GetSystemMetrics(SM_CYFULLSCREEN)
+	      - GetSystemMetrics(SM_CYFRAME) * 2
+	      - GetSystemMetrics(SM_CYCAPTION)
+#ifdef FEAT_MENU
+	      - gui_mswin_get_menu_height(FALSE)
+#endif
+	      ;
+}
+
+    void
+gui_mch_flash(int msec)
+{
+    RECT    rc;
+
+    /*
+     * Note: InvertRect() excludes right and bottom of rectangle.
+     */
+    rc.left = 0;
+    rc.top = 0;
+    rc.right = gui.num_cols * gui.char_width;
+    rc.bottom = gui.num_rows * gui.char_height;
+    InvertRect(s_hdc, &rc);
+    gui_mch_flush();			/* make sure it's displayed */
+
+    ui_delay((long)msec, TRUE);	/* wait for a few msec */
+
+    InvertRect(s_hdc, &rc);
+}
+
+/*
+ * Delete the given number of lines from the given row, scrolling up any
+ * text further down within the scroll region.
+ */
+    void
+gui_mch_delete_lines(
+    int	    row,
+    int	    num_lines)
+{
+    RECT	rc;
+
+    rc.left = FILL_X(gui.scroll_region_left);
+    rc.right = FILL_X(gui.scroll_region_right + 1);
+    rc.top = FILL_Y(row);
+    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
+    /* The SW_INVALIDATE is required when part of the window is covered or
+     * off-screen.  How do we avoid it when it's not needed? */
+    ScrollWindowEx(s_textArea, 0, -num_lines * gui.char_height,
+	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+
+    UpdateWindow(s_textArea);
+    /* This seems to be required to avoid the cursor disappearing when
+     * scrolling such that the cursor ends up in the top-left character on
+     * the screen...   But why?  (Webb) */
+    /* It's probably fixed by disabling drawing the cursor while scrolling. */
+    /* gui.cursor_is_valid = FALSE; */
+
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+						       gui.scroll_region_left,
+	gui.scroll_region_bot, gui.scroll_region_right);
+}
+
+/*
+ * Insert the given number of lines before the given row, scrolling down any
+ * following text within the scroll region.
+ */
+    void
+gui_mch_insert_lines(
+    int		row,
+    int		num_lines)
+{
+    RECT	rc;
+
+    rc.left = FILL_X(gui.scroll_region_left);
+    rc.right = FILL_X(gui.scroll_region_right + 1);
+    rc.top = FILL_Y(row);
+    rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
+    /* The SW_INVALIDATE is required when part of the window is covered or
+     * off-screen.  How do we avoid it when it's not needed? */
+    ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
+	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+
+    gui_undraw_cursor();	/* Is this really necessary? */
+    UpdateWindow(s_textArea);
+
+    gui_clear_block(row, gui.scroll_region_left,
+				row + num_lines - 1, gui.scroll_region_right);
+}
+
+
+    void
+gui_mch_exit(int rc)
+{
+    ReleaseDC(s_textArea, s_hdc);
+    DeleteObject(s_brush);
+
+#ifdef FEAT_TEAROFF
+    /* Unload the tearoff bitmap */
+    (void)DeleteObject((HGDIOBJ)s_htearbitmap);
+#endif
+
+    /* Destroy our window (if we have one). */
+    if (s_hwnd != NULL)
+    {
+	destroying = TRUE;	/* ignore WM_DESTROY message now */
+	DestroyWindow(s_hwnd);
+    }
+
+#ifdef GLOBAL_IME
+    global_ime_end();
+#endif
+}
 
 /*
  * Initialise vim to use the font with the given name.	Return FAIL if the font

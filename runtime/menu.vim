@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 23
+" Last Change:	2001 Apr 04
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -147,7 +147,42 @@ else
   vmenu	       &Edit.Find\ and\ Rep&lace<Tab>:s		:s/
 endif
 amenu 20.425 &Edit.-SEP3-			:
-amenu 20.430 &Edit.Options\.\.\.		:options<CR>
+amenu 20.430 &Edit.Settings\ &Window		:options<CR>
+
+" Edit/Settings
+fun <SID>ToggleGuiOption(option)
+    " If a:option is already set in guioptions, then we want to remove it
+    if match(&guioptions, a:option) > -1
+	exec "set guioptions-=" . a:option
+    else
+	exec "set guioptions+=" . a:option
+    endif
+endfun
+
+" Build boolean options
+amenu 20.440 &Edit.Se&ttings.Toggle\ Line\ Numbering<TAB>:set\ number!	:set number!<CR>
+amenu 20.450 &Edit.Se&ttings.Toggle\ Line\ Wrap<TAB>:set\ wrap!		:set wrap!<CR>
+amenu 20.460 &Edit.Se&ttings.Toggle\ hlsearch<TAB>:set\ hlsearch!	:set hlsearch!<CR>
+amenu 20.470 &Edit.Se&ttings.Toggle\ expandtab<TAB>:set\ expandtab!	:set expandtab!<CR>
+
+" Build GUI options
+amenu 20.475 &Edit.Se&ttings.-SEP1-	    :
+amenu 20.480 &Edit.Se&ttings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
+amenu 20.490 &Edit.Se&ttings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
+amenu 20.500 &Edit.Se&ttings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
+amenu 20.510 &Edit.Se&ttings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
+
+" Build variable options
+amenu 20.515 &Edit.Se&ttings.-SEP2-	    :
+amenu 20.520 &Edit.Se&ttings.Shiftwidth.2   :set shiftwidth=2<CR>
+amenu 20.530 &Edit.Se&ttings.Shiftwidth.3   :set shiftwidth=3<CR>
+amenu 20.540 &Edit.Se&ttings.Shiftwidth.4   :set shiftwidth=4<CR>
+amenu 20.550 &Edit.Se&ttings.Shiftwidth.5   :set shiftwidth=5<CR>
+amenu 20.560 &Edit.Se&ttings.Shiftwidth.6   :set shiftwidth=6<CR>
+amenu 20.570 &Edit.Se&ttings.Shiftwidth.8   :set shiftwidth=8<CR>
+amenu 20.580 &Edit.Se&ttings.Text\ Width\.\.\.    :let &tw=
+		\ input("Enter new text width (0 to disable formatting): ")<CR>
+
 
 " Programming menu
 amenu 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^] g<C-]>
@@ -382,7 +417,7 @@ amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
 amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
 amenu 70.330 &Window.Split\ &Vertically<Tab>^Wv	<C-W>v
 if has("vertsplit")
-  amenu 70.332 &Window.File\ E&xplorer		:call MenuExplOpen()<CR>
+  amenu 70.332 &Window.Split\ File\ E&xplorer	:call MenuExplOpen()<CR>
   if !exists("*MenuExplOpen")
     fun MenuExplOpen()
       if @% == ""
@@ -398,17 +433,19 @@ amenu 70.335 &Window.-SEP1-			:
 amenu 70.340 &Window.&Close<Tab>^Wc		:confirm close<CR>
 amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
 amenu 70.350 &Window.-SEP2-			:
-amenu 70.355 &Window.Ne&xt<Tab>^Ww		<C-W>w
-amenu 70.360 &Window.P&revious<Tab>^WW		<C-W>W
+amenu 70.355 &Window.Move\ &To.&Top<Tab>^WK	<C-W>K
+amenu 70.355 &Window.Move\ &To.&Bottom<Tab>^WJ	<C-W>J
+amenu 70.355 &Window.Move\ &To.&Left\ side<Tab>^WH	<C-W>H
+amenu 70.355 &Window.Move\ &To.&Right\ side<Tab>^WL	<C-W>L
+amenu 70.360 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
+amenu 70.362 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
 amenu 70.365 &Window.-SEP3-			:
 amenu 70.370 &Window.&Equal\ Height<Tab>^W=	<C-W>=
 amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
 amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
 amenu 70.400 &Window.Max\ Width<Tab>^W\|	<C-W>\|
 amenu 70.410 &Window.Min\ Width<Tab>^W1\|	<C-W>1\|
-amenu 70.420 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
-amenu 70.430 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
-if has("win32") || has("win16") || has("gui_gtk")
+if has("win32") || has("win16") || has("gui_gtk") || has("qui_photon")
   amenu 70.440 &Window.-SEP4-			:
   amenu 70.450 &Window.Select\ &Font\.\.\.	:set guifont=*<CR>
 endif
@@ -431,7 +468,7 @@ amenu 1.90 PopUp.Select\ &Block	<C-Q>
 amenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
-if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif")
+if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif") || has("gui_athena")
   amenu 1.10 ToolBar.Open	:browse e<CR>
   amenu 1.20 ToolBar.Save	:w<CR>
   amenu 1.30 ToolBar.SaveAll	:wa<CR>

@@ -16,6 +16,7 @@ DOCS = \
 	cmdline.txt \
 	debugger.txt \
 	develop.txt \
+	diff.txt \
 	digraph.txt \
 	editing.txt \
 	eval.txt \
@@ -53,6 +54,7 @@ DOCS = \
 	os_mint.txt \
 	os_msdos.txt \
 	os_os2.txt \
+	os_qnx.txt \
 	os_riscos.txt \
 	os_unix.txt \
 	os_vms.txt \
@@ -103,6 +105,7 @@ HTMLS = \
 	cmdline.html \
 	debugger.html \
 	develop.html \
+	diff.html \
 	digraph.html \
 	editing.html \
 	eval.html \
@@ -140,6 +143,7 @@ HTMLS = \
 	os_mint.html \
 	os_msdos.html \
 	os_os2.html \
+	os_qnx.html \
 	os_riscos.html \
 	os_unix.html \
 	os_vms.html \
@@ -188,7 +192,7 @@ HTMLS = \
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
 
-all: tags vim.man vimtutor.man xxd.man
+all: tags vim.man vimdiff.man vimtutor.man xxd.man
 
 # We should use Vim to generate the tags file:
 # 	vim -c "helptags ." -c quit
@@ -202,6 +206,9 @@ doctags: doctags.c
 
 vim.man: vim.1
 	nroff -man vim.1 | sed -e s/.//g > vim.man
+
+vimdiff.man: vimdiff.1
+	nroff -man vimdiff.1 | sed -e s/.//g > vimdiff.man
 
 vimtutor.man: vimtutor.1
 	nroff -man vimtutor.1 | sed -e s/.//g > vimtutor.man
@@ -268,6 +275,9 @@ os_msdos.txt:
 
 os_os2.txt:
 	touch os_os2.txt
+
+os_qnx.txt:
+	touch os_qnx.txt
 
 os_riscos.txt:
 	touch os_riscos.txt

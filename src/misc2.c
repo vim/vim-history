@@ -302,12 +302,18 @@ inc(lp)
 	}
 #endif
 	lp->col++;
+#ifdef FEAT_VIRTUALEDIT
+	lp->coladd = 0;
+#endif
 	return ((p[1] != NUL) ? 0 : 2);
     }
     if (lp->lnum != curbuf->b_ml.ml_line_count)     /* there is a next line */
     {
 	lp->col = 0;
 	lp->lnum++;
+#ifdef FEAT_VIRTUALEDIT
+	lp->coladd = 0;
+#endif
 	return 1;
     }
     return -1;
@@ -2179,22 +2185,20 @@ extract_modifiers(key, modp)
 {
     int	modifiers = *modp;
 
-    if ((modifiers & MOD_MASK_SHIFT) && isalpha(key))
+    if ((modifiers & MOD_MASK_SHIFT) && ASCII_ISALPHA(key))
     {
 	key = TO_UPPER(key);
 	modifiers &= ~MOD_MASK_SHIFT;
     }
     if ((modifiers & MOD_MASK_CTRL)
 #ifdef EBCDIC
-	    /*
-	     * TODO: EBCDIC Better use:
+	    /* * TODO: EBCDIC Better use:
 	     * && (Ctrl_chr(key) || key == '?')
-	     * ???
-	     */
+	     * ???  */
 	    && strchr("?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_", key)
 						       != NULL
 #else
-	    && ((key >= '?' && key <= '_') || isalpha(key))
+	    && ((key >= '?' && key <= '_') || ASCII_ISALPHA(key))
 #endif
 	    )
     {
@@ -2552,22 +2556,22 @@ cursorentry_t shape_table[SHAPE_IDX_COUNT] =
     /* The values will be filled in from the 'guicursor' and 'mouseshape'
      * defaults when Vim starts.
      * Adjust the SHAPE_IDX_ defines when making changes! */
-    {0,	0, 0, 700L, 400L, 250L, 0, "n", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "v", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "i", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "r", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "c", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "ci", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "cr", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "o", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0, 700L, 400L, 250L, 0, "ve", SHAPE_CURSOR+SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "e", SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "s", SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "sd", SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "vs", SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "vd", SHAPE_MOUSE},
-    {0,	0, 0,   0L,   0L,   0L, 0, "m", SHAPE_MOUSE},
-    {0,	0, 0, 100L, 100L, 100L, 0, "sm", SHAPE_CURSOR},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "n", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "v", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "i", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "r", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "c", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "ci", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "cr", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "o", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0, 700L, 400L, 250L, 0, 0, "ve", SHAPE_CURSOR+SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "e", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "s", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "sd", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "vs", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "vd", SHAPE_MOUSE},
+    {0,	0, 0,   0L,   0L,   0L, 0, 0, "m", SHAPE_MOUSE},
+    {0,	0, 0, 100L, 100L, 100L, 0, 0, "sm", SHAPE_CURSOR},
 };
 
 #ifdef FEAT_MOUSESHAPE
@@ -2609,6 +2613,7 @@ parse_shape_opt(what)
     char_u	*modep;
     char_u	*colonp;
     char_u	*commap;
+    char_u	*slashp;
     char_u	*p, *endp;
     int		idx = 0;		/* init for GCC */
     int		all_idx;
@@ -2762,8 +2767,18 @@ parse_shape_opt(what)
 			}
 			else if (endp > commap || endp == NULL)
 			    endp = commap;
+			slashp = vim_strchr(p, '/');
+			if (slashp != NULL && slashp < endp)
+			{
+			    /* "group/langmap_group" */
+			    i = syn_check_group(p, (int)(slashp - p));
+			    p = slashp + 1;
+			}
 			shape_table[idx].id = syn_check_group(p,
 							     (int)(endp - p));
+			shape_table[idx].id_lm = shape_table[idx].id;
+			if (slashp != NULL && slashp < endp)
+			    shape_table[idx].id = i;
 			p = endp;
 		    }
 		} /* if (what != SHAPE_MOUSE) */
@@ -2799,6 +2814,7 @@ parse_shape_opt(what)
 	    shape_table[SHAPE_IDX_VE].blinkoff =
 					   shape_table[SHAPE_IDX_V].blinkoff;
 	    shape_table[SHAPE_IDX_VE].id = shape_table[SHAPE_IDX_V].id;
+	    shape_table[SHAPE_IDX_VE].id_lm = shape_table[SHAPE_IDX_V].id_lm;
 	}
     }
 

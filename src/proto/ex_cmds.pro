@@ -7,6 +7,7 @@ void ex_copy __ARGS((linenr_t line1, linenr_t line2, linenr_t n));
 void do_bang __ARGS((int addr_count, exarg_t *eap, int forceit, int do_in, int do_out));
 void do_shell __ARGS((char_u *cmd, int flags));
 char_u *make_filter_cmd __ARGS((char_u *cmd, char_u *itmp, char_u *otmp));
+void append_redir __ARGS((char_u *buf, char_u *fname));
 int viminfo_error __ARGS((char *message, char_u *line));
 int read_viminfo __ARGS((char_u *file, int want_info, int want_marks, int forceit));
 void write_viminfo __ARGS((char_u *file, int forceit));

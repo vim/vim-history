@@ -22,7 +22,7 @@ struct cmdline_info
 {
     char_u	*cmdbuff;	/* pointer to command line buffer */
     int		cmdbufflen;	/* length of cmdbuff */
-    int		cmdlen;		/* number of chars on command line */
+    int		cmdlen;		/* number of chars in command line */
     int		cmdpos;		/* current cursor position */
     int		cmdspos;	/* cursor column on screen */
     int		cmdfirstc;	/* ':', '/', '?', '=' or NUL */
@@ -131,6 +131,9 @@ getcmdline(firstc, count, indent)
     colnr_t	old_curswant;
     colnr_t	old_leftcol;
     linenr_t	old_topline;
+# ifdef FEAT_DIFF
+    int		old_topfill;
+# endif
     linenr_t	old_botline;
     int		did_incsearch = FALSE;
     int		incsearch_postponed = FALSE;
@@ -173,6 +176,9 @@ getcmdline(firstc, count, indent)
     old_curswant = curwin->w_curswant;
     old_leftcol = curwin->w_leftcol;
     old_topline = curwin->w_topline;
+# ifdef FEAT_DIFF
+    old_topfill = curwin->w_topfill;
+# endif
     old_botline = curwin->w_botline;
 #endif
 
@@ -185,6 +191,7 @@ getcmdline(firstc, count, indent)
     if (ccline.cmdbuff == NULL)
 	return NULL;			    /* out of memory */
     ccline.cmdlen = ccline.cmdpos = 0;
+    ccline.cmdbuff[0] = NUL;
 
     redir_off = TRUE;		/* don't redirect the typed command */
     i = msg_scrolled;
@@ -203,13 +210,21 @@ getcmdline(firstc, count, indent)
 
     State = CMDLINE;
 
-    /* Use ":lmap" mappings for search pattern and input(). */
-    if ((curbuf->b_lmap & B_LMAP_SEARCH)
-			 && (firstc == '/' || firstc == '?' || firstc == '@'))
-	State |= LANGMAP;
+    if (firstc == '/' || firstc == '?' || firstc == '@')
+    {
+	/* Use ":lmap" mappings for search pattern and input(). */
+	if (curbuf->b_lmap & B_LMAP_SEARCH)
+	    State |= LANGMAP;
+#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
+	ImeSetOriginMode();
+#endif
+    }
 
 #ifdef FEAT_MOUSE
     setmouse();
+#endif
+#ifdef CURSOR_SHAPE
+    ui_cursor_shape();		/* may show different cursor shape */
 #endif
 
 #ifdef FEAT_CMDHIST
@@ -727,6 +742,9 @@ getcmdline(firstc, count, indent)
 		    i = ccline.cmdpos;
 		    while (i < ccline.cmdlen)
 			ccline.cmdbuff[i++] = ccline.cmdbuff[j++];
+
+		    /* Truncate at the end, required for multi-byte chars. */
+		    ccline.cmdbuff[ccline.cmdlen] = NUL;
 		    redrawcmd();
 		}
 		else if (ccline.cmdlen == 0 && c != Ctrl_W
@@ -767,8 +785,14 @@ getcmdline(firstc, count, indent)
 	case Ctrl_HAT:
 		/* Switch using ":lmap"s on/off. */
 		State ^= LANGMAP;
+#ifdef CURSOR_SHAPE
+		ui_cursor_shape();	/* may show different cursor shape */
+#endif
 		if (firstc == '/' || firstc == '?' || firstc == '@')
+		{
 		    curbuf->b_lmap ^= B_LMAP_SEARCH;
+		    b_lmap_def = curbuf->b_lmap;
+		}
 		goto cmdline_not_changed;
 
 /*	case '@':   only in very old vi */
@@ -779,6 +803,8 @@ getcmdline(firstc, count, indent)
 		i = ccline.cmdpos = 0;
 		while (i < ccline.cmdlen)
 		    ccline.cmdbuff[i++] = ccline.cmdbuff[j++];
+		/* Truncate at the end, required for multi-byte chars. */
+		ccline.cmdbuff[ccline.cmdlen] = NUL;
 		redrawcmd();
 		goto cmdline_changed;
 
@@ -899,11 +925,11 @@ getcmdline(firstc, count, indent)
 # endif
 		    if (!mouse_has(MOUSE_COMMAND))
 			goto cmdline_not_changed;   /* Ignore mouse */
-# ifdef FEAT_GUI
-		if (gui.in_use)
+#ifdef FEAT_CLIPBOARD
+		if (clip_star.available)
 		    cmdline_paste('*', TRUE);
 		else
-# endif
+#endif
 		    cmdline_paste(0, TRUE);
 		redrawcmd();
 		goto cmdline_changed;
@@ -985,7 +1011,6 @@ getcmdline(firstc, count, indent)
 	case K_XEND:
 	case K_S_END:
 		ccline.cmdpos = ccline.cmdlen;
-		ccline.cmdbuff[ccline.cmdlen] = NUL;
 		set_cmdspos_cursor();
 		goto cmdline_not_changed;
 
@@ -1024,7 +1049,6 @@ getcmdline(firstc, count, indent)
 		i = hiscnt;
 
 		/* save current command string so it can be restored later */
-		ccline.cmdbuff[ccline.cmdlen] = NUL;
 		if (lookfor == NULL)
 		{
 		    if ((lookfor = vim_strsave(ccline.cmdbuff)) == NULL)
@@ -1231,7 +1255,6 @@ cmdline_changed:
 	    {
 		cursor_off();		/* so the user knows we're busy */
 		out_flush();
-		ccline.cmdbuff[ccline.cmdlen] = NUL;
 		++emsg_off;    /* So it doesn't beep if bad expr */
 		i = do_search(NULL, firstc, ccline.cmdbuff, count,
 				      SEARCH_KEEP + SEARCH_OPT + SEARCH_NOOF);
@@ -1253,6 +1276,9 @@ cmdline_changed:
 	     * positioned in the same way as the actual search command */
 	    curwin->w_leftcol = old_leftcol;
 	    curwin->w_topline = old_topline;
+#ifdef FEAT_DIFF
+	    curwin->w_topfill = old_topfill;
+#endif
 	    curwin->w_botline = old_botline;
 	    changed_cline_bef_curs();
 	    update_topline();
@@ -1290,6 +1316,9 @@ returncmd:
 	curwin->w_curswant = old_curswant;
 	curwin->w_leftcol = old_leftcol;
 	curwin->w_topline = old_topline;
+#ifdef FEAT_DIFF
+	curwin->w_topfill = old_topfill;
+#endif
 	curwin->w_botline = old_botline;
 	highlight_match = FALSE;
 	validate_cursor();	/* needed for TAB */
@@ -1302,7 +1331,6 @@ returncmd:
 	/*
 	 * Put line in history buffer (":" and "=" only when it was typed).
 	 */
-	ccline.cmdbuff[ccline.cmdlen] = NUL;
 #ifdef FEAT_CMDHIST
 	if (ccline.cmdlen && firstc != NUL
 		&& (some_key_typed || histype == HIST_SEARCH))
@@ -1339,6 +1367,9 @@ returncmd:
 	need_wait_return = FALSE;
 
     State = save_State;
+#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
+    ImeSetEnglishMode();
+#endif
 #ifdef FEAT_MOUSE
     setmouse();
 #endif
@@ -1720,7 +1751,7 @@ realloc_cmdbuff(len)
 	ccline.cmdbuff = p;		/* keep the old one */
 	return FAIL;
     }
-    mch_memmove(ccline.cmdbuff, p, (size_t)ccline.cmdlen);
+    mch_memmove(ccline.cmdbuff, p, (size_t)ccline.cmdlen + 1);
     vim_free(p);
     return OK;
 }
@@ -1824,6 +1855,34 @@ put_on_cmdline(str, len, redraw)
 		ccline.cmdlen = ccline.cmdpos + len;
 	}
 	mch_memmove(ccline.cmdbuff + ccline.cmdpos, str, (size_t)len);
+	ccline.cmdbuff[ccline.cmdlen] = NUL;
+
+#ifdef FEAT_MBYTE
+	/* When the inserted text starts with a composing character, backup to
+	 * the character before it.  There could be two of them. */
+	c = 0;
+	while (enc_utf8 && ccline.cmdpos > 0
+	     && utf_iscomposing(utf_ptr2char(ccline.cmdbuff + ccline.cmdpos)))
+	{
+	    c = (*mb_head_off)(ccline.cmdbuff,
+				      ccline.cmdbuff + ccline.cmdpos - 1) + 1;
+	    ccline.cmdpos -= c;
+	    len += c;
+	}
+	if (c != 0)
+	{
+	    /* Also backup the cursor position. */
+	    c -= ptr2cells(ccline.cmdbuff + ccline.cmdpos);
+	    ccline.cmdspos -= c;
+	    msg_col -= c;
+	    if (msg_col < 0)
+	    {
+		msg_col += Columns;
+		--msg_row;
+	    }
+	}
+#endif
+
 	if (redraw)
 	{
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
@@ -1859,29 +1918,29 @@ put_on_cmdline(str, len, redraw)
 		    c = 1;
 		else
 #endif
-		    c = ptr2cells(str + i);
+		    c = ptr2cells(ccline.cmdbuff + ccline.cmdpos);
 #ifdef FEAT_MBYTE
 		/* multibyte wrap */
 		if (has_mbyte
-			&& (*mb_ptr2cells)(str + i) > 1
+			&& (*mb_ptr2cells)(ccline.cmdbuff + ccline.cmdpos) > 1
 			&& ccline.cmdspos % Columns + c == Columns)
 		    ccline.cmdspos++;
 #endif
 		/* Stop cursor at the end of the screen */
 		if (ccline.cmdspos + c >= m)
 		    break;
-		++ccline.cmdpos;
 		ccline.cmdspos += c;
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
 		{
-		    c = (*mb_ptr2len_check)(str + i) - 1;
-		    if (i + c + 1 >= len)
+		    c = (*mb_ptr2len_check)(ccline.cmdbuff + ccline.cmdpos) - 1;
+		    if (c > len - i - 1)
 			c = len - i - 1;
 		    ccline.cmdpos += c;
 		    i += c;
 		}
 #endif
+		++ccline.cmdpos;
 	    }
 	}
     }
@@ -1900,7 +1959,7 @@ cmdline_del(from)
     int from;
 {
     mch_memmove(ccline.cmdbuff + from, ccline.cmdbuff + ccline.cmdpos,
-	    (size_t)(ccline.cmdlen - ccline.cmdpos));
+	    (size_t)(ccline.cmdlen - ccline.cmdpos + 1));
     ccline.cmdlen -= ccline.cmdpos - from;
     ccline.cmdpos = from;
 }
@@ -2117,7 +2176,7 @@ nextwild(xp, type, options)
 	{
 	    vim_strncpy(&ccline.cmdbuff[ccline.cmdpos + difflen],
 					       &ccline.cmdbuff[ccline.cmdpos],
-		    ccline.cmdlen - ccline.cmdpos);
+		    ccline.cmdlen - ccline.cmdpos + 1);
 	    STRNCPY(&ccline.cmdbuff[i], p2, STRLEN(p2));
 	    ccline.cmdlen += difflen;
 	    ccline.cmdpos += difflen;
@@ -3593,7 +3652,7 @@ remove_key_from_history()
     p = history[HIST_CMD][i].hisstr;
     if (p != NULL)
 	for ( ; *p; ++p)
-	    if (STRNCMP(p, "key", 3) == 0 && !islower(p[3]))
+	    if (STRNCMP(p, "key", 3) == 0 && !isalpha(p[3]))
 	    {
 		p = vim_strchr(p + 3, '=');
 		if (p == NULL)
@@ -3680,7 +3739,8 @@ ex_history(eap)
     if (!(isdigit(*arg) || *arg == '-' || *arg == ','))
     {
 	end = arg;
-	while (isalpha(*end) || vim_strchr((char_u *)":=@>/?", *end) != NULL)
+	while (ASCII_ISALPHA(*end)
+		|| vim_strchr((char_u *)":=@>/?", *end) != NULL)
 	    end++;
 	i = *end;
 	*end = NUL;
@@ -3950,6 +4010,7 @@ cmd_pchar(c, offset)
 	return;
     }
     ccline.cmdbuff[ccline.cmdpos + offset] = (char_u)c;
+    ccline.cmdbuff[ccline.cmdlen] = NUL;
 }
 
     int
@@ -4062,7 +4123,6 @@ ex_window()
 
     /* Replace the empty last line with the current command-line and put the
      * cursor there. */
-    ccline.cmdbuff[ccline.cmdlen] = NUL;
     ml_replace(curbuf->b_ml.ml_line_count, ccline.cmdbuff, TRUE);
     curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
     curwin->w_cursor.col = ccline.cmdpos;

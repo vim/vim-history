@@ -1,6 +1,6 @@
 " Menu Translations:	Françaisè
 " Maintainer:	François Thunus (thunus@systran.fr)
-" Last Change:	2001 Feb 11
+" Last Change:	2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans &Edit				&Editer
 menutrans &Undo<Tab>u			&Défaire<Tab>u
 menutrans &Redo<Tab>^R			Re&faire<Tab>^R
 menutrans Repea&t<Tab>\.		&Répéter<Tab>\.
-menutrans Cu&t<Tab>"*x			&Couper<Tab>"*x
-menutrans &Copy<Tab>"*y			C&opier<Tab>"*y
-menutrans &Paste<Tab>"*p		Co&ller<Tab>"*p
+menutrans Cu&t<Tab>"+x			&Couper<Tab>"+x
+menutrans &Copy<Tab>"+y			C&opier<Tab>"+y
+menutrans &Paste<Tab>"+p		Co&ller<Tab>"+p
 menutrans Put\ &Before<Tab>[p		&Mettre\ devant<Tab>[p
 menutrans Put\ &After<Tab>]p		Me&ttre\ derriere<Tab>]p
 menutrans &Select\ all<Tab>ggVG		&Marquer\ Tout<Tab>ggVG

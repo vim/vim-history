@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Feb 15
+" Last Change:	2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,9 +38,9 @@ menutrans E&xit<Tab>:qa			&Esci<Tab>:qa
 menutrans &Undo<Tab>u			&Disfa<Tab>u
 menutrans &Redo<Tab>^R			Ri&fai<Tab>^R
 menutrans Rep&eat<Tab>\.		&Ripeti \ultimo \comando<Tab>\.
-menutrans Cu&t<Tab>"*x			T&aglia<Tab>"*x
-menutrans &Copy<Tab>"*y			&Copia<Tab>"*y
-menutrans &Paste<Tab>"*p		&Incolla<Tab>"*p
+menutrans Cu&t<Tab>"+x			T&aglia<Tab>"+x
+menutrans &Copy<Tab>"+y			&Copia<Tab>"+y
+menutrans &Paste<Tab>"+p		&Incolla<Tab>"+p
 menutrans Put\ &Before<Tab>[p		&Metti\ davanti<Tab>[p
 menutrans Put\ &After<Tab>]p		M&etti\ dietro<Tab>]p
 menutrans &Delete<Tab>x			Cance&lla<Tab>x

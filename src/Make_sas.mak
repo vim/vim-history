@@ -91,6 +91,7 @@ PROPT = DEF=PROTO GPROTO GPPARM MAXIMUMERRORS=999 GENPROTOSTATICS GENPROTOPARAME
 SRC = \
 	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -130,6 +131,7 @@ SRC = \
 OBJ = \
 	buffer.o \
 	charset.o \
+	diff.o \
 	digraph.o \
 	edit.o \
 	eval.o \
@@ -169,6 +171,7 @@ OBJ = \
 PRO = \
 	proto/buffer.pro \
 	proto/charset.pro \
+	proto/diff.pro \
 	proto/digraph.pro \
 	proto/edit.pro \
 	proto/eval.pro \
@@ -264,6 +267,8 @@ buffer.o:		buffer.c
 proto/buffer.pro:	buffer.c
 charset.o:		charset.c
 proto/charset.pro:	charset.c
+diff.o:			diff.c
+proto/diff.pro:		diff.c
 digraph.o:		digraph.c
 proto/digraph.pro:	digraph.c
 edit.o:			edit.c

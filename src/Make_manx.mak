@@ -36,6 +36,7 @@ DEL = $(SHELL) -c rm -f
 
 SRC =	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -76,6 +77,7 @@ INCL = vim.h feature.h keymap.h macros.h ascii.h term.h structs.h os_amiga.h
 
 OBJ =	obj/buffer.o \
 	obj/charset.o \
+	obj/diff.o \
 	obj/digraph.o \
 	obj/edit.o \
 	obj/eval.o \
@@ -114,6 +116,7 @@ OBJ =	obj/buffer.o \
 
 PRO =	proto/buffer.pro \
 	proto/charset.pro \
+	proto/diff.pro \
 	proto/digraph.pro \
 	proto/edit.pro \
 	proto/eval.pro \
@@ -199,6 +202,9 @@ obj/buffer.o:	buffer.c
 
 obj/charset.o:	charset.c
 	$(CCSYM) $@ charset.c
+
+obj/diff.o:	diff.c
+	$(CCSYM) $@ diff.c
 
 obj/digraph.o:	digraph.c
 	$(CCSYM) $@ digraph.c

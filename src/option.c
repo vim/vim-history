@@ -61,6 +61,7 @@ typedef enum
     , PV_CPT
     , PV_DEF
     , PV_DICT
+    , PV_DIFF
     , PV_EOL
     , PV_EP
     , PV_ET
@@ -579,6 +580,13 @@ static struct vimoption options[] =
     {"cpoptions",   "cpo",  P_STRING|P_VIM|P_RALL|P_FLAGLIST,
 			    (char_u *)&p_cpo, PV_NONE,
 			    {(char_u *)CPO_ALL, (char_u *)CPO_DEFAULT}},
+    {"cscopepathcomp", "cspc", P_NUM|P_VI_DEF|P_VIM,
+#ifdef USE_CSCOPE
+			    (char_u *)&p_cspc, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)0L, (char_u *)0L}},
     {"cscopeprg",   "csprg", P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
 #ifdef FEAT_CSCOPE
 			    (char_u *)&p_csprg, PV_NONE,
@@ -636,6 +644,31 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)"", (char_u *)0L}},
+    {"diff",	    NULL,   P_BOOL|P_VI_DEF|P_RWIN,
+#ifdef FEAT_DIFF
+			    (char_u *)VAR_WIN, PV_DIFF,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
+    {"diffexpr",    "dex",  P_STRING|P_VI_DEF|P_SECURE,
+#if defined(FEAT_DIFF) && defined(FEAT_EVAL)
+			    (char_u *)&p_dex, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
+    {"diffopt",	    "dip",  P_STRING|P_ALLOCED|P_VI_DEF|P_RWIN|P_COMMA|P_NODUP,
+#ifdef FEAT_DIFF
+			    (char_u *)&p_dip, PV_NONE,
+			    {(char_u *)"filler", (char_u *)NULL}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)"", (char_u *)NULL}
+#endif
+			    },
     {"digraph",	    "dg",   P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_DIGRAPHS
 			    (char_u *)&p_dg, PV_NONE,
@@ -863,7 +896,7 @@ static struct vimoption options[] =
 			    (char_u *)&p_guicursor, PV_NONE,
 			    {
 # ifdef FEAT_GUI
-				(char_u *)"n-v-c:block-Cursor,ve:ver35-Cursor,o:hor50-Cursor,i-ci:ver25-Cursor,r-cr:hor20-Cursor,sm:block-Cursor-blinkwait175-blinkoff150-blinkon175",
+				(char_u *)"n-v-c:block-Cursor/lCursor,ve:ver35-Cursor,o:hor50-Cursor,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor,sm:block-Cursor-blinkwait175-blinkoff150-blinkon175",
 # else	/* MSDOS or Win32 console */
 				(char_u *)"n-v-c:block,o:hor50,i-ci:hor10,r-cr:hor30,sm:block",
 # endif
@@ -953,7 +986,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"highlight",   "hl",   P_STRING|P_VI_DEF|P_RCLR|P_COMMA|P_NODUP,
 			    (char_u *)&p_hl, PV_NONE,
-			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn",
+			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn,A:DiffAdd,C:DiffChange,D:DiffDelete,T:DiffText",
 				(char_u *)0L}},
     {"history",	    "hi",   P_NUM|P_VIM,
 			    (char_u *)&p_hi, PV_NONE,
@@ -1381,6 +1414,15 @@ static struct vimoption options[] =
     {"pastetoggle", "pt",   P_STRING|P_VI_DEF,
 			    (char_u *)&p_pt, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
+    {"patchexpr",   "pex",  P_STRING|P_VI_DEF|P_SECURE,
+#if defined(FEAT_DIFF) && defined(FEAT_EVAL)
+			    (char_u *)&p_pex, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"patchmode",   "pm",   P_STRING|P_VI_DEF,
 			    (char_u *)&p_pm, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
@@ -2142,7 +2184,11 @@ static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
-static char *(p_fdm_values[]) = {"manual", "expr", "marker", "indent", "syntax", NULL};
+static char *(p_fdm_values[]) = {"manual", "expr", "marker", "indent", "syntax",
+#ifdef FEAT_DIFF
+				"diff",
+#endif
+				NULL};
 static char *(p_fcl_values[]) = {"all", NULL};
 #endif
 
@@ -2872,14 +2918,10 @@ do_set(arg, opt_flags)
 		 * The two characters after "t_" may not be alphanumeric.
 		 */
 		if (arg[0] == 't' && arg[1] == '_' && arg[2] && arg[3])
-		{
 		    len = 4;
-		}
 		else
-		{
-		    while (isalnum(arg[len]) || arg[len] == '_')
+		    while (ASCII_ISALNUM(arg[len]) || arg[len] == '_')
 			++len;
-		}
 		nextchar = arg[len];
 		arg[len] = NUL;			    /* put NUL after name */
 		opt_idx = findoption(arg);
@@ -4422,7 +4464,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &p_guifont)
     {
 	if (gui.in_use && gui_init_font(p_guifont, FALSE) != OK
-# if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_GTK)
+# if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
 		&& *p_guifont != '*'
 # endif
 		)
@@ -4759,6 +4801,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    errmsg = e_invarg;
     }
 
+#ifdef FEAT_DIFF
+    /* 'diffopt' */
+    else if (varp == &p_dip)
+    {
+	if (diffopt_changed() == FAIL)
+	    errmsg = e_invarg;
+    }
+#endif
+
 #ifdef FEAT_FOLDING
     /* 'foldmethod' */
     else if (varp == &curwin->w_p_fdm)
@@ -4936,6 +4987,7 @@ set_chars_option(varp)
 	{&fill_stlnc,	"stlnc"},
 	{&fill_vert,	"vert"},
 	{&fill_fold,	"fold"},
+	{&fill_diff,	"diff"},
     };
 #endif
     static struct charstab lcstab[] =
@@ -5206,18 +5258,31 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     }
 #endif
 
+#ifdef FEAT_SCROLLBIND
+    /* when 'scrollbind' is set: snapshot the current position to avoid a jump
+     * at the end of normal_cmd() */
+    else if ((int *)varp == &curwin->w_p_scb)
+    {
+	if (curwin->w_p_scb)
+	    do_check_scrollbind(FALSE);
+    }
+#endif
+
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     /* There can be only one window with 'previewwindow' set. */
     else if ((int *)varp == &curwin->w_p_pvw)
     {
-	win_t	*win;
+	if (curwin->w_p_pvw)
+	{
+	    win_t	*win;
 
-	for (win = firstwin; win != NULL; win = win->w_next)
-	    if (win->w_p_pvw && win != curwin)
-	    {
-		curwin->w_p_pvw = FALSE;
-		return (char_u *)N_("A preview window already exists");
-	    }
+	    for (win = firstwin; win != NULL; win = win->w_next)
+		if (win->w_p_pvw && win != curwin)
+		{
+		    curwin->w_p_pvw = FALSE;
+		    return (char_u *)N_("A preview window already exists");
+		}
+	}
     }
 #endif
 
@@ -5330,6 +5395,31 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	    gui_mch_enable_beval_area(balloonEval);
 	else
 	    gui_mch_disable_beval_area(balloonEval);
+    }
+#endif
+
+#ifdef FEAT_DIFF
+    /* 'diff' */
+    else if ((int *)varp == &curwin->w_p_diff)
+    {
+	win_t	*wp;
+
+	if (!curwin->w_p_diff)
+	{
+	    /* When there is no window showing a diff for this buffer, remove
+	     * it from the diffs. */
+	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		if (wp->w_buffer == curwin->w_buffer && wp->w_p_diff)
+		    break;
+	    if (wp == NULL)
+		diff_buf_delete(curwin->w_buffer);
+	}
+	else
+	    diff_buf_add(curwin->w_buffer);
+#ifdef FEAT_FOLDING
+	if (foldmethodIsDiff(curwin))
+	    foldUpdateAll(curwin);
+#endif
     }
 #endif
 
@@ -6562,6 +6652,9 @@ get_varp(p)
 #endif
 
 	case PV_LIST:	return (char_u *)&(curwin->w_p_list);
+#ifdef FEAT_DIFF
+	case PV_DIFF:	return (char_u *)&(curwin->w_p_diff);
+#endif
 #ifdef FEAT_FOLDING
 	case PV_FDC:	return (char_u *)&(curwin->w_p_fdc);
 	case PV_FEN:	return (char_u *)&(curwin->w_p_fen);
@@ -6736,6 +6829,9 @@ copy_winopt(from, to)
 #endif
 #ifdef FEAT_SCROLLBIND
     to->wo_scb = from->wo_scb;
+#endif
+#ifdef FEAT_DIFF
+    to->wo_diff = from->wo_diff;
 #endif
 #ifdef FEAT_FOLDING
     to->wo_fdc = from->wo_fdc;
@@ -6953,6 +7049,10 @@ buf_copy_options(buf, flags)
 	    buf->b_p_keymap = vim_strsave(p_keymap);
 	    buf->b_kmap_state |= KEYMAP_INIT;
 #endif
+	    /* This isn't really an option, but copying the langmap state from
+	     * the current buffer is better than resetting it. */
+	    buf->b_lmap = b_lmap_def;
+
 	    /* options that are normally global but also have a local value
 	     * are not copied, start using the global value */
 #ifdef FEAT_QUICKFIX
@@ -7100,7 +7200,8 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 	}
 	else
 	{
-	    while (isalnum(*p) || *p == '_' || *p == '*')   /* Allow * wildcard */
+		/* Allow * wildcard */
+	    while (ASCII_ISALNUM(*p) || *p == '_' || *p == '*')
 		p++;
 	    if (*p == NUL)
 		return;
@@ -7906,7 +8007,7 @@ check_opt_wim()
 
     for (p = p_wim; *p; ++p)
     {
-	for (i = 0; isalpha(p[i]); ++i)
+	for (i = 0; ASCII_ISALPHA(p[i]); ++i)
 	    ;
 	if (p[i] != NUL && p[i] != ',' && p[i] != ':')
 	    return FAIL;

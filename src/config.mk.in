@@ -73,13 +73,14 @@ RUBY_LIBS	= @RUBY_LIBS@
 
 SNIFF_SRC  	= @SNIFF_SRC@
 SNIFF_OBJ  	= @SNIFF_OBJ@
-SNIFF_DEFS 	= @SNIFF_DEFS@
 
 AWK		= @AWK@
 
 STRIP		= @STRIP@
 
 COMPILEDBY	= @compiledby@
+
+INSTALLVIMDIFF	= @dovimdiff@
 
 ### Line break character as octal number for "tr"
 NL   		= @line_break@

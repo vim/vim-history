@@ -1884,17 +1884,6 @@ gui_mch_delete_lines(row, num_lines)
     gui_mch_set_bg_color(gui.back_pixel);
     ScrollRect (&rc, 0, -num_lines * gui.char_height, (RgnHandle) nil);
 
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row < row + num_lines)
-	    gui.cursor_is_valid = FALSE;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_row -= num_lines;
-    }
-
     gui_clear_block(gui.scroll_region_bot - num_lines + 1,
 						       gui.scroll_region_left,
 	gui.scroll_region_bot, gui.scroll_region_right);

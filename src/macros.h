@@ -68,8 +68,19 @@
 # endif
 #endif
 
-/* some versions of isalnum() can't handle negative or big numbers */
-#define IS_ALNUM(x)	((x) > 0 && (x) < 256 && isalnum(x))
+/* Like isalpha() but reject non-ASCII characters.  Can't be used with a
+ * special key (negative value). */
+#ifdef EBCDIC
+# define ASCII_ISALPHA(c) isalpha(c)
+# define ASCII_ISALNUM(c) isalnum(c)
+# define ASCII_ISLOWER(c) islower(c)
+# define ASCII_ISUPPER(c) isupper(c)
+#else
+# define ASCII_ISALPHA(c) ((c) < 0x7f && isalpha(c))
+# define ASCII_ISALNUM(c) ((c) < 0x7f && isalnum(c))
+# define ASCII_ISLOWER(c) ((c) < 0x7f && islower(c))
+# define ASCII_ISUPPER(c) ((c) < 0x7f && isupper(c))
+#endif
 
 /* macro version of chartab().
  * Only works with values 0-255!

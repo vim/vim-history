@@ -75,6 +75,10 @@
 
 #if HAVE_TERMIO_H
 # include <termio.h>
+#else
+# if HAVE_TERMIOS_H
+#  include <termios.h>
+# endif
 #endif
 
 #if HAVE_SYS_STREAM_H

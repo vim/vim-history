@@ -39,6 +39,9 @@ static XtActionsRec	pullAction[2] = {{ "menu-pullright",
 					 { "menu-pullleft",
 				(XtActionProc)gui_athena_pullleft_action}};
 #endif
+#ifdef FEAT_TOOLBAR
+static Widget toolBar = (Widget)0;
+#endif
 
 static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
@@ -205,6 +208,21 @@ gui_x11_create_widgets()
 	XtVaSetValues(menuBar, XtNborderColor, gui.menu_fg_pixel, NULL);
 #endif
 
+#ifdef FEAT_TOOLBAR
+    toolBar = XtVaCreateManagedWidget("toolBar",
+	boxWidgetClass,		vimForm,
+	XtNresizable,		True,
+	XtNtop,			XtChainTop,
+	XtNbottom,		XtChainTop,
+	XtNleft,		XtChainLeft,
+	XtNright,		XtChainRight,
+	XtNorientation,		XtorientHorizontal,
+	XtNhSpace,		1,
+	XtNvSpace,		3,
+	NULL);
+    gui_athena_menu_colors(toolBar);
+#endif
+
     /* The text area. */
     textArea = XtVaCreateManagedWidget("textArea",
 	coreWidgetClass,	vimForm,
@@ -248,7 +266,38 @@ gui_x11_destroy_widgets()
 #ifdef FEAT_MENU
     menuBar = NULL;
 #endif
+#ifdef FEAT_TOOLBAR
+    toolBar = NULL;
+#endif
 }
+
+#if defined(FEAT_TOOLBAR) || defined(PROTO)
+    void
+gui_mch_set_toolbar_pos(x, y, w, h)
+    int	    x;
+    int	    y;
+    int	    w;
+    int	    h;
+{
+    Dimension	border;
+    int		height;
+
+    XtUnmanageChild(toolBar);
+    XtVaGetValues(toolBar,
+		XtNborderWidth, &border,
+		NULL);
+    height = h - 2 * border;
+    if (height < 0)
+	height = 1;
+    XtVaSetValues(toolBar,
+		  XtNhorizDistance, x,
+		  XtNvertDistance, y,
+		  XtNwidth, w - 2 * border,
+		  XtNheight,	height,
+		  NULL);
+    XtManageChild(toolBar);
+}
+#endif
 
     void
 gui_mch_set_text_area_pos(x, y, w, h)
@@ -292,9 +341,32 @@ gui_mch_enable_menu(flag)
     int	    flag;
 {
     if (flag)
+    {
 	XtManageChild(menuBar);
+# ifdef FEAT_TOOLBAR
+	if (XtIsManaged(toolBar))
+	{
+	    XtVaSetValues(toolBar,
+		XtNvertDistance,    gui.menu_height,
+		NULL);
+	    XtVaSetValues(textArea,
+		XtNvertDistance,    gui.menu_height + gui.toolbar_height,
+		NULL);
+	}
+# endif
+    }
     else
+    {
 	XtUnmanageChild(menuBar);
+# ifdef FEAT_TOOLBAR
+	if (XtIsManaged(toolBar))
+	{
+	    XtVaSetValues(toolBar,
+		XtNvertDistance,    0,
+		NULL);
+	}
+# endif
+    }
 }
 
     void
@@ -557,6 +629,65 @@ gui_mch_add_menu_item(menu, idx)
 {
     vimmenu_t	*parent = menu->parent;
 
+# ifdef FEAT_TOOLBAR
+    if (menu_is_toolbar(parent->name))
+    {
+	WidgetClass	type;
+	int		n;
+	Arg		args[21];
+
+	n = 0;
+	if (menu_is_separator(menu->name))
+	{
+	    XtSetArg(args[n], XtNlabel, ""); n++;
+	    XtSetArg(args[n], XtNborderWidth, 0); n++;
+	}
+	else
+	{
+	    Pixmap pixmap = 0;
+	    Pixmap insensitive = 0;
+
+	    if (strstr((const char *)p_toolbar, "icons") != NULL)
+		get_pixmap(menu->name, &pixmap, &insensitive);
+	    if (pixmap == 0)
+	    {
+		XtSetArg(args[n], XtNlabel, menu->dname); n++;
+	    }
+	    else
+	    {
+		XtSetArg(args[n], XtNbitmap, pixmap); n++;
+		XtSetArg(args[n], XtNinternalHeight, 1); n++;
+		XtSetArg(args[n], XtNinternalWidth, 1); n++;
+		XtSetArg(args[n], XtNborderWidth, 1); n++;
+	    }
+	}
+	XtSetArg(args[n], XtNhighlightThickness, 0); n++;
+	type = commandWidgetClass;
+	/* TODO: figure out the position in the toolbar?
+	 *       This currently works fine for the default toolbar, but
+	 *       what if we add/remove items during later runtime?
+	 */
+
+	if (menu->id == NULL)
+	{
+	    menu->id = XtCreateManagedWidget((char *)menu->dname,
+			type, toolBar, args, n);
+	    XtAddCallback(menu->id,
+		    XtNcallback, gui_x11_menu_cb, menu);
+	}
+	else
+	    XtSetValues(menu->id, args, n);
+
+	menu->parent = parent;
+	menu->submenu_id = NULL;
+	if (!XtIsManaged(toolBar)
+		    && vim_strchr(p_go, GO_TOOLBAR) != NULL)
+	    gui_mch_show_toolbar(TRUE);
+	gui.toolbar_height = gui_mch_compute_toolbar_height();
+	return;
+    } /* toolbar menu item */
+# endif
+
     /* Don't add menu separator */
     if (menu_is_separator(menu->name))
 	return;
@@ -576,6 +707,98 @@ gui_mch_add_menu_item(menu, idx)
     }
 }
 
+#if defined(FEAT_TOOLBAR) || defined(PROTO)
+    void
+gui_mch_show_toolbar(int showit)
+{
+    Cardinal	numChildren;	    /* how many children toolBar has */
+
+    XtVaGetValues(toolBar, XtNnumChildren, &numChildren, NULL);
+    if (showit && numChildren > 0)
+    {
+	gui.toolbar_height = gui_mch_compute_toolbar_height();
+	XtManageChild(toolBar);
+	if (XtIsManaged(menuBar))
+	{
+	    XtVaSetValues(textArea,
+		    XtNvertDistance,    gui.toolbar_height + gui.menu_height,
+		    NULL);
+	    XtVaSetValues(toolBar,
+		    XtNvertDistance,    gui.menu_height,
+		    NULL);
+	}
+	else
+	{
+	    XtVaSetValues(textArea,
+		    XtNvertDistance,    gui.toolbar_height,
+		    NULL);
+	    XtVaSetValues(toolBar,
+		    XtNvertDistance,    0,
+		    NULL);
+	}
+    }
+    else
+    {
+	gui.toolbar_height = 0;
+	if (XtIsManaged(menuBar))
+	    XtVaSetValues(textArea,
+		XtNvertDistance,    gui.menu_height,
+		NULL);
+	else
+	    XtVaSetValues(textArea,
+		XtNvertDistance,    0,
+		NULL);
+
+	XtUnmanageChild(toolBar);
+    }
+}
+
+
+    int
+gui_mch_compute_toolbar_height()
+{
+    Dimension	height;		    /* total Toolbar height */
+    Dimension	whgt;		    /* height of each widget */
+    Dimension	marginHeight;	    /* XmNmarginHeight of toolBar */
+    Dimension	shadowThickness;    /* thickness of Xtparent(toolBar) */
+    WidgetList	children;	    /* list of toolBar's children */
+    Cardinal	numChildren;	    /* how many children toolBar has */
+    int		i;
+
+    height = 0;
+    shadowThickness = 0;
+    marginHeight = 0;
+    if (toolBar != (Widget)0)
+    {
+	XtVaGetValues(toolBar,
+		XtNborderWidth,	    &shadowThickness,
+		XtNvSpace,	    &marginHeight,
+		XtNchildren,	    &children,
+		XtNnumChildren,	    &numChildren,
+		NULL);
+	for (i = 0; i < numChildren; i++)
+	{
+	    whgt = 0;
+
+	    XtVaGetValues(children[i], XtNheight, &whgt, NULL);
+	    if (height < whgt)
+		height = whgt;
+	}
+    }
+
+    return (int)(height + (marginHeight << 1) + (shadowThickness << 1));
+}
+
+    void
+gui_mch_get_toolbar_colors(bgp, fgp)
+    Pixel	*bgp;
+    Pixel	*fgp;
+{
+    XtVaGetValues(toolBar, XtNbackground, bgp, XtNborderColor, fgp, NULL);
+}
+#endif
+
+
 /* ARGSUSED */
     void
 gui_mch_toggle_tearoffs(enable)
@@ -592,6 +815,9 @@ gui_mch_new_menu_colors()
     if (gui.menu_fg_pixel != -1)
 	XtVaSetValues(menuBar, XtNborderColor,	gui.menu_fg_pixel, NULL);
     gui_athena_menu_colors(menuBar);
+#ifdef FEAT_TOOLBAR
+    gui_athena_menu_colors(toolBar);
+#endif
 
     gui_mch_submenu_change(root_menu,TRUE);
 }

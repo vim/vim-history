@@ -1769,9 +1769,15 @@ syn_current_attr(syncing, displaying)
 	    if (do_keywords)
 	    {
 	      line = syn_getcurline();
-	      if (vim_iswordc_buf(line[current_col], syn_buf)
+	      if (vim_iswordc_buf(line + current_col, syn_buf)
 		      && (current_col == 0
-			  || !vim_iswordc_buf(line[current_col - 1], syn_buf)))
+			  || !vim_iswordc_buf(line + current_col - 1
+#ifdef FEAT_MBYTE
+			      - (has_mbyte
+				  ? (*mb_head_off)(line, line + current_col - 1)
+				  : 0)
+#endif
+			       , syn_buf)))
 	      {
 		syn_id = check_keyword_id(line, (int)current_col,
 					 &endcol, &flags, &next_list, cur_si);
@@ -2841,10 +2847,21 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
     int		len;
     char_u	keyword[MAXKEYWLEN + 1]; /* assume max. keyword len is 80 */
 
-    /* Find first character after the keyword */
+    /* Find first character after the keyword.  First character was already
+     * checked. */
     p = line + startcol;
-    for (len = 1; vim_iswordc_buf(p[len], syn_buf); ++len)
-	;
+    len = 0;
+    do
+    {
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    len += (*mb_ptr2len_check)(p + len);
+	else
+#endif
+	    ++len;
+    }
+    while (vim_iswordc_buf(p + len, syn_buf));
+
     if (len > MAXKEYWLEN)
 	return 0;
 
@@ -2868,8 +2885,7 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	    ktab = syn_buf->b_keywtab[syn_khash(keyword)];
 	else /* round == 2, ignore case */
 	{
-	    for (p = keyword; *p != NUL; ++p)
-		*p = TO_LOWER(*p);
+	    str_tolower(keyword);
 	    ktab = syn_buf->b_keywtab_ic[syn_khash(keyword)];
 	}
 
@@ -3801,7 +3817,6 @@ add_keyword(name, id, flags, cont_in_list, next_list)
 {
     keyentry_t	*ktab;
     keyentry_t	***ktabpp;
-    char_u	*p;
     int		hash;
 
     ktab = (keyentry_t *)alloc((int)(sizeof(keyentry_t) + STRLEN(name)));
@@ -3816,8 +3831,7 @@ add_keyword(name, id, flags, cont_in_list, next_list)
 
     if (curbuf->b_syn_ic)
     {
-	for (p = ktab->keyword; *p; ++p)
-	    *p = TO_LOWER(*p);
+	str_tolower(ktab->keyword);
 	ktabpp = &curbuf->b_keywtab_ic;
     }
     else
@@ -3847,11 +3861,11 @@ syn_khash(p)
     long_u	hash = 0;
     long_u	g;
 
-    while (*p)
+    while (*p != NUL)
     {
 	hash = (hash << 4) + *p++;	/* clear low 4 bits of hash, add char */
 	g = hash & 0xf0000000L;		/* g has high 4 bits of hash only */
-	if (g)
+	if (g != 0)
 	    hash ^= g >> 24;		/* xor g's high 4 bits into hash */
     }
 
@@ -4186,7 +4200,7 @@ syn_cmd_keyword(eap, syncing)
 		    if (rest == NULL || ends_excmd(*rest))
 			break;
 		    p = keyword_copy;
-		    while (*rest && !vim_iswhite(*rest))
+		    while (*rest != 0 && !vim_iswhite(*rest))
 		    {
 			if (*rest == '\\' && rest[1] != NUL)
 			    ++rest;
@@ -4195,7 +4209,7 @@ syn_cmd_keyword(eap, syncing)
 		    *p = NUL;
 		    if (round == 2 && !eap->skip)
 		    {
-			for (p = vim_strchr(keyword_copy, '['); ; ++p)
+			for (p = vim_strchr(keyword_copy, '['); ; )
 			{
 			    if (p != NULL)
 				*p = NUL;
@@ -4203,7 +4217,20 @@ syn_cmd_keyword(eap, syncing)
 						     cont_in_list, next_list);
 			    if (p == NULL || p[1] == NUL || p[1] == ']')
 				break;
-			    p[0] = p[1];
+#ifdef FEAT_MBYTE
+			    if (has_mbyte)
+			    {
+				int l = (*mb_ptr2len_check)(p + 1);
+
+				mch_memmove(p, p + 1, l);
+				p += l;
+			    }
+			    else
+#endif
+			    {
+				p[0] = p[1];
+				++p;
+			    }
 			}
 		    }
 		}
@@ -5515,7 +5542,7 @@ ex_syntax(eap)
     syn_cmdlinep = eap->cmdlinep;
 
     /* isolate subcommand name */
-    for (subcmd_end = arg; isalpha(*subcmd_end); ++subcmd_end)
+    for (subcmd_end = arg; ASCII_ISALPHA(*subcmd_end); ++subcmd_end)
 	;
     subcmd_name = vim_strnsave(arg, (int)(subcmd_end - arg));
     if (subcmd_name != NULL)
@@ -5686,6 +5713,7 @@ static char *(highlight_init_both[]) =
     {
 #ifdef FEAT_GUI
 	"Cursor guibg=fg guifg=bg",
+	"lCursor guibg=fg guifg=bg",	/* should be different, but what? */
 #endif
 	"ErrorMsg term=standout ctermbg=DarkRed ctermfg=White guibg=Red guifg=White",
 	"IncSearch term=reverse cterm=reverse gui=reverse",
@@ -5696,6 +5724,8 @@ static char *(highlight_init_both[]) =
 	"VertSplit term=reverse cterm=reverse gui=reverse",
 	"Visual term=reverse cterm=reverse gui=reverse guifg=Grey guibg=fg",
 	"VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold",
+	"DiffDelete term=bold ctermfg=Blue gui=bold guifg=Blue",
+	"DiffText term=reverse cterm=bold ctermbg=Red gui=bold guibg=Red",
 	NULL
     };
 
@@ -5713,6 +5743,8 @@ static char *(highlight_init_light[]) =
 	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	"Folded term=standout ctermbg=Grey ctermfg=DarkBlue guibg=LightGrey guifg=DarkBlue",
 	"FoldColumn term=standout ctermbg=Grey ctermfg=DarkBlue guibg=Grey guifg=DarkBlue",
+	"DiffAdd term=bold ctermbg=LightBlue guibg=LightBlue",
+	"DiffChange term=bold ctermbg=LightMagenta guibg=LightMagenta",
 	NULL
     };
 
@@ -5730,6 +5762,8 @@ static char *(highlight_init_dark[]) =
 	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	"Folded term=standout ctermbg=DarkGrey ctermfg=Cyan guibg=DarkGrey guifg=Cyan",
 	"FoldColumn term=standout ctermbg=DarkGrey ctermfg=Cyan guibg=Grey guifg=Cyan",
+	"DiffAdd term=bold ctermbg=DarkBlue guibg=DarkBlue",
+	"DiffChange term=bold ctermbg=DarkMagenta guibg=DarkMagenta",
 	NULL
     };
 
@@ -6085,16 +6119,42 @@ do_highlight(line, forceit, init)
 	}
 	else if (STRCMP(key, "FONT") == 0)
 	{
-#ifdef FEAT_GUI	    /* in non-GUI fonts are simply ignored */
-	    gui_mch_free_font(HL_TABLE()[idx].sg_font);
+	    /* in non-GUI fonts are simply ignored */
+#ifdef FEAT_GUI
+	    GuiFont temp_sg_font = HL_TABLE()[idx].sg_font;
+# ifdef FEAT_XFONTSET
+	    GuiFontset temp_sg_fontset = HL_TABLE()[idx].sg_fontset;
+# endif
+	    /* First, save the current font/fontset.
+	     * Then try to allocate the font/fontset.
+	     * If the allocation fails, HL_TABLE()[idx].sg_font OR sg_fontset
+	     * will be set to NOFONT or NOFONTSET respectively. */
+
 	    HL_TABLE()[idx].sg_font = NOFONT;
 # ifdef FEAT_XFONTSET
-	    gui_mch_free_fontset(HL_TABLE()[idx].sg_fontset);
 	    HL_TABLE()[idx].sg_fontset = NOFONTSET;
 # endif
 	    hl_do_font(idx, arg, is_normal_group, is_menu_group);
-	    vim_free(HL_TABLE()[idx].sg_font_name);
-	    HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
+
+# ifdef FEAT_XFONTSET
+	    if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
+	    {
+		/* New font was accepted, free the old one. */
+		gui_mch_free_fontset(temp_sg_fontset);
+		vim_free(HL_TABLE()[idx].sg_font_name);
+		HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
+	    }
+	    else
+		HL_TABLE()[idx].sg_fontset = temp_sg_fontset;
+# endif
+	    if (HL_TABLE()[idx].sg_font != NOFONT)
+	    {
+		gui_mch_free_font(temp_sg_font);
+		vim_free(HL_TABLE()[idx].sg_font_name);
+		HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
+	    }
+	    else
+		HL_TABLE()[idx].sg_font = temp_sg_font;
 #endif
 	}
 	else if (STRCMP(key, "CTERMFG") == 0 || STRCMP(key, "CTERMBG") == 0)

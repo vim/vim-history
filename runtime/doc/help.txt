@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0z.  Last change: 2001 Mar 17
+*help.txt*	For Vim version 6.0aa.  Last change: 2001 Apr 04
 
 			VIM - main help file
 									 k
@@ -111,6 +111,7 @@ Advanced editing ~
 |quickfix.txt|	commands for a quick edit-compile-fix cycle
 |windows.txt|	commands for using multiple windows and buffers
 |syntax.txt|	syntax highlighting
+|diff.txt|	working with two or three versions of the same file
 |autocmd.txt|	automatically executing commands on an event
 |filetype.txt|	settings done specifically for a type of file
 |eval.txt|	expression evaluation, conditional commands
@@ -138,6 +139,7 @@ Interfaces ~
 |if_sniff.txt|	SNiFF+ interface
 |if_tcl.txt|	Tcl interface
 |if_ole.txt|	OLE automation interface for Win32
+|if_ruby.txt|	Ruby interface
 |debugger.txt|	Interface with a debugger
 |workshop.txt|	Sun Visual Workshop interface
 |sign.txt|	debugging signs
@@ -157,6 +159,7 @@ Remarks about specific systems ~
 |os_mint.txt|	Atari MiNT
 |os_msdos.txt|	MS-DOS (plain DOS and DOS box under Windows)
 |os_os2.txt|	OS/2
+|os_qnx.txt|	QNX
 |os_riscos.txt|	RISC-OS
 |os_unix.txt|	Unix
 |os_vms.txt|	VMS

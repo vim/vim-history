@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0z.  Last change: 2001 Mar 20
+*editing.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

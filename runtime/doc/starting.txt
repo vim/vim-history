@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0z.  Last change: 2001 Feb 24
+*starting.txt*  For Vim version 6.0aa.  Last change: 2001 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -307,7 +307,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		of terminal you are using (See |terminal-info|).  {not in Vi}
 
 							*-d*
--d {device}	Amiga only: The "device" is opened to be used for editing.
+-d		Start in diff mode, like |vimdiff|.
+		{not in Vi} {not available when compiled without the |+diff|
+		feature}
+
+-d {device}	Only on the Amiga and when not compiled with the |+diff|
+		feature: The {device} is opened to be used for editing.
 		Normally you would use this to set the window position and
 		size: "-d con:x/y/width/height", e.g.,
 		"-d con:30/10/600/150".  But you can also use it to start

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0z.  Last change: 2001 Mar 21
+*options.txt*   For Vim version 6.0aa.  Last change: 2001 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -572,8 +572,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to buffer
 	Copy indent from current line when starting a new line (typing <CR>
 	in Insert mode or when using the "o" or "O" command).  If you do not
-	type anything on the new line except <BS> and then type <Esc> or
-	<CR>, the indent is deleted again.  When autoindent is on,
+	type anything on the new line except <BS> or CTRL-D and then type
+	<Esc> or <CR>, the indent is deleted again.  When autoindent is on,
 	formatting (with the "gq" command or when you reach 'textwidth' in
 	Insert mode) uses the indentation of the first line.   When
 	'smartindent' or 'cindent' is on the indent is changed in specific
@@ -1059,8 +1059,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The possible encoding names encountered are in 'encoding'.
 	Additionally, names given in 'fileencodings' and 'fileencoding' are
 	used.
-	Conversion between "unicode", "ucs-2", "ucs-4" and "utf-8" is done
-	internally by Vim, 'charconvert' is not used for this.
+	Conversion between "latin1", "unicode", "ucs-2", "ucs-4" and "utf-8"
+	is done internally by Vim, 'charconvert' is not used for this.
 	'charconvert' is also used to convert the viminfo file, if the 'c'
 	flag is present in 'viminfo'.  Also used for Unicode conversion.
 	Example: >
@@ -1068,16 +1068,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 		fun CharConvert()
 		  system("recode "
 			\ . v:charconvert_from . ".." . v:charconvert_to
-			\ . " <" . v:charconvert_in . " >" v:charconvert_out)
+			\ . " <" . v:fname_in . " >" v:fname_out)
 		  return v:shell_error
 		endfun
 <	The related Vim variables are:
 		v:charconvert_from	name of the current encoding
 		v:charconvert_to	name of the desired encoding
-		v:charconvert_in	name of the input file
-		v:charconvert_out	name of the output file
-	Note that v:charconvert_in and v:charconvert_out will never be the
-	same.
+		v:fname_in		name of the input file
+		v:fname_out		name of the output file
+	Note that v:fname_in and v:fname_out will never be the same.
 	Note that v:charconvert_from and v:charconvert_to may be different
 	from 'encoding'.  Vim internally uses UTF-8 instead of UCS-2 or UCS-4.
 	Encryption is not done by Vim when using 'charconvert'.  If you want
@@ -1309,7 +1308,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to buffer
 			{not in Vi}
 	This option specifies how keyword completion |ins-completion| works
-	when CTRL-P or CTRL-N are used.  It indicates the type of completion
+	when CTRL-P or CTRL-N are used.  It is also used for whole-line
+	completion |i_CTRL-X_CTRL-L|.  It indicates the type of completion
 	and the places to scan.  It is a comma separated list of flags:
 	.	scan the current buffer ('wrapscan' is ignored)
 	w	scan buffers from other windows
@@ -1331,7 +1331,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	Unloaded buffers are not loaded, thus their autocmds |:autocmd| are
 	not executed, this may lead to unexpected completions from some files
-	(gzipped files for example)
+	(gzipped files for example).  Unloaded buffers are not scanned for
+	whole-line completion.
 
 	The default is ".,w,b,u,t,i", which means to scan:
 	   1. the current buffer
@@ -1540,6 +1541,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 				'<' excluded:   "^I"     (^I is a real <Tab>)
 			Also see the 'k' flag above.
 
+						*'cscopepathcomp'* *'cspc'*
+'cscopepathcomp' 'cspc'	number	(default 0)
+			global
+			{not available when compiled without the |+cscope|
+			feature}
+			{not in Vi}
+	Determines how many components of the path to show in a list of tags.
+	See |cscopepathcomp|.
+
 						*'cscopeprg'* *'csprg'*
 'cscopeprg' 'csprg'	string	(default "cscope")
 			global
@@ -1637,6 +1647,51 @@ A jump table for the options with a short description can be found at |Q_op|.
 	uses another default.
 	Backticks cannot be used in this option for security reasons.
 
+							*'diff'* *'nodiff'*
+'diff'			boolean	(default off)
+			local to window
+			{not in Vi}
+			{not available when compiled without the |+diff|
+			feature}
+	Join the current window in the group of windows that shows differences
+	between files.  See |vimdiff|.
+
+						*'dex'* *'diffexpr'*
+'diffexpr' 'dex'	string	(default "")
+			global
+			{not in Vi}
+			{not available when compiled without the |+diff|
+			feature}
+	Expression which is evaluated to obtain an ed-style diff file from two
+	versions of a file.  See |diff-diffexpr|.
+
+						*'dip'* *'diffopt'*
+'diffopt' 'dip'		string	(default "filler")
+			global
+			{not in Vi}
+			{not available when compiled without the |+diff|
+			feature}
+	Option settings for diff mode.  It can consist of these two items.
+	Both are optional.  When both are present they must be separated by a
+	comma.
+
+		filler		Show filler lines, to keep the text
+				synchronized with a window that has inserted
+				lines at the same position.  Mostly useful
+				when windows are side-by-side and 'scrollbind'
+				is set.
+
+		context:{n}	Use a context of {n} lines between a change
+				and a fold that contains unchanged lines.
+				When omitted a context of six lines is used.
+				See |fold-diff|.
+
+	Examples: >
+
+		:set diffopt=filler,context:4
+		:set diffopt=
+		:set diffopt=filler
+<
 				     *'digraph'* *'dg'* *'nodigraph'* *'nodg'*
 'digraph' 'dg'		boolean	(default off)
 			global
@@ -2014,21 +2069,31 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not available when compiled without the |+windows|
 			and |+folding| features}
 	Characters to fill the statuslines and vertical separators.
-	It is a comma separated list of string settings.
-	  stl:c		Used for filling the statusline of the current window
-	  stlnc:c	Used for filling the statusline of the non-current
-			windows
-	  vert:c	Used for filling the vertical separators
-	  fold:c	Used for filling 'foldtext'
-	Any one that is omitted will fall back to the default.  This means
-	using a space when there is highlighting or '^' for "stl", '-' for
-	"stlnc", '|' for "vert" and '-' for "fold".
+	It is a comma separated list of items:
+
+	  item		default		Used for ~
+	  stl:c		' ' or '^' 	statusline of the current window
+	  stlnc:c	' ' or '-'	statusline of the non-current windows
+	  vert:c	'|'		vertical separators |:vsplit|
+	  fold:c	'-'		filling 'foldtext'
+	  diff:c	'x'		deleted lines of the 'diff' option
+
+	Any one that is omitted will fall back to the default.  For "stl" and
+	"stlnc" the space will be used when there is highlighting, '^' or '-'
+	otherwise.
+
 	Example: >
-	    :set fillchars=stl:^,stlnc:-,vert:\|
-<	Note that this is different from the default, because these characters
-	will also be used when there is highlighting.
-	These characters will be highlighted using "StatusLine",
-	"StatusLineNC" and "VerticalSep" respectively.
+	    :set fillchars=stl:^,stlnc:-,vert:\|,fold:-,diff:x
+<	This is similar to the default, except that these characters will also
+	be used when there is highlighting.
+
+	The highlighting used for these items:
+	  item		highlight group ~
+	  stl:c		StatusLine		|hl-StatusLine|
+	  stlnc:c	StatusLineNC		|hl-StatusLineNC|
+	  vert:c	VertSplit		|hl-VertSplit|
+	  fold:c	Folded			|hl-Folded|
+	  diff:c	DiffDelete		|hl-DiffDelete|
 
 					*'fkmap'* *'fk'* *'nofkmap'* *'nofk'*
 'fkmap' 'fk'		boolean (default off)
@@ -2272,9 +2337,12 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This option cannot be set from a |modeline|, for security reasons.
 
 						*'guicursor'* *'gcr'*
-'guicursor' 'gcr'	string	(default "n-v-c:block-Cursor,ve:ver35-Cursor,
-					o:hor50-Cursor,i-ci:ver25-Cursor,
-					r-cr:hor20-Cursor,sm:block-Cursor
+'guicursor' 'gcr'	string	(default "n-v-c:block-Cursor/lCursor,
+					ve:ver35-Cursor,
+					o:hor50-Cursor,
+					i-ci:ver25-Cursor/lCursor,
+					r-cr:hor20-Cursor/lCursor,
+					sm:block-Cursor
 					-blinkwait175-blinkoff150-blinkon175")
 			global
 			{not in Vi}
@@ -2321,6 +2389,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 		{group-name}
 			a highlight group name, that sets the color and font
 			for the cursor
+		{group-name}/{group-name}
+			Two highlight group names, the first is used when
+			no language mappings are used, the other when they
+			are. |language-mapping|
+
 	Examples of parts:
 	   n-c-v:block-nCursor	in Normal, Command-line and Visual mode, use a
 				block cursor with colors from the "nCursor"
@@ -2366,7 +2439,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	width).
 	To preview a font on X11, you might be able to use the "xfontsel"
 	program.  The "xlsfonts" program gives a list of all available fonts.
-	For Win32 and GTK only: >
+	For Win32, GTK and Photon only: >
 	    :set guifont=*
 <	will bring up a font requester, where you can pick the font you want.
 	If none of the fonts can be loaded, vim will keep the current setting.
@@ -2448,8 +2521,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 						*'guioptions'* *'go'*
 'guioptions' 'go'	string	(default "gmrtT"   (MS-Windows),
 					 "gmrt"	   (MS-Windows no toolbar)
-					 "agimrtT" (Unix GTK and Motif),
-					 "agimrt"  (Unix Athena)
+					 "agimrtT" (Unix GTK, Motif, and Athena)
 			global
 			{not in Vi}
 			{only available when compiled with GUI enabled}
@@ -2499,7 +2571,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	  't'	Include tearoff menu items.  Currently only works for Win32,
 		GTK+, and Motif 1.2 GUI.
-	  'T'	Include Toolbar.  Currently only in Win32 and GTK+ GUI.
+	  'T'	Include Toolbar.  Currently only in Win32, GTK+, Motif, and
+		Athena GUIs.
 
 	  'r'	Right-hand scrollbar is present when 'r' is included.
 	  'l'	Left-hand scrollbar is present when 'l' is included.
@@ -3373,8 +3446,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 	Enable the use of the mouse.  Only works for certain terminals
-	(xterm, MS-DOS, Win32 |win32-mouse| and Linux console with gpm).  For
-	using the mouse in the GUI, see |gui-mouse|.
+	(xterm, MS-DOS, Win32 |win32-mouse|, qnx pterm, and Linux console
+	with gpm).  For using the mouse in the GUI, see |gui-mouse|.
 	The mouse can be enabled for different modes:
 		n	Normal mode
 		v	Visual mode
@@ -3390,11 +3463,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	See |mouse-using|.  Also see |'clipboard'|.
 
-	Note: When enabling the mouse in an xterm, GUI copy/paste will be used
-	if there is access to an X-server.  The xterm copy/paste can still be
-	used by keeping the shift key pressed.  The GUI copy/paste only works
-	in Normal, Visual and Insert mode.  This setting is suggested to allow
-	normal xterm selection in Command-line mode: >
+	Note: When enabling the mouse in a terminal, copy/paste will use the
+	"* register if there is access to an X-server.  The xterm handling of
+	the mouse buttons can still be used by keeping the shift key pressed.
+	This setting is suggested to allow normal xterm selection in
+	Command-line mode: >
 		:set mouse=nvi
 <	Also see the 'clipboard' option.
 
@@ -3600,7 +3673,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		- 'ruler' is reset
 		- 'showmatch' is reset
 		- 'formatoptions' is used like it is empty
-	These options keep there value, but their effect is disabled:
+	These options keep their value, but their effect is disabled:
 		- 'lisp'
 		- 'indentexpr'
 		- 'cindent'
@@ -3637,6 +3710,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Note that typing <F10> in paste mode inserts "<F10>", since in paste
 	mode everything is inserted literally, except the 'pastetoggle' key
 	sequence.
+
+						*'pex'* *'patchexpr'*
+'patchexpr' 'pex'	string	(default "")
+			global
+			{not in Vi}
+			{not available when compiled without the |+diff|
+			feature}
+	Expression which is evaluated to apply a patch to a file and generate
+	the resulting new version of the file.  See |diff-patchexpr|.
 
 						*'patchmode'* *'pm'*
 'patchmode' 'pm'	string	(default "")
@@ -3936,8 +4018,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	See also |scroll-binding|.  When this option is set, the current
 	window scrolls as other scrollbind windows (windows that also have
 	this option set) scroll.  This option is useful for viewing the
-	differences between two versions of a file.  See |'scrollopt'| for
-	options that determine how this option should be interpreted.
+	differences between two versions of a file, see 'diff'.
+	See |'scrollopt'| for options that determine how this option should be
+	interpreted.
 
 						*'scrolljump'* *'sj'*
 'scrolljump' 'sj'	number	(default 1)
@@ -3957,6 +4040,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	you set it to a very large value (999) the cursor line will always be
 	in the middle of the window (except at the start or end of the file or
 	when long lines wrap).
+	For scrolling horizontallly see 'sidescrolloff'.
 	NOTE: This option is set to 0 when 'compatible' is set.
 
 						*'scrollopt'* *'sbo'*
@@ -5610,7 +5694,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 'winaltkeys' 'wak'	string	(default "menu")
 			global
 			{not in Vi}
-			{only used in Win32, Motif and GTK GUI}
+			{only used in Win32, Motif, GTK and Photon GUI}
 	Some GUI versions allow the access to menu entries by using the ALT
 	key in combination with a character that appears underlined in the
 	menu.  This conflicts with the use of the ALT key for mappings and

@@ -111,31 +111,35 @@ typedef struct taggy
  */
 typedef struct
 {
+#ifdef FEAT_DIFF
+    int		wo_diff;
+# define w_p_diff w_onebuf_opt.wo_diff	/* 'diff' */
+#endif
 #ifdef FEAT_FOLDING
     long	wo_fdc;
-#define w_p_fdc w_onebuf_opt.wo_fdc	/* 'foldcolumn' */
+# define w_p_fdc w_onebuf_opt.wo_fdc	/* 'foldcolumn' */
     int		wo_fen;
-#define w_p_fen w_onebuf_opt.wo_fen	/* 'foldenable' */
+# define w_p_fen w_onebuf_opt.wo_fen	/* 'foldenable' */
     char_u	*wo_fde;
-#define w_p_fde w_onebuf_opt.wo_fde	/* 'foldexpr' */
+# define w_p_fde w_onebuf_opt.wo_fde	/* 'foldexpr' */
     char_u	*wo_fdi;
-#define w_p_fdi w_onebuf_opt.wo_fdi	/* 'foldignore' */
+# define w_p_fdi w_onebuf_opt.wo_fdi	/* 'foldignore' */
     long	wo_fdl;
-#define w_p_fdl w_onebuf_opt.wo_fdl	/* 'foldlevel' */
+# define w_p_fdl w_onebuf_opt.wo_fdl	/* 'foldlevel' */
     char_u	*wo_fdm;
-#define w_p_fdm w_onebuf_opt.wo_fdm	/* 'foldmethod' */
+# define w_p_fdm w_onebuf_opt.wo_fdm	/* 'foldmethod' */
     long	wo_fml;
-#define w_p_fml w_onebuf_opt.wo_fml	/* 'foldminlines' */
+# define w_p_fml w_onebuf_opt.wo_fml	/* 'foldminlines' */
     long	wo_fdn;
-#define w_p_fdn w_onebuf_opt.wo_fdn	/* 'foldnextmax' */
+# define w_p_fdn w_onebuf_opt.wo_fdn	/* 'foldnextmax' */
     char_u	*wo_fdt;
-#define w_p_fdt w_onebuf_opt.wo_fdt	/* 'foldtext' */
+# define w_p_fdt w_onebuf_opt.wo_fdt	/* 'foldtext' */
     char_u	*wo_fmr;
-#define w_p_fmr w_onebuf_opt.wo_fmr	/* 'foldmarker' */
+# define w_p_fmr w_onebuf_opt.wo_fmr	/* 'foldmarker' */
 #endif
 #ifdef FEAT_LINEBREAK
     int		wo_lbr;
-#define w_p_lbr w_onebuf_opt.wo_lbr	/* 'linebreak' */
+# define w_p_lbr w_onebuf_opt.wo_lbr	/* 'linebreak' */
 #endif
     int		wo_list;
 #define w_p_list w_onebuf_opt.wo_list	/* 'list' */
@@ -143,17 +147,17 @@ typedef struct
 #define w_p_nu w_onebuf_opt.wo_nu	/* 'number' */
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     int		wo_pvw;
-#define w_p_pvw w_onebuf_opt.wo_pvw	/* 'previewwindow' */
+# define w_p_pvw w_onebuf_opt.wo_pvw	/* 'previewwindow' */
 #endif
 #ifdef FEAT_RIGHTLEFT
     int		wo_rl;
-#define w_p_rl w_onebuf_opt.wo_rl	/* 'rightleft' */
+# define w_p_rl w_onebuf_opt.wo_rl	/* 'rightleft' */
 #endif
     long	wo_scr;
 #define w_p_scr w_onebuf_opt.wo_scr	/* 'scroll' */
 #ifdef FEAT_SCROLLBIND
     int		wo_scb;
-#define w_p_scb w_onebuf_opt.wo_scb	/* 'scrollbind' */
+# define w_p_scb w_onebuf_opt.wo_scb	/* 'scrollbind' */
 #endif
     int		wo_wrap;
 #define w_p_wrap w_onebuf_opt.wo_wrap	/* 'wrap' */
@@ -1103,6 +1107,10 @@ struct window
      */
     linenr_t	w_topline;	    /* buffer line number of the line at the
 				       top of the window */
+#ifdef FEAT_DIFF
+    int		w_topfill;	    /* number of filler lines above w_topline */
+    int		w_old_topfill;	    /* w_topfill at last redraw */
+#endif
     colnr_t	w_leftcol;	    /* window column number of the left most
 				       character in the window; used when
 				       'wrap' is off */
@@ -1172,6 +1180,10 @@ struct window
     linenr_t	w_botline;	    /* number of the line below the bottom of
 				       the screen */
     int		w_empty_rows;	    /* number of ~ rows in window */
+#ifdef FEAT_DIFF
+    int		w_filler_rows;	    /* number of filler rows at the end of the
+				       window */
+#endif
 
     /*
      * Info about the lines currently in the window is remembered to avoid
@@ -1212,6 +1224,9 @@ struct window
     pos_t	w_ru_cursor;	    /* cursor position shown in ruler */
     colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
     linenr_t	w_ru_topline;	    /* topline shown in ruler */
+# ifdef FEAT_DIFF
+    int		w_ru_topfill;	    /* topfill shown in ruler */
+# endif
     char	w_ru_empty;	    /* TRUE if ruler shows 0-1 (empty line) */
 #endif
 
@@ -1351,6 +1366,10 @@ typedef struct cmdarg
     int		prechar;	/* prefix character (optional, always 'g') */
     int		cmdchar;	/* command character */
     int		nchar;		/* next command character (optional) */
+#ifdef FEAT_MBYTE
+    int		ncharC1;	/* first composing character (optional) */
+    int		ncharC2;	/* second composing character (optional) */
+#endif
     int		extra_char;	/* yet another character (optional) */
     long	opcount;	/* count before an operator */
     long	count0;		/* count before command, default 0 */
@@ -1406,6 +1425,7 @@ typedef struct cursor_entry
     long	blinkon;	/* blinking, on time */
     long	blinkoff;	/* blinking, off time */
     int		id;		/* highlight group ID */
+    int		id_lm;		/* highlight group ID for :lmap mode */
     char	*name;		/* mode name (fixed) */
     char	used_for;	/* SHAPE_MOUSE and/or SHAPE_CURSOR */
 } cursorentry_t;
@@ -1509,6 +1529,10 @@ struct VimMenu
     int		greyed_out;	    /* Flag */
     int		hidden;
 #endif
+#ifdef FEAT_GUI_PHOTON
+    PtWidget_t	*id;
+    PtWidget_t	*submenu_id;
+#endif
 };
 #else
 /* For generating prototypes when FEAT_MENU isn't defined. */
@@ -1528,4 +1552,7 @@ typedef struct
     win_t	*new_curwin;	/* new curwin if save_curwin != NULL */
     pos_t	save_cursor;	/* saved cursor pos of save_curwin */
     linenr_t	save_topline;	/* saved topline of save_curwin */
+#ifdef FEAT_DIFF
+    int		save_topfill;	/* saved topfill of save_curwin */
+#endif
 } aco_save_t;

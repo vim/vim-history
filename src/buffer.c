@@ -160,11 +160,6 @@ open_buffer(read_stdin, eap)
     if (curbuf->b_flags & BF_NEVERLOADED)
 	(void)buf_init_chartab(curbuf, FALSE);
 
-#ifdef FEAT_FOLDING
-    /* Need to update automatic folding. */
-    foldUpdateAll(curwin);
-#endif
-
     /*
      * Set/reset the Changed flag first, autocmds may change the buffer.
      * Apply the automatic commands, before processing the modelines.
@@ -189,7 +184,12 @@ open_buffer(read_stdin, eap)
 #ifdef FEAT_AUTOCMD
     /* need to set w_topline, unless some autocommand already did that. */
     if (!(curwin->w_valid & VALID_TOPLINE))
+    {
 	curwin->w_topline = 1;
+# ifdef FEAT_DIFF
+	curwin->w_topfill = 0;
+# endif
+    }
     apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
 
@@ -218,6 +218,11 @@ open_buffer(read_stdin, eap)
 	}
 #endif
     }
+
+#ifdef FEAT_FOLDING
+    /* Need to update automatic folding. */
+    foldUpdateAll(curwin);
+#endif
 
     return retval;
 }
@@ -445,6 +450,9 @@ buf_freeall(buf, del_buf)
      */
     if (buf == curbuf && !is_curbuf)
 	return;
+#endif
+#ifdef FEAT_DIFF
+    diff_buf_delete(buf);	    /* Can't use 'diff' for unloaded buffer. */
 #endif
 #ifdef FEAT_TCL
     tcl_buffer_free(buf);
@@ -1093,6 +1101,10 @@ enter_buffer(buf)
     curbuf = buf;
     ++curbuf->b_nwindows;
 
+#ifdef FEAT_DIFF
+    diff_new_buffer();
+#endif
+
     /* Make sure the buffer is loaded. */
     if (curbuf->b_ml.ml_mfp == NULL)	/* need to load the file */
 	open_buffer(FALSE, NULL);
@@ -1102,6 +1114,9 @@ enter_buffer(buf)
 	(void)buf_check_timestamp(curbuf, FALSE); /* check if file changed */
 #ifdef FEAT_AUTOCMD
 	curwin->w_topline = 1;
+# ifdef FEAT_DIFF
+	curwin->w_topfill = 0;
+# endif
 	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 	apply_autocmds(EVENT_BUFWINENTER, NULL, NULL, FALSE, curbuf);
 #endif
@@ -3277,6 +3292,9 @@ get_rel_pos(wp, str)
     long	below; /* number of lines below window */
 
     above = wp->w_topline - 1;
+#ifdef FEAT_DIFF
+    above += diff_check_fill(wp, wp->w_topline) - wp->w_topfill;
+#endif
     below = wp->w_buffer->b_ml.ml_line_count - wp->w_botline + 1;
     if (below <= 0)
 	STRCPY(str, above == 0 ? _("All") : _("Bot"));

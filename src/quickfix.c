@@ -1482,6 +1482,7 @@ ex_cwindow(eap)
 	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix",
 								   OPT_LOCAL);
 	    set_option_value((char_u *)"bh", 0L, (char_u *)"delete", OPT_LOCAL);
+	    set_option_value((char_u *)"diff", 0L, (char_u *)"", OPT_LOCAL);
 	}
 	else if (buf != curbuf)
 	    set_curbuf(buf, DOBUF_GOTO);

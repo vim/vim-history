@@ -31,214 +31,26 @@ static void mainerr __ARGS((int, char_u *));
 static void main_msg __ARGS((char *s));
 static void usage __ARGS((void));
 static int get_number_arg __ARGS((char_u *p, int *idx, int def));
-
-/*
- * Type of error message.  These must match with errors[] in mainerr().
- */
-#define ME_UNKNOWN_OPTION	0
-#define ME_TOO_MANY_ARGS	1
-#define ME_ARG_MISSING		2
-#define ME_GARBAGE		3
-#define ME_EXTRA_CMD		4
-
-    static void
-mainerr(n, str)
-    int	    n;
-    char_u  *str;
-{
-    static char	*(errors[]) =
-    {
-	N_("Unknown option"),
-	N_("Too many edit arguments"),
-	N_("Argument missing after"),
-	N_("Garbage after option"),
-	N_("Too many \"+command\" or \"-c command\" arguments"),
-    };
-
-#if defined(UNIX) || defined(__EMX__) || defined(VMS)
-    reset_signals();		/* kill us with CTRL-C here, if you like */
-#endif
-
-    mch_errmsg(longVersion);
-    mch_errmsg("\n");
-    mch_errmsg(_(errors[n]));
-    if (str != NULL)
-    {
-	mch_errmsg(": \"");
-	mch_errmsg((char *)str);
-	mch_errmsg("\"");
-    }
-    mch_errmsg(_("\nMore info with: \"vim -h\"\n"));
-
-    mch_windexit(1);
-}
-
-/*
- * print a message with three spaces prepended and '\n' appended.
- */
-    static void
-main_msg(s)
-    char *s;
-{
-    mch_msg("   ");
-    mch_msg(s);
-    mch_msg("\n");
-}
-
-    static void
-usage()
-{
-    int		i;
-    static char	*(use[]) =
-    {
-	N_("[file ..]       edit specified file(s)"),
-	N_("-               read text from stdin"),
-	N_("-t tag          edit file where tag is defined"),
-#ifdef FEAT_QUICKFIX
-	N_("-q [errorfile]  edit file with first error")
-#endif
-    };
-
-#if defined(UNIX) || defined(__EMX__) || defined(VMS)
-    reset_signals();		/* kill us with CTRL-C here, if you like */
-#endif
-
-    mch_msg(longVersion);
-    mch_msg(_("\n\nusage:"));
-    for (i = 0; ; ++i)
-    {
-	mch_msg(_(" vim [arguments] "));
-	mch_msg(_(use[i]));
-	if (i == (sizeof(use) / sizeof(char_u *)) - 1)
-	    break;
-	mch_msg(_("\n   or:"));
-    }
-
-    mch_msg(_("\n\nArguments:\n"));
-    main_msg(_("--\t\t\tOnly file names after this"));
-#ifdef FEAT_OLE
-    main_msg(_("-register\t\tRegister this gvim for OLE"));
-    main_msg(_("-unregister\t\tUnregister gvim for OLE"));
-#endif
-#ifdef FEAT_GUI
-    main_msg(_("-g\t\t\tRun using GUI (like \"gvim\")"));
-    main_msg(_("-f\t\t\tForeground: Don't fork when starting GUI"));
-#endif
-    main_msg(_("-v\t\t\tVi mode (like \"vi\")"));
-    main_msg(_("-e\t\t\tEx mode (like \"ex\")"));
-    main_msg(_("-s\t\t\tSilent (batch) mode (only for \"ex\")"));
-    main_msg(_("-R\t\t\tReadonly mode (like \"view\")"));
-    main_msg(_("-Z\t\t\tRestricted mode (like \"rvim\")"));
-    main_msg(_("-m\t\t\tModifications (writing files) not allowed"));
-    main_msg(_("-b\t\t\tBinary mode"));
-#ifdef FEAT_LISP
-    main_msg(_("-l\t\t\tLisp mode"));
-#endif
-    main_msg(_("-C\t\t\tCompatible with Vi: 'compatible'"));
-    main_msg(_("-N\t\t\tNot fully Vi compatible: 'nocompatible'"));
-    main_msg(_("-V[N]\t\tVerbose level"));
-    main_msg(_("-D\t\t\tDebugging mode"));
-    main_msg(_("-n\t\t\tNo swap file, use memory only"));
-    main_msg(_("-r\t\t\tList swap files and exit"));
-    main_msg(_("-r (with file name)\tRecover crashed session"));
-    main_msg(_("-L\t\t\tSame as -r"));
-#ifdef AMIGA
-    main_msg(_("-f\t\t\tDon't use newcli to open window"));
-    main_msg(_("-d <device>\t\tUse <device> for I/O"));
-#endif
-#ifdef FEAT_RIGHTLEFT
-    main_msg(_("-H\t\t\tstart in Hebrew mode"));
-#endif
-#ifdef FEAT_FKMAP
-    main_msg(_("-F\t\t\tstart in Farsi mode"));
-#endif
-    main_msg(_("-T <terminal>\tSet terminal type to <terminal>"));
-    main_msg(_("-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"));
-#ifdef FEAT_GUI
-    main_msg(_("-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"));
-#endif
-    main_msg(_("--noplugin\t\tDon't load plugin scripts"));
-    main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
-    main_msg(_("+\t\t\tStart at end of file"));
-    main_msg(_("+<lnum>\t\tStart at line <lnum>"));
-    main_msg(_("-c <command>\t\tExecute <command> after loading the first file"));
-    main_msg(_("-S <session>\tExecute commands in file <session> after loading the first file"));
-    main_msg(_("-s <scriptin>\tRead Normal mode commands from file <scriptin>"));
-    main_msg(_("-w <scriptout>\tAppend all typed commands to file <scriptout>"));
-    main_msg(_("-W <scriptout>\tWrite all typed commands to file <scriptout>"));
-#ifdef FEAT_CRYPT
-    main_msg(_("-x\t\t\tEdit encrypted files"));
-#endif
-#if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
-    main_msg(_("-X\t\t\tDo not connect to X server"));
-#endif
-#ifdef FEAT_VIMINFO
-    main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
-#endif
-    main_msg(_("-h\t\t\tprint Help (this message) and exit"));
-    main_msg(_("--version\t\tprint version information and exit"));
-
-#ifdef FEAT_GUI_X11
-# ifdef FEAT_GUI_MOTIF
-    mch_msg(_("\nArguments recognised by gvim (Motif version):\n"));
-# else
-#  ifdef FEAT_GUI_ATHENA
-    mch_msg(_("\nArguments recognised by gvim (Athena version):\n"));
-#  endif
-# endif
-    main_msg(_("-display <display>\tRun vim on <display>"));
-    main_msg(_("-iconic\t\tStart vim iconified"));
-# if 0
-    main_msg(_("-name <name>\t\tUse resource as if vim was <name>"));
-    mch_msg(_("\t\t\t  (Unimplemented)\n"));
-# endif
-    main_msg(_("-background <color>\tUse <color> for the background (also: -bg)"));
-    main_msg(_("-foreground <color>\tUse <color> for normal text (also: -fg)"));
-    main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
-    main_msg(_("-boldfont <font>\tUse <font> for bold text"));
-    main_msg(_("-italicfont <font>\tUse <font> for italic text"));
-    main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
-    main_msg(_("-borderwidth <width>\tUse a border width of <width> (also: -bw)"));
-    main_msg(_("-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"));
-    main_msg(_("-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"));
-    main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
-    main_msg(_("+reverse\t\tDon't use reverse video (also: +rv)"));
-    main_msg(_("-xrm <resource>\tSet the specified resource"));
-#endif /* FEAT_GUI_X11 */
-#if defined(FEAT_GUI) && defined(RISCOS)
-    mch_msg(_("\nArguments recognised by gvim (RISC OS version):\n"));
-    main_msg(_("--columns <number>\tInitial width of window in columns"));
-    main_msg(_("--rows <number>\tInitial height of window in rows"));
-#endif
-#ifdef FEAT_GUI_GTK
-    mch_msg(_("\nArguments recognised by gvim (GTK+ version):\n"));
-    main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
-    main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
-    main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
-    main_msg(_("-display <display>\tRun vim on <display> (also: --display)"));
-# ifdef FEAT_GUI_GNOME
-    main_msg(_("--help\t\tShow Gnome arguments"));
-# endif
-#endif
-    mch_windexit(1);
-}
-
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 static void check_swap_exists_action __ARGS((void));
+#endif
 
 /*
- * Check the result of the ATTENTION dialog:
- * When "Quit" selected, exit Vim.
- * When "Recover" selected, recover the file.
+ * Different types of error messages.
  */
-    static void
-check_swap_exists_action()
+static char *(main_errors[]) =
 {
-    if (swap_exists_action == SEA_QUIT)
-	getout(1);
-    handle_swap_exists(NULL);
-}
-#endif
+    N_("Unknown option"),
+#define ME_UNKNOWN_OPTION	0
+    N_("Too many edit arguments"),
+#define ME_TOO_MANY_ARGS	1
+    N_("Argument missing after"),
+#define ME_ARG_MISSING		2
+    N_("Garbage after option"),
+#define ME_GARBAGE		3
+    N_("Too many \"+command\" or \"-c command\" arguments"),
+#define ME_EXTRA_CMD		4
+};
 
 /* Maximum number of commands from + or -c options */
 #define MAX_ARG_CMDS 10
@@ -257,47 +69,51 @@ VimMain
 main
 # endif
 (argc, argv)
-    int		    argc;
-    char	  **argv;
+    int		argc;
+    char	**argv;
 {
-    char_u	   *initstr;		    /* init string from environment */
-    char_u	   *term = NULL;	    /* specified terminal name */
-    char_u	   *fname = NULL;	    /* file name from command line */
-    char_u	   *tagname = NULL;	    /* tag from -t option */
-    char_u	   *use_vimrc = NULL;	    /* vimrc from -u option */
+    char_u	*initstr;		/* init string from environment */
+    char_u	*term = NULL;		/* specified terminal name */
+    char_u	*fname = NULL;		/* file name from command line */
+    char_u	*tagname = NULL;	/* tag from -t option */
+    char_u	*use_vimrc = NULL;	/* vimrc from -u option */
 #ifdef FEAT_QUICKFIX
-    char_u	   *use_ef = NULL;	    /* 'errorfile' from -q option */
+    char_u	*use_ef = NULL;		/* 'errorfile' from -q option */
 #endif
 #ifdef FEAT_CRYPT
-    int		    ask_for_key = FALSE;    /* -x argument */
+    int		ask_for_key = FALSE;    /* -x argument */
 #endif
-    int		    n_commands = 0;	    /* no. of commands from + or -c */
-    char_u	   *commands[MAX_ARG_CMDS]; /* commands from + or -c option */
-    int		    no_swap_file = FALSE;   /* "-n" option used */
-    int		    c;
-    int		    i;
-    char_u	    *p = NULL;
-    int		    bin_mode = FALSE;	    /* -b option used */
+    int		n_commands = 0;		/* no. of commands from + or -c */
+    char_u	*commands[MAX_ARG_CMDS]; /* commands from + or -c option */
+    int		no_swap_file = FALSE;   /* "-n" option used */
+    int		c;
+    int		i;
+    char_u	*p = NULL;
+    int		bin_mode = FALSE;	/* -b option used */
 #ifdef FEAT_WINDOWS
-    int		    window_count = 1;	    /* number of windows to use */
-    int		    arg_idx;		    /* index in argument list */
-    int		    vert_windows = FALSE;   /* "-O" used instead of "-o" */
+    int		window_count = -1;	/* number of windows to use */
+    int		arg_idx;		/* index in argument list */
+    int		vert_windows = MAYBE;   /* "-O" used instead of "-o" */
 #endif
-    int		    had_minmin = FALSE;	    /* found "--" option */
-    int		    argv_idx;		    /* index in argv[n][] */
-    int		    want_full_screen = TRUE;
-    int		    want_argument;	    /* option with argument */
+    int		had_minmin = FALSE;	/* found "--" option */
+    int		argv_idx;		/* index in argv[n][] */
+    int		want_full_screen = TRUE;
+    int		want_argument;		/* option with argument */
 #define EDIT_NONE   0	    /* no edit type yet */
 #define EDIT_FILE   1	    /* file name argument[s] given, use argument list */
 #define EDIT_STDIN  2	    /* read file from stdin */
 #define EDIT_TAG    3	    /* tag name argument given, use tagname */
 #define EDIT_QF	    4	    /* start in quickfix mode */
-    int		    edit_type = EDIT_NONE;  /* type of editing to do */
-    int		    stdout_isatty;	    /* is stdout a terminal? */
-    int		    input_isatty;	    /* is active input a terminal? */
+    int		edit_type = EDIT_NONE;  /* type of editing to do */
+#ifdef FEAT_DIFF
+    int		diffmode = FALSE;	/* start with 'diff' set */
+#endif
+    int		stdout_isatty;		/* is stdout a terminal? */
+    int		input_isatty;		/* is active input a terminal? */
 
     /*
-     * Do any system-specific initialisations.
+     * Do any system-specific initialisations.  These can NOT use IObuff or
+     * NameBuff.  Thus emsg2() cannot be called!
      */
     mch_init();
 
@@ -315,6 +131,10 @@ main
 
 #ifdef FEAT_MBYTE
     (void)mb_init();	/* init mb_bytelen_tab[] to ones */
+#endif
+
+#ifdef __QNX__
+    qnx_init();		/* PhAttach() for clipboard, mouse (and gui) */
 #endif
 
 #ifdef FEAT_GUI_MAC
@@ -429,6 +249,7 @@ main
      * If the executable name starts with "r" we disable shell commands.
      * If the next character is "g" we run the GUI version.
      * If the next characters are "view" we start in readonly mode.
+     * If the next characters are "diff" or "vimdiff" we start in diff mode.
      * If the next characters are "ex" we start in Ex mode.  If it's followed
      * by "im" use improved Ex mode.
      */
@@ -457,6 +278,21 @@ main
 	readonlymode = TRUE;
 	curbuf->b_p_ro = TRUE;
 	p_uc = 10000;			/* don't update very often */
+	initstr += 4;
+    }
+    else if (STRNICMP(initstr, "vim", 3) == 0)
+	initstr += 3;
+
+    /* Catch "[r][g]vimdiff" and "[r][g]viewdiff". */
+    if (STRICMP(initstr, "diff") == 0)
+    {
+#ifdef FEAT_DIFF
+	diffmode = TRUE;
+#else
+	mch_errmsg(_("This Vim was not compiled with the diff feature."));
+	mch_errmsg("\n");
+	mch_windexit(2);
+#endif
     }
 
     if (STRNICMP(initstr, "ex", 2) == 0)
@@ -691,7 +527,11 @@ main
 		debug_break_level = 9999;
 		break;
 #endif
-
+#ifdef FEAT_DIFF
+	    case 'd':		/* "-d"		'diff' */
+		diffmode = TRUE;
+		break;
+#endif
 	    case 'V':		/* "-V{N}"	Verbose level */
 		/* default is 10: a little bit verbose */
 		p_verbose = get_number_arg((char_u *)argv[0], &argv_idx, 10);
@@ -732,8 +572,10 @@ main
 
 	    case 'c':		/* "-c {command}" execute command */
 	    case 'S':		/* "-S {file}" execute Vim script */
-	    case 'd':		/* "-d {device}" device (for Amiga) */
 	    case 'i':		/* "-i {viminfo}" use for viminfo */
+#ifndef FEAT_DIFF
+	    case 'd':		/* "-d {device}" device (for Amiga) */
+#endif
 	    case 'T':		/* "-T {terminal}" terminal name */
 	    case 'u':		/* "-u {vimrc}" vim inits file */
 	    case 'U':		/* "-U {gvimrc}" gvim inits file */
@@ -780,7 +622,8 @@ main
 			commands[n_commands++] = (char_u *)argv[0];
 		    break;
 
-	    /*	case 'd':   This is handled in mch_check_win() */
+	    /*	case 'd':   -d {device} is handled in mch_check_win() for the
+	     *		    Amiga */
 
 #ifdef FEAT_QUICKFIX
 		case 'q':	/* "-q {errorfile}" QuickFix mode */
@@ -942,6 +785,16 @@ scripterror:
     }
 #endif
 
+#ifdef FEAT_DIFF
+    if (diffmode)
+    {
+	if (window_count == -1)
+	    window_count = 0;		/* open up to 3 files in a window */
+	if (vert_windows == MAYBE)
+	    vert_windows = TRUE;	/* use vertical split */
+    }
+#endif
+
     ++RedrawingDisabled;
 
     /*
@@ -1008,6 +861,13 @@ scripterror:
     firstwin->w_width = Columns;
     topframe->fr_width = Columns;
 #endif
+#ifdef FEAT_DIFF
+    /* Set the 'diff' option now, so that it can be checked for in a .vimrc
+     * file.  There is no buffer yet though. */
+    if (diffmode)
+	diff_win_options(firstwin, FALSE);
+#endif
+
     cmdline_row = Rows - p_ch;
     screenalloc(FALSE);		/* allocate screen buffers */
     set_init_2();
@@ -1285,10 +1145,18 @@ scripterror:
      * when getting a resize callback.
      */
     if (gui.in_use)
-#ifdef FEAT_SUN_WORKSHOP
-      if (!usingSunWorkShop)
+# ifdef FEAT_SUN_WORKSHOP
+	if (!usingSunWorkShop)
+# endif
+	    gui_wait_for_chars(50L);
 #endif
-	gui_wait_for_chars(50L);
+
+#ifdef FEAT_XCLIPBOARD
+    /* Start using the X clipboard, unless the GUI was started. */
+# ifdef FEAT_GUI
+    if (!gui.in_use)
+# endif
+	setup_term_clip();
 #endif
 
     /*
@@ -1368,12 +1236,16 @@ scripterror:
     /*
      * Create the number of windows that was requested.
      */
+    if (window_count == -1)	/* was not set */
+	window_count = 1;
     if (window_count == 0)
 	window_count = GARGCOUNT;
     if (window_count > 1)
     {
 	/* Don't change the windows if there was a command in .vimrc that
 	 * already split some windows */
+	if (vert_windows == MAYBE)
+	    vert_windows = FALSE;
 	if (firstwin->w_next == NULL)
 	    window_count = make_windows(window_count, vert_windows);
 	else
@@ -1513,6 +1385,17 @@ scripterror:
 	win_equal(curwin, 'b');		/* adjust heights */
 #endif /* FEAT_WINDOWS */
 
+#ifdef FEAT_DIFF
+    if (diffmode)
+    {
+	win_t	*wp;
+
+	/* set options in each window for "vimdiff". */
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	    diff_win_options(wp, TRUE);
+    }
+#endif
+
     /*
      * Shorten any of the filenames, but only when absolute.
      */
@@ -1562,6 +1445,16 @@ scripterror:
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_VIMENTER, NULL, NULL, FALSE, curbuf);
+#endif
+
+#if defined(FEAT_DIFF) && defined(FEAT_SCROLLBIND)
+    /* When a startup script or session file setup for diff'ing and
+     * scrollbind, sync the scrollbind now. */
+    if (curwin->w_p_diff && curwin->w_p_scb)
+    {
+	update_topline();
+	check_scrollbind((linenr_t)0, 0L);
+    }
 #endif
 
 #if defined(WIN32) && !defined(FEAT_GUI_W32)
@@ -1716,53 +1609,6 @@ main_loop(cmdwin)
     }
 }
 
-/*
- * Get a (optional) count for a Vim argument.
- */
-    static int
-get_number_arg(p, idx, def)
-    char_u	*p;	    /* pointer to argument */
-    int		*idx;	    /* index in argument, is incremented */
-    int		def;	    /* default value */
-{
-    if (isdigit(p[*idx]))
-    {
-	def = atoi((char *)&(p[*idx]));
-	while (isdigit(p[*idx]))
-	    *idx = *idx + 1;
-    }
-    return def;
-}
-
-/*
- * Get an evironment variable, and execute it as Ex commands.
- * Returns FAIL if the environment variable was not executed, OK otherwise.
- */
-    int
-process_env(env, is_viminit)
-    char_u	*env;
-    int		is_viminit; /* when TRUE, called for VIMINIT */
-{
-    char_u	*initstr;
-    char_u	*save_sourcing_name;
-    linenr_t	save_sourcing_lnum;
-
-    if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
-    {
-	if (is_viminit)
-	    vimrc_found();
-	save_sourcing_name = sourcing_name;
-	save_sourcing_lnum = sourcing_lnum;
-	sourcing_name = env;
-	sourcing_lnum = 0;
-	do_cmdline_cmd(initstr);
-	sourcing_name = save_sourcing_name;
-	sourcing_lnum = save_sourcing_lnum;
-	return OK;
-    }
-    return FAIL;
-}
-
     void
 getout(exitval)
     int		exitval;
@@ -1843,6 +1689,248 @@ getout(exitval)
 
     mch_windexit(exitval);
 }
+
+/*
+ * Get a (optional) count for a Vim argument.
+ */
+    static int
+get_number_arg(p, idx, def)
+    char_u	*p;	    /* pointer to argument */
+    int		*idx;	    /* index in argument, is incremented */
+    int		def;	    /* default value */
+{
+    if (isdigit(p[*idx]))
+    {
+	def = atoi((char *)&(p[*idx]));
+	while (isdigit(p[*idx]))
+	    *idx = *idx + 1;
+    }
+    return def;
+}
+
+/*
+ * Get an evironment variable, and execute it as Ex commands.
+ * Returns FAIL if the environment variable was not executed, OK otherwise.
+ */
+    int
+process_env(env, is_viminit)
+    char_u	*env;
+    int		is_viminit; /* when TRUE, called for VIMINIT */
+{
+    char_u	*initstr;
+    char_u	*save_sourcing_name;
+    linenr_t	save_sourcing_lnum;
+
+    if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
+    {
+	if (is_viminit)
+	    vimrc_found();
+	save_sourcing_name = sourcing_name;
+	save_sourcing_lnum = sourcing_lnum;
+	sourcing_name = env;
+	sourcing_lnum = 0;
+	do_cmdline_cmd(initstr);
+	sourcing_name = save_sourcing_name;
+	sourcing_lnum = save_sourcing_lnum;
+	return OK;
+    }
+    return FAIL;
+}
+
+/*
+ * Give an error message main_errors["n"] and exit.
+ */
+    static void
+mainerr(n, str)
+    int		n;	/* one of the ME_ defines */
+    char_u	*str;	/* extra argument or NULL */
+{
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
+    reset_signals();		/* kill us with CTRL-C here, if you like */
+#endif
+
+    mch_errmsg(longVersion);
+    mch_errmsg("\n");
+    mch_errmsg(_(main_errors[n]));
+    if (str != NULL)
+    {
+	mch_errmsg(": \"");
+	mch_errmsg((char *)str);
+	mch_errmsg("\"");
+    }
+    mch_errmsg(_("\nMore info with: \"vim -h\"\n"));
+
+    mch_windexit(1);
+}
+
+/*
+ * print a message with three spaces prepended and '\n' appended.
+ */
+    static void
+main_msg(s)
+    char *s;
+{
+    mch_msg("   ");
+    mch_msg(s);
+    mch_msg("\n");
+}
+
+/*
+ * Print messages for "vim -h" or "vim --help" and exit.
+ */
+    static void
+usage()
+{
+    int		i;
+    static char	*(use[]) =
+    {
+	N_("[file ..]       edit specified file(s)"),
+	N_("-               read text from stdin"),
+	N_("-t tag          edit file where tag is defined"),
+#ifdef FEAT_QUICKFIX
+	N_("-q [errorfile]  edit file with first error")
+#endif
+    };
+
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
+    reset_signals();		/* kill us with CTRL-C here, if you like */
+#endif
+
+    mch_msg(longVersion);
+    mch_msg(_("\n\nusage:"));
+    for (i = 0; ; ++i)
+    {
+	mch_msg(_(" vim [arguments] "));
+	mch_msg(_(use[i]));
+	if (i == (sizeof(use) / sizeof(char_u *)) - 1)
+	    break;
+	mch_msg(_("\n   or:"));
+    }
+
+    mch_msg(_("\n\nArguments:\n"));
+    main_msg(_("--\t\t\tOnly file names after this"));
+#ifdef FEAT_OLE
+    main_msg(_("-register\t\tRegister this gvim for OLE"));
+    main_msg(_("-unregister\t\tUnregister gvim for OLE"));
+#endif
+#ifdef FEAT_GUI
+    main_msg(_("-g\t\t\tRun using GUI (like \"gvim\")"));
+    main_msg(_("-f\t\t\tForeground: Don't fork when starting GUI"));
+#endif
+    main_msg(_("-v\t\t\tVi mode (like \"vi\")"));
+    main_msg(_("-e\t\t\tEx mode (like \"ex\")"));
+    main_msg(_("-s\t\t\tSilent (batch) mode (only for \"ex\")"));
+    main_msg(_("-d\t\t\tDiff mode (like \"vimdiff\")"));
+    main_msg(_("-R\t\t\tReadonly mode (like \"view\")"));
+    main_msg(_("-Z\t\t\tRestricted mode (like \"rvim\")"));
+    main_msg(_("-m\t\t\tModifications (writing files) not allowed"));
+    main_msg(_("-b\t\t\tBinary mode"));
+#ifdef FEAT_LISP
+    main_msg(_("-l\t\t\tLisp mode"));
+#endif
+    main_msg(_("-C\t\t\tCompatible with Vi: 'compatible'"));
+    main_msg(_("-N\t\t\tNot fully Vi compatible: 'nocompatible'"));
+    main_msg(_("-V[N]\t\tVerbose level"));
+    main_msg(_("-D\t\t\tDebugging mode"));
+    main_msg(_("-n\t\t\tNo swap file, use memory only"));
+    main_msg(_("-r\t\t\tList swap files and exit"));
+    main_msg(_("-r (with file name)\tRecover crashed session"));
+    main_msg(_("-L\t\t\tSame as -r"));
+#ifdef AMIGA
+    main_msg(_("-f\t\t\tDon't use newcli to open window"));
+    main_msg(_("-d <device>\t\tUse <device> for I/O"));
+#endif
+#ifdef FEAT_RIGHTLEFT
+    main_msg(_("-H\t\t\tstart in Hebrew mode"));
+#endif
+#ifdef FEAT_FKMAP
+    main_msg(_("-F\t\t\tstart in Farsi mode"));
+#endif
+    main_msg(_("-T <terminal>\tSet terminal type to <terminal>"));
+    main_msg(_("-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"));
+#ifdef FEAT_GUI
+    main_msg(_("-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"));
+#endif
+    main_msg(_("--noplugin\t\tDon't load plugin scripts"));
+    main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
+    main_msg(_("+\t\t\tStart at end of file"));
+    main_msg(_("+<lnum>\t\tStart at line <lnum>"));
+    main_msg(_("-c <command>\t\tExecute <command> after loading the first file"));
+    main_msg(_("-S <session>\tExecute commands in file <session> after loading the first file"));
+    main_msg(_("-s <scriptin>\tRead Normal mode commands from file <scriptin>"));
+    main_msg(_("-w <scriptout>\tAppend all typed commands to file <scriptout>"));
+    main_msg(_("-W <scriptout>\tWrite all typed commands to file <scriptout>"));
+#ifdef FEAT_CRYPT
+    main_msg(_("-x\t\t\tEdit encrypted files"));
+#endif
+#if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
+    main_msg(_("-X\t\t\tDo not connect to X server"));
+#endif
+#ifdef FEAT_VIMINFO
+    main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
+#endif
+    main_msg(_("-h\t\t\tprint Help (this message) and exit"));
+    main_msg(_("--version\t\tprint version information and exit"));
+
+#ifdef FEAT_GUI_X11
+# ifdef FEAT_GUI_MOTIF
+    mch_msg(_("\nArguments recognised by gvim (Motif version):\n"));
+# else
+#  ifdef FEAT_GUI_ATHENA
+    mch_msg(_("\nArguments recognised by gvim (Athena version):\n"));
+#  endif
+# endif
+    main_msg(_("-display <display>\tRun vim on <display>"));
+    main_msg(_("-iconic\t\tStart vim iconified"));
+# if 0
+    main_msg(_("-name <name>\t\tUse resource as if vim was <name>"));
+    mch_msg(_("\t\t\t  (Unimplemented)\n"));
+# endif
+    main_msg(_("-background <color>\tUse <color> for the background (also: -bg)"));
+    main_msg(_("-foreground <color>\tUse <color> for normal text (also: -fg)"));
+    main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
+    main_msg(_("-boldfont <font>\tUse <font> for bold text"));
+    main_msg(_("-italicfont <font>\tUse <font> for italic text"));
+    main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
+    main_msg(_("-borderwidth <width>\tUse a border width of <width> (also: -bw)"));
+    main_msg(_("-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"));
+    main_msg(_("-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"));
+    main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
+    main_msg(_("+reverse\t\tDon't use reverse video (also: +rv)"));
+    main_msg(_("-xrm <resource>\tSet the specified resource"));
+#endif /* FEAT_GUI_X11 */
+#if defined(FEAT_GUI) && defined(RISCOS)
+    mch_msg(_("\nArguments recognised by gvim (RISC OS version):\n"));
+    main_msg(_("--columns <number>\tInitial width of window in columns"));
+    main_msg(_("--rows <number>\tInitial height of window in rows"));
+#endif
+#ifdef FEAT_GUI_GTK
+    mch_msg(_("\nArguments recognised by gvim (GTK+ version):\n"));
+    main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
+    main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
+    main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
+    main_msg(_("-display <display>\tRun vim on <display> (also: --display)"));
+# ifdef FEAT_GUI_GNOME
+    main_msg(_("--help\t\tShow Gnome arguments"));
+# endif
+#endif
+    mch_windexit(1);
+}
+
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+/*
+ * Check the result of the ATTENTION dialog:
+ * When "Quit" selected, exit Vim.
+ * When "Recover" selected, recover the file.
+ */
+    static void
+check_swap_exists_action()
+{
+    if (swap_exists_action == SEA_QUIT)
+	getout(1);
+    handle_swap_exists(NULL);
+}
+#endif
 
 /*
  * When FEAT_FKMAP is defined, also compile the Farsi source code.

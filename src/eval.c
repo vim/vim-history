@@ -162,8 +162,10 @@ struct vimvar
     {"ctype", sizeof("ctype") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_from", sizeof("charconvert_from") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_to", sizeof("charconvert_to") - 1, NULL, VAR_STRING, VV_RO},
-    {"charconvert_in", sizeof("charconvert_in") - 1, NULL, VAR_STRING, VV_RO},
-    {"charconvert_out", sizeof("charconvert_out") - 1, NULL, VAR_STRING, VV_RO},
+    {"fname_in", sizeof("fname_in") - 1, NULL, VAR_STRING, VV_RO},
+    {"fname_out", sizeof("fname_out") - 1, NULL, VAR_STRING, VV_RO},
+    {"fname_new", sizeof("fname_new") - 1, NULL, VAR_STRING, VV_RO},
+    {"fname_diff", sizeof("fname_diff") - 1, NULL, VAR_STRING, VV_RO},
     {"cmdarg", sizeof("cmdarg") - 1, NULL, VAR_STRING, VV_RO},
     {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
     {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
@@ -2555,7 +2557,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	retvar->var_type = VAR_NUMBER;	/* default is number retvar */
 	error = ERROR_UNKNOWN;
 
-	if (!islower(fname[0]))
+	if (!ASCII_ISLOWER(fname[0]))
 	{
 	    /*
 	     * User defined function.
@@ -3174,7 +3176,7 @@ f_exists(argvars, retvar)
     else if (*p == '*')			/* internal or user defined function */
     {
 	++p;
-	if (isupper(*p) || *p == '<' || (*p == 's' && p[1] == ':'))
+	if (ASCII_ISUPPER(*p) || *p == '<' || (*p == 's' && p[1] == ':'))
 	{
 	    p = trans_function_name(&p);
 	    if (p != NULL)
@@ -3183,7 +3185,7 @@ f_exists(argvars, retvar)
 		vim_free(p);
 	    }
 	}
-	else if (islower(*p))
+	else if (ASCII_ISLOWER(*p))
 	    n = (find_internal_func(p) >= 0);
     }
     else if (*p == ':')
@@ -3417,6 +3419,7 @@ f_foldtext(argvars, retvar)
     char_u	*s;
     char_u	*r;
     int		len;
+    char	*txt;
 #endif
 
     retvar->var_type = VAR_STRING;
@@ -3440,11 +3443,12 @@ f_foldtext(argvars, retvar)
 	/* skip C comment-start */
 	if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
 	    s = skipwhite(s + 2);
+	txt = _("+-%s%3ld lines: ");
 	r = alloc((unsigned)(STRLEN(s)
-				  + STRLEN(vimvars[VV_FOLDDASHES].val) + 20));
+			 + STRLEN(vimvars[VV_FOLDDASHES].val) + STRLEN(txt)));
 	if (r != NULL)
 	{
-	    sprintf((char *)r, "+-%s%3ld lines: ", vimvars[VV_FOLDDASHES].val,
+	    sprintf((char *)r, txt, vimvars[VV_FOLDDASHES].val,
 		    (long)((linenr_t)vimvars[VV_FOLDEND].val
 				   - (linenr_t)vimvars[VV_FOLDSTART].val + 1));
 	    len = STRLEN(r);
@@ -3822,6 +3826,9 @@ f_has(argvars, retvar)
 #ifdef OS2
 	"os2",
 #endif
+#ifdef __QNX__
+	"qnx",
+#endif
 #ifdef RISCOS
 	"riscos",
 #endif
@@ -3885,6 +3892,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_GUI_DIALOG
 	"dialog_gui",
 #endif
+#ifdef FEAT_DIFF
+	"diff",
+#endif
 #ifdef FEAT_DIGRAPHS
 	"digraphs",
 #endif
@@ -3936,6 +3946,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_GUI_MOTIF
 	"gui_motif",
+#endif
+#ifdef FEAT_GUI_PHOTON
+	"gui_photon",
 #endif
 #ifdef FEAT_GUI_W16
 	"gui_win16",
@@ -4003,6 +4016,9 @@ f_has(argvars, retvar)
 # endif
 # ifdef FEAT_MOUSE_NET
 	"mouse_netterm",
+# endif
+# ifdef FEAT_MOUSE_PTERM
+	"mouse_pterm",
 # endif
 # ifdef FEAT_MOUSE_XTERM
 	"mouse_xterm",
@@ -5959,16 +5975,18 @@ find_name_end(arg, expr_start, expr_end)
     return p;
 }
 
-
+/*
+ * Return TRUE if character "c" can be used in a variable or function name.
+ */
     static int
 eval_isnamec(c)
     int	    c;
 {
+    return (ASCII_ISALPHA(c) || isdigit(c) || c == '_' || c == ':'
 #ifdef FEAT_MAGIC_BRACES
-    return (isalpha(c) || isdigit(c) || c == '_' || c == ':' || c == '{' || c == '}');
-#else
-    return (isalpha(c) || isdigit(c) || c == '_' || c == ':');
+	    || c == '{' || c == '}'
 #endif
+	    );
 }
 
 /*
@@ -6816,14 +6834,14 @@ find_option_end(arg, opt_flags)
     else
 	*opt_flags = 0;
 
-    if (!isalpha(*p))
+    if (!ASCII_ISALPHA(*p))
 	return NULL;
     *arg = p;
 
     if (p[0] == 't' && p[1] == '_' && p[2] != NUL && p[3] != NUL)
 	p += 4;	    /* termcap option */
     else
-	while (isalpha(*p))
+	while (ASCII_ISALPHA(*p))
 	    ++p;
     return p;
 }
@@ -6928,7 +6946,7 @@ ex_function(eap)
 	else
 	{
 	    arg = p;
-	    while (isalpha(*p) || isdigit(*p) || *p == '_')
+	    while (ASCII_ISALPHA(*p) || isdigit(*p) || *p == '_')
 		++p;
 	    if (arg == p || isdigit(*arg))
 	    {
@@ -7044,9 +7062,9 @@ ex_function(eap)
 	    {
 		p = skipwhite(skiptowhite(p));
 		p += eval_fname_script(p);
-		if (isalpha(*p))
+		if (ASCII_ISALPHA(*p))
 		{
-		    while (isalpha(*p) || isdigit(*p) || *p == '_')
+		    while (ASCII_ISALPHA(*p) || isdigit(*p) || *p == '_')
 			++p;
 		    if (*skipwhite(p) == '(')
 		    {
@@ -7058,10 +7076,10 @@ ex_function(eap)
 
 	    /* Check for ":append" or ":insert". */
 	    p = skip_range(p, NULL);
-	    if ((p[0] == 'a' && (!isalpha(p[1]) || p[1] == 'p'))
+	    if ((p[0] == 'a' && (!ASCII_ISALPHA(p[1]) || p[1] == 'p'))
 		    || (p[0] == 'i'
-			&& (!isalpha(p[1]) || (p[1] == 'n'
-				&& (!isalpha(p[2]) || (p[2] == 's'))))))
+			&& (!ASCII_ISALPHA(p[1]) || (p[1] == 'n'
+				&& (!ASCII_ISALPHA(p[2]) || (p[2] == 's'))))))
 		in_append = TRUE;
 	}
 
@@ -7144,7 +7162,7 @@ trans_function_name(pp)
     lead = eval_fname_script(start);
     if (lead > 0)
 	start += lead;
-    else if (!isupper(*start))
+    else if (!ASCII_ISUPPER(*start))
     {
 	EMSG2(_("Function name must start with a capital: %s"), start);
 	return NULL;
@@ -7678,10 +7696,10 @@ var_flavour(varname)
 {
     char_u *p = varname;
 
-    if (isupper(*p))
+    if (ASCII_ISUPPER(*p))
     {
 	while (*(++p))
-	    if (islower(*p))
+	    if (ASCII_ISLOWER(*p))
 		return VAR_FLAVOUR_SESSION;
 	return VAR_FLAVOUR_VIMINFO;
     }
@@ -7825,18 +7843,54 @@ eval_charconvert(enc_from, enc_to, fname_from, fname_to)
 
     set_vim_var_string(VV_CC_FROM, enc_from, -1);
     set_vim_var_string(VV_CC_TO, enc_to, -1);
-    set_vim_var_string(VV_CC_IN, fname_from, -1);
-    set_vim_var_string(VV_CC_OUT, fname_to, -1);
+    set_vim_var_string(VV_FNAME_IN, fname_from, -1);
+    set_vim_var_string(VV_FNAME_OUT, fname_to, -1);
     if (eval_to_bool(p_ccv, &err, NULL, FALSE))
 	err = TRUE;
     set_vim_var_string(VV_CC_FROM, NULL, -1);
     set_vim_var_string(VV_CC_TO, NULL, -1);
-    set_vim_var_string(VV_CC_IN, NULL, -1);
-    set_vim_var_string(VV_CC_OUT, NULL, -1);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
 
     if (err)
 	return FAIL;
     return OK;
+}
+# endif
+
+# if defined(FEAT_DIFF) || defined(PROTO)
+    void
+eval_diff(origfile, newfile, outfile)
+    char_u	*origfile;
+    char_u	*newfile;
+    char_u	*outfile;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_FNAME_IN, origfile, -1);
+    set_vim_var_string(VV_FNAME_NEW, newfile, -1);
+    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
+    (void)eval_to_bool(p_dex, &err, NULL, FALSE);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_NEW, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
+}
+
+    void
+eval_patch(origfile, difffile, outfile)
+    char_u	*origfile;
+    char_u	*difffile;
+    char_u	*outfile;
+{
+    int		err;
+
+    set_vim_var_string(VV_FNAME_IN, origfile, -1);
+    set_vim_var_string(VV_FNAME_DIFF, difffile, -1);
+    set_vim_var_string(VV_FNAME_OUT, outfile, -1);
+    (void)eval_to_bool(p_pex, &err, NULL, FALSE);
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_FNAME_DIFF, NULL, -1);
+    set_vim_var_string(VV_FNAME_OUT, NULL, -1);
 }
 # endif
 

@@ -115,6 +115,7 @@ PROPT = DEF=PROTO GPROTO GPPARM MAXIMUMERRORS=999 GENPROTOSTATICS GENPROTOPARAME
 SRC = \
 	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -152,7 +153,7 @@ SRC = \
 	gui_amiga.c \
 	gui.c
 
-OBJ = buffer.o charset.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o ex_getln.o \
+OBJ = buffer.o charset.o diff.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o ex_getln.o \
 	fileio.o fold.o getchar.o main.o mark.o memfile.o memline.o menu.o message.o misc1.o misc2.o move.o \
 	normal.o ops.o option.o os_amiga.o quickfix.o regexp.o screen.o search.o syntax.o \
 	tag.o term.o ui.o undo.o window.o gui_amiga.o gui.o  $(TERMLIB)
@@ -160,6 +161,7 @@ OBJ = buffer.o charset.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o
 PRO = \
 	buffer.pro \
 	charset.pro \
+	diff.pro \
 	digraph.pro \
 	edit.pro \
 	eval.pro \
@@ -272,6 +274,8 @@ buffer.o:	buffer.c $(DEP)
 buffer.pro:	buffer.c $(DEP)
 charset.o:	charset.c  $(DEP)
 charset.pro:	charset.c $(DEP)
+diff.o:		diff.c  $(DEP)
+diff.pro:	diff.c $(DEP)
 digraph.o:	digraph.c  $(DEP)
 digraph.pro:	digraph.c $(DEP)
 edit.o:		edit.c  $(DEP)

@@ -1,7 +1,6 @@
 " Menu Translations:	Japanese (for UNIX)
-" Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
-" Last Change:		11:15:35 16-Oct-2000.
+" Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
+" Last Change:		08:50:47 25-Mar-2001.
 
-" euc-jp is the same as ujis.
-" Source the other one from here.
-source <sfile>:p:h/menu_ja_jp.ujis.vim
+" eucjp is the same as euc-jp.  Source the other one from here.
+source <sfile>:p:h/menu_ja_jp.euc-jp.vim

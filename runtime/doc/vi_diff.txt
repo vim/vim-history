@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0z.  Last change: 2001 Feb 06
+*vi_diff.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -748,6 +748,7 @@ Only Vim is able to accept options in between and after the file names.
 		Vim: allow up to 10 "-c" arguments
 
 -d {device}	Vim: Use {device} for I/O (Amiga only).
+-d		Vim: start with 'diff' set. |vimdiff|
 
 -D		Vim: debug mode.
 

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0z.  Last change: 2001 Mar 23
+*syntax.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1420,6 +1420,30 @@ This will prevent highlighting of special identifiers like "ConstantName",
 "$global_var", "@instace_var", "| iterator |", and ":symbol".
 
 
+SDL						*sdl.vim* *sdl-syntax*
+
+The SDL highlighting probably misses a few keywords, but SDL has so many
+of them it's almost impossibly to cope.
+
+The new standard, SDL-2000, specifies that all identifiers are
+case-sensitive (which was not so before), and that all keywords can be
+used either completely lowercase or completely uppercase. To have the
+highlighting reflect this, you can set the following variable: >
+	:let sdl_2000=1
+
+This also sets many new keywords. If you want to disable the old
+keywords, which is probably a good idea, use: >
+	:let SDL_no_96=1
+
+
+The indentation is probably also imcomplete, but right now I am very
+satisfied with it for my own projects.
+
+The last thing is a little PO-editing helper. It adds a couple of menu
+entries. Though it doesn't do much, I find it extremely helpful for
+translating PO files. I just won't use Emacs, you know.
+
+
 SED						*sed.vim* *sed-syntax*
 
 To make tabs stand out from regular blanks (accomplished by using Todo
@@ -1699,6 +1723,8 @@ DEFINING KEYWORDS					*:syn-keyword*
 	Don't forget that a keyword can only be recognized if all the
 	characters are included in the 'iskeyword' option.  If one character
 	isn't, the keyword will never be recognized.
+	Multi-byte characters can also be used.  These do not have to be in
+	'iskeyword'.
 
 	A keyword always has higher priority than a match or region, the
 	keyword is used if more than one item matches.  Keywords do not nest
@@ -2891,6 +2917,14 @@ Cursor		the character under the cursor
 CursorIM	like Cursor, but used when in IME mode |CursorIM|
 							*hl-Directory*
 Directory	directory names (and other special names in listings)
+							*hl-DiffAdd*
+DiffAdd		diff mode: Added line |diff.txt|
+							*hl-DiffChange*
+DiffChange	diff mode: Changed line |diff.txt|
+							*hl-DiffDelete*
+DiffDelete	diff mode: Deleted line |diff.txt|
+							*hl-DiffText*
+DiffText	diff mode: Changed text within a changed line |diff.txt|
 							*hl-ErrorMsg*
 ErrorMsg	error messages on the command line
 							*hl-VertSplit*
@@ -3105,11 +3139,14 @@ at 8.  Therefore Vim sets the "cterm=bold" attribute for light foreground
 colors, when 't_Co' is 8.
 
 							*xfree-xterm*
-To get 16 colors, get the newest xterm version (which should be included with
-Xfree86 3.3 and later).  You can also find the latest version at: >
+To get 16 colors or more, get the newest xterm version (which should be
+included with Xfree86 3.3 and later).  You can also find the latest version
+at: >
 	http://www.clark.net/pub/dickey/xterm
-You probably have to enable 16 colors when running configure: >
-	./configure --disable-bold-color --enable-tcap-query
+Here is a good way to configure it.  This uses 88 colors and enables the
+termcap-query feature, which allows Vim to ask the xterm how many colors it
+supports. >
+	./configure --disable-bold-color --enable-88-color --enable-tcap-query
 If you only get 8 colors, check the xterm compilation settings.
 (Also see |UTF8-xterm| for using this xterm with UTF-8 character encoding).
 
@@ -3127,6 +3164,7 @@ This xterm should work with these lines in your .vimrc: >
 
 Without |+terminfo|, Vim will recognize these settings, and automatically
 translate cterm colors of 8 and above to "<Esc>[9%dm" and "<Esc>[10%dm".
+Colors above 16 are also translated automatically.
 
 Or just set the TERM environment variable to "xterm-16color" and try if that
 works.

@@ -63,6 +63,12 @@
 # include "gui_riscos.h"
 #endif
 
+#ifdef FEAT_GUI_PHOTON
+# include <Ph.h>
+# include <Pt.h>
+# include "photon/PxProto.h"
+#endif
+
 /*
  * On some systems, when we compile with the GUI, we always use it.  On Mac
  * there is no terminal version, and on Windows we can't figure out how to
@@ -198,6 +204,9 @@ typedef struct GuiScrollbar
 #ifdef RISCOS
     int		id;		/* Window handle of scrollbar window */
 #endif
+#ifdef FEAT_GUI_PHOTON
+    PtWidget_t	*id;
+#endif
 } scrollbar_t;
 
 typedef long	    guicolor_t;	/* handle for a GUI color */
@@ -208,10 +217,17 @@ typedef long	    guicolor_t;	/* handle for a GUI color */
 # define NOFONT		(GuiFont)NULL
 # define NOFONTSET	(GuiFontset)NULL
 #else
+# ifdef FEAT_GUI_PHOTON
+  typedef char		*GuiFont;
+  typedef char		*GuiFontset;
+#  define NOFONT	(GuiFont)NULL
+#  define NOFONTSET	(GuiFontset)NULL
+# else
   typedef long_u	GuiFont;	/* handle for a GUI font */
   typedef long_u	GuiFontset;	/* handle for a GUI fontset */
-# define NOFONT		(GuiFont)0
-# define NOFONTSET	(GuiFontset)0
+#  define NOFONT	(GuiFont)0
+#  define NOFONTSET	(GuiFontset)0
+# endif
 #endif
 
 typedef struct Gui
@@ -341,6 +357,12 @@ typedef struct Gui
     char_u	*browse_fname;	    /* file name from filedlg */
 #endif	/* FEAT_GUI_GTK */
 
+#ifdef FEAT_GUI_ATHENA
+# ifdef FEAT_TOOLBAR
+    int		toolbar_height;	    /* height of the toolbar */
+# endif
+#endif  /* FEAT_GUI_ATHENA */
+
 #ifdef FEAT_GUI_MOTIF
 # ifdef FEAT_TOOLBAR
     int		toolbar_height;	    /* height of the toolbar */
@@ -405,6 +427,23 @@ typedef struct Gui
     int		window_title_size;
     int		fg_colour;		/* in 0xBBGGRR format */
     int		bg_colour;
+#endif
+
+#ifdef FEAT_GUI_PHOTON
+    PtWidget_t	*vimWindow;		/* PtWindow */
+    PtWidget_t	*vimTextArea;		/* PtRaw */
+    PtWidget_t	*vimContainer;		/* PtPanel */
+# if defined( FEAT_MENU ) || defined( FEAT_TOOLBAR )
+    PtWidget_t	*vimToolBarGroup;
+# endif
+# ifdef FEAT_MENU
+    PtWidget_t	*vimMenuBar;
+# endif
+# ifdef FEAT_TOOLBAR
+    PtWidget_t	*vimToolBar;
+    int		toolbar_height;
+# endif
+    PhEvent_t	*event_buffer;
 #endif
 
 #ifdef FEAT_XIM

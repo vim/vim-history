@@ -1349,7 +1349,7 @@ vgetc()
 	    }
 	    c = TO_SPECIAL(c2, c);
 
-#if defined(FEAT_GUI_W32) && defined(FEAT_MENU)
+#if defined(FEAT_GUI_W32) && defined(FEAT_MENU) && defined(FEAT_TEAROFF)
 	    /* Handle K_TEAROFF here, the caller of vgetc() doesn't need to
 	     * know that a menu was torn off */
 	    if (c == K_TEAROFF)
@@ -2104,7 +2104,7 @@ vgetorpeek(advance)
 		    /* move cursor left, if possible */
 		    if (curwin->w_cursor.col != 0)
 		    {
-			if (curwin->w_wcol)
+			if (curwin->w_wcol > 0)
 			{
 			    if (did_ai)
 			    {
@@ -2705,6 +2705,7 @@ do_map(maptype, arg, mode, abbrev)
     if (hasarg && maptype != 1 && mode == LANGMAP)
     {
 	curbuf->b_lmap |= B_LMAP_INSERT | B_LMAP_SEARCH;
+	b_lmap_def = curbuf->b_lmap;
 #ifdef FEAT_WINDOWS
 	status_redraw_curbuf();
 #endif

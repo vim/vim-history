@@ -185,6 +185,7 @@ INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
 OBJ = \
 	$(OUTDIR)\buffer.obj \
 	$(OUTDIR)\charset.obj \
+	$(OUTDIR)\diff.obj \
 	$(OUTDIR)\digraph.obj \
 	$(OUTDIR)\edit.obj \
 	$(OUTDIR)\eval.obj \
@@ -436,6 +437,9 @@ $(OUTDIR)/buffer.obj:	$(OUTDIR) buffer.c  $(INCL)
 $(OUTDIR)/charset.obj:	$(OUTDIR) charset.c  $(INCL)
 	$(CC) $(CFLAGS) charset.c /Fo$(OUTDIR)/charset.obj $(PDB)
 
+$(OUTDIR)/diff.obj:	$(OUTDIR) diff.c  $(INCL)
+	$(CC) $(CFLAGS) diff.c /Fo$(OUTDIR)/diff.obj $(PDB)
+
 $(OUTDIR)/digraph.obj:	$(OUTDIR) digraph.c  $(INCL)
 	$(CC) $(CFLAGS) digraph.c /Fo$(OUTDIR)/digraph.obj $(PDB)
 
@@ -591,7 +595,7 @@ $(OUTDIR)/dimm_i.obj: $(OUTDIR) dimm_i.c $(INCL)
 
 $(OUTDIR)/glbl_ime.obj:	$(OUTDIR) glbl_ime.cpp  dimm.h $(INCL)
 	$(CC) $(CFLAGS) glbl_ime.cpp /Fo$(OUTDIR)/glbl_ime.obj $(PDB)
-  
+
 auto/pathdef.c: auto
 	@echo creating auto/pathdef.c
 	@echo /* pathdef.c */ > auto\pathdef.c
@@ -610,6 +614,7 @@ auto:
 proto.h: \
 	proto/buffer.pro \
 	proto/charset.pro \
+	proto/diff.pro \
 	proto/digraph.pro \
 	proto/edit.pro \
 	proto/eval.pro \

@@ -4,4 +4,6 @@ int get_digraph __ARGS((int cmdline));
 int getdigraph __ARGS((int char1, int char2, int meta));
 void putdigraph __ARGS((char_u *str));
 void listdigraphs __ARGS((void));
+char_u *keymap_init __ARGS((void));
+void ex_loadkeymap __ARGS((exarg_t *eap));
 /* vim: set ft=c : */

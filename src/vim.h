@@ -44,7 +44,8 @@
     || defined(FEAT_GUI_W32) \
     || defined(FEAT_GUI_W16) \
     || defined(FEAT_GUI_BEOS) \
-    || defined(FEAT_GUI_AMIGA)
+    || defined(FEAT_GUI_AMIGA) \
+    || defined(FEAT_GUI_PHOTON)
 # ifndef FEAT_GUI
 #  define FEAT_GUI
 # endif
@@ -201,6 +202,10 @@
 
 #ifdef RISCOS
 # include "os_riscos.h"
+#endif
+
+#ifdef __QNX__
+# include "os_qnx.h"
 #endif
 
 #ifdef FEAT_SUN_WORKSHOP
@@ -407,6 +412,7 @@ typedef unsigned short u8char_t;
 #define VREPLACE_FLAG	0x80	/* Virtual-replace mode flag */
 #define REPLACE		(REPLACE_FLAG + INSERT)
 #define VREPLACE	(REPLACE_FLAG + VREPLACE_FLAG + INSERT)
+#define LREPLACE	(REPLACE_FLAG + LANGMAP)
 
 #define NORMAL_BUSY	(0x100 + NORMAL) /* Normal mode, busy with a command */
 #define HITRETURN	(0x200 + NORMAL) /* waiting for return or command */
@@ -882,7 +888,8 @@ typedef enum auto_event EVENT_T;
 
 /*
  * Values for index in highlight_attr[].
- * When making changes, also update HL_FLAGS below!
+ * When making changes, also update HL_FLAGS below!  And update the default
+ * value of 'highlight' in option.c.
  */
 enum hlf_value
 {
@@ -909,12 +916,17 @@ enum hlf_value
     , HLF_WM	    /* Wildmenu highlight */
     , HLF_FL	    /* Folded line */
     , HLF_FC	    /* Fold column */
+    , HLF_ADD	    /* Added diff line */
+    , HLF_CHD	    /* Changed diff line */
+    , HLF_DED	    /* Deleted diff line */
+    , HLF_TXD	    /* Text Changed in diff line */
     , HLF_COUNT	    /* MUST be the last one */
 };
 
 /* the HL_FLAGS must be in the same order as the HLF_ enums! */
 #define HL_FLAGS {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M', \
-		  'n', 'r', 's', 'S', 'c', 't', 'v', 'V', 'w', 'W', 'f', 'F'}
+		  'n', 'r', 's', 'S', 'c', 't', 'v', 'V', 'w', 'W', \
+		  'f', 'F', 'A', 'C', 'D', 'T'}
 
 /*
  * Boolean constants
@@ -1231,13 +1243,15 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_CTYPE	13
 #define VV_CC_FROM	14
 #define VV_CC_TO	15
-#define VV_CC_IN	16
-#define VV_CC_OUT	17
-#define VV_CMDARG	18
-#define VV_FOLDSTART	19
-#define VV_FOLDEND	20
-#define VV_FOLDDASHES	21
-#define VV_LEN		22	/* number of v: vars */
+#define VV_FNAME_IN	16
+#define VV_FNAME_OUT	17
+#define VV_FNAME_NEW	18
+#define VV_FNAME_DIFF	19
+#define VV_CMDARG	20
+#define VV_FOLDSTART	21
+#define VV_FOLDEND	22
+#define VV_FOLDDASHES	23
+#define VV_LEN		24	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

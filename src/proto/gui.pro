@@ -37,6 +37,7 @@ void gui_init_which_components __ARGS((char_u *oldval));
 void gui_create_scrollbar __ARGS((scrollbar_t *sb, int type, win_t *wp));
 scrollbar_t *gui_find_scrollbar __ARGS((long ident));
 void gui_drag_scrollbar __ARGS((scrollbar_t *sb, long value, int still_dragging));
+void gui_update_scrollbars __ARGS((int force));
 int gui_do_scroll __ARGS((void));
 int gui_do_horiz_scroll __ARGS((void));
 void gui_check_colors __ARGS((void));

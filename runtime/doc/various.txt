@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0z.  Last change: 2001 Mar 20
+*various.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -216,6 +216,7 @@ B  *+cscope*		|cscope| support
 N  *+dialog_gui*	Support for |:confirm| with GUI dialog.
 N  *+dialog_con*	Support for |:confirm| with console dialog.
 N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
+N  *+diff*		|vimdiff| and 'diff'
 N  *+digraphs*		|digraphs|
 B  *+emacs_tags*	|emacs-tags| files
 N  *+eval*		expression evaluation |eval.txt|
@@ -233,6 +234,7 @@ N  *+gettext*		message translations |multi-lang|
    *+GUI_BeOS*		BeOS only: BeOS |GUI|
    *+GUI_GTK*		Unix only: GTK+ |GUI|
    *+GUI_Motif*		Unix only: Motif |GUI|
+   *+GUI_Photon*	QNX only:  Photon |GUI|
 m  *+hangul_input*	Hangul input support |hangul|
    *+iconv*		Compiled with the |iconv()| function
 N  *+insert_expand*	|insert_expand| Insert mode completion
@@ -253,6 +255,7 @@ N  *+mouseshape*	|'mouseshape'|
 B  *+mouse_dec*		Unix only: Dec terminal mouse handling |dec-mouse|
 N  *+mouse_gpm*		Unix only: Linux console mouse handling |gpm-mouse|
 B  *+mouse_netterm*	Unix only: netterm mouse handling |netterm-mouse|
+N  *+mouse_pterm*	QNX only: pterm mouse handling |qnx-terminal|
 N  *+mouse_xterm*	Unix only: xterm mouse handling |xterm-mouse|
 B  *+multi_byte*	Korean and other languages |multibyte|
    *+multi_byte_ime*	Win32 input method for multibyte chars |multibyte-ime|
@@ -415,9 +418,14 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 
 			*help* *<Help>* *:h* *:help* *<F1>* *i_<F1>* *i_<Help>*
 <Help>		or
-:h[elp]			Open a window at the top and display the help file in
-			read-only mode.  If there is a help window open
-			already, use that one.  {not in Vi}
+:h[elp]			Open a window and display the help file in read-only
+			mode.  If there is a help window open already, use
+			that one.  Otherwise, if the current window uses the
+			full width of the screen or is at least 80 characters
+			wide, the help window will appear just above the
+			current window.  Otherwise the new window is put at
+			the very top.
+			{not in Vi}
 
 								*{subject}*
 :h[elp] {subject}	Like ":help", additionally jump to the tag {subject}.

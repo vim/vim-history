@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0z.  Last change: 2001 Mar 24
+*version6.txt*  For Vim version 6.0aa.  Last change: 2001 Apr 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -34,8 +34,9 @@ NEW FEATURES
 
 Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
-Extended search patterns		|new-searchpat|
+Diff mode				|new-diff-mode|
 Flexible indenting			|new-indent-flex|
+Extended search patterns		|new-searchpat|
 UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
@@ -395,6 +396,27 @@ When there is not enough room in the status line for both the file name and
 the ruler, use up to half the width for the ruler.  Useful for narrow windows.
 
 
+Diff mode						*new-diff-mode*
+---------
+
+Added diff mode |diff.txt|
+- Added the vimdiff command to start diff mode on a few files.
+- Added the vimdiff manpage.
+- Added the ":diffsplit" command to start diff mode with the current file and
+  another file.
+- Added the ":diffpatch" command to start diff mode with the current file and
+  a patch file.
+- The 'diff' option switches diff mode on in a window.
+- The ":diffupdate" refreshes the diffs.
+- The 'diffopt' option changes how diffs are displayed.
+- The 'diffexpr' option can be set how a diff is to be created.
+- The 'patchexpr' option can be set how patch is applied to a file.
+- Added the "diff" folding method.
+- Added the DiffAdd, DiffChange, DiffDelete and DiffText highlight groups to
+  specify the highlighting for differences.  The defaults are ugly...
+- Unix: make a vimdiff symbolic link for "make install".
+
+
 Flexible indenting					*new-indent-flex*
 ------------------
 
@@ -507,8 +529,6 @@ Many new items for Multi-byte support:
 - Added ":scriptencoding" command: convert lines in a sourced script to
   'encoding'.  Useful for menu files.
 - Made "\<" and "\>" in regexp work for UTF-8. (Muraoka Taro)
-- Support double-byte single-width characters for euc-jp: Characters starting
-  with 0x8E.  Added ScreenLines2[] to store the second byte.
 - The "xfontset" feature isn't required for "xim".  These are now two
   independent features.
 - XIM: enable XIM when typing a language character (Insert mode, Search
@@ -517,6 +537,7 @@ Many new items for Multi-byte support:
 - Added 'm' flag to 'formatoptions': When wrapping words, allow splitting at
   each multibyte character, not only at a space.
 - Patterns should now work properly with all kinds of multi-byte characters.
+- Made ":syntax keyword" work with multi-byte characters.
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -541,6 +562,19 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
   characters.
 - Made the 'langmap' option recognize multi-byte characters.  But mapping only
   works for 8-bit characters.  Helps when using UTF-8.
+- Use a different mouse cursor for when ":lmap" mappings are active.  Can
+  specify two highlight groups for an item in 'guicursor'.  By default
+  "lCursor" and "Cursor" are equal, the user must set a color he likes.
+- Show "(lang)" for 'showmode' when language mapping is enabled.
+- UTF-8: Made "r" work with a ":lmap" that includes a composing character.
+  Also works for "f", which now works to find a character that includes a
+  composing character.
+
+Other multi-byte character additions:
+- Support double-byte single-width characters for euc-jp: Characters starting
+  with 0x8E.  Added ScreenLines2[] to store the second byte.
+- Unix: Included support for the "SJIS" locale, with "shift-jis" and "cp932"
+  as aliases.
 
 
 Multi-language support					*new-multi-lang*
@@ -570,6 +604,8 @@ Multi-language support					*new-multi-lang*
 - Added NLS support for Win32 with the MingW compiler. (Eduardo Fernandez)
 - Made it possible to have vimtutor use different languages.  Spanish and
   Italian translations are included. (Eduardo Fernandez)
+- When available, call bind_textdomain_codeset() to have gettext() translate
+  messages to 'encoding'.  This requires GNU gettext 0.10.36.
 
 
 Plugin support					*new-plugins*
@@ -722,6 +758,8 @@ Included jsbmouse support. (Darren Garth)
 Support for dec mouse in Unix. (Steve Wall)
 
 Port to 16-bit MS Windows (Windows 3.1x) (Vince Negri)
+
+Port to QNX.  Supports the Photon GUI, mouse, etc. (Julian Kinraid)
 
 Allow cross-compiling the Win32 version with Make_ming.mak. (Ron Aaron)
 Added Python support for compiling with Mingw. (Ron Aaron)
@@ -1100,11 +1138,13 @@ problems with not being able to rewind the file (e.g., when a line near the
 end of the file ends in LF instead of CR-LF).
 
 Insert mode:
-"CTRL-G j" and "CTRL-G k" can be used to insert in another line in the same
-column.  Useful for editing a table.
-Thesaurus completion with CTRL-X CTRL-T. (Vince Negri)
-Added the 'thesaurus' option, to use instead of 'dictionary' for thesaurus
-completion.  Added 's' flag in 'complete'.
+- "CTRL-G j" and "CTRL-G k" can be used to insert in another line in the same
+  column.  Useful for editing a table.
+- Adde Thesaurus completion with CTRL-X CTRL-T. (Vince Negri)
+- Added the 'thesaurus' option, to use instead of 'dictionary' for thesaurus
+  completion.  Added 's' flag in 'complete'.
+- Made CTRL-X CTRL-L in Insert mode use the 'complete' option.  It now also
+  scans other loaded buffers for matching lines.
 
 Performance:
 - Made display updating more efficient.  Insert/delete lines may be used for
@@ -1207,19 +1247,26 @@ GUI:
 - Allow non-Visual selection (without moving the cursor) by keeping CTRL and
   SHIFT pressed. (Ivan Wellesz)
 - Motif: added toolbar. (Gordon Prieur)  Also added tooltips.
+- Athena: added toolbar. (David Harrison -- based on Gordon Prieur's work)
 - Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
   Khodush)
 - When no --enable-xim argument is given, automatically enable it when a X GUI
   is used.  Required for dead key support (and multi-byte input).
-- X11: Support for the clipboard selection as register "+.  When exiting or
-  suspending copy the selection to cut buffer 0.  Should allow copy/paste with
-  more applications in a X11-standard way.  (Neil Bird)
 - After a file selection dialog, check that the edited files were not changed
   or deleted.  The Win32 dialog allows deleting and renaming files.
 - Motif and Athena: Added support for "editres". (Martin Dalecki)
 - Motif and Athena: Added "menuFont" to be able to specify a font or fontset
   for the menus.  Useful when the locale is different from 'encoding'. (David
   Harrison)
+
+X11:
+- Support for the clipboard selection as register "+.  When exiting or
+  suspending copy the selection to cut buffer 0.  Should allow copy/paste with
+  more applications in a X11-standard way.  (Neil Bird)
+- Use the X clipboard in any terminal, not just in an xterm.
+- Added a few messages for when 'verbose' is non-zero to show what happens
+  when trying to connect to the X server.  Should help when trying to find out
+  why startup is slow.
 
 GTK GUI: (partly by Marcin Dalecki)
 -   With some fonts the characters can be taller than ascent + descent.  E.g.,
@@ -1268,8 +1315,9 @@ start looking for a match.
 Made third argument to strpart() optional.  (Paul Moore, Zdenek Sekera)
 
 Cscope: (kahn)
-cscope_connection() function.
-":cscope kill -1" kills all cscope connections.
+- cscope_connection() function.
+- ":cscope kill -1" kills all cscope connections.
+- Added the 'cscopepathcomp' option. (Scott Hauck)
 
 exists() can also be used to check for Ex commands and defined autocommands.
 
@@ -1427,6 +1475,10 @@ consistent, it's not really a nice color to use.
 When resizing the Vim window, don't use 'equalalways'.  Avoids that making the
 Vim window smaller makes split windows bigger.  And it's what the docs say.
 
+When typing CTRL-D in Insert mode, just after an autoindent, then hitting CR
+kept the remaining white space.  Now made it work like BS: delete the
+autoindent to avoid a blank non-empty line results.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -1434,6 +1486,9 @@ All generated files have been moved out of the "src" directory.  This makes it
 easy to see which files are not edited by hand.  The files generated by
 configure are now in the "src/auto" directory.  For Unix, compiled object
 files go in the objects directory.
+
+The source archive was over the 1.4M floppy limit.  Now also provide bzip2
+compressed versions of the sources and runtime archives.
 
 Added "reconfig" as a target for make.  Useful when changing some of the
 arguments that require flushing the cache, such as switching from GTK to
@@ -2072,5 +2127,43 @@ for.
 GUI: When scrolling and 'writedelay' is non-zero, the character under the
 cursor was displayed in the wrong position (one line above/below with
 CTRL-E/CTRL-Y).
+
+A ":normal" command would reset the 'scrollbind' info.  Causes problems when
+using a ":normal" command in an autocommand for opening a file.
+
+Windows GUI: a point size with a dot, like "7.5", wasn't recognized. (Muraoka
+Taro)
+
+When 'scrollbind' wasn't set would still remember the current position,
+wasting time.
+
+GTK: Crash when 'shell' doesn't exist and doing":!ls".  Use _exit() instead of
+exit() when the child couldn't execute the shell.
+
+Multi-byte:
+- GUI with double-byte encoding: a mouse click in left halve of double-wide
+  character put the cursor in previous char.
+- Using double-byte encoding and 'selection' is "exclusive": "vey" and "^Vey"
+  included the character after the word.
+- When using a double-byte encoding and there is a lead byte at the end of the
+  line, the preceding line would be displayed.  "ga" also showed wrong info.
+
+GUI: The cursor was sometimes not removed when scrolling.  Changed the policy
+from redrawing the cursor after each call to gui_write() to only update it at
+the end of update_screen() or when setting the cursor position.  Also only
+update the scrollbars at the end of update_screen(), that's the only place
+where the window text may have been scrolled.
+
+Formatting "/*<Tab>long text", produced "* <Tab>" in the next line.  Now
+remove the space before the Tab.
+Formatting "/*<Tab>  long text", produced "* <Tab> long text" in the next
+line.  Now keep the space after the Tab.
+
+In some places non-ASCII alphabetical characters were accepted, which could
+cause problems.  For example, ":X" (X being such a character).
+
+When a pattern matches the end of the line, the last character in the line was
+highlighted for 'hlsearch'.  That looks wrong for "/\%3c".  Now highlight the
+character just after the line.
 
  vim:tw=78:

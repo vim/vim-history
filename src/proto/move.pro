@@ -2,6 +2,7 @@
 void update_topline_redraw __ARGS((void));
 void update_topline __ARGS((void));
 void update_curswant __ARGS((void));
+void check_cursor_moved __ARGS((win_t *wp));
 void changed_window_setting __ARGS((void));
 void set_topline __ARGS((win_t *wp, linenr_t lnum));
 void changed_cline_bef_curs __ARGS((void));
@@ -28,6 +29,7 @@ void scrollup __ARGS((long line_count, int byfold));
 void scrolldown_clamp __ARGS((void));
 void scrollup_clamp __ARGS((void));
 void scroll_cursor_top __ARGS((int min_scroll, int always));
+void set_empty_rows __ARGS((win_t *wp, int used));
 void scroll_cursor_bot __ARGS((int min_scroll, int set_topbot));
 void scroll_cursor_halfway __ARGS((int atend));
 void cursor_correct __ARGS((void));

@@ -1218,19 +1218,18 @@ search_for_exact_line(buf, pos, dir, pat)
  */
 
 /*
- * searchc(c, dir, type, count)
- *
- * Search for character 'c', in direction 'dir'. If 'type' is 0, move to the
+ * Search for a character in a line.  If "type" is 0, move to the
  * position of the character, otherwise move to just before the char.
- * Repeat this 'count' times.
+ * Do this "cap->count1" times.
  */
     int
-searchc(c, dir, type, count)
-    int		c;
-    int		dir;
+searchc(cap, type)
+    cmdarg_t	*cap;
     int		type;
-    long	count;
 {
+    int			c = cap->nchar;	/* char to search for */
+    int			dir = cap->arg;	/* TRUE for searching forward */
+    long		count = cap->count1;	/* repeat count */
     static int		lastc = NUL;	/* last character searched for */
     static int		lastcdir;	/* last direction of character search */
     static int		lastctype;	/* last search type ("find" or "to") */
@@ -1239,7 +1238,7 @@ searchc(c, dir, type, count)
     int			len;
 #ifdef FEAT_MBYTE
     static char_u	bytes[MB_MAXBYTES];
-    int			bytelen = 1;	/* >1 for multi-byte char */
+    static int		bytelen = 1;	/* >1 for multi-byte char */
 #endif
 
     if (c != NUL)	/* normal search: remember args for repeat */
@@ -1251,6 +1250,12 @@ searchc(c, dir, type, count)
 	    lastctype = type;
 #ifdef FEAT_MBYTE
 	    bytelen = (*mb_char2bytes)(c, bytes);
+	    if (cap->ncharC1 != 0)
+	    {
+		bytelen += (*mb_char2bytes)(cap->ncharC1, bytes + bytelen);
+		if (cap->ncharC2 != 0)
+		    bytelen += (*mb_char2bytes)(cap->ncharC2, bytes + bytelen);
+	    }
 #endif
 	}
     }
@@ -1264,10 +1269,7 @@ searchc(c, dir, type, count)
 	    dir = lastcdir;
 	type = lastctype;
 	c = lastc;
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
-	    bytelen = (*mb_char2len)(c);
-#endif
+	/* For multi-byte re-use last bytes[] and bytelen. */
     }
 
     p = ml_get_curline();

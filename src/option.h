@@ -313,11 +313,18 @@ EXTERN char_u	*p_cpo;		/* 'cpoptions' */
 EXTERN char_u	*p_csprg;	/* 'cscopeprg' */
 EXTERN int	p_cst;		/* 'cscopetag' */
 EXTERN long	p_csto;		/* 'cscopetagorder' */
+EXTERN long	p_cspc;		/* 'cscopepathcomp' */
 EXTERN int	p_csverbose;	/* 'cscopeverbose' */
 #endif
 EXTERN char_u	*p_debug;	/* 'debug' */
 #ifdef FEAT_FIND_ID
 EXTERN char_u	*p_def;		/* 'define' */
+#endif
+#ifdef FEAT_DIFF
+EXTERN char_u	*p_dip;		/* 'diffopt' */
+# ifdef FEAT_EVAL
+EXTERN char_u	*p_dex;		/* 'diffexpr' */
+# endif
 #endif
 #ifdef FEAT_INS_EXPAND
 EXTERN char_u	*p_dict;	/* 'dictionary' */
@@ -478,6 +485,9 @@ EXTERN int	p_more;		/* 'more' */
 EXTERN char_u	*p_para;	/* 'paragraphs' */
 EXTERN int	p_paste;	/* 'paste' */
 EXTERN char_u	*p_pt;		/* 'pastetoggle' */
+#if defined(FEAT_EVAL) && defined(FEAT_DIFF)
+EXTERN char_u	*p_pex;		/* 'patchexpr' */
+#endif
 EXTERN char_u	*p_pm;		/* 'patchmode' */
 EXTERN char_u	*p_path;	/* 'path' */
 #ifdef FEAT_SEARCHPATH
@@ -621,6 +631,7 @@ static char *(p_ttym_values[]) = {"xterm", "xterm2", "dec", "netterm", "jsbterm"
 # define TTYM_DEC	0x04
 # define TTYM_NETTERM	0x08
 # define TTYM_JSBTERM	0x10
+# define TTYM_PTERM	0x20
 #endif
 EXTERN long	p_ul;		/* 'undolevels' */
 EXTERN long	p_uc;		/* 'updatecount' */
@@ -650,7 +661,7 @@ static char *(p_ve_values[]) = {"block", "insert", "all", NULL};
 EXTERN long	p_verbose;	/* 'verbose' */
 EXTERN int	p_warn;		/* 'warn' */
 #if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(LINT) \
-	|| defined (FEAT_GUI_GTK)
+	|| defined (FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
 #define FEAT_WAK
 EXTERN char_u	*p_wak;		/* 'winaltkeys' */
 #endif

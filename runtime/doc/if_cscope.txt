@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 6.0z.  Last change: 2000 Jul 07
+*if_cscope.txt* For Vim version 6.0aa.  Last change: 2001 Apr 01
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -248,8 +248,8 @@ Examples: >
 	:set csto=0
 	:set csto=1
 <
-							*cscopeverbose* *csverb*
-If 'cscopeverbose' not set (the default), messages will not be printed
+						*cscopeverbose* *csverb*
+If 'cscopeverbose' is not set (the default), messages will not be printed
 indicating success or failure when adding a cscope database.  Ideally, you
 should reset this option in your |.vimrc| before adding any cscope databases,
 and after adding them, set it.  From then on, when you add more databases
@@ -257,6 +257,15 @@ within Vim, you will get a (hopefully) useful message should the database fail
 to be added.  Examples: >
 	:set csverb
 	:set nocsverb
+<
+                                                      *cscopepathcomp* *cspc*
+The value of 'cspc' determines how many components of a file's path to
+display.  With the default value of zero the entire path will be displayed.
+The value one will display only the filename with no path.  Other values
+display that many components.  For example: >
+	:set cspc=3
+will display the last 3 components of the file's path, including the file
+name itself.
 
 ==============================================================================
 4. How to use cscope in Vim				*cscope-howtouse*

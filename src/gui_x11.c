@@ -1380,6 +1380,10 @@ gui_mch_open()
 #if defined(FEAT_MENU) && defined(FEAT_GUI_ATHENA)
     /* The Athena GUI needs this again after opening the window */
     gui_position_menu();
+# ifdef FEAT_TOOLBAR
+    gui_mch_set_toolbar_pos(0, gui.menu_height, gui.menu_width,
+			    gui.toolbar_height);
+# endif
 #endif
 
     /* Get the colors for the highlight groups (gui_check_colors() might have
@@ -2501,17 +2505,6 @@ gui_mch_delete_lines(row, num_lines)
 	gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
 	FILL_X(gui.scroll_region_left), FILL_Y(row));
 
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row < row + num_lines)
-	    gui.cursor_is_valid = FALSE;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_row -= num_lines;
-    }
-
     gui_clear_block(gui.scroll_region_bot - num_lines + 1,
 						       gui.scroll_region_left,
 			  gui.scroll_region_bot, gui.scroll_region_right);
@@ -2538,17 +2531,6 @@ gui_mch_insert_lines(row, num_lines)
 			       + (gui.scroll_region_right == Columns - 1),
 	gui.char_height * (gui.scroll_region_bot - row - num_lines + 1),
 	FILL_X(gui.scroll_region_left), FILL_Y(row + num_lines));
-
-    /* Update gui.cursor_row if the cursor scrolled or copied over */
-    if (gui.cursor_row >= gui.row
-	    && gui.cursor_col >= gui.scroll_region_left
-	    && gui.cursor_col <= gui.scroll_region_right)
-    {
-	if (gui.cursor_row <= gui.scroll_region_bot - num_lines)
-	    gui.cursor_row += num_lines;
-	else if (gui.cursor_row <= gui.scroll_region_bot)
-	    gui.cursor_is_valid = FALSE;
-    }
 
     gui_clear_block(row, gui.scroll_region_left,
 				row + num_lines - 1, gui.scroll_region_right);
@@ -3131,5 +3113,299 @@ mch_set_mouse_shape(shape)
     }
     if (shape != MSHAPE_HIDE)
 	last_shape = shape;
+}
+#endif
+
+#if defined(FEAT_TOOLBAR) || defined(PROTO)
+/*
+ * Icons used by the toolbar code.
+ */
+#include "../pixmaps/tb_new.xpm"
+#include "../pixmaps/tb_open.xpm"
+#include "../pixmaps/tb_close.xpm"
+#include "../pixmaps/tb_save.xpm"
+#include "../pixmaps/tb_print.xpm"
+#include "../pixmaps/tb_cut.xpm"
+#include "../pixmaps/tb_copy.xpm"
+#include "../pixmaps/tb_paste.xpm"
+#include "../pixmaps/tb_find.xpm"
+#include "../pixmaps/tb_find_next.xpm"
+#include "../pixmaps/tb_find_prev.xpm"
+#include "../pixmaps/tb_find_help.xpm"
+#include "../pixmaps/tb_exit.xpm"
+#include "../pixmaps/tb_undo.xpm"
+#include "../pixmaps/tb_redo.xpm"
+#include "../pixmaps/tb_help.xpm"
+#include "../pixmaps/tb_macro.xpm"
+#include "../pixmaps/tb_make.xpm"
+#include "../pixmaps/tb_save_all.xpm"
+#include "../pixmaps/tb_jump.xpm"
+#include "../pixmaps/tb_ctags.xpm"
+#include "../pixmaps/tb_load_session.xpm"
+#include "../pixmaps/tb_save_session.xpm"
+#include "../pixmaps/tb_new_session.xpm"
+#include "../pixmaps/tb_blank.xpm"
+#include "../pixmaps/tb_maximize.xpm"
+#include "../pixmaps/tb_split.xpm"
+#include "../pixmaps/tb_minimize.xpm"
+#include "../pixmaps/tb_shell.xpm"
+#include "../pixmaps/tb_replace.xpm"
+#include "../pixmaps/tb_vsplit.xpm"
+#include "../pixmaps/tb_maxwidth.xpm"
+#include "../pixmaps/tb_minwidth.xpm"
+
+/*
+ * Those are the pixmaps used for the default buttons.
+ */
+struct NameToPixmap
+{
+    char *name;
+    char **xpm;
+};
+
+static const struct NameToPixmap built_in_pixmaps[] =
+{
+    {"New", tb_new_xpm},
+    {"Open", tb_open_xpm},
+    {"Save", tb_save_xpm},
+    {"Undo", tb_undo_xpm},
+    {"Redo", tb_redo_xpm},
+    {"Cut", tb_cut_xpm},
+    {"Copy", tb_copy_xpm},
+    {"Paste", tb_paste_xpm},
+    {"Print", tb_print_xpm},
+    {"Help", tb_help_xpm},
+    {"Find", tb_find_xpm},
+    {"SaveAll",	tb_save_all_xpm},
+    {"SaveSesn", tb_save_session_xpm},
+    {"NewSesn", tb_new_session_xpm},
+    {"LoadSesn", tb_load_session_xpm},
+    {"RunScript", tb_macro_xpm},
+    {"Replace",	tb_replace_xpm},
+    {"WinClose", tb_close_xpm},
+    {"WinMax",	tb_maximize_xpm},
+    {"WinMin", tb_minimize_xpm},
+    {"WinSplit", tb_split_xpm},
+    {"Shell", tb_shell_xpm},
+    {"FindPrev", tb_find_prev_xpm},
+    {"FindNext", tb_find_next_xpm},
+    {"FindHelp", tb_find_help_xpm},
+    {"Make", tb_make_xpm},
+    {"TagJump", tb_jump_xpm},
+    {"RunCtags", tb_ctags_xpm},
+    {"Exit", tb_exit_xpm},
+    {"WinVSplit", tb_vsplit_xpm},
+    {"WinMaxWidth", tb_maxwidth_xpm},
+    {"WinMinWidth", tb_minwidth_xpm},
+    { NULL, NULL} /* end tag */
+};
+
+#ifdef FEAT_SUN_WORKSHOP
+static const char *(sunws_pixmaps[]) =
+{
+    "Build",	"$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm",
+    "Stop At",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm",
+    "Stop In",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm",
+    "Clear At",	"$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm",
+    "Start",	"$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm",
+    "Evaluate",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm",
+    "Eval *",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm",
+    "Up",	"$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm",
+    "Down",	"$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm",
+    "Go",	"$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm",
+    "StepInto",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm",
+    "StepOver",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm",
+    "StepOut",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm",
+    "Fix",	"$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm",
+    "Def",	"$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm",
+    "Refs",	"$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm",
+    NULL,	NULL
+};
+
+static Boolean filePredicate __ARGS((String cp));
+
+    static Boolean
+filePredicate(cp)
+    String cp;
+{
+    return True;
+}
+#endif
+
+static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
+
+    void
+get_pixmap(menuname, sen, insen)
+    char_u	*menuname;
+    Pixmap	*sen;
+    Pixmap	*insen;
+{
+    int		builtin_num;		/* index into builtin table */
+    int		num_pixmaps;		/* entries in builtin pixmap table */
+    char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
+#ifdef FEAT_SUN_WORKSHOP
+    char	locbuf[MAXPATHL];	/* generate locale pathname */
+#endif
+    char	**xpm = NULL;		/* xpm array */
+    int		i;
+
+    buf[0] = NUL;			/* start with NULL path */
+    num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
+    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
+    {
+	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
+	{
+	    builtin_num = atoi((char *)menuname + 7);
+	    if (builtin_num >= 0 && builtin_num < num_pixmaps)
+		xpm = built_in_pixmaps[builtin_num].xpm;
+	    else
+		xpm = tb_blank_xpm;
+	}
+    }
+    else
+    {
+	for (i = 0; i < num_pixmaps; i++)
+	{
+	    if (STRCMP(menuname, built_in_pixmaps[i].name) == 0)
+	    {
+		xpm = built_in_pixmaps[i].xpm;
+		break;
+	    }
+	}
+#ifdef FEAT_SUN_WORKSHOP
+	if (xpm == NULL)
+	{
+	    char_u	*path;		/* path with %L resolved to locale */
+
+	    for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
+	    {
+		if (STRCMP(menuname, sunws_pixmaps[i]) == 0)
+		{
+		    path = (char_u *)XtResolvePathname(gui.dpy, NULL,
+			    NULL, ".xpm", sunws_pixmaps[i + 1],
+			    NULL, 0, filePredicate);
+		    if (path == NULL)	/* neither LANG nor LC_ALL is set */
+		    {
+			char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
+
+			while ((p = strstr(p, "%L")) != NULL)
+			{
+			    *p++ = 'C';
+			    strcpy(p, &p[1]);
+			}
+			path = (char_u *)locbuf;
+			expand_env(path, buf, MAXPATHL);
+		    }
+		    else
+		    {
+			expand_env(path, buf, MAXPATHL);
+			XtFree(path);
+		    }
+		    break;
+		}
+	    }
+	}
+#endif
+    }
+
+    if (xpm != NULL || buf[0] != NUL)
+	createXpmImages(buf, xpm, sen, insen);
+}
+
+#include <X11/xpm.h>
+
+/*
+ * Read an Xpm file, doing color substitutions for the foreground and
+ * background colors. If there is an error reading a color xpm file,
+ * drop back and read the monochrome file. If successful, create the
+ * insensitive Pixmap too.
+ */
+    static void
+createXpmImages(path, xpm, sen, insen)
+    char_u	*path;
+    char	**xpm;
+    Pixmap	*sen;
+    Pixmap	*insen;
+{
+    Window	rootWindow;
+    XpmAttributes attrs;
+    int		screenNum;
+    int		status;
+    GC		mask_gc;
+    GC		back_gc;
+    XGCValues	gcvalues;
+    int		startX;
+    int		x, y;
+    Pixmap	mask;
+    Pixmap	map;
+    Pixel	bg_pixel;
+    Pixel	fg_pixel;
+
+    gui_mch_get_toolbar_colors(&bg_pixel, &fg_pixel);
+
+    /* Setup the color subsititution table */
+    attrs.valuemask = XpmColorSymbols;
+    attrs.numsymbols = 2;
+    attrs.colorsymbols = (XpmColorSymbol *)
+			  XtMalloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
+    attrs.colorsymbols[0].name = "BgColor";
+    attrs.colorsymbols[0].value = NULL;
+    attrs.colorsymbols[0].pixel = bg_pixel;
+    attrs.colorsymbols[1].name = "FgColor";
+    attrs.colorsymbols[1].value = NULL;
+    attrs.colorsymbols[1].pixel = fg_pixel;
+
+    screenNum = DefaultScreen(gui.dpy);
+    rootWindow = RootWindow(gui.dpy, screenNum);
+
+    /* Create the "sensitive" pixmap */
+    if (xpm != NULL)
+	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm,
+							 &map, &mask, &attrs);
+    else
+	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path,
+							 &map, &mask, &attrs);
+    if (status == XpmSuccess && map != 0)
+    {
+	/* Need to create new Pixmaps with the mask applied. */
+	gcvalues.foreground = bg_pixel;
+	back_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
+	mask_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
+	XSetClipMask(gui.dpy, mask_gc, mask);
+
+	/* Create the "sensitive" pixmap. */
+	*sen = XCreatePixmap(gui.dpy, rootWindow,
+		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+	XFillRectangle(gui.dpy, *sen, back_gc, 0, 0,
+						   attrs.width, attrs.height);
+	XCopyArea(gui.dpy, map, *sen, mask_gc, 0, 0,
+					     attrs.width, attrs.height, 0, 0);
+
+	/* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
+	 * pixmap with half the pixels set to the background color. */
+	*insen = XCreatePixmap(gui.dpy, rootWindow,
+		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+	XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
+					     attrs.width, attrs.height, 0, 0);
+	for (y = 0; y < attrs.height; y++)
+	{
+	    if (y % 2 == 0)
+		startX = 0;
+	    else
+		startX = 1;
+	    for (x = startX; x < attrs.width; x += 2)
+		XDrawPoint(gui.dpy, *insen, back_gc, x, y);
+	}
+	XFreeGC(gui.dpy, back_gc);
+	XFreeGC(gui.dpy, mask_gc);
+	XFreePixmap(gui.dpy, map);
+	/* XFreePixmap(gui.dpy, mask); causes a crash, probably XFreeGC
+	 * already freed it. */
+    }
+    else
+	*insen = *sen = 0;
+
+    XtFree((char *)attrs.colorsymbols);
+    XpmFreeAttributes(&attrs);
 }
 #endif

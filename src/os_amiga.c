@@ -350,10 +350,12 @@ mch_check_win(argc, argv)
 		usewin = TRUE;
 		break;
 
+#ifndef FEAT_DIFF
 	    case 'd':
 		if (i < argc - 1)
 		    device = (char_u *)argv[i + 1];
 		break;
+#endif
 	    }
 	}
 
@@ -361,8 +363,11 @@ mch_check_win(argc, argv)
  * If we were not started from workbench, do not have a '-d' argument and
  * we have been started with an interactive window, use that window.
  */
-    if (argc != 0 && device == NULL &&
-			  (IsInteractive(Input()) || IsInteractive(Output())))
+    if (argc != 0
+#ifndef FEAT_DIFF
+	    && device == NULL
+#endif
+	    && (IsInteractive(Input()) || IsInteractive(Output())))
 	return OK;
 
 /*
@@ -381,7 +386,7 @@ mch_check_win(argc, argv)
 	{
 	    if (i >= 0)
 		device = constrings[i];
-	    if (device && (raw_in = Open((UBYTE *)device,
+	    if (device != NULL && (raw_in = Open((UBYTE *)device,
 					   (long)MODE_NEWFILE)) != (BPTR)NULL)
 		break;
 	}
@@ -442,11 +447,13 @@ mch_check_win(argc, argv)
 	else
 	    av = argv[i];
 
+#ifndef FEAT_DIFF
 	if (av[0] == '-' && av[1] == 'd')	/* skip '-d' option */
 	{
 	    ++i;
 	    continue;
 	}
+#endif
 	if (vim_strchr((char_u *)av, ' '))
 	    Write(fh, "\"", 1L);
 	Write(fh, av, (long)strlen(av));

@@ -40,6 +40,7 @@ INCLUDEPATH = E:\BORLANDC\INCLUDE;C:\CC\SPAWN
 EXE_dependencies =  \
  buffer.obj \
  charset.obj \
+ diff.obj \
  digraph.obj \
  edit.obj \
  eval.obj \
@@ -85,6 +86,7 @@ vim.exe: vim.cfg $(EXE_dependencies)
 c0l.obj+
 buffer.obj+
 charset.obj+
+diff.obj+
 digraph.obj+
 edit.obj+
 eval.obj+
@@ -153,6 +155,8 @@ clean:
 buffer.obj: buffer.c
 
 charset.obj: charset.c
+
+diff.obj: diff.c
 
 digraph.obj: digraph.c
 

@@ -21,6 +21,7 @@ CFLAGS = -O2 -DMSDOS -Iproto $(DEFINES) -Wall -Dinterrupt= -Dfar= -DMAXMEM=512 -
 OBJ = \
 	obj/buffer.o \
 	obj/charset.o \
+	obj/diff.o \
 	obj/digraph.o \
 	obj/edit.o \
 	obj/eval.o \
@@ -95,6 +96,9 @@ obj/buffer.o:	buffer.c $(INCL)
 
 obj/charset.o:	charset.c $(INCL)
 	$(CC) -c $(CFLAGS) charset.c -o obj/charset.o
+
+obj/diff.o:	diff.c $(INCL)
+	$(CC) -c $(CFLAGS) diff.c -o obj/diff.o
 
 obj/digraph.o:	digraph.c $(INCL)
 	$(CC) -c $(CFLAGS) digraph.c -o obj/digraph.o

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0z.  Last change: 2001 Mar 20
+*pattern.txt*   For Vim version 6.0aa.  Last change: 2001 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -779,6 +779,9 @@ Character classes: {not in Vi}
 \F	like "\f", but excluding digits			*/\F*
 \p	printable character (see 'isprint' option)	*/\p*
 \P	like "\p", but excluding digits			*/\P*
+
+NOTE: the above also work for multi-byte characters.  The ones below only
+match ASCII characters, as indicated by the range.
 
 						*whitespace* *white-space*
 \s	whitespace character: <Space> and <Tab>		*/\s*

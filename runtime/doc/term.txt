@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0z.  Last change: 2001 Mar 23
+*term.txt*      For Vim version 6.0aa.  Last change: 2001 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -582,7 +582,7 @@ pressed go to the xterm.  With the currently active mode not included in
 'mouse' all mouse clicks go to the xterm.
 
 							*xterm-clipboard*
-In the Athena and Motif GUI versions, when running in an xterm and there is
+In the Athena and Motif GUI versions, when running in a terminal and there is
 access to the X-server (DISPLAY is set), the copy and paste will behave like
 in the GUI.  If not, the middle mouse button will insert the unnamed register.
 In that case, here is how you copy and paste a piece of text:

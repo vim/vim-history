@@ -41,6 +41,7 @@ CFLAGS = -O2 -fno-strength-reduce -DOS2 -Wall -Iproto $(DEFINES)
 OBJ = \
 	buffer.o \
 	charset.o \
+	diff.o \
 	digraph.o \
 	edit.o \
 	eval.o \
@@ -108,6 +109,7 @@ clean:
 os_unix.o:	os_unix.c  $(INCL)
 buffer.o:	buffer.c  $(INCL)
 charset.o:	charset.c  $(INCL)
+diff.o:		diff.c  $(INCL)
 digraph.o:	digraph.c  $(INCL)
 edit.o:		edit.c  $(INCL)
 eval.o:		eval.c  $(INCL)

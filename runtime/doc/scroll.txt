@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0z.  Last change: 2000 Aug 20
+*scroll.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,6 +182,10 @@ windows can be given this behavior by setting the (window-specific)
 'scrollbind' option.  When a window that has 'scrollbind' set is scrolled, all
 other 'scrollbind' windows are scrolled the same amount, if possible.  The
 behavior of 'scrollbind' can be modified by the 'scrollopt' option.
+
+When a window also has the 'diff' option set, the scroll-binding uses the
+differences between the two buffers to synchronize the position precisely.
+Otherwise the following method is used.
 
 							*scrollbind-relative*
 Each 'scrollbind' window keeps track of its "relative offset," which can be

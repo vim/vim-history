@@ -55,6 +55,7 @@ ALL : ".\vim.tlb" ".\iid_ole.c" ".\if_ole.h" ".\gvim.exe"
 CLEAN : 
 	-@erase "$(INTDIR)\buffer.obj"
 	-@erase "$(INTDIR)\charset.obj"
+	-@erase "$(INTDIR)\diff.obj"
 	-@erase "$(INTDIR)\digraph.obj"
 	-@erase "$(INTDIR)\edit.obj"
 	-@erase "$(INTDIR)\eval.obj"
@@ -133,6 +134,7 @@ LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
+	"$(INTDIR)\diff.obj" \
 	"$(INTDIR)\digraph.obj" \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
@@ -200,6 +202,8 @@ CLEAN :
 	-@erase "$(INTDIR)\buffer.sbr"
 	-@erase "$(INTDIR)\charset.obj"
 	-@erase "$(INTDIR)\charset.sbr"
+	-@erase "$(INTDIR)\diff.obj"
+	-@erase "$(INTDIR)\diff.sbr"
 	-@erase "$(INTDIR)\digraph.obj"
 	-@erase "$(INTDIR)\digraph.sbr"
 	-@erase "$(INTDIR)\edit.obj"
@@ -309,6 +313,7 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/Gvim_vc.bsc"
 BSC32_SBRS= \
 	"$(INTDIR)\buffer.sbr" \
 	"$(INTDIR)\charset.sbr" \
+	"$(INTDIR)\diff.sbr" \
 	"$(INTDIR)\digraph.sbr" \
 	"$(INTDIR)\edit.sbr" \
 	"$(INTDIR)\eval.sbr" \
@@ -365,6 +370,7 @@ LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
+	"$(INTDIR)\diff.obj" \
 	"$(INTDIR)\digraph.obj" \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
@@ -430,6 +436,7 @@ ALL : ".\gvimrwd.exe"
 CLEAN : 
 	-@erase "$(INTDIR)\buffer.obj"
 	-@erase "$(INTDIR)\charset.obj"
+	-@erase "$(INTDIR)\diff.obj"
 	-@erase "$(INTDIR)\digraph.obj"
 	-@erase "$(INTDIR)\edit.obj"
 	-@erase "$(INTDIR)\eval.obj"
@@ -505,6 +512,7 @@ LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
 LINK32_OBJS= \
 	"$(INTDIR)\buffer.obj" \
 	"$(INTDIR)\charset.obj" \
+	"$(INTDIR)\diff.obj" \
 	"$(INTDIR)\digraph.obj" \
 	"$(INTDIR)\edit.obj" \
 	"$(INTDIR)\eval.obj" \
@@ -1913,6 +1921,64 @@ BuildCmds= \
 # SUBTRACT CPP /Fr /YX
 
 "$(INTDIR)\undo.obj" : $(SOURCE) $(DEP_CPP_UNDO_) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "FEAT_GUI_W32" /D "FEAT_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\diff.c
+DEP_CPP_DIFF=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_DIFF=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\diff.obj" : $(SOURCE) $(DEP_CPP_DIFF) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "FEAT_GUI_W32"\
+ /D "FEAT_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "FEAT_GUI_W32" /D "FEAT_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\diff.obj" : $(SOURCE) $(DEP_CPP_DIFF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\diff.sbr" : $(SOURCE) $(DEP_CPP_DIFF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\diff.obj" : $(SOURCE) $(DEP_CPP_DIFF) "$(INTDIR)"
    $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
  "FEAT_GUI_W32" /D "FEAT_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
 

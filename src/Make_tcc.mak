@@ -22,6 +22,7 @@ CFLAGS = -c -ml -DMSDOS -Iproto $(DEFINES)
 
 SRC =	buffer.c \
 	charset.c \
+	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
@@ -60,6 +61,7 @@ SRC =	buffer.c \
 
 OBJ =	objects/buffer.obj \
 	objects/charset.obj \
+	objects/diff.obj \
 	objects/digraph.obj \
 	objects/edit.obj \
 	objects/eval.obj \
@@ -113,6 +115,9 @@ objects/buffer.obj:	buffer.c  $(INCL)
 
 objects/charset.obj:	charset.c  $(INCL)
 	$(CC) $(CFLAGS) charset.c -o objects/charset.obj
+
+objects/diff.obj:	diff.c  $(INCL)
+	$(CC) $(CFLAGS) diff.c -o objects/diff.obj
 
 objects/digraph.obj:	digraph.c  $(INCL)
 	$(CC) $(CFLAGS) digraph.c -o objects/digraph.obj

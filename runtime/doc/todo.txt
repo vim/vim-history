@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0z.  Last change: 2001 Mar 24
+*todo.txt*      For Vim version 6.0aa.  Last change: 2001 Apr 04
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,15 +29,16 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Sunday March 25: Check for problems with summertime switch:
--   Win32: All files created on the day of switching from winter to summer
-    time cause "changed since editing started" messages.  It goes away when
-    the file is written again the next day, or the timezone is adjusted.
-    DJGPP version is OK. (Zaimi)  Looks like a problem with the Win32 library.
-    Rebooting doesn't help.  Time stamps look OK in directory. (Penn)
-    Is this on FAT (stores wall clock time) or NTFS (stores UTS)?
+Motif: The dialog that appears for an existing swap file can be closed.  Vim
+then no longer responds.
 
-The source archive is over the 1.4M floppy limit.  How to avoid this?
+In diff mode, dragging the scrollbar causes lots of flicker.
+
+Add a menu for Folding.
+
+Add a ":saveas" command?  Would do ":w file" and ":e #".
+
+The call to bind_textdomain_codeset() doesn't work yet.
 
 
 Main items for 6.0:
@@ -48,7 +49,7 @@ B.  UTF-8 support
 C.  Multi-line regexp patterns
 	Works.
 D.  Vertical window split
-	Works.  Add some way to show diffs.
+	Works.
 E.  Virtual edit
 	Works for some commands.  Still needs to be improved a lot.
 F.  Sun Visual workshop (debugger) interface
@@ -67,23 +68,23 @@ J.  User Friendlier
 	Enhance Windows install program.
 
 
-D. Vertical window split:
--   Show differences between files (like sdiff but in separate windows).
-
-
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
+-   "x" on a control character doesn't do anything.
+-   Allow specifying it separately for Tabs and beyond end-of-line?
 -   Using "A" in Insert mode, then <Right><BS> deletes the last char of the
     line, even though the cursor doesn't touch it.  (Mary Ellen Foster)
     Check other <BS> situations in Insert mode.
 -   Using "C" then then <CR> moves the last remaining character to the next
     line.  (Mary Ellen Foster)
+-   Insert "keyword keyw", ESC, C CTRL-N, shows "keyword ykeyword".  Repeating
+    CTRL-N fixes it. (Mary Ellen Foster)
+-   Wrapped line, "D" near the end, cursor is positioned wrong. (ME Foster)
+-   When doing Visual selection and including space after the end-of-line it
+    is not highlighted.  It's also not included in the operation.  Should this
+    be changed to include the space after the end-of-line?
 -   Bugs: (Mark Waggoner)
     See patches in ~/Mail/oldmail/waggoner/in.00132.
-    5. 'v' selection is kind of strange.  When in virtual space, pressing 'v'
-       will select the last character on the line, though the cursor remains
-       in virtual space.
-	Should set the start of the Visual area in virtual space.
     9.	Using "C" in virtual space moves back to the end of the current
 	line to start changing rather than inserting spaces up to the current
 	point and then changing.
@@ -168,6 +169,7 @@ H. More automatic testing:
 I. Multi-language support:
 -   Should handle aliases for different locale settings.  "de" is "de_DE" is
     "de_DE.ISO8859-1".  Perhaps use some code from gettext()?
+-   Changing 'encoding' for gettext() doesn't work yet.  See end of mb_init().
 -   Cmdline completion of ":langugage" for "messages" and "lctype".
 
 
@@ -181,6 +183,15 @@ J. User Friendlier
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
     Alternative: use BufEnter and BufLeave autocommands.
+9   Printing:
+    -	On Win32, use conversion to HTML and "rundll" (Dan Sharp)  At least
+	mention this in the text.  Or use ShellExecute("print").
+    -	Make conversion to html faster (Write it in C).
+    -	Add "page width" to wrap long lines.
+    -	On Win32, use GDI functions to print directly
+    -	On Unix convert to PostScript.
+    -	Use some dialog box to do the obvious settings (paper size, printer
+	name, portrait/landscane, etc).
 9   Buffer-local autocommands?
 	:au BufEnter <current> menu enable ...
 	:au BufLeave <current> menu disable ...
@@ -196,7 +207,7 @@ J. User Friendlier
 -   Add mappings local to a window: ":map <window> ..."?
 8   Add better control for protecting the user for editing a file twice, file
     changed outside of Vim, file protection changed outside of Vim, etc.
-
+8   When file changed outside of Vim, offer a choice to load the file again.
 
 Messages:
 -   In the message history, add a help tag for each message and number the
@@ -216,9 +227,6 @@ Various recent:
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
     doesn't work properly.
 -   In ":ptag" preview window highlight the tag.  Use the new regexp items.
-9   Motif GUI: ":hi menu font=name" crashes Vim in some situations. E.g.:
-	:hi menu font=fixed
-	:hi menu font=asdf
 9   Crash when creating XIC without a fontset. (Diamond)  Don't include the
     XNFontSet then?  Check if gui.normal_font is a fontset?
 -   Motif GUI: draws in right border of window, scrolling leaves pixels
@@ -247,6 +255,15 @@ Various recent:
 		int x;	    <- extra indent, ";" ignored.
 	    void func()
 	    {
+8   'cindent' problem: (Wright)
+	{
+		do {
+			if (foo) {
+			} else
+				;
+		} while (foo);
+			foo();	// wrong
+	}
 8   Implement ":tearoff" for other systems than Win32 GUI.
 8   ":let @" = "val" should not have side effects for other registers (after
     "ayy). (Raul Acevedo)
@@ -572,6 +589,8 @@ Athena GUI:
     the command line pseudo-scrollbar (only when status line moved quickly).
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
+7   The file selector's scrollbar colors are not set after doing a
+    ":hi Scrollbar guifg=color". (David Harrison)
 
 
 Motif GUI:
@@ -990,6 +1009,12 @@ Problems that will (probably) not be solved:
     It appears that cmd.exe and command.com don't return an error code.
 -   Win32 GUI: The Toolbar is a bit too high when the flat style is being
     used.  We don't have control over the height of the Toolbar.
+-   Win32: All files created on the day of switching from winter to summer
+    time cause "changed since editing started" messages.  It goes away when
+    the file is written again the next day, or the timezone is adjusted.
+    DJGPP version is OK. (Zaimi)  Looks like a problem with the Win32 library.
+    Rebooting doesn't help.  Time stamps look OK in directory. (Penn)
+    Is this on FAT (stores wall clock time) or NTFS (stores UTS)?
 -   SunOS 5.5.1 with Motif: The file open dialog does not have a horizontal
     scroll bar for the "files" selection.  This is a problem in the Motif
     libraries, get a patch from Sun.

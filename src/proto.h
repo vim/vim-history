@@ -60,12 +60,16 @@
 # ifdef RISCOS
 #  include "os_riscos.pro"
 # endif
+# ifdef __QNX__
+#  include "os_qnx.pro"
+# endif
 
 # include "buffer.pro"
 # include "charset.pro"
 # ifdef UNIX
 #  include "if_cscope.pro"
 # endif
+# include "diff.pro"
 # include "digraph.pro"
 # include "edit.pro"
 # include "eval.pro"
@@ -189,6 +193,9 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
 #  endif
 #  ifdef RISCOS
 #   include "gui_riscos.pro"
+#  endif
+#  ifdef FEAT_GUI_PHOTON
+#   include "gui_photon.pro"
 #  endif
 #  ifdef FEAT_SUN_WORKSHOP
 #   include "workshop.pro"

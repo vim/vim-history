@@ -1,6 +1,6 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
 " Translated By: 	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
-" Last Change:		2001 Feb 11
+" Last Change:		2001 Apr 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -37,9 +37,9 @@ menutrans &Edit				編輯(&E)
 menutrans &Undo<Tab>u			復原(&U)<Tab>u
 menutrans &Redo<Tab>^R			取消上次復原(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		重複上次動作(&E)<Tab>\.
-menutrans Cu&t<Tab>"*x			剪下(&T)<Tab>"*x
-menutrans &Copy<Tab>"*y			複製(&C)<Tab>"*y
-menutrans &Paste<Tab>"*p		貼上(&P)<Tab>"*p
+menutrans Cu&t<Tab>"+x			剪下(&T)<Tab>"+x
+menutrans &Copy<Tab>"+y			複製(&C)<Tab>"+y
+menutrans &Paste<Tab>"+p		貼上(&P)<Tab>"+p
 menutrans Put\ &Before<Tab>[p		貼到游標前(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		貼到游標後(&A)<Tab>]p
 menutrans &Delete<Tab>x			刪除(&D)<Tab>x
