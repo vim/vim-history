@@ -1247,6 +1247,14 @@ buflist_new(ffname, sfname, lnum, flags)
 	/* copy the options now, if 'cpo' doesn't have 's' and not done
 	 * already */
 	buf_copy_options(buf, 0);
+	if ((flags & BLN_LISTED) && !buf->b_p_bl)
+	{
+	    buf->b_p_bl = TRUE;
+#ifdef FEAT_AUTOCMD
+	    if (!(flags & BLN_DUMMY))
+		apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
+#endif
+	}
 	return buf;
     }
 
