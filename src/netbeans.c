@@ -58,7 +58,6 @@ static void messageFromNetbeans __ARGS((gpointer, gint, GdkInputCondition));
 static void nb_parse_cmd __ARGS((char_u *));
 static int  nb_do_cmd __ARGS((int, char_u *, int, int, char_u *));
 static void nb_send __ARGS((char *buf, char *fun));
-static void warn __ARGS((char *fmt, ...));
 #ifdef FEAT_BEVAL
 static void netbeans_beval_cb __ARGS((BalloonEval *beval, int state));
 #endif
@@ -574,45 +573,6 @@ messageFromNetbeans(gpointer clientData, gint unused1,
 }
 
 /*
- * Issue a warning.  This used to go to stderr but that doesn't show up when
- * started from a GUI.
- */
-    static void
-warn(char *fmt, ...)
-{
-    va_list ap;
-    char    buf[1000];
-
-    va_start(ap, fmt);
-    vsnprintf(buf, 1000, fmt, ap);
-    va_end(ap);
-    EMSG(buf);
-}
-
-/*
- * Issue a warning to stderr and possibly abort.
- */
-#if 0 /* we should never abort, changed files could be lost! */
-static void die __ARGS((char *fmt, ...));
-
-    static void
-die(char *fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fprintf(stderr, "\n");
-/*     exit(1); */
-    if (getenv("__NETBEANS_INTG_ABORT"))
-	abort();
-}
-#else
-# define die warn
-#endif
-
-/*
  * Handle one NUL terminated command.
  *
  * format of a command from netbeans:
@@ -661,7 +621,7 @@ nb_parse_cmd(char_u *cmd)
 
     if (*verb != ':')
     {
-	warn("missing colon: %s", cmd);
+	EMSG2("missing colon: %s", cmd);
 	return;
     }
     ++verb; /* skip colon */
@@ -684,7 +644,7 @@ nb_parse_cmd(char_u *cmd)
 
     if (isfunc < 0)
     {
-	warn("missing ! or / in: %s", cmd);
+	EMSG2("missing ! or / in: %s", cmd);
 	return;
     }
 
@@ -693,7 +653,7 @@ nb_parse_cmd(char_u *cmd)
     if (nb_do_cmd(bufno, verb, isfunc, cmdno, q) == FAIL)
     {
 	nbdebug(("nb_parse_cmd: Command error for \"%s\"\n", cmd));
-	die("bad return from nb_do_cmd");
+	EMSG("bad return from nb_do_cmd");
     }
 }
 
@@ -852,9 +812,9 @@ netbeans_end(void)
 nb_send(char *buf, char *fun)
 {
     if (sd < 0)
-	warn("%s(): write while not connected", fun);
+	EMSG2("%s(): write while not connected", fun);
     else if (write(sd, buf, STRLEN(buf)) != STRLEN(buf))
-	warn("%s(): write failed", fun);
+	EMSG2("%s(): write failed", fun);
 }
 
 /*
@@ -1083,7 +1043,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in getLength"));
-		die("null bufp in getLength");
+		EMSG("null bufp in getLength");
 		retval = FAIL;
 	    }
 	    else
@@ -1112,7 +1072,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in getText"));
-		die("null bufp in getText");
+		EMSG("null bufp in getText");
 		retval = FAIL;
 	    }
 	    else
@@ -1174,7 +1134,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in remove"));
-		die("null bufp in remove");
+		EMSG("null bufp in remove");
 		retval = FAIL;
 	    }
 	    else
@@ -1278,7 +1238,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in insert"));
-		die("null bufp in insert");
+		EMSG("null bufp in insert");
 		retval = FAIL;
 	    }
 	    else if (args != NULL)
@@ -1383,7 +1343,7 @@ nb_do_cmd(
 	    /* Create a buffer without a name. */
 	    if (buf == NULL)
 	    {
-		die("null buf in create");
+		EMSG("null buf in create");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1402,7 +1362,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		die("null buf in startDocumentListen");
+		EMSG("null buf in startDocumentListen");
 		return FAIL;
 	    }
 	    buf->fireChanges = 1;
@@ -1412,7 +1372,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		die("null buf in stopDocumentListen");
+		EMSG("null buf in stopDocumentListen");
 		return FAIL;
 	    }
 	    buf->fireChanges = 0;
@@ -1422,7 +1382,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		die("null buf in setTitle");
+		EMSG("null buf in setTitle");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1434,7 +1394,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		die("null buf in initDone");
+		EMSG("null buf in initDone");
 		return FAIL;
 	    }
 	    doupdate = 1;
@@ -1457,7 +1417,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		die("null buf in setBufferNumber");
+		EMSG("null buf in setBufferNumber");
 		return FAIL;
 	    }
 	    to_free = (char_u *)nb_unquote(++args, NULL);
@@ -1467,7 +1427,7 @@ nb_do_cmd(
 	    vim_free(to_free);
 	    if (bufp == NULL)
 	    {
-		warn("File %s not found in setBufferNumber", args);
+		EMSG2("File %s not found in setBufferNumber", args);
 		return FAIL;
 	    }
 	    buf->bufp = bufp;
@@ -1495,7 +1455,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		die("null buf in setFullName");
+		EMSG("null buf in setFullName");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1515,7 +1475,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		die("null buf in editFile");
+		EMSG("null buf in editFile");
 		return FAIL;
 	    }
 	    /* Edit a file: like create + setFullName + read the file. */
@@ -1538,7 +1498,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-/*		warn("null bufp in setVisible"); */
+/*		EMSG("null bufp in setVisible"); */
 		return FAIL;
 	    }
 	    if (streq((char *)args, "T"))
@@ -1571,7 +1531,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-/*		warn("null bufp in setModified"); */
+/*		EMSG("null bufp in setModified"); */
 		return FAIL;
 	    }
 	    if (streq((char *)args, "T"))
@@ -1616,7 +1576,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		die("null bufp in setDot");
+		EMSG("null bufp in setDot");
 		return FAIL;
 	    }
 
@@ -1657,7 +1617,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		die("null buf in close");
+		EMSG("null buf in close");
 		return FAIL;
 	    }
 
@@ -1666,7 +1626,7 @@ nb_do_cmd(
 		name = buf->displayname;
 #endif
 /*	    if (buf->bufp == NULL) */
-/*		die("null bufp in close"); */
+/*		EMSG("null bufp in close"); */
 	    nbdebug(("    CLOSE %d: %s\n", bufno, name));
 	    need_mouse_correct = TRUE;
 	    if (buf->bufp != NULL)
@@ -1699,7 +1659,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		die("null buf in defineAnnoType");
+		EMSG("null buf in defineAnnoType");
 		return FAIL;
 	    }
 
@@ -1751,7 +1711,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		die("null bufp in addAnno");
+		EMSG("null bufp in addAnno");
 		return FAIL;
 	    }
 
@@ -1983,7 +1943,7 @@ resolve_symlinks(char *filename, int level)
 
 	if (len < 0 || len == MAXPATHLEN)
 	{
-	    die("readlink() failed, errno = %d\n", errno);
+	    EMSGN("readlink() failed, errno = %ld\n", errno);
 	}
 	else
 	{
@@ -2000,10 +1960,10 @@ resolve_symlinks(char *filename, int level)
 		char *p = strrchr(filename, '/');
 
 		if (p == 0)
-		    die("missing slash!?!");
+		    EMSG("missing slash!?!");
 		else
 		    if ((p - filename) + strlen(buf) > MAXPATHLEN)
-			die("buffer overflow in resolve_symlinks()");
+			EMSG("buffer overflow in resolve_symlinks()");
 		    else
 			strcpy(p+1, buf);
 	    }

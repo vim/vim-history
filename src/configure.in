@@ -641,15 +641,6 @@ if test "$enable_netbeans" = "yes"; then
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-	/* Check use of vsnprintf() */
-	void warn(char *fmt, ...);
-	void warn(char *fmt, ...)
-	{
-	  va_list ap; char *buf = NULL;
-	  va_start(ap, fmt);
-	  vsnprintf(buf, 100, fmt, ap);
-	  va_end(ap);
-	}
 	/* Check bitfields */
 	struct nbbuf {
 	unsigned int  initDone:1;
