@@ -2582,7 +2582,19 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	msg_scroll = n;
     }
     else
-	msg_trunc_attr(buffer, FALSE, 0);
+    {
+	p = msg_trunc_attr(buffer, FALSE, 0);
+	if (restart_edit != 0 || (msg_scrolled && !need_wait_return))
+	{
+	    /* Need to repeat the message after redrawing when:
+	     * - When restart_edit is set (otherwise there will be a delay
+	     *   before redrawing).
+	     * - When the screen was scrolled but there is no wait-return
+	     *   prompt. */
+	    set_keep_msg(p);
+	    keep_msg_attr = 0;
+	}
+    }
 
     vim_free(buffer);
 }
