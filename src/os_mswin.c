@@ -1399,7 +1399,11 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      */
     memset(&fLogFont, 0, sizeof(fLogFont));
     if (!get_logfont(&fLogFont, p_pfn, prt_dlg.hDC))
+    {
+	EMSG2(_("E448: Unknown font: %s"), p_pfn);
+	mch_print_cleanup();
 	return FALSE;
+    }
 
     for (pifBold = 0; pifBold <= 1; pifBold++)
 	for (pifItalic = 0; pifItalic <= 1; pifItalic++)
