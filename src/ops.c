@@ -1407,6 +1407,12 @@ cmdline_paste(regname, literally)
 	/* insert ^M between lines and after last line if type is MLINE */
 	if (y_current->y_type == MLINE || i < y_current->y_size - 1)
 	    cmdline_paste_str((char_u *)"\r", literally);
+
+	/* Check for CTRL-C, in case someone tries to paste a few thousand
+	 * lines and gets bored. */
+	ui_breakcheck();
+	if (got_int)
+	    return FAIL;
     }
     return OK;
 }
