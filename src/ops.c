@@ -864,6 +864,35 @@ get_yank_register(regname, writing)
 	y_previous = y_current;
 }
 
+#ifdef FEAT_CLIPBOARD
+/*
+ * When "regname" is a clipboard register, obtain the selection.  If it's not
+ * available return zero, otherwise return "regname".
+ */
+static int may_get_selection __ARGS((int regname));
+
+    static int
+may_get_selection(regname)
+    int regname;
+{
+    if (regname == '*')
+    {
+	if (!clip_star.available)
+	    regname = 0;
+	else
+	    clip_get_selection(&clip_star);
+    }
+    else if (regname == '+')
+    {
+	if (!clip_plus.available)
+	    regname = 0;
+	else
+	    clip_get_selection(&clip_plus);
+    }
+    return regname;
+}
+#endif
+
 #if defined(FEAT_VISUAL) || defined(PROTO)
 /*
  * Obtain the contents of a "normal" register. The register is made empty.
@@ -877,6 +906,16 @@ get_register(name, copy)
     static struct yankreg	*reg;
     int				i;
 
+#ifdef FEAT_CLIPBOARD
+    /* When Visual area changed, may have to update selection.  Obtain the
+     * selection too. */
+    if (name == '*' && clip_star.available && clip_isautosel())
+    {
+	clip_update_selection();
+	may_get_selection(name);
+    }
+#endif
+
     get_yank_register(name, 0);
     reg = (struct yankreg *)alloc((unsigned)sizeof(struct yankreg));
     if (reg != NULL)
@@ -885,8 +924,11 @@ get_register(name, copy)
 	if (copy)
 	{
 	    /* If we run out of memory some or all of the lines are empty. */
-	    reg->y_array = (char_u **)alloc((unsigned)(sizeof(char_u *)
-							       * reg->y_size));
+	    if (reg->y_size == 0)
+		reg->y_array = NULL;
+	    else
+		reg->y_array = (char_u **)alloc((unsigned)(sizeof(char_u *)
+							      * reg->y_size));
 	    if (reg->y_array != NULL)
 	    {
 		for (i = 0; i < reg->y_size; ++i)
@@ -1048,35 +1090,6 @@ stuff_yank(regname, p)
     }
     return OK;
 }
-
-#ifdef FEAT_CLIPBOARD
-/*
- * When "regname" is a clipboard register, obtain the selection.  If it's not
- * available return zero, otherwise return "regname".
- */
-static int may_get_selection __ARGS((int regname));
-
-    static int
-may_get_selection(regname)
-    int regname;
-{
-    if (regname == '*')
-    {
-	if (!clip_star.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_star);
-    }
-    else if (regname == '+')
-    {
-	if (!clip_plus.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_plus);
-    }
-    return regname;
-}
-#endif
 
 /*
  * execute a yank register: copy it into the stuff buffer
