@@ -48,6 +48,9 @@ static void gui_destroy_tearoffs_recurse __ARGS((VimMenu *menu));
 static int s_tearoffs = FALSE;
 #endif
 
+/* The character for each menu mode */
+static char_u	menu_mode_chars[] = {'n', 'v', 'o', 'i', 'c', 't'};
+
 /*
  * Do the :menu command and relatives.
  */
@@ -771,7 +774,7 @@ show_menus_recursive(menu, modes, depth)
 		    return;
 		for (i = 0; i < depth + 2; i++)
 		    MSG_PUTS("  ");
-		msg_putchar(MENU_MODE_CHARS[bit]);
+		msg_putchar(menu_mode_chars[bit]);
 		if (menu->noremap[bit])
 		    msg_putchar('*');
 		else
@@ -1120,7 +1123,7 @@ popup_mode_name(name, idx)
     if (p != NULL)
     {
 	mch_memmove(p + 6, p + 5, (size_t)(len - 4));
-	p[5] = MENU_MODE_CHARS[idx];
+	p[5] = menu_mode_chars[idx];
     }
     return p;
 }
@@ -1367,7 +1370,7 @@ gui_show_popupmenu()
     mode = get_menu_mode();
     if (mode == MENU_INDEX_INVALID)
 	return;
-    mode = MENU_MODE_CHARS[mode];
+    mode = menu_mode_chars[mode];
 
     for (menu = root_menu; menu != NULL; menu = menu->next)
 	if (STRNCMP("PopUp", menu->name, 5) == 0 && menu->name[5] == mode)

@@ -878,9 +878,6 @@ struct cursor_entry
 #define MENU_ALL_MODES		((1 << MENU_INDEX_TIP) - 1)
 /*note MENU_INDEX_TIP is not a 'real' mode*/
 
-/* The character for each menu mode */
-#define MENU_MODE_CHARS		"nvoict"
-
 /* Start a menu name with this to not include it on the main menu bar */
 #define MNU_HIDDEN_CHAR		']'
 
