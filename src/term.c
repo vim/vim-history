@@ -3525,29 +3525,30 @@ check_termcode(max_offset, buf, buflen)
 		mouse_row = bytes[2] - ' ' - 1;
 		slen += num_bytes;
 
+#  if !defined(MSWIN) && !defined(MSDOS)
 		/*
 		 * Handle mouse events.
 		 * Recognize the xterm mouse wheel, but not in the GUI
-		 * (multi-clicks use >= 0x60).
+		 * and the MS-DOS or Win32 console (multi-clicks use >= 0x60).
 		 */
 		if (mouse_code >= MOUSEWHEEL_LOW
-#ifdef USE_GUI
+#   ifdef USE_GUI
 			&& !gui.in_use
-#endif
+#   endif
 			)
 		{
 		    /* Keep the mouse_code before it's changed, so that we
 		     * remember that it was a mouse wheel click. */
 		    wheel_code = mouse_code;
 		}
-#  ifdef UNIX
+#   ifdef UNIX
 		else if (use_xterm_mouse() > 1)
 		{
 		    if (mouse_code & MOUSE_DRAG_XTERM)
 			mouse_code |= MOUSE_DRAG;
 		}
-#  endif
-#  ifdef XTERM_CLIP
+#   endif
+#   ifdef XTERM_CLIP
 		else if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK))
 		{
 		    if ((mouse_code & MOUSE_RELEASE) == MOUSE_RELEASE)
@@ -3555,6 +3556,7 @@ check_termcode(max_offset, buf, buflen)
 		    else
 			start_xterm_trace(mouse_code);
 		}
+#   endif
 #  endif
 	    }
 # endif /* !UNIX || XTERM_MOUSE */
