@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.6a.  Last change: 1999 Dec 09
+*gui_x11.txt*   For Vim version 5.6a.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -249,6 +249,7 @@ like -bg, -fg, etc).  The ones that are supported are:
     -fn  or  -font	    .font		font name for the text
     -geom  or  -geometry    .geometry		size of the gvim window
     -rv  or  -reverse	    *reverseVideo	white text on black background
+    -display					display to be used
 
 To set the font, see |'guifont'|.  For GTK, there's also a menu option that
 does this.
@@ -265,6 +266,7 @@ internally.  Look in the GTK documentation for how they are used:
 	--gtk-no-debug
 	--g-fatal-warnings
 	--gtk-module
+	--display	(GTK+ counterpart of -display; works the same way.)
 
 As for colors, vim's color settings (for syntax highlighting) is still
 done the traditional vim way.  See |:highlight| for more help.
