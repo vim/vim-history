@@ -4805,8 +4805,11 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir, rel_fn
 	    for (run = 1; run <= 2; ++run)
 	    {
 		l = (int)STRLEN(file_to_find);
-		if (run == 1 && rel_to_curdir && (options & FNAME_REL)
-					  && STRLEN(rel_fname) + l < MAXPATHL)
+		if (run == 1
+			&& rel_to_curdir
+			&& (options & FNAME_REL)
+			&& rel_fname != NULL
+			&& STRLEN(rel_fname) + l < MAXPATHL)
 		{
 		    STRCPY(NameBuff, rel_fname);
 		    STRCPY(gettail(NameBuff), file_to_find);
