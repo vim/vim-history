@@ -28,13 +28,13 @@
 #endif
 
 #ifdef __EMX__
-# define HAVE_TOTAL_MEM
+# define HAVE_AVAIL_MEM
 #endif
 
 /* On AIX 4.2 there is a conflicting prototype for ioctl() in stropts.h and
  * unistd.h.  This hack should fix that (suggested by Jeff George).
  * But on AIX 4.3 it's alright (suggested by Jake Hamby). */
-#if defined(FEAT_GUI) && defined(_AIX) && !defined(_AIX43) && !defined(_NO_PROTO)
+#if defined(USE_GUI) && defined(_AIX) && !defined(_AIX43) && !defined(_NO_PROTO)
 # define _NO_PROTO
 #endif
 
@@ -54,7 +54,7 @@
  * SVR4 will be defined for linux and FreeBSD if elf.h exists, but those aren't
  * SVR4
  */
-#if defined(SVR4) && ((defined(__linux__) && (__GLIBC__ < 2)) || defined(BSD))
+#if defined(SVR4) && (defined(__linux__) || defined(BSD))
 # undef SVR4
 #endif
 
@@ -85,6 +85,8 @@
 
 /* always use unlink() to remove files */
 #ifndef PROTO
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
+# define mch_rmdir(x) rmdir((char *)(x))
 # define mch_remove(x) unlink((char *)(x))
 #endif
 
@@ -181,10 +183,6 @@
 # define W_OK 2		/* for systems that don't have W_OK in unistd.h */
 #endif
 
-#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
-# define HAVE_TOTAL_MEM
-#endif
-
 /*
  * Unix system-dependent file names
  */
@@ -198,16 +196,10 @@
 # define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
 #endif
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"filetype.vim"
-#endif
-#ifndef SETTINGS_FILE
-# define SETTINGS_FILE	"settings.vim"
+# define FILETYPE_FILE	"$VIMRUNTIME/filetype.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	"ftoff.vim"
-#endif
-#ifndef SETSOFF_FILE
-# define SETSOFF_FILE	"setsoff.vim"
+# define FTOFF_FILE	"$VIMRUNTIME/ftoff.vim"
 #endif
 #ifndef SYS_MENU_FILE
 # define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
@@ -228,7 +220,7 @@
 # define USR_GVIMRC_FILE "$HOME/.gvimrc"
 #endif
 
-#ifdef FEAT_VIMINFO
+#ifdef VIMINFO
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE	"$HOME/.viminfo"
 # endif
@@ -245,7 +237,7 @@
 # define VIMRC_FILE	".vimrc"
 #endif
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 # ifndef GVIMRC_FILE
 #  define GVIMRC_FILE	".gvimrc"
 # endif
@@ -286,7 +278,7 @@
 # define TEMPNAME	"v?XXXXXX"
 # define TEMPNAMELEN	128
 #else
-# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ""
+# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ".", "$HOME"
 # define TEMPNAME	"v?XXXXXX"
 # define TEMPNAMELEN	256
 #endif
@@ -294,7 +286,7 @@
 /* Special wildcards that need to be handled by the shell */
 #define SPECIAL_WILDCHAR    "`'{"
 
-#ifndef HAVE_OPENDIR
+#if !defined(HAVE_OPENDIR) || !defined(HAVE_QSORT)
 # define NO_EXPANDPATH
 #endif
 
@@ -333,20 +325,14 @@
 #endif
 
 #ifndef PROTO
-# ifdef HAVE_RENAME
-#  define mch_rename(src, dst) rename(src, dst)
-# else
+#ifdef HAVE_RENAME
+# define mch_rename(src, dst) rename(src, dst)
+#else
 int mch_rename __ARGS((const char *src, const char *dest));
-# endif
-# define mch_chdir(s) chdir(s)
-# ifdef __MVS__
-  /* on OS390 Unix getenv() doesn't return a pointer to persistant
-   * storage -> use __getenv() */
-#  define mch_getenv(x) (char_u *)__getenv((char *)(x))
-# else
-#  define mch_getenv(x) (char_u *)getenv((char *)(x))
-# endif
-# define mch_setenv(name, val, x) setenv(name, val, x)
+#endif
+#define mch_chdir(s) chdir(s)
+#define mch_getenv(x) (char_u *)getenv((char *)(x))
+#define mch_setenv(name, val, x) setenv(name, val, x)
 #endif
 
 #if !defined(S_ISDIR) && defined(S_IFDIR)
@@ -369,8 +355,4 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #endif
 #if defined(HAVE_STRINGS_H) && !defined(NO_STRINGS_WITH_STRING_H)
 # include <strings.h>
-#endif
-
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
-# include <setjmp.h>
 #endif

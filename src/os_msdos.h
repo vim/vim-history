@@ -39,8 +39,21 @@
 #define BREAKCHECK_SKIP	    1	/* call mch_breakcheck() each time, it's fast */
 #define HAVE_AVAIL_MEM
 
-#ifdef FEAT_NORMAL
+#ifndef MIN_FEAT
 # define VIM_BACKTICK		/* internal backtick expansion */
+#endif
+
+#ifdef DJGPP
+# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
+#  define SIZEOF_INT 4		/* 32 bit ints */
+# endif
+# define DOS32
+#else
+# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
+#  define SIZEOF_INT 2		/* 16 bit ints */
+# endif
+# define SMALL_MALLOC		/* 16 bit storage allocation */
+# define DOS16
 #endif
 
 /*
@@ -98,5 +111,12 @@ int mch_rename(const char *OldFile, const char *NewFile);
 #else
 # define mch_rename(src, dst) rename(src, dst)
 #endif
+
+#ifdef DJGPP
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
+#else
+# define vim_mkdir(x, y) mkdir((char *)(x))
+#endif
+#define mch_rmdir(x) rmdir((char *)(x))
 
 #define mch_setenv(name, val, x) setenv(name, val, x)

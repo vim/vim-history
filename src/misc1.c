@@ -5298,10 +5298,6 @@ line_breakcheck()
     }
 }
 
-#ifndef NO_EXPANDPATH
-static int	gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
-#endif
-
 /*
  * Expand wildcards.  Calls gen_expand_wildcards() and removes files matching
  * 'wildignore'.
@@ -5446,7 +5442,7 @@ static int expand_backtick __ARGS((struct growarray *gap, char_u *pat, int flags
  * Return OK when some files found.  "num_file" is set to the number of
  * matches, "file" to the array of matches.  Call FreeWild() later.
  */
-    static int
+    int
 gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     int		num_pat;	/* number of input patterns */
     char_u	**pat;		/* array of input patterns */
