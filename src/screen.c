@@ -5143,6 +5143,9 @@ screen_puts(text, row, col, attr)
 		 * next character.  When a bold character is removed, the next
 		 * character should be redrawn too.  This happens for our own
 		 * GUI and for some xterms.
+		 * Force the redraw by setting the attribute to a different
+		 * value than "attr", the contents of ScreenLines[] may be
+		 * needed by mb_off2cells() further on.
 		 * Don't do this for the last drawn character, because the
 		 * next character may not be redrawn. */
 		if (
@@ -5161,10 +5164,10 @@ screen_puts(text, row, col, attr)
 
 		    n = ScreenAttrs[off];
 # ifdef FEAT_MBYTE
-		    if (col + 1 + mbyte_cells - 1 < screen_Columns
+		    if (col + mbyte_cells < screen_Columns
 			    && (n > HL_ALL || (n & HL_BOLD))
 			    && ptr[mbyte_blen] != NUL)
-			ScreenLines[off + 1 + mbyte_cells - 1] = 0;
+			ScreenAttrs[off + mbyte_cells] = attr + 1;
 # else
 		    if (col + 1 < screen_Columns
 			    && (n > HL_ALL || (n & HL_BOLD))
@@ -5187,6 +5190,15 @@ screen_puts(text, row, col, attr)
 				&& (*mb_off2cells)(off) == 1
 				&& (*mb_off2cells)(off + 1) > 1)))
 		    clear_next_cell = TRUE;
+
+		/* Make sure we never leave a second byte of a double-byte
+		 * behind, it confuses mb_off2cells(). */
+		if (enc_dbcs
+			&& ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
+			    || (mbyte_cells == 2
+				&& (*mb_off2cells)(off) == 1
+				&& (*mb_off2cells)(off + 1) > 1)))
+		    ScreenLines[off + mbyte_blen] = 0;
 #endif
 		ScreenLines[off] = *ptr;
 		ScreenAttrs[off] = attr;
