@@ -1655,7 +1655,16 @@ nb_do_cmd(
 	    if (streq((char *)args, "T"))
 		buf->bufp->b_changed = 1;
 	    else
+	    {
+		struct stat	st;
+
+		/* Assume NetBeans stored the file.  Reset the timestamp to
+		 * avoid "file changed" warnings. */
+		if (buf->bufp->b_ffname != NULL
+			&& mch_stat((char *)buf->bufp->b_ffname, &st) >= 0)
+		    buf_store_time(buf->bufp, &st, buf->bufp->b_ffname);
 		buf->bufp->b_changed = 0;
+	    }
 	    buf->modified = buf->bufp->b_changed;
 /* =====================================================================*/
 	}
@@ -1759,7 +1768,8 @@ nb_do_cmd(
 	    nbdebug(("    CLOSE %d: %s\n", bufno, name));
 	    need_mouse_correct = TRUE;
 	    if (buf->bufp != NULL)
-		close_buffer(NULL, buf->bufp, 0);
+		do_buffer(DOBUF_WIPE, DOBUF_FIRST, FORWARD,
+						     buf->bufp->b_fnum, TRUE);
 	    doupdate = 1;
 /* =====================================================================*/
 	}
@@ -2336,7 +2346,7 @@ netbeans_file_closed(buf_T *bufp)
     nbbuf_T	*nbbuf = nb_get_buf(bufno);
     char	buffer[2*MAXPATHL];
 
-    if (!haveConnection)
+    if (!haveConnection || bufno < 0)
 	return;
 
     if (!netbeansCloseFile)
@@ -2526,10 +2536,16 @@ netbeans_button_release(int button)
 
     if (bufno >= 0 && curwin != NULL && curwin->w_buffer == curbuf)
     {
-	int lnum = curwin->w_cursor.lnum;
 	int col = mouse_col - curwin->w_wincol - (curwin->w_p_nu ? 9 : 1);
+	long off = pos2off(curbuf, &curwin->w_cursor);
 
-	sprintf(buf, "%d:buttonRelease=%d %d %d %d\n", bufno, cmdno, button, lnum, col);
+	/* sync the cursor position */
+	sprintf(buf, "%d:newDotAndMark=%d %ld %ld\n", bufno, cmdno, off, off);
+	nbdebug(("EVT: %s", buf));
+	nb_send(buf, "netbeans_button_release[newDotAndMark]");
+
+	sprintf(buf, "%d:buttonRelease=%d %d %ld %d\n", bufno, cmdno,
+				    button, (long)curwin->w_cursor.lnum, col);
 	nbdebug(("EVT: %s", buf));
 	nb_send(buf, "netbeans_button_release");
     }
