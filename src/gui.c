@@ -4173,6 +4173,7 @@ get_find_dialog_text(arg, wwordp, mcasep)
 	if (text != NULL)
 	{
 	    int len = STRLEN(text);
+	    int i;
 
 	    /* Remove "\V" */
 	    if (len >= 2 && STRNCMP(text, "\\V", 2) == 0)
@@ -4199,6 +4200,14 @@ get_find_dialog_text(arg, wwordp, mcasep)
 		text[len - 4] = NUL;
 	    }
 
+	    /* Recognize "\/" or "\?" and remove. */
+	    for (i = 0; i + 1 < len; ++i)
+		if (text[i] == '\\' && (text[i + 1] == '/'
+						       || text[i + 1] == '?'))
+		{
+		    mch_memmove(text + i, text + i + 1, (size_t)(len - i));
+		    --len;
+		}
 	}
     }
     return text;
