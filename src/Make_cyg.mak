@@ -4,34 +4,216 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2001 Sep 20
+# Last updated by Dan Sharp.  Last Change: 2002 Nov 2
 #
-
+# GUI		no or yes: set to yes if you want the GUI version (yes)
+# PERL		define to path to Perl dir to get Perl support (not defined)
+#   PERL_VER	  define to version of Perl being used (56)
+#   DYNAMIC_PERL  no or yes: set to yes to load the Perl DLL dynamically (yes)
+# PYTHON	define to path to Python dir to get PYTHON support (not defined)
+#   PYTHON_VER	    define to version of Python being used (22)
+#   DYNAMIC_PYTHON  no or yes: use yes to load the Python DLL dynamically (yes)
+# TCL		define to path to TCL dir to get TCL support (not defined)
+#   TCL_VER	define to version of TCL being used (83)
+#   DYNAMIC_TCL no or yes: use yes to load the TCL DLL dynamically (yes)
+# RUBY		define to path to Ruby dir to get Ruby support (not defined)
+#   RUBY_VER	define to version of Ruby being used (16)
+#   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (yes)
+# GETTEXT	no or yes: set to yes for dynamic gettext support (yes)
+# ICONV		no or yes: set to yes for dynamic iconv support (yes)
+# OLE		no or yes: set to yes to make OLE gvim (no)
+# DEBUG		no or yes: set to yes if you wish a DEBUGging build (no)
+# CPUNR		i386 through pentium4: select -mcpu argument to compile with (i386)
+# ARCH		i386 through pentium4: select -march argument to compile with (i386)
+# USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
+#		For USEDLL=yes the cygwin1.dll is required to run Vim.
+# POSTSCRIPT	no or yes: set to yes for PostScript printing (no)
+# FEATURES	TINY, SMALL, NORMAL, BIG or HUGE (BIG)
 #>>>>> choose options:
+ifndef GUI
+GUI=yes
+endif
+
+ifndef FEATURES
+FEATURES = BIG
+endif
+
+ifndef GETTEXT
+GETTEXT = yes
+endif
+
+ifndef ICONV
+ICONV = yes
+endif
+
+ifndef USEDLL
+USEDLL = no
+endif
+
+ifndef CPUNR
+CPUNR = i386
+endif
+
+ifndef ARCH
+ARCH = i386
+endif
 
 ### See feature.h for a list of optionals.
 ### Any other defines can be included here.
 
-DEFINES = -D__CYGWIN__
-INCLUDES = -I/usr/lib/include/mingw
+DEFINES = -D__CYGWIN__ -DHAVE_PATHDEF -DFEAT_$(FEATURES)
+INCLUDES = -mcpu=$(CPUNR) -march=$(ARCH)
 
 #>>>>> name of the compiler and linker, name of lib directory
 CC = gcc
 RC = windres
-EXE = vim.exe
-OUTDIR = obj
 
-#>>>>> uncomment this block to build a GUI version
-#OUTDIR = gobj
-#DEFINES += -DFEAT_GUI_W32
-#GUI_OBJ = $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o $(OUTDIR)/vimrc.o
-#GUI_LIBS = -lcomctl32
-#EXE = gvim.exe
+##############################
+# DYNAMIC_PERL=yes and no both work
+##############################
+ifdef PERL
+PERL_OBJ = $(OUTDIR)/if_perl.o
+DEFINES += -DFEAT_PERL
+ifndef PERL_VER
+PERL_VER = 56
+endif
+ifeq (yes, $(DYNAMIC_PERL))
+DEFINES += -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
+endif
+INCLUDES += -I$(PERL)/lib/CORE
+EXTRA_LIBS += $(PERL)/lib/CORE/perl56.lib
+endif
+
+##############################
+# DYNAMIC_PYTHON=yes works.
+# DYNAMIC_PYTHON=no does not (unresolved externals on link).
+##############################
+ifdef PYTHON
+PYTHON_OBJ = $(OUTDIR)/if_python.o
+DEFINES += -DFEAT_PYTHON
+ifndef PYTHON_VER
+PYTHON_VER = 22
+endif
+ifeq (yes, $(DYNAMIC_PYTHON))
+DEFINES += -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
+endif
+INCLUDES += -I$(PYTHON)/include
+EXTRA_LIBS += $(PYTHON)/libs/python$(PYTHON_VER).lib
+endif
+
+##############################
+# DYNAMIC_RUBY=yes works.
+# DYNAMIC_RUBY=no does not (process exits).
+##############################
+ifdef RUBY
+ifndef RUBY_VER_LONG
+RUBY_VER_LONG=1.6
+endif
+ifndef RUBY_VER
+RUBY_VER=16
+endif
+RUBY_OBJ = $(OUTDIR)/if_ruby.o
+DEFINES += -DFEAT_RUBY
+INCLUDES += -I$(RUBY)/lib/ruby/$(RUBY_VER_LONG)/i586-mswin32
+EXTRA_LIBS += $(RUBY)/lib/mswin32-ruby$(RUBY_VER).lib
+ifeq (yes, $(DYNAMIC_RUBY))
+DEFINES += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"mswin32-ruby$(RUBY_VER).dll\"
+endif
+endif
+
+##############################
+# DYNAMIC_TCL=yes and no both work.
+##############################
+ifdef TCL
+DEFINES += -DFEAT_TCL 
+TCL_OBJ = $(OUTDIR)/if_tcl.o
+ifndef TCL_VER
+TCL_VER = 83
+endif
+INCLUDES += -I$(TCL)/include
+ifeq (yes, $(DYNAMIC_TCL))
+DEFINES += -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
+EXTRA_LIBS += $(TCL)/lib/tclstub$(TCL_VER).lib
+else
+EXTRA_LIBS += $(TCL)/lib/tcl$(TCL_VER).lib
+endif
+endif
+
+##############################
+ifeq (yes, $(GETTEXT))
+DEFINES += -DDYNAMIC_GETTEXT
+endif
+
+##############################
+ifeq (yes, $(ICONV))
+DEFINES += -DDYNAMIC_ICONV
+endif
+
+##############################
+ifeq (yes, $(DEBUG))
+DEFINES += -DDEBUG
+INCLUDES += -g -fstack-check
+DEBUG_SUFFIX = d
+else
+INCLUDES += -s -fomit-frame-pointer -freg-struct-return \
+	    -malign-double -finline-functions
+endif
+
+##############################
+# USEDLL=yes will build a Cygwin32 executable that relies on cygwin1.dll.
+# USEDLL=no will build a Mingw32 executable with no extra dll dependencies.
+##############################
+ifeq (no, $(USEDLL))
+INCLUDES += -mno-cygwin
+endif
+
+##############################
+ifeq (yes, $(POSTSCRIPT))
+DEFINES += -DMSWINPS
+endif
+
+##############################
+# OLE does not work with the current (2.0-1) w32api headers in Cygwin.  They
+# define DeregisterTypeLib instead of UnRegisterTypeLib in oleauto.h, even though
+# the supplied oleaut32.a library implements UnRegisterTypeLib and not 
+# DeregisterTypeLib.
+# 
+# OLE=yes will work if you patch if_ole.cpp to include the prototype 
+#    WINOLEAUTAPI UnRegisterTypeLib(REFGUID libID, WORD wVerMajor,
+#                                   WORD wVerMinor, LCID lcid, SYSKIND syskind);
+# 
+##############################
+ifeq (yes, $(OLE))
+INCLUDES += -DFEAT_OLE
+OLE_OBJ = $(OUTDIR)/if_ole.o
+EXTRA_LIBS += -loleaut32 -lstdc++
+endif
+
+##############################
+ifeq ($(GUI),yes)
+EXE = gvim$(DEBUG_SUFFIX).exe
+OUTDIR = gobj$(DEBUG_SUFFIX)
+DEFINES += -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
+GUI_OBJ = $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o $(OUTDIR)/vimrc.o
+EXTRA_LIBS += -mwindows -lcomctl32
+else
+EXE = vim$(DEBUG_SUFFIX).exe
+OUTDIR = obj$(DEBUG_SUFFIX)
+LIBS += -luser32 -lgdi32 -lcomdlg32
+endif
+
+##############################
+ifneq (sh.exe, $(SHELL))
+DEL = rm
+else
+DEL = del
+endif
 
 #>>>>> end of choices
 ###########################################################################
 
-INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_win32.h structs.h
+INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_win32.h \
+       structs.h version.h
 CFLAGS = -O2 -D_MAX_PATH=256 -DWIN32 -DPC -Iproto $(DEFINES) $(INCLUDES)
 RCFLAGS = -D_MAX_PATH=256 -DWIN32 -DPC -O coff $(DEFINES)
 
@@ -64,6 +246,7 @@ OBJ = \
 	$(OUTDIR)/option.o \
 	$(OUTDIR)/os_win32.o \
 	$(OUTDIR)/os_mswin.o \
+	$(OUTDIR)/pathdef.o \
 	$(OUTDIR)/quickfix.o \
 	$(OUTDIR)/regexp.o \
 	$(OUTDIR)/screen.o \
@@ -73,26 +256,34 @@ OBJ = \
 	$(OUTDIR)/term.o \
 	$(OUTDIR)/ui.o \
 	$(OUTDIR)/undo.o \
+	$(OUTDIR)/version.o \
 	$(OUTDIR)/window.o \
 	$(GUI_OBJ) \
-	$(TERMLIB)
+	$(OLE_OBJ) \
+	$(PERL_OBJ) \
+	$(PYTHON_OBJ) \
+	$(RUBY_OBJ) \
+	$(TCL_OBJ)
 
 all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe
 
-$(EXE): $(OUTDIR) $(OBJ) version.c version.h
-	$(CC) $(CFLAGS) -s -o $(EXE) version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32 -luuid -lole32 -lcomdlg32 $(GUI_LIBS)
+# According to the Cygwin doc 1.2 FAQ, kernel32 should not be specified for
+# linking unless calling ld directly.  
+# See /usr/doc/cygwin-doc-1.2/html/faq_toc.html#TOC93 for more information.
+$(EXE): $(OUTDIR) $(OBJ)
+	$(CC) $(CFLAGS) -s -o $(EXE) $(OBJ) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd ; $(MAKE) -f Make_cyg.mak ; cd ..
 
 vimrun.exe: vimrun.c
-	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
+	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  $(LIBS)
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  -lkernel32 -luser32 -lgdi32 -ladvapi32 -luuid -lcomctl32 -lole32
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  $(LIBS) -luuid -lcomctl32 -lole32
 
 uninstal.exe: uninstal.c
-	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
+	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIBS)
 
 $(OUTDIR):
 	mkdir $(OUTDIR)
@@ -101,11 +292,18 @@ tags:
 	command /c ctags *.c $(INCL)
 
 clean:
-	-del $(OUTDIR)\*.o
-	-del *.o
-	-del *.exe
-	-del *.~
-	-del *~
+ifneq (sh.exe, $(SHELL))
+	-$(DEL) $(OUTDIR)/*.o
+else
+	-$(DEL) $(OUTDIR)\*.o
+endif
+	-$(DEL) *.o
+	-$(DEL) *.exe
+	-$(DEL) *.~
+	-$(DEL) *~
+	-$(DEL) dyn-ming.h
+	-$(DEL) if_perl.c
+	-$(DEL) pathdef.c
 
 ###########################################################################
 
@@ -153,6 +351,33 @@ $(OUTDIR)/gui.o:	gui.c $(INCL)
 
 $(OUTDIR)/gui_w32.o:	gui_w32.c $(INCL)
 	$(CC) -c $(CFLAGS) gui_w32.c -o $(OUTDIR)/gui_w32.o
+
+$(OUTDIR)/if_ole.o:	if_ole.cpp $(INCL)
+	$(CC) -c $(CFLAGS) -D__IID_DEFINED__ if_ole.cpp -o $(OUTDIR)/if_ole.o
+
+if_perl.c: if_perl.xs typemap
+	perl /usr/lib/perl5/5.6.1/ExtUtils/xsubpp -prototypes -typemap \
+	     /usr/lib/perl5/5.6.1/ExtUtils/typemap if_perl.xs > $@
+
+$(OUTDIR)/if_perl.o:	if_perl.c $(INCL) dyn-ming.h
+ifeq (no, $(USEDLL))
+	$(CC) -c $(CFLAGS) if_perl.c -o $(OUTDIR)/if_perl.o
+else
+	$(CC) -c $(CFLAGS) -I/usr/include/mingw -D__MINGW32__ if_perl.c -o $(OUTDIR)/if_perl.o
+endif
+
+$(OUTDIR)/if_python.o:	if_python.c $(INCL) dyn-ming.h
+	$(CC) -c $(CFLAGS) if_python.c -o $(OUTDIR)/if_python.o
+
+$(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL) dyn-ming.h
+ifeq (no, $(USEDLL))
+	$(CC) -c $(CFLAGS) -U_WIN32 if_ruby.c -o $(OUTDIR)/if_ruby.o
+else
+	$(CC) -c $(CFLAGS) if_ruby.c -o $(OUTDIR)/if_ruby.o
+endif
+
+$(OUTDIR)/if_tcl.o:	if_tcl.c $(INCL) dyn-ming.h
+	$(CC) -c $(CFLAGS) if_tcl.c -o $(OUTDIR)/if_tcl.o
 
 $(OUTDIR)/main.o:	main.c $(INCL)
 	$(CC) -c $(CFLAGS) main.c -o $(OUTDIR)/main.o
@@ -202,6 +427,9 @@ $(OUTDIR)/os_w32exe.o: os_w32exe.c $(INCL)
 $(OUTDIR)/os_mswin.o:	os_mswin.c $(INCL)
 	$(CC) -c $(CFLAGS) os_mswin.c -o $(OUTDIR)/os_mswin.o
 
+$(OUTDIR)/pathdef.o:	pathdef.c $(INCL)
+	$(CC) -c $(CFLAGS) pathdef.c -o $(OUTDIR)/pathdef.o
+
 $(OUTDIR)/quickfix.o:	quickfix.c $(INCL)
 	$(CC) -c $(CFLAGS) quickfix.c -o $(OUTDIR)/quickfix.o
 
@@ -229,8 +457,32 @@ $(OUTDIR)/ui.o:	ui.c $(INCL)
 $(OUTDIR)/undo.o:	undo.c $(INCL)
 	$(CC) -c $(CFLAGS) undo.c -o $(OUTDIR)/undo.o
 
+$(OUTDIR)/version.o:	version.c $(INCL)
+	$(CC) -c $(CFLAGS) version.c -o $(OUTDIR)/version.o
+
 $(OUTDIR)/vimrc.o:	vim.rc $(INCL)
 	$(RC) $(RCFLAGS) vim.rc -o $(OUTDIR)/vimrc.o
 
 $(OUTDIR)/window.o:	window.c $(INCL)
 	$(CC) -c $(CFLAGS) window.c -o $(OUTDIR)/window.o
+
+# If USEDLL=no, then __MINGW32__ is defined and this file is included by
+# the interfaces.  It is not really needed, so just make a dummy file to 
+# placate the compile.
+dyn-ming.h:
+ifneq (sh.exe, $(SHELL))
+	@echo \/\* created by make \*\/ > dyn-ming.h
+else
+	@echo /* created by make */ > dyn-ming.h
+endif
+
+pathdef.c:
+	@echo creating pathdef.c
+	@echo '/* pathdef.c */' > pathdef.c
+	@echo '#include "vim.h"' >> pathdef.c
+	@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> pathdef.c
+	@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> pathdef.c
+	@echo 'char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)";' >> pathdef.c
+	@echo 'char_u *all_lflags = (char_u *)"$(CC) -s -o $(EXE) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)";' >> pathdef.c
+	@echo 'char_u *compiled_user = (char_u *)"$(USERNAME)";' >> pathdef.c
+	@echo 'char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";' >> pathdef.c

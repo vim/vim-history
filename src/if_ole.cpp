@@ -24,6 +24,12 @@ extern HWND s_hwnd;
 #include "if_ole.h"	// Interface definitions
 #include "iid_ole.c"	// UUID definitions (compile here)
 
+/* Supply function prototype to work around bug in Mingw oleauto.h header */
+#ifdef __MINGW32__
+WINOLEAUTAPI UnRegisterTypeLib(REFGUID libID, WORD wVerMajor,
+            WORD wVerMinor, LCID lcid, SYSKIND syskind);
+#endif
+
 /*****************************************************************************
  1. Internal definitions for this file
 *****************************************************************************/
