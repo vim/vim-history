@@ -4059,6 +4059,8 @@ do_make(arg, errorformat)
     char_u *errorformat;
 {
     char_u	*name;
+    char_u	*cmd;
+    unsigned	len;
 
     autowrite_all();
     name = get_mef_name(TRUE);
@@ -4069,10 +4071,16 @@ do_make(arg, errorformat)
     /*
      * If 'shellpipe' empty: don't redirect to 'errorfile'.
      */
+    len = STRLEN(p_shq) * 2 + STRLEN(arg) + 1;
+    if (*p_sp != NUL)
+	len += STRLEN(p_sp) + STRLEN(name) + 2;
+    cmd = alloc(len);
+    if (cmd == NULL)
+	return;
     if (*p_sp == NUL)
-	sprintf((char *)IObuff, "%s%s%s", p_shq, arg, p_shq);
+	sprintf((char *)cmd, "%s%s%s", p_shq, arg, p_shq);
     else
-	sprintf((char *)IObuff, "%s%s%s %s %s", p_shq, arg, p_shq, p_sp, name);
+	sprintf((char *)cmd, "%s%s%s %s %s", p_shq, arg, p_shq, p_sp, name);
     /*
      * Output a newline if there's something else than the :make command that
      * was typed (in which case the cursor is in column 0).
@@ -4080,10 +4088,10 @@ do_make(arg, errorformat)
     if (msg_col != 0)
 	msg_putchar('\n');
     MSG_PUTS(":!");
-    msg_outtrans(IObuff);		/* show what we are doing */
+    msg_outtrans(cmd);		/* show what we are doing */
 
     /* let the shell know if we are redirecting output or not */
-    do_shell(IObuff, *p_sp ? SHELL_DOOUT : 0);
+    do_shell(cmd, *p_sp != NUL ? SHELL_DOOUT : 0);
 
 #ifdef AMIGA
     out_flush();
@@ -4096,6 +4104,7 @@ do_make(arg, errorformat)
 
     mch_remove(name);
     vim_free(name);
+    vim_free(cmd);
 }
 
 /*
