@@ -4839,12 +4839,13 @@ find_help_tags(arg, num_matches, matches, keep_lang)
     {
 	/* Replace "\S" with "/\\S", etc.  Otherwise every tag is matched.
 	 * Also replace "\%^" and "\%(", they match every tag too.
+	 * Also "\zs", "\z1", etc.
+	 * Also "\@<", "\@=", "\@<=", etc.
 	 * And also "\_$" and "\_^". */
-
 	if (arg[0] == '\\'
 		&& ((arg[1] != NUL && arg[2] == NUL)
-		    || ((arg[1] == '%' || arg[1] == '_')
-					  && arg[2] != NUL && arg[3] == NUL)))
+		    || (vim_strchr((char_u *)"%_z@", arg[1]) != NULL
+							   && arg[2] != NUL)))
 	{
 	    STRCPY(d, "/\\\\");
 	    STRCPY(d + 3, arg + 1);
