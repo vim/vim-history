@@ -555,6 +555,8 @@ main
 		    Columns = 80;	/* need to init Columns */
 		    info_message = TRUE; /* use mch_msg(), not mch_errmsg() */
 		    list_version();
+		    msg_putchar('\n');
+		    msg_didout = FALSE;
 		    mch_exit(0);
 		}
 		else if (STRNICMP(argv[0] + argv_idx, "literal", 7) == 0)
