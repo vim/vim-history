@@ -740,29 +740,52 @@ install_bat_choice(int idx)
 	    fprintf(fd, "goto eof\n\n");
 	    fprintf(fd, ":havevim\n");
 
-	    fprintf(fd, "if .%%OS%%==.Windows_NT goto ntaction\n\n");
-
-	    fprintf(fd, "rem for Win95 collect the arguments in VIMARGS\n");
+	    fprintf(fd, "rem collect the arguments in VIMARGS for Win95\n");
 	    fprintf(fd, "set VIMARGS=\n");
+	    if (*exename == 'g')
+		fprintf(fd, "set VIMNOFORK=\n");
 	    fprintf(fd, ":loopstart\n");
 	    fprintf(fd, "if .%%1==. goto loopend\n");
+	    if (*exename == 'g')
+	    {
+		fprintf(fd, "if NOT .%%1==.-f goto noforkarg\n");
+		fprintf(fd, "set VIMNOFORK=1\n");
+		fprintf(fd, ":noforkarg\n");
+	    }
 	    fprintf(fd, "set VIMARGS=%%VIMARGS%% %%1\n");
 	    fprintf(fd, "shift\n");
 	    fprintf(fd, "goto loopstart\n\n");
 	    fprintf(fd, ":loopend\n");
 
+	    fprintf(fd, "if .%%OS%%==.Windows_NT goto ntaction\n\n");
+
 	    /* For gvim.exe use "start" to avoid that the console window stays
 	     * open. */
 	    if (*exename == 'g')
+	    {
+		fprintf(fd, "if .%%VIMNOFORK%%==.1 goto nofork\n");
 		fprintf(fd, "start ");
+	    }
 
 	    /* Do use quotes here if the path includes a space. */
 	    if (strchr(installdir, ' ') != NULL)
 		fprintf(fd, "\"%%VIM%%\\%s\" %s %%VIMARGS%%\n", buf, vimarg);
 	    else
 		fprintf(fd, "%%VIM%%\\%s %s %%VIMARGS%%\n", buf, vimarg);
-	    fprintf(fd, "set VIMARGS=\n");
 	    fprintf(fd, "goto eof\n\n");
+
+	    if (*exename == 'g')
+	    {
+		fprintf(fd, ":nofork\n");
+		fprintf(fd, "start /w ");
+		/* Do use quotes here if the path includes a space. */
+		if (strchr(installdir, ' ') != NULL)
+		    fprintf(fd, "\"%%VIM%%\\%s\" %s %%VIMARGS%%\n", buf,
+								      vimarg);
+		else
+		    fprintf(fd, "%%VIM%%\\%s %s %%VIMARGS%%\n", buf, vimarg);
+		fprintf(fd, "goto eof\n\n");
+	    }
 
 	    fprintf(fd, ":ntaction\n");
 	    fprintf(fd, "rem for WinNT we can use %%*\n");
@@ -770,15 +793,33 @@ install_bat_choice(int idx)
 	    /* For gvim.exe use "start /b" to avoid that the console window
 	     * stays open. */
 	    if (*exename == 'g')
+	    {
+		fprintf(fd, "if .%%VIMNOFORK%%==.1 goto noforknt\n");
 		fprintf(fd, "start \"dummy\" /b ");
+	    }
 
 	    /* Do use quotes here if the path includes a space. */
 	    if (strchr(installdir, ' ') != NULL)
 		fprintf(fd, "\"%%VIM%%\\%s\" %s %%*\n", buf, vimarg);
 	    else
 		fprintf(fd, "%%VIM%%\\%s %s %%*\n", buf, vimarg);
+	    fprintf(fd, "goto eof\n\n");
+
+	    if (*exename == 'g')
+	    {
+		fprintf(fd, ":noforknt\n");
+		fprintf(fd, "start \"dummy\" /b /wait ");
+		/* Do use quotes here if the path includes a space. */
+		if (strchr(installdir, ' ') != NULL)
+		    fprintf(fd, "\"%%VIM%%\\%s\" %s %%*\n", buf, vimarg);
+		else
+		    fprintf(fd, "%%VIM%%\\%s %s %%*\n", buf, vimarg);
+	    }
 
 	    fprintf(fd, "\n:eof\n");
+	    fprintf(fd, "set VIMARGS=\n");
+	    if (*exename == 'g')
+		fprintf(fd, "set VIMNOFORK=\n");
 
 	    fclose(fd);
 	    printf("%s has been %s\n", batpath,
