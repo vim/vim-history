@@ -8,8 +8,8 @@ execute "vim tutor" and then follow the instructions in the lessons.
 The lessons tell you to modify the file, so DON'T DO THIS ON YOUR
 ORIGINAL COPY.
 
-You can also use the "vimtutor" program.  It will make a scratch copy of the
-tutor.
+On Unix you can also use the "vimtutor" program.  It will make a
+scratch copy of the tutor first.
 
 I have considered adding more advanced lessons but have not found the
 time. Please let me know how you like it and send any improvements you
@@ -19,4 +19,4 @@ Bob Ware, Colorado School of Mines, Golden, Co 80401, USA
 (303) 273-3987
 bware@mines.colorado.edu bware@slate.mines.colorado.edu bware@mines.bitnet
 
-(This file was modified for Vim by Bram Moolenaar)
+[This file was modified for Vim by Bram Moolenaar]

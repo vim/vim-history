@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Lua
 " Author:	Carlos Augusto Teixeira Mendes <cmendes@inf.puc-rio.br>
-" Last change:	09 october 1998
+" Last Change:	09 october 1998
 "
 " Still has some syncing problems...
 

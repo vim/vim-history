@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : MetaPost
-" Maintainer : Andreas Scherer <andreas.scherer@pobox.com>
-" Last change: August 3, 1998
+" Language:	MetaPost
+" Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
+" Last Change:	August 3, 1998
 
 " Removes any old syntax stuff hanging around
 syn clear

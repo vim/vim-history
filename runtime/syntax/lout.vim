@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : Lout
-" Maintainer : Christian V. J. Bruessow <cvjb@bigfoot.de>
-" Last change: Fre 18 Jun 1999 13:42:06 MEST
+" Language:	Lout
+" Maintainer:	Christian V. J. Bruessow <cvjb@bigfoot.de>
+" Last Change:	Fre 18 Jun 1999 13:42:06 MEST
 
 " Lout: Basser Lout document formatting system.
 

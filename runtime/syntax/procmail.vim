@@ -2,7 +2,7 @@
 " Language:	Procmail definition file
 " Maintainer:	vacancy [posted by Sonia Heimann, but she didn't feel like
 "		maintaining this]
-" Last change:	1998 Apr 20
+" Last Change:	1998 Apr 20
 
 " Remove any old syntax stuff hanging around
 syn clear

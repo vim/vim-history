@@ -2402,8 +2402,9 @@ gui_mch_set_font(
 	gui.char_width = (int) vf->StringWidth("n");
 	font_height fh;
 	vf->GetHeight(&fh);
-	gui.char_height = (int) (fh.ascent + fh.descent + fh.leading + 0.5);
-	gui.char_ascent = (int) (fh.ascent + 0.5);
+	gui.char_height = (int)(fh.ascent + 0.9999)
+		    + (int)(fh.descent + 0.9999) + (int)(fh.leading + 0.9999);
+        gui.char_ascent = (int)(fh.ascent + 0.9999);
 
 	gui.vimWindow->Unlock();
     }

@@ -1163,11 +1163,11 @@ get_syntax_attr(col, line)
 {
     int	    attr = 0;
 
-    reg_syn = TRUE;	/* let vim_regexec() know we're using syntax */
-
     /* check for out of memory situation */
     if (syn_buf->b_syn_states_len == 0)
 	return 0;
+
+    reg_syn = TRUE;	/* let vim_regexec() know we're using syntax */
 
     /* Make sure current_state is valid */
     if (INVALID_STATE(&current_state))

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	avenue
 " Maintainer:	Jan-Oliver Wagner <Jan-Oliver.Wagner@usf.Uni-Osnabrueck.DE>
-" Last change:	1998 September 11
+" Last Change:	1998 September 11
 
 " Avenue is the ArcView built-in language. ArcView is
 " a desktop GIS by ESRI. Though it is a built-in language

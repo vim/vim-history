@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ken@digitas.harvard.edu>
-" Last change:	1999 Jan 24
+" Last Change:	1999 Jan 24
 
 " Remove any old syntax stuff hanging around
 syn clear

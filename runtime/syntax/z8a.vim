@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Z80 assembler asz80
 " Maintainer:	Milan Pikula <www@fornax.elf.stuba.sk>
-" Last change:	1999 January 7
+" Last Change:	1999 January 7
 
 " Remove any old syntax
 syn clear

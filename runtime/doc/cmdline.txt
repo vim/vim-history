@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.6a.  Last change: 1999 Oct 21
+*cmdline.txt*   For Vim version 5.6.  Last change: 2000 Jan 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,7 @@ CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 				the last delete or yank
 			'%'	the current file name
 			'#'	the alternate file name
+			'*'	the clipboard contents
 			'/'	the last search pattern
 			':'	the last command-line
 			'-'	the last small (less than a line) delete

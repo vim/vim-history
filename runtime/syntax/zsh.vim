@@ -2,7 +2,7 @@
 " Language:	Z shell (zsh)
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
 " Heavily based on sh.vim by Lennart Schultz
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Pascal
 " Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
-" Last change:	1997 April 25
+" Last Change:	2000 Jan 06
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -41,7 +41,7 @@ syn region pascalComment	start="(\*"  end="\*)" contains=pascalTodo
 syn region pascalComment	start="{"  end="}" contains=pascalTodo
 
 syn keyword pascalOperator	and array boolean delete div downto
-syn keyword pascalOperator	false file get in input insert
+syn keyword pascalOperator	true false file get in input insert
 syn keyword pascalOperator	interactive keyboard label maxint
 syn keyword pascalOperator	mod new nil not of or output packed
 syn keyword pascalOperator	put read readln record repeat

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	PCCTS
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last change:	10 Aug 1999
+" Last Change:	10 Aug 1999
 
 " Remove any old syntax stuff hanging around
 syn clear

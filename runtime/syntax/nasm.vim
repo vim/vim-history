@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NASM: The Netwide Assembler (v0.97)
 " Maintainer:	C. Laurence Gonsalves <clgonsal@kami.com>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 " URL:		http://www.cryogen.com/clgonsal/vim/syntax/nasm.vim
 " NASM's home:	http://www.cryogen.com/Nasm
 

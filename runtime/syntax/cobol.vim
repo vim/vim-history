@@ -1,9 +1,8 @@
 " Vim syntax file
-" Language: COBOL
-" Maintainers:  Sitaram Chamarty <sitaram@diac.com> and
-"               James Mitchell <james_mitchell@acm.org>
-
-" Last change:  1999 Jun 14
+" Language:	COBOL
+" Maintainers:	Sitaram Chamarty <sitaram@dimensional.com> and
+"		James Mitchell <james_mitchell@acm.org>
+" Last Change:	1999 December 21
 
 " MOST important - else most of the keywords wont work!
 set isk=@,48-57,-
@@ -46,21 +45,24 @@ syn keyword cobolReserved STANDARD-1 STANDARD-2 START STATUS STOP STRING SUB-QUE
 syn keyword cobolReserved SUB-QUEUE-3 SUBTRACT SUM SUPPRESS SYMBOLIC SYNC SYNCHRONIZED TABLE TALLYING
 syn keyword cobolReserved TAPE TERMINAL TERMINATE TEST TEXT THAN THEN THROUGH THRU TIME TIMES TO TOP
 syn keyword cobolReserved TRAILING TRUE TYPE UNIT UNSTRING UNTIL UP UPON USAGE USE USING VALUE VALUES
-syn keyword cobolReserved VARYING WHEN WITH WORDS WORKING-STORAGE WRITE
+syn keyword cobolReserved VARYING WHEN WITH WORDS WORKING-STORAGE WRITE 
 syn match   cobolReserved "\<CONTAINS\>"
 syn match   cobolReserved "\<\(IF\|INVALID\|END\|EOP\)\>"
 syn match   cobolReserved "\<ALL\>"
 
+syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
+syn match   cobolAreaA        "^......"
+
 syn keyword cobolConstant SPACE SPACES NULL ZERO ZEROES ZEROS LOW-VALUE LOW-VALUES
 
 syn match   cobolTodo         "todo" contained
-syn match   cobolComment      "^.\{6}\*.*"hs=s+6 contains=cobolTodo
-syn match   cobolComment      "^.\{6}/.*"hs=s+6 contains=cobolTodo
+syn match   cobolComment      "^.\{6}\*.*"lc=6,hs=s+6 contains=cobolTodo
+syn match   cobolComment      "^.\{6}/.*"lc=6,hs=s+6 contains=cobolTodo
 syn region  cobolComment      start="*>" end="$" contains=cobolTodo
-syn match   cobolCompiler     "^.\{6}$.*"hs=s+6
+syn match   cobolCompiler     "^.\{6}$.*"lc=6,hs=s+6
 syn match   cobolContinue     "^.\{6}-"
 
-syn match   cobolBadLine      "^.\{6}[^ D*$/].*"hs=s+6
+syn match   cobolBadLine      "^.\{6}[^ D*$/].*"lc=6,hs=s+6
 
 syn keyword cobolGoTo         GO GOTO
 syn keyword cobolCopy         COPY
@@ -73,30 +75,30 @@ syn keyword cobolWatch        REPLACING RUN
 syn match   cobolWatch        "COMP-[123456XN]"
 syn keyword cobolEXECs        EXEC END-EXEC
 
-syn match   cobolParas        "^.\{6} \{1,4}[A-Z0-9][^"]\{-}\."hs=s+7
+syn match   cobolParas        "^.\{6} \{1,4}[A-Z0-9][^"]\{-}\."lc=6,hs=s+7
 
-syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+[1-4]\d "hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+0\=[2-9] "hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+66 "hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "lc=6,hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+[1-4]\d "lc=6,hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+0\=[2-9] "lc=6,hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+66 "lc=6,hs=s+7,he=e-1
 
-syn match   cobolWatch        "^.\{6} \+88 "hs=s+7,he=e-1
+syn match   cobolWatch        "^.\{6} \+88 "lc=6,hs=s+7,he=e-1
 
 syn match   cobolBadID        "\k\+-\($\|[^A-Z0-9]\)"
 syn match   cobolBadID        "[^A-Z0-9]-\d*[A-Z-]\+"hs=s+1
 
-syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE
+syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE 
 syn match   cobolCALLs        "EXIT \+PROGRAM"
 syn match   cobolExtras       /\<VALUE \+\d\+\./hs=s+6,he=e-1
 
-syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
+" syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
 
 syn match   cobolString       /".\{-}"/
 syn match   cobolString       /'.\{-}'/
 
 syn region  cobolLine       start="^.\{6} " end="$" contains=ALL
 if exists("cobol_legacy_code")
-    syn region  cobolCondFlow     contains=ALLBUT,cobolLine start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/"[^"]\+"/ end="\."
+    syn region  cobolCondFlow     contains=ALLBUT,cobolLine,cobolCondFlow start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/"[^"]\+"/ end="\."
 endif
 
 if ! exists("cobol_legacy_code")
@@ -120,7 +122,7 @@ if !exists("did_cobol_syntax_inits")
     hi link cobolBadLine  Error
     hi link cobolCALLs    Function
     hi link cobolComment  Comment
-    hi link cobolAreaB              Special
+    hi link cobolAreaA    LineNr
     hi link cobolCompiler PreProc
     hi link cobolCondFlow Special
     hi link cobolCopy     PreProc
@@ -138,5 +140,3 @@ if !exists("did_cobol_syntax_inits")
 endif
 
 let b:current_syntax = "cobol"
-
-" vim: ts=6 nowrap

@@ -1,7 +1,7 @@
-*todo.txt*      For Vim version 5.6a.  Last change: 1999 Dec 19
+*todo.txt*      For Vim version 5.6.  Last change: 2000 Jan 04
 
 
-		  VIM REFERENCE MANUAL    by Bram Moolenaar
+				  VIM REFERENCE MANUAL	  by Bram Moolenaar
 
 
 							  TODO list for Vim			*todo*
@@ -35,6 +35,8 @@ See |develop.txt| for development plans.
 -------------------- Known bugs and current work -----------------------
 
 Vi incompatibility:
+9	":s/e/\^M/" should replace an "e" with a CTRL-M, not split the line.
+	(Calder)
 8	With undo/redo only marks in the changed lines should be changed.  Other
 	marks should be kept.  Vi keeps each mark at the same text, even when it
 	is deleted or restored. (Webb)
@@ -86,9 +88,9 @@ Vi incompatibility:
 	(Sayre).
 7	Add flag in 'cpoptions' that makes operator (yank, filter) not move the
 	cursor, at least when canceled. (default vi compatible).
-7	Make "5dd" on last-but-one-line not delete anything (vi compatible).
-	Change cursor_down()???  Many other commands will change too: "5j", "c5j",
-	etc.  Add flag in 'cpoptions'?
+7	Make "5dd" on last-but-one-line not delete anything (Vi compatible).
+	Add flag in 'cpoptions' for this.  When not present, "2dd" in the last
+	line should delete the last line.
 7	This Vi-trick doesn't work: "Q" to go to Ex mode, then "g/pattern/visual".
 	In Vi you can edit in visual mode, and when doing "Q" you jump to the next
 	match.  Nvi can do it too.
@@ -106,28 +108,29 @@ Vi incompatibility:
 
 
 GTK+ GUI known bugs:
+8	Move gtk_main_quit() calls from call to add_to_input_buf() to inside the
+	function?
+9	GTK GUI: Include changes in gtklayout.c since GTK 1.1.6 in gui_gtk_f.c?
+	(Kahn)
 9	Can't paste a Visual selection from GTK-gvim to vim in xterm when it is
 	longer than 4000 characters.  Works OK from gvim to gvim and vim to vim.
 	This is a GTK problem.
+9	With some fonts the characters can be taller than ascent + descent.  E.g.,
+	"-misc-fixed-*-*-*-*-18-*-*-*-*-*-iso10646-1".  Add one to the character
+	cell height?  (Dalecki)
 9	With the guifont "-*-clean-medium-r-*-*-8-*-*-*-*-80-*" bold characters
-	are drawn wrong.  Try on C source code.  Probably a font problem.  Check
-	font cell size and use bold font trick if it's wrong?
-8	Menu item ordering is not according to priority.
-8	When a menu is added or removed which changes the height of the menu bar,
-	the whole window is resized unexpectedly.  Use ":menu U&gly.echo :echo
-	"ugly".  (Urban)
-8	'mousefocus' doesn't work. (Roemer)
-8	Some keys don't work: Shift-TAB, CTRL-@.
+	are drawn wrong.  Try on C source code.  The bold font is wider than the
+	medium font.  Check bold font cellsize and use bold font trick if it's
+	wrong?
 8	When using "gvim -geom 40x30" or setting 'columns' in .gvimrc or with a
 	GUIEnter autocommand, the width is still set to fit the toolbar.  Also
 	happens when changing the font.  How to avoid that the toolbar specifies
 	the minimal window width?
-8	Changing GTK themes isn't handled correctly.  Background color is wrong
-	when scrolling with keyboard commands. Selection has no color. (Akkerman)
 8	Implement "no" value for 'winaltkeys': don't use Alt-Key as a menu
 	shortcut, when 'wak' changed after creating the menus.
-8	Dialogs sometimes appear a bit far away.  Apply a patch from brent verner
-	to make it work better?
+8	Dialogs sometimes appear a bit far away.  Apply a patch from Brent Verner
+	to position the dialogs on top of the gvim window (Jul 1999)?  Check that
+	it still works for focus-follows-mouse.
 
 
 Win32 GUI known bugs:
@@ -141,8 +144,6 @@ Win32 GUI known bugs:
 9	When there are more than 32767 lines, the scrollbar has a roundoff error.
 	Clicking the up or down error scrolls two lines or more.  Looks like there
 	is an extra event that reports the new position of the scrollbar.
-9	The "Edit with Vim" registry entry really causes trouble for MS-Office
-	users.  Can this be avoided?
 8	Make new version of VisVim.dll which includes the patch from Cordell.
 8	When 'grepprg' doesn't execute, the error only flashes by, the
 	user can hardly see what is wrong. (Moore)
@@ -153,6 +154,8 @@ Win32 GUI known bugs:
 	scroll it, or even hit the OK button (but you can hit return).
 7	Add an option to disable adding a pixel row for bold and italic fonts?
 	Same option as for multy-byte (patch from Nam)?
+	Add another option to add one to the character width?  Lucida Console
+	italic is wider than the normal font ("d" overlaps with next char).
 7	At the hit-return prompt scrolling now no longer works.  Need to use the
 	keyboard to get around this.  Pretend <CR> was hit when the users tries to
 	scroll?
@@ -214,10 +217,8 @@ Motif GUI:
 8	Popup menu ordering is wrong.
 8	Dialog: Pointer should be moved to the default button.  Accelerators don't
 	work yet.
-8	Lesstif: Adding a menu item that doesn't fit crashes Vim.
-8	Lesstif 0.88: Using tear-off menu causes a few warnings.  When using
-	"Refresh" in a tear-off buffer menu it becomes empty (because the menu was
-	deleted?).
+8	Lesstif 0.89.4: Tearing-off a menu sometimes gives a "Restoring focus to
+	NULL widget!" error.  Probably a Lesstif problem.
 8	Lesstif: When deleting a menu that's torn off, the torn off menu becomes
 	very small instead of disappearing.  When closing it, Vim crashes.
 	(Phillipps)
@@ -366,6 +367,8 @@ Win32 console:
 9	tmpnam() uses file in root of file system: "\asdf".  That doesn't work on
 	a Netware network drive.  Use same function as for Win32 GUI?
 8	When exiting, sends ^M^M^J to the console in raw mode (Webb).
+8	In os_win32.h, HAVE_STRICMP and HAVE_STRNICMP are defined only if __GNUC__
+	is not defined.  Shouldn't that be the other way around?
 
 
 Amiga:
@@ -648,8 +651,6 @@ Considered for release 6.0:
 8	Make ":normal" command accept <Key> notation, like ":map".
 8	Rename all version directories to vim54 instead of vim-5.4, also for the
 	distribution.
-9	Drag'n drop support for GTK ~/vim/patches/dalecki.dnd4 .
-	Also fixes background color changing on the fly.
 8	GNOME support for GTK version ~/vim/patches/kahn.5.4.gnome .
 8	Remove runtime/macros/html.
 8	Adjust colortest.vim: Include colors on normal background (Szalai).
@@ -722,7 +723,7 @@ Help:
 
 Syntax highlighting:
 8	Add patch from Scott Bigham for back referencing.
-	~/vim/patches/bigham.regexp2 .
+	~/vim/patches/bigham.regexp3 .
 8	Some syntax files set 'iskeyword'.  When switching to another filetype
 	this isn't reset.  Add "set isk&" to all syntax files?
 8	Add specific syntax item to match with parens/braces that don't have a
@@ -745,6 +746,7 @@ Syntax highlighting:
 	to find the group where redrawing starts.  Useful for "#if 0" constructs
 	in C. (Geddes)
 	c.vim: Use advanced syncing to make long "#if 0" constructs work.
+8	cpp.vim: In C++ it's allowed to use {} inside ().
 8	Keep more context for syncing, but not for every line.  Make this settable
 	with some command ":syn sync context=1000 skip=10" (store state for 1000
 	lines, every 10 lines).
@@ -905,8 +907,8 @@ Built-in script language:
 		getbufvar({bufid}, {name})
 		setbufvar({bufid}, {name}, {value})
 								get/set value of variable {name} in buffer
-								{bufid}  See ~/vim/patches/aaron.getbufvar
-		setwinvar()				see ~/vim/patches/aaron.getbufvar2 .
+								{bufid}  See ~/vim/patches/aaron.getbufvar4
+		setwinvar()
 		getwinvar()
 		libcall()				Allow more than one argument.
 		libcallnr()				Like libcall(), but function returns a number.
@@ -979,6 +981,10 @@ Performance:
 	Win16.
 9	Setting GUI options in the console (e.g., 'guifont') should not cause a
 	redraw.
+8	For an existing file, the page size of the swap file is always the
+	default, instead of using the block size of the device, because the swap
+	file is created only after setting the block size in mf_open().  How can
+	this be improved?
 8	Set default for 'ttyscroll' to half a screen height?  Should speed up
 	MS-DOS version. (Negri)
 7	DOS console: Add t_DL support, to make scrolling faster.
@@ -1093,6 +1099,9 @@ Messages:
 
 
 Screen updating:
+7	Add a string to the 'display' option to make CTRL-E and CTRL-Y scroll one
+	screen line, also if this means the first line doesn't start with the
+	first character (like what happens with a single line that doesn't fit).
 -	screen_line():
 	- insert/delete character stuff.
 	- improve delete rest of line (spaces at end of line).
@@ -1178,7 +1187,7 @@ Tags:
 		:tagargs clear
 	These are then the default values (changes the order of priority in tag
 	matching).
-7	Support for "gtags" and "global"?  With ":rtag" command?  
+7	Support for "gtags" and "global"?  With ":rtag" command?
 	There is an example for how to do this in Nvi.
 	Or do it like Elvis: 'tagprg' and 'tagprgonce' options. (Yamaguchi)
 	The Elvis method is far more flexible, do it that way.
@@ -1232,6 +1241,9 @@ Win32 GUI:
 
 
 GUI:
+8	Dragging the mouse pointer outside of a Vim Window should make the text
+	scroll.  Return a value from gui_send_mouse_event() to the machine
+	specific code to indicate the time in which the event should be repeated.
 8	Make the split into system independend code and system specific code more
 	explicit.  There are too many #ifdefs in gui.c.
 	If possible, separate the Vim code completely from the GUI code, to allow
@@ -1464,6 +1476,10 @@ Command-line editing:
 
 
 Insert mode:
+9	When 'autoindent' is set, hitting <CR> twice, while there is text after
+	the cursor, doesn't delete the autoindent in the resulting blank line.
+	(Rich Wales) This is Vi compatible, but it looks like a bug.  Rich has a
+	suggestion for a patch to fix this.
 8	<C-G><Up> and <C-G><Down> in Insert mode move to the column where insert
 	started, like Elvis. (patch from Lord)  Perhaps an option to allow "j" and
 	"k" after an insert to go to the column where inserting started.
@@ -1473,8 +1489,7 @@ Insert mode:
 	"<C-O>10axyz<Esc>".  Nesting this further is confusing.
 	":map <F2> 5aabc<Esc>" works only once from Insert mode.
 7	Make ":startinsert" command work directly for functions and scripts?
-8	Make it possible to start Insert mode with an Ex command.  ":normal a"
-	doesn't work.
+    Also make it possible to append (it's difficult at end of line).
 -	In Insert mode (and command line editing?): Allow undo of the last typed
 	character.	This is useful for CTRL-U, CTRL-W, delete and backspace, and
 	also for characters that wrap to the next line.
@@ -1504,6 +1519,13 @@ Insert mode:
 					some_cmd;
 		}
 8	"int asdf,<CR>asdf;" should indent the second line more. (Zellner)
+8	In C++ it's possible to have {} inside (): (Kirshna)
+				func(
+						new String[] {
+							"asdf",
+							"asdf"
+						}
+					);
 7	Separate "(0" option into inside/outside a function (Zellner):
 		func(
 		   int x)		// indent like "(4"
@@ -1613,7 +1635,12 @@ Visual mode:
 7	Support dragging the Visual area to drop it somewhere else. (Aaron)
 7	With blockwise Visual mode and "c", "C", "I", "A", etc., allow the use of
 	a <CR>.  The entered lines are repeated over the Visual area.
-7	CTRL-V :s should substitute only in the block.
+7	CTRL-V :s should substitute only in the block, not to whole lines.
+7	Filtering a block should only apply to the block, not to the whole lines.
+	When the number of lines is increased, add lines. When decreased, padd with
+	spaces or delete? Use ":`<,`>" on the command line.
+8	After filtering the Visual area, make "gv" select the filtered text?
+	Currently "gv" only selects a single line, not useful.
 7	Don't move the cursor when scrolling?  Needed when the selection should
 	stay the same.  Scroll to the cursor at any movement command.  With an
 	option!
@@ -1627,9 +1654,6 @@ Visual mode:
 6	":left" and ":right" should work in Visual block mode.
 7	For Visual mode: Command to do a search for the string in the marked area.
 	Only when less than two lines. Use "g/" and "g?".
-7	Filtering a block should only apply to the block, not to the whole lines.
-	When the number of lines is increased, add lines. When decreased, padd with
-	spaces or delete? Use ":`<,`>" on the command line.
 7	CTRL-I and CTRL-O should work in Visual mode, but only jump to marks in the
 	current buffer.
 7	CTRL-A and CTRL-X should increase/decrease all numbers in the Visual area.
@@ -2096,15 +2120,20 @@ Digraphs:
 
 
 Multibyte support:
+9	is_dbcs is set globally, even though 'fileencoding' is local to a buffer.
+	What if two buffers have different encoding?
+-	Substitute doesn't work well on multibyte characters:
+	":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
+	Requires regexp code that sees a multibyte character as one char.
+9	Include patch from Muraoka for multi-byte  search patterns.
+9	Include some of Japanese multibyte patches: (Muraoka)
+	~/vim/patches/muraoka_gvim55_w32.tz
 9	Check "gR" for proper working of backspacing.
 9	With Athena and Motif the status line overwrites a bottom scrollbar?
 9	The BROKEN_LOCALE check should be done at runtime, not at compile time.
 	Helps when compiling on one machine and running on another.
 8	Include some of the patches ~/vim/patches/muraoka2.diff.tgz (Muraoka)
 	Find another solution for CSI from the GUI.  Prepare for UTF-8.
--	Substitute doesn't work well on multibyte characters:
-	":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
-	Requires regexp code that sees a multibyte character as one char.
 -	When wrapping words, allow splitting at each multibyte character, not only
 	at a space (with an option). (Nishioka)
 -	Support full UTF8 format, also three to eight byte characters.  Use a skip
@@ -2159,6 +2188,10 @@ Writing files:
 	often, not only when writing over it.  E.g., at the time the swap file is
 	flushed.  Or every ten seconds or so (use the time of day, check it before
 	waiting for a character to be typed).
+8	When a file was changed since editing started, show this in the status
+	line of the window, like "[time]".
+	Make it easier to reload all outdated files that don't have changes.
+	Automatic and/or with a command.
 
 
 Substitute:

@@ -62,37 +62,41 @@ extern void catFile( name )
 
 #ifdef EXTERNAL_SORT
 
+#ifdef NON_CONST_PUTENV_PROTOTYPE
+# define PE_CONST
+#else
+# define PE_CONST const
+#endif
+
 extern void externalSortTags( toStdout )
     const boolean toStdout;
 {
-    const char *const sortTemplate = "%s sort -u -o %s %s";
-#ifndef NON_CONST_PUTENV_PROTOTYPE
-    const
-#endif
-	  char *const sortOrder = "LC_COLLATE=C LC_ALL=C";
-    const char *env = "";
-    const size_t length	= strlen(sortOrder) + strlen(sortTemplate) +
-	    			2 * strlen(tagFileName());
-    char *const cmd = (char *)malloc(length);
-    int ret;
+    const char *const sortCommand = "sort -u -o";
+    PE_CONST char *const sortOrder1 = "LC_COLLATE=C";
+    PE_CONST char *const sortOrder2 = "LC_ALL=C";
+    const size_t length	= 4 + strlen(sortOrder1) + strlen(sortOrder2) +
+	    strlen(sortCommand) + (2 * strlen(tagFileName()));
+    char *const cmd = (char *)malloc(length + 1);
+    int ret = -1;
 
-    if (cmd == NULL)
-	ret = -1;
-    else
+    if (cmd != NULL)
     {
 	/*  Ensure ASCII value sort order.
 	 */
-#ifdef HAVE_PUTENV
-	putenv(sortOrder);
-#else
-# ifdef HAVE_SETENV
+#ifdef HAVE_SETENV
 	setenv("LC_COLLATE", "C", 1);
 	setenv("LC_ALL", "C", 1);
+	sprintf(cmd, "%s %s %s", sortCommand, tagFileName(), tagFileName());
+#else
+# ifdef HAVE_PUTENV
+	putenv(sortOrder1);
+	putenv(sortOrder2);
+	sprintf(cmd, "%s %s %s", sortCommand, tagFileName(), tagFileName());
 # else
-	env = sortOrder;
+	sprintf(cmd, "%s %s %s %s %s", sortOrder1, sortOrder2, sortCommand,
+		tagFileName(), tagFileName());
 # endif
 #endif
-	sprintf(cmd, sortTemplate, env, tagFileName(), tagFileName());
 	if (Option.verbose)
 	    printf("system(\"%s\")\n", cmd);
 	ret = system(cmd);

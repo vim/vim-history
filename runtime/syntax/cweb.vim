@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : CWEB
-" Maintainer : Andreas Scherer <andreas.scherer@pobox.com>
-" Last change: August 23, 1999
+" Language:	CWEB
+" Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
+" Last Change:	August 23, 1999
 
 " Details of the CWEB language can be found in the article by Donald E. Knuth
 " and Silvio Levy, "The CWEB System of Structured Documentation", included as

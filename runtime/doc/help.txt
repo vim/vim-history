@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 5.6a.  Last change: 1999 Sep 19
+*help.txt*	For Vim version 5.6.  Last change: 2000 Jan 01
 
 			VIM - main help file
 									 k
@@ -68,7 +68,7 @@ General subjects ~
 |quotes.txt|	remarks from users of Vim
 |todo.txt|	known problems and desired extensions
 |develop.txt|	development of Vim
-|uganda.txt|	Vim distribution conditions and what do do with your money
+|uganda.txt|	Vim distribution conditions and what to do with your money
 
 Basic editing ~
 |starting.txt|	starting Vim, Vim command arguments, initialisation
@@ -96,7 +96,7 @@ Advanced editing ~
 |eval.txt|	expression evaluation, conditional commands
 
 Special issues ~
-|term.txt|	using different terminals and mouses
+|term.txt|	using different terminals and mice
 |digraph.txt|	list of available digraphs
 |multibyte.txt|	multi-byte text support
 |farsi.txt|	Farsi (Persian) editing
@@ -342,8 +342,8 @@ N is used to indicate an optional count that can be given before the command.
 These only work when 'wrap' is off:
 |zh|		N  zh		scroll screen N characters to the right
 |zl|		N  zl		scroll screen N characters to the left
-|zH|		N  zH		scroll screen half a screenwith to the right
-|zL|		N  zL		scroll screen half a screenwith to the left
+|zH|		N  zH		scroll screen half a screenwidth to the right
+|zL|		N  zL		scroll screen half a screenwidth to the left
 ------------------------------------------------------------------------------
 *X_in*		Inserting text
 
@@ -844,7 +844,7 @@ Short explanation of each option:		*option-list*
 |'suffixes'|	   |'su'|	suffixes that are ignored with multiple match
 |'swapfile'|	   |'swf'|	whether to use a swapfile for a buffer
 |'swapsync'|	   |'sws'|	how to sync the swap file
-|'switchbuf'|	   |'swb'|	sets behavior when swiching to another buffer
+|'switchbuf'|	   |'swb'|	sets behavior when switching to another buffer
 |'syntax'|	   |'syn'|	syntax to be loaded for current buffer
 |'tabstop'|	   |'ts'|	number of spaces that <Tab> in file uses
 |'tagbsearch'|	   |'tbs'|	use binary searching in tags files
@@ -885,7 +885,7 @@ Short explanation of each option:		*option-list*
 |'wildcharm'|	   |'wcm'|	like 'wildchar' but also works when mapped
 |'wildignore'|	   |'wig'|	files matching these patterns are not completed
 |'wildmenu'|	   |'wmnu'|	use menu for command line completion
-|'wildmode'|	   |'wim'|	mode for 'wilchar' command-line expansion
+|'wildmode'|	   |'wim'|	mode for 'wildchar' command-line expansion
 |'winaltkeys'|	   |'wak'|	when the windows system handles ALT keys
 |'winheight'|	   |'wh'|	minimum number of lines for the current window
 |'winminheight'|   |'wmh'|	minimum number of lines for any window
@@ -1167,7 +1167,7 @@ Context-sensitive completion on the command-line:
 |viminfo-file|	Read registers, marks, history at startup, save when exiting.
 
 |:rviminfo|	:rv[iminfo] [file]	Read info from viminfo file [file]
-|:rviminfo|	:rv[iminfo]! [file]	idem, overwrite exisiting info
+|:rviminfo|	:rv[iminfo]! [file]	idem, overwrite existing info
 |:wviminfo|	:wv[iminfo] [file]	Add info to viminfo file [file]
 |:wviminfo|	:wv[iminfo]! [file]	Write info to viminfo file [file]
 

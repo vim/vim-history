@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	M$ Resource files (*.rc)
 " Maintainer:	Heiko Erhardt <Heiko.Erhardt@munich.netsurf.de>
-" Last change:	1998 Feb 16
+" Last Change:	1998 Feb 16
 
 " This file is based on the c.vim
 

@@ -234,11 +234,11 @@
 #endif /* VIMINFO */
 
 #ifndef DEF_BDIR
-# define DEF_BDIR		"sys$disk:[],tmp:,sys$login:"	/* default for 'backupdir' */
+# define DEF_BDIR		"./,sys$disk:[],tmp:,sys$login:"	/* default for 'backupdir' */
 #endif
 
 #ifndef DEF_DIR
-# define DEF_DIR		"sys$disk:[],tmp:,sys$login:"	/* default for 'directory' */
+# define DEF_DIR		"./,sys$disk:[],tmp:,sys$login:"	/* default for 'directory' */
 #endif
 
 #define TEMPNAME		"tmp:v?XXXXXX.txt"
@@ -247,8 +247,8 @@
 #define CMDBUFFSIZE	1024	/* size of the command processing buffer */
 #define MAXPATHL	1024	/* VMS has long paths and plenty of memory */
 
-/*#define CHECK_INODE		** used when checking if a swap file already
-							   exists for a file */
+#define CHECK_INODE		     /* used when checking if a swap file already
+							    exists for a file */
 
 #ifndef MAXMEM
 # define MAXMEM			512			/* use up to 512Kbyte for buffer */

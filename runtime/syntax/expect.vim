@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Expect
 " Maintainer:	Ralph Jennings <knowbudy@oro.net>
-" Last change:	1999 Jun 16
+" Last Change:	1999 Jun 16
 
 " Remove any old syntax stuff hanging around
 syn clear

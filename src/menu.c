@@ -1010,12 +1010,18 @@ menu_name_skip(name)
     char_u  *p;
 
     for (p = name; *p && *p != '.'; p++)
+    {
 	if (*p == '\\' || *p == Ctrl('V'))
 	{
 	    mch_memmove(p, p + 1, STRLEN(p));
 	    if (*p == NUL)
 		break;
 	}
+#ifdef MULTI_BYTE
+	if (is_dbcs && IsLeadByte(*p) && p[1] != NUL)
+	    ++p;	/* skip multibyte char */
+#endif
+    }
     if (*p)
 	*p++ = NUL;
     return p;

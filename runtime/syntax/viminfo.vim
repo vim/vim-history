@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim .viminfo file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Aug 19
+" Last Change:	1999 Aug 19
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		lace
 " Maintainer:	Jocelyn Fiat <utilities@eiffel.com>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Copyright Interactive Software Engineering, 1998
 " You are free to use this file as you please, but

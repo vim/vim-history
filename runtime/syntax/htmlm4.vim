@@ -2,7 +2,7 @@
 " Language:	HTML and M4
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/htmlm4.vim
-" Last change:	1999 May 20
+" Last Change:	1999 May 20
 
 " Remove any old syntax stuff hanging around
 

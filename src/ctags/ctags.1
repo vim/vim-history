@@ -1,4 +1,4 @@
-.TH CTAGS 1 "Version 3.3.3" "Darren Hiebert"
+.TH CTAGS 1 "Version 3.4" "Darren Hiebert"
 
 
 .SH NAME
@@ -1034,6 +1034,12 @@ option. Alternatively, this key may be omitted, with only its value present
 (i.e. a field without a ':' defaults to the \fIkind\fP key).
 
 .TP 12
+.I implementation
+When present, this indicates a limited implementation (abstract vs. concrete)
+of a routine or class, where \fIvalue\fP is specific to the language
+("virtual" or "pure virtual" for C++; "abstract" for Java).
+
+.TP 12
 .I interface
 Indicates that this tag is a member of the interface whose name is given by
 \fIvalue\fP.
@@ -1115,13 +1121,6 @@ For more commands, see the \fITags\fP topic in the Emacs info tree.
 \fBCtags\fP has as many options as \fBls\fP(1).
 
 .PP
-White space is treated as a separator for file names and options read from
-list files, specified using the \fB-L\fP option, and in filter mode (specified
-using the \fB--filter\fP option). Therefore, it is not currently possible to
-supply file names or other options containing embedded white space (spaces,
-etc.) through these options.
-
-.PP
 Because \fBctags\fP is neither a preprocessor nor a compiler, use of
 preprocessor macros can fool \fBctags\fP into either missing tags or
 improperly generating inappropriate tags. Although \fBctags\fP has been
@@ -1129,6 +1128,19 @@ designed to handle certain common cases, this is the single biggest cause of
 reported problems. In particular, the use of preprocessor constructs which
 alter the textual syntax of C can fool \fBctags\fP. You can work around many
 such problems by using the \fB-I\fP option.
+
+.PP
+When parsing a C++ member function definition (e.g. "className::function"),
+\fBctags\fP cannot determine whether the scope specifier is a class name or a
+namespace specifier and always lists it as a class name in the scope portion
+of the extension flags.
+
+.PP
+White space is treated as a separator for file names and options read from
+list files, specified using the \fB-L\fP option, and in filter mode (specified
+using the \fB--filter\fP option). Therefore, it is not currently possible to
+supply file names or other options containing embedded white space (spaces,
+etc.) through these options.
 
 .PP
 Legacy C source code which uses C++ reserved keywords as variable or parameter

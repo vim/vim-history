@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	MSDOS batch file (with NT command extensions)
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
-" Filenames:    *.bat
+" Filenames:	*.bat
 " Last Change:	14th May 1999
-" Web Page:     N/A
+" Web Page:	N/A
 
 " Remove any old syntax stuff hanging around
 syn clear

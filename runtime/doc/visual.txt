@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 5.6a.  Last change: 1999 Sep 14
+*visual.txt*    For Vim version 5.6.  Last change: 2000 Jan 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -225,8 +225,10 @@ Additionally the following commands can be used:
 
 Note that the ":vmap" command can be used to specifically map keys in Visual
 mode.  For example, if you would like the "/" command not to extend the Visual
-area, but instead use the highlighted text for searching:
->  :vmap / y/<C-R>"
+area, but instead take the highlighted text and search for that:
+>  :vmap / y/<C-R>"<CR>
+(In the <> notation |<>|, when typing it you should type it literally; you
+need to remove the 'B' and '<' flags from 'cpoptions')
 
 If you want to give a register name using the """ command, do this just before
 typing the operator character: "v{move-around}"xd".

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 21
+" Last Change:	2000 Jan 14
 
 " Transform a file into HTML, using the current syntax highlighting.
 
@@ -144,6 +144,10 @@ while lnum <= end
   endif
   let len = strlen(line)
   let new = ""
+
+  if exists("html_number_color")
+    let new = '<FONT COLOR=' . html_number_color . '>' . strpart('        ', 0, strlen(line("$")) - strlen(lnum)) . lnum . '</FONT>  '
+  endif
 
   " Loop over each character in the line
   let col = 1

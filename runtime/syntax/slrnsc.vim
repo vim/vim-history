@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Slrn score file
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
-" Last change:	Thu Apr  2 14:02:43 1998
+" Last Change:	Thu Apr  2 14:02:43 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

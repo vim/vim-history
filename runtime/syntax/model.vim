@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Model
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1997 Sep 14
+" Last Change:	1997 Sep 14
 
 " very basic things only (based on the vgrindefs file).
 " If you use this language, please improve it, and send me the patches!

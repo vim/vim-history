@@ -2,10 +2,11 @@
 " Language:	phtml PHP 2.0
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
-" Email:        Subject: send syntax_vim.tgz
-" Last change:	1999 Jun 14
-" Options       phtml_sql_query = 1 for SQL syntax highligthing inside strings
-"               phtml_minlines = x     to sync at least x lines backwards
+" Email:	Subject: send syntax_vim.tgz
+" Last Change:	1999 Dec 27
+"
+" Options	phtml_sql_query = 1 for SQL syntax highligthing inside strings
+"		phtml_minlines = x     to sync at least x lines backwards
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -114,9 +115,6 @@ syn keyword phtmlFunctions  Symlink syslog System Tan TempNam Time Umask UniqId 
 syn keyword phtmlFunctions  Unlink Unset UrlDecode UrlEncode USleep Virtual contained
 syn keyword phtmlFunctions  SecureVar contained
 
-" Identifier
-syn match  phtmlIdentifier "$[a-zA-Z_][a-zA-Z0-9_]*" contained contains=phtmlEnvVar,phtmlIntVar
-
 " Conditional
 syn keyword phtmlConditional  if else elseif endif switch endswitch contained
 
@@ -133,11 +131,15 @@ syn keyword phtmlStatement  break return continue exit contained
 syn match phtmlOperator  "[-=+%^&|*!]" contained
 syn match phtmlOperator  "[-+*/%^&|]=" contained
 syn match phtmlOperator  "/[^*]"me=e-1 contained
-syn match phtmlOperator  "/$" contained
+syn match phtmlOperator  "\$" contained
 syn match phtmlRelation  "&&" contained
 syn match phtmlRelation  "||" contained
 syn match phtmlRelation  "[!=<>]=" contained
 syn match phtmlRelation  "[<>]" contained
+
+" Identifier
+syn match  phtmlIdentifier "$\h\w*" contained contains=phtmlEnvVar,phtmlIntVar,phtmlOperator
+
 
 " Include
 syn keyword phtmlInclude  include contained
@@ -176,38 +178,39 @@ syn region phtmlParent	matchgroup=Delimiter start="{" end="}" contained contains
 syn region phtmlParent	matchgroup=Delimiter start="\[" end="\]" contained contains=@phtmlInside
 
 syn region phtmlRegion keepend matchgroup=Delimiter start="<?" skip=+(.*>.*)\|".\{-}>.\{-}"\|/\*.\{-}>.\{-}\*/+ end=">" contains=@phtmlTop
-syn region phtmlRegion matchgroup=Delimiter start="<?" end=">" contains=@phtmlTop contained
 syn region phtmlRegionInsideHtmlTags keepend matchgroup=Delimiter start="<?" skip=+(.*>.*)\|/\*.\{-}>.\{-}\*/+ end=">" contains=@phtmlTop contained
 
 " sync
 if exists("phtml_minlines")
   exec "syn sync minlines=" . phtml_minlines
+else
+  syn sync minlines=100
 endif
 
 if !exists("did_phtml_syntax_inits")
   let did_phtml_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link phtmlComment                   Comment
-  hi link phtmlString                    String
-  hi link phtmlNumber                    Number
-  hi link phtmlFloat                     Float
-  hi phtmlIdentifier guifg=DarkGray ctermfg=Brown
-  hi link phtmlFunctions                 Function
-  hi link phtmlRepeat                    Repeat
-  hi link phtmlConditional               Conditional
-  hi link phtmlLabel                     Label
-  hi link phtmlStatement                 Statement
-  hi link phtmlType                      Type
-  hi link phtmlInclude                   Include
-  hi link phtmlDefine                    Define
-  hi link phtmlSpecialChar               SpecialChar
-  hi link phtmlParentError	         Error
-  hi link phtmlOctalError	         Error
-  hi link phtmlTodo                      Todo
-  hi phtmlRelation guifg=SeaGreen ctermfg=DarkGreen
-  hi phtmlOperator guifg=SeaGreen ctermfg=DarkGreen
-  hi phtmlIntVar guifg=Red ctermfg=DarkRed
-  hi phtmlEnvVar guifg=Red ctermfg=DarkRed
+  hi link phtmlComment		Comment
+  hi link phtmlString		String
+  hi link phtmlNumber		Number
+  hi link phtmlFloat		Float
+  hi link phtmlIdentifier	Identifier
+  hi link phtmlIntVar		Identifier
+  hi link phtmlEnvVar		Identifier
+  hi link phtmlFunctions	Function
+  hi link phtmlRepeat		Repeat
+  hi link phtmlConditional	Conditional
+  hi link phtmlLabel		Label
+  hi link phtmlStatement	Statement
+  hi link phtmlType		Type
+  hi link phtmlInclude		Include
+  hi link phtmlDefine		Define
+  hi link phtmlSpecialChar	SpecialChar
+  hi link phtmlParentError	Error
+  hi link phtmlOctalError	Error
+  hi link phtmlTodo		Todo
+  hi link phtmlOperator		Operator
+  hi link phtmlRelation         Operator
 endif
 
 let b:current_syntax = "phtml"

@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language   :	Lisp
-" Maintainer :	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Language:	Lisp
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	July 13, 1999
-" Version    :	1.03
+" Version:	1.03
 
 " remove any old syntax stuff hanging around
 syn clear

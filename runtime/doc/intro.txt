@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.6a.  Last change: 1999 Nov 04
+*intro.txt*     For Vim version 5.6.  Last change: 2000 Jan 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -211,6 +211,7 @@ Vim would never have become what it is now, without the help of these people!
 	Bruce Hunsaker		improvements for VMS port
 	Andy Kahn		Cscope support, GTK+ GUI port
 	Steve Kirkendall	Elvis
+	Roger Knobbe		original port to Windows NT
 	Sergey Laskavy		Vim's help from Moscow
 	Felix von Leitner	Maintainer of Vim Mailing Lists
 	David Leonard		Port of Python extensions to Unix

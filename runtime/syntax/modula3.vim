@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Modula-3
 " Maintainer:	Timo Pedersen <dat97tpe@ludat.lth.se>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Basic things only...
 " Based on the modula 2 syntax file

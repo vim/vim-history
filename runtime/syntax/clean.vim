@@ -1,8 +1,9 @@
 " Vim syntax file
-" Language: Clean
-" Author: Pieter van Engelen <pietere@sci.kun.nl>
-" Co-Author: Arthur van Leeuwen <arthurvl@sci.kun.nl>
-" Last Change: Fri Feb  6 15:02:40 CET 1998
+" Language:		Clean
+" Author:		Pieter van Engelen <pietere@sci.kun.nl>
+" Co-Author:	Arthur van Leeuwen <arthurvl@sci.kun.nl>
+" Last Change:	Fri Feb  6 15:02:40 CET 1998
+
 syn clear
 
 " Some Clean-keywords

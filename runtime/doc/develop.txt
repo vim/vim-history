@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 5.6a.  Last change: 1999 Dec 01
+*develop.txt*   For Vim version 5.6.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -57,7 +57,7 @@ completely different editor.  Extensions are done with a "Vi spirit".
 - A feature that people do not know about is a useless feature.  Don't add
   obscure features, or at least add hints in documentation that they exists.
 - Minimize using CTRL and other modifiers, they are more difficult to type.
-- There are many first-time and unexperienced Vim users.  Make it easy for
+- There are many first-time and inexperienced Vim users.  Make it easy for
   them to start using Vim and learn more over time.
 - There is no limit to the features that can be added.  Selecting new features
   is one based on (1) what users ask for, (2) how much effort it takes to
@@ -89,7 +89,7 @@ VIM IS... WELL DOCUMENTED				*design-documented*
   feature must include the documentation.
 - Documentation should be comprehensive and understandable.  Using examples is
   recommended.
-- Don't make the text unneccesarily long.  Less documentation means that an
+- Don't make the text unnecessarily long.  Less documentation means that an
   item is easier to find.
 
 

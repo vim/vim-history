@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	BASIC
 " Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
-" Last change:	Tue Sep 14 14:24:23 BST 1999
+" Last Change:	Tue Sep 14 14:24:23 BST 1999
 
 " First version based on Micro$soft QBASIC circa 1989, as documented in
 " 'Learn BASIC Now' by Halvorson&Rygmyr. Microsoft Press 1989.

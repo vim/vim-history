@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:   PROLOG
-" Maintainers:   Ralph Becket <rwab1@cam.sri.co.uk>,
-"                Thomas Koehler <jean-luc@picard.franken.de>
-" Last change:   1997 December 28
+" Language:    PROLOG
+" Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
+"              Thomas Koehler <jean-luc@picard.franken.de>
+" Last Change: 1997 December 28
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.

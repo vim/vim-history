@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 03
+" Last Change:	2000 Jan 02
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -89,6 +89,7 @@ au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl
 command -nargs=1  SynAu  au Syntax <args> so $VIMRUNTIME/syntax/<args>.vim
 
 SynAu abc
+SynAu abel
 SynAu ada
 SynAu ahdl
 SynAu amiga
@@ -105,6 +106,7 @@ SynAu basic
 SynAu bib
 SynAu btm
 SynAu c
+SynAu cf
 SynAu change
 SynAu clean
 SynAu clipper
@@ -129,6 +131,7 @@ SynAu dtd
 SynAu eiffel
 SynAu elf
 SynAu elmfilt
+SynAu erlang
 SynAu esqlc
 SynAu expect
 SynAu exports
@@ -138,12 +141,14 @@ SynAu fortran
 SynAu fvwm
 SynAu gdb
 SynAu gdmo
+SynAu gedcom
 SynAu gnuplot
 SynAu gp
 SynAu haskell
 SynAu help
 SynAu html
 SynAu htmlm4
+SynAu icon
 SynAu idl
 SynAu idlang
 SynAu inform
@@ -153,6 +158,7 @@ SynAu java
 SynAu javacc
 SynAu javascript
 SynAu jgraph
+SynAu jsp
 SynAu kwt
 SynAu lace
 SynAu lex
@@ -207,6 +213,7 @@ SynAu purifylog
 SynAu python
 SynAu radiance
 SynAu rc
+SynAu rcslog
 SynAu rebol
 SynAu remind
 SynAu rexx
@@ -239,6 +246,7 @@ SynAu tads
 SynAu tags
 SynAu tcl
 SynAu tex
+SynAu texinfo
 SynAu tf
 SynAu tsalt
 SynAu uil

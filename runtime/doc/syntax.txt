@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.6a.  Last change: 1999 Dec 16
+*syntax.txt*    For Vim version 5.6.  Last change: 2000 Jan 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -365,6 +365,12 @@ window into HTML.  A new window is opened, in which the HTML file is built.
 The resulting file can be written where you want it.  You can then view it
 with any HTML viewer, such as Netscape.  The colors should be exactly the same
 as you see them in Vim.
+If you want the lines to be numbered, set the "html_number_color" variable to
+the color name of the line number.  The color name must be valid in HTML.
+Example:
+>   let html_number_color = "#804000"
+To stop this, remove the variable:
+>   unlet html_number_color
 Remarks:
 - This only works in a version with GUI support.  If the GUI not actually
   running (possible for X11) it still works, but not that good (the color
@@ -539,6 +545,18 @@ Finally, some vendors support hexadecimal constants. To handle them, add
 >  let eiffel_hex_constants=1
 
 to your startup file.
+
+
+ERLANG							*erlang.vim*
+
+The erlang highlighting supports Erlang (ERicsson LANGuage).
+Erlang is case sensitive and default extension is ".erl".
+
+If you want to disable keywords highlighting, put in your .vimrc:
+>	let erlang_keywords=1
+If you want to disable special characters highlighting, put in
+your .vimrc:
+>	let erlang_characters=1
 
 
 FVWM CONFIGURATION FILES				*fvwm.vim*
@@ -733,6 +751,20 @@ may be changed by the user if s/he is experiencing synchronization
 difficulties (such as may happen with large lex files).
 
 
+LITE							*lite.vim*
+
+There are two options for the lite syntax highlighting.
+
+If you like SQL syntax highligthing inside Strings, use this:
+
+>  let lite_sql_query = 1
+
+For syncing, minlines defaults to 100.  If you prefer another value, you can
+set "lite_minlines" to the value you desire.  Example:
+
+>  let lite_minlines = 200
+
+
 MAPLE							*maple.vim*
 
 Maple V, by Waterloo Maple Inc, supports symbolic algebra.  The language
@@ -758,7 +790,21 @@ $VIMRUNTIME/syntax/syntax.vim).
 >  mv_finance	 mv_logic	mv_powseries
 
 
-PERL                                                    *perl.vim*
+MSQL							*msql.vim*
+
+There are two options for the msql syntax highlighting.
+
+If you like SQL syntax highligthing inside Strings, use this:
+
+>  let msql_sql_query = 1
+
+For syncing, minlines defaults to 100.  If you prefer another value, you can
+set "msql_minlines" to the value you desire.  Example:
+
+>  let msql_minlines = 200
+
+
+PERL							*perl.vim*
 
 There are a number of possible options to the perl syntax highlighting.
 
@@ -800,6 +846,38 @@ Below you can set the maximum distance VIM should look for starting points for
 its attempts in syntax highlighting.
 
 > let perl_sync_dist = 100
+
+
+PHP3							*php3.vim*
+
+There are three options to the php3 syntax highlighting.
+
+If you like SQL syntax highligthing inside Strings:
+
+>  let php3_sql_query = 1
+
+For highligthing the Baselib methods:
+
+>  let php3_baselib = 1
+
+For syncing minlines is being set default to 100.  If you
+prefer another value, please make use of something like:
+
+>  let php3_minlines = 200
+
+
+PHTML							*phtml.vim*
+
+There are two options for the phtml syntax highlighting.
+
+If you like SQL syntax highligthing inside Strings, use this:
+
+>  let phtml_sql_query = 1
+
+For syncing, minlines defaults to 100.  If you prefer another value, you can
+set "phtml_minlines" to the value you desire.  Example:
+
+>  let phtml_minlines = 200
 
 
 POSTSCRIPT						*postscr.vim*
@@ -986,6 +1064,16 @@ If you have a slow computer, you may wish to reduce the values for
 (especially the latter).  If your computer is fast, you may wish to
 increase them.  This primarily affects synchronizing (ie. just what group,
 if any, is the text at the top of the screen supposed to be in?).
+
+
+TF							*tf.vim*
+
+There is one option for the tf syntax highlighting.
+
+For syncing, minlines defaults to 100.  If you prefer another value, you can
+set "tf_minlines" to the value you desire.  Example:
+
+>  let tf_minlines = your choice
 
 
 X Pixmaps (XPM)						*xpm.vim*
@@ -1624,6 +1712,7 @@ There are three ways to synchronize:
 2. Jumping back a certain number of lines and start parsing there.
 3. Searching backwards in the text for a pattern to sync on.
 
+				*:syn-sync-maxlines* *:syn-sync-minlines*
 For all three methods, the line range where the parsing can start is limited
 by "minlines" and "maxlines".
 
@@ -1638,7 +1727,7 @@ slow machine.  Example:
 >  :syntax sync ccomment maxlines=500
 
 
-First syncing method:
+First syncing method:					*:syn-sync-ccomment*
 
 For the first method, only the "ccomment" argument needs to be given.
 Example:
@@ -1667,13 +1756,13 @@ is hardly ever noticed.
 
 Second syncing method:
 
-For the second method, only the "lines={N}" argument needs to be given.  Vim
-will subtract {N} from the line number and start parsing there.  This means
-{N} extra lines need to be parsed, which makes this method a bit slower.
+For the second method, only the "minlines={N}" argument needs to be given.
+Vim will subtract {N} from the line number and start parsing there.  This
+means {N} extra lines need to be parsed, which makes this method a bit slower.
 Example:
->  :syntax sync lines=50
+>  :syntax sync minlines=50
 
-"lines" and "minlines" are equivalent.
+"lines" is equivalent to "minlines" (used by older versions).
 
 
 Third syncing method:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Elm Filter rules
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change:	November 11, 1998
+" Last Change:	November 11, 1998
 
 " remove any old syntax stuff hanging around
 syn clear

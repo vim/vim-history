@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Daniel Amyot <damyot@site.uottawa.ca>
-" Last change:	Dec 09 1999
+" Last Change:	Dec 09 1999
 " Filenames:	*.dtd
 " URL:		http://www.zellner.org/vim/syntax/dtd.vim
 " $Id$

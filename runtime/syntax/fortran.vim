@@ -2,7 +2,7 @@
 " Language:	Fortran
 " Maintainer:	Preben "Peppe" Guldberg <c928400@student.dtu.dk>
 "		Original author: Mario Eusebio
-" Last change:	1999 Jul 05
+" Last Change:	1999 Jul 05
 
 " Remove any old syntax stuff hanging around
 syn clear

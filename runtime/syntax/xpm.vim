@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	X Pixmap
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last change:	1999 Jul 05
+" Last Change:	1999 Jul 05
 " Version:	5.4n.1
 
 " Remove any old syntax stuff hanging around

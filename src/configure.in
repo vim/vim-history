@@ -881,7 +881,7 @@ main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }],
  AC_MSG_RESULT(good), AC_MSG_ERROR(failed to compile test program))
 
 AC_MSG_CHECKING(whether __DATE__ and __TIME__ work)
-AC_TRY_COMPILE(, [fprintf("(" __DATE__ " " __TIME__ ")");],
+AC_TRY_COMPILE(, [printf("(" __DATE__ " " __TIME__ ")");],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_DATE_TIME),
 	AC_MSG_RESULT(no))
 

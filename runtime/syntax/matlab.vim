@@ -2,7 +2,7 @@
 " Language:	Matlab
 " Maintainer:	Preben "Peppe" Guldberg <c928400@student.dtu.dk>
 "		Original author: Mario Eusebio
-" Last change:	Tue Jul 28 17:44:06 1998
+" Last Change:	Tue Jul 28 17:44:06 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

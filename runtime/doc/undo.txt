@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 5.6a.  Last change: 1999 Oct 31
+*undo.txt*      For Vim version 5.6.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -16,7 +16,7 @@ Undo and redo						*undo-redo*
 <Undo>		or					*undo* *<Undo>* *u*
 u			Undo [count] changes.  {Vi: only one level}
 
-							*:u* *:undo*
+							*:u* *:un* *:undo*
 :u[ndo]			Undo one change.  {Vi: only one level}
 
 							*CTRL-R*

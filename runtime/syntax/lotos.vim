@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	LOTOS (Language Of Temporal Ordering Specifications, IS8807)
 " Maintainer:	Daniel Amyot <damyot@csi.uottawa.ca>
-" Last change:	Wed Aug 19 1998
-" URL:          http://lotos.csi.uottawa.ca/~damyot/vim/lotos.vim
+" Last Change:	Wed Aug 19 1998
+" URL:		http://lotos.csi.uottawa.ca/~damyot/vim/lotos.vim
 " This file is an adaptation of pascal.vim by Mario Eusebio
 " I'm not sure I understand all of the syntax highlight language,
 " but this file seems to do the job for standard LOTOS.

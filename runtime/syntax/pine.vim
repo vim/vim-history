@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : Pine (email program) run commands
-" Maintainer : David Pascoe <David.Pascoe@jtec.com.au>
-" Last change: Wed Oct 13 11:02:15 WST 1999, update for pine 4.20
+" Language:	Pine (email program) run commands
+" Maintainer:	David Pascoe <David.Pascoe@jtec.com.au>
+" Last Change:	Wed Oct 13 11:02:15 WST 1999, update for pine 4.20
 
 " Remove any old syntax stuff hanging around
 syn clear

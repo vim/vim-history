@@ -1,6 +1,6 @@
 " Interactive Data Language syntax file (IDL, too :-)
-" Maintainer:	 Hermann.Rochholz@faidor.com
-" Last change:	 1999 Jun 14
+" Maintainer:	Hermann.Rochholz@faidor.com
+" Last Change:	1999 Jun 14
 " Preliminary, because I do not use higher language elements of IDL until now.
 
 " Remove any old syntax stuff hanging around

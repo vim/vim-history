@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Mail file
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
-" Last change:	1999 Aug 27
+" Last Change:	1999 Aug 27
 
 " Remove any old syntax stuff hanging around
 syn clear

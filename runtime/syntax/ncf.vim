@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ncf NCF Batch File
 " Maintainer:	Jonathan J. Miner <jon.miner@doit.wisc.edu>
-" Last change:	Thursday 13 May 1999 10:29 Central Daylight Time
+" Last Change:	Thursday 13 May 1999 10:29 Central Daylight Time
 
 " Remove any old syntax stuff hanging around
 syn clear

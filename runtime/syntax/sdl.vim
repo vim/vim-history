@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SDL
 " Maintainer:	Harald Böhme
-" Last change:	Mon Mar 16 12:13:33 MET 1998
+" Last Change:	Mon Mar 16 12:13:33 MET 1998
 " This syntax file is a adaption of the C syntax to SDL syntax
 
 syn clear

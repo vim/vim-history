@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fvwm{1,2} configuration file
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1999 Dec 16
+" Last Change:	1999 Dec 16
 
 " Clear old syntax defs
 syn clear

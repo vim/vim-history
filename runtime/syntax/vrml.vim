@@ -1,9 +1,9 @@
 " Vim syntax file
-" Language:        VRML97
-" Modified from:   VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
-" Maintainer:      Gregory Seidman <gseidman@acm.org>
-" URL:             http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
-" Last change:     1999 Feb 22
+" Language:	 VRML97
+" Modified from: VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
+" Maintainer:	 Gregory Seidman <gseidman@acm.org>
+" URL:		 http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
+" Last Change:	 1999 Feb 22
 
 " syn clear
 " keyword definitions

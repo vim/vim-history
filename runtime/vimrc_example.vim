@@ -1,12 +1,13 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Oct 27
+" Last change:	2000 Jan 06
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
-"             for Amiga:  s:.vimrc
+"	      for Amiga:  s:.vimrc
 "  for MS-DOS and Win32:  $VIM\_vimrc
+"		for VMS:  sys$login:.vimrc
 
 " Use Vim settings, rather then Vi settings (much better!).
 " This must be first, because it changes other options as a side effect.
@@ -98,6 +99,7 @@ if has("autocmd")
     " When uncompressed the whole buffer, do autocommands
     if empty
       execute ":doautocmd BufReadPost " . expand("%:r")
+    endif
   endfun
 
   " After writing compressed file: Compress written file with "cmd"

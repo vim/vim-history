@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : C-shell (csh)
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change: June 4, 1998
+" Language:	C-shell (csh)
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	June 4, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

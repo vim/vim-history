@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sed
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1999 Jul 02
+" Last Change:	1999 Jul 02
 "
 " Special thanks go to Preben "Peppe" Guldberg for a lot of help, and, in
 " particular, his clever way of matching the substitute command.

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Scheme (R5RS)
 " Maintainer:	Dirk van Deun <dvandeun@poboxes.com>
-" Last change:	April 30, 1998
+" Last Change:	April 30, 1998
 
 " This script incorrectly recognizes some junk input as numerals:
 " parsing the complete system of Scheme numerals using the pattern

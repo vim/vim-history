@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language   : TeX
-" Version    : 5.4-7
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: November 23, 1999
+" Language:	TeX
+" Version:	5.4-8
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	November 29, 1999
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -35,7 +35,7 @@ syn cluster texMathZones	contains=texMathZoneA,texMathZoneB,texMathZoneC,texMath
 " Try to flag {}, [], and () mismatches
 syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup
 syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup
-syn region texParen	start="("		   		end=")"	contains=@texMatchGroup
+syn region texParen	start="("				end=")"	contains=@texMatchGroup
 syn match  texError	"[}\])]"
 syn match  texMathError	"}"	contained
 syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone" contained contains=@texMathMatchGroup
@@ -160,12 +160,13 @@ syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter e
 syn match texMathOper	"[_^=]" contained
 
 " \left..something.. and \right..something.. support
-syn match   texMathDelimBad  contained	"."
+syn match   texMathDelimBad	contained	"."
 syn match   texMathDelim		"\\\(left\|right\)"	nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
-syn match   texMathDelimSet2 contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
-syn match   texMathDelimSet1 contained	"[<>()[\]|/.]\|\\[{}|]"
-syn keyword texMathDelimKey  contained	Downarrow	Uparrow	downarrow	lceil	rangle	uparrow
-syn keyword texMathDelimKey  contained	Rfloor	backslash	langle	lfloor	rceil
+syn match   texMathDelim		"\\\(left\|right\)arrow"
+syn match   texMathDelimSet2	contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
+syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
+syn keyword texMathDelimKey	contained	Downarrow	Uparrow	downarrow	lceil	rangle	uparrow
+syn keyword texMathDelimKey	contained	Rfloor	backslash	langle	lfloor	rceil
 
 " texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents
 syn match texAccent	"\\[bcdvuH][^a-zA-Z]"me=e-1

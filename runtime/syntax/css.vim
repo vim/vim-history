@@ -2,7 +2,7 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last change:	1999 Jul 1
+" Last Change:	1999 Jul 1
 
 " Remove any old syntax stuff hanging around
 syn clear

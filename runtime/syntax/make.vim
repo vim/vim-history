@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last change:	1999 June 16
+" Last Change:	1999 Dec 12
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -34,8 +34,8 @@ syn match makeSpecTarget	"^\.IGNORE"
 syn match makeSpecTarget	"^\.SILENT"
 syn match makeSpecTarget	"^\.EXPORT_ALL_VARIABLES"
 syn match makeSpecTarget	"^\.KEEP_STATE"
-syn match makeImplicit	        "^\.\w\+\.\w\+\s*:[^=]"me=e-2
-syn match makeImplicit	        "^\.\w\+\.\w\+\s*:$"me=e-1
+syn match makeImplicit	        "^\.[A-Za-z0-9_./\t -]\+\s*:[^=]"me=e-2
+syn match makeImplicit	        "^\.[A-Za-z0-9_./\t -]\+\s*:$"me=e-1
 syn match makeTarget		"^\w[A-Za-z0-9_./\t -]*:[^=]"me=e-2
 syn match makeTarget		"^\w[A-Za-z0-9_./\t -]*:$"me=e-1
 

@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 5.6a.  Last change: 1999 Aug 04
+*vi_diff.txt*   For Vim version 5.6.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -25,7 +25,7 @@ is ":open".  There are probably a lot of small differences.
 
 This command is in Vi, but not in Vim:
 
-:o[pen]			{Vi: start editing in open mode} *:o* *:open*
+:o[pen]			{Vi: start editing in open mode} *:o* *:op* *:open*
 
 ==============================================================================
 2. Missing options					*missing-options*

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Objective C
 " Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Read the C syntax to start with
 source <sfile>:p:h/c.vim

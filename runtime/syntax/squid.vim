@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Squid config file
 " Maintainer:	Klaus Muth <muth@hagos.de>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 " URL:		http://unitopia.uni-stuttgart.de/~monty/vim/syntax/squid.vim
 
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Telix (Modem Comm Program) SALT Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last change:	1997/12/16
+" Last Change:	1997/12/16
 " Version Info: @(#)tsalt.vim	1.5	97/12/16 08:11:15
 
 " Remove any old syn stuff hanging around

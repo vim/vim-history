@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.6a.  Last change: 1999 Dec 19
+*version5.txt*  For Vim version 5.6.  Last change: 2000 Jan 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5868,20 +5868,33 @@ for alphabetical items to avoid a clash with fixed items.
 Added							*added-5.6*
 -----
 
-Included Exuberant Ctags version 3.3.3. (Darren Hiebert)
+Included Exuberant Ctags version 3.4. (Darren Hiebert)
+
+OpenWithVim in Python. (Christian Schaller)
+
+Win32 GUI: gvimext.dll, for the context menu "Edit with Vim" entry.  Avoids
+the reported problems with the MS Office taskbar.  Now it's a Shell Extension.
+(Tianmiao Hu)
 
 New syntax files:
-Abel "abel.vim"
-MakeIndex syntax "ist.vim"
-Arc Macro Language "aml.vim"
-Java Server Pages "jsp.vim"
-Apache-style config file "apachestyle.vim"
-files with CTRL-H sequences "ctrlh.vim"
-CUPL "cupl.vim" and "cuplsim.vim"
-Remind "remind.vim"
-Structured Query Report Writer "sqr.vim"
-TADS "tads.vim"
-X Pixmap v2 "xpm2.vim"
+abel		Abel (John Cook)
+aml		Arc Macro Language (Nikki Knuit)
+apachestyle	Apache-style config file (Christian Hammers)
+cf		Cold Fusion (Jeff Lanzarotta)
+ctrlh		files with CTRL-H sequences (Bram Moolenaar)
+cupl		CUPL (John Cook)
+cuplsim		CUPL simulation (John Cook)
+erlang		Erlang (Kresimir Marzic)
+gedcom		Gedcom (Paul Johnson)
+icon		Icon (Wendell Turner)
+ist		MakeIndex style (Peter Meszaros)
+jsp		Java Server Pages (Rafael Garcia-Suarez)
+rcslog		Rcslog (Joe Karthauser)
+remind		Remind (Davide Alberani)
+sqr		Structured Query Report Writer (Paul Moore)
+tads		TADS (Amir Karger)
+texinfo		Texinfo (Sandor Kopanyi)
+xpm2		X Pixmap v2 (Steve Wall)
 
 The 'C' flag in 'cpoptions' can be used to switch off concatenation for
 sourced lines.  See patch 5.5.013 below. |line-continuation|
@@ -5891,18 +5904,44 @@ sourced lines.  See patch 5.5.013 below. |line-continuation|
 
 Implemented |z+| and |z^| commands.  See patch 5.5.050 below.
 
+Vim logo in Corel Draw format.  Can be scaled to any resolution.
+
 
 Fixed							*fixed-5.6*
 -----
 
-VMS: ioctl() in pty.c caused trouble, #ifndef VMS added.
-
-Using this mapping in Select mode, terminates completion:
+Using this mapping in Select mode, terminated completion:
 ":vnoremap <C-N> <Esc>a<C-N>" (Benji Fisher)
 Ignore K_SELECT in ins_compl_prep().
 
-GTK GUI: With GTK 1.2.5 and later the scrollbars were not redrawn correctly.
-Adjusted the gtk_form_draw() function.
+VMS (Zoltan Arpadffy, David Elins):
+- ioctl() in pty.c caused trouble, #ifndef VMS added.
+- Cut & paste mismatch corrected.
+- Popup menu line crash corrected.  (Patch 5.5.047)
+- Motif directories during open and save as corrected.
+- Handle full file names with version numbers. (Patch 5.5.046)
+- Directory handling (CD command etc.)
+- Corrected file name conversion VMS to Unix and v.v.
+- Recovery was not working.
+- Terminal and signal handling was outdated compared to os_unix.c.
+- Improved os_vms.txt.
+
+Configure used fprintf() instead of printf() to check for __DATE__ and
+__TIME__. (John Card II)
+
+BeOS: Adjust computing the char_height and char_ascent.  Round them up
+separately, avoids redrawing artifacts. (Mike Steed)
+
+Fix a few multi-byte problems in menu_name_skip(), set_reg_ic(), searchc() and
+findmatchlimit(). (Taro Muraoka)
+
+GTK GUI:
+- With GTK 1.2.5 and later the scrollbars were not redrawn correctly.
+- Adjusted the gtk_form_draw() function.
+- SNiFF connection didn't work.
+- 'mousefocus' was not working. (Dalecki)
+- Some keys were not working with modifiers: Shift-Tab, Ctrl-Space and CTRL-@.
+
 
 Patch 5.5.001
 Problem:    Configure in the top directory did not pass on an argument with a
@@ -6389,6 +6428,200 @@ Problem:    Win 32 GUI: The Find and Find/Replace dialogs didn't show the
 	    "match case" checkbox.  The Find/Replace dialog didn't handle the
 	    "match whole word" checkbox.
 Solution:   Support the "match case" and "match whole word" checkboxes.
+Files:	    src/gui_w32.c
+
+Patch 5.6a.001
+Problem:    Using <C-End> with a count doesn't work like it does with "G".
+	    (Benji Fisher)
+Solution:   Accept a count for <C-End> and <C-Home>.
+Files:	    src/normal.c
+
+Patch 5.6a.002
+Problem:    The script for conversion to HTML was an older version.
+Solution:   Add support for running 2html.vim on a color terminal.
+Files:	    runtime/syntax/2html.vim
+
+Patch 5.6a.003
+Problem:    Defining a function inside a function didn't give an error
+	    message.  A missing ":endfunction" doesn't give an error message.
+Solution:   Allow defining a function inside a function.
+Files:	    src/eval.c, runtime/doc/eval.txt
+
+Patch 5.6a.004
+Problem:    A missing ":endwhile" or ":endif" doesn't give an error message.
+	    (Johannes Zellner)
+Solution:   Check for missing ":endwhile" and ":endif" in sourced files.
+	    Add missing ":endif" in file selection macros.
+Files:	    src/ex_docmd.c, runtime/macros/file_select.vim
+
+Patch 5.6a.005
+Problem:    'hlsearch' was not listed alphabetically.  The value of 'toolbar'
+	    was changed when 'compatible' is set.
+Solution:   Moved entry of 'hlsearch' in options[] table down.
+	    Don't reset 'toolbar' option to the default value when
+	    'compatible' is set.
+Files:	    src/option.c
+
+Patch 5.6a.006
+Problem:    Using a backwards range inside ":if 0" gave an error message.
+Solution:   Don't complain about a range when it is not going to be used.
+	    (Stefan Roemer)
+Files:	    src/ex_docmd.c
+
+Patch 5.6a.007
+Problem:    ":let" didn't show internal Vim variables.  (Ron Aaron)
+Solution:   Do show ":v" variables for ":let" and ":let v:name".
+Files:	    src/eval.c
+
+Patch 5.6a.008
+Problem:    Selecting a syntax from the Syntax menu gives an error message.
+Solution:   Replace "else if" in SetSyn() with "elseif".  (Ronald Schild)
+Files:	    runtime/menu.vim
+
+Patch 5.6a.009
+Problem:    When compiling with +extra_search but without +syntax, there is a
+	    compilation error in screen.c. (Axel Kielhorn)
+Solution:   Adjust the #ifdef for declaring and initializing "line" in
+	    win_line().  Also solve compilation problem when +statusline is
+	    used without +eval.  Another one when +cmdline_compl is used
+	    without +eval.
+Files:	    src/screen.c, src/misc2.c
+
+Patch 5.6a.010
+Problem:    In a function, ":startinsert!" does not append to the end of the
+	    line if a ":normal" command was used to move the cursor. (Fisher)
+Solution:   Reset "w_set_curswant" to avoid that w_curswant is changed again.
+Files:	    src/ex_docmd.c
+
+Patch 5.6a.011 (depends on 5.6a.004)
+Problem:    A missing ":endif" or ":endwhile" in a function doesn't give an
+	    error message.
+Solution:   Give that error message.
+Files:	    src/ex_docmd.c
+
+Patch 5.6a.012 (depends on 5.6a.008)
+Problem:    Some Syntax menu entries caused a hit-return prompt.
+Solution:   Call a function to make the command shorter.  Also rename a few
+	    functions to avoid name clashes.
+Files:	    runtime/menu.vim
+
+Patch 5.6a.013
+Problem:    Command line completion works different when another completion
+	    was done earlier. (Johannes Zellner)
+Solution:   Reset wim_index when starting a new completion.
+Files:	    src/ex_getln.c
+
+Patch 5.6a.014
+Problem:    Various warning messages when compiling and running lint with
+	    different combinations of features.
+Solution:   Fix the warning messages.
+Files:	    src/eval.c, src/ex_cmds.c, src/ex_docmd.c, src/gui_gtk_x11.c,
+	    src/option.c, src/screen.c, src/search.c, src/syntax.c,
+	    src/feature.h, src/globals.h
+
+Patch 5.6a.015
+Problem:    The vimtutor command doesn't always know the value of $VIMRUNTIME.
+Solution:   Let Vim expand $VIMRUNTIME, instead of the shell.
+Files:	    src/vimtutor
+
+Patch 5.6a.016 (extra)
+Problem:    Mac: Window size is restricted when starting.  Cannot drag the
+	    window all over the desktop.
+Solution:   Get real screen size instead of assuming 640x400.  Do not use a
+	    fixed number for the drag limits. (Axel Kielhorn)
+Files:	    src/gui_mac.c
+
+Patch 5.6a.017
+Problem:    The "Paste" entry in popup menu for Visual, Insert and Cmdline
+	    mode is in the wrong position. (Stol)
+Solution:   Add priority numbers for all Paste menu entries.
+Files:	    runtime/menu.vim
+
+Patch 5.6a.018
+Problem:    GTK GUI: submenu priority doesn't work.
+	    Help dialog could be destroyed too soon.
+	    When closing a dialog window (e.g. the "ATTENTION" one), Vim would
+	    just hang.
+	    When GTK theme is changed, Vim doesn't adjust to the new colors.
+	    Argument for ":promptfind" isn't used.
+Solution:   Fixed the mentioned problems.
+	    Made the dialogs look&feel nicer.
+	    Moved functions to avoid the need for a forward declaration.
+	    Fixed reentrancy of the file browser dialog.
+	    Added drag&drop support for GNOME.
+	    Init the text for the Find/replace dialog from the last used
+	    search string.  Set "match whole word" toggle button correctly.
+	    Made repeat rate for drag outside of window depend on the
+	    distance from the window.  (Marcin Dalecki)
+	    Made the drag in Visual mode actually work.
+	    Removed recursiveness protection from gui_mch_get_rgb(), it might
+	    cause more trouble than it solves.
+Files:	    src/ex_docmd.c, src/gui_gtk.c, src/gui_gtk_x11.c, src/ui.c,
+	    src/proto/ui.pro, src/misc2.c
+
+Patch 5.6a.019
+Problem:    When trying to recover through NFS, which uses a large block size,
+	    Vim might think the swap file is empty, because mf_blocknr_max is
+	    zero.  (Scott McDermott)
+Solution:   When computing the number of blocks of the file in mf_open(),
+	    round up instead of down.
+Files:	    src/memfile.c
+
+Patch 5.6a.020
+Problem:    GUI GTK: Could not set display for gvim.
+Solution:   Add "-display" and "--display" arguments. (Marcin Dalecki)
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.6a.021
+Problem:    Recovering still may not work when the block size of the device
+	    where the swap file is located is larger than 4096.
+Solution:   Read block 0 with the minimal block size.
+Files:	    src/memline.c, src/memfile.c, src/vim.h
+
+Patch 5.6a.022 (extra)
+Problem:    Win32 GUI: When an error in the vimrc causes a dialog to pop up
+	    (e.g., for an existing swap file), Vim crashes. (David Elins)
+Solution:   Before showing a dialog, open the main window.
+Files:	    src/gui_w32.c
+
+Patch 5.6a.023
+Problem:    Using expand("%:gs??/?") causes a crash. (Ron Aaron)
+Solution:   Check for running into the end of the string in do_string_sub().
+Files:	    src/eval.c
+
+Patch 5.6a.024
+Problem:    Using an autocommand to delete a buffer when leaving it can cause
+	    a crash when jumping to a tag. (Franz Gorkotte)
+Solution:   In do_tag(), store tagstacklen before jumping to another buffer.
+	    Check tagstackidx after jumping to another buffer.
+	    Add extra check in win_split() if tagname isn't NULL.
+Files:	    src/tag.c, src/window.c
+
+Patch 5.6a.025 (extra)
+Problem:    Win32 GUI: The tables for toupper() and tolower() are initialized
+	    too late. (Mike Steed)
+Solution:   Move the initialization to win32_init() and call it from main().
+Files:	    src/main.c, src/os_w32.c, src/proto/os_w32.pro
+
+Patch 5.6a.026
+Problem:    When the SNiFF connection is open, shell commands hang. (Pruemmer)
+Solution:   Skip a second wait() call if waitpid() already detected that the
+	    child has exited.
+Files:	    src/os_unix.c
+
+Patch 5.6a.027 (extra)
+Problem:    Win32 GUI: The "Edit with Vim" popup menu entry causes problems
+	    for the Office toolbar.
+Solution:   Use a shell extension dll. (Tianmiao Hu)
+	    Added it to the install and uninstal programs, replaces the old
+	    "Edit with Vim" menu registry entries.
+Files:	    src/dosinst.c, src/uninstal.c, gvimext/*, runtime/doc/gui_w32.txt
+
+Patch 5.6a.028 (extra)
+Problem:    Win32 GUI: Dialogs and tear-off menus can't handle multi-byte
+	    characters.
+Solution:   Adjust nCopyAnsiToWideChar() to handle multi-byte characters
+	    correctly.
 Files:	    src/gui_w32.c
 
  vim:ts=8:sw=8:tw=78:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Config file:	printcap
 " Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 "define keywords
 se isk=@,46-57,_,-,#,=,192-255

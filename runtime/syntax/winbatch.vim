@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	WinBatch/Webbatch (*.wbt, *.web)
 " Maintainer:	stephan@a2f-services.fr
-" Last change:	08/19/1999
+" Last Change:	08/19/1999
 
 " Remove any old syntax stuff hanging around
 syn clear

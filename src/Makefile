@@ -174,9 +174,9 @@
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
 #FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 GTK 1.2.3	5.5	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Athena	5.5	 Bram Moolenaar
-#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Lesstif0.88.1 5.5	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 GTK 1.2.5	5.6a	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Athena	5.6a	 Bram Moolenaar
+#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.6a	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
@@ -582,7 +582,7 @@ LINT_OPTIONS = -beprxzF
 ### (I) SINIX-N 5.42 or 5.43 RM400 R4000 (also SINIX-Y and SINIX-Z)
 #EXTRA_LIBS = -lgen -lnsl
 ###   For SINIX-Y this is needed for the right prototype of gettimeofday()
-#CFLAGS = $(CFLAGS) -D_XPG_IV
+#EXTRA_DEFS = -D_XPG_IV
 
 ### (I) Reliant-Unix (aka SINIX) 5.44 with standard cc
 #       Use both "-F O3" lines for optimization or the "-g" line for debugging
@@ -736,7 +736,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim56a
+VIMRTDIR = /vim56
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros

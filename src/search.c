@@ -265,8 +265,19 @@ set_reg_ic(pat)
     {
 	/* don't ignore case if pattern has uppercase */
 	for (p = pat; *p; )
-	    if (isupper(*p++))
-		reg_ic = FALSE;
+	{
+#ifdef MULTI_BYTE
+	    if (is_dbcs && IsLeadByte(*p))
+	    {
+		if (*++p == NUL)
+		    break;
+		++p;
+	    }
+	    else
+#endif
+		if (isupper(*p++))
+		    reg_ic = FALSE;
+	}
     }
     no_smartcase = FALSE;
 }
@@ -1081,8 +1092,16 @@ searchc(c, dir, type, count)
 	{
 	    if ((col += dir) < 0 || col >= len)
 		return FALSE;
+#ifdef MULTI_BYTE
+	    if (is_dbcs && dir < 0 && IsTrailByte(p, &p[col]))
+		continue;	/* skip multibyte's trail byte */
+#endif
 	    if (p[col] == c)
 		break;
+#ifdef MULTI_BYTE
+	    if (is_dbcs && dir > 0 && IsLeadByte(p[col]))
+		++col;		/* skip multibyte's trail byte */
+#endif
 	}
     }
     if (type)
@@ -1421,7 +1440,13 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		    comment_col = check_linecomment(linep);
 	    }
 	    else
+	    {
 		--pos.col;
+#ifdef MULTI_BYTE
+		if (is_dbcs && IsTrailByte(linep, linep + pos.col))
+		    --pos.col;
+#endif
+	    }
 	}
 	else				/* forward search */
 	{
@@ -1440,7 +1465,14 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		line_breakcheck();
 	    }
 	    else
+	    {
+#ifdef MULTI_BYTE
+		if (is_dbcs && IsLeadByte(linep[pos.col])
+						 && linep[pos.col + 1] != NUL)
+		    ++pos.col;
+#endif
 		++pos.col;
+	    }
 	}
 
 	/*

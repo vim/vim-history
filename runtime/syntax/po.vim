@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : po (GNU gettext)
-" Maintainer : Sung-Hyun Nam <namsh@kldp.org>
-" Last change: 1999/12/14
+" Language:	po (GNU gettext)
+" Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
+" Last Change:	1999/12/14
 
 " remove any old syntax stuff hanging around
 syn clear

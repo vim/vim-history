@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : FORTH
-" Maintainer : Christian V. J. Br=FCssow <cvjb@bigfoot.de>
-" Last change: Fre 18 Jun 1999 13:44:14 MEST
+" Language:		FORTH
+" Maintainer:	Christian V. J. Br=FCssow <cvjb@bigfoot.de>
+" Last Change:	Fre 18 Jun 1999 13:44:14 MEST
 
 " The list of keywords is incomplete, compared with the offical ANS
 " wordlist. If you use this language, please improve it, and send me

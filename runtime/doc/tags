@@ -348,12 +348,16 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'noruler'	options.txt	/*'noruler'*
 'nosb'	options.txt	/*'nosb'*
 'nosc'	options.txt	/*'nosc'*
+'noscb'	options.txt	/*'noscb'*
+'noscrollbind'	options.txt	/*'noscrollbind'*
 'noscs'	options.txt	/*'noscs'*
 'nosecure'	options.txt	/*'nosecure'*
+'nosft'	options.txt	/*'nosft'*
 'noshellslash'	options.txt	/*'noshellslash'*
 'noshiftround'	options.txt	/*'noshiftround'*
 'noshortname'	options.txt	/*'noshortname'*
 'noshowcmd'	options.txt	/*'noshowcmd'*
+'noshowfulltag'	options.txt	/*'noshowfulltag'*
 'noshowmatch'	options.txt	/*'noshowmatch'*
 'noshowmode'	options.txt	/*'noshowmode'*
 'nosi'	options.txt	/*'nosi'*
@@ -399,7 +403,9 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'nowarn'	options.txt	/*'nowarn'*
 'nowb'	options.txt	/*'nowb'*
 'noweirdinvert'	options.txt	/*'noweirdinvert'*
+'nowildmenu'	options.txt	/*'nowildmenu'*
 'nowiv'	options.txt	/*'nowiv'*
+'nowmnu'	options.txt	/*'nowmnu'*
 'nowrap'	options.txt	/*'nowrap'*
 'nowrapscan'	options.txt	/*'nowrapscan'*
 'nowrite'	options.txt	/*'nowrite'*
@@ -1030,6 +1036,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :bro	editing.txt	/*:bro*
 :browse	editing.txt	/*:browse*
 :browse-set	options.txt	/*:browse-set*
+:bu	windows.txt	/*:bu*
 :buffer	windows.txt	/*:buffer*
 :buffer-!	windows.txt	/*:buffer-!*
 :buffers	windows.txt	/*:buffers*
@@ -1051,6 +1058,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :center	change.txt	/*:center*
 :cf	quickfix.txt	/*:cf*
 :cfile	quickfix.txt	/*:cfile*
+:ch	change.txt	/*:ch*
 :change	change.txt	/*:change*
 :chd	editing.txt	/*:chd*
 :chdir	editing.txt	/*:chdir*
@@ -1110,6 +1118,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :cunme	gui.txt	/*:cunme*
 :cunmenu	gui.txt	/*:cunmenu*
 :d	change.txt	/*:d*
+:de	change.txt	/*:de*
+:del	change.txt	/*:del*
 :delc	map.txt	/*:delc*
 :delcommand	map.txt	/*:delcommand*
 :delcr	todo.txt	/*:delcr*
@@ -1160,6 +1170,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :exi	editing.txt	/*:exi*
 :exit	editing.txt	/*:exit*
 :f	editing.txt	/*:f*
+:fi	editing.txt	/*:fi*
 :file	editing.txt	/*:file*
 :file_f	editing.txt	/*:file_f*
 :filename	editing.txt	/*:filename*
@@ -1209,6 +1220,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :imapclear	map.txt	/*:imapclear*
 :ime	gui.txt	/*:ime*
 :imenu	gui.txt	/*:imenu*
+:in	insert.txt	/*:in*
 :ino	map.txt	/*:ino*
 :inorea	map.txt	/*:inorea*
 :inoreabbrev	map.txt	/*:inoreabbrev*
@@ -1271,10 +1283,12 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :mksession	options.txt	/*:mksession*
 :mkv	options.txt	/*:mkv*
 :mkvimrc	options.txt	/*:mkvimrc*
+:mo	change.txt	/*:mo*
 :mod	term.txt	/*:mod*
 :mode	term.txt	/*:mode*
 :move	change.txt	/*:move*
 :n	editing.txt	/*:n*
+:ne	editing.txt	/*:ne*
 :new	windows.txt	/*:new*
 :next	editing.txt	/*:next*
 :next_f	editing.txt	/*:next_f*
@@ -1322,6 +1336,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :onoremap	map.txt	/*:onoremap*
 :onoreme	gui.txt	/*:onoreme*
 :onoremenu	gui.txt	/*:onoremenu*
+:op	vi_diff.txt	/*:op*
 :open	vi_diff.txt	/*:open*
 :opt	options.txt	/*:opt*
 :options	options.txt	/*:options*
@@ -1340,6 +1355,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :pop	tagsearch.txt	/*:pop*
 :pp	windows.txt	/*:pp*
 :ppop	windows.txt	/*:ppop*
+:pr	various.txt	/*:pr*
 :pre	recover.txt	/*:pre*
 :preserve	recover.txt	/*:preserve*
 :prev	editing.txt	/*:prev*
@@ -1382,6 +1398,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :r!	insert.txt	/*:r!*
 :range	cmdline.txt	/*:range*
 :range!	change.txt	/*:range!*
+:re	insert.txt	/*:re*
 :read	insert.txt	/*:read*
 :read!	insert.txt	/*:read!*
 :rec	recover.txt	/*:rec*
@@ -1475,6 +1492,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :stop	starting.txt	/*:stop*
 :sts	tagsearch.txt	/*:sts*
 :stselect	tagsearch.txt	/*:stselect*
+:su	change.txt	/*:su*
 :substitute	change.txt	/*:substitute*
 :sun	windows.txt	/*:sun*
 :sunhide	windows.txt	/*:sunhide*
@@ -1520,6 +1538,9 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :syn-skipwhite	syntax.txt	/*:syn-skipwhite*
 :syn-start	syntax.txt	/*:syn-start*
 :syn-sync	syntax.txt	/*:syn-sync*
+:syn-sync-ccomment	syntax.txt	/*:syn-sync-ccomment*
+:syn-sync-maxlines	syntax.txt	/*:syn-sync-maxlines*
+:syn-sync-minlines	syntax.txt	/*:syn-sync-minlines*
 :syn-transparent	syntax.txt	/*:syn-transparent*
 :syncbind	scroll.txt	/*:syncbind*
 :syntax	syntax.txt	/*:syntax*
@@ -1554,6 +1575,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :tu	gui.txt	/*:tu*
 :tunmenu	gui.txt	/*:tunmenu*
 :u	undo.txt	/*:u*
+:un	undo.txt	/*:un*
 :una	map.txt	/*:una*
 :unabbreviate	map.txt	/*:unabbreviate*
 :undo	undo.txt	/*:undo*
@@ -1997,9 +2019,6 @@ User	autocmd.txt	/*User*
 V	visual.txt	/*V*
 VIMINIT	starting.txt	/*VIMINIT*
 VMS	os_vms.txt	/*VMS*
-VMS-5.3	os_vms.txt	/*VMS-5.3*
-VMS-5.4	os_vms.txt	/*VMS-5.4*
-VMS-SK	os_vms.txt	/*VMS-SK*
 Vi	intro.txt	/*Vi*
 VimEnter	autocmd.txt	/*VimEnter*
 VimLeave	autocmd.txt	/*VimLeave*
@@ -2461,6 +2480,7 @@ emacs_tags	tagsearch.txt	/*emacs_tags*
 encryption	editing.txt	/*encryption*
 end	intro.txt	/*end*
 enlightened-terminal	syntax.txt	/*enlightened-terminal*
+erlang.vim	syntax.txt	/*erlang.vim*
 errmsg-variable	eval.txt	/*errmsg-variable*
 error-messages	message.txt	/*error-messages*
 errorformat	quickfix.txt	/*errorformat*
@@ -2930,6 +2950,7 @@ linefeed	intro.txt	/*linefeed*
 linewise	motion.txt	/*linewise*
 linewise-register	change.txt	/*linewise-register*
 linewise-visual	visual.txt	/*linewise-visual*
+lite.vim	syntax.txt	/*lite.vim*
 literal-string	eval.txt	/*literal-string*
 locale	change.txt	/*locale*
 localtime()	eval.txt	/*localtime()*
@@ -3007,6 +3028,7 @@ msdos-mode	gui_w32.txt	/*msdos-mode*
 msdos-problems	os_msdos.txt	/*msdos-problems*
 msdos-termcap	os_msdos.txt	/*msdos-termcap*
 msdos-versions	os_msdos.txt	/*msdos-versions*
+msql.vim	syntax.txt	/*msql.vim*
 multi-byte	multibyte.txt	/*multi-byte*
 multi-repeat	repeat.txt	/*multi-repeat*
 multibyte	multibyte.txt	/*multibyte*
@@ -3111,6 +3133,8 @@ perl-editing	if_perl.txt	/*perl-editing*
 perl-overview	if_perl.txt	/*perl-overview*
 perl-using	if_perl.txt	/*perl-using*
 perl.vim	syntax.txt	/*perl.vim*
+php3.vim	syntax.txt	/*php3.vim*
+phtml.vim	syntax.txt	/*phtml.vim*
 popup-menu	gui.txt	/*popup-menu*
 popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
@@ -3528,6 +3552,7 @@ terminfo	term.txt	/*terminfo*
 tex.vim	syntax.txt	/*tex.vim*
 text-objects	motion.txt	/*text-objects*
 text-objects-changed	version5.txt	/*text-objects-changed*
+tf.vim	syntax.txt	/*tf.vim*
 this_session-variable	eval.txt	/*this_session-variable*
 timestamp	editing.txt	/*timestamp*
 tips	tips.txt	/*tips*
@@ -3707,6 +3732,15 @@ visual-use	visual.txt	/*visual-use*
 visual.txt	visual.txt	/*visual.txt*
 visualmode()	eval.txt	/*visualmode()*
 vms	os_vms.txt	/*vms*
+vms-authors	os_vms.txt	/*vms-authors*
+vms-compiling	os_vms.txt	/*vms-compiling*
+vms-deploy	os_vms.txt	/*vms-deploy*
+vms-download	os_vms.txt	/*vms-download*
+vms-gui	os_vms.txt	/*vms-gui*
+vms-notes	os_vms.txt	/*vms-notes*
+vms-problems	os_vms.txt	/*vms-problems*
+vms-started	os_vms.txt	/*vms-started*
+vms-usage	os_vms.txt	/*vms-usage*
 votes-for-changes	todo.txt	/*votes-for-changes*
 vreplace-mode	insert.txt	/*vreplace-mode*
 vt100-cursor-keys	term.txt	/*vt100-cursor-keys*

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	X Pixmap v2
 " Maintainer:	Steve Wall (steve_wall@redcom.com)
-" Last change:	1999 Oct 04
+" Last Change:	1999 Oct 04
 " Version:	5.5
 "
 " Made from xpm.vim by Ronald Schild <rs@scutum.de>

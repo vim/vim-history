@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language   : rpcgen
-" Version    : 5.4-1
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change: April 23, 1999
+" Language:	rpcgen
+" Version:	5.4-1
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	April 23, 1999
 
 " Removes any old syntax stuff hanging around
 syn clear

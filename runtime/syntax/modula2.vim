@@ -2,7 +2,7 @@
 " Language:	Modula 2
 " Maintainer:	pf@artcom0.north.de (Peter Funk)
 "   based on original work of Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	exports
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change:	May 18, 1998
-" Notes: This file includes both SysV and BSD 'isms
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	May 18, 1998
+" Notes:		This file includes both SysV and BSD 'isms
 
 " Remove any old syntax stuff hanging around
 syn clear

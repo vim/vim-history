@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Lynx 2.7.1 style file
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last change:	1997 Nov 23
+" Last Change:	1997 Nov 23
 
 " clear any unwanted syntax defs
 syntax clear

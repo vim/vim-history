@@ -1,9 +1,9 @@
 " Vim syntax file
-" Language:     Rebol
+" Language:	Rebol
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
-" Filenames:    *.r
-" Last change:  20th October 1998
-" URL:          N/A
+" Filenames:	*.r
+" Last Change:	20th October 1998
+" URL:		N/A
 "
 " Change history
 

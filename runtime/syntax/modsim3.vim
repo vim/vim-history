@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Modsim III, by CACI Products Co. (www.caci.com)
 " Maintainer:	Philipp Jocham <flip@sbox.tu-graz.ac.at>
-" Extension:    *.mod
-" Last change:	1999 Jun 14
+" Extension:	*.mod
+" Last Change:	1999 Jun 14
 
 " 1999 Apr 22 : Changed modsim3Literal from region to match
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	povray screen description language
 " Maintainer:	T. Scott Urban <urban@blarg.net>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Remove any old syntax stuff hanging around
 syn clear

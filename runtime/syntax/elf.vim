@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : ELF
-" Maintainer : Christian V. J. Bruessow <cvjb@bigfoot.de>
-" Last change: Fre 18 Jun 1999 13:34:50 MEST
+" Language:		ELF
+" Maintainer:	Christian V. J. Bruessow <cvjb@bigfoot.de>
+" Last Change:	Fre 18 Jun 1999 13:34:50 MEST
 
 " ELF: Extensible Language Facility
 "      This is the Applix Inc., Macro and Builder programming language.

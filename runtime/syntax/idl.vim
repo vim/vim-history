@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
 " Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last change:	1997 Nov 20
+" Last Change:	1997 Nov 20
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result

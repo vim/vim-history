@@ -100,7 +100,7 @@ vim.exe: $(OBJ)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ $(LIB) -Xlinker "--subsystem windows"
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB)
 
 exes:
 	@del *.o

@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     jgraph (graph plotting utility)
-" Maintainer:   Jonas Munsin jmunsin@iki.fi
-" Last change:  1999 Jun 14
+" Language:	jgraph (graph plotting utility)
+" Maintainer:	Jonas Munsin jmunsin@iki.fi
+" Last Change:	1999 Jun 14
 " this syntax file is not yet complete
 
 

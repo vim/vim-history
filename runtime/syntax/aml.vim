@@ -1,13 +1,13 @@
 " Vim syntax file
-" Language:     AML (ARC/INFO Arc Macro Language)	
+" Language:	AML (ARC/INFO Arc Macro Language)	
 " Written by:	Nikki Knuit <Nikki.Knuit@gems3.gov.bc.ca>
 " Maintainer:	Todd Glover <todd.glover@gems9.gov.bc.ca>
-" Last change:	1999-November-04 
+" Last Change:	1999-November-04 
 
 " FUTURE CODING:  Bold application commands after &sys, &tty
-"                 Only highlight aml Functions at the beginning
-"                   of [], in order to avoid -read highlighted, 
-"                   or [quote] strings highlighted
+"		  Only highlight aml Functions at the beginning
+"		    of [], in order to avoid -read highlighted, 
+"		    or [quote] strings highlighted
 
 " Remove any old syntax stuff hanging around
 syn clear

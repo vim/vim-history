@@ -540,7 +540,7 @@ fi
 
 
 
-echo 'Exuberant Ctags, version 3.3.3'
+echo 'Exuberant Ctags, version 3.4'
 uname -mrsv 2>/dev/null
 
 
@@ -2107,7 +2107,7 @@ done
 	fi
 fi
 
-for ac_func in putenv
+for ac_func in setenv
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:2114: checking for $ac_func" >&5
@@ -2156,14 +2156,14 @@ if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
   cat >> confdefs.h <<EOF
 #define $ac_tr_func 1
 EOF
- have_putenv=yes
+ have_setenv=yes
 else
   echo "$ac_t""no" 1>&6
 fi
 done
 
-if test "$have_putenv" != yes ; then
-	for ac_func in setenv
+if test "$have_setenv" != yes ; then
+	for ac_func in putenv
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:2170: checking for $ac_func" >&5
@@ -2212,14 +2212,14 @@ if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
   cat >> confdefs.h <<EOF
 #define $ac_tr_func 1
 EOF
- 
+ have_putenv=yes
 else
   echo "$ac_t""no" 1>&6
 fi
 done
 
-else
-	cat > conftest.$ac_ext <<EOF
+	if test "$have_putenv" = yes ; then
+		cat > conftest.$ac_ext <<EOF
 #line 2224 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
@@ -2231,10 +2231,10 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 fi
 rm -f conftest*
 
-	if test "$have_putenv_prototype" = yes ; then
-		echo $ac_n "checking "putenv prototype"""... $ac_c" 1>&6
+		if test "$have_putenv_prototype" = yes ; then
+			echo $ac_n "checking "putenv prototype"""... $ac_c" 1>&6
 echo "configure:2237: checking "putenv prototype"" >&5
-		cat > conftest.$ac_ext <<EOF
+			cat > conftest.$ac_ext <<EOF
 #line 2239 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
@@ -2246,27 +2246,28 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   rm -rf conftest*
   
-				echo "$ac_t""no const" 1>&6
-				cat >> confdefs.h <<\EOF
+					echo "$ac_t""no const" 1>&6
+					cat >> confdefs.h <<\EOF
 #define NON_CONST_PUTENV_PROTOTYPE 1
 EOF
 
-			
+				
 fi
 rm -f conftest*
 
+		fi
 	fi
 fi
 
 
 echo "checking "for missing prototypes"" 1>&6
-echo "configure:2264: checking "for missing prototypes"" >&5
+echo "configure:2265: checking "for missing prototypes"" >&5
 
 
 
 if test "$have_remove" = yes ; then
 	cat > conftest.$ac_ext <<EOF
-#line 2270 "configure"
+#line 2271 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 EOF
@@ -2284,7 +2285,7 @@ rm -f conftest*
 
 else
 	cat > conftest.$ac_ext <<EOF
-#line 2288 "configure"
+#line 2289 "configure"
 #include "confdefs.h"
 #include <unistd.h>
 EOF
@@ -2302,7 +2303,7 @@ rm -f conftest*
 
 fi
 cat > conftest.$ac_ext <<EOF
-#line 2306 "configure"
+#line 2307 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -2319,7 +2320,7 @@ fi
 rm -f conftest*
 
 cat > conftest.$ac_ext <<EOF
-#line 2323 "configure"
+#line 2324 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -2336,7 +2337,7 @@ fi
 rm -f conftest*
 
 cat > conftest.$ac_ext <<EOF
-#line 2340 "configure"
+#line 2341 "configure"
 #include "confdefs.h"
 #include <string.h>
 EOF
@@ -2353,7 +2354,7 @@ fi
 rm -f conftest*
 
 cat > conftest.$ac_ext <<EOF
-#line 2357 "configure"
+#line 2358 "configure"
 #include "confdefs.h"
 #include <sys/stat.h>
 EOF
@@ -2370,7 +2371,7 @@ fi
 rm -f conftest*
 
 cat > conftest.$ac_ext <<EOF
-#line 2374 "configure"
+#line 2375 "configure"
 #include "confdefs.h"
 #include <sys/stat.h>
 EOF
@@ -2388,7 +2389,7 @@ rm -f conftest*
 
 if test "$have_fgetpos" = yes ; then
 	cat > conftest.$ac_ext <<EOF
-#line 2392 "configure"
+#line 2393 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 EOF
@@ -2407,7 +2408,7 @@ rm -f conftest*
 fi
 if test "$have_truncate" = yes ; then
 	cat > conftest.$ac_ext <<EOF
-#line 2411 "configure"
+#line 2412 "configure"
 #include "confdefs.h"
 #include <unistd.h>
 EOF
@@ -2426,7 +2427,7 @@ rm -f conftest*
 fi
 if test "$have_ftruncate" = yes ; then
 	cat > conftest.$ac_ext <<EOF
-#line 2430 "configure"
+#line 2431 "configure"
 #include "confdefs.h"
 #include <unistd.h>
 EOF

@@ -1,7 +1,7 @@
 Begin3
 Title:          Exuberant Ctags
-Version:        3.3.3
-Entered-date:   16DEC99
+Version:        3.4
+Entered-date:   13JAN00
 Description:    A better ctags with support for C, C++, Eiffel, Fortran and
                 Java. It is capable of generating tags for all of the
                 following language constructs:
@@ -26,9 +26,9 @@ Keywords:       ctags etags ftags tag tags Exuberant C C++ Eiffel Fortran Java
 		tool utility source index
 Author:         darren@hiebert.com (Darren Hiebert)
 Primary-site:   sunsite.unc.edu /pub/Linux/devel/lang/c
-		133kB ctags-3.3.3.tar.gz
+		137kB ctags-3.4.tar.gz
 Original-site:  http://darren.hiebert.com/ctags
-		133kB archives/ctags-3.3.3.tar.gz
+		137kB archives/ctags-3.4.tar.gz
 Platforms:      UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, VMS, Cray
 Copying-policy: GNU General Public License
 End

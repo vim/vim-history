@@ -2,7 +2,7 @@
 " Language:	GDB command files
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/gdb.vim
-" Last change:	1999 Jun 14
+" Last Change:	1999 Oct 21 
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -15,16 +15,20 @@ syn keyword gdbInfo contained syn keyword tracepoints types udot variables warra
 syn match gdbInfo contained "all-registers"
 
 
-syn keyword gdbStatement actions apply attach awatch backtrace break bt call catch cd clear collect commands
-syn keyword gdbStatement complete condition continue delete detach directory disable disassemble display down
-syn keyword gdbStatement echo else enable end file finish frame handle hbreak help if ignore
-syn keyword gdbStatement inspect jump kill list load maintenance make next nexti ni output overlay
-syn keyword gdbStatement passcount path print printf ptype pwd quit rbreak remote return run rwatch
-syn keyword gdbStatement search section set sharedlibrary shell show si signal source step stepi stepping
-syn keyword gdbStatement stop target tbreak tdump tfind thbreak thread tp trace tstart tstatus tstop
-syn keyword gdbStatement tty undisplay unset until up watch whatis where while ws x
-syn keyword gdbStatement info nextgroup=gdbInfo skipwhite skipempty
+syn keyword gdbStatement contained actions apply attach awatch backtrace break bt call catch cd clear collect commands
+syn keyword gdbStatement contained complete condition continue delete detach directory disable disassemble display down
+syn keyword gdbStatement contained echo else enable end file finish frame handle hbreak help if ignore 
+syn keyword gdbStatement contained inspect jump kill list load maintenance make next nexti ni output overlay
+syn keyword gdbStatement contained passcount path print printf ptype pwd quit rbreak remote return run rwatch
+syn keyword gdbStatement contained search section set sharedlibrary shell show si signal source step stepi stepping
+syn keyword gdbStatement contained stop target tbreak tdump tfind thbreak thread tp trace tstart tstatus tstop
+syn keyword gdbStatement contained tty undisplay unset until up watch whatis where while ws x 
 syn match gdbFuncDef "\<define\>.*"
+syn match gdbStatmentContainer "^\s*\S\+" contains=gdbStatement
+syn match gdbStatement "^\s*info" nextgroup=gdbInfo skipwhite skipempty
+
+" some commonly used abreviations
+syn keyword gdbStatement c disp undisp disas p 
 
 syn region gdbDocument matchgroup=gdbFuncDef start="\<document\>.*$" matchgroup=gdbFuncDef end="^end$"
 

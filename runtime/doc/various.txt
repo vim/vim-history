@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.6a.  Last change: 1999 Oct 11
+*various.txt*   For Vim version 5.6.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -41,7 +41,7 @@ ga			Print the ascii value of the character under the
 				<^@>  0,  Hex 00,  Octal 000
 			Mnemonic: Get Ascii value.  {not in Vi}
 
-							*:p* *:print*
+							*:p* *:pr* *:print*
 :[range]p[rint]		Print [range] lines (default current line).
 			Note: If you are looking for a way to print your text
 			file, you need an external program for that.  In the

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 02
+" Last Change:	1999 Dec 02
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -142,6 +142,7 @@ typedef enum eVisibilityType {
     ACCESS_PRIVATE,
     ACCESS_PROTECTED,
     ACCESS_PUBLIC,
+    ACCESS_DEFAULT,		/* Java-specific */
     ACCESS_COUNT
 } accessType;
 
@@ -160,6 +161,14 @@ typedef struct sTokenInfo {
     fpos_t        filePosition;	/* file position of line containing name */
 } tokenInfo;
 
+typedef enum eImplementation {
+    IMP_DEFAULT,
+    IMP_ABSTRACT,
+    IMP_VIRTUAL,
+    IMP_PURE_VIRTUAL,
+    IMP_COUNT
+} impType;
+
 /*  Describes the statement currently undergoing analysis.
  */
 typedef struct sStatementInfo {
@@ -170,6 +179,7 @@ typedef struct sStatementInfo {
     boolean	gotParenName;	/* was a name inside parentheses parsed yet? */
     boolean	gotArgs;	/* was a list of parameters parsed yet? */
     boolean	isPointer;	/* is 'name' a pointer? */
+    impType	implementation;	/* abstract or concrete implementation? */
     unsigned int tokenIndex;	/* currently active token */
     tokenInfo*	token[(int)NumTokens];
     tokenInfo*	context;	/* accumulated scope of current statement */
@@ -285,6 +295,8 @@ static tokenInfo *prevToken __ARGS((const statementInfo *const st, unsigned int 
 static void setToken __ARGS((statementInfo *const st, const tokenType type));
 static tokenInfo *newToken __ARGS((void));
 static void deleteToken __ARGS((tokenInfo *const token));
+static const char *accessString __ARGS((const accessType access));
+static const char *implementationString __ARGS((const impType imp));
 static boolean isContextualKeyword __ARGS((const tokenInfo *const token));
 static boolean isContextualStatement __ARGS((const statementInfo *const st));
 static boolean isMember __ARGS((const statementInfo *const st));
@@ -294,10 +306,10 @@ static void initStatement __ARGS((statementInfo *const st, statementInfo *const 
 static const char *tagName __ARGS((const tagType type));
 static int tagLetter __ARGS((const tagType type));
 static boolean includeTag __ARGS((const tagType type, const boolean isFileScope));
-static const char *accessString __ARGS((const accessType access));
 static tagType declToTagType __ARGS((const declType declaration));
 static const char* accessField __ARGS((const statementInfo *const st));
 static int addOtherFields __ARGS((const tagType type, const statementInfo *const st, vString *const scope, const char *(*otherFields)[2]));
+static void addContextSeparator __ARGS((vString *const scope));
 static void findScopeHierarchy __ARGS((vString *const string, const statementInfo *const st));
 static void makeExtraTagEntry __ARGS((tagEntryInfo *const e, vString *const scope));
 static void makeTag __ARGS((const tokenInfo *const token, const statementInfo *const st, boolean isFileScope, const tagType type));
@@ -336,7 +348,7 @@ static void initParenInfo __ARGS((parenInfo *const info));
 static void analyzeParens __ARGS((statementInfo *const st));
 static void addContext __ARGS((statementInfo *const st, const tokenInfo* const token));
 static void processColon __ARGS((statementInfo *const st));
-static int skipInitializer __ARGS((const boolean enumInitializer));
+static int skipInitializer __ARGS((statementInfo *const st));
 static void processInitializer __ARGS((statementInfo *const st));
 static void parseIdentifier __ARGS((statementInfo *const st, const int c));
 static void parseGeneralToken __ARGS((statementInfo *const st, const int c));
@@ -433,6 +445,28 @@ static void deleteToken( token )
 	vStringDelete(token->name);
 	eFree(token);
     }
+}
+
+static const char *accessString( access )
+    const accessType access;
+{
+    static const char *const names[] ={
+	    "?", "private", "protected", "public", "default"
+    };
+    Assert(sizeof(names)/sizeof(names[0]) == ACCESS_COUNT);
+    Assert((int)access < ACCESS_COUNT);
+    return names[(int)access];
+}
+
+static const char *implementationString( imp )
+    const impType imp;
+{
+    static const char *const names[] ={
+	    "?", "abstract", "virtual", "pure virtual"
+    };
+    Assert(sizeof(names)/sizeof(names[0]) == IMP_COUNT);
+    Assert((int)imp < IMP_COUNT);
+    return names[(int)imp];
 }
 
 /*----------------------------------------------------------------------------
@@ -619,6 +653,7 @@ static void reinitStatement( st, partial )
     }
     st->gotParenName	= FALSE;
     st->isPointer	= FALSE;
+    st->implementation	= IMP_DEFAULT;
     st->gotArgs		= FALSE;
     st->gotName		= FALSE;
     st->haveQualifyingName = FALSE;
@@ -650,7 +685,10 @@ static void initMemberInfo( st )
 	    break;
 
 	case DECL_CLASS:
-	    accessDefault = ACCESS_PRIVATE;
+	    if (isLanguage(LANG_JAVA))
+		accessDefault = ACCESS_DEFAULT;
+	    else
+		accessDefault = ACCESS_PRIVATE;
 	    break;
 
 	case DECL_INTERFACE:
@@ -755,16 +793,6 @@ static boolean includeTag( type, isFileScope )
     return include;
 }
 
-static const char *accessString( access )
-    const accessType access;
-{
-    static const char *const names[] ={ "?", "private", "protected", "public" };
-
-    Assert(sizeof(names)/sizeof(names[0]) == ACCESS_COUNT);
-    Assert((int)access < ACCESS_COUNT);
-    return names[(int)access];
-}
-
 static tagType declToTagType( declaration )
     const declType declaration;
 {
@@ -807,7 +835,7 @@ static int addOtherFields( type, st, scope, otherFields )
     /*  For selected tag types, append an extension flag designating the
      *  parent object in which the tag is defined.
      */
-    if (isMember(st)) switch (type)
+    switch (type)
     {
 	default: break;
 
@@ -822,7 +850,8 @@ static int addOtherFields( type, st, scope, otherFields )
 	case TAG_STRUCT:
 	case TAG_TYPEDEF:
 	case TAG_UNION:
-	    if (! (type == TAG_ENUMERATOR  &&  vStringLength(scope) == 0))
+	    if (isMember(st) &&
+		! (type == TAG_ENUMERATOR  &&  vStringLength(scope) == 0))
 	    {
 		if (isType(st->context, TOKEN_NAME))
 		    otherFields[0][numFields] = tagName(TAG_CLASS);
@@ -835,8 +864,16 @@ static int addOtherFields( type, st, scope, otherFields )
 		otherFields[1][numFields] = vStringValue(scope);
 		++numFields;
 	    }
-	    if ((isLanguage(LANG_CPP) && Option.include.cTypes.access) ||
-		(isLanguage(LANG_JAVA) && Option.include.javaTypes.access))
+	    if (st->implementation != IMP_DEFAULT &&
+		(isLanguage(LANG_CPP) || isLanguage(LANG_JAVA)))
+	    {
+		otherFields[0][numFields] = "implementation";
+		otherFields[1][numFields] = implementationString(st->implementation);
+		++numFields;
+	    }
+	    if (isMember(st) &&
+		((isLanguage(LANG_CPP) && Option.include.cTypes.access) ||
+		 (isLanguage(LANG_JAVA) && Option.include.javaTypes.access)))
 	    {
 		if (accessField(st) != NULL)
 		{
@@ -852,6 +889,15 @@ static int addOtherFields( type, st, scope, otherFields )
 	    break;
     }
     return numFields;
+}
+
+static void addContextSeparator( scope )
+    vString *const scope;
+{
+    if (isLanguage(LANG_C)  ||  isLanguage(LANG_CPP))
+	vStringCatS(scope, "::");
+    else if (isLanguage(LANG_JAVA))
+	vStringCatS(scope, ".");
 }
 
 static void findScopeHierarchy( string, st )
@@ -878,20 +924,22 @@ static void findScopeHierarchy( string, st )
 	    if (isContextualStatement(s))
 	    {
 		vStringCopy(temp, string);
+		vStringClear(string);
 		if (isType(s->blockName, TOKEN_NAME))
 		{
-		    vStringCopy(string, s->blockName->name);
+		    if (isType(s->context, TOKEN_NAME) &&
+			vStringLength(s->context->name) > 0)
+		    {
+			vStringCat(string, s->context->name);
+			addContextSeparator(string);
+		    }
+		    vStringCat(string, s->blockName->name);
 		    nonAnonPresent = TRUE;
 		}
 		else
 		    vStringCopyS(string, anon);
 		if (vStringLength(temp) > 0)
-		{
-		    if (isLanguage(LANG_C)  ||  isLanguage(LANG_CPP))
-			vStringCatS(string, "::");
-		    else if (isLanguage(LANG_JAVA))
-			vStringCatS(string, ".");
-		}
+		    addContextSeparator(string);
 		vStringCat(string, temp);
 	    }
 	}
@@ -906,17 +954,14 @@ static void makeExtraTagEntry( e, scope )
     tagEntryInfo *const e;
     vString *const scope;
 {
-    if (scope != NULL  &&
+    if (scope != NULL  &&  vStringLength(scope) > 0  &&
 	((isLanguage(LANG_CPP)   &&  Option.include.cTypes.classPrefix)  ||
 	 (isLanguage(LANG_JAVA)  &&  Option.include.javaTypes.classPrefix)))
     {
 	vString *const scopedName = vStringNew();
 
 	vStringCopy(scopedName, scope);
-	if (isLanguage(LANG_CPP))
-	    vStringCatS(scopedName, "::");
-	else if (isLanguage(LANG_JAVA))
-	    vStringCatS(scopedName, ".");
+	addContextSeparator(scopedName);
 	vStringCatS(scopedName, e->name);
 	e->name = vStringValue(scopedName);
 	makeTagEntry(e);
@@ -949,12 +994,8 @@ static void makeTag( token, st, isFileScope, type )
 	e.kindName	= tagName(type);
 	e.kind		= tagLetter(type);
 
-#if 1
 	findScopeHierarchy(scope, st);
 	e.otherFields.count = addOtherFields(type, st, scope, otherFields);
-#else
-	e.otherFields.count = addOtherFields(type, st, st->context->name, otherFields);
-#endif
 	e.otherFields.label = otherFields[0];
 	e.otherFields.value = otherFields[1];
 
@@ -1442,6 +1483,7 @@ static void processToken( token, st )
 	default: break;
 
 	case KEYWORD_NONE:	processName(st);			break;
+	case KEYWORD_ABSTRACT:	st->implementation = IMP_ABSTRACT;	break;
 	case KEYWORD_ATTRIBUTE:	skipParens(); initToken(token);		break;
 	case KEYWORD_CATCH:	skipParens(); skipBraces();		break;
 	case KEYWORD_CHAR:	st->declaration = DECL_BASE;		break;
@@ -1473,6 +1515,7 @@ static void processToken( token, st )
 	case KEYWORD_USING:	st->declaration = DECL_IGNORE;		break;
 	case KEYWORD_VOID:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_VOLATILE:	st->declaration = DECL_BASE;		break;
+	case KEYWORD_VIRTUAL:	st->implementation = IMP_VIRTUAL;	break;
 
 	case KEYWORD_EXTERN:
 	    st->scope = SCOPE_EXTERN;
@@ -1929,10 +1972,6 @@ static void addContext( st, token )
 	vStringCat(st->context->name, token->name);
 	st->context->type = TOKEN_NAME;
     }
-#if 0
-    if (st->declaration == DECL_NONE)
-	st->declaration = DECL_BASE;
-#endif
 }
 
 static void processColon( st )
@@ -1961,28 +2000,34 @@ static void processColon( st )
 /*  Skips over any initializing value which may follow an '=' character in a
  *  variable definition.
  */
-static int skipInitializer( enumInitializer )
-    const boolean enumInitializer;
+static int skipInitializer( st )
+    statementInfo *const st;
 {
     boolean done = FALSE;
     int c;
 
     while (! done)
     {
-	c = cppGetc();
+	c = skipToNonWhite();
 
 	if (c == EOF)
 	    longjmp(Exception, (int)ExceptionFormattingError);
 	else switch (c)
 	{
 	    case ',':
-	    case ';':   done = TRUE; break;
+	    case ';': done = TRUE; break;
 
-	    case '[':   skipToMatch("[]"); break;
-	    case '(':   skipToMatch("()"); break;
-	    case '{':   skipToMatch("{}"); break;
+	    case '0':
+		if (st->implementation == IMP_VIRTUAL)
+		    st->implementation = IMP_PURE_VIRTUAL;
+		break;
+
+	    case '[': skipToMatch("[]"); break;
+	    case '(': skipToMatch("()"); break;
+	    case '{': skipToMatch("{}"); break;
+
 	    case '}':
-		if (enumInitializer)
+		if (insideEnumBody(st))
 		    done = TRUE;
 		else if (! isBraceFormat())
 		{
@@ -1993,7 +2038,7 @@ static int skipInitializer( enumInitializer )
 		}
 		break;
 
-	    default:    break;
+	    default: break;
 	}
     }
     return c;
@@ -2003,7 +2048,7 @@ static void processInitializer( st )
     statementInfo *const st;
 {
     const boolean inEnumBody = insideEnumBody(st);
-    const int c = skipInitializer(inEnumBody);
+    const int c = skipInitializer(st);
 
     if (c == ';')
 	setToken(st, TOKEN_SEMICOLON);

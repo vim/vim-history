@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.6a.  Last change: 1999 Nov 29
+*change.txt*    For Vim version 5.6.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -60,7 +60,7 @@ For inserting text see |insert.txt|.
 			"D" deletes the highlighted text plus all text until
 			the end of the line.  {not in Vi}
 
-							*:d* *:delete*
+						*:d* *:de* *:del* *:delete*
 :[range]d[elete] [x]	Delete [range] lines (default: current line) [into
 			register x].
 
@@ -207,7 +207,7 @@ word does not include the following white space.  {Vi: "cw" when on a blank
 followed by other blanks changes only the first blank; this is probably a
 bug, because "dw" deletes all the blanks}
 
-							*:c* *:change*
+							*:c* *:ch* *:change*
 :{range}c[hange]	Replace lines of text with some different text.
 			Type a line containing only "." to stop replacing.
 			Without {range}, this command changes only the current
@@ -458,7 +458,7 @@ the 'shelltype' option).  You can repeat filter commands with ".".  Vim does
 not recognize a comment (starting with '"') after the ":!" command.
 
 
-						*:s* *:substitute*
+						*:s* *:su* *:substitute*
 :[range]s[ubstitute]/{pattern}/{string}/[c][e][g][p][r][i][I] [count]
 			For each line in [range] replace a match of {pattern}
 			with {string}.  See |:s_flags| for the flags.
@@ -890,7 +890,7 @@ The next three commands always work on whole lines.
 							*:t*
 :t			Synonym for copy.
 
-:[range]m[ove] {address}				*:m* *:move*
+:[range]m[ove] {address}				*:m* *:mo* *:move*
 			Move the lines given by [range] to below the line
 			given by {address}.
 

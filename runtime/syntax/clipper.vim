@@ -2,7 +2,7 @@
 " Language:	Clipper 5.2
 " Maintainer:	Claudio R Zamana <zamana@zip.net>
 " Some things based on c.vim by Bram Moolenaar and pascal.vim by Mario Eusebio
-" Last change:	1999 Aug 16
+" Last Change:	1999 Aug 16
 
 " Remove any old syntax stuff hanging around
 syn clear

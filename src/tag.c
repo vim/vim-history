@@ -2613,6 +2613,15 @@ simplify_filename(filename)
     do
     {
 	/* At this point "p" is pointing to the char following a "/". */
+#ifdef VMS
+	/* VMS allows disk:[directory - don't strip the [ in directory */
+	if (*p == '[' && p > filename && p[-1] == ':')
+	{
+	    ++components;		/* vms directory component */
+	    p = getnextcomp(p + 1);
+	}
+	else
+#endif
 	if (vim_ispathsep(*p))
 	    movetail(p, p + 1);		/* remove duplicate "/" */
 	else if (p[0] == '.' && vim_ispathsep(p[1]))

@@ -2,11 +2,11 @@
 " Language:	msql
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
-" Email:        Subject: send syntax_vim.tgz
-" Last change:	1999 Jun 14
+" Email:	Subject: send syntax_vim.tgz
+" Last Change:	2000 Jan 05
 "
-" Options       msql_sql_query = 1 for SQL syntax highligthing inside strings
-"               msql_minlines = x     to sync at least x lines backwards
+" Options	msql_sql_query = 1 for SQL syntax highligthing inside strings
+"		msql_minlines = x     to sync at least x lines backwards
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -41,31 +41,33 @@ syn region msqlRegion matchgroup=Delimiter start="<!$" start="<![^!->D]" end=">"
 " sync
 if exists("msql_minlines")
   exec "syn sync minlines=" . msql_minlines
+else
+  syn sync minlines=100
 endif
 
 if !exists("did_msql_syntax_inits")
   let did_msql_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link msqlComment                   Comment
-  hi link msqlString                    String
-  hi link msqlNumber                    Number
-  hi link msqlFloat                     Float
-  hi msqlIdentifier guifg=DarkGrey ctermfg=Brown
-  hi msqlGlobalIdentifier guifg=DarkGrey ctermfg=Brown
-  hi link msqlFunctions                 Function
-  hi link msqlRepeat                    Repeat
-  hi link msqlConditional               Conditional
-  hi link msqlStatement                 Statement
-  hi link msqlType                      Type
-  hi link msqlInclude                   Include
-  hi link msqlDefine                    Define
-  hi link msqlSpecialChar               SpecialChar
-  hi link msqlParentError	        Error
-  hi link msqlTodo                      Todo
-  hi msqlRelation guifg=SeaGreen ctermfg=DarkGreen
-  hi msqlOperator guifg=SeaGreen ctermfg=DarkGreen
-  hi msqlIntVar guifg=Red ctermfg=DarkRed
-  hi msqlEnvVar guifg=Red ctermfg=DarkRed
+  hi link msqlComment		Comment
+  hi link msqlString		String
+  hi link msqlNumber		Number
+  hi link msqlFloat		Float
+  hi link msqlIdentifier	Identifier
+  hi link msqlGlobalIdentifier	Identifier
+  hi link msqlIntVar		Identifier
+  hi link msqlEnvVar		Identifier
+  hi link msqlFunctions		Function
+  hi link msqlRepeat		Repeat
+  hi link msqlConditional	Conditional
+  hi link msqlStatement		Statement
+  hi link msqlType		Type
+  hi link msqlInclude		Include
+  hi link msqlDefine		Define
+  hi link msqlSpecialChar	SpecialChar
+  hi link msqlParentError	Error
+  hi link msqlTodo		Todo
+  hi link msqlOperator		Operator
+  hi link msqlRelation		Operator
 endif
 
 let b:current_syntax = "msql"

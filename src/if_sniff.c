@@ -83,7 +83,7 @@ static struct sn_cmd sniff_cmds[] =
 static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
-static char msg_sniff_disconnect[] = "aCannot connect to SNiFF+. Check environment.\n";
+static char msg_sniff_disconnect[] = "aCannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n";
 /* Initializing vim commands
  * executed each time vim connects to Sniff
  */

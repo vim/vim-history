@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
-" Last change:	1999 Jul 27
+" Last Change:	1999 Jul 27
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -4,9 +4,9 @@
 "		http://nis-www.lanl.gov/~rosalia/mydocs/docbook-intro.html
 "		ftp://sourceware.cygnus.com/pub/docbook-tools
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-"               If you want to enhance and maintain, You can remove my name
-"               and insert yours.
-" Last change:	1999/12/10
+"		If you want to enhance and maintain, You can remove my name
+"		and insert yours.
+" Last Change:	1999/12/10
 
 " Remove any old syntax stuff hanging around
 syn clear

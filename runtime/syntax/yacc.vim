@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Yacc
-" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change:	April 8, 1999
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	April 8, 1999
 
 " Remove any old syntax stuff hanging around
 syn clear

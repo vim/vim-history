@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mj@core.rose.hp.com>
-" Last Update:  Tue Jun 30 09:25:12 PDT 1998
+" Last Update:	Tue Jun 30 09:25:12 PDT 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1125,7 +1125,11 @@ clip_gen_request_selection()
  * descriptions which would otherwise overflow.  The buffer is considered full
  * when only this extra space (or part of it) remains.
  */
-#define INBUFLEN 250
+#ifdef VMS
+# define INBUFLEN 10000 /* for proper cut/paste between X windows in ch. mode */
+#else
+# define INBUFLEN 250
+#endif
 
 static char_u	inbuf[INBUFLEN + MAX_KEY_CODE_LEN];
 static int	inbufcount = 0;	    /* number of chars in inbuf[] */

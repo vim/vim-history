@@ -508,6 +508,7 @@ SynMenu CD.Century\ Term:cterm
 SynMenu CD.Change:change
 SynMenu CD.Clean:clean
 SynMenu CD.Clipper:clipper
+SynMenu CD.Cold\ Fusion:cf
 SynMenu CD.Configure\ script:config
 SynMenu CD.Csh\ shell\ script:csh
 SynMenu CD.Ctrl-H:ctrlh
@@ -523,6 +524,7 @@ SynMenu CD.DTD:dtd
 
 SynMenu EFGH.Eiffel:eiffel
 SynMenu EFGH.Elm\ Filter:elmfilt
+SynMenu EFGH.ERicsson\ LANGuage:erlang
 SynMenu EFGH.ESQL-C:esqlc
 SynMenu EFGH.Expect:expect
 SynMenu EFGH.Exports:exports
@@ -534,6 +536,7 @@ SynMenu EFGH.Fvwm\ configuration:fvwm1
 SynMenu EFGH.Fvwm2\ configuration:fvwm2
 SynMenu EFGH.GDB\ command\ file:gdb
 SynMenu EFGH.GDMO:gdmo
+SynMenu EFGH.Gedcom:gedcom
 SynMenu EFGH.GP:gp
 SynMenu EFGH.GNUplot:gnuplot
 SynMenu EFGH.Haskell:haskell
@@ -541,6 +544,7 @@ SynMenu EFGH.Haskell-literal:lhaskell
 SynMenu EFGH.HTML:html
 SynMenu EFGH.HTML\ with\ M4:htmlm4
 
+SynMenu IJKL.Icon:icon
 SynMenu IJKL.IDL:idl
 SynMenu IJKL.Interactive\ Data\ Lang:idlang
 SynMenu IJKL.Inform:inform
@@ -606,6 +610,7 @@ SynMenu PQR.Prolog:prolog
 SynMenu PQR.Purify\ log:purifylog
 SynMenu PQR.Python:python
 SynMenu PQR.Radiance:radiance
+SynMenu PQR.RCS\ log\ output:rcslog
 SynMenu PQR.Rebol:rebol
 SynMenu PQR.Remind:remind
 SynMenu PQR.Renderman\ Shader\ Lang:sl
@@ -643,6 +648,7 @@ SynMenu TUV.Tcl/Tk:tcl
 SynMenu TUV.Telix\ Salt:tsalt
 SynMenu TUV.Termcap:ptcap
 SynMenu TUV.TeX:tex
+SynMenu TUV.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
 SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.Verilog\ HDL:verilog

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Motif UIL (User Interface Language)
 " Maintainer:	Thomas Koehler <jean-luc@picard.franken.de>
-" Last change:	1998 February 17
+" Last Change:	1998 February 17
 
 syn clear
 

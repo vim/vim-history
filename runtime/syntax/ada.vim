@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	Ada (95)
 " Maintainer:	David A. Wheeler <wheeler@ida.org>
-" Last change:	1998 Dec 7
+" Last Change:	1998 Dec 7
 
 " Former Maintainer:	Simon Bradley <simon.bradley@pitechnology.com>
-"                       (was <sib93@aber.ac.uk>)
+"			(was <sib93@aber.ac.uk>)
 " This version fixes an error in String/Character handling from 1997-May-5.
 " The formal spec of Ada95 is available at "http://www.adahome.com/rm95/".
 

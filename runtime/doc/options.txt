@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.6a.  Last change: 1999 Dec 10
+*options.txt*   For Vim version 5.6.  Last change: 2000 Jan 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -516,7 +516,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Allow CTRL-_ in Insert and Command-line mode.  This is default off, to
 	avoid that users that accidentally type CTRL-_ instead of SHIFT-_ get
 	into reverse Insert mode, and don't know how to get out.  See
-	'revins'.  This option is reset when 'compatible' is set.
+	'revins'.
+	NOTE: This option is reset when 'compatible' is set.
 
 			 *'altkeymap'* *'akm'* *'noaltkeymap'* *'noakm'*
 'altkeymap' 'akm'	boolean (default off)
@@ -612,6 +613,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	  2	same as "indent,eol,start"
 
 	See |:fixdel| if your <BS> or <Del> key does not do what you want.
+	NOTE: This option is set to "" when 'compatible' is set.
 
 				*'backup'* *'bk'* *'nobackup'* *'nobk'*
 'backup' 'bk'		boolean	(default off)
@@ -624,6 +626,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	the default).  If you do not want a backup file at all reset both
 	options (use this if your file system is almost full).  See the
 	|backup-table| for more explanations.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'backupdir'* *'bdir'*
 'backupdir' 'bdir'	string	(default for Amiga: ".,t:",
@@ -641,6 +644,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	- A directory starting with "./" (or ".\" for MS-DOS et.al.) means to
 	  put the backup file relative to where the edited file is.  The
 	  leading "." is replaced with the path name of the edited file.
+	  ("." inside a directory name has no special meaning).
 	- Spaces after the comma are ignored, other spaces are considered part
 	  of the directory name.  To have a space at the start of a directory
 	  name, precede it with a backslash.
@@ -653,6 +657,10 @@ A jump table for the options with a short description can be found at |X_op|.
 	- For backwards compatibility with Vim version 3.0 a '>' at the start
 	  of the option is removed.
 	See also 'backup' and 'writebackup' options.
+	If you want to hide your backup files on Unix, consider this value:
+>		:set backupdir=./.backup,~/.backup,.,/tmp
+	You must create a ".backup" directory in each directory and in your
+	home directory for this to work properly.
 	The use of |:set+=| and |:set-=| is preferred when adding or removing
 	directories from the list.  This avoids problems when a future version
 	uses another default.
@@ -733,6 +741,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	external program.  See |C-indenting|.  This option is switched off
 	when 'paste' is set.  When you don't like the way 'cindent' works, try
 	the 'smartindent' option.
+	NOTE: This option is reset when 'compatible' is set.
 
 'cinkeys' 'cink'	string	(default "0{,0},:,0#,!^F,o,O,e")
 			local to buffer
@@ -854,10 +863,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	option		+ set value	effect	~
 
 	'allowrevins'	  off		no CTRL-_ command
-	'backspace'	  0		normal backspace
+	'backspace'	  ""		normal backspace
 	'backup'	  off		no backup file
 	'cindent'	  off		no C code indentation
 	'cpoptions'	+ (all flags)	Vi-compatible flags
+	'cscopetag'	  off		don't use cscope for ":tag"
+	'cscopetagorder'  0		see |cscopetagorder|
+	'cscopeverbose'	  off		see |cscopeverbose|
 	'digraph'	  off		no digraphs
 	'esckeys'	+ off		no <Esc>-keys in Insert mode
 	'expandtab'	  off		tabs not expanded to spaces
@@ -866,6 +878,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	'formatoptions'	+ "vt"		Vi compatible formatting
 	'gdefault'	  off		no default 'g' flag for ":s"
 	'history'	+ 0		no commandline history
+	'hkmap'		  off		no Hebrew keyboard mapping
+	'hkmapp'	  off		no phonetic Hebrew keyboard mapping
 	'hlsearch'	  off		no highlighting of search matches
 	'incsearch'	  off		no incremental searching
 	'insertmode'	  off		do not start in Insert mode
@@ -879,6 +893,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'scrolljump'	  1		no jump scroll
 	'scrolloff'	  0		no scroll offset
 	'shiftround'	  off		indent not rounded to shiftwidth
+	'shortmess'	+ ""		no shortening of messages
 	'showcmd'	+ off		command characters not shown
 	'showmode'	+ off		current mode not shown
 	'smartcase'	  off		no automatic ignore case switch
@@ -894,6 +909,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'whichwrap'	+ ""		left-right movements don't wrap
 	'wildchar'	+ CTRL-E	only when the current value is <Tab>
 					use CTRL-E for cmdline completion
+	'writebackup'	  on or off	depends on +writebackup feature
 
 						*'complete'* *'cpt'*
 'complete' 'cpt'	string	(default: ".,w,b,u,t,i")
@@ -965,10 +981,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	A sequence of single character flags.  When a character is present
 	this indicates vi-compatible behavior.  This is used for things where
 	not being vi-compatible is mostly or sometimes preferred.
-	'cpoptions' stands for 'compatibleoptions'.
+	'cpoptions' stands for "compatible-options".
 	Commas can be added for readability.
 	To avoid problems with flags that are added in the future, use the
 	"+=" and "-=" feature of ":set" |add-option-flags|.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 	    contains	behaviour	~
 		a	When included, a ":read" command with a file name
@@ -1137,6 +1155,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 			{not in Vi}
 	Use cscope for tag commands.  See |cscope-options|.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'cscopetagorder'* *'csto'*
 'cscopetagorder' 'csto'	number	(default 0)
@@ -1146,6 +1165,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	Determines the order in which ":cstag" performs a search.  See
 	|cscopetagorder|.
+	NOTE: This option is set to 0 when 'compatible' is set.
 
 					*'cscopeverbose'* *'csverb'*
 					*'nocscopeverbose'* *'nocsverb'*
@@ -1155,6 +1175,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 			{not in Vi}
 	Give messages when adding a cscope database.  See |cscopeverbose|.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'define'* *'def'*
 'define' 'def'		string	(default "^#\s*define")
@@ -1199,6 +1220,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	Enable the entering of digraphs in Insert mode with {char1} <BS>
 	{char2}.  See |digraphs|.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'directory'* *'dir'*
 'directory' 'dir'	string	(default for Amiga: ".,t:",
@@ -1340,6 +1362,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	try changing the values for 'timeoutlen' and 'ttimeoutlen'.  Note that
 	when 'esckeys' is off, you can still map anything, but the cursor keys
 	won't work by default.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'eventignore'* *'ei'*
 'eventignore' 'ei'	string	(default "")
@@ -1359,6 +1383,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	<Tab>.  Spaces are used in indents with the '>' and '<' commands and
 	when 'autoindent' is on.  To insert a real tab when 'expandtab' is
 	on, use CTRL-V<Tab>.  See also |:retab| and |ins-expandtab|.
+	NOTE: This option is reset when 'compatible' is set.
 
 					*'exrc'* *'ex'* *'noexrc'* *'noex'*
 'exrc' 'ex'		boolean (default off)
@@ -1472,6 +1497,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	For backwards compatibility: When this option is set to an empty
 	string or one format (no comma is included), 'textauto' is reset,
 	otherwise 'textauto' is set.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 					*'filetype'* *'ft'*
 'filetype' 'ft'		string (default: "")
@@ -1512,6 +1539,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	be inserted for readability.
 	To avoid problems with flags that are added in the future, use the
 	"+=" and "-=" feature of ":set" |add-option-flags|.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'formatprg'* *'fp'*
 'formatprg' 'fp'	string (default "")
@@ -1540,6 +1569,8 @@ A jump table for the options with a short description can be found at |X_op|.
 		:s///		  subst. all	  subst. one
 		:s///g		  subst. one	  subst. all
 		:s///gg		  subst. all	  subst. one
+
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'grepformat'* *'gfm'*
 'grepformat' 'gfm'	string	(default "%f:%l%m,%f  %l%m")
@@ -1884,6 +1915,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	When you get bored looking at the highlighted matches, you can turn it
 	off with |:nohlsearch|.  As soon as you use a search command, the
 	highlighting comes back.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'history'* *'hi'*
 'history' 'hi'		number	(Vim default: 20, Vi default: 0)
@@ -1892,6 +1924,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	A history of ":" commands, and a history of previous search patterns
 	are remembered.  This option decides how many entries may be stored in
 	each of these histories (see |cmdline-editing|).
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 					 *'hkmap'* *'hk'* *'nohkmap'* *'nohk'*
 'hkmap' 'hk'		boolean (default off)
@@ -1902,6 +1936,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on, the keyboard is mapped for the Hebrew character set.
 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 	toggle this option.  See |rightleft.txt|.
+	NOTE: This option is reset when 'compatible' is set.
 
 				 *'hkmapp'* *'hkp'* *'nohkmapp'* *'nohkp'*
 'hkmapp' 'hkp'		boolean (default off)
@@ -1912,6 +1947,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on, phonetic keyboard mapping is used.  'hkmap' must also be on.
 	This is useful if you have a non-Hebrew keyboard.
 	See |rightleft.txt|.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'icon'* *'noicon'*
 'icon'			boolean	(default off, on when title can be restored)
@@ -1980,6 +2016,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	there.  You still need to finish the search command with <CR> to move
 	the cursor.  The highlighting can be set with the 'i' flag in
 	'highlight'.  See also: 'hlsearch'.
+	NOTE: This option is reset when 'compatible' is set.
 
 			*'infercase'* *'inf'* *'noinfercase'* *'noinf'*
 'infercase' 'inf'	boolean	(default off)
@@ -2017,6 +2054,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	However, when <Esc> is used inside a mapping, it behaves like
 	'insertmode' was not set.  This was done to be able to use the same
 	mappings with 'insertmode' set or not set.
+
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'isfname'* *'isf'*
 'isfname' 'isf'		string	(default for MS-DOS, Win32 and OS/2:
@@ -2095,6 +2134,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	'*', '"' and '|' (so that CTRL-] on a command finds the help for that
 	command).
 	When the 'lisp' option is on the '-' character is always included.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'isprint'* *'isp'*
 'isprint' 'isp'	string	(default for MS-DOS and Win32: "@,~-255"
@@ -2121,6 +2162,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Insert two spaces after a '.', '?' and '!' with a join command.
 	When 'cpoptions' includes the 'j' flag, only do this after a '.'.
 	Otherwise only one space is inserted.
+	NOTE: This option is set when 'compatible' is set.
 
 							*'key'*
 'key'			string	(default "")
@@ -2408,8 +2450,9 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	If 'modeline' is on 'modelines' gives the number of lines that is
 	checked for set commands.  If 'modeline' is off or 'modelines' is zero
-	no lines are checked.  See |modeline|.  'modeline' is reset when
-	'compatible' is set.
+	no lines are checked.  See |modeline|.
+	NOTE: 'modeline' is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 				 *'modified'* *'mod'* *'nomodified'* *'nomod'*
 'modified' 'mod'	boolean	(default off)
@@ -2426,7 +2469,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on, listings pause when the whole screen is filled.  You will get
 	the |more-prompt|.  When this option is off there are no pauses, the
 	listing continues until finished.
-	When 'compatible' is set this option is reset.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'mouse'*
 'mouse'			string	(default "", "a" for GUI, MS-DOS and Win32)
@@ -2759,8 +2803,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	Inserting characters in Insert mode will work backwards.  See "typing
 	backwards" |ins-reverse|.  This option can be toggled with the CTRL-_
-	command in Insert mode, when 'allowrevins' is set.  This option is
-	reset when 'compatible' or 'paste' is set.
+	command in Insert mode, when 'allowrevins' is set.
+	NOTE: This option is reset when 'compatible' or 'paste' is set.
 
 				 *'rightleft'* *'rl'* *'norightleft'* *'norl'*
 'rightleft' 'rl'	boolean	(default off)
@@ -2803,6 +2847,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	This option is reset when the 'paste' option is set.
 	If you don't want to see the ruler all the time but want to know where
 	you are, use "g CTRL-G" |g_CTRL-G|.
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'rulerformat'* *'ruf'*
 'rulerformat' 'ruf'	string	(default empty)
@@ -2826,7 +2871,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	of screen lines instead of file lines, makes a difference when lines
 	wrap}
 
-						*'scrollbind'* *'scb'*
+			*'scrollbind'* *'scb'* *'noscrollbind'* *'noscb'*
 'scrollbind' 'scb'	boolean  (default off)
 			local to window
 			{not in Vi}
@@ -2845,6 +2890,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Minimal number of lines to scroll when the cursor gets off the
 	screen (e.g., with "j").  Not used for scroll commands (e.g., CTRL-E,
 	CTRL-D).  Useful if your terminal scrolls very slowly.
+	NOTE: This option is set to 1 when 'compatible' is set.
 
 						*'scrolloff'* *'so'*
 'scrolloff' 'so'	number	(default 0)
@@ -2855,6 +2901,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	you set it to a very large value (999) the cursor line will always be
 	in the middle of the window (except at the start or end of the file or
 	when long lines wrap).
+	NOTE: This option is set to 0 when 'compatible' is set.
 
 						*'scrollopt'* *'sbo'*
 'scrollopt' 'sbo'	string	(default "ver,jump")
@@ -3118,6 +3165,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Round indent to multiple of 'shiftwidth'.  Applies to > and <
 	commands.  CTRL-T and CTRL-D in Insert mode always round the indent to
 	a multiple of 'shiftwidth' (this is Vi compatible).
+	NOTE: This option is reset when 'compatible' is set.
 
 						*'shiftwidth'* *'sw'*
 'shiftwidth' 'sw'	number	(default 8)
@@ -3169,6 +3217,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	    shm=a	Abbreviation, but no loss of information.
 	    shm=at	Abbreviation, and truncate message when necessary.
 
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
+
 				 *'shortname'* *'sn'* *'noshortname'* *'nosn'*
 'shortname' 'sn'	boolean	(default off)
 			local to buffer
@@ -3204,8 +3255,10 @@ A jump table for the options with a short description can be found at |X_op|.
 			|+cmdline_info| feature}
 	Show (partial) command in status line.  Set this option off if your
 	terminal is slow.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
-						*'showfulltag'* *'sft'*
+			*'showfulltag'* *'sft'* *'noshowfulltag'* *'nosft'*
 'showfulltag' 'sft'	boolean (default off)
 			global
 			{not in Vi}
@@ -3235,6 +3288,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	If in Insert, Replace or Visual mode put a message on the last line.
 	Use the 'M' flag in 'highlight' to set the type of highlighting for
 	this message.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'sidescroll'* *'ss'*
 'sidescroll' 'ss'	number	(default 0)
@@ -3257,6 +3312,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	":g" and ":s".  Not used for "*", "#", "gd", tag search, etc..  After
 	"*" and "#" you can make 'smartcase' used by doing a "/" command,
 	recalling the search pattern from history and hitting return.
+	NOTE: This option is reset when 'compatible' is set.
 
 			     *'smartindent'* *'si'* *'nosmartindent'* *'nosi'*
 'smartindent' 'si'	boolean	(default off)
@@ -3281,7 +3337,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	mapping: ":inoremap # X^H#", where ^H is entered with CTRL-V CTRL-H.
 	When using the ">>" command, lines starting with '#' are not shifted
 	right.
-	'smartindent' is reset when the 'paste' option is set.
+	NOTE: 'smartindent' is reset when 'compatible' or 'paste' option is
+	set.
 
 				 *'smarttab'* *'sta'* *'nosmarttab'* *'nosta'*
 'smarttab' 'sta'	boolean	(default off)
@@ -3295,6 +3352,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	What gets inserted (a Tab or spaces) depends on the 'expandtab'
 	option.  Also see |ins-expandtab|.  When 'expandtab' is not set, the
 	number of spaces minimized by using <Tab>s.
+	NOTE: This option is reset when 'compatible' is set.
 
 					*'softtabstop'* *'sts'*
 'softtabstop' 'sts'	number	(default 0)
@@ -3310,6 +3368,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'softtabstop' is set to 0 when the 'paste' option is set.
 	See also |ins-expandtab|.  When 'expandtab' is not set, the number of
 	spaces minimized by using <Tab>s.
+	NOTE: This option is set to 0 when 'compatible' is set.
 
 			*'splitbelow'* *'sb'* *'nosplitbelow'* *'nosb'*
 'splitbelow' 'sb'	boolean	(default off)
@@ -3331,7 +3390,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	only has a line number, e.g., ":25" or ":+".
 	In case of buffer changing commands the cursor is placed at the column
 	where it was the last time the buffer was edited.
-	This option is set when the 'compatible' option is set.
+	NOTE: This option is set when 'compatible' is set.
 
 			   *'statusline'* *'stl'*
 'statusline' 'stl'	string	(default empty)
@@ -3594,8 +3653,9 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	If on and using a tag file in another directory, file names in that
-	tag file are relative to the directory where the tag file is.  When
-	the 'compatible' option is set, this option is reset.
+	tag file are relative to the directory where the tag file is.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'tags'* *'tag'*
 'tags' 'tag'		string	(default "./tags,tags", when compiled with
@@ -3664,6 +3724,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	For backwards compatibility, when 'textauto' is set, 'fileformats' is
 	set to the default value for the current system.  When 'textauto' is
 	reset, 'fileformats' is made empty.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 				   *'textmode'* *'tx'* *'notextmode'* *'notx'*
 'textmode' 'tx'		boolean	(MS-DOS, Win32 and OS/2: default on,
@@ -3684,12 +3746,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	this.  'textwidth' is set to 0 when the 'paste' option is set.  When
 	'textwidth' is zero, 'wrapmargin' may be used.  See also
 	'formatoptions' and |ins-textwidth|.
+	NOTE: This option is set to 0 when 'compatible' is set.
 
 			     *'tildeop'* *'top'* *'notildeop'* *'notop'*
 'tildeop' 'top'		boolean	(default off)
 			global
 			{not in Vi}
 	When on: The tilde command "~" behaves like an operator.
+	NOTE: This option is reset when 'compatible' is set.
 
 				*'timeout'* *'to'* *'notimeout'* *'noto'*
 'timeout' 'to'		boolean (default on)
@@ -3722,6 +3786,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	problems with key codes, but would like to have :mapped key
 	sequences not time out in 1 second, set the ttimeout option and
 	reset the timeout option.
+
+	NOTE: 'ttimeout' is reset when 'compatible' is set.
 
 						*'timeoutlen'* *'tm'*
 'timeoutlen' 'tm'	number	(default 1000)
@@ -4115,17 +4181,20 @@ A jump table for the options with a short description can be found at |X_op|.
 	cursor.
 	When 'l' is included, you get a side effect: "yl" on an empty line
 	will include the <EOL>, so that "p" will insert a new line.
-	When 'compatible' is set, 'whichwrap' is set to "".
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'wildchar'* *'wc'*
 'wildchar' 'wc'		number	(Vim default: <Tab>, Vi default: CTRL-E)
 			global
 			{not in Vi}
 	Character you have to type to start wildcard expansion in the
-	command-line.  CTRL-E is used when the 'compatible' option is set.
+	command-line.
 	The character is not recognized when used inside a macro.  Although
 	'wc' is a number option, you can set it to a special key:
 >		:set wc=<Esc>
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
 
 						*'wildcharm'* *'wcm'*
 'wildcharm' 'wcm'	number	(default: none (0))
@@ -4136,7 +4205,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	keys suitable for this option by looking at |ex-edit-index|. Normally
 	you'll never actually type 'wildcharm', just use it in mappings that
 	automatically invoke completion mode, e.g.:
->		:set wc=<C-Z>
+>		:set wcm=<C-Z>
 >		:cmap ss so $vim/sessions/*.vim<C-Z>
 	Then after typing :ss you can use CTRL-P & CTRL-N.
 
@@ -4156,7 +4225,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	a pattern from the list.  This avoids problems when a future version
 	uses another default.
 
-							*'wildmenu'* *'wmnu'*
+				*'wildmenu'* *'wmnu'* *'nowildmenu'* *'nowmnu'*
 'wildmenu' 'wmnu'	boolean	(default off)
 			global
 			{not in Vi}
@@ -4328,6 +4397,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	the file was successfully written, unless the 'backup' option is
 	also on.  Reset this option if your file system is almost full.  See
 	|backup-table| for another explanation.
+	NOTE: This option is set to the default value when 'compatible' is
+	set.
 
 						*'writedelay'* *'wd'*
 'writedelay' 'wd'	number	(default 0)

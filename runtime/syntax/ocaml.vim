@@ -1,9 +1,9 @@
 " Vim syntax file
-" Language:      OCAML
-" Maintainers:   Markus Mottl     <mottl>@miss.wu-wien.ac.at
-"                Karl-Heinz Sylla <Karl-Heinz.Sylla>@gmd.de
-" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last change:   1999 Oct  10 - small fix for modules (MM)
+" Language:	OCAML
+" Maintainers:	Markus Mottl	  <mottl>@miss.wu-wien.ac.at
+"		Karl-Heinz Sylla <Karl-Heinz.Sylla>@gmd.de
+" URL:		http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
+" Last Change:	1999 Oct  10 - small fix for modules (MM)
 
 
 " Remove any old syntax stuff hanging around.

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	XS (Perl extension interface language)
 " Maintainer:	Michael W. Dodge <sarge@pobox.com>
-" Last change:	1999 Mar 08
+" Last Change:	1999 Mar 08
 
 " Remove any old syntax stuff hanging around
 syn clear
