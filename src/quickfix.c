@@ -1224,7 +1224,7 @@ qf_jump(dir, errornr, forceit)
 		    (char *)qf_types(qf_ptr->qf_type, qf_ptr->qf_nr));
 	    /* Add the message, skipping leading whitespace and newlines. */
 	    len = (int)STRLEN(IObuff);
-	    qf_fmt_text(qf_ptr->qf_text, IObuff + len, IOSIZE - len);
+	    qf_fmt_text(skipwhite(qf_ptr->qf_text), IObuff + len, IOSIZE - len);
 
 	    /* Output the message.  Overwrite to avoid scrolling when the 'O'
 	     * flag is present in 'shortmess'; But when not jumping, print the
@@ -1347,8 +1347,12 @@ qf_list(eap)
 		sprintf((char *)IObuff + STRLEN(IObuff), "%s: ",
 				  (char *)qf_types(qfp->qf_type, qfp->qf_nr));
 		msg_puts_attr(IObuff, hl_attr(HLF_N));
-		/* Remove newlines and leading whitespace from the text. */
-		qf_fmt_text(qfp->qf_text, IObuff, IOSIZE);
+		/* Remove newlines and leading whitespace from the text.
+		 * For an unrecognized line keep the indent, the compiler may
+		 * mark a word with ^^^^. */
+		qf_fmt_text((fname != NULL || qfp->qf_lnum != 0)
+				     ? skipwhite(qfp->qf_text) : qfp->qf_text,
+							      IObuff, IOSIZE);
 		msg_prt_line(IObuff);
 		out_flush();		/* show one line at a time */
 		need_return = TRUE;
@@ -1392,7 +1396,7 @@ qf_fmt_text(text, buf, bufsize)
     int		bufsize;
 {
     int		i;
-    char_u	*p = skipwhite(text);
+    char_u	*p = text;
 
     for (i = 0; *p != NUL && i < bufsize - 1; ++i)
     {
@@ -1852,7 +1856,11 @@ qf_fill_buffer()
 	    IObuff[len++] = '|';
 	    IObuff[len++] = ' ';
 
-	    qf_fmt_text(qfp->qf_text, IObuff + len, IOSIZE - len);
+	    /* Remove newlines and leading whitespace from the text.
+	     * For an unrecognized line keep the indent, the compiler may
+	     * mark a word with ^^^^. */
+	    qf_fmt_text(len > 3 ? skipwhite(qfp->qf_text) : qfp->qf_text,
+						  IObuff + len, IOSIZE - len);
 
 	    if (ml_append(lnum, IObuff, (colnr_T)STRLEN(IObuff) + 1, FALSE)
 								      == FAIL)
