@@ -1474,29 +1474,31 @@ im_set_position(int row, int col)
 im_set_active(int active)
 {
     HIMC	hImc;
-    static HIMC	hImcOld = NULL;
+    static HIMC	hImcOld = (HIMC)0;
 
-    if (p_imdisable)
+    if (pImmGetContext)	    /* if NULL imm32.dll wasn't loaded (yet) */
     {
-	if (hImcOld == NULL)
+	if (p_imdisable)
 	{
-	    hImcOld = pImmGetContext(s_hwnd);
-	    if (hImcOld)
-		pImmAssociateContext(s_hwnd, NULL);
+	    if (hImcOld == (HIMC)0)
+	    {
+		hImcOld = pImmGetContext(s_hwnd);
+		if (hImcOld)
+		    pImmAssociateContext(s_hwnd, (HIMC)0);
+	    }
+	    active = FALSE;
 	}
-	active = FALSE;
-    }
-    else
-    if (hImcOld != NULL)
-    {
-	pImmAssociateContext(s_hwnd, hImcOld);
-	hImcOld = NULL;
-    }
+	else if (hImcOld != (HIMC)0)
+	{
+	    pImmAssociateContext(s_hwnd, hImcOld);
+	    hImcOld = (HIMC)0;
+	}
 
-    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
-    {
-	pImmSetOpenStatus(hImc, active);
-	pImmReleaseContext(s_hwnd, hImc);
+	if (hImc = pImmGetContext(s_hwnd))
+	{
+	    pImmSetOpenStatus(hImc, active);
+	    pImmReleaseContext(s_hwnd, hImc);
+	}
     }
 }
 
