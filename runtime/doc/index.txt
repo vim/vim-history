@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.3.  Last change: 2004 Jun 16
+*index.txt*     For Vim version 6.3.  Last change: 2004 Jul 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -89,7 +89,7 @@ tag		char		action	~
 |i_CTRL-V_digit| CTRL-V {number} insert three digit decimal number as a single
 				byte.
 |i_CTRL-W|	CTRL-W		delete word before the cursor
-|i_CTRL-X|	CTRL-X {mode}	enter CTRL-X sub mode, see below
+|i_CTRL-X|	CTRL-X {mode}	enter CTRL-X sub mode, see |i_CTRL-X_index|
 |i_CTRL-Y|	CTRL-Y		insert the character which is above the cursor
 |i_CTRL-Z|	CTRL-Z		when 'insertmode' set: suspend Vim
 |i_<Esc>|	<Esc>		end insert mode (unless 'insertmode' set)
@@ -141,7 +141,7 @@ tag		char		action	~
 |i_<MouseUp>|	<MouseUp>	scroll three lines upwards
 |i_<S-MouseUp>|	<S-MouseUp>	scroll a full page upwards
 
-commands in CTRL-X submode
+commands in CTRL-X submode				*i_CTRL-X_index*
 
 |i_CTRL-X_CTRL-D|	CTRL-X CTRL-D	complete defined identifiers
 |i_CTRL-X_CTRL-E|	CTRL-X CTRL-E	scroll up
@@ -153,6 +153,7 @@ commands in CTRL-X submode
 |i_CTRL-X_CTRL-P|	CTRL-X CTRL-P	previous completion
 |i_CTRL-X_CTRL-T|	CTRL-X CTRL-T	complete identifiers from thesaurus
 |i_CTRL-X_CTRL-Y|	CTRL-X CTRL-Y	scroll down
+|i_CTRL-X_CTRL-V|	CTRL-X CTRL-V	complete like in : command line
 |i_CTRL-X_CTRL-]|	CTRL-X CTRL-]	complete tags
 {not available when compiled without the +insert_expand feature}
 
