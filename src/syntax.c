@@ -6173,7 +6173,7 @@ do_highlight(line, forceit, init)
 	     */
 	    if (gui.in_use)
 	    {
-# ifdef FEAT_BEVAL
+# ifdef FEAT_BEVAL_TIP
 		gui_init_tooltip_font();
 # endif
 # if defined(FEAT_MENU) && (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF))
@@ -7179,7 +7179,7 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 #  ifdef FONTSET_ALWAYS
 	|| do_menu
 #  endif
-#  ifdef FEAT_BEVAL
+#  ifdef FEAT_BEVAL_TIP
 	/* In Athena & Motif, the Tooltip highlight group is always a fontset */
 	|| do_tooltip
 #  endif
@@ -7188,7 +7188,7 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 #  ifdef FONTSET_ALWAYS
 		|| do_menu
 #  endif
-#  ifdef FEAT_BEVAL
+#  ifdef FEAT_BEVAL_TIP
 		|| do_tooltip
 #  endif
 		);

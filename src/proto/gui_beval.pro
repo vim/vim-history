@@ -1,5 +1,5 @@
 /* gui_beval.c */
-BalloonEval *gui_mch_create_beval_area __ARGS((Widget target, char_u *mesg, void (*mesgCB)(BalloonEval *, int), XtPointer clientData));
+BalloonEval *gui_mch_create_beval_area __ARGS((void *target, char_u *mesg, void (*mesgCB)(BalloonEval *, int), void *clientData));
 void gui_mch_destroy_beval_area __ARGS((BalloonEval *beval));
 void gui_mch_enable_beval_area __ARGS((BalloonEval *beval));
 void gui_mch_disable_beval_area __ARGS((BalloonEval *beval));

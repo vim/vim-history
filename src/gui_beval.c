@@ -12,29 +12,48 @@
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
 
-#include <X11/keysym.h>
-#ifdef FEAT_GUI_MOTIF
-#include <Xm/PushB.h>
-#include <Xm/Separator.h>
-#include <Xm/List.h>
-#include <Xm/Label.h>
-#include <Xm/AtomMgr.h>
-#include <Xm/Protocols.h>
+#ifdef FEAT_GUI_GTK
+# include <gdk/gdkkeysyms.h>
+# include <gtk/gtk.h>
 #else
-    /* Assume Athena */
-#include <X11/Shell.h>
-#include <X11/Xaw/Label.h>
+# include <X11/keysym.h>
+# ifdef FEAT_GUI_MOTIF
+#  include <Xm/PushB.h>
+#  include <Xm/Separator.h>
+#  include <Xm/List.h>
+#  include <Xm/Label.h>
+#  include <Xm/AtomMgr.h>
+#  include <Xm/Protocols.h>
+# else
+   /* Assume Athena */
+#  include <X11/Shell.h>
+#  include <X11/Xaw/Label.h>
+# endif
 #endif
 
 #include "gui_beval.h"
 
+#ifndef FEAT_GUI_GTK
 extern Widget vimShell;
+#endif
 
+#ifdef FEAT_GUI_GTK
+static void addEventHandler __ARGS((GtkWidget *, BalloonEval *));
+static void removeEventHandler __ARGS((BalloonEval *));
+static gint target_event_cb __ARGS((GtkWidget *, GdkEvent *, gpointer));
+static gint mainwin_event_cb __ARGS((GtkWidget *, GdkEvent *, gpointer));
+static void pointer_event __ARGS((BalloonEval *, int, int, unsigned int));
+static void key_event __ARGS((BalloonEval *, unsigned, int));
+static gint timeout_cb __ARGS((gpointer));
+static gint balloon_expose_event_cb __ARGS((GtkWidget *, GdkEventExpose *, gpointer));
+static void balloon_draw_cb __ARGS((GtkWidget *, GdkRectangle *area, gpointer));
+#else
 static void addEventHandler __ARGS((Widget, BalloonEval *));
 static void removeEventHandler __ARGS((BalloonEval *));
 static void pointerEventEH __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void pointerEvent __ARGS((BalloonEval *, XEvent *));
 static void timerRoutine __ARGS((XtPointer, XtIntervalId *));
+#endif
 static void cancelBalloon __ARGS((BalloonEval *));
 static void requestBalloon __ARGS((BalloonEval *));
 static void drawBalloon __ARGS((BalloonEval *));
@@ -53,14 +72,16 @@ static void createBalloonEvalWindow __ARGS((BalloonEval *));
  */
     BalloonEval *
 gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
-    Widget	target;
+    void	*target;
     char_u	*mesg;
     void	(*mesgCB)__ARGS((BalloonEval *, int));
-    XtPointer	clientData;
+    void	*clientData;
 {
+#ifndef FEAT_GUI_GTK
     char	*display_name;	    /* get from gui.dpy */
     int		screen_num;
     char	*p;
+#endif
     BalloonEval	*beval;
 
     if (mesg != NULL && mesgCB != NULL)
@@ -72,10 +93,16 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
     beval = (BalloonEval *)alloc(sizeof(BalloonEval));
     if (beval != NULL)
     {
-	beval->target = target;
+#ifdef FEAT_GUI_GTK
+	beval->target = GTK_WIDGET(target);
+	beval->balloonShell = NULL;
+	beval->timerID = 0;
+#else
+	beval->target = (Widget)target;
 	beval->balloonShell = NULL;
 	beval->timerID = (XtIntervalId)NULL;
-	beval->appContext = XtWidgetToApplicationContext(target);
+	beval->appContext = XtWidgetToApplicationContext((Widget)target);
+#endif
 	beval->showState = ShS_NEUTRAL;
 	beval->x = 0;
 	beval->y = 0;
@@ -88,25 +115,28 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
 	 * and when the pointer rests in a certain spot for a given time
 	 * interval, show the beval.
 	 */
-	addEventHandler(target, beval);
+	addEventHandler(beval->target, beval);
 	createBalloonEvalWindow(beval);
 
+#ifndef FEAT_GUI_GTK
 	/*
 	 * Now create and save the screen width and height. Used in drawing.
 	 */
 	display_name = DisplayString(gui.dpy);
 	p = strrchr(display_name, '.');
-	if (p++ != NULL)
-	    screen_num = atoi(p);
+	if (p != NULL)
+	    screen_num = atoi(++p);
 	else
 	    screen_num = 0;
 	beval->screen_width = DisplayWidth(gui.dpy, screen_num);
 	beval->screen_height = DisplayHeight(gui.dpy, screen_num);
+#endif
     }
 
     return beval;
 }
 
+#if defined(FEAT_BEVAL_TIP) || defined(PROTO)
 /*
  * Destroy a ballon-eval and free its associated memory.
  */
@@ -117,9 +147,14 @@ gui_mch_destroy_beval_area(beval)
     cancelBalloon(beval);
     removeEventHandler(beval);
     /* Children will automatically be destroyed */
+# ifdef FEAT_GUI_GTK
+    gtk_widget_destroy(beval->balloonShell);
+# else
     XtDestroyWidget(beval->balloonShell);
+# endif
     vim_free(beval);
 }
+#endif
 
     void
 gui_mch_enable_beval_area(beval)
@@ -257,6 +292,252 @@ gui_mch_post_balloon(beval, mesg)
 	undrawBalloon(beval);
 }
 #endif
+
+#ifdef FEAT_GUI_GTK
+/*
+ * We can unconditionally use ANSI-style prototypes here since
+ * GTK+ requires an ANSI C compiler anyway.
+ */
+    static void
+addEventHandler(GtkWidget *target, BalloonEval *beval)
+{
+    /*
+     * Connect to the generic "event" signal instead of the individual
+     * signals for each event type, because the former is emitted earlier.
+     * This allows us to catch events independently of the signal handlers
+     * in gui_gtk_x11.c.
+     */
+    /* Should use GTK_OBJECT() here, but that causes a lint warning... */
+    gtk_signal_connect((GtkObject*)(target), "event",
+		       GTK_SIGNAL_FUNC(target_event_cb),
+		       beval);
+    /*
+     * Nasty:  Key press events go to the main window thus the drawing area
+     * will never see them.  This means we have to connect to the main window
+     * as well in order to catch those events.
+     */
+    if (gtk_socket_id == 0 && gui.mainwin != NULL
+	    && gtk_widget_is_ancestor(target, gui.mainwin))
+    {
+	gtk_signal_connect((GtkObject*)(gui.mainwin), "event",
+			   GTK_SIGNAL_FUNC(mainwin_event_cb),
+			   beval);
+    }
+}
+
+    static void
+removeEventHandler(BalloonEval *beval)
+{
+    gtk_signal_disconnect_by_func((GtkObject*)(beval->target),
+				  GTK_SIGNAL_FUNC(target_event_cb),
+				  beval);
+
+    if (gtk_socket_id == 0 && gui.mainwin != NULL
+	    && gtk_widget_is_ancestor(beval->target, gui.mainwin))
+    {
+	gtk_signal_disconnect_by_func((GtkObject*)(gui.mainwin),
+				      GTK_SIGNAL_FUNC(mainwin_event_cb),
+				      beval);
+    }
+}
+
+    static gint
+target_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+    BalloonEval *beval = (BalloonEval *)data;
+
+    switch (event->type)
+    {
+	case GDK_ENTER_NOTIFY:
+	    pointer_event(beval, (int)event->crossing.x,
+				 (int)event->crossing.y,
+				 event->crossing.state);
+	    break;
+	case GDK_MOTION_NOTIFY:
+	    if (event->motion.is_hint)
+	    {
+		int		x;
+		int		y;
+		GdkModifierType	state;
+		/*
+		 * GDK_POINTER_MOTION_HINT_MASK is set, thus we cannot obtain
+		 * the coordinates from the GdkEventMotion struct directly.
+		 */
+		gdk_window_get_pointer(widget->window, &x, &y, &state);
+		pointer_event(beval, x, y, (unsigned int)state);
+	    }
+	    else
+	    {
+		pointer_event(beval, (int)event->motion.x,
+				     (int)event->motion.y,
+				     event->motion.state);
+	    }
+	    break;
+	case GDK_LEAVE_NOTIFY:
+	    /*
+	     * Ignore LeaveNotify events that are not "normal".
+	     * Apparently we also get it when somebody else grabs focus.
+	     */
+	    if (event->crossing.mode == GDK_CROSSING_NORMAL)
+		cancelBalloon(beval);
+	    break;
+	case GDK_BUTTON_PRESS:
+	    cancelBalloon(beval);
+	    break;
+	case GDK_KEY_PRESS:
+	    key_event(beval, event->key.keyval, TRUE);
+	    break;
+	case GDK_KEY_RELEASE:
+	    key_event(beval, event->key.keyval, FALSE);
+	    break;
+	default:
+	    break;
+    }
+
+    return FALSE; /* continue emission */
+}
+
+/*ARGSUSED*/
+    static gint
+mainwin_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+    BalloonEval *beval = (BalloonEval *)data;
+
+    switch (event->type)
+    {
+	case GDK_KEY_PRESS:
+	    key_event(beval, event->key.keyval, TRUE);
+	    break;
+	case GDK_KEY_RELEASE:
+	    key_event(beval, event->key.keyval, FALSE);
+	    break;
+	default:
+	    break;
+    }
+
+    return FALSE; /* continue emission */
+}
+
+    static void
+pointer_event(BalloonEval *beval, int x, int y, unsigned state)
+{
+    int distance;
+
+    distance = ABS(x - beval->x) + ABS(y - beval->y);
+
+    if (distance > 4)
+    {
+	/*
+	 * Moved out of the balloon location: cancel it.
+	 * Remember button state
+	 */
+	beval->state = state;
+	cancelBalloon(beval);
+
+	/* Mouse buttons are pressed - no balloon now */
+	if (!(state & ((int)GDK_BUTTON1_MASK | (int)GDK_BUTTON2_MASK
+						    | (int)GDK_BUTTON3_MASK)))
+	{
+	    beval->x = x;
+	    beval->y = y;
+
+	    if (state & ((int)GDK_MOD1_MASK | (int)GDK_MOD2_MASK
+							| (int)GDK_MOD3_MASK))
+	    {
+		/*
+		 * Alt is pressed -- enter super-evaluate-mode,
+		 * where there is no time delay
+		 */
+		if (beval->msgCB != NULL)
+		{
+		    beval->showState = ShS_PENDING;
+		    (*beval->msgCB)(beval, state);
+		}
+	    }
+	    else
+	    {
+		beval->timerID = gtk_timeout_add((unsigned)p_bdlay,
+							  &timeout_cb, beval);
+	    }
+	}
+    }
+}
+
+    static void
+key_event(BalloonEval *beval, unsigned keyval, int is_keypress)
+{
+    if (beval->showState == ShS_SHOWING && beval->msgCB != NULL)
+    {
+	switch (keyval)
+	{
+	    case GDK_Shift_L:
+	    case GDK_Shift_R:
+		beval->showState = ShS_UPDATE_PENDING;
+		(*beval->msgCB)(beval, (is_keypress)
+						   ? (int)GDK_SHIFT_MASK : 0);
+		break;
+	    case GDK_Control_L:
+	    case GDK_Control_R:
+		beval->showState = ShS_UPDATE_PENDING;
+		(*beval->msgCB)(beval, (is_keypress)
+						 ? (int)GDK_CONTROL_MASK : 0);
+		break;
+	    default:
+		cancelBalloon(beval);
+		break;
+	}
+    }
+    else
+	cancelBalloon(beval);
+}
+
+    static gint
+timeout_cb(gpointer data)
+{
+    BalloonEval *beval = (BalloonEval *)data;
+
+    beval->timerID = 0;
+    /*
+     * If the timer event happens then the mouse has stopped long enough for
+     * a request to be started. The request will only send to the debugger if
+     * there the mouse is pointing at real data.
+     */
+    requestBalloon(beval);
+
+    return FALSE; /* don't call me again */
+}
+
+/*ARGSUSED*/
+    static gint
+balloon_expose_event_cb(GtkWidget *widget, GdkEventExpose *event, gpointer data)
+{
+    gtk_paint_flat_box(widget->style, widget->window,
+		       GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+		       &event->area, widget, "tooltip",
+		       0, 0, -1, -1);
+    return FALSE;
+}
+
+/*ARGSUSED*/
+    static void
+balloon_draw_cb(GtkWidget *widget, GdkRectangle *area, gpointer data)
+{
+    GtkWidget	    *child;
+    GdkRectangle    child_area;
+
+    gtk_paint_flat_box(widget->style, widget->window,
+		       GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+		       area, widget, "tooltip",
+		       0, 0, -1, -1);
+
+    child = GTK_BIN(widget)->child;
+
+    if (gtk_widget_intersect(child, area, &child_area))
+	gtk_widget_draw(child, &child_area);
+}
+
+
+#else /* !FEAT_GUI_GTK */
 
     static void
 addEventHandler(target, beval)
@@ -452,6 +733,8 @@ timerRoutine(dx, id)
     requestBalloon(beval);
 }
 
+#endif /* !FEAT_GUI_GTK */
+
     static void
 requestBalloon(beval)
     BalloonEval	*beval;
@@ -468,6 +751,104 @@ requestBalloon(beval)
 	    drawBalloon(beval);
     }
 }
+
+#ifdef FEAT_GUI_GTK
+
+/*
+ * Draw a balloon.
+ */
+    static void
+drawBalloon(BalloonEval *beval)
+{
+    if (beval->msg != NULL)
+    {
+	GtkRequisition	requisition;
+	int		screen_w;
+	int		screen_h;
+	int		x;
+	int		y;
+
+	screen_w = gdk_screen_width();
+	screen_h = gdk_screen_height();
+
+	gtk_widget_ensure_style(beval->balloonShell);
+	gtk_widget_ensure_style(beval->balloonLabel);
+
+	gtk_label_set_text(GTK_LABEL(beval->balloonLabel),
+						    (const char *)beval->msg);
+
+	/* Calculate the balloon's width and height */
+	gtk_widget_size_request(beval->balloonShell, &requisition);
+
+	/* Compute position of the balloon area */
+	gdk_window_get_origin(beval->target->window, &x, &y);
+	x += beval->x + EVAL_OFFSET_X;
+	y += beval->y + EVAL_OFFSET_Y;
+	x  = MIN(x, screen_w - requisition.width);
+	y  = MIN(y, screen_h - requisition.height);
+
+	/* Show the balloon */
+	gtk_widget_set_uposition(beval->balloonShell, x, y);
+	gtk_widget_show(beval->balloonShell);
+
+	beval->showState = ShS_SHOWING;
+    }
+}
+
+/*
+ * Undraw a balloon.
+ */
+    static void
+undrawBalloon(BalloonEval *beval)
+{
+    if (beval->balloonShell != NULL)
+	gtk_widget_hide(beval->balloonShell);
+    beval->showState = ShS_NEUTRAL;
+}
+
+    static void
+cancelBalloon(BalloonEval *beval)
+{
+    if (beval->showState == ShS_SHOWING
+	    || beval->showState == ShS_UPDATE_PENDING)
+	undrawBalloon(beval);
+
+    if (beval->timerID != 0)
+    {
+	gtk_timeout_remove(beval->timerID);
+	beval->timerID = 0;
+    }
+    beval->showState = ShS_NEUTRAL;
+}
+
+    static void
+createBalloonEvalWindow(BalloonEval *beval)
+{
+    beval->balloonShell = gtk_window_new(GTK_WINDOW_POPUP);
+
+    gtk_widget_set_app_paintable(beval->balloonShell, TRUE);
+    gtk_window_set_policy(GTK_WINDOW(beval->balloonShell), FALSE, FALSE, TRUE);
+    gtk_widget_set_name(beval->balloonShell, "gtk-tooltips");
+    gtk_container_border_width(GTK_CONTAINER(beval->balloonShell), 4);
+
+    gtk_signal_connect((GtkObject*)(beval->balloonShell), "expose_event",
+		       GTK_SIGNAL_FUNC(balloon_expose_event_cb), NULL);
+    gtk_signal_connect((GtkObject*)(beval->balloonShell), "draw",
+		       GTK_SIGNAL_FUNC(balloon_draw_cb), NULL);
+
+    beval->balloonLabel = gtk_label_new(NULL);
+
+    gtk_label_set_line_wrap(GTK_LABEL(beval->balloonLabel), FALSE);
+    gtk_label_set_justify(GTK_LABEL(beval->balloonLabel), GTK_JUSTIFY_LEFT);
+    gtk_misc_set_alignment(GTK_MISC(beval->balloonLabel),
+						      (float)0.5, (float)0.5);
+    gtk_widget_set_name(beval->balloonLabel, "vim-balloon-label");
+    gtk_widget_show(beval->balloonLabel);
+
+    gtk_container_add(GTK_CONTAINER(beval->balloonShell), beval->balloonLabel);
+}
+
+#else /* !FEAT_GUI_GTK */
 
 /*
  * Draw a balloon.
@@ -622,5 +1003,7 @@ createBalloonEvalWindow(beval)
 		    labelWidgetClass, beval->balloonShell, args, n);
 #endif
 }
+
+#endif /* !FEAT_GUI_GTK */
 
 #endif /* FEAT_BEVAL */

@@ -4,6 +4,7 @@ void gui_mch_add_menu_item __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_set_text_area_pos __ARGS((int x, int y, int w, int h));
 void gui_gtk_set_mnemonics __ARGS((int enable));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
+void gui_mch_menu_set_tip __ARGS((vimmenu_T *menu));
 void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));
 void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, long val, long size, long max));
 void gui_mch_set_scrollbar_pos __ARGS((scrollbar_T *sb, int x, int y, int w, int h));

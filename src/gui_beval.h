@@ -10,7 +10,11 @@
 #if !defined(GUI_BEVAL_H) && (defined(FEAT_BEVAL) || defined(PROTO))
 #define GUI_BEVAL_H
 
-#include <X11/Intrinsic.h>
+#ifdef FEAT_GUI_GTK
+# include <gtk/gtkwidget.h>
+#else
+# include <X11/Intrinsic.h>
+#endif
 
 typedef enum
 {
@@ -22,10 +26,19 @@ typedef enum
 
 typedef struct
 {
+#ifdef FEAT_GUI_GTK
+    GtkWidget		*target;	/* widget we are monitoring */
+    GtkWidget		*balloonShell;
+    GtkWidget		*balloonLabel;
+    unsigned int	timerID;	/* timer for run */
+    BeState		showState;	/* tells us whats currently going on */
+    int			x;
+    int			y;
+    unsigned int	state;		/* Button/Modifier key state */
+#else
     Widget		target;		/* widget we are monitoring */
     Widget		balloonShell;
     Widget		balloonLabel;
-
     XtIntervalId	timerID;	/* timer for run */
     BeState		showState;	/* tells us whats currently going on */
     XtAppContext	appContext;	/* used in event handler */
@@ -34,12 +47,15 @@ typedef struct
     Position		x_root;
     Position		y_root;
     int			state;		/* Button/Modifier key state */
+#endif
     int			ts;		/* tabstop setting for this buffer */
     char_u		*msg;
     void		(*msgCB)();
     void		*clientData;	/* For callback */
+#ifndef FEAT_GUI_GTK
     Dimension		screen_width;	/* screen width in pixels */
     Dimension		screen_height;	/* screen height in pixels */
+#endif
 } BalloonEval;
 
 #define EVAL_OFFSET_X 10 /* displacement of beval topleft corner from pointer */

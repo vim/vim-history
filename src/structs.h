@@ -1614,7 +1614,7 @@ struct VimMenu
 #ifdef FEAT_GUI_MOTIF
     Pixmap	image_ins;	    /* Toolbar image insensitive */
 #endif
-#ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL_TIP
     BalloonEval *tip;		    /* tooltip for this menu item */
 #endif
 #ifdef FEAT_GUI_W16
