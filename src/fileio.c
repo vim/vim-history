@@ -83,6 +83,9 @@ static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fn
 #  define FIO_PUT_CP(x) (((x) & 0xffff) << 16)	/* put codepage in top word */
 #  define FIO_GET_CP(x)	(((x)>>16) & 0xffff)	/* get codepage from top word */
 # endif
+# ifdef MACOS_X
+#  define FIO_MACROMAN	0x20	/* convert MacRoman */
+# endif
 # define FIO_ENDIAN_L	0x80	/* little endian */
 # define FIO_ENCRYPTED	0x1000	/* encrypt written bytes */
 # define FIO_NOCONVERT	0x2000	/* skip encoding conversion */
@@ -132,6 +135,9 @@ static char_u *check_for_bom __ARGS((char_u *p, long size, int *lenp, int flags)
 static int make_bom __ARGS((char_u *buf, char_u *name));
 # ifdef WIN3264
 static int get_win_fio_flags __ARGS((char_u *ptr));
+# endif
+# ifdef MACOS_X
+static int get_mac_fio_flags __ARGS((char_u *ptr));
 # endif
 #endif
 static int move_lines __ARGS((buf_T *frombuf, buf_T *tobuf));
@@ -946,6 +952,12 @@ retry:
 	    fio_flags = get_win_fio_flags(fenc);
 # endif
 
+# ifdef MACOS_X
+	/* Conversion from Apple MacRoman to latin1 or UTF-8 */
+	if (fio_flags == 0)
+	    fio_flags = get_mac_fio_flags(fenc);
+# endif
+
 # ifdef USE_ICONV
 	/*
 	 * Try using iconv() if we can't convert internally.
@@ -1104,6 +1116,10 @@ retry:
 		    size = size / ICONV_MULT;	/* worst case */
 # ifdef WIN3264
 		else if (fio_flags & FIO_CODEPAGE)
+		    size = size / ICONV_MULT;	/* also worst case */
+# endif
+# ifdef MACOS_X
+		else if (fio_flags & FIO_MACROMAN)
 		    size = size / ICONV_MULT;	/* also worst case */
 # endif
 #endif
@@ -1457,6 +1473,46 @@ retry:
 		    if (bad && !keep_dest_enc)
 			goto rewind_retry;
 		}
+	    }
+	    else
+# endif
+# ifdef MACOS_X
+	    if (fio_flags & FIO_MACROMAN)
+	    {
+		/*
+		 * Conversion from Apple MacRoman char encoding to UTF-8 or
+		 * latin1, using standard Carbon framework.
+		 */
+		CFStringRef	cfstr;
+		CFRange		r;
+		CFIndex		len = size;
+
+		/* MacRoman is an 8-bit encoding, no need to move bytes to
+		 * conv_rest[]. */
+		cfstr = CFStringCreateWithBytes(NULL, ptr, len,
+						kCFStringEncodingMacRoman, 0);
+		/*
+		 * If there is a conversion error, try using another
+		 * conversion.
+		 */
+		if (cfstr == NULL)
+		    goto rewind_retry;
+
+		r.location = 0;
+		r.length = CFStringGetLength(cfstr);
+		if (r.length != CFStringGetBytes(cfstr, r,
+			(enc_utf8) ? kCFStringEncodingUTF8
+						 : kCFStringEncodingISOLatin1,
+			0, /* no lossy conversion */
+			0, /* not external representation */
+			ptr + size, real_size - size, &len))
+		{
+		    CFRelease(cfstr);
+		    goto rewind_retry;
+		}
+		CFRelease(cfstr);
+		mch_memmove(ptr, ptr + size, len);
+		size = len;
 	    }
 	    else
 # endif
@@ -3527,6 +3583,17 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
 # endif
 
+# ifdef MACOS_X
+    if (converted && wb_flags == 0 && (wb_flags = get_mac_fio_flags(fenc)) != 0)
+    {
+	write_info.bw_conv_buflen = bufsize * 3;
+	write_info.bw_conv_buf
+			    = lalloc((long_u)write_info.bw_conv_buflen, TRUE);
+	if (write_info.bw_conv_buf == NULL)
+	    end = 0;
+    }
+# endif
+
 # if defined(FEAT_EVAL) || defined(USE_ICONV)
     if (converted && wb_flags == 0)
     {
@@ -4673,6 +4740,72 @@ buf_write_bytes(ip)
 	}
 # endif
 
+# ifdef MACOS_X
+	else if (flags & FIO_MACROMAN)
+	{
+	    /*
+	     * Convert UTF-8 or latin1 to Apple MacRoman.
+	     */
+	    CFStringRef	cfstr;
+	    CFRange	r;
+	    CFIndex	l;
+	    char_u	*from;
+	    size_t	fromlen;
+
+	    if (ip->bw_restlen > 0)
+	    {
+		/* Need to concatenate the remainder of the previous call and
+		 * the bytes of the current call.  Use the end of the
+		 * conversion buffer for this. */
+		fromlen = len + ip->bw_restlen;
+		from = ip->bw_conv_buf + ip->bw_conv_buflen - fromlen;
+		mch_memmove(from, ip->bw_rest, (size_t)ip->bw_restlen);
+		mch_memmove(from + ip->bw_restlen, buf, (size_t)len);
+	    }
+	    else
+	    {
+		from = buf;
+		fromlen = len;
+	    }
+
+	    ip->bw_restlen = 0;
+	    cfstr = CFStringCreateWithBytes(NULL, from, fromlen,
+		    (enc_utf8) ?
+		    kCFStringEncodingUTF8 : kCFStringEncodingISOLatin1,
+		    0);
+	    while (cfstr == NULL && ip->bw_restlen < 3 && fromlen > 1)
+	    {
+		ip->bw_rest[ip->bw_restlen++] = from[--fromlen];
+		cfstr = CFStringCreateWithBytes(NULL, from, fromlen,
+		    (enc_utf8) ?
+		    kCFStringEncodingUTF8 : kCFStringEncodingISOLatin1,
+		    0);
+	    }
+	    if (cfstr == NULL)
+	    {
+		ip->bw_conv_error = TRUE;
+		return FAIL;
+	    }
+
+	    r.location = 0;
+	    r.length = CFStringGetLength(cfstr);
+	    if (r.length != CFStringGetBytes(cfstr, r,
+			kCFStringEncodingMacRoman,
+			0, /* no lossy conversion */
+			0, /* not external representation (since vim
+			    * handles this internally */
+			ip->bw_conv_buf, ip->bw_conv_buflen, &l))
+	    {
+		CFRelease(cfstr);
+		ip->bw_conv_error = TRUE;
+		return FAIL;
+	    }
+	    CFRelease(cfstr);
+	    buf = ip->bw_conv_buf;
+	    len = l;
+	}
+# endif
+
 # ifdef USE_ICONV
 	if (ip->bw_iconv_fd != (iconv_t)-1)
 	{
@@ -4937,6 +5070,22 @@ get_win_fio_flags(ptr)
 	    return 0;
     }
     return FIO_PUT_CP(cp) | FIO_CODEPAGE;
+}
+#endif
+
+#ifdef MACOS_X
+/*
+ * Check "ptr" for a Carbon supported encoding and return the FIO_ flags
+ * needed for the internal conversion to/from utf-8 or latin1.
+ */
+    static int
+get_mac_fio_flags(ptr)
+    char_u	*ptr;
+{
+    if ((enc_utf8 || STRCMP(p_enc, "latin1") == 0)
+				     && (enc_canon_props(ptr) & ENC_MACROMAN))
+	return FIO_MACROMAN;
+    return 0;
 }
 #endif
 
