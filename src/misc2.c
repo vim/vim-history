@@ -5266,7 +5266,7 @@ parse_list_options(option_str, table, table_size)
 #define EXTRASIZE 5		/* increment to add to env. size */
 
 static int  envsize = -1;	/* current size of environment */
-#ifndef MACOS
+#ifndef MACOS_CLASSIC
 extern
 #endif
        char **environ;		/* the global which is your env. */

@@ -3457,12 +3457,13 @@ mch_call_shell(cmd, options)
 finished:
 		p_more = p_more_save;
 
+#ifndef MACOS_X_UNIX /* TODO: Is it needed for MACOS_X ? */
 		/*
 		 * Give all typeahead that wasn't used back to ui_inchar().
 		 */
 		if (ta_len)
 		    ui_inchar_undo(ta_buf, ta_len);
-
+#endif
 		State = old_State;
 		if (toshell_fd >= 0)
 		    close(toshell_fd);
@@ -3978,7 +3979,7 @@ unix_expandpath(gap, path, wildoff, flags)
     }
 
     /* compile the regexp into a program */
-#ifdef MACOS_X
+#ifdef MACOS_X /* Can/Should we use CASE_INSENSITIVE_FILENAME instead ?*/
     regmatch.rm_ic = TRUE;		/* Behave like Terminal.app */
 #else
     regmatch.rm_ic = FALSE;		/* Don't ever ignore case */

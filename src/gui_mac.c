@@ -1882,12 +1882,12 @@ gui_mac_doActivateEvent(event)
 
     whichWindow = (WindowPtr) event->message;
     if ((event->modifiers) & activeFlag)
-	/* Activate */
-	gui.in_focus = TRUE;
+    	/* Activate */
+	gui_focus_change(TRUE);
     else
     {
 	/* Deactivate */
-	gui.in_focus = FALSE;
+	gui_focus_change(FALSE);
 /*	DON'T KNOW what the code below was doing
 	found in the deactivate clause, but the
 	clause writting TRUE into in_focus (BUG)
@@ -1899,7 +1899,6 @@ gui_mac_doActivateEvent(event)
 	SetOutlinePreferred (a_bool);
 #endif
     }
-    gui_update_cursor(TRUE, FALSE);
 }
 
 
@@ -1921,12 +1920,11 @@ gui_mac_doSuspendEvent(event)
      * get an activate/desactivate event
      */
     if (event->message & 1)
-	/* Resume */
-	gui.in_focus = TRUE;
+    	/* Resume */
+	gui_focus_change(TRUE);
     else
-	/* Suspend */
-	gui.in_focus = FALSE;
-    gui_update_cursor(TRUE, FALSE);
+    	/* Suspend */
+	gui_focus_change(FALSE);
 }
 
 /*
