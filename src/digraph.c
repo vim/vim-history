@@ -2039,7 +2039,11 @@ get_digraph(cmdline)
 	    return c;
 	if (cmdline)
 	{
-	    if (char2cells(c) == 1)
+	    if (char2cells(c) == 1
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+		    && cmdline_star == 0
+#endif
+		    )
 		putcmdline(c, TRUE);
 	}
 #ifdef FEAT_CMDL_INFO
