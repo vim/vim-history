@@ -72,10 +72,11 @@ static void	report_pending __ARGS((int action, int pending, void *value));
 /*
  * When several errors appear in a row, setting "force_abort" is delayed until
  * the failing command returned.  "cause_abort" is set to TRUE meanwhile, in
- * order to indicate that situation.  This is useful for aborting expression
- * evaluation when a function call set "force_abort" without producing any
- * error messages, but giving all error messages on a parsing error during the
- * expression evaluation (even if a try conditional is active).
+ * order to indicate that situation.  This is useful when "force_abort" was set
+ * during execution of a function call from an expression: the aborting of the
+ * expression evaluation is done without producing any error messages, but all
+ * error messages on parsing errors during the expression evaluation are given
+ * (even if a try conditional is active).
  */
 static int cause_abort = FALSE;
 
@@ -85,8 +86,8 @@ static int cause_abort = FALSE;
  * to check whether an aborted function that does not handle a range itself
  * should be called again for the next line in the range.  Also used for
  * cancelling expression evaluation after a function call caused an immediate
- * abort.  Note that the first emsg() call temporarily resets force_abort until
- * the throw point for error messages has been reached.  That is, during
+ * abort.  Note that the first emsg() call temporarily resets "force_abort"
+ * until the throw point for error messages has been reached.  That is, during
  * cancellation of an expression evaluation after an aborting function call or
  * due to a parsing error, aborting() always returns the same value.
  */
@@ -94,6 +95,19 @@ static int cause_abort = FALSE;
 aborting()
 {
     return (did_emsg && force_abort) || got_int || did_throw;
+}
+
+/*
+ * The value of "force_abort" is temporarily reset by the first emsg() call
+ * during an expression evaluation, and "cause_abort" is used instead.  It might
+ * be necessary to restore "force_abort" even before the throw point for the
+ * error message has been reached.  update_force_abort() should be called then.
+ */
+    void
+update_force_abort()
+{
+    if (cause_abort)
+	force_abort = TRUE;
 }
 
 /*

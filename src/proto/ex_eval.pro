@@ -1,5 +1,6 @@
 /* ex_eval.c */
 int aborting __ARGS((void));
+void update_force_abort __ARGS((void));
 int should_abort __ARGS((int retcode));
 int aborted_in_try __ARGS((void));
 int cause_errthrow __ARGS((char_u *msg, int severe, int *ignore));
