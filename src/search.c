@@ -322,6 +322,15 @@ last_search_pat()
     return spats[last_idx].pat;
 }
 
+/*
+ * Reset search direction to forward.  For "gd" and "gD" commands.
+ */
+    void
+reset_search_dir()
+{
+    spats[0].off.dir = '/';
+}
+
 #if defined(FEAT_EVAL) || defined(FEAT_VIMINFO)
 /*
  * Set the last search pattern.  For ":let @/ =" and viminfo.

@@ -5,6 +5,7 @@ void save_search_patterns __ARGS((void));
 void restore_search_patterns __ARGS((void));
 int ignorecase __ARGS((char_u *pat));
 char_u *last_search_pat __ARGS((void));
+void reset_search_dir __ARGS((void));
 void set_last_search_pat __ARGS((char_u *s, int idx, int magic, int setlast));
 void last_pat_prog __ARGS((regmmatch_T *regmatch));
 int searchit __ARGS((win_T *win, buf_T *buf, pos_T *pos, int dir, char_u *str, long count, int options, int pat_use));
