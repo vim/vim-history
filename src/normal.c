@@ -1130,6 +1130,9 @@ getcount:
 normal_end:
 
     msg_nowait = FALSE;
+#ifdef FEAT_VISUAL
+    did_visual_put = FALSE;
+#endif
 
     /* Reset finish_op, in case it was set */
 #ifdef CURSOR_SHAPE
@@ -1888,7 +1891,9 @@ do_pending_operator(cap, old_col, gui_yank)
 	{
 	    curwin->w_cursor = old_cursor;
 	}
+#ifdef FEAT_VISUAL
 	oap->block_mode = FALSE;
+#endif
 	oap->regname = 0;
 	oap->motion_force = NUL;
     }
@@ -7180,6 +7185,7 @@ nv_tilde(cap)
 
 /*
  * Handle an operator command.
+ * The actual work is done by do_pending_operator().
  */
     static void
 nv_operator(cap)
@@ -7842,11 +7848,15 @@ nv_put(cap)
     colnr_T	left, right;
 #endif
     int		dir;
+    int		flags = 0;
 
     if (cap->oap->op_type != OP_NOP)
 	clearopbeep(cap->oap);
     else
     {
+	dir = (cap->cmdchar == 'P'
+		|| (cap->cmdchar == 'g' && cap->nchar == 'P'))
+							 ? BACKWARD : FORWARD;
 #ifdef FEAT_VISUAL
 	if (VIsual_active)
 	{
@@ -7866,16 +7876,21 @@ nv_put(cap)
 	    if (VIsual_mode == 'v' && *p_sel == 'e')
 		dir = BACKWARD;
 	    else
+	    {
+		if (dir == BACKWARD)
+		    flags |= PUT_LINE_BACKWARD;
 		dir = FORWARD;
+	    }
+	    /* When deleting a linewise Visual area, must put the register as
+	     * lines to avoid it being deleted. */
+	    if (VIsual_mode == 'V')
+		flags |= PUT_LINE;
 	}
-	else
 #endif
-	    dir = (cap->cmdchar == 'P'
-		    || (cap->cmdchar == 'g' && cap->nchar == 'P'))
-							 ? BACKWARD : FORWARD;
 	prep_redo_cmd(cap);
-	do_put(cap->oap->regname, dir,
-			  cap->count1, cap->cmdchar == 'g' ? PUT_CURSEND : 0);
+	if (cap->cmdchar == 'g')
+	    flags |= PUT_CURSEND;
+	do_put(cap->oap->regname, dir, cap->count1, flags);
 
 #ifdef FEAT_VISUAL
 	if (VIsual_active)
@@ -7886,6 +7901,7 @@ nv_put(cap)
 	    cap->oap->regname = NUL;
 	    curwin->w_cursor = curpos;
 	    nv_operator(cap);
+	    did_visual_put = TRUE;  /* tell op_delete() to correct '] mark */
 	}
 #endif
     }

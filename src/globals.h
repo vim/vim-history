@@ -446,6 +446,7 @@ EXTERN int	VIsual_mode INIT(= 'v');
 
 EXTERN int	redo_VIsual_busy INIT(= FALSE);
 				/* TRUE when redoing Visual */
+EXTERN int	did_visual_put INIT(= FALSE); /* TRUE after Visual mode "p" */
 #endif
 
 #ifdef FEAT_MOUSE

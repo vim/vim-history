@@ -1428,8 +1428,8 @@ typedef struct oparg
 				   do_change()) */
 #ifdef FEAT_VISUAL
     int		is_VIsual;	/* operator on Visual area */
-#endif
     int		block_mode;	/* current operator is Visual block mode */
+#endif
     colnr_T	start_vcol;	/* start col for block mode operator */
     colnr_T	end_vcol;	/* end col for block mode operator */
 } oparg_T;
