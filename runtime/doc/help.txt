@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.2.  Last change: 2003 May 11
+*help.txt*	For Vim version 6.2.  Last change: 2004 Jan 08
 
 			VIM - main help file
 									 k
@@ -36,6 +36,7 @@ BASIC:
 |tutor|		30 minutes training course for beginners
 |copying|	About copyrights
 |iccf|		Helping poor children in Uganda
+|sponsor|	Sponsor Vim development, become a registered Vim user
 |www|		Vim on the World Wide Web
 |bugs|		Where to send bug reports
 
