@@ -84,8 +84,8 @@ MINOR = 2
 #   src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
-# - With these features: "make proto" (requires cproto; ignore warnings for
-#   missing include files, fix problems for syntax errors).
+# - With these features: "make proto" (requires cproto and Motif installed;
+#   ignore warnings for missing include files, fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
 # - Enable the efence library in "src/Makefile" and run "make test".
@@ -185,9 +185,12 @@ VIM	= vim
 SRC_ALL =	\
 		main.aap \
 		src/README.txt \
+		src/arabic.c \
+		src/arabic.h \
 		src/ascii.h \
 		src/buffer.c \
 		src/charset.c \
+		src/diff.c \
 		src/digraph.c \
 		src/edit.c \
 		src/eval.c \
@@ -197,15 +200,23 @@ SRC_ALL =	\
 		src/ex_docmd.c \
 		src/ex_eval.c \
 		src/ex_getln.c \
+		src/farsi.c \
+		src/farsi.h \
 		src/feature.h \
 		src/fileio.c \
+		src/fold.c \
 		src/getchar.c \
 		src/globals.h \
+		src/gui.c \
+		src/gui.h \
+		src/gui_beval.c \
+		src/gui_beval.h \
 		src/keymap.h \
 		src/macros.h \
 		src/main.aap \
 		src/main.c \
 		src/mark.c \
+		src/mbyte.c \
 		src/memfile.c \
 		src/memline.c \
 		src/menu.c \
@@ -237,8 +248,10 @@ SRC_ALL =	\
 		src/proto/fold.pro \
 		src/proto/getchar.pro \
 		src/proto/gui.pro \
+		src/proto/gui_beval.pro \
 		src/proto/main.pro \
 		src/proto/mark.pro \
+		src/proto/mbyte.pro \
 		src/proto/memfile.pro \
 		src/proto/memline.pro \
 		src/proto/menu.pro \
@@ -246,7 +259,6 @@ SRC_ALL =	\
 		src/proto/misc1.pro \
 		src/proto/misc2.pro \
 		src/proto/move.pro \
-		src/proto/mbyte.pro \
 		src/proto/netbeans.pro \
 		src/proto/normal.pro \
 		src/proto/ops.pro \
@@ -275,8 +287,8 @@ SRC_ALL =	\
 		src/term.h \
 		src/termlib.c \
 		src/testdir/*.in \
-		src/testdir/main.aap \
 		src/testdir/*.ok \
+		src/testdir/main.aap \
 		src/testdir/test49.vim \
 		src/ui.c \
 		src/undo.c \
@@ -285,18 +297,6 @@ SRC_ALL =	\
 		src/vim.h \
 		src/window.c \
 		src/xxd/xxd.c \
-
-# more source files
-SRC_MORE =	\
-		src/diff.c \
-		src/arabic.c \
-		src/arabic.h \
-		src/farsi.c \
-		src/farsi.h \
-		src/fold.c \
-		src/gui.c \
-		src/gui.h \
-		src/mbyte.c \
 
 # source files for Unix only
 SRC_UNIX =	\
@@ -319,8 +319,6 @@ SRC_UNIX =	\
 		src/gui_at_sb.c \
 		src/gui_at_sb.h \
 		src/gui_athena.c \
-		src/gui_beval.c \
-		src/gui_beval.h \
 		src/gui_gtk.c \
 		src/gui_gtk_f.c \
 		src/gui_gtk_f.h \
@@ -341,7 +339,6 @@ SRC_UNIX =	\
 		src/osdef2.h.in \
 		src/pathdef.sh \
 		src/proto/gui_athena.pro \
-		src/proto/gui_beval.pro \
 		src/proto/gui_gtk.pro \
 		src/proto/gui_gtk_x11.pro \
 		src/proto/gui_motif.pro \
@@ -612,6 +609,7 @@ RT_ALL =	\
 		runtime/macros/matchit.txt \
 		runtime/macros/maze/README.txt \
 		runtime/macros/maze/[mM]akefile \
+		runtime/macros/maze/main.aap \
 		runtime/macros/maze/maze.c \
 		runtime/macros/maze/maze_5.78 \
 		runtime/macros/maze/maze_mac \
@@ -632,7 +630,7 @@ RT_ALL =	\
 		runtime/indoff.vim \
 		runtime/termcap \
 		runtime/tools/README.txt \
-		runtime/tools/[a-z]* \
+		runtime/tools/[a-z]*[^~] \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
@@ -925,7 +923,6 @@ unixsrc: dist prepare
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
 		$(SRC_ALL) \
-		$(SRC_MORE) \
 		| (cd dist/$(VIMRTDIR); tar xf -)
 	cd dist && tar cf $(VIMVER)-src1.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-src1.tar
@@ -1034,7 +1031,6 @@ amisrc: dist prepare
 	tar cf - \
 		$(ROOT_AMI) \
 		$(SRC_ALL) \
-		$(SRC_MORE) \
 		$(SRC_AMI) \
 		$(SRC_AMI_DOS) \
 		| (cd dist/Vim/$(VIMRTDIR); tar xf -)
@@ -1208,7 +1204,6 @@ dossrc: dist no_title.vim dist/$(COMMENT_SRC) runtime/doc/uganda.nsis.txt
 	mkdir dist/vim/$(VIMRTDIR)
 	tar cf - \
 		$(SRC_ALL) \
-		$(SRC_MORE) \
 		$(SRC_DOS) \
 		$(SRC_AMI_DOS) \
 		$(SRC_DOS_UNIX) \
