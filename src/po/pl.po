@@ -435,7 +435,7 @@ msgstr "E115: Brak cudzys³owu: %s"
 #: eval.c:2531
 #, c-format
 msgid "E116: Invalid arguments for function %s"
-msgstr "R116: Niew³a¶ciwe argumenty dla funkcji %s"
+msgstr "E116: Niew³a¶ciwe argumenty dla funkcji %s"
 
 #: eval.c:2532
 #, c-format
