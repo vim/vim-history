@@ -6,6 +6,9 @@
 
 AWK = awk
 
+# Set to $(VIMTARGET) when executed from src/Makefile.
+VIMEXE = vim
+
 # include the config.mk from the source directory.  It's only needed to set
 # AWK, used for "make html".  Comment this out if the include gives problems.
 include ../../src/auto/config.mk
@@ -251,10 +254,11 @@ HTMLS = \
 all: tags vim.man vimdiff.man vimtutor.man xxd.man
 
 # Use Vim to generate the tags file.  Can only be used when Vim has been
-# compiled and installed.
+# compiled and installed.  Supports multiple languages.
 vimtags: $(DOCS)
-	vim -c "helptags ." -c quit
+	$(VIMEXE) -e -s -c "helptags ." -c quit
 
+# Use "doctags" to generate the tags file.  Only works for English!
 tags: doctags $(DOCS)
 	./doctags $(DOCS) | LANG=C LC_ALL=C sort >tags
 	uniq -d -2 tags
