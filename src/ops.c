@@ -1855,17 +1855,19 @@ op_insert(oap, count1)
 	{
 	    /* this lil bit if code adapted from nv_append() */
 	    curwin->w_set_curswant = TRUE;
-	    while (oneright() == OK
-		    && (curwin->w_cursor.col < (bd.textcol + bd.textlen - 1)))
+	    while (inc_cursor() == 0
+		    && (curwin->w_cursor.col < bd.textcol + bd.textlen))
 		;
 	}
 	else
+	{
 	    curwin->w_cursor = oap->end;
 
-	/* Works just like an 'i'nsert on the next character. */
-	if (!lineempty(curwin->w_cursor.lnum)
-		&& oap->start_vcol != oap->end_vcol)
-	    inc_cursor();
+	    /* Works just like an 'i'nsert on the next character. */
+	    if (!lineempty(curwin->w_cursor.lnum)
+		    && oap->start_vcol != oap->end_vcol)
+		inc_cursor();
+	}
     }
 
     edit(NUL, FALSE, (linenr_t)count1);
