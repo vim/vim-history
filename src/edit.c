@@ -1093,6 +1093,15 @@ doESCkey:
 	    /* FALLTHROUGH */
 	case CR:
 	case NL:
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	    /* In a quickfix window a <CR> jumps to the error under the
+	     * cursor. */
+	    if (bt_quickfix(curbuf) && c == CR)
+	    {
+		do_cmdline_cmd((char_u *)".cc");
+		break;
+	    }
+#endif
 #ifdef FEAT_CMDWIN
 	    if (cmdwin_type != 0)
 	    {
