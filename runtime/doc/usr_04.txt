@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_04.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -467,7 +467,7 @@ character.
 ==============================================================================
 *04.10*	Conclusion
 
-The operators, movement commands and text objects give you the possibiliby to
+The operators, movement commands and text objects give you the possibility to
 make lots of combinations.  Now that you know how it works, you can use N
 operators with M movement commands to make N * M commands!
 

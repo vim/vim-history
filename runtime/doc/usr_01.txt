@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_01.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -8,16 +8,16 @@
 This chapter introduces the manuals available with Vim.  Read this to know the
 conditions under which the commands are explained.
 
-|01.1|  Two manuals
-|01.2|  Vim installed
-|01.3|  Using the Vim tutor
-|01.4|  Copyright
+|01.1|	Two manuals
+|01.2|	Vim installed
+|01.3|	Using the Vim tutor
+|01.4|	Copyright
 
      Next chapter: |usr_02.txt|  The first steps in Vim
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*01.1*  Two manuals
+*01.1*	Two manuals
 
 The Vim documentation consists of two parts:
 
@@ -48,7 +48,7 @@ on it.
 Other subjects can be found with the ":help" command, see |help.txt|.
 
 ==============================================================================
-*01.2*  Vim installed
+*01.2*	Vim installed
 
 Most of the manuals assume that Vim has been properly installed.  If you
 didn't do that yet, or if Vim doesn't run properly (e.g., files can't be found
@@ -98,7 +98,7 @@ For more info see |vimrc| and |compatible-default|.
 	explanatory.  See |evim-keys| for details.
 
 ==============================================================================
-*01.3*  Using the Vim tutor				*tutor* *vimtutor*
+*01.3*	Using the Vim tutor				*tutor* *vimtutor*
 
 Instead of reading the text (boring!) you can use the vimtutor to learn your
 first Vim commands.  This is a 30 minute tutorial that teaches the most basic
@@ -139,7 +139,7 @@ filename.  For French:
 	del TUTORCOPY
 <
 ==============================================================================
-*01.4*  Copyright					*manual-copyright*
+*01.4*	Copyright					*manual-copyright*
 
 The Vim user manual and reference manual are Copyright (c) 1988-2001 by Bram
 Moolenaar. This material may be distributed only subject to the terms and

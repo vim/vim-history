@@ -217,12 +217,18 @@ LINK_PDB = /PDB:$(OUTDIR)/
 # LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
 CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
 RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
-# The /fixed:no is needed for Quantify.
+# The /fixed:no is needed for Quantify. Assume not 4.? as unsupported in VC4.0.
+! if "$(_NMAKE_VER)" == ""
+LIBC =
+! else
+LIBC = /fixed:no
+! endif
+
 ! ifndef USE_MSVCRT
-LIBC = /fixed:no libcd.lib
+LIBC = $(LIBC) libcd.lib
 ! else
 CFLAGS = $(CFLAGS) -MDd
-LIBC = /fixed:no msvcrtd.lib
+LIBC = $(LIBC) msvcrtd.lib
 ! endif
 !endif # DEBUG
 

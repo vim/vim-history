@@ -56,7 +56,6 @@ static void	del_from_showcmd __ARGS((int));
  * v_*(): functions called to handle Visual mode commands.
  */
 static void	nv_ignore __ARGS((cmdarg_T *cap));
-static void	nv_silent __ARGS((cmdarg_T *cap));
 static void	nv_error __ARGS((cmdarg_T *cap));
 static void	nv_help __ARGS((cmdarg_T *cap));
 static void	nv_addsub __ARGS((cmdarg_T *cap));
@@ -361,7 +360,6 @@ static const struct nv_cmd
     {K_RIGHTRELEASE, nv_mouse,	0,			0},
 #endif
     {K_IGNORE,	nv_ignore,	0,			0},
-    {K_SILENT,	nv_silent,	0,			0},
     {K_INS,	nv_edit,	0,			0},
     {K_KINS,	nv_edit,	0,			0},
     {K_BS,	nv_ctrlh,	0,			0},
@@ -3216,7 +3214,7 @@ add_to_showcmd(c)
 	K_VER_SCROLLBAR, K_HOR_SCROLLBAR,
 	K_LEFTMOUSE_NM, K_LEFTRELEASE_NM,
 #endif
-	K_IGNORE, K_SILENT,
+	K_IGNORE,
 	K_LEFTMOUSE, K_LEFTDRAG, K_LEFTRELEASE,
 	K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
 	K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
@@ -3512,18 +3510,6 @@ check_scrollbind(topline_diff, leftcol_diff)
 nv_ignore(cap)
     cmdarg_T	*cap;
 {
-}
-
-/*
- * End of a silent menu.
- */
-/*ARGSUSED */
-    static void
-nv_silent(cap)
-    cmdarg_T	*cap;
-{
-    if (cmd_silent > 0)
-	--cmd_silent;
 }
 
 /*
@@ -4119,8 +4105,7 @@ dozet:
 		/* "zF": create fold command */
 		/* "zf": create fold operator */
     case 'F':
-    case 'f':   if (foldmethodIsManual(curwin)
-			|| (foldmethodIsMarker(curwin) && *curbuf->b_p_cms != NUL))
+    case 'f':   if (foldManualAllowed(TRUE))
 		{
 		    cap->nchar = 'f';
 		    nv_operator(cap);
@@ -4134,17 +4119,13 @@ dozet:
 		    }
 		}
 		else
-		{
-		    EMSG(_("E350: Cannot create fold with current 'foldmethod'"));
 		    clearopbeep(cap->oap);
-		}
 		break;
 
 		/* "zd": delete fold at cursor */
 		/* "zD": delete fold at cursor recursively */
     case 'd':
-    case 'D':	if (foldmethodIsManual(curwin)
-			|| (foldmethodIsMarker(curwin) && *curbuf->b_p_cms != NUL))
+    case 'D':	if (foldManualAllowed(FALSE))
 		{
 		    if (VIsual_active)
 			nv_operator(cap);
@@ -4152,8 +4133,6 @@ dozet:
 			deleteFold(curwin->w_cursor.lnum,
 				  curwin->w_cursor.lnum, nchar == 'D', FALSE);
 		}
-		else
-		    EMSG(_("E351: Cannot delete fold with current 'foldmethod'"));
 		break;
 
 		/* "zE": erease all folds */
@@ -4353,9 +4332,15 @@ nv_colon(cap)
     else
 #endif
     {
-	/* translate "count:" into ":.,.+(count - 1)" */
-	if (cap->count0 && cap->oap->op_type == OP_NOP)
+	if (cap->oap->op_type != OP_NOP)
 	{
+	    /* Using ":" as a movement is characterwise exclusive. */
+	    cap->oap->motion_type = MCHAR;
+	    cap->oap->inclusive = FALSE;
+	}
+	else if (cap->count0)
+	{
+	    /* translate "count:" into ":.,.+(count - 1)" */
 	    stuffcharReadbuff('.');
 	    if (cap->count0 > 1)
 	    {
@@ -6945,11 +6930,6 @@ nv_g_cmd(cap)
 #endif
 
     case K_IGNORE:
-	break;
-
-    case K_SILENT:
-	if (cmd_silent > 0)
-	    --cmd_silent;
 	break;
 
     /*

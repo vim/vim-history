@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jul 28
+" Last change:	2001 Aug 04
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -307,6 +307,9 @@ au BufNewFile,BufRead configure.in,configure.ac setf config
 " Enlightenment configuration files
 au BufNewFile,BufRead *enlightenment/*.cfg	setf c
 
+" Eterm
+au BufNewFile,BufRead *Eterm/*.cfg		setf eterm
+
 " Configure files
 au BufNewFile,BufRead *.cfg			setf cfg
 
@@ -337,6 +340,9 @@ au BufNewFile,BufRead *.com
 	\	|| getline(2) =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
 	\	|| getline(1).getline(2).getline(3).getline(4) =~ 'BIND.*named'
 	\ | setf dns | else | setf dcl | endif
+
+" DOT
+au BufNewFile,BufRead *.dot			setf dot
 
 " Dylan - lid files
 au BufNewFile,BufRead *.lid			setf dylanlid
@@ -388,9 +394,6 @@ au BufNewFile,BufRead *.ec,*.EC			setf esqlc
 
 " Essbase script
 au BufNewFile,BufRead *.csc			setf csc
-
-" Eterm
-au BufNewFile,BufRead *Eterm/*.cfg		setf eterm
 
 " Expect
 au BufNewFile,BufRead *.exp			setf expect
@@ -736,7 +739,10 @@ au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
 " Povray
 au BufNewFile,BufRead *.pov			setf pov
-"
+
+" Povray configuration
+au BufNewFile,BufRead .povrayrc			setf povini
+
 " Povray, PHP or assembly
 au BufNewFile,BufRead *.inc			call FTCheck_inc()
 
@@ -965,6 +971,9 @@ au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*  setf zsh
 " Scheme
 au BufNewFile,BufRead *.scm			setf scheme
 
+" Screen RC
+au BufNewFile,BufRead .screenrc,screenrc	setf screen
+
 " Simula
 au BufNewFile,BufRead *.sim			setf simula
 
@@ -1051,6 +1060,9 @@ au BufNewFile,BufRead *.tli			setf tli
 
 " Telix Salt
 au BufNewFile,BufRead *.slt			setf tsalt
+
+" Terminfo
+au BufNewFile,BufRead *.ti			setf terminfo
 
 " TeX
 au BufNewFile,BufRead *.tex,*.latex,*.sty,*.dtx,*.ltx	setf tex
@@ -1242,12 +1254,22 @@ au BufNewFile,BufRead Xresources*,*/app-defaults/*,*/Xresources/* setf xdefaults
 " Z-Shell script
 au BufNewFile,BufRead zsh*,zlog*		setf zsh
 
+
+" Generic configuration file (check this last, it's just guessing!)
+au BufNewFile,BufRead,StdinReadPost *
+	\ if !did_filetype()
+	\    && (getline(1) =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'
+	\	|| getline(4) =~ '^#' || getline(5) =~ '^#') |
+	\   setf conf |
+	\ endif
+
 augroup END
 
 
 " If the GUI is already running, may still need to install the Syntax menu.
 " Don't do it when the 'M' flag is included in 'guioptions'.
-if has("menu") && has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "M"
+if has("menu") && has("gui_running")
+      \ && !exists("did_install_syntax_menu") && &guioptions !~# "M"
   source <sfile>:p:h/menu.vim
 endif
 

@@ -1937,6 +1937,9 @@ gui_mch_new_colors()
     int
 gui_mch_open()
 {
+    if (gui_win_x != -1 && gui_win_y != -1)
+	gui_mch_set_winpos(gui_win_x, gui_win_y);
+
     /* Actually open the window */
     if (gui.vimWindow->Lock()) {
 	gui.vimWindow->Show();

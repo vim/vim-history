@@ -18,6 +18,9 @@ AC_PROG_AWK	dnl required for "make html" in ../doc
 dnl Don't strip if we don't have it
 AC_CHECK_PROG(STRIP, strip, strip, :)
 
+dnl Check for extention of executables
+AC_EXEEXT
+
 dnl Set default value for CFLAGS if none is defined or it's empty
 if test -z "$CFLAGS"; then
   CFLAGS="-O"

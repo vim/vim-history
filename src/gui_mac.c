@@ -2582,7 +2582,10 @@ gui_mch_new_colors()
     int
 gui_mch_open()
 {
-    ShowWindow (gui.VimWindow);
+    ShowWindow(gui.VimWindow);
+
+    if (gui_win_x != -1 && gui_win_y != -1)
+	gui_mch_set_winpos(gui_win_x, gui_win_y);
     return OK;
 }
 
@@ -2628,7 +2631,7 @@ gui_mch_set_winpos(int x, int y)
     /* TODO:  Should make sure the window is move within range
      *	      e.g.: y > ~16 [Menu bar], x > 0, x < screen width
      */
-    MoveWindow (gui.VimWindow, x, y, TRUE);
+    MoveWindow(gui.VimWindow, x, y, TRUE);
 }
 
     void

@@ -2123,10 +2123,8 @@ ex_emenu(eap)
 
     if (idx != MENU_INDEX_INVALID && menu->strings[idx] != NULL)
     {
-	if (menu->silent[idx])
-	    start_silent_cmd();
-
-	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0, TRUE);
+	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0,
+						     TRUE, menu->silent[idx]);
     }
     else
 	EMSG2(_("E335: Menu not defined for %s mode"), mode);

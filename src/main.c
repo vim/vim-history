@@ -2140,6 +2140,7 @@ usage()
     main_msg(_("-R\t\t\tReadonly mode (like \"view\")"));
     main_msg(_("-Z\t\t\tRestricted mode (like \"rvim\")"));
     main_msg(_("-m\t\t\tModifications (writing files) not allowed"));
+    main_msg(_("-M\t\t\tModifications in text not allowed"));
     main_msg(_("-b\t\t\tBinary mode"));
 #ifdef FEAT_LISP
     main_msg(_("-l\t\t\tLisp mode"));

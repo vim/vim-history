@@ -282,17 +282,31 @@ gui_athena_create_pullright_pixmap(w)
     Widget  w;
 {
     Pixmap  retval;
+#ifdef FONTSET_ALWAYS
+    XFontSet	font = None;
+#else
     XFontStruct	*font = NULL;
+#endif
 
+#ifdef FONTSET_ALWAYS
+    if (gui.menu_fontset == NOFONTSET)
+#else
     if (gui.menu_font == NOFONT)
+#endif
     {
 	XrmValue from, to;
 	WidgetList  children;
 	Cardinal    num_children;
 
+#ifdef FONTSET_ALWAYS
+	from.size = strlen(from.addr = XtDefaultFontSet);
+	to.addr = (XtPointer)&font;
+	to.size = sizeof(XFontSet);
+#else
 	from.size = strlen(from.addr = XtDefaultFont);
 	to.addr = (XtPointer)&font;
 	to.size = sizeof(XFontStruct *);
+#endif
 	/* Assumption: The menuBar children will use the same font as the
 	 *             pulldown menu items AND they will all be of type
 	 *             XtNfont.
@@ -302,13 +316,22 @@ gui_athena_create_pullright_pixmap(w)
 			       NULL);
 	if (XtConvertAndStore(w ? w :
 				(num_children > 0) ? children[0] : menuBar,
-			      XtRString, &from, XtRFontStruct, &to)
-		== False)
+			      XtRString, &from,
+#ifdef FONTSET_ALWAYS
+			      XtRFontSet, &to
+#else
+			      XtRFontStruct, &to
+#endif
+		    ) == False)
 	    return None;
 	/* "font" should now contain data */
     }
     else
+#ifdef FONTSET_ALWAYS
+	font = (XFontSet)gui.menu_fontset;
+#else
 	font = (XFontStruct *)gui.menu_font;
+#endif
 
     {
 	int	    width, height;
@@ -316,7 +339,11 @@ gui_athena_create_pullright_pixmap(w)
 	XGCValues   gc_values;
 	XPoint	    points[3];
 
+#ifdef FONTSET_ALWAYS
+	height = fontset_height2(font);
+#else
 	height = font->max_bounds.ascent + font->max_bounds.descent;
+#endif
 	width = height - 2;
 	puller_width = width + 4;
 	retval = XCreatePixmap(gui.dpy,DefaultRootWindow(gui.dpy),width,
@@ -571,7 +598,10 @@ gui_mch_add_menu(menu, idx)
 	{
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		menuButtonWidgetClass, menuBar,
-		XtNmenuName, menu->dname,
+		XtNmenuName,	    menu->dname,
+#ifdef FONTSET_ALWAYS
+		XtNinternational,   True,
+#endif
 		NULL);
 	    if (menu->id == (Widget)0)
 		return;
@@ -608,6 +638,9 @@ gui_mch_add_menu(menu, idx)
     {
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
+#ifdef FONTSET_ALWAYS
+	    XtNinternational,	True,
+#endif
 	    NULL);
 	if (menu->id == (Widget)0)
 	    return;
@@ -685,10 +718,7 @@ gui_athena_menu_has_submenus(id, ignore)
 gui_athena_menu_font(id)
     Widget	id;
 {
-    int		managed = FALSE;
-
-#ifdef EXPERIMENTAL
-# ifdef FEAT_XFONTSET
+#ifdef FONTSET_ALWAYS
     if (gui.menu_fontset != NOFONTSET)
     {
 	if (XtIsManaged(id))
@@ -696,16 +726,17 @@ gui_athena_menu_font(id)
 	    XtUnmanageChild(id);
 	    XtVaSetValues(id, XtNfontSet, gui.menu_fontset, NULL);
 	    /* We should force the widget to recalculate it's
-	     * geometry now.
-	     */
+	     * geometry now. */
 	    XtManageChild(id);
 	}
 	else
 	    XtVaSetValues(id, XtNfontSet, gui.menu_fontset, NULL);
+	if (has_submenu(id))
+	    XtVaSetValues(id, XtNrightBitmap, pullerBitmap, NULL);
     }
-    else
-# endif
-#endif
+#else
+    int		managed = FALSE;
+
     if (gui.menu_font != NOFONT)
     {
 	if (XtIsManaged(id))
@@ -714,11 +745,11 @@ gui_athena_menu_font(id)
 	    managed = TRUE;
 	}
 
-#ifdef FEAT_XFONTSET
+# ifdef FEAT_XFONTSET
 	if (gui.fontset != NOFONTSET)
 	    XtVaSetValues(id, XtNfontSet, gui.menu_font, NULL);
 	else
-#endif
+# endif
 	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
 	if (has_submenu(id))
 	    XtVaSetValues(id, XtNrightBitmap, pullerBitmap, NULL);
@@ -727,6 +758,7 @@ gui_athena_menu_font(id)
 	if (managed)
 	    XtManageChild(id);
     }
+#endif
 }
 
 
@@ -811,32 +843,32 @@ gui_mch_new_menu_font()
     void
 gui_mch_new_tooltip_font()
 {
+#  ifdef FEAT_TOOLBAR
+    vimmenu_T   *menu;
+
     if (toolBar == (Widget)0)
 	return;
 
-    {
-	vimmenu_T   *toolbar;
-
-	toolbar = gui_find_menu((char_u *)"ToolBar");
-	if (toolbar != NULL)
-	    gui_mch_submenu_change(toolbar, FALSE);
-    }
+    menu = gui_find_menu((char_u *)"ToolBar");
+    if (menu != NULL)
+	gui_mch_submenu_change(menu, FALSE);
+#  endif
 }
 # endif
 
     void
 gui_mch_new_tooltip_colors()
 {
+# ifdef FEAT_TOOLBAR
+    vimmenu_T   *menu;
+
     if (toolBar == (Widget)0)
 	return;
 
-    {
-	vimmenu_T   *toolbar;
-
-	toolbar = gui_find_menu((char_u *)"ToolBar");
-	if (toolbar != NULL)
-	    gui_mch_submenu_change(toolbar, TRUE);
-    }
+    menu = gui_find_menu((char_u *)"ToolBar");
+    if (menu != NULL)
+	gui_mch_submenu_change(menu, TRUE);
+# endif
 }
 #endif
 
@@ -1028,6 +1060,9 @@ gui_mch_add_menu_item(menu, idx)
 	    menu->submenu_id = (Widget)0;
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		    smeBSBObjectClass, parent->submenu_id,
+#ifdef FONTSET_ALWAYS
+		    XtNinternational,	True,
+#endif
 		    NULL);
 	    if (menu->id == (Widget)0)
 		return;
@@ -1264,6 +1299,10 @@ gui_mch_destroy_menu(menu)
 {
     Widget	parent;
 
+    /* There is no item for the toolbar. */
+    if (menu->id == (Widget)0)
+	return;
+
     parent = XtParent(menu->id);
 
     /* When removing the last "pulldown" menu item from a pane, adjust the
@@ -1458,7 +1497,7 @@ gui_athena_popup_callback(w, client_data, call_data)
     XtVaGetValues(XtParent(w),
 		  XtNwidth,   &width,
 		  NULL);
-    /* Assumtion: XawSimpleMenuGetActiveEntry(XtParent(w)) == menu->id */
+    /* Assumption: XawSimpleMenuGetActiveEntry(XtParent(w)) == menu->id */
     /* i.e. This IS the active entry */
     XtTranslateCoords(menu->id,width - 5, 0, &root_x, &root_y);
     XtVaSetValues(w, XtNx, root_x,

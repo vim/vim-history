@@ -77,6 +77,9 @@
 
 #include "vim.h"
 #if defined(WIN3264) || defined(WIN32UNIX)
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
 # include <windows.h>
 # ifndef __MINGW32__
 #  include <winnls.h>
@@ -87,6 +90,9 @@
 #endif
 #ifdef X_LOCALE
 #include <X11/Xlocale.h>
+#endif
+#ifndef EILSEQ
+# define EILSEQ 123
 #endif
 
 #if defined(FEAT_MBYTE) || defined(PROTO)

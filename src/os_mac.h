@@ -137,16 +137,17 @@
 #define BINARY_FILE_IO
 #define EOL_DEFAULT EOL_MAC
 #define USE_CR
-#define NO_CONSOLE		    /* don't include console mode */
+#define NO_CONSOLE		/* don't include console mode */
 #define HAVE_AVAIL_MEM
 
-/* #define SYNC_DUP_CLOSE	     sync() a file with dup() and close() */
+/* #define SYNC_DUP_CLOSE	   sync() a file with dup() and close() */
 #define HAVE_STRING_H
 #define HAVE_STRCSPN
 #define HAVE_MEMSET
-#define USE_TMPNAM		    /* use tmpnam() instead of mktemp() */
+#define USE_TMPNAM		/* use tmpnam() instead of mktemp() */
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
+#define HAVE_ST_MODE		/* have stat.st_mode */
 
 #if defined(__DATE__) && defined(__TIME__)
 # define HAVE_DATE_TIME

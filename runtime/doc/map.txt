@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ap.  Last change: 2001 Jul 24
+*map.txt*       For Vim version 6.0aq.  Last change: 2001 Jul 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -128,17 +128,18 @@ The local buffer mappings are used before the global ones.
 To define a mapping which will not be echoed on the command line, add
 "<silent>" as the first argument.  Example: >
 	:map <silent> ,h /Header<CR>
-The search string will not be echoed when using this mapping  Messages from
+The search string will not be echoed when using this mapping.  Messages from
 the executed command are still given though.  To shut them up too, add a
 ":silent" in the executed command: >
 	:map <silent> ,h :exe ":silent normal /Header\r"<CR>
 <
 						*:map-<script>* *:map-script*
 If the first argument to one of these commands is "<script>" and it is used to
-define a new mapping or abbreviation, the mapping will only remap mappings
-that were defined local to a script, starting with "<SID>".  This can be used
-to avoid that mappings from outside a script interfere (e.g., when CTRL-V is
-remapped in mswin.vim), but do use other mappings defined in the script.
+define a new mapping or abbreviation, the mapping will only remap characters
+in the {rhs} using mappings that were defined local to a script, starting with
+"<SID>".  This can be used to avoid that mappings from outside a script
+interfere (e.g., when CTRL-V is remapped in mswin.vim), but do use other
+mappings defined in the script.
 Note: ":map <script>" and ":noremap <script>" do the same thing.  The
 "<script>" overrules the command name.  Using ":noremap <script>" is
 preferred, because it's clearer that remapping is (mostly) disabled.

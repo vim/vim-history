@@ -3998,9 +3998,6 @@ f_has(argvars, retvar)
 #ifdef FEAT_SEARCHPATH
 	"file_in_path",
 #endif
-#ifdef FEAT_OSFILETYPE
-	"osfiletype",
-#endif
 #ifdef FEAT_FIND_ID
 	"find_in_path",
 #endif
@@ -4122,6 +4119,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_OLE
 	"ole",
+#endif
+#ifdef FEAT_OSFILETYPE
+	"osfiletype",
 #endif
 #ifdef FEAT_PATH_EXTRA
 	"path_extra",
@@ -5493,7 +5493,7 @@ f_serverreplyread(argvars, retvar)
     if (serverReadReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
 		        &r, FALSE) < 0)
     {
-	EMSG(_("Unable to  read a server reply"));
+	EMSG(_("Unable to read a server reply"));
 	return;
     }
     retvar->var_type = VAR_STRING;

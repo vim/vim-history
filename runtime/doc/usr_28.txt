@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_28.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -10,14 +10,14 @@ Folding allows you to display a section as one line, providing an overview.
 This chapter explains the different ways this can be done.
 
 |28.1|	What is folding?
-|28.2|  Manual folding
-|28.3|  Working with folds
-|28.4|  Saving and restoring folds
-|28.5|  Folding by indent
-|28.6|  Folding with markers
-|28.7|  Folding by syntax
-|28.8|  Folding by expression
-|28.9|  Folding unchanged lines
+|28.2|	Manual folding
+|28.3|	Working with folds
+|28.4|	Saving and restoring folds
+|28.5|	Folding by indent
+|28.6|	Folding with markers
+|28.7|	Folding by syntax
+|28.8|	Folding by expression
+|28.9|	Folding unchanged lines
 |28.10| Which fold method to use?
 
      Next chapter: |usr_29.txt|  Moving through programs
@@ -52,7 +52,7 @@ structure of text, by folding lines of a section and replacing it with a line
 that indicates that there is a section.
 
 ==============================================================================
-*28.2*  Manual folding
+*28.2*	Manual folding
 
 Try it out: Position the cursor in a paragraph and type: >
 
@@ -119,7 +119,7 @@ way of working:
 More about manual folding in the reference manual: |fold-manual|
 
 ==============================================================================
-*28.3*  Working with folds
+*28.3*	Working with folds
 
 When some folds are closed, movement commands like "j" and "k" move over a
 fold like it was a single, empty line.  This allows you to quickly move around
@@ -179,7 +179,7 @@ the same buffer, one with folds and one without folds.  Or one with all folds
 closed and one with all folds open.
 
 ==============================================================================
-*28.4*  Saving and restoring folds
+*28.4*	Saving and restoring folds
 
 When you abandon a file (starting to edit another one), the state of the folds
 is lost.  If you come back to the same file later, all manually opened and
@@ -205,7 +205,7 @@ Also check out the 'viewdir' option, which specifies where the views are
 stored.  You might want to delete old views now and then.
 
 ==============================================================================
-*28.5*  Folding by indent
+*28.5*	Folding by indent
 
 Defining folds with |zf| is a lot of work.  If your text is structured by
 giving lower level items a larger indent, you can use the indent folding
@@ -262,7 +262,7 @@ would conflict with the relation between the indent and the fold level.
 More about folding by indent in the reference manual: |fold-indent|
 
 ==============================================================================
-*28.6*  Folding with markers
+*28.6*	Folding with markers
 
 Markers in the text are used to specify the start and end of a fold region.
 This gives precise control over which lines are included in a fold.  The
@@ -308,7 +308,7 @@ another starts you need to add an end marker.
 More about folding with markers in the reference manual: |fold-marker|
 
 ==============================================================================
-*28.7*  Folding by syntax
+*28.7*	Folding by syntax
 
 For each language Vim uses a different syntax file.  This defines the colors
 for various items in the file.  If you are reading this in Vim, in a terminal
@@ -324,7 +324,7 @@ The folds will be created and deleted automatically when you edit the file.
 More about folding by syntax in the reference manual: |fold-syntax|
 
 ==============================================================================
-*28.8*  Folding by expression
+*28.8*	Folding by expression
 
 This is similar to folding by indent, but instead of using the indent of a
 line a user function is called to compute the fold level of a line.  You can
@@ -365,7 +365,7 @@ then edit.
 More about folding by expression in the reference manual: |fold-expr|
 
 ==============================================================================
-*28.9*  Folding unchanged lines
+*28.9*	Folding unchanged lines
 
 This is useful when you set the 'diff' option in the same window.  The
 |vimdiff| command does this for you.  Example: >
@@ -379,7 +379,7 @@ change is folded.
 For more details see |fold-diff|.
 
 ==============================================================================
-*28.10*  Which fold method to use?
+*28.10* Which fold method to use?
 
 All these possibilities makes you wonder which method you should chose.
 Unfortunately, there is not golden rule.  Here are some hints.

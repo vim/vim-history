@@ -674,6 +674,11 @@ set_b0_fname(b0p, buf)
 #endif
 	    buf->b_mtime = buf->b_mtime_read = (long)st.st_mtime;
 	    buf->b_orig_size = (size_t)st.st_size;
+#ifdef HAVE_ST_MODE
+	    buf->b_orig_mode = (int)st.st_mode;
+#else
+	    buf->b_orig_mode = mch_getperm(buf->b_ffname);
+#endif
 	}
 	else
 	{
@@ -684,6 +689,7 @@ set_b0_fname(b0p, buf)
 	    buf->b_mtime = 0;
 	    buf->b_mtime_read = 0;
 	    buf->b_orig_size = 0;
+	    buf->b_orig_mode = 0;
 	}
     }
 }

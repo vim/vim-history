@@ -40,4 +40,14 @@ int mch_has_wildcard __ARGS((char_u *p));
 int mch_chdir __ARGS((char *path));
 char_u *mch_getenv __ARGS((char_u *name));
 char *djgpp_setlocale __ARGS((void));
+int clip_mch_own_selection __ARGS((VimClipboard *cbd));
+void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
+void clip_mch_request_selection __ARGS((VimClipboard *cbd));
+void clip_mch_set_selection __ARGS((VimClipboard *cbd));
+int OpenClipboard __ARGS((void));
+int CloseClipboard __ARGS((void));
+int EmptyClipboard __ARGS((void));
+void FreeDOSMemory __ARGS((int protected_mode_selector));
+char_u *GetClipboardData __ARGS((int clip_data_format));
+int SetClipboardData __ARGS((int clip_data_format, char_u *clip_data, int clip_data_size, int clip_data_type));
 /* vim: set ft=c : */

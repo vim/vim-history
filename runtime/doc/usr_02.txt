@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_02.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -10,20 +10,20 @@ well or fast, but you can edit.  Take some time to practice with these
 commands, they form the base for what follows.
 
 |02.1|	Running Vim for the First Time
-|02.2|  Inserting text
-|02.3|  Moving around
-|02.4|  Deleting characters
-|02.5|  Undo and Redo
-|02.6|  Other editing commands
-|02.7|  Getting out
-|02.8|  Finding help
+|02.2|	Inserting text
+|02.3|	Moving around
+|02.4|	Deleting characters
+|02.5|	Undo and Redo
+|02.6|	Other editing commands
+|02.7|	Getting out
+|02.8|	Finding help
 
      Next chapter: |usr_03.txt|  Moving around
  Previous chapter: |usr_01.txt|  About the manuals
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*02.1*  Running Vim for the First Time
+*02.1*	Running Vim for the First Time
 
 To start Vim, enter this command: >
 
@@ -67,7 +67,7 @@ versions, but with gvim you have extra features, like a menu bar.  More about
 that later.
 
 ==============================================================================
-*02.2*  Inserting text
+*02.2*	Inserting text
 
 The Vim editor is a modal editor.  That means that the editor behaves
 differently, depending on which mode you are in.  The two basic modes are
@@ -128,7 +128,7 @@ press the <Esc> key.  Sometimes you have to press it twice.  If Vim beeps back
 at you, you already are in Normal mode.
 
 ==============================================================================
-*02.3*  Moving around
+*02.3*	Moving around
 
 After you return to command mode, you can move around by using these keys:
 
@@ -167,7 +167,7 @@ insert a word somewhere.  Don't forget to press <Esc> to go back to Normal
 mode.  The |vimtutor| is also a nice way to learn by doing.
 
 ==============================================================================
-*02.4*  Deleting characters
+*02.4*	Deleting characters
 
 To delete a character, move the cursor over it and type "x".  (This is a
 throwback to the old days of the typewriter, when you deleted things by typing
@@ -227,7 +227,7 @@ Move the cursor to the first line and press "J":
 	A young intelligent turtle ~
 
 ==============================================================================
-*02.5*  Undo and Redo
+*02.5*	Undo and Redo
 
 Suppose you delete too much.  Well, you can type it in again, but an easier
 way exists.  The "u" command undoes the last edit.  Take a look at this in
@@ -295,7 +295,7 @@ redoes.  This might be a bit confusing.  Don't worry, with "u" and CTRL-R you
 can go to any of the situations you had.
 
 ==============================================================================
-*02.6*  Other editing commands
+*02.6*	Other editing commands
 
 Vim has a large number of commands to change the text.  See |Q_in| and below.
 Here are a few often used ones.
@@ -357,7 +357,7 @@ its effect.  Similarly, to delete three characters, use the command "3x".  The
 count always comes before the command it applies to.
 
 ==============================================================================
-*02.7*  Getting out
+*02.7*	Getting out
 
 To exit, use the "ZZ" command.  This command writes the file and exits.
 
@@ -394,7 +394,7 @@ If you want to continue editing with Vim: The ":e!" command reloads the
 original version of the file.
 
 ==============================================================================
-*02.8*  Finding help
+*02.8*	Finding help
 
 Everything you always wanted to know can be found in the Vim help files.
 Don't be afraid to ask!

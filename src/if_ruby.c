@@ -68,8 +68,8 @@ static void ruby_vim_init(void);
 
 #if defined(DYNAMIC_RUBY) || defined(PROTO)
 /* Console Vim doesn't include this, but we need it for dynamic loading */
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 
 #ifdef PROTO
 # define HINSTANCE int		/* for generating prototypes */
@@ -458,7 +458,7 @@ static void error_print(int state)
 	}
 	break;
     default:
-	snprintf(buff, BUFSIZ, "E273: unknown longjmp status %d", state);
+	snprintf(buff, BUFSIZ, _("E273: unknown longjmp status %d"), state);
 	EMSG(buff);
 	break;
     }

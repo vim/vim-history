@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 12
+*message.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -533,6 +533,7 @@ contents changed (more precisely: When reading the file again with the current
 option settings and autocommands you would end up with different text).  This
 probably means that some other program changed the file.  You will have to
 find out what happened, and decide which version of the file you want to keep.
+Set the 'autoread' option if you want to do this automatically.
 There is one situation where you get this message even though there is nothing
 wrong: If you save a file in Windows on the day the daylight saving time
 starts.  It can be fixed by adding this line in your autoexec.bat: >
@@ -547,6 +548,15 @@ This message is not given when 'buftype' is not empty.
 Like the above, and the buffer for the file was changed in this Vim as well.
 You will have to decide if you want to keep the version in this Vim or the one
 on disk.  This message is not given when 'buftype' is not empty.
+
+							*W16*  >
+  Warning: Mode of file "{filename}" has changed since editing started
+
+When the timestamp for a buffer was changed and the contents are still the
+same but the mode (permissions) have changed.  This usually occurs when
+checking out a file from a version control system, which causes the read-only
+bit to be reset.  It should be safe to reload the file.  Set 'autoread' to
+automatically reload the file.
 
 							*E211*  >
   Warning: File "{filename}" no longer available

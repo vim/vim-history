@@ -211,7 +211,11 @@ gui_init_check()
 #endif
 
 #ifdef FEAT_MENU
+# ifdef FONTSET_ALWAYS
+    gui.menu_fontset = NOFONTSET;
+# else
     gui.menu_font = NOFONT;
+# endif
     gui.menu_is_active = TRUE;	    /* default: include menu */
 # ifndef FEAT_GUI_GTK
     gui.menu_height = MENU_DEFAULT_HEIGHT;

@@ -1273,6 +1273,9 @@ gui_mch_open(void)
 
     highlight_gui_started();
 
+    if (gui_win_x != -1 && gui_win_y != -1)
+	gui_mch_set_winpos(gui_win_x, gui_win_y);
+
     return( (PtRealizeWidget( gui.vimWindow ) == 0) ? OK : FAIL );
 }
 

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ap.  Last change: 2001 Jul 17
+*quickfix.txt*  For Vim version 6.0aq.  Last change: 2001 Aug 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -203,10 +203,11 @@ substitute string of the ":s" command, which is used to evaluate an
 expression.
 
 Note: Making changes in the quickfix window has no effect on the list of
-errors.  If you delete or insert lines, the relation between the text and the
-error number is messed up.  If you really want to do this, you could write the
-contents of the quickfix window to a file and use ":cfile" to have it parsed
-and used as the new error list.
+errors.  'modifiable' is off to avoid making changes.  If you delete or insert
+lines anyway, the relation between the text and the error number is messed up.
+If you really want to do this, you could write the contents of the quickfix
+window to a file and use ":cfile" to have it parsed and used as the new error
+list.
 
 =============================================================================
 3. Selecting a compiler					*compiler-select*
@@ -560,19 +561,24 @@ messages is the current directory. This is why you could just use the message
 8. Specific error file formats			*errorformats*
 
 						*errorformat-Jikes*
-Jikes(TM), a source-to-bytecode Java compiler published by IBM Research.
-produces simple multi-line error messages when invoked with the option "+E".
+Jikes(TM), a source-to-bytecode Java compiler published by IBM Research,
+produces simple multi-line error messages.
 
 An 'errorformat' string matching the produced messages is shown below.
 The following lines can be placed in the user's |vimrc| to overwrite Vim's
 recognized default formats, or see |:set+=| how to install this format
 additionally to the default. >
 
- :set efm=%A%f:%l:%c:%*\\d:%*\\d:,
+  :set efm=%A%f:%l:%c:%*\\d:%*\\d:,
 	\%C%*\\s%trror:%m,
 	\%+C%*[^:]%trror:%m,
 	\%C%*\\s%tarning:%m,
 	\%C%m
+<
+Jikes(TM) produces a single-line error message when invoked with the 
+option "+E", and can be matched with the following: >
+
+  :set efm=%f:%l:%v:%*\\d:%*\\d:%*\\s%m
 <
 						*errorformat-javac*
 This 'errorformat' has been reported to work well for javac, which outputs a

@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_08.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -44,7 +44,7 @@ top one:
 	+----------------------------------+
 
 What you see here is two windows on the same file.  The line with "====" is
-that status line.  It display information about the window above it.  (in
+that status line.  It displays information about the window above it.  (in
 practice the status line will be in reverse video.)
    The two windows allow you to view two parts of the same file.  For example,
 you could make the top window show the variable declarations of a program, and
@@ -63,8 +63,8 @@ To close a window, use the command: >
 	:close
 
 Actually, any command that quits editing a file works, like ":quit" and "ZZ".
-But ":close" prevents you from acidentally exiting Vim when you close the last
-window.
+But ":close" prevents you from accidentally exiting Vim when you close the
+last window.
 
 
 CLOSING ALL OTHER WINDOWS
@@ -339,7 +339,7 @@ file in the argument list.  ":vertical all" does it with vertical splits.
 There is a special way to start Vim, which shows the differences between two
 files.  Let's take a file "main.c" and insert a few characters in one line.
 Write this file with the 'backup' option set, so that the backup file
-"main.c~" will contian the previous version of the file.
+"main.c~" will contain the previous version of the file.
    Type this command in a shell (not in Vim): >
 
 	vimdiff main.c~ main.c
@@ -373,9 +373,9 @@ better look.)
 is called a closed fold.  The are indicated in the picture with "<- fold".
 Thus the single fold line at the top stands for 123 text lines.  These lines
 are equal in both files.
-   The line marked with "<- changed line" is highlighed, and the inserted text
-is displayed with another color.  This clearly shows what the difference is
-between the two files.
+   The line marked with "<- changed line" is highlighted, and the inserted
+text is displayed with another color.  This clearly shows what the difference
+is between the two files.
    The line that was deleted is displayed with "---" in the main.c window.
 See the "<- deleted line" marker in the picture.  These characters are not
 really there.  They just fill up main.c, so that it displays the same number

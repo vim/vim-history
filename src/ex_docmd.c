@@ -5666,18 +5666,20 @@ do_exedit(eap, old_curwin)
 #ifdef FEAT_LISTCMDS
 		    + (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )
 #endif
-		    ) == FAIL
-		&& old_curwin != NULL)
+		    ) == FAIL)
 	{
+	    /* Editing the file failed.  If the window was split, close it. */
 #ifdef FEAT_WINDOWS
-	    /* If editing failed after a split command, close the window */
-	    need_hide = (curbufIsChanged() && curbuf->b_nwindows <= 1);
-	    if (!need_hide || P_HID(curbuf))
+	    if (old_curwin != NULL)
 	    {
+		need_hide = (curbufIsChanged() && curbuf->b_nwindows <= 1);
+		if (!need_hide || P_HID(curbuf))
+		{
 # ifdef FEAT_GUI
-		need_mouse_correct = TRUE;
+		    need_mouse_correct = TRUE;
 # endif
-		win_close(curwin, !need_hide && !P_HID(curbuf));
+		    win_close(curwin, !need_hide && !P_HID(curbuf));
+		}
 	    }
 #endif
 	}
@@ -5836,7 +5838,7 @@ ex_syncbind(eap)
 
 	    ctrl_o[0] = Ctrl_O;
 	    ctrl_o[1] = 0;
-	    ins_typebuf(ctrl_o, REMAP_NONE, 0, TRUE);
+	    ins_typebuf(ctrl_o, REMAP_NONE, 0, TRUE, FALSE);
 	}
     }
 #endif
@@ -6130,6 +6132,12 @@ ex_winpos(eap)
 # ifdef FEAT_GUI
 	if (gui.in_use)
 	    gui_mch_set_winpos(x, y);
+	else if (gui.starting)
+	{
+	    /* Remember the coordinates for when the window is opened. */
+	    gui_win_x = x;
+	    gui_win_y = y;
+	}
 #  ifdef HAVE_TGETENT
 	else
 #  endif
@@ -6730,6 +6738,7 @@ ex_normal(eap)
     int		save_State = State;
     typebuf_T	saved_typebuf;
     int		save_insertmode = p_im;
+    int		save_finish_op = finish_op;
 #ifdef FEAT_MBYTE
     char_u	*arg = NULL;
     int		l;
@@ -6827,6 +6836,7 @@ ex_normal(eap)
 	do
 	{
 	    clear_oparg(&oa);
+	    finish_op = FALSE;
 	    if (eap->addr_count != 0)
 	    {
 		curwin->w_cursor.lnum = eap->line1++;
@@ -6841,7 +6851,8 @@ ex_normal(eap)
 #ifdef FEAT_MBYTE
 		    arg != NULL ? arg :
 #endif
-		    eap->arg, eap->forceit ? REMAP_NONE : REMAP_YES, 0, TRUE);
+		    eap->arg, eap->forceit ? REMAP_NONE : REMAP_YES, 0,
+								 TRUE, FALSE);
 	    while ((!stuff_empty() || (!typebuf_typed() && typebuf.tb_len > 0))
 		    && !got_int)
 	    {
@@ -6863,6 +6874,7 @@ ex_normal(eap)
     msg_scroll = save_msg_scroll;
     restart_edit = save_restart_edit;
     p_im = save_insertmode;
+    finish_op = save_finish_op;
     msg_didout |= save_msg_didout;	/* don't reset msg_didout now */
 
     /* Restore the state (needed when called from a function executed for
@@ -8812,7 +8824,8 @@ ex_X(eap)
 ex_fold(eap)
     exarg_T	*eap;
 {
-    foldCreate(eap->line1, eap->line2);
+    if (foldManualAllowed(TRUE))
+	foldCreate(eap->line1, eap->line2);
 }
 
     static void

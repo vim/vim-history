@@ -33,6 +33,7 @@
 #define HAVE_STRNICMP
 #define HAVE_MEMSET
 #define HAVE_QSORT
+#define HAVE_ST_MODE		/* have stat.st_mode */
 #if defined(__DATE__) && defined(__TIME__)
 # define HAVE_DATE_TIME
 #endif

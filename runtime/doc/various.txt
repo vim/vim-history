@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
+*various.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -220,6 +220,7 @@ B  *++builtin_terms*	maximal terminals builtin |builtin-terms|
 N  *+byte_offset*	support for 'o' flag in 'statusline' option, "go"
 			and ":goto" commands.
 N  *+cindent*		|'cindent'|, C indenting
+   *+clipboard*		|clipboard| support
 N  *+cmdline_compl*	command line completion |cmdline-completion|
 N  *+cmdline_hist*	command line history |cmdline-history|
 N  *+cmdline_info*	|'showcmd'| and |'ruler'|

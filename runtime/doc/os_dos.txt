@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 24
+*os_dos.txt*    For Vim version 6.0aq.  Last change: 2001 Jul 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -86,14 +86,14 @@ CTRL-PageUp	<M-N><M-C-D>	    H		    <C-O>H
 CTRL-PageDown	<M-N>v		    L$		    <C-O>L<C-O>$
 
 Additionally, these keys are available for copy/cut/paste.  In the Win32
-version only, they also use the clipboard.
+and DJGPP versions, they also use the clipboard.
 
 Shift-Insert	paste text (from clipboard)			*<S-Insert>*
 CTRL-Insert	copy Visual text (to clipboard)			*<C-Insert>*
 CTRL-Del	cut Visual text (to clipboard)			*<C-Del>*
 Shift-Del	cut Visual text (to clipboard)			*<S-Del>*
 
-These mappings accomplish this (Win32 version of Vim):
+These mappings accomplish this (Win32 and DJGPP versions of Vim):
 
 key		key code     Normal	Visual	    Insert ~
 Shift-Insert	<M-N><M-T>   "*P	"-d"*P      <C-R>*

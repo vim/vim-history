@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
+*change.txt*    For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -186,11 +186,17 @@ gR			Enter Virtual replace mode: Each character you type
 							*v_r*
 {Visual}["x]r{char}	Replace all selected characters by {char}.
 
-{Visual}["x]C	or
-{Visual}["x]S	or					*v_C* *v_R* *v_S*
-{Visual}["x]R		Delete the highlighted lines [into register x] and
+							*v_C*
+{Visual}["x]C		Delete the highlighted lines [into register x] and
+			start insert.  In Visual block mode it works
+			differently |v_b_C|.  {not in Vi}
+							*v_S*
+{Visual}["x]S		Delete the highlighted lines [into register x] and
 			start insert (for {Visual} see |Visual-mode|).  {not
 			in Vi}
+							*v_R* 
+{Visual}["x]R		Currently just like {Visual}["x]S.  In a next version
+			it might work differently. {not in Vi}
 
 Notes:
 - You can end Insert and Replace mode with <Esc>.

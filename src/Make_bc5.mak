@@ -13,6 +13,7 @@
 #	3/2000 - Bram: Made it work with BC 5.5 free command line compiler,
 #			cleaned up variables.
 #	6/2001 - Dan - Added support for compiling Python and TCL
+#	7/2001 - Dan - Added support for compiling Ruby
 #
 # It builds on Windows 95 and NT-Intel, producing the same binary in either
 # case.  To build using Microsoft Visual C++, use Make_mvc.mak.
@@ -41,14 +42,19 @@
 #   PYTHON_VER	    define to version of Python being used (15)
 #   DYNAMIC_PYTHON  no or yes: use yes to load the Python DLL dynamically (no)
 # TCL		define to path to TCL dir to get TCL support (not defined)
-#   TCL_VER	define to version oc TCL being used (83)
+#   TCL_VER	define to version of TCL being used (83)
 #   DYNAMIC_TCL no or yes: use yes to load the TCL DLL dynamically (no)
+# RUBY		define to patch to Ruby dir to get Ruby support (not defined)
+#   RUBY_VER	define to version of Ruby being used (16)
+#   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (no)
+# MBYTE		0 or 1: set to 1 for multi-byte support (1)
+# ICONV		0 or 1: set to 1 for dynamic iconv support (1)
 # OLE		0 or 1: set to 1 to make OLE gvim (0)
 # OSTYPE	DOS16 or WIN32 (WIN32)
 # DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
 # CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
 # CPU		1 through 6: select CPU to compile for (3)
-# USEDLL	0 or 1: set to 1 to use the Runtime library DLL (1)
+# USEDLL	0 or 1: set to 1 to use the Runtime library DLL (0)
 #		For USEDLL=1 the cc3250.dll is required to run Vim.
 # VIMDLL	0 or 1: create vim32.dll, and stub (g)vim.exe (0)
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
@@ -67,15 +73,24 @@ BOR = c:\bc5
 !if ("$(GUI)"=="")
 GUI = 1
 !endif
+!if ("$(MBYTE)"=="")
+MBYTE = 1
+!endif
+!if ("$(ICONV)"=="")
+ICONV = 1
+!endif
 #
-### PERL: uncommented this line if you want perl support in vim
+### PERL: uncomment this line if you want perl support in vim
 #	'USEDLL' doesn't seem to work with perl, don't know why.
 # PERL=c:\perl
 #
-### PYTHON: uncommented this line if you want python support in vim
+### PYTHON: uncomment this line if you want python support in vim
 # PYTHON=c:\python20
 #
-### TCL: uncommented this line if you want tcl support in vim
+### RUBY: uncomment this line if you want ruby support in vim
+# RUBY=c:\ruby
+# 
+### TCL: uncomment this line if you want tcl support in vim
 # TCL=c:\tcl
 #
 ### OLE: 0 for normal gvim, 1 for OLE-capable gvim (only works with GUI)
@@ -121,7 +136,13 @@ ALIGN = 4
 ### FASTCALL: 1 to use FASTCALL calling convention (RECOMMENDED!), 0 otherwise
 #   Incompatible when calling external functions (like MSVC-compiled DLLs), so
 #   don't use FASTCALL when linking with external libs.
-!if ("$(FASTCALL)"=="") && ("$(PYTHON)"=="") && ("$(PERL)"=="") && ("$(TCL)"=="")
+!if ("$(FASTCALL)"=="") && \
+	("$(PYTHON)"=="") && \
+	("$(PERL)"=="") && \
+	("$(TCL)"=="") && \
+	("$(RUBY)"=="") && \
+	("$(ICONV)"=="") && \
+	("$(MBYTE)"=="")
 FASTCALL = 1
 !endif
 #
@@ -184,14 +205,14 @@ INCLUDE = $(BOR)\include;.;proto
 DEFINES = -DWIN32 -DPC $(WINVER)
 #
 !ifdef PERL
-DEFINES = $(DEFINES) -DFEAT_PERL
+INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PERL
 INCLUDE = $(PERL)\lib\core;$(INCLUDE)
 !  ifndef PERL_VER
 PERL_VER = 56
 !  endif
 !  if ("$(DYNAMIC_PERL)" == "yes")
 !    if ($(PERL_VER) > 55)
-DEFINES = $(DEFINES) -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
+INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"perl$(PERL_VER).dll\"
 PERL_LIB_FLAG = /nodefaultlib:
 !    else
 !      message "Cannot dynamically load Perl versions less than 5.6.  Loading statically..."
@@ -200,25 +221,52 @@ PERL_LIB_FLAG = /nodefaultlib:
 !endif
 #
 !ifdef PYTHON
-DEFINES = $(DEFINES) -DFEAT_PYTHON
+INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PYTHON
 INCLUDE = $(PYTHON)\include;$(INCLUDE)
 !ifndef PYTHON_VER
 PYTHON_VER = 15
 !endif
 !if "$(DYNAMIC_PYTHON)" == "yes"
-DEFINES = $(DEFINES) -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
+INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
 PYTHON_LIB_FLAG = /nodefaultlib:
 !endif
 !endif
 #
+!ifdef RUBY
+!if "$(OS)" == "Windows_NT"
+!message Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
+!undef RUBY
+!else
+INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
+INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
+!ifndef RUBY_VER
+RUBY_VER = 16
+!endif
+!ifndef RUBY_VER_LONG
+RUBY_VER_LONG = 1.6
+!endif
+!ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i586-mswin32
+!endif
+RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+
+!if "$(DYNAMIC_RUBY)" == "yes"
+INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+RUBY_LIB_FLAG = /nodefaultlib:
+!endif
+!endif
+!endif
+#
 !ifdef TCL
-DEFINES = $(DEFINES) -DFEAT_TCL
+INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_TCL
 INCLUDE = $(TCL)\include;$(INCLUDE)
 !ifndef TCL_VER
 TCL_VER = 83
 !endif
+TCL_LIB=$(TCL)\lib\tcl$(TCL_VER).lib
 !if "$(DYNAMIC_TCL)" == "yes"
-DEFINES = $(DEFINES) -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
+INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
+TCL_LIB = $(TCL)\lib\tclstub$(TCL_VER).lib
 TCL_LIB_FLAG = /nodefaultlib:
 !endif
 !endif
@@ -236,8 +284,18 @@ DEFINES=$(DEFINES) -DDEBUG
 DEFINES = $(DEFINES) -DFEAT_OLE
 !endif
 #
+!if ($(MBYTE)==1)
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_GETTEXT
 !if ($(GUI)==1)
-DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE_IME -DDYNAMIC_IME
+!endif
+!if ($(ICONV)==1)
+MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
+!endif
+!endif
+
+!if ($(GUI)==1)
+DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD 
 !ifdef DEBUG
 TARGET = gvimd.exe
 !else
@@ -270,7 +328,7 @@ EXETYPE=-WC
 STARTUPOBJ = c0x32.obj
 LINK2 = -ap -OS -o -P
 !endif
-RESFILE =
+RESFILE = vim.res
 !endif
 
 !if ($(USEDLL)==1)
@@ -391,6 +449,11 @@ vimobj = $(vimobj) \
     $(OBJDIR)\if_python.obj
 !endif
 
+!ifdef RUBY
+vimobj = $(vimobj) \
+    $(OBJDIR)\if_ruby.obj
+!endif
+
 !ifdef TCL
 vimobj = $(vimobj) \
     $(OBJDIR)\if_tcl.obj
@@ -452,6 +515,12 @@ MSG = $(MSG)(dynamic)
 !ifdef PYTHON
 MSG = $(MSG) PYTHON
 ! ifdef DYNAMIC_PYTHON
+MSG = $(MSG)(dynamic)
+! endif
+!endif
+!ifdef RUBY
+MSG = $(MSG) RUBY
+! ifdef DYNAMIC_RUBY
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
@@ -518,6 +587,7 @@ clean:
 	-@del *.csm
 	-@del *.map
 	-@del *.tds
+	-@del *.lib
 	@cd xxd
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
 	@cd ..
@@ -542,6 +612,9 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !ifdef PYTHON
 	$(PYTHON_LIB_FLAG)python.lib+
 !endif
+!ifdef RUBY
+	$(RUBY_LIB_FLAG)ruby.lib+
+!endif
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
 !endif
@@ -557,9 +630,9 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 |
 
 !if ($(VIMDLL)==1)
-$(TARGET): $(OBJDIR) $(DLLTARGET) $(vimmain) $(RESFILE)
+$(TARGET): $(OBJDIR) $(DLLTARGET) $(vimmain) $(OBJDIR)\$(RESFILE)
 !else
-$(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
+$(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !endif
   $(LINK) @&&|
 	$(LFLAGS) +
@@ -584,6 +657,9 @@ $(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
 !ifdef PYTHON
 	$(PYTHON_LIB_FLAG)python.lib+
 !endif
+!ifdef RUBY
+	$(RUBY_LIB_FLAG)ruby.lib+
+!endif
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
 !endif
@@ -594,7 +670,7 @@ $(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
 !endif
 !if ($(GUI)==1)
 
-	$(RESFILE)
+	$(OBJDIR)\$(RESFILE)
 !endif
 !else
 	emu.lib + cl.lib
@@ -702,11 +778,15 @@ if_perl.c: if_perl.xs typemap
 $(OBJDIR)\if_python.obj: if_python.c python.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_python.c
 
+$(OBJDIR)\if_ruby.obj: if_ruby.c ruby.lib
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_ruby.c
+	
 $(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_tcl.c
 
-vim.res: vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
-    $(BRC) $(DEFINES) -i $(BOR)\include -w32 -r $*.rc
+$(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
+	vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
+    $(BRC) $(DEFINES) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc
 
 perl.lib: $(PERL)\lib\CORE\perl$(PERL_VER).lib
 	coff2omf $(PERL)\lib\CORE\perl$(PERL_VER).lib $@
@@ -714,8 +794,11 @@ perl.lib: $(PERL)\lib\CORE\perl$(PERL_VER).lib
 python.lib: $(PYTHON)\libs\python$(PYTHON_VER).lib
 	coff2omf $(PYTHON)\libs\python$(PYTHON_VER).lib $@
 
-tcl.lib: $(TCL)\lib\tcl$(TCL_VER).lib
-	coff2omf $(TCL)\lib\tcl$(TCL_VER).lib $@
+ruby.lib: $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
+	coff2omf $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib $@
+
+tcl.lib: $(TCL_LIB)
+	coff2omf $(TCL_LIB) $@
 
 # vimrun.exe:
 vimrun.exe: vimrun.c
@@ -731,6 +814,8 @@ $(OBJDIR)\bcc.cfg: Make_bc5.mak
 	$(CFLAGS)
 	-L$(LIB)
 	$(DEFINES)
+	$(MBDEFINES)
+	$(INTERP_DEFINES)
 	$(EXETYPE)
 	$(DEBUG)
 	$(OPT)

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
-" Last Change:	Wed Jul 25 22:29:03 CST 2001
+" Last Change:	Wed Aug  1 21:08:17 CST 2001
 " URL:          http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
 "
 " Buffer Variables:
@@ -17,7 +17,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetVerilogIndent()
-setlocal indentkeys=!^F,o,O,0),=\*/,=begin,=end,=join,=endcase
+setlocal indentkeys=!^F,o,O,0),=begin,=end,=join,=endcase
 setlocal indentkeys+==endmodule,=endfunction,=endtask,=endspecify
 setlocal indentkeys+==`else,=`endif
 
@@ -28,9 +28,6 @@ endif
 
 function GetVerilogIndent()
 
-  let offset_comment  = 3
-  let offset_comment1 = 1
-  let offset_comment2 = 2
   if exists('b:verilog_indent_width')
     let offset = b:verilog_indent_width
   else
@@ -56,21 +53,12 @@ function GetVerilogIndent()
   let last_line2 = getline(lnum2)
   let ind  = indent(lnum)
   let ind2 = indent(lnum - 1)
+  let offset_comment1 = 1
 
   " Indent accoding to last line
-  " Multiple-line comment
-  if last_line =~ '^\s*/\*'
-    if last_line !~ '\*/\s*$'
-      let ind = ind + offset_comment
-    endif
-  elseif last_line =~ '\*/\s*$'
+  " End of multiple-line comment
+  if last_line =~ '\*/\s*$'
     let ind = ind - offset_comment1
-    if last_line !~ '^\s*\*/\s*$'
-      let ind = ind - offset_comment2
-    endif
-  " One-line comment
-  elseif last_line =~ '^\s*//'
-    ind = ind
 
   " Indent after if/else/for/case/always/initial/specify/fork blocks
   elseif last_line =~ '\<\(if\|else\)\>' ||
@@ -130,13 +118,10 @@ function GetVerilogIndent()
   endif
 
   " Re-indent current line
-  " Multiple-line comment
-  if curr_line =~ '^\s*\*/'
-    let ind = ind - offset_comment2
 
   " De-indent on the end of the block
   " join/end/endcase/endfunction/endtask/endspecify
-  elseif curr_line =~ '^\s*\<\(join\|end\|endcase\)\>' ||
+  if curr_line =~ '^\s*\<\(join\|end\|endcase\)\>' ||
     \ curr_line =~ '^\s*\<\(endfunction\|endtask\|endspecify\)\>'
     let ind = ind - offset
   elseif curr_line =~ '^\s*\<endmodule\>'

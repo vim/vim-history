@@ -6,10 +6,10 @@ static char * tb_open_xpm[] = {
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
 "X	s bottomShadowColor	m black	c #5D6069",
-"o	s iconColor2	m white	c #FFFFFF",
-"O	s iconGray1	m white	c #dedede",
+"o	s iconColor2	m none	c #FFFFFF",
+"O	s iconGray1	m none	c #dedede",
 "+	s iconGray5	m black	c #737373",
-"@	s iconGray3	m white	c #adadad",
+"@	s iconGray3	m none	c #adadad",
 /* pixels */
 "                  ",
 "    .........X    ",

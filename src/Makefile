@@ -294,8 +294,9 @@ CClink = $(CC)
 
 # Uncomment one of these lines if you have that GUI but don't want to use it.
 # The automatic check will use another one that can be found
+# Gnome is disabled by default, it may cause trouble.
 #CONF_OPT_GUI = --disable-gtk-check
-#CONF_OPT_GUI = --disable-gnome-check
+CONF_OPT_GUI = --disable-gnome-check
 #CONF_OPT_GUI = --disable-motif-check
 #CONF_OPT_GUI = --disable-athena-check
 
@@ -688,7 +689,8 @@ LINT_OPTIONS = -beprxzF
 #CONF_TERM_LIB = --with-tlib=ncurses
 
 ### For GCC on MSDOS, the ".exe" suffix will be added.
-#SUFFIX = .exe
+#EXEEXT = .exe
+#LNKEXT = .exe
 
 ### (O)  For LynxOS 2.5.0, tested on PC.
 #EXTRA_LIBS = -lXext -lSM -lICE -lbsd
@@ -706,32 +708,32 @@ LINT_OPTIONS = -beprxzF
 ##################### end of system specific lines ################### }}}
 
 ### Names of the programs and targets  {{{1
-VIMTARGET	= $(VIMNAME)$(SUFFIX)
-EXTARGET	= $(EXNAME)$(SUFFIX)
-VIEWTARGET	= $(VIEWNAME)$(SUFFIX)
+VIMTARGET	= $(VIMNAME)$(EXEEXT)
+EXTARGET	= $(EXNAME)$(LNKEXT)
+VIEWTARGET	= $(VIEWNAME)$(LNKEXT)
 GVIMNAME	= g$(VIMNAME)
-GVIMTARGET	= $(GVIMNAME)$(SUFFIX)
+GVIMTARGET	= $(GVIMNAME)$(LNKEXT)
 GVIEWNAME	= g$(VIEWNAME)
-GVIEWTARGET	= $(GVIEWNAME)$(SUFFIX)
+GVIEWTARGET	= $(GVIEWNAME)$(LNKEXT)
 RVIMNAME	= r$(VIMNAME)
-RVIMTARGET	= $(RVIMNAME)$(SUFFIX)
+RVIMTARGET	= $(RVIMNAME)$(LNKEXT)
 RVIEWNAME	= r$(VIEWNAME)
-RVIEWTARGET	= $(RVIEWNAME)$(SUFFIX)
+RVIEWTARGET	= $(RVIEWNAME)$(LNKEXT)
 RGVIMNAME	= r$(GVIMNAME)
-RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
+RGVIMTARGET	= $(RGVIMNAME)$(LNKEXT)
 RGVIEWNAME	= r$(GVIEWNAME)
-RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
+RGVIEWTARGET	= $(RGVIEWNAME)$(LNKEXT)
 VIMDIFFNAME	= $(VIMNAME)diff
 GVIMDIFFNAME	= g$(VIMDIFFNAME)
-VIMDIFFTARGET	= $(VIMDIFFNAME)$(SUFFIX)
-GVIMDIFFTARGET	= $(GVIMDIFFNAME)$(SUFFIX)
+VIMDIFFTARGET	= $(VIMDIFFNAME)$(LNKEXT)
+GVIMDIFFTARGET	= $(GVIMDIFFNAME)$(LNKEXT)
 EVIMNAME	= e$(VIMNAME)
-EVIMTARGET	= $(EVIMNAME)$(SUFFIX)
+EVIMTARGET	= $(EVIMNAME)$(LNKEXT)
 EVIEWNAME	= e$(VIEWNAME)
-EVIEWTARGET	= $(EVIEWNAME)$(SUFFIX)
+EVIEWTARGET	= $(EVIEWNAME)$(LNKEXT)
 
 ### Names of the tools that are also made  {{{1
-TOOLS = xxd/xxd$(SUFFIX)
+TOOLS = xxd/xxd$(EXEEXT)
 
 ### Installation directories.  The defaults come from configure. {{{1
 #
@@ -769,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ap
+VIMRTDIR = /vim60aq
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1363,19 +1365,23 @@ $(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
 		-o $(VIMTARGET) $(OBJ) objects/version.o $(ALL_LIBS)" \
 		MAKE="$(MAKE)" sh $(srcdir)/link.sh
 
-xxd/xxd$(SUFFIX): xxd/xxd.c
+xxd/xxd$(EXEEXT): xxd/xxd.c
 	cd xxd; CC="$(CC)" CFLAGS="$(CPPFLAGS) $(CFLAGS)" \
 		$(MAKE) -f Makefile
 
 # build the language specific files if they were unpacked
+# generate the ja.sjis.mo file separately, it's no problem if this fails.
 languages:
 	@if test -n "$(MAKEMO)"; then \
-		cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix); \
+		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix); \
+	fi
+	-@if test -n "$(MAKEMO)"; then \
+		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) ja.sjis.mo; \
 	fi
 
 # Update the *.po files for changes in the sources.  Only run manually.
 update-po:
-	cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix) update-po
+	cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) update-po
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
@@ -1590,13 +1596,13 @@ installtutor: $(TUTORSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TUTOR)
 # install helper program xxd
 installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 		$(TOOLSSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TOOLS)
-	if test -f $(DEST_BIN)/xxd$(SUFFIX); then \
-	  mv -f $(DEST_BIN)/xxd$(SUFFIX) $(DEST_BIN)/xxd.rm; \
+	if test -f $(DEST_BIN)/xxd$(EXEEXT); then \
+	  mv -f $(DEST_BIN)/xxd$(EXEEXT) $(DEST_BIN)/xxd.rm; \
 	  rm -f $(DEST_BIN)/xxd.rm; \
 	fi
-	$(INSTALL_PROG) xxd/xxd$(SUFFIX) $(DEST_BIN)
-	$(STRIP) $(DEST_BIN)/xxd$(SUFFIX)
-	chmod $(BINMOD) $(DEST_BIN)/xxd$(SUFFIX)
+	$(INSTALL_PROG) xxd/xxd$(EXEEXT) $(DEST_BIN)
+	$(STRIP) $(DEST_BIN)/xxd$(EXEEXT)
+	chmod $(BINMOD) $(DEST_BIN)/xxd$(EXEEXT)
 	$(INSTALL_DATA) $(HELPSOURCE)/xxd.1 $(DEST_MAN)
 	chmod $(MANMOD) $(DEST_MAN)/xxd.1
 # install the runtime tools
@@ -1758,7 +1764,7 @@ uninstall: uninstall_runtime
 	-rm -f $(DEST_BIN)/$(VIMTARGET)
 	-rm -f $(DEST_MAN)/$(VIMNAME).1 $(DEST_MAN)/$(VIMNAME)tutor.1
 	-rm -f $(DEST_BIN)/vimtutor
-	-rm -f $(DEST_BIN)/xxd$(SUFFIX) $(DEST_MAN)/xxd.1
+	-rm -f $(DEST_BIN)/xxd$(EXEEXT) $(DEST_MAN)/xxd.1
 	-rm -f $(DEST_BIN)/$(EXTARGET) $(DEST_BIN)/$(VIEWTARGET)
 	-rm -f $(DEST_BIN)/$(GVIMTARGET) $(DEST_BIN)/$(GVIEWTARGET)
 	-rm -f $(DEST_BIN)/$(RVIMTARGET) $(DEST_BIN)/$(RVIEWTARGET)
@@ -2297,8 +2303,8 @@ objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h
 objects/gui_gtk_x11.o: gui_gtk_x11.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \
- gui_gtk_f.h ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_gtk_f.h \
+ ../runtime/vim32x32.xpm ../runtime/vim16x16.xpm \
  ../runtime/vim48x48.xpm
 objects/gui_x11.o: gui_x11.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ap.  Last change: 2001 Jul 29
+*version6.txt*  For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -617,6 +617,8 @@ Many new items for Multi-byte support:
 - Win32: Typing multi-byte characters without IME. (Alexander Smishlajev)
 - Win32 with Mingw: compile with iconv library. (Ron Aaron)
 - Win32 with MSVC: dynamically load iconv.dll library. (Muraoka Taro)
+- Make it possible to build a version with multi-byte and iconv support with
+  Borland 5.5.  (Yasuhiro Matsumoto)
 - Added 'delcombing' option: Delete combining character separately. (Ron
   Aaron)
 - The "xfontset" feature isn't required for "xim".  These are now two
@@ -964,6 +966,8 @@ Port to QNX.  Supports the Photon GUI, mouse, etc. (Julian Kinraid)
 
 Allow cross-compiling the Win32 version with Make_ming.mak. (Ron Aaron)
 Added Python support for compiling with Mingw. (Ron Aaron)
+
+Dos 32 bit: Added support the Windows clipboard. (David Kotchan)
 
 Win32: Dynamically load Perl and Python.  Allows compiling Vim with these
 interfaces and will try to find the DLLs at runtime. (Muraoka Taro)
@@ -1330,18 +1334,22 @@ system. (Charles Campbell)
 
 New Syntax files: ~
 
-debcontrol	Debian Control and Debian Changelog syntax files. (Wichert
-debchangelog	Akkerman)
-catalog		SGML catalog (Johannes Zellner)
-dsl		DSSSL syntax (Johannes Zellner)
-tidy		Tidy configuration (Doug Kearns)
-specman		Specman (Or Freund)
-plm		PL/M (Philippe Coulonges)
 bdf		BDF font definition (Nikolai Weibull)
-pilrc		Pal resource compiler (Brian Schau)
-indent		Indent profile (Nikolai Weibull)
+catalog		SGML catalog (Johannes Zellner)
+debchangelog	Akkerman)
+debcontrol	Debian Control and Debian Changelog syntax files. (Wichert
+dot		dot (Markus Mottl)
+dsl		DSSSL syntax (Johannes Zellner)
 eterm		Eterm configuration (Nikolai Weibull)
+indent		Indent profile (Nikolai Weibull)
 natural		Natural (Marko Leipert)
+pilrc		Pal resource compiler (Brian Schau)
+plm		PL/M (Philippe Coulonges)
+povini		Povray configuration (David Necas)
+screen		Screen RC (Nikolai Weibull)
+specman		Specman (Or Freund)
+terminfo	terminfo (Nikolai Weibull)
+tidy		Tidy configuration (Doug Kearns)
 
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
@@ -1485,8 +1493,8 @@ Performance:
   allocated memory was growing steadily.  Also when 'undolevels' is -1.
   Caused by the line saved for "U" never to be freed.  Now free an undo block
   when it becomes empty.
-- GUI: Use a vertical scroll region, to make scrolling in a vertically split
-  window faster.  No need to redraw the whole window.
+- GUI and Dos32: Use a vertical scroll region, to make scrolling in a
+  vertically split window faster.  No need to redraw the whole window.
 - When scrolling isn't possible with terminal codes (e.g., for a vertically
   split window) redraw from ScreenLines[].  That should be faster than going
   through the lines with win_line(), especially when using syntax
@@ -1571,21 +1579,8 @@ Modeless selection:
   Removed the mappings in runtime/mswin.vim for CTRL-Y and CTRL-Z in
   cmdline-mode to be able to use CTRL-Y in the new way.
 
-Win32 console version:
-- Includes the user and system name in the ":version" message, when available.
-  It generates a pathdef.c file for this.  (Jon Miner)
-- Set the window icon to Vim's icon (only for Windows 2000).  While executing
-  a shell command, modify the window title to show this.  When exiting,
-  restore the cursor position too.  (Craig Barkhouse)
-
 Reduced the amount of stack space used by regmatch() to allow it to handle
 complicated patterns on a longer text.
-
-Win32: When 'shell' is "cmd" or "cmd.exe", set 'shellredir' to redirect stderr
-too.  Also check for the Unix shell names.
-
-Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
-(Craig Barkhouse)
 
 'isfname' now includes '%' and '#'.  Makes "vim dir\#file" work for MS-DOS.
 
@@ -1628,6 +1623,8 @@ GUI:
 - Motif and Athena: Added "menuFont" to be able to specify a font or fontset
   for the menus.  Can also be set with the "Menu" highlight group.  Useful
   when the locale is different from 'encoding'. (David Harrison)
+  When FONTSET_ALWAYS is defined, always use a fontset for the menus.  Should
+  avoid trouble with changing from a font to a fontset.  (David Harrison)
 - Highlighting and font for the tooltips can be specified with the "Tooltip"
   highlight group. (David Harrison)
 - The Cmdline-mode menus can be used at the more-prompt.  This mostly works
@@ -1667,6 +1664,7 @@ GTK GUI: (partly by Marcin Dalecki)
 - Replace XQueryColor with GDK calls.
 - Gnome support.  Detects Gnome in configure and uses different widgets.
   Otherwise it's much like GTK. (Kahn)
+  It is disabled by default, because it causes a few problems.
 - Removed the special code to fork first and then start the GUI.  Now use
   _exit() instead of exit(), this works fine without special tricks.
 - Dialogs sometimes appeared a bit far away.  Position the dialogs inside
@@ -1865,8 +1863,21 @@ line.
 
 When asked to display the value of a hidden option, tell it's not supported.
 
-Win32: When dropping a shortcut on gvim (.lnk file) edit the target, not the
-shortcut itself.  (Yasuhiro Matsumoto)
+Win32:
+- When dropping a shortcut on gvim (.lnk file) edit the target, not the
+  shortcut itself.  (Yasuhiro Matsumoto)
+- Added C versions of the OpenWithVim and SendToVim programs. (Walter Briscoe)
+- When 'shell' is "cmd" or "cmd.exe", set 'shellredir' to redirect stderr too.
+  Also check for the Unix shell names.
+- When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.  (Craig
+  Barkhouse)
+
+Win32 console version:
+- Includes the user and system name in the ":version" message, when available.
+  It generates a pathdef.c file for this.  (Jon Miner)
+- Set the window icon to Vim's icon (only for Windows 2000).  While executing
+  a shell command, modify the window title to show this.  When exiting,
+  restore the cursor position too.  (Craig Barkhouse)
 
 Errorformat:
 - Let "%p" in 'errorformat' (column of error indicated by a row of characters)
@@ -1917,6 +1928,9 @@ Timestamps:
   produces warnings.
 - Checking timestamps is only done for buffers that are not hidden.  These
   will be checked when they become unhidden.
+- When checking for a file being changed outside of Vim, also check if the
+  file permissions changed.  When the file contents didn't change but the
+  permissions did, give a warning.
 
 Mapping <M-A> when 'encoding' is "latin1" and then setting 'encoding' to
 "utf-8" causes the first byte of a multi-byte to be mapped.  Can cause very
@@ -1957,6 +1971,9 @@ Added has("win95"), to be able to distinguish between MS-Windows 95/98/ME and
 NT/2000/XP in a Vim script.
 
 When a ":cd" command was typed, echo the new current directory. (Dan Sharp)
+
+When using ":winpos" before the GUI window has been opened, remember the
+values until it is opened.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -2048,6 +2065,9 @@ Win32: Merged Make_gvc.mak and Make_ovc.mak into one file: Make_ivc.mak.  It's
 much smaller, many unecessary text has been removed. (Walter Briscoe)
 Added Make_dvc.mak to be able to debug exe generated with Make_mvc.mak in
 MS-Devstudio. (Walter Briscoe)
+
+Added AC_EXEEXT to configure.in, to check if the executable needs ".exe" for
+Cygwin or MingW.  Renamed SUFFIX to EXEEXT in Makefile.
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2995,5 +3015,28 @@ vim_strpbrk() did not support multibyte characters. (Muraoka Taro)
 
 The Amiga version didn't compile, the code was too big for relative jumps.
 Moved a few files from ex_docmd.c to ex_cmds2.c
+
+When evaluating the "= register resulted in the "= register being changed, Vim
+would crash.
+
+When doing ":view file" and it fails, the current buffer was made read-only.
+
+Motif: For some people the separators in the toolbar disappeared when resizing
+the Vim window. (Martin Dalecki)
+
+Win32 GUI: when setting 'lines' to a huge number, would not compute the
+available space correctly.  Was counting the menu height twice.
+
+Conversion of the docs to HTML didn't handle the line with the +quickfix tag
+correctly. (Antonio Colombo)
+
+Win32: fname_case() didn't handle multi-byte characters correctly. (Yasuhiro
+Matsumoto)
+
+The Cygwin version had trouble with fchdir().  Don't use that function for
+Cygwin.
+
+The generic check in scripts.vim for "conf" syntax was done before some checks
+in filetype.vim, resulting in "conf" syntax too often.
 
  vim:tw=78:

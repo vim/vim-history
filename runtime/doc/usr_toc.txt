@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_toc.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -52,20 +52,20 @@ Getting Started ~
 Read this from start to end to learn the essential commands.
 
 |usr_01.txt|  About the manuals
-		|01.1|  Two manuals
-		|01.2|  Vim installed
-		|01.3|  Using the Vim tutor
-		|01.4|  Copyright
+		|01.1|	Two manuals
+		|01.2|	Vim installed
+		|01.3|	Using the Vim tutor
+		|01.4|	Copyright
 
 |usr_02.txt|  The first steps in Vim
 		|02.1|	Running Vim for the First Time
-		|02.2|  Inserting text
-		|02.3|  Moving around
-		|02.4|  Deleting characters
-		|02.5|  Undo and Redo
-		|02.6|  Other editing commands
-		|02.7|  Getting out
-		|02.8|  Finding help
+		|02.2|	Inserting text
+		|02.3|	Moving around
+		|02.4|	Deleting characters
+		|02.5|	Undo and Redo
+		|02.6|	Other editing commands
+		|02.7|	Getting out
+		|02.8|	Finding help
 
 |usr_03.txt|  Moving around
 		|03.1|	Word movement
@@ -92,21 +92,21 @@ Read this from start to end to learn the essential commands.
 		|04.10|	Conclusion
 
 |usr_05.txt|  Set your settings
-		|05.1|  The vimrc file
-		|05.2|  The example vimrc file explained
-		|05.3|  Simple mappings
-		|05.4|  Adding a plugin
-		|05.5|  Adding a help file
-		|05.6|  The option window
-		|05.7|  Often used options
+		|05.1|	The vimrc file
+		|05.2|	The example vimrc file explained
+		|05.3|	Simple mappings
+		|05.4|	Adding a plugin
+		|05.5|	Adding a help file
+		|05.6|	The option window
+		|05.7|	Often used options
 
 |usr_06.txt|  Using syntax highlighting
-		|06.1|  Switching it on
-		|06.2|  No or wrong colors?
-		|06.3|  Different colors
-		|06.4|  With colors or without colors
-		|06.5|  Printing with colors
-		|06.6|  Further reading
+		|06.1|	Switching it on
+		|06.2|	No or wrong colors?
+		|06.3|	Different colors
+		|06.4|	With colors or without colors
+		|06.5|	Printing with colors
+		|06.6|	Further reading
 
 |usr_07.txt|  Editing more than one file
 		|07.1|	Edit another file
@@ -134,15 +134,15 @@ Read this from start to end to learn the essential commands.
 		|09.4|	Select mode
 
 |usr_10.txt|  Making big changes
-		|10.1|  Record and playback commands
+		|10.1|	Record and playback commands
 		|10.2|	Substitution
-		|10.3|  Command ranges
-		|10.4|  The global command
-		|10.5|  Visual block mode
-		|10.6|  Reading and writing part of a file
-		|10.7|  Formatting text
-		|10.8|  Changing case
-		|10.9|  Using an external program
+		|10.3|	Command ranges
+		|10.4|	The global command
+		|10.5|	Visual block mode
+		|10.6|	Reading and writing part of a file
+		|10.7|	Formatting text
+		|10.8|	Changing case
+		|10.9|	Using an external program
 
 |usr_11.txt|  Recovering from a crash
 		|11.1|	Basic recovery
@@ -160,7 +160,7 @@ Read this from start to end to learn the essential commands.
 		|12.7|	Find where a word is used
 
 ==============================================================================
-Editing Effictively ~
+Editing Effectively ~
 
 Subjects that can be read independently.
 
@@ -215,7 +215,7 @@ Subjects that can be read independently.
 		|26.1|	Repeating with Visual mode
 		|26.2|	Add and subtract
 		|26.3|	Making a change in many files
-		|26.4|	Using Vim from shell script
+		|26.4|	Using Vim from a shell script
 
 |usr_27.txt|  Search commands and patterns
 		|27.1|	Ignoring case
@@ -230,14 +230,14 @@ Subjects that can be read independently.
 
 |usr_28.txt|  Folding
 		|28.1|	What is folding?
-		|28.2|  Manual folding
-		|28.3|  Working with folds
-		|28.4|  Saving and restoring folds
-		|28.5|  Folding by indent
-		|28.6|  Folding with markers
-		|28.7|  Folding by syntax
-		|28.8|  Folding by expression
-		|28.9|  Folding unchanged lines
+		|28.2|	Manual folding
+		|28.3|	Working with folds
+		|28.4|	Saving and restoring folds
+		|28.5|	Folding by indent
+		|28.6|	Folding with markers
+		|28.7|	Folding by syntax
+		|28.8|	Folding by expression
+		|28.9|	Folding unchanged lines
 		|28.10| Which fold method to use?
 
 |usr_29.txt|  Moving through programs
@@ -280,7 +280,7 @@ Make Vim work as you like it.
 		|41.5|	Executing an expression
 		|41.6|	Using functions
 		|41.7|	Defining a function
-		|41.8|  Various remarks
+		|41.8|	Various remarks
 		|41.9|	Writing a plugin
 		|41.10|	Writing a filetype plugin
 		|41.11|	Writing a compiler plugin
@@ -292,8 +292,8 @@ Make Vim work as you like it.
 		|42.4|	Toolbar and popup menus
 
 |usr_43.txt|  Using filetypes
-		|43.1|  Plugins for a filetype
-		|43.2|  Adding a filetype
+		|43.1|	Plugins for a filetype
+		|43.2|	Adding a filetype
 
 |usr_44.txt|  Your own syntax highlighted
 		|44.1|	Basic syntax commands
@@ -322,11 +322,11 @@ Making Vim Run ~
 Before you can use Vim.
 
 |usr_90.txt|  Installing Vim
-		|90.1|  Unix
-		|90.2|  MS-Windows
-		|90.3|  Upgrading
-		|90.4|  Common installation issues
-		|90.5|  Uninstalling Vim
+		|90.1|	Unix
+		|90.2|	MS-Windows
+		|90.3|	Upgrading
+		|90.4|	Common installation issues
+		|90.5|	Uninstalling Vim
 
 ==============================================================================
 

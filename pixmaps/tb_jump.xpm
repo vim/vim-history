@@ -4,11 +4,11 @@ static char * tb_jump_xpm[] = {
 "18 18 6 1 0 0",
 /* colors */
 " 	s none	m none	c none",
-".	c #888800",
+".	m black	c #888800",
 "X	s bottomShadowColor	m black	c #5D6069",
-"o	s iconColor6	m white	c #FFFF00",
+"o	s iconColor6	m none	c #FFFF00",
 "O	s iconColor1	m black	c #000000",
-"+	s topShadowColor	m white	c #DCDEE5",
+"+	s topShadowColor	m none	c #DCDEE5",
 /* pixels */
 "                  ",
 "                  ",

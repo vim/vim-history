@@ -223,7 +223,6 @@ enum key_extra
     , KE_SNR		/* <SNR> */
     , KE_PLUG		/* <Plug> */
     , KE_CMDWIN		/* open command-line window from Command-line Mode */
-    , KE_SILENT		/* decrement msg_silent, used after a silent menu */
 
     , KE_C_LEFT		/* control-left */
     , KE_C_RIGHT	/* control-right */
@@ -422,7 +421,6 @@ enum key_extra
 #define K_RIGHTRELEASE	TERMCAP2KEY(KS_EXTRA, KE_RIGHTRELEASE)
 
 #define K_IGNORE	TERMCAP2KEY(KS_EXTRA, KE_IGNORE)
-#define K_SILENT	TERMCAP2KEY(KS_EXTRA, KE_SILENT)
 
 #define K_SNIFF		TERMCAP2KEY(KS_EXTRA, KE_SNIFF)
 

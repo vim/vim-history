@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
+*options.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2017,6 +2017,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	See 'encoding' for the possible values.  Additionally, values may be
 	specified that can be handled by the converter (either iconv() or
 	specified with 'charconvert').
+	Old versions of GNU iconv() may cause the conversion to fail (they
+	request a very large buffer, more than Vim is willing to provide).
+	Try getting another iconv() implementation.
 	Unlike 'filecharcode' there is no conversion when the option is set.
 
 					*'fileformat'* *'ff'*

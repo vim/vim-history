@@ -5,8 +5,8 @@ static char * tb_minimize_xpm[] = {
 /* colors */
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
-"X	s topShadowColor	m white	c #DCDEE5",
-"o	s iconColor2	m white	c #FFFFFF",
+"X	s topShadowColor	m none	c #DCDEE5",
+"o	s iconColor2	m none	c #FFFFFF",
 "O	s bottomShadowColor	m black	c #5D6069",
 /* pixels */
 "                  ",

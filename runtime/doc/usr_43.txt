@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_43.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -10,15 +10,15 @@ shell script, you often use the same option settings and mappings.  You
 quickly get tired of manually setting these each time.  This chapter explains
 how to do it automatically.
 
-|43.1|  Plugins for a filetype
-|43.2|  Adding a filetype
+|43.1|	Plugins for a filetype
+|43.2|	Adding a filetype
 
      Next chapter: |usr_44.txt|  Your own syntax highlighted
  Previous chapter: |usr_42.txt|  Add new menus
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*43.1*  Plugins for a filetype				*filetype-plugin*
+*43.1*	Plugins for a filetype				*filetype-plugin*
 
 How to start using filetype plugins has already been discussed here:
 |add-filetype-plugin|.  But you probably are not satisfied with the default
@@ -67,7 +67,7 @@ More details about writing a filetype plugin can be found here:
 |write-plugin|.
 
 ==============================================================================
-*43.2*  Adding a filetype
+*43.2*	Adding a filetype
 
 If you are using a type of file that is not recognized by Vim, this is how to
 get them recognized.  You need a runtime directory of your own.  See

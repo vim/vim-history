@@ -12,6 +12,9 @@ elseif exists("b:current_syntax")
   finish
 endif
 
+" String and Character contstants
+" Highlight special characters (those which have a backslash) differently
+syn match   zshSpecial	"\\\d\d\d\|\\[abcfnrtv\\']"
 syn region	zshSinglequote	start=+'+ skip=+\\'+ end=+'+
 " A bunch of useful zsh keywords
 " syn keyword	zshFunction	function
@@ -63,9 +66,6 @@ syn region	zshDerefOpr	start="\${" end="}" contains=zshShellVariables
 syn match	zshDerefIdentifier	"\$[a-zA-Z_][a-zA-Z0-9_]*\>"
 syn match	zshOperator		"[][}{&;|)(]"
 
-" String and Character contstants
-" Highlight special characters (those which have a backslash) differently
-syn match   zshSpecial	contained "\\\d\d\d\|\\[abcfnrtv\\]"
 
 
 syn match  zshNumber		"-\=\<\d\+\>"

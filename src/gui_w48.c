@@ -22,7 +22,6 @@
 
 #include "vim.h"
 #include "version.h"	/* used by dialog box routine for default title */
-#include <windows.h>
 #ifdef DEBUG
 # include <tchar.h>
 #endif
@@ -2683,11 +2682,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 	      - GetSystemMetrics(SM_CXFRAME) * 2;
     *screen_h = GetSystemMetrics(SM_CYFULLSCREEN)
 	      - GetSystemMetrics(SM_CYFRAME) * 2
-	      - GetSystemMetrics(SM_CYCAPTION)
-#ifdef FEAT_MENU
-	      - gui_mswin_get_menu_height(FALSE)
-#endif
-	      ;
+	      - GetSystemMetrics(SM_CYCAPTION);
 }
 
     void

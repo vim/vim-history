@@ -78,6 +78,8 @@ AWK		= @AWK@
 
 STRIP		= @STRIP@
 
+EXEEXT		= @EXEEXT@
+
 COMPILEDBY	= @compiledby@
 
 INSTALLVIMDIFF	= @dovimdiff@

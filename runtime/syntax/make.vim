@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2001 Jul 11
+" Last Change:	2001 Jul 21
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -12,9 +12,13 @@ elseif exists("b:current_syntax")
   finish
 endif
 
+" some special characters
+syn match makeSpecial	"^\s*[@-]\+"
+syn match makeNextLine	"\\$"
+
 " some directives
 syn match makePreCondit	"^\s*\(ifeq\>\|else\>\|endif\>\|define\>\|endef\>\|ifneq\>\|ifdef\>\|ifndef\>\)"
-syn match makeInclude	"^\s*include"
+syn match makeInclude	"^\s*-\=include"
 syn match makeStatement	"^\s*vpath"
 syn match makeOverride	"^\s*override"
 hi link makeOverride makeStatement
@@ -54,19 +58,15 @@ syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:$"me=e-1 cont
 " Statements / Functions (GNU make)
 syn match makeStatement contained "(\(subst\|addprefix\|addsuffix\|basename\|call\|dir\|error\|filter-out\|filter\|findstring\|firstword\|foreach\|if\|join\|notdir\|origin\|patsubst\|shell\|sort\|strip\|suffix\|warning\|wildcard\|word\|wordlist\|words\)\>"ms=s+1
 
-" some special characters
-syn match makeSpecial	"^\s*[@-]\+"
-syn match makeNextLine	"\\$"
-
-
 " Errors
 syn match makeError	"^ \+\t"
 syn match makeError	"^ \{8\}[^ ]"me=e-1
 syn region makeIgnore	start="\\$" end="^." end="^$" contains=ALLBUT,makeError
 
 " Comment
-syn region  makeComment	start="#" end="[^\\]$"
-syn match   makeComment	"#$"
+syn region  makeComment	start="#" end="[^\\]$" contains=makeTodo
+syn match   makeComment	"#$" contains=makeTodo
+syn keyword makeTodo TODO FIXME XXX contained
 
 " match escaped quotes and any other escaped character
 " except for $, as a backslash in front of a $ does
@@ -76,9 +76,9 @@ syn match   makeComment	"#$"
 syn match makeEscapedChar	"\\[^$]"
 
 
-syn region  makeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIdent
-syn region  makeSString start=+'+  skip=+\\'+  end=+'+  contains=makeIdent
-syn region  makeBString start=+`+  skip=+\\`+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine
+syn region  makeDString start=+"+  skip=+\\.+  end=+"+  contains=makeIdent
+syn region  makeSString start=+'+  skip=+\\.+  end=+'+  contains=makeIdent
+syn region  makeBString start=+`+  skip=+\\.+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -105,6 +105,7 @@ if version >= 508 || !exists("did_make_syn_inits")
   HiLink makeSString		String
   HiLink makeBString		Function
   HiLink makeError		Error
+  HiLink makeTodo		Todo
   delcommand HiLink
 endif
 

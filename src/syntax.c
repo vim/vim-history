@@ -7024,6 +7024,9 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
     /* If 'guifontset' is not empty, first try using the name as a
      * fontset.  If that doesn't work, use it as a font name. */
     if (*p_guifontset != NUL
+#   ifdef FONTSET_ALWAYS
+	|| do_menu
+#   endif
 #  if defined(FEAT_BEVAL) && defined(FEAT_GUI_ATHENA)
 	/* In Athena, the Tooltip highlight group is always a fontset */
 	|| do_tooltip
@@ -7039,7 +7042,12 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 #   if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
 	if (do_menu)
 	{
+#    ifdef FONTSET_ALWAYS
+	    gui.menu_fontset = HL_TABLE()[idx].sg_fontset;
+#    else
+	    /* YIKES!  This is a bug waiting to crash the program */
 	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
+#    endif
 	    gui_mch_new_menu_font();
 	}
 #    ifdef FEAT_BEVAL
@@ -7072,12 +7080,14 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	{
 	    if (do_normal)
 		gui_init_font(arg, FALSE);
-#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
+#ifndef FONTSET_ALWAYS
+# if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
 	    if (do_menu)
 	    {
 		gui.menu_font = HL_TABLE()[idx].sg_font;
 		gui_mch_new_menu_font();
 	    }
+# endif
 #endif
 # if defined(FEAT_BEVAL) && !defined(FEAT_GUI_ATHENA)
 	    /* The Athena widget set cannot currently handle switching between

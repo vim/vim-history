@@ -2305,6 +2305,7 @@ win_line(wp, lnum, startrow, endrow)
     static char_u *at_end_str = (char_u *)""; /* used for p_extra when
 					   displaying lcs_eol at end-of-line */
     int		lcs_eol_one = lcs_eol;	/* lcs_eol until it's been used */
+    int		lcs_prec_todo = lcs_prec;   /* lcs_prec until it's been used */
 
     /* saved "extra" items for when draw_state becomes WL_LINE (again) */
     int		saved_n_extra = 0;
@@ -3444,19 +3445,16 @@ win_line(wp, lnum, startrow, endrow)
 	 * character of the line and the user wants us to show us a
 	 * special character (via 'listchars' option "precedes:<char>".
 	 */
-	if (lcs_prec != NUL
+	if (lcs_prec_todo != NUL
 		&& (wp->w_p_wrap ? wp->w_skipcol > 0 : wp->w_leftcol > 0)
 #ifdef FEAT_DIFF
 		&& filler_todo <= 0
 #endif
-		&& (
-#ifdef FEAT_RIGHTLEFT
-		    wp->w_p_rl ? col == W_WIDTH(wp) - 1 :
-#endif
-		    col == 0)
+		&& draw_state > WL_NR
 		&& c != NUL)
 	{
 	    c = lcs_prec;
+	    lcs_prec_todo = NUL;
 #ifdef FEAT_MBYTE
 	    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
@@ -3748,7 +3746,7 @@ win_line(wp, lnum, startrow, endrow)
 	    }
 
 	    col = 0;
-	    off = (unsigned) (current_ScreenLine - ScreenLines);
+	    off = (unsigned)(current_ScreenLine - ScreenLines);
 #ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 	    {
@@ -3764,6 +3762,7 @@ win_line(wp, lnum, startrow, endrow)
 	    saved_c_extra = c_extra;
 	    saved_char_attr = char_attr;
 	    n_extra = 0;
+	    lcs_prec_todo = lcs_prec;
 #ifdef FEAT_LINEBREAK
 # ifdef FEAT_DIFF
 	    if (filler_todo <= 0)
@@ -6686,6 +6685,9 @@ win_do_lines(wp, row, line_count, mayclear, del)
      * Always do this in a vertically split window.  This will redraw from
      * ScreenLines[] when t_CV isn't defined.  That's faster than using
      * win_line().
+     * Don't use a scroll region when we are going to redraw the text, writing
+     * a character in the lower right corner of the scroll region causes a
+     * scroll-up in the DJGPP version.
      */
     if (scroll_region
 #ifdef FEAT_VERTSPLIT
@@ -6694,7 +6696,7 @@ win_do_lines(wp, row, line_count, mayclear, del)
 	    )
     {
 #ifdef FEAT_VERTSPLIT
-	if (scroll_region)
+	if (scroll_region && (wp->w_width == Columns || *T_CSV != NUL))
 #endif
 	    scroll_region_set(wp, row);
 	if (del)
@@ -6704,7 +6706,7 @@ win_do_lines(wp, row, line_count, mayclear, del)
 	    retval = screen_ins_lines(W_WINROW(wp) + row, 0, line_count,
 						      wp->w_height - row, wp);
 #ifdef FEAT_VERTSPLIT
-	if (scroll_region)
+	if (scroll_region && (wp->w_width == Columns || *T_CSV != NUL))
 #endif
 	    scroll_region_reset();
 	return retval;

@@ -5,7 +5,7 @@ static char * tb_blank_xpm[] = {
 /* colors */
 " 	s iconColor1	m black	c #000000",
 ".	s none	m none	c none",
-"X	s topShadowColor	m white	c #DCDEE5",
+"X	s topShadowColor	m none	c #DCDEE5",
 "o	s bottomShadowColor	m black	c #5D6069",
 /* pixels */
 "                 .",

@@ -578,7 +578,8 @@ gui_mch_init(void)
     s_hwnd = CreateWindow(
 	szVimWndClass, "Vim MSWindows GUI",
 	WS_OVERLAPPEDWINDOW,
-	CW_USEDEFAULT, CW_USEDEFAULT,
+	gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
+	gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
 	100,				/* Any value will do */
 	100,				/* Any value will do */
 	NULL, NULL,

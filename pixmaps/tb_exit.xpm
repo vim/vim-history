@@ -5,11 +5,11 @@ static char * tb_exit_xpm[] = {
 /* colors */
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
-"X	s iconColor2	m white	c #FFFFFF",
+"X	s iconColor2	m none	c #FFFFFF",
 "o	s bottomShadowColor	m black	c #5D6069",
 "O	s iconColor3	m black	c #FF0000",
-"+	s iconGray3	m white	c #adadad",
-"@	s iconGray4	m white	c #949494",
+"+	s iconGray3	m none	c #adadad",
+"@	s iconGray4	m none	c #949494",
 "#	s iconGray5	m black	c #737373",
 "$	s iconGray6	m black	c #636363",
 /* pixels */

@@ -50,7 +50,13 @@
 #include <Xm/AtomMgr.h>
 #include <Xm/PushB.h>
 
-#include <X11/xpm.h>
+#ifdef HAVE_X11_XPM_H
+# include <X11/xpm.h>
+#else
+# ifdef HAVE_XM_XPMP_H
+#  include <Xm/XpmP.h>
+# endif
+#endif
 
 #ifdef HAVE_UTIL_DEBUG_H
 # include <util/debug.h>

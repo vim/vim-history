@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_10.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -10,22 +10,22 @@ goes into making changes that are repeated or can affect a large amount of
 text.  The Visual mode allows doing various things with blocks of text.  Use
 an external program to do really complicated things.
 
-|10.1|  Record and playback commands
+|10.1|	Record and playback commands
 |10.2|	Substitution
-|10.3|  Command ranges
-|10.4|  The global command
-|10.5|  Visual block mode
-|10.6|  Reading and writing part of a file
-|10.7|  Formatting text
-|10.8|  Changing case
-|10.9|  Using an external program
+|10.3|	Command ranges
+|10.4|	The global command
+|10.5|	Visual block mode
+|10.6|	Reading and writing part of a file
+|10.7|	Formatting text
+|10.8|	Changing case
+|10.9|	Using an external program
 
      Next chapter: |usr_11.txt|  Recovering from a crash
  Previous chapter: |usr_09.txt|  Using the GUI
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*10.1*  Record and playback commands
+*10.1*	Record and playback commands
 
 The "." command repeats the preceding change.  But what if you want to do
 something more complex than a single change?  That's where command recording
@@ -142,7 +142,7 @@ Repeat this command for all lines.  The a register now contains all those
 lines, in the order you yanked them.
 
 ==============================================================================
-*10.2*  Substitution
+*10.2*	Substitution
 
 The ":substitute" command enables you to perform string replacements on a
 whole range of lines.  The general form of this command is as follows: >
@@ -218,7 +218,7 @@ instead of the slash.  A plus, for example: >
 	:s+one/two+one or two+
 
 ==============================================================================
-*10.3*  Command ranges
+*10.3*	Command ranges
 
 The ":substitute" command, and many other : commands, can be applied to a
 selection of lines.  This is called a range.
@@ -339,7 +339,7 @@ Now you can type the command you want to use.  It will use the range "."
 (current line) until ".+4" (four lines down).  Thus it spans five lines.
 
 ==============================================================================
-*10.4*  The global command
+*10.4*	The global command
 
 The ":global" command is one of the more powerful features of Vim.  It allows
 you to find a match for a pattern and execute a command there.  The general
@@ -375,7 +375,7 @@ Just like with ":substitute", any pattern can be used.  When you learn more
 complicated patterns later, you can use them here.
 
 ==============================================================================
-*10.5*  Visual block mode
+*10.5*	Visual block mode
 
 With CTRL-V you can start selection of a rectangular area of text.  There are
 a few commands that do something special with the text block.
@@ -543,7 +543,7 @@ The "J" command doesn't require a blockwise selection.  It works with "v" and
 If you don't want the white space to be changed, use the "gJ" command.
 
 ==============================================================================
-*10.6*  Reading and writing part of a file
+*10.6*	Reading and writing part of a file
 
 When you are writing an e-mail message, you may want to include another file.
 This can be done with the ":read {filename}" command.  The text of the file is
@@ -617,7 +617,7 @@ but the line must be appended at the end.   You can repeat this as many times
 as you like.
 
 ==============================================================================
-*10.7*  Formatting text
+*10.7*	Formatting text
 
 When you are typing plain text, it's nice if the length of each line is
 automatically trimmed to fit in the window.  To make this happen while
@@ -688,7 +688,7 @@ lowercase.  This can be shortened to "guu".  "gUgU" is shortened to "gUU" and
 <	Some GIRLS have Fun    ---->   sOME girls HAVE fUN ~
 
 ==============================================================================
-*10.9*  Using an external program
+*10.9*	Using an external program
 
 Vim has a very powerful set of commands, it can do anything.  But there may
 still be something that an external command can do better or faster.

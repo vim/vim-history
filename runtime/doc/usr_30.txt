@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_30.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -418,7 +418,7 @@ with a different tabstop setting, see |25.3| for how to fix that.)
    For indenting lines in a program, using a multiple of eight spaces makes
 you quickly run into the right border of the window.  Using a single space
 doesn't provide enough visual difference.  Many people prefer to use four
-spaces, a good compromize.
+spaces, a good compromise.
    Since a <Tab> is eight spaces and you want to use an indent of four spaces,
 you can't use a <Tab> character to make your indent.  There are two ways to
 handle this:

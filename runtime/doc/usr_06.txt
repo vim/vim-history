@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_06.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -7,22 +7,22 @@
 
 Black and white text is boring.  With colors your file comes to life.  This
 not only looks nice, it also speeds up your work.  Change the colors used for
-the different sorts of text.  Pring your text, with the colors you see on the
+the different sorts of text.  Print your text, with the colors you see on the
 screen.
 
-|06.1|  Switching it on
-|06.2|  No or wrong colors?
-|06.3|  Different colors
-|06.4|  With colors or without colors
-|06.5|  Printing with colors
-|06.6|  Further reading
+|06.1|	Switching it on
+|06.2|	No or wrong colors?
+|06.3|	Different colors
+|06.4|	With colors or without colors
+|06.5|	Printing with colors
+|06.6|	Further reading
 
      Next chapter: |usr_07.txt|  Editing more than one file
  Previous chapter: |usr_05.txt|  Set your settings
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*06.1*  Switching it on
+*06.1*	Switching it on
 
 It all starts with one simple command: >
 
@@ -48,7 +48,7 @@ If you want syntax highlighting only in the GUI version, put the ":syntax
 enable" command in your |gvimrc| file.
 
 ==============================================================================
-*06.2*  No or wrong colors?
+*06.2*	No or wrong colors?
 
 There can be a number of reasons why you don't see colors:
 
@@ -63,6 +63,10 @@ There can be a number of reasons why you don't see colors:
 	xterm that supports colors: >
 
 		setenv TERM xterm-color
+<
+	or (depending on your shell): >
+
+		TERM=xterm-color; export TERM
 
 <	The terminal name must match the terminal you are using.  If it
 	still doesn't work, have a look at |xterm-color|, which shows a few
@@ -129,7 +133,7 @@ Or the colors could be wrong:
 	example, |tex.vim| for the TeX syntax.
 
 ==============================================================================
-*06.3*  Different colors				*:syn-default-override*
+*06.3*	Different colors				*:syn-default-override*
 
 If you don't like the default colors, you can select another color scheme.  In
 the GUI use the Edit/Color Scheme menu.  You can also type the command: >
@@ -184,7 +188,7 @@ You will see text in various color combinations.  You can check which ones are
 readable and look nice.
 
 ==============================================================================
-*06.4*  With colors or without colors
+*06.4*	With colors or without colors
 
 Displaying text in color takes a lot of effort.  If you find the displaying
 too slow, you might want to disable syntax highlighting for a moment: >
@@ -213,7 +217,7 @@ buffer, set the 'syntax' option: >
 	:set syntax=ON
 <
 ==============================================================================
-*06.5*  Printing with colors				*syntax-printing*
+*06.5*	Printing with colors				*syntax-printing*
 
 In the MS-Windows version you can print the current file with this command: >
 
@@ -261,7 +265,7 @@ Instead of printing, you could also put the HTML file on a web server, and let
 others look at the colored text.
 
 ==============================================================================
-*06.6*  Further reading
+*06.6*	Further reading
 
 |usr_44.txt|  Your own syntax highlighted.
 |syntax|      All the details.

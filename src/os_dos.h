@@ -122,3 +122,4 @@
 #define BACKSLASH_IN_FILENAME
 #define USE_CRNL		/* lines end in CR-NL instead of NL */
 #define HAVE_DUP		/* have dup() */
+#define HAVE_ST_MODE		/* have stat.st_mode */

@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0ap.  Last change: 2001 Jun 03
+*sign.txt*     For Vim version 6.0aq.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur

@@ -19,6 +19,8 @@ void gui_mch_set_fontset __ARGS((GuiFontset fontset));
 void gui_mch_free_font __ARGS((GuiFont font));
 void gui_mch_free_fontset __ARGS((GuiFontset fontset));
 GuiFontset gui_mch_get_fontset __ARGS((char_u *name, int giveErrorIfMissing));
+int fontset_height __ARGS((XFontSet fs));
+int fontset_height2 __ARGS((XFontSet fs));
 guicolor_T gui_mch_get_color __ARGS((char_u *reqname));
 void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));

@@ -5,8 +5,8 @@ static char * tb_save_all_xpm[] = {
 /* colors */
 " 	s iconColor1	m black	c #000000",
 ".	s none	m none	c none",
-"X	s iconGray2	m white	c #bdbdbd",
-"o	s iconColor2	m white	c #FFFFFF",
+"X	s iconGray2	m none	c #bdbdbd",
+"o	s iconColor2	m none	c #FFFFFF",
 "O	s bottomShadowColor	m black	c #5D6069",
 /* pixels */
 "              ....",

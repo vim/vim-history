@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
+*windows.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -862,14 +862,14 @@ list of buffers. |unlisted-buffer|
 			2u    "asdf"			line 0
 			3 %l+ "version.c"		line 1
 <
-		Only when the [!] is included will buffers shown that are not
-		in the buffer list.
+		When the [!] is included the list will show unlisted buffers
+		(the term "unlisted" is a bit confusing then...).
 
 		Each buffer has a unique number.  That number will not change,
 		so you can always go to a specific buffer with ":buffer N" or
 		"N CTRL-^", where N is the buffer number.
 
-		Indicators:
+		Indicators (chars in the same column are mutually exclusive):
 		u	an unlisted buffer (only displayed when [!] is used)
 			   |unlisted-buffer|
 		 %	the buffer in the current window
@@ -877,9 +877,9 @@ list of buffers. |unlisted-buffer|
 		  a	an active buffer: it is loaded and visible
 		  h	a hidden buffer: It is loaded, but currently not
 			   displayed in a window |hidden-buffer|
-		   -	a buffer with 'modifiable' off (may also be readonly)
-		   =	a readonly buffer
-		    +	a modified buffer
+		   -	a buffer with 'modifiable' off
+		    =	a readonly buffer
+		     +	a modified buffer
 
 						*:bad* *:badd*
 :bad[d]	[+lnum] {fname}

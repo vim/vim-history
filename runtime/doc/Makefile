@@ -64,6 +64,7 @@ DOCS = \
 	pi_expl.txt \
 	pi_gzip.txt \
 	pi_netrw.txt \
+	pi_spec.txt \
 	quickfix.txt \
 	quickref.txt \
 	quotes.txt \
@@ -175,6 +176,7 @@ HTMLS = \
 	pi_expl.html \
 	pi_gzip.html \
 	pi_netrw.html \
+	pi_spec.html \
 	quickfix.html \
 	quickref.html \
 	quotes.html \
