@@ -5659,6 +5659,8 @@ ex_drop(eap)
      * so, jump to that window.
      * We would actually need to check all arguments, but that's complicated
      * and mostly only one file is dropped.
+     * This also ignores wildcards, since it is very unlikely the user is
+     * editing a file name with a wildcard character.
      */
     arg = vim_strsave(eap->arg);
     if (arg != NULL)
@@ -5684,13 +5686,9 @@ ex_drop(eap)
 
 	    if (incurwin)
 	    {
-		/* Already editing the file.  If there are more redefine the
-		 * argument list. */
-		if (two_or_more)
-		{
-		    set_arglist(eap->arg);
-		    curwin->w_arg_idx = 0;
-		}
+		/* Already editing the file.  Redefine the argument list. */
+		set_arglist(eap->arg);
+		curwin->w_arg_idx = 0;
 		vim_free(arg);
 		return;
 	    }
@@ -5718,33 +5716,14 @@ ex_drop(eap)
 # endif
     }
 
-    if (two_or_more)
+    /* Fake a ":snext" or ":next" command, redefine the arglist. */
+    if (split)
     {
-	/* Fake a ":snext" or ":next" command, redefine the arglist. */
-	if (split)
-	{
-	    eap->cmdidx = CMD_snext;
-	    eap->cmd[0] = 's';
-	}
-	else
-	    eap->cmdidx = CMD_next;
-	ex_next(eap);
+	eap->cmdidx = CMD_snext;
+	eap->cmd[0] = 's';
     }
     else
-    {
-	/* Fake a ":split" or ":edit" command, don't change the arglist. */
-# ifdef FEAT_WINDOWS
-	if (split)
-	{
-	    eap->cmdidx = CMD_split;
-	    ex_splitview(eap);
-	}
-	else
-# endif
-	{
-	    eap->cmdidx = CMD_edit;
-	    do_exedit(eap, NULL);
-	}
-    }
+	eap->cmdidx = CMD_next;
+    ex_next(eap);
 }
 #endif
