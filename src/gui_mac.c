@@ -93,8 +93,10 @@ static    OSType	_ftype = 'TEXT';
 /* Include some file. TODO: move into os_mac.h */
 #include <Menus.h>
 #include <Resources.h>
+#if !TARGET_API_MAC_CARBON
 #include <StandardFile.h>
 #include <Traps.h>
+#endif
 #include <Balloons.h>
 #include <Processes.h>
 #ifdef USE_AEVENT
@@ -3140,8 +3142,8 @@ gui_mch_get_color(name)
 	{"Violet",	RGB(0x8D, 0x38, 0xC9)}, /*U*/
     };
 
-    unsigned short	r, g, b;
-    int			i;
+    int		r, g, b;
+    int		i;
 
     if (name[0] == '#' && strlen((char *) name) == 7)
     {
@@ -5208,24 +5210,23 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
      * TODO: Add protection for 256 char max.
      */
 
-    CInfoPBRec  theCPB;
-    Str255      directoryName;
-    char_u      temporary[255];
- /* char	filename[255]; */
-    char_u       fname[256];
-    char_u	*temporaryPtr = temporary;
-    char_u      *filenamePtr = fname;
-    OSErr       error;
+    CInfoPBRec	theCPB;
+    char_u	fname[256];
+    char_u	*filenamePtr = fname;
+    OSErr	error;
     int		folder = 1;
 #ifdef USE_UNIXFILENAME
-    char	*p;
     SInt16	dfltVol_vRefNum;
-    SInt32      dfltVol_dirID;
+    SInt32	dfltVol_dirID;
     FSRef	refFile;
     OSStatus	status;
     UInt32	pathSize = 256;
     char_u	pathname[256];
     char_u	*path = pathname;
+#else
+    Str255	directoryName;
+    char_u	temporary[255];
+    char_u	*temporaryPtr = temporary;
 #endif
 
 #ifdef USE_UNIXFILENAME
@@ -5400,9 +5401,12 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     STRCPY(&temporaryPtr[1], filenamePtr);
     temporaryPtr[0] = '/';
     STRCPY(filenamePtr, temporaryPtr);
+    {
+    char	*p;
     for (p = fname; *p; p++)
 	if (*p == ':')
 	    *p = '/';
+    }
 #endif
 
     return (vim_strsave (fname));
