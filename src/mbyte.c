@@ -3075,7 +3075,10 @@ im_delete_preedit(void)
     char_u delkey[] = {CSI, 'k', 'D'};
 
     if (State & NORMAL)
+    {
+	im_preedit_cursor = 0;
 	return;
+    }
     for (; im_preedit_cursor > 0; --im_preedit_cursor)
 	add_to_input_buf(bskey, (int)sizeof(bskey));
 
@@ -3537,6 +3540,11 @@ xim_reset(void)
     int
 xim_queue_key_press_event(GdkEventKey *event)
 {
+    /*
+     * When typing fFtT, XIM may be activated. Thus it must pass
+     * gtk_im_context_filter_keypress() in Normal mode.
+     * And while doing :sh too.
+     */
     if (xic != NULL && !p_imdisable
 		    && (State & (INSERT | CMDLINE | NORMAL | EXTERNCMD)) != 0)
     {
