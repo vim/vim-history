@@ -3601,8 +3601,7 @@ else
 
   case "$enable_gui_canon" in
     no|none)	echo "$ac_t""no GUI support" 1>&6 ;;
-    yes|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
-    auto)	echo "$ac_t""auto - automatic GUI support" 1>&6
+    yes|""|auto)	echo "$ac_t""yes/auto - automatic GUI support" 1>&6
 		SKIP_GTK=
 		SKIP_GTK2=
 		SKIP_GNOME=
