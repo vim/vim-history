@@ -221,7 +221,7 @@ msgstr "    wiersz=%ld  id=%d  nazwa=%s"
 #: diff.c:133
 #, c-format
 msgid "E96: Can not diff more than %ld buffers"
-msgstr "E96: Nie mogê zró¿nicowaæ wiêcej ni¿ %ls buforów"
+msgstr "E96: Nie mogê zró¿nicowaæ wiêcej ni¿ %ld buforów"
 
 #: diff.c:641
 msgid "E97: Cannot create diffs"
@@ -383,7 +383,7 @@ msgstr "pasuje %d z %d"
 #: edit.c:3355
 #, c-format
 msgid "match %d"
-msgstr "pasuje %s"
+msgstr "pasuje %d"
 
 #: eval.c:693
 #, c-format
@@ -571,7 +571,7 @@ msgstr "E133: :return poza funkcj±"
 #: eval.c:8143
 #, c-format
 msgid "%s returning #%ld"
-msgstr "%s zwraca #%d"
+msgstr "%s zwraca #%ld"
 
 #: eval.c:8146
 #, c-format
@@ -2178,7 +2178,7 @@ msgstr "E257: cstag: nie ma takiego zaznacznika"
 #: if_cscope.c:407 if_cscope.c:451
 #, c-format
 msgid "stat(%s) error: %d"
-msgstr "stat(%s) b³±d: %s"
+msgstr "stat(%s) b³±d: %d"
 
 #: if_cscope.c:460 if_cscope.c:467
 #, c-format
