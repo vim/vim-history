@@ -2663,7 +2663,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     {
 	if (whole)
 	{
-	    if (buf->b_changed)
+	    /*
+	     * b_changed can be 0 after an undo, but we still need to write
+	     * the buffer to NetBeans.
+	     */
+	    if (buf->b_changed || isNetbeansModified(buf))
 	    {
 		netbeans_save_buffer(buf);
 		return retval;
