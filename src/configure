@@ -3803,21 +3803,21 @@ for ac_hdr in stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
 	unistd.h stropts.h errno.h strings.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
-	poll.h sys/poll.h pwd.h utime.h sys/param.h
+	poll.h sys/poll.h pwd.h utime.h sys/param.h Xm/Xm.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:3825: checking for $ac_hdr" >&5
+echo "configure:3811: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3830 "configure"
+#line 3816 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3835: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3821: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -3845,13 +3845,16 @@ done
 
 
 echo $ac_n "checking if strings.h can be included after string.h""... $ac_c" 1>&6
-echo "configure:3863: checking if strings.h can be included after string.h" >&5
+echo "configure:3849: checking if strings.h can be included after string.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 3865 "configure"
+#line 3851 "configure"
 #include "confdefs.h"
 
 #if defined(_AIX) && !defined(_NO_PROTO)
 # define _NO_PROTO	/* like in os_unix.h, causes conflict for AIX (Winn) */
+#endif
+#ifdef HAVE_XM_XM_H
+# include <Xm/Xm.h>	/* This breaks it for HP-UX 11 (Squassabia) */
 #endif
 #ifdef HAVE_STRING_H
 # include <string.h>
