@@ -172,11 +172,11 @@ mch_inchar(buf, maxlen, time, tb_change_cnt)
 
     for (;;)	    /* repeat until we got a character */
     {
-	len = Read(raw_in, (char *)buf, (long)maxlen
 #  ifdef FEAT_MBYTE
-		/ input_conv.vc_factor
+	len = Read(raw_in, (char *)buf, (long)maxlen / input_conv.vc_factor);
+#  else
+	len = Read(raw_in, (char *)buf, (long)maxlen);
 #  endif
-		);
 	if (len > 0)
 	{
 #ifdef FEAT_AUTOCMD
