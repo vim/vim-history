@@ -189,15 +189,19 @@ static int	can_cindent;		/* may do cindenting on this line */
 static int	old_indent = 0;		/* for ^^D command in insert mode */
 
 #ifdef FEAT_RIGHTLEFT
-int	    revins_on;		    /* reverse insert mode on */
-int	    revins_chars;	    /* how much to skip after edit */
-int	    revins_legal;	    /* was the last char 'legal'? */
-int	    revins_scol;	    /* start column of revins session */
+int	    revins_on;			/* reverse insert mode on */
+int	    revins_chars;		/* how much to skip after edit */
+int	    revins_legal;		/* was the last char 'legal'? */
+int	    revins_scol;		/* start column of revins session */
 #endif
 
 #if defined(FEAT_MBYTE) && defined(macintosh)
 static short	previous_script = smRoman;
 #endif
+
+static int	ins_need_undo;		/* call u_save() before inserting a
+					   char.  Set when edit() is called.
+					   after that arrow_used is used. */
 
 /*
  * edit(): Start inserting text.
@@ -403,6 +407,10 @@ edit(cmdchar, startln, count)
 	arrow_used = FALSE;
 	o_eol = FALSE;
     }
+
+    /* Need to save the line for undo before inserting the first char. */
+    ins_need_undo = TRUE;
+
 #ifdef FEAT_MOUSE
     where_paste_started.lnum = 0;
 #endif
@@ -464,7 +472,7 @@ edit(cmdchar, startln, count)
 	if (arrow_used)	    /* don't repeat insert when arrow key used */
 	    count = 0;
 
-	    /* set curwin->w_curswant for next K_DOWN or K_UP */
+	/* set curwin->w_curswant for next K_DOWN or K_UP */
 	if (!arrow_used)
 	    curwin->w_set_curswant = TRUE;
 
@@ -741,7 +749,7 @@ edit(cmdchar, startln, count)
 	case K_XF1:
 	    stuffcharReadbuff(K_HELP);
 	    if (p_im)
-		stuffcharReadbuff('i');
+		need_start_insertmode = TRUE;
 	    goto doESCkey;
 
 	/* an escape ends input mode */
@@ -4141,7 +4149,10 @@ stop_arrow()
     if (arrow_used)
     {
 	if (u_save_cursor() == OK)
+	{
 	    arrow_used = FALSE;
+	    ins_need_undo = FALSE;
+	}
 	Insstart = curwin->w_cursor;	/* new insertion starts here */
 	Insstart_textlen = linetabsize(ml_get_curline());
 	ai_col = 0;
@@ -4154,13 +4165,18 @@ stop_arrow()
 	ResetRedobuff();
 	AppendToRedobuff((char_u *)"1i");   /* pretend we start an insertion */
     }
+    else if (ins_need_undo)
+    {
+	if (u_save_cursor() == OK)
+	    ins_need_undo = FALSE;
+    }
 
 #ifdef FEAT_FOLDING
     /* Always open fold at the cursor line when inserting something. */
     foldOpenCursor();
 #endif
 
-    return (arrow_used ? FAIL : OK);
+    return (arrow_used || ins_need_undo ? FAIL : OK);
 }
 
 /*
@@ -4953,6 +4969,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 {
     char_u	*look;
     int		try_match;
+    int		try_match_word;
     char_u	*p;
     char_u	*line;
     int		icase;
@@ -4981,13 +4998,17 @@ in_cinkeys(keytyped, when, line_is_empty)
 
 	/*
 	 * If there is a '0', only accept a match if the line is empty.
+	 * But may still match when typing last char of a word.
 	 */
 	if (*look == '0')
 	{
+	    try_match_word = try_match;
 	    if (!line_is_empty)
 		try_match = FALSE;
 	    ++look;
 	}
+	else
+	    try_match_word = FALSE;
 
 	/*
 	 * does it look like a control character?
@@ -5107,8 +5128,11 @@ in_cinkeys(keytyped, when, line_is_empty)
 	    p = vim_strchr(look, ',');
 	    if (p == NULL)
 		p = look + STRLEN(look);
-	    if (try_match && curwin->w_cursor.col >= (colnr_T)(p - look))
+	    if ((try_match || try_match_word)
+		    && curwin->w_cursor.col >= (colnr_T)(p - look))
 	    {
+		int		match = FALSE;
+
 #ifdef FEAT_INS_EXPAND
 		if (keytyped == KEY_COMPLETE)
 		{
@@ -5138,7 +5162,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 			    && (icase
 				? STRNICMP(s, look, p - look)
 				: STRNCMP(s, look, p - look)) == 0)
-			return TRUE;
+			match = TRUE;
 		}
 		else
 #endif
@@ -5152,8 +5176,19 @@ in_cinkeys(keytyped, when, line_is_empty)
 				? STRNICMP(line - (p - look), look, p - look)
 				: STRNCMP(line - (p - look), look, p - look))
 									 == 0)
-			return TRUE;
+			match = TRUE;
 		}
+		if (match && try_match_word && !try_match)
+		{
+		    /* "0=word": Check if there are only blanks before the
+		     * word. */
+		    line = ml_get_curline();
+		    if ((int)(skipwhite(line) - line) !=
+				     (int)(curwin->w_cursor.col - (p - look)))
+			match = FALSE;
+		}
+		if (match)
+		    return TRUE;
 	    }
 	    look = p;
 	}

@@ -3224,9 +3224,13 @@ syn_cmd_reset(eap, syncing)
     exarg_T	*eap;
     int		syncing;	/* not used */
 {
-    set_internal_string_var((char_u *)"syntax_cmd", (char_u *)"reset");
-    syn_cmd_onoff(eap, "syncolor");
-    do_unlet((char_u *)"g:syntax_cmd");
+    eap->nextcmd = check_nextcmd(eap->arg);
+    if (!eap->skip)
+    {
+	set_internal_string_var((char_u *)"syntax_cmd", (char_u *)"reset");
+	do_cmdline_cmd((char_u *)"runtime! syntax/syncolor.vim");
+	do_unlet((char_u *)"g:syntax_cmd");
+    }
 }
 
 /*
@@ -5792,8 +5796,9 @@ static char *(highlight_init_dark[]) =
     };
 
     void
-init_highlight(both)
+init_highlight(both, reset)
     int		both;	    /* include groups where 'bg' doesn't matter */
+    int		reset;	    /* clear group first */
 {
     int		i;
     char	**pp;
@@ -5818,7 +5823,7 @@ init_highlight(both)
 	had_both = TRUE;
 	pp = highlight_init_both;
 	for (i = 0; pp[i] != NULL; ++i)
-	    do_highlight((char_u *)pp[i], FALSE, TRUE);
+	    do_highlight((char_u *)pp[i], reset, TRUE);
     }
     else if (!had_both)
 	/* Don't do anything before the call with both == TRUE from main().
@@ -5831,7 +5836,7 @@ init_highlight(both)
     else
 	pp = highlight_init_dark;
     for (i = 0; pp[i] != NULL; ++i)
-	do_highlight((char_u *)pp[i], FALSE, TRUE);
+	do_highlight((char_u *)pp[i], reset, TRUE);
 
 #ifdef FEAT_SYN_HL
     /*
@@ -5875,6 +5880,8 @@ load_colors(p)
 
 /*
  * Handle the ":highlight .." command.
+ * When using ":hi clear" this is called recursively for each group with
+ * "forceit" and "init" both TRUE.
  */
     void
 do_highlight(line, forceit, init)
@@ -6026,14 +6033,6 @@ do_highlight(line, forceit, init)
 	line = linep;
 	if (ends_excmd(*line))
 	{
-	    /*
-	     * Clear all highlight groups and load the defaults.
-	     */
-	    for (idx = 0; idx < highlight_ga.ga_len; ++idx)
-	    {
-		highlight_clear(idx);
-		HL_TABLE()[idx].sg_set = 0;
-	    }
 #ifdef FEAT_EVAL
 	    do_unlet((char_u *)"colors_name");
 #endif
@@ -6048,7 +6047,10 @@ do_highlight(line, forceit, init)
 	    cterm_normal_bg_color = 0;
 #endif
 
-	    init_highlight(TRUE);
+	    /*
+	     * Clear all default highlight groups and load the defaults.
+	     */
+	    init_highlight(TRUE, TRUE);
 #ifdef FEAT_GUI
 	    if (gui.in_use)
 		highlight_gui_started();
@@ -6090,9 +6092,15 @@ do_highlight(line, forceit, init)
 	is_scrollbar_group = TRUE;
 #endif
 
-    if (doclear)
+    /* Clear the highlighting for ":hi clear {group}" and ":hi clear". */
+    if (doclear || (forceit && init))
+    {
 	highlight_clear(idx);
-    else
+	if (!doclear)
+	    HL_TABLE()[idx].sg_set = 0;
+    }
+
+    if (!doclear)
       while (!ends_excmd(*linep))
       {
 	key_start = linep;

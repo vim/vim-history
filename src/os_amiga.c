@@ -1478,11 +1478,22 @@ sortcmp(a, b)
 mch_has_wildcard(p)
     char_u *p;
 {
-#ifdef VIM_BACKTICK
-    return (vim_strpbrk(p, (char_u *)"*?[(~#$`") != NULL);
-#else
-    return (vim_strpbrk(p, (char_u *)"*?[(~#$") != NULL);
-#endif
+    for ( ; *p; ++p)
+    {
+	if (*p == '\\' && p[1] != NUL)
+	    ++p;
+        else
+	    if (vim_strchr((char_u *)
+#  ifdef VIM_BACKTICK
+				    "*?[(#$`"
+#  else
+				    "*?[(#$"
+#  endif
+                                                , *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
+	    return TRUE;
+    }
+    return FALSE;
 }
 
 /*

@@ -881,7 +881,21 @@ do_buffer(action, start, dir, count, forceit)
 
 	    /* Close any other windows on this buffer, then make it empty. */
 #ifdef FEAT_WINDOWS
-	    close_others(FALSE, TRUE);
+	    {
+		win_T	*wp, *nextwp;
+
+		for (wp = firstwin; wp != NULL; wp = nextwp)
+		{
+		    nextwp = wp->w_next;
+		    if (wp != curwin && wp->w_buffer == buf)
+		    {
+			/* Start all over, autocommands may change the window
+			 * layout. */
+			nextwp = firstwin;
+			win_close(wp, FALSE);
+		    }
+		}
+	    }
 #endif
 	    setpcmark();
 	    retval = do_ecmd(0, NULL, NULL, NULL, ECMD_ONE,
@@ -3045,6 +3059,13 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    if (get_keymap_str(wp, tmp, TMPLEN))
 		str = tmp;
 	    break;
+	case STL_PAGENUM:
+#ifdef FEAT_PRINTER
+	    num = get_printer_page_num();
+#else
+	    num = 0;
+#endif
+	    break;
 
 	case STL_BUFNO:
 	    num = wp->w_buffer->b_fnum;
@@ -3453,7 +3474,6 @@ do_arg_all(count, forceit)
     int		opened_len;	/* lenght of opened[] */
     int		use_firstwin = FALSE;	/* use first window for arglist */
     int		split_ret = OK;
-    int		p_sb_save;
     int		p_ea_save;
     alist_T	*alist;		/* argument list to be used */
     buf_T	*buf;
@@ -3597,12 +3617,9 @@ do_arg_all(count, forceit)
 	{
 	    if (!use_firstwin)		/* split current window */
 	    {
-		p_sb_save = p_sb;
 		p_ea_save = p_ea;
-		p_sb = TRUE;		/* put windows in order of arglist */
 		p_ea = TRUE;		/* use space from all windows */
-		split_ret = win_split(0, WSP_ROOM);
-		p_sb = p_sb_save;
+		split_ret = win_split(0, WSP_ROOM | WSP_BELOW);
 		p_ea = p_ea_save;
 		if (split_ret == FAIL)
 		    continue;
@@ -3653,7 +3670,6 @@ do_buffer_all(eap)
     buf_T	*buf;
     win_T	*wp, *wpnext;
     int		split_ret = OK;
-    int		p_sb_save;
     int		p_ea_save;
     int		open_wins = 0;
     int		r;
@@ -3728,13 +3744,10 @@ do_buffer_all(eap)
 	else if (split_ret == OK)
 	{
 	    /* Split the window and put the buffer in it */
-	    p_sb_save = p_sb;
 	    p_ea_save = p_ea;
-	    p_sb = TRUE;		/* put windows in order of arglist */
 	    p_ea = TRUE;		/* use space from all windows */
-	    split_ret = win_split(0, WSP_ROOM);
+	    split_ret = win_split(0, WSP_ROOM | WSP_BELOW);
 	    ++open_wins;
-	    p_sb = p_sb_save;
 	    p_ea = p_ea_save;
 	    if (split_ret == FAIL)
 		continue;

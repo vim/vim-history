@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ag.  Last change: 2001 May 20
+*todo.txt*      For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,8 +29,13 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: Patch for dropping a shortcut on Vim. (Matsumoto)  Only for OLE
-version?  Use non-OLE hack?
+Done: When dropping a shortcut on gvim (.lnk file) should edit the target, not
+the shortcut itself.  (Matsumoto)  Does it cause any problems?
+How to edit a shortcut when starting Vim?
+
+Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
+
+Try out autoconf 2.50 (after releasing 5.8).
 
 GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
 
@@ -48,7 +53,7 @@ C.  Multi-line regexp patterns
 D.  Vertical window split
 	Works.
 E.  Virtual edit
-	Works for some commands.  Still needs to be improved a lot.
+	Works for most commands.  Still needs to be improved.
 F.  Sun Visual workshop (debugger) interface
 	Works.
 G.  Edit command line with Vi commands
@@ -63,61 +68,54 @@ J.  User Friendlier
 
 
 E. Virtual edit:
--   Still a lot of work to do.  Test various commands.
+-   Still some work to do.  Need to test various commands.
 -   When doing Visual selection and including space after the end-of-line it
-    is not highlighted.  It's also not included in the operation.  Should this
-    be changed to include the space after the end-of-line?
+    is not included in the operation.  Should this be changed to include the
+    space after the end-of-line?
+-   With blockwise Visual selection, "O" doesn't move to the other corner when
+    both corners are in virtual space.
 -   'c' behaves incorrectly sometimes when breaking tabs.
--   'r' doesn't work in virtual space off the end of a line.
--   When undoing a tab-breaking operation, cursor jumps back to the start
-    of the tab, rather than it's position at the start of the operation.
 -   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
     to a valid character.
 -   In Visual-block mode highlighting part of a tab is wrong.
 -   Add more documentation.
 -   Use vpos_T instead of fpos_T for positions that can have a coladd?
 -   coladvance2() can be a bit slow.  Check with profiling.
--   Should not insert spaces for yank or filter.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line?
 -   Allow specifying it separately for Tabs and beyond end-of-line?
--   Add test for various virtualedit operations that went wrong in the past.
 
 
 J. User Friendlier
-9   Printing:
-    -	Make conversion to html faster (Write it in C).
-    -	Add "page width" to wrap long lines.
-    -	On Unix convert to PostScript?
-    -	Use some dialog box to do the obvious settings (paper size, printer
-	name, portrait/landscape, etc).
-9   Make Windows install program better:
-    - Add an icon on the Desktop, if the user wants this.
-    - Add Vim to the Start/Programs menu if the user wants this.
-    - Detect the OLE version and register it.
-    - Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
-    - Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
-      can really be dropped-in.
-    - Delete the vim.bat and gvim.bat files.
-    - Also create an evim.bat and vimdiff.bat file.  How about view.bat?
-    - Delete a whole tree of Vim files.
-9   Extend the User Manual.  Use portions of the Reference Manual.
+9   Extend the User Manual.
+    Use portions of the Reference Manual.
     Use portions of the Vim book.
+9   Printing:
+    -	Add "page width" to wrap long lines.
+    -	Unix: make conversion to PostScript work better.
+     	Use some dialog box to do the obvious settings (paper size, printer
+	name, portrait/landscape, etc).
+9   Windows install with NSIS:
+    - Don't use install.exe, do everything in NSIS.
+    - install icon on desktop
+    - create entry in start/programs menu (also for uninstall)
+    - create .bat files in the windows directory
+    - detect and handle an existing Vim version
+9   Windows install with install.exe:
+    Check new dosinst.c features (Jon Merz)
+    -  also evim.bat, vimdiff.bat, gvimdiff.bat, view.bat, gview.bat
+       One directory for all batch files.
+       One item: install batch files in {path}
+		 overwrite batch files in {path}
+		 do not install batch files
+    -  also shortcut to evim, gvimdiff and gview
+9   Make Windows uninstall program better:
+    - Delete the vim.bat and gvim.bat files.
+    - Delete the whole tree of Vim files.
+8   make vimtutor.bat for DOS/MS-Windows and vimtutor script for Amiga.
 
 
 Various recent:
-9   Diff: when scrolling with the mouse or scrollbar one line is sometimes
-    missing.  It's hard to reproduce.  Both in console and GUI.
-9   When t_Co changes because of an xterm termresponse and the user defined a
-    different Comment color in his mysyntaxfile, resetting the colors causes
-    the default Comment color to appear again.
-8   Test if it possible for a skip pattern to include "\n", so that it can
-    skip over newlines for a "oneline" region.
--   Check use of multi-line regexp in syntax highlighting.
--   "ls -1 * | xargs vim" works a bit but not well.  Should use stderr for all
-    term I/O.
-8   Make 'indentkeys' accept "0=then" (typed "then" as the first thing in a
-    line). (Neil Bird)
 9   ":cwindow!" always open quickfix window, ":cwindow" only opens it if there
     are recognized errors.  ":cclose" to close quickfix window?
     Or use a new command: ":cwincheck", opens the cwindow when there are
@@ -145,6 +143,8 @@ Various recent:
        aborting a mapping).
        Or use ":map <silent>"?
     -> ":silent unmap" shouldn't complain about a non-existing mapping.
+    -> ":silent 1,$d" says "no lines in buffer".
+    -> ":silent put" says "16 more lines".
     Still do the messages for ":redir"?
     -> ":silent redir": Remember the last message, print it if waiting for a
        key (otherwise the hit-enter prompt could be missed).
@@ -152,7 +152,8 @@ Various recent:
        DOS console used to execute external commands.  Pass a flag to
        vimrun.exe.
     Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
--   xterm sends <Esc>O5F for <C-End>.  Similarly for other Control-keys.
+-   xterm sends <Esc>O5F for <C-End>.  Similarly for other Control-keys, e.g.,
+    <C-Left> and <C-Right>.
 -   Problem with cscope jumping to the wrong position? (Medley)
     Selecting item 5 jumps to item 4. (Andrej Borsenkow)
 8   When running in a console and $DISPLAY is set a connection to the X server
@@ -162,6 +163,9 @@ Various recent:
 8   When changing 'guicursor' and the value is invalid, some of the effects
     will still take place.  Should first check for errors and only make the
     new value effective when it's OK.
+9   Should mapping <C-A> and <C-S-A> both work?
+9   When compiled with Python and threaded libraries, a signal can cause Vim
+    to loop forever.  Looks like a problem with threads and signals.
 
 
 Considered for release 6.0:
@@ -362,8 +366,6 @@ Win32 GUI known bugs:
     Alternative: use prfile32 (Aaron)
 8   install.exe, vimrun.exe and ctags are not build from Gvim_vc.mak.  When
     added, check that this works from the command line and from the IDE.
-8   When dropping a shortcut on gvim (.lnk file) should edit the target, not
-    the shortcut itself.
 9   Replace SendToVim and OpenWithVim with C++ versions? (Rafal Dibrowa)
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
@@ -646,8 +648,6 @@ VMS:
     Also problems with buffer menu.
 9   optwin.vim: Restoring a mapping for <Space> or <CR> is not correct for
     ":noremap".  Add "mapcmd({string}, {mode})?  Use code from ":mkexrc".
-9   When starting gvim in an xterm, Vim sends t_vi and t_ve to the terminal
-    (cursor invisible/visible).  Should not happen.
 9   incsearch is incorrect for "/that/<Return>/this/;//" (last search pattern
     isn't updated).
 9   term_console is used before it is set (msdos, Amiga).
@@ -712,7 +712,6 @@ VMS:
 7   In xterm, recognize both vt100 and vt220 cursor keys.  Change
     add_termcode() to not remove an existing entry for a name, when it's
     needed.
-    Recognize <C-Left> and <C-Right> in new xterm.
     Need a generic solution to recognize different codes for the same key.
 8   Core dump within signal function: gdb doesn't show stack backtrace!  Option
     to skip catch_signals()?
@@ -855,6 +854,11 @@ Problems that will (probably) not be solved:
     This is caused by the gnome library gnome_init() setting $LC_CTYPE to
     "en_US".  Not all systems support this locale name, thus causing the
     error.  Hopefully a newer version of GTK/Gnome fixes this problem.
+-   When using an xterm that supports the termresponse feature, and the 't_Co'
+    termcap option was wrong when Vim started, it will be corrected when the
+    termresponse is received.  Since the number of colors changes, the
+    highlighting needs to be initialized again.  This may cause color defined
+    in the vimrc file to be lost.
 
 ---------------------  extensions and improvements ----------------------
 						    *extensions-improvements*
@@ -874,8 +878,6 @@ Documentation:
 8   Spread the windows commands over the other files.  For example, ":stag"
     should be with ":tag".  cross-link with tags to avoid too much double
     text.
-8   make vimtutor.bat for DOS and vimtutor script for Amiga.  Then add
-    vimtutor.man to the runtime archive.
 7   Windows: When a wrong command is typed with an ALT key, give a hint to
     look at the help for 'winaltkeys'.
 -   Check text editor compendium for vi and Vim remarks.
@@ -971,6 +973,7 @@ Ease of use:
 
 
 Syntax highlighting:
+8   Make conversion to HTML faster (Write it in C or pre-compile the script).
 9   There is still a redraw bug somewhere.  Probably because a cached state is
     used in a wrong way.  I can't reproduce it...
 7   Make syntax keyword table configurable.  Set number of bits used with
@@ -1363,6 +1366,7 @@ Screen updating:
 8   Add a ":refresh [winnr]" command, to force updating a window.  Useful from
     an event handler where ":normal" can't be used.  Also useful when
     'lazyredraw' is set in a mapping.
+7   Make 'list' and 'linebreak' work together.
 
 
 Scrolling:

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 19
+" Last Change:	2001 May 21
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -14,7 +14,7 @@ endif
 " let others know that syntax has been switched on
 let syntax_on = 1
 
-" Set the default highlighting colors
+" Set the default highlighting colors.  Use a color scheme if specified.
 if exists("colors_name")
   exe "colors " . colors_name
 else

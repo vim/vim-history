@@ -1,0 +1,22 @@
+*usr_26.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+				  Repeating
+
+
+|26.1|	Replace a word
+
+     Next chapter: |usr_27.txt|  Search commands and patterns
+ Previous chapter: |usr_25.txt|  Editing formatted text
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*26.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_27.txt|  Search commands and patterns
+
+Copyright: see |manual-copyright|  vim:tw=78:

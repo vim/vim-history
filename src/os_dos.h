@@ -122,3 +122,4 @@
 #define SPACE_IN_FILENAME
 #define BACKSLASH_IN_FILENAME
 #define USE_CRNL		/* lines end in CR-NL instead of NL */
+#define HAVE_DUP		/* have dup() */

@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0ag.  Last change: 2001 Mar 23
+*quickref.txt*  For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,8 +21,8 @@
 |Q_si|	insert: Special inserts		|Q_wq|	Writing and quitting
 |Q_de|	change: Deleting text		|Q_st|	Starting VIM
 |Q_cm|	change: Copying and moving	|Q_ac|	Automatic commands
-|Q_ch|	change: Changing text		|Q_wi|	Multi-window functions
-|Q_co|	change: Complex			|Q_bu|	Buffer list functions
+|Q_ch|	change: Changing text		|Q_wi|	Multi-window commands
+|Q_co|	change: Complex			|Q_bu|	Buffer list commands
 |Q_vi|	Visual mode			|Q_sy|	Syntax highlighting
 |Q_to|	Text objects			|Q_gu|	GUI commands
 					|Q_fo|  Folding
@@ -74,13 +74,13 @@ N is used to indicate an optional count that can be given before the command.
 *Q_tm*		Text object motions
 
 |w|	N  w		N words forward
-|W|	N  W		N blank-separated WORDS forward
+|W|	N  W		N blank-separated |WORD|s forward
 |e|	N  e		forward to the end of the Nth word
-|E|	N  E		forward to the end of the Nth blank-separated WORD
+|E|	N  E		forward to the end of the Nth blank-separated |WORD|
 |b|	N  b		N words backward
-|B|	N  B		N blank-separated WORDS backward
+|B|	N  B		N blank-separated |WORD|s backward
 |ge|	N  ge		backward to the end of the Nth word
-|gE|	N  gE		backward to the end of the Nth blank-separated WORD
+|gE|	N  gE		backward to the end of the Nth blank-separated |WORD|
 
 |)|	N  )		N sentences forward
 |(|	N  (		N sentences backward
@@ -176,7 +176,8 @@ N is used to indicate an optional count that can be given before the command.
 |`]|	   `]		go to the end of the previously operated or put text
 |`<|	   `<		go to the start of the (previous) Visual area
 |`>|	   `>		go to the end of the (previous) Visual area
-|'|	   '{a-zA-Z0-9[]'"<>}
+|`.|	   `.		go to the position of the last change in this file
+|'|	   '{a-zA-Z0-9[]'"<>.}
 			same as `, but on the first non-blank in the line
 |:marks|  :marks	print the active marks
 |CTRL-O|  N  CTRL-O	go to Nth older position in jump list
@@ -452,8 +453,8 @@ In Insert or Command-line mode:
 
 |v_aw|	N  aw		Select "a word"
 |v_iw|	N  iw		Select "inner word"
-|v_aW|	N  aW		Select "a WORD"
-|v_iW|	N  iW		Select "inner WORD"
+|v_aW|	N  aW		Select "a |WORD|"
+|v_iW|	N  iW		Select "inner |WORD|"
 |v_as|	N  as		Select "a sentence"
 |v_is|	N  is		Select "inner sentence"
 |v_ap|	N  ap		Select "a paragraph"
@@ -1096,7 +1097,7 @@ Context-sensitive completion on the command-line:
 |:autocmd|	:au! {event} {pat} {cmd}  Remove all autocommands for {event}
 					with {pat} and enter new one
 ------------------------------------------------------------------------------
-*Q_wi*		Multi-window functions
+*Q_wi*		Multi-window commands
 
 |CTRL-W_s|	CTRL-W s  or  :split	Split window into two parts
 |:split_f|	:split {file}		Split window and edit {file} in one of
@@ -1132,7 +1133,7 @@ Context-sensitive completion on the command-line:
 |CTRL-W__|	CTRL-W _		Set current window height (default:
 					   very high)
 ------------------------------------------------------------------------------
-*Q_bu*		Buffer list functions
+*Q_bu*		Buffer list commands
 
 |:buffers|	:buffers  or  :files	list all known buffer and file names
 

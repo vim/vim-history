@@ -2760,6 +2760,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 #ifdef FEAT_MBYTE
     unsigned		c;
 #endif
+    int			width;
 
     if (gui.current_font == NULL || gui.drawarea->window == NULL)
 	return;
@@ -2793,6 +2794,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 
 	p = s;
 	textlen = 0;
+	width = 0;
 	while (p < s + len)
 	{
 #ifdef FEAT_MBYTE
@@ -2804,6 +2806,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 		buf[textlen].byte1 = c >> 8;
 		buf[textlen].byte2 = c;
 		p += utf_ptr2len_check(p);
+		width += utf_char2cells(c);
 	    }
 	    else
 #endif
@@ -2811,6 +2814,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 		buf[textlen].byte1 = '\0';	/* high eight bits */
 		buf[textlen].byte2 = *p;	/* low eight bits */
 		++p;
+		++width;
 	    }
 	    ++textlen;
 	}
@@ -2821,53 +2825,38 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
     {
 	text = (XChar2b *)s;
 	textlen = len;
+	width = len;
     }
 
-    if (flags & DRAW_TRANSP)
+    if (!(flags & DRAW_TRANSP))
     {
-	gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
-	gdk_draw_text(gui.drawarea->window,
-		      gui.current_font,
-		      gui.text_gc,
-		      TEXT_X(col), TEXT_Y(row),
-		      (const gchar *)text, textlen);
-    }
-    else
-    {
-	int width;
-	int height;
-
-	width = gdk_text_width(gui.current_font, (const gchar *)text, textlen);
-	height = gui.char_height;
-
 	gdk_gc_set_foreground(gui.text_gc, gui.bgcolor);
 	gdk_draw_rectangle(gui.drawarea->window,
 			   gui.text_gc,
 			   TRUE,
-			   FILL_X(col), FILL_Y(row), width, height);
-	gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
-	gdk_draw_text(gui.drawarea->window,
-		      gui.current_font,
-		      gui.text_gc,
-		      TEXT_X(col), TEXT_Y(row),
-		      (const gchar *)text, textlen);
+			   FILL_X(col), FILL_Y(row),
+			   width * gui.char_width, gui.char_height);
     }
+    gdk_gc_set_foreground(gui.text_gc, gui.fgcolor);
+    gdk_draw_text(gui.drawarea->window,
+		  gui.current_font,
+		  gui.text_gc,
+		  TEXT_X(col), TEXT_Y(row),
+		  (const gchar *)text, textlen);
 
     /* redraw the contents with an offset of 1 to emulate bold */
     if (flags & DRAW_BOLD)
-    {
 	gdk_draw_text(gui.drawarea->window,
 		      gui.current_font,
 		      gui.text_gc,
 		      TEXT_X(col) + 1, TEXT_Y(row),
 		      (const gchar *)text, textlen);
-    }
 
     if (flags & DRAW_UNDERL)
     {
 	gdk_draw_line(gui.drawarea->window,
 		      gui.text_gc, FILL_X(col),
-	FILL_Y(row + 1) - 1, FILL_X(col + textlen) - 1, FILL_Y(row + 1) - 1);
+	FILL_Y(row + 1) - 1, FILL_X(col + width) - 1, FILL_Y(row + 1) - 1);
     }
 }
 

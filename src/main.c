@@ -43,6 +43,7 @@ static void check_swap_exists_action __ARGS((void));
 static FILE *time_fd = NULL;
 #endif
 
+#define FEAT_PRECOMMANDS
 /*
  * Different types of error messages.
  */
@@ -93,6 +94,10 @@ main
 #endif
     int		n_commands = 0;		/* no. of commands from + or -c */
     char_u	*commands[MAX_ARG_CMDS]; /* commands from + or -c option */
+#ifdef FEAT_PRECOMMANDS
+    int		p_commands = 0;		/* no. of commands from --cmd */
+    char_u	*pre_commands[MAX_ARG_CMDS]; /* commands from --cmd option */
+#endif
     int		no_swap_file = FALSE;   /* "-n" option used */
     int		c;
     int		i;
@@ -281,6 +286,10 @@ main
      */
     initstr = gettail((char_u *)argv[0]);
 
+#ifdef FEAT_EVAL
+    set_vim_var_string(VV_PROGNAME, initstr, -1);
+#endif
+
     if (TO_LOWER(initstr[0]) == 'r')
     {
 	restricted = TRUE;
@@ -391,7 +400,13 @@ main
 		    if (edit_type != EDIT_NONE)
 			mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 		    edit_type = EDIT_STDIN;
+#ifdef HAVE_DUP
+		    /* Use stderr for stdin, also works for shell commands. */
+		    close(0);
+		    dup(2);
+#else
 		    read_cmd_fd = 2;	/* read from stderr instead of stdin */
+#endif
 		}
 		argv_idx = -1;		/* skip to next argument */
 		break;
@@ -400,6 +415,7 @@ main
 				/* "--help" give help message */
 				/* "--version" give version message */
 				/* "--noplugin[s]" skip plugins */
+				/* "--cmd <cmd>" execute cmd before vimrc */
 		if (STRICMP(argv[0] + argv_idx, "help") == 0)
 		    usage();
 		if (STRICMP(argv[0] + argv_idx, "version") == 0)
@@ -410,6 +426,13 @@ main
 		}
 		if (STRNICMP(argv[0] + argv_idx, "noplugin", 8) == 0)
 		    p_lpl = FALSE;
+#ifdef FEAT_PRECOMMANDS
+		else if (STRNICMP(argv[0] + argv_idx, "cmd", 3) == 0)
+		{
+		    want_argument = TRUE;
+		    argv_idx += 3;
+		}
+#endif
 		else
 		{
 		    if (argv[0][argv_idx])
@@ -655,6 +678,14 @@ main
 		    else
 			commands[n_commands++] = (char_u *)argv[0];
 		    break;
+
+#ifdef FEAT_PRECOMMANDS
+		case '-':	/* "--cmd {command}" execute command */
+		    if (n_commands >= MAX_ARG_CMDS)
+			mainerr(ME_EXTRA_CMD, NULL);
+		    pre_commands[p_commands++] = (char_u *)argv[0];
+		    break;
+#endif
 
 	    /*	case 'd':   -d {device} is handled in mch_check_win() for the
 	     *		    Amiga */
@@ -945,7 +976,7 @@ scripterror:
 
     init_mappings();		/* set up initial mappings */
 
-    init_highlight(TRUE);	/* set the default highlight groups */
+    init_highlight(TRUE, FALSE); /* set the default highlight groups */
     TIME_MSG("init highlight");
 #ifdef CURSOR_SHAPE
     parse_shape_opt(SHAPE_CURSOR); /* set cursor shapes from 'guicursor' */
@@ -955,6 +986,16 @@ scripterror:
 #endif
 #ifdef FEAT_PRINTER
     parse_list_options(p_prtsettings, printer_opts, OPT_PRINT_NUM_OPTIONS);
+#endif
+#ifdef FEAT_PRECOMMANDS
+    if (p_commands > 0)
+    {
+	curwin->w_cursor.lnum = 0; /* just in case.. */
+	sourcing_name = (char_u *)"pre-vimrc command line";
+	for (i = 0; i < p_commands; ++i)
+	    do_cmdline_cmd(pre_commands[i]);
+	sourcing_name = NULL;
+    }
 #endif
 
     /*
@@ -1999,6 +2040,9 @@ usage()
     main_msg(_("-O[N]\t\tlike -o but split vertically"));
     main_msg(_("+\t\t\tStart at end of file"));
     main_msg(_("+<lnum>\t\tStart at line <lnum>"));
+#ifdef FEAT_PRECOMMANDS
+    main_msg(_("--cmd <command>\tExecute <command> before loading any vimrc file"));
+#endif
     main_msg(_("-c <command>\t\tExecute <command> after loading the first file"));
     main_msg(_("-S <session>\t\tSource file <session> after loading the first file"));
     main_msg(_("-s <scriptin>\tRead Normal mode commands from file <scriptin>"));

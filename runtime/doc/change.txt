@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ag.  Last change: 2001 May 20
+*change.txt*    For Vim version 6.0ah.  Last change: 2001 May 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1322,7 +1322,8 @@ Characters that can precede each key:
 	the current line before opening a new line.
 0	When a zero precedes the key (but appears after '!' or '*') Vim will
 	reindent the line only if the key is the first character you type in
-	the line.
+	the line.  When used before "=" Vim will only reindent the line if
+	there is only white space before the word.
 
 When neither '!' nor '*' precedes the key, Vim reindents the line after you
 type the key.  So ';' sets the indentation of a line which includes the ';'.
@@ -1344,7 +1345,8 @@ e	Reindent a line that starts with "else" when you type the second 'e'.
 	actually be part of another word.  Thus "=end" would cause reindenting
 	when typing the "d" in "endif" or "endwhile".  But not when typing
 	"bend".  Also reindent when completion produces a word that starts
-	with "word".
+	with "word".  "0=word" reindents when there is only white space before
+	the word.
 =~word	Like =word, but ignore case.
 
 If you really want to reindent when you type 'o', 'O', 'e', '0', '<', '>',

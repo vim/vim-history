@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0ag.  Last change: 2001 Apr 04
+*help.txt*	For Vim version 6.0ah.  Last change: 2001 May 27
 
 			VIM - main help file
 									 k
@@ -13,6 +13,7 @@ Jump to a subject:  Position the cursor on a tag between |bars| and hit CTRL-].
 Get specific help:  It is possible to go directly to whatever you want help
 		    on, by giving an argument to the ":help" command |:help|.
 		    It is possible to further specify the context:
+			  				*help-context*
 			  WHAT			PREPEND    EXAMPLE	~
 		      Normal mode commands     (nothing)   :help x
 		      Visual mode commands	  v_	   :help v_u
@@ -39,39 +40,46 @@ BASIC:
 USER MANUAL: These files explain how to accomplish an editing task.
 
 |usr_toc.txt|	Table Of Contents
+
 Getting Started ~
-|usr_01.txt|	About the manuals
-|usr_02.txt|	The first steps in Vim
-|usr_03.txt|	Moving around
-|usr_04.txt|	Making local changes
-|usr_05.txt|	Making big changes
-|usr_06.txt|	Set your settings
-|usr_07.txt|	Using syntax highlighting
-|usr_08.txt|	Editing more than one file
-|usr_09.txt|	Splitting windows
+|usr_01.txt|  About the manuals
+|usr_02.txt|  The first steps in Vim
+|usr_03.txt|  Moving around
+|usr_04.txt|  Making small changes
+|usr_05.txt|  Making big changes
+|usr_06.txt|  Set your settings
+|usr_07.txt|  Using syntax highlighting
+|usr_08.txt|  Editing more than one file
+|usr_09.txt|  Splitting windows
+|usr_10.txt|  Using the GUI
+|usr_11.txt|  Recovering from a crash
+|usr_12.txt|  Clever tricks
+
 Editing Effectively ~
-|usr_20.txt|	Typing commands quickly
-|usr_21.txt|	Go away and come back
-|usr_22.txt|	Finding the file to edit
-|usr_23.txt|	Editing other files
-|usr_24.txt|	Inserting quickly
-|usr_25.txt|	Editing formatted text
-|usr_26.txt|	Repeating
-|usr_27.txt|	Search patterns
-|usr_28.txt|	Folding
-|usr_29.txt|	Editing programs
-|usr_30.txt|	Compiling programs
-|usr_31.txt|	Exploiting the GUI
+|usr_20.txt|  Typing commands quickly
+|usr_21.txt|  Go away and come back
+|usr_22.txt|  Finding the file to edit
+|usr_23.txt|  Editing other files
+|usr_24.txt|  Inserting quickly
+|usr_25.txt|  Editing formatted text
+|usr_26.txt|  Repeating
+|usr_27.txt|  Search commands and patterns
+|usr_28.txt|  Folding
+|usr_29.txt|  Editing programs
+|usr_30.txt|  Compiling programs
+|usr_31.txt|  Exploiting the GUI
+
 Tuning Vim ~
-|usr_40.txt|	Write a Vim script
-|usr_41.txt|	Make new commands
-|usr_42.txt|	Add new menus
-|usr_43.txt|	Using filetypes
-|usr_44.txt|	Your own syntax highlighted
-|usr_45.txt|	Select your language
+|usr_40.txt|  Write a Vim script
+|usr_41.txt|  Make new commands
+|usr_42.txt|  Add new menus
+|usr_43.txt|  Using filetypes
+|usr_44.txt|  Your own syntax highlighted
+|usr_45.txt|  Select your language
+
 Making Vim Run ~
-|usr_90.txt|	Installing Vim
-|usr_91.txt|	Compiling Vim
+|usr_90.txt|  Installing Vim
+|usr_91.txt|  Compiling Vim
 
 
 REFERENCE MANUAL: These files explain every detail of Vim.

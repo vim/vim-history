@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ag.  Last change: 2001 Mar 24
+*gui_x11.txt*   For Vim version 6.0ah.  Last change: 2001 Mar 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

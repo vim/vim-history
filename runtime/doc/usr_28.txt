@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0ag.  Last change: 2001 Mar 31
+*usr_28.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -16,8 +16,8 @@
 |28.9|  Folding unchanged lines
 |28.10|  Which fold method to use?
 
-     Next chapter: |usr_27.txt|  Search patterns
- Previous chapter: |usr_29.txt|  Editing programs
+     Next chapter: |usr_29.txt|  Editing programs
+ Previous chapter: |usr_27.txt|  Search commands and patterns
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
@@ -352,4 +352,7 @@ want them, you could switch to the "manual" method.  This will not remove the
 defined folds.  Then you can delete or add folds manually.
 
 ==============================================================================
- vim:tw=78:
+
+Next chapter: |usr_29.txt|  Editing programs
+
+Copyright: see |manual-copyright|  vim:tw=78:

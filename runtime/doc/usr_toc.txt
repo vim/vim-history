@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0ag.  Last change: 2001 Mar 31
+*usr_toc.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -7,7 +7,7 @@
 
 NOTE: The construction of the User Manual has only just started.  Most of it
 is still empty.  Over time bits from the reference manual will be moved to the
-user manual and new text will be added.
+user manual.  Parts from the Vim book and new text will be added.
 
 ==============================================================================
 Overview ~
@@ -16,12 +16,15 @@ Getting Started
 |usr_01.txt|  About the manuals
 |usr_02.txt|  The first steps in Vim
 |usr_03.txt|  Moving around
-|usr_04.txt|  Making local changes
+|usr_04.txt|  Making small changes
 |usr_05.txt|  Making big changes
 |usr_06.txt|  Set your settings
 |usr_07.txt|  Using syntax highlighting
 |usr_08.txt|  Editing more than one file
 |usr_09.txt|  Splitting windows
+|usr_10.txt|  Using the GUI
+|usr_11.txt|  Recovering from a crash
+|usr_12.txt|  Clever tricks
 
 Editing Effectively
 |usr_20.txt|  Typing commands quickly
@@ -31,7 +34,7 @@ Editing Effectively
 |usr_24.txt|  Inserting quickly
 |usr_25.txt|  Editing formatted text
 |usr_26.txt|  Repeating
-|usr_27.txt|  Search patterns
+|usr_27.txt|  Search commands and patterns
 |usr_28.txt|  Folding
 |usr_29.txt|  Editing programs
 |usr_30.txt|  Compiling programs
@@ -56,48 +59,122 @@ Read this from start to end to learn the essential commands.
 
 |usr_01.txt|  About the manuals
 		|01.1|  Two manuals
-		|01.2|  Using the Vim tutor
-		|01.3|  Copyright
+		|01.2|  Vim installed
+		|01.3|  Using the Vim tutor
+		|01.4|  Copyright
 
 |usr_02.txt|  The first steps in Vim
-		(open a file, "hjkl", insert, "x", "dd", write, quit, undo,
-		redo, ":edit file", Finding help, assume using vimrc_example)
+		|02.1|	Running Vim for the First Time
+		|02.2|  Inserting text
+		|02.3|  Moving around
+		|02.4|  Deleting characters
+		|02.5|  Undo and Redo
+		|02.6|  Other editing commands
+		|02.7|  Getting out
+		|02.8|  Finding help
 
 |usr_03.txt|  Moving around
-		(left-right, up-down, scrolling, simple searches, "n", %,
-		marks, moving in Insert mode)
+		|03.1|	Word movement
+		|03.2|	Moving to the start or end of a line
+		|03.3|	Moving to a character
+		|03.4|	Matching a paren
+		|03.5|	Moving to a specific line
+		|03.6|	Telling where you are
+		|03.7|	Scrolling around
+		|03.8|	Simple searches
+		|03.9|	Simple search patterns
+		|03.10|	Using marks
 
-|usr_04.txt|  Making local changes
-		(motions and operators, "dw", yank and put, "r", "cw",
-		replace mode, "I", "A", "J", "~", ">>", ".", Visual mode, text
-		objects)
+|usr_04.txt|  Making small changes
+		|04.1|	Making small changes
+		|04.2|	Changing text
+		|04.3|	Repeating a change
+		|04.4|	Visual mode
+		|04.5|	Moving text
+		|04.6|	Copying text
+		|04.7|	Using the clipboard
+		|04.8|	Text objects
+		|04.9|	Replace mode
+		|04.10|	Conclusion
 
-|usr_05.txt|  Making big changes
-		(":s", ":g", external filter, "=", formatting text "gq")
+|usr_05.txt|  Set your settings
+		|05.1|  The vimrc file
+		|05.2|  The default vimrc file explained
+		|05.3|  Simple mappings
+		|05.4|  Adding a plugin
+		|05.5|  Adding a help file
+		|05.6|  The option window
+		|05.7|  Often used options
 
-|usr_06.txt|  Set your settings
-		|06.1|  The vimrc file
-		|06.2|  The default vimrc file explained
-		|06.3|  Adding a plugin
-		|06.4|  Adding a help file
-		|06.5|  Often used options
+|usr_06.txt|  Using syntax highlighting
+		|06.1|  Switching it on
+		|06.2|  No or wrong colors?
+		|06.3|  Different colors
+		|06.4|  With colors or without colors
+		|06.5|  Printing with colors
+		(chap 23)
 
-|usr_07.txt|  Using syntax highlighting
-		|07.1|  Switching it on
-		|07.2|  No or wrong colors?
-		|07.3|  Different colors
-		|07.4|  With colors or without colors
-		|07.5|  Printing with colors
+|usr_07.txt|  Editing more than one file
+		":edit file" (chap 4)
+		argument list, :next, ":rewind" (chap 4)
+		CTRL-^ (chap 4)
+		file marks (chap 20)
+		backup files (chap 14)
+		copy/paste between files (chap 16)
+		registers (chap 20)
+		:w >>file (short)
 
-|usr_08.txt|  Editing more than one file
-		(argument list, :next, ^^, file marks, backup file, copy/paste
-		between files, hidden buffers)
-
-|usr_09.txt|  Splitting windows
-		|09.1|  The help window
-		|09.2|  Two versions of a file
-		|09.3|  Vertical splits (example: edit tags file, map <Enter>
+|usr_08.txt|  Splitting windows
+		:split and :split file (chap 5)
+		CTRL-W w, link to window movement commands |Q_wi|
+		:q :close :wall :qall
+		:new
+		:only
+		moving windows, CTRL-W K, CTRL-W H
+		window size
+		link to 'laststatus'
+		The help window
+		Vertical splits (example: edit tags file, map <Enter>
 			to show match in other window)
+		vimdiff, scrollbind
+
+|usr_09.txt|  Using the GUI
+		(chap 10)
+		the parts of the GUI, link to 'guioptions'
+		mouse usage (chap 26)
+		tear-off menus
+		toolbar
+		the clipboard, "* and "+
+		select mode (chap 26)
+
+|usr_10.txt|  Making big changes
+		":s" (chap 9)
+		command line ranges (chap 9)
+		Visual mode and ":", '<,'> (chap 9)
+		Visual block mode "r", "I", "A", "J", "~", "u" (chap 6)
+			switching modes
+		":g"
+		":r file"
+		":{range}w file"
+		external filter (chap 4) "!"
+		CTRL-L to redraw
+		formatting text "gq"
+		recording and executing registers (chap 2)
+
+|usr_11.txt|  Recovering from a crash
+		(chap 14)
+		basic recovery
+		swap file management
+		":preserve"
+
+|usr_12.txt|  Clever tricks
+		(chap 16)
+		replace a word with another
+		sorting a list
+		counting words
+		reading a manpage (with the man.vim plugin)
+		trimming blanks
+		finding all places an ID is used with ":grep"
 
 ==============================================================================
 Editing Effictively ~
@@ -105,35 +182,77 @@ Editing Effictively ~
 Subjects that can be read independently.
 
 |usr_20.txt|  Typing commands quickly
-		(command line editing and command completion, abbreviations,
-		history)
+		command line editing
+		command completion
+		":" command abbreviations
+		cmdline histories
+		cmdline window
 
 |usr_21.txt|  Go away and come back
-		{viminfo, sessions, modelines)
-		session example: gvim with vertical split window, explorer on
-		the left, double click on name to change dir or view file.
+		CTRL-Z :suspend
+		viminfo, '0, '1 (chap 20)
+		sessions (chap 21)
+			session example: gvim with vertical split window,
+			explorer on the left, double click on name to change
+			dir or view file.
+		modelines
+		:sh and ":!cmd" to stay in Vim.
 		:set go+=l ssop+=resize
 
 |usr_22.txt|  Finding the file to edit
-		(file name completion, 'wildmenu', ":cd", :find, "gf", tags,
-		explorer)
+		file explorer
+		file name completion, 'wildmenu'
+		":cd", ":lcd"
+		:find, "gf", link to 'path'
+		tags (chap 7) link to 'tagbsearch' and 'taglength'
+		the buffer list (chap 5)
+		(hidden) buffers (chap 5)
 
 |usr_23.txt|  Editing other files
-		(using ftp and http with Vim, encryption, binary files,
-		|hex-editing|, compressed files)
+		'fileformat' (chap 11)
+		using ftp and http with Vim
+		encryption (chap 14)
+		binary files |hex-editing|
+		"ga"
+		'list'
+		compressed files
+		dealing with long lines (chap 20)
 
 |usr_24.txt|  Inserting quickly
-		(insert mode completion, abbreviations, abbr to correct typos,
-		digraphs, ":r file", CTRL-O)
+		(chap 20)
+		insert mode completion (chap 12)
+		abbreviations (chap 8) (chap 24)
+		abbr to correct typos,
+		digraphs (chap 2)
+		CTRL-V nr
+		CTRL-R register
+		":r file"
+		CTRL-O
+		CTRL-A and CTRL-@
+		CTRL-E and CTRL-Y
 
 |usr_25.txt|  Editing formatted text
-		('wrap', 'textwidth', "gq", 'autoindent', 'linebreak'
-		|edit-no-break|, tables, 'virtualedit')
+		'wrap', 'textwidth' (chap 11)
+		"gq" (chap 11)
+		reference to 'formatoptions'
+		:center (chap 11)
+		'autoindent'
+		'linebreak' |edit-no-break|
+		tables
+		'virtualedit'
+		tabs, 'sts', :retab (chap 23)
 
 |usr_26.txt|  Repeating
-		(recording, executing registers)
+		recording
+		executing registers
+		put register, edit, yank
+		"gv"
+		":bufdo"
+		":windo"
 
-|usr_27.txt|  Search patterns
+|usr_27.txt|  Search comands and patterns (chap 19)
+		most often used items
+		offsets
 
 |usr_28.txt|  Folding
 		|28.1|	What is folding?
@@ -148,43 +267,75 @@ Subjects that can be read independently.
 		|28.10| Which fold method to use?
 
 |usr_29.txt|  Editing programs
-		('cindent', 'patchmode', 'sts', "[I", "K", tag preview, :grep,
-		cscope, sniff)
+		(chap 7)
+		">>", "<<", ">%"
+		'ts', 'sts', 'sw'
+		'cindent', 'smartindent', link to 'cinoptions'
+		"="
+		indent files
+		formatting comments, link to 'comments'
+		'patchmode'
+		"[I", ]D
+		:checkpath (chap 23) link to 'include' and 'define'
+		"gd", "gD"
+		"%" on #if-#endif
+		[{, [#, [m and [(  (chap 23)
+		"K"
+		tag preview, preview window
+		:grep (chap 7)
+		cscope
+		sniff
 
 |usr_30.txt|  Compiling programs
-		(:make, :cn, 'errorformat')
+		:make (chap 7)
+		:cn
+		:colder (chap 23)
+		link to 'makeprg' and 'errorformat'
 
 |usr_31.txt|  Exploiting the GUI
-		(:browse, :confirm, menu shortcuts)
+		:browse (chap 26)
+		:confirm (chap 26)
+		menu shortcuts
+		:winpos
+		:set 'lines' and 'columns'
 
 ==============================================================================
 Tuning Vim ~
 
 Make Vim work as you like it.
 
-|usr_40.txt|  Write a Vim script
+|usr_40.txt|  Write a Vim script (chap 27 but shorter)
 		|40.1|	Introduction
-		|40.2|	Expressions
+		|40.2|	Expressions, variables, ":echo"
 		|40.3|	If and while
+			:sleep
 		|40.4|	Using :execute
-		|40.5|	Functions
-		|40.6|	Autocommands
+		|40.5|	Functions, user functions
+		|40.6|	Autocommands (chap 13)
 		|40.7|	Writing a plugin
 		|40.8|	Writing a filetype plugin
 
 |usr_41.txt|  Make new commands
-		(mappings, user commands, :normal, |restore-position|)
+		mappings (chap 8) (chap 24)
+		user commands (chap 27)
+		:normal
+		|restore-position|
 
-|usr_42.txt|  Add new menus
+|usr_42.txt|  Add new menus (chap 26)
+		add a toolbar item
+		tooltips (chap 26)
 
 |usr_43.txt|  Using filetypes
 		|43.1|  Settings for a filetype
 		|43.2|  Adding a filetype
 		|43.3|  Automatic commands
 
-|usr_44.txt|  Your own syntax highlighted
-		(changing existing syntax, new syntax, items within a line,
-		regions, synchronizing)
+|usr_44.txt|  Your own syntax highlighted (chap 30)
+		changing existing syntax
+		parts of a syntax file
+		items within a line
+		regions
+		synchronizing
 
 |usr_45.txt|  Select your language
 		(multi-lang features, menutrans, 'encoding', how to enter text
@@ -195,7 +346,7 @@ Making Vim Run ~
 
 Before you can use Vim.
 
-|usr_90.txt|  Installing Vim
+|usr_90.txt|  Installing Vim (appendix A)
 		|90.1|  The runtime files
 		|90.2|  Upgrading
 
@@ -205,4 +356,5 @@ Before you can use Vim.
 		|91.3|  Selecting features
 
 ==============================================================================
- vim:tw=78:
+
+Copyright: see |manual-copyright|  vim:tw=78:

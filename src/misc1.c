@@ -1435,7 +1435,6 @@ plines_m_win(wp, first, last)
 	    if (first == wp->w_topline)
 		count += plines_win_nofill(wp, first, TRUE) + wp->w_topfill;
 	    else
-
 #endif
 		count += plines_win(wp, first, TRUE);
 	    ++first;
@@ -6936,6 +6935,7 @@ FreeWild(count, files)
 /*
  * return TRUE when need to go to Insert mode because of 'insertmode'.
  * Don't do this when still processing a command or a mapping.
+ * Don't do this when inside a ":normal" command.
  */
     int
 goto_im()

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	BIND 8.x configuration file
 " Maintainer:	glory hump <rnd@web-drive.ru>
-" Last change:	Thu Apr 26 02:19:49 SAMST 2001
+" Last change:	Mon May 21 04:51:01 SAMST 2001
 " Filenames:	named.conf
 " URL:	http://rnd.web-drive.ru/vim/syntax/named.vim
 " $Id$
@@ -49,13 +49,13 @@ syn keyword	namedKeyword	zone nextgroup=namedZoneString skipwhite
 " --- Identifier: name of following { ... } Section
 syn match	namedIdentifier	contained /\k\+/ nextgroup=namedSection skipwhite
 " --- IntIdent: name of following IntSection
-syn match	namedIntIdent	contained /\k\+/ nextgroup=namedIntSection skipwhite
+syn match	namedIntIdent	contained /"\=\k\+"\=/ nextgroup=namedIntSection skipwhite
 
 " --- Section: { ... } clause
 syn region	namedSection	contained start=+{+ end=+};+ contains=namedSection,namedIntKeyword
 
 " --- IntSection: section that does not contain other sections
-syn region	namedIntSection	contained start=+{+ end=+};+ contains=namedIntKeyword,namedParenError,namedError
+syn region	namedIntSection	contained start=+{+ end=+}+ contains=namedIntKeyword,namedError
 
 " --- IntKeyword: keywords contained within `{ ... }' sections only
 " + these keywords are contained within `key' and `acl' sections
@@ -137,6 +137,7 @@ syn region	namedZoneString	contained oneline start=+"+ end=+"+ skipwhite
 \		contains=namedDomain,namedIllegalDom
 \		nextgroup=namedZoneClass,namedZoneSection
 syn keyword	namedZoneClass	contained in hs hesiod chaos
+\		IN HS HESIOD CHAOS
 \		nextgroup=namedZoneSection skipwhite
 
 syn region	namedZoneSection	contained start=+{+ end=+};+ contains=namedZoneOpt,namedCNOption,namedComment,namedMasters,namedParenError

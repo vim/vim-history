@@ -17,6 +17,7 @@
 # pragma warn -ucp
 # pragma warn -use
 # pragma warn -aus
+# pragma warn -obs
 #endif
 
 #include <io.h>

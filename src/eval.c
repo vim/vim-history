@@ -171,6 +171,7 @@ struct vimvar
     {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
     {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
     {"folddashes", sizeof("folddashes") - 1, NULL, VAR_STRING, VV_RO},
+    {"progname", sizeof("progname") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -3355,7 +3356,7 @@ f_filewritable(argvars, retvar)
 {
     char_u	*p;
     int		retval = 0;
-#ifndef WIN32
+#ifdef UNIX
     int		perm = 0;
 #endif
 
@@ -3363,7 +3364,9 @@ f_filewritable(argvars, retvar)
 #ifdef WIN32
     if (mch_writable(p))
 #else
+# ifdef UNIX
     perm = mch_getperm(p);
+# endif
     if (
 # ifdef UNIX
 	    (perm & 0222) &&

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 08
+" Last Change:	2001 May 21
 
 " This file sets up the default methods for highlighting.
 " It is loaded from "synload.vim" and from Vim for ":syntax reset".
@@ -15,10 +15,13 @@ else
     " ":syntax enable" keeps any existing colors
     command -nargs=* SynColor hi def <args>
     command -nargs=* SynLink hi def link <args>
-  else
+  elseif syntax_cmd == "reset"
     " ":syntax reset" resets all colors to the default
     command -nargs=* SynColor hi <args>
     command -nargs=* SynLink hi! link <args>
+  else
+    " User defined syncolor file has already set the colors.
+    finish
   endif
 endif
 
@@ -28,26 +31,26 @@ endif
 " Careful with "cterm=bold", it changes the color to bright for some terminals.
 " There are two sets of defaults: for a dark and a light background.
 if &background == "dark"
-  SynColor Comment	term=bold ctermfg=Cyan guifg=#80a0ff
-  SynColor Constant	term=underline ctermfg=Magenta guifg=#ffa0a0
-  SynColor Special	term=bold ctermfg=LightRed guifg=Orange
-  SynColor Identifier	term=underline cterm=bold ctermfg=Cyan guifg=#40ffff
-  SynColor Statement	term=bold ctermfg=Yellow guifg=#ffff60 gui=bold
-  SynColor PreProc	term=underline ctermfg=LightBlue guifg=#ff80ff
-  SynColor Type		term=underline ctermfg=LightGreen guifg=#60ff60 gui=bold
-  SynColor Ignore	ctermfg=black guifg=bg
+  SynColor Comment	term=bold cterm=NONE ctermfg=Cyan ctermbg=NONE gui=NONE guifg=#80a0ff guibg=NONE
+  SynColor Constant	term=underline cterm=NONE ctermfg=Magenta ctermbg=NONE gui=NONE guifg=#ffa0a0 guibg=NONE
+  SynColor Special	term=bold cterm=NONE ctermfg=LightRed ctermbg=NONE gui=NONE guifg=Orange guibg=NONE
+  SynColor Identifier	term=underline cterm=bold ctermfg=Cyan ctermbg=NONE gui=NONE guifg=#40ffff guibg=NONE
+  SynColor Statement	term=bold cterm=NONE ctermfg=Yellow ctermbg=NONE gui=bold guifg=#ffff60 guibg=NONE
+  SynColor PreProc	term=underline cterm=NONE ctermfg=LightBlue ctermbg=NONE gui=NONE guifg=#ff80ff guibg=NONE
+  SynColor Type		term=underline cterm=NONE ctermfg=LightGreen ctermbg=NONE gui=bold guifg=#60ff60 guibg=NONE
+  SynColor Ignore	term=NONE cterm=NONE ctermfg=black ctermbg=NONE gui=NONE guifg=bg guibg=NONE
 else
-  SynColor Comment	term=bold ctermfg=DarkBlue guifg=Blue
-  SynColor Constant	term=underline ctermfg=DarkRed guifg=Magenta
-  SynColor Special	term=bold ctermfg=DarkMagenta guifg=SlateBlue
-  SynColor Identifier	term=underline ctermfg=DarkCyan guifg=DarkCyan
-  SynColor Statement	term=bold ctermfg=Brown gui=bold guifg=Brown
-  SynColor PreProc	term=underline ctermfg=DarkMagenta guifg=Purple
-  SynColor Type		term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
-  SynColor Ignore	ctermfg=white guifg=bg
+  SynColor Comment	term=bold cterm=NONE ctermfg=DarkBlue ctermbg=NONE gui=NONE guifg=Blue guibg=NONE
+  SynColor Constant	term=underline cterm=NONE ctermfg=DarkRed ctermbg=NONE gui=NONE guifg=Magenta guibg=NONE
+  SynColor Special	term=bold cterm=NONE ctermfg=DarkMagenta ctermbg=NONE gui=NONE guifg=SlateBlue guibg=NONE
+  SynColor Identifier	term=underline cterm=NONE ctermfg=DarkCyan ctermbg=NONE gui=NONE guifg=DarkCyan guibg=NONE
+  SynColor Statement	term=bold cterm=NONE ctermfg=Brown ctermbg=NONE gui=bold guifg=Brown guibg=NONE
+  SynColor PreProc	term=underline cterm=NONE ctermfg=DarkMagenta ctermbg=NONE gui=NONE guifg=Purple guibg=NONE
+  SynColor Type		term=underline cterm=NONE ctermfg=DarkGreen ctermbg=NONE gui=bold guifg=SeaGreen guibg=NONE
+  SynColor Ignore	term=NONE cterm=NONE ctermfg=white ctermbg=NONE gui=NONE guifg=bg guibg=NONE
 endif
-SynColor Error		term=reverse ctermbg=Red ctermfg=White guibg=Red guifg=White
-SynColor Todo		term=standout ctermbg=Yellow ctermfg=Black guifg=Blue guibg=Yellow
+SynColor Error		term=reverse cterm=NONE ctermfg=White ctermbg=Red gui=NONE guifg=White guibg=Red
+SynColor Todo		term=standout cterm=NONE ctermfg=Black ctermbg=Yellow gui=NONE guifg=Blue guibg=Yellow
 
 " Common groups that link to default highlighting.
 " You can specify other highlighting easily.

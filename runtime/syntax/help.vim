@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2001 Apr 25
+" Last Change:	2001 May 25
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -42,6 +42,7 @@ syn match helpSpecial		"{[-a-zA-Z0-9'":%#=[\]<>.]\+}"
 syn match helpSpecial		"\s\[[-a-zA-Z0-9_]\{2,}]"ms=s+1
 syn match helpSpecial		"<[-a-zA-Z0-9_]\+>"
 syn match helpSpecial		"<[SCM]-.>"
+syn match helpNormal		"<---*>"
 syn match helpSpecial		"\[range]"
 syn match helpSpecial		"\[line]"
 syn match helpSpecial		"\[count]"

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ag.  Last change: 2001 May 19
+*options.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3009,6 +3009,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	However, when <Esc> is used inside a mapping, it behaves like
 	'insertmode' was not set.  This was done to be able to use the same
 	mappings with 'insertmode' set or not set.
+	When executing commands with |:normal| 'insertmode' is not used.
 
 	NOTE: This option is reset when 'compatible' is set.
 
@@ -3290,7 +3291,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	value of 'showbreak' is used to put in front of wrapped lines.  This
 	option is not used when the 'wrap' option is off or 'list' is on.
 	Note that <Tab> characters after an <EOL> are mostly not displayed
-	correctly.
+	with the right amount of white space.
 
 						*'lines'*
 'lines'			number	(default 24 or terminal height)
@@ -3921,7 +3922,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|:ptag|, |:pedit|, etc.
 
 						*'printerfont'* *'pfn'*
-'printerfont' 'pfn'		string	(default "courier")
+'printerfont' 'pfn'	string	(default "courier")
 			global
 			{not in Vi}
 			{only available when compiled with the |+printer|
@@ -3931,6 +3932,30 @@ A jump table for the options with a short description can be found at |Q_op|.
 	except that only one font may be named, and the special "guifont=*"
 	syntax is not available.
 
+						*'printerheader'* *'pheader'*
+'printerheader' 'pheader'  string  (default "%<%f%h%m%=Page %N")
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			feature}
+	This defines the format of the header produced in |:hardcopy| output.
+	The option is defined in the same way as the 'statusline' option.
+	If Vim has not been compiled with the |+statusline| feature, this
+	option has no effect and a simple default header is used.
+
+						*'printername* *'pname'*
+'printername' 'pname'	string	(default empty)
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			feature}
+	This defines the name of the printer to be used when the |:hardcopy|
+	command is issued with a bang (!) to skip the printer selection
+	dialog.  On Win32, it should be the printer name exactly as it appears
+	in the standard printer dialog.
+	If the option is empty, then vim will use the system default printer
+	for ":hardcopy!"
+
 						*'printersettings'* *'pset'*
 'printersettings' 'pset' string (default "left:10pc,right:5pc,
 						 top:5pc,bottom:5pc,header:2")
@@ -3938,17 +3963,24 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{only available when compiled with |+printer| feature}
 	This is a comma-separated list of options that control the format of
-	the output of |:hardcopy|.
-	The "left", "right", "top", and "bottom" settings control the margin.
-	The margin may be specified in inches (in), millimetres (mm), or as a
-	percentage of media size (pc).
-	The "header" setting controls how many lines high the header is. If
-	"header" is omitted, no header is printed. The header is of fixed
-	format and shows the page number and buffer name.
-	If "mono:y" is included, plain text monochrome output is used. This is
-	faster and thus useful when printing large files.
-	If "number:y" is included, line numbers are included in the printed
-	output.
+	the output of |:hardcopy|:
+
+	  left:{spec}		left margin
+	  right:{spec}		right margin
+	  top:{spec}		top margin
+	  bottom:{spec}		bottom margin
+				{spec} is a number followed by "in" for
+				inches, "mm" for millimetres or "pc" for a
+				percentage of the media size.
+
+	  header:{nr}		number of lines to use for the header The
+				If omitted, no header is printed.  The header
+				is of fixed format and shows the page number
+				and buffer name.
+	  mono:y		Use plain text monochrome output.  This is
+				faster and thus useful when printing large
+				files.  But you don't get syntax highlighting.
+	  number:y		Include line numbers in the printed output.
 
 				   *'readonly'* *'ro'* *'noreadonly'* *'noro'*
 'readonly' 'ro'		boolean	(default off)
@@ -4788,6 +4820,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	      Mnemonic: Offset from start of file (with one added)
 	      {not available when compiled without |+byte_offset| feature}
 	O N   As above, in hexadecimal.
+	N N   Printer page number. (Only of use in the 'printerheader'
+		option.)
 	l N   Line number.
 	L N   Number of lines in buffer.
 	c N   Column number.
@@ -5637,9 +5671,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	    insert	Allow virtual editing in Insert mode.
 	    all		Allow virtual editing in all modes.
 	Virtual editing means that the cursor can be positioned where there is
-	no actual character.  This can be halfway a Tab or beyond the end of
-	the line.  Useful for selecting a rectangle in Visual mode and editing
-	a table.
+	no actual character.  This can be halfway into a Tab or beyond the end
+	of the line.  Useful for selecting a rectangle in Visual mode and
+	editing a table.
 
 			*'visualbell'* *'vb'* *'novisualbell'* *'novb'* *beep*
 'visualbell' 'vb'	boolean	(default off)

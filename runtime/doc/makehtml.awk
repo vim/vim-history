@@ -29,6 +29,7 @@ BEGIN   {
 	skip_word["toggle"]="yes";
 	skip_word["various"]="yes";
 	skip_word["version"]="yes";
+	skip_word["is"]="yes";
 }
 #
 # protect special chars

@@ -1,6 +1,6 @@
 " Vim color file
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 May 19
+" Last Change: 2001 May 21
 " URI: http://physics.muni.cz/~yeti/download/peachpuff.vim
 
 " This color scheme uses a peachpuff background (what you've expected when it's
@@ -11,6 +11,9 @@
 " First remove all existing highlighting.
 set background=light
 hi clear
+if exists("syntax_on")
+  syntax reset
+endif
 
 let colors_name = "peachpuff"
 
@@ -42,6 +45,8 @@ hi DiffDelete term=bold cterm=bold ctermfg=4 ctermbg=6 gui=bold guifg=LightBlue 
 hi DiffText term=reverse cterm=bold ctermbg=1 gui=bold guibg=#ff8060
 hi Cursor guifg=bg guibg=fg
 hi lCursor guifg=bg guibg=fg
+
+" Colors for syntax highlighting
 hi Comment term=bold ctermfg=4 guifg=#406090
 hi Constant term=underline ctermfg=1 guifg=#c00058
 hi Special term=bold ctermfg=5 guifg=SlateBlue
@@ -52,10 +57,3 @@ hi Type term=underline ctermfg=2 gui=bold guifg=SeaGreen
 hi Ignore cterm=bold ctermfg=7 guifg=bg
 hi Error term=reverse cterm=bold ctermfg=7 ctermbg=1 gui=bold guifg=White guibg=Red
 hi Todo term=standout ctermfg=0 ctermbg=3 guifg=Blue guibg=Yellow
-
-if exists("syntax_on")
-  let syntax_cmd = "enable"
-  runtime! syntax/syncolor.vim
-  unlet syntax_cmd
-endif
-

@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Apr 13
+" Last change:	2001 May 26
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -13,8 +13,10 @@
 " This must be first, because it changes other options as a side effect.
 set nocompatible
 
-set bs=2		" allow backspacing over everything in insert mode
-set ai			" always set autoindenting on
+" allow backspacing over everything in insert mode
+set backspace=indent,eol,start
+
+set autoindent		" always set autoindenting on
 if has("vms")
   set nobackup		" do not keep a backup file, use versions instead
 else
@@ -54,7 +56,7 @@ if has("autocmd")
   filetype plugin indent on
 
   " For all text files set 'textwidth' to 78 characters.
-  au FileType text setlocal tw=78
+  autocmd FileType text setlocal textwidth=78
 
   " When editing a file, always jump to the last known cursor position.
   " Don't do it when the position is invalid or when inside an event handler

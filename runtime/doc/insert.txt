@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0ag.  Last change: 2001 May 19
+*insert.txt*    For Vim version 6.0ah.  Last change: 2001 May 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -222,7 +222,7 @@ CTRL-]		Trigger abbreviation, without inserting a character.  {not in
 		Vi}
 
 						*i_<Insert>*
-<Insert>	Toggle between insert and replace mode.  {not in Vi}
+<Insert>	Toggle between Insert and Replace mode.  {not in Vi}
 -----------------------------------------------------------------------
 
 						*i_backspacing*

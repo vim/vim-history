@@ -74,7 +74,7 @@
  */
 # define HINSTANCE	void *
 # define HWND		void *
-# define HDC		void *
+typedef void *HDC;
 # define HMENU		void *
 # define UINT		int
 # define INT		int
@@ -1344,7 +1344,7 @@ init_logfont(LOGFONT *lf)
 get_logfont(
     LOGFONT *lf,
     char_u  *name,
-    void *printer_dc)
+    HDC printer_dc)
 {
     char_u	*p;
     CHOOSEFONT	cf;

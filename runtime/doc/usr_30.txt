@@ -1,0 +1,22 @@
+*usr_30.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			      Compiling programs
+
+
+|30.1|	Replace a word
+
+     Next chapter: |usr_31.txt|  Exploiting the GUI
+ Previous chapter: |usr_29.txt|  Editing program
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*30.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_31.txt|  Exploiting the GUI
+
+Copyright: see |manual-copyright|  vim:tw=78:

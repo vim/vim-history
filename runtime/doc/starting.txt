@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ag.  Last change: 2001 May 12
+*starting.txt*  For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,7 +8,7 @@ Starting Vim						*starting*
 
  1. Vim arguments		|vim-arguments|
  2. Vim on the Amiga		|starting-amiga|
- 3. Running Vim from xargs	|xargs|
+ 3. Running eVim		|evim-keys|
  4. Initialization		|initialization|
  5. $VIM and $VIMRUNTIME	|$VIM|
  6. Suspending			|suspend|
@@ -160,6 +160,11 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		command.  They are executed in the order given. {Vi only
 		allows one command}
 
+--cmd {command}						*--cmd* 
+		{command} will be executed before processing any vimrc file.
+		Otherwise it acts like -c {command}.  You can use up to 10 of
+		these commands, independently from "-c" commands.
+
 							*-S*
 -S {file}	The {file} will be sourced after the first file has been read.
 		This is an easy way to do the equivalent of: >
@@ -275,8 +280,8 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 -y		Easy mode.  Implied for |evim| and |eview|.  Starts with
 		'insertmode' set and behaves like a click-and-type editor.
 		This sources the script $VIMRUNTIME/evim.vim.  Mappings are
-		set up to work like most click-and-type editors.  The GUI is
-		started when available.
+		set up to work like most click-and-type editors, see
+		|evim-keys|.  The GUI is started when available.
 		{not in Vi}
 
 							*-n*
@@ -489,39 +494,53 @@ resizing.  Under Amiga DOS 1.3, it is advised to use the fastfonts program,
 "FF", to speed up display redrawing.
 
 ==============================================================================
-3. Running Vim from xargs					*xargs*
+3. Running eVim							*evim-keys*
 
-The xargs program can be used to start a program with arguments that come from
-stdin.  A typical example: >
+EVim runs Vim as click-and-type editor.  This is very unlike the original Vi
+idea.  But it helps for people that don't use Vim often enough to learn the
+commands.  Hopefully they will find out that learning to use Normal mode
+commands will make their editing much more effictive.
 
-	find . -name "*.c" -print | xargs vim
+In Evim these options are changed from their default value:
 
-A problem is that stdin for the program run by xargs is not setup properly,
-which causes problems for Vim.  That is because Vim expects commands to come
-from stdin.  The symptoms are that typed characters are echoed and don't take
-effect until <Enter> is hit.
+	:set nocompatible	Use Vim improvements
+	:set insertmode		Remain in Insert mode most of the time
+	:set hidden		Keep invisible buffers loaded
+	:set backup		Keep backup files (not for VMS)
+	:set backspace=2	Backspace over everything
+	:set autoindent		auto-indent new lines
+	:set history=50		keep 50 lines of Ex commands
+	:set ruler		show the cursor position
+	:set incsearch		show matches halfway typing a pattern
+	:set mouse=a		use the mouse in all modes
+	:set hlsearch		highlight all matches for a search pattern
+	:set whichwrap+=<,>,[,]  <Left> and <Right> wrap around line breaks
+	:set guioptions-=a	non-Unix only: don't do auto-select
 
-This is really a problem in xargs.  To work around it, you can use this small
-program: >
+Key mappings:
+	<Down>		moves by screen lines rather than file lines
+	<Up>		idem
+	Q		does "gq", formatting, instead of Ex mode
+	<BS>		in Visual mode: deletes the selection
+	CTRL-X		in Visual mode: Cut to clipboard
+	<S-Del>		idem
+	CTRL-C		in Visual mode: Copy to clipboard
+	<C-Insert>	idem
+	CTRL-V		Pastes from the clipboard (in any mode)
+	<S-Insert>	idem
+	CTRL-Q		do what CTRL-V used to do
+	CTRL-Z		undo
+	CTRL-Y		redo
+	<M-Space>	system menu
+	CTRL-A		select all
+	<C-Tab>		next window, CTRL-W w
+	<C-F4>		close window, CTRL-W c
 
-  #include <unistd.h>
-  #include <stdio.h>
-
-  main(argc, argv)
-      int    argc;
-      char   **argv;
-  {
-      close(0);		/* close stdin */
-      dup(2);		/* duplicate stdin from stderr */
-      execvp(argv[1], argv + 1);
-      perror("could not execute program");
-  }
-
-Store this in "start.c", compile it to "start" and put it somewhere in your
-search path.  You might have to make a few adjustments for your system.  An
-example of using this: >
-
-	find . -name "*.c" -print | xargs start vim
+Additionally:
+- ":behave mswin" is used |:behave|
+- syntax highlighting is enabled
+- filetype detection is enabled, filetype plugins and indenting is enabled
+- in a text file 'textwdith' is set to 78
 
 ==============================================================================
 4. Initialization				*initialization* *startup*

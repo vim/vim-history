@@ -1650,13 +1650,14 @@ op_delete(oap)
 
 	    if (oap->end.coladd != 0 && (int)oap->end.col >= len - 1
 		    && !(oap->start.coladd && (int)oap->end.col >= len - 1))
-	    {
 		n++;
-		curwin->w_cursor.coladd = 0;
-	    }
 	    /* Delete at least one character (e.g, when on a control char). */
 	    if (n == 0 && oap->start.coladd != oap->end.coladd)
 		n = 1;
+
+	    /* When deleted a char in the line, reset coladd. */
+	    if (gchar_cursor() != NUL)
+		curwin->w_cursor.coladd = 0;
 	}
 #endif
 	(void)del_chars((long)n, restart_edit == NUL);

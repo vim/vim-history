@@ -823,6 +823,8 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define WSP_TOP		4	/* window at top-left of shell */
 #define WSP_BOT		8	/* window at bottom-right of shell */
 #define WSP_HELP	16	/* creating the help window */
+#define WSP_BELOW	32	/* put new window below/right */
+#define WSP_ABOVE	64	/* put new window above/left */
 
 /*
  * "flags" values for option-setting functions.
@@ -1304,7 +1306,8 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_FOLDSTART	22
 #define VV_FOLDEND	23
 #define VV_FOLDDASHES	24
-#define VV_LEN		25	/* number of v: vars */
+#define VV_PROGNAME	25
+#define VV_LEN		26	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

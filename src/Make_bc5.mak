@@ -240,6 +240,7 @@ OBJDIR	= $(OSTYPE)\obj
 !endif
 
 ##### BASE COMPILER/TOOLS RULES #####
+MAKE = $(BOR)\bin\make
 !if ($(OSTYPE)==DOS16)
 BRC =
 !if ("$(LINK)"=="")
@@ -408,7 +409,7 @@ $(OBJDIR):
 
 xxd:
 	@cd xxd
-	$(BOR)\bin\make /f Make_bc5.mak BOR="$(BOR)" BCC="$(CC)"
+	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
 install.exe: dosinst.c
@@ -426,10 +427,12 @@ clean:
 	-@del *.res
 	-@del *.dll
 	-@del *vim*.exe
+	-@del *install*.exe
 	-@del *.csm
 	-@del *.map
+	-@del *.tds
 	@cd xxd
-	$(BOR)\bin\make /f Make_bc5.mak BOR="$(BOR)" clean
+	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
 	@cd ..
 
 $(DLLTARGET): $(OBJDIR) $(vimdllobj)
@@ -613,6 +616,7 @@ vimrun.exe: vimrun.c
 $(OBJDIR)\bcc.cfg: Make_bc5.mak
   copy &&|
 	$(CFLAGS)
+	-L$(LIB)
 	$(DEFINES)
 	$(EXETYPE)
 	$(DEBUG)

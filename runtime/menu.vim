@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 20
+" Last Change:	2001 May 25
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -202,7 +202,7 @@ fun! s:TagFiles()
   endif
 endfun
 
-fun <SID>ToggleGuiOption(option)
+fun! s:ToggleGuiOption(option)
     " If a:option is already set in guioptions, then we want to remove it
     if match(&guioptions, a:option) > -1
 	exec "set go-=" . a:option
@@ -429,13 +429,13 @@ if !exists("bmenu_priority")
   let bmenu_priority = 60
 endif
 
-func! <SID>BMAdd()
+func! s:BMAdd()
   if s:bmenu_wait == 0
     call <SID>BMFilename(expand("<afile>"), expand("<abuf>"))
   endif
 endfunc
 
-func! <SID>BMRemove()
+func! s:BMRemove()
   if s:bmenu_wait == 0
     let name = expand("<afile>")
     if isdirectory(name)
@@ -453,7 +453,7 @@ func! <SID>BMRemove()
 endfunc
 
 " buffer menu stuff
-func! <SID>BMShow(...)
+func! s:BMShow(...)
   let s:bmenu_wait = 1
   let s:bmenu_short = 1
   let s:bmenu_count = 0
@@ -514,7 +514,7 @@ func! <SID>BMShow(...)
   aug END
 endfunc
 
-func! <SID>BMHash(name)
+func! s:BMHash(name)
   " Make name all upper case, so that chars are between 32 and 96
   let nm = substitute(a:name, ".*", '\U\0', "")
   if has("ebcdic")
@@ -529,7 +529,7 @@ func! <SID>BMHash(name)
   return (char2nr(nm[0]) - sp) * 0x1000000 + (char2nr(nm[1]) - sp) * 0x40000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x40 + (char2nr(nm[4]) - sp) * 0x40 + (char2nr(nm[5]) - sp)
 endfunc
 
-func! <SID>BMHash2(name)
+func! s:BMHash2(name)
   let nm = substitute(a:name, ".", '\L\0', "")
   if nm[0] >= 'a' && nm[0] <= 'd'
     return '&abcd.'
@@ -549,7 +549,7 @@ func! <SID>BMHash2(name)
 endfunc
 
 " insert a buffer name into the buffer menu:
-func! <SID>BMFilename(name, num)
+func! s:BMFilename(name, num)
   if isdirectory(a:name)
     return
   endif
@@ -567,7 +567,28 @@ func! <SID>BMFilename(name, num)
   let &cpo = cpo_save
 endfunc
 
-func! <SID>BMMunge(fname, bnum)
+" Truncate a long path to fit it in a menu item.
+if !exists("g:bmenu_max_pathlen")
+  let g:bmenu_max_pathlen = 35
+endif
+func! s:BMTruncName(fname)
+  let name = a:fname
+  if g:bmenu_max_pathlen < 5
+    let name = ""
+  else
+    let len = strlen(name)
+    if len > g:bmenu_max_pathlen
+      let amount = (g:bmenu_max_pathlen / 2) - 2
+      let left = strpart(name, 0, amount)
+      let amount = g:bmenu_max_pathlen - amount - 3
+      let right = strpart(name, len - amount, amount)
+      let name = left . '...' . right
+    endif
+  endif
+  return name
+endfunc
+
+func! s:BMMunge(fname, bnum)
   let name = a:fname
   if !exists("g:menutrans_no_file")
     let g:menutrans_no_file = "[No file]"
@@ -582,7 +603,7 @@ func! <SID>BMMunge(fname, bnum)
   if a:bnum >= 0
     let name2 = name2 . ' (' . a:bnum . ')'
   endif
-  let name = name2 . "\t" . fnamemodify(name,':h')
+  let name = name2 . "\t" . <SID>BMTruncName(fnamemodify(name,':h'))
   let name = escape(name, "\\. \t|")
   let name = substitute(name, "\n", "^@", "g")
   return name
@@ -707,8 +728,8 @@ if 0	" disabled; These are in the Windows menu
 endif
 
   amenu 1.215 ToolBar.-sep5-	<nul>
-  amenu 1.220 ToolBar.LoadSesn	:call LoadVimSesn()<CR>
-  amenu 1.230 ToolBar.SaveSesn	:call SaveVimSesn()<CR>
+  amenu 1.220 ToolBar.LoadSesn	:call <SID>LoadVimSesn()<CR>
+  amenu 1.230 ToolBar.SaveSesn	:call <SID>SaveVimSesn()<CR>
   amenu 1.240 ToolBar.RunScript	:browse so<CR>
 
   amenu 1.245 ToolBar.-sep6-	<nul>
@@ -761,7 +782,7 @@ else
 endif
 
 " Select a session to load; default to current session name if present
-fun! LoadVimSesn()
+fun! s:LoadVimSesn()
   if exists("this_session")
     let name = this_session
   else
@@ -771,7 +792,7 @@ fun! LoadVimSesn()
 endfun
 
 " Select a session to save; default to current session name if present
-fun! SaveVimSesn()
+fun! s:SaveVimSesn()
   if !exists("this_session")
     let this_session = "session.vim"
   endif
@@ -995,15 +1016,16 @@ am 50.70.190 &Syntax.PQ.Pike :cal SetSyn("pike")<CR>
 am 50.70.200 &Syntax.PQ.Pine\ RC :cal SetSyn("pine")<CR>
 am 50.70.210 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
 am 50.70.220 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
-am 50.70.230 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
-am 50.70.240 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
-am 50.70.250 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
-am 50.70.260 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
-am 50.70.270 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
-am 50.70.280 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
-am 50.70.290 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
-am 50.70.300 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
-am 50.70.310 &Syntax.PQ.Python :cal SetSyn("python")<CR>
+am 50.70.230 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
+am 50.70.240 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
+am 50.70.250 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
+am 50.70.260 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
+am 50.70.270 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
+am 50.70.280 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
+am 50.70.290 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
+am 50.70.300 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
+am 50.70.310 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
+am 50.70.320 &Syntax.PQ.Python :cal SetSyn("python")<CR>
 am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
 am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
 am 50.80.120 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
@@ -1045,15 +1067,16 @@ am 50.90.230 &Syntax.Sh-S.SNNS.SNNS\ network :cal SetSyn("snnsnet")<CR>
 am 50.90.240 &Syntax.Sh-S.SNNS.SNNS\ pattern :cal SetSyn("snnspat")<CR>
 am 50.90.250 &Syntax.Sh-S.SNNS.SNNS\ result :cal SetSyn("snnsres")<CR>
 am 50.90.260 &Syntax.Sh-S.Snobol4 :cal SetSyn("snobol4")<CR>
-am 50.90.270 &Syntax.Sh-S.SPEC\ (Linux\ RPM) :cal SetSyn("spec")<CR>
-am 50.90.280 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
-am 50.90.290 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
-am 50.90.300 &Syntax.Sh-S.Squid :cal SetSyn("squid")<CR>
-am 50.90.310 &Syntax.Sh-S.SQL :cal SetSyn("sql")<CR>
-am 50.90.320 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
-am 50.90.330 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
-am 50.90.340 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
-am 50.90.350 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
+am 50.90.270 &Syntax.Sh-S.Snort\ Configuration :cal SetSyn("hog")<CR>
+am 50.90.280 &Syntax.Sh-S.SPEC\ (Linux\ RPM) :cal SetSyn("spec")<CR>
+am 50.90.290 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
+am 50.90.300 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
+am 50.90.310 &Syntax.Sh-S.Squid :cal SetSyn("squid")<CR>
+am 50.90.320 &Syntax.Sh-S.SQL :cal SetSyn("sql")<CR>
+am 50.90.330 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
+am 50.90.340 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
+am 50.90.350 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
+am 50.90.360 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
 am 50.100.100 &Syntax.TUV.Tads :cal SetSyn("tads")<CR>
 am 50.100.110 &Syntax.TUV.Tags :cal SetSyn("tags")<CR>
 am 50.100.120 &Syntax.TUV.TAK.TAK\ compare :cal SetSyn("tak")<CR>
@@ -1107,7 +1130,7 @@ am 50.195 &Syntax.-SEP1-				:
 
 am 50.200 &Syntax.Set\ '&syntax'\ only		:let s:syntax_menu_synonly=1<CR>
 am 50.202 &Syntax.Set\ '&filetype'\ too		:call <SID>Nosynonly()<CR>
-fun! <Sid>Nosynonly()
+fun! s:Nosynonly()
   if exists("s:syntax_menu_synonly")
     unlet s:syntax_menu_synonly
   endif
@@ -1118,7 +1141,7 @@ am 50.212 &Syntax.&Manual		:syn manual<CR>
 am 50.214 &Syntax.A&utomatic		:syn on<CR>
 
 am 50.216 &Syntax.on/off\ for\ &This\ file	:call <SID>SynOnOff()<CR>
-fun! <SID>SynOnOff()
+fun! s:SynOnOff()
   if has("syntax_items")
     syn clear
   else

@@ -1,0 +1,22 @@
+*usr_12.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+				Clever tricks
+
+
+|12.1|	Replace a word
+
+     Next chapter: |usr_20.txt|  Typing commands quickly
+ Previous chapter: |usr_11.txt|  Recovering from a crash
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*12.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_20.txt|  Typing commands quickly
+
+Copyright: see |manual-copyright|  vim:tw=78:

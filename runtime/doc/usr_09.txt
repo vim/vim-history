@@ -1,0 +1,22 @@
+*usr_09.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+				Using the GUI
+
+
+|09.1|	Parts of the GUI
+
+     Next chapter: |usr_10.txt|  Making big changes
+ Previous chapter: |usr_08.txt|  Splitting windows
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*09.1*	Parts of the GUI
+
+
+==============================================================================
+
+Next chapter: |usr_11.txt|  Recovering from a crash
+
+Copyright: see |manual-copyright|  vim:tw=78:

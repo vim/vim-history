@@ -582,7 +582,7 @@ chg_c_to_X_or_X ()
 	dec_cursor();
     }
 
-    if ((tempc = toF_Xor_X_(tempc)))
+    if ((tempc = toF_Xor_X_(tempc)) != 0)
 	put_and_redo(tempc);
 }
 
@@ -739,7 +739,7 @@ chg_r_to_Xor_X_()
 
 	tempc = gchar_cursor();
 
-	if ((c = toF_Xor_X_(tempc)))
+	if ((c = toF_Xor_X_(tempc)) != 0)
 	    put_and_redo(c);
 
 	if (!p_ri)
@@ -1947,7 +1947,7 @@ lrF_sub(ibuf)
     p = ibuf;
 
     /* Find the boundry of the search path */
-    while ((p = vim_strchr(++p, '/')) && p[-1] == '\\')
+    while (((p = vim_strchr(++p, '/')) != NULL) && p[-1] == '\\')
 	;
 
     if (p == NULL)
@@ -1957,7 +1957,7 @@ lrF_sub(ibuf)
     lrFswap(ibuf, (int)(p-ibuf));
 
     /* Now find the boundry of the substitute section */
-    if ((ep = (char_u *)strrchr((char *)++p, '/')))
+    if ((ep = (char_u *)strrchr((char *)++p, '/')) != NULL)
 	cnt = ep - p;
     else
 	cnt = STRLEN(p);

@@ -799,6 +799,7 @@ workshop_toolbar_end()
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
+    {
 	wstrace("workshop_toolbar_end()\n");
     }
 #endif

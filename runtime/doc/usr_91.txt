@@ -1,0 +1,26 @@
+*usr_91.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+				Compiling Vim
+
+
+|91.1|	Replace a word
+|91.2|  Using configure
+|91.3|  Selecting features
+
+ Previous chapter: |usr_90.txt|  Installing Vim
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*91.1*	Which compiler?
+
+==============================================================================
+*91.2*  Using configure
+
+==============================================================================
+*91.3*  Selecting features
+
+==============================================================================
+
+Copyright: see |manual-copyright|  vim:tw=78:

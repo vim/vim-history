@@ -10,6 +10,7 @@ are belong to vim
 this is a test
 this is a test
 this is a test
+"r"    x<-- should be 'x'
 
 a
 a

@@ -125,6 +125,9 @@ coladvance2(addspaces, finetune, wcol)
 	    idx = STRLEN(line) - 1 + one_more;
 	    col = wcol;
 
+	    /* Invalidate curwin->w_virtcol */
+	    curwin->w_valid &= ~VALID_VIRTCOL;
+
 #ifdef FEAT_VIRTUALEDIT
 	    if ((addspaces || finetune) && !VIsual_active)
 	    {
@@ -242,6 +245,7 @@ coladvance2(addspaces, finetune, wcol)
     }
 
 #endif
+	curwin->w_valid |= VALID_VIRTCOL;
     }
 
     if (idx < 0)
@@ -261,6 +265,8 @@ coladvance2(addspaces, finetune, wcol)
 	 * the wanted column */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
 	    curwin->w_cursor.coladd = b;
+
+	col += b;
     }
 #endif
 
@@ -269,6 +275,10 @@ coladvance2(addspaces, finetune, wcol)
     if (has_mbyte)
 	mb_adjust_cursor();
 #endif
+    /* Set w_virtcol, unless VALID_VIRTCOL was cleared above */
+    if (curwin->w_valid & VALID_VIRTCOL)
+	curwin->w_virtcol = col;
+
     if (col <= wcol)
 	return FAIL;
     else

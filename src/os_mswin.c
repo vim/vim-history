@@ -502,14 +502,21 @@ display_errors()
  * Does `s' contain a wildcard?
  */
     int
-mch_has_wildcard(
-    char_u *s)
+mch_has_wildcard(char_u *p)
 {
-#ifdef VIM_BACKTICK
-    return (vim_strpbrk(s, (char_u *)"?*$`~") != NULL);
-#else
-    return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
-#endif
+    for ( ; *p; ++p)
+    {
+	if (vim_strchr((char_u *)
+#  ifdef VIM_BACKTICK
+				    "?*$`"
+#  else
+				    "?*$"
+#  endif
+                                                , *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
+	    return TRUE;
+    }
+    return FALSE;
 }
 
 
@@ -1139,37 +1146,36 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     s_pd.Flags |= stored_nFlags;
     /*
      * If bang present, return default printer setup with no dialogue
+     * never show dialogue if we are running over telnet
      */
-    if (forceit)
-	s_pd.Flags |= PD_RETURNDEFAULT;
-
-    if (PrintDlg(&s_pd) != 0)
+    if (forceit || !term_console)
     {
-	if (s_pd.hDC == NULL)
+	s_pd.Flags |= PD_RETURNDEFAULT;
+#ifdef WIN32
+	/*
+	 * MSDN suggests setting the first parameter to WINSPOOL for
+	 * NT, but NULL appears to work just as well.
+	 */
+	if (STRLEN(p_prtname))
+	    s_pd.hDC = CreateDC(NULL, p_prtname, NULL, NULL);
+	else
+#endif
 	{
-	    EMSG(_("E237: Printer selection failed"));
-	    mch_print_cleanup();
-	    return FALSE;
+	    s_pd.Flags |= PD_RETURNDEFAULT;
+	    if (PrintDlg(&s_pd) == 0)
+		goto init_fail_dlg;
 	}
     }
-    else
+    else if (PrintDlg(&s_pd) == 0)
+	goto init_fail_dlg;
+
+    if (s_pd.hDC == NULL)
     {
-	DWORD err = CommDlgExtendedError();
-	char_u *buf;
-
-	if (err)
-	{
-	    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			  FORMAT_MESSAGE_FROM_SYSTEM |
-			  FORMAT_MESSAGE_IGNORE_INSERTS,
-			  NULL, err, 0, (LPTSTR)(&buf), 0, NULL);
-	    EMSG2(_("E238: Print error: "), buf);
-	    LocalFree((LPVOID)(buf));
-	}
-
+	EMSG(_("E237: Printer selection failed"));
 	mch_print_cleanup();
 	return FALSE;
     }
+
     /*
      * keep the previous driver context
      */
@@ -1199,7 +1205,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	return FALSE;
 #else
     /*<VN> need to rearrange win32 code so we can call get_logfont*/
-    STRCPY(fLogFont.lfFaceName, p_prtfont);
+    /* Should use p_prtfont here, but only the font name. */
+    STRCPY(fLogFont.lfFaceName, "Courier New");
 #endif
 
     for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
@@ -1233,6 +1240,31 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     psettings->jobname = jobname;
 
     return TRUE;
+
+init_fail_dlg:
+    {
+	DWORD err = CommDlgExtendedError();
+
+	if (err)
+	{
+#ifdef WIN16
+	    char buf[8];
+	    sprintf(buf, "%ld", err);
+	    EMSG2(_("E238: Print error: "), buf);
+#else
+	    char_u *buf;
+	    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			  FORMAT_MESSAGE_FROM_SYSTEM |
+			  FORMAT_MESSAGE_IGNORE_INSERTS,
+			  NULL, err, 0, (LPTSTR)(&buf), 0, NULL);
+	    EMSG2(_("E238: Print error: "), buf);
+	    LocalFree((LPVOID)(buf));
+#endif
+	}
+
+	mch_print_cleanup();
+	return FALSE;
+    }
 }
 
 
@@ -1264,14 +1296,7 @@ mch_print_end_page(void)
     int
 mch_print_begin_page(void)
 {
-    int ret = StartPage(s_pd.hDC);
-    if (ret > 0)
-	return TRUE;
-    else
-    {
-	//ret = GetLastError();
-	return FALSE;
-    }
+    return (StartPage(s_pd.hDC) > 0);
 }
 
     int

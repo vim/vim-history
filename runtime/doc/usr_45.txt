@@ -1,0 +1,22 @@
+*usr_45.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Select your language
+
+
+|45.1|	Replace a word
+
+     Next chapter: |usr_90.txt|  Installing Vim
+ Previous chapter: |usr_44.txt|  Your own syntax highlighted
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*45.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_90.txt|  Installing Vim
+
+Copyright: see |manual-copyright|  vim:tw=78:

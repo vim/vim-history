@@ -1108,7 +1108,7 @@ clip_copy_modeless_selection(both)
 #endif
 
     /* Create a temporary buffer for storing the text */
-    len = (row2 - row1 + 1) * Columns + 1, TRUE;
+    len = (row2 - row1 + 1) * Columns + 1;
 #ifdef FEAT_MBYTE
     if (enc_dbcs != 0)
 	len *= 2;	/* max. 2 bytes per display cell */
@@ -1627,7 +1627,22 @@ fill_input_buf(exit_on_error)
 	 * This helps when using "foo | xargs vim".
 	 */
 	if (!did_read_something && !isatty(read_cmd_fd) && read_cmd_fd == 0)
-	    read_cmd_fd = 2;
+	{
+	    int m = cur_tmode;
+
+	    /* We probably set the wrong file descriptor to raw mode.  Switch
+	     * back to cooked mode, use another descriptor and set the mode to
+	     * what it was. */
+	    settmode(TMODE_COOK);
+#ifdef HAVE_DUP
+	    /* Use stderr for stdin, also works for shell commands. */
+	    close(0);
+	    dup(2);
+#else
+	    read_cmd_fd = 2;	/* read from stderr instead of stdin */
+#endif
+	    settmode(m);
+	}
 	if (!exit_on_error)
 	    return;
     }
