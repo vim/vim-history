@@ -2310,7 +2310,11 @@ check_state_ends()
 		    break;
 
 		if (had_extend)
+		{
 		    syn_update_ends(FALSE);
+		    if (current_state.ga_len == 0)
+			break;
+		}
 
 		cur_si = &CUR_STATE(current_state.ga_len - 1);
 
