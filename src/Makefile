@@ -70,7 +70,7 @@
 #		make
 #	The configuration phase creates/overwrites auto/config.h and
 #	auto/config.mk.
-#	The configure script is created with autoconf.  It can detect
+#	The configure script is created with "make autoconf".  It can detect
 #	different features of your system and act accordingly.  However, it is
 #	not correct for all systems.  Check this:
 #	- If you have X windows, but configure could not find it or reported
@@ -503,7 +503,7 @@ LINT_OPTIONS = -beprxzF
 #####################################################
 
 ### Uncomment things here only if the values chosen by configure are wrong.
-### It's better to adjust configure.in and run autoconf, if you can!
+### It's better to adjust configure.in and "make autoconf", if you can!
 ### Then send the required changes to configure.in to the bugs list.
 
 ### (1) BSD/OS 2.0.1, 2.1 or 3.0 using shared libraries
@@ -1415,14 +1415,19 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 # Use "myself" to make "all" with a possibly changed auto/config.mk.
 reconfig: scratch config myself
 
-# When configure.in has changed, run autoconf to produce configure.
-# If you don't have autoconf, use the existing configure script.
+# Run autoconf to produce auto/configure.
+# Note:
+# - DO NOT RUN autoconf MANUALLY!  It will overwrite ./configure instead of
+#   producing auto/configure.
+# - autoconf is not run automatically, because a patch usually changes both
+#   configure.in and auto/configure but can't update the timestamps.  People
+#   who do not have (the correct version of) autoconf would run into trouble.
 #
 # Two tricks are required to make autoconf put its output in the "auto" dir:
 # - Temporarily move the ./configure script to ./configure.save.  Don't
 #   overwrite it, it's probably the result of an aborted autoconf.
 # - Use sed to change ./config.log to auto/config.log in the configure script.
-auto/configure: configure.in
+autoconf:
 	if test ! -f configure.save; then mv configure configure.save; fi
 	autoconf
 	sed -e 's+\./config.log+auto/config.log+' configure > auto/configure
