@@ -2320,8 +2320,8 @@ RESDIR = $(APPDIR)/Contents/Resources
 VERSION = 6.2
 
 ### Common flags
-M4FLAGS += -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) -DAPP_VER=$(VERSION) \
-	   -DICON_APP=$(ICON_APP)
+M4FLAGS = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \
+		-DAPP_VER=$(VERSION) -DICON_APP=$(ICON_APP)
 
 ### Icons
 # You can download Douglas Stebila's icons:
