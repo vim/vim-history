@@ -1700,14 +1700,8 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 
 #ifdef FEAT_MBYTE
-	/* Include the trailing byte of a multi-byte char.  Don't do it when
-	 * VIsual_active is TRUE and 'sel' is "exclusive", the position has
-	 * already been moved to the trailing byte by adjust_for_sel() then. */
-	if (has_mbyte && oap->inclusive
-# ifdef FEAT_VISUAL
-		    && (!oap->is_VIsual || *p_sel != 'e')
-# endif
-		    )
+	/* Include the trailing byte of a multi-byte char. */
+	if (has_mbyte && oap->inclusive)
 	{
 	    int		l;
 
@@ -1733,7 +1727,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		    );
 	/*
 	 * For delete, change and yank, it's an error to operate on an
-	 * empty region, when 'E' inclucded in 'cpoptions' (Vi compatible).
+	 * empty region, when 'E' included in 'cpoptions' (Vi compatible).
 	 */
 	empty_region_error = (oap->empty
 				&& vim_strchr(p_cpo, CPO_EMPTYREGION) != NULL);
@@ -7738,7 +7732,12 @@ unadjust_for_sel()
 	else
 #endif
 	if (pp->col > 0)
+	{
 	    --pp->col;
+#ifdef FEAT_MBYTE
+	    mb_adjustpos(pp);
+#endif
+	}
 	else if (pp->lnum > 1)
 	{
 	    --pp->lnum;
