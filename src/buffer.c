@@ -3030,8 +3030,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		t = (opt == STL_FULLPATH) ? wp->w_buffer->b_ffname
 					: wp->w_buffer->b_fname;
 		home_replace(wp->w_buffer, t, NameBuff, MAXPATHL, TRUE);
-		trans_characters(NameBuff, MAXPATHL);
 	    }
+	    trans_characters(NameBuff, MAXPATHL);
 	    if (opt != STL_FILENAME)
 		str = NameBuff;
 	    else
