@@ -349,7 +349,7 @@ static struct vimoption
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"ambiwidth",  "ambw",  P_STRING|P_VI_DEF|P_RCLR,
-#if defined(FEAT_MBYTE) && defined(FEAT_EVAL)
+#if defined(FEAT_MBYTE)
 			    (char_u *)&p_ambw, PV_NONE,
 			    {(char_u *)"single", (char_u *)0L}
 #else
