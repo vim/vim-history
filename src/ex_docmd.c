@@ -612,6 +612,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 {
     char_u	*next_cmdline;		/* next cmd to execute */
     char_u	*cmdline_copy = NULL;	/* copy of cmd line */
+    int		used_getline = FALSE;	/* used "getline" to obtain command */
     static int	recursive = 0;		/* recursive depth */
     int		msg_didout_before_start = 0;
     int		count = 0;		/* line number count */
@@ -885,6 +886,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 		retval = FAIL;
 		break;
 	    }
+	    used_getline = TRUE;
 
 	    /*
 	     * Keep the first typed line.  Clear it when more lines are typed.
@@ -1151,7 +1153,8 @@ do_cmdline(cmdline, getline, cookie, flags)
 		&& cstack.cs_trylevel == 0
 #endif
 	    )
-	    && !(did_emsg && (getline_equal(getline, cookie, getexmodeline)
+	    && !(did_emsg && used_getline
+			  && (getline_equal(getline, cookie, getexmodeline)
 				|| getline_equal(getline, cookie, getexline)))
 	    && (next_cmdline != NULL
 #ifdef FEAT_EVAL
