@@ -775,12 +775,11 @@ main(int argc, char **argv)
 		fprintf(fd, "\"UninstallString\"=\"%suninstal.exe\"\n", buf);
 
 		fclose(fd);
-		system("regedit vim.reg");
+		system("regedit /s vim.reg");
 		/* Can't delete the file, because regedit detaches itself,
 		 * thus we don't know when it is finished. */
 
-		printf("The registry editor has been started to install Vim in the popup menu.\n");
-		printf("Hit the \"Yes\" button in the dialog to confirm this.\n\n");
+		printf("Vim has been installed in the popup menu.\n");
 		printf("Use uninstal.exe if you want to remove it again.\n");
 		printf("Also see \":help win32-popup-menu\" in Vim.\n");
 	    }
