@@ -1547,13 +1547,27 @@ set_x11_title(title)
     char_u	*title;
 {
 #if XtSpecificationRelease >= 4
-    XTextProperty text_prop;
+    XTextProperty	text_prop;
+# ifdef FEAT_XFONTSET
+    Status		status;
 
-    text_prop.value = title;
-    text_prop.nitems = STRLEN(title);
-    text_prop.encoding = XA_STRING;
-    text_prop.format = 8;
+    status = XmbTextListToTextProperty(x11_display, (char **)&title, 1,
+					      XCompoundTextStyle, &text_prop);
+    /* Status is a positive number when some chars could not be converted.
+     * Accept that, we don't know what to do otherwise. */
+    if (status < Success)
+# endif
+    {
+	text_prop.value = title;
+	text_prop.nitems = STRLEN(title);
+	text_prop.encoding = XA_STRING;
+	text_prop.format = 8;
+    }
     XSetWMName(x11_display, x11_window, &text_prop);
+# ifdef FEAT_XFONTSET
+    if (status >= Success)
+	XFree((void *)text_prop.value);
+# endif
 #else
     XStoreName(x11_display, x11_window, (char *)title);
 #endif
@@ -1570,13 +1584,27 @@ set_x11_icon(icon)
     char_u	*icon;
 {
 #if XtSpecificationRelease >= 4
-    XTextProperty text_prop;
+    XTextProperty	text_prop;
+# ifdef FEAT_XFONTSET
+    Status		status;
 
-    text_prop.value = icon;
-    text_prop.nitems = STRLEN(icon);
-    text_prop.encoding = XA_STRING;
-    text_prop.format = 8;
+    status = XmbTextListToTextProperty(x11_display, (char **)&icon, 1,
+					      XCompoundTextStyle, &text_prop);
+    /* Status is a positive number when some chars could not be converted.
+     * Accept that, we don't know what to do otherwise. */
+    if (status < Success)
+# endif
+    {
+	text_prop.value = icon;
+	text_prop.nitems = STRLEN(icon);
+	text_prop.encoding = XA_STRING;
+	text_prop.format = 8;
+    }
     XSetWMIconName(x11_display, x11_window, &text_prop);
+# ifdef FEAT_XFONTSET
+    if (status >= Success)
+	XFree((void *)text_prop.value);
+# endif
 #else
     XSetIconName(x11_display, x11_window, (char *)icon);
 #endif
