@@ -38,7 +38,7 @@ INSTALLDIR = $(VIMRUNTIME)\lang\$(LANGUAGE)\LC_MESSAGES
 all: $(MOFILES)
 
 files:
-	$(LS) $(LSFLAGS) ..\*.c ..\globals.h > .\files
+	$(LS) $(LSFLAGS) ..\*.c ..\if_perl.xs ..\globals.h > .\files
 
 first_time: files
 	$(XGETTEXT) --default-domain=$(LANGUAGE) --add-comments --keyword=_ --keyword=N_ --files-from=.\files

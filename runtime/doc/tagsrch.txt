@@ -1,4 +1,4 @@
-*tagsrch.txt*   For Vim version 6.2d.  Last change: 2003 May 04
+*tagsrch.txt*   For Vim version 6.2e.  Last change: 2003 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -602,7 +602,7 @@ at compile time.
 When a line is encountered that includes another file, that file is searched
 before continuing in the current buffer.  Files included by included files are
 also searched.  When an include file could not be found it is silently
-ignored.  Use the ":checkpath" command to discover which files could not be
+ignored.  Use the |:checkpath| command to discover which files could not be
 found, possibly your 'path' option is not set up correctly.  Note: the
 included file is searched, not a buffer that may be editing that file.  Only
 for the current file the lines in the buffer are used.

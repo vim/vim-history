@@ -1035,6 +1035,7 @@ del_typebuf(len, offset)
     int	    i;
 
     typebuf.tb_len -= len;
+
     /*
      * Easy case: Just increase typebuf.tb_off.
      */
@@ -1089,6 +1090,12 @@ del_typebuf(len, offset)
 	else
 	    typebuf.tb_no_abbr_cnt -= len;
     }
+
+#ifdef FEAT_CLIENTSERVER
+    /* Reset the flag that text received from a client was inserted in the
+     * typeahead buffer. */
+    received_from_client = FALSE;
+#endif
 }
 
 /*
@@ -2644,8 +2651,8 @@ inchar(buf, maxlen, wait_time)
 	out_flush();
 
 	/*
-	 * fill up to a third of the buffer, because each character may be
-	 * tripled below
+	 * Fill up to a third of the buffer, because each character may be
+	 * tripled below.
 	 */
 	len = ui_inchar(buf, maxlen / 3, wait_time);
     }
@@ -2709,6 +2716,24 @@ fix_input_buffer(buf, len, script)
     *p = NUL;		/* add trailing NUL */
     return len;
 }
+
+#if defined(USE_INPUT_BUF) || defined(PROTO)
+/*
+ * Return TRUE when bytes are in the input buffer or in the typeahead buffer.
+ * Normally the input buffer would be sufficient, but the server_to_input_buf()
+ * may insert characters in the typeahead buffer while we are waiting for
+ * input to arrive.
+ */
+    int
+input_available()
+{
+    return (!vim_is_input_buf_empty()
+# ifdef FEAT_CLIENTSERVER
+	    || received_from_client
+# endif
+	    );
+}
+#endif
 
 /*
  * map[!]		    : show all key mappings

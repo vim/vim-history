@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2d.  Last change: 2003 Mar 03
+*motion.txt*    For Vim version 6.2e.  Last change: 2003 May 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -915,13 +915,17 @@ stored in the viminfo file and restored when starting Vim.
 			For other items the matchit plugin can be used, see
 			|matchit-install|.
 
-			Parens and braces preceded with a backslash are
-			ignored.  When the '%' character is not present in
-			'cpoptions', parens and braces inside double quotes
-			are ignored, unless the number of parens/braces in a
-			line is uneven and this line and the previous one does
-			not end in a backslash.  '(', '{', '[', ']', '}' and
-			')' are also ignored (parens and braces inside single
+			When 'cpoptions' contains "M" |cpo-M| backslashes
+			before parens and braces are ignored.  Without "M" the
+			number of backslashes matters: an even number doesn't
+			match with an odd number.  Thus in "( \) )" and "\( (
+			\)" the first and last parenthesis match.
+			When the '%' character is not present in 'cpoptions'
+			|cpo-%|, parens and braces inside double quotes are
+			ignored, unless the number of parens/braces in a line
+			is uneven and this line and the previous one does not
+			end in a backslash.  '(', '{', '[', ']', '}' and ')'
+			are also ignored (parens and braces inside single
 			quotes).  Note that this works fine for C, but not for
 			Perl, where single quotes are used for strings.
 			No count is allowed ({count}% jumps to a line {count}

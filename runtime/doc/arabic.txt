@@ -1,4 +1,4 @@
-*arabic.txt*	For Vim version 6.2d.  Last change: 2003 May 11
+*arabic.txt*	For Vim version 6.2e.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL	  by Nadim Shaikli
@@ -284,7 +284,7 @@ o  Keyboard
        |Q  َ |W  ً |E  ُ |R  ٌ |T لإ |Y إ |U ` |I ÷ |O x |P ؛ |{ < |} > |
        |q ض |w ص |e ث |r ق |t ف |y غ |u ع |i ه |o خ |p ح |[ ج |] د |
        +-----------------------------------------------------------+
-	 |A  ِ |S  ٍ |D [ |F ] |G لأ |H أ |J ـ |K ، |L / |:   |"	 |
+	 |A  ِ |S  ٍ |D [ |F ] |G لأ |H أ |J ـ |K ، |L / |:   |"   |
 	 |a ش |s س |d ي |f ب |g ل |h ا |j ت |k ن |l م |; ك |' ط |
 	 +------------------------------------------------------+
 	   |Z ~ |X  ْ |C { |V } |B لآ |N آ |M ' |< , |> . |? ؟ |

@@ -2592,7 +2592,7 @@ gui_mch_iconify()
     void
 gui_mch_set_foreground()
 {
-    XRaiseWindow(gui.dpy, XtWindow(vimShell));
+    XMapRaised(gui.dpy, XtWindow(vimShell));
 }
 #endif
 
@@ -2735,7 +2735,7 @@ gui_mch_wait_for_chars(wtime)
 	 */
 	XtAppProcessEvent(app_context, desired);
 
-	if (!vim_is_input_buf_empty())
+	if (input_available())
 	{
 	    if (timer != (XtIntervalId)0 && !timed_out)
 		XtRemoveTimeOut(timer);

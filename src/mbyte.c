@@ -1412,6 +1412,9 @@ utfc_ptr2len_check(p)
     char_u	*p;
 {
     int		len;
+#ifdef FEAT_ARABIC
+    int		prevlen;
+#endif
 
     if (*p == NUL)
 	return 0;
@@ -1429,12 +1432,18 @@ utfc_ptr2len_check(p)
      * Check for composing characters.  We can handle only the first two, but
      * skip all of them (otherwise the cursor would get stuck).
      */
+#ifdef FEAT_ARABIC
+    prevlen = 0;
+#endif
     for (;;)
     {
-	if (p[len] < 0x80 || !UTF_COMPOSINGLIKE(p, p + len))
+	if (p[len] < 0x80 || !UTF_COMPOSINGLIKE(p + prevlen, p + len))
 	    return len;
 
 	/* Skip over composing char */
+#ifdef FEAT_ARABIC
+	prevlen = len;
+#endif
 	len += utf_ptr2len_check(p + len);
     }
 }

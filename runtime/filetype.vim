@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 07
+" Last Change:	2003 May 13
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -543,6 +543,9 @@ endfun
 
 " HTML with M4
 au BufNewFile,BufRead *.html.m4			setf htmlm4
+
+" HTML Cheetah template
+au BufNewFile,BufRead *.tmpl			setf htmlcheetah
 
 " Hyper Builder
 au BufNewFile,BufRead *.hb			setf hb

@@ -40,6 +40,7 @@ void ex_source __ARGS((exarg_T *eap));
 int source_level __ARGS((void *cookie));
 int do_source __ARGS((char_u *fname, int check_other, int is_vimrc));
 void ex_scriptnames __ARGS((exarg_T *eap));
+void scriptnames_slash_adjust __ARGS((void));
 char_u *get_scriptname __ARGS((scid_T id));
 char *fgets_cr __ARGS((char *s, int n, FILE *stream));
 char_u *getsourceline __ARGS((int c, void *cookie, int indent));

@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.2d.  Last change: 2003 May 11
+*os_vms.txt*    For Vim version 6.2e.  Last change: 2003 May 12
 
 
 		  VIM REFERENCE MANUAL
@@ -689,7 +689,59 @@ Version 5.7 (2000 Jun 24)
 - New CTAGS v5.0 in distribution
 - Documentation updated
 
-[older changes omitted]
+Version 5.6 (2000 Jan 17)
+- VMS filename related changes:
+	- version handling (open everything, save to new version)
+	- correct file extension matching for syntax (version problem)
+	- handle <,> characters and passwords in directory definition
+	- handle internode/remote invocation and editing with passwords
+	- OpenVMS files will be treated case insensitive from now
+	- corrected response of expand("%:.") etc path related functions
+	(in one word: VMS directory handling internally)
+- version command
+	- corrected (+,-) information data
+	- added compiler and OS version
+	- added user and host information
+	- resolving $VIM and $VIMRUNTIME logicals
+- VMS port is in MAX_FEAT (maximum features) club with Unix, Win32 and OS/2.
+	- enabled farsi, rightleft etc. features
+	- undo level raised up to 1000
+- Updated OS_VMS.MMS file.
+	- maximum features ON is default
+	- Vim is compilable with +perl, +python and +tcl features.
+	- improved MMK compatibility
+- Created MAKEFILE_VMS.MMS, makefile for testing Vim during development.
+- Defined DEC terminal VT320
+	- compatibility for VT3*0, VT2*0 and VT1*0 - ANSI terminals
+	  backwards, but not VT340 and newer with colour capability.
+	- VT320 is default terminal for OpenVMS
+	- these new terminals are also fast ttys (default for OpenVMS).
+	- allowed dec_mouse ttym
+- Updated files vimrc and gvimrc with VMS specific suggestions.
+- OS_VMS.TXT updated with new features.
+
+Version 5.5 (1999 Dec 3)
+- Popup menu line crash corrected.
+- Handle full file names with version numbers.
+- Directory handling (CD command etc.)
+- Corrected file name conversion VMS to Unix and v.v.
+- Correct response of expand wildcards
+- Recovery is working from this version under VMS as well.
+- Improved terminal and signal handing.
+- Improved OS_VMS.TXT
+
+Version 5.4 (1999 Sep 9)
+- Cut and paste mismatch corrected.
+- Motif directories during open and save are corrected.
+
+Version 5.3 (1998 Oct 12)
+- Minor changes in the code
+- Standard distribution with +GUI option
+
+Version 5.1 (1998 Apr 21)
+- Syntax and DEC C changes in the code
+- Fixing problems with the /doc subdirectory
+- Improve OS_VMS.MMS
 
 Version 4.5 (1996 Dec 16)
 - First VMS port by Henk Elbers <henk@xs4all.nl>

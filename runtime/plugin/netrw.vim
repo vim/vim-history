@@ -556,16 +556,41 @@ function! s:NetGetFile(readcmd, fname, method)
 
  " get the file, but disable undo when reading a new buffer
  if a:readcmd[0] == '0'
+  let use_e_cmd = 0		" 1 when using ':edit'
+  let delline = 0		" 1 when have to delete empty last line
   if line("$") == 1 && getline(1) == ""
-   " Now being asked to 0r a file into an empty file.  Safe to :e it instead
-   let curfilename= expand("%")
+   " Now being asked to 0r a file into an empty file.  Safe to :e it instead,
+   " unless there is another window on the same buffer.
+   let curbufnr = bufnr("%")
+   let use_e_cmd = 1
+   let delline = 1
+   " Loop over all windows, reset use_e_cmd when another one is editing the
+   " current buffer.
+   let i = 1
+   while 1
+     if i != winnr() && winbufnr(i) == curbufnr
+       let use_e_cmd = 0
+       break
+     endif
+     let i = i + 1
+     if winbufnr(i) < 0
+       break
+     endif
+   endwhile
+  endif
+  if use_e_cmd > 0
+   " ':edit' the temp file, wipe out the old buffer and rename the buffer
+   let curfilename = expand("%")
    exe "e!".v:cmdarg." ".fname
-   exe "bwipe ".curfilename
+   exe curbufnr . "bwipe"
    exe "f ".curfilename
   else
    let oldul= &ul
    set ul=-1
    exe a:readcmd.v:cmdarg . " " . fname
+   if delline > 0
+     $del
+   endif
    let &ul= oldul
   endif
  else

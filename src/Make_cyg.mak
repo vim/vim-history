@@ -33,7 +33,7 @@
 # POSTSCRIPT	no or yes: set to yes for PostScript printing (no)
 # FEATURES	TINY, SMALL, NORMAL, BIG or HUGE (BIG)
 # WINVER	Lowest Win32 version to support.  (0x400)
-# CSCOPE	no or yes: to include cscope interface support (no)
+# CSCOPE	no or yes: to include cscope interface support (yes)
 # OPTIMIZE	SPACE, SPEED, or MAXSPEED: set optimization level (MAXSPEED)
 #>>>>> choose options:
 ifndef GUI
@@ -271,8 +271,7 @@ ifeq ($(GUI),yes)
 EXE = gvim$(DEBUG_SUFFIX).exe
 OUTDIR = gobj$(DEBUG_SUFFIX)
 DEFINES += -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
-EXTRA_OBJS += $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o \
-	      $(OUTDIR)/vimrc.o
+EXTRA_OBJS += $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o
 EXTRA_LIBS += -mwindows -lcomctl32
 else
 EXE = vim$(DEBUG_SUFFIX).exe
@@ -340,6 +339,7 @@ OBJ = \
 	$(OUTDIR)/ui.o \
 	$(OUTDIR)/undo.o \
 	$(OUTDIR)/version.o \
+	$(OUTDIR)/vimrc.o \
 	$(OUTDIR)/window.o \
 	$(EXTRA_OBJS)
 
@@ -361,7 +361,7 @@ vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  $(LIBS)
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  $(LIBS) -luuid -lcomctl32 -lole32
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  $(LIBS) -luuid -lole32
 
 uninstal.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIBS)
@@ -416,6 +416,7 @@ $(OUTDIR)/vimrc.o:	vim.rc $(INCL)
 	$(RC) $(RCFLAGS) vim.rc -o $(OUTDIR)/vimrc.o
 
 pathdef.c:
+ifneq (sh.exe, $(SHELL))
 	@echo creating pathdef.c
 	@echo '/* pathdef.c */' > pathdef.c
 	@echo '#include "vim.h"' >> pathdef.c
@@ -425,3 +426,14 @@ pathdef.c:
 	@echo 'char_u *all_lflags = (char_u *)"$(CC) -s -o $(EXE) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)";' >> pathdef.c
 	@echo 'char_u *compiled_user = (char_u *)"$(USERNAME)";' >> pathdef.c
 	@echo 'char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";' >> pathdef.c
+else
+	@echo creating pathdef.c
+	@echo /* pathdef.c */ > pathdef.c
+	@echo #include "vim.h" >> pathdef.c
+	@echo char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)"; >> pathdef.c
+	@echo char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)"; >> pathdef.c
+	@echo char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)"; >> pathdef.c
+	@echo char_u *all_lflags = (char_u *)"$(CC) -s -o $(EXE) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)"; >> pathdef.c
+	@echo char_u *compiled_user = (char_u *)"$(USERNAME)"; >> pathdef.c
+	@echo char_u *compiled_sys = (char_u *)"$(USERDOMAIN)"; >> pathdef.c
+endif

@@ -1010,6 +1010,8 @@ mch_set_cursor_shape(int thickness)
     ConsoleCursorInfo.bVisible = s_cursor_visible;
 
     SetConsoleCursorInfo(g_hConOut, &ConsoleCursorInfo);
+    if (s_cursor_visible)
+	SetConsoleCursorPosition(g_hConOut, g_coord);
 }
 
     void
@@ -1075,7 +1077,7 @@ WaitForChar(long msec)
 		|| g_nMouseClick != -1
 #endif
 #ifdef FEAT_CLIENTSERVER
-		|| !vim_is_input_buf_empty()
+		|| input_available()
 #endif
 	   )
 	    return TRUE;
@@ -1159,7 +1161,7 @@ WaitForChar(long msec)
 
 #ifdef FEAT_CLIENTSERVER
     /* Something might have been received while we were waiting. */
-    if (!vim_is_input_buf_empty())
+    if (input_available())
 	return TRUE;
 #endif
     return FALSE;
@@ -1211,7 +1213,7 @@ tgetch(void)
 
 #ifdef FEAT_CLIENTSERVER
 	(void)WaitForChar(-1L);
-	if (!vim_is_input_buf_empty() || g_nMouseClick != -1)
+	if (input_available() || g_nMouseClick != -1)
 	    return 0;
 #endif
 	if (ReadConsoleInput(g_hConIn, &ir, 1, &cRecords) == 0)
@@ -1366,7 +1368,7 @@ mch_inchar(
 	    c = tgetch();
 
 #ifdef FEAT_CLIENTSERVER
-	    if (!vim_is_input_buf_empty())
+	    if (input_available())
 	    {
 		len = read_from_input_buf(buf, (long)maxlen);
 		break;

@@ -52,6 +52,8 @@
  *
  * (c) 1990-1998 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
+ * Small changes made afterwards by Bram Moolenaar et al.
+ *
  * Distribute freely and credit me,
  * make money and share with me,
  * lose money and don't ask me.
@@ -81,6 +83,13 @@
 #if __MWERKS__ && !defined(BEBOX)
 # include <unix.h>	/* for fdopen() on MAC */
 #endif
+
+#if defined(__BORLANDC__) && __BORLANDC__ <= 0x0410 && !defined(fileno)
+/* Missing define and prototype grabbed from the BC 4.0 <stdio.h> */
+# define fileno(f)       ((f)->fd)
+FILE   _FAR *_Cdecl _FARFUNC fdopen(int __handle, char _FAR *__type);
+#endif
+
 
 /*  This corrects the problem of missing prototypes for certain functions
  *  in some GNU installations (e.g. SunOS 4.1.x).

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2d.  Last change: 2003 May 11
+*eval.txt*      For Vim version 6.2e.  Last change: 2003 May 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2452,8 +2452,11 @@ system({expr})	Get the output of the shell command {expr}.  Note: newlines
 		in {expr} may cause the command to fail.  The characters in
 		'shellquote' and 'shellxquote' may also cause trouble.
 		This is not to be used for interactive commands.
-		The result is a String.
-		To make the result more system-independent, the shell output
+		The result is a String.  Example: >
+
+			:let files = system("ls")
+
+<		To make the result more system-independent, the shell output
 		is filtered to replace <CR> with <NL> for Macintosh, and
 		<CR><NL> with <NL> for DOS-like systems.
 		The command executed is constructed using several options:

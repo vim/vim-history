@@ -678,7 +678,7 @@ xxd:
 
 GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
 	cd GvimExt
-	$(MAKE) /f Make_bc5.mak USEDLL=$(USEDLL)
+	$(MAKE) /f Make_bc5.mak USEDLL=$(USEDLL) BOR=$(BOR)
 	cd ..
 
 install.exe: dosinst.c $(OBJDIR)\bcc.cfg

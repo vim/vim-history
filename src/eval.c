@@ -21,7 +21,7 @@
 #endif
 
 #ifdef MACOS
-# include <time.h>       /* for time_t */
+# include <time.h>	/* for time_t */
 #endif
 
 #ifdef HAVE_FCNTL_H
@@ -4609,6 +4609,9 @@ f_has(argvars, retvar)
 #endif
 #ifndef CASE_INSENSITIVE_FILENAME
 	"fname_case",
+#endif
+#ifdef FEAT_ARABIC
+	"arabic",
 #endif
 #ifdef FEAT_AUTOCMD
 	"autocmd",
@@ -9589,6 +9592,202 @@ store_session_globals(fd)
 
 #if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) || defined(PROTO)
 
+
+#ifdef WIN3264
+/*
+ * Functions for ":8" filename modifier: get 8.3 version of a filename.
+ */
+static int get_short_pathname __ARGS((u_char **fnamep, u_char **bufp, int *fnamelen));
+static int shortpath_for_invalid_fname __ARGS((char_u **fname, char_u **bufp, int *fnamelen));
+static int shortpath_for_partial __ARGS((char_u **fnamep, char_u **bufp, long *fnamelen));
+
+/*
+ * Get the short pathname of a file.
+ * Returns 1 on success. *fnamelen is 0 for nonexistant path.
+ */
+    static int
+get_short_pathname(fnamep, bufp, fnamelen)
+    u_char	**fnamep;
+    u_char	**bufp;
+    int		*fnamelen;
+{
+    int		l,len;
+    u_char	*newbuf;
+
+    len = *fnamelen;
+
+    l = GetShortPathName(*fnamep, *fnamep, len);
+    if (l > len - 1)
+    {
+	/* If that doesn't work (not enough space), then save the string
+	 * and try again with a new buffer big enough
+	 */
+	newbuf = vim_strnsave(*fnamep, l);
+	if (newbuf == NULL)
+	    return 0;
+
+	vim_free(*bufp);
+	*fnamep = *bufp = newbuf;
+
+	l = GetShortPathName(*fnamep,*fnamep,l+1);
+
+	/* Really should always succeed, as the buffer is big enough */
+    }
+
+    *fnamelen = l;
+    return 1;
+}
+
+/*
+ * Create a short path name.  Returns the length of the buffer it needs.
+ * Doesn't copy over the end of the buffer passed in.
+ */
+    static int
+shortpath_for_invalid_fname(fname, bufp, fnamelen)
+    char_u	**fname;
+    char_u	**bufp;
+    int		*fnamelen;
+{
+    char_u	*s, *p, *pbuf2, *pbuf3;
+    char_u	ch;
+    int		l,len,len2,plen,slen;
+
+    /* Make a copy */
+    len2 = *fnamelen;
+    pbuf2 = vim_strnsave(*fname, len2);
+    pbuf3 = NULL;
+
+    s = pbuf2 + len2 - 1; /* Find the end */
+    slen = 1;
+    plen = len2;
+
+    l = 0;
+    if (vim_ispathsep(*s))
+    {
+	--s;
+	++slen;
+	--plen;
+    }
+
+    do
+    {
+	/* Go back one path-seperator */
+	while (s > pbuf2 && !vim_ispathsep(*s))
+	{
+	    --s;
+	    ++slen;
+	    --plen;
+	}
+	if (s <= pbuf2)
+	    break;
+
+	/* Remeber the character that is about to be blatted */
+	ch = *s;
+	*s = 0; /* get_short_pathname requires a null-terminated string */
+
+	/* Try it in situ */
+	p = pbuf2;
+	if (!get_short_pathname(&p, &pbuf3, &plen))
+	{
+	    vim_free(pbuf2);
+	    return -1;
+	}
+	*s = ch;    /* Preserve the string */
+    } while (plen == 0);
+
+    if (plen > 0)
+    {
+	/* Remeber the length of the new string.  */
+	*fnamelen = len = plen + slen;
+	vim_free(*bufp);
+	if (len > len2)
+	{
+	    /* If there's not enough space in the currently allocated string,
+	     * then copy it to a buffer big enough.
+	     */
+	    *fname= *bufp = vim_strnsave(p, len);
+	    if (*fname == NULL)
+		return -1;
+	}
+	else
+	{
+	    /* Transfer pbuf2 to being the main buffer  (it's big enough) */
+	    *fname = *bufp = pbuf2;
+	    if (p != pbuf2)
+		strncpy(*fname, p, plen);
+	    pbuf2 = NULL;
+	}
+	/* Concat the next bit */
+	strncpy(*fname + plen, s, slen);
+	(*fname)[len] = '\0';
+    }
+    vim_free(pbuf3);
+    vim_free(pbuf2);
+    return 0;
+}
+
+/*
+ * Get a pathname for a partial path.
+ */
+    static int
+shortpath_for_partial(fnamep, bufp, fnamelen)
+    char_u	**fnamep;
+    char_u	**bufp;
+    long	*fnamelen;
+{
+    int		sepcount,len;
+    char_u	*p;
+    char_u	*pbuf, *tfname;
+
+    /* Count up the path seperators from the RHS.. so we know which part
+     * of the path to return.
+     */
+    sepcount = 0;
+    for (p = *fnamep + *fnamelen - 1; p >= *fnamep; --p)
+	if (vim_ispathsep(*p))
+	    ++sepcount;
+
+    /* Need full path first (use expand_env() to remove a "~/") */
+    if (**fnamep == '~')
+	pbuf = tfname = expand_env_save(*fnamep);
+    else
+	pbuf = tfname = FullName_save(*fnamep, FALSE);
+
+    len = STRLEN(tfname);
+    if (!get_short_pathname(&tfname, &pbuf, &len))
+	return -1;
+
+    if (len == 0)
+    {
+	/* Don't have a valid filename, so shorten the rest of the
+	 * path if we can. This CAN give us invalid 8.3 filenames, but
+	 * there's not a lot of point in guessing what it might be.
+	 */
+	if (shortpath_for_invalid_fname(&tfname, &pbuf, &len) == -1)
+	    return -1;
+    }
+
+    /* Count the paths backward to find the beginning of the desired string. */
+    for (p = tfname + len - 1; p >= tfname; --p)
+	if (vim_ispathsep(*p))
+	{
+	    if (sepcount == 0)
+		break;
+	    else
+		sepcount --;
+	}
+    ++p;
+
+    /* Copy in the string - p indexes into tfname - allocated at pbuf */
+    vim_free(*bufp);
+    *fnamelen = (int)STRLEN(p);
+    *bufp = pbuf;
+    *fnamep = p;
+
+    return 0;
+}
+#endif /* WIN3264 */
+
 /*
  * Adjust a filename, according to a string of modifiers.
  * *fnamep must be NUL terminated when called.  When returning, the length is
@@ -9606,14 +9805,20 @@ modify_fname(src, usedlen, fnamep, bufp, fnamelen)
 {
     int		valid = 0;
     char_u	*tail;
-    char_u	*s, *p;
+    char_u	*s, *p, *pbuf;
     char_u	dirname[MAXPATHL];
     int		c;
+    int		has_fullname = 0;
+#ifdef WIN3264
+    int		has_shortname = 0;
+#endif
 
 repeat:
     /* ":p" - full path/file_name */
     if (src[*usedlen] == ':' && src[*usedlen + 1] == 'p')
     {
+	has_fullname = 1;
+
 	valid |= VALID_PATH;
 	*usedlen += 2;
 
@@ -9659,14 +9864,32 @@ repeat:
 
     /* ":." - path relative to the current directory */
     /* ":~" - path relative to the home directory */
-    while (src[*usedlen] == ':' && ((c = src[*usedlen + 1]) == '.' || c == '~'))
+    /* ":8" - shortname path - postponed till after */
+    while (src[*usedlen] == ':'
+		  && ((c = src[*usedlen + 1]) == '.' || c == '~' || c == '8'))
     {
 	*usedlen += 2;
+	if (c == '8')
+	{
+#ifdef WIN3264
+	    has_shortname = 1; /* Postpone this. */
+#endif
+	    continue;
+	}
+	pbuf = NULL;
 	/* Need full path first (use expand_env() to remove a "~/") */
-	if (c == '.' && **fnamep == '~')
-	    p = expand_env_save(*fnamep);
+	if (!has_fullname)
+	{
+	    if (c == '.' && **fnamep == '~')
+		p = pbuf = expand_env_save(*fnamep);
+	    else
+		p = pbuf = FullName_save(*fnamep, FALSE);
+	}
 	else
-	    p = FullName_save(*fnamep, FALSE);
+	    p = *fnamep;
+
+	has_fullname = 0;
+
 	if (p != NULL)
 	{
 	    if (c == '.')
@@ -9676,11 +9899,13 @@ repeat:
 		if (s != NULL)
 		{
 		    *fnamep = s;
-		    vim_free(*bufp);	/* free any allocated file name */
-		    *bufp = p;
+		    if (pbuf != NULL)
+		    {
+			vim_free(*bufp);   /* free any allocated file name */
+			*bufp = pbuf;
+			pbuf = NULL;
+		    }
 		}
-		else
-		    vim_free(p);
 	    }
 	    else
 	    {
@@ -9696,8 +9921,8 @@ repeat:
 			*bufp = s;
 		    }
 		}
-		vim_free(p);
 	    }
+	    vim_free(pbuf);
 	}
     }
 
@@ -9721,6 +9946,59 @@ repeat:
 	while (tail > s && !vim_ispathsep(tail[-1]))
 	    --tail;
     }
+
+    /* ":8" - shortname  */
+    if (src[*usedlen] == ':' && src[*usedlen + 1] == '8')
+    {
+	*usedlen += 2;
+#ifdef WIN3264
+	has_shortname = 1;
+#endif
+    }
+
+#ifdef WIN3264
+    /* Check shortname after we have done 'heads' and before we do 'tails'
+     */
+    if (has_shortname)
+    {
+	 /* Copy the string if it is shortened by :h */
+	if (*fnamelen < (int)STRLEN(*fnamep))
+	{
+	    p = vim_strnsave(*fnamep, *fnamelen);
+	    if (p == 0)
+		return -1;
+	    vim_free(*bufp);
+	    *bufp = *fnamep = p;
+	}
+
+	/* Split into two implementations - makes it easier.  First is where
+	 * there isn't a full name already, second is where there is.
+	 */
+	if (!has_fullname && !vim_isAbsName(*fnamep))
+	{
+	    if (shortpath_for_partial(fnamep, bufp, fnamelen) == -1)
+		return -1;
+	}
+	else
+	{
+	    int		l;
+
+	    /* Simple case, already have the full-name
+	     * Nearly always shorter, so try first time. */
+	    l = *fnamelen;
+	    if (!get_short_pathname(fnamep, bufp, &l))
+		return -1;
+
+	    if (l == 0)
+	    {
+		/* Couldn't find the filename.. search the paths.
+		 */
+		if (shortpath_for_invalid_fname(fnamep, bufp, fnamelen) == -1)
+		    return -1;
+	    }
+	}
+    }
+#endif /* WIN3264 */
 
     /* ":t" - tail, just the basename */
     if (src[*usedlen] == ':' && src[*usedlen + 1] == 't')

@@ -969,13 +969,13 @@ crnl_to_nl(const char_u *str, int *size)
  */
 
 /*
- * Convert 'encoding' to UCS-2.
+ * Convert "str" from 'encoding' to UCS-2.
  * Input in "str" with length "*lenp".  When "lenp" is NULL, use strlen().
  * Output is returned as an allocated string.  "*lenp" is set to the length of
  * the result.
  * Returns NULL when out of memory.
  */
-    static WCHAR *
+    WCHAR *
 enc_to_ucs2(char_u *str, int *lenp)
 {
     vimconv_T	conv;
@@ -1501,9 +1501,39 @@ swap_me(COLORREF colorref)
     static BOOL CALLBACK
 PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+#ifdef FEAT_GETTEXT
+    NONCLIENTMETRICS nm;
+    static HFONT hfont;
+#endif
+
     switch (message)
     {
 	case WM_INITDIALOG:
+#ifdef FEAT_GETTEXT
+	    nm.cbSize = sizeof(NONCLIENTMETRICS);
+	    if (SystemParametersInfo(
+			SPI_GETNONCLIENTMETRICS,
+			sizeof(NONCLIENTMETRICS),
+			&nm,
+			0))
+	    {
+		char buff[MAX_PATH];
+		int i;
+
+		/* Translate the dialog texts */
+		hfont = CreateFontIndirect(&nm.lfMessageFont);
+		for (i = IDC_PRINTTEXT1; i <= IDC_PROGRESS; i++)
+		{
+		    SendDlgItemMessage(hDlg, i, WM_SETFONT, (WPARAM)hfont, 1);
+		    if (GetDlgItemText(hDlg,i, buff, sizeof(buff)))
+			SetDlgItemText(hDlg,i, _(buff));
+		}
+		SendDlgItemMessage(hDlg, IDCANCEL,
+						WM_SETFONT, (WPARAM)hfont, 1);
+		if (GetDlgItemText(hDlg,IDCANCEL, buff, sizeof(buff)))
+		    SetDlgItemText(hDlg,IDCANCEL, _(buff));
+	    }
+#endif
 	    SetWindowText(hDlg, szAppName);
 	    if (prt_name != NULL)
 	    {
@@ -1522,6 +1552,9 @@ PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	    EnableWindow(GetParent(hDlg), TRUE);
 	    DestroyWindow(hDlg);
 	    hDlgPrint = NULL;
+#ifdef FEAT_GETTEXT
+	    DeleteObject(hfont);
+#endif
 	    return TRUE;
     }
     return FALSE;
@@ -1614,10 +1647,7 @@ mch_print_cleanup(void)
     if (prt_dlg.hDC != NULL)
 	DeleteDC(prt_dlg.hDC);
     if (!*bUserAbort)
-    {
-	EnableWindow(prt_dlg.hwndOwner, TRUE);
-	DestroyWindow(hDlgPrint);
-    }
+	SendMessage(hDlgPrint, WM_COMMAND, 0, 0);
 }
 
     static int
@@ -1964,7 +1994,7 @@ mch_print_begin(prt_settings_T *psettings)
 #else
     SetAbortProc(prt_dlg.hDC, AbortProc);
 #endif
-    wsprintf(szBuffer, _("Printing '%s'"), psettings->jobname);
+    wsprintf(szBuffer, _("Printing '%s'"), gettail(psettings->jobname));
     SetDlgItemText(hDlgPrint, IDC_PRINTTEXT1, (LPSTR)szBuffer);
 
     memset(&di, 0, sizeof(DOCINFO));
@@ -1980,10 +2010,7 @@ mch_print_end(prt_settings_T *psettings)
 {
     EndDoc(prt_dlg.hDC);
     if (!*bUserAbort)
-    {
-	EnableWindow(prt_dlg.hwndOwner, TRUE);
-	DestroyWindow(hDlgPrint);
-    }
+	SendMessage(hDlgPrint, WM_COMMAND, 0, 0);
 }
 
     int

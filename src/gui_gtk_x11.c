@@ -5736,7 +5736,7 @@ gui_mch_wait_for_chars(long wtime)
 	gtk_main();
 
 	/* Got char, return immediately */
-	if (!vim_is_input_buf_empty())
+	if (input_available())
 	{
 	    if (timer != 0 && !timed_out)
 		gtk_timeout_remove(timer);

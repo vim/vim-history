@@ -3026,8 +3026,14 @@ server_to_input_buf(str)
     str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
     p_cpo = cpo_save;
 
-    add_to_input_buf(str, STRLEN(str));
-    vim_free((char_u *)(ptr));
+    /* Can't use add_to_input_buf() here, we now have K_SPECIAL bytes.
+     * First clear the typeahead buffer, there could be half a mapping there. */
+    del_typebuf(typebuf.tb_len, 0);
+    (void)ins_typebuf(str, REMAP_NONE, 0, TRUE, FALSE);
+    vim_free((char_u *)ptr);
+
+    /* Let input_available() know we inserted text in the typeahead buffer. */
+    received_from_client = TRUE;
 }
 
 /*

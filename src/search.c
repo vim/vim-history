@@ -101,8 +101,9 @@ static int	    saved_no_hlsearch = 0;
 #endif
 
 static char_u	    *mr_pattern = NULL;	/* pattern used by search_regcomp() */
-#ifdef FEAT_RIGHLEFT
+#ifdef FEAT_RIGHTLEFT
 static int	    mr_pattern_alloced = FALSE; /* mr_pattern was allocated */
+static char_u	    *reverse_text __ARGS((char_u *s));
 #endif
 
 #ifdef FEAT_FIND_ID
@@ -174,7 +175,7 @@ search_regcomp(pat, pat_save, pat_use, options, regmatch)
 	add_to_history(HIST_SEARCH, pat, TRUE);
 #endif
 
-#ifdef FEAT_RIGHLEFT
+#ifdef FEAT_RIGHTLEFT
     if (mr_pattern_alloced)
     {
 	vim_free(mr_pattern);
@@ -183,37 +184,13 @@ search_regcomp(pat, pat_save, pat_use, options, regmatch)
 
     if (curwin->w_p_rl && *curwin->w_p_rlc == 's')
     {
-	unsigned	cmd_len;
-	int		j, k;
-	int		out_len;
-	char_u		*rev_pattern;
+	char_u *rev_pattern;
 
-	/*
-	 * Reverse the pattern.
-	 */
-	cmd_len = (unsigned)STRLEN(pat);
-	rev_pattern = alloc(cmd_len + 1);
-	if (rev_pattern == NULL)    /* out of memory */
-	    mr_pattern = pat;
+	rev_pattern = reverse_text(pat);
+	if (rev_pattern == NULL)
+	    mr_pattern = pat;	    /* out of memory, keep normal pattern. */
 	else
 	{
-	    k = cmd_len;
-	    for (j = 0; j < cmd_len; ++j)
-	    {
-# ifdef FEAT_MBYTE
-		if (has_mbyte)
-		{
-		    out_len = (*mb_ptr2len_check)(pat + j);
-		    k -= out_len;
-		    mch_memmove(rev_pattern + k, pat + j, out_len);
-		    j += out_len - 1;
-		}
-		else
-# endif
-		    rev_pattern[j] = pat[--k];
-
-	    }
-	    rev_pattern[cmd_len] = NUL;
 	    mr_pattern = rev_pattern;
 	    mr_pattern_alloced = TRUE;
 	}
@@ -251,6 +228,50 @@ get_search_pat()
 {
     return mr_pattern;
 }
+
+#ifdef FEAT_RIGHTLEFT
+/*
+ * Reverse text into allocated memory.
+ * Returns the allocated string, NULL when out of memory.
+ */
+    static char_u *
+reverse_text(s)
+    char_u *s;
+{
+    unsigned	len;
+    unsigned	s_i, rev_i;
+    char_u	*rev;
+
+    /*
+     * Reverse the pattern.
+     */
+    len = (unsigned)STRLEN(s);
+    rev = alloc(len + 1);
+    if (rev != NULL)
+    {
+	rev_i = len;
+	for (s_i = 0; s_i < len; ++s_i)
+	{
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		int	mb_len;
+
+		mb_len = (*mb_ptr2len_check)(s + s_i);
+		rev_i -= mb_len;
+		mch_memmove(rev + rev_i, s + s_i, mb_len);
+		s_i += mb_len - 1;
+	    }
+	    else
+# endif
+		rev[--rev_i] = s[s_i];
+
+	}
+	rev[len] = NUL;
+    }
+    return rev;
+}
+#endif
 
     static void
 save_re_pat(idx, pat, magic)
@@ -1075,13 +1096,26 @@ do_search(oap, dirc, pat, count, options)
 			*p = NUL;
 		}
 
+		msg_start();
+		trunc = msg_strtrunc(msgbuf);
+
 #ifdef FEAT_RIGHTLEFT
 		/* The search pattern could be shown on the right in rightleft
 		 * mode, but the 'ruler' and 'showcmd' area use it too, thus
-		 * it would be blanked out again very soon. */
+		 * it would be blanked out again very soon.  Show it on the
+		 * left, but do reverse the text. */
+		if (curwin->w_p_rl && *curwin->w_p_rlc == 's')
+		{
+		    char_u *r;
+
+		    r = reverse_text(trunc != NULL ? trunc : msgbuf);
+		    if (r != NULL)
+		    {
+			vim_free(trunc);
+			trunc = r;
+		    }
+		}
 #endif
-		msg_start();
-		trunc = msg_strtrunc(msgbuf);
 		if (trunc != NULL)
 		{
 		    msg_outtrans(trunc);
@@ -1493,6 +1527,8 @@ findmatchlimit(oap, initc, flags, maxtravel)
     int		traveled = 0;		/* how far we've searched so far */
     int		ignore_cend = FALSE;    /* ignore comment end */
     int		cpo_match;		/* vi compatible matching */
+    int		cpo_bsl;		/* don't recognize backslashes */
+    int		match_escaped = 0;	/* search for escaped match */
     int		dir;			/* Direction to search */
     int		comment_col = MAXCOL;   /* start of / / comment */
 
@@ -1500,6 +1536,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
     linep = ml_get(pos.lnum);
 
     cpo_match = (vim_strchr(p_cpo, CPO_MATCH) != NULL);
+    cpo_bsl = (vim_strchr(p_cpo, CPO_MATCHBSL) != NULL);
 
     /* Direction to search when initc is '/', '*' or '#' */
     if (flags & FM_BACKWARD)
@@ -1661,6 +1698,17 @@ findmatchlimit(oap, initc, flags, maxtravel)
 			hash_dir = 1;
 		    else
 			return NULL;
+		}
+		else if (!cpo_bsl)
+		{
+		    int col, bslcnt = 0;
+
+		    /* Set "match_escaped" if there are an odd number of
+		     * backslashes. */
+		    for (col = pos.col - 1; col >= 0 && linep[col] == '\\';
+									col--)
+			bslcnt++;
+		    match_escaped = (bslcnt & 1);
 		}
 	    }
 	}
@@ -2027,16 +2075,30 @@ findmatchlimit(oap, initc, flags, maxtravel)
 #endif
 
 	    /* Check for match outside of quotes, and inside of
-	     * quotes when the start is also inside of quotes */
-	    if (!inquote || start_in_quotes == TRUE)
+	     * quotes when the start is also inside of quotes. */
+	    if ((!inquote || start_in_quotes == TRUE)
+		    && (c == initc || c == findc))
 	    {
-		if (c == initc)
-		    count++;
-		else if (c == findc)
+		int	col, bslcnt = 0;
+
+		if (!cpo_bsl)
 		{
-		    if (count == 0)
-			return &pos;
-		    count--;
+		    for (col = pos.col - 1; col >= 0 && linep[col] == '\\';
+									col--)
+			bslcnt++;
+		}
+		/* Only accept a match when 'M' is in 'cpo' or when ecaping is
+		 * what we expect. */
+		if (cpo_bsl || (bslcnt & 1) == match_escaped)
+		{
+		    if (c == initc)
+			count++;
+		    else
+		    {
+			if (count == 0)
+			    return &pos;
+			count--;
+		    }
 		}
 	    }
 	}
@@ -3761,7 +3823,7 @@ search_line:
 		 * don't let it match beyond the end of this identifier.
 		 */
 		p = def_regmatch.endp[0];
-		while (*p && !vim_isIDc(*p))
+		while (*p && !vim_iswordc(*p))
 		    p++;
 		define_matched = TRUE;
 	    }
@@ -3785,7 +3847,7 @@ search_line:
 		    else
 			matched = !STRNCMP(startp, ptr, len);
 		    if (matched && define_matched && whole
-						    && vim_isIDc(startp[len]))
+						  && vim_iswordc(startp[len]))
 			matched = FALSE;
 		}
 		else if (regmatch.regprog != NULL
@@ -3981,6 +4043,9 @@ search_line:
 			if (win_split(0, 0) == FAIL)
 #endif
 			    break;
+#ifdef FEAT_SCROLLBIND
+			curwin->w_p_scb = FALSE;
+#endif
 		    }
 		    if (depth == -1)
 		    {

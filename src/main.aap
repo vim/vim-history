@@ -13,7 +13,7 @@
 
 # Skip the configure stuff when "link.sh" is executing this recipe recursively
 # to build pathdef.c.
-@if _no.targetarg != "pathdef":
+@if _no.targetarg != "pathdef" and has_build_target():
 
     #
     # A U T O C O N F
@@ -79,6 +79,9 @@
 # A "PREFIX=dir" argument overrules the value of $prefix
 @if _no.get("PREFIX"):
     prefix = $PREFIX
+
+# Don't want "~/" in prefix.
+prefix = `os.path.expanduser(prefix)`
 
 #
 # G U I  variant
@@ -845,41 +848,43 @@ installglinks {virtual}: $DEST_BIN/$GVIMTARGET \
 installvimdiff {virtual}: $DEST_BIN/$VIMDIFFTARGET
 installgvimdiff {virtual}: $DEST_BIN/$GVIMDIFFTARGET
 
+# These dependencies use an empty buildcheck so that they are only done when
+# the target doesn't exist.
 $DEST_BIN/$EXTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $EXTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $EXTARGET
 
 $DEST_BIN/$VIEWTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $VIEWTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $VIEWTARGET
 
 $DEST_BIN/$GVIMTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $GVIMTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $GVIMTARGET
 
 $DEST_BIN/$GVIEWTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $GVIEWTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $GVIEWTARGET
 
 $DEST_BIN/$RVIMTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $RVIMTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $RVIMTARGET
 
 $DEST_BIN/$RVIEWTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $RVIEWTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $RVIEWTARGET
 
 $DEST_BIN/$RGVIMTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $RGVIMTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $RGVIMTARGET
 
 $DEST_BIN/$RGVIEWTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $RGVIEWTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $RGVIEWTARGET
 
 $DEST_BIN/$VIMDIFFTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $VIMDIFFTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $VIMDIFFTARGET
 
 $DEST_BIN/$GVIMDIFFTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $GVIMDIFFTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $GVIMDIFFTARGET
 
 $DEST_BIN/$EVIMTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $EVIMTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $EVIMTARGET
 
 $DEST_BIN/$EVIEWTARGET: {buildcheck = }
-	:sys cd $DEST_BIN; ln -s $VIMTARGET $EVIEWTARGET
+    :sys cd $DEST_BIN; ln -s $VIMTARGET $EVIEWTARGET
 
 # create links for the manual pages with various names to vim.	This is only
 # done when the links (or manpages with the same name) don't exist yet.
@@ -897,86 +902,86 @@ installghelplinks {virtual}: $DEST_MAN/$(GVIMNAME).1 \
 			$DEST_MAN/$(EVIEWNAME).1
 
 $DEST_MAN/$(EXNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(EXNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(EXNAME).1
 
 $DEST_MAN/$(VIEWNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(VIEWNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(VIEWNAME).1
 
 $DEST_MAN/$(GVIMNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(GVIMNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(GVIMNAME).1
 
 $DEST_MAN/$(GVIEWNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(GVIEWNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(GVIEWNAME).1
 
 $DEST_MAN/$(RVIMNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RVIMNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RVIMNAME).1
 
 $DEST_MAN/$(RVIEWNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RVIEWNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RVIEWNAME).1
 
 $DEST_MAN/$(RGVIMNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RGVIMNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RGVIMNAME).1
 
 $DEST_MAN/$(RGVIEWNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RGVIEWNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMNAME).1 $(RGVIEWNAME).1
 
 $DEST_MAN/$(GVIMDIFFNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(VIMDIFFNAME).1 $(GVIMDIFFNAME).1
+    :sys cd $DEST_MAN; ln -s $(VIMDIFFNAME).1 $(GVIMDIFFNAME).1
 
 $DEST_MAN/$(EVIEWNAME).1: {buildcheck = }
-	:sys cd $DEST_MAN; ln -s $(EVIMNAME).1 $(EVIEWNAME).1
+    :sys cd $DEST_MAN; ln -s $(EVIMNAME).1 $(EVIEWNAME).1
 
 #
 # U N I N S T A L L
 #
 uninstall {virtual}{force}: uninstall_runtime
-	:del {force} $DEST_BIN/$VIMTARGET
-	:del {force} $DEST_MAN/$(VIMNAME).1 $DEST_MAN/$(VIMNAME)tutor.1
-	:del {force} $DEST_BIN/vimtutor
-	:del {force} $DEST_BIN/xxd$EXESUF $DEST_MAN/xxd.1
-	:del {force} $DEST_BIN/$EXTARGET $DEST_BIN/$VIEWTARGET
-	:del {force} $DEST_BIN/$GVIMTARGET $DEST_BIN/$GVIEWTARGET
-	:del {force} $DEST_BIN/$RVIMTARGET $DEST_BIN/$RVIEWTARGET
-	:del {force} $DEST_BIN/$RGVIMTARGET $DEST_BIN/$RGVIEWTARGET
-	:del {force} $DEST_BIN/$VIMDIFFTARGET $DEST_BIN/$GVIMDIFFTARGET
-	:del {force} $DEST_BIN/$EVIMTARGET $DEST_BIN/$EVIEWTARGET
-	:del {force} $DEST_MAN/$(EXNAME).1 $DEST_MAN/$(VIEWNAME).1
-	:del {force} $DEST_MAN/$(GVIMNAME).1 $DEST_MAN/$(GVIEWNAME).1
-	:del {force} $DEST_MAN/$(RVIMNAME).1 $DEST_MAN/$(RVIEWNAME).1
-	:del {force} $DEST_MAN/$(RGVIMNAME).1 $DEST_MAN/$(RGVIEWNAME).1
-	:del {force} $DEST_MAN/$(VIMDIFFNAME).1 $DEST_MAN/$(GVIMDIFFNAME).1
-	:del {force} $DEST_MAN/$(EVIMNAME).1 $DEST_MAN/$(EVIEWNAME).1
+    :del {force} $DEST_BIN/$VIMTARGET
+    :del {force} $DEST_MAN/$(VIMNAME).1 $DEST_MAN/$(VIMNAME)tutor.1
+    :del {force} $DEST_BIN/vimtutor
+    :del {force} $DEST_BIN/xxd$EXESUF $DEST_MAN/xxd.1
+    :del {force} $DEST_BIN/$EXTARGET $DEST_BIN/$VIEWTARGET
+    :del {force} $DEST_BIN/$GVIMTARGET $DEST_BIN/$GVIEWTARGET
+    :del {force} $DEST_BIN/$RVIMTARGET $DEST_BIN/$RVIEWTARGET
+    :del {force} $DEST_BIN/$RGVIMTARGET $DEST_BIN/$RGVIEWTARGET
+    :del {force} $DEST_BIN/$VIMDIFFTARGET $DEST_BIN/$GVIMDIFFTARGET
+    :del {force} $DEST_BIN/$EVIMTARGET $DEST_BIN/$EVIEWTARGET
+    :del {force} $DEST_MAN/$(EXNAME).1 $DEST_MAN/$(VIEWNAME).1
+    :del {force} $DEST_MAN/$(GVIMNAME).1 $DEST_MAN/$(GVIEWNAME).1
+    :del {force} $DEST_MAN/$(RVIMNAME).1 $DEST_MAN/$(RVIEWNAME).1
+    :del {force} $DEST_MAN/$(RGVIMNAME).1 $DEST_MAN/$(RGVIEWNAME).1
+    :del {force} $DEST_MAN/$(VIMDIFFNAME).1 $DEST_MAN/$(GVIMDIFFNAME).1
+    :del {force} $DEST_MAN/$(EVIMNAME).1 $DEST_MAN/$(EVIEWNAME).1
 
 # Note: "deldir" will fail if any files were added after "make install", that
 # is intentionally: Keep files the user added.
 uninstall_runtime {virtual}{force}:
-	:del {force} $DEST_HELP/*.txt $DEST_HELP/tags $DEST_HELP/*.pl
-	:del {force} $SYS_MENU_FILE $SYS_SYNMENU_FILE $SYS_DELMENU_FILE
-	:del {force} $SYS_BUGR_FILE $EVIM_FILE $MSWIN_FILE
-	:del {force} $DEST_SCRIPT/gvimrc_example.vim $DEST_SCRIPT/vimrc_example.vim
-	:del {force} $SYS_FILETYPE_FILE $SYS_FTOFF_FILE $SYS_SCRIPTS_FILE
-	:del {force} $SYS_INDOFF_FILE $SYS_INDENT_FILE
-	:del {force} $SYS_FTPLUGOF_FILE $SYS_FTPLUGIN_FILE
-	:del {force} $SYS_OPTWIN_FILE
-	:del {force} $DEST_COL/*.vim $DEST_COL/README.txt
-	:del {force} $DEST_SYN/*.vim $DEST_SYN/README.txt
-	:del {force} $DEST_IND/*.vim $DEST_IND/README.txt
-	:del {force} $DEST_PRINT/*.ps
-	:del {force}{recursive} $DEST_MACRO
-	:del {force}{recursive} $DEST_TUTOR
-	:del {force}{recursive} $DEST_TOOLS
-	:del {force}{recursive} $DEST_LANG
-	:del {force}{recursive} $DEST_KMAP
-	:del {force}{recursive} $DEST_COMP
-	:deldir {force} $DEST_HELP $DEST_COL $DEST_SYN $DEST_IND
-	:del {force}{recursive} $DEST_FTP/*.vim $DEST_FTP/README.txt
-	:del {force} $DEST_PLUG/*.vim $DEST_PLUG/README.txt
-	:deldir {force} $DEST_FTP $DEST_PLUG $DEST_RT $DEST_PRINT
+    :del {force} $DEST_HELP/*.txt $DEST_HELP/tags $DEST_HELP/*.pl
+    :del {force} $SYS_MENU_FILE $SYS_SYNMENU_FILE $SYS_DELMENU_FILE
+    :del {force} $SYS_BUGR_FILE $EVIM_FILE $MSWIN_FILE
+    :del {force} $DEST_SCRIPT/gvimrc_example.vim $DEST_SCRIPT/vimrc_example.vim
+    :del {force} $SYS_FILETYPE_FILE $SYS_FTOFF_FILE $SYS_SCRIPTS_FILE
+    :del {force} $SYS_INDOFF_FILE $SYS_INDENT_FILE
+    :del {force} $SYS_FTPLUGOF_FILE $SYS_FTPLUGIN_FILE
+    :del {force} $SYS_OPTWIN_FILE
+    :del {force} $DEST_COL/*.vim $DEST_COL/README.txt
+    :del {force} $DEST_SYN/*.vim $DEST_SYN/README.txt
+    :del {force} $DEST_IND/*.vim $DEST_IND/README.txt
+    :del {force} $DEST_PRINT/*.ps
+    :del {force}{recursive} $DEST_MACRO
+    :del {force}{recursive} $DEST_TUTOR
+    :del {force}{recursive} $DEST_TOOLS
+    :del {force}{recursive} $DEST_LANG
+    :del {force}{recursive} $DEST_KMAP
+    :del {force}{recursive} $DEST_COMP
+    :deldir {force} $DEST_HELP $DEST_COL $DEST_SYN $DEST_IND
+    :del {force}{recursive} $DEST_FTP/*.vim $DEST_FTP/README.txt
+    :del {force} $DEST_PLUG/*.vim $DEST_PLUG/README.txt
+    :deldir {force} $DEST_FTP $DEST_PLUG $DEST_RT $DEST_PRINT
 #	This will fail when other Vim versions are installed, no worries.
-	@try:
-	    :deldir $DEST_VIM
-	@except:
-	    :print Cannot delete $DEST_VIM
+    @try:
+	:deldir $DEST_VIM
+    @except:
+	:print Cannot delete $DEST_VIM
 
 
 # vim: sts=4 sw=4 :

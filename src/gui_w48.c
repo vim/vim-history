@@ -1735,7 +1735,7 @@ gui_mch_wait_for_chars(int wtime)
 	 */
 	process_message();
 
-	if (!vim_is_input_buf_empty())
+	if (input_available())
 	{
 	    if (s_wait_timer != 0 && !s_timed_out)
 	    {
@@ -2562,6 +2562,21 @@ gui_mch_settitle(
     char_u  *title,
     char_u  *icon)
 {
+#ifdef FEAT_MBYTE
+    if (title != NULL && has_mbyte
+		      && (enc_codepage == 0 || enc_codepage != (int)GetACP()))
+    {
+	WCHAR	*wbuf;
+
+	/* Convert the title from 'encoding' to ucs2. */
+	wbuf = enc_to_ucs2(title, NULL);
+	if (wbuf != NULL)
+	{
+	    SetWindowTextW(s_hwnd, wbuf);
+	    vim_free(wbuf);
+	}
+    }
+#endif
     SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : (char *)title));
 }
 

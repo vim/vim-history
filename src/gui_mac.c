@@ -3536,7 +3536,7 @@ gui_mch_wait_for_chars(wtime)
 	    if (!SIOUXHandleOneEvent(&event))
 #endif
 		gui_mac_handle_event (&event);
-	    if (!vim_is_input_buf_empty())
+	    if (input_available())
 	    {
 		allow_scrollbar = FALSE;
 		return OK;

@@ -1392,6 +1392,9 @@ do_argfile(eap, argn)
 	{
 	    if (win_split(0, 0) == FAIL)
 		return;
+# ifdef FEAT_SCROLLBIND
+	    curwin->w_p_scb = FALSE;
+# endif
 	}
 	else
 #endif
@@ -2266,6 +2269,21 @@ ex_scriptnames(eap)
 	if (SCRIPT_NAME(i) != NULL)
 	    smsg((char_u *)"%3d: %s", i, SCRIPT_NAME(i));
 }
+
+# if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
+/*
+ * Fix slashes in the list of script names for 'shellslash'.
+ */
+    void
+scriptnames_slash_adjust()
+{
+    int i;
+
+    for (i = 1; i <= script_names.ga_len; ++i)
+	if (SCRIPT_NAME(i) != NULL)
+	    slash_adjust(SCRIPT_NAME(i));
+}
+# endif
 
 /*
  * Get a pointer to a script name.  Used for ":verbose set".
@@ -4737,7 +4755,7 @@ mch_print_begin(psettings)
     /* Search for external resources we supply */
     if (!prt_find_resource("prolog", &res_prolog))
     {
-	EMSG(_("E456: Can't find PostScript resource file \"prolog\""));
+	EMSG(_("E456: Can't find PostScript resource file \"prolog.ps\""));
 	return FALSE;
     }
     if (!prt_open_resource(&res_prolog))
@@ -4768,7 +4786,7 @@ mch_print_begin(psettings)
 	    p_encoding = (char_u *)"latin1";
 	    if (!prt_find_resource((char *)p_encoding, &res_encoding))
 	    {
-		EMSG2(_("E456: Can't find PostScript resource file \"%s\""),
+		EMSG2(_("E456: Can't find PostScript resource file \"%s.ps\""),
 			p_encoding);
 		return FALSE;
 	    }

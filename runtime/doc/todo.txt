@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2d.  Last change: 2003 May 11
+*todo.txt*      For Vim version 6.2e.  Last change: 2003 May 18
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,54 +29,21 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Patch for cscope to use the quickfix window.  Adds 'cscopequickfix' option.
-(Khorev Sergey, May 6)
+Crash and/or out-of-memory error. (Luc Hermitte, Mar 1)
 
-8   Make 'keywordprg' global-local.  Patch from Christian Robinson (Dec 26
-    2002)
+Vim crashes with very long arguments. (Carlo Perassi, Feb 6)
 
-"%" does not ignore "\(".  Patch from Haakon Riiser (Feb 25).
-Is this Vi compatible?  If not, disable it for some flag in 'cpoptions'.
+Hang with folding, reproducable. (Derek Wyatt, Oct 30)
+Crash with folding. (Kamil Burzynski, Apr 7)
 
-Patches from Yasuhiro Matsumoto, Apr 9:
-    cui_cursor_correct.diff	Win32: console cursor position
-    gui_cursor_dust.diff	old problem with cursor not always removed
-    mapping_m_x.diff		old problem with mapping byte of multi-byte
-    max_window.diff		Win32: startup window size
-    mb_printdlg.diff		Win32: print dialog
-    remote_send_termcode.diff_	(doesn't work correctly)
-    utf_caption.diff		Win32: multi-byte window title
+Crash when creating/wiping out buffers in autocommand, reproducable. (Hari
+Krishna Dara, April 10)
 
-Using "gvim --remote []" where [] is a double byte character and "]" is
-K_SPECIAL doesn't work.  It's translated into a three byte sequence in
-server_to_input_buf(). (Yasuhiro Matsumoto, patch Nov 14, new one Apr 17)
-Change K_SPECIAL to CSI there?  Would only work for the GUI.
-Also a patch from Taro Muraoka, Jan 20.
-"gvim --remote '<Up>'" beeps.  Already done wrong?
-Another patch from Yasuhiro Matsumoto, Apr 15, using ins_typebuf().
+Crash for some script which contains:
+    execute "syn match Ranges '\\%" . i . "l.*' containedin=ALL"
+(Salman Halim, Dan Sharp)
 
-NSIS 2.0 patch from Rene de Zwart. (18 dec 2002)
-Also check work from Steve Hall for NSIS.
-
-Fix runtime/optwin.vim for new options.
-
-Perl: cur_val() now works for Perl 5.8 but not for 5.6.  How can it be made to
-work for both?
-
-Exception handling: (Servatius Brandt)
-- Add section to user manual
-- remove the workarounds for not being able to define a function in a while
-  loop.  It's not supported.
-
-"/$" causes "e" in last column of screen to disappear, highlighted char is
-displayed instead.
-
-":s/ *\ze\n//e" introduces arbitrary text. (Klaus Bosau)
-
-Adding "c" flag to ":s" changes the behavior: (Klaus Bosau, April 24)
-    1,4 s/\v%(\_^A.*B.*)@<=\nA%(\s*|.*B)@=/ /ge
-
-Change [ CTRL-D completion to use 'iskeyword' instead of 'isident'? (Dorai)
+Win32: Crash when adding and deleting menu items. (Klaus Bosau Dec 29)
 
 Redraw problem in help file after listing completions. (Jacob Lerner, Apr 27)
 
@@ -86,10 +53,17 @@ removes some highlighting in one of the windows. (Brett Pershing Stahlman)
 The syntax must be different in the previous current window and the window
 above the status line being dragged.
 
-Crash and/or out-of-memory error. (Luc Hermitte, Mar 1)
+Perl: cur_val() now works for Perl 5.8 but not for 5.6.  How can it be made to
+work for both?
+
+Exception handling: (Servatius Brandt)
+- Add section to user manual
+- remove the workarounds for not being able to define a function in a while
+  loop.  It's not supported.
 
 GTK2 patch problems:
 - ":sp" ":q" leaves cursor on the cmdline.
+- "gvim --remote file" doesn't work.
 - DND doesn't work with KDE?
 - Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
 - Combining UTF-8 characters not displayed properly in menus (Mikolaj
@@ -171,15 +145,8 @@ that compiling and linking still works.  Catch errornous "-lelf" argument.
 Add a configure check for tgetent(): whether it returns 0 for OK or entry not
 found. (uribarri)
 
-Vim crashes with very long arguments. (Carlo Perassi, Feb 6)
-
 :let test = "\n"  :echo test =~ '\n'  should result in "1", results in "0".
 (Yasuhiro Matsumoto)
-
-Crash in substitute command with multi-line pattern. (Dale Hodson, Mar 11)
-
-Hang with folding, reproducable. (Derek Wyatt, Oct 30)
-Crash with folding. (Kamil Burzynski, Apr 7)
 
 Fold nesting wrong when deleting first of these lines:
 a{{{
@@ -189,9 +156,6 @@ c{{{
 'foldmethod' is "marker". (Kamil Burzynski, Feb 4)
 
 Create wrong fold when using "P" on closed fold. (Kamil Burzynski, Feb 12)
-
-Crash when creating/wiping out buffers in autocommand, reproducable. (Hari
-Krishna Dara, April 10)
 
 Fold continues beyond "}}}" when a "{{{2" follows. (Muraoka Taro, Mar 15)
 
@@ -261,10 +225,6 @@ Make 'fillchars' work for multi-byte characters.
 ":set nowrap virtualedit=all" Block select lines of different length, use "l",
 selection is no longer a block.
 
-Crash for some script which contains:
-    execute "syn match Ranges '\\%" . i . "l.*' containedin=ALL"
-(Salman Halim, Dan Sharp)
-
 Add ColorSchemePost autocommand event, so that scripts can set up their
 highlighting. (Salman Halim)
 
@@ -333,12 +293,8 @@ Win32: New compiling howto http://mywebpage.netscape.com/sharppeople/vim/howto
 Ruby: "ruby << EOF" inside a function doesn't always work.  Recognize this and
 skip until the matching "EOF".  Also for ":python", ":tcl" and ":perl".
 
-Win32: Crash when adding and deleting menu items. (Klaus Bosau Dec 29)
-
 DJGPP: install 2.03 refresh: http://clio.rice.edu/djgpp/win2k/main_203.htm
 Fixes problems with Windows XP.
-
-":%s/\vA@<=\nB@=//gce" gets stuck on "A\nB" when entering "n". (Klaus Bosau)
 
 When 'selection' is "exclusive", selecting with the mouse from right to left
 does not select the character the mouse first pointed to.  When dragging the
@@ -362,9 +318,6 @@ Redraw is wrong and "PPP" works differently.
 
 BufEnter autocommand stops 'mousefocus' from working in Insert mode (Normal
 mode is OK). (Gregory Seidman, Jan 17)
-
-Perl: Using Vim with Perl 5.8, accessing $curbuf from Perl code crashes Vim.
-Perl 5.6.1 is OK, I can't reproduce it.
 
 Win32: use wide character function to display window title, otherwise it
 doesn't work when 'encoding' is different from the current codepage. (Yasuhiro
@@ -608,8 +561,6 @@ Motif GUI:
 
 
 GUI:
-9   When using a very small font, 'columns' can be very big.  Pass mouse
-    events with 16 bits.
 9   On Solaris, creating the popup menu causes the right mouse button no
     longer to work for extending the selection. (Halevy)
 9   When running an external program, it can't always be killed with CTRL-C.
@@ -720,6 +671,8 @@ MSDOS/DJGPP:
 
 
 MSDOS, OS/2 and Win32:
+7   Use the latest NSIS 2.0 installer.  Patch from Rene de Zwart. (18 dec
+    2002)  Also check work from Steve Hall for NSIS.
 8   OS/2: Add backtick expansion.  Undefine NO_EXPANDPATH and use
     gen_expand_wildcards().
 8   OS/2: Add clipboard support?  See example clipbrd.exe from Alexander
@@ -735,8 +688,6 @@ MSDOS, OS/2 and Win32:
     special keys for these.  Should use modifier + key.
 8   Win32 console: caps-lock makes non-alpha keys work like with shift.
     Should work like in the GUI version.
-6   Win32: Add ":8" file modifier to get short filename? (patch from Michael
-    Geddes, Oct 9, needs more work)
 8   Environment variables in DOS are not case sensitive.  Make a define for
     STRCMP_ENV(), and use it when comparing environment var names.
 8   Setting 'shellslash' has no immediate effect.  Change all file names when
@@ -1592,6 +1543,8 @@ Built-in script language:
 				evaluate an expression.
 	confirm()		add "flags" argument, with 'v' for vertical
 				layout and 'c' for console dialog. (Haegg)
+				Flemming Madsen has a patch for the 'c' flag
+				(2003 May 13)
 	filter({cmd} [, {string}])  Filter {string} through the shell command
 				{cmd} and return the result.  If {string} is
 				omitted no input is given to {cmd}.
@@ -3306,8 +3259,6 @@ Various improvements:
     (Webb).
 -   Besides remembering the last used line number of a file, also remember the
     column. Use it with CTRL-^ et. al.
--   When a window resizes, the line with the cursor should stay at the same
-    percentage from the start of the window as it was before.
 -   Check for non-digits when setting a number option (careful when entering
     hex codes like 0xff).
 -   Add option to make "." redo the "@r" command, instead of the last command

@@ -558,12 +558,11 @@ LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 
 all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe GvimExt/gvimext.dll
 
-$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) $(OUTDIR)\version.obj
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) version.c version.h
+	$(CC) $(CFLAGS)  version.c /Fo$(OUTDIR)/version.obj $(PDB)
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
 		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) \
 		$(OUTDIR)\version.obj $(LINKARGS2)
-	if exist $(OUTDIR)\version.obj del $(OUTDIR)\version.obj
-	if exist auto\pathdef.c del auto\pathdef.c
 
 $(VIM).exe: $(VIM)
 
@@ -757,8 +756,6 @@ $(OUTDIR)/term.obj:	$(OUTDIR) term.c  $(INCL)
 $(OUTDIR)/ui.obj:	$(OUTDIR) ui.c  $(INCL)
 
 $(OUTDIR)/undo.obj:	$(OUTDIR) undo.c  $(INCL)
-
-$(OUTDIR)/version.obj: $(OUTDIR) version.c version.h
 
 $(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
 

@@ -1,4 +1,4 @@
-*mlang.txt*     For Vim version 6.2d.  Last change: 2002 Oct 29
+*mlang.txt*     For Vim version 6.2e.  Last change: 2003 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -179,7 +179,8 @@ you can do it without restarting Vim: >
 	:source <your-new-menu-file>
 	:source $VIMRUNTIME/menu.vim
 
-Each part of a menu path is translated separately.  The result is that
+Each part of a menu path is translated separately.  The result is that when
+"Help" is translated to "Hilfe" and "Overview" to "Überblick" then
 "Help.Overview" will be translated to "Hilfe.Überblick".
 
 ==============================================================================

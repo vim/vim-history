@@ -2496,7 +2496,7 @@ gui_mch_wait_for_chars(long wtime)
 
 	process_event(reason, block);
 
-	if (vim_is_input_buf_empty() == FALSE || ro_return_early)
+	if (input_available() || ro_return_early)
 	{
 	    ro_return_early = FALSE;
 	    return OK;	    /* There is something to process (key / menu event) */

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2d.  Last change: 2003 May 11
+*version6.txt*  For Vim version 6.2e.  Last change: 2003 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6004,9 +6004,40 @@ Changed the Win32 Makefiles to become more uniform and compile gvimext.dll.
 'cindent': Align a "//" comment with a "//" comment in a previous line.
 (Helmut Stiegler)
 
+Previously only for xterm-like terminals parent widgets were followed to find
+the title and icon label.  Now do this for all terminal emulators.
+
+Made it possible to recognize backslashes for "%" matching.  The 'M' flag in
+'cpoptions' disables it. (Haakon Riiser)
+
+Removed the Make_tcc.mak makefile for Turbo C.  It didn't work and we probably
+can't make it work (the compiler runs out of memory).
+
+Even though the documentation refers to keywords, "[ CTRL-D" was using
+'isident' to find matches.  Changed it to use 'iskeyword'.  Also applies to
+other commands that search for defined words in included files such as
+":dsearch", "[D" and "[d".
+
+Made 'keywordprg' global-local. (Christian Robinson)
+
 
 Added							*added-6.2*
 -----
+
+New options:
+	'arabic'
+	'arabicshape'
+	'ambiwidth'
+	'autochdir'
+	'casemap'
+	'copyindent'
+	'cscopequickfix'
+	'preserveindent'
+	'printencoding'
+	'rightleftcmd'
+	'termbidi'
+	'toolbariconsize'
+	'winfixheight'
 
 New keymaps:
 	Serbian (Aleksandar Veselinovic)
@@ -6047,6 +6078,7 @@ New syntax files:
 	Resolv.conf (Radu Dineiu)
 	A65 (Clemens Kirchgatterer)
 	sshconfig and sshdconfig (David Necas)
+	Cheetah and HTMLCheetah (Max Ischenko)
 
 New indent files:
 	Eiffel (David Clarke)
@@ -6162,6 +6194,15 @@ Added 'preserveindent' and 'copyindent' options.  They use existing white
 space characters instead of using Tabs as much as possible. (Chris Leishman)
 
 Updated Unicode tables to Unicode 4.0. (Raphael Finkel)
+
+Support for the mouse wheel in rxvt. (AIDA Shinra)
+
+Win32: Added ":8" file modifier to get short filename. (Michael Geddes)
+
+'cscopequickfix' option: Open quickfix window for Cscope commands.  Also
+cleanup the code for giving messages.  (Khorev Sergey)
+
+GUI: Support more than 222 columns for mouse positions.
 
 
 Fixed							*fixed-6.2*
@@ -6298,6 +6339,59 @@ MSwin: Handling of backslashes and double quotes for command line arguments
 was not like what other applications do.  (Walter Briscoe)
 
 Test32 sometimes didn't work, because test11.out was written as TEST11.OUT.
+
+Avoid pointer conversions warnings for Borland C 5.5 in dosinst.c and
+uninstal.c.
+
+More improvements for Make_bc3.mak file. (Walter Briscoe)
+
+When ":syn sync linebreaks=1" is used, editing the first line caused a redraw
+of the whole screen.
+
+Making translated messages didn't work, if_perl.xs wasn't found. (Vlad
+Sandrini)
+
+Motif and Athena: moving Vim to the foreground didn't uniconify it.  Use
+XMapRaised() instead of XRaiseWindow(). (Srikanth Sankaran)
+
+When using ":ptag" in a window where 'scrollbind' is set the preview window
+would also have 'scrollbind' set.  Also reset 'foldcolumn' and 'diff'.
+
+Various commands that split a window took over 'scrollbind', which is hardly
+ever desired.  Esp. for "q:" and ":copen".  Mostly reset 'scrollbind' when
+splitting a window.
+
+When 'shellslash' is set in the vimrc file the first entry of ":scriptnames"
+would still have backslashes.  Entries in the quickfix list could also have
+wrong (back)slashes.
+
+Win32: printer dialog texts were not translated. (Yasuhiro Matsumoto)
+
+When using a multi-byte character with a K_SPECIAL byte or a special key code
+with "--remote-send" the received byte sequence was mangled.  Put it in the
+typeahead buffer instead of the input buffer.
+
+Win32: The cursor position was incorrect after changing cursor shape.
+(Yasuhiro Matsumoto).
+
+Win32: When 'encoding' is not the current codepage the title could not be set
+to non-ascii characters.
+
+"vim -d scp://machine/file1 scp://machine/file2" did not work, there was only
+one window.  Fixed the netrw plugin not to wipe out the buffer if it is
+displayed in other windows.
+
+"/$" caused "e" in last column of screen to disappear, a highlighted blank was
+displayed instead.
+
+":s/ *\ze\n//e" removed the line break and introduced arbitrary text.  Was
+using the line count including what matched after the "\ze".
+
+Using the "c" flag with ":s" changed the behavior when a line break is
+replaced and "\@<=" is used.  Without "c" a following match was not found.
+
+":%s/\vA@<=\nB@=//gce" got stuck on "A\nB" when entering "n".
+
 
 Patch 6.1.001
 Problem:    When formatting UTF-8 text it might be wrapped at a space that is

@@ -843,7 +843,11 @@ win_update(wp)
 		/* Need to redraw lines above the change that may be included
 		 * in a pattern match. */
 		if (syntax_present(buf))
+		{
 		    mod_top -= buf->b_syn_sync_linebreaks;
+		    if (mod_top < 1)
+			mod_top = 1;
+		}
 #endif
 	    }
 	    if (mod_bot == 0 || mod_bot < buf->b_mod_bot)
@@ -3788,29 +3792,36 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		       ))
 	    {
+		int n = 0;
+
 #ifdef FEAT_RIGHTLEFT
 		if (wp->w_p_rl)
 		{
 		    if (col < 0)
-		    {
-			++off;
-			++col;
-		    }
+			n = 1;
 		}
 		else
 #endif
 		{
 		    if (col >= W_WIDTH(wp))
-		    {
-			--off;
-			--col;
-		    }
+			n = -1;
 		}
-		ScreenLines[off] = ' ';
+		if (n != 0)
+		{
+		    /* At the window boundary, highlight the last character
+		     * instead (better than nothing). */
+		    off += n;
+		    col += n;
+		}
+		else
+		{
+		    /* Add a blank character to highlight. */
+		    ScreenLines[off] = ' ';
 #ifdef FEAT_MBYTE
-		if (enc_utf8)
-		    ScreenLinesUC[off] = 0;
+		    if (enc_utf8)
+			ScreenLinesUC[off] = 0;
 #endif
+		}
 #ifdef FEAT_SEARCH_EXTRA
 		if (area_attr == 0)
 		{

@@ -136,6 +136,7 @@
 #define CPO_LITERAL	'l'	/* take char after backslash in [] literal */
 #define CPO_LISTWM	'L'	/* 'list' changes wrapmargin */
 #define CPO_SHOWMATCH	'm'
+#define CPO_MATCHBSL	'M'	/* "%" ignores use of backslashes */
 #define CPO_NUMCOL	'n'	/* 'number' column also used for text */
 #define CPO_LINEOFF	'o'
 #define CPO_OVERNEW	'O'	/* silently overwrite new file */
@@ -156,7 +157,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmnoOprsStuvwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmMnoOprsStuvwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"
@@ -349,6 +350,11 @@ EXTERN int	p_cp;		/* 'compatible' */
 EXTERN char_u	*p_cpo;		/* 'cpoptions' */
 #ifdef FEAT_CSCOPE
 EXTERN char_u	*p_csprg;	/* 'cscopeprg' */
+# ifdef FEAT_QUICKFIX
+EXTERN char_u	*p_csqf;	/* 'cscopequickfix' */
+#  define	CSQF_CMDS   "sgdctefi"
+#  define	CSQF_FLAGS  "+-0"
+# endif
 EXTERN int	p_cst;		/* 'cscopetag' */
 EXTERN long	p_csto;		/* 'cscopetagorder' */
 EXTERN long	p_cspc;		/* 'cscopepathcomp' */

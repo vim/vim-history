@@ -42,7 +42,7 @@
  * i 8name	Find files #including this file
  */
 #define	FIND_USAGE "find c|d|e|f|g|i|s|t name"
-#define FIND_HELP "\
+#define FIND_HELP "\n\
        c: Find functions calling this function\n\
        d: Find functions called by this function\n\
        e: Find this egrep pattern\n\
@@ -71,6 +71,7 @@ typedef struct csi {
     ino_t	    st_ino;	/* inode number of cscope db */
 #elif defined(WIN32)
     int	    pid;	/* Can't get pid so set it to 0 ;) */
+    HANDLE	    hProc;	/* cscope process handle */
     DWORD	    nVolume;	/* Volume serial number, instead of st_dev */
     DWORD	    nIndexHigh;	/* st_ino has no meaning in the Windows */
     DWORD	    nIndexLow;

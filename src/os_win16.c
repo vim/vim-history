@@ -96,7 +96,7 @@ WinMain(
 {
     int		argc;
     char	**argv;
-    char	*tofree
+    char	*tofree;
     char	prog[256];
 
     /*

@@ -103,7 +103,7 @@ RSC_PROJ= /l 0x409 /d "FEAT_GUI_W32"
 
 INTDIR=.\oleRel
 VIM=gvim
-EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj"
+EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
 CPP_PROJ=$(CPP_PROJ) /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
 # ADD CPP            /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
@@ -122,7 +122,7 @@ LINK32_FLAGS=$(LINK32_FLAGS) /pdb:none libc.lib oleaut32.lib /subsystem:windows 
 
 INTDIR=.\oleDbg
 VIM=gvimd
-EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj"
+EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
 CPP_PROJ=$(CPP_PROJ) /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
 # ADD CPP            /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
@@ -142,7 +142,7 @@ LINK32_FLAGS=$(LINK32_FLAGS) libcd.lib oleaut32.lib /subsystem:windows /debug /p
 
 INTDIR=.\gRel
 VIM=gvim
-EXTRAS="$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj"
+EXTRAS="$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
 CPP_PROJ=$(CPP_PROJ) /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /Fd.\gRel/ /Fo.\gRel/
 # ADD CPP            /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /Fd.\gRel/ /Fo.\gRel/
@@ -161,7 +161,7 @@ LINK32_FLAGS=$(LINK32_FLAGS) /pdb:none libc.lib /subsystem:windows /out:.\gvim.e
 
 INTDIR=.\gDbg
 VIM=gvimd
-EXTRAS="$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj"
+EXTRAS="$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
 CPP_PROJ=$(CPP_PROJ) /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /Fd.\gDbg/ /Fo.\gDbg/
 # ADD CPP            /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /Fd.\gDbg/ /Fo.\gDbg/
@@ -238,7 +238,6 @@ LINK32_OBJS= \
 	"$(INTDIR)/ops.obj" \
 	"$(INTDIR)/option.obj" \
 	"$(INTDIR)/os_mswin.obj" \
-	"$(INTDIR)/os_w32exe.obj" \
 	"$(INTDIR)/os_win32.obj" \
 	"$(INTDIR)/quickfix.obj" \
 	"$(INTDIR)/regexp.obj" \
@@ -400,6 +399,21 @@ SOURCE=.\gui_w32.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\os_w32exe.c
+
+!IF      "$(CFG)" == "Vim - Win32 Release vim"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug vim"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\if_ole.cpp
 
 !IF  "$(CFG)" == "Vim - Win32 Release gvim OLE"
@@ -543,10 +557,6 @@ SOURCE=.\option.c
 # Begin Source File
 
 SOURCE=.\os_mswin.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\os_w32exe.c
 # End Source File
 # Begin Source File
 

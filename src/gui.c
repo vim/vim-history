@@ -25,6 +25,7 @@ static int gui_screenstr __ARGS((int off, int len, int flags, guicolor_T fg, gui
 #endif
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
+static void fill_mouse_coord __ARGS((char_u *p, int col, int row));
 static void gui_do_scrollbar __ARGS((win_T *wp, int which, int enable));
 static void gui_update_horiz_scrollbar __ARGS((int));
 static win_T *xy2win __ARGS((int x, int y));
@@ -2534,7 +2535,7 @@ gui_wait_for_chars(wtime)
     }
 
     gui_mch_update();
-    if (!vim_is_input_buf_empty())	/* Got char, return immediately */
+    if (input_available())	/* Got char, return immediately */
     {
 #ifdef FEAT_AUTOCMD
 	once_already = 0;
@@ -2616,6 +2617,21 @@ gui_wait_for_chars(wtime)
 
     gui_mch_stop_blink();
     return retval;
+}
+
+/*
+ * Fill buffer with mouse coordinates encoded for check_termcode().
+ */
+    static void
+fill_mouse_coord(p, col, row)
+    char_u	*p;
+    int		col;
+    int		row;
+{
+    p[0] = (char_u)(col / 128 + ' ' + 1);
+    p[1] = (char_u)(col % 128 + ' ' + 1);
+    p[2] = (char_u)(row / 128 + ' ' + 1);
+    p[3] = (char_u)(row % 128 + ' ' + 1);
 }
 
 /*
@@ -2932,10 +2948,8 @@ button_set:
 	string[3] = (char_u)button;
 
     string[3] |= modifiers;
-    /* Can't encode numbers above 222... */
-    string[4] = (char_u)((col > 222 ? 222 : col) + ' ' + 1);
-    string[5] = (char_u)((row > 222 ? 222 : row) + ' ' + 1);
-    add_to_input_buf(string, 6);
+    fill_mouse_coord(string + 4, col, row);
+    add_to_input_buf(string, 8);
 
     if (row < 0)
 	prev_row = 0;
@@ -3297,7 +3311,7 @@ gui_drag_scrollbar(sb, value, still_dragging)
 
 #ifdef USE_ON_FLY_SCROLL
     /* When not allowed to do the scrolling right now, return. */
-    if (dont_scroll || !vim_is_input_buf_empty())
+    if (dont_scroll || input_available())
 	return;
 #endif
 
@@ -4027,15 +4041,17 @@ gui_mouse_moved(x, y)
 	st[1] = KS_MOUSE;
 	st[2] = KE_FILLER;
 	st[3] = (char_u)MOUSE_LEFT;
+	fill_mouse_coord(st + 4,
 #ifdef FEAT_VERTSPLIT
-	st[4] = (char_u)(W_WINCOL(wp) + ' ' + 1);	/* column -1 */
+		W_WINCOL(wp),
 #else
-	st[4] = (char_u)(' ');		/* column -1 */
+		-1,
 #endif
-	st[5] = (char_u)(wp->w_height + W_WINROW(wp) + ' ' + 1);
-	add_to_input_buf(st, 6);
+		wp->w_height + W_WINROW(wp));
+
+	add_to_input_buf(st, 8);
 	st[3] = (char_u)MOUSE_RELEASE;
-	add_to_input_buf(st, 6);
+	add_to_input_buf(st, 8);
 
 #ifdef FEAT_GUI_GTK
 	/* Need to wake up the main loop */

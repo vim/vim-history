@@ -1,8 +1,6 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 May 09
-
-:set undolevels=-1		" speed things up a little
+" Last Change:	2003 May 16
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1
@@ -216,6 +214,8 @@ endif
 " The variants for existing g:ExtraVimResult are needed when executing a script
 " in an extra Vim process, see ExtraVim below.
 
+" EXTRA_VIM_START - do not change or remove this line.
+
 com!		    XpathINIT	let g:Xpath = 0
 
 if exists("g:ExtraVimResult")
@@ -266,6 +266,11 @@ else
 				    \ '", "\n", "&\t      ", "g") . "\n"'
 endif
 
+" Switch off storing of lines for undoing changes.  Speeds things up a little.
+set undolevels=-1
+
+" EXTRA_VIM_STOP - do not change or remove this line.
+
 
 " ExtraVim() - Run a script file in an extra Vim process.		    {{{2
 "
@@ -307,41 +312,60 @@ endif
 " process are then redirected to the file.  An existing file is overwritten.
 "
 let ExtraVimCount = 0
-let ExtraVimScript = expand("<sfile>")
+let ExtraVimBase = expand("<sfile>")
+let ExtraVimTestEnv = ""
 "
 function! ExtraVim(...)
     " Count how often this function is called.
     let g:ExtraVimCount = g:ExtraVimCount + 1
 
-    " Open a buffer for a temp file, read in this test script, and search the
-    " end of the test environment.
-    let script = tempname()
-    execute "edit" script
-    execute "0read" g:ExtraVimScript
-    execute "/E" . "ND_OF_TEST_ENVIRONMENT/+"
+    " Disable folds to prevent that the ranges in the ":write" commands below
+    " are extended up to the end of a closed fold.  This also speeds things up
+    " considerably.
+    set nofoldenable
 
-    " Delete up to the g:ExtraVimCount'th occurrence of "if ExtraVim()"
-    " (inclusive).
-    let cnt = g:ExtraVimCount
-    while cnt > 0
-	silent ,/^\s*if\s\+ExtraVim(.*)/d
-	let cnt = cnt - 1
-    endwhile
+    " Open a buffer for this test script and copy the test environment to
+    " a temporary file.  Take account of parts relevant for the extra script
+    " execution only.
+    let current_buffnr = bufnr("%")
+    execute "view +1" g:ExtraVimBase
+    if g:ExtraVimCount == 1
+	let g:ExtraVimTestEnv = tempname()
+	execute "/E" . "XTRA_VIM_START/+,/E" . "XTRA_VIM_STOP/-w"
+		    \ g:ExtraVimTestEnv "|']+"
+	execute "/E" . "XTRA_VIM_START/+,/E" . "XTRA_VIM_STOP/-w >>"
+		    \ g:ExtraVimTestEnv "|']+"
+	execute "/E" . "XTRA_VIM_START/+,/E" . "XTRA_VIM_STOP/-w >>"
+		    \ g:ExtraVimTestEnv "|']+"
+	execute "/E" . "XTRA_VIM_START/+,/E" . "XTRA_VIM_STOP/-w >>"
+		    \ g:ExtraVimTestEnv "|']+"
+    endif
 
-    " Compute the source line number where the extra script begins.  Passed as
-    " variable "ExtraVimBegin" to the script.
-    let script_begin = line(".") - 1
+    " Start the extra Vim script with a ":source" command for the test
+    " environment.  The source line number where the extra script will be
+    " appended, needs to be passed as variable "ExtraVimBegin" to the script.
+    let extra_script = tempname()
+    exec "!echo 'source " . g:ExtraVimTestEnv . "' >" . extra_script
+    let extra_begin = 1
 
-    " Search the end of the extra Vim script, deleting all ^" in between, and
-    " delete the rest of the buffer.
-    ,/^endif/s/^"//e
-    execute '\/,$d'
+    " Starting behind the test environment, skip over the first g:ExtraVimCount
+    " occurrences of "if ExtraVim()" and copy the following lines up to the
+    " matching "endif" to the extra Vim script.
+    execute "/E" . "ND_OF_TEST_ENVIRONMENT/"
+    exec 'norm ' . g:ExtraVimCount . '/^\s*if\s\+ExtraVim(.*)/+' . "\n"
+    execute ".,/^endif/-write >>" . extra_script
+
+    " Open a buffer for the extra Vim script, delete all ^", and write the
+    " script if was actually modified.
+    execute "edit +" . (extra_begin + 1) extra_script
+    ,$s/^"//e
+    update
 
     " Count the INTERRUPTs and build the breakpoint and quit commands.
     let breakpoints = ""
     let debug_quits = ""
     let in_func = 0
-    execute "?E" . "ND_OF_TEST_ENVIRONMENT?"
+    exec extra_begin
     while search(
 	    \ '"\s*INTERRUPT\h\@!\|^\s*fu\%[nction]\>!\=\s*\%(\u\|s:\)\w*\s*(\|'
 	    \ . '^\s*\\\|^\s*endf\%[unction]\>\|'
@@ -396,7 +420,7 @@ function! ExtraVim(...)
 		else
 		    " Add the file breakpoint and the quits to be used for it.
 		    let breakpoints = breakpoints . " -c 'breakadd file " .
-			\ line(".") . " " . script . "'"
+			\ line(".") . " " . extra_script . "'"
 		    if quits == ""
 			let quits = "q\r"
 		    endif
@@ -421,8 +445,7 @@ function! ExtraVim(...)
 	endif
     endwhile
 
-    " Write the script and create an (empty) resultfile.
-    write
+    " Close the buffer for the script and create an (empty) resultfile.
     bwipeout
     let resultfile = tempname()
     exec "!>" . resultfile
@@ -435,10 +458,10 @@ function! ExtraVim(...)
     let redirect = a:0 ?
 	\ " -c 'au VimLeave * redir END' -c 'redir\\! >" . a:1 . "'" : ""
     exec "!echo '" . debug_quits . "q' | ../vim -u NONE -N -e -s" . redirect .
-	\ " -c 'debuggreedy' "
-	\ " -c 'let ExtraVimBegin = " . script_begin . "'" .
+	\ " -c 'debuggreedy'" .
+	\ " -c 'let ExtraVimBegin = " . extra_begin . "'" .
 	\ " -c 'let ExtraVimResult = \"" . resultfile . "\"'" . breakpoints .
-	\ " -S " . script
+	\ " -S " . extra_script
 
     " Build the resulting sum for resultfile and add it to g:Xpath.  Add Xout
     " information provided by the extra Vim process to the test output.
@@ -460,8 +483,11 @@ function! ExtraVim(...)
     let g:Xpath = g:Xpath + sum
 
     " Delete the extra script and the resultfile.
-    call delete(script)
+    call delete(extra_script)
     call delete(resultfile)
+
+    " Switch back to the buffer that was active when this function was entered.
+    exec "buffer" current_buffnr
 
     " Return 0.  This protects extra scripts from being run in the main Vim
     " process.
@@ -474,6 +500,7 @@ endfunction
 " Evaluates v:throwpoint and returns the throwpoint relativ to the beginning of
 " an ExtraVim script as passed by ExtraVim() in ExtraVimBegin.
 "
+" EXTRA_VIM_START - do not change or remove this line.
 function! ExtraVimThrowpoint()
     if !exists("g:ExtraVimBegin")
 	Xout "ExtraVimThrowpoint() used outside ExtraVim() script."
@@ -488,6 +515,7 @@ function! ExtraVimThrowpoint()
 	\ (substitute(v:throwpoint, '.*, line ', '', "") - g:ExtraVimBegin) .
 	\ " of ExtraVim() script"
 endfunction
+" EXTRA_VIM_STOP - do not change or remove this line.
 
 
 " MakeScript() - Make a script file from a function.			    {{{2
@@ -502,6 +530,7 @@ endfunction
 " In order to execute a function specifying an INTERRUPT location (see ExtraVim)
 " as a script file, use ExecAsScript below.
 "
+" EXTRA_VIM_START - do not change or remove this line.
 function! MakeScript(funcname, ...)
     let script = tempname()
     execute "redir! >" . script
@@ -528,6 +557,7 @@ function! MakeScript(funcname, ...)
     bwipeout
     return script
 endfunction
+" EXTRA_VIM_STOP - do not change or remove this line.
 
 
 " ExecAsScript - Source a temporary script made from a function.	    {{{2
@@ -538,6 +568,7 @@ endfunction
 " When inside ":if ExtraVim()", add a file breakpoint for each INTERRUPT
 " location specified in the function.
 "
+" EXTRA_VIM_START - do not change or remove this line.
 function! ExecAsScript(funcname)
     " Make a script from the function passed as argument.
     let script = MakeScript(a:funcname)
@@ -572,6 +603,7 @@ function! ExecAsScript(funcname)
 endfunction
 
 com! -nargs=1 -bar ExecAsScript call ExecAsScript(<f-args>)
+" EXTRA_VIM_STOP - do not change or remove this line.
 
 
 " END_OF_TEST_ENVIRONMENT - do not change or remove this line.
@@ -8696,7 +8728,7 @@ function! Delete_autocommands(...)
 	    endwhile
 	catch /.*/
 	finally
-	    bw!
+	    bwipeout!
 	    call delete(augfile)
 	    break		" discard errors for $VIMNOERRTHROW
 	endtry
@@ -8868,7 +8900,7 @@ while 1
 		aug! TMP
 	    endtry
 	finally
-	    bw!
+	    bwipeout!
 	endtry
     catch /.*/
 	Xpath 4194304				" X: 0

@@ -1516,7 +1516,9 @@ get_x11_thing(get_title, test_only)
 	 * keep traversing up the tree until a window with a title/icon is
 	 * found.
 	 */
-	/* if (term_is_xterm) */
+	/* Previously this was only done for xterm and alikes.  I don't see a
+	 * reason why it would fail for other terminal emulators.
+	 * if (term_is_xterm) */
 	{
 	    Window	    root;
 	    Window	    parent;
@@ -3900,7 +3902,7 @@ WaitForChar(msec)
 #endif
     int		avail;
 
-    if (!vim_is_input_buf_empty())	    /* something in inbuf[] */
+    if (input_available())	    /* something in inbuf[] */
 	return 1;
 
 #if defined(FEAT_MOUSE_DEC)
@@ -3942,7 +3944,7 @@ WaitForChar(msec)
 # endif
 	if (!avail)
 	{
-	    if (!vim_is_input_buf_empty())
+	    if (input_available())
 		return 1;
 # ifdef FEAT_XCLIPBOARD
 	    if (rest == 0 || !do_xterm_trace())
@@ -4081,7 +4083,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	if (xterm_Shell != (Widget)0 && (fds[xterm_idx].revents & POLLIN))
 	{
 	    xterm_update();      /* Maybe we should hand out clipboard */
-	    if (--ret == 0 && vim_is_input_buf_empty())
+	    if (--ret == 0 && !input_available())
 		/* Try again */
 		finished = FALSE;
 	}
@@ -4203,7 +4205,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    xterm_update();	      /* Maybe we should hand out clipboard */
 	    /* continue looping when we only got the X event and the input
 	     * buffer is empty */
-	    if (--ret == 0 && vim_is_input_buf_empty())
+	    if (--ret == 0 && !input_available())
 	    {
 		/* Try again */
 		finished = FALSE;

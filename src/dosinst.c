@@ -445,14 +445,14 @@ uninstall_check(void)
     char	*uninstall_key = "software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
     char	subkey_name_buff[BUFSIZE];
     char	temp_string_buffer[BUFSIZE];
-    long	local_bufsize = BUFSIZE;
+    DWORD	local_bufsize = BUFSIZE;
     FILETIME	temp_pfiletime;
     DWORD	key_index;
     char	input;
     long	code;
-    long	value_type;
-    long	orig_num_keys;
-    long	new_num_keys;
+    DWORD	value_type;
+    DWORD	orig_num_keys;
+    DWORD	new_num_keys;
     int		foundone = 0;
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, uninstall_key, 0, KEY_READ,

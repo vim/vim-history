@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 07
+" Last Change:	2003 May 14
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -101,6 +101,7 @@ SynMenu CD.Cascading\ Style\ Sheets:css
 SynMenu CD.Century\ Term:cterm
 SynMenu CD.CHILL:ch
 SynMenu CD.ChangeLog:changelog
+SynMenu CD.Cheetah\ template:cheetah
 SynMenu CD.Clean:clean
 SynMenu CD.Clever:cl
 SynMenu CD.Clipper:clipper
@@ -168,9 +169,10 @@ SynMenu HIJK.Haskell.Haskell:haskell
 SynMenu HIJK.Haskell.Haskell-c2hs:chaskell
 SynMenu HIJK.Haskell.Haskell-literate:lhaskell
 SynMenu HIJK.Hercules:hercules
-SynMenu HIJK.HTML:html
-SynMenu HIJK.HTML\ with\ M4:htmlm4
-SynMenu HIJK.HTML/OS:htmlos
+SynMenu HIJK.HTML.HTML:html
+SynMenu HIJK.HTML.HTML\ with\ M4:htmlm4
+SynMenu HIJK.HTML.Cheetah\ HTML\ template:htmlcheetah
+SynMenu HIJK.HTML.HTML/OS:htmlos
 SynMenu HIJK.Hyper\ Builder:hb
 SynMenu HIJK.Icon:icon
 SynMenu HIJK.IDL\Generic\ IDL:idl

@@ -1357,7 +1357,7 @@ gui_mch_wait_for_chars(int wtime)
     while( 1 )
     {
 	PtProcessEvent();
-	if( !vim_is_input_buf_empty() )
+	if( input_available() )
 	{
 	    PtSetResource( gui_ph_timer_timeout, Pt_ARG_TIMER_INITIAL, 0, 0 );
 	    return( OK );
