@@ -1372,7 +1372,10 @@ cmdline_paste_str(s, literally)
 		++s;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		c = mb_ptr2char_adv(&s);
+	    {
+		c = mb_ptr2char(s);
+		s += mb_char2len(c);
+	    }
 	    else
 #endif
 		c = *s++;

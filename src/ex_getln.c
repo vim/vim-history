@@ -2003,7 +2003,7 @@ put_on_cmdline(str, len, redraw)
 	if (c != 0)
 	{
 	    /* Also backup the cursor position. */
-	    c -= ptr2cells(ccline.cmdbuff + ccline.cmdpos);
+	    c = ptr2cells(ccline.cmdbuff + ccline.cmdpos);
 	    ccline.cmdspos -= c;
 	    msg_col -= c;
 	    if (msg_col < 0)
