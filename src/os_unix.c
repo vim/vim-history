@@ -3994,6 +3994,8 @@ RealWaitForChar(fd, msec, check_for_gpm)
 {
     int		ret;
 #if defined(FEAT_XCLIPBOARD) || defined(USE_XSMP)
+    static int	busy = FALSE;
+
     /* May retry getting characters after an event was handled. */
 # define MAY_LOOP
 
@@ -4016,6 +4018,11 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    ))
 	gettimeofday(&start_tv, NULL);
 # endif
+
+    /* Handle being called recursively.  This may happen for the session
+     * manager stuff, it may save the file, which does a breakcheck. */
+    if (busy)
+	return 0;
 #endif
 
 #ifdef MAY_LOOP
@@ -4111,7 +4118,11 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	if (xsmp_idx >= 0 && (fds[xsmp_idx].revents & (POLLIN | POLLHUP)))
 	{
 	    if (fds[xsmp_idx].revents & POLLIN)
+	    {
+		busy = TRUE;
 		xsmp_handle_requests();
+		busy = FALSE;
+	    }
 	    else if (fds[xsmp_idx].revents & POLLHUP)
 	    {
 		if (p_verbose > 0)
@@ -4247,7 +4258,9 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    }
 	    else if (FD_ISSET(xsmp_icefd, &rfds))
 	    {
+		busy = TRUE;
 		xsmp_handle_requests();
+		busy = FALSE;
 		if (--ret == 0)
 		    finished = FALSE;   /* keep going if event was only one */
 	    }
@@ -5793,7 +5806,7 @@ xsmp_handle_save_yourself(smc_conn, client_data, save_type,
     int		interact_style;
     Bool	fast;
 {
-    /* Handle already biung in saveyourself */
+    /* Handle already being in saveyourself */
     if (xsmp.save_yourself)
 	SmcSaveYourselfDone(smc_conn, True);
     xsmp.save_yourself = True;
@@ -5893,6 +5906,7 @@ xsmp_ice_connection(iceConn, clientData, opening, watchData)
 xsmp_handle_requests()
 {
     Bool rep;
+
     if (IceProcessMessages(xsmp.iceconn, NULL, &rep)
 						 == IceProcessMessagesIOError)
     {
