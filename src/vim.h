@@ -1469,7 +1469,8 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_EXCEPTION	29
 #define VV_THROWPOINT	30
 #define VV_REG		31
-#define VV_LEN		32	/* number of v: vars */
+#define VV_CMDBANG	32
+#define VV_LEN		33	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

@@ -230,6 +230,7 @@ struct vimvar
     {"exception", sizeof("exception") - 1, NULL, VAR_STRING, VV_RO},
     {"throwpoint", sizeof("throwpoint") - 1, NULL, VAR_STRING, VV_RO},
     {"register", sizeof("register") - 1, NULL, VAR_STRING, VV_RO},
+    {"cmdbang", sizeof("cmdbang") - 1, NULL, VAR_NUMBER, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -7843,6 +7844,16 @@ set_vim_var_nr(idx, val)
     long	val;
 {
     vimvars[idx].val = (char_u *)val;
+}
+
+/*
+ * Get number v: variable value;
+ */
+    long
+get_vim_var_nr(idx)
+    int		idx;
+{
+    return (long)vimvars[idx].val;
 }
 
 /*
