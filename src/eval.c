@@ -8447,8 +8447,6 @@ ex_echo(eap)
 
     if (eap->skip)
 	++emsg_skip;
-    else if (eap->cmdidx == CMD_echo)
-	msg_start();
     while (*arg != NUL && *arg != '|' && *arg != '\n' && !got_int)
     {
 	p = arg;
@@ -8466,7 +8464,13 @@ ex_echo(eap)
 	if (!eap->skip)
 	{
 	    if (atstart)
+	    {
 		atstart = FALSE;
+		/* Call msg_start() after eval1(), evaluating the expression
+		 * may cause a message to appear. */
+		if (eap->cmdidx == CMD_echo)
+		    msg_start();
+	    }
 	    else if (eap->cmdidx == CMD_echo)
 		msg_puts_attr((char_u *)" ", echo_attr);
 	    for (p = get_var_string(&retvar); *p != NUL && !got_int; ++p)
