@@ -46,7 +46,7 @@ static int	otherfile_buf __ARGS((buf_T *buf, char_u *ffname));
 static int	ti_change __ARGS((char_u *str, char_u **last));
 #endif
 static void	free_buffer __ARGS((buf_T *));
-static void	free_buffer_stuff __ARGS((buf_T *));
+static void	free_buffer_stuff __ARGS((buf_T *buf, int free_options));
 static void	clear_wininfo __ARGS((buf_T *buf));
 
 #ifdef UNIX
@@ -393,7 +393,7 @@ close_buffer(win, buf, action)
 	{
 	    /* Free all internal variables and reset option values, to make
 	     * ":bdel" compatible with Vim 5.7. */
-	    free_buffer_stuff(buf);
+	    free_buffer_stuff(buf, TRUE);
 
 	    /* Make it look like a new buffer. */
 	    buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
@@ -481,7 +481,7 @@ buf_freeall(buf, del_buf)
 free_buffer(buf)
     buf_T	*buf;
 {
-    free_buffer_stuff(buf);
+    free_buffer_stuff(buf, TRUE);
 #ifdef FEAT_PERL
     perl_buf_free(buf);
 #endif
@@ -498,21 +498,25 @@ free_buffer(buf)
  * Free stuff in the buffer for ":bdel" and when wiping out the buffer.
  */
     static void
-free_buffer_stuff(buf)
+free_buffer_stuff(buf, free_options)
     buf_T	*buf;
+    int		free_options;		/* free options as well */
 {
-    clear_wininfo(buf);
+    if (free_options)
+    {
+	clear_wininfo(buf);		/* including window-local options */
+	free_buf_options(buf, TRUE);
+    }
 #ifdef FEAT_EVAL
-    var_clear(&buf->b_vars);	    /* free all internal variables */
+    var_clear(&buf->b_vars);		/* free all internal variables */
 #endif
 #ifdef FEAT_USR_CMDS
-    uc_clear(&buf->b_ucmds);	    /* clear local user commands */
+    uc_clear(&buf->b_ucmds);		/* clear local user commands */
+#endif
 #ifdef FEAT_LOCALMAP
     map_clear_int(buf, MAP_ALL_MODES, TRUE, FALSE);  /* clear local mappings */
     map_clear_int(buf, MAP_ALL_MODES, TRUE, TRUE);   /* clear local abbrevs */
 #endif
-#endif
-    free_buf_options(buf, TRUE);
 #ifdef FEAT_MBYTE
     vim_free(buf->b_start_fenc);
     buf->b_start_fenc = NULL;
@@ -1290,8 +1294,10 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
 	/* buf->b_nwindows = 0; why was this here? */
-#ifdef FEAT_EVAL
-	var_clear(&buf->b_vars);	/* delete internal variables */
+	free_buffer_stuff(buf, FALSE);	/* delete local variables et al. */
+#ifdef FEAT_KEYMAP
+	/* need to reload lmaps and set b:keymap_name */
+	curbuf->b_kmap_state |= KEYMAP_INIT;
 #endif
     }
     else
