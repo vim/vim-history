@@ -603,8 +603,9 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     {
 #ifdef USE_GUI_MOTIF
 	/* Ignore ALT keys when they are used for the menu only */
-	if (p_wak[0] == 'y'
-		|| (p_wak[0] == 'm' && gui_is_menu_shortcut(string[0])))
+	if (gui.menu_is_active
+		&& (p_wak[0] == 'y'
+		    || (p_wak[0] == 'm' && gui_is_menu_shortcut(string[0]))))
 	{
 #ifdef USE_XIM
 	    if (string_alloced)
