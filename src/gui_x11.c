@@ -21,11 +21,16 @@
 
 #include "vim.h"
 
-#ifdef HAVE_X11_XPM_H
-# include <X11/xpm.h>
+/*
+ * For Workshop XpmP.h is preferred, because it makes the signs drawn with a
+ * transparent background instead of black.
+ */
+#if defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF) \
+	&& (!defined(HAVE_X11_XPM_H) || defined(FEAT_SUN_WORKSHOP))
+# include <Xm/XpmP.h>
 #else
-# if defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF)
-#  include <Xm/XpmP.h>
+# ifdef HAVE_X11_XPM_H
+#  include <X11/xpm.h>
 # endif
 #endif
 
