@@ -1736,6 +1736,8 @@ do_pending_operator(cap, old_col, gui_yank)
 		else
 		    restart_edit_save = 0;
 		restart_edit = 0;
+		/* Reset finish_op now, don't want it set inside edit(). */
+		finish_op = FALSE;
 		if (op_change(oap))	/* will call edit() */
 		    cap->retval |= CA_COMMAND_BUSY;
 		if (restart_edit == 0)
