@@ -2425,6 +2425,26 @@ mch_early_init()
 #endif
 }
 
+static void exit_scroll __ARGS((void));
+
+/*
+ * Output a newline when exiting.
+ * Make sure the newline goes to the same stream as the text.
+ */
+    static void
+exit_scroll()
+{
+    if (msg_use_printf())
+    {
+	if (info_message)
+	    mch_msg("\r\n");
+	else
+	    mch_errmsg("\r\n");
+    }
+    else
+	out_char('\n');
+}
+
     void
 mch_exit(r)
     int r;
@@ -2443,7 +2463,16 @@ mch_exit(r)
 #ifdef FEAT_TITLE
 	mch_restore_title(3);	/* restore xterm title and icon name */
 #endif
-	/* Stop termcap first: May need to check for T_CRV response, which
+	/*
+	 * When t_ti is not empty but it doesn't cause swapping terminal
+	 * pages, need to output a newline when msg_didout is set.  But when
+	 * t_ti does swap pages it should not go to the shell page.  Do this
+	 * before stoptermcap().
+	 */
+	if (swapping_screen() && !newline_on_exit && msg_didout)
+	    exit_scroll();
+
+	/* Stop termcap: May need to check for T_CRV response, which
 	 * requires RAW mode. */
 	stoptermcap();
 
@@ -2454,18 +2483,7 @@ mch_exit(r)
 	if (!swapping_screen() || newline_on_exit)
 	{
 	    if (newline_on_exit || msg_didout)
-	    {
-		/* Make sure the newline goes to the same stream as the text */
-		if (msg_use_printf())
-		{
-		    if (info_message)
-			mch_msg("\r\n");
-		    else
-			mch_errmsg("\r\n");
-		}
-		else
-		    out_char('\n');
-	    }
+		exit_scroll();
 	    else
 	    {
 		restore_cterm_colors();	/* get original colors back */
