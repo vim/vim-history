@@ -146,6 +146,7 @@ do_tag(tag, type, count, forceit, verbose)
     char_u		**new_matches;
     int			attr;
     int			use_tagstack;
+    int			skip_msg = FALSE;
 
     /* remember the matches for the last used tag */
     static int		num_matches = 0;
@@ -314,7 +315,11 @@ do_tag(tag, type, count, forceit, verbose)
 		if (cur_match >= MAXCOL)
 		    cur_match = MAXCOL - 1;
 		else if (cur_match < 0)
+		{
+		    EMSG("Cannot go before first matching tag");
+		    skip_msg = TRUE;
 		    cur_match = 0;
+		}
 	    }
 	}
 
@@ -629,7 +634,17 @@ do_tag(tag, type, count, forceit, verbose)
 	    }
 
 	    if (cur_match >= num_matches)
+	    {
+		if (type == DT_NEXT || type == DT_FIRST)
+		{
+		    if (num_matches == 1)
+			EMSG("There is only one matching tag");
+		    else
+			EMSG("Cannot go beyond last matching tag");
+		    skip_msg = TRUE;
+		}
 		cur_match = num_matches - 1;
+	    }
 	    if (use_tagstack)
 	    {
 		tagstack[tagstackidx].cur_match = cur_match;
@@ -649,7 +664,8 @@ do_tag(tag, type, count, forceit, verbose)
 #ifdef USE_CSCOPE
 		&& type != DT_CSCOPE
 #endif
-		&& (num_matches > 1 || ic))
+		&& (num_matches > 1 || ic)
+		&& !skip_msg)
 	    {
 		/* Give an indication of the number of matching tags */
 		sprintf((char *)msg_buf, "tag %d of %d%s",
