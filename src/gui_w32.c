@@ -330,9 +330,11 @@ gui_mswin_get_menu_height(
     }
 
     if (fix_window && menu_height != old_menu_height)
+    {
+	old_menu_height = menu_height;
 	gui_set_shellsize(FALSE, FALSE);
+    }
 
-    old_menu_height = menu_height;
     return menu_height;
 }
 #endif /*FEAT_MENU*/
