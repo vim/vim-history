@@ -101,6 +101,11 @@ AC_ARG_WITH(global-runtime, [  --with-global-runtime=DIR    global runtime direc
 	AC_MSG_RESULT($withval); AC_DEFINE_UNQUOTED(RUNTIME_GLOBAL, "$withval"),
 	AC_MSG_RESULT(no))
 
+AC_MSG_CHECKING(--with-modified-by argument)
+AC_ARG_WITH(modified-by, [  --with-modified-by=NAME       name of who modified a rlease version],
+	AC_MSG_RESULT($withval); AC_DEFINE_UNQUOTED(MODIFIED_BY, "$withval"),
+	AC_MSG_RESULT(no))
+
 dnl Check for EBCDIC stolen from the LYNX port to OS390 Unix
 AC_MSG_CHECKING(if character set is EBCDIC)
 AC_TRY_COMPILE([ ],

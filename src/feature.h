@@ -887,6 +887,13 @@
 /* #define RUNTIME_GLOBAL "/etc/vim" */
 
 /*
+ * MODIFIED_BY		Name of who modified Vim.  Required when distributing
+ *			a modifed version of Vim.
+ *			Also from the "--with-modified-by" configure argument.
+ */
+/* #define MODIFIED_BY "John Doe" */
+
+/*
  * Machine dependent:
  * ==================
  */
