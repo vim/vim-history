@@ -4236,6 +4236,7 @@ ml_find_line_or_offset(buf, line, offp)
     long	offset;
     int		len;
     int		ffdos = (get_fileformat(buf) == EOL_DOS);
+    int		extra = 0;
 
     if (buf->b_ml.ml_usedchunks == -1
 	    || buf->b_ml.ml_chunksize == NULL
@@ -4255,10 +4256,10 @@ ml_find_line_or_offset(buf, line, offp)
     curline = 1;
     curix = size = 0;
     while (curix < buf->b_ml.ml_usedchunks - 1
-	    && ((line
+	    && ((line != 0
 	     && line >= curline + buf->b_ml.ml_chunksize[curix].mlcs_numlines)
-		|| (offset
-	   && offset >= size + buf->b_ml.ml_chunksize[curix].mlcs_totalsize
+		|| (offset != 0
+	       && offset > size + buf->b_ml.ml_chunksize[curix].mlcs_totalsize
 		      + ffdos * buf->b_ml.ml_chunksize[curix].mlcs_numlines)))
     {
 	curline += buf->b_ml.ml_chunksize[curix].mlcs_numlines;
@@ -4268,13 +4269,11 @@ ml_find_line_or_offset(buf, line, offp)
 	curix++;
     }
 
-    while ((line && curline < line) || (offset && size < offset))
+    while ((line != 0 && curline < line) || (offset != 0 && size < offset))
     {
 	if (curline > buf->b_ml.ml_line_count
 		|| (hp = ml_find_line(buf, curline, ML_FIND)) == NULL)
-	{
 	    return -1;
-	}
 	dp = (DATA_BL *)(hp->bh_data);
 	count = (long)(buf->b_ml.ml_locked_high) -
 		(long)(buf->b_ml.ml_locked_low) + 1;
@@ -4284,7 +4283,7 @@ ml_find_line_or_offset(buf, line, offp)
 	else
 	    text_end = ((dp->db_index[idx - 1]) & DB_INDEX_MASK);
 	/* Compute index of last line to use in this MEMLINE */
-	if (line)
+	if (line != 0)
 	{
 	    if (curline + (count - idx) >= line)
 		idx += line - curline - 1;
@@ -4293,6 +4292,7 @@ ml_find_line_or_offset(buf, line, offp)
 	}
 	else
 	{
+	    extra = 0;
 	    while (offset >= size
 		       + text_end - (int)((dp->db_index[idx]) & DB_INDEX_MASK)
 								      + ffdos)
@@ -4300,13 +4300,16 @@ ml_find_line_or_offset(buf, line, offp)
 		if (ffdos)
 		    size++;
 		if (idx == count - 1)
+		{
+		    extra = 1;
 		    break;
+		}
 		idx++;
 	    }
 	}
 	len = text_end - ((dp->db_index[idx]) & DB_INDEX_MASK);
 	size += len;
-	if (offp != NULL && size >= offset)
+	if (offset != 0 && size >= offset)
 	{
 	    if (size + ffdos == offset)
 		*offp = 0;
@@ -4315,7 +4318,7 @@ ml_find_line_or_offset(buf, line, offp)
 	    else
 		*offp = offset - size + len
 		     - (text_end - ((dp->db_index[idx - 1]) & DB_INDEX_MASK));
-	    return curline + idx - start_idx;
+	    return curline + idx - start_idx + extra;
 	}
 	curline = buf->b_ml.ml_locked_high + 1;
     }
@@ -4355,7 +4358,7 @@ goto_byte(cnt)
     check_cursor();
 
 # ifdef FEAT_MBYTE
-    /* prevent cursor from moving on the trail byte */
+    /* Make sure the cursor is on the first byte of a multi-byte char. */
     if (has_mbyte)
 	mb_adjust_cursor();
 # endif
