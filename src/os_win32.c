@@ -4084,7 +4084,10 @@ do_acl_check(char *n)
 		if (first)
 		    first = FALSE;
 		else
+		{
+		    ++i;	/* include the trailing (back)slash */
 		    break;
+		}
 	    }
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
