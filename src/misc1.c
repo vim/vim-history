@@ -2494,6 +2494,11 @@ changed_common(lnum, col, lnume, xtra)
 {
     win_T	*wp;
     int		i;
+#ifdef FEAT_JUMPLIST
+    int		cols;
+    pos_T	*p;
+    int		add;
+#endif
 
     /* mark the buffer as modified */
     changed();
@@ -2505,35 +2510,59 @@ changed_common(lnum, col, lnume, xtra)
 	curbuf->b_last_change.col = col;
 
 #ifdef FEAT_JUMPLIST
-	if (curbuf->b_new_change)
+	/* Create a new entry if a new undo-able change was started or we
+	 * don't have an entry yet. */
+	if (curbuf->b_new_change || curbuf->b_changelistlen == 0)
 	{
-	    /* This is the first of a new sequence of undo-able changes.
-	     * Use a new position in the changelist. */
-	    curbuf->b_new_change = FALSE;
-
-	    if (curbuf->b_changelistlen == JUMPLISTSIZE)
+	    if (curbuf->b_changelistlen == 0)
+		add = TRUE;
+	    else
 	    {
-		/* changelist is full: remove oldest entry */
-		curbuf->b_changelistlen = JUMPLISTSIZE - 1;
-		mch_memmove(curbuf->b_changelist, curbuf->b_changelist + 1,
-					  sizeof(pos_T) * (JUMPLISTSIZE - 1));
-		FOR_ALL_WINDOWS(wp)
+		/* Don't create a new entry when the line number is the same
+		 * as the last one and the column is not too far away.  Avoids
+		 * creating many entries for typing "xxxxx". */
+		p = &curbuf->b_changelist[curbuf->b_changelistlen - 1];
+		if (p->lnum != lnum)
+		    add = TRUE;
+		else
 		{
-		    /* Correct position in changelist for other windows on
-		     * this buffer. */
-		    if (wp->w_buffer == curbuf && wp->w_changelistidx > 0)
-			--wp->w_changelistidx;
+		    cols = comp_textwidth(FALSE);
+		    if (cols == 0)
+			cols = 79;
+		    add = (p->col + cols < col || col + cols < p->col);
 		}
 	    }
-	    FOR_ALL_WINDOWS(wp)
+	    if (add)
 	    {
-		/* For other windows, if the position in the changelist is at
-		 * the end it stays at the end. */
-		if (wp->w_buffer == curbuf
+		/* This is the first of a new sequence of undo-able changes
+		 * and it's at some distance of the last change.  Use a new
+		 * position in the changelist. */
+		curbuf->b_new_change = FALSE;
+
+		if (curbuf->b_changelistlen == JUMPLISTSIZE)
+		{
+		    /* changelist is full: remove oldest entry */
+		    curbuf->b_changelistlen = JUMPLISTSIZE - 1;
+		    mch_memmove(curbuf->b_changelist, curbuf->b_changelist + 1,
+					  sizeof(pos_T) * (JUMPLISTSIZE - 1));
+		    FOR_ALL_WINDOWS(wp)
+		    {
+			/* Correct position in changelist for other windows on
+			 * this buffer. */
+			if (wp->w_buffer == curbuf && wp->w_changelistidx > 0)
+			    --wp->w_changelistidx;
+		    }
+		}
+		FOR_ALL_WINDOWS(wp)
+		{
+		    /* For other windows, if the position in the changelist is
+		     * at the end it stays at the end. */
+		    if (wp->w_buffer == curbuf
 			    && wp->w_changelistidx == curbuf->b_changelistlen)
-		    ++wp->w_changelistidx;
+			++wp->w_changelistidx;
+		}
+		++curbuf->b_changelistlen;
 	    }
-	    ++curbuf->b_changelistlen;
 	}
 	curbuf->b_changelist[curbuf->b_changelistlen - 1] =
 							curbuf->b_last_change;

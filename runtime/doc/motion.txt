@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2.  Last change: 2004 Feb 29
+*motion.txt*    For Vim version 6.2.  Last change: 2004 Mar 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -960,35 +960,72 @@ If you have included the ' item in the 'viminfo' option the jumplist will be
 stored in the viminfo file and restored when starting Vim.
 
 
-CHANGE LIST JUMPS			*changelist* *change-list-jumps*
+CHANGE LIST JUMPS			*changelist* *change-list-jumps* *E664*
 
-For changes the cursor position is remembered.  One position is remembered for
-every change that can be undone.  Two commands can be used to jump to
-positions of changes, also those that have been undone.
+When making a change the cursor position is remembered.  One position is
+remembered for every change that can be undone, unless it is close to a
+previous change.  Two commands can be used to jump to positions of changes,
+also those that have been undone:
 
-							*g;*
-g;			Go to [count] older cursor position in change list
-			(not a motion command).
+							*g;* *E662*
+g;			Go to [count] older position in change list.
+			If [count] is larger than the number of older change
+			positions go to the oldest change.
+			If there is no older change an error message is given.
+			(not a motion command)
 			{not in Vi}
 			{not available without the +jumplist feature}
 
-							*g,*
-g,			Go to [count] newer cursor position in change list
-			(not a motion command).
+							*g,* *E663*
+g,			Go to [count] newer cursor position in change list.
+			Just like "g;| but in the opposite direction.
+			(not a motion command)
 			{not in Vi}
 			{not available without the +jumplist feature}
 
-When you already are at the end or start of the change list you will get an
-error message.  When using a count you jump as far back or forward as
-possible.  Thus you can use "999g;" to go to the first change for which the
-position is still remembered.  The number of entries in the change list is
-fixed and is the same as for the |jumplist|.
+When using a count you jump as far back or forward as possible.  Thus you can
+use "999g;" to go to the first change for which the position is still
+remembered.  The number of entries in the change list is fixed and is the same
+as for the |jumplist|.
+
+When two undo-able changes are in the same line and at a column position less
+than 'textwidth' apart only the last one is remembered.  This avoids that a
+sequence of small changes in a line, for example "xxxxx", adds many positions
+to the change list.  When 'textwidth' is zero 'wrapmargin' is used.  When that
+also isn't set a fixed number of 79 is used.  Detail: For the computations
+bytes are used, not characters, to avoid a speed penalty (this only matters
+for multi-byte encodings).
 
 Note that when text has been inserted or deleted the cursor position might be
-a bit different from the position of the change.
+a bit different from the position of the change.  Especially when lines have
+been deleted.
 
 When the |:keepjumps| command modifier is used the position of a change is not
 remembered.
+
+							*:changes*
+:changes		Print the change list.  A ">" character indicates the
+			current position.  Just after a change it is below the
+			newest entry, indicating that "g;" takes you to the
+			newest entry position.  The first column indicates the
+			count needed to take you to this position.  Example:
+
+				change line  col text ~
+				    3     9    8 bla bla bla
+				    2    11   57 foo is a bar
+				    1    14   54 the latest changed line
+				>
+
+			The "3g;" command takes you to line 9.  Then the
+			output of ":changes is:
+
+				change line  col text ~
+				>   0     9    8 bla bla bla
+				    1    11   57 foo is a bar
+				    2    14   54 the latest changed line
+			
+			Now you can use "g," to go to line 11 and "2g," to go
+			to line 14.
 
 ==============================================================================
 9. Various motions				*various-motions*

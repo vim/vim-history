@@ -898,7 +898,7 @@ mark_adjust(line1, line2, amount, amount_after)
 #ifdef FEAT_JUMPLIST
 	/* list of change positions */
 	for (i = 0; i < curbuf->b_changelistlen; ++i)
-	    one_adjust(&(curbuf->b_changelist[i].lnum));
+	    one_adjust_nodel(&(curbuf->b_changelist[i].lnum));
 #endif
 
 #ifdef FEAT_VISUAL
@@ -1470,7 +1470,7 @@ copy_viminfo_marks(virp, fp_out, count, eof)
 				  else
 				      ++curbuf->b_changelistlen;
 				  curbuf->b_changelist[
-					       curbuf->b_changelistlen] = pos;
+					   curbuf->b_changelistlen - 1] = pos;
 #endif
 				  break;
 			default:  if ((i = line[1] - 'a') >= 0 && i < NMARKS)
