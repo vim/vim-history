@@ -37,6 +37,10 @@
 # include <vimtbar.h>
 #endif
 
+#ifdef PROTO
+# define WINAPI
+#endif
+
 #define HANDLE_WM_DROPFILES(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HDROP)(wParam)), 0L)
 
@@ -222,7 +226,7 @@ _WndProc(
 	    return HANDLE_WM_SYSCHAR((hwnd), (wParam), (lParam), (_OnSysChar));
 #ifdef FEAT_MENU
 	else
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
 #endif
 
     case WM_SYSKEYUP:
@@ -230,7 +234,7 @@ _WndProc(
 	/* Only when menu is active, ALT key is used for that. */
 	if (gui.menu_is_active)
 	{
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	else
 #endif
@@ -269,7 +273,7 @@ _WndProc(
 	    int x, y;
 	    int xPos = GET_X_LPARAM(lParam);
 
-	    result = DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    result = MyWindowProc(hwnd, uMsg, wParam, lParam);
 	    if (result == HTCLIENT)
 	    {
 		gui_mch_get_winpos(&x, &y);
@@ -291,7 +295,7 @@ _WndProc(
 	    _OnFindRepl();
 	}
 #endif
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return MyWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
     return 1;
