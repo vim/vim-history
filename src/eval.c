@@ -339,7 +339,7 @@ static void list_one_var_a __ARGS((char_u *prefix, char_u *name, int type, char_
 static void set_var __ARGS((char_u *name, VAR varp));
 static void copy_var __ARGS((VAR from, VAR to));
 static char_u *find_option_end __ARGS((char_u **arg, int *opt_flags));
-static char_u *trans_function_name __ARGS((char_u **pp));
+static char_u *trans_function_name __ARGS((char_u **pp, int skip));
 static int eval_fname_script __ARGS((char_u *p));
 static int eval_fname_sid __ARGS((char_u *p));
 static void list_func_head __ARGS((ufunc_T *fp));
@@ -347,6 +347,8 @@ static void cat_func_name __ARGS((char_u *buf, ufunc_T *fp));
 static ufunc_T *find_func __ARGS((char_u *name));
 static void call_func __ARGS((ufunc_T *fp, int argcount, VAR argvars, VAR retvar, linenr_T firstline, linenr_T lastline));
 
+/* Magic braces are always enabled, otherwise Vim scripts would not be
+ * portable. */
 #define FEAT_MAGIC_BRACES
 
 #ifdef FEAT_MAGIC_BRACES
@@ -582,6 +584,7 @@ make_expanded_name(in_start, expr_start, expr_end, in_end)
     char_u	c1;
     char_u	*retval = NULL;
     char_u	*temp_result;
+    char_u	*nextcmd = NULL;
 
     if (expr_end == NULL || in_end == NULL)
 	return NULL;
@@ -590,8 +593,8 @@ make_expanded_name(in_start, expr_start, expr_end, in_end)
     c1 = *in_end;
     *in_end = NUL;
 
-    temp_result = eval_to_string(expr_start + 1, NULL);
-    if (temp_result != NULL)
+    temp_result = eval_to_string(expr_start + 1, &nextcmd);
+    if (temp_result != NULL && nextcmd == NULL)
     {
 	retval = alloc((unsigned)(STRLEN(temp_result) + (expr_start - in_start)
 						   + (in_end - expr_end) + 1));
@@ -602,9 +605,8 @@ make_expanded_name(in_start, expr_start, expr_end, in_end)
 	    STRCAT(retval, temp_result);
 	    STRCAT(retval, expr_end + 1);
 	}
-
-	vim_free(temp_result);
     }
+    vim_free(temp_result);
 
     *in_end = c1;		/* put char back for error messages */
     *expr_start = '{';
@@ -643,7 +645,7 @@ ex_let(eap)
     VAR		varp;
     var		retvar;
     char_u	*p;
-    int		c1, c2;
+    int		c1 = 0, c2;
     int		i;
 
     expr = vim_strchr(arg, '=');
@@ -672,30 +674,62 @@ ex_let(eap)
 	}
 	else
 	{
+	    int		error = FALSE;
+
 	    /*
 	     * List variables.
 	     */
 	    while (!ends_excmd(*arg))
 	    {
-		for (p = arg; eval_isnamec(*p); ++p)
-		    ;
-		if (!vim_iswhite(*p) && !ends_excmd(*p))
+		char_u	*expr_start;
+		char_u	*expr_end;
+		char_u	*name_end;
+		char_u	*temp_string = NULL;
+		int	arg_len;
+
+		/* Find the end of the name. */
+		name_end = find_name_end(arg, &expr_start, &expr_end);
+
+		if (!vim_iswhite(*name_end) && !ends_excmd(*name_end))
 		{
 		    EMSG(_(e_trailing));
 		    break;
 		}
-		if (!eap->skip)
+		if (!error && !eap->skip)
 		{
-		    c1 = *p;
-		    *p = NUL;
-		    i = find_vim_var(arg, (int)(p - arg));
+#ifdef FEAT_MAGIC_BRACES
+		    if (expr_start != NULL)
+		    {
+			temp_string = make_expanded_name(arg, expr_start,
+							 expr_end, name_end);
+			if (temp_string == NULL)
+			{
+			    EMSG2(_(e_invarg2), arg);
+			    break;
+			}
+			arg = temp_string;
+			arg_len = STRLEN(temp_string);
+		    }
+		    else
+#endif
+		    {
+			c1 = *name_end;
+			*name_end = NUL;
+			arg_len = (int)(name_end - arg);
+		    }
+		    i = find_vim_var(arg, arg_len);
 		    if (i >= 0)
 			list_vim_var(i);
 		    else
 		    {
 			varp = find_var(arg, FALSE);
 			if (varp == NULL)
+			{
+			    /* Skip further arguments but do continue to
+			     * search for a trailing command. */
 			    EMSG2(_("E106: Unknown variable: \"%s\""), arg);
+			    error = TRUE;
+			}
 			else
 			{
 			    name = vim_strchr(arg, ':');
@@ -718,9 +752,14 @@ ex_let(eap)
 				list_one_var(varp, (char_u *)"");
 			}
 		    }
-		    *p = c1;
+#ifdef FEAT_MAGIC_BRACES
+		    if (expr_start != NULL)
+			vim_free(temp_string);
+		    else
+#endif
+			*name_end = c1;
 		}
-		arg = skipwhite(p);
+		arg = skipwhite(name_end);
 	    }
 	}
 	eap->nextcmd = check_nextcmd(arg);
@@ -1035,50 +1074,59 @@ ex_unlet(eap)
     char_u	cc;
     char_u	*expr_start;
     char_u	*expr_end;
+    int		error = FALSE;
 
     do
     {
-
 	/* Find the end of the name. */
 	name_end = find_name_end(arg, &expr_start, &expr_end);
 
-#ifdef FEAT_MAGIC_BRACES
-	if (expr_start != NULL)
+	if (!vim_iswhite(*name_end) && !ends_excmd(*name_end))
 	{
-	    char_u  *temp_string;
-
-	    temp_string = make_expanded_name(arg, expr_start,
-							 expr_end, name_end);
-	    if (temp_string == NULL)
-		EMSG2(_(e_invarg2), arg);
-	    else
-	    {
-		if (do_unlet(temp_string) == FAIL && !eap->forceit)
-		{
-		    EMSG2(_("E108: No such variable: \"%s\""), temp_string);
-		    vim_free(temp_string);
-		    break;
-		}
-		vim_free(temp_string);
-	    }
+	    EMSG(_(e_trailing));
+	    break;
 	}
-	else
-#endif
+
+	if (!error && !eap->skip)
 	{
-	    cc = *name_end;
-	    *name_end = NUL;
-
-	    if (do_unlet(arg) == FAIL && !eap->forceit)
+#ifdef FEAT_MAGIC_BRACES
+	    if (expr_start != NULL)
 	    {
-		*name_end = cc;
-		EMSG2(_("E108: No such variable: \"%s\""), arg);
-		break;
-	    }
+		char_u  *temp_string;
 
-	    *name_end = cc;
+		temp_string = make_expanded_name(arg, expr_start,
+							 expr_end, name_end);
+		if (temp_string == NULL)
+		    EMSG2(_(e_invarg2), arg);
+		else
+		{
+		    if (do_unlet(temp_string) == FAIL && !eap->forceit)
+		    {
+			EMSG2(_("E108: No such variable: \"%s\""), temp_string);
+			error = TRUE;
+		    }
+		    vim_free(temp_string);
+		}
+	    }
+	    else
+#endif
+	    {
+		cc = *name_end;
+		*name_end = NUL;
+
+		if (do_unlet(arg) == FAIL && !eap->forceit)
+		{
+		    EMSG2(_("E108: No such variable: \"%s\""), arg);
+		    error = TRUE;
+		}
+
+		*name_end = cc;
+	    }
 	}
 	arg = skipwhite(name_end);
-    } while (*arg != NUL);
+    } while (!ends_excmd(*arg));
+
+    eap->nextcmd = check_nextcmd(arg);
 }
 
 /*
@@ -3396,7 +3444,7 @@ f_exists(argvars, retvar)
     char_u	*p;
     char_u	*name;
     int		n = FALSE;
-    int		len;
+    int		len = 0;
 
     p = get_var_string(&argvars[0]);
     if (*p == '$')			/* environment variable */
@@ -3418,17 +3466,15 @@ f_exists(argvars, retvar)
     else if (*p == '*')			/* internal or user defined function */
     {
 	++p;
-	if (ASCII_ISUPPER(*p) || *p == '<' || (*p == 's' && p[1] == ':'))
+	p = trans_function_name(&p, FALSE);
+	if (p != NULL)
 	{
-	    p = trans_function_name(&p);
-	    if (p != NULL)
-	    {
+	    if (ASCII_ISUPPER(*p) || p[0] == K_SPECIAL)
 		n = (find_func(p) != NULL);
-		vim_free(p);
-	    }
+	    else if (ASCII_ISLOWER(*p))
+		n = (find_internal_func(p) >= 0);
+	    vim_free(p);
 	}
-	else if (ASCII_ISLOWER(*p))
-	    n = (find_internal_func(p) >= 0);
     }
     else if (*p == ':')
     {
@@ -3447,10 +3493,37 @@ f_exists(argvars, retvar)
     }
     else				/* internal variable */
     {
+#ifdef FEAT_MAGIC_BRACES
+	char_u	*expr_start;
+	char_u	*expr_end;
+	char_u  *temp_string = NULL;
+	char_u	*s;
+#endif
 	name = p;
-	len = get_id_len(&p);
+
+#ifdef FEAT_MAGIC_BRACES
+	/* Find the end of the name. */
+	s = find_name_end(name, &expr_start, &expr_end);
+	if (expr_start != NULL)
+	{
+	    ++emsg_skip;
+	    temp_string = make_expanded_name(name, expr_start, expr_end, s);
+	    --emsg_skip;
+	    if (temp_string != NULL)
+	    {
+		len = STRLEN(temp_string);
+		name = temp_string;
+	    }
+	}
+#endif
+	if (len == 0)
+	    len = get_id_len(&p);
 	if (len != 0)
 	    n = (get_var_var(name, len, NULL) == OK);
+
+#ifdef FEAT_MAGIC_BRACES
+	vim_free(temp_string);
+#endif
     }
 
     retvar->var_val.var_number = n;
@@ -7633,24 +7706,33 @@ ex_function(eap)
     /*
      * ":function" without argument: list functions.
      */
-    if (*eap->arg == NUL)
+    if (ends_excmd(*eap->arg))
     {
 	if (!eap->skip)
 	    for (fp = firstfunc; fp != NULL && !got_int; fp = fp->next)
 		list_func_head(fp);
+	eap->nextcmd = check_nextcmd(eap->arg);
 	return;
     }
 
     p = eap->arg;
-    name = trans_function_name(&p);
+    name = trans_function_name(&p, eap->skip);
     if (name == NULL && !eap->skip)
 	return;
 
     /*
      * ":function func" with only function name: list function.
      */
-    if (vim_strchr(eap->arg, '(') == NULL)
+    if (vim_strchr(p, '(') == NULL)
     {
+	if (!ends_excmd(*skipwhite(p)))
+	{
+	    EMSG(_(e_trailing));
+	    goto erret_name;
+	}
+	eap->nextcmd = check_nextcmd(p);
+	if (eap->nextcmd != NULL)
+	    *p = NUL;
 	if (!eap->skip)
 	{
 	    fp = find_func(name);
@@ -7919,8 +8001,9 @@ erret_name:
  * Advances "pp" to just after the function name (if no error).
  */
     static char_u *
-trans_function_name(pp)
+trans_function_name(pp, skip)
     char_u	**pp;
+    int		skip;		/* only find the end, don't evaluate */
 {
     char_u	*name;
     char_u	*start;
@@ -7936,27 +8019,28 @@ trans_function_name(pp)
     lead = eval_fname_script(start);
     if (lead > 0)
 	start += lead;
-    else if (!ASCII_ISUPPER(*start))
-    {
-	EMSG2(_("E128: Function name must start with a capital: %s"), start);
-	return NULL;
-    }
     end = find_name_end(start, &expr_start, &expr_end);
     if (end == start)
     {
-	EMSG(_("E129: Function name required"));
+	if (!skip)
+	    EMSG(_("E129: Function name required"));
 	return NULL;
     }
-    if (expr_start != NULL)
+#ifdef FEAT_MAGIC_BRACES
+    if (expr_start != NULL && !skip)
     {
 	/* expand magic curlies */
 	temp_string = make_expanded_name(start, expr_start, expr_end, end);
 	if (temp_string == NULL)
+	{
+	    EMSG2(_(e_invarg2), start);
 	    return NULL;
+	}
 	start = temp_string;
 	len = (int)STRLEN(temp_string);
     }
     else
+#endif
 	len = (int)(end - start);
 
     /*
@@ -7964,7 +8048,9 @@ trans_function_name(pp)
      * Accept <SID>name() inside a script, translate into <SNR>123_name().
      * Accept <SNR>123_name() outside a script.
      */
-    if (lead > 0)
+    if (skip)
+	/* do nothing */;
+    else if (lead > 0)
     {
 	lead = 3;
 	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
@@ -7979,7 +8065,15 @@ trans_function_name(pp)
 	}
     }
     else
+    {
+	if (!ASCII_ISUPPER(*start))
+	{
+	    EMSG2(_("E128: Function name must start with a capital: %s"),
+								       start);
+	    return NULL;
+	}
 	lead = 0;
+    }
     name = alloc((unsigned)(len + lead + 1));
     if (name != NULL)
     {
@@ -8139,46 +8233,59 @@ cat_func_name(buf, fp)
 ex_delfunction(eap)
     exarg_T	*eap;
 {
-    ufunc_T	*fp, *pfp;
+    ufunc_T	*fp = NULL, *pfp;
     char_u	*p;
     char_u	*name;
 
     p = eap->arg;
-    name = trans_function_name(&p);
+    name = trans_function_name(&p, eap->skip);
     if (name == NULL)
 	return;
-    fp = find_func(name);
+    if (!ends_excmd(*skipwhite(p)))
+    {
+	EMSG(_(e_trailing));
+	return;
+    }
+    eap->nextcmd = check_nextcmd(p);
+    if (eap->nextcmd != NULL)
+	*p = NUL;
+
+    if (!eap->skip)
+	fp = find_func(name);
     vim_free(name);
 
-    if (fp == NULL)
+    if (!eap->skip)
     {
-	EMSG2(_("E130: Undefined function: %s"), eap->arg);
-	return;
-    }
-    if (fp->calls)
-    {
-	EMSG2(_("E131: Cannot delete function %s: It is in use"), eap->arg);
-	return;
-    }
+	if (fp == NULL)
+	{
+	    EMSG2(_("E130: Undefined function: %s"), eap->arg);
+	    return;
+	}
+	if (fp->calls)
+	{
+	    EMSG2(_("E131: Cannot delete function %s: It is in use"), eap->arg);
+	    return;
+	}
 
-    /* clear this function */
-    vim_free(fp->name);
-    ga_clear_strings(&(fp->args));
-    ga_clear_strings(&(fp->lines));
+	/* clear this function */
+	vim_free(fp->name);
+	ga_clear_strings(&(fp->args));
+	ga_clear_strings(&(fp->lines));
 
-    /* remove the function from the function list */
-    if (firstfunc == fp)
-	firstfunc = fp->next;
-    else
-    {
-	for (pfp = firstfunc; pfp != NULL; pfp = pfp->next)
-	    if (pfp->next == fp)
-	    {
-		pfp->next = fp->next;
-		break;
-	    }
+	/* remove the function from the function list */
+	if (firstfunc == fp)
+	    firstfunc = fp->next;
+	else
+	{
+	    for (pfp = firstfunc; pfp != NULL; pfp = pfp->next)
+		if (pfp->next == fp)
+		{
+		    pfp->next = fp->next;
+		    break;
+		}
+	}
+	vim_free(fp);
     }
-    vim_free(fp);
 }
 
 /*
@@ -8256,6 +8363,26 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	    ++no_wait_return;
 	    msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
 	    smsg((char_u *)_("calling %s"), sourcing_name);
+	    if (p_verbose >= 14)
+	    {
+		int i;
+
+		msg_puts((char_u *)"(");
+		for (i = 0; i < argcount; ++i)
+		{
+		    if (i > 0)
+			msg_puts((char_u *)", ");
+		    if (argvars[i].var_type == VAR_NUMBER)
+			msg_outnum((long)argvars[i].var_val.var_number);
+		    else
+		    {
+			msg_puts((char_u *)"\"");
+			msg_puts(get_var_string(&argvars[i]));
+			msg_puts((char_u *)"\"");
+		    }
+		}
+		msg_puts((char_u *)")");
+	    }
 	    msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	    cmdline_row = msg_row;
 	    --no_wait_return;

@@ -1775,6 +1775,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_browse:
 	    case CMD_call:
 	    case CMD_confirm:
+	    case CMD_delfunction:
 	    case CMD_djump:
 	    case CMD_dlist:
 	    case CMD_dsearch:
@@ -1803,6 +1804,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_syntax:
 	    case CMD_tilde:
 	    case CMD_topleft:
+	    case CMD_unlet:
 	    case CMD_verbose:
 	    case CMD_vertical:
 				break;
