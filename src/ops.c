@@ -2780,9 +2780,6 @@ do_put(regname, dir, count, flags)
     struct block_def bd;
     char_u	*insert_string = NULL;
     int		allocated = FALSE;
-#ifdef FEAT_MBYTE
-    int		bytelen = 0;
-#endif
     long	cnt;
 
 #ifdef FEAT_CLIPBOARD
@@ -2983,7 +2980,7 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		/* move to start of next multi-byte character */
-		curwin->w_cursor.col += bytelen;
+		curwin->w_cursor.col += (*mb_ptr2len_check)(ml_get_cursor());
 	    else
 #endif
 #ifdef FEAT_VIRTUALEDIT
@@ -3148,6 +3145,8 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
 		{
+		    int bytelen = (*mb_ptr2len_check)(ml_get_cursor());
+
 		    /* put it on the next of the multi-byte character. */
 		    col += bytelen;
 		    if (yanklen)
