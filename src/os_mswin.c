@@ -1018,7 +1018,9 @@ clip_mch_request_selection(VimClipboard *cbd)
     VimClipType_t	metadata = { -1, -1, -1 };
     HGLOBAL		hMem = NULL;
     char_u		*str = NULL;
+#if defined(FEAT_MBYTE) && defined(WIN3264)
     char_u		*to_free = NULL;
+#endif
     char_u		*hMemStr = NULL;
     int			str_size = 0;
     int			maxlen;
@@ -1103,6 +1105,7 @@ clip_mch_request_selection(VimClipboard *cbd)
 			break;
 	    }
 
+#if defined(FEAT_MBYTE) && defined(WIN3264)
 	    /* The text is now in the active codepage.  Convert to 'encoding',
 	     * going through UCS-2. */
 	    maxlen = MultiByteToWideChar(CP_ACP, 0, str, str_size, NULL, 0);
@@ -1119,6 +1122,7 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    to_free = str;
 		}
 	    }
+#endif
 	}
     }
 
@@ -1143,7 +1147,9 @@ clip_mch_request_selection(VimClipboard *cbd)
     if (hMemStr != NULL)
 	GlobalUnlock(hMem);
     CloseClipboard();
+#if defined(FEAT_MBYTE) && defined(WIN3264)
     vim_free(to_free);
+#endif
 }
 
 /*
@@ -1154,6 +1160,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 {
     char_u		*str = NULL;
     VimClipType_t	metadata;
+    long_u		txtlen;
     HGLOBAL		hMem = NULL;
     HGLOBAL		hMemVim = NULL;
 # if defined(FEAT_MBYTE) && defined(WIN3264)
@@ -1166,9 +1173,10 @@ clip_mch_set_selection(VimClipboard *cbd)
     cbd->owned = FALSE;
 
     /* Get the text to be put on the clipboard, with CR-LF. */
-    metadata.type = clip_convert_selection(&str, &metadata.txtlen, cbd);
+    metadata.type = clip_convert_selection(&str, &txtlen, cbd);
     if (metadata.type < 0)
 	return;
+    metadata.txtlen = (int)txtlen;
     metadata.ucslen = 0;
 
 # if defined(FEAT_MBYTE) && defined(WIN3264)
