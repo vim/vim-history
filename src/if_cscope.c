@@ -2114,10 +2114,10 @@ cs_release_csp(i, freefnpp)
 
     /*
      * Safety check: If the PID would be zero here, the entire X session would
-     * be killed...
+     * be killed.  -1 and 1 are dangerous as well.
      */
 #if defined(UNIX)
-    if (csinfo[i].pid != 0)
+    if (csinfo[i].pid > 1)
     {
 	kill(csinfo[i].pid, SIGTERM);
 	(void)waitpid(csinfo[i].pid, &pstat, 0);
