@@ -40,6 +40,10 @@
 # define CRYPT_MAGIC_LEN	12
 #endif
 
+#if defined(UNIX) || defined(DJGPP) || defined(__EMX__) || defined(VMS) || defined(RISCOS)
+# define USE_MCH_ACCESS
+#endif
+
 #ifdef AUTOCMD
 struct aco_save
 {
@@ -311,7 +315,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 	fd = 0;
     else
     {
-#if defined(UNIX) || defined(DJGPP) || defined(__EMX__) || defined(VMS) || defined(RISCOS)
+#ifdef USE_MCH_ACCESS
 	if (
 # ifdef UNIX
 	    !(perm & 0222) ||
@@ -1597,6 +1601,18 @@ nobackup:
     else if (mch_isdir(fname))
     {
 	errmsg = (char_u *)"is a directory";
+	goto fail;
+    }
+    else if (!forceit && (
+# ifdef USE_MCH_ACCESS
+		mch_access((char *)fname, W_OK)
+# else
+		(fd = mch_open((char *)fname, O_RDWR | O_EXTRA, 0)) < 0
+			? TRUE : (close(fd), FALSE)
+# endif
+			 ))
+    {
+	errmsg = (char_u *)"is read-only (use ! to override)";
 	goto fail;
     }
     else if (overwriting)
