@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 # converts vim documentation to simple html
 # Sirtaj Singh Kang (taj@kde.org)
