@@ -5190,7 +5190,7 @@ clip_yank_selection(type, str, len, cbd)
 }
 
 /*
- * Convert the '*'/'*' register into a GUI selection string returned in *str
+ * Convert the '*'/'+' register into a GUI selection string returned in *str
  * with length *len.
  * Returns the motion type, or -1 for failure.
  */
@@ -5228,10 +5228,10 @@ clip_convert_selection(str, len, cbd)
     /*
      * Don't want newline character at end of last line if we're in MCHAR mode.
      */
-    if (y_ptr->y_type == MCHAR && *len > eolsize)
+    if (y_ptr->y_type == MCHAR && *len >= eolsize)
 	*len -= eolsize;
 
-    p = *str = lalloc(*len, TRUE);
+    p = *str = lalloc(*len + 1, TRUE);	/* add one to avoid zero */
     if (p == NULL)
 	return -1;
     lnum = 0;
