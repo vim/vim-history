@@ -1517,10 +1517,18 @@ regatom(flagp)
 		 * that is repeated (+*=): what instance of the repetition
 		 * should we match?
 		 */
-		if (had_endbrace[refnum])
-		    ret = regnode(BACKREF + refnum);
-		else
-		    EMSG_RET_NULL("E65: Illegal back reference");
+		if (!had_endbrace[refnum])
+		{
+		    /* Trick: check if "@<=" or "@<!" follows, in which case
+		     * the \1 can appear before the referenced match. */
+		    for (p = regparse; *p != NUL; ++p)
+			if (p[0] == '@' && p[1] == '<'
+					      && (p[2] == '!' || p[2] == '='))
+			    break;
+		    if (*p == NUL)
+			EMSG_RET_NULL("E65: Illegal back reference");
+		}
+		ret = regnode(BACKREF + refnum);
 	    }
 	    break;
 
