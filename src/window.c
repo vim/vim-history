@@ -366,6 +366,7 @@ make_windows(count)
 {
 	int		maxcount;
 	int		todo;
+	int		p_sb_save;
 
 /*
  * each window needs at least MIN_ROWS lines and a status line
@@ -384,11 +385,17 @@ make_windows(count)
 		curwin->w_height -= STATUS_HEIGHT;
 	}
 
+/*
+ * set 'splitbelow' off for a moment, don't what that now
+ */
+	p_sb_save = p_sb;
+	p_sb = FALSE;
 		/* todo is number of windows left to create */
 	for (todo = count - 1; todo > 0; --todo)
 		if (win_split((long)(curwin->w_height - (curwin->w_height - todo
 				* STATUS_HEIGHT) / (todo + 1) - STATUS_HEIGHT), FALSE) == FAIL)
 			break;
+	p_sb = p_sb_save;
 
 		/* return actual number of windows */
 	return (count - todo);

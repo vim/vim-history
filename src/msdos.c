@@ -773,6 +773,7 @@ call_shell(cmd, filter, cooked)
 	}
 
 	resettitle();
+	(void)mch_get_winsize();		/* display mode may have been changed */
 	return (x ? FAIL : OK);
 }
 

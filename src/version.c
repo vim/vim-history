@@ -268,15 +268,13 @@
 			to switch off undo ":set ul=-1". Allow parameters to be set to
 			numbers >32000 for machines with 16 bit ints.
 
- Vim 2.1 to 2.8: see readme2.8
-
- Vim 2.8
+ Vim 2.1 to 3.0: see readme3.0
 
 */
 
-char		   *Version = "VIM 2.8 beta";
+char		   *Version = "VIM 3.0";
 #if !defined(__DATE__) || !defined(__TIME__)
-char		   *longVersion = "Vi IMproved 2.8 beta by Bram Moolenaar (1994 Aug 7)";
+char		   *longVersion = "Vi IMproved 3.0 by Bram Moolenaar (1994 Aug 12)";
 #else
-char		   *longVersion = "Vi IMproved 2.8 beta by Bram Moolenaar (1994 Aug 7, compiled " __DATE__ " " __TIME__ ")";
+char		   *longVersion = "Vi IMproved 3.0 by Bram Moolenaar (1994 Aug 12, compiled " __DATE__ " " __TIME__ ")";
 #endif

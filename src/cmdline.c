@@ -781,13 +781,14 @@ DoOneCmd(buff)
 	 * Exeptions:
 	 * - the 'k' command can directly be followed by any character.
 	 * - the 's' command can be followed directly by 'c', 'g' or 'r'
+	 *		but :sre[wind] is another command.
 	 */
 	if (*cmd == 'k')
 	{
 		cmdidx = CMD_k;
 		p = cmd + 1;
 	}
-	if (*cmd == 's' && strchr("cgr", cmd[1]) != NULL)
+	else if (*cmd == 's' && strchr("cgr", cmd[1]) != NULL && STRNCMP("sre", cmd, (size_t)3) != 0)
 	{
 		cmdidx = CMD_substitute;
 		p = cmd + 1;
@@ -1420,14 +1421,24 @@ doargument:
 					(void)do_buffer(i, 0, FORWARD, 0, forceit);
 				else
 				{
+					int do_current = FALSE;		/* delete current buffer? */
+
 					if (addr_count == 2)
 						n = line1;
 					else
 						n = line2;
-					for (;;)
+					for ( ;!got_int; breakcheck())
 					{
-						if (do_buffer(i, 1, FORWARD, (int)n, forceit) == FAIL)
-							break;
+						/*
+						 * delete the current buffer last, otherwise when the
+						 * current buffer is deleted, the next buffer becomes
+						 * the current one and will be loaded, which may then
+						 * also be deleted, etc.
+						 */
+						if (n == curbuf->b_fnum)
+							do_current = TRUE;
+						else
+							(void)do_buffer(i, 1, FORWARD, (int)n, forceit);
 						if (addr_count == 2)
 						{
 							if (++n > line2)
@@ -1446,6 +1457,8 @@ doargument:
 							n = getdigits(&arg);
 						}
 					}
+					if (!got_int && do_current)
+						(void)do_buffer(i, 1, FORWARD, (int)curbuf->b_fnum, forceit);
 				}
 				break;
 
@@ -1809,7 +1822,7 @@ doabbr:
 				/*
 				 * move or copy lines from 'line1'-'line2' to below line 'n'
 				 */
-				if (n == MAXLNUM || n < 0)
+				if (n == MAXLNUM || n < 0 || n > curbuf->b_ml.ml_line_count)
 				{
 					emsg(e_invaddr);
 					break;
@@ -2533,7 +2546,7 @@ check_more(message)
 	{
 		if (message)
 		{
-			emsg(e_more);
+			emsg2((char_u *)"%ld more files to edit", (char_u *)(long)(arg_count - curwin->w_arg_idx - 1));
 			quitmore = 2;			/* next try to quit is allowed */
 		}
 		return FAIL;
@@ -2828,6 +2841,10 @@ ExpandOne(str, list_notfound, mode)
 				if (!expand_interactively)
 #endif /* WEBB_COMPLETE */
 					emsg(e_toomany);
+#ifdef WEBB_COMPLETE
+				else
+					beep();
+#endif /* WEBB_COMPLETE */
 				found = 0;				/* return first one */
 				multmatch = TRUE;		/* for found < 0 */
 			}
@@ -3427,11 +3444,6 @@ set_one_cmd_context(firstc, buff)
 		cmdidx = CMD_k;
 		p = cmd + 1;
 	}
-	if (*cmd == 's' && strchr("cgr", cmd[1]) != NULL)
-	{
-		cmdidx = CMD_substitute;
-		p = cmd + 1;
-	}
 	else
 	{
 		p = cmd;
@@ -3441,18 +3453,26 @@ set_one_cmd_context(firstc, buff)
 			++p;
 		i = (int)(p - cmd);
 
-		for (cmdidx = 0; cmdidx < CMD_SIZE; ++cmdidx)
-			if (STRNCMP(cmdnames[cmdidx].cmd_name, cmd, (size_t)i) == 0)
-				break;
 		if (i == 0)
 		{
 			expand_context = EXPAND_UNSUCCESSFUL;
 			return NULL;
 		}
-		if (p == cmdbuff + cmdpos)		/* We are still touching the command */
-			return NULL;				/* So complete it */
+		for (cmdidx = 0; cmdidx < CMD_SIZE; ++cmdidx)
+			if (STRNCMP(cmdnames[cmdidx].cmd_name, cmd, (size_t)i) == 0)
+				break;
+	}
+	if (p == cmdbuff + cmdpos)		/* We are still touching the command */
+		return NULL;				/* So complete it */
 
-		if (cmdidx == CMD_SIZE)
+	if (cmdidx == CMD_SIZE)
+	{
+		if (*cmd == 's' && strchr("cgr", cmd[1]) != NULL)
+		{
+			cmdidx = CMD_substitute;
+			p = cmd + 1;
+		}
+		else
 		{
 			/* Not still touching the command and it was an illegal command */
 			expand_context = EXPAND_UNSUCCESSFUL;

@@ -141,6 +141,7 @@ struct data_block
 struct block0
 {
 	short_u		b0_id;			/* id for block 0: BLOCK0_ID */
+	char_u		b0_version[10];	/* Vim version string */
 	int			b0_page_size;	/* number of bytes per page */
 	long		b0_mtime;		/* last modification time of file */
 	char_u		b0_fname[1000];	/* file name of file being edited */
@@ -204,7 +205,7 @@ ml_open()
 
 /*
  * make fname for swap file
- * If we are unable to find a file name, ml_fname will be NULL
+ * If we are unable to find a file name, mf_fname will be NULL
  * and the memfile will be in memory only (no recovery possible).
  * When 'updatecount' is 0 there is never a swap file.
  */
@@ -253,6 +254,7 @@ ml_open()
 	}
 	b0p = (ZERO_BL *)(hp->bh_data);
 	b0p->b0_id = BLOCK0_ID;
+	STRNCPY(b0p->b0_version, Version, (size_t)10);
 	if (curbuf->b_filename != NULL)
 	{
 		STRNCPY(b0p->b0_fname, curbuf->b_filename, (size_t)1000);
@@ -314,7 +316,7 @@ ml_open_files()
 
 	/*
 	 * make fname for swap file
-	 * If we are unable to find a file name, ml_fname will be NULL
+	 * If we are unable to find a file name, mf_fname will be NULL
 	 * and the memfile will remain in memory only (no recovery possible).
 	 */
 		fname = findswapname(buf, FALSE);		/* NULL detected below */
@@ -436,6 +438,7 @@ ml_recover()
 	int			idx;
 	int			top;
 	int			txt_start;
+	long		size;
 
 /*
  * If the file name ends in ".sw?" we use it directly.
@@ -490,29 +493,23 @@ ml_recover()
 		if (fname == NULL)
 			goto theend;
 	}
-	if (mfp == NULL)
+	if (mfp == NULL || mfp->mf_fd < 0)
 	{
 		EMSG2("Cannot open %s", fname);
 		goto theend;
 	}
 	buf->b_ml.ml_mfp = mfp;
 
-	if (mfp->mf_infile_count == 0)
-	{
-		msg_start();
-		msg_outstr(fname);
-		msg_outstr((char_u *)" is too short for a .swp file; maybe no changes were\n");
-		msg_outstr((char_u *)"made or Vim did not update the .swp file");
-		msg_end();
-		goto theend;
-	}
-
 /*
  * try to read block 0
  */
 	if ((hp = mf_get(mfp, (blocknr_t)0, 1)) == NULL)
 	{
-		EMSG2("Unable to read block 0 from %s", fname);
+		msg_start();
+		msg_outstr((char_u *)"Unable to read block 0 from ");
+		msg_outstr(fname);
+		msg_outstr((char_u *)"\nMaybe no changes were made or Vim did not update the .swp file");
+		msg_end();
 		goto theend;
 	}
 	b0p = (ZERO_BL *)(hp->bh_data);
@@ -521,7 +518,19 @@ ml_recover()
 		EMSG2("%s is not a swap file", fname);
 		goto theend;
 	}
-	mfp->mf_page_size = b0p->b0_page_size;
+	/*
+	 * If we guessed the wrong page size, we have to recalculate the
+	 * hightest block number in the file
+	 */
+	if (mfp->mf_page_size != b0p->b0_page_size)
+	{
+		mfp->mf_page_size = b0p->b0_page_size;
+		if ((size = lseek(mfp->mf_fd, 0L, SEEK_END)) <= 0)
+			mfp->mf_blocknr_max = 0;		/* no file or empty file */
+		else
+			mfp->mf_blocknr_max = size / mfp->mf_page_size;
+		mfp->mf_infile_count = mfp->mf_blocknr_max;
+	}
 
 /*
  * If .swp file name given directly, use name from swap file for buffer

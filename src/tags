@@ -36,8 +36,8 @@ OUTSTRN	vim.h	/^#define OUTSTRN(s)			outstrn((char_u *)(s))$/
 Opencmd	misccmds.c	/^Opencmd(dir, redraw, delspaces)$/
 PERR	winnt.c	/^#define PERR(bSuccess, api) {if (!(bSuccess)) perr/
 PeekChr	regexp.c	/^#define PeekChr() curchr	\/* shortcut only when las/
-Read	unix.c	/^Read(buf, maxlen)$/
-RealWaitForChar	unix.c	/^RealWaitForChar(ticks)$/
+Read	archie.c	/^Read(buf, maxlen)$/
+RealWaitForChar	archie.c	/^RealWaitForChar(ticks)$/
 ResetRedobuff	getchar.c	/^ResetRedobuff()$/
 STRCAT	vim.h	/^#define STRCAT(d, s)		strcat((char *)(d), (char *)/
 STRCHR	vim.h	/^#define STRCHR(s, c)		(char_u *)strchr((char *)(s)/
@@ -52,7 +52,7 @@ TO_LOWER	macros.h	/^# define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c/
 TO_UPPER	macros.h	/^# define TO_UPPER(c)	(islower(c) ? toupper(c) : (c/
 UCHARAT	regexp.c	/^#define UCHARAT(p)		((int)*(unsigned char *)(p))$/
 UNCHANGED	vim.h	/^#define UNCHANGED(buf)	unset_Changed(buf)$/
-WaitForChar	msdos.c	/^WaitForChar(msec)$/
+WaitForChar	archie.c	/^WaitForChar(ticks)$/
 __ARGS	regsub.c	/^# define __ARGS(a)	a$/
 __PARMS	vim.h	/^# define __PARMS(x)	x$/
 _addfmt	termlib.c	/^_addfmt(buf, fmt, val)             \/* add val to b/
@@ -154,6 +154,7 @@ delchar	misccmds.c	/^delchar(fixpos)$/
 delline	winnt.c	/^delline(int count)$/
 dellines	misccmds.c	/^dellines(nlines, dowindow, undo)$/
 delmode	screen.c	/^delmode()$/
+dirname	archie.c	/^dirname(buf, len)$/
 dis_msg	ops.c	/^dis_msg(p, skip_esc)$/
 do_Copy	regsub.c	/^do_Copy(d, c)$/
 do_Lower	regsub.c	/^do_Lower(d, c)$/
@@ -213,7 +214,7 @@ expandpath	msdos.c	/^expandpath(fl, path, fonly, donly, notf)$/
 file_name_at_cursor	window.c	/^file_name_at_cursor()$/
 fileinfo	buffer.c	/^fileinfo(fullname)$/
 filemess	fileio.c	/^filemess(name, s)$/
-fill_inbuf	unix.c	/^fill_inbuf()$/
+fill_inbuf	archie.c	/^fill_inbuf()$/
 findfunc	search.c	/^findfunc(dir, what, count)$/
 findpar	search.c	/^findpar(dir, count, what, both)$/
 findparam	param.c	/^findparam(arg)$/
@@ -269,7 +270,7 @@ gotocmdline	cmdline.c	/^gotocmdline(clr, firstc)$/
 gotoxy	winnt.c	/^gotoxy(x, y)$/
 handler_routine	winnt.c	/^BOOL WINAPI     handler_routine(DWORD dwCtrlType)$/
 has_wildcard	amiga.c	/^has_wildcard(p)$/
-have_wildcard	unix.c	/^have_wildcard(num, file)$/
+have_wildcard	archie.c	/^have_wildcard(num, file)$/
 help	help.c	/^help()$/
 home_replace	misccmds.c	/^home_replace(src, dst, dstlen)$/
 inc	linefunc.c	/^inc(lp)$/
@@ -468,7 +469,7 @@ regtilde	regsub.c	/^regtilde(source, magic)$/
 regtry	regexp.c	/^regtry(prog, string)$/
 remove	unix.c	/^remove(buf)$/
 rename	unix.c	/^rename(src, dest)$/
-resettitle	buffer.c	/^resettitle()$/
+resettitle	archie.c	/^resettitle()$/
 resizeConBufAndWindow	winnt.c	/^void            resizeConBufAndWindow(HANDLE hCons/
 screen_char	screen.c	/^screen_char(p, row, col)$/
 screen_del_lines	screen.c	/^screen_del_lines(off, row, nlines, end)$/
@@ -509,6 +510,7 @@ setfname	buffer.c	/^setfname(fname, sfname, message)$/
 setmark	mark.c	/^setmark(c)$/
 setpcmark	mark.c	/^setpcmark()$/
 setperm	amiga.c	/^setperm(name, perm)$/
+settitle	archie.c	/^settitle(str)$/
 settmode	term.c	/^settmode(raw)$/
 shift_line	ops.c	/^shift_line(left, round, amount)$/
 showmap	getchar.c	/^showmap(mp)$/

@@ -89,9 +89,6 @@ static BHDR *mf_rem_free __ARGS((MEMFILE *));
 static int	mf_read __ARGS((MEMFILE *, BHDR *));
 static int	mf_write __ARGS((MEMFILE *, BHDR *));
 static int	mf_trans_add __ARGS((MEMFILE *, BHDR *));
-#ifdef UNIX
-static void mf_get_page_size __ARGS((MEMFILE *));
-#endif
 static void mf_do_open __ARGS((MEMFILE *, char_u *, int));
 
 /*
@@ -217,6 +214,7 @@ mf_open_file(mfp, fname)
 	if (mfp->mf_fd < 0)
 		return FAIL;
 
+	mfp->mf_dirty = TRUE;
 	return OK;
 }
 

@@ -101,7 +101,15 @@ setpcmark()
 			--curwin->w_jumplistidx;
 		}
 
+#ifdef ARCHIE
+		/* Workaround for a bug in gcc 2.4.5 R2 on the Archimedes
+		 * Should be fixed in 2.5.x.
+		 */
+		curwin->w_jumplist[curwin->w_jumplistidx].mark.ptr = curwin->w_pcmark.ptr;
+		curwin->w_jumplist[curwin->w_jumplistidx].mark.col = curwin->w_pcmark.col;
+#else
 		curwin->w_jumplist[curwin->w_jumplistidx].mark = curwin->w_pcmark;
+#endif
 		curwin->w_jumplist[curwin->w_jumplistidx].fnum = curbuf->b_fnum;
 		++curwin->w_jumplistidx;
 	}

@@ -56,7 +56,11 @@ EXTERN char_u *p_ef	INIT(= (char_u *)"errors");			/* name of errorfile */
 #ifdef AMIGA
 EXTERN char_u *p_efm	INIT(= (char_u *)"%f>%l:%c:%t:%n:%m");/* error format */
 #else
+# ifdef ARCHIE
+EXTERN char_u *p_efm	INIT(= (char_u *)"%f:%l:%m");	/* error format */
+# else
 EXTERN char_u *p_efm	INIT(= (char_u *)"\"%f\",%*[^0123456789]%l: %m");	/* error format */
+# endif
 #endif
 #ifdef COMPATIBLE
 EXTERN int	p_ek	INIT(= FALSE);		/* function keys with ESC in insert mode */
@@ -116,10 +120,18 @@ EXTERN char_u *p_sections	INIT(= (char_u *)"SHNHH HUnhsh");		/* sections */
 #ifdef MSDOS
 EXTERN char_u *p_sh 	INIT(= (char_u *)"command");		/* name of shell to use */
 #else
+# ifdef ARCHIE
+EXTERN char_u *p_sh 	INIT(= (char_u *)"gos");	/* name of shell to use */
+# else
 EXTERN char_u *p_sh 	INIT(= (char_u *)"sh");		/* name of shell to use */
+# endif
 #endif
 #ifdef UNIX
+# ifdef ARCHIE
+EXTERN char_u *p_sp	INIT(= (char_u *)"2>");		/* string for output of make */
+# else
 EXTERN char_u *p_sp	INIT(= (char_u *)"| tee");	/* string for output of make */
+# endif
 #else
 EXTERN char_u *p_sp	INIT(= (char_u *)">");		/* string for output of make */
 #endif

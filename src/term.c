@@ -212,8 +212,14 @@ set_term(term)
 			term_strings.t_kr = TGETSTR("kr", &tp);
 			/* term_strings.t_sku = TGETSTR("", &tp); termcap code unknown */
 			/* term_strings.t_skd = TGETSTR("", &tp); termcap code unknown */
-			term_strings.t_sku = NULL;
-			term_strings.t_skd = NULL;
+#ifdef ARCHIE
+            /* Termcap code made up! */
+            term_strings.t_sku = tgetstr("su", &tp);
+            term_strings.t_skd = tgetstr("sd", &tp);
+#else
+            term_strings.t_sku = NULL;
+            term_strings.t_skd = NULL;
+#endif
 			term_strings.t_skl = TGETSTR("#4", &tp);
 			term_strings.t_skr = TGETSTR("%i", &tp);
 			term_strings.t_f1 = TGETSTR("k1", &tp);

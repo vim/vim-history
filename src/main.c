@@ -279,7 +279,7 @@ main(argc, argv)
 			break;
 
 		  default:				/* must be a file name */
-#if !defined(UNIX)
+#if !defined(UNIX) || defined(ARCHIE)
 			if (ExpandWildCards(argc - 1, (char_u **)argv, &arg_count,
 					&arg_files, TRUE, TRUE) == OK && arg_count != 0)
 			{

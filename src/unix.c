@@ -345,7 +345,7 @@ get_x11_windis()
 	 */
 	if (x11_window == 0 && (winid = getenv("WINDOWID")) != NULL) 
 		x11_window = (Window)atol(winid);
-	if (x11_display == NULL)
+	if (x11_window != 0 && x11_display == NULL)
 		x11_display = XOpenDisplay(NULL);
 	if (x11_window == 0 || x11_display == NULL)
 		return FAIL;
@@ -526,11 +526,13 @@ mch_settitle(title, icon)
 			case 2: outstrn((char_u *)"\033]2;");		/* xterm */
 					outstrn(title);
 					outchar(Ctrl('G'));
+					flushbuf();
 					break;
 
 			case 3: outstrn((char_u *)"\033P1.y");		/* iris-ansi */
 					outstrn(title);
 					outstrn((char_u *)"\234");
+					flushbuf();
 					break;
 			}
 		}
@@ -551,11 +553,13 @@ mch_settitle(title, icon)
 			case 2: outstrn((char_u *)"\033]1;");		/* xterm */
 					outstrn(icon);
 					outchar(Ctrl('G'));
+					flushbuf();
 					break;
 
 			case 3: outstrn((char_u *)"\033P3.y");		/* iris-ansi */
 					outstrn(icon);
 					outstrn((char_u *)"\234");
+					flushbuf();
 					break;
 			}
 		}

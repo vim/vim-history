@@ -1,4 +1,4 @@
-README for version 2.8 of Vim: Vi IMproved.
+README for version 3.0 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor vi. Only the 'Q'
 command is missing (you don't need it). Many new features have been added:
@@ -10,22 +10,32 @@ All commands are given with normal keyboard characters, so those who can type
 with ten fingers can work very fast. Additionally function keys can be defined
 by the user.
 
-Vim currently runs under Amiga DOS, MSDOS and many UNIX versions. Porting to
-other systems should not be very difficult.
+Vim currently runs under Amiga DOS, MSDOS, Windows NT and many UNIX versions.
+There are some things included for the Archimedes, but it does not work yet.
+Porting to other systems should not be very difficult. 
 
 Documentation:
 	  tutor/readme - one hour training course for beginners
 	 reference.doc - complete reference of all Vim commands
 	difference.doc - summarizes the differences with UNIX vi
+	   windows.doc - reference for the multi windows and buffer commands
 		 index - alfabetical list of commands
 	     amiga.doc - remarks for Amiga
 	      unix.doc - remarks for unix
 	     msdos.doc - remarks for MSDOS
 	     winnt.doc - remarks for Windows NT
+            archie.doc - remarks for Archimedes
 
 Vim is Charityware. You can copy it as much as you like. Please read
 uganda.txt for details.
 
+
+Compiling:
+	cd src
+	cp makefile.<system> makefile
+	make
+
+When using makefile.unix you MUST uncomment three lines for your system!
 
 The makefile offers some compilation options. If you do not use digraphs, you
 can save some memory by recompiling without the DIGRAPHS option. The Amiga
@@ -36,7 +46,7 @@ TERMCAP option. See the makefiles for further options.
 Please send comments, bug reports and suggestions to:
 
 stable address:	Bram Moolenaar		UUCP E-mail:	mool@oce.nl
-		molenstraaat 2
+		molenstraat 2
 		2162 HP  Lisse		Fax: +31 2521 16381
 		The Netherlands		Tel: +31 2521 13037
 

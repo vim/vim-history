@@ -129,7 +129,7 @@ typedef unsigned long	long_u;
 #  undef M_XENIX
 #  include <sys/ndir.h>		/* for MAXNAMLEN */
 # else
-#  if defined(SOLARIS) || defined(AIX)
+#  if defined(SOLARIS) || defined(AIX) || defined(ARCHIE)
 #   include <dirent.h>		/* for MAXNAMLEN */
 #  else
 #   include <sys/dir.h>		/* for MAXNAMLEN */
@@ -364,6 +364,10 @@ typedef unsigned		colnr_t;	/* column number type */
 
 #ifdef AMIGA
 # include "amiga.h"
+#endif
+
+#ifdef ARCHIE
+# include "archie.h"
 #endif
 
 #ifdef MSDOS

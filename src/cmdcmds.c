@@ -450,7 +450,7 @@ dofilter(line1, line2, buff, do_in, do_out)
 	if (!do_out)
 		outchar('\n');
 
-#ifdef UNIX
+#if defined(UNIX) && !defined(ARCHIE)
 /*
  * put braces around the command (for concatenated commands)
  */

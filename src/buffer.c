@@ -164,6 +164,7 @@ do_buffer(action, start, dir, count, forceit)
 	int		forceit;	/* TRUE for :bdelete! */
 {
 	BUF		*buf;
+	int		retval;
 
 	switch (start)
 	{
@@ -228,12 +229,13 @@ do_buffer(action, start, dir, count, forceit)
 	{
 		if (buf->b_nwindows > 1 || (buf != curbuf && buf->b_nwindows != 0))
 		{
-			EMSG("Other window editing this buffer");
+			EMSG2("Other window editing buffer %ld", (char_u *)buf->b_fnum);
 			return FAIL;
 		}
 		if (!forceit && buf->b_changed)
 		{
-			emsg(e_nowrtmsg);
+			EMSG2("No write since last change for buffer %ld (use ! to override)",
+						(char_u *)buf->b_fnum);
 			return FAIL;
 		}
 		/*
@@ -241,7 +243,13 @@ do_buffer(action, start, dir, count, forceit)
 		 */
 		if (firstbuf->b_next == NULL)
 		{
-			return doecmd(NULL, NULL, NULL, FALSE, (linenr_t)1);
+			buf = curbuf;
+			retval = doecmd(NULL, NULL, NULL, FALSE, (linenr_t)1);
+				/* the doecmd() may create a new buffer, then we have to
+				 * delete the old one */
+			if (action == 3 && buf != curbuf)
+				close_buffer(buf, TRUE, action == 3);
+			return retval;
 		}
 		/*
 		 * If deleted buffer is not current one, delete it here.

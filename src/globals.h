@@ -217,7 +217,6 @@ EXTERN char_u e_invarg[]	INIT(="Invalid argument");
 EXTERN char_u e_invrange[]	INIT(="Invalid range");
 EXTERN char_u e_invcmd[]	INIT(="Invalid command");
 EXTERN char_u e_invstring[]	INIT(="Invalid search string");
-EXTERN char_u e_more[]		INIT(="Still more files to edit");
 EXTERN char_u e_nesting[]	INIT(="Scripts nested too deep");
 EXTERN char_u e_noalt[]		INIT(="No alternate file");
 EXTERN char_u e_nolastcmd[]	INIT(="No previous command line");

@@ -570,6 +570,7 @@ sow:				if (i == 0)
 				{
 					++curwin->w_cursor.lnum;
 					curwin->w_cursor.col = 0;
+					curwin->w_set_curswant = TRUE;
 					continue;
 				}
 				if (operator == NOP)
@@ -612,7 +613,7 @@ sow:				if (i == 0)
 				{
 					--(curwin->w_cursor.lnum);
 					coladvance(MAXCOL);
-					curwin->w_curswant = MAXCOL;	/* so we stay at the end */
+					curwin->w_set_curswant = TRUE;
 					continue;
 				}
 				else if (operator != DELETE && operator != CHANGE)
@@ -860,6 +861,12 @@ docsearch:
 	  case ']':
 		mtype = MCHAR;
 		mincl = FALSE;
+
+		/*
+		 * "[f" or "]f" : Edit file under the cursor (same as "gf")
+		 */
+		if ((c == ']' || c == '[') && nchar == 'f')
+			goto gotofile;
 
 		/*
 		 * "[{", "[(", "]}" or "])": go to Nth unclosed '{', '(', '}' or ')'
@@ -1465,8 +1472,11 @@ cursormark:
 		{
 						/*
 						 * "gf": goto file, edit file under cursor
+						 * "]f" and "[f": can also be used.
 						 */
-			case 'f':	ptr = file_name_at_cursor();
+			case 'f':
+gotofile:
+						ptr = file_name_at_cursor();
 							/* do autowrite if necessary */
 						if (curbuf->b_changed && curbuf->b_nwindows <= 1 && !p_hid)
 							autowrite(curbuf);

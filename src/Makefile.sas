@@ -90,7 +90,7 @@ ctags:
 
 # can't use delete here, too many file names
 clean:
-	csh -c rm -f $(OBJ) obj/version.o mkcmdtab.o /Vim $(GST) mkcmdtab cmdtab.h
+	csh -c rm -f $(OBJ) obj/version.o obj/mkcmdtab.o /Vim $(GST) mkcmdtab cmdtab.h
 
 $(GST)  : vim.h keymap.h macros.h ascii.h term.h structs.h
 	$(CC) $(CFLAGS) MGST=$(GST) vim.h

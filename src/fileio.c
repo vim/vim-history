@@ -106,6 +106,7 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 #endif
 	int					textmode = curbuf->b_p_tx;		/* accept CR-LF for line break */
 	struct stat			st;
+	int					readonly;
 
 	/*
 	 * If there is no file name yet, use the one for the read file.
@@ -130,10 +131,10 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 		linecnt = 0;
 
 #ifdef UNIX
-		/*
-		 * On Unix it is possible to read a directory, so we have to
-		 * check for it before the open().
-		 */
+	/*
+	 * On Unix it is possible to read a directory, so we have to
+	 * check for it before the open().
+	 */
 	perm = getperm(fname);
 # ifdef _POSIX_SOURCE
 	if (perm >= 0 && !S_ISREG(perm))				/* not a regular file */
@@ -161,45 +162,55 @@ readfile(fname, sfname, from, newfile, skip_lnum, nlines)
 	else
 		curbuf->b_mtime = 0;
 
-	if (
+/*
+ * for UNIX: check readonly with perm and access()
+ * for MSDOS and Amiga: check readonly by trying to open the file for writing
+ */
+	readonly = FALSE;
 #ifdef UNIX
-		!(perm & 0222) || access((char *)fname, 2) ||	/* vi's way to check RO */
-#endif
-		(fd = open((char *)fname, O_RDWR)) == -1)		/* cannot open r/w */
+	if (!(perm & 0222) || access((char *)fname, 2))
+		readonly = TRUE;
+	fd = open((char *)fname, O_RDONLY);
+#else
+	if (!newfile || readonlymode || (fd = open((char *)fname, O_RDWR)) < 0)
 	{
-		if ((fd = open((char *)fname, O_RDONLY)) == -1) /* cannot open at all */
-		{
+		readonly = TRUE;
+		fd = open((char *)fname, O_RDONLY);			/* try to open ro */
+	}
+#endif
+
+	if (fd < 0)					 /* cannot open at all */
+	{
 #ifdef MSDOS
-		/*
-		 * The screen may be messed up by the "insert disk
-		 * in drive b: and hit return" message
-		 */
-			screenclear();
+	/*
+	 * The screen may be messed up by the "insert disk
+	 * in drive b: and hit return" message
+	 */
+		screenclear();
 #endif
 
 #ifndef UNIX
-		/*
-		 * On MSDOS and Amiga we can't open a directory, check here.
-		 */
-			if (isdir(fname) == TRUE)
-				filemess(fname, (char_u *)"is a directory");
-			else
+	/*
+	 * On MSDOS and Amiga we can't open a directory, check here.
+	 */
+		if (isdir(fname) == TRUE)
+			filemess(fname, (char_u *)"is a directory");
+		else
 #endif
-				if (newfile)
+			if (newfile)
 #ifdef UNIX
-					if (perm < 0)
+				if (perm < 0)
 #endif
-						filemess(fname, (char_u *)"[New File]");
+					filemess(fname, (char_u *)"[New File]");
 #ifdef UNIX
-					else
-						filemess(fname, (char_u *)"[Permission Denied]");
+				else
+					filemess(fname, (char_u *)"[Permission Denied]");
 #endif
 
-			return FAIL;
-		}
-		if (newfile)						/* set file readonly */
-			curbuf->b_p_ro = TRUE;
+		return FAIL;
 	}
+	if (newfile && readonly)					/* set file readonly */
+		curbuf->b_p_ro = TRUE;
 
 	if (newfile)
 		curbuf->b_p_eol = TRUE;
@@ -516,7 +527,7 @@ buf_write(buf, fname, sfname, start, end, append, forceit, reset_changed)
 	else
 		bufsize = BUFSIZE;
 
-#ifdef UNIX
+#if defined(UNIX) && !defined(ARCHIE)
 		/* get information about original file (if there is one) */
 	old.st_dev = old.st_ino = 0;
 	if (stat((char *)fname, &old))
