@@ -2703,16 +2703,16 @@ current_word(oap, count, include, bigword)
 	     * If the start is not on white space, and white space should be
 	     * included ("word	 "), or start is on white space and white
 	     * space should not be included ("	 "), find start of word.
+	     * If we end up in the first column of the next line (single char
+	     * word) back up to end of the line.
 	     */
-	    if (fwd_word(1L, bigword, TRUE) == FAIL)
-		return FAIL;
-	    /*
-	     * If end is just past a new-line, we don't want to include the
-	     * first character on the line
-	     */
-	    if (oneleft() == FAIL)	/* put cursor on last char of area */
-		inclusive = FALSE;
-	    else if (include)
+	    fwd_word(1L, bigword, TRUE);
+	    if (curwin->w_cursor.col == 0)
+		decl(&curwin->w_cursor);
+	    else
+		oneleft();
+
+	    if (include)
 	    {
 		/*
 		 * If we don't include white space at the end, move the start
