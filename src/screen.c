@@ -6494,13 +6494,14 @@ windgoto(row, col)
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
-		    /* Don't use an UTF-8 char for positioning, it's slow. */
-		    i = col - wouldbe_col;
-		    p = ScreenLines + LineOffset[row] + wouldbe_col;
-		    while (i && MB_BYTE2LEN(*p++) == 1)
-			--i;
-		    if (i != 0)
-			cost = 999;
+		    /* Don't use an UTF-8 char for positioning, it's slow. And
+		     * check for composing characters. */
+		    for (i = wouldbe_col; i < col; ++i)
+			if (ScreenLinesUC[LineOffset[row] + i] != 0)
+			{
+			    cost = 999;
+			    break;
+			}
 		}
 #endif
 	    }
