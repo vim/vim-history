@@ -4502,18 +4502,20 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    if (varp == &p_enc)
 	    {
 		errmsg = mb_init();
+# ifdef FEAT_TITLE
 		need_maketitle = TRUE;
+# endif
 	    }
 	}
 
 	if (errmsg == NULL)
 	{
-#ifdef FEAT_KEYMAP
+# ifdef FEAT_KEYMAP
 	    /* When 'keymap' is used and 'encoding' changes, reload the keymap
 	     * (with another encoding). */
 	    if (varp == &p_enc && *curbuf->b_p_keymap != NUL)
 		(void)keymap_init();
-#endif
+# endif
 
 	    /* When 'termencoding' is not empty and 'encoding' changes or when
 	     * 'termencoding' changes, need to setup for keyboard input and
