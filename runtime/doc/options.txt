@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2003 Aug 12
+*options.txt*	For Vim version 6.2.  Last change: 2004 Jan 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -619,26 +619,38 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Registered sign, Greek/Cyrillic letters are represented by two octets,
 	therefore those fonts have "wide" glyphs for them. This is also
 	true of some line drawing characters used to make tables in text
-	file. Therefore, when a CJK font is used for GUI vim or
-	vim is running inside a terminal (emulators) that uses a CJK font
-	(or vim is run inside an xterm invoked with "-cjkwidth" option.),
+	file. Therefore, when a CJK font is used for GUI Vim or
+	Vim is running inside a terminal (emulators) that uses a CJK font
+	(or Vim is run inside an xterm invoked with "-cjkwidth" option.),
 	this option should be set to "double" to match the width perceived
 	by Vim with the width of glyphs in the font.  Perhaps it also has
 	to be set to "double" under CJK Windows 9x/ME or Windows 2k/XP
 	when the system locale is set to one of CJK locales.  See Unicode
 	Standard Annex #11 (http://www.unicode.org/reports/tr11).
 
-			*'autochdir'* *'acd'* *'noatuochdir'* *'noacd'*
+			*'antialias'* *'anti'* *'noantialias'* *'noanti'*
+'antialias' 'anti'	boolean (default: off)
+			global
+			{not in Vi}
+			{only available when compiled with GUI enabled
+                        on Mac OS X}
+	This option only has an effect in the GUI version of Vim on Mac OS X
+        v10.2 or later.  When on, Vim will use smooth ("antialiased") fonts,
+        which can be easier to read at certain sizes on certain displays.
+	Setting this option can sometimes cause problems if |guifont| is set 
+	to its default (empty string).
+
+			*'autochdir'* *'acd'* *'noautochdir'* *'noacd'*
 'autochdir' 'acd'	boolean (default off)
 			global
 			{not in Vi}
 			{only available when compiled with the
 			|+netbeans_intg| or |+sun_workshop| feature}
-	When on, vim will change its value for the current working directory
+	When on, Vim will change its value for the current working directory
 	whenever you open a file, switch buffers, delete a buffer or
 	open/close a window. It will change to the directory containing the
 	file which was opened or selected.  This option is provided for
-	backward compatibility with the vim released with Sun ONE Studio 4
+	backward compatibility with the Vim released with Sun ONE Studio 4
 	Enterprise Edition.
 
 				*'arabic'* *'arab'* *'noarabic'* *'noarab'*
