@@ -836,6 +836,7 @@ foldUpdateAll(win)
     win_T	*win;
 {
     win->w_foldinvalid = TRUE;
+    redraw_later(NOT_VALID);
 }
 
 /* foldMoveTo() {{{2 */
