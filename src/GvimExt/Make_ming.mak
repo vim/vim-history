@@ -22,20 +22,20 @@ DLL  := gvimext.dll
 all: all-before $(DLL) all-after
 
 $(DLL): $(OBJ) $(RES) $(DEFFILE)
-	$(CXX) -shared $(CXXFLAGS) -s -o $@ \ 
+	$(CXX) -shared $(CXXFLAGS) -s -o $@  \
 		-Wl,--enable-auto-image-base \
-		-Wl,--enable-auto-import \
-		-Wl,--whole-archive \
-	 		$^ \ 
-		-Wl,--no-whole-archive \
+		-Wl,--enable-auto-import  \
+		-Wl,--whole-archive  \
+			$^  \
+		-Wl,--no-whole-archive  \
 			$(LIBS)
 
 gvimext.o: gvimext.cpp
-	$(CXX) $(CXXFLAGS) -DFEAT_GETTEXT -c $? -o $@ 
+	$(CXX) $(CXXFLAGS) -DFEAT_GETTEXT -c $^ -o $@ 
 
 $(RES): gvimext_ming.rc
-	$(WINDRES) --input-format=rc --output-format=coff -DMING $? -o $@
+	$(WINDRES) --input-format=rc --output-format=coff -DMING $^ -o $@
 
 clean: clean-custom
-	${RM}  $(OBJ) $(RES) $(DLL)
+	$(RM)  $(OBJ) $(RES) $(DLL)
 
