@@ -187,7 +187,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_VB,	IF_EB("\033|f", ESC_STR "|f")},
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},
-    {(int)KS_LE,	"\010"},	/* cursor-left = BS */
+    {(int)KS_LE,	"\b"},		/* cursor-left = BS */
     {(int)KS_ND,	"\014"},	/* cursor-right = CTRL-L */
 # ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033|%p1%d;%p2%dM", ESC_STR "|%p1%d;%p2%dM")},
@@ -298,7 +298,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CZR,	"\033[0m"},
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},		/* guessed */
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -402,7 +402,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_OP,	"\033[m"},	/* reset colors */
     {(int)KS_MS,	"y"},		/* safe to move cur in reverse mode */
     {(int)KS_UT,	"y"},		/* guessed */
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -447,7 +447,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},		/* guessed */
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH", ESC_STR "[%i%p1%d;%p2%dH")},
 #  else
@@ -496,7 +496,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_OP,	"\033[0m"},	/* reset colors */
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},		/* guessed */
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -585,7 +585,7 @@ struct builtin_term builtin_termcaps[] =
 #  endif
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033|%i%p1%d;%p2%dH"},
 #  else
@@ -696,7 +696,7 @@ struct builtin_term builtin_termcaps[] =
 
     {(int)KS_MS,	"y"},		/* save to move cur in reverse mode */
     {(int)KS_UT,	"y"},
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033|%i%p1%d;%p2%dH"},/* cursor motion */
 #  else
@@ -798,7 +798,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH",
 						  ESC_STR "[%i%p1%d;%p2%dH")},
@@ -852,7 +852,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CE,	IF_EB("\033K", ESC_STR "K")},
     {(int)KS_CD,	IF_EB("\033J", ESC_STR "J")},
     {(int)KS_CM,	IF_EB("\033Y%+ %+ ", ESC_STR "Y%+ %+ ")},
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef __MINT__
     {(int)KS_AL,	IF_EB("\033L", ESC_STR "L")},
     {(int)KS_DL,	IF_EB("\033M", ESC_STR "M")},
@@ -938,7 +938,7 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_US,	IF_EB("\033[4m", ESC_STR "[4m")},
     {(int)KS_MS,	"y"},
     {(int)KS_UT,	"y"},
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	IF_EB("\033[%i%p1%d;%p2%dH",
 						  ESC_STR "[%i%p1%d;%p2%dH")},
@@ -1101,7 +1101,7 @@ struct builtin_term builtin_termcaps[] =
 #  endif
     {(int)KS_MS,	"y"},		/* guessed */
     {(int)KS_UT,	"y"},		/* guessed */
-    {(int)KS_LE,	"\010"},
+    {(int)KS_LE,	"\b"},
 #  ifdef TERMINFO
     {(int)KS_CM,	"\033[%i%p1%d;%p2%dH"},
 #  else
