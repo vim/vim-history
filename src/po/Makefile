@@ -4,11 +4,11 @@
 # Note: ja.sjis, *.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
 # not installed on Unix
 
-LANGUAGES =	af cs de en_GB es fr it ja ko no pl sk uk zh_TW \
+LANGUAGES =	af ca cs de en_GB es fr it ja ko no pl ru sk sv uk zh_TW \
 		zh_TW.UTF-8 zh_CN zh_CN.UTF-8
-MOFILES =	af.mo cs.mo de.mo en_GB.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo no.mo pl.mo sk.mo uk.mo zh_TW.mo zh_TW.UTF-8.mo \
-		zh_CN.mo zh_CN.UTF-8.mo
+MOFILES =	af.mo ca.mo cs.mo de.mo en_GB.mo es.mo fr.mo it.mo ja.mo \
+		ko.mo no.mo pl.mo ru.mo sk.mo sv.mo uk.mo \
+		zh_TW.mo zh_TW.UTF-8.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -55,7 +55,8 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
-converted: ja.sjis.mo cs.cp1250.mo pl.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo
+converted: ja.sjis.mo cs.cp1250.mo pl.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo \
+		ru.cp1251.mo ru.cp866.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.  Don't depend on sjiscorr, it should only be compiled when
@@ -92,6 +93,18 @@ zh_CN.cp936.po: zh_CN.po
 	rm -f zh_CN.cp936.po
 	iconv -f gb2312 -t cp936 zh_CN.po | \
 		sed -e 's/charset=gb2312/charset=gbk/' -e 's/# Original translations/# Generated from zh_CN.po, DO NOT EDIT/' > zh_CN.cp936.po
+
+# Convert ru.po to create ru.cp866.po.
+ru.cp866.po: ru.po
+	rm -f ru.cp866.po
+	iconv -f koi8-r -t cp866 ru.po | \
+		sed -e 's/charset=koi8-r/charset=cp866/' -e 's/# Original translations/# Generated from ru.po, DO NOT EDIT/' > ru.cp866.po
+
+# Convert ru.po to create ru.cp1251.po.
+ru.cp1251.po: ru.po
+	rm -f ru.cp1251.po
+	iconv -f koi8-r -t cp1251 ru.po | \
+		sed -e 's/charset=koi8-r/charset=cp1251/' -e 's/# Original translations/# Generated from ru.po, DO NOT EDIT/' > ru.cp1251.po
 
 check:
 	@if test "x" = "x$(prefix)"; then \
