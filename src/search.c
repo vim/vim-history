@@ -2698,11 +2698,13 @@ extend:
     }
     else
     {
-	/* include a newline after the sentence */
-	incl(&curwin->w_cursor);
+	/* include a newline after the sentence, if there is one */
+	if (incl(&curwin->w_cursor) == -1)
+	    oap->inclusive = TRUE;
+	else
+	    oap->inclusive = FALSE;
 	oap->start = start_pos;
 	oap->motion_type = MCHAR;
-	oap->inclusive = FALSE;
     }
     return OK;
 }
