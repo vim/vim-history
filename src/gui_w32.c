@@ -1571,7 +1571,7 @@ gui_mch_draw_string(
     static WCHAR *unicodebuf = NULL;
     static int   *unicodepdy = NULL;
     int		unibuflen = 0;
-    int		n;
+    int		n = 0;
 #endif
     HPEN	hpen, old_pen;
     int		y;
@@ -2248,7 +2248,7 @@ gui_mch_dialog(
     int		dlgwidth = 0;
     int		dlgheight;
     int		editboxheight;
-    int		horizWidth;
+    int		horizWidth = 0;
     int		msgheight;
     char_u	*pstart;
     char_u	*pend;
@@ -2498,7 +2498,8 @@ gui_mch_dialog(
 	buttonYpos += editboxheight;
 
     pstart = tbuffer;
-    horizWidth = (dlgwidth - horizWidth) / 2;	/* Now it's X offset */
+    if (!vertical)
+	horizWidth = (dlgwidth - horizWidth) / 2;	/* Now it's X offset */
     for (i = 0; i < numButtons; i++)
     {
 	/* get end of this button. */

@@ -242,7 +242,7 @@ dyn_libintl_init(char *libname)
 	{"gettext", (FARPROC*)&dyn_libintl_gettext},
 	{"textdomain", (FARPROC*)&dyn_libintl_textdomain},
 	{"bindtextdomain", (FARPROC*)&dyn_libintl_bindtextdomain},
-	NULL, NULL
+	{NULL, NULL}
     };
 
     /* No need to initialize twice. */
@@ -1213,8 +1213,12 @@ tgetch(void)
 
 #ifdef FEAT_CLIENTSERVER
 	(void)WaitForChar(-1L);
-	if (input_available() || g_nMouseClick != -1)
+	if (input_available())
 	    return 0;
+# ifdef FEAT_MOUSE
+	if (g_nMouseClick != -1)
+	    return 0;
+# endif
 #endif
 	if (ReadConsoleInput(g_hConIn, &ir, 1, &cRecords) == 0)
 	{

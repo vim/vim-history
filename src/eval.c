@@ -6333,7 +6333,7 @@ f_remote_peek(argvars, retvar)
 {
 #ifdef FEAT_CLIENTSERVER
     var		v;
-    char_u	*s;
+    char_u	*s = NULL;
 # ifdef WIN32
     int		n = 0;
 # endif

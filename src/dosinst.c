@@ -20,7 +20,7 @@
 #include "dosinst.h"
 
 /* Macro to do an error check I was typing over and over */
-#define CHECK_REG_ERROR(code) if (code != ERROR_SUCCESS) { printf("%d error number:  %d\n", __LINE__, code); return 1; }
+#define CHECK_REG_ERROR(code) if (code != ERROR_SUCCESS) { printf("%ld error number:  %ld\n", (long)__LINE__, (long)code); return 1; }
 
 int	has_vim = 0;		/* installable vim.exe exists */
 int	has_gvim = 0;		/* installable gvim.exe exists */
@@ -1492,7 +1492,7 @@ create_shortcut(
     }
     else
     {
-	printf("CoCreateInstance Error - hres = %08x\n", hres);
+	printf("CoCreateInstance Error - hres = %08x\n", (int)hres);
 	return FAIL;
     }
 
