@@ -285,12 +285,12 @@ close_buffer(win, buf, action)
     {
 	del_buf = TRUE;
 	unload_buf = TRUE;
-	wipe_buf = TRUE;
     }
     else if (buf->b_p_bh[0] == 'w')	/* 'bufhidden' == "wipe" */
     {
 	del_buf = TRUE;
 	unload_buf = TRUE;
+	wipe_buf = TRUE;
     }
     else if (buf->b_p_bh[0] == 'u')	/* 'bufhidden' == "unload" */
 	unload_buf = TRUE;
