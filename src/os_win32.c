@@ -1528,6 +1528,7 @@ fname_case(
     char_u *name)
 {
     char szTrueName[_MAX_PATH + 2];
+    char szOrigElem[_MAX_PATH + 2];
     char *psz, *pszPrev;
     const int len = (name != NULL)  ?  STRLEN(name)  :	0;
 
@@ -1562,7 +1563,19 @@ fname_case(
 	{
 	    /* avoid ".." and ".", etc */
 	    if (_stricoll(pszPrev, fb.cFileName) == 0)
+	    {
+		STRCPY(szOrigElem, pszPrev);
 		STRCPY(pszPrev, fb.cFileName);
+		/* Look for exact match and prefer it if found */
+		while (FindNextFile(hFind, &fb))
+		{
+		    if (strcoll(szOrigElem, fb.cFileName) == 0)
+		    {
+			STRCPY(pszPrev, fb.cFileName);
+			break;
+		    }
+		}
+	    }
 	    FindClose(hFind);
 	}
 
