@@ -264,7 +264,7 @@ static struct
     {VK_TAB,		TAB, NUL},
     {VK_ESCAPE,		ESC, NUL},
     {NL,		NL, NUL},
-    {CR,		CR, NUL},
+    {CAR,		CAR, NUL},
 
     /* End of list marker: */
     {0,			0, 0}

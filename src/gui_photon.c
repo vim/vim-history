@@ -174,12 +174,12 @@ static struct
     {Pk_KP_5,	    '&', '8'}, /* Undo	    */
 
     /* Keys that we want to be able to use any modifier with: */
-    {Pk_Return,	    CR,  NUL},
+    {Pk_Return,	    CAR,  NUL},
     {Pk_space,	    ' ', NUL},
     {Pk_Tab,	    TAB, NUL},
     {Pk_Escape,	    ESC, NUL},
     {NL,	    NL,	 NUL},
-    {CR,	    CR,  NUL},
+    {CAR,	    CAR,  NUL},
 
     /* End of list marker: */
     {0,		0, 0}
