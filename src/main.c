@@ -113,7 +113,9 @@ main
     int		i;
     char_u	*p = NULL;
     int		bin_mode = FALSE;	/* -b option used */
+#ifdef FEAT_EVAL
     int		use_debug_break_level = -1;
+#endif
 #ifdef FEAT_WINDOWS
     int		window_count = -1;	/* number of windows to use */
     int		arg_idx;		/* index in argument list */
@@ -1292,8 +1294,10 @@ scripterror:
     parse_list_options(p_popt, printer_opts, OPT_PRINT_NUM_OPTIONS);
 #endif
 
+#ifdef FEAT_EVAL
     /* Set the break level after the terminal is initialized. */
     debug_break_level = use_debug_break_level;
+#endif
 
 #ifdef FEAT_PRECOMMANDS
     if (p_commands > 0)
