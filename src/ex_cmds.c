@@ -2291,6 +2291,7 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
     long	n;
     linenr_t	lnum;
     linenr_t	topline = 0;
+    int		newcol = -1;
 
     if (fnum != 0)
     {
@@ -2624,7 +2625,10 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
 	 * keep it.
 	 */
 	if (curwin->w_cursor.lnum != lnum)
+	{
 	    newlnum = curwin->w_cursor.lnum;
+	    newcol = curwin->w_cursor.col;
+	}
 	if (curwin->w_topline == topline)
 	    topline = 0;
 
@@ -2635,19 +2639,22 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
 
     if (command == NULL)
     {
-	if (newlnum > 0)
+	if (newcol >= 0)	/* position set by autocommands */
+	{
+	    curwin->w_cursor.lnum = newlnum;
+	    curwin->w_cursor.col = newcol;
+	    adjust_cursor();
+	}
+	else if (newlnum > 0)	/* line number from caller or old position */
 	{
 	    curwin->w_cursor.lnum = newlnum;
 	    check_cursor_lnum();
 	    beginline(BL_SOL | BL_FIX);
 	}
-	else
+	else			/* no line number, go to last line in Ex mode */
 	{
 	    if (exmode_active)
-	    {
 		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-		check_cursor_lnum();
-	    }
 	    beginline(BL_WHITE | BL_FIX);
 	}
     }
