@@ -1630,9 +1630,9 @@ op_replace(oap, c)
 	     * Thus the number of characters may increase!
 	     */
 	    /* allow for pre spaces */
-	    n = (bd.startspaces ? bd.start_char_vcols - 1 : 0 );
+	    n = (bd.startspaces ? bd.start_char_vcols - 1 : 0);
 	    /* allow for post spp */
-	    n += ( bd.endspaces && !bd.is_oneChar ? bd.end_char_vcols - 1 : 0 );
+	    n += (bd.endspaces && !bd.is_oneChar ? bd.end_char_vcols - 1 : 0);
 	    n += (oap->end_vcol - oap->start_vcol) - bd.textlen + 1;
 
 	    oldp = ml_get_curline();
@@ -1827,15 +1827,16 @@ op_insert(oap, count1)
     long		ins_len, pre_textlen = 0;
     char_u		*firstline, *ins_text;
     struct block_def	bd;
+    int			i;
 
     if (u_save((linenr_t)(oap->start.lnum - 1),
 	       (linenr_t)(oap->end.lnum + 1)) == FAIL)
 	return;
 
     /* edit() changes this - record it for OP_APPEND */
-    bd.is_MAX = (curwin->w_curswant==MAXCOL);
+    bd.is_MAX = (curwin->w_curswant == MAXCOL);
     /* beyond EOL allowed in VIsual mode */
-    bd.is_EOL = (linetabsize( ml_get_curline()) == (int)oap->end_vcol);
+    bd.is_EOL = (linetabsize(ml_get_curline()) == (int)oap->end_vcol);
 
     /* vis block is still marked. Get rid of it now. */
     curwin->w_cursor.lnum = oap->start.lnum;
@@ -1843,10 +1844,12 @@ op_insert(oap, count1)
 
     if (oap->block_mode)
     {
-	/* We first input the new text */
-	firstline = ml_get(oap->start.lnum);
-	pre_textlen = STRLEN(firstline);
+	/* Get the info about the block before entering the text */
 	block_prep(oap, &bd, oap->start.lnum, TRUE);
+	firstline = ml_get(oap->start.lnum) + bd.textcol;
+	if (oap->op_type == OP_APPEND)
+	    firstline += bd.textlen;
+	pre_textlen = STRLEN(firstline);
     }
 
     if (oap->op_type == OP_APPEND)
@@ -1858,6 +1861,14 @@ op_insert(oap, count1)
 	    while (inc_cursor() == 0
 		    && (curwin->w_cursor.col < bd.textcol + bd.textlen))
 		;
+	    if (bd.is_short && !bd.is_MAX)
+	    {
+		/* First line was too short, make it longer and adjust the
+		 * values in "bd". */
+		for (i = 0; i < bd.endspaces; ++i)
+		    ins_char(' ');
+		bd.textlen += bd.endspaces;
+	    }
 	}
 	else
 	{
@@ -1880,21 +1891,39 @@ op_insert(oap, count1)
 
     if (oap->block_mode)
     {
-	firstline = ml_get(oap->start.lnum);
+	struct block_def	bd2;
+
+	/*
+	 * Spaces and tabs in the indent may have changed to other spaces and
+	 * tabs.  Get the starting column again and correct the lenght.
+	 * Don't do this when "$" used, end-of-line will have changed.
+	 */
+	block_prep(oap, &bd2, oap->start.lnum, TRUE);
+	if (!bd.is_MAX || bd2.textlen < bd.textlen)
+	{
+	    if (oap->op_type == OP_APPEND)
+	    {
+		pre_textlen += bd2.textlen - bd.textlen;
+		if (bd2.endspaces)
+		    --bd2.textlen;
+	    }
+	    bd.textcol = bd2.textcol;
+	    bd.textlen = bd2.textlen;
+	}
+
 	/*
 	 * Subsequent calls to ml_get() flush the firstline data - take a
 	 * copy of the required string.
 	 */
+	firstline = ml_get(oap->start.lnum) + bd.textcol;
+	if (oap->op_type == OP_APPEND)
+	    firstline += bd.textlen;
 	if ((ins_len = STRLEN(firstline) - pre_textlen) > 0)
 	{
 	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
 	    {
 
-		if (oap->op_type == OP_APPEND)
-		    STRNCPY(ins_text, firstline + bd.textcol + bd.textlen,
-								    ins_len);
-		else
-		    STRNCPY(ins_text, firstline + bd.textcol, ins_len);
+		STRNCPY(ins_text, firstline, ins_len);
 		*(ins_text + ins_len) = NUL;
 
 		/* block handled here */
@@ -3673,7 +3702,7 @@ block_prep(oap, bdp, lnum, is_del)
 		bdp->end_vcol += incr;
 		++pend;
 	    }
-	    if (bdp->end_vcol < oap->end_vcol
+	    if (bdp->end_vcol <= oap->end_vcol
 		    && (!is_del
 			|| oap->op_type == OP_APPEND
 			|| oap->op_type == OP_REPLACE)) /* line too short */
@@ -3682,7 +3711,7 @@ block_prep(oap, bdp, lnum, is_del)
 		bdp->is_short = TRUE;
 #endif
 		if (oap->op_type == OP_APPEND)
-		    bdp->endspaces = oap->end_vcol - bdp->end_vcol;
+		    bdp->endspaces = oap->end_vcol - bdp->end_vcol + 1;
 		else
 		    bdp->endspaces = 0;
 	    }
