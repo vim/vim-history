@@ -2079,6 +2079,9 @@ scroll_cursor_halfway(atend)
 #else
     used = plines(loff.lnum);
 #endif
+#ifdef FEAT_FOLDING
+    (void)hasFolding(boff.lnum, NULL, &boff.lnum);
+#endif
     topline = loff.lnum;
     while (topline > 1)
     {
