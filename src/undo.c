@@ -750,6 +750,7 @@ u_undoline()
     ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
     u_free_line(curbuf->b_u_line_ptr);
     curbuf->b_u_line_ptr = oldp;
+    changed();
 #ifdef SYNTAX_HL
     /* recompute syntax hl., starting with current line */
     syn_changed(curbuf->b_u_line_lnum);
