@@ -2751,8 +2751,9 @@ button_set:
 	case INSERT+LANGMAP:	checkfor = MOUSE_INSERT;	break;
 	case ASKMORE:
 	case HITRETURN:		/* At the more- and hit-enter prompt pass the
-				   mouse event for a click on the last line. */
-				if (Y_2_ROW(y) == Rows - 1)
+				   mouse event for a click on or below the
+				   message line. */
+				if (Y_2_ROW(y) >= msg_row)
 				    checkfor = MOUSE_NORMAL;
 				else
 				    checkfor = MOUSE_RETURN;
@@ -4117,7 +4118,7 @@ xy2win(x, y)
 # ifdef FEAT_MOUSESHAPE
     if (State == HITRETURN || State == ASKMORE)
     {
-	if (Y_2_ROW(y) == Rows - 1)
+	if (Y_2_ROW(y) >= msg_row)
 	    update_mouseshape(SHAPE_IDX_MOREL);
 	else
 	    update_mouseshape(SHAPE_IDX_MORE);
