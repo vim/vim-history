@@ -1539,6 +1539,11 @@ gui_write(s, len)
     if (can_update_cursor && force_cursor)
 	gui_update_cursor(force_cursor, TRUE);
 
+    /* When switching to another window the dragging must have stopped.
+     * Required for GTK, dragged_sb isn't reset. */
+    if (old_curwin != curwin)
+	gui.dragged_sb = SBAR_NONE;
+
     /* Update the scrollbars after clearing the screen or when switched
      * to another window.
      * Update the horizontal scrollbar always, it's difficult to check all
@@ -1551,9 +1556,9 @@ gui_write(s, len)
 
     /*
      * We need to make sure this is cleared since Athena doesn't tell us when
-     * he is done dragging.
+     * he is done dragging.  Do the same for GTK.
      */
-#ifdef FEAT_GUI_ATHENA
+#if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK)
     gui.dragged_sb = SBAR_NONE;
 #endif
 
