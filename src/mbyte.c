@@ -113,6 +113,14 @@
 # include <wchar.h>
 #endif
 
+#if 0
+/* This has been disabled, because several people reported problems with the
+ * wcwidth() and iswprint() library functions, esp. for Hebrew. */
+# ifdef __STDC_ISO_10646__
+#  define USE_WCHAR_FUNCTIONS
+# endif
+#endif
+
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
 static int enc_canon_search __ARGS((char_u *name));
@@ -1108,7 +1116,7 @@ utf_char2cells(c)
 
     if (c >= 0x100)
     {
-#ifdef __STDC_ISO_10646__
+#ifdef USE_WCHAR_FUNCTIONS
 	/*
 	 * Assume the library function wcwidth() works better than our own
 	 * stuff.  It should return 1 for ambiguous width chars!
@@ -1766,7 +1774,7 @@ utf_iscomposing(c)
 utf_printable(c)
     int		c;
 {
-#ifdef __STDC_ISO_10646__
+#ifdef USE_WCHAR_FUNCTIONS
     /*
      * Assume the iswprint() library function works better than our own stuff.
      */
