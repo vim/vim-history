@@ -5746,6 +5746,11 @@ ins_ctrl_g()
 {
     int		c;
 
+#ifdef FEAT_INS_EXPAND
+    /* Right after CTRL-X the cursor will be after the ruler. */
+    setcursor();
+#endif
+
     /*
      * Don't map the register name. This also prevents the mode message to be
      * deleted when ESC is hit.
