@@ -5716,6 +5716,8 @@ paste_option_changed()
 	/* set global options */
 	p_sm = 0;		    /* no showmatch */
 #ifdef CMDLINE_INFO
+	if (p_ru)
+	    status_redraw_all();    /* redraw to remove the ruler */
 	p_ru = 0;		    /* no ruler */
 #endif
 #ifdef RIGHTLEFT
@@ -5750,6 +5752,8 @@ paste_option_changed()
 	/* restore global options */
 	p_sm = save_sm;
 #ifdef CMDLINE_INFO
+	if (p_ru != save_ru)
+	    status_redraw_all();    /* redraw to draw the ruler */
 	p_ru = save_ru;
 #endif
 #ifdef RIGHTLEFT
