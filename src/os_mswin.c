@@ -1339,20 +1339,23 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     }
     else if (PrintDlg(&prt_dlg) == 0)
 	goto init_fail_dlg;
+    else
+    {
+	/*
+	 * keep the previous driver context
+	 */
+	stored_dm = prt_dlg.hDevMode;
+	stored_devn = prt_dlg.hDevNames;
+	stored_nFlags = prt_dlg.Flags;
+	stored_nCopies = prt_dlg.nCopies;
+    }
+
     if (prt_dlg.hDC == NULL)
     {
 	EMSG(_("E237: Printer selection failed"));
 	mch_print_cleanup();
 	return FALSE;
     }
-
-    /*
-     * keep the previous driver context
-     */
-    stored_dm = prt_dlg.hDevMode;
-    stored_devn = prt_dlg.hDevNames;
-    stored_nFlags = prt_dlg.Flags;
-    stored_nCopies = prt_dlg.nCopies;
 
     /* Not all printer drivers report the support of color (or grey) in the
      * same way.  Let's set has_color if there appears to be some way to print
