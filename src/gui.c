@@ -3993,7 +3993,7 @@ get_find_dialog_text(arg, wordp)
 
 	    /* Remove "\V" */
 	    if (len >= 2 && STRNCMP(text, "\\V", 2) == 0)
-		mch_memmove(text, text + 2, (size_t)(len - 2));
+		mch_memmove(text, text + 2, (size_t)(len - 1));
 
 	    /* Recognize "\<text\>" and remove. */
 	    if (len >= 4
