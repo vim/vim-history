@@ -8892,8 +8892,7 @@ ex_function(eap)
 		p += eval_fname_script(p);
 		if (ASCII_ISALPHA(*p))
 		{
-		    while (ASCII_ISALPHA(*p) || isdigit(*p) || *p == '_')
-			++p;
+		    (void)trans_function_name(&p, TRUE, FALSE);
 		    if (*skipwhite(p) == '(')
 		    {
 			++nesting;
