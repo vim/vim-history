@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 05
+*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 18
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -834,10 +834,16 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 	When writing a file and a backup is made, this option tells how it's
-	done:
+	done.  This is a comma separated list of words.
+	
+	The main values are:
 	"yes"	make a copy of the file and overwrite the original one
 	"no"	rename the file and write a new one
 	"auto"	one of the previous, what works best
+
+	Extra values that can be combined with the ones above are:
+	"breaksymlink"	always break symlinks when writing
+	"breakhardlink"	always break hardlinks when writing
 
 	Making a copy and overwriting the original file:
 	- Takes extra time to copy the file.
@@ -856,6 +862,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	is possible without side effects (the attributes can be passed on and
 	and the file is not a link) that is used.  When problems are expected,
 	a copy will be made.
+
+	The "breaksymlink" and "breakhardlink" values can be used in
+	combination with any of "yes", "no" and "auto".  When included, they
+	force Vim to always break either symbolic or hard links by doing
+	exactly what the "no" option does, renaming the original file to
+	become the backup and writing a new file in its place.  This can be
+	useful for example in source trees where all the files are symbolic or
+	hard links and any changes should stay in the local source tree, not
+	be propagated back to the original source.
 							*crontab*
 	One situation where "no" and "auto" will cause problems: A program
 	that opens a file, invokes Vim to edit that file, and then tests if

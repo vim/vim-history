@@ -2876,12 +2876,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      */
     if (!(append && *p_pm == NUL) && !filtering && perm >= 0 && dobackup)
     {
-	if (*p_bkc == 'y' || append)	/* "yes" */
+#if defined(UNIX) || defined(WIN32)
+	struct stat st;
+#endif
+
+	if ((bkc_flags & BKC_YES) || append)	/* "yes" */
 	    backup_copy = TRUE;
 #if defined(UNIX) || defined(WIN32)
-	else if (*p_bkc == 'a')		/* "auto" */
+	else if ((bkc_flags & BKC_AUTO))	/* "auto" */
 	{
-	    struct stat	st;
 	    int		i;
 
 # ifdef UNIX
@@ -2932,6 +2935,31 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		}
 	    }
 	}
+
+# ifdef UNIX
+	/*
+	 * Break symlinks and/or hardlinks if we've been asked to.
+	 */
+	if ((bkc_flags & BKC_BREAKSYMLINK) || (bkc_flags & BKC_BREAKHARDLINK))
+	{
+	    int	lstat_res;
+
+	    lstat_res = mch_lstat((char *)fname, &st);
+
+	    /* Symlinks. */
+	    if ((bkc_flags & BKC_BREAKSYMLINK)
+		    && lstat_res == 0
+		    && st.st_ino != st_old.st_ino)
+		backup_copy = FALSE;
+
+	    /* Hardlinks. */
+	    if ((bkc_flags & BKC_BREAKHARDLINK)
+		    && st_old.st_nlink > 1
+		    && (lstat_res != 0 || st.st_ino == st_old.st_ino))
+		backup_copy = FALSE;
+	}
+#endif
+
 #endif
 
 	/* make sure we have a valid backup extension to use */

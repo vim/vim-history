@@ -301,6 +301,15 @@ EXTERN char_u	*p_bs;		/* 'backspace' */
 EXTERN char_u	*p_bg;		/* 'background' */
 EXTERN int	p_bk;		/* 'backup' */
 EXTERN char_u	*p_bkc;		/* 'backupcopy' */
+EXTERN unsigned	bkc_flags;
+#ifdef IN_OPTION_C
+static char *(p_bkc_values[]) = {"yes", "auto", "no", "breaksymlink", "breakhardlink", NULL};
+#endif
+# define BKC_YES		0x001
+# define BKC_AUTO		0x002
+# define BKC_NO			0x004
+# define BKC_BREAKSYMLINK	0x008
+# define BKC_BREAKHARDLINK	0x010
 EXTERN char_u	*p_bdir;	/* 'backupdir' */
 EXTERN char_u	*p_bex;		/* 'backupext' */
 #ifdef FEAT_WILDIGN
