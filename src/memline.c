@@ -4247,6 +4247,9 @@ ml_find_line_or_offset(buf, line, offp)
     int		ffdos = (get_fileformat(buf) == EOL_DOS);
     int		extra = 0;
 
+    /* take care of cached line first */
+    ml_flush_line(curbuf);
+
     if (buf->b_ml.ml_usedchunks == -1
 	    || buf->b_ml.ml_chunksize == NULL
 	    || line < 0)
