@@ -5767,6 +5767,28 @@ static void auto_next_pat __ARGS((AutoPatCmd *apc, int stop_at_last));
 static EVENT_T	last_event;
 static int	last_group;
 
+#ifdef BACKSLASH_IN_FILENAME
+static void forward_slash __ARGS((char_u *));
+
+/*
+ * Convert all backslashes in fname to forward slashes in-place.
+ */
+    static void
+forward_slash(fname)
+    char_u	*fname;
+{
+    for (p = fname; *p != NUL; ++p)
+# ifdef  FEAT_MBYTE
+	/* The Big5 encoding can have '\' in the trail byte. */
+	if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+	    ++p;
+	else
+# endif
+	if (*p == '\\')
+	    *p = '/';
+}
+#endif
+
 /*
  * Show the autocommands for one AutoPat.
  */
@@ -6900,31 +6922,10 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     /*
      * Replace all backslashes with forward slashes.  This makes the
      * autocommand patterns portable between Unix and MS-DOS.
-     * Watch out for the Big5 encoding, it has '\' in the trail byte.
      */
-    {
-	char_u	    *p;
-
-	if (sfname != NULL)
-	{
-	    for (p = sfname; *p; ++p)
-# ifdef  FEAT_MBYTE
-		if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
-		    ++p;
-		else
-# endif
-		if (*p == '\\')
-		    *p = '/';
-	}
-	for (p = fname; *p; ++p)
-# ifdef  FEAT_MBYTE
-	    if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
-		++p;
-	    else
-# endif
-	    if (*p == '\\')
-		*p = '/';
-    }
+    if (sfname != NULL)
+	forward_slash(sfname);
+    forward_slash(fname);
 #endif
 
 #ifdef VMS
@@ -7179,6 +7180,51 @@ getnextac(c, cookie, indent)
 	acp->nextcmd = NULL;
     else
 	acp->nextcmd = ac->next;
+    return retval;
+}
+
+/*
+ * Return TRUE if there is a matching autocommand for "fname".
+ */
+    int
+has_autocmd(event, sfname)
+    EVENT_T	event;
+    char_u	*sfname;
+{
+    AutoPat	*ap;
+    char_u	*fname;
+    char_u	*tail = gettail(sfname);
+    int		retval = FALSE;
+
+    fname = FullName_save(sfname, FALSE);
+    if (fname == NULL)
+	return FALSE;
+
+#ifdef BACKSLASH_IN_FILENAME
+    /*
+     * Replace all backslashes with forward slashes.  This makes the
+     * autocommand patterns portable between Unix and MS-DOS.
+     */
+    sfname = vim_strsave(sfname);
+    if (sfname != NULL)
+	forward_slash(sfname);
+    forward_slash(fname);
+#endif
+
+    for (ap = first_autopat[(int)event]; ap != NULL; ap = ap->next)
+	if (ap->pat != NULL && ap->cmds != NULL
+		&& match_file_pat(ap->reg_pat, fname, sfname, tail,
+							      ap->allow_dirs))
+	{
+	    retval = TRUE;
+	    break;
+	}
+
+    vim_free(fname);
+#ifdef BACKSLASH_IN_FILENAME
+    vim_free(sfname);
+#endif
+
     return retval;
 }
 

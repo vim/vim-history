@@ -25,6 +25,7 @@ void aucmd_prepbuf __ARGS((aco_save_T *aco, buf_T *buf));
 void aucmd_restbuf __ARGS((aco_save_T *aco));
 int apply_autocmds __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, buf_T *buf));
 int has_cursorhold __ARGS((void));
+int has_autocmd __ARGS((EVENT_T event, char_u *sfname));
 char_u *get_augroup_name __ARGS((expand_T *xp, int idx));
 char_u *set_context_in_autocmd __ARGS((expand_T *xp, char_u *arg, int doautocmd));
 char_u *get_event_name __ARGS((expand_T *xp, int idx));
