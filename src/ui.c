@@ -1981,7 +1981,9 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
 	array[3] = text_atom;
 	array[4] = compound_text_atom;
 	*type = XA_ATOM;
-	*format = sizeof(Atom) * 8;
+	/* This used to be: *format = sizeof(Atom) * 8; but that caused
+	 * crashes on 64 bit machines. (Peter Derr) */
+	*format = 32;
 	*length = 5;
 	return True;
     }
