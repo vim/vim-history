@@ -1442,7 +1442,9 @@ utf_ptr2len_check_len(p, size)
     if (*p == NUL)
 	return 1;
     len = utf8len_tab[*p];
-    for (i = 1; i < len && i < size; ++i)
+    if (len > size)
+	return 1;	/* Probably illegal byte sequence. */
+    for (i = 1; i < len; ++i)
 	if ((p[i] & 0xc0) != 0x80)
 	    return 1;
     return len;
