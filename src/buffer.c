@@ -507,6 +507,10 @@ free_buffer_stuff(buf)
 #endif
 #ifdef FEAT_USR_CMDS
     uc_clear(&buf->b_ucmds);	    /* clear local user commands */
+#ifdef FEAT_LOCALMAP
+    map_clear_int(buf, MAP_ALL_MODES, TRUE, FALSE);  /* clear local mappings */
+    map_clear_int(buf, MAP_ALL_MODES, TRUE, TRUE);   /* clear local abbrevs */
+#endif
 #endif
     free_buf_options(buf, TRUE);
 #ifdef FEAT_MBYTE
