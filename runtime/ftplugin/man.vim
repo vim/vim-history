@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Nam SungHyun <namsh@kldp.org>
-" Last Change:	2001 Sep 20
+" Last Change:	2002 May 12
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -41,7 +41,7 @@ if !exists("s:man_tag_depth")
 
 let s:man_tag_depth = 0
 
-if $OSTYPE =~ "solaris"
+if system('uname -s') =~ "SunOS" && system('uname -r') =~ "^5"
   let s:man_sect_arg = "-s"
   let s:man_find_arg = "-l"
 else
@@ -80,7 +80,7 @@ endfunc
 func <SID>FindPage(sect, page)
   let where = system("/usr/bin/man ".s:man_find_arg.' '.s:GetCmdArg(a:sect, a:page))
   if where !~ "^/"
-    if substitute(where, ".* \\(.*$\\)", "\\1", "") !~ "^/"
+    if matchstr(where, " [^ ]*$") !~ "^ /"
       return 0
     endif
   endif
