@@ -3757,7 +3757,7 @@ ex_brewind(eap)
 ex_blast(eap)
     exarg_T	*eap;
 {
-    goto_buffer(eap, DOBUF_LAST, FORWARD, 0);
+    goto_buffer(eap, DOBUF_LAST, BACKWARD, 0);
 }
 #endif
 
