@@ -4421,7 +4421,28 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &p_bg)
     {
 	if (check_opt_strings(p_bg, p_bg_values, FALSE) == OK)
+	{
+#ifdef FEAT_EVAL
+	    int dark = (*p_bg == 'd');
+#endif
+
 	    init_highlight(FALSE, FALSE);
+
+#ifdef FEAT_EVAL
+	    if (dark != (*p_bg == 'd')
+			  && get_var_value((char_u *)"g:colors_name") != NULL)
+	    {
+		/* The color scheme must have set 'background' back to another
+		 * value, that's not what we want here.  Disable the color
+		 * scheme and set the colors again. */
+		do_unlet((char_u *)"g:colors_name");
+		free_string_option(p_bg);
+		p_bg = vim_strsave((char_u *)(dark ? "dark" : "light"));
+		check_string_option(&p_bg);
+		init_highlight(FALSE, FALSE);
+	    }
+#endif
+	}
 	else
 	    errmsg = e_invarg;
     }
