@@ -2754,10 +2754,15 @@ im_save_status(psave)
      * disabled then (but might start later).
      * Also don't save when inside a mapping, vgetc_im_active has not been set
      * then.
-     * And don't save when the keys were stuffed (e.g., for a "." command). */
+     * And don't save when the keys were stuffed (e.g., for a "." command).
+     * And don't save when the GUI is running but our window doesn't have
+     * input focus (e.g., when a find dialog is open). */
     if (!p_imdisable && KeyTyped && !KeyStuffed
 # ifdef FEAT_XIM
 	    && xic != NULL
+# endif
+# ifdef FEAT_GUI
+	    && (!gui.in_use || gui.in_focus)
 # endif
 	)
     {
