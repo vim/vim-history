@@ -2543,6 +2543,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     char_u	*sname;
     int		ret;
     int		didone = FALSE;
+    int		exiterr = 0;
     char	**newArgV = argv + 1;
     int		newArgC = 1,
 		Argc = *argc;
@@ -2620,6 +2621,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    {
 			/* Probably out of memory, exit. */
 			didone = TRUE;
+			exiterr = 1;
 			break;
 		    }
 		    Argc = i;
@@ -2637,6 +2639,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 			/* Failed to send, abort. */
 			mch_errmsg(_("\nSend failed.\n"));
 			didone = TRUE;
+			exiterr = 1;
 		    }
 		    else if (!silent)
 			/* Let vim start normally.  */
@@ -2752,7 +2755,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 	if (didone)
 	{
 	    display_errors();	/* display any collected messages */
-	    exit(0);		/* Mission accomplished - get out */
+	    exit(exiterr);	/* Mission accomplished - get out */
 	}
     }
     /* Return back into main() */
