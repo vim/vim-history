@@ -1955,16 +1955,17 @@ auto/if_perl.c: if_perl.xs
 auto/osdef.h: auto/config.h osdef.sh osdef1.h.in osdef2.h.in
 	CC="$(CC) $(ALL_CFLAGS)" srcdir=$(srcdir) sh $(srcdir)/osdef.sh
 
+QUOTESED = sed -e 's/"/\\"/g' -e 's/\\"/"/' -e 's/\\";$$/";/'
 auto/pathdef.c: Makefile auto/config.mk
 	-@echo creating $@
 	-@echo '/* pathdef.c */' > $@
 	-@echo '/* This file is automatically created by Makefile' >> $@
 	-@echo ' * DO NOT EDIT!  Change Makefile only. */' >> $@
 	-@echo '#include "vim.h"' >> $@
-	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> $@
-	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> $@
-	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >>  $@
-	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(ALL_LIB_DIRS) $(LDFLAGS) -o $(VIMTARGET) $(ALL_LIBS) ";' >>  $@
+	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' | $(QUOTESED) >> $@
+	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' | $(QUOTESED) >> $@
+	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' | $(QUOTESED) >>  $@
+	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(ALL_LIB_DIRS) $(LDFLAGS) -o $(VIMTARGET) $(ALL_LIBS) ";' | $(QUOTESED) >>  $@
 	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d $(NL) >> $@
 	-@if test -n "$(COMPILEDBY)"; then \
 		echo "$(COMPILEDBY)" | tr -d $(NL) >> $@; \
