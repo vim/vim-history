@@ -177,10 +177,22 @@ endif
 ifndef RUBY_VER_LONG
 RUBY_VER_LONG = 1.6
 endif
+
+ifeq ($(RUBY_VER), 16)
 ifndef RUBY_PLATFORM
 RUBY_PLATFORM = i586-mswin32
 endif
+ifndef RUBY_INSTALL_NAME
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+endif
+else
+ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i386-mswin32
+endif
+ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = msvcrt-ruby$(RUBY_VER)
+endif
+endif
 
 RUBYINC =-I $(RUBY)/lib/ruby/$(RUBY_VER_LONG)/$(RUBY_PLATFORM)
 ifeq (no, $(DYNAMIC_RUBY))
@@ -244,6 +256,7 @@ ifdef RUBY
 CFLAGS += -DFEAT_RUBY $(RUBYINC)
 ifeq (yes, $(DYNAMIC_RUBY))
 CFLAGS += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+CFLAGS += -DDYNAMIC_RUBY_VER=$(RUBY_VER)
 endif
 endif
 
@@ -507,7 +520,9 @@ $(OUTDIR)/if_ole.o: if_ole.cpp $(INCL)
 	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o $(OUTDIR)/if_ole.o if_ole.cpp
 
 $(OUTDIR)/if_ruby.o: if_ruby.c $(INCL)
+ifeq (16, $(RUBY))
 	$(CC) $(CFLAGS) -U_WIN32 -c -o $(OUTDIR)/if_ruby.o if_ruby.c
+endif
 
 if_perl.c: if_perl.xs typemap
 	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \

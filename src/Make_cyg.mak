@@ -1,10 +1,9 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
+# Last updated by Dan Sharp.  Last Change: 2004 Jan 03
 #
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
-#
-# Last updated by Dan Sharp.  Last Change: 2003 Sep 12
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -152,25 +151,44 @@ endif
 # DYNAMIC_RUBY=no does not (process exits).
 ##############################
 ifdef RUBY
-ifndef RUBY_VER_LONG
-RUBY_VER_LONG=1.6
-endif
-DEFINES += -DFEAT_RUBY
-INCLUDES += -I$(RUBY)/lib/ruby/$(RUBY_VER_LONG)/i586-mswin32
-EXTRA_OBJS += $(OUTDIR)/if_ruby.o
-
-ifndef DYNAMIC_RUBY
-DYNAMIC_RUBY = yes
-endif
 
 ifndef RUBY_VER
 RUBY_VER=16
 endif
 
-ifeq (yes, $(DYNAMIC_RUBY))
-DEFINES += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"mswin32-ruby$(RUBY_VER).dll\"
+ifndef RUBY_VER_LONG
+RUBY_VER_LONG=1.6
+endif
+
+ifndef DYNAMIC_RUBY
+DYNAMIC_RUBY = yes
+endif
+
+ifeq ($(RUBY_VER), 16)
+ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i586-mswin32
+endif
+ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+endif
 else
-EXTRA_LIBS += $(RUBY)/lib/mswin32-ruby$(RUBY_VER).lib
+ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i386-mswin32
+endif
+ifndef RUBY_INSTALL_NAME
+RUBY_INSTALL_NAME = msvcrt-ruby$(RUBY_VER)
+endif
+endif
+
+DEFINES += -DFEAT_RUBY
+INCLUDES += -I$(RUBY)/lib/ruby/$(RUBY_VER_LONG)/$(RUBY_PLATFORM)
+EXTRA_OBJS += $(OUTDIR)/if_ruby.o
+
+ifeq (yes, $(DYNAMIC_RUBY))
+DEFINES += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+DEFINES += -DDYNAMIC_RUBY_VER=$(RUBY_VER)
+else
+EXTRA_LIBS += $(RUBY)/lib/$(RUBY_INSTALL_NAME).lib
 endif
 endif
 
@@ -446,7 +464,9 @@ ifeq (yes, $(USEDLL))
 endif
 
 $(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL)
+ifeq (16, $(RUBY_VER))
 	$(CC) -c $(CFLAGS) -U_WIN32 if_ruby.c -o $(OUTDIR)/if_ruby.o
+endif
 
 $(OUTDIR)/netbeans.o:	netbeans.c $(INCL) $(NBDEBUG_DEP)
 	$(CC) -c $(CFLAGS) netbeans.c -o $(OUTDIR)/netbeans.o
