@@ -1085,6 +1085,7 @@ curs_columns(scroll)
 						    - 1 >= curwin->w_height))
 	    && curwin->w_height != 0
 	    && curwin->w_cursor.lnum == curwin->w_topline
+	    && width > 0
 #ifdef FEAT_VERTSPLIT
 	    && curwin->w_width != 0
 #endif
