@@ -8678,7 +8678,8 @@ makeopens(fd, dirnow)
 	    if (fputs("edit ", fd) < 0
 		    || ses_fname(fd, wp->w_buffer, &ssop_flags) == FAIL)
 		return FAIL;
-	    edited_win = wp;
+	    if (!wp->w_arg_idx_invalid)
+		edited_win = wp;
 	    break;
 	}
     }
@@ -8959,7 +8960,9 @@ put_view(fd, wp, add_edit, flagp)
 	    return FAIL;
     }
 
-    if (add_edit)
+    /* Edit the file.  Skip this when ":next" already did it. */
+    if (add_edit && (wp->w_arg_idx == 0 || flagp != &ssop_flags
+						    || wp->w_arg_idx_invalid))
     {
 	/*
 	 * Load the file.
