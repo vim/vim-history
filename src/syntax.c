@@ -7738,10 +7738,11 @@ syn_list_header(did_header, outlen, id)
 set_hl_attr(idx)
     int		idx;	    /* index in array */
 {
-    attrentry_T	at_en;
+    attrentry_T		at_en;
+    struct hl_group	*sgp = HL_TABLE() + idx;
 
     /* The "Normal" group doesn't need an attribute number */
-    if (STRCMP(HL_TABLE()[idx].sg_name_u, "NORMAL") == 0)
+    if (sgp->sg_name_u != NULL && STRCMP(sgp->sg_name_u, "NORMAL") == 0)
 	return;
 
 #ifdef FEAT_GUI
@@ -7749,55 +7750,54 @@ set_hl_attr(idx)
      * For the GUI mode: If there are other than "normal" highlighting
      * attributes, need to allocate an attr number.
      */
-    if (HL_TABLE()[idx].sg_gui_fg == INVALCOLOR
-	    && HL_TABLE()[idx].sg_gui_bg == INVALCOLOR
-	    && HL_TABLE()[idx].sg_font == NOFONT
+    if (sgp->sg_gui_fg == INVALCOLOR
+	    && sgp->sg_gui_bg == INVALCOLOR
+	    && sgp->sg_font == NOFONT
 # ifdef FEAT_XFONTSET
-	    && HL_TABLE()[idx].sg_fontset == NOFONTSET
+	    && sgp->sg_fontset == NOFONTSET
 # endif
 	    )
     {
-	HL_TABLE()[idx].sg_gui_attr = HL_TABLE()[idx].sg_gui;
+	sgp->sg_gui_attr = sgp->sg_gui;
     }
     else
     {
-	at_en.ae_attr = HL_TABLE()[idx].sg_gui;
-	at_en.ae_u.gui.fg_color = HL_TABLE()[idx].sg_gui_fg;
-	at_en.ae_u.gui.bg_color = HL_TABLE()[idx].sg_gui_bg;
-	at_en.ae_u.gui.font = HL_TABLE()[idx].sg_font;
+	at_en.ae_attr = sgp->sg_gui;
+	at_en.ae_u.gui.fg_color = sgp->sg_gui_fg;
+	at_en.ae_u.gui.bg_color = sgp->sg_gui_bg;
+	at_en.ae_u.gui.font = sgp->sg_font;
 # ifdef FEAT_XFONTSET
-	at_en.ae_u.gui.fontset = HL_TABLE()[idx].sg_fontset;
+	at_en.ae_u.gui.fontset = sgp->sg_fontset;
 # endif
-	HL_TABLE()[idx].sg_gui_attr = get_attr_entry(&gui_attr_table, &at_en);
+	sgp->sg_gui_attr = get_attr_entry(&gui_attr_table, &at_en);
     }
 #endif
     /*
      * For the term mode: If there are other than "normal" highlighting
      * attributes, need to allocate an attr number.
      */
-    if (HL_TABLE()[idx].sg_start == NULL && HL_TABLE()[idx].sg_stop == NULL)
-	HL_TABLE()[idx].sg_term_attr = HL_TABLE()[idx].sg_term;
+    if (sgp->sg_start == NULL && sgp->sg_stop == NULL)
+	sgp->sg_term_attr = sgp->sg_term;
     else
     {
-	at_en.ae_attr = HL_TABLE()[idx].sg_term;
-	at_en.ae_u.term.start = HL_TABLE()[idx].sg_start;
-	at_en.ae_u.term.stop = HL_TABLE()[idx].sg_stop;
-	HL_TABLE()[idx].sg_term_attr = get_attr_entry(&term_attr_table, &at_en);
+	at_en.ae_attr = sgp->sg_term;
+	at_en.ae_u.term.start = sgp->sg_start;
+	at_en.ae_u.term.stop = sgp->sg_stop;
+	sgp->sg_term_attr = get_attr_entry(&term_attr_table, &at_en);
     }
 
     /*
      * For the color term mode: If there are other than "normal"
      * highlighting attributes, need to allocate an attr number.
      */
-    if (HL_TABLE()[idx].sg_cterm_fg == 0 && HL_TABLE()[idx].sg_cterm_bg == 0)
-	HL_TABLE()[idx].sg_cterm_attr = HL_TABLE()[idx].sg_cterm;
+    if (sgp->sg_cterm_fg == 0 && sgp->sg_cterm_bg == 0)
+	sgp->sg_cterm_attr = sgp->sg_cterm;
     else
     {
-	at_en.ae_attr = HL_TABLE()[idx].sg_cterm;
-	at_en.ae_u.cterm.fg_color = HL_TABLE()[idx].sg_cterm_fg;
-	at_en.ae_u.cterm.bg_color = HL_TABLE()[idx].sg_cterm_bg;
-	HL_TABLE()[idx].sg_cterm_attr =
-				    get_attr_entry(&cterm_attr_table, &at_en);
+	at_en.ae_attr = sgp->sg_cterm;
+	at_en.ae_u.cterm.fg_color = sgp->sg_cterm_fg;
+	at_en.ae_u.cterm.bg_color = sgp->sg_cterm_bg;
+	sgp->sg_cterm_attr = get_attr_entry(&cterm_attr_table, &at_en);
     }
 }
 
