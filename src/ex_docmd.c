@@ -3229,7 +3229,11 @@ expand_filename(eap, cmdlinep, errormsgp)
 	 * for shell commands (may have to use quotes instead).  Don't do this
 	 * for non-unix systems when there is a single argument (spaces don't
 	 * separate arguments then). */
-	if (!eap->usefilter && eap->cmdidx != CMD_bang
+	if (!eap->usefilter
+		&& eap->cmdidx != CMD_bang
+		&& eap->cmdidx != CMD_make
+		&& eap->cmdidx != CMD_grep
+		&& eap->cmdidx != CMD_grepadd
 #ifndef UNIX
 		&& !(eap->argt & NOSPC)
 #endif
