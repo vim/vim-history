@@ -76,6 +76,8 @@ static int		maphash_valid = FALSE;
  */
 static mapblock_T	*first_abbr = NULL; /* first entry in abbrlist */
 
+static int		KeyNoremap = FALSE; /* remapping disabled */
+
 /*
  * variables used by vgetorpeek() and flush_buffers()
  *
@@ -2118,6 +2120,8 @@ vgetorpeek(advance)
 					gotchars(typebuf.tb_buf
 							 + typebuf.tb_off, 1);
 				    }
+				    KeyNoremap = (typebuf.tb_noremap[
+						typebuf.tb_off] != REMAP_YES);
 				    del_typebuf(1, 0);
 				}
 				break;	    /* got character, break for loop */
@@ -3903,6 +3907,8 @@ check_abbr(c, ptr, col, mincol)
     int		vim_abbr;
 
     if (typebuf.tb_no_abbr_cnt)	/* abbrev. are not recursive */
+	return FALSE;
+    if (KeyNoremap)		/* no remapping implies no abbreviation */
 	return FALSE;
 
     /*
