@@ -364,8 +364,13 @@ typedef struct expand
 {
     int		xp_context;		/* type of expansion */
     char_u	*xp_pattern;		/* start of item to expand */
-    int		xp_set_path;		/* ":set path=/dir/<Tab>" */
+    int		xp_backslash;		/* one of the XP_BS_ values */
 } expand_T;
+
+/* values for xp_backslash */
+#define XP_BS_NONE	0	/* nothing special for backslashes */
+#define XP_BS_ONE	1	/* uses one backslash before a space */
+#define XP_BS_THREE	2	/* uses three backslashes before a space */
 
 /*
  * Command modifiers ":vertical", ":browse", ":confirm" and ":hide" set a flag.

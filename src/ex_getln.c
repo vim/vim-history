@@ -2605,7 +2605,7 @@ ExpandEscape(xp, str, numfiles, files, options)
 	    for (i = 0; i < numfiles; ++i)
 	    {
 		/* for ":set path=" we need to escape spaces twice */
-		if (xp->xp_set_path)
+		if (xp->xp_backslash == XP_BS_THREE)
 		{
 		    p = vim_strsave_escaped(files[i], (char_u *)" ");
 		    if (p != NULL)
@@ -2643,7 +2643,7 @@ ExpandEscape(xp, str, numfiles, files, options)
 		    }
 		}
 	    }
-	    xp->xp_set_path = FALSE;
+	    xp->xp_backslash = XP_BS_NONE;
 	}
 	else if (xp->xp_context == EXPAND_TAGS)
 	{
@@ -3103,36 +3103,39 @@ ExpandFromContext(xp, pat, num_file, file, options)
     if (options & WILD_SILENT)
 	flags |= EW_SILENT;
 
-    if (xp->xp_context == EXPAND_FILES)
+    if (xp->xp_context == EXPAND_FILES || xp->xp_context == EXPAND_DIRECTORIES)
     {
 	/*
-	 * Expand file names.
-	 */
-	return expand_wildcards(1, &pat, num_file, file, flags|EW_FILE);
-    }
-    else if (xp->xp_context == EXPAND_DIRECTORIES)
-    {
-	/*
-	 * Expand directory names.
+	 * Expand file or directory names.
 	 */
 	int	free_pat = FALSE;
 	int	i;
 
-	/* for ":set path=" we need to remove backslashes for escaped space */
-	if (xp->xp_set_path)
+	/* for ":set path=" and ":set tags=" halve backslashes for escaped
+	 * space */
+	if (xp->xp_backslash != XP_BS_NONE)
 	{
 	    free_pat = TRUE;
 	    pat = vim_strsave(pat);
 	    for (i = 0; pat[i]; ++i)
-		if (pat[i] == '\\'
-			&& pat[i + 1] == '\\'
-			&& pat[i + 2] == '\\'
-			&& pat[i + 3] == ' ')
-		    STRCPY(pat + i, pat + i + 3);
+		if (pat[i] == '\\')
+		{
+		    if (xp->xp_backslash == XP_BS_THREE
+			    && pat[i + 1] == '\\'
+			    && pat[i + 2] == '\\'
+			    && pat[i + 3] == ' ')
+			STRCPY(pat + i, pat + i + 3);
+		    if (xp->xp_backslash == XP_BS_ONE
+			    && pat[i + 1] == ' ')
+			STRCPY(pat + i, pat + i + 1);
+		}
 	}
 
-	ret = expand_wildcards(1, &pat, num_file, file,
-						 (flags | EW_DIR) & ~EW_FILE);
+	if (xp->xp_context == EXPAND_FILES)
+	    flags |= EW_FILE;
+	else
+	    flags = (flags | EW_DIR) & ~EW_FILE;
+	ret = expand_wildcards(1, &pat, num_file, file, flags);
 	if (free_pat)
 	    vim_free(pat);
 	return ret;
