@@ -905,6 +905,9 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 	    curbuf->b_op_end.lnum -= linecount;		/* adjust '] */
 	    write_lnum_adjust(-linecount);		/* adjust last line
 							   for next write */
+#ifdef FEAT_FOLDING
+	    foldUpdate(curwin, curbuf->b_op_start.lnum, curbuf->b_op_end.lnum);
+#endif
 	}
 	else
 	{
