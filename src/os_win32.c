@@ -4012,13 +4012,23 @@ default_shell()
 }
 
 /*
- * mch_access() was used to support ACLs under Windows NT/2K/XP(?).
- * Unfortunately the ACL system functions are buggy, we couldn't make it work,
- * removed for now.
+ * mch_access() extends access() to do more detailed check on network drives.
  * Returns 0 if file "n" has access rights according to "p", -1 otherwise.
  */
     int
 mch_access(char *n, int p)
 {
-    return access(n, p);
+    HANDLE  hFile;
+    DWORD am;
+
+    /* Trying to open the file for the required access does ACL, read-only
+     * network share, and file attribute checks.
+     */
+    am = ((p & W_OK) ? GENERIC_WRITE : 0)
+	    | ((p & R_OK) ? GENERIC_READ : 0);
+    hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return -1;
+    CloseHandle(hFile);
+    return 0;
 }
