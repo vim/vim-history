@@ -26,6 +26,7 @@ void updatescript __ARGS((int c));
 int vgetc __ARGS((void));
 int safe_vgetc __ARGS((void));
 int vpeekc __ARGS((void));
+int vpeekc_nomap __ARGS((void));
 int vpeekc_any __ARGS((void));
 int char_avail __ARGS((void));
 void vungetc __ARGS((int c));

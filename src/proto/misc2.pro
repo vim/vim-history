@@ -79,3 +79,4 @@ char_u *find_file_in_path __ARGS((char_u *ptr, int len, int options, int first))
 char_u *find_directory_in_path __ARGS((char_u *ptr, int len, int options));
 int vim_chdir __ARGS((char_u *new_dir));
 int get_user_name __ARGS((char_u *buf, int len));
+void sort_strings __ARGS((char_u **files, int count));

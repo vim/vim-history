@@ -25,6 +25,7 @@ int get_replace_stack_virtcol __ARGS((void));
 void fixthisline __ARGS((int (*get_the_indent)(void)));
 void fix_indent __ARGS((void));
 int in_cinkeys __ARGS((int keytyped, int when, int line_is_empty));
+char_u *keymap_init __ARGS((void));
 int hkmap __ARGS((int c));
 void ins_scroll __ARGS((void));
 void ins_horscroll __ARGS((void));
