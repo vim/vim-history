@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 27
+" Last change:	2000 Jan 02
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -289,9 +289,9 @@ amenu 1.15 PopUp.-SEP1-		:
 vmenu 1.20 PopUp.Cu&t		"*x
 vmenu 1.30 PopUp.&Copy		"*y
 nmenu 1.40 PopUp.&Paste		"*P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
-vmenu      PopUp.&Paste		"-x"*P`]
-imenu      PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>exe 'norm "*P'<Bar>endif<CR>`]a
-cmenu      PopUp.&Paste		<C-R>*
+vmenu 1.40 PopUp.&Paste		"-x"*P`]
+imenu 1.40 PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>exe 'norm "*P'<Bar>endif<CR>`]a
+cmenu 1.40 PopUp.&Paste		<C-R>*
 vmenu 1.50 PopUp.&Delete	x
 amenu 1.55 PopUp.-SEP2-		:
 vmenu 1.60 PopUp.Select\ Blockwise <C-V>
