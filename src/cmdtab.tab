@@ -9,7 +9,7 @@
  */
 
 /*
- * |This file is read by makecmdtab to produce cmdtab.h.
+ * |This file is read by mkcmdtab to produce cmdtab.h.
  *
  * The bars are used to recognize file positions. Do not insert/delete them.|
  */
@@ -61,6 +61,7 @@ static struct
 	{"chdir",		NAMEDF+TRLBAR},
 	{"delete",		RANGE+REGSTR+COUNT+TRLBAR},
 	{"display",		TRLBAR},
+	{"digraph",		EXTRA+TRLBAR},
 	{"edit",		BANG+FILE1+TRLBAR},
 	{"ex",			BANG+FILE1+TRLBAR},
 	{"file",		FILE1+TRLBAR},
@@ -73,16 +74,16 @@ static struct
 	{"k",			RANGE+WORD1+TRLBAR},
 	{"list",		RANGE+COUNT+TRLBAR},		/* not supported */
 	{"move",		RANGE+EXTRA+TRLBAR},
-	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
 	{"mark",		RANGE+WORD1+TRLBAR},
 	{"marks",		TRLBAR},
+	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
 	{"mkexrc",		BANG+FILE1+TRLBAR},
 	{"next",		RANGE+BANG+NAMEDFS+TRLBAR},
 	{"number",		RANGE+COUNT+TRLBAR},		/* not supported */
 	{"Next",		RANGE+BANG+TRLBAR},
 	{"print",		RANGE+COUNT+TRLBAR},
 	{"pop",			RANGE+TRLBAR+ZEROR},
-	{"put",			RANGE+REGSTR+TRLBAR},
+	{"put",			RANGE+BANG+REGSTR+TRLBAR},
 	{"previous",	RANGE+BANG+TRLBAR},
 	{"quit",		BANG+TRLBAR},
 	{"read",		RANGE+NAMEDF+NEEDARG+TRLBAR+ZEROR},
@@ -93,7 +94,7 @@ static struct
 	{"setkeymap",	NAMEDF+TRLBAR},
 	{"shell",		TRLBAR},
 	{"source",		NAMEDF+NEEDARG+TRLBAR},
-	{"stop",		TRLBAR},					/* not supported */
+	{"stop",		TRLBAR+BANG},
 	{"t",			RANGE+EXTRA+TRLBAR},
 	{"tag",			RANGE+BANG+WORD1+TRLBAR+ZEROR},
 	{"tags",		TRLBAR},
@@ -104,11 +105,13 @@ static struct
 	{"version",		TRLBAR},
 	{"visual",		RANGE+BANG+FILE1+TRLBAR},
 	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
+	{"wnext",		RANGE+BANG+FILE1+TRLBAR},
 	{"winsize",		EXTRA+NEEDARG+TRLBAR},
 	{"wq",			BANG+FILE1+DFLALL+TRLBAR},
 	{"xit",			BANG+FILE1+DFLALL+TRLBAR},
 	{"yank",		RANGE+REGSTR+COUNT+TRLBAR},
 	{"z",			RANGE+COUNT+TRLBAR},		/* not supported */
+	{"@",			RANGE+EXTRA+TRLBAR},
 	{"!",			RANGE+NAMEDFS},
 	{"<",			RANGE+COUNT+TRLBAR},
 	{">",			RANGE+COUNT+TRLBAR},

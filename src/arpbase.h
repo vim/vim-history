@@ -295,6 +295,8 @@ struct FileRequester	{
 
 #endif	/* LIBRARIES_ASL_H */
 
+#ifndef DOS_DOSASL_H		/* mool: either this or dos/dosasl.h */
+#define DOS_DOSASL_H
 /*
  ************************************************************************
  * Structure expected by FindFirst()/FindNext()				*
@@ -332,6 +334,8 @@ struct	AnchorPath	{
 		struct	FileInfoBlock	ap_Info;
 			BYTE		ap_Buf[1];	/* Allocate a buffer here, if desired		*/
 			};
+
+#define ap_Length ap_StrLen
 
 /*
  ************************************************************************
@@ -419,12 +423,16 @@ struct	AChain	{
 #define	P_REPEND	0x8AL	/* Token for ']'	*/
 #endif	/* ARP_PRIVATE */
 
+#define	ERROR_BUFFER_OVERFLOW	303L	/* User or internal buffer overflow	*/
+#define	ERROR_BREAK		304L	/* A break character was received	*/
+#define	ERROR_NOT_EXECUTABLE	305L	/* A file has E bit cleared		*/
 	/* dos/dosasl.h uses a good lot of the symbols and structures
 	 * defined here (AnchorPatch, AChain, ERROR_BREAK and the
 	 * like), so let's don't include it again.
 	 */
 
-#define DOS_DOSASL_H 1
+/* #define DOS_DOSASL_H 1 */
+#endif	/* added by mool */
 
 /*
  ************************************************************************
@@ -832,9 +840,6 @@ struct	NewShell	{
  *	Additional IoErr() returns added by ARP...			*
  ************************************************************************
  */
-#define	ERROR_BUFFER_OVERFLOW	303L	/* User or internal buffer overflow	*/
-#define	ERROR_BREAK		304L	/* A break character was received	*/
-#define	ERROR_NOT_EXECUTABLE	305L	/* A file has E bit cleared		*/
 #define	ERROR_NOT_CLI		400L	/* Program/function neeeds to be cli	*/
 
 /*
@@ -941,6 +946,9 @@ struct	ProcessMemory	{
  *	Date String/Data structures					*
  ************************************************************************
  */
+#ifndef DOS_DATETIME_H		/* added by mool */
+#define DOS_DATETIME_H
+
 struct	DateTime	{
 		struct	DateStamp	dat_Stamp;	/* DOS Datestamp			*/
 			UBYTE		dat_Format;	/* controls appearance ot dat_StrDate	*/
@@ -983,7 +991,8 @@ struct	DateTime	{
 	 * keep the compiler from pulling it in. -olsen
 	 */
 
-#define DOS_DATETIME_H 1
+/* #define DOS_DATETIME_H 1 */
+#endif
 
 /*
  ************************************************************************

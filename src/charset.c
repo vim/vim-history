@@ -9,6 +9,10 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
+
 
 	char *
 transchar(c)
@@ -24,7 +28,7 @@ transchar(c)
 				buf[1] = '@' + c;
 				buf[2] = NUL;
 		}
-		else if (c <= '~' || c > 0xa0)
+		else if (c <= '~' || c > 0xa0 || p_gr)
 		{
 				buf[0] = c;
 				buf[1] = NUL;
@@ -39,42 +43,64 @@ transchar(c)
 }
 
 /*
- * output 'len' characters in 'str' with translation
+ * output 'len' characters in 'str' (including NULs) with translation
  * if 'len' is -1, output upto a NUL character
+ * return the number of characters it takes on the screen
  */
-	void
+	int
 outtrans(str, len)
 	register char *str;
 	register int   len;
 {
+	int retval = 0;
+
 	if (len == -1)
 		len = strlen(str);
 	while (--len >= 0)
 	{
-		outstr(transchar(*(u_char *)str));
+		outstrn(transchar(*(u_char *)str));
+		retval += charsize(*(u_char *)str);
 		++str;
 	}
+	return retval;
 }
 
 /*
  * return the number of characters 'c' will take on the screen
  */
+	int
 charsize(c)
+	int c;
 {
-	return (c >= ' ' && c <= '~' || c > 0xa0 ? 1 : 2);
+	return ((c >= ' ' && (p_gr || c <= '~')) || c > 0xa0 ? 1 : 2);
+}
+
+/*
+ * return the number of characters string 's' will take on the screen
+ */
+	int
+strsize(s)
+	char *s;
+{
+	int	len = 0;
+
+	while (*s)
+		len += charsize(*s++);
+	return len;
 }
 
 /*
  * return the number of characters 'c' will take on the screen, taking
  * into account the size of a tab
  */
+	int
 chartabsize(c, col)
 	int c, col;
 {
-	if (c >= ' ' && c <= '~' || c > 0xa0)
+	if ((c >= ' ' && (c <= '~' || p_gr)) || c > 0xa0)
    		return 1;
-   	else if (c == TAB && !P(P_LS))
-   		return (P(P_TS) - (col % P(P_TS)));
+   	else if (c == TAB && !p_list)
+   		return (int)(p_ts - (col % p_ts));
    	else
 		return 2;
 }
@@ -82,7 +108,9 @@ chartabsize(c, col)
 /*
  * return TRUE if 'c' is an identifier character
  */
+	int
 isidchar(c)
+	int c;
 {
 #ifdef __STDC__
 		return (isalnum(c) || c == '_');

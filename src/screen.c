@@ -13,27 +13,34 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
-static char 	*Nextscreen = NULL; 	/* What's to be put on the screen. */
+static u_char 	*Nextscreen = NULL; 	/* What's to be put on the screen. */
 static int		 NumLineSizes = 0;		/* # of active LineSizes */
 static linenr_t *LineNumbers = NULL;	/* Pointer to the line for LineSizes */
-static char 	*LineSizes = NULL;		/* Size of a line (pline output) */
-static char 	**LinePointers = NULL;	/* array of pointers into Netscreen */
+static u_char 	*LineSizes = NULL;		/* Number of rows the lines occupy */
+static u_char 	**LinePointers = NULL;	/* array of pointers into Netscreen */
 
 /*
  * The following variable is set (in cursupdate) to the number of physical
  * lines taken by the line the cursor is on. We use this to avoid extra calls
  * to plines(). The optimized routine updateline()
- * makes sure that the size of the cursor line hasn't changed. If so, lines below
- * the cursor will move up or down and we need to call the routine
+ * makes sure that the size of the cursor line hasn't changed. If so, lines
+ * below the cursor will move up or down and we need to call the routine
  * updateScreen() to examine the entire screen.
  */
 static int		Cline_size; 			/* size (in rows) of the cursor line */
 static int		Cline_row;				/* starting row of the cursor line */
-static int		redraw_msg = TRUE;		/* TRUE when "insert mode" needs updating */
+int				redraw_msg = TRUE;		/* TRUE when "insert mode" needs updating */
+static FPOS		oldCurpos = {0, 0};		/* last known end of quoted part */
+static int		oldCurswant = 0;		/* last known value of Curswant */
+static int		canopt;					/* TRUE when cursor goto can be optimized */
+static int		emptyrows = 0;			/* number of '~' rows on screen */
 
 static int screenline __ARGS((linenr_t, int, int));
-static void screenchar __ARGS((int, int, int));
+static void screenchar __ARGS((u_char *, int, int));
 static void screenfill __ARGS((int, int));
 
 /*
@@ -54,26 +61,20 @@ updateline()
 	if (Nextscreen == NULL || RedrawingDisabled)
 		return;
 
-	screenchar(' ', -1, -1);	/* init cursor position of screenchar() */
-#ifdef AUX
-	if (!Aux_Device)
-#endif
-		outstr(T_CI);				/* disable cursor */
+	screenchar(NULL, 0, 0);	/* init cursor position of screenchar() */
+	outstr(T_CI);				/* disable cursor */
 
-	row = screenline(Curpos.lnum, Cline_row, Rows - 1);
+	row = screenline(Curpos.lnum, Cline_row, (int)Rows - 1);
 
-#ifdef AUX
-	if (!Aux_Device)
-#endif
-		outstr(T_CV);				/* enable cursor again */
+	outstr(T_CV);				/* enable cursor again */
 
 	n = row - Cline_row;
 	if (n != Cline_size)		/* line changed size */
 	{
 		if (n < Cline_size) 	/* got smaller: delete lines */
-				s_del(row, Cline_size - n, (bool_t)FALSE);
+				s_del(row, Cline_size - n, FALSE);
 		else					/* got bigger: insert lines */
-				s_ins(Cline_row + Cline_size, n - Cline_size, (bool_t)FALSE);
+				s_ins(Cline_row + Cline_size, n - Cline_size, FALSE);
 
 		updateScreen(VALID_TO_CURSCHAR);
 	}
@@ -93,21 +94,51 @@ updateScreen(type)
 	register int	row;
 	register int	endrow;
 	linenr_t		lnum;
-	bool_t			done;		/* if TRUE, we hit the end of the file */
-	bool_t			didline;	/* if TRUE, we finished the last line */
-	int 			srow;		/* starting row of the current line */
+	linenr_t		lastline = 0; /* only valid if endrow != Rows -1 */
+	int				done;		/* if TRUE, we hit the end of the file */
+	int				didline;	/* if TRUE, we finished the last line */
+	int 			srow = 0;	/* starting row of the current line */
 	int 			idx;
 	int 			i;
 	long 			j;
+	static int		postponed_not_valid = FALSE;
 
 	screenalloc();		/* allocate screen buffers if size changed */
 
-	if (Nextscreen == NULL || RedrawingDisabled)
+	if (Nextscreen == NULL)
 		return;
 
+	if (type == CLEAR)		/* first clear screen */
+	{
+		screenclear();
+		type = NOT_VALID;
+	}
+	if (type == CURSUPD)	/* update cursor and then redraw */
+	{
+		NumLineSizes = 0;
+		cursupdate();		/* will call updateScreen(VALID) */
+		return;
+	}
 	if (NumLineSizes == 0)
 		type = NOT_VALID;
-	if (type == VALID && Topline == LineNumbers[0]) 	/* nothing to do */
+
+ 	if (RedrawingDisabled)
+	{
+		if (type == NOT_VALID)
+			postponed_not_valid = TRUE;		/* use NOT_VALID next time */
+		return;
+	}
+
+	if (postponed_not_valid)
+	{
+		type = NOT_VALID;
+		postponed_not_valid = FALSE;
+	}
+
+/* return if there is nothing to do */
+	if ((type == VALID && Topline == LineNumbers[0]) ||
+			(type == INVERTED && oldCurpos.lnum == Curpos.lnum &&
+					oldCurpos.col == Curpos.col))
 		return;
 
 	if (type == NOT_VALID)
@@ -119,9 +150,6 @@ updateScreen(type)
 	idx = 0;
 	row = 0;
 	lnum = Topline;
-#ifdef AUX
-	if (!Aux_Device)
-#endif
 	outstr(T_CI);				/* disable cursor */
 
 	/* The number of rows shown is Rows-1. */
@@ -137,47 +165,62 @@ updateScreen(type)
 		 */
 		if (Topline < LineNumbers[0])	/* may scroll down */
 		{
-				j = LineNumbers[0] - Topline;
-				if (j < Rows - 3)				/* not too far off */
+			j = LineNumbers[0] - Topline;
+			if (j < Rows - 3)				/* not too far off */
+			{
+				lastline = LineNumbers[0] - 1;
+				i = plines_m(Topline, lastline);
+				if (i < Rows - 3)		/* less than a screen off */
 				{
-						i = plines_m(Topline, (linenr_t)(LineNumbers[0] - 1));
-						if (i < Rows - 3)		/* less than a screen off */
+					/*
+					 * Try to insert the correct number of lines.
+					 * This may fail and the screen may have been cleared.
+					 */
+					if (s_ins(0, i, FALSE) && NumLineSizes)
+					{
+						endrow = i;
+
+						if ((NumLineSizes += j) > Rows - 1)
+							NumLineSizes = Rows - 1;
+						for (idx = NumLineSizes; idx - j >= 0; idx--)
 						{
-							s_ins(0, i, (bool_t)FALSE);
-
-							endrow = i;
-
-							if ((NumLineSizes += j) > Rows - 1)
-								NumLineSizes = Rows - 1;
-							for (idx = NumLineSizes; idx - j >= 0; idx--)
-							{
-								LineNumbers[idx] = LineNumbers[idx - j];
-								LineSizes[idx] = LineSizes[idx - j];
-							}
-							idx = 0;
+							LineNumbers[idx] = LineNumbers[idx - j];
+							LineSizes[idx] = LineSizes[idx - j];
 						}
+						idx = 0;
+					}
 				}
+				else		/* far off: clearing the screen is faster */
+					screenclear();
+			}
+			else		/* far off: clearing the screen is faster */
+				screenclear();
 		}
 		else							/* may scroll up */
 		{
-				j = -1;
-				for (i = 0; i < NumLineSizes; i++) /* try to find Topline in LineNumbers[] */
+			j = -1;
+			for (i = 0; i < NumLineSizes; i++) /* try to find Topline in LineNumbers[] */
+			{
+				if (LineNumbers[i] == Topline)
 				{
-					if (LineNumbers[i] == Topline)
-					{
-						j = i;
-						break;
-					}
-					row += LineSizes[i];
+					j = i;
+					break;
 				}
-				if (j == -1)	/* Topline is not in LineNumbers */
+				row += LineSizes[i];
+			}
+			if (j == -1)	/* Topline is not in LineNumbers */
+			{
+				row = 0;
+				screenclear();   /* far off: clearing the screen is faster */
+			}
+			else
+			{
+				/*
+				 * Try to delete the correct number of lines.
+				 * Topline is at LineNumbers[i].
+				 */
+				if ((row == 0 || s_del(0, row, FALSE)) && NumLineSizes)
 				{
-					row = 0;
-				}
-				else
-				{
-					if (row)	/* Topline is at LineNumbers[i] */
-						s_del(0, row, (bool_t)FALSE);
 					srow = row;
 					row = 0;
 					for (;;)
@@ -195,13 +238,74 @@ updateScreen(type)
 					}
 					NumLineSizes = idx;
 				}
+				else
+					row = 0;		/* update all lines */
+			}
 		}
 		if (endrow == Rows - 1 && idx == 0) 	/* no scrolling */
 				NumLineSizes = 0;
 	}
 
 	done = didline = FALSE;
-	screenchar(' ', -1, -1);	/* init cursor position of screenchar() */
+	screenchar(NULL, 0, 0);	/* init cursor position of screenchar() */
+
+	if (Quote.lnum)				/* check if we are updating the inverted part */
+	{
+		linenr_t	from, to;
+
+	/* find the line numbers that need to be updated */
+		if (Curpos.lnum < oldCurpos.lnum)
+		{
+			from = Curpos.lnum;
+			to = oldCurpos.lnum;
+		}
+		else
+		{
+			from = oldCurpos.lnum;
+			to = Curpos.lnum;
+		}
+	/* if in block mode and changed column or Curswant: update all lines */
+		if (Quote_block && (Curpos.col != oldCurpos.col || Curswant != oldCurswant))
+		{
+			if (from > Quote.lnum)
+				from = Quote.lnum;
+			if (to < Quote.lnum)
+				to = Quote.lnum;
+		}
+
+		if (from < Topline)
+			from = Topline;
+		if (to >= Botline)
+			to = Botline - 1;
+
+	/* find the minimal part to be updated */
+		if (type == INVERTED)
+		{
+			while (lnum < from)						/* find start */
+			{
+				row += LineSizes[idx++];
+				++lnum;
+			}
+			srow = row;
+			for (j = idx; j < NumLineSizes; ++j)	/* find end */
+			{
+				if (LineNumbers[j] == to + 1)
+				{
+					endrow = srow;
+					break;
+				}
+				srow += LineSizes[j];
+			}
+			oldCurpos = Curpos;
+			oldCurswant = Curswant;
+		}
+	/* if we update the lines between from and to set oldCurpos */
+		else if (lnum <= from && (endrow == Rows - 1 || lastline >= to))
+		{
+			oldCurpos = Curpos;
+			oldCurswant = Curswant;
+		}
+	}
 
 	/*
 	 * Update the screen rows from "row" to "endrow".
@@ -264,6 +368,7 @@ updateScreen(type)
 		}
 	}
 
+	emptyrows = 0;
 	/*
 	 * If we didn't hit the end of the file, and we didn't finish the last
 	 * line we were working on, then the line didn't fit.
@@ -282,30 +387,31 @@ updateScreen(type)
 		/* make sure the rest of the screen is blank */
 		/* put '~'s on rows that aren't part of the file. */
 		screenfill(row, '~');
+		emptyrows = Rows - row - 1;
 
 		if (done)				/* we hit the end of the file */
 			Botline = line_count + 1;
 		else
-			Botline = lnum; 	/* FIX - prev? */
+			Botline = lnum;
 	}
 
-	if (redraw_msg && P(P_MO))
+	if (redraw_msg)
 	{
 		showmode();
 		redraw_msg = FALSE;
 	}
 
-#ifdef AUX
-	if (!Aux_Device)
-#endif
 	outstr(T_CV);				/* enable cursor again */
 }
+
+static int		invert;		/* shared by screenline() and screenchar() */
 
 /*
  * Move line "lnum" to the screen.
  * Start at row "startrow", stop when "endrow" is reached.
- * Return the number of rows the line occupies.
+ * Return the number of last row the line occupies.
  */
+
 	static int
 screenline(lnum, startrow, endrow)
 		linenr_t		lnum;
@@ -314,20 +420,81 @@ screenline(lnum, startrow, endrow)
 {
 	register u_char  *screenp;
 	register u_char   c;
-	register int	col;
-	register int	vcol;				/* virtual column for tabs */
+	register int	col;				/* visual column on screen */
+	register int	vcol;				/* visual column for tabs */
 	register int	row;
 	register u_char *ptr;
 	char			extra[16];
 	char			*p_extra;
 	int 			n_extra;
 
+	int				fromcol, tocol;		/* start/end of inverting */
+	int				temp;
+	FPOS			*top, *bot;
+
 	row = startrow;
 	col = 0;
 	vcol = 0;
+	invert = FALSE;
+	fromcol = tocol = -10;
 	ptr = (u_char *)nr2ptr(lnum);
-	screenp = (u_char *)LinePointers[row];
-	if (P(P_NU))
+	canopt = TRUE;
+	if (Quote.lnum)					/* quoting active */
+	{
+		if (ltoreq(Curpos, Quote))		/* Quote is after Curpos */
+		{
+			top = &Curpos;
+			bot = &Quote;
+		}
+		else							/* Quote is before Curpos */
+		{
+			top = &Quote;
+			bot = &Curpos;
+		}
+		if (Quote_block)						/* block mode */
+		{
+			if (lnum >= top->lnum && lnum <= bot->lnum)
+			{
+				fromcol = getvcol(top, 2);
+				temp = getvcol(bot, 2);
+				if (temp < fromcol)
+					fromcol = temp;
+
+				if (Curswant == 29999)
+					tocol = 29999;
+				else
+				{
+					tocol = getvcol(top, 3);
+					temp = getvcol(bot, 3);
+					if (temp > tocol)
+						tocol = temp;
+					++tocol;
+				}
+			}
+		}
+		else							/* non-block mode */
+		{
+			if (lnum > top->lnum && lnum <= bot->lnum)
+				fromcol = 0;
+			if (lnum == top->lnum)
+				fromcol = getvcol(top, 2);
+			if (lnum == bot->lnum)
+				tocol = getvcol(bot, 3) + 1;
+
+			if (Quote.col == QUOTELINE)		/* linewise */
+			{
+				if (fromcol > 0)
+					fromcol = 0;
+				if (tocol > 0)
+					tocol = QUOTELINE;
+			}
+		}
+		/* if inverting in this line, can't optimize cursor positioning */
+		if (fromcol >= 0 || tocol >= 0)
+			canopt = FALSE;
+	}
+	screenp = LinePointers[row];
+	if (p_nu)
 	{
 		sprintf(extra, "%7ld ", (long)lnum);
 		p_extra = extra;
@@ -342,8 +509,18 @@ screenline(lnum, startrow, endrow)
 	}
 	for (;;)
 	{
-		/* Get the next character to put on the screen. */
+		if (vcol == fromcol)	/* start inverting */
+		{
+			invert = TRUE;
+			outstr(T_TI);
+		}
+		if (vcol == tocol)		/* stop inverting */
+		{
+			invert = FALSE;
+			outstr(T_TP);
+		}
 
+		/* Get the next character to put on the screen. */
 		/*
 		 * The 'extra' array contains the extra stuff that is inserted to
 		 * represent special characters (tabs, and other non-printable stuff.
@@ -355,43 +532,65 @@ screenline(lnum, startrow, endrow)
 			c = (u_char)*p_extra++;
 			n_extra--;
 		}
-		else if ((c = *ptr++) < ' ' || c > '~' && c < 0xa0)
+		else
 		{
-			/*
-			 * when getting a character from the file, we may have to turn it
-			 * into something else on the way to putting it into 'Nextscreen'.
-			 */
-			if (c == TAB && !P(P_LS))
+			if ((c = *ptr++) < ' ' || (c > '~' && c < 0xa0))
 			{
-				p_extra = "               ";
-				/* tab amount depends on current column */
-				n_extra = (int)P(P_TS) - vcol % (int)P(P_TS) - 1;
-				c = ' ';
-			}
-			else if (c == NUL && P(P_LS))
-			{
-				extra[0] = NUL;
-				p_extra = extra;
-				n_extra = 1;
-				c = '$';
-			}
-			else if (c != NUL)
-			{
-				p_extra = (char *)transchar(c);
-				c = (u_char)*p_extra++;
-				n_extra = 1;
+				/*
+				 * when getting a character from the file, we may have to turn it
+				 * into something else on the way to putting it into 'Nextscreen'.
+				 */
+				if (c == TAB && !p_list)
+				{
+					p_extra = spaces;
+					/* tab amount depends on current column */
+					n_extra = (int)p_ts - vcol % (int)p_ts - 1;
+					c = ' ';
+				}
+				else if (c == NUL && p_list)
+				{
+					extra[0] = NUL;
+					p_extra = extra;
+					n_extra = 1;
+					c = '$';
+				}
+				else if (c != NUL)
+				{
+					p_extra = (char *)transchar(c);
+					n_extra = charsize(c) - 1;
+					c = (u_char)*p_extra++;
+				}
 			}
 		}
 
 		if (c == NUL)
 		{
-			/* blank out the rest of this row */
+			if (invert)
+			{
+				if (vcol == 0)	/* invert first char of empty line */
+				{
+					if (*screenp != (' ' ^ 0x80))
+					{
+							*screenp = (' ' ^ 0x80);
+							screenchar(screenp, row, col);
+					}
+					++screenp;
+					++col;
+				}
+				outstr(T_TP);
+				invert = FALSE;
+			}
+			/* 
+			 * blank out the rest of this row
+			 * could also use clear-to-end-of-line, but it is slower
+			 * on an Amiga
+			 */
 			while (col < Columns)
 			{
 				if (*screenp != ' ')
 				{
-						screenchar(' ', row, col);
 						*screenp = ' ';
+						screenchar(screenp, row, col);
 				}
 				++screenp;
 				++col;
@@ -407,66 +606,92 @@ screenline(lnum, startrow, endrow)
 				++row;
 				break;
 			}
-			screenp = (u_char *)LinePointers[row];
+			screenp = LinePointers[row];
 		}
 		/* store the character in Nextscreen */
-		if (*screenp != c)
-				screenchar(*screenp = c, row, col);
+		if (!invert)
+		{
+			if (*screenp != c)
+			{
+				*screenp = c;
+				screenchar(screenp, row, col);
+			}
+		}
+		else
+		{
+			if (*screenp != (c ^ 0x80))
+			{
+				*screenp = c ^ 0x80;
+				screenchar(screenp, row, col);
+			}
+		}
 		++screenp;
 		col++;
 		vcol++;
 	}
 
+	if (invert)
+	{
+		outstr(T_TP);
+		invert = FALSE;
+	}
 	return (row);
 }
 
 /*
- * put character 'c' on the screen at position 'row' and 'col'
+ * put character '*p' on the screen at position 'row' and 'col'
  */
 	static void
-screenchar(c, row, col)
-		int		c;
+screenchar(p, row, col)
+		u_char	*p;
 		int 	row;
 		int 	col;
 {
-		static int oldrow, oldcol;		/* old cursor position */
+	static int	oldrow, oldcol;		/* old cursor position */
+	int			c;
 
-		if (row == -1)					/* initialize cursor position */
+	if (p == NULL)					/* initialize cursor position */
+	{
+		oldrow = oldcol = -1;
+		return;
+	}
+	if (oldcol != col || oldrow != row)
+	{
+		/*
+		 * If we're on the same row (which happens a lot!), try to
+		 * avoid a windgoto().
+		 * If we are only a few characters off, output the
+		 * characters. That is faster than cursor positioning.
+		 * This can't be used when inverting (a part of) the line.
+		 */
+		if (oldrow == row && oldcol < col)
 		{
-				oldrow = oldcol = -1;
-				return;
-		}
-		if (oldcol != col || oldrow != row)
-		{
-				/*
-				 * If we're on the same row, don't do a windgoto()
-				 * (this happens a lot!)
-				 */
-				if (oldrow == row && oldcol < col)
+			register int i;
+
+			i = col - oldcol;
+			if (i <= 4 && canopt)
+			{
+				while (i)
 				{
-					register int i;
-
-#ifdef AMIGA
-# ifdef AUX
-					if (Aux_Device)
-						outstr("\033[");
-					else
-# endif /* AUX */
-						outchar(CSI);
-#else
-					outstr("\033[");
-#endif /* AMIGA */
-					i = col - oldcol;
-					if (i > 1)
-						outnum((long)i);
-					outchar('C');
-					oldcol = col;
+					c = *(p - i--);
+					outchar(c);
 				}
-				else
-					windgoto(oldrow = row, oldcol = col);
+			}
+			else if (T_CRI && *T_CRI)	/* use tgoto interface! jw */
+				outstr(tgoto(T_CRI, 0, i));
+			else
+				windgoto(row, col);
+			
+			oldcol = col;
 		}
-		outchar(c);
-		oldcol++;
+		else
+			windgoto(oldrow = row, oldcol = col);
+	}
+	if (invert)
+		outchar(*p ^ 0x80);
+	else
+		outchar(*p);
+	oldcol++;
 }
 
 /*
@@ -479,20 +704,23 @@ screenfill(srow, c)
 {
 		register int row;
 		register int col;
-		register char *screenp;
+		register u_char *screenp;
 
 		for (row = srow; row < (Rows - 1); ++row)
 		{
 			screenp = LinePointers[row];
 			if (*screenp != c)
-				screenchar(c, row, 0);
-			*screenp++ = c;
+			{
+				*screenp = c;
+				screenchar(screenp, row, 0);
+			}
+			++screenp;
 			for (col = 1; col < Columns; ++col)
 			{
 				if (*screenp != ' ')
 				{
-						screenchar(' ', row, col);
-						*screenp = ' ';
+					*screenp = ' ';
+					screenchar(screenp, row, col);
 				}
 				++screenp;
 			}
@@ -520,12 +748,12 @@ prt_line(s)
 			c = extra[--n_extra];
 		else {
 			c = s[si++];
-			if (c == TAB && !P(P_LS)) {
+			if (c == TAB && !p_list) {
 				strcpy(extra, "                ");
 				/* tab amount depends on current column */
-				n_extra = (P(P_TS) - 1) - col % P(P_TS);
+				n_extra = (p_ts - 1) - col % p_ts;
 				c = ' ';
-			} else if (c == NUL && P(P_LS)) {
+			} else if (c == NUL && p_list) {
 				extra[0] = NUL;
 				n_extra = 1;
 				c = '$';
@@ -569,7 +797,7 @@ screenalloc()
 	 * If we're changing the size of the screen, free the old arrays
 	 */
 	if (Nextscreen != NULL)
-		free(Nextscreen);
+		free((char *)Nextscreen);
 	if (LinePointers != NULL)
 		free((char *)LinePointers);
 	if (LineNumbers != NULL)
@@ -577,17 +805,17 @@ screenalloc()
 	if (LineSizes != NULL)
 		free(LineSizes);
 
-	Nextscreen = malloc((size_t) (Rows * Columns));
+	Nextscreen = (u_char *)malloc((size_t) (Rows * Columns));
 	LineNumbers = (linenr_t *) malloc((size_t) (Rows * sizeof(linenr_t)));
-	LineSizes = malloc((size_t) Rows);
-	LinePointers = (char **)malloc(sizeof(char *) * Rows);
+	LineSizes = (u_char *)malloc((size_t) Rows);
+	LinePointers = (u_char **)malloc(sizeof(u_char *) * Rows);
 
 	if (Nextscreen == NULL || LineNumbers == NULL || LineSizes == NULL ||
 												LinePointers == NULL)
 	{
-		emsg("Out of memory");
+		emsg(e_outofmem);
 		if (Nextscreen != NULL)
-			free(Nextscreen);
+			free((char *)Nextscreen);
 		Nextscreen = NULL;
 	}
 	else
@@ -602,8 +830,8 @@ screenalloc()
 	void
 screenclear()
 {
-	register char  *np;
-	register char  *end;
+	register u_char  *np;
+	register u_char  *end;
 
 	if (Nextscreen == NULL)
 		return;
@@ -625,12 +853,8 @@ screenclear()
 cursupdate()
 {
 	linenr_t		p;
-	u_char			c;
-	u_char		   *ptr;
-	int 			incr;
 	long 			nlines;
 	int 			i;
-	int 			didincr;
 	int 			temp;
 
 	screenalloc();		/* allocate screen buffers if size changed */
@@ -647,6 +871,8 @@ cursupdate()
 		Curpos.col = 0;
 		for (i = 0; i < Rows; i++)
 			LineSizes[i] = 0;
+		if (NumLineSizes == 0)		/* don't know about screen contents */
+			updateScreen(NOT_VALID);
 		NumLineSizes = 1;
 	}
 	else if (Curpos.lnum < Topline)
@@ -664,8 +890,14 @@ cursupdate()
 				;
 			Topline = p;
 		}
-		else
-				Topline = Curpos.lnum;
+		else if (p_sj > 1)		/* scroll at least p_sj lines */
+		{
+			for (i = 0; i < p_sj && Topline > 1; i += plines(--Topline))
+				;
+
+		}
+		if (Topline > Curpos.lnum)
+			Topline = Curpos.lnum;
 		updateScreen(VALID);
 	}
 	else if (Curpos.lnum >= Botline)
@@ -675,19 +907,29 @@ cursupdate()
 		 * compute the number of lines at the top which have the same or more
 		 * rows than the rows of the lines below the bottom
 		 */
-		if (nlines <= Rows / 3)
+		if (nlines <= Rows)
 		{
-				temp = plines_m(Botline, Curpos.lnum);
+				/* get the number or rows to scroll minus the number of
+								free '~' rows */
+			temp = plines_m(Botline, Curpos.lnum) - emptyrows;
+			if (temp <= 0)
+				nlines = 0;
+			else
+			{
+					/* scroll minimal number of lines */
+				if (temp < p_sj)
+					temp = p_sj;
 				for (i = 0, p = Topline; i < temp && p <= line_count; ++p)
-						i += plines(p);
+					i += plines(p);
 				nlines = p - Topline;
+			}
 		}
 
 		/*
 		 * Scroll up if the cursor is off the bottom of the screen a bit.
 		 * Otherwise put it at 2/3 of the screen.
 		 */
-		if (nlines > Rows / 3)
+		if (nlines > Rows / 3 && nlines > p_sj)
 		{
 			p = Curpos.lnum;
 			temp = (2 * Rows) / 3;
@@ -695,14 +937,14 @@ cursupdate()
 			i = 0;
 			do				/* this loop could win a contest ... */
 				i += plines(p);
-			while (i < temp && (nlines = 1) && --p != 0);
+			while (i < temp && (nlines = 1) != 0 && --p != 0);
 			Topline = p + nlines;
 		}
 		else
 			scrollup(nlines);
 		updateScreen(VALID);
 	}
-	if (NumLineSizes == 0)		/* don't know about screen contents */
+	else if (NumLineSizes == 0)		/* don't know about screen contents */
 		updateScreen(NOT_VALID);
 	Cursrow = Curscol = Cursvcol = i = 0;
 	for (p = Topline; p != Curpos.lnum; ++p)
@@ -710,9 +952,6 @@ cursupdate()
 			Cursrow += plines(p);
 		else
 			Cursrow += LineSizes[i++];
-
-	if (P(P_NU))
-		Curscol = 8;
 
 	Cline_row = Cursrow;
 	if (!RedrawingDisabled && i > NumLineSizes)
@@ -726,41 +965,7 @@ cursupdate()
         else
 			Cline_size = LineSizes[i];
 
-		ptr = (u_char *)nr2ptr(Curpos.lnum);
-		for (i = 0; i <= Curpos.col; i++)
-		{
-			c = *ptr++;
-			if (c == NUL)		/* make sure we don't go past the end of the line */
-				Curpos.col = i;
-			/* A tab gets expanded, depending on the current column */
-			incr = chartabsize(c, Cursvcol);
-			Curscol += incr;
-			Cursvcol += incr;
-			if (Curscol >= Columns)
-			{
-				Curscol -= Columns;
-				Cursrow++;
-				didincr = TRUE;
-			}
-			else
-				didincr = FALSE;
-		}
-
-		if (c == TAB && State == NORMAL && !P(P_LS))
-		{
-			Curscol--;
-			Cursvcol--;
-		}
-		else
-		{
-			Curscol -= incr;
-			Cursvcol -= incr;
-		}
-		if (Curscol < 0)
-		{
-			Curscol += Columns;
-			Cursrow--;
-		}
+		curs_columns();		/* compute Cursvcol and Curscol */
 	}
 
 	if (set_want_col)
@@ -768,6 +973,66 @@ cursupdate()
 		Curswant = Cursvcol;
 		set_want_col = FALSE;
 	}
+	showruler(0);
+}
+
+/*
+ * compute Curscol and Cursvcol
+ */
+	void
+curs_columns()
+{
+	Cursvcol = getvcol(&Curpos, 1);
+	Curscol = Cursvcol;
+	if (p_nu)
+		Curscol += 8;
+
+	Cursrow = Cline_row;
+	while (Curscol >= Columns)
+	{
+		Curscol -= Columns;
+		Cursrow++;
+	}
+}
+
+/*
+ * get virtual column number of pos
+ * type = 1: where the cursor is on this character
+ * type = 2: on the first position of this character
+ * type = 3: on the last position of this character
+ */
+	int
+getvcol(pos, type)
+	FPOS	*pos;
+	int		type;
+{
+	int				col;
+	int				vcol;
+	u_char		   *ptr;
+	int 			incr;
+	u_char			c;
+
+	vcol = 0;
+	ptr = (u_char *)nr2ptr(pos->lnum);
+	for (col = pos->col; col >= 0; --col)
+	{
+		c = *ptr++;
+		if (c == NUL)		/* make sure we don't go past the end of the line */
+			break;
+
+		/* A tab gets expanded, depending on the current column */
+		incr = chartabsize(c, vcol);
+
+		if (col == 0)		/* character at pos.col */
+		{
+			if (type == 3 || (type == 1 && c == TAB && State == NORMAL && !p_list))
+				--incr;
+			else
+				break;
+		}
+		vcol += incr;
+	}
+	return vcol;
 }
 
 	void
@@ -811,11 +1076,11 @@ scrollup(nlines)
 	}
 	s_del(0, done, TRUE);
 #endif
-		Topline += nlines;
-		if (Topline > line_count)
-				Topline = line_count;
-		if (Curpos.lnum < Topline)
-				Curpos.lnum = Topline;
+	Topline += nlines;
+	if (Topline > line_count)
+		Topline = line_count;
+	if (Curpos.lnum < Topline)
+		Curpos.lnum = Topline;
 }
 
 /*
@@ -831,21 +1096,22 @@ scrollup(nlines)
 /*
  * s_ins(row, nlines, invalid) - insert 'nlines' lines at 'row'
  * if 'invalid' is TRUE the LineNumbers[] is invalidated.
+ * Returns 0 if the lines are not inserted, 1 for success.
  */
-	void
+	int
 s_ins(row, nlines, invalid)
-	int 			row;
-	int 			nlines;
-	bool_t		invalid;
+	int 		row;
+	int 		nlines;
+	int			invalid;
 {
-	int 			i;
-	int 			j;
-	char		*temp;
+	int 		i;
+	int 		j;
+	u_char		*temp;
 
 	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL)
-		return;
+		return 0;
 
 	if (invalid)
 		NumLineSizes = 0;
@@ -853,36 +1119,44 @@ s_ins(row, nlines, invalid)
 	if (nlines > (Rows - 1 - row))
 		nlines = Rows - 1 - row;
 
-	if ((T_IL[0] == NUL) || RedrawingDisabled || nlines <= 0)
-		return;
+	if (RedrawingDisabled || nlines <= 0 ||
+						((T_CIL == NULL || *T_CIL == NUL) &&
+						(T_IL == NULL || *T_IL == NUL) &&
+						(T_SR == NULL || *T_SR == NUL || row != 0)))
+		return 0;
+	
+	if (Rows - nlines < 5)	/* only a few lines left: redraw is faster */
+	{
+		screenclear();		/* will set NumLineSizes to 0 */
+		return 0;
+	}
 
 	/*
 	 * It "looks" better if we do all the inserts at once
 	 */
-#ifndef AMIGA
-	outstr(T_SC);				/* save position */
-
-	if (T_IL_B[0] == NUL) {
-		for (i = 0; i < nlines; i++) {
-			windgoto(row, 0);
+    if (T_CIL && *T_CIL) 
+    {
+        windgoto(row, 0);
+		if (nlines == 1 && T_IL && *T_IL)
 			outstr(T_IL);
-		}
-	} else
-#endif
-	{
-		windgoto(row, 0);
-		outstr(T_IL);
-		outnum((long)nlines);
-		outstr(T_IL_B);
-	}
-
-	windgoto(Rows - 1, 0);		/* delete any garbage that may have */
-	outstr(T_EL);				/* been shifted to the bottom line */
+		else
+			outstr(tgoto(T_CIL, 0, nlines));
+    }
+    else
+    {
+        for (i = 0; i < nlines; i++) 
+        {
+            if (i == 0 || row != 0)
+				windgoto(row, 0);
+			if (T_IL && *T_IL)
+				outstr(T_IL);
+			else
+				outstr(T_SR);
+        }
+    }
+	windgoto((int)Rows - 1, 0);		/* delete any garbage that may have */
+	clear_line();					/* been shifted to the bottom line */
 	redraw_msg = TRUE;
-
-#ifndef AMIGA
-	outstr(T_RC);				/* restore position */
-#endif
 
 	/*
 	 * Now shift LinePointers nlines down to reflect the inserted lines.
@@ -897,26 +1171,28 @@ s_ins(row, nlines, invalid)
 		LinePointers[j + nlines] = temp;
 		memset(temp, ' ', (size_t)Columns);
 	}
+	return 1;
 }
 
 /*
  * s_del(row, nlines, invalid) - delete 'nlines' lines at 'row'
  * If 'invalid' is TRUE LineNumbers[] is ivalidated.
+ * Return 1 for success, 0 if the lines are not deleted.
  */
-	void
+	int
 s_del(row, nlines, invalid)
 	int 			row;
 	int 			nlines;
-	bool_t		invalid;
+	int			invalid;
 {
 	int 			j;
 	int 			i;
-	char		*temp;
+	u_char		*temp;
 
 	screenalloc();		/* allocate screen buffers if size changed */
 
 	if (Nextscreen == NULL)
-		return;
+		return 0;
 
 	if (invalid)
 		NumLineSizes = 0;
@@ -924,35 +1200,47 @@ s_del(row, nlines, invalid)
 	if (nlines > (Rows - 1 - row))
 		nlines = Rows - 1 - row;
 
-	if ((T_DL[0] == NUL) || RedrawingDisabled || nlines <= 0)
-		return;
+	if (RedrawingDisabled || nlines <= 0 ||
+				((T_DL == NULL || *T_DL == NUL) &&
+				(T_CDL == NULL || *T_CDL == NUL) &&
+				row != 0))
+		return 0;
 
-#ifndef AMIGA
-	outstr(T_SC);				/* save position */
-#endif
+	if (Rows - nlines < 5)	/* only a few lines left: redraw is faster */
+	{
+		screenclear();		/* will set NumLineSizes to 0 */
+		return 0;
+	}
 
-	windgoto(Rows - 1, 0);		/* delete any garbage that */
-	outstr(T_EL);				/* was on the status line */
+	windgoto((int)Rows - 1, 0);		/* delete any garbage that may be */
+	clear_line();					/* on the bottom line */
 	redraw_msg = TRUE;
 
 	/* delete the lines */
-#ifndef AMIGA
-	if (T_DL_B[0] == NUL) {
-		for (i = 0; i < nlines; i++) {
-			windgoto(row, 0);
-			outstr(T_DL);		/* delete a line */
-		}
-	} else
-#endif
+	if (T_CDL && *T_CDL) 
 	{
 		windgoto(row, 0);
-		outstr(T_DL);
-		outnum((long)nlines);
-		outstr(T_DL_B);
+		if (nlines == 1 && T_DL && *T_DL)
+			outstr(T_DL);
+		else
+			outstr(tgoto(T_CDL, 0, nlines));
+	} 
+	else
+	{
+		if (row == 0)
+		{
+			for (i = 0; i < nlines; i++) 
+				outchar('\n');
+		}
+		else
+		{
+			for (i = 0; i < nlines; i++) 
+			{
+				windgoto(row, 0);
+				outstr(T_DL);           /* delete a line */
+			}
+		}
 	}
-#ifndef AMIGA
-	outstr(T_RC);				/* restore position */
-#endif
 
 	/*
 	 * Now shift LinePointers nlines up to reflect the deleted lines.
@@ -967,19 +1255,87 @@ s_del(row, nlines, invalid)
 		LinePointers[j - nlines] = temp;
 		memset(temp, ' ', (size_t)Columns);
 	}
+	return 1;
 }
 
 	void
 showmode()
 {
-		if (State == INSERT || State == REPLACE || Recording)
+		if ((p_mo && (State == INSERT || State == REPLACE)) || Recording)
 		{
-				gotocmdline(YES, NUL);
-				if (State == INSERT)
-						outstr("-- INSERT --");
-				if (State == REPLACE)
-						outstr("-- REPLACE --");
+				gotocmdline(TRUE, NUL);
+				if (p_mo)
+				{
+					if (State == INSERT)
+						outstrn("-- INSERT --");
+					if (State == REPLACE)
+						outstrn("-- REPLACE --");
+				}
 				if (Recording)
-						outstr("recording");
+						outstrn("recording");
 		}
+		showruler(1);
 }
+
+/*
+ * delete mode message
+ */
+	void
+delmode()
+{
+	if (Recording)
+		msg("recording");
+	else
+		msg("");
+}
+
+/*
+ * if ruler option is set: show current cursor position
+ * if always is FALSE, only print if position has changed
+ */
+	void
+showruler(always)
+	int		always;
+{
+	static linenr_t	oldlnum = 0;
+	static colnr_t	oldcol = 0;
+	static int		oldlen = 0;
+	int				newlen;
+	char			buffer[20];
+
+	if (p_ru && (redraw_msg || always || Curpos.lnum != oldlnum || Cursvcol != oldcol))
+	{
+		windgoto((int)Rows - 1, (int)Columns - 22);
+#if defined(SYSV) || defined(linux) || defined(MSDOS) || defined(AMIGA)
+		newlen = sprintf(buffer, "%ld,%d", Curpos.lnum, Cursvcol + 1);
+#else
+		newlen = strlen(sprintf(buffer, "%ld,%d", Curpos.lnum, Cursvcol + 1));
+#endif
+		outstrn(buffer);
+		while (newlen < oldlen)
+		{
+			outchar(' ');
+			--oldlen;
+		}
+		oldlen = newlen;
+		oldlnum = Curpos.lnum;
+		oldcol = Cursvcol;
+		redraw_msg = FALSE;
+	}
+}
+
+/*
+ * Clear a line. The cursor must be at the first char of the line.
+ */
+	void
+clear_line()
+{
+	register int i;
+
+	if (T_EL != NULL && *T_EL != NUL)
+		outstr(T_EL);
+	else
+		for (i = 1; i < Columns; ++i)
+			outchar(' ');
+}
+

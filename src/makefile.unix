@@ -1,0 +1,168 @@
+#
+# Makefile for Vim on Unix, using gcc or standard cc
+#
+
+#>>>>> choose bsd (Sun, Linux) or system V (Dynix/PTX)
+MACHINE = -DBSD
+#MACHINE = -DSYSV
+
+#>>>>> choose one compiler
+### standard C compiler, with optimizer or debugger
+CC=cc -O
+#CC=cc -g
+
+### GCC on sun, Dynix
+#CC=gcc -g -Wall -traditional
+
+### GCC 2.2.2d on Linux
+#CC=gcc -O6 -Wall
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support
+### -DTERMCAP		full termcap file support
+### -DWILD_CARDS	wildcard expansion code
+### -DDEBUG		output a lot of debugging garbage
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFS = -DDIGRAPHS -DTERMCAP -DWILD_CARDS -DSOME_BUILTIN_TCAPS
+
+#>>>>> link with termlib only if TERMCAP is defined
+LIBS = -ltermlib
+#LIBS = 
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c $(MACHINE) $(DEFS)
+
+INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h unix.h debug.h
+
+OBJ =	alloc.o unix.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o term.o undo.o
+
+../vim: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	$(CC) -o ../vim $(OBJ) version.o $(LIBS)
+
+debug: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	$(CC) -o ../vim -g $(OBJ) version.o $(LIBS)
+
+ctags:
+	csh -c ctags *.c *.h
+
+clean:
+	-rm -f $(OBJ) mkcmdtab.o version.o core ../vim mkcmdtab
+
+#use this in case the files have been transported via an MSDOS system
+
+FILES = *.c *.h makefile makefile.* cmdtab.tab proto/*.pro tags
+
+dos2unix:
+	-mv arp_prot.h arp_proto.h
+	-mv ptx_stdl.h ptx_stdlib.h
+	-mv sun_stdl.h sun_stdlib.h
+	-mv makefile.dic makefile.dice
+	-mv makefile.uni makefile.unix
+	-mv makefile.man makefile.manx
+	-mv makefile.6sa makefile.6sas
+	-mv makefile.5sa makefile.5sas
+	for i in $(FILES); do tr -d '\r\032' < $$i > ~tmp~; mv ~tmp~ $$i; echo $$i; done
+
+###########################################################################
+
+alloc.o:	alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c
+
+unix.o:	unix.c  $(INCL) unix.h
+	$(CC) $(CFLAGS) unix.c
+
+buffers.o:	buffers.c  $(INCL)
+	$(CC) $(CFLAGS) buffers.c
+
+charset.o:	charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c
+
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c
+
+csearch.o:	csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c
+
+digraph.o:	digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c
+
+edit.o:	edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c
+
+fileio.o:	fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c
+
+help.o:	help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c
+
+linefunc.o:	linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c
+
+main.o:	main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c
+
+mark.o:	mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c
+
+message.o:	message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c
+
+misccmds.o:	misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c
+
+normal.o:	normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c
+
+ops.o:	ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c
+
+param.o:	param.c  $(INCL)
+	$(CC) $(CFLAGS) param.c
+
+quickfix.o:	quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c
+
+regexp.o:	regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c
+
+regsub.o:	regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c
+
+screen.o:	screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c
+
+script.o:	script.c  $(INCL)
+	$(CC) $(CFLAGS) script.c
+
+search.o:	search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c
+
+storage.o:	storage.c  $(INCL)
+	$(CC) $(CFLAGS) storage.c
+
+tag.o:	tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c
+
+term.o:	term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c
+
+undo.o:	undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: mkcmdtab.o
+	$(CC) -o mkcmdtab mkcmdtab.o

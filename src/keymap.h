@@ -17,39 +17,47 @@
 
 #define K_CCIRCM		0x1e	/* control circumflex */
 
-#define K_HELP			0x80
-#define K_UNDO			0x81
-#define K_INSERT		0x82
-#define K_HOME			0x83
-#define K_UARROW		0x84
-#define K_DARROW		0x85
-#define K_LARROW		0x86
-#define K_RARROW		0x87
-#define K_SUARROW		0x88
-#define K_SDARROW		0x89
-#define K_SLARROW		0x8a
-#define K_SRARROW		0x8b
+/*
+ * careful: the next entries must be in the same order as the termcap strings
+ * in term.h and the numbers must be consecutive (used by inchar()).
+ */
+#define K_UARROW		0x80
+#define K_DARROW		0x81
+#define K_LARROW		0x82
+#define K_RARROW		0x83
+#define K_SUARROW		0x84
+#define K_SDARROW		0x85
+#define K_SLARROW		0x86
+#define K_SRARROW		0x87
 
-#define K_F1			0x8c	/* function keys */
-#define K_F2			0x8d
-#define K_F3			0x8e
-#define K_F4			0x8f
-#define K_F5			0x90
-#define K_F6			0x91
-#define K_F7			0x92
-#define K_F8			0x93
-#define K_F9			0x94
-#define K_F10			0x95
+#define K_F1			0x88	/* function keys */
+#define K_F2			0x89
+#define K_F3			0x8a
+#define K_F4			0x8b
+#define K_F5			0x8c
+#define K_F6			0x8d
+#define K_F7			0x8e
+#define K_F8			0x8f
+#define K_F9			0x90
+#define K_F10			0x91
 
-#define K_SF1			0x96	/* shifted function keys */
-#define K_SF2			0x97
-#define K_SF3			0x98
-#define K_SF4			0x99
-#define K_SF5			0x9a
-#define K_SF6			0x9b
-#define K_SF7			0x9c
-#define K_SF8			0x9d
-#define K_SF9			0x9e
-#define K_SF10			0x9f
+#define K_SF1			0x92	/* shifted function keys */
+#define K_SF2			0x93
+#define K_SF3			0x94
+#define K_SF4			0x95
+#define K_SF5			0x96
+#define K_SF6			0x97
+#define K_SF7			0x98
+#define K_SF8			0x99
+#define K_SF9			0x9a
+#define K_SF10			0x9b
 
-#define K_ZERO			0xd7	/* zero is ignored, this replaces ^@ */
+#define K_HELP			0x9c
+#define K_UNDO			0x9d
+
+/*
+ * NULs cannot be in the input string, therefore CTRL-@ is replaced by K_ZERO.
+ * K_NUL is used for MSDOS extended keys (same value used in term.h).
+ */
+#define K_NUL			0x9e	/* for MSDOS: special key follows */
+#define K_ZERO			0x9f	/* replaces ^@ */

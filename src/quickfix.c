@@ -13,6 +13,8 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
 
 static void qf_free __ARGS((void));
 
@@ -40,28 +42,27 @@ static int	qf_count = 0;		/* number of errors (0 means no error list) */
 	   int	qf_index;			/* current index in the error list */
 static int	qf_marksset;		/* set to 1 when qf_mark-s have been set */
 
-static char *qf_error = "no errorfile; use :cf";
-
 /*
  * Read the errorfile into memory, line by line, building the error list.
  * Return 1 for error, 0 for success.
  */
+	int
 qf_init(fname)
 	char *fname;
 {
 	char 			namebuf[CMDBUFFSIZE];
 	char			errmsg[CMDBUFFSIZE];
 	FILE			*fd;
-	struct qf_line	*qfp;
+	struct qf_line	*qfp = NULL;
 
 	if (fname == NULL)
 	{
-		emsg("no errorfile name");
+		emsg(e_errorf);
 		return 1;
 	}
 	if ((fd = fopen(fname, "r")) == NULL)
 	{
-		emsg("cannot open errorfile");
+		emsg(e_openerrf);
 		return 1;
 	}
 	qf_free();
@@ -107,7 +108,7 @@ qf_init(fname)
 		return 0;
 	}
 error:
-	emsg("error while reading errorfile");
+	emsg(e_readerrf);
 error1:
 	free(qfp);
 error2:
@@ -129,7 +130,7 @@ qf_jump(errornr)
 
 	if (qf_count == 0)
 	{
-		emsg(qf_error);
+		emsg(e_quickfix);
 		return;
 	}
 	if (errornr == 0)
@@ -148,7 +149,7 @@ qf_jump(errornr)
 	/*
 	 * read the wanted file if needed, and check autowrite etc.
 	 */
-	if (!getfile(qf_ptr->qf_fname, (bool_t)TRUE))
+	if (getfile(qf_ptr->qf_fname, TRUE) <= 0)
 	{
 		/*
 		 * use mark if possible, because the line number may be invalid
@@ -156,10 +157,12 @@ qf_jump(errornr)
 		 */
 		i = 0;
 		msgp = "";
-		if (qf_ptr->qf_mark != NULL && (i = ptr2nr(qf_ptr->qf_mark, (linenr_t)0)) == 0 || qf_ptr->qf_cleared)
+		if ((qf_ptr->qf_mark != NULL && (i = ptr2nr(qf_ptr->qf_mark, (linenr_t)0)) == 0) || qf_ptr->qf_cleared)
 			msgp = "(line changed) ";
 		if (i == 0)
 			i = qf_ptr->qf_lnum;
+		if (i > line_count)
+			i = line_count;
 		Curpos.lnum = i;
 		Curpos.col = qf_ptr->qf_col;
 		adjustCurpos();
@@ -170,7 +173,7 @@ qf_jump(errornr)
 									the errors in the curren file */
 		{
 			for (i = 0, qfp = qf_start; i < qf_count; ++i, qfp = qfp->qf_next)
-				if (strcmp(qfp->qf_fname, qf_ptr->qf_fname) == 0)
+				if (strcmp(qfp->qf_fname, qf_ptr->qf_fname) == 0 && qfp->qf_lnum <= line_count)
 					qfp->qf_mark = nr2ptr(qfp->qf_lnum);
 			qf_marksset = 1;
 		}
@@ -188,12 +191,12 @@ qf_list()
 
 	if (qf_count == 0)
 	{
-		emsg(qf_error);
+		emsg(e_quickfix);
 		return;
 	}
 	qfp = qf_start;
-	gotocmdline((bool_t)TRUE, NUL);
-	setmode(0);
+	gotocmdline(TRUE, NUL);
+	settmode(0);
 	for (i = 1; i <= qf_count; ++i)
 	{
 		sprintf(IObuff, "%2d line %ld col %2d %s %3d: %s",
@@ -208,8 +211,8 @@ qf_list()
 		qfp = qfp->qf_next;
 		flushbuf();
 	}
-	setmode(1);
-	wait_return((bool_t)TRUE);
+	settmode(1);
+	wait_return(TRUE);
 }
 
 /*

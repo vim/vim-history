@@ -15,6 +15,10 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
+
 
 /*
  * structure used to store one block of the stuff/redo/macro buffers
@@ -42,8 +46,19 @@ static struct buffheader stuffbuff = {{NULL, NUL}, NULL, 0, 0};
 static struct buffheader redobuff = {{NULL, NUL}, NULL, 0, 0};
 static struct buffheader recordbuff = {{NULL, NUL}, NULL, 0, 0};
 
-bool_t	redo_ins_busy = FALSE;	/* when TRUE redo buffer will not be changed
-									(used by edit() to repeat insertions) */
+	/*
+	 * when block_redo is TRUE redo buffer will not be changed
+	 * used by edit() to repeat insertions and 'V' command for redoing
+	 */
+static int		block_redo = FALSE;
+
+struct mapblock
+{
+	struct mapblock *m_next;		/* next mapblock */
+	char			*m_keys;		/* mapped from */
+	char			*m_str; 		/* mapped to */
+	int 			 m_mode;		/* valid mode */
+};
 
 /* variables used by vgetorpeek() and flush_buffers */
 #define MAXMAPLEN 10	/* maximum length of key sequence to be mapped */
@@ -55,10 +70,10 @@ static int		maplen = 0;		/* number of characters in mapstr */
 static void		free_buff __ARGS((struct buffheader *));
 static void		add_buff __ARGS((struct buffheader *, char *));
 static void		add_num_buff __ARGS((struct buffheader *, long));
-static u_char	read_stuff __ARGS((bool_t));
-static bool_t	start_stuff __ARGS((void));
-static int		read_redo __ARGS((bool_t));
-static u_char	vgetorpeek __ARGS((bool_t));
+static u_char	read_stuff __ARGS((int));
+static int		start_stuff __ARGS((void));
+static int		read_redo __ARGS((int));
+static u_char	vgetorpeek __ARGS((int));
 static void		showmap __ARGS((struct mapblock *));
 
 /*
@@ -85,9 +100,9 @@ free_buff(buf)
 get_bufcont(buffer)
 	struct buffheader *buffer;
 {
-		int count = 0;
-		u_char *p = NULL;
-		struct bufblock *bp;
+		unsigned		count = 0;
+		u_char			*p = NULL;
+		struct bufblock	*bp;
 
 /* compute the total length of the string */
 		for (bp = buffer->bh_first.b_next; bp != NULL; bp = bp->b_next)
@@ -104,11 +119,12 @@ get_bufcont(buffer)
 
 /*
  * return the contents of the record buffer as a single string
+ *	and clear the record buffer
  */
 	u_char *
 get_recorded()
 {
-		u_char *p = NULL;
+		u_char *p;
 
 		p = get_bufcont(&recordbuff);
 		free_buff(&recordbuff);
@@ -146,7 +162,7 @@ add_buff(buf, s)
 		}
 		else if (buf->bh_curr == NULL)	/* buffer has already been read */
 		{
-				emsg("add to read buffer");
+				emsg("Add to read buffer");
 				return;
 		}
 		else if (buf->bh_index != 0)
@@ -194,26 +210,26 @@ add_num_buff(buf, n)
  */
 	static u_char
 read_stuff(advance)
-	bool_t			advance;
+	int			advance;
 {
 		register u_char c;
 		register struct bufblock *curr;
 
 
 		if (stuffbuff.bh_first.b_next == NULL)	/* buffer is empty */
-				return NUL;
+			return NUL;
 
 		curr = stuffbuff.bh_first.b_next;
 		c = curr->b_str[stuffbuff.bh_index];
 
 		if (advance)
 		{
-				if (curr->b_str[++stuffbuff.bh_index] == NUL)
-				{
-						stuffbuff.bh_first.b_next = curr->b_next;
-						free((char *)curr);
-						stuffbuff.bh_index = 0;
-				}
+			if (curr->b_str[++stuffbuff.bh_index] == NUL)
+			{
+				stuffbuff.bh_first.b_next = curr->b_next;
+				free((char *)curr);
+				stuffbuff.bh_index = 0;
+			}
 		}
 		return c;
 }
@@ -221,14 +237,25 @@ read_stuff(advance)
 /*
  * prepare stuff buffer for reading (if it contains something)
  */
-	static bool_t
+	static int
 start_stuff()
 {
-		if (stuffbuff.bh_first.b_next == NULL)
-				return FALSE;
-		stuffbuff.bh_curr = &(stuffbuff.bh_first);
-		stuffbuff.bh_space = 0;
+	if (stuffbuff.bh_first.b_next == NULL)
+		return FALSE;
+	stuffbuff.bh_curr = &(stuffbuff.bh_first);
+	stuffbuff.bh_space = 0;
+	return TRUE;
+}
+
+/*
+ * check if the stuff buffer is empty
+ */
+	int
+stuff_empty()
+{
+	if (stuffbuff.bh_first.b_next == NULL)
 		return TRUE;
+	return FALSE;
 }
 
 /*
@@ -238,7 +265,7 @@ start_stuff()
 flush_buffers()
 {
 	start_stuff();
-	while (read_stuff((bool_t)TRUE) != NUL)
+	while (read_stuff(TRUE) != NUL)
 		;
 	typelen = 0;
 	maplen = 0;
@@ -249,7 +276,7 @@ flush_buffers()
 	void
 ResetBuffers()
 {
-	if (!redo_ins_busy)
+	if (!block_redo)
 		free_buff(&redobuff);
 }
 
@@ -257,7 +284,7 @@ ResetBuffers()
 AppendToRedobuff(s)
 	char		   *s;
 {
-	if (!redo_ins_busy)
+	if (!block_redo)
 		add_buff(&redobuff, s);
 }
 
@@ -265,7 +292,7 @@ AppendToRedobuff(s)
 AppendNumberToRedobuff(n)
 	long 			n;
 {
-	if (!redo_ins_busy)
+	if (!block_redo)
 		add_num_buff(&redobuff, n);
 }
 
@@ -289,7 +316,7 @@ stuffnumReadbuff(n)
  */
 	static int
 read_redo(init)
-	bool_t		init;
+	int			init;
 {
 	static struct bufblock	*bp;
 	static u_char			*p;
@@ -321,43 +348,52 @@ copy_redo()
 {
 	register int c;
 
-	while ((c = read_redo((bool_t)FALSE)) != NUL)
+	while ((c = read_redo(FALSE)) != NUL)
 		stuffReadbuff(mkstr(c));
 }
+
+extern int redo_Quote_busy;		/* this is in normal.c */
 
 /*
  * Stuff the redo buffer into the stuffbuff.
  * Insert the redo count into the command.
  */
-	bool_t
+	int
 start_redo(count)
 	long count;
 {
 		register int c;
 
-		if (read_redo((bool_t)TRUE))	/* init the pointers; return if nothing to redo */
+		if (read_redo(TRUE))	/* init the pointers; return if nothing to redo */
 				return FALSE;
 
-		c = read_redo((bool_t)FALSE);
+		c = read_redo(FALSE);
 
 /* copy the buffer name, if present */
 		if (c == '"')
 		{
 				add_buff(&stuffbuff, "\"");
-				c = read_redo((bool_t)FALSE);
+				c = read_redo(FALSE);
 
 		/* if a numbered buffer is used, increment the number */
 				if (c >= '1' && c < '9')
 						++c;
 				add_buff(&stuffbuff, mkstr(c));
-				c = read_redo((bool_t)FALSE);
+				c = read_redo(FALSE);
+		}
+
+		if (c == 'q')	/* redo Quoting */
+		{
+			Quote = Curpos;
+			redo_Quote_busy = TRUE;
+			c = read_redo(FALSE);
 		}
 
 /* try to enter the count (in place of a previous count) */
 		if (count)
 		{
 				while (isdigit(c))		/* skip "old" count */
-						c = read_redo((bool_t)FALSE);
+						c = read_redo(FALSE);
 				add_num_buff(&stuffbuff, count);
 		}
 
@@ -371,17 +407,17 @@ start_redo(count)
  * Repeat the last insert (R, o, O, a, A, i or I command) by stuffing the redo buffer
  * into the stuffbuff.
  */
-	bool_t
+	int
 start_redo_ins()
 {
 		register u_char c;
 
-		if (read_redo((bool_t)TRUE))
+		if (read_redo(TRUE))
 				return FALSE;
 		start_stuff();
 
 /* skip the count and the command character */
-		while ((c = read_redo((bool_t)FALSE)) != NUL)
+		while ((c = read_redo(FALSE)) != NUL)
 		{
 			c = toupper(c);
 			if (strchr("AIRO", c) != NULL)
@@ -394,29 +430,28 @@ start_redo_ins()
 
 /* copy the typed text from the redo buffer into the stuff buffer */
 		copy_redo();
-		redo_ins_busy = TRUE;
+		block_redo = TRUE;
 		return TRUE;
+}
+
+	void
+set_redo_ins()
+{
+		block_redo = TRUE;
 }
 
 	void
 stop_redo_ins()
 {
-		redo_ins_busy = FALSE;
+		block_redo = FALSE;
 }
-
-struct mapblock
-{
-		struct mapblock *m_next;		/* next mapblock */
-		char			*m_keys;		/* mapped from */
-		char			*m_str; 		/* mapped to */
-		int 			 m_mode;		/* valid mode */
-};
 
 struct mapblock maplist = {NULL, NULL, NULL}; /* first dummy entry in maplist */
 
 /*
  * insert a string in front of the map-buffer (for '@' command and vgetorpeek)
  */
+	int
 ins_mapbuf(str)
 	char *str;
 {
@@ -424,9 +459,9 @@ ins_mapbuf(str)
 	register int newlen;
 
 	newlen = maplen + strlen(str) + 1;
-	if (newlen < 0)		/* string is getting too long */
+	if (newlen < 0)				/* string is getting too long */
 	{
-		emsg("command too complex");	/* also calls flush_buffers */
+		emsg(e_toocompl);		/* also calls flush_buffers */
 		return -1;
 	}
 	s = alloc(newlen);
@@ -443,6 +478,8 @@ ins_mapbuf(str)
 	return 0;
 }
 
+extern int arrow_used;		/* this is in edit.c */
+
 /*
  * get a character: 1. from the stuffbuffer
  *					2. from the user
@@ -453,10 +490,10 @@ ins_mapbuf(str)
  */
 	static u_char
 vgetorpeek(advance)
-	bool_t advance;
+	int		advance;
 {
 	register int	c;
-	int				n;
+	int				n = 0;		/* init for GCC */
 	char			*str;
 	int				len;
 	struct mapblock *mp;
@@ -510,8 +547,8 @@ vgetorpeek(advance)
 						if (!strncmp(mp->m_keys, str, (size_t)(n > len ? len : n)))
 							break;
 					}
-					if (mp == NULL || str == mapstr && (n > len ||
-								P(P_REMAP) == FALSE)) /* no match found */
+					if (mp == NULL || (str == mapstr && (n > len ||
+								p_remap == FALSE))) /* no match found */
 					{
 						c = str[0] & 255;
 						if (str == mapstr)
@@ -552,7 +589,7 @@ vgetorpeek(advance)
 					}
 				}
 				c = inchar(!advance);
-				if (c <= NUL)	/* no character available */
+				if (c <= NUL || !advance)	/* no character available or async */
 				{
 					if (!advance)
 						break;
@@ -563,7 +600,10 @@ vgetorpeek(advance)
 					updatescript(c);
 					if (Recording)
 						add_buff(&recordbuff, mkstr(c));
-					if (mode != INSERT)
+
+							/* do not sync in insert mode, unless cursor key has
+							 * been used */
+					if (mode != INSERT || arrow_used)		
 						u_sync();
 				}
 				len = typelen;
@@ -575,7 +615,7 @@ vgetorpeek(advance)
 				continue;
 			}
 		}
-	} while (c < 0 || advance && c == NUL);
+	} while (c < 0 || (advance && c == NUL));
 						/* if advance is FALSE don't loop on NULs */
 
 	return (u_char) c;
@@ -584,13 +624,13 @@ vgetorpeek(advance)
 	u_char
 vgetc()
 {
-	return (vgetorpeek((bool_t)TRUE));
+	return (vgetorpeek(TRUE));
 }
 
 	u_char
 vpeekc()
 {
-	return (vgetorpeek((bool_t)FALSE));
+	return (vgetorpeek(FALSE));
 }
 
 /*
@@ -609,6 +649,7 @@ vpeekc()
  *		  3 for ambiguety
  *		  4 for out of mem
  */
+	int
 domap(unmap, arg, mode)
 	int		unmap;
 	char	*arg;
@@ -616,15 +657,15 @@ domap(unmap, arg, mode)
 {
 		struct mapblock *mp, *mprev;
 		char *p;
-		int n;
-		int len;
+		int n = 0;			/* init for GCC */
+		int len = 0;		/* init for GCC */
 		char *newstr;
 
 /*
  * find end of keys
  */
-		for (p = arg; *p != ' ' && *p != '\t' && *p != NUL; ++p)
-			;
+		p = arg;
+		skiptospace(&p);
 		if (*p != NUL)
 			*p++ = NUL;
 		skipspace(&p);
@@ -636,10 +677,10 @@ domap(unmap, arg, mode)
 		{
 				if (unmap && *p != NUL)				/* unmap has no arguments */
 					return 1;
-				if (*arg == '#' && isdigit(*(arg + 1)))	/* funcion key */
+				if (*arg == '#' && isdigit(*(arg + 1)))	/* function key */
 				{
 					if (*++arg == '0')
-						*arg = K_F10;
+						*(u_char *)arg = K_F10;
 					else
 						*arg += K_F1 - '1';
 				}
@@ -651,8 +692,8 @@ domap(unmap, arg, mode)
 /*
  * Find an entry in the maplist that matches.
  */
-		if (*arg == NUL || !unmap && *p == NUL)
-			setmode(0);				/* set cooked mode so output can be halted */
+		if (*arg == NUL || (!unmap && *p == NUL))
+			settmode(0);				/* set cooked mode so output can be halted */
 		for (mp = maplist.m_next, mprev = &maplist; mp; mprev = mp, mp = mp->m_next)
 		{
 			if (mp->m_mode != mode)
@@ -668,10 +709,10 @@ domap(unmap, arg, mode)
 					break;
 			}
 		}
-		if (*arg == NUL || !unmap && *p == NUL)
+		if (*arg == NUL || (!unmap && *p == NUL))
 		{
-				setmode(1);
-				wait_return((bool_t)TRUE);
+				settmode(1);
+				wait_return(TRUE);
 				return 0;				/* listing finished */
 		}
 
@@ -728,13 +769,9 @@ domap(unmap, arg, mode)
 showmap(mp)
 	struct mapblock *mp;
 {
-	char *p;
 	int len;
 
-	outtrans(mp->m_keys, -1);
-	len = 0;
-	for (p = mp->m_keys; *p; ++p)
-		len += charsize(*p);		/* count length of what we have written */
+	len = outtrans(mp->m_keys, -1);	/* get length of what we have written */
 	while (len < MAXMAPLEN)
 	{
 		outchar(' ');				/* padd with blanks */
@@ -749,6 +786,7 @@ showmap(mp)
  * Write map commands for the current mapping to an .exrc file.
  * Return 1 on error.
  */
+	int
 makemap(fd)
 	FILE *fd;
 {

@@ -11,138 +11,223 @@
 /*
  * Code to handle user-settable parameters. This is all pretty much table-
  * driven. To add a new parameter, put it in the params array, and add a
- * macro for it in param.h. If it's a numeric parameter, add any necessary
+ * variable for it in param.h. If it's a numeric parameter, add any necessary
  * bounds checks to doset().
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
-/*
- * The param structure is initialized here.
- * The order of the parameters MUST be the same as defined in param.h
- */
-struct param params[] =
+struct param
 {
-		{"autoindent",	"ai",	FALSE,	P_BOOL},
-/*		{"autoprint",	"ap",	TRUE,	P_BOOL}, */
-		{"autowrite",	"aw",	FALSE,	P_BOOL},
-		{"backspace",	"bs",	FALSE,	P_BOOL},
-		{"backup",		"bk",	TRUE,	P_BOOL},
-/*		{"beautify",	"bf",	FALSE,	P_BOOL}, */
- 		{"directory",	"dir",	0,		P_STRING},
-		{"errorbells",	"eb",	FALSE,	P_BOOL},
-		{"errorfile",	"ef",   0,		P_STRING},
-		{"expandtab",	"et",	FALSE,	P_BOOL},
-/*		{"hardtabs",	"ht",	8,		P_NUM}, */
-		{"history", 	"hi",	20, 	P_NUM},
-		{"ignorecase",	"ic",	FALSE,	P_BOOL},
-		{"joinspaces", 	"js",	TRUE,	P_BOOL},
-		{"lines",		NULL,	25, 	P_NUM},
-/*		{"lisp",		NULL,	FALSE,	P_BOOL}, */
-		{"list",		NULL,	FALSE,	P_BOOL},
-		{"magic",		NULL,	TRUE,	P_BOOL},
-		{"modelines",	"ml",	5,		P_NUM},
-		{"number",		"nu",	FALSE,	P_BOOL},
-/*		{"open",		NULL,	TRUE,	P_BOOL}, */
-/*		{"optimize",	"opt",	TRUE,	P_BOOL}, */
-		{"paragraphs",	"para", 0,		P_STRING},
-/*		{"prompt",		NULL,	TRUE,	P_BOOL}, */
-		{"readonly",	"ro",	FALSE,	P_BOOL},
-/*		{"redraw",		NULL,	FALSE,	P_BOOL}, */
-		{"remap",		NULL,	TRUE,	P_BOOL},
-		{"repdel",		"rd",	TRUE,	P_BOOL},
-		{"report",		NULL,	5,		P_NUM},
-		{"scroll",		NULL,	12, 	P_NUM},
-		{"sections",	NULL,	0,		P_STRING},
-		{"shell",		"sh",	0,		P_STRING},
-		{"shelltype",	"st",	0,		P_NUM},
-		{"shiftround",	"sr",	FALSE,	P_BOOL},
-		{"shiftwidth",	"sw",	8,		P_NUM},
-		{"showcmd",		"sc",	TRUE,	P_BOOL},
-		{"showmatch",	"sm",	FALSE,	P_BOOL},
-		{"showmode",	"mo",	TRUE,	P_BOOL},
-/*		{"slowopen",	"slow", FALSE,	P_BOOL}, */
-		{"smartindent", "si",	FALSE,	P_BOOL},
-		{"suffixes",	"su",	0,		P_STRING},
-		{"tabstop", 	"ts",	8,		P_NUM},
-		{"taglength",	"tl",	0,		P_NUM},
-		{"tags",		NULL,	0,		P_STRING},
-/*		{"term",		NULL,	0,		P_STRING}, */
-		{"terse",		NULL,	TRUE,	P_BOOL},
-		{"textwidth",	"tw",	9999,	P_NUM},
-		{"tildeop", 	"to",	FALSE,	P_BOOL},
-		{"undolevels",	"ul",	100,	P_NUM},
-		{"updatecount",	"uc",	100,	P_NUM},
-		{"updatetime",	"ut",	2000,	P_NUM},
-		{"visualbell",	"vb",	FALSE,	P_BOOL},
-		{"warn",		NULL,	TRUE,	P_BOOL},
-/*		{"window",		NULL,	24, 	P_NUM}, */
-/*		{"w300",		NULL,	24, 	P_NUM}, */
-/*		{"w1200",		NULL,	24, 	P_NUM}, */
-/*		{"w9600",		NULL,	24, 	P_NUM}, */
-		{"wrapscan",	"ws",	TRUE,	P_BOOL},
-		{"wrapmargin",	"wm",	0,		P_NUM},
-		{"writeany",	"wa",	FALSE,	P_BOOL},
-		{"yankendofline", "ye", FALSE,	P_BOOL},
-		{NULL, NULL, 0, 0}								/* end marker */
+	char		*fullname;		/* full parameter name */
+	char		*shortname; 	/* permissible abbreviation */
+	int 		flags;			/* see below */
+	char		*var;			/* pointer to variable */
 };
 
 /*
- * Initialize some of the parameters.
- * We need this because string parameters are unions which cannot be initialized
- * by the compiler.
+ * Flags
+ */
+#define P_BOOL			0x01	/* the parameter is boolean */
+#define P_NUM			0x02	/* the parameter is numeric */
+#define P_STRING		0x04	/* the parameter is a string */
+#define P_CHANGED		0x08	/* the parameter has been changed */
+
+/*
+ * The param structure is initialized here.
+ * The order of the parameters should be alfabetic
+ */
+struct param params[] =
+{
+		{"autoindent",	"ai",	P_BOOL,		(char *)&p_ai},
+/*		{"autoprint",	"ap",	P_BOOL,		(char *)&p_ap}, */
+		{"autowrite",	"aw",	P_BOOL,		(char *)&p_aw},
+		{"backspace",	"bs",	P_NUM,		(char *)&p_bs},
+		{"backup",		"bk",	P_BOOL,		(char *)&p_bk},
+#ifdef UNIX
+ 		{"backupdir",	"bdir",	P_STRING,	(char *)&p_bdir},
+#endif
+/*		{"beautify",	"bf",	P_BOOL,		(char *)&p_bf}, */
+		{"columns",		"co",	P_NUM,		(char *)&Columns},
+#ifdef DIGRAPHS
+		{"digraph",		"dg",	P_BOOL,		(char *)&p_dg},
+#endif /* DIGRAPHS */
+ 		{"directory",	"dir",	P_STRING,	(char *)&p_dir},
+		{"equalprg",	"ep",  	P_STRING,	(char *)&p_ep},
+		{"errorbells",	"eb",	P_BOOL,		(char *)&p_eb},
+		{"errorfile",	"ef",  	P_STRING,	(char *)&p_ef},
+		{"expandtab",	"et",	P_BOOL,		(char *)&p_et},
+		{"graphic",		"gr",	P_BOOL,		(char *)&p_gr},
+/*		{"hardtabs",	"ht",	P_NUM,		(char *)&p_ht}, */
+		{"helpfile",	"hf",  	P_STRING,	(char *)&p_hf},
+		{"history", 	"hi", 	P_NUM,		(char *)&p_hi},
+		{"ignorecase",	"ic",	P_BOOL,		(char *)&p_ic},
+		{"insertmode",	"im",	P_BOOL,		(char *)&p_im},
+		{"joinspaces", 	"js",	P_BOOL,		(char *)&p_js},
+		{"keywordprg",	"kp",  	P_STRING,	(char *)&p_kp},
+		{"lines",		NULL, 	P_NUM,		(char *)&Rows},
+/*		{"lisp",		NULL,	P_BOOL		(char *)&p_lisp}, */
+		{"list",		NULL,	P_BOOL,		(char *)&p_list},
+		{"magic",		NULL,	P_BOOL,		(char *)&p_magic},
+		{"modelines",	"ml",	P_NUM,		(char *)&p_ml},
+		{"number",		"nu",	P_BOOL,		(char *)&p_nu},
+/*		{"open",		NULL,	P_BOOL,		(char *)&p_open}, */
+/*		{"optimize",	"opt",	P_BOOL,		(char *)&p_opt}, */
+		{"paragraphs",	"para",	P_STRING,	(char *)&p_para},
+/*		{"prompt",		NULL,	P_BOOL,		(char *)&p_prompt}, */
+		{"readonly",	"ro",	P_BOOL,		(char *)&p_ro},
+/*		{"redraw",		NULL,	P_BOOL,		(char *)&p_redraw}, */
+		{"remap",		NULL,	P_BOOL,		(char *)&p_remap},
+		{"repdel",		"rd",	P_BOOL,		(char *)&p_rd},
+		{"report",		NULL,	P_NUM,		(char *)&p_report},
+		{"ruler",		"ru",	P_BOOL,		(char *)&p_ru},
+		{"scroll",		NULL, 	P_NUM,		(char *)&p_scroll},
+		{"scrolljump",	"sj", 	P_NUM,		(char *)&p_sj},
+		{"sections",	NULL,	P_STRING,	(char *)&p_sections},
+		{"shell",		"sh",	P_STRING,	(char *)&p_sh},
+		{"shelltype",	"st",	P_NUM,		(char *)&p_st},
+		{"shiftround",	"sr",	P_BOOL,		(char *)&p_sr},
+		{"shiftwidth",	"sw",	P_NUM,		(char *)&p_sw},
+		{"showcmd",		"sc",	P_BOOL,		(char *)&p_sc},
+		{"showmatch",	"sm",	P_BOOL,		(char *)&p_sm},
+		{"showmode",	"mo",	P_BOOL,		(char *)&p_mo},
+/*		{"slowopen",	"slow",	P_BOOL,		(char *)&p_slow}, */
+		{"smartindent", "si",	P_BOOL,		(char *)&p_si},
+		{"suffixes",	"su",	P_STRING,	(char *)&p_su},
+		{"tabstop", 	"ts",	P_NUM,		(char *)&p_ts},
+		{"taglength",	"tl",	P_NUM,		(char *)&p_tl},
+		{"tags",		NULL,	P_STRING,	(char *)&p_tags},
+		{"term",		NULL,	P_STRING,	(char *)&term_strings.t_name},
+		{"terse",		NULL,	P_BOOL,		(char *)&p_terse},
+#ifdef MSDOS
+		{"textmode",	"tx",	P_BOOL,		(char *)&p_tx},
+#endif
+		{"textwidth",	"tw",	P_NUM,		(char *)&p_tw},
+		{"tildeop", 	"to",	P_BOOL,		(char *)&p_to},
+		{"timeout", 	NULL,	P_BOOL,		(char *)&p_timeout},
+		{"undolevels",	"ul",	P_NUM,		(char *)&p_ul},
+		{"updatecount",	"uc",	P_NUM,		(char *)&p_uc},
+		{"updatetime",	"ut",	P_NUM,		(char *)&p_ut},
+		{"visualbell",	"vb",	P_BOOL,		(char *)&p_vb},
+		{"warn",		NULL,	P_BOOL,		(char *)&p_warn},
+/*		{"window",		NULL, 	P_NUM,		(char *)&p_window}, */
+/*		{"w300",		NULL, 	P_NUM,		(char *)&p_w300}, */
+/*		{"w1200",		NULL, 	P_NUM,		(char *)&p_w1200}, */
+/*		{"w9600",		NULL, 	P_NUM,		(char *)&p_w9600}, */
+		{"wrapscan",	"ws",	P_BOOL,		(char *)&p_ws},
+		{"wrapmargin",	"wm",	P_NUM,		(char *)&p_wm},
+		{"writeany",	"wa",	P_BOOL,		(char *)&p_wa},
+		{"writebackup",	"wb",	P_BOOL,		(char *)&p_wb},
+		{"yankendofline", "ye",	P_BOOL,		(char *)&p_ye},
+
+/* terminal output codes */
+		{"t_el",		NULL,	P_STRING,	(char *)&term_strings.t_el},
+		{"t_il",		NULL,	P_STRING,	(char *)&term_strings.t_il},
+		{"t_cil",		NULL,	P_STRING,	(char *)&term_strings.t_cil},
+		{"t_dl",		NULL,	P_STRING,	(char *)&term_strings.t_dl},
+		{"t_cdl",		NULL,	P_STRING,	(char *)&term_strings.t_cdl},
+		{"t_ed",		NULL,	P_STRING,	(char *)&term_strings.t_ed},
+		{"t_ci",		NULL,	P_STRING,	(char *)&term_strings.t_ci},
+		{"t_cv",		NULL,	P_STRING,	(char *)&term_strings.t_cv},
+		{"t_tp",		NULL,	P_STRING,	(char *)&term_strings.t_tp},
+		{"t_ti",		NULL,	P_STRING,	(char *)&term_strings.t_ti},
+		{"t_cm",		NULL,	P_STRING,	(char *)&term_strings.t_cm},
+		{"t_sr",		NULL,	P_STRING,	(char *)&term_strings.t_sr},
+		{"t_cri",		NULL,	P_STRING,	(char *)&term_strings.t_cri},
+		{"t_vb",		NULL,	P_STRING,	(char *)&term_strings.t_vb},
+		{"t_ks",		NULL,	P_STRING,	(char *)&term_strings.t_ks},
+		{"t_ke",		NULL,	P_STRING,	(char *)&term_strings.t_ke},
+
+/* terminal key codes */
+		{"t_ku",		NULL,	P_STRING,	(char *)&term_strings.t_ku},
+		{"t_kd",		NULL,	P_STRING,	(char *)&term_strings.t_kd},
+		{"t_kr",		NULL,	P_STRING,	(char *)&term_strings.t_kr},
+		{"t_kl",		NULL,	P_STRING,	(char *)&term_strings.t_kl},
+		{"t_sku",		NULL,	P_STRING,	(char *)&term_strings.t_sku},
+		{"t_skd",		NULL,	P_STRING,	(char *)&term_strings.t_skd},
+		{"t_skr",		NULL,	P_STRING,	(char *)&term_strings.t_skr},
+		{"t_skl",		NULL,	P_STRING,	(char *)&term_strings.t_skl},
+		{"t_f1",		NULL,	P_STRING,	(char *)&term_strings.t_f1},
+		{"t_f2",		NULL,	P_STRING,	(char *)&term_strings.t_f2},
+		{"t_f3",		NULL,	P_STRING,	(char *)&term_strings.t_f3},
+		{"t_f4",		NULL,	P_STRING,	(char *)&term_strings.t_f4},
+		{"t_f5",		NULL,	P_STRING,	(char *)&term_strings.t_f5},
+		{"t_f6",		NULL,	P_STRING,	(char *)&term_strings.t_f6},
+		{"t_f7",		NULL,	P_STRING,	(char *)&term_strings.t_f7},
+		{"t_f8",		NULL,	P_STRING,	(char *)&term_strings.t_f8},
+		{"t_f9",		NULL,	P_STRING,	(char *)&term_strings.t_f9},
+		{"t_f10",		NULL,	P_STRING,	(char *)&term_strings.t_f10},
+		{"t_sf1",		NULL,	P_STRING,	(char *)&term_strings.t_sf1},
+		{"t_sf2",		NULL,	P_STRING,	(char *)&term_strings.t_sf2},
+		{"t_sf3",		NULL,	P_STRING,	(char *)&term_strings.t_sf3},
+		{"t_sf4",		NULL,	P_STRING,	(char *)&term_strings.t_sf4},
+		{"t_sf5",		NULL,	P_STRING,	(char *)&term_strings.t_sf5},
+		{"t_sf6",		NULL,	P_STRING,	(char *)&term_strings.t_sf6},
+		{"t_sf7",		NULL,	P_STRING,	(char *)&term_strings.t_sf7},
+		{"t_sf8",		NULL,	P_STRING,	(char *)&term_strings.t_sf8},
+		{"t_sf9",		NULL,	P_STRING,	(char *)&term_strings.t_sf9},
+		{"t_sf10",		NULL,	P_STRING,	(char *)&term_strings.t_sf10},
+		{"t_help",		NULL,	P_STRING,	(char *)&term_strings.t_help},
+		{"t_undo",		NULL,	P_STRING,	(char *)&term_strings.t_undo},
+		{NULL, NULL, 0, NULL}			/* end marker */
+};
+
+static void	showparams __ARGS((int));
+static void showonep __ARGS((struct param *));
+static int  istermparam __ARGS((struct param *));
+
+/*
+ * Initialize the shell parameter and scroll size.
  */
 	void
 set_init()
 {
 		char *p;
 
-		PS(P_EF) = "AztecC.Err";
-		PS(P_PARA) = "IPLPPPQPP LIpplpipbp";
-		PS(P_DIR) = "";
-		PS(P_SECTIONS) = "SHNHH HUnhsh";
-		if ((p = getenv("SHELL")) == NULL)
-			PS(P_SHELL) = "sh";
-		else
-			PS(P_SHELL) = strsave(p);
-		PS(P_SU) = ".bak.o.h.info.vim";
-		PS(P_TAGS) = "tags";
+		if ((p = getenv("SHELL")) != NULL)
+			p_sh = strsave(p);
+		p_scroll = (Rows >> 1);
 }
-
-static void	showparams __ARGS((bool_t));
-static void showonep __ARGS((struct param *));
-static char paramerr[] = "invalid 'set' parameter";
 
 	void
 doset(arg)
 	char		*arg;	/* parameter string */
 {
-	register int		 i;
+	register int i;
 	char		*s;
-	bool_t		did_lines = FALSE;
-	bool_t		state;	/* new state of boolean parms. */
+	int			prefix;	/* 0: nothing, 1: "no", 2: "inv" in front of name */
 	int 		nextchar;
-	int 		len;
+	int 		len = 0;
 	int 		flags;
-	int			olduc = P(P_UC);	/* remember old update count */
+	int			olduc = p_uc;	/* remember old update count */
 
 	if (*arg == NUL)
 	{
-		showparams((bool_t)FALSE);
+		showparams(0);
 		return;
 	}
 
 	while (*arg)		/* loop to process all parameters */
 	{
 		if (strncmp(arg, "all", (size_t)3) == 0)
-				showparams((bool_t)TRUE);
+				showparams(1);
+		else if (strncmp(arg, "termcap", (size_t)7) == 0)
+				showparams(2);
 		else
 		{
-			state = TRUE;
+			prefix = 1;
 			if (strncmp(arg, "no", (size_t)2) == 0)
 			{
-				state = FALSE;
+				prefix = 0;
 				arg += 2;
+			}
+			else if (strncmp(arg, "inv", (size_t)3) == 0)
+			{
+				prefix = 2;
+				arg += 3;
 			}
 			for (i = 0; (s = params[i].fullname) != NULL; i++)
 			{
@@ -162,49 +247,57 @@ doset(arg)
 
 			if (s == NULL)		/* found a mismatch: skip the rest */
 			{
-				emsg("Unrecognized 'set' option");
+				emsg(e_unrset);
 				break;
 			}
 
 			flags = params[i].flags;
 			nextchar = arg[len];
-			if (nextchar == '?' || nextchar != '=' && !(flags & P_BOOL))
+			/*
+			 * allow '=' and ':' as MSDOS command.com allows only one
+			 * '=' character per "set" command line. grrr. (jw)
+			 */
+			if (nextchar == '?' || 
+			    ((nextchar != '=' && nextchar != ':') &&
+			    !(flags & P_BOOL)))
 			{										/* print value */
-				gotocmdline((bool_t)TRUE, NUL);
+				gotocmdline(TRUE, NUL);
 				showonep(&params[i]);
 			}
-			else if (nextchar != NUL && strchr("= \t", nextchar) == NULL)
+			else if (nextchar != NUL && strchr("=: \t", nextchar) == NULL)
 			{
-				emsg(paramerr);
+				emsg(e_setparam);
 				break;
 			}
 			else if (flags & P_BOOL)					/* boolean */
 			{
-					if (nextchar == '=')
+					if (nextchar == '=' || nextchar == ':')
 					{
-						emsg(paramerr);
+						emsg(e_setparam);
 						break;
 					}
-					P(i) = state;
+					if (prefix == 2)
+						*(int *)(params[i].var) ^= 1;	/* invert it */
+					else
+						*(int *)(params[i].var) = prefix;
 			}
 			else								/* numeric or string */
 			{
-				if (nextchar != '=' || state == FALSE)
+				if ((nextchar != '=' && nextchar != ':') || prefix != 1)
 				{
-					emsg(paramerr);
+					emsg(e_setparam);
 					break;
 				}
 				if (flags & P_NUM)				/* numeric */
 				{
-					did_lines = (i == P_LI);
 					len = atoi(arg + len + 1);
-					if (i == P_WM)	/* wrapmargin is translated into textlength */
+					if ((long *)params[i].var == &p_wm)	/* wrapmargin is translated into textlength */
 					{
 						if (len >= Columns)
 							len = Columns - 1;
-						P(P_TW) = Columns - len;
+						p_tw = Columns - len;
 					}
-					P(i) = len;
+					*(long *)(params[i].var) = len;
 				}
 				else							/* string */
 				{
@@ -213,8 +306,8 @@ doset(arg)
 					if (s == NULL)
 						break;
 					if (flags & P_CHANGED)
-						free(PS(i));
-					PS(i) = s;
+						free(*(char **)(params[i].var));
+					*(char **)(params[i].var) = s;
 								/* copy the string */
 					while (*arg && *arg != ' ' && *arg != '\t')
 					{
@@ -223,105 +316,124 @@ doset(arg)
 						*s++ = *arg++;
 					}
 					*s = NUL;
+					/*
+					 * options that need some action
+					 * to perform when changed (jw)
+					 */
+					if (params[i].var == (char *)&term_strings.t_name)
+					    set_term(term_strings.t_name);
+					else if (istermparam(&params[i]))
+						ttest(FALSE);
 				}
 			}
 			params[i].flags |= P_CHANGED;
 		}
 
-										/* skip to next white space */
-		while (*arg != ' ' && *arg != '\t' && *arg != NUL)
-				arg++;
+		skiptospace(&arg);				/* skip to next white space */
 		skipspace(&arg);				/* skip spaces */
 	}
 
 	/*
 	 * Check the bounds for numeric parameters here
 	 */
-	if (P(P_TS) <= 0 || P(P_TS) > 16)
+	if (p_ts <= 0 || p_ts > 16)
 	{
-		emsg("Invalid tab size specified");
-		P(P_TS) = 8;
+		emsg(e_tabsize);
+		p_ts = 8;
 	}
-	if (P(P_SS) <= 0 || P(P_SS) > Rows)
+	if (p_scroll <= 0 || p_scroll > Rows)
 	{
-		emsg("Invalid scroll size specified");
-		P(P_SS) = Rows >> 1;
+		emsg(e_scroll);
+		p_scroll = Rows >> 1;
 	}
-	if (P(P_UL) < 0)
+	if (p_sj < 0 || p_sj >= Rows)
 	{
-		emsg("undo levels must be positive");
-		P(P_UL) = 100;
+		emsg(e_scroll);
+		p_sj = 1;
 	}
-	if (P(P_UC) < 0)
+	if (p_ul < 0)
 	{
-		emsg("update count must be positive");
-		P(P_UC) = 100;
+		emsg(e_positive);
+		p_ul = 100;
 	}
-	if (P(P_UC) == 0 && olduc != 0)		/* P_UC changed from on to off */
+	if (p_uc < 0)
+	{
+		emsg(e_positive);
+		p_uc = 100;
+	}
+	if (p_uc == 0 && olduc != 0)		/* p_uc changed from on to off */
 		stopscript();
-	if (P(P_UC) > 0 && olduc == 0)		/* P_UC changed from off to on */
+	if (p_uc > 0 && olduc == 0)		/* p_uc changed from off to on */
 		startscript();
-	if (P(P_UT) < 0)
+#ifdef MSDOS
+	textfile(p_tx);
+#endif
+	if (p_ut < 0)
 	{
-		emsg("update time must be positive");
-		P(P_UT) = 2000;
+		emsg(e_positive);
+		p_ut = 2000;
 	}
 
 	/*
 	 * Update the screen in case we changed something like "tabstop" or
-	 * "list" that will change its appearance.
+	 * "lines" or "list" that will change its appearance.
 	 */
-	if (did_lines)
-		Rows = P(P_LI);		/* screen buffers will be allocated by updateScreen() */
 	updateScreen(NOT_VALID);
 }
 
 /*
- * if 'all' == 1: show all parameters
  * if 'all' == 0: show changed parameters
+ * if 'all' == 1: show all normal parameters
+ * if 'all' == 2: show all terminal parameters
  */
 	static void
 showparams(all)
-	bool_t			all;
+	int			all;
 {
 	struct param   *p;
 	int				col = 0;
 	int				inc;
+	int				isterm;
 
-	gotocmdline(YES, NUL);
-	outstr("Parameters:\r\n");
+	gotocmdline(TRUE, NUL);
+	outstrn("Parameters:\n");
 
-	setmode(0);				/* set cooked mode so output can be halted */
+	settmode(0);				/* set cooked mode so output can be halted */
 	for (p = &params[0]; p->fullname != NULL; p++)
-		if (all || (p->flags & P_CHANGED))
+	{
+		isterm = istermparam(p);
+		if ((all == 2 && isterm) ||
+			(all == 1 && !isterm) ||
+			(all == 0 && (p->flags & P_CHANGED)))
 		{
-			if (p->flags & P_STRING)
-				inc = strlen(p->fullname) + strlen(p->val.strval) + 1;
+			if ((p->flags & P_STRING) && *(char **)(p->var) != NULL)
+				inc = strlen(p->fullname) + strsize(*(char **)(p->var)) + 1;
 			else
 				inc = 1;
 			if (col + inc >= Columns)
 			{
-					outchar('\n');
-					col = 0;
+				outchar('\n');
+				col = 0;
 			}
 
 			showonep(p);
 			col += inc;
 			col += 19 - col % 19;
 			if (col < Columns - 19)
-				windgoto(Rows - 1, col); /* make columns */
+				windgoto((int)Rows - 1, col); /* make columns */
 			else
 			{
-				outchar('\n');
 				col = 0;
+				outchar('\n');
 			}
 			flushbuf();
 		}
+	}
 
 	if (col)
 		outchar('\n');
-	setmode(1);
-	wait_return((bool_t)TRUE);
+	settmode(1);
+	wait_return(TRUE);
 }
 
 	static void
@@ -330,43 +442,83 @@ showonep(p)
 {
 	char			buf[64];
 
-		if ((p->flags & P_BOOL) && !p->val.intval)
-			outstr("no");
-		outstr(p->fullname);
-		if (!(p->flags & P_BOOL))
+	if ((p->flags & P_BOOL) && !*(int *)(p->var))
+		outstrn("no");
+	outstrn(p->fullname);
+	if (!(p->flags & P_BOOL))
+	{
+		outchar('=');
+		if (p->flags & P_NUM)
 		{
-			outchar('=');
-			if (p->flags & P_NUM)
-			{
-				sprintf(buf, "%ld", p->val.intval);
-				outstr(buf);
-			}
-			else
-				outstr(p->val.strval);
+			sprintf(buf, "%ld", *(long *)(p->var));
+			outstrn(buf);
 		}
+		else if (*(char **)(p->var) != NULL)
+			outtrans(*(char **)(p->var), -1);
+	}
 }
 
 /*
  * Write modified parameters as set command to a file.
  * Return 1 on error.
  */
+	int
 makeset(fd)
 	FILE *fd;
 {
-	struct param   *p;
-	int e;
+	struct param	*p;
+	char			*s;
+	int				e;
 
 	for (p = &params[0]; p->fullname != NULL; p++)
 		if (p->flags & P_CHANGED)
 		{
 			if (p->flags & P_BOOL)
-				e = fprintf(fd, "set %s%s\n", p->val.intval ? "" : "no", p->fullname);
+				e = fprintf(fd, "set %s%s\n", *(int *)(p->var) ? "" : "no", p->fullname);
 			else if (p->flags & P_NUM)
-				e = fprintf(fd, "set %s=%ld\n", p->fullname, p->val.intval);
+				e = fprintf(fd, "set %s=%ld\n", p->fullname, *(long *)(p->var));
 			else
-				e = fprintf(fd, "set %s=%s\n", p->fullname, p->val.strval);
+			{
+				fprintf(fd, "set %s=", p->fullname);
+				s = *(char **)(p->var);
+				if (s != NULL)
+					for ( ; *s; ++s)
+					{
+						if (*s < ' ' || *s > '~')
+							putc(CTRL('V'), fd);
+						putc(*s, fd);
+					}
+				e = putc('\n', fd);
+			}
 			if (e < 0)
 				return 1;
 		}
 	return 0;
+}
+
+/*
+ * Clear all the terminal parameters.
+ * If the parameter has been changed, free the allocated memory.
+ * Reset the "changed" flag, so the new value will not be freed.
+ */
+	void
+clear_termparam()
+{
+	struct param   *p;
+
+	for (p = &params[0]; p->fullname != NULL; p++)
+		if (istermparam(p))
+		{
+			if (p->flags & P_CHANGED)
+				free(*(char **)(p->var));
+			*(char **)(p->var) = NULL;
+			p->flags &= ~P_CHANGED;
+		}
+}
+
+	static int
+istermparam(p)
+	struct param *p;
+{
+	return (p->fullname[0] == 't' && p->fullname[1] == '_');
 }

@@ -1,0 +1,26 @@
+/* amiga.c */
+void flushbuf __PARMS((void));
+void outchar __PARMS((unsigned int c));
+int GetChars __PARMS((char *buf, int maxlen, int type));
+void sleep __PARMS((int n));
+void vim_delay __PARMS((void));
+void mch_suspend __PARMS((void));
+void mch_windinit __PARMS((void));
+void check_win __PARMS((int argc, char **argv));
+void fname_case __PARMS((char *name));
+void settitle __PARMS((char *str));
+void resettitle __PARMS((void));
+int dirname __PARMS((char *buf, int len));
+int FullName __PARMS((char *fname, char *buf, int len));
+long getperm __PARMS((char *name));
+int setperm __PARMS((char *name, long perm));
+int isdir __PARMS((char *name));
+void mch_windexit __PARMS((int r));
+void mch_settmode __PARMS((int raw));
+int mch_get_winsize __PARMS((void));
+void mch_set_winsize __PARMS((void));
+int call_shell __PARMS((char *cmd, int filter));
+void breakcheck __PARMS((void));
+long Chk_Abort __PARMS((void));
+int ExpandWildCards __PARMS((int num_pat, char **pat, int *num_file, char ***file, int files_only, int list_notfound));
+void FreeWild __PARMS((int num, char **file));

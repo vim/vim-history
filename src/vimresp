@@ -1,0 +1,5 @@
+alloc.obj msdos.obj buffers.obj charset.obj cmdline.obj csearch.obj +
+digraph.obj edit.obj fileio.obj help.obj linefunc.obj main.obj mark.obj +
+message.obj misccmds.obj normal.obj ops.obj param.obj quickfix.obj +
+regexp.obj regsub.obj screen.obj script.obj search.obj storage.obj +
+tag.obj term.obj undo.obj version.obj

@@ -2,34 +2,61 @@
 # Makefile for VIM, using DICE 2.06.40 and 2.06.21
 #
 
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DWILD_CARDS	wildcard expansion code
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DWILD_CARDS -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+
+#>>>>> if TERMCAP is defined termlib.o has to be used
+TERMLIB = termlib.o
+#TERMLIB = 
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c -DAMIGA $(DEFINES)
+
 INCL = vim.syms
 PRE = -H${INCL}=vim.h
-CFLAGS = -DAMIGA -DWILD_CARDS #-DAUX
 LIBS = -lmanx -la
-CC = dcc -c
+CC = dcc
 LD = dcc
 
 .c.o:
 	${CC} ${PRE} ${CFLAGS} $*.c -o $@
 
-OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o cmdsearch.o edit.o \
-	fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
 	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
-	script.o search.o storage.o tag.o undo.o version.o
+	script.o search.o storage.o tag.o undo.o $(TERMLIB)
 
-/Vim: $(OBJ)
+/Vim: $(OBJ) version.c
 	${CC} $(CFLAGS) version.c -o version.o
-	${LD} -o /Vim $(OBJ) $(LIBS)
+	${LD} -o /Vim $(OBJ) version.o $(LIBS)
 
-debug: $(OBJ)
+debug: $(OBJ) version.c
 	${CC} $(CFLAGS) version.c -o version.o
-	${LD} -s -o /Vim $(OBJ) $(LIBS)
+	${LD} -s -o /Vim $(OBJ) version.o $(LIBS)
 
-tags:	$(OBJ)
+ctags:
 	csh -c ctags *.c *.h
 
-$(INCL)  : vim.h globals.h param.h keymap.h macros.h ascii.h term.h amiga.h
+# can't use delete here, too many file names
+clean:
+	csh -c rm -f $(OBJ) version.o mkcmdtab.o /Vim $(INCL) mkcmdtab
+
+$(INCL)  : vim.h globals.h keymap.h macros.h ascii.h term.h amiga.h
 	delete $(INCL)
+
+###########################################################################
 
 alloc.o:	alloc.c  $(INCL)
 
@@ -41,7 +68,9 @@ charset.o:	charset.c  $(INCL)
 
 cmdline.o:	cmdline.c  $(INCL) cmdtab.h
 
-cmdsearch.o:	cmdsearch.c  $(INCL) regexp.h
+csearch.o:	csearch.c  $(INCL) regexp.h
+
+digraph.o: digraph.c	$(INCL)
 
 edit.o: edit.c	$(INCL)
 
@@ -51,7 +80,7 @@ help.o: help.c	$(INCL)
 
 linefunc.o:	linefunc.c  $(INCL)
 
-main.o: main.c	$(INCL)
+main.o: main.c
 	${CC} ${CFLAGS} main.c -o main.o
 
 mark.o: mark.c	$(INCL) mark.h
@@ -85,14 +114,14 @@ search.o:	search.c  $(INCL) regexp.h
 
 tag.o:	tags.c  $(INCL) mark.h
 
+termlib.o:	termlib.c $(INCL)
+
 storage.o:	storage.c  $(INCL)
 
 undo.o: undo.c	$(INCL)
 
-cmdtab.h: cmdtab.tab makecmdtab
-#	makecmdtab <cmdtab.tab >cmdtab.h
-	newcli from makecmdtab.cli
-	wait 10
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
 
-makecmdtab: makecmdtab.o
-	${LD} -o makecmdtab makecmdtab.o
+mkcmdtab: mkcmdtab.o
+	${LD} -o mkcmdtab mkcmdtab.o

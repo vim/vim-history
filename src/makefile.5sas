@@ -1,0 +1,143 @@
+#
+# Makefile for VIM on the Amiga, using SAS/Lattice C 5.10
+#
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DWILD_CARDS	wildcard expansion code
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DWILD_CARDS -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+
+#>>>>> if TERMCAP is defined termlib.o has to be used
+TERMLIB = termlib.o
+#TERMLIB = 
+
+#>>>>> end of choices
+###########################################################################
+
+CC = lc
+CFLAGS = -c -DAMIGA $(DEFINES)
+
+INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h debug.h
+
+OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o term.o undo.o $(TERMLIB)
+
+/Vim: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	blink FROM lib:c.o $(OBJ) version.o TO /Vim LIBRARY lib:lc.lib lib:amiga2.0.lib lib:arp.lib VERBOSE NODEBUG SMALLCODE SMALLDATA map Vim.map
+
+debug: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	blink FROM lib:c.o $(OBJ) version.o TO /Vim LIBRARY lib:lc.lib lib:amiga.lib lib:arp.lib VERBOSE DEBUG SMALLCODE SMALLDATA map Vim.map
+
+ctags:
+	csh -c ctags *.c *.h
+
+# can't use delete here, too many file names
+clean:
+	csh -c rm -f $(OBJ) version.o mkcmdtab.o /Vim mkcmdtab
+
+###########################################################################
+
+alloc.o:	alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c
+
+amiga.o:	amiga.c  $(INCL)
+	$(CC) $(CFLAGS) amiga.c
+
+buffers.o:	buffers.c  $(INCL)
+	$(CC) $(CFLAGS) buffers.c
+
+charset.o:	charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c
+
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c
+
+csearch.o:	csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c
+
+digraph.o:	digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c
+
+edit.o:	edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c
+
+fileio.o:	fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c
+
+help.o:	help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c
+
+linefunc.o:	linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c
+
+main.o:	main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c
+
+mark.o:	mark.c  $(INCL) mark.h
+	$(CC) $(CFLAGS) mark.c
+
+message.o:	message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c
+
+misccmds.o:	misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c
+
+normal.o:	normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c
+
+ops.o:	ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c
+
+param.o:	param.c  $(INCL)
+	$(CC) $(CFLAGS) param.c
+
+quickfix.o:	quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c
+
+regexp.o:	regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c
+
+regsub.o:	regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c
+
+screen.o:	screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c
+
+script.o:	script.c  $(INCL)
+	$(CC) $(CFLAGS) script.c
+
+search.o:	search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c
+
+storage.o:	storage.c  $(INCL)
+	$(CC) $(CFLAGS) storage.c
+
+tag.o:	tag.c  $(INCL) mark.h
+	$(CC) $(CFLAGS) tag.c
+
+term.o:	term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c
+
+termlib.o:	termlib.c  $(INCL)
+	$(CC) $(CFLAGS) termlib.c
+
+undo.o:	undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: mkcmdtab.o
+	$(CC) -o mkcmdtab mkcmdtab.o

@@ -47,6 +47,9 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
 struct u_entry
 {
@@ -70,7 +73,7 @@ static struct u_header *u_oldhead = NULL;	/* pointer to oldest header */
 static struct u_header *u_newhead = NULL;	/* pointer to newest header */
 static struct u_header *u_curhead = NULL;	/* pointer to current header */
 static int				u_numhead = 0;		/* current number of headers */
-static bool_t			u_synced = TRUE;	/* entry lists are synced */
+static int				u_synced = TRUE;	/* entry lists are synced */
 
 /*
  * variables for "U" command
@@ -79,16 +82,16 @@ static char	   *u_line_ptr = NULL;		/* saved line for "U" command */
 static linenr_t u_line_lnum;			/* line number of line in u_line */
 static colnr_t	u_line_colnr;			/* optional column number */
 
-static void u_getbot();
+static void u_getbot __ARGS((void));
 static int u_savecommon __ARGS((linenr_t, linenr_t, int, char *));
-static void u_undoredo();
+static void u_undoredo __ARGS((void));
 static void u_freelist __ARGS((struct u_header *));
 static void u_freeentry __ARGS((struct u_entry *, long));
 
 /*
  * save the current line for both the "u" and "U" command
  */
-	bool_t
+	int
 u_saveCurpos()
 {
 	return (u_save((linenr_t)(Curpos.lnum - 1), (linenr_t)(Curpos.lnum + 1)));
@@ -99,7 +102,7 @@ u_saveCurpos()
  * "top" may be 0 and bot may be line_count + 1.
  * Returns FALSE when lines could not be saved.
  */
-	bool_t
+	int
 u_save(top, bot)
 	linenr_t top, bot;
 {
@@ -116,7 +119,7 @@ u_save(top, bot)
  * save the line "lnum", pointed at by "ptr" (used by :g//s commands)
  * "ptr" is handed over to the undo routines
  */
-	bool_t
+	int
 u_savesub(lnum, ptr)
 	linenr_t	lnum;
 	char		*ptr;
@@ -128,7 +131,7 @@ u_savesub(lnum, ptr)
  * save the line "lnum", pointed at by "ptr" (used by :g//d commands)
  * "ptr" is handed over to the undo routines
  */
-	bool_t
+	int
 u_savedel(lnum, ptr)
 	linenr_t	lnum;
 	char		*ptr;
@@ -163,7 +166,7 @@ u_savecommon(top, bot, flag, ptr)
 		/*
 		 * free headers to keep the size right
 		 */
-		while (u_numhead > P(P_UL) && u_oldhead != NULL)
+		while (u_numhead > p_ul && u_oldhead != NULL)
 			u_freelist(u_oldhead);
 
 		/*
@@ -202,7 +205,11 @@ u_savecommon(top, bot, flag, ptr)
 	uep->ue_botptr = NULL;
 	if (flag)
 		uep->ue_bot = bot;
-	else if (bot > line_count)
+		/*
+		 * use 0 for ue_bot if bot is below last line or if the buffer is empty, in
+		 * which case the last line may be replaced (e.g. with 'O' command).
+		 */
+	else if (bot > line_count || bufempty())
 		uep->ue_bot = 0;
 	else
 		uep->ue_botptr = nr2ptr(bot);	/* we have to do ptr2nr(ue_botptr) later */
@@ -245,7 +252,7 @@ u_undo(count)
 	{
 		if (u_curhead == NULL)						/* first undo */
 			u_curhead = u_newhead;
-		else if (P(P_UL) != 0)						/* multi level undo */
+		else if (p_ul != 0)						/* multi level undo */
 			u_curhead = u_curhead->uh_next;			/* get next undo */
 
 		if (u_numhead == 0 || u_curhead == NULL)	/* nothing to undo */
@@ -265,7 +272,7 @@ u_redo(count)
 {
 	while (count--)
 	{
-		if (u_curhead == NULL || P(P_UL) == 0)		/* nothing to redo */
+		if (u_curhead == NULL || p_ul == 0)		/* nothing to redo */
 		{
 			beep();
 			return;
@@ -286,11 +293,11 @@ u_redo(count)
 	static void
 u_undoredo()
 {
-	char		**newarray;
+	char		**newarray = NULL;
 	linenr_t	oldsize;
 	linenr_t	newsize;
 	linenr_t	top, bot;
-	linenr_t	lnum;
+	linenr_t	lnum = 0;
 	linenr_t	newlnum = INVLNUM;
 	long		i;
 	long		count = 0;
@@ -374,8 +381,7 @@ u_undoredo()
 		Curpos.col = u_curhead->uh_curpos.col;
 	else
 		Curpos.col = 0;
-	cursupdate();
-	updateScreen(NOT_VALID);
+	updateScreen(CURSUPD);
 }
 
 /*
@@ -408,7 +414,7 @@ u_getbot()
 		if ((uep->ue_bot = ptr2nr(uep->ue_botptr, uep->ue_top)) == 0)
 		{
 			emsg("undo line missing");
-			return;
+			uep->ue_bot = uep->ue_top + 1;	/* guess what it is */
 		}
 
 	u_synced = TRUE;

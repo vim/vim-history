@@ -1,0 +1,21 @@
+/* buffers.c */
+unsigned char *get_bufcont __PARMS((struct buffheader *buffer));
+unsigned char *get_recorded __PARMS((void));
+unsigned char *get_inserted __PARMS((void));
+int stuff_empty __PARMS((void));
+void flush_buffers __PARMS((void));
+void ResetBuffers __PARMS((void));
+void AppendToRedobuff __PARMS((char *s));
+void AppendNumberToRedobuff __PARMS((long n));
+void stuffReadbuff __PARMS((char *s));
+void stuffnumReadbuff __PARMS((long n));
+void copy_redo __PARMS((void));
+int start_redo __PARMS((long count));
+int start_redo_ins __PARMS((void));
+void set_redo_ins __PARMS((void));
+void stop_redo_ins __PARMS((void));
+int ins_mapbuf __PARMS((char *str));
+unsigned char vgetc __PARMS((void));
+unsigned char vpeekc __PARMS((void));
+int domap __PARMS((int unmap, char *arg, int mode));
+int makemap __PARMS((struct __stdio *fd));

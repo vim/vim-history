@@ -13,8 +13,12 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 #include "cmdtab.h"
 #include "ops.h"			/* included because we call functions in ops.c */
+#include "fcntl.h"			/* for chdir() */
 
 #ifdef LATTICE
 # define mktemp(a)	tmpnam(a)
@@ -28,13 +32,6 @@
 static char    *altfiles[NUMALTFILES];	/* alternate files */
 static linenr_t altlnum[NUMALTFILES];	/* line # in alternate file */
 static linenr_t doecmdlnum = 0;			/* line # in new file for doecmd() */
-
-static char 	invarg[] = "Invalid argument";
-static char 	nomore[] = "No more files to edit";
-static char 	nowrtmsg[] = "No write since last change (use ! to override)";
-static char 	toolong[] = "Command too long";
-static char 	invcmd[] = "Invalid command";
-char 			notopen[] = "Cannot open file";
 
 /*
  * variables shared between getcmdline() and redrawcmdline()
@@ -52,31 +49,32 @@ static u_char	*cmdbuff;		/* pointer to command line buffer */
  * They are set by docmdline().
  */
 static linenr_t 	line1, line2;
-static bool_t		forceit;
+static int			forceit;
 static int			regname;
 
 static void		cmdchecklen __ARGS((void));
 static void		cursorcmd __ARGS((void));
 static u_char	*DoOneCmd __ARGS((u_char *));
 static void		dobang __ARGS((int, u_char *));
-static bool_t	autowrite __ARGS((void));
-static int		dowrite __ARGS((u_char *, bool_t));
-static bool_t	doecmd __ARGS((char *));
-static void		doshell __ARGS((char *, bool_t));
-static void		dofilter __ARGS((u_char *, bool_t, bool_t));
-static bool_t	check_readonly __ARGS((void));
-static bool_t	check_changed __ARGS((bool_t));
-static bool_t	check_fname __ARGS((void));
-static bool_t	check_more __ARGS((void));
+static int		autowrite __ARGS((void));
+static int		dowrite __ARGS((u_char *, int));
+static int		doecmd __ARGS((char *));
+static void		doshell __ARGS((char *));
+static void		dofilter __ARGS((u_char *, int, int));
+static int		check_readonly __ARGS((void));
+static int		check_changed __ARGS((int));
+static int		check_fname __ARGS((void));
+static int		check_more __ARGS((void));
 #ifdef WILD_CARDS
-static char		*ExpandOne __ARGS((u_char *, int, bool_t));
-#endif
+static char		*ExpandOne __ARGS((u_char *, int, int));
 static void		showmatches __ARGS((char *, int));
+static char		*addstar __ARGS((char *, int));
+#endif
 static linenr_t get_address __ARGS((u_char **, linenr_t));
 
 extern char		*mktemp __ARGS((char *));
 
-extern int global_busy, global_wait;	/* shared with cmdsearch.c */
+extern int global_busy, global_wait;	/* shared with csearch.c */
 
 /*
  * variable shared with quickfix.c
@@ -89,12 +87,13 @@ extern int qf_index;
  * For searches the optional matching '?' or '/' is removed.
  */
 
-	bool_t
+	int
 getcmdline(firstc, buff)
 	int			firstc; 	/* either ':', '/', or '?' */
 	u_char		*buff;	 	/* buffer for command string */
 {
 	register u_char 	c;
+			 int		nextc = 0;
 	register int		i;
 			 int		retval;
 			 int		hiscnt;				/* current history line in use */
@@ -104,7 +103,15 @@ getcmdline(firstc, buff)
 	static	 int		hisidx = -1;		/* last entered entry */
 			 char		**temp;
 			 int		j;
+
+#ifdef WILD_CARDS
 			 int		gotesc = FALSE;		/* TRUE when last char typed was <ESC> */
+			 char		*p1, *p2;
+			 int		oldlen;
+			 int		difflen;
+			 int		findex;
+#endif
+
 
 
 /*
@@ -116,12 +123,12 @@ getcmdline(firstc, buff)
 	cmdslen = cmdspos = 1;
 	cmdredraw = 0;
 	State = CMDLINE;
-	gotocmdline(YES, firstc);
+	gotocmdline(TRUE, firstc);
 
 /*
  * if size of history table changed, reallocate it
  */
-	newlen = P(P_HI);
+	newlen = p_hi;
 	if (newlen != hislen)						/* history length changed */
 	{
 		temp = (char **)alloc((int)(newlen * sizeof(char *)));
@@ -159,7 +166,21 @@ getcmdline(firstc, buff)
 	for (;;)
 	{
 		cursorcmd();	/* set the cursor on the right spot */
-		c = vgetc();
+		if (nextc)		/* character remaining from CTRL-V */
+		{
+			c = nextc;
+			nextc = 0;
+		}
+		else
+			c = vgetc();
+
+#ifdef WILD_CARDS
+		if (c != ESC && c != CTRL('N') && c != CTRL('P') && gotesc)
+		{
+			(void)ExpandOne(NULL, FALSE, -2);	/* may free expanded file names */
+			gotesc = FALSE;
+		}
+#endif
 
 		if (c == '\n' || c == '\r')
 		{
@@ -167,8 +188,7 @@ getcmdline(firstc, buff)
 				flushbuf();
 				break;
 		}
-		if (c != ESC)
-			gotesc = FALSE;
+
 		switch (c)
 		{
 		case BS:
@@ -202,7 +222,7 @@ clearline:
 				cmdlen = 0;
 				cmdslen = 1;
 				cmdspos = 1;
-				gotocmdline(YES, firstc);
+				gotocmdline(TRUE, firstc);
 				continue;
 
 		case ESC:
@@ -211,40 +231,50 @@ clearline:
 				msg("");
 				goto returncmd; 	/* back to cmd mode */
 #else
+			/*
+			 * hitting <ESC> twice means: abandon command line
+			 */
+			if (gotesc)
 			{
-				char *pp;
-				int oldlen;
-				int difflen;
+				retval = FALSE;
+				msg("");
+				goto returncmd; 	/* back to cmd mode */
+			}
+			gotesc = TRUE;
+			findex = 0;
 
-				/*
-				 * hitting <ESC> twice means: abandon command line
-				 */
-				if (gotesc)
+doexpand:
+			outstr("...");		/* show that we are busy */
+			flushbuf();
+			i = cmdslen;
+			cmdslen = cmdpos + 4;
+			cmdchecklen();		/* check if we caused a scrollup */
+			cmdslen = i;
+
+			for (i = cmdpos; i > 0 && buff[i - 1] != ' '; --i)
+				;
+			oldlen = cmdpos - i;
+
+				/* add a "*" to the file name and expand it */
+			if ((p1 = addstar((char *)&buff[i], oldlen)) != NULL)
+			{
+				if ((p2 = ExpandOne((u_char *)p1, FALSE, findex)) != NULL)
 				{
-					retval = FALSE;
-					msg("");
-					goto returncmd; 	/* back to cmd mode */
-				}
-				gotesc = TRUE;
-				for (i = cmdpos; i > 0 && buff[i - 1] != ' '; --i)
-					;
-				oldlen = cmdpos - i;
-				if ((pp = ExpandOne(&buff[i], oldlen, (bool_t)FALSE)) != NULL)
-				{
-					if (cmdlen + (difflen = strlen(pp) - oldlen) > CMDBUFFSIZE - 4)
-						emsg(toolong);
+					if (cmdlen + (difflen = strlen(p2) - oldlen) > CMDBUFFSIZE - 4)
+						emsg(e_toolong);
 					else
 					{
 						strncpy((char *)&buff[cmdpos + difflen], (char *)&buff[cmdpos], (size_t)(cmdlen - cmdpos));
-						strncpy((char *)&buff[i], pp, strlen(pp));
+						strncpy((char *)&buff[i], p2, strlen(p2));
 						cmdlen += difflen;
 						cmdpos += difflen;
 					}
-					free(pp);
+					free(p2);
 				}
-				redrawcmd();
-				continue;
+				free(p1);
 			}
+			redrawcmd();
+			continue;
 
 		case CTRL('D'):
 			{
@@ -281,10 +311,18 @@ clearline:
 				while (c == K_SLARROW && buff[cmdpos - 1] != ' ');
 				continue;
 
+		case CTRL('N'):		/* next match */
+		case CTRL('P'):		/* previous match */
+				if (gotesc)
+				{
+					findex = (c == CTRL('P')) ? 2 : 1;
+					goto doexpand;
+				}
+
 		case K_UARROW:
 		case K_DARROW:
 				i = hiscnt;
-				if (c == K_UARROW)
+				if (c == K_UARROW || c == CTRL('P'))
 				{
 						if (hiscnt == hislen)
 								hiscnt = hisidx;
@@ -324,9 +362,7 @@ clearline:
 				cmdchecklen();
 				--cmdslen;
 				cursorcmd();
-				State = NOMAPPING;		/* no mapping for the next char */
-				c = vgetc();
-				State = CMDLINE;
+				c = get_literal(&nextc);	/* get next (two) character(s) */
 		}
 
 		/* we come here if we have entered a normal character */
@@ -353,10 +389,7 @@ clearline:
 
 returncmd:
 	if (cmdredraw)
-	{
-		screenclear();
-		updateScreen(NOT_VALID);
-	}
+		updateScreen(CLEAR);
 	State = NORMAL;
 	script_winsize_pp();
 	return retval;
@@ -392,7 +425,7 @@ redrawcmd()
 {
 	register int i;
 
-	windgoto(Rows - 1 - cmdredraw, 0);
+	windgoto((int)Rows - 1 - cmdredraw, 0);
 	outchar(cmdfirstc);
 	cmdslen = 1;
 	cmdspos = 1;
@@ -411,7 +444,7 @@ redrawcmd()
 	static void
 cursorcmd()
 {
-	windgoto(Rows - 1 - cmdredraw + (cmdspos / Columns), cmdspos % Columns);
+	windgoto((int)Rows - 1 - cmdredraw + (cmdspos / (int)Columns), cmdspos % (int)Columns);
 }
 
 /*
@@ -441,7 +474,7 @@ docmdline(cmdline)
 	{
 		if (strlen((char *)cmdline) > CMDBUFFSIZE - 2)
 		{
-				emsg(toolong);
+				emsg(e_toolong);
 				return;
 		}
 		/* Make a copy of the command so we can mess with it. */
@@ -488,7 +521,7 @@ DoOneCmd(buff)
 	long				n;
 	int					addr_count;	/* number of address specifications */
 	FPOS				pos;
-	bool_t				append = FALSE;			/* write with append */
+	int					append = FALSE;			/* write with append */
 	u_char				*nextcomm;
 
 
@@ -560,7 +593,7 @@ DoOneCmd(buff)
 
 	if (line1 > line2 || line2 > line_count)
 	{
-		emsg("Invalid range");
+		emsg(e_invrange);
 		goto doend;
 	}
 
@@ -573,7 +606,7 @@ DoOneCmd(buff)
 	/*
 	 * If we got a line, but no command, then go to the line.
 	 */
-	if (*cmd == NUL || *cmd == '"' || *cmd == '|' && (nextcomm = cmd))
+	if (*cmd == NUL || *cmd == '"' || (*cmd == '|' && (nextcomm = cmd) != NULL))
 	{
 		if (addr_count != 0)
 		{
@@ -594,7 +627,7 @@ DoOneCmd(buff)
 	if (*cmd != 'k')
 		while (isalpha(*p))
 			++p;
-	if (p == cmd && strchr("!=><&k", *p) != NULL)	/* non-alpha or 'k' command */
+	if (p == cmd && strchr("@!=><&k", *p) != NULL)	/* non-alpha or 'k' command */
 		++p;
 	i = p - cmd;
 
@@ -604,7 +637,7 @@ DoOneCmd(buff)
 
 	if (i == 0 || cmdidx == CMD_SIZE)
 	{
-		emsg(invcmd);
+		emsg(e_invcmd);
 		goto doend;
 	}
 
@@ -623,7 +656,7 @@ DoOneCmd(buff)
 
 	if (!(argt & RANGE) && addr_count)
 	{
-		emsg("No range allowed");
+		emsg(e_norange);
 		goto doend;
 	}
 
@@ -640,7 +673,7 @@ DoOneCmd(buff)
 
 	if ((argt & NEEDARG) && *arg == NUL)
 	{
-		emsg("Argument required");
+		emsg(e_argreq);
 		goto doend;
 	}
 
@@ -651,9 +684,11 @@ DoOneCmd(buff)
 	{
 		while (*p)
 		{
-			if (*p == '"' && !(argt & NOTRLCOM) || *p == '|')
+			if (*p == CTRL('V'))
+				strcpy((char *)p, (char *)p + 1);
+			else if ((*p == '"' && !(argt & NOTRLCOM)) || *p == '|')
 			{						/* remove the backslash or ^V */
-				if (*(p - 1) == '\\' || *(p - 1) == CTRL('V'))
+				if (*(p - 1) == '\\')
 				{
 					strcpy((char *)p - 1, (char *)p);
 					--p;
@@ -678,7 +713,7 @@ DoOneCmd(buff)
 
 	regname = 0;
 		/* accept numbered register only when no count allowed (:put) */
-	if ((argt & REGSTR) && (isalpha(*arg) || !(argt & COUNT) && isdigit(*arg)))
+	if ((argt & REGSTR) && (isalpha(*arg) || *arg == '.' || (!(argt & COUNT) && isdigit(*arg))))
 	{
 		regname = *arg;
 		++arg;
@@ -691,7 +726,7 @@ DoOneCmd(buff)
 		skipspace((char **)&arg);
 		if (i <= 0)
 		{
-			emsg("zero count");
+			emsg(e_zerocount);
 			goto doend;
 		}
 		line1 = line2;
@@ -700,7 +735,7 @@ DoOneCmd(buff)
 
 	if (!(argt & EXTRA) && strchr("|\"#", *arg) == NULL)	/* no arguments allowed */
 	{
-		emsg("Trailing characters");
+		emsg(e_trailing);
 		goto doend;
 	}
 
@@ -739,11 +774,11 @@ DoOneCmd(buff)
 			{
 				q = (char *)p + 1;
 				i = getdigits(&q);
-				n = q - p;
+				n = q - (char *)p;
 
 				if (i >= NUMALTFILES || altfiles[i] == NULL)
 				{
-						emsg("no alternate file");
+						emsg(e_noalt);
 						goto doend;
 				}
 				doecmdlnum = altlnum[i];
@@ -754,7 +789,7 @@ DoOneCmd(buff)
 				i += strlen((char *)nextcomm);
 			if (i > CMDBUFFSIZE)
 			{
-				emsg(toolong);
+				emsg(e_toolong);
 				goto doend;
 			}
 			/*
@@ -779,16 +814,20 @@ DoOneCmd(buff)
 		if (argt & NOSPC)		/* one file argument: expand wildcards */
 		{
 			for (p = arg; *p; ++p)
+#ifdef UNIX
+				if (strchr("*?[{}`~$", *p) != NULL)
+#else
 				if (strchr("*?[{}`", *p) != NULL)
+#endif
 					break;
 			if (*p)					/* has a wildcard */
 			{
-				if ((p = (u_char *)ExpandOne(arg, (int)strlen((char *)arg), (bool_t)TRUE)) == NULL)
+				if ((p = (u_char *)ExpandOne(arg, TRUE, -1)) == NULL)
 					goto doend;
 				if (strlen((char *)p) + arg - buff < CMDBUFFSIZE - 2)
 					strcpy((char *)arg, (char *)p);
 				else
-					emsg(toolong);
+					emsg(e_toolong);
 				free(p);
 			}
 		}
@@ -801,35 +840,69 @@ DoOneCmd(buff)
 	switch (cmdidx)
 	{
 		case CMD_quit:
-				if (check_changed((bool_t)FALSE) || check_more())
-						break;
+				exiting = TRUE;
+				settmode(0);		/* allows typeahead */
+				if (check_changed(FALSE) || check_more())
+				{
+					exiting = FALSE;
+					settmode(1);
+					break;
+				}
 				getout(0);
+
+		case CMD_stop:
+				if (!forceit && Changed)
+					autowrite();
+				gotocmdline(TRUE, NUL);
+				flushbuf();
+				mch_suspend();		/* call machine specific function */
+				updateScreen(CLEAR);
+				break;
 
 		case CMD_xit:
 		case CMD_wq:
-				if ((cmdidx == CMD_wq || Changed) && (check_readonly() || !dowrite(arg, (bool_t)FALSE)))
+				exiting = TRUE;
+				settmode(0);		/* allows typeahead */
+				if ((cmdidx == CMD_wq || Changed) && (check_readonly() || !dowrite(arg, FALSE)))
+				{
+					exiting = FALSE;
+					settmode(1);
 					break;
+				}
 				if (check_more())
+				{
+					exiting = FALSE;
+					settmode(1);
 					break;
+				}
 				getout(0);
 
 		case CMD_args:
-				gotocmdline((bool_t)TRUE, NUL);
+				gotocmdline(TRUE, NUL);
 				for (i = 0; i < numfiles; ++i)
 				{
 					if (i == curfile)
 						outchar('[');
-					outstr(files[i]);
+					outstrn(files[i]);
 					if (i == curfile)
 						outchar(']');
 					outchar(' ');
 				}
 				outchar('\n');
-				wait_return((bool_t)TRUE);
+				wait_return(TRUE);
 				break;
 
+		case CMD_wnext:
+				n = line2;
+				line1 = 1;
+				line2 = line_count;
+				dowrite(arg, FALSE);
+				line2 = n;
+				arg = (u_char *)"";		/* no file list */
+				/*FALLTHROUGH*/
+
 		case CMD_next:
-				if (check_changed((bool_t)TRUE))
+				if (check_changed(TRUE))
 						break;
 				if (*arg != NUL)		/* redefine file list */
 				{
@@ -847,10 +920,10 @@ DoOneCmd(buff)
 
 donextfile:		if (i < 0 || i >= numfiles)
 				{
-					emsg(nomore);
+					emsg(e_nomore);
 					break;
 				}
-				if (check_changed((bool_t)TRUE))
+				if (check_changed(TRUE))
 						break;
 				curfile = i;
 				doecmd(files[curfile]);
@@ -870,7 +943,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 
 		case CMD_write:
 				if (*arg == '!')		/* input lines to shell command */
-					dofilter(arg + 1, (bool_t)TRUE, (bool_t)FALSE);
+					dofilter(arg + 1, TRUE, FALSE);
 				else
 					dowrite(arg, append);
 				break;
@@ -893,31 +966,31 @@ donextfile:		if (i < 0 || i >= numfiles)
 				break;
 
 		case CMD_files:
-				setmode(0);
+				settmode(0);
 				for (i = 0; i < NUMALTFILES; ++i)
 				{
 					if (altfiles[i])
 					{
 						sprintf(IObuff, "%2d \"%s\" line %ld\n", i, altfiles[i], (long)altlnum[i]);
-						outstr(IObuff);
+						outstrn(IObuff);
 					}
 					flushbuf();
 				}
-				setmode(1);
-				wait_return((bool_t)TRUE);
+				settmode(1);
+				wait_return(TRUE);
 				break;
 
 		case CMD_read:
-				if (forceit || *arg == '!' && ++arg)
+				if (forceit || (*arg == '!' && ++arg))
 				{
-						dofilter(arg, (bool_t)FALSE, (bool_t)TRUE);			/* :r!cmd */
+						dofilter(arg, FALSE, TRUE);			/* :r!cmd */
 						break;
 				}
 				if (!u_save(line2, (linenr_t)(line2 + 1)))
 						break;
-				if (readfile((char *)arg, line2))
+				if (readfile((char *)arg, line2, FALSE))
 				{
-					emsg(notopen);
+					emsg(e_notopen);
 					break;
 				}
 				updateScreen(NOT_VALID);
@@ -931,12 +1004,12 @@ donextfile:		if (i < 0 || i >= numfiles)
 					if (dirname(IObuff, IOSIZE))
 						msg(IObuff);
 					else
-						emsg("unknown");
+						emsg(e_unknown);
 				}
 				else
 				{
-					if (chdir(arg))
-						emsg("chdir unsuccesful");
+					if (chdir((char *)arg))
+						emsg(e_failed);
 				}
 				break;
 
@@ -945,28 +1018,28 @@ donextfile:		if (i < 0 || i >= numfiles)
 				break;
 
 		case CMD_print:
-				setmode(0);			/* set cooked mode, so output can be halted */
+				settmode(0);			/* set cooked mode, so output can be halted */
 				do
 				{
-					if (P(P_NU))
+					if (p_nu)
 					{
 						sprintf(IObuff, "%7ld ", (long)line1);
-						outstr(IObuff);
+						outstrn(IObuff);
 					}
 					prt_line(nr2ptr(line1));
 					outchar('\n');
 					flushbuf();
 				} while (++line1 <= line2);
-				setmode(1);
+				settmode(1);
 
 				if (global_busy)
 					global_wait = 1;
 				else
-					wait_return((bool_t)TRUE);
+					wait_return(TRUE);
 				break;
 
 		case CMD_shell:
-				doshell(NULL, (bool_t)FALSE);
+				doshell(NULL);
 				break;
 
 		case CMD_tag:
@@ -989,6 +1062,17 @@ donextfile:		if (i < 0 || i >= numfiles)
 				dojumps();
 				break;
 
+		case CMD_digraph:
+#ifdef DIGRAPHS
+				if (*arg)
+					putdigraph((char *)arg);
+				else
+					listdigraphs();
+#else
+				emsg("No digraphs in this version");
+#endif /* DIGRAPHS */
+				break;
+
 		case CMD_set:
 				doset((char *)arg);
 				break;
@@ -997,11 +1081,11 @@ donextfile:		if (i < 0 || i >= numfiles)
 		case CMD_unmap:
 				switch (domap(*cmd == 'u', (char *)arg, forceit ? INSERT : NORMAL))
 				{
-					case 1: emsg(invarg);
+					case 1: emsg(e_invarg);
 							break;
-					case 2: emsg("no such mapping");
+					case 2: emsg(e_nomap);
 							break;
-					case 3: emsg("ambiguous mapping");
+					case 3: emsg(e_ambmap);
 							break;
 				}
 				break;
@@ -1022,7 +1106,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 				line1 = getdigits((char **)&arg);
 				skipspace((char **)&arg);
 				line2 = getdigits((char **)&arg);
-				set_winsize((int)line1, (int)line2);
+				set_winsize((int)line1, (int)line2, TRUE);
 				break;
 
 		case CMD_delete:
@@ -1041,7 +1125,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 					dodelete();
 					break;
 				case CMD_yank:
-					doyank((bool_t)FALSE);
+					doyank(FALSE);
 					break;
 				case CMD_rshift:
 					doshift(RSHIFT);
@@ -1055,7 +1139,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 		case CMD_put:
 				yankbuffer = regname;
 				Curpos.lnum = line2;
-				doput(FORWARD, -1L);
+				doput(forceit ? BACKWARD : FORWARD, -1L);
 				break;
 
 		case CMD_t:
@@ -1064,7 +1148,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 				n = get_address(&arg, line2);
 				if (n == INVLNUM)
 				{
-					emsg("invalid address");
+					emsg(e_invaddr);
 					break;
 				}
 
@@ -1083,7 +1167,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 					dodelete();
 				}
 				else
-					doyank((bool_t)FALSE);
+					doyank(FALSE);
 
 				if (n == 0)				/* put in above first line */
 				{
@@ -1113,7 +1197,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 					}
 					++line2;
 				}
-				dodojoin(line2 - line1 + 1, !forceit);
+				dodojoin(line2 - line1 + 1, !forceit, TRUE);
 				break;
 
 		case CMD_global:
@@ -1121,6 +1205,14 @@ donextfile:		if (i < 0 || i >= numfiles)
 					*cmd = 'v';
 		case CMD_vglobal:
 				doglob(*cmd, line1, line2, (char *)arg);
+				break;
+
+		case CMD_at:				/* :[addr]@r */
+				Curpos.lnum = line2;
+				if (!doexecbuf(*arg))		/* put the register in mapbuf */
+					beep();
+				else
+					docmdline(NULL);		/* execute from the mapbuf */
 				break;
 
 		case CMD_bang:
@@ -1135,7 +1227,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 				if (forceit)	/* :so! read vi commands */
 					openscript((char *)arg);
 				else if (dosource((char *)arg))		/* :so read ex commands */
-					emsg(notopen);
+					emsg(e_notopen);
 				break;
 
 		case CMD_mkexrc:
@@ -1147,17 +1239,17 @@ donextfile:		if (i < 0 || i >= numfiles)
 					if (!forceit && (fd = fopen((char *)arg, "r")) != NULL)
 					{
 						fclose(fd);
-						emsg("file exists; use ! to overwrite");
+						emsg(e_exists);
 						break;
 					}
 
 					if ((fd = fopen((char *)arg, "w")) == NULL)
 					{
-						emsg("cannot create file");
+						emsg(e_notcreate);
 						break;
 					}
 					if (makemap(fd) || makeset(fd))
-						emsg("error while writing");
+						emsg(e_write);
 					fclose(fd);
 					break;
 				}
@@ -1168,7 +1260,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 
 		case CMD_cf:
 					if (*arg == NUL)
-						arg = (u_char *)PS(P_EF);
+						arg = (u_char *)p_ef;
 					if (!qf_init((char *)arg))
 						qf_jump(0);
 					break;
@@ -1186,7 +1278,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 					break;
 
 		case CMD_cq:
-					getout(4);
+					getout(1);		/* this does not always work. why? */
 
 		case CMD_mark:
 		case CMD_k:
@@ -1204,7 +1296,7 @@ donextfile:		if (i < 0 || i >= numfiles)
 #endif
 
 		default:
-					emsg(invcmd);
+					emsg(e_invcmd);
 	}
 
 
@@ -1219,8 +1311,8 @@ doend:
  */
 	static void
 dobang(addr_count, arg)
-	int addr_count;
-	u_char *arg;
+	int		addr_count;
+	u_char	*arg;
 {
 	static	char	*prevcmd = NULL;		/* the previous command */
 	char			*t;
@@ -1247,7 +1339,7 @@ dobang(addr_count, arg)
 	{
 		if (prevcmd == NULL)
 		{
-			emsg("No previous command");
+			emsg(e_noprev);
 			return;
 		}
 		len += strlen(prevcmd) * (trailarg != NULL && forceit ? 2 : 1);
@@ -1255,7 +1347,7 @@ dobang(addr_count, arg)
 
 	if (len > CMDBUFFSIZE)
 	{
-		emsg("line too long");
+		emsg(e_toolong);
 		return;
 	}
 	if ((t = alloc(len)) == NULL)
@@ -1275,52 +1367,52 @@ dobang(addr_count, arg)
 	if (addr_count == 0)
 	{
 		smsg(":!%s", prevcmd);
-		doshell(prevcmd, (bool_t)FALSE); 				/* :! */
+		doshell(prevcmd); 				/* :! */
 	}
 	else
 	{
 		smsg(":%ld,%ld!%s", (long)line1, (long)line2, prevcmd);
-		dofilter((u_char *)prevcmd, (bool_t)TRUE, (bool_t)TRUE);		/* :range! */
+		dofilter((u_char *)prevcmd, TRUE, TRUE);		/* :range! */
 	}
 }
 
-	static bool_t
+	static int
 autowrite()
 {
-	if (!P(P_AW) || check_readonly() || check_fname())
+	if (!p_aw || check_readonly() || check_fname())
 		return FALSE;
-	return (writeit(Filename, (linenr_t)1, line_count, 0));
+	return (writeit(Filename, (linenr_t)1, line_count, 0, 0));
 }
 
 	static int
 dowrite(arg, append)
-	u_char *arg;
-	bool_t append;
+	u_char	*arg;
+	int		append;
 {
 	FILE *f;
 
-	if (check_readonly())
+	if ((*arg == NUL || (Filename && !strcmp((char *)arg, Filename))) && check_readonly())
 		return FALSE;
 	if (*arg == NUL)
 	{
 		if (check_fname())
 			return FALSE;
-		return (writeit(Filename, line1, line2, append));
+		return (writeit(Filename, line1, line2, append, forceit));
 	}
-	if (!forceit && !append && !P(P_WA) && (f = fopen((char *)arg, "r")) != NULL)
+	if (!forceit && !append && !p_wa && (f = fopen((char *)arg, "r")) != NULL)
 	{								/* don't overwrite existing file */
 			fclose(f);
-			emsg("File exists (use ! to override)");
+			emsg(e_exists);
 			return 0;
 	}
-	return (writeit((char *)arg, line1, line2, append));
+	return (writeit((char *)arg, line1, line2, append, forceit));
 }
 
-	static bool_t
+	static int
 doecmd(arg)
 	char		*arg;
 {
-	bool_t		setalt;
+	int			setalt;
 	char		*command = NULL;
 	int			i;
 	linenr_t	newlnum;
@@ -1363,7 +1455,7 @@ doecmd(arg)
 	fname_case(arg);		/* set correct case for filename */
 #endif
 	FullName(arg, IObuff, IOSIZE);
-	setalt = (*arg != NUL && (Filename == NULL || stricmp(IObuff, Filename)));
+	setalt = (*arg != NUL && (Filename == NULL || fnamecmp(IObuff, Filename)));
 	if (setalt)
 	{
 		free(altfiles[NUMALTFILES - 1]);
@@ -1375,7 +1467,7 @@ doecmd(arg)
 		incrmarks();		/* increment file number for all jumpmarks */
 		incrtags();			/* increment file number for all tags */
 	}
-	if (check_changed((bool_t)FALSE))
+	if (check_changed(FALSE))
 	{
 		if (setalt)
 		{
@@ -1405,7 +1497,10 @@ doecmd(arg)
 	UNCHANGED;
 	startscript();		/* re-start auto script file */
 
-	readfile(Filename, (linenr_t)0);
+	i = RedrawingDisabled;
+	RedrawingDisabled = TRUE;		/* don't redraw until the cursor is in
+									 * the right line */
+	readfile(Filename, (linenr_t)0, TRUE);
 	if (newlnum && command == NULL)
 	{
 		if (newlnum != INVLNUM)
@@ -1414,31 +1509,36 @@ doecmd(arg)
 			Curpos.lnum = line_count;
 		Curpos.col = 0;
 	}
-	updateScreen(NOT_VALID);
 	if (command)
-		docmdline(command);
+		docmdline((u_char *)command);
+	RedrawingDisabled = i;			/* cursupdate() will redraw the screen */
+	if (p_im)
+		stuffReadbuff("i");			/* start editing in insert mode */
 	return TRUE;
 }
 
 	static void
-doshell(cmd, redraw_now)
+doshell(cmd)
 	char	*cmd;
-	bool_t	redraw_now;
 {
-	gotocmdline((bool_t)FALSE, '\n');
+	gotocmdline(FALSE, '\n');
 
 	call_shell(cmd, 0);
 
 	if (global_busy)
 		global_wait = 1;
 	else
-		wait_return(redraw_now);
-#ifdef AUX
-	if (!Aux_Device && !redraw_now)
+#ifdef AMIGA
+		wait_return(!term_console);
 #else
-	if (!redraw_now)
+		wait_return(TRUE);
 #endif
-		outstr("\033[0 q"); 			/* get window size */
+
+	/* in an Amiga window redrawing is caused by asking the window size */
+#ifdef AMIGA
+	if (term_console)
+		outstr("\033[0 q"); 	/* get window size */
+#endif /* AMIGA */
 }
 
 /*
@@ -1457,10 +1557,10 @@ doshell(cmd, redraw_now)
 	static void
 dofilter(buff, do_in, do_out)
 	u_char		*buff;
-	bool_t		do_in, do_out;
+	int			do_in, do_out;
 {
-		char		itmp[15];
-		char		otmp[15];
+		char		itmp[TMPNAMELEN];
+		char		otmp[TMPNAMELEN];
 		linenr_t 	linecount;
 
 		if (*buff == NUL)		/* no filter command */
@@ -1469,7 +1569,7 @@ dofilter(buff, do_in, do_out)
 		Curpos.lnum = line1;
 		Curpos.col = 0;
 		cursupdate();
-		gotocmdline((bool_t)FALSE, '\n');
+		gotocmdline(FALSE, '\n');
 
 		/*
 		 * 1. Form temp file names
@@ -1480,18 +1580,18 @@ dofilter(buff, do_in, do_out)
 		 * 6. Remove the temp files
 		 */
 
-		strcpy(itmp, "t:viXXXXXX");
-		strcpy(otmp, "t:voXXXXXX");
+		strcpy(itmp, TMPNAME1);
+		strcpy(otmp, TMPNAME2);
 
 		if ((do_in && *mktemp(itmp) == NUL) || (do_out && *mktemp(otmp) == NUL))
 		{
-				emsg("Can't get temp file names");
+				emsg(e_notmp);
 				return;
 		}
 
-		if (do_in && !writeit(itmp, line1, line2, (bool_t)FALSE))
+		if (do_in && !writeit(itmp, line1, line2, FALSE, 0))
 		{
-				emsg("Can't create input temp file");
+				emsg(e_notcreate);
 				return;
 		}
 		if (!do_out)
@@ -1501,24 +1601,31 @@ dofilter(buff, do_in, do_out)
 						do_in ? '<' : ' ', do_in ? itmp : "",
 						do_out ? '>' : ' ', do_out ? otmp : "");
 
-		call_shell(IObuff, 1);
+		if (call_shell(IObuff, 1))
+		{
+			linecount = 0;
+			goto error;
+		}
 
 		if (do_out)
 		{
 				if (!u_save((linenr_t)(line1 - 1), (linenr_t)(line2 + 1)))
 				{
-						linecount = 0;
-						goto error;
+					linecount = 0;
+					goto error;
 				}
-				if (readfile(otmp, line2))
+				if (readfile(otmp, line2, FALSE))
 				{
-						emsg("Can't read filter output");
-						linecount = 0;
-						goto error;
+					emsg(e_notread);
+					linecount = 0;
+					goto error;
 				}
 
 				if (do_in)
-						delline(linecount, (bool_t)TRUE);
+				{
+					Curpos.lnum = line1;
+					dellines(linecount, TRUE);
+				}
 		}
 		else
 		{
@@ -1526,25 +1633,19 @@ error:
 				if (global_busy)
 					global_wait = 1;
 				else
-					wait_return((bool_t)FALSE);
+					wait_return(FALSE);
 		}
-		screenclear();
-		updateScreen(NOT_VALID);
+		updateScreen(CLEAR);
 
-		if (linecount > P(P_RP))
+		if (linecount > p_report)
 		{
 				if (!do_in && do_out)
 						msgmore(linecount);
 				else
 						smsg("%ld lines filtered", (long)linecount);
 		}
-#ifdef AMIGA
-		unlink(itmp);
-		unlink(otmp);
-#else
 		remove(itmp);
 		remove(otmp);
-#endif
 		return;
 	}
 
@@ -1552,17 +1653,20 @@ error:
  * Redefine the argument list to 'str'.
  * Return TRUE for failure.
  */
+	int
 doarglist(str)
 	char *str;
 {
-	int new_numfiles = 0;
-	char **new_files = NULL;
-	int exp_numfiles;
-	char **exp_files;
-	char **t;
-	char *p;
-	bool_t inquote;
-	int i;
+	int		new_numfiles = 0;
+	char	**new_files = NULL;
+#ifdef WILD_CARDS
+	int		exp_numfiles;
+	char	**exp_files;
+#endif
+	char	**t;
+	char	*p;
+	int		inquote;
+	int		i;
 
 	while (*str)
 	{
@@ -1602,14 +1706,14 @@ doarglist(str)
 	}
 	
 #ifdef WILD_CARDS
-	if (ExpandWildCards(new_numfiles, new_files, &exp_numfiles, &exp_files, (bool_t)FALSE, (bool_t)TRUE) != 0)
+	if (ExpandWildCards(new_numfiles, new_files, &exp_numfiles, &exp_files, FALSE, TRUE) != 0)
 	{
 		emsg((char *)exp_files);
 		return TRUE;
 	}
 	else if (exp_numfiles == 0)
 	{
-		emsg("No match");
+		emsg(e_nomatch);
 		return TRUE;
 	}
 	FreeWild(numfiles, files);
@@ -1624,70 +1728,82 @@ doarglist(str)
 	return FALSE;
 }
 
+extern int redraw_msg;		/* this is in screen.c */
+
 	void
 gotocmdline(clr, firstc)
-	bool_t			clr;
+	int				clr;
 	int				firstc;
 {
-	windgoto(Rows - 1, 0);
+	windgoto((int)Rows - 1, 0);
 	if (clr)
-		outstr(T_EL);			/* clear the bottom line */
+	{
+		clear_line();			/* clear the bottom line */
+		windgoto((int)Rows - 1, 0);
+		redraw_msg = TRUE;
+	}
 	if (firstc)
 		outchar(firstc);
 }
 
-	static bool_t
+	static int
 check_readonly()
 {
-	if (!forceit && P(P_RO))
+	if (!forceit && p_ro)
 	{
-		emsg("file is readonly");
+		emsg(e_readonly);
 		return TRUE;
 	}
 	return FALSE;
 }
 
-	static bool_t
+	static int
 check_changed(checkaw)
-	bool_t	checkaw;
+	int		checkaw;
 {
-		if (!forceit && Changed && (!checkaw || !autowrite()))
-		{
-				emsg(nowrtmsg);
-				return TRUE;
-		}
-		return FALSE;
+	if (!forceit && Changed && (!checkaw || !autowrite()))
+	{
+		if (exiting)
+			settmode(1);		/* set raw again for typeahead */
+		emsg(e_nowrtmsg);
+		return TRUE;
+	}
+	return FALSE;
 }
 
-	static bool_t
+	static int
 check_fname()
 {
-		if (Filename == NULL)
-		{
-				emsg("No file name");
-				return TRUE;
-		}
-		return FALSE;
+	if (Filename == NULL)
+	{
+		emsg(e_noname);
+		return TRUE;
+	}
+	return FALSE;
 }
 
-	static bool_t
+	static int
 check_more()
 {
-		if (!forceit && curfile + 1 < numfiles)
-		{
-				emsg("still more files to edit");
-				return TRUE;
-		}
-		return FALSE;
+	if (!forceit && curfile + 1 < numfiles)
+	{
+		if (exiting)
+			settmode(1);		/* set raw again for typeahead */
+		emsg(e_more);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 /*
  * try to abandon current file and edit "fname"
- * return 1 for normal error, 2 for "not written" error, 0 for success
+ * return 1 for "normal" error, 2 for "not written" error, 0 for success
+ * -1 for succesfully opening another file
  */
+	int
 getfile(fname, setpm)
 	char	*fname;
-	bool_t	setpm;
+	int		setpm;
 {
 	int other;
 
@@ -1695,28 +1811,30 @@ getfile(fname, setpm)
 	if (Filename == NULL)
 		other = TRUE;
 	else
-		other = stricmp(IObuff, Filename);	/* ignore upper/lower case difference */
+		other = fnamecmp(IObuff, Filename);
 	if (other && !forceit && Changed && !autowrite())
 	{
-		emsg(nowrtmsg);
-		return 2;
+		emsg(e_nowrtmsg);
+		return 2;		/* file has been changed */
 	}
 	if (setpm)
 		setpcmark();
-	if (!other || doecmd(fname))
-		return 0;
-	return 1;
+	if (!other)
+		return 0;		/* it's in the same file */
+	if (doecmd(fname))
+		return -1;		/* opened another file */
+	return 1;			/* error encountered */
 }
 
 /*
  * return TRUE if alternate file n is the same as the current file
  */
-	bool_t
+	int
 samealtfile(n)
 	int			n;
 {
 	if (n < NUMALTFILES && altfiles[n] != NULL && Filename != NULL &&
-					stricmp(altfiles[n], Filename) == 0)
+					fnamecmp(altfiles[n], Filename) == 0)
 		return TRUE;
 	return FALSE;
 }
@@ -1731,18 +1849,25 @@ samealtfile(n)
 getaltfile(n, lnum, setpm)
 	int			n;
 	linenr_t	lnum;
-	bool_t		setpm;
+	int			setpm;
 {
-	if (n >= NUMALTFILES || altfiles[n] == NULL)
+	if (n < 0 || n >= NUMALTFILES || altfiles[n] == NULL)
 		return 1;
 	if (lnum == 0)
 		lnum = altlnum[n];		/* altlnum may be changed by getfile() */
-	if (!getfile(altfiles[n], setpm))
+	RedrawingDisabled = TRUE;
+	if (getfile(altfiles[n], setpm) <= 0)
 	{
-		Curpos.lnum = lnum;
+		RedrawingDisabled = FALSE;
+		if (lnum == 0 || lnum > line_count)		/* check for valid lnum */
+			Curpos.lnum = 1;
+		else
+			Curpos.lnum = lnum;
+
 		Curpos.col = 0;
 		return 0;
 	}
+	RedrawingDisabled = FALSE;
 	return 1;
 }
 
@@ -1760,45 +1885,75 @@ getaltfname(n)
 
 #ifdef WILD_CARDS
 /*
- * Do wildcard expansion on the string 'str' of length 'len'.
+ * Do wildcard expansion on the string 'str'.
  * Return a pointer to alloced memory containing the new string.
  * Return NULL for failure.
+ *
+ * mode = -2: only release file names
+ * mode = -1: normal expansion, do not keep file names
+ * mode =  0: normal expansion, keep file names
+ * mode =  1: use next match in multiple match
+ * mode =  2: use previous match in multiple match
  */
 	static char *
-ExpandOne(str, len, list_notfound)
-	u_char *str;
-	int	  len;
-	bool_t	list_notfound;
+ExpandOne(str, list_notfound, mode)
+	u_char	*str;
+	int		list_notfound;
+	int		mode;
 {
-	char *pp;
-	char *ss = NULL;
-	char **cmd_files = NULL;	  /* list of input files */
-	int  cmd_numfiles = 0;	  /* number of input files */
-	int	 i, found;
-	char *filesuf, *setsuf, *nextsetsuf;
-	int	 filesuflen, setsuflen;
+	char		*ss = NULL;
+	static char **cmd_files = NULL;	  /* list of input files */
+	static int  cmd_numfiles = -1;	  /* number of input files */
+	static int	index;
+	int			i, found = 0;
+	char		*filesuf, *setsuf, *nextsetsuf;
+	int			filesuflen, setsuflen;
 
-	if ((pp = strnsave((char *)str, len + 1)) == NULL)
+/*
+ * first handle the case of using an old match
+ */
+	if (mode >= 1)
+	{
+		if (cmd_numfiles > 0)
+		{
+			if (mode == 1)
+				++index;
+			else	/* mode == 2 */
+				--index;
+			if (index < 0)
+				index = 0;
+			if (index > cmd_numfiles - 1)
+				index = cmd_numfiles - 1;
+			return strsave(cmd_files[index]);
+		}
+		else
+			return NULL;
+	}
+
+/* free old names */
+	if (cmd_numfiles != -1)
+		FreeWild(cmd_numfiles, cmd_files);
+	cmd_numfiles = -1;
+	index = -1;
+
+	if (mode == -2)		/* only release file name */
 		return NULL;
-	pp[len] = '*';
-	pp[len + 1] = NUL;
 
-	if (ExpandWildCards(1, &pp, &cmd_numfiles, &cmd_files, (bool_t)FALSE, list_notfound) != 0)
+	if (ExpandWildCards(1, (char **)&str, &cmd_numfiles, &cmd_files, FALSE, list_notfound) != 0)
 		emsg((char *)cmd_files);
 	else if (cmd_numfiles == 0)
-		emsg("No match");
+		emsg(e_nomatch);
 	else
 	{
-		found = 0;
 		if (cmd_numfiles > 1)		/* more than one match; check suffixes */
 		{
-			found = -1;
+			found = -2;
 			for (i = 0; i < cmd_numfiles; ++i)
 			{
 				if ((filesuf = strrchr(cmd_files[i], '.')) != NULL)
 				{
 					filesuflen = strlen(filesuf);
-					for (setsuf = PS(P_SU); *setsuf; setsuf = nextsetsuf)
+					for (setsuf = p_su; *setsuf; setsuf = nextsetsuf)
 					{
 						if ((nextsetsuf = strchr(setsuf + 1, '.')) == NULL)
 							nextsetsuf = setsuf + strlen(setsuf);
@@ -1812,20 +1967,23 @@ ExpandOne(str, len, list_notfound)
 				}
 				if (found >= 0)
 				{
-					found = -1;
+					found = -2;
 					break;
 				}
 				found = i;
 			}
 		}
 		if (found < 0)
-			emsg("Too many file names");
+			emsg(e_toomany);
 		else
 			ss = strsave(cmd_files[found]);
 	}
 		
-	FreeWild(cmd_numfiles, cmd_files);
-	free(pp);
+	if (found != -2 || mode == -1)
+	{
+		FreeWild(cmd_numfiles, cmd_files);
+		cmd_numfiles = -1;
+	}
 	return ss;
 }
 
@@ -1840,22 +1998,19 @@ showmatches(file, len)
 	char *file_str;
 	int num_files;
 	char **files_found;
-	int i, j, k, c;
+	int i, j, k;
 	int maxlen;
 	int lines;
 	int columns;
 
-	file_str = alloc(len + 2);
+	file_str = addstar(file, len);		/* add star to file name */
 	if (file_str != NULL)
 	{
 		outchar('\n');
 		flushbuf();
 
 		/* find all files that match the description */
-		strncpy(file_str, file, (size_t)len);
-		file_str[len] = '*';
-		file_str[len + 1] = 0;
-		ExpandWildCards(1, &file_str, &num_files, &files_found, (bool_t)FALSE, (bool_t)FALSE);
+		ExpandWildCards(1, &file_str, &num_files, &files_found, FALSE, FALSE);
 
 		/* find the maximum length of the file names */
 		maxlen = 0;
@@ -1874,7 +2029,7 @@ showmatches(file, len)
 		lines = (num_files + columns - 1) / columns;
 
 		/* list the files line by line */
-		setmode(0);		/* allow output to be halted */
+		settmode(0);		/* allow output to be halted */
 		for (i = 0; i < lines; ++i)
 		{
 			for (k = i; k < num_files; k += lines)
@@ -1884,55 +2039,87 @@ showmatches(file, len)
 						outchar(' ');
 				j = isdir(files_found[k]);	/* highlight directories */
 				if (j)
+				{
 #ifdef AMIGA
-					outstr("\033[33m");		/* use other color (mosly red) */
-#else
-					outstr(T_TI);
-#endif
-				outstr(files_found[k]);
+					if (term_console)
+						outstr("\033[33m");		/* use highlight color */
+					else
+#endif /* AMIGA */
+						outstr(T_TI);
+				}
+				outstrn(files_found[k]);
 				if (j)
+				{
 #ifdef AMIGA
-					outstr("\033[0m");		/* use normal color */
-#else
-					outstr(T_TP);
-#endif
+					if (term_console)
+						outstr("\033[0m");		/* use normal color */
+					else
+#endif /* AMIGA */
+						outstr(T_TP);
+				}
 			}
 			outchar('\n');
 			flushbuf();
 		}
 		free(file_str);
 		FreeWild(num_files, files_found);
-		setmode(1);
+		settmode(1);
 
-		State = HITRETURN;	/* prevent redraws because of window resizes */
-		outstr("Press RETURN to continue");
-		do {
-			c = vgetc();
-		} while (c != '\r' && c != '\n' && c != ' ');
-		if (State == SETWINSIZE)	/* now do the resizing */
-		{
-			State = CMDLINE;
-			set_winsize(0, 0);
-		}
-		State = CMDLINE;
+		wait_return(TRUE);
 	}
-	screenclear();
-	updateScreen(NOT_VALID);
 }
+
+/*
+ * copy the file name into allocated memory and add a '*' at the end
+ */
+	static char *
+addstar(fname, len)
+	char	*fname;
+	int		len;
+{
+	char	*retval;
+#ifdef MSDOS
+	int		i;
 #endif
+
+	retval = alloc(len + 4);
+	if (retval != NULL)
+	{
+		strncpy(retval, fname, (size_t)len);
+#ifdef MSDOS
+	/*
+	 * if there is no dot in the file name, add "*.*" instead of "*".
+	 */
+		for (i = len - 1; i >= 0; --i)
+			if (retval[i] == '.' || retval[i] == '\\' || retval[i] == ':')
+				break;
+		if (retval[i] != '.')
+		{
+			retval[len++] = '*';
+			retval[len++] = '.';
+		}
+#endif
+		retval[len] = '*';
+		retval[len + 1] = 0;
+	}
+	return retval;
+}
+#endif /* WILD_CARDS */
 
 /*
  * dosource: read the file "fname" and execute its lines as EX commands
  *
  * This function may be called recursively!
  */
+	int
 dosource(fname)
 	register char *fname;
 {
 	register FILE *fp;
 	register char *s;
 
-	if ((fp = fopen(fname, "r")) == NULL)
+	expand_env(fname, IObuff, IOSIZE);		/* use IObuff for expanded name */
+	if ((fp = fopen(IObuff, "r")) == NULL)
 		return 1;
 
 	while (fgets(IObuff, IOSIZE, fp) != NULL && !got_int)
@@ -1944,6 +2131,8 @@ dosource(fname)
 		breakcheck();
 	}
 	fclose(fp);
+	if (got_int)
+		emsg(e_interr);
 	return 0;
 }
 
@@ -1982,9 +2171,9 @@ get_address(ptr, curpos_lnum)
 						break;
 
 			case '\'': 						/* ''' - mark */
-						if (*++cmd == NUL || (fp = getmark(*cmd++, (bool_t)FALSE)) == NULL)
+						if (*++cmd == NUL || (fp = getmark(*cmd++, FALSE)) == NULL)
 						{
-							emsg("Unknown mark");
+							emsg(e_umark);
 							goto error;
 						}
 						lnum = fp->lnum;

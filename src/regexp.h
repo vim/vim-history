@@ -16,6 +16,9 @@
  * not the System V one.
  */
 
+#ifndef _REGEXP_H
+#define _REGEXP_H
+
 #define NSUBEXP  10
 typedef struct regexp {
 	char		   *startp[NSUBEXP];
@@ -30,7 +33,7 @@ typedef struct regexp {
 /* regexp.c */
 regexp *regcomp __ARGS((char *));
 int regexec __ARGS((regexp *, char *, int));
-int cstrncmp __ARGS((char *, char *, int));
+/* int cstrncmp __ARGS((char *, char *, int)); */
 char *cstrchr __ARGS((char *, int));
 
 /* regsub.c */
@@ -43,3 +46,4 @@ extern void 	regerror __ARGS((char *));
 extern int		reg_ic; 		/* set non-zero to ignore case in searches */
 extern int		reg_magic;		/* set zero to disable magicness of .*[~& */
 #endif
+#endif	/* _REGEXP_H */

@@ -12,19 +12,6 @@
  * ops.h: things shared between normal.c, cmdline.c and ops.c
  */
 
-void	doshift __ARGS((int));
-bool_t	dorecord __ARGS((int));
-int		doexecbuf __ARGS((int));
-void	dodelete __ARGS((void));
-void	dotilde __ARGS((void));
-void	dochange __ARGS((void));
-bool_t	doyank __ARGS((bool_t));
-void	doput __ARGS((int, long));
-void	dodis __ARGS((void));
-void	dodojoin __ARGS((long, bool_t));
-bool_t	dojoin __ARGS((bool_t));
-void	startinsert __ARGS((int, int, long));
-
 /*
  * Operators
  */
@@ -37,11 +24,15 @@ void	startinsert __ARGS((int, int, long));
 #define FILTER	6
 #define TILDE	7
 #define INDENT	8
+#define FORMAT	9
+#define COLON	10
+#define UPPER	11
+#define LOWER	12
 
 /*
  * operator characters; the order must correspond to the defines above
  */
-EXTERN char *opchars INIT(= "dyc<>!~=");
+EXTERN char *opchars INIT(= "dyc<>!~=V:uU");
 
 /*
  * When a cursor motion command is made, it is marked as being a character or
@@ -61,13 +52,15 @@ EXTERN char *opchars INIT(= "dyc<>!~=");
 #define MBAD	(-1)			/* 'bad' motion type marks unusable yank buf */
 #define MCHAR	0
 #define MLINE	1
+#define MBLOCK	2
 
 EXTERN int		operator INIT(= NOP);	/* current pending operator */
 EXTERN int		mtype;					/* type of the current cursor motion */
-EXTERN bool_t	mincl;					/* true if char motion is inclusive */
+EXTERN int		mincl;					/* true if char motion is inclusive */
 EXTERN int		oneless;				/* 1 if !mincl and startop != endop */
 EXTERN FPOS 	startop;				/* cursor pos. at start of operator */
 EXTERN FPOS		endop;					/* cursor pos. at end of operator */
+EXTERN colnr_t	startvcol;				/* start col for block mode operator */
+EXTERN colnr_t	endvcol;				/* end col for block mode operator */
 EXTERN long		nlines;					/* lines between startop and endop + 1 */
 EXTERN int		yankbuffer INIT(= 0);	/* current yank buffer */
-

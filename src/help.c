@@ -13,6 +13,13 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
+
+#ifdef MSDOS
+# include <dir.h>
+#endif
 
 static long helpfilepos;		/* position in help file */
 static FILE *helpfd;			/* file descriptor of help file */
@@ -20,17 +27,36 @@ static FILE *helpfd;			/* file descriptor of help file */
 	void
 help()
 {
-	int c;
-	int eof;
-	int i;
-	long filepos[26];	/* seek position for each screen */
-	int	screennr;		/* screen number; 'c' == 1 */
+	int		c;
+	int		eof;
+	int		i;
+	long	filepos[26];	/* seek position for each screen */
+	int		screennr;		/* screen number; 'c' == 1 */
+	char	fnamebuf[MAXPATHL];
+#ifdef MSDOS
+	char	*fnamep;
+#endif
 
-	if ((helpfd = fopen("vim.hlp", "r")) == NULL &&
-						(helpfd = fopen("vim:vim.hlp", "r")) == NULL)
+/*
+ * try to open the file specified by the "helpfile" option
+ */
+	expand_env(p_hf, fnamebuf, MAXPATHL);
+	if ((helpfd = fopen(fnamebuf, "r")) == NULL)
 	{
-		msg("Sorry, help file not found");
-		return;
+#ifdef MSDOS
+	/*
+	 * for MSdos: try the DOS search path
+     */
+		strcpy(fnamebuf, "vim.hlp");
+		fnamep = searchpath(fnamebuf);
+		if (fnamep == NULL || (helpfd = fopen(fnamep, "r")) == NULL)
+		{
+#endif
+			smsg("Sorry, help file %s not found", fnamebuf);
+			return;
+#ifdef MSDOS
+		}
+#endif
 	}
 	helpfilepos = 0;
 	screennr = 0;
@@ -82,10 +108,10 @@ help()
 	State = NORMAL;
 	script_winsize_pp();
 	fclose(helpfd);
-	screenclear();
-	updateScreen(NOT_VALID);
+	updateScreen(CLEAR);
 }
 
+	int
 redrawhelp()
 {
 		int nextc;
@@ -99,8 +125,8 @@ redrawhelp()
 		while ((nextc = getc(helpfd)) != -1 && nextc != '\f')
 				outchar((char)nextc);
 		windgoto(0, (int)(Columns - strlen(Version) - 1));
-		outstr(Version);
-		windgoto(Rows - 1, col);
-		outstr("<space = next; return = quit; a = index; b = back>");
+		outstrn(Version);
+		windgoto((int)Rows - 1, col);
+		outstrn("<space = next; return = quit; a = index; b = back>");
 		return (nextc == -1);
 }

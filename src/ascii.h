@@ -21,7 +21,21 @@
 #define CR						'\015'
 #define ESC 					'\033'
 #define ESC_STR 				"\033"
-#define DEL 					'\x7f'
+#define DEL 					0x7f
 #define CSI 					0x9b
 
+#ifdef CTRL
+# undef CTRL
+#endif
 #define CTRL(x) ((x) & 0x1f)
+
+/*
+ * character that separates dir names in a path
+ */
+#ifdef MSDOS
+# define PATHSEP '\\'
+# define PATHSEPSTR "\\"
+#else
+# define PATHSEP '/'
+# define PATHSEPSTR "/"
+#endif

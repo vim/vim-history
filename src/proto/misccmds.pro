@@ -1,0 +1,25 @@
+/* misccmds.c */
+int get_indent __PARMS((void));
+void set_indent __PARMS((int size, int delete));
+int Opencmd __PARMS((int dir, int redraw));
+int plines __PARMS((long p));
+int plines_m __PARMS((long first, long last));
+void fileinfo __PARMS((void));
+void setfname __PARMS((char *s));
+void maketitle __PARMS((void));
+void inschar __PARMS((int c));
+void insstr __PARMS((char *s));
+int delchar __PARMS((int fixpos));
+void dellines __PARMS((long nlines, int can_update));
+int gchar __PARMS((struct fpos *pos));
+int gcharCurpos __PARMS((void));
+int inindent __PARMS((void));
+void skipspace __PARMS((char **pp));
+void skiptospace __PARMS((char **pp));
+long getdigits __PARMS((char **pp));
+char *plural __PARMS((long n));
+void set_Changed __PARMS((void));
+int ask_yesno __PARMS((char *str));
+void msgmore __PARMS((long n));
+void beep __PARMS((void));
+void expand_env __PARMS((char *src, char *dst, int dstlen));

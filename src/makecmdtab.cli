@@ -1,2 +1,0 @@
-	makecmdtab <cmdtab.tab >cmdtab.h
-	endcli

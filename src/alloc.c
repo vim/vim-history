@@ -16,16 +16,23 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+
 #ifdef AMIGA
 # undef FALSE			/* these are redefined in exec/types.h */
 # undef TRUE
 # include <exec/types.h>
 # include <exec/memory.h>
 # undef FALSE
-# define FALSE 0
+# define FALSE 0		/* define FALSE and TRUE as ints instead of longs */
 # undef TRUE
 # define TRUE 1
 #endif /* AMIGA */
+
+#ifdef MSDOS
+# include <alloc.h>
+#endif /* MSDOS */
 
 #define PANIC_FACTOR_CHIP 8192L
 
@@ -39,7 +46,7 @@ alloc(size)
 	char *
 lalloc(size, message)
 	u_long			size;
-	bool_t			message;
+	int				message;
 {
 	register char   *p;			/* pointer to new storage space */
 
@@ -52,9 +59,16 @@ lalloc(size, message)
 				p = NULL;
 		}
 #endif
+#ifdef MSDOS
+		if (coreleft() < PANIC_FACTOR_CHIP)
+		{ 								/* System is low... no go! */
+				free(p);
+				p = NULL;
+		}
+#endif
 	}
 	if (message && p == NULL)
-		emsg("out of memory!");
+		emsg(e_outofmem);
 	return (p);
 }
 
@@ -87,6 +101,27 @@ strnsave(string, len)
 		p[len] = NUL;
 	}
 	return p;
+}
+
+/*
+ * copy a number of spaces
+ */
+	void
+copy_spaces(ptr, count)
+	char	*ptr;
+	size_t	count;
+{
+	register size_t	j;
+
+	while (count)		/* copy 15 spaces at a time */
+	{
+		j = count;
+		if (j > 15)
+			j = 15;
+		memmove(ptr, spaces, j);
+		ptr += j;
+		count -= j;
+	}
 }
 
 	char *

@@ -10,54 +10,71 @@
 
 #define EXTERN
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
+
+static void usage __PARMS((int));
 
 	static void
-usage()
+usage(n)
+	int n;
 {
-	register int i, j;
-	static char *(use[]) = {"[file] ..\n",
+	register int i;
+	static char *(use[]) = {"[file ..]\n",
 							"-t tag\n",
-							"+[num] file ..\n",
-							"+/pat file ..\n",
+							"+[command] file ..\n",
+							"-c {command} file ..\n",
 							"-e\n"};
+	static char *(errors[]) =  {"Unknown option\n",			/* 0 */
+								"Too many arguments\n",		/* 1 */
+								"Argument missing\n",		/* 2 */
+								};
 
-	fprintf(stderr, "usage: vim [-v] [-n] [-r] [-s scriptin] [-w scriptout] ");
+	fprintf(stderr, errors[n]);
+	fprintf(stderr, "usage:");
 	for (i = 0; ; ++i)
 	{
+		fprintf(stderr, " vim [options] ");
 		fprintf(stderr, use[i]);
 		if (i == (sizeof(use) / sizeof(char *)) - 1)
 			break;
-		for (j = 55; --j >= 0; )
-			putc(' ', stderr);
+		fprintf(stderr, "   or:");
 	}
-	windexit(1);
+#ifdef AMIGA
+	fprintf(stderr, "\noptions: -v -n -r -d device -s scriptin -w scriptout -T terminal\n");
+#else
+	fprintf(stderr, "\noptions: -v -n -r -s scriptin -w scriptout -T terminal\n");
+#endif
+	mch_windexit(1);
 }
 
-#ifdef AMIGA
 	void
-#else
-	int
-#endif
 main(argc, argv)
-	int 			argc;
+	int				argc;
 	char		  **argv;
 {
 	char		   *initstr;		/* init string from the environment */
+	char		   *term = NULL;	/* specified terminal name */
 	char		   *fname = NULL;	/* file name from command line */
+	char		   *command = NULL;	/* command from + option */
 	int 			c;
 	int				doqf = 0;
-	char		   *command = NULL;	/* command from + option */
 
-#ifdef AMIGA
-	/*
-	 * Check if we have an interactive window.
-	 * If not, open one with a newcli command (needed for :! to work).
-	 */
-	check_win(argc, argv);
+#ifdef DEBUG
+# ifdef MSDOS
+	OPENDEBUG("#debug#");
+# else
+	OPENDEBUG("/tmp/debug/vim");
+# endif
 #endif
 
-	windinit();
-	set_init();
+/*
+ * Check if we have an interactive window.
+ * If not, open one with a newcli command (needed for :! to work).
+ * check_win will also handle the -d argument (for the Amiga).
+ */
+	check_win(argc, argv);
 
 	++argv;
 	/*
@@ -67,44 +84,72 @@ main(argc, argv)
 	 *		'-v'
 	 *		'-n'
 	 *		'-r'
+	 *		'-T terminal'
 	 */
-	while (argc > 1 && argv[0][0] == '-' && strchr("swvnr", c = argv[0][1]) != NULL && c)
+	while (argc > 1 && argv[0][0] == '-' &&
+			strchr("swvnrTd", c = argv[0][1]) != NULL && c)
 	{
 		--argc;
-		if (c == 'v')
+		switch (c)
 		{
+		case 'v':
 			readonlymode = TRUE;
-			P(P_RO) = TRUE;
-		}
-		else if (c == 'n')
-		{
-			P(P_UC) = 0;
-		}
-		else if (c == 'r')
-		{
+			p_ro = TRUE;
+			/*FALLTHROUGH*/
+
+		case 'n':
+			p_uc = 0;
+			break;
+
+		case 'r':
 			recoverymode = 1;
-		}
-		else
-		{
+			break;
+		
+		default:	/* options with argument */
 			++argv;
 			--argc;
 			if (argc < 1)
-				usage();
-			if (c == 's')
+				usage(2);
+
+			switch (c)
 			{
-				if ((scriptin[0] = fopen(argv[0], "r")) == NULL)
+			case 's':
+				if ((scriptin[0] = fopen(argv[0],
+#ifdef MSDOS
+													"rb"
+#else
+													"r"
+#endif
+														)) == NULL)
 				{
 						fprintf(stderr, "cannot open %s for reading\n", argv[0]);
-						windexit(2);
+						mch_windexit(2);
 				}
-			}
-			else	/* c == 'w' */
-			{
-				if ((scriptout = fopen(argv[0], "a")) == NULL)
+				break;
+			
+			case 'w':
+				if ((scriptout = fopen(argv[0],
+#ifdef MSDOS
+													"ab"
+#else
+													"a"
+#endif
+														)) == NULL)
 				{
 						fprintf(stderr, "cannot open %s for output\n", argv[0]);
-						windexit(2);
+						mch_windexit(2);
 				}
+				break;
+
+/*
+ * The -T term option is always available and when TERMCAP is supported it
+ * overrides the environment variable TERM.
+ */
+			case 'T':
+				term = *argv;
+				break;
+			
+		/*	case 'd':		This is ignored as it is handled in check_win() */
 			}
 		}
 		++argv;
@@ -114,7 +159,11 @@ main(argc, argv)
 	 * Allocate space for the generic buffer
 	 */
 	if ((IObuff = alloc(IOSIZE)) == NULL)
-		windexit(0);
+		mch_windexit(0);
+
+	/* note that we may use mch_windexit() before mch_windinit()! */
+	mch_windinit();
+	set_init();			/* after mch_windinit because Rows is used */
 
 	/*
 	 * Process the other command line arguments.
@@ -125,41 +174,57 @@ main(argc, argv)
 		switch (argv[0][0])
 		{
 		  case '-':
-		  	if (c == 'e')		/* -e QuickFix mode */
+		    switch (c)
 			{
+		  	case 'e':			/* -e QuickFix mode */
 				if (argc != 2)
-					usage();
-				if (qf_init(PS(P_EF)))
-					windexit(3);
+					usage(1);
 				doqf = 1;
 				break;
+
+			case 'c':			/* -c {command} file .. */
+				if (argc <= 3)
+					usage(2);
+				++argv;
+				--argc;
+				command = &(argv[0][0]);
+				goto getfiles;
+
+			case 't':			/* -t tag */
+				if (argc < 3)
+					usage(2);
+				if (argc > 3)
+					usage(1);
+				++argv;
+				stuffReadbuff(":ta ");
+				stuffReadbuff(argv[0]);
+				stuffReadbuff("\n");
+				break;
+
+			default:
+				usage(0);
 			}
-			if (c != 't' || argc != 3)
-				usage();
-								/* -t tag */
-			++argv;
-			stuffReadbuff(":ta ");
-			stuffReadbuff(argv[0]);
-			stuffReadbuff("\n");
 			break;
 
-		  case '+': 			/* + or +n or +/pat or +command */
+		  case '+': 			/* + or +{number} or +/{pat} or +{command} */
 			if (argc < 3)		/* no filename */
-					usage();
+					usage(2);
 			if (c == NUL)
 				command = "$";
 			else
 				command = &(argv[0][1]);
 
+getfiles:
 			++argv;
 			--argc;
 			/*FALLTHROUGH*/
 
 		  default:				/* must be a file name */
-#ifdef WILD_CARDS
-			ExpandWildCards(argc - 1, argv, &numfiles, &files, (bool_t)TRUE, (bool_t)TRUE);
+#if defined(WILD_CARDS) && !defined(UNIX)
+			ExpandWildCards(argc - 1, argv, &numfiles, &files, TRUE, TRUE);
 			if (numfiles != 0)
 				fname = files[0];
+
 #else
 			files = argv;
 			numfiles = argc - 1;
@@ -174,23 +239,56 @@ main(argc, argv)
 	if (numfiles == 0)
 		numfiles = 1;
 
+	RedrawingDisabled = TRUE;
 	filealloc();				/* Initialize storage structure */
-	screenalloc();				/* allocate screen buffers */
 	init_yank();				/* init yank buffers */
+	termcapinit(term);			/* get terminal capabilities */
+
+#ifdef MSDOS /* default mapping for some often used keys */
+	domap(0, "#1 :help\r", 0);				/* F1 is help key */
+	domap(0, "\236R i", 0);					/* INSERT is 'i' */
+	domap(0, "\236S x", 0);					/* DELETE is 'x' */
+	domap(0, "\236G 0", 0);					/* HOME is '0' */
+	domap(0, "\236w H", 0);					/* CTRL-HOME is 'H' */
+	domap(0, "\236O $", 0);					/* END is '$' */
+	domap(0, "\236u L", 0);					/* CTRL-END is 'L' */
+	domap(0, "\236I \002", 0);				/* PageUp is '^B' */
+	domap(0, "\236\204 1G", 0);				/* CTRL-PageUp is '1G' */
+	domap(0, "\236Q \006", 0);				/* PageDown is '^F' */
+	domap(0, "\236v G", 0);					/* CTRL-PageDown is 'G' */
+			/* insert mode */
+	domap(0, "\236S \177", INSERT);			/* DELETE is <DEL> */
+	domap(0, "\236G \017H", INSERT);		/* HOME is '^OH' */
+	domap(0, "\236w \017H", INSERT);		/* CTRL-HOME is '^OH' */
+	domap(0, "\236O \017L", INSERT);		/* END is '^OL' */
+	domap(0, "\236u \017L", INSERT);		/* CTRL-END is '^OL' */
+	domap(0, "\236I \017\002", INSERT);		/* PageUp is '^O^B' */
+	domap(0, "\236\204 \017\061G", INSERT);	/* CTRL-PageUp is '^O1G' */
+	domap(0, "\236Q \017\006", INSERT);		/* PageDown is '^O^F' */
+	domap(0, "\236v \017G", INSERT);		/* CTRL-PageDown is '^OG' */
+#endif
 
 /*
- * Read the EXINIT environment variable (commands are to be separated with '|').
- * If there is none, read initialization commands from "s:.exrc".
+ * Read the VIMINIT or EXINIT environment variable
+ *		(commands are to be separated with '|').
+ * If there is none, read initialization commands from "s:.vimrc" or "s:.exrc".
  */
-	if ((initstr = getenv("EXINIT")) != NULL)
+	if ((initstr = getenv("VIMINIT")) != NULL || (initstr = getenv("EXINIT")) != NULL)
 		docmdline((u_char *)initstr);
-	else
-		dosource("s:.exrc");
+	else if (dosource(SYSVIMRC_FILE))
+		dosource(SYSEXRC_FILE);
 
 /*
- * read initialization commands from ".exrc"
+ * read initialization commands from ".vimrc" or ".exrc" in current directory
  */
-	dosource(".exrc");
+	if (dosource(VIMRC_FILE))
+		dosource(EXRC_FILE);
+
+/*
+ * Call settmode here, so the T_KS may be defined by termcapinit and
+ * redifined in .exrc.
+ */
+	settmode(1);
 
 #ifdef AMIGA
 	fname_case(fname);		/* set correct case for file name */
@@ -198,7 +296,7 @@ main(argc, argv)
 	setfname(fname);
 	maketitle();
 	if (Filename != NULL)
-		readfile(Filename, (linenr_t)0);
+		readfile(Filename, (linenr_t)0, TRUE);
 	else
 		msg("Empty Buffer");
 
@@ -208,8 +306,6 @@ main(argc, argv)
 	if (recoverymode && !scriptin[curscript])	/* first do script file, then recover */
 		openrecover();
 
-	updateScreen(NOT_VALID);
-
 	/* position the display and the cursor at the top of the file. */
 	Topline = 1;
 	Curpos.lnum = 1;
@@ -217,11 +313,21 @@ main(argc, argv)
 	Cursrow = Curscol = 0;
 
 	if (doqf)
+	{
+		if (qf_init(p_ef))
+			mch_windexit(3);
 		qf_jump(0);
+	}
 
 	if (command)
-		docmdline(command);
+		docmdline((u_char *)command);
 
+	RedrawingDisabled = FALSE;
+	updateScreen(NOT_VALID);
+
+		/* start in insert mode (already taken care of for :ta command) */
+	if (p_im && stuff_empty())
+		stuffReadbuff("i");
 /*
  * main command loop
  */
@@ -230,9 +336,11 @@ main(argc, argv)
 		adjustCurpos();
 		cursupdate();	/* Figure out where the cursor is based on Curpos. */
 
-		windgoto(Cursrow, Curscol);
+		if (Quote.lnum)
+			updateScreen(INVERTED);		/* update inverted part */
+		setcursor();
 
-		normal();		/* execute a command */
+		normal();						/* get and execute a command */
 	}
 	/*NOTREACHED*/
 }
@@ -241,8 +349,8 @@ main(argc, argv)
 getout(r)
 	int 			r;
 {
-	windgoto(Rows - 1, 0);
+	windgoto((int)Rows - 1, 0);
 	outchar('\r');
 	outchar('\n');
-	windexit(r);
+	mch_windexit(r);
 }

@@ -1,0 +1,282 @@
+#
+# Makefile for VIM on the Amiga, using Aztec/Manx C 5.0 or later
+#
+# Note: not all dependencies are included. This was done to avoid having
+#       to compile everything when a global variable or function is added
+#	
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DWILD_CARDS	wildcard expansion code
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DWILD_CARDS -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+
+#>>>>> if TERMCAP is defined termlib.o has to be used
+#TERMLIB = termlib.o
+TERMLIB = 
+
+#>>>>> choose between debugging (-bs) or optimizing (-so)
+OPTIONS = -so
+#OPTIONS = -bs
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = $(OPTIONS) -wapruq -ps -qf $(DEFINES) -DAMIGA
+
+LIBS = -lc16
+SYMS = vim.syms
+
+OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
+	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
+	script.o search.o storage.o tag.o term.o undo.o $(TERMLIB)
+
+PRO =	proto/alloc.pro proto/buffers.pro proto/charset.pro proto/cmdline.pro \
+	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro \
+	proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
+	proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
+	proto/param.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
+	proto/screen.pro proto/script.pro proto/search.pro proto/storage.pro \
+	proto/tag.pro proto/term.pro proto/termlib.pro \
+	proto/undo.pro proto/amiga.pro
+
+/Vim: $(OBJ) version.c
+	cc $(CFLAGS) version.c
+	ln +q -m -o /Vim $(OBJ) version.o $(LIBS)
+
+debug: $(OBJ) version.c
+	cc $(CFLAGS) version.c
+	ln +q -m -g -o /Vim $(OBJ) version.o $(LIBS)
+
+proto: $(SYMS) $(PRO)
+
+ctags:
+	csh -c ctags *.c *.h
+
+# can't use delete here, too many file names
+clean:
+	csh -c rm -f $(OBJ) version.o mkcmdtab.o /Vim $(SYMS) mkcmdtab
+
+$(SYMS)  : vim.h keymap.h macros.h ascii.h term.h
+	cc $(CFLAGS) -ho$(SYMS) vim.h
+
+###########################################################################
+
+alloc.o:	alloc.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) alloc.c
+
+proto/alloc.pro:	alloc.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) alloc.c
+	csh -c mv -f alloc.pro proto
+
+amiga.o:	amiga.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) amiga.c
+
+proto/amiga.pro:	amiga.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) amiga.c
+	csh -c mv -f amiga.pro proto
+
+buffers.o:	buffers.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) buffers.c
+
+proto/buffers.pro:	buffers.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) buffers.c
+	csh -c mv -f buffers.pro proto
+
+charset.o:	charset.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) charset.c
+
+proto/charset.pro:	charset.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) charset.c
+	csh -c mv -f charset.pro proto
+
+cmdline.o:	cmdline.c  $(SYMS) cmdtab.h
+	cc $(CFLAGS) -hi$(SYMS) cmdline.c
+
+proto/cmdline.pro:	cmdline.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) cmdline.c
+	csh -c mv -f cmdline.pro proto
+
+csearch.o:	csearch.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) csearch.c
+
+proto/csearch.pro:	csearch.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) csearch.c
+	csh -c mv -f csearch.pro proto
+
+digraph.o:	digraph.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) digraph.c
+
+proto/digraph.pro:	digraph.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) digraph.c
+	csh -c mv -f digraph.pro proto
+
+edit.o:	edit.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) edit.c
+
+proto/edit.pro:	edit.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) edit.c
+	csh -c mv -f edit.pro proto
+
+fileio.o:	fileio.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) fileio.c
+
+proto/fileio.pro:	fileio.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) fileio.c
+	csh -c mv -f fileio.pro proto
+
+help.o:	help.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) help.c
+
+proto/help.pro:	help.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) help.c
+	csh -c mv -f help.pro proto
+
+linefunc.o:	linefunc.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) linefunc.c
+
+proto/linefunc.pro:	linefunc.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) linefunc.c
+	csh -c mv -f linefunc.pro proto
+
+main.o:	main.c $(SYMS) param.h globals.h
+	cc $(CFLAGS) -hi$(SYMS) main.c
+
+proto/main.pro:	main.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) main.c
+	csh -c mv -f main.pro proto
+
+mark.o:	mark.c  $(SYMS) mark.h
+	cc $(CFLAGS) -hi$(SYMS) mark.c
+
+proto/mark.pro:	mark.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) mark.c
+	csh -c mv -f mark.pro proto
+
+message.o:	message.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) message.c
+
+proto/message.pro:	message.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) message.c
+	csh -c mv -f message.pro proto
+
+misccmds.o:	misccmds.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) misccmds.c
+
+proto/misccmds.pro:	misccmds.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) misccmds.c
+	csh -c mv -f misccmds.pro proto
+
+normal.o:	normal.c  $(SYMS) ops.h
+	cc $(CFLAGS) -hi$(SYMS) normal.c
+
+proto/normal.pro:	normal.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) normal.c
+	csh -c mv -f normal.pro proto
+
+ops.o:	ops.c  $(SYMS) ops.h
+	cc $(CFLAGS) -hi$(SYMS) ops.c
+
+proto/ops.pro:	ops.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) ops.c
+	csh -c mv -f ops.pro proto
+
+param.o:	param.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) param.c
+
+proto/param.pro:	param.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) param.c
+	csh -c mv -f param.pro proto
+
+quickfix.o:	quickfix.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) quickfix.c
+
+proto/quickfix.pro:	quickfix.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) quickfix.c
+	csh -c mv -f quickfix.pro proto
+
+regexp.o:	regexp.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) regexp.c
+
+proto/regexp.pro:	regexp.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) regexp.c
+	csh -c mv -f regexp.pro proto
+
+regsub.o:	regsub.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) regsub.c
+
+proto/regsub.pro:	regsub.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) regsub.c
+	csh -c mv -f regsub.pro proto
+
+screen.o:	screen.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) screen.c
+
+proto/screen.pro:	screen.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) screen.c
+	csh -c mv -f screen.pro proto
+
+script.o:	script.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) script.c
+
+proto/script.pro:	script.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) script.c
+	csh -c mv -f script.pro proto
+
+search.o:	search.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) search.c
+
+proto/search.pro:	search.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) search.c
+	csh -c mv -f search.pro proto
+
+storage.o:	storage.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) storage.c
+
+proto/storage.pro:	storage.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) storage.c
+	csh -c mv -f storage.pro proto
+
+tag.o:	tag.c  $(SYMS) mark.h
+	cc $(CFLAGS) -hi$(SYMS) tag.c
+
+proto/tag.pro:	tag.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) tag.c
+	csh -c mv -f tag.pro proto
+
+term.o:	term.c  $(SYMS) term.h
+	cc $(CFLAGS) -hi$(SYMS) term.c
+
+proto/term.pro:	term.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) term.c
+	csh -c mv -f term.pro proto
+
+termlib.o:	termlib.c  $(SYMS)
+	cc $(CFLAGS) termlib.c
+
+proto/termlib.pro:	termlib.c
+	cc -qa -qp $(CFLAGS) -DPROTO termlib.c
+#the manx compiler generates a wrong prototype for tputs
+	vim -s termlib.fix termlib.pro
+	csh -c mv -f termlib.pro proto
+
+undo.o:	undo.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) undo.c
+
+proto/undo.pro:	undo.c
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) undo.c
+	csh -c mv -f undo.pro proto
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: mkcmdtab.o
+	ln +q -o mkcmdtab mkcmdtab.o -lc16

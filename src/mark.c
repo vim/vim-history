@@ -13,6 +13,8 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
 #include "mark.h"
 
 /*
@@ -30,14 +32,14 @@ static struct filemark jumplist[JUMPLISTSIZE];	/* list of old pcmarks */
 static int jumplistlen = 0;
 static int jumplistidx = 0;
 
-static FPOS *mark2pos(struct mark *);
+static FPOS *mark2pos __ARGS((struct mark *));
 
 /*
  * setmark(c) - set named mark 'c' at current cursor position
  *
  * Returns TRUE on success, FALSE if no room for mark or bad name given.
  */
-	bool_t
+	int
 setmark(c)
 	int			c;
 {
@@ -146,7 +148,7 @@ movemark(count)
 	jumplistidx += count;
 	if (jumplist[jumplistidx].mark.ptr == NULL)	/* jump to other file */
 	{
-		if (getaltfile(jumplist[jumplistidx].fnum - 1, jumplist[jumplistidx].lnum, (bool_t)FALSE))
+		if (getaltfile(jumplist[jumplistidx].fnum - 1, jumplist[jumplistidx].lnum, FALSE))
 			return (FPOS *)NULL;
 		Curpos.col = jumplist[jumplistidx].mark.col;
 		jumplist[jumplistidx].fnum = 0;
@@ -168,7 +170,7 @@ movemark(count)
 	FPOS *
 getmark(c, changefile)
 	int			c;
-	bool_t		changefile;
+	int			changefile;
 {
 	FPOS	*posp;
 
@@ -183,7 +185,7 @@ getmark(c, changefile)
 		posp = mark2pos(&(namedfm[c].mark));
 		if (posp == NULL && namedfm[c].lnum != 0 && (changefile || samealtfile(namedfm[c].fnum - 1)))
 		{
-			if (!getaltfile(namedfm[c].fnum - 1, namedfm[c].lnum, (bool_t)TRUE))
+			if (!getaltfile(namedfm[c].fnum - 1, namedfm[c].lnum, TRUE))
 			{
 				Curpos.col = namedfm[c].mark.col;
 				namedfm[c].fnum = 0;
@@ -316,7 +318,7 @@ fm_getname(fmark)
 	if (fmark->fnum != 0)						/* maybe not current file */
 	{
 		name = getaltfname(fmark->fnum - 1);
-		if (stricmp(name, Filename) != 0)		/* not current file */
+		if (fnamecmp(name, Filename) != 0)		/* not current file */
 			return name;
 		fmark->fnum = 0;
 	}
@@ -340,8 +342,8 @@ domarks()
 	int			i;
 	char		*name;
 
-	setmode(0);
-	outstr("\nmark line  file\n");
+	settmode(0);
+	outstrn("\nmark line  file\n");
 	for (i = 0; i < NMARKS; ++i)
 	{
 		if (namedm[i].ptr != NULL)
@@ -349,7 +351,7 @@ domarks()
 			sprintf(IObuff, " %c %5ld\n",
 				i + 'a',
 				ptr2nr(namedm[i].ptr, (linenr_t)1));
-			outstr(IObuff);
+			outstrn(IObuff);
 		}
 		flushbuf();
 	}
@@ -365,12 +367,12 @@ domarks()
 				i + 'A',
 				namedfm[i].lnum,
 				name);
-			outstr(IObuff);
+			outstrn(IObuff);
 		}
 		flushbuf();
 	}
-	setmode(1);
-	wait_return((bool_t)TRUE);
+	settmode(1);
+	wait_return(TRUE);
 }
 
 /*
@@ -382,8 +384,8 @@ dojumps()
 	int			i;
 	char		*name;
 
-	setmode(0);
-	outstr("\n jump line  file\n");
+	settmode(0);
+	outstrn("\n jump line  file\n");
 	for (i = 0; i < jumplistlen; ++i)
 	{
 		if (jumplist[i].lnum != 0)
@@ -397,12 +399,12 @@ dojumps()
 				i + 1,
 				jumplist[i].lnum,
 				name);
-			outstr(IObuff);
+			outstrn(IObuff);
 		}
 		flushbuf();
 	}
 	if (jumplistidx == jumplistlen)
-		outstr(">\n");
-	setmode(1);
-	wait_return((bool_t)TRUE);
+		outstrn(">\n");
+	settmode(1);
+	wait_return(TRUE);
 }

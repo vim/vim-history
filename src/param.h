@@ -9,85 +9,97 @@
  */
 
 /*
- * param.h: data definitions for settable parameters
+ * param.h: definition of global variables for settable parameters
+ *
+ * EXTERN is only defined in main.c (and vim.h)
  */
 
-struct param
-{
-	char		*fullname;		/* full parameter name */
-	char		*shortname; 	/* permissible abbreviation */
-	union
-	{
-		long	intval; 		/* integer parameter value */
-		char	*strval;		/* string parameter value */
-	} val;
-	int 		flags;
-};
-
-extern struct param params[];
+#ifndef EXTERN
+# define EXTERN extern
+# define INIT(x)
+#else
+# ifndef INIT
+#  define INIT(x) x
+# endif
+#endif
 
 /*
- * Flags
- */
-#define P_BOOL			0x01	/* the parameter is boolean */
-#define P_NUM			0x02	/* the parameter is numeric */
-#define P_CHANGED		0x04	/* the parameter has been changed */
-#define P_STRING		0x08	/* the parameter is a string */
-
-/*
- * The following are the indices in the params array for each parameter
+ * The following are actual variabables for the parameters
  */
 
-#define P_AI			0		/* auto-indent */
-#define P_AW			1		/* auto-write */
-#define P_BS			2		/* backspace over newlines in insert mode */
-#define P_BK			3		/* make backups when writing out files */
-#define P_DIR			4		/* directory for autoscript file */
-#define P_EB			5		/* ring bell for errors */
-#define P_EF			6		/* name of errofile */
-#define P_ET			7		/* expand tabs into spaces */
-#define P_HI			8		/* command line history size */
-#define P_IC			9		/* ignore case in searches */
-#define P_JS			10		/* use two spaces after period with Join */
-#define P_LI			11		/* lines */
-#define P_LS			12		/* show tabs and newlines graphically */
-#define P_MAGIC 		13		/* use some characters for pattern matching */
-#define P_ML			14		/* number of mode lines */
-#define P_NU			15		/* number lines on the screen */
-#define P_PARA			16		/* paragraphs */
-#define P_RO			17		/* readonly */
-#define P_REMAP			18		/* remap */
-#define P_RD			19		/* delete when replacing */
-#define P_RP			20		/* minimum number of lines for report */
-#define P_SS			21		/* scroll size */
-#define P_SECTIONS		22		/* sections */
-#define P_SHELL 		23		/* name of shell to use */
-#define P_ST			24		/* type of shell */
-#define P_SR			25		/* shift round off (for < and >) */
-#define P_SW			26		/* shiftwidth (for < and >) */
-#define P_SC			27		/* show command in status line */
-#define P_SM			28		/* showmatch */
-#define P_MO			29		/* show mode */
-#define P_SI			30		/* smart-indent for c programs */
-#define P_SU			31		/* suffixes for wildcard expansion */
-#define P_TS			32		/* tab size in the file */
-#define P_TL			33		/* used tag length */
-#define P_TAGS			34		/* tags search path */
-#define P_TE			35		/* terse (not used) */
-#define P_TW			36		/* textwidth */
-#define P_TO			37		/* tilde is an operator */
-#define P_UL			38		/* number of Undo Levels */
-#define P_UC			39		/* update count for auto script file */
-#define P_UT			40		/* update time for auto script file */
-#define P_VB			41		/* visual bell only (no beep) */
-#define P_WARN			42		/* warn for changes at shell command */
-#define P_WS			43		/* wrap scan */
-#define P_WM			44		/* wrapmargin */
-#define P_WA			45		/* write any */
-#define P_YE			46		/* Y yanks to end of line */
-
-/*
- * Macro to get the value of a parameter
- */
-#define P(n)	((params[n].val.intval))
-#define PS(n)	(params[n].val.strval)
+EXTERN int	p_ai	INIT(= FALSE);		/* auto-indent */
+EXTERN int	p_aw	INIT(= FALSE);		/* auto-write */
+EXTERN long	p_bs	INIT(= 0);			/* backspace over newlines in insert mode */
+EXTERN int	p_bk	INIT(= TRUE);		/* make backups when writing out files */
+#ifdef UNIX
+EXTERN char *p_bdir	INIT(= BACKUPDIR);	/* directory for backups */
+#endif
+#ifdef DIGRAPHS
+EXTERN int	p_dg	INIT(= FALSE);		/* enable digraphs */
+#endif /* DIGRAPHS */
+EXTERN char *p_dir	INIT(= "");			/* directory for autoscript file */
+EXTERN char *p_ep	INIT(= "indent");	/* program name for '=' command */
+EXTERN int	p_eb	INIT(= FALSE);		/* ring bell for errors */
+#ifdef AMIGA
+EXTERN char *p_ef	INIT(= "AztecC.Err");	/* name of errorfile */
+#else
+EXTERN char *p_ef	INIT(= "");			/* name of errorfile */
+#endif
+EXTERN int	p_et	INIT(= FALSE);		/* expand tabs into spaces */
+#ifdef MSDOS
+EXTERN int	p_gr	INIT(= TRUE);		/* display graphic characters */
+#else
+EXTERN int	p_gr	INIT(= FALSE);		/* display graphic characters */
+#endif
+EXTERN long p_hi	INIT(= 20);			/* command line history size */
+EXTERN char *p_hf	INIT(= VIM_HLP);	/* name of help file */
+EXTERN int	p_ic	INIT(= FALSE);		/* ignore case in searches */
+EXTERN int	p_im	INIT(= FALSE);		/* start editing in input mode */
+EXTERN char *p_kp	INIT(= "ref");		/* keyword program */
+EXTERN int	p_js	INIT(= TRUE);		/* use two spaces after period with Join */
+EXTERN int	p_list	INIT(= FALSE);		/* show tabs and newlines graphically */
+EXTERN int	p_magic INIT(= TRUE);		/* use some characters for reg exp */
+EXTERN long p_ml	INIT(= 5);			/* number of mode lines */
+EXTERN int	p_nu	INIT(= FALSE);		/* number lines on the screen */
+EXTERN char *p_para	INIT(= "IPLPPPQPP LIpplpipbp");		/* paragraphs */
+EXTERN int	p_ro	INIT(= FALSE);		/* readonly */
+EXTERN int	p_remap	INIT(= TRUE);		/* remap */
+EXTERN int	p_rd	INIT(= TRUE);		/* delete when replacing */
+EXTERN long	p_report	INIT(= 2);		/* minimum number of lines for report */
+EXTERN int	p_ru	INIT(= FALSE);		/* show column/line number */
+EXTERN long	p_scroll	INIT(= 12);		/* scroll size */
+EXTERN long	p_sj	INIT(= 1);			/* scroll jump size */
+EXTERN char *p_sections	INIT(= "SHNHH HUnhsh");		/* sections */
+#ifdef MSDOS
+EXTERN char *p_sh 	INIT(= "command");		/* name of shell to use */
+#else
+EXTERN char *p_sh 	INIT(= "sh");		/* name of shell to use */
+#endif
+EXTERN long	p_st	INIT(= 0);			/* type of shell */
+EXTERN int	p_sr	INIT(= FALSE);		/* shift round off (for < and >) */
+EXTERN long	p_sw	INIT(= 8);			/* shiftwidth (for < and >) */
+EXTERN int	p_sc	INIT(= TRUE);		/* show command in status line */
+EXTERN int	p_sm	INIT(= FALSE);		/* showmatch */
+EXTERN int	p_mo	INIT(= TRUE);		/* show mode */
+EXTERN int	p_si	INIT(= FALSE);		/* smart-indent for c programs */
+EXTERN char *p_su	INIT(= ".bak.o.h.info.vim");	/* suffixes for wildcard expansion */
+EXTERN long p_ts	INIT(= 8);			/* tab size in the file */
+EXTERN long p_tl	INIT(= 0);			/* used tag length */
+EXTERN char *p_tags	INIT(= "tags");		/* tags search path */
+EXTERN int	p_terse	INIT(= TRUE);		/* terse (not used) */
+#ifdef MSDOS
+EXTERN int	p_tx	INIT(= TRUE);		/* textmode for file I/O */
+#endif
+EXTERN long p_tw	INIT(= 9999);		/* textwidth */
+EXTERN int	p_to	INIT(= FALSE);		/* tilde is an operator */
+EXTERN int	p_timeout	INIT(= TRUE);	/* mappings entered within one second */
+EXTERN long p_ul	INIT(= 100);		/* number of Undo Levels */
+EXTERN long p_uc	INIT(= 100);		/* update count for auto script file */
+EXTERN long p_ut	INIT(= 2000);		/* update time for auto script file */
+EXTERN int	p_vb	INIT(= FALSE);		/* visual bell only (no beep) */
+EXTERN int	p_warn	INIT(= TRUE);		/* warn for changes at shell command */
+EXTERN int	p_ws	INIT(= TRUE);		/* wrap scan */
+EXTERN long p_wm	INIT(= 0);			/* wrapmargin */
+EXTERN int	p_wa	INIT(= FALSE);		/* write any */
+EXTERN int	p_wb	INIT(= TRUE);		/* write backup files */
+EXTERN int	p_ye	INIT(= FALSE);		/* Y yanks to end of line */

@@ -14,6 +14,8 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
 
 /*
  * coladvance(col)
@@ -53,10 +55,11 @@ coladvance(wcol)
  * Increment the line pointer 'p' crossing line boundaries as necessary. Return
  * 1 when crossing a line, -1 when at end of file, 0 otherwise.
  */
+	int
 inc(lp)
 	register FPOS  *lp;
 {
-	register char  *p = nr2ptr(lp->lnum) + lp->col;
+	register char  *p = pos2ptr(lp);
 
 	if (*p != NUL)
 	{			/* still within line */
@@ -72,6 +75,7 @@ inc(lp)
 	return -1;
 }
 
+	int
 incCurpos()
 {
 	return inc(&Curpos);
@@ -80,6 +84,7 @@ incCurpos()
 /*
  * incl(lp): same as inc(), but skip the NUL at the end of non-empty lines
  */
+	int
 incl(lp)
 		register FPOS *lp;
 {
@@ -96,6 +101,7 @@ incl(lp)
  * Decrement the line pointer 'p' crossing line boundaries as necessary. Return
  * 1 when crossing a line, -1 when at start of file, 0 otherwise.
  */
+	int
 dec(lp)
 	register FPOS  *lp;
 {
@@ -113,6 +119,7 @@ dec(lp)
 	return -1;					/* at start of file */
 }
 
+	int
 decCurpos()
 {
 	return dec(&Curpos);
@@ -121,6 +128,7 @@ decCurpos()
 /*
  * decl(lp): same as dec(), but skip the NUL at the end of non-empty lines
  */
+	int
 decl(lp)
 		register FPOS *lp;
 {

@@ -13,6 +13,12 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#define MESSAGE
+#include "proto.h"
+#include "param.h"
+
+static int msg_invert = FALSE;
 
 /*
  * msg(s) - displays the string 's' on the status line
@@ -21,22 +27,40 @@
 msg(s)
 	char		   *s;
 {
-	int len = -1;
+	int len;
 
-	if (RedrawingDisabled)
+	if (Columns == 0)	/* terminal not initialized */
+	{
+		fprintf(stderr, s);
+		fflush(stderr);
 		return;
-	gotocmdline(YES, NUL);
-	/*
-	 * Truncate the string if it's larger than the window.
-	 * (this may still happen with non-printable characters).
-	 */
-	if (strlen(s) >= Columns)
-		len = Columns - 1;
-	outtrans(s, len);
+	}
+
+	gotocmdline(TRUE, NUL);
+	if (msg_invert)
+		outstr(T_TI);
+	len = outtrans(s, -1);
+	if (msg_invert)
+	{
+		outstr(T_TP);
+		msg_invert = FALSE;
+	}
 	flushbuf();
+	/*
+	 * if the string is larger than the window,
+	 * or the ruler option is set and we run into it,
+	 * we have to redraw the window.
+	 * Do not do this if we are abandoning the file.
+	 */
+	if (!exiting && len >= Columns - (p_ru ? 22 : 0))
+	{
+		outchar('\n');
+		wait_return(TRUE);
+	}
 }
 
 /* VARARGS */
+#ifndef PROTO		/* automatic prototype generation does not understand this */
 	void
 smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 	char		*s;
@@ -45,6 +69,7 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 	sprintf(IObuff, s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 	msg(IObuff);
 }
+#endif
 
 /*
  * emsg() - display an error message
@@ -55,40 +80,21 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 emsg(s)
 	char		   *s;
 {
-	int temp;
-
-	if (P(P_EB))
+	if (p_eb)
 		beep();				/* also includes flush_buffers() */
 	else
 		flush_buffers();		/* delete all typeahead characters */
-	outstr(T_TI);
-	temp = RedrawingDisabled;
-	RedrawingDisabled = FALSE;
+	msg_invert = TRUE;
 	msg(s);
-	RedrawingDisabled = temp;
-	outstr(T_TP);
 	flushbuf();
+	if (got_int)		/* remove typeahead now, allow typeadhead during sleep */
+		inchar(TRUE);
 	sleep(1);	/* give the user a chance to read the message */
 }
 
 	void
-msgmore(n)
-	long n;
-{
-	long pn;
-
-	if (n > 0)
-		pn = n;
-	else
-		pn = -n;
-
-	if (pn > P(P_RP))
-		smsg("%ld %s lines %s", pn, n > 0 ? "more" : "fewer", got_int ? "(Interrupted)" : "");
-}
-
-	void
 wait_return(redraw)
-	bool_t	redraw;
+	int		redraw;
 {
 	u_char			c;
 	int				oldstate;
@@ -96,43 +102,30 @@ wait_return(redraw)
 	oldstate = State;
 	State = HITRETURN;
 	if (got_int)
-		outstr("Interrupt: ");
-	outstr("Press RETURN to continue");
+		outstrn("Interrupt: ");
+
+#ifdef ORG_HITRETURN
+	outstrn("Press RETURN to continue");
 	do {
 		c = vgetc();
-	} while (c != '\r' && c != '\n' && c != ' ' && c != ':');
+	} while (strchr("\r\n: ", c) == NULL);
+	if (c == ':')			 /* this can vi too (but not always!) */
+		stuffReadbuff(mkstr(c));
+#else
+	outstrn("Press RETURN or enter command to continue");
+	c = vgetc();
+	if (strchr("\r\n ", c) == NULL)
+		stuffReadbuff(mkstr(c));
+#endif
 
 	if (State == SETWINSIZE)
 	{
 		State = oldstate;
-		set_winsize(0, 0);
+		set_winsize(0, 0, FALSE);
 	}
 	State = oldstate;
 	script_winsize_pp();
 
-	if (c == ':')								 /* this can vi too  */
-	{
-		outchar('\n');
-		docmdline(NULL);
-	}
 	if (redraw)
-	{
-		screenclear();
-		updateScreen(NOT_VALID);
-	}
-}
-
-ask_yesno(str)
-	char *str;
-{
-	int r = ' ';
-
-	while (r != 'y' && r != 'n')
-	{
-		smsg("%s (y/n)? ", str);
-		r = vgetc();
-		outchar(r);		/* show what you typed */
-		flushbuf();
-	}
-	return r;
+		updateScreen(CLEAR);
 }

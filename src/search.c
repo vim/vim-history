@@ -12,15 +12,15 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
 /* modified Henry Spencer's regular expression routines */
 #include "regexp.h"
 
-static int inmacro __ARGS((int, char *));
+static int inmacro __ARGS((char *, char *));
 static int cls __ARGS((void));
-
-char		emsg_inval[] = "Invalid search string";
-char		emsg_interrupted[] = "Interrupted";
 
 /*
  * This file contains various searching-related routines. These fall into
@@ -47,7 +47,7 @@ char		emsg_interrupted[] = "Interrupted";
  */
 
 static char 	*search_pattern = NULL;  /* previous search pattern */
-static bool_t	want_start; 			 /* looking for start of line? */
+static int		want_start; 			 /* looking for start of line? */
 
 /*
  * translate search pattern for regcomp()
@@ -62,7 +62,7 @@ myregcomp(pat)
 	{
 		if (search_pattern == NULL)
 		{
-			emsg("No previous search pattern");
+			emsg(e_noprevre);
 			return (regexp *) NULL;
 		}
 		pat = search_pattern;
@@ -72,10 +72,10 @@ myregcomp(pat)
 		if (search_pattern != NULL)
 			free(search_pattern);
 		search_pattern = strsave(pat);
-		reg_magic = P(P_MAGIC);		/* Magic sticks with the r.e. */
+		reg_magic = p_magic;		/* Magic sticks with the r.e. */
 	}
 	want_start = (*pat == '^');		/* looking for start of line? */
-	reg_ic = P(P_IC);				/* tell the regexec routine how to search */
+	reg_ic = p_ic;				/* tell the regexec routine how to search */
 	retval = regcomp(pat);
 	return retval;
 }
@@ -86,12 +86,13 @@ myregcomp(pat)
  * Start at position 'pos' and return the found position in 'pos'.
  * Return 1 for success, 0 for failure.
  */
+	int
 searchit(pos, dir, str, count, end)
 	FPOS	*pos;
 	int 	dir;
 	char	*str;
 	long	count;
-	bool_t	end;
+	int		end;
 {
 	int 			found;
 	linenr_t		lnum;
@@ -105,7 +106,7 @@ searchit(pos, dir, str, count, end)
 
 	if ((prog = myregcomp(str)) == NULL)
 	{
-		emsg(emsg_inval);
+		emsg(e_invstring);
 		return 0;
 	}
 /*
@@ -169,7 +170,9 @@ searchit(pos, dir, str, count, end)
 					found = 1;
 					break;
 				}
-				breakcheck();       /* stop if ctrl-C typed */
+				/* breakcheck is slow, do it only once in 16 lines */
+				if ((lnum & 15) == 0)
+					breakcheck();       /* stop if ctrl-C typed */
 				if (got_int)
 					break;
 
@@ -177,7 +180,7 @@ searchit(pos, dir, str, count, end)
 					break;
 			}
 	/* stop the search if wrapscan isn't set, after an interrupt and after a match */
-			if (!P(P_WS) || got_int || found)
+			if (!p_ws || got_int || found)
 				break;
 
 			if (dir == BACKWARD)    /* start second loop at the other end */
@@ -194,9 +197,9 @@ searchit(pos, dir, str, count, end)
 	if (!found)             /* did not find it */
 	{
 		if (got_int)
-				emsg(emsg_interrupted);
+				emsg(e_interr);
 		else
-				emsg("Pattern not found");
+				emsg(e_patnotf);
 		return 0;
 	}
 
@@ -210,20 +213,23 @@ searchit(pos, dir, str, count, end)
  * If 'str' is 0 or 'str' is empty: use previous string.
  *			  If 'reverse' is TRUE: go in reverse of previous dir.
  */
-	bool_t
+	int
 dosearch(dir, str, reverse, count)
 	int				dir;
 	char		   *str;
-	bool_t			reverse;
+	int				reverse;
 	long			count;
 {
 	FPOS			pos;		/* position of the last match */
 	int				dirc;
 	static int		lastsdir = FORWARD;	/* previous search direction */
-	static bool_t	lastoffline;/* previous/current search has line offset */
-	static bool_t	lastend;	/* previous/current search set cursor at end */
+	static int		lastoffline;/* previous/current search has line offset */
+	static int		lastend;	/* previous/current search set cursor at end */
 	static long 	lastoff;	/* previous/current line or char offset */
-	static bool_t   nosetpm;    /* do not call setpcmark() */
+	static int		nosetpm;    /* do not call setpcmark() */
+	register char	*p;
+	register long	c;
+	char			*dircp = NULL;
 
 	if (dir == 0)
 		dir = lastsdir;
@@ -234,16 +240,22 @@ dosearch(dir, str, reverse, count)
 
 	dirc = (dir == FORWARD ? '/' : '?');
 	if (str == NULL || *str == NUL)     /* use previous string and options */
+	{
+		if (search_pattern == NULL)
+		{
+			emsg(e_noprevre);
+			return 0;
+		}
 		str = "";
+	}
 	else
 	{
-		register char  *p;
-
 		/* If there is a matching '/' or '?', toss it */
 		for (p = str; *p; ++p)
 		{
 			if (*p == dirc)
 			{
+				dircp = p;		/* remember where we put the NUL */
 				*p++ = NUL;
 				break;
 			}
@@ -285,39 +297,37 @@ dosearch(dir, str, reverse, count)
 		if (lastoff < 0)
 		{
 			outchar('-');
-			outnum(-lastoff);
+			outnum((int)-lastoff);
 		}
 		else if (lastoff > 0 || lastoffline)
 		{
 			outchar('+');
-			outnum(lastoff);
+			outnum((int)lastoff);
 		}
 	}
 
-	gotocmdline((bool_t)FALSE, NUL);
+	gotocmdline(FALSE, NUL);
 	flushbuf();
 
 	pos = Curpos;
 
-	if (!searchit(&pos, dir, str, count, lastend))
+	c = searchit(&pos, dir, str, count, lastend);
+	if (dircp)
+		*dircp = dirc;		/* put second '/' or '?' back for normal() */
+	if (!c)
 		return 0;
 
 	if (!lastoffline)           /* add the character offset to the column */
 	{
 		if (lastoff > 0)        /* offset to the right, check for end of line */
 		{
-			register long	c;
-			register char  *p;
-
-			p = nr2ptr(pos.lnum) + pos.col + 1;
+			p = pos2ptr(&pos) + 1;
 			c = lastoff;
 			while (c-- && *p++ != NUL)
 				++pos.col;
 		}
 		else					/* offset to the left, check for start of line */
 		{
-			register long	c;
-
 			if ((c = pos.col + lastoff) < 0)
 				c = 0;
 			pos.col = c;
@@ -335,18 +345,14 @@ dosearch(dir, str, reverse, count)
 /*
  * add the offset to the line number.
  */
-	{
-		register long	c;
-
-		c = Curpos.lnum + lastoff;
-		if (c < 1)
-			Curpos.lnum = 1;
-		else if (c > line_count)
-			Curpos.lnum = line_count;
-		else
-			Curpos.lnum = c;
-		Curpos.col = 0;
-	}
+	c = Curpos.lnum + lastoff;
+	if (c < 1)
+		Curpos.lnum = 1;
+	else if (c > line_count)
+		Curpos.lnum = line_count;
+	else
+		Curpos.lnum = c;
+	Curpos.col = 0;
 
 	return 2;
 }
@@ -363,7 +369,7 @@ dosearch(dir, str, reverse, count)
  * position of the character, otherwise move to just before the char.
  * Repeat this 'count' times.
  */
-	bool_t
+	int
 searchc(c, dir, type, count)
 	int 			c;
 	register int	dir;
@@ -457,10 +463,13 @@ foundit:
 		findc = table[i - 1];
 	else						/* forward search */
 		findc = table[i + 1];
+	i &= 1;
 
-	for (; !got_int; breakcheck())
+	/* we only do a breakcheck() once for every 16 lines */
+	while (!got_int)
 	{
-		if (i & 1)              /* backward search */
+			/* we could use inc() and dec() here, but that is much slower */
+		if (i)              /* backward search */
 		{
 			if (pos.col == 0)   /* at start of line, go to previous one */
 			{
@@ -469,6 +478,8 @@ foundit:
 				--pos.lnum;
 				p = nr2ptr(pos.lnum);
 				pos.col = strlen(p);
+				if ((pos.lnum & 15) == 0)
+					breakcheck();
 			}
 			else
 				--pos.col;
@@ -482,41 +493,70 @@ foundit:
 				++pos.lnum;
 				pos.col = 0;
 				p = nr2ptr(pos.lnum);
+				if ((pos.lnum & 15) == 0)
+					breakcheck();
 			}
 			else
 				++pos.col;
 		}
-		c = p[pos.col];
-		if (c == NUL && (pos.col == 0 || p[pos.col - 1] != '\\'))
-			inquote = FALSE;
-		else if (c == '"')                  /* count number of quotes */
-			inquote = !inquote;
-		else if (c == '\'')                 /* skip 'x' or '\x' */
+
+		/*
+		 * anything that is preceded with a backslash is ignored
+		 */
+		if (pos.col == 0 || p[pos.col - 1] != '\\')
 		{
-			if (i & 1 && pos.col > 1)           /* backward search */
+		/*
+		 * Things inside quotes are ignored by setting 'inquote'.
+		 * If we find a quote without a preceding '\' invert 'inquote'.
+		 * At the end of a line not ending in '\' we reset 'inquote'.
+		 */
+			switch (c = p[pos.col])
 			{
-				if (p[pos.col - 2] == '\'')
-					pos.col -= 2;
-				else if (p[pos.col - 2] == '\\' && pos.col > 2 && p[pos.col - 3] == '\'')
-					pos.col -= 3;
-			}
-			else if (p[pos.col + 1])            /* forward search */
-			{
-				if (p[pos.col + 2] == '\'')
-					pos.col += 2;
-				else if (p[pos.col + 1] == '\\' && p[pos.col + 2] && p[pos.col + 3] == '\'')
-					pos.col += 3;
-			}
-		}
-		else if (!inquote)      /* only check for match outside of quotes */
-		{
-			if (c == initc)
-				count++;
-			else if (c == findc)
-			{
-				if (count == 0)
-					return &pos;
-				count--;
+			case NUL:
+				inquote = FALSE;
+				break;
+
+			case '"':
+				inquote = !inquote;
+				break;
+
+			/*
+			 * Skip things in single quotes: 'x' or '\x'.
+			 * Be careful for single single quotes, eg jon's.
+			 * Things like '\233' or '\x3f' are ok, there is no brace in it.
+			 */
+			case '\'':
+				if (i)						/* backward search */
+				{
+					if (pos.col > 1)
+					{
+						if (p[pos.col - 2] == '\'')
+							pos.col -= 2;
+						else if (p[pos.col - 2] == '\\' && pos.col > 2 && p[pos.col - 3] == '\'')
+							pos.col -= 3;
+					}
+				}
+				else if (p[pos.col + 1])	/* forward search */
+				{
+					if (p[pos.col + 1] == '\\' && p[pos.col + 2] && p[pos.col + 3] == '\'')
+						pos.col += 3;
+					else if (p[pos.col + 2] == '\'')
+						pos.col += 2;
+				}
+				break;
+
+			default:
+				if (!inquote)      /* only check for match outside of quotes */
+				{
+					if (c == initc)
+						count++;
+					else if (c == findc)
+					{
+						if (count == 0)
+							return &pos;
+						count--;
+					}
+				}
 			}
 		}
 	}
@@ -528,10 +568,10 @@ foundit:
  *
  * Return TRUE if a line was found.
  */
-	bool_t
+	int
 findfunc(dir, what, count)
 	int 		dir;
-	bool_t		what;
+	int			what;
 	long		count;
 {
 	linenr_t	curr;
@@ -571,13 +611,14 @@ findfunc(dir, what, count)
  * or at an empty line.
  * Return TRUE if the next sentence was found.
  */
+	int
 findsent(dir, count)
 		int 	dir;
 		long	count;
 {
 		FPOS			pos, tpos;
 		register int	c;
-		int 			(*func)();
+		int 			(*func) __PARMS((FPOS *));
 		int 			startlnum;
 
 		pos = Curpos;
@@ -611,8 +652,8 @@ findsent(dir, count)
 						decl(&pos);
 
 				/* go back to the previous non-blank char */
-				while ((c = gchar(&pos)) == ' ' || c == '\t' || dir == BACKWARD &&
-										strchr(".!?)]\"'", c) != NULL)
+				while ((c = gchar(&pos)) == ' ' || c == '\t' ||
+						(dir == BACKWARD && strchr(".!?)]\"'", c) != NULL))
 						if (decl(&pos) == -1)
 								break;
 
@@ -622,7 +663,7 @@ findsent(dir, count)
 				for (;;)                /* find end of sentence */
 				{
 						if ((c = gchar(&pos)) == NUL ||
-										pos.col == 0 && startPS(pos.lnum, NUL))
+								(pos.col == 0 && startPS(pos.lnum, NUL)))
 						{
 							if (dir == BACKWARD && pos.lnum != startlnum)
 								++pos.lnum;
@@ -668,16 +709,16 @@ found:
  * Return TRUE if the next paragraph was found.
  * If 'what' is '{' or '}' we go to the next section.
  */
-	bool_t
+	int
 findpar(dir, count, what)
 	register int	dir;
 	long			count;
 	int 			what;
 {
 	register linenr_t	curr;
-	bool_t				did_skip;		/* TRUE after separating lines have
+	int					did_skip;		/* TRUE after separating lines have
 												been skipped */
-	bool_t				first;			/* TRUE on first line */
+	int					first;			/* TRUE on first line */
 
 	curr = Curpos.lnum;
 
@@ -705,7 +746,7 @@ findpar(dir, count, what)
 	Curpos.lnum = curr;
 	if (curr == line_count)
 	{
-		if (Curpos.col = strlen(nr2ptr(curr)))
+		if ((Curpos.col = strlen(nr2ptr(curr))) != 0)
 				--Curpos.col;
 	}
 	else
@@ -718,15 +759,15 @@ findpar(dir, count, what)
  */
 	static int
 inmacro(opt, s)
-		int opt;
+		char *opt;
 		register char *s;
 {
 		register char *macro;
 
-		for (macro = PS(opt); macro[0]; ++macro)
+		for (macro = opt; macro[0]; ++macro)
 		{
-				if (macro[0] == s[0] && ((s[1] == NUL || s[1] == ' ')
-						&& (macro[1] == NUL || macro[1] == ' ') || macro[1] == s[1]))
+				if (macro[0] == s[0] && (((s[1] == NUL || s[1] == ' ')
+						&& (macro[1] == NUL || macro[1] == ' ')) || macro[1] == s[1]))
 						break;
 				++macro;
 				if (macro[0] == NUL)
@@ -739,6 +780,7 @@ inmacro(opt, s)
  * startPS: return TRUE if line 'lnum' is the start of a section or paragraph.
  * If 'para' is '{' or '}' only check for sections.
  */
+	int
 startPS(lnum, para)
 	linenr_t	lnum;
 	int 		para;
@@ -746,11 +788,11 @@ startPS(lnum, para)
 	register char *s;
 
 	s = nr2ptr(lnum);
-	if (para == NUL && *s == '{' || *s == para || *s == '\f')
+	if ((para == NUL && *s == '{') || *s == para || *s == '\f')
 		return TRUE;
 	if (*s++ != '.')
 		return FALSE;
-	if (inmacro(P_SECTIONS, s) || !para && inmacro(P_PARA, s))
+	if (inmacro(p_sections, s) || (!para && inmacro(p_para, s)))
 		return TRUE;
 	else
 		return FALSE;
@@ -805,6 +847,7 @@ cls()
  *
  * Returns TRUE if end of the file was reached.
  */
+	int
 fwd_word(count, type)
 	long		count;
 	int 		type;
@@ -849,6 +892,7 @@ fwd_word(count, type)
  *
  * Returns TRUE if top of the file was reached.
  */
+	int
 bck_word(count, type)
 	long		count;
 	int 		type;
@@ -910,10 +954,11 @@ finished:
  *
  * If stop is TRUE and we are already on the end of a word, move one less.
  */
+	int
 end_word(count, type, stop)
 	long		count;
 	int 		type;
-	bool_t		stop;
+	int			stop;
 {
 	int 		sclass; 	/* starting class */
 

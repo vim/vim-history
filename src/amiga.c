@@ -15,6 +15,10 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
+
 #include <fcntl.h>
 
 #undef TRUE 			/* will be redefined by exec/types.h */
@@ -34,7 +38,7 @@
 #endif
 
 #include <libraries/arpbase.h>
-#ifdef LATTICE
+#if defined(LATTICE) && !defined(SASC)
 # include <libraries/arp_pragmas.h>
 #endif
 
@@ -42,37 +46,39 @@
  * At this point TRUE and FALSE are defined as 1L and 0L, but we want 1 and 0.
  */
 #undef TRUE
-#define TRUE 1
+#define TRUE (1)
 #undef FALSE
-#define FALSE 0
-
-static unsigned GetCharacter __ARGS((bool_t));
-static int getCSIsequence __ARGS((void));
-static int get_winsize __ARGS((void));
+#define FALSE (0)
 
 #ifndef AZTEC_C
 static long dos_packet __ARGS((struct MsgPort *, long, long));
 #endif
+static int lock2name __ARGS((BPTR lock, char *buf, long	len));
+static struct FileInfoBlock *get_fib __ARGS((char *));
 
-static BPTR raw_in = (BPTR)NULL;
-static BPTR raw_out = (BPTR)NULL;
+static BPTR				raw_in = (BPTR)NULL;
+static BPTR				raw_out = (BPTR)NULL;
+static int				close_win = FALSE;	/* set if Vim opened the window */
 
-struct Library	*IntuitionBase;
-struct ArpBase *ArpBase;
+struct IntuitionBase	*IntuitionBase = NULL;
+struct ArpBase			*ArpBase = NULL;
 
-static struct Window   *wb_window;
-static char *oldwindowtitle = NULL;
-static int quickfix = FALSE;
+static struct Window	*wb_window;
+static char				*oldwindowtitle = NULL;
+static int				quickfix = FALSE;
 
-static char win_resize_on[]  = "\033[12{";
-static char win_resize_off[] = "\033[12}";
+int						dos2 = FALSE;		/* Amiga DOS 2.0x or higher */
+int						size_set = FALSE;	/* set to TRUE if window size was set */
+
+static char				win_resize_on[]  = "\033[12{";
+static char				win_resize_off[] = "\033[12}";
 
 /*
  * the number of calls to Write is reduced by using the buffer "outbuf"
  */
 #define BSIZE	2048
-static u_char	outbuf[BSIZE];
-static int		bpos = 0;
+static u_char			outbuf[BSIZE];
+static int				bpos = 0;		/* number of chars in outbuf */
 
 /*
  * flushbuf(): flush the output buffer
@@ -81,246 +87,66 @@ static int		bpos = 0;
 flushbuf()
 {
 	if (bpos != 0)
+	{
 		Write(raw_out, (char *)outbuf, (long)bpos);
-	bpos = 0;
+		bpos = 0;
+	}
 }
 
 /*
- * outchar(c): put a character into the output buffer. Flush it if it becomes full.
+ * outchar(c): put a character into the output buffer.
+ *			   Flush it if it becomes full.
  */
 	void
 outchar(c)
-	unsigned			  c;
+	unsigned	c;
 {
-		outbuf[bpos] = c;
-		++bpos;
-		if (bpos >= BSIZE)
-				flushbuf();
+	outbuf[bpos] = c;
+	++bpos;
+	if (bpos >= BSIZE)
+		flushbuf();
 }
 
 /*
- * outstr(s): put a string character at a time into the output buffer.
- */
-	void
-outstr(s)
-	register char			 *s;
-{
-	while (*s)
-	{
-		outchar(*s);
-		++s;
-	}
-}
-
-/*
- * GetCharacter(): low level input funcion.
- * Get a character from the script file or from the keyboard.
- * If peek == TRUE only look whether there is a character.
- *
- * Use a buffer because Read() is slow.
- */
-	static unsigned
-GetCharacter(peek)
-		bool_t peek;
-{
-	static u_char inbuf[20];
-	static int len = 0;			/* number of valid chars in inbuf[] */
-	static int idx = 0;			/* index of next char in inbuf[] */
-	register unsigned cc;
-	register int c;
-
-	if (idx >= len) 	/* inbuf is empty: fill it */
-	{
-		idx = 0;		/* reset idx and len */
-		len = 0;
-retry:
-		if (scriptin[curscript] != NULL)
-		{
-				if (got_int || (c = getc(scriptin[curscript])) < 0)	/* reached EOF */
-				{
-						fclose(scriptin[curscript]);
-						scriptin[curscript] = NULL;
-						if (curscript > 0)
-							--curscript;
-						if (recoverymode)
-							openrecover();
-						goto retry;		/* may read from other script */
-				}
-				else
-				{
-						inbuf[0] = c;
-						len = 1;
-				}
-		}
-		if (scriptin[curscript] == NULL)
-		{
-				if (peek)
-				{
-					if (WaitForChar(raw_in, 100L) == 0)	/* no character available */
-						return 0;
-				}
-				/*
-				 * If there is no character available within 2 seconds (default)
-				 * write the autoscript file to disk
-				 */
-				else if (WaitForChar(raw_in, P(P_UT) * 1000L) == 0)
-						updatescript(0);
-
-				/*
-				 * if we are really getting a character, reset interrupt flag
-				 */
-				breakcheck();
-				if (got_int)		/* skip typed characters */
-				{
-					got_int = FALSE;
-					while (WaitForChar(raw_in, 100L) != 0)	/* characters available */
-						Read(raw_in, (char *)inbuf, (long)(sizeof(inbuf)));
-				}
-				if ((len = Read(raw_in, (char *)inbuf, (long)(sizeof(inbuf)))) <= 0)
-						return 0;
-		}
-	}
-
-	if (peek)
-		return TRUE;
-	cc = inbuf[idx];
-	++idx;
-	if (cc == 0)
-		cc = K_ZERO;		/* 0 means no-character, replace ^@ with K_ZERO */
-	return cc;
-}
-
-/*
- * getCSIsequence - get a CSI sequence
- *				  - either cursor keys, help, functionkeys, or some
- *					other sequence (if other, check window size)
- */
-	static int
-getCSIsequence()
-{
-	register int 		tmp;
-	register unsigned	c;
-
-	c = GetCharacter(FALSE);
-	if (isdigit(c))
-	{
-		tmp = 0;
-		while (isdigit(c))
-		{
-				tmp = tmp * 10 + c - '0';
-				c = GetCharacter(FALSE);
-		}
-		if (c == '~')			/* function key (may be shifted) */
-			return (K_F1 + tmp);
-	}
-	switch (c)
-	{
-	  case 'A': 		/* cursor up */
-		return K_UARROW;
-	  case 'B': 		/* cursor down */
-		return K_DARROW;
-	  case 'C': 		/* cursor right */
-		return K_RARROW;
-	  case 'D': 		/* cursor left */
-		return K_LARROW;
-	  case 'T': 		/* shift cursor up */
-		return K_SUARROW;
-	  case 'S': 		/* shift cursor down */
-		return K_SDARROW;
-	  case ' ': 		/* shift cursor left or right */
-		if ((c = GetCharacter(FALSE)) == 'A')			/* shift cursor left */
-			return K_SLARROW;
-		if (c == '@')			/* shift cursor right */
-			return K_SRARROW;
-		break;
-	  case '?': 		/* help */
-		if ((c = GetCharacter(FALSE)) == '~')
-			return K_HELP;
-		break;
-	}
-
-	/* must have been a window resize event; skip rest of the sequence */
-	while (c != 'r')
-	{
-		if (!GetCharacter(TRUE))
-				break;
-		c = GetCharacter(FALSE);
-	}
-	set_winsize(0, 0);		/* get size and redraw screen */
-
-	return 0;				/* some other control code */
-}
-
-/*
- * inchar() - get a character from the keyboard
+ * GetChars(): low level input funcion.
+ * Get a characters from the keyboard.
+ * If type == T_PEEK do not wait for characters.
+ * If type == T_WAIT wait a short time for characters.
+ * If type == T_BLOCK wait for characters.
  */
 	int
-inchar(async)
-		bool_t async;	/* set to TRUE when not waiting for the char */
+GetChars(buf, maxlen, type)
+	char	*buf;
+	int		maxlen;
+	int		type;
 {
-	register int c;
+	int		len;
+	long	time = 1000000L;	/* one second */
 
-	flushbuf();
-
-	if (async && !GetCharacter(TRUE))
-		return NUL;
-
-	for (;;)
+	switch (type)
 	{
-		c = GetCharacter(FALSE);
-		if (c == CSI)
-				c = getCSIsequence();
-		if (c != 0)
-				break;
+	case T_PEEK:
+		time = 100L;
+	case T_WAIT:
+		if (WaitForChar(raw_in, time) == 0)	/* no character available */
+			return 0;
+		break;
+
+	case T_BLOCK:
+	/*
+	 * If there is no character available within 2 seconds (default)
+	 * write the autoscript file to disk
+	 */
+		if (WaitForChar(raw_in, p_ut * 1000L) == 0)
+			updatescript(0);
 	}
-	return c;
-}
 
-/*
- * outnum - output a number fast (used for row and column numbers)
- */
-	void
-outnum(n)
-		register long n;
-{
-		char buf[20];
-		register char *p;
-
-		p = &buf[19];
-		*p = NUL;
-		do
-		{
-			--p;
-			*p = n % 10 + '0';
-			n /= 10;
-		}
-		while (n > 0);
-		outstr(p);
-}
-
-/*
- * give a warning for an error
- */
-	void
-beep()
-{
-	flush_buffers();
-	if (P(P_VB))
+	for (;;)		/* repeat until we got a character */
 	{
-#ifdef AUX
-		if (!Aux_Device)
-			outstr("\007\007");
-		else
-#endif
-		{
-			msg("     ^G");		/* primitive visual bell for AUX */
-			msg("       ");
-			msg("      ^G");
-			msg("        ");
-		}
+		len = Read(raw_in, buf, (long)maxlen);
+		if (len > 0)
+			return len;
 	}
-	else
-		outchar('\007');
 }
 
 	void
@@ -336,43 +162,64 @@ sleep(n)
 }
 
 	void
-delay()
+vim_delay()
 {
 	Delay(25L);
 }
 
-	void
-windinit()
+/*
+ * We have no job control, fake it by starting a new shell.
+ */
+void
+mch_suspend()
 {
-	static char intlibname[] = "intuition.library";
+	outstr("new shell started\n");
+	call_shell(NULL, 0);
+}
+
+#define DOS_LIBRARY     ((UBYTE *) "dos.library")
+
+	void
+mch_windinit()
+{
+	static char		intlibname[] = "intuition.library";
+	struct Library	*DosBase;
 
 #ifdef AZTEC_C
 	Enable_Abort = 0;			/* disallow vim to be aborted */
 #endif
 	Columns = 80;
-	P(P_LI) = Rows = 24;
+	Rows = 24;
 
-	if (!quickfix)
+/*
+ * check if we are running under DOS 2.0x or higher
+ */
+    if (DosBase = OpenLibrary(DOS_LIBRARY, 37L))
+    {
+		CloseLibrary(DosBase);
+		dos2 = TRUE;
+    }
+
+	/*
+	 * Set input and output channels, unless we have opened our own window
+	 */
+	if (raw_in == (BPTR)NULL)
 	{
 		raw_in = Input();
 		raw_out = Output();
 	}
-	setmode(1);
 
-#ifdef AUX
-	if (!Aux_Device)
-#endif
+	if (term_console)
 		outstr(win_resize_on); 			/* window resize events activated */
 	flushbuf();
 
 	wb_window = NULL;
-	if ((IntuitionBase = OpenLibrary(intlibname, 0L)) == NULL)
+	if ((IntuitionBase = (struct IntuitionBase *)OpenLibrary((UBYTE *)intlibname, 0L)) == NULL)
 	{
 		fprintf(stderr, "cannot open %s!?\n", intlibname);
-		windexit(3);
+		mch_windexit(3);
 	}
-	if (get_winsize())
-		windexit(4);
+	mch_get_winsize();
 }
 
 #include <workbench/startup.h>
@@ -385,7 +232,7 @@ windinit()
  * This also is the best way to assure proper working in a next Workbench release.
  *
  * For the -e option (quickfix mode) we open our own window and disable :sh.
- * Otherwise we would never know when editing is finished.
+ * Otherwise the compiler would never know when editing is finished.
  */
 #define BUF2SIZE 320		/* lenght of buffer for argument with complete path */
 
@@ -398,58 +245,91 @@ check_win(argc, argv)
 	BPTR			nilfh, fh;
 	char			buf1[20];
 	char			buf2[BUF2SIZE];
-	static char		exstr[] = "newcli <nil: >nil: con:0/0/%d/200/ from %s";
+	static char		*(constrings[3]) = {"con:0/0/662/210/",
+									  "con:0/0/640/200/",
+									  "con:0/0/320/200/"};
 	static char		winerr[] = "VIM: Can't open window!\n";
 	struct WBArg	*argp;
 	int				ac;
 	char			*av;
+	char			*device = NULL;
+	int				exitval = 4;
 
-	if (!(ArpBase = (struct ArpBase *) OpenLibrary(ArpName, ArpVersion)))
+	if (!(ArpBase = (struct ArpBase *) OpenLibrary((UBYTE *)ArpName, ArpVersion)))
 	{
 		fprintf(stderr, "Need %s version %ld\n", ArpName, ArpVersion);
 		exit(3);
 	}
-	if (argc != 0)		/* only check Input and Output when not started from WB */
-	{
-		if (IsInteractive(Input()) && IsInteractive(Output()))
-			return;
-	}
 
 /*
- * if we are in quickfix mode, we open our own window
+ * scan argv[] for the '-e' and '-d' arguments
  */
 	for (i = 1; i < argc; ++i)
-		if (argv[i][0] == '-' && argv[i][1] == 'e')
+		if (argv[i][0] == '-')
 		{
-			quickfix = TRUE;
-			raw_in = Open("CON:0/0/640/200/", (long)MODE_NEWFILE);
-			if (raw_in == (BPTR)NULL)
+			switch (argv[i][1])
 			{
-				raw_in = Open("CON:0/0/480/200/", (long)MODE_NEWFILE);
-				if (raw_in == (BPTR)NULL)
-				{
-					fprintf(stderr, winerr);
-					exit(2);
-				}
+			case 'e':
+				quickfix = TRUE;
+				break;
+
+			case 'd':
+				if (i < argc - 1)
+					device = argv[i + 1];
+				break;
 			}
-			raw_out = raw_in;
-			return;
 		}
 
-	if ((nilfh = Open("NIL:", (long)MODE_NEWFILE)) == (BPTR)NULL)
+/*
+ * If we were not started from workbench, do not have a '-d' argument and
+ * we have been started with an interactive window, use that window.
+ */
+	if (argc != 0 && device == NULL &&
+				IsInteractive(Input()) && IsInteractive(Output()))
+		return;
+
+/*
+ * If we are in quickfix mode, we open our own window. We can't use the
+ * newcli trick below, because the compiler would not know when we are finished.
+ */
+	if (quickfix)
+	{
+		/*
+		 * Try to open a window. First try the specified device.
+		 * Then try a 24 line 80 column window.
+		 * If that fails, try two smaller ones.
+		 */
+		for (i = -1; i < 3; ++i)
+		{
+			if (i >= 0)
+				device = constrings[i];
+			if (device && (raw_in = Open((UBYTE *)device, (long)MODE_NEWFILE)) != (BPTR)NULL)
+				break;
+		}
+		if (raw_in == (BPTR)NULL)		/* all three failed */
+		{
+			fprintf(stderr, winerr);
+			goto exit;
+		}
+		raw_out = raw_in;
+		close_win = TRUE;
+		return;
+	}
+
+	if ((nilfh = Open((UBYTE *)"NIL:", (long)MODE_NEWFILE)) == (BPTR)NULL)
 	{
 		fprintf(stderr, "Cannot open NIL:\n");
-		exit(3);
+		goto exit;
 	}
 
 	/*
 	 * make a unique name for the temp file (which we will not delete!)
 	 */
 	sprintf(buf1, "t:nc%ld", buf1);	/* nobody else is using our stack */
-	if ((fh = Open(buf1, (long)MODE_NEWFILE)) == (BPTR)NULL)
+	if ((fh = Open((UBYTE *)buf1, (long)MODE_NEWFILE)) == (BPTR)NULL)
 	{
 		fprintf(stderr, "Cannot create %s\n", buf1);
-		exit(3);
+		goto exit;
 	}
 	/*
 	 * Write the command into the file, put quotes around the arguments that
@@ -466,13 +346,18 @@ check_win(argc, argv)
 			*buf2 = NUL;
 			argp = &(((struct WBStartup *)argv)->sm_ArgList[i]);
 			if (argp->wa_Lock)
-				PathName(argp->wa_Lock, buf2, (long)(BUF2SIZE / 32 - 1));
+				lock2name(argp->wa_Lock, buf2, (long)(BUF2SIZE - 1));
 			TackOn(buf2, argp->wa_Name);
 			av = buf2;
 		}
 		else
 			av = argv[i];
 
+		if (av[0] == '-' && av[1] == 'd')		/* skip '-d' option */
+		{
+			++i;
+			continue;
+		}
 		if (strchr(av, ' '))
 			Write(fh, "\"", 1L);
 		Write(fh, av, (long)strlen(av));
@@ -483,18 +368,32 @@ check_win(argc, argv)
 	Write(fh, "\nendcli\n", 8L);
 	Close(fh);
 
-	sprintf(buf2, exstr, 640, buf1);
-	if (!Execute(buf2, nilfh, nilfh))
+/*
+ * Try to open a new cli in a window. If '-d' argument was given try to open
+ * the specified device. Then try a 24 line 80 column window.
+ * If that fails, try two smaller ones.
+ */
+	for (i = -1; i < 3; ++i)
 	{
-		sprintf(buf2, exstr, 320, buf1);
-		if (!Execute(buf2, nilfh, nilfh))
-		{
-				DeleteFile(buf1);
-				fprintf(stderr, winerr);
-				exit(2);
-		}
+		if (i >= 0)
+			device = constrings[i];
+		else if (device == NULL)
+			continue;
+		sprintf(buf2, "newcli <nil: >nil: %s from %s", device, buf1);
+		if (Execute((UBYTE *)buf2, nilfh, nilfh))
+			break;
 	}
-	exit(0);	/* The Execute succeeded: exit this program */
+	if (i == 3)		/* all three failed */
+	{
+		DeleteFile((UBYTE *)buf1);
+		fprintf(stderr, winerr);
+		goto exit;
+	}
+	exitval = 0;	/* The Execute succeeded: exit this program */
+
+exit:
+	CloseLibrary((struct Library *) ArpBase);
+	exit(exitval);
 }
 
 /*
@@ -505,27 +404,46 @@ check_win(argc, argv)
 fname_case(name)
 	char *name;
 {
-	BPTR	flock;
-	struct FileInfoBlock *fib;
+	register struct FileInfoBlock	*fib;
+	register size_t					len;
 
-	if (name == NULL)
-		return;
-	flock = Lock(name, (long)ACCESS_READ);
-	if (flock != (BPTR)NULL)
+	fib = get_fib(name);
+	if (fib != NULL)
 	{
-		fib = (struct FileInfoBlock *)malloc(sizeof(struct FileInfoBlock));
-		if (fib != NULL)
-		{
-			if (Examine(flock, fib))
-			{
-				/* check name length, might not be necessary */
-				if (strlen(name) == strlen(fib->fib_FileName))
-					memmove(name, fib->fib_FileName, strlen(name));
-			}
-			free(fib);
-		}
-		UnLock(flock);
+		len = strlen(name);
+		if (len == strlen(fib->fib_FileName))	/* safety check */
+				memmove(name, fib->fib_FileName, len);
+		free(fib);
 	}
+}
+
+/*
+ * Get the FileInfoBlock for file "fname"
+ * The returned structure has to be free()d.
+ * Returns NULL on error.
+ */
+	static struct FileInfoBlock *
+get_fib(fname)
+	char *fname;
+{
+	register BPTR					flock;
+	register struct FileInfoBlock	*fib;
+
+	if (fname == NULL)		/* safety check */
+		return NULL;
+	fib = (struct FileInfoBlock *)malloc(sizeof(struct FileInfoBlock));
+	if (fib != NULL)
+	{
+		flock = Lock((UBYTE *)fname, (long)ACCESS_READ);
+		if (flock == (BPTR)NULL || !Examine(flock, fib))
+		{
+			free(fib);	/* in case of an error the memory is freed here */
+			fib = NULL;
+		}
+		if (flock)
+			UnLock(flock);
+	}
+	return fib;
 }
 
 /*
@@ -545,7 +463,7 @@ settitle(str)
 		if (lasttitle != NULL)
 		{
 			sprintf(lasttitle, "VIM - %s", str);
-			SetWindowTitles(wb_window, lasttitle, (char *)-1L);
+			SetWindowTitles(wb_window, (UBYTE *)lasttitle, (UBYTE *)-1L);
 		}
 	}
 }
@@ -554,7 +472,7 @@ settitle(str)
 resettitle()
 {
 		if (wb_window != NULL && lasttitle != NULL)
-				SetWindowTitles(wb_window, lasttitle, (char *)-1L);
+				SetWindowTitles(wb_window, (UBYTE *)lasttitle, (UBYTE *)-1L);
 }
 
 /*
@@ -574,54 +492,92 @@ FullName(fname, buf, len)
 	char		*fname, *buf;
 	int			len;
 {
-	BPTR l;
-	int retval = 0;
+	BPTR		l;
+	int			retval = 0;
 
 	if (fname == NULL)	/* always fail */
 		return 0;
 
-	if ((l = Lock(fname, (long)ACCESS_READ)))/* lock the file */
+	if ((l = Lock((UBYTE *)fname, (long)ACCESS_READ)))/* lock the file */
 	{
-		retval = PathName(l, buf, (long)(len/32));		/* call arp function */
+		retval = lock2name(l, buf, (long)len);
 		UnLock(l);
 	}
-	if (retval == 0)		/* something failed; use at least the filename */
-		strcpy(buf, fname);
+	if (retval == 0 || *buf == 0 || *buf == ':')
+		strcpy(buf, fname);			/* something failed; use the filename */
 	return retval;
+}
+
+/*
+ * Get the full filename from a lock. Use 2.0 function if possible, because
+ * the arp function has more restrictions on the path length.
+ */
+	static int
+lock2name(lock, buf, len)
+	BPTR	lock;
+	char	*buf;
+	long	len;
+{
+	if (dos2)
+		return (int)NameFromLock(lock, (UBYTE *)buf, len);
+	else
+		return (int)PathName(lock, buf, (long)(len/32));		/* call arp function */
 }
 
 /*
  * get file permissions for 'name'
  */
+	long
 getperm(name)
 	char		*name;
 {
+	struct FileInfoBlock	*fib;
+	long 					retval = -1;
+
+	fib = get_fib(name);
+	if (fib != NULL)
+	{
+		retval = fib->fib_Protection;
+		free(fib);
+	}
+	return retval;
+}
+
+#ifdef DEBUG
+/*
+ * check for write lock
+ */
+	long
+writelock(name)
+	char		*name;
+{
 	BPTR			lock;
-	char			buf[sizeof(struct FileInfoBlock) + 2];
-	struct FileInfoBlock *fib;
-	int 			retval = -1;
 
 	lock = Lock(name, (long)ACCESS_READ);
 	if (lock)
 	{
-		fib = (struct FileInfoBlock *)(((long)buf + 3) & ~3);
-								/* make fib start on longword boundary */
-		if (Examine(lock, fib))
-			retval = fib->fib_Protection;
 		UnLock(lock);
+		lock = Lock(name, (long)ACCESS_WRITE);
+		if (lock)
+		{
+			UnLock(lock);
+			return TRUE;		/* can write-lock */
+		}
+		return FALSE;			/* can read-lock but not write-lock */
 	}
-	return retval;
+	return TRUE;				/* file does not exist */
 }
+#endif
 
 /*
  * set file permission for 'name' to 'perm'
  */
 setperm(name, perm)
 	char		*name;
-	int			perm;
+	long		perm;
 {
 	perm &= ~FIBF_ARCHIVE;				/* reset archived bit */
-	return SetProtection(name, (long)perm);
+	return (int)SetProtection((UBYTE *)name, (long)perm);
 }
 
 /*
@@ -630,63 +586,51 @@ setperm(name, perm)
 isdir(name)
 	char		*name;
 {
-	BPTR			lock;
-	char			buf[sizeof(struct FileInfoBlock) + 2];
-	struct FileInfoBlock *fib;
-	int 			retval = -1;
+	struct FileInfoBlock	*fib;
+	int 					retval = -1;
 
-	lock = Lock(name, (long)ACCESS_READ);
-	if (lock)
+	fib = get_fib(name);
+	if (fib != NULL)
 	{
-		fib = (struct FileInfoBlock *)(((long)buf + 3) & ~3);
-								/* make fib start on longword boundary */
-		if (Examine(lock, fib))
-			retval = (fib->fib_DirEntryType >= 0);
-		UnLock(lock);
+		retval = (fib->fib_DirEntryType >= 0);
+		free(fib);
 	}
 	return retval;
 }
 
+/*
+ * Careful: mch_windexit() may be called before mch_windinit()!
+ */
 	void
-windexit(r)
+mch_windexit(r)
 	int 			r;
 {
-#ifdef AUX
-	if (!Aux_Device)
-#endif
-		outstr(win_resize_off);		/* window resize events de-activated */
-	flushbuf();
+	if (raw_out)
+	{
+		if (term_console)
+		{
+			outstr(win_resize_off);		/* window resize events de-activated */
+			if (size_set)
+				outstr("\233t\233u");		/* reset window size (CSI t CSI u) */
+		}
+		flushbuf();
+	}
 
 	if (wb_window != NULL)			/* disable window title */
-		SetWindowTitles(wb_window, oldwindowtitle, (char *)-1L);
-	setmode(0);
+		SetWindowTitles(wb_window, (UBYTE *)oldwindowtitle, (UBYTE *)-1L);
+	if (raw_in)
+		settmode(0);
 	stopscript();					/* remove autoscript file */
-	CloseLibrary((struct Library *) ArpBase);
-	if (quickfix)
+	if (ArpBase)
+		CloseLibrary((struct Library *) ArpBase);
+	if (close_win)
 		Close(raw_in);
+	if (r)
+		printf("exiting with %d\n", r);	/* somehow this makes :cq work!? */
 	exit(r);
 }
 
-	void
-windgoto(r, c)
-	int		r;
-	int		c;
-{
-#ifdef AUX
-	if (Aux_Device)
-		outstr("\033[");
-	else
-#endif
-		outchar(CSI);
-	outnum((long)(r + 1));
-	outchar(';');
-	outnum((long)(c + 1));
-	outchar('H');
-}
-
 /*
- * raw.c
- *
  * This is a routine for setting a given stream to raw or cooked mode on the
  * Amiga . This is useful when you are using Lattice C to produce programs
  * that want to read single characters with the "getch()" or "fgetc" call.
@@ -697,7 +641,7 @@ windgoto(r, c)
 #define MP(xx)	((struct MsgPort *)((struct FileHandle *) (BADDR(xx)))->fh_Type)
 
 /*
- * Function setmode() - Convert the specified file pointer to 'raw' or 'cooked'
+ * Function mch_settmode() - Convert the specified file pointer to 'raw' or 'cooked'
  * mode. This only works on TTY's.
  *
  * Raw: keeps DOS from translating keys for you, also (BIG WIN) it means
@@ -709,8 +653,8 @@ windgoto(r, c)
  *		it sends a 0 to the console to make it back into a CON: from a RAW:
  */
 	void
-setmode(raw)
-	bool_t			raw;
+mch_settmode(raw)
+	int			raw;
 {
 	if (dos_packet(MP(raw_in), (long)ACTION_SCREEN_MODE, raw ? -1L : 0L) == 0)
 		fprintf(stderr, "cannot change console mode ?!\n");
@@ -730,130 +674,94 @@ setmode(raw)
 
 #include <devices/conunit.h>
 
-static void check_winsize __ARGS((void));
-
-	static int
-get_winsize()
+/*
+ * try to get the real window size
+ * return non-zero for failure
+ */
+	int
+mch_get_winsize()
 {
 	struct ConUnit	*conUnit;
  	char			id_a[sizeof(struct InfoData) + 3];
 	struct InfoData *id;
 
+	if (!term_console)	/* not an amiga window */
+		return 1;
+
 	/* insure longword alignment */
  	id = (struct InfoData *)(((long)id_a + 3L) & ~3L);
 
-	/* Make console aware of real window size, not the one we set. */
-	outstr("\233t\233u");	/* CSI t CSI u */
+	/*
+	 * Should make console aware of real window size, not the one we set.
+	 * Unfortunately, under DOS 2.0x this redraws the window and it
+	 * is rarely needed, so we skip it now, unless we changed the size.
+	 */
+	if (size_set)
+		outstr("\233t\233u");	/* CSI t CSI u */
 	flushbuf();
 
-	if (dos_packet(MP(raw_out), (long)ACTION_DISK_INFO, ((ULONG) id) >> 2) == 0)
+	if (dos_packet(MP(raw_out), (long)ACTION_DISK_INFO, ((ULONG) id) >> 2) == 0 ||
+				(wb_window = (struct Window *)id->id_VolumeNode) == NULL)
 	{
-#ifdef AUX
-		Rows = -1;
-		Aux_Device = TRUE;
-#else
-		fprintf(stderr, "get_winsize: cannot send packet\n");
-		return (1);
-#endif
+		/* it's not an amiga window, maybe aux device */
+		/* terminal type should be set */
+		term_console = FALSE;
+		return 1;
 	}
-#ifdef AUX
-	if (!Aux_Device)
-#endif
+	if (oldwindowtitle == NULL)
+		oldwindowtitle = (char *)wb_window->Title;
+	if (id->id_InUse == (BPTR)NULL)
 	{
-		wb_window = (struct Window *) id->id_VolumeNode; /* for settitle() */
-		if (oldwindowtitle == NULL)
-			oldwindowtitle = (char *)wb_window->Title;
-		if (id->id_InUse == (BPTR)NULL)
-		{
-			fprintf(stderr, "get_winsize: not a console??\n");
-			return (2);
-		}
-		conUnit = (struct ConUnit *) ((struct IOStdReq *) id->id_InUse)->io_Unit;
+		fprintf(stderr, "mch_get_winsize: not a console??\n");
+		return (2);
+	}
+	conUnit = (struct ConUnit *) ((struct IOStdReq *) id->id_InUse)->io_Unit;
 
-		/* get window size */
-		Rows = conUnit->cu_YMax + 1;
-		Columns = conUnit->cu_XMax + 1;
-	}
-#ifdef AUX
-	if (Rows < 0 || Rows > 200) 	/* AUX: device (I hope) */
+	/* get window size */
+	Rows = conUnit->cu_YMax + 1;
+	Columns = conUnit->cu_XMax + 1;
+	if (Rows < 0 || Rows > 200) 	/* cannot be an amiga window */
 	{
 		Columns = 80;
 		Rows = 24;
-		Aux_Device = TRUE;
+		term_console = FALSE;
+		return 1;
 	}
-#endif
 
 	check_winsize();
 	script_winsize();
 
-	return (0);
+	return 0;
 }
 
-	static void
-check_winsize()
-{
-	if (Columns < 5)
-		Columns = 5;
-	else if (Columns > MAX_COLUMNS)
-		Columns = MAX_COLUMNS;
-	if (Rows < 2)
-		Rows = 2;
-	P(P_LI) = Rows;
-	P(P_SS) = Rows >> 1;
-}
-
+/*
+ * try to set the real window size
+ */
 	void
-set_winsize(width, height)
-	int		width, height;
+mch_set_winsize()
 {
-	register int 		tmp;
-
-	if (width < 0 || height < 0)	/* just checking... */
-		return;
-
-	if (State == HITRETURN)	/* postpone the resizing */
+	if (term_console)
 	{
-		State = SETWINSIZE;
-		return;
-	}
-	screenclear();
-	flushbuf(); 		/* must do this before get_winsize for some obscure reason */
-	if (width == 0)
-		get_winsize();
-	else
-	{
-		Rows = height;
-		Columns = width;
-		check_winsize();
-
+		size_set = TRUE;
 		outchar(CSI);
-		outnum((long)Rows);
+		outnum((int)Rows);
 		outchar('t');
 		outchar(CSI);
-		outnum((long)Columns);
+		outnum((int)Columns);
 		outchar('u');
 		flushbuf();
 	}
-	if (State == HELP)
-			redrawhelp();
-	else
-	{
-			tmp = RedrawingDisabled;
-			RedrawingDisabled = FALSE;
-			cursupdate();
-			updateScreen(NOT_VALID);
-			RedrawingDisabled = tmp;
-			if (State == CMDLINE)
-				redrawcmdline();
-			else
-				windgoto(Cursrow, Curscol);
-	}
-	flushbuf();
 }
 
 #ifdef SETKEYMAP
 /*
  * load and activate a new keymap for our CLI - DOES NOT WORK -
+ * The problem is that after the setting of the keymap the input blocks
+ * But the new keymap works allright in another window.
+ * Tried but no improvement:
+ * - remembering the length, data and command fields in request->io_xxx
+ * - settmode(0) first, settmode(1) afterwards
+ * - putting the keymap directly in conunit structure
  */
 
 #include <devices/keymap.h>
@@ -867,16 +775,15 @@ set_keymap(name)
 	static struct KeyMap	*old;
 	static BPTR				segment = (BPTR)NULL;
 	struct IOStdReq			*request;
+	int						c;
 
-#ifdef AUX
-	if (Aux_Device)
+	if (!term_console)
 		return;
-#endif
 
 	/* insure longword alignment */
  	id = (struct InfoData *)(((long)id_a + 3L) & ~3L);
 
-	if (dos_packet(MP(raw_out), ACTION_DISK_INFO, ((ULONG) id) >> 2) == 0)
+	if (dos_packet(MP(raw_out), (long)ACTION_DISK_INFO, ((ULONG) id) >> 2) == 0)
 	{
 		emsg("dos_packet failed");
 		return;
@@ -914,7 +821,7 @@ set_keymap(name)
 		old = (struct KeyMap *)AllocMem(sizeof(struct KeyMap), MEMF_PUBLIC);
 		if (old == NULL)
 		{
-			emsg("Cannot AllocMem");
+			emsg(e_outofmem);
 			UnLoadSeg(segment);
 			segment = (BPTR)NULL;
 		}
@@ -939,6 +846,14 @@ set_keymap(name)
 				DoIO((struct IORequest *)request);
 				if (request->io_Error)
 					emsg("Cannot set keymap");
+
+				/* test for blocking */
+				request->io_Command = CMD_READ;
+				request->io_Length = 1;
+				request->io_Data = (APTR)&c;
+				DoIO((struct IORequest *)request);	/* BLOCK HERE! */
+				if (request->io_Error)
+					emsg("Cannot set keymap");
 			}
 		}
 	}
@@ -949,8 +864,8 @@ set_keymap(name)
 /*
  * Sendpacket.c
  *
- * An invaluable addition to your Amiga.lib file. This code sends a packet the
- * given message port. This makes working around DOS lots easier.
+ * An invaluable addition to your Amiga.lib file. This code sends a packet to
+ * the given message port. This makes working around DOS lots easier.
  *
  * Note, I didn't write this, those wonderful folks at CBM did. I do suggest
  * however that you may wish to add it to Amiga.Lib, to do so, compile it and
@@ -1011,44 +926,48 @@ dos_packet(pid, action, arg)
 }
 #endif
 
-	void
+/*
+ * call shell, return non-zero for failure
+ */
+	int
 call_shell(cmd, filter)
 		char	*cmd;
-		bool_t	filter;		/* if != 0: called by dofilter() */
+		int		filter;		/* if != 0: called by dofilter() */
 {
 	BPTR mydir;
 	int x;
 #ifndef LATTICE
 	int	use_execute;
 #endif
+	int	retval = 0;
 
-	if (quickfix)
+	if (close_win)
 	{
+		/* if Vim opened a window: Executing a shell may cause crashes */
 		emsg("Cannot execute shell with -e option");
-		return;
+		return 1;
 	}
 
-#ifdef AUX
-	if (!Aux_Device)
-#endif
+	if (term_console)
 		outstr(win_resize_off); 	/* window resize events de-activated */
 	flushbuf();
 
-	setmode(0); 				/* set to cooked mode */
-	mydir = Lock("", (long)ACCESS_READ);	/* remember current directory */
+	settmode(0); 				/* set to cooked mode */
+	mydir = Lock((UBYTE *)"", (long)ACCESS_READ);	/* remember current directory */
 
 #ifdef LATTICE		/* not tested yet */
 	if (cmd == NULL)
-		x = Execute(PS(P_SHELL), raw_in, raw_out);
+		x = Execute(p_sh, raw_in, raw_out);
 	else
 		x = Execute(cmd, 0L, raw_out);
 	if (!x)
 	{
 		if (cmd == NULL)
-			smsg("Cannot execute shell %s", PS(P_SHELL));
+			smsg("Cannot execute shell %s", p_sh);
 		else
 			smsg("Cannot execute %s", cmd);
 		outchar('\n');
+		retval = 1;
 	}
 	else
 	{
@@ -1056,31 +975,33 @@ call_shell(cmd, filter)
 		{
 			smsg("%d returned", x);
 			outchar('\n');
+			retval = 1;
 		}
 	}
 #else
-	if (P(P_ST) >= 4 || (P(P_ST) >= 2 && !filter))
+	if (p_st >= 4 || (p_st >= 2 && !filter))
 		use_execute = 1;
 	else
 		use_execute = 0;
 	if (cmd == NULL)
 	{
 		use_execute = 0;
-		x = fexecl(PS(P_SHELL), PS(P_SHELL), NULL);
+		x = fexecl(p_sh, p_sh, NULL);
 	}
 	else if (use_execute)
-		x = !Execute(cmd, 0L, raw_out);
-	else if (P(P_ST) & 1)
-		x = fexecl(PS(P_SHELL), PS(P_SHELL), cmd, NULL);
+		x = !Execute((UBYTE *)cmd, 0L, raw_out);
+	else if (p_st & 1)
+		x = fexecl(p_sh, p_sh, cmd, NULL);
 	else
-		x = fexecl(PS(P_SHELL), PS(P_SHELL), "-c", cmd, NULL);
+		x = fexecl(p_sh, p_sh, "-c", cmd, NULL);
 	if (x)
 	{
 		if (use_execute)
 			smsg("Cannot execute %s", cmd);
 		else
-			smsg("Cannot execute shell %s", PS(P_SHELL));
+			smsg("Cannot execute shell %s", p_sh);
 		outchar('\n');
+		retval = 1;
 	}
 	else
 	{
@@ -1092,18 +1013,18 @@ call_shell(cmd, filter)
 		{
 			smsg("%d returned", x);
 			outchar('\n');
+			retval = 1;
 		}
 	}
 #endif
 
 	if (mydir = CurrentDir(mydir))		/* make sure we stay in the same directory */
 		UnLock(mydir);
-	setmode(1); 						/* set to raw mode */
+	settmode(1); 						/* set to raw mode */
 	resettitle();
-#ifdef AUX
-	if (!Aux_Device)
-#endif
-	outstr(win_resize_on); 			/* window resize events activated */
+	if (term_console)
+		outstr(win_resize_on); 			/* window resize events activated */
+	return retval;
 }
 
 /*
@@ -1149,7 +1070,13 @@ Chk_Abort()
  * Copyright (c) 1987, Scott Ballantyne
  * Use and abuse as you please.
  *
- * Mool: return 0 for success, 1 for error (you may loose some memory)
+ * num_pat is number of input patterns
+ * pat is array of pointers to input patterns
+ * num_file is pointer to number of matched file names
+ * file is pointer to array of pointers to matched file names
+ * if file_only is TRUE we match only files, no dirs
+ * if list_notfound is TRUE we include not-found entries (probably locked)
+ * return 0 for success, 1 for error (you may loose some memory)
  *-------------------------------------------------------------------------
  */
 
@@ -1164,8 +1091,8 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	char		  **pat;
 	int 		   *num_file;
 	char		 ***file;
-	bool_t		files_only;
-	bool_t		list_notfound;
+	int			files_only;
+	int			list_notfound;
 {
 	int 		i;
 	int 		retval = 0;
@@ -1176,7 +1103,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	LONG			Result;
 
 	*num_file = 0;
-	*file = NULL;
+	*file = (char **)"";
 
 	/* Get our AnchorBase */
 	Anchor = (struct AnchorPath *) calloc((size_t)1, (size_t)ANCHOR_SIZE);
@@ -1198,22 +1125,9 @@ OUT_OF_MEMORY:
 		for (i = 0; i < num_pat; i++)
 		{
 			Result = FindFirst(pat[i], Anchor);
-			while (Result == 0 || Result == ERROR_OBJECT_NOT_FOUND)
+			while (Result == 0)
 			{
-				if (Result == ERROR_OBJECT_NOT_FOUND)
-				{
-					if (list_notfound)	/* put not found object in list */
-					{
-						(*num_file)++;
-						if (!AddDANode(pat[i], &FileList, 0L, (long)i))
-						{
-							FreeAnchorChain(Anchor);
-							FreeDAList(FileList);
-							goto OUT_OF_MEMORY;
-						}
-					}
-				}
-				else if (!files_only || Anchor->ap_Info.fib_DirEntryType < 0)
+				if (!files_only || Anchor->ap_Info.fib_DirEntryType < 0)
 				{
 					(*num_file)++;
 					if (!AddDANode(Anchor->ap_Buf, &FileList, 0L, (long)i))
@@ -1232,13 +1146,27 @@ OUT_OF_MEMORY:
 				retval = 1;
 				*file = (char **)"ANCHOR_BUF_SIZE too small.";
 				goto Return;
-			} else if (Result != ERROR_NO_MORE_ENTRIES)
+			}
+			if (Result != ERROR_NO_MORE_ENTRIES)
 			{
-				FreeAnchorChain(Anchor);
-				FreeDAList(FileList);
-				retval = 1;
-				*file = (char **)"I/O ERROR";
-				goto Return;
+				if (list_notfound)	/* put object with error in list */
+				{
+					(*num_file)++;
+					if (!AddDANode(pat[i], &FileList, 0L, (long)i))
+					{
+						FreeAnchorChain(Anchor);
+						FreeDAList(FileList);
+						goto OUT_OF_MEMORY;
+					}
+				}
+				else if (Result != ERROR_OBJECT_NOT_FOUND)
+				{
+					FreeAnchorChain(Anchor);
+					FreeDAList(FileList);
+					retval = 1;
+					*file = (char **)"I/O ERROR";
+					goto Return;
+				}
 			}
 		}
 		FreeAnchorChain(Anchor);

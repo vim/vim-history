@@ -13,6 +13,9 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 #include "mark.h"
 
 #define TAGSTACKSIZE 20
@@ -38,9 +41,10 @@ static int tagstackidx = 0;				/* index just below active entry */
 static int tagstacklen = 0;				/* number of tags on the stack */
 
 static int findtag __ARGS((char *));
+static char *firsttaborspace __ARGS((char *));
 
-static char *bottommsg = "at bottom of tag stack";
-static char *topmsg = "at top of tag stack";
+static char bottommsg[] = "at bottom of tag stack";
+static char topmsg[] = "at top of tag stack";
 
 /*
  * Jump to tag; handling of tag stack
@@ -109,9 +113,9 @@ dotag(tag, type, count)
 		}
 		if (tagstack[tagstackidx].fmark.mark.ptr == NULL)	/* jump to other file */
 		{
-			if (getaltfile(tagstack[tagstackidx].fmark.fnum - 1, tagstack[tagstackidx].fmark.lnum, (bool_t)TRUE))
+			if (getaltfile(tagstack[tagstackidx].fmark.fnum - 1, tagstack[tagstackidx].fmark.lnum, TRUE))
 			{
-				emsg("Cannot get file");
+				emsg(e_notopen);
 				return;
 			}
 			/* "refresh" this position, so we will not fall off the altfile array */
@@ -196,8 +200,8 @@ dotags()
 	int			i;
 	char		*name;
 
-	setmode(0);
-	outstr("\n  # TO tag      FROM line in file\n");
+	settmode(0);
+	outstrn("\n  # TO tag      FROM line in file\n");
 	for (i = 0; i < tagstacklen; ++i)
 	{
 		if (tagstack[i].tagname != NULL)
@@ -212,14 +216,14 @@ dotags()
 				tagstack[i].tagname,
 				tagstack[i].fmark.lnum,
 				name);
-			outstr(IObuff);
+			outstrn(IObuff);
 		}
 		flushbuf();
 	}
 	if (tagstackidx == tagstacklen)		/* idx at top of stack */
-		outstr(">\n");
-	setmode(1);
-	wait_return((bool_t)TRUE);
+		outstrn(">\n");
+	settmode(1);
+	wait_return(TRUE);
 }
 
 /*
@@ -235,7 +239,7 @@ findtag(tag)
 	char		pbuf[LSIZE];			/* search pattern buffer */
 	char	   *fname, *str;
 	int			cmplen;
-	char		*m;
+	char		*m = NULL;
 	register char	*p;
 	char		*np;					/* pointer into file name string */
 	char		sbuf[CMDBUFFSIZE + 1];	/* tag file name */
@@ -244,11 +248,11 @@ findtag(tag)
 	if (tag == NULL)		/* out of memory condition */
 		return 0;
 
-	if ((cmplen = P(P_TL)) == 0)
+	if ((cmplen = p_tl) == 0)
 		cmplen = 999;
 
 	/* get stack of tag file names from tags option */
-	for (np = PS(P_TAGS); *np; )
+	for (np = p_tags; *np; )
 	{
 		for (i = 0; i < CMDBUFFSIZE && *np; ++i)	/* copy next file name into lbuf */
 		{
@@ -267,18 +271,26 @@ findtag(tag)
 		}
 		while (fgets(lbuf, LSIZE, tp) != NULL)
 		{
-			m = "Format error in tags file %s";
-			if ((fname = strchr(lbuf, TAB)) == NULL && (fname = strchr(lbuf, ' ')) == NULL)
+			m = "Format error in tags file %s";	/* default error message */
+
+		/* find start of file name, after first TAB or space */
+			fname = firsttaborspace(lbuf);
+			if (fname == NULL)
 				goto erret;
 			*fname++ = '\0';
-			if ((str = strchr(fname, TAB)) == NULL && (str = strchr(fname, ' ')) == NULL)
+
+		/* find start of search command, after second TAB or space */
+			str = firsttaborspace(fname);
+			if (str == NULL)
 				goto erret;
 			*str++ = '\0';
 
 			if (strncmp(lbuf, tag, (size_t)cmplen) == 0)
 			{
+				fclose(tp);
 				/*
 				 * Tag found!
+				 * Form a string like "+/^function fname".
 				 * Scan through the search string. If we see a magic
 				 * char, we have to quote it. This lets us use "real"
 				 * implementations of ctags.
@@ -297,7 +309,7 @@ findtag(tag)
 									*p++ = *str++;
 								break;
 
-					case '\n':	*p++ = *pbuf;	/* copy '/' or '?' */
+					case '\n':	*p++ = pbuf[0];	/* copy '/' or '?' */
 								*p++ = 'n';		/* no setpcmark() for search */
 								break;
 
@@ -306,7 +318,7 @@ findtag(tag)
 								 * else escape it with '\'
 								 */
 					case '/':
-					case '?':	if (*str == *pbuf && str[1] == '\n')
+					case '?':	if (*str == pbuf[0] && str[1] == '\n')
 								{
 									++str;
 									continue;
@@ -320,13 +332,20 @@ findtag(tag)
 				}
 				*p = NUL;
 
-				fclose(tp);
-				if (getfile(fname, (bool_t)TRUE) == 0)
+				RedrawingDisabled = TRUE;
+				if ((i = getfile(fname, TRUE)) <= 0)
 				{
-					stuffReadbuff(pbuf);	/* str has \n at end */
-					stuffReadbuff("\007");	/* CTRL('G') */
+					set_want_col = TRUE;
+
+					RedrawingDisabled = FALSE;
+					dosearch(pbuf[0] == '/' ? FORWARD : BACKWARD, pbuf + 1, FALSE, 1L);
+					if (p_im && i == -1)
+						stuffReadbuff("\033\007i");	/* ESC CTRL-G i */
+					else
+						stuffReadbuff("\007");		/* CTRL-G */
 					return 1;
 				}
+				RedrawingDisabled = FALSE;
 				return 0;
 			}
 		}
@@ -344,4 +363,20 @@ erret2:
 	if (m == NULL)
 		emsg("tag not found");
 	return 0;
+}
+
+/*
+ * find first TAB or space
+ */
+	static char *
+firsttaborspace(str)
+	char *str;
+{
+	char *p1, *p2;
+
+	p1 = strchr(str, TAB);			/* find first TAB */
+	p2 = strchr(str, ' ');			/* find first space */
+	if (p1 == NULL || (p2 != NULL && p2 < p1))
+		return p2;					/* space comes first */
+	return p1;
 }

@@ -13,12 +13,16 @@
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
 static char *(si_tab[]) = {"if", "else", "while", "for", "do"};
 
 /*
  * count the size of the indent in the current line
  */
+	int
 get_indent()
 {
 	register char *ptr;
@@ -27,7 +31,7 @@ get_indent()
 	for (ptr = nr2ptr(Curpos.lnum); *ptr; ++ptr)
 	{
 		if (*ptr == TAB)	/* count a tab for what it is worth */
-			count += P(P_TS) - (count % P(P_TS));
+			count += p_ts - (count % p_ts);
 		else if (*ptr == ' ')
 			++count;			/* count a space for one */
 		else
@@ -52,12 +56,12 @@ set_indent(size, delete)
 	if (delete)
 	{
 		while (isspace(gcharCurpos()))	/* delete old indent */
-			delchar((bool_t)FALSE);
+			delchar(FALSE);
 	}
-	while (size >= P(P_TS))
+	while (size >= p_ts)
 	{
 		inschar(TAB);
-		size -= P(P_TS);
+		size -= p_ts;
 	}
 	while (size)
 	{
@@ -74,9 +78,10 @@ set_indent(size, delete)
  * Add a blank line below or above the current line.
  */
 
-	bool_t
-Opencmd(dir)
+	int
+Opencmd(dir, redraw)
 	int 		dir;
+	int			redraw;
 {
 	char   *l;
 	char   *ptr;
@@ -85,13 +90,13 @@ Opencmd(dir)
 	int 	newindent = 0;		/* auto-indent of the new line */
 	int 	extra = 0;			/* number of bytes to be copied from current line */
 	int		n;
-	bool_t	truncate = FALSE;	/* truncate current line afterwards */
-	bool_t	no_si = FALSE;		/* reset did_si afterwards */
+	int		truncate = FALSE;	/* truncate current line afterwards */
+	int		no_si = FALSE;		/* reset did_si afterwards */
 
 	ptr = nr2ptr(Curpos.lnum);
 	u_clearline();		/* cannot do "U" command when adding lines */
 	did_si = FALSE;
-	if (P(P_AI) || P(P_SI))
+	if (p_ai || p_si)
 	{
 		/*
 		 * count white space on current line
@@ -104,7 +109,7 @@ Opencmd(dir)
 				 */
 		if (dir == FORWARD && did_ai)
 				truncate = TRUE;
-		else if (P(P_SI))
+		else if (p_si)
 		{
 			char	*p;
 			char	*pp;
@@ -143,17 +148,16 @@ Opencmd(dir)
 			}
 		}
 		did_ai = TRUE;
-		if (P(P_SI))
+		if (p_si)
 			can_si = TRUE;
 	}
 	if (State == INSERT || State == REPLACE)	/* only when dir == FORWARD */
 		extra = strlen(ptr + Curpos.col);
 	if ((l = alloc_line(extra)) == NULL)
 		return (FALSE);
-	l[0] = NUL;
 	if (extra)
 	{
-		strcat(l, ptr + Curpos.col);
+		strcpy(l, ptr + Curpos.col);
 		did_ai = FALSE; 		/* don't trucate now */
 	}
 
@@ -167,11 +171,11 @@ Opencmd(dir)
 		++Curpos.lnum;
 		if (did_si)
 		{
-			if (P(P_SR))
-				newindent -= newindent % P(P_SW);
-			newindent += P(P_SW);
+			if (p_sr)
+				newindent -= newindent % p_sw;
+			newindent += p_sw;
 		}
-		set_indent(newindent, (bool_t)FALSE);
+		set_indent(newindent, FALSE);
 		newcol = Curpos.col;
 		if (no_si)
 			did_si = FALSE;
@@ -181,14 +185,14 @@ Opencmd(dir)
 	if (dir == FORWARD)
 	{
 		if (truncate)
-				*ptr = NUL;
+			*ptr = NUL;
 		else if (extra)
 		{
-				truncate = TRUE;
-				*(ptr + Curpos.col) = NUL;		/* truncate current line at cursor */
+			truncate = TRUE;
+			*(ptr + Curpos.col) = NUL;		/* truncate current line at cursor */
 		}
 		if (truncate)
-				canincrease(0);
+			canincrease(0);
 
 		/*
 		 * Get the cursor to the start of the line, so that 'Cursrow' gets
@@ -196,27 +200,34 @@ Opencmd(dir)
 		 * follows...
 		 */
 		Curpos.col = 0;
-		cursupdate();
 
-		/*
-		 * If we're doing an open on the last logical line, then go ahead and
-		 * scroll the screen up. Otherwise, just insert a blank line at the
-		 * right place. We use calls to plines() in case the cursor is
-		 * resting on a long line.
-		 */
-		n = Cursrow + plines(Curpos.lnum);
-		if (n == (Rows - 1))
-			scrollup(1L);
-		else
-			s_ins(n, 1, (bool_t)TRUE);
+		if (redraw)
+		{
+			cursupdate();
+
+			/*
+			 * If we're doing an open on the last logical line, then go ahead and
+			 * scroll the screen up. Otherwise, just insert a blank line at the
+			 * right place. We use calls to plines() in case the cursor is
+			 * resting on a long line.
+			 */
+			n = Cursrow + plines(Curpos.lnum);
+			if (n == (Rows - 1))
+				scrollup(1L);
+			else
+				s_ins(n, 1, TRUE);
+		}
 		++Curpos.lnum;	/* cursor moves down */
 	}
-	else
-		s_ins(Cursrow, 1, (bool_t)TRUE); /* insert physical line */
+	else if (redraw)
+		s_ins(Cursrow, 1, TRUE); /* insert physical line */
 
 	Curpos.col = newcol;
-	updateScreen(VALID_TO_CURSCHAR);
-	cursupdate();		/* update Cursrow */
+	if (redraw)
+	{
+		updateScreen(VALID_TO_CURSCHAR);
+		cursupdate();		/* update Cursrow */
+	}
 	CHANGED;
 
 	return (TRUE);
@@ -251,16 +262,16 @@ plines(p)
 	 * If list mode is on, then the '$' at the end of the line takes up one
 	 * extra column.
 	 */
-	if (P(P_LS))
+	if (p_list)
 		col += 1;
 
 	/*
 	 * If 'number' mode is on, add another 8.
 	 */
-	if (P(P_NU))
+	if (p_nu)
 		col += 8;
 
-	return ((col + (Columns - 1)) / Columns);
+	return ((col + ((int)Columns - 1)) / (int)Columns);
 }
 
 /*
@@ -364,7 +375,7 @@ inschar(c)
 	 * is a match AND it's on the screen, then flash to it briefly. If it
 	 * isn't on the screen, don't do anything.
 	 */
-	if (P(P_SM) && State == INSERT && (c == ')' || c == '}' || c == ']'))
+	if (p_sm && State == INSERT && (c == ')' || c == '}' || c == ']'))
 	{
 		FPOS		   *lpos, csave;
 
@@ -376,9 +387,9 @@ inschar(c)
 			csave = Curpos;
 			Curpos = *lpos; 	/* move to matching char */
 			cursupdate();
-			windgoto(Cursrow, Curscol);
+			setcursor();
 			flushbuf();
-			delay();			/* brief pause */
+			vim_delay();		/* brief pause */
 			Curpos = csave; 	/* restore cursor position */
 			cursupdate();
 		}
@@ -415,14 +426,14 @@ insstr(s)
 	CHANGED;
 }
 
-	bool_t
+	int
 delchar(fixpos)
-	bool_t			fixpos; 	/* if TRUE fix the cursor position when done */
+	int			fixpos; 	/* if TRUE fix the cursor position when done */
 {
 	char		*ptr;
-	bool_t		lastchar;
+	int			lastchar;
 
-	ptr = nr2ptr(Curpos.lnum) + Curpos.col;
+	ptr = pos2ptr(&Curpos);
 
 	if (*ptr == NUL)	/* can't do anything */
 		return FALSE;
@@ -446,9 +457,9 @@ delchar(fixpos)
 }
 
 	void
-delline(nlines, can_update)
+dellines(nlines, can_update)
 	long 			nlines;
-	bool_t			can_update;
+	int				can_update;
 {
 	int 			doscreen;	/* if true, update the screen */
 	int 			num_plines = 0;
@@ -458,10 +469,11 @@ delline(nlines, can_update)
 	 * There's no point in keeping the screen updated if we're deleting more
 	 * than a screen's worth of lines.
 	 */
-	if (nlines > (Rows - 1) && can_update) {
+	if (nlines > (Rows - 1) && can_update)
+	{
 		doscreen = FALSE;
 		/* flaky way to clear rest of screen */
-		s_del(Cursrow, Rows - 1, (bool_t)TRUE);
+		s_del(Cursrow, (int)Rows - 1, TRUE);
 	}
 	while (nlines-- > 0)
 	{
@@ -486,30 +498,31 @@ delline(nlines, can_update)
 			break;
 		}
 	}
-	Curpos.col = 0; 	/* is this right? */
+	Curpos.col = 0;
 	/*
 	 * Delete the correct number of physical lines on the screen
 	 */
 	if (doscreen && num_plines > 0)
-	{
-		s_del(Cursrow, num_plines, (bool_t)TRUE);
-	}
+		s_del(Cursrow, num_plines, TRUE);
 }
 
+	int
 gchar(pos)
 	FPOS *pos;
 {
-	return (int)(*(nr2ptr(pos->lnum) + pos->col));
+	return (int)(*(pos2ptr(pos)));
 }
 
+	int
 gcharCurpos()
 {
-	return (int)(*(nr2ptr(Curpos.lnum) + Curpos.col));
+	return (int)(*(pos2ptr(&Curpos)));
 }
 
 /*
  * return TRUE if the cursor is before or on the first non-blank in the line
  */
+	int
 inindent()
 {
 	register char *ptr;
@@ -537,6 +550,22 @@ skipspace(pp)
     for (p = *pp; *p == ' ' || *p == '\t'; ++p)	/* skip to next non-white */
     	;
     *pp = p;
+}
+
+/*
+ * skiptospace: skip over text until ' ' or '\t'.
+ *
+ * note: you must give a pointer to a char pointer!
+ */
+	void
+skiptospace(pp)
+	char **pp;
+{
+	register char *p;
+
+	for (p = *pp; *p != ' ' && *p != '\t' && *p != NUL; ++p)
+		;
+	*pp = p;
 }
 
 /*
@@ -569,4 +598,111 @@ plural(n)
 	if (n == 1)
 		return &(buf[1]);
 	return &(buf[0]);
+}
+
+/*
+ * set_Changed is called whenever something in the file is changed
+ * If the file is readonly, give a warning message with the first change.
+ */
+	void
+set_Changed()
+{
+	if (Changed == 0 && p_ro)
+	{
+		emsg("Warning: Changing a readonly file");
+		sleep(2);		/* give the user some time to think about it */
+	}
+	Changed = 1;
+	Updated = 1;
+}
+
+	int
+ask_yesno(str)
+	char *str;
+{
+	int r = ' ';
+
+	while (r != 'y' && r != 'n')
+	{
+		smsg("%s (y/n)? ", str);
+		r = vgetc();
+		outchar(r);		/* show what you typed */
+		flushbuf();
+	}
+	return r;
+}
+
+	void
+msgmore(n)
+	long n;
+{
+	long pn;
+
+	if (n > 0)
+		pn = n;
+	else
+		pn = -n;
+
+	if (pn > p_report)
+		smsg("%ld %s lines %s", pn, n > 0 ? "more" : "fewer", got_int ? "(Interrupted)" : "");
+}
+
+/*
+ * give a warning for an error
+ */
+	void
+beep()
+{
+	flush_buffers();
+	if (p_vb)
+	{
+		if (T_VB && *T_VB)
+		    outstr(T_VB);
+		else
+		{			/* very primitive visual bell */
+	        msg("    ^G");
+	        msg("     ^G");
+	        msg("    ^G ");
+	        msg("     ^G");
+	        msg("       ");
+		}
+	}
+	else
+	    outchar('\007');
+}
+
+/* 
+ * Expand environment variable with path name.
+ * If anything fails no expansion is done and dst equals src.
+ */
+	void
+expand_env(src, dst, dstlen)
+	char	*src;			/* input string e.g. "$HOME/vim.hlp" */
+	char	*dst;			/* where to put the result */
+	int		dstlen;			/* maximum length of the result */
+{
+	char	*tail;
+	int		c;
+	char	*var;
+
+	if (*src == '$')
+	{
+		for (tail = src + 1; *tail; ++tail)
+			if (*tail == PATHSEP)
+				break;
+		c = *tail;
+		*tail = NUL;
+		var = getenv(src + 1);
+		*tail = c;
+		if (*tail)
+			++tail;
+		if (var && strlen(var) + strlen(tail) + 1 < dstlen)
+		{
+			strcpy(dst, var);
+			strcat(dst, PATHSEPSTR);
+			strcat(dst, tail);
+			return;
+		}
+	}
+	strncpy(dst, src, (size_t)dstlen);
 }

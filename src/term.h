@@ -1,6 +1,6 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMitation
+ * term.h -- VIM - Vi IMitation
  *
  * Code Contributions By:	Bram Moolenaar			mool@oce.nl
  *							Tim Thompson			twitch!tjt
@@ -14,137 +14,319 @@
  * optional. Anything not available should be indicated by a null string. In
  * the case of insert/delete line sequences, the editor checks the capability
  * and works around the deficiency, if necessary.
- *
- * Currently, insert/delete line sequences are used for screen scrolling. There
- * are lots of terminals that have 'index' and 'reverse index' capabilities,
- * but no line insert/delete. For this reason, the editor routines s_ins()
- * and s_del() should be modified to use 'index' sequences when the line to
- * be inserted or deleted at line zero.
  */
 
 /*
- * The macro names here correspond (more or less) to the actual ANSI names
+ * the terminal capabilities are stored in this structure
+ * keep in sync with array in term.c
  */
+typedef struct _tcarr
+{
+/* output codes */
+  char *t_name;		/* name of this terminal entry */
+  char *t_el;		/* el       ce	clear to end of line */
+  char *t_il;		/* il1      al	add new blank line */
+  char *t_cil;		/* il       AL	add number of blank lines */
+  char *t_dl;		/* dl1      dl	delete line */
+  char *t_cdl;		/* dl       DL	delete number of lines */
+  char *t_ed;		/* clear    cl	clear screen */
+  char *t_ci;		/* civis    vi	cursur invisible */
+  char *t_cv;		/* cnorm    ve	cursur visible */
+  char *t_tp;		/* sgr0     me	normal mode */
+  char *t_ti;		/* rev      mr	reverse mode */
+  char *t_cm;		/* cup      cm	cursor motion */
+  char *t_sr;		/* ri       sr	scroll reverse (backward) */
+  char *t_cri;		/* cuf      RI	cursor number of chars right */
+  char *t_vb;		/* flash    vb	visual bell */
+  char *t_ks;		/* smkx     ks	put terminal in "keypad transmit" mode */
+  char *t_ke;		/* rmkx     ke	out of "keypad transmit" mode */
 
-#ifdef	ATARI
-#define T_EL	"\033l" 		/* erase the entire current line */
-#define T_IL	"\033L" 		/* insert one line */
-#define T_IL_B	""
-#define T_DL	"\033M" 		/* delete one line */
-#define T_DL_B	""
-#define T_SC	"\033j" 		/* save the cursor position */
-#define T_ED	"\033E" 		/* erase display (may optionally home cursor) */
-#define T_RC	"\033k" 		/* restore the cursor position */
-#define T_CI	"\033f" 		/* invisible cursor (very optional) */
-#define T_CV	"\033e" 		/* visible cursor (very optional) */
-#define T_TP	""				/* plain text */
-#define T_TI	""				/* inverse-video text */
-#endif
+/* key codes */
+  char *t_ku;		/* kcuu1    ku	arrow up */
+  char *t_kd;		/* kcud1    kd	arrow down */
+  char *t_kl;		/* kcub1    kl	arrow left */
+  char *t_kr;		/* kcuf1    kr	arrow right */
+  char *t_sku;		/* shift arrow up */
+  char *t_skd;		/* shift arrow down */
+  char *t_skl;		/* kLFT     #4	shift arrow left */
+  char *t_skr;		/* kRIT     %	shift arrow right */
+  char *t_f1;		/* kf1      k1	function key 1 */
+  char *t_f2;		/* kf2      k2	function key 2 */
+  char *t_f3;		/* kf3      k3	function key 3 */
+  char *t_f4;		/* kf4      k4	function key 4 */
+  char *t_f5;		/* kf5      k5	function key 5 */
+  char *t_f6;		/* kf6      k6	function key 6 */
+  char *t_f7;		/* kf7      k7	function key 7 */
+  char *t_f8;		/* kf8      k8	function key 8 */
+  char *t_f9;		/* kf9      k9	function key 9 */
+  char *t_f10;		/* kf10     k;	function key 10 */
+  char *t_sf1;		/* kf11     F1	shifted function key 1 */
+  char *t_sf2;		/* kf12     F2	shifted function key 2 */
+  char *t_sf3;		/* kf13     F3	shifted function key 3 */
+  char *t_sf4;		/* kf14     F4	shifted function key 4 */
+  char *t_sf5;		/* kf15     F5	shifted function key 5 */
+  char *t_sf6;		/* kf16     F6	shifted function key 6 */
+  char *t_sf7;		/* kf17     F7	shifted function key 7 */
+  char *t_sf8;		/* kf18     F8	shifted function key 8 */
+  char *t_sf9;		/* kf19     F9	shifted function key 9 */
+  char *t_sf10;		/* kf20     FA	shifted function key 10 */
+  char *t_help;		/* khlp     %1	help key */
+  char *t_undo;		/* kund     &8	undo key */
+  /* adjust inchar() for last entry */
+} Tcarr;
 
-#ifdef	UNIX
+extern Tcarr term_strings;	/* currently used terminal strings */
+
 /*
- * The UNIX sequences are hard-wired for ansi-like terminals. I should really
- * use termcap/terminfo, but the UNIX port was done for profiling, not for
- * actual use, so it wasn't worth the effort.
+ * strings used for terminal
  */
-#define T_EL	"\033[2K"		/* erase the entire current line */
-#define T_IL	"\033[L"		/* insert one line */
-#define T_IL_B	""
-#define T_DL	"\033[M"		/* delete one line */
-#define T_DL_B	""
-#define T_ED	"\033[2J"		/* erase display (may optionally home cursor) */
-#define T_SC	"\0337" 		/* save the cursor position */
-#define T_RC	"\0338" 		/* restore the cursor position */
-#define T_CI	""				/* invisible cursor (very optional) */
-#define T_CV	""				/* visible cursor (very optional) */
-#define T_TP	""				/* plain text */
-#define T_TI	""				/* inverse-video text */
-#endif
+#define T_EL	(term_strings.t_el)
+#define T_IL	(term_strings.t_il)
+#define T_CIL	(term_strings.t_cil)
+#define T_DL	(term_strings.t_dl)
+#define T_CDL	(term_strings.t_cdl)
+#define T_ED	(term_strings.t_ed)
+#define T_CI	(term_strings.t_ci)
+#define T_CV	(term_strings.t_cv)
+#define T_TP	(term_strings.t_tp)
+#define T_TI	(term_strings.t_ti)
+#define T_CM	(term_strings.t_cm)
+#define T_SR	(term_strings.t_sr)
+#define T_CRI	(term_strings.t_cri)
+#define T_VB	(term_strings.t_vb)
+#define T_KS	(term_strings.t_ks)
+#define T_KE	(term_strings.t_ke)
 
-#ifdef	BSD
-/* The BSD 4.3 sequences are hard-wired for ansi-like terminals. */
-#define T_EL	"\033[2K"		/* erase the entire current line */
-#define T_IL	"\033[L"		/* insert line */
-#define T_IL_B	""
-#define T_DL	"\033[M"		/* delete line */
-#define T_DL_B	""
-#define T_ED	"\033[2J"		/* erase display (may optionally home cursor) */
-#define T_SC	""				/* save the cursor position */
-#define T_RC	""				/* restore the cursor position */
-#define T_CI	""				/* invisible cursor (very optional) */
-#define T_CV	""				/* visible cursor (very optional) */
-#define T_TP	""				/* plain text */
-#define T_TI	""				/* inverse-video text */
-#endif
 
-#ifdef	OS2
+#ifndef NO_BUILTIN_TCAPS
 /*
- * The OS/2 ansi console driver is pretty deficient. No insert or delete line
- * sequences. The erase line sequence only erases from the cursor to the end
- * of the line. For our purposes that works out okay, since the only time
- * T_EL is used is when the cursor is in column 0.
- *
- * The insert/delete line sequences marked here are actually implemented in
- * the file os2.c using direct OS/2 system calls. This makes the capability
- * available for the rest of the editor via appropriate escape sequences
- * passed to outstr().
+ * here are the builtin termcap entries.
+ * They not stored as complete Tcarr structures, as such a structure 
+ * is to big. 
+ * Each termcap is a concatenated string of entries, where '\0' characters
+ * followed by a skip character sepereate the capabilities. The skip 
+ * character is the relative structure offset for the following entry.
+ * See parse_builtin_tcap() in term.c for all details.
  */
-#define T_EL	"\033[K"		/* erase the entire current line */
-#define T_IL	"\033[L"		/* insert one line - fake (see os2.c) */
-#define T_IL_B	""
-#define T_DL	"\033[M"		/* delete one line - fake (see os2.c) */
-#define T_DL_B	""
-#define T_ED	"\033[2J"		/* erase display (may optionally home cursor) */
-#define T_SC	"\033[s"		/* save the cursor position */
-#define T_RC	"\033[u"		/* restore the cursor position */
-#define T_CI	""				/* invisible cursor (very optional) */
-#define T_CV	""				/* visible cursor (very optional) */
-#define T_TP	""				/* plain text */
-#define T_TI	""				/* inverse-video text */
-#endif
+# define AMIGA_TCAP "amiga\0\
+\0\033[K\0\
+\0\033[L\0\
+\0\033[%dL\0\
+\0\033[M\0\
+\0\033[%dM\0\
+\0\014\0\
+\0\033[0 p\0\
+\0\033[1 p\0\
+\0\033[0m\0\
+\0\033[7m\0\
+\0\033[%i%d;%dH\0\
+\1\033[%dC\0\
+\3\233A\0\
+\0\233B\0\
+\0\233D\0\
+\0\233C\0\
+\0\233T\0\
+\0\233S\0\
+\0\233 A\0\
+\0\233 @\0\
+\0\2330~\0\
+\0\2331~\0\
+\0\2332~\0\
+\0\2333~\0\
+\0\2334~\0\
+\0\2335~\0\
+\0\2336~\0\
+\0\2337~\0\
+\0\2338~\0\
+\0\2339~\0\
+\0\23310~\0\
+\0\23311~\0\
+\0\23312~\0\
+\0\23313~\0\
+\0\23314~\0\
+\0\23315~\0\
+\0\23316~\0\
+\0\23317~\0\
+\0\23318~\0\
+\0\23319~\0\
+\0\233?~\0\
+\0\0"
 
-#ifdef AMIGA
-/*
- * The erase line sequence only erases from the cursor to the end of the
- * line. For our purposes that works out okay, since the only time T_EL is
- * used is when the cursor is in column 0.
- */
-#define T_EL	"\033[K" 		/* erase the entire current line */
-#define T_IL	"\033["			/* insert line */
-#define T_IL_B	"L"
-#define T_DL	"\033["			/* delete line */
-#define T_DL_B	"M"
-#ifdef AUX
-# define T_ED	"\033[2J\014"	/* erase display (may optionally home cursor) */
-#else
-# define T_ED	"\014"			/* erase display (may optionally home cursor) */
-#endif
-#define T_RC	""				/* restore the cursor position */
-#define T_SC	""				/* save the cursor position */
-#define T_CI	"\033[0 p"		/* invisible cursor (very optional) */
-#define T_CV	"\033[1 p"		/* visible cursor (very optional) */
-#define T_TP	"\033[0m"		/* plain text */
-#define T_TI	"\033[7m"		/* inverse-video text */
-#endif
+# define ATARI_TCAP "atari\0\
+\0\033l\0\
+\0\033L\0\
+\1\033M\0\
+\1\033E\0\
+\0\033f\0\
+\0\033e\0\
+\0\0"
 
-#ifdef	DOS
+# define ANSI_TCAP "ansi\0\
+\0\033[2K\0\
+\0\033[L\0\
+\0\033[%dL\0\
+\0\033[M\0\
+\0\033[%dM\0\
+\0\033[2J\0\
+\2\033[0m\0\
+\0\033[7m\0\
+\0\033[%i%d;%dH\0\
+\1\033[%dC\0\
+\0\0"
+
 /*
- * DOS sequences
- *
- * Some of the following sequences require the use of the "nansi.sys"
- * console driver. The standard "ansi.sys" driver doesn't support
- * sequences for insert/delete line.
+ * Function keys on a PC are preceded with a NUL. These are converted into
+ * K_ZERO '\236' in GetChars(), because we cannot handle NULs in key codes.
+ * CTRL-arrow is used instead of SHIFT-arrow.
  */
-#define T_EL	"\033[K"		/* erase the entire current line */
-#define T_IL	"\033[L"		/* insert line (requires nansi.sys driver) */
-#define T_IL_B	""
-#define T_DL	"\033[M"		/* delete line (requires nansi.sys driver) */
-#define T_DL_B	""
-#define T_ED	"\033[2J"		/* erase display (may optionally home cursor) */
-#define T_SC	"\033[s"		/* save the cursor position */
-#define T_RC	"\033[u"		/* restore the cursor position */
-#define T_CI	""				/* invisible cursor (very optional) */
-#define T_CV	""				/* visible cursor (very optional) */
-#define T_TP	""				/* plain text */
-#define T_TI	""				/* inverse-video text */
-#endif
+# define PCTERM_TCAP "pcterm\0\
+\0\033[K\0\
+\0\033|L\0\
+\1\033|M\0\
+\1\033[2J\0\
+\2\033[0m\0\
+\0\033[7m\0\
+\0\033[%i%d;%dH\0\
+\1\033[%dC\0\
+\3\236H\0\
+\0\236P\0\
+\0\236K\0\
+\0\236M\0\
+\2\236s\0\
+\0\236t\0\
+\0\236;\0\
+\0\236<\0\
+\0\236=\0\
+\0\236>\0\
+\0\236?\0\
+\0\236@\0\
+\0\236A\0\
+\0\236B\0\
+\0\236C\0\
+\0\236D\0\
+\0\236T\0\
+\0\236U\0\
+\0\236V\0\
+\0\236W\0\
+\0\236X\0\
+\0\236Y\0\
+\0\236Z\0\
+\0\236[\0\
+\0\236\\\0\
+\0\236]\0\
+\0\0"
+
+# define VT52_TCAP "vt52\0\
+\0\033K\0\
+\0\033T\0\
+\1\033U\0\
+\1\014\0\
+\2\033SO\0\
+\0\033S2\0\
+\0\033Y%+ %+ \0\
+\0\0"
+
+# define XTERM_TCAP "xterm\0\
+\0\033[K\0\
+\0\033[L\0\
+\0\033[%dL\0\
+\0\033[M\0\
+\0\033[%dM\0\
+\0\033[2J\0\
+\2\033[m\0\
+\0\033[7m\0\
+\0\033[%i%d;%dH\0\
+\0\033M\0\
+\0\033[%dC\0\
+\1\033[?1h\0\
+\0\033[?0h\0\
+\0\033[OA\0\
+\0\033[OB\0\
+\0\033[OD\0\
+\0\033[OC\0\
+\0\033[Ox\0\
+\0\033[Or\0\
+\0\033[Ot\0\
+\0\033[Ov\0\
+\0\033[12~\0\
+\0\033[13~\0\
+\0\033[14~\0\
+\0\033[15~\0\
+\0\033[16~\0\
+\0\033[17~\0\
+\0\033[18~\0\
+\0\033[19~\0\
+\0\033[20~\0\
+\0\033[21~\0\
+\0\033[23~\0\
+\0\033[24~\0\
+\10\033[28~\0\
+\0\033[26~\0\
+\0\0"
+
+# define DEBUG_TCAP "debug\0\
+\0[EL]\0\
+\0[IL]\0\
+\0[CIL%d]\0\
+\0[DL]\0\
+\0[CDL%d]\0\
+\0[ED]\0\
+\0[CI]\0\
+\0[CV]\0\
+\0[TP]\0\
+\0[TI]\0\
+\0[%dCM%d]\0\
+\0[SR]\0\
+\0[CRI%d]\0\
+\0[VB]\0\
+\0[KS]\0\
+\0[KE]\0\
+\0[KU]\0\
+\0[KD]\0\
+\0[KL]\0\
+\0[KR]\0\
+\0[SKU]\0\
+\0[SKD]\0\
+\0[SKL]\0\
+\0[SKR]\0\
+\0[F1]\0\
+\0[F2]\0\
+\0[F3]\0\
+\0[F4]\0\
+\0[F5]\0\
+\0[F6]\0\
+\0[F7]\0\
+\0[F8]\0\
+\0[F9]\0\
+\0[F10]\0\
+\0[SF1]\0\
+\0[SF2]\0\
+\0[SF3]\0\
+\0[SF4]\0\
+\0[SF5]\0\
+\0[SF6]\0\
+\0[SF7]\0\
+\0[SF8]\0\
+\0[SF9]\0\
+\0[SF10]\0\
+\0[HELP]\0\
+\0[UNDO]\0\
+\0\0"
+
+# ifdef ATARI
+#  define DFLT_TCAP ATARI_TCAP
+# endif /* ATARI */
+
+# ifdef AMIGA
+#  define DFLT_TCAP AMIGA_TCAP
+# endif /* AMIGA */
+
+# ifdef MSDOS
+#  define DFLT_TCAP PCTERM_TCAP
+# endif /* MSDOS */
+
+# ifdef UNIX
+#  define DFLT_TCAP ANSI_TCAP
+# endif /* UNIX */
+
+#endif /* NO_BUILTIN_TCAPS */

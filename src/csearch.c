@@ -10,16 +10,17 @@
 
 /*
  *
- * cmdsearch.c: command line searching commands
+ * csearch.c: command line searching commands
  */
 
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
+#include "param.h"
 
 /* we use modified Henry Spencer's regular expression routines */
 #include "regexp.h"
 
-extern char emsg_inval[];
-extern char emsg_interrupted[];
 int global_busy = 0;			/* set to 1 if global busy, 2 if global has
 									been called during a global command */
 int global_wait;				/* set to 1 if wait_return has to be called
@@ -40,6 +41,8 @@ extern regexp *myregcomp __ARGS((char *));
  * The usual escapes are supported as described in the regexp docs.
  */
 
+extern char *reg_prev_sub;		/* this is in regexp.c */
+
 	void
 dosub(lp, up, cmd, nextcommand)
 	linenr_t	lp;
@@ -53,8 +56,8 @@ dosub(lp, up, cmd, nextcommand)
 	regexp		   *prog;
 	long			nsubs = 0;
 	linenr_t		nlines = 0;
-	bool_t			do_all; 		/* do multiple substitutions per line */
-	bool_t			do_ask; 		/* ask for confirmation */
+	int				do_all; 		/* do multiple substitutions per line */
+	int				do_ask; 		/* ask for confirmation */
 	char		   *pat, *sub;
 	static char    *old_sub = NULL;
 	int 			delimiter;
@@ -62,30 +65,30 @@ dosub(lp, up, cmd, nextcommand)
 
 	if (strchr("0123456789gc|\"#", *cmd) == NULL)       /* new pattern and substitution */
 	{
-		delimiter = *cmd;			/* remember delimiter character */
-		++cmd;						/* skip the delimiter */
-		pat = cmd;					/* note the start of the regexp */
-		while (*cmd)                /* find the end of the regexp */
-		{
-			if (cmd[0] == delimiter && cmd[-1] != '\\')
-			{
-				*cmd++ = NUL;
-				break;
-			}
-			++cmd;
-		}
+		delimiter = *cmd++;			/* remember delimiter character */
+		pat = cmd;					/* remember the start of the regexp */
 
-		sub = cmd;					/* note the start of the substitution */
-		for (;;)                    /* find the end of the substitution */
+		/*
+		 * do the next loop twice:
+		 *  i == 0: find the end of the regexp
+		 *  i == 1: find the end of the substitution
+		 */
+		for (i = 0; ; ++i)
 		{
-			if (*cmd == NUL)        /* no end delimiter */
-				break;
-			if (cmd[0] == delimiter && cmd[-1] != '\\')
+			while (cmd[0])
 			{
-				*cmd++ = NUL;
-				break;
+				if (cmd[0] == delimiter)			/* end delimiter found */
+				{
+					*cmd++ = NUL;					/* replace it by a NUL */
+					break;
+				}
+				if (cmd[0] == '\\' && cmd[1] != 0)	/* skip escaped characters */
+					++cmd;
+				++cmd;
 			}
-			cmd++;
+			if (i == 1)
+				break;
+			sub = cmd;				/* remember the start of the substitution */
 		}
 		free(old_sub);
 		old_sub = strsave(sub);
@@ -126,7 +129,7 @@ dosub(lp, up, cmd, nextcommand)
 		i = getdigits(&cmd);
 		if (i <= 0)
 		{
-			emsg("zero count");
+			emsg(e_zerocount);
 			return;
 		}
 		lp = up;
@@ -145,14 +148,14 @@ dosub(lp, up, cmd, nextcommand)
 		}
 		else
 		{
-			emsg("Trailing characters");
+			emsg(e_trailing);
 			return;
 		}
 	}
 
 	if ((prog = myregcomp(pat)) == NULL)
 	{
-		emsg(emsg_inval);
+		emsg(e_invcmd);
 		return;
 	}
 
@@ -161,12 +164,9 @@ dosub(lp, up, cmd, nextcommand)
 		ptr = nr2ptr(lnum);
 		if (regexec(prog, ptr, (int)TRUE))  /* a match on this line */
 		{
-			char		   *ns, *sns, *p, *prevp, *oldp;
-			bool_t		did_sub = FALSE;
+			char	   *ns, *sns = NULL, *p, *prevp, *oldp = NULL;
+			int			did_sub = FALSE;
 
-#ifdef LATTICE
-			oldp = NULL;	/* Lattice gives an error message without this */
-#endif
 			if (nsubs == 0)
 					setpcmark();
 			/*
@@ -191,10 +191,9 @@ dosub(lp, up, cmd, nextcommand)
 				}
 				if (do_ask)
 				{
-						cursupdate();
-						updateScreen(NOT_VALID);
+						updateScreen(CURSUPD);
 						smsg("replace by %s (y/n/q)? ", sub);
-						windgoto(Cursrow, Curscol);
+						setcursor();
 						if ((i = vgetc()) == 'q')
 						{
 							got_int = TRUE;
@@ -205,7 +204,7 @@ dosub(lp, up, cmd, nextcommand)
 				}
 
 						/* get length of substitution part */
-				sublen = regsub(prog, sub, ptr, 0, (int)P(P_MAGIC));
+				sublen = regsub(prog, sub, ptr, 0, (int)p_magic);
 				if (did_sub == FALSE)
 				{
 					/*
@@ -237,8 +236,14 @@ dosub(lp, up, cmd, nextcommand)
 				while (prevp < prog->startp[0])
 					*ns++ = *prevp++;
 
-				regsub(prog, sub, ns, 1, (int)P(P_MAGIC));
+				regsub(prog, sub, ns, 1, (int)p_magic);
 				nsubs++;
+				/*
+				 * Regsub may have replaced a ~ by the old sub.
+				 * We have to use the result, otherwise the ~ is replaced
+				 * over and over again.
+				 */
+				sub = reg_prev_sub;
 
 				prevp = prog->endp[0];	/* remember last copied character */
 				/*
@@ -253,7 +258,9 @@ skip:
 					break;
 
 skip2:
-				breakcheck();
+					/* breakcheck is slow, don't call it too often */
+				if ((nsubs & 15) == 0)
+					breakcheck();
 
 			} while (!got_int && do_all && regexec(prog, p, (int)FALSE));
 
@@ -271,27 +278,29 @@ skip2:
 					++nlines;
 			}
 		}
-		breakcheck();
+			/* breakcheck is slow, don't call it too often */
+		if ((lnum & 15) == 0)
+			breakcheck();
 	}
 
 outofmem:
 	if (nsubs)
 	{
 		CHANGED;
-		updateScreen(NOT_VALID);        /* need this to update LineSizes */
-		beginline((bool_t)TRUE);
-		if (nsubs >= P(P_RP))
+		updateScreen(CURSUPD); /* need this to update LineSizes */
+		beginline(TRUE);
+		if (nsubs >= p_report)
 			smsg("%s%ld substitution%s on %ld line%s",
 								got_int ? "(Interrupted) " : "",
 								nsubs, plural(nsubs),
 								(long)nlines, plural((long)nlines));
 		else if (got_int)
-				msg(emsg_interrupted);
+				msg(e_interr);
 		else if (do_ask)
 				msg("");
 	}
 	else if (got_int)
-		msg(emsg_interrupted);
+		msg(e_interr);
 	else
 		msg("No match");
 
@@ -330,7 +339,7 @@ doglob(type, lp, up, cmd)
 	char			delim;		/* delimiter, normally '/' */
 	char		   *pat;
 	regexp		   *prog;
-	bool_t			match;
+	int				match;
 
 	if (global_busy)
 	{
@@ -342,21 +351,23 @@ doglob(type, lp, up, cmd)
 	delim = *cmd++; 			/* skip the delimiter */
 	pat = cmd;
 
-	while (*cmd)
+	while (cmd[0])
 	{
-		if (cmd[0] == delim && cmd[-1] != '\\')
+		if (cmd[0] == delim)				/* end delimiter found */
 		{
-			*cmd++ = NUL;
+			*cmd++ = NUL;					/* replace it by a NUL */
 			break;
 		}
-		cmd++;
+		if (cmd[0] == '\\' && cmd[1] != 0)	/* skip escaped characters */
+			++cmd;
+		++cmd;
 	}
 
-	reg_ic = P(P_IC);           /* set "ignore case" flag appropriately */
+	reg_ic = p_ic;           /* set "ignore case" flag appropriately */
 
 	if ((prog = myregcomp(pat)) == NULL)
 	{
-		emsg(emsg_inval);
+		emsg(e_invcmd);
 		return;
 	}
 	msg("");
@@ -368,12 +379,14 @@ doglob(type, lp, up, cmd)
 	for (lnum = lp; lnum <= up && !got_int; ++lnum)
 	{
 		match = regexec(prog, nr2ptr(lnum), (int)TRUE);     /* a match on this line? */
-		if (type == 'g' && match || type == 'v' && !match)
+		if ((type == 'g' && match) || (type == 'v' && !match))
 		{
 			setmarked(lnum);
 			ndone++;
 		}
-		breakcheck();
+			/* breakcheck is slow, don't call it too often */
+		if ((lnum & 15) == 0)
+			breakcheck();
 	}
 
 /*
@@ -389,7 +402,7 @@ doglob(type, lp, up, cmd)
 		global_wait = 0;
 		RedrawingDisabled = TRUE;
 		old_lcount = line_count;
-		while (!got_int && (lnum = firstmarked()) && global_busy == 1)
+		while (!got_int && (lnum = firstmarked()) != 0 && global_busy == 1)
 		{
 			Curpos.lnum = lnum;
 			Curpos.col = 0;
@@ -402,9 +415,8 @@ doglob(type, lp, up, cmd)
 
 		RedrawingDisabled = FALSE;
 		if (global_wait)                /* wait for return */
-			wait_return((bool_t)FALSE);
-		screenclear();                  /* redraw */
-		updateScreen(NOT_VALID);
+			wait_return(FALSE);
+		updateScreen(CLEAR);
 		msgmore(line_count - old_lcount);
 	}
 

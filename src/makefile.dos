@@ -1,0 +1,142 @@
+#
+# Makefile for VIM on MSDOS, using Turbo C
+#
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DWILD_CARDS	wildcard expansion code
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DWILD_CARDS
+
+#>>>>> name of the compiler and linker, name of lib directory
+CC = tcc
+LINK = tlink
+LIB = d:\tc\lib
+
+#>>>>> end of choices
+###########################################################################
+
+INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h msdos.h
+CFLAGS = -c -ml -DMSDOS $(DEFINES)
+
+OBJ =	alloc.obj msdos.obj buffers.obj charset.obj cmdline.obj csearch.obj \
+	digraph.obj edit.obj fileio.obj help.obj linefunc.obj main.obj mark.obj \
+	message.obj misccmds.obj normal.obj ops.obj param.obj quickfix.obj \
+	regexp.obj regsub.obj screen.obj script.obj search.obj storage.obj \
+	tag.obj term.obj undo.obj
+
+..\vim: $(OBJ) version.c
+	$(CC) $(CFLAGS) version.c
+	$(LINK) /c /m $(LIB)\C0l @vimresp,..\vim,..\vim,$(LIB)\emu $(LIB)\Cl
+
+ctags:
+	command /c ctags *.c *.h
+
+clean:
+	del $(OBJ) version.obj mkcmdtab.obj ..\vim mkcmdtab
+
+addcr:	addcr.c
+	$(CC) addcr.c
+	command /c addcr.bat
+
+###########################################################################
+
+alloc.obj:	alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c
+
+msdos.obj:	msdos.c  $(INCL) msdos.h
+	$(CC) $(CFLAGS) msdos.c
+
+buffers.obj:	buffers.c  $(INCL)
+	$(CC) $(CFLAGS) buffers.c
+
+charset.obj:	charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c
+
+cmdline.obj:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c
+
+csearch.obj:	csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c
+
+digraph.obj:	digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c
+
+edit.obj:	edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c
+
+fileio.obj:	fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c
+
+help.obj:	help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c
+
+linefunc.obj:	linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c
+
+main.obj:	main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c
+
+mark.obj:	mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c
+
+message.obj:	message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c
+
+misccmds.obj:	misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c
+
+normal.obj:	normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c
+
+ops.obj:	ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c
+
+param.obj:	param.c  $(INCL)
+	$(CC) $(CFLAGS) param.c
+
+quickfix.obj:	quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c
+
+regexp.obj:	regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c
+
+regsub.obj:	regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c
+
+screen.obj:	screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c
+
+script.obj:	script.c  $(INCL)
+	$(CC) $(CFLAGS) script.c
+
+search.obj:	search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c
+
+storage.obj:	storage.c  $(INCL)
+	$(CC) $(CFLAGS) storage.c
+
+tag.obj:	tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c
+
+term.obj:	term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c
+
+undo.obj:	undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c
+
+cmdtab.h: cmdtab.tab mkcmdtab.exe
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab.exe: mkcmdtab.obj
+	$(CC) -ml -omkcmdtab mkcmdtab.obj
+
+mkcmdtab.obj: mkcmdtab.c
+	$(CC) $(CFLAGS) mkcmdtab.c

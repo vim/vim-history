@@ -50,8 +50,9 @@
  * - Left some magic stuff in, but only backslashed: \| \+
  * - * and \+ still work after \) even though they shouldn't.
  */
-#include "env.h"
 #include "vim.h"
+#include "globals.h"
+#include "proto.h"
 #undef DEBUG
 
 #include <stdio.h>
@@ -94,27 +95,27 @@
  * to the thing following the set of BRANCHes.)  The opcodes are:
  */
 
-/* definition	number	opnd?	meaning */
+/* definition	number			   opnd?	meaning */
 #define END 	0				/* no	End of program. */
 #define BOL 	1				/* no	Match "" at beginning of line. */
 #define EOL 	2				/* no	Match "" at end of line. */
 #define ANY 	3				/* no	Match any one character. */
 #define ANYOF	4				/* str	Match any character in this string. */
 #define ANYBUT	5				/* str	Match any character not in this
-								 * string. */
+								 *		string. */
 #define BRANCH	6				/* node Match this alternative, or the
-								 * next... */
+								 *		next... */
 #define BACK	7				/* no	Match "", "next" ptr points backward. */
 #define EXACTLY 8				/* str	Match this string. */
 #define NOTHING 9				/* no	Match empty string. */
 #define STAR	10				/* node Match this (simple) thing 0 or more
-								 * times. */
+								 *		times. */
 #define PLUS	11				/* node Match this (simple) thing 1 or more
-								 * times. */
+								 *		times. */
 #define BOW		12				/* no	Match "" after [^a-zA-Z0-9_] */
 #define EOW		13				/* no	Match "" at    [^a-zA-Z0-9_] */
 #define MOPEN	20				/* no	Mark this point in input as start of
-								 * #n. */
+								 *		#n. */
  /* MOPEN+1 is number 1, etc. */
 #define MCLOSE	30				/* no	Analogous to MOPEN. */
 #define BACKREF	40				/* node Match same string again \1-\9 */
@@ -177,6 +178,7 @@ static int ismult __ARGS((int));
 
 	static int
 ismult(c)
+	int c;
 {
 	return (c == Magic('*') || c == Magic('+') || c == Magic('?'));
 }
@@ -240,17 +242,22 @@ static char   **regendp;		/* Ditto for endp. */
 /*
  * META contains all characters that may be magic.
  * This depends on the configuration options TILDE, BACKREF.
+ * (could be done simpler for compilers that know string concatenation)
  */
 
-static char META[] = "^$.[()|?+*<>"
 #ifdef TILDE
-					 "~"
+# ifdef BACKREF
+       static char META[] = "^$.[()|?+*<>~123456789";
+# else
+       static char META[] = "^$.[()|?+*<>~";
+# endif
+#else
+# ifdef BACKREF
+       static char META[] = "^$.[()|?+*<>123456789";
+# else
+       static char META[] = "^$.[()|?+*<>";
+# endif
 #endif
-#ifdef BACKREF
-					 "123456789"
-#endif
-					 ;
-
 
 /*
  * Forward declarations for regcomp()'s friends.
@@ -278,7 +285,7 @@ static void 	regoptail __ARGS((char *, char *));
 #ifdef STRCSPN
 static int		strcspn __ARGS((const char *, const char *));
 #endif
-static int		cstrncmp __ARGS((char *s1, char *s2, int n));
+static int		cstrncmp __ARGS((char *, char *, int));
 
 /*
  - regcomp - compile a regular expression into internal code
@@ -307,7 +314,7 @@ regcomp(exp)
 /*	extern char    *malloc();*/
 
 	if (exp == NULL) {
-		FAIL("NULL argument");
+		FAIL(e_null);
 	}
 
 #ifdef EMPTY_RE
@@ -315,7 +322,7 @@ regcomp(exp)
 		if (reg_prev_re) {
 			exp = reg_prev_re;
 		} else {
-			FAIL("No previous regular expression");
+			FAIL(e_noprevre);
 		}
 	}
 #endif
@@ -332,13 +339,13 @@ regcomp(exp)
 
 	/* Small enough for pointer-storage convention? */
 	if (regsize >= 32767L)		/* Probably could be 65535L. */
-		FAIL("regexp too big");
+		FAIL(e_toolong);
 
 	/* Allocate space. */
 /*	r = (regexp *) malloc((unsigned) (sizeof(regexp) + regsize));*/
 	r = (regexp *) alloc((unsigned) (sizeof(regexp) + regsize));
 	if (r == NULL)
-		FAIL("out of space");
+		FAIL(e_outofmem);
 
 #ifdef EMPTY_RE
 	if (exp != reg_prev_re) {
@@ -417,7 +424,7 @@ reg(paren, flagp)
 	register char  *ret;
 	register char  *br;
 	register char  *ender;
-	register int	parno;
+	register int	parno = 0;
 	int 			flags;
 
 	*flagp = HASWIDTH;			/* Tentatively. */
@@ -425,7 +432,7 @@ reg(paren, flagp)
 	/* Make an MOPEN node, if parenthesized. */
 	if (paren) {
 		if (regnpar >= NSUBEXP)
-			FAIL("too many (");
+			FAIL(e_toombra);
 		parno = regnpar;
 		regnpar++;
 		ret = regnode((char)(MOPEN + parno));
@@ -466,12 +473,12 @@ reg(paren, flagp)
 
 	/* Check for proper termination. */
 	if (paren && getchr() != Magic(')')) {
-		FAIL("unmatched (");
+		FAIL(e_toombra);
 	} else if (!paren && peekchr() != '\0') {
 		if (PeekChr() == Magic(')')) {
-			FAIL("unmatched )");
+			FAIL(e_toomket);
 		} else
-			FAIL("junk on end");/* "Can't happen". */
+			FAIL(e_trailing);/* "Can't happen". */
 		/* NOTREACHED */
 	}
 	/*
@@ -577,7 +584,7 @@ regpiece(flagp)
 	}
 	skipchr();
 	if (ismult(peekchr()))
-		FAIL("nested *?+");
+		FAIL("Nested *?+");
 
 	return ret;
 }
@@ -640,7 +647,7 @@ regatom(flagp)
 						class = UCHARAT(regparse - 2) + 1;
 						classend = UCHARAT(regparse);
 						if (class > classend + 1)
-							FAIL("invalid [] range");
+							FAIL(e_invrange);
 						for (; class <= classend; class++)
 							regc((char)class);
 						regparse++;
@@ -653,7 +660,7 @@ regatom(flagp)
 			}
 			regc('\0');
 			if (*regparse != ']')
-				FAIL("unmatched [");
+				FAIL(e_toomsbra);
 			skipchr();			/* let's be friends with the lexer again */
 			*flagp |= HASWIDTH | SIMPLE;
 		}
@@ -667,7 +674,7 @@ regatom(flagp)
 	  case '\0':
 	  case Magic('|'):
 	  case Magic(')'):
-		FAIL("internal urp");	/* Supposed to be caught earlier. */
+		FAIL(e_internal);	/* Supposed to be caught earlier. */
 		/* break; Not Reached */
 	  case Magic('?'):
 	  case Magic('+'):
@@ -691,7 +698,7 @@ regatom(flagp)
 						*flagp |= SIMPLE;
 				}
 	  		} else
-				FAIL("no previous substitute");
+				FAIL(e_nopresub);
 			break;
 #endif
 #ifdef BACKREF
@@ -721,7 +728,7 @@ regatom(flagp)
 				(regendp == NULL || regendp[refnum] != NULL))
 				ret = regnode(BACKREF + refnum);
 			else
-				FAIL("illegal back reference");
+				FAIL("Illegal back reference");
 		}
 		break;
 #endif
@@ -786,7 +793,7 @@ regc(b)
 	int			b;
 {
 	if (regcode != &regdummy)
-		*regcode++ = b;
+		*(u_char *)regcode++ = b;
 	else
 		regsize++;
 }
@@ -884,7 +891,7 @@ regoptail(p, val)
  * magic and such, so therefore we need a lexical analyzer.
  */
 
-static int		curchr;
+/* static int		curchr; */
 static int		prevchr;
 
 static void
@@ -984,7 +991,7 @@ ungetchr()
 static char    *reginput;		/* String-input pointer. */
 static char    *regbol; 		/* Beginning of input, for ^ check. */
 static char   **regstartp;		/* Pointer to startp array. */
-static char   **regendp;		/* Ditto for endp. */
+/* static char   **regendp;	*/	/* Ditto for endp. */
 
 /*
  * Forwards.
@@ -1012,12 +1019,12 @@ regexec(prog, string, at_bol)
 
 	/* Be paranoid... */
 	if (prog == NULL || string == NULL) {
-		emsg("NULL parameter");
+		emsg(e_null);
 		return 0;
 	}
 	/* Check validity of program. */
 	if (UCHARAT(prog->program) != MAGIC) {
-		emsg("corrupted program");
+		emsg(e_re_corr);
 		return 0;
 	}
 	/* If there is a "must appear" string, look for it. */
@@ -1322,7 +1329,7 @@ regmatch(prog)
 			return 1; 		/* Success! */
 			/* break; Not Reached */
 		  default:
-			emsg("memory corruption");
+			emsg(e_re_corr);
 			return 0;
 			/* break; Not Reached */
 		}
@@ -1334,7 +1341,7 @@ regmatch(prog)
 	 * We get here only if there's trouble -- normally "case END" is the
 	 * terminating point.
 	 */
-	emsg("corrupted pointers");
+	emsg(e_re_corr);
 	return 0;
 }
 
@@ -1375,7 +1382,7 @@ regrepeat(p)
 		}
 		break;
 	  default:					/* Oh dear.  Called inappropriately. */
-		emsg("internal foulup");
+		emsg(e_re_corr);
 		count = 0;				/* Best compromise. */
 		break;
 	}
@@ -1580,7 +1587,7 @@ strcspn(s1, s2)
 }
 #endif
 
-int
+	static int
 cstrncmp(s1, s2, n)
 	char		   *s1, *s2;
 	int 			n;
@@ -1588,7 +1595,7 @@ cstrncmp(s1, s2, n)
 	if (!reg_ic)
 		return strncmp(s1, s2, (size_t)n);
 
-#if 1
+#ifndef UNIX
 	return strnicmp(s1, s2, (size_t)n);
 #else
 	{

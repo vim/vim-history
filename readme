@@ -1,0 +1,55 @@
+README for version 1.24 of VIM: Vi IMitation.
+
+VIM is an almost compatible version of the UNIX editor vi. Only the 'Q' 
+command is missing. Many new features have been added: multi level undo, 
+command line history, filename completion, quoting, etc. See difference.doc.
+
+This editor is very useful for editing programs and other plain ASCII files. 
+All commands are given with normal keyboard characters, so those who can type 
+with ten fingers can work very fast. Function keys can be used for macros.
+
+Vim currently runs under Amiga DOS, MSDOS and UNIX. Porting to other systems 
+should not be very difficult.
+
+Documentation:
+	  tutor/readme - one hour training course for beginners
+	 reference.doc - complete reference of all VIM commands
+	difference.doc - summarizes the differences with UNIX vi
+		 index - alfabetical list of commands
+	      unix.doc - remarks for unix
+	     msdos.doc - remarks for MSdos
+
+Vim is Public Domain. You can copy it as much as you like. If you want to 
+distribute a modified version of the source code please contact me first.
+
+Installation on the Amiga:
+- Put "arp.library" in "libs:" (always required).
+- Assign "vim:" to the directory where the vim.hlp file is (for the help 
+  command).
+- With DOS 1.3 or earlier: make sure that newcli and run are in "c:" (for 
+  executing external commands).
+- Put a shell that accepts a command with "-c" (e.g. "Csh" from Fish disk 
+  624) in "c:" or in any other directory that is in your search path (for 
+  executing external commands).
+
+If you have sufficient memory you can avoid startup delays by making Vim and 
+csh resident with the command "rez csh vim". You will have to put 
+"rezlib.library" in your "libs:" directory. Under 2.0 you will need rez 
+version 0.5.
+
+If you do not use digraphs, you can save some memory by recompiling without 
+the DIGRAPHS option. If you want to use Vim with other terminals you can 
+recompile with the TERMCAP option. See the makefiles.
+
+Please send comments, bug reports and suggestions to:
+
+	Bram Moolenaar
+	Clematisstraat 30
+	5925 BE  Venlo
+	The Netherlands
+
+UUCP E-mail:	mool@oce.nl
+
+Note: The files may have been placed in zoo files to save disk space.
+      Unzoo with the command "zoo x// vim_src.zoo". Be sure to have enough
+      disk space.
