@@ -1,6 +1,6 @@
 /* gui_amiga.c */
-void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, vimmenu_t *parent, int idx));
-void gui_mch_add_menu __ARGS((vimmenu_t *menu, vimmenu_t *parent, int idx));
+void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, int idx));
+void gui_mch_add_menu __ARGS((vimmenu_t *menu, int idx));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 int gui_mch_set_blinking __ARGS((long wait, long on, long off));
 void gui_mch_prepare __ARGS((int *argc, char **argv));

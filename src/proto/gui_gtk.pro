@@ -1,6 +1,6 @@
 /* gui_gtk.c */
-void gui_mch_add_menu __ARGS((vimmenu_t *menu, vimmenu_t *parent, int idx));
-void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, vimmenu_t *parent, int idx));
+void gui_mch_add_menu __ARGS((vimmenu_t *menu, int idx));
+void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, int idx));
 void gui_mch_set_text_area_pos __ARGS((int x, int y, int w, int h));
 void gui_gtk_set_mnemonics __ARGS((int enable));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
