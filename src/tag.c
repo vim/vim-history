@@ -959,6 +959,10 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 							)
 	goto findtag_end;
 
+#ifdef USE_CSCOPE
+    STRCPY(tag_fname, "from cscope");		/* for error messages */
+#endif
+
 /*
  * Initialize a few variables
  */
