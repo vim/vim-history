@@ -3238,11 +3238,13 @@ ex_append(eap)
 #endif
 		    NUL, eap->cookie, 0);
 	lines_left = Rows - 1;
-	if (theline == NULL || (theline[0] == '.' && theline[1] == NUL))
+	if (theline == NULL || (theline[0] == '.' && theline[1] == NUL)
+		|| (!did_undo && u_save(lnum, lnum + 1) == FAIL))
+	{
+	    vim_free(theline);
 	    break;
+	}
 
-	if (!did_undo && u_save(lnum, lnum + 1) == FAIL)
-	    break;
 	did_undo = TRUE;
 	ml_append(lnum, theline, (colnr_T)0, FALSE);
 	appended_lines_mark(lnum, 1L);

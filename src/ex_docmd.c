@@ -1261,6 +1261,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 		emsg(p);
 		vim_free(p);
 	    }
+	    vim_free(sourcing_name);
 	    sourcing_name = saved_sourcing_name;
 	    sourcing_lnum = saved_sourcing_lnum;
 	}
@@ -2650,10 +2651,9 @@ find_command(eap, full)
 	    gap = &curbuf->b_ucmds;
 	    for (;;)
 	    {
-		cmd = USER_CMD_GA(gap, 0);
-
-		for (j = 0; j < gap->ga_len; ++j, ++cmd)
+		for (j = 0; j < gap->ga_len; ++j)
 		{
+		    cmd = USER_CMD_GA(gap, j);
 		    cp = eap->cmd;
 		    np = cmd->uc_name;
 		    k = 0;
@@ -4579,7 +4579,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, compl_arg, force)
     char_u	*compl_arg;
     int		force;
 {
-    ucmd_T	*cmd;
+    ucmd_T	*cmd = NULL;
     char_u	*p;
     int		i;
     int		cmp = 1;
@@ -4607,13 +4607,13 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, compl_arg, force)
     else
 	gap = &ucmds;
 
-    /* Search for the command */
-    cmd = USER_CMD_GA(gap, 0);
-    i = 0;
-    while (i < gap->ga_len)
+    /* Search for the command in the already defined commands. */
+    for (i = 0; i < gap->ga_len; ++i)
     {
-	size_t len = STRLEN(cmd->uc_name);
+	size_t len;
 
+	cmd = USER_CMD_GA(gap, i);
+	len = STRLEN(cmd->uc_name);
 	cmp = STRNCMP(name, cmd->uc_name, name_len);
 	if (cmp == 0)
 	{
@@ -4639,9 +4639,6 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, compl_arg, force)
 	/* Stop as soon as we pass the name to add */
 	if (cmp < 0)
 	    break;
-
-	++cmd;
-	++i;
     }
 
     /* Extend the array unless we're replacing an existing command */
@@ -5124,20 +5121,19 @@ ex_delcommand(eap)
     exarg_T	*eap;
 {
     int		i = 0;
-    ucmd_T	*cmd;
+    ucmd_T	*cmd = NULL;
     int		cmp = -1;
     garray_T	*gap;
 
     gap = &curbuf->b_ucmds;
     for (;;)
     {
-	cmd = USER_CMD_GA(gap, 0);
 	for (i = 0; i < gap->ga_len; ++i)
 	{
+	    cmd = USER_CMD_GA(gap, i);
 	    cmp = STRCMP(eap->arg, cmd->uc_name);
 	    if (cmp <= 0)
 		break;
-	    ++cmd;
 	}
 	if (gap == &ucmds || cmp == 0)
 	    break;

@@ -1500,7 +1500,6 @@ ga_clear(gap)
     ga_init(gap);
 }
 
-#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Clear a growing array that contains a list of strings.
  */
@@ -1514,7 +1513,6 @@ ga_clear_strings(gap)
 	vim_free(((char_u **)(gap->ga_data))[i]);
     ga_clear(gap);
 }
-#endif
 
 /*
  * Initialize a growing array.	Don't forget to set ga_itemsize and

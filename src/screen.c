@@ -1599,6 +1599,15 @@ win_update(wp)
 				wp->w_lines_valid = wp->w_height;
 			    for (i = wp->w_lines_valid; i - j >= idx; --i)
 				wp->w_lines[i] = wp->w_lines[i - j];
+
+			    /* The w_lines[] entries for inserted lines are
+			     * now invalid, but wl_size may be used above.
+			     * Reset to zero. */
+			    while (i >= idx)
+			    {
+				wp->w_lines[i].wl_size = 0;
+				wp->w_lines[i--].wl_valid = FALSE;
+			    }
 			}
 		    }
 		}
