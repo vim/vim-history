@@ -116,6 +116,7 @@ extern char g_szOrigTitle[];
 # define WORD int
 # define DWORD int
 # define BOOL int
+# define WCHAR int
 typedef int UINT;
 typedef int CALLBACK;
 typedef int LRESULT;
@@ -734,6 +735,14 @@ mch_libcall(
  * Clipboard stuff, for cutting and pasting text to other windows.
  */
 
+/* Type used for the clipboard type of Vim's data. */
+typedef struct
+{
+    int type;		/* MCHAR, MBLOCK or MLINE */
+    int txtlen;		/* length of CF_TEXT in bytes */
+    int ucslen;		/* length of CF_UNICODETEXT in words */
+} VimClipType_t;
+
 /*
  * Make vim the owner of the current selection.  Return OK upon success.
  */
@@ -757,6 +766,244 @@ clip_mch_lose_selection(VimClipboard *cbd)
 }
 
 /*
+ * Copy "str[*size]" into allocated memory, changing CR-NL to NL.
+ * Return the allocated result and the size in "*size".
+ * Returns NULL when out of memory.
+ */
+    static char_u *
+crnl_to_nl(const char_u *str, int *size)
+{
+    int		pos = 0;
+    int		str_len = *size;
+    char_u	*ret;
+    char_u	*retp;
+
+    ret = lalloc((long_u)str_len, TRUE);
+    if (ret != NULL)
+    {
+	retp = ret;
+	for (pos = 0; pos < str_len; ++pos)
+	{
+	    if (str[pos] == '\r' && str[pos + 1] == '\n')
+	    {
+		++pos;
+		--(*size);
+	    }
+	    *retp++ = str[pos];
+	}
+    }
+
+    return ret;
+}
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * iconv-like utf-<->ucs2 interfaces.
+ *
+ * If outstr is NULL, return the required buffer length.
+ *
+ * Otherwise, convert from *instr to outstr, incrementing instr and
+ * decrementing inlen.  Return the number of bytes converted.
+ *
+ * (We assume outstr has enough space; the caller needs to make sure
+ * of this itself.)
+ */
+
+/*
+ * Convert an UTF-8 string to UCS-2 (see above for info).
+ */
+    static int
+utf8_to_ucs2(char_u **instr, int *inlen, WCHAR *outstr)
+{
+    int total_length = 0;
+
+    if (outstr == NULL)
+    {
+	/* Return the required size. */
+	int need = 0, n;
+
+	for (n = 0; n < *inlen;
+			 n += utf_ptr2len_check_len((*instr) + n, *inlen - n))
+	    need++;
+	return need;
+    }
+
+    while (*inlen)
+    {
+	/* Do we have a complete sequence? */
+	int seq_len = utf_ptr2len_check_len(*instr, *inlen);
+
+	if (seq_len > *inlen)
+	    return total_length;
+
+        *outstr = utf_ptr2char(*instr);
+	(*instr) += seq_len;
+	(*inlen) -= seq_len;
+	outstr++;
+	total_length++;
+    }
+
+    return total_length;
+}
+
+/*
+ * Convert an UCS-2 string to UTF-8 (see above for info).
+ */
+    static int
+ucs2_to_utf8(WCHAR **instr, int *inlen, char_u *outstr)
+{
+    int total_length = 0;
+
+    if (outstr == NULL)
+    {
+	/* Return the required size. */
+	int need = 0, n;
+
+	for (n = 0; n < *inlen; ++n)
+	    need += utf_char2len((*instr)[n]);
+	return need;
+    }
+
+    while (*inlen)
+    {
+	int seq_len = utf_char2bytes(**instr, outstr);
+
+	(*instr)++;
+	(*inlen)--;
+	outstr += seq_len;
+	total_length += seq_len;
+    }
+
+    return total_length;
+}
+
+/*
+ * Note: the following two functions are only guaranteed to work if iconv() is
+ * available *or* p_enc is Unicode *or* p_enc is the ACP.  If encoding=cp932,
+ * your system is in cp935, and iconv() isn't available, these return nothing.
+ * (Lots of other things don't work in this case, anyway.)
+ */
+
+/*
+ * Convert 'encoding' to UCS-2.
+ * Input in "str" with length "*len".  When "len" is NULL, use strlen().
+ * Output is returned as an allocated string.  "*len" is set to the length of
+ * the result.
+ * Returns NULL when out of memory.
+ */
+    static WCHAR *
+enc_to_ucs2(char_u *str, int *len)
+{
+    vimconv_T	conv;
+    WCHAR	*ret;
+    char_u	*allocbuf = NULL;
+    int		len_loc;
+    int		length;
+
+    if (len == NULL)
+    {
+	len_loc = STRLEN(str) + 1;
+	len = &len_loc;
+    }
+
+    if (enc_dbcs)
+    {
+	/* We can do any CP###->WIDE in one pass, and we can do it
+	 * without iconv() (convert_* may need iconv). */
+	length = MultiByteToWideChar(enc_dbcs, 0, str, *len, NULL, 0);
+	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
+	if (ret != NULL)
+	    MultiByteToWideChar(enc_dbcs, 0, str, *len, ret, length);
+    }
+    else
+    {
+#ifdef USE_ICONV
+	conv.vc_fd = (iconv_t)-1;
+#endif
+	/* We might be called before we have p_enc set up. */
+	convert_setup(&conv, p_enc ? p_enc : "latin1", "utf-8");
+	if (conv.vc_type != CONV_NONE)
+	{
+	    str = allocbuf = string_convert(&conv, str, len);
+	    if (str == NULL)
+		return NULL;
+	}
+	convert_setup(&conv, "", "");
+
+	length = utf8_to_ucs2((char_u **)&str, len, NULL);
+	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
+	if (ret != NULL)
+	    utf8_to_ucs2((char_u **)&str, len, ret);
+
+	vim_free(allocbuf);
+    }
+
+    *len = length;
+    return ret;
+}
+
+/*
+ * Convert an UCS-2 string to 'encoding'.
+ * Input in "str" with length (counted in wide characters) "*len".  When "len"
+ * is NULL, use strlen().
+ * Output is returned as an allocated string.  "*len" is set to the length of
+ * the result.
+ * Returns NULL when out of memory.
+ */
+    static char_u *
+ucs2_to_enc(WCHAR *str, int *len)
+{
+    vimconv_T	conv;
+    char_u	*utf8_str = NULL, *enc_str = NULL;
+    int		len_loc;
+
+    if (len == NULL)
+    {
+	len_loc = wcslen(str) + 1;
+	len = &len_loc;
+    }
+
+    if (enc_dbcs)
+    {
+	/* We can do any WIDE->CP### in one pass. */
+	int length = WideCharToMultiByte(enc_dbcs, 0, str, *len, NULL, 0, 0, 0);
+
+	utf8_str = alloc((unsigned)length);
+	if (utf8_str != NULL)
+	    WideCharToMultiByte(enc_dbcs, 0, str, *len, utf8_str, length, 0,0);
+	*len = length;
+        return utf8_str;
+    }
+
+    utf8_str = alloc(ucs2_to_utf8(&str, len, NULL));
+    if (utf8_str != NULL)
+    {
+	*len = ucs2_to_utf8(&str, len, utf8_str);
+
+#ifdef USE_ICONV
+	conv.vc_fd = (iconv_t)-1;
+#endif
+	/* We might be called before we have p_enc set up. */
+	convert_setup(&conv, "utf-8", p_enc? p_enc: "latin1");
+	if (conv.vc_type == CONV_NONE)
+	{
+	    /* p_enc is utf-8, so we're done. */
+	    enc_str = utf8_str;
+	}
+	else
+	{
+	    enc_str = string_convert(&conv, utf8_str, len);
+	    vim_free(utf8_str);
+	}
+
+	convert_setup(&conv, "", "");
+    }
+
+    return enc_str;
+}
+#endif /* FEAT_MBYTE */
+
+/*
  * Get the current selection and put it in the clipboard register.
  *
  * NOTE: Must use GlobalLock/Unlock here to ensure Win32s compatibility.
@@ -770,84 +1017,116 @@ clip_mch_lose_selection(VimClipboard *cbd)
     void
 clip_mch_request_selection(VimClipboard *cbd)
 {
-    int		type = MCHAR;
-    HGLOBAL	hMem;
-    char_u	*str = NULL;
+    VimClipType_t	metadata = { -1, -1, -1 };
+    HGLOBAL		hMem = NULL;
+    char_u		*str = NULL;
+    char_u		*hMemStr = NULL;
+    int			str_size = 0;
+    int			maxlen;
 
     /*
      * Don't pass GetActiveWindow() as an argument to OpenClipboard() because
      * then we can't paste back into the same window for some reason - webb.
      */
-    if (OpenClipboard(NULL))
+    if (!OpenClipboard(NULL))
+	return;
+
+    /* Check for vim's own clipboard format first.  This only gets the type of
+     * the data, still need to use CF_UNICODETEXT or CF_TEXT for the text. */
+    if (IsClipboardFormatAvailable(cbd->format))
     {
-	/* Check for vim's own clipboard format first */
-	if ((hMem = GetClipboardData(cbd->format)) != NULL)
-	{
-	    str = (char_u *)GlobalLock(hMem);
-	    if (str != NULL)
-		switch (*str++)
-		{
-		    default:
-		    case 'L':	type = MLINE;	break;
-		    case 'C':	type = MCHAR;	break;
-#ifdef FEAT_VISUAL
-		    case 'B':	type = MBLOCK;	break;
-#endif
-		}
-	}
-	/* Otherwise, check for the normal text format */
-	else if ((hMem = GetClipboardData(CF_TEXT)) != NULL)
-	{
-	    str = (char_u *)GlobalLock(hMem);
-	    if (str != NULL)
-		type = (vim_strchr((char*) str, '\r') != NULL) ? MLINE : MCHAR;
-	}
+	VimClipType_t	*meta_p;
+	HANDLE		*meta_h;
 
-	if (hMem != NULL && str != NULL)
+	/* We have metadata on the clipboard; try to get it. */
+	if ((meta_h = GetClipboardData(cbd->format)) != NULL
+		&& (meta_p = (VimClipType_t *)GlobalLock(meta_h)) != NULL)
 	{
-	    /* successful lock - must unlock when finished */
-	    if (*str != NUL)
-	    {
-		LPCSTR		psz = (LPCSTR)str;
-		char_u		*temp_clipboard;
-		char_u		*pszTemp;
-		const char	*pszNL;
-		int		len;
-
-		temp_clipboard = (char_u *)lalloc((long_u)STRLEN(psz) + 1,
-									TRUE);
-		if (temp_clipboard != NULL)
-		{
-		    /* Translate <CR><NL> into <NL>. */
-		    pszTemp = temp_clipboard;
-		    while (*psz != NUL)
-		    {
-			pszNL = psz;
-			for (;;)
-			{
-			    pszNL = strchr(pszNL, '\r');
-			    if (pszNL == NULL || pszNL[1] == '\n')
-				break;
-			    ++pszNL;
-			}
-			len = (int)((pszNL != NULL) ? pszNL - psz : STRLEN(psz));
-			STRNCPY(pszTemp, psz, len);
-			pszTemp += len;
-			if (pszNL != NULL)
-			    *pszTemp++ = '\n';
-			psz += len + ((pszNL != NULL) ? 2 : 0);
-		    }
-		    *pszTemp = NUL;
-		    clip_yank_selection(type, temp_clipboard,
-				(long)(pszTemp - temp_clipboard), cbd);
-		    vim_free(temp_clipboard);
-		}
-	    }
-	    /* unlock the global object */
-	    (void)GlobalUnlock(hMem);
+	    if (GlobalSize(meta_h) >= sizeof(VimClipType_t))
+		memcpy(&metadata, meta_p, sizeof(metadata));
+	    GlobalUnlock(meta_h);
 	}
-	CloseClipboard();
     }
+
+#if defined(FEAT_MBYTE) && defined(WIN3264)
+    /* Try to get the clipboard in Unicode. */
+    if (IsClipboardFormatAvailable(CF_UNICODETEXT))
+    {
+        HGLOBAL hMemW;
+
+	if ((hMemW = GetClipboardData(CF_UNICODETEXT)) != NULL)
+	{
+	    WCHAR *hMemWstr = (WCHAR *)GlobalLock(hMemW);
+
+	    /* Use the length of our metadata if possible, but limit it to the
+	     * GlobalSize() for safety. */
+	    maxlen = GlobalSize(hMemW) / sizeof(WCHAR);
+	    if (metadata.ucslen >= 0)
+	    {
+		if (metadata.ucslen > maxlen)
+		    str_size = maxlen;
+		else
+		    str_size = metadata.ucslen;
+	    }
+	    else
+	    {
+		for (str_size = 0; str_size < maxlen; ++str_size)
+		    if (hMemWstr[str_size] == NUL)
+			break;
+	    }
+	    str = ucs2_to_enc(hMemWstr, &str_size);
+	    GlobalUnlock(hMemW);
+	}
+    }
+    else
+#endif
+    /* Get the clipboard in the ANSI codepage. */
+    if (IsClipboardFormatAvailable(CF_TEXT))
+    {
+	if ((hMem = GetClipboardData(CF_TEXT)) != NULL)
+	{
+	    str = hMemStr = (char_u *)GlobalLock(hMem);
+
+	    /* The length is either what our metadata says or the strlen().
+	     * But limit it to the GlobalSize() for safety. */
+	    maxlen = GlobalSize(hMem);
+	    if (metadata.txtlen >= 0)
+	    {
+		if (metadata.txtlen > maxlen)
+		    str_size = maxlen;
+		else
+		    str_size = metadata.txtlen;
+	    }
+	    else
+	    {
+		for (str_size = 0; str_size < maxlen; ++str_size)
+		    if (str[str_size] == NUL)
+			break;
+	    }
+	}
+    }
+
+    if (str != NULL && *str != NUL)
+    {
+	char_u *temp_clipboard;
+
+	/* If the type is not known guess it. */
+	if (metadata.type == -1)
+	    metadata.type = (vim_strchr(str, '\n') == NULL) ? MCHAR : MLINE;
+
+	/* Translate <CR><NL> into <NL>. */
+	temp_clipboard = crnl_to_nl(str, &str_size);
+	if (temp_clipboard != NULL)
+	{
+	    clip_yank_selection(metadata.type, temp_clipboard, str_size, cbd);
+	    vim_free(temp_clipboard);
+	}
+    }
+
+    /* unlock the global object */
+    if (hMemStr != NULL)
+	GlobalUnlock(hMem);
+    CloseClipboard();
 }
 
 /*
@@ -856,66 +1135,122 @@ clip_mch_request_selection(VimClipboard *cbd)
     void
 clip_mch_set_selection(VimClipboard *cbd)
 {
-    char_u	*str = NULL;
-    long_u	cch;
-    int		type;
-    HGLOBAL	hMem = NULL;
-    HGLOBAL	hMemVim = NULL;
-    LPSTR	lpszMem = NULL;
-    LPSTR	lpszMemVim = NULL;
+    char_u		*str = NULL;
+    long_u		str_len;
+    VimClipType_t	metadata;
+    HGLOBAL		hMem = NULL;
+    HGLOBAL		hMemVim = NULL;
+# if defined(FEAT_MBYTE) && defined(WIN3264)
+    HGLOBAL		hMemW = NULL;
+# endif
 
     /* If the '*' register isn't already filled in, fill it in now */
     cbd->owned = TRUE;
     clip_get_selection(cbd);
     cbd->owned = FALSE;
 
-    type = clip_convert_selection(&str, &cch, cbd);
-
-    if (type < 0)
+    /* Get the text to be put on the clipboard, with CR-LF. */
+    metadata.type = clip_convert_selection(&str, &str_len, cbd);
+    if (metadata.type < 0)
 	return;
+    metadata.txtlen = str_len;
+    metadata.ucslen = 0;
 
-    if ((hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, cch+1)) != NULL
-	&& (lpszMem = (LPSTR)GlobalLock(hMem)) != NULL
-	&& (hMemVim = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE, cch+2)) != NULL
-	&& (lpszMemVim = (LPSTR)GlobalLock(hMemVim)) != NULL)
+# if defined(FEAT_MBYTE) && defined(WIN3264)
     {
-	switch (type)
+        WCHAR		*out;
+        int		len = str_len;
+
+	/* Convert the text to UCS-2. This is put on the clipboard as
+	 * CF_UNICODETEXT. */
+	out = enc_to_ucs2(str, &len);
+	if (out != NULL)
 	{
-	    default:
-	    case MLINE:	    *lpszMemVim++ = 'L';    break;
-	    case MCHAR:	    *lpszMemVim++ = 'C';    break;
-#ifdef FEAT_VISUAL
-	    case MBLOCK:    *lpszMemVim++ = 'B';    break;
-#endif
-	}
+	    WCHAR *lpszMemW;
 
-	STRNCPY(lpszMem, str, cch);
-	lpszMem[cch] = NUL;
-
-	STRNCPY(lpszMemVim, str, cch);
-	lpszMemVim[cch] = NUL;
-
-	/*
-	 * Don't pass GetActiveWindow() as an argument to OpenClipboard()
-	 * because then we can't paste back into the same window for some
-	 * reason - webb.
-	 */
-	if (OpenClipboard(NULL))
-	{
-	    if (EmptyClipboard())
+	    /* Allocate memory for the UCS-2 text, add one NUL word to
+	     * terminate the string. */
+	    hMemW = (LPSTR)GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE,
+						   (len + 1) * sizeof(WCHAR));
+	    lpszMemW = (WCHAR *)GlobalLock(hMemW);
+	    if (lpszMemW != NULL)
 	    {
-		SetClipboardData(cbd->format, hMemVim);
-		SetClipboardData(CF_TEXT, hMem);
+		memcpy(lpszMemW, out, len * sizeof(WCHAR));
+		lpszMemW[len] = NUL;
+		GlobalUnlock(hMemW);
 	    }
-	    CloseClipboard();
+            vim_free(out);
+	    metadata.ucslen = len;
 	}
     }
-    if (lpszMem != NULL)
-	GlobalUnlock(hMem);
-    if (lpszMemVim != NULL)
+# endif
+
+    /* Allocate memory for the text, add one NUL byte to terminate the string.
+     */
+    hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, str_len + 1);
+    {
+	LPSTR lpszMem = (LPSTR)GlobalLock(hMem);
+
+	if (lpszMem)
+	{
+	    STRNCPY(lpszMem, str, str_len);
+	    lpszMem[str_len] = NUL;
+	    GlobalUnlock(hMem);
+	}
+    }
+
+    /* Set up metadata: */
+    {
+        VimClipType_t *lpszMemVim = NULL;
+
+	hMemVim = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
+						       sizeof(VimClipType_t));
+	lpszMemVim = (VimClipType_t *)GlobalLock(hMemVim);
+	memcpy(lpszMemVim, &metadata, sizeof(metadata));
 	GlobalUnlock(hMemVim);
+    }
+
+    /*
+     * Open the clipboard, clear it and put our text on it.
+     * Always set our Vim format.  Either put Unicode or plain text on it.
+     * TODO: why not both?
+     *
+     * Don't pass GetActiveWindow() as an argument to OpenClipboard()
+     * because then we can't paste back into the same window for some
+     * reason - webb.
+     */
+    if (OpenClipboard(NULL))
+    {
+	if (EmptyClipboard())
+	{
+	    SetClipboardData(cbd->format, hMemVim);
+	    hMemVim = 0;
+# if defined(FEAT_MBYTE) && defined(WIN3264)
+	    if (hMemW != NULL)
+	    {
+		SetClipboardData(CF_UNICODETEXT, hMemW);
+		hMemW = 0;
+	    }
+	    else
+# endif
+	    {
+		SetClipboardData(CF_TEXT, hMem);
+		hMem = 0;
+	    }
+	}
+	CloseClipboard();
+    }
 
     vim_free(str);
+    /* Free any allocations we didn't give to the clipboard: */
+    if (hMem)
+	GlobalFree(hMem);
+# if defined(FEAT_MBYTE) && defined(WIN3264)
+    if (hMemW)
+	GlobalFree(hMemW);
+# endif
+    if (hMemVim)
+	GlobalFree(hMemVim);
 }
 
 #endif /* FEAT_CLIPBOARD */
