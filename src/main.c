@@ -2380,8 +2380,10 @@ usage()
 # endif
 #endif
 #ifdef FEAT_CLIENTSERVER
-    main_msg(_("--remote <files>\tEdit <files> in a Vim server and exit"));
+    main_msg(_("--remote <files>\tEdit <files> in a Vim server if possible"));
+    main_msg(_("--remote-silent <files>  Same, don't complain if there is no server"));
     main_msg(_("--remote-wait <files>  As --remote but wait for files to have been edited"));
+    main_msg(_("--remote-wait-silent <files>  Same, don't complain if there is no server"));
     main_msg(_("--remote-send <keys>\tSend <keys> to a Vim server and exit"));
     main_msg(_("--remote-expr <expr>\tEvaluate <expr> in a Vim server and print result"));
     main_msg(_("--serverlist\t\tList available Vim server names and exit"));
@@ -2606,199 +2608,217 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     if (sname == NULL)
 	return;
 
-# ifdef FEAT_X11
-    if (xterm_dpy != NULL)	/* Win32 always works? */
-# endif
+    /*
+     * Execute the command server related arguments and remove them
+     * from the argc/argv array; We may have to return into main()
+     */
+    for (i = 1; i < Argc; i++)
     {
-	/*
-	 * Execute the command server related arguments and remove them
-	 * from the argc/argv array; We may have to return into main()
-	 */
-	for (i = 1; i < Argc; i++)
+	res = NULL;
+	if (STRCMP(argv[i], "--") == 0)	/* end of options */
 	{
-	    res = NULL;
-	    if (STRCMP(argv[i], "--") == 0)	/* end of options */
-	    {
-		for (; i < *argc; i++)
-		{
-		    *newArgV++ = argv[i];
-		    newArgC++;
-		}
-		break;
-	    }
-
-	    if (STRICMP(argv[i], "--remote") == 0)
-		argtype = ARGTYPE_EDIT;
-	    else if (STRICMP(argv[i], "--remote-silent") == 0)
-	    {
-		argtype = ARGTYPE_EDIT;
-		silent = TRUE;
-	    }
-	    else if (STRICMP(argv[i], "--remote-wait") == 0)
-		argtype = ARGTYPE_EDIT_WAIT;
-	    else if (STRICMP(argv[i], "--remote-wait-silent") == 0)
-	    {
-		argtype = ARGTYPE_EDIT_WAIT;
-		silent = TRUE;
-	    }
-	    else if (STRICMP(argv[i], "--remote-send") == 0)
-		argtype = ARGTYPE_SEND;
-	    else
-		argtype = ARGTYPE_OTHER;
-	    if (argtype != ARGTYPE_OTHER)
-	    {
-		if (i == *argc - 1)
-		    mainerr_arg_missing((char_u *)argv[i]);
-		if (argtype == ARGTYPE_SEND)
-		{
-		    *serverStr = (char_u *)argv[i + 1];
-		    i++;
-		}
-		else
-		{
-		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
-						argtype == ARGTYPE_EDIT_WAIT);
-		    if (*serverStr == NULL)
-		    {
-			/* Probably out of memory, exit. */
-			didone = TRUE;
-			exiterr = 1;
-			break;
-		    }
-		    Argc = i;
-		}
-# ifdef FEAT_X11
-		ret = serverSendToVim(xterm_dpy, sname, *serverStr,
-						    NULL, &srv, 0, 0, silent);
-# else
-		ret = serverSendToVim(sname, *serverStr, NULL, &srv, 0, silent);
-# endif
-		if (ret < 0)
-		{
-		    if (argtype == ARGTYPE_SEND)
-		    {
-			/* Failed to send, abort. */
-			mch_errmsg(_("\nSend failed.\n"));
-			didone = TRUE;
-			exiterr = 1;
-		    }
-		    else if (!silent)
-			/* Let vim start normally.  */
-			mch_errmsg(_("\nSend failed. Trying to execute locally\n"));
-		    break;
-		}
-
-# ifdef FEAT_GUI_W32
-		/* Guess that when the server name starts with "g" it's a GUI
-		 * server, which we can bring to the foreground here.
-		 * Foreground() in the server doesn't work very well. */
-		if (argtype != ARGTYPE_SEND && TOUPPER_ASC(*sname) == 'G')
-		    SetForegroundWindow(srv);
-# endif
-
-		/*
-		 * For --remote-wait: Wait until the server did edit each
-		 * file.  Also detect that the server no longer runs.
-		 */
-		if (ret >= 0 && argtype == ARGTYPE_EDIT_WAIT)
-		{
-		    int	    numFiles = *argc - i - 1;
-		    int	    j;
-		    char_u  *done = alloc(numFiles);
-		    char_u  *p;
-# ifdef FEAT_GUI_W32
-		    NOTIFYICONDATA ni;
-		    int count = 0;
-		    extern HWND message_window;
-
-		    ni.cbSize = sizeof(ni);
-		    ni.hWnd = message_window;
-		    ni.uID = 0;
-		    ni.uFlags = NIF_ICON|NIF_TIP;
-		    ni.hIcon = LoadIcon((HINSTANCE)GetModuleHandle(0),
-								   "IDR_VIM");
-		    sprintf(ni.szTip, _("%d of %d edited"), count, numFiles);
-		    Shell_NotifyIcon(NIM_ADD, &ni);
-# endif
-
-		    /* Wait for all files to unload in remote */
-		    memset(done, 0, numFiles);
-		    while (memchr(done, 0, numFiles) != NULL)
-		    {
-# ifdef WIN32
-			p = serverGetReply(srv, NULL, TRUE, TRUE);
-			if (p == NULL)
-			    break;
-# else
-			if (serverReadReply(xterm_dpy, srv, &p, TRUE) < 0)
-			    break;
-# endif
-			j = atoi((char *)p);
-			if (j >= 0 && j < numFiles)
-			{
-# ifdef FEAT_GUI_W32
-			    ++count;
-			    sprintf(ni.szTip, _("%d of %d edited"),
-							     count, numFiles);
-			    Shell_NotifyIcon(NIM_MODIFY, &ni);
-# endif
-			    done[j] = 1;
-			}
-		    }
-# ifdef FEAT_GUI_W32
-		    Shell_NotifyIcon(NIM_DELETE, &ni);
-# endif
-		}
-	    }
-	    else if (STRICMP(argv[i], "--remote-expr") == 0)
-	    {
-		if (i == *argc - 1)
-		    mainerr_arg_missing((char_u *)argv[i]);
-# ifdef WIN32
-		if (serverSendToVim(sname, (char_u *)argv[i + 1],
-						    &res, NULL, 1, FALSE) < 0)
-# else
-		if (serverSendToVim(xterm_dpy, sname, (char_u *)argv[i + 1],
-						 &res, NULL, 1, 1, FALSE) < 0)
-# endif
-		    mch_errmsg(_("Send expression failed.\n"));
-	    }
-	    else if (STRICMP(argv[i], "--serverlist") == 0)
-	    {
-# ifdef WIN32
-		res = serverGetVimNames();
-#else
-		res = serverGetVimNames(xterm_dpy);
-#endif
-	    }
-	    else if (STRICMP(argv[i], "--servername") == 0)
-	    {
-		/* Alredy processed. Take it out of the command line */
-		i++;
-		continue;
-	    }
-	    else
+	    for (; i < *argc; i++)
 	    {
 		*newArgV++ = argv[i];
 		newArgC++;
-		continue;
 	    }
-	    didone = TRUE;
-	    if (res != NULL && *res != NUL)
-	    {
-		mch_msg((char *)res);
-		if (res[STRLEN(res) - 1] != '\n')
-		    mch_msg("\n");
-	    }
-	    vim_free(res);
+	    break;
 	}
 
-	if (didone)
+	if (STRICMP(argv[i], "--remote") == 0)
+	    argtype = ARGTYPE_EDIT;
+	else if (STRICMP(argv[i], "--remote-silent") == 0)
 	{
-	    display_errors();	/* display any collected messages */
-	    exit(exiterr);	/* Mission accomplished - get out */
+	    argtype = ARGTYPE_EDIT;
+	    silent = TRUE;
 	}
+	else if (STRICMP(argv[i], "--remote-wait") == 0)
+	    argtype = ARGTYPE_EDIT_WAIT;
+	else if (STRICMP(argv[i], "--remote-wait-silent") == 0)
+	{
+	    argtype = ARGTYPE_EDIT_WAIT;
+	    silent = TRUE;
+	}
+	else if (STRICMP(argv[i], "--remote-send") == 0)
+	    argtype = ARGTYPE_SEND;
+	else
+	    argtype = ARGTYPE_OTHER;
+	if (argtype != ARGTYPE_OTHER)
+	{
+	    if (i == *argc - 1)
+		mainerr_arg_missing((char_u *)argv[i]);
+	    if (argtype == ARGTYPE_SEND)
+	    {
+		*serverStr = (char_u *)argv[i + 1];
+		i++;
+	    }
+	    else
+	    {
+		*serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
+						argtype == ARGTYPE_EDIT_WAIT);
+		if (*serverStr == NULL)
+		{
+		    /* Probably out of memory, exit. */
+		    didone = TRUE;
+		    exiterr = 1;
+		    break;
+		}
+		Argc = i;
+	    }
+# ifdef FEAT_X11
+	    if (xterm_dpy == NULL)
+	    {
+		mch_errmsg(_("No display"));
+		ret = -1;
+	    }
+	    else
+		ret = serverSendToVim(xterm_dpy, sname, *serverStr,
+						    NULL, &srv, 0, 0, silent);
+# else
+	    /* Win32 always works? */
+	    ret = serverSendToVim(sname, *serverStr, NULL, &srv, 0, silent);
+# endif
+	    if (ret < 0)
+	    {
+		if (argtype == ARGTYPE_SEND)
+		{
+		    /* Failed to send, abort. */
+		    mch_errmsg(_(": Send failed.\n"));
+		    didone = TRUE;
+		    exiterr = 1;
+		}
+		else if (!silent)
+		    /* Let vim start normally.  */
+		    mch_errmsg(_(": Send failed. Trying to execute locally\n"));
+		break;
+	    }
+
+# ifdef FEAT_GUI_W32
+	    /* Guess that when the server name starts with "g" it's a GUI
+	     * server, which we can bring to the foreground here.
+	     * Foreground() in the server doesn't work very well. */
+	    if (argtype != ARGTYPE_SEND && TOUPPER_ASC(*sname) == 'G')
+		SetForegroundWindow(srv);
+# endif
+
+	    /*
+	     * For --remote-wait: Wait until the server did edit each
+	     * file.  Also detect that the server no longer runs.
+	     */
+	    if (ret >= 0 && argtype == ARGTYPE_EDIT_WAIT)
+	    {
+		int	numFiles = *argc - i - 1;
+		int	j;
+		char_u  *done = alloc(numFiles);
+		char_u  *p;
+# ifdef FEAT_GUI_W32
+		NOTIFYICONDATA ni;
+		int	count = 0;
+		extern HWND message_window;
+
+		ni.cbSize = sizeof(ni);
+		ni.hWnd = message_window;
+		ni.uID = 0;
+		ni.uFlags = NIF_ICON|NIF_TIP;
+		ni.hIcon = LoadIcon((HINSTANCE)GetModuleHandle(0), "IDR_VIM");
+		sprintf(ni.szTip, _("%d of %d edited"), count, numFiles);
+		Shell_NotifyIcon(NIM_ADD, &ni);
+# endif
+
+		/* Wait for all files to unload in remote */
+		memset(done, 0, numFiles);
+		while (memchr(done, 0, numFiles) != NULL)
+		{
+# ifdef WIN32
+		    p = serverGetReply(srv, NULL, TRUE, TRUE);
+		    if (p == NULL)
+			break;
+# else
+		    if (serverReadReply(xterm_dpy, srv, &p, TRUE) < 0)
+			break;
+# endif
+		    j = atoi((char *)p);
+		    if (j >= 0 && j < numFiles)
+		    {
+# ifdef FEAT_GUI_W32
+			++count;
+			sprintf(ni.szTip, _("%d of %d edited"),
+							     count, numFiles);
+			Shell_NotifyIcon(NIM_MODIFY, &ni);
+# endif
+			done[j] = 1;
+		    }
+		}
+# ifdef FEAT_GUI_W32
+		Shell_NotifyIcon(NIM_DELETE, &ni);
+# endif
+	    }
+	}
+	else if (STRICMP(argv[i], "--remote-expr") == 0)
+	{
+	    if (i == *argc - 1)
+		mainerr_arg_missing((char_u *)argv[i]);
+# ifdef WIN32
+	    /* Win32 always works? */
+	    if (serverSendToVim(sname, (char_u *)argv[i + 1],
+						    &res, NULL, 1, FALSE) < 0)
+# else
+	    if (xterm_dpy == NULL)
+		mch_errmsg(_("No display: Send expression failed.\n"));
+	    else if (serverSendToVim(xterm_dpy, sname, (char_u *)argv[i + 1],
+						 &res, NULL, 1, 1, FALSE) < 0)
+# endif
+	    {
+		if (res != NULL && *res != NUL)
+		{
+		    /* Output error from remote */
+		    mch_errmsg((char *)res);
+		    vim_free(res);
+		    res = NULL;
+		}
+		mch_errmsg(_(": Send expression failed.\n"));
+	    }
+	}
+	else if (STRICMP(argv[i], "--serverlist") == 0)
+	{
+# ifdef WIN32
+	    /* Win32 always works? */
+	    res = serverGetVimNames();
+# else
+	    if (xterm_dpy != NULL)
+		res = serverGetVimNames(xterm_dpy);
+# endif
+	    if (called_emsg)
+		mch_errmsg("\n");
+	}
+	else if (STRICMP(argv[i], "--servername") == 0)
+	{
+	    /* Alredy processed. Take it out of the command line */
+	    i++;
+	    continue;
+	}
+	else
+	{
+	    *newArgV++ = argv[i];
+	    newArgC++;
+	    continue;
+	}
+	didone = TRUE;
+	if (res != NULL && *res != NUL)
+	{
+	    mch_msg((char *)res);
+	    if (res[STRLEN(res) - 1] != '\n')
+		mch_msg("\n");
+	}
+	vim_free(res);
     }
+
+    if (didone)
+    {
+	display_errors();	/* display any collected messages */
+	exit(exiterr);	/* Mission accomplished - get out */
+    }
+
     /* Return back into main() */
     *argc = newArgC;
     vim_free(sname);
@@ -2890,10 +2910,9 @@ server_to_input_buf(str)
     /* Set 'cpoptions' the way we want it.
      *    B set - backslashes are *not* treated specially
      *    k set - keycodes are *not* reverse-engineered
-     *    < unset - <Key> sequenecs *are* interpreted
-     *  last parameter of replace_termcodes() is TRUE so that
-     *  the <lt> sequence is recognised - needed as backslash
-     *  is not special...
+     *    < unset - <Key> sequences *are* interpreted
+     *  The last parameter of replace_termcodes() is TRUE so that the <lt>
+     *  sequence is recognised - needed for a real backslash.
      */
     p_cpo = (char_u *)"Bk";
     str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
