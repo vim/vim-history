@@ -5052,11 +5052,16 @@ write_viminfo_registers(fp)
     char_u  c;
     int	    num_lines;
     int	    max_num_lines;
+    int	    max_kbyte;
+    long    len;
 
     fprintf(fp, _("\n# Registers:\n"));
 
     max_num_lines = get_viminfo_parameter('"');
     if (max_num_lines == 0)
+	return;
+    max_kbyte = get_viminfo_parameter('s');
+    if (max_kbyte == 0)
 	return;
     for (i = 0; i < NUM_REGISTERS; i++)
     {
@@ -5072,6 +5077,17 @@ write_viminfo_registers(fp)
 	if (i == TILDE_REGISTER)
 	    continue;
 #endif
+	num_lines = y_regs[i].y_size;
+	if (max_kbyte > 0)
+	{
+	    /* Skip register if there is more text than the maximum size. */
+	    len = 0;
+	    for (j = 0; j < num_lines; j++)
+		len += STRLEN(y_regs[i].y_array[j]) + 1L;
+	    if (len > (long)max_kbyte * 1024L)
+		continue;
+	}
+
 	switch (y_regs[i].y_type)
 	{
 	    case MLINE:
@@ -5102,7 +5118,6 @@ write_viminfo_registers(fp)
 		    0
 #endif
 		    );
-	num_lines = y_regs[i].y_size;
 
 	/* If max_num_lines < 0, then we save ALL the lines in the register */
 	if (max_num_lines > 0 && num_lines > max_num_lines)
