@@ -2573,8 +2573,8 @@ gui_mch_draw_part_cursor(w, h, color)
 	    !(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
 		FILL_X(gui.col),
-	    FILL_Y(gui.row) + gui.char_height - h + (int)p_linespace / 2,
-	    w, h - (int)p_linespace);
+	    FILL_Y(gui.row) + gui.char_height - h,
+	    w, h);
 }
 
 /*
