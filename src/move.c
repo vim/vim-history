@@ -1144,6 +1144,8 @@ curs_columns(scroll)
 	{
 	    /* less then 'scrolloff' lines below, increase skipcol */
 	    endcol = (n - curwin->w_height + 1) * width;
+	    while (endcol > curwin->w_virtcol)
+		endcol -= width;
 	    if (endcol > curwin->w_skipcol)
 		curwin->w_skipcol = endcol;
 	}
