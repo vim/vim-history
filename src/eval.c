@@ -7163,6 +7163,9 @@ find_var_ga(name, varname)
 {
     if (name[1] != ':')
     {
+	/* If not "x:name" there must not be any ":" in the name. */
+	if (vim_strchr(name, ':') != NULL)
+	    return NULL;
 	*varname = name;
 	if (current_funccal == NULL)
 	    return &variables;			/* global variable */
@@ -7352,7 +7355,10 @@ set_var(name, varp)
     {
 	gap = find_var_ga(name, &varname);
 	if (gap == NULL)    /* illegal name */
+	{
+	    EMSG2(_("E461: Illegal variable name: %s"), name);
 	    return;
+	}
 
 	/* Try to use an empty entry */
 	for (i = gap->ga_len; --i >= 0; )
