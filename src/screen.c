@@ -3036,18 +3036,22 @@ win_line(wp, lnum, startrow, endrow)
 				else
 				    shl->endp = line + MAXCOL;
 
-				/* for a non-null match, loop to check if the
-				 * match starts at the current position */
-				if (shl->startp != shl->endp)
-				    continue;
-
-				/* highlight empty match, try again after it */
+				if (shl->startp == shl->endp)
+				{
+				    /* highlight empty match, try again after
+				     * it */
 #ifdef FEAT_MBYTE
-				if (has_mbyte)
-				    shl->endp += (*mb_ptr2len_check)(shl->endp);
-				else
+				    if (has_mbyte)
+					shl->endp +=
+					       (*mb_ptr2len_check)(shl->endp);
+				    else
 #endif
-				    ++shl->endp;
+					++shl->endp;
+				}
+
+				/* Loop to check if the match starts at the
+				 * current position */
+				continue;
 			    }
 			}
 			break;
