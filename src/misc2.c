@@ -1281,7 +1281,8 @@ mch_memmove(dst_arg, src_arg, len)
 
 #if (!defined(HAVE_STRCASECMP) && !defined(HAVE_STRICMP)) || defined(PROTO)
 /*
- * Compare two strings, ignoring case.
+ * Compare two strings, ignoring case, using current locale.
+ * Doesn't work for multi-byte characters.
  * return 0 for match, < 0 for smaller, > 0 for bigger
  */
     int
@@ -1293,7 +1294,7 @@ vim_stricmp(s1, s2)
 
     for (;;)
     {
-	i = (int)TO_LOWER(*s1) - (int)TO_LOWER(*s2);
+	i = (int)TOLOWER_LOC(*s1) - (int)TOLOWER_LOC(*s2);
 	if (i != 0)
 	    return i;			    /* this character different */
 	if (*s1 == NUL)
@@ -1307,7 +1308,8 @@ vim_stricmp(s1, s2)
 
 #if (!defined(HAVE_STRNCASECMP) && !defined(HAVE_STRNICMP)) || defined(PROTO)
 /*
- * Compare two strings, for length "len", ignoring case.
+ * Compare two strings, for length "len", ignoring case, using current locale.
+ * Doesn't work for multi-byte characters.
  * return 0 for match, < 0 for smaller, > 0 for bigger
  */
     int
@@ -1320,7 +1322,7 @@ vim_strnicmp(s1, s2, len)
 
     while (len > 0)
     {
-	i = (int)TO_LOWER(*s1) - (int)TO_LOWER(*s2);
+	i = (int)TOLOWER_LOC(*s1) - (int)TOLOWER_LOC(*s2);
 	if (i != 0)
 	    return i;			    /* this character different */
 	if (*s1 == NUL)
@@ -1934,13 +1936,10 @@ name_to_mod_mask(c)
 {
     int	    i;
 
-    if (c > 0 && c <= 255)	/* avoid TO_UPPER() with number > 255 */
-    {
-	c = TO_UPPER(c);
-	for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
-	    if (c == mod_mask_table[i].name)
-		return mod_mask_table[i].mod_flag;
-    }
+    c = TOUPPER_ASC(c);
+    for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
+	if (c == mod_mask_table[i].name)
+	    return mod_mask_table[i].mod_flag;
     return 0;
 }
 
@@ -2288,7 +2287,7 @@ extract_modifiers(key, modp)
 #endif
     if ((modifiers & MOD_MASK_SHIFT) && ASCII_ISALPHA(key))
     {
-	key = TO_UPPER(key);
+	key = TOUPPER_ASC(key);
 	modifiers &= ~MOD_MASK_SHIFT;
     }
     if ((modifiers & MOD_MASK_CTRL)
@@ -2372,7 +2371,7 @@ get_special_key_code(name)
 	{
 	    table_name = key_names_table[i].name;
 	    for (j = 0; vim_isIDc(name[j]) && table_name[j] != NUL; j++)
-		if (TO_LOWER(table_name[j]) != TO_LOWER(name[j]))
+		if (TOLOWER_ASC(table_name[j]) != TOLOWER_ASC(name[j]))
 		    break;
 	    if (!vim_isIDc(name[j]) && table_name[j] == NUL)
 		return key_names_table[i].key;
@@ -2796,7 +2795,7 @@ parse_shape_opt(what)
 			len = 1;
 		    else
 			len = 2;
-		    if (len == 1 && TO_LOWER(modep[0]) == 'a')
+		    if (len == 1 && TOLOWER_ASC(modep[0]) == 'a')
 			all_idx = SHAPE_IDX_COUNT - 1;
 		    else
 		    {
@@ -2893,7 +2892,7 @@ parse_shape_opt(what)
 				    return (char_u *)N_("Illegal percentage");
 				if (round == 2)
 				{
-				    if (TO_LOWER(i) == 'v')
+				    if (TOLOWER_ASC(i) == 'v')
 					shape_table[idx].shape = SHAPE_VER;
 				    else
 					shape_table[idx].shape = SHAPE_HOR;
@@ -4466,7 +4465,7 @@ ff_wc_equal(s1, s2)
     {
 	if (s1[i] != s2[i]
 #ifdef CASE_INSENSITIVE_FILENAME
-		&& TO_UPPER(s1[i]) != TO_UPPER(s2[i])
+		&& TOUPPER_LOC(s1[i]) != TOUPPER_LOC(s2[i])
 #endif
 		)
 	{
@@ -5217,7 +5216,7 @@ pathcmp(p, q)
 
 	if (
 #ifdef CASE_INSENSITIVE_FILENAME
-		TO_UPPER(p[i]) != TO_UPPER(q[i])
+		TOUPPER_LOC(p[i]) != TOUPPER_LOC(q[i])
 #else
 		p[i] != q[i]
 #endif

@@ -2845,7 +2845,7 @@ vim_regexec_both(line, col)
 			(enc_utf8 && utf_fold(prog->regstart) == utf_fold(c)))
 			|| (c < 255 && prog->regstart < 255 &&
 #endif
-			    TO_LOWER(prog->regstart) == TO_LOWER(c)))))
+			    TOLOWER_LOC(prog->regstart) == TOLOWER_LOC(c)))))
 	    retval = regtry(prog, col);
 	else
 	    retval = 0;
@@ -3432,7 +3432,7 @@ regmatch(scan)
 #ifdef FEAT_MBYTE
 			    !enc_utf8 &&
 #endif
-			    TO_LOWER(*opnd) != TO_LOWER(*reginput))))
+			    TOLOWER_LOC(*opnd) != TOLOWER_LOC(*reginput))))
 		    return FALSE;
 		if (*opnd == NUL)
 		{
@@ -3886,9 +3886,9 @@ regmatch(scan)
 		    if (ireg_ic)
 		    {
 			if (isupper(nextb))
-			    nextb_ic = TO_LOWER(nextb);
+			    nextb_ic = TOLOWER_LOC(nextb);
 			else
-			    nextb_ic = TO_UPPER(nextb);
+			    nextb_ic = TOUPPER_LOC(nextb);
 		    }
 		    else
 			nextb_ic = nextb;
@@ -4407,8 +4407,8 @@ do_class:
 	     * would have been used for it. */
 	    if (ireg_ic)
 	    {
-		cu = TO_UPPER(*opnd);
-		cl = TO_LOWER(*opnd);
+		cu = TOUPPER_LOC(*opnd);
+		cl = TOLOWER_LOC(*opnd);
 		while (count < maxcount && (*scan == cu || *scan == cl))
 		{
 		    count++;
@@ -5206,9 +5206,9 @@ cstrchr(s, c)
     else
 #endif
 	 if (isupper(c))
-	cc = TO_LOWER(c);
+	cc = TOLOWER_LOC(c);
     else if (islower(c))
-	cc = TO_UPPER(c);
+	cc = TOUPPER_LOC(c);
     else
 	return vim_strchr(s, c);
 
@@ -5266,7 +5266,7 @@ do_upper(d, c)
     char_u *d;
     int c;
 {
-    *d = TO_UPPER(c);
+    *d = TOUPPER_LOC(c);
 
     return (fptr)NULL;
 }
@@ -5276,7 +5276,7 @@ do_Upper(d, c)
     char_u *d;
     int c;
 {
-    *d = TO_UPPER(c);
+    *d = TOUPPER_LOC(c);
 
     return (fptr)do_Upper;
 }
@@ -5286,7 +5286,7 @@ do_lower(d, c)
     char_u *d;
     int c;
 {
-    *d = TO_LOWER(c);
+    *d = TOLOWER_LOC(c);
 
     return (fptr)NULL;
 }
@@ -5296,7 +5296,7 @@ do_Lower(d, c)
     char_u	*d;
     int		c;
 {
-    *d = TO_LOWER(c);
+    *d = TOLOWER_LOC(c);
 
     return (fptr)do_Lower;
 }

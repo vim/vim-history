@@ -385,36 +385,81 @@ transstr(s)
 
 #if defined(FEAT_SYN_HL) || defined(FEAT_INS_EXPAND) || defined(PROTO)
 /*
- * Convert the string "p" to do ignore-case comparing.
- * It's done in-place.
+ * Convert the string "p[len]" to do ignore-case comparing.  Uses the current
+ * locale.  Returns an allocated string (NULL for out-of-memory).
  */
-    void
-str_foldcase(p)
-    char_u	*p;
+    char_u *
+str_foldcase(str, len)
+    char_u	*str;
+    int		len;
 {
-    while (*p != NUL)
+    garray_T	ga;
+    int		i;
+
+#define GA_CHAR(i)  ((char_u *)ga.ga_data)[i]
+#define GA_PTR(i)   ((char_u *)ga.ga_data + i)
+
+    /* Copy "str" into allocated memory, unmodified. */
+    ga_init2(&ga, 1, 10);
+    if (ga_grow(&ga, len + 1) == FAIL)
+	return NULL;
+    mch_memmove(ga.ga_data, str, len);
+    GA_CHAR(len) = NUL;
+    ga.ga_len = len;
+    ga.ga_room -= len;
+
+    /* Make each character lower case. */
+    i = 0;
+    while (GA_CHAR(i) != NUL)
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && MB_BYTE2LEN(*p) > 1)
+	if (enc_utf8 || (has_mbyte && MB_BYTE2LEN(GA_CHAR(i)) > 1))
 	{
 	    if (enc_utf8)
 	    {
 		int	c, lc;
 
-		c = utf_ptr2char(p);
+		c = utf_ptr2char(GA_PTR(i));
 		lc = utf_tolower(c);
-		if (c != lc && utf_char2len(c) == utf_char2len(lc))
-		    (void)utf_char2bytes(c, p);
+		if (c != lc)
+		{
+		    int	    ol = utf_char2len(c);
+		    int	    nl = utf_char2len(lc);
+
+		    /* If the byte length changes need to shift the following
+		     * characters forward or backward. */
+		    if (ol != nl)
+		    {
+			if (nl > ol)
+			    if (ga_grow(&ga, nl - ol) == FAIL)
+			    {
+				/* out of memory, keep old char */
+				lc = c;
+				nl = ol;
+			    }
+			if (ol != nl)
+			{
+			    mch_memmove(GA_PTR(i) + nl, GA_PTR(i) + ol,
+						  STRLEN(GA_PTR(i) + ol) + 1);
+			    ga.ga_len += nl - ol;
+			    ga.ga_room -= nl - ol;
+			}
+		    }
+		    (void)utf_char2bytes(lc, GA_PTR(i));
+		}
 	    }
-	    p += (*mb_ptr2len_check)(p);	/* skip multi-byte char */
+	    /* skip to next multi-byte char */
+	    i += (*mb_ptr2len_check)(GA_PTR(i));
 	}
 	else
 #endif
 	{
-	    *p = TO_LOWER(*p);
-	    ++p;
+	    GA_CHAR(i) = TOLOWER_LOC(GA_CHAR(i));
+	    ++i;
 	}
     }
+
+    return (char_u *)ga.ga_data;
 }
 #endif
 

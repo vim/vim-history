@@ -2570,8 +2570,8 @@ ExpandOne(xp, str, orig, options, mode)
 			|| xp->xp_context == EXPAND_FILES
 			|| xp->xp_context == EXPAND_BUFFERS)
 		{
-		    if (TO_LOWER(cmd_files[i][len]) !=
-						   TO_LOWER(cmd_files[0][len]))
+		    if (TOLOWER_LOC(cmd_files[i][len]) !=
+					       TOLOWER_LOC(cmd_files[0][len]))
 			break;
 		}
 		else

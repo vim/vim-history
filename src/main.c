@@ -411,15 +411,16 @@ main
     /* TODO: On MacOS X default to gui if argv[0] ends in:
      *       /vim.app/Contents/MacOS/Vim */
 
-    if (TO_LOWER(initstr[0]) == 'r')
+    if (TOLOWER_ASC(initstr[0]) == 'r')
     {
 	restricted = TRUE;
 	++initstr;
     }
 
     /* Avoid using evim mode for "editor". */
-    if (TO_LOWER(initstr[0]) == 'e'
-	    && (TO_LOWER(initstr[1]) == 'v' || TO_LOWER(initstr[1]) == 'g'))
+    if (TOLOWER_ASC(initstr[0]) == 'e'
+	    && (TOLOWER_ASC(initstr[1]) == 'v'
+					   || TOLOWER_ASC(initstr[1]) == 'g'))
     {
 #ifdef FEAT_GUI
 	gui.starting = TRUE;
@@ -428,7 +429,7 @@ main
 	++initstr;
     }
 
-    if (TO_LOWER(initstr[0]) == 'g')
+    if (TOLOWER_ASC(initstr[0]) == 'g')
     {
 	main_start_gui();
 #ifdef FEAT_GUI
@@ -506,10 +507,10 @@ main
 	    if (c == '/')
 	    {
 		c = argv[0][argv_idx++];
-		c = TO_UPPER(c);
+		c = TOUPPER_ASC(c);
 	    }
 	    else
-		c = TO_LOWER(c);
+		c = TOLOWER_ASC(c);
 #endif
 	    switch (c)
 	    {
@@ -2688,7 +2689,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		/* Guess that when the server name starts with "g" it's a GUI
 		 * server, which we can bring to the foreground here.
 		 * Foreground() in the server doesn't work very well. */
-		if (argtype != ARGTYPE_SEND && TO_UPPER(*sname) == 'G')
+		if (argtype != ARGTYPE_SEND && TOUPPER_ASC(*sname) == 'G')
 		    SetForegroundWindow(srv);
 # endif
 

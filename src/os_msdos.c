@@ -2241,7 +2241,7 @@ mch_chdir(char *path)
 	return 0;
     if (path[1] == ':')		    /* has a drive name */
     {
-	if (change_drive(TO_LOWER(path[0]) - 'a' + 1))
+	if (change_drive(TOLOWER_ASC(path[0]) - 'a' + 1))
 	    return -1;		    /* invalid drive name */
 	path += 2;
     }

@@ -1824,10 +1824,10 @@ gui_is_menu_shortcut(key)
     vimmenu_T	*menu;
 
     if (key < 256)
-	key = TO_LOWER(key);
+	key = TOLOWER_LOC(key);
     for (menu = root_menu; menu != NULL; menu = menu->next)
 	if (menu->mnemonic == key
-		|| (menu->mnemonic < 256 && TO_LOWER(menu->mnemonic) == key))
+		|| (menu->mnemonic < 256 && TOLOWER_LOC(menu->mnemonic) == key))
 	    return TRUE;
     return FALSE;
 }

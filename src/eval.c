@@ -3169,9 +3169,9 @@ f_confirm(argvars, retvar)
 	    def = get_var_number(&argvars[2]);
 	    if (argvars[3].var_type != VAR_UNKNOWN)
 	    {
-		/* avoid that TO_UPPER calls get_var_string_buf() twice */
+		/* avoid that TOUPPER_ASC calls get_var_string_buf() twice */
 		c = *get_var_string_buf(&argvars[3], buf2);
-		switch (TO_UPPER(c))
+		switch (TOUPPER_ASC(c))
 		{
 		    case 'E': type = VIM_ERROR; break;
 		    case 'Q': type = VIM_QUESTION; break;
@@ -6086,7 +6086,7 @@ f_synIDattr(argvars, retvar)
     if (argvars[2].var_type != VAR_UNKNOWN)
     {
 	mode = get_var_string_buf(&argvars[2], modebuf);
-	modec = TO_LOWER(mode[0]);
+	modec = TOLOWER_ASC(mode[0]);
 	if (modec != 't' && modec != 'c'
 #ifdef FEAT_GUI
 		&& modec != 'g'
@@ -6108,10 +6108,10 @@ f_synIDattr(argvars, retvar)
     }
 
 
-    switch (TO_LOWER(what[0]))
+    switch (TOLOWER_ASC(what[0]))
     {
 	case 'b':
-		if (TO_LOWER(what[1]) == 'g')		/* bg[#] */
+		if (TOLOWER_ASC(what[1]) == 'g')	/* bg[#] */
 		    p = highlight_color(id, what, modec);
 		else					/* bold */
 		    p = highlight_has_attr(id, HL_BOLD, modec);
@@ -6122,7 +6122,7 @@ f_synIDattr(argvars, retvar)
 		break;
 
 	case 'i':
-		if (TO_LOWER(what[1]) == 'n')		/* inverse */
+		if (TOLOWER_ASC(what[1]) == 'n')	/* inverse */
 		    p = highlight_has_attr(id, HL_INVERSE, modec);
 		else					/* italic */
 		    p = highlight_has_attr(id, HL_ITALIC, modec);
@@ -6318,7 +6318,7 @@ f_tolower(argvars, retvar)
 	    else
 #endif
 	    {
-		*p = TO_LOWER(*p); /* note that tolower() can be a macro */
+		*p = TOLOWER_LOC(*p); /* note that tolower() can be a macro */
 		++p;
 	    }
 	}
@@ -6361,7 +6361,7 @@ f_toupper(argvars, retvar)
 	    else
 #endif
 	    {
-		*p = TO_UPPER(*p); /* note that toupper() can be a macro */
+		*p = TOUPPER_LOC(*p); /* note that toupper() can be a macro */
 		p++;
 	    }
 	}
@@ -8019,7 +8019,7 @@ eval_fname_script(p)
 eval_fname_sid(p)
     char_u	*p;
 {
-    return (*p == 's' || TO_UPPER(p[2]) == 'I');
+    return (*p == 's' || TOUPPER_ASC(p[2]) == 'I');
 }
 
 /*

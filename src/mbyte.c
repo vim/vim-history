@@ -1771,8 +1771,21 @@ convertStruct toUpper[] =
 utf_toupper(a)
     int		a;
 {
+    /* If 'casemap' contains "keepascii" use ASCII style toupper(). */
+    if (a < 128 && (cmp_flags & CMP_KEEPASCII))
+	return TOUPPER_ASC(a);
+
+#if defined(HAVE_TOWUPPER) && defined(__STDC__ISO_10646__)
+    /* If towupper() is availble and handles Unicode, use it. */
+    if (!(cmp_flags & CMP_INTERNAL))
+	return towupper(a);
+#endif
+
+    /* For characters below 128 use locale sensitive toupper(). */
     if (a < 128)
-	return toupper(a);
+	return TOUPPER_LOC(a);
+
+    /* For any other characters use the above mapping table. */
     return utf_convert(a, toUpper, sizeof(toUpper));
 }
 
@@ -1791,8 +1804,21 @@ utf_islower(a)
 utf_tolower(a)
     int		a;
 {
+    /* If 'casemap' contains "keepascii" use ASCII style tolower(). */
+    if (a < 128 && (cmp_flags & CMP_KEEPASCII))
+	return TOLOWER_ASC(a);
+
+#if defined(HAVE_TOWLOWER) && defined(__STDC__ISO_10646__)
+    /* If towlower() is availble and handles Unicode, use it. */
+    if (!(cmp_flags & CMP_INTERNAL))
+	return towlower(a);
+#endif
+
+    /* For characters below 128 use locale sensitive tolower(). */
     if (a < 128)
-	return tolower(a);
+	return TOLOWER_LOC(a);
+
+    /* For any other characters use the above mapping table. */
     return utf_convert(a, toLower, sizeof(toLower));
 }
 
@@ -1830,7 +1856,7 @@ mb_strnicmp(s1, s2, n)
 	    /* Single byte: first check normally, then with ignore case. */
 	    if (s1[i] != s2[i])
 	    {
-		cdiff = TO_LOWER(s1[i]) - TO_LOWER(s2[i]);
+		cdiff = TOLOWER_LOC(s1[i]) - TOLOWER_LOC(s2[i]);
 		if (cdiff != 0)
 		    return cdiff;
 	    }
@@ -2319,7 +2345,7 @@ enc_canonize(enc)
 	    if (*s == '_')
 		*p++ = '-';
 	    else
-		*p++ = TO_LOWER(*s);
+		*p++ = TOLOWER_ASC(*s);
 	}
 	*p = NUL;
 
@@ -2445,7 +2471,7 @@ enc_default()
 	if (s[i] == '_' || s[i] == '-')
 	    buf[i] = '-';
 	else if (isalnum((int)s[i]))
-	    buf[i] = TO_LOWER(s[i]);
+	    buf[i] = TOLOWER_ASC(s[i]);
 	else
 	    break;
     }

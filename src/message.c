@@ -2294,7 +2294,7 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
 		    continue;
 		for (retval = 0; hotkeys[retval]; retval++)
 		{
-		    if (hotkeys[retval] == TO_LOWER(c))
+		    if (hotkeys[retval] == TOLOWER_LOC(c))
 			break;
 		}
 		if (hotkeys[retval])
@@ -2386,7 +2386,7 @@ msg_show_console_dialog(message, buttons, dfltbutton)
     p = confirm_msg + 1 + STRLEN(message);
     q = hotk;
     r = buttons;
-    *q = (char_u)TO_LOWER(*r);	/* define lowercase hotkey */
+    *q = (char_u)TOLOWER_LOC(*r);	/* define lowercase hotkey */
 
     /* Remember where the choices start, displaying starts here when "q" typed
      * at the more prompt. */
@@ -2399,7 +2399,7 @@ msg_show_console_dialog(message, buttons, dfltbutton)
 	{
 	    *p++ = ',';
 	    *p++ = ' ';	    /* '\n' -> ', ' */
-	    *(++q) = (char_u)TO_LOWER(*(r + 1)); /* next hotkey */
+	    *(++q) = (char_u)TOLOWER_LOC(*(r + 1)); /* next hotkey */
 	    if (dfltbutton)
 		--dfltbutton;
 	}
@@ -2414,7 +2414,7 @@ msg_show_console_dialog(message, buttons, dfltbutton)
 		*p++ = (dfltbutton == 1) ? '[' : '(';
 		*p++ = *r;
 		*p++ = (dfltbutton == 1) ? ']' : ')';
-		*q = (char_u)TO_LOWER(*r);	/* define lowercase hotkey */
+		*q = (char_u)TOLOWER_LOC(*r);	/* define lowercase hotkey */
 	    }
 	}
 	else

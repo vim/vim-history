@@ -2925,7 +2925,7 @@ expand_env_esc(src, dst, dstlen, esc)
 			    ))
 		    {
 #ifdef OS2		/* env vars only in uppercase */
-			*var++ = TO_UPPER(*tail);
+			*var++ = TOUPPER_LOC(*tail);
 			tail++;	    /* toupper() may be a macro! */
 #else
 			*var++ = *tail++;
@@ -3789,7 +3789,7 @@ vim_fnamencmp(x, y, len)
 {
     while (len > 0 && *x && *y)
     {
-	if (TO_LOWER(*x) != TO_LOWER(*y)
+	if (TOLOWER_LOC(*x) != TOLOWER_LOC(*y)
 		&& !(*x == '/' && *y == '\\')
 		&& !(*x == '\\' && *y == '/'))
 	    break;
@@ -6553,7 +6553,7 @@ namelowcpy(
     else
 #  endif
 	while (*s)
-	    *d++ = TO_LOWER(*s++);
+	    *d++ = TOLOWER_LOC(*s++);
     *d = NUL;
 }
 # endif

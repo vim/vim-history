@@ -2946,7 +2946,13 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	    ktab = syn_buf->b_keywtab[syn_khash(keyword)];
 	else /* round == 2, ignore case */
 	{
-	    str_foldcase(keyword);
+	    p = str_foldcase(keyword, STRLEN(keyword));
+	    if (p != NULL)
+	    {
+		STRNCPY(keyword, p, MAXKEYWLEN);
+		keyword[MAXKEYWLEN] = NUL;
+		vim_free(p);
+	    }
 	    ktab = syn_buf->b_keywtab_ic[syn_khash(keyword)];
 	}
 
@@ -3904,11 +3910,20 @@ add_keyword(name, id, flags, cont_in_list, next_list)
     keyentry_T	*ktab;
     keyentry_T	***ktabpp;
     int		hash;
+    char_u	*name_ic = name;
 
-    ktab = (keyentry_T *)alloc((int)(sizeof(keyentry_T) + STRLEN(name)));
+    if (curbuf->b_syn_ic)
+    {
+	name_ic = str_foldcase(name, STRLEN(name));
+	if (name_ic == NULL)
+	    name_ic = name;
+    }
+    ktab = (keyentry_T *)alloc((int)(sizeof(keyentry_T) + STRLEN(name_ic)));
     if (ktab == NULL)
 	return;
-    STRCPY(ktab->keyword, name);
+    STRCPY(ktab->keyword, name_ic);
+    if (name_ic != name)
+	vim_free(name_ic);
     ktab->k_syn.id = id;
     ktab->k_syn.inc_tag = current_syn_inc_tag;
     ktab->flags = flags;
@@ -3918,10 +3933,7 @@ add_keyword(name, id, flags, cont_in_list, next_list)
     ktab->next_list = copy_id_list(next_list);
 
     if (curbuf->b_syn_ic)
-    {
-	str_foldcase(ktab->keyword);
 	ktabpp = &curbuf->b_keywtab_ic;
-    }
     else
 	ktabpp = &curbuf->b_keywtab;
 
@@ -4047,7 +4059,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	{
 	    if (!isalpha(arg[llen]))
 		break;
-	    lowname[llen] = TO_LOWER(arg[llen]);
+	    lowname[llen] = TOLOWER_ASC(arg[llen]);
 	}
 
 	for (fidx = sizeof(flagtab) / sizeof(struct flag); --fidx >= 0; )
@@ -5383,7 +5395,7 @@ get_id_list(arg, keylen, list)
 		    || STRCMP(name + 1, "TOP") == 0
 		    || STRCMP(name + 1, "CONTAINED") == 0)
 	    {
-		if (TO_UPPER(**arg) != 'C')
+		if (TOUPPER_ASC(**arg) != 'C')
 		{
 		    EMSG2(_("E407: %s not allowed here"), name + 1);
 		    failed = TRUE;
@@ -6533,7 +6545,7 @@ do_highlight(line, forceit, init)
 #endif
 
 		/* reduce calls to STRICMP a bit, it can be slow */
-		off = TO_UPPER(*arg);
+		off = TOUPPER_ASC(*arg);
 		for (i = (sizeof(color_names) / sizeof(char *)); --i >= 0; )
 		    if (off == color_names[i][0]
 				 && STRICMP(arg + 1, color_names[i] + 1) == 0)
@@ -7557,7 +7569,7 @@ highlight_color(id, what, modec)
     if (id <= 0 || id > highlight_ga.ga_len)
 	return NULL;
 
-    if (TO_LOWER(what[0]) == 'f')
+    if (TOLOWER_ASC(what[0]) == 'f')
 	fg = TRUE;
     else
 	fg = FALSE;

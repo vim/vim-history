@@ -1793,7 +1793,7 @@ ins_compl_add_infercase(str, len, fname, dir, reuse)
 		{
 		    /* Rule 1 is satisfied */
 		    for (idx = completion_length; idx < len; ++idx)
-			IObuff[idx] = TO_LOWER(IObuff[idx]);
+			IObuff[idx] = TOLOWER_LOC(IObuff[idx]);
 		    break;
 		}
 	    }
@@ -1812,7 +1812,7 @@ ins_compl_add_infercase(str, len, fname, dir, reuse)
 		{
 		    /* Rule 2 is satisfied */
 		    for (idx = completion_length; idx < len; ++idx)
-			IObuff[idx] = TO_UPPER(IObuff[idx]);
+			IObuff[idx] = TOUPPER_LOC(IObuff[idx]);
 		    break;
 		}
 		was_letter = isalpha(original_text[idx]);
@@ -3113,11 +3113,12 @@ ins_complete(c)
 		    tmp_ptr += ++temp;
 		    temp = complete_col - temp;
 		}
-		complete_pat = vim_strnsave(tmp_ptr, temp);
+		if (p_ic)
+		    complete_pat = str_foldcase(tmp_ptr, temp);
+		else
+		    complete_pat = vim_strnsave(tmp_ptr, temp);
 		if (complete_pat == NULL)
 		    return FAIL;
-		if (p_ic)
-		    str_foldcase(complete_pat);
 	    }
 	    else if (continue_status & CONT_ADDING)
 	    {
@@ -3211,11 +3212,12 @@ ins_complete(c)
 	    temp = (int)complete_col - (int)(tmp_ptr - line);
 	    if (temp < 0)	/* cursor in indent: empty pattern */
 		temp = 0;
-	    complete_pat = vim_strnsave(tmp_ptr, temp);
+	    if (p_ic)
+		complete_pat = str_foldcase(tmp_ptr, temp);
+	    else
+		complete_pat = vim_strnsave(tmp_ptr, temp);
 	    if (complete_pat == NULL)
 		return FAIL;
-	    if (p_ic)
-		str_foldcase(complete_pat);
 	}
 	else if (ctrl_x_mode == CTRL_X_FILES)
 	{
@@ -5495,7 +5497,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 #endif
 		    /* TODO: multi-byte */
 		    if (keytyped == (int)p[-1] || (icase && keytyped < 256
-			       && TO_LOWER(keytyped) == TO_LOWER((int)p[-1])))
+			 && TOLOWER_LOC(keytyped) == TOLOWER_LOC((int)p[-1])))
 		{
 		    line = ml_get_cursor();
 		    if ((curwin->w_cursor.col == (colnr_T)(p - look)
