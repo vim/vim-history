@@ -2998,6 +2998,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		maxwid += *s - '0';
 		s++;
 	    }
+	    if (maxwid <= 0)	/* overflow */
+		maxwid = 50;
 	}
 	minwid = (minwid > 50 ? 50 : minwid) * l;
 	if (*s == '(')
