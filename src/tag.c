@@ -2711,6 +2711,7 @@ expand_tag_fname(fname, tag_fname, expand)
     if (expand && mch_has_wildcard(fname))
     {
 	xpc.xp_context = EXPAND_FILES;
+	xpc.xp_backslash = XP_BS_NONE;
 	expanded_fname = ExpandOne(&xpc, (char_u *)fname, NULL,
 			    WILD_LIST_NOTFOUND|WILD_SILENT, WILD_EXPAND_FREE);
 	if (expanded_fname != NULL)

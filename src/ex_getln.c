@@ -207,6 +207,7 @@ getcmdline(firstc, count, indent)
 	set_cmdspos();
     }
     xpc.xp_context = EXPAND_NOTHING;
+    xpc.xp_backslash = XP_BS_NONE;
 
     /*
      * Avoid scrolling when called by a recursive do_cmdline(), e.g. when
@@ -2370,7 +2371,7 @@ nextwild(xp, type, options)
  * options = WILD_SILENT:	    don't print warning messages
  * options = WILD_ESCAPE:	    put backslash before special chars
  *
- * The variable xp->xp_context must have been set!
+ * The variables xp->xp_context and xp->xp_backslash must have been set!
  */
     char_u *
 ExpandOne(xp, str, orig, options, mode)
@@ -3403,6 +3404,7 @@ globpath(path, file)
     cmd_numfiles = -1;
 
     xpc.xp_context = EXPAND_FILES;
+    xpc.xp_backslash = XP_BS_NONE;
     ga_init2(&ga, 1, 100);
 
     /* Loop over all entries in {path}. */
