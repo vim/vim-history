@@ -3330,7 +3330,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 /*
  * Replace part of the command line, keeping eap->cmd, eap->arg and
  * eap->nextcmd correct.
- * "src" points to the part that is to be replaced, of lenght "srclen".
+* "src" points to the part that is to be replaced, of length "srclen".
  * "repl" is the replacement string.
  * Returns a pointer to the character after the replaced string.
  * Returns NULL for failure.
@@ -3350,9 +3350,10 @@ repl_cmdline(eap, src, srclen, repl, cmdlinep)
     /*
      * The new command line is build in new_cmdline[].
      * First allocate it.
+     * Careful: a "+cmd" argument may have been NUL terminated.
      */
     len = (int)STRLEN(repl);
-    i = (int)STRLEN(*cmdlinep) + len + 3;
+    i = (int)(src - *cmdlinep) + (int)STRLEN(src + srclen) + len + 3;
     if (eap->nextcmd)
 	i += (int)STRLEN(eap->nextcmd);/* add space for next command */
     if ((new_cmdline = alloc((unsigned)i)) == NULL)
