@@ -6432,6 +6432,8 @@ screenalloc(clear)
 	return;
     entered = TRUE;
 
+    win_new_shellsize();    /* fit the windows in the new sized shell */
+
 #ifdef FEAT_GUI_BEOS
     vim_lock_screen();  /* be safe, put it here */
 #endif
