@@ -908,7 +908,17 @@ dos_expandpath(
 	}
 	else if (*path == '*' || *path == '?')
 	    e = p;
-	*p++ = *path++;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    len = mb_ptr2len_check(path);
+	    STRNCPY(p, path, len);
+	    p += len;
+	    path += len;
+	}
+	else
+#endif
+	    *p++ = *path++;
     }
     e = p;
     if (s == NULL)

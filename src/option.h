@@ -23,28 +23,28 @@
 
 /* default values for p_efm 'errorformat' */
 #ifdef AMIGA
-# define EFM_DFLT	"%f>%l:%c:%t:%n:%m,%f:%l: %t%*\\D%n: %m,%f %l %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f:%l:%m"
+# define DFLT_EFM	"%f>%l:%c:%t:%n:%m,%f:%l: %t%*\\D%n: %m,%f %l %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f:%l:%m"
 #else
 # if defined MSDOS  ||	defined WIN32
-#  define EFM_DFLT	"%f(%l) : %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"
+#  define DFLT_EFM	"%f(%l) : %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"
 # else
 #  if defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
-#   define EFM_DFLT	"%f:%l:%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f(%l:%c) : %m"
+#   define DFLT_EFM	"%f:%l:%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f(%l:%c) : %m"
 #  else
 #   if defined(__QNX__)
-#    define EFM_DFLT	"%f(%l):%*[^WE]%t%*\\D%n:%m"
+#    define DFLT_EFM	"%f(%l):%*[^WE]%t%*\\D%n:%m"
 #   else /* Unix, probably */
 #    ifdef EBCDIC
-#define EFM_DFLT	"%*[^ ] %*[^ ] %f:%l%*[ ]%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#define DFLT_EFM	"%*[^ ] %*[^ ] %f:%l%*[ ]%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
 #    else
-#define EFM_DFLT	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#define DFLT_EFM	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
 #    endif
 #   endif
 #  endif
 # endif
 #endif
 
-#define GEFM_DFLT	"%f:%l%m,%f  %l%m"
+#define DFLT_GREPFORMAT	"%f:%l%m,%f  %l%m"
 
 /* default values for b_p_ff 'fileformat' and p_ffs 'fileformats' */
 #define FF_DOS		"dos"
@@ -52,20 +52,20 @@
 #define FF_UNIX		"unix"
 
 #ifdef USE_CRNL
-# define FF_DFLT	"dos"
-# define FFS_DFLT	"dos,unix"
-# define FFS_VI		"dos,unix"	/* also autodetect in compatible mode */
-# define TA_DFLT	TRUE
+# define DFLT_FF	"dos"
+# define DFLT_FFS_VIM	"dos,unix"
+# define DFLT_FFS_VI	"dos,unix"	/* also autodetect in compatible mode */
+# define DFLT_TEXTAUTO	TRUE
 #else
 # ifdef USE_CR
-#  define FF_DFLT	"mac"
-#  define FFS_DFLT	"mac,unix,dos"
+#  define DFLT_FF	"mac"
+#  define DFLT_FFS_VIM	"mac,unix,dos"
 # else
-#  define FF_DFLT	"unix"
-#  define FFS_DFLT	"unix,dos"
+#  define DFLT_FF	"unix"
+#  define DFLT_FFS_VIM	"unix,dos"
 # endif
-# define FFS_VI		""
-# define TA_DFLT	FALSE
+# define DFLT_FFS_VI	""
+# define DFLT_TEXTAUTO	FALSE
 #endif
 
 #ifdef FEAT_MBYTE
@@ -109,8 +109,8 @@
 #define FO_INS_LONG	'l'
 #define FO_INS_BLANK	'b'
 
-#define FO_DFLT_VI	"vt"
-#define FO_DFLT		"tcq"
+#define DFLT_FO_VI	"vt"
+#define DFLT_FO_VIM	"tcq"
 #define FO_ALL		"tcroq2vlb,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
@@ -408,6 +408,7 @@ EXTERN long	p_ls;		/* 'laststatus' */
 EXTERN char_u	*p_lcs;		/* 'listchars' */
 
 EXTERN int	p_lz;		/* 'lazyredraw' */
+EXTERN int	p_lpl;		/* 'loadplugins' */
 EXTERN int	p_magic;	/* 'magic' */
 #ifdef FEAT_QUICKFIX
 EXTERN char_u	*p_mef;		/* 'makeef' */

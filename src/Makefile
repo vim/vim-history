@@ -205,7 +205,7 @@
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
 #Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.5	 Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    6.0c     Ant. Colombo
+#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    6.0d     Ant. Colombo
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
@@ -371,13 +371,13 @@ include auto/config.mk
 #CONF_OPT_MULTIBYTE = --enable-multibyte
 
 # XIM - X Input Method.  Special character input support for X11 (chinese,
-# japanese, special symbols, etc).
+# japanese, special symbols, etc).  Also needed for dead-key support.
 # HANGUL - Input Hangul (korean) language using internal routines.
 # Uncomment one of these when you want to input a multibyte language.
 #CONF_OPT_INPUT = --enable-xim
 #CONF_OPT_INPUT = --enable-hangulinput
 
-# FONTSET - X fontset support for output of special languages.
+# FONTSET - X fontset support for output of languages with many characters.
 # Uncomment this when you want to output a multibyte language.
 #CONF_OPT_OUTPUT = --enable-fontset
 
@@ -563,6 +563,15 @@ LINT_OPTIONS = -beprxzF
 ### Solaris with /usr/ucb/cc (it is rejected by autoconf as "cc")
 #CC	    = /usr/ucb/cc
 #EXTRA_LIBS = -R/usr/ucblib
+
+### Solaris with Forte Developer and FEAT_SUN_WORKSHOP
+# The Xpm library is available from ftp://koala.inria.fr/pub/xpm.
+#CC		= cc
+#XPM_DIR	= /usr/local/xpm/xpm-3.4k-solaris
+#XPM_LIB	= -L$(XPM_DIR)/lib -R$(XPM_DIR)/lib -lXpm
+#XPM_IPATH	= -I$(XPM_DIR)/include
+#EXTRA_LIBS	= $(XPM_LIB)
+#EXTRA_IPATHS	= $(XPM_IPATH)
 
 ### UTS2 for Amdahl UTS 2.1.x
 #EXTRA_DEFS = -DUTS2
@@ -771,7 +780,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60d
+VIMRTDIR = /vim60e
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 LANGSUBDIR = /lang
@@ -1062,7 +1071,7 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .cc .c .o .pro
 
-PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS)
+PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS) $(EXTRA_IPATHS)
 POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DEFS)
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
@@ -2113,12 +2122,14 @@ objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h \
 objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
-objects/gui_beval.o: gui_beval.c feature.h vim.h auto/config.h os_unix.h \
+objects/gui_beval.o: gui_beval.c auto/config.h feature.h vim.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h gui_beval.h \
  proto/gui_beval.pro
-objects/workshop.o: workshop.c integration.h vim.h auto/config.h feature.h \
+objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
  gui_beval.h proto/gui_beval.pro workshop.h
-objects/integration.o: integration.c integration.h
+objects/integration.o: integration.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h globals.h farsi.h option.h ex_cmds.h proto.h integration.h

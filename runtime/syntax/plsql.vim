@@ -2,8 +2,8 @@
 "    Language:	PL/SQL - Oracle Procedural SQL
 "  Maintainer:	Jeff Lanzarotta <roc_head@yahoo.com>
 " 					Originally by C. Laurence Gonsalves <clgonsal@kami.com>
-"         URL:	http://web.qx.net/lanzarotta/vim/syntax/plsql.vim
-" Last Change:	2000 Feb 24
+"         URL:	http://members.tripod.com/lanzarotta/vim/syntax/plsql.vim
+" Last Change:	2000 July 13
 
 " Remove any old syntax stuff hanging around.
 syn clear

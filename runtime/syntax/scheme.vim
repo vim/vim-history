@@ -64,6 +64,7 @@ syn keyword schemeFunc inexact->exact number->string string->number char=?
 syn keyword schemeFunc char-ci=? char<? char-ci<? char>? char-ci>? char<=?
 syn keyword schemeFunc char-ci<=? char>=? char-ci>=? char-alphabetic? char?
 syn keyword schemeFunc char-numeric? char-whitespace? char-upper-case?
+syn keyword schemeFunc char-lower-case?
 syn keyword schemeFunc char->integer integer->char char-upcase char-downcase
 syn keyword schemeFunc string? make-string string string-length string-ref
 syn keyword schemeFunc string-set! string=? string-ci=? string<? string-ci<?

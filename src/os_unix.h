@@ -194,8 +194,8 @@
 #ifndef SYS_GVIMRC_FILE
 # define SYS_GVIMRC_FILE "$VIM/gvimrc"
 #endif
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt"
 #endif
 #ifndef FILETYPE_FILE
 # define FILETYPE_FILE	"filetype.vim"
@@ -255,28 +255,29 @@
 # define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
 #endif
 
-#ifndef DEF_BDIR
+#ifndef DFLT_BDIR
 # ifdef OS2
-#  define DEF_BDIR	".,c:/tmp,~/tmp,~/"
+#  define DFLT_BDIR	".,c:/tmp,~/tmp,~/"
 # else
-#  define DEF_BDIR	".,~/tmp,~/"	/* default for 'backupdir' */
+#  define DFLT_BDIR	".,~/tmp,~/"	/* default for 'backupdir' */
 # endif
 #endif
 
-#ifndef DEF_DIR
+#ifndef DFLT_DIR
 # ifdef OS2
-#  define DEF_DIR	".,~/tmp,c:/tmp,/tmp"
+#  define DFLT_DIR	".,~/tmp,c:/tmp,/tmp"
 # else
-#  define DEF_DIR	".,~/tmp,/var/tmp,/tmp"	/* default for 'directory' */
+#  define DFLT_DIR	".,~/tmp,/var/tmp,/tmp"	/* default for 'directory' */
 # endif
 #endif
 
-#define ERRORFILE	"errors.err"
+#define DFLT_ERRORFILE		"errors.err"
 #ifdef OS2
-# define MAKEEF		"vim##.err"
+# define DFLT_MAKEEF		"vim##.err"
 #else
-# define MAKEEF		"/tmp/vim##.err"
+# define DFLT_MAKEEF		"/tmp/vim##.err"
 #endif
+#define DFLT_RUNTIMEPATH	"~/.vim,$VIMRUNTIME"
 
 #ifdef OS2
 /*
@@ -307,11 +308,11 @@
 #define CHECK_INODE		/* used when checking if a swap file already
 				    exists for a file */
 
-#ifndef MAXMEM
-# define MAXMEM		(5*1024)    /* use up to 5 Mbyte for a buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	(5*1024)    /* use up to 5 Mbyte for a buffer */
 #endif
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
 #endif
 
 /* memmove is not present on all systems, use memmove, bcopy, memcpy or our

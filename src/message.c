@@ -179,8 +179,11 @@ msg_strtrunc(s)
 		    buf[i] = s[i];
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
-			for (n = mb_ptr2len_check(s + i); --n > 0; ++i)
+			for (n = mb_ptr2len_check(s + i); --n > 0; )
+			{
+			    ++i;
 			    buf[i] = s[i];
+			}
 #endif
 		}
 

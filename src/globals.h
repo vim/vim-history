@@ -835,9 +835,6 @@ EXTERN char_u e_nesting[]	INIT(=N_("Scripts nested too deep"));
 EXTERN char_u e_noalt[]		INIT(=N_("No alternate file"));
 EXTERN char_u e_noabbr[]	INIT(=N_("No such abbreviation"));
 EXTERN char_u e_nobang[]	INIT(=N_("No ! allowed"));
-#ifndef FEAT_EVAL
-EXTERN char_u e_noeval[]	INIT(=N_("Expression evaluation cannot be used: Not enabled at compile time"));
-#endif
 #ifndef FEAT_GUI
 EXTERN char_u e_nogvim[]	INIT(=N_("GUI cannot be used: Not enabled at compile time"));
 #endif
@@ -891,7 +888,6 @@ EXTERN char_u e_readonlyvar[]	INIT(=N_("Cannot set read-only variable \"%s\""));
 EXTERN char_u e_readerrf[]	INIT(=N_("Error while reading errorfile"));
 #endif
 EXTERN char_u e_scroll[]	INIT(=N_("Invalid scroll size"));
-EXTERN char_u e_tagformat[]	INIT(=N_("Format error in tags file \"%s\""));
 EXTERN char_u e_tagstack[]	INIT(=N_("tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("Name too long"));

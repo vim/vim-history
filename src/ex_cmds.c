@@ -4462,7 +4462,7 @@ ex_sign(eap)
     char_u	*arg2;			/* the second argument */
     char_u	*arg3;			/* the third argument */
     int		markId;			/* unique mark identifier */
-    int		lnum;			/* line number mark displayed on */
+    int		lnum = 0;		/* line number mark displayed on */
     int		idx;			/* which mark to use */
     char_u	*filename;		/* filename which gets the mark */
     buf_t	*buf;			/* buffer to set mark in */
@@ -4517,7 +4517,6 @@ ex_sign(eap)
 	else
 	{
 	    idx = atoi((char *) arg2);
-	    lnum = 0;
 	    filename = arg3;
 	}
     }

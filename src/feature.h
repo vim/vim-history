@@ -20,7 +20,7 @@
 /*
  * When adding a new feature:
  * - Add a #define below.
- * - Add a message in the table above do_version().
+ * - Add a message in the table above ex_version().
  * - Add a string to f_has().
  * - Add a feature to ":help feature-list" in doc/eval.txt.
  * - Add feature to ":help +feature-list" in doc/various.txt.
@@ -377,7 +377,7 @@
  */
 #if 0
 # define FEAT_OSFILETYPE
-# define OFT_DFLT "Text"
+# define DFLT_OFT "Text"
 #endif
 
 /*
@@ -714,9 +714,9 @@
 /* #define SYS_GVIMRC_FILE	"/etc/gvimrc" */
 
 /*
- * VIM_HLP		Name of the help file.
+ * DFLT_HELPFILE	Name of the help file.
  */
-/* # define VIM_HLP	"$VIMRUNTIME/doc/help.txt.gz" */
+/* # define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt.gz" */
 
 /*
  * FILETYPE_FILE	Name of the file type detection file.
@@ -830,6 +830,15 @@
 	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM)) \
 	|| defined(FEAT_MOUSE_JSB)
 # define FEAT_MOUSE		/* include mouse support */
+#endif
+
+/*
+ * +termresponse	send t_RV to obtain terminal response.  Used for xterm
+ *			to check if mouse dragging can be used and if term
+ *			codes can be obtaind.
+ */
+#if (defined(FEAT_NORMAL) || defined(FEAT_MOUSE)) && defined(HAVE_TGETENT)
+# define FEAT_TERMRESPONSE
 #endif
 
 /*

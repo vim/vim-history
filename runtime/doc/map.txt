@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0d.  Last change: 2000 Jul 14
+*map.txt*       For Vim version 6.0e.  Last change: 2000 Aug 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -466,6 +466,11 @@ recursive abbreviations, for no apparent reason}
 
 Abbreviations are disabled if the 'paste' option is on.
 
+				*:abbreviate-local* *:abbreviate-<buffer>*
+Just like mappings, abbreviations can be local to a buffer.  This is mostly
+used in a |settings| file.  Example for a C settings file: >
+	:abb <buffer> FF  for (i = 0; i < ; ++i)
+<
 						*:ab* *:abbreviate*
 :ab[breviate]		list all abbreviations.  The character in the first
 			column indicates the mode where the abbreviation is

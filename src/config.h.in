@@ -305,6 +305,18 @@
 /* Define if you have the <Xm/Xm.h> header file (only used by configure). */
 #undef HAVE_XM_XM_H
 
+/* Define if you have the <libgen.h> header file. */
+#undef HAVE_LIBGEN_H
+
+/* Define if you have the <util/debug.h> header file. */
+#undef HAVE_UTIL_DEBUG_H
+
+/* Define if you have the <util/msgi18n.h> header file. */
+#undef HAVE_UTIL_MSGI18N_H
+
+/* Define if you have the <frame.h> header file. */
+#undef HAVE_FRAME_H
+
 /* Define if you have the <X11/xpm.h> header file. */
 #undef HAVE_X11_XPM_H
 

@@ -2020,7 +2020,7 @@ syn_current_attr(syncing, displaying)
 }
 
 
-#ifdef FEAT_LINE_HL
+#if defined(FEAT_LINE_HL) || defined(PROTO)
 /*
  * Search all highlights for one with sg_sign_type == type
  */
@@ -2038,7 +2038,7 @@ get_debug_highlight(idx)
 }
 #endif
 
-#ifdef FEAT_SIGNS
+#if defined(FEAT_SIGNS) || defined(PROTO)
     XImage *
 get_debug_sign(idx)
     int	    idx;		    /* the attribute which may have a sign */

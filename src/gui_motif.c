@@ -1477,7 +1477,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 }
 #endif /* FEAT_GUI_DIALOG */
 
-#ifdef FEAT_FOOTER
+#if defined(FEAT_FOOTER) || defined(PROTO)
 
     static int
 gui_mch_compute_footer_height()
@@ -1719,25 +1719,25 @@ static const struct NameToPixmap built_in_pixmaps[] =
 };
 
 #ifdef FEAT_SUN_WORKSHOP
-static const struct NameToPixmap sunws_pixmaps[] =
+static const char *(sunws_pixmaps[]) =
 {
-    {"Build",	    "$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm"},
-    {"Stop At",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm"},
-    {"Stop In",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm"},
-    {"Clear At",    "$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm"},
-    {"Start",	    "$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm"},
-    {"Evaluate",    "$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm"},
-    {"Eval *",	    "$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm"},
-    {"Up",	    "$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm"},
-    {"Down",	    "$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm"},
-    {"Go",	    "$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm"},
-    {"StepInto",    "$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm"},
-    {"StepOver",    "$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm"},
-    {"StepOut",	    "$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm"},
-    {"Fix",	    "$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm"},
-    {"Def",	    "$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm"},
-    {"Refs",	    "$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm"},
-    {NULL,	    NULL}
+    "Build",	"$SPRO_WSDIR/lib/locale/%L/graphics/build.xpm",
+    "Stop At",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopAt.xpm",
+    "Stop In",	"$SPRO_WSDIR/lib/locale/%L/graphics/stopIn.xpm",
+    "Clear At",	"$SPRO_WSDIR/lib/locale/%L/graphics/clearAt.xpm",
+    "Start",	"$SPRO_WSDIR/lib/locale/%L/graphics/start.xpm",
+    "Evaluate",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate.xpm",
+    "Eval *",	"$SPRO_WSDIR/lib/locale/%L/graphics/evaluate-star.xpm",
+    "Up",	"$SPRO_WSDIR/lib/locale/%L/graphics/up.xpm",
+    "Down",	"$SPRO_WSDIR/lib/locale/%L/graphics/down.xpm",
+    "Go",	"$SPRO_WSDIR/lib/locale/%L/graphics/go.xpm",
+    "StepInto",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepInto.xpm",
+    "StepOver",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOver.xpm",
+    "StepOut",	"$SPRO_WSDIR/lib/locale/%L/graphics/stepOut.xpm",
+    "Fix",	"$SPRO_WSDIR/lib/locale/%L/graphics/fix.xpm",
+    "Def",	"$SPRO_WSDIR/lib/locale/%L/graphics/findDef.xpm",
+    "Refs",	"$SPRO_WSDIR/lib/locale/%L/graphics/findRefs.xpm",
+    NULL,	NULL
 };
 #endif
 
@@ -1793,17 +1793,14 @@ get_pixmap(menuname, sen, insen)
 	if (xpm == NULL)
 	{
 	    char_u	*path;		/* path with %L resolved to locale */
-	    char	*lang = getenv("LANG");
-	    char	*lc_all = getenv("LC_ALL");
 
-	    num_pixmaps = (sizeof(sunws_pixmaps)/sizeof(sunws_pixmaps[0])) - 1;
-	    for (i = 0; i < num_pixmaps; i++)
+	    for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
 	    {
-		if (STRCMP(menuname, sunws_pixmaps[i].name) == 0)
+		if (STRCMP(menuname, sunws_pixmaps[i]) == 0)
 		{
-		    path = (char_u *) XtResolvePathname(gui.dpy, NULL,
-			NULL, ".xpm", sunws_pixmaps[i].xpm,
-			NULL, 0, filePredicate);
+		    path = (char_u *)XtResolvePathname(gui.dpy, NULL,
+			    NULL, ".xpm", sunws_pixmaps[i + 1],
+			    NULL, 0, filePredicate);
 		    expand_env(path, buf, MAXPATHL);
 		    XtFree(path);
 		    break;

@@ -38,8 +38,9 @@
 # define VIM_BACKTICK		/* internal backtick expansion */
 #endif
 
-#define ERRORFILE	"AztecC.Err"
-#define MAKEEF		"t:vim##.Err"
+#define DFLT_ERRORFILE		"AztecC.Err"
+#define DFLT_MAKEEF		"t:vim##.Err"
+#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
 
 #define BASENAMELEN	26	/* Amiga */
 
@@ -87,8 +88,8 @@ typedef long off_t;
 #ifndef SYS_MENU_FILE
 # define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
 #endif
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt"
 #endif
 #ifndef FILETYPE_FILE
 # define FILETYPE_FILE	"filetype.vim"
@@ -151,19 +152,19 @@ typedef long off_t;
 # define GVIMRC_FILE	".gvimrc"
 #endif
 
-#ifndef DEF_BDIR
-# define DEF_BDIR	".,t:"	    /* default for 'backupdir' */
+#ifndef DFLT_BDIR
+# define DFLT_BDIR	".,t:"	    /* default for 'backupdir' */
 #endif
 
-#ifndef DEF_DIR
-# define DEF_DIR	".,t:"	    /* default for 'directory' */
+#ifndef DFLT_DIR
+# define DFLT_DIR	".,t:"	    /* default for 'directory' */
 #endif
 
-#ifndef MAXMEM
-# define MAXMEM		256	/* use up to 256Kbyte for buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	256	/* use up to 256Kbyte for buffer */
 #endif
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	0	/* decide in set_init */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	0	/* decide in set_init */
 #endif
 
 #if defined(SASC)

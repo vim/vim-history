@@ -1,0 +1,76 @@
+*usr_06.txt*	For Vim version 6.0e.  Last change: 2000 Aug 06
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			      Set your settings
+
+
+|06.1|  The vimrc file
+|06.2|  The default vimrc file explained
+|06.3|  Adding a plugin
+|06.4|  Often used options
+
+     Next chapter: |usr_07.txt|  Using syntax highlighting
+ Previous chapter: |usr_05.txt|  Making big changes
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*06.1*  The vimrc file
+
+==============================================================================
+*06.2*  The default vimrc file explained
+
+==============================================================================
+*06.3*  Adding a plugin						*add-plugin*
+
+Vim's functionality can be extended by adding a plugin.  A plugin is nothing
+more than a Vim script file that is loaded when Vim starts up.  It usually
+adds a nice feature for a limited audience (if it was for everybody it would
+have been included in Vim itself).
+
+Where can you find plugins?  Some come with Vim.  You should be able to find
+them in the directory $VIMRUNTIME/macros and its sub-directories.  Others can
+be downloaded from the net, check out http://www.vim.org.  They are sometimes
+posted in a Vim |maillist|.
+
+How to start using a plugin?  First read the text in the plugin itself to
+check for any special conditions.  Then copy the file to your plugin
+directory:
+
+	system		directory ~
+	Unix		~/.vim/plugin/
+	others		$VIMRUNTIME/plugin/
+
+Example for Unix: >
+
+	cp /usr/local/share/vim/vim60/macros/justify.vim ~/.vim/plugin
+
+For other systems: Since Vim knows the value of $VIMRUNTIME best, you can do
+this from within Vim.  For example on MS-Windows: >
+
+	:!copy $VIMRUNTIME/macros/justify.vim $VIMRUNTIME/plugin
+
+That's all!  Now you can use the commands defined in this plugin to justify
+text.
+
+Actually, the "plugin" directory can be in any of the directories in the
+'runtimepath' option.  All of these directories will be searched for plugins
+and they are all loaded.  Thus if your 'runtimepath' option is set to: >
+
+	/etc/vim,~/.vim,$VIMRUNTIME
+
+then Vim will load all plugins in these directories: >
+
+	/etc/vim/plugin/
+	~/.vim/plugin/
+	$VIMRUNTIME/plugin/
+
+Further reading:
+	|load-plugins|	When the plugins are loaded during startup.
+	|write-plugin|	How to write a plugin script.
+
+==============================================================================
+*06.4*  Often used options
+
+==============================================================================
+ vim:tw=78:

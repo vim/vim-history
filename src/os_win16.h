@@ -73,12 +73,12 @@ typedef long off_t;
 
 #define BASENAMELEN	(MAXPATHL-5)	/* length of base of file name */
 
-#ifndef MAXMEM
-# define MAXMEM		(256)    /* use up to 256K for a buffer*/
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	(256)    /* use up to 256K for a buffer*/
 #endif
 
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
 #endif
 
 /*

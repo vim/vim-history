@@ -75,11 +75,11 @@ typedef long off_t;
 #define TEMPNAME	"v?XXXXXX"
 #define TEMPNAMELEN	128
 
-#ifndef MAXMEM
-# define MAXMEM		256		/* use up to 256Kbyte for buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	256		/* use up to 256Kbyte for buffer */
 #endif
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	0		/* decide in set_init */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	0		/* decide in set_init */
 #endif
 
 #ifdef DJGPP

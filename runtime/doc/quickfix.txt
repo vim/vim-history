@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
+*quickfix.txt*  For Vim version 6.0e.  Last change: 2000 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -145,13 +145,20 @@ the mouse).
 
 In the quickfix window, each line is one error.  The line number is equal to
 the error number.  You can use ":.cc" to jump to the error under the cursor.
-Double-clicking the mouse on a line has the same effect.  The file containing
-the error is opened in the window above the quickfix window.  If there already
-is a window for that file, it is used instead.  If the buffer in the used
-window has changed, and the error is in another file, jumping to the error
-will fail.  You will first have to make sure the window contains a buffer
-which can be abandoned.
+Hitting the <Tab> key or double-clicking the mouse on a line has the same
+effect.  The file containing the error is opened in the window above the
+quickfix window.  If there already is a window for that file, it is used
+instead.  If the buffer in the used window has changed, and the error is in
+another file, jumping to the error will fail.  You will first have to make
+sure the window contains a buffer which can be abandoned.
 
+When the quickfix window has been filled, the BufReadPost autocommand event is
+triggered.  This can be used to perform some action on the listed errors.
+Example: >
+	au BufReadPost quickfix  silent g/^/s//\=line(".")." "/
+This prepends the line number to each line.  Note the use of "\=" in the
+substitute string of the ":s" command, which is used to evaluate an
+expression.
 
 							*error-file-format*
 A template for the errorfile name can be set with the 'makeef' option.  If it

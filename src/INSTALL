@@ -129,6 +129,13 @@ Vim runtime files in /usr.  This can be done with:
 	./configure --prefix=/usr
 	make VIMRCLOC=/etc VIMRUNTIMEDIR=/usr/share/vim MAKE="make -e"
 
+Unix: COMPILING ON NeXT
+
+Add the "-posix" argument to the compiler by using one of these commands:
+	setenv CC 'cc -posix' (csh)
+	export CC='cc -posix' (sh)
+And run configure with "--disable-motif-check".
+
 
 3. RISC OS
 =============

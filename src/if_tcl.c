@@ -255,6 +255,11 @@ buffercmd(dummy, interp, objc, objv)
 	"exists", "list", (char *)0
     };
 
+    if (objc < 2)
+    {
+	Tcl_WrongNumArgs(interp, 1, objv, "option");
+	return TCL_ERROR;
+    }
     err = Tcl_GetIntFromObj(interp, objv[1], &n);
     if (err == TCL_OK)
     {

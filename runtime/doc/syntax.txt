@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0d.  Last change: 2000 Jul 25
+*syntax.txt*    For Vim version 6.0e.  Last change: 2000 Jul 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -911,6 +911,16 @@ errors, use this: >
 	:let ncf_highlight_unknowns = 1
 
 If you don't want to highlight these errors, leave it unset.
+
+
+PASCAL							*pascal.vim*
+
+The Pascal syntax file has been extended to take into account some extensions
+provided by Turbo Pascal, Free Pascal Compiler or GNU Pascal Compiler.  If you
+prefer to stick with the standard Pascal keywords, add the following line to
+your startup file:
+
+>   let pascal_traditional=1
 
 
 PERL							*perl.vim*

@@ -1692,7 +1692,7 @@ op_tilde(oap)
 
 	while (ltoreq(pos, oap->end))
 	{
-	    did_change = swapchar(oap->op_type, &pos);
+	    did_change |= swapchar(oap->op_type, &pos);
 	    if (inc(&pos) == -1)    /* at end of file */
 		break;
 	}

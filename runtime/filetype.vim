@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jul 19
+" Last change:	2000 Aug 05
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -112,11 +112,17 @@ endfun
 " Atlas
 au BufNewFile,BufRead *.atl,*.as		SetFT atlas
 
+" Automake
+au BufNewFile,BufRead [mM]akefile.am		SetFT automake
+
 " Avenue
 au BufNewFile,BufRead *.ave			SetFT ave
 
 " Awk
 au BufNewFile,BufRead *.awk			SetFT awk
+
+" B
+au BufNewFile,BufRead *.mch,*.ref,*.imp		SetFT b
 
 " BASIC or Visual Basic
 au BufNewFile,BufRead *.bas			call FTCheck_VB("basic")
@@ -142,6 +148,9 @@ au BufNewFile,BufRead *.bc			SetFT bc
 
 " BibTeX bibliography database file
 au BufNewFile,BufRead *.bib			SetFT bib
+
+" Blank
+au BufNewFile,BufRead *.bl			SetFT blank
 
 " C
 au BufNewFile,BufRead *.c			SetFT c
@@ -234,6 +243,9 @@ au BufNewFile,BufReadPost filter-rules		SetFT elmfilt
 " ESQL-C
 au BufNewFile,BufRead *.ec,*.EC			SetFT esqlc
 
+" Expect
+au BufNewFile,BufRead *.exp			SetFT expect
+
 " Exports
 au BufNewFile,BufRead exports			SetFT exports
 
@@ -295,8 +307,14 @@ au BufNewFile,BufRead *.pro			SetFT idlang
 " Inform
 au BufNewFile,BufRead *.inf,*.INF		SetFT inform
 
+" Informix 4GL (source - canonical, include file, I4GL+M4 preproc.)
+au BufNewFile,BufRead *.4gl,*.4gh,*.m4gl	SetFT fgl
+
 " .INI file for MSDOS
 au BufNewFile,BufRead *.ini			SetFT dosini
+
+" Inno Setup
+au BufNewFile,BufRead *.iss			SetFT iss
 
 " Java
 au BufNewFile,BufRead *.java,*.jav		SetFT java
@@ -357,13 +375,16 @@ au BufNewFile,BufRead *.lua			SetFT lua
 au BufNewFile,BufRead *.lss			SetFT lss
 
 " M4
-au BufNewFile,BufRead *.m4			if expand("<afile>") !~?  "html.m4$" | call SetFT("m4") | endif
+au BufNewFile,BufRead *.m4
+	\ if expand("<afile>") !~? 'html.m4$' | call SetFT("m4") | endif
 
 " Mail (for Elm, trn, mutt and rn)
 au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt SetFT mail
 
-" Makefile
-au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak,*.dsp SetFT make
+" Makefile (but not Automake)
+au BufNewFile,BufRead [mM]akefile*
+	\ if expand("<afile>") !~? 'Makefile.am\>' | call SetFT("make") | endif
+au BufNewFile,BufRead GNUmakefile,*.mk,*.mak,*.dsp SetFT make
 
 " MakeIndex
 au BufNewFile,BufRead *.ist,*.mst		SetFT ist
@@ -373,6 +394,9 @@ au BufNewFile,BufRead *.man			SetFT man
 
 " Maple V
 au BufNewFile,BufRead *.mv,*.mpl,*.mws		SetFT maple
+
+" Mason
+au BufNewFile,BufRead *.mason			SetFT mason
 
 " Matlab
 au BufNewFile,BufRead *.m			SetFT matlab
@@ -495,11 +519,16 @@ au BufNewFile,BufRead *.py			SetFT python
 " Radiance
 au BufNewFile,BufRead *.rad,*.mat		SetFT radiance
 
+" Registry for MS-Windows
+au BufNewFile,BufRead *.reg
+	\ if getline(1) =~? '^REGEDIT[0-9]*\s*$'|call SetFT("registry")|endif
+
 " Rexx
 au BufNewFile,BufRead *.rexx,*.rex		SetFT rexx
 
 " Rexx or Rebol
-au BufNewFile,BufRead *.r			if getline(1) =~ '^REBOL'|call SetFT("rebol")|else|call SetFT("rexx")|endif
+au BufNewFile,BufRead *.r
+	\ if getline(1) =~ '^REBOL'|call SetFT("rebol")|else|call SetFT("rexx")|endif
 
 " Remind
 au BufNewFile,BufRead .reminders*		SetFT remind
@@ -577,9 +606,6 @@ au BufNewFile,BufRead *.score			SetFT slrnsc
 " Smalltalk
 au BufNewFile,BufRead *.st,*.cls		SetFT st
 
-" Stored Procedures
-au BufNewFile,BufRead *.stp			SetFT stp
-
 " SMIL or XML
 au BufNewFile,BufReadPost *.smil
 	\ if getline(1) =~ '<?\s*xml.*?>'|
@@ -589,10 +615,18 @@ au BufNewFile,BufReadPost *.smil
 	\ endif
 
 " SMIL or SNMP MIB file
-au BufNewFile,BufRead *.smi		if getline(1) =~ '\<smil\>'|call SetFT("smil")|else|call SetFT("mib")|endif
+au BufNewFile,BufRead *.smi
+	\ if getline(1) =~ '\<smil\>'|
+	\   call SetFT("smil")|
+	\ else|
+	\   call SetFT("mib")|
+	\ endif
 
-" Standard ML
-au BufNewFile,BufRead *.sml			SetFT sml
+" SMITH
+au BufNewFile,BufRead *.smt,*.smith		SetFT smith
+
+" Snobol4
+au BufNewFile,BufRead *.sno			SetFT snobol4
 
 " SNMP MIB files
 au BufNewFile,BufReadPost *.mib			SetFT mib
@@ -614,6 +648,12 @@ au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	SetFT sql
 
 " SQR
 au BufNewFile,BufRead *.sqr,*.sqi		SetFT sqr
+
+" Stored Procedures
+au BufNewFile,BufRead *.stp			SetFT stp
+
+" Standard ML
+au BufNewFile,BufRead *.sml			SetFT sml
 
 " Tads
 au BufNewFile,BufRead *.t			SetFT tads
@@ -687,10 +727,20 @@ au BufNewFile,BufRead *.w			SetFT cweb
 
 " WEB (*.web is also used for Winbatch: Guess, based on expecting "%" comment
 " lines in a WEB file).
-au BufNewFile,BufRead *.web			if getline(1)[0].getline(2)[0].getline(3)[0].getline(4)[0].getline(5)[0] =~ "%" | call SetFT("web") | else | call SetFT("winbatch") | endif
+au BufNewFile,BufRead *.web
+	\ if getline(1)[0].getline(2)[0].getline(3)[0].getline(4)[0].getline(5)[0] =~ "%" |
+	\   call SetFT("web") |
+	\ else |
+	\   call SetFT("winbatch") |
+	\ endif
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
-au BufEnter *.xpm				if getline(1) =~ "XPM2"|call SetFT("xpm2")|else|call SetFT("xpm")|endif
+au BufEnter *.xpm
+	\ if getline(1) =~ "XPM2"|
+	\   call SetFT("xpm2")|
+	\ else|
+	\   call SetFT("xpm")|
+	\ endif
 au BufEnter *.xpm2				SetFT xpm2
 
 " XS Perl extension interface language
@@ -701,7 +751,8 @@ au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xres
 
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		SetFT xmath
-au BufNewFile,BufRead *.ms			if !FTCheck_nroff() | call SetFT("xmath") | endif
+au BufNewFile,BufRead *.ms
+	\ if !FTCheck_nroff() | call SetFT("xmath") | endif
 
 " vim: ts=8
 " XML

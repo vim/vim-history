@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0d.  Last change: 2000 Jul 09
+*starting.txt*  For Vim version 6.0e.  Last change: 2000 Jul 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -120,6 +120,10 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 							*--version*
 --version	Print version information and exit.  Same output as for
 		|:version| command.  {not in Vi}
+
+							*--noplugins*
+--noplugins	Skip loading plugins.  Resets the 'loadplugins' option.
+		{not in Vi}
 
 							*-+*
 +[num]		The cursor will be positioned on line "num" for the first
@@ -547,18 +551,20 @@ accordingly.  Vim proceeds in this order:
      (*) Using this file or environment variable will cause 'compatible' to be
 	 off by default.  See |compatible-default|.
 
-4. Load the default file type detection script.
-	This script is used to set autocommands for the FileType event.  See
-	|FileType| and |'filetype'|.  This is only done if Vim was compiled
-	with the |+autocmd| feature.
-	If Vim was started with "-u filename", this is skipped.  |-u|
-	The name of this file depends on the system:
-		Amiga	    $VIMRUNTIME/filetype.vim
-		Mac	    $VIMRUNTIME:filetype.vim
-		MS-DOS	    $VIMRUNTIME\filetype.vim
-		RiscOS	    Vim:Filetype
-		Unix	    $VIMRUNTIME/filetype.vim
-		VMS	    $VIMRUNTIME/filetype.vim
+4. Load the plugin scripts.					*load-plugins*
+	This does the same as the command: >
+		:runtime plugin/*.vim
+<	The result is that all directories in the 'runtimepath' option will be
+	searched for the "plugin" sub-directory and all files ending in ".vim"
+	will be sourced.
+	Loading plugins won't be done when:
+	- The 'loadplugins' option was reset in a vimrc file.
+	- The |--noplugins| command line argument is used.
+	- When Vim was started with the |-u| argument to specify a vimrc
+	  script to use.
+	Note that using "-c set noloadplugins" doesn't work, because the
+	commands from the command line are executed after loading the plugins
+	(so that they are active when loading the first file).
 
 5. Set 'shellpipe' and 'shellredir'
 	The 'shellpipe' and 'shellredir' options are set according to the

@@ -401,7 +401,7 @@ void workshop_hotkey_pressed(void *frame, void *clientData);
  * or in WorkShop mode. For example, in standalone mode you may not want to
  * add a footer/message area or a sign gutter.
  */
-int workshop_invoked();
+int workshop_invoked(void);
 
 /*
  *Set the desktop icon of the current shell to the given xpm icon.

@@ -86,7 +86,7 @@ static char_u	*skip_cmd_arg __ARGS((char_u *p));
 static int	getargopt __ARGS((exarg_t *eap));
 #ifdef FEAT_QUICKFIX
 static void	ex_make __ARGS((exarg_t *eap));
-static char_u	*get_mef_name __ARGS((int newname));
+static char_u	*get_mef_name __ARGS((void));
 static void	ex_cc __ARGS((exarg_t *eap));
 static void	ex_cnext __ARGS((exarg_t *eap));
 static void	ex_cfile __ARGS((exarg_t *eap));
@@ -97,6 +97,8 @@ static void	ex_cfile __ARGS((exarg_t *eap));
 # define ex_cfile		ex_ni
 # define qf_list		ex_ni
 # define qf_age			ex_ni
+#endif
+#if !defined(FEAT_QUICKFIX) || !defined(FEAT_WINDOWS)
 # define ex_cwindow		ex_ni
 #endif
 static int	do_arglist __ARGS((char_u *));
@@ -298,7 +300,6 @@ static void	ex_viminfo __ARGS((exarg_t *eap));
 #else
 # define ex_viminfo		ex_ni
 #endif
-static void	cmd_runtime __ARGS((char_u *name));
 static void	ex_source __ARGS((exarg_t *eap));
 static void	cmd_source __ARGS((char_u *fname, int forceit));
 static void	ex_behave __ARGS((exarg_t *eap));
@@ -1494,12 +1495,6 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 
-    if (ea.argt & XFILE)
-    {
-	if (expand_filename(&ea, cmdlinep, &errormsg) == FAIL)
-	    goto doend;
-    }
-
 #ifdef FEAT_EVAL
     /*
      * Skip the command when it's not going to be executed.
@@ -1549,6 +1544,12 @@ do_one_cmd(cmdlinep, sourcing,
 	}
     }
 #endif
+
+    if (ea.argt & XFILE)
+    {
+	if (expand_filename(&ea, cmdlinep, &errormsg) == FAIL)
+	    goto doend;
+    }
 
     /*
      * Accept buffer name.  Cannot be used at the same time with a buffer
@@ -3447,7 +3448,9 @@ getargopt(eap)
  * backslash.  "C:\$VIM\doc" is taken literally, only "$VIM\doc" works.
  * Although "\ name" is valid, the backslash in "Program\ files" must be
  * removed.  Assume a file name doesn't start with a space.
- * Caller must make sure that "\\mch\file" isn't translated into "\mch\file".
+ * For multi-byte names, never remove a backslash before a non-ascii
+ * character, assume that all multi-byte characters are valid file name
+ * characters.
  */
     int
 rem_backslash(str)
@@ -3455,6 +3458,9 @@ rem_backslash(str)
 {
 #ifdef BACKSLASH_IN_FILENAME
     return (str[0] == '\\'
+# ifdef FEAT_MBYTE
+	    && str[1] < 0x80
+# endif
 	    && (str[1] == ' '
 		|| (str[1] != NUL
 		    && str[1] != '*'
@@ -3506,7 +3512,7 @@ ex_make(eap)
     char_u	*name;
 
     autowrite_all();
-    name = get_mef_name(TRUE);
+    name = get_mef_name();
     if (name == NULL)
 	return;
     mch_remove(name);	    /* in case it's not unique */
@@ -3546,17 +3552,19 @@ ex_make(eap)
 
 /*
  * Return the name for the errorfile, in allocated memory.
- * When "newname" is TRUE, find a new unique name when 'makeef' contains
- * "##".  Returns NULL for error.
+ * Find a new unique name when 'makeef' contains "##".
+ * Returns NULL for error.
  */
     static char_u *
-get_mef_name(newname)
-    int		newname;
+get_mef_name()
 {
     char_u	*p;
     char_u	*name;
     static int	start = -1;
     static int	off = 0;
+#ifdef HAVE_LSTAT
+    struct stat	sb;
+#endif
 
     if (*p_mef == NUL)
     {
@@ -3571,15 +3579,13 @@ get_mef_name(newname)
     if (*p == NUL)
 	return vim_strsave(p_mef);
 
-    /* When "newname" set: keep trying until the name doesn't exist yet. */
+    /* Keep trying until the name doesn't exist yet. */
     for (;;)
     {
-	if (newname)
-	{
-	    if (start == -1)
-		start = mch_get_pid();
-	    ++off;
-	}
+	if (start == -1)
+	    start = mch_get_pid();
+	else
+	    off += 19;
 
 	name = alloc((unsigned)STRLEN(p_mef) + 30);
 	if (name == NULL)
@@ -3587,7 +3593,12 @@ get_mef_name(newname)
 	STRCPY(name, p_mef);
 	sprintf((char *)name + (p - p_mef), "%d%d", start, off);
 	STRCAT(name, p + 2);
-	if (!newname || mch_getperm(name) < 0)
+	if (mch_getperm(name) < 0
+#ifdef HAVE_LSTAT
+		    /* Don't accept a symbolic link, its a security risk. */
+		    && lstat((char *)name, &sb) < 0
+#endif
+		)
 	    break;
 	vim_free(name);
     }
@@ -4084,7 +4095,7 @@ getsourceline(c, cookie, indent)
 	}
     }
 
-    if (p_verbose >= 12)
+    if (p_verbose >= 12 && line != NULL)
 	smsg((char_u *)_("line %ld: \"%s\""), (long)sourcing_lnum, line);
 
     return line;
@@ -8181,16 +8192,6 @@ put_eol(fd)
     return OK;
 }
 
-/*
- * ":runtime {name}"
- */
-    static void
-ex_runtime(eap)
-    exarg_t	*eap;
-{
-    cmd_runtime(eap->arg);
-}
-
 #ifdef FEAT_VIMINFO
 /*
  * ":rviminfo" and ":wviminfo".
@@ -8215,24 +8216,53 @@ ex_viminfo(eap)
 }
 #endif
 
+/*
+ * ":runtime {name}"
+ */
     static void
+ex_runtime(eap)
+    exarg_t	*eap;
+{
+    cmd_runtime(eap->arg);
+}
+
+/*
+ * Source the file "name" from all directories in 'runtimepath'.
+ * "name" can contain wildcards.
+ */
+    void
 cmd_runtime(name)
     char_u	*name;
 {
     char_u	*p = p_rtp;
     char_u	*buf;
+    int		num_files;
+    char_u	**files;
+    int		i;
 
     buf = alloc(MAXPATHL);
     if (buf != NULL)
     {
+	if (p_verbose > 0)
+	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
+						 (char *)name, (char *)p_rtp);
 	while (*p != NUL)
 	{
+	    /* Concatenate a part of 'runtimepath' with the file name. */
 	    copy_option_part(&p, buf, MAXPATHL, ",");
 	    if (STRLEN(buf) + STRLEN(name) + 1 < MAXPATHL)
 	    {
 		add_pathsep(buf);
 		STRCAT(buf, name);
-		(void)do_source(buf, FALSE, FALSE);
+
+		/* Expand wildcards and source each match. */
+		if (gen_expand_wildcards(1, &buf, &num_files, &files,
+							       EW_FILE) == OK)
+		{
+		    for (i = 0; i < num_files; ++i)
+			(void)do_source(files[i], FALSE, FALSE);
+		    FreeWild(num_files, files);
+		}
 	    }
 	}
 	vim_free(buf);

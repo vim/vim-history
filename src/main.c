@@ -539,6 +539,7 @@ main
 	    case '-':		/* "--" don't take any more options */
 				/* "--help" give help message */
 				/* "--version" give version message */
+				/* "--noplugins" skip plugins */
 		if (STRICMP(argv[0] + argv_idx, "help") == 0)
 		    usage();
 		if (STRICMP(argv[0] + argv_idx, "version") == 0)
@@ -547,9 +548,14 @@ main
 		    list_version();
 		    mch_windexit(1);
 		}
-		if (argv[0][argv_idx])
-		    mainerr(ME_UNKNOWN_OPTION, (char_u *)argv[0]);
-		had_minmin = TRUE;
+		if (STRICMP(argv[0] + argv_idx, "noplugins") == 0)
+		    p_lpl = FALSE;
+		else
+		{
+		    if (argv[0][argv_idx])
+			mainerr(ME_UNKNOWN_OPTION, (char_u *)argv[0]);
+		    had_minmin = TRUE;
+		}
 		argv_idx = -1;		/* skip to next argument */
 		break;
 
@@ -1148,6 +1154,12 @@ main
 	if (secure == 2)
 	    need_wait_return = TRUE;
 	secure = 0;
+
+	/*
+	 * Read all the plugin files.
+	 */
+	if (p_lpl)
+	    cmd_runtime((char_u *)"plugin/*.vim");
     }
 
     /*

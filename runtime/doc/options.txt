@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0d.  Last change: 2000 Jul 30
+*options.txt*   For Vim version 6.0e.  Last change: 2000 Aug 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2345,12 +2345,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	When you get bored looking at the highlighted matches, you can turn it
 	off with |:nohlsearch|.  As soon as you use a search command, the
 	highlighting comes back.
-	When the search pattern includes "\n" to match an end-of-line, Vim
-	will try to highlight all of the matched text.  However, this depends
-	on where the search starts.  Since display updating only redraws what
-	is needed, a match in a previous line which is not redrawn may not
-	continue in an newly drawn line.  Use CTRL-L to update the
-	highlighting.
+	When the search pattern can match an end-of-line, Vim will try to
+	highlight all of the matched text.  However, this depends on where the
+	search starts.  This will be the first line in the window or the first
+	line below a closed fold.  A match in a previous line which is not
+	drawn may not continue in an newly drawn line.
 	NOTE: This option is reset when 'compatible' is set.
 
 						*'history'* *'hi'*
@@ -2801,6 +2800,16 @@ A jump table for the options with a short description can be found at |X_op|.
 	    :set lcs=tab:>-,trail:-
 	    :set lcs=tab:>-,eol:<
 <	The "NonText" highlighting will be used for these characters.
+
+			*'lpl'* *'nolpl'* *'loadplugins'* *'noloadplugins'*
+'loadplugins' 'lpl'	boolean	(default on)
+			global
+			{not in Vi}
+	When on the plugin scripts are loaded when starting up |load-plugins|.
+	This option can be reset in your |vimrc| file to disable the loading
+	of plugins.
+	Note that using the "-u {vimrc}" command line argument also disables
+	loading plugins |-u|.
 
 						*'magic'* *'nomagic'*
 'magic'			boolean	(default on)
@@ -3407,7 +3416,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	ruler.  The default ruler width is 17 characters.
 
 						*'runtimepath'* *'rtp'*
-'runtimepath' 'rtp'	string	(default: "$VIMRUNTIME")
+'runtimepath' 'rtp'	string	(default: "$VIMRUNTIME",
+					on Unix: "~/.vim,$VIMRUNTIME")
 			global
 			{not in Vi}
 	This is a list of directories which will be searched for runtime
@@ -3418,7 +3428,8 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set runtimepath=/mygroup/vim,~/vimruntime,$VIMRUNTIME
 <	This will use the directory "~/vimruntime" first (containing your
 	personal Vim runtime files), then "/mygroup/vim" (shared between a
-	group of people) and finally "$VIMRUNTIME" (the distributed files).
+	group of people) and finally "$VIMRUNTIME" (the distributed runtime
+	files).
 	You probably should always include $VIMRUNTIME somewhere, to use the
 	distributed runtime files.  You can put a directory before $VIMRUNTIME
 	to find files which replace a distributed runtime files.  You can put
@@ -4618,9 +4629,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	"xterm", when the terminal name doesn't start with "xterm", but it can
 	handle xterm mouse codes.
 	The "xterm2" value will be set if the xterm version is reported to be
-	95 of higher.  This only works if the t_RV is set to the escape
-	sequence to request the xterm version number.  Otherwise "xterm2" must
-	be set explicitly.
+	95 of higher.  This only works when compiled with the |+termresponse|
+	feature and if the t_RV is set to the escape sequence to request the
+	xterm version number.  Otherwise "xterm2" must be set explicitly.
 	If you do not want 'ttymouse' to be set to "xterm2" automatically, set
 	t_RV to an empty string: >
 		:set t_RV=

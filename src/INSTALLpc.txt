@@ -132,3 +132,19 @@ Building Vim on OpenNT 2.0 on Windows NT 4.0, with Softway's prerelease gcc:
 7. Change slink to "ln -f" from "ln -s".
 8. Return to the src directory.
 9. make
+
+
+4. Windows 3.1x
+===============
+
+make -f Make_w16.mak		     16 bit, Borland C++ 5.0
+
+Warning: Be sure to use the right make.exe.  It should be Borland make.
+
+You will almost certainly have to change the paths for libs and include files
+in the Makefile.  Look for "D:\BC5" and "ctl3dv2".  You will get a number of
+warnings which can be ignored ( _chmod, precompiled header files, and
+"possibly incorrect assignment").
+
+The makefile should also work for BC++ 4.0 and 4.5, but may need tweaking to
+remove unsupported compiler & liker options.

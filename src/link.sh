@@ -4,13 +4,13 @@
 # minimal set for fastest startup.  The problem is that configure adds a few
 # libraries when they exist, but this doesn't mean they are needed for Vim.
 #
+#      Author: Bram Moolenaar
+# Last change: 2000 Aug 06
+#
 # Warning: This fails miserably if the linker doesn't return an error code!
 #
 # Otherwise this script is fail-safe, falling back to the original full link
 # command if anything fails.
-#
-# Author: Bram Moolenaar
-#   Date: 1999 June 7
 
 echo "$LINK " >link.cmd
 exit_value=0
@@ -25,7 +25,6 @@ if test -f auto/link.sed; then
   echo "link.sh: If this fails too, try creating an empty auto/link.sed file."
 else
 
-#
 # If linking works with the full link command, try removing some libraries,
 # that are know not to be needed on at least one system.
 # Remove auto/pathdef.c if there is a new link command and compile it again.
@@ -44,17 +43,17 @@ else
         if grep "l$libname " linkit.sh >/dev/null; then
           if test ! -f link1.sed; then
             echo "link.sh: OK, linking works, let's try removing a few libraries."
-            echo "link.sh: See link.log for details."
-            rm -f link.log
+            echo "link.sh: See auto/link.log for details."
+            rm -f auto/link.log
           fi
           echo "link.sh: Trying to remove the $libname library..."
           echo "s/-l$libname  *//" >link1.sed
           sed -f auto/link.sed <link.cmd >linkit2.sh
           sed -f link1.sed <linkit2.sh >linkit.sh
-          cat linkit.sh >>link.log
+          cat linkit.sh >>auto/link.log
           # Redirect this link output, it may contain error messages which
           # should be ignored.
-          if sh linkit.sh >>link.log 2>&1; then
+          if sh linkit.sh >>auto/link.log 2>&1; then
             echo "link.sh: We don't need the $libname library!"
             cat link1.sed >>auto/link.sed
             rm -f auto/pathdef.c

@@ -241,8 +241,8 @@
 # endif
 #endif
 
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt"
 #endif
 
 #ifndef SYNTAX_FNAME
@@ -267,12 +267,12 @@
 # define USER_HOME    "/user,/user2"
 #endif
 
-#ifndef DEF_BDIR
-# define DEF_BDIR	"./,sys$login:,tmp:"	/* default for 'backupdir' */
+#ifndef DFLT_BDIR
+# define DFLT_BDIR	"./,sys$login:,tmp:"	/* default for 'backupdir' */
 #endif
 
-#ifndef DEF_DIR
-# define DEF_DIR	"./,sys$login:,tmp:"	/* default for 'directory' */
+#ifndef DFLT_DIR
+# define DFLT_DIR	"./,sys$login:,tmp:"	/* default for 'directory' */
 #endif
 
 #define TEMPNAME	"tmp:v?XXXXXX.txt"
@@ -284,11 +284,11 @@
 #define CHECK_INODE	    /* used when checking if a swap file already
 			       exists for a file */
 
-#ifndef MAXMEM
-# define MAXMEM		512	    /* use up to 512Kbyte for buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	512	    /* use up to 512Kbyte for buffer */
 #endif
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	2048	    /* use up to 2048Kbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	2048	    /* use up to 2048Kbyte for Vim */
 #endif
 
 #define BASENAMELEN	(MAXNAMLEN - 5)
@@ -315,5 +315,6 @@
 #define mch_chdir(s) chdir(vms_fixfilename(s))
 
 typedef struct dsc$descriptor   DESC;
-#define ERRORFILE   "errors.err"
-#define MAKEEF	"tmp:vim##.err"	    /* user must assign tmp: */
+#define DFLT_ERRORFILE		"errors.err"
+#define DFLT_MAKEEF		"tmp:vim##.err"	 /* user must assign tmp: */
+#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0d.  Last change: 2000 Jul 07
+*intro.txt*     For Vim version 6.0e.  Last change: 2000 Aug 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -73,7 +73,7 @@ See http://www.vim.org/usenet.html.  This group is also for other editors.  If
 you write about Vim, don't forget to mention that.
 
 						*mail-list* *maillist*
-There are four mailing lists for Vim:
+There are several mailing lists for Vim:
 <vim@vim.org>
 	For discussions about using existing versions of Vim: Useful mappings,
 	questions, answers, where to get a specific version, etc.
@@ -197,6 +197,7 @@ patches, suggestions and giving feedback about what is good and bad in Vim.
 Vim would never have become what it is now, without the help of these people!
 
 	Ron Aaron		Win32 GUI changes
+	Zoltan Arpadffy		work on VMS port
 	Dany St-Amant		Macintosh port
 	Tony Andrews		Stevie
 	Gert van Antwerpen	changes for DJGPP on MS-DOS
@@ -230,6 +231,7 @@ Vim would never have become what it is now, without the help of these people!
 	George V. Reilly	Win32 port, Win32 GUI start-off
 	Stephen Riehm		bug collector
 	Stefan Roemer		various patches and help to users
+	Ralf Schandl		IBM OS/390 port
 	Olaf Seibert		DICE and BeBox version, regexp improvements
 	Mortaza Shiran		Farsi patches
 	Peter da Silva		termlib

@@ -17,7 +17,7 @@
 #define CASE_INSENSITIVE_FILENAME
 #define FEAT_MODIFY_FNAME
 #define FEAT_OSFILETYPE
-#define OFT_DFLT "Text"
+#define DFLT_OFT	"Text"
 #define USE_TERM_CONSOLE
 #define HAVE_AVAIL_MEM
 
@@ -35,17 +35,17 @@
 # define TEMPNAMELEN	25
 #endif
 
-#ifndef VIM_HLP
-# define VIM_HLP "Vim:doc.help"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE "Vim:doc.help"
 #endif
 
-#ifndef DEF_BDIR
-# define DEF_BDIR	".,<Wimp$ScrapDir>."	/* default for 'backupdir' */
+#ifndef DFLT_BDIR
+# define DFLT_BDIR	".,<Wimp$ScrapDir>."	/* default for 'backupdir' */
 #endif
 
 /* Paths to try putting swap file in. */
-#ifndef DEF_DIR
-# define DEF_DIR	"<Wimp$ScrapDir>.,."	/* default for 'directory' */
+#ifndef DFLT_DIR
+# define DFLT_DIR	"<Wimp$ScrapDir>.,."	/* default for 'directory' */
 #endif
 
 #ifndef TERMCAPFILE
@@ -112,8 +112,9 @@
 # define SETSOFF_FILE	    "Setsoff"
 #endif
 
-#define ERRORFILE	"errors/vim"
-#define MAKEEF		"<Wimp$ScrapDir>.vim##/err"
+#define DFLT_ERRORFILE		"errors/vim"
+#define DFLT_MAKEEF		"<Wimp$ScrapDir>.vim##/err"
+#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
 
 /*
  * RISC PCs have plenty of memory, use large buffers
@@ -121,12 +122,12 @@
 #define CMDBUFFSIZE 1024	/* size of the command processing buffer */
 #define MAXPATHL    256		/* paths are always quite short though */
 
-#ifndef MAXMEM
-# define MAXMEM		(5*1024)    /* use up to 5 Mbyte for a buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	(5*1024)    /* use up to 5 Mbyte for a buffer */
 #endif
 
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
 #endif
 
 #ifdef HAVE_SIGSET

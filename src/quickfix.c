@@ -33,9 +33,11 @@ static char_u *qf_push_dir __ARGS((char_u *, struct dir_stack_t **));
 static char_u *qf_pop_dir __ARGS((/*char_u *, */struct dir_stack_t **));
 static char_u *qf_guess_filepath __ARGS((char_u *));
 static void    qf_clean_dir_stack __ARGS((struct dir_stack_t **));
+#ifdef FEAT_WINDOWS
 static buf_t  *qf_find_buf __ARGS((void));
 static void    qf_update_buffer __ARGS((void));
 static void    qf_fill_buffer __ARGS((void));
+#endif
 
 static struct dir_stack_t   *dir_stack = NULL;
 
@@ -624,7 +626,9 @@ qf_init_end:
     vim_free(errmsg);
     vim_free(fmtstr);
 
+#ifdef FEAT_WINDOWS
     qf_update_buffer();
+#endif
 
     return retval;
 }
@@ -1285,7 +1289,9 @@ qf_msg()
 {
     smsg((char_u *)_("error list %d of %d; %d errors"),
 	    qf_curlist + 1, qf_listcount, qf_lists[qf_curlist].qf_count);
+#ifdef FEAT_WINDOWS
     qf_update_buffer();
+#endif
 }
 
 /*
@@ -1452,7 +1458,6 @@ ex_cwindow(eap)
      */
     qf_fill_buffer();
 }
-#endif
 
 /*
  * Find quickfix buffer.
@@ -1475,16 +1480,30 @@ qf_find_buf()
 qf_update_buffer()
 {
     buf_t	*buf;
+#ifdef FEAT_AUTOCMD
+    aco_save_t	aco;
+#else
     buf_t	*save_curbuf;
+#endif
 
     /* Check if a buffer for the quickfix list exists.  Update it. */
     buf = qf_find_buf();
     if (buf != NULL)
     {
+#ifdef FEAT_AUTOCMD
+	/* set curwin/curbuf to buf and save a few things */
+	aucmd_prepbuf(&aco, buf);
+#else
 	save_curbuf = curbuf;
 	curbuf = buf;
+#endif
 	qf_fill_buffer();
+#ifdef FEAT_AUTOCMD
+	/* restore curwin/curbuf and a few other things */
+	aucmd_restbuf(&aco);
+#else
 	curbuf = save_curbuf;
+#endif
     }
 }
 
@@ -1557,6 +1576,11 @@ qf_fill_buffer()
     /* correct cursor position */
     check_lnums(TRUE);
 
+#ifdef FEAT_AUTOCMD
+    apply_autocmds(EVENT_BUFREADPOST, (char_u *)"quickfix", NULL,
+							       FALSE, curbuf);
+#endif
+
     /* make sure it will be redrawn */
     redraw_curbuf_later(NOT_VALID);
 }
@@ -1570,5 +1594,6 @@ qf_isqbuf(buf)
 {
     return (STRCMP(buf->b_p_bt, "quickfix") == 0);
 }
+#endif /* FEAT_WINDOWS */
 
 #endif /* FEAT_QUICKFIX */

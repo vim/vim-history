@@ -137,6 +137,10 @@ elseif getline(1) =~ '^\x\{7}: \x\{4} \x\{4} '
 elseif getline(1) =~ '^RCS file:' || getline(2) =~ '^RCS file:'
   set ft=rcslog
 
+" CVS commit
+elseif getline(2) =~ '^CVS:'
+   set ft=cvs
+
 " SNNS files
 elseif getline(1) =~ '^SNNS network definition file'
   set ft=snnsnet

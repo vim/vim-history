@@ -7,6 +7,9 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "auto/config.h"
+#endif
 #include "feature.h"
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
@@ -36,7 +39,6 @@ static void timerRoutine(XtPointer, XtIntervalId *);
 static void cancelBalloon(BalloonEval *);
 static void requestBalloon(BalloonEval *);
 static void drawBalloon(BalloonEval *);
-static void post_balloon(BalloonEval *, char_u *);
 static void createBalloonEvalWindow(BalloonEval *);
 static int virtlen(buf_t *, char_u *);
 
@@ -51,7 +53,7 @@ static int virtlen(buf_t *, char_u *);
 gui_mch_create_beval_area(target, msg, msgCB, clientData)
     Widget	target;
     char	*msg;
-    void	(*msgCB)();
+    void	(*msgCB)__ARGS((BalloonEval *, int));
     XtPointer	clientData;
 {
     BalloonEval	*beval;
@@ -100,6 +102,8 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 	beval->screen_width = DisplayWidth(gui.dpy, screen_num);
 	beval->screen_height = DisplayHeight(gui.dpy, screen_num);
     }
+
+    return beval;
 }
 
     void
@@ -141,23 +145,24 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 
     top_off = Y_2_ROW(beval->y);
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	if (wp->w_winpos <= top_off && top_off < (wp->w_winpos + wp->w_height))
+	if (W_WINROW(wp) <= top_off && top_off < (W_WINROW(wp) + wp->w_height))
 	    break;
 
     if (wp)
     {
-	row_off = top_off - wp->w_winpos + 1;
+	row_off = top_off - W_WINROW(wp) + 1;
 	i = 0;
 	row = 0;
-	while (i < row_off && row < wp->w_lsize_valid)
+	while (i < row_off && row < wp->w_lines_valid)
 	{
-	    i += wp->w_lsize[row];
+	    i += wp->w_lines[row].wl_size;
 	    row++;
 	}
 
-	if (wp->w_lsize[row - 1] > 1)
-	    col = ((top_off - (i - wp->w_lsize[row - 1])) * gui.num_cols) +
-		    X_2_COL(beval->x) - (wp->w_p_nu ? 8 : 0) + 1;
+	if (wp->w_lines[row - 1].wl_size > 1)
+	    col = ((top_off - (i - (int)(wp->w_lines[row - 1]).wl_size)) *
+		    gui.num_cols) + X_2_COL(beval->x)
+						 - (wp->w_p_nu ? 8 : 0) + 1;
 	else
 	    col = X_2_COL(beval->x) - (wp->w_p_nu ? 8 : 0) + 1;
 
@@ -368,7 +373,6 @@ virtlen(buf, line)
 {
     int		count = 0;
     int		ts = buf->b_p_ts;
-    int		rem;
 
     while (*line)
     {

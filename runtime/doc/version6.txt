@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0d.  Last change: 2000 Jul 30
+*version6.txt*  For Vim version 6.0e.  Last change: 2000 Aug 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -32,6 +32,7 @@ Vertically split windows		|new-vertsplit|
 Extended search patterns		|new-searchpat|
 UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
+Plugin support				|new-plugins|
 Filetype settings			|new-filetype-settings|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
@@ -126,7 +127,8 @@ CTRL-U in Command-line mode			*CTRL-U-changed*
 
 CTRL-U in the command line cleared the whole line.  Most shells only delete
 the characters before the cursor.  Made it like that. (Steve Wall)
-You can get the old behavior with CTRL-E CTRL-U.
+You can get the old behavior with CTRL-E CTRL-U: >
+	:cmap <C-U> <C-E><C-U>
 
 
 Documentation					*documentation-6*
@@ -305,6 +307,16 @@ Multi-language support					*new-multi-lang*
 - Win32: Added global IME support (Muraoka)
 
 
+Plugin support					*new-plugins*
+--------------
+
+To make it really easy to load a Vim script when starting Vim, the "plugin"
+runtime directory can be used.  All ".vim" files in it will be automatically
+loaded.  For Unix, the directory "~/.vim/plugin" is used by default.  The
+'runtimepath' option can be set to look in other directories for plugins.
+|load-plugins| |add-plugin|
+
+
 Filetype settings				*new-filetype-settings*
 -----------------
 
@@ -445,6 +457,8 @@ IMPROVEMENTS						*improvements-6*
 Included Exuberant ctags 4.0. (Darren Hiebert)
 It now additionally supports Assembler, COBOL, LISP, PERL, Scheme, AWK, Bourne
 Shell, BETA, Python, TCL, and Vim scripts.
+When there is a format error in a tags file, the byte position is reported so
+that the error can be located.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -584,6 +598,12 @@ Internal changes:
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
 
+When an xterm is in 8-bit mode this is detected by the code returned for t_RV.
+All key codes are automatically converted to their 8-bit versions.
+
+The OPT_TCAP_QUERY in xterm patch level 140 and later is used to obtain the
+actual key codes used.
+
 ":browse set" now also works in the console mode.  ":browse edit" will give an
 error message.
 
@@ -625,5 +645,13 @@ eachother and be lost forever.
 
 When starting Vim with an extremely long file name (around 1024 characters) it
 would crash.  Added a few checks to avoid buffer overflows.
+
+CTRL-E could get stuck in a file with very long lines.
+
+":au syntax<Tab>" expanded event names while it should expand groups starting
+with "syntax".
+
+When exanding a file name caused an error (e.g., for <amatch>) it was produced
+even when inside an "if 0".
 
  vim:tw=78:

@@ -389,7 +389,12 @@ gui_init()
      */
     if (font_argument != NULL)
 	set_option_value((char_u *)"gfn", 0L, (char_u *)font_argument, FALSE);
-    if (gui_init_font(p_guifont, FALSE) == FAIL)
+    if (
+#ifdef FEAT_XFONTSET
+	    (*p_guifontset == NUL
+	     || gui_init_font(p_guifontset, TRUE) == FAIL) &&
+#endif
+	    gui_init_font(p_guifont, FALSE) == FAIL)
 	goto error2;
 #ifdef FEAT_MBYTE
     if (gui_get_wide_font() == FAIL)
@@ -1654,10 +1659,12 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	clip_may_clear_selection(gui.row, gui.row);
 
 
+#ifndef MSWIN16_FASTTEXT
     /* If there's no bold font, then fake it */
     if ((highlight_mask & (HL_BOLD | HL_STANDOUT))
 	    && (gui.bold_font == NOFONT || font != gui.bold_font))
 	draw_flags |= DRAW_BOLD;
+#endif
 
     /*
      * When drawing bold or italic characters the spill-over from the left
@@ -1683,22 +1690,17 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #else
     /* Do we underline the text? */
     if ((highlight_mask & HL_UNDERLINE)
+# ifndef MSWIN16_FASTTEXT
 	    || ((highlight_mask & HL_ITALIC)
-		&& (gui.ital_font == NOFONT || font != gui.ital_font)))
+		&& (gui.ital_font == NOFONT || font != gui.ital_font))
+# endif
+	)
 	draw_flags |= DRAW_UNDERL;
 #endif
 
     /* Do we draw transparantly? */
     if ((flags & GUI_MON_TRS_CURSOR))
 	draw_flags |= DRAW_TRANSP;
-
-#ifdef FEAT_SIGNS
-    if (gui.col == 0 && aep != NULL)
-	if (aep->ae_u.gui.sign != 0)
-	    gui_mch_drawsign(gui.row, aep->ae_u.gui.sign);
-	else
-	    gui_mch_clearsign(gui.row);
-#endif
 
     /*
      * Draw the text.
@@ -1815,12 +1817,21 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	gui_mch_draw_string(gui.row, col, s, len, draw_flags);
     }
 
+#ifdef FEAT_SIGNS
+    /*
+     * If there is a sign (indicated by the highlighting) draw it on top of
+     * the text (should be spaces).
+     */
+    if (aep != NULL && aep->ae_u.gui.sign != 0)
+	gui_mch_drawsign(gui.row, aep->ae_u.gui.sign);
+#endif
+
     if (!(flags & (GUI_MON_IS_CURSOR | GUI_MON_TRS_CURSOR)))
 	gui.col = col + len;
 
-    /* May need to invert it when it's part of the selection (assumes len==1) */
+    /* May need to invert it when it's part of the selection. */
     if (flags & GUI_MON_NOCLEAR)
-	clip_may_redraw_selection(gui.row, col);
+	clip_may_redraw_selection(gui.row, col, len);
 
     if (!(flags & (GUI_MON_IS_CURSOR | GUI_MON_TRS_CURSOR)))
     {
@@ -1878,7 +1889,7 @@ gui_redraw(x, y, w, h)
     row2 = Y_2_ROW(y + h - 1);
     col2 = X_2_COL(x + w - 1);
 
-    (void)gui_redraw_block(row1, col1, row2, col2, 0);
+    (void)gui_redraw_block(row1, col1, row2, col2, GUI_MON_NOCLEAR);
 
     /*
      * We may need to redraw the cursor, but don't take it upon us to change
@@ -1889,9 +1900,6 @@ gui_redraw(x, y, w, h)
      */
     if (gui.row == gui.cursor_row)
 	gui_update_cursor(FALSE, TRUE);
-
-    if (clipboard.state != SELECT_CLEARED)
-	clip_redraw_selection(x, y, w, h);
 }
 
 /*
@@ -3366,7 +3374,11 @@ gui_mouse_moved(x, y)
 	st[1] = KS_MOUSE;
 	st[2] = KE_FILLER;
 	st[3] = (char_u)MOUSE_LEFT;
+#ifdef FEAT_VERTSPLIT
+	st[4] = (char_u)(W_WINCOL(wp) + ' ' + 1);	/* column -1 */
+#else
 	st[4] = (char_u)(' ');		/* column -1 */
+#endif
 	st[5] = (char_u)(wp->w_height + W_WINROW(wp) + ' ' + 1);
 	add_to_input_buf(st, 6);
 	st[3] = (char_u)MOUSE_RELEASE;

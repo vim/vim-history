@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	CF (Cold Fusion)
 " Maintainer:	Jeff Lanzarotta
-" URL:		http://web.qx.net/lanzarotta/vim/syntax/cf.vim
-" Last Change:	2000 January 10
+" URL:		http://members.tripod.com/lanzarotta/vim/syntax/cf.vim
+" Last Change:	2000 July 13
 " Note:		Since Cold Fusion has its' own version of html comments, make sure
 "		that you put 'let html_wrong_comments=1' in your _vimrc file.
 

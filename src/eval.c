@@ -3455,6 +3455,9 @@ f_has(argvars, retvar)
 #ifdef TERMINFO
 	"terminfo",
 #endif
+#ifdef FEAT_TERMRESPONSE
+	"termresponse",
+#endif
 #ifdef FEAT_TEXTOBJ
 	"textobjects",
 #endif
@@ -6066,7 +6069,7 @@ var_flavour(varname)
 }
 #endif
 
-#ifdef FEAT_VIMINFO
+#if defined(FEAT_VIMINFO) || defined(PROTO)
 /*
  * Restore global vars that start with a capital from the viminfo file
  */
@@ -6151,7 +6154,7 @@ write_viminfo_varlist(fp)
 }
 #endif
 
-#ifdef FEAT_SESSION
+#if defined(FEAT_SESSION) || defined(PROTO)
     int
 store_session_globals(fd)
     FILE	*fd;

@@ -1,6 +1,6 @@
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
-" Last Change:		06:24:32 24-Jul-2000.
+" Last Change:		08:44:52 31-Jul-2000.
 "
 " Usage:		If you want to use this menu file on Japanese Windows,
 "			you have no thing to do, except to set this file at
@@ -26,6 +26,7 @@ menutrans &Version		バージョン情報(&V)
 menutrans &File				ファイル(&F)
 menutrans &Open\.\.\.<Tab>:e		開く(&O)\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	分割して開く(&L)\.\.\.<Tab>:sp
+menutrans &New<Tab>:enew		新規作成(&N)<Tab>:enew
 menutrans &Close<Tab>:q			閉じる(&C)<Tab>:q
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:w	名前を付けて保存(&A)\.\.\.<Tab>:w
@@ -62,6 +63,8 @@ menutrans &Previous\ Error<Tab>:cp	前のエラーへ(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	古いリスト(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	新しいリスト(&E)<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	エラーウィンドウ表示(&W)<Tab>:cwin	
+menutrans Convert\ to\ HEX<Tab>:%!xxd	HEXへ変換<Tab>:%!xxd
+menutrans Convert\ back<Tab>:%!xxd\ -r	HEXから逆変換<Tab>%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers	バッファ(&B)
