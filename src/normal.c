@@ -6974,6 +6974,8 @@ nv_g_cmd(cap)
 	break;
 
     case '_':
+	/* "g_": to the last non-blank character in the line or <count> lines
+	 * downward. */
 	cap->oap->motion_type = MCHAR;
 	cap->oap->inclusive = TRUE;
 	curwin->w_curswant = MAXCOL;
@@ -6984,6 +6986,11 @@ nv_g_cmd(cap)
 	{
 	    char_u  *ptr = ml_get_curline();
 
+	    /* In Visual mode we may end up after the line. */
+	    if (curwin->w_cursor.col > 0 && ptr[curwin->w_cursor.col] == NUL)
+		--curwin->w_cursor.col;
+
+	    /* Decrease the cursor column until it's on a non-blank. */
 	    while (curwin->w_cursor.col > 0
 				    && vim_iswhite(ptr[curwin->w_cursor.col]))
 		--curwin->w_cursor.col;
