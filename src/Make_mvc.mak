@@ -119,6 +119,9 @@ CON_LIB = $(conlibsd)
 !endif
 !endif
 
+# need shell32.lib for ExtractIcon()
+CON_LIB = $(CON_LIB) shell32.lib
+
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
 #VIMRCLOC = somewhere
@@ -280,6 +283,7 @@ PERL_EXE = $(PERL)\Bin\perl
 PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
 PERL_INC = /I $(PERL)\Lib\Core
 PERL_LIB = $(PERL)\Lib\Core\perl.lib
+#PERL_LIB = $(PERL)\Lib\Core\perl56.lib
 XSUBPP	 = $(PERL)\lib\ExtUtils\xsubpp
 XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 !endif
@@ -290,7 +294,7 @@ LINKARGS1 = $(linkdebug) $(conflags)
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(LINK_PDB)
 
-all:	$(VIM) vimrun.exe install.exe uninstal.exe ctags/ctags.exe xxd/xxd.exe
+all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe
 
 $(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
@@ -314,11 +318,6 @@ uninstal.exe: uninstal.c
 
 vimrun.exe: vimrun.c
 	$(CC) -DNDEBUG vimrun.c
-
-ctags/ctags.exe: ctags/main.c
-	cd ctags
-	$(MAKE) -f Makefile.mvc
-	cd ..
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
@@ -347,9 +346,6 @@ clean:
 	- del dimm.h
 	- del dimm_i.c
 	- del dimm.tlb
-	cd ctags
-	$(MAKE) -f Makefile.mvc clean
-	cd ..
 	cd xxd
 	$(MAKE) -f Make_mvc.mak clean
 	cd ..

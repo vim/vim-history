@@ -391,7 +391,7 @@ TARGETS = $(TARGETS) $(TARGET)
 !endif
 
 # Targets:
-all: vim vimrun.exe install.exe xxd ctags
+all: vim vimrun.exe install.exe xxd
 
 vim: $(OSTYPE) $(OBJDIR) $(OBJDIR)\bcc.cfg $(TARGETS)
 	@del $(OBJDIR)\version.obj
@@ -405,11 +405,6 @@ $(OBJDIR):
 xxd:
 	@cd xxd
 	$(BOR)\bin\make /f Make_bc5.mak BOR="$(BOR)" BCC="$(CC)"
-	@cd ..
-
-ctags:
-	@cd ctags
-	$(BOR)\bin\make /f Makefile.bc5 BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
 install.exe: dosinst.c
@@ -431,9 +426,6 @@ clean:
 	-@del *.map
 	@cd xxd
 	$(BOR)\bin\make /f Make_bc5.mak BOR="$(BOR)" clean
-	@cd ..
-	@cd ctags
-	$(BOR)\bin\make /f Makefile.bc5 BOR="$(BOR)" clean
 	@cd ..
 
 $(DLLTARGET): $(OBJDIR) $(vimdllobj)

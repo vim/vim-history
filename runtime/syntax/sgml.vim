@@ -1,11 +1,16 @@
 " Vim syntax file
 " Language:	SGML-DTD (DocBook 3.1 and LinuxDoc)
 " Maintainer:	Lorance Stinson <madlinux@yahoo.com>
-" Last Change:	Thu Aug 7 12:08 EDT 2000
+" Last Change:	Thu Sep 8 14:39 EDT 2000
 " Filenames:    *.ent *.sgml *.sgm
 
 " Adapted from the HTML syntax file by Claudio Fleiner <claudio@fleiner.com>
 " and the SGML syntax files by Sung-Hyun Nam <namsh@kldp.org>.
+
+" The option "sgml_no_rendering" can be set to turnrendering off.
+" The option "sgml_my_rendering" can be set to use custome rendering.
+" If custome rendering is used the color definitions sgmlLink, sgmlBold
+" sgmlBoldItalic, sgmlUnderline and sgmlItalic should be set to taste.
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -27,7 +32,7 @@ syn match   sgmlTagN    contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=sgmlTagNam
 syn match   sgmlTagN    contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=sgmlTagName,sgmlSpecialTagName,@sgmlTagNameCluster
 syn match   sgmlTagErr  contained "[^>]<"ms=s+1
 syn region  sgmlDocEnt  contained start="<!\(entity\|element\)\s" end=">" contains=sgmlStr
-syn region  sgmlDocEntI contained start=+\[+ end=+]+ contains=sgmlDocEnt
+syn region  sgmlDocEntI contained start=+\[+ end=+]+ contains=sgmlDocEnt,sgmlComment
 syn region  sgmlDocType start=+<!doctype\s+ end=+>+ contains=sgmlDocEntI,sgmlStr
 
 
@@ -121,18 +126,18 @@ syn match sgmlSpecialChar "&[^;]*;"
 syn region sgmlComment  start=+<!--+ end=+-->+
 
 " rendering
-syn cluster sgmlTop     contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,sgmlLink,@sgmlPreproc
+if !exists("sgml_no_rendering")
+    syn cluster sgmlTop     contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,sgmlLink,@sgmlPreproc
 
-syn region sgmlUnderline  start="<varname\>" end="</varname>"me=e-10 contains=@sgmlTop
-syn region sgmlBoldItalic start="<emphasis\>" end="</emphasis>"me=e-11 contains=@sgmlTop
-syn region sgmlBold       start="<command\>" end="</command>"me=e-10 contains=@sgmlTop
-syn region sgmlBold       start="<function\>" end="</function>"me=e-11 contains=@sgmlTop
-syn region sgmlItalic     start="<literal\>" end="</literal>"me=e-10 contains=@sgmlTop
-syn region sgmlItalic     start="<replaceable\>" end="</replaceable>"me=e-14 contains=@sgmlTop
-
-syn region sgmlLink       start="<ulink\>" end="</ulink>"me=e-8 contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,@sgmlPreproc
-syn region sgmlLink       start="<link\>" end="</link>"me=e-7 contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,@sgmlPreproc
-
+    syn region sgmlUnderline  start="<varname\>" end="</varname>"me=e-10 contains=@sgmlTop
+    syn region sgmlBoldItalic start="<emphasis\>" end="</emphasis>"me=e-11 contains=@sgmlTop
+    syn region sgmlBold       start="<command\>" end="</command>"me=e-10 contains=@sgmlTop
+    syn region sgmlBold       start="<function\>" end="</function>"me=e-11 contains=@sgmlTop
+    syn region sgmlItalic     start="<literal\>" end="</literal>"me=e-10 contains=@sgmlTop
+    syn region sgmlItalic     start="<replaceable\>" end="</replaceable>"me=e-14 contains=@sgmlTop
+    syn region sgmlLink       start="<ulink\>" end="</ulink>"me=e-8 contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,@sgmlPreproc
+    syn region sgmlLink       start="<link\>" end="</link>"me=e-7 contains=@Spell,sgmlTag,sgmlEndTag,sgmlSpecialChar,sgmlPreProc,sgmlComment,@sgmlPreproc
+endif
 
 if main_syntax == "sgml"
   " synchronizing (does not always work if a comment includes legal
@@ -144,41 +149,45 @@ if main_syntax == "sgml"
 endif
 
 if !exists("did_sgml_syntax_inits")
-  let did_sgml_syntax_inits = 1
-  hi link sgmlTag                       Function
-  hi link sgmlEndTag                    Identifier
-  hi link sgmlArg                       Type
-  hi link sgmlTagName                   sgmlStatement
-  hi link sgmlSpecialTagName            Exception
-  hi link sgmlValue                     Value
-  hi link sgmlSpecialChar               Special
-  hi link sgmlDocEnt                    Type
-  hi link sgmlDocType                   PreProc
-  hi link sgmlTitle                     Title
-  if &background == "dark"
-    hi sgmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
-  else
-    hi sgmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
-  endif
-  hi sgmlBold                term=bold cterm=bold gui=bold
-  hi sgmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
-  hi sgmlUnderline           term=underline cterm=underline gui=underline
-  hi sgmlItalic              term=italic cterm=italic gui=italic
+    let did_sgml_syntax_inits = 1
+    hi link sgmlTag                       Function
+    hi link sgmlEndTag                    Identifier
+    hi link sgmlArg                       Type
+    hi link sgmlTagName                   sgmlStatement
+    hi link sgmlSpecialTagName            Exception
+    hi link sgmlValue                     Value
+    hi link sgmlSpecialChar               Special
+    hi link sgmlDocEnt                    Type
+    hi link sgmlDocType                   PreProc
+    hi link sgmlTitle                     Title
+    hi link sgmlPreStmt                   PreProc
+    hi link sgmlPreErr                    Error
+    hi link sgmlPreProc                   PreProc
+    hi link sgmlPreAttr                   String
+    hi link sgmlPreProcAttrName           PreProc
+    hi link sgmlPreProcAttrErr            Error
+    hi link sgmlSpecial                   Special
+    hi link sgmlSpecialChar               Special
+    hi link sgmlString                    String
+    hi link sgmlStatement                 Statement
+    hi link sgmlComment                   Comment
+    hi link sgmlValue                     String
+    hi link sgmlTagErr                    sgmlErr
+    hi link sgmlErr                       Error
 
-  hi link sgmlPreStmt                   PreProc
-  hi link sgmlPreErr                    Error
-  hi link sgmlPreProc                   PreProc
-  hi link sgmlPreAttr                   String
-  hi link sgmlPreProcAttrName           PreProc
-  hi link sgmlPreProcAttrErr            Error
-  hi link sgmlSpecial                   Special
-  hi link sgmlSpecialChar               Special
-  hi link sgmlString                    String
-  hi link sgmlStatement                 Statement
-  hi link sgmlComment                   Comment
-  hi link sgmlValue                     String
-  hi link sgmlTagErr                    sgmlErr
-  hi link sgmlErr                       Error
+    if !exists("sgml_no_rendering")
+        if !exists("sgml_my_rendering")
+            if &background == "dark"
+                 hi sgmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
+             else
+                 hi sgmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
+             endif
+             hi sgmlBold                term=bold cterm=bold gui=bold
+             hi sgmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
+             hi sgmlUnderline           term=underline cterm=underline gui=underline
+             hi sgmlItalic              term=italic cterm=italic gui=italic
+        endif
+    endif
 endif
 
 let b:current_syntax = "sgml"

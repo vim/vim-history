@@ -1204,3 +1204,24 @@ mch_has_resource_fork (file)
     return (fileRFid != -1);
 }
 
+    int
+mch_get_shellsize(void)
+{
+    /* never used */
+    return OK;
+}
+
+    void
+mch_set_shellsize(void)
+{
+    /* never used */
+}
+
+/*
+ * Rows and/or Columns has changed.
+ */
+    void
+mch_new_shellsize(void)
+{
+    /* never used */
+}

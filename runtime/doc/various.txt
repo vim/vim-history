@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0h.  Last change: 2000 Aug 20
+*various.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -259,6 +259,7 @@ m  *+perl*		Perl interface |perl|
 m  *+python*		Python interface |python|
 N  *+quickfix*		|:make| and |quickfix| commands
 B  *+rightleft*		Right to left typing |'rightleft'|
+m  *+ruby*		Ruby interface |ruby|
 N  *+scrollbind*	|'scrollbind'|
 N  *+smartindent*	|'smartindent'|
 m  *+sniff*		SniFF interface (no docs available...)

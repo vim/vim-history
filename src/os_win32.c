@@ -16,7 +16,7 @@
  * Portions lifted from the Win32 SDK samples, the MSDOS-dependent code,
  * NetHack 3.1.3, GNU Emacs 19.30, and Vile 5.5.
  *
- * George V. Reilly <georgere@microsoft.com> wrote most of this.
+ * George V. Reilly <george@reilly.org> wrote most of this.
  * Roger Knobbe <rogerk@wonderware.com> did the initial port of Vim 3.0.
  */
 
@@ -47,6 +47,10 @@
 # endif
 #else
 # include <direct.h>
+#endif
+
+#if defined(FEAT_TITLE) && !defined(FEAT_GUI_W32)
+# include <shellapi.h>
 #endif
 
 #ifdef __MINGW32__
@@ -84,7 +88,6 @@
 FILE* fdDump = NULL;
 #endif
 
-
 /*
  * When generating prototypes for Win32 on Unix, these lines make the syntax
  * errors disappear.  They do not need to be correct.
@@ -106,6 +109,13 @@ FILE* fdDump = NULL;
 # define LPCSTR char_u *
 # define WINBASEAPI
 # define INPUT_RECORD int
+# define SECURITY_INFORMATION int
+# define PSECURITY_DESCRIPTOR int
+# define VOID void
+# define HWND int
+# define PSID int
+# define PACL int
+# define HICON int
 #endif
 
 #ifndef FEAT_GUI_W32
@@ -181,8 +191,6 @@ int _stricoll(char *a, char *b)
 static
 # endif
        HANDLE g_hConIn	= INVALID_HANDLE_VALUE;
-static HANDLE g_hSavOut = INVALID_HANDLE_VALUE;
-static HANDLE g_hCurOut = INVALID_HANDLE_VALUE;
 static HANDLE g_hConOut = INVALID_HANDLE_VALUE;
 
 /* Win32 Screen buffer,coordinate,console I/O information */
@@ -252,6 +260,19 @@ static void PlatformId(void);
 static DWORD g_PlatformId;
 
 /*
+ * These are needed to dynamically load the ADVAPI DLL, which is not
+ * implemented under Windows 95 (and causes VIM to crash)
+ */
+typedef DWORD (WINAPI *PSNSECINFO) (LPTSTR, enum SE_OBJECT_TYPE,
+	SECURITY_INFORMATION, PSID, PSID, PACL, PACL);
+typedef DWORD (WINAPI *PGNSECINFO) (LPSTR, enum SE_OBJECT_TYPE,
+	SECURITY_INFORMATION, PSID *, PSID *, PACL *, PACL *,
+	PSECURITY_DESCRIPTOR *);
+static HANDLE advapi_lib;	/* Handle for ADVAPI library */
+static PSNSECINFO pSetNamedSecurityInfo;
+static PGNSECINFO pGetNamedSecurityInfo;
+
+/*
  * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
  * VER_PLATFORM_WIN32_WINDOWS (Win95).
  */
@@ -268,6 +289,26 @@ PlatformId(void)
 	GetVersionEx(&ovi);
 
 	g_PlatformId = ovi.dwPlatformId;
+
+	/*
+	 * Load the ADVAPI runtime if we are on anything
+	 * other than Windows 95
+	 */
+	if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+	{
+	    /*
+	     * do this load.  Problems:  Doesn't unload at end of run (this is
+	     * theoretically okay, since Windows should unload it when VIM
+	     * terminates).  Should we be using the 'mch_libcall' routines?
+	     * Seems like a lot of overhead to load/unload ADVAPI32.DLL each
+	     * time we verify security...
+	     */
+	    advapi_lib = LoadLibrary("ADVAPI32.DLL");
+	    pSetNamedSecurityInfo = (PSNSECINFO)GetProcAddress(advapi_lib,
+						      "SetNamedSecurityInfo");
+	    pGetNamedSecurityInfo = (PGNSECINFO)GetProcAddress(advapi_lib,
+						      "GetNamedSecurityInfo");
+	}
 	done = TRUE;
     }
 }
@@ -879,7 +920,7 @@ mch_set_cursor_shape(int thickness)
     ConsoleCursorInfo.dwSize = thickness;
     ConsoleCursorInfo.bVisible = s_cursor_visible;
 
-    SetConsoleCursorInfo(g_hCurOut, &ConsoleCursorInfo);
+    SetConsoleCursorInfo(g_hConOut, &ConsoleCursorInfo);
 }
 
     void
@@ -1335,18 +1376,385 @@ mch_windexit(
 
 #else /* FEAT_GUI_W32 */
 
-static char g_szOrigTitle[256];
-static int  g_fWindInitCalled = FALSE;
+#define SRWIDTH(sr) ((sr).Right - (sr).Left + 1)
+#define SRHEIGHT(sr) ((sr).Bottom - (sr).Top + 1)
+
+/*
+ * ClearConsoleBuffer()
+ * Description:
+ *  Clears the entire contents of the console screen buffer, using the
+ *  specified attribute.
+ * Returns:
+ *  TRUE on success
+ */
+    static BOOL
+ClearConsoleBuffer(WORD wAttribute)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coord;
+    DWORD NumCells, dummy;
+
+    if (!GetConsoleScreenBufferInfo(g_hConOut, &csbi))
+	return FALSE;
+
+    NumCells = csbi.dwSize.X * csbi.dwSize.Y;
+    coord.X = 0;
+    coord.Y = 0;
+    if (!FillConsoleOutputCharacter(g_hConOut, ' ', NumCells,
+	    coord, &dummy))
+    {
+	return FALSE;
+    }
+    if (!FillConsoleOutputAttribute(g_hConOut, wAttribute, NumCells,
+	    coord, &dummy))
+    {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * FitConsoleWindow()
+ * Description:
+ *  Checks if the console window will fit within given buffer dimensions.
+ *  Also, if requested, will shrink the window to fit.
+ * Returns:
+ *  TRUE on success
+ */
+    static BOOL
+FitConsoleWindow(
+    COORD dwBufferSize,
+    BOOL WantAdjust)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD dwWindowSize;
+    BOOL NeedAdjust = FALSE;
+
+    if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
+    {
+	/*
+	 * A buffer resize will fail if the current console window does
+	 * not lie completely within that buffer.  To avoid this, we might
+	 * have to move and possibly shrink the window.
+	 */
+	if (csbi.srWindow.Right >= dwBufferSize.X)
+	{
+	    dwWindowSize.X = SRWIDTH(csbi.srWindow);
+	    if (dwWindowSize.X > dwBufferSize.X)
+		dwWindowSize.X = dwBufferSize.X;
+	    csbi.srWindow.Right = dwBufferSize.X - 1;
+	    csbi.srWindow.Left = dwBufferSize.X - dwWindowSize.X;
+	    NeedAdjust = TRUE;
+	}
+	if (csbi.srWindow.Bottom >= dwBufferSize.Y)
+	{
+	    dwWindowSize.Y = SRHEIGHT(csbi.srWindow);
+	    if (dwWindowSize.Y > dwBufferSize.Y)
+		dwWindowSize.Y = dwBufferSize.Y;
+	    csbi.srWindow.Bottom = dwBufferSize.Y - 1;
+	    csbi.srWindow.Top = dwBufferSize.Y - dwWindowSize.Y;
+	    NeedAdjust = TRUE;
+	}
+	if (NeedAdjust && WantAdjust)
+	{
+	    if (!SetConsoleWindowInfo(g_hConOut, TRUE, &csbi.srWindow))
+		return FALSE;
+	}
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+typedef struct ConsoleBufferStruct
+{
+    BOOL IsValid;
+    CONSOLE_SCREEN_BUFFER_INFO Info;
+    PCHAR_INFO Buffer;
+    COORD BufferSize;
+} ConsoleBuffer;
+ 
+/*
+ * SaveConsoleBuffer()
+ * Description:
+ *  Saves important information about the console buffer, including the
+ *  actual buffer contents.  The saved information is suitable for later
+ *  restoration by RestoreConsoleBuffer().
+ * Returns:
+ *  TRUE if all information was saved; FALSE otherwise
+ *  If FALSE, still sets cb->IsValid if buffer characteristics were saved.
+ */
+    static BOOL
+SaveConsoleBuffer(
+    ConsoleBuffer *cb)
+{
+    DWORD NumCells;
+    COORD BufferCoord;
+    SMALL_RECT ReadRegion;
+    WORD Y, Y_incr;
+
+    if (cb == NULL)
+	return FALSE;
+
+    if (!GetConsoleScreenBufferInfo(g_hConOut, &cb->Info))
+    {
+	cb->IsValid = FALSE;
+	return FALSE;
+    }
+    cb->IsValid = TRUE;
+
+    /*
+     * Allocate a buffer large enough to hold the entire console screen
+     * buffer.  If this ConsoleBuffer structure has already been initialized
+     * with a buffer of the correct size, then just use that one.
+     */
+    if (!cb->IsValid || cb->Buffer == NULL ||
+	    cb->BufferSize.X != cb->Info.dwSize.X ||
+	    cb->BufferSize.Y != cb->Info.dwSize.Y)
+    {
+	cb->BufferSize.X = cb->Info.dwSize.X;
+	cb->BufferSize.Y = cb->Info.dwSize.Y;
+	NumCells = cb->BufferSize.X * cb->BufferSize.Y;
+	if (cb->Buffer != NULL)
+	    vim_free(cb->Buffer);
+	cb->Buffer = (PCHAR_INFO) alloc(NumCells * sizeof(CHAR_INFO));
+	if (cb->Buffer == NULL)
+	    return FALSE;
+    }
+    
+    /*
+     * We will now copy the console screen buffer into our buffer.
+     * ReadConsoleOutput() seems to be limited as far as how much you
+     * can read at a time.  Empirically, this number seems to be about
+     * 15000 cells (rows * columns).  Start at position (0, 0) and copy
+     * in chunks until it is all copied.  The chunks will all have the
+     * same horizontal characteristics, so initialize them now.  The
+     * height of each chunk will be (15000 / width).
+     */
+    BufferCoord.X = 0;
+    ReadRegion.Left = 0;
+    ReadRegion.Right = cb->Info.dwSize.X - 1;
+    Y_incr = 15000 / cb->Info.dwSize.X;
+    for (Y = 0; Y < cb->BufferSize.Y; Y += Y_incr)
+    {
+	/*
+	 * Read into position (0, Y) in our buffer.
+	 */
+	BufferCoord.Y = Y;
+	/*
+	 * Read the region whose top left corner is (0, Y) and whose bottom
+	 * right corner is (width - 1, Y + Y_incr - 1).  This should define
+	 * a region of size width by Y_incr.  Don't worry if this region is
+	 * too large for the remaining buffer; it will be cropped.
+	 */
+	ReadRegion.Top = Y;
+	ReadRegion.Bottom = Y + Y_incr - 1;
+	if (!ReadConsoleOutput(g_hConOut,	/* output handle */
+		cb->Buffer,			/* our buffer */
+		cb->BufferSize,			/* dimensions of our buffer */
+		BufferCoord,			/* offset in our buffer */
+		&ReadRegion))			/* region to save */
+	{
+	    vim_free(cb->Buffer);
+	    cb->Buffer = NULL;
+	    return FALSE;
+	}
+    }
+
+    return TRUE;
+}
+
+/*
+ * RestoreConsoleBuffer()
+ * Description:
+ *  Restores important information about the console buffer, including the
+ *  actual buffer contents, if desired.  The information to restore is in
+ *  the same format used by SaveConsoleBuffer().
+ * Returns:
+ *  TRUE on success
+ */
+    static BOOL
+RestoreConsoleBuffer(
+    ConsoleBuffer *cb,
+    BOOL RestoreScreen)
+{
+    COORD BufferCoord;
+    SMALL_RECT WriteRegion;
+
+    if (cb == NULL || !cb->IsValid)
+	return FALSE;
+
+    FitConsoleWindow(cb->Info.dwSize, TRUE);
+    if (!SetConsoleScreenBufferSize(g_hConOut, cb->Info.dwSize))
+	return FALSE;
+    if (!SetConsoleTextAttribute(g_hConOut, cb->Info.wAttributes))
+	return FALSE;
+
+    if (!RestoreScreen)
+    {
+	/*
+	 * No need to restore the screen buffer contents, so we're done.
+	 */
+	return TRUE;
+    }
+
+    if (cb->Buffer != NULL)
+    {
+	BufferCoord.X = 0;
+	BufferCoord.Y = 0;
+	WriteRegion.Left = 0;
+	WriteRegion.Top = 0;
+	WriteRegion.Right = cb->Info.dwSize.X - 1;
+	WriteRegion.Bottom = cb->Info.dwSize.Y - 1;
+	if (!WriteConsoleOutput(g_hConOut,	/* output handle */
+		cb->Buffer,			/* our buffer */
+		cb->BufferSize,			/* dimensions of our buffer */
+		BufferCoord,			/* offset in our buffer */
+		&WriteRegion))			/* region to restore */
+	{
+	    return FALSE;
+	}
+    }
+
+    if (!SetConsoleCursorPosition(g_hConOut, cb->Info.dwCursorPosition))
+	return FALSE;
+    if (!SetConsoleWindowInfo(g_hConOut, TRUE, &cb->Info.srWindow))
+	return FALSE;
+
+    return TRUE;
+}
+
+#ifdef FEAT_RESTORE_ORIG_SCREEN
+static ConsoleBuffer g_cbOrig = { 0 };
+#endif
+static ConsoleBuffer g_cbNonTermcap = { 0 };
+static ConsoleBuffer g_cbTermcap = { 0 };
+
+#ifdef FEAT_TITLE
+typedef WINBASEAPI HWND (WINAPI *GETCONSOLEWINDOWPROC)(VOID);
+static char g_szOrigTitle[256] = { 0 };
+static HWND g_hWnd = NULL;
+static HICON g_hOrigIconSmall = NULL;
+static HICON g_hOrigIcon = NULL;
+static HICON g_hVimIcon = NULL;
+static BOOL g_fCanChangeIcon = FALSE;
+
+/*
+ * GetConsoleIcon()
+ * Description:
+ *  Attempts to retrieve the small icon and/or the big icon currently in
+ *  use by a given window.
+ * Returns:
+ *  TRUE on success
+ */
+    static BOOL
+GetConsoleIcon(
+    HWND hWnd,
+    HICON *phIconSmall,
+    HICON *phIcon)
+{
+    if (hWnd == NULL)
+	return FALSE;
+
+    if (phIconSmall != NULL)
+    {
+	*phIconSmall = (HICON) SendMessage(hWnd, WM_GETICON,
+			    (WPARAM) ICON_SMALL, (LPARAM) 0);
+    }
+    if (phIcon != NULL)
+    {
+	*phIcon = (HICON) SendMessage(hWnd, WM_GETICON,
+			    (WPARAM) ICON_BIG, (LPARAM) 0);
+    }
+    return TRUE;
+}
+
+/*
+ * SetConsoleIcon()
+ * Description:
+ *  Attempts to change the small icon and/or the big icon currently in
+ *  use by a given window.
+ * Returns:
+ *  TRUE on success
+ */
+    static BOOL
+SetConsoleIcon(
+    HWND hWnd,
+    HICON hIconSmall,
+    HICON hIcon)
+{
+    HICON hPrevIconSmall;
+    HICON hPrevIcon;
+
+    if (hWnd == NULL)
+	return FALSE;
+
+    if (hIconSmall != NULL)
+    {
+	hPrevIconSmall = (HICON) SendMessage(hWnd, WM_SETICON,
+			    (WPARAM) ICON_SMALL, (LPARAM) hIconSmall);
+    }
+    if (hIcon != NULL)
+    {
+	hPrevIcon = (HICON) SendMessage(hWnd, WM_SETICON,
+			    (WPARAM) ICON_BIG, (LPARAM) hIcon);
+    }
+    return TRUE;
+}
+
+/*
+ * SaveConsoleTitleAndIcon()
+ * Description:
+ *  Saves the current console window title in g_szOrigTitle, for later
+ *  restoration.  Also, attempts to obtain a handle to the console window,
+ *  and use it to save the small and big icons currently in use by the
+ *  console window.  This is not always possible on some versions of Windows;
+ *  nor is it possible when running Vim remotely using Telnet (since the
+ *  console window the user sees is owned by a remote process).
+ */
+    static void
+SaveConsoleTitleAndIcon(void)
+{
+    GETCONSOLEWINDOWPROC GetConsoleWindowProc;
+
+    /* Save the original title. */
+    if (!GetConsoleTitle(g_szOrigTitle, sizeof(g_szOrigTitle)))
+	return;
+
+    /*
+     * Obtain a handle to the console window using GetConsoleWindow() from
+     * KERNEL32.DLL; we need to handle in order to change the window icon.
+     * This function only exists on NT-based Windows, starting with Windows
+     * 2000.  On older operating systems, we can't change the window icon
+     * anyway.
+     */
+    if ((GetConsoleWindowProc = (GETCONSOLEWINDOWPROC)
+	    GetProcAddress(GetModuleHandle("KERNEL32.DLL"),
+		    "GetConsoleWindow")) != NULL)
+    {
+	g_hWnd = (*GetConsoleWindowProc)();
+    }
+    if (g_hWnd == NULL)
+	return;
+
+    /* Save the original console window icon. */
+    GetConsoleIcon(g_hWnd, &g_hOrigIconSmall, &g_hOrigIcon);
+    if (g_hOrigIconSmall == NULL || g_hOrigIcon == NULL)
+	return;
+
+    /* Extract the first icon contained in the Vim executable. */
+    g_hVimIcon = ExtractIcon(NULL, exe_name, 0);
+    if (g_hVimIcon != NULL)
+	g_fCanChangeIcon = TRUE;
+}
+#endif
+
+static int g_fWindInitCalled = FALSE;
+static int g_fTermcapMode = FALSE;
 static CONSOLE_CURSOR_INFO g_cci;
 static DWORD g_cmodein = 0;
 static DWORD g_cmodeout = 0;
-
-/*
- * Because of a bug in the Windows 95 Console, we need to set the screen size
- * back when switching screens.
- */
-static int g_nOldRows = 0;
-static int g_nOldColumns = 0;
 
 /*
  * non-GUI version of mch_shellinit().
@@ -1354,7 +1762,9 @@ static int g_nOldColumns = 0;
     void
 mch_shellinit()
 {
+#ifndef FEAT_RESTORE_ORIG_SCREEN
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+#endif
 #ifndef __MINGW32__
     extern int _fmode;
 #endif
@@ -1373,29 +1783,41 @@ mch_shellinit()
 	g_hConIn =  GetStdHandle(STD_INPUT_HANDLE);
     else
 	create_conin();
-    g_hSavOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    g_hCurOut = g_hSavOut;
+    g_hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
+#ifdef FEAT_RESTORE_ORIG_SCREEN
+    /* Save the initial console buffer for later restoration */
+    SaveConsoleBuffer(&g_cbOrig);
+    g_attrCurrent = g_attrDefault = g_cbOrig.Info.wAttributes;
+#else
     /* Get current text attributes */
-    GetConsoleScreenBufferInfo(g_hSavOut, &csbi);
+    GetConsoleScreenBufferInfo(g_hConOut, &csbi);
     g_attrCurrent = g_attrDefault = csbi.wAttributes;
+#endif
     if (cterm_normal_fg_color == 0)
 	cterm_normal_fg_color = (g_attrCurrent & 0xf) + 1;
     if (cterm_normal_bg_color == 0)
 	cterm_normal_bg_color = ((g_attrCurrent >> 4) & 0xf) + 1;
-    GetConsoleCursorInfo(g_hSavOut, &g_cci);
 
     /* set termcap codes to current text attributes */
-    update_tcap(csbi.wAttributes);
+    update_tcap(g_attrCurrent);
 
+    GetConsoleCursorInfo(g_hConOut, &g_cci);
     GetConsoleMode(g_hConIn,  &g_cmodein);
-    GetConsoleMode(g_hSavOut, &g_cmodeout);
+    GetConsoleMode(g_hConOut, &g_cmodeout);
 
-    GetConsoleTitle(g_szOrigTitle, sizeof(g_szOrigTitle));
+#ifdef FEAT_TITLE
+    SaveConsoleTitleAndIcon();
+    /*
+     * Set both the small and big icons of the console window to Vim's icon.
+     * Note that Vim presently only has one size of icon (32x32), but it
+     * automatically gets scaled down to 16x16 when setting the small icon.
+     */
+    if (g_fCanChangeIcon)
+	SetConsoleIcon(g_hWnd, g_hVimIcon, g_hVimIcon);
+#endif
+
     ui_get_shellsize();
-
-    g_nOldRows = Rows;
-    g_nOldColumns = Columns;
 
 #ifdef MCH_WRITE_DUMP
     fdDump = fopen("dump", "wt");
@@ -1430,13 +1852,6 @@ mch_shellinit()
     s_pfnGetConsoleKeyboardLayoutName =
 	(PFNGCKLN) GetProcAddress(GetModuleHandle("kernel32.dll"),
 				  "GetConsoleKeyboardLayoutNameA");
-    /*
-     * We don't really want to jump to our own screen yet; do that after
-     * starttermcap().	This flashes the window, sorry about that, but
-     * otherwise "vim -r" doesn't work.
-     */
-    g_hCurOut = g_hSavOut;
-    SetConsoleActiveScreenBuffer(g_hCurOut);
 }
 
 /*
@@ -1449,26 +1864,9 @@ mch_windexit(
     int r)
 {
     stoptermcap();
-    if (full_screen)
-    {
-	out_char('\r');
-	out_char('\n');
-	out_flush();
-    }
 
     if (g_fWindInitCalled)
 	settmode(TMODE_COOK);
-
-    if (g_hConOut != INVALID_HANDLE_VALUE)
-    {
-	(void)CloseHandle(g_hConOut);
-
-	if (g_hSavOut != INVALID_HANDLE_VALUE)
-	{
-	    SetConsoleTextAttribute(g_hSavOut, g_attrDefault);
-	    SetConsoleCursorInfo(g_hSavOut, &g_cci);
-	}
-    }
 
     ml_close_all(TRUE);		/* remove all memfiles */
 
@@ -1476,6 +1874,12 @@ mch_windexit(
     {
 #ifdef FEAT_TITLE
 	mch_restore_title(3);
+	/*
+	 * Restore both the small and big icons of the console window to
+	 * what they were at startup.
+	 */
+	if (g_fCanChangeIcon)
+	    SetConsoleIcon(g_hWnd, g_hOrigIconSmall, g_hOrigIcon);
 #endif
 
 #ifdef MCH_WRITE_DUMP
@@ -1490,6 +1894,10 @@ mch_windexit(
 	fdDump = NULL;
 #endif
     }
+
+    SetConsoleCursorInfo(g_hConOut, &g_cci);
+    SetConsoleMode(g_hConIn,  g_cmodein);
+    SetConsoleMode(g_hConOut, g_cmodeout);
 
     exit(r);
 }
@@ -1623,7 +2031,6 @@ fname_case(
 #ifdef FEAT_TITLE
 /*
  * mch_settitle(): set titlebar of our window
- * Can the icon also be set?
  */
     void
 mch_settitle(
@@ -1667,7 +2074,7 @@ mch_can_restore_title()
 
 
 /*
- * Return TRUE if we can restore the icon (we can't)
+ * Return TRUE if we can restore the icon title (we can't)
  */
     int
 mch_can_restore_icon()
@@ -1919,7 +2326,14 @@ mch_nodetype(char_u *name)
     return NODE_OTHER;
 }
 
-#include <aclapi.h>
+/*
+ * Mingw doesn't have the acl stuff.
+ * Borland only in version 5.5 and later.
+ */
+#if !defined(__MINGW32__) && (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550)
+# include <aclapi.h>
+
+# define HAVE_ACL
 
 struct my_acl
 {
@@ -1929,6 +2343,7 @@ struct my_acl
     PACL		    pDacl;
     PACL		    pSacl;
 };
+#endif
 
 /*
  * Return a pointer to the ACL of file "fname" in allocated memory.
@@ -1938,46 +2353,57 @@ struct my_acl
 mch_get_acl(fname)
     char_u	*fname;
 {
-    struct my_acl   *p;
+#ifndef HAVE_ACL
+    return (vim_acl_t)NULL;
+#else
+    struct my_acl   *p = NULL;
 
-    p = (struct my_acl *)alloc_clear((unsigned)sizeof(struct my_acl));
-    if (p != NULL)
+    /* This only works on Windows NT and 2000. */
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
     {
-	if (GetNamedSecurityInfo(
-		    (LPTSTR)fname,		// Abstract filename
-		    SE_FILE_OBJECT,		// File Object
-		    // Retrieve the entire security descriptor.
-		    OWNER_SECURITY_INFORMATION |
+	p = (struct my_acl *)alloc_clear((unsigned)sizeof(struct my_acl));
+	if (p != NULL)
+	{
+	    if (pGetNamedSecurityInfo(
+			(LPTSTR)fname,		// Abstract filename
+			SE_FILE_OBJECT,		// File Object
+			// Retrieve the entire security descriptor.
+			OWNER_SECURITY_INFORMATION |
 			GROUP_SECURITY_INFORMATION |
 			DACL_SECURITY_INFORMATION |
 			SACL_SECURITY_INFORMATION,
-		    &p->pSidOwner,		// Ownership information.
-		    &p->pSidGroup,		// Group membership.
-		    &p->pDacl,			// Discretionary information.
-		    &p->pSacl,			// For auditing purposes.
-		    &p->pSecurityDescriptor
-				) != ERROR_SUCCESS)
-	{
-	    mch_free_acl((vim_acl_t)p);
-	    p = NULL;
+			&p->pSidOwner,		// Ownership information.
+			&p->pSidGroup,		// Group membership.
+			&p->pDacl,		// Discretionary information.
+			&p->pSacl,		// For auditing purposes.
+			&p->pSecurityDescriptor
+				    ) != ERROR_SUCCESS)
+	    {
+		mch_free_acl((vim_acl_t)p);
+		p = NULL;
+	    }
 	}
     }
+
     return (vim_acl_t)p;
+#endif
 }
 
 /*
  * Set the ACL of file "fname" to "acl" (unless it's NULL).
  * Errors are ignored.
+ * This must only be called with "acl" equal to what mch_get_acl() returned.
  */
     void
 mch_set_acl(fname, acl)
     char_u	*fname;
     vim_acl_t	acl;
 {
+#ifdef HAVE_ACL
     struct my_acl   *p = (struct my_acl *)acl;
 
     if (p != NULL)
-	(void)SetNamedSecurityInfo(
+	(void)pSetNamedSecurityInfo(
 		    (LPTSTR)fname,		// Abstract filename
 		    SE_FILE_OBJECT,		// File Object
 		    // Retrieve the entire security descriptor.
@@ -1990,12 +2416,14 @@ mch_set_acl(fname, acl)
 		    p->pDacl,			// Discretionary information.
 		    p->pSacl			// For auditing purposes.
 		    );
+#endif
 }
 
     void
 mch_free_acl(acl)
     vim_acl_t	acl;
 {
+#ifdef HAVE_ACL
     struct my_acl   *p = (struct my_acl *)acl;
 
     if (p != NULL)
@@ -2003,6 +2431,7 @@ mch_free_acl(acl)
 	LocalFree(p->pSecurityDescriptor);	// Free the memory just in case
 	vim_free(p);
     }
+#endif
 }
 
 #ifdef FEAT_GUI_W32
@@ -2087,43 +2516,38 @@ mch_settmode(
 {
     DWORD cmodein;
     DWORD cmodeout;
+    BOOL bEnableHandler;
 
-    GetConsoleMode(g_hConIn,  &cmodein);
-    GetConsoleMode(g_hCurOut, &cmodeout);
-
+    GetConsoleMode(g_hConIn, &cmodein);
+    GetConsoleMode(g_hConOut, &cmodeout);
     if (tmode == TMODE_RAW)
     {
 	cmodein &= ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT |
 		     ENABLE_ECHO_INPUT);
-	cmodein |= (
 #ifdef FEAT_MOUSE
-	    (g_fMouseActive ? ENABLE_MOUSE_INPUT : 0) |
+	if (g_fMouseActive)
+	    cmodein |= ENABLE_MOUSE_INPUT;
 #endif
-	    ENABLE_WINDOW_INPUT);
-
-	SetConsoleMode(g_hConIn, cmodein);
-
 	cmodeout &= ~(ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-	SetConsoleMode(g_hCurOut, cmodeout);
-	SetConsoleCtrlHandler(handler_routine, TRUE);
+	bEnableHandler = TRUE;
     }
     else /* cooked */
     {
-	cmodein =  g_cmodein;
-	cmodeout = g_cmodeout;
-	SetConsoleMode(g_hConIn,  g_cmodein);
-	SetConsoleMode(g_hCurOut, g_cmodeout);
-
-	SetConsoleCtrlHandler(handler_routine, FALSE);
+	cmodein |= (ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT |
+		    ENABLE_ECHO_INPUT);
+	cmodeout |= (ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+	bEnableHandler = FALSE;
     }
+    SetConsoleMode(g_hConIn, cmodein);
+    SetConsoleMode(g_hConOut, cmodeout);
+    SetConsoleCtrlHandler(handler_routine, bEnableHandler);
 
 #ifdef MCH_WRITE_DUMP
     if (fdDump)
     {
-	fprintf(fdDump, "mch_settmode(%s, CurOut = %s, in = %x, out = %x)\n",
+	fprintf(fdDump, "mch_settmode(%s, in = %x, out = %x)\n",
 		tmode == TMODE_RAW ? "raw" :
 				    tmode == TMODE_COOK ? "cooked" : "normal",
-		(g_hCurOut == g_hSavOut ? "Sav" : "Con"),
 		cmodein, cmodeout);
 	fflush(fdDump);
     }
@@ -2140,7 +2564,18 @@ mch_get_shellsize()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    if (GetConsoleScreenBufferInfo(g_hCurOut, &csbi))
+    if (!g_fTermcapMode && g_cbTermcap.IsValid)
+    {
+	/*
+	 * For some reason, we are trying to get the screen dimensions
+	 * even though we are not in termcap mode.  The 'Rows' and 'Columns'
+	 * variables are really intended to mean the size of Vim screen
+	 * while in termcap mode.
+	 */
+	Rows = g_cbTermcap.Info.dwSize.Y;
+	Columns = g_cbTermcap.Info.dwSize.X;
+    }
+    else if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
     {
 	Rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 	Columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
@@ -2165,7 +2600,6 @@ ResizeConBufAndWindow(
     CONSOLE_SCREEN_BUFFER_INFO csbi;	/* hold current console buffer info */
     SMALL_RECT	    srWindowRect;	/* hold the new console size */
     COORD	    coordScreen;
-    int		    did_start_termcap = FALSE;
 
 #ifdef MCH_WRITE_DUMP
     if (fdDump)
@@ -2175,17 +2609,6 @@ ResizeConBufAndWindow(
     }
 #endif
 
-    /*
-     * The resizing MUST be done while in our own console buffer, otherwise it
-     * will never be possible to restore the old one, and we will crash on
-     * exit in Windows 95.
-     */
-    if (g_hCurOut != g_hConOut)
-    {
-	termcap_mode_start();
-	did_start_termcap = TRUE;
-    }
-
     /* get the largest size we can size the console window to */
     coordScreen = GetLargestConsoleWindowSize(hConsole);
 
@@ -2194,7 +2617,7 @@ ResizeConBufAndWindow(
     srWindowRect.Right =  (SHORT) (min(xSize, coordScreen.X) - 1);
     srWindowRect.Bottom = (SHORT) (min(ySize, coordScreen.Y) - 1);
 
-    if (GetConsoleScreenBufferInfo(g_hCurOut, &csbi))
+    if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
     {
 	int sx, sy;
 
@@ -2218,7 +2641,7 @@ ResizeConBufAndWindow(
 	}
     }
 
-    if (!SetConsoleWindowInfo(hConsole, TRUE, &srWindowRect))
+    if (!SetConsoleWindowInfo(g_hConOut, TRUE, &srWindowRect))
     {
 #ifdef MCH_WRITE_DUMP
 	if (fdDump)
@@ -2245,9 +2668,6 @@ ResizeConBufAndWindow(
 	}
 #endif
     }
-
-    if (did_start_termcap)
-	termcap_mode_end();
 }
 
 
@@ -2266,7 +2686,7 @@ mch_set_shellsize()
 	return;
     }
 
-    coordScreen = GetLargestConsoleWindowSize(g_hCurOut);
+    coordScreen = GetLargestConsoleWindowSize(g_hConOut);
 
     /* Clamp Rows and Columns to reasonable values */
     if (Rows > coordScreen.Y)
@@ -2274,7 +2694,7 @@ mch_set_shellsize()
     if (Columns > coordScreen.X)
 	Columns = coordScreen.X;
 
-    ResizeConBufAndWindow(g_hCurOut, Columns, Rows);
+    ResizeConBufAndWindow(g_hConOut, Columns, Rows);
 }
 
 /*
@@ -2591,24 +3011,25 @@ mch_call_shell(
     int options)	/* SHELL_*, see vim.h */
 {
     int	    x = 0;
-#ifndef FEAT_GUI_W32
-    int	    stopped_termcap_mode = FALSE;
+#ifdef FEAT_TITLE
+    char szShellTitle[512];
+
+    /* Change the title to reflect that we are in a subshell. */
+    if (GetConsoleTitle(szShellTitle, sizeof(szShellTitle) - 4) > 0)
+    {
+	if (cmd == NULL)
+	    strcat(szShellTitle, " :sh");
+	else
+	{
+	    strcat(szShellTitle, " - !");
+	    if ((strlen(szShellTitle) + strlen(cmd) < sizeof(szShellTitle)))
+		strcat(szShellTitle, cmd);
+	}
+	mch_settitle(szShellTitle, NULL);
+    }
 #endif
 
     out_flush();
-
-#ifndef FEAT_GUI_W32
-    /*
-     * Switch to non-termcap mode, otherwise ":r !ls" may crash.
-     * The only exception is "!start".
-     */
-    if (g_hCurOut == g_hConOut
-	    && (cmd == NULL || STRNICMP(cmd, "start ", 6) != 0))
-    {
-	termcap_mode_end();
-	stopped_termcap_mode = TRUE;
-    }
-#endif
 
 #ifdef MCH_WRITE_DUMP
     if (fdDump)
@@ -2755,11 +3176,6 @@ mch_call_shell(
     signal(SIGSEGV, SIG_DFL);
     signal(SIGTERM, SIG_DFL);
     signal(SIGABRT, SIG_DFL);
-
-#ifndef FEAT_GUI_W32
-    if (stopped_termcap_mode)
-	termcap_mode_start();
-#endif
 
     return x;
 }
@@ -2962,170 +3378,117 @@ mch_chdir(char *path)
 
 
 #ifndef FEAT_GUI_W32
-/*
- * Copy the contents of screen buffer hSrc to the bottom-left corner
- * of screen buffer hDst.
- */
-    static void
-copy_screen_buffer_text(
-    HANDLE hSrc,
-    HANDLE hDst)
-{
-    int	    i, j, nSrcWidth, nSrcHeight, nDstWidth, nDstHeight;
-    COORD   coordOrigin;
-    DWORD   dwDummy;
-    LPSTR   pszOldText;
-    CONSOLE_SCREEN_BUFFER_INFO csbiSrc, csbiDst;
-
-#ifdef MCH_WRITE_DUMP
-    if (fdDump)
-    {
-	fprintf(fdDump, "copy_screen_buffer_text(%s, %s)\n",
-		(hSrc == g_hSavOut ? "Sav" : "Con"),
-		(hDst == g_hSavOut ? "Sav" : "Con"));
-	fflush(fdDump);
-    }
-#endif
-
-    GetConsoleScreenBufferInfo(hSrc, &csbiSrc);
-    nSrcWidth =  csbiSrc.srWindow.Right  - csbiSrc.srWindow.Left + 1;
-    nSrcHeight = csbiSrc.srWindow.Bottom - csbiSrc.srWindow.Top  + 1;
-
-    GetConsoleScreenBufferInfo(hDst, &csbiDst);
-    nDstWidth =  csbiDst.srWindow.Right  - csbiDst.srWindow.Left + 1;
-    nDstHeight = csbiDst.srWindow.Bottom - csbiDst.srWindow.Top  + 1;
-
-    pszOldText = (LPSTR) alloc(nDstHeight * nDstWidth);
-
-    /* clear the top few lines if Src shorter than Dst */
-    for (i = 0;  i < nDstHeight - nSrcHeight;  i++)
-    {
-	for (j = 0;  j < nDstWidth;  j++)
-	    pszOldText[i * nDstWidth + j] = ' ';
-    }
-
-    /* Grab text off source screen. */
-    coordOrigin.X = 0;
-    coordOrigin.Y = (SHORT) max(0, csbiSrc.srWindow.Bottom + 1 - nDstHeight);
-
-    for (i = 0;  i < min(nSrcHeight, nDstHeight);  i++)
-    {
-	LPSTR psz = pszOldText
-		     + (i + max(0, nDstHeight - nSrcHeight)) * nDstWidth;
-
-	ReadConsoleOutputCharacter(hSrc, psz, min(nDstWidth, nSrcWidth),
-				   coordOrigin, &dwDummy);
-	coordOrigin.Y++;
-
-	/* clear the last few columns if Src narrower than Dst */
-	for (j = nSrcWidth;  j < nDstWidth;  j++)
-	    psz[j] = ' ';
-    }
-
-    /* paste Src's text onto Dst */
-    coordOrigin.Y = csbiDst.srWindow.Top;
-    WriteConsoleOutputCharacter(hDst, pszOldText, nDstHeight * nDstWidth,
-				coordOrigin, &dwDummy);
-    vim_free(pszOldText);
-}
-
-
-/* keep track of state of original console window */
-static SMALL_RECT   g_srOrigWindowRect;
-static COORD	    g_coordOrig;
-static WORD	    g_attrSave = 0;
-
 
 /*
- * Start termcap mode by switching to our allocated screen buffer
+ * Start termcap mode
  */
     static void
 termcap_mode_start(void)
 {
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    DWORD dwDummy;
-    COORD coord;
-    WORD wAttr = (WORD) (g_attrSave ? g_attrSave : g_attrCurrent);
+    DWORD cmodein;
 
-    GetConsoleScreenBufferInfo(g_hSavOut, &csbi);
-    g_srOrigWindowRect = csbi.srWindow;
+    if (g_fTermcapMode)
+	return;
 
-    g_coordOrig.X = 0;
-    g_coordOrig.Y = csbi.dwCursorPosition.Y;
+    SaveConsoleBuffer(&g_cbNonTermcap);
 
-    if (g_hConOut == INVALID_HANDLE_VALUE)
+    if (g_cbTermcap.IsValid)
     {
-	/* Create a new screen buffer in which we do all of our editing.
-	 * This means we can restore the original screen when we finish. */
-	g_hConOut = CreateConsoleScreenBuffer(GENERIC_WRITE | GENERIC_READ,
-					      0, (LPSECURITY_ATTRIBUTES) NULL,
-					      CONSOLE_TEXTMODE_BUFFER,
-					      (LPVOID) NULL);
-
-	/* initialize the new screenbuffer with what is in the current one */
-	coord.X = coord.Y = 0;
-	FillConsoleOutputCharacter(g_hConOut, ' ',
-					     Rows * Columns, coord, &dwDummy);
-	FillConsoleOutputAttribute(g_hConOut, wAttr,
-					     Rows * Columns, coord, &dwDummy);
-	copy_screen_buffer_text(g_hSavOut, g_hConOut);
+	/*
+	 * We've been in termcap mode before.  Restore certain screen
+	 * characteristics, including the buffer size and the window
+	 * size.  Since we will be redrawing the screen, we don't need
+	 * to restore the actual contents of the buffer.
+	 */
+	RestoreConsoleBuffer(&g_cbTermcap, FALSE);
+	SetConsoleWindowInfo(g_hConOut, TRUE, &g_cbTermcap.Info.srWindow);
+	Rows = g_cbTermcap.Info.dwSize.Y;
+	Columns = g_cbTermcap.Info.dwSize.X;
     }
-
-    g_hCurOut = g_hConOut;
-    SetConsoleActiveScreenBuffer(g_hCurOut);
-
-    check_shellsize();
-    ResizeConBufAndWindow(g_hCurOut, Columns, Rows);
-    set_scroll_region(0, 0, Columns - 1, Rows - 1);
+    else
+    {
+	/*
+	 * This is our first time entering termcap mode.  Clear the console
+	 * screen buffer, and resize the buffer to match the current window
+	 * size.  We will use this as the size of our editing environment.
+	 */
+	ClearConsoleBuffer(g_attrCurrent);
+	ResizeConBufAndWindow(g_hConOut, Columns, Rows);
+    }
 
 #ifdef FEAT_TITLE
     resettitle();
 #endif
 
-    textattr(wAttr);
+    GetConsoleMode(g_hConIn, &cmodein);
+#ifdef FEAT_MOUSE
+    if (g_fMouseActive)
+	cmodein |= ENABLE_MOUSE_INPUT;
+    else
+	cmodein &= ~ENABLE_MOUSE_INPUT;
+#endif
+    cmodein |= ENABLE_WINDOW_INPUT;
+    SetConsoleMode(g_hConIn, cmodein);
+
+    must_redraw = CLEAR;
+    g_fTermcapMode = TRUE;
 }
 
 
 /*
- * Turn off termcap mode by restoring the screen buffer we had upon startup
+ * End termcap mode
  */
     static void
 termcap_mode_end(void)
 {
-    g_attrSave = g_attrCurrent;
+    DWORD cmodein;
+    ConsoleBuffer *cb;
+    COORD coord;
+    DWORD dwDummy;
 
-    ResizeConBufAndWindow(g_hCurOut, g_nOldColumns, g_nOldRows);
+    if (!g_fTermcapMode)
+	return;
 
-    /* This weird Sleep(0) is required to allow Windows to really resize the
-     * console window.  Apparently it's done asynchronously, which may cause
-     * the following screenbuffer switch to go wrong */
-    Sleep(0);
+    SaveConsoleBuffer(&g_cbTermcap);
 
-    check_shellsize();
+    GetConsoleMode(g_hConIn, &cmodein);
+    cmodein &= ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT);
+    SetConsoleMode(g_hConIn, cmodein);
 
-    g_hCurOut = g_hSavOut;
-    SetConsoleActiveScreenBuffer(g_hCurOut);
-    SetConsoleCursorInfo(g_hCurOut, &g_cci);
-
-    normvideo();
-
-    if (!p_rs)
-	g_coordOrig.Y = g_srOrigWindowRect.Bottom;
-
-    SetConsoleCursorPosition(g_hCurOut, g_coordOrig);
-
-    if (!p_rs)
-	copy_screen_buffer_text(g_hConOut, g_hSavOut);
-
-    clear_chars(g_coordOrig,
-		g_srOrigWindowRect.Right - g_srOrigWindowRect.Left + 1);
-
-#ifdef FEAT_TITLE
-    mch_restore_title(3);
+#ifdef FEAT_RESTORE_ORIG_SCREEN
+    cb = exiting ? &g_cbOrig : &g_cbNonTermcap;
+#else
+    cb = &g_cbNonTermcap;
 #endif
+    RestoreConsoleBuffer(cb, p_rs);
+    SetConsoleCursorInfo(g_hConOut, &g_cci);
 
-    SetConsoleMode(g_hConIn,  g_cmodein);
-    SetConsoleMode(g_hSavOut, g_cmodeout);
+    if (p_rs || exiting)
+    {
+	/*
+	 * Clear anything that happens to be on the current line.
+	 */
+	coord.X = 0;
+	coord.Y = p_rs ? cb->Info.dwCursorPosition.Y : (Rows - 1);
+	FillConsoleOutputCharacter(g_hConOut, ' ',
+		cb->Info.dwSize.X, coord, &dwDummy);
+	/*
+	 * The following is just for aesthetics.  If we are exiting without
+	 * restoring the screen, then we want to have a prompt string
+	 * appear at the bottom line.  However, the command interpreter
+	 * seems to always advance the cursor one line before displaying
+	 * the prompt string, which causes the screen to scroll.  To
+	 * counter this, move the cursor up one line before exiting.
+	 */
+	if (exiting && !p_rs)
+	    coord.Y--;
+	/*
+	 * Position the cursor at the leftmost column of the desired row.
+	 */
+	SetConsoleCursorPosition(g_hConOut, coord);
+    }
+
+    g_fTermcapMode = FALSE;
 }
 #endif /* FEAT_GUI_W32 */
 
@@ -3169,8 +3532,8 @@ clear_chars(
 {
     DWORD dwDummy;
 
-    FillConsoleOutputCharacter(g_hCurOut, ' ', n, coord, &dwDummy);
-    FillConsoleOutputAttribute(g_hCurOut, g_attrCurrent, n, coord, &dwDummy);
+    FillConsoleOutputCharacter(g_hConOut, ' ', n, coord, &dwDummy);
+    FillConsoleOutputAttribute(g_hConOut, g_attrCurrent, n, coord, &dwDummy);
 }
 
 
@@ -3267,7 +3630,7 @@ insert_lines(
     fill.Char.AsciiChar = ' ';
     fill.Attributes = g_attrCurrent;
 
-    ScrollConsoleScreenBuffer(g_hCurOut, &source, NULL, dest, &fill);
+    ScrollConsoleScreenBuffer(g_hConOut, &source, NULL, dest, &fill);
 
     /* Here we have to deal with a win32 console flake: If the scroll
      * region looks like abc and we scroll c to a and fill with d we get
@@ -3310,7 +3673,7 @@ delete_lines(
     fill.Char.AsciiChar = ' ';
     fill.Attributes = g_attrCurrent;
 
-    ScrollConsoleScreenBuffer(g_hCurOut, &source, NULL, dest, &fill);
+    ScrollConsoleScreenBuffer(g_hConOut, &source, NULL, dest, &fill);
 
     /* Here we have to deal with a win32 console flake: If the scroll
      * region looks like abc and we scroll c to a and fill with d we get
@@ -3340,31 +3703,13 @@ gotoxy(
     unsigned x,
     unsigned y)
 {
-    COORD coord2;
-
     if (x < 1 || x > (unsigned)Columns || y < 1 || y > (unsigned)Rows)
 	return;
 
-    /* Should we check against g_srScrollRegion? */
-
     /* external cursor coords are 1-based; internal are 0-based */
-    g_coord.X = coord2.X = x - 1;
-    g_coord.Y = coord2.Y = y - 1;
-
-    /* If we are using the window buffer that we had upon startup, make
-     * sure to position cursor relative to the window upon that buffer */
-    if (g_hCurOut == g_hSavOut)
-    {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	GetConsoleScreenBufferInfo(g_hCurOut, &csbi);
-	g_srOrigWindowRect = csbi.srWindow;
-
-	coord2.X += (SHORT) (g_srOrigWindowRect.Left);
-	coord2.Y += (SHORT) (g_srOrigWindowRect.Bottom + 1 - Rows);
-    }
-
-    SetConsoleCursorPosition(g_hCurOut, coord2);
+    g_coord.X = x - 1;
+    g_coord.Y = y - 1;
+    SetConsoleCursorPosition(g_hConOut, g_coord);
 }
 
 
@@ -3378,7 +3723,7 @@ textattr(
 {
     g_attrCurrent = wAttr;
 
-    SetConsoleTextAttribute(g_hCurOut, wAttr);
+    SetConsoleTextAttribute(g_hConOut, wAttr);
 }
 
 
@@ -3388,7 +3733,7 @@ textcolor(
 {
     g_attrCurrent = (g_attrCurrent & 0xf0) + wAttr;
 
-    SetConsoleTextAttribute(g_hCurOut, g_attrCurrent);
+    SetConsoleTextAttribute(g_hConOut, g_attrCurrent);
 }
 
 
@@ -3398,7 +3743,7 @@ textbackground(
 {
     g_attrCurrent = (g_attrCurrent & 0x0f) + (wAttr << 4);
 
-    SetConsoleTextAttribute(g_hCurOut, g_attrCurrent);
+    SetConsoleTextAttribute(g_hConOut, g_attrCurrent);
 }
 
 
@@ -3475,13 +3820,13 @@ visual_bell()
     DWORD   dwDummy;
     LPWORD  oldattrs = (LPWORD) alloc(Rows * Columns * sizeof(WORD));
 
-    ReadConsoleOutputAttribute(g_hCurOut, oldattrs, Rows * Columns,
+    ReadConsoleOutputAttribute(g_hConOut, oldattrs, Rows * Columns,
 			       coordOrigin, &dwDummy);
-    FillConsoleOutputAttribute(g_hCurOut, attrFlash, Rows * Columns,
+    FillConsoleOutputAttribute(g_hConOut, attrFlash, Rows * Columns,
 			       coordOrigin, &dwDummy);
 
     Sleep(15);	    /* wait for 15 msec */
-    WriteConsoleOutputAttribute(g_hCurOut, oldattrs, Rows * Columns,
+    WriteConsoleOutputAttribute(g_hConOut, oldattrs, Rows * Columns,
 				coordOrigin, &dwDummy);
     vim_free(oldattrs);
 }
@@ -3511,22 +3856,12 @@ write_chars(
     DWORD* pcchWritten)
 {
     BOOL f;
-    COORD coord2 = g_coord;
+    COORD coord = g_coord;
 
-    if (g_hCurOut == g_hSavOut)
-    {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	GetConsoleScreenBufferInfo(g_hCurOut, &csbi);
-
-	coord2.X += (SHORT) (csbi.srWindow.Left);
-	coord2.Y += (SHORT) (csbi.srWindow.Bottom + 1 - Rows);
-    }
-
-    FillConsoleOutputAttribute(g_hCurOut, g_attrCurrent, cchToWrite,
-			       coord2, pcchWritten);
-    f = WriteConsoleOutputCharacter(g_hCurOut, pchBuf, cchToWrite,
-				    coord2, pcchWritten);
+    FillConsoleOutputAttribute(g_hConOut, g_attrCurrent, cchToWrite,
+			       coord, pcchWritten);
+    f = WriteConsoleOutputCharacter(g_hConOut, pchBuf, cchToWrite,
+				    coord, pcchWritten);
 
     g_coord.X += (SHORT) *pcchWritten;
 

@@ -1015,6 +1015,10 @@ gui_mch_prepare(argc, argv)
 	    gui.dofork = FALSE;	/* don't fork() when starting GUI */
 	    mch_memmove(&argv[arg], &argv[arg + 1],
 					    (--*argc - arg) * sizeof(char *));
+# ifdef WSDEBUG
+	    wsdebug_wait(WT_ENV | WT_WAIT | WT_STOP, "SPRO_GVIM_WAIT", 20);
+	    wsdebug_log_init("SPRO_GVIM_DEBUG", "SPRO_GVIM_DLEVEL");
+# endif
 	}
 	else
 #endif

@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language   : TeX
-" Version    : 6.0-1
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: August 8, 2000
+" Language:    TeX
+" Version:     6.0-3
+" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change: September 28, 2000	NOT RELEASED
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -21,6 +21,9 @@
 
 " Removes any old syntax stuff hanging around
 syn clear
+
+" (La)TeX keywords only use the letters a-zA-Z
+set isk=a-z,A-Z
 
 " Clusters
 " --------
@@ -43,17 +46,25 @@ syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end=
 " TeX/LaTeX keywords
 " Instead of trying to be All Knowing, I just match \..alphameric..
 " Note that *.tex files may not have "@" in their \commands
-syn match texStatement	"\\[a-zA-Z]\+"
+syn match texStatement	"\\\a\+"
 let b:extfname=expand("%:e")
 if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
-  syn match texStatement	"\\[a-zA-Z]*@[a-zA-Z@]*"
+  syn match texStatement	"\\\a*@[a-zA-Z@]*"
 else
-  syn match texError		"\\[a-zA-Z]*@[a-zA-Z@]*"
+  syn match texError		"\\\a*@[a-zA-Z@]*"
 endif
 
 " TeX/LaTeX delimiters
 syn match texDelimiter	"&"
 syn match texDelimiter	"\\\\"
+
+" texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents
+syn match texAccent	"\\[bcdvuH]\A"me=e-1
+syn match texAccent	"\\[bcdvuH]$"
+syn match texAccent	+\\[=^.\~"`']+
+syn match texAccent	+\\['=t'.c^ud"vb~Hr]{\a}+
+syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)\A"me=e-1
+syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)$"
 
 " \begin{}/\end{} section markers
 syn match  texSectionMarker	"\\begin\>\|\\end\>" nextgroup=texSectionName
@@ -167,31 +178,28 @@ syn match   texMathDelim		"\\\(left\|right\)arrow\>"
 syn match   texMathDelim		"\\lefteqn\>"
 syn match   texMathDelimSet2	contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
 syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
-syn keyword texMathDelimKey	contained	Downarrow	Uparrow	downarrow	lceil	rangle	uparrow
-syn keyword texMathDelimKey	contained	Rfloor	backslash	langle	lfloor	rceil
-
-" texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents
-syn match texAccent	"\\[bcdvuH][^a-zA-Z]"me=e-1
-syn match texAccent	"\\[bcdvuH]$"
-syn match texAccent	+\\[=^.\~"`']+
-syn match texAccent	+\\['=t'.c^ud"vb~Hr]{[a-zA-Z]}+
-syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)[^a-zA-Z]"me=e-1
-syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)$"
+syn keyword texMathDelimKey   contained	Downarrow	backslash	lceil	rceil	uparrow
+syn keyword texMathDelimKey   contained	Uparrow	downarrow	lfloor	rfloor	updownarrow
+syn keyword texMathDelimKey   contained	Updownarrow	langle	rangle
 
 " special TeX characters  ( \$ \& \% \# \{ \} \_ \S \P )
 syn match texSpecialChar	"\\[$&%#{}_]"
-syn match texSpecialChar	"\\[SP@][^a-zA-Z]"me=e-1
+syn match texSpecialChar	"\\[SP@]\A"me=e-1
 syn match texSpecialChar	"\\\\"
-syn match texOnlyMath		"[_^]"
+syn match texOnlyMath	"[_^]"
 syn match texSpecialChar	"\^\^[0-9a-f]\{2}\|\^\^\S"
 
 " Comments:    Normal TeX LaTeX     :   %....
 "              Documented TeX Format:  ^^A...    -and-  leading %s (only)
+syn cluster texCommentGroup	contains=texTodo
+syn case ignore
+syn keyword texTodo	contained	todo
+syn case match
 if b:extfname == "dtx"
-  syn match texComment	"\^\^A.*$"
-  syn match texComment	"^%\+"
+  syn match texComment	"\^\^A.*$"	contains=@texCommentGroup
+  syn match texComment	"^%\+"	contains=@texCommentGroup
 else
-  syn match texComment	"%.*$"
+  syn match texComment	"%.*$"	contains=@texCommentGroup
 endif
 
 " separate lines used for verb` and verb# so that the end conditions
@@ -221,7 +229,7 @@ syn region texEnvBgn  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	ne
 syn region texEnvEnd  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	skipwhite skipnl contains=@texEnvGroup
 
 syn match texDefCmd		"\\def\>"			nextgroup=texDefName skipwhite skipnl
-syn match texDefName contained	"\\[a-zA-Z]\+"			nextgroup=texCmdBody skipwhite skipnl
+syn match texDefName contained	"\\\a\+"			nextgroup=texCmdBody skipwhite skipnl
 
 " TeX Lengths
 syn match  texLength	"\d\+\(\.\d\+\)\=\(bp\|cc\|cm\|dd\|em\|ex\|in\|mm\|pc\|pt\|sp\)"
@@ -306,6 +314,7 @@ if !exists("did_tex_syntax_inits")
  hi link texMathDelimSet1	texMathDelim
  hi link texMathDelimSet2	texMathDelim
  hi link texMathDelimKey	texMathDelim
+ hi link texMathError	texError
  hi link texMathMatcher	texMath
  hi link texMathZoneA	texMath
  hi link texMathZoneB	texMath

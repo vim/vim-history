@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0h
+MINOR = 0i
 
 # CHECKLIST for creating a new version:
 #
@@ -77,7 +77,7 @@ MINOR = 0h
 #   VIMRTDIR in src/Makefile, GvimExt/GvimExt.reg, README*.txt,
 #   runtime/doc/*.txt.
 # - Correct included_patches[] in src/version.c.
-# - Compile Vim with GTK, Perl, Python, TCL, Cscope and "huge" features.
+# - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
 # - With these features: "make proto" (requires cproto; ignore warnings for
 #   missing include files, but fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
@@ -88,6 +88,8 @@ MINOR = 0h
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
 #   preferences or the GTK, Perl, etc. mentioned above.
+# - Check that runtime/doc/help.txt doesn't contain entries in "LOCAL
+#   ADDITIONS".
 # - Check file protections to be "644" for text and "755" for executables.
 # - Check compiling on Amiga, MS-DOS and MS-Windows.
 # - Delete all *~, *.sw?, *.orig, *.rej files
@@ -95,7 +97,7 @@ MINOR = 0h
 #
 # Amiga:
 # - "make amisrc", move the archive to the Amiga and compile the Amiga version
-#   with "big" features.  Place the executables Vim, Ctags and Xxd in this
+#   with "big" features.  Place the executables Vim and Xxd in this
 #   directory (set the executable flag).
 # - "make amirt", "make amibin".
 #
@@ -103,22 +105,20 @@ MINOR = 0h
 # - "make dossrc" and "make dosrt".  Unpack the archives on a PC.
 # 16 bit DOS version:
 # - Set environment for compiling with Borland C++ 3.1.  Adjust the paths in
-#   src/Make_bc3.mak and src/ctags/Makefile.bc3.
+#   src/Make_bc3.mak.
 # - "ren Make_bc3.mak Makefile", "make" (compiling xxd will fail)
 # - Set environment for compiling with Borland C++ 4.0 and "make xxd/xxd.exe".
 # - "make test" and check the output.
-# - Rename the executables to "vimd16.exe", "ctagsd16.exe", "xxdd16.exe",
-#   and "installd16.exe".
+# - Rename the executables to "vimd16.exe", "xxdd16.exe", and "installd16.exe".
 # 32 bit DOS version:
 # - Set environment for compiling with DJGPP; "make -f makefile.djg".
 # - "rm testdir/*.out", "make -f makefile.djg test" and check the output.
-# - Rename the executables to "vimd32.exe", "ctagsd32.exe", "xxdd32.exe",
-#   and "installd32.exe".
+# - Rename the executables to "vimd32.exe", "xxdd32.exe", and "installd32.exe".
 # Win32 console version:
 # - Set environment for Visual C++ 5.0: "vcvars32"
 # - "nmake -f makefile.mvc"
 # - "rm testdir/*.out", "nmake -f makefile.mvc test" and check the output.
-# - Rename the executables to "vimw32.exe", "ctagsw32.exe", "xxdw32.exe".
+# - Rename the executables to "vimw32.exe", "xxdw32.exe".
 # - Delete vimrun.exe, install.exe and uninstall.exe.
 # Win32 GUI version:
 # - "nmake -f Make_gvc.mak".
@@ -142,8 +142,7 @@ MINOR = 0h
 # OS/2:
 # - Unpack the Unix "src", "extra" and "rt" archives.
 # - "make -f makefile.os2".
-# - Rename the executables to vimos2.exe, ctagsos2.exe, xxdos2.exe and
-#   teeos2.exe.
+# - Rename the executables to vimos2.exe, xxdos2.exe and teeos2.exe.
 # - "make os2bin".
 
 VIM	= vim-$(MAJOR).$(MINOR)
@@ -156,52 +155,6 @@ SRC_ALL =	\
 		src/ascii.h \
 		src/buffer.c \
 		src/charset.c \
-		src/ctags/COPYING \
-		src/ctags/FAQ \
-		src/ctags/NEWS \
-		src/ctags/README.txt \
-		src/ctags/args.c \
-		src/ctags/args.h \
-		src/ctags/asm.c \
-		src/ctags/awk.c \
-		src/ctags/beta.c \
-		src/ctags/c.c \
-		src/ctags/cobol.c \
-		src/ctags/ctags.h \
-		src/ctags/debug.c \
-		src/ctags/debug.h \
-		src/ctags/eiffel.c \
-		src/ctags/entry.c \
-		src/ctags/entry.h \
-		src/ctags/fortran.c \
-		src/ctags/general.h \
-		src/ctags/get.c \
-		src/ctags/get.h \
-		src/ctags/keyword.c \
-		src/ctags/keyword.h \
-		src/ctags/lisp.c \
-		src/ctags/main.c \
-		src/ctags/main.h \
-		src/ctags/options.c \
-		src/ctags/options.h \
-		src/ctags/parse.c \
-		src/ctags/parse.h \
-		src/ctags/perl.c \
-		src/ctags/python.c \
-		src/ctags/read.c \
-		src/ctags/read.h \
-		src/ctags/sh.c \
-		src/ctags/scheme.c \
-		src/ctags/sort.c \
-		src/ctags/sort.h \
-		src/ctags/source.mak \
-		src/ctags/strlist.c \
-		src/ctags/strlist.h \
-		src/ctags/strstr.c \
-		src/ctags/tcl.c \
-		src/ctags/vim.c \
-		src/ctags/vstring.c \
-		src/ctags/vstring.h \
 		src/digraph.c \
 		src/edit.c \
 		src/eval.c \
@@ -304,16 +257,6 @@ SRC_UNIX =	\
 		src/config.mk.in \
 		src/configure \
 		src/configure.in \
-		src/ctags/INSTALL \
-		src/ctags/Makefile.in \
-		src/ctags/Makefile.maint \
-		src/ctags/acconfig.h \
-		src/ctags/config.h.in \
-		src/ctags/configure \
-		src/ctags/configure.in \
-		src/ctags/ctags.1 \
-		src/ctags/ctags.lsm \
-		src/ctags/mkinstalldirs \
 		src/gui_at_fs.c \
 		src/gui_at_sb.c \
 		src/gui_at_sb.h \
@@ -332,6 +275,7 @@ SRC_UNIX =	\
 		src/integration.c \
 		src/integration.h \
 		src/link.sh \
+		src/mkinstalldirs \
 		src/os_unix.c \
 		src/os_unix.h \
 		src/os_unixx.h \
@@ -359,6 +303,8 @@ SRC_UNIX =	\
 		src/vimtutor \
 		src/workshop.c \
 		src/workshop.h \
+		src/wsdebug.c \
+		src/wsdebug.h \
 		src/xxd/Makefile \
 
 # source files for both DOS and Unix
@@ -388,11 +334,6 @@ SRC_DOS =	\
 		src/Make_mvc.mak \
 		src/Make_tcc.mak \
 		src/Make_w16.mak \
-		src/ctags/Makefile.bc3 \
-		src/ctags/Makefile.bc5 \
-		src/ctags/Makefile.djg \
-		src/ctags/Makefile.ming \
-		src/ctags/Makefile.mvc \
 		src/dimm.idl \
 		src/dlldata.c \
 		src/dosinst.c \
@@ -480,7 +421,6 @@ SRC_DOS_BIN = 	\
 
 # source files for Amiga, DOS, etc. (also in the extra archive)
 SRC_AMI_DOS =	\
-		src/ctags/INSTALL.DOS \
 
 # source files for Amiga (also in the extra archive)
 SRC_AMI =	\
@@ -492,8 +432,6 @@ SRC_AMI =	\
 		src/Make_dice.mak \
 		src/Make_manx.mak \
 		src/Make_sas.mak \
-		src/ctags/Makefile.manx \
-		src/ctags/Makefile.sas \
 		src/gui_amiga.c \
 		src/gui_amiga.h \
 		src/os_amiga.c \
@@ -517,7 +455,6 @@ SRC_MAC =	\
 SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
-		src/ctags/descrip.mms \
 		src/gui_vms_conf.h \
 		src/os_vms.c \
 		src/os_vms.h \
@@ -533,7 +470,6 @@ SRC_VMS =	\
 # source files for OS/2 (also in the extra archive)
 SRC_OS2 =	\
 		src/Make_os2.mak \
-		src/ctags/Makefile.os2 \
 		src/os_os2_cfg.h \
 		src/testdir/Make_os2.mak \
 		src/testdir/todos.vim \
@@ -552,13 +488,11 @@ SRC_EXTRA =	\
 		README_os390.txt \
 		src/Make_mint.mak \
 		src/Make_ro.mak \
-		src/ctags/*.mms \
-		src/ctags/Makefile.qdos \
-		src/ctags/qdos.c \
 		src/gui_beos.cc \
 		src/gui_beos.h \
 		src/gui_riscos.c \
 		src/gui_riscos.h \
+		src/if_ruby.c \
 		src/if_sniff.c \
 		src/if_sniff.h \
 		src/link.390 \
@@ -570,6 +504,7 @@ SRC_EXTRA =	\
 		src/os_riscos.h \
 		src/proto/gui_beos.pro \
 		src/proto/gui_riscos.pro \
+		src/proto/if_ruby.pro \
 		src/proto/os_beos.pro \
 		src/proto/os_riscos.pro \
 		src/os_vms_fix.com \
@@ -592,6 +527,7 @@ RT_ALL =	\
 		runtime/gvimrc_example.vim \
 		runtime/macros/README.txt \
 		runtime/macros/diffwin.vim \
+		runtime/macros/hdiffwin.vim \
 		runtime/macros/dvorak \
 		runtime/macros/explorer.vim \
 		runtime/macros/hanoi/click.me \
@@ -621,13 +557,14 @@ RT_ALL =	\
 		runtime/optwin.vim \
 		runtime/plugin/README.txt \
 		runtime/scripts.vim \
-		runtime/settings.vim \
-		runtime/setsoff.vim \
+		runtime/ftplugin.vim \
+		runtime/ftplugof.vim \
 		runtime/indent.vim \
 		runtime/indoff.vim \
 		runtime/indent/*.vim \
 		runtime/indent/README.txt \
-		runtime/settings/*.vim \
+		runtime/ftplugin/*/*.vim \
+		runtime/ftplugin/README.txt \
 		runtime/syntax/*.vim \
 		runtime/syntax/README.txt \
 		runtime/termcap \
@@ -650,14 +587,10 @@ RT_UNIX_DOS_BIN =	\
 		runtime/vim48x48.gif \
 
 # runtime not for unix or extra
-# Unix has ctags.1 in the src/ctags directory, for "make install".
-# Dos, Amiga and OS/2 have ctags.1 and ctags.man in the doc directory.
 RT_NO_UNIX =	\
-		runtime/doc/ctags.1 \
 
 # runtime for Amiga (also in the extra archive)
 RT_AMI_DOS =	\
-		runtime/doc/ctags.man \
 		runtime/doc/vim.man \
 		runtime/doc/vimtutor.man \
 		runtime/doc/xxd.man \
@@ -708,7 +641,6 @@ ROOT_EXTRA =	\
 
 # files for Amiga small binary (also in extra archive)
 BIN_AMI =	\
-		Ctags.info \
 		README_amibin.txt \
 		README_amibin.txt.info \
 		Vim.info \
@@ -904,7 +836,6 @@ amibin: dist
 		$(ROOT_AMI) \
 		$(BIN_AMI) \
 		Vim \
-		Ctags \
 		Xxd \
 		| (cd dist/Vim/$(VIMRTDIR); tar xvf -)
 	mv dist/Vim/$(VIMRTDIR)/vimdir.info dist/Vim.info
@@ -963,7 +894,6 @@ dosbin_gvim: dist no_title.vim dist/$(COMMENT_GVIM)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim.exe dist/vim/$(VIMRTDIR)/gvim.exe
-	cp ctagsw32.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -982,7 +912,6 @@ dosbin_w32: dist no_title.vim dist/$(COMMENT_W32)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimw32.exe dist/vim/$(VIMRTDIR)/vim.exe
-	cp ctagsw32.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
 	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
@@ -999,7 +928,6 @@ dosbin_d32: dist no_title.vim dist/$(COMMENT_D32)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimd32.exe dist/vim/$(VIMRTDIR)/vim.exe
-	cp ctagsd32.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd32.exe dist/vim/$(VIMRTDIR)/install.exe
 	cp csdpmi4b.zip dist/vim/$(VIMRTDIR)
@@ -1016,7 +944,6 @@ dosbin_d16: dist no_title.vim dist/$(COMMENT_D16)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimd16.exe dist/vim/$(VIMRTDIR)/vim.exe
-	cp ctagsd16.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdd16.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd16.exe dist/vim/$(VIMRTDIR)/install.exe
 	cd dist && zip -9 -rD -z vim$(VERSION)d16.zip vim <$(COMMENT_D16)
@@ -1032,7 +959,6 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_ole.exe dist/vim/$(VIMRTDIR)/gvim.exe
-	cp ctagsw32.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -1058,7 +984,6 @@ dosbin_s: dist no_title.vim dist/$(COMMENT_W32S)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_w32s.exe dist/vim/$(VIMRTDIR)/gvim.exe
-	cp ctagsd32.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp README_w32s.txt dist/vim/$(VIMRTDIR)
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -1093,7 +1018,6 @@ os2bin: dist no_title.vim dist/$(COMMENT_OS2)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimos2.exe dist/vim/$(VIMRTDIR)/vim.exe
-	cp ctagsos2.exe dist/vim/$(VIMRTDIR)/ctags.exe
 	cp xxdos2.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp teeos2.exe dist/vim/$(VIMRTDIR)/tee.exe
 	cp emx.dll emxlibcs.dll dist/vim/$(VIMRTDIR)

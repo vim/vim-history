@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0h.  Last change: 2000 Aug 20
+*pattern.txt*   For Vim version 6.0i.  Last change: 2000 Aug 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -404,9 +404,6 @@ Example			matches ~
 			An identifier (e.g., in a C program).
 
 \(\.$\|\. \)		A period followed by <EOL> or a space.
-			Note that "\(\. \|\.$\)" does not do the same,
-			because '$' is not <EOL> in front of '\)'.
-			This was done to remain Vi-compatible.
 
 [.!?][])"']*\($\|[ ]\)	A search pattern that finds the end of a sentence,
 			with almost the same definition as the ")" command.

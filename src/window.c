@@ -1608,6 +1608,8 @@ win_close(win, free_buf)
     }
     if (p_ea)
 	win_equal(curwin, 0);
+    else
+	win_comp_pos();
     if (close_curwin)
     {
 	win_enter_ext(wp, FALSE, TRUE);
@@ -1668,7 +1670,7 @@ frame2win(frp)
 
 /*
  * Set a new height for a frame.  Recursively sets the height for contained
- * frames and windows.
+ * frames and windows.  Caller must take care of positions.
  */
     static void
 frame_new_height(topfrp, height, topfirst)
@@ -1699,9 +1701,9 @@ frame_new_height(topfrp, height, topfirst)
 	/* Complicated case: Resize a column of frames.  Resize the bottom
 	 * frame first, frames above that when needed. */
 
-	/* Find the bottom frame of this column */
 	frp = topfrp->fr_child;
 	if (!topfirst)
+	    /* Find the bottom frame of this column */
 	    while (frp->fr_next != NULL)
 		frp = frp->fr_next;
 
@@ -1731,7 +1733,7 @@ frame_new_height(topfrp, height, topfirst)
 	}
 	else if (extra_lines > 0)
 	{
-	    /* increase height of bottom frame */
+	    /* increase height of bottom or top frame */
 	    frame_new_height(frp, frp->fr_height + extra_lines, topfirst);
 	}
     }
@@ -2536,6 +2538,10 @@ win_free(wp)
 
 #ifdef FEAT_TCL
     tcl_window_free(wp);
+#endif
+
+#ifdef FEAT_RUBY
+    ruby_window_free(wp);
 #endif
 
 #ifdef FEAT_FOLDING
@@ -3762,8 +3768,15 @@ get_file_name_in_path(line, col, options, count)
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
     if ((options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
     {
+	void	*save_funccalp;
+
 	set_vim_var_string(VV_FNAME, ptr, len);
+	/* Don't want to use local function variables here. */
+	save_funccalp = save_funccal();
+
 	tofree = eval_to_string(curbuf->b_p_inex, NULL);
+
+	restore_funccal(save_funccalp);
 	set_vim_var_string(VV_FNAME, NULL, 0);
 	if (tofree != NULL)
 	{

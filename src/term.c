@@ -4461,24 +4461,41 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	}
 
 #ifdef FEAT_EVAL
-	/*
-	 * Replace <Map> by the value of "localmapchar".
-	 * If "localmapchar" isn't set use the default ",".
-	 */
-	if (STRNICMP(src, "<Map>", 5) == 0)
 	{
-	    char_u	*p, *s;
+	    char_u	*p, *s, len;
 
-	    p = get_var_value((char_u *)"localmapchar");
-	    if (p == NULL || *p == NUL || STRLEN(p) > 30)
-		s = (char_u *)",";
+	    /*
+	     * Replace <Leader> by the value of "mapleader".
+	     * Replace <LocalLeader> by the value of "maplocalleader".
+	     * If "mapleader" or "maplocalleader" isn't set use a backslash.
+	     */
+	    if (STRNICMP(src, "<Leader>", 8) == 0)
+	    {
+		len = 8;
+		p = get_var_value((char_u *)"mapleader");
+	    }
+	    else if (STRNICMP(src, "<LocalLeader>", 13) == 0)
+	    {
+		len = 13;
+		p = get_var_value((char_u *)"maplocalleader");
+	    }
 	    else
-		s = p;
-	    while (*s != NUL)
-		result[dlen++] = *s++;
-	    vim_free(p);
-	    src += 5;
-	    continue;
+	    {
+		len = 0;
+		p = NULL;
+	    }
+	    if (len != 0)
+	    {
+		if (p == NULL || *p == NUL || STRLEN(p) > 30)
+		    s = (char_u *)"\\";
+		else
+		    s = p;
+		while (*s != NUL)
+		    result[dlen++] = *s++;
+		vim_free(p);
+		src += len;
+		continue;
+	    }
 	}
 #endif
 

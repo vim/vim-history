@@ -3,11 +3,11 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Aug 19
+" Last Change:	2000 Oct 15
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
-let s:menu_cpo_save = &cpo
+let s:cpo_save = &cpo
 let &cpo = ""
 
 " Avoid installing the menus twice
@@ -59,14 +59,23 @@ amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
 amenu 10.350 &File.Save\ &As\.\.\.<Tab>:w	:browse confirm w<CR>
 if has("win32")
   amenu 10.355 &File.-SEP2-			:
-" Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
-  amenu 10.360 &File.&Print :let smod=&mod<Bar>:let ttt=tempname()<Bar>
-	\exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>
-	\exec "!del ".ttt<CR>
+  " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
+  amenu 10.360 &File.&Print			:call Win32Print(":")<CR>
   vunmenu &File.&Print
-  vmenu &File.&Print <Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>
-	\exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>
-	\exec "!del ".ttt<CR>
+  vmenu &File.&Print				<Esc>:call Win32Print(":'<,'>")<CR>
+  if !exists("*Win32Print")
+    fun Win32Print(range)
+      let mod_save = &mod
+      let ff_save = &ff
+      set ff=dos
+      let ttt = tempname()
+      exec a:range . "w! " . ttt
+      let &ff = ff_save
+      let &mod = mod_save
+      exec "!notepad /p " . ttt
+      exec "!del " . ttt
+    endfun
+  endif
 elseif has("unix")
   amenu 10.355 &File.-SEP2-			:
   amenu 10.360 &File.&Print			:w !lpr<CR>
@@ -74,11 +83,18 @@ elseif has("unix")
   vmenu &File.&Print				:w !lpr<CR>
 elseif has("vms")
   amenu 10.355 &File.-SEP2-                     :
-  amenu 10.360 &File.&Print :let smod=&mod<Bar>:let ttt=tempname()<Bar>
-        \exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
+  amenu 10.360 &File.&Print			:call VMSPrint(":")<CR>
   vunmenu &File.&Print
-  vmenu &File.&Print <Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>
-        \exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
+  vmenu &File.&Print				<Esc>:call VMSPrint(":'<,'>")<CR>
+  if !exists("*VMSPrint")
+    fun VMSPrint(range)
+      let mod_save = &mod
+      let ttt = tempname()
+      exec a:range . "w! " . ttt
+      let &mod = mod_save
+      exec "!print/delete " . ttt
+    endfun
+  endif
 endif
 amenu 10.365 &File.-SEP3-			:
 amenu 10.370 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
@@ -88,7 +104,7 @@ amenu 10.380 &File.E&xit<Tab>:qa		:confirm qa<CR>
 " Edit menu
 amenu 20.310 &Edit.&Undo<Tab>u			u
 amenu 20.320 &Edit.&Redo<Tab>^R			<C-R>
-amenu 20.330 &Edit.Repea&t<Tab>\.		.
+amenu 20.330 &Edit.Rep&eat<Tab>\.		.
 amenu 20.335 &Edit.-SEP1-			:
 vmenu 20.340 &Edit.Cu&t<Tab>"*x			"*x
 vmenu 20.350 &Edit.&Copy<Tab>"*y		"*y
@@ -107,14 +123,14 @@ amenu 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>
 amenu 20.405 &Edit.-SEP2-			:
 if has("win32")  || has("win16") || has("gui_gtk")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
-  amenu 20.420 &Edit.Find\ and\ R&eplace\.\.\.	:promptrepl<CR>
-  vunmenu      &Edit.Find\ and\ R&eplace\.\.\.
-  vmenu	       &Edit.Find\ and\ R&eplace\.\.\.	y:promptrepl <C-R>"<CR>
+  amenu 20.420 &Edit.Find\ and\ Rep&lace\.\.\.	:promptrepl<CR>
+  vunmenu      &Edit.Find\ and\ Rep&lace\.\.\.
+  vmenu	       &Edit.Find\ and\ Rep&lace\.\.\.	y:promptrepl <C-R>"<CR>
 else
   amenu 20.410 &Edit.&Find<Tab>/			/
-  amenu 20.420 &Edit.Find\ and\ R&eplace<Tab>:%s	:%s/
-  vunmenu      &Edit.Find\ and\ R&eplace
-  vmenu	       &Edit.Find\ and\ R&eplace<Tab>:s		:s/
+  amenu 20.420 &Edit.Find\ and\ Rep&lace<Tab>:%s	:%s/
+  vunmenu      &Edit.Find\ and\ Rep&lace
+  vmenu	       &Edit.Find\ and\ Rep&lace<Tab>:s		:s/
 endif
 amenu 20.425 &Edit.-SEP3-			:
 amenu 20.430 &Edit.Options\.\.\.		:options<CR>
@@ -342,7 +358,7 @@ endif " !exists("no_buffers_menu")
 amenu 70.300 &Window.&New<Tab>^Wn		<C-W>n
 amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
 amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
-amenu 70.330 &Window.S&plit\ Vertically<Tab>^Wv	<C-W>v
+amenu 70.330 &Window.Split\ &Vertically<Tab>^Wv	<C-W>v
 amenu 70.335 &Window.-SEP1-			:
 amenu 70.340 &Window.&Close<Tab>^Wc		:confirm close<CR>
 amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
@@ -386,13 +402,13 @@ if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif")
   amenu 1.30 ToolBar.SaveAll	:wa<CR>
 
   if has("win32")
-    amenu 1.40 ToolBar.Print	:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
+    amenu 1.40 ToolBar.Print	:call Win32Print(":")<CR>
     vunmenu ToolBar.Print
-    vmenu ToolBar.Print		<Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
+    vmenu ToolBar.Print		<Esc>:call Win32Print(":'<,'>")<CR>
   elseif has("vms")
-    amenu 1.40 ToolBar.Print	:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
+    amenu 1.40 ToolBar.Print	:call VMSPrint(":")<CR>
     vunmenu ToolBar.Print
-    vmenu ToolBar.Print		<Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>    
+    vmenu ToolBar.Print		<Esc>:call VMSPrint(":'<,'>")<CR>
   else
     amenu 1.40 ToolBar.Print	:w !lpr<CR>
     vunmenu ToolBar.Print
@@ -632,6 +648,10 @@ SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva
 SynMenu CD.Dracula:dracula
 SynMenu CD.DTD:dtd
+SynMenu CD.Zope\ DTML:dtml
+SynMenu CD.Dylan:dylan
+SynMenu CD.Dylan\ intr:dylanintr
+SynMenu CD.Dylan\ lid:dylanlid
 
 SynMenu EFGH.Eiffel:eiffel
 SynMenu EFGH.Elm\ Filter:elmfilt
@@ -669,10 +689,12 @@ SynMenu IJKL.JavaCC:javacc
 SynMenu IJKL.JavaScript:javascript
 SynMenu IJKL.Java\ Server\ Pages:jsp
 SynMenu IJKL.Java\ Properties:jproperties
+SynMenu IJKL.Jess:jess
 SynMenu IJKL.Jgraph:jgraph
 SynMenu IJKL.KDE\ script:kscript
 SynMenu IJKL.Kimwitu:kwt
 SynMenu IJKL.Lace:lace
+SynMenu IJKL.Lamda\ Prolog:lprolog
 SynMenu IJKL.Latte:latte
 SynMenu IJKL.Lex:lex
 SynMenu IJKL.Lilo:lilo
@@ -684,6 +706,7 @@ SynMenu IJKL.Lua:lua
 SynMenu IJKL.Lynx\ Style:lss
 
 SynMenu MNO.M4:m4
+SynMenu MNO.MaGic\ Point:mgp
 SynMenu MNO.Mail:mail
 SynMenu MNO.Makefile:make
 SynMenu MNO.MakeIndex:ist
@@ -710,6 +733,8 @@ SynMenu MNO.Novell\ batch:ncf
 SynMenu MNO.Nroff:nroff
 SynMenu MNO.Objective\ C:objc
 SynMenu MNO.OCAML:ocaml
+SynMenu MNO.Omnimark:omnimark
+SynMenu MNO.OpenROAD:openroad
 SynMenu MNO.Open\ Psion\ Lang:opl
 SynMenu MNO.Oracle\ config:ora
 
@@ -718,8 +743,9 @@ SynMenu PQR.PCCTS:pccts
 SynMenu PQR.Perl:perl
 SynMenu PQR.Perl\ POD:pod
 SynMenu PQR.Perl\ XS:xs
-SynMenu PQR.PHP\ 3:php3
+SynMenu PQR.PHP\ 3-4:php
 SynMenu PQR.Phtml:phtml
+SynMenu PQR.PIC\ assembly:pic
 SynMenu PQR.Pike:pike
 SynMenu PQR.Pine\ RC:pine
 SynMenu PQR.PL/SQL:plsql
@@ -731,6 +757,7 @@ SynMenu PQR.Procmail:procmail
 SynMenu PQR.Prolog:prolog
 SynMenu PQR.Purify\ log:purifylog
 SynMenu PQR.Python:python
+SynMenu PQR.R:r
 SynMenu PQR.Radiance:radiance
 SynMenu PQR.RCS\ log\ output:rcslog
 SynMenu PQR.Rebol:rebol
@@ -738,7 +765,9 @@ SynMenu PQR.Registry\ of\ MS-Windows:registry
 SynMenu PQR.Remind:remind
 SynMenu PQR.Renderman\ Shader\ Lang:sl
 SynMenu PQR.Rexx:rexx
+SynMenu PQR.Robots\.txt:robots
 SynMenu PQR.Rpcgen:rpcgen
+SynMenu PQR.RTF:rtf
 SynMenu PQR.Ruby:ruby
 
 SynMenu S.S-lang:slang
@@ -773,6 +802,7 @@ SynMenu S.SQL:sql
 SynMenu S.SQR:sqr
 SynMenu S.Standard\ ML:sml
 SynMenu S.Stored\ Procedures:stp
+SynMenu S.Strace:strace
 
 SynMenu TUV.Tads:tads
 SynMenu TUV.Tags:tags
@@ -783,6 +813,7 @@ SynMenu TUV.Termcap:ptcap
 SynMenu TUV.TeX:tex
 SynMenu TUV.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
+SynMenu TUV.Turbo\ assembly:tasm
 SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
@@ -790,14 +821,17 @@ SynMenu TUV.VHDL:vhdl
 SynMenu TUV.Vim\ help\ file:help
 SynMenu TUV.Vim\ script:vim
 SynMenu TUV.Viminfo\ file:viminfo
+SynMenu TUV.Virata:virata
 SynMenu TUV.Visual\ Basic:vb
 SynMenu TUV.VRML:vrml
 
 SynMenu WXYZ.WEB:web
 SynMenu WXYZ.Webmacro:webmacro
 SynMenu WXYZ.Website\ MetaLanguage:wml
+SynMenu WXYZ.Wdiff:wdiff
 SynMenu WXYZ.Whitespace\ (add):whitespace
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
+SynMenu WXYZ.Windows\ Scripting\ Host:wsh
 SynMenu WXYZ.X\ Pixmap:xpm
 SynMenu WXYZ.X\ Pixmap\ (2):xpm2
 SynMenu WXYZ.X\ resources:xdefaults
@@ -829,7 +863,7 @@ am 50.110 &Syntax.&Off			:syn off<CR>
 am 50.112 &Syntax.&Manual		:syn manual<CR>
 am 50.114 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.116 &Syntax.&on\ (this\ file)	:call SmenuSynoff()<CR>
+am 50.116 &Syntax.o&n\ (this\ file)	:call SmenuSynoff()<CR>
 fun! SmenuSynoff()
   if !exists("syntax_on")
     syn manual
@@ -846,4 +880,4 @@ am 50.730 &Syntax.&Convert\ to\ HTML	:so $VIMRUNTIME/syntax/2html.vim<CR>
 endif " !exists("did_install_syntax_menu")
 
 " Restore the previous value of 'cpoptions'.
-let &cpo = s:menu_cpo_save
+let &cpo = s:cpo_save

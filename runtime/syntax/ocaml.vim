@@ -1,10 +1,10 @@
 " Vim syntax file
-" Language:	OCAML
-" Maintainers:	Markus Mottl	  <mottl>@miss.wu-wien.ac.at
-"		Karl-Heinz Sylla <Karl-Heinz.Sylla>@gmd.de
-" URL:		http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last Change:	1999 Oct  10 - small fix for modules (MM)
-
+" Language:      OCAML
+" Filenames:     *.ml *.mli *.mll *.mly
+" Maintainers:   Markus Mottl     <mottl@miss.wu-wien.ac.at>
+"                Karl-Heinz Sylla <Karl-Heinz.Sylla@gmd.de>
+" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
+" Last Change:   2000 May  05 - small fix for optional arguments
 
 " Remove any old syntax stuff hanging around.
 syn clear
@@ -12,7 +12,6 @@ syn clear
 
 " OCAML is case sensitive.
 syn case match
-
 
 " lowercase identifier - the standard way to match
 syn match    ocamlLCIdentifier /\<\(\l\|_\)\(\w\|'\)*\>/
@@ -24,7 +23,6 @@ syn match    ocamlBraceErr   "}"
 syn match    ocamlBrackErr   "\]"
 syn match    ocamlParenErr   ")"
 syn match    ocamlArrErr     "|]"
-syn match    ocamlStreamErr  ">]"
 
 syn match    ocamlCommentErr "\*)"
 
@@ -55,7 +53,6 @@ syn region   ocamlEncl transparent matchgroup=ocamlKeyword start="(" matchgroup=
 syn region   ocamlEncl transparent matchgroup=ocamlKeyword start="{" matchgroup=ocamlKeyword end="}"  contains=ALLBUT,@ocamlContained,ocamlBraceErr
 syn region   ocamlEncl transparent matchgroup=ocamlKeyword start="\[" matchgroup=ocamlKeyword end="\]" contains=ALLBUT,@ocamlContained,ocamlBrackErr
 syn region   ocamlEncl transparent matchgroup=ocamlKeyword start="\[|" matchgroup=ocamlKeyword end="|\]" contains=ALLBUT,@ocamlContained,ocamlArrErr
-syn region   ocamlEncl transparent matchgroup=ocamlKeyword start="\[<" matchgroup=ocamlKeyword end=">\]" contains=ALLBUT,@ocamlContained,ocamlStreamErr
 
 
 " Comments
@@ -148,11 +145,13 @@ syn match    ocamlConstructor  "\[|\s*>|]"
 syn match    ocamlConstructor  "\[<\s*>\]"
 syn match    ocamlConstructor  "\u\(\w\|'\)*\>"
 
+" Polymorphic variants
+syn match    ocamlConstructor  "`\w\(\w\|'\)*\>"
+
 " Module prefix
 syn match    ocamlModPath      "\u\(\w\|'\)*\."he=e-1
 
 syn match    ocamlCharacter    "'.'\|'\\\d\d\d'\|'\\[\'ntbr]'"
-syn match    ocamlCharErr      "'\\\d\d'\|'\\\d'"
 syn match    ocamlCharErr      "'\\\d\d'\|'\\\d'"
 syn match    ocamlCharErr      "'\\[^\'ntbr]'"
 syn region   ocamlString       start=+"+ skip=+\\\\\|\\"+ end=+"+
@@ -167,6 +166,7 @@ syn match    ocamlAnyVar       "\<_\>"
 syn match    ocamlKeyChar      "!"
 syn match    ocamlKeyChar      "|[^\]]"me=e-1
 syn match    ocamlKeyChar      ";"
+syn match    ocamlKeyChar      "\~"
 syn match    ocamlKeyChar      "?"
 syn match    ocamlKeyChar      "\*"
 syn match    ocamlKeyChar      "="
@@ -177,7 +177,13 @@ syn match    ocamlNumber        "\<-\=0[o|O]\o\+\>"
 syn match    ocamlNumber        "\<-\=0[b|B][01]\+\>"
 syn match    ocamlFloat         "\<-\=\d\+\.\d*\([eE][-+]\=\d\+\)\=[fl]\=\>"
 
-" synchronization
+" Labels
+syn match    ocamlLabel        "\~\(\l\|_\)\(\w\|'\)*"lc=1
+syn match    ocamlLabel        "?\(\l\|_\)\(\w\|'\)*"lc=1
+syn region   ocamlLabel transparent matchgroup=ocamlLabel start="?(\(\l\|_\)\(\w\|'\)*"lc=2 end=")"me=e-1 contains=ALLBUT,@ocamlContained,ocamlParenErr
+
+
+" Synchronization
 syn sync minlines=20
 syn sync maxlines=500
 
@@ -197,7 +203,6 @@ if !exists("did_ocaml_syntax_inits")
   hi link ocamlBraceErr     Error
   hi link ocamlBrackErr     Error
   hi link ocamlParenErr     Error
-  hi link ocamlStreamErr    Error
   hi link ocamlArrErr       Error
 
   hi link ocamlCommentErr   Error
@@ -226,7 +231,6 @@ if !exists("did_ocaml_syntax_inits")
 
   hi link ocamlModPreRHS    Keyword
   hi link ocamlMPRestr2     Keyword
-  hi link ocamlEnvKeyword   Keyword
   hi link ocamlKeyword      Keyword
   hi link ocamlFunDef       Keyword
   hi link ocamlRefAssign    Keyword
@@ -241,12 +245,15 @@ if !exists("did_ocaml_syntax_inits")
   hi link ocamlFloat        Float
   hi link ocamlString       String
 
+  hi link ocamlLabel        Identifier
+
   hi link ocamlType         Type
 
   hi link ocamlTodo         Todo
 
   hi link ocamlEncl         Keyword
-
 endif
 
 let b:current_syntax = "ocaml"
+
+" vim: ts=28

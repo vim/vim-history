@@ -1,11 +1,11 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 15
+" Last change:	2000 Oct 07
 
 " make 'cpoptions' empty
 if 1	" only do this when compiled with expression evaluation
-  let s:mswin_save_cpo = &cpoptions
+  let s:save_cpo = &cpoptions
 endif
 set cpoptions=
 
@@ -96,5 +96,5 @@ cnoremap <C-F4> <C-C><C-W>c
 " restore 'cpoptions'
 set cpoptions&
 if 1
-  let &cpoptions = s:mswin_save_cpo
+  let &cpoptions = s:save_cpo
 endif

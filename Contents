@@ -9,25 +9,12 @@ Vim		Vi IMproved.  A clone of the UNIX text editor Vi.  Very useful
 		messages, shows current file name in window title, on-line
 		help, rectangular cut/paste, etc., etc., etc...
 
-		Version 6.0h.  Also runs under UNIX, MSDOS and other systems.
-		vim60hrt.tgz  contains the documentation and syntax files.
-		vim60hbin.tgz contains the normal binaries.
-		vim60hbig.tgz contains a binary with more features.
-		vim60hsrc.tgz contains the sources.
+		Version 6.0i.  Also runs under UNIX, MSDOS and other systems.
+		vim60irt.tgz  contains the documentation and syntax files.
+		vim60ibin.tgz contains the normal binaries.
+		vim60ibig.tgz contains a binary with more features.
+		vim60isrc.tgz contains the sources.
 		Author: Bram Moolenaar et al.
-
-
-Ctags		Exuberant Ctags.  A better ctags with support for Assembler,
-		AWK, BETA, Bourne shell, C, C++, Cobol, Eiffel, Fortran,
-		Java, Lisp, Perl, Python, TCL and Vim scripts.  It can
-		generate tags for many tag types.
-		It is far less easily fooled by C code containing #if
-		preprocessor conditional constructs.  It can also be used to
-		print out a list of selected objects found in source files.
-		It can also produce Emacs-style TAGS files.
-
-		Version 4.03.
-		Author: Darren Hiebert
 
 
 Xxd		Hex dumper and reader.  Can be used to view files as hex, edit

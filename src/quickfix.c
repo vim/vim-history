@@ -25,18 +25,19 @@ struct dir_stack_t
     char_u		*dirname;
 };
 
-static void    qf_msg __ARGS((void));
-static void    qf_free __ARGS((int idx));
-static char_u *qf_types __ARGS((int, int));
-static int     qf_get_fnum __ARGS((char_u *, char_u *));
-static char_u *qf_push_dir __ARGS((char_u *, struct dir_stack_t **));
-static char_u *qf_pop_dir __ARGS((/*char_u *, */struct dir_stack_t **));
-static char_u *qf_guess_filepath __ARGS((char_u *));
-static void    qf_clean_dir_stack __ARGS((struct dir_stack_t **));
+static void	qf_msg __ARGS((void));
+static void	qf_free __ARGS((int idx));
+static char_u	*qf_types __ARGS((int, int));
+static int	qf_get_fnum __ARGS((char_u *, char_u *));
+static char_u	*qf_push_dir __ARGS((char_u *, struct dir_stack_t **));
+static char_u	*qf_pop_dir __ARGS((/*char_u *, */struct dir_stack_t **));
+static char_u	*qf_guess_filepath __ARGS((char_u *));
+static void	qf_fmt_text __ARGS((char_u *text, char_u *buf, int bufsize));
+static void	qf_clean_dir_stack __ARGS((struct dir_stack_t **));
 #ifdef FEAT_WINDOWS
-static buf_t  *qf_find_buf __ARGS((void));
-static void    qf_update_buffer __ARGS((void));
-static void    qf_fill_buffer __ARGS((void));
+static buf_t	*qf_find_buf __ARGS((void));
+static void	qf_update_buffer __ARGS((void));
+static void	qf_fill_buffer __ARGS((void));
 #endif
 
 static struct dir_stack_t   *dir_stack = NULL;
@@ -881,7 +882,6 @@ qf_jump(dir, errornr, forceit)
     int		    old_qf_index;
     static char_u   *e_no_more_items = (char_u *)N_("No more items");
     char_u	    *err = e_no_more_items;
-    char_u	    *ptr;
     linenr_t	    i;
     buf_t	    *old_curbuf;
     linenr_t	    old_lnum;
@@ -889,6 +889,7 @@ qf_jump(dir, errornr, forceit)
     int		    opened_window = FALSE;
 #endif
     int		    print_message = TRUE;
+    int		    len;
 
     if (qf_curlist >= qf_listcount || qf_lists[qf_curlist].qf_count == 0)
     {
@@ -1072,19 +1073,14 @@ qf_jump(dir, errornr, forceit)
 	{
 	    /* Update the screen before showing the message */
 	    update_topline_redraw();
-	    sprintf((char *)IObuff, _("(%d of %d)%s%s: %s"), qf_index,
+	    sprintf((char *)IObuff, _("(%d of %d)%s%s: "), qf_index,
 		    qf_lists[qf_curlist].qf_count,
 		    qf_ptr->qf_cleared ? (char_u *)_(" (line deleted)")
 							       : (char_u *)"",
-		    qf_types(qf_ptr->qf_type, qf_ptr->qf_nr), qf_ptr->qf_text);
-	    /*
-	     * Remove newlines and leading whitespace characters from IObuff.
-	     */
-	    if ((err = vim_strchr(IObuff, '\n')) != NULL)
-		for (ptr = err; (*ptr = *err) != NUL; ++ptr)
-		    if (*err++ == '\n')
-			for (*ptr = ' '; vim_iswhite(*err) || *err=='\n';
-								      ++err );
+		    qf_types(qf_ptr->qf_type, qf_ptr->qf_nr));
+	    /* Add the message, skipping leading whitespace and newlines. */
+	    len = STRLEN(IObuff);
+	    qf_fmt_text(qf_ptr->qf_text, IObuff + len, IOSIZE - len);
 
 	    /* Output the message.  Overwrite to avoid scrolling when the 'O'
 	     * flag is present in 'shortmess'; But when not jumping, print the
@@ -1138,7 +1134,6 @@ qf_list(eap)
 {
     buf_t		*buf;
     char_u		*fname;
-    char_u		*ptr;
     struct qf_line	*qfp;
     int			i;
     int			idx1 = 1;
@@ -1200,21 +1195,9 @@ qf_list(eap)
 		sprintf((char *)IObuff + STRLEN(IObuff), "%s: ",
 					  qf_types(qfp->qf_type, qfp->qf_nr));
 		msg_puts_attr(IObuff, hl_attr(HLF_N));
-		if (vim_strchr(fname = qfp->qf_text, '\n') == NULL)
-		    msg_prt_line(qfp->qf_text);
-		else
-		{
-		    /* Remove newlines and leading whitespace from
-		     * output message.
-		     * TODO: alternatively (option?) keep the line
-		     * breaks of multi-lines in the :clist output?
-		     */
-		    for (ptr = IObuff; (*ptr = *fname) != NUL; ++ptr)
-			if (*fname++ == '\n')
-			    for (*ptr = ' ';
-				vim_iswhite(*fname) || *fname=='\n'; ++fname );
-		    msg_prt_line(IObuff);
-		}
+		/* Remove newlines and leading whitespace from the text. */
+		qf_fmt_text(qfp->qf_text, IObuff, IOSIZE);
+		msg_prt_line(IObuff);
 		out_flush();		/* show one line at a time */
 		need_return = TRUE;
 		last_printed = i;
@@ -1244,6 +1227,34 @@ qf_list(eap)
 	ui_breakcheck();
     }
     more_back_used = FALSE;
+}
+
+/*
+ * Remove newlines and leading whitespace from an error message.
+ * Put the result in "buf[bufsize]".
+ */
+    static void
+qf_fmt_text(text, buf, bufsize)
+    char_u	*text;
+    char_u	*buf;
+    int		bufsize;
+{
+    int		i;
+    char_u	*p = skipwhite(text);
+
+    for (i = 0; *p != NUL && i < bufsize - 1; ++i)
+    {
+	if (*p == '\n')
+	{
+	    buf[i] = ' ';
+	    while (*++p != NUL)
+		if (!vim_iswhite(*p) && *p != '\n')
+		    break;
+	}
+	else
+	    buf[i] = *p++;
+    }
+    buf[i] = NUL;
 }
 
 /*
@@ -1516,7 +1527,6 @@ qf_fill_buffer()
     linenr_t		lnum;
     struct qf_line	*qfp;
     buf_t		*errbuf;
-    char_u		*p;
     int			len;
 
     /* delete all existing lines */
@@ -1559,12 +1569,9 @@ qf_fill_buffer()
 	    IObuff[len++] = '|';
 	    IObuff[len++] = ' ';
 
-	    p = skipwhite(qfp->qf_text);
-	    while (len < IOSIZE && *p != NUL)
-		IObuff[len++] = *p++;
-	    IObuff[len++] = NUL;
+	    qf_fmt_text(qfp->qf_text, IObuff + len, IOSIZE - len);
 
-	    if (ml_append(lnum, IObuff, len, FALSE) == FAIL)
+	    if (ml_append(lnum, IObuff, STRLEN(IObuff) + 1, FALSE) == FAIL)
 		break;
 	    qfp = qfp->qf_next;
 	}

@@ -12,6 +12,8 @@ Contents:
 1. MS-DOS
 2. Win32 (Windows NT and Windows 95)
 3. Windows NT with OpenNT
+4. Windows 3.1
+5. Using Mingw
 
 
 1. MS-DOS
@@ -148,3 +150,58 @@ warnings which can be ignored ( _chmod, precompiled header files, and
 
 The makefile should also work for BC++ 4.0 and 4.5, but may need tweaking to
 remove unsupported compiler & liker options.
+
+
+5. Mingw
+========
+
+(written by Ron Aaron: <ron@mossbayeng.com>)
+
+This is about how to produce a Win32 binary of gvim with Mingw.
+
+First, you need to get the 'mingw32' compiler, which is free for the download
+at:
+
+	http://www.mingw.org/
+
+Once you have downloaded the compiler binaries, unpack them on your hard disk
+somewhere, and put them on your PATH.  If you are on Win95/98 you can edit
+your AUTOEXEC.BAT file with a line like:
+
+	set PATH=C:\GCC-2.95.2\BIN;%PATH%
+
+or on NT/2000, go to the Control Panel, System, and edit the environment from
+there.
+
+Test if gcc is on your path.  From a CMD (or COMMAND on '95/98):
+
+	C:\> gcc --version
+	2.95.2
+
+	C:\> make --version
+	GNU Make version 3.77 (...etc...)
+
+Now you are ready to rock 'n' roll.  Unpack the vim sources (look on
+www.vim.org for exactly which version of the vim files you need).  
+
+Change directory to 'vim\src':
+
+	C:\> cd vim\src
+	C:\VIM\SRC> 
+
+and you type:
+
+	make -f Make_ming.mak gvim.exe
+
+After churning for a while, you will end up with 'gvim.exe' in the 'vim\src'
+directory.
+
+You should not need to do *any* editing of any files to get vim compiled this
+way.  If, for some reason, you want the console-mode-only version of vim (this
+is NOT recommended on Win32, especially on '95/'98!!!), you need only change
+the 'gvim.exe' to 'vim.exe' in the 'make' commands given above.
+
+If you are dismayed by how big the EXE is, I strongly recommend you get 'UPX'
+(also free!) and compress the file (typical compression is 50%). UPX can be
+found at 
+	http://upx.tsx.org/

@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0h.  Last change: 2000 Aug 07
+*vi_diff.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -165,6 +165,12 @@ Folding							|folding|
 	overviewing a file and moving blocks of text around quickly.
 	Folds can be created manually, from the syntax of the file, by indent,
 	etc.
+
+Plugins							|add-plugin|
+	The functionality can be extended by dropping a plugin file in the
+	right directory.  That's an easy way to start using Vim scripts
+	written by others.  Plugins can be for all kind of files, or
+	specifically for a filetype.
 
 Repeat a series of commands.				|q|
 	'q'{c} starts recording typed characters into named register {c}

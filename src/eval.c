@@ -180,6 +180,8 @@ static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
+static void f_foldclosed __ARGS((VAR argvars, VAR retvar));
+static void f_foldlevel __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
@@ -190,6 +192,7 @@ static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
 static void f_glob __ARGS((VAR argvars, VAR retvar));
 static void f_has __ARGS((VAR argvars, VAR retvar));
+static void f_hasmapto __ARGS((VAR argvars, VAR retvar));
 static void f_histadd __ARGS((VAR argvars, VAR retvar));
 static void f_histdel __ARGS((VAR argvars, VAR retvar));
 static void f_histget __ARGS((VAR argvars, VAR retvar));
@@ -220,6 +223,7 @@ static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
+static void f_skipblank __ARGS((VAR argvars, VAR retvar));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
 static void f_stridx __ARGS((VAR argvars, VAR retvar));
 static void f_strlen __ARGS((VAR argvars, VAR retvar));
@@ -233,13 +237,15 @@ static void f_system __ARGS((VAR argvars, VAR retvar));
 static void f_submatch __ARGS((VAR argvars, VAR retvar));
 static void f_substitute __ARGS((VAR argvars, VAR retvar));
 static void f_tempname __ARGS((VAR argvars, VAR retvar));
-static void f_toupper __ARGS((VAR argvars, VAR retvar));
 static void f_tolower __ARGS((VAR argvars, VAR retvar));
+static void f_toupper __ARGS((VAR argvars, VAR retvar));
+static void f_type __ARGS((VAR argvars, VAR retvar));
 static void f_virtcol __ARGS((VAR argvars, VAR retvar));
 static void f_visualmode __ARGS((VAR argvars, VAR retvar));
 static void f_winbufnr __ARGS((VAR argvars, VAR retvar));
 static void f_winheight __ARGS((VAR argvars, VAR retvar));
 static void f_winnr __ARGS((VAR argvars, VAR retvar));
+static void f_winwidth __ARGS((VAR argvars, VAR retvar));
 static win_t *find_win_by_nr __ARGS((VAR vp));
 static pos_t *var2fpos __ARGS((VAR varp, int lnum));
 static int get_env_len __ARGS((char_u **arg));
@@ -2075,6 +2081,8 @@ static struct fst
     {"file_readable",	1, 1, f_filereadable},	/* obsolete */
     {"filereadable",	1, 1, f_filereadable},
     {"fnamemodify",	2, 2, f_fnamemodify},
+    {"foldclosed",	1, 1, f_foldclosed},
+    {"foldlevel",	1, 1, f_foldlevel},
     {"getbufvar",	2, 2, f_getbufvar},
     {"getcwd",		0, 0, f_getcwd},
     {"getfsize",	1, 1, f_getfsize},
@@ -2085,6 +2093,7 @@ static struct fst
     {"getwinvar",	2, 2, f_getwinvar},
     {"glob",		1, 1, f_glob},
     {"has",		1, 1, f_has},
+    {"hasmapto",	1, 2, f_hasmapto},
     {"highlightID",	1, 1, f_hlID},		/* obsolete */
     {"highlight_exists",1, 1, f_hlexists},	/* obsolete */
     {"histadd",		2, 2, f_histadd},
@@ -2105,21 +2114,22 @@ static struct fst
     {"localtime",	0, 0, f_localtime},
     {"maparg",		1, 2, f_maparg},
     {"mapcheck",	1, 2, f_mapcheck},
-    {"match",		2, 2, f_match},
-    {"matchend",	2, 2, f_matchend},
-    {"matchstr",	2, 2, f_matchstr},
+    {"match",		2, 3, f_match},
+    {"matchend",	2, 3, f_matchend},
+    {"matchstr",	2, 3, f_matchstr},
     {"nr2char",		1, 1, f_nr2char},
     {"rename",		2, 2, f_rename},
     {"search",		1, 2, f_search},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
     {"setwinvar",	3, 3, f_setwinvar},
+    {"skipblank",	1, 1, f_skipblank},
 #ifdef HAVE_STRFTIME
     {"strftime",	1, 2, f_strftime},
 #endif
     {"stridx",		2, 2, f_stridx},
     {"strlen",		1, 1, f_strlen},
-    {"strpart",		3, 3, f_strpart},
+    {"strpart",		2, 3, f_strpart},
     {"strridx",		2, 2, f_strridx},
     {"strtrans",	1, 1, f_strtrans},
     {"submatch",	1, 1, f_submatch},
@@ -2131,11 +2141,13 @@ static struct fst
     {"tempname",	0, 0, f_tempname},
     {"tolower",		1, 1, f_tolower},
     {"toupper",		1, 1, f_toupper},
+    {"type",		1, 1, f_type},
     {"virtcol",		1, 1, f_virtcol},
     {"visualmode",	0, 0, f_visualmode},
     {"winbufnr",	1, 1, f_winbufnr},
     {"winheight",	1, 1, f_winheight},
     {"winnr",		0, 0, f_winnr},
+    {"winwidth",	1, 1, f_winwidth},
 };
 
 #ifdef FEAT_CMDL_COMPL
@@ -2986,6 +2998,54 @@ f_fnamemodify(argvars, retvar)
 }
 
 /*
+ * "foldclosed()" function
+ */
+    static void
+f_foldclosed(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_FOLDING
+    linenr_t	lnum;
+    linenr_t	first;
+
+    lnum = get_var_lnum(argvars);
+    if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
+    {
+	if (hasFoldingWin(curwin, lnum, &first, NULL, FALSE, NULL))
+	{
+	    retvar->var_val.var_number = (var_number_type)first;
+	    return;
+	}
+    }
+#endif
+    retvar->var_val.var_number = -1;
+}
+
+/*
+ * "foldlevel()" function
+ */
+    static void
+f_foldlevel(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_FOLDING
+    linenr_t	lnum;
+    int		level;
+
+    lnum = get_var_lnum(argvars);
+    if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
+    {
+	hasFoldingWin(curwin, lnum, NULL, NULL, FALSE, &level);
+	retvar->var_val.var_number = level;
+    }
+    else
+#endif
+	retvar->var_val.var_number = 0;
+}
+
+/*
  * "getbufvar()" function
  */
     static void
@@ -3448,6 +3508,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_RIGHTLEFT
 	"rightleft",
 #endif
+#ifdef FEAT_RUBY
+	"ruby",
+#endif
 #ifdef FEAT_SCROLLBIND
 	"scrollbind",
 #endif
@@ -3586,6 +3649,28 @@ f_has(argvars, retvar)
 }
 
 /*
+ * "hasmapto()" function
+ */
+    static void
+f_hasmapto(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*name;
+    char_u	*mode;
+    char_u	buf[NUMBUFLEN];
+
+    name = get_var_string(&argvars[0]);
+    if (argvars[1].var_type == VAR_UNKNOWN)
+	mode = (char_u *)"nvo";
+    else
+	mode = get_var_string_buf(&argvars[1], buf);
+
+    if (map_to_exists(name, mode))
+	retvar->var_val.var_number = TRUE;
+}
+
+/*
  * "histadd()" function
  */
     static void
@@ -3595,11 +3680,12 @@ f_histadd(argvars, retvar)
 {
     int		histype;
     char_u	*str;
+    char_u	buf[NUMBUFLEN];
 
     histype = get_histtype(get_var_string(&argvars[0]));
     if (histype >= 0)
     {
-	str = get_var_string(&argvars[1]);
+	str = get_var_string_buf(&argvars[1], buf);
 	if (*str != NUL)
 	{
 	    add_to_history(histype, str, FALSE);
@@ -3619,6 +3705,7 @@ f_histdel(argvars, retvar)
     VAR		retvar;
 {
     int		n;
+    char_u	buf[NUMBUFLEN];
 
     if (argvars[1].var_type == VAR_UNKNOWN)
 	/* only one argument: clear entire history */
@@ -3630,7 +3717,7 @@ f_histdel(argvars, retvar)
     else
 	/* string given: remove all matching entries */
 	n = del_history_entry(get_histtype(get_var_string(&argvars[0])),
-					   get_var_string(&argvars[1]));
+					get_var_string_buf(&argvars[1], buf));
     retvar->var_val.var_number = n;
 }
 
@@ -3975,6 +4062,7 @@ f_some_match(argvars, retvar, type)
     regmatch_t	regmatch;
     char_u	patbuf[NUMBUFLEN];
     char_u	*save_cpo;
+    long	start = 0;
 
     /* Make 'cpoptions' empty, the 'l' flag should not be used here. */
     save_cpo = p_cpo;
@@ -3990,6 +4078,17 @@ f_some_match(argvars, retvar, type)
     }
     else
 	retvar->var_val.var_number = -1;
+
+    if (argvars[2].var_type != VAR_UNKNOWN)
+    {
+	start = get_var_number(&argvars[2]);
+	if (start < 0)
+	    start = 0;
+	if (start > STRLEN(str))
+	    start = STRLEN(str);
+	str += start;
+    }
+
     regmatch.regprog = vim_regcomp(pat, TRUE);
     if (regmatch.regprog != NULL)
     {
@@ -3999,10 +4098,14 @@ f_some_match(argvars, retvar, type)
 	    if (type == 2)
 		retvar->var_val.var_string = vim_strnsave(regmatch.startp[0],
 				(int)(regmatch.endp[0] - regmatch.startp[0]));
-	    else if (type)
-		retvar->var_val.var_number = regmatch.startp[0] - str;
 	    else
-		retvar->var_val.var_number = regmatch.endp[0] - str;
+	    {
+		if (type != 0)
+		    retvar->var_val.var_number = regmatch.startp[0] - str;
+		else
+		    retvar->var_val.var_number = regmatch.endp[0] - str;
+		retvar->var_val.var_number += start;
+	    }
 	}
 	vim_free(regmatch.regprog);
     }
@@ -4212,6 +4315,25 @@ f_setwinvar(argvars, retvar)
     --emsg_off;
 }
 
+/*
+ * "skipblank()" function
+ */
+    static void
+f_skipblank(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    linenr_t	lnum;
+
+    lnum = get_var_lnum(argvars);
+    if (lnum > curbuf->b_ml.ml_line_count)
+	lnum = 0;
+    else
+	while (lnum >= 1 && *skipwhite(ml_get(lnum)) == NUL)
+	    --lnum;
+    retvar->var_val.var_number = lnum;
+}
+
 #ifdef HAVE_STRFTIME
 /*
  * "strftime({format}[, {time}])" function
@@ -4319,7 +4441,11 @@ f_strpart(argvars, retvar)
 
     p = get_var_string(&argvars[0]);
     n = get_var_number(&argvars[1]);
-    len = get_var_number(&argvars[2]);
+    if (argvars[2].var_type != VAR_UNKNOWN)
+        len = get_var_number(&argvars[2]);
+    else
+        len = STRLEN(p) - n;
+
     slen = STRLEN(p);
     /*
      * Only return the overlap between the specified part and the actual
@@ -4642,6 +4768,20 @@ f_toupper(argvars, retvar)
 }
 
 /*
+ * "type(expr)" function
+ */
+    static void
+f_type(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    if (argvars[0].var_type == VAR_NUMBER)
+	retvar->var_val.var_number = 0;
+    else
+	retvar->var_val.var_number = 1;
+}
+
+/*
  * "virtcol(string)" function
  */
     static void
@@ -4729,6 +4869,27 @@ f_winnr(argvars, retvar)
     for (wp = firstwin; wp != curwin; wp = wp->w_next)
 	++nr;
     retvar->var_val.var_number = nr;
+}
+
+/*
+ * "winwidth(nr)" function
+ */
+    static void
+f_winwidth(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    win_t	*wp;
+
+    wp = find_win_by_nr(&argvars[0]);
+    if (wp == NULL)
+	retvar->var_val.var_number = -1;
+    else
+#ifdef FEAT_VERTSPLIT
+	retvar->var_val.var_number = wp->w_width;
+#else
+	retvar->var_val.var_number = Columns;
+#endif
 }
 
     static win_t *

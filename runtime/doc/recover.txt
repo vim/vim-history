@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0h.  Last change: 2000 Jul 07
+*recover.txt*   For Vim version 6.0i.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -80,6 +80,8 @@ For read-only files, a swap file is not used.  Unless the file is big, causing
 the amount of memory used to be higher than given with 'maxmem' or
 'maxmemtot'.  And when making a change to a read-only file, the swap file is
 created anyway.
+
+The 'swapfile' option can be reset to avoid creating a swapfile.
 
 
 Detecting an existing swap file ~

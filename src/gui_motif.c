@@ -1748,7 +1748,7 @@ static Boolean filePredicate __ARGS((String cp));
 filePredicate(cp)
     String cp;
 {
-    return True;
+    return access(cp, R_OK) == 0;
 }
 #endif
 
@@ -1763,6 +1763,7 @@ get_pixmap(menuname, sen, insen)
     int		builtin_num;		/* index into builtin table */
     int		num_pixmaps;		/* entries in builtin pixmap table */
     char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
+    char_u	locbuf[MAXPATHL];	/* generate locale pathname */
     char	**xpm = NULL;		/* xpm array */
     int		i;
 
@@ -1801,6 +1802,17 @@ get_pixmap(menuname, sen, insen)
 		    path = (char_u *)XtResolvePathname(gui.dpy, NULL,
 			    NULL, ".xpm", sunws_pixmaps[i + 1],
 			    NULL, 0, filePredicate);
+		    if (path == NULL)	/* neither LANG nor LC_ALL is set */
+		    {
+			char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
+
+			while ((p = strstr(p, "%L")) != NULL)
+			{
+			    *p++ = 'C';
+			    strcpy(p, &p[1]);
+			}
+			path = (char_u *)locbuf;
+		    }
 		    expand_env(path, buf, MAXPATHL);
 		    XtFree(path);
 		    break;

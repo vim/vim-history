@@ -161,17 +161,19 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 
 	if (wp->w_lines[row - 1].wl_size > 1)
 	    col = ((top_off - (i - (int)(wp->w_lines[row - 1]).wl_size)) *
-		    gui.num_cols) + X_2_COL(beval->x)
-						 - (wp->w_p_nu ? 8 : 0) + 1;
+		    gui.num_cols) + X_2_COL(beval->x) + 1;
 	else
-	    col = X_2_COL(beval->x) - (wp->w_p_nu ? 8 : 0) + 1;
+	    col = X_2_COL(beval->x) + 1;
+	if (wp->w_p_nu)
+	    col -= 8;
 
 	if (wp->w_p_wrap == 0)
 	    col += wp->w_leftcol;
 
 	row += wp->w_topline - 1;
-	if (col > 0 && (lbuf = ml_get_buf(wp->w_buffer, row, FALSE)) != NULL)
+	if (col > 0)
 	{
+	    lbuf = ml_get_buf(wp->w_buffer, row, FALSE);
 	    i = virtlen(wp->w_buffer, lbuf);
 	    if (i >= col)		/* don't send if past end of line */
 	    {

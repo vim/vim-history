@@ -1,11 +1,13 @@
 " VIM syntax file
 " Language:	Nroff/Troff
 " Maintainer:	Matthias Burian <burian@grabner-instruments.com>
-" Last Change:	2000 Apr 13
+" Last Change:	2000 Sep 30
 
 syn clear
 
-syn match nroffError "\s\+$"
+if exists("nroff_space_errors")
+  syn match nroffError "\s\+$"
+endif
 syn match nroffCommand "^\.[a-zA-Z]" nextgroup=nroffCmdArg,nroffError
 syn match nroffCommand "^\.[a-zA-Z][a-zA-Z0-9\\]" nextgroup=nroffCmdArg,nroffError
 

@@ -1183,7 +1183,12 @@ retry:
 	    }
 	    if (msg_add_fileformat(fileformat))
 		c = TRUE;
-	    msg_add_lines(c, (long)linecnt, filesize);
+#ifdef FEAT_CRYPT
+	    if (cryptkey != NULL)
+		msg_add_lines(c, (long)linecnt, filesize - CRYPT_MAGIC_LEN);
+	    else
+#endif
+		msg_add_lines(c, (long)linecnt, filesize);
 
 #ifdef ALWAYS_USE_GUI
 	    /* Don't show the message when reading stdin, it would end up in a
@@ -1805,7 +1810,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    dirp = p_bdir;
 	    while (*dirp)
 	    {
-		st_new.st_dev = st_new.st_ino = 0;
+		st_new.st_dev = 0;
+#ifdef VMS
+		/* It's array under VMS */
+		vim_memset(st_new.st_ino, 0, sizeof(st_new.st_ino));
+#else
+		st_new.st_ino = 0;
+#endif
 		st_new.st_gid = 0;
 
 		/*
@@ -3376,7 +3387,11 @@ vim_fgets(buf, size, fp)
     char	tbuf[FGETS_SIZE];
 
     buf[size - 2] = NUL;
+#ifdef USE_CR
+    eof = fgets_cr((char *)buf, size, fp);
+#else
     eof = fgets((char *)buf, size, fp);
+#endif
     if (buf[size - 2] != NUL && buf[size - 2] != '\n')
     {
 	buf[size - 1] = NUL;	    /* Truncate the line */
@@ -3385,7 +3400,11 @@ vim_fgets(buf, size, fp)
 	do
 	{
 	    tbuf[FGETS_SIZE - 2] = NUL;
+#ifdef USE_CR
+	    fgets_cr((char *)tbuf, FGETS_SIZE, fp);
+#else
 	    fgets((char *)tbuf, FGETS_SIZE, fp);
+#endif
 	} while (tbuf[FGETS_SIZE - 2] != NUL && tbuf[FGETS_SIZE - 2] != '\n');
     }
     return (eof == NULL);
@@ -5015,9 +5034,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 	if (fname != NULL && *fname != NUL)
 	    autocmd_fname = fname;
 	else if (buf != NULL)
-	{
-		autocmd_fname = buf->b_fname;
-	}
+	    autocmd_fname = buf->b_fname;
 	else
 	    autocmd_fname = NULL;
     }

@@ -2682,6 +2682,65 @@ showmap(mp)
     out_flush();			/* show one line at a time */
 }
 
+/*
+ * Return TRUE if a map exists that has "name" in the rhs for mode "modechars".
+ * Also checks mappings local to the current buffer.
+ */
+    int
+map_to_exists(name, modechars)
+    char_u	*name;
+    char_u	*modechars;
+{
+    int		mode = 0;
+#ifdef FEAT_LOCALMAP
+    int		expand_buffer = FALSE;
+#endif
+    mapblock_t	*mp;
+    int		hash;
+
+    validate_maphash();
+
+    if (vim_strchr(modechars, 'n') != NULL)
+	mode |= NORMAL;
+    if (vim_strchr(modechars, 'v') != NULL)
+	mode |= VISUAL;
+    if (vim_strchr(modechars, 'o') != NULL)
+	mode |= OP_PENDING;
+    if (vim_strchr(modechars, 'i') != NULL)
+	mode |= INSERT;
+    if (vim_strchr(modechars, 'c') != NULL)
+	mode |= CMDLINE;
+
+#ifdef FEAT_LOCALMAP
+    /* Do it twice: once for global maps and once for local maps. */
+    for (;;)
+    {
+#endif
+	for (hash = 0; hash < 256; ++hash)
+	{
+#ifdef FEAT_LOCALMAP
+	    if (expand_buffer)
+		mp = curbuf->b_maphash[hash];
+	    else
+#endif
+		mp = maphash[hash];
+	    for (; mp; mp = mp->m_next)
+	    {
+		if ((mp->m_mode & mode)
+			&& strstr((char *)mp->m_str, (char *)name) != NULL)
+		    return TRUE;
+	    }
+	}
+#ifdef FEAT_LOCALMAP
+	if (expand_buffer)
+	    break;
+	expand_buffer = TRUE;
+    }
+#endif
+
+    return FALSE;
+}
+
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 /*
  * Used below when expanding mapping/abbreviation names.

@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0h.  Last change: 2000 Aug 20
+*usr_toc.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -58,7 +58,7 @@ Read this from start to end to learn the essential commands.
 		|09.2|  Two versions of a file
 
 ==============================================================================
-Editing Efficiently ~
+Editing Effictively ~
 
 Subjects that can be read independently.
 

@@ -289,5 +289,5 @@ augroup fileExplorer
   au BufLeave _fileExplorer.tmp nun s
   au BufEnter _fileExplorer.tmp command! -nargs=+ -complete=dir ChangeDirectory call ExplGotoDir(<f-args>)
   au BufLeave _fileExplorer.tmp delcommand ChangeDirectory
-  au BufEnter * nested call ExplEditDir(expand("%"))
+  au BufEnter * nested call ExplEditDir(expand("%:p"))
 augroup end

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0h.  Last change: 2000 Aug 31
+*map.txt*       For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -197,12 +197,19 @@ example, to make sure that function key 8 does nothing at all: >
 	:map  <F8>  <Nop>
 	:map! <F8>  <Nop>
 <
-                                                       *<Map>*
-To define a mapping which uses the "localmapchar" variable, the special
-string "<Map>" can be used.  It is replaced with the string value of
-"localmapchar".  If "localmapchar" is not set or empty, "," is used instead.
-Example: >
-      :map <Map>A  oanother line<Esc>
+                                                       *<Leader>*
+To define a mapping which uses the "mapleader" variable, the special string
+"<Leader>" can be used.  It is replaced with the string value of "mapleader".
+If "mapleader" is not set or empty, a backslash is used instead.  Example: >
+      :map <Leader>A  oanother line<Esc>
+Works like: >
+      :map \A  oanother line<Esc>
+<
+                                                       *<LocalLeader>*
+Just like <Leader>, except that it uses "maplocalleader" instead of
+"mapleader".  <LocalLeader> is to be used for mappings which are local to a
+buffer.  Example: >
+      :map <LocalLeader>q  \DoItNow
 <
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'
@@ -475,7 +482,7 @@ Abbreviations are disabled if the 'paste' option is on.
 
 				*:abbreviate-local* *:abbreviate-<buffer>*
 Just like mappings, abbreviations can be local to a buffer.  This is mostly
-used in a |settings| file.  Example for a C settings file: >
+used in a |filetype-plugin| file.  Example for a C plugin file: >
 	:abb <buffer> FF  for (i = 0; i < ; ++i)
 <
 						*:ab* *:abbreviate*

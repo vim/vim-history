@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0h.  Last change: 2000 Aug 31
+*eval.txt*      For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -56,6 +56,9 @@ Note that in the command >
 "foo" is converted to 0, which means FALSE.  To test for a non-empty string,
 use strlen(): >
 	:if strlen("foo")
+
+If you need to know the type of a variable or expression, use the |type()|
+function.
 
 When the '!' flag is included in the 'viminfo' option, global variables that
 start with an uppercase letter, and don't contain a lowercase letter, are
@@ -585,6 +588,8 @@ exists( {var})			Number	TRUE if {var} exists
 expand( {expr})			String	expand special keywords in {expr}
 filereadable( {file})		Number	TRUE if {file} is a readable file
 fnamemodify( {fname}, {mods})	String	modify file name
+foldclosed( {lnum})		Number  >0 if fold at {lnum} is closed
+foldlevel( {lnum})		Number	fold level at {lnum}
 getbufvar( {expr}, {varname})		variable {varname} in buffer {expr}
 getcwd()			String	the current working directory
 getftime( {fname})		Number	last modification time of file
@@ -595,6 +600,7 @@ getwinposy()			Number	Y coord in pixels of GUI vim window
 getwinvar( {nr}, {varname}		variable {varname} in window {nr}
 glob( {expr} [, {flag}])	String	expand file wildcards in {expr}
 has( {feature})			Number	TRUE if feature {feature} supported
+hasmapto( {what} [, {mode}])	Number	TRUE if mapping to {what} exists
 histadd( {history},{item})	String	add an item to a history
 histdel( {history} [, {item}])	String	remove an item from a history
 histget( {history} [, {index}])	String	get the item {index} from a history
@@ -612,21 +618,26 @@ line2byte( {lnum})		Number	byte count of line {lnum}
 localtime()			Number	current time
 maparg( {name}[, {mode}])	String	rhs of mapping {name} in mode {mode}
 mapcheck( {name}[, {mode}])	String	check for mappings matching {name}
-match( {expr}, {pat})		Number	position where {pat} matches in {expr}
-matchend( {expr}, {pat})	Number	position where {pat} ends in {expr}
-matchstr( {expr}, {pat})	String	match of {pat} in {expr}
+match( {expr}, {pat}[, {start}])
+				Number	position where {pat} matches in {expr}
+matchend( {expr}, {pat}[, {start})
+				Number	position where {pat} ends in {expr}
+matchstr( {expr}, {pat}[, {start}])
+				String	match of {pat} in {expr}
 nr2char( {expr})		String	single char with ASCII value {expr}
 rename({from}, {to})		Number  rename (move) file from {from} to {to}
 search( {pattern}[, {wrap})	Number  search for {pattern}
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
+skipblank( {lnum})		Number	line nr of non-blank <= {lnum}
 strftime( {format}[, {time}])	String	time in specified format
-stridx( {haystack}, {needle})	Number	first index of {needle} in {haystack} 
+stridx( {haystack}, {needle})	Number	first index of {needle} in {haystack}
 strlen( {expr})			Number	length of the String {expr}
-strpart( {src}, {start}, {len})	String	{len} characters of {src} at {start}
-strridx( {haystack}, {needle})	Number	last index of {needle} in {haystack} 
-strtrans( {expr})		String	translate sting to make it printable
+strpart( {src}, {start}[, {len}])
+				String	{len} characters of {src} at {start}
+strridx( {haystack}, {needle})	Number	last index of {needle} in {haystack}
+strtrans( {expr})		String	translate string to make it printable
 substitute( {expr}, {pat}, {sub}, {flags})
 				String	all {pat} in {expr} replaced with {sub}
 synID( {line}, {col}, {trans})	Number	syntax ID at {line} and {col}
@@ -635,13 +646,15 @@ synIDattr( {synID}, {what} [, {mode}])
 synIDtrans( {synID})		Number	translated syntax ID of {synID}
 system( {expr})			String	output of shell command {expr}
 tempname()			String	name for a temporary file
-tolower({expr})			String	the String {expr} switched to lower case
-toupper({expr})			String	the String {expr} switched to upper case
+tolower( {expr})		String	the String {expr} switched to lower case
+toupper( {expr})		String	the String {expr} switched to upper case
+type( {name})			Number	type of variable {name}
 virtcol( {expr})		Number	screen column of cursor or mark
 visualmode()			String	last visual mode used
 winbufnr( {nr})			Number	buffer number of window {nr}
 winheight( {nr})		Number	height of window {nr}
 winnr()				Number	number of current window
+winwidth( {nr})			Number	width of window {nr}
 
 append({lnum}, {string}					*append()*
 		Append the text {string} after line {lnum} in the current
@@ -989,6 +1002,20 @@ fnamemodify({fname}, {mods})
 <		results in: >
 			/home/mool/vim/vim/src/
 <
+
+							*foldclosed()*
+foldclosed({lnum})
+		The result is the linenumber of the fold which contains the
+		line {lnum} in a closed fold.  If the line {lnum} is not in
+		a closed fold, -1 is returned.
+
+							*foldlevel()*
+foldlevel({lnum})
+		The result is a Number, which is the foldlevel of line {lnum}
+		in the current buffer.  If line {lnum} starts a new fold, the
+		foldlevel is returned as negative number, e.g. if {lnum}
+		starts a fold with level 3, |foldlevel()| returns -3.
+
 							*getbufvar()*
 getbufvar({expr}, {varname})
 		The result is the value of option or local buffer variable
@@ -1073,6 +1100,30 @@ glob({expr})	Expand the file wildcards in {expr}.  The result is a String.
 has({feature})	The result is a Number, which is 1 if the feature {feature} is
 		supported, zero otherwise.  The {feature} argument is a
 		string.  See |feature-list| below.
+
+							*hasmapto()*
+hasmapto({what} [, {mode}])
+		The result is a Number, which is 1 if there is a mapping that
+		contains {what} in the rhs (what it is mapped to) and this
+		mapping exists in one of the modes indicated by {mode}.
+		Both the global mappings and the mappings local to the current
+		buffer are checked for a match.
+		If no matching mapping is found 0 is returned.
+		The following characters are recognized in {mode}:
+			n	Normal mode
+			v	Visual mode
+			o	Operator-pending mode
+			i	Insert mode
+			c	Command-line mode
+		When {mode} is omitted, "nvo" is used.
+
+		This function is useful to check if a mapping already exists
+		to a function in a Vim script.  Example: >
+			:if !hasmapto('\ABCdoit')
+			:   map <Leader>d \ABCdoit
+			:endif
+<		This installs the mapping to "\ABCdoit" only if there isn't
+		already a mapping to "\ABCdoit".
 
 							*histadd()*
 histadd({history}, {item})
@@ -1321,7 +1372,7 @@ mapcheck({name}[, {mode}])
 		Check if there is a mapping that matches with {name} in mode
 		{mode}.  See |maparg()| for {mode} and special names in
 		{name}.
-		When there is no mapping that matches with {name}, and empty
+		When there is no mapping that matches with {name}, an empty
 		String is returned.  If there is one, the rhs of that mapping
 		is returned.  If there are several matches, the rhs of one of
 		them is returned.
@@ -1336,30 +1387,51 @@ mapcheck({name}[, {mode}])
 		"_vvv".
 
 							*match()*
-match({expr}, {pat})
+match({expr}, {pat}[, {start}])
 		The result is a Number, which gives the index in {expr} where
 		{pat} matches.  A match at the first character returns zero.
 		If there is no match -1 is returned.  Example: >
 			:echo match("testing", "ing")
 <		results in "4".
+		If {start} is given, the search starts from character {start}.
+		The result, however, is still the index counted from the
+		first character. Example: >
+			:echo match("testing", "ing", 2)
+<		result is again "4". >
+			:echo match("testing", "ing", 4)
+<		result is again "4". >
+			:echo match("testing", "t", 2)
+<		result is "3".
+		If {start} < 0, it will be set to 0.
+		If {start} > strlen({expr}) it will be set to strlen({expr}).
 		See |pattern| for the patterns that are accepted.
 		The 'ignorecase' option is used to set the ignore-caseness of
 		the pattern.  'smartcase' is NOT used.  The matching is always
 		done like 'magic' is set and 'cpoptions' is empty.
 
 							*matchend()*
-matchend({expr}, {pat})
+matchend({expr}, {pat}[, {start}])
 		Same as match(), but return the index of first character after
 		the match.  Example: >
 			:echo matchend("testing", "ing")
 <		results in "7".
+		The {start}, if given, has the same meaning as for match(). >
+			:echo matchend("testing", "ing", 2)
+<		results in "7". >
+			:echo matchend("testing", "ing", 5)
+<		result is "-1".
 
 							*matchstr()*
-matchstr({expr}, {pat})
+matchstr({expr}, {pat}[, {start}])
 		Same as match(), but return the matched string.  Example: >
 			:echo matchstr("testing", "ing")
 <		results in "ing".
 		When there is no match "" is returned.
+		The {start}, if given, has the same meaning as for match(). >
+			:echo matchstr("testing", "ing", 2)
+<		results in "ing". >
+			:echo matchstr("testing", "ing", 5)
+<		result is "".
 
 							*nr2char()*
 nr2char({expr})
@@ -1432,6 +1504,14 @@ setwinvar({nr}, {varname}, {val})
 			:call setwinvar(1, "&list", 0)
 			:call setwinvar(2, "myvar", "foobar")
 <
+							*skipblank()*
+skipblank({lnum})
+		Return the line number of the first line at or above {lnum}
+		that is not blank.  Example: >
+			let ind = indent(skipblank(v:lnum - 1))
+<		When {lnum} is invalid or there is no non-blank line at or
+		above it, zero is returned.
+
 							*strftime()*
 strftime({format} [, {time}])
 		The result is a String, which is a formatted date and time, as
@@ -1465,14 +1545,17 @@ strlen({expr})	The result is a Number, which is the length of the String
 		{expr}.
 
 							*strpart()*
-strpart({src}, {start}, {len})
+strpart({src}, {start}[, {len}])
 		The result is a String, which is part of {src},
 		starting from character {start}, with the length {len}.
 		When non-existing characters are included, this doesn't result
-		in an error, the characters are simply omitted. >
+		in an error, the characters are simply omitted.
+		If {len} is missing, the copy continues from {start} till
+		the end of the {src}. >
 			strpart("abcdefg", 3, 2)    == "de"
 			strpart("abcdefg", -2, 4)   == "ab"
 			strpart("abcdefg", 5, 4)    == "fg"
+			strpart("abcdefg", 3)       == "defg"
 <		Note: To get the first character, {start} must be 0.  For
 		example, to get three characters under and after the cursor: >
 			strpart(getline(line(".")), col(".") - 1, 3)
@@ -1613,20 +1696,13 @@ tolower({expr})
 toupper({expr})
 		The result is a copy of the String given, with all upper case
 		characters turned into lower case (just like applying |gU| to
-		the string). 
+		the string).
 
-							*visualmode()*
-visualmode()
-		The result is a String, which describes the last Visual mode
-		used.  Initially it returns an empty string, but once Visual
-		mode has been used, it returns "v", "V", or "<CTRL-V>" (a
-		single CTRL-V character) for character-wise, line-wise, or
-		block-wise Visual mode respectively.
-		Example: >
-			:exe "normal " . visualmode()
-<		This enters the same Visual mode as before.  It is also useful
-		in scripts if you wish to act differently depending on the
-		Visual mode that was used.
+							*type()*
+type({expr})
+		The result is a Number:
+			0 if {expr} has the type Number
+			1 if {expr} has the type String
 
 							*virtcol()*
 virtcol({expr})
@@ -1651,6 +1727,19 @@ virtcol({expr})
   virtcol("'t")    with text "    there", with 't at 'h', returns 6
 <		The first column is 1.  0 is returned for an error.
 
+							*visualmode()*
+visualmode()
+		The result is a String, which describes the last Visual mode
+		used.  Initially it returns an empty string, but once Visual
+		mode has been used, it returns "v", "V", or "<CTRL-V>" (a
+		single CTRL-V character) for character-wise, line-wise, or
+		block-wise Visual mode respectively.
+		Example: >
+			:exe "normal " . visualmode()
+<		This enters the same Visual mode as before.  It is also useful
+		in scripts if you wish to act differently depending on the
+		Visual mode that was used.
+
 							*winbufnr()*
 winbufnr({nr})	The result is a Number, which is the number of the buffer
 		associated with window {nr}. When {nr} is zero, the number of
@@ -1671,6 +1760,16 @@ winheight({nr})
 							*winnr()*
 winnr()		The result is a Number, which is the number of the current
 		window.  The top window has number 1.
+
+							*winwidth()*
+winwidth({nr})
+		The result is a Number, which is the width of window {nr}.
+		When {nr} is zero, the width of the current window is
+		returned.  When window {nr} doesn't exist, -1 is returned.
+		An existing window always has a width of zero or more.
+		Examples: >
+  :echo "The current window has " . winwidth(0) . " columns."
+<
 
 							*feature-list*
 There are two types of features:

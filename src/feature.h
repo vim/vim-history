@@ -576,7 +576,7 @@
 #if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
 # define USE_DLOPEN
 #endif
-#if defined(FEAT_EVAL) && (defined(WIN32) || (defined(UNIX) \
+#if defined(FEAT_EVAL) && (defined(WIN32) || ((defined(UNIX) || defined(VMS)) \
 	&& (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))))
 # define FEAT_LIBCALL
 #endif
@@ -733,17 +733,17 @@
 /*
  * File names for:
  * FILETYPE_FILE	switch on file type detection
- * SETTINGS_FILE	switch on loading settings files
+ * FTPLUGIN_FILE	switch on loading filetype plugin files
  * INDENT_FILE		switch on loading indent files
  * FTOFF_FILE		switch off file type detection
- * SETSOFF_FILE		switch off loading settings files
+ * FTPLUGOF_FILE	switch off loading settings files
  * INDOFF_FILE		switch off loading indent files
  */
 /* # define FILETYPE_FILE	"filetype.vim" */
-/* # define SETTINGS_FILE	"settings.vim" */
+/* # define FTPLUGIN_FILE	"ftplugin.vim" */
 /* # define INDENT_FILE		"indent.vim" */
 /* # define FTOFF_FILE		"ftoff.vim" */
-/* # define SETSOFF_FILE	"setsoff.vim" */
+/* # define FTPLUGOF_FILE	"ftplugof.vim" */
 /* # define INDOFF_FILE		"indoff.vim" */
 
 /*
@@ -917,7 +917,8 @@
  *			Used for showing the PC, Breakponts, etc.
  */
 #if (defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)) \
-	&& (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
+	&& (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
+	&& defined(HAVE_X11_XPM_H)
 # define FEAT_SIGNS
 #endif
 

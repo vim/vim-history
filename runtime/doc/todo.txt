@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0h.  Last change: 2000 Aug 31
+*todo.txt*      For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,26 +29,53 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: mouseshape doesn't return to normal after a ":set" command. (Timothy)
-Stays at "no entry".
+Try writing the "how to write a plugin" docs, to find out a simple way to
+avoid mappings running into eachother (in usr_40.txt).  Also for filetype
+plugins.
+- Add some ":map" command that checks if the map already exists or is
+  ambiguous and gives a clear warning message.
+- Use <SID> for mappings local to a script?
+    :map \ScriptFunc xxx<SID>1yyy<SID>2zzz
+    :noremap <SID>1 something
+    :noremap <SID>2 foobar
+  The <SID> could be a special key code, starting with K_SPECIAL.
+- Avoid that mappings from outside a script are used inside a script.
+  Use ":noremap <script> lhs rhs" to only use mappings from a script?
+  Avoid that a mapping for CTRL-V (mswin.vim) causes trouble.
+- Local functions in a script: <SID>funcname().  Internally prepend a number
+  to the function name.  But how to use this in functions defined in a mapping
+  or function?  Not?
+- For a user function, remember in which script it was defined and allow using
+  s:var in it?  Disadvantage: script variables won't be automatically deleted.
 
-Win32: Mapping <M-F> doesn't work. (Dolland)
+Setting 'term' or t_Co from 16 to 1 doesn't switch the attributes used (e.g.,
+for 'number').
 
-Win32 GUI: (on no file), :vs<CR>:q<CR> leaves a trail of pixels down the
-middle. (Paul Moore)
+Multi-byte digraphs: ~/vim/patches/marinichev_digraphs.diff .
+But use a struct char/char/int to avoid wasting space.
 
-Win32 GUI: mouse wheel always scrolls rightmost window.
-
-Win32: "make test" has errors in test11 and test30.
+This works:
+    com! -nargs=1 GoWinB exe "echo ".bufwinnr(<q-args>)
+This doesn't: (Viart)
+    com! -complete=buffer -nargs=1 GoWinB exe "echo ".bufwinnr(<q-args>)
 
 When /usr/local/share/vim/vim60a isn't found, it uses /usr/local/share/vim
 instead of ../runtime. (Sekera)
+
+After some changes the syntax highlighting isn't updated for lines below the
+change.
 
 Syntax highlighting: Using doxygen syntax, second comment line is the wrong
 color after a change, it's right after CTRL-L.  Was OK in Vim 5.7. (Geddes)
 
 Combination of Visual selection, ":" command and scrolling causes the display
 to be updated wrong. (Nam)
+
+A regexp can run forever and crash when out of stack space.  Protect it with
+setjump()/longjump()?
+
+Docs: usr_43.txt and filetype.txt have quite a bit of overlap.
+
 
 Main items for 6.0:
 A.  Folding
@@ -93,6 +120,11 @@ A. Folding:
     4) press zb
     now the line 1 is out of sight
 -   Fold lines 3-4 then 1-3: foldcolumn shows that it's wrong.
+-   change foldlevel() function: return fold level of a line also when the
+    fold is closed.  Don't return negative number for first line.
+    Add a separate function foldstart() to find the start of a fold.
+-   topline sometimes wrong after CTRL-F (Ian Phillipps):
+	foldexpr=getline(v:lnum)=~'^\s*$'&&getline(v:lnum+1)=~'\S'?'<1':1
 -   In a small window, fold lines 2-5 out of 6.  Using "Gkkkk" makes displayed
     fold start in the wrong line. (Acevedo)
 -   Fold three lines, on the second line do "ddu", the start of the fold has
@@ -111,13 +143,16 @@ A. Folding:
     Make "zo" and "zc" work properly (open/close only one level).
     "zc" in Visual mode doesn't redraw properly.
     "za" should toggle fold open/closed?
+    Add new command to re-apply 'foldlevel' to the folds at the cursor line.
+    "zu"
+    (also available: "zg" "zj", "zk" "zp" "zq" "zv" "zw" "zx" "zy")
 -   Make "zc", "zC", "zo" and "zO" work in Visual mode to work on all selected
     lines.
 -   Fold column shouldn't stop at end-of-file.
+-   Also use 'number' for closed fold.
 -   Make all operations that end or start in a closed fold work on the whole
     fold?  Thus "dw" closes the whole fold.
--   ruler currently shows "44-1", should be just 1 (cursor in first column)
--   Add commands to go to next/previous fold boundary.
+-   Add commands to go to next/previous fold boundary. "zj", "zk"?
 -   Command to delete one fold only ("zd" also deletes nested folds).
     Or change it: "zd" normally deletes only one fold (the top level fold
     under the cursor), in Visual mode it also deletes nested folds.
@@ -128,6 +163,7 @@ A. Folding:
     open/close of the fold depend on whether it's inside an open/closed fold.
     Otherwise closed folds appear when inserting lines in a fold that was
     opened with "zO".
+    OR: always create new folds open.  Add a command to re-apply 'foldlevel'.
 -   When moving over a fold, always put the cursor on the first line.
 -   In Insert mode, not only show the line the cursor is in but the whole
     fold.
@@ -141,6 +177,7 @@ A. Folding:
 -   Folding doesn't work together with 'scrollbind'.
 -   Add movement commands to the start/end of a fold: "[z" and "]z".
     (Marinichev)
+    Make a difference for open/closed folds?  How about nested folds?
 -   Add option to open fold when the cursor moves into it with certain
     commands.
 	search: "/", "n", etc.
@@ -206,6 +243,8 @@ B. UTF-8 support:
 -   Displaying digraphs with ":dig" doesn't work properly.
 -   Add digraphs from RFC1345.
     Later: Also support CTRL-K <space> {mnemonic} <space>.
+    Support different sets of digraphs, depending on the character set?  At
+    least Latin-1/Unicode, Latin-2, MS-DOS, Windows?
 -   out_char() doesn't handle mbyte, check callers.
 -   cls() should work for UTF-8 chars.  Use class table function from Markus
     Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
@@ -217,6 +256,9 @@ B. UTF-8 support:
 	-> if UTF-8 detected, nothing happens
 	-> assume iso8859-1, convert to UTF-8 with 'charconvert'.
     mined has code for this.
+-   Use iconv() when it's available.  When it isn't present or doesn't work
+    use 'charconvert'.
+    Add configure check for iconv(), also in libiconv (libutf8?).
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
 -   Set default for 'charconvert' to "charconvert()".  Should use "recode" in
     the obvious way.
@@ -258,6 +300,7 @@ C.  Multi-line regexp patterns
     including non-empty lines before it).
 
 D. Vertical window split:
+-   Dragging a scrollbar (always?) scrolls the leftmost window.
 -   ";vertical resize" for width.
 -   "-O" command line argument, like "-o" but split vertically?
 -   When there is not enough room, remove the ruler from the status line of
@@ -283,6 +326,37 @@ D. Vertical window split:
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
+-   Bugs: (Mark Waggoner)
+    See patches in ~/Mail/oldmail/waggoner/in.00132 .
+    1. Start a rectangular visual select (Ctrl-V) in virtual space, move
+       up a few lines into non-virtual space, maybe over a space, and do
+       a yank (y). If you paste this somewhere else, you'll find that the
+       yanked text does not match what was visually highlighted.
+
+    "P" leaves a space at the end of the line.
+
+    4. Start a rectangular visual select with Ctrl-V, move down a few
+       lines and then use $ to select to the end of the line. It will
+       behave differently with virtualedit on than with it off.  With
+       virtualedit on, The selection will not include intervening lines
+       that are longer than the current line.
+
+    5. 'v' selection is kind of strange.  When in virtual space, pressing
+	'v' will select the last character on the line, though the cursor
+	remains in virtual space.
+	Should set the start of the Visual area in virtual space.
+
+    6.  yank a word, move to virtual space and do "p": word is appended to the
+        end of the line instead of put at the cursor position.
+
+    8.  Using "R" in virtual space moves back one character before starting
+	the replacement.
+
+    9.	Using "C" in virtual space moves back to the end of the current
+	line to start changing rather than inserting spaces up to the current
+	point and then changing.
+	And when the cursor is in a TAB somewhere, it also doesn't work right.
+
 -   In Visual-block mode "x" doesn't delete part of a tab correctly.
 -   b_op_start and b_op_end also need coladd.
 -   Add more documentation.
@@ -332,6 +406,8 @@ I. Multi-language support:
 
 J. User Friendlier
 -   ":setlocal option<": reset local option to global value.
+-   Add a way to save local settings and mappings into a new plugin file.
+    ":mkplugin <file>"?
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
@@ -357,13 +433,30 @@ Messages:
 
 
 Various recent:
+8   Using "gf" in Visual mode should use the selected text as a file name.
+9   This pattern in syntax/java.vim causes a recursive call of regmatch():
+	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
+    A long line with a " in it causes a crash when it runs out of stack space.
+9   Number output of ":function <name>", so that the line of an error message
+    can be located?
 8   For a "/*" "**" "*/" comment the end isn't aligned properly.
 9   Support ACLs on more systems.
+9   Win32: double clicking on "c:\tmp\{asdf}.txt" edits "c:\tmp{asdf}.txt".
+    Don't remove backslash before {}?  Simlarly for "Edit with Vim". (Ott)
+    See list with success/failure for different names and situations.
+9   Win32: mouseshape doesn't return to normal after a ":set" command.
+    (Timothy) Stays at "no entry".  Only visible with ":set nomousehide".
 9   'smartcase' also uses 'noignorecase' when using "\S" in a pattern.
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
+9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
+    Without Gnome it does work.
+    Not all Gnome arguments get to gnome_init().
 8   Add "display" argument to many items in syntax files, to speed up parsing.
+    How to avoid that a "display" keyword no longer works?  Also for "fold".
+8   Make ":syntax include" to search 'runtimepath' for the included syntax
+    file if the argument is relative.
 -   update $VIMRUNTIME/optwin for new options.
 -   When using the file browser in GTK the absolute file name is used.  Should
     try to simplify it. (Lohner)
@@ -387,10 +480,6 @@ Various recent:
 -   When accidentally hitting Shift-R instead of Ctrl-R, further Ctrl-R is not
     possible, also when typing <Esc> immediately. (Grahn)
 -   When starting GUI with "-u NONE" get "Unknown font" errors.
--   Patch from Paul Moore for extra argument to match(), matchend() and
-    matchstr()?
-    Also: make third argument to strpart() optional.
-    Patch that includes docs: ~/vim/patches/sekera_match
 -   include flipcase patch: ~/vim/patches/wall.flipcase2
 -   When doing ":split" copy the jumplist to the new window.
 -   Mouse scroll wheel in xterm should work with Ctrl key ("a" changes to
@@ -433,6 +522,8 @@ Various recent:
     ":silent let password = input('')" should put stars on cmdline.
     ":silent write" still writes a message.
     ":silent s//" still writes a message.
+    How to use ":silent" for a search command?  ":silent /pat" uses ":/pat".
+	:silent exe "normal /path\<CR>"
     Run the external command silently, don't give the hit-return prompt.
     Remove how it's done for Risc OS with ":!~cmd", see do_shell().
     Don't redraw the screen, make a note in the docs that CTRL-L should be
@@ -475,6 +566,8 @@ Various recent:
     when using buffer commands to go to the files.
 -   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 -   Problem with cscope jumping to the wrong position? (Medley)
+-   ":abbr b byte", append "b " to an existing word still expands to "byte".
+    This is Vi compatible, but can we avoid it anyway?
 
 
 Considered for release 6.0:
@@ -643,6 +736,9 @@ GTK+ GUI known bugs:
     cannot be found. (Tsirkin)
 8   When a font is not fixed width, the message "not fixed-width" disappears
     immediately. (Tsirkin)
+    Add some code to handle proportional fonts?  Need to draw each character
+    separately (like xterm).  Also for when a double-width font is not exactly
+    double-width. (Maeda)
 8   Move gtk_main_quit() calls from call to add_to_input_buf() to inside the
     function?
 9   Can't paste a Visual selection from GTK-gvim to vim in xterm when it is
@@ -1196,6 +1292,9 @@ Problems that will (probably) not be solved:
     MS-Windows problem, it automatically reverses words that Vim already
     reversed, thus messing up the display.  A workaround is to install Hebrew
     fonts that are not marked as being Hebrew. (Nadav Har'El)
+-   Win32 GUI: mouse wheel always scrolls rightmost window.  The events arrive
+    in Vim as if the rightmost scrollbar was used.
+
 
 ---------------------  extensions and improvements ----------------------
 						    *extensions-improvements*
@@ -1264,7 +1363,7 @@ Syntax highlighting:
 8   Some syntax files set 'iskeyword'.  When switching to another filetype
     this isn't reset.  Add a special keyword definition for the syntax rules?
 8   Add specific syntax item to match with parens/braces that don't have a
-    "%" match.  :syntax nomatch cParenError "("
+    "%" match.  :syntax nomatch cMatchError (,{,[,),},] [contained]
 8   Highlight the text between two matching parens (e.g., with a grey
     background) when on one of the parens or in between them.
 8   Add a command to jump to the next characterw highlighted with "Error".
@@ -1366,6 +1465,8 @@ Syntax highlighting:
     OR: add an argument "cursor" to the syntax command, which means that the
     region/match/keyword is only highlighted when the cursor is on it.
     (Campbell)
+    Or do it like Elvis: define text objects and how to highlight them around
+    the cursor. (Iain Truskett)
 7   Make it possible to use all words in the tags files as Keyword.
     Can also be done with a script (but it's slow).
 7   Make it possible to call a ":" command when a match is found.  Should
@@ -1397,11 +1498,9 @@ Built-in script language:
     Alternative: Support packages.  {package-name}:{function-name}().
     Packages are loaded automatically when first used, from
     $VIMRUNTIME/packages (or use a search path).
-    Or add a FuncUndefined autocommand, so that the user can handle loading a
-    function as he pleases. (Aaron)
-    Pre-parse or compile Vim scripts into a bytecode.  Put the bytecode with
-    the original script, with an ":if" around it, so that it's only used with
-    a Vim that supports it.
+7   Pre-parse or compile Vim scripts into a bytecode.  Put the bytecode with
+    the original script, with an ":if has('bytecode')" around it, so that it's
+    only used with a Vim that supports it.
 8   The input() function should not read mapped characters, but always get
     characters from the user (or a script).  Need to change vgetorpeek() to
     ignore mapped characters.
@@ -1428,6 +1527,8 @@ Built-in script language:
 	getbufvar({bufid}, {name})
 	setwinvar()
 	getwinvar()
+	search()		Add optional offset argument.
+	searchback()		Like search() but backwards.
 	libcall()		Allow more than one argument.
 	libcallnr()		Like libcall(), but function returns a number.
 	fnamemod({fname}, {mod})    {mod} can be ":p:h" etc., to be applied to
@@ -1872,7 +1973,8 @@ Autocommands:
     InsertKeyPre    - key hit in Insert mode, before inserting the char.
     InsertKeyPost   - key hit in Insert mode, after inserting the char.
     BufModified	    - When a buffer becomes modified, or unmodified (for
-		      putting a [+] in the window title).
+		      putting a [+] in the window title or checking out the
+		      file from CVS).
     BufChange	    - after a change was made.  Set some variables to indicate
 		      the position and number of inserted/deleted lines, so
 		      that marks can be updated.  HierAssist has patch to add
@@ -1900,6 +2002,7 @@ Insert mode completion/expansion:
     completion.  After "foo." complete all member functions/variables of
     "foo".  Need to search backwards for the class definition of foo.
     Should work for C++ and Java.
+    Even more context would be nice: "import java.^N" -> "io", "lang", etc.
 7   When expanding $HOME/dir with ^X^F keep the $HOME (with an option?).
 7   Add CTRL-X command in Insert mode like CTRL-X CTRL-N, that completes WORDS
     instead of words.
@@ -2716,6 +2819,10 @@ Registers:
 
 
 Various improvements:
+7   Add a message area for the user.  Set some option to reserve space (above
+    the command line?).  Use an ":echouser" command to display the message
+    (truncated to fit in the space).
+7   Add %s to 'keywordprg': replace with word under the cursor. (Zellner)
 8   Support printing on Unix.  Can use "lpansi.c" as an example. (Bookout)
 8   Add put command that replaces the text under it.  Esp. for blockwise
     Visual mode.
@@ -3113,6 +3220,9 @@ From vile:
 Far future and "big" extensions:
 -   Make it possible to run Vim inside a window of another program.  For
     Xwindows this can be done with XReparentWindow().
+-   Add a way of scrolling that leaves the cursor where it is.  Especially
+    when using the scrollbar.  Typing a cursor-movement command scrolls back
+    to where the cursor is.
 -   Make it easy to setup Vim for groups of users: novice vi users, novice
     Vim users, C programmers, xterm users, GUI users,...
 -   Add a mode to only view text.  Like Less, but with syntax highlighting

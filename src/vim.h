@@ -541,9 +541,10 @@ typedef unsigned short u8char_t;
 #define GETF_ALT	0x02	/* jumping to alternate file (not buf num) */
 #define GETF_SWITCH	0x04	/* respect 'switchbuf' settings when jumping */
 
-/* Values for in_indentkeys() */
+/* Values for in_cinkeys() */
 #define KEY_OPEN_FORW	0x101
 #define KEY_OPEN_BACK	0x102
+#define KEY_COMPLETE	0x103	/* end of completion */
 
 /* Values for mch_call_shell() second argument */
 #define SHELL_FILTER	1	/* filtering text */
@@ -646,6 +647,11 @@ typedef unsigned short u8char_t;
 /* flags for do_put() */
 #define PUT_FIXINDENT	1	/* make indent look nice */
 #define PUT_CURSEND	2	/* leave cursor after end of new text */
+
+/* flags for set_indent() */
+#define SIN_CHANGED	1	/* call changed_bytes() when line changed */
+#define SIN_INSERT	2	/* insert indent before existing text */
+#define SIN_UNDO	4	/* save line for undo before changing it */
 
 /*
  * There are four history tables:

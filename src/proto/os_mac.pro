@@ -35,7 +35,7 @@ int mch_call_shell __PARMS((char_u *cmd, int options));
 int mch_has_wildcard __PARMS((char_u *s));
 int mch_expandpath __PARMS((struct growarray *gap, char_u *path, int flags));
 int mac_expandpath __PARMS((struct growarray *gap, char_u *path, int flags, short start_at, short as_full));
-int vim_chdir __PARMS((char *path));
+/*int vim_chdir __PARMS((char *path));*/
 int can_end_termcap_mode __PARMS((int give_msg));
 void mch_delay __PARMS((long msec, int ignoreinput));
 int vim_remove __PARMS((char_u *name));
@@ -67,3 +67,9 @@ int C2PascalString (char_u *CString, Str255 *PascalString);
 int GetFSSpecFromPath ( char_u *file, FSSpec *fileFSSpec);
 int mch_has_resource_fork (char_u *file);
 int mch_copy_file_attribute(char_u *from, char_u *to);
+
+void mch_shellinit __ARGS((void));
+int mch_get_shellsize __ARGS((void));
+void mch_set_shellsize __ARGS((void));
+void mch_new_shellsize __ARGS((void));
+int mch_nodetype __ARGS((char_u *name));

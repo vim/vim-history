@@ -79,45 +79,94 @@ get_indent_str(ptr, ts)
 }
 
 /*
- * set the indent of the current line
- * leaves the cursor on the first non-blank in the line
+ * Set the indent of the current line.
+ * Leaves the cursor on the first non-blank in the line.
+ * Caller must take care of undo.
+ * "flags":
+ *	SIN_CHANGED:	call changed_bytes() if the line was changed.
+ *	SIN_INSERT:	insert the indent in front of the line.
+ *	SIN_UNDO:	save line for undo before changing it.
+ * Returns TRUE if the line was changed.
  */
-    void
-set_indent(size, del_first)
+    int
+set_indent(size, flags)
     int		size;
-    int		del_first;
+    int		flags;
 {
-    int		oldstate = State;
-    int		c;
-#ifdef FEAT_RIGHTLEFT
-    int		old_p_ri = p_ri;
+    char_u	*p;
+    char_u	*line;
+    char_u	*s;
+    int		todo;
+    int		ind_len;
+    int		line_len;
+    int		doit = FALSE;
 
-    p_ri = 0;			    /* don't want revins in ident */
-#endif
-
-    State = INSERT;		    /* don't want REPLACE for State */
-    curwin->w_cursor.col = 0;
-    if (del_first)		    /* delete old indent */
-    {
-				    /* vim_iswhite() is a define! */
-	while ((c = gchar_cursor()), vim_iswhite(c))
-	    (void)del_char(FALSE);
-    }
-    if (!curbuf->b_p_et)	    /* if 'expandtab' is set, don't use TABs */
-	while (size >= (int)curbuf->b_p_ts)
+    /*
+     * First check if there is anything to do and compute the number of
+     * characters needed for the indent.
+     */
+    todo = size;
+    ind_len = 0;
+    p = ml_get_curline();
+    if (!curbuf->b_p_et)	/* if 'expandtab' isn't set: use TABs */
+	while (todo >= (int)curbuf->b_p_ts)
 	{
-	    ins_char(TAB);
-	    size -= (int)curbuf->b_p_ts;
+	    if (*p != TAB)
+		doit = TRUE;
+	    else
+		++p;
+	    todo -= curbuf->b_p_ts;
+	    ++ind_len;
 	}
-    while (size)
+    while (todo > 0)
     {
-	ins_char(' ');
-	--size;
+	if (*p != ' ')
+	    doit = TRUE;
+	else
+	    ++p;
+	--todo;
+	++ind_len;
     }
-    State = oldstate;
-#ifdef FEAT_RIGHTLEFT
-    p_ri = old_p_ri;
-#endif
+
+    /* Return if the indent is OK already. */
+    if (!doit && !vim_iswhite(*p) && !(flags & SIN_INSERT))
+	return FALSE;
+
+    /* Allocate memory for the new line. */
+    if (flags & SIN_INSERT)
+	p = ml_get_curline();
+    else
+	p = skipwhite(p);
+    line_len = STRLEN(p) + 1;
+    line = alloc(ind_len + line_len);
+    if (line == NULL)
+	return FALSE;
+
+    /* Put the characters in the new line. */
+    s = line;
+    todo = size;
+    if (!curbuf->b_p_et)	/* if 'expandtab' isn't set: use TABs */
+	while (todo >= (int)curbuf->b_p_ts)
+	{
+	    *s++ = TAB;
+	    todo -= (int)curbuf->b_p_ts;
+	}
+    while (todo > 0)
+    {
+	*s++ = ' ';
+	--todo;
+    }
+    mch_memmove(s, p, line_len);
+
+    /* Replace the line. */
+    if (flags & SIN_UNDO)
+	u_savesub(curwin->w_cursor.lnum);
+    ml_replace(curwin->w_cursor.lnum, line, FALSE);
+    if (flags & SIN_CHANGED)
+	changed_bytes(curwin->w_cursor.lnum, 0);
+
+    curwin->w_cursor.col = ind_len;
+    return TRUE;
 }
 
 #if defined(FEAT_CINDENT) || defined(FEAT_SMARTINDENT)
@@ -882,7 +931,7 @@ open_line(dir, del_spaces, old_indent)
 	    newindent += (int)curbuf->b_p_sw;
 	}
 #endif
-	set_indent(newindent, FALSE);
+	(void)set_indent(newindent, SIN_INSERT);
 	ai_col = curwin->w_cursor.col;
 
 	/*
@@ -1214,7 +1263,11 @@ plines_win(wp, lnum)
     width = W_WIDTH(wp) - win_col_off(wp);
     if (width > 0)
     {
-	lines = (col + (width - 1)) / width;
+	if (col <= width)
+	    return 1;
+	col -= width;
+	width += win_col_off2(wp);
+	lines = (col + (width - 1)) / width + 1;
 	if (lines <= wp->w_height)
 	    return lines;
     }
@@ -1232,9 +1285,10 @@ plines_win_col(wp, lnum, column)
     linenr_t	lnum;
     long	column;
 {
-    register long	col;
-    register char_u	*s;
-    register int	lines;
+    long	col;
+    char_u	*s;
+    int		lines;
+    int		width;
 
     if (!wp->w_p_wrap)
 	return 1;
@@ -1269,13 +1323,17 @@ plines_win_col(wp, lnum, column)
 	col += win_lbr_chartabsize(wp, s, (colnr_t)col, NULL) - 1;
 
     /*
-     * Add column offset for 'number' and 'foldcolumn'.
+     * Add column offset for 'number', 'foldcolumn', etc.
      */
-    col += win_col_off(wp);
-
-    lines = 1 + col / W_WIDTH(wp);
-    if (lines <= wp->w_height)
-	return lines;
+    width = W_WIDTH(wp) - win_col_off(wp);
+    if (width > 0)
+    {
+	lines = 1;
+	if (col >= width)
+	    lines += (col - width) / (width + win_col_off2(wp));
+	if (lines <= wp->w_height)
+	    return lines;
+    }
     return (int)(wp->w_height);	    /* maximum length */
 }
 
@@ -1779,24 +1837,24 @@ del_lines(nlines, undo)
     if (undo && u_savedel(curwin->w_cursor.lnum, nlines) == FAIL)
 	return;
 
-    for (n = 0; n < nlines; ++n)
+    for (n = 0; n < nlines; )
     {
 	if (curbuf->b_ml.ml_flags & ML_EMPTY)	    /* nothing to delete */
 	    break;
 
 	ml_delete(curwin->w_cursor.lnum, TRUE);
+	++n;
 
 	/* If we delete the last line in the file, stop */
 	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-	{
-	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 	    break;
-	}
     }
-    curwin->w_cursor.col = 0;
-
     /* adjust marks, mark the buffer as changed and prepare for displaying */
     deleted_lines_mark(curwin->w_cursor.lnum, n);
+
+    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+    curwin->w_cursor.col = 0;
 }
 
     int

@@ -1785,8 +1785,10 @@ mch_nodetype(name)
 	return NODE_NORMAL;
     if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))
 	return NODE_NORMAL;
+#ifndef OS2
     if (S_ISBLK(st.st_mode))	/* block device isn't writable */
 	return NODE_OTHER;
+#endif
     /* Everything else is writable? */
     return NODE_WRITABLE;
 }
@@ -3417,7 +3419,8 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	 * return value of buf if no wildcards left,
 	 * OR if no match AND EW_NOTFOUND is set.
 	 */
-	if (!has_wildcard || (expl_files == NULL && (flags & EW_NOTFOUND)))
+	if ((!has_wildcard && ((flags & EW_NOTFOUND) || mch_getperm(buf) >= 0))
+		|| (expl_files == NULL && (flags & EW_NOTFOUND)))
 	{   /* simply save the current contents of *buf */
 	    expl_files = (char_u **)alloc(sizeof(char_u **) * 2);
 	    if (expl_files != NULL)

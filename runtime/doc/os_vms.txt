@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0h.  Last change: 2000 Aug 20
+*os_vms.txt*    For Vim version 6.0i.  Last change: 2000 Sep 1
 
 
 		  VIM REFERENCE MANUAL
@@ -165,7 +165,7 @@ Example LOGIN.COM: >
 
 Note: This set-up should be enough, if you are working on standalone server or
 clustered environment, but if you want to use Vim as internode editor, it
-will satiate you as well. You just have to define the "whole" path: >
+will satisfy you as well. You just have to define the "whole" path: >
 
 	$ define VIM "<server_name>[""user password""]::device:<path>"
 	$ vi*m :== "mcr VIM:VIM.EXE"
@@ -422,7 +422,7 @@ You can print out whole buffer or just the marked area.
 
 9. VMS related changes					*vms-changes*
 
-Version 6.0 (2000 Aug 1)
+Version 6.0 (2000 Sep 1)
 - menu changes (fixed printing, CTAGS and XXD usage)
 - pixmaps (toolbar) for VMS GUI.
 - created OS_VMS_FILTER.COM - DECC->VAXC pre-processor directive convert

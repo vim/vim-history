@@ -65,6 +65,7 @@ typedef enum
     , PV_INC
     , PV_INEX
     , PV_INDE
+    , PV_INDK
     , PV_INF
     , PV_ISK
     , PV_KEY
@@ -143,6 +144,7 @@ static char_u	*p_inex;
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
 static char_u	*p_inde;
+static char_u	*p_indk;
 #endif
 static int	p_inf;
 static char_u	*p_isk;
@@ -879,6 +881,15 @@ static struct vimoption options[] =
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
 			    (char_u *)&p_inde, PV_INDE,
 			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
+    {"indentkeys", "indk",  P_STRING|P_ALLOCED|P_VI_DEF|P_COMMA|P_NODUP,
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+			    (char_u *)&p_indk, PV_INDK,
+			    {(char_u *)"0{,0},:,0#,!^F,o,O,e", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -3126,7 +3137,10 @@ do_set(arg, opt_flags)
 				for (s = newval; *s; ++s)
 				    if ((!(flags & P_COMMA) || *s != ',')
 					    && vim_strchr(s + 1, *s) != NULL)
+				    {
 					STRCPY(s, s + 1);
+					--s;
+				    }
 			    }
 
 			    *(char_u **)(varp) = newval;
@@ -3441,6 +3455,8 @@ check_buf_options(buf)
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
     if (buf->b_p_inde == NULL)
 	buf->b_p_inde = empty_option;
+    if (buf->b_p_indk == NULL)
+	buf->b_p_indk = empty_option;
 #endif
 #ifdef FEAT_CRYPT
     if (buf->b_p_key == NULL)
@@ -4703,9 +4719,13 @@ set_bool_option(opt_idx, varp, value, local)
     }
 
     /* when 'readonly' is reset, also reset readonlymode */
-    else if ((int *)varp == &curbuf->b_p_ro && !curbuf->b_p_ro)
+    else if ((int *)varp == &curbuf->b_p_ro)
     {
-	readonlymode = FALSE;
+	if (!curbuf->b_p_ro)
+	    readonlymode = FALSE;
+#ifdef FEAT_TITLE
+	maketitle();
+#endif
     }
 
     /* when 'bin' is set also set some other options */
@@ -5890,6 +5910,7 @@ get_varp(p)
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
 	case PV_INDE:	return (char_u *)&(curbuf->b_p_inde);
+	case PV_INDK:	return (char_u *)&(curbuf->b_p_indk);
 #endif
 #ifdef FEAT_CRYPT
 	case PV_KEY:	return (char_u *)&(curbuf->b_p_key);
@@ -6184,6 +6205,7 @@ buf_copy_options(buf, flags)
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
 	    buf->b_p_inde = vim_strsave(p_inde);
+	    buf->b_p_indk = vim_strsave(p_indk);
 #endif
 #ifdef FEAT_CRYPT
 	    buf->b_p_key = vim_strsave(p_key);
@@ -6644,7 +6666,7 @@ option_value2string(opp, global)
 	    NameBuff[0] = NUL;
 #ifdef FEAT_CRYPT
 	/* don't show the actual value of 'key', only that it's set */
-	if (opp->var == (char_u *)PV_KEY && *varp)
+	if (opp->var == (char_u *)&p_key && *varp)
 	    STRCPY(NameBuff, "*****");
 #endif
 	else if (opp->flags & P_EXPAND)

@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0h.  Last change: 2000 Jul 09
+*debugger.txt*  For Vim version 6.0i.  Last change: 2000 Jul 09
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -20,7 +20,7 @@ an Integrated Programming Environment (IPE) or Integrated Development
 Environment (IDE):
 
 	Alternate Command Input				|alt-input|
-	Debug Glyphs					|debug-signs|
+	Debug Signs					|debug-signs|
 	Debug Source Highlight				|debug-highlight|
 	Message Footer					|gui-footer|
 	Balloon Evaluation				|balloon-eval|
@@ -44,7 +44,7 @@ enough control to display the current debug environment and state.
 The current implementation is based on the X Toolkit displatch loop and the
 XtAddInput() function call.
 
-1.2 Debug Glyphs					*debug-signs*
+1.2 Debug Signs						*debug-signs*
 
 Many debuggers mark specific lines by placing a small sign or color highlight
 on the line. The |:sign| command lets the debugger set this graphic mark. Some
@@ -106,16 +106,17 @@ could also use some or all of the tools used with Sun's ipe.
 
 The following compile time preprocessor variables control the features:
 
-    Alternate Command Input			USE_ALT_INPUT
-    Debug Glyphs				USE_DEBUG_GLYPHS
-    Debug Highlights				USE_DEBUG_HIGHLIGHTS
-    Message Footer				USE_FOOTER
+    Alternate Command Input			ALT_X_INPUT
+    Debug Glyphs				FEAT_SIGNS
+    Debug Highlights				FEAT_SIGNS
+    Message Footer				FEAT_FOOTER
+    Balloon Evaluation				FEAT_BEVAL
 
 The first integration with a full IPE/IDE was with Sun Visual WorkShop. To
 compile a gvim which interfaces with VWS set the following flag, which sets
 all the above flags:
 
-    Sun Visual WorkShop				USE_SUN_WORKSHOP
+    Sun Visual WorkShop				FEAT_SUN_WORKSHOP
 
 ==============================================================================
 3. Integrated Debuggers					*debugger-integration*

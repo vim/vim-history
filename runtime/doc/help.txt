@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0h.  Last change: 2000 Aug 19
+*help.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
 
 			VIM - main help file
 									 k
@@ -48,7 +48,7 @@ Getting Started ~
 |usr_07.txt|	Using syntax highlighting
 |usr_08.txt|	Editing more than one file
 |usr_09.txt|	Splitting windows
-Editing Efficiently ~
+Editing Effectively ~
 |usr_20.txt|	Typing commands quickly
 |usr_21.txt|	Go away and come back
 |usr_22.txt|	Finding the file to edit
@@ -113,6 +113,7 @@ Advanced editing ~
 |autocmd.txt|	automatically executing commands on an event
 |filetype.txt|	settings done specifically for a type of file
 |eval.txt|	expression evaluation, conditional commands
+|fold.txt|	hide (fold) ranges of lines
 
 Special issues ~
 |term.txt|	using different terminals and mice

@@ -2014,10 +2014,15 @@ foldlevelExpr(flp)
 
     /* If the level is unknown for the first or the last line in the file, use
      * level 0. */
-    if (flp->lvl < 0 && (lnum <= 1 || lnum == curbuf->b_ml.ml_line_count))
+    if (flp->lvl < 0)
     {
-	flp->lvl = 0;
-	flp->lvl_next = 0;
+	if (lnum <= 1)
+	{
+	    flp->lvl = 0;
+	    flp->lvl_next = 0;
+	}
+	if (lnum == curbuf->b_ml.ml_line_count)
+	    flp->lvl_next = 0;
     }
 
     curwin = win;

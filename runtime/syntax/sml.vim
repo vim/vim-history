@@ -1,103 +1,213 @@
 " Vim syntax file
-" Language:   SML
-" Maintainers:   Fabrizio Zeno Cornelli <zeno@filibusta.crema.unimi.it>
-" Last change:   2000 May 20
-
-" There are two sets of highlighting in here:
-" If the "sml_highlighting_clean" variable exists, it is rather sparse.
-" Otherwise you get more highlighting.
+" Language:      SML
+" Filenames:     *.sml *.sig
+" Maintainers:   Markus Mottl            <mottl@miss.wu-wien.ac.at>
+"                Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
+" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/sml.vim
+" Last Change:   2000 Oct  01 - integrated Fabrizio's syntax file and
+"                               cleaned up for distribution
 
 " Remove any old syntax stuff hanging around.
 syn clear
 
-" Sml is case sensitive.
+
+" SML is case sensitive.
 syn case match
 
-" Very simple highlighting for comments, clause heads and
-" character codes.  It respects sml strings and atoms.
+" lowercase identifier - the standard way to match
+syn match    smlLCIdentifier /\<\(\l\|_\)\(\w\|'\)*\>/
 
-syn region   smlComment     start=+(\*+ end=+\*)+
+syn match    smlKeyChar    "|"
 
-" syn keyword  smlKeyword      
-syn keyword  smlStatement 	 let in end
-syn keyword  smlFunction 	 fun val
-syn match    smlCharCode     +0'\\\=.+
-syn region   smlString       start=+"+ skip=+\\"+ end=+"+
-syn region   smlAtom         start=+'+ skip=+\\'+ end=+'+
+" Errors
+syn match    smlBraceErr   "}"
+syn match    smlBrackErr   "\]"
+syn match    smlParenErr   ")"
+syn match    smlCommentErr "\*)"
+syn match    smlThenErr    "\<then\>"
 
-if !exists("sml_highlighting_clean")
-
-  " some keywords
-  " some common predicates are also highlighted as keywords
-  " is there a better solution?
-
-  syn keyword smlKeyword   abstype local struct sig  with
-  syn keyword smlKeyword   if then else case of fn and
-  syn keyword smlKeyword   datatype type exception open infix infixr nonfix
-  syn keyword smlKeyword   handle raise withtype
-  syn keyword smlKeyword   while do
-
-  syn keyword   smlType 	real list integer
-syn keyword smlStructures  Array BinIO BinPrimIO
-syn keyword smlStructures  Bool Byte Char
-syn keyword smlStructures  CharArray CharVector CommandLine
-syn keyword smlStructures  Date General IEEEReal
-syn keyword smlStructures  Int IO LargeInt
-syn keyword smlStructures  LargeReal LargeWord List
-syn keyword smlStructures  ListPair Math Option
-syn keyword smlStructures  OS OS.FileSys OS.IO
-syn keyword smlStructures  OS.Path OS.Process Position
-syn keyword smlStructures  Real SML90 String
-syn keyword smlStructures  StringCvt Substring TextIO
-syn keyword smlStructures  TextPrimIO Time Timer
-syn keyword smlStructures  Vector Word Word8
-syn keyword smlStructures  Word8Array Word8Vector
-
-
-  syn match   smlOperator ">=\|=\|<\|>\|<=\|::"
-  syn match   smlOperator "quot\|rem\|div\|mod\|=>\||"
-
-  syn match   smlNumber            "\<[0123456789]*\>"
-  syn match   smlSpecialCharacter  ";"
-
-
-
+" Error-highlighting of "end" without synchronization:
+" as keyword or as error (default)
+if exists("sml_noend_error")
+  syn match    smlKeyword    "\<end\>"
+else
+  syn match    smlEndErr     "\<end\>"
 endif
 
-syn sync ccomment maxlines=50
+" Some convenient clusters
+syn cluster  smlAllErrs contains=smlBraceErr,smlBrackErr,smlParenErr,smlCommentErr,smlEndErr,smlThenErr
+
+syn cluster  smlAENoParen contains=smlBraceErr,smlBrackErr,smlCommentErr,smlEndErr,smlThenErr
+
+syn cluster  smlContained contains=smlTodo,smlPreDef,smlModParam,smlModParam1,smlPreMPRestr,smlMPRestr,smlMPRestr1,smlMPRestr2,smlMPRestr3,smlModRHS,smlFuncWith,smlFuncStruct,smlModTypeRestr,smlModTRWith,smlWith,smlWithRest,smlModType,smlFullMod
+
+
+" Enclosing delimiters
+syn region   smlEncl transparent matchgroup=smlKeyword start="(" matchgroup=smlKeyword end=")" contains=ALLBUT,@smlContained,smlParenErr
+syn region   smlEncl transparent matchgroup=smlKeyword start="{" matchgroup=smlKeyword end="}"  contains=ALLBUT,@smlContained,smlBraceErr
+syn region   smlEncl transparent matchgroup=smlKeyword start="\[" matchgroup=smlKeyword end="\]" contains=ALLBUT,@smlContained,smlBrackErr
+syn region   smlEncl transparent matchgroup=smlKeyword start="#\[" matchgroup=smlKeyword end="\]" contains=ALLBUT,@smlContained,smlBrackErr
+
+
+" Comments
+syn region   smlComment start="(\*" end="\*)" contains=smlComment,smlTodo
+syn keyword  smlTodo contained TODO FIXME XXX
+
+
+" let
+syn region   smlEnd matchgroup=smlKeyword start="\<let\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+
+" local
+syn region   smlEnd matchgroup=smlKeyword start="\<local\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+" Blocks
+" "begin"
+syn region   smlEnd matchgroup=smlKeyword start="\<begin\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+" "if"
+syn region   smlNone matchgroup=smlKeyword start="\<if\>" matchgroup=smlKeyword end="\<then\>" contains=ALLBUT,@smlContained,smlThenErr
+
+
+"" Modules
+
+" "struct"
+syn region   smlStruct matchgroup=smlModule start="\<struct\>" matchgroup=smlModule end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+" "sig"
+syn region   smlSig matchgroup=smlModule start="\<sig\>" matchgroup=smlModule end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr,smlModule
+syn region   smlModSpec matchgroup=smlKeyword start="\<structure\>" matchgroup=smlModule end="\<\u\(\w\|'\)*\>" contained contains=@smlAllErrs,smlComment skipwhite skipempty nextgroup=smlModTRWith,smlMPRestr
+
+" "open"
+syn region   smlNone matchgroup=smlKeyword start="\<open\>" matchgroup=smlModule end="\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*\>" contains=@smlAllErrs,smlComment
+
+" "structure" - somewhat complicated stuff ;-)
+syn region   smlModule matchgroup=smlKeyword start="\<\(structure\|functor\)\>" matchgroup=smlModule end="\<\u\(\w\|'\)*\>" contains=@smlAllErrs,smlComment skipwhite skipempty nextgroup=smlPreDef
+syn region   smlPreDef start="."me=e-1 matchgroup=smlKeyword end="\l\|="me=e-1 contained contains=@smlAllErrs,smlComment,smlModParam,smlModTypeRestr,smlModTRWith nextgroup=smlModPreRHS
+syn region   smlModParam start="([^*]" end=")" contained contains=@smlAENoParen,smlModParam1
+syn match    smlModParam1 "\<\u\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=smlPreMPRestr
+
+syn region   smlPreMPRestr start="."me=e-1 end=")"me=e-1 contained contains=@smlAllErrs,smlComment,smlMPRestr,smlModTypeRestr
+
+syn region   smlMPRestr start=":" end="."me=e-1 contained contains=@smlComment skipwhite skipempty nextgroup=smlMPRestr1,smlMPRestr2,smlMPRestr3
+syn region   smlMPRestr1 matchgroup=smlModule start="\ssig\s\=" matchgroup=smlModule end="\<end\>" contained contains=ALLBUT,@smlContained,smlEndErr,smlModule
+syn region   smlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=smlKeyword end="->" contained contains=@smlAllErrs,smlComment,smlModParam skipwhite skipempty nextgroup=smlFuncWith
+syn match    smlMPRestr3 "\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*" contained
+syn match  smlModPreRHS "=" contained skipwhite skipempty nextgroup=smlModParam,smlFullMod
+syn region  smlModRHS start="." end=".\w\|([^*]"me=e-2 contained contains=smlComment skipwhite skipempty nextgroup=smlModParam,smlFullMod
+syn match   smlFullMod "\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*" contained skipwhite skipempty nextgroup=smlFuncWith
+
+syn region  smlFuncWith start="("me=e-1 end=")" contained contains=smlComment,smlWith,smlFuncStruct
+syn region  smlFuncStruct matchgroup=smlModule start="[^a-zA-Z]struct\>"hs=s+1 matchgroup=smlModule end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+syn match    smlModTypeRestr "\<\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*\>" contained
+syn region   smlModTRWith start=":\s*("hs=s+1 end=")" contained contains=@smlAENoParen,smlWith
+syn match    smlWith "\<\(\u\(\w\|'\)*\.\)*\w\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=smlWithRest
+syn region   smlWithRest start="[^)]" end=")"me=e-1 contained contains=ALLBUT,@smlContained
+
+" "signature"
+syn region   smlKeyword start="\<signature\>" matchgroup=smlModule end="\<\w\(\w\|'\)*\>" contains=smlComment skipwhite skipempty nextgroup=smlMTDef
+syn match    smlMTDef "=\s*\w\(\w\|'\)*\>"hs=s+1,me=s
+
+syn keyword  smlKeyword  abstype and andalso case
+syn keyword  smlKeyword  datatype else eqtype
+syn keyword  smlKeyword  exception fn fun handle
+syn keyword  smlKeyword  in infix infixl infixl
+syn keyword  smlKeyword  match nonfix of orelse
+syn keyword  smlKeyword  raise handle type
+syn keyword  smlKeyword  val where while with withtype
+
+syn keyword  smlType     bool char exn int list option
+syn keyword  smlType     real string unit
+
+syn keyword  smlOperator div mod not or quot rem
+
+syn keyword  smlBoolean      true false
+syn match    smlConstructor  "(\s*)"
+syn match    smlConstructor  "\[\s*\]"
+syn match    smlConstructor  "#\[\s*\]"
+syn match    smlConstructor  "\u\(\w\|'\)*\>"
+
+" Module prefix
+syn match    smlModPath      "\u\(\w\|'\)*\."he=e-1
+
+syn match    smlCharacter    +#"."\|#"\\\d\d\d"+
+syn match    smlCharErr      +#"\\\d\d"\|#"\\\d"+
+syn region   smlString       start=+"+ skip=+\\\\\|\\"+ end=+"+
+
+syn match    smlFunDef       "=>"
+syn match    smlRefAssign    ":="
+syn match    smlTopStop      ";;"
+syn match    smlOperator     "\^"
+syn match    smlOperator     "::"
+syn match    smlAnyVar       "\<_\>"
+syn match    smlKeyChar      "!"
+syn match    smlKeyChar      ";"
+syn match    smlKeyChar      "\*"
+syn match    smlKeyChar      "="
+
+syn match    smlNumber        "\<-\=\d\+\>"
+syn match    smlNumber        "\<-\=0[x|X]\x\+\>"
+syn match    smlReal          "\<-\=\d\+\.\d*\([eE][-+]\=\d\+\)\=[fl]\=\>"
+
+" Synchronization
+syn sync minlines=20
+syn sync maxlines=500
+
+syn sync match smlEndSync     grouphere  smlEnd     "\<begin\>"
+syn sync match smlEndSync     groupthere smlEnd     "\<end\>"
+syn sync match smlStructSync  grouphere  smlStruct  "\<struct\>"
+syn sync match smlStructSync  groupthere smlStruct  "\<end\>"
+syn sync match smlSigSync     grouphere  smlSig     "\<sig\>"
+syn sync match smlSigSync     groupthere smlSig     "\<end\>"
 
 if !exists("did_sml_syntax_inits")
-
+  " The default methods for highlighting.  Can be overridden later
   let did_sml_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
+  hi link smlBraceErr     Error
+  hi link smlBrackErr     Error
+  hi link smlParenErr     Error
 
-  hi link smlComment    Comment
-  hi link smlCharCode   Special
+  hi link smlCommentErr   Error
 
-  if exists ("sml_highlighting_clean")
+  hi link smlEndErr       Error
+  hi link smlThenErr      Error
 
-    hi link smlKeyword          Statement
-    hi link smlStatement        Statement
-    hi link smlFunction         Statement
+  hi link smlCharErr      Error
 
-  else
+  hi link smlComment      Comment
 
-    hi link smlStatement        Statement
-    hi link smlKeyword          Keyword
-    hi link smlFunction         Function
-    hi link smlSpecialCharacter Special
-    hi link smlNumber           Number
-    hi link smlAtom             String
-    hi link smlString           String
-    hi link smlOperator         Operator
-    hi link smlType             Type
-    hi link smlStructures	    Type
+  hi link smlModPath      Include
+  hi link smlModule       Include
+  hi link smlModParam1    Include
+  hi link smlModType      Include
+  hi link smlMPRestr3     Include
+  hi link smlFullMod      Include
+  hi link smlModTypeRestr Include
+  hi link smlWith         Include
+  hi link smlMTDef        Include
 
+  hi link smlConstructor  Constant
 
+  hi link smlModPreRHS    Keyword
+  hi link smlMPRestr2     Keyword
+  hi link smlKeyword      Keyword
+  hi link smlFunDef       Keyword
+  hi link smlRefAssign    Keyword
+  hi link smlKeyChar      Keyword
+  hi link smlAnyVar       Keyword
+  hi link smlTopStop      Keyword
+  hi link smlOperator     Keyword
 
-  endif
-
+  hi link smlBoolean      Boolean
+  hi link smlCharacter    Character
+  hi link smlNumber       Number
+  hi link smlReal         Float
+  hi link smlString       String
+  hi link smlType         Type
+  hi link smlTodo         Todo
+  hi link smlEncl         Keyword
 endif
 
 let b:current_syntax = "sml"

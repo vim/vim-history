@@ -51,6 +51,8 @@ void validate_cheight __ARGS((void));
 void validate_cursor_col __ARGS((void));
 int win_col_off __ARGS((win_t *wp));
 int curwin_col_off __ARGS((void));
+int win_col_off2 __ARGS((win_t *wp));
+int curwin_col_off2 __ARGS((void));
 void curs_columns __ARGS((int scroll));
 void scrolldown __ARGS((long line_count));
 void scrollup __ARGS((long line_count));

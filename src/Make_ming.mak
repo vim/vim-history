@@ -11,7 +11,7 @@
 #
 # NOTE: Sometimes 'GNU Make' will stop after building vimrun.exe -- I think
 # it's just run out of memory or something.  Run again, and it will continue
-# with 'ctags' and 'xxd'.
+# with 'xxd'.
 #
 # Maintained by Ron Aaron <ron@mossbayeng.com>
 # updated 1999 Jun 08
@@ -90,7 +90,7 @@ LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
 ifdef PERL
 LIB += -lperlcapi -lperlcore
 endif
-all: $(TARGET) vimrun.exe ctags/ctags.exe xxd/xxd.exe
+all: $(TARGET) vimrun.exe xxd/xxd.exe
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c
@@ -109,16 +109,12 @@ exes:
 	$(MAKE) -f Make_ming.mak vim.exe
 	@del *.o
 
-ctags/ctags.exe: ctags/main.c
-	$(MAKE) -C ctags  -f Makefile.ming
-
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd && $(CC) $(CFLAGS) -o xxd.exe -s -DWIN32 xxd.c && cd ..
 
 clean:
 	-del *.o
 	-del *.exe
-	$(MAKE) -C ctags -f makefile.ming clean
 	cd xxd && del *.exe && cd ..
 
 ###########################################################################

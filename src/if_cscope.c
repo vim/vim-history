@@ -1446,15 +1446,20 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 	if (curbuf->b_fname != NULL)
 	{
 	    char *f;
-	    int len;
+	    int fname_len, ffname_len;
 
-	    len = strlen((const char *)(curbuf->b_fname));
+	    fname_len = strlen((const char *)(curbuf->b_fname));
+	    ffname_len = strlen((const char *)(curbuf->b_ffname));
+
 	    for (i = 0; i < num_matches; i++)
 	    {
 		if ((f = strchr(matches[i], '\t')) != NULL)
 		{
 		    f++;
-		    if (strncmp((const char *)(curbuf->b_fname), f, len) == 0)
+		    if (strncmp((const char *)(curbuf->b_fname), f, fname_len)
+									  == 0
+			    || strncmp((const char *)(curbuf->b_ffname), f,
+							     ffname_len) == 0)
 			in_cur_file[i] = TRUE;
 		}
 	    }

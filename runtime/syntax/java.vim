@@ -2,7 +2,7 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2000 Jun 1
+" Last Change:  2000 Oct 15
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -156,7 +156,8 @@ syn match   javaSpecialError     contained "\\."
 syn match   javaSpecialCharError contained "[^']"
 syn match   javaSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
 syn region   javaString          start=+"+ end=+"+ end=+$+ contains=javaSpecialChar,javaSpecialError,@Spell
-syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
+" next line disabled, it can cause a crash for a long line
+"syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
 syn match   javaCharacter        "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
 syn match   javaCharacter        "'\\''" contains=javaSpecialChar
 syn match   javaCharacter        "'[^\\]'"

@@ -199,7 +199,7 @@ PRO = \
 	proto/undo.pro \
 	proto/window.pro
 
-all: proto Vim ctags/Ctags
+all: proto Vim
 
 Vim: scoptions $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c
@@ -210,9 +210,6 @@ debug: scoptions $(OBJ) version.c version.h
 	$(CC) LINK $(COPTS) $(OBJ) version.o $(DBG) PNAME=Vim
 
 proto: $(GST) $(PRO)
-
-ctags/Ctags: ctags/main.c
-	$(SHELL) -c "cd ctags; smake -f Makefile.sas; cd .."
 
 tags:
 	spat ctags $(SRC) *.h

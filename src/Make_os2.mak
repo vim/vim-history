@@ -31,7 +31,7 @@ CC = gcc
 TARGET = vim.exe
 
 ### Names of the tools that are also made
-TOOLS = ctags/ctags.exe xxd/xxd.exe tee/tee.exe
+TOOLS = xxd/xxd.exe tee/tee.exe
 
 ###########################################################################
 
@@ -85,9 +85,6 @@ LFLAGS = -Zcrtdll -s -o $(TARGET) $(LIBS)
 $(TARGET): $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c $(OBJ) $(LFLAGS)
 
-ctags/ctags.exe:
-	cd ctags & $(MAKE) -f Makefile.os2 small
-
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd & $(MAKE) -f Make_os2.mak
 
@@ -101,7 +98,6 @@ clean:
 	-del *.o
 	-del *.exe
 	-del *.~ *~ *.bak
-	cd ctags & $(MAKE) -f Makefile.os2 clean
 	cd xxd   & $(MAKE) -f Make_os2.mak clean
 	cd tee   & $(MAKE) -f Makefile clean
 

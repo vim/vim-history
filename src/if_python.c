@@ -663,9 +663,9 @@ VimCommand(PyObject *self, PyObject *args)
 VimEval(PyObject *self, PyObject *args)
 {
 #ifdef FEAT_EVAL
-    char *expr;
-    char *str;
-    PyObject *result;
+    char	*expr;
+    char	*str;
+    PyObject	*result;
 
     if (!PyArg_ParseTuple(args, "s", &expr))
 	return NULL;
@@ -1437,6 +1437,10 @@ WindowGetattr(PyObject *self, char *name)
     }
     else if (strcmp(name, "height") == 0)
 	return Py_BuildValue("l", (long)(this->win->w_height));
+#ifdef FEAT_VERTSPLIT
+    else if (strcmp(name, "width") == 0)
+	return Py_BuildValue("l", (long)(W_WIDTH(this->win)));
+#endif
     else if (strcmp(name,"__members__") == 0)
 	return Py_BuildValue("[sss]", "buffer", "cursor", "height");
     else
@@ -1504,6 +1508,30 @@ WindowSetattr(PyObject *self, char *name, PyObject *val)
 
 	return 0;
     }
+#ifdef FEAT_VERTSPLIT
+    else if (strcmp(name, "width") == 0)
+    {
+	int	width;
+	win_t	*savewin;
+
+	if (!PyArg_Parse(val, "i", &width))
+	    return -1;
+
+#ifdef FEAT_GUI
+	need_mouse_correct = TRUE;
+#endif
+	savewin = curwin;
+	curwin = this->win;
+	win_setwidth(width);
+	curwin = savewin;
+
+	/* Check for keyboard interrupts */
+	if (VimErrorCheck())
+	    return -1;
+
+	return 0;
+    }
+#endif
     else
     {
 	PyErr_SetString(PyExc_AttributeError, name);

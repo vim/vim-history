@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2000 Jul 21
+" Last Change:	2000 Oct 15
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -51,7 +51,7 @@ syn match helpSpecial		"CTRL-{char}"
 syn region helpNotVi		start="{Vi[: ]" start="{not" start="{only" end="}" contains=helpLeadBlank,helpHyperTextJump
 syn match helpLeadBlank		"^\s\+" contained
 
-syn sync minlines=30
+syn sync minlines=40
 
 if !exists("did_help_syntax_inits")
   let did_help_syntax_inits = 1

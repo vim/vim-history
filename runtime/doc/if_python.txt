@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0h.  Last change: 2000 Jul 07
+*if_python.txt* For Vim version 6.0i.  Last change: 2000 Sep 30
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -14,8 +14,8 @@ The Python Interface to Vim				*python* *Python*
 
 {Vi does not have any of these commands}
 
-The Python interface only works when Vim was compiled with the |+python|
-feature.
+The Python interface is available only when Vim was compiled with the
+|+python| feature.
 
 ==============================================================================
 1. Commands						*python-commands*
@@ -30,7 +30,7 @@ Both of these commands do essentially the same thing - they execute a piece of
 Python code, with the "current range" |python-range| set to the given line
 range.
 
-In the case of :python, the code to execute is specified on the command-line.
+In the case of :python, the code to execute is in the command-line.
 In the case of :pyfile, the code to execute is the contents of the given file.
 
 Here are some examples					*python-examples*  >
@@ -42,7 +42,7 @@ Here are some examples					*python-examples*  >
 	:python str = current.buffer[42]
 
 (Note that changes - like the imports - persist from one command to the next,
-just like in the Python interpreter).
+just like in the Python interpreter.)
 
 ==============================================================================
 2. The vim module					*python-vim*
@@ -55,9 +55,9 @@ Overview >
 	print "Hello"			# displays a message
 	vim.command(cmd)		# execute an ex command
 	w = vim.windows[n]		# gets window "n"
-	cw = vim.current.window	# gets the current window
+	cw = vim.current.window		# gets the current window
 	b = vim.buffers[n]		# gets buffer "n"
-	cb = vim.current.buffer	# gets the current buffer
+	cb = vim.current.buffer		# gets the current buffer
 	w.height = lines		# sets the window height
 	w.cursor = (row, col)		# sets the window cursor position
 	pos = w.cursor			# gets a tuple (row, col)
@@ -76,12 +76,11 @@ Methods
 	Examples: >
 		vim.command("set tw=72")
 		vim.command("%s/aaa/bbb/g")
-<	To execute normal-mode commands, the following definition could be
-	used: >
+<	The following definition executes Normal mode commands: >
 		def normal(str):
 			vim.command("normal "+str)
-		# Note the use of '...' to delimit a string containing double
-		# quotes
+		# Note the use of single quotes to delimit a string containing
+		# double quotes
 		normal('"a2dd"aP')
 <
 	vim.eval(str)					*python-eval*
@@ -96,7 +95,7 @@ Methods
 
 Error object
 	vim.error					*python-error*
-	All vim errors encountered by Python are raised as exceptions of type
+	Upon encountering a Vim error, Python raises an exception of type
 	vim.error.
 	Example: >
 		try:
@@ -105,13 +104,13 @@ Error object
 			# nothing in register a
 
 Constants
-	Note that these are not actually constants - in theory you could
-	reassign them. But this is silly, as you would then lose access to the
-	vim objects referred to by the variables.
+	Note that these are not actually constants - you could reassign them.
+	But this is silly, as you would then lose access to the vim objects
+	to which the variables referred.
 
 	vim.buffers					*python-buffers*
 	A sequence object providing access to the list of vim buffers. The
-	following operations are supported: >
+	object supports the following operations: >
 		b = vim.buffers[i]	# Indexing (read-only)
 		b in vim.buffers	# Membership test
 		n = len(vim.buffers)	# Number of elements
@@ -119,7 +118,7 @@ Constants
 <
 	vim.windows					*python-windows*
 	A sequence object providing access to the list of vim windows. The
-	following operations are supported: >
+	object supprts the following operations: >
 		w = vim.windows[i]	# Indexing (read-only)
 		w in vim.windows	# Membership test
 		n = len(vim.windows)	# Number of elements
@@ -133,22 +132,20 @@ Constants
 		vim.current.window	The current window (RO)		Window
 		vim.current.range	The current line range (RO)	Range
 
-	The last case deserves a little explanation. When a range is specified
-	in the :python or :pyfile command, this range of lines is treated as
-	the "current range". A range is a bit like a buffer, but with all
-	access restricted to a subset of lines. See |python-range| for more
-	details.
+	The last case deserves a little explanation. When the :python or
+	:pyfile command specifies a range, this range of lines becomes the
+	"current range". A range is a bit like a buffer, but with all access
+	restricted to a subset of lines. See |python-range| for more details.
 
 Output from Python					*python-output*
-	All output from Python code is displayed in the Vim message area.
-	Normal output is displayed as information messages, and error output
-	is displayed as error messages.
+	Vim displays all Python code output in the Vim message area.  Normal
+	output appears as information messages, and error output appears as
+	error messages.
 
-	In implementation terms, this means that all output directed to
-	sys.stdout (including the output from print statements) is displayed
-	by vim as an information message, and all output directed to
-	sys.stderr (including error tracebacks) is displayed by vim as an
-	error message.
+	In implementation terms, this means that all output to sys.stdout
+	(including the output from print statements) appears as information
+	messages, and all output to sys.stderr (including error tracebacks)
+	appears as error messages.
 
 							*python-input*
 	Input (via sys.stdin, including input() and raw_input()) is not
@@ -158,17 +155,15 @@ Output from Python					*python-output*
 ==============================================================================
 3. Buffer objects					*python-buffer*
 
-Buffer objects represent vim buffers. They can be obtained in a number of
-ways:
+Buffer objects represent vim buffers. You can obtain them in a number of ways:
 	- via vim.current.buffer (|python-current|)
 	- from indexing vim.buffers (|python-buffers|)
 	- from the "buffer" attribute of a window (|python-window|)
 
 Buffer objects have one read-only attribute - name - the full file name for
-the buffer. They also have three methods (append, mark, and range) which are
-described below.
+the buffer. They also have three methods (append, mark, and range; see below).
 
-Buffer objects can also be treated as sequence objects. In this context, they
+You can also treat buffer objects as sequence objects. In this context, they
 act as if they were lists (yes, they are mutable) of strings, with each
 element being a line of the buffer. All of the usual sequence operations,
 including indexing, index assignment, slicing and slice assignment, work as
@@ -208,7 +203,7 @@ Examples (assume b is the current buffer) >
 ==============================================================================
 4. Range objects					*python-range*
 
-Range objects represent a part of a vim buffer. They can be obtained in a
+Range objects represent a part of a vim buffer. You can obtain them in a
 number of ways:
 	- via vim.current.range (|python-current|)
 	- from a buffer's range() method (|python-buffer|)
@@ -225,19 +220,21 @@ line(s) to the end of the range.
 ==============================================================================
 5. Window objects					*python-window*
 
-Window objects represent vim windows. They can be obtained in a number of
-ways:
+Window objects represent vim windows. You can obtain them in a number of ways:
 	- via vim.current.window (|python-current|)
 	- from indexing vim.windows (|python-windows|)
 
-Window objects can only be manipulated through their attributes. They have no
+You can manipulate window objects only through their attributes. They have no
 methods, and no sequence or other interface.
 
-Window attributes are
+Window attributes are:
 	buffer (read-only)	The buffer displayed in this window
 	cursor (read-write)	The current cursor position in the window
 				This is a tuple, (row,col).
 	height (read-write)	The window height, in rows
+	width (read-write)	The window width, in columns
+The height attribute is writable only if the screen is split horizontally.
+The width attribute is writable only if the screen is split vertically.
 
 ==============================================================================
  vim:tw=78:

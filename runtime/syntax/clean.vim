@@ -2,7 +2,7 @@
 " Language:		Clean
 " Author:		Pieter van Engelen <pietere@sci.kun.nl>
 " Co-Author:	Arthur van Leeuwen <arthurvl@sci.kun.nl>
-" Last Change:	Fri Feb  6 15:02:40 CET 1998
+" Last Change:	Fri Sep 29 11:35:34 CEST 2000
 
 syn clear
 
@@ -21,7 +21,7 @@ syn keyword cleanTypeClass class instance export
 syn keyword cleanBoolDenot True False
 syn region  cleanStringDenot start=+"+ end=+"+
 syn match cleanCharDenot "'.'"
-syn match cleanCharsDenot "'.*'" contained
+syn match cleanCharsDenot "'[^'\\]*\(\\.[^'\\]\)*'" contained
 syn match cleanIntegerDenot "[+-~]\=\<\(\d\+\|0[0-7]\+\|0x[0-9A-Fa-f]\+\)\>"
 syn match cleanRealDenot "[+-~]\=\<\d\+\.\d+\(E[+-~]\=\d+\)\="
 
@@ -32,11 +32,11 @@ syn region cleanArray start="{:" end=":}" contains=ALL
 syn match cleanTuple "([^=]*,[^=]*)" contains=ALL
 
 " To do some Comment Highlighting
-syn region cleanComment start="/\*"  end="\*/"
+syn region cleanComment start="/\*"  end="\*/" contains=cleanComment
 syn match cleanComment "//.*"
 
 " Now for some useful typedefinitionrecognition
-syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" oneline contains=cleanSpecial
+syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" contains=cleanSpecial
 
 if !exists("did_clean_syntax_init")
    let did_clean_syntax_init = 1

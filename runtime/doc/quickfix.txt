@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0h.  Last change: 2000 Aug 21
+*quickfix.txt*  For Vim version 6.0i.  Last change: 2000 Sep 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -465,7 +465,7 @@ remove the comment lines.  For the '\' notation at the start of some lines see
 	\%-G(see\ the\ transcript%.%#),
 <		Generally exclude any empty or whitespace-only line from
 		being displayed: >
-	\%-G%*\\s,
+	\%-G\\s%#,
 <		The LaTeX output log does not specify the names of erroneous
 		source files per line; rather they are given globally,
 		enclosed in parentheses.

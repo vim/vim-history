@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0h.  Last change: 2000 Aug 20
+*autocmd.txt*   For Vim version 6.0i.  Last change: 2000 Sep 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -429,6 +429,16 @@ the first character.  Example: >
 	:autocmd BufRead */doc/*.txt	set tw=78
 This autocommand will for example be executed for "/tmp/doc/xx.txt" and
 "/usr/home/piet/doc/yy.txt".  The number of directories does not matter here.
+
+
+The file name that the pattern is matched against is after expanding
+wildcards.  Thus is you issue this command: >
+	:e $ROOTDIR/main.$EXT
+The argument is first expanded to: >
+	/usr/root/main.py
+Before it's matched with the pattern of the autocommand.  Careful with this
+when using events like FileReadCmd, the value of <amatch> may not be what you
+expect.
 
 
 Environment variables can be used in a pattern: >

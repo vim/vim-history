@@ -53,7 +53,8 @@
 # include "proto/if_perlsfio.pro"
 #endif
 
-static void *perl_interp = NULL;
+// static void *perl_interp = NULL;
+static PerlInterpreter *perl_interp = NULL;
 static void xs_init __ARGS((void));
 static void VIM_init __ARGS((void));
 

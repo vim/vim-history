@@ -57,15 +57,10 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32
-
-ctags/ctags.exe: ctags/main.c
-	cd ctags
-	$(MAKE) -f Makefile.djg
-	cd ..
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd

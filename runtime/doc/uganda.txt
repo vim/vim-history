@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0h.  Last change: 2000 Aug 27
+*uganda.txt*    For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,6 +136,11 @@ Holland:	Transfer to the account of "Stichting ICCF Holland" in Venlo.
 		This will allow for tax deduction (if you live in Holland)!
 			Postbank, nr. 4548774
 
+World:		Use a postal money order.  That should be possible from any
+		country, mostly from the post office.  Use this name (which is
+		in my passport): "Abraham Moolenaar".  Use Euro for the
+		currency if possible.
+
 Europe:		To avoid banking costs the best thing is to send me a
 		Eurocheque, written out to "Bram Moolenaar" in Dutch Guilders
 		(DFL).  Send it to the address below.
@@ -151,9 +156,6 @@ Others:		Transfer to one of these accounts if possible:
 		Otherwise, send a cheque in US dollars to the above address.
 		Minimal amount: $70 (my bank does not accept smaller amounts
 		for foreign cheques, sorry)
-
-An alternative is to send a postal money order.  That should be possible from
-any country.  Use this name (which is in my passport): "Abraham Moolenaar".
 
 Address to send cheques to:
 			stichting ICCF Holland

@@ -73,7 +73,7 @@ EXE_dependencies =  \
  window.obj \
  version.obj
 
-all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe install.exe xxd/xxd.exe
 
 #		*Explicit Rules*
 #  add /v to TLINK for debugging
@@ -128,12 +128,6 @@ install.exe: dosinst.c
 	-del install.exe
 	ren dosinst.exe install.exe
 
-ctags/ctags.exe: ctags/main.c
-	cd ctags
-	copy Makefile.bc3 Makefile
-	$(MAKE)
-	cd ..
-
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
 	copy Make_bc3.mak Makefile
@@ -146,9 +140,6 @@ clean:
 	-del *.obj
 	-del vim.exe
 	-del install.exe
-	-del ctags\*.obj
-	-del ctags\ctags.exe
-	-del ctags\respbcc
 	-del xxd\*.obj
 	-del xxd\xxd.exe
 	-del vim.cfg
