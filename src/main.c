@@ -2592,7 +2592,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		else
 		{
 		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
-						argv[i][8] == '-');
+						argtype == ARGTYPE_EDIT_WAIT);
 		    Argc = i;
 		}
 # ifdef FEAT_X11
