@@ -2628,7 +2628,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    while (memchr(done, 0, numFiles) != NULL)
 		    {
 # ifdef WIN32
-			p = serverGetReply(srv, FALSE, TRUE, TRUE);
+			p = serverGetReply(srv, NULL, TRUE, TRUE);
 			if (p == NULL)
 			    break;
 # else

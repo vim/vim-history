@@ -70,6 +70,7 @@
 typedef struct PendingCommand
 {
     int	    serial;	/* Serial number expected in result. */
+    int	    code;	/* Result Code. 0 is OK */
     char_u  *result;	/* String result for command (malloc'ed).
 			 * NULL means command still pending. */
     struct PendingCommand *nextPtr;
@@ -136,6 +137,9 @@ static PendingCommand *pendingCommands = NULL;
  *	defaults to an empty string.
  *
  * -c code
+ *	0: for OK. This is the default.
+ *	1: for error: Result is the last error
+ *
  * -i errorInfo
  * -e errorCode
  *	Not applicable for Vim
@@ -385,9 +389,15 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
 	    ret = eval_to_string(cmd, NULL);
 	    --emsg_skip;
 	    if (result != NULL)
-		*result = ret;
+	    {
+		if (ret == NULL)
+		    *result = vim_strsave(_(e_invexprmsg));
+		else
+		    *result = ret;
+	    }
 	    else
 		vim_free(ret);
+	    return ret == NULL ? -1 : 0;
 	}
 	else
 	    server_to_input_buf(cmd);
@@ -461,6 +471,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
      * AppendErrorProc to pass back the command's results).
      */
     pending.serial = serial;
+    pending.code = 0;
     pending.result = NULL;
     pending.nextPtr = pendingCommands;
     pendingCommands = &pending;
@@ -489,7 +500,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     else
 	vim_free(pending.result);
 
-    return 0;
+    return pending.code == 0 ? 0 : -1;
 }
 
     static int
@@ -1092,7 +1103,7 @@ serverEventProc(dpy, eventPtr)
 {
     char_u	*propInfo;
     char_u	*p;
-    int		result, actualFormat;
+    int		result, actualFormat, code;
     long_u	numItems, bytesAfter;
     Atom	actualType;
 
@@ -1223,6 +1234,12 @@ serverEventProc(dpy, eventPtr)
 	    {
 		if (res != NULL)
 		    ga_concat(&reply, res);
+		else if (asKeys == 0)
+		{
+		    ga_concat(&reply, _(e_invexprmsg));
+		    ga_append(&reply, 0);
+		    ga_concat(&reply, "-c 1");
+		}
 		ga_append(&reply, 0);
 		(void)AppendPropCarefully(dpy, resWindow, commProperty,
 					   reply.ga_data, reply.ga_len);
@@ -1243,6 +1260,7 @@ serverEventProc(dpy, eventPtr)
 	    p += 2;
 	    gotSerial = 0;
 	    res = (char_u *)"";
+	    code = 0;
 	    while ((p-propInfo) < numItems && *p == '-')
 	    {
 		switch (p[1])
@@ -1254,6 +1272,10 @@ serverEventProc(dpy, eventPtr)
 		    case 's':
 			if (sscanf((char *)p + 2, " %d", &serial) == 1)
 			    gotSerial = 1;
+			break;
+		    case 'c':
+			if (sscanf((char *)p + 2, " %d", &code) != 1)
+			    code = 0;
 			break;
 		}
 		while (*p != 0)
@@ -1273,6 +1295,7 @@ serverEventProc(dpy, eventPtr)
 		if (serial != pcPtr->serial || pcPtr->result != NULL)
 		    continue;
 
+		pcPtr->code = code;
 		if (res != NULL)
 		    pcPtr->result = vim_strsave(res);
 		else

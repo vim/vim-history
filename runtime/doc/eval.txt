@@ -671,6 +671,7 @@ v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
 
 					*v:servername* *servername-variable*
 v:servername	The resulting registered |x11-clientserver| name if any.
+		Read-only.
 
 					*v:shell_error* *shell_error-variable*
 v:shell_error	Result of the last shell command.  When non-zero, the last
@@ -1189,7 +1190,8 @@ expand({expr} [, {flag}])				*expand()*
 			<sfile>		sourced script file name
 			<cword>		word under the cursor
 			<cWORD>		WORD under the cursor
-			<client>	The {serverid} of the las
+			<client>	the {clientid} of the last received
+					message |server2client()|
 		Modifiers:
 			:p		expand to full path
 			:h		head (last path component removed)
@@ -1864,7 +1866,7 @@ prevnonblank({lnum})					*prevnonblank()*
 <		When {lnum} is invalid or there is no non-blank line at or
 		above it, zero is returned.
 
-							*remote_expr()*
+							*remote_expr()* *E449*
 remote_expr({server}, {string} [, {idvar}])
 		Send the {string} to {server}.  The string is sent as an
 		expression and the result is returned after evaluation.
@@ -1873,11 +1875,11 @@ remote_expr({server}, {string} [, {idvar}])
 		remote_read() is stored there.
 		See also |clientserver| |RemoteReply|.
 		{only available when compiled with the |+clientserver| feature}
-		Note: Any errors will be reported in the server and may mess
-		up the display.
+		Note: Any errors will cause a local error message to be issued
+		and the result will be the empty string.
 		Examples: >
 			:echo remote_expr("gvim", "2+2")
-			:echo remote_expr("gvim-001", "b:current_syntax")
+			:echo remote_expr("gvim1", "b:current_syntax")
 <
 
 remote_foreground({server})				*remote_foreground()*

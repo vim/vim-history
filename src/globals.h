@@ -1133,6 +1133,9 @@ EXTERN char_u e_zerocount[]	INIT(=N_("Zero count"));
 #ifdef FEAT_EVAL
 EXTERN char_u e_usingsid[]	INIT(=N_("E81: Using <SID> not in a script context"));
 #endif
+#ifdef FEAT_CLIENTSERVER
+EXTERN char_u e_invexprmsg[]	INIT(=N_("E449: Invalid expression received"));
+#endif
 
 /*
  * Optional Farsi support.  Include it here, so EXTERN and INIT are defined.

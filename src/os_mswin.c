@@ -1716,10 +1716,11 @@ HWND message_window = 0;	    /* window that's handling messsages */
 
 /* Communication is via WM_COPYDATA messages. The message type is send in
  * the dwData parameter. Types are defined here. */
-#define COPYDATA_KEYS	0
-#define COPYDATA_REPLY	1
-#define COPYDATA_EXPR	10
-#define COPYDATA_RESULT	11
+#define COPYDATA_KEYS		0
+#define COPYDATA_REPLY		1
+#define COPYDATA_EXPR		10
+#define COPYDATA_RESULT		11
+#define COPYDATA_ERROR_RESULT	12
 
 /* This is a structure containing a server HWND and its name. */
 struct server_id
@@ -1775,6 +1776,9 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	 *   COPYDATA_RESULT:
 	 *	A reply. We are a client, and a server has sent this message
 	 *	in response to a COPYDATA_EXPR.
+	 *   COPYDATA_ERROR_RESULT:
+	 *	A reply. We are a client, and a server has sent this message
+	 *	in response to a COPYDATA_EXPR that failed to evaluate.
 	 */
 	COPYDATASTRUCT	*data = (COPYDATASTRUCT*)lParam;
 	HWND		sender = (HWND)wParam;
@@ -1808,8 +1812,12 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    res = eval_to_string(data->lpData, NULL);
 	    --emsg_skip;
 	    if (res == NULL)
-		res = vim_strsave((char_u *)"");
-	    reply.dwData = COPYDATA_RESULT;
+	    {
+		res = vim_strsave(_(e_invexprmsg));
+		reply.dwData = COPYDATA_ERROR_RESULT;
+	    }
+	    else
+		reply.dwData = COPYDATA_RESULT;
 	    reply.lpData = res;
 	    reply.cbData = STRLEN(res) + 1;
 
@@ -1820,10 +1828,13 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case COPYDATA_REPLY:
 	case COPYDATA_RESULT:
+	case COPYDATA_ERROR_RESULT:
 	    if (data->lpData != NULL)
 	    {
 		save_reply(sender, data->lpData,
-					     data->dwData == COPYDATA_RESULT);
+			   (data->dwData == COPYDATA_REPLY ?  0 :
+			   (data->dwData == COPYDATA_RESULT ? 1 :
+							      2)));
 #ifdef FEAT_AUTOCMD
 		if (data->dwData == COPYDATA_REPLY)
 		{
@@ -2071,6 +2082,7 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
     HWND	target = findServer(name);
     COPYDATASTRUCT data;
     char_u	*retval = NULL;
+    int		retcode = 0;
 
     if (ptarget)
 	*(HWND *)ptarget = target;
@@ -2084,14 +2096,14 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
 	return -1;
 
     if (asExpr)
-	retval = serverGetReply(target, TRUE, TRUE, TRUE);
+	retval = serverGetReply(target, &retcode, TRUE, TRUE);
 
     if (result == NULL)
 	vim_free(retval);
     else
 	*result = retval; /* Caller assumes responsibility for freeing */
 
-    return 0;
+    return retcode;
 }
 
 /*
@@ -2119,7 +2131,7 @@ typedef struct
 {
     HWND	server;		/* server window */
     char_u	*reply;		/* reply string */
-    int		expr_result;	/* TRUE for COPYDATA_RESULT */
+    int		expr_result;	/* 0 for REPLY, 1 for RESULT 2 for error */
 }
 reply_T;
 
@@ -2155,13 +2167,14 @@ save_reply(HWND server, char_u *reply, int expr)
 
 /*
  * Get a reply from server "server".
- * When "expr" is TRUE, get the result of an expression, otherwise a
+ * When "expr_res" is non NULL, get the result of an expression, otherwise a
  * server2client() message.
+ * When non NULL, point to return code. 0 => OK, -1 => ERROR
  * If "remove" is TRUE, consume the message, the caller must free it then.
  * if "wait" is TRUE block until a message arrives (or the server exits).
  */
     char_u *
-serverGetReply(HWND server, int expr, int remove, int wait)
+serverGetReply(HWND server, int *expr_res, int remove, int wait)
 {
     int		i;
     char_u	*reply;
@@ -2177,10 +2190,13 @@ serverGetReply(HWND server, int expr, int remove, int wait)
 	for (i = 0; i < REPLY_COUNT; ++i)
 	{
 	    rep = REPLY_ITEM(i);
-	    if (rep->server == server && rep->expr_result == expr)
+	    if (rep->server == server
+		    && ((rep->expr_result != 0) == (expr_res != NULL)))
 	    {
 		/* Save the values we've found for later */
 		reply = rep->reply;
+		if (expr_res != NULL)
+		    *expr_res = rep->expr_result == 1 ? 0 : -1;
 
 		if (remove)
 		{
