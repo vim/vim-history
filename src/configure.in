@@ -1465,8 +1465,9 @@ AC_MSG_CHECKING([if strings.h can be included after string.h])
 cppflags_save=$CPPFLAGS
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 AC_TRY_COMPILE([
-#if defined(_AIX) && !defined(_NO_PROTO)
+#if defined(_AIX) && !defined(_AIX51) && !defined(_NO_PROTO)
 # define _NO_PROTO	/* like in os_unix.h, causes conflict for AIX (Winn) */
+			/* but don't do it on AIX 5.1 (Uribarri) */
 #endif
 #ifdef HAVE_XM_XM_H
 # include <Xm/Xm.h>	/* This breaks it for HP-UX 11 (Squassabia) */
