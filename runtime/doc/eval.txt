@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2002 May 12
+*eval.txt*      For Vim version 6.1.  Last change: 2002 Sep 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1176,6 +1176,7 @@ exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 		contains one of these:
 			&option-name	Vim option (only checks if it exists,
 					not if it really works)
+			+option-name	Vim option that works.
 			$ENVNAME	environment variable (could also be
 					done by comparing with an empty
 					string)

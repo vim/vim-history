@@ -2026,7 +2026,7 @@ eval7(arg, retvar, evaluate)
 
 /*
  * Get an option value.
- * "arg" points to the '&' before the option name.
+ * "arg" points to the '&' or '+' before the option name.
  * "arg" is advanced to character after the option name.
  * Return OK or FAIL.
  */
@@ -2041,6 +2041,7 @@ get_option_var(arg, retvar, evaluate)
     char_u	*stringval;
     int		opt_type;
     int		c;
+    int		working = (**arg == '+');    /* has("+option") */
     int		ret = OK;
     int		opt_flags;
 
@@ -2095,6 +2096,8 @@ get_option_var(arg, retvar, evaluate)
 	    retvar->var_val.var_string = stringval;
 	}
     }
+    else if (working && (opt_type == -2 || opt_type == -1))
+	ret = FAIL;
 
     *option_end = c;		    /* put back for error messages */
     *arg = option_end;
@@ -3409,7 +3412,7 @@ f_exists(argvars, retvar)
 	    vim_free(p);
 	}
     }
-    else if (*p == '&')			/* option */
+    else if (*p == '&' || *p == '+')			/* option */
 	n = (get_option_var(&p, NULL, TRUE) == OK);
     else if (*p == '*')			/* internal or user defined function */
     {
@@ -7555,7 +7558,7 @@ ex_execute(eap)
 
 /*
  * Skip over the name of an option: "&option", "&g:option" or "&l:option".
- * "arg" points to the "&" when called, to "option" when returning.
+ * "arg" points to the "&" or '+' when called, to "option" when returning.
  * Returns NULL when no option name found.  Otherwise pointer to the char
  * after the option name.
  */
