@@ -910,7 +910,7 @@ reg(paren, flagp)
     if (paren == REG_ZPAREN)
     {
 	if (regnzpar >= NSUBEXP)
-	    EMSG_RET_NULL(_(e_toomzbra));
+	    EMSG_RET_NULL(_("Too many \\z("));
 	parno = regnzpar;
 	regnzpar++;
 	ret = regnode(ZOPEN + parno);
@@ -920,7 +920,7 @@ reg(paren, flagp)
 	if (paren == REG_PAREN)
     {
 	if (regnpar >= NSUBEXP)
-	    EMSG_RET_NULL(_(e_toombra));
+	    EMSG_RET_NULL(_("Too many \\("));
 	parno = regnpar;
 	++regnpar;
 	ret = regnode(MOPEN + parno);
@@ -968,11 +968,14 @@ reg(paren, flagp)
 
     /* Check for proper termination. */
     if (paren != REG_NOPAREN && getchr() != Magic(')'))
+    {
 #ifdef FEAT_SYN_HL
-	EMSG_RET_NULL(paren == REG_ZPAREN ? _(e_toomzbra) : _(e_toombra))
-#else
-	EMSG_RET_NULL(_(e_toombra))
+	if (paren == REG_ZPAREN)
+	    EMSG_RET_NULL(_("Unmatched \\z("))
+	else
 #endif
+	    EMSG_RET_NULL(_("Unmatched \\("))
+    }
     else if (paren == REG_NOPAREN && peekchr() != NUL)
     {
 	if (curchr == Magic(')'))

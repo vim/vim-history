@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	automake Makefile.am
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last change:	2000 Nov 04
+" Last change:	2000 Dec 17
 
 
 " This script adds support for automake's Makefile.am format. It highlights
@@ -12,7 +12,7 @@
 
 
 " Read the Makefile syntax to start with
-source <sfile>:p:h/make.vim
+runtime syntax/make.vim
 
 syn match automakePrimary "^[A-Za-z0-9_]\+\(_PROGRAMS\|LIBRARIES\|_LIST\|_SCRIPTS\|_DATA\|_HEADERS\|_MANS\|_TEXINFOS\|_JAVA\|_LTLIBRARIES\)\s*="me=e-1
 syn match automakePrimary "^TESTS\s*="me=e-1

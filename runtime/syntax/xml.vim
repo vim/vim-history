@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Fre, 01 Dez 2000 17:37:53 +0100
+" Last Change:	Sam, 16 Dez 2000 19:01:49 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -43,7 +43,7 @@ syn region  xmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlE
 
 " punctuation (within attributes) e.g. <tag xml:foo.attribute ...>
 "                                              ^   ^
-syn match   xmlAttribPunct +[:.]+ display
+syn match   xmlAttribPunct +[:.]+ contained display
 
 
 " no highlighting for xmlEqual (xmlEqual has no highlighting group)
@@ -100,14 +100,13 @@ syn region   xmlEmptyTag
 " (should we provide a separate @xmlEndTagHook ?)
 "
 syn match   xmlEndTag
-    \ +</[^ /!?>"']\+>\@=+
+    \ +</[^ /!?>"']\+>+
     \ contained
     \ contains=@xmlTagHook
 
 
-" real (non-empty) elements with syntax-folding. Highlight only
-" the very last '>' with xmlEndTag. The rest is highlighted by
-" contained elements.
+" real (non-empty) elements with syntax-folding.
+" No highlighing, highlighing is done by contained elements.
 "
 " PROVIDES: @xmlRegionHook
 "
@@ -122,9 +121,11 @@ syn match   xmlEndTag
 " 
 syn region   xmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+
-    \ matchgroup=xmlEndTag end=+\(</\z1\)\@<=>+
+    \ end=+</\z1>+
     \ fold
     \ contains=xmlTag,xmlEndTag,xmlCdata,@xmlRegionCluster,xmlComment,xmlEntity,@xmlRegionHook
+    \ keepend
+    \ extend
 
 
 " empty tags. Just a container, no highlighting.
@@ -164,7 +165,9 @@ syn region  xmlCommentPart  contained start=+--+        end=+--+
 syn region    xmlCdata
     \ start=+<!\[CDATA\[+
     \ end=+]]>+
-    \ contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook keepend
+    \ contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
+    \ keepend
+    \ extend
 " using the following line instead leads to corrupt folding at CDATA regions
 " syn match    xmlCdata      +<!\[CDATA\[\_.\{-}]]>+  contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
 syn match    xmlCdataStart +<!\[CDATA\[+  contained contains=xmlCdataCdata

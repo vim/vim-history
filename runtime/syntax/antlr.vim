@@ -1,7 +1,7 @@
 " Vim syntax file
 " Antlr:	ANTLR, Another Tool For Language Recognition <www.antlr.org>
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" Last change:	2000 Nov 04
+" Last change:	2000 Dec 17
 " Original:	Comes from JavaCC.vim
 
 
@@ -11,7 +11,7 @@
 " Those files usually have the extension  *.jj
 
 " source the java.vim file
-source <sfile>:p:h/java.vim
+runtime syntax/java.vim
 
 "remove catching errors caused by wrong parenthesis (does not work in antlr
 "files) (first define them in case they have not been defined in java)

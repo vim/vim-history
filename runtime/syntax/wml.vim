@@ -2,7 +2,7 @@
 " Language:    WML
 " Maintainer:  Gerfried Fuchs <alfie@innocent.com>
 " URL:         http://alfie.ist.org/vim/syntax/wml.vim
-" Last Change: 2000 Nov 04
+" Last Change: 2000 Dec 17
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
@@ -10,7 +10,7 @@
 " Original Version: Craig Small <csmall@eye-net.com.au>
 
 " A lot of the web stuff looks like HTML so we load that first
-so $VIMRUNTIME/syntax/html.vim
+runtime syntax/syntax/html.vim
 
 if !exists("main_syntax")
   let main_syntax = 'wml'

@@ -175,7 +175,7 @@ do_cstag(eap)
     if (!ret)
     {
 	(void)EMSG(_("cstag: tag not found"));
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	g_do_tagpreview = 0;
 #endif
     }

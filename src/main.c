@@ -103,18 +103,18 @@ usage()
 #endif
 
     mch_msg(longVersion);
-    mch_msg(_("\nusage:"));
+    mch_msg(_("\n\nusage:"));
     for (i = 0; ; ++i)
     {
-	mch_msg(_(" vim [options] "));
+	mch_msg(_(" vim [arguments] "));
 	mch_msg(_(use[i]));
 	if (i == (sizeof(use) / sizeof(char_u *)) - 1)
 	    break;
 	mch_msg(_("\n   or:"));
     }
 
-    mch_msg(_("\n\nOptions:\n"));
-    main_msg(_("--\t\t\tEnd of options"));
+    mch_msg(_("\n\nArguments:\n"));
+    main_msg(_("--\t\t\tOnly file names after this"));
 #ifdef FEAT_OLE
     main_msg(_("-register\t\tRegister this gvim for OLE"));
     main_msg(_("-unregister\t\tUnregister gvim for OLE"));
@@ -151,17 +151,19 @@ usage()
     main_msg(_("-F\t\t\tstart in Farsi mode"));
 #endif
     main_msg(_("-T <terminal>\tSet terminal type to <terminal>"));
-    main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
-    main_msg(_("+\t\t\tStart at end of file"));
-    main_msg(_("+<lnum>\t\tStart at line <lnum>"));
-    main_msg(_("-c <command>\t\tExecute <command> first"));
-    main_msg(_("-s <scriptin>\tRead commands from script file <scriptin>"));
-    main_msg(_("-w <scriptout>\tAppend commands to script file <scriptout>"));
-    main_msg(_("-W <scriptout>\tWrite commands to script file <scriptout>"));
     main_msg(_("-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"));
 #ifdef FEAT_GUI
     main_msg(_("-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"));
 #endif
+    main_msg(_("--noplugin\t\tDon't load plugin scripts"));
+    main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
+    main_msg(_("+\t\t\tStart at end of file"));
+    main_msg(_("+<lnum>\t\tStart at line <lnum>"));
+    main_msg(_("-c <command>\t\tExecute <command> after loading the first file"));
+    main_msg(_("-S <session>\tExecute commands in file <session> after loading the first file"));
+    main_msg(_("-s <scriptin>\tRead Normal mode commands from file <scriptin>"));
+    main_msg(_("-w <scriptout>\tAppend all typed commands to file <scriptout>"));
+    main_msg(_("-W <scriptout>\tWrite all typed commands to file <scriptout>"));
 #ifdef FEAT_CRYPT
     main_msg(_("-x\t\t\tEdit encrypted files"));
 #endif
@@ -176,10 +178,10 @@ usage()
 
 #ifdef FEAT_GUI_X11
 # ifdef FEAT_GUI_MOTIF
-    mch_msg(_("\nOptions recognised by gvim (Motif version):\n"));
+    mch_msg(_("\nArguments recognised by gvim (Motif version):\n"));
 # else
 #  ifdef FEAT_GUI_ATHENA
-    mch_msg(_("\nOptions recognised by gvim (Athena version):\n"));
+    mch_msg(_("\nArguments recognised by gvim (Athena version):\n"));
 #  endif
 # endif
     main_msg(_("-display <display>\tRun vim on <display>"));
@@ -202,12 +204,12 @@ usage()
     main_msg(_("-xrm <resource>\tSet the specified resource"));
 #endif /* FEAT_GUI_X11 */
 #if defined(FEAT_GUI) && defined(RISCOS)
-    mch_msg(_("\nOptions recognised by gvim (RISC OS version):\n"));
+    mch_msg(_("\nArguments recognised by gvim (RISC OS version):\n"));
     main_msg(_("--columns <number>\tInitial width of window in columns"));
     main_msg(_("--rows <number>\tInitial height of window in rows"));
 #endif
 #ifdef FEAT_GUI_GTK
-    mch_msg(_("\nOptions recognised by gvim (GTK+ version):\n"));
+    mch_msg(_("\nArguments recognised by gvim (GTK+ version):\n"));
     main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
     main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
     main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
@@ -482,7 +484,7 @@ main
 	}
 
 	/*
-	 * Option argument.
+	 * Optional argument.
 	 */
 	else if (argv[0][0] == '-' && !had_minmin)
 	{
@@ -520,7 +522,7 @@ main
 	    case '-':		/* "--" don't take any more options */
 				/* "--help" give help message */
 				/* "--version" give version message */
-				/* "--noplugins" skip plugins */
+				/* "--noplugin[s]" skip plugins */
 		if (STRICMP(argv[0] + argv_idx, "help") == 0)
 		    usage();
 		if (STRICMP(argv[0] + argv_idx, "version") == 0)
@@ -529,7 +531,7 @@ main
 		    list_version();
 		    mch_windexit(1);
 		}
-		if (STRICMP(argv[0] + argv_idx, "noplugins") == 0)
+		if (STRNICMP(argv[0] + argv_idx, "noplugin", 8) == 0)
 		    p_lpl = FALSE;
 		else
 		{
@@ -706,6 +708,7 @@ main
 		break;
 
 	    case 'c':		/* "-c {command}" execute command */
+	    case 'S':		/* "-S {file}" execute Vim script */
 	    case 'd':		/* "-d {device}" device (for Amiga) */
 	    case 'i':		/* "-i {viminfo}" use for viminfo */
 	    case 'T':		/* "-T {terminal}" terminal name */
@@ -739,9 +742,21 @@ main
 		switch (c)
 		{
 		case 'c':	/* "-c {command}" execute command */
+		case 'S':	/* "-S {file}" execute Vim script */
 		    if (n_commands >= MAX_ARG_CMDS)
 			mainerr(ME_EXTRA_CMD, NULL);
-		    commands[n_commands++] = (char_u *)argv[0];
+		    if (c == 'S')
+		    {
+			char_u *p;
+
+			p = alloc((unsigned)(STRLEN(argv[0]) + 4));
+			if (p == NULL)
+			    mch_windexit(2);
+			sprintf((char *)p, "so %s", argv[0]);
+			commands[n_commands++] = p;
+		    }
+		    else
+			commands[n_commands++] = (char_u *)argv[0];
 		    break;
 
 	    /*	case 'd':   This is handled in mch_check_win() */
@@ -1772,6 +1787,9 @@ getout(r)
 #endif
 #ifdef FEAT_PERL
     perl_end();
+#endif
+#if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
+    iconv_end();
 #endif
 
     mch_windexit(r);

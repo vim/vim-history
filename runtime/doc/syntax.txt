@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0p.  Last change: 2000 Dec 10
+*syntax.txt*    For Vim version 6.0q.  Last change: 2000 Dec 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1589,6 +1589,7 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 :sy[ntax] region {group-name} [{options}]
 		[matchgroup={group_name}]
 		[keepend]
+		[extend]
 		[excludenl]
 		start={start_pattern} ..
 		[skip={skip_pattern}]
@@ -1608,6 +1609,8 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	keepend			Don't allow contained matches to go past a
 				match with the end pattern.  See
 				|:syn-keepend|.
+	extend			Override a "keepend" for an item this region
+				is contained in. See |:syn-extend|.
 	excludenl		Don't make a pattern with the end-of-line "$"
 				extend a containing match or item.  Only
 				useful for end patterns.  Must be given before
@@ -1695,6 +1698,14 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 <	Here the htmlItem item does not make the htmlRef item continue
 	furthere, it is only used to highlight the <> items.  The htmlScript
 	item does extend the htmlRef item.
+
+	Another example: >
+   :syn region xmlFold start="<a>" end="</a>" fold transparent keepend extend
+<	This defines a region with "keepend", so that its end cannot be
+	changed by contained items, like when the "</a>" is matched to
+	highlight it differently.  But when the xmlFold region is nested (it
+	includes itself), the "extend" applies, so that the "</a>" of a nested
+	region only ends that region, and not the one it is contained in.
 
 							*:syn-excludenl*
 	When a pattern for a match or end pattern of a region includes a '$'

@@ -1,7 +1,7 @@
 " DTML syntax file
 " Language:	        Zope's Dynamic Template Markup Language
 " Maintainer:	    Jean Jordaan <jean@mosaicsoftware.com> (njj)
-" Last change:	    2000 Nov 04
+" Last change:	    2000 Dec 17
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -13,7 +13,7 @@
 syn clear
 
 " First load the HTML syntax
-source <sfile>:p:h/html.vim
+runtime syntax/html.vim
 
 syn case match
 

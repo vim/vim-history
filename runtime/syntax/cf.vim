@@ -10,7 +10,7 @@
 syntax clear
 
 " Use all the stuff from the original html syntax file.
-source <sfile>:p:h/html.vim
+runtime syntax/html.vim
 
 " Tag names.
 syn keyword cfTagName contained cfabort cfapplet cfapplication cfassociate

@@ -58,6 +58,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'bex'	options.txt	/*'bex'*
 'bf'	vi_diff.txt	/*'bf'*
 'bg'	options.txt	/*'bg'*
+'bh'	options.txt	/*'bh'*
 'bin'	options.txt	/*'bin'*
 'binary'	options.txt	/*'binary'*
 'biosk'	options.txt	/*'biosk'*
@@ -72,6 +73,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'bsdir'	options.txt	/*'bsdir'*
 'bsk'	options.txt	/*'bsk'*
 'bt'	options.txt	/*'bt'*
+'bufhidden'	options.txt	/*'bufhidden'*
 'buftype'	options.txt	/*'buftype'*
 'cb'	options.txt	/*'cb'*
 'cc'	options.txt	/*'cc'*
@@ -280,6 +282,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'ls'	options.txt	/*'ls'*
 'lsp'	options.txt	/*'lsp'*
 'lz'	options.txt	/*'lz'*
+'ma'	options.txt	/*'ma'*
 'magic'	options.txt	/*'magic'*
 'makeef'	options.txt	/*'makeef'*
 'makeprg'	options.txt	/*'makeprg'*
@@ -304,6 +307,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'mod'	options.txt	/*'mod'*
 'modeline'	options.txt	/*'modeline'*
 'modelines'	options.txt	/*'modelines'*
+'modifiable'	options.txt	/*'modifiable'*
 'modified'	options.txt	/*'modified'*
 'more'	options.txt	/*'more'*
 'mouse'	options.txt	/*'mouse'*
@@ -406,11 +410,13 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'noloadplugins'	options.txt	/*'noloadplugins'*
 'nolpl'	options.txt	/*'nolpl'*
 'nolz'	options.txt	/*'nolz'*
+'noma'	options.txt	/*'noma'*
 'nomagic'	options.txt	/*'nomagic'*
 'nomh'	options.txt	/*'nomh'*
 'noml'	options.txt	/*'noml'*
 'nomod'	options.txt	/*'nomod'*
 'nomodeline'	options.txt	/*'nomodeline'*
+'nomodifiable'	options.txt	/*'nomodifiable'*
 'nomodified'	options.txt	/*'nomodified'*
 'nomore'	options.txt	/*'nomore'*
 'nomousef'	options.txt	/*'nomousef'*
@@ -942,7 +948,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 --	starting.txt	/*--*
 ---	starting.txt	/*---*
 --help	starting.txt	/*--help*
---noplugins	starting.txt	/*--noplugins*
+--noplugin	starting.txt	/*--noplugin*
 --version	starting.txt	/*--version*
 -C	starting.txt	/*-C*
 -E	starting.txt	/*-E*
@@ -951,6 +957,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 -L	starting.txt	/*-L*
 -N	starting.txt	/*-N*
 -R	starting.txt	/*-R*
+-S	starting.txt	/*-S*
 -T	starting.txt	/*-T*
 -U	starting.txt	/*-U*
 -V	starting.txt	/*-V*
@@ -2999,6 +3006,7 @@ error-messages	message.txt	/*error-messages*
 errorformat	quickfix.txt	/*errorformat*
 errorformat-Jikes	quickfix.txt	/*errorformat-Jikes*
 errorformat-LaTeX	quickfix.txt	/*errorformat-LaTeX*
+errorformat-ant	quickfix.txt	/*errorformat-ant*
 errorformat-changed	version4.txt	/*errorformat-changed*
 errorformat-javac	quickfix.txt	/*errorformat-javac*
 errorformat-multi-line	quickfix.txt	/*errorformat-multi-line*
@@ -3013,6 +3021,7 @@ ex-cmd-index	index.txt	/*ex-cmd-index*
 ex-edit-index	index.txt	/*ex-edit-index*
 ex:	options.txt	/*ex:*
 exclusive	motion.txt	/*exclusive*
+executable()	eval.txt	/*executable()*
 execute-menus	gui.txt	/*execute-menus*
 exim	starting.txt	/*exim*
 exists()	eval.txt	/*exists()*
@@ -3021,7 +3030,6 @@ expand-env	options.txt	/*expand-env*
 expand-environment-var	options.txt	/*expand-environment-var*
 expl-starting	pi_expl.txt	/*expl-starting*
 explorer-delete	pi_expl.txt	/*explorer-delete*
-explorer-settings	pi_expl.txt	/*explorer-settings*
 expr	eval.txt	/*expr*
 expr-!	eval.txt	/*expr-!*
 expr-!=	eval.txt	/*expr-!=*
@@ -3162,6 +3170,8 @@ g	index.txt	/*g*
 g#	pattern.txt	/*g#*
 g$	motion.txt	/*g$*
 g&	change.txt	/*g&*
+g'	motion.txt	/*g'*
+g'a	motion.txt	/*g'a*
 g0	motion.txt	/*g0*
 g8	various.txt	/*g8*
 g:explDateFormat	pi_expl.txt	/*g:explDateFormat*
@@ -3200,6 +3210,8 @@ g_CTRL-A	various.txt	/*g_CTRL-A*
 g_CTRL-G	editing.txt	/*g_CTRL-G*
 g_CTRL-H	visual.txt	/*g_CTRL-H*
 g_CTRL-]	tagsearch.txt	/*g_CTRL-]*
+g`	motion.txt	/*g`*
+g`a	motion.txt	/*g`a*
 ga	various.txt	/*ga*
 gd	pattern.txt	/*gd*
 ge	motion.txt	/*ge*
@@ -4056,6 +4068,7 @@ sniff-commands	if_sniff.txt	/*sniff-commands*
 sniff-compiling	if_sniff.txt	/*sniff-compiling*
 sniff-intro	if_sniff.txt	/*sniff-intro*
 space	intro.txt	/*space*
+special-buffers	windows.txt	/*special-buffers*
 speed-up	tips.txt	/*speed-up*
 splitfind	windows.txt	/*splitfind*
 splitview	windows.txt	/*splitview*

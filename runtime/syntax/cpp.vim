@@ -1,13 +1,13 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ccshan@post.harvard.edu>
-" Last change:	2000 Nov 04
+" Last change:	2000 Dec 17
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+runtime syntax/c.vim
 
 " C++ extentions
 

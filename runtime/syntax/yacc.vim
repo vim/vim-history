@@ -1,13 +1,17 @@
 " Vim syntax file
 " Language:	Yacc
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	July 6, 1999
+" Last Change:	December 13, 1999
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+if version >= 600
+  runtime syntax/c.vim
+else
+  so <sfile>:p:h/c.vim
+endif
 
 " Clusters
 syn cluster	yaccActionGroup	contains=yaccDelim,cInParen,cTodo,cIncluded,yaccDelim,yaccCurlyError,yaccUnionCurly,yaccUnion,cUserLabel,cOctalZero,cCppOut2,cCppSkip,cErrInBracket,cErrInParen,cOctalError,cCommentStartError,cParenError

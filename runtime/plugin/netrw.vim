@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-"  Last Change: October 31, 2000
+"  Last Change: December 5, 2000
 "  Maintainer:  Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  Version:     2.06
+"  Version:     2.07
 "
 "  rcp, ftp support by C Campbell <cec@NgrOyphSon.gPsfAc.nMasa.gov>
 "  scp  support by raf            <raf@comdyn.com.au>
@@ -27,7 +27,7 @@
 
 " User And Password Changing:
 "  Attempts to use ftp will prompt you for a user-id and a password.
-"  These will be saved in netrw_uid and netrw_passwd
+"  These will be saved in g:netrw_uid and g:netrw_passwd
 "  Subsequent uses of ftp will re-use those.  If you need to use
 "  a different user id and/or password, you'll want to
 "  call NetUserPass() first.
@@ -39,8 +39,8 @@
 " Variables:
 "    b:netrw_lastfile : last file Network-read/written retained on 
 "                       per-buffer basis
-"    netrw_uid        : (ftp) user id,      retained on a per-session basis
-"    netrw_passwd     : (ftp) password,     retained on a per-session basis
+"    g:netrw_uid        : (ftp) user id,      retained on a per-session basis
+"    g:netrw_passwd     : (ftp) password,     retained on a per-session basis
 
 "  This version of <netrw.vim> borrows some ideas from Michael Geddes
 "  in the "invisible password" input code.
@@ -78,11 +78,20 @@ endif
 
 " ------------------------------------------------------------------------
 
-" NetRead: Nread:
+" NetRead: responsible for reading a file over the net
 function! s:NetRead(...)
 " echo "DBG: NetRead(a:1<".a:1.">) {"
 
  " Get Temporary Filename
+ let cinkeep=&cin
+ let aikeep=&ai
+ let cinokeep=&cino
+ let comkeep=&com
+ set nocin noai
+ set cino=
+ set com=
+
+ " get temporary file
  let tmpfile = tempname()
 
  " Special Exception: if a file is named "0r", then
@@ -112,10 +121,14 @@ function! s:NetRead(...)
 
    " Reconstruct Choice if choice starts with '"'
    if match(choice,"?") == 0
-    echo "Usage:"
-	echo "  :Nread machine:file                       uses rcp"
-	echo "  :Nread \"machine file\"                     uses ftp with <.netrc>"
-	echo "  :Nread \"machine id password file\"         uses ftp"
+    echo "NetRead Usage:"
+    echo ":Nread machine:file                  uses rcp"
+    echo ":Nread \"machine file\"                uses ftp with <.netrc>"
+    echo ":Nread \"machine id password file\"    uses ftp"
+    echo ":Nread ftp://machine/file            uses ftp  (autodetects <.netrc>)"
+    echo ":Nread http://[user@]machine/file    uses http (wget)"
+    echo ":Nread rcp://machine/file            uses rcp"
+    echo ":Nread scp://[user@]machine/file     uses scp"
 	break
    elseif match(choice,"^\"") != -1
 "    echo "DBG: reconstructing choice"
@@ -160,7 +173,7 @@ function! s:NetRead(...)
   elseif s:netrw_method == 3		" read with ftp + machine, id, passwd, and fname
 "   echo "DBG: read via ftp+mipf (method #3)"
 "   echo "DBG: this line gets wiped out"
-   exe "norm mzouser ".netrw_uid." ".netrw_passwd."\<cr>ascii\<cr>get ".s:netrw_fname." ".tmpfile."\<esc>"
+   exe "norm mzouser ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>get ".s:netrw_fname." ".tmpfile."\<esc>"
 
    if has("win32")
     exe "norm o\<esc>my"
@@ -200,15 +213,24 @@ function! s:NetRead(...)
  endwhile
 
  " cleanup
- unlet s:netrw_method
- unlet s:netrw_machine
- unlet s:netrw_fname
+" echo "DBG NetRead: cleanup"
+ if exists("s:netrw_method")
+   unlet s:netrw_method
+   unlet s:netrw_machine
+   unlet s:netrw_fname
+ endif
+ let &cin  = cinkeep
+ let &ai   = aikeep
+ let &cino = cinokeep
+ let &com  = comkeep
 
 " echo "DBG: return NetRead }"
 endfunction
 " end of NetRead
 
-" Function to read file "fname" with command "readcmd".
+" ------------------------------------------------------------------------
+
+" NetGetFile: Function to read file "fname" with command "readcmd".
 " Takes care of deleting the last line when the buffer was emtpy.
 " Deletes the file "fname".
 function! s:NetGetFile(readcmd, fname)
@@ -217,6 +239,7 @@ function! s:NetGetFile(readcmd, fname)
     let dodel = 1
   endif
   exe a:readcmd . v:cmdarg . " " . a:fname
+"  exe a:readcmd . " " . a:fname
   if a:readcmd[0] == '0' && dodel && getline("$") == ""
     $d
     1
@@ -226,9 +249,18 @@ endfun
 
 " ------------------------------------------------------------------------
 
-" NetWrite: Nwrite:
+" NetWrite: responsible for writing a file over the net
 function! s:NetWrite(...) range
 " echo "DBG: NetWrite(a:0=".a:0.") {"
+
+ " option handling
+ let cinkeep=&cin
+ let aikeep=&ai
+ let cinokeep=&cino
+ let comkeep=&com
+ set nocin noai
+ set cino=
+ set com=
 
  " Get Temporary Filename
  let tmpfile    = tempname()
@@ -242,6 +274,7 @@ function! s:NetWrite(...) range
 
  " write (selected portion of) file to temporary
  exe a:firstline . "," . a:lastline . "w!" . v:cmdarg . " " . tmpfile
+" exe a:firstline . "," . a:lastline . "w!" . " " . tmpfile
 
  while ichoice <= a:0
 
@@ -255,10 +288,13 @@ function! s:NetWrite(...) range
 
    " Reconstruct Choice if choice starts with '"'
    if match(choice,"?") == 0
-    echo "Usage:"
-	echo "  :Nwrite machine:file                       uses rcp"
-	echo "  :Nwrite \"machine file\"                     uses ftp with <.netrc>"
-	echo "  :Nwrite \"machine id password file\"         uses ftp"
+    echo "NetWrite Usage:"
+    echo ":Nwrite machine:file                  uses rcp"
+    echo ":Nwrite \"machine file\"                uses ftp with <.netrc>"
+    echo ":Nwrite \"machine id password file\"    uses ftp"
+    echo ":Nwrite ftp://machine/file          uses ftp  (autodetects <.netrc>)"
+    echo ":Nwrite rcp://machine/file          uses rcp"
+    echo ":Nwrite scp://[user@]machine/file   uses scp"
 	break
    elseif match(choice,"^\"") != -1
     if match(choice,"\"$") != -1
@@ -297,21 +333,21 @@ function! s:NetWrite(...) range
 
   elseif s:netrw_method == 3	" write with ftp + machine, id, passwd, and fname
    if has("win32")
-    exe "norm mzouser ".netrw_uid." ".netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
+    exe "norm mzouser ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
     exe "'z+1,.!ftp -i -n " . s:netrw_machine
 	norm u
    elseif filereadable(expand("$HOME/.netrc"))
     " DON'T use <.netrc>, even though it exists
-    exe "norm mzouser ".netrw_uid." ".netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
+    exe "norm mzouser ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
     exe "'z+1,.!ftp -i -n " . s:netrw_machine
    else
     " ordinary ftp
-    exe "norm mzouser ".netrw_uid." ".netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
+    exe "norm mzouser ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".s:netrw_fname."\<esc>"
     exe "'z+1,.!ftp -i " . s:netrw_machine
    endif
    " save choice/id/password for future use
    let b:netrw_lastfile = choice
-   let netrw_uid     = netrw_uid
+   let g:netrw_uid     = g:netrw_uid
 
   elseif     s:netrw_method == 4	" write with scp
    exe "!scp " . tmpfile . " " . s:netrw_machine . ":" . s:netrw_fname
@@ -323,10 +359,21 @@ function! s:NetWrite(...) range
  endwhile
 
  " cleanup
+" echo "DBG NetWrite: cleanup"
  let result=delete(tmpfile)
- unlet s:netrw_method
- unlet s:netrw_machine
- unlet s:netrw_fname
+ if exists("s:netrw_method")
+   unlet s:netrw_method
+   unlet s:netrw_machine
+   unlet s:netrw_fname
+ endif
+ let &cin  = cinkeep
+ let &ai   = aikeep
+ let &cino = cinokeep
+ let &com  = comkeep
+
+ if a:firstline == 1 && a:lastline == line("$")
+   set nomod
+ endif
 
 " echo "DBG: return NetWrite }"
 endfunction
@@ -350,8 +397,8 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 
  " Patterns:
  " mipf  : a:machine a:id password filename  Use ftp
- " mf    : a:machine filename                Use ftp + <.netrc> or netrw_uid netrw_passwd
- " ftpurm: ftp://host/filename               Use ftp + <.netrc> or netrw_uid netrw_passwd
+ " mf    : a:machine filename                Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
+ " ftpurm: ftp://host/filename               Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
  " rcpurm: rcp://host/filename               Use rcp
  " rcphf : host:filename                     Use rcp
  " scpurm: scp://[user@]host/filename        Use scp
@@ -391,17 +438,17 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 "  echo "DBG: NetMethod: ftp://..."
   let s:netrw_machine= substitute(a:choice,ftpurm,'\1',"")
   let s:netrw_fname  = substitute(a:choice,ftpurm,'\2',"")
-  if exists("netrw_uid") && exists("netrw_passwd")
+  if exists("g:netrw_uid") && exists("g:netrw_passwd")
    let s:netrw_method = 3
   else
    if filereadable(expand("$HOME/.netrc"))
 	 let s:netrw_method= 2
    else
-     if !exists("netrw_uid") || netrw_uid == ""
+     if !exists("g:netrw_uid") || g:netrw_uid == ""
        call NetUserPass()
-	 elseif !exists("netrw_passwd") || netrw_passwd == ""
-       call NetUserPass(netrw_uid)
-	 " else just use current netrw_uid and netrw_passwd
+	 elseif !exists("g:netrw_passwd") || g:netrw_passwd == ""
+       call NetUserPass(g:netrw_uid)
+	 " else just use current g:netrw_uid and g:netrw_passwd
 	 endif
 	 let s:netrw_method= 3
 	endif
@@ -423,14 +470,14 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 "  echo "DBG: NetMethod: (ftp) host id pass file"
   let s:netrw_method  = 3
   let s:netrw_machine = substitute(a:choice,mipf,'\1',"")
-  let netrw_uid     = substitute(a:choice,mipf,'\2',"")
-  let netrw_passwd  = substitute(a:choice,mipf,'\3',"")
+  let g:netrw_uid     = substitute(a:choice,mipf,'\2',"")
+  let g:netrw_passwd  = substitute(a:choice,mipf,'\3',"")
   let s:netrw_fname   = substitute(a:choice,mipf,'\4',"")
 
  " Issue an ftp: "hostname [path/]filename"
  elseif match(a:choice,mf) == 0
 "  echo "DBG: NetMethod: (ftp) host file"
-  if exists("netrw_uid") && exists("netrw_passwd")
+  if exists("g:netrw_uid") && exists("g:netrw_passwd")
    let s:netrw_method  = 3;
    let s:netrw_machine = substitute(a:choice,mf,'\1',"")
    let s:netrw_fname   = substitute(a:choice,mf,'\2',"")
@@ -445,11 +492,11 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 " echo "DBG: NetMethod: a:choice       <".a:choice.">"
 " echo "DBG: NetMethod: s:netrw_method <".s:netrw_method.">"
 " echo "DBG: NetMethod:   s:netrw_machine<".s:netrw_machine.">"
-" if exists("netrw_uid")		" DBG
-"  echo "DBG: NetMethod: netrw_uid     <".netrw_uid.">"
+" if exists("g:netrw_uid")		" DBG
+"  echo "DBG: NetMethod: g:netrw_uid     <".g:netrw_uid.">"
 " endif							" DBG
-" if exists("netrw_passwd")	" DBG
-"  echo "DBG: NetMethod: netrw_passwd  <".netrw_passwd.">"
+" if exists("g:netrw_passwd")	" DBG
+"  echo "DBG: NetMethod: g:netrw_passwd  <".g:netrw_passwd.">"
 " endif							" DBG
 " echo "DBG: NetMethod: s:netrw_fname    <".s:netrw_fname.">"
 " echo "DBG: NetMethod return }"
@@ -466,12 +513,12 @@ function! NetUserPass(...)
  " get/set userid
  if a:0 == 0
 "  echo "DBG: NetUserPass(a:0<".a:0.">) {"
-  if !exists("netrw_uid") || netrw_uid == ""
-   let netrw_uid= input('Enter username: ')
+  if !exists("g:netrw_uid") || g:netrw_uid == ""
+   let g:netrw_uid= input('Enter username: ')
   endif
  else
 "  echo "DBG: NetUserPass(a:1<".a:1.">) {"
-  let netrw_uid= a:1
+  let g:netrw_uid= a:1
  endif
 
  " get password -- if the user has specified both foreground and
@@ -479,13 +526,13 @@ function! NetUserPass(...)
  "                 group, the password will be obtained invisibly.
  if a:0 <= 1
 "  echo "DBG: a:0=".a:0." case <=1:"
-  if !exists("netrw_passwd")
+  if !exists("g:netrw_passwd")
    let _ch  = &ch|set ch=2
    let _gfg = synIDattr(hlID("Normal"), 'fg', 'gui')
    let _gbg = synIDattr(hlID("Normal"), 'bg', 'gui')
    let _cfg = synIDattr(hlID("Normal"), 'fg', 'cterm')
    let _cbg = synIDattr(hlID("Normal"), 'bg', 'cterm')
-   echo "\nEnter ".netrw_uid."'s Password:"
+   echo "\nEnter ".g:netrw_uid."'s Password:"
 
    " HIDE BEGIN
    if has("gui_running") " gui
@@ -504,7 +551,7 @@ function! NetUserPass(...)
    endif
    " HIDE END
 
-   let netrw_passwd= input('')
+   let g:netrw_passwd= input('')
 
    " HIDE BEGIN
    " restore Normal highlighting
@@ -526,7 +573,7 @@ function! NetUserPass(...)
  else
 "  echo "DBG: a:0=".a:0." case >1: a:2<".a:2.">"
   " user has also specified the password
-  let netrw_passwd=a:2
+  let g:netrw_passwd=a:2
  endif
 " echo "DBG: return NetUserPass }"
 endfunction

@@ -2,13 +2,13 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2000 Nov 04
+" Last change:	2000 Dec 17
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 " Source HTML syntax
-source <sfile>:p:h/html.vim
+runtime syntax/html.vim
 
 " Next syntax items are case-sensitive
 syn case match

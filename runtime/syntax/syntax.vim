@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 17
+" Last Change:	2000 Dec 17
 
 " This file is used for ":syntax on".
 " It installs the autocommands and starts highlighting for all buffers.
@@ -16,7 +16,7 @@ if exists("syntax_on") || exists("syntax_manual")
 endif
 
 " Load the Syntax autocommands and set the default methods for highlighting.
-so <sfile>:p:h/synload.vim
+runtime syntax/synload.vim
 
 " Load the FileType autocommands if not done yet.
 if exists("did_load_filetypes")

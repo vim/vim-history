@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
+*todo.txt*      For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -194,7 +194,9 @@ A. Folding:
 
 
 B. UTF-8 support:
--   Do latin-1 to UTF-8 conversion internally.
+-   When reading stdin, it's not possible to rewind and try another
+    conversion.  Read the file with a one-to-one conversion (binary) and use
+    the current buffer contents to convert from?
 -   Support ++cc=name for ":w".
 -   Big change: Support editing UTF-8 text while the terminal only supports
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
@@ -247,6 +249,8 @@ C.  Multi-line regexp patterns
     including non-empty lines before it).
 
 D. Vertical window split:
+-   Add a flag in 'guioptions' to make a scrollbar use the full height and
+    work for the current window.  Makes it possible to scroll inner windows.
 -   ";vertical resize" for width.
 -   Make window-rotate commands also work with vertically split windows.  Be
     able to move the preview window to a vertically split window.
@@ -465,9 +469,6 @@ Various recent:
     term I/O.
 -   Check libcall() and libcallnr() for Win32.  No crash when function returns
     1 or -1?
-8   'buftype': also use it for tag preview window.  Remove w_preview flag.
-    Add "autohide" buftype: becomes hidden when closed.  Like a scratch buffer
-    but the contents is kept hidden.  Or call it "memory"?
 9   ":cwindow!" always open quickfix window, ":cwindow" only open it if there
     are recognized errors.  ":cclose" to close quickfix window?
 8   For ":silent !cmd":

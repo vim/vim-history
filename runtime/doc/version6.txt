@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0p.  Last change: 2000 Dec 10
+*version6.txt*  For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -379,6 +379,8 @@ Many new items for Multi-byte support:
   2000), which uses ucs-2le files with a BOM (e.g., when exporting the
   registry).
 - Win32: Typing multi-byte characters without IME. (Alexander Smishlajev)
+- Win32 with Mingw: compile with iconv library. (Ron Aaron)
+- Win32 with MSVC: dynamically load iconv.dll library. (Muraoka Taro)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -499,11 +501,13 @@ This was originally made to work with Sun Visual Workshop. (Gordon Prieur)
 Buffer types						*new-buftype*
 ------------
 
-'buftype' option: special buffer type.
-"quickfix": Shows the error list, allowing to jump to the error location.
-"nofile": A buffer that's not associated with any file.
-"scratch": A buffer that's not associated with any file and gets deleted as
-soon as there is no window left that displays its contents
+The 'buftype' and 'bufhidden' option have been added.  They can be set to have
+different kinds of buffers.  For example:
+- 'buftype' = "quickfix": buffer with error list
+- 'buftype' = "nofile" and 'bufhidden' = 'delete": scratch buffer that will be
+  deleted as soon as there is no window displaying it.
+
+'bufhidden' can be used to overrule the 'hidden' option for one buffer.
 
 
 Ports							*ports-6*
@@ -618,11 +622,18 @@ Normal mode commands: ~
 "gi"		Jump to the ^ mark and start Insert mode.  Also works when the
 		mark is just after the line. |gi|
 
+"g'm" and "g`m"
+		Jump to a mark without changing the jumplist.  Now you can use
+		g`" to jump to the last known position in a file without side
+		effects.  Also useful in mappings.
+
 Options: ~
 
 'debug'		When set to "msg" it will print error messages that would
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
+'modifiable'	When off, it is impossible to make changes to a buffer.
+
 
 Ex commands: ~
 
@@ -682,7 +693,8 @@ Store the ^ and . marks in the viminfo file.  Makes it possible to jump to the
 last insert position or changed text.
 
 
-New functions:
+New functions: ~
+executable()	Checks if a program or batch script can be executed.
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
 getbufvar()	gets the value of an option or local variable in a buffer (Ron
@@ -720,6 +732,9 @@ for NT systems with multiple users.
 
 A double-click of the mouse on a character that has a "%" match selects from
 that character to the match.  Similar to "v%".
+
+"-S session.vim" argument: Source a script file when starting up.  Convenient
+way to start Vim with a session file.
 
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
@@ -816,6 +831,9 @@ Win32 console version:
 - Set the window icon to Vim's icon (only for Windows 2000).  While executing
   a shell command, modify the window title to show this.  When exiting,
   restore the cursor position too.  (Craig Barkhouse)
+
+Win32: When 'shell' is "cmd" or "cmd.exe", set 'shellredir' to redirect stderr
+too.  Also check for the Unix shell names.
 
 Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
 (Craig Barkhouse)
@@ -1247,5 +1265,22 @@ OS/2: Could not find the tags file.  mch_expand_wildcards() added another
 slash to a directory name.
 
 When using ">>" the `] mark was not in the last column.
+
+When Vim was compiled without menu support, filetype.vim was still trying to
+source the menu.vim script. (Rafael Garcia-Suarez)
+
+":ptag" added an item to the tag stack.
+
+Win32 IME: "gr" didn't use IME mode.
+
+In the "vim --help" message the term "options" was used for arguments.  That's
+confusing, call them "arguments".
+
+When there are two windows, and a BufUnload autocommand for closing window #1
+closed window #2, Vim would crash.
+
+When there is a preview window and only one other window, ":q" wouldn't exit.
+
+In Insert mode, when cancelling a digraph with ESC, the '?' wasn't removed.
 
  vim:tw=78:

@@ -53,6 +53,7 @@ static void last_status_rec __ARGS((frame_t *fr, int statusline));
 
 static win_t	*prevwin = NULL;	/* previous window */
 #endif /* FEAT_WINDOWS */
+static void win_setheight_win __ARGS((int height, win_t *win));
 static win_t *win_alloc __ARGS((win_t *after));
 static void win_new_height __ARGS((win_t *, int));
 
@@ -362,12 +363,14 @@ do_window(nchar, Prenum)
 #endif
 
 /* jump to tag and split window if tag exists */
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     case '}':
 		if (Prenum)
 		    g_do_tagpreview = Prenum;
 		else
 		    g_do_tagpreview = p_pvh;
 		/*FALLTHROUGH*/
+#endif
     case ']':
     case Ctrl_RSB:
 #ifdef FEAT_VISUAL
@@ -441,6 +444,7 @@ do_window(nchar, Prenum)
 #endif
 		switch (xchar)
 		{
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 		    case '}':
 			xchar = Ctrl_RSB;
 			if (Prenum)
@@ -448,6 +452,7 @@ do_window(nchar, Prenum)
 			else
 			    g_do_tagpreview = p_pvh;
 			/*FALLTHROUGH*/
+#endif
 		    case ']':
 		    case Ctrl_RSB:
 #ifdef FEAT_VISUAL
@@ -587,7 +592,10 @@ win_split(new_size, flags)
 	    needed += frame_minheight(topframe, NULL);
 	}
 	else
+	{
 	    available = oldwin->w_height;
+	    needed += p_wmh;
+	}
 	if (available < needed)
 	{
 	    EMSG(_(e_noroom));
@@ -600,15 +608,7 @@ win_split(new_size, flags)
 	    oldwin_height -= STATUS_HEIGHT;
 	}
 	if (new_size == 0)
-	{
-#ifdef FEAT_QUICKFIX
-	    if (bt_quickfix(oldwin->w_buffer)
-					  && oldwin_height > 2 * QF_WINHEIGHT)
-		new_size = oldwin_height - QF_WINHEIGHT;
-	    else
-#endif
-		new_size = oldwin_height / 2;
-	}
+	    new_size = oldwin_height / 2;
 
 	if (new_size > oldwin_height - p_wmh - STATUS_HEIGHT)
 	    new_size = oldwin_height - p_wmh - STATUS_HEIGHT;
@@ -618,6 +618,13 @@ win_split(new_size, flags)
 	/* if it doesn't fit in the current window, need win_equal() */
 	if (oldwin_height - new_size - STATUS_HEIGHT < p_wmh)
 	    do_equal = TRUE;
+#ifdef FEAT_QUICKFIX
+	/* We don't like to take lines for the new window from a quickfix
+	 * or preview window.  Take them from a window above or below
+	 * instead, if possible. */
+	if (bt_quickfix(oldwin->w_buffer) || oldwin->w_preview)
+	    win_setheight_win(oldwin->w_height + new_size, oldwin);
+#endif
     }
 
     /*
@@ -1271,6 +1278,10 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
     int		next_curwin_size = 0;
     int		room = 0;
     int		new_size;
+#ifdef FEAT_QUICKFIX
+    int		quickfix_height = 0;
+    int		preview_height = 0;
+#endif
 
     if (topfr->fr_layout == FR_LEAF)
     {
@@ -1368,7 +1379,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	}
     }
 #endif
-    else
+    else /* topfr->fr_layout == FR_COL */
     {
 #ifdef FEAT_VERTSPLIT
 	topfr->fr_width = width;
@@ -1386,44 +1397,73 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		extra_sep = 0;
 	    totwincount = (n + extra_sep) / (p_wmh + 1);
 
-	    /* Compute room available for windows other than "next_curwin" */
+	    /*
+	     * Compute height for "next_curwin" window and room available for
+	     * other windows.
+	     * "m" is the minimal height when counting p_wh for "next_curwin".
+	     */
 	    m = frame_minheight(topfr, next_curwin);
 	    room = height - m;
 	    if (room < 0)
 	    {
+		/* The room is less then 'winheight', use all space for the
+		 * current window. */
 		next_curwin_size = p_wh + room;
 		room = 0;
 	    }
-	    else if (n == m)		/* doesn't contain curwin */
-		next_curwin_size = 0;
-	    else if (totwincount > 1
-		     && (room + (totwincount - 2)) / (totwincount - 1) > p_wh)
-	    {
-		next_curwin_size = (room + p_wh + totwincount * p_wmh +
-					     (totwincount - 1)) / totwincount;
-		room -= next_curwin_size - p_wh;
-	    }
 	    else
-		next_curwin_size = p_wh;
-
-#ifdef FEAT_QUICKFIX
-	    for (fr = topfr->fr_child; fr != NULL; fr = fr->fr_next)
 	    {
-		/* don't count lines of quickfix window if it's full width.
-		 * Watch out for next_curwin being the quickfix window. */
-		if (fr->fr_win != NULL && bt_quickfix(fr->fr_win->w_buffer))
+#ifdef FEAT_QUICKFIX
+		next_curwin_size = -1;
+		for (fr = topfr->fr_child; fr != NULL; fr = fr->fr_next)
 		{
-		    room -= fr->fr_win->w_height - p_wmh;
-		    if (fr->fr_win == next_curwin)
+		    /* the quickfix and preview window keep their height if
+		     * it's full width.
+		     * Watch out for this window being the next_curwin. */
+		    if (fr->fr_win != NULL
+			    && (bt_quickfix(fr->fr_win->w_buffer)
+				|| fr->fr_win->w_preview))
 		    {
-			room += next_curwin_size - p_wmh;
+			new_size = fr->fr_height;
+			if (fr->fr_win == next_curwin)
+			{
+			    room += p_wh - p_wmh;
+			    next_curwin_size = 0;
+			    if (new_size < p_wh)
+				new_size = p_wh;
+			}
+			else
+			    --totwincount;
+			room -= new_size - p_wmh - fr->fr_win->w_status_height;
+			if (room < 0)
+			{
+			    new_size += room;
+			    room = 0;
+			}
+			if (fr->fr_win->w_preview)
+			    preview_height = new_size;
+			else
+			    quickfix_height = new_size;
+		    }
+		}
+		if (next_curwin_size == -1)
+#endif
+		{
+		    if (n == m)		/* doesn't contain curwin */
 			next_curwin_size = 0;
+		    else if (totwincount > 1
+			    && (room + (totwincount - 2))
+						   / (totwincount - 1) > p_wh)
+		    {
+			next_curwin_size = (room + p_wh + totwincount * p_wmh
+					   + (totwincount - 1)) / totwincount;
+			room -= next_curwin_size - p_wh;
 		    }
 		    else
-			--totwincount;
+			next_curwin_size = p_wh;
 		}
 	    }
-#endif
+
 	    if (n != m)
 		--totwincount;		/* don't count curwin */
 	}
@@ -1435,12 +1475,20 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    if (fr->fr_next == NULL)
 		/* last frame gets all that remains (avoid roundoff error) */
 		new_size = height;
-	    else if (dir == 'h'
-#ifdef FEAT_QUICKFIX
-		    || (fr->fr_win != NULL && bt_quickfix(fr->fr_win->w_buffer))
-#endif
-		    )
+	    else if (dir == 'h')
 		new_size = fr->fr_height;
+#ifdef FEAT_QUICKFIX
+	    else if (fr->fr_win != NULL && bt_quickfix(fr->fr_win->w_buffer))
+	    {
+		new_size = quickfix_height;
+		wincount = 0;	    /* doesn't count as a sizeable window */
+	    }
+	    else if (fr->fr_win != NULL && fr->fr_win->w_preview)
+	    {
+		new_size = preview_height;
+		wincount = 0;	    /* doesn't count as a sizeable window */
+	    }
+#endif
 	    else
 	    {
 		/* Compute the maximum number of windows vert. in "fr". */
@@ -1463,10 +1511,11 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		}
 		else
 		    room -= new_size;
+		new_size += n;
 	    }
-	    win_equal_rec(next_curwin, fr, dir, col, row, width, new_size + n);
-	    row += new_size + n;
-	    height -= new_size + n;
+	    win_equal_rec(next_curwin, fr, dir, col, row, width, new_size);
+	    row += new_size;
+	    height -= new_size;
 	    totwincount -= wincount;
 	}
     }
@@ -1497,7 +1546,7 @@ close_windows(buf)
 
 /*
  * close window "win"
- * If "free_buf" is TRUE related buffer may be freed.
+ * If "free_buf" is TRUE related buffer may be unloaded.
  *
  * called by :quit, :close, :xit, :wq and findtag()
  */
@@ -1515,6 +1564,10 @@ win_close(win, free_buf)
 #ifdef FEAT_VERTSPLIT
     int		dir;
 #endif
+#ifdef FEAT_QUICKFIX
+    int		old_height = 0;
+#endif
+
 
     if (lastwin == firstwin)
     {
@@ -1551,8 +1604,9 @@ win_close(win, free_buf)
      * Close the link to the buffer.
      */
     close_buffer(win, win->w_buffer, free_buf, FALSE);
-    /* autocommands may have closed the window already */
-    if (!win_valid(win))
+    /* Autocommands may have closed the window already, or closed the only
+     * other window. */
+    if (!win_valid(win) || firstwin == lastwin)
 	return;
 
     /* reduce the reference count to the argument list. */
@@ -1582,8 +1636,20 @@ win_close(win, free_buf)
     if (frp->fr_parent->fr_layout == FR_COL)
     {
 #endif
+#ifdef FEAT_QUICKFIX
+	/* For a preview or quickfix window, remember its old size and restore
+	 * it later (it's a simplistic solution...). */
+	if (frp2->fr_win != NULL
+		&& (frp2->fr_win->w_preview
+		    || bt_quickfix(frp2->fr_win->w_buffer)))
+	    old_height = frp2->fr_win->w_height;
+#endif
 	frame_new_height(frp2, frp2->fr_height + frp->fr_height,
 					 frp2 == frp->fr_next ? TRUE : FALSE);
+#ifdef FEAT_QUICKFIX
+	if (old_height != 0)
+	    win_setheight_win(old_height, frp2->fr_win);
+#endif
 #ifdef FEAT_VERTSPLIT
 	dir = 'v';
     }
@@ -2436,11 +2502,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 	redraw_later(VALID);	/* causes status line redraw */
 
     /* set window height to desired minimal value */
-    if (curwin->w_height < p_wh
-#ifdef FEAT_QUICKFIX
-	    && !bt_quickfix(curwin->w_buffer)
-#endif
-	    )
+    if (curwin->w_height < p_wh)
 	win_setheight((int)p_wh);
 
 #ifdef FEAT_VERTSPLIT
@@ -2840,8 +2902,6 @@ frame_comp_pos(topfrp, row, col)
 win_setheight(height)
     int		height;
 {
-    int		row;
-
     /* Always keep current window at least one line high, even when
      * 'winminheight' is zero. */
 #ifdef FEAT_WINDOWS
@@ -2850,16 +2910,29 @@ win_setheight(height)
 #endif
     if (height == 0)
 	height = 1;
+    win_setheight_win(height, curwin);
+}
+
+/*
+ * Set the window height of window "win" and take care of repositioning other
+ * windows to fit around it.
+ */
+    static void
+win_setheight_win(height, win)
+    int		height;
+    win_t	*win;
+{
+    int		row;
 
 #ifdef FEAT_WINDOWS
-    frame_setheight(curwin->w_frame, height + curwin->w_status_height);
+    frame_setheight(win->w_frame, height + win->w_status_height);
 
     /* recompute the window positions */
     row = win_comp_pos();
 #else
     if (height > Rows - p_ch)
 	height = Rows - p_ch;
-    curwin->w_height = height;
+    win->w_height = height;
     row = height;
 #endif
 
@@ -2902,6 +2975,9 @@ frame_setheight(curfrp, height)
     int		run;
     frame_t	*frp;
     int		h;
+#ifdef FEAT_QUICKFIX
+    int		room_reserved;
+#endif
 
     /* If the height already is the desired value, nothing to do. */
     if (curfrp->fr_height == height)
@@ -2926,7 +3002,7 @@ frame_setheight(curfrp, height)
     else
     {
 	/*
-	 * Column of frames: try to change only frames in this columns.
+	 * Column of frames: try to change only frames in this column.
 	 */
 #ifdef FEAT_VERTSPLIT
 	/*
@@ -2934,6 +3010,7 @@ frame_setheight(curfrp, height)
 	 * 1: compute room available, if it's not enough try resizing the
 	 *    containing frame.
 	 * 2: compute the room available and adjust the height to it.
+	 * Try not to reduce the height of the quickfix and preview window.
 	 */
 	for (run = 1; run <= 2; ++run)
 #else
@@ -2941,9 +3018,18 @@ frame_setheight(curfrp, height)
 #endif
 	{
 	    room = 0;
+#ifdef FEAT_QUICKFIX
+	    room_reserved = 0;
+#endif
 	    for (frp = curfrp->fr_parent->fr_child; frp != NULL;
 							   frp = frp->fr_next)
 	    {
+#ifdef FEAT_QUICKFIX
+		if (frp->fr_win != NULL
+			&& (frp->fr_win->w_preview
+			    || bt_quickfix(frp->fr_win->w_buffer)))
+		    room_reserved += frp->fr_height;
+#endif
 		room += frp->fr_height;
 		if (frp != curfrp)
 		    room -= frame_minheight(frp, NULL);
@@ -2973,6 +3059,12 @@ frame_setheight(curfrp, height)
 	    /*NOTREACHED*/
 	}
 
+#ifdef FEAT_QUICKFIX
+	/* If there is not enough room, also reduce the height of quickfix and
+	 * preview window. */
+	if (height > room + room_cmdline - room_reserved)
+	    room_reserved = room + room_cmdline - height;
+#endif
 
 	/*
 	 * Compute the number of lines we will take from others frames (can be
@@ -2980,11 +3072,13 @@ frame_setheight(curfrp, height)
 	 */
 	take = height - curfrp->fr_height;
 
-	if (take > 0)
+	if (take > 0 && room_cmdline > 0)
 	{
-	    take -= room_cmdline;	    /* use lines from cmdline first */
-	    if (take < 0)
-		take = 0;
+	    /* use lines from cmdline first */
+	    if (take < room_cmdline)
+		room_cmdline = take;
+	    take -= room_cmdline;
+	    topframe->fr_height += room_cmdline;
 	}
 
 	/*
@@ -3006,15 +3100,36 @@ frame_setheight(curfrp, height)
 	    while (frp != NULL && take != 0)
 	    {
 		h = frame_minheight(frp, NULL);
-		if (frp->fr_height - take < h)
+#ifdef FEAT_QUICKFIX
+		if (room_reserved > 0
+			&& frp->fr_win != NULL
+			&& (frp->fr_win->w_preview
+			    || bt_quickfix(frp->fr_win->w_buffer)))
 		{
-		    take -= frp->fr_height - h;
-		    frame_new_height(frp, h, FALSE);
+		    if (room_reserved >= frp->fr_height)
+			room_reserved -= frp->fr_height;
+		    else
+		    {
+			if (frp->fr_height - room_reserved > take)
+			    room_reserved = frp->fr_height - take;
+			take -= frp->fr_height - room_reserved;
+			frame_new_height(frp, room_reserved, FALSE);
+			room_reserved = 0;
+		    }
 		}
 		else
+#endif
 		{
-		    frame_new_height(frp, frp->fr_height - take, FALSE);
-		    take = 0;
+		    if (frp->fr_height - take < h)
+		    {
+			take -= frp->fr_height - h;
+			frame_new_height(frp, h, FALSE);
+		    }
+		    else
+		    {
+			frame_new_height(frp, frp->fr_height - take, FALSE);
+			take = 0;
+		    }
 		}
 		if (run == 0)
 		    frp = frp->fr_next;
@@ -3918,8 +4033,8 @@ min_rows()
 }
 
 /*
- * Return TRUE if there is only one window, not counting a help window, unless
- * it is the current window.
+ * Return TRUE if there is only one window, not counting a help or preview
+ * window, unless it is the current window.
  */
     int
 only_one_window()
@@ -3929,7 +4044,11 @@ only_one_window()
     win_t	*wp;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	if (!wp->w_buffer->b_help || wp == curwin)
+	if (!(wp->w_buffer->b_help
+# ifdef FEAT_QUICKFIX
+		    || wp->w_preview
+# endif
+	     ) || wp == curwin)
 	    ++count;
     return (count <= 1);
 #else

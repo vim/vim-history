@@ -8,7 +8,7 @@
 syn clear
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+runtime syntax/c.vim
 
 syn keyword rpcProgram	program				skipnl skipwhite nextgroup=rpcProgName
 syn match   rpcProgName	contained	"\<\i\I*\>"	skipnl skipwhite nextgroup=rpcProgZone

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0p.  Last change: 2000 Nov 12
+*tagsearch.txt* For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -263,6 +263,7 @@ message is given.
 
 The tag match list can also be used in the preview window.  The commands are
 the same as above, with a "p" prepended.
+{not available when compiled without the |+quickfix| feature}
 
 							*:pts* *:ptselect*
 :pts[elect][!] [ident]	Does ":tselect[!] [ident]" and shows the new tag in a

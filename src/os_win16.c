@@ -409,6 +409,18 @@ mch_isdir(char_u *name)
     return TRUE;
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return 1 if "name" can be executed, 0 if not.
+ * Return -1 if unknown.
+ */
+    int
+mch_can_exe(char_u *name)
+{
+    return (searchpath(name) != NULL);
+}
+#endif
+
 /*
  * Check what "name" is:
  * NODE_NORMAL: file or directory (or doesn't exist)
@@ -462,8 +474,8 @@ mch_system(char *cmd, int options)
 
     if (h_module < 32)
     {
-    	/*error*/
-    	ret = -h_module;
+	/*error*/
+	ret = -h_module;
     }
     else
     {

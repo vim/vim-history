@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0p.  Last change: 2000 Nov 22
+*windows.txt*   For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,12 +21,14 @@ differently when used in combination with more than one window.
 9.  argument and buffer list commands		|buffer-list|
 10. Do a command in all buffers or windows	|list-repeat|
 11. Tag or file name under the cursor		|window-tag|
-12. Using hidden buffers			|buffer-hidden|
+12. The preview window				|preview-window|
+13. Using hidden buffers			|buffer-hidden|
+14. Special kinds of buffers			|special-buffers|
 
 {Vi does not have any of these commands}
-{not able to use multiple windows when the +windows feature was disabled at
+{not able to use multiple windows when the |+windows| feature was disabled at
 compile time}
-{not able to use vertically split windows when the +vertsplit feature was
+{not able to use vertically split windows when the |+vertsplit| feature was
 disabled at compile time}
 
 ==============================================================================
@@ -240,7 +242,7 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 							*:hide*
 :hid[e]		Quit current window, unless it is the last window on the
 		screen.  The buffer becomes hidden (unless there is another
-		window editing it).
+		window editing it or 'bufhidden' is "unload" or "delete").
 		The value of 'hidden' is irrelevant for this command.
 		Changes to the buffer are not written and won't get lost, so
 		this is a "safe" command.
@@ -664,6 +666,7 @@ the keyword under the cursor.
 The preview window is a special window to show (preview) another file.  It is
 normally a small window used to show an include file or definition of a
 function.
+{not available when compiled without the |+quickfix| feature}
 
 There can be only one preview window.  It is created with one of the commands
 below.  The 'previewheight' option can be set to specify the height of the
@@ -732,7 +735,7 @@ CTRL-W g }						*CTRL-W_g}*
 <		Warning: This can be slow.
 
 ==============================================================================
-11. Using hidden buffers				*buffer-hidden*
+13. Using hidden buffers				*buffer-hidden*
 
 A hidden buffer is not displayed in a window, but is still loaded into memory.
 This makes it possible to jump from file to file, without the need to read or
@@ -749,6 +752,15 @@ modified, but is forced (with '!') to be removed from a window, and
 
 You can make a hidden buffer not hidden by starting to edit it with any
 command.  Or by deleting it with the ":bdelete" command.
+
+The 'hidden' is global, it is used for all buffers.  The 'bufhidden' option
+can be used to make an exception for a specific buffer.  It can take these
+values:
+	<empty>		Use the value of 'hidden'.
+	hide		Hide this buffer, also when 'hidden' is not set.
+	unload		Don't hide but unload this buffer, also when 'hidden'
+			is set.
+	delete		Delete the buffer.
 
 							*hidden-quit*
 When you try to quit Vim while there is a hidden, modified buffer, you will
@@ -940,5 +952,42 @@ Be careful: there may be more hidden, modified buffers!
 Note: All the commands above that start editing another buffer, keep the
 'readonly' flag as it was.  This differs from the ":edit" command, which sets
 the 'readonly' flag each time the file is read.
+
+==============================================================================
+14. Special kinds of buffers			*special-buffers*
+
+Instead of containing the text of a file, buffers can also be used for other
+purposes.  A few options can be set to change the behavior of a buffer:
+	'bufhidden'	what happens when the buffer is no longer displayed
+			in a window.
+	'buftype'	what kind of a buffer this is
+	'swapfile'	whether the buffer will have a swap file
+
+A few useful kinds of a buffer:
+
+quickfix	Used to contain the error list.  See |:cwindow|.  This command
+		sets the 'buftype' option is to "quickfix".  You are not
+		supposed to change this!  'swapfile' is off.
+
+help		Contains a help file.  Will only be created with the |:help|
+		command.  The flag that indicates a help buffer is internal
+		and can't be changed.
+
+directory	Displays directory contents.  Used by the |file-explorer|
+		plugin.  The buffer is created with these settings: >
+			:set buftype=nowrite
+			:set bufhidden=delete
+			:set noswapfile
+<		The buffer name is the name of the directory and is adjusted
+		when using the |:cd| command.
+
+scratch		Contains text that can be discarded at any time.  It is kept
+		when closing the window, it must be deleted explicitly.
+		Settings: >
+			:set buftype=nofile
+			:set bufhidden=hide
+			:set noswapfile
+<		The buffer name can be used to identify the buffer.
+
 
  vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":

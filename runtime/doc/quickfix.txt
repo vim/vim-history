@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0p.  Last change: 2000 Dec 02
+*quickfix.txt*  For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -513,7 +513,11 @@ This 'errorformat' has been reported to work well for javac, which outputs a
 line with "^" to indicate the column of the error: >
   :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
 <
-
+						*errorformat-ant*
+For ant (http://jakarta.apache.org/) the above errorformat has to be modified
+to honour the leading [javac] in front of each javac output line: >
+  :set efm=%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
+<
 						*quickfix-error-lists*
 So far has been assumed that there is only one list of errors.  Actually the
 ten last used lists are remembered.  When starting a new list, the previous

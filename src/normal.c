@@ -810,44 +810,65 @@ getcount:
 #endif
 			))))
     {
-	int	    *cp;
+	int	*cp;
+#if (defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)) || defined(CURSOR_SHAPE)
+	int	repl = FALSE;	/* get character for replace mode */
+#endif
+	int	lit = FALSE;	/* get extra character literally */
 
 	++no_mapping;
 	++allow_keys;		/* no mapping for nchar, but allow key codes */
 	if (ca.cmdchar == 'g')
 	{
-	    /* For 'g' get the next character now, so that we can check for
-	     * "gr". */
+	    /*
+	     * For 'g' get the next character now, so that we can check for
+	     * "gr", "g'" and "g`".
+	     */
 	    ca.nchar = safe_vgetc();
 #ifdef FEAT_CMDL_INFO
 	    need_flushbuf |= add_to_showcmd(ca.nchar);
 #endif
+	    if (ca.nchar == 'r' || ca.nchar == '\'' || ca.nchar == '`')
+	    {
+		cp = &ca.extra_char;	/* need to get a third character */
+		if (ca.nchar != 'r')
+		    lit = TRUE;			/* get it literally */
+#if (defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)) || defined(CURSOR_SHAPE)
+		else
+		    repl = TRUE;		/* get it in replace mode */
+#endif
+	    }
+	    else
+		cp = NULL;		/* no third character needed */
+	}
+	else
+	{
+#if (defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)) || defined(CURSOR_SHAPE)
+	    if (ca.cmdchar == 'r')		/* get it in replace mode */
+		repl = TRUE;
+#endif
+	    cp = &ca.nchar;
 	}
 
-	/* For 'g' commands, already got next char above, "gr" still needs an
-	 * extra one though. */
-	if (ca.cmdchar != 'g')
-	    cp = &ca.nchar;
-	else if (ca.nchar == 'r')
-	    cp = &ca.extra_char;
-	else
-	    cp = NULL;
+	/*
+	 * Get a second or third character.
+	 */
 	if (cp != NULL)
 	{
 #ifdef CURSOR_SHAPE
-	    if (ca.cmdchar == 'r' || ca.cmdchar == 'g')
+	    if (repl)
 	    {
 		State = REPLACE;	/* pretend Replace mode */
 		ui_cursor_shape();	/* show different cursor shape */
 	    }
 #endif
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-	    if (ca.cmdchar == 'r')
+	    if (repl)
 		ImeSetOriginMode();
 #endif
 	    *cp = safe_vgetc();
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-	    if (ca.cmdchar == 'r')
+	    if (repl)
 		ImeSetEnglishMode();
 #endif
 #ifdef CURSOR_SHAPE
@@ -857,47 +878,50 @@ getcount:
 	    need_flushbuf |= add_to_showcmd(*cp);
 #endif
 
-#ifdef FEAT_DIGRAPHS
-	    /* Typing CTRL-K gets a digraph. */
-	    if (*cp == Ctrl_K
-		    && ((nv_cmds[idx].cmd_flags & NV_LANG)
-			|| cp == &ca.extra_char)
-		    && vim_strchr(p_cpo, CPO_DIGRAPH) == NULL)
+	    if (!lit)
 	    {
-		c = get_digraph(FALSE);
-		if (c > 0)
+#ifdef FEAT_DIGRAPHS
+		/* Typing CTRL-K gets a digraph. */
+		if (*cp == Ctrl_K
+			&& ((nv_cmds[idx].cmd_flags & NV_LANG)
+			    || cp == &ca.extra_char)
+			&& vim_strchr(p_cpo, CPO_DIGRAPH) == NULL)
 		{
-		    *cp = c;
+		    c = get_digraph(FALSE);
+		    if (c > 0)
+		    {
+			*cp = c;
 # ifdef FEAT_CMDL_INFO
-		    /* Guessing how to update showcmd here... */
-		    del_from_showcmd(3);
-		    need_flushbuf |= add_to_showcmd(*cp);
+			/* Guessing how to update showcmd here... */
+			del_from_showcmd(3);
+			need_flushbuf |= add_to_showcmd(*cp);
 # endif
+		    }
 		}
-	    }
 #endif
 
 #ifdef FEAT_LANGMAP
-	    /* adjust chars > 127, except after "tTfFr" commands */
-	    LANGMAP_ADJUST(*cp, !((nv_cmds[idx].cmd_flags & NV_LANG)
+		/* adjust chars > 127, except after "tTfFr" commands */
+		LANGMAP_ADJUST(*cp, !((nv_cmds[idx].cmd_flags & NV_LANG)
 						    || cp == &ca.extra_char));
 #endif
 #ifdef FEAT_RIGHTLEFT
-	    /* adjust Hebrew mapped char */
-	    if (p_hkmap
-		    && ((nv_cmds[idx].cmd_flags & NV_LANG)
+		/* adjust Hebrew mapped char */
+		if (p_hkmap
+			&& ((nv_cmds[idx].cmd_flags & NV_LANG)
 						      || cp == &ca.extra_char)
-		    && KeyTyped)
-		*cp = hkmap(*cp);
+			&& KeyTyped)
+		    *cp = hkmap(*cp);
 # ifdef FEAT_FKMAP
-	    /* adjust Farsi mapped char */
-	    if (p_fkmap
-		    && ((nv_cmds[idx].cmd_flags & NV_LANG)
+		/* adjust Farsi mapped char */
+		if (p_fkmap
+			&& ((nv_cmds[idx].cmd_flags & NV_LANG)
 						      || cp == &ca.extra_char)
-		    && KeyTyped)
-		*cp = fkmap(*cp);
+			&& KeyTyped)
+		    *cp = fkmap(*cp);
 # endif
 #endif
+	    }
 	}
 	--no_mapping;
 	--allow_keys;
@@ -1548,8 +1572,9 @@ do_pending_operator(cap, old_col, gui_yank)
 				&& vim_strchr(p_cpo, CPO_EMPTYREGION) != NULL);
 
 #ifdef FEAT_VISUAL
-	/* Force a redraw when operating on an empty Visual region */
-	if (oap->is_VIsual && oap->empty)
+	/* Force a redraw when operating on an empty Visual region or when
+	 * 'modifiable is off. */
+	if (oap->is_VIsual && (oap->empty || !curbuf->b_p_ma))
 	    redraw_curbuf_later(INVERTED);
 #endif
 
@@ -5633,16 +5658,21 @@ nv_optrans(cap)
 }
 
 /*
- * "'" and "`" commands.
- * cap->arg is TRUE for "'".
+ * "'" and "`" commands.  Also for "g'" and "g`".
+ * cap->arg is TRUE for "'" and "g'".
  */
     static void
 nv_gomark(cap)
     cmdarg_t	*cap;
 {
     pos_t	*pos;
+    int		c;
 
-    pos = getmark(cap->nchar, (cap->oap->op_type == OP_NOP));
+    if (cap->cmdchar == 'g')
+	c = cap->extra_char;
+    else
+	c = cap->nchar;
+    pos = getmark(c, (cap->oap->op_type == OP_NOP));
     if (pos == (pos_t *)-1)	    /* jumped to other file */
     {
 	if (cap->arg)
@@ -5658,7 +5688,7 @@ nv_gomark(cap)
 
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active())
-	getmark_coladd(cap->nchar, (cap->oap->op_type == OP_NOP));
+	getmark_coladd(c, (cap->oap->op_type == OP_NOP));
 #endif
 }
 
@@ -5936,22 +5966,6 @@ nv_g_cmd(cap)
 
     case 'r':
 	nv_vreplace(cap);
-	break;
-
-    /*
-     * "gi": start Insert at the last position.
-     */
-    case 'i':
-	if (curbuf->b_last_insert.lnum != 0)
-	{
-	    curwin->w_cursor = curbuf->b_last_insert;
-	    check_cursor_lnum();
-	    i = STRLEN(ml_get_curline());
-	    if (curwin->w_cursor.col > i)
-		curwin->w_cursor.col = i;
-	}
-	cap->cmdchar = 'i';
-	nv_edit(cap);
 	break;
 
     case '&':
@@ -6257,6 +6271,22 @@ nv_g_cmd(cap)
 	break;
 
     /*
+     * "gi": start Insert at the last position.
+     */
+    case 'i':
+	if (curbuf->b_last_insert.lnum != 0)
+	{
+	    curwin->w_cursor = curbuf->b_last_insert;
+	    check_cursor_lnum();
+	    i = STRLEN(ml_get_curline());
+	    if (curwin->w_cursor.col > i)
+		curwin->w_cursor.col = i;
+	}
+	cap->cmdchar = 'i';
+	nv_edit(cap);
+	break;
+
+    /*
      * "gI": Start insert in column 1.
      */
     case 'I':
@@ -6283,6 +6313,14 @@ nv_g_cmd(cap)
 	nv_gotofile(cap);
 	break;
 #endif
+
+	/* "g'm" and "g`m": jump to mark without setting pcmark */
+    case '\'':
+	cap->arg = TRUE;
+	/*FALLTHROUGH*/
+    case '`':
+	nv_gomark(cap);
+	break;
 
     /*
      * "gs": Goto sleep, but keep on checking for CTRL-C

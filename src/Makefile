@@ -775,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60p
+VIMRTDIR = /vim60q
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1697,12 +1697,7 @@ shadow:	runtime pixmaps
 	cd $(SHADOWDIR)/auto; ln -s ../../auto/configure .
 	cd $(SHADOWDIR); rm -f auto/link.sed
 	cp Makefile configure $(SHADOWDIR)
-	@echo generating auto/config.mk
-	@echo "the first targets to make vim are: scratch config myself" > $(SHADOWDIR)/auto/config.mk
-	@echo "srcdir = ." >> $(SHADOWDIR)/auto/config.mk
-	@echo "VIMNAME = vim" >> $(SHADOWDIR)/auto/config.mk
-	@echo "EXNAME = ex" >> $(SHADOWDIR)/auto/config.mk
-	@echo "VIEWNAME = view" >> $(SHADOWDIR)/auto/config.mk
+	cp -f config.mk.dist $(SHADOWDIR)/auto/config.mk
 	mkdir $(SHADOWDIR)/xxd
 	cd $(SHADOWDIR)/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 	mkdir $(SHADOWDIR)/testdir
@@ -1725,12 +1720,7 @@ scrub scratch:
 	touch auto/config.h
 
 distclean: clean scratch
-	@echo generating auto/config.mk
-	@echo "the first targets to make vim are: scratch config myself" > auto/config.mk
-	@echo "srcdir = ." >> auto/config.mk
-	@echo "VIMNAME = vim" >> auto/config.mk
-	@echo "EXNAME = ex" >> auto/config.mk
-	@echo "VIEWNAME = view" >> auto/config.mk
+	cp -f config.mk.dist auto/config.mk
 
 dist: distclean tar
 
@@ -2171,7 +2161,8 @@ objects/hangulin.o: hangulin.c vim.h auto/config.h feature.h os_unix.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h
 objects/if_perl.o: auto/if_perl.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+ gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
+ /usr/libdata/perl/5.00503/mach/CORE/patchlevel.h
 objects/if_perlsfio.o: if_perlsfio.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h

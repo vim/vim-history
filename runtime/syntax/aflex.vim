@@ -12,7 +12,7 @@
 syn clear
 
 " Read the Ada syntax to start with
-so <sfile>:p:h/ada.vim
+runtime syntax/ada.vim
 
 " --- AfLex stuff ---
 

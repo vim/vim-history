@@ -1833,8 +1833,8 @@ fold_line(wp, fold_count, level, lnum, row)
     else
 #endif
 	vim_memset(current_ScreenAttrs, hl_attr(attr), (size_t)(W_WIDTH(wp)));
-    SCREEN_LINE(row + W_WINROW(wp), W_WINCOL(wp), W_WIDTH(wp),
-							  W_WIDTH(wp), FALSE);
+    SCREEN_LINE(row + W_WINROW(wp), W_WINCOL(wp), (int)W_WIDTH(wp),
+						     (int)W_WIDTH(wp), FALSE);
 
     /*
      * Update w_cline_height and w_cline_folded if the cursor line was
@@ -3812,7 +3812,9 @@ win_redr_status(wp)
 	len = STRLEN(p);
 
 	if (wp->w_buffer->b_help
+#ifdef FEAT_QUICKFIX
 		|| wp->w_preview
+#endif
 		|| bufIsChanged(wp->w_buffer)
 		|| wp->w_buffer->b_p_ro)
 	    *(p + len++) = ' ';
@@ -3821,11 +3823,13 @@ win_redr_status(wp)
 	    STRCPY(p + len, _("[help]"));
 	    len += STRLEN(p + len);
 	}
+#ifdef FEAT_QUICKFIX
 	if (wp->w_preview)
 	{
 	    STRCPY(p + len, _("[Preview]"));
 	    len += STRLEN(p + len);
 	}
+#endif
 	if (bufIsChanged(wp->w_buffer))
 	{
 	    STRCPY(p + len, "[+]");
@@ -4428,6 +4432,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    break;
 #endif
 
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	case STL_PREVIEWFLAG:
 	case STL_PREVIEWFLAG_ALT:
 	    itemisflag = TRUE;
@@ -4435,6 +4440,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		str = (char_u *)((opt == STL_PREVIEWFLAG_ALT) ? ",PRV"
 							    : _("[Preview]"));
 	    break;
+#endif
 
 	case STL_MODIFIED:
 	case STL_MODIFIED_ALT:
@@ -9075,7 +9081,7 @@ win_redr_ruler(wp, always)
 	screen_puts(buffer, row, this_ru_col + WITH_OFF(off), attr);
 	screen_fill(row, row + 1,
 		this_ru_col + WITH_OFF(off) + (int)STRLEN(buffer),
-		(int)WITH_OFF(off) + WITH_WIDTH(width),
+		(int)(WITH_OFF(off) + WITH_WIDTH(width)),
 		fillchar, fillchar, attr);
 	wp->w_ru_cursor = wp->w_cursor;
 	wp->w_ru_virtcol = wp->w_virtcol;

@@ -10,7 +10,7 @@ let plain_mf_macros = 0 " plain.mf has no special meaning for MetaPost
 let other_mf_macros = 0 " cmbase.mf, logo.mf, ... neither
 
 " Read the Metafont syntax to start with
-source <sfile>:p:h/mf.vim
+runtime syntax/mf.vim
 
 " MetaPost has TeX inserts for typeset labels
 " verbatimtex, btex, and etex will be treated as keywords

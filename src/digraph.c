@@ -2104,6 +2104,11 @@ getexactdigraph(char1, char2, meta)
 	    ++dp;
 	}
     }
+#ifdef FEAT_MBYTE
+    /* Ignore multi-byte characters when not in multi-byte mode. */
+    if (!has_mbyte && retval > 0xff)
+	retval = 0;
+#endif
 
     if (retval == 0)		/* digraph deleted or not found */
     {

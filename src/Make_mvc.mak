@@ -16,15 +16,21 @@
 #	OLE interface: OLE=yes
 #	IME support: IME=yes	(requires GUI=yes)
 #	Global IME support: GIME=yes (requires GUI=yes)
-#	Perl interface: PERL=[Path to Perl directory]
-#	Active Perl (dynamic link) interface:
-#	  ACTIVEPERL=[Path to Active Perl directory]
+#	Perl interface:
+#	  PERL=[Path to Perl directory]
+#	  DYNAMIC_PERL=yes (to load the Perl DLL dynamically)
+#	  PERL_VER=[Perl version, in the form 55 (5.005), 56 (5.6.x), etc]
 #	Python interface:
 #	  PYTHON=[Path to Python directory]          -- statically loaded
 #	  DYNAMIC_PYTHON=[Path to Python directory]  -- dynamically loaded
-#	  PYTHON_VER=[Python version, eg 15, 20]
+#	  PYTHON_VER=[Python version, eg 15, 20]  (default is 15)
+#	Tcl interface:
+#	  TCL=[Path to Tcl directory]
+#	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
+#	Iconv library (dynamically loaded) support:
+#	  ICONV=[yes or no]  (default is yes)
 #
 # You can combine any of these interfaces
 #
@@ -113,14 +119,26 @@ MULTITHREADED = yes
 
 !ifdef MULTITHREADED
 CVARS = $(cvarsmt)
+! ifndef USE_MSVCRT
 CON_LIB = $(conlibsmt)
+! else
+CON_LIB = $(conlibsdll)
+! endif
 !else
 !ifdef NODEBUG
 CVARS = $(cvars)
+! ifndef USE_MSVCRT
 CON_LIB = $(conlibs)
+! else
+CON_LIB = $(conlibsdll)
+! endif
 !else
 CVARS= $(cvarsd)
+! ifndef USE_MSVCRT
 CON_LIB = $(conlibsd)
+! else
+CON_LIB = $(conlibsdlld)
+! endif
 !endif
 !endif
 
@@ -153,7 +171,12 @@ OUTDIR=$(OBJDIR)
 VIM = vim
 CFLAGS = $(CFLAGS) -DNDEBUG /Ox
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
+! ifndef USE_MSVCRT
 LIBC = libc.lib
+! else
+CFLAGS = $(CFLAGS) -MD
+LIBC = msvcrt.lib
+! endif
 !else  # DEBUG
 VIM = vimd
 # MSVC 4.1
@@ -164,7 +187,12 @@ LINK_PDB = /PDB:$(OUTDIR)/
 # LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
 CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
 RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
+! ifndef USE_MSVCRT
 LIBC = libcd.lib
+! else
+CFLAGS = $(CFLAGS) -MDd
+LIBC = msvcrtd.lib
+! endif
 !endif # DEBUG
 
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
@@ -260,14 +288,24 @@ GUI_LIB = \
 SUBSYSTEM = console
 !endif
 
+# iconv.dll library (dynamically loaded)
+!ifndef ICONV
+ICONV = yes
+!endif
+!if "$(ICONV)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_ICONV
+!endif
+
 # TCL interface
 !ifdef TCL
+!ifndef TCL_VER
+TCL_VER = 83
+!endif
 !message Tcl detected - root dir is "$(TCL)"
 CFLAGS  = $(CFLAGS) -DFEAT_TCL
 TCL_OBJ	= $(OUTDIR)\if_tcl.obj
 TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
-#TCL_LIB = $(TCL)\lib\tcl80vc.lib
-TCL_LIB = $(TCL)\lib\tcl83vc.lib
+TCL_LIB = $(TCL)\lib\tcl$(TCL_VER)vc.lib
 !endif
 
 # PYTHON interface
@@ -296,28 +334,47 @@ PYTHON_LIB = /nodefaultlib:python$(PYTHON_VER).lib
 
 # Perl interface
 !ifdef PERL
-!message Perl detected - root dir is "$(PERL)"
+!message Perl detected (version $(PERL_VER)) - root dir is "$(PERL)"
+!if "$(DYNAMIC_PERL)" == "yes"
+!if "$(PERL_VER)" == "56"
+!message Perl DLL will be loaded dynamically
+!else
+!message Dynamic loading is not supported for Perl versions earlier than 5.6.0
+!message Reverting to static loading...
+!undef DYNAMIC_PERL
+!endif
+!endif
 !message
-CFLAGS	 = $(CFLAGS) -DFEAT_PERL
-PERL_EXE = $(PERL)\Bin\perl
+
+# Is Perl installed in architecture-specific directories?
+!if exist($(PERL)\Bin\MSWin32-x86)
+PERL_ARCH = \MSWin32-x86
+!endif
+
+PERL_INCDIR = $(PERL)\Lib$(PERL_ARCH)\Core
+
+# Version-dependent stuff
+!if "$(PERL_VER)" == "55"
+PERL_LIB = $(PERL_INCDIR)\perl.lib
+!else
+PERL_DLL = perl$(PERL_VER).dll
+PERL_LIB = $(PERL_INCDIR)\perl$(PERL_VER).lib
+!endif
+
+CFLAGS = $(CFLAGS) -DFEAT_PERL
+
+# Do we want to load Perl dynamically?
+!if "$(DYNAMIC_PERL)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"$(PERL_DLL)\"
+!undef PERL_LIB
+!endif
+
+PERL_EXE = $(PERL)\Bin$(PERL_ARCH)\perl
+PERL_INC = /I $(PERL_INCDIR)
 PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
-PERL_INC = /I $(PERL)\Lib\Core
-PERL_LIB = $(PERL)\Lib\Core\perl.lib
-#PERL_LIB = $(PERL)\Lib\Core\perl56.lib
-XSUBPP	 = $(PERL)\lib\ExtUtils\xsubpp
+XSUBPP = $(PERL)\lib\ExtUtils\xsubpp
 XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
-# ActivePerl interface
-!elseifdef ACTIVEPERL
-!message ActivePerl detected - root dir is "$(ACTIVEPERL)"
-!message
-CFLAGS	 = $(CFLAGS) -DFEAT_PERL \
-	-DACTIVE_PERL -DACTIVE_PERL_W32=\"perl56.dll\" -DPERL_CAPI
-PERL_EXE = $(ACTIVEPERL)\Bin\perl
-PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
-PERL_INC = /I $(ACTIVEPERL)\Lib\Core
-PERL_LIB =
-XSUBPP	 = $(ACTIVEPERL)\lib\ExtUtils\xsubpp
-XSUBPP_TYPEMAP = $(ACTIVEPERL)\lib\ExtUtils\typemap
+
 !endif
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no

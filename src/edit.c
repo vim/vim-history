@@ -6358,6 +6358,7 @@ ins_digraph()
 	    return c;
 	}
     }
+    edit_unputchar();
 #ifdef FEAT_CMDL_INFO
     clear_showcmd();
 #endif

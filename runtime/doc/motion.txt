@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0p.  Last change: 2000 Dec 10
+*motion.txt*    For Vim version 6.0q.  Last change: 2000 Dec 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -617,11 +617,19 @@ m'  or  m`		Set the previous context mark.  This can be jumped to
 			be omitted.
 
 						*'* *'a* *`* *`a*
-'{a-z}  `{a-z}		To the mark {a-z}.
+'{a-z}  `{a-z}		Jump to the mark {a-z}.
 
 						*'A* *'0* *`A* *`0*
 '{A-Z0-9}  `{A-Z0-9}	To the mark {A-Z0-9} in the correct file (not a motion
 			command when in another file).  {not in Vi}
+
+						*g'* *g'a* *g`* *g`a*
+g'{mark}  g`{mark}
+			Jump to the {mark}, but don't change the jumplist when
+			jumping within the current buffer.  Example: >
+				g`"
+<			jumps to the last known position in a file.  See
+			$VIMRUNTIME/vimrc_example.vim.  {not in Vi}
 
 						*:marks*
 :marks			List all the current marks (not a motion command).

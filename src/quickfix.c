@@ -205,8 +205,9 @@ qf_init(efile, errorformat)
      * Get some space to modify the format string into.
      */
     i = (FMT_PATTERNS * 3) + (STRLEN(efm) << 2);
-    for (round = FMT_PATTERNS; round;)
+    for (round = FMT_PATTERNS; round > 0; )
 	i += strlen(fmt_pat[--round].pattern);
+    i += 2; /* "%f" can become two chars longer */
     if ((fmtstr = alloc(i)) == NULL)
 	goto error2;
 
@@ -227,8 +228,9 @@ qf_init(efile, errorformat)
 	fmt_ptr->flags = NUL;
 	fmt_ptr->next = NULL;
 	fmt_ptr->prog = NULL;
-	for (round = FMT_PATTERNS; round;)
-	    fmt_ptr->addr[--round] = NUL;	/* round is 0 */
+	for (round = FMT_PATTERNS; round > 0; )
+	    fmt_ptr->addr[--round] = NUL;
+	/* round is 0 now */
 
 	/*
 	 * Isolate one part in the 'errorformat' option
@@ -275,9 +277,24 @@ qf_init(efile, errorformat)
 		    fmt_ptr->addr[idx] = (char_u)++round;
 		    *ptr++ = '\\';
 		    *ptr++ = '(';
-		    srcptr = (char_u *)fmt_pat[idx].pattern;
-		    while ((*ptr = *srcptr++) != NUL)
-			++ptr;
+		    if (*efmp == 'f' && efmp[1] != NUL
+					 && efmp[1] != '\\' && efmp[1] != '%')
+		    {
+			/* A file name may contain spaces, but this isn't in
+			 * "\f".  use "[^x]\+" instead (x is next character) */
+			*ptr++ = '[';
+			*ptr++ = '^';
+			*ptr++ = efmp[1];
+			*ptr++ = ']';
+			*ptr++ = '\\';
+			*ptr++ = '+';
+		    }
+		    else
+		    {
+			srcptr = (char_u *)fmt_pat[idx].pattern;
+			while ((*ptr = *srcptr++) != NUL)
+			    ++ptr;
+		    }
 		    *ptr++ = '\\';
 		    *ptr++ = ')';
 		}
@@ -1464,6 +1481,7 @@ ex_cwindow(eap)
 	    /* switch off 'swapfile' */
 	    set_option_value((char_u *)"swf", 0L, NULL, TRUE);
 	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix", TRUE);
+	    set_option_value((char_u *)"bh", 0L, (char_u *)"delete", TRUE);
 	}
 	else
 	    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum,
@@ -1617,7 +1635,6 @@ bt_quickfix(buf)
     return (buf->b_p_bt[0] == 'q');
 }
 
-
 /*
  * Return TRUE if "buf" is a "nofile" buffer.
  */
@@ -1625,16 +1642,46 @@ bt_quickfix(buf)
 bt_nofile(buf)
     buf_t	*buf;
 {
-    return (buf->b_p_bt[0] == 'n');
+    return (buf->b_p_bt[0] == 'n' && buf->b_p_bt[2] == 'f');
 }
 
 /*
- * Return TRUE if "buf" is a "scratch" buffer.
+ * Return TRUE if "buf" is a "nowrite" or "nofile" buffer.
  */
     int
-bt_scratch(buf)
+bt_dontwrite(buf)
     buf_t	*buf;
 {
-    return (buf->b_p_bt[0] == 's');
+    return (buf->b_p_bt[0] == 'n');
+}
+
+    int
+bt_dontwrite_msg(buf)
+    buf_t	*buf;
+{
+    if (bt_dontwrite(buf))
+    {
+	EMSG(_("Cannot write, 'buftype' option is set"));
+	return TRUE;
+    }
+    return FALSE;
+}
+
+/*
+ * Return TRUE if the buffer should be hidden, according to 'hidden', ":hide"
+ * and 'bufhidden'.
+ */
+    int
+buf_hide(buf)
+    buf_t	*buf;
+{
+    /* 'bufhidden' overrules 'hidden' and ":hide", check it first */
+    switch (buf->b_p_bh[0])
+    {
+	case 'u':		    /* "unload" */
+	case 'd': return FALSE;	    /* "delete" */
+	case 'h': return TRUE;	    /* "hide" */
+    }
+    return (p_hid || cmdmod.hide);
 }
 #endif /* FEAT_QUICKFIX */

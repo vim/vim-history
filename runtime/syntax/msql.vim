@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Dec 17
 "
 " Options	msql_sql_query = 1 for SQL syntax highligthing inside strings
 "		msql_minlines = x     to sync at least x lines backwards
@@ -15,7 +15,7 @@ if !exists("main_syntax")
   let main_syntax = 'msql'
 endif
 
-so <sfile>:p:h/html.vim
+runtime syntax/html.vim
 syn cluster htmlPreproc add=msqlRegion
 
 syn case match

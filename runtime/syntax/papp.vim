@@ -2,7 +2,7 @@
 "
 " Language:	papp
 " Maintainer:	Marc Lehmann <pcg@goof.com>
-" Last Change:	2000 Nov 18
+" Last Change:	2000 Dec 17
 " Filenames:    *.papp *.pxml *.pxsl
 " URL:		http://papp.plan9.de/
 
@@ -17,7 +17,7 @@
 syn clear
 
 " source is basically xml, with included html (this is common) and perl bits
-so <sfile>:p:h/xml.vim
+runtime syntax/xml.vim
 
 if exists("papp_include_html")
    syn include @PAppHtml <sfile>:p:h/html.vim

@@ -29,3 +29,5 @@ int au_exists __ARGS((char_u *name, char_u *name_end, char_u *pattern));
 int match_file_pat __ARGS((char_u *pattern, char_u *fname, char_u *sfname, char_u *tail, int allow_dirs));
 char_u *file_pat_to_reg_pat __ARGS((char_u *pat, char_u *pat_end, char *allow_dirs, int no_bslash));
 int symlink_check __ARGS((char_u *fname));
+int iconv_enabled __ARGS((void));
+void iconv_end __ARGS((void));

@@ -140,22 +140,25 @@ static void	ex_quit_all __ARGS((exarg_t *eap));
 #ifdef FEAT_WINDOWS
 static void	ex_close __ARGS((exarg_t *eap));
 static void	ex_win_close __ARGS((exarg_t *eap, win_t *win));
-static void	ex_pclose __ARGS((exarg_t *eap));
 static void	ex_only __ARGS((exarg_t *eap));
 static void	ex_all __ARGS((exarg_t *eap));
 static void	ex_resize __ARGS((exarg_t *eap));
 static void	ex_splitview __ARGS((exarg_t *eap));
 static void	ex_stag __ARGS((exarg_t *eap));
-static void	ex_ptag __ARGS((exarg_t *eap));
-static void	ex_pedit __ARGS((exarg_t *eap));
 #else
 # define ex_close		ex_ni
-# define ex_pclose		ex_ni
 # define ex_only		ex_ni
 # define ex_all			ex_ni
 # define ex_resize		ex_ni
 # define ex_splitview		ex_ni
 # define ex_stag		ex_ni
+#endif
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+static void	ex_pclose __ARGS((exarg_t *eap));
+static void	ex_ptag __ARGS((exarg_t *eap));
+static void	ex_pedit __ARGS((exarg_t *eap));
+#else
+# define ex_pclose		ex_ni
 # define ex_ptag		ex_ni
 # define ex_pedit		ex_ni
 #endif
@@ -299,7 +302,7 @@ static void	ex_findpat __ARGS((exarg_t *eap));
 # define ex_findpat		ex_ni
 # define ex_checkpath		ex_ni
 #endif
-#if defined(FEAT_FIND_ID) && defined(FEAT_WINDOWS)
+#if defined(FEAT_FIND_ID) && defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 static void	ex_psearch __ARGS((exarg_t *eap));
 #else
 # define ex_psearch		ex_ni
@@ -3247,8 +3250,8 @@ autowrite(buf, forceit)
 {
     if (!(p_aw || p_awa) || !p_write
 #ifdef FEAT_QUICKFIX
-	/* never autowrite a "nofile" or "scratch" buffer */
-	|| bt_nofile(buf) || bt_scratch(buf)
+	/* never autowrite a "nofile" or "nowrite" buffer */
+	|| bt_dontwrite(buf)
 #endif
 	|| (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
 	return FAIL;
@@ -4655,7 +4658,7 @@ ex_finish(eap)
     if (eap->getline == getsourceline)
 	((struct source_cookie *)eap->cookie)->finished = TRUE;
     else
-	EMSG(_(":finish used outsided of a sourced file"));
+	EMSG(_(":finish used outside of a sourced file"));
 }
 
 /*
@@ -5770,6 +5773,7 @@ ex_win_close(eap, win)
 	    dialog_changed(buf, FALSE);
 	    if (bufIsChanged(buf))
 		return;
+	    need_hide = FALSE;
 	}
 	else
 #endif
@@ -5782,9 +5786,11 @@ ex_win_close(eap, win)
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
 #endif
-    win_close(win, (!need_hide) && (!P_HID(buf)));    /* may free buffer */
+    /* free buffer when not hiding it or when it's a scratch buffer */
+    win_close(win, !need_hide && !P_HID(buf));
 }
 
+#ifdef FEAT_QUICKFIX
 /*
  * ":pclose": Close any preview window.
  */
@@ -5803,6 +5809,7 @@ ex_pclose(eap)
 	}
     }
 }
+#endif
 
 /*
  * ":only".
@@ -5924,7 +5931,8 @@ ex_exit(eap)
 # ifdef FEAT_GUI
 	need_mouse_correct = TRUE;
 # endif
-	win_close(curwin, !P_HID(curwin->w_buffer)); /* quit current window, may free buffer */
+	/* quit current window, may free buffer */
+	win_close(curwin, !P_HID(curwin->w_buffer));
 #endif
     }
 }
@@ -6284,7 +6292,7 @@ ex_drop(eap)
 	--emsg_off;
     }
 
-    /* Fake a ":split" or ":snext" command. */
+    /* Fake a ":snext" or ":next" command. */
     if (split)
     {
 	eap->cmdidx = CMD_snext;
@@ -6596,16 +6604,21 @@ ex_botright(eap)
 ex_silent(eap)
     exarg_t	*eap;
 {
+    int		save_msg_scroll = msg_scroll;
+
     ++msg_silent;
     if (eap->forceit)
 	++emsg_silent;
     do_cmdline(eap->arg, NULL, NULL, DOCMD_VERBOSE + DOCMD_NOWAIT);
     /* messages could be enabled for a serious error, need to check if the
-     * counters have not bee reset */
+     * counters have not been reset */
     if (msg_silent > 0)
 	--msg_silent;
     if (eap->forceit && emsg_silent > 0)
 	--emsg_silent;
+    /* Restore msg_scroll, it's set by file I/O commands, even when no message
+     * is actually displayed. */
+    msg_scroll = save_msg_scroll;
 }
 
 /*
@@ -6845,7 +6858,7 @@ do_exedit(eap, old_curwin)
 # ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 # endif
-		win_close(curwin, !need_hide && !P_HID(curwin->w_buffer));
+		win_close(curwin, !need_hide && !P_HID(curbuf));
 	    }
 #endif
 	}
@@ -7929,7 +7942,7 @@ ex_checkpath(eap)
 					      (linenr_t)1, (linenr_t)MAXLNUM);
 }
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 /*
  * ":psearch"
  */
@@ -8003,6 +8016,8 @@ ex_findpat(eap)
 #endif
 
 #ifdef FEAT_WINDOWS
+
+# ifdef FEAT_QUICKFIX
 /*
  * ":ptag", ":ptselect", ":ptjump", ":ptnext", etc.
  */
@@ -8037,6 +8052,7 @@ ex_pedit(eap)
     }
     g_do_tagpreview = 0;
 }
+# endif
 
 /*
  * ":stag", ":stselect" and ":stjump".
@@ -8767,8 +8783,10 @@ makeopens(fd)
     int		dont_save_help = FALSE;
     int		only_save_windows = TRUE;
     int		nr = 0;
+#ifdef FEAT_WINDOWS
     int		cnr = 0;
     int		restore_size = TRUE;
+#endif
     win_t	*wp;
 
 
@@ -8871,7 +8889,9 @@ makeopens(fd)
 	{
 	    if (vim_strchr(p_sessopt, 'k') == NULL)	/* "blank" */
 	    {
+#ifdef FEAT_WINDOWS
 		restore_size = FALSE;
+#endif
 		--nr;    /*skip this window*/
 		continue;
 	    }
@@ -8881,7 +8901,9 @@ makeopens(fd)
 	}
 	else if ((wp->w_buffer->b_help) && dont_save_help)
 	{
+#ifdef FEAT_WINDOWS
 	    restore_size = FALSE;
+#endif
 	    --nr;    /*skip this window*/
 	    continue;
 	}
@@ -8920,8 +8942,10 @@ makeopens(fd)
 	    return FAIL;
 #endif
 
+#ifdef FEAT_WINDOWS
 	if (curwin == wp)
 	    cnr = nr;
+#endif
     }
     if (fputs("let &splitbelow = sbsave", fd) < 0 || put_eol(fd) == FAIL)
 	return FAIL;

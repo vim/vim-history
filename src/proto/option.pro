@@ -13,6 +13,7 @@ char_u *find_viminfo_parameter __ARGS((int type));
 void check_options __ARGS((void));
 void check_buf_options __ARGS((buf_t *buf));
 void free_string_option __ARGS((char_u *p));
+void clear_string_option __ARGS((char_u **pp));
 void set_term_option_alloced __ARGS((char_u **p));
 void set_string_option_direct __ARGS((char_u *name, int opt_idx, char_u *val, int opt_flags));
 char_u *check_stl_option __ARGS((char_u *s));

@@ -1959,12 +1959,12 @@ do_write(eap)
 
     /*
      * Writing to the current file is not allowed in readonly mode
-     * and need a file name.
-     * "nofile" and "scratch" buffers cannot be written implicitly either.
+     * and a file name is required.
+     * "nofile" and "nowrite" buffers cannot be written implicitly either.
      */
     if (!other && (
 #ifdef FEAT_QUICKFIX
-		bt_nofile(curbuf) || bt_scratch(curbuf) ||
+		bt_dontwrite_msg(curbuf) ||
 #endif
 		check_fname() == FAIL || check_readonly(&eap->forceit, curbuf)))
 	goto theend;
@@ -3629,7 +3629,7 @@ do_sub(eap)
 			    /* move the cursor to the new line, like Vi */
 			    ++curwin->w_cursor.lnum;
 			    STRCPY(new_start, p1 + 1);	/* copy the rest */
-			    p1 = new_start;
+			    p1 = new_start - 1;
 			}
 		    }
 		}
@@ -4011,7 +4011,7 @@ write_viminfo_sub_string(fp)
 }
 #endif /* FEAT_VIMINFO */
 
-#if defined(FEAT_WINDOWS) || defined(PROTO)
+#if (defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)) || defined(PROTO)
 /*
  * Set up for a tagpreview.
  */
@@ -4052,7 +4052,7 @@ prepare_tagpreview()
 #endif
 }
 
-#endif /* FEAT_WINDOWS */
+#endif
 
 
 /*
@@ -4208,6 +4208,7 @@ ex_help(eap)
 
     curbuf->b_p_ts = 8;
     curwin->w_p_list = FALSE;
+    curbuf->b_p_ma = FALSE;
 
 erret:
     if (need_free)
@@ -4787,7 +4788,7 @@ ex_sign(eap)
     }
     else
     {
-	EMSG(_("Missing sign id"));
+	EMSG(_("Missing sign ID"));
 	return;
     }
 

@@ -44,6 +44,8 @@
 # undef _DEBUG
 #endif
 
+/* OK, nasty namespace hacking over... */
+
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
@@ -61,14 +63,28 @@
 #endif
 #endif
 
-// static void *perl_interp = NULL;
-static PerlInterpreter *perl_interp = NULL;
-#ifdef ACTIVE_PERL
-static void xs_init __ARGS((pTHXo));
-#else
-static void xs_init __ARGS((void));
+/* Perl compatibility stuff. This should ensure compatibility with older
+ * versions of Perl.
+ */
+
+#ifndef PERL_VERSION
+#    include "patchlevel.h"
+#    define PERL_REVISION   5
+#    define PERL_VERSION    PATCHLEVEL
+#    define PERL_SUBVERSION SUBVERSION
 #endif
+
+#ifndef pTHX
+#    define pTHX void
+#    define pTHX_
+#endif
+
+/* Compatibility hacks over */
+
+static PerlInterpreter *perl_interp = NULL;
+static void xs_init __ARGS((pTHX));
 static void VIM_init __ARGS((void));
+EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 
 #ifdef __MINGW32__
 # include "dyn-ming.h"
@@ -77,7 +93,7 @@ static void VIM_init __ARGS((void));
 /*
  * For dynamic linked perl. (Windows)
  */
-#if defined(ACTIVE_PERL) || defined(PROTO)
+#if defined(DYNAMIC_PERL) || defined(PROTO)
 /*
  * Wrapper defines
  */
@@ -138,10 +154,9 @@ static void VIM_init __ARGS((void));
 # define Perl_Isv_yes_ptr dll_Perl_Isv_yes_ptr
 # define boot_DynaLoader dll_boot_DynaLoader
 
-#ifndef ACTIVE_PERL /* just generating prototypes */
+#ifndef DYNAMIC_PERL /* just generating prototypes */
 # define HANDLE int
 # define XSINIT_t int
-# define pTHX_ int
 # define XSUBADDR_t int
 #endif
 
@@ -205,7 +220,7 @@ static STRLEN* (*Perl_Tna_ptr)(register PerlInterpreter*);
 static GV** (*Perl_Idefgv_ptr)(register PerlInterpreter*);
 static GV** (*Perl_Ierrgv_ptr)(register PerlInterpreter*);
 static SV* (*Perl_Isv_yes_ptr)(register PerlInterpreter*);
-static void (*boot_DynaLoader)_((PerlInterpreter*, CV*));
+static void (*boot_DynaLoader)_((pTHX_ CV*));
 
 /*
  * Table of name to function pointer of perl.
@@ -313,9 +328,9 @@ perl_runtime_link_init(char *libname)
     int
 perl_enabled()
 {
-    return perl_runtime_link_init(ACTIVE_PERL_W32);
+    return perl_runtime_link_init(DYNAMIC_PERL_DLL);
 }
-#endif /* ACTIVE_PERL */
+#endif /* DYNAMIC_PERL */
 
 /*
  * perl_init(): initialize perl interpreter
@@ -352,12 +367,9 @@ perl_end()
 	perl_run(perl_interp);
 	perl_destruct(perl_interp);
 	perl_free(perl_interp);
-#ifdef ACTIVE_PERL	/* is this right? */
-	PERL_SET_CONTEXT(0);
-#endif
 	perl_interp = NULL;
     }
-#ifdef ACTIVE_PERL
+#ifdef DYNAMIC_PERL
     if (hPerlLib)
     {
 	FreeLibrary(hPerlLib);
@@ -505,7 +517,7 @@ VIM_init()
     SvREADONLY_on(sv);
 }
 
-#ifdef ACTIVE_PERL
+#ifdef DYNAMIC_PERL
 static char *e_noperl = N_("Sorry, this command is disabled: the Perl library could not be loaded.");
 #endif
 
@@ -522,7 +534,7 @@ ex_perl(eap)
 
     if (!perl_interp)
     {
-#ifdef ACTIVE_PERL
+#ifdef DYNAMIC_PERL
 	if (!perl_enabled())
 	{
 	    EMSG(_(e_noperl));
@@ -593,7 +605,7 @@ ex_perldo(eap)
 
     if (!perl_interp)
     {
-#ifdef ACTIVE_PERL
+#ifdef DYNAMIC_PERL
 	if (!perl_enabled())
 	{
 	    EMSG(_(e_noperl));
@@ -652,14 +664,6 @@ err:
     }
 }
 
-#ifndef ACTIVE_PERL
-extern void
-#ifdef __BORLANDC__
-__import
-#endif
-boot_DynaLoader _((CV* cv));
-#endif
-
 XS(XS_VIM_Msg);
 XS(XS_VIM_SetOption);
 XS(XS_VIM_DoCommand);
@@ -681,17 +685,11 @@ XS(XS_VIBUF_Append);
 XS(boot_VIM);
 
     static void
-#ifndef ACTIVE_PERL
-xs_init()
-#else
-xs_init(pTHXo)
-#endif
+xs_init(pTHX)
 {
-#if 0
-    dXSUB_SYS;	    /* causes an error with Perl 5.003_97 */
-#endif
     char *file = __FILE__;
 
+    /* DynaLoader is a special case */
     newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, file);
     newXS("VIM::bootstrap", boot_VIM, file);
 }

@@ -187,9 +187,11 @@ buf_valid(buf)
 }
 
 /*
- * Close the link to a buffer. If "free_buf" is TRUE free the buffer if it
- * becomes unreferenced. The caller should get a new buffer very soon!
- * If 'del_buf' is TRUE, remove the buffer from the buffer list.
+ * Close the link to a buffer.
+ * If "free_buf" is TRUE free the buffer if it becomes unreferenced. The
+ * caller should get a new buffer very soon!
+ * If "del_buf" is TRUE, remove the buffer from the buffer list.
+ * The 'bufhidden' option can force freeing and deleting.
  */
     void
 close_buffer(win, buf, free_buf, del_buf)
@@ -200,6 +202,21 @@ close_buffer(win, buf, free_buf, del_buf)
 {
 #ifdef FEAT_AUTOCMD
     int		is_curbuf;
+#endif
+
+#ifdef FEAT_QUICKFIX
+    /*
+     * Force unloading or deleting when 'bufhidden' says so.
+     * The caller must take care of NOT deleting/freeing when 'bufhidden' is
+     * "hide" (otherwise we could never free or delete a buffer).
+     */
+    if (buf->b_p_bh[0] == 'd')		/* 'bufhidden' == "delete" */
+    {
+	del_buf = TRUE;
+	free_buf = TRUE;
+    }
+    else if (buf->b_p_bh[0] == 'u')	/* 'bufhidden' == "unload" */
+	free_buf = TRUE;
 #endif
 
     if (buf->b_nwindows > 0)
@@ -220,6 +237,7 @@ close_buffer(win, buf, free_buf, del_buf)
 	    return;
     }
 #endif
+
     if (buf->b_nwindows > 0 || !free_buf)
     {
 	if (buf == curbuf)
@@ -227,13 +245,8 @@ close_buffer(win, buf, free_buf, del_buf)
 	return;
     }
 
-    /* Always remove the buffer when there is no file name or it is a
-     * "scratch" buffer. */
-    if (buf->b_ffname == NULL
-#ifdef FEAT_QUICKFIX
-	    || bt_scratch(buf)
-#endif
-       )
+    /* Always remove the buffer when there is no file name. */
+    if (buf->b_ffname == NULL)
 	del_buf = TRUE;
 
     /*
@@ -798,9 +811,12 @@ do_buffer(action, start, dir, count, forceit)
 #endif
 	if (buf_valid(delbuf))
 	    close_buffer(delbuf == curwin->w_buffer ? curwin : NULL, delbuf,
-		    (action == DOBUF_GOTO && !P_HID(delbuf) && !bufIsChanged(delbuf))
-			     || action == DOBUF_UNLOAD || action == DOBUF_DEL,
-		      action == DOBUF_DEL);
+			(action == DOBUF_GOTO
+			     && !P_HID(delbuf)
+			     && !bufIsChanged(delbuf))
+			|| action == DOBUF_UNLOAD
+			|| action == DOBUF_DEL,
+		    action == DOBUF_DEL);
     }
 #ifdef FEAT_AUTOCMD
     if (buf_valid(buf))	    /* an autocommand may have deleted buf! */
@@ -922,9 +938,9 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 #endif
 #ifdef FEAT_QUICKFIX
-	/* Make sure 'buftype' is empty */
-	free_string_option(buf->b_p_bt);
-	curbuf->b_p_bt = empty_option;
+	/* Make sure 'bufhidden' and 'buftype' are empty */
+	clear_string_option(&buf->b_p_bh);
+	clear_string_option(&buf->b_p_bt);
 #endif
     }
     else
@@ -1063,6 +1079,7 @@ free_buf_options(buf, free_p_ff)
 #endif
 	free_string_option(buf->b_p_ff);
 #ifdef FEAT_QUICKFIX
+	free_string_option(buf->b_p_bh);
 	free_string_option(buf->b_p_bt);
 #endif
     }
@@ -2031,8 +2048,16 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	    "\"%s%s%s%s%s%s",
 	    curbufIsChanged() ? (shortmess(SHM_MOD)
 					  ?  " [+]" : _(" [Modified]")) : " ",
-	    (curbuf->b_flags & BF_NOTEDITED) ? _("[Not edited]") : "",
-	    (curbuf->b_flags & BF_NEW) ? _("[New file]") : "",
+	    (curbuf->b_flags & BF_NOTEDITED)
+#ifdef FEAT_QUICKFIX
+		    && !bt_dontwrite(curbuf)
+#endif
+					? _("[Not edited]") : "",
+	    (curbuf->b_flags & BF_NEW)
+#ifdef FEAT_QUICKFIX
+		    && !bt_dontwrite(curbuf)
+#endif
+					? _("[New file]") : "",
 	    (curbuf->b_flags & BF_READERR) ? _("[Read errors]") : "",
 	    curbuf->b_p_ro ? (shortmess(SHM_RO) ? "[RO]"
 						      : _("[readonly]")) : "",
@@ -2449,6 +2474,7 @@ do_arg_all(count, forceit)
     int		p_sb_save;
     int		p_ea_save;
     alist_t	*alist;		/* argument list to be used */
+    buf_t	*buf;
 
     if (ARGCOUNT <= 0)
     {
@@ -2476,8 +2502,9 @@ do_arg_all(count, forceit)
     for (wp = firstwin; wp != NULL; wp = wpnext)
     {
 	wpnext = wp->w_next;
-	if (wp->w_buffer->b_ffname == NULL
-		|| wp->w_buffer->b_nwindows > 1
+	buf = wp->w_buffer;
+	if (buf->b_ffname == NULL
+		|| buf->b_nwindows > 1
 #ifdef FEAT_VERTSPLIT
 		|| wp->w_width != Columns
 #endif
@@ -2488,8 +2515,7 @@ do_arg_all(count, forceit)
 	    /* check if the buffer in this window is in the arglist */
 	    for (i = 0; i < ARGCOUNT; ++i)
 	    {
-		if (fullpathcmp(ARGLIST[i],
-				     wp->w_buffer->b_ffname, TRUE) & FPC_SAME)
+		if (fullpathcmp(ARGLIST[i], buf->b_ffname, TRUE) & FPC_SAME)
 		{
 		    if (i < opened_len)
 			opened[i] = TRUE;
@@ -2509,15 +2535,14 @@ do_arg_all(count, forceit)
 
 	if (i == ARGCOUNT)		/* close this window */
 	{
-	    if (P_HID(wp->w_buffer) || forceit || wp->w_buffer->b_nwindows > 1
-						|| !bufIsChanged(wp->w_buffer))
+	    if (P_HID(buf) || forceit || buf->b_nwindows > 1
+							|| !bufIsChanged(buf))
 	    {
 		/* If the buffer was changed, and we would like to hide it,
 		 * try autowriting. */
-		if (!P_HID(wp->w_buffer) && wp->w_buffer->b_nwindows <= 1
-						 && bufIsChanged(wp->w_buffer))
+		if (!P_HID(buf) && buf->b_nwindows <= 1 && bufIsChanged(buf))
 		{
-		    (void)autowrite(wp->w_buffer, FALSE);
+		    (void)autowrite(buf, FALSE);
 #ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the window */
 		    if (!win_valid(wp))
@@ -2534,8 +2559,7 @@ do_arg_all(count, forceit)
 #ifdef FEAT_WINDOWS
 		else
 		{
-		    win_close(wp, !P_HID(wp->w_buffer)
-					      && !bufIsChanged(wp->w_buffer));
+		    win_close(wp, !P_HID(buf) && !bufIsChanged(buf));
 # ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the next window */
 		    if (!win_valid(wpnext))
@@ -2604,8 +2628,10 @@ do_arg_all(count, forceit)
 		--autocmd_no_leave;
 #endif
 
+	    /*
+	     * edit file i
+	     */
 	    curwin->w_arg_idx = i;
-	    /* edit file i */
 	    (void)do_ecmd(0, ((char_u **)alist->al_ga.ga_data)[i],
 							 NULL, NULL, ECMD_ONE,
 		   ((P_HID(curwin->w_buffer)
@@ -3020,7 +3046,12 @@ write_viminfo_bufferlist(fp)
     fprintf(fp, _("\n# Buffer list:\n"));
     for (buf = firstbuf; buf != NULL ; buf = buf->b_next)
     {
-	if (buf->b_fname == NULL || buf->b_help || removable(buf->b_ffname))
+	if (buf->b_fname == NULL
+		|| buf->b_help
+#ifdef FEAT_QUICKFIX
+		|| bt_quickfix(buf)
+#endif
+		|| removable(buf->b_ffname))
 	    continue;
 
 	putc('%', fp);
@@ -3048,21 +3079,13 @@ buf_spname(buf)
 	return _("[Error List]");
 #endif
 #ifdef FEAT_QUICKFIX
-    /* There is no _file_ for a "nofile" and "scratch" buffers, b_sfname
+    /* There is no _file_ when 'buftype' is "nofile", b_sfname
      * contains the name as specified by the user */
     if (bt_nofile(buf))
     {
 	if (buf->b_sfname != NULL)
 	    return (char *)buf->b_sfname;
-	else
-	    return "";
-    }
-    if (bt_scratch(buf))
-    {
-	if (buf->b_sfname != NULL)
-	      return (char *)buf->b_sfname;
-	else
-	      return _("[scratch]");
+	return "[Scratch]";
     }
 #endif
     if (buf->b_fname == NULL)

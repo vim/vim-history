@@ -329,7 +329,7 @@ my_fullpath(char *buf, char *fname, int len)
     if (strlen(buf) + strlen(fname) >= len - 1)
     {
 	printf("ERROR: File name too long!\n");
-	exit();
+	exit(1);
     }
     add_pathsep(buf);
     strcat(buf, fname);

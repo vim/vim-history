@@ -51,6 +51,7 @@ static void foldUpdateIEMS __ARGS((win_t *wp, linenr_t top, linenr_t bot));
 
 /* Exported folding functions. {{{1 */
 /* copyFoldingState() {{{2 */
+#if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * Copy that folding state from window "wp_from" to window "wp_to".
  */
@@ -63,6 +64,7 @@ copyFoldingState(wp_from, wp_to)
     wp_to->w_foldinvalid = wp_from->w_foldinvalid;
     cloneFoldGrowArray(&wp_from->w_folds, &wp_to->w_folds);
 }
+#endif
 
 /* hasAnyFolding() {{{2 */
 /*

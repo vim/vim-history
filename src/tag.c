@@ -171,8 +171,13 @@ do_tag(tag, type, count, forceit, verbose)
 
     /*
      * Don't add a tag to the tagstack if 'tagstack' has been reset.
+     * Also don't do this for ":ptag".
      */
-    if (!p_tgst && *tag)
+    if ((!p_tgst && *tag != NUL)
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	    || g_do_tagpreview
+#endif
+	    )
     {
 	use_tagstack = FALSE;
     }
@@ -428,7 +433,7 @@ do_tag(tag, type, count, forceit, verbose)
 	{
 	    if (verbose)
 		EMSG2(_("tag not found: %s"), name);
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	    g_do_tagpreview = 0;
 #endif
 	}
@@ -2263,7 +2268,7 @@ jumpto_tag(lbuf, forceit)
 #ifdef FEAT_SEARCH_EXTRA
     int		save_no_hlsearch;
 #endif
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     win_t	*curwin_save = NULL;
 #endif
     char_u	*full_fname = NULL;
@@ -2338,7 +2343,7 @@ jumpto_tag(lbuf, forceit)
     need_mouse_correct = TRUE;
 #endif
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     if (g_do_tagpreview)
     {
 	/* don't split again below */
@@ -2370,7 +2375,7 @@ jumpto_tag(lbuf, forceit)
 
     /* A :ta from a help file will keep the b_help flag set.  For ":ptag" we
      * need to use the flag from the window where we came from. */
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     if (g_do_tagpreview)
 	keep_help_flag = curwin_save->w_buffer->b_help;
     else
@@ -2535,7 +2540,7 @@ jumpto_tag(lbuf, forceit)
 	if (curbuf->b_help)
 	    set_topline(curwin, curwin->w_cursor.lnum);
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	if (g_do_tagpreview && curwin != curwin_save && win_valid(curwin_save))
 	{
 	    /* Return cursor to where we were */
@@ -2560,7 +2565,7 @@ jumpto_tag(lbuf, forceit)
     }
 
 erret:
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     g_do_tagpreview = 0; /* For next time */
 #endif
     if (tagp.fname_end != NULL)

@@ -20,7 +20,7 @@ syntax clear
 " level in the CWEB syntax, e.g., in the preamble.  In general, a CWEB source
 " code can be seen as a normal TeX document with some C/C++ material
 " interspersed in certain defined regions.
-source <sfile>:p:h/tex.vim
+runtime syntax/tex.vim
 
 " Read the C/C++ syntax too; C/C++ syntax items are treated as such in the
 " C/C++ section of a CWEB chunk or in inner C/C++ context in "|...|" groups.

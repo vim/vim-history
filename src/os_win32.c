@@ -1229,8 +1229,6 @@ mch_inchar(
 #endif /* FEAT_GUI_W32 */
 }
 
-#ifdef FEAT_GUI_W32
-
 #ifndef __MINGW32__
 # include <shellapi.h>	/* required for FindExecutable() */
 #endif
@@ -1259,6 +1257,8 @@ executable_exists(char *name)
     }
     return FALSE;
 }
+
+#ifdef FEAT_GUI_W32
 
 /*
  * GUI version of mch_shellinit().
@@ -1863,7 +1863,7 @@ mch_windexit(
 
     exit(r);
 }
-#endif /* FEAT_GUI_W32 */
+#endif /* !FEAT_GUI_W32 */
 
 
 /*
@@ -2086,6 +2086,18 @@ mch_isdir(char_u *name)
 
     return (f & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return 1 if "name" can be executed, 0 if not.
+ * Return -1 if unknown.
+ */
+    int
+mch_can_exe(char_u *name)
+{
+    return executable_exists((char *)name);
+}
+#endif
 
 /*
  * Check what "name" is:

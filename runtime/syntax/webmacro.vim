@@ -2,7 +2,7 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2000 Nov 04
+" Last Change:  2000 Dec 17
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
@@ -16,7 +16,7 @@ if !exists("main_syntax")
 endif
 
 
-so <sfile>:p:h/html.vim
+runtime syntax/html.vim
 
 syn cluster htmlPreProc add=webmacroIf,webmacroUse,webmacroBraces,webmacroParse,webmacroInclude,webmacroSet,webmacroForeach,webmacroComment
 

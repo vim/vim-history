@@ -697,8 +697,10 @@ EXTERN char_u	*autocmd_match INIT(= NULL); /* name for <amatch> on cmdline */
 
 #ifdef FEAT_WINDOWS
 EXTERN int	postponed_split INIT(= 0);  /* for CTRL-W CTRL-] command */
+# ifdef FEAT_QUICKFIX
 EXTERN int	g_do_tagpreview INIT(= 0);  /* for tag preview commands:
 					       height of preview window */
+# endif
 #endif
 EXTERN int	replace_offset INIT(= 0);   /* offset for replace_push() */
 
@@ -782,13 +784,14 @@ EXTERN int	lcs_tab1 INIT(= NUL);
 EXTERN int	lcs_tab2 INIT(= NUL);
 EXTERN int	lcs_trail INIT(= NUL);
 
-#if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT)
+#if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT) \
+	|| defined(FEAT_FOLDING)
 /* Characters from 'fillchars' option */
 EXTERN int	fill_stl INIT(= ' ');
 EXTERN int	fill_stlnc INIT(= ' ');
-EXTERN int	fill_vert INIT(= ' ');
 #endif
-#ifdef FEAT_FOLDING
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
+EXTERN int	fill_vert INIT(= ' ');
 EXTERN int	fill_fold INIT(= '-');
 #endif
 
@@ -947,11 +950,7 @@ EXTERN char_u e_scroll[]	INIT(=N_("Invalid scroll size"));
 EXTERN char_u e_tagstack[]	INIT(=N_("tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("Name too long"));
-EXTERN char_u e_toombra[]	INIT(=N_("Too many \\("));
 EXTERN char_u e_toomsbra[]	INIT(=N_("Too many ["));
-#ifdef FEAT_SYN_HL
-EXTERN char_u e_toomzbra[]	INIT(=N_("Too many \\z("));
-#endif
 #ifdef SMALL_MALLOC		/* 16 bit storage allocation */
 EXTERN char_u e_toolong[]	INIT(=N_("Command too long"));
 #endif

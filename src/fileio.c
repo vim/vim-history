@@ -47,6 +47,9 @@
 
 #ifdef FEAT_MBYTE
 static char_u *next_fcc __ARGS((char_u **pp));
+# ifdef FEAT_EVAL
+static char_u *readfile_charconvert __ARGS((char_u *fname, char_u *fcc, int *fdp));
+# endif
 #endif
 #ifdef FEAT_VIMINFO
 static void check_marks_read __ARGS((void));
@@ -82,14 +85,55 @@ static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fn
 # define FIO_ALL	-1	/* allow all formats */
 #endif
 
-#if defined(HAVE_ICONV_H) && defined(FEAT_MBYTE)
-# include <iconv.h>
+#ifdef USE_ICONV
+# ifdef HAVE_ICONV_H
+#  include <iconv.h>
+# else
+#  include <errno.h>
+typedef void *iconv_t;
+# endif
+
+/*
+ * On Win32 iconv.dll is dynamically loaded.
+ */
+# ifndef DYNAMIC_ICONV
+#  define ICONV_ENABLED 1
+#else
+#  define ICONV_ENABLED iconv_enabled()
+static int iconv_runtime_link_init(char *libname, char *rtlibname);
+HINSTANCE hIconvDLL = 0;
+HINSTANCE hMsvcrtDLL = 0;
+/* Pointer to functions and variables to be loaded at runtime */
+static size_t (*iconv) (iconv_t cd, const char* * inbuf,
+	size_t *inbytesleft, char* * outbuf, size_t *outbytesleft);
+static iconv_t (*iconv_open) (const char* tocode, const char* fromcode);
+static int (*iconv_close) (iconv_t cd);
+static int (*iconvctl) (iconv_t cd, int request, void* argument);
+static int *iconv_errno = 0;
+#  define errno (*iconv_errno)
+#  ifndef DYNAMIC_ICONV_DLL
+#   define DYNAMIC_ICONV_DLL "iconv.dll"
+#  endif
+#  ifndef DYNAMIC_MSVCRT_DLL
+#   ifndef DEBUG
+#    define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
+#   else
+#    define DYNAMIC_MSVCRT_DLL "msvcrtd.dll"
+#   endif
+#  endif
+# endif
+
 static iconv_t	my_iconv_open __ARGS((char_u *to, char_u *from));
+
 #endif
 
 /* When converting, a read() or write() may leave some bytes to be converted
  * for the next call.  The value is guessed... */
 #define CONV_RESTLEN 30
+
+/* We have to guess how much a sequence of bytes may expand when converting
+ * with iconv() to be able to allocate a buffer. */
+#define ICONV_MULT 8
 
 /*
  * Structure to pass arguments from buf_write() to buf_write_bytes().
@@ -109,7 +153,7 @@ struct bw_info
     char_u	*bw_conv_buf;	/* buffer for writing converted chars */
     int		bw_conv_buflen; /* size of bw_conv_buf */
     int		bw_conv_error;	/* set for conversion error */
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
     iconv_t	bw_iconv_fd;	/* descriptor for iconv() or -1 */
 # endif
 #endif
@@ -160,10 +204,6 @@ filemess(buf, name, s, attr)
     msg_clr_eos();
     out_flush();
 }
-
-/* We have to guess how much a sequence of bytes may expaned when converting
- * with iconv() to be able to allocate a buffer. */
-#define ICONV_MULT 8
 
 /*
  * Read lines from file 'fname' into the buffer after line 'from'.
@@ -249,10 +289,12 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     char_u	*fcc_next = NULL;	/* next item in 'fccs' or NULL */
     int		advance_fcc = FALSE;
     long	real_size = 0;
-# if defined(HAVE_ICONV_H) && defined(FEAT_EVAL)
+# ifdef USE_ICONV
     iconv_t	iconv_fd = (iconv_t)-1;	/* descriptor for iconv() or -1 */
+#  ifdef FEAT_EVAL
     int		did_iconv = FALSE;	/* TRUE when iconv() failed and trying
 					   'charconvert' next */
+#  endif
 # endif
     int		converted = FALSE;	/* TRUE if conversion done */
     int		notconverted = FALSE;	/* TRUE if conversion wanted but it
@@ -482,7 +524,14 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		     * been created by someone else, a ":w" will complain.
 		     */
 		    curbuf->b_flags |= BF_NEW;
-		    check_need_swap(newfile);	/* may create swap file now */
+
+		    /* Create a swap file now, so that other Vims are warned
+		     * that we are editing this file.  Don't do this for a
+		     * "nofile" or "nowrite" buffer type. */
+#ifdef FEAT_QUICKFIX
+		    if (!bt_dontwrite(curbuf))
+#endif
+			check_need_swap(newfile);
 		    filemess(curbuf, sfname, (char_u *)_("[New File]"), 0);
 #ifdef FEAT_VIMINFO
 		    /* Even though this is a new file, it might have been
@@ -521,7 +570,13 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #endif
     }
 
-    check_need_swap(newfile);	/* may create swap file now */
+    /* Create a swap file now, so that other Vims are warned that we are
+     * editing this file.
+     * Don't do this for a "nofile" or "nowrite" buffer type. */
+#ifdef FEAT_QUICKFIX
+    if (!bt_dontwrite(curbuf))
+#endif
+	check_need_swap(newfile);
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     /* If "Quit" selected at ATTENTION dialog, don't load the file */
@@ -720,7 +775,7 @@ retry:
     }
 
 #ifdef FEAT_MBYTE
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
     if (iconv_fd != (iconv_t)-1)
     {
 	/* aborted conversion with iconv(), close the descriptor */
@@ -789,7 +844,7 @@ retry:
 	else if (cc_utf8 || !has_mbyte)
 	    fio_flags = get_fio_flags(fcc);
 
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
 	/*
 	 * Try using iconv() if we can't convert internally.
 	 */
@@ -797,7 +852,7 @@ retry:
 #  ifdef FEAT_EVAL
 		&& !did_iconv
 #  endif
-		)
+		&& ICONV_ENABLED)
 	    iconv_fd = my_iconv_open(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc);
 # endif
 
@@ -807,19 +862,19 @@ retry:
 	 * and we can't do it internally or with iconv().
 	 */
 	if (fio_flags == 0 && !read_stdin && *p_ccv != NUL
-# ifdef HAVE_ICONV_H
-						&& iconv_fd == (iconv_t)-1
-# endif
+#  ifdef USE_ICONV
+						    && iconv_fd == (iconv_t)-1
+#  endif
 		)
 	{
-# ifdef HAVE_ICONV_H
+#  ifdef USE_ICONV
 	    did_iconv = FALSE;
-# endif
+#  endif
 	    /* Skip conversion when it's already done (retry for wrong
 	     * "fileformat"). */
 	    if (tmpname == NULL)
 	    {
-		tmpname = eval_charconvert(fname, fcc, &fd);
+		tmpname = readfile_charconvert(fname, fcc, &fd);
 		if (tmpname == NULL)
 		{
 		    /* Conversion failed.  Try another one. */
@@ -839,10 +894,10 @@ retry:
 # endif
 	{
 	    if (fio_flags == 0
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
 		    && iconv_fd == (iconv_t)-1
 # endif
-		    )
+	       )
 	    {
 		/* Conversion wanted but we can't.
 		 * Try the next conversion in 'filecharcodes' */
@@ -925,7 +980,7 @@ retry:
 		 * ucs-4 to utf-8: 4 bytes become up to 6 bytes, size must be
 		 * multiple of 4 */
 		real_size = size;
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
 		if (iconv_fd != (iconv_t)-1)
 		    size = size / ICONV_MULT;
 		else
@@ -1047,7 +1102,7 @@ retry:
 	    size += conv_restlen;
 	    conv_restlen = 0;
 
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
 	    if (iconv_fd != (iconv_t)-1)
 	    {
 		/*
@@ -1242,7 +1297,7 @@ retry:
 		    {
 rewind_retry:
 			/* Retry reading with another conversion. */
-# if defined(FEAT_EVAL) && defined(HAVE_ICONV_H)
+# if defined(FEAT_EVAL) && defined(USE_ICONV)
 			if (*p_ccv != NUL && iconv_fd != (iconv_t)-1)
 			    /* iconv() failed, try 'charconvert' */
 			    did_iconv = TRUE;
@@ -1471,7 +1526,7 @@ failed:
 	set_string_option_direct((char_u *)"fcc", -1, fcc, OPT_FREE);
     if (fcc_next != NULL)
 	vim_free(fcc);
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
     if (iconv_fd != (iconv_t)-1)
     {
 	iconv_close(iconv_fd);
@@ -1772,6 +1827,73 @@ next_fcc(pp)
     }
     return r;
 }
+
+# ifdef FEAT_EVAL
+/*
+ * Convert a file with the 'charconvert' expression.
+ * This closes the file which is to be read, converts it and opens the
+ * resulting file for reading.
+ * Returns name of the resulting converted file (the caller should delete it
+ * after reading it).
+ * Returns NULL if the conversion failed ("*fdp" is not set) .
+ */
+    static char_u *
+readfile_charconvert(fname, fcc, fdp)
+    char_u	*fname;		/* name of input file */
+    char_u	*fcc;		/* converted from */
+    int		*fdp;		/* in/out: file descriptor of file */
+{
+    char_u	*tmpname;
+    char_u	*errmsg = NULL;
+
+    tmpname = vim_tempname('r');
+    if (tmpname == NULL)
+	errmsg = (char_u *)_("Can't find temp file for conversion");
+    else
+    {
+	close(*fdp);		/* close the input file, ignore errors */
+	*fdp = -1;
+	if (eval_charconvert(fcc, cc_utf8 ? (char_u *)"utf-8" : p_cc,
+						      fname, tmpname) == FAIL)
+	    errmsg = (char_u *)_("Conversion with 'charconvert' failed");
+	if (errmsg == NULL && (*fdp = mch_open((char *)tmpname,
+						  O_RDONLY | O_EXTRA, 0)) < 0)
+	    errmsg = (char_u *)_("can't read output of 'charconvert'");
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+	/* Security check: We don't want to read from a symlink.  This could
+	 * be a symlink attack to try to replace the converted text with
+	 * something else. */
+	if (errmsg == NULL && symlink_check(tmpname))
+	{
+	    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
+	    close(*fdp);
+	    *fdp = -1;
+	}
+#endif
+    }
+
+    if (errmsg != NULL)
+    {
+	/* Don't use emsg(), it breaks mappings, the retry with
+	 * another type of conversion might still work. */
+	MSG(errmsg);
+	if (tmpname != NULL)
+	{
+	    mch_remove(tmpname);	/* delete converted file */
+	    vim_free(tmpname);
+	    tmpname = NULL;
+	}
+    }
+
+    /* If the input file is closed, open it (caller should check for error). */
+    if (*fdp < 0)
+	*fdp = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0);
+
+    return tmpname;
+}
+# endif
+
 #endif
 
 #ifdef FEAT_VIMINFO
@@ -1947,6 +2069,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     struct bw_info write_info;		/* info for buf_write_bytes() */
 #ifdef FEAT_MBYTE
     int		    converted = FALSE;
+    int		    notconverted = FALSE;
     char_u	    *fcc;		/* effective 'filecharcode' */
 #endif
 #ifdef HAS_BW_FLAGS
@@ -1979,7 +2102,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     write_info.bw_conv_buf = NULL;
     write_info.bw_conv_error = FALSE;
     write_info.bw_restlen = 0;
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
     write_info.bw_iconv_fd = (iconv_t)-1;
 # endif
 #endif
@@ -2769,16 +2892,19 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
     }
 
-# if defined(FEAT_EVAL) || defined(HAVE_ICONV_H)
+# if defined(FEAT_EVAL) || defined(USE_ICONV)
     if (converted && wb_flags == 0)
     {
-#  ifdef HAVE_ICONV_H
+#  ifdef USE_ICONV
 	/*
 	 * Use iconv() conversion when conversion is needed and it's not done
 	 * internally.
 	 */
-	write_info.bw_iconv_fd = my_iconv_open(fcc,
+	if (ICONV_ENABLED)
+	    write_info.bw_iconv_fd = my_iconv_open(fcc,
 					  cc_utf8 ? (char_u *)"utf-8" : p_cc);
+	else
+	    write_info.bw_iconv_fd = (iconv_t)-1;
 	if (write_info.bw_iconv_fd != (iconv_t)-1)
 	{
 	    /* We're going to use iconv(), allocate a buffer to convert in. */
@@ -2810,7 +2936,23 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		}
 	    }
 #  endif
+    }
 # endif
+    if (converted && wb_flags == 0
+#  ifdef USE_ICONV
+	    && write_info.bw_iconv_fd == (iconv_t)-1
+#  endif
+#  ifdef FEAT_EVAL
+	    && wfname == fname
+#  endif
+	    )
+    {
+	if (!forceit)
+	{
+	    errmsg = (char_u *)_("Cannot convert (use ! to write without conversion)");
+	    goto fail;
+	}
+	notconverted = TRUE;
     }
 #endif
 
@@ -3109,24 +3251,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 */
 	if (end != 0)
 	{
-	    int	error;
-
-	    set_vim_var_string(VV_CC_FROM,
-				      cc_utf8 ? (char_u *)"utf-8" : p_cc, -1);
-	    set_vim_var_string(VV_CC_TO, fcc, -1);
-	    set_vim_var_string(VV_CC_IN, wfname, -1);
-	    set_vim_var_string(VV_CC_OUT, fname, -1);
-	    if (eval_to_bool(p_ccv, &error, NULL, FALSE) || error)
+	    if (eval_charconvert(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc,
+						       wfname, fname) == FAIL)
 	    {
-		errmsg = (char_u *)_("Conversion failed");
+		write_info.bw_conv_error = TRUE;
 		end = 0;
 	    }
-	    else
-		converted = TRUE;
-	    set_vim_var_string(VV_CC_FROM, NULL, -1);
-	    set_vim_var_string(VV_CC_TO, NULL, -1);
-	    set_vim_var_string(VV_CC_IN, NULL, -1);
-	    set_vim_var_string(VV_CC_OUT, NULL, -1);
 	}
 	mch_remove(wfname);
 	vim_free(wfname);
@@ -3209,6 +3339,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (write_info.bw_conv_error)
 	{
 	    STRCAT(IObuff, _(" CONVERSION ERROR"));
+	    c = TRUE;
+	}
+	else if (notconverted)
+	{
+	    STRCAT(IObuff, _("[NOT converted]"));
 	    c = TRUE;
 	}
 	else if (converted)
@@ -3355,7 +3490,7 @@ nofail:
 	vim_free(buffer);
 #ifdef FEAT_MBYTE
     vim_free(write_info.bw_conv_buf);
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
     if (write_info.bw_iconv_fd != (iconv_t)-1)
     {
 	iconv_close(write_info.bw_iconv_fd);
@@ -3673,7 +3808,7 @@ buf_write_bytes(ip)
 	    }
 	}
 
-# ifdef HAVE_ICONV_H
+# ifdef USE_ICONV
 	if (ip->bw_iconv_fd != (iconv_t)-1)
 	{
 	    const char	*from;
@@ -3689,8 +3824,8 @@ buf_write_bytes(ip)
 		 * conversion buffer for this. */
 		fromlen = len + ip->bw_restlen;
 		from = (char *)ip->bw_conv_buf + ip->bw_conv_buflen - fromlen;
-		mch_memmove(from, ip->bw_rest, (size_t)ip->bw_restlen);
-		mch_memmove(from + ip->bw_restlen, buf, (size_t)len);
+		mch_memmove((void *)from, ip->bw_rest, (size_t)ip->bw_restlen);
+		mch_memmove((void *)(from + ip->bw_restlen), buf, (size_t)len);
 		tolen = ip->bw_conv_buflen - fromlen;
 	    }
 	    else
@@ -3703,8 +3838,19 @@ buf_write_bytes(ip)
 
 	    if (ip->bw_first)
 	    {
+		size_t	save_len = tolen;
+
 		/* output the initial shift state sequence */
 		(void)iconv(ip->bw_iconv_fd, NULL, NULL, &to, &tolen);
+
+		/* There is a bug in iconv() on Linux (which appears to be
+		 * wide-spread) which sets "to" to NULL and messes up "tolen".
+		 */
+		if (to == NULL)
+		{
+		    to = (char *)ip->bw_conv_buf;
+		    tolen = save_len;
+		}
 		ip->bw_first = FALSE;
 	    }
 
@@ -3721,7 +3867,7 @@ buf_write_bytes(ip)
 
 	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
 	    if (fromlen > 0)
-		mch_memmove(ip->bw_rest, from, fromlen);
+		mch_memmove(ip->bw_rest, (void *)from, fromlen);
 	    ip->bw_restlen = fromlen;
 
 	    buf = ip->bw_conv_buf;
@@ -4049,7 +4195,7 @@ shorten_fnames(force)
     {
 	if (buf->b_fname != NULL
 #ifdef FEAT_QUICKFIX
-	        && !bt_nofile(buf) && !bt_scratch(buf)
+	        && !bt_nofile(buf)
 #endif
 		&& (force
 		    || buf->b_sfname == NULL
@@ -6810,7 +6956,7 @@ symlink_check(fname)
 }
 #endif
 
-#if defined(HAVE_ICONV_H) && defined(FEAT_MBYTE)
+#if defined(USE_ICONV) || defined(PROTO)
 static char_u *alt_charset __ARGS((char_u *name));
 
 /*
@@ -6832,7 +6978,11 @@ alt_charset(name)
 	{"ucs-4bl", "ucs-4"},
 	{"ucs-4lb", "ucs-4"},
 	{"unicode", "ucs-2"},
-	{"japan", "shift_jis"},
+#ifdef WIN32
+	{"japan", "cp932"},
+#else
+	{"japan", "euc-jp"},
+#endif
 	{"korea", "euc-kr"},
 	{"prc", "chinese"},
 	{"taiwan", "euc-tw"},
@@ -6844,8 +6994,11 @@ alt_charset(name)
 	    return (char_u *)trans[idx][1];
     return NULL;
 }
+
 /*
  * Call iconv_open() with a few retries for similar charset names.
+ * Also checks if iconv() works properly (there are broken versions).
+ * Returns (iconv_t)-1 if failed.
  */
     static iconv_t
 my_iconv_open(to, from)
@@ -6855,6 +7008,14 @@ my_iconv_open(to, from)
     iconv_t	fd;
     char_u	*to_alt;
     char_u	*from_alt;
+#define ICONV_TESTLEN 400
+    char_u	tobuf[ICONV_TESTLEN];
+    char	*p;
+    size_t	tolen;
+    static int	iconv_ok = -1;
+
+    if (iconv_ok == FALSE)
+	return (iconv_t)-1;	/* detected a broken iconv() previously */
 
     fd = iconv_open((char *)to, (char *)from);
     if (fd == (iconv_t)-1)
@@ -6870,6 +7031,74 @@ my_iconv_open(to, from)
 		fd = iconv_open((char *)to_alt, (char *)from_alt);
 	}
     }
+
+    if (fd != (iconv_t)-1 && iconv_ok == -1)
+    {
+	/*
+	 * Do a dummy iconv() call to check if it actually works.  There is a
+	 * version of iconv() on Linux that is broken.  We can't ignore it,
+	 * because it's wide-spread.  The symptoms are that after outputting
+	 * the initial shift state the "to" pointer is NULL and conversion
+	 * stops for no apparent reason after about 8160 characters.
+	 */
+	p = (char *)tobuf;
+	tolen = ICONV_TESTLEN;
+	(void)iconv(fd, NULL, NULL, &p, &tolen);
+	if (p == NULL)
+	{
+	    iconv_ok = FALSE;
+	    iconv_close(fd);
+	    fd = (iconv_t)-1;
+	}
+	else
+	    iconv_ok = TRUE;
+    }
+
     return fd;
 }
-#endif
+
+# if (defined(USE_ICONV) && defined(DYNAMIC_ICONV)) || defined(PROTO)
+    int
+iconv_enabled()
+{
+    return iconv_runtime_link_init(DYNAMIC_ICONV_DLL, DYNAMIC_MSVCRT_DLL);
+}
+
+    static int
+iconv_runtime_link_init(char *libname, char *rtlibname)
+{
+    if (hIconvDLL && hMsvcrtDLL)
+	return 1;
+    hIconvDLL = LoadLibrary(libname);
+    hMsvcrtDLL = LoadLibrary(rtlibname);
+    if (!hIconvDLL || !hMsvcrtDLL)
+    {
+	iconv_end();
+	return 0;
+    }
+    *((FARPROC*)&iconv)		= GetProcAddress(hIconvDLL, "libiconv");
+    *((FARPROC*)&iconv_open)	= GetProcAddress(hIconvDLL, "libiconv_open");
+    *((FARPROC*)&iconv_close)	= GetProcAddress(hIconvDLL, "libiconv_close");
+    *((FARPROC*)&iconvctl)	= GetProcAddress(hIconvDLL, "libiconvctl");
+    *((FARPROC*)&iconv_errno)	= GetProcAddress(hMsvcrtDLL, "_errno");
+    if (!iconv || !iconv_open || !iconv_close || !iconvctl || !iconv_errno)
+    {
+	iconv_end();
+	return 0;
+    }
+    return 1;
+}
+
+    void
+iconv_end()
+{
+    if (hIconvDLL)
+	FreeLibrary(hIconvDLL);
+    if (hMsvcrtDLL)
+	FreeLibrary(hMsvcrtDLL);
+    hIconvDLL = 0;
+    hMsvcrtDLL = 0;
+}
+# endif /* defined(DYNAMIC_ICONV) */
+
+#endif /* defined(USE_ICONV) */

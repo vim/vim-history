@@ -191,6 +191,7 @@ static void f_cscope_connection __ARGS((VAR argvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
 static void f_did_filetype __ARGS((VAR argvars, VAR retvar));
 static void f_escape __ARGS((VAR argvars, VAR retvar));
+static void f_executable __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
@@ -2108,6 +2109,7 @@ static struct fst
     {"delete",		1, 1, f_delete},
     {"did_filetype",	0, 0, f_did_filetype},
     {"escape",		2, 2, f_escape},
+    {"executable",	1, 1, f_executable},
     {"exists",		1, 1, f_exists},
     {"expand",		1, 2, f_expand},
     {"file_readable",	1, 1, f_filereadable},	/* obsolete */
@@ -2949,6 +2951,17 @@ f_escape(argvars, retvar)
 }
 
 /*
+ * "executable()" function
+ */
+    static void
+f_executable(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = mch_can_exe(get_var_string(&argvars[0]));
+}
+
+/*
  * "exists()" function
  */
     static void
@@ -3541,6 +3554,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_HANGULIN
 	"hangul_input",
 #endif
+#if defined(HAVE_ICONV_H) && defined(USE_ICONV)
+	"iconv",
+#endif
 #ifdef FEAT_INS_EXPAND
 	"insert_expand",
 #endif
@@ -3610,7 +3626,7 @@ f_has(argvars, retvar)
 	"path_extra",
 #endif
 #ifdef FEAT_PERL
-#ifndef ACTIVE_PERL
+#ifndef DYNAMIC_PERL
 	"perl",
 #endif
 #endif
@@ -3744,11 +3760,15 @@ f_has(argvars, retvar)
     {
 	if (STRICMP(name, "vim_starting") == 0)
 	    n = (starting != 0);
+#if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
+	else if (STRICMP(name, "iconv") == 0)
+	    n = iconv_enabled() ? TRUE : FALSE;
+#endif
 #ifdef DYNAMIC_PYTHON
 	else if (STRICMP(name, "python") == 0)
 	    n = python_enabled() ? TRUE : FALSE;
 #endif
-#ifdef ACTIVE_PERL
+#ifdef DYNAMIC_PERL
 	else if (STRICMP(name, "perl") == 0)
 	    n = perl_enabled() ? TRUE : FALSE;
 #endif
@@ -4445,7 +4465,9 @@ f_setwinvar(argvars, retvar)
     VAR		retvar;
 {
     win_t	*win;
+#ifdef FEAT_WINDOWS
     win_t	*save_curwin;
+#endif
     char_u	*varname, *winvarname;
     VAR		varp;
     char_u	nbuf[NUMBUFLEN];
@@ -4457,10 +4479,12 @@ f_setwinvar(argvars, retvar)
 
     if (win != NULL && varname != NULL && varp != NULL)
     {
+#ifdef FEAT_WINDOWS
 	/* set curwin to be our win, temporarily */
 	save_curwin = curwin;
 	curwin = win;
 	curbuf = curwin->w_buffer;
+#endif
 
 	if (*varname == '&')
 	{
@@ -6959,6 +6983,33 @@ store_session_globals(fd)
 }
 #endif
 
+# if defined(FEAT_MBYTE) || defined(PROTO)
+    int
+eval_charconvert(cc_from, cc_to, fname_from, fname_to)
+    char_u	*cc_from;
+    char_u	*cc_to;
+    char_u	*fname_from;
+    char_u	*fname_to;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_CC_FROM, cc_from, -1);
+    set_vim_var_string(VV_CC_TO, cc_to, -1);
+    set_vim_var_string(VV_CC_IN, fname_from, -1);
+    set_vim_var_string(VV_CC_OUT, fname_to, -1);
+    if (eval_to_bool(p_ccv, &err, NULL, FALSE))
+	err = TRUE;
+    set_vim_var_string(VV_CC_FROM, NULL, -1);
+    set_vim_var_string(VV_CC_TO, NULL, -1);
+    set_vim_var_string(VV_CC_IN, NULL, -1);
+    set_vim_var_string(VV_CC_OUT, NULL, -1);
+
+    if (err)
+	return FAIL;
+    return OK;
+}
+# endif
+
 #endif /* FEAT_EVAL */
 
 #if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) || defined(PROTO)
@@ -7275,72 +7326,3 @@ do_string_sub(str, pat, sub, flags)
 }
 
 #endif /* defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) */
-
-#if defined(FEAT_MBYTE) || defined(PROTO)
-/*
- * Convert a file with the 'charconvert' expression.
- * Returns name of the resulting converted file.
- * Returns NULL if the conversion failed ("*fdp" is not set) .
- */
-    char_u *
-eval_charconvert(fname, fcc, fdp)
-    char_u	*fname;		/* name of input file */
-    char_u	*fcc;		/* converted from */
-    int		*fdp;		/* in/out: file descriptor of file */
-{
-    char_u	*tmpname;
-    char_u	*errmsg = NULL;
-    int		err;
-
-    tmpname = vim_tempname('r');
-    if (tmpname == NULL)
-	errmsg = (char_u *)_("Can't find temp file for reading");
-    else
-    {
-	close(*fdp);		/* close the input file, ignore errors */
-	*fdp = -1;
-	set_vim_var_string(VV_CC_FROM, fcc, -1);
-	set_vim_var_string(VV_CC_TO,
-			      cc_utf8 ? (char_u *)"utf-8" : p_cc, -1);
-	set_vim_var_string(VV_CC_IN, fname, -1);
-	set_vim_var_string(VV_CC_OUT, tmpname, -1);
-	if (eval_to_bool(p_ccv, &err, NULL, FALSE) || err)
-	    errmsg = (char_u *)_("Conversion failed");
-	set_vim_var_string(VV_CC_FROM, NULL, -1);
-	set_vim_var_string(VV_CC_TO, NULL, -1);
-	set_vim_var_string(VV_CC_IN, NULL, -1);
-	set_vim_var_string(VV_CC_OUT, NULL, -1);
-
-	if (errmsg == NULL && (*fdp = mch_open((char *)tmpname,
-						  O_RDONLY | O_EXTRA, 0)) < 0)
-	    errmsg = (char_u *)_("can't read output of 'charconvert'");
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-	/* Security check: We don't want to read from a symlink.  This could
-	 * be a symlink attack to try to replace the converted text with
-	 * something else. */
-	if (errmsg == NULL && symlink_check(tmpname))
-	    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
-#endif
-    }
-
-    if (errmsg != NULL)
-    {
-	/* Don't use emsg(), it breaks mappings, the retry with
-	 * another type of conversion might still work. */
-	MSG(errmsg);
-	if (tmpname != NULL)
-	{
-	    mch_remove(tmpname);	/* delete converted file */
-	    vim_free(tmpname);
-	    tmpname = NULL;
-	}
-    }
-
-    /* If the input file is closed, open it (caller should check for error). */
-    if (*fdp < 0)
-	*fdp = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0);
-
-    return tmpname;
-}
-#endif

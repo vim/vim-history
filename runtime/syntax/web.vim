@@ -15,7 +15,7 @@ syntax clear
 " we base this syntax file on the modern superset, CWEB.  Note: This shortcut
 " may introduce some illegal constructs, e.g., CWEB's "@c" does _not_ start a
 " code section in WEB.  Anyway, I'm not a WEB programmer.
-source <sfile>:p:h/cweb.vim
+runtime syntax/cweb.vim
 
 " Replace C/C++ syntax by Pascal syntax.
 syntax include @webIncludedC <sfile>:p:h/pascal.vim

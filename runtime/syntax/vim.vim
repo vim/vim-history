@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0o script
+" Language:	Vim 6.0p script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	December 04, 2000
-" Version:	6.0o-01
+" Last Change:	December 11, 2000
+" Version:	6.0p-01
 
 " Remove old syntax
 syn clear
@@ -167,21 +167,22 @@ syn keyword vimOption contained	csprg	hidden	mp	ssop	winheight
 syn keyword vimOption contained	cst	highlight	mps	st	winminheight
 syn keyword vimOption contained	csto	history	nf	sta	winminwidth
 syn keyword vimOption contained	csverb	hk	nrformats	startofline	winwidth
-syn keyword vimOption contained	def	hkmap	nu	statusline	wiv
-syn keyword vimOption contained	define	hkmapp	number	stl	wiw
-syn keyword vimOption contained	dg	hkp	oft	sts	wm
-syn keyword vimOption contained	dict	hl	osfiletype	su	wmh
-syn keyword vimOption contained	dictionary	hls	pa	sua	wmnu
-syn keyword vimOption contained	digraph	hlsearch	para	suffixes	wmw
-syn keyword vimOption contained	dir	ic	paragraphs	suffixesadd	wrap
-syn keyword vimOption contained	directory	icon	paste	sw	wrapmargin
-syn keyword vimOption contained	display	iconstring	pastetoggle	swapfile	wrapscan
-syn keyword vimOption contained	dy	ignorecase	patchmode	swapsync	write
-syn keyword vimOption contained	ea	im	path	swb	writeany
-syn keyword vimOption contained	ead	inc	pm	swf	writebackup
-syn keyword vimOption contained	eadirection	include	previewheight	switchbuf	writedelay
-syn keyword vimOption contained	eb	includeexpr	pt	sws	ws
-syn keyword vimOption contained	ed	incsearch	pvh	sxq	ww
+syn keyword vimOption contained	debug	hkmap	nu	statusline	wiv
+syn keyword vimOption contained	def	hkmapp	number	stl	wiw
+syn keyword vimOption contained	define	hkp	oft	sts	wm
+syn keyword vimOption contained	dg	hl	osfiletype	su	wmh
+syn keyword vimOption contained	dict	hls	pa	sua	wmnu
+syn keyword vimOption contained	dictionary	hlsearch	para	suffixes	wmw
+syn keyword vimOption contained	digraph	ic	paragraphs	suffixesadd	wrap
+syn keyword vimOption contained	dir	icon	paste	sw	wrapmargin
+syn keyword vimOption contained	directory	iconstring	pastetoggle	swapfile	wrapscan
+syn keyword vimOption contained	display	ignorecase	patchmode	swapsync	write
+syn keyword vimOption contained	dy	im	path	swb	writeany
+syn keyword vimOption contained	ea	inc	pm	swf	writebackup
+syn keyword vimOption contained	ead	include	previewheight	switchbuf	writedelay
+syn keyword vimOption contained	eadirection	includeexpr	pt	sws	ws
+syn keyword vimOption contained	eb	incsearch	pvh	sxq	ww
+syn keyword vimOption contained	ed
 
 " These are the turn-off setting variants
 syn keyword vimOption contained	loadplugins	noea	noinf	nors	notagbsearch

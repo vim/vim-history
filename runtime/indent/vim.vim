@@ -1,10 +1,10 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 08
+" Last Change:	2000 Dec 12
 
 setlocal indentexpr=GetVimIndent()
-setlocal indentkeys+==end,=else
+setlocal indentkeys+==end,=else,0\\
 
 " Only define the function once.
 if exists("*GetVimIndent")
@@ -20,9 +20,10 @@ function GetVimIndent()
     return 0
   endif
 
-  " Add a 'shiftwidth' after :if, :while, :function and :else
+  " Add a 'shiftwidth' after :if, :while, :function and :else.
+  " Also for a line that starts with '\' after a line that doesn't.
   let ind = indent(lnum)
-  if getline(lnum) =~ '^\s*\(if\>\|wh\|fu\|el\)'
+  if getline(lnum) =~ '^\s*\(if\>\|wh\|fu\|el\)' || (getline(v:lnum) =~ '^\s*\\' && v:lnum > 1 && getline(lnum) !~ '^\s*\\')
     let ind = ind + &sw
   endif
 

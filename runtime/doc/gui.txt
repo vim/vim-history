@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0p.  Last change: 2000 Oct 29
+*gui.txt*       For Vim version 6.0q.  Last change: 2000 Dec 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -126,8 +126,11 @@ with the 'guiheadroom' option.
 							*:win* *:winsize*
 :win[size] {width} {height}
 		Set the window height to {width} by {height} characters.
-		Obsolete, use ":set lines=" and ":set columns=".
+		Obsolete, use ":set lines=11 columns=22".
 
+If you are running X-Windows, you can get information about the window Vim is
+running in with this command: >
+	:!xwininfo -id $WINDOWID
 
 ==============================================================================
 2. Scrollbars						*gui-scrollbars*
