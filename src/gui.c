@@ -1398,7 +1398,7 @@ gui_write(s, len)
 	    }
 	    else
 	    {
-		str = transchar(s[i]);
+		str = transchar_byte(s[i]);
 		if (str[0] && str[1])
 		    printf("<%s>", (char *)str);
 		else

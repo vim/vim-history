@@ -1060,7 +1060,7 @@ msg_outtrans_one(p, attr)
 	return p + l;
     }
 #endif
-    msg_puts_attr(transchar(*p), attr);
+    msg_puts_attr(transchar_byte(*p), attr);
     return p + 1;
 }
 
@@ -1110,7 +1110,7 @@ msg_outtrans_len_attr(str, len, attr)
 	else
 #endif
 	{
-	    s = transchar(*str);
+	    s = transchar_byte(*str);
 	    if (attr == 0 && s[1] != NUL)
 		msg_puts_attr(s, hl_attr(HLF_8));	/* unprintable char */
 	    else
@@ -1357,7 +1357,7 @@ msg_prt_line(s)
 	    else if (c != NUL && (n = byte2cells(c)) > 1)
 	    {
 		n_extra = n - 1;
-		p_extra = transchar(c);
+		p_extra = transchar_byte(c);
 		c_extra = NUL;
 		c = *p_extra++;
 	    }

@@ -4559,7 +4559,7 @@ win_redr_status_matches(xp, num_matches, matches, match)
 	    else
 #endif
 	    {
-		STRCPY(buf + len, transchar(*s));
+		STRCPY(buf + len, transchar_byte(*s));
 		len += (int)STRLEN(buf + len);
 	    }
 	}
@@ -4739,15 +4739,16 @@ win_redr_status(wp)
 		    clen += (*mb_ptr2cells)(p + i);
 		/* Find first character that will fit.
 		 * Going from start to end is much faster for DBCS. */
-		for (i = 0; p[i] != NUL && clen > this_ru_col - 1;
+		for (i = 0; p[i] != NUL && clen >= this_ru_col - 1;
 					      i += (*mb_ptr2len_check)(p + i))
 		    clen -= (*mb_ptr2cells)(p + i);
+		len = clen;
 		if (i > 0)
 		{
 		    p = p + i - 1;
 		    *p = '<';
+		    ++len;
 		}
-		len = clen;
 
 	    }
 	    else

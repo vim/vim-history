@@ -2504,9 +2504,6 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	    name = curbuf->b_ffname;
 	home_replace(shorthelp ? curbuf : NULL, name, p,
 					  (int)(IOSIZE - (p - buffer)), TRUE);
-	/* the file name may contain unprintable characters, esp. when using
-	 * multi-byte chars */
-	trans_characters(buffer, IOSIZE);
     }
 
     sprintf((char *)buffer + STRLEN(buffer),
@@ -2735,11 +2732,19 @@ maketitle()
 	    else		    /* use file name only in icon */
 		i_name = gettail(curbuf->b_ffname);
 	    *i_str = NUL;
-	    /* Truncate name at 100 chars. */
-	    if (STRLEN(i_name) > 100)
-		i_name += STRLEN(i_name) - 100;
-	    while (*i_name)
-		STRCAT(i_str, transchar(*i_name++));
+	    /* Truncate name at 100 bytes. */
+	    len = STRLEN(i_name);
+	    if (len > 100)
+	    {
+		len -= 100;
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    len += (*mb_tail_off)(i_name, i_name + len) + 1;
+#endif
+		i_name += len;
+	    }
+	    STRCPY(i_str, i_name);
+	    trans_characters(i_str, IOSIZE);
 	}
     }
 

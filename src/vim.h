@@ -1198,6 +1198,7 @@ enum hlf_value
 #else
 # define MB_STRICMP(d, s)	STRICMP((d), (s))
 # define MB_STRNICMP(d, s, n)	STRNICMP((d), (s), (n))
+# define transchar_byte(c)	transchar(c)
 #endif
 
 #define STRCAT(d, s)	    strcat((char *)(d), (char *)(s))

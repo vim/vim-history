@@ -72,6 +72,9 @@ static int	cmd_fkmap = 0;	/* Farsi mapping during command line */
 static int	cmdline_charsize __ARGS((int idx));
 static void	set_cmdspos __ARGS((void));
 static void	set_cmdspos_cursor __ARGS((void));
+#ifdef FEAT_MBYTE
+static void	correct_cmdspos __ARGS((int idx, int cells));
+#endif
 static void	alloc_cmdbuff __ARGS((int len));
 static int	realloc_cmdbuff __ARGS((int len));
 #ifdef FEAT_WILDMENU
@@ -1078,9 +1081,7 @@ getcmdline(firstc, count, indent)
 		    if (has_mbyte)
 		    {
 			/* Count ">" for double-wide char that doesn't fit. */
-			if ((*mb_ptr2cells)(ccline.cmdbuff + ccline.cmdpos) > 1
-				    && ccline.cmdspos % Columns + i > Columns)
-			    ccline.cmdspos++;
+			correct_cmdspos(ccline.cmdpos, i);
 			ccline.cmdpos += (*mb_ptr2len_check)(ccline.cmdbuff
 							 + ccline.cmdpos) - 1;
 		    }
@@ -1580,11 +1581,9 @@ set_cmdspos_cursor()
     {
 	c = cmdline_charsize(i);
 #ifdef FEAT_MBYTE
-	/* Count ">" for double-wide char that doesn't fit. */
-	if (has_mbyte
-		&& (*mb_ptr2cells)(ccline.cmdbuff + i) > 1
-		&& ccline.cmdspos % Columns + c > Columns)
-	    ccline.cmdspos++;
+	/* Count ">" for double-wide multi-byte char that doesn't fit. */
+	if (has_mbyte)
+	    correct_cmdspos(i, c);
 #endif
 	/* If the cmdline doesn't fit, put cursor on last visible char. */
 	if ((ccline.cmdspos += c) >= m)
@@ -1599,6 +1598,23 @@ set_cmdspos_cursor()
 #endif
     }
 }
+
+#ifdef FEAT_MBYTE
+/*
+ * Check if the character at "idx", which is "cells" wide, is a multi-byte
+ * character that doesn't fit, so that a ">" must be displayed.
+ */
+    static void
+correct_cmdspos(idx, cells)
+    int		idx;
+    int		cells;
+{
+    if ((*mb_ptr2len_check)(ccline.cmdbuff + idx) > 1
+		&& (*mb_ptr2cells)(ccline.cmdbuff + idx) > 1
+		&& ccline.cmdspos % Columns + cells > Columns)
+	ccline.cmdspos++;
+}
+#endif
 
 /*
  * Get an Ex command line for the ":" command.
@@ -2058,10 +2074,8 @@ put_on_cmdline(str, len, redraw)
 		c = cmdline_charsize(ccline.cmdpos);
 #ifdef FEAT_MBYTE
 		/* count ">" for a double-wide char that doesn't fit. */
-		if (has_mbyte
-			&& (*mb_ptr2cells)(ccline.cmdbuff + ccline.cmdpos) > 1
-			&& ccline.cmdspos % Columns + c > Columns)
-		    ccline.cmdspos++;
+		if (has_mbyte)
+		    correct_cmdspos(ccline.cmdpos, c);
 #endif
 		/* Stop cursor at the end of the screen */
 		if (ccline.cmdspos + c >= m)
