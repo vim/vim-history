@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Sep 11
+" Last Change: 2001 Sep 20
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -113,7 +113,13 @@ fun s:appre(cmd)
     let nmt = expand("<afile>:p:h") . "/X~=@l9q5"
     let nmte = nmt . "." . expand("<afile>:e")
     if rename(nm, nmte) == 0
-      call system(a:cmd . " " . nmte)
+      if &patchmode != "" && getfsize(nm . &patchmode) == -1
+	" Create patchmode file by creating the decompressed file new
+	call system(a:cmd . " -c " . nmte . " > " . nmt)
+	call rename(nmte, nm . &patchmode)
+      else
+	call system(a:cmd . " " . nmte)
+      endif
       call rename(nmt, nm)
     endif
   endif
