@@ -190,9 +190,9 @@ WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
 OPT = -Od -N
 !else
 !if ($(OPTIMIZE)==SPACE)
-OPT = -O1 -f- -N- -d
+OPT = -O1 -f- -d
 !else
-OPT = -O2 -f- -d -N- -Oca -O
+OPT = -O2 -f- -d -Oca -O
 !endif
 !if ("$(FASTCALL)"=="yes")
 OPT = $(OPT) -pr
@@ -377,7 +377,7 @@ LINK	= $(BOR)\BIN\ILink32
 CC   = $(BOR)\BIN\Bcc32
 LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG) $(LINK2)
-CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -N- -f-
+CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -f-
 !endif
 
 CC1 = -c
