@@ -1512,6 +1512,7 @@ typedef struct _ButtonData
 typedef struct _CancelData
 {
     int		*status;
+    int		ignore_enter;
     GtkWidget	*dialog;
 } CancelData;
 
@@ -1530,6 +1531,10 @@ dlg_button_clicked(GtkWidget * widget, ButtonData *data)
     static int
 dlg_key_press_event(GtkWidget * widget, GdkEventKey * event, CancelData *data)
 {
+    /* Ignore hitting Enter when there is no default button. */
+    if (data->ignore_enter && event->keyval == GDK_Return)
+	return TRUE;
+
     if (event->keyval != GDK_Escape && event->keyval != GDK_Return)
 	return FALSE;
 
@@ -1820,6 +1825,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     vim_free(names);
 
+    cancel_data.ignore_enter = FALSE;
     if (butcount > 0)
     {
 	--def_but;		/* 1 is first button */
@@ -1830,6 +1836,9 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 	    gtk_widget_grab_focus(button[def_but]);
 	    gtk_widget_grab_default(button[def_but]);
 	}
+	else
+	    /* No default, ignore hitting Enter. */
+	    cancel_data.ignore_enter = TRUE;
     }
 
     if (textfield != NULL)
@@ -2103,16 +2112,38 @@ dialog_add_buttons(GtkDialog *dialog, char_u *button_string)
  * GUI used to work this way, and I consider the impact on UI consistency
  * low enough to justify implementing this as a special Vim feature.
  */
+typedef struct _DialogInfo
+{
+    int		ignore_enter;	    /* no default button, ignore "Enter" */
+    int		noalt;		    /* accept accelerators without Alt */
+    GtkDialog	*dialog;	    /* Widget of the dialog */
+} DialogInfo;
+
 /*ARGSUSED2*/
     static gboolean
 dialog_key_press_event_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
-    if ((event->state & gtk_accelerator_get_default_mod_mask()) == 0)
+    DialogInfo *di = (DialogInfo *)data;
+
+    /* Ignore hitting "Enter" if there is no default button. */
+    if (di->ignore_enter && event->keyval == GDK_Return)
+	return TRUE;
+
+    /* Close the dialog when hitting "Esc". */
+    if (event->keyval == GDK_Escape)
+    {
+	gtk_dialog_response(di->dialog, GTK_RESPONSE_REJECT);
+	return TRUE;
+    }
+
+    if (di->noalt
+	      && (event->state & gtk_accelerator_get_default_mod_mask()) == 0)
     {
 	return gtk_window_mnemonic_activate(
 		   GTK_WINDOW(widget), event->keyval,
 		   gtk_window_get_mnemonic_modifier(GTK_WINDOW(widget)));
     }
+
     return FALSE; /* continue emission */
 }
 
@@ -2128,8 +2159,10 @@ gui_mch_dialog(int	type,	    /* type of dialog */
     GtkWidget	*entry = NULL;
     char_u	*text;
     int		response;
+    DialogInfo  dialoginfo;
 
     dialog = create_message_dialog(type, title, message);
+    dialoginfo.dialog = GTK_DIALOG(dialog);
     dialog_add_buttons(GTK_DIALOG(dialog), buttons);
 
     if (textfield != NULL)
@@ -2151,18 +2184,24 @@ gui_mch_dialog(int	type,	    /* type of dialog */
 
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 			   alignment, TRUE, FALSE, 0);
+	dialoginfo.noalt = FALSE;
     }
     else
-    {
-	/* Allow activation of mnemonic accelerators without pressing <Alt>.
-	 * For safety, connect this signal handler only if the dialog has
-	 * no other other interaction widgets but buttons. */
-	g_signal_connect(G_OBJECT(dialog), "key_press_event",
-			 G_CALLBACK(&dialog_key_press_event_cb), NULL);
-    }
+	dialoginfo.noalt = TRUE;
+
+    /* Allow activation of mnemonic accelerators without pressing <Alt> when
+     * there is no textfield.  Handle pressing Enter and Esc. */
+    g_signal_connect(G_OBJECT(dialog), "key_press_event",
+			 G_CALLBACK(&dialog_key_press_event_cb), &dialoginfo);
 
     if (def_but > 0)
+    {
 	gtk_dialog_set_default_response(GTK_DIALOG(dialog), def_but);
+	dialoginfo.ignore_enter = FALSE;
+    }
+    else
+	/* No default button, ignore pressing Enter. */
+	dialoginfo.ignore_enter = TRUE;
 
     /* Show the mouse pointer if it's currently hidden. */
     gui_mch_mousehide(FALSE);
