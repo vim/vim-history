@@ -344,7 +344,7 @@ static char_u *find_option_end __ARGS((char_u **arg, int *opt_flags));
 static char_u *trans_function_name __ARGS((char_u **pp, int skip, int internal));
 static int eval_fname_script __ARGS((char_u *p));
 static int eval_fname_sid __ARGS((char_u *p));
-static void list_func_head __ARGS((ufunc_T *fp));
+static void list_func_head __ARGS((ufunc_T *fp, int indent));
 static void cat_func_name __ARGS((char_u *buf, ufunc_T *fp));
 static ufunc_T *find_func __ARGS((char_u *name));
 static void call_func __ARGS((ufunc_T *fp, int argcount, VAR argvars, VAR retvar, linenr_T firstline, linenr_T lastline));
@@ -7795,7 +7795,7 @@ ex_function(eap)
     {
 	if (!eap->skip)
 	    for (fp = firstfunc; fp != NULL && !got_int; fp = fp->next)
-		list_func_head(fp);
+		list_func_head(fp, FALSE);
 	eap->nextcmd = check_nextcmd(eap->arg);
 	return;
     }
@@ -7823,15 +7823,15 @@ ex_function(eap)
 	    fp = find_func(name);
 	    if (fp != NULL)
 	    {
-		list_func_head(fp);
+		list_func_head(fp, TRUE);
 		for (j = 0; j < fp->lines.ga_len; ++j)
 		{
 		    msg_putchar('\n');
 		    msg_outnum((long)(j + 1));
-		    do
-		    {
+		    if (j < 9)
 			msg_putchar(' ');
-		    } while (msg_col < 3);
+		    if (j < 99)
+			msg_putchar(' ');
 		    msg_prt_line(FUNCLINE(fp, j));
 		}
 		MSG("   endfunction");
@@ -8208,12 +8208,16 @@ eval_fname_sid(p)
  * List the head of the function: "name(arg1, arg2)".
  */
     static void
-list_func_head(fp)
+list_func_head(fp, indent)
     ufunc_T	*fp;
+    int		indent;
 {
     int		j;
 
-    MSG(_("function "));
+    msg_start();
+    if (indent)
+	MSG_PUTS("   ");
+    MSG_PUTS("function ");
     if (fp->name[0] == K_SPECIAL)
     {
 	MSG_PUTS_ATTR("<SNR>", hl_attr(HLF_8));
