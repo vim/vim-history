@@ -1539,8 +1539,6 @@ do_pending_operator(cap, old_col, gui_yank)
 	     */
 	    if (oap->motion_force == NUL || oap->motion_type == MLINE)
 		oap->inclusive = TRUE;
-	    if (virtual_active() && curwin->w_curswant == MAXCOL)
-		oap->inclusive = FALSE;
 	    if (VIsual_mode == 'V')
 		oap->motion_type = MLINE;
 	    else
