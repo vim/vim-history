@@ -426,8 +426,9 @@ gui_mac_handle_menu(menuChoice)
 
 	pascal
 	void
-gui_mac_drag_thumb (theControl)
-	ControlHandle	theControl;
+gui_mac_drag_thumb (ControlHandle theControl, short partCode)
+/*	ControlHandle	theControl;
+	short			partCode; */
 {
 	/* TODO: have live support */
 	GuiScrollbar *sb;
@@ -1512,7 +1513,7 @@ gui_mac_doMouseDown (theEvent)
 					dragged_sb = theControl;
 						TrackControl(theControl, thePoint, NULL);
 /*						gui_mch_scroll_drag();*/
-					gui_mac_drag_thumb (theControl);
+					gui_mac_drag_thumb (theControl, 0);
 					dragged_sb = NULL;
 				}
 			/*	gui_mac_do_control(theControl, thePoint);*/
