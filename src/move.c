@@ -2384,6 +2384,10 @@ onepage(dir, count)
 #ifdef FEAT_DIFF
 		botline_topline(&loff);
 #endif
+#ifdef FEAT_FOLDING
+		/* We're at the wrong end of a fold now. */
+		(void)hasFolding(loff.lnum, &loff.lnum, NULL);
+#endif
 
 		/* Always scroll at least one line.  Avoid getting stuck on
 		 * very long lines. */
