@@ -4822,9 +4822,7 @@ f_iconv(argvars, retvar)
     str = get_var_string(&argvars[0]);
     from = enc_canonize(enc_skip(get_var_string_buf(&argvars[1], buf1)));
     to = enc_canonize(enc_skip(get_var_string_buf(&argvars[2], buf2)));
-# ifdef USE_ICONV
-    vimconv.vc_fd = (iconv_t)-1;
-# endif
+    vimconv.vc_type = CONV_NONE;
     convert_setup(&vimconv, from, to);
 
     /* If the encodings are equal, no conversion needed. */
@@ -4833,7 +4831,7 @@ f_iconv(argvars, retvar)
     else
 	retvar->var_val.var_string = string_convert(&vimconv, str, NULL);
 
-    convert_setup(&vimconv, (char_u *)"", (char_u *)"");
+    convert_setup(&vimconv, NULL, NULL);
     vim_free(from);
     vim_free(to);
 #endif
@@ -6087,10 +6085,12 @@ f_strftime(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    char_u	result_buf[80];
+    char_u	result_buf[256];
     struct tm	*curtime;
     time_t	seconds;
     char_u	*p;
+
+    retvar->var_type = VAR_STRING;
 
     p = get_var_string(&argvars[0]);
     if (argvars[1].var_type == VAR_UNKNOWN)
@@ -6100,12 +6100,42 @@ f_strftime(argvars, retvar)
     curtime = localtime(&seconds);
     /* MSVC returns NULL for an invalid value of seconds. */
     if (curtime == NULL)
-	STRCPY(result_buf, _("(Invalid)"));
+	retvar->var_val.var_string = vim_strsave((char_u *)_("(Invalid)"));
     else
-	(void)strftime((char *)result_buf, (size_t)80, (char *)p, curtime);
+    {
+# ifdef FEAT_MBYTE
+	vimconv_T   conv;
+	char_u	    *enc;
 
-    retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = vim_strsave(result_buf);
+	conv.vc_type = CONV_NONE;
+	enc = enc_locale();
+	convert_setup(&conv, p_enc, enc);
+	if (conv.vc_type != CONV_NONE)
+	    p = string_convert(&conv, p, NULL);
+# endif
+	if (p != NULL)
+	    (void)strftime((char *)result_buf, sizeof(result_buf),
+							  (char *)p, curtime);
+	else
+	    result_buf[0] = NUL;
+
+# ifdef FEAT_MBYTE
+	if (conv.vc_type != CONV_NONE)
+	    vim_free(p);
+	convert_setup(&conv, enc, p_enc);
+	if (conv.vc_type != CONV_NONE)
+	    retvar->var_val.var_string =
+				      string_convert(&conv, result_buf, NULL);
+	else
+# endif
+	    retvar->var_val.var_string = vim_strsave(result_buf);
+
+# ifdef FEAT_MBYTE
+	/* Release conversion descriptors */
+	convert_setup(&conv, NULL, NULL);
+	vim_free(enc);
+# endif
+    }
 }
 #endif
 

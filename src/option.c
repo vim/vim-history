@@ -2658,13 +2658,27 @@ set_init_1()
     }
 # endif
 
-    /* enc_default() will try setting p_enc to a value depending on the
-     * current locale */
-    if (enc_default() == OK)
+    /* enc_locale() will try to find the encoding of the current locale. */
+    p = enc_locale();
+    if (p != NULL)
     {
-	opt_idx = findoption((char_u *)"encoding");
-	options[opt_idx].def_val[VI_DEFAULT] = p_enc;
-	options[opt_idx].flags |= P_DEF_ALLOCED;
+	char_u *save_enc;
+
+	/* Try setting 'encoding' and check if the value is valid.
+	 * If not, go back to the default "latin1". */
+	save_enc = p_enc;
+	p_enc = p;
+	if (mb_init() == NULL)
+	{
+	    opt_idx = findoption((char_u *)"encoding");
+	    options[opt_idx].def_val[VI_DEFAULT] = p_enc;
+	    options[opt_idx].flags |= P_DEF_ALLOCED;
+	}
+	else
+	{
+	    vim_free(p_enc);
+	    p_enc = save_enc;
+	}
     }
 #endif
 }

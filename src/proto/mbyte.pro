@@ -54,7 +54,7 @@ int mb_lefthalve __ARGS((int row, int col));
 int mb_fix_col __ARGS((int col, int row));
 char_u *enc_skip __ARGS((char_u *p));
 char_u *enc_canonize __ARGS((char_u *enc));
-int enc_default __ARGS((void));
+char_u *enc_locale __ARGS((void));
 void *my_iconv_open __ARGS((char_u *to, char_u *from));
 int iconv_enabled __ARGS((int verbose));
 void iconv_end __ARGS((void));
