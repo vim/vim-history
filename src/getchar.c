@@ -766,7 +766,7 @@ copy_redo(old_redo)
 /*
  * Stuff the redo buffer into the stuffbuff.
  * Insert the redo count into the command.
- * If 'old_redo' is TRUE, the last but one command is repeated
+ * If "old_redo" is TRUE, the last but one command is repeated
  * instead of the last command (inserting text). This is used for
  * CTRL-O <.> in insert mode
  *
@@ -3178,7 +3178,12 @@ do_map(maptype, arg, mode, abbrev)
 		    {
 			if (maptype == 1)	/* delete entry */
 			{
-			    if (n != len)	/* not a full match */
+			    /* Only accept a full match.  For abbreviations we
+			     * ignore trailing space when matching with the
+			     * "lhs", since an abbreviation can't have
+			     * trailing space. */
+			    if (n != len && (!abbrev || round || n > len
+					       || *skipwhite(keys + n) != NUL))
 			    {
 				mpp = &(mp->m_next);
 				continue;
