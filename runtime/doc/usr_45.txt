@@ -345,7 +345,7 @@ KEYMAPS
 For some languages the character set is different from latin, but uses a
 similar number of characters.  It's possible to map keys to characters.  Vim
 uses keymaps for this.
-   Suppose you want to type hebrew.  You can load the keymap like this: >
+   Suppose you want to type Hebrew.  You can load the keymap like this: >
 
 	:set keymap=hebrew
 

@@ -148,7 +148,7 @@ transfer/protocol.  Files are read from/written to a temporary file
 clean up.
 
 One may modify any protocol's implementing external application
-by settinbg a variable (ex. scp uses the variable g:netrw_scp_cmd,
+by setting a variable (ex. scp uses the variable g:netrw_scp_cmd,
 which is defaulted to "scp -q").
 
 Ftp, an old protocol, seems to be blessed by numerous implementations.
@@ -229,7 +229,7 @@ additional prompting.
 
 	(*2) if <.netrc> is present, it is assumed that it will
 	work with your ftp client.  Otherwise the script will
-	prompt for user-id and pasword.
+	prompt for user-id and password.
 
 	(*3) for ftp, "machine" may be machine#port or machine:port
 	if a different port is needed than the standard ftp port

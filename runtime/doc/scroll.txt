@@ -161,7 +161,7 @@ zL			Scroll the screen half a screenwidth to the left.
 			This only works when 'wrap' is off.  {not in Vi}
 
 							*zH*
-zH			Scroll the screen half a screenwith to the right.
+zH			Scroll the screen half a screenwidth to the right.
 			This only works when 'wrap' is off.  {not in Vi}
 
 For the following two commands the cursor is not moved in the text, only the
