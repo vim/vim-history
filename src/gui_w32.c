@@ -661,14 +661,14 @@ _WndProc(
 
     case WM_SYSKEYUP:
 #ifdef FEAT_MENU
-	/* Only when menu is active, ALT key is used for that. */
-	if (gui.menu_is_active)
-	{
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
-	else
+	/* Thus used to be done only when menu is active: ALT key is used for
+	 * that.  But that caused problems when menu is disabled and using
+	 * Alt-Tab-Esc: get into a strange state where no mouse-moved events
+	 * are received, mouse pointer remains hidden. */
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+#else
+	return 0;
 #endif
-	    return 0;
 
     case WM_SIZING:	/* HANDLE_MSG doesn't seem to handle this one */
 	return _DuringSizing(hwnd, (UINT)wParam, (LPRECT)lParam);
