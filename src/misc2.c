@@ -105,7 +105,7 @@ coladvance(wcol)
 {
     int rc = getvpos(&curwin->w_cursor, wcol);
 
-    if (wcol == MAXCOL || rc == FAIL)
+    if (wcol == MAXCOL)
 	curwin->w_valid &= ~VALID_VIRTCOL;
     else
     {
