@@ -2374,7 +2374,7 @@ do_mouse(oap, c, dir, count, fixindent)
 		if (VIsual_active)
 		    jump_flags |= MOUSE_MAY_STOP_VIS;
 	    }
-	    else
+	    else if (mouse_has(MOUSE_VISUAL))
 		jump_flags |= MOUSE_MAY_VIS;
 	}
 	else if (which_button == MOUSE_RIGHT)
@@ -2396,7 +2396,9 @@ do_mouse(oap, c, dir, count, fixindent)
 		    end_visual = curwin->w_cursor;
 		}
 	    }
-	    jump_flags |= MOUSE_MAY_VIS | MOUSE_FOCUS;
+	    jump_flags |= MOUSE_FOCUS;
+	    if (mouse_has(MOUSE_VISUAL))
+		jump_flags |= MOUSE_MAY_VIS;
 	}
     }
 #endif
@@ -2658,7 +2660,8 @@ do_mouse(oap, c, dir, count, fixindent)
     }
 #endif
 #ifdef FEAT_VISUAL
-    else if ((mod_mask & MOD_MASK_MULTI_CLICK) && (State & (NORMAL | INSERT)))
+    else if ((mod_mask & MOD_MASK_MULTI_CLICK) && (State & (NORMAL | INSERT))
+	     && mouse_has(MOUSE_VISUAL))
     {
 	if (is_click || !VIsual_active)
 	{
