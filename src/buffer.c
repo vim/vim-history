@@ -3504,8 +3504,8 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 		while (++width < maxwidth)
 		    *s++ = fillchar;
 	    }
-#endif
 	    else
+#endif
 		s = out + maxwidth - 1;
 	    for (l = 0; l < itemcnt; l++)
 		if (item[l].start > s)
