@@ -1665,9 +1665,11 @@ set_termname(term)
 		    width = tgetnum("co");
 
 		/*
-		 * Get number of colors.
+		 * Get number of colors (if not done already).
 		 */
-		set_color_count(tgetnum("Co"));
+		if (term_str(KS_CCO) == NULL
+			|| term_str(KS_CCO) == empty_option)
+		    set_color_count(tgetnum("Co"));
 
 # ifndef hpux
 		BC = (char *)TGETSTR("bc", &tp);
