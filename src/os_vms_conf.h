@@ -7,18 +7,6 @@
 #define USE_GETCWD
 #define USE_SYSTEM
 
-/* Define when termcap library found */
-/* #undef HAVE_LIBTERMCAP */
-
-/* Define when termlib library found */
-/* #undef HAVE_LIBTERMLIB */
-
-/* Define when ncurses library found */
-#undef HAVE_LIBNCURSES
-
-/* Define when curses library found */
-/* #undef HAVE_LIBCURSES */
-
 /* Define when terminfo support found */
 #undef TERMINFO
 
@@ -104,6 +92,7 @@
 /* Define if you have the sigset() function.  */
 /* #undef HAVE_SIGSET */
 
+#define TGETENT_ZERO_ERR
 #define HAVE_GETCWD
 #define HAVE_STRCSPN
 #define HAVE_STRTOL

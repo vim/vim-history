@@ -6451,6 +6451,9 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
 	    ffname = FullName_save((*file)[i], FALSE);
 	    if (ffname == NULL)		/* out of memory */
 		break;
+# ifdef VMS
+            vms_remove_version(ffname);
+# endif
 	    if (match_file_list(p_wig, (*file)[i], ffname))
 	    {
 		/* remove this matching file from the list */
@@ -7082,7 +7085,13 @@ get_cmd_output(cmd, flags)
     /*
      * read the names from the file into memory
      */
+# ifdef VMS
+    /* created temporary file is not allways readable as binary */
+    fd = mch_fopen((char *)tempname, "r");
+# else
     fd = mch_fopen((char *)tempname, READBIN);
+# endif
+
     if (fd == NULL)
     {
 	EMSG2(_(e_notopen), tempname);
@@ -7100,6 +7109,9 @@ get_cmd_output(cmd, flags)
     mch_remove(tempname);
     if (buffer == NULL)
 	goto done;
+#ifdef VMS
+    len = i;	/* why is this? */
+#endif
     if (i != len)
     {
 	EMSG2(_(e_notread), tempname);

@@ -123,7 +123,7 @@ static int	did_set_icon = FALSE;
 static void may_core_dump __ARGS((void));
 
 static int  WaitForChar __ARGS((long));
-#if defined(__BEOS__) || defined(VMS)
+#if defined(__BEOS__)
 int  RealWaitForChar __ARGS((int, long, int *));
 #else
 static int  RealWaitForChar __ARGS((int, long, int *));
@@ -280,8 +280,6 @@ mch_write(s, len)
 	RealWaitForChar(read_cmd_fd, p_wd, NULL);
 }
 
-#ifndef VMS
-
 /*
  * mch_inchar(): low level input funcion.
  * Get a characters from the keyboard.
@@ -389,8 +387,6 @@ mch_inchar(buf, maxlen, wtime)
 	}
     }
 }
-
-#endif /* VMS */
 
     static void
 handle_resize()
@@ -3109,13 +3105,16 @@ mch_call_shell(cmd, options)
 	    x = system((char *)newcmd);
 	    vim_free(newcmd);
 	}
-# endif
+#  endif
     }
+# ifdef VMS
+    x = vms_sys_status(x);
+# endif
     if (emsg_silent)
 	;
     else if (x == 127)
 	MSG_PUTS(_("\nCannot execute shell sh\n"));
-#endif	/* __EMX__ */
+# endif	/* __EMX__ */
     else if (x && !(options & SHELL_SILENT))
     {
 	MSG_PUTS(_("\nshell returned "));
@@ -3862,7 +3861,7 @@ WaitForChar(msec)
  * Or when a Linux GPM mouse event is waiting.
  */
 /* ARGSUSED */
-#if defined(__BEOS__) || defined(VMS)
+#if defined(__BEOS__)
     int
 #else
     static  int
@@ -4040,7 +4039,13 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 
+# ifdef OLD_VMS
+	/* Old VMS as v6.2 and older have broken select(). It waits more than
+	 * required. Should not be used */
+	ret = 0;
+# else
 	ret = select(maxfd + 1, &rfds, NULL, &efds, (msec >= 0) ? &tv : NULL);
+# endif
 
 # ifdef FEAT_SNIFF
 	if (ret < 0 )
