@@ -1861,6 +1861,11 @@ line_read_in:
 			{
 			    p[0] = mtt;
 			    STRCPY(p + 1, tag_fname);
+#ifdef BACKSLASH_IN_FILENAME
+			    /* Ignore differences in slashes, avoid adding
+			     * both path/file and path\file. */
+			    slash_adjust(p + 1);
+#endif
 			    s = p + 1 + STRLEN(tag_fname) + 1;
 #ifdef FEAT_EMACS_TAGS
 			    if (is_etag)
