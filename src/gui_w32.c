@@ -202,8 +202,6 @@ static UINT	s_menu_id = 100;
 #define VIM_NAME	"vim"
 #define VIM_CLASS	"Vim"
 
-static OSVERSIONINFO os_version;    /* like it says.  Init in gui_mch_init() */
-
 /* Initial size for the dialog template.  For gui_mch_dialog() it's fixed,
  * thus there should be room for every dialog.  For tearoffs it's made bigger
  * when needed. */
@@ -545,7 +543,7 @@ _OnWindowPosChanged(
 	y = lpwpos->y;
 	cx = lpwpos->cx;
 	cy = lpwpos->cy;
-        netbeans_frame_moved(x, y);
+	netbeans_frame_moved(x, y);
     }
     /* Allow to send WM_SIZE and WM_MOVE */
     FORWARD_WM_WINDOWPOSCHANGED(hwnd, lpwpos, DefWindowProc);
