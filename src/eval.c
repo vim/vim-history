@@ -1996,7 +1996,7 @@ eval4(arg, retvar, evaluate)
 			    regmatch.rm_ic = ic;
 			    if (regmatch.regprog != NULL)
 			    {
-				n1 = vim_regexec(&regmatch, s1, (colnr_T)0);
+				n1 = vim_regexec_nl(&regmatch, s1, (colnr_T)0);
 				vim_free(regmatch.regprog);
 				if (type == TYPE_NOMATCH)
 				    n1 = !n1;
@@ -5763,7 +5763,7 @@ find_some_match(argvars, retvar, type)
     if (regmatch.regprog != NULL)
     {
 	regmatch.rm_ic = p_ic;
-	if (vim_regexec(&regmatch, str, (colnr_T)0))
+	if (vim_regexec_nl(&regmatch, str, (colnr_T)0))
 	{
 	    if (type == 2)
 		retvar->var_val.var_string = vim_strnsave(regmatch.startp[0],
@@ -5771,9 +5771,11 @@ find_some_match(argvars, retvar, type)
 	    else
 	    {
 		if (type != 0)
-		    retvar->var_val.var_number = (varnumber_T) (regmatch.startp[0] - str);
+		    retvar->var_val.var_number =
+				      (varnumber_T)(regmatch.startp[0] - str);
 		else
-		    retvar->var_val.var_number = (varnumber_T) (regmatch.endp[0] - str);
+		    retvar->var_val.var_number =
+					(varnumber_T)(regmatch.endp[0] - str);
 		retvar->var_val.var_number += start;
 	    }
 	}
@@ -8235,7 +8237,7 @@ find_var_ga(name, varname)
 
 /*
  * Get the string value of a (global/local) variable.
- * Returns NULL when it doesn't exit.
+ * Returns NULL when it doesn't exist.
  */
     char_u *
 get_var_value(name)
@@ -10477,7 +10479,7 @@ do_string_sub(str, pat, sub, flags)
     if (regmatch.regprog != NULL)
     {
 	tail = str;
-	while (vim_regexec(&regmatch, str, (colnr_T)(tail - str)))
+	while (vim_regexec_nl(&regmatch, str, (colnr_T)(tail - str)))
 	{
 	    /*
 	     * Get some space for a temporary buffer to do the substitution
