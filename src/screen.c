@@ -3068,8 +3068,13 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	for (l = 0; l < itemcnt; l++)
 	    if (item[l].type == Trunc)
 		break;
-	l = l == itemcnt ? 0 : l;
-	s = item[l].start;
+	if (itemcnt == 0)
+	    s = out;
+	else
+	{
+	    l = l == itemcnt ? 0 : l;
+	    s = item[l].start;
+	}
 	if ((int) (s - out) > maxlen)
 	{   /* Truncation mark is beyond max length */
 	    s = out + maxlen - 1;
@@ -3083,7 +3088,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	else
 	{
 	    p = s + num - maxlen;
-	    mch_memmove(s, p, STRLEN(s) + 1);
+	    mch_memmove(s, p, STRLEN(p) + 1);
 	    *s = '<';
 	    for (; l < itemcnt; l++)
 		item[l].start -= num - maxlen;
