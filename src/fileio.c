@@ -250,6 +250,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #ifdef FEAT_MBYTE
     int		can_retry;
     int		conv_error = FALSE;	/* conversion error detected */
+    int		illegal_byte = FALSE;	/* illegal byte detected */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
     char_u	*fenc;			/* fileencoding to use */
@@ -1401,7 +1402,7 @@ retry:
 	    }
 	    else if (enc_utf8 && !conv_error && !curbuf->b_p_bin)
 	    {
-		/* Converting to UTF-8: Check if the bytes are valid UTF-8.
+		/* Reading UTF-8: Check if the bytes are valid UTF-8.
 		 * Need to start before "ptr" when part of the character was
 		 * read in the previous read() call. */
 		for (p = ptr - utf_head_off(buffer, ptr); p < ptr + size; ++p)
@@ -1410,7 +1411,7 @@ retry:
 		    {
 			len = utf_ptr2len_check(p);
 			/* A length of 1 means it's an illegal byte.  Accept
-			 * an incomplete charater at the end though, the next
+			 * an incomplete character at the end though, the next
 			 * read() will get the next bytes, we'll check it
 			 * then. */
 			if (len == 1)
@@ -1441,7 +1442,12 @@ rewind_retry:
 		    }
 
 		    /* There is no alternative fenc, just report the error. */
-		    conv_error = TRUE;
+# ifdef USE_ICONV
+		    if (iconv_fd != (iconv_t)-1)
+			conv_error = TRUE;
+		    else
+# endif
+			illegal_byte = TRUE;
 		}
 	    }
 #endif
@@ -1821,6 +1827,11 @@ failed:
 	    if (conv_error)
 	    {
 		STRCAT(IObuff, _("[CONVERSION ERROR]"));
+		c = TRUE;
+	    }
+	    else if (illegal_byte)
+	    {
+		STRCAT(IObuff, _("[ILLEGAL BYTE]"));
 		c = TRUE;
 	    }
 	    else
