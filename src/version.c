@@ -638,6 +638,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    191,
+/**/
     190,
 /**/
     189,
@@ -1377,6 +1379,7 @@ intro_message(colon)
     int		i;
     int		row;
     int		blanklines;
+    int		sponsor;
     char	*p;
     static char	*(lines[]) =
     {
@@ -1444,6 +1447,11 @@ intro_message(colon)
     if (blanklines < 0)
 	blanklines = 0;
 
+    /* Show the sponsor and register message one out of four times, the Uganda
+     * message two out of four times. */
+    sponsor = time(NULL);
+    sponsor = ((sponsor & 2) == 0) - ((sponsor & 4) == 0);
+
     /* start displaying the message lines after half of the blank lines */
     row = blanklines / 2;
     if ((row >= 2 && Columns >= 50) || colon)
@@ -1460,6 +1468,19 @@ intro_message(colon)
 		if (!p_cp)
 		    break;
 		continue;
+	    }
+	    if (sponsor != 0)
+	    {
+		if (strstr(p, "children") != NULL)
+		    p = sponsor < 0
+			? N_("Sponsor Vim development!")
+			: N_("Become a registered Vim user!");
+		else if (strstr(p, "iccf") != NULL)
+		    p = sponsor < 0
+			? N_("type  :help sponsor<Enter>    for information ")
+			: N_("type  :help register<Enter>   for information ");
+		else if (strstr(p, "Orphans") != NULL)
+		    p = N_("menu  Help->Sponsor/Register  for information    ");
 	    }
 	    if (*p != NUL)
 		do_intro_line(row, (char_u *)_(p), i == 2, 0);

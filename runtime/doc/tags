@@ -1924,6 +1924,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :ju	motion.txt	/*:ju*
 :jumps	motion.txt	/*:jumps*
 :k	motion.txt	/*:k*
+:kee	motion.txt	/*:kee*
+:keepmarks	motion.txt	/*:keepmarks*
 :l	various.txt	/*:l*
 :la	editing.txt	/*:la*
 :lan	mlang.txt	/*:lan*
@@ -1956,6 +1958,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :loadk	mbyte.txt	/*:loadk*
 :loadkeymap	mbyte.txt	/*:loadkeymap*
 :loadview	starting.txt	/*:loadview*
+:loc	motion.txt	/*:loc*
+:lockmarks	motion.txt	/*:lockmarks*
 :ls	windows.txt	/*:ls*
 :lu	map.txt	/*:lu*
 :lunmap	map.txt	/*:lunmap*
@@ -5508,6 +5512,8 @@ ref	intro.txt	/*ref*
 reference	intro.txt	/*reference*
 regexp	pattern.txt	/*regexp*
 regexp-changes-5.4	version5.txt	/*regexp-changes-5.4*
+register	sponsor.txt	/*register*
+register-faq	sponsor.txt	/*register-faq*
 register-variable	eval.txt	/*register-variable*
 registers	change.txt	/*registers*
 regular-expression	pattern.txt	/*regular-expression*
@@ -5619,6 +5625,7 @@ searchpair()	eval.txt	/*searchpair()*
 section	motion.txt	/*section*
 sed-syntax	syntax.txt	/*sed-syntax*
 sed.vim	syntax.txt	/*sed.vim*
+send-money	sponsor.txt	/*send-money*
 send-to-menu	gui_w32.txt	/*send-to-menu*
 sendto	gui_w32.txt	/*sendto*
 sentence	motion.txt	/*sentence*
@@ -5667,6 +5674,9 @@ special-buffers	windows.txt	/*special-buffers*
 speed-up	tips.txt	/*speed-up*
 splitfind	windows.txt	/*splitfind*
 splitview	windows.txt	/*splitview*
+sponsor	sponsor.txt	/*sponsor*
+sponsor-faq	sponsor.txt	/*sponsor-faq*
+sponsor.txt	sponsor.txt	/*sponsor.txt*
 spoon	os_unix.txt	/*spoon*
 spup-syntax	syntax.txt	/*spup-syntax*
 spup.vim	syntax.txt	/*spup.vim*
@@ -6271,6 +6281,8 @@ vms-notes	os_vms.txt	/*vms-notes*
 vms-problems	os_vms.txt	/*vms-problems*
 vms-started	os_vms.txt	/*vms-started*
 vms-usage	os_vms.txt	/*vms-usage*
+vote-for-features	sponsor.txt	/*vote-for-features*
+votes-counted	sponsor.txt	/*votes-counted*
 votes-for-changes	todo.txt	/*votes-for-changes*
 vreplace-mode	insert.txt	/*vreplace-mode*
 vt100-cursor-keys	term.txt	/*vt100-cursor-keys*
@@ -6460,6 +6472,7 @@ zz	scroll.txt	/*zz*
 {motion}	intro.txt	/*{motion}*
 {move-around}	visual.txt	/*{move-around}*
 {offset}	pattern.txt	/*{offset}*
+{pat}	autocmd.txt	/*{pat}*
 {rhs}	map.txt	/*{rhs}*
 {subject}	various.txt	/*{subject}*
 {}	intro.txt	/*{}*
