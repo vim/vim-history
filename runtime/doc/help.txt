@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.3.  Last change: 2004 Jul 13
+*help.txt*	For Vim version 6.3.  Last change: 2004 Aug 29
 
 			VIM - main help file
 									 k
@@ -187,12 +187,6 @@ Standard plugins ~
 |pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:				*local-additions*
-|engspchk.txt|	English Spelling Checker   (v57)	May 25, 2004
-|example.txt|	Example for a locally added help file
-|matchit.txt|   Extended "%" matching
-|test.txt|	Testing the hélp cömmånd nôw
-|typecorr.txt|	Plugin for correcting typing mistakes
-|helpp.txt|	Dummy line to avoid an error message
 
 ------------------------------------------------------------------------------
 *bars*		Bars example
