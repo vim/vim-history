@@ -8564,8 +8564,27 @@ repeat:
     {
 	valid |= VALID_PATH;
 	*usedlen += 2;
+
+	/* Expand "~/path" for all systems and "~user/path" for Unix and VMS */
+	if ((*fnamep)[0] == '~'
+#if !defined(UNIX) && !(defined(VMS) && defined(USER_HOME))
+		&& ((*fnamep)[1] == '/'
+# ifdef BACKSLASH_IN_FILENAME
+		    || (*fnamep)[1] == '\\'
+# endif
+		    || (*fnamep)[1] == NUL)
+
+#endif
+	   )
+	{
+	    *fnamep = expand_env_save(*fnamep);
+	    vim_free(*bufp);	/* free any allocated file name */
+	    *bufp = *fnamep;
+	    if (*fnamep == NULL)
+		return -1;
+	}
 	/* FullName_save() is slow, don't use it when not needed. */
-	if (!vim_isAbsName(*fnamep))
+	else if (!vim_isAbsName(*fnamep))
 	{
 	    *fnamep = FullName_save(*fnamep, FALSE);
 	    vim_free(*bufp);	/* free any allocated file name */
