@@ -8569,6 +8569,7 @@ makeopens(fd, dirnow)
     int		restore_size = TRUE;
     win_T	*wp;
     char_u	*sname;
+    win_T	*edited_win = NULL;
 
     if (ssop_flags & SSOP_BUFFERS)
 	only_save_windows = FALSE;		/* Save ALL buffers */
@@ -8657,6 +8658,29 @@ makeopens(fd, dirnow)
 #endif
 
     /*
+     * Before creating the window layout, try loading one file.  If this is
+     * aborted we don't end up with a number of useless windows.
+     * This may have side effects! (e.g., compressed or network file).
+     */
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    {
+	if (ses_do_win(wp)
+		&& wp->w_buffer->b_ffname != NULL
+		&& !wp->w_buffer->b_help
+#ifdef FEAT_QUICKFIX
+		&& !bt_nofile(wp->w_buffer)
+#endif
+		)
+	{
+	    if (fputs("edit ", fd) < 0
+		    || ses_fname(fd, wp->w_buffer, &ssop_flags) == FAIL)
+		return FAIL;
+	    edited_win = wp;
+	    break;
+	}
+    }
+
+    /*
      * Save current window layout.
      */
     if (put_line(fd, "set splitbelow splitright") == FAIL)
@@ -8702,7 +8726,7 @@ makeopens(fd, dirnow)
     {
 	if (!ses_do_win(wp))
 	    continue;
-	if (put_view(fd, wp, TRUE, &ssop_flags) == FAIL)
+	if (put_view(fd, wp, wp != edited_win, &ssop_flags) == FAIL)
 	    return FAIL;
 	if (nr > 1 && put_line(fd, "wincmd w") == FAIL)
 	    return FAIL;
