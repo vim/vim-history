@@ -1711,6 +1711,8 @@ do_dialog(type, title, message, buttons, dfltbutton)
 		retval = 0;
 		break;
 	    default:		/* Could be a hotkey? */
+		if (c > 255)	/* special keys are ignored here */
+		    continue;
 		for (retval = 0; hotkeys[retval]; retval++)
 		{
 		    if (hotkeys[retval] == TO_LOWER(c))
