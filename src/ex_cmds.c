@@ -3642,6 +3642,9 @@ do_glob(eap)
 	 */
 	setpcmark();
 
+	/* When the command writes a message, don't overwrite the command. */
+	msg_didout = TRUE;
+
 	global_need_beginline = FALSE;
 	global_busy = 1;
 	old_lcount = curbuf->b_ml.ml_line_count;
@@ -3668,6 +3671,11 @@ do_glob(eap)
 	 * flicker.
 	 */
 	redraw_later(NOT_VALID);
+
+	/* If it looks like no message was written, allow overwriting the
+	 * command with the report for number of changes. */
+	if (msg_col == 0 && msg_scrolled == 0)
+	    msg_didout = FALSE;
 
 	/* If subsitutes done, report number of substitues, otherwise report
 	 * number of extra or deleted lines. */
