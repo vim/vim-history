@@ -1621,104 +1621,100 @@ op_delete(oap)
 	    u_clearline();	/* "U" command not possible after "dd" */
 	}
     }
-    else if (oap->line_count == 1)	/* delete characters within one line */
-    {
-	if (u_save_cursor() == FAIL)
-	    return FAIL;
-	/* if 'cpoptions' contains '$', display '$' at end of change */
-	if (	   vim_strchr(p_cpo, CPO_DOLLAR) != NULL
-		&& oap->op_type == OP_CHANGE
-		&& oap->end.lnum == curwin->w_cursor.lnum
-#ifdef FEAT_VISUAL
-		&& !oap->is_VIsual
-#endif
-		)
-	    display_dollar(oap->end.col - !oap->inclusive);
-
-	n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
-#ifdef FEAT_VIRTUALEDIT
-
-	if (virtual_active())
-	{
-	    /* fix up things for virtualedit-delete:
-	     * make sure the coladds are in the right order, and
-	     * break the tabs which are going to get in our way
-	     */
-	    char_u	*curline = ml_get_curline();
-	    int		oldcol = getviscol();
-	    int		len;
-	    int		endcol;
-
-	    if (oap->start.col == oap->end.col
-		    && oap->end.coladd < oap->start.coladd)
-	    {
-		colnr_T tmp = oap->start.coladd;
-		oap->start.coladd = oap->end.coladd;
-		oap->end.coladd = tmp;
-
-		curwin->w_cursor.coladd = oap->start.coladd;
-	    }
-
-	    if (curline[oap->start.col] == '\t')
-	    {
-		endcol = getviscol2(oap->end.col, oap->end.coladd);
-		coladvance_force(getviscol2(oap->start.col, oap->start.coladd));
-		oap->start.col = curwin->w_cursor.col;
-		oap->start.coladd = 0;
-		coladvance(endcol);
-		oap->end.col = curwin->w_cursor.col;
-		oap->end.coladd = curwin->w_cursor.coladd;
-		coladvance(oldcol);
-		curline = ml_get_curline();
-	    }
-
-	    if (curline[oap->end.col] == '\t')
-	    {
-		coladvance_force(getviscol2(oap->end.col, oap->end.coladd));
-		oap->end.col = curwin->w_cursor.col;
-		oap->end.coladd = 0;
-		coladvance(oldcol);
-		curline = ml_get_curline();
-	    }
-
-	    n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
-	    len = (int)STRLEN(curline);
-
-	    if (oap->end.coladd != 0 && (int)oap->end.col >= len - 1
-		    && !(oap->start.coladd && (int)oap->end.col >= len - 1))
-		n++;
-	    /* Delete at least one character (e.g, when on a control char). */
-	    if (n == 0 && oap->start.coladd != oap->end.coladd)
-		n = 1;
-
-	    /* When deleted a char in the line, reset coladd. */
-	    if (gchar_cursor() != NUL)
-		curwin->w_cursor.coladd = 0;
-	}
-#endif
-	(void)del_bytes((long)n, restart_edit == NUL);
-    }
-    else				/* delete characters between lines */
+    else
     {
 	if (u_save_cursor() == FAIL)	/* save first line for undo */
 	    return FAIL;
-	truncate_line(TRUE);		/* delete from cursor to end of line */
 
-	oap->start = curwin->w_cursor;	/* remember curwin->w_cursor */
-	++curwin->w_cursor.lnum;
-					/* includes save for undo */
-	del_lines((long)(oap->line_count - 2), TRUE);
+#ifdef FEAT_VIRTUALEDIT
+	if (virtual_active())
+	{
+	    int		endcol = 0;
 
-	if (u_save_cursor() == FAIL)	/* save last line for undo */
-	    return FAIL;
-	u_clearline();			/* "U" should not be possible now */
-	/* delete from start of line until op_end */
-	curwin->w_cursor.col = 0;
-	(void)del_bytes((long)(oap->end.col + 1 - !oap->inclusive),
+	    /* For virtualedit: break the tabs that are partly included. */
+	    if (gchar_pos(&oap->start) == '\t')
+	    {
+		if (oap->line_count == 1)
+		    endcol = getviscol2(oap->end.col, oap->end.coladd);
+		coladvance_force(getviscol2(oap->start.col, oap->start.coladd));
+		oap->start = curwin->w_cursor;
+		if (oap->line_count == 1)
+		{
+		    coladvance(endcol);
+		    oap->end.col = curwin->w_cursor.col;
+		    oap->end.coladd = curwin->w_cursor.coladd;
+		    curwin->w_cursor = oap->start;
+		}
+	    }
+
+	    if (gchar_pos(&oap->end) == '\t')
+	    {
+		curwin->w_cursor = oap->end;
+		coladvance_force(getviscol2(oap->end.col, oap->end.coladd));
+		oap->end = curwin->w_cursor;
+		curwin->w_cursor = oap->start;
+	    }
+	}
+#endif
+
+	if (oap->line_count == 1)	/* delete characters within one line */
+	{
+	    /* if 'cpoptions' contains '$', display '$' at end of change */
+	    if (	   vim_strchr(p_cpo, CPO_DOLLAR) != NULL
+		    && oap->op_type == OP_CHANGE
+		    && oap->end.lnum == curwin->w_cursor.lnum
+#ifdef FEAT_VISUAL
+		    && !oap->is_VIsual
+#endif
+		    )
+		display_dollar(oap->end.col - !oap->inclusive);
+
+	    n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
+
+#ifdef FEAT_VIRTUALEDIT
+	    if (virtual_active())
+	    {
+		/* fix up things for virtualedit-delete:
+		 * break the tabs which are going to get in our way
+		 */
+		char_u		*curline = ml_get_curline();
+		int		len = (int)STRLEN(curline);
+
+		if (oap->end.coladd != 0
+			&& (int)oap->end.col >= len - 1
+			&& !(oap->start.coladd && (int)oap->end.col >= len - 1))
+		    n++;
+		/* Delete at least one char (e.g, when on a control char). */
+		if (n == 0 && oap->start.coladd != oap->end.coladd)
+		    n = 1;
+
+		/* When deleted a char in the line, reset coladd. */
+		if (gchar_cursor() != NUL)
+		    curwin->w_cursor.coladd = 0;
+	    }
+#endif
+	    (void)del_bytes((long)n, restart_edit == NUL);
+	}
+	else				/* delete characters between lines */
+	{
+	    truncate_line(TRUE);	/* delete from cursor to end of line */
+
+	    oap->start = curwin->w_cursor;	/* remember curwin->w_cursor */
+	    ++curwin->w_cursor.lnum;
+						/* includes save for undo */
+	    del_lines((long)(oap->line_count - 2), TRUE);
+
+	    if (u_save_cursor() == FAIL)	/* save last line for undo */
+		return FAIL;
+	    u_clearline();			/* "U" not possible now */
+	    /* delete from start of line until op_end */
+	    curwin->w_cursor.col = 0;
+	    (void)del_bytes((long)(oap->end.col + 1 - !oap->inclusive),
 							 restart_edit == NUL);
-	curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
+	    curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
 
-	(void)do_join(FALSE);
+	    (void)do_join(FALSE);
+	}
     }
 
     msgmore(curbuf->b_ml.ml_line_count - old_lcount);

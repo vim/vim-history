@@ -5147,10 +5147,10 @@ nv_dollar(cap)
     /* In virtual mode when off the edge of a line and an operator
      * is pending (whew!) keep the cursor where it is.
      * Otherwise, send it to the end of the line. */
-    if (!virtual_active() || gchar_cursor() != NUL ||
-	    cap->oap->op_type == OP_NOP)
+    if (!virtual_active() || gchar_cursor() != NUL
+					       || cap->oap->op_type == OP_NOP)
 #endif
-    curwin->w_curswant = MAXCOL;	/* so we stay at the end */
+	curwin->w_curswant = MAXCOL;	/* so we stay at the end */
     if (cursor_down((long)(cap->count1 - 1),
 					 cap->oap->op_type == OP_NOP) == FAIL)
 	clearopbeep(cap->oap);
@@ -6563,9 +6563,6 @@ nv_g_cmd(cap)
 #ifdef FEAT_VISUAL
     pos_T	tpos;
 #endif
-#ifdef FEAT_VIRTUALEDIT
-    int		coladd;
-#endif
     int		i;
     int		flag = FALSE;
 
@@ -6627,10 +6624,6 @@ nv_g_cmd(cap)
 		curbuf->b_visual_end = curwin->w_cursor;
 		curwin->w_cursor = curbuf->b_visual_start;
 		curbuf->b_visual_start = VIsual;
-
-#ifdef FEAT_VIRTUALEDIT
-		coladd = tpos.coladd;
-#endif
 	    }
 	    else
 	    {
@@ -6638,9 +6631,6 @@ nv_g_cmd(cap)
 		curwin->w_curswant = curbuf->b_visual_curswant;
 		tpos = curbuf->b_visual_end;
 		curwin->w_cursor = curbuf->b_visual_start;
-#ifdef FEAT_VIRTUALEDIT
-		coladd = curbuf->b_visual_end.coladd;
-#endif
 	    }
 
 	    VIsual_active = TRUE;
@@ -6651,9 +6641,6 @@ nv_g_cmd(cap)
 	    check_cursor();
 	    VIsual = curwin->w_cursor;
 	    curwin->w_cursor = tpos;
-#ifdef FEAT_VIRTUALEDIT
-	    curwin->w_cursor.coladd = coladd;
-#endif
 	    check_cursor();
 	    update_topline();
 	    /*
@@ -7425,6 +7412,11 @@ unadjust_for_sel()
 	    pp = &curwin->w_cursor;
 	else
 	    pp = &VIsual;
+#ifdef FEAT_VIRTUALEDIT
+	if (pp->coladd > 0)
+	    --pp->coladd;
+	else
+#endif
 	if (pp->col > 0)
 	    --pp->col;
 	else if (pp->lnum > 1)
