@@ -1317,7 +1317,8 @@ enter_buffer(buf)
 
 #if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
     /* Change directories when the acd option is set on. */
-    if (p_acd && vim_chdirfile(buf->b_ffname) == OK)
+    if (p_acd && curbuf->b_ffname != NULL
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	shorten_fnames(TRUE);
 #endif
 
