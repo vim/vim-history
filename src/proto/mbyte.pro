@@ -55,7 +55,7 @@ char_u *enc_skip __ARGS((char_u *p));
 char_u *enc_canonize __ARGS((char_u *enc));
 int enc_default __ARGS((void));
 void *my_iconv_open __ARGS((char_u *to, char_u *from));
-int iconv_enabled __ARGS((void));
+int iconv_enabled __ARGS((int verbose));
 void iconv_end __ARGS((void));
 int im_xim_isvalid_imactivate __ARGS((void));
 void im_set_active __ARGS((int active));

@@ -255,7 +255,11 @@ dyn_libintl_init(char *libname)
 	STRCPY(gettail(dirname), GETTEXT_DLL);
 	hLibintlDLL = LoadLibrary((char *)dirname);
 	if (!hLibintlDLL)
+	{
+	    if (p_verbose > 0)
+		EMSG2(_("E370: Could not load library %s"), GETTEXT_DLL);
 	    return 0;
+	}
     }
     for (i = 0; libintl_entry[i].name != NULL
 	    && libintl_entry[i].ptr != NULL; ++i)
@@ -264,6 +268,9 @@ dyn_libintl_init(char *libname)
 			libintl_entry[i].name)))
 	{
 	    dyn_libintl_end();
+	    if (p_verbose > 0)
+		EMSG2(_("E448: Could not load library function %s"),
+						       libintl_entry[i].name);
 	    return 0;
 	}
     }

@@ -307,17 +307,21 @@ static struct {
  * 3. Repeat 2, until get all functions will be used.
  *
  * Parameter 'libname' provides name of DLL.
- * Succeeded in load, return 1. Failed, return zero.
+ * Return OK or FAIL.
  */
     static int
-perl_runtime_link_init(char *libname)
+perl_runtime_link_init(char *libname, int verbose)
 {
     int i;
 
-    if (hPerlLib)
-	return 1;
+    if (hPerlLib != NULL)
+	return OK;
     if (!(hPerlLib = LoadLibraryEx(libname, NULL, 0)))
-	return 0;
+    {
+	if (verbose)
+	    EMSG2(_("E370: Could not load library %s"), libname);
+	return FAIL;
+    }
     for (i = 0; perl_funcname_table[i].ptr; ++i)
     {
 	if (!(*perl_funcname_table[i].ptr = GetProcAddress(hPerlLib,
@@ -325,20 +329,24 @@ perl_runtime_link_init(char *libname)
 	{
 	    FreeLibrary(hPerlLib);
 	    hPerlLib = NULL;
-	    return 0;
+	    if (verbose)
+		EMSG2(_("E448: Could not load library function %s"),
+						 perl_funcname_table[i].name);
+	    return FAIL;
 	}
     }
-    return 1;
+    return OK;
 }
 
 /*
- * If runtime-link-perl(DLL) was loaded successfully, return 1.
- * There were no DLL loaded, return 0.
+ * If runtime-link-perl(DLL) was loaded successfully, return TRUE.
+ * There were no DLL loaded, return FALSE.
  */
     int
-perl_enabled()
+perl_enabled(verbose)
+    int		verbose;
 {
-    return perl_runtime_link_init(DYNAMIC_PERL_DLL);
+    return perl_runtime_link_init(DYNAMIC_PERL_DLL, verbose) == OK;
 }
 #endif /* DYNAMIC_PERL */
 
@@ -548,10 +556,10 @@ ex_perl(eap)
     SV		*sv;
     SV		*safe;
 
-    if (!perl_interp)
+    if (perl_interp == NULL)
     {
 #ifdef DYNAMIC_PERL
-	if (!perl_enabled())
+	if (!perl_enabled(TRUE))
 	{
 	    EMSG(_(e_noperl));
 	    return;
@@ -644,10 +652,10 @@ ex_perldo(eap)
     if (bufempty())
 	return;
 
-    if (!perl_interp)
+    if (perl_interp == NULL)
     {
 #ifdef DYNAMIC_PERL
-	if (!perl_enabled())
+	if (!perl_enabled(TRUE))
 	{
 	    EMSG(_(e_noperl));
 	    return;

@@ -2429,7 +2429,7 @@ my_iconv_open(to, from)
 
 #ifdef DYNAMIC_ICONV
     /* Check if the iconv.dll can be found. */
-    if (!iconv_enabled())
+    if (!iconv_enabled(TRUE))
 	return (void *)-1;
 #endif
 
@@ -2553,7 +2553,8 @@ HINSTANCE hMsvcrtDLL = 0;
  * Try opening the iconv.dll and return TRUE if iconv() can be used.
  */
     int
-iconv_enabled()
+iconv_enabled(verbose)
+    int		verbose;
 {
     if (hIconvDLL != 0 && hMsvcrtDLL != 0)
 	return TRUE;
@@ -2561,6 +2562,11 @@ iconv_enabled()
     hMsvcrtDLL = LoadLibrary(DYNAMIC_MSVCRT_DLL);
     if (hIconvDLL == 0 || hMsvcrtDLL == 0)
     {
+	/* Only give the message when 'verbose' is set, otherwise it might be
+	 * done whenever a conversion is attempted. */
+	if (verbose && p_verbose > 0)
+	    EMSG2(_("E370: Could not load library %s"),
+		    hIconvDLL == 0 ? DYNAMIC_ICONV_DLL : DYNAMIC_MSVCRT_DLL);
 	iconv_end();
 	return FALSE;
     }
@@ -2574,6 +2580,9 @@ iconv_enabled()
 	    || iconvctl == NULL || iconv_errno == NULL)
     {
 	iconv_end();
+	if (verbose && p_verbose > 0)
+	    EMSG2(_("E448: Could not load library function %s"),
+							      "for libiconv");
 	return FALSE;
     }
     return TRUE;
@@ -2607,6 +2616,9 @@ static int	status_area_enabled = TRUE;
 #if defined(FEAT_GUI_GTK) || defined(PROTO)
 static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 static int	xim_input_style;
+#ifndef FEAT_GUI_GTK
+# define gboolean int
+#endif
 static gboolean	use_status_area = 0;
 
 static int im_xim_str2keycode __ARGS((unsigned int *code, unsigned int *state));

@@ -4337,23 +4337,23 @@ f_has(argvars, retvar)
 	    n = (starting != 0);
 #ifdef DYNAMIC_TCL
 	else if (STRICMP(name, "tcl") == 0)
-	    n = tcl_enabled() ? TRUE : FALSE;
+	    n = tcl_enabled(FALSE);
 #endif
 #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
 	else if (STRICMP(name, "iconv") == 0)
-	    n = iconv_enabled();
+	    n = iconv_enabled(FALSE);
 #endif
 #ifdef DYNAMIC_RUBY
 	else if (STRICMP(name, "ruby") == 0)
-	    n = ruby_enabled() ? TRUE : FALSE;
+	    n = ruby_enabled(FALSE);
 #endif
 #ifdef DYNAMIC_PYTHON
 	else if (STRICMP(name, "python") == 0)
-	    n = python_enabled() ? TRUE : FALSE;
+	    n = python_enabled(FALSE);
 #endif
 #ifdef DYNAMIC_PERL
 	else if (STRICMP(name, "perl") == 0)
-	    n = perl_enabled() ? TRUE : FALSE;
+	    n = perl_enabled(FALSE);
 #endif
 #ifdef FEAT_GUI
 	else if (STRICMP(name, "gui_running") == 0)
