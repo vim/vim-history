@@ -1,7 +1,7 @@
 " Vim filetype plugin file.
 " Language:	Lua 4.0+
 " Maintainer:	Max Ischenko <mfi@ukr.net>
-" Last Change:	2001 Aug 30
+" Last Change:	2001 Sep 17
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -23,6 +23,7 @@ setlocal suffixesadd=.lua
 " The following lines enable the macros/matchit.vim plugin for
 " extended matching with the % key.
 
+set cpo-=C
 if exists("loaded_matchit")
 
   let b:match_ignorecase = 0

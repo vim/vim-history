@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 13
+*tips.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -108,7 +108,7 @@ To use it, place the cursor on a word, type "_u" and vim will load the file
 that contains the word.  Search for the next occurence of the word in the same
 file with "n".  Go to the next file with "_n".
 
-This has been tested with id-utils-3.2 (which is the name name of the id-tools
+This has been tested with id-utils-3.2 (which is the name of the id-tools
 archive file on your closest gnu-ftp-mirror).
 
 [the idea for this comes from Andreas Kutschera]

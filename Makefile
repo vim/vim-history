@@ -36,9 +36,9 @@ all install uninstall tools config configure proto depend lint tags types test t
 # 2. Create the various distributions:
 #
 # TARGET	PRODUCES		CONTAINS
-# unixall	vim-#.#.tar.bz2		All files for Unix
-# unixrt	vim-#.#-rt[12].tar.gz	Runtime files for Unix
-# unixsrc	vim-#.#-src[12].tar.gz	Sources for Unix
+# unixall	vim-#.#.tar.bz2		Runtime files and Sources for Unix
+#    unixrt	vim-#.#-rt[12].tar.gz	Runtime files for Unix
+#    unixsrc	vim-#.#-src[12].tar.gz	Sources for Unix
 #
 # extra		vim-#.#-extra.tar.gz	Extra source and runtime files
 # lang		vim-#.#-lang.tar.gz	multi-language files
@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0aw
+MINOR = 0ax
 
 # CHECKLIST for creating a new version:
 #
@@ -1152,10 +1152,10 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 # Add the message translations.  Trick: skip ja.mo and use ja.sjis.mo instead.
-# Same for cs.mo and cs.cp1250.mo.
+# Same for cs.mo / cs.cp1250.mo and zh_CN.mo / zh_CN.cp936.mo.
 	for i in $(LANG_DOS); do \
-	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo"; then \
-		n=`echo $$i | sed -e "s+src/po/\([-a-zA-Z0-9_]*\(.UTF-8\)*\)\(.sjis\)*\(.cp1250\)*.mo+\1+"`; \
+	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo" -a "$$i" != "src/po/zh_CN.mo"; then \
+		n=`echo $$i | sed -e "s+src/po/\([-a-zA-Z0-9_]*\(.UTF-8\)*\)\(.sjis\)*\(.cp1250\)*\(.cp936\)*.mo+\1+"`; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
 		cp $$i dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES/vim.mo; \

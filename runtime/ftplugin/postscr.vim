@@ -21,6 +21,8 @@ if !exists("b:match_words")
   let b:match_words = '<<:>>,\<begin\>:\<end\>,\<save\>:\<restore\>,\<gsave\>:\<grestore\>'
 endif
 
+set cpo-=C
+
 " Define patterns for the browse file filter
 if has("gui_win32") && !exists("b:browsefilter")
   let b:browsefilter = "PostScript Files (*.ps)\t*.ps\n" .

@@ -824,8 +824,11 @@ getcmdline(firstc, count, indent)
 #ifdef USE_IM_CONTROL
 		else
 		{
-		    /* There are no ":lmap" mappings, toggle IM */
-		    if (im_get_status())
+		    /* There are no ":lmap" mappings, toggle IM.  When
+		     * 'imdisable' is set don't try getting the status, it's
+		     * always off. */
+		    if ((p_imdisable && b_im_ptr != NULL)
+			    ? *b_im_ptr == B_IMODE_IM : im_get_status())
 		    {
 			im_set_active(FALSE);	/* Disable input method */
 			if (b_im_ptr != NULL)

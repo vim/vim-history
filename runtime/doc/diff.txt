@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 16
+*diff.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -177,7 +177,7 @@ lines: >
 The diffs are highlighted with these groups:
 
 |hl-DiffAdd|	DiffAdd		Added (inserted) lines.  These lines exist in
-				this buffer buffer but not in another.
+				this buffer but not in another.
 |hl-DiffChange|	DiffChange	Changed lines.
 |hl-DiffText|	DiffText	Changed text inside a Changed line.  Vim
 				finds the first character that is different,

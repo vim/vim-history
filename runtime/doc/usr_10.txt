@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 03
+*usr_10.txt*	For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -612,7 +612,7 @@ Now move the cursor to the second line you want to collect, and type this: >
 
 	:.write >>collection
 
-The ">>" tells Vim the "collection" file is not be be written as a new file,
+The ">>" tells Vim the "collection" file is not to be written as a new file,
 but the line must be appended at the end.   You can repeat this as many times
 as you like.
 

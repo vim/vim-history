@@ -2942,6 +2942,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		/* 'sol' is off: Use last known column. */
 		curwin->w_cursor.col = solcol;
 		check_cursor_col();
+#ifdef FEAT_VIRTUALEDIT
+		curwin->w_cursor.coladd = 0;
+#endif
 		curwin->w_set_curswant = TRUE;
 	    }
 	    else

@@ -160,7 +160,7 @@
 #HP-UX_9.04	      cc	     +X11 +Motif	5.0  (2) Carton Lao
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
 #Irix 6.4	      cc	     ?			5.0m (S) Rick Sayre
-#Irix 6.5	      cc	     ?			5.3  (S) David Harrison
+#Irix 6.5	      cc	     ?			6.0  (S) David Harrison
 #Irix 64 bit						4.5  (K) Jon Wright
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60aw
+VIMRTDIR = /vim60ax
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax

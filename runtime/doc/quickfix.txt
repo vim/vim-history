@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 12
+*quickfix.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -104,7 +104,7 @@ The following commands can be used if you are in QuickFix mode:
 
 							*:cl* *:clist*
 :cl[ist] [from] [, [to]]
-			List all errors that include a file name.
+			List all errors that are valid |quickfix-valid|.
 			If numbers [from] and/or [to] are given, the respective
 			range of errors is listed. A negative number counts
 			from the last error backwards, -1 being the last error.
@@ -223,6 +223,28 @@ What this command actually does is:
 - execute ":runtime! compiler/{name}.vim"
 
 For writing a compiler plugin, see |write-compiler-plugin|.
+
+
+TEX COMPILER						*compiler-tex*
+
+Included in the distribution compiler for TeX ($VIMRUNTIME/compiler/tex.vim)
+is intended to handle all flavors of TeX formats. If b:tex_flavor or
+g:tex_flavor (in this precedence) variable exists, it defines TeX flavor for
+:make (actually, this is the name of executed command), and if both variables
+do not exist, it defaults to "latex". For example, while editing chapter2.tex
+\input-ed from mypaper.tex written in AMS-TeX: >
+
+	:let b:tex_flavor = 'amstex'
+	:compiler tex
+<	[editing...] >
+	:make mypaper
+
+Note that you must specify a name of the file to process as an argument (to
+process the right file when editing \input-ed or \include-ed file; portable
+solution for substituting % for no arguments is welcome). This is not in the
+semantics of make, but you may specify filename without extension ".tex" and
+mean this as "make filename.dvi or filename.pdf or
+filename.some_result_extension according to compiler"
 
 =============================================================================
 4. Using more than one list of errors			*quickfix-error-lists*
@@ -457,6 +479,7 @@ a pattern precede it with a backslash (you have to type two in a set command).
 To include a backslash itself give two backslashes (you have to type four in a
 set command).
 
+							*quickfix-valid*
 If a line is detected that does not completely match the 'errorformat', the
 whole line is put in the error message and the entry is marked "not valid"
 These lines are skipped with the ":cn" and ":cp" commands (unless there is

@@ -1,8 +1,9 @@
 # Makefile for the Vim message translations.
 
 # TODO make this configurable
-# Note: ja.sjis is only for MS-Windows, it's not installed on Unix
-# cs.cp1250 also is only for MS-Windows
+# Note: ja.sjis, cs.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
+# not installed on Unix
+
 LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW zh_CN zh_CN.UTF-8
 MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
 		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
@@ -52,7 +53,7 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
-converted: ja.sjis.mo cs.cp1250.mo
+converted: ja.sjis.mo cs.cp1250.mo zh_CN.cp936.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.  Don't depend on sjiscorr, it should only be compiled when
@@ -69,6 +70,12 @@ cs.cp1250.po: cs.po
 	iconv -f iso-8859-2 -t cp1250 cs.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from cs.po, DO NOT EDIT/' > cs.cp1250.po
 
+# Convert zh_CN.po to create zh_CN.cp936.po.
+# set 'charset' to gbk to avoid that msfmt generates a warning
+zh_CN.cp936.po: zh_CN.po
+	iconv -f gb2312 -t cp936 zh_CN.po | \
+		sed -e 's/charset=gb2312/charset=gbk/' -e 's/# Original translations/# Generated from zh_CN.po, DO NOT EDIT/' > zh_CN.cp936.po
+
 check:
 	@if test "x" = "x$(prefix)"; then \
 	  echo "******************************************"; \
@@ -78,7 +85,7 @@ check:
 	fi
 
 clean:
-	rm -f core core.* *.old.po *.mo *.pot sjiscorr ja.sjis.po cs.cp1250.po
+	rm -f core core.* *.old.po *.mo *.pot sjiscorr
 
 distclean: clean
 

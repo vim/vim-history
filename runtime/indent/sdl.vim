@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	SDL
 " Maintainer:	Michael Piefel <piefel@informatik.hu-berlin.de>
-" Last Change:	2001 Aug 16
+" Last Change:	2001 Sep 17
 
 " Shamelessly stolen from the Vim-Script indent file
 
@@ -18,6 +18,8 @@ setlocal indentkeys+==~end,=~state,*<Return>
 if exists("*GetSDLIndent")
 "  finish
 endif
+
+set cpo-=C
 
 function! GetSDLIndent()
   " Find a non-blank line above the current line.

@@ -1741,8 +1741,9 @@ utf_isupper(a)
 
 /*
  * Version of strnicmp() that handles multi-byte characters.
- * Only needed for Big5 and UTF-8 encoding.  Other DBCS encodings can use
- * strnicmp(), because there are no ASCII characters in the second byte.
+ * Needed for Big5, Sjift-JIS and UTF-8 encoding.  Other DBCS encodings can
+ * probably use strnicmp(), because there are no ASCII characters in the
+ * second byte.
  * Returns zero if s1 and s2 are equal (ignoring case), the difference between
  * two characters otherwise.
  */

@@ -1030,11 +1030,8 @@ gui_mch_init(void)
     /* Do we need to bother with this? */
     /* m_fMouseAvail = GetSystemMetrics(SM_MOUSEPRESENT); */
 
-    /* Get background/foreground colors from system */
-    gui.norm_pixel = GetSysColor(COLOR_WINDOWTEXT);
-    gui.back_pixel = GetSysColor(COLOR_WINDOW);
-    gui.def_norm_pixel = gui.norm_pixel;
-    gui.def_back_pixel = gui.back_pixel;
+    /* Get background/foreground colors from the system */
+    gui_mch_def_colors();
 
     /* Get the colors from the "Normal" group (set in syntax.c or in a vimrc
      * file) */

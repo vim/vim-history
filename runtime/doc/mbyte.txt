@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.0aw.  Last change: 2001 Sep 09
+*mbyte.txt*     For Vim version 6.0ax.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.

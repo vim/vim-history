@@ -3716,6 +3716,9 @@ do_join(insert_space)
      */
     curwin->w_cursor.col = currsize;
     check_cursor_col();
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_cursor.coladd = 0;
+#endif
     curwin->w_set_curswant = TRUE;
 
     return OK;

@@ -1,4 +1,4 @@
-*pi_spec.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 03
+*pi_spec.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 03
 
 by Gustavo Niemeyer ~
 

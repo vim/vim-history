@@ -17,6 +17,8 @@ let b:did_indent = 1
 setlocal indentexpr=XmlIndentGet(v:lnum,1)
 setlocal indentkeys=o,O,*<Return>,<>>,<<>,/,<bs>,{,}
 
+set cpo-=C
+
 if !exists('b:xml_indent_open')
     let b:xml_indent_open = '.\{-}<\a'
     " pre tag, e.g. <address>

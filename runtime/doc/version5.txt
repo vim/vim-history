@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 03
+*version5.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1334,7 +1334,7 @@ up-down.
 
 ":retab" didn't work well when 'list' is set.
 
-Amiga: When inserting characters at the last line on on the screen, causing it
+Amiga: When inserting characters at the last line on the screen, causing it
 to wrap, messed up the display.  It appears that a '\n' on the last line
 doesn't always cause a scroll up.
 
@@ -4092,7 +4092,7 @@ selecting a menu entry). (Negri)
 Unix with X: Some systems crash on exit, because of the XtCloseDisplay() call.
 Removed it, it should not be necessary when exiting.
 
-Win32: Crash on keypress when compiled with with Borland C++. (Aaron)
+Win32: Crash on keypress when compiled with Borland C++. (Aaron)
 
 When checking for Motif library files, prefer the same location as the include
 files (with "include" replaced with "lib") above another entry.
@@ -7145,7 +7145,7 @@ Solution:   Redraw italic text starting from a blank, like this is already
 Files:	    src/gui.c, src/gui.h, src/gui_w32.c
 
 Patch 5.6.060
-Problem:    Some bold characters spill over the the cell on the left, that
+Problem:    Some bold characters spill over to the cell on the left, that
 	    spill-over can remain sometimes.
 Solution:   Redraw a characters when the next character was bold and needs
 	    redrawing. (Robert Webb)

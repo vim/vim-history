@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 09
+*usr_42.txt*	For Vim version 6.0ax.  Last change: 2001 Sep 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

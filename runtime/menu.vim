@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 18
+" Last Change:	2001 Sep 19
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -710,11 +710,11 @@ imenu 1.40 PopUp.&Paste			x<Esc><SID>Paste"_s
 cmenu 1.40 PopUp.&Paste			<C-R>+
 vmenu 1.50 PopUp.&Delete		x
 amenu 1.55 PopUp.-SEP2-			:
-vmenu 1.60 PopUp.Select\ Blockwise	<C-Q>
-amenu 1.70 PopUp.Select\ &Word		vaw
-amenu 1.80 PopUp.Select\ &Line		V
-amenu 1.90 PopUp.Select\ &Block		<C-Q>
-amenu 1.100 PopUp.Select\ &All		ggVG
+vnoremenu 1.60 PopUp.Select\ Blockwise	<C-Q>
+anoremenu 1.70 PopUp.Select\ &Word	vaw
+anoremenu 1.80 PopUp.Select\ &Line	V
+anoremenu 1.90 PopUp.Select\ &Block	<C-Q>
+anoremenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 16
+*options.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -219,8 +219,8 @@ values from back then are used.  Otherwise the values from the window where
 the buffer was edited last are used.
 
 It's possible to set a local window option specifically for a type of buffer.
-When you edit another buffer in the same window, you don't want to to keep
-using that local window options.  Therefore Vim keeps a global value of the
+When you edit another buffer in the same window, you don't want to keep
+using these local window options.  Therefore Vim keeps a global value of the
 local window options, which is used when editing another buffer.  Each window
 has its own copy of these values.  Thus these are local to the window, but
 global to all buffers in the window.  With this you can do: >
@@ -2404,7 +2404,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 'grepprg' 'gp'		string	(default "grep -n ",
 					Unix: "grep -n $* /dev/null",
 					Win32: "findstr /n" or "grep -n",
-						      VMS: "SEEARCH/NUMBERS ")
+						      VMS: "SEARCH/NUMBERS ")
 			global or local to buffer |global-local|
 			{not in Vi}
 	Program to use for the ":grep" command. This option may contain '%'
@@ -5730,9 +5730,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 	Maximum number of changes that can be undone.  Since undo information
-	is kept in memory, higher numbers will cause more more memory to be
-	used (nevertheless, a single change can use an unlimited amount of
-	memory).
+	is kept in memory, higher numbers will cause more memory to be used
+	(nevertheless, a single change can use an unlimited amount of memory).
 	Set to 0 for Vi compatibility: One level of undo and "u" undoes
 	itself: >
 		set ul=0

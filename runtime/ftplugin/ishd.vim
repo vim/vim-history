@@ -9,6 +9,8 @@ let b:did_ftplugin = 1
 setlocal nocindent
 setlocal autoindent
 
+set cpo-=C
+
 " matchit support
 if exists("loaded_matchit")
     let b:match_ignorecase=0

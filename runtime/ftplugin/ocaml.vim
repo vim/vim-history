@@ -3,7 +3,8 @@
 " Maintainers:  Mike Leary    <leary@nwlink.com>
 "               Markus Mottl  <markus@oefai.at>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/ftplugin/ocaml.vim
-" Last Change:  2001 Sep 16 - fixed 'no_mail_maps'-bug (MM)
+" Last Change:  2001 Sep 17 - added cpo-flag
+"               2001 Sep 16 - fixed 'no_mail_maps'-bug (MM)
 "               2001 Sep 02 - initial release  (MM)
 
 " Only do these settings when not done yet for this buffer
@@ -13,6 +14,8 @@ endif
 
 " Don't do other file type settings for this buffer
 let b:did_ftplugin = 1
+
+set cpo-=C
 
 " Error formats
 setlocal efm=

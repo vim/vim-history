@@ -3,7 +3,6 @@ int setmark __ARGS((int c));
 void setpcmark __ARGS((void));
 void checkpcmark __ARGS((void));
 pos_T *movemark __ARGS((int count));
-pos_T *getmark_coladd __ARGS((int c, int changefile));
 pos_T *getmark __ARGS((int c, int changefile));
 pos_T *getnextmark __ARGS((pos_T *startpos, int dir, int begin_line));
 void fmarks_check_names __ARGS((buf_T *buf));

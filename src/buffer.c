@@ -1524,6 +1524,10 @@ buflist_getfile(n, lnum, options, forceit)
 	{
 	    curwin->w_cursor.col = col;
 	    check_cursor_col();
+#ifdef FEAT_VIRTUALEDIT
+	    curwin->w_cursor.coladd = 0;
+#endif
+	    curwin->w_set_curswant = TRUE;
 	}
 	return OK;
     }
@@ -1550,6 +1554,10 @@ buflist_getfpos()
     {
 	curwin->w_cursor.col = fpos->col;
 	check_cursor_col();
+#ifdef FEAT_VIRTUALEDIT
+	curwin->w_cursor.coladd = 0;
+#endif
+	curwin->w_set_curswant = TRUE;
     }
 }
 

@@ -3747,6 +3747,7 @@ compatible-default	starting.txt	/*compatible-default*
 compile-changes	version5.txt	/*compile-changes*
 compile-changes-6	version6.txt	/*compile-changes-6*
 compiler-select	quickfix.txt	/*compiler-select*
+compiler-tex	quickfix.txt	/*compiler-tex*
 compl-current	insert.txt	/*compl-current*
 compl-define	insert.txt	/*compl-define*
 compl-dictionary	insert.txt	/*compl-dictionary*
@@ -4978,6 +4979,7 @@ quickfix	quickfix.txt	/*quickfix*
 quickfix-6	version6.txt	/*quickfix-6*
 quickfix-directory-stack	quickfix.txt	/*quickfix-directory-stack*
 quickfix-error-lists	quickfix.txt	/*quickfix-error-lists*
+quickfix-valid	quickfix.txt	/*quickfix-valid*
 quickfix-window	quickfix.txt	/*quickfix-window*
 quickfix.txt	quickfix.txt	/*quickfix.txt*
 quickref	quickref.txt	/*quickref*

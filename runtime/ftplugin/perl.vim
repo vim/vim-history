@@ -1,8 +1,8 @@
 " Vim filetype plugin file
 " Language:	Perl
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Tue, 21 Aug 2001 16:54:23
-" Current version is at http://sites.netscape.net/sharppeople/vim/scripts
+" Last Change:	Mon, 17 Sep 2001 11:28:08 Eastern Daylight Time
+" Current version is at http://sites.netscape.net/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
@@ -12,6 +12,10 @@ let b:did_ftplugin = 1
 setlocal fo-=t fo+=croql
 
 setlocal com=:#
+
+" Make sure the continuation lines below do not cause problems in
+" compatibility mode.
+set cpo-=C
 
 " Change the browse dialog on Win32 to show mainly Perl-related files
 if has("gui_win32") && !exists("b:browsefilter")
@@ -25,7 +29,6 @@ endif
 "---------------------------------------------
 setlocal include=\\<\\(use\|require\\)\\s*
 setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.pm','')
-setlocal isfname=A-Z,a-z,:,48-57,_
 setlocal keywordprg=perldoc
 setlocal iskeyword=48-57,_,A-Z,a-z,:
 setlocal isident=48-57,_,A-Z,a-z

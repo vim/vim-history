@@ -1,7 +1,7 @@
 " Vim settings file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.41
-" Last Change:	2001 Sep 14
+" Last Change:	2001 Sep 19
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -70,6 +70,9 @@ setlocal fo+=tcql
 
 setlocal include=^#\\=\\s*include\\s\\+
 
+let s:cposet=&cpoptions
+set cpoptions-=C
+
 " Define patterns for the matchit plugin
 if !exists("b:match_words")
   let s:notend = '\%(\<end\s\+\)\@<!'
@@ -95,5 +98,8 @@ if has("gui_win32") && !exists("b:browsefilter")
   let b:browsefilter = "Fortran Files (*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn)\t*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn\n" .
     \ "All Files (*.*)\t*.*\n"
 endif
+
+let &cpoptions=s:cposet
+unlet s:cposet
 
 " vim:sw=2

@@ -600,8 +600,9 @@ enter_notify_event(GtkContainer * container, gpointer data)
     if (blink_state == BLINK_NONE)
 	gui_mch_start_blink();
 
-    /* make sure keybord input goes there */
-    gtk_widget_grab_focus(gui.drawarea);
+    /* make sure keyboard input goes there */
+    if (gtk_socket_id == 0 || !GTK_WIDGET_HAS_FOCUS(gui.drawarea))
+	gtk_widget_grab_focus(gui.drawarea);
 }
 
 /*ARGSUSED*/
@@ -621,8 +622,9 @@ focus_in_event(GtkWidget *widget, GdkEventFocus *focus, gpointer data)
     if (blink_state == BLINK_NONE)
 	gui_mch_start_blink();
 
-    /* make sure keybord input goes there */
-    gtk_widget_grab_focus(gui.drawarea);
+    /* make sure keyboard input goes there */
+    if (gtk_socket_id == 0)
+	gtk_widget_grab_focus(gui.drawarea);
 
     return TRUE;
 }
@@ -661,6 +663,18 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     len = event->length;
     state = event->state;
     g_assert(len <= sizeof(string));
+
+    /*
+     * It appears as if we always want to consume a key-press (there currently
+     * aren't any 'return FALSE's), so we always do this: when running in a
+     * GtkPlug and not a window, we must prevent emission of the key_press
+     * EVENT from continuing (which is 'beyond' the level of stopping mere
+     * signals by returning FALSE), otherwise things like tab/cursor-keys are
+     * processed by the GtkPlug default handler, which moves input focus away
+     * from us!
+     */
+    if (gtk_socket_id != 0)
+	gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "key_press_event");
 
 #ifdef FEAT_XIM
     if (xim_queue_key_press_event((GdkEvent *)event))
@@ -1263,6 +1277,10 @@ button_press_event(GtkWidget * widget, GdkEventButton * event)
     int x, y;
     int_u vim_modifiers;
 
+    /* Make sure we have focus now we've been selected */
+    if (gtk_socket_id != 0 && !GTK_WIDGET_HAS_FOCUS(gui.drawarea))
+	gtk_widget_grab_focus(gui.drawarea);
+
     /*
      * Don't let additional events about multiple clicks send by GTK to us
      * after the initial button press event confuse us.
@@ -1760,8 +1778,17 @@ gui_mch_init()
 
     if (gtk_socket_id != 0)
     {
+	GtkPlug *plug;
+
 	/* Use GtkSocket from another app. */
-	gui.mainwin = gtk_plug_new(gtk_socket_id);
+	plug = GTK_PLUG(gui.mainwin = gtk_plug_new(gtk_socket_id));
+
+	/* Pretend we never wanted it if it failed (get own window) */
+	if (!plug->socket_window)
+	{
+	    /* Failed - using straightforward window */
+	    gtk_socket_id = 0;
+	}
     }
     else
     {
@@ -1884,14 +1911,25 @@ gui_mch_init()
     gtk_widget_show(gui.formwin);
     gtk_box_pack_start(GTK_BOX(vbox), gui.formwin, TRUE, TRUE, 0);
 
-    gtk_signal_connect(GTK_OBJECT(gui.mainwin), "key_press_event",
-		       (GtkSignalFunc) key_press_event, NULL);
+    if (gtk_socket_id != 0)
+	/* For GtkSockets, key-presses must go to the focus widget (drawarea)
+	 * and not the window. */
+	gtk_signal_connect(GTK_OBJECT(gui.drawarea), "key_press_event",
+			   (GtkSignalFunc)key_press_event, NULL);
+    else
+	gtk_signal_connect(GTK_OBJECT(gui.mainwin), "key_press_event",
+			   (GtkSignalFunc)key_press_event, NULL);
+
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "realize",
 		       GTK_SIGNAL_FUNC(drawarea_realize_cb), NULL);
 
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
     reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
+
+    if (gtk_socket_id != 0)
+	/* make sure keybord input can go to the drawarea */
+	GTK_WIDGET_SET_FLAGS(gui.drawarea, GTK_CAN_FOCUS);
 
     /*
      * Set clipboard specific atoms

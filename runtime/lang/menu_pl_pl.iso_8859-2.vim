@@ -15,8 +15,8 @@ scriptencoding iso-8859-2
 menutrans &Help			Po&moc
 menutrans &Overview<Tab><F1>	&Spis\ Tre¶ci<Tab><F1>
 menutrans &How-to\ links	&Odno¶niki\ JTZ
-menutrans &GUI			&GIU
 menutrans &Credits		Po&dziêkowania
+menutrans &User\ Manual    Podrêcznik\ &u¿ytkownika
 menutrans Co&pying		&Kopiowanie
 menutrans &Version		&Wersja
 menutrans &About		o\ &Aplikacji
@@ -69,17 +69,17 @@ menutrans &File\ Format\.\.\.			&Format\ pliku\.\.\.
 menutrans Soft\ &Tabstop				Rozmiar\ &tabulacji
 menutrans C&olor\ Scheme		Zestawy\ kolorów
 menutrans &Keymap			Uk³ady\ klawiatury
-menutrans None				¯aden
+menutrans None				¿aden
 menutrans accents			akcenty
 menutrans hebrew			hebrajski
 menutrans hebrewp			hebrajski\ p
 menutrans russian-jcuken		rosyjski-jcuken
 menutrans russian-jcukenwin		rosyjski-jcukenwin
 
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Prze³±cz\ podkre¶lanie\ &wzorców<Tab>:set\ hls!
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Podkre¶lanie\ &wzorców<Tab>:set\ hls!
 
-menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Prze³±cz\ &ignorowanie\ wielko¶ci<Tab>:set\ ic!
-menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Prze³±cz\ &pokazywanie\ pasuj±cych<Tab>:set\ sm!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!	&Ignorowanie\ wielko¶ci<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!		&Pokazywanie\ pasuj±cych<Tab>:set\ sm!
 
 menutrans &Context\ lines	Wiersze\ &kontekstowe
 menutrans &Virtual\ Edit	Obróbka\ &wirtualna
@@ -90,17 +90,17 @@ menutrans Insert\ mode		Tryb\ wprowadzania
 menutrans Block\ and\ Insert	Zakres\ i\ wprowadzanie
 menutrans Always		Zawsze
 
-menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Prze³±cz\ tryb\ wprowadzania<Tab>:set\ im!
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Tryb\ wprowadzania<Tab>:set\ im!
 menutrans Search\ &Path\.\.\.	Scie¿ka\ poszukiwania\.\.\.
 menutrans Ta&g\ Files\.\.\.	Pliki\ tagów\.\.\.
 
 
 "
 " GUI options
-menutrans Toggle\ &Toolbar		Prze³±cz\ pasek\ narzêdzi
-menutrans Toggle\ &Bottom\ Scrollbar	Prze³±cz\ dolny\ przewijacz
-menutrans Toggle\ &Left\ Scrollbar	Prze³±cz\ lewy\ przewijacz
-menutrans Toggle\ &Right\ Scrollbar	Prze³±cz\ prawy\ przewijacz
+menutrans Toggle\ &Toolbar		Pasek\ narzêdzi
+menutrans Toggle\ &Bottom\ Scrollbar	Dolny\ przewijacz
+menutrans Toggle\ &Left\ Scrollbar	&Lewy\ przewijacz
+menutrans Toggle\ &Right\ Scrollbar	P&rawy\ przewijacz
 
 " Programming menu
 menutrans &Tools			&Narzêdzia
@@ -144,7 +144,7 @@ menutrans N&ewer\ List<Tab>:cnew	N&owsza\ lista<Tab>:cnew
 menutrans Error\ &Window  Okno\ komu&nikatów
 menutrans &Update<Tab>:cwin			Akt&ualizuj<Tab>:cwin
 menutrans &Close<Tab>:cclose			&Zamknij<Tab>:cclose
-menutrans &Open<Tab>:copen			&Otworz<Tab>:copen
+menutrans &Open<Tab>:copen			&Otwórz<Tab>:copen
 
 menutrans &Set\ Compiler				U&staw\ kompilator
 menutrans &Convert\ to\ HEX<Tab>:%!xxd     Kody\ szesnastkowe<Tab>:%!xxd
@@ -165,7 +165,7 @@ menutrans &New<Tab>^Wn			&Nowy<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Po&dziel<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	P&odziel\ na\ #<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	Podziel\ pionowo<Tab>^Wv
-menutrans Split\ File\ E&xplorer		Otworz\ menedzer\ plikow
+menutrans Split\ File\ E&xplorer		Otwórz\ mened¿er\ plików
 
 menutrans &Close<Tab>^Wc		&Zamknij<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Zamknij\ &inne<Tab>^Wo

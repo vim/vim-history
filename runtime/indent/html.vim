@@ -116,6 +116,7 @@ endif
 
 delfun <SID>HtmlIndentPush
 
+set cpo-=C
 
 " [-- count indent-increasing tags of line a:lnum --]
 fun! <SID>HtmlIndentOpen(lnum)

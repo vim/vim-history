@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0aw.  Last change: 2001 Sep 03
+*map.txt*       For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1014,7 +1014,7 @@ This will invoke: >
 	:call Allargs("%s/foo/bar/ge|update")
 <
 When defining an user command in a script, it will be able to call functions
-local to the script and use mappings local the the script.  When the user
+local to the script and use mappings local to the script.  When the user
 invokes the user command, it will run in the context of the script it was
 defined in.  This matters if |<SID>| is used in a command.
 

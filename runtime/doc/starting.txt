@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 12
+*starting.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -333,7 +333,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-O*
 -O[N]		Open N windows, split vertically.  Otherwise it's like -o.
-		If both the -o and the -O option are given, the last one one
+		If both the -o and the -O option are given, the last one on
 		the command line determines how the windows will be split.
 		{not in Vi}
 
@@ -500,7 +500,7 @@ Starting in Readonly mode can also be done with "vim -R".
 
 If the executable is called "ex", Vim will start in "Ex" mode.  This means it
 will accept only ":" commands.  But when the "-v" argument is given, Vim will
-start in in Normal mode anyway.
+start in Normal mode anyway.
 
 Additional arguments are available on unix like systems when compiled with
 X11 GUI support.  See |gui-resources|.

@@ -26,6 +26,8 @@ if exists("*GetVerilogIndent")
   finish
 endif
 
+set cpo-=C
+
 function GetVerilogIndent()
 
   if exists('b:verilog_indent_width')

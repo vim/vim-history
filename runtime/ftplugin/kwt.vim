@@ -6,6 +6,7 @@
 " Behaves almost like C++
 runtime! ftplugin/cpp.vim ftplugin/cpp_*.vim ftplugin/cpp/*.vim
 
+set cpo-=C
 
 " Limit the browser to related files
 if has("gui_win32") && !exists("b:browsefilter")
