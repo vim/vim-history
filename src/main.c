@@ -1157,7 +1157,8 @@ scripterror:
 	if (!input_isatty)
 	    mch_errmsg(_("Vim: Warning: Input is not from a terminal\n"));
 	out_flush();
-	ui_delay(2000L, TRUE);
+	if (scriptin[0] == NULL)
+	    ui_delay(2000L, TRUE);
 	TIME_MSG("Warning delay");
     }
 
