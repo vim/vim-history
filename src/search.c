@@ -2025,6 +2025,7 @@ showmatch()
 #ifdef CURSOR_SHAPE
     int		    save_state;
 #endif
+    colnr_T	    save_dollar_vcol;
 
     if ((lpos = findmatch(NULL, NUL)) == NULL)	    /* no match, so beep */
 	vim_beep();
@@ -2045,6 +2046,7 @@ showmatch()
 	    ++curwin->w_virtcol;	/* do display ')' just before "$" */
 	    update_screen(VALID);	/* show the new char first */
 
+	    save_dollar_vcol = dollar_vcol;
 #ifdef CURSOR_SHAPE
 	    save_state = State;
 	    State = SHOWMATCH;
@@ -2063,6 +2065,10 @@ showmatch()
 		gui_mch_flush();
 	    }
 #endif
+	    /* Restore collar_vcol(), because setcursor() may call curs_rows()
+	     * which resets it if the matching position is in a previous line
+	     * and has a higher column number. */
+	    dollar_vcol = save_dollar_vcol;
 
 	    /*
 	     * brief pause, unless 'm' is present in 'cpo' and a character is
