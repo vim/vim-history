@@ -3565,7 +3565,7 @@ getargopt(eap)
     {
 	/* Make 'fileencoding' lower case. */
 	for (p = eap->cmd + eap->force_enc; *p != NUL; ++p)
-	    *p = TO_LOWER(*p);
+	    *p = TOLOWER_ASC(*p);
     }
 #endif
 

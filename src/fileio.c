@@ -4494,7 +4494,7 @@ shorten_fname(full_path, dir_name)
      * a floppy from "A:\dir" to "B:\dir".
      */
     else if (len > 3
-	    && TO_UPPER(full_path[0]) == TO_UPPER(dir_name[0])
+	    && TOUPPER_LOC(full_path[0]) == TOUPPER_LOC(dir_name[0])
 	    && full_path[1] == ':'
 	    && vim_ispathsep(full_path[2]))
 	p = full_path + 2;

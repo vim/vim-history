@@ -1382,7 +1382,7 @@ diff_cmp(s1, s2)
 #endif
 	    {
 		if (*p1 != *p2 && (!(diff_flags & DIFF_ICASE)
-					   || TO_LOWER(*p1) != TO_LOWER(*p2)))
+				     || TOLOWER_LOC(*p1) != TOLOWER_LOC(*p2)))
 		    break;
 		++p1;
 		++p2;

@@ -2720,7 +2720,7 @@ prt_header_height()
 prt_use_number()
 {
     return (printer_opts[OPT_PRINT_NUMBER].present
-	    && TO_LOWER(printer_opts[OPT_PRINT_NUMBER].string[0]) == 'y');
+	    && TOLOWER_ASC(printer_opts[OPT_PRINT_NUMBER].string[0]) == 'y');
 }
 
 /*
@@ -2897,9 +2897,9 @@ ex_hardcopy(eap)
 
 #ifdef FEAT_SYN_HL
     if (printer_opts[OPT_PRINT_SYNTAX].present
-	    && TO_LOWER(printer_opts[OPT_PRINT_SYNTAX].string[0]) != 'a')
+	    && TOLOWER_ASC(printer_opts[OPT_PRINT_SYNTAX].string[0]) != 'a')
 	settings.do_syntax =
-		  (TO_LOWER(printer_opts[OPT_PRINT_SYNTAX].string[0]) == 'y');
+	       (TOLOWER_ASC(printer_opts[OPT_PRINT_SYNTAX].string[0]) == 'y');
     else
 	settings.do_syntax = settings.has_color;
 #endif
@@ -2930,7 +2930,7 @@ ex_hardcopy(eap)
 #endif
 
     jobsplit = (printer_opts[OPT_PRINT_JOBSPLIT].present
-	      && TO_LOWER(printer_opts[OPT_PRINT_JOBSPLIT].string[0]) == 'y');
+	   && TOLOWER_ASC(printer_opts[OPT_PRINT_JOBSPLIT].string[0]) == 'y');
 
     if (!mch_print_begin(&settings))
 	goto print_fail_no_begin;
@@ -3232,7 +3232,7 @@ hardcopy_line(psettings, page_line, ppos)
      * line.
      */
     if (line[col] == NUL || (printer_opts[OPT_PRINT_WRAP].present
-		  && TO_LOWER(printer_opts[OPT_PRINT_WRAP].string[0]) == 'n'))
+	       && TOLOWER_ASC(printer_opts[OPT_PRINT_WRAP].string[0]) == 'n'))
 	return 0;
     return col;
 }
@@ -3976,7 +3976,7 @@ mch_print_init(psettings, jobname, forceit)
      * Find the size of the paper and set the margins.
      */
     prt_portrait = (!printer_opts[OPT_PRINT_PORTRAIT].present
-	      || TO_LOWER(printer_opts[OPT_PRINT_PORTRAIT].string[0]) == 'y');
+	   || TOLOWER_ASC(printer_opts[OPT_PRINT_PORTRAIT].string[0]) == 'y');
     if (printer_opts[OPT_PRINT_PAPER].present)
     {
 	paper_name = (char *)printer_opts[OPT_PRINT_PAPER].string;
@@ -4055,7 +4055,7 @@ mch_print_init(psettings, jobname, forceit)
     psettings->n_uncollated_copies = 1;
     prt_num_copies = 1;
     prt_collate = (!printer_opts[OPT_PRINT_COLLATE].present
-	    || TO_LOWER(printer_opts[OPT_PRINT_COLLATE].string[0]) == 'y');
+	    || TOLOWER_ASC(printer_opts[OPT_PRINT_COLLATE].string[0]) == 'y');
     if (prt_collate)
     {
 	/* TODO: Get number of collated copies wanted. */

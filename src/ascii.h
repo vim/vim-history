@@ -41,7 +41,7 @@
 
 #define POUND		0xA3
 
-#define Ctrl_chr(x)	(TO_UPPER(x) ^ 0x40) /* '?' -> DEL, '@' -> ^@, etc. */
+#define Ctrl_chr(x)	(TOUPPER_ASC(x) ^ 0x40) /* '?' -> DEL, '@' -> ^@, etc. */
 #define Meta(x)		((x) | 0x80)
 
 #define CTRL_F_STR	"\006"

@@ -1980,7 +1980,7 @@ hex_digit(int c)
 {
     if (vim_isdigit(c))
 	return( c - '0' );
-    c = TO_LOWER(c);
+    c = TOLOWER_ASC(c);
     if (c >= 'a' && c <= 'f')
 	return( c - 'a' + 10 );
     return( -1000 );

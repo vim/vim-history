@@ -576,7 +576,7 @@ mch_chdir(char *path)
 	/* If we can change to the drive, skip that part of the path.  If we
 	 * can't then the current directory may be invalid, try using chdir()
 	 * with the whole path. */
-	if (_chdrive(TO_LOWER(path[0]) - 'a' + 1) == 0)
+	if (_chdrive(TOLOWER_ASC(path[0]) - 'a' + 1) == 0)
 	    path += 2;
     }
 

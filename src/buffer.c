@@ -3215,7 +3215,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    {
 		sprintf((char *)tmp, ",%s", wp->w_buffer->b_p_ft);
 		for (t = tmp; *t != 0; t++)
-		    *t = TO_UPPER(*t);
+		    *t = TOUPPER_LOC(*t);
 		str = tmp;
 	    }
 	    break;

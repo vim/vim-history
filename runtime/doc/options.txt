@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2002 Sep 19
+*options.txt*   For Vim version 6.1.  Last change: 2002 Oct 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -996,6 +996,21 @@ A jump table for the options with a short description can be found at |Q_op|.
 	nofile only:	The buffer name is fixed, it is not handled like a
 			file name.  It is not modified in response to a |:cd|
 			command.
+
+						*'casemap'* *'cmp'*
+'casemap' 'cmp'		string	(default: "internal,keepascii")
+			global
+			{not in Vi}
+	Specifies details about changing the case of letters  It may contain
+	these words, separated by a comma:
+	internal	Use internal case mapping functions, the current
+			locale does not change the case mapping  This only
+			matters when 'encoding' is a Unicode encoding.  When
+			"internal" is omitted, the towupper() and towlower()
+			system library functions are used when available.
+	keepascii	For the ASCII characters (0x00 to 0x7f) use the US
+			case mapping, the current locale is not effective.
+			This probably only matters for Turkish.
 
 						*'cdpath'* *'cd'* *E344* *E346*
 'cdpath' 'cd'		string	(default: equivalent to $CDPATH or ",,")

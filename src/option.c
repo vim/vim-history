@@ -455,6 +455,10 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
+    {"casemap",	    "cmp",   P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
+			    (char_u *)&p_cmp, PV_NONE,
+			    {(char_u *)"internal,keepascii", (char_u *)0L}
+			    },
     {"cdpath",	    "cd",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_SEARCHPATH
 			    (char_u *)&p_cdpath, PV_NONE,
@@ -3407,7 +3411,7 @@ do_set(arg, opt_flags)
 				i = 1;
 #ifdef HAVE_STRTOL
 			    value = strtol((char *)arg, NULL, 0);
-			    if (arg[i] == '0' && TO_LOWER(arg[i + 1]) == 'x')
+			    if (arg[i] == '0' && TOLOWER_ASC(arg[i + 1]) == 'x')
 				i += 2;
 #else
 			    value = atol((char *)arg);
@@ -4031,6 +4035,7 @@ didset_options()
     /* initialize the table for 'iskeyword' et.al. */
     (void)init_chartab();
 
+    (void)opt_strings_flags(p_cmp, p_cmp_values, &cmp_flags, TRUE);
 #ifdef FEAT_SESSION
     (void)opt_strings_flags(p_ssop, p_ssop_values, &ssop_flags, TRUE);
     (void)opt_strings_flags(p_vop, p_ssop_values, &vop_flags, TRUE);
@@ -5162,6 +5167,13 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		errmsg = e_invarg;
 	}
 	else if (check_opt_strings(p_bs, p_bs_values, TRUE) != OK)
+	    errmsg = e_invarg;
+    }
+
+    /* 'casemap' */
+    else if (varp == &p_cmp)
+    {
+	if (opt_strings_flags(p_cmp, p_cmp_values, &cmp_flags, TRUE) != OK)
 	    errmsg = e_invarg;
     }
 
