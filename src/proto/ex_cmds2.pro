@@ -37,6 +37,8 @@ int cmd_runtime __ARGS((char_u *name, int all));
 int do_in_runtimepath __ARGS((char_u *name, int all, void (*callback)(char_u *fname)));
 void ex_options __ARGS((exarg_T *eap));
 void ex_source __ARGS((exarg_T *eap));
+linenr_T *source_breakpoint __ARGS((void *cookie));
+int *source_dbg_tick __ARGS((void *cookie));
 int source_level __ARGS((void *cookie));
 int do_source __ARGS((char_u *fname, int check_other, int is_vimrc));
 void ex_scriptnames __ARGS((exarg_T *eap));

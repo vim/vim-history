@@ -126,6 +126,36 @@ struct funccall
 };
 
 /*
+ * Return the name of the executed function.
+ */
+    char_u *
+func_name(cookie)
+    void *cookie;
+{
+    return ((struct funccall *)cookie)->func->name;
+}
+
+/*
+ * Return the address holding the next breakpoint line for a funccall cookie.
+ */
+    linenr_T *
+func_breakpoint(cookie)
+    void *cookie;
+{
+    return &((struct funccall *)cookie)->breakpoint;
+}
+
+/*
+ * Return the address holding the debug tick for a funccall cookie.
+ */
+    int *
+func_dbg_tick(cookie)
+    void *cookie;
+{
+    return &((struct funccall *)cookie)->dbg_tick;
+}
+
+/*
  * Return the nesting level for a funccall cookie.
  */
     int

@@ -1996,6 +1996,26 @@ struct source_cookie
 
 #ifdef FEAT_EVAL
 /*
+ * Return the address holding the next breakpoint line for a source cookie.
+ */
+    linenr_T *
+source_breakpoint(cookie)
+    void *cookie;
+{
+    return &((struct source_cookie *)cookie)->breakpoint;
+}
+
+/*
+ * Return the address holding the debug tick for a source cookie.
+ */
+    int *
+source_dbg_tick(cookie)
+    void *cookie;
+{
+    return &((struct source_cookie *)cookie)->dbg_tick;
+}
+
+/*
  * Return the nesting level for a source cookie.
  */
     int

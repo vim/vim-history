@@ -591,6 +591,9 @@ do_cmdline(cmdline, getline, cookie, flags)
     struct condstack cstack;		/* conditional stack */
     garray_T	lines_ga;		/* keep lines for ":while" */
     int		current_line = 0;	/* active line in lines_ga */
+    char_u	*fname = NULL;		/* function or script name */
+    linenr_T	*breakpoint = NULL;	/* ptr to breakpoint field in cookie */
+    int		*dbg_tick = NULL;	/* ptr to dbg_tick field in cookie */
     int		saved_trylevel = 0;
     int		saved_force_abort = 0;
     except_T	*saved_caught_stack = NULL;
@@ -648,6 +651,21 @@ do_cmdline(cmdline, getline, cookie, flags)
     /* Inside a function use a higher nesting level. */
     if (getline == get_func_line && ex_nesting_level == func_level(cookie))
 	++ex_nesting_level;
+
+    /* Get the function or script name and the address where the next breakpoint
+     * line and the debug tick for a function or script are stored. */
+    if (getline == get_func_line)
+    {
+	fname = func_name(cookie);
+	breakpoint = func_breakpoint(cookie);
+	dbg_tick = func_dbg_tick(cookie);
+    }
+    else if (getline == getsourceline)
+    {
+	fname = sourcing_name;
+	breakpoint = source_breakpoint(cookie);
+	dbg_tick = source_dbg_tick(cookie);
+    }
 
     /*
      * Initialize "force_abort"  and "suppress_errthrow" at the top level.
@@ -749,8 +767,28 @@ do_cmdline(cmdline, getline, cookie, flags)
 		break;
 	    }
 
+	    /* If breakpoints have been added/deleted need to check for it. */
+	    if (breakpoint != NULL && dbg_tick != NULL
+						   && *dbg_tick != debug_tick)
+	    {
+		*breakpoint = dbg_find_breakpoint((getline == getsourceline),
+							fname, sourcing_lnum);
+		*dbg_tick = debug_tick;
+	    }
+
 	    next_cmdline = ((wcmd_T *)(lines_ga.ga_data))[current_line].line;
 	    sourcing_lnum = ((wcmd_T *)(lines_ga.ga_data))[current_line].lnum;
+
+	    /* Did we encounter a breakpoint? */
+	    if (breakpoint != NULL && *breakpoint != 0
+					      && *breakpoint <= sourcing_lnum)
+	    {
+		dbg_breakpoint(fname, sourcing_lnum);
+		/* Find next breakpoint. */
+		*breakpoint = dbg_find_breakpoint((getline == getsourceline),
+							fname, sourcing_lnum);
+		*dbg_tick = debug_tick;
+	    }
 	}
 #endif
 
@@ -932,6 +970,15 @@ do_cmdline(cmdline, getline, cookie, flags)
 		    current_line = cstack.cs_line[cstack.cs_idx];
 		    cstack.cs_had_while = TRUE;	/* note we jumped there */
 		    line_breakcheck();		/* check if CTRL-C typed */
+
+		    /* Check for the next breakpoint at or after the ":while".*/
+		    if (breakpoint != NULL)
+		    {
+			*breakpoint = dbg_find_breakpoint(
+					    (getline == getsourceline), fname,
+			   ((wcmd_T *)lines_ga.ga_data)[current_line].lnum-1);
+			*dbg_tick = debug_tick;
+		    }
 		}
 		else /* can only get here with ":endwhile" */
 		{
