@@ -2830,6 +2830,9 @@ tearoff_callback(
     if (message == WM_INITDIALOG)
 	return (TRUE);
 
+    /* May show the mouse pointer again. */
+    HandleMouseHide(message, lParam);
+
     if (message == WM_COMMAND)
     {
 	if ((WORD)(LOWORD(wParam)) & 0x8000)
