@@ -820,7 +820,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
      * also mess up the screen, clear it later.
      */
     if (!do_out || STRCMP(p_srr, ">") == 0 || !do_in)
-	must_redraw = CLEAR;
+	redraw_later_clear();
 
     /*
      * When call_shell() fails wait_return() is called to give the user a
@@ -834,7 +834,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     if (call_shell(cmd_buf, SHELL_FILTER | SHELL_COOKED
 						| (do_out ? SHELL_DOOUT : 0)))
     {
-	must_redraw = CLEAR;
+	redraw_later_clear();
 	wait_return(FALSE);
     }
     vim_free(cmd_buf);
@@ -1026,7 +1026,7 @@ do_shell(cmd, flags)
 
 #ifdef FEAT_AUTOCMD
     if (autocmd_busy)
-	must_redraw = CLEAR;
+	redraw_later_clear();
     else
 #endif
     {
@@ -1043,7 +1043,7 @@ do_shell(cmd, flags)
 # endif
 	   )
 	{
-	    must_redraw = CLEAR;
+	    redraw_later_clear();
 	    need_wait_return = FALSE;
 	}
 	else
@@ -1078,12 +1078,12 @@ do_shell(cmd, flags)
 	 */
 #ifdef AMIGA
 	if (skip_redraw)		/* ':' hit in wait_return() */
-	    must_redraw = CLEAR;
+	    redraw_later_clear();
 	else if (term_console)
 	{
 	    OUT_STR(IF_EB("\033[0 q", ESC_STR "[0 q"));	/* get window size */
 	    if (got_int)
-		must_redraw = CLEAR;	/* if got_int is TRUE, redraw needed */
+		redraw_later_clear();	/* if got_int is TRUE, redraw needed */
 	    else
 		must_redraw = 0;	/* no extra redraw needed */
 	}
@@ -2136,7 +2136,7 @@ do_wqall(eap)
 	    }
 	    else
 	    {
-		if (buf_write_all(buf) == FAIL)
+		if (buf_write_all(buf, eap->forceit) == FAIL)
 		    ++error;
 #ifdef FEAT_AUTOCMD
 		/* an autocommand may have deleted the buffer */
@@ -3167,7 +3167,12 @@ do_sub(eap)
 	    }
 	    if (cmd[0] == '\\' && cmd[1] != 0)	/* skip escaped characters */
 		++cmd;
-	    ++cmd;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		cmd += mb_ptr2len_check(cmd);
+	    else
+#endif
+		++cmd;
 	}
 
 	if (!eap->skip)
@@ -4605,7 +4610,7 @@ ex_helptags(eap)
     /*
      * Go over all the files and extract the tags.
      */
-    ga_init2(&ga, sizeof(char_u *), 100);
+    ga_init2(&ga, (int)sizeof(char_u *), 100);
     for (fi = 0; fi < filecount && !got_int; ++fi)
     {
 	fd = fopen((char *)files[fi], "r");

@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0n.  Last change: 2000 Nov 04
+*insert.txt*    For Vim version 6.0o.  Last change: 2000 Nov 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -301,8 +301,10 @@ char		action	~
 <Down>		cursor one line down			     *i_<Down>*
 CTRL-G <Up>	cursor one line up, insert start column	     *i_CTRL-G_<Up>*
 CTRL-G k	cursor one line up, insert start column	     *i_CTRL-G_k*
+CTRL-G CTRL-K	cursor one line up, insert start column	     *i_CTRL-G_CTRL-K*
 CTRL-G <Down>	cursor one line down, insert start column    *i_CTRL-G_<Down>*
 CTRL-G j	cursor one line down, insert start column    *i_CTRL-G_j*
+CTRL-G CTRL-J	cursor one line down, insert start column    *i_CTRL-G_CTRL-J*
 <Left>		cursor one character left		     *i_<Left>*
 <Right>		cursor one character right		     *i_<Right>*
 <S-Left>	cursor one word back (like "b" command)	     *i_<S-Left>*

@@ -4,6 +4,7 @@ Also test for ^Vxff and ^Vo123 in Insert mode.
 Also test "[m", "]m", "[M" and "]M"
 
 STARTTEST
+:so small.vim
 /Start cursor here
 vaBiBD:?Bug?,/Piece/-2w! test.out
 /^- Bug

@@ -20,7 +20,7 @@ SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test23.out test24.out test26.out \
 		test28.out test29.out test30.out test31.out test32.out \
 		test33.out test34.out test35.out test36.out test37.out \
-		test38.out test39.out test40.out
+		test38.out test39.out test40.out test41.out test42.out
 
 .SUFFIXES: .in .out
 
@@ -30,17 +30,19 @@ all:	/tmp $(SCRIPTS)
 $(SCRIPTS): $(VIMPROG)
 
 clean:
-	-rm -rf *.out
+	-rm -rf *.out Xdotest test.ok tiny.vim small.vim mbyte.vim
 
 # Make sure all .in and .out files are in DOS fileformat.
 .in.out:
 	$(VIMPROG) -u NONE -s todos.vim $*.in
 	$(VIMPROG) -u NONE -s todos.vim $*.ok
+	copy $*.ok test.ok
 	$(VIMPROG) -u os2.vim -s dotest.in $*.in
 	$(VIMPROG) -u NONE -s todos.vim test.out
 	diff test.out $*.ok
 	rename test.out $*.out
-#	rm Xdotest
+	-deltree X*
+	-del test.ok
 
 # Create a directory for temp files
 /tmp:

@@ -7,7 +7,6 @@ STARTTEST
 :w! test.out
 :e Xfile1
 :w >> test.out
-:!rm -f Xfile1 Xfile2
 :qa!
 ENDTEST
 

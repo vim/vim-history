@@ -1474,6 +1474,9 @@ mch_restore_title(which)
 
 #endif /* FEAT_TITLE */
 
+/*
+ * Return TRUE if "name" looks like some xterm name.
+ */
     int
 vim_is_xterm(name)
     char_u *name;
@@ -2194,7 +2197,7 @@ get_stty()
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
 /*
- * set mouse clicks on or off (only works for xterms)
+ * Set mouse clicks on or off.
  */
     void
 mch_setmouse(on)
@@ -3856,7 +3859,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	if (!(flags & EW_SILENT))
 #endif
 	{
-	    must_redraw = CLEAR;	/* probably messed up screen */
+	    redraw_later_clear();	/* probably messed up screen */
 	    msg_putchar('\n');		/* clear bottom line quickly */
 	    cmdline_row = Rows - 1;	/* continue on last line */
 #ifdef USE_SYSTEM

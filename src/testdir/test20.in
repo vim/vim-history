@@ -1,6 +1,7 @@
 Tests Blockwise Visual when there are TABs before the text.
 
 STARTTEST
+:so tiny.vim
 /start
 jjlld:.,$w! test.out
 :qa!

@@ -1,6 +1,7 @@
 Test for autocommand that changes the buffer list, when doing ":ball".
 
 STARTTEST
+:so small.vim
 :au BufReadPost Xxx2 bdel
 /start of
 A1:.,/end of/w! Xxx1   " write test file Xxx1
@@ -10,7 +11,6 @@ $r4:ball                 " open window for all args, close Xxx2
 :.,$w! test.out          " Write contents of this file
 :w >>test.out        " Append contents of second window (Xxx1)
 :/^start of/,$w >>test.out   " Append contents of last window (this file)
-:!rm Xxx1 Xxx2 Xxx3
 :qa!
 ENDTEST
 

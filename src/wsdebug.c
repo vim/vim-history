@@ -96,7 +96,7 @@ wsdebug_log_init(
 		} else {
 			ws_dlevel = WS_TRACE;	/* default level */
 		}
-		//XSetErrorHandler(errorHandler);
+		/* XSetErrorHandler(errorHandler); */
 	}
 
 }    /* end wsdebug_log_init */

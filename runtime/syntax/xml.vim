@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Mit, 15 Nov 2000 17:06:42 +0100
+" Last Change:	Fre, 01 Dez 2000 17:37:53 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -21,40 +21,161 @@
 "   http://www.w3.org/TR/1998/REC-xml-19980210
 "   http://www.w3.org/XML/1998/06/xmlspec-report-19980910.htm
 
-syn clear
+let s:xml_cpo_save = &cpo
+set cpo&vim
 
-" Following items are case-sensitive
-" Case-insensitive rules can be specified by 'syn case ignore' later
+syn clear
 syn case match
 
 " mark illegal characters
-syn match xmlError "[<>&]"
+syn match xmlError "[<&]"
 
 
-" tags
-syn region  xmlString   contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlEntity
-syn region  xmlString   contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlEntity
-syn region  xmlEndTag             start=+</+                 end=+>+ contains=xmlTagError,@xmlTagHook
-syn region  xmlTag                start=+<[^/]+              end=+>+ contains=xmlString,xmlTagError,@xmlTagHook
-syn match   xmlTagError                                              contained "[^>]<"ms=s+1
+" strings (inside tags) aka VALUES
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = "value">
+"                      ^^^^^^^
+syn region  xmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlEntity display
+syn region  xmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlEntity display
 
-" syntax-folding
-if v:version >= 600
-    syn cluster xmlFoldCluster contains=xmlTag,xmlEndTag,xmlProcessing,xmlComment,xmlFold,xmlCdata,xmlEntity
-    syn region  xmlFold start=+<\z([^ /!?>]\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+ end=+</\z1>+ transparent fold contains=@xmlFoldCluster keepend
-endif
+
+" punctuation (within attributes) e.g. <tag xml:foo.attribute ...>
+"                                              ^   ^
+syn match   xmlAttribPunct +[:.]+ display
+
+
+" no highlighting for xmlEqual (xmlEqual has no highlighting group)
+syn match   xmlEqual +=+
+
+
+" attribute, everything before the '='
+"
+" PROVIDES: @xmlAttribHook
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = "value">
+"      ^^^^^^^^^^^^^
+"
+syn match   xmlAttrib
+    \ +[^-'"<]\@<=\<[a-zA-Z0-9.:]\+\>\([^'">]\@=\|$\)+
+    \ contained
+    \ contains=xmlAttribPunct,@xmlAttribHook
+    \ display
+
+
+" start tag
+" use matchgroup=xmlTag to skip over the leading '<'
+" see also xmlEmptyTag below.
+"
+" PROVIDES: @xmlTagHook
+"
+syn region   xmlTag
+    \ matchgroup=xmlTag start=+<[^ /!?"']\@=+
+    \ matchgroup=xmlTag end=+>+
+    \ contained
+    \ contains=xmlError,xmlAttrib,xmlEqual,xmlString,@xmlTagHook
+
+
+" tag content for empty tags. This is the same as xmlTag
+" above, except the `matchgroup=xmlEndTag for highlighting
+" the end '/>' differently.
+"
+" PROVIDES: @xmlTagHook
+"
+syn region   xmlEmptyTag
+    \ matchgroup=xmlTag start=+<[^ /!?"']\@=+
+    \ matchgroup=xmlEndTag end=+/>+
+    \ contained
+    \ contains=xmlError,xmlAttrib,xmlEqual,xmlString,@xmlTagHook
+
+
+" end tag
+" highlight everything but not the trailing '>' which
+" was already highlighted by the containing xmlRegion.
+"
+" PROVIDES: @xmlTagHook
+" (should we provide a separate @xmlEndTagHook ?)
+"
+syn match   xmlEndTag
+    \ +</[^ /!?>"']\+>\@=+
+    \ contained
+    \ contains=@xmlTagHook
+
+
+" real (non-empty) elements with syntax-folding. Highlight only
+" the very last '>' with xmlEndTag. The rest is highlighted by
+" contained elements.
+"
+" PROVIDES: @xmlRegionHook
+"
+" EXAMPLE:
+"
+" <tag id="whoops">
+"   <!-- comment -->
+"   <another.tag></another.tag>
+"   <another.tag/>
+"   some data
+" </tag>
+" 
+syn region   xmlRegion
+    \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+
+    \ matchgroup=xmlEndTag end=+\(</\z1\)\@<=>+
+    \ fold
+    \ contains=xmlTag,xmlEndTag,xmlCdata,@xmlRegionCluster,xmlComment,xmlEntity,@xmlRegionHook
+
+
+" empty tags. Just a container, no highlighting.
+" Compare this with xmlTag.
+"
+" EXAMPLE:
+"
+" <tag id="lola"/>
+"
+" TODO use xmlEmptyTag intead of xmlTag
+syn match    xmlEmptyRegion
+    \ +<[^ /!?>"']\(\_[^"'<>]\|"\_[^"]*"\|'\_[^']*'\)*/>+
+    \ contains=xmlEmptyTag
+
+
+" cluster which contains the above two elements
+syn cluster xmlRegionCluster contains=xmlRegion,xmlEmptyRegion
+
 
 " &entities; compare with dtd
 syn match   xmlEntity                 "&[^; \t]*;" contains=xmlEntityPunct
 syn match   xmlEntityPunct  contained "[&.;]"
 
-syn keyword xmlTodo         contained TODO FIXME XXX
 
 " The real comments (this implements the comments as defined by xml,
 " but not all xml pages actually conform to it. Errors are flagged.
 syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo
+syn keyword xmlTodo         contained TODO FIXME XXX
 syn match   xmlCommentError contained "[^><!]"
 syn region  xmlCommentPart  contained start=+--+        end=+--+
+
+
+" CData sections
+"
+" PROVIDES: @xmlCdataHook
+"
+syn region    xmlCdata
+    \ start=+<!\[CDATA\[+
+    \ end=+]]>+
+    \ contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook keepend
+" using the following line instead leads to corrupt folding at CDATA regions
+" syn match    xmlCdata      +<!\[CDATA\[\_.\{-}]]>+  contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
+syn match    xmlCdataStart +<!\[CDATA\[+  contained contains=xmlCdataCdata
+syn keyword  xmlCdataCdata CDATA          contained
+syn match    xmlCdataEnd   +]]>+          contained
+
+
+" Processing instructions
+" This allows "?>" inside strings -- good idea?
+syn region  xmlProcessing matchgroup=xmlProcessingDelim start="<?" end="?>" contains=xmlAttrib,xmlEqual,xmlString
+
 
 " DTD -- we use dtd.vim here
 syn region  xmlDocType matchgroup=xmlDocTypeDecl start="<!DOCTYPE"he=s+2,rs=s+2 end=">" contains=xmlDocTypeKeyword,xmlInlineDTD,xmlString
@@ -62,42 +183,52 @@ syn keyword xmlDocTypeKeyword contained DOCTYPE PUBLIC SYSTEM
 syn region  xmlInlineDTD contained start="\[" end="]" contains=@xmlDTD
 syn include @xmlDTD <sfile>:p:h/dtd.vim
 
-" Processing instructions
-" This allows "?>" inside strings -- good idea?
-syn region  xmlProcessing matchgroup=xmlProcessingDelim start="<?" end="?>" contains=xmlString
 
-" CData sections
-syn region  xmlCdata matchgroup=xmlCdataDecl start="<!\[CDATA\[" keepend end="]]>"
+" synchronizing
+" TODO !!! to be improved !!!
 
-" synchronizing (does not always work if a comment includes legal
-" xml tags, but doing it right would mean to always start
-" at the first line, which is too slow)
-syn sync match xmlHighlight groupthere NONE "<[/a-zA-Z]"
-syn sync match xmlHighlightSkip "^.*['\"].*$"
-syn sync minlines=10
+syn sync match xmlSyncDT grouphere  xmlDocType +\_.\(<!DOCTYPE\)\@=+
+" syn sync match xmlSyncDT groupthere  NONE       +]>+
+
+syn sync match xmlSync grouphere   xmlRegion  +\_.\(<[^ /!?>"']\+\)\@=+
+" syn sync match xmlSync grouphere  xmlRegion "<[^ /!?>"']*>"
+syn sync match xmlSync groupthere  xmlRegion  +</[^ /!?>"']\+>+
+
+syn sync minlines=100
+
 
 " The default highlighting.
 hi def link xmlTodo                      Todo
 hi def link xmlTag                       Function
 hi def link xmlEndTag                    Identifier
+hi def link xmlEmptyTag                  Function
 hi def link xmlEntity                    Statement
 hi def link xmlEntityPunct               Type
+
+hi def link xmlAttribPunct               Comment
+hi def link xmlAttrib                    Type
+
 hi def link xmlString                    String
 hi def link xmlComment                   Comment
 hi def link xmlCommentPart               Comment
-hi def link xmlCommentError              xmlError
-hi def link xmlTagError                  xmlError
+hi def link xmlCommentError              Error
 hi def link xmlError                     Error
 
 hi def link xmlProcessingDelim           Comment
 hi def link xmlProcessing                Type
-hi def link xmlCdata                     Normal
-hi def link xmlCdataDecl                 String
-hi def link xmlDocType                   Normal
+
+hi def link xmlCdata                     String
+hi def link xmlCdataCdata                Statement
+hi def link xmlCdataStart                Type
+hi def link xmlCdataEnd                  Type
+
 hi def link xmlDocTypeDecl               Function
 hi def link xmlDocTypeKeyword            Statement
 hi def link xmlInlineDTD                 Function
 
 let b:current_syntax = "xml"
+
+let &cpo = s:xml_cpo_save
+unlet s:xml_cpo_save
 
 " vim: ts=8

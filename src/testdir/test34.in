@@ -1,6 +1,7 @@
 Test for user functions
 
 STARTTEST
+:so small.vim
 :function Table(title, ...)
 :  let ret = a:title
 :  let idx = 1

@@ -2,6 +2,7 @@ Test for jumping to a tag with 'hidden' set, with symbolic link in path of tag.
 This only works for Unix, because of the symbolic link.
 
 STARTTEST
+:so small.vim
 :set hidden
 :" Create a link from test25.dir to the current directory.
 :!rm -f test25.dir

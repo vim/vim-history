@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0n.  Last change: 2000 Nov 19
+*version6.txt*  For Vim version 6.0o.  Last change: 2000 Dec 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -372,6 +372,11 @@ Many new items for Multi-byte support:
 - Added 'guifontwide' for double-width font.
 - Added Korean support for character class detection.  Also fix cls() in
   search.c. (Chong-Dae Park)
+- Added 'bomb' option and detection of a BOM at the start of a file.  Can be
+  used with "ucs-bom" in 'filecharcodes' to automatically detect a Unicode
+  file if it starts with a BOM.  Especially useful on MS-Windows (NT and
+  2000), which uses ucs-2le files with a BOM (e.g., when exporting the
+  registry).
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -385,16 +390,23 @@ Multi-language support					*new-multi-lang*
 
 - Added +multi_lang feature.
 - Prepared for use of gettext() by putting translatable strings in _().
-  Added "po" directory with German and Polish translations.
-  (Marcin Dalecki)
+  Added "po" directory with message translations. (Marcin Dalecki)
+  The src/po/README.txt file explains a few things about translation.
 - Added v:lang variable to be able to get current language setting.
   (Marcin Dalecki)
 - Added ":language" command to set the language (locale)
 - Added ":menutrans" to be able to translate menu paths.
-- Added German and Polish menu translations (Marcin Dalecki)
+- Added German and Polish menu translations (Marcin Dalecki), Italian menu
+  translations (Antonio Colombo).
 - removed "broken locale" (Marcin Dalecki0.
-- don't user color names in icons, use RGB values.
+- don't user color names in icons, use RGB values.  The names could be
+  translated.
 - Win32: Added global IME support (Muraoka)
+- ":messages" prints a message about who maintains the messages or the
+  translations.  Useful to find out where to make a remark about a wrong
+  translation.
+- --disable-nls argument for configure: Disable use of gettext(). (Sung-Hyun
+  Nam)
 
 
 Plugin support					*new-plugins*
@@ -599,11 +611,17 @@ Various new items					*new-items-6*
 
 Interface to Ruby. (Shugo Maeda)
 
-:silent[!] cmd
+:silent[!] {cmd}
 		Execute a command silently.
 		RISCOS: Removed that "!~cmd" didn't output anything, and
 		didn't wait for <Enter> afterwards.  Can use ":silent !cmd"
 		now.
+
+:verbose {cmd}  Set 'verbose' for one command.
+
+:echomsg {expr}
+:echoerr {expr} Like ":echo" but store the message in the history. (Mark
+		Waggoner)
 
 :finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
 		script. |:finish|
@@ -619,6 +637,9 @@ Interface to Ruby. (Shugo Maeda)
 :menu enable
 :menu disable	Commands to enable/disable menu entries without removing them.
 		(Monish Shah)
+
+:windo		Execute a command in all windows.
+:bufdo		Execute a command in all buffers.
 
 :lcd and :lchdir
 		Set local directory for a window. (Benjie Chen)
@@ -758,6 +779,10 @@ Syntax highlighting:
   distribution and speedup keyword lookup. (Campbell)
 - Also allow the "lc" leading context for skip and end patterns. (Scott
   Bigham)
+- Syntax items can have the "extend" argument to undo the effect of a
+  "keepend" argument of an item it is contained in.  Makes it possible to have
+  some contained items extend a region while others don't.
+- Added catalog.vim syntax file (Johannes Zellner)
 
 Win32 console version:
 - Includes the user and system name in the ":version" message, when available.
@@ -796,6 +821,8 @@ GUI:
 - Motif: added toolbar. (Gordon Prieur)
 - Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
   Khodush)
+- When no --enable-xim argument is given, automatically enable it when a X GUI
+  is used.  Required for dead key support (and multi-byte input).
 
 GTK GUI: (partly by Marcin Dalecki)
 -   With some fonts the characters can be taller than ascent + descent.  E.g.,
@@ -846,8 +873,10 @@ cscope_connection() function.
 
 exists() can also be used to check for Ex commands.
 
-VMS: Command line arguments are always uppercase.  Interpret a "-X" argument
-as "-x" and "-/X" as "-X".
+VMS:
+- Command line arguments are always uppercase.  Interpret a "-X" argument as
+  "-x" and "-/X" as "-X".
+- Set 'makeprg' and 'grepprg' to meaningful defaults. (Zoltan Arpadffy)
 
 Options:
 - When using set += or ^= , check for strings used twice.  Duplicates are
@@ -1114,5 +1143,54 @@ Backslashes were removed one time too many for ":next".
 
 VMS: "gf" didn't work properly.  Use vms_fixfilename() to translate the file
 name. (Zoltan Arpadffy)
+
+After ":hi Normal ctermbg=black ctermfg=white" and suspending Vim not all
+characters are redrawn with the right background.
+
+When doing "make test" without +eval or +windows feature, many tests failed.
+Now have test1 generate a script to copy the correct output, so that a test
+that doesn't work is skipped.
+
+On FreeBSD the Perl interface added "-lc" to the link command and Python added
+"-pthread".  These two don't work together, because the libc_r library should
+be used.  Removed "-lc" from Perl, it should not be needed.
+Also: Add "-pthread" to $LIBS, so that the checks for functions is done with
+libc_r.  Sigaltstack() appears to be missing from libc_r.
+
+The Syntax sub-menus were getting too long, reorganized them and added another
+level for some langauges.
+
+Visual block "r"eplace didn't work well when a Tab is partly included.
+(Matthias Kramm)
+
+When yanking a Visual block, where some lines end halfway the block, putting
+the text somewhere else doesn't insert a block.  Padd with spaces for missing
+characters.  Added "y_width" to struct yankreg. (Matthias Kramm)
+
+If a substitute string has a multibyte character after a backslash only the
+first byte of it was skipped. (Muraoka Taro)
+
+Win32: Numeric keypad keys were missing from the builtin termcap entry.
+
+When a file was read-only ":wa!" didn't force it to be written. (Vince Negri)
+
+Amiga: A file name starting with a colon was considered absolute but it isn't.
+Amiga: ":pwd" added a slash when in the root of a drive.
+
+Don't let 'ttymouse' default to "dec" when compiled with dec mouse support.
+It breaks the gpm mouse (Linux console).
+
+The prototypes for the Perl interface didn't work for threaded Perl.  Added a
+sed command to remove the prototypes from proto/if_perl.pro and added them
+manually to if_perl.xs.
+
+When ":w!" resets the 'readonly' option the title and status lines were not
+updated.
+
+":args" showed the current file when the argument list was empty.  Made this
+work like Vi: display nothing.
+
+"99:<C-U>echo v:count" echoed "99" in Normal mode, but 0 in Visual mode.
+Don't set v:count when executing a stuffed command.
 
  vim:tw=78:

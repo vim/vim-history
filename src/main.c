@@ -402,7 +402,7 @@ main
     init_yank();		/* init yank buffers */
 
     /* Init the argument list to empty. */
-    ga_init2(&global_alist.al_ga, sizeof(char_u *), 5);
+    ga_init2(&global_alist.al_ga, (int)sizeof(char_u *), 5);
 
     /*
      * Set the default values for the options.
@@ -770,7 +770,7 @@ main
 		    {
 			mch_errmsg(_("Cannot open for reading: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\"\n"));
+			mch_errmsg("\"\n");
 			mch_windexit(2);
 		    }
 		    if (save_typebuf() == FAIL)

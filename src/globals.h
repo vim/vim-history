@@ -179,7 +179,7 @@ EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_t	sourcing_lnum INIT(= 0);    /* line number of the source file */
 
 #ifdef FEAT_EVAL
-EXTERN sid_t	current_SID INIT(= 0);	    /* ID of script being sourced or
+EXTERN scid_t	current_SID INIT(= 0);	    /* ID of script being sourced or
 					       was sourced to define the
 					       current function. */
 #endif

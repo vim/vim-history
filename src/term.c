@@ -79,7 +79,6 @@ static void gather_termleader __ARGS((void));
 static void req_codes_from_term __ARGS((void));
 static void req_more_codes_from_term __ARGS((void));
 static void got_code_from_term __ARGS((char_u *code, int len));
-static void check_for_codes_from_term __ARGS((void));
 #endif
 #if defined(FEAT_GUI) \
     || (defined(FEAT_MOUSE) && (!defined(UNIX) || defined(FEAT_MOUSE_XTERM)))
@@ -728,6 +727,16 @@ struct builtin_term builtin_termcaps[] =
     {K_KPLUS,		"\316N"},
     {K_KMINUS,		"\316J"},
     {K_KMULTIPLY,	"\3167"},
+    {K_K0,		"\316\332"},
+    {K_K1,		"\316\336"},
+    {K_K2,		"\316\342"},
+    {K_K3,		"\316\346"},
+    {K_K4,		"\316\352"},
+    {K_K5,		"\316\356"},
+    {K_K6,		"\316\362"},
+    {K_K7,		"\316\366"},
+    {K_K8,		"\316\372"},
+    {K_K9,		"\316\376"},
 # endif
 
 # if defined(VMS) || defined(ALL_BUILTIN_TCAPS)
@@ -1452,7 +1461,7 @@ set_color_count(nr)
 #endif
 
 #ifdef HAVE_TGETENT
-static char	    *(key_names[]) =
+static char *(key_names[]) =
 {
     "ku", "kd", "kr", "kl",
 # ifdef ARCHIE
@@ -1775,15 +1784,6 @@ set_termname(term)
 	char_u	*p;
 
 	p = (char_u *)"";
-#  ifdef FEAT_MOUSE_JSB
-	p = (char_u *)"jsbterm";
-#  endif
-#  ifdef FEAT_MOUSE_NET
-	p = (char_u *)"netterm";
-#  endif
-#  ifdef FEAT_MOUSE_DEC
-	p = (char_u *)"dec";
-#  endif
 #  ifdef FEAT_MOUSE_XTERM
 #   ifdef FEAT_CLIPBOARD
 #    ifdef FEAT_GUI
@@ -4801,17 +4801,15 @@ req_codes_from_term()
     static void
 req_more_codes_from_term()
 {
-    char	buf[10];
+    char	buf[11];
     int		old_idx = xt_index_out;
 
     /* Send up to 10 more requests out than we received.  Avoid sending too
      * many, there can be a buffer overflow somewhere. */
     while (xt_index_out < xt_index_in + 10 && key_names[xt_index_out] != NULL)
     {
-	/* Can't send "k;" for F10, use "kf10" instead. */
-	sprintf(buf, "\033P+q%s\033\\",
-		key_names[xt_index_out][1] == ';'
-					  ? "kf10" : key_names[xt_index_out]);
+	sprintf(buf, "\033P+q%02x%02x\033\\",
+		      key_names[xt_index_out][0], key_names[xt_index_out][1]);
 	out_str_nf((char_u *)buf);
 	++xt_index_out;
     }
@@ -4822,8 +4820,9 @@ req_more_codes_from_term()
 }
 
 /*
- * Decode key code response from xterm: '<Esc>P1+r<hex bytes><Esc>\'.  A "0"
- * instead of the "1" indicates a code that isn't supported.
+ * Decode key code response from xterm: '<Esc>P1+r<name>=<string><Esc>\'.
+ * A "0" instead of the "1" indicates a code that isn't supported.
+ * Both <name> and <string> are encoded in hex.
  * "code" points to the "0" or "1".
  */
     static void
@@ -4832,53 +4831,64 @@ got_code_from_term(code, len)
     int		len;
 {
 #define XT_LEN 100
-    char_u	buf[XT_LEN];
+    char_u	name[3];
+    char_u	str[XT_LEN];
     int		i;
     int		j = 0;
+    int		c;
 
-    if (key_names[xt_index_in] == NULL)
+    /* A '1' means the code is supported, a '0' means it isn't.
+     * When half the length is > XT_LEN we can't use it.
+     * Our names are currently all 2 characters. */
+    if (code[0] == '1' && code[7] == '=' && len / 2 < XT_LEN)
     {
-	EMSG(_("xterm sent more codes than Vim asked for"));
-	return;
+	/* Get the name from the response and find it in the table. */
+	name[0] = hexhex2nr(code + 3);
+	name[1] = hexhex2nr(code + 5);
+	name[2] = NUL;
+	for (i = 0; key_names[i] != NULL; ++i)
+	{
+	    if (STRCMP(key_names[i], name) == 0)
+	    {
+		xt_index_in = i;
+		break;
+	    }
+	}
+	if (key_names[i] != NULL)
+	{
+	    for (i = 8; (c = hexhex2nr(code + i)) >= 0; i += 2)
+		str[j++] = c;
+	    str[j] = NUL;
+	    if (name[0] == 'C' && name[1] == 'o')
+	    {
+		/* Color count is not a key code. */
+		set_color_count(atoi((char *)str));
+	    }
+	    else
+	    {
+		/* First delete any existing entry with the same code. */
+		i = find_term_bykeys(str);
+		if (i >= 0)
+		    del_termcode_idx(i);
+		add_termcode(name, str, FALSE);
+	    }
+	}
     }
 
-    /* A '1' means the code is supported, a '0' means it isn't.  When half the
-     * length is > XT_LEN we can't use it. */
-    if (code[0] == '1' && len / 2 < XT_LEN)
-    {
-	for (i = 3; isxdigit(code[i]) && isxdigit(code[i + 1]); i += 2)
-	    buf[j++] = (hex2nr(code[i]) << 4) + hex2nr(code[i + 1]);
-	buf[j] = NUL;
-	if (key_names[xt_index_in][0] == 'C'
-					  && key_names[xt_index_in][1] == 'o')
-	{
-	    /* Color count is not a key code. */
-	    set_color_count(atoi((char *)buf));
-	}
-	else
-	{
-	    /* First delete any existing entry with the same code. */
-	    i = find_term_bykeys(buf);
-	    if (i >= 0)
-		del_termcode_idx(i);
-
-	    add_termcode((char_u *)key_names[xt_index_in], buf, FALSE);
-	}
-    }
-
+    /* May request more codes now that we received one. */
     ++xt_index_in;
     req_more_codes_from_term();
 }
 
 /*
- * This is called before starting an external program.  We don't want
- * responses to be send to that program.  Check if there are any unanswered
- * requests and deal with them.
+ * Check if there are any unanswered requests and deal with them.
+ * This is called before starting an external program or getting direct
+ * keyboard input.  We don't want responses to be send to that program or
+ * handled as typed text.
  */
-    static void
+    void
 check_for_codes_from_term()
 {
-    int		i;
     int		c;
 
     /* If no codes requested or all are answered, no need to wait. */
@@ -4891,7 +4901,6 @@ check_for_codes_from_term()
     ++allow_keys;
     for (;;)
     {
-	i = xt_index_in;
 	c = vpeekc();
 	if (c == NUL)	    /* nothing available */
 	    break;
@@ -4899,20 +4908,15 @@ check_for_codes_from_term()
 	/* If a response is recognized it's replaced with K_IGNORE, must read
 	 * it from the input stream.  If there is no K_IGNORE we can't do
 	 * anything, break here (there might be some responses further on, but
-	 * we don't want to throw away typed chars). */
-	if (c == K_SPECIAL || c == K_IGNORE)
-	{
-	    c = vgetc();
-	    if (c != K_IGNORE)
-	    {
-		vungetc(c);
-		break;
-	    }
-	}
-
-	/* If we didn't receive a response, wait no longer. */
-	if (i == xt_index_in)
+	 * we don't want to throw away any typed chars). */
+	if (c != K_SPECIAL && c != K_IGNORE)
 	    break;
+	c = vgetc();
+	if (c != K_IGNORE)
+	{
+	    vungetc(c);
+	    break;
+	}
     }
     --no_mapping;
     --allow_keys;

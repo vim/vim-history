@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
+*windows.txt*   For Vim version 6.0o.  Last change: 2000 Nov 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,17 +10,18 @@ The commands which have been added to use multiple windows and buffers are
 explained here.  Additionally, there are explanations for commands that work
 differently when used in combination with more than one window.
 
-1.  Introduction			|windows-intro|
-2.  Starting Vim			|windows-starting|
-3.  Opening and closing a window	|opening-window|
-4.  Moving cursor to other windows	|window-move-cursor|
-5.  Moving windows around		|window-moving|
-6.  Window resizing			|window-resize|
-7.  Exiting Vim				|window-exit|
-8.  Writing with multiple buffers	|buffer-write|
-9.  argument and buffer list commands	|buffer-list|
-10. Tag or file name under the cursor	|window-tag|
-11. Using hidden buffers		|buffer-hidden|
+1.  Introduction				|windows-intro|
+2.  Starting Vim				|windows-starting|
+3.  Opening and closing a window		|opening-window|
+4.  Moving cursor to other windows		|window-move-cursor|
+5.  Moving windows around			|window-moving|
+6.  Window resizing				|window-resize|
+7.  Exiting Vim					|window-exit|
+8.  Writing with multiple buffers		|buffer-write|
+9.  argument and buffer list commands		|buffer-list|
+10. Do a command in all buffers or windows	|list-repeat|
+11. Tag or file name under the cursor		|window-tag|
+12. Using hidden buffers			|buffer-hidden|
 
 {Vi does not have any of these commands}
 {not able to use multiple windows when the +windows feature was disabled at
@@ -558,7 +559,68 @@ can also get to them with the buffer list commands, like ":bnext".
 		{only available when compiled with the +gui feature}
 
 ==============================================================================
-10. Tag or file name under the cursor			*window-tag*
+10. Do a command in all buffers or windows			*list-repeat*
+
+							*:windo*
+:windo[!] {cmd}		Execute {cmd} in each window.
+			It works like doing this: >
+				CTRL-W t
+				:{cmd}
+				CTRL-W w
+				:{cmd}
+				etc.
+<			When an error is detected on one window, further
+			windows will not be visited.
+			The last window (or where an error occurred) becomes
+			the current window.
+			{cmd} can contain '|' to concatenate several commands.
+			{cmd} must not open or close windows or reorder them.
+			Note: While this command is executing, the Syntax
+			autocommand event is disabled by adding it to
+			'eventignore'.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+			Also see |:argdo| and |:bufdo|.
+
+							*:bufdo*
+:bufdo[!] {cmd}		Execute {cmd} in each buffer.
+			It works like doing this: >
+				:bfirst
+				:{cmd}
+				:bnext
+				:{cmd}
+				etc.
+<			When the current file can't be |abandon|ed and the [!]
+			is not present, the command fails.
+			When an error is detected on one buffer, further
+			buffers will not be visited.
+			The last buffer (or where an error occurred) becomes
+			the current buffer.
+			{cmd} can contain '|' to concatenate several commands.
+			{cmd} must not delete buffers or add buffers to the
+			buffer list.
+			Note: While this command is executing, the Syntax
+			autocommand event is disabled by adding it to
+			'eventignore'.  This considerably speeds up editing
+			each buffer.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+			Also see |:argdo| and |:windo|.
+
+Examples: >
+
+	:windo set nolist nofoldcolumn | normal zn
+
+This resets the 'list' option and disables folding in all windows. >
+
+	:bufdo set filecharcode= | update
+
+This resets the 'filecharcode' in each buffer and writes it if this changed
+the buffer.  The result is that all buffers will use the 'charcode' encoding
+(if conversion works properly).
+
+==============================================================================
+11. Tag or file name under the cursor			*window-tag*
 
 							*:sta* *:stag*
 :sta[g][!] [tagname]
@@ -597,7 +659,7 @@ Also see |CTRL-W_CTRL-I|: open window for an included file that includes
 the keyword under the cursor.
 
 ==============================================================================
-11. The preview window				*preview-window*
+12. The preview window				*preview-window*
 
 The preview window is a special window to show (preview) another file.  It is
 normally a small window used to show an include file or definition of a

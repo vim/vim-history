@@ -1207,7 +1207,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int
 mch_isFullName(char_u *fname)
 {
-    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'[') || strchr((char *)fname,']') || strchr((char *)fname,'<') || strchr((char *)fname,'>') )
+    if (fname[0] == '/' || fname[0] == '.' || strchr((char *)fname, ':') || strchr((char *)fname,'[') || strchr((char *)fname,']') || strchr((char *)fname,'<') || strchr((char *)fname,'>') )
 	return 1;
     else
 	return 0;

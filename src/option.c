@@ -41,6 +41,7 @@ typedef enum
     PV_NONE = 0
     , PV_AI
     , PV_BIN
+    , PV_BOMB
     , PV_BT
     , PV_CIN
     , PV_CINK
@@ -109,6 +110,9 @@ typedef enum
  */
 static int	p_ai;
 static int	p_bin;
+#ifdef FEAT_MBYTE
+static int	p_bomb;
+#endif
 #if defined(FEAT_QUICKFIX)
 static char_u	*p_bt;
 #endif
@@ -355,6 +359,13 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)TRUE, (char_u *)0L}},
+    {"bomb",	    NULL,   P_BOOL|P_NO_MKRC|P_VI_DEF|P_RSTAT,
+#ifdef FEAT_MBYTE
+			    (char_u *)&p_bomb, PV_BOMB,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"breakat",	    "brk",  P_STRING|P_VI_DEF|P_RALL|P_FLAGLIST,
 #ifdef FEAT_LINEBREAK
 			    (char_u *)&p_breakat, PV_NONE,
@@ -727,7 +738,11 @@ static struct vimoption options[] =
 			     * insert a file name in the match line. */
 			    (char_u *)"grep -n $* /dev/null",
 #  else
+#   ifdef VMS
+			    (char_u *)"SEARCH/NUMBERS ",
+#   else
 			    (char_u *)"grep -n ",
+#endif
 #endif
 # endif
 			    (char_u *)0L},
@@ -1112,7 +1127,11 @@ static struct vimoption options[] =
     {"makeprg",	    "mp",   P_STRING|P_EXPAND|P_VI_DEF|P_MODEWARN,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_mp, PV_NONE,
+# ifdef VMS
+			    {(char_u *)"MMS", (char_u *)0L}
+# else
 			    {(char_u *)"make", (char_u *)0L}
+# endif
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -1935,9 +1954,9 @@ static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
 static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
 #ifdef FEAT_MBYTE
 static char *(p_cc_values[]) = {CC_ANSI, CC_LATIN1, CC_UNICODE, CC_UCS2,
-				CC_UCS2L, CC_UCS2B, CC_UCS4, CC_UCS4B, CC_UCS4L,
-				CC_UCS4BL, CC_UCS4LB, CC_UTF8, CC_DBJPN,
-				CC_DBKOR, CC_DBCHT, CC_DBCHS,
+				CC_UCS2LE, CC_UCS2BE, CC_UCS4, CC_UCS4BE,
+				CC_UCS4LE, CC_UCS4BL, CC_UCS4LB, CC_UTF8,
+				CC_DBJPN, CC_DBKOR, CC_DBCHT, CC_DBCHS,
 #ifdef MB_DEBUG
 				CC_DEBUG,
 #endif
@@ -3727,11 +3746,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	else if (set_termname(T_NAME) == FAIL)
 	    errmsg = (char_u *)N_("Not found in termcap");
 	else
-	{
 	    /* Screen colors may have changed. */
-	    out_str(T_ME);
-	    redraw_later(CLEAR);
-	}
+	    redraw_later_clear();
     }
 
     /* 'backupcopy' */
@@ -3873,20 +3889,20 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	    errmsg = mb_init();
     }
 
-    /* 'filecharcodes' and 'filecharcode' must be lower case*/
+    /* 'filecharcodes' and 'filecharcode' must be lower case */
     else if (varp == &p_fccs || varp == &curbuf->b_p_fcc)
     {
 	for (p = *varp; *p; ++p)
 	    *p = TO_LOWER(*p);
     }
+#endif
 
-#endif /* FEAT_MBYTE */
 #ifdef FEAT_KEYMAP
-	else if (varp == &(curbuf->b_p_keymap))
-	{
+    else if (varp == &(curbuf->b_p_keymap))
+    {
 	/* load or unload key mapping tables */
-		errmsg = keymap_init();
-	}
+	errmsg = keymap_init();
+    }
 #endif
 
     /* 'fileformat' */
@@ -5941,6 +5957,9 @@ get_varp(p)
 
 	case PV_AI:	return (char_u *)&(curbuf->b_p_ai);
 	case PV_BIN:	return (char_u *)&(curbuf->b_p_bin);
+#ifdef FEAT_MBYTE
+	case PV_BOMB:	return (char_u *)&(curbuf->b_p_bomb);
+#endif
 #if defined(FEAT_QUICKFIX)
 	case PV_BT:	return (char_u *)&(curbuf->b_p_bt);
 #endif

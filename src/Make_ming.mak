@@ -58,11 +58,12 @@ PERLLIBS=$(PERLLIB)/Core
 #PYTHON=c:/python20
 
 # to make a vim version that autoloads python if available.  You do want this!
-DYNAMICPYTHON=python20.dll
+PYTHON_VER=20
+DYNAMIC_PYTHON=python$(PYTHON_VER).dll
 
 ifdef PYTHON
-ifndef DYNAMICPYTHON
-PYTHONLIB=-L$(PYTHON)/libs -lpython20
+ifndef DYNAMIC_PYTHON
+PYTHONLIB=-L$(PYTHON)/libs -lpython$(PYTHON_VER)
 endif
 # my include files are in 'win32inc' on Linux, and 'include' in the standard
 # NT distro (ActiveState)
@@ -105,7 +106,7 @@ endif
 
 ifdef PYTHON
 CFLAGS += -DFEAT_PYTHON $(PYTHONINC)
-ifdef DYNAMICPYTHON
+ifdef DYNAMIC_PYTHON
 CFLAGS += -DDYNAMIC_PYTHON 
 endif
 endif
@@ -205,10 +206,10 @@ else
 endif
 endif
 
-ifdef DYNAMICPYTHON
+ifdef DYNAMIC_PYTHON
 ifeq ($(CROSS),1)
-	@echo \#define DYNAMIC_PYTHON_W32 \"$(DYNAMICPYTHON)\" >> dyn-ming.h
+	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
 else
-	@echo #define DYNAMIC_PYTHON_W32 "$(DYNAMICPYTHON)" >> dyn-ming.h
+	@echo #define DYNAMIC_PYTHON_DLL "$(DYNAMIC_PYTHON)" >> dyn-ming.h
 endif
 endif

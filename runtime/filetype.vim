@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 18
+" Last change:	2000 Nov 26
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -337,6 +337,9 @@ au BufNewFile,BufRead *.ini			setf dosini
 " Inno Setup
 au BufNewFile,BufRead *.iss			setf iss
 
+" Jam
+au BufNewFile,BufRead *.jpl	    		setf jam
+
 " Java
 au BufNewFile,BufRead *.java,*.jav		setf java
 
@@ -641,6 +644,9 @@ au BufNewFile,BufRead *.sgm,*.sgml
 	\   setf sgml |
 	\ endif
 au BufNewFile,BufRead *.ent			setf sgml
+
+" SGML catalog file
+au BufNewFile,BufRead sgml.catalog*,catalog	setf catalog
 
 " Shell scripts (sh, ksh, bash, bash2, csh); Allow .profile_foo etc.
 au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash call SetFileTypeSH("bash")

@@ -1,6 +1,7 @@
 Tests for :right on text with embedded TAB.
 
 STARTTEST
+:so small.vim
 :set tw=65
 
 :/test for :left/,/test for :center/ left

@@ -346,8 +346,6 @@ CClink = $(CC)
 # When you get an error for a missing "perl.exp" file, try creating an emtpy
 # one: "touch perl.exp".
 # This requires at least "small" features, "tiny" doesn't work.
-# NOTE: May not work in combination with "-pthread" linker argument, sometimes
-# needed for Python.
 #CONF_OPT_PERL = --enable-perlinterp
 
 # PYTHON - For creating Vim with Python interface
@@ -381,9 +379,11 @@ CClink = $(CC)
 
 # XIM - X Input Method.  Special character input support for X11 (chinese,
 # japanese, special symbols, etc).  Also needed for dead-key support.
+# When omitted it's automatically enabled for the X-windows GUI.
 # HANGUL - Input Hangul (korean) language using internal routines.
 # Uncomment one of these when you want to input a multibyte language.
 #CONF_OPT_INPUT = --enable-xim
+#CONF_OPT_INPUT = --disable-xim
 #CONF_OPT_INPUT = --enable-hangulinput
 
 # FONTSET - X fontset support for output of languages with many characters.
@@ -775,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60n
+VIMRTDIR = /vim60o
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1402,8 +1402,10 @@ os_vms.pro: os_vms.c
 	rm auto/config.h
 	mv auto/config.h.save auto/config.h
 
+# if_perl.pro is special: Use the generated if_perl.c for input and remove
+# prototypes for local functions.
 if_perl.pro: auto/if_perl.c
-	cproto $(PFLAGS) -DFEAT_GUI auto/if_perl.c > proto/$@
+	cproto $(PFLAGS) -DFEAT_GUI auto/if_perl.c | sed "/_VI/d" > proto/$@
 
 
 notags:

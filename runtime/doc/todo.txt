@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0n.  Last change: 2000 Nov 19
+*todo.txt*      For Vim version 6.0o.  Last change: 2000 Dec 03
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,22 +29,40 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Let :map also list buffer-local mappings.  Add a command to exclude local
-mappings?
+Syntax: Add "!item" to "contains=" to include an item after an ALLBUT?
+Otherwise items with "contained" can't be matched. (Campbell)
 
-After ":hi Normal ctermbg=black ctermfg=white" CTRL-Z fg doesn't redraw all
-characters. (Cesar Crusius)
-
-"make test" doesn't work with tiny or small features.  Perform only those
-tests that will work.
+":cd ." gives an error message. (Lewis)
 
 Fold bug: Creating a higher level fold deletes a lower level fold. (Weiguang
 Shi)
 
-Win32: Compiling the Python interface with MSVC doesn't work.
+Amiga:
+- Tries to open a file on the "home:" volume.
+- Creating a swap file doesn't work?
 
-Syntax: skip pattern in a region that matches more than one line doesn't avoid
-a match with an end pattern past the first line.
+Win32: Edit a file like d:\path\file.c, open a cwindow with an entry for
+\path\file.c, hit <CR> creates a new buffer instead of using the existing one.
+(Scott Graham)
+
+FileChangedRO event:  When triggered by "dd", the autocommands are executed
+but the "dd" is lost.  With 'insertmode' set FileChangedRO is never triggered.
+(Michael S. Tsirkin)
+
+Syntax syncing: sometimes a wrong state used from lines below a change which
+is not redisplayed?
+
+Add "gi" command: Start Insert mode in the same position where typed <Esc>
+(left Insert mode) last time.  Works with an empty line and past the end of a
+line.  Useful for Insert mode mappings that don't want to move the cursor.
+Also use this for CTRL-O?
+
+Add exists() argument to check if an autocommand exists for a certain
+event/pattern.  Use this to give a warning in the gzip.vim plugin if an
+autocommand exists for the BufRead event with pattern *.gz.
+
+":set <M-b>=^[b" works, but mapping <M-b> doesn't. (Bernd Eggink)  ":set
+termcap" shows a strange code for <M-b>.  It worked fine in Vim 5.7.
 
 
 Main items for 6.0:
@@ -145,6 +163,7 @@ A. Folding:
     opened with "zO".
     OR: always create new folds open.  Add a command to re-apply 'foldlevel'.
 -   When moving over a fold, always put the cursor on the first line.
+    It's done for cursor-up, are there other commands where this applies?
 -   In Insert mode, not only show the line the cursor is in but the whole
     fold.
 -   In Insert mode, only unfold the line/fold of the current window.  Not
@@ -207,11 +226,14 @@ A. Folding:
 
 
 B. UTF-8 support:
+-   Do UTF-8 to latin-1 conversion internally (replace errors with ¿).
+    Only when iconv() can't do it.
 -   Big change: Support editing UTF-8 text while the terminal only supports
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
     wide characters).  Use 'displaycode' option?
 -   GUI: Cursor is sometimes not removed.
 -   show other non-printable as <xx>.
+-   Support ++cc=name for ":w".
 -   Check mbyte with 'fontset'.
 -   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
     byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
@@ -240,9 +262,6 @@ B. UTF-8 support:
     Add configure check for iconv(), also in libiconv (libutf8?).
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
 -   Init 'charcode' from $LANG for non-UTF-8?
--   Combination of 'charconvert' and encryption requires decrypting before
-    reading and encryption after writing a file.  Use temp files, make sure
-    they are readable for the user only.
 -   readfile(): When reading UCS-2 or UCS-4 and the number of bytes returned
     by read() isn't a multiple of 2 or 4, what to do?
 -   When 'charcode' is "ucs-2" or "ucs-4", do we need to convert when sending
@@ -273,8 +292,9 @@ C.  Multi-line regexp patterns
     including non-empty lines before it).
 
 D. Vertical window split:
--   Dragging a scrollbar (always?) scrolls the leftmost window.
 -   ";vertical resize" for width.
+-   Make window-rotate commands also work with vertically split windows.  Be
+    able to move the preview window to a vertically split window.
 -   "-O" command line argument, like "-o" but split vertically?
 -   When there is not enough room, remove the ruler from the status line of
     windows which are not the current one, so that there is more room for the
@@ -301,11 +321,6 @@ E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
 -   Bugs: (Mark Waggoner)
     See patches in ~/Mail/oldmail/waggoner/in.00132 .
-    1. Start a rectangular visual select (Ctrl-V) in virtual space, move
-       up a few lines into non-virtual space, maybe over a space, and do
-       a yank (y). If you paste this somewhere else, you'll find that the
-       yanked text does not match what was visually highlighted.
-
     "P" leaves a space at the end of the line.
 
     4. Start a rectangular visual select with Ctrl-V, move down a few
@@ -330,17 +345,12 @@ E. Virtual edit:
 	point and then changing.
 	And when the cursor is in a TAB somewhere, it also doesn't work right.
 
--   With 've' set to "block", deleting a block ending in a tab deletes text
-    right of the tab (~/Mail/oldmail/zellner/in.00943 first problem)
-
 -   In Visual-block mode "x" doesn't delete part of a tab correctly.
     Deleting a whole tab also doesn't work properly (deletes to much).
 -   b_op_start and b_op_end also need coladd.
 -   Add more documentation.
 -   Use vpos_t instead of fpos_t for positions that can have a coladd?
 -   coladvance2() can be a bit slow.
--   Visual mode should not insert spaces:
-	do_pending_operator()
 -   Should not insert spaces for yank or filter.
 -   trailing blanks can't be deleted.
 -   "x" after end of line adds another space
@@ -392,6 +402,7 @@ J. User Friendlier
     Add an icon on the Desktop, if the user wants this.
     Add Vim to the Start/Programs menu if the user wants this.
     Detect the OLE version and register it.
+    Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
 -   Make Windows uninstall program better:
     Delete the vim.bat and gvim.bat files.
     Delete a whole tree of Vim files.
@@ -548,6 +559,7 @@ Various recent:
     when starting up in a color terminal.
 -   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 -   Problem with cscope jumping to the wrong position? (Medley)
+    Selecting item 5 jumps to item 4. (Andrej Borsenkow)
 -   ":abbr b byte", append "b " to an existing word still expands to "byte".
     This is Vi compatible, but can we avoid it anyway?
 
@@ -832,6 +844,8 @@ GUI:
     browse().
 8   Add dialog for search/replace to other GUIs?  Tk has something for this,
     use that code?  Or use console dialog.
+8   When selecting a font with the font dialog and the font is invalid, the
+    error message disappears too quick.
 8   gui_check_colors() is not called at the right moment.  Do it much later,
     to avoid problems.
 8   gui_update_cursor() is called for a cursor shape change, even when there
@@ -1242,6 +1256,9 @@ Documentation:
     autocmd.txt "like \| in a |pattern|"
 9   Add 'fold' section to quick reference.
 9   Add new options to quick reference.
+9   Change all tags for commands from i_<C-R>_<C-O> to i_CTRL-R_CTRL-O to
+    avoid giving the user the impression that all commands have a tag in the
+    <C-x> form.
 9   Extend the User Manual.  Use portions of the Reference Manual.
 9   Make the Reference Manual more precise.  For each command mention:
     - change to cursor position and curswant
@@ -2213,7 +2230,8 @@ Visual mode:
 7   Support dragging the Visual area to drop it somewhere else. (Aaron)
 7   With blockwise Visual mode and "c", "C", "I", "A", etc., allow the use of
     a <CR>.  The entered lines are repeated over the Visual area.
-7   CTRL-V :s should substitute only in the block, not to whole lines.
+7   CTRL-V :s should substitute only in the block, not to whole lines. (David
+    Young is working on this)
 7   Filtering a block should only apply to the block, not to the whole lines.
     When the number of lines is increased, add lines. When decreased, padd with
     spaces or delete? Use ":`<,`>" on the command line.

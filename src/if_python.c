@@ -50,6 +50,9 @@
 #define eval_input	258
 
 #if defined(DYNAMIC_PYTHON) || defined(PROTO)
+/* Console Vim doesn't include this, but we need it for dynamic loading */
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #ifndef DYNAMIC_PYTHON
 # define HINSTANCE int		/* for generating prototypes */
@@ -69,11 +72,6 @@
 #define PyErr_SetString dll_PyErr_SetString
 #define PyEval_RestoreThread dll_PyEval_RestoreThread
 #define PyEval_SaveThread dll_PyEval_SaveThread
-#define PyExc_AttributeError dll_PyExc_AttributeError
-#define PyExc_IndexError dll_PyExc_IndexError
-#define PyExc_KeyboardInterrupt dll_PyExc_KeyboardInterrupt
-#define PyExc_TypeError dll_PyExc_TypeError
-#define PyExc_ValueError dll_PyExc_ValueError
 #define PyInt_AsLong dll_PyInt_AsLong
 #define PyInt_FromLong dll_PyInt_FromLong
 #define PyInt_Type (*dll_PyInt_Type)
@@ -82,6 +80,8 @@
 #define PyList_SetItem dll_PyList_SetItem
 #define PyList_Size dll_PyList_Size
 #define PyList_Type (*dll_PyList_Type)
+#define PyImport_ImportModule dll_PyImport_ImportModule
+#define PyDict_GetItemString dll_PyDict_GetItemString
 #define PyModule_GetDict dll_PyModule_GetDict
 #define PyRun_SimpleString dll_PyRun_SimpleString
 #define PyString_AsString dll_PyString_AsString
@@ -113,11 +113,6 @@ static void(*dll_PyErr_SetNone)(PyObject *);
 static void(*dll_PyErr_SetString)(PyObject *, const char *);
 static void(*dll_PyEval_RestoreThread)(PyThreadState *);
 static PyThreadState*(*dll_PyEval_SaveThread)(void);
-static PyObject* dll_PyExc_AttributeError;
-static PyObject* dll_PyExc_IndexError;
-static PyObject* dll_PyExc_KeyboardInterrupt;
-static PyObject* dll_PyExc_TypeError;
-static PyObject* dll_PyExc_ValueError;
 static long(*dll_PyInt_AsLong)(PyObject *);
 static PyObject*(*dll_PyInt_FromLong)(long);
 static PyTypeObject* dll_PyInt_Type;
@@ -126,6 +121,8 @@ static PyObject*(*dll_PyList_New)(int size);
 static int(*dll_PyList_SetItem)(PyObject *, int, PyObject *);
 static int(*dll_PyList_Size)(PyObject *);
 static PyTypeObject* dll_PyList_Type;
+static PyObject*(*dll_PyImport_ImportModule)(const char *);
+static PyObject*(*dll_PyDict_GetItemString)(PyObject *, const char *);
 static PyObject*(*dll_PyModule_GetDict)(PyObject *);
 static int(*dll_PyRun_SimpleString)(char *);
 static char*(*dll_PyString_AsString)(PyObject *);
@@ -140,21 +137,34 @@ static PyObject*(*dll_Py_FindMethod)(PyMethodDef[], PyObject *, char *);
 static PyObject*(*dll_Py_InitModule4)(char *, PyMethodDef *, char *, PyObject *, int);
 static void(*dll_Py_Initialize)(void);
 static PyObject*(*dll__PyObject_New)(PyTypeObject *, PyObject *);
-#ifdef __MINGW32__
-static PyObject*(*dll__PyObject_Init)(PyTypeObject *, PyObject *);
-#endif
+static PyObject*(*dll__PyObject_Init)(PyObject *, PyTypeObject *);
 static PyObject* dll__Py_NoneStruct;
 
 static HINSTANCE hinstPython = 0; /* Instance of python.dll */
+
+/* Imported exception objects */
+static PyObject *imp_PyExc_AttributeError;
+static PyObject *imp_PyExc_IndexError;
+static PyObject *imp_PyExc_KeyboardInterrupt;
+static PyObject *imp_PyExc_TypeError;
+static PyObject *imp_PyExc_ValueError;
+
+#define PyExc_AttributeError imp_PyExc_AttributeError
+#define PyExc_IndexError imp_PyExc_IndexError
+#define PyExc_KeyboardInterrupt imp_PyExc_KeyboardInterrupt
+#define PyExc_TypeError imp_PyExc_TypeError
+#define PyExc_ValueError imp_PyExc_ValueError
 
 /*
  * Table of name to function pointer of python.
  */
 #define PYTHON_PROC FARPROC
-static struct {
-    char* name;
-    PYTHON_PROC* ptr;
-} python_funcname_table[] = {
+static struct
+{
+    char *name;
+    PYTHON_PROC *ptr;
+} python_funcname_table[] =
+{
     {"PyArg_Parse", (PYTHON_PROC*)&dll_PyArg_Parse},
     {"PyArg_ParseTuple", (PYTHON_PROC*)&dll_PyArg_ParseTuple},
     {"PyDict_SetItemString", (PYTHON_PROC*)&dll_PyDict_SetItemString},
@@ -166,11 +176,6 @@ static struct {
     {"PyErr_SetString", (PYTHON_PROC*)&dll_PyErr_SetString},
     {"PyEval_RestoreThread", (PYTHON_PROC*)&dll_PyEval_RestoreThread},
     {"PyEval_SaveThread", (PYTHON_PROC*)&dll_PyEval_SaveThread},
-    {"PyExc_AttributeError", (PYTHON_PROC*)&dll_PyExc_AttributeError},
-    {"PyExc_IndexError", (PYTHON_PROC*)&dll_PyExc_IndexError},
-    {"PyExc_KeyboardInterrupt", (PYTHON_PROC*)&dll_PyExc_KeyboardInterrupt},
-    {"PyExc_TypeError", (PYTHON_PROC*)&dll_PyExc_TypeError},
-    {"PyExc_ValueError", (PYTHON_PROC*)&dll_PyExc_ValueError},
     {"PyInt_AsLong", (PYTHON_PROC*)&dll_PyInt_AsLong},
     {"PyInt_FromLong", (PYTHON_PROC*)&dll_PyInt_FromLong},
     {"PyInt_Type", (PYTHON_PROC*)&dll_PyInt_Type},
@@ -179,6 +184,8 @@ static struct {
     {"PyList_SetItem", (PYTHON_PROC*)&dll_PyList_SetItem},
     {"PyList_Size", (PYTHON_PROC*)&dll_PyList_Size},
     {"PyList_Type", (PYTHON_PROC*)&dll_PyList_Type},
+    {"PyImport_ImportModule", (PYTHON_PROC*)&dll_PyImport_ImportModule},
+    {"PyDict_GetItemString", (PYTHON_PROC*)&dll_PyDict_GetItemString},
     {"PyModule_GetDict", (PYTHON_PROC*)&dll_PyModule_GetDict},
     {"PyRun_SimpleString", (PYTHON_PROC*)&dll_PyRun_SimpleString},
     {"PyString_AsString", (PYTHON_PROC*)&dll_PyString_AsString},
@@ -193,10 +200,7 @@ static struct {
     {"Py_InitModule4", (PYTHON_PROC*)&dll_Py_InitModule4},
     {"Py_Initialize", (PYTHON_PROC*)&dll_Py_Initialize},
     {"_PyObject_New", (PYTHON_PROC*)&dll__PyObject_New},
-#ifdef __MINGW32__
-    /* check this out-- I needed it for MingW32 to compile w/ ActiveState 2.0 */
     {"PyObject_Init", (PYTHON_PROC*)&dll__PyObject_Init},
-#endif
     {"_Py_NoneStruct", (PYTHON_PROC*)&dll__Py_NoneStruct},
     {"", NULL},
 };
@@ -251,7 +255,30 @@ python_runtime_link_init(char* libname)
     int
 python_enabled()
 {
-    return python_runtime_link_init(DYNAMIC_PYTHON_W32);
+    return python_runtime_link_init(DYNAMIC_PYTHON_DLL);
+}
+
+/* Load the standard Python exceptions - don't import the symbols from the
+ * DLL, as this can cause errors (importing data symbols is not reliable).
+ */
+static void get_exceptions __ARGS((void));
+
+    static void
+get_exceptions()
+{
+    PyObject *exmod = PyImport_ImportModule("exceptions");
+    PyObject *exdict = PyModule_GetDict(exmod);
+    imp_PyExc_AttributeError = PyDict_GetItemString(exdict, "AttributeError");
+    imp_PyExc_IndexError = PyDict_GetItemString(exdict, "IndexError");
+    imp_PyExc_KeyboardInterrupt = PyDict_GetItemString(exdict, "KeyboardInterrupt");
+    imp_PyExc_TypeError = PyDict_GetItemString(exdict, "TypeError");
+    imp_PyExc_ValueError = PyDict_GetItemString(exdict, "ValueError");
+    Py_XINCREF(imp_PyExc_AttributeError);
+    Py_XINCREF(imp_PyExc_IndexError);
+    Py_XINCREF(imp_PyExc_KeyboardInterrupt);
+    Py_XINCREF(imp_PyExc_TypeError);
+    Py_XINCREF(imp_PyExc_ValueError);
+    Py_XDECREF(exmod);
 }
 #endif /* DYNAMIC_PYTHON */
 
@@ -346,6 +373,10 @@ Python_Init(void)
 	Py_Initialize();
 #else
 	PyMac_Initialize();
+#endif
+
+#ifdef DYNAMIC_PYTHON
+	get_exceptions();
 #endif
 
 	if (PythonIO_Init())

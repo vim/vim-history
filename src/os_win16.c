@@ -211,7 +211,7 @@ WinMain(
 
 
 #ifdef __BORLANDC__
-// being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
+/* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll: */
 int _stricoll(char *a, char *b)
 {
 #if 1

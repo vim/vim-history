@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0n.  Last change: 2000 Nov 18
+*index.txt*     For Vim version 6.0o.  Last change: 2000 Dec 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,8 +39,10 @@ tag		char		action	~
 				line
 |i_CTRL-E|	CTRL-E		insert the character which is below the cursor
 		CTRL-F		not used
+|i_CTRL-G_j|	CTRL-G CTRL-J	line down, to column where inserting started
 |i_CTRL-G_j|	CTRL-G j	line down, to column where inserting started
 |i_CTRL-G_j|	CTRL-G <Down>	line down, to column where inserting started
+|i_CTRL-G_k|	CTRL-G CTRL-K	line up, to column where inserting started
 |i_CTRL-G_k|	CTRL-G k	line up, to column where inserting started
 |i_CTRL-G_k|	CTRL-G <Up>	line up, to column where inserting started
 |i_<BS>|	<BS>		delete character before the cursor
@@ -1008,7 +1010,9 @@ The commands are sorted on the non-optional part of their name.
 |:dsplit|	:dsp[lit]	split window and jump to #define
 |:edit|		:e[dit]		edit a file
 |:echo|		:ec[ho]		echoes the result of expressions
+|:echoerr|	:echoe[rr]	like :echo, show like an error and use history
 |:echohl|	:echoh[l]	set highlighting for echo commands
+|:echomsg|	:echom[sg]	same as :echo, put message in history
 |:echon|	:echon		same as :echo, but without <EOL>
 |:else|		:el[se]		part of an :if command
 |:elseif|	:elsei[f]	part of an :if command
@@ -1232,6 +1236,7 @@ The commands are sorted on the non-optional part of their name.
 |:update|	:up[date]	write buffer if modified
 |:vglobal|	:v[global]	execute commands for not matching lines
 |:version|	:ve[rsion]	print version number and other info
+|:verbose|	:verb[ose]	execute command with 'verbose' set
 |:vertical|	:vert[ical]	make following command split vertically
 |:visual|	:vi[sual]	same as ":edit", but turns off "Ex" mode
 |:view|		:vie[w]		edit a file read-only

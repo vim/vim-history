@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0n.  Last change: 2000 Nov 18
+*map.txt*       For Vim version 6.0o.  Last change: 2000 Nov 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -171,18 +171,19 @@ Operator-pending mode.
 							*map-listing*
 When listing mappings the characters in the first two columns are:
 
-	CHAR		MODE	~
-	<Space>		Normal, Visual and Operator-pending
-	 n		Normal
-	 v		Visual
-	 o		Operator-pending
-	 !		Insert and Command-line
-	 i		Insert
-	 c		Command-line
+      CHAR	MODE	~
+     <Space>	Normal, Visual and Operator-pending
+	n	Normal
+	v	Visual
+	o	Operator-pending
+	!	Insert and Command-line
+	i	Insert
+	c	Command-line
 
-A "*" just before the {rhs} indicates that it is not remappable.
-A "&" just before the {rhs} indicates that only script-local mappings are
-remappable.
+Just before the {rhs} a special character can appear:
+	*	indicates that it is not remappable
+	&	indicates that only script-local mappings are remappable
+	@	indicates a buffer-local mapping
 
 Everything from the first non-blank after {lhs} up to the end of the line
 (or '|') is considered to be part of {rhs}.  This allows the {rhs} to end

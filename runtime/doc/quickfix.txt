@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0n.  Last change: 2000 Nov 12
+*quickfix.txt*  For Vim version 6.0o.  Last change: 2000 Dec 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -163,6 +163,12 @@ perform some action on the listed errors.  Example: >
 This prepends the line number to each line.  Note the use of "\=" in the
 substitute string of the ":s" command, which is used to evaluate an
 expression.
+
+Note: Making changes in the quickfix window has no effect on the list of
+errors.  If you delete or insert lines, the relation between the text and the
+error number is messed up.  If you really want to do this, you could write the
+contents of the quickfix window to a file and use ":cfile" to have it parsed
+and used as the new error list.
 
 							*error-file-format*
 A template for the errorfile name can be set with the 'makeef' option.  If it

@@ -1,6 +1,7 @@
 Test for a lot of variations of the 'fileformats' option
 
 STARTTEST
+:so small.vim
 :" first write three test files, one in each format
 :set fileformat=unix
 :set fileformats=
@@ -157,8 +158,6 @@ STARTTEST
 :!cat XX10 >>test.out
 :" add a newline at the end
 :!cat XXUnix >>test.out
-:!rm -f XXtt XXUnix XXDos XXMac XXUxDs XXUxMac XXDosMac XXUxDsMc
-:!rm -f XX1 XX2 XX3 XX4 XX5 XX6 XX7 XX8 XX9 XX10
 :qa!
 ENDTEST
 

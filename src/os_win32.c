@@ -3457,7 +3457,7 @@ termcap_mode_start(void)
     cmodein |= ENABLE_WINDOW_INPUT;
     SetConsoleMode(g_hConIn, cmodein);
 
-    must_redraw = CLEAR;
+    redraw_later_clear();
     g_fTermcapMode = TRUE;
 }
 

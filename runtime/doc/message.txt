@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0n.  Last change: 2000 Nov 13
+*message.txt*   For Vim version 6.0o.  Last change: 2000 Dec 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,13 +13,16 @@ means.  It is not complete though.
 3. Messages		|messages|
 
 ==============================================================================
-1. Old messages						*:messages* *:mes*
+1. Old messages			*:messages* *:mes* *message-history*
 
 The ":messages" command can be used to view previously given messages.  This
 is especially useful when messages have been overwritten or truncated.  This
 depends on the 'shortmess' option.
 
 The number of remembered messages is fixed at 20.
+
+The first printed line tells who maintains the messages or the translations.
+You can use this to contact the maintainer when you spot a mistake.
 
 ==============================================================================
 2. Error messages					*error-messages*

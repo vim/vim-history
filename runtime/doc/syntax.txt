@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0n.  Last change: 2000 Nov 18
+*syntax.txt*    For Vim version 6.0o.  Last change: 2000 Dec 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1564,14 +1564,23 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	Offsets are not used for this.  This implies that the match for the
 	end pattern will never overlap with the start pattern.
 
+	The skip and end pattern can match across line breaks, but since the
+	search for the pattern can start in any line it often does not do what
+	you want.  The skip pattern doesn't avoid a match of an end pattern in
+	the next line.  Use single-line patterns to avoid trouble.
+
 	Note: The decision to start a region is only based on a matching start
 	pattern.  There is no check for a matching end pattern.  This does NOT
-	work:
-		:syn region First  start="("  end="."
+	work: >
+		:syn region First  start="("  end=":"
 		:syn region Second start="("  end=";"
-	The Second always matches before the First (last defined pattern has
+<	The Second always matches before the First (last defined pattern has
 	higher priority).  The Second region then continues until the next
-	';', no matter if there is a '.' before it.
+	';', no matter if there is a ':' before it.  Using a match does work: >
+		:syn match First  "(\_.\{-}:"
+		:syn match Second "(\_.\{-};"
+<	This pattern matches any character or line break with "\_." and
+	repeats that with "\{-}" (repeat as few as possible).
 
 							*:syn-keepend*
 	By default, a contained match can obscure a match for the end pattern.
@@ -1596,6 +1605,21 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	after each contained match.  When "keepend" is included, the first
 	encountered match with an end pattern is used, truncating any
 	contained matches.
+							*:syn-extend*
+	The "keepend" behavior can be changed by using the "extend" argument.
+	When an item with "extend" is contained in an item that uses
+	"keepend", the "keepend" is ignored and the containing region will be
+	extended.
+	This can be used to have some contained items extend a region while
+	others don't.  Example: >
+
+   :syn region htmlRef start=+<a>+ end=+</a>+ keepend contains=htmlItem,htmlScript
+   :syn match htmlItem +<[^>]*>+ contained
+   :syn region htmlScript start=+<script+ end=+</script[^>]*>+ contained extend
+
+<	Here the htmlItem item does not make the htmlRef item continue
+	furthere, it is only used to highlight the <> items.  The htmlScript
+	item does extend the htmlRef item.
 
 							*:syn-excludenl*
 	When a pattern for a match or end pattern of a region includes a '$'
@@ -1660,7 +1684,7 @@ These arguments can be used for all three commands:
 	skipnl
 	skipempty
 
-And the argument that can be used for a match and regeion, but not for a
+And the argument that can be used for a match and region, but not for a
 keyword:
 	display
 
@@ -2161,9 +2185,10 @@ First syncing method:			*:syn-sync-first*
    :syntax sync fromstart
 
 The file will be parsed from the start.  This makes syntax highlighting
-accurate, but can be slow for long files.  Vim caches previously parsed text.
-However, when making changes some part of the next needs to be parsed again
-(worst case: to the end of the file).
+accurate, but can be slow for long files.  Vim caches previously parsed text,
+so that it's only slow when parsing the text for the first time.  However,
+when making changes some part of the next needs to be parsed again (worst
+case: to the end of the file).
 
 Using "fromstart" is equivalent to using "minlines" with a very large number.
 
@@ -2227,6 +2252,9 @@ matches, nextgroup, etc.  But there are a few differences:
   consecutive that contain the continuation pattern.
 - When using "nextgroup" or "contains", this only works within one line (or
   group of continued lines).
+- When using a region, it must start and end in the same line (or group of
+  continued lines).  Otherwise the end is assumed to be at the end of the
+  line (or group of continued lines).
 - When a match with a sync pattern is found, the rest of the line (or group of
   continued lines) is searched for another match.  The last match is used.
   This is used when a line can contain both the start end the end of a region
@@ -2770,10 +2798,10 @@ colors, when 't_Co' is 8.
 
 							*xfree-xterm*
 To get 16 colors, get the newest xterm version (which should be included with
-Xfree86 3.3).  You can also find the latest version at:
+Xfree86 3.3 and later).  You can also find the latest version at:
 	http://www.clark.net/pub/dickey/xterm
 You probably have to enable 16 colors when running configure:
-	./configure --disable-bold-color
+	./configure --disable-bold-color --enable-tcap-query
 If you only get 8 colors, check the xterm compilation settings.
 (Also see |UTF8-xterm| for using this xterm with UTF-8 character encoding).
 

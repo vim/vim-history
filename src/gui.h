@@ -74,6 +74,14 @@
 #endif
 
 /*
+ * GUIs that support dropping files on a running Vim.
+ */
+#if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MAC) \
+	|| defined(FEAT_GUI_BEOS) || defined(FEAT_GUI_GTK)
+# define HAVE_DROP_FILE
+#endif
+
+/*
  * These macros convert between character row/column and pixel coordinates.
  * TEXT_X   - Convert character column into X pixel coord for drawing strings.
  * TEXT_Y   - Convert character row into Y pixel coord for drawing strings.

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0n.  Last change: 2000 Nov 19
+*options.txt*   For Vim version 6.0o.  Last change: 2000 Dec 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -929,6 +929,28 @@ A jump table for the options with a short description can be found at |X_op|.
 	terminal over a serial port reset this option.
 	Also see |'conskey'|.
 
+							*'bomb'* *'nobomb'*
+'bomb'			boolean	(default off)
+			local to buffer
+			{not in Vi}
+			{only available when compiled with the |+multi_byte|
+			feature}
+	When writing a file and the following conditions are met, a BOM (Byte
+	Order Mark) is prepended to the file:
+	- this option is on
+	- the 'binary' option is off
+	- 'filecharcode' is "utf-8", "ucs-2", "ucs-4" or one of the little/big
+	  endian variants.
+	Some applications use the BOM to recognize the encoding of the file.
+	Often used for UCS-2 files on MS-Windows.  For other applications it
+	causes trouble, for example: "cat file1 file2" makes the BOM of file2
+	appear halfway the file.
+	When Vim reads a file and 'filecharcodes' starts with "ucs-bom", a
+	check for the presence of the BOM is done and 'bomb' set accordingly.
+	Unless 'binary' is set, it is removed from the first line, so that you
+	don't see it when editing.  When you don't change the options, the BOM
+	will be restored when writing the file.
+
 						*'breakat'* *'brk'*
 'breakat' 'brk'		string	(default " ^I!@*-+;:,./?")
 			global
@@ -1020,11 +1042,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	    latin-1	8-bit characters (ISO 8859-1)
 	    ansi	same as latin-1 (obsolete, for backward compatibility)
 	    ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
-	    ucs-2l	like ucs-2, little endian
-	    ucs-2b	like ucs-2, big endian
+	    ucs-2le	like ucs-2, little endian
+	    ucs-2be	same as ucs-2 (big endian)
 	    ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
-	    ucs-4l	like ucs-4, little endian
-	    ucs-4b	like ucs-4, big endian
+	    ucs-4le	like ucs-4, little endian
+	    ucs-4be	same as ucs-4 (big endian)
 	    ucs-4lb	like ucs-4, little-big endian
 	    ucs-4bl	like ucs-4, big-little endian
 	    unicode	same as ucs-2
@@ -1035,6 +1057,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	    taiwan	use traditional Chinese encoding
 	When the option is set, the value is converted to lower case.  Thus
 	you can set it with upper case values too.
+
+	On Windows systems you probably want to use "ucs-2le", because it uses
+	little endian UCS-2.
 
 	Note: "latin-1" is also used for other 8-bit character encodings.
 	This only works when editing files in the same encoding!  When the
@@ -1054,14 +1079,14 @@ A jump table for the options with a short description can be found at |X_op|.
 
 	For the UCS codes the byte order matters.  This is tricky, use UTF-8
 	whenever you can.  The default is to use big-endian (most significant
-	byte comes first).
+	byte comes first).  For the Unicode character 0x11223344:
 	    name	bytes		char ~
-	    ucs-2	11 22		1122
-	    ucs-2b	11 22		1122
-	    ucs-2l	11 22		2211
+	    ucs-2	      33 44	3344
+	    ucs-2be	      33 44	3344
+	    ucs-2le	      33 44	4433
 	    ucs-4	11 22 33 44	11223344
-	    ucs-4b	11 22 33 44	11223344
-	    ucs-4l	11 22 33 44	44332211
+	    ucs-4be	11 22 33 44	11223344
+	    ucs-4le	11 22 33 44	44332211
 	    ucs-4bl	11 22 33 44	22114433
 	    ucs-4lb	11 22 33 44	33441122
 
@@ -1101,6 +1126,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	same.
 	Note that v:charconvert_from and v:charconvert_to may be different
 	from 'charcode'.  Vim internally uses UTF-8 instead of UCS-2 or UCS-4.
+	Encryption is not done by Vim when using 'charconvert'.  If you want
+	to encrypt the file after conversion, 'charconvert' should take care
+	of this.
 
 				   *'cindent'* *'cin'* *'nocindent'* *'nocin'*
 'cindent' 'cin'		boolean	(default off)
@@ -1835,7 +1863,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	option is set, because the file would be different when written.
 
 					*'filecharcodes'* *'fccs'*
-'filecharcodes' 'fccs'	string (default: "")
+'filecharcodes' 'fccs'	string (default: "", "ucs-bom,utf-8,latin-1" when
+					 'charcode' is set to a Unicode value)
 			global
 			{only available when compiled with the |+multi_byte|
 			feature}
@@ -1847,13 +1876,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	If all fail, 'filecharcode' is set to an empty string, which means
 	the value of 'charcode' is used.
 		WARNING: Conversion can cause loss of information!  When
-		'charcode' is "utf-8" conversion is most likely done in a way
-		that the reverse conversion results in the same text.  When
-		'charcode' is not "utf-8" special characters may be lost!
-	When 'charcode' is set to "utf-8", you can use this command to
-	automatically handle latin-1 files: >
-		:set filecharcodes=utf-8,latin-1
-<	If 'filecharcodes' is empty, 'filecharcode' is not modified.
+		'charcode' is "utf-8" (or one of the other Unicode variants)
+		conversion is most likely done in a way that the reverse
+		conversion results in the same text.  When 'charcode' is not
+		"utf-8" special characters may be lost!
+	The special value "ucs-bom" can be used to check for a Unicode BOM
+	(Byte Order Mark) at the start of the file.  It must not be preceded
+	by "utf-8" or another Unicode encoding for this to work properly.
+	If 'filecharcodes' is empty, 'filecharcode' is not modified.
 	See 'charcode' for the possible values.  Additionally, values may be
 	specified that can be handled by the converter (either iconv() or
 	specified with 'charconvert').
@@ -2147,7 +2177,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	'errorformat' option: see |errorformat|.
 
 						*'grepprg'* *'gp'*
-'grepprg' 'gp'		string	(default "grep -n", Win32: "findstr /n")
+'grepprg' 'gp'		string	(default "grep -n ", Win32: "findstr /n",
+						      VMS: "SEEARCH/NUMBERS ")
 			global
 			{not in Vi}
 	Program to use for the ":grep" command. This option may contain '%'
@@ -3094,7 +3125,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	See |option-backslash| about including spaces and backslashes.
 
 						*'makeprg'* *'mp'*
-'makeprg' 'mp'		string	(default "make")
+'makeprg' 'mp'		string	(default "make", VMS: "MMS")
 			global
 			{not in Vi}
 	Program to use for the ":make" command.  See |:make_makeprg|.  This
@@ -3682,15 +3713,27 @@ A jump table for the options with a short description can be found at |X_op|.
 						*'runtimepath'* *'rtp'*
 'runtimepath' 'rtp'	string	(default: "$VIMRUNTIME",
 				 Unix: "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME")
-				 Amiga: "home:vimfiles,s:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
-				 PC, OS/2: "$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+				 Amiga: "home:vimfiles,s:vimfiles,
+						    $VIM/vimfiles,$VIMRUNTIME"
+				 PC, OS/2: "$HOME/vimfiles,$VIM/vimfiles,
+								  $VIMRUNTIME"
 				 Macintosh: "$VIM/vimfiles,$VIMRUNTIME"
 				 RISC-OS: "Choices:vimfiles,$VIMRUNTIME"
-				 VMS: "sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+				 VMS: "sys$login:vimfiles,$VIM/vimfiles,
+								  $VIMRUNTIME"
 			global
 			{not in Vi}
 	This is a list of directories which will be searched for runtime
-	files: Syntax files, filetype settings files, menu.vim, etc.
+	files:
+	  filetype.vim	filetypes |new-filetype|
+	  menu.vim	GUI menus |menu.vim|
+	  doc/		documentation |write-local-help|
+	  plugin/	plugin scripts |write-plugin|
+	  ftplugin/	iletype plugins |write-filetype-plugin|
+	  syntax/	syntax files |mysyntaxfile|
+	  syntax2/	syntax file additions |mysyntaxfile-add|
+
+	And any other file searched for with the |:runtime| command.
 
 	The defaults for most systems are setup to search three locations:
 	1. In your home directory, for your personal preferences.
@@ -4521,7 +4564,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Note: Setting 'tabstop' to any other value than 8 can make your file
 	appear wrong in many places (e.g., when printing it).
 
-	There are three main ways to use tabs in Vim:
+	There are four main ways to use tabs in Vim:
 	1. Always keep 'tabstop' at 8, set 'softtabstop' and 'shiftwidth' to 4
 	   (or 3 or whatever you prefer) and use 'noexpandtabs'.  Then Vim
 	   will use a mix of tabs and spaces, but typing Tab and BS will
@@ -4935,7 +4978,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Only "xterm"(2) is really recognized.  NetTerm mouse codes are always
 	recognized, if enabled at compile time.  DEC terminal mouse codes
 	are recognized if enabled at compile time, and 'ttymouse' is not
-	"xterm".
+	"xterm" (because the xterm and dec mouse codes conflict).
 	This option is automatically set to "xterm", when the 'term' option is
 	set to a name that starts with "xterm", and 'ttymouse' is not "xterm"
 	or "xterm2" already.  The main use of this option is to set it to
@@ -5012,8 +5055,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	When bigger than zero, Vim will give messages about what it is doing.
 	Currently, these messages are given:
-	>= 1	When a file is ":source"'ed.
 	>= 1	When the viminfo file is read or written.
+	>= 2	When a file is ":source"'ed.
 	>= 5	Every searched tags file.
 	>= 8	Files for which a group of autocommands is executed.
 	>= 9	Every executed autocommand.
@@ -5021,6 +5064,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	>= 15	Every executed Ex command (truncated at 200 characters)
 
 	This option can also be set with the "-V" argument.  See |-V|.
+	This option is also set by the |:verbose| command.
 
 						*'viminfo'* *'vi'*
 

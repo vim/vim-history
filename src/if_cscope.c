@@ -1542,6 +1542,7 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 	    if (got_int)
 	    {
 		got_int = FALSE;	/* don't print any more matches */
+		j = 1;
 		break;
 	    }
 

@@ -125,7 +125,7 @@ static void	closescript __ARGS((void));
 static int	vgetorpeek __ARGS((int));
 static void	map_free __ARGS((mapblock_t **));
 static void	validate_maphash __ARGS((void));
-static void	showmap __ARGS((mapblock_t *));
+static void	showmap __ARGS((mapblock_t *mp, int local));
 
 /*
  * free and clear a buffer
@@ -2174,6 +2174,9 @@ do_map(maptype, arg, mode, abbrev, ambig)
     int		hasarg;
     int		haskey;
     int		did_it = FALSE;
+#ifdef FEAT_LOCALMAP
+    int		did_local = FALSE;
+#endif
     int		round;
     char_u	*keys_buf = NULL;
     char_u	*arg_buf = NULL;
@@ -2181,14 +2184,14 @@ do_map(maptype, arg, mode, abbrev, ambig)
     int		do_backslash;
     int		hash;
     int		new_hash;
-    mapblock_t	**p_abr;
-    mapblock_t	**p_map;
+    mapblock_t	**abbr_table;
+    mapblock_t	**map_table;
     int		unique = FALSE;
     int		noremap;
 
     keys = arg;
-    p_map = maphash;
-    p_abr = &first_abbr;
+    map_table = maphash;
+    abbr_table = &first_abbr;
 
     /* For ":noremap" don't remap, otherwise do remap. */
     if (maptype == 2)
@@ -2208,8 +2211,8 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	if (STRNCMP(keys, "<buffer>", 8) == 0)
 	{
 	    keys = skipwhite(keys + 8);
-	    p_map = curbuf->b_maphash;
-	    p_abr = &curbuf->b_first_abbr;
+	    map_table = curbuf->b_maphash;
+	    abbr_table = &curbuf->b_first_abbr;
 	    continue;
 	}
 #endif
@@ -2346,8 +2349,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
     /*
      * Check if a new local mapping wasn't already defined globally.
      */
-    if (unique && p_map == curbuf->b_maphash && haskey
-						    && maptype != 1 && hasarg)
+    if (map_table == curbuf->b_maphash && haskey && hasarg && maptype != 1)
     {
 	/* need to loop over all global hash lists */
 	for (hash = 0; hash < 256 && !got_int; ++hash)
@@ -2369,7 +2371,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 		    if (STRNCMP(mp->m_keys, keys,
 					    (size_t)(n < len ? n : len)) == 0)
 		    {
-			if (n != len)	/* new entry is ambigious */
+			if (n != len)		/* new entry is ambigious */
 			{
 			    if (!abbrev)	/* for abbrev's that's ok */
 			    {
@@ -2389,6 +2391,47 @@ do_map(maptype, arg, mode, abbrev, ambig)
 					mp->m_keys);
 			    retval = 5;
 			    goto theend;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    /*
+     * When listing global mappings, also list buffer-local ones here.
+     */
+    if (map_table != curbuf->b_maphash && !hasarg && maptype != 1)
+    {
+	/* need to loop over all global hash lists */
+	for (hash = 0; hash < 256 && !got_int; ++hash)
+	{
+	    if (abbrev)
+	    {
+		if (hash != 0)	/* there is only one abbreviation list */
+		    break;
+		mp = curbuf->b_first_abbr;
+	    }
+	    else
+		mp = curbuf->b_maphash[hash];
+	    for ( ; mp != NULL && !got_int; mp = mp->m_next)
+	    {
+		/* check entries with the same mode */
+		if ((mp->m_mode & mode) != 0)
+		{
+		    if (!haskey)		    /* show all entries */
+		    {
+			showmap(mp, TRUE);
+			did_local = TRUE;
+		    }
+		    else
+		    {
+			n = mp->m_keylen;
+			if (STRNCMP(mp->m_keys, keys,
+					    (size_t)(n < len ? n : len)) == 0)
+			{
+			    showmap(mp, TRUE);
+			    did_local = TRUE;
 			}
 		    }
 		}
@@ -2415,10 +2458,10 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	    {
 		if (hash != 0)	/* there is only one abbreviation list */
 		    break;
-		mpp = p_abr;
+		mpp = abbr_table;
 	    }
 	    else
-		mpp = &(p_map[hash]);
+		mpp = &(map_table[hash]);
 	    for (mp = *mpp; mp != NULL && !got_int; mp = *mpp)
 	    {
 
@@ -2429,7 +2472,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 		}
 		if (!haskey)		    /* show all entries */
 		{
-		    showmap(mp);
+		    showmap(mp, map_table != maphash);
 		    did_it = TRUE;
 		}
 		else			    /* do we have a match? */
@@ -2462,7 +2505,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 			}
 			else if (!hasarg)	/* show matching entry */
 			{
-			    showmap(mp);
+			    showmap(mp, map_table != maphash);
 			    did_it = TRUE;
 			}
 			else if (n != len)	/* new entry is ambigious */
@@ -2518,8 +2561,8 @@ do_map(maptype, arg, mode, abbrev, ambig)
 			if (!abbrev && new_hash != hash)
 			{
 			    *mpp = mp->m_next;
-			    mp->m_next = p_map[new_hash];
-			    p_map[new_hash] = mp;
+			    mp->m_next = map_table[new_hash];
+			    map_table[new_hash] = mp;
 
 			    continue;		/* continue with *mpp */
 			}
@@ -2539,7 +2582,11 @@ do_map(maptype, arg, mode, abbrev, ambig)
 
     if (!haskey || !hasarg)		    /* print entries */
     {
-	if (!did_it)
+	if (!did_it
+#ifdef FEAT_LOCALMAP
+		&& !did_local
+#endif
+		)
 	{
 	    if (abbrev)
 		MSG(_("No abbreviation found"));
@@ -2584,14 +2631,14 @@ do_map(maptype, arg, mode, abbrev, ambig)
     /* add the new entry in front of the abbrlist or maphash[] list */
     if (abbrev)
     {
-	mp->m_next = *p_abr;
-	*p_abr = mp;
+	mp->m_next = *abbr_table;
+	*abbr_table = mp;
     }
     else
     {
 	n = MAP_HASH(mp->m_mode, mp->m_keys[0]);
-	mp->m_next = p_map[n];
-	p_map[n] = mp;
+	mp->m_next = map_table[n];
+	map_table[n] = mp;
     }
 
 theend:
@@ -2759,8 +2806,9 @@ map_clear(cmdp, arg, forceit, abbr)
 }
 
     static void
-showmap(mp)
-    mapblock_t *mp;
+showmap(mp, local)
+    mapblock_t	*mp;
+    int		local;	    /* TRUE for buffer-local map */
 {
     int len = 1;
 
@@ -2804,12 +2852,19 @@ showmap(mp)
 	msg_putchar(' ');		/* padd with blanks */
 	++len;
     } while (len < 12);
+
     if (mp->m_noremap == REMAP_NONE)
 	msg_puts_attr((char_u *)"*", hl_attr(HLF_8));
     else if (mp->m_noremap == REMAP_SCRIPT)
 	msg_puts_attr((char_u *)"&", hl_attr(HLF_8));
     else
 	msg_putchar(' ');
+
+    if (local)
+	msg_putchar('@');
+    else
+	msg_putchar(' ');
+
     /* Use FALSE below if we only want things like <Up> to show up as such on
      * the rhs, and not M-x etc, TRUE gets both -- webb
      */
@@ -2820,6 +2875,7 @@ showmap(mp)
     out_flush();			/* show one line at a time */
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return TRUE if a map exists that has "str" in the rhs for mode "modechars".
  * Also checks mappings local to the current buffer.
@@ -2886,6 +2942,7 @@ map_to_exists(str, modechars)
     vim_free(buf);
     return FALSE;
 }
+#endif
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 /*

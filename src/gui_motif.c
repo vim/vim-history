@@ -295,6 +295,7 @@ gui_x11_destroy_widgets()
 #endif
 }
 
+/*ARGSUSED*/
     void
 gui_mch_set_text_area_pos(x, y, w, h)
     int	    x;
@@ -991,11 +992,17 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
     if (sb->id != (Widget)0)
     {
 	if (sb->type == SBAR_LEFT || sb->type == SBAR_RIGHT)
+	{
+	    if (y == 0)
+		h -= gui.border_offset;
+	    else
+		y -= gui.border_offset;
 	    XtVaSetValues(sb->id,
 			  XmNtopOffset, y,
 			  XmNbottomOffset, -y - h,
 			  XmNwidth, w,
 			  NULL);
+	}
 	else
 	    XtVaSetValues(sb->id,
 			  XmNtopOffset, y,
@@ -1586,12 +1593,6 @@ gui_mch_show_toolbar(int showit)
     }
 }
 
-    Widget
-gui_mch_get_toolbar()
-{
-    return toolBar;
-}
-
 /*
  * A toolbar button has been pushed; now reset the input focus
  * such that the user can type page up/down etc. and have the
@@ -1931,6 +1932,7 @@ createXpmImages(path, xpm, sen, insen)
  * The next toolbar enter/leave callbacks make sure the text area gets the
  * keyboard focus when the pointer is not in the toolbar.
  */
+/*ARGSUSED*/
     static void
 toolbar_enter_cb(w, client_data, event, cont)
     Widget	w;
@@ -1941,6 +1943,7 @@ toolbar_enter_cb(w, client_data, event, cont)
     XmProcessTraversal(toolBar, XmTRAVERSE_CURRENT);
 }
 
+/*ARGSUSED*/
     static void
 toolbar_leave_cb(w, client_data, event, cont)
     Widget	w;
@@ -1956,6 +1959,7 @@ toolbar_leave_cb(w, client_data, event, cont)
  * I have to use footer help for backwards compatability.  Hopefully both will
  * get implemented and the user will have a choice.
  */
+/*ARGSUSED*/
     static void
 toolbarbutton_enter_cb(w, client_data, event, cont)
     Widget	w;
@@ -1974,6 +1978,7 @@ toolbarbutton_enter_cb(w, client_data, event, cont)
     }
 }
 
+/*ARGSUSED*/
     static void
 toolbarbutton_leave_cb(w, client_data, event, cont)
     Widget	w;

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 18
+" Last Change:	2000 Nov 26
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -583,9 +583,8 @@ fun <SID>Syn(arg)
     let s:cur_menu_char = submenu_name[0]
   else
     " When starting a new letter, insert a menu separator.
-    " Make an exception for "4DOS", which is after "MS-DOS".
     let c = submenu_name[0]
-    if c != s:cur_menu_char && c != "4"
+    if c != s:cur_menu_char
       exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
       let s:cur_menu_item = s:cur_menu_item + 10
       let s:cur_menu_char = c
@@ -609,10 +608,10 @@ SynMenu AB.Applix\ ELF:elf
 SynMenu AB.Arc\ Macro\ Language:aml
 SynMenu AB.ASP\ with\ VBSages:aspvbs
 SynMenu AB.ASP\ with\ Perl:aspperl
-SynMenu AB.Assembly\ (GNU):asm
-SynMenu AB.Assembly\ (H8300):asmh8300
-SynMenu AB.Assembly\ (Microsoft):masm
-SynMenu AB.Assembly\ (Netwide):nasm
+SynMenu AB.Assembly.Assembly\ (GNU):asm
+SynMenu AB.Assembly.Assembly\ (H8300):asmh8300
+SynMenu AB.Assembly.Assembly\ (Microsoft):masm
+SynMenu AB.Assembly.Assembly\ (Netwide):nasm
 SynMenu AB.ASN\.1:asn
 SynMenu AB.Atlas:atlas
 SynMenu AB.Automake:automake
@@ -648,163 +647,167 @@ SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva
 SynMenu CD.Dracula:dracula
 SynMenu CD.DTD:dtd
-SynMenu CD.Zope\ DTML:dtml
-SynMenu CD.Dylan:dylan
-SynMenu CD.Dylan\ intr:dylanintr
-SynMenu CD.Dylan\ lid:dylanlid
+SynMenu CD.DTML\ (Zope):dtml
+SynMenu CD.Dylan.Dylan:dylan
+SynMenu CD.Dylan.Dylan\ intr:dylanintr
+SynMenu CD.Dylan.Dylan\ lid:dylanlid
 
-SynMenu EFGH.Eiffel:eiffel
-SynMenu EFGH.Elm\ Filter:elmfilt
-SynMenu EFGH.ERicsson\ LANGuage:erlang
-SynMenu EFGH.ESQL-C:esqlc
-SynMenu PQR.Product\ Spec\ File:psf
-SynMenu EFGH.Expect:expect
-SynMenu EFGH.Exports:exports
-SynMenu EFGH.Focus\ Executable:focexec
-SynMenu EFGH.Focus\ Master:master
-SynMenu EFGH.FORM:form
-SynMenu EFGH.Forth:forth
-SynMenu EFGH.Fortran:fortran
-SynMenu EFGH.Fvwm\ configuration:fvwm1
-SynMenu EFGH.Fvwm2\ configuration:fvwm2
-SynMenu EFGH.GDB\ command\ file:gdb
-SynMenu EFGH.GDMO:gdmo
-SynMenu EFGH.Gedcom:gedcom
-SynMenu EFGH.GP:gp
-SynMenu EFGH.GNUplot:gnuplot
-SynMenu EFGH.Haskell:haskell
-SynMenu EFGH.Haskell-literal:lhaskell
-SynMenu EFGH.HTML:html
-SynMenu EFGH.HTML\ with\ M4:htmlm4
-SynMenu EFGH.Hyper\ Builder:hb
+SynMenu EFG.Eiffel:eiffel
+SynMenu EFG.Elm\ Filter:elmfilt
+SynMenu EFG.ERicsson\ LANGuage:erlang
+SynMenu EFG.ESQL-C:esqlc
+SynMenu EFG.Expect:expect
+SynMenu EFG.Exports:exports
+SynMenu EFG.Focus\ Executable:focexec
+SynMenu EFG.Focus\ Master:master
+SynMenu EFG.FORM:form
+SynMenu EFG.Forth:forth
+SynMenu EFG.Fortran:fortran
+SynMenu EFG.Fvwm\ configuration:fvwm1
+SynMenu EFG.Fvwm2\ configuration:fvwm2
+SynMenu EFG.GDB\ command\ file:gdb
+SynMenu EFG.GDMO:gdmo
+SynMenu EFG.Gedcom:gedcom
+SynMenu EFG.GP:gp
+SynMenu EFG.GNUplot:gnuplot
 
-SynMenu IJKL.Icon:icon
-SynMenu IJKL.IDL:idl
-SynMenu IJKL.Interactive\ Data\ Lang:idlang
-SynMenu IJKL.Inform:inform
-SynMenu IJKL.Informix\ 4GL:fgl
-SynMenu IJKL.Inno\ Setup:iss
-SynMenu IJKL.InstallShield\ Rules:ishd
-SynMenu IJKL.Java:java
-SynMenu IJKL.JavaCC:javacc
-SynMenu IJKL.JavaScript:javascript
-SynMenu IJKL.Java\ Server\ Pages:jsp
-SynMenu IJKL.Java\ Properties:jproperties
-SynMenu IJKL.Jess:jess
-SynMenu IJKL.Jgraph:jgraph
-SynMenu IJKL.KDE\ script:kscript
-SynMenu IJKL.Kimwitu:kwt
-SynMenu IJKL.Lace:lace
-SynMenu IJKL.Lamda\ Prolog:lprolog
-SynMenu IJKL.Latte:latte
-SynMenu IJKL.Lex:lex
-SynMenu IJKL.Lilo:lilo
-SynMenu IJKL.Lisp:lisp
-SynMenu IJKL.Lite:lite
-SynMenu IJKL.LOTOS:lotos
-SynMenu IJKL.Lout:lout
-SynMenu IJKL.Lua:lua
-SynMenu IJKL.Lynx\ Style:lss
+SynMenu HIJK.Haskell:haskell
+SynMenu HIJK.Haskell-literal:lhaskell
+SynMenu HIJK.HTML:html
+SynMenu HIJK.HTML\ with\ M4:htmlm4
+SynMenu HIJK.Hyper\ Builder:hb
+SynMenu HIJK.Icon:icon
+SynMenu HIJK.IDL:idl
+SynMenu HIJK.Interactive\ Data\ Lang:idlang
+SynMenu HIJK.Inform:inform
+SynMenu HIJK.Informix\ 4GL:fgl
+SynMenu HIJK.Inno\ Setup:iss
+SynMenu HIJK.InstallShield\ Rules:ishd
+SynMenu HIJK.Jam:jam
+SynMenu HIJK.Java.Java:java
+SynMenu HIJK.Java.JavaCC:javacc
+SynMenu HIJK.Java.JavaScript:javascript
+SynMenu HIJK.Java.Java\ Server\ Pages:jsp
+SynMenu HIJK.Java.Java\ Properties:jproperties
+SynMenu HIJK.Jess:jess
+SynMenu HIJK.Jgraph:jgraph
+SynMenu HIJK.KDE\ script:kscript
+SynMenu HIJK.Kimwitu:kwt
 
-SynMenu MNO.M4:m4
-SynMenu MNO.MaGic\ Point:mgp
-SynMenu MNO.Mail:mail
-SynMenu MNO.Makefile:make
-SynMenu MNO.MakeIndex:ist
-SynMenu MNO.Man\ page:man
-SynMenu MNO.Maple:maple
-SynMenu MNO.Mason:mason
-SynMenu MNO.Matlab:matlab
-SynMenu MNO.Maya\ Ext\.\ Lang\.:mel
-SynMenu MNO.Metafont:mf
-SynMenu MNO.MetaPost:mp
-SynMenu MNO.MS\ Module\ Definition:def
-SynMenu MNO.Model:model
-SynMenu MNO.Modsim\ III:modsim3
-SynMenu MNO.Modula\ 2:modula2
-SynMenu MNO.Modula\ 3:modula3
-SynMenu MNO.Msql:msql
-SynMenu MNO.MS-DOS\ \.bat\ file:dosbatch
-SynMenu MNO.4DOS\ \.bat\ file:btm
-SynMenu MNO.MS-DOS\ \.ini\ file:dosini
-SynMenu MNO.MS\ Resource\ file:rc
-SynMenu MNO.Muttrc:muttrc
-SynMenu MNO.Nastran\ input/DMAP:nastran
-SynMenu MNO.Novell\ batch:ncf
-SynMenu MNO.Nroff:nroff
-SynMenu MNO.Objective\ C:objc
-SynMenu MNO.OCAML:ocaml
-SynMenu MNO.Omnimark:omnimark
-SynMenu MNO.OpenROAD:openroad
-SynMenu MNO.Open\ Psion\ Lang:opl
-SynMenu MNO.Oracle\ config:ora
+SynMenu L-Ma.Lace:lace
+SynMenu L-Ma.Lamda\ Prolog:lprolog
+SynMenu L-Ma.Latte:latte
+SynMenu L-Ma.Lex:lex
+SynMenu L-Ma.Lilo:lilo
+SynMenu L-Ma.Lisp:lisp
+SynMenu L-Ma.Lite:lite
+SynMenu L-Ma.LOTOS:lotos
+SynMenu L-Ma.Lout:lout
+SynMenu L-Ma.Lua:lua
+SynMenu L-Ma.Lynx\ Style:lss
+SynMenu L-Ma.M4:m4
+SynMenu L-Ma.MaGic\ Point:mgp
+SynMenu L-Ma.Mail:mail
+SynMenu L-Ma.Makefile:make
+SynMenu L-Ma.MakeIndex:ist
+SynMenu L-Ma.Man\ page:man
+SynMenu L-Ma.Maple:maple
+SynMenu L-Ma.Mason:mason
+SynMenu L-Ma.Matlab:matlab
+SynMenu L-Ma.Maya\ Ext\.\ Lang\.:mel
 
-SynMenu PQR.PApp:papp
-SynMenu PQR.Pascal:pascal
-SynMenu PQR.PCCTS:pccts
-SynMenu PQR.Perl:perl
-SynMenu PQR.Perl\ POD:pod
-SynMenu PQR.Perl\ XS:xs
-SynMenu PQR.PHP\ 3-4:php
-SynMenu PQR.Phtml:phtml
-SynMenu PQR.PIC\ assembly:pic
-SynMenu PQR.Pike:pike
-SynMenu PQR.Pine\ RC:pine
-SynMenu PQR.PL/SQL:plsql
-SynMenu PQR.PO\ (GNU\ gettext):po
-SynMenu PQR.PostScript:postscr
-SynMenu PQR.Povray:pov
-SynMenu PQR.Printcap:pcap
-SynMenu PQR.Procmail:procmail
-SynMenu PQR.Prolog:prolog
-SynMenu PQR.Purify\ log:purifylog
-SynMenu PQR.Python:python
-SynMenu PQR.R:r
-SynMenu PQR.Radiance:radiance
-SynMenu PQR.RCS\ log\ output:rcslog
-SynMenu PQR.Rebol:rebol
-SynMenu PQR.Registry\ of\ MS-Windows:registry
-SynMenu PQR.Remind:remind
-SynMenu PQR.Renderman\ Shader\ Lang:sl
-SynMenu PQR.Rexx:rexx
-SynMenu PQR.Robots\.txt:robots
-SynMenu PQR.Rpcgen:rpcgen
-SynMenu PQR.RTF:rtf
-SynMenu PQR.Ruby:ruby
+SynMenu Me-NO.Metafont:mf
+SynMenu Me-NO.MetaPost:mp
+SynMenu Me-NO.MS\ Module\ Definition:def
+SynMenu Me-NO.Model:model
+SynMenu Me-NO.Modsim\ III:modsim3
+SynMenu Me-NO.Modula\ 2:modula2
+SynMenu Me-NO.Modula\ 3:modula3
+SynMenu Me-NO.Msql:msql
+SynMenu Me-NO.MS-DOS.MS-DOS\ \.bat\ file:dosbatch
+SynMenu Me-NO.MS-DOS.4DOS\ \.bat\ file:btm
+SynMenu Me-NO.MS-DOS.MS-DOS\ \.ini\ file:dosini
+SynMenu Me-NO.MS\ Resource\ file:rc
+SynMenu Me-NO.Muttrc:muttrc
+SynMenu Me-NO.Nastran\ input/DMAP:nastran
+SynMenu Me-NO.Novell\ batch:ncf
+SynMenu Me-NO.Nroff:nroff
+SynMenu Me-NO.Objective\ C:objc
+SynMenu Me-NO.OCAML:ocaml
+SynMenu Me-NO.Omnimark:omnimark
+SynMenu Me-NO.OpenROAD:openroad
+SynMenu Me-NO.Open\ Psion\ Lang:opl
+SynMenu Me-NO.Oracle\ config:ora
 
-SynMenu S.S-lang:slang
-SynMenu S.Samba\ config:samba
-SynMenu S.SAS:sas
-SynMenu S.Sather:sather
-SynMenu S.Scheme:scheme
-SynMenu S.SDL:sdl
-SynMenu S.Sed:sed
-SynMenu S.Sendmail\.cf:sm
-SynMenu S.SGML\ DTD:sgml
-SynMenu S.SGML\ linuxdoc:sgmllnx
-SynMenu S.Sh\ shell\ script:sh
-SynMenu S.SiCAD:sicad
-SynMenu S.Simula:simula
-SynMenu S.SKILL:skill
-SynMenu S.SLRN\ rc:slrnrc
-SynMenu S.SLRN\ score:slrnsc
-SynMenu S.SmallTalk:st
-SynMenu S.SMIL:smil
-SynMenu S.SMITH:smith
-SynMenu S.SNMP\ MIB:mib
-SynMenu S.SNNS\ network:snnsnet
-SynMenu S.SNNS\ pattern:snnspat
-SynMenu S.SNNS\ result:snnsres
-SynMenu S.Snobol4:snobol4
-SynMenu S.SPEC\ (Linux\ RPM):spec
-SynMenu S.Spice:spice
-SynMenu S.Speedup:spup
-SynMenu S.Squid:squid
-SynMenu S.SQL:sql
-SynMenu S.SQR:sqr
-SynMenu S.Standard\ ML:sml
-SynMenu S.Stored\ Procedures:stp
-SynMenu S.Strace:strace
+SynMenu PQ.PApp:papp
+SynMenu PQ.Pascal:pascal
+SynMenu PQ.PCCTS:pccts
+SynMenu PQ.Perl.Perl:perl
+SynMenu PQ.Perl.Perl\ POD:pod
+SynMenu PQ.Perl.Perl\ XS:xs
+SynMenu PQ.PHP\ 3-4:php
+SynMenu PQ.Phtml:phtml
+SynMenu PQ.PIC\ assembly:pic
+SynMenu PQ.Pike:pike
+SynMenu PQ.Pine\ RC:pine
+SynMenu PQ.PL/SQL:plsql
+SynMenu PQ.PO\ (GNU\ gettext):po
+SynMenu PQ.PostScript:postscr
+SynMenu PQ.Povray:pov
+SynMenu PQ.Printcap:pcap
+SynMenu PQ.Procmail:procmail
+SynMenu PQ.Product\ Spec\ File:psf
+SynMenu PQ.Prolog:prolog
+SynMenu PQ.Purify\ log:purifylog
+SynMenu PQ.Python:python
+
+SynMenu R-Sg.R:r
+SynMenu R-Sg.Radiance:radiance
+SynMenu R-Sg.RCS\ log\ output:rcslog
+SynMenu R-Sg.Rebol:rebol
+SynMenu R-Sg.Registry\ of\ MS-Windows:registry
+SynMenu R-Sg.Remind:remind
+SynMenu R-Sg.Renderman\ Shader\ Lang:sl
+SynMenu R-Sg.Rexx:rexx
+SynMenu R-Sg.Robots\.txt:robots
+SynMenu R-Sg.Rpcgen:rpcgen
+SynMenu R-Sg.RTF:rtf
+SynMenu R-Sg.Ruby:ruby
+SynMenu R-Sg.S-lang:slang
+SynMenu R-Sg.Samba\ config:samba
+SynMenu R-Sg.SAS:sas
+SynMenu R-Sg.Sather:sather
+SynMenu R-Sg.Scheme:scheme
+SynMenu R-Sg.SDL:sdl
+SynMenu R-Sg.Sed:sed
+SynMenu R-Sg.Sendmail\.cf:sm
+SynMenu R-Sg.SGML.SGML\ catalog:catalog
+SynMenu R-Sg.SGML.SGML\ DTD:sgml
+SynMenu R-Sg.SGML.SGML\ linuxdoc:sgmllnx
+
+SynMenu Sh-S.Sh\ shell\ script:sh
+SynMenu Sh-S.SiCAD:sicad
+SynMenu Sh-S.Simula:simula
+SynMenu Sh-S.SKILL:skill
+SynMenu Sh-S.SLRN.SLRN\ rc:slrnrc
+SynMenu Sh-S.SLRN.SLRN\ score:slrnsc
+SynMenu Sh-S.SmallTalk:st
+SynMenu Sh-S.SMIL:smil
+SynMenu Sh-S.SMITH:smith
+SynMenu Sh-S.SNMP\ MIB:mib
+SynMenu Sh-S.SNNS.SNNS\ network:snnsnet
+SynMenu Sh-S.SNNS.SNNS\ pattern:snnspat
+SynMenu Sh-S.SNNS.SNNS\ result:snnsres
+SynMenu Sh-S.Snobol4:snobol4
+SynMenu Sh-S.SPEC\ (Linux\ RPM):spec
+SynMenu Sh-S.Spice:spice
+SynMenu Sh-S.Speedup:spup
+SynMenu Sh-S.Squid:squid
+SynMenu Sh-S.SQL:sql
+SynMenu Sh-S.SQR:sqr
+SynMenu Sh-S.Standard\ ML:sml
+SynMenu Sh-S.Stored\ Procedures:stp
+SynMenu Sh-S.Strace:strace
 
 SynMenu TUV.Tads:tads
 SynMenu TUV.Tags:tags
@@ -820,9 +823,9 @@ SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
 SynMenu TUV.VHDL:vhdl
-SynMenu TUV.Vim\ help\ file:help
-SynMenu TUV.Vim\ script:vim
-SynMenu TUV.Viminfo\ file:viminfo
+SynMenu TUV.Vim.Vim\ help\ file:help
+SynMenu TUV.Vim.Vim\ script:vim
+SynMenu TUV.Vim.Viminfo\ file:viminfo
 SynMenu TUV.Virata:virata
 SynMenu TUV.Visual\ Basic:vb
 SynMenu TUV.VRML:vrml
@@ -852,28 +855,28 @@ unlet s:cur_menu_char
 delcommand SynMenu
 delfun <SID>Syn
 
-am 50.95 &Syntax.-SEP1-				:
+am 50.195 &Syntax.-SEP1-				:
 
-am 50.100 &Syntax.Set\ 'syntax'\ only		:let s:syntax_menu_synonly=1<CR>
-am 50.101 &Syntax.Set\ 'filetype'\ too		:call <SID>Nosynonly()<CR>
+am 50.200 &Syntax.Set\ 'syntax'\ only		:let s:syntax_menu_synonly=1<CR>
+am 50.202 &Syntax.Set\ 'filetype'\ too		:call <SID>Nosynonly()<CR>
 fun! <Sid>Nosynonly()
   if exists("s:syntax_menu_synonly")
     unlet s:syntax_menu_synonly
   endif
 endfun
 
-am 50.110 &Syntax.&Off			:syn off<CR>
-am 50.112 &Syntax.&Manual		:syn manual<CR>
-am 50.114 &Syntax.A&utomatic		:syn on<CR>
+am 50.210 &Syntax.&Off			:syn off<CR>
+am 50.212 &Syntax.&Manual		:syn manual<CR>
+am 50.214 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.116 &Syntax.o&n\ (this\ file)	:call <SID>Synoff()<CR>
+am 50.216 &Syntax.o&n\ (this\ file)	:call <SID>Synoff()<CR>
 fun! <SID>Synoff()
   if !exists("g:syntax_on")
     syn manual
   endif
   set syn=ON
 endfun
-am 50.118 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
+am 50.218 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
 
 am 50.700 &Syntax.-SEP3-		:
 am 50.710 &Syntax.Co&lor\ test		:sp $VIMRUNTIME/syntax/colortest.vim<Bar>so %<CR>

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0n.  Last change: 2000 Nov 17
+*cmdline.txt*   For Vim version 6.0o.  Last change: 2000 Dec 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -212,6 +212,8 @@ CTRL-_		a - switch between Hebrew and English keyboard mode, which is
 		required in the command-line, searches, abbreviations, etc.
 		Applies only if Vim is compiled with the |+farsi| feature.
 		See |farsi.txt|.
+
+For Emacs-style editing on the command-line see |emacs-keys|.
 
 The <Up> and <Down> keys take the current command-line as a search string.
 The beginning of the next/previous command-lines are compared with this

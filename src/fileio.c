@@ -40,7 +40,8 @@
 # define CRYPT_MAGIC_LEN	12		/* must be multiple of 4! */
 #endif
 
-#if defined(UNIX) || defined(DJGPP) || defined(__EMX__) || defined(VMS) || defined(RISCOS)
+/* Is there any system that doesn't have access()? */
+#if 1
 # define USE_MCH_ACCESS
 #endif
 
@@ -49,6 +50,9 @@ static char_u *next_fcc __ARGS((char_u **pp));
 #endif
 #ifdef FEAT_VIMINFO
 static void check_marks_read __ARGS((void));
+#endif
+#ifdef FEAT_CRYPT
+static char_u *check_for_cryptkey __ARGS((char_u *cryptkey, char_u *ptr, long *sizep, long *filesizep, int newfile));
 #endif
 #ifdef UNIX
 static void set_file_time __ARGS((char_u *fname, time_t atime, time_t mtime));
@@ -59,25 +63,63 @@ static void msg_add_lines __ARGS((int, long, long));
 static void msg_add_eol __ARGS((void));
 static int check_mtime __ARGS((buf_t *buf, struct stat *s));
 static int time_differs __ARGS((long t1, long t2));
+
 #if defined(FEAT_CRYPT) || defined(FEAT_MBYTE)
-static int  buf_write_bytes __ARGS((int, char_u *, int, int));
-# define WB_HAS_FLAGS
-# define FIO_ENCRYPTED	0x01	/* encrypt written bytes */
-# define FIO_UCS2	0x02	/* convert UTF-8 to UCS-2 */
-# define FIO_UCS4	0x04	/* convert UTF-8 to UCS-4 */
-# define FIO_LATIN1	0x08	/* convert UTF-8 to Latin-1 */
+# define HAS_BW_FLAGS
+# define FIO_UCS2	0x01	/* convert UCS-2 */
+# define FIO_UCS4	0x02	/* convert UCS-4 */
+# define FIO_LATIN1	0x04	/* convert Latin-1 */
+# define FIO_UTF8	0x08	/* convert UTF-8 */
 # define FIO_ENDIAN_L	0x10	/* little endian */
 # define FIO_ENDIAN_LB	0x20	/* little-big endian */
 # define FIO_ENDIAN_BL	0x40	/* big-little endian */
-#else
-static int  buf_write_bytes __ARGS((int, char_u *, int));
+# define FIO_ENCRYPTED	0x1000	/* encrypt written bytes */
+# define FIO_NOCONVERT	0x2000	/* skip charcode conversion */
+# define FIO_UCSBOM	0x4000	/* check for BOM at start of file */
+# define FIO_ALL	-1	/* allow all formats */
+#endif
+
+#if defined(HAVE_ICONV_H) && defined(FEAT_MBYTE)
+# include <iconv.h>
+static iconv_t	my_iconv_open __ARGS((char_u *to, char_u *from));
+#endif
+
+/* When converting, a read() or write() may leave some bytes to be converted
+ * for the next call.  The value is guessed... */
+#define CONV_RESTLEN 30
+
+/*
+ * Structure to pass arguments from buf_write() to buf_write_bytes().
+ */
+struct bw_info
+{
+    int		bw_fd;		/* file descriptor */
+    char_u	*bw_buf;	/* buffer with data to be written */
+    int		bw_len;	/* lenght of data */
+#ifdef HAS_BW_FLAGS
+    int		bw_flags;	/* FIO_ flags */
 #endif
 #ifdef FEAT_MBYTE
-static int get_fio_flags __ARGS((char_u *ptr));
+    char_u	bw_rest[CONV_RESTLEN]; /* not converted bytes */
+    int		bw_restlen;	/* nr of bytes in bw_rest[] */
+    int		bw_first;	/* first write call */
+    char_u	*bw_conv_buf;	/* buffer for writing converted chars */
+    int		bw_conv_buflen; /* size of bw_conv_buf */
+    int		bw_ucs_error;	/* set for conversion error */
+# ifdef HAVE_ICONV_H
+    iconv_t	bw_iconv_fd;	/* descriptor for iconv() or -1 */
+# endif
+#endif
+};
 
-static char_u	*conv_buf = NULL;	/* buffer for writing converted chars */
-static int	conv_buflen;		/* size of conv_buf */
-static int	ucs_error = FALSE;	/* set for conversion error */
+static int  buf_write_bytes __ARGS((struct bw_info *ip));
+
+#ifdef FEAT_MBYTE
+static int ucs2bytes __ARGS((unsigned c, char_u **pp, int flags));
+static int same_charcode __ARGS((char_u *a, char_u *b));
+static int get_fio_flags __ARGS((char_u *ptr));
+static char_u *check_for_bom __ARGS((char_u *p, long size, int *lenp, int flags));
+static int make_bom __ARGS((char_u *buf, char_u *name));
 #endif
 
 static linenr_t	write_no_eol_lnum = 0;	/* non-zero lnum when last line of
@@ -116,26 +158,9 @@ filemess(buf, name, s, attr)
     out_flush();
 }
 
-#if defined(HAVE_ICONV_H) && defined(FEAT_MBYTE)
-# include <iconv.h>
-static iconv_t	my_iconv_open __ARGS((char_u *to, char_u *from));
-
-static iconv_t	iconv_fd = (iconv_t)-1;	/* descriptor for iconv() or -1 */
-
-static int	iconv_first;		/* TRUE for first write */
-
 /* We have to guess how much a sequence of bytes may expaned when converting
  * with iconv() to be able to allocate a buffer. */
-# define ICONV_MULT 8
-#endif
-
-#ifdef FEAT_MBYTE
-/* When converting, a read() or write() may leave some bytes to be converted
- * for the next call.  They are kept in conv_rest[]. */
-# define CONV_RESTLEN 30		/* guessed... */
-static char_u	conv_rest[CONV_RESTLEN];
-static int	conv_restlen;		/* nr of bytes in conv_rest[] */
-#endif
+#define ICONV_MULT 8
 
 /*
  * Read lines from file 'fname' into the buffer after line 'from'.
@@ -180,9 +205,10 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     char_u	*line_start = NULL;	/* init to shut up gcc */
     int		wasempty;		/* buffer was empty before reading */
     colnr_t	len;
-    long	size;
+    long	size = 0;
     char_u	*p;
-    long	filesize;
+    long	filesize = 0;
+    int		skip_read = FALSE;
 #ifdef FEAT_CRYPT
     char_u	*cryptkey = NULL;
 #endif
@@ -191,36 +217,45 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     linenr_t	linecnt;
     int		error = FALSE;		/* errors encountered */
     int		ff_error = EOL_UNKNOWN; /* file format with errors */
-    long	linerest;		/* remaining chars in line */
+    long	linerest = 0;		/* remaining chars in line */
 #ifdef UNIX
     int		perm = 0;
 #else
     int		perm;
 #endif
-    int		fileformat;		/* end-of-line format */
+    int		fileformat = 0;		/* end-of-line format */
+    int		keep_fileformat = FALSE;
     struct stat	st;
     int		file_readonly;
-    linenr_t	skip_count;
-    linenr_t	read_count;
+    linenr_t	skip_count = 0;
+    linenr_t	read_count = 0;
     int		msg_save = msg_scroll;
     linenr_t	read_no_eol_lnum = 0;   /* non-zero lnum when last line of
 					 * last read was missing the eol */
     int		try_mac = (vim_strchr(p_ffs, 'm') != NULL);
     int		try_dos = (vim_strchr(p_ffs, 'd') != NULL);
     int		try_unix = (vim_strchr(p_ffs, 'x') != NULL);
+    int		file_rewind = FALSE;
 #ifdef FEAT_MBYTE
+    int		can_retry;
+    int		conv_error = FALSE;	/* conversion error detected */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
-    char_u	*fcc;			/* filecharcode to use */
+    char_u	*fcc;			/* filecharcode to use; when fcc_next
+					   != NULL it's in allocated memory */
     char_u	*fcc_next = NULL;	/* next item in 'fccs' or NULL */
-    long	real_size;
+    int		advance_fcc = FALSE;
+    long	real_size = 0;
 # if defined(HAVE_ICONV_H) && defined(FEAT_EVAL)
+    iconv_t	iconv_fd = (iconv_t)-1;	/* descriptor for iconv() or -1 */
     int		did_iconv = FALSE;	/* TRUE when iconv() failed and trying
 					   'charconvert' next */
 # endif
     int		converted = FALSE;	/* TRUE if conversion done */
-    int		notconverted = FALSE;	/* TRUE if conversion wanted bit it
+    int		notconverted = FALSE;	/* TRUE if conversion wanted but it
 					   wasn't possible */
+    char_u	conv_rest[CONV_RESTLEN];
+    int		conv_restlen = 0;	/* nr of bytes in conv_rest[] */
 #endif
 
 #ifdef FEAT_AUTOCMD
@@ -474,7 +509,12 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	curbuf->b_p_ro = TRUE;
 
     if (newfile)
+    {
 	curbuf->b_p_eol = TRUE;
+#ifdef FEAT_MBYTE
+	curbuf->b_p_bomb = FALSE;
+#endif
+    }
 
     check_need_swap(newfile);	/* may create swap file now */
 
@@ -577,52 +617,98 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #ifdef FEAT_GUI
 	    /* Also write a message in the GUI window, if there is one. */
 	    if (gui.in_use)
-		gui_write((char_u *)_("Reading from stdin..."), 21);
+	    {
+		p = (char_u *)_("Reading from stdin...");
+		gui_write(p, STRLEN(p));
+	    }
 #endif
 	}
 	else
 	    filemess(curbuf, sfname, (char_u *)"", 0);
     }
 
-    msg_scroll = FALSE;				/* overwrite the file message */
+    msg_scroll = FALSE;			/* overwrite the file message */
 
     /*
-     * Set fileformat and linecnt now, before the "retry" caused by a wrong
-     * guess for fileformat, and after the autocommands, which may change
-     * them.
+     * Set linecnt now, before the "retry" caused by a wrong guess for
+     * fileformat, and after the autocommands, which may change them.
      */
-    if (eap != NULL && eap->force_ff != 0)
-	fileformat = get_fileformat_force(curbuf, eap);
-    else if (curbuf->b_p_bin)
-	fileformat = EOL_UNIX;			/* binary: use Unix format */
-    else if (*p_ffs == NUL)
-	fileformat = get_fileformat(curbuf);	/* use format from buffer */
-    else
-	fileformat = EOL_UNKNOWN;		/* detect from file */
     linecnt = curbuf->b_ml.ml_line_count;
 
 #ifdef FEAT_MBYTE
     /*
-     * Decide which 'charcode' to use.
+     * Decide which 'charcode' to use first.
      */
     if (eap != NULL && eap->force_fcc != 0)
 	fcc = eap->cmd + eap->force_fcc;
     else if (curbuf->b_p_bin)
-	fcc = (char_u *)"";			/* binary: don't convert */
+	fcc = (char_u *)"";		/* binary: don't convert */
     else if (*p_fccs == NUL)
-	fcc = curbuf->b_p_fcc;			/* use format from buffer */
+	fcc = curbuf->b_p_fcc;		/* use format from buffer */
     else
     {
-	fcc_next = p_fccs;
+	fcc_next = p_fccs;		/* try items in 'filecharcodes' */
 	fcc = next_fcc(&fcc_next);
     }
 #endif
 
     /*
-     * When reading the file with the selected "fileformat" and/or "fcc"
-     * doesn't work, we come back here to try again.
+     * Jump back here to retry reading the file in different ways.
+     * Reasons to retry:
+     * - charcode conversion failed: try another one from "fcc_next"
+     * - BOM detected and fcc was set, need to setup conversion
+     * - "fileformat" check failed: try another
+     *
+     * Variables set for special retry actions:
+     * "file_rewind"	Rewind the file to start reading it again.
+     * "advance_fcc"	Advance "fcc" using "fcc_next".
+     * "skip_read"	Re-use already read bytes (BOM detected).
+     * "did_iconv"	iconv() conversion failed, try 'charconvert'.
+     * "keep_fileformat" Don't reset "fileformat".
+     *
+     * Other status indicators:
+     * "tmpname"	When != NULL did conversion with 'charconvert'.
+     *			Output file has to be deleted afterwards.
+     * "iconv_fd"	When != -1 did conversion with iconv().
      */
 retry:
+
+    if (file_rewind)
+    {
+	if (read_stdin || lseek(fd, (off_t)0L, SEEK_SET) != 0)
+	{
+	    /* Can't rewind the file, give up. */
+	    error = TRUE;
+	    goto failed;
+	}
+	/* Delete the previously read lines. */
+	while (lnum > from)
+	    ml_delete(lnum--, FALSE);
+	file_rewind = FALSE;
+#ifdef FEAT_MBYTE
+	if (newfile)
+	    curbuf->b_p_bomb = FALSE;
+	conv_error = FALSE;
+#endif
+    }
+
+    /*
+     * When retrying with another "fcc" and the first time "fileformat"
+     * will be reset.
+     */
+    if (keep_fileformat)
+	keep_fileformat = FALSE;
+    else
+    {
+	if (eap != NULL && eap->force_ff != 0)
+	    fileformat = get_fileformat_force(curbuf, eap);
+	else if (curbuf->b_p_bin)
+	    fileformat = EOL_UNIX;		/* binary: use Unix format */
+	else if (*p_ffs == NUL)
+	    fileformat = get_fileformat(curbuf);/* use format from buffer */
+	else
+	    fileformat = EOL_UNKNOWN;		/* detect from file */
+    }
 
 #ifdef FEAT_MBYTE
 # ifdef HAVE_ICONV_H
@@ -634,114 +720,117 @@ retry:
     }
 # endif
 
-    /*
-     * Conversion is required when the encoding of the file is different from
-     * 'charcode' or 'charcode' is UCS-2 or UCS-4 (requires converstion to
-     * UTF-8).
-     */
-    converted = FALSE;
-    if ((*fcc != NUL && STRCMP(p_cc, fcc) != 0) || cc_unicode != 0)
+    if (advance_fcc)
     {
 	/*
-	 * Check if UCS-2/4 or Latin-1 to UTF-8 conversion needs to be done.
-	 * This is handled below after read().  Prepare the fio_flags to avoid
-	 * having to parse the string each time.
+	 * Try the next entry in 'filecharcodes'.
 	 */
-	if (cc_utf8)
+	advance_fcc = FALSE;
+
+	if (eap != NULL && eap->force_fcc != 0)
+	{
+	    /* Conversion given with "++cc=" wasn't possible, read
+	     * without conversion. */
+	    notconverted = TRUE;
+	    conv_error = FALSE;
+	    fcc = (char_u *)"";
+	}
+	else
+	{
+	    if (fcc_next != NULL)
+	    {
+		vim_free(fcc);
+		fcc = next_fcc(&fcc_next);
+	    }
+	    else
+		fcc = (char_u *)"";
+	}
+	if (tmpname != NULL)
+	{
+	    mch_remove(tmpname);		/* delete converted file */
+	    vim_free(tmpname);
+	    tmpname = NULL;
+	}
+    }
+
+    /*
+     * Conversion is required when the encoding of the file is different
+     * from 'charcode' or 'charcode' is UCS-2 or UCS-4 (requires
+     * conversion to UTF-8).
+     */
+    fio_flags = 0;
+    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
+    if (converted || cc_unicode != 0)
+    {
+
+	/* "ucs-bom" means we need to check the first bytes of the file
+	 * for a BOM. */
+	if (STRCMP(fcc, CC_UCSBOM) == 0)
+	    fio_flags = FIO_UCSBOM;
+
+	/*
+	 * Check if UCS-2/4 or Latin-1 to UTF-8 conversion needs to be
+	 * done.  This is handled below after read().  Prepare the
+	 * fio_flags to avoid having to parse the string each time.
+	 */
+	else if (cc_utf8)
 	    fio_flags = get_fio_flags(fcc);
 
 # ifdef HAVE_ICONV_H
 	/*
-	 * Use iconv() to do the conversion when conversion is required and we
-	 * can't do it internally.
+	 * Use iconv() to do the conversion when conversion is required
+	 * and we can't do it internally.
 	 */
-	if (fio_flags == 0 && !read_stdin
-# ifdef FEAT_EVAL
+	if (fio_flags == 0
+#  ifdef FEAT_EVAL
 		&& !did_iconv
-#endif
+#  endif
 		)
-	    iconv_fd = my_iconv_open(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc);
+	    iconv_fd = my_iconv_open(cc_utf8
+					 ? (char_u *)"utf-8" : p_cc, fcc);
+# else
+	/*
+	 * When iconv() is not available, we do our own Unicode to Latin-1
+	 * conversion.  This works just like conversion to UTF-8 except how
+	 * the resulting character is put in the buffer.
+	 */
+	if (fio_flags == 0 && !has_mbyte)
+	    fio_flags = get_fio_flags(fcc);
 # endif
 
 # ifdef FEAT_EVAL
 	/*
-	 * Use the 'charconvert' expression when conversion is required and we
-	 * can't do it internally or with iconv().
+	 * Use the 'charconvert' expression when conversion is required
+	 * and we can't do it internally or with iconv().
 	 */
 	if (fio_flags == 0 && !read_stdin && *p_ccv != NUL
 # ifdef HAVE_ICONV_H
-						    && iconv_fd == (iconv_t)-1
+						&& iconv_fd == (iconv_t)-1
 # endif
 		)
 	{
-	    int		err;
-	    char_u	*errmsg = NULL;
-
-	    close(fd);		/* ignore errors */
-
 # ifdef HAVE_ICONV_H
 	    did_iconv = FALSE;
 # endif
-	    tmpname = vim_tempname('r');
-	    if (tmpname == NULL)
-		errmsg = (char_u *)_("Can't find temp file for reading");
-	    else
+	    /* Skip conversion when it's already done (retry for wrong
+	     * "fileformat"). */
+	    if (tmpname != NULL)
 	    {
-		set_vim_var_string(VV_CC_FROM, fcc, -1);
-		set_vim_var_string(VV_CC_TO,
-				      cc_utf8 ? (char_u *)"utf-8" : p_cc, -1);
-		set_vim_var_string(VV_CC_IN, fname, -1);
-		set_vim_var_string(VV_CC_OUT, tmpname, -1);
-		if (eval_to_bool(p_ccv, &err, NULL, FALSE) || err)
-		    errmsg = (char_u *)_("Conversion failed");
-		set_vim_var_string(VV_CC_FROM, NULL, -1);
-		set_vim_var_string(VV_CC_TO, NULL, -1);
-		set_vim_var_string(VV_CC_IN, NULL, -1);
-		set_vim_var_string(VV_CC_OUT, NULL, -1);
-
-		if (errmsg == NULL && (fd = mch_open((char *)tmpname,
-						  O_RDONLY | O_EXTRA, 0)) < 0)
-		    errmsg = (char_u *)_("can't read output of 'charconvert'");
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-		/* Security check: When filtering, we don't want to read
-		 * through a symlink.  This could be a symlink attack to try
-		 * to replace the filtered text with something else.
-		 */
-		if (errmsg == NULL && symlink_check(tmpname))
-		    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
-#endif
-	    }
-	    if (errmsg != NULL)
-	    {
-		/* Don't use emsg(), it breaks mappings, the retry with
-		 * another value for "fcc" might still work. */
-		MSG(errmsg);
-		if (tmpname != NULL)
+		tmpname = eval_charconvert(fname, fcc, &fd);
+		if (tmpname == NULL)
 		{
-		    mch_remove(tmpname);	/* delete converted file */
-		    vim_free(tmpname);
-		    tmpname = NULL;
+		    /* Conversion failed.  Try another one. */
+		    advance_fcc = TRUE;
+		    if (fd < 0)
+		    {
+			/* Re-opening the original file failed! */
+			EMSG(_("Conversion made file unreadable!"));
+			error = TRUE;
+			goto failed;
+		    }
+		    goto retry;
 		}
-
-		/*
-		 * Conversion failed.  If there is another conversion to try
-		 * in 'filecharcodes' jump back to retry.  Otherwise read the
-		 * file without conversion.
-		 */
-		if (fcc_next != NULL)
-		{
-		    vim_free(fcc);
-		    fcc = next_fcc(&fcc_next);
-		}
-		else
-		    fcc = (char_u *)"";
-		if (*fcc == NUL)
-		    notconverted = TRUE;
-		fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0);
-		goto retry;
 	    }
-	    converted = TRUE;
 	}
 	else
 # endif
@@ -752,25 +841,31 @@ retry:
 # endif
 		    )
 	    {
-		/* Conversion wanted but we can't, read the file unmodified. */
-		notconverted = TRUE;
-		if (fcc_next != NULL)
-		    vim_free(fcc);
-		fcc = (char_u *)"";
+		/* Conversion wanted but we can't.
+		 * Try the next conversion in 'filecharcodes' */
+		advance_fcc = TRUE;
+		goto retry;
 	    }
-	    else
-		converted = TRUE;
 	}
     }
+
+    /* Set can_retry when it's possible to rewind the file and try with
+     * another "fcc" value.  It's FALSE when no other "fcc" to try, reading
+     * stdin or "fcc" was specified with "++cc=". */
+    can_retry = *fcc != NUL && !read_stdin
+				      && (eap == NULL || eap->force_fcc == 0);
 #endif
 
-    linerest = 0;
-    filesize = 0;
-    skip_count = lines_to_skip;
-    read_count = lines_to_read;
-#if defined(FEAT_MBYTE) && defined(HAVE_ICONV_H)
-    conv_restlen = 0;
+    if (!skip_read)
+    {
+	linerest = 0;
+	filesize = 0;
+	skip_count = lines_to_skip;
+	read_count = lines_to_read;
+#ifdef FEAT_MBYTE
+	conv_restlen = 0;
 #endif
+    }
 
     while (!error && !got_int)
     {
@@ -790,77 +885,166 @@ retry:
 	else
 #endif
 	{
+	    if (!skip_read)
+	    {
 #if SIZEOF_INT > 2
-	    size = 0x10000L;		    /* use buffer >= 64K */
+		size = 0x10000L;		    /* use buffer >= 64K */
 #else
-	    size = 0x7ff0L - linerest;	    /* limit buffer to 32K */
+		size = 0x7ff0L - linerest;	    /* limit buffer to 32K */
 #endif
 
-	    for ( ; size >= 10; size = (long_u)size >> 1)
-	    {
-		if ((new_buffer = lalloc((long_u)(size + linerest + 1),
+		for ( ; size >= 10; size = (long_u)size >> 1)
+		{
+		    if ((new_buffer = lalloc((long_u)(size + linerest + 1),
 							      FALSE)) != NULL)
+			break;
+		}
+		if (new_buffer == NULL)
+		{
+		    do_outofmem_msg();
+		    error = TRUE;
 		    break;
-	    }
-	    if (new_buffer == NULL)
-	    {
-		do_outofmem_msg();
-		error = TRUE;
-		break;
-	    }
-	    if (linerest)	/* copy characters from the previous buffer */
-		mch_memmove(new_buffer, ptr - linerest, (size_t)linerest);
-	    vim_free(buffer);
-	    buffer = new_buffer;
-	    ptr = buffer + linerest;
-	    line_start = buffer;
+		}
+		if (linerest)	/* copy characters from the previous buffer */
+		    mch_memmove(new_buffer, ptr - linerest, (size_t)linerest);
+		vim_free(buffer);
+		buffer = new_buffer;
+		ptr = buffer + linerest;
+		line_start = buffer;
 
 #ifdef FEAT_MBYTE
-	    /* May need room to translate into.
-	     * For iconv() we don't really know the required space, use a
-	     * factor ICONV_MULT.
-	     * latin-1 to utf-8: 1 byte becomes up to 2 bytes
-	     * ucs-2 to utf-8: 2 bytes become up to 3 bytes, size must be
-	     * multipe of 2
-	     * ucs-4 to utf-8: 4 bytes become up to 6 bytes, size must be
-	     * multiple of 4 */
-	    real_size = size;
+		/* May need room to translate into.
+		 * For iconv() we don't really know the required space, use a
+		 * factor ICONV_MULT.
+		 * latin-1 to utf-8: 1 byte becomes up to 2 bytes
+		 * ucs-2 to utf-8: 2 bytes become up to 3 bytes, size must be
+		 * multiple of 2
+		 * ucs-4 to utf-8: 4 bytes become up to 6 bytes, size must be
+		 * multiple of 4 */
+		real_size = size;
 # ifdef HAVE_ICONV_H
-	    if (iconv_fd != (iconv_t)-1)
-		size = size / ICONV_MULT;
-	    else
+		if (iconv_fd != (iconv_t)-1)
+		    size = size / ICONV_MULT;
+		else
 # endif
-	    if (fio_flags & FIO_LATIN1)
-		size = size / 2;
-	    else if (fio_flags & FIO_UCS2)
-		size = (size * 2 / 3) & ~1;
-	    else if (fio_flags & FIO_UCS4)
-		size = (size * 2 / 3) & ~3;
+		    if (fio_flags & FIO_LATIN1)
+		    size = size / 2;
+		else if (fio_flags & FIO_UCS2)
+		    size = (size * 2 / 3) & ~1;
+		else if (fio_flags & FIO_UCS4)
+		    size = (size * 2 / 3) & ~3;
+		else if (fio_flags == FIO_UCSBOM)
+		    size = size / ICONV_MULT;	/* worst case */
 #endif
 
-#if defined(FEAT_MBYTE) && defined(HAVE_ICONV_H)
-	    if (iconv_fd != (iconv_t)-1 && conv_restlen > 0)
-	    {
-		/* Insert unconverted bytes from previous line. */
-		mch_memmove(ptr, conv_rest, conv_restlen);
-		ptr += conv_restlen;
-		size -= conv_restlen;
+#ifdef FEAT_MBYTE
+		if (conv_restlen > 0)
+		{
+		    /* Insert unconverted bytes from previous line. */
+		    mch_memmove(ptr, conv_rest, conv_restlen);
+		    ptr += conv_restlen;
+		    size -= conv_restlen;
+		}
+#endif
+
+		/*
+		 * Read bytes from the file.
+		 */
+		if ((size = read(fd, (char *)ptr, (size_t)size)) <= 0)
+		{
+		    if (size < 0)		    /* read error */
+			error = TRUE;
+#ifdef FEAT_MBYTE
+		    else if (conv_restlen > 0)
+			/* some trailing bytes unconverted */
+			conv_error = TRUE;
+#endif
+		    break;
+		}
+
+#ifdef FEAT_CRYPT
+		/*
+		 * At start of file: Check for magic number of encryption.
+		 */
+		if (filesize == 0)
+		    cryptkey = check_for_cryptkey(cryptkey, ptr, &size,
+							  &filesize, newfile);
+		/*
+		 * Decrypt the read bytes.
+		 */
+		if (cryptkey != NULL)
+		    for (p = ptr; p < ptr + size; ++p)
+			ZDECODE(*p);
+#endif
 	    }
-#endif
+	    skip_read = FALSE;
 
-	    if ((size = read(fd, (char *)ptr, (size_t)size)) <= 0)
+#ifdef FEAT_MBYTE
+	    /*
+	     * At start of file (or after crypt magic number): Check for BOM.
+	     * Also check for a BOM for other Unicode encodings, but not after
+	     * converting with 'charconvert' or when a BOM has already been
+	     * found.
+	     */
+	    if (size >= 2
+		    && (filesize == 0
+# ifdef FEAT_CRYPT
+			|| (filesize == CRYPT_MAGIC_LEN && cryptkey != NULL)
+# endif
+		       )
+		    && (fio_flags == FIO_UCSBOM
+			|| (!curbuf->b_p_bomb
+			    && tmpname == NULL
+			    && (*fcc == 'u' || (*fcc == NUL && cc_utf8)))))
 	    {
-		if (size < 0)		    /* read error */
-		    error = TRUE;
-#if defined(FEAT_MBYTE) && defined(HAVE_ICONV_H)
-		else if (conv_restlen > 0)
-		    /* some trailing bytes unconverted */
-		    error = TRUE;
-#endif
-		break;
+		char_u	*ccname;
+		int	blen;
+
+		if (curbuf->b_p_bin)	/* no BOM detection in binary mode */
+		    ccname = NULL;
+		else
+		    ccname = check_for_bom(ptr, size, &blen,
+		      fio_flags == FIO_UCSBOM ? FIO_ALL : get_fio_flags(fcc));
+		if (ccname != NULL)
+		{
+		    /* Remove BOM from the text */
+		    filesize += blen;
+		    size -= blen;
+		    mch_memmove(ptr, ptr + blen, (size_t)size);
+		    if (newfile)
+			curbuf->b_p_bomb = TRUE;
+		}
+
+		if (fio_flags == FIO_UCSBOM)
+		{
+		    if (ccname == NULL)
+		    {
+			/* No BOM detected: retry with next encoding. */
+			advance_fcc = TRUE;
+		    }
+		    else
+		    {
+			/* BOM detected: set "fcc" and jump back */
+			if (fcc_next != NULL)
+			{
+			    vim_free(fcc);
+			    fcc = vim_strsave(ccname);
+			}
+			else
+			    fcc = ccname;
+		    }
+		    /* retry reading without getting new bytes or rewinding */
+		    skip_read = TRUE;
+		    goto retry;
+		}
 	    }
 
-#if defined(FEAT_MBYTE) && defined(HAVE_ICONV_H)
+	    /* Include not converted bytes. */
+	    ptr -= conv_restlen;
+	    size += conv_restlen;
+	    conv_restlen = 0;
+
+# ifdef HAVE_ICONV_H
 	    if (iconv_fd != (iconv_t)-1)
 	    {
 		/*
@@ -868,12 +1052,10 @@ retry:
 		 * iconv().
 		 */
 		const char	*fromp;
-		char	*top;
-		size_t	from_size;
-		size_t	to_size;
+		char		*top;
+		size_t		from_size;
+		size_t		to_size;
 
-		ptr -= conv_restlen;
-		size += conv_restlen;
 		fromp = (char *)ptr;
 		from_size = size;
 		ptr += size;
@@ -883,14 +1065,9 @@ retry:
 								 == (size_t)-1
 			    && errno != EINVAL)
 			|| from_size > CONV_RESTLEN)
-		{
-		    /* Conversion error or not enough room.  Try rewinding the
-		     * file to try with another conversion. */
-		    if (!read_stdin && lseek(fd, (off_t)0L, SEEK_SET) == 0)
-			goto rewind_retry;
-		    error = TRUE;
-		    break;
-		}
+		    /* Conversion error or not enough room.  Try using another
+		     * conversion. */
+		    goto rewind_retry;
 
 		if (from_size > 0)
 		{
@@ -899,83 +1076,50 @@ retry:
 		    mch_memmove(conv_rest, (char_u *)fromp, from_size);
 		    conv_restlen = from_size;
 		}
-		else
-		    conv_restlen = 0;
 
 		/* move the linerest to before the converted characters */
 		line_start = ptr - linerest;
 		mch_memmove(line_start, buffer, (size_t)linerest);
 		size = (char_u *)top - ptr;
 	    }
-#endif
+# endif
 
-#ifdef FEAT_CRYPT
-	    /* At start of file: Check for magic number of encryption. */
-	    if (filesize == 0)
-	    {
-		if (STRNCMP(ptr, CRYPT_MAGIC, CRYPT_MAGIC_LEN) == 0)
-		{
-		    if (cryptkey == NULL)
-		    {
-			if (*curbuf->b_p_key)
-			    cryptkey = curbuf->b_p_key;
-			else
-			{
-			    /* When newfile is TRUE, store the typed key in
-			     * the 'key' option and don't free it. */
-			    cryptkey = get_crypt_key(newfile);
-			    /* check if empty key entered */
-			    if (cryptkey != NULL && *cryptkey == NUL)
-			    {
-				if (cryptkey != curbuf->b_p_key)
-				    vim_free(cryptkey);
-				cryptkey = NULL;
-			    }
-			}
-		    }
-
-		    if (cryptkey != NULL)
-		    {
-			crypt_init_keys(cryptkey);
-
-			/* Remove magic number from the text */
-			filesize += CRYPT_MAGIC_LEN;
-			size -= CRYPT_MAGIC_LEN;
-			mch_memmove(ptr, ptr + CRYPT_MAGIC_LEN, (size_t)size);
-		    }
-		}
-		/* When starting to edit a new file which does not have
-		 * encryption, clear the 'key' option, except starting up
-		 * (called with -x argument) */
-		else if (newfile && *curbuf->b_p_key && !starting)
-		    set_option_value((char_u *)"key", 0L, (char_u *)"", TRUE);
-	    }
-
-	    if (cryptkey != NULL)
-		for (p = ptr; p < ptr + size; ++p)
-		    zdecode(*p);
-#endif
-
-#ifdef FEAT_MBYTE
 	    if (fio_flags != 0)
 	    {
 		int	u8c;
 		char_u	*dest;
 
+		if (fio_flags == FIO_UTF8)
+		{
+		    /* Check for a trailing incomplete UTF-8 sequence and move
+		     * it to conv_rest[]. */
+		    p = ptr + size - 1;
+		    while (p > ptr && (*p & 0xc0) == 0x80)
+			--p;
+		    if (p + utf_byte2len(*p) > ptr + size)
+		    {
+			conv_restlen = (ptr + size) - p;
+			mch_memmove(conv_rest, (char_u *)p, conv_restlen);
+			size -= conv_restlen;
+		    }
+		}
+
 		/*
-		 * Convert Unicode or Latin-1 to UTF-8.
-		 * Go from end to start in the buffer, because the number of
-		 * bytes may increase.
+		 * "cc_utf8" set: Convert Unicode or Latin-1 to UTF-8.
+		 * "cc_utf8" not set: Convert Unicode to Latin-1.
+		 * Go from end to start through the buffer, because the number
+		 * of bytes may increase.
 		 * "dest" points to after where the UTF-8 bytes go, "p" points
 		 * to after the next character to convert.
 		 */
 		dest = ptr + real_size;
-		if (fio_flags & FIO_LATIN1)
+		if (fio_flags == FIO_LATIN1 || fio_flags == FIO_UTF8)
 		    p = ptr + size;
 		else if (fio_flags & FIO_UCS2)
 		    p = ptr + (size & ~1); /* TODO_UTF8: what if (size & 1)? */
 		else /*  FIO_UCS4 */
-		    p = ptr + (size & ~3); /* TODO:_UTF8 what if (size & 3)? */
+		    p = ptr + (size & ~3); /* TODO_UTF8 what if (size & 3)? */
+
 		while (p > ptr)
 		{
 		    if (fio_flags & FIO_LATIN1)
@@ -993,7 +1137,7 @@ retry:
 			    u8c += (*--p << 8);
 			}
 		    }
-		    else    /* UCS-4 */
+		    else if (fio_flags & FIO_UCS4)
 		    {
 			if (fio_flags & FIO_ENDIAN_L)
 			{
@@ -1024,8 +1168,47 @@ retry:
 			    u8c += (*--p << 24);
 			}
 		    }
-		    dest -= utf_char2len(u8c);
-		    (void)utf_char2bytes(u8c, dest);
+		    else    /* UTF-8 */
+		    {
+			if (*--p < 0x80)
+			    u8c = *p;
+			else
+			{
+			    len = utf_head_off(ptr, p);
+			    if (len == 0)
+			    {
+				/* Not a valid UTF-8 character, retry with
+				 * another fcc when possible, otherwise just
+				 * report the error. */
+				if (can_retry)
+				    goto rewind_retry;
+				conv_error = TRUE;
+			    }
+			    p -= len;
+			    u8c = utf_ptr2char(p);
+			}
+		    }
+		    if (cc_utf8)	/* produce UTF-8 */
+		    {
+			dest -= utf_char2len(u8c);
+			(void)utf_char2bytes(u8c, dest);
+		    }
+		    else		/* produce Latin-1 */
+		    {
+			--dest;
+			if (u8c >= 0x100)
+			{
+			    /* character doesn't fit in latin-1, retry with
+			     * another fcc when possible, otherwise just
+			     * report the error. */
+			    if (can_retry)
+				goto rewind_retry;
+			    *dest = 0xBF;
+			    conv_error = TRUE;
+			}
+			else
+			    *dest = u8c;
+		    }
 		}
 
 		/* move the linerest to before the converted characters */
@@ -1034,10 +1217,9 @@ retry:
 		size = (ptr + real_size) - dest;
 		ptr = dest;
 	    }
-	    else if (cc_utf8 && *fcc != NUL && !read_stdin)
+	    else if (cc_utf8 && !conv_error && !curbuf->b_p_bin)
 	    {
-		/* Converting to UTF-8: Check if the bytes are valid UTF-8.
-		 * If not, use the next charcode or no conversion. */
+		/* Converting to UTF-8: Check if the bytes are valid UTF-8. */
 		for (p = ptr; p < ptr + size; ++p)
 		{
 		    if (*p >= 0x80)
@@ -1050,38 +1232,25 @@ retry:
 		}
 		if (p < ptr + size)
 		{
-		    if (lseek(fd, (off_t)0L, SEEK_SET) == 0)
+		    /* Detected a UTF-8 error. */
+		    if (can_retry)
 		    {
-# ifdef HAVE_ICONV_H
 rewind_retry:
-# endif
-			/* Retry reading with another conversion:
-			 * 1. use 'charconvert' with the same conversion.
-			 * 2. use the next item from 'filecharcodes'.
-			 * 3. read without conversion.
-			 */
+			/* Retry reading with another conversion. */
 # if defined(FEAT_EVAL) && defined(HAVE_ICONV_H)
 			if (*p_ccv != NUL && iconv_fd != (iconv_t)-1)
+			    /* iconv() failed, try 'charconvert' */
 			    did_iconv = TRUE;
 			else
 # endif
-			{
-			    if (fcc_next != NULL)
-			    {
-				vim_free(fcc);
-				fcc = next_fcc(&fcc_next);
-			    }
-			    else
-				fcc = (char_u *)"";
-			    if (*fcc == NUL)
-				notconverted = TRUE;
-			}
-			while (lnum > from)
-			    ml_delete(lnum--, FALSE);
+			    /* use next item from 'filecharcodes' */
+			    advance_fcc = TRUE;
+			file_rewind = TRUE;
 			goto retry;
 		    }
-		    error = TRUE;
-		    break;
+
+		    /* There is no alternative fcc, just report the error. */
+		    conv_error = TRUE;
 		}
 	    }
 #endif
@@ -1113,6 +1282,9 @@ rewind_retry:
 		    /* Don't give in to EOL_UNIX if EOL_MAC is more likely */
 		    if (fileformat == EOL_UNIX && try_mac)
 		    {
+			/* Need to reset the counters when retrying fcc. */
+			try_mac = 1;
+			try_unix = 1;
 			for (; p >= ptr && *p != CR; p--)
 			    ;
 			if (p >= ptr)
@@ -1219,15 +1391,14 @@ rewind_retry:
 					&& !read_stdin
 					&& lseek(fd, (off_t)0L, SEEK_SET) == 0)
 				{
-				    while (lnum > from)
-					ml_delete(lnum--, FALSE);
 				    fileformat = EOL_UNIX;
 				    if (newfile)
 					set_fileformat(EOL_UNIX, TRUE);
+				    file_rewind = TRUE;
+				    keep_fileformat = TRUE;
 				    goto retry;
 				}
-				else
-				    ff_error = EOL_DOS;
+				ff_error = EOL_DOS;
 			    }
 			}
 			if (ml_append(lnum, line_start, len, newfile) == FAIL)
@@ -1253,6 +1424,7 @@ rewind_retry:
 	ui_breakcheck();
     }
 
+failed:
     /* not an error, max. number of lines reached */
     if (error && read_count == 0)
 	error = FALSE;
@@ -1431,7 +1603,15 @@ rewind_retry:
 		c = TRUE;
 	    }
 #endif
-	    if (error)
+#ifdef FEAT_MBYTE
+	    if (conv_error)
+	    {
+		STRCAT(IObuff, _("[CONVERSION ERROR]"));
+		c = TRUE;
+	    }
+	    else
+#endif
+		if (error)
 	    {
 		STRCAT(IObuff, _("[READ ERRORS]"));
 		c = TRUE;
@@ -1471,7 +1651,12 @@ rewind_retry:
 		keep_msg = NULL;
 	}
 
-	if (error && newfile)	/* with errors we should not write the file */
+	/* with errors writing the file requires ":w!" */
+	if (newfile && (error
+#ifdef FEAT_MBYTE
+		    || conv_error
+#endif
+		    ))
 	    curbuf->b_p_ro = TRUE;
 
 	u_clearline();	    /* cannot use "U" command after adding lines */
@@ -1592,6 +1777,63 @@ check_marks_read()
 }
 #endif
 
+#ifdef FEAT_CRYPT
+/*
+ * Check for magic number used for encryption.
+ * If found, the magic number is removed from ptr[*sizep] and *sizep and
+ * *filesizep are updated.
+ * Return the (new) encryption key, NULL for no encryption.
+ */
+    static char_u *
+check_for_cryptkey(cryptkey, ptr, sizep, filesizep, newfile)
+    char_u	*cryptkey;	/* previous encryption key or NULL */
+    char_u	*ptr;		/* pointer to read bytes */
+    long	*sizep;		/* length of read bytes */
+    long	*filesizep;	/* nr of bytes used from file */
+    int		newfile;	/* editing a new buffer */
+{
+    if (*sizep >= CRYPT_MAGIC_LEN
+	    && STRNCMP(ptr, CRYPT_MAGIC, CRYPT_MAGIC_LEN) == 0)
+    {
+	if (cryptkey == NULL)
+	{
+	    if (*curbuf->b_p_key)
+		cryptkey = curbuf->b_p_key;
+	    else
+	    {
+		/* When newfile is TRUE, store the typed key
+		 * in the 'key' option and don't free it. */
+		cryptkey = get_crypt_key(newfile);
+		/* check if empty key entered */
+		if (cryptkey != NULL && *cryptkey == NUL)
+		{
+		    if (cryptkey != curbuf->b_p_key)
+			vim_free(cryptkey);
+		    cryptkey = NULL;
+		}
+	    }
+	}
+
+	if (cryptkey != NULL)
+	{
+	    crypt_init_keys(cryptkey);
+
+	    /* Remove magic number from the text */
+	    *filesizep += CRYPT_MAGIC_LEN;
+	    *sizep -= CRYPT_MAGIC_LEN;
+	    mch_memmove(ptr, ptr + CRYPT_MAGIC_LEN, (size_t)*sizep);
+	}
+    }
+    /* When starting to edit a new file which does not have
+     * encryption, clear the 'key' option, except when
+     * starting up (called with -x argument) */
+    else if (newfile && *curbuf->b_p_key && !starting)
+	set_option_value((char_u *)"key", 0L, (char_u *)"", TRUE);
+
+    return cryptkey;
+}
+#endif
+
 #ifdef UNIX
     static void
 set_file_time(fname, atime, mtime)
@@ -1693,12 +1935,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
     int		    attr;
     int		    fileformat;
-#ifdef WB_HAS_FLAGS
-    int		    wb_flags = 0;	/* flags for buf_write_bytes() */
-#endif
+    struct bw_info write_info;		/* info for buf_write_bytes() */
 #ifdef FEAT_MBYTE
     int		    converted = FALSE;
     char_u	    *fcc;		/* effective 'filecharcode' */
+#endif
+#ifdef HAS_BW_FLAGS
+    int		    wb_flags = 0;
 #endif
 #ifdef HAVE_ACL
     vim_acl_t	    acl = NULL;		/* ACL copied from original file to
@@ -1721,6 +1964,16 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	EMSG(_(e_longname));
 	return FAIL;
     }
+
+#ifdef FEAT_MBYTE
+    /* must init bw_conv_buf and bw_iconv_fd before jumping to "fail" */
+    write_info.bw_conv_buf = NULL;
+    write_info.bw_ucs_error = FALSE;
+    write_info.bw_restlen = 0;
+# ifdef HAVE_ICONV_H
+    write_info.bw_iconv_fd = (iconv_t)-1;
+# endif
+#endif
 
     /*
      * If there is no file name yet, use the one for the written file.
@@ -2098,7 +2351,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (backup_copy
 		&& (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
 	{
-	    int		bfd, buflen;
+	    int		bfd;
 	    char_u	*copybuf, *wp;
 	    int		some_error = FALSE;
 	    struct stat	st_new;
@@ -2130,14 +2383,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    dirp = p_bdir;
 	    while (*dirp)
 	    {
-		st_new.st_dev = 0;
-#ifdef VMS
-		/* It's array under VMS */
-		vim_memset(st_new.st_ino, 0, sizeof(st_new.st_ino));
-#else
+#ifdef UNIX
 		st_new.st_ino = 0;
-#endif
+		st_new.st_dev = 0;
 		st_new.st_gid = 0;
+#endif
 
 		/*
 		 * Isolate one directory name, using an entry in 'bdir'.
@@ -2257,8 +2507,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    }
 		    else
 		    {
-			/* set file protection same as original file, but strip
-			 * s-bit */
+			/* set file protection same as original file, but
+			 * strip s-bit */
 			(void)mch_setperm(backup, perm & 0777);
 
 #ifdef UNIX
@@ -2280,22 +2530,24 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
 
 			/* copy the file. */
-			while ((buflen = read(fd, (char *)copybuf, BUFSIZE))
-									  > 0)
-			{
-			    if (buf_write_bytes(bfd, copybuf, buflen
-#ifdef WB_HAS_FLAGS
-					, 0
+			write_info.bw_fd = bfd;
+			write_info.bw_buf = copybuf;
+#ifdef HAS_BW_FLAGS
+			write_info.bw_flags = FIO_NOCONVERT;
 #endif
-					) == FAIL)
+			while ((write_info.bw_len = read(fd, (char *)copybuf,
+							(size_t)BUFSIZE)) > 0)
+			{
+			    if (buf_write_bytes(&write_info) == FAIL)
 			    {
 				errmsg = (char_u *)_("Can't write to backup file (use ! to override)");
 				break;
 			    }
 			}
+
 			if (close(bfd) < 0 && errmsg == NULL)
 			    errmsg = (char_u *)_("Close error for backup file (use ! to override)");
-			if (buflen < 0)
+			if (write_info.bw_len < 0)
 			    errmsg = (char_u *)_("Can't read file for backup (use ! to override)");
 #ifdef UNIX
 			set_file_time(backup, st_old.st_atime, st_old.st_mtime);
@@ -2421,7 +2673,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     /* When using ":w!" and writing to the current file, readonly makes no
      * sense, reset it */
     if (forceit && overwriting)
+    {
 	buf->b_p_ro = FALSE;
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;	    /* set window title later */
+#endif
+#ifdef FEAT_WINDOWS
+	status_redraw_all();	    /* redraw status lines later */
+#endif
+    }
 
     if (end > buf->b_ml.ml_line_count)
 	end = buf->b_ml.ml_line_count;
@@ -2470,11 +2730,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	fcc = buf->b_p_fcc;
 
     /*
-     * Check if UTF-8 to UCS-2/4 or Latin-1 conversion needs to be done.  This
-     * is handled in buf_write_bytes().  Prepare the flags for it and allocate
-     * conv_buf when needed.
+     * Check if UTF-8 to UCS-2/4 or Latin-1 conversion needs to be done.  Or
+     * Latin-1 to Unicode conversion.  This is handled in buf_write_bytes().
+     * Prepare the flags for it and allocate bw_conv_buf when needed.
      */
-    if (cc_utf8)
+    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
+    if (converted && (cc_utf8 || !has_mbyte))
     {
 	wb_flags = get_fio_flags(fcc);
 
@@ -2482,20 +2743,18 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	{
 	    /* Need to allocate a buffer to translate into. */
 	    if (wb_flags & FIO_UCS2)
-		conv_buflen = bufsize * 2;
+		write_info.bw_conv_buflen = bufsize * 2;
 	    else
-		conv_buflen = bufsize * 4;
-	    conv_buf = lalloc((long_u)conv_buflen, TRUE);
-	    if (conv_buf == NULL)
+		write_info.bw_conv_buflen = bufsize * 4;
+	    write_info.bw_conv_buf
+			   = lalloc((long_u)write_info.bw_conv_buflen, TRUE);
+	    if (write_info.bw_conv_buf == NULL)
 		end = 0;
 	}
-	ucs_error = FALSE;
     }
 
 # if defined(FEAT_EVAL) || defined(HAVE_ICONV_H)
-    if (*fcc != NUL
-	    && !(wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_LATIN1))
-	    && STRCMP(p_cc, fcc) != 0)
+    if (converted && wb_flags == 0)
     {
 	/*
 	 * The file needs to be converted.  This happens when 'filecharcode'
@@ -2503,17 +2762,17 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * 'charcode'.
 	 */
 #  ifdef HAVE_ICONV_H
-	iconv_fd = my_iconv_open(fcc, cc_utf8 ? (char_u *)"utf-8" : p_cc);
-	if (iconv_fd != (iconv_t)-1)
+	write_info.bw_iconv_fd = my_iconv_open(fcc,
+					  cc_utf8 ? (char_u *)"utf-8" : p_cc);
+	if (write_info.bw_iconv_fd != (iconv_t)-1)
 	{
 	    /* We're going to use iconv(), allocate a buffer to convert in. */
-	    conv_buflen = bufsize * ICONV_MULT;
-	    conv_buf = lalloc((long_u)conv_buflen, TRUE);
-	    if (conv_buf == NULL)
+	    write_info.bw_conv_buflen = bufsize * ICONV_MULT;
+	    write_info.bw_conv_buf
+			   = lalloc((long_u)write_info.bw_conv_buflen, TRUE);
+	    if (write_info.bw_conv_buf == NULL)
 		end = 0;
-	    conv_restlen = 0;
-	    iconv_first = TRUE;
-	    converted = TRUE;
+	    write_info.bw_first = TRUE;
 	}
 #   ifdef FEAT_EVAL
 	else
@@ -2653,6 +2912,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
 #endif
 
+    write_info.bw_fd = fd;
+
 #ifdef FEAT_CRYPT
     if (*buf->b_p_key)
     {
@@ -2660,17 +2921,44 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	/* Write magic number, so that Vim knows that this file is encrypted
 	 * when reading it again.  This also undergoes utf-8 to ucs-2/4
 	 * conversion when needed. */
-	if (buf_write_bytes(fd, (char_u *)CRYPT_MAGIC, CRYPT_MAGIC_LEN,
-							    wb_flags) == FAIL)
+	write_info.bw_buf = (char_u *)CRYPT_MAGIC;
+	write_info.bw_len = CRYPT_MAGIC_LEN;
+	write_info.bw_flags = FIO_NOCONVERT;
+	if (buf_write_bytes(&write_info) == FAIL)
 	    end = 0;
 	wb_flags |= FIO_ENCRYPTED;
     }
 #endif
 
-    fileformat = get_fileformat_force(buf, eap);
-    len = 0;
-    s = buffer;
+    write_info.bw_buf = buffer;
     nchars = 0;
+
+#ifdef FEAT_MBYTE
+    /*
+     * The BOM is written just after the encryption magic number.
+     */
+    if (buf->b_p_bomb && !buf->b_p_bin)
+    {
+	write_info.bw_len = make_bom(buffer, fcc);
+	if (write_info.bw_len > 0)
+	{
+	    /* don't convert, do encryption */
+	    write_info.bw_flags = FIO_NOCONVERT | wb_flags;
+	    if (buf_write_bytes(&write_info) == FAIL)
+		end = 0;
+	    else
+		nchars += write_info.bw_len;
+	}
+    }
+#endif
+
+    write_info.bw_len = bufsize;
+#ifdef HAS_BW_FLAGS
+    write_info.bw_flags = wb_flags;
+#endif
+    fileformat = get_fileformat_force(buf, eap);
+    s = buffer;
+    len = 0;
     for (lnum = start; lnum <= end; ++lnum)
     {
 	/*
@@ -2689,11 +2977,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    ++s;
 	    if (++len != bufsize)
 		continue;
-	    if (buf_write_bytes(fd, buffer, bufsize
-#ifdef WB_HAS_FLAGS
-			, wb_flags
-#endif
-			) == FAIL)
+	    if (buf_write_bytes(&write_info) == FAIL)
 	    {
 		end = 0;		/* write error: break loop */
 		break;
@@ -2722,11 +3006,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    {
 		if (++len == bufsize)
 		{
-		    if (buf_write_bytes(fd, buffer, bufsize
-#ifdef WB_HAS_FLAGS
-				, wb_flags
-#endif
-				 ) == FAIL)
+		    if (buf_write_bytes(&write_info) == FAIL)
 		    {
 			end = 0;	/* write error: break loop */
 			break;
@@ -2740,11 +3020,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
 	if (++len == bufsize && end)
 	{
-	    if (buf_write_bytes(fd, buffer, bufsize
-#ifdef WB_HAS_FLAGS
-			, wb_flags
-#endif
-			) == FAIL)
+	    if (buf_write_bytes(&write_info) == FAIL)
 	    {
 		end = 0;		/* write error: break loop */
 		break;
@@ -2759,27 +3035,22 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * writing blocks at a time.  Fix it by writing a line at a time.
 	 * This is much slower!
 	 */
-	if (buf_write_bytes(fd, buffer, len
-# ifdef WB_HAS_FLAGS
-			, wb_flags
-# endif
-			) == FAIL)
-	    {
-		end = 0;		/* write error: break loop */
-		break;
-	    }
+	file_info.bw_len = len;
+	if (buf_write_bytes(&write_info) == FAIL)
+	{
+	    end = 0;		/* write error: break loop */
+	    break;
+	}
+	file_info.bw_len = bufsize;
 	nchars += len;
 	s = buffer;
 	len = 0;
 #endif
     }
-    if (len && end)
+    if (len > 0 && end > 0)
     {
-	if (buf_write_bytes(fd, buffer, len
-#ifdef WB_HAS_FLAGS
-		    , wb_flags
-#endif
-		    ) == FAIL)
+	write_info.bw_len = len;
+	if (buf_write_bytes(&write_info) == FAIL)
 	    end = 0;		    /* write error */
 	nchars += len;
     }
@@ -2853,38 +3124,37 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    errmsg = (char_u *)_("write error (file system full?)");
 	/*
 	 * If we have a backup file, try to put it in place of the new file,
-	 * because it is probably corrupt. This avoids loosing the original
-	 * file when trying to make a backup when writing the file a second
-	 * time.
-	 * For unix this means copying the backup over the new file.
-	 * For others this means renaming the backup file.
+	 * because the new file is probably corrupt.  This avoids loosing the
+	 * original file when trying to make a backup when writing the file a
+	 * second time.
+	 * When "backup_copy" is set we need to copy the backup over the new
+	 * file.  Otherwise rename the backup file.
 	 * If this is OK, don't give the extra warning message.
 	 */
 	if (backup != NULL)
 	{
 	    if (backup_copy)
 	    {
-		int	bfd, buflen;
-
-		if ((bfd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0))
-									 >= 0)
+		if ((fd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0)) >= 0)
 		{
-		    if ((fd = mch_open((char *)fname,
+		    if ((write_info.bw_fd = mch_open((char *)fname,
 			  O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA, 0666)) >= 0)
 		    {
 			/* copy the file. */
-			while ((buflen = read(bfd, (char *)smallbuf, SMBUFSIZE))
-									  > 0)
-			    if (buf_write_bytes(fd, smallbuf, buflen
-#ifdef WB_HAS_FLAGS
-					, 0
+			write_info.bw_buf = smallbuf;
+#ifdef HAS_BW_FLAGS
+			write_info.bw_flags = FIO_NOCONVERT;
 #endif
-					) == FAIL)
+			while ((write_info.bw_len = read(fd, (char *)smallbuf,
+						      (size_t)SMBUFSIZE)) > 0)
+			    if (buf_write_bytes(&write_info) == FAIL)
 				break;
-			if (close(fd) >= 0 && buflen == 0)	/* success */
-			    end = 1;
+
+			if (close(write_info.bw_fd) >= 0
+						   && write_info.bw_len == 0)
+			    end = 1;		/* success */
 		    }
-		    close(bfd);	/* ignore errors for closing read file */
+		    close(fd);	/* ignore errors for closing read file */
 		}
 	    }
 	    else
@@ -2913,7 +3183,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	msg_add_fname(buf, fname);	/* put fname in IObuff with quotes */
 	c = FALSE;
 #ifdef FEAT_MBYTE
-	if (ucs_error)
+	if (write_info.bw_ucs_error)
 	{
 	    STRCAT(IObuff, _(" CONVERSION ERROR"));
 	    c = TRUE;
@@ -2964,7 +3234,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
     if (reset_changed && whole
 #ifdef FEAT_MBYTE
-	    && !ucs_error
+	    && !write_info.bw_ucs_error
 #endif
 	    )		/* when written everything correctly */
     {
@@ -3061,13 +3331,12 @@ nofail:
     if (buffer != smallbuf)
 	vim_free(buffer);
 #ifdef FEAT_MBYTE
-    vim_free(conv_buf);
-    conv_buf = NULL;
+    vim_free(write_info.bw_conv_buf);
 # ifdef HAVE_ICONV_H
-    if (iconv_fd != (iconv_t)-1)
+    if (write_info.bw_iconv_fd != (iconv_t)-1)
     {
-	iconv_close(iconv_fd);
-	iconv_fd = (iconv_t)-1;
+	iconv_close(write_info.bw_iconv_fd);
+	write_info.bw_iconv_fd = (iconv_t)-1;
     }
 # endif
 #endif
@@ -3259,159 +3528,160 @@ time_differs(t1, t2)
 
 /*
  * Call write() to write a number of bytes to the file.
- * Also handles encryption and utf-8 conversion.
+ * Also handles encryption and 'charcode' conversion.
  *
  * Return FAIL for failure, OK otherwise.
  */
     static int
-buf_write_bytes(fd, buf, len
-#ifdef WB_HAS_FLAGS
-	    , flags
-#endif
-	 )
-    int		fd;
-    char_u	*buf;
-    int		len;
-#ifdef WB_HAS_FLAGS
-    int		flags;
-#endif
+buf_write_bytes(ip)
+    struct bw_info *ip;
 {
     int		wlen;
+    char_u	*buf = ip->bw_buf;	/* data to write */
+    int		len = ip->bw_len;	/* length of data */
+#ifdef HAS_BW_FLAGS
+    int		flags = ip->bw_flags;	/* extra flags */
+#endif
 
 #ifdef FEAT_MBYTE
-    char_u	*p;
-    unsigned	c;
-    int		n;
-
-    if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
+    /*
+     * Skip conversion when writing the crypt magic number or the BOM.
+     */
+    if (!(flags & FIO_NOCONVERT))
     {
-	/* Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin-1 chars
-	 * in the file. */
-	if (flags & FIO_LATIN1)
-	    p = buf;		/* translate in-place (can only get shorter) */
-	else
-	    p = conv_buf;	/* translate to buffer */
-	for (wlen = 0; wlen < len; wlen += n)
-	{
-	    if (wlen == 0 && conv_restlen != 0)
-	    {
-		int	    l;
+	char_u		*p;
+	unsigned	c;
+	int		n;
 
-		/* Use remainder of previous call.  Append the start of buf[]
-		 * to get a full sequence. Might still be too short! */
-		l = CONV_RESTLEN - conv_restlen;
-		if (l > len)
-		    l = len;
-		mch_memmove(conv_rest + conv_restlen, buf, l);
-		n = utf_ptr2len_check_len(conv_rest, conv_restlen + l);
-		if (n > conv_restlen + len)
+	if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
+	{
+	    /* Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin-1
+	     * chars in the file. */
+	    if (flags & FIO_LATIN1)
+		p = buf;	/* translate in-place (can only get shorter) */
+	    else
+		p = ip->bw_conv_buf;	/* translate to buffer */
+	    for (wlen = 0; wlen < len; wlen += n)
+	    {
+		if (wlen == 0 && ip->bw_restlen != 0)
 		{
-		    /* We have an incomplete byte sequence at the end to be
-		     * written.  We can't convert it without the remaining
-		     * bytes.  Keep them for the next call. */
-		    if (conv_restlen + len > CONV_RESTLEN)
-			return FAIL;
-		    conv_restlen += len;
-		    break;
+		    int		l;
+
+		    /* Use remainder of previous call.  Append the start of
+		     * buf[] to get a full sequence.  Might still be too
+		     * short! */
+		    l = CONV_RESTLEN - ip->bw_restlen;
+		    if (l > len)
+			l = len;
+		    mch_memmove(ip->bw_rest + ip->bw_restlen, buf, l);
+		    n = utf_ptr2len_check_len(ip->bw_rest, ip->bw_restlen + l);
+		    if (n > ip->bw_restlen + len)
+		    {
+			/* We have an incomplete byte sequence at the end to
+			 * be written.  We can't convert it without the
+			 * remaining bytes.  Keep them for the next call. */
+			if (ip->bw_restlen + len > CONV_RESTLEN)
+			    return FAIL;
+			ip->bw_restlen += len;
+			break;
+		    }
+		    if (n > 1)
+			c = utf_ptr2char(ip->bw_rest);
+		    else
+			c = ip->bw_rest[0];
+		    if (n >= ip->bw_restlen)
+		    {
+			n -= ip->bw_restlen;
+			ip->bw_restlen = 0;
+		    }
+		    else
+		    {
+			ip->bw_restlen -= n;
+			mch_memmove(ip->bw_rest, ip->bw_rest + n,
+							     ip->bw_restlen);
+			n = 0;
+		    }
 		}
-		if (n > 1)
-		    c = utf_ptr2char(conv_rest);
 		else
-		    c = conv_rest[0];
-		if (n >= conv_restlen)
 		{
-		    n -= conv_restlen;
-		    conv_restlen = 0;
+		    n = utf_ptr2len_check_len(buf + wlen, len - wlen);
+		    if (n > len - wlen)
+		    {
+			/* We have an incomplete byte sequence at the end to
+			 * be written.  We can't convert it without the
+			 * remaining bytes.  Keep them for the next call. */
+			if (len - wlen > CONV_RESTLEN)
+			    return FAIL;
+			ip->bw_restlen = len - wlen;
+			mch_memmove(ip->bw_rest, buf + wlen, ip->bw_restlen);
+			break;
+		    }
+		    if (n > 1)
+			c = utf_ptr2char(buf + wlen);
+		    else
+			c = buf[wlen];
 		}
-		else
-		{
-		    conv_restlen -= n;
-		    mch_memmove(conv_rest, conv_rest + n, conv_restlen);
-		    n = 0;
-		}
+
+		ip->bw_ucs_error |= ucs2bytes(c, &p, flags);
+	    }
+	    if (flags & FIO_LATIN1)
+		len = p - buf;
+	    else
+	    {
+		buf = ip->bw_conv_buf;
+		len = p - ip->bw_conv_buf;
+	    }
+	}
+
+# ifdef HAVE_ICONV_H
+	if (ip->bw_iconv_fd != (iconv_t)-1)
+	{
+	    const char	*from;
+	    size_t	fromlen;
+	    char	*to;
+	    size_t	tolen;
+
+	    /* Convert with iconv(). */
+	    if (ip->bw_restlen > 0)
+	    {
+		/* Need to concatenate the remainder of the previous call and
+		 * the bytes of the current call.  Use the end of the
+		 * conversion buffer for this. */
+		fromlen = len + ip->bw_restlen;
+		from = (char *)ip->bw_conv_buf + ip->bw_conv_buflen - fromlen;
+		mch_memmove(from, ip->bw_rest, (size_t)ip->bw_restlen);
+		mch_memmove(from + ip->bw_restlen, buf, (size_t)len);
+		tolen = ip->bw_conv_buflen - fromlen;
 	    }
 	    else
 	    {
-		n = utf_ptr2len_check_len(buf + wlen, len - wlen);
-		if (n > len - wlen)
-		{
-		    /* We have an incomplete byte sequence at the end to be
-		     * written.  We can't convert it without the remaining
-		     * bytes.  Keep them for the next call. */
-		    if (len - wlen > CONV_RESTLEN)
-			return FAIL;
-		    conv_restlen = len - wlen;
-		    mch_memmove(conv_rest, buf + wlen, conv_restlen);
-		    break;
-		}
-		if (n > 1)
-		    c = utf_ptr2char(buf + wlen);
-		else
-		    c = buf[wlen];
+		from = (const char *)buf;
+		fromlen = len;
+		tolen = ip->bw_conv_buflen;
 	    }
+	    to = (char *)ip->bw_conv_buf;
 
-	    if (flags & FIO_UCS4)
+	    if (ip->bw_first)
 	    {
-		if (flags & FIO_ENDIAN_L)
-		{
-		    *p++ = c;
-		    *p++ = (c >> 8);
-		    *p++ = (c >> 16);
-		    *p++ = (c >> 24);
-		}
-		else if (flags & FIO_ENDIAN_LB)
-		{
-		    *p++ = (c >> 8);
-		    *p++ = c;
-		    *p++ = (c >> 24);
-		    *p++ = (c >> 16);
-		}
-		else if (flags & FIO_ENDIAN_BL)
-		{
-		    *p++ = (c >> 16);
-		    *p++ = (c >> 24);
-		    *p++ = c;
-		    *p++ = (c >> 8);
-		}
-		else
-		{
-		    *p++ = (c >> 24);
-		    *p++ = (c >> 16);
-		    *p++ = (c >> 8);
-		    *p++ = c;
-		}
+		/* output the initial shift state sequence */
+		(void)iconv(ip->bw_iconv_fd, NULL, NULL, &to, &tolen);
+		ip->bw_first = FALSE;
 	    }
-	    else if (flags & FIO_UCS2)
-	    {
-		if (c >= 0x10000)
-		    ucs_error = TRUE;
-		if (flags & FIO_ENDIAN_L)
-		{
-		    *p++ = c;
-		    *p++ = (c >> 8);
-		}
-		else
-		{
-		    *p++ = (c >> 8);
-		    *p++ = c;
-		}
-	    }
-	    else
-	    {
-		if (c >= 0x100)
-		    ucs_error = TRUE;
-		*p++ = c;
-	    }
+	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen) == (size_t)-1
+			&& errno != EINVAL)
+		    || fromlen > CONV_RESTLEN)
+		return FAIL;
+	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
+	    if (fromlen > 0)
+		mch_memmove(ip->bw_rest, from, fromlen);
+	    ip->bw_restlen = fromlen;
+
+	    buf = ip->bw_conv_buf;
+	    len = (char_u *)to - ip->bw_conv_buf;
 	}
-	if (flags & FIO_LATIN1)
-	    len = p - buf;
-	else
-	{
-	    buf = conv_buf;
-	    len = p - conv_buf;
-	}
+# endif
     }
-#endif
+#endif /* FEAT_MBYTE */
 
 #ifdef FEAT_CRYPT
     if (flags & FIO_ENCRYPTED)		/* encrypt the data */
@@ -3421,63 +3691,15 @@ buf_write_bytes(fd, buf, len
 	for (i = 0; i < len; i++)
 	{
 	    ztemp  = buf[i];
-	    buf[i] = zencode(ztemp, t);
+	    buf[i] = ZENCODE(ztemp, t);
 	}
-    }
-#endif
-
-#if defined(HAVE_ICONV_H) && defined(FEAT_MBYTE)
-    if (iconv_fd != (iconv_t)-1)
-    {
-	const char	*from;
-	size_t		fromlen;
-	char		*to;
-	size_t		tolen;
-
-	/* Convert with iconv(). */
-	if (conv_restlen > 0)
-	{
-	    /* Need to concatenate the remainder of the previous call and the
-	     * bytes of the current call.  Use the end of the conversion
-	     * buffer for this. */
-	    fromlen = len + conv_restlen;
-	    from = (char *)conv_buf + conv_buflen - fromlen;
-	    mch_memmove(from, conv_rest, (size_t)conv_restlen);
-	    mch_memmove(from + conv_restlen, buf, (size_t)len);
-	    tolen = conv_buflen - fromlen;
-	}
-	else
-	{
-	    from = (const char *)buf;
-	    fromlen = len;
-	    tolen = conv_buflen;
-	}
-	to = (char *)conv_buf;
-
-	if (iconv_first)
-	{
-	    /* output the initial shift state sequence */
-	    (void)iconv(iconv_fd, NULL, NULL, &to, &tolen);
-	    iconv_first = FALSE;
-	}
-	if ((iconv(iconv_fd, &from, &fromlen, &to, &tolen) == (size_t)-1
-		    && errno != EINVAL)
-		|| fromlen > CONV_RESTLEN)
-	    return FAIL;
-	/* copy remainder to conv_rest[] to be used for the next call. */
-	if (fromlen > 0)
-	    mch_memmove(conv_rest, from, fromlen);
-	conv_restlen = fromlen;
-
-	buf = conv_buf;
-	len = (char_u *)to - conv_buf;
     }
 #endif
 
     /* Repeat the write(), it may be interrupted by a signal. */
     while (len)
     {
-	wlen = write(fd, (char *)buf, (size_t)len);
+	wlen = write(ip->bw_fd, (char *)buf, (size_t)len);
 	if (wlen <= 0)		    /* error! */
 	    return FAIL;
 	len -= wlen;
@@ -3487,6 +3709,96 @@ buf_write_bytes(fd, buf, len
 }
 
 #ifdef FEAT_MBYTE
+/*
+ * Convert a Unicode character to bytes.
+ */
+    static int
+ucs2bytes(c, pp, flags)
+    unsigned	c;		/* in: character */
+    char_u	**pp;		/* in/out: pointer to result */
+    int		flags;		/* FIO_ flags */
+{
+    char_u	*p = *pp;
+    int		error = FALSE;
+
+    if (flags & FIO_UCS4)
+    {
+	if (flags & FIO_ENDIAN_L)
+	{
+	    *p++ = c;
+	    *p++ = (c >> 8);
+	    *p++ = (c >> 16);
+	    *p++ = (c >> 24);
+	}
+	else if (flags & FIO_ENDIAN_LB)
+	{
+	    *p++ = (c >> 8);
+	    *p++ = c;
+	    *p++ = (c >> 24);
+	    *p++ = (c >> 16);
+	}
+	else if (flags & FIO_ENDIAN_BL)
+	{
+	    *p++ = (c >> 16);
+	    *p++ = (c >> 24);
+	    *p++ = c;
+	    *p++ = (c >> 8);
+	}
+	else
+	{
+	    *p++ = (c >> 24);
+	    *p++ = (c >> 16);
+	    *p++ = (c >> 8);
+	    *p++ = c;
+	}
+    }
+    else if (flags & FIO_UCS2)
+    {
+	if (c >= 0x10000)
+	    error = TRUE;
+	if (flags & FIO_ENDIAN_L)
+	{
+	    *p++ = c;
+	    *p++ = (c >> 8);
+	}
+	else
+	{
+	    *p++ = (c >> 8);
+	    *p++ = c;
+	}
+    }
+    else    /* Latin-1 */
+    {
+	if (c >= 0x100)
+	{
+	    error = TRUE;
+	    *p++ = 0xBF;
+	}
+	else
+	    *p++ = c;
+    }
+
+    *pp = p;
+    return error;
+}
+
+/*
+ * Return TRUE if "a" and "b" are the same 'charcode'.
+ * Ignores difference between "ansi" and "latin-1", "ucs-4" and "ucs-4be", etc.
+ */
+    static int
+same_charcode(a, b)
+    char_u	*a;
+    char_u	*b;
+{
+    int		f;
+
+    if (STRCMP(a, b) == 0)
+	return TRUE;
+    f = get_fio_flags(a);
+    return (f != 0 && get_fio_flags(b) == f);
+}
+
 /*
  * Check "ptr" for a unicode charcode and return the FIO_ flags needed for the
  * internal conversion.
@@ -3499,14 +3811,14 @@ get_fio_flags(ptr)
     if (*ptr == NUL)
 	ptr = p_cc;
 
-    if (STRCMP(ptr, CC_UCS2) == 0 || STRCMP(ptr, CC_UCS2B) == 0
+    if (STRCMP(ptr, CC_UCS2) == 0 || STRCMP(ptr, CC_UCS2BE) == 0
 					      || STRCMP(ptr, CC_UNICODE) == 0)
 	return FIO_UCS2;
-    if (STRCMP(ptr, CC_UCS2L) == 0)
+    if (STRCMP(ptr, CC_UCS2LE) == 0)
 	return FIO_UCS2 | FIO_ENDIAN_L;
-    if (STRCMP(ptr, CC_UCS4) == 0 || STRCMP(ptr, CC_UCS4B) == 0)
+    if (STRCMP(ptr, CC_UCS4) == 0 || STRCMP(ptr, CC_UCS4BE) == 0)
 	return FIO_UCS4;
-    if (STRCMP(ptr, CC_UCS4L) == 0)
+    if (STRCMP(ptr, CC_UCS4LE) == 0)
 	return FIO_UCS4 | FIO_ENDIAN_L;
     if (STRCMP(ptr, CC_UCS4BL) == 0)
 	return FIO_UCS4 | FIO_ENDIAN_BL;
@@ -3514,7 +3826,103 @@ get_fio_flags(ptr)
 	return FIO_UCS4 | FIO_ENDIAN_LB;
     if (STRCMP(ptr, CC_LATIN1) == 0 || STRCMP(ptr, CC_ANSI) == 0)
 	return FIO_LATIN1;
+    if (STRCMP(ptr, CC_UTF8) == 0)
+	return FIO_UTF8;
     return 0;
+}
+
+/*
+ * Check for a Unicode BOM (Byte Order Mark) at the start of p[size].
+ * "size" must be at least 2.
+ * Return the name of the charcode and set "*lenp" to the length.
+ * Returns NULL when no BOM found.
+ */
+    static char_u *
+check_for_bom(p, size, lenp, flags)
+    char_u	*p;
+    long	size;
+    int		*lenp;
+    int		flags;
+{
+    char	*name = NULL;
+    int		len = 2;
+
+    if (p[0] == 0xef && p[1] == 0xbb && size >= 3 && p[2] == 0xbf
+	    && (flags == FIO_ALL || flags == 0))
+    {
+	name = "utf-8";		/* EF BB BF */
+	len = 3;
+    }
+    else if (p[0] == 0xff && p[1] == 0xfe)
+    {
+	if (size >= 4 && p[2] == 0 && p[3] == 0
+	    && (flags == FIO_ALL || flags == (FIO_UCS4 | FIO_ENDIAN_L)))
+	{
+	    name = "ucs-4le";	/* FF FE 00 00 */
+	    len = 4;
+	}
+	else if (flags == FIO_ALL || flags == (FIO_UCS2 | FIO_ENDIAN_L))
+	    name = "ucs-2le";	/* FF FE */
+    }
+    else if (p[0] == 0xfe && p[1] == 0xff)
+    {
+	if (size >= 4 && p[2] == 0 && p[3] == 0
+		&& (flags == FIO_ALL || flags == (FIO_UCS4 | FIO_ENDIAN_LB)))
+	{
+	    name = "ucs-4lb";		/* FE FF 00 00 */
+	    len = 4;
+	}
+	else if (flags == FIO_ALL || flags == FIO_UCS2)
+	    name = "ucs-2";		/* FE FF */
+    }
+    else if (size >= 4 && p[0] == 0 && p[1] == 0)
+    {
+	if (p[2] == 0xfe && p[3] == 0xff
+		&& (flags == FIO_ALL || flags == FIO_UCS4))
+	{
+	    name = "ucs-4";		/* 00 00 FE FF */
+	    len = 4;
+	}
+	else if (p[2] == 0xff && p[3] == 0xfe
+		&& (flags == FIO_ALL || flags == (FIO_UCS4 | FIO_ENDIAN_BL)))
+	{
+	    name = "ucs-4bl";		/* 00 00 FF FE */
+	    len = 4;
+	}
+    }
+
+    *lenp = len;
+    return (char_u *)name;
+}
+
+/*
+ * Generate a BOM in "buf[4]" for charcode "name".
+ * Return the length of the BOM (zero when no BOM).
+ */
+    static int
+make_bom(buf, name)
+    char_u	*buf;
+    char_u	*name;
+{
+    int		flags;
+    char_u	*p;
+
+    flags = get_fio_flags(name);
+
+    /* Can't put a BOM in a non-Unicode file. */
+    if (flags == FIO_LATIN1 || flags == 0)
+	return 0;
+
+    if (flags == FIO_UTF8)	/* UTF-8 */
+    {
+	buf[0] = 0xef;
+	buf[1] = 0xbb;
+	buf[2] = 0xbf;
+	return 3;
+    }
+    p = buf;
+    (void)ucs2bytes(0xfeff, &p, flags);
+    return (int)(p - buf);
 }
 #endif
 
@@ -4004,23 +4412,22 @@ vim_rename(from, to)
     while ((n = read(fd_in, buffer, (size_t)BUFSIZE)) > 0)
 	if (write(fd_out, buffer, (size_t)n) != n)
 	{
-	    errmsg = _("writing to");
+	    errmsg = _("Error writing to \"%s\"");
 	    break;
 	}
 
     vim_free(buffer);
     close(fd_in);
     if (close(fd_out) < 0)
-	errmsg = _("closing");
+	errmsg = _("Error closing \"%s\"");
     if (n < 0)
     {
-	errmsg = _("reading");
+	errmsg = _("Error reading \"%s\"");
 	to = from;
     }
     if (errmsg != NULL)
     {
-	sprintf((char *)IObuff, _("Error %s '%s'"), errmsg, to);
-	emsg(IObuff);
+	EMSG2(errmsg, to);
 	return -1;
     }
     mch_remove(from);
@@ -4398,7 +4805,7 @@ typedef struct AutoCmd
     char	    nested;		/* If autocommands nest here */
     char	    last;		/* last command in list */
 #ifdef FEAT_EVAL
-    sid_t	    scriptID;		/* script ID where defined */
+    scid_t	    scriptID;		/* script ID where defined */
 #endif
     struct AutoCmd  *next;		/* Next AutoCmd in list */
 } AutoCmd;
@@ -5469,7 +5876,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     AutoPatCmd	patcmd;
     AutoPat	*ap;
 #ifdef FEAT_EVAL
-    sid_t	save_current_SID;
+    scid_t	save_current_SID;
     void	*save_funccalp;
 #endif
 
@@ -6296,10 +6703,10 @@ alt_charset(name)
     {
 	{"latin-1", "latin1"},
 	{"ansi", "latin1"},
-	{"ucs-2l", "ucs-2"},
-	{"ucs-2b", "ucs-2"},
-	{"ucs-4b", "ucs-4"},
-	{"ucs-4l", "ucs-4"},
+	{"ucs-2le", "ucs-2"},
+	{"ucs-2be", "ucs-2"},
+	{"ucs-4be", "ucs-4"},
+	{"ucs-4le", "ucs-4"},
 	{"ucs-4bl", "ucs-4"},
 	{"ucs-4lb", "ucs-4"},
 	{"unicode", "ucs-2"},

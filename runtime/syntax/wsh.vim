@@ -1,21 +1,37 @@
 " Vim syntax file
 " Language:	Windows Scripting Host
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	16 Oct 2000
+" Last Change:	Fre, 24 Nov 2000 21:54:09 +0100
 
 " This reuses the XML, VB and JavaScript syntax files. While VB is not
 " VBScript, it's close enough for us. No attempt is made to handle
 " other languages.
 " Send comments, suggestions and requests to the maintainer.
 
+let s:wsh_cpo_save = &cpo
+set cpo&vim
+
 source <sfile>:p:h/xml.vim
 
 syn case ignore
 syn include @wshVBScript <sfile>:p:h/vb.vim
 syn include @wshJavaScript <sfile>:p:h/javascript.vim
-syn region wshVBScript matchgroup=xmlTag start="<script[^>]*VBScript\(>\|[^>]*[^/>]>\)" end="</script>" contains=@wshVBScript
-syn region wshJavaScript matchgroup=xmlTag start="<script[^>]*J\(ava\)\=Script\(>\|[^>]*[^/>]>\)" end="</script>" contains=@wshJavaScript
+syn region wshVBScript
+    \ matchgroup=xmlTag    start="<script[^>]*VBScript\(>\|[^>]*[^/>]>\)"
+    \ matchgroup=xmlEndTag end="</script>"
+    \ fold
+    \ contains=@wshVBScript
+    \ keepend
+syn region wshJavaScript
+    \ matchgroup=xmlTag    start="<script[^>]*J\(ava\)\=Script\(>\|[^>]*[^/>]>\)"
+    \ matchgroup=xmlEndTag end="</script>"
+    \ fold
+    \ contains=@wshJavaScript
+    \ keepend
 
-" No type-specific highlighting -- it's all reused from other files
+syn cluster xmlRegionHook add=wshVBScript,wshJavaScript
 
 let b:current_syntax = "wsh"
+
+let &cpo = s:wsh_cpo_save
+unlet s:wsh_cpo_save

@@ -62,6 +62,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'bioskey'	options.txt	/*'bioskey'*
 'bk'	options.txt	/*'bk'*
 'bkc'	options.txt	/*'bkc'*
+'bomb'	options.txt	/*'bomb'*
 'breakat'	options.txt	/*'breakat'*
 'brk'	options.txt	/*'brk'*
 'browsedir'	options.txt	/*'browsedir'*
@@ -337,6 +338,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'nobiosk'	options.txt	/*'nobiosk'*
 'nobioskey'	options.txt	/*'nobioskey'*
 'nobk'	options.txt	/*'nobk'*
+'nobomb'	options.txt	/*'nobomb'*
 'nocf'	options.txt	/*'nocf'*
 'nocin'	options.txt	/*'nocin'*
 'nocindent'	options.txt	/*'nocindent'*
@@ -1254,6 +1256,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :browse	editing.txt	/*:browse*
 :browse-set	options.txt	/*:browse-set*
 :bu	windows.txt	/*:bu*
+:bufdo	windows.txt	/*:bufdo*
 :buffer	windows.txt	/*:buffer*
 :buffer-!	windows.txt	/*:buffer-!*
 :buffers	windows.txt	/*:buffers*
@@ -1368,8 +1371,12 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :e	editing.txt	/*:e*
 :ec	eval.txt	/*:ec*
 :echo	eval.txt	/*:echo*
+:echoe	eval.txt	/*:echoe*
+:echoerr	eval.txt	/*:echoerr*
 :echoh	eval.txt	/*:echoh*
 :echohl	eval.txt	/*:echohl*
+:echom	eval.txt	/*:echom*
+:echomsg	eval.txt	/*:echomsg*
 :echon	eval.txt	/*:echon*
 :edit	editing.txt	/*:edit*
 :edit!	editing.txt	/*:edit!*
@@ -1820,6 +1827,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :syn-end	syntax.txt	/*:syn-end*
 :syn-excludenl	syntax.txt	/*:syn-excludenl*
 :syn-ext-match	syntax.txt	/*:syn-ext-match*
+:syn-extend	syntax.txt	/*:syn-extend*
 :syn-file-remarks	syntax.txt	/*:syn-file-remarks*
 :syn-files	syntax.txt	/*:syn-files*
 :syn-fold	syntax.txt	/*:syn-fold*
@@ -1910,6 +1918,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :update	editing.txt	/*:update*
 :v	repeat.txt	/*:v*
 :ve	various.txt	/*:ve*
+:verb	various.txt	/*:verb*
+:verbose	various.txt	/*:verbose*
 :version	various.txt	/*:version*
 :vertical	windows.txt	/*:vertical*
 :vertical-resize	windows.txt	/*:vertical-resize*
@@ -1950,6 +1960,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :wh	eval.txt	/*:wh*
 :while	eval.txt	/*:while*
 :win	gui.txt	/*:win*
+:windo	windows.txt	/*:windo*
 :winp	gui.txt	/*:winp*
 :winpos	gui.txt	/*:winpos*
 :winsize	gui.txt	/*:winsize*
@@ -3410,6 +3421,8 @@ i_CTRL-D	insert.txt	/*i_CTRL-D*
 i_CTRL-E	insert.txt	/*i_CTRL-E*
 i_CTRL-G_<Down>	insert.txt	/*i_CTRL-G_<Down>*
 i_CTRL-G_<Up>	insert.txt	/*i_CTRL-G_<Up>*
+i_CTRL-G_CTRL-J	insert.txt	/*i_CTRL-G_CTRL-J*
+i_CTRL-G_CTRL-K	insert.txt	/*i_CTRL-G_CTRL-K*
 i_CTRL-G_j	insert.txt	/*i_CTRL-G_j*
 i_CTRL-G_k	insert.txt	/*i_CTRL-G_k*
 i_CTRL-H	insert.txt	/*i_CTRL-H*
@@ -3561,6 +3574,7 @@ linefeed	intro.txt	/*linefeed*
 linewise	motion.txt	/*linewise*
 linewise-register	change.txt	/*linewise-register*
 linewise-visual	visual.txt	/*linewise-visual*
+list-repeat	windows.txt	/*list-repeat*
 lite-syntax	syntax.txt	/*lite-syntax*
 lite.vim	syntax.txt	/*lite.vim*
 literal-string	eval.txt	/*literal-string*
@@ -3629,6 +3643,7 @@ menu-examples	gui.txt	/*menu-examples*
 menu-priority	gui.txt	/*menu-priority*
 menu.vim	gui.txt	/*menu.vim*
 menus	gui.txt	/*menus*
+message-history	message.txt	/*message-history*
 message.txt	message.txt	/*message.txt*
 messages	message.txt	/*messages*
 meta	intro.txt	/*meta*

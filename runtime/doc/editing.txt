@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
+*editing.txt*   For Vim version 6.0o.  Last change: 2000 Dec 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -821,20 +821,27 @@ USING THE ARGUMENT LIST
 
 						*:argdo*
 :argdo[!] {cmd}		Execute {cmd} for each file in the argument list.
-			This works like using |:argument| to edit each file
-			and then executing {cmd}.
-			When the current file can't be |abandon|ed and the [!]
+			It works like doing this: >
+				:rewind
+				:{cmd}
+				:next
+				:{cmd}
+				etc.
+<			When the current file can't be |abandon|ed and the [!]
 			is not present, the command fails.
 			When an error is detected on one file, further files
 			in the argument list will not be visited.
 			The last file in the argument list (or where an error
 			occurred) becomes the current file.
+			{cmd} can contain '|' to concatenate several commands.
+			{cmd} must not change the argument list.
 			Note: While this command is executing, the Syntax
 			autocommand event is disabled by adding it to
 			'eventignore'.  This considerably speeds up editing
 			each file.
 			{not in Vi} {not available when compiled without the
 			|+listcmds| feature}
+			Also see |:windo| and |:bufdo|.
 
 Example: >
 	:args *.c
@@ -1087,7 +1094,7 @@ There are a few things to remember when editing binary files:
 Vim is able to write files encrypted, and read them back.  The encrypted text
 cannot be read without the right key.
 
-Note: The swapfile and text in memory are not encrypted.  A system
+Note: The swapfile and text in memory is not encrypted.  A system
 administrator will be able to see your text while you are editing it.
 
 WARNING: If you make a typo when entering the key and then write the file and
@@ -1132,6 +1139,7 @@ line to "/etc/magic", "/usr/share/misc/magic" or wherever your system has the
      0	string	VimCrypt~	Vim encrypted file
 
 Notes:
+- Encryption is not possible when doing conversion with 'charconvert'.
 - Text you copy or delete goes to the numbered registers.  The registers can
   be saved in the .viminfo file, where they could be read.  Change your
   'viminfo' option to be safe.

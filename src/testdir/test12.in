@@ -4,6 +4,7 @@ Tests for 'directory' option.
 - "dir", in directory relative to current dir
 
 STARTTEST
+:so small.vim
 :set nocompatible
 :set dir=.,~
 :/start of testfile/,/end of testfile/w! Xtest1
@@ -42,7 +43,6 @@ STARTTEST
 :!echo under Xtest3 >>test.out
 :!ls Xtest.je >>test.out
 :!echo under Xtest3.swp >>test.out
-:!rm -rf Xtest1 Xtest2 Xtest.je
 :qa!
 ENDTEST
 

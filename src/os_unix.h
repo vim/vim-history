@@ -177,10 +177,6 @@
 # undef __ARGS
 #endif
 
-#ifndef W_OK
-# define W_OK 2		/* for systems that don't have W_OK in unistd.h */
-#endif
-
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
 # define HAVE_TOTAL_MEM
 #endif

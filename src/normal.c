@@ -712,7 +712,10 @@ getcount:
     ca.count1 = (ca.count0 == 0 ? 1 : ca.count0);
 
 #ifdef FEAT_EVAL
-    if (toplevel)
+    /*
+     * Only set v:count when called from main() and not a stuffed command.
+     */
+    if (toplevel && stuff_empty())
     {
 	set_vim_var_nr(VV_COUNT, ca.count0);
 	set_vim_var_nr(VV_COUNT1, ca.count1);
@@ -1335,6 +1338,15 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 	    oap->end = oap->start;
 	    oap->start = curwin->w_cursor;
+
+#ifdef FEAT_VIRTUALEDIT
+	    {
+		/* swap the two coladds */
+		colnr_t tmp = curbuf->b_visual_start_coladd;
+		curbuf->b_visual_start_coladd = curbuf->b_visual_end_coladd;
+		curbuf->b_visual_end_coladd = tmp;
+	    }
+#endif 
 	}
 
 	oap->line_count = oap->end.lnum - oap->start.lnum + 1;
@@ -1354,9 +1366,15 @@ do_pending_operator(cap, old_col, gui_yank)
 		{
 		    getvcol(curwin, &(oap->end), &start, NULL, &end);
 # ifdef FEAT_VIRTUALEDIT
-		    start += curbuf->b_visual_end_coladd;
-		    end += curbuf->b_visual_end_coladd;
-		    oap->start_vcol += curbuf->b_visual_start_coladd;
+		    
+		    if (virtual_active())
+		    {
+			start += curbuf->b_visual_end_coladd;
+			oap->start_vcol += curbuf->b_visual_start_coladd;
+
+			end = start;
+			oap->end_vcol = oap->start_vcol;
+		    }
 # endif
 
 		    if (start < oap->start_vcol)
@@ -1389,20 +1407,17 @@ do_pending_operator(cap, old_col, gui_yank)
 		/*
 		 * Correct oap->end.col and oap->start.col to be the
 		 * upper-left and lower-right corner of the block area.
+		 *
+		 * (Actually, this does convert column positions into character
+		 * positions)
 		 */
 		curwin->w_cursor.lnum = oap->end.lnum;
 		coladvance(oap->end_vcol);
 		oap->end = curwin->w_cursor;
-# ifdef FEAT_VIRTUALEDIT
-		oap->end.col += curwin->w_coladd;
-# endif
 
 		curwin->w_cursor = oap->start;
 		coladvance(oap->start_vcol);
 		oap->start = curwin->w_cursor;
-# ifdef FEAT_VIRTUALEDIT
-		oap->start.col += curwin->w_coladd;
-# endif
 	    }
 
 	    if (!redo_VIsual_busy && !gui_yank)
@@ -5022,7 +5037,7 @@ nv_percent(cap)
 	    setpcmark();
 			    /* round up, so CTRL-G will give same value */
 	    curwin->w_cursor.lnum = (curbuf->b_ml.ml_line_count *
-						      cap->count0 + 99) / 100;
+						    cap->count0 + 99L) / 100L;
 	    beginline(BL_SOL | BL_FIX);
 	}
     }

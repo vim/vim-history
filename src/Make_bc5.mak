@@ -576,7 +576,7 @@ $(OBJDIR)\os_w32dll.obj: os_w32dll.c
 $(OBJDIR)\if_ole.obj: if_ole.cpp
 
 $(OBJDIR)\os_w32exe.obj: os_w32exe.c
-	$(CC) $(CCARG) $(CC1) -WE $(CC2)$@ os_w32exe.c
+	$(CC) $(CCARG) $(CC1) -I$(INCLUDE) -WE $(CC2)$@ os_w32exe.c
 
 $(OBJDIR)\if_perl.obj: if_perl.c
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_perl.c

@@ -177,6 +177,7 @@ typedef struct syn_pattern
 #define HL_EXCLUDENL	0x800	/* exclude NL from match */
 #define HL_DISPLAY	0x1000	/* only used for displaying, not syncing */
 #define HL_FOLD		0x2000	/* define fold */
+#define HL_EXTEND	0x4000	/* ignore a keepend */
 
 #define SYN_ITEMS(buf)	((synpat_t *)((buf)->b_syn_patterns.ga_data))
 
@@ -329,6 +330,7 @@ static int	current_line_id = 0;	/* unique number for current line */
 static void syn_sync __ARGS((win_t *wp, linenr_t lnum, synstate_t *last_valid));
 static int syn_match_linecont __ARGS((linenr_t lnum));
 static void syn_start_line __ARGS((void));
+static void syn_update_ends __ARGS((int dolast));
 static void syn_stack_alloc __ARGS((void));
 static int syn_stack_cleanup __ARGS((void));
 static void syn_stack_free_entry __ARGS((buf_t *buf, synstate_t *p));
@@ -905,11 +907,31 @@ syn_match_linecont(lnum)
     static void
 syn_start_line()
 {
-    stateitem_t	*cur_si;
-    int		i;
-
     current_finished = FALSE;
     current_col = 0;
+
+    /*
+     * Need to update the end of a start/skip/end that continues from the
+     * previous line and regions that have "keepend".
+     */
+    if (current_state.ga_len > 0)
+	syn_update_ends(TRUE);
+
+    next_match_idx = -1;
+    ++current_line_id;
+}
+
+/*
+ * Check for items in the stack that need their end updated.
+ * When "dolast" is TRUE the last item is always updated.
+ * When "dolast" is FALSE the item with "keepend" is forcefully updated.
+ */
+    static void
+syn_update_ends(dolast)
+    int		dolast;
+{
+    stateitem_t	*cur_si;
+    int		i;
 
     /*
      * Need to update the end of a start/skip/end that continues from the
@@ -917,24 +939,24 @@ syn_start_line()
      * influence contained items.
      * Then check for items ending in column 0.
      */
-    if (current_state.ga_len)
+    i = current_state.ga_len - 1;
+    if (keepend_level >= 0)
+	for ( ; i > keepend_level; --i)
+	    if (CUR_STATE(i).si_flags & HL_EXTEND)
+		break;
+    for ( ; i < current_state.ga_len; ++i)
     {
-	for (i = 0; i < current_state.ga_len; ++i)
+	cur_si = &CUR_STATE(i);
+	if ((cur_si->si_flags & HL_KEEPEND)
+				 || (i == current_state.ga_len - 1 && dolast))
 	{
-	    cur_si = &CUR_STATE(i);
-	    if ((cur_si->si_flags & HL_KEEPEND)
-					     || i == current_state.ga_len - 1)
-	    {
-		cur_si->si_h_startpos.col = 0;	/* start highl. in col 0 */
-		cur_si->si_h_startpos.lnum = current_lnum;
-		update_si_end(cur_si, 0, FALSE);
-	    }
+	    cur_si->si_h_startpos.col = 0;	/* start highl. in col 0 */
+	    cur_si->si_h_startpos.lnum = current_lnum;
+	    update_si_end(cur_si, (int)current_col, !dolast);
 	}
-	check_keepend();
-	check_state_ends();
     }
-    next_match_idx = -1;
-    ++current_line_id;
+    check_keepend();
+    check_state_ends();
 }
 
 /****************************************
@@ -1790,16 +1812,14 @@ syn_current_attr(syncing, displaying)
 				&& (displaying || !(spp->sp_flags & HL_DISPLAY))
 				&& (spp->sp_type == SPTYPE_MATCH
 				    || spp->sp_type == SPTYPE_START)
-				&& ((current_next_list != 0
-					&& in_id_list(current_next_list,
-							     &spp->sp_syn, 0))
-				    || (current_next_list == 0
-					&& ((cur_si == NULL
-					    && !(spp->sp_flags & HL_CONTAINED))
-						|| (cur_si != NULL
-					 && in_id_list(cur_si->si_cont_list,
-					     &spp->sp_syn,
-					     spp->sp_flags & HL_CONTAINED))))))
+				&& (current_next_list != NULL
+				    ? in_id_list(current_next_list,
+							      &spp->sp_syn, 0)
+				    : (cur_si == NULL
+					? !(spp->sp_flags & HL_CONTAINED)
+					: in_id_list(cur_si->si_cont_list,
+					    &spp->sp_syn,
+					    spp->sp_flags & HL_CONTAINED))))
 			{
 			    /* If we already tried matching in this line, and
 			     * there isn't a match before next_match_col, skip
@@ -2161,6 +2181,7 @@ push_next_match(cur_si)
 check_state_ends()
 {
     stateitem_t	*cur_si;
+    int		had_extend = FALSE;
 
     cur_si = &CUR_STATE(current_state.ga_len - 1);
     for (;;)
@@ -2197,11 +2218,20 @@ check_state_ends()
 		if (!(current_next_flags & (HL_SKIPNL | HL_SKIPEMPTY))
 			&& syn_getcurline()[current_col] == NUL)
 		    current_next_list = NULL;
+
+		/* When the ended item has "extend", another item with
+		 * "keepend" now needs to check for its end. */
+		 if (cur_si->si_flags & HL_EXTEND)
+		     had_extend = TRUE;
+
 		pop_current_state();
 
 		if (current_state.ga_len == 0)
 		    break;
 		cur_si = &CUR_STATE(current_state.ga_len - 1);
+
+		if (had_extend)
+		    syn_update_ends(FALSE);
 
 		/*
 		 * Only for a region the search for the end continues after
@@ -2277,8 +2307,8 @@ update_si_attr(idx)
 }
 
 /*
- * Check the current stack for patterns with "keepend" flag.  Propagate the
- * match-end to contained items.
+ * Check the current stack for patterns with "keepend" flag.
+ * Propagate the match-end to contained items, until a "skipend" item is found.
  */
     static void
 check_keepend()
@@ -2294,8 +2324,17 @@ check_keepend()
     if (keepend_level < 0)
 	return;
 
+    /*
+     * Find the last index of an "extend" item.  "keepend" items before that
+     * won't do anything.  If there is no "extend" item "i" will be
+     * "keepend_level" and all "keepend" items will work normally.
+     */
+    for (i = current_state.ga_len - 1; i > keepend_level; --i)
+	if (CUR_STATE(i).si_flags & HL_EXTEND)
+	    break;
+
     maxpos.lnum = 0;
-    for (i = keepend_level; i < current_state.ga_len; ++i)
+    for ( ; i < current_state.ga_len; ++i)
     {
 	sip = &CUR_STATE(i);
 	if (maxpos.lnum != 0)
@@ -2346,8 +2385,8 @@ update_si_end(sip, startcol, force)
     end_idx = 0;
     startpos.lnum = current_lnum;
     startpos.col = startcol;
-    find_endpos(sip->si_idx, &startpos, &endpos,
-       &hl_endpos, &(sip->si_flags), &end_endpos, &end_idx, sip->si_extmatch);
+    find_endpos(sip->si_idx, &startpos, &endpos, &hl_endpos,
+		   &(sip->si_flags), &end_endpos, &end_idx, sip->si_extmatch);
 
     if (endpos.lnum == 0)
     {
@@ -2831,14 +2870,12 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	 */
 	for ( ; ktab != NULL; ktab = ktab->next)
 	    if (   STRCMP(keyword, ktab->keyword) == 0
-		&& (   (current_next_list != 0
-			&& in_id_list(current_next_list, &ktab->k_syn, 0))
-		    || (current_next_list == 0
-			&& ((cur_si == NULL && !(ktab->flags & HL_CONTAINED))
-			    || (cur_si != NULL
-				&& in_id_list(cur_si->si_cont_list,
-					&ktab->k_syn,
-					ktab->flags & HL_CONTAINED))))))
+		&& (current_next_list != 0
+		    ? in_id_list(current_next_list, &ktab->k_syn, 0)
+		    : (cur_si == NULL
+			? !(ktab->flags & HL_CONTAINED)
+			: in_id_list(cur_si->si_cont_list, &ktab->k_syn,
+						ktab->flags & HL_CONTAINED))))
 	    {
 		*endcol = startcol + len;
 		*flags = ktab->flags;
@@ -3270,6 +3307,14 @@ syn_lines_msg()
 
 static int  last_matchgroup;
 
+struct name_list
+{
+    int		flag;
+    char	*name;
+};
+
+static void syn_list_flags __ARGS((struct name_list *nl, int flags, int attr));
+
 /*
  * List one syntax item, for ":syntax" or "syntax list syntax_name".
  */
@@ -3283,6 +3328,25 @@ syn_list_one(id, syncing, link_only)
     int		idx;
     int		did_header = FALSE;
     synpat_t	*spp;
+    static struct name_list namelist1[] =
+		{
+		    {HL_DISPLAY, "display"},
+		    {HL_CONTAINED, "contained"},
+		    {HL_ONELINE, "oneline"},
+		    {HL_KEEPEND, "keepend"},
+		    {HL_EXTEND, "extend"},
+		    {HL_EXCLUDENL, "excludenl"},
+		    {HL_TRANSP, "transparent"},
+		    {HL_FOLD, "fold"},
+		    {0, NULL}
+		};
+    static struct name_list namelist2[] =
+		{
+		    {HL_SKIPWHITE, "skipwhite"},
+		    {HL_SKIPNL, "skipnl"},
+		    {HL_SKIPEMPTY, "skipempty"},
+		    {0, NULL}
+		};
 
     attr = hl_attr(HLF_D);		/* highlight like directories */
 
@@ -3321,63 +3385,15 @@ syn_list_one(id, syncing, link_only)
 	    --idx;
 	    msg_putchar(' ');
 	}
-	if (spp->sp_flags & HL_DISPLAY)
-	{
-	    msg_puts_attr((char_u *)"display", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_CONTAINED)
-	{
-	    msg_puts_attr((char_u *)"contained", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_ONELINE)
-	{
-	    msg_puts_attr((char_u *)"oneline", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_KEEPEND)
-	{
-	    msg_puts_attr((char_u *)"keepend", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_EXCLUDENL)
-	{
-	    msg_puts_attr((char_u *)"excludenl", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_TRANSP)
-	{
-	    msg_puts_attr((char_u *)"transparent", attr);
-	    msg_putchar(' ');
-	}
-	if (spp->sp_flags & HL_FOLD)
-	{
-	    msg_puts_attr((char_u *)"fold", attr);
-	    msg_putchar(' ');
-	}
+	syn_list_flags(namelist1, spp->sp_flags, attr);
+
 	if (spp->sp_cont_list != NULL)
-	{
 	    put_id_list((char_u *)"contains", spp->sp_cont_list, attr);
-	}
+
 	if (spp->sp_next_list != NULL)
 	{
 	    put_id_list((char_u *)"nextgroup", spp->sp_next_list, attr);
-	    if (spp->sp_flags & HL_SKIPWHITE)
-	    {
-		msg_puts_attr((char_u *)"skipwhite", attr);
-		msg_putchar(' ');
-	    }
-	    if (spp->sp_flags & HL_SKIPNL)
-	    {
-		msg_puts_attr((char_u *)"skipnl", attr);
-		msg_putchar(' ');
-	    }
-	    if (spp->sp_flags & HL_SKIPEMPTY)
-	    {
-		msg_puts_attr((char_u *)"skipempty", attr);
-		msg_putchar(' ');
-	    }
+	    syn_list_flags(namelist2, spp->sp_flags, attr);
 	}
 	if (spp->sp_flags & (HL_SYNC_HERE|HL_SYNC_THERE))
 	{
@@ -3403,6 +3419,22 @@ syn_list_one(id, syncing, link_only)
 	msg_putchar(' ');
 	msg_outtrans(HL_TABLE()[HL_TABLE()[id - 1].sg_link - 1].sg_name);
     }
+}
+
+    static void
+syn_list_flags(nl, flags, attr)
+    struct name_list	*nl;
+    int			flags;
+    int			attr;
+{
+    int		i;
+
+    for (i = 0; nl[i].flag != 0; ++i)
+	if (flags & nl[i].flag)
+	{
+	    msg_puts_attr((char_u *)nl[i].name, attr);
+	    msg_putchar(' ');
+	}
 }
 
 /*
@@ -3814,6 +3846,7 @@ get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
     } flagtab[] = { {"contained",   9,	HL_CONTAINED},
 		    {"oneline",	    7,	HL_ONELINE},
 		    {"keepend",	    7,	HL_KEEPEND},
+		    {"extend",	    6,	HL_EXTEND},
 		    {"excludenl",   9,	HL_EXCLUDENL},
 		    {"transparent", 11, HL_TRANSP},
 		    {"skipnl",	    6,	HL_SKIPNL},

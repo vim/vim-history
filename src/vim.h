@@ -56,6 +56,7 @@
  */
 #if defined(FEAT_GUI_W32) || defined(FEAT_GUI_W16)
 # define FEAT_GUI_MSWIN
+# define HAVE_DROP_FILE
 #endif
 #if defined(WIN32) || defined(WIN16)
 # define MSWIN
@@ -954,6 +955,13 @@ enum hlf_value
 # define O_EXTRA    O_BINARY
 #else
 # define O_EXTRA    0
+#endif
+
+#ifndef W_OK
+# define W_OK 2		/* for systems that don't have W_OK in unistd.h */
+#endif
+#ifndef R_OK
+# define R_OK 4		/* for systems that don't have R_OK in unistd.h */
 #endif
 
 /*

@@ -837,7 +837,6 @@ ml_recover()
     if (STRNCMP(b0p->b0_version, "VIM 3.0", 7) == 0)
     {
 	msg_start();
-	MSG_PUTS_ATTR(_("The file "), MSG_HIST);
 	msg_outtrans_attr(mfp->mf_fname, MSG_HIST);
 	MSG_PUTS_ATTR(_(" cannot be used with this version of Vim.\n"), MSG_HIST);
 	MSG_PUTS_ATTR(_("Use Vim version 3.0.\n"), MSG_HIST);
@@ -852,7 +851,6 @@ ml_recover()
     if (b0_magic_wrong(b0p))
     {
 	msg_start();
-	MSG_PUTS_ATTR(_("The file "), attr | MSG_HIST);
 	msg_outtrans_attr(mfp->mf_fname, attr | MSG_HIST);
 #if defined(MSDOS) || defined(MSWIN)
 	if (STRNCMP(b0p->b0_hname, "PC ", 3) == 0)
@@ -3644,9 +3642,9 @@ findswapname(buf, dirp, old_fname)
 		    {
 			char_u	*name;
 
-			name = alloc((unsigned)STRLEN(fname)
+			name = alloc((unsigned)(STRLEN(fname)
 				+ STRLEN(_("Swap file \""))
-				+ STRLEN(_("\" already exists!")) + 5);
+				+ STRLEN(_("\" already exists!")) + 5));
 			if (name != NULL)
 			{
 			    STRCPY(name, _("Swap file \""));

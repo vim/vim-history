@@ -65,5 +65,5 @@ $(TARGET) : $(OBJ)
 	$(LD_DEF) $(LDFLAGS) /exe=$(TARGET) $+
 
 clean :
-	del *.obj;*
-	del *.exe;*
+	-@ if "''F$SEARCH("*.obj")'" .NES. ""  then delete/noconfirm/nolog *.obj;*
+	-@ if "''F$SEARCH("*.exe")'" .NES. ""  then delete/noconfirm/nolog *.exe;*
