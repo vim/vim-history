@@ -726,6 +726,15 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	trash_input_buf();
 	got_int = TRUE;
     }
+
+    if (len == 1 && string[0] == CSI)
+    {
+	/* Turn CSI into K_CSI. */
+	string[1] = KS_EXTRA;
+	string[2] = KE_CSI;
+	len = 3;
+    }
+
     add_to_input_buf(string, len);
 
 #ifdef USE_XIM
