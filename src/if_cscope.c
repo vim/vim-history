@@ -1064,7 +1064,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	/* next symbol must be + or - */
 	if (strchr(CSQF_FLAGS, *qfpos) == NULL)
 	{
-	    char *nf = _("E469 invalid cscopequickfix flag %c for %c");
+	    char *nf = _("E469: invalid cscopequickfix flag %c for %c");
 	    char *buf = (char *)alloc(strlen(nf));
 
 	    /* strlen will be enough because we use chars */
@@ -1970,7 +1970,7 @@ cs_read_prompt(i)
     int		ch;
     char	*buf = NULL; /* buffer for possible error message from cscope */
     int		bufpos = 0;
-    static char	*cs_emsg = N_("E609 Cscope error: %s");
+    static char	*cs_emsg = N_("E609: Cscope error: %s");
 		/* maximum allowed len for Cscope error message */
     int		maxlen = IOSIZE - strlen(_(cs_emsg));
 
