@@ -1405,6 +1405,7 @@ AC_TYPE_UID_T
 AC_HEADER_TIME
 AC_CHECK_TYPE(ino_t, long)
 AC_CHECK_TYPE(dev_t, unsigned)
+AC_CHECK_TYPE(rlim_t, unsigned long)
 
 AC_MSG_CHECKING(for stack_t)
 if eval "test \"`echo '$''{'ac_cv_type_stack_t'+set}'`\" = set"; then

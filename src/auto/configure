@@ -5145,14 +5145,47 @@ EOF
 
 fi
 
+echo $ac_n "checking for rlim_t""... $ac_c" 1>&6
+echo "configure:5150: checking for rlim_t" >&5
+if eval "test \"`echo '$''{'ac_cv_type_rlim_t'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 5155 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+EOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  egrep "(^|[^a-zA-Z_0-9])rlim_t[^a-zA-Z_0-9]" >/dev/null 2>&1; then
+  rm -rf conftest*
+  ac_cv_type_rlim_t=yes
+else
+  rm -rf conftest*
+  ac_cv_type_rlim_t=no
+fi
+rm -f conftest*
+
+fi
+echo "$ac_t""$ac_cv_type_rlim_t" 1>&6
+if test $ac_cv_type_rlim_t = no; then
+  cat >> confdefs.h <<\EOF
+#define rlim_t unsigned long
+EOF
+
+fi
+
 
 echo $ac_n "checking for stack_t""... $ac_c" 1>&6
-echo "configure:5151: checking for stack_t" >&5
+echo "configure:5184: checking for stack_t" >&5
 if eval "test \"`echo '$''{'ac_cv_type_stack_t'+set}'`\" = set"; then
   echo "$ac_t""(cached) $ac_cv_type_stack_t" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5156 "configure"
+#line 5189 "configure"
 #include "confdefs.h"
 
 #include "confdefs.h"
