@@ -37,20 +37,20 @@
 
 static char *ctrl_x_msgs[] =
 {
-    N_(" Keyword completion (^N/^P)"), /* ctrl_x_mode == 0, ^P/^N compl. */
-    N_(" ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^V/^N/^P)"),
+    N_(" Keyword completion (^N^P)"), /* ctrl_x_mode == 0, ^P/^N compl. */
+    N_(" ^X mode (^E^Y^L^]^F^I^K^D^V^N^P)"),
     /* Scroll has it's own msgs, in it's place there is the msg for local
      * ctrl_x_mode = 0 (eg continue_status & CONT_LOCAL)  -- Acevedo */
-    N_(" Keyword Local completion (^N/^P)"),
-    N_(" Whole line completion (^L/^N/^P)"),
-    N_(" File name completion (^F/^N/^P)"),
-    N_(" Tag completion (^]/^N/^P)"),
-    N_(" Path pattern completion (^N/^P)"),
-    N_(" Definition completion (^D/^N/^P)"),
+    N_(" Keyword Local completion (^N^P)"),
+    N_(" Whole line completion (^L^N^P)"),
+    N_(" File name completion (^F^N^P)"),
+    N_(" Tag completion (^]^N^P)"),
+    N_(" Path pattern completion (^N^P)"),
+    N_(" Definition completion (^D^N^P)"),
     NULL,
-    N_(" Dictionary completion (^K/^N/^P)"),
-    N_(" Thesaurus completion (^T/^N/^P)"),
-    N_(" Command-line completion (^V/^N/^P)")
+    N_(" Dictionary completion (^K^N^P)"),
+    N_(" Thesaurus completion (^T^N^P)"),
+    N_(" Command-line completion (^V^N^P)")
 };
 
 static char_u e_hitend[] = N_("Hit end of paragraph");
@@ -5969,7 +5969,7 @@ ins_ctrl_g()
 #endif
 
     /*
-     * Don't map the register name. This also prevents the mode message to be
+     * Don't map the second key. This also prevents the mode message to be
      * deleted when ESC is hit.
      */
     ++no_mapping;
