@@ -742,11 +742,20 @@ add_menu_path(menu_path, menuarg, pri_tab, call_data
 
 		if (c)
 		{
-		    menu->strings[i] = alloc((unsigned)(STRLEN(call_data) + 2));
+		    menu->strings[i] = alloc((unsigned)(STRLEN(call_data) + 4));
 		    if (menu->strings[i] != NULL)
 		    {
 			menu->strings[i][0] = c;
 			STRCPY(menu->strings[i] + 1, call_data);
+			if (c == Ctrl_C)
+			{
+			    int	    len = STRLEN(menu->strings[i]);
+
+			    /* Append CTRL-\ CTRL-G to obey 'insertmode'. */
+			    menu->strings[i][len] = Ctrl_BSL;
+			    menu->strings[i][len + 1] = Ctrl_G;
+			    menu->strings[i][len + 2] = NUL;
+			}
 		    }
 		}
 		else
