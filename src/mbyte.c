@@ -4118,6 +4118,7 @@ convert_setup(vcp, from, to)
 
 /*
  * Do conversion on typed input characters in-place.
+ * The input and output are not NUL terminated!
  * Returns the length after conversion.
  */
     int
@@ -4127,27 +4128,25 @@ convert_input(ptr, len, maxlen)
     int		maxlen;
 {
     char_u	*d;
-    int		l;
+    int		dlen = len;
 
-    d = string_convert(&input_conv, ptr, &len);
+    d = string_convert(&input_conv, ptr, &dlen);
     if (d != NULL)
     {
-	l = (int)STRLEN(d);
-	if (l <= maxlen)
-	{
-	    mch_memmove(ptr, d, l);
-	    len = l;
-	}
+	if (dlen <= maxlen)
+	    mch_memmove(ptr, d, dlen);
+	else
+	    dlen = len;	    /* result is too long, keep the unconverted text */
 	vim_free(d);
     }
-    return len;
+    return dlen;
 }
 
 /*
  * Convert text "ptr[*lenp]" according to "vcp".
  * Returns the result in allocated memory and sets "*lenp".
  * When "lenp" is NULL, use NUL terminated strings.
- * When something goes wrong, NULL is returned.
+ * When something goes wrong, NULL is returned and "*lenp" is unchanged.
  */
     char_u *
 string_convert(vcp, ptr, lenp)
@@ -4238,8 +4237,8 @@ string_convert(vcp, ptr, lenp)
 	{
 	    int retlen;
 
-	    if (!lenp)
-		len /= sizeof(unsigned short);
+	    /* buffer size -> number of shorts */
+	    len /= sizeof(unsigned short);
 	    retlen = WideCharToMultiByte(vcp->vc_dbcs, 0,
 				(const unsigned short *)ptr, len, 0, 0, 0, 0);
 	    retval = alloc(retlen + 1);
@@ -4263,7 +4262,8 @@ string_convert(vcp, ptr, lenp)
 	    MultiByteToWideChar(GetACP(), 0, ptr, len,
 					   (unsigned short *) retval, retlen);
 	    if (lenp != NULL)
-		*lenp = retlen * sizeof(unsigned short); /* number of shorts -> buffer size */
+		/* number of shorts -> buffer size */
+		*lenp = retlen * sizeof(unsigned short);
 	}
 # endif
     }

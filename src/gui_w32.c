@@ -1411,14 +1411,16 @@ _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
 }
 
 /*
- * get the current composition string, in UCS-2; len is the number of
+ * get the current composition string, in UCS-2; *lenp is the number of
  * Unicode characters
  */
     static unsigned short *
-GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *len)
+GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
 {
-    LONG ret;
-    unsigned short *wbuf = NULL;
+    LONG	    ret;
+    unsigned short  *wbuf = NULL;
+    char_u	    *buf;
+    int		    len;
 
     if (!pImmGetContext)
 	return NULL; /* no imm32.dll */
@@ -1433,29 +1435,28 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *len)
 	wbuf = (unsigned short *) alloc(ret * sizeof(unsigned short));
 	if(!wbuf) return NULL;
 	pImmGetCompositionStringW(hIMC, GCS, wbuf, ret);
-	*len = ret / sizeof(unsigned short); /* char -> wchar */
+	*lenp = ret / sizeof(unsigned short); /* char -> wchar */
 	return wbuf;
     }
+
     /* ret < 0; we got an error, so try the ANSI version.  This'll work
      * on 9x/ME, but only if the codepage happens to be set to whatever
      * we're inputting. */
     ret = pImmGetCompositionStringA(hIMC, GCS, NULL, 0);
     if (ret <= 0)
 	return NULL; /* empty or error */
-    else
-    {
-	char_u *buf;
 
-	buf = alloc(ret);
-	if (buf == NULL)
-	    return NULL;
-	pImmGetCompositionStringA(hIMC, GCS, buf, ret);
+    buf = alloc(ret);
+    if (buf == NULL)
+	return NULL;
+    pImmGetCompositionStringA(hIMC, GCS, buf, ret);
 
-	/* convert from codepage to UCS-2 */
-	wbuf = (unsigned short *)string_convert(&ime_conv_cp, buf, &ret);
-	vim_free(buf);
-	*len = ret / sizeof(unsigned short); /* char_u -> wchar */
-    }
+    /* convert from codepage to UCS-2 */
+    len = ret;
+    wbuf = (unsigned short *)string_convert(&ime_conv_cp, buf, &len);
+    vim_free(buf);
+    *lenp = len / sizeof(unsigned short); /* char_u -> wchar */
+
     return wbuf;
 }
 
@@ -1469,6 +1470,7 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *len)
 GetResultStr(HWND hwnd, int GCS)
 {
     DWORD	dwBufLen;	/* Stogare for len. of composition str. */
+    int		buflen;
     HIMC	hIMC;		/* Input context handle. */
     unsigned short *buf = NULL;
     char *convbuf = NULL;
@@ -1481,7 +1483,8 @@ GetResultStr(HWND hwnd, int GCS)
     if (buf == NULL)
 	return NULL;
 
-    convbuf = string_convert(&ime_conv, (unsigned char *) buf, &dwBufLen);
+    buflen = dwBufLen * 2;	/* length in words -> length in bytes */
+    convbuf = string_convert(&ime_conv, (unsigned char *)buf, &buflen);
     pImmReleaseContext(hwnd, hIMC);
     vim_free(buf);
     return convbuf;
