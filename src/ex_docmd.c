@@ -1027,6 +1027,15 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 	ea.argt = cmdnames[(int)ea.cmdidx].cmd_argt;
 
+#ifdef HAVE_SANDBOX
+    if (sandbox != 0 && !(ea.argt & SBOXOK))
+    {
+	/* Command not allowed in sandbox. */
+	errormsg = e_sandbox;
+	goto doend;
+    }
+#endif
+
     if (!(ea.argt & RANGE) && ea.addr_count)	/* no range allowed */
     {
 	errormsg = e_norange;

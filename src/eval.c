@@ -321,6 +321,27 @@ eval_to_string(arg, nextcmd)
     return retval;
 }
 
+# if defined(STATUSLINE) || defined(PROTO)
+/*
+ * Call eval_to_string() with "sandbox" set and not using local variables.
+ */
+    char_u *
+eval_to_string_safe(arg, nextcmd)
+    char_u	*arg;
+    char_u	**nextcmd;
+{
+    char_u	*retval;
+    void	*save_funccalp;
+
+    save_funccalp = save_funccal();
+    ++sandbox;
+    retval = eval_to_string(arg, nextcmd);
+    --sandbox;
+    restore_funccal(save_funccalp);
+    return retval;
+}
+# endif
+
 /*
  * ":let var = expr"	assignment command.
  * ":let var"		list one variable value

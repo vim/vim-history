@@ -52,7 +52,7 @@ static void u_doit __ARGS((int count));
 static void u_undoredo __ARGS((void));
 static void u_undo_end __ARGS((void));
 static void u_freelist __ARGS((struct u_header *));
-static void u_freeentry __ARGS((u_entry_t *, long));
+static void u_freeentry __ARGS((struct u_entry *, long));
 
 static char_u *u_blockalloc __ARGS((long_u));
 static void u_free_line __ARGS((char_u *));
@@ -152,8 +152,20 @@ u_savecommon(top, bot, newbot)
     linenr_t	    lnum;
     long	    i;
     struct u_header *uhp;
-    u_entry_t  *uep;
+    struct u_entry  *uep;
     long	    size;
+
+#ifdef HAVE_SANDBOX
+    /*
+     * In the sandbox it's not allowed to change the text.  Letting the
+     * undo fail is a crude way to make all change commands fail.
+     */
+    if (sandbox != 0)
+    {
+	EMSG(e_sandbox);
+	return FAIL;
+    }
+#endif
 
     /*
      * if curbuf->b_u_synced == TRUE make a new header
@@ -195,7 +207,7 @@ u_savecommon(top, bot, newbot)
 		       ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
 
 	/* save named marks for undo */
-	mch_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(pos_t) * NMARKS);
+	mch_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
 	curbuf->b_u_newhead = uhp;
 	if (curbuf->b_u_oldhead == NULL)
 	    curbuf->b_u_oldhead = uhp;
@@ -217,7 +229,7 @@ u_savecommon(top, bot, newbot)
     /*
      * add lines in front of entry list
      */
-    uep = (u_entry_t *)u_alloc_line((unsigned)sizeof(u_entry_t));
+    uep = (struct u_entry *)u_alloc_line((unsigned)sizeof(struct u_entry));
     if (uep == NULL)
 	goto nomem;
 
@@ -259,7 +271,7 @@ u_savecommon(top, bot, newbot)
     return OK;
 
 nomem:
-    if (ask_yesno((char_u *)_("No undo possible; continue anyway"), TRUE) == 'y')
+    if (ask_yesno((char_u *)"No undo possible; continue anyway", TRUE) == 'y')
     {
 	undo_off = TRUE;	    /* will be reset when character typed */
 	return OK;
@@ -314,6 +326,15 @@ u_redo(count)
 u_doit(count)
     int count;
 {
+#ifdef HAVE_SANDBOX
+    /* In the sandbox it's not allowed to change the text. */
+    if (sandbox != 0)
+    {
+	EMSG(e_sandbox);
+	return;
+    }
+#endif
+
     u_newcount = 0;
     u_oldcount = 0;
     while (count--)
@@ -369,22 +390,27 @@ u_undoredo()
     linenr_t	lnum;
     linenr_t	newlnum = MAXLNUM;
     long	i;
-    u_entry_t	*uep, *nuep;
-    u_entry_t	*newlist = NULL;
+    struct u_entry *uep, *nuep;
+    struct u_entry *newlist = NULL;
     int		old_flags;
     int		new_flags;
-    pos_t	namedm[NMARKS];
+    FPOS	namedm[NMARKS];
     int		empty_buffer;		    /* buffer became empty */
 
     old_flags = curbuf->b_u_curhead->uh_flags;
     new_flags = (curbuf->b_changed ? UH_CHANGED : 0) +
 	       ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
+    if (old_flags & UH_CHANGED)
+	changed();
+    else
+	unchanged(curbuf, FALSE);
     setpcmark();
+    changed_line_abv_curs();	/* need to recompute cursor posn on screen */
 
     /*
      * save marks before undo/redo
      */
-    mch_memmove(namedm, curbuf->b_namedm, sizeof(pos_t) * NMARKS);
+    mch_memmove(namedm, curbuf->b_namedm, sizeof(FPOS) * NMARKS);
     curbuf->b_op_start.lnum = curbuf->b_ml.ml_line_count;
     curbuf->b_op_start.col = 0;
     curbuf->b_op_end.lnum = 0;
@@ -398,7 +424,7 @@ u_undoredo()
 	    bot = curbuf->b_ml.ml_line_count + 1;
 	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
 	{
-	    EMSG(_("u_undo: line numbers wrong"));
+	    EMSG("u_undo: line numbers wrong");
 	    changed();		/* don't want UNCHANGED now */
 	    return;
 	}
@@ -416,8 +442,7 @@ u_undoredo()
 	/* delete the lines between top and bot and save them in newarray */
 	if (oldsize)
 	{
-	    if ((newarray = (char_u **)u_alloc_line(
-			    (unsigned)(sizeof(char_u *) * oldsize))) == NULL)
+	    if ((newarray = (char_u **)u_alloc_line((unsigned)(sizeof(char_u *) * oldsize))) == NULL)
 	    {
 		do_outofmem_msg();
 		/*
@@ -435,11 +460,11 @@ u_undoredo()
 	    /* delete backwards, it goes faster in most cases */
 	    for (lnum = bot - 1, i = oldsize; --i >= 0; --lnum)
 	    {
-		/* what can we do when we run out of memory? */
+		    /* what can we do when we run out of memory? */
 		if ((newarray[i] = u_save_line(lnum)) == NULL)
 		    do_outofmem_msg();
-		/* remember we deleted the last line in the buffer, and a
-		 * dummy empty line will be inserted */
+		    /* remember we deleted the last line in the buffer, and a
+		     * dummy empty line will be inserted */
 		if (curbuf->b_ml.ml_line_count == 1)
 		    empty_buffer = TRUE;
 		ml_delete(lnum, FALSE);
@@ -474,9 +499,6 @@ u_undoredo()
 	    if (curbuf->b_op_end.lnum > top + oldsize)
 		curbuf->b_op_end.lnum += newsize - oldsize;
 	}
-
-	changed_lines(top + 1, 0, bot, newsize - oldsize);
-
 	/* set '[ and '] mark */
 	if (top + 1 < curbuf->b_op_start.lnum)
 	    curbuf->b_op_start.lnum = top + 1;
@@ -503,10 +525,6 @@ u_undoredo()
     curbuf->b_u_curhead->uh_flags = new_flags;
     if ((old_flags & UH_EMPTYBUF) && bufempty())
 	curbuf->b_ml.ml_flags |= ML_EMPTY;
-    if (old_flags & UH_CHANGED)
-	changed();
-    else
-	unchanged(curbuf, FALSE);
 
     /*
      * restore marks from before undo/redo
@@ -553,12 +571,10 @@ u_undo_end()
     if ((u_oldcount -= u_newcount) != 0)
 	msgmore(-u_oldcount);
     else if (u_newcount > p_report)
-    {
-	if (u_newcount == 1)
-	    MSG(_("1 change"));
-	else
-	    smsg((char_u *)_("%ld changes"), u_newcount);
-    }
+	smsg((char_u *)"%ld change%s", u_newcount, plural(u_newcount));
+
+    update_topline();
+    update_curbuf(NOT_VALID);	/* need to update all windows in this buffer */
 }
 
 /*
@@ -579,7 +595,7 @@ u_sync()
  */
     void
 u_unchanged(buf)
-    buf_t	*buf;
+    BUF	    *buf;
 {
     struct u_header	*uh;
 
@@ -595,12 +611,12 @@ u_unchanged(buf)
     static void
 u_getbot()
 {
-    u_entry_t	*uep;
+    struct u_entry	*uep;
 
     if (curbuf->b_u_newhead == NULL ||
 				(uep = curbuf->b_u_newhead->uh_entry) == NULL)
     {
-	EMSG(_("undo list corrupt"));
+	EMSG("undo list corrupt");
 	return;
     }
 
@@ -615,7 +631,7 @@ u_getbot()
 				(curbuf->b_ml.ml_line_count - uep->ue_lcount);
 	if (uep->ue_bot < 1 || uep->ue_bot > curbuf->b_ml.ml_line_count)
 	{
-	    EMSG(_("undo line missing"));
+	    EMSG("undo line missing");
 	    uep->ue_bot = uep->ue_top + 1;  /* assume all lines deleted, will
 					     * get all the old lines back
 					     * without deleting the current
@@ -634,7 +650,7 @@ u_getbot()
 u_freelist(uhp)
     struct u_header *uhp;
 {
-    u_entry_t	*uep, *nuep;
+    struct u_entry	*uep, *nuep;
 
     for (uep = uhp->uh_entry; uep != NULL; uep = nuep)
     {
@@ -664,7 +680,7 @@ u_freelist(uhp)
  */
     static void
 u_freeentry(uep, n)
-    u_entry_t	*uep;
+    struct u_entry  *uep;
     long	    n;
 {
     while (n)
@@ -677,7 +693,7 @@ u_freeentry(uep, n)
  */
     void
 u_clearall(buf)
-    buf_t	*buf;
+    BUF	    *buf;
 {
     buf->b_u_newhead = buf->b_u_oldhead = buf->b_u_curhead = NULL;
     buf->b_u_synced = TRUE;
@@ -753,15 +769,22 @@ u_undoline()
 	return;
     }
     ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
-    changed_bytes(curbuf->b_u_line_lnum, 0);
     u_free_line(curbuf->b_u_line_ptr);
     curbuf->b_u_line_ptr = oldp;
+    changed();
+#ifdef SYNTAX_HL
+    /* recompute syntax hl., starting with current line */
+    syn_changed(curbuf->b_u_line_lnum);
+#endif
 
     t = curbuf->b_u_line_colnr;
     if (curwin->w_cursor.lnum == curbuf->b_u_line_lnum)
 	curbuf->b_u_line_colnr = curwin->w_cursor.col;
+    changed_cline_bef_curs();
     curwin->w_cursor.col = t;
     curwin->w_cursor.lnum = curbuf->b_u_line_lnum;
+    approximate_botline();	/* w_botline may have changed a bit */
+    update_screen(VALID_TO_CURSCHAR);
 }
 
 /*
@@ -837,12 +860,12 @@ u_undoline()
  */
     static char_u *
 u_blockalloc(size)
-    long_u	size;
+    long_u  size;
 {
-    mblock_t	*p;
-    mblock_t	*mp, *next;
+    struct m_block *p;
+    struct m_block *mp, *next;
 
-    p = (mblock_t *)lalloc(size + sizeof(mblock_t), FALSE);
+    p = (struct m_block *)lalloc(size + sizeof(struct m_block), FALSE);
     if (p != NULL)
     {
 	 /* Insert the block into the allocated block list, keeping it
@@ -867,9 +890,9 @@ u_blockalloc(size)
  */
     void
 u_blockfree(buf)
-    buf_t	*buf;
+    BUF	    *buf;
 {
-    mblock_t	*p, *np;
+    struct m_block  *p, *np;
 
     for (p = buf->b_block_head.mb_next; p != NULL; p = np)
     {
@@ -889,31 +912,30 @@ u_blockfree(buf)
 u_free_line(ptr)
     char_u *ptr;
 {
-    minfo_t	*next;
-    minfo_t	*prev, *curr;
-    minfo_t	*mp;
-    mblock_t	*nextb;
+    info_t		*next;
+    info_t		*prev, *curr;
+    info_t		*mp;
+    struct m_block	*nextb;
 
     if (ptr == NULL || ptr == IObuff)
 	return;	/* illegal address can happen in out-of-memory situations */
 
-    mp = (minfo_t *)(ptr - M_OFFSET);
+    mp = (info_t *)(ptr - M_OFFSET);
 
     /* find block where chunk could be a part off */
     /* if we change curbuf->b_mb_current, curbuf->b_m_search is set to NULL */
-    if (curbuf->b_mb_current == NULL || mp < (minfo_t *)curbuf->b_mb_current)
+    if (curbuf->b_mb_current == NULL || mp < (info_t *)curbuf->b_mb_current)
     {
 	curbuf->b_mb_current = curbuf->b_block_head.mb_next;
 	curbuf->b_m_search = NULL;
     }
-    if ((nextb = curbuf->b_mb_current->mb_next) != NULL
-						     && (minfo_t *)nextb < mp)
+    if ((nextb = curbuf->b_mb_current->mb_next) != NULL && (info_t *)nextb < mp)
     {
 	curbuf->b_mb_current = nextb;
 	curbuf->b_m_search = NULL;
     }
-    while ((nextb = curbuf->b_mb_current->mb_next) != NULL
-						     && (minfo_t *)nextb < mp)
+    while ((nextb = curbuf->b_mb_current->mb_next) != NULL &&
+							 (info_t *)nextb < mp)
 	curbuf->b_mb_current = nextb;
 
     curr = NULL;
@@ -994,18 +1016,18 @@ u_free_line(ptr)
 u_alloc_line(size)
     unsigned	    size;
 {
-    minfo_t	*mp, *mprev, *mp2;
-    mblock_t	*mbp;
-    int		size_align;
+    info_t	    *mp, *mprev, *mp2;
+    struct m_block  *mbp;
+    int		    size_align;
 
     /*
      * Add room for size field and trailing NUL byte.
-     * Adjust for minimal size (must be able to store minfo_t
+     * Adjust for minimal size (must be able to store info_t
      * plus a trailing NUL, so the chunk can be released again)
      */
     size += M_OFFSET + 1;
-    if (size < sizeof(minfo_t) + 1)
-      size = sizeof(minfo_t) + 1;
+    if (size < sizeof(info_t) + 1)
+      size = sizeof(info_t) + 1;
 
     /*
      * round size up for alignment
@@ -1050,7 +1072,7 @@ u_alloc_line(size)
 		int	n = (size_align > (MEMBLOCKSIZE / 4)
 						 ? size_align : MEMBLOCKSIZE);
 
-		mp = (minfo_t *)u_blockalloc((long_u)n);
+		mp = (info_t *)u_blockalloc((long_u)n);
 		if (mp == NULL)
 		    return (NULL);
 		mp->m_size = n;
@@ -1065,9 +1087,9 @@ u_alloc_line(size)
     }
 
     /* if the chunk we found is large enough, split it up in two */
-    if ((long)mp->m_size - size_align >= (long)(sizeof(minfo_t) + 1))
+    if ((long)mp->m_size - size_align >= (long)(sizeof(info_t) + 1))
     {
-	mp2 = (minfo_t *)((char_u *)mp + size_align);
+	mp2 = (info_t *)((char_u *)mp + size_align);
 	mp2->m_size = mp->m_size - size_align;
 	mp2->m_next = mp->m_next;
 	mprev->m_next = mp2;
@@ -1080,7 +1102,7 @@ u_alloc_line(size)
     curbuf->b_m_search = mprev;
     curbuf->b_mb_current = mbp;
 
-    mp = (minfo_t *)((char_u *)mp + M_OFFSET);
+    mp = (info_t *)((char_u *)mp + M_OFFSET);
     *(char_u *)mp = NUL;		    /* set the first byte to NUL */
 
     return ((char_u *)mp);
@@ -1110,14 +1132,14 @@ u_save_line(lnum)
  * check the first character, because it can only be "dos", "unix" or "mac").
  */
     int
-bufIsChanged(buf)
-    buf_t	*buf;
+buf_changed(buf)
+    BUF	    *buf;
 {
-    return (buf->b_changed || file_ff_differs(buf));
+    return (buf->b_changed || *buf->b_p_ff != buf->b_start_ffc);
 }
 
     int
-curbufIsChanged()
+curbuf_changed()
 {
-    return (curbuf->b_changed || file_ff_differs(curbuf));
+    return (curbuf->b_changed || *curbuf->b_p_ff != curbuf->b_start_ffc);
 }

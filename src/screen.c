@@ -2876,7 +2876,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    curwin = wp;
 	    curbuf = wp->w_buffer;
 
-	    str = eval_to_string(p, &t);
+	    str = eval_to_string_safe(p, &t);
 	    if (str != NULL && *str != 0)
 	    {
 		t = str;
