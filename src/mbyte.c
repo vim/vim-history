@@ -109,6 +109,10 @@
 # endif
 #endif
 
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
+
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
 static int enc_canon_search __ARGS((char_u *name));
@@ -1099,11 +1103,23 @@ utf_char2cells(c)
 	{0x2642, 0x2642}, {0x2660, 0x2661}, {0x2663, 0x2665},
 	{0x2667, 0x266A}, {0x266C, 0x266D}, {0x266F, 0x266F},
 	{0x273D, 0x273D}, {0x2776, 0x277F}, {0xE000, 0xF8FF},
-	{0xFFFD, 0xFFFD}
+	{0xFFFD, 0xFFFD}, /* {0xF0000, 0xFFFFD}, {0x100000, 0x10FFFD} */
     };
 
     if (c >= 0x100)
     {
+#ifdef __STDC_ISO_10646__
+	/*
+	 * Assume the library function wcwidth() works better than our own
+	 * stuff.  It should return 1 for ambiguous width chars!
+	 */
+	int	n = wcwidth(c);
+
+	if (n < 0)
+	    return 6;		/* unprintable, displays <xxxx> */
+	if (n > 1)
+	    return n;
+#else
 	if (!utf_printable(c))
 	    return 6;		/* unprintable, displays <xxxx> */
 	if (c >= 0x1100
@@ -1118,8 +1134,10 @@ utf_char2cells(c)
 		|| (c >= 0xfe30 && c <= 0xfe6f)	/* CJK Compatibility Forms */
 		|| (c >= 0xff00 && c <= 0xff60)	/* Fullwidth Forms */
 		|| (c >= 0xffe0 && c <= 0xffe6)
-		|| (c >= 0x20000 && c <= 0x2ffff)))
+		|| (c >= 0x20000 && c <= 0x2fffd)
+		|| (c >= 0x30000 && c <= 0x3fffd)))
 	    return 2;
+#endif
     }
 
     /* Characters below 0x100 are influenced by 'isprint' option */
@@ -1748,6 +1766,12 @@ utf_iscomposing(c)
 utf_printable(c)
     int		c;
 {
+#ifdef __STDC_ISO_10646__
+    /*
+     * Assume the iswprint() library function works better than our own stuff.
+     */
+    return iswprint(c);
+#else
     /* Sorted list of non-overlapping intervals.
      * 0xd800-0xdfff is reserved for UTF-16, actually illegal. */
     static struct interval nonprint[] =
@@ -1758,6 +1782,7 @@ utf_printable(c)
     };
 
     return !intable(nonprint, sizeof(nonprint), c);
+#endif
 }
 
 /*
@@ -1771,7 +1796,7 @@ utf_class(c)
     int		c;
 {
     /* sorted list of non-overlapping intervals */
-    static struct interval
+    static struct clinterval
     {
 	unsigned short first;
 	unsigned short last;
@@ -1840,7 +1865,7 @@ utf_class(c)
 	{0xff5b, 0xff65, 1},		/* half/fullwidth ASCII */
     };
     int bot = 0;
-    int top = sizeof(classes) / sizeof(struct interval) - 1;
+    int top = sizeof(classes) / sizeof(struct clinterval) - 1;
     int mid;
 
     /* First quick check for Latin1 characters, use 'iskeyword'. */
