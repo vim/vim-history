@@ -3336,6 +3336,24 @@ expand_env_esc(src, dst, dstlen, esc)
 #endif /* UNIX || VMS */
 	    }
 
+#ifdef BACKSLASH_IN_FILENAME
+	    /* If 'shellslash' is set change backslashes to forward slashes.
+	     * Can't use slash_adjust(), p_ssl may be set temporarily. */
+	    if (p_ssl && var != NULL && vim_strchr(var, '\\') != NULL)
+	    {
+		char_u	*p = vim_strsave(var);
+
+		if (p != NULL)
+		{
+		    if (mustfree)
+			vim_free(var);
+		    var = p;
+		    mustfree = TRUE;
+		    forward_slash(var);
+		}
+	    }
+#endif
+
 	    /* If "var" contains white space, escape it with a backslash.
 	     * Required for ":e ~/tt" when $HOME includes a space. */
 	    if (esc && var != NULL && vim_strpbrk(var, (char_u *)" \t") != NULL)

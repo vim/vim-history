@@ -17,6 +17,7 @@ void buf_store_time __ARGS((buf_T *buf, struct stat *st, char_u *fname));
 void write_lnum_adjust __ARGS((linenr_T offset));
 void vim_deltempdir __ARGS((void));
 char_u *vim_tempname __ARGS((int extra_char));
+void forward_slash __ARGS((char_u *fname));
 void do_augroup __ARGS((char_u *arg, int del_group));
 int check_ei __ARGS((void));
 void do_autocmd __ARGS((char_u *arg, int forceit));

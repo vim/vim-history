@@ -6255,13 +6255,11 @@ static void auto_next_pat __ARGS((AutoPatCmd *apc, int stop_at_last));
 static EVENT_T	last_event;
 static int	last_group;
 
-#ifdef BACKSLASH_IN_FILENAME
-static void forward_slash __ARGS((char_u *));
-
+#if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
 /*
  * Convert all backslashes in fname to forward slashes in-place.
  */
-    static void
+    void
 forward_slash(fname)
     char_u	*fname;
 {
@@ -6717,10 +6715,19 @@ do_autocmd(arg, forceit)
     if (*cmd)
 	*cmd++ = NUL;
 
-    /* expand environment variables in the pattern */
+    /* Expand environment variables in the pattern.  Set 'shellslash', we want
+     * forward slashes here. */
     if (vim_strchr(pat, '$') != NULL || vim_strchr(pat, '~') != NULL)
     {
+#ifdef BACKSLASH_IN_FILENAME
+	int	p_ssl_save = p_ssl;
+
+	p_ssl = TRUE;
+#endif
 	envpat = expand_env_save(pat);
+#ifdef BACKSLASH_IN_FILENAME
+	p_ssl = p_ssl_save;
+#endif
 	if (envpat != NULL)
 	    pat = envpat;
     }
