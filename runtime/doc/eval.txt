@@ -1,10 +1,10 @@
-*eval.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 18
+*eval.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Expression evaluation					*expression* *expr*
+Expression evaluation				*expression* *expr* *ee3*
 
 Note: Expression evaluation can be disabled at compile time.  If this has been
 done, the features in this document are not available.  See |+eval| and the
@@ -630,6 +630,13 @@ v:lang		The current locale setting for messages of the runtime
 		in a different language than what is used for character
 		encoding.  See |multi-lang|.
 
+						*v:lc_time* *lc_time-variable*
+v:lc_time	The current locale setting for time messages of the runtime
+		environment.  This allows Vim scripts to be aware of the
+		current language.  Technical: it's the value of LC_TIME.
+		This variable can not be set directly, use the |:language|
+		command.  See |multi-lang|.
+
 						*v:ctype* *ctype-variable*
 v:ctype		The current locale setting for characters of the runtime
 		environment.  This allows Vim scripts to be aware of the
@@ -1170,6 +1177,15 @@ expand({expr} [, {flag}])				*expand()*
 		See |glob()| for finding existing files.  See |system()| for
 		getting the raw output of an external command.
 
+expandpath({expr}, {pathlist})				*expandpath()*
+		Find all matches for {expr} in each element of {pathlist}.
+		Each match is followed by a <NL>.  Example: >
+			let list = expandpath("colors/*.vim", &runtimepath)
+<		This gets a list of the color scheme files in 'runtimepath'.
+		{pathlist} must be a comma separated list of paths.
+		When there are no matches an empty string is returned.
+
+
 filereadable({file})					*filereadable()*
 		The result is a Number, which is TRUE when a file with the
 		name {file} exists, and can be read.  If {file} doesn't exist,
@@ -1191,7 +1207,7 @@ fnamemodify({fname}, {mods})				*fnamemodify()*
 		Example: >
 			:echo fnamemodify("main.c", ":p:h")
 <		results in: >
-			/home/mool/vim/vim/src/
+			/home/mool/vim/vim/src
 <		Note: Environment variables and "~" don't work in {fname}, use
 		|expand()| first then.
 
@@ -1916,7 +1932,9 @@ strftime({format} [, {time}])				*strftime()*
 		{format} depends on your system, thus this is not portable!
 		See the manual page of the C function strftime() for the
 		format.  The maximum length of the result is 80 characters.
-		See also |localtime()| and |getftime()|.  Examples: >
+		See also |localtime()| and |getftime()|.
+		The language can be changed with the |:language| command.
+		Examples: >
 		  :echo strftime("%c")		   Sun Apr 27 11:49:23 1997
 		  :echo strftime("%Y %b %d %X")	   1997 Apr 27 11:53:25
 		  :echo strftime("%y%m%d %T")	   970427 11:53:55
@@ -2343,7 +2361,7 @@ A function local to a script must start with "s:".  A local script function
 can only be called from within the script and from functions, user commands
 and autocommands defined in the script.  It is also possible to call the
 function from a mappings defined in the script, but then |<SID>| must be used
-instead of ":s" when the mapping is expanded outside of the script.
+instead of "s:" when the mapping is expanded outside of the script.
 
 							*:fu* *:function*
 :fu[nction]		List all functions and their arguments.
@@ -2544,7 +2562,7 @@ This would call the function "my_func_whizz(parameter)"
 ==============================================================================
 7. Commands						*expression-commands*
 
-:let {var-name} = {expr1}				*:let*
+:let {var-name} = {expr1}				*:let* *el1*
 			Set internal variable {var-name} to the result of the
 			expression {expr1}.  The variable will get the type
 			from the {expr}.  if {var-name} didn't exist yet, it
@@ -2866,7 +2884,7 @@ missing: >
 	:endif
 <
 ==============================================================================
-10. The sandbox					*eval-sandbox* *sandbox*
+10. The sandbox					*eval-sandbox* *sandbox* *es5*
 
 The 'foldexpr', 'includeexpr', 'indentexpr', 'statusline' and 'foldtext'
 options are evaluated in a sandbox.  This means that you are protected from

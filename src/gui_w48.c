@@ -167,11 +167,7 @@ static int		s_need_activate = FALSE;
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
 # define MyTranslateMessage(x) global_ime_TranslateMessage(x)
 #else
-// # ifdef FEAT_MBYTE
-// #  define MyTranslateMessage(x) LCTranslateMessage(x)
-// # else
-#  define MyTranslateMessage(x) TranslateMessage(x)
-// # endif
+# define MyTranslateMessage(x) TranslateMessage(x)
 #endif
 
 #ifdef FEAT_MBYTE
@@ -2991,10 +2987,10 @@ mch_set_mouse_shape(int shape)
 convert_filter(char_u *s)
 {
     char_u	*res;
-    int_u	s_len = (unsigned)(STRLEN(s) + 3);
-    int_u	i;
+    unsigned	s_len = (unsigned)STRLEN(s);
+    unsigned	i;
 
-    res = alloc(s_len);
+    res = alloc(s_len + 3);
     if (res != NULL)
     {
 	STRCPY(res, s);

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	DSSSL
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Fre, 13 Apr 2001 23:18:44 +0200
+" Last Change:	Die, 17 Apr 2001 08:25:44 +0200
 " Filenames:	*.dsl
 " URL:		http://www.zellner.org/vim/syntax/dsl.vim
 " $Id$
@@ -26,7 +26,7 @@ syn region  dslCond matchgroup=dslCondDelim start="\[\_[^[]\+\[" end="]]" contai
 
 syn region dslRegion matchgroup=Delimiter start=+(+ end=+)+ contains=dslRegion,dslString,dslComment
 syn match dslString +"\_[^"]*"+ contained
-syn match dslComment +;;.*$+
+syn match dslComment +;.*$+
 
 " The default highlighting.
 hi def link dslString		String

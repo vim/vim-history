@@ -132,10 +132,10 @@ ui_inchar(buf, maxlen, wtime)
     }
 #endif
 
-#ifdef NO_CONSOLE
+#ifdef NO_CONSOLE_INPUT
     /* Don't wait for character input when the window hasn't been opened yet.
      * Must return something, otherwise we'll loop forever.  */
-    if (!gui.in_use || gui.starting)
+    if (no_console_input())
     {
 	buf[0] = CR;
 	return 1;
@@ -180,6 +180,10 @@ ui_char_avail()
     }
 #endif
 #ifndef NO_CONSOLE
+# ifdef NO_CONSOLE_INPUT
+    if (no_console_input())
+	return 0;
+# endif
     return mch_char_avail();
 #else
     return 0;
@@ -1039,6 +1043,7 @@ clip_invert_rectangle(row, col, height, width, invert)
  * available for pasting.
  * When "both" is TRUE also copy to the '+' register.
  */
+/*ARGSUSED*/
     void
 clip_copy_modeless_selection(both)
     int		both;
@@ -2049,9 +2054,10 @@ static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_T *lnump));
  * remembered.
  */
     int
-jump_to_mouse(flags, inclusive)
+jump_to_mouse(flags, inclusive, which_button)
     int		flags;
     int		*inclusive;	/* used for inclusive operator, can be NULL */
+    int		which_button;	/* MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE */
 {
     static int	on_status_line = 0;	/* #lines below bottom of window */
 #ifdef FEAT_VERTSPLIT
@@ -2232,7 +2238,7 @@ retnomove:
 # endif
 #endif
     }
-    else if (on_status_line)
+    else if (on_status_line && which_button == MOUSE_LEFT)
     {
 #ifdef FEAT_WINDOWS
 	/* Drag the status line */
@@ -2242,7 +2248,7 @@ retnomove:
 	return IN_STATUS_LINE;			/* Cursor didn't move */
     }
 #ifdef FEAT_VERTSPLIT
-    else if (on_sep_line)
+    else if (on_sep_line && which_button == MOUSE_LEFT)
     {
 	/* Drag the separator column */
 	count = col - curwin->w_wincol - curwin->w_width + 1 - on_sep_line;
@@ -2606,3 +2612,61 @@ get_fpos_of_mouse(mpos)
 #endif
 
 #endif /* FEAT_MOUSE */
+
+#if defined(FEAT_GUI) || defined(WIN32) || defined(PROTO)
+/*
+ * Called when focus changed.  Used for the GUI or for systems where this can
+ * be done in the console (Win32).
+ */
+    void
+ui_focus_change(in_focus)
+    int		in_focus;	/* TRUE if focus gained. */
+{
+    static time_t	last_time = (time_t)0;
+    int			need_redraw = FALSE;
+
+    /* When activated: Check if any file was modified outside of Vim.
+     * Only do this when not done within the last two seconds (could get
+     * several events in a row). */
+    if (in_focus && last_time + 2 < time(NULL))
+    {
+	need_redraw = check_timestamps(
+# ifdef FEAT_GUI
+		gui.in_use
+# else
+		FALSE
+# endif
+		);
+	last_time = time(NULL);
+    }
+
+#ifdef FEAT_AUTOCMD
+    /*
+     * Fire the focus gained/lost autocommand.
+     */
+    need_redraw |= apply_autocmds(in_focus ? EVENT_FOCUSGAINED
+				: EVENT_FOCUSLOST, NULL, NULL, FALSE, curbuf);
+#endif
+
+    if (need_redraw)
+    {
+	/* Something was executed, make sure the cursor is put back where it
+	 * belongs. */
+	need_wait_return = FALSE;
+
+	if (State & CMDLINE)
+	    redrawcmdline();
+	else if (State == HITRETURN || State == SETWSIZE || State == ASKMORE
+		|| State == EXTERNCMD || State == CONFIRM || exmode_active)
+	    repeat_message();
+	else if ((State & NORMAL) || (State & INSERT))
+	{
+	    if (must_redraw != 0)
+		update_screen(0);
+	    setcursor();
+	}
+	cursor_on();	    /* redrawing may have switched it off */
+	out_flush();
+    }
+}
+#endif

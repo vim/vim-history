@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 6.0ac.  Last change: 2000 Jul 12
+*if_tcl.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 24
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -26,7 +26,28 @@ comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 1. Commands						*tcl-ex-commands*
 
 							*:tcl* *:tc*
-:tc[l] {cmd}		Execute Tcl command {cmd}. {not in Vi}
+:tc[l] {cmd}		Execute Tcl command {cmd}.
+
+:[range]tc[l] << {endmarker}
+{script}
+{endmarker}
+			Execute Tcl script {script}.
+
+{endmarker} must NOT be preceeded by any white space. If {endmarker} is
+omitted from after the "<<", a dot '.' must be used after {script}, like for
+the |:append| and |:insert| commands.
+This form of the |:tcl| command is mainly useful for including tcl code in Vim
+scripts.
+
+Example: >
+	function! DefineDate()
+	    tcl << EOF
+	    proc date {} {
+		return [clock format [clock seconds]]
+	    }
+	EOF
+	endfunction
+<
 
 							*:tcldo* *:tcld*
 :[range]tcld[o] {cmd}	Execute Tcl command {cmd} for each line in [range]

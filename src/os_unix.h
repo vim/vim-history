@@ -394,3 +394,6 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #  define LONGJMP longjmp
 # endif
 #endif
+
+/* We have three kinds of ACL support. */
+#define HAVE_ACL (HAVE_POSIX_ACL || HAVE_SOLARIS_ACL || HAVE_AIX_ACL)

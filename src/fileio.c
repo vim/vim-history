@@ -1364,10 +1364,14 @@ retry:
 		    {
 			len = utf_ptr2len_check(p);
 			/* A length of 1 means it's an illegal byte.  Accept
-			 * it at the end though, the next read() will probably
-			 * get the next byte, we'll check it then. */
-			if (len == 1 && p + 1 < ptr + size)
+			 * an incomplete charater at the end though, the next
+			 * read() will get the next bytes, we'll check it
+			 * then. */
+			if (len == 1)
+			{
+			    p += utf_byte2len(*p) - 1;
 			    break;
+			}
 			p += len - 1;
 		    }
 		}
@@ -1776,31 +1780,26 @@ failed:
 #endif
 		msg_add_lines(c, (long)linecnt, filesize);
 
+	    vim_free(keep_msg);
+	    keep_msg = NULL;
 #ifdef ALWAYS_USE_GUI
 	    /* Don't show the message when reading stdin, it would end up in a
 	     * message box (which might be shown when exiting!) */
 	    if (read_stdin || read_buffer)
-		keep_msg = msg_may_trunc(FALSE, IObuff);
+		p = msg_may_trunc(FALSE, IObuff);
 	    else
 #endif
-		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
-	    keep_msg_attr = 0;
-	    if ((read_stdin || read_buffer || restart_edit != 0)
-		    && keep_msg != NULL)
+		p = msg_trunc_attr(IObuff, FALSE, 0);
+	    if (read_stdin || read_buffer || restart_edit != 0)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
 		 * When restart_edit is set, keep the message to show it after
 		 * redrawing (otherwise there will be a delay before
-		 * redrawing).
-		 * Copy the message (truncated) to msg_buf, because IObuff
-		 * could be overwritten any time. */
-		STRNCPY(msg_buf, keep_msg, MSG_BUF_LEN);
-		msg_buf[MSG_BUF_LEN - 1] = NUL;
-		keep_msg = msg_buf;
+		 * redrawing). */
+		set_keep_msg(p);
+		keep_msg_attr = 0;
 	    }
-	    else
-		keep_msg = NULL;
 	}
 
 	/* with errors writing the file requires ":w!" */
@@ -3465,7 +3464,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [w]") : _(" written"));
 	}
 
-	keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
+	set_keep_msg(msg_trunc_attr(IObuff, FALSE, 0));
 	keep_msg_attr = 0;
     }
 
@@ -4831,9 +4830,11 @@ buf_check_timestamp(buf, focus)
 
 	/*
 	 * If 'autoread' is set, the buffer has no changes and the file still
-	 * exists, reload the buffer.
+	 * exists, reload the buffer.  Use the buffer-local option value if it
+	 * was set, the global option value otherwise.
 	 */
-	else if (p_ar && !bufIsChanged(buf) && stat_res >= 0)
+	else if ((buf->b_p_ar >= 0 ? buf->b_p_ar : p_ar)
+				       && !bufIsChanged(buf) && stat_res >= 0)
 	    reload = TRUE;
 	else
 	{
@@ -4847,16 +4848,16 @@ buf_check_timestamp(buf, focus)
 #endif
 	    {
 		if (stat_res < 0)
-		    mesg = _("Warning: File \"%s\" no longer available");
+		    mesg = _("Warning wa1: File \"%s\" no longer available");
 		else
 		{
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 		    can_reload = TRUE;
 #endif
 		    if (bufIsChanged(buf))
-			mesg = _("Warning: File \"%s\" has changed and the buffer was changed in Vim as well");
+			mesg = _("Warning wc3: File \"%s\" has changed and the buffer was changed in Vim as well");
 		    else
-			mesg = _("Warning: File \"%s\" has changed since editing started");
+			mesg = _("Warning wc2: File \"%s\" has changed since editing started");
 		}
 	    }
 	}
@@ -4865,7 +4866,7 @@ buf_check_timestamp(buf, focus)
     else if ((buf->b_flags & BF_NEW) && !(buf->b_flags & BF_NEW_W)
 						&& vim_fexists(buf->b_ffname))
     {
-	mesg = _("Warning: File \"%s\" has been created after editing started");
+	mesg = _("Warning wc4: File \"%s\" has been created after editing started");
 	buf->b_flags |= BF_NEW_W;
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 	can_reload = TRUE;

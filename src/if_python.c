@@ -409,7 +409,6 @@ fail:
 
 /* External interface
  */
-
     static void
 DoPythonCommand(exarg_T *eap, const char *cmd)
 {
@@ -442,7 +441,16 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     void
 ex_python(exarg_T *eap)
 {
-    DoPythonCommand(eap, (char *)eap->arg);
+    char_u *script;
+
+    script = script_get(eap, eap->arg);
+    if (script == NULL)
+	DoPythonCommand(eap, (char *)eap->arg);
+    else
+    {
+	DoPythonCommand(eap, (char *)script);
+	vim_free(script);
+    }
 }
 
 #define BUFFER_SIZE 1024

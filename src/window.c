@@ -2797,6 +2797,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
 
 #endif /* FEAT_WINDOWS */
 
+#if defined(FEAT_WINDOWS) || defined(FEAT_SIGNS) || defined(PROTO)
 /*
  * Jump to the first open window that contains buffer buf if one exists
  * TODO: Alternatively jump to last open window? Dependent from 'splitbelow'?
@@ -2821,6 +2822,7 @@ buf_jump_open_win(buf)
     return NULL;
 #endif
 }
+#endif
 
 /*
  * allocate a window structure and link it in the window list

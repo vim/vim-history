@@ -56,6 +56,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #		gvim##.zip		binary for GUI Win32
 #		gvim##ole.zip		OLE exe for Win32 GUI
 #		gvim##_s.zip		exe for Win32s GUI
+# doslang	vim##lang.zip		language files for Win32
 #
 # os2bin	vim##os2.zip		binary for OS/2
 #					(use RT from dosrt)
@@ -69,7 +70,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ac
+MINOR = 0ad
 
 # CHECKLIST for creating a new version:
 #
@@ -138,6 +139,7 @@ MINOR = 0ac
 # - The produced uninstall.exe and vimrun.exe are used.
 # - Move all the "*.exe" files to here.
 # - "make dosbin".
+# - "make doslang".
 #
 # OS/2:
 # - Unpack the Unix "src", "extra" and "rt" archives.
@@ -145,10 +147,13 @@ MINOR = 0ac
 # - Rename the executables to vimos2.exe, xxdos2.exe and teeos2.exe.
 # - "make os2bin".
 
-VIM	= vim-$(MAJOR).$(MINOR)
+VIMVER	= vim-$(MAJOR).$(MINOR)
 VERSION = $(MAJOR)$(MINOR)
 VDOT	= $(MAJOR).$(MINOR)
 VIMRTDIR = vim$(VERSION)
+
+# Vim used for conversion from "unix" to "dos"
+VIM	= vim
 
 # source files for all source archives
 SRC_ALL =	\
@@ -722,20 +727,27 @@ EXTRA =		\
 		emx.dll \
 		emxlibcs.dll \
 
-# all files for lang archive
-LANGUAGE = \
+# generic language files
+LANG_GEN = \
 		README_lang.txt \
+		runtime/lang/README.txt \
+		runtime/lang/menu_*.vim \
+		runtime/keymap/README.txt \
+		runtime/keymap/*.vim \
+		runtime/tutor/tutor.?? \
+
+# all files for lang archive
+LANG_SRC = \
 		src/po/README.txt \
 		src/po/README_mingw.txt \
 		src/po/cleanup.vim \
 		src/po/Makefile \
 		src/po/Make_ming.mak \
 		src/po/*.po \
-		runtime/lang/README.txt \
-		runtime/lang/menu_*.vim \
-		runtime/keymap/README.txt \
-		runtime/keymap/*.vim \
-		runtime/tutor/tutor.?? \
+
+# the language files for the Win32 lang archive
+LANG_DOS = \
+		src/po/*.mo \
 
 # All output is put in the "dist" directory.
 dist:
@@ -756,6 +768,7 @@ COMMENT_SRC = comment/$(VERSION)-src
 COMMENT_OS2 = comment/$(VERSION)-bin-os2
 COMMENT_HTML = comment/$(VERSION)-html
 COMMENT_FARSI = comment/$(VERSION)-farsi
+COMMENT_LANG = comment/$(VERSION)-lang
 
 dist/$(COMMENT_RT): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) runtime files for MS-DOS and MS-Windows" > dist/$(COMMENT_RT)
@@ -790,9 +803,12 @@ dist/$(COMMENT_HTML): dist/comment
 dist/$(COMMENT_FARSI): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) Farsi language files" > dist/$(COMMENT_FARSI)
 
+dist/$(COMMENT_LANG): dist/comment
+	echo "Vim - Vi IMproved - v$(VDOT) MS-Windows language files" > dist/$(COMMENT_LANG)
+
 unixrt: dist
-	rm -f dist/$(VIM)-rt.tar.gz
-	rm -f dist/$(VIM)-rt.tar.bz2
+	rm -f dist/$(VIMVER)-rt.tar.gz
+	rm -f dist/$(VIMVER)-rt.tar.bz2
 	rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
@@ -800,15 +816,15 @@ unixrt: dist
 		$(RT_UNIX) \
 		$(RT_UNIX_DOS_BIN) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
-	cd dist && tar cvf $(VIM)-rt.tar $(VIMRTDIR)
-	cp -f dist/$(VIM)-rt.tar dist/tt
-	gzip -9 dist/$(VIM)-rt.tar
-	mv -f dist/tt dist/$(VIM)-rt.tar
-	bzip2 dist/$(VIM)-rt.tar
+	cd dist && tar cvf $(VIMVER)-rt.tar $(VIMRTDIR)
+	cp -f dist/$(VIMVER)-rt.tar dist/tt
+	gzip -9 dist/$(VIMVER)-rt.tar
+	mv -f dist/tt dist/$(VIMVER)-rt.tar
+	bzip2 dist/$(VIMVER)-rt.tar
 
 unixsrc: dist
-	-rm -f dist/$(VIM)-src.tar.gz
-	-rm -f dist/$(VIM)-src.tar.bz2
+	-rm -f dist/$(VIMVER)-src.tar.gz
+	-rm -f dist/$(VIMVER)-src.tar.bz2
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
@@ -822,31 +838,32 @@ unixsrc: dist
 	touch dist/$(VIMRTDIR)/src/auto/config.h
 # Make sure configure is newer than config.mk to force it to be generated
 	touch dist/$(VIMRTDIR)/src/configure
-	cd dist && tar cvf $(VIM)-src.tar $(VIMRTDIR)
-	cp -f dist/$(VIM)-src.tar dist/tt
-	gzip -9 dist/$(VIM)-src.tar
-	mv -f dist/tt dist/$(VIM)-src.tar
-	bzip2 dist/$(VIM)-src.tar
+	cd dist && tar cvf $(VIMVER)-src.tar $(VIMRTDIR)
+	cp -f dist/$(VIMVER)-src.tar dist/tt
+	gzip -9 dist/$(VIMVER)-src.tar
+	mv -f dist/tt dist/$(VIMVER)-src.tar
+	bzip2 dist/$(VIMVER)-src.tar
 
 extra: dist
-	-rm -f dist/$(VIM)-extra.tar.gz
+	-rm -f dist/$(VIMVER)-extra.tar.gz
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
 		$(EXTRA) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
-	cd dist && tar cvf $(VIM)-extra.tar $(VIMRTDIR)
-	gzip -9 dist/$(VIM)-extra.tar
+	cd dist && tar cvf $(VIMVER)-extra.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-extra.tar
 
 lang: dist
-	-rm -f dist/$(VIM)-lang.tar.gz
+	-rm -f dist/$(VIMVER)-lang.tar.gz
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
-		$(LANGUAGE) \
+		$(LANG_GEN) \
+		$(LANG_SRC) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
-	cd dist && tar cvf $(VIM)-lang.tar $(VIMRTDIR)
-	gzip -9 dist/$(VIM)-lang.tar
+	cd dist && tar cvf $(VIMVER)-lang.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-lang.tar
 
 amirt: dist
 	-rm -f dist/vim$(VERSION)rt.tar.gz
@@ -918,7 +935,7 @@ dosrt: dist no_title.vim dist/$(COMMENT_RT)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
 	rmdir dist/vim/$(VIMRTDIR)/runtime
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp $(RT_UNIX_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)rt.zip vim <$(COMMENT_RT)
 
@@ -933,7 +950,7 @@ dosbin_gvim: dist no_title.vim dist/$(COMMENT_GVIM)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim.exe dist/vim/$(VIMRTDIR)/gvim.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
@@ -951,7 +968,7 @@ dosbin_w32: dist no_title.vim dist/$(COMMENT_W32)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimw32.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -967,7 +984,7 @@ dosbin_d32: dist no_title.vim dist/$(COMMENT_D32)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimd32.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd32.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -983,7 +1000,7 @@ dosbin_d16: dist no_title.vim dist/$(COMMENT_D16)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimd16.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdd16.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd16.exe dist/vim/$(VIMRTDIR)/install.exe
@@ -998,7 +1015,7 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_ole.exe dist/vim/$(VIMRTDIR)/gvim.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
@@ -1023,13 +1040,33 @@ dosbin_s: dist no_title.vim dist/$(COMMENT_W32S)
 	tar cf - \
 		$(BIN_DOS) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_w32s.exe dist/vim/$(VIMRTDIR)/gvim.exe
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp README_w32s.txt dist/vim/$(VIMRTDIR)
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
 	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cd dist && zip -9 -rD -z gvim$(VERSION)_s.zip vim <$(COMMENT_W32S)
+
+# make Win32 lang archive
+doslang: dist no_title.vim dist/$(COMMENT_LANG)
+	-rm -rf dist/vim$(VERSION)lang.zip
+	-rm -rf dist/vim
+	mkdir dist/vim
+	mkdir dist/vim/$(VIMRTDIR)
+	mkdir dist/vim/$(VIMRTDIR)/lang
+	tar cf - \
+		$(LANG_GEN) \
+		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
+	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
+	for i in $(LANG_DOS); do\
+		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\).mo+\1+"`; \
+		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
+		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
+		cp $$i dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES/vim.mo; \
+	    done
+	cd dist && zip -9 -rD -z vim$(VERSION)lang.zip vim <$(COMMENT_LANG)
 
 # MS-DOS sources
 dossrc: dist no_title.vim dist/$(COMMENT_SRC)
@@ -1043,7 +1080,7 @@ dossrc: dist no_title.vim dist/$(COMMENT_SRC)
 		$(SRC_AMI_DOS) \
 		$(SRC_DOS_UNIX) \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	tar cf - \
 		$(SRC_DOS_BIN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
@@ -1057,7 +1094,7 @@ os2bin: dist no_title.vim dist/$(COMMENT_OS2)
 	tar cf - \
 		$(BIN_OS2) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
-	find dist/vim/$(VIMRTDIR) -type f -exec vim -u no_title.vim -c ":set tx|wq" {} \;
+	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp vimos2.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdos2.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp teeos2.exe dist/vim/$(VIMRTDIR)/tee.exe

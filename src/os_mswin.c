@@ -11,7 +11,6 @@
  * os_mswin.c
  *
  * Routines common to both Win16 and Win32.
- *
  */
 
 #ifdef WIN16
@@ -182,10 +181,6 @@ int _stricoll(char *a, char *b)
 #endif
 
 
-garray_T error_ga = {0, 0, 0, 0, NULL};
-
-
-
 #if defined(FEAT_GUI_MSWIN) || defined(PROTO)
 /*
  * GUI version of mch_windexit().
@@ -196,7 +191,7 @@ garray_T error_ga = {0, 0, 0, 0, NULL};
 mch_windexit(
     int r)
 {
-    mch_display_error();
+    display_errors();
 
     ml_close_all(TRUE);		/* remove all memfiles */
 
@@ -450,40 +445,17 @@ mch_suspend()
     suspend_shell();
 }
 
+#if defined(USE_MCH_ERRMSG) || defined(PROTO)
 
-#ifdef mch_errmsg
-# undef mch_errmsg
-# undef mch_display_error
+#ifdef display_errors
+# undef display_errors
 #endif
-
-/*
- * Record an error message for later display.
- */
-    void
-mch_errmsg(char *str)
-{
-    int		len = STRLEN(str) + 1;
-
-    if (error_ga.ga_growsize == 0)
-    {
-	error_ga.ga_growsize = 80;
-	error_ga.ga_itemsize = 1;
-    }
-    if (ga_grow(&error_ga, len) == OK)
-    {
-	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
-							  (char_u *)str, len);
-	--len;			/* don't count the NUL at the end */
-	error_ga.ga_len += len;
-	error_ga.ga_room -= len;
-    }
-}
 
 /*
  * Display the saved error message(s).
  */
     void
-mch_display_error()
+display_errors()
 {
     char *p;
 
@@ -506,6 +478,7 @@ mch_display_error()
 	ga_clear(&error_ga);
     }
 }
+#endif
 
 
 /*

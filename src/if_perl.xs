@@ -533,6 +533,7 @@ ex_perl(eap)
     exarg_T	*eap;
 {
     char	*err;
+    char	*script;
     STRLEN	length;
     SV		*sv;
 
@@ -553,7 +554,14 @@ ex_perl(eap)
     ENTER;
     SAVETMPS;
 
-    sv = newSVpv((char *)eap->arg, 0);
+    script = (char *)script_get(eap, eap->arg);
+    if (script == NULL)
+	sv = newSVpv((char *)eap->arg, 0);
+    else
+    {
+	sv = newSVpv(script, 0);
+	vim_free(script);
+    }
     perl_eval_sv(sv, G_DISCARD | G_NOARGS);
     SvREFCNT_dec(sv);
 

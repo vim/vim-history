@@ -201,7 +201,7 @@ typedef void (*nv_func_T) __ARGS((cmdarg_T *cap));
  * The order doesn't matter, init_normal_cmds() will create a sorted index.
  * It is faster when all keys from zero to '~' are present.
  */
-struct nv_cmd
+static const struct nv_cmd
 {
     int		cmd_char;	/* (first) command character */
     nv_func_T   cmd_func;	/* function for this command */
@@ -1095,11 +1095,14 @@ getcount:
 	 * delay */
 	if (must_redraw && keep_msg != NULL && !emsg_on_display)
 	{
-	    char_u	*kmsg = keep_msg;
+	    char_u	*kmsg;
 
+	    kmsg = keep_msg;
+	    keep_msg = NULL;
 	    /* showmode() will clear keep_msg, but we want to use it anyway */
 	    update_screen(0);
 	    msg_attr(kmsg, keep_msg_attr);
+	    vim_free(kmsg);
 	}
 	setcursor();
 	cursor_on();
@@ -2274,7 +2277,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 		}
 		if (jump_flags)
 		{
-		    jump_flags = jump_to_mouse(jump_flags, NULL);
+		    jump_flags = jump_to_mouse(jump_flags, NULL, which_button);
 		    update_curbuf(
 #ifdef FEAT_VISUAL
 			    VIsual_active ? INVERTED :
@@ -2355,7 +2358,7 @@ do_mouse(oap, c, dir, count, fix_indent)
      * JUMP!
      */
     jump_flags = jump_to_mouse(jump_flags,
-				      oap == NULL ? NULL : &(oap->inclusive));
+			oap == NULL ? NULL : &(oap->inclusive), which_button);
     moved = (jump_flags & CURSOR_MOVED);
     in_status_line = (jump_flags & IN_STATUS_LINE);
 #ifdef FEAT_VERTSPLIT
@@ -7540,7 +7543,7 @@ nv_edit(cap)
 		    /* Pretent Insert mode here to allow the cursor on the
 		     * character past the end of the line */
 		    State = INSERT;
-		    coladvance_force((colnr_T)MAXCOL);
+		    coladvance((colnr_T)MAXCOL);
 		    State = save_State;
 		}
 		else
@@ -7555,6 +7558,10 @@ nv_edit(cap)
 	    case 'a':	/* "a"ppend is like "i"nsert on the next character. */
 		if (*ml_get_cursor() != NUL)
 		    inc_cursor();
+#ifdef FEAT_VIRTUALEDIT
+		else if (virtual_active())
+		    curwin->w_cursor.coladd++;
+#endif
 		break;
 	}
 
@@ -7566,7 +7573,7 @@ nv_edit(cap)
 	    /* Pretent Insert mode here to allow the cursor on the
 	     * character past the end of the line */
 	    State = INSERT;
-	    coladvance_force(getviscol());
+	    coladvance(getviscol());
 	    State = save_State;
 	}
 #endif

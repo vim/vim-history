@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ac.  Last change: 2001 Apr 16
+*syntax.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1220,6 +1220,10 @@ its attempts in syntax highlighting. >
 For the "<<xxx" construct (here Documents), Vim can't check for any value of
 "xxx".  If you have a choice use "<<EOF ... EOF", then the highlighting will
 work.
+
+If you want to use folding with perl, set perl_fold: >
+
+       :let perl_fold = 1
 
 
 PHP3 and PHP4		*php.vim* *php3.vim* *php-syntax* *php3-syntax*
@@ -2452,10 +2456,11 @@ two different ways:
 
 	- If top-level syntax items in the included syntax file are to be
 	  allowed at the top level in the including syntax, you can simply use
-	  the |:source| command: >
+	  the |:runtime| command: >
 
   " In cpp.vim:
-  :source <sfile>:p:h/c.vim
+  :runtime! syntax/c.vim
+  :unlet b:current_syntax
 
 <	- If top-level syntax items in the included syntax file are to be
 	  contained within a region in the including syntax, you can use the
@@ -2471,6 +2476,13 @@ two different ways:
    " In perl.vim:
    :syntax include @Pod <sfile>:p:h/pod.vim
    :syntax region perlPOD start="^=head" end="^=cut" contains=@Pod
+<
+   	  When {file-name} is an absolute path (starts with "/", "c:" or
+	  "<sfile>") that file is sourced.  When it is a relative path (e.g.,
+	  "syntax/pod.vim") the file is searched for in 'runtimepath'.  All
+	  matching files are loaded.  Using a relative path is recommended,
+	  because it allows a user to replace the included file with his own
+	  version, without replacing the file that does the ":syn include".
 
 ==============================================================================
 10. Synchronizing					*:syn-sync*
@@ -2673,7 +2685,7 @@ Note that the ":syntax" command can be abbreviated to ":sy", although ":syn"
 is mostly used, because it looks better.
 
 ==============================================================================
-12. Highlight command					*:highlight* *:hi*
+12. Highlight command				*:highlight* *:hi* *eh3*
 
 There are three types of highlight groups:
 - The ones used for specific languages.  For these the name starts with the
@@ -2687,11 +2699,22 @@ You can see all the groups currently active with this command: >
 This will open a new window containing all highlight group names, displayed
 in their own color.
 
+						*:colo* *:colorscheme*
+:colo[rscheme] {name}	Load color scheme {name}.  This searches 'runtimepath'
+			for the file "colors/{name}.vim.  The first one that
+			is found is loaded.
+			To see the name of the currently active color scheme: >
+				:echo colors_name
+
+
 :hi[ghlight]		List all the current highlight groups that have
 			attributes set.
 
 :hi[ghlight] {group-name}
 			List one highlight group.
+
+:hi[ghlight] clear	Disable all highlighting.  Only useful when new
+			highlighting is going to be defined next!
 
 :hi[ghlight] clear {group-name}
 :hi[ghlight] {group-name} NONE

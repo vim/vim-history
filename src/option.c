@@ -47,6 +47,7 @@ typedef enum
 {
     PV_NONE = 0
     , PV_AI
+    , PV_AR
     , PV_BH
     , PV_BIN
     , PV_BL
@@ -289,7 +290,11 @@ struct vimoption
  * The options with a NULL variable are 'hidden': a set command for them is
  * ignored and they are not printed.
  */
-static struct vimoption options[] =
+static struct vimoption
+#ifdef FEAT_GUI_W16
+	_far
+#endif
+	options[] =
 {
     {"aleph",	    "al",   P_NUM|P_VI_DEF,
 #ifdef FEAT_RIGHTLEFT
@@ -325,7 +330,7 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"autoread",    "ar",   P_BOOL|P_VI_DEF,
-			    (char_u *)&p_ar, PV_NONE,
+			    (char_u *)&p_ar, OPT_BOTH(PV_AR),
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"autowrite",   "aw",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_aw, PV_NONE,
@@ -5083,6 +5088,10 @@ set_chars_option(varp)
 		*(tab[i].cp) = (varp == &p_lcs ? NUL : ' ');
 	    if (varp == &p_lcs)
 		lcs_tab1 = NUL;
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
+	    else
+		fill_diff = '-';
+#endif
 	}
 	p = *varp;
 	while (*p)
@@ -6654,6 +6663,7 @@ get_varp_scope(p, opt_flags)
 #endif
 	    case OPT_BOTH(PV_EP):   return (char_u *)&(curbuf->b_p_ep);
 	    case OPT_BOTH(PV_PATH): return (char_u *)&(curbuf->b_p_path);
+	    case OPT_BOTH(PV_AR):   return (char_u *)&(curbuf->b_p_ar);
 	    case OPT_BOTH(PV_TAGS): return (char_u *)&(curbuf->b_p_tags);
 #ifdef FEAT_FIND_ID
 	    case OPT_BOTH(PV_DEF):  return (char_u *)&(curbuf->b_p_def);
@@ -6688,6 +6698,8 @@ get_varp(p)
 				    ? (char_u *)&curbuf->b_p_ep : p->var;
 	case OPT_BOTH(PV_PATH):	return *curbuf->b_p_path != NUL
 				    ? (char_u *)&(curbuf->b_p_path) : p->var;
+	case OPT_BOTH(PV_AR):	return curbuf->b_p_ar >= 0
+				    ? (char_u *)&(curbuf->b_p_ar) : p->var;
 	case OPT_BOTH(PV_TAGS):	return *curbuf->b_p_tags != NUL
 				    ? (char_u *)&(curbuf->b_p_tags) : p->var;
 #ifdef FEAT_FIND_ID
@@ -7115,6 +7127,7 @@ buf_copy_options(buf, flags)
 
 	    /* options that are normally global but also have a local value
 	     * are not copied, start using the global value */
+	    buf->b_p_ar = -1;
 #ifdef FEAT_QUICKFIX
 	    buf->b_p_gp = empty_option;
 	    buf->b_p_mp = empty_option;

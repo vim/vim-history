@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 17
+*message.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -32,23 +32,25 @@ it, you can see it again with: >
   :echo errmsg
 or view a list of recent messages with: >
   :messages
+
+Many messages start with a three character ID, like "ec1:" or "wf3:".  You
+can use this ID to find help on the subject: >
+	:help ec1
+	:help wf3
 <
->
-  Ambiguous mapping, conflicts with "..."
-
-The first argument for a ":map" command starts with the same character(s) as
-an already existing mapping which is given in "..." in the error message.
-Note that keys like <F1> often start with "^[[". Check the output of
-":set termcap" for that. All variations of the ":map" command give the same
-message: ":cmap", ":imap", etc.
-
 >
   ATTENTION
   Found a swap file by the name ...
 
 See |ATTENTION|.
 
->
+							*ec2*  >
+  Cannot allocate color {name}
+
+The color name {name} is unknown.  See |gui-colors| for a list of colors that
+are available on most systems.
+
+							*ec1*  >
   Cannot allocate colormap entry for "xxxx"
   Cannot allocate colormap entry, some colors may be incorrect
 
@@ -66,7 +68,20 @@ This can also be done with a line in your Xdefaults file: >
 or >
 	Netscape*maxImageColors:  64
 <
->
+							*ew3*  >
+  Cannot expand wildcards
+
+A filename contains a strange combination of characters, which causes Vim to
+attempt expanding wildcards but this fails.  This does NOT mean that no
+matching file names could be found, but that the pattern was illegal.
+
+							*er6*  >
+  Cannot set read-only variable "{name}"
+
+You are trying to assign a value to an argument of a function |a:var| or a Vim
+internal variagble |v:var| which is read-only.
+
+							*ee1*  >
   Can't open errorfile <filename>
 
 When using the ":make" or ":grep" commands: The file used to save the error
@@ -77,12 +92,18 @@ messages or grep output cannot be opened.  This can have several causes:
   make command is still executed in the wrong directory.
 - 'makeef' has a wrong value.
 
->
+							*ea2:*  >
   Command not allowed from exrc/vimrc in current dir or tag search
 
 Some commands are not allowed for security reasons.  These commands mostly
 come from a .exrc or .vimrc file in the current directory, or from a tags
 file.  Also see 'secure'.
+
+							*ec3*  >
+  Command too complex
+
+A mapping resulted in a very long command string.  Could be caused by a
+mapping that indirectly calls itself.
 
 >
   CONVERSION ERROR
@@ -94,7 +115,26 @@ about the loss of information, set the 'fileencoding' option to another value
 that can handle the characters in the buffer and write again.  If you don't
 care, you can abandon the buffer or reset the 'modified' option.
 
->
+							*ed2*  >
+  Damaged match string
+  Corrupted regexp program
+
+Something inside Vim went wrong and resulted in a corrupted regexp.  If you
+know how to reproduce this problem, please report it. |bugs|
+
+							*er2*  >
+  Error while reading errorfile
+
+Reading the error file was not possible.  This is NOT caused by an error
+message that was not recognized.
+
+							*ew4*  >
+  Error while writing
+
+Writing a file was not completed successfully.  The file is probably
+incomplete.
+
+							*ee2*  >
   File exists (use ! to override)
 
 You are protected from accidentally overwriting a file.  When you want to
@@ -104,62 +144,69 @@ Example: >
 changes to: >
 	:w! /tmp/test
 <
->
+							*ew1*  >
   File not written: Writing is disabled by 'write' option
 
 The 'write' option is off.  This makes all commands that try to write a file
 generate this message.  This could be caused by a |-m| commandline argument.
 You can switch the 'write' option on with ":set write".
 
->
+							*eg1*  >
   GUI cannot be used: Not enabled at compile time
 
 You are running a version of Vim that doesn't include the GUI code.  Therefore
 "gvim" and ":gui" don't work.
 
->
+							*es2*  >
+  Invalid scroll size
+
+This is caused by setting an invalid value for the 'scroll', 'scrolljump' or
+'scrolloff' options.
+
+							*em1*  >
   Mark has invalid line number
 
 You are using a mark that has a line number that doesn't exist.  This can
 happen when you have a mark in another file, and some other program has
 deleted lines from it.
 
->
+							*em2*  >
   ml_get: invalid lnum:
 
 This is an internal Vim error.  Please try to find out how it can be
 reproduced, and submit a bug report |bugreport.vim|.
 
->
+							*en2* *en3*  >
   No alternate file
+  No alternate file name to substitute for '#'
 
 The alternate file is not defined yet.  See |alternate-file|.
 
->
+							*ef1*  >
   No file name
 
 The current buffer has no name.  To write it, use ":w fname".  Or give the
 buffer a name with ":file fname".
 
->
+							*es3*  >
   No previous substitute regular expression
 
 When using the '~' character in a pattern, it is replaced with the previously
 used pattern in a ":substitute" command.  This fails when no such command has
 been used yet.  See |/~|.
 
->
+							*ep1*  >
   No previous regular expression
 
 When using an empty search pattern, the previous search pattern is used.  But
 that is not possible if there was no previous search.
 
->
+							*ea2*  >
   No such abbreviation
 
 You have used an ":unabbreviate" command with an argument which is not an
 existing abbreviation.  All variations of this command give the same message:
-":cunabbrev", ":iunabbrev", etc.
+":cunabbrev", ":iunabbrev", etc.  Check for trailing white space.
 
 >
   /dev/dsp: No such file or directory
@@ -167,14 +214,14 @@ existing abbreviation.  All variations of this command give the same message:
 Only given for GTK GUI with Gnome support.  Gnome tries to use the audio
 device and it isn't present.  You can ignore this error.
 
->
+							*em3*  >
   No such mapping
 
 You have used an ":unmap" command with an argument which is not an existing
 mapping.  All variations of this command give the same message: ":cunmap",
-":unmap!", etc.
+":unmap!", etc.  Check for trailing white space.
 
->
+							*ew2*  >
   No write since last change (use ! to override)
 
 You are trying to |abandon| a file that has changes.  Vim protects you from
@@ -185,13 +232,19 @@ adding a '!' character just after the command you used.  Example: >
 changes to: >
 	:e! other_file
 <
->
+							*en5*  >
+  Null argument
+
+Something inside Vim went wrong and resulted in a NULL pointer.  If you know
+how to reproduce this problem, please report it. |bugs|
+
+							*ef2*  >
   Only one file name allowed
 
 The ":edit" command only accepts one file name.  When you want to specify
 several files for editing use ":next" |:next|.
 
->
+							*em4*  >
   Out of memory!
 
 Oh, oh.  You must have been doing something complicated, or some other program
@@ -200,17 +253,23 @@ out-of-memory situation.  First make sure that any changes are saved.  Then
 try to solve the memory shortage.  To stay on the safe side, exit Vim and
 start again.  Also see |msdos-limitations|.
 
->
+							*ep5*  >
+  Pattern too long
+
+This only happens on systems with 16 bit ints: The compiled regexp pattern is
+longer than about 65000 characters.  Try using a shorter pattern.
+
+							*er1*  >
   'readonly' option is set (use ! to override)
 
 You are trying to write a file that was marked as read-only.  To write the
 file anyway, either reset the 'readonly' option, or add a '!' character just
-after the command you used.  Example >
+after the command you used.  Example: >
 	:w
 changes to: >
 	:w!
 <
->
+							*en4*  >
   Recursive use of :normal too deep
 
 You are using a ":normal" command, whose argument again uses a ":normal"
@@ -219,7 +278,7 @@ example illustrates how to get this message: >
 	:map gq :normal gq<CR>
 If you type "gq", it will execute this mapping, which will call "gq" again.
 
->
+							*es4*  >
   Scripts nested too deep
 
 Scripts can be read with the "-s" command-line argument and with the ":source"
@@ -227,7 +286,7 @@ command.  The script can then again read another script.  This can continue
 for about 14 levels.  When more nesting is done, Vim assumes that there is a
 recursive loop somewhere and stops with this error message.
 
->
+							*et2*  >
   Tags file not sorted: {file name}
 
 Vim (and Vi) expect tags files to be sorted in ASCII order.  Binary searching
@@ -237,27 +296,34 @@ This message is only given when Vim detects a problem when searching for a
 tag.  Sometimes this message is not given, even thought the tags file is not
 properly sorted.
 
->
+							*eh1*  >
   Too many different highlighting attributes in use
 
 Vim can only handle about 223 different kinds of highlighting.  If you run
 into this limit, you have used too many |:highlight| commands with different
-arguments.
+arguments.  A ":highlight link" is not counted.
 
->
+							*et3*  >
   Too many file names
 
 When expanding file names, more than one match was found.  Only one match is
-allowed.
+allowed for the command that was used.
 
->
+							*wc1*  >
   Warning: Changing a readonly file
 
 The file is read-only and you are making a change to it anyway.  You can use
 the |FileChangedRO| autocommand event to avoid this message (the autocommand
 must reset the 'readonly' option).
 
->
+							*wc4*  >
+  Warning: File "{filename}" has been created after editing started
+
+You are editing a file in Vim when it didn't exist, but it does exist now.
+You will have to decide if you want to keep the version in Vim or the newly
+created file.
+
+							*wc2*  >
   Warning: File "{filename}" has changed since editing started
 
 The file which you have started editing has got another timestamp.  This
@@ -270,7 +336,14 @@ starts.  It can be fixed by adding this line in your autoexec.bat: >
 Adjust the "-1" for your time zone.  Or just write the file again the next
 day.
 
->
+							*wc3*  >
+  Warning: File "{filename}" has changed and the buffer was changed in Vim as well
+
+Like the above, and the buffer for the file was changed in this Vim as well.
+You will have to decide if you want to keep the version in this Vim or the one
+on disk.
+
+							*wa1*  >
   Warning: File "{filename}" no longer available
 
 The file which you have started editing has disappeared, or is no longer
@@ -286,6 +359,13 @@ not allow a connection.  The connection to the X server is needed to be able
 to restore the title and for the xterm clipboard support.  Unfortunately this
 error message cannot be avoided, except by disabling the |+xterm_clipboard|
 and |+X11| features.
+
+							*eb1*  >
+  \\ should be followed by /, ? or &
+
+A command line started with a backslash or the range of a command contained a
+backslash in a wrong place.  This is often caused by command-line continuation
+being disabled.  Remove the 'C' flag from the 'cpoptions' option to enable it.
 
 ==============================================================================
 3. Messages						*messages*

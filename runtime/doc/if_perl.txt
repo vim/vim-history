@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0ac.  Last change: 2001 Mar 21
+*if_perl.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -47,7 +47,29 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 
 							*:perl* *:pe*
 :pe[rl] {cmd}		Execute Perl command {cmd}. The current package
-			is "main". {not in Vi}
+			is "main".
+
+:pe[rl] << {endpattern}
+{script}
+{endpattern}
+			Execute Perl script {script}.
+			{endpattern} must NOT be preceeded by any white space.
+			If {endpattern} is omitted, it defaults to a dot '.'
+			like for the |:append| and |:insert| commands.  This
+			form of the |:perl| command is mainly useful for
+			including perl code in vim scripts.
+
+Example vim script: >
+
+	function! WhitePearl()
+	perl << EOF
+		VIM::Msg("pearls are nice for necklaces");
+		VIM::Msg("rubys for rings");
+		VIM::Msg("pythons for bags");
+		VIM::Msg("tcls????");
+	EOF
+	endfunction
+<
 
 							*:perldo* *:perld*
 :[range]perld[o] {cmd}	Execute Perl command {cmd} for each line in the
@@ -56,7 +78,6 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 			the text, but note that it is not possible to add or
 			delete lines using this command.
 			The default for [range] is the whole file: "1,$".
-			{not in Vi}
 
 Here are some things you can try: >
 

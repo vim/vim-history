@@ -9,8 +9,9 @@ PACKAGE = vim
 SHELL = /bin/sh
 
 # The OLD_PO_FILE_INPUT and OLD_PO_FILE_OUTPUT are for the new GNU gettext
-# tools, which use a slightly different .po file format that is not compatible
-# with Solaris (and old gettext implementations) unless these are set.
+# tools 0.10.37, which use a slightly different .po file format that is not
+# compatible with Solaris (and old gettext implementations) unless these are
+# set.  gettext 0.10.36 will not work!
 MSGFMT = OLD_PO_FILE_INPUT=yes msgfmt
 XGETTEXT = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes xgettext
 MSGMERGE = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes msgmerge

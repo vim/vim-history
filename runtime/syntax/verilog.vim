@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mun_johl@agilent.com>
-" Last Update:  Mon Feb  5 11:51:09 PST 2001
+" Last Update:  Mon Apr 23 13:32:54 PDT 2001
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")

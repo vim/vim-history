@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0ac.  Last change: 2001 Apr 18
+*if_python.txt* For Vim version 6.0ad.  Last change: 2001 Apr 24
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -21,7 +21,29 @@ The Python interface is available only when Vim was compiled with the
 1. Commands						*python-commands*
 
 							*:python* *:py*
-:[range]py[thon] {stmt}	Execute Python statement {stmt}.  {not in Vi}
+:[range]py[thon] {stmt}
+			Execute Python statement {stmt}.
+
+:[range]py[thon] << {endmarker}
+{script}
+{endmarker}
+			Execute Python script {script}.
+
+{endmarker} must NOT be preceeded by any white space.  If {endmarker} is
+omitted from after the "<<", a dot '.' must be used after {script}, like
+for the |:append| and |:insert| commands.
+This form of the |:python| command is mainly useful for including python code
+in Vim scripts.
+
+Example: >
+	function! IcecreamInitialize()
+	    python << EOF
+	    class StrawberryIcecream:
+		def __call__(self):
+		    print 'EAT ME'
+	EOF
+	endfunction
+<
 
 							*:pyfile* *:pyf*
 :[range]pyf[ile] {file}	Execute the Python script in {file}.  {not in Vi}

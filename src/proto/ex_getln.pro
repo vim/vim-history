@@ -34,4 +34,5 @@ void finish_viminfo_history __ARGS((void));
 void write_viminfo_history __ARGS((FILE *fp));
 void cmd_pchar __ARGS((int c, int offset));
 int cmd_gchar __ARGS((int offset));
+char_u *script_get __ARGS((exarg_T *eap, char_u *cmd));
 /* vim: set ft=c : */

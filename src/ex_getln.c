@@ -4278,3 +4278,52 @@ ex_window()
     return cmdwin_result;
 }
 #endif /* FEAT_CMDWIN */
+
+#if defined(FEAT_PYTHON) || defined(FEAT_RUBY) || defined(FEAT_TCL) \
+	|| defined(FEAT_PERL) || defined(PROTO)
+/*
+ * Used for commands that either take a simple command string argument, or:
+ *	cmd << endmarker
+ *	  {script}
+ *	endmarker
+ * Returns a pointer to allocated memory with {script} or NULL.
+ */
+    char_u *
+script_get(eap, cmd)
+    exarg_T	*eap;
+    char_u	*cmd;
+{
+    char_u	*theline;
+    char	*end_pattern = NULL;
+    char	dot[] = ".";
+    garray_T	ga;
+
+    if (cmd[0] != '<' || cmd[1] != '<' || eap->getline == NULL)
+	return NULL;
+
+    ga_init2(&ga, 1, 0x400);
+
+    if (cmd[2] != NUL)
+	end_pattern = (char *)skipwhite(cmd + 2);
+    else
+	end_pattern = dot;
+
+    for (;;)
+    {
+	theline = eap->getline(
+#ifdef FEAT_EVAL
+	    eap->cstack->cs_whilelevel > 0 ? -1 :
+#endif
+	    NUL, eap->cookie, 0);
+
+	if (theline == NULL || STRCMP(end_pattern, theline) == 0)
+	    break;
+
+	ga_concat(&ga, theline);
+	ga_append(&ga, '\n');
+	vim_free(theline);
+    }
+
+    return ga.ga_data;
+}
+#endif /* SCRIPTS */

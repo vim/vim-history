@@ -1,15 +1,22 @@
-" Vim syntax file for SNMPv1 and SNMPv2 MIB and SMI files
-"
+" Vim syntax file
+" Language:	Vim syntax file for SNMPv1 and SNMPv2 MIB and SMI files
 " Author:	David.Pascoe@jtec.com.au
 " Written:	Wed Jan 28 14:37:23 GMT--8:00 1998
-" Last Changed:	Mon Jun 21 14:15:03 WST 1999
+" Last Changed:	Thu Apr 26 10:39:59 WST 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
-setlocal iskeyword=@,48-57,_,128-167,224-235,-,:,=
+if version >= 600
+  setlocal iskeyword=@,48-57,_,128-167,224-235,-,:,=
+else
+  set iskeyword=@,48-57,_,128-167,224-235,-,:,=
+endif
 
 syn keyword mibImplicit ACCESS ANY AUGMENTS BEGIN BIT BITS BOOLEAN CHOICE
 syn keyword mibImplicit COMPONENTS CONTACT-INFO DEFINITIONS DEFVAL
@@ -44,14 +51,26 @@ syn match  mibComment           "\ *--.*$"
 syn match  mibNumber		"\<['0-9a-fA-FhH]*\>"
 syn region mibDescription start="\"" end="\"" contains=DEFAULT
 
-" The default highlighting.
-hi def link mibImplicit		Statement
-hi def link mibComment          Comment
-hi def link mibConstants        String
-hi def link mibNumber           Number
-hi def link mibDescription      Identifier
-hi def link mibEpilogue         SpecialChar
-hi def link mibValue            Structure
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_mib_syn_inits")
+  if version < 508
+    let did_mib_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink mibImplicit	     Statement
+  HiLink mibComment          Comment
+  HiLink mibConstants        String
+  HiLink mibNumber           Number
+  HiLink mibDescription      Identifier
+  HiLink mibEpilogue         SpecialChar
+  HiLink mibValue            Structure
+  delcommand HiLink
+endif
 
 let b:current_syntax = "mib"
 

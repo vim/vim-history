@@ -2158,7 +2158,7 @@ putdigraph(str)
 	    return;
 	if (char1 == ESC || char2 == ESC)
 	{
-	    EMSG(_("Escape not allowed in digraph"));
+	    EMSG(_("(ed1) Escape not allowed in digraph"));
 	    return;
 	}
 	str = skipwhite(str);

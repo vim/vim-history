@@ -1320,7 +1320,9 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     {
 	char_u		*next;
 	GtkWidget	*label;
+# ifdef GTK_USE_ACCEL
 	guint		accel_key;
+# endif
 
 	/* Chunk out this single button. */
 	for (next = p; *next; ++next)
@@ -1338,8 +1340,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 	label = gtk_accel_label_new("");
         gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), dialog);
 
-	accel_key = gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
 # ifdef GTK_USE_ACCEL
+	accel_key = gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
 	/* Don't add accelator if 'winaltkeys' is "no". */
 	if (accel_key != GDK_VoidSymbol)
 	{

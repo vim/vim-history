@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0ac.  Last change: 2001 Mar 19
+*filetype.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -292,7 +292,7 @@ ways to change this:
 <  In this file you can change just those settings that you want to change.
 
 
-Docs for the default filetype plugins.
+Docs for the default filetype plugins.			*ftplugin-docs*
 
 
 FORTRAN							*fortran-plugin*
@@ -344,5 +344,12 @@ Man {name}	Display the manual page for {name} in a window.
 Local mappings:
 CTRL-]		Jump to the manual page for the word under the cursor.
 CTRL-T		Jump back to the previous manual page.
+
+
+RPM SPEC						*spec-plugin*
+
+Since the text for this plugin is rather long it has been put in a separate
+file: |pi_spec.txt|.
+
 
  vim:tw=78:

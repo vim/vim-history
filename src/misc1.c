@@ -2428,7 +2428,7 @@ change_warning(col)
 	msg_start();
 	if (msg_row == Rows - 1)
 	    msg_col = col;
-	MSG_PUTS_ATTR(_("Warning: Changing a readonly file"),
+	MSG_PUTS_ATTR(_("Warning wc1: Changing a readonly file"),
 						   hl_attr(HLF_W) | MSG_HIST);
 	msg_clr_eos();
 	(void)msg_end();
@@ -2638,7 +2638,7 @@ msgmore(n)
     long pn;
 
     if (global_busy	    /* no messages now, wait until global is finished */
-	    || keep_msg	    /* there is a message already, skip this one */
+	    || keep_msg != NULL /* there is a message already, skip this one */
 	    || !messaging())  /* 'lazyredraw' set, don't do messages now */
 	return;
 
@@ -2667,7 +2667,7 @@ msgmore(n)
 	    STRCAT(msg_buf, _(" (Interrupted)"));
 	if (msg(msg_buf))
 	{
-	    keep_msg = msg_buf;
+	    set_keep_msg(msg_buf);
 	    keep_msg_attr = 0;
 	}
     }
@@ -3801,12 +3801,13 @@ skip_string(p)
 	{
 	    for (++p; p[0]; ++p)
 	    {
-		if (p[0] == '\\' && p[1])
+		if (p[0] == '\\' && p[1] != NUL)
 		    ++p;
 		else if (p[0] == '"')	    /* end of string */
 		    break;
 	    }
-	    continue;
+	    if (p[0] == '"')
+		continue;
 	}
 	break;				    /* no string found */
     }
@@ -4303,7 +4304,7 @@ cin_ends_in(s, find)
 
     while (*p != NUL)
     {
-	p = skip_string(cin_skipcomment(p));
+	p = cin_skipcomment(p);
 	if (STRNCMP(p, find, len) == 0)
 	{
 	    r = skipwhite(p + len);
@@ -5138,6 +5139,11 @@ get_c_indent()
 		iscase = cin_iscase(l);
 		if (iscase || cin_isscopedecl(l))
 		{
+		    /* When looking for a "do" we are not interested in
+		     * labels. */
+		    if (whilelevel > 0)
+			continue;
+
 		    /*
 		     *	case xx:
 		     *	    c = 99 +	    <- this indent plus continuation
@@ -5664,6 +5670,37 @@ term_again:
 		if (cin_isfuncdecl(l))
 		{
 		    amount = ind_param;
+		    break;
+		}
+
+		/*
+		 * If the previous line ends in ';' and the line before the
+		 * previous line ends in ',' or '\', ident to column zero:
+		 * int foo,
+		 *     bar;
+		 * indent_to_0 here;
+		 */
+		if (cin_ends_in(l, (char_u*)";"))
+		{
+		    l = ml_get(curwin->w_cursor.lnum - 1);
+		    if (cin_ends_in(l, (char_u *)",")
+			    || (*l != NUL && l[STRLEN(l) - 1] == '\\'))
+			break;
+		    l = ml_get_curline();
+		}
+
+		/*
+		 * If the previous line ends in ',', use one level of
+		 * indentation:
+		 * int foo,
+		 *     bar;
+		 */
+		if (cin_ends_in(l, (char_u *)",")
+			|| (*l != NUL && l[STRLEN(l) - 1] == '\\'))
+		{
+		    amount = get_indent();
+		    if (amount == 0)
+			amount = ind_param;
 		    break;
 		}
 

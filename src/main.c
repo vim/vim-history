@@ -251,6 +251,7 @@ main
 #endif
 
     /*
+     * Check for: [r][e][g][vi|vim|view][diff][ex[im]]
      * If the executable name starts with "r" we disable shell commands.
      * If the next character is "e" we run in Easy mode.
      * If the next character is "g" we run the GUI version.
@@ -267,7 +268,9 @@ main
 	++initstr;
     }
 
-    if (TO_LOWER(initstr[0]) == 'e')
+    /* Avoid using evim mode for "editor". */
+    if (TO_LOWER(initstr[0]) == 'e'
+	    && (TO_LOWER(initstr[1]) == 'v' || TO_LOWER(initstr[1]) == 'g'))
     {
 #ifdef FEAT_GUI
 	gui.starting = TRUE;
@@ -822,9 +825,15 @@ scripterror:
 
     /*
      * When certain to start the GUI, don't check capabilities of terminal.
+     * For GTK we can't be sure, but when started from the desktop it doesn't
+     * make sense to try using a terminal.
      */
-#if defined(ALWAYS_USE_GUI) || defined(FEAT_GUI_X11)
-    if (gui.starting)
+#if defined(ALWAYS_USE_GUI) || defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
+    if (gui.starting
+# ifdef FEAT_GUI_GTK
+	    && !isatty(2)
+# endif
+	    )
 	want_full_screen = FALSE;
 #endif
 
@@ -886,6 +895,7 @@ scripterror:
 #endif
 
     cmdline_row = Rows - p_ch;
+    msg_row = cmdline_row;
     screenalloc(FALSE);		/* allocate screen buffers */
     set_init_2();
 
@@ -1595,7 +1605,14 @@ main_loop(cmdwin)
 #endif
 	    /* display message after redraw */
 	    if (keep_msg != NULL)
-		msg_attr(keep_msg, keep_msg_attr);
+	    {
+		char_u *p = keep_msg;
+
+		/* msg_start() frees keep_msg(), must avoid that here */
+		keep_msg = NULL;
+		msg_attr(p, keep_msg_attr);
+		vim_free(p);
+	    }
 	    if (need_fileinfo)		/* show file info after redraw */
 	    {
 		fileinfo(FALSE, TRUE, FALSE);

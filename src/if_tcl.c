@@ -1785,14 +1785,21 @@ tclexit(error)
 ex_tcl(eap)
     exarg_T *eap;
 {
-    char	*script = (char *)eap->arg;
+    char_u	*script;
     int		err;
 
     err = tclinit(eap);
     if (err == OK)
     {
 	Tcl_AllowExceptions(tclinfo.interp);
-	err = Tcl_Eval(tclinfo.interp, script);
+	script = script_get(eap, eap->arg);
+	if (script == NULL)
+	    err = Tcl_Eval(tclinfo.interp, (char *)eap->arg);
+	else
+	{
+	    err = Tcl_Eval(tclinfo.interp, (char *)script);
+	    vim_free(script);
+	}
 	err = tclexit(err);
     }
 }

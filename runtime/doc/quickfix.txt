@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 12
+*quickfix.txt*  For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,7 +10,7 @@ The quickfix commands are not available when the |+quickfix| feature was
 disabled at compile time.
 
 
-Using the QuickFix mode					*quickfix* *Quickfix*
+Using the QuickFix mode				*quickfix* *Quickfix* *ee4*
 
 Vim has a special mode to speedup the edit-compile-edit cycle.  This is
 inspired by the quickfix option of the Manx's Aztec C compiler on the Amiga.
@@ -152,11 +152,15 @@ The following commands can be used if you are in QuickFix mode:
 			the current window.  It is not possible to open a
 			second quickfix window.
 
-Normally the quickfix window is at the bottom of the screen.  Although you can
-move it around with |window-moving| commands, if you really want.  The window
-will mostly keep its height, ignoring 'winheight' and 'equalalways'.  You can
-change the height manually (e.g., by dragging the status line above it with
-the mouse).
+Normally the quickfix window is at the bottom of the screen.  If there are
+vertical splits, it's at the bottom of the column of windows that contains the
+current window.  To make it always occupy the full width: >
+	:botright cwindow
+You can move the window around with |window-moving| commands.
+For example, to move it to the top: CTRL-W K
+The window will mostly keep its height, ignoring 'winheight' and
+'equalalways'.  You can change the height manually (e.g., by dragging the
+status line above it with the mouse).
 
 In the quickfix window, each line is one error.  The line number is equal to
 the error number.  You can use ":.cc" to jump to the error under the cursor.

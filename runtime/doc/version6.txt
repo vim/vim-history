@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 22
+*version6.txt*  For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -618,10 +618,10 @@ Multi-language support					*new-multi-lang*
   Added "po" directory with message translations. (Marcin Dalecki)
   The src/po/README.txt file explains a few things about translation.
 - Added v:lang variable to be able to get current language setting.
-  (Marcin Dalecki)
-- Added ":language" command to set the language (locale) for messages and
-  character type.
-- Added ":menutrans" to be able to translate menu paths.
+  (Marcin Dalecki)  Also v:lc_time and v:ctype
+- Added ":language" command to set the language (locale) for messages, time
+  and character type.
+- Added ":menutranslate" to be able to translate menu paths.
 - Added menu translations for various languages.
 - Added message translations for various languages.
 - removed "broken locale" (Marcin Dalecki).
@@ -1117,7 +1117,11 @@ New Syntax files: ~
 Debian Control file and Debian Changelog syntax files. (Wichert Akkerman)
 catalog.vim (Johannes Zellner)
 DSSSL syntax (Johannes Zellner)
+Updated many syntax files to work both with Vim 5.7 and 6.0.
 
+Support for loading a color scheme.  Added the ":colorscheme" command.
+Automatically add menu entries for available schemes.
+Should now properly reset the colors when 'background' or 't_Co' is changed.
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -1342,6 +1346,9 @@ GUI:
   fine, because they start with a CTRL-C.  The "Copy" menu works to copy the
   modeless selection.  Allows copying the output of ":set all" or ":intro"
   without auto-selection.
+- When starting the GUI when there is no terminal connected to stdout and
+  stderr, display error messages in a dialog.  Previously they wouldn't be
+  displayed at all.
 
 X11:
 - Support for the clipboard selection as register "+.  When exiting or
@@ -1377,6 +1384,7 @@ Command line completion:
 Complete environment variable names. (Mike Steed)
 For ":command", added a few completion methods: "mapping", "function",
 "expression" and "environment".
+When a function doesn't take arguments, let completion add () instead of (.
 
 For MS-DOS, MS-Windows and OS/2: Expand %VAR% environment variables like $VAR.
 (Walter Briscoe)
@@ -1591,6 +1599,19 @@ produces warnings.
 Checking timestamps is only done for buffers that are not hidden.  These will
 be checked when they become unhidden.
 
+For ":python" and ":tcl" accept an in-line script. (Johannes Zellner)
+Also for ":ruby". (Benoit Cerrina)
+
+Made ":syn include" use 'runtimepath' when the file name is not a full path.
+
+When 'switchbuf' contains "split" and the current window is empty, don't split
+the window.
+
+Added more option settings to the default menus.
+
+Added IDs to many error messages.  Makes it easier to find the relevant
+explanation in the docs.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -1653,6 +1674,10 @@ system types.
 
 Added a configure check for X11 header files that implicitly define the return
 type to int. (Steve Wall)
+
+"make doslang" in the top directory makes an archive with the menu and .mo
+files for Windows.  This uses the files generated on Unix, these should work
+on MS-Windows as well (needs to be tested). 
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2320,6 +2345,11 @@ work.
   semicolon. (Meikel Brandmeyer)
 - 'cindent' gave too much indent to a line after a "};" that ends an array
   init.
+- Support declaration lines ending in "," and "\".  (Meikel Brandmeyer)
+- A case statement inside a do-while loop was used for indenting a line after
+  the do-while loop. (Meikel Brandmeyer)
+- When skipping a string in a line with one double quote it could continue in
+  the previous line. (Meikel Brandmeyer)
 
 Win32 GUI: mouseshape didn't return to normal after a ":set" command.
 It stayed at "no entry".  Was only visible with ":set nomousehide".
@@ -2342,5 +2372,35 @@ The error message for not being able to load the shared library wasn't
 translated.  (Muraoka Taro)
 
 A few fixes for the Mac port. (Axel Kielhorn)
+
+Unix: When catching a deadly signal and we keep getting one use _exit() to
+exit in a quick and dirty way.
+
+Athena menu ordering didn't work correctly. (David Harrison)
+
+A ":make" or ":grep" command with a long argument could cause a crash.
+
+Doing ":new file" and using "Quit" for the ATTENTION dialog still opened a new
+window.
+
+GTK: When starting the GUI and there is an error in the .vimrc file, don't
+present the wait-return prompt, since the message was given in the terminal.
+
+When there was an error in a .vimrc file the terminal where gvim was started
+could be cleared.  Set msg_row in main.c before writing any messages.
+
+GTK and X11 GUI: When trying to read characters from the user (e.g. with
+input()) before the Vim window was opened caused Vim to hang when it was
+started from the desktop.
+
+OS/390 uses 31 bit pointers.  That broke some computations with MAX_COL.
+Reduce MAX_COL by one bit for OS/390. (Ralf Schandl)
+
+When defining a function and it already exists, Vim didn't say it existed
+until after typing it.  Now do this right away when typing it.
+
+The message remembered for displaying later (keep_msg) was sometimes pointing
+into a generic buffer, which might be changed by the time the message is
+displayed.  Now make a copy of the message.
 
  vim:tw=78:

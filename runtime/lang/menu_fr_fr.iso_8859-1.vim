@@ -1,6 +1,6 @@
 " Menu Translations:	Français
 " Maintainer:		François Thunus (thunus@systran.fr)
-" Last Change:	2001 Apr 18
+" Last Change:	2001 apr 26
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -102,8 +102,8 @@ menutrans Select\ &Line		Choisir\ une\ &line
 menutrans Select\ &Block	Choisir\ un\ &bloc
 menutrans Select\ &All		Choisir\ &tout
  
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif

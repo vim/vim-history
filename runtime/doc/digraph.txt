@@ -1,4 +1,4 @@
-*digraph.txt*   For Vim version 6.0ac.  Last change: 2000 Oct 25
+*digraph.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -20,7 +20,7 @@ that can be entered with CTRL-V (see |i_CTRL-V|).
 ==============================================================================
 1. Defining digraphs					*digraphs-define*
 
-						*:dig* *:digraphs*
+						*:dig* *:digraphs* *ed1*
 :dig[raphs]		show currently defined digraphs.
 
 :dig[raphs] {char1}{char2} {number} ...

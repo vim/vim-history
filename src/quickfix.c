@@ -907,6 +907,7 @@ qf_jump(dir, errornr, forceit)
     int		    qf_index;
     int		    old_qf_fnum;
     int		    old_qf_index;
+    int		    prev_index;
     static char_u   *e_no_more_items = (char_u *)N_("No more items");
     char_u	    *err = e_no_more_items;
     linenr_T	    i;
@@ -937,7 +938,7 @@ qf_jump(dir, errornr, forceit)
 	while (errornr--)
 	{
 	    old_qf_ptr = qf_ptr;
-	    old_qf_index = qf_index;
+	    prev_index = qf_index;
 	    old_qf_fnum = qf_ptr->qf_fnum;
 	    do
 	    {
@@ -945,7 +946,7 @@ qf_jump(dir, errornr, forceit)
 						   || qf_ptr->qf_next == NULL)
 		{
 		    qf_ptr = old_qf_ptr;
-		    qf_index = old_qf_index;
+		    qf_index = prev_index;
 		    if (err != NULL)
 		    {
 			EMSG(_(err));
@@ -966,13 +967,13 @@ qf_jump(dir, errornr, forceit)
 	while (errornr--)
 	{
 	    old_qf_ptr = qf_ptr;
-	    old_qf_index = qf_index;
+	    prev_index = qf_index;
 	    do
 	    {
 		if (qf_index == 1 || qf_ptr->qf_prev == NULL)
 		{
 		    qf_ptr = old_qf_ptr;
-		    qf_index = old_qf_index;
+		    qf_index = prev_index;
 		    if (err != NULL)
 		    {
 			EMSG(_(err));
@@ -1135,7 +1136,7 @@ qf_jump(dir, errornr, forceit)
 	     */
 	    if (linetabsize(IObuff) < ((int)p_ch - 1) * Columns + sc_col)
 	    {
-		keep_msg = IObuff;
+		set_keep_msg(IObuff);
 		keep_msg_attr = 0;
 	    }
 	}
@@ -1780,6 +1781,8 @@ ex_make(eap)
     exarg_T	*eap;
 {
     char_u	*name;
+    char_u	*cmd;
+    unsigned	len;
 
     autowrite_all();
     name = get_mef_name();
@@ -1790,10 +1793,16 @@ ex_make(eap)
     /*
      * If 'shellpipe' empty: don't redirect to 'errorfile'.
      */
+    len = STRLEN(p_shq) * 2 + STRLEN(eap->arg) + 1;
+    if (*p_sp != NUL)
+	len += STRLEN(p_sp) + STRLEN(name) + 2;
+    cmd = alloc(len);
+    if (cmd == NULL)
+	return;
     if (*p_sp == NUL)
-	sprintf((char *)IObuff, "%s%s%s", p_shq, eap->arg, p_shq);
+	sprintf((char *)cmd, "%s%s%s", p_shq, eap->arg, p_shq);
     else
-	sprintf((char *)IObuff, "%s%s%s %s %s", p_shq, eap->arg, p_shq,
+	sprintf((char *)cmd, "%s%s%s %s %s", p_shq, eap->arg, p_shq,
 								  p_sp, name);
     /*
      * Output a newline if there's something else than the :make command that
@@ -1803,10 +1812,10 @@ ex_make(eap)
 	msg_didout = FALSE;
     msg_start();
     MSG_PUTS(":!");
-    msg_outtrans(IObuff);		/* show what we are doing */
+    msg_outtrans(cmd);		/* show what we are doing */
 
     /* let the shell know if we are redirecting output or not */
-    do_shell(IObuff, *p_sp ? SHELL_DOOUT : 0);
+    do_shell(cmd, *p_sp != NUL ? SHELL_DOOUT : 0);
 
 #ifdef AMIGA
     out_flush();
@@ -1821,6 +1830,7 @@ ex_make(eap)
 
     mch_remove(name);
     vim_free(name);
+    vim_free(cmd);
 }
 
 /*

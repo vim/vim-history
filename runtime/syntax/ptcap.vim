@@ -1,11 +1,14 @@
 " Vim syntax file
 " Language:	printcap/termcap database
-" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2001 Jan 15
+" Maintainer:	Haakon Riiser <haakon@riiser.net>
+" Last Change:	2001 Apr 25
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+    syn clear
+elseif exists("b:current_syntax")
+    finish
 endif
 
 " Since I only highlight based on the structure of the databases, not
@@ -69,24 +72,34 @@ syn region ptcapField	    start=":" skip="[^\\]\(\\\\\)*\\$" end="[^\\]\(\\\\\)*
 syn region ptcapString	    matchgroup=ptcapOperator start="=" skip="[^\\]\(\\\\\)*\\:" matchgroup=ptcapDelimiter end=":"me=e-1 matchgroup=NONE end="[^\\]\(\\\\\)*[^\\]$" end="^$" contains=ptcapEscapedChar,ptcapLineCont keepend contained
 syn region ptcapComment	    start="^\s*#" end="$" contains=ptcapLeadBlank
 
-" The default highlighting.
-hi def link ptcapComment	Comment
-hi def link ptcapDelimiter	Delimiter
-" The highlighting of "ptcapEntry" should always be overridden by
-" its contents, so I use Todo highlighting to indicate that there
-" is work to be done with the syntax file if you can see it :-)
-hi def link ptcapEntry		Todo
-hi def link ptcapError		Error
-hi def link ptcapEscapedChar	SpecialChar
-hi def link ptcapField		Type
-hi def link ptcapLeadBlank	NONE
-hi def link ptcapLineCont	Special
-hi def link ptcapNames		Label
-hi def link ptcapNumber		NONE
-hi def link ptcapNumberError	Error
-hi def link ptcapOperator	Operator
-hi def link ptcapSpecialCap	Type
-hi def link ptcapString		NONE
+if version >= 508 || !exists("did_ptcap_syntax_inits")
+    if version < 508
+	let did_ptcap_syntax_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink ptcapComment		Comment
+    HiLink ptcapDelimiter	Delimiter
+    " The highlighting of "ptcapEntry" should always be overridden by
+    " its contents, so I use Todo highlighting to indicate that there
+    " is work to be done with the syntax file if you can see it :-)
+    HiLink ptcapEntry		Todo
+    HiLink ptcapError		Error
+    HiLink ptcapEscapedChar	SpecialChar
+    HiLink ptcapField		Type
+    HiLink ptcapLeadBlank	NONE
+    HiLink ptcapLineCont	Special
+    HiLink ptcapNames		Label
+    HiLink ptcapNumber		NONE
+    HiLink ptcapNumberError	Error
+    HiLink ptcapOperator	Operator
+    HiLink ptcapSpecialCap	Type
+    HiLink ptcapString		NONE
+
+    delcommand HiLink
+endif
 
 let b:current_syntax = "ptcap"
 

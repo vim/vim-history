@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:  		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:      	2001 Apr 18
+" Last Change:      	2001 apr 26
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -102,8 +102,8 @@ menutrans Select\ &Line		Zaznacz\ W&iersz
 menutrans Select\ &Block	Zaznacz\ &Blok
 menutrans Select\ &All		Zaznacz\ C&a³o¶æ
  
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif

@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0ac.  Last change: 2000 Jul 07
+*recover.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -85,7 +85,7 @@ The 'swapfile' option can be reset to avoid creating a swapfile.
 
 
 Detecting an existing swap file ~
-							*ATTENTION*
+							*ATTENTION* *ea1*
 When starting to edit a file, Vim checks if a swap file already exists for
 that file.  If there is one, you will get a message indicating that something
 is wrong:

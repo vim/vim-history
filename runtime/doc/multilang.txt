@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0ac.  Last change: 2001 Apr 22
+*multilang.txt* For Vim version 6.0ad.  Last change: 2001 Apr 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,14 +6,96 @@
 
 Multi-language features				*multilang* *multi-lang*
 
-1. Menus			|multilang-menus|
-2. Scripts			|multilang-scripts|
-3. Typing			|multilang-typing|
+This is about using messages and menus in various languages.  For editing
+multi-byte text see |multibyte|.
+
+1. Messages			|multilang-messages|
+2. Menus			|multilang-menus|
+3. Scripts			|multilang-scripts|
 
 {Vi does not have any of these features}
+{not available when compiled without the |+multi_lang| feature}
 
 ==============================================================================
-1. Menus						*multilang-menus*
+1. Messages						*multilang-messages*
+
+Set the locale in your shell and Vim picks it up.
+
+						*:lan* *:lang* *:language*
+:lan[guage]
+:lan[guage] mes[sages]
+:lan[guage] cty[pe]
+:lan[guage] tim[e]
+			Print the current language (aka locale).
+			With the "messages" argument the language used for
+			messages is printed.  Technical: LC_MESSAGES.
+			With the "ctype" argument the language used for
+			character encoding is printed.  Technical: LC_CTYPE.
+			With the "time" argument the language used for
+			strftime() is printed.  Technical: LC_TIME.
+			Without argument all parts of the locale are printed
+			(this is system dependend).
+			The current language can also be obtained with the
+			|v:lang|, |v:ctype| and |v:lc_time| variables.
+
+:lan[guage] {name}
+:lan[guage] mes[sages] {name}
+:lan[guage] cty[pe] {name}
+:lan[guage] tim[e] {name}
+			Set the current language (aka locale) to {name}.
+			The locale {name} must be a valid locale on your
+			system.  Some systems accept aliases like "en" or
+			"en_US", but some only accept the full specification
+			like "en_US.ISO_8859-1".
+			With the "messages" argument the language used for
+			messages is set.  This can be different when you want,
+			for example, English messages while editing Japanese
+			text.  This sets $LC_MESSAGES.
+			With the "ctype" argument the language used for
+			character encoding is set.  This affects the libraries
+			that Vim was linked with.  It's unusual to set this to
+			a different value from 'encoding'.  This sets
+			$LC_CTYPE.
+			With the "time" argument the language used for time
+			and date messages is set.  This affects strftime().
+			This sets $LC_TIME.
+			Without an argument both are set, and additionally
+			$LANG is set.
+			This will make a difference for items that depend on
+			the language (some messages, time and date format).
+			Not fully supported on all systems
+			If this fails there will be an error message.  If it
+			succeeds there is no message.  Example: >
+				:language
+				Current language: C
+				:language de_DE.ISO_8859-1
+				:language mes
+				Current messages language: de_DE.ISO_8859-1
+				:lang mes en
+<
+
+WINDOWS MESSAGE TRANSLATIONS				*win32-gettext*
+
+Get the libintl.dll file if you don't have it yet:
+
+	http://sourceforge.net/projects/gettext
+
+This also contains tools xgettext, msgformat and others.
+
+libintl.dll should be placed in same directory with (g)vim.exe, or some
+place where PATH environment value describe.  Message file (vim.mo)
+have to  be placed $VIMRUNTIME/lang/*/LC_MESSAGES as like as UNIX.
+Method of generate message file is same with UNIX.  Ex: >
+   cd vim60aa
+   mkdir runtime\lang\ja\LC_MESSAGES
+   msgfmt -o runtime\lang\ja\LC_MESSAGES\vim.mo src\po\ja.po
+And set LANG environment on vim. >
+  :let $LANG = 'ja'
+
+(text by Muraoka Taro)
+
+==============================================================================
+2. Menus						*multilang-menus*
 
 The default menus are in English.  To be able to use your local language, they
 must be translated.  Normally this is automatically done for you if the $LANG
@@ -62,10 +144,11 @@ in a Vim script.  For a language that has no translation yet, please consider
 becoming the maintainer and make your translations available to all Vim users.
 Send an e-mail to Bram Moolenaar <Bram@vim.org>.
 
-							*:menut* *:menutrans*
-:menut[rans] clear	Clear all menu translations.
+					*:menut* *:menutrans* *:menutranslate*
+:menut[ranslate] clear
+			Clear all menu translations.
 
-:menut[rans] {english} {mylang}
+:menut[ranslate] {english} {mylang}
 			Translate menu name {english} to {mylang}.  All
 			special characters like "&" and "<Tab>" need to be
 			included.  Spaces and dots need to be escaped with a
@@ -83,7 +166,7 @@ Each part of a menu path is translated separately.  The result is that
 "Help.Overview" will be translated to "Hilfe.Überblick".
 
 ==============================================================================
-2. Scripts						*multilang-scripts*
+3. Scripts						*multilang-scripts*
 
 In Vim scripts you can use the |v:lang| variable to get the current language
 (locale).  The default value is "C" or comes from the $LANG environment
@@ -98,154 +181,5 @@ a message adapt to language preferences of the user, >
 	:  echo "Good morning"
 	:endif
 <
-						*:lan* *:lang* *:language*
-:lan[guage]
-:lan[guage] mes[sages]
-:lan[guage] cty[pe]
-			Print the current language (aka locale).
-			With the "messages" argument the language used for
-			messages is printed.  Technical: LC_MESSAGES.
-			With the "ctype" argument the language used for
-			character encoding is printed.  Technical: LC_CTYPE.
-			Without argument one of the two is used (this is
-			system dependend).
-			The current language can also be obtained with the
-			|v:lang| and |v:ctype| variables. {not in Vi}
-
-:lan[guage] {name}
-:lan[guage] mes[sages] {name}
-:lan[guage] cty[pe] {name}
-			Set the current language (aka locale) to {name}.
-			The locale {name} must be a valid locale on your
-			system.  Some systems accept aliases like "en" or
-			"en_US", but some only accept the full specification
-			like "en_US.ISO_8859-1".
-			With the "messages" argument the language used for
-			messages is set.  This can be different when you want,
-			for example, English messages while editing Japanese
-			text.  This sets $LC_MESSAGES.
-			With the "ctype" argument the language used for
-			character encoding is set.  This affects the libraries
-			that Vim was linked with.  It's unusual to set this to
-			a different value from 'encoding'.  This sets
-			$LC_CTYPE.
-			Without an argument both are set, and additionally
-			$LANG is set.
-			This will make a difference for items that depend on
-			the language (some messages, time and date format).
-			Not fully supported on all systems
-			If this fails there will be an error message.  If it
-			succeeds there is no message.  Example: >
-				:language
-				Current language: C
-				:language de_DE.ISO_8859-1
-				:language mes
-				Current messages language: de_DE.ISO_8859-1
-				:lang mes en
-<
-==============================================================================
-3. Typing						*multilang-typing*
-
-In most situations your keyboard will produce the characters that you want to
-use.  Then you don't need to do any specific settings.
-
-When the keyboard doesn't produce the characters you want to enter in your
-text, you can use the 'keymap' option.  This will translate one or more
-(English) characters to another (non-English) character.  This only happens
-when typing text, not when typing Vim commands.  This avoids having to switch
-between two keyboard settings.
-
-The value of the 'keymap' option specifies a keymap file to use.  The name of
-this file is one of these two:
-
-	keymap/{keymap}_{encoding}.vim
-	keymap/{keymap}.vim
-
-Here {keymap} is the value of the 'keymap' option and {encoding} of the
-'encoding' option.  The file name with the {encoding} included is tried first.
-
-'runtimepath' is used to find these files.  To see an overview of all
-available keymap files, use this: >
-	echo globpath(&rtp, "keymap/*.vim")
-
-In Insert and Command-line mode you can use CTRL-^ to toggle between using the
-keyboard map or not. |i_CTRL-^| |c_CTRL-^|
-This flag is remembered for Insert mode.  When leaving and entering Insert
-mode the previous value is used.  The same value is also used for commands
-that take a single character argument, like |f| and |r|.
-For Command-line mode the flag is NOT remembered.  You are expected to type an
-Ex command first, which is ASCII.
-
-It is possible to give the GUI cursor another color when the language mappings
-are being used.  This is disabled by default, to avoid that the cursor becomes
-invisible when you use a non-standard background color.  Here is an example to
-use a brightly colored cursor: >
-	:highlight Cursor guifg=NONE guibg=Green
-	:highlight lCursor guifg=NONE guibg=Cyan
-<
-				*keymap-file-format* *:loadk* *:loadkeymap*
-The keymap file looks something like this: >
-
-	" Maintainer:	name <email@address>
-	" Last Changed:	2001 Jan 1
-
-	let b:keymap_name = "short"
-
-	loadkeymap
-	a	A
-	b	B	comment
-
-The lines starting with a " are comments and will be ignored.  Blank lines are
-also ignored.  The lines with the mappings may have a comment after the useful
-text.
-
-The "b:keymap_name" can be set to a short name, which will be shown in the
-status line.  The idea is that this takes less room than the value of
-'keymap', which might be long to distinguish between different languages,
-keyboards and encodings.
-
-The actual mappings are in the lines below "loadkeymap".  In the example "a"
-is mapped to "A" and "b" to "B".  Thus the first item is mapped to the second
-item.  This is done for each line, until the end of the file.
-These items are exactly the same as what can be used in a |:lnoremap| command.
-You can check the result with this command: >
-	:lmap
-The two items must be separated by white space.  You cannot include white
-space inside an item, use the special names "<Tab>" and "<Space>" instead.
-The length of the two items together must not exceed 200 bytes.
-
-It's possible to have more than one character in the first column.  This works
-like a dead key.  Example: >
-	'a	á
-Since Vim doesn't know if the next character after a quote is really an "a",
-it will wait for the next character.  To be able to insert a single quote,
-also add this line: >
-	''	'
-Since the mapping is defined with |:lnoremap| the resulting quote will not be
-used for the start of another character.
-
-Although it's possible to have more than one character in the second column,
-this is unusual.  But you can use various ways to specify the character: >
-	A	a		literal character
-	A	<char-97>	decimal value
-	A	<char-0x61>	hexadecimal value
-	A	<char-0141>	octal value
-	x	<Space>		special key name
-
-The characters are assumed to be encoded for the current value of 'encoding'.
-It's possible to use ":scriptencoding" when all characters are given
-literally.  That doesn't work when using the <char-> construct, because the
-conversion is done on the keymap file, not on the resulting character.
-
-The lines after "loadkeymap" are interpreted with 'cpoptions' set to "C".
-This means that continuation lines are not used and a backslash has a special
-meaning in the mappings.  Examples: >
-
-	" a comment line
-	\"	x	maps " to x
-	\\	y	maps \ to y
-
-If you write a keymap file that will be useful for others, consider submitting
-it to the Vim author for inclusion in the distribution: <Bram@vim.org>
 
  vim:tw=78:sw=4

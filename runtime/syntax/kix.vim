@@ -1,78 +1,182 @@
 " Vim syntax file
-" Language:	Kixtart
-" Maintainer:	Nigel Gibbs <nigel@gibbsoft.com>
-" Based on:     KiXtart 95 Version 3.61, from Windows NT® 4.0 Resource Kit
-" Last change:	November 2000
+" Language:	KixTart 95, Kix2001 Windows script language http://kixtart.org/
+" Maintainer:	Richard Howarth <rhowarth@sgb.co.uk>
+" Last Change:	2001 April 26 08:20 BST
+" URL:		http://www.howsoft.demon.co.uk/
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" KixTart files identified by *.kix extension.
+
+" Amendment History:
+" 26 April 2001: RMH
+"    Removed development comments from distro version
+"    Renamed "Kix*" to "kix*" for consistancy
+"    Changes made in preperation for VIM version 5.8/6.00
+
+" TODO:
+"	Handle arrays highlighting
+"	Handle object highlighting
+" The next two may not be possible:
+"	Work out how to error too many "(", i.e. (() should be an error.
+"	Similarly, "if" without "endif" and similar constructs should error.
+
+" Clear legacy syntax rules for version 5.x, exit if already processed for version 6+
+if version < 600
+	syn clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
+syn case match
+syn keyword kixTODO		TODO FIX XXX contained
+
+" Case insensitive language.
 syn case ignore
 
-syn keyword kixStatement : ; ? BEEP BIG BREAK CALL CD CLS COLOR COOKIE1 COPY 
-syn keyword kixStatement DEL DIM DISPLAY DO UNTIL EXIT FLUSHKB GET GETS GLOBAL 
-syn keyword kixStatement GO GOSUB GOTO IF ELSE ENDIF MD PASSWORD PLAY QUIT RD 
-syn keyword kixStatement RETURN RUN SELECT CASE … ENDSELECT SET SETL SETM 
-syn keyword kixStatement SETTIME SHELL SLEEP SMALL USE WHILE LOOP
+" Kix statements
+syn match   kixStatement	"?"
+syn keyword kixStatement	beep big break
+syn keyword kixStatement	call cd cls color cookie1 copy
+syn keyword kixStatement	del dim display
+syn keyword kixStatement	exit
+syn keyword kixStatement	flushkb
+syn keyword kixStatement	get gets global go gosub goto
+syn keyword kixStatement	md
+syn keyword kixStatement	password play
+syn keyword kixStatement	quit
+syn keyword kixStatement	rd return run
+syn keyword kixStatement	set setl setm settime shell sleep small
+syn keyword kixStatement	use
 
-syn keyword kixFunction ADDKEY ADDPRINTERCONNECTION ADDPROGRAMGROUP ADDPROGRAMITEM 
-syn keyword kixFunction ASC AT BOX CHR CLOSE COMPAREFILETIMES DECTOHEX DELKEY 
-syn keyword kixFunction DELPRINTERCONNECTION DELPROGRAMGROUP DELPROGRAMITEM DELTREE 
-syn keyword kixFunction DELVALUE DIR ENUMGROUP ENUMKEY ENUMLOCALGROUP ENUMVALUE EXECUTE 
-syn keyword kixFunction EXIST EXISTKEY GETDISKSPACE GETFILEATTR GETFILESIZE GETFILETIME 
-syn keyword kixFunction GETFILEVERSION INGROUP INSTR LCASE LEN LOADHIVE LOADKEY LOGEVENT 
-syn keyword kixFunction LOGOFF LTRIM MESSAGEBOX OLECALLFUNC OLECALLPROC OLECREATEOBJECT 
-syn keyword kixFunction OLEGETOBJECT OLEGETPROPERTY OLEGETSUBOBJECT OLEPUTPROPERTY 
-syn keyword kixFunction OLERELEASEOBJECT OPEN READLINE READPROFILESTRING READTYPE 
-syn keyword kixFunction READVALUE REDIRECTOUTPUT RND RTRIM SAVEKEY SENDKEYS SENDMESSAGE 
-syn keyword kixFunction SETCONSOLE SETDEFAULTPRINTER SETFILEATTR SETFOCUS SETWALLPAPER 
-syn keyword kixFunction SHOWPROGRAMGROUP SHUTDOWN SRND SUBSTR UCASE UNLOADHIVE VAL 
-syn keyword kixFunction WRITELINE WRITEPROFILESTRING WRITEVALUE
+" Kix2001
+syn keyword kixStatement	debug function endfunction redim
 
-syn keyword kixConditional IF ELSE ENDIF
+" Simple variables
+syn match   kixNotVar           "\$\$\|@@\|%%" transparent contains=NONE
+syn match   kixLocalVar		"\$\w\+"
+syn match   kixMacro		"@\w\+"
+syn match   kixEnvVar		"%\w\+"
 
-syn keyword kixTodo contained	TODO
+" Destination labels
+syn match   kixLabel		":\w\+\>"
 
-"integer number, or floating point number without a dot.
-syn match  kixNumber		"\<[0-9]\+\>"
+" Identify strings, trap unterminated strings
+syn match   kixStringError      +".*\|'.*+
+syn region  kixDoubleString	oneline start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=kixLocalVar,kixMacro,kixEnvVar,kixNotVar
+syn region  kixSingleString	oneline start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=kixLocalVar,kixMacro,kixEnvVar,kixNotVar
 
-"floating point number, with dot
-syn match  kixNumber		"\<[0-9]\+\.[0-9]*\>"
+" Operators
+syn match   kixOperator		"+\|-\|\*\|/\|=\|&\||"
+syn keyword kixOperator		and or
+" Kix2001
+syn match   kixOperator		"=="
+syn keyword kixOperator		not
 
-"floating point number, starting with a dot
-syn match  kixNumber		"\.[0-9]\+\>"
+" Numeric constants
+syn match   kixInteger		"-\=\<\d\+\>" contains=NONE
+syn match   kixFloat		"-\=\.\d\+\>\|-\=\<\d\+\.\d\+\>" contains=NONE
+
+" Hex numeric constants
+syn match   kixHex		"\&\x\+\>" contains=NONE
+
+" Other contants
+" Kix2001
+syn keyword kixConstant		on off
+
+" Comments
+syn match   kixComment		";.*$" contains=kixTODO
+
+" Trap unmatched parenthesis
+syn match   kixParenCloseError	")"
+syn region  kixParen		oneline transparent start="(" end=")" contains=ALLBUT,kixParenCloseError
+
+" Functions (Builtin + UDF)
+syn match   kixFunction		"\w\+("he=e-1,me=e-1 contains=ALL
+
+" Trap unmatched brackets
+syn match   kixBrackCloseError	"\]"
+syn region  kixBrack		transparent start="\[" end="\]" contains=ALLBUT,kixBrackCloseError
+
+" Clusters for ALLBUT shorthand
+syn cluster kixIfBut		contains=kixIfError,kixSelectOK,kixDoOK,kixWhileOK,kixForEachOK,kixForNextOK
+syn cluster kixSelectBut	contains=kixSelectError,kixIfOK,kixDoOK,kixWhileOK,kixForEachOK,kixForNextOK
+syn cluster kixDoBut		contains=kixDoError,kixSelectOK,kixIfOK,kixWhileOK,kixForEachOK,kixForNextOK
+syn cluster kixWhileBut		contains=kixWhileError,kixSelectOK,kixIfOK,kixDoOK,kixForEachOK,kixForNextOK
+syn cluster kixForEachBut	contains=kixForEachError,kixSelectOK,kixIfOK,kixDoOK,kixForNextOK,kixWhileOK
+syn cluster kixForNextBut	contains=kixForNextError,kixSelectOK,kixIfOK,kixDoOK,kixForEachOK,kixWhileOK
+" Condtional construct errors.
+syn match   kixIfError		"\<if\>\|\<else\>\|\<endif\>"
+syn match   kixIfOK		contained "\<if\>\|\<else\>\|\<endif\>"
+syn region  kixIf           	transparent matchgroup=kixIfOK start="\<if\>" end="\<endif\>" contains=ALLBUT,@kixIfBut
+syn match   kixSelectError	"\<select\>\|\<case\>\|\<endselect\>"
+syn match   kixSelectOK		contained "\<select\>\|\<case\>\|\<endselect\>"
+syn region  kixSelect          	transparent matchgroup=kixSelectOK start="\<select\>" end="\<endselect\>" contains=ALLBUT,@kixSelectBut
+
+" Program control constructs.
+syn match   kixDoError		"\<do\>\|\<until\>"
+syn match   kixDoOK		contained "\<do\>\|\<until\>"
+syn region  kixDo           	transparent matchgroup=kixDoOK start="\<do\>" end="\<until\>" contains=ALLBUT,@kixDoBut
+syn match   kixWhileError	"\<while\>\|\<loop\>"
+syn match   kixWhileOK		contained "\<while\>\|\<loop\>"
+syn region  kixWhile           	transparent matchgroup=kixWhileOK start="\<while\>" end="\<loop\>" contains=ALLBUT,@kixWhileBut
+syn match   kixForNextError	"\<for\>\|\<to\>\|\<step\>\|\<next\>"
+syn match   kixForNextOK	contained "\<for\>\|\<to\>\|\<step\>\|\<next\>"
+syn region  kixForNext         	transparent matchgroup=kixForNextOK start="\<for\>" end="\<next\>" contains=ALLBUT,@kixForBut
+syn match   kixForEachError	"\<for each\>\|\<in\>\|\<next\>"
+syn match   kixForEachOK	contained "\<for each\>\|\<in\>\|\<next\>"
+syn region  kixForEach         	transparent matchgroup=kixForEachOK start="\<for each\>" end="\<next\>" contains=ALLBUT,@kixForEachBut
+
+" Expressions
+syn match   kixExpression	"<\|>\|<=\|>=\|<>"
 
 
-" String and Character contstants
-syn region  kixString		start=+"+ end=+"+ contains=kixSpecial
-syn match   kixSpecial   "\(\$#\|\$\+\|@\$*\|\&\$*\)[a-zA-Z_][a-zA-Z0-9_]*\(\(::\|'\)[a-zA-Z_][a-zA-Z0-9_]*\)*\>"
+" Default highlighting.
+" Version < 5.8 set default highlight if file not already processed.
+" Version >= 5.8 set default highlight only if it doesn't already have a value.
+if version > 508 || !exists("did_kix_syn_inits")
+	if version < 508
+		let did_kix_syn_inits=1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-syn region  kixComment	start=";" end="$" contains=kixTodo
-syn match   kixTypeSpecifier  "[a-zA-Z0-9][\$%&!#]"ms=s+1
+	HiLink kixDoubleString		String
+	HiLink kixSingleString		String
+	HiLink kixStatement		Statement
+	HiLink kixRepeat		Repeat
+	HiLink kixComment		Comment
+	HiLink kixBuiltin		Function
+	HiLink kixLocalVar		Special
+	HiLink kixMacro			Special
+	HiLink kixEnvVar		Special
+	HiLink kixLabel			Type
+	HiLink kixFunction		Function
+	HiLink kixInteger		Number
+	HiLink kixHex			Number
+	HiLink kixFloat			Number
+	HiLink kixOperator		Operator
+	HiLink kixExpression		Operator
 
-" Used with OPEN statement
-syn match   kixFilenumber  "#[0-9]\+"
+	HiLink kixParenCloseError	Error
+	HiLink kixBrackCloseError	Error
+	HiLink kixStringError		Error
 
-syn match   kixMathsOperator   "-\|=\|[:<>+\*^/\\]\|AND\|OR"
+	HiLink kixWhileError		Error
+	HiLink kixWhileOK		Conditional
+	HiLink kixDoError		Error
+	HiLink kixDoOK			Conditional
+	HiLink kixIfError		Error
+	HiLink kixIfOK			Conditional
+	HiLink kixSelectError		Error
+	HiLink kixSelectOK		Conditional
+	HiLink kixForNextError		Error
+	HiLink kixForNextOK		Conditional
+	HiLink kixForEachError		Error
+	HiLink kixForEachOK		Conditional
 
-" The default highlighting.
-hi def link kixLabel		Label
-hi def link kixConditional	Conditional
-hi def link kixRepeat		Repeat
-hi def link kixNumber		Number
-hi def link kixError		Error
-hi def link kixStatement        Statement
-hi def link kixString		String
-hi def link kixComment		Comment
-hi def link kixSpecial		Special
-hi def link kixTodo		Todo
-hi def link kixFunction		Identifier
-hi def link kixTypeSpecifier	Type
-hi def link kixFilenumber	kixTypeSpecifier
-hi def kixMathsOperator term=bold cterm=bold gui=bold
+	delcommand HiLink
+endif
 
 let b:current_syntax = "kix"
 
-" vim: ts=8
+" vim: ts=8 sw=2

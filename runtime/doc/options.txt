@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 22
+*options.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -293,6 +293,8 @@ files.  You use this command: >
 	:setlocal makeprg=perlmake
 You can switch back to using the global value by making the local value empty: >
 	:setlocal makeprg=
+This only works for a string option.  For a boolean option you cannot go back
+to using the global value.
 
 
 Setting the filetype
@@ -588,7 +590,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 				 *'autoread'* *'ar'* *'noautoread'* *'noar'*
 'autoread' 'ar'		boolean	(default off)
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	When a file has been detected to have been changed outside of Vim and
 	it has not been changed inside of Vim, automatically read it again.
@@ -1656,7 +1658,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	for keyword completion commands |i_CTRL-X_CTRL-K|.  Each file should
 	contain a list of words.  This can be one word per line, or several
 	words per line, separated by non-keyword characters (white space is
-	preferred).
+	preferred).  Maximum line length is 510 bytes.
 	To include a comma in a file name precede it with a backslash.  Spaces
 	after a comma are ignored, otherwise spaces are included in the file
 	name.  See |option-backslash| about using backslashes.
@@ -2108,14 +2110,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  stlnc:c	' ' or '-'	statusline of the non-current windows
 	  vert:c	'|'		vertical separators |:vsplit|
 	  fold:c	'-'		filling 'foldtext'
-	  diff:c	'x'		deleted lines of the 'diff' option
+	  diff:c	'-'		deleted lines of the 'diff' option
 
 	Any one that is omitted will fall back to the default.  For "stl" and
 	"stlnc" the space will be used when there is highlighting, '^' or '-'
 	otherwise.
 
 	Example: >
-	    :set fillchars=stl:^,stlnc:-,vert:\|,fold:-,diff:x
+	    :set fillchars=stl:^,stlnc:-,vert:\|,fold:-,diff:-
 <	This is similar to the default, except that these characters will also
 	be used when there is highlighting.
 
@@ -3091,7 +3093,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{only available when compiled with the |+keymap|
 			feature}
-	Name of a keyboard mapping.  See |multilang-typing|.
+	Name of a keyboard mapping.  See |mbyte-keymap|.
 
 					*'keymodel'* *'km'*
 'keymodel' 'km'		string	(default "")
@@ -3444,7 +3446,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				 *'modifiable'* *'ma'* *'nomodifiable'* *'noma'*
 'modifiable' 'ma'	boolean	(default on)
 			local to buffer
-			{not in Vi}
+			{not in Vi}		*ec5*
 	When off the buffer contents cannot be changed.  The 'fileformat' and
 	'fileencoding' options also can't be changed.
 
@@ -4198,7 +4200,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	with Unix.  The Unix version of Vim cannot source dos format scripts,
 	but the Windows version of Vim can source unix format scripts.
 
-						*'shell'* *'sh'*
+						*'shell'* *'sh'* *es1*
 'shell' 'sh'		string	(default $SHELL or "sh",
 					MS-DOS and Win32: "command.com" or
 					"cmd.exe", OS/2: "cmd")
@@ -5071,7 +5073,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	List of file names, separated by commas, that are used to lookup words
 	for thesesaurus completion commands |i_CTRL-X_CTRL-T|.  Each line in
 	the file should contain words with similar meaning, separated by
-	non-keyword characters (white space is preferred).
+	non-keyword characters (white space is preferred).  Maximum line
+	length is 510 bytes.
 	To obtain a file to be used here, check out the wordlist FAQ at
         http://www.hyphenologist.co.uk .
 	To include a comma in a file name precede it with a backslash.  Spaces
@@ -5238,7 +5241,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				*'toolbar'* *'tb'*
 'toolbar' 'tb'		string	(default "icons,tooltips")
 			global
-			{only for |+GUI_GTK|}
+			{only for |+GUI_GTK|, |+GUI_Athena| and |+GUI_Motif|}
 	The contents of this option controls various toolbar settings.  The
 	possible values are:
 		icons		Toolbar buttons are shown with icons.
@@ -5250,7 +5253,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	If you want the toolbar to be shown with icons as well as text, do the
 	following: >
 		:set tb=icons,text
-<	If none of the strings specified in 'toolbar' are valid of if
+<	Motif and Athena cannot display icons and text at the same time.  They
+	will show icons if both are requested.
+
+	If none of the strings specified in 'toolbar' are valid of if
 	'toolbar' is empty, this option is ignored.  If you want to disable
 	the toolbar, you need to set the 'guioptions' option.  For example: >
 		:set guioptions-=T

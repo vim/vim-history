@@ -69,7 +69,7 @@ static void	ex_abclear __ARGS((exarg_T *eap));
 #ifndef FEAT_MENU
 # define ex_emenu		ex_ni
 # define ex_menu		ex_ni
-# define ex_menutrans		ex_ni
+# define ex_menutranslate	ex_ni
 #endif
 #ifdef FEAT_AUTOCMD
 static void	ex_autocmd __ARGS((exarg_T *eap));
@@ -122,6 +122,7 @@ static char_u	*invalid_range __ARGS((exarg_T *eap));
 static void	correct_range __ARGS((exarg_T *eap));
 static char_u	*repl_cmdline __ARGS((exarg_T *eap, char_u *src, int srclen, char_u *repl, char_u **cmdlinep));
 static void	ex_highlight __ARGS((exarg_T *eap));
+static void	ex_colorscheme __ARGS((exarg_T *eap));
 static void	ex_quit __ARGS((exarg_T *eap));
 static void	ex_cquit __ARGS((exarg_T *eap));
 static void	ex_quit_all __ARGS((exarg_T *eap));
@@ -1697,9 +1698,21 @@ do_one_cmd(cmdlinep, sourcing,
  *
  * The "ea" structure holds the arguments that can be used.
  */
+    ea.cmdlinep = cmdlinep;
+    ea.getline = getline;
+    ea.cookie = cookie;
+#ifdef FEAT_EVAL
+    ea.cstack = cstack;
+#endif
+
 #ifdef FEAT_USR_CMDS
     if (USER_CMDIDX(ea.cmdidx))
+    {
+	/*
+	 * Execute a user-defined command.
+	 */
 	do_ucmd(&ea);
+    }
     else
 #endif
     {
@@ -1707,12 +1720,6 @@ do_one_cmd(cmdlinep, sourcing,
 	 * Call the function to execute the command.
 	 */
 	ea.errmsg = NULL;
-	ea.cmdlinep = cmdlinep;
-	ea.getline = getline;
-	ea.cookie = cookie;
-#ifdef FEAT_EVAL
-	ea.cstack = cstack;
-#endif
 	(cmdnames[ea.cmdidx].cmd_func)(&ea);
 	if (ea.errmsg != NULL)
 	    errormsg = (char_u *)_(ea.errmsg);
@@ -3027,7 +3034,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 			    ++p;
 			else if (vim_iswhite(*p))
 			{
-			    *errormsgp = (char_u *)_("Only one file name allowed");
+			    *errormsgp = (char_u *)_("(ef2) Only one file name allowed");
 			    return FAIL;
 			}
 		    }
@@ -4515,7 +4522,8 @@ do_ucmd(eap)
     }
 
     current_SID = cmd->uc_scriptID;
-    do_cmdline_cmd(buf);
+    (void)do_cmdline(buf, eap->getline, eap->cookie,
+				   DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
     current_SID = save_current_SID;
     vim_free(buf);
     vim_free(split_buf);
@@ -4595,6 +4603,14 @@ get_user_cmd_complete(xp, idx)
 # endif /* FEAT_CMDL_COMPL */
 
 #endif	/* FEAT_USR_CMDS */
+
+    static void
+ex_colorscheme(eap)
+    exarg_T	*eap;
+{
+    if (load_colors(eap->arg) == FAIL)
+	EMSG2(_("Cannot find color scheme %s"), eap->arg);
+}
 
     static void
 ex_highlight(eap)
@@ -5503,7 +5519,7 @@ ex_edit(eap)
     void
 do_exedit(eap, old_curwin)
     exarg_T	*eap;
-    win_T	*old_curwin;
+    win_T	*old_curwin;	    /* curwin before doing a split or NULL */
 {
     int		n;
 #ifdef FEAT_WINDOWS
@@ -5555,7 +5571,7 @@ do_exedit(eap, old_curwin)
 		    + (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )
 #endif
 		    ) == FAIL
-		&& (eap->cmdidx == CMD_split || eap->cmdidx == CMD_vsplit))
+		&& old_curwin != NULL)
 	{
 #ifdef FEAT_WINDOWS
 	    /* If editing failed after a split command, close the window */
@@ -5598,12 +5614,7 @@ do_exedit(eap, old_curwin)
      * if ":split file" worked, set alternate file name in old window to new
      * file
      */
-    if (       (eap->cmdidx == CMD_new
-# ifdef FEAT_VERTSPLIT
-		|| eap->cmdidx == CMD_vnew
-		|| eap->cmdidx == CMD_vsplit
-# endif
-		|| eap->cmdidx == CMD_split)
+    if (old_curwin != NULL
 	    && *eap->arg != NUL
 	    && curwin != old_curwin
 	    && win_valid(old_curwin)
@@ -5886,7 +5897,7 @@ ex_pwd(eap)
     if (mch_dirname(NameBuff, MAXPATHL) == OK)
 	msg(NameBuff);
     else
-	EMSG(_(e_unknown));
+	EMSG(_("(eu1) Unknown"));
 }
 
 /*
@@ -6608,7 +6619,7 @@ ex_normal(eap)
 
     if (ex_normal_busy >= p_mmd)
     {
-	EMSG(_("Recursive use of :normal too deep"));
+	EMSG(_("(en4) Recursive use of :normal too deep"));
 	return;
     }
     ++ex_normal_busy;
@@ -7376,7 +7387,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		buf = buflist_findnr(i);
 		if (buf == NULL)
 		{
-		    *errormsg = (char_u *)_("No alternate file name to substitute for '#'");
+		    *errormsg = (char_u *)_("(en3) No alternate file name to substitute for '#'");
 		    return NULL;
 		}
 		if (lnump != NULL)
@@ -8858,67 +8869,75 @@ ex_folddo(eap)
 #endif
 
 #ifdef FEAT_EVAL
+
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+static char *get_locale_val __ARGS((int what));
+
+    static char *
+get_locale_val(what)
+    int		what;
+{
+    char	*loc;
+
+    /* Obtain the locale value from the libraries.  For DJGPP this is
+     * redefined and it doesn't use the arguments. */
+    loc = setlocale(what, NULL);
+
+#  if defined(__BORLANDC__)
+    if (loc != NULL)
+    {
+	char_u	*p;
+
+	/* Borland returns something like "LC_CTYPE=<name>\n"
+	 * Let's try to fix that bug here... */
+	p = vim_strchr(loc, '=');
+	if (p != NULL)
+	{
+	    loc = ++p;
+	    while (*p != NUL)	/* remove trailing newline */
+	    {
+		if (*p < ' ')
+		{
+		    *p = NUL;
+		    break;
+		}
+		++p;
+	    }
+	}
+    }
+#  endif
+
+    return loc;
+}
+# endif
+
 /*
- * Set the "lang" variable according to the current locale setting.
+ * Set the "v:lang" variable according to the current locale setting.
+ * Also do "v:lc_time"and "v:ctype".
  */
     void
 set_lang_var()
 {
     char_u	*loc;
-# if defined(LC_MESSAGES) \
-	|| ((defined(HAVE_LOCALE_H) || defined(X_LOCALE)) && !defined(DJGPP))
-    int		what = LC_CTYPE;
-# endif
 
-    /* first do LC_CTYPE, then LC_MESSAGES (if it's supported) */
-    for (;;)
-    {
 # if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
-	/* Obtain the locale value from the libraries.  For DJGPP this is
-	 * redefined and it doesn't use the arguments. */
-	loc = (char_u *)setlocale(what, NULL);
-#  if defined(__BORLANDC__)
-	if (loc != NULL)
-	{
-	    char_u	*p;
-
-	    /* Borland returns something like "LC_CTYPE=<name>\n"
-	     * Let's try to fix that bug here... */
-	    p = vim_strchr(loc, '=');
-	    if (p != NULL)
-	    {
-		loc = ++p;
-		while (*p != NUL)	/* remove trailing newline */
-		{
-		    if (*p < ' ')
-		    {
-			*p = NUL;
-			break;
-		    }
-		    ++p;
-		}
-	    }
-	}
-#  endif
+    loc = (char_u *)get_locale_val(LC_CTYPE);
 # else
-	/* setlocale() not supported: use the default value */
-	loc = (char_u *)"C";
+    /* setlocale() not supported: use the default value */
+    loc = (char_u *)"C";
 # endif
-# ifdef LC_MESSAGES
-	if (what == LC_CTYPE)
-	{
+    set_vim_var_string(VV_CTYPE, loc, -1);
+
+    /* When LC_MESSAGES isn't defined use the value from LC_CTYPE. */
+# if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) && defined(LC_MESSAGES)
+    loc = (char_u *)get_locale_val(LC_MESSAGES);
 # endif
-	    set_vim_var_string(VV_CTYPE, loc, -1);
-# ifdef LC_MESSAGES
-	    what = LC_MESSAGES;
-	}
-	else
-#endif
-	{
-	    set_vim_var_string(VV_LANG, loc, -1);
-	    break;
-	}
-    }
+    set_vim_var_string(VV_LANG, loc, -1);
+
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    loc = (char_u *)get_locale_val(LC_TIME);
+# endif
+    set_vim_var_string(VV_LC_TIME, loc, -1);
 }
 #endif
 
@@ -8939,9 +8958,9 @@ ex_language(eap)
 
     name = eap->arg;
 
-    /* Check for "messages name" or "ctype name" argument.  Allow
-     * abbreviation, but require at least 3 characters to avoid confusion
-     * with a two letter language name "me" or "ct". */
+    /* Check for "messages {name}", "ctype {name}" or "time {name}" argument.
+     * Allow abbreviation, but require at least 3 characters to avoid
+     * confusion with a two letter language name "me" or "ct". */
     p = skiptowhite(eap->arg);
     if ((*p == NUL || vim_iswhite(*p)) && p - eap->arg >= 3)
     {
@@ -8961,6 +8980,12 @@ ex_language(eap)
 	    name = skipwhite(p);
 	    whatstr = "ctype ";
 	}
+	else if (STRNICMP(eap->arg, "time", p - eap->arg) == 0)
+	{
+	    what = LC_TIME;
+	    name = skipwhite(p);
+	    whatstr = "time ";
+	}
     }
 
     if (*name == NUL)
@@ -8978,30 +9003,34 @@ ex_language(eap)
 	    /* Reset $LC_ALL, otherwise it would overrule everyting. */
 	    vim_setenv((char_u *)"LC_ALL", (char_u *)"");
 
-	    /* Tell gettext() what to translate to.  It apparently doesn't
-	     * use the currently effective locale.  Also do this when
-	     * FEAT_GETTEXT isn't defined, so that shell commands use this
-	     * value. */
-	    if (what == LC_ALL)
-		vim_setenv((char_u *)"LANG", name);
-	    if (what != LC_CTYPE)
-		vim_setenv((char_u *)"LC_MESSAGES", name);
+	    if (what != LC_TIME)
+	    {
+		/* Tell gettext() what to translate to.  It apparently doesn't
+		 * use the currently effective locale.  Also do this when
+		 * FEAT_GETTEXT isn't defined, so that shell commands use this
+		 * value. */
+		if (what == LC_ALL)
+		    vim_setenv((char_u *)"LANG", name);
+		if (what != LC_CTYPE)
+		    vim_setenv((char_u *)"LC_MESSAGES", name);
 
-	    /* Set $LC_CTYPE, because it overrules $LANG, and gtk_set_locale()
-	     * calls setlocale() again.  gnome_init() sets $LC_CTYPE to
-	     * "en_US" (that's a bug!). */
+		/* Set $LC_CTYPE, because it overrules $LANG, and
+		 * gtk_set_locale() calls setlocale() again.  gnome_init()
+		 * sets $LC_CTYPE to "en_US" (that's a bug!). */
 #ifdef LC_MESSAGES
-	    if (what != LC_MESSAGES)
+		if (what != LC_MESSAGES)
 #endif
-		vim_setenv((char_u *)"LC_CTYPE", name);
+		    vim_setenv((char_u *)"LC_CTYPE", name);
 # ifdef FEAT_GUI_GTK
-	    /* Let GTK know what locale we're using.  Not sure this is really
-	     * needed... */
-	    if (gui.in_use)
-		(void)gtk_set_locale();
+		/* Let GTK know what locale we're using.  Not sure this is
+		 * really needed... */
+		if (gui.in_use)
+		    (void)gtk_set_locale();
 # endif
+	    }
+
 # ifdef FEAT_EVAL
-	    /* Set v:lang and v:ctype to the final result. */
+	    /* Set v:lang, v:lc_time and v:ctype to the final result. */
 	    set_lang_var();
 # endif
 	}

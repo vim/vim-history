@@ -159,6 +159,7 @@ struct vimvar
     {"termresponse", sizeof("termresponse") - 1, NULL, VAR_STRING, VV_RO},
     {"fname", sizeof("fname") - 1, NULL, VAR_STRING, VV_RO},
     {"lang", sizeof("lang") - 1, NULL, VAR_STRING, VV_RO},
+    {"lc_time", sizeof("lc_time") - 1, NULL, VAR_STRING, VV_RO},
     {"ctype", sizeof("ctype") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_from", sizeof("charconvert_from") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_to", sizeof("charconvert_to") - 1, NULL, VAR_STRING, VV_RO},
@@ -170,6 +171,7 @@ struct vimvar
     {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
     {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
     {"folddashes", sizeof("folddashes") - 1, NULL, VAR_STRING, VV_RO},
+    {"all_colors", sizeof("all_colors") - 1, NULL, VAR_NUMBER, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -211,6 +213,7 @@ static void f_eventhandler __ARGS((VAR argvars, VAR retvar));
 static void f_executable __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
+static void f_expandpath __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
 static void f_filewritable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
@@ -2284,6 +2287,7 @@ static struct fst
     {"executable",	1, 1, f_executable},
     {"exists",		1, 1, f_exists},
     {"expand",		1, 2, f_expand},
+    {"expandpath",	2, 2, f_expandpath},
     {"file_readable",	1, 1, f_filereadable},	/* obsolete */
     {"filereadable",	1, 1, f_filereadable},
     {"filewritable",	1, 1, f_filewritable},
@@ -2392,7 +2396,10 @@ get_function_name(xp, idx)
     }
     if (++intidx < (int)(sizeof(functions) / sizeof(struct fst)))
     {
-	STRCAT(STRCPY(IObuff, functions[intidx].f_name), "(");
+	STRCPY(IObuff, functions[intidx].f_name);
+	STRCAT(IObuff, "(");
+	if (functions[intidx].f_max_argc == 0)
+	    STRCAT(IObuff, ")");
 	return IObuff;
     }
 
@@ -3273,6 +3280,45 @@ f_expand(argvars, retvar)
 	xpc.xp_context = EXPAND_FILES;
 	retvar->var_val.var_string = ExpandOne(&xpc, s, NULL, flags, WILD_ALL);
     }
+}
+
+/*
+ * "expandpath()" function
+ */
+    static void
+f_expandpath(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*expr;
+    char_u	*pathlist;
+    char_u	buf[NUMBUFLEN];
+    garray_T	ga;
+    char_u	*p;
+    expand_T	xpc;
+
+    expr = get_var_string(&argvars[0]);
+    pathlist = get_var_string_buf(&argvars[1], buf);
+    ga_init2(&ga, 1, 100);
+
+    while (*pathlist != NUL)
+    {
+	copy_option_part(&pathlist, NameBuff, MAXPATHL, ",");
+	if (STRLEN(expr) + STRLEN(NameBuff) < MAXPATHL - 2)
+	{
+	    add_pathsep(NameBuff);
+	    STRCAT(NameBuff, expr);
+	    xpc.xp_context = EXPAND_FILES;
+	    p = ExpandOne(&xpc, NameBuff, NULL,
+			     WILD_SILENT|WILD_USE_NL|WILD_KEEP_ALL, WILD_ALL);
+	    if (p != NULL && ga_grow(&ga, STRLEN(p)) == OK)
+		STRCAT(ga.ga_data, p);
+	    vim_free(p);
+	}
+    }
+
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = ga.ga_data;
 }
 
 /*
@@ -4479,11 +4525,9 @@ f_input(argvars, retvar)
 
     retvar->var_type = VAR_STRING;
 
-#ifdef NO_CONSOLE
-    /*
-     * While starting up, there is no place to enter text.
-     */
-    if (!gui.in_use || gui.starting)
+#ifdef NO_CONSOLE_INPUT
+    /* While starting up, there is no place to enter text. */
+    if (no_console_input())
     {
 	retvar->var_val.var_string = NULL;
 	return;
@@ -6498,6 +6542,7 @@ find_var_ga(name, varname)
 
 /*
  * Get the string value of a global variable.
+ * Returns NULL when it doesn't exit.
  */
     char_u *
 get_var_value(name)
@@ -7077,9 +7122,19 @@ ex_function(eap)
      */
     if (KeyTyped)
     {
+	/* Check if the function already exists, don't let the user type the
+	 * whole function before telling him it doesn't work!  For a script we
+	 * need to skip the body to be able to find what follows. */
+	if (find_func(name) != NULL && !eap->forceit)
+	{
+	    EMSG2(_("Function %s already exists, use ! to replace"), name);
+	    goto erret;
+	}
+
 	msg_putchar('\n');	    /* don't overwrite the function name */
 	cmdline_row = msg_row;
     }
+
     indent = 2;
     nesting = 0;
     for (;;)
@@ -7391,7 +7446,11 @@ get_user_func_name(xp, idx)
 
 	cat_func_name(IObuff, fp);
 	if (xp->xp_context != EXPAND_USER_FUNC)
+	{
 	    STRCAT(IObuff, "(");
+	    if (!fp->varargs && fp->args.ga_len == 0)
+		STRCAT(IObuff, ")");
+	}
 
 	fp = fp->next;
 	return IObuff;

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Apr 16
+" Last change:	2001 Apr 25
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -267,8 +267,13 @@ fun! <SID>FTent()
   setf sgml
 endfun
 
-" Clipper
-au BufNewFile,BufRead *.prg			setf clipper
+" Clipper (or FoxPro)
+au BufNewFile,BufRead *.prg
+	\ if exists("g:filetype_prg") |
+	\   exe "setf " . g:filetype_prg |
+	\ else |
+	\   setf clipper |
+	\ endif
 
 " Cobol
 au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	setf cobol
@@ -580,8 +585,12 @@ au BufNewFile,BufRead .muttrc*,Muttrc		setf muttrc
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			setf ncf
 
-" Nroff/Troff (*.ms is checked below)
-au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr	setf nroff
+" Nroff/Troff (*.ms and *.t are checked below)
+au BufNewFile,BufRead *.me
+	\ if expand("<afile>") != "read.me" && expand("<afile>") != "click.me" |
+	\   setf nroff |
+	\ endif
+au BufNewFile,BufRead *.mm,*.tr,*.nr,*.roff	setf nroff
 au BufNewFile,BufRead *.[1-9]			call <SID>FTnroff()
 
 " This function checks if one of the first five lines start with a dot.  In
@@ -950,8 +959,9 @@ au BufNewFile,BufRead *.stp			setf stp
 " Standard ML
 au BufNewFile,BufRead *.sml			setf sml
 
-" Tads
-au BufNewFile,BufRead *.t			setf tads
+" Tads (or Nroff)
+au BufNewFile,BufRead *.t
+	\ if !<SID>FTnroff() | setf tads | endif
 
 " Tags
 au BufNewFile,BufRead tags			setf tags
@@ -1111,6 +1121,9 @@ au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*		setf make
+
+" Nroff macros
+au BufNewFile,BufRead tmac.*			setf nroff
 
 " Printcap and Termcap
 au BufNewFile,BufRead *printcap*

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Apr 18
+" Last Change:	2001 apr 26
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -28,7 +28,9 @@ menutrans Sp&lit-Open\.\.\.<Tab>:sp	In\ nieuw\ &Venster\ openen\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nieuw<Tab>:enew
 menutrans &Close<Tab>:q			&Sluiten<Tab>:q
 menutrans &Save<Tab>:w			&Bewaren<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:w	Bewaren\ als\.\.\.<Tab>:w
+menutrans Save\ &As\.\.\.<Tab>:sav	Bewaren\ als\.\.\.<Tab>:sav
+menutrans Show\ &Diff\ with\.\.\.	Toon\ diff\ met\.\.\.
+menutrans Show\ &Patched\ by\.\.\.	Toon\ gewijzigd\ door\.\.\.
 menutrans &Print			Af&drukken
 menutrans Sa&ve-Exit<Tab>:wqa		Bewaren\ en\ Afluiten<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Afsluiten<Tab>:qa
@@ -40,7 +42,7 @@ menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
 menutrans Rep&eat<Tab>\.		&Herhalen<Tab>\.
 menutrans Cu&t<Tab>"+x			&Knippen<Tab>"+x
 menutrans &Copy<Tab>"+y			K&opiëeren<Tab>"+y
-menutrans &Paste<Tab>"+p		Plakken<Tab>"+p
+menutrans &Paste<Tab>"+P		Plakken<Tab>"+P
 menutrans Put\ &Before<Tab>[p		Ervoor\ invoegen<Tab>[p
 menutrans Put\ &After<Tab>]p		Erachter\ invoegen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markeren<Tab>ggVG
@@ -70,9 +72,11 @@ menutrans Convert\ back<Tab>:%!xxd\ -r	Converteer\ terug<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers		&Buffer
-menutrans Refresh \menu		Ververs\ menu
+menutrans &Refresh\ menu	Ververs\ menu
 menutrans Delete		Wissen
-menutrans Alternate		Vorige
+menutrans A&lternate		Vorige
+menutrans &Next			Vooruit
+menutrans &Previous		Achteruit
 menutrans [No\ File]		[Geen\ Bestand]
 
 " Window menu
@@ -90,6 +94,11 @@ menutrans &Max\ Height<Tab>^W_		&Maximale\ hoogte<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ hoogte<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Maximale\ breedte<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Minimale\ breedte<Tab>^W1\|
+menutrans Move\ &To			Verplaats\ naar
+menutrans &Top<Tab>^WK			Bovenkant<Tab>^WK
+menutrans &Bottom<Tab>^WJ		Onderkant<Tab>^WJ
+menutrans &Left\ side<Tab>^WH		Linkerkant<Tab>^WH
+menutrans &Right\ side<Tab>^WL		Rechterkant<Tab>^WL
 menutrans Rotate\ &Up<Tab>^WR		Roteren\ naar\ &boven<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Roteren\ naar\ &onder<Tab>^Wr
 menutrans Select\ &Font\.\.\.		Selecteer\ font\.\.\.
@@ -107,7 +116,7 @@ menutrans Select\ &Block	Selecteer\ een\ Recht&hoek
 menutrans Select\ &All		Selecteer\ &Alles
  
 " The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif
@@ -149,3 +158,6 @@ menutrans o&ff\ (this\ file)	&Uit\ (dit\ Bestand)
 menutrans Co&lor\ test		Test\ de\ &Kleuren
 menutrans &Highlight\ test	Test\ de\ Markeringen
 menutrans &Convert\ to\ HTML	Converteren\ naar\ &HTML
+
+" Find Help dialog text
+let find_help_dialog = "Typ een commando of woord om help voor te vinden:\n\nVoeg i_ in voor Input mode commandos (bijv. i_CTRL-X)\nVoeg c_ in voor een commando-regel edit commando (bijv. c_<Del>)\nVoeg ' in \voor een optie naam (bijv. 'shiftwidth')"

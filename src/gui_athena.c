@@ -33,6 +33,11 @@ static Widget vimForm = (Widget)0;
 static Widget textArea = (Widget)0;
 #ifdef FEAT_MENU
 static Widget menuBar = (Widget)0;
+
+/* Used to figure out menu ordering */
+static vimmenu_T *a_cur_menu = NULL;
+static Cardinal athena_calculate_ins_pos __ARGS((Widget));
+
 static void gui_athena_pullright_action __ARGS((Widget, XEvent *, String *,
 						Cardinal *));
 static void gui_athena_pullleft_action __ARGS((Widget, XEvent *, String *,
@@ -205,6 +210,7 @@ gui_x11_create_widgets()
 	XtNbottom,		XtChainTop,
 	XtNleft,		XtChainLeft,
 	XtNright,		XtChainRight,
+	XtNinsertPosition,	athena_calculate_ins_pos,
 	NULL);
     gui_athena_menu_colors(menuBar);
     if (gui.menu_fg_pixel != -1)
@@ -212,7 +218,9 @@ gui_x11_create_widgets()
 #endif
 
 #ifdef FEAT_TOOLBAR
-    toolBar = XtVaCreateManagedWidget("toolBar",
+    /* Don't create it Managed, it will be managed when creating the first
+     * item.  Otherwise an empty toolbar shows up. */
+    toolBar = XtVaCreateWidget("toolBar",
 	boxWidgetClass,		vimForm,
 	XtNresizable,		True,
 	XtNtop,			XtChainTop,
@@ -222,6 +230,7 @@ gui_x11_create_widgets()
 	XtNorientation,		XtorientHorizontal,
 	XtNhSpace,		1,
 	XtNvSpace,		3,
+	XtNinsertPosition,	athena_calculate_ins_pos,
 	NULL);
     gui_athena_menu_colors(toolBar);
 #endif
@@ -285,6 +294,8 @@ gui_mch_set_toolbar_pos(x, y, w, h)
     Dimension	border;
     int		height;
 
+    if (!XtIsManaged(toolBar))	/* nothing to do */
+	return;
     XtUnmanageChild(toolBar);
     XtVaGetValues(toolBar,
 		XtNborderWidth, &border,
@@ -399,6 +410,65 @@ gui_mch_set_menu_pos(x, y, w, h)
     XtManageChild(menuBar);
 }
 
+/*
+ * Used to calculate the insertion position of a widget with respect to its neighbors.
+ *
+ * Valid range of return values is: 0 (beginning of children) to
+ *                                  numChildren (end of children).
+ */
+    static Cardinal
+athena_calculate_ins_pos(widget)
+    Widget	widget;
+{
+    /* Assume that if the parent of the vimmenu_T is NULL, then we can get
+     * to this menu by traversing "next", starting at "root_menu".
+     *
+     * This holds true for popup menus, toolbar, and toplevel menu items.
+     */
+
+    /* Popup menus:  "id" is NULL. Only submenu_id is valid */
+
+    /* Menus that are not toplevel: "parent" will be non-NULL, "id" &
+     * "submenu_id" will be non-NULL.
+     */
+
+    /* Toplevel menus: "parent" is NULL, id is the widget of the menu item */
+
+    WidgetList	children;
+    Cardinal	num_children = 0;
+    String      name;
+    int		retval;
+
+    name = XtName(widget);
+    {
+	Arg	args[2];
+	int	n = 0;
+
+	XtSetArg(args[n], XtNchildren, &children); n++;
+	XtSetArg(args[n], XtNnumChildren, &num_children); n++;
+	XtGetValues(XtParent(widget), args, n);
+    }
+    retval = num_children;
+    {
+	int i;
+
+	for (i = 0; i < num_children; ++i)
+	{
+	    Widget	current = children[i];
+	    vimmenu_T	*menu = NULL;
+
+	    for (menu = (a_cur_menu->parent == NULL) ? root_menu : a_cur_menu->parent->children;
+		 menu != NULL;
+		 menu = menu->next)
+		if (current == menu->id)
+		    if (a_cur_menu->priority < menu->priority)
+			if (i < retval)
+			    retval = i;
+	}
+    }
+    return retval;
+}
+
 /* ARGSUSED */
     void
 gui_mch_add_menu(menu, idx)
@@ -409,12 +479,14 @@ gui_mch_add_menu(menu, idx)
     Dimension	height, space, border;
     vimmenu_T	*parent = menu->parent;
 
+    a_cur_menu = menu;
     if (parent == NULL)
     {
 	if (menu_is_popup(menu->dname))
 	{
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
-		simpleMenuWidgetClass, vimShell,
+		simpleMenuWidgetClass,	vimShell,
+		XtNinsertPosition,	athena_calculate_ins_pos,
 		NULL);
 	    gui_athena_menu_colors(menu->submenu_id);
 	}
@@ -431,6 +503,7 @@ gui_mch_add_menu(menu, idx)
 
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, menu->id,
+		XtNinsertPosition,	athena_calculate_ins_pos,
 		NULL);
 	    gui_athena_menu_colors(menu->submenu_id);
 	    gui_athena_menu_font(menu->submenu_id);
@@ -480,6 +553,7 @@ gui_mch_add_menu(menu, idx)
 
 	XtOverrideTranslations(parent->submenu_id, parentTrans);
     }
+    a_cur_menu = NULL;
 }
 
     static void
@@ -659,6 +733,7 @@ gui_mch_add_menu_item(menu, idx)
 {
     vimmenu_T	*parent = menu->parent;
 
+    a_cur_menu = menu;
 # ifdef FEAT_TOOLBAR
     if (menu_is_toolbar(parent->name))
     {
@@ -704,18 +779,14 @@ gui_mch_add_menu_item(menu, idx)
 			type, toolBar, args, n);
 	    XtAddCallback(menu->id,
 		    XtNcallback, gui_x11_menu_cb, menu);
-#ifdef FEAT_BEVAL
-	    if (menu->strings[MENU_INDEX_TIP] && menu->tip == NULL)
-		menu->tip = gui_mch_create_beval_area(
-				    menu->id,
-				    menu->strings[MENU_INDEX_TIP],
-				    NULL,
-				    NULL);
-#endif
 	}
 	else
 	    XtSetValues(menu->id, args, n);
 	gui_athena_menu_colors(menu->id);
+
+#ifdef FEAT_BEVAL
+	gui_mch_menu_set_tip(menu);
+#endif
 
 	menu->parent = parent;
 	menu->submenu_id = NULL;
@@ -754,6 +825,7 @@ gui_mch_add_menu_item(menu, idx)
 		    (XtPointer)menu);
 	}
     }
+    a_cur_menu = NULL;
 }
 
 #if defined(FEAT_TOOLBAR) || defined(PROTO)
@@ -762,6 +834,8 @@ gui_mch_show_toolbar(int showit)
 {
     Cardinal	numChildren;	    /* how many children toolBar has */
 
+    if (toolBar == (Widget)0)
+	return;
     XtVaGetValues(toolBar, XtNnumChildren, &numChildren, NULL);
     if (showit && numChildren > 0)
     {
@@ -1428,7 +1502,8 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
 	XtManageChild(dialogtextfield);
 	XtAddEventHandler(dialogtextfield, KeyPressMask, False,
 			    (XtEventHandler)keyhit_callback, (XtPointer)NULL);
-	XawTextSetInsertionPoint(dialogtextfield, STRLEN(textfield));
+	XawTextSetInsertionPoint(dialogtextfield,
+					  (XawTextPosition)STRLEN(textfield));
 	XtSetKeyboardFocus(dialog, dialogtextfield);
     }
 

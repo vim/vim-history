@@ -1308,7 +1308,7 @@ AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
 	Xm/Xm.h libgen.h util/debug.h util/msg18n.h frame.h \
-	sys/acl.h)
+	sys/acl.h sys/access.h)
 
 dnl Check if strings.h and string.h can both be included when defined.
 AC_MSG_CHECKING([if strings.h can be included after string.h])
@@ -1632,22 +1632,26 @@ AC_TRY_COMPILE(
 
 dnl Link with iconv for charset translation, if not found without library.
 dnl check for iconv() requires including iconv.h
+dnl Add "-liconv" when possible; Solaris has iconv but use GNU iconv when it
+dnl has been installed.
 AC_MSG_CHECKING(for iconv_open())
+save_LIBS="$LIBS"
+LIBS="$LIBS -liconv"
 AC_TRY_LINK([
 #ifdef HAVE_ICONV_H
 # include <iconv.h>
 #endif
-], [iconv_open("fr", "to");],
-	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ICONV),
-	save_LIBS="$LIBS"
-	LIBS="$LIBS -liconv"
-	AC_TRY_LINK([
+    ], [iconv_open("fr", "to");],
+    AC_MSG_RESULT(yes; with -liconv); AC_DEFINE(HAVE_ICONV),
+    LIBS="$save_LIBS"
+    AC_TRY_LINK([
 #ifdef HAVE_ICONV_H
 # include <iconv.h>
 #endif
 	], [iconv_open("fr", "to");],
-	AC_MSG_RESULT(yes; with -liconv); AC_DEFINE(HAVE_ICONV),
-	LIBS="$save_LIBS"; AC_MSG_RESULT(no)))
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ICONV),
+	AC_MSG_RESULT(no)))
+
 
 AC_MSG_CHECKING(for nl_langinfo(CODESET))
 AC_TRY_LINK([
@@ -1661,16 +1665,45 @@ AC_TRY_LINK([
 dnl Link with posix1e for ACL stuff
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],,)
 
-AC_MSG_CHECKING(ACL support)
+AC_MSG_CHECKING(for POSIX ACL support)
 AC_TRY_LINK([
 #include <sys/types.h>
 #ifdef HAVE_SYS_ACL_H
 # include <sys/acl.h>
 #endif
-acl_t acl;], [acl = acl_get_file("foo", ACL_TYPE_DEFAULT);
-	acl_set_file("foo", ACL_TYPE_DEFAULT, acl);
+acl_t acl;], [acl = acl_get_file("foo", ACL_TYPE_ACCESS);
+	acl_set_file("foo", ACL_TYPE_ACCESS, acl);
 	acl_free(acl);],
-	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ACL),
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_POSIX_ACL),
+	AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(for Solaris ACL support)
+AC_TRY_LINK([
+#ifdef HAVE_SYS_ACL_H
+# include <sys/acl.h>
+#endif], [acl("foo", GETACLCNT, 0, NULL);
+	],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SOLARIS_ACL),
+	AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(for AIX ACL support)
+AC_TRY_LINK([
+#ifdef HAVE_SYS_ACL_H
+# include <sys/acl.h>
+#endif
+#ifdef HAVE_SYS_ACCESS_H
+# include <sys/access.h>
+#endif
+#define _ALL_SOURCE
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+int aclsize;
+struct acl *aclent;], [aclsize = sizeof(struct acl);
+	aclent = malloc(aclsize);
+	statacl("foo", STX_NORMAL, aclent, aclsize);
+	],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_AIX_ACL),
 	AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(--disable-gpm argument)

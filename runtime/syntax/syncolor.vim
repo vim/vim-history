@@ -1,10 +1,11 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 14
+" Last Change:	2001 Apr 28
 
 " This file sets up the default methods for highlighting.
 " It is loaded from "synload.vim" and from Vim for ":syntax reset".
-"
+" Also used from init_highlight().
+
 if !exists("syntax_cmd") || syntax_cmd == "on"
   " ":syntax on" works like in Vim 5.7: set colors but keep links
   command -nargs=* SynColor hi <args>

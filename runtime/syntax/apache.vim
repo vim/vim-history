@@ -1,26 +1,45 @@
 " Vim syntax file
-" Language: Apache httpd.conf, srm.conf, access.conf, .htaccess
-" Maintainer: David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Apr 20
-"              (synchronized with Apache 1.3.14 documentation)
-" URL: http://physics.muni.cz/~yeti/download/apache.vim
-" TODO: see particular FIXME's scattered thorough the file
+" Language: Apache configuration (httpd.conf, srm.conf, access.conf, .htaccess)
+" Maintainer: David Ne\{c}as (Yeti) <yeti@physics.muni.cz>
+" Last Change: 2001-04-26
+" URI: http://physics.muni.cz/~yeti/download/apache.vim
+"
+" Notes: Last synced with apache-1.3.14.
+" TODO: see particular FIXME's scattered through the file
+"       + add `display' where appropriate
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" Setup {{{
+" React to possibly already-defined syntax.
+" For version 5.x: Clear all syntax items unconditionally
+" For version 6.x: Quit when a syntax file was already loaded
+if version >= 600
+  if exists("b:current_syntax")
+    finish
+  endif
+else
+  syntax clear
 endif
 
-" SECTION: basic setup
+" Set iskeyword since we need really strange chars in keywords.
+" For version 5.x: Set it globally
+" For version 6.x: Set it locally
+if version >= 600
+  command -nargs=1 SetIsk setlocal iskeyword=<args>
+else
+  command -nargs=1 SetIsk set iskeyword=<args>
+endif
+SetIsk @,48-57,-,+,_
+delcommand SetIsk
+
 syn case ignore
-setlocal iskeyword=a-z,A-Z,48-57,-,+,_
-syn match   apacheComment       "^\s*#.*$"
+" }}}
+" Base constructs {{{
+syn match apacheComment "^\s*#.*$"
 syn match apacheAnything "\s[^>]*" contained
 syn match apacheError "\w\+" contained
 syn region apacheString start=+"+ end=+"+ skip=+\\\"+
-syn sync ccomment
-
-" SECTION: core
+" }}}
+" Core {{{
 syn keyword apacheDeclaration AccessConfig AccessFileName AddDefaultCharset AddModule AuthName AuthType BindAddress BS2000Account ClearModuleList ContentDigest CoreDumpDirectory DefaultType DocumentRoot ErrorDocument ErrorLog Group HostNameLookups IdentityCheck Include KeepAlive KeepAliveTimeout LimitRequestBody LimitRequestFields LimitRequestFieldsize LimitRequestLine Listen ListenBacklog LockFile LogLevel MaxClients MaxKeepAliveRequests MaxRequestsPerChild MaxSpareServers MinSpareServers NameVirtualHost Options PidFile Port require ResourceConfig RLimitCPU RLimitMEM RLimitNPROC Satisfy ScoreBoardFile ScriptInterpreterSource SendBufferSize ServerAdmin ServerAlias ServerName ServerPath ServerRoot ServerSignature ServerTokens ServerType StartServers ThreadsPerChild ThreadStackSize TimeOut UseCanonicalName User
 syn keyword apacheOption Any All On Off Double EMail DNS Min Minimal OS Prod ProductOnly Full
 syn keyword apacheOption emerg alert crit error warn notice info debug
@@ -39,8 +58,8 @@ syn match apacheAuthType "AuthType\s.*$" contains=apacheAuthTypeValue
 syn keyword apacheAuthTypeValue Basic Digest
 syn match apacheAllowOverride "AllowOverride\s.*$" contains=apacheAllowOverrideValue,apacheComment
 syn keyword apacheAllowOverrideValue AuthConfig FileInfo Indexes Limit Options contained
-
-" SECTION: modules
+" }}}
+" Modules {{{
 " mod_access
 syn match apacheAllowDeny "Allow\s\+from.*$" contains=apacheAllowDenyValue,apacheComment
 syn match apacheAllowDeny "Deny\s\+from.*$" contains=apacheAllowDenyValue,apacheComment
@@ -62,7 +81,7 @@ syn keyword apacheDeclaration AuthDBGroupFile AuthDBUserFile AuthDBAuthoritative
 " mod_auth_dbm
 syn keyword apacheDeclaration AuthDBMGroupFile AuthDBMUserFile AuthDBMAuthoritative
 " mod_auth_digest
-syn keyword apacheDeclaration AuthDigestFile AuthDigestGroupFile AuthDigestQop AuthDigestNonceLifetime AuthDigestNonceFormat AuthDigestNcCheck AuthDigestAlgorithm AuthDigestDomain 
+syn keyword apacheDeclaration AuthDigestFile AuthDigestGroupFile AuthDigestQop AuthDigestNonceLifetime AuthDigestNonceFormat AuthDigestNcCheck AuthDigestAlgorithm AuthDigestDomain
 syn keyword apacheOption none auth auth-int MD5 MD5-sess
 " mod_autoindex
 syn keyword apacheDeclaration AddAlt AddAltByEncoding AddAltByType AddDescription AddIcon AddIconByEncoding AddIconByType DefaultIcon FancyIndexing HeaderName IndexIgnore IndexOptions IndexOrderDefault ReadmeName
@@ -154,28 +173,40 @@ syn keyword apacheDeclaration UserDir
 " mod_usertrack
 syn keyword apacheDeclaration CookieExpires CookieName CookieTracking
 " mod_vhost_alias
-syn keyword apacheDeclaration VirtualDocumentRoot VirtualDocumentRootIP VirtualScriptAlias VirtualScriptAliasIP 
+syn keyword apacheDeclaration VirtualDocumentRoot VirtualDocumentRootIP VirtualScriptAlias VirtualScriptAliasIP
+" }}}
+" Define the default highlighting {{{
+" For version 5.7 and earlier: Only when not done already
+" For version 5.8 and later: Only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_apache_syntax_inits")
+  if version < 508
+    let did_apache_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" SECTION: links
-" the default highlighting.
-hi def link apacheAllowOverride		apacheDeclaration
-hi def link apacheAllowOverrideValue	apacheOption
-hi def link apacheAuthType		apacheDeclaration
-hi def link apacheAuthTypeValue		apacheOption
-hi def link apacheOptionOption		apacheOption
-hi def link apacheDeclaration		Function
-hi def link apacheAnything		apacheOption
-hi def link apacheOption		Number
-hi def link apacheComment		Comment
-hi def link apacheLimitSectionKeyword	apacheLimitSection
-hi def link apacheLimitSection		apacheSection
-hi def link apacheSection		Label
-hi def link apacheMethodOption		Type
-hi def link apacheAllowDeny		Include
-hi def link apacheAllowDenyValue	Identifier
-hi def link apacheOrder			Special
-hi def link apacheOrderValue		String
-hi def link apacheString		Number
-hi def link apacheError			Error
+  HiLink apacheAllowOverride       apacheDeclaration
+  HiLink apacheAllowOverrideValue  apacheOption
+  HiLink apacheAuthType            apacheDeclaration
+  HiLink apacheAuthTypeValue       apacheOption
+  HiLink apacheOptionOption        apacheOption
+  HiLink apacheDeclaration         Function
+  HiLink apacheAnything            apacheOption
+  HiLink apacheOption              Number
+  HiLink apacheComment             Comment
+  HiLink apacheLimitSectionKeyword apacheLimitSection
+  HiLink apacheLimitSection        apacheSection
+  HiLink apacheSection             Label
+  HiLink apacheMethodOption        Type
+  HiLink apacheAllowDeny           Include
+  HiLink apacheAllowDenyValue      Identifier
+  HiLink apacheOrder               Special
+  HiLink apacheOrderValue          String
+  HiLink apacheString              Number
+  HiLink apacheError               Error
 
+  delcommand HiLink
+endif
+" }}}
 let b:current_syntax = "apache"

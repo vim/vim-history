@@ -1,15 +1,16 @@
 " Vim syntax file
 " Language:	SNNS network file
 " Maintainer:	Davide Alberani <alberanid@bigfoot.com>
-" Last Change:	29 Jan 2000
-" Version:	0.1
-" URL:		http://members.xoom.com/alberanid/vim/syntax/snnsnet.vim
+" Last Change:	28 Apr 2001
+" Version:	0.2
+" URL:		http://digilander.iol.it/alberanid/vim/syntax/snnsnet.vim
 "
 " SNNS http://www-ra.informatik.uni-tuebingen.de/SNNS/
 " is a simulator for neural networks.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -53,14 +54,24 @@ syn match	snnsnetNumbers	"\d" contained
 syn match	snnsnetComment	"#.*$" contains=snnsnetTodo
 syn keyword	snnsnetTodo	TODO XXX FIXME contained
 
-" The default highlighting.
-hi def link snnsnetType		Type
-hi def link snnsnetComment	Comment
-hi def link snnsnetNumbers	Number
-hi def link snnsnetSection	Statement
-hi def link snnsnetTitle	Label
-hi def link snnsnetTodo		Todo
+if version >= 508 || !exists("did_snnsnet_syn_inits")
+  if version < 508
+    let did_snnsnet_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink snnsnetType		Type
+  HiLink snnsnetComment		Comment
+  HiLink snnsnetNumbers		Number
+  HiLink snnsnetSection		Statement
+  HiLink snnsnetTitle		Label
+  HiLink snnsnetTodo		Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "snnsnet"
 
-" vim: ts=8
+" vim: ts=8 sw=2

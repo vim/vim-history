@@ -2,18 +2,21 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 26
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if !exists("main_syntax")
+  if version < 600
+    syntax clear
+  elseif exists("b:current_syntax")
   finish
+endif
+  let main_syntax = 'css'
 endif
 
 syn case ignore
 
-if !exists("main_syntax")
-  let main_syntax = 'css'
-endif
 
 syn keyword cssTagName address applet area a base basefont
 syn keyword cssTagName big blockquote body br b caption center
@@ -90,30 +93,42 @@ if main_syntax == "css"
   syn sync minlines=10
 endif
 
-" The default highlighting.
-hi def link cssComment Comment
-hi def link cssTagName Statement
-hi def link cssFontProperties StorageClass
-hi def link cssColorProperties StorageClass
-hi def link cssTextProperties StorageClass
-hi def link cssBoxProperties StorageClass
-hi def link cssClassificationProperties StorageClass
-hi def link cssFontAttr Type
-hi def link cssColorAttr Type
-hi def link cssTextAttr Type
-hi def link cssBoxAttr Type
-hi def link cssClassificationAttr Type
-hi def link cssPseudoClassId PreProc
-hi def link cssLength Number
-hi def link cssColor Constant
-hi def link cssURL String
-hi def link cssIdentifier Function
-hi def link cssInclude Include
-hi def link cssImportant Special
-hi def link cssBraces Function
-hi def link cssError Error
-hi def link cssInclude Include
-hi def link cssString String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_css_syn_inits")
+  if version < 508
+    let did_css_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cssComment Comment
+  HiLink cssTagName Statement
+  HiLink cssFontProperties StorageClass
+  HiLink cssColorProperties StorageClass
+  HiLink cssTextProperties StorageClass
+  HiLink cssBoxProperties StorageClass
+  HiLink cssClassificationProperties StorageClass
+  HiLink cssFontAttr Type
+  HiLink cssColorAttr Type
+  HiLink cssTextAttr Type
+  HiLink cssBoxAttr Type
+  HiLink cssClassificationAttr Type
+  HiLink cssPseudoClassId PreProc
+  HiLink cssLength Number
+  HiLink cssColor Constant
+  HiLink cssURL String
+  HiLink cssIdentifier Function
+  HiLink cssInclude Include
+  HiLink cssImportant Special
+  HiLink cssBraces Function
+  HiLink cssError Error
+  HiLink cssInclude Include
+  HiLink cssString String
+  delcommand HiLink
+endif
 
 let b:current_syntax = "css"
 

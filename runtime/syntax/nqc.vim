@@ -6,8 +6,11 @@
 " URL:		http://www.enotes.de/twiki/pub/Home/LegoMindstorms/nqc.vim
 " Filenames:	.nqc
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -292,8 +295,6 @@ syn region	nqcCommentL	start="//" skip="\\$" end="$" keepend contains=@nqcCommen
 syn region	nqcComment	matchgroup=nqcCommentStart start="/\*" matchgroup=NONE end="\*/" contains=@nqcCommentGroup,nqcCommentStartError,nqcSpaceError
 
 " keep a // comment separately, it terminates a preproc. conditional
-hi def link nqcCommentL nqcComment
-hi def link nqcCommentStart nqcComment
 syntax match	nqcCommentError	display "\*/"
 syntax match	nqcCommentStartError display "/\*" contained
 
@@ -324,36 +325,53 @@ if !exists("nqc_minlines")
 endif
 exec "syn sync ccomment nqcComment minlines=" . nqc_minlines
 
-hi def link nqcLabel			Label
-hi def link nqcConditional		Conditional
-hi def link nqcRepeat			Repeat
-hi def link nqcCharacter		Character
-hi def link nqcNumber			Number
-hi def link nqcFloat			Float
-hi def link nqcFunction			Function
-hi def link nqcParenError		nqcError
-hi def link nqcErrInParen		nqcError
-hi def link nqcErrInBracket		nqcError
-hi def link nqcCommentError		nqcError
-hi def link nqcCommentStartError	nqcError
-hi def link nqcSpaceError		nqcError
-hi def link nqcStorageClass		StorageClass
-hi def link nqcInclude			Include
-hi def link nqcPreProc			PreProc
-hi def link nqcDefine			Macro
-hi def link nqcIncluded			String
-hi def link nqcError			Error
-hi def link nqcStatement		Statement
-hi def link nqcEvents			Statement
-hi def link nqcPreCondit		PreCondit
-hi def link nqcType			Type
-hi def link nqcConstant			Constant
-hi def link nqcCommentSkip		nqcComment
-hi def link nqcComment			Comment
-hi def link nqcTodo			Todo
-hi def link nqcCppSkip			nqcCppOut
-hi def link nqcCppOut2			nqcCppOut
-hi def link nqcCppOut			Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_nqc_syn_inits")
+  if version < 508
+    let did_nqc_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default methods for highlighting.  Can be overridden later
+  HiLink nqcLabel		Label
+  HiLink nqcConditional		Conditional
+  HiLink nqcRepeat		Repeat
+  HiLink nqcCharacter		Character
+  HiLink nqcNumber		Number
+  HiLink nqcFloat		Float
+  HiLink nqcFunction		Function
+  HiLink nqcParenError		nqcError
+  HiLink nqcErrInParen		nqcError
+  HiLink nqcErrInBracket	nqcError
+  HiLink nqcCommentL		nqcComment
+  HiLink nqcCommentStart	nqcComment
+  HiLink nqcCommentError	nqcError
+  HiLink nqcCommentStartError	nqcError
+  HiLink nqcSpaceError		nqcError
+  HiLink nqcStorageClass	StorageClass
+  HiLink nqcInclude		Include
+  HiLink nqcPreProc		PreProc
+  HiLink nqcDefine		Macro
+  HiLink nqcIncluded		String
+  HiLink nqcError		Error
+  HiLink nqcStatement		Statement
+  HiLink nqcEvents		Statement
+  HiLink nqcPreCondit		PreCondit
+  HiLink nqcType		Type
+  HiLink nqcConstant		Constant
+  HiLink nqcCommentSkip		nqcComment
+  HiLink nqcComment		Comment
+  HiLink nqcTodo		Todo
+  HiLink nqcCppSkip		nqcCppOut
+  HiLink nqcCppOut2		nqcCppOut
+  HiLink nqcCppOut		Comment
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "nqc"
 

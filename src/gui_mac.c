@@ -60,7 +60,6 @@ static short dragRectControl;
 #ifdef USE_CTRLCLICKMENU
 static short clickIsPopup;
 #endif
-garray_T error_ga = {0, 0, 0, 0, NULL};
 
 ControlActionUPP gScrollAction;
 ControlActionUPP gScrollDrag;
@@ -647,7 +646,7 @@ gui_mch_prepare(argc, argv)
 gui_mch_init()
 {
     /* Display any pending error messages */
-    mch_display_error();
+    display_errors();
 
     /* Get background/foreground colors from system */
     /* TODO: do the approriate call to get real defaults */
@@ -2707,6 +2706,7 @@ gui_mch_dialog(
     return itemHit;
 }
 #endif /* GUI_DIALOGUE */
+
 /*
  * Apple Event Handling procedure
  *
@@ -3551,33 +3551,10 @@ void Send_KAHL_MOD_AE (buf_T *buf)
 
 
 /*
- * Record an error message for later display.
- */
-    void
-mch_errmsg(char *str)
-{
-    int		len = STRLEN(str) + 1;
-
-    if (error_ga.ga_growsize == 0)
-    {
-	error_ga.ga_growsize = 80;
-	error_ga.ga_itemsize = 1;
-    }
-    if (ga_grow(&error_ga, len) == OK)
-    {
-	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
-			      (char_u *)str, len);
-	--len;		/* don't count the NUL at the end */
-	error_ga.ga_len += len;
-	error_ga.ga_room -= len;
-    }
-}
-
-/*
  * Display the saved error message(s).
  */
     void
-mch_display_error()
+display_errors()
 {
     char	*p;
     char_u	pError[256];

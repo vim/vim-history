@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ac.  Last change: 2001 Mar 30
+*windows.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -16,14 +16,12 @@ differently when used in combination with more than one window.
 4.  Moving cursor to other windows		|window-move-cursor|
 5.  Moving windows around			|window-moving|
 6.  Window resizing				|window-resize|
-7.  Exiting Vim					|window-exit|
-8.  Writing with multiple buffers		|buffer-write|
-9.  argument and buffer list commands		|buffer-list|
-10. Do a command in all buffers or windows	|list-repeat|
-11. Tag or file name under the cursor		|window-tag|
-12. The preview window				|preview-window|
-13. Using hidden buffers			|buffer-hidden|
-14. Special kinds of buffers			|special-buffers|
+7.  argument and buffer list commands		|buffer-list|
+8.  Do a command in all buffers or windows	|list-repeat|
+9.  Tag or file name under the cursor		|window-tag|
+10. The preview window				|preview-window|
+11. Using hidden buffers			|buffer-hidden|
+12. Special kinds of buffers			|special-buffers|
 
 {Vi does not have any of these commands}
 {not able to use multiple windows when the |+windows| feature was disabled at
@@ -116,7 +114,7 @@ status line is inverted anyway; you will only see this problem on terminals
 that have termcap codes for italics.
 
 ==============================================================================
-3. Opening and closing a window				*opening-window*
+3. Opening and closing a window				*opening-window* *er5*
 
 CTRL-W s						*CTRL-W_s*
 CTRL-W S						*CTRL-W_S*
@@ -205,7 +203,7 @@ window will appear.
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will appear at the bottom and occupy the full width of the
 		Vim window.  When the split is vertical the window appears at
-		the far firght and occupies the full height of the Vim window.
+		the far right and occupies the full height of the Vim window.
 
 These command modifers can be combined to make a vertically split window
 occupy the full height.  Example: >
@@ -472,51 +470,7 @@ The minimal height and width of a window is set with 'winminheight' and
 'winminwidth'.  These are hard values, a window will never become smaller.
 
 ==============================================================================
-7. Exiting Vim						*window-exit*
-
-							*:qa* *:qall*
-:qa[ll]		Exit Vim, unless there are some buffers which have been
-		changed.  (Use ":bmod" to go to the next modified buffer).
-		When 'autowriteall' is set all changed buffers will be
-		written, like |:wqall|.
-
-:conf[irm] qa[ll]
-		Exit Vim.  Bring up a prompt when some buffers have been
-		changed.  See |:confirm|.
-
-:qa[ll]!	Exit Vim.  Any changes to buffers are lost.
-
-							*:quita* *:quitall*
-:quita[ll][!]	Same as ":qall".
-
-:wqa[ll]					*:wqa* *:wqall* *:xa* *:xall*
-:xa[ll]		Write all changed buffers and exit Vim.  If there are buffers
-		without a file name, which are readonly or which cannot be
-		written for another reason, Vim is not quit.
-
-:conf[irm] wqa[ll]
-:conf[irm] xa[ll]
-		Write all changed buffers and exit Vim.  Bring up a prompt
-		when some buffers are readonly or cannot be written for
-		another reason.  See |:confirm|.
-
-:wqa[ll]!
-:xa[ll]!	Write all changed buffers, even the ones that are readonly,
-		and exit Vim.  If there are buffers without a file name or
-		which cannot be written for another reason, Vim is not quit.
-
-==============================================================================
-8. Writing with multiple buffers			*buffer-write*
-
-							*:wa* *:wall*
-:wa[ll]		Write all changed buffers.  Buffers without a file name or
-		which are readonly are not written.
-
-:wa[ll]!	Write all changed buffers, even the ones that are readonly.
-		Buffers without a file name are not written.
-
-==============================================================================
-9. argument and buffer list commands			*buffer-list*
+7. argument and buffer list commands			*buffer-list*
 
       args list		       buffer list	   meaning ~
 1. :[N]argument [N]	11. :[N]buffer [N]	to arg/buf N
@@ -624,7 +578,7 @@ can also get to them with the buffer list commands, like ":bnext".
 		{only available when compiled with the +gui feature}
 
 ==============================================================================
-10. Do a command in all buffers or windows			*list-repeat*
+8. Do a command in all buffers or windows			*list-repeat*
 
 							*:windo*
 :windo[!] {cmd}		Execute {cmd} in each window.
@@ -685,7 +639,7 @@ the buffer.  The result is that all buffers will use the 'encoding' encoding
 (if conversion works properly).
 
 ==============================================================================
-11. Tag or file name under the cursor			*window-tag*
+9. Tag or file name under the cursor			*window-tag*
 
 							*:sta* *:stag*
 :sta[g][!] [tagname]
@@ -724,7 +678,7 @@ Also see |CTRL-W_CTRL-I|: open window for an included file that includes
 the keyword under the cursor.
 
 ==============================================================================
-12. The preview window				*preview-window*
+10. The preview window				*preview-window*
 
 The preview window is a special window to show (preview) another file.  It is
 normally a small window used to show an include file or definition of a
@@ -845,7 +799,7 @@ is no word under the cursor, and a few other things: >
   :endfun
 
 ==============================================================================
-13. Using hidden buffers				*buffer-hidden*
+11. Using hidden buffers				*buffer-hidden*
 
 A hidden buffer is not displayed in a window, but is still loaded into memory.
 This makes it possible to jump from file to file, without the need to read or
@@ -1082,7 +1036,7 @@ Note: All the commands above that start editing another buffer, keep the
 the 'readonly' flag each time the file is read.
 
 ==============================================================================
-14. Special kinds of buffers			*special-buffers*
+12. Special kinds of buffers			*special-buffers*
 
 Instead of containing the text of a file, buffers can also be used for other
 purposes.  A few options can be set to change the behavior of a buffer:

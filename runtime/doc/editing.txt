@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 21
+*editing.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,10 +10,11 @@ Editing files						*edit-files*
 2. Editing a file		|edit-a-file|
 3. The current directory	|current-directory|
 4. The argument list		|argument-list|
-5. Writing and quitting		|write-quit|
-6. Editing binary files		|edit-binary|
-7. Encryption			|encryption|
-8. Timestamps			|timestamps|
+5. Writing			|writing|
+6. Writing and quitting		|write-quit|
+7. Editing binary files		|edit-binary|
+8. Encryption			|encryption|
+9. Timestamps			|timestamps|
 
 ==============================================================================
 1. Introduction						*edit-intro*
@@ -609,7 +610,7 @@ also makes a difference for executing external commands, e.g. ":!ls".
 							*:lch* *:lchdir*
 :lch[dir]		Same as |:lcd|. {not in Vi}
 
-							*:pw* *:pwd*
+							*:pw* *:pwd* *eu1*
 :pw[d]			Print the current directory name.  {Vi: no pwd}
 			Also see |getcwd()|.
 
@@ -933,7 +934,7 @@ flag is used for the ":substitute" command to avoid an error for files where
 "my_foo" isn't used.  ":update" writes the file only if changes were made.
 
 ==============================================================================
-5. Writing and quitting				*write-quit* *save-file*
+5. Writing					*writing* *save-file*
 
 Note: When the 'write' option is off, you are not able to write any file.
 
@@ -979,58 +980,18 @@ used, for example, when the write fails and you want to try again later with
 			Like ":write", but only write when the buffer has been
 			modified.  {not in Vi}
 
-							*:q* *:quit*
-:q[uit]			Quit the current window.  Quit Vim if this is the last
-			window.  This fails when changes have been made and
-			Vim refuses to |abandon| the current buffer, and when
-			not editing the last file in the argument list.
 
-:conf[irm] q[uit]	Quit, but give prompt when changes have been made, or
-			not editing the last file in the argument list.  See
-			|:confirm| and 'confirm'.  {not in Vi}
+Writing with multiple buffers				*buffer-write*
 
-:q[uit]!		Quit without writing, also when visible buffers have
-			changes.  Does not exit when there are changed hidden
-			buffers.  Use ":qall!" to exit always.
+							*:wa* *:wall*
+:wa[ll]			Write all changed buffers.  Buffers without a file
+			name or which are readonly are not written. {not in
+			Vi}
 
-:cq[uit]		Quit always, without writing, and return an error
-			code.  See |:cq|.  Used for Manx's QuickFix mode (see
-			|quickfix|).  {not in Vi}
+:wa[ll]!		Write all changed buffers, even the ones that are
+			readonly.  Buffers without a file name are not
+			written. {not in Vi}
 
-							*:wq*
-:wq			Write the current file and quit (unless editing the
-			last file in the argument list or the file is
-			read-only).
-
-:wq!			Write the current file and quit.
-
-:wq {file}		Write to {file}.  Quit if not editing the last
-			file in the argument list.
-
-:wq! {file}		Write to {file} and quit.
-
-:[range]wq[!] [file]	Same as above, but only write the lines in [range].
-
-							*:x* *:xit*
-:[range]x[it][!] [file]
-			Like ":wq", but write only when changes have been
-			made.
-			When 'hidden' is set and there are more windows, the
-			current buffer becomes hidden, after writing the file.
-
-							*:exi* *:exit*
-:[range]exi[t][!] [file]
-			Same as :xit.
-
-							*ZZ*
-ZZ			Write current file, if modified, and quit (same as
-			":x").  (Note: If there are several windows for the
-			current file, the file is written if it was modified
-			and the window is closed).
-
-							*ZQ*
-ZQ			Quit without checking for changes (same as ":q!").
-			{not in Vi}
 
 Vim will warn you if you try to overwrite a file that has been changed
 elsewhere.  See |timestamp|.
@@ -1115,6 +1076,96 @@ For MS-DOS and MS-Windows the device is detected by its name:
 	COMn	n=1,2,3... etc
 	LPTn	n=1,2,3... etc
 The names can be in upper or lower case.
+
+==============================================================================
+6. Writing and quitting					*write-quit* 
+
+							*:q* *:quit*
+:q[uit]			Quit the current window.  Quit Vim if this is the last
+			window.  This fails when changes have been made and
+			Vim refuses to |abandon| the current buffer, and when
+			not editing the last file in the argument list.
+
+:conf[irm] q[uit]	Quit, but give prompt when changes have been made, or
+			not editing the last file in the argument list.  See
+			|:confirm| and 'confirm'.  {not in Vi}
+
+:q[uit]!		Quit without writing, also when visible buffers have
+			changes.  Does not exit when there are changed hidden
+			buffers.  Use ":qall!" to exit always.
+
+:cq[uit]		Quit always, without writing, and return an error
+			code.  See |:cq|.  Used for Manx's QuickFix mode (see
+			|quickfix|).  {not in Vi}
+
+							*:wq*
+:wq			Write the current file and quit (unless editing the
+			last file in the argument list or the file is
+			read-only).
+
+:wq!			Write the current file and quit.
+
+:wq {file}		Write to {file}.  Quit if not editing the last
+			file in the argument list.
+
+:wq! {file}		Write to {file} and quit.
+
+:[range]wq[!] [file]	Same as above, but only write the lines in [range].
+
+							*:x* *:xit*
+:[range]x[it][!] [file]
+			Like ":wq", but write only when changes have been
+			made.
+			When 'hidden' is set and there are more windows, the
+			current buffer becomes hidden, after writing the file.
+
+							*:exi* *:exit*
+:[range]exi[t][!] [file]
+			Same as :xit.
+
+							*ZZ*
+ZZ			Write current file, if modified, and quit (same as
+			":x").  (Note: If there are several windows for the
+			current file, the file is written if it was modified
+			and the window is closed).
+
+							*ZQ*
+ZQ			Quit without checking for changes (same as ":q!").
+			{not in Vi}
+
+MULTIPLE WINDOWS AND BUFFERS				*window-exit*
+
+							*:qa* *:qall*
+:qa[ll]		Exit Vim, unless there are some buffers which have been
+		changed.  (Use ":bmod" to go to the next modified buffer).
+		When 'autowriteall' is set all changed buffers will be
+		written, like |:wqall|. {not in Vi}
+
+:conf[irm] qa[ll]
+		Exit Vim.  Bring up a prompt when some buffers have been
+		changed.  See |:confirm|. {not in Vi}
+
+:qa[ll]!	Exit Vim.  Any changes to buffers are lost. {not in Vi}
+
+							*:quita* *:quitall*
+:quita[ll][!]	Same as ":qall". {not in Vi}
+
+:wqa[ll]					*:wqa* *:wqall* *:xa* *:xall*
+:xa[ll]		Write all changed buffers and exit Vim.  If there are buffers
+		without a file name, which are readonly or which cannot be
+		written for another reason, Vim is not quit. {not in Vi}
+
+:conf[irm] wqa[ll]
+:conf[irm] xa[ll]
+		Write all changed buffers and exit Vim.  Bring up a prompt
+		when some buffers are readonly or cannot be written for
+		another reason.  See |:confirm|. {not in Vi}
+
+:wqa[ll]!
+:xa[ll]!	Write all changed buffers, even the ones that are readonly,
+		and exit Vim.  If there are buffers without a file name or
+		which cannot be written for another reason, Vim is not quit.
+		{not in Vi}
 
 ==============================================================================
 6. Editing binary files					*edit-binary*

@@ -1734,7 +1734,7 @@ set_termname(term)
 		    ui_delay(2000L, TRUE);
 		}
 		set_string_option_direct((char_u *)"term", -1, term, OPT_FREE);
-		mch_display_error();
+		display_errors();
 	    }
 	    out_flush();
 #ifdef HAVE_TGETENT
@@ -3136,8 +3136,13 @@ stoptermcap()
     static void
 may_req_termresponse()
 {
-    if (crv_status == CRV_GET && cur_tmode == TMODE_RAW
-						  && termcap_active && *T_CRV)
+    if (crv_status == CRV_GET
+	    && cur_tmode == TMODE_RAW
+	    && termcap_active
+#ifdef UNIX
+	    && isatty(1)
+#endif
+	    && *T_CRV != NUL)
     {
 	out_str(T_CRV);
 	crv_status = CRV_SENT;
@@ -3723,8 +3728,8 @@ check_termcode(max_offset, buf, buflen)
 		     * found instead of <kHome> when they produce the same
 		     * key code.
 		     */
-		    if (termcodes[idx].name[0] == 'K' &&
-						isdigit(termcodes[idx].name[1]))
+		    if (termcodes[idx].name[0] == 'K'
+					   && isdigit(termcodes[idx].name[1]))
 		    {
 			for (j = idx + 1; j < tc_len; ++j)
 			    if (termcodes[j].len == slen &&

@@ -46,7 +46,7 @@
 #include "vim.h"
 #include "version.h"
 
-#ifdef PROTO
+#if defined(PROTO) && !defined(FEAT_RUBY)
 /* Define these to be able to generate the function prototypes. */
 # define VALUE int
 #endif
@@ -296,10 +296,18 @@ ruby_end()
 void ex_ruby(exarg_T *eap)
 {
     int state;
+    char *script = NULL;
 
     if (ensure_ruby_initialized())
     {
-	rb_eval_string_protect((char *) eap->arg, &state);
+	script = script_get(eap, eap->arg);
+	if (script == NULL)
+	    rb_eval_string_protect((char *)eap->arg, &state);
+	else
+	{
+	    rb_eval_string_protect(script, &state);
+	    vim_free(script);
+	}
 	if (state)
 	    error_print(state);
     }
@@ -326,6 +334,10 @@ void ex_rubydo(exarg_T *eap)
 	    }
 	    line = rb_lastline_get();
 	    if (!NIL_P(line)) {
+		if (TYPE(line) != T_STRING) {
+		    EMSG("$_ must be an instance of String");
+		    return;
+		}
 		ml_replace(i, (char_u *) STR2CSTR(line), 1);
 		changed();
 #ifdef SYNTAX_HL

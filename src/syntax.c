@@ -4101,6 +4101,7 @@ syn_cmd_include(eap, syncing)
     char_u	*errormsg = NULL;
     int		prev_toplvl_grp;
     int		prev_syn_inc_tag;
+    int		source = FALSE;
 
     eap->nextcmd = find_nextcmd(arg);
     if (eap->skip)
@@ -4126,11 +4127,17 @@ syn_cmd_include(eap, syncing)
      */
     eap->argt |= (XFILE | NOSPC);
     separate_nextcmd(eap);
-    if (expand_filename(eap, syn_cmdlinep, &errormsg) == FAIL)
+    if (*eap->arg == '<' || mch_isFullName(eap->arg))
     {
-	if (errormsg != NULL)
-	    EMSG(errormsg);
-	return;
+	/* For an absolute path or "<sfile>.." we ":source" the file.  Need to
+	 * expand the file name first.  In other cases ":runtime!" is used. */
+	source = TRUE;
+	if (expand_filename(eap, syn_cmdlinep, &errormsg) == FAIL)
+	{
+	    if (errormsg != NULL)
+		EMSG(errormsg);
+	    return;
+	}
     }
 
     /*
@@ -4141,7 +4148,8 @@ syn_cmd_include(eap, syncing)
     current_syn_inc_tag = ++running_syn_inc_tag;
     prev_toplvl_grp = curbuf->b_syn_topgrp;
     curbuf->b_syn_topgrp = sgl_id;
-    if (do_source(eap->arg, FALSE, FALSE) == FAIL)
+    if (source ? do_source(eap->arg, FALSE, FALSE) == FAIL
+					: cmd_runtime(eap->arg, TRUE) == FAIL)
 	EMSG2(_(e_notopen), eap->arg);
     curbuf->b_syn_topgrp = prev_toplvl_grp;
     current_syn_inc_tag = prev_syn_inc_tag;
@@ -5702,10 +5710,8 @@ syn_get_foldlevel(wp, lnum)
  **************************************/
 
 /*
- * The default highlight groups.  Used in the 'highlight' and 'guicursor'
- * options default.  Depends on 'background' option.
- * These are compiled in, because they are needed even when no configuration
- * file is used (e.g., for error messages).
+ * The default highlight groups.  These are compiled-in for fast startup and
+ * they still work when the runtime files can't be found.
  */
 static char *(highlight_init_both[]) =
     {
@@ -5722,7 +5728,6 @@ static char *(highlight_init_both[]) =
 	"VertSplit term=reverse cterm=reverse gui=reverse",
 	"Visual term=reverse cterm=reverse gui=reverse guifg=Grey guibg=fg",
 	"VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold",
-	"DiffDelete term=bold ctermfg=Blue gui=bold guifg=Blue",
 	"DiffText term=reverse cterm=bold ctermbg=Red gui=bold guibg=Red",
 	NULL
     };
@@ -5743,6 +5748,7 @@ static char *(highlight_init_light[]) =
 	"FoldColumn term=standout ctermbg=Grey ctermfg=DarkBlue guibg=Grey guifg=DarkBlue",
 	"DiffAdd term=bold ctermbg=LightBlue guibg=LightBlue",
 	"DiffChange term=bold ctermbg=LightMagenta guibg=LightMagenta",
+	"DiffDelete term=bold ctermfg=Blue ctermbg=LightCyan gui=bold guifg=Blue guibg=LightCyan",
 	NULL
     };
 
@@ -5762,6 +5768,7 @@ static char *(highlight_init_dark[]) =
 	"FoldColumn term=standout ctermbg=DarkGrey ctermfg=Cyan guibg=Grey guifg=Cyan",
 	"DiffAdd term=bold ctermbg=DarkBlue guibg=DarkBlue",
 	"DiffChange term=bold ctermbg=DarkMagenta guibg=DarkMagenta",
+	"DiffDelete term=bold ctermfg=Blue ctermbg=DarkCyan gui=bold guifg=Blue guibg=DarkCyan",
 	NULL
     };
 
@@ -5772,7 +5779,23 @@ init_highlight(both)
     int		i;
     char	**pp;
     static int	had_both = FALSE;
+#ifdef FEAT_EVAL
+    char_u	*p;
 
+    set_vim_var_nr(VV_ALL_COLORS, (long)both);
+
+    /*
+     * Try finding the color file.  Used when a color file was loaded and
+     * 'background' or 't_Co' is changed.
+     */
+    p = get_var_value((char_u *)"colors_name");
+    if (p != NULL && load_colors(p) == OK)
+	return;
+#endif
+
+    /*
+     * Didn't use a color file, use the compiled-in colors.
+     */
     if (both)
     {
 	had_both = TRUE;
@@ -5792,6 +5815,45 @@ init_highlight(both)
 	pp = highlight_init_dark;
     for (i = 0; pp[i] != NULL; ++i)
 	do_highlight((char_u *)pp[i], FALSE, TRUE);
+
+#ifdef FEAT_SYN_HL
+    /*
+     * If syntax highlighting is enabled load the highlighting for it.
+     */
+    if (get_var_value((char_u *)"syntax_on") != NULL)
+	(void)cmd_runtime((char_u *)"syntax/syncolor.vim", FALSE);
+#endif
+}
+
+/*
+ * Load color file "p".
+ * Return OK for success, FAIL for failure.
+ */
+    int
+load_colors(p)
+    char_u	*p;
+{
+    char_u	*buf;
+    int		retval = FAIL;
+    static int	recursive = FALSE;
+
+    /* When being called recursively, this is probably because setting
+     * 'background' caused the highlighting to be reloaded.  This means it is
+     * working, thus we should return OK. */
+    if (recursive)
+	return OK;
+
+    recursive = TRUE;
+    buf = alloc(STRLEN(p) + 12);
+    if (buf != NULL)
+    {
+	sprintf((char *)buf, "colors/%s.vim", p);
+	retval = cmd_runtime(buf, FALSE);
+	vim_free(buf);
+    }
+    recursive = FALSE;
+
+    return retval;
 }
 
 /*
@@ -5933,18 +5995,37 @@ do_highlight(line, forceit, init)
 	    }
 	}
 
+	/* Only call highlight_changed() once, after sourcing a syntax file */
+	need_highlight_changed = TRUE;
+
 	return;
     }
 
-    /*
-     * Handle ":highlight clear {group}" command.
-     */
     if (doclear)
     {
+	/*
+	 * ":highlight clear [group]" command.
+	 */
 	line = linep;
 	if (ends_excmd(*line))
 	{
-	    EMSG(_("Cannot clear all highlight groups"));
+	    /*
+	     * clear all highlight groups
+	     */
+	    for (idx = 0; idx < highlight_ga.ga_len; ++idx)
+		highlight_clear(idx);
+#ifdef FEAT_GUI
+	    if (gui.in_use)
+		highlight_gui_started();
+#endif
+#ifdef FEAT_GUI_X11
+# ifdef FEAT_MENU
+	    gui_mch_new_menu_colors();
+# endif
+	    if (gui.in_use)
+		gui_new_scrollbar_colors();
+#endif
+	    redraw_all_later(CLEAR);
 	    return;
 	}
 	name_end = skiptowhite(line);
@@ -6986,7 +7067,7 @@ get_attr_entry(table, aep)
 	 */
 	if (recursive)
 	{
-	    EMSG(_("Too many different highlighting attributes in use"));
+	    EMSG(_("(eh1) Too many different highlighting attributes in use"));
 	    return 0;
 	}
 	recursive = TRUE;

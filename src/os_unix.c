@@ -689,9 +689,11 @@ mch_didjmp()
     static RETSIGTYPE
 deathtrap SIGDEFARG(sigarg)
 {
-    static int	    entered = 0;
+    static int	entered = 0;	    /* count the number of times we got here.
+				       Note: when memory has been corrupted
+				       this may get an arbitrary value! */
 #ifdef SIGHASARG
-    int	    i;
+    int		i;
 #endif
 
 #if defined(HAVE_SETJMP_H)
@@ -711,6 +713,9 @@ deathtrap SIGDEFARG(sigarg)
     }
 #endif
 
+    /* Remember how often we have been called. */
+    ++entered;
+
 #ifdef SIGHASARG
     /* try to find the name of this signal */
     for (i = 0; signal_info[i].sig != -1; i++)
@@ -727,28 +732,30 @@ deathtrap SIGDEFARG(sigarg)
      * terminal mode, etc.)
      * When this happens twice, just exit, don't even try to give a message,
      * stack may be corrupt or something weird.
+     * When this still happens again (or memory was corrupted in such a way
+     * that "entered" was clobbered) use _exit(), don't try freeing resources.
      */
-    if (entered >= 2)
+    if (entered >= 3)
     {
 	reset_signals();	/* don't catch any signals anymore */
 	may_core_dump();
+	if (entered >= 4)
+	    _exit(8);
 	exit(7);
     }
-    if (entered++)
+    if (entered == 2)
     {
 	OUT_STR(_("Vim: Double signal, exiting\n"));
 	out_flush();
-	reset_signals();	/* don't catch any signals anymore */
 	getout(1);
     }
 
-    sprintf((char *)IObuff, _("Vim: Caught %s %s\n"),
 #ifdef SIGHASARG
-		    _("deadly signal"), signal_info[i].name
+    sprintf((char *)IObuff, _("Vim: Caught deadly signal %s\n"),
+							 signal_info[i].name);
 #else
-		    _("some"), _("deadly signal")
+    sprintf((char *)IObuff, _("Vim: Caught deadly signal\n"));
 #endif
-			    );
     preserve_exit();		    /* preserve files and exit */
 
     SIGRETURN;
@@ -1947,6 +1954,16 @@ mch_setperm(name, perm)
 # ifdef HAVE_SYS_ACL_H
 #  include <sys/acl.h>
 # endif
+# ifdef HAVE_SYS_ACCESS_H
+#  include <sys/access.h>
+# endif
+
+# ifdef HAVE_SOLARIS_ACL
+typedef struct vim_acl_solaris_T {
+    int acl_cnt;
+    aclent_t *acl_entry;
+} vim_acl_solaris_T;
+# endif
 
 /*
  * Return a pointer to the ACL of file "fname" in allocated memory.
@@ -1956,27 +1973,101 @@ mch_setperm(name, perm)
 mch_get_acl(fname)
     char_u	*fname;
 {
-    return (vim_acl_T)acl_get_file((char *)fname, ACL_TYPE_DEFAULT);
+    vim_acl_T	ret = NULL;
+#ifdef HAVE_POSIX_ACL
+    ret = (vim_acl_T)acl_get_file((char *)fname, ACL_TYPE_ACCESS);
+#else
+#ifdef HAVE_SOLARIS_ACL
+    vim_acl_solaris_T   *aclent;
+
+    aclent = malloc(sizeof(vim_acl_solaris_T));
+    if ((aclent->acl_cnt = acl(fname, GETACLCNT, 0, NULL)) < 0)
+    {
+	free(aclent);
+	return NULL;
+    }
+    aclent->acl_entry = malloc(aclent->acl_cnt * sizeof(aclent_t));
+    if (acl(fname, GETACL, aclent->acl_cnt, aclent->acl_entry) < 0)
+    {
+	free(aclent->acl_entry);
+	free(aclent);
+	return NULL;
+    }
+    ret = (vim_acl_T)aclent;
+#else
+#if defined(HAVE_AIX_ACL)
+    int		aclsize;
+    struct acl *aclent;
+
+    aclsize = sizeof(struct acl);
+    aclent = malloc(aclsize);
+    if (statacl((char *)fname, STX_NORMAL, aclent, aclsize) < 0)
+    {
+	if (errno == ENOSPC)
+	{
+	    aclsize = aclent->acl_len;
+	    aclent = realloc(aclent, aclsize);
+	    if (statacl((char *)fname, STX_NORMAL, aclent, aclsize) < 0)
+	    {
+		free(aclent);
+		return NULL;
+	    }
+	}
+	else
+	{
+	    free(aclent);
+	    return NULL;
+	}
+    }
+    ret = (vim_acl_T)aclent;
+#endif /* HAVE_AIX_ACL */
+#endif /* HAVE_SOLARIS_ACL */
+#endif /* HAVE_POSIX_ACL */
+    return ret;
 }
 
 /*
  * Set the ACL of file "fname" to "acl" (unless it's NULL).
  */
     void
-mch_set_acl(fname, acl)
+mch_set_acl(fname, aclent)
     char_u	*fname;
-    vim_acl_T	acl;
+    vim_acl_T	aclent;
 {
-    if (acl != NULL)
-	acl_set_file((char *)fname, ACL_TYPE_DEFAULT, (acl_t)acl);
+    if (aclent == NULL)
+	return;
+#ifdef HAVE_POSIX_ACL
+    acl_set_file((char *)fname, ACL_TYPE_ACCESS, (acl_t)aclent);
+#else
+#ifdef HAVE_SOLARIS_ACL
+    acl(fname, SETACL, ((vim_acl_solaris_T *)aclent)->acl_cnt,
+	    ((vim_acl_solaris_T *)aclent)->acl_entry);
+#else
+#ifdef HAVE_AIX_ACL
+    chacl((char *)fname, aclent, ((struct acl *)aclent)->acl_len);
+#endif /* HAVE_AIX_ACL */
+#endif /* HAVE_SOLARIS_ACL */
+#endif /* HAVE_POSIX_ACL */
 }
 
     void
-mch_free_acl(acl)
-    vim_acl_T	acl;
+mch_free_acl(aclent)
+    vim_acl_T	aclent;
 {
-    if (acl != NULL)
-	acl_free((acl_t)acl);
+    if (aclent == NULL)
+	return;
+#ifdef HAVE_POSIX_ACL
+    acl_free((acl_t)aclent);
+#else
+#ifdef HAVE_SOLARIS_ACL
+    free(((vim_acl_solaris_T *)aclent)->acl_entry);
+    free(aclent);
+#else
+#ifdef HAVE_AIX_ACL
+    free(aclent);
+#endif /* HAVE_AIX_ACL */
+#endif /* HAVE_SOLARIS_ACL */
+#endif /* HAVE_POSIX_ACL */
 }
 #endif
 
