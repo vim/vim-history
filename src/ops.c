@@ -868,7 +868,8 @@ get_register(name, copy)
 	if (copy)
 	{
 	    /* If we run out of memory some or all of the lines are empty. */
-	    reg->y_array = (char_u **)alloc((unsigned)sizeof(char_u *));
+	    reg->y_array = (char_u **)alloc((unsigned)(sizeof(char_u *)
+							       * reg->y_size));
 	    if (reg->y_array != NULL)
 	    {
 		for (i = 0; i < reg->y_size; ++i)
