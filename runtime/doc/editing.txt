@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.2.  Last change: 2004 Mar 30
+*editing.txt*   For Vim version 6.3a.  Last change: 2004 Apr 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -246,13 +246,17 @@ If you want to keep the changed buffer without saving it, switch on the
 			Normal mode.  Otherwise same as |:edit|, but set
 			'readonly' option for this buffer.  {not in Vi}
 
-							*CTRL-^*
+							*CTRL-^* *CTRL-6*
 [count]CTRL-^		Edit [count]th alternate file (equivalent to ":e
 			#[count]").  Without count this gets you to the
 			previously edited file.  This is a quick way to toggle
 			between two (or more) files.
 			If the 'autowrite' or 'autowriteall' option is on and
 			the buffer was changed, write it.
+			Mostly the ^ character is positioned on the 6 key,
+			pressing CTRL and 6 then gets you what we call CTRL-^.
+			But on some non-US keyboards CTRL-^ is produced in
+			another way.
 
 [count]]f						*]f* *[f*
 [count][f		Same as "gf".  Deprecated.
@@ -551,18 +555,22 @@ If you want to always use ":confirm", set the 'confirm' option.
 
 			*:browse* *:bro* *E338* *E614* *E615* *E616* *E578*
 :bro[wse] {command}	Open a file selection dialog for an argument to
-			{command}.  At present this works for ":e", ":w",
-			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
-			{only in Win32, Motif and Athena GUI}
-			When ":browse" is not supported it's ignored,
-			{command} is executed without a dialog.
+			{command}.  At present this works for |:e|, |:w|,
+			|:r|, |:saveas|, |:sp|, |:mkexrc|, |:mkvimrc| and
+			|:mksession|.
+			{only in Win32, Athena, Motif, GTK and Mac GUI}
+			When ":browse" is not possible you get an error
+			message.  If the |+browse| feature is missing or the
+			{command} doesn't support browsing, the {command} is
+			executed without a dialog.
+			":browse set" works like |:options|.
 
 The syntax is best shown via some examples: >
 	:browse e $vim/foo
 <		Open the browser in the $vim/foo directory, and edit the
 		file chosen. >
 	:browse e
-<		Open the browser in the directory of the current buffer,
+<		Open the browser in the directory specified with 'browsedir',
 		and edit the file chosen. >
 	:browse w
 <		Open the browser in the directory of the current buffer,
@@ -962,7 +970,8 @@ flag is used for the ":substitute" command to avoid an error for files where
 Note: When the 'write' option is off, you are not able to write any file.
 
 							*:w* *:write*
-				*E502* *E503* *E504* *E505* *E512* *E514*
+						*E502* *E503* *E504* *E505*
+						*E512* *E514* *E667*
 :w[rite]		Write the whole buffer to the current file.  This is
 			the normal way to save changes to a file.  It fails
 			when the 'readonly' option is set or when there is

@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.2.  Last change: 2002 Oct 29
+*tips.txt*      For Vim version 6.3a.  Last change: 2004 Feb 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -97,7 +97,7 @@ Put this in your .vimrc: >
 	map _u :call ID_search()<Bar>execute "/\\<" . g:word . "\\>"<CR>
 	map _n :n<Bar>execute "/\\<" . g:word . "\\>"<CR>
 
-	function ID_search()
+	function! ID_search()
 	  let g:word = expand("<cword>")
 	  let x = system("lid --key=none ". g:word)
 	  let x = substitute(x, "\n", " ", "g")
@@ -216,6 +216,15 @@ You might want to reset 'hlsearch' or do ":nohlsearch".
 
 This does not work if the 'modifiable' option is off.  An alternative is using
 |v_g_CTRL-G| in Visual mode.
+
+							*count-bytes*
+If you want to count bytes, you can use this:
+
+	Visually select the characters (block is also possible)
+	Use "y" to yank the characters
+	Use the strlen() function: >
+		:echo strlen(@")
+A line break is counted for one byte.
 
 ==============================================================================
 Restoring the cursor position				*restore-position*

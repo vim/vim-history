@@ -1,8 +1,8 @@
 " Vim indent file
-" Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.34
+" Language:	Fortran95 (and Fortran90, Fortran77, F and elf90)
+" Version:	0.36
 " URL:		http://www.unb.ca/chem/ajit/indent/fortran.vim
-" Last Change: 2003 Jan. 31
+" Last Change:	2004 Apr. 05
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " Usage:	Do :help fortran-indent from Vim
 
@@ -12,7 +12,11 @@ if exists("b:did_indent")
 endif
 let b:did_indent = 1
 
+let s:cposet=&cpoptions
+set cpoptions-=C
+
 setlocal indentkeys+==~end,=~case,=~if,=~else,=~do,=~where,=~elsewhere,=~select
+setlocal indentkeys+==~endif,=~enddo,=~endwhere,=~endselect
 
 " Determine whether this is a fixed or free format source file
 " if this hasn't been done yet
@@ -78,7 +82,8 @@ function FortranGetIndent(lnum)
 
   "Add a shiftwidth to statements following if, else, case,
   "where and elsewhere statements
-  if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>' || prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
+  if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>'
+	\ || prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
      let ind = ind + &sw
     " Remove unwanted indent after logical and arithmetic ifs
     if prevstat =~? '\<if\>' && prevstat !~? '\<then\>'
@@ -88,7 +93,8 @@ function FortranGetIndent(lnum)
 
   "Subtract a shiftwidth from else, elsewhere, case, end if,
   " end where and end select statements
-  if getline(v:lnum) =~? '^\s*\(\d\+\s\)\=\s*\(else\|elsewhere\|case\|end\s*\(if\|where\|select\)\)\>'
+  if getline(v:lnum) =~? '^\s*\(\d\+\s\)\=\s*'
+	\. '\(else\|elsewhere\|case\|end\s*\(if\|where\|select\)\)\>'
     let ind = ind - &sw
     " Fix indent for case statement immediately after select
     if prevstat =~? '\<select\>'
@@ -125,7 +131,8 @@ function FortranGetFixedIndent()
   let lnum = v:lnum - 1
   while lnum > 0
     let prevline=getline(lnum)
-    if (prevline =~ "^[C*!]") || (prevline =~ "^\s*$") || (strpart(prevline,5,1) !~ "[ 0]")
+    if (prevline =~ "^[C*!]") || (prevline =~ "^\s*$")
+	\ || (strpart(prevline,5,1) !~ "[ 0]")
       " Skip comments, blank lines and continuation lines
       let lnum = lnum - 1
     else
@@ -147,5 +154,8 @@ function FortranGetFixedIndent()
   let ind=FortranGetIndent(lnum)
   return ind
 endfunction
+
+let &cpoptions=s:cposet
+unlet s:cposet
 
 " vim:sw=2 tw=130

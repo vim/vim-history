@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Yacc
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
 " Last Change:	Nov 18, 2002
 " Version:	2
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax

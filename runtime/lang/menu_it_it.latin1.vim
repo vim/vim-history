@@ -1,7 +1,7 @@
 " Menu Translations:	Italian / Italiano
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
 "			Vlad Sandrini <sator72@libero.it>
-" Last Change:	2003 Mar 30
+" Last Change:	2004 Mar 3
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -19,6 +19,7 @@ menut &How-to\ links	Co&me\.\.\.
 "menut &GUI			&GUI
 menut &Credits		Cr&editi
 menut Co&pying		C&opie
+menut &Sponsor/Register &Sponsor/Registrazione
 menut O&rphans		O&rfani
 "menut &Find\.\.\.		&Cerca\.\.\.
 "NOTA: fa conflitto con 'cerca' nel menu 'modifica'
@@ -59,6 +60,7 @@ menut Put\ &Before<Tab>[p		&Metti\ davanti<Tab>[p
 menut Put\ &After<Tab>]p		M&etti\ dietro<Tab>]p
 menut &Delete<Tab>x			Cance&lla<Tab>x
 menut &Select\ all<Tab>ggVG		Seleziona\ &tutto<Tab>ggVG
+menut &Select\ All<Tab>ggVG		Seleziona\ &tutto<Tab>ggVG
 menut &Find\.\.\.			&Cerca\.\.\.
 menut Find\ and\ Rep&lace\.\.\.	&Sostituisci\.\.\.
 menut Settings\ &Window		&Finestra\ Impostazioni
@@ -181,7 +183,7 @@ if has("folding")
   menut &Delete\ Fold<Tab>zd			&Leva\ Piegatura<Tab>zd
   menut Delete\ &All\ Folds<Tab>zD			Leva\ &tutte\ le\ Piegature<Tab>zD
   " movimenti all'interno delle piegature
-  menut Fold\ column\ &width			Larg&hezza\ piegature\ in\ colonne
+  menut Fold\ col&umn\ width			Larghezza\ piegat&ure\ in\ colonne
 endif  " has folding
 
 if has("diff")
@@ -223,7 +225,7 @@ menut &Previous		&Precedente
 menut [No\ File]		[Nessun\ File]
 " Syntax / Sintassi
 menut &Syntax		&Sintassi
-menut &Show\ individual\ choices	Mo&stra\ opzioni\ individuali
+menut &Show\ filetypes\ in\ menu	Mo&stra\ tipi\ di\ file\ nel\ menu
 menut Set\ '&syntax'\ only	Attiva\ solo\ \ '&syntax'
 menut Set\ '&filetype'\ too	Attiva\ anche\ '&filetype'
 menut &Off			&Disattiva

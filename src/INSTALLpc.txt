@@ -67,6 +67,8 @@ characters at the end of each line.
 ====================================
 
 Summary:
+vcvars32				  Setup paths for nmake and MSVC
+
 nmake -f Make_mvc.mak		console   Win32 SDK or Microsoft Visual C++
 nmake -f Make_mvc.mak GUI=yes	GUI	  Microsoft Visual C++
 nmake -f Make_mvc.mak OLE=yes	OLE	  Microsoft Visual C++

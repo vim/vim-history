@@ -123,6 +123,7 @@ typedef int TEXTMETRIC;
 typedef int TOKEN_INFORMATION_CLASS;
 typedef int TRUSTEE;
 typedef int WORD;
+typedef int WCHAR;
 typedef void VOID;
 #endif
 
@@ -1288,25 +1289,31 @@ mch_inchar(
 {
 #ifndef FEAT_GUI_W32	    /* this isn't used for the GUI */
 
-    int		len = 0;
+    int		len;
     int		c;
 #ifdef FEAT_AUTOCMD
     static int	once_already = 0;
 #endif
+#define TYPEAHEADLEN 20
+    static char_u   typeahead[TYPEAHEADLEN];	/* previously typed bytes. */
+    static int	    typeaheadlen = 0;
+
+    /* First use any typeahead that was kept because "buf" was too small. */
+    if (typeaheadlen > 0)
+	goto theend;
 
 #ifdef FEAT_SNIFF
     if (want_sniff_request)
     {
-	if (sniff_request_waiting && maxlen-len >= 3)
+	if (sniff_request_waiting)
 	{
 	    /* return K_SNIFF */
-	    *buf++ = CSI;
-	    *buf++ = (char_u)KS_EXTRA;
-	    *buf++ = (char_u)KE_SNIFF;
-	    len += 3;
+	    typeahead[typeaheadlen++] = CSI;
+	    typeahead[typeaheadlen++] = (char_u)KS_EXTRA;
+	    typeahead[typeaheadlen++] = (char_u)KE_SNIFF;
 	    sniff_request_waiting = 0;
 	    want_sniff_request = 0;
-	    return len;
+	    goto theend;
 	}
 	else if (time < 0 || time > 250)
 	{
@@ -1370,34 +1377,36 @@ mch_inchar(
 	fputc('[', fdDump);
 #endif
 
-    while ((len == 0 || WaitForChar(0L)) && len < maxlen - 1)
+    /* Keep looping until there is something in the typeahead buffer and more
+     * to get and still room in the buffer (up to two bytes for a char and
+     * three bytes for a modifier). */
+    while ((typeaheadlen == 0 || WaitForChar(0L))
+					  && typeaheadlen + 5 <= TYPEAHEADLEN)
     {
 	if (typebuf_changed(tb_change_cnt))
 	{
 	    /* "buf" may be invalid now if a client put something in the
 	     * typeahead buffer and "buf" is in the typeahead buffer. */
-	    len = 0;
+	    typeaheadlen = 0;
 	    break;
 	}
 #ifdef FEAT_MOUSE
-	if (g_nMouseClick != -1 && maxlen - len >= 5)
+	if (g_nMouseClick != -1)
 	{
 # ifdef MCH_WRITE_DUMP
 	    if (fdDump)
 		fprintf(fdDump, "{%02x @ %d, %d}",
 			g_nMouseClick, g_xMouse, g_yMouse);
 # endif
-	    len += 5;
-	    *buf++ = ESC + 128;
-	    *buf++ = 'M';
-	    *buf++ = g_nMouseClick;
-	    *buf++ = g_xMouse + '!';
-	    *buf++ = g_yMouse + '!';
+	    typeahead[typeaheadlen++] = ESC + 128;
+	    typeahead[typeaheadlen++] = 'M';
+	    typeahead[typeaheadlen++] = g_nMouseClick;
+	    typeahead[typeaheadlen++] = g_xMouse + '!';
+	    typeahead[typeaheadlen++] = g_yMouse + '!';
 	    g_nMouseClick = -1;
-
 	}
 	else
-#endif /* FEAT_MOUSE */
+#endif
 	{
 	    char_u	ch2 = NUL;
 	    int		modifiers = 0;
@@ -1408,7 +1417,7 @@ mch_inchar(
 	    {
 		/* "buf" may be invalid now if a client put something in the
 		 * typeahead buffer and "buf" is in the typeahead buffer. */
-		len = 0;
+		typeaheadlen = 0;
 		break;
 	    }
 
@@ -1427,10 +1436,10 @@ mch_inchar(
 		int	n = 1;
 
 		/* A key may have one or two bytes. */
-		buf[0] = c;
+		typeahead[typeaheadlen] = c;
 		if (ch2 != NUL)
 		{
-		    buf[1] = ch2;
+		    typeahead[typeaheadlen + 1] = ch2;
 		    ++n;
 		}
 #ifdef FEAT_MBYTE
@@ -1439,7 +1448,8 @@ mch_inchar(
 		 * when 'tenc' is set. */
 		if (input_conv.vc_type != CONV_NONE
 						&& (ch2 == NUL || c != K_NUL))
-		    n = convert_input(buf, n, maxlen - len);
+		    n = convert_input(typeahead + typeaheadlen, n,
+						 TYPEAHEADLEN - typeaheadlen);
 #endif
 
 		/* Use the ALT key to set the 8th bit of the character
@@ -1448,28 +1458,27 @@ mch_inchar(
 		 * byte). */
 		if ((modifiers & MOD_MASK_ALT)
 			&& n == 1
-			&& (buf[0] & 0x80) == 0
+			&& (typeahead[typeaheadlen] & 0x80) == 0
 #ifdef FEAT_MBYTE
 			&& !enc_dbcs
 #endif
 		   )
 		{
-		    buf[0] |= 0x80;
+		    typeahead[typeaheadlen] |= 0x80;
 		    modifiers &= ~MOD_MASK_ALT;
 		}
 
-		if (modifiers != 0 && len + 4 < maxlen)
+		if (modifiers != 0)
 		{
 		    /* Prepend modifiers to the character. */
-		    mch_memmove(buf + 3, buf, n);
-		    buf[0] = K_SPECIAL;
-		    buf[1] = (char_u)KS_MODIFIER;
-		    buf[2] = modifiers;
-		    n += 3;
+		    mch_memmove(typeahead + typeaheadlen + 3,
+						 typeahead + typeaheadlen, n);
+		    typeahead[typeaheadlen++] = K_SPECIAL;
+		    typeahead[typeaheadlen++] = (char_u)KS_MODIFIER;
+		    typeahead[typeaheadlen++] =  modifiers;
 		}
 
-		buf += n;
-		len += n;
+		typeaheadlen += n;
 
 #ifdef MCH_WRITE_DUMP
 		if (fdDump)
@@ -1490,7 +1499,17 @@ mch_inchar(
 #ifdef FEAT_AUTOCMD
     once_already = 0;
 #endif
+
+theend:
+    /* Move typeahead to "buf", as much as fits. */
+    len = 0;
+    while (len < maxlen && typeaheadlen > 0)
+    {
+	buf[len++] = typeahead[0];
+	mch_memmove(typeahead, typeahead + 1, --typeaheadlen);
+    }
     return len;
+
 #else /* FEAT_GUI_W32 */
     return 0;
 #endif /* FEAT_GUI_W32 */
@@ -4630,7 +4649,7 @@ myresetstkoflw(void)
 
     /* ...and the base of the stack. */
     if (VirtualQuery(pStackPtr, &mbi, sizeof mbi) == 0)
-        return 0;
+	return 0;
     pStackBase = (BYTE*)mbi.AllocationBase;
 
     /* ...and the page thats min_stack_req pages away from stack base; this is
@@ -4643,52 +4662,52 @@ myresetstkoflw(void)
     {
 	/* Find the page that's only 1 page down from the page that the stack
 	 * ptr is in. */
-        pGuardPage = (BYTE*)((DWORD)nPageSize * (((DWORD)pStackPtr
+	pGuardPage = (BYTE*)((DWORD)nPageSize * (((DWORD)pStackPtr
 						    / (DWORD)nPageSize) - 1));
-        if (pGuardPage < pLowestPossiblePage)
-            return 0;
+	if (pGuardPage < pLowestPossiblePage)
+	    return 0;
 
 	/* Apply the noaccess attribute to the page -- there's no guard
 	 * attribute in win95-type OSes. */
-        if (!VirtualProtect(pGuardPage, nPageSize, PAGE_NOACCESS, &dummy))
-            return 0;
+	if (!VirtualProtect(pGuardPage, nPageSize, PAGE_NOACCESS, &dummy))
+	    return 0;
     }
     else
     {
 	/* On NT, however, we want the first committed page in the stack Start
 	 * at the stack base and move forward through memory until we find a
 	 * committed block. */
-        BYTE *pBlock = pStackBase;
+	BYTE *pBlock = pStackBase;
 
-        while (1)
-        {
-            if (VirtualQuery(pBlock, &mbi, sizeof mbi) == 0)
-                return 0;
+	while (1)
+	{
+	    if (VirtualQuery(pBlock, &mbi, sizeof mbi) == 0)
+		return 0;
 
-            pBlock += mbi.RegionSize;
+	    pBlock += mbi.RegionSize;
 
-            if (mbi.State & MEM_COMMIT)
-                break;
-        }
+	    if (mbi.State & MEM_COMMIT)
+		break;
+	}
 
-        /* mbi now describes the first committed block in the stack. */
-        if (mbi.Protect & PAGE_GUARD)
-            return 1;
+	/* mbi now describes the first committed block in the stack. */
+	if (mbi.Protect & PAGE_GUARD)
+	    return 1;
 
-        /* decide where the guard page should start */
-        if ((long_u)(mbi.BaseAddress) < (long_u)pLowestPossiblePage)
-            pGuardPage = pLowestPossiblePage;
-        else
-            pGuardPage = (BYTE*)mbi.BaseAddress;
+	/* decide where the guard page should start */
+	if ((long_u)(mbi.BaseAddress) < (long_u)pLowestPossiblePage)
+	    pGuardPage = pLowestPossiblePage;
+	else
+	    pGuardPage = (BYTE*)mbi.BaseAddress;
 
-        /* allocate the guard page */
-        if (!VirtualAlloc(pGuardPage, nPageSize, MEM_COMMIT, PAGE_READWRITE))
-            return 0;
+	/* allocate the guard page */
+	if (!VirtualAlloc(pGuardPage, nPageSize, MEM_COMMIT, PAGE_READWRITE))
+	    return 0;
 
-        /* apply the guard attribute to the page */
-        if (!VirtualProtect(pGuardPage, nPageSize, PAGE_READWRITE | PAGE_GUARD,
+	/* apply the guard attribute to the page */
+	if (!VirtualProtect(pGuardPage, nPageSize, PAGE_READWRITE | PAGE_GUARD,
 								      &dummy))
-            return 0;
+	    return 0;
     }
 
     return 1;

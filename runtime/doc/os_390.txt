@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.2.  Last change: 2003 May 24
+*os_390.txt*    For Vim version 6.3a.  Last change: 2003 Jun 03
 
 
 		  VIM REFERENCE MANUAL	  by Ralf Schandl
@@ -16,7 +16,7 @@ This file contains the particulars for the z/OS UNIX version of Vim.
 8. Known weaknesses			|zOS-weaknesses|
 9. Changes				|zOS-changes|
 
-DISCLAIMER:~
+DISCLAIMER: ~
 We are IBM employees, but IBM is not responsible for this port. This is our
 private fun, and is provided in the hopes that it may be useful to others.
 

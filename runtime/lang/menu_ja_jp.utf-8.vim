@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (UTF-8)
 " Translated By:	MURAOKA Taro  <koron@tka.att.ne.jp>
-" Last Change:		31-May-2003.
+" Last Change:		29-Apr-2004.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -19,6 +19,7 @@ menutrans &User\ Manual		ユーザマニュアル(&U)
 menutrans &How-to\ links	&How-toリンク
 menutrans &Credits		クレジット(&C)
 menutrans Co&pying		著作権情報(&P)
+menutrans &Sponsor/Register	スポンサー/登録(&S)
 menutrans O&rphans		孤児(&R)
 menutrans &Version		バージョン情報(&V)
 menutrans &About		Vimについて(&A)
@@ -50,7 +51,7 @@ menutrans &Paste<Tab>"+gP		貼り付け(&P)<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		前に貼る(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
-menutrans &Select\ all<Tab>ggVG		全て選択(&S)<Tab>ggvG
+menutrans &Select\ All<Tab>ggVG		全て選択(&S)<Tab>ggvG
 menutrans &Find\.\.\.			検索(&F)\.\.\.
 menutrans &Find<Tab>/			検索(&F)<Tab>/
 menutrans Find\ and\ Rep&lace\.\.\.	置換(&L)\.\.\.

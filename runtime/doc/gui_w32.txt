@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.2.  Last change: 2003 May 27
+*gui_w32.txt*   For Vim version 6.3a.  Last change: 2004 May 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -76,7 +76,7 @@ file's directory.
 If you want Vim to start full-screen, use this for the Open action: >
 	gvim -c "simalt ~x" "%1"
 
-Another method, which also works When you put Vim in another directory (e.g.,
+Another method, which also works when you put Vim in another directory (e.g.,
 when you have got a new version):
 1. select a file you want to use Vim with
 2. <Shift-F10>
@@ -170,6 +170,43 @@ only seems to happen on some Windows NT versions (Windows bug?).  Procedure:
    to be used as the default (normally the "open" action) and click on the
    "Set Default" button.
 
+
+Vim in the "Open With..." context menu			*win32-open-with-menu*
+
+If you use the Vim install program you have the choice to add Vim to the "Open
+With..." menu.  This means you can use Vim to edit many files.  Not every file
+(for unclear reasons...), thus the "Edit with Vim" menu entry is still useful.
+
+One reason to add this is to be able to edit HTML files directly from Internet
+Explorer.  To enable this use the "Tools" menu, "Internet Options..." entry.
+In the dialog select the "Programs" tab and select Vim in the "HTML editor"
+choice.  If it's not there than installing didn't work properly.
+
+Doing this manually can be done with this script:
+
+----------------------------------------------------------
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\Applications\gvim.exe]
+
+[HKEY_CLASSES_ROOT\Applications\gvim.exe\shell]
+
+[HKEY_CLASSES_ROOT\Applications\gvim.exe\shell\edit]
+
+[HKEY_CLASSES_ROOT\Applications\gvim.exe\shell\edit\command]
+@="c:\\vim\\vim62\\gvim.exe \"%1\""
+
+[HKEY_CLASSES_ROOT\.htm\OpenWithList\gvim.exe]
+
+[HKEY_CLASSES_ROOT\*\OpenWithList\gvim.exe]
+
+----------------------------------------------------------
+
+Change the "c:\\vim\\vim62" bit to where gvim.exe is actually located.
+
+To uninstall this run the Vim uninstall program or manually delete the
+registry entries with "regedit".
+
 ==============================================================================
 3. Using the clipboard					*gui-clipboard*
 
@@ -188,6 +225,7 @@ Visually selecting text doesn't put it on the clipboard.  When the 'a' flag is
 included, the text is copied to the clipboard even when it is not operated
 upon.
 
+							*mswin.vim*
 To use the standard MS-Windows way of CTRL-X, CTRL-C and CTRL-V, use the
 $VIMRUNTIME/mswin.vim script.  You could add this line to your _vimrc file: >
 	source $VIMRUNTIME/mswin.vim
@@ -305,7 +343,7 @@ as the traditional interface shared with the console version.
 6.1 Dialogs
 
 The dialogs displayed by the "confirm" family (i.e. the 'confirm' option,
-|:confirm| command and |confirm()| function are GUI-based rather than the
+|:confirm| command and |confirm()| function) are GUI-based rather than the
 console-based ones used by other versions.  The 'c' flag in 'guioptions'
 changes this.
 
@@ -393,17 +431,8 @@ Vim supports a number of standard MS Windows features. Some of these are
 detailed elsewhere: see |'mouse'|, |win32-hidden-menus|.
 
 							*drag-n-drop-win32*
-You can drag and drop one or more files into the vim window, where they will
-be opened as normal.  If you hold down Shift while doing this, Vim changes to
-the (first) dropped file's directory.  If you hold Ctrl Vim will always split
-a new window for the file.  Otherwise it's only done if the current buffer has
-been changed.
-You can also drop a directory's icon, but rather than open all files in the
-directory (which wouldn't usually be what you want) Vim instead changes to
-that directory and begins a new file.
-If Vim happens to be editing a command line, the names of the dropped files
-and directories will be inserted at the cursor.  This allows you to use these
-names with any Ex command.
+You can drag and drop one or more files into the Vim window, where they will
+be opened as normal.  See |drag-n-drop|.
 
 							*:simalt* *:si*
 :sim[alt] {key}		simulate pressing {key} while holding Alt pressed.

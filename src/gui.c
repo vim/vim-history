@@ -4102,15 +4102,21 @@ gui_new_scrollbar_colors()
 gui_focus_change(in_focus)
     int		in_focus;
 {
+/*
+ * Skip this code to avoid drawing the cursor when debugging and switching
+ * between the debugger window and gvim.
+ */
+#if 1
     gui.in_focus = in_focus;
     out_flush();		/* make sure output has been written */
     gui_update_cursor(TRUE, FALSE);
 
-#ifdef FEAT_XIM
+# ifdef FEAT_XIM
     xim_set_focus(in_focus);
-#endif
+# endif
 
     ui_focus_change(in_focus);
+#endif
 }
 
 /*

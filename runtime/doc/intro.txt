@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.2.  Last change: 2003 May 31
+*intro.txt*     For Vim version 6.3a.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -62,7 +62,7 @@ reference.  Parts of this book have been included in the user manual
 |frombook|.
 Published by New Riders Publishing.  ISBN: 0735710015
 For more information try one of these:
-	http://vim.iccf-holland.org
+	http://iccf-holland.org/click5.html
 	http://www.vim.org/iccf/click5.html
 
 	"Learning the Vi editor" by Linda Lamb and Arnold Robbins
@@ -80,17 +80,15 @@ The Vim pages contain the most recent information about Vim.  They also
 contain links to the most recent version of Vim.  The FAQ is a list of
 Frequently Asked Questions.  Read this if you have problems.
 
-	VIM home page:	  http://vim.sf.net/
-	Sven's VIM pages: http://www.vim.org/
-	Latest news:	  http://www.vim.org/news.html
-	VIM FAQ:	  http://www.vim.org/faq/
+	VIM home page:	  http://www.vim.org/
+	VIM FAQ:	  http://vimdoc.sf.net/
 	Downloading:	  ftp://ftp.vim.org/pub/vim/MIRRORS
 
 
 Usenet News group where Vim is discussed:		*news* *usenet*
 	comp.editors
-See http://www.vim.org/usenet.html.  This group is also for other editors.  If
-you write about Vim, don't forget to mention that.
+This group is also for other editors.  If you write about Vim, don't forget to
+mention that.
 
 						*mail-list* *maillist*
 There are several mailing lists for Vim:
@@ -110,7 +108,7 @@ There are several mailing lists for Vim:
 	For discussions about using and improving the Macintosh version of
 	Vim.
 
-See http://www.vim.org/mail.html.
+See http://www.vim.org/maillist.php for the latest information.
 
 NOTE:
 - You can only send messages to these lists if you have subscribed!
@@ -133,9 +131,6 @@ http://groups.yahoo.com/group/vimdev
 http://groups.yahoo.com/group/vimannounce
 http://groups.yahoo.com/group/vim-multibyte
 http://groups.yahoo.com/group/vim-mac
-
-Another archive is at http://www.somelist.com in the "Editeurs" section (the
-site is in French, the messages are in English).
 
 
 Additional maillists:
@@ -235,7 +230,7 @@ Vim would never have become what it is now, without the help of these people!
 	Benji Fisher		Answering lots of user questions
 	Bill Foster		Athena GUI port
 	Loic Grenie		xvim (ideas for multi windows version)
-	Sven Guckes		Vim WWW page maintainer
+	Sven Guckes		Vim promotor and previous WWW page maintainer
 	Darren Hiebert		Exuberant ctags
 	Bruce Hunsaker		improvements for VMS port
 	Andy Kahn		Cscope support, GTK+ GUI port
@@ -287,7 +282,7 @@ Vi	"the original".  Without further remarks this is the version
 	"Version 3.7, 6/7/85".  Sometimes other versions are referred
 	to.  Only runs under Unix.  Source code only available with a
 	license.  More information on Vi can be found through:
-		http://vi-editor.org
+		http://vi-editor.org	[doesn't currently work...]
 							*Posix*
 Posix	From the IEEE standard 1003.2, Part 2: Shell and utilities.
 	Generally known as "Posix".  This is a textual description of
@@ -357,6 +352,7 @@ and <> are part of what you type, the context should make this clear.
 {motion}	A command that moves the cursor.  These are explained in
 		|motion.txt|.  Examples:
 			w		to start of next word
+			b		to begin of current word
 			4j		four lines down
 			/The<CR>	to next occurrence of "The"
 		This is used after an |operator| command to move over the text
@@ -364,6 +360,8 @@ and <> are part of what you type, the context should make this clear.
 		- If the motion includes a count and the operator also had a
 		  count, the two counts are multiplied.  For example: "2d3w"
 		  deletes six words.
+		- The motion can be backwards, e.g. "db" to delete to the
+		  start of the word.
 		- The motion can also be a mouse click.  The mouse is not
 		  supported in every terminal though.
 		- The ":omap" command can be used to map characters while an
@@ -664,7 +662,8 @@ If the 'insertmode' option is on, editing a file will start in Insert mode.
 Additionally the command CTRL-\ CTRL-N or <C-\><C-N> can be used to go to
 Normal mode from any other mode.  This can be used to make sure Vim is in
 Normal mode, without causing a beep like <Esc> would.  However, this does not
-work in Ex mode.
+work in Ex mode.  When used after a command that takes an argument, such as
+|f| or |m|, the timeout set with 'ttimeoutlen' applies.
 
 	*CTRL-\_CTRL-G* *i_CTRL-\_CTRL-G* *c_CTRL-\_CTRL-G* *v_CTRL-\_CTRL-G*
 The command CTRL-\ CTRL-G or <C-\><C-G> can be used to go to Insert mode when

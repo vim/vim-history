@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 6.2.  Last change: 2001 Oct 25
+*if_tcl.txt*    For Vim version 6.3a.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -201,7 +201,7 @@ Variables:
 	rely on this.  See also |tcl-linenumbers|.
 
 	::vim::range					*tcl-var-range*
-	This is an array with three elements, "start", "begin" end "end".  It
+	This is an array with three elements, "start", "begin" and "end".  It
 	contains the line numbers of the start and end row of the current
 	range.  "begin" is the same as "start".  This variable is read-only.
 	See |tcl-examples|.
@@ -260,7 +260,7 @@ Options:
 	Tcl array variable, which must contain two elements "row" and "column".
 	These are used to set the cursor to the new position: >
 		$win cursor here	;# not $here !
-<	With two arguments, sets the cursor to the specified row and colum: >
+<	With two arguments, sets the cursor to the specified row and column: >
 		$win cursor $here(row) $here(column)
 <	Invalid positions result in a standard Tcl error, which can be caught
 	with "catch".  The row and column values depend on the "::vim::lbase"

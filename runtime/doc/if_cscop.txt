@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.2.  Last change: 2003 May 24
+*if_cscop.txt*  For Vim version 6.3a.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -243,7 +243,7 @@ results. This is a list of comma-separated values. Each item consists of
 |cscope-find| command (s, g, d, c, t, e, f or i) and flag (+, - or 0).
 '+' indicates that results must be appended to quickfix window,
 '-' implies previous results clearance, '0' or command absence - don't use
-quickfix. Search is performed from start until first command occurence.
+quickfix. Search is performed from start until first command occurrence.
 The default value is "" (don't use quickfix anyway). The following value
 seems to be useful: "s-,c-,d-,i-,t-,e-".
 
@@ -452,8 +452,8 @@ from World-Wide Exptools Open Source packages page:
 In Solaris 2.x, if you have the C compiler license, you will also have
 cscope.  Both are usually located under /opt/SUNWspro/bin
 
-SGI developers can also get it.  Currently a tardist file can be found at:
-	ftp://ftp.openage.com/pub/Sgi/Binaries/Cscope-13_3_tardist.gz
+SGI developers can also get it.  Search for Cscope on this page:
+	http://freeware.sgi.com/index-by-alpha.html
 	https://toolbox.sgi.com/toolbox/utilities/cscope/
 The second one is for those who have a password for the SGI toolbox.
 

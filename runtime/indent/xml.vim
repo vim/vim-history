@@ -1,11 +1,10 @@
 " Language:	xml
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" URL:		http://www.zellner.org/vim/indent/xml.vim
-" Last Change:	Thu, 10 Jan 2002 22:00:51 +0100
+" Last Change:	Tue, 27 Apr 2004 14:54:59 CEST
 " Notes:	1) does not indent pure non-xml code (e.g. embedded scripts)
 "		2) will be confused by unbalanced tags in comments
 "		or CDATA sections.
-" TODO:		implement pre-like tags, see xml_indent_open / xml_indent_close
+" TODO: 	implement pre-like tags, see xml_indent_open / xml_indent_close
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -15,7 +14,7 @@ let b:did_indent = 1
 
 " [-- local settings (must come before aborting the script) --]
 setlocal indentexpr=XmlIndentGet(v:lnum,1)
-setlocal indentkeys=o,O,*<Return>,<>>,<<>,/,<bs>,{,}
+setlocal indentkeys=o,O,*<Return>,<>>,<<>,/,{,}
 
 set cpo-=C
 

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.2.  Last change: 2004 Mar 04
+*change.txt*    For Vim version 6.3a.  Last change: 2004 Mar 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -23,7 +23,7 @@ For inserting text see |insert.txt|.
 
 ["x]<Del>	or					*<Del>* *x* *dl*
 ["x]x			Delete [count] characters under and after the cursor
-			[into register x] (not linewise).  Does the same as
+			[into register x] (not |linewise|).  Does the same as
 			"dl".
 			The <Del> key does not take a [count].  Instead, it
 			deletes the last character of the count.
@@ -33,7 +33,7 @@ For inserting text see |insert.txt|.
 
 							*X* *dh*
 ["x]X			Delete [count] characters before the cursor [into
-			register x] (not linewise).  Does the same as "dh".
+			register x] (not |linewise|).  Does the same as "dh".
 			Also see |'whichwrap'|.
 
 							*d*
@@ -41,13 +41,13 @@ For inserting text see |insert.txt|.
 			x].  See below for exceptions.
 
 							*dd*
-["x]dd			Delete [count] lines [into register x] (linewise).
+["x]dd			Delete [count] lines [into register x] |linewise|.
 
 							*D*
 ["x]D			Delete the characters under the cursor until the end
 			of the line and [count]-1 more lines [into register
 			x]; synonym for "d$".
-			(not linewise)
+			(not |linewise|)
 
 {Visual}["x]x	or					*v_x* *v_d* *v_<Del>*
 {Visual}["x]d   or
@@ -164,22 +164,22 @@ gR			Enter Virtual Replace mode: Each character you type
 
 							*cc*
 ["x]cc			Delete [count] lines [into register x] and start
-			insert (linewise).  If 'autoindent' is on, preserve
+			insert |linewise|.  If 'autoindent' is on, preserve
 			the indent of the first line.
 
 							*C*
 ["x]C			Delete from the cursor position to the end of the
 			line and [count]-1 more lines [into register x], and
-			start insert.  Synonym for c$ (not linewise).
+			start insert.  Synonym for c$ (not |linewise|).
 
 							*s*
 ["x]s			Delete [count] characters [into register x] and start
 			insert (s stands for Substitute).  Synonym for "cl"
-			(not linewise).
+			(not |linewise|).
 
 							*S*
 ["x]S			Delete [count] lines [into register x] and start
-			insert.  Synonym for "cc" (linewise).
+			insert.  Synonym for "cc" |linewise|.
 
 {Visual}["x]c	or					*v_c* *v_s*
 {Visual}["x]s		Delete the highlighted text [into register x] and
@@ -470,6 +470,12 @@ For example: >
 			temporary file and then reads the file into the
 			buffer.  Vim uses the 'shellredir' option to redirect
 			the filter output to the temporary file.
+			When the 'R' flag is included in 'cpoptions' marks in
+			the filtered lines are deleted, unless the
+			|:keepmarks| command is used.  Example: >
+				:keepmarks '<,'>!sort
+<			When the number of lines after filtering is less than
+			before, marks in the missing lines are deleted anyway.
 
 							*=*
 ={motion}		Filter {motion} lines through the external program
@@ -538,11 +544,11 @@ g&			Synonym for ":%s//~/&" (repeat last substitute on all
 			lines with the same flags).
 			Mnemonic: global substitute. {not in Vi}
 
-						*:snomagic*
+						*:snomagic* *:sno*
 :[range]sno[magic] ...	Same as ":substitute", but always use 'nomagic'.
 			{not in Vi}
 
-						*:smagic*
+						*:smagic* *:sm*
 :[range]sm[agic] ...	Same as ":substitute", but always use 'magic'.
 			{not in Vi}
 
@@ -642,23 +648,10 @@ replacement string.  Example: >
 
 For the definition of a pattern, see |pattern|.
 
-						*sub-replace-special*
-When the {string} starts with "\=" it is evaluated as an expression.  The
-special meaning for characters as mentioned below does not apply then, except
-"<CR>", "\<CR>" and "\\".  Thus in the result of the expression you need to
-use two backslashes get one, put a backslash before a <CR> you want to insert
-and use a <CR> without a backslash where you want to break the line.
-   The whole matched text can be accessed with "submatch(0)".  The text
-matched with the first pair of () with "submatch(1)".  Likewise for further
-sub-matches in ().
-   Be careful: The separation character must not appear in the expression!
-Consider using a character like "@" or ":".  There is no problem if the result
-of the expression contains the separation character.
-Example: >
-	:s@\n@\="\r" . expand("$HOME") . "\r"@
-This replaces an end-of-line with a new line containing the value of $HOME.
-
-Some characters in {string} have a special meaning:
+					*sub-replace-special* *:s\=*
+When the {string} starts with "\=" it is evaluated as an expression, see
+|sub-replace-expression|.  Otherwise these characters in {string} have a
+special meaning:
 
 magic	nomagic	  action    ~
   &	  \&	  replaced with the whole matched pattern	     *s/\&*
@@ -719,6 +712,35 @@ either the first or second pattern in parentheses did not match, so either
 \1 or \2 is empty.  Example: >
   :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  to "ax bx x x"
 <
+
+Substitute with an expression			*sub-replace-expression*
+
+When the substitute string starts with "\=" the remainer is interpreted as an
+expression.  This does not work recursively: a substitute() function inside
+the expression cannot use "\=" for the substitute string.
+
+The special meaning for characters as mentioned at |sub-replace-special| does
+not apply except "<CR>", "\<CR>" and "\\".  Thus in the result of the
+expression you need to use two backslashes get one, put a backslash before a
+<CR> you want to insert and use a <CR> without a backslash where you want to
+break the line.
+
+For convenience a <NL> character is also used as a line break.  Prepend a
+backslash to get a real <NL> character (which will be a NUL in the file).
+
+The whole matched text can be accessed with "submatch(0)".  The text matched
+with the first pair of () with "submatch(1)".  Likewise for further
+sub-matches in ().
+
+Be careful: The separation character must not appear in the expression!
+Consider using a character like "@" or ":".  There is no problem if the result
+of the expression contains the separation character.
+
+Example: >
+	:s@\n@\="\r" . expand("$HOME") . "\r"@
+This replaces an end-of-line with a new line containing the value of $HOME.
+
+
 						*:pro* *:promptfind*
 :promptf[ind] [string]
 			Put up a Search dialog.  When [string] is given, it is
@@ -794,11 +816,11 @@ inside of strings can change!  Also see 'softtabstop' option. >
 			flag.
 
 							*yy*
-["x]yy			Yank [count] lines [into register x] (linewise).
+["x]yy			Yank [count] lines [into register x] |linewise|.
 
 							*Y*
 ["x]Y			yank [count] lines [into register x] (synonym for
-			yy, linewise).  If you like "Y" to work from the
+			yy, |linewise|).  If you like "Y" to work from the
 			cursor to the end of line (which is more logical,
 			but not Vi-compatible) use ":map Y y$".
 
@@ -837,7 +859,9 @@ inside of strings can change!  Also see 'softtabstop' option. >
 			pasting with the middle mouse button: >
 				:map <MiddleMouse> <Nop>
 				:imap <MiddleMouse> <Nop>
-<
+<			You might want to disable the multi-click versions
+			too, see |double-click|.
+
 							*gp*
 ["x]gp			Just like "p", but leave the cursor just after the new
 			text.  {not in Vi}
@@ -848,8 +872,8 @@ inside of strings can change!  Also see 'softtabstop' option. >
 
 							*:pu* *:put*
 :[line]pu[t] [x]	Put the text [from register x] after [line] (default
-			current line).  This always works linewise, thus this
-			command can be used to put a yanked block as new
+			current line).  This always works |linewise|, thus
+			this command can be used to put a yanked block as new
 			lines.
 			The register can also be '=' followed by an optional
 			expression.  The expression continues until the end of
@@ -884,8 +908,8 @@ way to toggle between two files).
 
 				*linewise-register* *characterwise-register*
 You can repeat the put commands with "." (except for :put) and undo them.  If
-the command that was used to get the text into the register was linewise, Vim
-inserts the text below ("p") or above ("P") the line where the cursor is.
+the command that was used to get the text into the register was |linewise|,
+Vim inserts the text below ("p") or above ("P") the line where the cursor is.
 Otherwise Vim inserts the text after ("p") or before ("P") the cursor.  With
 the ":put" command, Vim always inserts the text in the next line.  You can
 exchange two characters with the command sequence "xp".  You can exchange two

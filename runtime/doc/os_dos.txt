@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.2.  Last change: 2001 Sep 03
+*os_dos.txt*    For Vim version 6.3a.  Last change: 2003 Dec 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -52,7 +52,8 @@ Will find "c:\user\piet\_vimrc" and the runtime files in "e:\vim\vim54".
 
 See |$VIM| and |$VIMRUNTIME| for more information.
 
-Under Windows 95, you can set $VIM in your C:\autoexec.bat file.  For example: >
+Under Windows 95, you can set $VIM in your C:\autoexec.bat file.  For
+example: >
   set VIM=D:\vim
 Under Windows NT, you can set environment variables for each user separately
 under "Start/Settings/Control Panel->System", or through the properties in the

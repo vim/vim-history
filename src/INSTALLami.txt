@@ -30,5 +30,5 @@ documentation files.
 
 MorphOS
 
-Use the Make_morphos.mak Makefile:
-	make -f Make_morphos.mak
+Use the Make_morph.mak Makefile:
+	make -f Make_morph.mak

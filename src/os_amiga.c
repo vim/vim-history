@@ -1489,8 +1489,9 @@ Return:
 sortcmp(a, b)
     const void *a, *b;
 {
-    char_u *s = *(char **)a,
-           *t = *(char **)b;
+    char *s = *(char **)a;
+    char *t = *(char **)b;
+
     return pathcmp(s, t);
 }
 

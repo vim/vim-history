@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2.  Last change: 2004 Apr 20
+*eval.txt*      For Vim version 6.3a.  Last change: 2004 May 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -96,43 +96,45 @@ Expression syntax summary, from least to most significant:
 |expr3|	expr4 && expr4 ..	logical AND
 
 |expr4|	expr5 == expr5		equal
-expr5 != expr5		not equal
-expr5 >	 expr5		greater than
-expr5 >= expr5		greater than or equal
-expr5 <	 expr5		smaller than
-expr5 <= expr5		smaller than or equal
-expr5 =~ expr5		regexp matches
-expr5 !~ expr5		regexp doesn't match
-expr5 ==? expr5		equal, ignoring case
-expr5 ==# expr5		equal, match case
-etc.  As above, append ? for ignoring case, # for matching case
+	expr5 != expr5		not equal
+	expr5 >	 expr5		greater than
+	expr5 >= expr5		greater than or equal
+	expr5 <	 expr5		smaller than
+	expr5 <= expr5		smaller than or equal
+	expr5 =~ expr5		regexp matches
+	expr5 !~ expr5		regexp doesn't match
+
+	expr5 ==? expr5		equal, ignoring case
+	expr5 ==# expr5		equal, match case
+	etc.			As above, append ? for ignoring case, # for
+				matching case
 
 |expr5|	expr6 +	 expr6 ..	number addition
-expr6 -	 expr6 ..	number subtraction
-expr6 .	 expr6 ..	string concatenation
+	expr6 -	 expr6 ..	number subtraction
+	expr6 .	 expr6 ..	string concatenation
 
 |expr6|	expr7 *	 expr7 ..	number multiplication
-expr7 /	 expr7 ..	number division
-expr7 %	 expr7 ..	number modulo
+	expr7 /	 expr7 ..	number division
+	expr7 %	 expr7 ..	number modulo
 
 |expr7|	! expr7			logical NOT
-- expr7			unary minus
-+ expr7			unary plus
-expr8
+	- expr7			unary minus
+	+ expr7			unary plus
+	expr8
 
 |expr8|	expr9[expr1]		index in String
 
 |expr9|	number			number constant
-"string"		string constant
-'string'		literal string constant
-&option			option value
-(expr1)			nested expression
-variable		internal variable
-va{ria}ble		internal variable with curly braces
-$VAR			environment variable
-@r			contents of register 'r'
-function(expr1, ...)	function call
-func{ti}on(expr1, ...)	function call with curly braces
+	"string"		string constant
+	'string'		literal string constant
+	&option			option value
+	(expr1)			nested expression
+	variable		internal variable
+	va{ria}ble		internal variable with curly braces
+	$VAR			environment variable
+	@r			contents of register 'r'
+	function(expr1, ...)	function call
+	func{ti}on(expr1, ...)	function call with curly braces
 
 
 ".." indicates that the operations in this level can be concatenated.
@@ -173,7 +175,7 @@ expr2 and expr3						*expr2* *expr3*
 The "||" and "&&" operators take one argument on each side.  The arguments
 are (converted to) Numbers.  The result is:
 
- input				 output ~
+	 input				 output ~
 n1		n2		n1 || n2	n1 && n2 ~
 zero		zero		zero		zero
 zero		non-zero	non-zero	zero
@@ -255,8 +257,8 @@ single-quote string, see |literal-string|.
 Since a string is considered to be a single line, a multi-line pattern
 (containing \n, backslash-n) will not match.  However, a literal NL character
 can be matched like an ordinary character.  Examples:
-"foo\nbar" =~ "\n"	evaluates to 1
-"foo\nbar" =~ "\\n"	evaluates to 0
+	"foo\nbar" =~ "\n"	evaluates to 1
+	"foo\nbar" =~ "\\n"	evaluates to 0
 
 
 expr5 and expr6						*expr5* *expr6*
@@ -272,8 +274,8 @@ expr7 %	 expr7 ..	number modulo		*expr-%*
 For all, except ".", Strings are converted to Numbers.
 
 Note the difference between "+" and ".":
-"123" + "456" = 579
-"123" . "456" = "123456"
+	"123" + "456" = 579
+	"123" . "456" = "123456"
 
 When the righthand side of '/' is zero, the result is 0x7fffffff.
 When the righthand side of '%' is zero, the result is 0.
@@ -292,9 +294,9 @@ For '+' the number is unchanged.
 A String will be converted to a Number first.
 
 These three can be repeated and mixed.  Examples:
-!-1	    == 0
-!!8	    == 1
---9	    == 9
+	!-1	    == 0
+	!!8	    == 1
+	--9	    == 9
 
 
 expr8							*expr8*
@@ -436,9 +438,9 @@ Using a name that isn't an internal variable, or an internal variable that has
 been destroyed, results in an error.
 
 There are several name spaces for variables.  Which one is to be used is
-specified by what is prepended::
+specified by what is prepended:
 
-	(nothing) In a function: local to a function; Otherwise: global
+		(nothing) In a function: local to a function; otherwise: global
 |buffer-variable|    b:	  Local to the current buffer.
 |window-variable|    w:	  Local to the current window.
 |global-variable|    g:	  Global.
@@ -450,9 +452,8 @@ specified by what is prepended::
 						*buffer-variable* *b:var*
 A variable name that is preceded with "b:" is local to the current buffer.
 Thus you can have several "b:foo" variables, one for each buffer.
-This kind of variable is deleted when the buffer is unloaded.  If you want to
-keep it, ensure that the buffer is not unloaded (e.g., by setting the 'hidden'
-option).
+This kind of variable is deleted when the buffer is wiped out or deleted with
+|:bdelete|.
 
 One local buffer variable is predefined:
 					*b:changedtick-variable* *changetick*
@@ -600,10 +601,9 @@ v:count1	Just like "v:count", but defaults to one when no count is
 v:ctype		The current locale setting for characters of the runtime
 		environment.  This allows Vim scripts to be aware of the
 		current locale encoding.  Technical: it's the value of
-		LC_CTYPE.
+		LC_CTYPE.  When not using a locale the value is "C".
 		This variable can not be set directly, use the |:language|
 		command.
-		Normally it's equal to 'encoding', but not always...
 		See |multi-lang|.
 
 					*v:dying* *dying-variable*
@@ -683,6 +683,7 @@ v:foldstart	Used for 'foldtext': first line of closed fold.
 v:lang		The current locale setting for messages of the runtime
 		environment.  This allows Vim scripts to be aware of the
 		current language.  Technical: it's the value of LC_MESSAGES.
+		The value is system dependent.
 		This variable can not be set directly, use the |:language|
 		command.
 		It can be different from |v:ctype| when messages are desired
@@ -872,7 +873,7 @@ maparg( {name}[, {mode}])	String	rhs of mapping {name} in mode {mode}
 mapcheck( {name}[, {mode}])	String	check for mappings matching {name}
 match( {expr}, {pat}[, {start}])
 				Number	position where {pat} matches in {expr}
-matchend( {expr}, {pat}[, {start})
+matchend( {expr}, {pat}[, {start}])
 				Number	position where {pat} ends in {expr}
 matchstr( {expr}, {pat}[, {start}])
 				String	match of {pat} in {expr}
@@ -1223,9 +1224,10 @@ escape({string}, {chars})				*escape()*
 			c:\\program\ files\\vim
 <
 eventhandler()						*eventhandler()*
-		Returns 1 when inside an event handler.  This means
-		interactive commands cannot be used.  Otherwise zero is
-		returned.
+		Returns 1 when inside an event handler.  That is that Vim got
+		interrupted while waiting for the user to type a character,
+		e.g., when dropping a file on Vim.  This means interactive
+		commands cannot be used.  Otherwise zero is returned.
 
 executable({expr})					*executable()*
 		This function checks if an executable with the name {expr}
@@ -1258,6 +1260,8 @@ exists({expr})	The result is a Number, which is non-zero if {expr} is
 					1  for match with start of a command
 					2  full match with a command
 					3  matches several user commands
+					To check for a supported command
+					always check the return value to be 2.
 			#event		autocommand defined for this event
 			#event#pattern	autocommand defined for this event and
 					pattern (the pattern is taken
@@ -1436,16 +1440,11 @@ getchar([expr])						*getchar()*
 				not consumed.  If a normal character is
 				available, it is returned, otherwise a
 				non-zero value is returned.
-		If a character available, it is returned as a Number.  Use
-		nr2char() to convert it to a String.
-		To turn a multi-byte character string also to a Number use
-		this: >
-			let c = getchar()
-			if c == 0
-			   let c = char2nr(c)
-			endif
-<		The returned value is negative for special keys.
+		If a normal character available, it is returned as a Number.
+		Use nr2char() to convert it to a String.
 		The returned value is zero if no character is available.
+		The returned value is a string of characters for special keys
+		and when a modifier (shift, control, alt) was used.
 		There is no prompt, you will somehow have to make clear to the
 		user that a character has to be typed.
 		There is no mapping for the character.
@@ -1599,6 +1598,9 @@ globpath({path}, {expr})				*globpath()*
 <		{path} is a comma-separated list of directory names.  Each
 		directory name is prepended to {expr} and expanded like with
 		glob().  A path separator is inserted when needed.
+		To add a comma inside a directory name escape it with a
+		backslash.  Note that on MS-Windows a directory may have a
+		trailing backslash, remove it if you put a comma after it.
 		If the expansion fails for one of the directories, there is no
 		error message.
 		The 'wildignore' option applies: Names matching one of the
@@ -1983,13 +1985,13 @@ mapcheck({name}[, {mode}])				*mapcheck()*
 		mapping for "_v" or for "_vvv".
 
 match({expr}, {pat}[, {start}])				*match()*
-		The result is a Number, which gives the index in {expr} where
-		{pat} matches.  A match at the first character returns zero.
-		If there is no match -1 is returned.  Example: >
+		The result is a Number, which gives the index (byte offset) in
+		{expr} where {pat} matches.  A match at the first character
+		returns zero.  If there is no match -1 is returned.  Example: >
 			:echo match("testing", "ing")
 <		results in "4".
 		See |string-match| for how {pat} is used.
-		If {start} is given, the search starts from character {start}.
+		If {start} is given, the search starts from index {start}.
 		The result, however, is still the index counted from the
 		first character. Example: >
 			:echo match("testing", "ing", 2)
@@ -2245,6 +2247,10 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 		found.  That's because the "if 2" will be found first, and
 		then this is considered to be a nested if/endif from "if 2" to
 		"endif 2".
+		When searching backwards and {end} is more than one character,
+		it may be useful to put "\zs" at the end of the pattern, so
+		that when the cursor is inside a match with the end it finds
+		the matching start.
 
 		Example, to find the "endif" command in a Vim script: >
 
@@ -2420,18 +2426,18 @@ strlen({expr})	The result is a Number, which is the length of the String
 <		Composing characters are not counted.
 
 strpart({src}, {start}[, {len}])			*strpart()*
-		The result is a String, which is part of {src},
-		starting from character {start}, with the length {len}.
-		When non-existing characters are included, this doesn't result
-		in an error, the characters are simply omitted.
-		If {len} is missing, the copy continues from {start} till
-		the end of the {src}. >
+		The result is a String, which is part of {src}, starting from
+		byte {start}, with the length {len}.
+		When non-existing bytes are included, this doesn't result in
+		an error, the bytes are simply omitted.
+		If {len} is missing, the copy continues from {start} till the
+		end of the {src}. >
 			strpart("abcdefg", 3, 2)    == "de"
 			strpart("abcdefg", -2, 4)   == "ab"
 			strpart("abcdefg", 5, 4)    == "fg"
 			strpart("abcdefg", 3)       == "defg"
 <		Note: To get the first character, {start} must be 0.  For
-		example, to get three characters under and after the cursor: >
+		example, to get three bytes under and after the cursor: >
 			strpart(getline(line(".")), col(".") - 1, 3)
 <
 strridx({haystack}, {needle})				*strridx()*
@@ -2470,7 +2476,7 @@ substitute({expr}, {pat}, {sub}, {flags})		*substitute()*
 		And a "~" in {sub} is not replaced with the previous {sub}.
 		Note that some codes in {sub} have a special meaning
 		|sub-replace-special|.  For example, to replace something with
-		a literal "\n", use "\\\\n" or '\\n'.
+		"\n" (two characters), use "\\\\n" or '\\n'.
 		When {pat} does not match in {expr}, {expr} is returned
 		unmodified.
 		When {flags} is "g", all matches of {pat} in {expr} are
@@ -2658,13 +2664,13 @@ winnr()		The result is a Number, which is the number of the current
 		with |CTRL-W_w| and ":wincmd w" |:wincmd|.
 
 							*winrestcmd()*
-winrestcmd()	Returns a sequence of |resize| commands that should restore
+winrestcmd()	Returns a sequence of |:resize| commands that should restore
 		the current window sizes.  Only works properly when no windows
 		are opened or closed and the current window is unchanged.
 		Example: >
-			cmd = winrestcmd()
-			call MessWithWindowSizes()
-			exe cmd
+			:let cmd = winrestcmd()
+			:call MessWithWindowSizes()
+			:exe cmd
 
 winwidth({nr})						*winwidth()*
 		The result is a Number, which is the width of window {nr}.
@@ -2686,9 +2692,11 @@ There are three types of features:
 2.  Features that are only supported when certain conditions have been met.
     Example: >
 	:if has("gui_running")
+<							*has-patch*
 3.  Included patches.  First check |v:version| for the version of Vim.
     Then the "patch123" feature means that patch 123 has been included for
-    this version.
+    this version.  Example (checking version 6.2.148 or later): >
+	:if v:version > 602 || v:version == 602 && has("patch148")
 
 all_builtin_terms	Compiled with all builtin terminals enabled.
 amiga			Amiga version of Vim.
@@ -2832,6 +2840,7 @@ windows			Compiled with support for more than one window.
 winaltkeys		Compiled with 'winaltkeys' option.
 win16			Win16 version of Vim (MS-Windows 3.1).
 win32			Win32 version of Vim (MS-Windows 95/98/ME/NT/2000/XP).
+win64			Win64 version of Vim (MS-Windows 64 bit).
 win32unix		Win32 version of Vim, using Unix files (Cygwin)
 win95			Win32 version for MS-Windows 95/98/ME.
 writebackup		Compiled with 'writebackup' default on.
@@ -2917,7 +2926,8 @@ instead of "s:" when the mapping is expanded outside of the script.
 								*E127* *E122*
 			When a function by this name already exists and [!] is
 			not used an error message is given.  When [!] is used,
-			an existing function is silently replaced.
+			an existing function is silently replaced.  Unless it
+			is currently being executed, that is an error.
 						*a:firstline* *a:lastline*
 			When the [range] argument is added, the function is
 			expected to take care of a range itself.  The range is
@@ -4564,7 +4574,7 @@ This is not guaranteed 100% secure, but it should block most attacks.
 These items are not allowed in the sandbox:
 	- changing the buffer text
 	- defining or changing mapping, autocommands, functions, user commands
-	- setting an option with ":set"
+	- setting certain options (see |option-summary|)
 	- executing a shell command
 	- reading or writing a file
 	- jumping to another buffer or editing a file

@@ -81,8 +81,8 @@ If you are compiling Vim for several machines, for each machine:
   c.    cd machine_name
   d.    make; make install
 
-[don't use a path for machine_name, just a directory name, Otherwise the links
-that "make shadow" creates won't work]
+[Don't use a path for machine_name, just a directory name, otherwise the links
+that "make shadow" creates won't work.]
 
 
 Unix: COMPILING WITH/WITHOUT GUI

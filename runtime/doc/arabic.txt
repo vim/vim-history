@@ -1,4 +1,4 @@
-*arabic.txt*	For Vim version 6.2.  Last change: 2003 May 11
+*arabic.txt*	For Vim version 6.3a.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL	  by Nadim Shaikli

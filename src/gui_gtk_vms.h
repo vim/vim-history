@@ -14,7 +14,7 @@
  * but not all functions that DECW library has. Therefore it has been expanded
  * with necessary defines for Vim on OpenVMS with GTK GUI.
  *
- * Zoltan Arpadffy <arpadffy@polarfox.com>
+ * Zoltan Arpadffy <arpadffy@polarhome.com>
  */
 
 /*

@@ -13,11 +13,11 @@ Summary
 
 1 MacOS X
  1.1. Carbon interface
- 1.2. X (Athena, GTK, Motif) or plain text.  
+ 1.2. X (Athena, GTK, Motif) or plain text.
 
 2 MacOS Classic
- 2.1. CodeWarrior 
- 2.2. MPW 
+ 2.1. CodeWarrior
+ 2.2. MPW
 
 NOTE: The Carbon version can only be compiled properly under
       MacOS X.
@@ -27,44 +27,44 @@ NOTE: The Carbon version can only be compiled properly under
 ----------------------------------------------------------------------------
 
 1.0 Considerations
- 
+
  Only '/' supported as path separator.
 
 1.1 Carbon interface (default)
- 
+
  You can compile vim with the standard Unix routine:
    cd ..
    ./configure
    make; make install
-  
+
  This will create a working Vim.app application bundle in the src
  directory.  You can move this bundle (the Vim.app directory) anywhere
  you want, for example, /Applications.
- 
-1.2 X-Windows or Plain Text 
- 
+
+1.2 X-Windows or Plain Text
+
  If you do not want the Carbon interface, you must explicitly tell
  configure to use a different GUI.
- 
+
   cd ..
   ./configure --enable-gui=gtk2
   make; make install
- 
- NOTE: The following GUI options are supported: 
-        no (for text), motif, athena, nextaw 
-        gtk, gtk2, gnome, gnome2,
-  
+
+ NOTE: The following GUI options are supported:
+	no (for text), motif, athena, nextaw
+	gtk, gtk2, gnome, gnome2,
+
  NOTE: You need to first install XFree86 and XDarwin.
        Please visit http://www.XDarwin.org
- 
+
 ----------------------------------------------------------------------------
-MacOS 9 
+MacOS 9
 ----------------------------------------------------------------------------
 
 Both ':' and '/' supported as path separator.
 
 2.1: Compiling with CodeWarior
- 
+
  1. Expand the resource file:
    open ../src/os_mac.rsr.hqx to produce ../src/gui_mac.rsrc:
    % cd vim62/src

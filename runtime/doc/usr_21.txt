@@ -1,4 +1,4 @@
-*usr_21.txt*	For Vim version 6.2.  Last change: 2002 Oct 29
+*usr_21.txt*	For Vim version 6.3a.  Last change: 2004 Mar 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -125,17 +125,13 @@ the marks are stored.  You want this feature, so now you have this: >
 
 	:set viminfo='1000,f1
 
-The " option controls how many lines are saved for each of the registers.  By
+The < option controls how many lines are saved for each of the registers.  By
 default, all the lines are saved.  If 0, nothing is saved.  To avoid adding
 thousands of lines to your viminfo file (which might never get used and makes
 starting Vim slower) you use a maximum of 500 lines: >
 
-	:set viminfo='1000,f1,\"500
+	:set viminfo='1000,f1,<500
 <
-	Note:
-	Since the " character starts a comment, it must be preceded with a
-	backslash.
-
 Other options you might want to use:
 	:	number of lines to save from the command line history
 	@	number of lines to save from the input line history

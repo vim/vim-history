@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2002 May 13
+" Last Change:	2004 Apr 30
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -69,7 +69,7 @@ syn match makeStatement contained "(\(subst\|addprefix\|addsuffix\|basename\|cal
 if exists("make_microsoft")
    syn match  makeComment "#.*" contains=makeTodo
 else
-   syn region  makeComment	start="#" end="^$" end="[^\\]$" contains=makeTodo
+   syn region  makeComment	start="#" end="^$" end="[^\\]$" keepend contains=makeTodo
    syn match   makeComment	"#$"
 endif
 syn keyword makeTodo TODO FIXME XXX contained
@@ -86,6 +86,16 @@ syn region  makeDString start=+\(\\\)\@<!"+  skip=+\\.+  end=+"+  contains=makeI
 syn region  makeSString start=+\(\\\)\@<!'+  skip=+\\.+  end=+'+  contains=makeIdent
 syn region  makeBString start=+\(\\\)\@<!`+  skip=+\\.+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine
 
+" Syncing
+syn sync minlines=20 maxlines=200
+
+" Sync on Make command block region: When searching backwards hits a line that
+" can't be a command or a comment, use makeCommands if it looks like a target,
+" NONE otherwise.
+syn sync match makeCommandSync groupthere NONE "^[^\t#]"
+syn sync match makeCommandSync groupthere makeCommands "^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:\{1,2}[^:=]"
+syn sync match makeCommandSync groupthere makeCommands "^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:\{1,2}\s*$"
+
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
@@ -100,7 +110,9 @@ if version >= 508 || !exists("did_make_syn_inits")
   HiLink makeNextLine		makeSpecial
   HiLink makeCmdNextLine	makeSpecial
   HiLink makeSpecTarget		Statement
-  HiLink makeCommands		Number
+  if !exists("make_no_commands")
+    HiLink makeCommands		Number
+  endif
   HiLink makeImplicit		Function
   HiLink makeTarget		Function
   HiLink makeInclude		Include

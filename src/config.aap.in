@@ -24,7 +24,7 @@ X_LIBS		= @X_LIB@
 
 PERL		= @vi_cv_path_perl@
 PERLLIB		= @vi_cv_perllib@
-PERL_LIBS	= @perllibs@
+PERL_LIBS	= @PERL_LIBS@
 SHRPENV		= @shrpenv@
 PERL_SRC	= @PERL_SRC@
 PERL_OBJ	= @PERL_OBJ@

@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.2.  Last change: 2001 Sep 03
+*recover.txt*   For Vim version 6.3a.  Last change: 2004 Apr 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -147,6 +147,10 @@ some way.  If Vim has doubt about what it found, it will give an error
 message and insert lines with "???" in the text.  If you see an error message
 while recovering, search in the file for "???" to see what is wrong.  You may
 want to cut and paste to get the text you need.
+
+The most common remark is "???LINES MISSING".  This means that Vim cannot read
+the text from the original file.  This can happen if the system crashed and
+parts of the original file were not written to disk.
 
 Be sure that the recovery was successful before overwriting the original
 file or deleting the swap file.  It is good practice to write the recovered

@@ -3296,16 +3296,16 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
      * string. */
     if (input_conv.vc_type != CONV_NONE)
     {
-        im_str = string_convert(&input_conv, (char_u *)str, &len);
-        g_return_if_fail(im_str != NULL);
+	im_str = string_convert(&input_conv, (char_u *)str, &len);
+	g_return_if_fail(im_str != NULL);
     }
     else
-        im_str = (char_u *)str;
+	im_str = (char_u *)str;
     clen = 0;
     for (p = im_str; p < im_str + len; p += (*mb_ptr2len_check)(p))
-        clen += (*mb_ptr2cells)(p);
+	clen += (*mb_ptr2cells)(p);
     if (input_conv.vc_type != CONV_NONE)
-        vim_free(im_str);
+	vim_free(im_str);
     preedit_start_col += clen;
 
     /* Is this a single character that matches a keypad key that's just
@@ -3837,17 +3837,17 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 	    case GDK_KP_Multiply: xim_expected_char = '*';  break;
 	    case GDK_KP_Decimal:  xim_expected_char = '.';  break;
 	    case GDK_KP_Equal:    xim_expected_char = '=';  break;
-	    case GDK_KP_0:        xim_expected_char = '0';  break;
-	    case GDK_KP_1:        xim_expected_char = '1';  break;
-	    case GDK_KP_2:        xim_expected_char = '2';  break;
-	    case GDK_KP_3:        xim_expected_char = '3';  break;
-	    case GDK_KP_4:        xim_expected_char = '4';  break;
-	    case GDK_KP_5:        xim_expected_char = '5';  break;
-	    case GDK_KP_6:        xim_expected_char = '6';  break;
-	    case GDK_KP_7:        xim_expected_char = '7';  break;
-	    case GDK_KP_8:        xim_expected_char = '8';  break;
-	    case GDK_KP_9:        xim_expected_char = '9';  break;
-	    default:              xim_expected_char = NUL;
+	    case GDK_KP_0:	  xim_expected_char = '0';  break;
+	    case GDK_KP_1:	  xim_expected_char = '1';  break;
+	    case GDK_KP_2:	  xim_expected_char = '2';  break;
+	    case GDK_KP_3:	  xim_expected_char = '3';  break;
+	    case GDK_KP_4:	  xim_expected_char = '4';  break;
+	    case GDK_KP_5:	  xim_expected_char = '5';  break;
+	    case GDK_KP_6:	  xim_expected_char = '6';  break;
+	    case GDK_KP_7:	  xim_expected_char = '7';  break;
+	    case GDK_KP_8:	  xim_expected_char = '8';  break;
+	    case GDK_KP_9:	  xim_expected_char = '9';  break;
+	    default:		  xim_expected_char = NUL;
 	}
 	xim_ignored_char = FALSE;
     }
@@ -3910,7 +3910,7 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 	 * right now.  Unlike with GTK+ 1.2 we cannot rely on the IM module
 	 * not doing anything before the activation key was sent. */
 	if (im_activatekey_keyval == GDK_VoidSymbol || im_is_active)
-        {
+	{
 	    int imresult = gtk_im_context_filter_keypress(xic, event);
 
 	    /* Some XIM send following sequence:
@@ -3925,18 +3925,18 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 					       && event->keyval == GDK_Return)
 	    {
 		im_synthesize_keypress(GDK_Return, 0U);
-                return FALSE;
+		return FALSE;
 	    }
 
-            /* If XIM tried to commit a keypad key as a single char.,
-             * ignore it so we can use the keypad key 'raw', for mappings. */
-            if (xim_expected_char != NUL && xim_ignored_char)
-                /* We had a keypad key, and XIM tried to thieve it */
-                return FALSE;
+	    /* If XIM tried to commit a keypad key as a single char.,
+	     * ignore it so we can use the keypad key 'raw', for mappings. */
+	    if (xim_expected_char != NUL && xim_ignored_char)
+		/* We had a keypad key, and XIM tried to thieve it */
+		return FALSE;
 
 	    /* Normal processing */
 	    return imresult;
-        }
+	}
     }
 
     return FALSE;

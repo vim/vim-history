@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.2.  Last change: 2003 Mar 28
+*autocmd.txt*   For Vim version 6.3a.  Last change: 2004 Apr 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,6 +19,7 @@ For a basic explanation, see section |40.3| in the user manual.
 9.  Using autocommands		|autocmd-use|
 
 {Vi does not have any of these commands}
+{only when the |+autocmd| feature has not been disabled at compile time}
 
 ==============================================================================
 1. Introduction						*autocmd-intro*
@@ -45,9 +46,6 @@ effects.  Be careful not to destroy your text.
   events should do the same (this makes recovery possible in some rare cases).
   It's a good idea to use the same autocommands for the File* and Buf* events
   when possible.
-
-The |+autocmd| feature is only included if it has not been disabled at compile
-time.
 
 ==============================================================================
 2. Defining autocommands				*autocmd-define*
@@ -267,7 +265,8 @@ FilterWritePost			After writing a file for a filter command or
 							*FileChangedShell*
 FileChangedShell		When Vim notices that the modification time of
 				a file has changed since editing started.
-				|timestamp|
+				Also when the file attributes of the file
+				change. |timestamp|
 				Mostly triggered after executing a shell
 				command, but also with a |:checktime| command
 				or when Vim regains input focus.
@@ -497,13 +496,16 @@ User				Never executed automatically.  To be used for
 				autocommands that are only executed with
 				":doautocmd".
 
+You can specify a comma-separated list of event names.  No white space can be
+used in this list.  The command applies to all the events in the list.
 
-For READING FILES there are three possible pairs of events.  Vim uses only one
-pair at a time:
-BufNewFile			starting to edit a non-existent file
-BufReadPre	BufReadPost	starting to edit an existing file
-FilterReadPre	FilterReadPost	read the temp file with filter output
-FileReadPre	FileReadPost	any other file read
+For READING FILES there are four kinds of events possible:
+	BufNewFile			starting to edit a non-existent file
+	BufReadPre	BufReadPost	starting to edit an existing file
+	FilterReadPre	FilterReadPost	read the temp file with filter output
+	FileReadPre	FileReadPost	any other file read
+Vim uses only one of these four kinds when reading a file.  The "Pre" and
+"Post" events are both triggered, before and after reading the file.
 
 Note that the autocommands for the *ReadPre events and all the Filter events
 are not allowed to change the current buffer (you will get an error message if
@@ -517,7 +519,7 @@ You can use the 'eventignore' option to ignore a number of events or all
 events.
 
 ==============================================================================
-6. Patterns						*autocmd-patterns*
+6. Patterns					*autocmd-patterns* *{pat}*
 
 The file pattern {pat} is tested for a match against the file name in one of
 two ways:
@@ -576,6 +578,7 @@ The pattern is interpreted like mostly used in file names:
 	,	inside { }: like \| in a |pattern|
 	\	special meaning like in a |pattern|
 	[ch]	matches 'c' or 'h'
+	[^ch]   match any character but 'c' and 'h'
 
 Note that for all systems the '/' character is used for path separator (even
 MS-DOS and OS/2).  This was done because the backslash is difficult to use
@@ -612,7 +615,10 @@ for all groups.  The group only matters when executing autocommands with
 ":doautocmd" or ":doautoall", or when defining or deleting autocommands.
 
 The group name can contain any characters except white space.  The group name
-"end" is reserved (also in uppercase).  The group name is case sensitive.
+"end" is reserved (also in uppercase).
+
+The group name is case sensitive.  Note that this is different from the event
+name!
 
 							*:aug* *:augroup*
 :aug[roup] {name}		Define the autocmd group name for the
@@ -649,7 +655,7 @@ have changed autocommands, or when Vim has executed the wrong autocommands
 Note that the 'eventignore' option applies here too.  Events listed in this
 option will not cause any commands to be executed.
 
-						*:do* *:doautocmd* *E217*
+					*:do* *:doau* *:doautocmd* *E217*
 :do[autocmd] [group] {event} [fname]
 			Apply the autocommands matching [fname] (default:
 			current file name) for {event} to the current buffer.
@@ -673,12 +679,14 @@ option will not cause any commands to be executed.
 						*:doautoa* *:doautoall*
 :doautoa[ll] [group] {event} [fname]
 			Like ":doautocmd", but apply the autocommands to each
-			loaded buffer.  Careful: Don't use this for
-			autocommands that delete a buffer, change to another
-			buffer or change the contents of a buffer; the result
-			is unpredictable.  This command is intended for
-			autocommands that set options, change highlighting,
-			and things like that.
+			loaded buffer.  Note that {fname} is used to select
+			the autocommands, not the buffers to which they are
+			applied.
+			Careful: Don't use this for autocommands that delete a
+			buffer, change to another buffer or change the
+			contents of a buffer; the result is unpredictable.
+			This command is intended for autocommands that set
+			options, change highlighting, and things like that.
 
 ==============================================================================
 9. Using autocommands					*autocmd-use*
@@ -889,6 +897,7 @@ you expect the file to be modified.
 
 The |v:cmdarg| variable holds the "++enc=" and "++ff=" argument that are
 effective.  These should be used for the command that reads/writes the file.
+The |v:cmdbang| variable is one when "!" was used, zero otherwise.
 
 See the $VIMRUNTIME/plugin/netrw.vim for examples.
 

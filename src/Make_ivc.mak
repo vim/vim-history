@@ -105,8 +105,8 @@ INTDIR=.\oleRel
 VIM=gvim
 EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
-CPP_PROJ=$(CPP_PROJ) /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
-# ADD CPP            /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
+CPP_PROJ=$(CPP_PROJ) /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "DYNAMIC_GETTEXT" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
+# ADD CPP            /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "DYNAMIC_GETTEXT" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/
 
 RSC_PROJ=$(RSC_PROJ) /I ".\oleRel" /d "NDEBUG" /d "FEAT_OLE" /fo.\oleRel\vim.res
 # ADD RSC            /I ".\oleRel" /d "NDEBUG" /d "FEAT_OLE" /fo.\oleRel\vim.res
@@ -124,8 +124,8 @@ INTDIR=.\oleDbg
 VIM=gvimd
 EXTRAS="$(INTDIR)/if_ole.obj" "$(INTDIR)/vim.res" "$(INTDIR)/gui.obj" "$(INTDIR)/gui_w32.obj" "$(INTDIR)/os_w32exe.obj"
 
-CPP_PROJ=$(CPP_PROJ) /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
-# ADD CPP            /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
+CPP_PROJ=$(CPP_PROJ) /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "DYNAMIC_GETTEXT" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
+# ADD CPP            /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "DYNAMIC_GETTEXT" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/
 
 RSC_PROJ=$(RSC_PROJ) /I .\oleDbg /d "_DEBUG" /d "FEAT_OLE" /fo.\oleDbg\vim.res
 # ADD RSC            /I .\oleDbg /d "_DEBUG" /d "FEAT_OLE" /fo.\oleDbg\vim.res

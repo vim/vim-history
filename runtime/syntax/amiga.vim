@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	AmigaDos
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
-" Last Change:	Nov 18, 2002
-" Version:     3
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
+" Last Change:	Sep 02, 2003
+" Version:     4
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
@@ -62,7 +62,7 @@ syn keyword	amiKey	colors	execute	install	palette	set	which
 syn keyword	amiKey	conclip	failat	iprefs	path	setclock	why
 
 " comments
-syn cluster	amiCommentGroup contains=amiTodo
+syn cluster	amiCommentGroup contains=amiTodo,@Spell
 syn case ignore
 syn keyword	amiTodo	contained	todo
 syn case match

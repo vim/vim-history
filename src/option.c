@@ -329,7 +329,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)FALSE}
 #endif
-                            },
+			    },
     {"arabic",	    "arab", P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_ARABIC
 			    (char_u *)VAR_WIN, PV_ARAB,
@@ -6823,7 +6823,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    /* Postpone the resizing; check the size and cmdline position for
 	     * messages. */
 	    check_shellsize();
-	    if (cmdline_row > Rows - p_ch)
+	    if (cmdline_row > Rows - p_ch && Rows > p_ch)
 		cmdline_row = Rows - p_ch;
 	}
     }

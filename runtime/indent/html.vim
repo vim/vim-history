@@ -1,9 +1,7 @@
 " Description:	html indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
-" Updated By:	Bram Moolenaar
-" URL:		http://www.zellner.org/vim/indent/html.vim
-" Last Change:	2003 May 11
-" Globals:	g:html_indent_tags	   -- indenting tags
+" Last Change:	Tue, 27 Apr 2004 10:28:39 CEST
+" Globals:	g:html_indent_tags         -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
 
@@ -149,7 +147,7 @@ endfun
 " [-- return the sum of indents respecting the syntax of a:lnum --]
 fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
 	    let open = <SID>HtmlIndentOpen(a:lnum, g:html_indent_tags)
 	    let close = <SID>HtmlIndentClose(a:lnum, g:html_indent_tags)
 	    if 0 != open || 0 != close
@@ -178,14 +176,24 @@ fun! HtmlIndentGet(lnum)
     endif
 
     let restore_ic = &ic
-    setlocal ic		" ignore case
+    setlocal ic " ignore case
 
     " [-- special handling for <pre>: no indenting --]
     if getline(a:lnum) =~ '\c</pre>'
-	  \ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nWb')
-	  \ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nW')
+		\ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nWb')
+		\ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nW')
 	" we're in a line with </pre> or inside <pre> ... </pre>
 	return -1
+    endif
+
+    " [-- special handling for <javascript>: use cindent --]
+    let js = '<script.*type\s*=\s*.*java'
+    if   0 < searchpair(js, '', '</script>', 'nWb')
+    \ || 0 < searchpair(js, '', '</script>', 'nW')
+	" we're inside javascript
+	if getline(lnum) !~ js && getline(a:lnum) != '</script>'
+	    return cindent(a:lnum)
+	endif
     endif
 
     if getline(lnum) =~ '\c</pre>'
@@ -202,7 +210,7 @@ fun! HtmlIndentGet(lnum)
     let ind = ind + <SID>HtmlIndentSum(a:lnum, 0)
 
     if restore_ic == 0
-      setlocal noic
+	setlocal noic
     endif
 
     return indent(lnum) + (&sw * ind)

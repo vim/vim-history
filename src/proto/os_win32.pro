@@ -37,6 +37,7 @@ void mch_delay __ARGS((long msec, int ignoreinput));
 int mch_remove __ARGS((char_u *name));
 void mch_breakcheck __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
+int mch_wrename __ARGS((WCHAR *wold, WCHAR *wnew));
 int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
 char *default_shell __ARGS((void));
 int mch_access __ARGS((char *n, int p));

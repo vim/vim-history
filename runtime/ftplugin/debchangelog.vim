@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Debian Changelog
 " Maintainer:	Michael Piefel <piefel@informatik.hu-berlin.de>
-" Last Change:	31 October 2001
+" Last Change:	23 March 2004
 
 if exists("g:did_changelog_ftplugin")
   finish
@@ -195,8 +195,12 @@ function <SID>MakeMenu()
 endfunction
 
 augroup changelogMenu
-au BufEnter * if &filetype == "debchangelog" | call <SID>MakeMenu() | setlocal tw=78 | set comments=f:* | endif
+au BufEnter * if &filetype == "debchangelog" | call <SID>MakeMenu() | endif
 au BufLeave * if &filetype == "debchangelog" | aunmenu Changelog | endif
 augroup END
 
-
+" Debian changelogs are not supposed to have any other text width,
+" so the user cannot override this setting
+setlocal tw=78
+setlocal comments=f:* 
+let b:undo_ftplugin = "setlocal tw< comments<"

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Lex
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
-" Last Change:	Nov 18, 2002
-" Version:	2
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
+" Last Change:	Sep 02, 2003
+" Version:	4
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Option:
@@ -44,7 +44,7 @@ syn match  lexAbbrv		"^\I\i*\s"me=e-1			skipwhite	contained nextgroup=lexAbbrvRe
 syn match  lexAbbrv		"^%[sx]"					contained
 syn match  lexAbbrvRegExp	"\s\S.*$"lc=1				contained nextgroup=lexAbbrv,lexInclude
 syn region lexInclude	matchgroup=lexSep	start="^%{" end="%}"	contained	contains=ALLBUT,@lexListGroup
-syn region lexAbbrvComment	start="^\s\+/\*"	end="\*/"
+syn region lexAbbrvComment	start="^\s\+/\*"	end="\*/"			contains=@Spell
 
 "%% : Patterns {Actions}
 syn region lexPatBlock	matchgroup=Todo	start="^%%$" matchgroup=Todo end="^%%$"	skipnl skipwhite contains=lexPat,lexPatTag,lexPatComment
@@ -53,7 +53,7 @@ syn region lexBrace	start="\[" skip=+\\\\\|\\+		end="]"		contained
 syn region lexPatString	matchgroup=String start=+"+	skip=+\\\\\|\\"+	matchgroup=String end=+"+	contained
 syn match  lexPatTag	"^<\I\i*\(,\I\i*\)*>*"			contained nextgroup=lexPat,lexPatTag,lexMorePat,lexPatSep
 syn match  lexPatTag	+^<\I\i*\(,\I\i*\)*>*\(\\\\\)*\\"+		contained nextgroup=lexPat,lexPatTag,lexMorePat,lexPatSep
-syn region lexPatComment	start="^\s*/\*" end="\*/"		skipnl	contained contains=cTodo nextgroup=lexPatComment,lexPat,lexPatString,lexPatTag
+syn region lexPatComment	start="^\s*/\*" end="\*/"		skipnl	contained contains=cTodo nextgroup=lexPatComment,lexPat,lexPatString,lexPatTag,@Spell
 syn match  lexPatCodeLine	".*$"					contained contains=ALLBUT,@lexListGroup
 syn match  lexMorePat	"\s*|\s*$"			skipnl	contained nextgroup=lexPat,lexPatTag,lexPatComment
 syn match  lexPatSep	"\s\+"					contained nextgroup=lexMorePat,lexPatCode,lexPatCodeLine

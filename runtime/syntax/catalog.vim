@@ -1,9 +1,8 @@
 " Vim syntax file
 " Language:	sgml catalog file
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Son, 26 Nov 2000 01:32:50 +0100
+" Last Change:	Tue, 27 Apr 2004 14:54:59 CEST
 " Filenames:	/etc/sgml.catalog
-" URL:		http://www.zellner.org/vim/syntax/catalog.vim
 " $Id$
 
 " Quit when a syntax file was already loaded

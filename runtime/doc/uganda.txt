@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.2.  Last change: 2003 Mar 03
+*uganda.txt*    For Vim version 6.3a.  Last change: 2004 Jan 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9,11 +9,13 @@ SUMMARY
 								*iccf* *ICCF*
 Vim is Charityware.  You can use and copy it as much as you like, but you are
 encouraged to make a donation for needy children in Uganda.  Please see |kcc|
-below or visit the ICCF web site, available at these mirrors:
+below or visit the ICCF web site, available at these URLs:
 
 	http://iccf-holland.org/
 	http://www.vim.org/iccf/
-	http://www.iccf.nl/
+
+You can also sponsor the development of Vim.  Vim sponsors can vote for
+features.  See |sponsor|.
 
 The Open Publication License applies to the Vim documentation, see
 |manual-copyright|.
@@ -106,6 +108,9 @@ Note:
 - If you are happy with Vim, please express that by reading the rest of this
   file and consider helping needy children in Uganda.
 
+- If you want to support further Vim development consider becoming a
+  |sponsor|.
+
 - According to Richard Stallman the Vim license is GNU GPL compatible.
   A few minor changes have been made since he checked it, but that should not
   make a difference.
@@ -192,7 +197,7 @@ at the centre, I know them personally.  Further more, the centre is
 co-sponsored and inspected by World Vision, Save the Children Fund and
 International Child Care Fund.  The centre is visited about once a year to
 check the progress (at our own cost).  I have visited the centre myself in
-1996, 1998, 2000 and 2001.  The visit reports are on the ICCF web site.
+1996, 1998, 2000, 2001 and 2003.  The visit reports are on the ICCF web site.
 
 If you have any further questions, send me e-mail: <Bram@vim.org>.
 
@@ -258,8 +263,8 @@ Others:		Transfer to one of these accounts if possible:
 		    Rabobank Venlo, account 3765.05.117
 				Swift code: RABO NL 2U
 			under the name "Bram Moolenaar", Venlo
-		Otherwise, send a cheque in euro or US dollars to the above
-		address.  Minimal amount: $70 (my bank does not accept smaller
+		Otherwise, send a cheque in euro or US dollars to the address
+		below.  Minimal amount: $70 (my bank does not accept smaller
 		amounts for foreign cheques, sorry)
 
 Address to send cheques to:

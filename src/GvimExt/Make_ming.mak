@@ -2,15 +2,15 @@
 # Generates gvimext.dll with gcc.
 # Can be used for Cygwin and MingW (MingW ignores -mno-cygwin)
 #
-# Originally, the DLL base address was fixed: -Wl,--image-base=0x1C000000 
-# Now it is allocated dymanically by the linker by evaluating all DLLs 
+# Originally, the DLL base address was fixed: -Wl,--image-base=0x1C000000
+# Now it is allocated dymanically by the linker by evaluating all DLLs
 # already loaded in memory. The binary image contains as well information
-# for automatic pseudo-rebasing, if needed by the system. ALV 2004-02-29 
+# for automatic pseudo-rebasing, if needed by the system. ALV 2004-02-29
 
 # If cross-compiling set this to yes, else set it to no
 CROSS = no
 #CROSS = yes
-# For the old MinGW 2.95 (the one you get e.g. with debian woody) 
+# For the old MinGW 2.95 (the one you get e.g. with debian woody)
 # set the following variable to yes and check if the executables are
 # really named that way.
 # If you have a newer MinGW or you are using cygwin set it to no and

@@ -1126,7 +1126,8 @@ copy_spaces(ptr, count)
 
 #if defined(FEAT_VISUALEXTRA) || defined(PROTO)
 /*
- * copy a character a number of times
+ * Copy a character a number of times.
+ * Does not work for multi-byte charactes!
  */
     void
 copy_chars(ptr, count, c)

@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.2.  Last change: 2003 May 04
+*mbyte.txt*     For Vim version 6.3a.  Last change: 2004 May 02
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -60,7 +60,7 @@ your system has been installed to use the language, it probably works right
 away.  If not, you can often make it work by setting the $LANG environment
 variable in your shell: >
 
-	setenv lang ja_JP.EUC
+	setenv LANG ja_JP.EUC
 
 Unfortunately, the name of the locale depends on your system.  Japanese might
 also be called "ja_JP.EUCjp" or just "ja".  To see what is currently used: >
@@ -284,6 +284,7 @@ Supported 'encoding' values are:			*encoding-values*
 1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
 1   koi8-r	Russian
 1   koi8-u	Ukrainian
+1   macroman    MacRoman (Macintosh encoding)
 1   8bit-{name} any 8-bit encoding (Vim specific name)
 1   cp{number}	MS-Windows: any installed single-byte codepage
 2   cp932	Japanese (Windows only)
@@ -435,14 +436,14 @@ Useful utilities for converting the charset:
     Korean:	    hmconv
 	Hmconv is Korean code conversion utility especially for E-mail. It can
 	convert between EUC-KR and ISO-2022-KR.  Hmconv can be found at:
-	ftp://ftp.kaist.ac.kr/pub/hangul/code/hmconv/hmconv1.0pl3
+	ftp://ftp.kaist.ac.kr/pub/hangul/code/hmconv/
 
     Multilingual:   lv
 	Lv is a Powerful Multilingual File Viewer.  And it can be worked as
 	|charset| converter.  Supported |charset|: ISO-2022-CN, ISO-2022-JP,
 	ISO-2022-KR, EUC-CN, EUC-JP, EUC-KR, EUC-TW, UTF-7, UTF-8, ISO-8859
 	series, Shift_JIS, Big5 and HZ. Lv can be found at:
-	http://www.ff.iij4u.or.jp/~nrt/freeware/lv4493.tar.gz
+	http://www.ff.iij4u.or.jp/~nrt/freeware/lv4495.tar.gz
 
 
 							*mbyte-conversion*
@@ -487,7 +488,7 @@ xterm that comes with XFree86 by Thomas Dickey (text by Markus Kuhn).
 
 Get the latest xterm version which has now UTF-8 support:
 
-	http://www.clark.net/pub/dickey/xterm/xterm.tar.gz
+	http://invisible-island.net/xterm/xterm.html
 
 Compile it with "./configure --enable-wide-chars ; make"
 
@@ -521,7 +522,7 @@ font is a long string.  For multi-byte fonts we need several of these...
 
 Note: Most of this is no longer relevant for GTK+ 2.  Selecting a font via
 its XLFD is not supported anymore; see 'guifont' for an example of how to
-set the font.  Do yourself a favour and ignore the |XLFD| and |xfontset|
+set the font.  Do yourself a favor and ignore the |XLFD| and |xfontset|
 sections below.
 
 First of all, Vim only accepts fixed-width fonts for displaying text.  You
@@ -756,8 +757,8 @@ is suitable for complex input, such as CJK.
   number of Hira-gana characters are 76.  So, first, we pre-input text as
   pronounced in Hira-gana, second, we convert Hira-gana to Kanji or Kata-Kana,
   if needed.  There are some Kana-Kanji conversion server: jserver
-  (distributed with Wnn, see below) and canna. Canna can be found at:
-  ftp://ftp.nec.co.jp/pub/Canna/
+  (distributed with Wnn, see below) and canna. Canna could be found at:
+  ftp://ftp.nec.co.jp/pub/Canna/ (no longer works).
 
 There is a good input system: Wnn4.2.  Wnn 4.2 contains,
     xwnmo (|IM-server|)
@@ -765,8 +766,8 @@ There is a good input system: Wnn4.2.  Wnn 4.2 contains,
     cserver (Chinese PinYin or ZhuYin to simplified HanZi conversion server)
     tserver (Chinese PinYin or ZhuYin to traditional HanZi conversion server)
     kserver (Hangul-Hanja conversion server)
-Wnn 4.2 can be found at:
-    ftp://ftp.FreeBSD.ORG/pub/FreeBSD/ports/distfiles/Wnn4.2.tar.gz
+Wnn 4.2 for several systems can be found at various places on the internet.
+Use the RPM or port for your system.
 
 
 - Input Style
@@ -816,7 +817,7 @@ Wnn 4.2 can be found at:
 
 
 USING XIM			*multibyte-input* *E284* *E286* *E287* *E288*
-				*E285* *E291* *E292* *E290* *ez4* *E289*
+				*E285* *E291* *E292* *E290* *E289*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display
@@ -870,7 +871,7 @@ For example, when you are using kinput2 as |IM-server| and sh, >
 	export XMODIFIERS="@im=kinput2"
 <
 
-FULLY CONTROLED XIM
+FULLY CONTROLLED XIM
 
 You can fully control XIM, like with IME of MS-Windows (see |multibyte-ime|).
 This is currently only available for the GTK GUI.
@@ -921,7 +922,7 @@ WHAT IS GLOBAL IME					*global-ime*
     Windows NT 4.0.
     On Windows 2000 and XP it should work as well (without downloading).  On
     Windows 2000 Professional, Global IME is built in, and the Input Locales
-    can be added through Control Panel/Reginal Options/Input Locales.
+    can be added through Control Panel/Regional Options/Input Locales.
     Please see below URL for detail of Global IME.  You can also find various
     language version of Global IME at same place.
 
@@ -933,11 +934,11 @@ WHAT IS GLOBAL IME					*global-ime*
 
     Support Global IME is a experimental feature.
 
-NOTE: For IME to work you must make sure the input locales of your languague
+NOTE: For IME to work you must make sure the input locales of your language
 are added to your system.  The exact location of this depends on the version
 of Windows you use.  For example, on my W2P box:
 1. Control Panel
-2. Reginal Options
+2. Regional Options
 3. Input Locales Tab
 4. Add Installed input locales -> Chinese(PRC)
    The default is still English (United Stated)
@@ -1202,7 +1203,7 @@ Combining forms:
 
 ==============================================================================
 10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*
-								*Unicode*
+							*Unicode* *unicode*
 The Unicode character set was designed to include all characters from other
 character sets.  Therefore it is possible to write text in any language using
 Unicode (with a few rarely used languages excluded).  And it's mostly possible
@@ -1341,7 +1342,7 @@ options.txt for detailed information.
 
 'fileencodings'	List of possible encodings of a file.  When opening a file
 		these will be tried and the first one that doesn't cause an
-		error is used for 'fileencoding'
+		error is used for 'fileencoding'.
 
 'charconvert'	Expression used to convert files from one encoding to another.
 
@@ -1350,7 +1351,7 @@ options.txt for detailed information.
 		languages where a sequence of characters can be broken
 		anywhere.
 
-'guifontset'	The list of font names used for a multi-byte endoding.  When
+'guifontset'	The list of font names used for a multi-byte encoding.  When
 		this option is not empty, it replaces 'guifont'.
 
 'keymap'	Specify the name of a keyboard mapping.

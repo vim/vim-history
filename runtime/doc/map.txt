@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.2.  Last change: 2003 May 04
+*map.txt*       For Vim version 6.3a.  Last change: 2004 Mar 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,7 +51,7 @@ modes.
 :ono[remap] {lhs} {rhs}					*:ono* *:onoremap*
 :no[remap]! {lhs} {rhs}					*:no!* *:noremap!*
 :ino[remap] {lhs} {rhs}					*:ino* *:inoremap*
-:lno[remap] {lhs} {rhs}					*:ln*  *:lnoremap*
+:ln[oremap] {lhs} {rhs}					*:ln*  *:lnoremap*
 :cno[remap] {lhs} {rhs}					*:cno* *:cnoremap*
 			Map the key sequence {lhs} to {rhs} for the modes
 			where the map command applies.  Disallow mapping of
@@ -179,6 +179,10 @@ There are five sets of mappings
 
 There are no separate mappings for Select mode.  The same as for Visual mode
 are used |Select-mode-mapping|.
+
+Special case: While typing a count for a command in Normal mode, mapping zero
+is disabled.  This makes it possible to map zero without making it impossible
+to type a count with a zero.
 
 						*map-overview* *map-modes*
 Overview of which map command works in which mode:
@@ -651,7 +655,8 @@ used in a |filetype-plugin| file.  Example for a C plugin file: >
 :ab[breviate]		list all abbreviations.  The character in the first
 			column indicates the mode where the abbreviation is
 			used: 'i' for insert mode, 'c' for Command-line
-			mode, '!' for both.
+			mode, '!' for both.  These are the same as for
+			mappings, see |map-listing|.
 
 :ab[breviate] {lhs}	list the abbreviations that start with {lhs}
 
@@ -808,7 +813,7 @@ is executed, it is transformed into a normal ex command and then executed.
 
 For starters: See section |40.2| in the user manual.
 
-						*E183* *user-cmd-abmiguous*
+						*E183* *user-cmd-ambiguous*
 All user defined commands must start with an uppercase letter, to avoid
 confusion with builtin commands. (There are a few builtin commands, notably
 :Next, :Print and :X, which do start with an uppercase letter.  The builtin

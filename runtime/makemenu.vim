@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Jan 25
+" Last Change:	2004 May 04
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -48,6 +48,7 @@ fun! <SID>Syn(arg)
   let s:lnum = s:lnum + 1
 endfun
 
+SynMenu AB.Aap:aap
 SynMenu AB.Abaqus:abaqus
 SynMenu AB.ABC\ music\ notation:abc
 SynMenu AB.ABEL:abel
@@ -63,9 +64,12 @@ SynMenu AB.Apache\ config:apache
 SynMenu AB.Apache-style\ config:apachestyle
 SynMenu AB.Applix\ ELF:elf
 SynMenu AB.Arc\ Macro\ Language:aml
+SynMenu AB.Arch\ inventory:arch
+SynMenu AB.ART:art
 SynMenu AB.ASP\ with\ VBScript:aspvbs
 SynMenu AB.ASP\ with\ Perl:aspperl
 SynMenu AB.Assembly.680x0:asm68k
+SynMenu AB.Assembly.Flat:fasm
 SynMenu AB.Assembly.GNU:asm
 SynMenu AB.Assembly.GNU\ H-8300:asmh8300
 SynMenu AB.Assembly.Intel\ IA-64:ia64
@@ -73,13 +77,16 @@ SynMenu AB.Assembly.Microsoft:masm
 SynMenu AB.Assembly.Netwide:nasm
 SynMenu AB.Assembly.PIC:pic
 SynMenu AB.Assembly.Turbo:tasm
+SynMenu AB.Assembly.VAX\ Macro\ Assembly:vmasm
 SynMenu AB.Assembly.Z-80:z8a
+SynMenu AB.Assembly.xa\ 6502\ cross\ assember:a65
 SynMenu AB.ASN\.1:asn
 SynMenu AB.Atlas:atlas
 SynMenu AB.Automake:automake
 SynMenu AB.Avenue:ave
 SynMenu AB.Awk:awk
 SynMenu AB.AYacc:ayacc
+
 SynMenu AB.B:b
 SynMenu AB.Baan:baan
 SynMenu AB.BASIC:basic
@@ -90,91 +97,107 @@ SynMenu AB.BIND.BIND\ config:named
 SynMenu AB.BIND.BIND\ zone:bindzone
 SynMenu AB.Blank:blank
 
-SynMenu CD.C:c
-SynMenu CD.C++:cpp
-SynMenu CD.C#:cs
-SynMenu CD.CDL:cdl
-SynMenu CD.Crontab:crontab
-SynMenu CD.Cyn++:cynpp
-SynMenu CD.Cynlib:cynlib
-SynMenu CD.Cascading\ Style\ Sheets:css
-SynMenu CD.Century\ Term:cterm
-SynMenu CD.CH\ script:ch
-SynMenu CD.ChangeLog:changelog
-SynMenu CD.Cheetah\ template:cheetah
-SynMenu CD.CHILL:chill
-SynMenu CD.Clean:clean
-SynMenu CD.Clever:cl
-SynMenu CD.Clipper:clipper
-SynMenu CD.Cold\ Fusion:cf
-SynMenu CD.Config.Cfg\ Config\ file:cfg
-SynMenu CD.Config.Generic\ Config\ file:conf
-SynMenu CD.Config.Configure\.in:config
-SynMenu CD.Ctrl-H:ctrlh
-SynMenu CD.Cobol:cobol
-SynMenu CD.CSP:csp
-SynMenu CD.CUPL.CUPL:cupl
-SynMenu CD.CUPL.Simulation:cuplsim
-SynMenu CD.CVS.commit\ file:cvs
-SynMenu CD.CVS.cvsrc:cvsrc
-SynMenu CD.Debian.Debian\ ChangeLog:debchangelog
-SynMenu CD.Debian.Debian\ Control:debcontrol
-SynMenu CD.Diff:diff
-SynMenu CD.Digital\ Command\ Lang:dcl
-SynMenu CD.DNS/BIND\ zone:dns
-SynMenu CD.DocBook:docbk
-SynMenu CD.Dot:dot
-SynMenu CD.Dracula:dracula
-SynMenu CD.DSSSL:dsl
-SynMenu CD.DTD:dtd
-SynMenu CD.DTML\ (Zope):dtml
-SynMenu CD.Dylan.Dylan:dylan
-SynMenu CD.Dylan.Dylan\ interface:dylanintr
-SynMenu CD.Dylan.Dylan\ lid:dylanlid
+SynMenu C.C:c
+SynMenu C.C++:cpp
+SynMenu C.C#:cs
+SynMenu C.Calendar:calendar
+SynMenu C.CDL:cdl
+SynMenu C.Crontab:crontab
+SynMenu C.Cyn++:cynpp
+SynMenu C.Cynlib:cynlib
+SynMenu C.Cascading\ Style\ Sheets:css
+SynMenu C.Century\ Term:cterm
+SynMenu C.CH\ script:ch
+SynMenu C.ChangeLog:changelog
+SynMenu C.Cheetah\ template:cheetah
+SynMenu C.CHILL:chill
+SynMenu C.Clean:clean
+SynMenu C.Clever:cl
+SynMenu C.Clipper:clipper
+SynMenu C.Cold\ Fusion:cf
+SynMenu C.Config.Cfg\ Config\ file:cfg
+SynMenu C.Config.Generic\ Config\ file:conf
+SynMenu C.Config.Configure\.in:config
+SynMenu C.CRM114:crm
+SynMenu C.Ctrl-H:ctrlh
+SynMenu C.Cobol:cobol
+SynMenu C.CSP:csp
+SynMenu C.CUPL.CUPL:cupl
+SynMenu C.CUPL.Simulation:cuplsim
+SynMenu C.CVS.commit\ file:cvs
+SynMenu C.CVS.cvsrc:cvsrc
 
-SynMenu EFG.EDIF:edif
-SynMenu EFG.Eiffel:eiffel
-SynMenu EFG.Elm\ filter\ rules:elmfilt
-SynMenu EFG.Embedix\ Component\ Description:ecd
-SynMenu EFG.ERicsson\ LANGuage:erlang
-SynMenu EFG.ESQL-C:esqlc
-SynMenu EFG.Essbase\ script:csc
-SynMenu EFG.Eterm\ config:eterm
-SynMenu EFG.Exim\ conf:exim
-SynMenu EFG.Expect:expect
-SynMenu EFG.Exports:exports
-SynMenu EFG.Fetchmail:fetchmail
-SynMenu EFG.Focus\ Executable:focexec
-SynMenu EFG.Focus\ Master:master
-SynMenu EFG.FORM:form
-SynMenu EFG.Forth:forth
-SynMenu EFG.Fortran:fortran
-SynMenu EFG.FoxPro:foxpro
-SynMenu EFG.Fstab:fstab
-SynMenu EFG.Fvwm.Fvwm\ configuration:fvwm1
-SynMenu EFG.Fvwm.Fvwm2\ configuration:fvwm2
-SynMenu EFG.Fvwm.Fvwm2\ configuration with M4:fvwm2m4
-SynMenu EFG.GDB\ command\ file:gdb
-SynMenu EFG.GDMO:gdmo
-SynMenu EFG.Gedcom:gedcom
-SynMenu EFG.Gkrellmrc:gkrellmrc
-SynMenu EFG.GP:gp
-SynMenu EFG.GPG:gpg
-SynMenu EFG.Grub:grub
-SynMenu EFG.GNU\ Server\ Pages:gsp
-SynMenu EFG.GNUplot:gnuplot
-SynMenu EFG.Groff:groff
-SynMenu EFG.GTKrc:gtkrc
+SynMenu DE.D:d
+SynMenu DE.Debian.Debian\ ChangeLog:debchangelog
+SynMenu DE.Debian.Debian\ Control:debcontrol
+SynMenu DE.Desktop:desktop
+SynMenu DE.Diff:diff
+SynMenu DE.Digital\ Command\ Lang:dcl
+SynMenu DE.Dircolors:dircolors
+SynMenu DE.DNS/BIND\ zone:dns
+SynMenu DE.DocBook.auto-detect:docbk
+SynMenu DE.DocBook.SGML:docbksgml
+SynMenu DE.DocBook.XML:docbkxml
+SynMenu DE.Dot:dot
+SynMenu DE.Dracula:dracula
+SynMenu DE.DSSSL:dsl
+SynMenu DE.DTD:dtd
+SynMenu DE.DTML\ (Zope):dtml
+SynMenu DE.Dylan.Dylan:dylan
+SynMenu DE.Dylan.Dylan\ interface:dylanintr
+SynMenu DE.Dylan.Dylan\ lid:dylanlid
+
+SynMenu DE.EDIF:edif
+SynMenu DE.Eiffel:eiffel
+SynMenu DE.Elinks\ config:elinks
+SynMenu DE.Elm\ filter\ rules:elmfilt
+SynMenu DE.Embedix\ Component\ Description:ecd
+SynMenu DE.ERicsson\ LANGuage:erlang
+SynMenu DE.ESQL-C:esqlc
+SynMenu DE.Essbase\ script:csc
+SynMenu DE.Eterm\ config:eterm
+SynMenu DE.Exim\ conf:exim
+SynMenu DE.Expect:expect
+SynMenu DE.Exports:exports
+
+SynMenu FG.Fetchmail:fetchmail
+SynMenu FG.Focus\ Executable:focexec
+SynMenu FG.Focus\ Master:master
+SynMenu FG.FORM:form
+SynMenu FG.Forth:forth
+SynMenu FG.Fortran:fortran
+SynMenu FG.FoxPro:foxpro
+SynMenu FG.Fstab:fstab
+SynMenu FG.Fvwm.Fvwm\ configuration:fvwm1
+SynMenu FG.Fvwm.Fvwm2\ configuration:fvwm2
+SynMenu FG.Fvwm.Fvwm2\ configuration\ with\ M4:fvwm2m4
+
+SynMenu FG.GDB\ command\ file:gdb
+SynMenu FG.GDMO:gdmo
+SynMenu FG.Gedcom:gedcom
+SynMenu FG.Gkrellmrc:gkrellmrc
+SynMenu FG.GP:gp
+SynMenu FG.GPG:gpg
+SynMenu FG.Grub:grub
+SynMenu FG.GNU\ Server\ Pages:gsp
+SynMenu FG.GNUplot:gnuplot
+SynMenu FG.GrADS\ scripts:grads
+SynMenu FG.Groff:groff
+SynMenu FG.GTKrc:gtkrc
 
 SynMenu HIJK.Haskell.Haskell:haskell
 SynMenu HIJK.Haskell.Haskell-c2hs:chaskell
 SynMenu HIJK.Haskell.Haskell-literate:lhaskell
 SynMenu HIJK.Hercules:hercules
+SynMenu HIJK.Hex\ dump.XXD:xxd
+SynMenu HIJK.Hex\ dump.Intel\ MCS51:hex
 SynMenu HIJK.HTML.HTML:html
 SynMenu HIJK.HTML.HTML\ with\ M4:htmlm4
 SynMenu HIJK.HTML.Cheetah\ HTML\ template:htmlcheetah
 SynMenu HIJK.HTML.HTML/OS:htmlos
+SynMenu HIJK.HTML.XHTML:xhtml
 SynMenu HIJK.Hyper\ Builder:hb
+SynMenu HIJK.Icewm\ menu:icemenu
 SynMenu HIJK.Icon:icon
 SynMenu HIJK.IDL\Generic\ IDL:idl
 SynMenu HIJK.IDL\Microsoft\ IDL:msidl
@@ -203,12 +226,14 @@ SynMenu HIJK.KixTart:kix
 SynMenu L-Ma.Lace:lace
 SynMenu L-Ma.LamdaProlog:lprolog
 SynMenu L-Ma.Latte:latte
+SynMenu L-Ma.LDAP\ LDIF:ldif
 SynMenu L-Ma.Lex:lex
 SynMenu L-Ma.LFTP\ config:lftp
 SynMenu L-Ma.LifeLines\ script:lifelines
 SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
 SynMenu L-Ma.Lite:lite
+SynMenu L-Ma.Locale\ Input:fdcc
 SynMenu L-Ma.Logtalk:logtalk
 SynMenu L-Ma.LOTOS:lotos
 SynMenu L-Ma.LotusScript:lscript
@@ -256,6 +281,7 @@ SynMenu Me-NO.Not\ Quite\ C\ (LEGO):nqc
 SynMenu Me-NO.Nroff:nroff
 SynMenu Me-NO.NSIS\ script:nsis
 SynMenu Me-NO.Objective\ C:objc
+SynMenu Me-NO.Objective\ C++:objcpp
 SynMenu Me-NO.OCAML:ocaml
 SynMenu Me-NO.Occam:occam
 SynMenu Me-NO.Omnimark:omnimark
@@ -264,6 +290,7 @@ SynMenu Me-NO.Open\ Psion\ Lang:opl
 SynMenu Me-NO.Oracle\ config:ora
 
 SynMenu PQ.Palm\ resource\ compiler:pilrc
+SynMenu PQ.Packet\ filter\ conf:pf
 SynMenu PQ.PApp:papp
 SynMenu PQ.Pascal:pascal
 SynMenu PQ.PCCTS:pccts
@@ -271,36 +298,40 @@ SynMenu PQ.PPWizard:ppwiz
 SynMenu PQ.Perl.Perl:perl
 SynMenu PQ.Perl.Perl\ POD:pod
 SynMenu PQ.Perl.Perl\ XS:xs
-SynMenu PQ.PHP\ 3-4:php
-SynMenu PQ.Phtml\ (PHP\ 2):phtml
+SynMenu PQ.PHP.PHP\ 3-4:php
+SynMenu PQ.PHP.Phtml\ (PHP\ 2):phtml
 SynMenu PQ.Pike:pike
 SynMenu PQ.Pine\ RC:pine
+SynMenu PQ.Pinfo\ RC:pinfo
 SynMenu PQ.PL/M:plm
 SynMenu PQ.PL/SQL:plsql
 SynMenu PQ.PLP:plp
 SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
-SynMenu PQ.PostScript:postscr
-SynMenu PQ.PostScript\ Printer\ Description:ppd
-SynMenu PQ.Povray\ scene\ descr:pov
-SynMenu PQ.Povray\ configuration:povini
+SynMenu PQ.PostScript.PostScript:postscr
+SynMenu PQ.PostScript.PostScript\ Printer\ Description:ppd
+SynMenu PQ.Povray.Povray\ scene\ descr:pov
+SynMenu PQ.Povray.Povray\ configuration:povini
 SynMenu PQ.Printcap:pcap
 SynMenu PQ.Procmail:procmail
 SynMenu PQ.Product\ Spec\ File:psf
 SynMenu PQ.Progress:progress
 SynMenu PQ.Prolog:prolog
 SynMenu PQ.Purify\ log:purifylog
+SynMenu PQ.Pyrex:pyrex
 SynMenu PQ.Python:python
 SynMenu PQ.Quake:quake
+SynMenu PQ.Quickfix\ window:qf
 
 SynMenu R-Sg.R:r
 SynMenu R-Sg.Radiance:radiance
 SynMenu R-Sg.Ratpoison:ratpoison
-SynMenu R-Sg.Readline\ config:readline
 SynMenu R-Sg.RCS.RCS\ log\ output:rcslog
 SynMenu R-Sg.RCS.RCS\ file:rcs
+SynMenu R-Sg.Readline\ config:readline
 SynMenu R-Sg.Rebol:rebol
 SynMenu R-Sg.Remind:remind
+SynMenu R-Sg.Relax\ NG\ compact:rnc
 SynMenu R-Sg.Renderman.Renderman\ Shader\ Lang:sl
 SynMenu R-Sg.Renderman.Renderman\ Interface\ Bytestream:rib
 SynMenu R-Sg.Resolv\.conf:resolv
@@ -329,6 +360,7 @@ SynMenu R-Sg.SGML.SGML-linuxdoc:sgmllnx
 
 SynMenu Sh-S.Shell\ script.sh\ and\ ksh:sh
 SynMenu Sh-S.Shell\ script.csh:csh
+SynMenu Sh-S.Shell\ script.tcsh:tcsh
 SynMenu Sh-S.Shell\ script.zsh:zsh
 SynMenu Sh-S.SiCAD:sicad
 SynMenu Sh-S.Simula:simula
@@ -337,6 +369,7 @@ SynMenu Sh-S.Sinda.Sinda\ input:sinda
 SynMenu Sh-S.Sinda.Sinda\ output:sindaout
 SynMenu Sh-S.SKILL.SKILL:skill
 SynMenu Sh-S.SKILL.SKILL\ for\ Diva:diva
+SynMenu Sh-S.Slice:slice
 SynMenu Sh-S.SLRN.Slrn\ rc:slrnrc
 SynMenu Sh-S.SLRN.Slrn\ score:slrnsc
 SynMenu Sh-S.SmallTalk:st
@@ -423,8 +456,8 @@ SynMenu WXYZ.Xmath:xmath
 SynMenu WXYZ.XML:xml
 SynMenu WXYZ.XML\ Schema\ (XSD):xsd
 SynMenu WXYZ.Xslt:xslt
-SynMenu WXYZ.XXD\ hex\ dump:xxd
 SynMenu WXYZ.XFree86\ Config:xf86conf
+SynMenu WXYZ.YAML:yaml
 SynMenu WXYZ.Yacc:yacc
 
 call append(s:lnum, "")

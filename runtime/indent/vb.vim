@@ -1,8 +1,7 @@
 " Vim indent file
 " Language:	VisualBasic (ft=vb) / Basic (ft=basic) / SaxBasic (ft=vb)
 " Author:	Johannes Zellner <johannes@zellner.org>
-" URL:		http://www.zellner.org/vim/indent/vb.vim
-" Last Change:	Sat, 24 May 2003 13:32:30 CEST
+" Last Change:	Tue, 27 Apr 2004 14:54:59 CEST
 
 if exists("b:did_indent")
     finish

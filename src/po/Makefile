@@ -56,7 +56,7 @@ uninstall:
 	done
 
 converted: ja.sjis.mo cs.cp1250.mo pl.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo \
-		ru.cp1251.mo ru.cp866.mo
+		ru.cp1251.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.  Don't depend on sjiscorr, it should only be compiled when
@@ -93,12 +93,6 @@ zh_CN.cp936.po: zh_CN.po
 	rm -f zh_CN.cp936.po
 	iconv -f gb2312 -t cp936 zh_CN.po | \
 		sed -e 's/charset=gb2312/charset=gbk/' -e 's/# Original translations/# Generated from zh_CN.po, DO NOT EDIT/' > zh_CN.cp936.po
-
-# Convert ru.po to create ru.cp866.po.
-ru.cp866.po: ru.po
-	rm -f ru.cp866.po
-	iconv -f koi8-r -t cp866 ru.po | \
-		sed -e 's/charset=koi8-r/charset=cp866/' -e 's/# Original translations/# Generated from ru.po, DO NOT EDIT/' > ru.cp866.po
 
 # Convert ru.po to create ru.cp1251.po.
 ru.cp1251.po: ru.po

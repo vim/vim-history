@@ -1,8 +1,8 @@
 #
 # Makefile for Vim on OpenVMS
 #
-# Maintainer:   Zoltan Arpadffy <arpadffy@polarfox.com>
-# Last change:  2003 May 06
+# Maintainer:   Zoltan Arpadffy <arpadffy@polarhome.com>
+# Last change:  2004 May 04
 #
 # This has script been tested on VMS 6.2 to 7.3 on DEC Alpha and VAX
 # with MMS and MMK

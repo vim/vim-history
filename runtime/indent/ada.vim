@@ -44,25 +44,25 @@ function s:MainBlockIndent( prev_indent, prev_lnum, blockstart, stop_at )
    let line = substitute( getline(lnum), s:AdaComment, '', '' )
    while lnum > 1
       if a:stop_at != ''  &&  line =~ '^\s*' . a:stop_at  &&  indent(lnum) < a:prev_indent
-	 return -1
+         return -1
       elseif line =~ '^\s*' . a:blockstart
-	 let ind = indent(lnum)
-	 if ind < a:prev_indent
-	    return ind
-	 endif
+         let ind = indent(lnum)
+         if ind < a:prev_indent
+            return ind
+         endif
       endif
 
       let lnum = prevnonblank(lnum - 1)
       " Get previous non-blank/non-comment-only line
       while 1
-	 let line = substitute( getline(lnum), s:AdaComment, '', '' )
-	 if line !~ '^\s*$' && line !~ '^\s*#'
-	    break
-	 endif
-	 let lnum = prevnonblank(lnum - 1)
-	 if lnum <= 0
-	    return a:prev_indent
-	 endif
+         let line = substitute( getline(lnum), s:AdaComment, '', '' )
+         if line !~ '^\s*$' && line !~ '^\s*#'
+            break
+         endif
+         let lnum = prevnonblank(lnum - 1)
+         if lnum <= 0
+            return a:prev_indent
+         endif
       endwhile
    endwhile
    " Fallback - just move back one
@@ -82,15 +82,15 @@ function s:EndBlockIndent( prev_indent, prev_lnum, blockstart, blockend )
    while lnum > 1
       if getline(lnum) =~ '^\s*' . a:blockstart
 	 let ind = indent(lnum)
-	 if ends <= 0
-	    if ind < a:prev_indent
+         if ends <= 0
+            if ind < a:prev_indent
 	       return ind
-	    endif
-	 else
-	    let ends = ends - 1
+            endif
+         else
+            let ends = ends - 1
 	 endif
       elseif getline(lnum) =~ '^\s*' . a:blockend
-	 let ends = ends + 1
+         let ends = ends + 1
       endif
 
       let lnum = prevnonblank(lnum - 1)
@@ -122,25 +122,25 @@ function s:StatementIndent( current_indent, prev_lnum )
       let lnum = prevnonblank(lnum - 1)
       " Get previous non-blank/non-comment-only line
       while 1
-	 let line = substitute( getline(lnum), s:AdaComment, '', '' )
-	 if line !~ '^\s*$' && line !~ '^\s*#'
-	    break
-	 endif
-	 let lnum = prevnonblank(lnum - 1)
-	 if lnum <= 0
-	    return a:current_indent
-	 endif
+         let line = substitute( getline(lnum), s:AdaComment, '', '' )
+         if line !~ '^\s*$' && line !~ '^\s*#'
+            break
+         endif
+         let lnum = prevnonblank(lnum - 1)
+         if lnum <= 0
+            return a:current_indent
+         endif
       endwhile
       " Leave indent alone if our ';' line is part of a ';'-delineated
       " aggregate (e.g., procedure args.) or first line after a block start.
       if line =~ s:AdaBlockStart || line =~ '(\s*$'
-	 return a:current_indent
+         return a:current_indent
       endif
       if line !~ '[.=(]\s*$'
-	 let ind = indent(prev_lnum)
-	 if ind < a:current_indent
-	    return ind
-	 endif
+         let ind = indent(prev_lnum)
+         if ind < a:current_indent
+            return ind
+         endif
       endif
    endwhile
    " Fallback - just use current one
@@ -159,11 +159,11 @@ function GetAdaIndent()
    while 1
       let line = substitute( getline(lnum), s:AdaComment, '', '' )
       if line !~ '^\s*$' && line !~ '^\s*#'
-	 break
+         break
       endif
       let lnum = prevnonblank(lnum - 1)
       if lnum <= 0
-	 return ind
+         return ind
       endif
    endwhile
 
@@ -175,15 +175,15 @@ function GetAdaIndent()
       " Check for false matches to AdaBlockStart
       let false_match = 0
       if line =~ '^\s*\(procedure\|function\|package\)\>.*\<is\s*new\>'
-	 " Generic instantiation
-	 let false_match = 1
+         " Generic instantiation
+         let false_match = 1
       elseif line =~ ')\s*;\s*$'  ||  line =~ '^\([^(]*([^)]*)\)*[^(]*;\s*$'
-	 " forward declaration
-	 let false_match = 1
+         " forward declaration
+         let false_match = 1
       endif
       " Move indent in
       if ! false_match
-	 let ind = ind + &sw
+         let ind = ind + &sw
       endif
    elseif line =~ '^\s*\(case\|exception\)\>'
       " Move indent in twice (next 'when' will move back)
@@ -192,15 +192,15 @@ function GetAdaIndent()
       " Move indent back to tallying 'type' preceeding the 'record'.
       " Allow indent to be equal to 'end record's.
       let ind = s:MainBlockIndent( ind+&sw, lnum, 'type\>', '' )
-   elseif line =~ ')\s*[;,]\s*$'
+   elseif line =~ '\(^\s*new\>.*\)\@<!)\s*[;,]\s*$'
       " Revert to indent of line that started this parenthesis pair
       exe lnum
       exe 'normal! $F)%'
       if getline('.') =~ '^\s*('
-	 " Dire layout - use previous indent (could check for AdaComment here)
-	 let ind = indent( prevnonblank( line('.')-1 ) )
+         " Dire layout - use previous indent (could check for AdaComment here)
+         let ind = indent( prevnonblank( line('.')-1 ) )
       else
-	 let ind = indent('.')
+         let ind = indent('.')
       endif
       exe v:lnum
    elseif line =~ '[.=(]\s*$'
@@ -239,7 +239,7 @@ function GetAdaIndent()
       let ind = s:EndBlockIndent( ind, lnum, 'if\>', 'end\>\s*\<if\>' )
    elseif line =~ '^\s*end\>\s*\<loop\>'
       " End of loops
-      let ind = s:EndBlockIndent( ind, lnum, '\(while\|for\)\>.*\<loop\>', 'end\>\s*\<loop\>' )
+      let ind = s:EndBlockIndent( ind, lnum, '\(\(while\|for\)\>.*\)\?\<loop\>', 'end\>\s*\<loop\>' )
    elseif line =~ '^\s*end\>\s*\<record\>'
       " End of records
       let ind = s:EndBlockIndent( ind, lnum, '\(type\>.*\)\=\<record\>', 'end\>\s*\<record\>' )

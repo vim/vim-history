@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 04
+" Last Change:	2003 Aug 12
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -34,13 +34,19 @@ endif
 if has("gui_win32") && !exists("b:browsefilter")
   if &ft == "cpp"
     let b:browsefilter = "C++ Source Files (*.cpp *.c++)\t*.cpp;*.c++\n" .
-	\ "C Header Files (*.h)\t*.h\n" .
-	\ "C Source Files (*.c)\t*.c\n" .
-	\ "All Files (*.*)\t*.*\n"
+	  \ "C Header Files (*.h)\t*.h\n" .
+	  \ "C Source Files (*.c)\t*.c\n" .
+	  \ "All Files (*.*)\t*.*\n"
+  elseif &ft == "chscript"
+    let b:browsefilter = "Ch Source Files (*.ch *.chf)\t*.ch;*.chf\n" .
+	  \ "C Header Files (*.h)\t*.h\n" .
+	  \ "C Source Files (*.c)\t*.c\n" .
+	  \ "All Files (*.*)\t*.*\n"
   else
     let b:browsefilter = "C Source Files (*.c)\t*.c\n" .
-	\ "C Header Files (*.h)\t*.h\n" .
-	\ "C++ Source Files (*.cpp *.c++)\t*.cpp;*.c++\n" .
-	\ "All Files (*.*)\t*.*\n"
+	  \ "C Header Files (*.h)\t*.h\n" .
+    	  \ "Ch Source Files (*.ch *.chf)\t*.ch;*.chf\n" .
+	  \ "C++ Source Files (*.cpp *.c++)\t*.cpp;*.c++\n" .
+	  \ "All Files (*.*)\t*.*\n"
   endif
 endif

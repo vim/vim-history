@@ -9,6 +9,10 @@ if exists("current_compiler")
 endif
 let current_compiler = "fortran_g77"
 
+if exists(":CompilerSet") != 2		" older Vim always used :setlocal
+  command -nargs=* CompilerSet setlocal <args>
+endif
+
 let s:cpo_save = &cpo
 set cpo-=C
 
@@ -27,7 +31,7 @@ set cpo-=C
 "	   2
 " Invalid declaration of or reference to symbol `desca' at (2) [initially seen at (1)]
 
-setlocal errorformat=
+CompilerSet errorformat=
 	\%Omake:\ %r,
 	\%f:%l:\ warning:\ %m,
 	\%A%f:%l:\ (continued):,

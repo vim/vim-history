@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 6.2.  Last change: 2002 Jul 30
+*undo.txt*      For Vim version 6.3a.  Last change: 2003 Oct 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -37,7 +37,7 @@ to revert the text to how it was before each change.  You can also apply the
 changes again, getting back the text before the undo.
 
 The "U" command is treated by undo/redo just like any other command.  Thus a
-"u" command undos a "U" command and a 'CTRL-R' command redoes it again.  When
+"u" command undoes a "U" command and a 'CTRL-R' command redoes it again.  When
 mixing "U", "u" and 'CTRL-R' you will notice that the "U" command will
 restore the situation of a line to before the previous "U" command.  This may
 be confusing.  Try it out to get used to it.
@@ -82,10 +82,10 @@ Marks for the buffer ('a to 'z) are also saved and restored, together with the
 text.  {Vi does this a little bit different}
 
 When all changes have been undone, the buffer is not considered to be changed.
-It is then possible to exit Vim with ":q" instead of ":q!".  {this is not in
-Vi} Note that this is relative to the last write of the file.  Typing "u"
-after ":w" actually changes the buffer, compared to what was written, so the
-buffer is considered changed then.
+It is then possible to exit Vim with ":q" instead of ":q!" {not in Vi}.  Note
+that this is relative to the last write of the file.  Typing "u" after ":w"
+actually changes the buffer, compared to what was written, so the buffer is
+considered changed then.
 
 When manual |folding| is being used, the folds are not saved and restored.
 Only changes completely within a fold will keep the fold as it was, because

@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.2.  Last change: 2001 Oct 25
+*if_perl.txt*   For Vim version 6.3a.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -44,7 +44,7 @@ The Perl patches for Vim were made by:
 	Matt Gerassimof
 
 Perl for MS-Windows can be found at:
-http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
+http://www.perl.com/CPAN/ports/nt/Standard/x86/
 
 ==============================================================================
 3. Using the Perl interface				*perl-using*
@@ -59,8 +59,10 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 			Execute Perl script {script}.
 			{endpattern} must NOT be preceded by any white space.
 			If {endpattern} is omitted, it defaults to a dot '.'
-			like for the |:append| and |:insert| commands.  This
-			form of the |:perl| command is mainly useful for
+			like for the |:append| and |:insert| commands.  Using
+			'.' helps when inside a function, because "$i;" looks
+			like the start of an |:insert| command to Vim.
+			This form of the |:perl| command is mainly useful for
 			including perl code in vim scripts.
 			Note: This command doesn't work when the Perl feature
 			wasn't compiled in.  To avoid errors, see

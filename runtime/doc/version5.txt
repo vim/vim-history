@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.2.  Last change: 2002 Oct 29
+*version5.txt*  For Vim version 6.3a.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,7 +10,8 @@ Although 5.0 is mentioned here, this is also for version 5.1, 5.2, etc..
 See |vi_diff.txt| for an overview of differences between Vi and Vim 5.0.
 See |version4.txt| for differences between Vim 3.0 and Vim 4.0.
 
-INCOMPATIBLE:
+INCOMPATIBLE:				|incompatible-5|
+
 Default value for 'compatible' changed	|cp-default|
 Text formatting command "Q" changed	|Q-command-changed|
 Command-line arguments changed		|cmdline-changed|
@@ -24,7 +25,8 @@ Tags file format changed		|tags-file-changed|
 Options changed				|options-changed|
 CTRL-B in Insert mode gone		|i_CTRL-B-gone|
 
-NEW FEATURES:
+NEW FEATURES:				|new-5|
+
 Syntax highlighting			|new-highlighting|
 Built-in script language		|new-script|
 Perl and Python support			|new-perl-python|
@@ -41,11 +43,11 @@ New options				|added-options|
 New command-line arguments		|added-cmdline-args|
 Various additions			|added-various|
 
-IMPROVEMENTS				|improvements|
+IMPROVEMENTS				|improvements-5|
 
-COMPILE TIME CHANGES			|compile-changes|
+COMPILE TIME CHANGES			|compile-changes-5|
 
-BUG FIXES				|bug-fixes|
+BUG FIXES				|bug-fixes-5|
 
 VERSION 5.1			|version-5.1|
 Changed					|changed-5.1|
@@ -116,7 +118,7 @@ Added					|added-5.8|
 Fixed					|fixed-5.8|
 
 ==============================================================================
-				 INCOMPATIBLE
+				 INCOMPATIBLE		*incompatible-5*
 
 Default value for 'compatible' changed			*cp-default*
 --------------------------------------
@@ -358,7 +360,7 @@ CTRL-_ key for this |i_CTRL-_|. >
    :imap <C-B> <C-O>:set revins!<CR>
 
 ==============================================================================
-				 NEW FEATURES
+				 NEW FEATURES		*new-5*
 
 Syntax highlighting					*new-highlighting*
 -------------------
@@ -633,7 +635,7 @@ Included support for the Farsi language (Shiran).  Only when enabled at
 compile time.  See |farsi|.
 
 ==============================================================================
-				 IMPROVEMENTS		*improvements*
+				 IMPROVEMENTS		*improvements-5*
 
 Performance:
 - When 'showcmd' was set, mappings would execute much more slowly because the
@@ -927,7 +929,7 @@ Some versions of Motif require "-lXpm".  Added check for this in configure.
 Don't add "-L/usr/lib" to the link line, causes problems on a few systems.
 
 ==============================================================================
-			     COMPILE TIME CHANGES	*compile-changes*
+			     COMPILE TIME CHANGES	*compile-changes-5*
 
 When compiling, allow a choice for minimal, normal or maximal features in an
 easy way, by changing a single line in src/feature.h.
@@ -973,7 +975,7 @@ Don't use HPUX digraphs by default, but only when HPUX_DIGRAPHS is defined.
 |digraphs-default|
 
 ==============================================================================
-				 BUG FIXES		*bug-fixes*
+				 BUG FIXES		*bug-fixes-5*
 
 Note:	Some of these fixes may only apply to test versions which were
 	created after version 4.6, but before 5.0.
@@ -2105,7 +2107,7 @@ redone with ".".
 'maxfuncdepth' option.  Restricts the depth of function calls.  Avoids trouble
 (crash because of out-of-memory) when a function uses endless recursion.
 
-User defineable Ex commands: ":command", ":delcommand" and ":comclear".
+User definable Ex commands: ":command", ":delcommand" and ":comclear".
 (Moore)  See |user-commands|.
 
 
@@ -3541,7 +3543,7 @@ Added character classes to search patterns, to avoid the need for removing the
 'l' flag from 'cpoptions': |[:tab:]|, |[:return:]|, |[:backspace:]| and
 |[:escape:]|.
 
-By adding a '?' after a comparitive operator in an expression, the comparison
+By adding a '?' after a comparative operator in an expression, the comparison
 is done by ignoring case. |expr-==?|
 
 
@@ -4826,7 +4828,7 @@ doesn't match, the cursor would jump to the first line.
 Unix: Dependencies for pty.c were not included in Makefile.  Dependency of
 ctags/config.h was not included (only matters for parallel make).
 
-Removed a few Unitialized Memory Reads (potential crashes).  In do_call()
+Removed a few Uninitialized Memory Reads (potential crashes).  In do_call()
 calling clear_var() when not evaluating.  In win32_expandpath() and
 dos_expandpath() calling backslash_halve() past the end of a file name.
 
@@ -6716,7 +6718,7 @@ to avoid depending on $PATH.  Fixed "make clean".
 Many fixes to Macintosh specific parts: (mostly by Dany StAmant)
 - Only one Help menu.
 - No more crash when removing a menu item.
-- Support as External Editor for Codewarior (still some little glitches).
+- Support as External Editor for Codewarrior (still some little glitches).
 - Popup menu support.
 - Fixed crash when pasting after application switch.
 - Color from rgb.txt properly displayed.
@@ -7118,7 +7120,7 @@ Files:	    src/screen.c
 Patch 5.6.056 (extra)
 Problem:    MS-DOS: F11 and F12 don't work when 'bioskey' is set.
 Solution:   Use enhanced keyboard functions. (Vince Negri)
-	    Detect presence of enhanced keybard and set bioskey_read and
+	    Detect presence of enhanced keyboard and set bioskey_read and
 	    bioskey_ready.
 Files:	    src/os_msdos.c
 
@@ -7617,7 +7619,7 @@ Win32: Gvimext could not edit more than a few files at once, the length of the
 argument was fixed.
 
 
-Previosly released patches for Vim 5.7:
+Previously released patches for Vim 5.7:
 
 Patch 5.7.001
 Problem:    When the current buffer is crypted, and another modified buffer

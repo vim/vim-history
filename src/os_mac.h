@@ -401,7 +401,7 @@
 # ifdef _DEBUG
 #  define TRACE			Trace
    void Trace(char *fmt, ...);
-# else /* !_DEBUG */
+# else
 #  define TRACE			1 ? (void)0 : printf
 # endif
 #endif

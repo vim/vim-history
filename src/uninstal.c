@@ -110,7 +110,7 @@ remove_popup(void)
 
     if (fail == 6)
 	printf("No Vim popup registry entries could be removed\n");
-    else if (fail)
+    else if (fail > 0)
 	printf("Some Vim popup registry entries could not be removed\n");
     else
 	printf("The Vim popup registry entries have been removed\n");
@@ -132,12 +132,14 @@ remove_openwith(void)
 	++fail;
     if (RegDeleteKey(HKEY_CLASSES_ROOT, ".htm\\OpenWithList\\gvim.exe") != ERROR_SUCCESS)
 	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, ".vim\\OpenWithList\\gvim.exe") != ERROR_SUCCESS)
+	++fail;
     if (RegDeleteKey(HKEY_CLASSES_ROOT, "*\\OpenWithList\\gvim.exe") != ERROR_SUCCESS)
 	++fail;
 
-    if (fail == 6)
+    if (fail == 7)
 	printf("No Vim open-with registry entries could be removed\n");
-    else if (fail)
+    else if (fail > 0)
 	printf("Some Vim open-with registry entries could not be removed\n");
     else
 	printf("The Vim open-with registry entries have been removed\n");

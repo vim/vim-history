@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.2.  Last change: 2003 Oct 30
+*insert.txt*    For Vim version 6.3a.  Last change: 2004 Apr 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -357,7 +357,10 @@ Note: If the cursor keys take you out of Insert mode, check the 'noesckeys'
 option.
 
 The CTRL-O command sometimes has a side effect: If the cursor was beyond the
-end of the line, it will be put on the last character in the line.
+end of the line, it will be put on the last character in the line.  In
+mappings it's often better to use <Esc> (first put an "x" in the text, <Esc>
+will then always put the cursor on it).
+
 The shifted cursor keys are not available on all terminals.
 
 Another side effect is that a count specified before the "i" or "a" command is
@@ -463,7 +466,6 @@ inserted character is a space, then it will only delete the character before
 the cursor.  Otherwise you cannot always delete a single character before the
 cursor.  You will have to delete 'softtabstop' characters first, and then type
 extra spaces to get where you want to be.
-
 
 ==============================================================================
 5. Replace mode				*Replace* *Replace-mode* *mode-replace*
@@ -879,7 +881,9 @@ The following commands can be used to insert new text into the buffer.  They
 can all be undone and repeated with the "." command.
 
 							*a*
-a			Append text after the cursor [count] times.
+a			Append text after the cursor [count] times.  If the
+			cursor is in the first column of an empty line Insert
+			starts there.  But not when 'virtualedit' is set!
 
 							*A*
 A			Append text at the end of the line [count] times.
@@ -903,6 +907,8 @@ gi			Insert text in the same position as where Insert mode
 			when the mark is past the end of the line.
 			The position is corrected for inserted/deleted lines,
 			but NOT for inserted/deleted characters.
+			When the |:keepjumps| command modifier is used the |'^|
+			mark wont be changed.
 			{not in Vi}
 
 							*o*

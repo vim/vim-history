@@ -1,7 +1,7 @@
 # VMS MM[KS] makefile for XXD
 # tested with MMK and MMS as well.
 #
-# Maintained by Zoltan Arpadffy <arpadffy@altavista.net>
+# Maintained by Zoltan Arpadffy <arpadffy@polarhome.com>
 #
 # Edit the lines in the Configuration section below to select.
 #

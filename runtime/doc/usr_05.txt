@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.2.  Last change: 2003 Aug 13
+*usr_05.txt*	For Vim version 6.3a.  Last change: 2004 Mar 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -468,13 +468,13 @@ The options are grouped by subject.  Move the cursor to a subject and press
 <Enter> to jump there.  Press <Enter> again to jump back.  Or use CTRL-O.
 
 You can change the value of an option.  For example, move to the "displaying
-text" subject.  Then move the cursor down to this line: >
+text" subject.  Then move the cursor down to this line:
 
-	set wrap	nowrap
+	set wrap	nowrap ~
 
-When you hit <Enter>, the line will change to: >
+When you hit <Enter>, the line will change to:
 
-	set nowrap	wrap
+	set nowrap	wrap ~
 
 The option has now been switched off.
 
@@ -484,9 +484,9 @@ the full help on the 'wrap' option.
 
 For options that take a number or string argument you can edit the value.
 Then press <Enter> to apply the new value.  For example, move the cursor a few
-lines up to this line: >
+lines up to this line:
 
-	set so=0
+	set so=0 ~
 
 Position the cursor on the zero with "$".  Change it into a five with "r5".
 Then press <Enter> to apply the new value.  When you now move the cursor
@@ -566,8 +566,8 @@ and tabs as highlighted characters.  Use the 'listchars' option: >
 
 	:set listchars=tab:>-,trail:-
 
-Now every tab will be displayed as ">---" and trailing white space as "-".
-Looks a lot better, doesn't it?
+Now every tab will be displayed as ">---" (with more or less "-") and trailing
+white space as "-".  Looks a lot better, doesn't it?
 
 
 KEYWORDS
@@ -575,7 +575,7 @@ KEYWORDS
 The 'iskeyword' option specifies which characters can appear in a word: >
 
 	:set iskeyword
-<	  iskeyword=@,48-57,_,192-255
+<	  iskeyword=@,48-57,_,192-255 ~
 
 The "@" stands for all alphabetic letters.  "48-57" stands for ASCII
 characters 48 to 57, which are the numbers 0 to 9.  "192-255" are the
@@ -585,14 +585,14 @@ like "w" consider "upper-case" to be one word.  You can do it like this: >
 
 	:set iskeyword+=-
 	:set iskeyword
-<	  iskeyword=@,48-57,_,192-255,-
+<	  iskeyword=@,48-57,_,192-255,- ~
 
 If you look at the new value, you will see that Vim has added a comma for you.
    To remove a character use "-=".  For example, to remove the underscore: >
 
 	:set iskeyword-=_
 	:set iskeyword
-<	  iskeyword=@,48-57,192-255,-
+<	  iskeyword=@,48-57,192-255,- ~
 
 This time a comma is automatically deleted.
 

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.2.  Last change: 2003 Apr 25
+*message.txt*   For Vim version 6.3a.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -688,7 +688,7 @@ Vim cannot read a temporary file.
   Ambiguous use of user-defined command
 
 There are two user-defined commands with a common name prefix, and you used
-Command-line completion to execute one of them. |user-cmd-abmiguous|
+Command-line completion to execute one of them. |user-cmd-ambiguous|
 Example: >
 	:command MyCommand1 echo "one"
 	:command MyCommand2 echo "two"
@@ -720,7 +720,7 @@ and the screen is about to be redrawn:
 -> Hit ":" or any other Normal mode command character to start that command.
 -> Hit <C-Y> to copy (yank) a modeless selection to the clipboard register.
 -> Use a menu.  The characters defined for Cmdline-mode are used.
--> When 'mouse' contians the 'r' flag, clicking the left mouse button works
+-> When 'mouse' contains the 'r' flag, clicking the left mouse button works
    like pressing <Space>.  This makes it impossible to select text though.
 -> For the GUI clicking the left mouse button in the last line works like
    pressing <Space>.

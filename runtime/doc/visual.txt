@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.2.  Last change: 2003 Apr 06
+*visual.txt*    For Vim version 6.3a.  Last change: 2004 Apr 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -243,7 +243,7 @@ mode.  For example, if you would like the "/" command not to extend the Visual
 area, but instead take the highlighted text and search for that: >
 	:vmap / y/<C-R>"<CR>
 (In the <> notation |<>|, when typing it you should type it literally; you
-need to remove the 'B' and '<' flags from 'cpoptions')
+need to remove the 'B' and '<' flags from 'cpoptions'.)
 
 If you want to give a register name using the """ command, do this just before
 typing the operator character: "v{move-around}"xd".
@@ -366,7 +366,7 @@ Visual-block Examples					*blockwise-examples*
 With the following text, I will indicate the commands to produce the block and
 the results below. In all cases, the cursor begins on the 'a' in the first
 line if the test text.
-The following modeline settings are assumed :ts=8:sw=4:
+The following modeline settings are assumed ":ts=8:sw=4:".
 
 It will be helpful to
 :set hls
@@ -401,14 +401,14 @@ abc	      defghijklmnopqrstuvwxyz
 abcdef  ghi   jklmnopqrstuvwxyz
 abcdefghijklmnopqrstuvwxyz
 
-4. fo3j>..							*v_b_>_example*
+4. fo<C-v>3j>..							*v_b_>_example*
 
 abcdefghijklmn		  opqrstuvwxyz
 abc			    defghijklmnopqrstuvwxyz
 abcdef  ghi			    jklmnopqrstuvwxyz
 abcdefghijklmn		  opqrstuvwxyz
 
-5. fo5l3jrX							*v_b_r_example*
+5. fo<C-v>5l3jrX						*v_b_r_example*
 
 abcdefghijklmnXXXXXXuvwxyz
 abc	      XXXXXXhijklmnopqrstuvwxyz

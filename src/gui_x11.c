@@ -2181,7 +2181,7 @@ check_fontset_sanity(fs)
 	    EMSG2(_("E253: Fontset name: %s\n"), base_name);
 	    EMSG2(_("Font0: %s\n"), font_name[min_font_idx]);
 	    EMSG2(_("Font1: %s\n"), font_name[i]);
-	    EMSGN(_("Font%d width is not twice that of font0\n"), i);
+	    EMSGN(_("Font%ld width is not twice that of font0\n"), i);
 	    EMSGN(_("Font0 width: %ld\n"), xfs[min_font_idx]->max_bounds.width);
 	    EMSGN(_("Font1 width: %ld\n\n"), xfs[i]->max_bounds.width);
 	    return FAIL;

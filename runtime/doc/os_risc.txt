@@ -1,4 +1,4 @@
-*os_risc.txt*   For Vim version 6.2.  Last change: 2002 Oct 29
+*os_risc.txt*   For Vim version 6.3a.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -28,6 +28,7 @@ actually works!
 
 Thomas Leonard <tal197@ecs.soton.ac.uk>
 
+	[these URLs no longer work...]
  Port homepage:	http://www.ecs.soton.ac.uk/~tal197/
 	or try:	http://www.soton.ac.uk/~tal197/
 

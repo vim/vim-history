@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 6.2.  Last change: 2001 Sep 03
+*develop.txt*   For Vim version 6.3a.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -16,6 +16,10 @@ Vim.
 
 See the file README.txt in the "src" directory for an overview of the source
 code.
+
+Vim is open source software.  Everybody is encouraged to contribute to help
+improving Vim.  For sending patches a context diff "diff -c" is preferred.
+Also see http://www.vim.org/tips/tip.php?tip_id=618.
 
 ==============================================================================
 1. Design goals						*design-goals*
@@ -105,7 +109,7 @@ fast.
 - Computers are becoming faster and bigger each year.  Vim can grow too, but
   no faster than computers are growing.  Keep Vim usable on older systems.
 - Many users start Vim from a shell very often.  Startup time must be short.
-- Commands must work efficient.  The time they consume must be as small as
+- Commands must work efficiently.  The time they consume must be as small as
   possible.  Useful commands may take longer.
 - Don't forget that some people use Vim over a slow connection.  Minimize the
   communication overhead.
@@ -234,7 +238,7 @@ get_env_value()	Linux system function
 VARIOUS							*style-various*
 
 Typedef'ed names should end in "_t": >
-    typdef int some_t;
+    typedef int some_t;
 Define'ed names should be uppercase: >
     #define SOME_THING
 Features always start with "FEAT_": >
@@ -341,7 +345,7 @@ Several forms of folding should be possible for the same buffer.  For example,
 have one window that shows the text with function bodies folded, another
 window that shows a function body.
 
-Folding is a way to display the text.  It should change the text itself.
+Folding is a way to display the text.  It should not change the text itself.
 Therefore the folding has been implemented as a filter between the text stored
 in a buffer (buffer lines) and the text displayed in a window (logical lines).
 
@@ -373,5 +377,8 @@ char_u	    8 bit unsigned
 int	    16, 32 or 64 bit signed
 unsigned    16, 32 or 64 bit unsigned
 long	    32 or 64 bit signed, can hold a pointer
+
+Note that some compilers cannot handle long lines or strings.  The C89
+standard specifies a limit of 509 characters.
 
  vim:tw=78:ts=8:ft=help:norl:

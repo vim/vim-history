@@ -3554,44 +3554,44 @@ gui_mch_draw_string(row, col, s, len, flags)
     Gestalt(gestaltSystemVersion, &sys_version);
     if (sys_version >= 0x1020)
     {
-        /* Quartz antialiasing is available only in OS 10.2 and later. */
-        UInt32 qd_flags = (p_antialias ?
+	/* Quartz antialiasing is available only in OS 10.2 and later. */
+	UInt32 qd_flags = (p_antialias ?
 			     kQDUseCGTextRendering | kQDUseCGTextMetrics : 0);
-        (void)SwapQDTextFlags(qd_flags);
+	(void)SwapQDTextFlags(qd_flags);
     }
 
     if (sys_version >= 0x1020 && p_antialias)
     {
-        StyleParameter face;
+	StyleParameter face;
 
-        face = normal;
-        if (flags & DRAW_BOLD)
-            face |= bold;
-        if (flags & DRAW_UNDERL)
-            face |= underline;
-        TextFace(face);
+	face = normal;
+	if (flags & DRAW_BOLD)
+	    face |= bold;
+	if (flags & DRAW_UNDERL)
+	    face |= underline;
+	TextFace(face);
 
-        /* Quartz antialiasing works only in srcOr transfer mode. */
-        TextMode(srcOr);
+	/* Quartz antialiasing works only in srcOr transfer mode. */
+	TextMode(srcOr);
 
-        if (!(flags & DRAW_TRANSP))
-        {
-            /*
-             * Since we're using srcOr mode, we have to clear the block
-             * before drawing the text.  The following is like calling
-             * gui_mch_clear_block(row, col, row, col + len - 1),
-             * but without setting the bg color to gui.back_pixel.
-             */
-            Rect rc;
-            rc.left = FILL_X(col);
-            rc.top = FILL_Y(row);
-            rc.right = FILL_X(col + len) + (col + len == Columns);
-            rc.bottom = FILL_Y(row + 1);
-            EraseRect(&rc);
-        }
+	if (!(flags & DRAW_TRANSP))
+	{
+	    /*
+	     * Since we're using srcOr mode, we have to clear the block
+	     * before drawing the text.  The following is like calling
+	     * gui_mch_clear_block(row, col, row, col + len - 1),
+	     * but without setting the bg color to gui.back_pixel.
+	     */
+	    Rect rc;
+	    rc.left = FILL_X(col);
+	    rc.top = FILL_Y(row);
+	    rc.right = FILL_X(col + len) + (col + len == Columns);
+	    rc.bottom = FILL_Y(row + 1);
+	    EraseRect(&rc);
+	}
 
-        MoveTo(TEXT_X(col), TEXT_Y(row));
-        DrawText((char*)s, 0, len);
+	MoveTo(TEXT_X(col), TEXT_Y(row));
+	DrawText((char*)s, 0, len);
     }
     else
 #endif

@@ -1780,7 +1780,7 @@ syn_current_attr(syncing, displaying)
 
     /* Init the list of zero-width matches with a nextlist.  This is used to
      * avoid matching the same item in the same position twice. */
-    ga_init2(&zero_width_next_ga, sizeof(int), 10);
+    ga_init2(&zero_width_next_ga, (int)sizeof(int), 10);
 
     /*
      * Repeat matching keywords and patterns, to find contained items at the

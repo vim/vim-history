@@ -1,10 +1,22 @@
-*os_mac.txt*    For Vim version 6.2.  Last change: 2002 Oct 07
+*os_mac.txt*    For Vim version 6.3a.  Last change: 2004 Apr 27
 
 
-		  VIM REFERENCE MANUAL    by Bram Moolenaar
+		  VIM REFERENCE MANUAL    by Bram Moolenaar et al.
 
 
 					*mac* *Mac* *macintosh* *Macintosh*
+
+This file documents the particularities of the Macintosh version of Vim.
+
+NOTE: This file is a bit outdated.  You might find more useful info here:
+	http://macvim.swdev.org/
+
+1. Filename Convention		|mac-filename|
+2. .vimrc an .vim files		|mac-vimfile|
+3. FAQ				|mac-faq|
+4. Known Lack			|mac-lack|
+5. Mac Bug Report		|mac-bug|
+6. Compiling Vim		|mac-compile|
 
 There was a Mac port for version 3.0 of Vim.  Here are the first few lines
 from the old file:
@@ -17,16 +29,6 @@ Eric Fischer
 <enf1@midway.uchicago.edu>, <eric@jcp.uchicago.edu>, <etaoin@uchicago.edu>
 5759 N. Guilford Ave
 Indianapolis IN 46220 USA
-
-This file documents the particularities of the macintosh version of Vim.
-
-NOTE: This version 5, is still in the alpha stage
-
-1. Filename Convention		|mac-filename|
-2. .vimrc an .vim files		|mac-vimfile|
-3. Known Lack			|mac-lack|
-4. Mac Bug Report		|mac-bug|
-5. Compiling Vim		|mac-compile|
 
 ==============================================================================
 1. Filename Convention					*mac-filename*
@@ -63,7 +65,14 @@ any format (mac, dos or unix).  Vim can handle any file format when the
 files.
 
 ==============================================================================
-3. Mac Lack						*mac-lack*
+3. Mac FAQ						*mac-faq*
+
+Q: I can't enter non-ASCII character in Apple Terminal.
+A: Under Window Settings, Emulation, make sure that "Escape non-ASCII
+   characters" is not checked.
+
+==============================================================================
+4. Mac Lack						*mac-lack*
 
 -The filenames containing both ":" and "/" are sometimes misinterpreted.
   (just re-execute the command)
@@ -72,7 +81,7 @@ files.
 -Syntax highlighting works on 68k Macs but is _really_ slow.
 
 ==============================================================================
-4. Mac Bug Report					*mac-bug*
+5. Mac Bug Report					*mac-bug*
 
 When reporting any Mac specific bug or feature change, please use the vim-mac
 maillist |vim-mac|.  However, you need to be subscribed.  An alternative is to
@@ -81,15 +90,9 @@ send a message to the current MacVim maintainers:
 	mac@vim.org
 
 ==============================================================================
-5. Compiling Vim					*mac-compile*
+6. Compiling Vim					*mac-compile*
 
-Vim compiles out of the box with the supplied CodeWarrior project when using
-CodeWarrior 9. If you are using a more recent version (e. g. CW Pro) you have
-to convert the project first.
-When compiling Vim for 68k Macs you have to open the "size" resource in
-ResEdit and enable the "High level events aware" button to get drag and drop
-working.
-You have to increase the memory partition to at least 1024 kBytes to prevent
-Vim from crashing due to low memory.
+See the file "src/INSTALLmac.txt" that comes with the source files.
+
 
  vim:tw=78:ts=8:ft=help:norl:

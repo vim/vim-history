@@ -939,11 +939,11 @@ msgstr "E163: Es gibt nur eine Datei zum Editieren"
 
 #: ex_cmds2.c:1210
 msgid "E164: Cannot go before first file"
-msgstr "E164: Kann nicht über die erste Zeile hinausgehen"
+msgstr "E164: Kann nicht über die erste Datei hinausgehen"
 
 #: ex_cmds2.c:1212
 msgid "E165: Cannot go beyond last file"
-msgstr "E165: Kann nicht über die letzte Zeile hinausgehen"
+msgstr "E165: Kann nicht über die letzte Datei hinausgehen"
 
 #: ex_cmds2.c:1634
 #, c-format
@@ -1113,11 +1113,11 @@ msgstr "Nur keine Panik!"
 
 #: ex_docmd.c:1460
 msgid "Backwards range given"
-msgstr "Rückwärts-Bereich gegeben"
+msgstr "Bereichsgrenzen rückwärts"
 
 #: ex_docmd.c:1469
 msgid "Backwards range given, OK to swap"
-msgstr "Rückwärts-Bereich gegeben; Bereit zum Auslagern"
+msgstr "Bereichsgrenzen rückwärts, vertauschen"
 
 #: ex_docmd.c:1580
 msgid "Use w or w>>"
@@ -2207,7 +2207,7 @@ msgstr "unbekannter cscope Suchtyp"
 
 #: if_cscope.c:680
 msgid "Could not create cscope pipes"
-msgstr "cscope Pipes konnten nicht angelgt werden"
+msgstr "cscope Pipes konnten nicht angelegt werden"
 
 #: if_cscope.c:745
 msgid "cs_create_connection exec failed"
@@ -4308,7 +4308,7 @@ msgstr "Ungültiger Fontset"
 
 #: option.c:4816
 msgid "can't select wide font"
-msgstr "Schriftart %s kann nicht verwendet werden"
+msgstr "Weiter Schriftart kann nicht engestellt werden"
 
 #: option.c:4818
 msgid "Invalid wide font"
@@ -4551,7 +4551,7 @@ msgstr "Vim: Erhielt tödliches Signal %s\n"
 
 #: os_unix.c:871
 msgid "Vim: Caught deadly signal\n"
-msgstr "Vim: Erhielt tödliches Signal %s\n"
+msgstr "Vim: Erhielt tödliches Signal\n"
 
 #: os_unix.c:1125
 #, c-format
@@ -5684,7 +5684,7 @@ msgstr "                              für zwei Moden      "
 
 #: version.c:1019
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
-msgstr "Menü  Editieren->Globale Einstellung->Vi-Kompatiblität ein- und ausschalten"
+msgstr "Menü  Editieren->Globale Einstellung->Vi-Kompatibilität ein- und ausschalten"
 
 #: version.c:1020
 msgid "                              for Vim defaults   "

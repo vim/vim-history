@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.2.  Last change: 2004 Feb 24
+*various.txt*   For Vim version 6.3a.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -49,12 +49,12 @@ ga			Print the ascii value of the character under the
 			non-printable version is also given.  When the
 			character is larger than 127, the <M-x> form is also
 			printed.  For example:
-				<~A>  <M-^A>  129,  Hex 81,  Octal 201
-				<p>  <|~>  <M-~>  254,  Hex fe,  Octal 376
+				<~A>  <M-^A>  129,  Hex 81,  Octal 201 ~
+				<p>  <|~>  <M-~>  254,  Hex fe,  Octal 376 ~
 			(where <p> is a special character)
 			The <Nul> character in a file is stored internally as
 			<NL>, but it will be shown as:
-				<^@>  0,  Hex 00,  Octal 000
+				<^@>  0,  Hex 00,  Octal 000 ~
 			Mnemonic: Get Ascii value.  {not in Vi}
 
 							*g8*
@@ -62,9 +62,9 @@ g8			Print the hex values of the bytes used in the
 			character under the cursor, assuming it is in |UTF-8|
 			encoding.  This also shows composing characters.
 			Example of a character with three composing
-			characters: >
-				e0 b8 81 + e0 b8 b9 + e0 b9 89
-<			{not in Vi}
+			characters:
+				e0 b8 81 + e0 b8 b9 + e0 b9 89 ~
+			{not in Vi}
 
 							*:p* *:pr* *:print*
 :[range]p[rint]		Print [range] lines (default current line).
@@ -123,9 +123,11 @@ g8			Print the hex values of the bytes used in the
 			{not in all versions of Vi, not with these arguments}
 
 							*:=*
-:=			Print the cursor line number.
+:=			Print the last line number.
 
-:{range}=		Prints the last line number in {range}.
+:{range}=		Prints the last line number in {range}.  For example,
+			this prints the current line number: >
+				:.=
 
 :norm[al][!] {commands}					*:norm* *:normal*
 			Execute Normal mode commands {commands}.  This makes
@@ -319,7 +321,7 @@ m  *+ruby*		Ruby interface |ruby|, may have |/dyn|
 N  *+scrollbind*	|'scrollbind'|
 B  *+signs*		|:sign|
 N  *+smartindent*	|'smartindent'|
-m  *+sniff*		SniFF interface (no docs available...)
+m  *+sniff*		SniFF interface |sniff|
 N  *+statusline*	Options 'statusline', 'rulerformat' and special
 			formats of 'titlestring' and 'iconstring'
 m  *+sun_workshop*	|workshop|
@@ -534,7 +536,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 
 			The 'helplang' option is used to select a language, if
 			the {subject} is available in several languages.
-			To find a tag in a specific language, append '@ab",
+			To find a tag in a specific language, append "@ab",
 			where "ab" is the two-letter language code.  See
 			|help-translated|.
 
@@ -584,6 +586,9 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 <			Cannot be followed by another command, everything is
 			used as part of the pattern.  But you can use
 			|:execute| when needed.
+			Compressed help files will not be searched (Debian
+			compresses the help files).
+			{not in Vi}
 
 
 When no argument is given to |:help| the file given with the 'helpfile' option
@@ -632,9 +637,10 @@ command: >
 			Only for backwards compatibility.  It now executes the
 			ToolBar.FindHelp menu entry instead of using a builtin
 			dialog.  {only when compiled with |+GUI_GTK|}
+<			{not in Vi}
 
 					*:helpt* *:helptags*
-					*E154* *E150* *E151* *E152* *E153*
+				*E154* *E150* *E151* *E152* *E153* *E670*
 :helpt[ags] {dir}	Generate the help tags file(s) for directory {dir}.
 			All "*.txt" and "*.??x" files in the directory are
 			scanned for a help tag definition in between stars.
@@ -646,6 +652,7 @@ command: >
 			To rebuild the help tags in the runtime directory
 			(requires write permission there): >
 				:helptags $VIMRUNTIME/doc
+<			{not in Vi}
 
 
 TRANSLATED HELP						*help-translated*
@@ -688,13 +695,23 @@ When using |CTRL-]| or ":help!" in a non-English help file Vim will try to
 find the tag in the same language.  If not found then 'helplang' will be used
 to select a language.
 
+Help files must use latin1 or utf-8 encoding.  Vim assumes the encoding is
+utf-8 when finding non-ASCII characters in the first line.  Thus you must
+translate the header with "For Vim version".
+
+The same encoding must be used for the help files of one language in one
+directory.  You can use a different encoding for different languages and use
+a different encoding for help files of the same language but in a different
+directory.
+
 Hints for translators:
 - Do not translate the tags.  This makes it possible to use 'helplang' to
-  specify the preferred language.
+  specify the preferred language.  You may add new tags in your language.
 - When you do not translate a part of a file, add tags to the English version,
   using the "tag@en" notation.
 - Make a package with all the files and the tags file available for download.
   Users can drop it in one of the "doc" directories and start use it.
+  Report this to Bram, so that he can add a link on www.vim.org.
 - Use the |:helptags| command to generate the tags files.  It will find all
   languages in the specified directory.
 
@@ -809,7 +826,7 @@ i.   Decide on a unique name for your encoding vector, one that does not clash
      |encoding-names| for a list), and that no one else is likely to use.
 ii.  Copy $VIMRUNTIME/print/latin1.ps to the print subdirectory in your
      'runtimepath' and rename it with your unique name.
-iii. Edit your renamed copy of latin1.ps, replacing all occurences of latin1
+iii. Edit your renamed copy of latin1.ps, replacing all occurrences of latin1
      with your unique name (don't forget the line starting %%Title:), and
      modify the array of glyph names to define your new encoding vector.  The
      array must have exactly 256 entries or you will not be able to print!
@@ -928,10 +945,9 @@ X11
 
 OpenVMS
 
-- gv-vms.  A port of gv to OpenVMS.  Obtainable from:
+- Is apparently supported in the main code now (untested).  See:
 
-    ftp://axp.psl.ku.dk/decwindows/xaw3d/
-    ftp://ftp.wku.edu/vms/fileserv/x11kit.zip
+    http://wwwthep.physik.uni-mainz.de/~plass/gv/
 
 Windows and OS/2
 
@@ -965,7 +981,7 @@ PSUtils is a collection of utility programs for manipulating PostScript
 documents.  Binary distributions are available for many platforms, as well as
 the full source.  PSUtils can be found at:
 
-  http://www.tardis.ed.ac.uk/~ajcd/psutils/index.html
+  http://knackered.org/angus/psutils
 
 The utilities of interest include:
 

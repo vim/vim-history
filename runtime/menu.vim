@@ -39,18 +39,21 @@ if exists("v:lang") || &langmenu != ""
     " Change "iso-8859" to "iso_8859" and "iso8859" to "iso_8859", some
     " systems appear to use this.
     " Change spaces to underscores.
-    let s:lang = substitute(tolower(s:lang), "\\.iso-", ".iso_", "")
-    let s:lang = substitute(s:lang, "\\.iso8859", ".iso_8859", "")
+    let s:lang = substitute(tolower(s:lang), '\.iso-', ".iso_", "")
+    let s:lang = substitute(s:lang, '\.iso8859', ".iso_8859", "")
     let s:lang = substitute(s:lang, " ", "_", "g")
     " Remove "@euro", otherwise "LC_ALL=de_DE@euro gvim" will show English menus
     let s:lang = substitute(s:lang, "@euro", "", "")
+    " Change "iso_8859-1" and "iso_8859-15" to "latin1", we always use the
+    " same menu file for them.
+    let s:lang = substitute(s:lang, 'iso_8859-15\=$', "latin1", "")
     menutrans clear
     exe "runtime! lang/menu_" . s:lang . ".vim"
 
     if !exists("did_menu_trans")
       " There is no exact match, try matching with a wildcard added
       " (e.g. find menu_de_de.iso_8859-1.vim if s:lang == de_DE).
-      let s:lang = substitute(s:lang, "\\.[^.]*", "", "")
+      let s:lang = substitute(s:lang, '\.[^.]*', "", "")
       exe "runtime! lang/menu_" . s:lang . "*.vim"
 
       if !exists("did_menu_trans") && strlen($LANG) > 1
@@ -150,7 +153,7 @@ else
   nnoremap <silent> <script> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
 endif
 
-" Use maps for items that are present both in Edit and Popup menu.
+" Use maps for items that are present both in Edit, Popup and Toolbar menu.
 if has("virtualedit")
   vnoremap <script> <SID>vPaste	"-c<Esc><SID>Paste
   inoremap <script> <SID>iPaste	<Esc><SID>Pastegi
@@ -379,15 +382,19 @@ if has("win32") || has("win16") || has("gui_gtk") || has("gui_photon")
 endif
 
 " Programming menu
+if !exists("g:ctags_command")
+  if has("vms")
+    let g:ctags_command = "mc vim:ctags ."
+  else
+    let g:ctags_command = "ctags -R ."
+  endif
+endif
+
 an 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^]	g<C-]>
 vunmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]
 vnoremenu &Tools.&Jump\ to\ this\ tag<Tab>g^]	g<C-]>
 an 40.310 &Tools.Jump\ &back<Tab>^T		<C-T>
-if has("vms")
-  an 40.320 &Tools.Build\ &Tags\ File		:!mc vim:ctags .<CR>
-else
-  an 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
-endif
+an 40.320 &Tools.Build\ &Tags\ File		:exe "!" . g:ctags_command<CR>
 
 " Tools.Fold Menu
 if has("folding")
@@ -806,13 +813,8 @@ if has("toolbar")
   cnoremenu 1.80 ToolBar.Copy		<C-Y>
   nnoremenu 1.90 ToolBar.Paste		"+gP
   cnoremenu	 ToolBar.Paste		<C-R>+
-  if has("virtualedit")
-    vnoremenu <script>	 ToolBar.Paste	"-c<Esc><SID>Paste
-    inoremenu <script>	 ToolBar.Paste	<Esc><SID>Pastegi
-  else
-    vnoremenu <script>	 ToolBar.Paste	"-c<Esc>gix<Esc><SID>Paste"_x
-    inoremenu <script>	 ToolBar.Paste	x<Esc><SID>Paste"_s
-  endif
+  vnoremenu <script>	 ToolBar.Paste	<SID>vPaste
+  inoremenu <script>	 ToolBar.Paste	<SID>iPaste
 
   if !has("gui_athena")
     an 1.95   ToolBar.-sep3-		<Nop>
@@ -845,7 +847,7 @@ endif
 
   an 1.245 ToolBar.-sep6-		<Nop>
   an 1.250 ToolBar.Make			:make<CR>
-  an 1.270 ToolBar.RunCtags		:!ctags -R .<CR>
+  an 1.270 ToolBar.RunCtags		:exe "!" . g:ctags_command<CR>
   an 1.280 ToolBar.TagJump		g<C-]>
 
   an 1.295 ToolBar.-sep7-		<Nop>
@@ -954,8 +956,8 @@ endif
 an 50.210 &Syntax.&Off			:syn off<CR>
 an 50.700 &Syntax.-SEP3-		<Nop>
 an 50.710 &Syntax.Co&lor\ test		:sp $VIMRUNTIME/syntax/colortest.vim<Bar>so %<CR>
-an 50.720 &Syntax.&Highlight\ test	:so $VIMRUNTIME/syntax/hitest.vim<CR>
-an 50.730 &Syntax.&Convert\ to\ HTML	:so $VIMRUNTIME/syntax/2html.vim<CR>
+an 50.720 &Syntax.&Highlight\ test	:runtime syntax/hitest.vim<CR>
+an 50.730 &Syntax.&Convert\ to\ HTML	:runtime syntax/2html.vim<CR>
 
 endif " !exists("did_install_syntax_menu")
 

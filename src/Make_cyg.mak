@@ -1,6 +1,6 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
-# Last updated by Dan Sharp.  Last Change: 2004 Mar 09
+# Last updated by Dan Sharp.  Last Change: 2004 Apr 23
 #
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
@@ -36,7 +36,7 @@
 # OPTIMIZE	SPACE, SPEED, or MAXSPEED: set optimization level (MAXSPEED)
 # NETBEANS	no or yes: to include netbeans interface support (yes when GUI
 #		is yes)
-# XPM		define to path to XPM dir to get XPM image support (not defined) 
+# XPM		define to path to XPM dir to get XPM image support (not defined)
 #>>>>> choose options:
 ifndef GUI
 GUI=yes

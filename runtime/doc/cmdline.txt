@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.2.  Last change: 2004 Mar 31
+*cmdline.txt*   For Vim version 6.3a.  Last change: 2004 Mar 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -142,11 +142,13 @@ CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 				the last delete or yank
 			'%'	the current file name
 			'#'	the alternate file name
-			'*'	the clipboard contents
+			'*'	the clipboard contents (X11: primary selection)
+			'+'	the clipboard contents
 			'/'	the last search pattern
 			':'	the last command-line
 			'-'	the last small (less than a line) delete
 			'.'	the last inserted text
+							*c_CTRL-R_=*
 			'='	the expression register: you are prompted to
 				enter an expression (see |expression|)
 		See |registers| about registers.  {not in Vi}
@@ -454,6 +456,7 @@ followed by another command:
     :debug
     :folddoopen
     :folddoclosed
+    :function
     :global
     :help
     :helpfind
@@ -712,7 +715,7 @@ Note: these are typed literally, they are not special keys!
 		   a function.
 
 							 *filename-modifiers*
-		 *:_%:* *::p* *::.* *::~* *::h* *::t* *::r* *::e* *::s* *::gs*
+	 *:_%:* *::8* *::p* *::.* *::~* *::h* *::t* *::r* *::e* *::s* *::gs*
 The file name modifiers can be used after "%", "#", "#n", "<cfile>", "<sfile>",
 "<afile>" or "<abuf>".  They are also used with the |fnamemodify()| function.
 These are not available when Vim has been compiled without the |+modify_fname|

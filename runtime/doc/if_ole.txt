@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.2.  Last change: 2002 Oct 12
+*if_ole.txt*    For Vim version 6.3a.  Last change: 2003 Jun 19
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -155,8 +155,8 @@ To avoid the message box that pops up to report the result, prepend "-silent":
 
 The OLE version can be used to run Vim as the editor in Microsoft Visual
 Studio.  This is called "VisVim".  It is included in the archive that contains
-the OLE version.  The documentation can be found in the VisVim directory, the
-README.txt file.
+the OLE version.  The documentation can be found in the runtime directory, the
+README_VisVim.txt file.
 
 ==============================================================================
  vim:tw=78:ts=8:ft=help:norl:

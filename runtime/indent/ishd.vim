@@ -1,7 +1,6 @@
 " Description:	InstallShield indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
-" URL:		http://www.zellner.org/vim/indent/ishd.vim
-" Last Change:	Tue, 07 Aug 2001 14:49:42 W. Europe Standard Time
+" Last Change:	Tue, 27 Apr 2004 14:54:59 CEST
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -10,7 +9,8 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetIshdIndent(v:lnum)
-setlocal indentkeys+==else,=elseif,=endif,=end,=begin
+setlocal indentkeys&
+setlocal indentkeys+==else,=elseif,=endif,=end,=begin,<:>
 " setlocal indentkeys-=0#
 
 " Only define the function once.
@@ -21,7 +21,9 @@ endif
 fun! GetIshdIndent(lnum)
     " labels and preprocessor get zero indent immediately
     let this_line = getline(a:lnum)
-    if this_line =~ '^\s*\(\<\k\+\>:\s*$\|#.*\)'
+    let LABELS_OR_PREPROC = '^\s*\(\<\k\+\>:\s*$\|#.*\)'
+    let LABELS_OR_PREPROC_EXCEPT = '^\s*\<default\+\>:'
+    if this_line =~ LABELS_OR_PREPROC && this_line !~ LABELS_OR_PREPROC_EXCEPT
 	return 0
     endif
 
@@ -31,7 +33,7 @@ fun! GetIshdIndent(lnum)
     while lnum > 0
 	let lnum = prevnonblank(lnum - 1)
 	let previous_line = getline(lnum)
-	if previous_line !~ '^\(\s*\<\k\+\>:\s*$\|#.*\)'
+	if previous_line !~ LABELS_OR_PREPROC || previous_line =~ LABELS_OR_PREPROC_EXCEPT
 	    break
 	endif
     endwhile

@@ -12,6 +12,7 @@ VIMPROG = /vim
 # test12	can't unlink a swap file
 # test25	uses symbolic link
 # test27	can't edit file with "*"
+# test52	only for Win32
 
 SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test7.out test8.out test9.out \
@@ -30,7 +31,7 @@ nongui:	/tmp $(SCRIPTS)
 	csh -c echo ALL DONE
 
 clean:
-	csh -c \rm -rf *.out /tmp/* Xdotest small.vim tiny.vim mbyte.vim test.ok
+	csh -c \rm -rf *.out /tmp/* Xdotest small.vim tiny.vim mbyte.vim test.ok viminfo
 
 .in.out:
 	copy $*.ok test.ok

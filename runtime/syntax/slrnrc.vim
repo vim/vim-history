@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Slrn setup file (based on slrn 0.9.7.4)
 " Maintainer:	Preben 'Peppe' Guldberg <peppe-vim@wielders.org>
-" Last Change:	30 May 2003
+" Last Change:	20 July 2003
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -37,17 +37,17 @@ syn match slrnSlangPreCondit	"^#\s*\(elif\|else\|endif\)\>"
 
 syn match slrnrcComment		"%.*$"	contains=slrnrcTodo
 
-syn region  slrnrcVarIntStr	contained abort_unmodified_edits article_window_page_overlap auto_mark_article_as_read beep broken_xref cc_followup check_new_groups color_by_score confirm_actions custom_sort_by_threads
-syn region  slrnrcVarIntStr	contained display_cursor_bar drop_bogus_groups editor_uses_mime_charset emphasized_text_mask emphasized_text_mode fold_headers followup_strip_signature force_authentication generate_date_header generate_email_from
-syn region  slrnrcVarIntStr	contained generate_message_id grouplens_port hide_pgpsignature hide_quotes hide_signature hide_verbatim_marks highlight_unread_subjects highlight_urls ignore_signature kill_score
-syn region  slrnrcVarIntStr	contained lines_per_update mail_editor_is_mua max_low_score max_queued_groups min_high_score mouse netiquette_warnings new_subject_breaks_threads no_autosave no_backups
-syn region  slrnrcVarIntStr	contained prefer_head process_verbatim_marks query_next_article query_next_group query_read_group_cutoff read_active reject_long_lines scroll_by_page show_article show_thread_subject
-syn region  slrnrcVarIntStr	contained simulate_graphic_chars smart_quote sorting_method spoiler_char spoiler_display_mode spool_check_up_on_nov uncollapse_threads unsubscribe_new_groups use_blink use_color
-syn region  slrnrcVarIntStr	contained use_flow_control use_grouplens use_header_numbers use_inews use_localtime use_metamail use_mime use_slrnpull use_tilde use_tmpdir
-syn region  slrnrcVarIntStr	contained use_uudeview warn_followup_to wrap_flags wrap_method write_newsrc_flags
+syn keyword  slrnrcVarInt	contained abort_unmodified_edits article_window_page_overlap auto_mark_article_as_read beep broken_xref cc_followup check_new_groups color_by_score confirm_actions custom_sort_by_threads
+syn keyword  slrnrcVarInt	contained display_cursor_bar drop_bogus_groups editor_uses_mime_charset emphasized_text_mask emphasized_text_mode fold_headers followup_strip_signature force_authentication generate_date_header generate_email_from
+syn keyword  slrnrcVarInt	contained generate_message_id grouplens_port hide_pgpsignature hide_quotes hide_signature hide_verbatim_marks highlight_unread_subjects highlight_urls ignore_signature kill_score
+syn keyword  slrnrcVarInt	contained lines_per_update mail_editor_is_mua max_low_score max_queued_groups min_high_score mouse netiquette_warnings new_subject_breaks_threads no_autosave no_backups
+syn keyword  slrnrcVarInt	contained prefer_head process_verbatim_marks query_next_article query_next_group query_read_group_cutoff read_active reject_long_lines scroll_by_page show_article show_thread_subject
+syn keyword  slrnrcVarInt	contained simulate_graphic_chars smart_quote sorting_method spoiler_char spoiler_display_mode spool_check_up_on_nov uncollapse_threads unsubscribe_new_groups use_blink use_color
+syn keyword  slrnrcVarInt	contained use_flow_control use_grouplens use_header_numbers use_inews use_localtime use_metamail use_mime use_slrnpull use_tilde use_tmpdir
+syn keyword  slrnrcVarInt	contained use_uudeview warn_followup_to wrap_flags wrap_method write_newsrc_flags
 
 " Listed for removal
-syn region  slrnrcVarIntStr	contained author_display display_author_realname display_score group_dsc_start_column process_verbatum_marks prompt_next_group query_reconnect show_descriptions use_xgtitle
+syn keyword  slrnrcVarInt	contained author_display display_author_realname display_score group_dsc_start_column process_verbatum_marks prompt_next_group query_reconnect show_descriptions use_xgtitle
 
 " Match as a "string" too
 syn region  slrnrcVarIntStr	contained matchgroup=slrnrcVarInt start=+"+ end=+"+ oneline contains=slrnrcVarInt,slrnrcSpaceError

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Apr 29
+" Last Change:	2004 May 04
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -512,6 +512,10 @@ if has("gui")
   endif
   call append("$", "guifontwide\tlist of font names to be used for double-wide characters")
   call <SID>OptionG("gfw", &gfw)
+  if has("mac")
+    call append("$", "antialias\tuse smooth, antialiased fonts")
+    call <SID>BinOptionG("anti", &anti)
+  endif
   call append("$", "guioptions\tlist of flags that specify how the GUI works")
   call <SID>OptionG("go", &go)
   if has("gui_gtk")
@@ -601,6 +605,10 @@ call append("$", "errorbells\tring the bell for error messages")
 call <SID>BinOptionG("eb", &eb)
 call append("$", "visualbell\tuse a visual bell instead of beeping")
 call <SID>BinOptionG("vb", &vb)
+if has("multi_lang")
+  call append("$", "helplang\tlist of preferred languages for finding help")
+  call <SID>OptionG("hlg", &hlg)
+endif
 
 
 call <SID>Header("selecting text")

@@ -4528,7 +4528,7 @@ cin_islabel(ind_maxcomment)		/* XXX */
  * Q&D-Implementation:
  * check for "=" at end or "enum" at beginning of line.
  */
-    int
+    static int
 cin_isinit(void)
 {
     char_u	*s;

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.2.  Last change: 2003 May 26
+*windows.txt*   For Vim version 6.3a.  Last change: 2004 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,7 +19,7 @@ The basics are explained in chapter 7 and 8 of the user manual |usr_07.txt|
 4.  Moving cursor to other windows		|window-move-cursor|
 5.  Moving windows around			|window-moving|
 6.  Window resizing				|window-resize|
-7.  argument and buffer list commands		|buffer-list|
+7.  Argument and buffer list commands		|buffer-list|
 8.  Do a command in all buffers or windows	|list-repeat|
 9.  Tag or file name under the cursor		|window-tag|
 10. The preview window				|preview-window|
@@ -78,7 +78,7 @@ in the argument list.  The "-o" argument will split the windows horizontally;
 the "-O" argument will split the windows vertically.  If both "-o" and "-O"
 are given, the last one encountered will be used to determine the split
 orientation.  For example, this will open three windows, split horizontally: >
-	Vim -o file1 file2 file3
+	vim -o file1 file2 file3
 
 "-oN", where N is a decimal number, opens N windows split horizontally.  If
 there are more file names than windows, only N windows are opened and some
@@ -196,7 +196,7 @@ window will appear.
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will be split vertically.
 
-:lefta[bove] {cmd}				*:lefta* *leftabove*
+:lefta[bove] {cmd}				*:lefta* *:leftabove*
 :abo[veleft] {cmd}				*:abo* *:aboveleft*
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will be opened left (vertical split) or above (horizontal
@@ -319,8 +319,10 @@ CTRL-W l	Move cursor to Nth window right of current one.  Uses the
 CTRL-W w					*CTRL-W_w* *CTRL-W_CTRL-W*
 CTRL-W CTRL-W	Without count: move cursor to window below/right of the
 		current one.  If there is no window below or right, go to
-		top-left window.  With count: go to Nth window (windows are
-		numbered from top-left to bottom-right).
+		top-left window.
+		With count: go to Nth window (windows are numbered from
+		top-left to bottom-right).  To obtain the window number see
+		|bufwinnr()| and |winnr()|.
 
 						*CTRL-W_W*
 CTRL-W W	Without count: move cursor to window above/left of current
@@ -356,6 +358,9 @@ These commands can also be executed with ":wincmd":
 		This command is useful when a Normal mode cannot be used (for
 		the |CursorHold| autocommand event).  Or when a Normal mode
 		command is inconvenient.
+		The count can also be a window number.  Example: >
+			:exe nr . "wincmd w"
+<		This goes to window "nr".
 
 ==============================================================================
 5. Moving windows around				*window-moving*
@@ -489,7 +494,7 @@ The minimal height and width of a window is set with 'winminheight' and
 'winminwidth'.  These are hard values, a window will never become smaller.
 
 ==============================================================================
-7. argument and buffer list commands			*buffer-list*
+7. Argument and buffer list commands			*buffer-list*
 
       args list		       buffer list	   meaning ~
 1. :[N]argument [N]	11. :[N]buffer [N]	to arg/buf N
@@ -551,6 +556,9 @@ can also get to them with the buffer list commands, like ":bnext".
 		buffers that are modified are not removed, unless the [!] is
 		given, then they become hidden.  But modified buffers are
 		never abandoned, so changes cannot get lost.
+		[N] is the maximum number of windows to open.  'winheight'
+		also limits the number of windows opened ('winwidth' if
+		|:vertical| was prepended).
 		Buf/Win Enter/Leave autocommands are not executed for the new
 		windows here, that's only done when they are really entered.
 
@@ -570,8 +578,8 @@ can also get to them with the buffer list commands, like ":bnext".
 		previous argument.  But when there is no previous file, the
 		window is not split.  Also see |++opt| and |+cmd|.
 
-						*:sr* *:srewind*
-:sr[ewind][!] [++opt] [+cmd]
+						*:sre* *:srewind*
+:sre[wind][!] [++opt] [+cmd]
 		Short for ":split | rewind": split window and go to first
 		argument.  But when there is no argument list, the window is
 		not split.  Also see |++opt| and |+cmd|.
@@ -616,9 +624,6 @@ can also get to them with the buffer list commands, like ":bnext".
 			the current window.
 			{cmd} can contain '|' to concatenate several commands.
 			{cmd} must not open or close windows or reorder them.
-			Note: While this command is executing, the Syntax
-			autocommand event is disabled by adding it to
-			'eventignore'.
 			{not in Vi} {not available when compiled without the
 			|+listcmds| feature}
 			Also see |:argdo| and |:bufdo|.
@@ -723,6 +728,10 @@ to have it keep the same height when opening/closing other windows.
 		'previewheight' is used for the height of the window.   See
 		also |:tag|.
 		See below for an example. |CursorHold-example|
+		Small difference from |:tag|: When [tagname] is equal to the
+		already displayed tag, the position in the matching tag list
+		is not reset.  This makes the CursorHold example work after a
+		|:ptnext|.
 
 CTRL-W z					*CTRL-W_z*
 CTRL-W CTRL-Z					*CTRL-W_CTRL-Z* *:pc* *:pclose*
@@ -790,7 +799,7 @@ is no word under the cursor, and a few other things: >
   :    return
   :  endif
   :  let w = expand("<cword>")		" get the word under cursor
-  :  if w != ""				" if there is one ":ptag" to it
+  :  if w =~ '\a'			" if the word contains a letter
   :
   :    " Delete any existing highlight before showing another tag
   :    silent! wincmd P			" jump to preview window
@@ -800,11 +809,11 @@ is no word under the cursor, and a few other things: >
   :    endif
   :
   :    " Try displaying a matching tag for the word under the cursor
-  :    let v:errmsg = ""
-  :    exe "silent! ptag " . w
-  :    if v:errmsg =~ "tag not found"
+  :    try
+  :       exe "ptag " . w
+  :    catch
   :      return
-  :    endif
+  :    endtry
   :
   :    silent! wincmd P			" jump to preview window
   :    if &previewwindow		" if we really get there...
@@ -862,12 +871,12 @@ list of buffers. |unlisted-buffer|
 
 :files[!]					*:files*
 :buffers[!]					*:buffers* *:ls*
-:ls[!]		Show all buffers.  Example: >
+:ls[!]		Show all buffers.  Example:
 
-			1 #h  "/test/text"		line 1
-			2u    "asdf"			line 0
-			3 %l+ "version.c"		line 1
-<
+			1 #h  "/test/text"		line 1 ~
+			2u    "asdf"			line 0 ~
+			3 %l+ "version.c"		line 1 ~
+
 		When the [!] is included the list will show unlisted buffers
 		(the term "unlisted" is a bit confusing then...).
 
@@ -922,7 +931,7 @@ list of buffers. |unlisted-buffer|
 		name.
 
 :N,Mbdelete[!]	Do ":bdelete[!]" for all buffers in the range N to M
-		(inclusive).
+		|inclusive|.
 
 :[N]bw[ipeout][!]			*:bw* *:bwipe* *:bwipeout* *E517*
 :bw[ipeout][!] {bufname}
@@ -951,7 +960,7 @@ list of buffers. |unlisted-buffer|
 		before a space in a buffer name.
 
 :N,Mbunload[!]	Do ":bunload[!]" for all buffers in the range N to M
-		(inclusive).
+		|inclusive|.
 
 :bunload[!] N1 N2 ...
 		Do ":bunload[!]" for buffer N1, N2, etc.  The arguments can be
@@ -1056,9 +1065,10 @@ list of buffers. |unlisted-buffer|
 :[N]ba[ll] [N]					*:ba* *:ball* *:sba* *:sball*
 :[N]sba[ll] [N]	Rearrange the screen to open one window for each buffer in
 		the buffer list.  When a count is given, this is the maximum
-		number of windows to open.  Buf/Win Enter/Leave autocommands
-		are not executed for the new windows here, that's only done
-		when they are really entered.
+		number of windows to open.  'winheight' also limits the number
+		of windows opened ('winwidth' if |:vertical| was prepended).
+		Buf/Win Enter/Leave autocommands are not executed for the new
+		windows here, that's only done when they are really entered.
 
 Note: All the commands above that start editing another buffer, keep the
 'readonly' flag as it was.  This differs from the ":edit" command, which sets
@@ -1110,4 +1120,4 @@ unlisted	The buffer is not in the buffer list.  It is not used for
 			:set nobuflisted
 <
 
- vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -180,7 +180,6 @@
 static void make_tooltip __ARGS((BalloonEval *beval, char *text, POINT pt));
 static void delete_tooltip __ARGS((BalloonEval *beval));
 static VOID CALLBACK BevalTimerProc __ARGS((HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime));
-void TrackUserActivity __ARGS((UINT uMsg));
 
 static BalloonEval  *cur_beval = NULL;
 static UINT	    BevalTimerId = 0;
@@ -3721,7 +3720,7 @@ make_tooltip(beval, text, pt)
      * first mouse move. D*mn M$
      */
     mouse_event(MOUSEEVENTF_MOVE, 1, 1, 0, 0);
-    mouse_event(MOUSEEVENTF_MOVE, -1, -1, 0, 0);
+    mouse_event(MOUSEEVENTF_MOVE, (DWORD)-1, (DWORD)-1, 0, 0);
 }
 
     static void
@@ -3855,7 +3854,7 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
     return beval;
 }
 
-    void
+    static void
 Handle_WM_Notify(hwnd, pnmh)
     HWND hwnd;
     LPNMHDR pnmh;
@@ -3882,14 +3881,12 @@ Handle_WM_Notify(hwnd, pnmh)
     }
 }
 
-void TrackUserActivity (uMsg)
-    UINT    uMsg;
+    static void
+TrackUserActivity(UINT uMsg)
 {
-    if ((uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST) ||
-	    (uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST))
-    {
+    if ((uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
+	    || (uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST))
 	LastActivity = GetTickCount();
-    }
 }
 
     void
