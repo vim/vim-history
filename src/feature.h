@@ -719,19 +719,16 @@
  *			When none of these defined there is no dialog support.
  */
 #ifdef FEAT_NORMAL
-# if defined(FEAT_GUI_MSWIN)
-#  define FEAT_GUI_DIALOG
-# else
-#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) \
+# if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) \
 		&& defined(HAVE_X11_XPM_H)) \
 	|| defined(FEAT_GUI_GTK) \
 	|| defined(FEAT_GUI_PHOTON) \
+	|| defined(FEAT_GUI_MSWIN) \
 	|| defined(FEAT_GUI_MAC)
-#   define FEAT_CON_DIALOG
-#   define FEAT_GUI_DIALOG
-#  else
-#   define FEAT_CON_DIALOG
-#  endif
+#  define FEAT_CON_DIALOG
+#  define FEAT_GUI_DIALOG
+# else
+#  define FEAT_CON_DIALOG
 # endif
 #endif
 #if !defined(FEAT_GUI_DIALOG) && (defined(FEAT_GUI_MOTIF) \
