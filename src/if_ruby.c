@@ -12,7 +12,9 @@
 #include <string.h>
 
 #ifdef _WIN32
-# define NT
+# if !defined(DYNAMIC_RUBY_VER) || (DYNAMIC_RUBY_VER < 18)
+#   define NT
+# endif
 # ifndef DYNAMIC_RUBY
 #  define IMPORT /* For static dll usage __declspec(dllimport) */
 #  define RUBYEXTERN __declspec(dllimport)
@@ -33,6 +35,15 @@
 # define rb_cNilClass		(*dll_rb_cNilClass)
 # define rb_cSymbol		(*dll_rb_cSymbol)
 # define rb_cTrueClass		(*dll_rb_cTrueClass)
+# if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 18
+/*
+ * On ver 1.8, all Ruby functions are exported with "__declspce(dllimport)"
+ * in ruby.h.  But it cause trouble for these variables, because it is
+ * defined in this file.  When defined this RUBY_EXPORT it modified to
+ * "extern" and be able to avoid this problem.
+ */
+#  define RUBY_EXPORT
+# endif
 #endif
 
 #include <ruby.h>
@@ -83,7 +94,7 @@ static void ruby_vim_init(void);
 #define rb_define_module_function	dll_rb_define_module_function
 #define rb_define_singleton_method	dll_rb_define_singleton_method
 #define rb_define_virtual_variable	dll_rb_define_virtual_variable
-#define rb_defout			(*dll_rb_defout)
+#define rb_stdout			(*dll_rb_stdout)
 #define rb_eArgError			(*dll_rb_eArgError)
 #define rb_eIndexError			(*dll_rb_eIndexError)
 #define rb_eRuntimeError		(*dll_rb_eRuntimeError)
@@ -111,6 +122,9 @@ static void ruby_vim_init(void);
 #define ruby_errinfo			(*dll_ruby_errinfo)
 #define ruby_init			dll_ruby_init
 #define ruby_init_loadpath		dll_ruby_init_loadpath
+#if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 18
+# define rb_w32_snprintf		dll_rb_w32_snprintf
+#endif
 
 /*
  * Pointers for dynamic link
@@ -133,7 +147,7 @@ static VALUE (*dll_rb_define_module) (const char*);
 static void (*dll_rb_define_module_function) (VALUE,const char*,VALUE(*)(),int);
 static void (*dll_rb_define_singleton_method) (VALUE,const char*,VALUE(*)(),int);
 static void (*dll_rb_define_virtual_variable) (const char*,VALUE(*)(),void(*)());
-static VALUE *dll_rb_defout;
+static VALUE *dll_rb_stdout;
 static VALUE *dll_rb_eArgError;
 static VALUE *dll_rb_eIndexError;
 static VALUE *dll_rb_eRuntimeError;
@@ -162,6 +176,7 @@ static VALUE (*dll_rb_str_new2) (const char*);
 static VALUE *dll_ruby_errinfo;
 static void (*dll_ruby_init) (void);
 static void (*dll_ruby_init_loadpath) (void);
+static int (*dll_rb_w32_snprintf)(char*, size_t, const char*, ...);
 
 static HINSTANCE hinstRuby = 0; /* Instance of ruby.dll */
 
@@ -193,7 +208,7 @@ static struct
     {"rb_define_module_function", (RUBY_PROC*)&dll_rb_define_module_function},
     {"rb_define_singleton_method", (RUBY_PROC*)&dll_rb_define_singleton_method},
     {"rb_define_virtual_variable", (RUBY_PROC*)&dll_rb_define_virtual_variable},
-    {"rb_defout", (RUBY_PROC*)&dll_rb_defout},
+    {"rb_stdout", (RUBY_PROC*)&dll_rb_stdout},
     {"rb_eArgError", (RUBY_PROC*)&dll_rb_eArgError},
     {"rb_eIndexError", (RUBY_PROC*)&dll_rb_eIndexError},
     {"rb_eRuntimeError", (RUBY_PROC*)&dll_rb_eRuntimeError},
@@ -221,6 +236,7 @@ static struct
     {"ruby_errinfo", (RUBY_PROC*)&dll_ruby_errinfo},
     {"ruby_init", (RUBY_PROC*)&dll_ruby_init},
     {"ruby_init_loadpath", (RUBY_PROC*)&dll_ruby_init_loadpath},
+    {"rb_w32_snprintf", (RUBY_PROC*)&dll_rb_w32_snprintf},
     {"", NULL},
 };
 
@@ -782,11 +798,11 @@ static VALUE f_p(int argc, VALUE *argv, VALUE self)
 static void ruby_io_init(void)
 {
 #ifndef DYNAMIC_RUBY
-    RUBYEXTERN VALUE rb_defout;
+    RUBYEXTERN VALUE rb_stdout;
 #endif
 
-    rb_defout = rb_obj_alloc(rb_cObject);
-    rb_define_singleton_method(rb_defout, "write", vim_message, 1);
+    rb_stdout = rb_obj_alloc(rb_cObject);
+    rb_define_singleton_method(rb_stdout, "write", vim_message, 1);
     rb_define_global_function("p", f_p, -1);
 }
 
