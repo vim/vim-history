@@ -2925,10 +2925,12 @@ addstar(fname, len, context)
 	 * use with vim_regcomp().  First work out how long it will be:
 	 */
 
-	/* for help tags the translation is done in find_help_tags() */
+	/* For help tags the translation is done in find_help_tags().
+	 * For a tag pattern starting with "/" no translation is needed. */
 	if (context == EXPAND_HELP
 		|| context == EXPAND_COLORS
-		|| context == EXPAND_COMPILER)
+		|| context == EXPAND_COMPILER
+		|| (context == EXPAND_TAGS && fname[0] == '/'))
 	    retval = vim_strnsave(fname, len);
 	else
 	{
