@@ -1,6 +1,6 @@
-# $Id: Makefile.in,v 5.3 1998/03/07 20:57:09 darren Exp $
+# $Id: Makefile.in,v 6.1 1998/07/01 06:34:33 darren Exp $
 #
-# Makefile for Exuberant Ctags
+# Makefile for UNIX-like platforms.
 #
 
 # These are the names of the installed programs, in case you wish to change
@@ -66,8 +66,9 @@ OBJS	= entry.o get.o main.o options.o parse.o read.o sort.o
 HDRS	= ctags.h config.h
 MANPAGE	= ctags.1
 
-CONFIG_GEN = config.h config.cache config.log config.status config.run
-GENERATED  = $(CONFIG_GEN) Makefile tags TAGS
+AUTO_GEN   = configure config.h.in
+CONFIG_GEN = config.cache config.log config.status config.run \
+		config.h Makefile
 
 #
 # names for installed man pages
@@ -171,7 +172,10 @@ clean:
 mostlyclean: clean
 
 distclean: clean
-	@ rm -f $(GENERATED)
+	@ rm -f $(CONFIG_GEN)
+
+maintainerclean: distclean
+	@ rm -f $(AUTO_GEN)
 
 #
 # implicit rules

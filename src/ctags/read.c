@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: read.c,v 5.1 1998/02/19 03:47:18 darren Exp $
+*   $Id: read.c,v 6.6 1998/08/01 05:16:20 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -22,15 +22,23 @@
 #include "ctags.h"
 
 /*============================================================================
+=   Data declarations
+============================================================================*/
+
+typedef struct _langTab {
+    const char *extension;
+    langType language;
+} langTab;
+
+/*============================================================================
 =   Data definitions
 ============================================================================*/
 
-sourceFile File = { NULL, NULL, 0, -1, FALSE, 0, FALSE, FALSE };
+sourceFile File = { NULL, NULL, 0L, -1L, '\0', FALSE, FALSE, LANG_IGNORE };
 
 /*============================================================================
 =   Function prototypes
 ============================================================================*/
-static boolean isFileHeader __ARGS((const char *const name));
 static void fileNewline __ARGS((void));
 static boolean resizeLineBuffer __ARGS((lineBuf *const pLine));
 
@@ -117,39 +125,13 @@ extern char *readLine( pLine, fp )
  *	Source file access functions
  *--------------------------------------------------------------------------*/
 
-/*  Determines whether the specified file name is considered to be a header
- *  file for the purposes of determining whether enclosed tags are global or
- *  static.
- */
-static boolean isFileHeader( name )
-    const char *const name;
-{
-    boolean header = FALSE;		    /* default unless match found */
-    const char *extension;
-
-    extension = strrchr(name, '.');	    /* find last '.' */
-    if (extension != NULL)
-    {
-	int i;
-
-	++extension;			    /* skip to character after '.' */
-	for (i = 0 ; Option.headerExt[i] != NULL ; ++i)
-	{
-	    if (strcmp(Option.headerExt[i], extension) == 0)
-	    {
-		header = TRUE;		    /* found in list */
-		break;
-	    }
-	}
-    }
-    return header;
-}
-
 /*  This function opens a source file, and resets the line counter.  If it
  *  fails, it will display an error message and leave the File.fp set to NULL.
  */
-extern boolean fileOpen( name )
-    const char *const name;
+extern boolean fileOpen( fileName, language, isHeader )
+    const char *const fileName;
+    const langType language;
+    const boolean isHeader;
 {
     boolean opened = FALSE;
 
@@ -161,30 +143,26 @@ extern boolean fileOpen( name )
 	File.fp = NULL;
     }
 
-    if (! doesFileExist(name))
-	error(WARNING | PERROR, "cannot open \"%s\"", name);
-    else if (isNormalFile(name))
+    File.fp = fopen(fileName, "rb");  /* must be binary mode for fseek() */
+    if (File.fp == NULL)
+	error(WARNING | PERROR, "cannot open \"%s\"", fileName);
+    else
     {
-	File.fp = fopen(name, "rb");	/* must be binary mode for fseek() */
-	if (File.fp == NULL)
-	    error(WARNING | PERROR, "cannot open \"%s\"", name);
-	else
-	{
-	    opened = TRUE;
-	    File.name	    = name;
-	    File.lineNumber = 0L;
-	    File.seek	    = 0L;
-	    File.afterNL    = TRUE;
-	    File.warned	    = FALSE;
+	opened = TRUE;
 
-	    if (strlen(name) > TagFile.max.file)
-		TagFile.max.file = strlen(name);
+	File.name	= fileName;
+	File.lineNumber = 0L;
+	File.seek	= 0L;
+	File.afterNL    = TRUE;
 
-	    /*	Determine whether this is a header File.
-	     */
-	    File.header = isFileHeader(name);
-	    DebugStatement( debugOpen(name); )
-	}
+	if (strlen(fileName) > TagFile.max.file)
+	    TagFile.max.file = strlen(fileName);
+
+	/*	Determine whether this is a header File.
+	    */
+	File.isHeader = isHeader;
+	File.language = language;
+	DebugStatement( debugOpen(fileName, File.isHeader, File.language); )
     }
     return opened;
 }
@@ -280,8 +258,8 @@ nextChar:	/* not structured, but faster for this critical path */
 	if (escaped)				/* check for line splicing */
 	{
 	    DebugStatement(
-		debugPutc(BACKSLASH, DEBUG_VISUAL);  /* print the characters */
-		debugPutc(c, DEBUG_VISUAL);	     /*  we're throwing away */
+		debugPutc(BACKSLASH, DEBUG_RAW);     /* print the characters */
+		debugPutc(c, DEBUG_RAW);	     /*  we're throwing away */
 	    )
 	    escaped = FALSE;		    /* BACKSLASH now fully processed */
 	    goto nextChar;		    /* through away "\NEWLINE" */
@@ -289,7 +267,7 @@ nextChar:	/* not structured, but faster for this critical path */
 	break;
     }
 
-    DebugStatement( debugPutc(c, DEBUG_VISUAL); )
+    DebugStatement( debugPutc(c, DEBUG_RAW); )
     return c;
 }
 

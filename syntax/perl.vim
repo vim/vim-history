@@ -1,14 +1,20 @@
 " Vim syntax file
 " Language:	Perl
-" Maintainer:	Sonia Heimann <niania@netsurf.org>
-" Last change:	1997 Dec 16
+" Maintainer:	Nick Hibma <nick.hibma@jrc.it>
+" Last change:	1998 Jul 3
+"
+" Original version: Sonia Heimann <niania@netsurf.org>
 
 " Remove any old syntax stuff hanging around
 syn clear
 
 "
-" Comments
+" Setting a few parameters for the options below
 "
+let perl_want_scope_in_variables = 1
+let perl_extended_vars = 1
+let perl_highlight_matches = 1
+let perl_sync_on_sub = 1
 
 " First, treat the the #!/bin/perl
 syn match  perlSharpBang         "^#!.\+$"
@@ -38,6 +44,15 @@ else
   syn sync match perlEmbeddedPod groupthere NONE "^=cut"
 endif
 
+
+"
+" Syncing to speed up processing, added by NWH to speed up editing of files.
+"
+if exists("perl_sync_on_sub")
+   syn sync match perlSync grouphere NONE "^sub[ \t]\+"
+endif
+
+
 "
 " Includes
 "
@@ -50,7 +65,7 @@ syn region  perlInclude     start=+^[ \t]*\<\(use\|require\)\>+ end=+;+he=e-1
 syn keyword perlLabel                   case default
 syn keyword perlConditional             if elsif unless else switch eq ne gt lt ge le cmp not and or xor
 syn keyword perlRepeat                  while for foreach do until
-syn keyword perlOperator                defined undef and or not bless
+syn keyword perlOperator                defined undef and or not bless ref
 syn keyword perlControl                 BEGIN END
 
 syn keyword perlStatementStorageClass   my local
@@ -72,7 +87,7 @@ syn keyword perlStatementNetwork        endprotoent endservent gethostbyaddr get
 syn keyword perlStatementTime           gmtime localtime time times
 syn keyword perlStatementMisc           print warn formline reset scalar new delete STDIN STDOUT STDERR
 
-syn keyword perlTodo contained TODO TBD
+syn keyword perlTodo contained TODO TBD FIXME
 
 "
 " Perl Identifiers.
@@ -93,7 +108,8 @@ syn keyword perlTodo contained TODO TBD
 " Special variables first ($^A, ...)
 syn match  perlVarPlain "$^[A-Z]"
 " Special variables, continued ($|, $', ...)
-syn match  perlVarPlain "$[\\\"\[\]'&`+*.,;=%~^:!@$<>(0-9-]"
+syn match  perlVarPlain "$[\\\"\[\]'&`+*.,;=%~^!@$<>(0-9-]"
+syn match  perlVarPlain "$:[^:]"
 " These variables are not recognized within matches.
 syn match perlVarNotInMatches "$[|)]"
 " This variable is not recognized within matches delimited by //.
@@ -101,7 +117,7 @@ syn match perlVarSlash "$/"
 
 " And plain identifiers
 
-syn match perlPackageRef "[a-zA-Z_][a-zA-Z0-9_]*\>\('\|::\)" contained
+syn match perlPackageRef "\([a-zA-Z_][a-zA-Z0-9_]*\)\=\(::\|'\)[a-zA-Z_]"me=e-1 contained
 
 " To highlight packages in variables as a scope reference - i.e. in $pack::var,
 " pack:: is a scope, just set "perl_want_scope_in_variables"
@@ -109,9 +125,9 @@ syn match perlPackageRef "[a-zA-Z_][a-zA-Z0-9_]*\>\('\|::\)" contained
 " just set the variable "perl_extended_vars"...
 
 if exists("perl_want_scope_in_variables")
-  syn match perlVarPlain   "\(\$#\|\$\+\|@\$*\|%\$*\|\&\$*\)[a-zA-Z_][a-zA-Z0-9_]*\(\(::\|'\)[a-zA-Z_][a-zA-Z0-9_]*\)*\>" contains=perlPackageRef nextgroup=perlVarMember
+  syn match perlVarPlain   "\\\=\(\$#\|\$\+\|@\$*\|%\$*\|\&\$*\)\([a-zA-Z_][a-zA-Z0-9_]*\)\=\(\(::\|'\)[a-zA-Z_][a-zA-Z0-9_]*\)*\>" contains=perlPackageRef nextgroup=perlVarMember
 else
-  syn match perlVarPlain   "\(\$#\|\$\+\|@\$*\|%\$*\|\&\$*\)[a-zA-Z_][a-zA-Z0-9_]*\(\(::\|'\)[a-zA-Z_][a-zA-Z0-9_]*\)*\>" nextgroup=perlVarMember
+  syn match perlVarPlain   "\\\=\(\$#\|\$\+\|@\$*\|%\$*\|\&\$*\)\([a-zA-Z_][a-zA-Z0-9_]*\)\=\(\(::\|'\)[a-zA-Z_][a-zA-Z0-9_]*\)*\>" nextgroup=perlVarMember
 endif
 
 if exists("perl_extended_vars")
@@ -125,23 +141,25 @@ endif
 "
 
 " Highlight special characters (those which have a backslash) differently
-syn match   perlSpecial           contained "\\[0-9][0-9][0-9]\|\\."
+syn match   perlSpecial           contained "\\\(\d\+\|x[0-9a-fA-F]\+\|.\)"
 " "" String may contain variables
 syn match   perlCharacter         "'[^\\]'"
 syn match   perlSpecialCharacter  "'\\.'"
-syn match   perlSpecialCharacter  "'\\[0-9][0-9][0-9]'"
+syn match   perlSpecialCharacter  "'\\\d{3}'"
 
 " Strings
 syn region  perlString            start=+"+  skip=+\\\\\|\\"+  end=+"+ contains=perlSpecial,perlVarPlain,perlVarNotInMatches,perlVarSlash
 " '' Strings may not contain anything
-syn region  perlStringUnexpanded  start=+'+  skip=+\\\\\|\\"+  end=+'+ contains=perlSpecial
-syn region  perlStringUnexpanded  start="qw("hs=s+2 skip="\\\\\|\\)" end=")" contains=perlSpecial
+syn region  perlStringUnexpanded  start=+'+  skip=+\\\\\|\\"+  end=+'+
+"contains=perlSpecial
+syn region  perlStringUnexpanded  start="qw("hs=s+2 skip="\\\\\|\\)" end=")"
+"contains=perlSpecial
 
 " Shell commands
 syn region  perlShellCommand            start=+`+  skip=+\\\\\|\\"+  end=+`+ contains=perlSpecial,perlVarPlain
 
 " Numbers
-syn match  perlNumber          "-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn match  perlNumber          "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 
 " Constructs such as print <<EOF [...] EOF
 syn region perlUntilEOF start=+<<\(["`]\=\)EOF\1+hs=s+2 end=+^EOF$+ contains=perlSpecial,perlVarPlain,perlVarNotInMatches,perlVarSlash
@@ -174,7 +192,7 @@ syn match perlMatch "/\(\\/\|[^/]\)*[^\\]\(\\\\\)*/[xosmige]*" contains=perlVarP
 
 syn match perlClassDecl		"^[ \t]*package\>[^;]*"
 
-syn match  perlLineSkip     "\\$"
+"syn match  perlLineSkip     "\\$"
 
 "
 " Functions

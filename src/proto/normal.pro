@@ -10,3 +10,4 @@ int add_to_showcmd __ARGS((int c));
 void add_to_showcmd_c __ARGS((int c));
 void push_showcmd __ARGS((void));
 void pop_showcmd __ARGS((void));
+void may_start_select __ARGS((int c));

@@ -1,8 +1,8 @@
-*if_perl.txt*   For Vim version 5.1.  Last modification: 1998 Mar 28
+*if_perl.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
-		  			 and Matt Gerassimof
+					 and Matt Gerassimof
 
 Perl and Vim				*perl*
 
@@ -37,6 +37,9 @@ work with Perl 5.003_05 and later.
 The Perl patches for Vim were made by:
 	Sven Verdoolaege <skimo@breughel.ufsia.ac.be>
 	Matt Gerassimof
+
+Perl for MS-Windows can be found at:
+http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 
 ==============================================================================
 3. Using the Perl interface				*perl-using*
@@ -106,7 +109,7 @@ VIM::Buffers([{bn}...])	If no arguments are specified the function will return
 			return the number of buffers in a scalar context.
 			If a list of buffer names or numbers {bn} is given,
 			a list of the buffers matching {bn} will be returned,
-			using the same rules as Vim's internal |buffer_name()|
+			using the same rules as Vim's internal |bufname()|
 			function.
 
 							*perl-Windows*
@@ -120,14 +123,14 @@ VIM::Windows([{wn}...])	If no arguments are specified the function will return
 VIM::DoCommand({cmd})	Executes Ex command {cmd}.
 
 							*perl-Eval*
-VIM::Eval({expr})    	Evaluates {expr} and returns (success, val).
+VIM::Eval({expr})	Evaluates {expr} and returns (success, val).
 			success=1 indicates that val contains the value of
 			{expr}; success=0 indicates a failure to evaluation
 			the expression.  '@x' returns the contents of register
 			x, '&x' returns the value of option x, 'x' returns the
 			value of internal |variables| x, and '$x' is equivalent
 			to perl's $ENV{x}.  All |functions| accessible from
-			the command line can be used in {expr}.
+			the command-line can be used in {expr}.
 
 							*perl-SetHeight*
 Window->SetHeight({height})
@@ -149,28 +152,25 @@ Window->Buffer()					*perl-Buffer*
 
 							*perl-Name*
 Buffer->Name()		Returns the filename for the Buffer.
-
+							*perl-Number*
+Buffer->Number()	Returns the number of the Buffer.
 							*perl-Count*
 Buffer->Count()		Returns the number of lines in the Buffer.
-
 							*perl-Get*
 Buffer->Get({lnum}, {lnum}?, ...)
 			Returns a text string of line {lnum} in the Buffer
 			for each {lnum} specified. An array can be passed
 			with a list of {lnum}'s specified.
-
 							*perl-Delete*
 Buffer->Delete({lnum}, {lnum}?)
 			Deletes line {lnum} in the Buffer. If the second
 			{lnum} is specified,  the range of lines from the
 			first {lnum} to the second {lnum} are deleted.
-
 							*perl-Append*
 Buffer->Append({lnum}, {line}, {line}?, ...)
 			Appends the string {line} after line {lnum} in the
 			Buffer for each {line} specified.  An array can be
 			passed with a list of {line}'s specified.
-
 							*perl-Set*
 Buffer->Set({lnum}, {line}, {line}?, ...)
 			Replaces line {lnum} with string {line} for each

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.1.  Last modification: 1998 Mar 27
+*intro.txt*     For Vim version 5.2.  Last modification: 1998 Aug 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,6 +136,9 @@ and operating system.  Specifically, time_t and the ctime() function are used.
 And the time_t is stored in four bytes in the swap file.  But that's only used
 for printing a file date/time for recovery.
 
+The Vim strftime() function directly uses the strftime() system function.  If
+your system libraries are year 2000 compliant, Vim is too.
+
 ==============================================================================
 3. Credits						*credits* *author*
 
@@ -162,17 +165,21 @@ Vim would never have become what it is now, without the help of these people!
 	Robert Colon		many useful remarks
 	Kayhan Demirel		sent me news in Uganda
 	Chris & John Downey	xvi (ideas for multi-windows version)
+	Henk Elbers		first VMS port
 	Eric Fischer		Mac port, 'cindent', and other improvements
 	Bill Foster		Athena GUI port
 	Loic Grenie		xvim (ideas for multi windows version)
 	Sven Guckes		Vim WWW page maintainer
 	Darren Hiebert		Exuberant ctags
+	Bruce Hunsaker		improvements for VMS port
+	Andy Kahn		Cscope support
 	Steve Kirkendall	Elvis
 	Sergey Laskavy		Vim's help from Moscow
 	Felix von Leitner	Maintainer of Vim Mailing Lists
 	David Leonard		Port of Python extensions to Unix
 	Avner Lottem		Edit in right-to-left windows
 	Paul Moore		Python interface extensions
+	Vince Negri		Many Win32 GUI enhancements
 	George V. Reilly	Win32 port, Win32 GUI start-off
 	Stephen Riehm		bug collector
 	Olaf Seibert		DICE and BeBox version, regexp improvements
@@ -185,6 +192,7 @@ Vim would never have become what it is now, without the help of these people!
 	Sven Verdoolaege	Perl interface
 	Robert Webb		Command-line completion, GUI versions, and
 				lots of patches
+	Ingo Wilken		Tcl interface
 	Juergen Weigert		Lattice version, AUX improvements, UNIX and
 				MS-DOS ports, autoconf
 	Stefan 'Sec' Zehl	Maintainer of vim.org
@@ -286,12 +294,13 @@ notation	meaning		    equivalent	decimal value(s)	~
 <Enter>		same as <CR>				*<Enter>*
 <Esc>		escape			CTRL-[	 27	*escape* *<Esc>*
 <Space>		space				 32	*space*
-<Del>		delete				127
-<Bar>		vertical bar		|	124	*<Bar>*
+<lt>		less-then		<	 60	*<lt>*
 <Bslash>	backslash		\	 92	*backslash* *<Bslash>*
+<Bar>		vertical bar		|	124	*<Bar>*
+<Del>		delete				127
 
 <EOL>		end-of-line (can be <CR>, <LF> or <CR><LF>,
-		depends on system and 'fileformat')  	*<EOL>*
+		depends on system and 'fileformat')	*<EOL>*
 
 <Up>		cursor-up			*cursor-up* *cursor_up*
 <Down>		cursor-down			*cursor-down* *cursor_down*
@@ -316,6 +325,11 @@ notation	meaning		    equivalent	decimal value(s)	~
 <kEnd>		keypad end (lower left)		*keypad-end*
 <kPageUp>	keypad page-up (upper right)	*keypad-page-up*
 <kPageDown>	keypad page-down (lower right)	*keypad-page-down*
+<kPlus>		keypad +			*keypad-plus*
+<kMinus>	keypad -			*keypad-minus*
+<kMultiply>	keypad *			*keypad-multiply*
+<kDivide>	keypad /			*keypad-divide*
+<kEnter>	keypad Enter			*keypad-enter*
 <S-...>		shift-key			*shift*
 <C-...>		control-key			*control* *ctrl*
 <M-...>		alt-key or meta-key		*meta* *alt*
@@ -345,7 +359,7 @@ clear what you need to type, but often it can be typed literally, e.g., with
 the ":map" command.  The rules are:
  1.  Any printable characters are typed directly, except backslash and '<'
  2.  A backslash is represented with "\\", double backslash.
- 3.  A real '<' is represented with "\<".
+ 3.  A real '<' is represented with "\<" or "<lt>".
  4.  "<key>" means the special key typed.  This is the notation explained in
      the table above.  A few examples:
 	   <Esc>		Escape key
@@ -357,14 +371,21 @@ the ":map" command.  The rules are:
 	   <M-A>		Meta- A  ('A' with bit 8 set)
 	   <t_kd>		"kd" termcap entry (cursor down key)
 
-If you want to use the full <> notation in Vim, you have to remove the 'B'
-flag from 'cpoptions' and make sure the '<' flag is excluded (it already is by
-default).
-	:set cpo=ceFs
-If you have the 'B' flag in 'cpoptions', then <> notation mostly still works,
-but you can't escape the special meaning of key names in <> with a backslash.
-To distinguish using <> with and without the 'B' flag, it's called full <>
-notation if the 'B' flag is excluded.
+If you want to use the full <> notation in Vim, you have to make sure the '<'
+flag is excluded from 'cpoptions' (when 'compatible' is not set, it already is
+by default).
+>	:set cpo-=<
+The <> notation uses <lt> to escape the special meaning of key names.  Using a
+backslash also work, but only when 'cpoptions' does not include the 'B' flag.
+
+Examples for using a literal "<Home>" in a mapping:
+>	:imap <C-H> \<Home>
+>	:imap <C-H> <lt>Home>
+The first one only works when the 'B' flag is not in 'cpoptions'.  The second
+one always works.
+To get a literal "<lt>" in a mapping:
+>	:map <C-L> <lt>lt>
+
 For mapping, abbreviation and menu commands you can then copy-paste the
 examples and use them directly.  Or type them literally, including the '<' and
 '>' characters.  This does NOT work for other commands, like ":set" and
@@ -399,7 +420,7 @@ There are several references to other versions of Vi:
 ==============================================================================
 5. Modes, introduction				*vim-modes-intro* *vim-modes*
 
-Vim has five BASIC modes:
+Vim has six BASIC modes:
 
 Normal mode		In Normal mode you can enter all the editor
 			commands.  If you start the editor you are in this
@@ -409,36 +430,50 @@ Normal mode		In Normal mode you can enter all the editor
 Visual mode		This is like Normal mode, but the movement commands
 			extend a highlighted area.  When a non-movement
 			command is used, it is executed for the highlighted
-			area.  See |Visual-mode|.
+			area.  If the 'showmode' option is on "-- VISUAL --"
+			is shown at the bottom of the window.  See
+			|Visual-mode|.
+
+Select mode		This looks most like the MS-Windows selection mode.
+			Typing a printable character deletes the selection
+			and starts Insert mode.  If the 'showmode' option is
+			on "-- SELECT --" is shown at the bottom of the
+			window.  See |Select-mode|.
 
 Insert mode		In Insert mode the text you type is inserted into the
-			buffer.  If the 'showmode' option is on (which is
-			default), the string "-- INSERT --" is shown at the
-			bottom of the window.  |mode-ins-repl|
+			buffer.  If the 'showmode' option is on "-- INSERT --"
+			is shown at the bottom of the window.  |Insert-mode|
 
-Command-line mode	In Command-line mode you can enter one line of text
-			at the bottom of the window.  This is for the Ex
-			commands, ":", the pattern search commands, "?" and
-			"/", and the filter command, "!".  |mode-cmdline|
+Command-line mode	In Command-line mode (also called Cmdline mode) you
+Cmdline mode		can enter one line of text at the bottom of the
+			window.  This is for the Ex commands, ":", the pattern
+			search commands, "?" and "/", and the filter command,
+			"!".  |Cmdline-mode|
 
 Ex mode			Like Command-line mode, but after entering a command
 			you remain in Ex mode.  Very limited editing of the
-			command.  |mode-Ex|
+			command.  |Ex-mode|
 
-There are two ADDITIONAL modes:
+There are four ADDITIONAL modes:
 
 Replace mode		Replace mode is a special case of Insert mode.  You
 			can do the same things as in Insert mode, but for
 			each character you enter, one character of the existing
 			text is deleted.  If the 'showmode' option is on,
 			(which is the default), the string "-- REPLACE --" is
-			shown at the bottom of the window.  |replace-mode|
+			shown at the bottom of the window.  |Replace-mode|
 
 Insert command mode	Entered when CTRL-O given in Insert mode.  This is
 			like Normal mode, but after executing one command Vim
 			returns to Insert mode.  The string "-- (insert) --"
 			is shown at the bottom of the window.
 
+Insert Visual mode	Entered when starting a Visual selection from Insert
+			mode.  When the Visual selection ends, Vim returns to
+			Insert mode.
+
+Insert Select mode	Entered when starting Select mode from Insert mode.
+			When the Select mode ends, Vim returns to Insert mode.
 
 ==============================================================================
 6. Switching from mode to mode				*mode-switching*
@@ -449,15 +484,16 @@ Normal mode when you see the screen flash or hear the bell after you type
 <Esc>.  This doesn't work for Ex mode, use ":visual".
 
 							*i_esc*
-		      TO mode						  ~
-                Normal     Visual     Insert     Replace    Cmd-line   Ex ~
-FROM mode								  ~
-Normal		  -        v V ^V      *1          R        : / ? !    Q
-Visual           *2          -         c C         --       :          --
-Insert           <Esc>       --        -         <Insert>   --         --
-Replace          <Esc>       --       <Insert>     -        --         --
-Command-line     *3          --       --           --       -          --
-Ex               :vi         --       --           --       --         -
+		TO mode						    ~
+		Normal	Visual	Select	Insert	  Replace   Cmd-line  Ex ~
+FROM mode								 ~
+Normal		  -	v V ^V	  *4	 *1	    R	    : / ? !   Q
+Visual		 *2	  -	  ^G	 c C	    --	      :       --
+Select		 *5	^O ^G	  -	 *6	    --	      :       --
+Insert		 <Esc>	  --	  --	 -	  <Insert>    --      --
+Replace		 <Esc>	  --	  --	<Insert>    -	      --      --
+Command-line	 *3	  --	  --	 --	    --	      -       --
+Ex		 :vi	  --	  --	 --	    --	      --      -
 
 -  NA
 -- not possible
@@ -466,23 +502,31 @@ Ex               :vi         --       --           --       --         -
    "A", "o", "O", "c", "C", "s" or S".
 *2 Go from Visual mode to Normal mode by giving a non-movement command, which
    causes the command to be executed, or by hitting <Esc> "v", "V" or "CTRL-V"
-   (see |v_v|), which just stops Visual mode without side effets.
+   (see |v_v|), which just stops Visual mode without side effects.
 *3 Go from Command-line mode to Normal mode by:
    - Hitting <CR> or <NL>, which causes the entered command to be executed.
    - Deleting the complete line (e.g., with CTRL-U) and giving a final <BS>.
-   - Hitting CTRL-C or <Esc>, which quits the command line without executing
+   - Hitting CTRL-C or <Esc>, which quits the command-line without executing
      the command.
    In the last case <Esc> may be the character defined with the 'wildchar'
-   option, in which case it will start command line completion.  You can
-   ignore that and type <Esc> again.  {Vi: when hitting <Esc> the command line
+   option, in which case it will start command-line completion.  You can
+   ignore that and type <Esc> again.  {Vi: when hitting <Esc> the command-line
    is executed.  This is unexpected for most people; therefore it was changed
-   in Vim.  But when the <Esc> is part of a mapping, the command line is
+   in Vim.  But when the <Esc> is part of a mapping, the command-line is
    executed.  If you want the Vi behaviour also when typing <Esc>, use ":cmap
    ^V<Esc> ^V^M"}
+*4 Go from Normal to Select mode by:
+   - use the mouse to select text while 'mousemodel' is "ms"
+   - use a non-printable command to move the cursur while keeping the Shift
+     key pressed, and the 'select' option is set
+*5 Go from Select mode to Normal mode by using a non-printable command to move
+   the cursor, without keeping the Shift key pressed.
+*6 Go from Select mode to Insert mode by typing a printable character.  The
+   selection is deleted and the character is inserted.
 
 If the 'insertmode' option is on, editing a file will start in Insert mode.
 
-						*Q* *mode-Ex* *ex-mode*
+						*Q* *mode-Ex* *Ex-mode*
 Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			commands one after another, except:
 			- You don't have to keep pressing ":".
@@ -490,10 +534,10 @@ Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			- There is no normal command-line editing.
 			- Mappings and abbreviations are not used.
 			In fact, you are editing the lines with the "standard"
-			line-input editing commands (<Del> or <BS> to erease,
+			line-input editing commands (<Del> or <BS> to erase,
 			CTRL-U to kill the whole line).
 			Vim will enter this mode by default if it's invoked as
-			"ex" on the command line.
+			"ex" on the command-line.
 			Use the ":vi" command |:visual| to exit "Ex" mode.
 
 ==============================================================================
@@ -554,7 +598,7 @@ If you set the 'list' option, <Tab> characters will not be shown as several
 spaces, but as "^I".  A '$' will be placed at the end of the line, so you can
 find trailing blanks.
 
-In Command-line mode only the command line itself is shown correctly.  The
+In Command-line mode only the command-line itself is shown correctly.  The
 display of the buffer contents is updated as soon as you go back to Command
 mode.
 

@@ -1,5 +1,12 @@
-Here are some quotes about VIM that I collected from news and mail (only the
-good ones, of course :-).
+*quotes.txt*    For Vim version 5.2.  Last modification: 1998 Aug 23
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+							*quotes*
+Here are some quotes about VIM that I collected from news and mail.
+
 
 vim (vim) noun - Ebullient vitality and energy.  [Latin, accusative of vis,
 strength] (Dictionary)
@@ -7,8 +14,22 @@ strength] (Dictionary)
 VIM is so much better than vi that a great many of my old vi :map's became
 immediately obsolete! (Tony Nugent, Australia)
 
-Boy, I thought I knew almost everything about Vim, but every time I browse the
-online documentation, I hit upon a minor but cool aspect of a Vim feature that
+You've done a tremendous job with 'VIM', Bram!  The more I use it, the more
+impressed I get (I am an old 'vi' die hard who once started out with early
+versions of 'emacs' in the late 1970's and was relieved by finding 'vi' in the
+first UNIX I came across in 1983).  In my opinion, it's about time 'VIM'
+replace 'emacs' as the standard for top editors.  (Bo Thide', Sweden)
+
+I love and use VIM heavily too. (Larry Wall)
+
+Schon bei Nutzung eines Bruchteils der VIM-Funktionen wird der Benutzer recht
+schnell die Vorzuege dieses Editors kennen- und schaetzenlernen.
+Translated: Already by using a part of the VIM-functions will the user quickly
+learn and appreciate the advantages of this editor. (Garry Glendown,
+conclusion of an article on VIM in iX magazine 9/1998)
+
+Boy, I thought I knew almost everything about VIM, but every time I browse the
+online documentation, I hit upon a minor but cool aspect of a VIM feature that
 I didn't know before!  I must say the documentation is one the finest I've
 ever seen in a product -- even better than most commercial products.
 (Gautam Mudunuri)
@@ -19,7 +40,7 @@ change anything!!  Words cannot express my amazement and gratitude to the
 creators of VIM.  Keep it up.  (Vikas, USA)
 
 I wonder how long it will be before people will refer to other Vi editors as
-Vim clones?  (Darren Hiebert)
+VIM clones?  (Darren Hiebert)
 
 I read about [auto-positioning-in-file-based-on-the-errors-from-make] in one
 of those "Perfect Programmer's Editor" threads and was delighted to discover
@@ -32,11 +53,25 @@ I tell them VIM stands for VI for the new (M)illenium. Thanks so much!
 I think from now on "vi" should be called "Vim Imitation", not the other way
 around.  (Rungun Ramanathan)
 
+The Law of VIM:
+For each member b of the possible behaviour space B of program P, there exists
+a finite time t before which at least one user u in the total user space U of
+program P will request b becomes a member of the allowed behaviour space B'
+(B' <= B).
+In other words: Sooner or later everyone wants everything as an option.  (raf)
+
 Whenever I move to a new computing platform, the first thing I do is to port
-Vim.  Lately, I am simply stunned by its ease of compilation using the
+VIM.  Lately, I am simply stunned by its ease of compilation using the
 configure facility.  (A.M. Sabuncu, Turkey)
 
 The options are really excellent and very powerful. (Anish Maharaj)
+
+The Spring user-interface designs are in, and word from the boutiques is that
+80x24 text-only mode is back with a *vengeance! Vi editor clone VIM burst onto
+March desk-tops with a dazzling show of pastel syntax highlights for its 5.0
+look. Strident and customizable, VIM raises eyebrows with its interpretation
+of the classic Vi single-key macro collection.
+http://www.ntk.net/index.cgi?back=archive98/now0327.txt&line=179#l
 
 I just wanted to take this opportunity to let you know that VIM 5 ROCKS!
 Syntax highlighting: how did I survive without it?!  Thank you for creating
@@ -52,7 +87,7 @@ can honestly say that I couldn't live with anything less anymore.  My
 productivity has easily doubled compared to what it was when I used vi.
 (Sitaram Chamarty)
 
-I luv vim.  It is incredible.  I'm naming my first-born Vimberly.  (Jose
+I luv VIM.  It is incredible.  I'm naming my first-born Vimberly.  (Jose
 Unpingco, USA)
 
 Hint:  "VIM" is "vi improved" - much better! (Sven Guckes, Germany)
@@ -168,13 +203,13 @@ Eccettuato, Italy)
 
 
 In summary:
-     __     ___             _       _   _  ___ _____
+     __     ___		    _	    _	_  ___ _____
      \ \   / (_)_ __ ___   (_)___  | | | |/ _ \_   _|
       \ \ / /| | '_ ` _ \  | / __| | |_| | | | || |
        \ V / | | | | | | | | \__ \ |  _  | |_| || |
-        \_/  |_|_| |_| |_| |_|___/ |_| |_|\___/ |_|
-             ____ _____ _   _ _____ _____ _ _
-            / ___|_   _| | | |  ___|  ___| | |
-            \___ \ | | | | | | |_  | |_  | | |
-             ___) || | | |_| |  _| |  _| |_|_|
-	    |____/ |_|  \___/|_|   |_|   (_|_)        (Tony Nugent, Australia)
+	\_/  |_|_| |_| |_| |_|___/ |_| |_|\___/ |_|
+	     ____ _____ _   _ _____ _____ _ _
+	    / ___|_   _| | | |	___|  ___| | |
+	    \___ \ | | | | | | |_  | |_  | | |
+	     ___) || | | |_| |	_| |  _| |_|_|
+	    |____/ |_|	\___/|_|   |_|	 (_|_)	      (Tony Nugent, Australia)

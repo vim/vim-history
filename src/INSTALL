@@ -6,7 +6,7 @@ executable version of Vim, you don't need this.
 Contents:
 1. Generic
 2. Unix
-3. Archimedes
+3. RISC OS
 4. Macintosh
 5. OS/2 (with EMX 0.9b)
 6. Atari MiNT
@@ -66,14 +66,35 @@ If you run configure by hand (not using the Makefile), remember that any
 changes in the Makefile have no influence on configure.  This may be what you
 want, but maybe not!
 
+The advantage of running configure separately, is that you can write a script
+to build Vim, without changing the Makefile or feature.h.  Example (using sh):
 
-3. Archimedes
+	CFLAGS=-DUSE_CSCOPE ./configure --enable-gui=motif
+
+
+3. RISC OS
 =============
 
-make -f makefile.arch
+Much file renaming is needed before you can compile anything.
 
-This probably doesn't work, since the include file os_archie.h is still
-missing.  Nobody is currently working on this.
+`feature.h' needs to be edited since the defaults don't make sense
+on RISC OS.
+
+I suggest you get the latest version of the specific RISC OS sources and
+use the diffs to find out what to change. You'll need the RISC OS binary
+distribution too.
+
+Try here : http://www.ecs.soton.ac.uk/~tal197
+
+Once you have the RISC OS sources extract them onto a filing system
+which supports long filenames (eg raFS - call the disk VimSrc).
+
+Edit the Makefile to write the binary to the right place.
+
+* dir raFS::VimSrc.riscos
+* make
+
+You'll need UnixLib to link against, GCC and GNU make.
 
 
 4. Macintosh

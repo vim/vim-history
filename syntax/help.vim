@@ -26,8 +26,8 @@ syn match helpLeadBlank		"^\s\+"
 if !exists("did_help_syntax_inits")
   let did_help_syntax_inits = 1
 
-  hi helpExampleStart guifg=bg
-  hi helpIgnore guifg=bg
+  hi link helpExampleStart	helpIgnore
+  hi link helpIgnore		Ignore
   hi link helpHyperTextJump	Subtitle
   hi link helpHyperTextEntry	String
   hi link helpHeadline		Statement

@@ -11,6 +11,10 @@
 /* #define D(x)	printf x; */
 #define D(x)
 
+#if defined(USE_GUI_AMIGA)
+# include <intuition/intuition.h>
+#endif
+
 #ifdef USE_GUI_MOTIF
 # define USE_GUI_X11
 # include <Xm/Xm.h>
@@ -45,6 +49,10 @@
 /*
 # include <ToolUtils.h>
 # include <SegLoad.h>*/
+#endif
+
+#ifdef RISCOS
+# include "gui_riscos.h"
 #endif
 
 /* In the GUI we always have the clipboard and the mouse */
@@ -90,7 +98,8 @@
 #define MENU_INDEX_OP_PENDING	2
 #define MENU_INDEX_INSERT	3
 #define MENU_INDEX_CMDLINE	4
-#define MENU_MODES		5
+#define MENU_INDEX_TIP		5
+#define MENU_MODES		6
 
 /* Menu modes */
 #define MENU_NORMAL_MODE	(1 << MENU_INDEX_NORMAL)
@@ -98,10 +107,12 @@
 #define MENU_OP_PENDING_MODE	(1 << MENU_INDEX_OP_PENDING)
 #define MENU_INSERT_MODE	(1 << MENU_INDEX_INSERT)
 #define MENU_CMDLINE_MODE	(1 << MENU_INDEX_CMDLINE)
-#define MENU_ALL_MODES		((1 << MENU_MODES) - 1)
+#define MENU_TIP_MODE		(1 << MENU_INDEX_TIP)
+#define MENU_ALL_MODES		((1 << MENU_INDEX_TIP) - 1)
+/*note MENU_INDEX_TIP is not a 'real' mode*/
 
 /* The character for each menu mode */
-#define MENU_MODE_CHARS		"nvoic"
+#define MENU_MODE_CHARS		"nvoict"
 
 /* Indices for arrays of scrollbars */
 #define SBAR_NONE	    -1
@@ -117,24 +128,40 @@
 #define SB_DEFAULT_WIDTH    16
 
 /* Default height of the menu bar */
-#define MENU_DEFAULT_HEIGHT 1		    /* figure it out at runtime */
+#define MENU_DEFAULT_HEIGHT 1		/* figure it out at runtime */
 
 /* Flags for gui_mch_outstr_nowrap() */
-#define GUI_MON_WRAP_CURSOR	0x01	    /* wrap cursor at end of line */
-#define GUI_MON_INVERT		0x02	    /* invert the characters */
-#define GUI_MON_IS_CURSOR	0x04	    /* drawing cursor */
-#define GUI_MON_TRS_CURSOR	0x08	    /* drawing transparent cursor */
-#define GUI_MON_NOCLEAR		0x10	    /* don't clear selection */
+#define GUI_MON_WRAP_CURSOR	0x01	/* wrap cursor at end of line */
+#define GUI_MON_INVERT		0x02	/* invert the characters */
+#define GUI_MON_IS_CURSOR	0x04	/* drawing cursor */
+#define GUI_MON_TRS_CURSOR	0x08	/* drawing transparent cursor */
+#define GUI_MON_NOCLEAR		0x10	/* don't clear selection */
 
 /* Flags for gui_mch_draw_string() */
-#define DRAW_TRANSP		0x01	    /* draw with transparant bg */
-#define DRAW_BOLD		0x02	    /* draw bold text */
-#define DRAW_UNDERL		0x04	    /* draw underline text */
+#define DRAW_TRANSP		0x01	/* draw with transparant bg */
+#define DRAW_BOLD		0x02	/* draw bold text */
+#define DRAW_UNDERL		0x04	/* draw underline text */
+#ifdef RISCOS
+# define DRAW_ITALIC		0x08	/* draw italic text */
+#endif
+
+/* For our own tearoff menu item */
+#define TEAR_STRING		"-->Detach"
+#define TEAR_LEN		(9)	/* length of above string */
+#define MNU_HIDDEN_CHAR		']'	/* Start a menu name with this to not
+					 * include it on the main menu bar */
+
+/* for the toolbar */
+#define TOOLBAR_BUTTON_HEIGHT	15
+#define TOOLBAR_BUTTON_WIDTH	16
 
 typedef struct GuiMenu
 {
     int		modes;		    /* Which modes is this menu visible for? */
-    char_u	*name;		    /* Name shown in menu */
+    char_u	*name;		    /* Name of menu */
+    char_u	*dname;		    /* Displayed Name (without '&') */
+    int		mnemonic;	    /* mnemonic key (after '&') */
+    char_u	*actext;	    /* accelerator text (after TAB) */
     int		priority;	    /* Menu order priority */
     void	(*cb)();	    /* Call-back routine */
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
@@ -148,6 +175,8 @@ typedef struct GuiMenu
 #ifdef USE_GUI_WIN32
     UINT	id;		    /* Id of menu item */
     HMENU	submenu_id;	    /* If this is submenu, add children here */
+    HWND	tearoff_handle;	    /* hWnd of tearoff if created */
+    struct GuiMenu *parent;	    /* Parent of menu (needed for tearoffs) */
 #endif
 #if USE_GUI_BEOS
     BMenuItem	*id;		    /* Id of menu item */
@@ -162,6 +191,22 @@ typedef struct GuiMenu
     MenuHandle	menu_handle;
     MenuHandle	submenu_handle;
 #endif
+#if defined(USE_GUI_AMIGA)
+				    /* only one of these will ever be set, but
+				     * they are used to allow the menu routine
+				     * to easily get a hold of the parent menu
+				     * pointer which is needed by all items to
+				     * form the chain correctly */
+    int		    id;		    /* unused by the amiga, but used in the
+				     * code kept for compatibility */
+    struct Menu	    *menuPtr;
+    struct MenuItem *menuItemPtr;
+#endif
+#ifdef RISCOS
+    int		*id;		    /* Not used, but gui.c needs it */
+    int		greyed_out;	    /* Flag */
+    int		hidden;
+#endif
 } GuiMenu;
 
 typedef struct GuiScrollbar
@@ -169,6 +214,7 @@ typedef struct GuiScrollbar
     long	ident;		    /* Unique identifier for each scrollbar */
     struct window *wp;		    /* Scrollbar's window, NULL for bottom */
     int		value;		    /* Represents top line number visible */
+    int		pixval;		    /* pixel count of value */
     int		size;		    /* Size of scrollbar thumb */
     int		max;		    /* Number of lines in buffer */
 
@@ -187,6 +233,9 @@ typedef struct GuiScrollbar
 #endif
 #ifdef macintosh
     ControlHandle id;		    /* A handle to the scrollbar */
+#endif
+#ifdef RISCOS
+    int		id;		    /* Window handle of scrollbar window */
 #endif
 } GuiScrollbar;
 
@@ -291,6 +340,18 @@ typedef struct Gui
     char_u	*dflt_boldital_fn;  /* Resource bold-italic font */
     char_u	*geom;		    /* Geometry, eg "80x24" */
     char_u	rev_video;	    /* Use reverse video? */
+#endif
+#if defined(USE_GUI_AMIGA)
+    struct Window *window;	    /* a handle to the amiga window */
+    struct Menu	  *menu;	    /* a pointer to the first menu */
+    struct TextFont *textfont;	    /* a pointer to the font structure */
+#endif
+#ifdef RISCOS
+    int		window_handle;
+    char_u	*window_title;
+    int		window_title_size;
+    int		fg_colour;	    /* in 0xBBGGRR format */
+    int		bg_colour;
 #endif
 } Gui;
 

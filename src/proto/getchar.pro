@@ -18,6 +18,7 @@ void set_redo_ins __ARGS((void));
 void stop_redo_ins __ARGS((void));
 int ins_typebuf __ARGS((char_u *str, int noremap, int offset, int nottyped));
 int typebuf_typed __ARGS((void));
+int typebuf_maplen __ARGS((void));
 void del_typebuf __ARGS((int len, int offset));
 int save_typebuf __ARGS((void));
 int openscript __ARGS((char_u *name));

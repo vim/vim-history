@@ -15,7 +15,7 @@ syn match   expectVariables "\$spawn[a-zA-Z0-9_]*\|\$timeout[a-zA-Z0-9_]*"
 
 " Normal Expect variables.
 syn match   expectVariables "\$env([^)]*)"
-syn match   expectVariables "\$any_spawn_id\|\$argc\|\$argv[0-9]*"
+syn match   expectVariables "\$any_spawn_id\|\$argc\|\$argv\d*"
 syn match   expectVariables "\$user_spawn_id\|\$spawn_id\|\$timeout"
 
 " Expect variable arrays.
@@ -58,13 +58,13 @@ syn keyword expectOutVar  contained  string start end buffer
 
 " Numbers (Tcl style).
 syn case ignore
-  syn match  expectNumber	"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+  syn match  expectNumber	"\<\d\+\(u\=l\=\|lu\|f\)\>"
   "floating point number, with dot, optional exponent
-  syn match  expectNumber	"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+  syn match  expectNumber	"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
   "floating point number, starting with a dot, optional exponent
-  syn match  expectNumber	"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+  syn match  expectNumber	"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
   "floating point number, without dot, with exponent
-  syn match  expectNumber	"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+  syn match  expectNumber	"\<\d\+e[-+]\=\d\+[fl]\=\>"
   "hex number
   syn match  expectNumber	"0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
   "syn match  expectIdentifier	"\<[a-z_][a-z0-9_]*\>"

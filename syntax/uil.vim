@@ -16,7 +16,7 @@ syn keyword uilTodo contained	TODO
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
-syn match   uilSpecial contained "\\[0-9][0-9][0-9]\|\\."
+syn match   uilSpecial contained "\\\d\d\d\|\\."
 syn region  uilString		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=uilSpecial
 syn match   uilCharacter	"'[^\\]'"
 syn region  uilString		start=+'+  skip=+\\\\\|\\"+  end=+'+  contains=uilSpecial
@@ -25,7 +25,7 @@ syn match   uilSpecialStatement	"Xm[^ =(){}]*"
 syn match   uilSpecialFunction	"MrmNcreateCallback"
 syn match   uilRessource	"XmN[^ =(){}]*"
 
-syn match  uilNumber		"-\=\<[0-9]*\.\=[0-9]\+\(e\=f\=\|[uU]\=[lL]\=\)\>"
+syn match  uilNumber		"-\=\<\d*\.\=\d\+\(e\=f\=\|[uU]\=[lL]\=\)\>"
 syn match  uilNumber		"0[xX][0-9a-fA-F]\+\>"
 
 syn region uilComment		start="/\*"  end="\*/" contains=uilTodo

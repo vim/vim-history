@@ -13,8 +13,8 @@ syn match slrnscSectionCom	".].*"lc=2
 set isk=@,48-57,.,-,_,+
 
 syn match slrnscGroup		contained "\(\k\|\*\)\+"
-syn match slrnscNumber		contained "[0-9]\+"
-syn match slrnscDate		contained "\([0-9]\{1,2}[-/]\)\{2}[0-9]\{4}"
+syn match slrnscNumber		contained "\d\+"
+syn match slrnscDate		contained "\(\d\{1,2}[-/]\)\{2}\d\{4}"
 syn match slrnscDelim		contained ":"
 syn match slrnscComma		contained ","
 syn match slrnscOper		contained "\~"
@@ -29,13 +29,13 @@ syn keyword slrnscItem		contained Expires From Lines References Subject Xref
 
 syn match slrnscItemFill	contained ".*$" skipempty nextgroup=slrnscScoreItem contains=slrnscEsc
 
-syn match slrnscScoreItem	contained "^\s*Expires:\s*\([0-9]\{1,2}[-/]\)\{2}[0-9]\{4}\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscItem,slrnscDelim,slrnscDate
-syn match slrnscScoreItem	contained "^\s*\~\=Lines:\s*[0-9]\+\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscOper,slrnscItem,slrnscDelim,slrnscNumber
+syn match slrnscScoreItem	contained "^\s*Expires:\s*\(\d\{1,2}[-/]\)\{2}\d\{4}\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscItem,slrnscDelim,slrnscDate
+syn match slrnscScoreItem	contained "^\s*\~\=Lines:\s*\d\+\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscOper,slrnscItem,slrnscDelim,slrnscNumber
 syn match slrnscScoreItem	contained "^\s*\~\=\(From\|References\|Subject\|Xref\):" nextgroup=slrnscItemFill contains=slrnscOper,slrnscItem,slrnscDelim
 syn match slrnscScoreItem	contained "^\s*%.*$" skipempty nextgroup=slrnscScoreItem contains=slrnscComment
 
 syn keyword slrnscScore		contained Score
-syn match slrnScoreLine		"^\s*Score::\=\s\+=\=-\=[0-9]\+\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscScore,slrnscDelim,slrnscOper,slrnscNumber
+syn match slrnScoreLine		"^\s*Score::\=\s\+=\=-\=\d\+\s*$" skipempty nextgroup=slrnscScoreItem contains=slrnscScore,slrnscDelim,slrnscOper,slrnscNumber
 
 if !exists("did_slrnsc_syntax_inits")
   let did_slrnsc_syntax_inits = 1

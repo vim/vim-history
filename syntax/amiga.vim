@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:  	AmigaDos
-" Maintainer:	Dr Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
-" Last change:	November 14, 1997
+" Language:	AmigaDos
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Last change: May 18, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -18,7 +18,7 @@ syn match amiAlias	"\<[a-zA-Z][a-zA-Z0-9]\+:[a-zA-Z0-9/]*/"
 syn region amiString	start=+"+ end=+"+ oneline
 
 " numbers
-syn match amiNumber	"\<[0-9]\+\>"
+syn match amiNumber	"\<\d\+\>"
 
 " Logic flow
 syn region	amiFlow	matchgroup=Statement start="if"	matchgroup=Statement end="endif"	contains=ALL

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.1.  Last modification: 1998 Apr 05
+*pattern.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -107,13 +107,18 @@ CTRL-C			Interrupt current (search) command.  Use CTRL-Break on
 			MS-DOS |dos-CTRL-Break|.
 			In Normal mode, any pending command is aborted.
 
+							*:noh* *:nohlsearch*
+:noh[lsearch]		Stop the highlighting for the 'hlsearch' option.  It
+			is automatically turned back on when using a search
+			command, or setting the 'hlsearch' option.
+
 While typing the search pattern the current match will be shown if the
 'incsearch' option is on.  Remember that you still have to finish the search
 command with <CR> to actually position the cursor at the displayed match.  Or
 use <Esc> to abandon the search.
 
 All matches for the last used search pattern will be highlighted if you set
-the 'hlsearch' option.
+the 'hlsearch' option.  This can be suspended with the |:nohlsearch| command.
 
 					*search-offset* *{offset}*
 These commands search for the specified pattern.  With "/" and "?" an
@@ -228,7 +233,7 @@ Patterns may contain special characters, depending on the setting of the
    first match "foo", then a digit and then "beep".
 
 3. A piece is an atom, possibly followed by:
-      magic   nomagic	~
+     'magic' 'nomagic'	~
 							*/star* */\star*
 	*	\*	matches 0 or more of the preceding atom, as much as
 			possible
@@ -290,29 +295,45 @@ Patterns may contain special characters, depending on the setting of the
 	.	\.	matches any single character		  */.* */\.*
 	\<	\<	matches the beginning of a word			*/\<*
 	\>	\>	matches the end of a word			*/\>*
-	\i	\i	matches any identifier character (see		*/\i*
-			'isident' option) {not in Vi}
-	\I	\I	like "\i", but excluding digits {not in Vi}	*/\I*
-	\k	\k	matches any keyword character (see		*/\k*
-			'iskeyword' option) {not in Vi}
-	\K	\K	like "\k", but excluding digits {not in Vi}	*/\K*
-	\f	\f	matches any file name character (see		*/\f*
-			'isfname' option) {not in Vi}
-	\F	\F	like "\f", but excluding digits {not in Vi}	*/\F*
-	\p	\p	matches any printable character (see		*/\p*
-			'isprint' option) {not in Vi}
-	\P	\P	like "\p", but excluding digits {not in Vi}	*/\P*
+
+	Character classes {not in Vi}:
+	\i	\i	identifier character (see 'isident' option)	*/\i*
+	\I	\I	like "\i", but excluding digits			*/\I*
+	\k	\k	keyword character (see 'iskeyword' option)	*/\k*
+	\K	\K	like "\k", but excluding digits			*/\K*
+	\f	\f	file name character (see 'isfname' option)	*/\f*
+	\F	\F	like "\f", but excluding digits			*/\F*
+	\p	\p	printable character (see 'isprint' option)	*/\p*
+	\P	\P	like "\p", but excluding digits			*/\P*
+
 						*whitespace* *white-space*
-	\s	\s	matches a whitespace character: <Space> and	*/\s*
-			<Tab> {not in Vi}
-	\S	\S	matches a non-whitespace character; opposite	*/\S*
-			of \s  {not in Vi}
-	\e	\e	<Esc>						*/\e*
-	\t	\t	<Tab>						*/\t*
-	\r	\r	<CR>						*/\r*
-	\b	\b	<BS>						*/\b*
-	\n	\n	<NL> Not available yet!  Will be used for	*/\n*
-			multi-line patterns
+	\s	\s	whitespace character: <Space> and <Tab>		*/\s*
+	\S	\S	non-whitespace character; opposite of \s	*/\S*
+	\d	\d	digit:				[0-9]		*/\d*
+	\D	\D	non-digit:			[^0-9]		*/\D*
+	\x	\x	hex digit:			[0-9A-Fa-f]	*/\x*
+	\X	\X	non-hex digit:			[^0-9A-Fa-f]	*/\X*
+	\o	\o	octal digit:			[0-7]		*/\o*
+	\O	\O	non-octal digit:		[^0-7]		*/\O*
+	\w	\w	word character:			[0-9A-Za-z_]	*/\w*
+	\W	\W	non-word character:		[^0-9A-Za-z_]	*/\W*
+	\h	\h	head of word character:		[A-Za-z_]	*/\h*
+	\H	\H	non-head of word character:	[^A-Za-z_]	*/\H*
+	\a	\a	alphabetic character:		[A-Za-z]	*/\a*
+	\A	\A	non-alphabetic character:	[^A-Za-z]	*/\A*
+	\l	\l	lowercase character:		[a-z]		*/\l*
+	\L	\L	non-lowercase character:	[^a-z]		*/\L*
+	\u	\u	uppercase character:		[A-Z]		*/\u*
+	\U	\U	non-uppercase character		[^A-Z]		*/\U*
+			NOTE: using the atom is faster than the [] form
+	(end of character classes)
+
+	\e	\e	matches <Esc>					*/\e*
+	\t	\t	matches <Tab>					*/\t*
+	\r	\r	matches <CR>					*/\r*
+	\b	\b	matches <BS>					*/\b*
+	\n	\n	matches <NL> Not available yet!  Will be used	*/\n*
+			for multi-line patterns
 	~	\~	matches the last given substitute string    */~* */\~*
 	\(\)	\(\)	A pattern enclosed by escaped parentheses      */\(\)*
 			(e.g., "\(^a\)") matches that pattern
@@ -323,11 +344,13 @@ Patterns may contain special characters, depending on the setting of the
 	\2      \2	Like "\1", but uses second sub-expression,	*/\2*
 	   ...
 	\9      \9	Like "\1", but uses ninth sub-expression.	*/\9*
+
 	x	x	A single character, with no special meaning,
 			matches itself
 	\x	\x	A backslash followed by a single character,	*/\*
-			with no special meaning, matches the single
-			character
+			with no special meaning, is reserved for future
+			expansions
+
 	[]	\[]	A range. This is a sequence of characters	*/[]*
 			enclosed in "[]" or "\[]".  It matches any	*/\[]*
 			single character from the sequence.  E.g., "[xyz]"
@@ -339,6 +362,30 @@ Patterns may contain special characters, depending on the setting of the
 			  '-', this is shorthand for the full list of ASCII
 			  characters between them.  E.g., "[0-9]" matches any
 			  decimal digit.
+			- A character class expression is evaluated to the set
+			  of characters belonging to that character class.  The
+			  following character classes are supported:
+			  Name		Contents ~
+			  [:alnum:]     letters and digits
+			  [:alpha:]     letters
+			  [:ascii:]     ASCII characters
+			  [:blank:]     space and tab characters
+			  [:cntrl:]     control characters
+			  [:digit:]     decimal digits
+			  [:graph:]     printable characters excluding space
+			  [:lower:]     lowercase letters
+			  [:print:]     printable characters including space
+			  [:punct:]     punctuation characters
+			  [:space:]     whitespace characters
+			  [:upper:]     uppercase letters
+			  [:xdigit:]    hexadecimal digits
+			  The brackets in character class expressions are
+			  additional to the brackets delimiting a range.
+			  For example, the following is plausible for a UNIX
+			  filename: [-./[:alnum:]_~]\+
+			  That is, a list of at least one character, each of
+			  which is either '-', '.', '/', alphabetic, numeric,
+			  '_' or '~'.
 			- To include a literal ']', '^', '-' or '\' in the
 			  sequence, put a backslash before it: "[xyz\]]",
 			  "[\^xyz]", "[xy\-z]" and "[xyz\\]".
@@ -358,6 +405,8 @@ Patterns may contain special characters, depending on the setting of the
 				\t	<Tab>
 				\r	<CR>
 				\b	<BS>
+			- Machting ranges can be slow, use one of the other
+			  items above when possible.
 
 If the 'ignorecase' option is on, the case of letters is ignored.
 
@@ -369,8 +418,9 @@ Examples:
 [a-zA-Z]$		Any alphabetic character at the end of a line.
 
 \<\I\i*		or
-\(^\|[^a-zA-Z0-9_]\)[a-zA-Z_][a-zA-Z0-9_]*
-			A C identifier (will stop in front of it).
+\<\h\w*
+\<[a-zA-Z_][a-zA-Z0-9_]*
+			An identifier (e.g., in a C program).
 
 \(\.$\|\. \)		A period followed by <EOL> or a space.
 			Note that "\(\. \|\.$\)" does not do the same,

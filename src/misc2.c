@@ -12,6 +12,10 @@
 
 #include "vim.h"
 
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>	    /* for chdir() */
+#endif
+
 /*
  * coladvance(col)
  *
@@ -40,14 +44,21 @@ coladvance(wcol)
 	++ptr;
     }
     /*
-     * in insert mode it is allowed to be one char beyond the end of the line
+     * In Insert mode it is allowed to be one char beyond the end of the line.
+     * Also in Visual mode, when 'selection' is not "old".
      */
-    if ((State & INSERT) && col <= wcol)
+    if (((State & INSERT) || (VIsual_active && *p_sel != 'o')) && col <= wcol)
 	++idx;
     if (idx < 0)
 	curwin->w_cursor.col = 0;
     else
 	curwin->w_cursor.col = idx;
+#ifdef MULTI_BYTE
+    /* prevent cursor from moving on the trail byte */
+    if (is_dbcs)
+	AdjustCursorForMultiByteCharacter();
+#endif
+
     if (col <= wcol)
 	return FAIL;	    /* Couldn't reach column */
     else
@@ -74,10 +85,17 @@ inc(lp)
 
     if (*p != NUL)	/* still within line, move to next char (may be NUL) */
     {
+#ifdef MULTI_BYTE
+	if (is_dbcs && IsLeadByte(p[0]) && p[1] != NUL)
+	{
+	    lp->col += 2;
+	    return ((p[2] != NUL) ? 0 : 1);
+	}
+#endif
 	lp->col++;
 	return ((p[1] != NUL) ? 0 : 1);
     }
-    if (lp->lnum != curbuf->b_ml.ml_line_count)	    /* there is a next line */
+    if (lp->lnum != curbuf->b_ml.ml_line_count)     /* there is a next line */
     {
 	lp->col = 0;
 	lp->lnum++;
@@ -109,7 +127,11 @@ incl(lp)
     int
 dec_cursor()
 {
+#ifdef MULTI_BYTE
+    return (is_dbcs ? han_dec(&curwin->w_cursor) : dec(&curwin->w_cursor));
+#else
     return dec(&curwin->w_cursor);
+#endif
 }
 
     int
@@ -157,29 +179,44 @@ check_cursor_lnum()
 }
 
 /*
- * make sure curwin->w_cursor in on a valid character
+ * Make sure curwin->w_cursor.col is valid.
  */
     void
-adjust_cursor()
+check_cursor_col()
 {
     colnr_t len;
-
-    check_cursor_lnum();
 
     len = STRLEN(ml_get_curline());
     if (len == 0)
 	curwin->w_cursor.col = 0;
     else if (curwin->w_cursor.col >= len)
-	curwin->w_cursor.col = len - 1;
+    {
+	if (State & INSERT)
+	    curwin->w_cursor.col = len;
+	else
+	    curwin->w_cursor.col = len - 1;
+    }
+}
+
+/*
+ * make sure curwin->w_cursor in on a valid character
+ */
+    void
+adjust_cursor()
+{
+    check_cursor_lnum();
+    check_cursor_col();
 }
 
 /*
  * Make sure curwin->w_cursor is not on the NUL at the end of the line.
+ * Allow it when in Visual mode and 'selection' is not "old".
  */
     void
 adjust_cursor_col()
 {
-    if (curwin->w_cursor.col && gchar_cursor() == NUL)
+    if ((!VIsual_active || *p_sel == 'o')
+	    && curwin->w_cursor.col && gchar_cursor() == NUL)
 	--curwin->w_cursor.col;
 }
 
@@ -241,6 +278,115 @@ leftcol_changed()
 /**********************************************************************
  * Various routines dealing with allocation and deallocation of memory.
  */
+
+#if defined(MEM_PROFILE) || defined(PROTO)
+
+# define MEM_SIZES  8200
+static long_u mem_allocs[MEM_SIZES];
+static long_u mem_frees[MEM_SIZES];
+static long_u mem_allocated;
+static long_u mem_freed;
+static long_u mem_peak;
+static long_u num_alloc;
+static long_u num_freed;
+
+static void mem_pre_alloc_s __ARGS((size_t *sizep));
+static void mem_pre_alloc_l __ARGS((long_u *sizep));
+static void mem_post_alloc __ARGS((void **pp, size_t size));
+static void mem_pre_free __ARGS((void **pp));
+
+    static void
+mem_pre_alloc_s(sizep)
+    size_t *sizep;
+{
+    *sizep += sizeof(size_t);
+}
+
+    static void
+mem_pre_alloc_l(sizep)
+    long_u *sizep;
+{
+    *sizep += sizeof(size_t);
+}
+
+    static void
+mem_post_alloc(pp, size)
+    void **pp;
+    size_t size;
+{
+    if (*pp == NULL)
+	return;
+    size -= sizeof(size_t);
+    *(long_u *)*pp = size;
+    if (size <= MEM_SIZES-1)
+	mem_allocs[size-1]++;
+    else
+	mem_allocs[MEM_SIZES-1]++;
+    mem_allocated += size;
+    if (mem_allocated - mem_freed > mem_peak)
+	mem_peak = mem_allocated - mem_freed;
+    num_alloc++;
+    *pp = (void *)((char *)*pp + sizeof(size_t));
+}
+
+    static void
+mem_pre_free(pp)
+    void **pp;
+{
+    long_u size;
+
+    *pp = (void *)((char *)*pp - sizeof(size_t));
+    size = *(size_t *)*pp;
+    if (size <= MEM_SIZES-1)
+	mem_frees[size-1]++;
+    else
+	mem_frees[MEM_SIZES-1]++;
+    mem_freed += size;
+    num_freed++;
+}
+
+/*
+ * called on exit via atexit()
+ */
+    void
+vim_mem_profile_dump()
+{
+    int i, j;
+
+    printf("\r\n");
+    j = 0;
+    for (i = 0; i < MEM_SIZES - 1; i++)
+    {
+	if (mem_allocs[i] || mem_frees[i])
+	{
+	    if (mem_frees[i] > mem_allocs[i])
+		printf("\r\nERROR: ");
+	    printf("[%4d / %4lu-%-4lu] ", i + 1, mem_allocs[i], mem_frees[i]);
+	    j++;
+	    if (j > 3)
+	    {
+		j = 0;
+		printf("\r\n");
+	    }
+	}
+    }
+
+    i = MEM_SIZES - 1;
+    if (mem_allocs[i])
+    {
+	printf("\r\n");
+	if (mem_frees[i] > mem_allocs[i])
+	    printf("ERROR: ");
+	printf("[>%d / %4lu-%-4lu]", i, mem_allocs[i], mem_frees[i]);
+    }
+
+    printf("\r\n\n[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\r\n",
+	    mem_allocated, mem_freed, mem_allocated - mem_freed, mem_peak);
+    printf("[calls] total re/malloc()'s %lu, total free()'s %lu\r\n\n",
+	    num_alloc, num_freed);
+}
+
+#endif /* MEM_PROFILE */
 
 /*
  * Some memory is reserved for error messages and for being able to
@@ -311,8 +457,8 @@ lalloc_clear(size, message)
 
     char_u *
 lalloc(size, message)
-    long_u	    size;
-    int		    message;
+    long_u	size;
+    int		message;
 {
     char_u	*p;		    /* pointer to new storage space */
     static int	releasing = FALSE;  /* don't do mf_release_all() recursive */
@@ -323,6 +469,11 @@ lalloc(size, message)
 	EMSGN("Internal error: lalloc(%ld, )", size);
 	return NULL;
     }
+
+#ifdef MEM_PROFILE
+    mem_pre_alloc_l(&size);
+#endif
+
 #if defined(MSDOS) && !defined(DJGPP)
     if (size >= 0xfff0)		/* in MSDOS we can't deal with >64K blocks */
 	p = NULL;
@@ -356,15 +507,42 @@ lalloc(size, message)
 	    break;
     }
 
-    /*
-     * Avoid repeating the error message many times (they take 1 second each).
-     * Did_outofmem_msg is reset when a character is read.
-     */
     if (message && p == NULL)
 	do_outofmem_msg();
+
+#ifdef MEM_PROFILE
+    mem_post_alloc((void **)&p, (size_t)size);
+#endif
+
     return (p);
 }
 
+#if defined(MEM_PROFILE) || defined(PROTO)
+/*
+ * realloc(), with memory profiling.
+ */
+    void *
+vim_realloc(ptr, size)
+    void *ptr;
+    size_t size;
+{
+    void *p;
+
+    mem_pre_free(&ptr);
+    mem_pre_alloc_s(&size);
+
+    p = realloc(ptr, size);
+
+    mem_post_alloc(&p, size);
+
+    return p;
+}
+#endif
+
+/*
+* Avoid repeating the error message many times (they take 1 second each).
+* Did_outofmem_msg is reset when a character is read.
+*/
     void
 do_outofmem_msg()
 {
@@ -388,7 +566,7 @@ vim_strsave(string)
     len = STRLEN(string) + 1;
     p = alloc(len);
     if (p != NULL)
-	vim_memmove(p, string, (size_t)len);
+	mch_memmove(p, string, (size_t)len);
     return p;
 }
 
@@ -630,7 +808,12 @@ vim_free(x)
     void *x;
 {
     if (x != NULL)
+    {
+#ifdef MEM_PROFILE
+	mem_pre_free(&x);
+#endif
 	free(x);
+    }
 }
 
 #ifndef HAVE_MEMSET
@@ -678,7 +861,7 @@ vim_memcmp(b1, b2, len)
  * For systems that don't have a function that is guaranteed to do that (SYSV).
  */
     void
-vim_memmove(dst_arg, src_arg, len)
+mch_memmove(dst_arg, src_arg, len)
     void    *src_arg, *dst_arg;
     size_t  len;
 {
@@ -832,23 +1015,49 @@ vim_isspace(x)
  * Clear an allocated growing array.
  */
     void
-ga_clear(ga)
-    struct growarray *ga;
+ga_clear(gap)
+    struct growarray *gap;
 {
-    vim_free(ga->ga_data);
-    ga_init(ga);
+    vim_free(gap->ga_data);
+    ga_init(gap);
 }
 
 /*
- * Initialize a growing array.	Don't forget to set ga_itemsize and ga_growsize!
+ * Clear a growing array that contains a list of strings.
  */
     void
-ga_init(ga)
-    struct growarray *ga;
+ga_clear_strings(gap)
+    struct growarray *gap;
 {
-    ga->ga_data = NULL;
-    ga->ga_room = 0;
-    ga->ga_len = 0;
+    int		i;
+
+    for (i = 0; i < gap->ga_len; ++i)
+	vim_free(((char_u **)(gap->ga_data))[i]);
+    ga_clear(gap);
+}
+
+/*
+ * Initialize a growing array.	Don't forget to set ga_itemsize and
+ * ga_growsize!  Or use ga_init2().
+ */
+    void
+ga_init(gap)
+    struct growarray *gap;
+{
+    gap->ga_data = NULL;
+    gap->ga_room = 0;
+    gap->ga_len = 0;
+}
+
+    void
+ga_init2(gap, itemsize, growsize)
+    struct growarray	*gap;
+    int			itemsize;
+    int			growsize;
+{
+    ga_init(gap);
+    gap->ga_itemsize = itemsize;
+    gap->ga_growsize = growsize;
 }
 
 /*
@@ -874,7 +1083,7 @@ ga_grow(ga, n)
 	ga->ga_room = n;
 	if (ga->ga_data != NULL)
 	{
-	    vim_memmove(pp, ga->ga_data,
+	    mch_memmove(pp, ga->ga_data,
 				      (size_t)(ga->ga_itemsize * ga->ga_len));
 	    vim_free(ga->ga_data);
 	}
@@ -1006,9 +1215,13 @@ static struct key_name_entry
     {NL,		(char_u *)"LF"},	/* Alternative name */
     {CR,		(char_u *)"CR"},
     {CR,		(char_u *)"Return"},	/* Alternative name */
+    {K_BS,		(char_u *)"BS"},
+    {K_BS,		(char_u *)"BackSpace"},	/* Alternative name */
     {ESC,		(char_u *)"Esc"},
     {'|',		(char_u *)"Bar"},
     {'\\',		(char_u *)"Bslash"},
+    {K_DEL,		(char_u *)"Del"},
+    {K_DEL,		(char_u *)"Delete"},	/* Alternative name */
     {K_UP,		(char_u *)"Up"},
     {K_DOWN,		(char_u *)"Down"},
     {K_LEFT,		(char_u *)"Left"},
@@ -1060,12 +1273,8 @@ static struct key_name_entry
 
     {K_HELP,		(char_u *)"Help"},
     {K_UNDO,		(char_u *)"Undo"},
-    {K_BS,		(char_u *)"BS"},
-    {K_BS,		(char_u *)"BackSpace"},	/* Alternative name */
     {K_INS,		(char_u *)"Insert"},
     {K_INS,		(char_u *)"Ins"},	/* Alternative name */
-    {K_DEL,		(char_u *)"Del"},
-    {K_DEL,		(char_u *)"Delete"},	/* Alternative name */
     {K_HOME,		(char_u *)"Home"},
     {K_END,		(char_u *)"End"},
     {K_PAGEUP,		(char_u *)"PageUp"},
@@ -1074,6 +1283,13 @@ static struct key_name_entry
     {K_KEND,		(char_u *)"kEnd"},
     {K_KPAGEUP,		(char_u *)"kPageUp"},
     {K_KPAGEDOWN,	(char_u *)"kPageDown"},
+    {K_KPLUS,		(char_u *)"kPlus"},
+    {K_KMINUS,		(char_u *)"kMinus"},
+    {K_KDIVIDE,		(char_u *)"kDivide"},
+    {K_KMULTIPLY,	(char_u *)"kMultiply"},
+    {K_KENTER,		(char_u *)"kEnter"},
+
+    {'<',		(char_u *)"lt"},
 
     {K_MOUSE,		(char_u *)"Mouse"},
     {K_LEFTMOUSE,	(char_u *)"LeftMouse"},
@@ -1146,7 +1362,7 @@ check_shifted_spec_key(c)
 }
 
 /*
- * Check if if there is a special key code for "key" that include the
+ * Check if if there is a special key code for "key" that includes the
  * modifiers specified.
  */
     int
@@ -1220,7 +1436,7 @@ get_special_key_name(c, modifiers)
      * When not a known special key, and not a printable character, try to
      * extract modifiers.
      */
-    if (table_idx < 0 && !vim_isprintc(c) && (c & 0x80))
+    if (table_idx < 0 && (!vim_isprintc(c) || (c & 0x7f) == ' ') && (c & 0x80))
     {
 	c &= 0x7f;
 	modifiers |= MOD_MASK_ALT;
@@ -1277,18 +1493,19 @@ get_special_key_name(c, modifiers)
  * Try translating a <> name at (*srcp)[] to dst[].
  * Return the number of characters added to dst[], zero for no match.
  * If there is a match, srcp is advanced to after the <> name.
- * dst[] must be big enough to hold the result!
+ * dst[] must be big enough to hold the result (up to six characters)!
  */
     int
-trans_special(srcp, dst)
-    char_u  **srcp;
-    char_u  *dst;
+trans_special(srcp, dst, keycode)
+    char_u	**srcp;
+    char_u	*dst;
+    int		keycode; /* prefer key code, e.g. K_DEL instead of DEL */
 {
     int	    modifiers;
     int	    key;
     int	    dlen = 0;
 
-    key = find_special_key(srcp, &modifiers);
+    key = find_special_key(srcp, &modifiers, keycode);
     if (key == 0)
 	return 0;
 
@@ -1318,9 +1535,10 @@ trans_special(srcp, dst)
  * returns 0 if there is no match.
  */
     int
-find_special_key(srcp, modp)
+find_special_key(srcp, modp, keycode)
     char_u	**srcp;
     int		*modp;
+    int		keycode; /* prefer key code, e.g. K_DEL instead of DEL */
 {
     char_u  *last_dash;
     char_u  *end_of_name;
@@ -1389,6 +1607,15 @@ find_special_key(srcp, modp)
 		 * includes the modifier.
 		 */
 		key = simplify_key(key, &modifiers);
+
+		if (!keycode)
+		{
+		    /* don't want keycode, use single byte code */
+		    if (key == K_BS)
+			key = BS;
+		    else if (key == K_DEL)
+			key = DEL;
+		}
 
 		/*
 		 * Normal Key with modifier: Try to make a single byte code.
@@ -1604,6 +1831,11 @@ call_shell(cmd, opt)
 {
     char_u	*ncmd;
 
+#ifdef USE_GUI_WIN32
+    /* Don't hide the pointer while executing a shell command. */
+    gui_mch_mousehide(FALSE);
+#endif
+
     if (cmd == NULL || *p_sxq == NUL)
 	call_shell_retval = mch_call_shell(cmd, opt);
     else
@@ -1618,7 +1850,7 @@ call_shell(cmd, opt)
 	    vim_free(ncmd);
 	}
 	else
-	    call_shell_retval = FAIL;
+	    call_shell_retval = -1;
     }
     return call_shell_retval;
 }
@@ -1639,3 +1871,231 @@ get_real_state()
     }
     return State;
 }
+
+/*
+ * Change to a file's directory.
+ */
+    int
+vim_chdirfile(fname)
+    char_u	*fname;
+{
+    char_u	temp_string[MAXPATHL];
+    char_u	*p;
+    char_u	*t;
+
+    STRCPY(temp_string, fname);
+    p = get_past_head(temp_string);
+    t = gettail(temp_string);
+    while (t > p && vim_ispathsep(t[-1]))
+	--t;
+    *t = NUL; /* chop off end of string */
+
+    return mch_chdir((char *)temp_string);
+}
+
+#ifdef CURSOR_SHAPE
+
+/*
+ * Handling of cursor shapes in various modes.
+ */
+
+struct cursor_entry cursor_table[SHAPE_COUNT] =
+{
+    /* The values will be filled in from the guicursor' default when the GUI
+     * starts. */
+    {0,	0, 700L, 400L, 250L, 0, "n"},
+    {0,	0, 700L, 400L, 250L, 0, "v"},
+    {0,	0, 700L, 400L, 250L, 0, "i"},
+    {0,	0, 700L, 400L, 250L, 0, "r"},
+    {0,	0, 700L, 400L, 250L, 0, "c"},
+    {0,	0, 700L, 400L, 250L, 0, "ci"},
+    {0,	0, 700L, 400L, 250L, 0, "cr"},
+    {0,	0, 100L, 100L, 100L, 0, "sm"},
+    {0,	0, 700L, 400L, 250L, 0, "o"},
+    {0,	0, 700L, 400L, 250L, 0, "ve"}
+};
+
+/*
+ * Parse the 'guicursor' option.
+ * Returns error message for an illegal option, NULL otherwise.
+ */
+    char_u *
+parse_guicursor()
+{
+    char_u	*modep;
+    char_u	*colonp;
+    char_u	*commap;
+    char_u	*p, *endp;
+    int		idx = 0;		/* init for GCC */
+    int		all_idx;
+    int		len;
+    int		i;
+    long	n;
+    int		found_ve = FALSE;	/* found "ve" flag */
+
+    /*
+     * Repeat for all comma separated parts.
+     */
+    modep = p_guicursor;
+    while (*modep)
+    {
+	colonp = vim_strchr(modep, ':');
+	if (colonp == NULL)
+	    return (char_u *)"Missing colon";
+	commap = vim_strchr(modep, ',');
+
+	/*
+	 * Repeat for all mode's before the colon.
+	 * For the 'a' mode, we loop to handle all the modes.
+	 */
+	all_idx = -1;
+	while (modep < colonp || all_idx >= 0)
+	{
+	    if (all_idx < 0)
+	    {
+		/* Find the mode. */
+		if (modep[1] == '-' || modep[1] == ':')
+		    len = 1;
+		else
+		    len = 2;
+		if (len == 1 && TO_LOWER(modep[0]) == 'a')
+		    all_idx = SHAPE_COUNT - 1;
+		else
+		{
+		    for (idx = 0; idx < SHAPE_COUNT; ++idx)
+			if (STRNICMP(modep, cursor_table[idx].name, len) == 0)
+			    break;
+		    if (idx == SHAPE_COUNT)
+			return (char_u *)"Illegal mode";
+		    if (len == 2 && modep[0] == 'v' && modep[1] == 'e')
+			found_ve = TRUE;
+		}
+		modep += len + 1;
+	    }
+
+	    if (all_idx >= 0)
+		idx = all_idx--;
+	    else
+	    {
+		/* Set the defaults, for the missing parts */
+		cursor_table[idx].shape = SHAPE_BLOCK;
+		cursor_table[idx].blinkwait = 700L;
+		cursor_table[idx].blinkon = 400L;
+		cursor_table[idx].blinkoff = 250L;
+	    }
+
+	    /* Parse the part after the colon */
+	    for (p = colonp + 1; *p && *p != ','; )
+	    {
+		/*
+		 * First handle the ones with a number argument.
+		 */
+		i = *p;
+		len = 0;
+		if (STRNICMP(p, "ver", 3) == 0)
+		    len = 3;
+		else if (STRNICMP(p, "hor", 3) == 0)
+		    len = 3;
+		else if (STRNICMP(p, "blinkwait", 9) == 0)
+		    len = 9;
+		else if (STRNICMP(p, "blinkon", 7) == 0)
+		    len = 7;
+		else if (STRNICMP(p, "blinkoff", 8) == 0)
+		    len = 8;
+		if (len)
+		{
+		    p += len;
+		    if (!isdigit(*p))
+			return (char_u *)"digit expected";
+		    n = getdigits(&p);
+		    if (len == 3)   /* "ver" or "hor" */
+		    {
+			if (n == 0)
+			    return (char_u *)"Illegal percentage";
+			if (TO_LOWER(i) == 'v')
+			    cursor_table[idx].shape = SHAPE_VER;
+			else
+			    cursor_table[idx].shape = SHAPE_HOR;
+			cursor_table[idx].percentage = n;
+		    }
+		    else if (len == 9)
+			cursor_table[idx].blinkwait = n;
+		    else if (len == 7)
+			cursor_table[idx].blinkon = n;
+		    else
+			cursor_table[idx].blinkoff = n;
+		}
+		else if (STRNICMP(p, "block", 5) == 0)
+		{
+		    cursor_table[idx].shape = SHAPE_BLOCK;
+		    p += 5;
+		}
+		else	/* must be a highlight group name then */
+		{
+		    endp = vim_strchr(p, '-');
+		    if (commap == NULL)		    /* last part */
+		    {
+			if (endp == NULL)
+			    endp = p + STRLEN(p);   /* find end of part */
+		    }
+		    else if (endp > commap || endp == NULL)
+			endp = commap;
+		    cursor_table[idx].id = syn_check_group(p, (int)(endp - p));
+		    p = endp;
+		}
+		if (*p == '-')
+		    ++p;
+	    }
+	}
+	modep = p;
+	if (*modep == ',')
+	    ++modep;
+    }
+
+    /* If the 's' flag is not given, use the 'v' cursor for 's' */
+    if (!found_ve)
+    {
+	cursor_table[SHAPE_VE].shape = cursor_table[SHAPE_V].shape;
+	cursor_table[SHAPE_VE].percentage = cursor_table[SHAPE_V].percentage;
+	cursor_table[SHAPE_VE].blinkwait = cursor_table[SHAPE_V].blinkwait;
+	cursor_table[SHAPE_VE].blinkon = cursor_table[SHAPE_V].blinkon;
+	cursor_table[SHAPE_VE].blinkoff = cursor_table[SHAPE_V].blinkoff;
+	cursor_table[SHAPE_VE].id = cursor_table[SHAPE_V].id;
+    }
+
+    return NULL;
+}
+
+/*
+ * Return the index into cursor_table[] for the current mode.
+ */
+    int
+get_cursor_idx()
+{
+    if (State == SHOWMATCH)
+	return SHAPE_SM;
+    if (State == INSERT)
+	return SHAPE_I;
+    if (State == REPLACE)
+	return SHAPE_R;
+    if (State == CMDLINE)
+    {
+	if (cmdline_at_end())
+	    return SHAPE_C;
+	if (cmdline_overstrike())
+	    return SHAPE_CR;
+	return SHAPE_CI;
+    }
+    if (finish_op)
+	return SHAPE_O;
+    if (VIsual_active)
+    {
+	if (*p_sel == 'e')
+	    return SHAPE_VE;
+	else
+	    return SHAPE_V;
+    }
+    return SHAPE_N;
+}
+
+#endif /* CURSOR_SHAPE */

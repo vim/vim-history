@@ -25,12 +25,12 @@ syn region  pascalString	start=+'+  end=+'+
 syn match  pascalMatrixDelimiter	"[][]"
 
 "if you prefer you can highlight the range
-"syn match  pascalMatrixDelimiter	"[[0-9]\+\.\.[0-9]\+]"
+"syn match  pascalMatrixDelimiter	"[\d\+\.\.\d\+]"
 
-"syn match  pascalNumber		"-\=\<[0-9]\+\.[0-9]\+[dD]-\=[0-9]\+\>"
-"syn match  pascalNumber		"-\=\<[0-9]\+\.[0-9]\+[eE]-\=[0-9]\+\>"
-"syn match  pascalNumber		"-\=\<[0-9]\+\.[0-9]\+\>"
-syn match  pascalNumber		"-\=\<[0-9]\+\>"
+"syn match  pascalNumber		"-\=\<\d\+\.\d\+[dD]-\=\d\+\>"
+"syn match  pascalNumber		"-\=\<\d\+\.\d\+[eE]-\=\d\+\>"
+"syn match  pascalNumber		"-\=\<\d\+\.\d\+\>"
+syn match  pascalNumber		"-\=\<\d\+\>"
 syn match  pascalByte		"\$[0-9a-fA-F]\+\>"
 
 " If you don't like tabs

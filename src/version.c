@@ -55,11 +55,18 @@ do_version(arg)
 	MSG(longVersion);
 #ifdef WIN32
 # ifdef USE_GUI_WIN32
-	MSG_PUTS("\nWindows 32 bit GUI version");
+#  if (_MSC_VER <= 1010)    /* Only MS VC 4.1 and earlier can do Win32s */
+	MSG_PUTS("\nMS-Windows 16/32 bit GUI version");
+#  else
+	MSG_PUTS("\nMS-Windows 32 bit GUI version");
+#  endif
 	if (gui_is_win32s())
 	    MSG_PUTS(" in Win32s mode");
+# ifdef HAVE_OLE
+	MSG_PUTS(" with OLE support");
+# endif
 # else
-	MSG_PUTS("\nWindows 32 bit console version");
+	MSG_PUTS("\nMS-Windows 32 bit console version");
 # endif
 #endif
 #ifdef MSDOS
@@ -71,6 +78,9 @@ do_version(arg)
 #endif
 #ifdef macintosh
 	MSG_PUTS("\nMacOS version");
+#endif
+#ifdef RISCOS
+	MSG_PUTS("\nRISC OS version");
 #endif
 	MSG_PUTS("\nCompiled with (+) or without (-):\n");
 #ifdef AMIGA		/* only for Amiga systems */
@@ -85,6 +95,11 @@ do_version(arg)
 #else
 	version_msg("-autocmd ");
 #endif
+#ifdef USE_BROWSE
+	version_msg("+browse ");
+#else
+	version_msg("-browse ");
+#endif
 #ifdef NO_BUILTIN_TCAPS
 	version_msg("-builtin_terms ");
 #endif
@@ -98,6 +113,24 @@ do_version(arg)
 	version_msg("+cindent ");
 #else
 	version_msg("-cindent ");
+#endif
+#ifdef USE_CSCOPE
+	version_msg("+cscope ");
+#else
+	version_msg("-cscope ");
+#endif
+#if defined(CON_DIALOG) && defined(GUI_DIALOG)
+	version_msg("+dialog_con_gui ");
+#else
+# if defined(CON_DIALOG)
+	version_msg("+dialog_con ");
+# else
+#  if defined(GUI_DIALOG)
+	version_msg("+dialog_gui ");
+#  else
+	version_msg("-dialog ");
+#  endif
+# endif
 #endif
 #ifdef DIGRAPHS
 	version_msg("+digraphs ");
@@ -133,6 +166,11 @@ do_version(arg)
 	version_msg("+file_in_path ");
 #else
 	version_msg("-file_in_path ");
+#endif
+#ifdef WANT_FILETYPE
+	version_msg("+filetype ");
+#else
+	version_msg("-filetype ");
 #endif
 #ifdef FIND_IN_PATH
 	version_msg("+find_in_path ");
@@ -173,6 +211,11 @@ do_version(arg)
 #else
 	version_msg("-lispindent ");
 #endif
+#ifdef WANT_MODIFY_FNAME
+	version_msg("+modify_fname ");
+#else
+	version_msg("-modify_fname ");
+#endif
 #ifdef USE_MOUSE
 	version_msg("+mouse ");
 # else
@@ -193,6 +236,15 @@ do_version(arg)
 	version_msg("+mouse_xterm ");
 # else
 	version_msg("-mouse_xterm ");
+# endif
+#endif
+#ifdef MULTI_BYTE_IME
+	version_msg("+multi_byte_ime ");
+#else
+# ifdef MULTI_BYTE
+	version_msg("+multi_byte ");
+# else
+	version_msg("-multi_byte ");
 # endif
 #endif
 #ifdef USE_GUI_WIN32
@@ -261,6 +313,11 @@ do_version(arg)
 #else
 	version_msg("-tag_any_white ");
 #endif
+#ifdef HAVE_TCL
+	version_msg("+tcl ");
+#else
+	version_msg("-tcl ");
+#endif
 #if defined(UNIX) || defined(__EMX__)
 /* only Unix (or OS/2 with EMX!) can have terminfo instead of termcap */
 # ifdef TERMINFO
@@ -280,20 +337,30 @@ do_version(arg)
 #else
 	version_msg("-textobjects ");
 #endif
+#ifdef USER_COMMANDS
+	version_msg("+user-commands ");
+#else
+	version_msg("-user-commands ");
+#endif
 #ifdef VIMINFO
 	version_msg("+viminfo ");
 #else
 	version_msg("-viminfo ");
 #endif
-#ifdef SAVE_XTERM_SCREEN
-	version_msg("+xterm_save ");
+#ifdef WILDIGNORE
+	version_msg("+wildignore ");
 #else
-	version_msg("-xterm_save ");
+	version_msg("-wildignore ");
 #endif
 #ifdef WRITEBACKUP
 	version_msg("+writebackup ");
 #else
 	version_msg("-writebackup ");
+#endif
+#ifdef SAVE_XTERM_SCREEN
+	version_msg("+xterm_save ");
+#else
+	version_msg("-xterm_save ");
 #endif
 #ifdef UNIX
 # if defined(WANT_X11) && defined(HAVE_X11)
@@ -303,59 +370,55 @@ do_version(arg)
 # endif
 #endif
 	msg_putchar('\n');
+#ifdef SYS_VIMRC_FILE
+	version_msg("   system vimrc file: \"");
+	version_msg(SYS_VIMRC_FILE);
+	version_msg("\"\n");
+#endif
 #ifdef USR_VIMRC_FILE
-	version_msg("	user vimrc file: \"");
+	version_msg("     user vimrc file: \"");
 	version_msg(USR_VIMRC_FILE);
-	version_msg("\" ");
+	version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE2
-	version_msg("2nd user vimrc file: \"");
+	version_msg(" 2nd user vimrc file: \"");
 	version_msg(USR_VIMRC_FILE2);
-	version_msg("\" ");
+	version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE
-	version_msg("	 user exrc file: \"");
+	version_msg("      user exrc file: \"");
 	version_msg(USR_EXRC_FILE);
-	version_msg("\" ");
+	version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE2
-	version_msg("2nd user exrc file: \"");
+	version_msg("  2nd user exrc file: \"");
 	version_msg(USR_EXRC_FILE2);
-	version_msg("\" ");
-#endif
-#ifdef USE_GUI
-	version_msg("  user gvimrc file: \"");
-	version_msg(USR_GVIMRC_FILE);
-	version_msg("\" ");
-# ifdef USR_GVIMRC_FILE2
-	version_msg("2nd user gvimrc file: \"");
-	version_msg(USR_GVIMRC_FILE2);
-	version_msg("\" ");
-# endif
-#endif
-#ifdef SYS_VIMRC_FILE
-	msg_putchar('\n');
-	version_msg(" system vimrc file: \"");
-	version_msg(SYS_VIMRC_FILE);
-	version_msg("\"");
+	version_msg("\"\n");
 #endif
 #ifdef USE_GUI
 # ifdef SYS_GVIMRC_FILE
-	msg_putchar('\n');
-	version_msg("system gvimrc file: \"");
+	version_msg("  system gvimrc file: \"");
 	version_msg(SYS_GVIMRC_FILE);
-	MSG_PUTS("\"");
+	MSG_PUTS("\"\n");
 # endif
+	version_msg("    user gvimrc file: \"");
+	version_msg(USR_GVIMRC_FILE);
+	version_msg("\"\n");
+# ifdef USR_GVIMRC_FILE2
+	version_msg("2nd user gvimrc file: \"");
+	version_msg(USR_GVIMRC_FILE2);
+	version_msg("\"\n");
+# endif
+#endif
+#ifdef USE_GUI
 # ifdef SYS_MENU_FILE
-	msg_putchar('\n');
-	version_msg("  system menu file: \"");
+	version_msg("    system menu file: \"");
 	version_msg(SYS_MENU_FILE);
-	MSG_PUTS("\"");
+	MSG_PUTS("\"\n");
 # endif
 #endif
 #ifdef HAVE_PATHDEF
-	msg_putchar('\n');
-	version_msg("  default for $VIM: \"");
+	version_msg("    default for $VIM: \"");
 	version_msg((char *)default_vim_dir);
 	MSG_PUTS("\"\n");
 	version_msg("Compilation: ");

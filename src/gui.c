@@ -15,66 +15,37 @@ Gui gui;
 /* Set to TRUE after adding/removing menus to ensure they are updated */
 int force_menu_update = FALSE;
 
-/*
- * Handling of cursor shapes in various modes.
- */
-#define SHAPE_N		0   /* Normal mode */
-#define SHAPE_V		1   /* Visual mode */
-#define SHAPE_I		2   /* Insert mode */
-#define SHAPE_R		3   /* Replace mode */
-#define SHAPE_C		4   /* Command line Normal mode */
-#define SHAPE_CI	5   /* Command line Insert mode */
-#define SHAPE_CR	6   /* Command line Replace mode */
-#define SHAPE_SM	7   /* showing matching paren */
-#define SHAPE_O		8   /* Operator-pending mode */
-#define SHAPE_COUNT	9
-
-#define SHAPE_BLOCK	0   /* block cursor */
-#define SHAPE_HOR	1   /* horizontal bar cursor */
-#define SHAPE_VER	2   /* vertical bar cursor */
-
-struct cursor_entry
-{
-    int	    shape;	    /* one of the SHAPE_ defines */
-    int	    percentage;	    /* percentage of cell for bar */
-    long    blinkwait;	    /* blinking, wait time before blinking starts */
-    long    blinkon;	    /* blinking, on time */
-    long    blinkoff;	    /* blinking, off time */
-    int	    id;		    /* highlight group ID */
-    char    *name;	    /* mode name (fixed) */
-} cursor_table[SHAPE_COUNT] =
-{
-    /* The values will be filled in from the guicursor' default when the GUI
-     * starts. */
-    {0,	0, 700L, 400L, 250L, 0, "n"},
-    {0,	0, 700L, 400L, 250L, 0, "v"},
-    {0,	0, 700L, 400L, 250L, 0, "i"},
-    {0,	0, 700L, 400L, 250L, 0, "r"},
-    {0,	0, 700L, 400L, 250L, 0, "c"},
-    {0,	0, 700L, 400L, 250L, 0, "ci"},
-    {0,	0, 700L, 400L, 250L, 0, "cr"},
-    {0,	0, 100L, 100L, 100L, 0, "sm"},
-    {0,	0, 700L, 400L, 250L, 0, "o"}
-};
-
 static void gui_check_screen __ARGS((void));
 static void gui_position_components __ARGS((int, int));
 static void gui_outstr __ARGS((char_u *, int));
-static void gui_outstr_nowrap __ARGS((char_u *, int, int, GuiColor, GuiColor, int));
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
 static int gui_get_menu_cmd_modes __ARGS((char_u *, int, int *, int *));
+static char_u *popup_mode_name __ARGS((char_u *name, int idx));
 static void  gui_update_menus_recurse __ARGS((GuiMenu *, int));
-static int gui_add_menu_path __ARGS((char_u *, int, int, void (*)(), char_u *, int));
-static int gui_remove_menu __ARGS((GuiMenu **, char_u *, int));
+#ifdef USE_GUI_WIN32
+static int gui_add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int));
+#else
+static int gui_add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int));
+#endif
+static int gui_remove_menu __ARGS((GuiMenu **, char_u *, int, int silent));
 static void gui_free_menu __ARGS((GuiMenu *));
 static void gui_free_menu_string __ARGS((GuiMenu *, int));
 static int gui_show_menus __ARGS((char_u *, int));
 static void gui_show_menus_recursive __ARGS((GuiMenu *, int, int));
-static char_u *gui_menu_name_skip __ARGS((char_u *name));
+static int menu_name_equal __ARGS((char_u *name, GuiMenu *menu));
+static int menu_namecmp __ARGS((char_u *name, char_u *mname));
 static void gui_create_initial_menus __ARGS((GuiMenu *, GuiMenu *));
 static void gui_update_scrollbars __ARGS((int));
 static void gui_update_horiz_scrollbar __ARGS((int));
+static WIN *y2win __ARGS((int y));
+static int get_menu_mode __ARGS((void));
+#ifdef USE_GUI_WIN32
+static void gui_create_tearoffs_recurse __ARGS((GuiMenu *menu, const char_u *pname, int *pri_tab, int pri_idx));
+static void gui_add_tearoff __ARGS((char_u *tearpath, int *pri_tab, int pri_idx));
+static void gui_destroy_tearoffs_recurse __ARGS((GuiMenu *menu));
+static int s_tearoffs = FALSE;
+#endif
 
 /*
  * The Athena scrollbars can move the thumb to after the end of the scrollbar,
@@ -84,6 +55,12 @@ static void gui_update_horiz_scrollbar __ARGS((int));
 #if defined(USE_GUI_ATHENA) || defined(macintosh)
 # define SCROLL_PAST_END
 #endif
+
+/*
+ * While defining the system menu, gui_sys_menu is TRUE.  This avoids
+ * overruling of menus that the user already defined.
+ */
+static int	gui_sys_menu = FALSE;
 
 /*
  * gui_start -- Called when user wants to start the GUI.
@@ -97,7 +74,7 @@ gui_start()
 #endif
 
     old_term = vim_strsave(T_NAME);
-    mch_setmouse(FALSE);		    /* first switch mouse off */
+    mch_setmouse(FALSE);		/* first switch mouse off */
 
     /*
      * Set_termname() will call gui_init() to start the GUI.
@@ -109,17 +86,19 @@ gui_start()
      * file, they will have to go to the terminal: Set full_screen to FALSE.
      * full_screen will be set to TRUE again by a successful termcapinit().
      */
-    settmode(TMODE_COOK);			/* stop RAW mode */
+    settmode(TMODE_COOK);		/* stop RAW mode */
+    if (full_screen)
+	cursor_on();			/* needed for ":gui" in .vimrc */
     gui.starting = TRUE;
     full_screen = FALSE;
     termcapinit((char_u *)"builtin_gui");
     gui.starting = FALSE;
 
-    if (!gui.in_use)			    /* failed to start GUI */
+    if (!gui.in_use)			/* failed to start GUI */
     {
-	termcapinit(old_term);		    /* back to old term settings */
-	settmode(TMODE_RAW);		    /* restart RAW mode */
-	set_title_defaults();		    /* set 'title' and 'icon' again */
+	termcapinit(old_term);		/* back to old term settings */
+	settmode(TMODE_RAW);		/* restart RAW mode */
+	set_title_defaults();		/* set 'title' and 'icon' again */
     }
 
     vim_free(old_term);
@@ -189,7 +168,7 @@ gui_init()
 
 	gui.window_created = FALSE;
 	gui.dying = FALSE;
-	gui.in_focus = FALSE;
+	gui.in_focus = TRUE;		/* so the guicursor setting works */
 	gui.dragged_sb = SBAR_NONE;
 	gui.dragged_wp = NULL;
 	gui.pointer_hidden = FALSE;
@@ -224,14 +203,18 @@ gui_init()
 	 * Set up system-wide default menus.
 	 */
 #ifdef SYS_MENU_FILE
+	gui_sys_menu = TRUE;
 	do_source((char_u *)SYS_MENU_FILE, FALSE, FALSE);
+	gui_sys_menu = FALSE;
 #endif
 
 	/*
-	 * Switch on the mouse by default.
+	 * Switch on the mouse by default, unless the user changed it already.
 	 * This can then be changed in the .gvimrc.
 	 */
-	set_string_option_direct((char_u *)"mouse", -1, (char_u *)"a", TRUE);
+	if (!option_was_set((char_u *)"mouse"))
+	    set_string_option_direct((char_u *)"mouse", -1,
+							 (char_u *)"a", TRUE);
 
 	/*
 	 * If -U option given, use only the initializations from that file and
@@ -384,6 +367,7 @@ error:
 gui_exit(rc)
     int		rc;
 {
+    free_highlight_fonts();
     gui.in_use = FALSE;
     gui_mch_exit(rc);
 }
@@ -391,6 +375,7 @@ gui_exit(rc)
 /*
  * Set the font. Uses the 'font' option. The first font name that works is
  * used. If none is found, use the default font.
+ * Return OK when able to set the font.
  */
     int
 gui_init_font(font_list)
@@ -398,27 +383,34 @@ gui_init_font(font_list)
 {
 #define FONTLEN 100
     char_u  font_name[FONTLEN];
+    int     font_list_empty = FALSE;
     int	    ret = FAIL;
 
     if (!gui.in_use)
 	return FAIL;
 
-    while (*font_list != NUL)
-    {
-	/* Isolate one font name */
-	(void)copy_option_part(&font_list, font_name, FONTLEN, ",");
-	if (gui_mch_init_font(font_name) == OK)
+    font_name[0] = NUL;
+    if (*font_list == NUL)
+	font_list_empty = TRUE;
+    else
+	while (*font_list != NUL)
 	{
-	    ret = OK;
-	    break;
+	    /* Isolate one font name */
+	    (void)copy_option_part(&font_list, font_name, FONTLEN, ",");
+	    if (gui_mch_init_font(font_name) == OK)
+	    {
+		ret = OK;
+		break;
+	    }
 	}
-    }
 
-    if (ret != OK && STRCMP(font_name, "*") != 0)
+    if (ret != OK && STRCMP(font_name, "*") != 0
+	    && (font_list_empty || gui.norm_font == (GuiFont)0))
     {
 	/*
-	 * Couldn't load any font in 'font', tell gui_mch_init_font() to try
-	 * to find a font we can load.
+	 * Couldn't load any font in 'font_list', keep the current font if
+	 * there is one.  If 'font_list' is empty, or if there is no current
+	 * font, tell gui_mch_init_font() to try to find a font we can load.
 	 */
 	ret = gui_mch_init_font(NULL);
     }
@@ -427,7 +419,13 @@ gui_init_font(font_list)
     {
 	/* Set normal font as current font */
 	gui_mch_set_font(gui.norm_font);
-	gui_set_winsize(FALSE);
+	gui_set_winsize(
+#ifdef WIN32
+		TRUE
+#else
+		FALSE
+#endif
+		);
     }
 
     return ret;
@@ -481,6 +479,8 @@ gui_update_cursor(force, clear_selection)
 		    || gui.row != gui.cursor_row || gui.col != gui.cursor_col)
     {
 	gui_undraw_cursor();
+	if (gui.row <0)
+	    return;
 	gui.cursor_row = gui.row;
 	gui.cursor_col = gui.col;
 	gui.cursor_is_valid = TRUE;
@@ -500,27 +500,7 @@ gui_update_cursor(force, clear_selection)
 	/*
 	 * How the cursor is drawn depends on the current mode.
 	 */
-	if (State == SHOWMATCH)
-	    idx = SHAPE_SM;
-	else if (State == INSERT)
-	    idx = SHAPE_I;
-	else if (State == REPLACE)
-	    idx = SHAPE_R;
-	else if (State == CMDLINE)
-	{
-	    if (cmdline_at_end())
-		idx = SHAPE_C;
-	    else if (cmdline_overstrike())
-		idx = SHAPE_CR;
-	    else
-		idx = SHAPE_CI;
-	}
-	else if (finish_op)
-	    idx = SHAPE_O;
-	else if (VIsual_active)
-	    idx = SHAPE_V;
-	else
-	    idx = SHAPE_N;
+	idx = get_cursor_idx();
 	id = cursor_table[idx].id;
 
 	/* get the colors and attributes for the cursor.  Default is inverted */
@@ -646,9 +626,16 @@ gui_position_components(total_width, total_height)
     text_area_x = 0;
     if (gui.which_scrollbars[SBAR_LEFT])
 	text_area_x += gui.scrollbar_width;
-    text_area_y = 0;
+
+#ifdef USE_GUI_WIN32
+    if (vim_strchr(p_guioptions, GO_TOOLBAR) != NULL)
+	text_area_y = TOOLBAR_BUTTON_HEIGHT + 12;
+    else
+#endif
+	text_area_y = 0;
+
     if (gui.menu_is_active)
-	text_area_y = gui.menu_height;
+	text_area_y += gui.menu_height;
     text_area_width = gui.num_cols * gui.char_width + gui.border_offset * 2;
     text_area_height = gui.num_rows * gui.char_height + gui.border_offset * 2;
 
@@ -690,6 +677,10 @@ gui_get_base_height()
 	base_height += gui.scrollbar_height;
     if (gui.menu_is_active)
 	base_height += gui.menu_height;
+#ifdef USE_GUI_WIN32
+    if (vim_strchr(p_guioptions, GO_TOOLBAR) != NULL)
+	base_height += (TOOLBAR_BUTTON_HEIGHT+12);
+#endif
     return base_height;
 }
 
@@ -719,10 +710,10 @@ gui_resize_window(pixel_width, pixel_height)
 
     gui_reset_scroll_region();
     /*
-     * At the "more" prompt there is no redraw, put the cursor at the last
-     * line here (why does it have to be one row too low?).
+     * At the "more" and ":confirm" prompt there is no redraw, put the cursor
+     * at the last line here (why does it have to be one row too low?).
      */
-    if (State == ASKMORE)
+    if (State == ASKMORE || State == CONFIRM)
 	gui.row = gui.num_rows;
 
     if (gui.num_rows != screen_Rows || gui.num_cols != screen_Columns)
@@ -783,8 +774,8 @@ gui_set_winsize(fit_to_display)
 	if (height > screen_h)
 	{
 	    Rows = (screen_h - base_height) / gui.char_height;
-	    if (Rows < MIN_ROWS)
-		Rows = MIN_ROWS;
+	    if (Rows < MIN_LINES)
+		Rows = MIN_LINES;
 	    gui.num_rows = Rows;
 	    gui_reset_scroll_region();
 	    height = Rows * gui.char_height + base_height;
@@ -792,7 +783,7 @@ gui_set_winsize(fit_to_display)
     }
 
     min_width = base_width + MIN_COLUMNS * gui.char_width;
-    min_height = base_height + MIN_ROWS * gui.char_height;
+    min_height = base_height + MIN_LINES * gui.char_height;
 
     gui_mch_set_winsize(width, height, min_width, min_height,
 			base_width, base_height);
@@ -868,7 +859,11 @@ gui_write(s, len)
 {
     char_u  *p;
     int	    arg1 = 0, arg2 = 0;
+#ifdef RISCOS
+    int     force = TRUE;  /* JK230798, stop Vim being smart or our redraw speed will suffer */
+#else
     int	    force = FALSE;	/* force cursor update */
+#endif
 
 /* #define DEBUG_GUI_WRITE */
 #ifdef DEBUG_GUI_WRITE
@@ -1066,7 +1061,7 @@ gui_outstr(s, len)
  * GUI_MON_TRS_CURSOR is used to draw the cursor text with a transparant
  * background.
  */
-    static void
+    void
 gui_outstr_nowrap(s, len, flags, fg, bg, back)
     char_u	*s;
     int		len;
@@ -1143,13 +1138,21 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
     if (highlight_mask & (HL_INVERSE | HL_STANDOUT))
     {
+#if defined(AMIGA) || defined(RISCOS)
+	gui_mch_set_colors(bg_color, fg_color);
+#else
 	gui_mch_set_fg_color(bg_color);
 	gui_mch_set_bg_color(fg_color);
+#endif
     }
     else
     {
+#if defined(AMIGA) || defined(RISCOS)
+	gui_mch_set_colors(fg_color, bg_color);
+#else
 	gui_mch_set_fg_color(fg_color);
 	gui_mch_set_bg_color(bg_color);
+#endif
     }
 
     /* Clear the selection if we are about to write over it */
@@ -1168,10 +1171,20 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	col -= back;
     }
 
+#ifdef RISCOS
+    /* If there's no italic font, then fake it */
+    if ((highlight_mask & HL_ITALIC) && gui.ital_font == 0)
+	draw_flags |= DRAW_ITALIC;
+
+    /* Do we underline the text? */
+    if (highlight_mask & HL_UNDERLINE)
+	draw_flags |= DRAW_UNDERL;
+#else
     /* Do we underline the text? */
     if ((highlight_mask & HL_UNDERLINE) ||
 	    ((highlight_mask & HL_ITALIC) && gui.ital_font == 0))
 	draw_flags |= DRAW_UNDERL;
+#endif
 
     /* Do we draw transparantly? */
     if ((flags & GUI_MON_TRS_CURSOR))
@@ -1447,7 +1460,6 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 {
     static int	    prev_row = 0, prev_col = 0;
     static int	    prev_button = -1;
-    static linenr_t prev_topline = 0;
     static int	    num_clicks = 1;
     char_u	    string[6];
     int		    row, col;
@@ -1456,6 +1468,13 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 
     int		    checkfor;
     int		    did_clip = FALSE;
+
+    /* If a clipboard selection is in progress, handle it */
+    if (clipboard.state == SELECT_IN_PROGRESS)
+    {
+	clip_process_selection(button, x, y, repeated_click, modifiers);
+	return;
+    }
 
     /* Determine which mouse settings to look for based on the current mode */
     switch (get_real_state())
@@ -1469,8 +1488,8 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	case HITRETURN:	    checkfor = MOUSE_RETURN;	break;
 
 	    /*
-	     * On the command line, use the non-Visual mode selection on all
-	     * lines but the command line.  But not when pasting.
+	     * On the command line, use the clipboard selection on all lines
+	     * but the command line.  But not when pasting.
 	     */
 	case CMDLINE:
 	    if (Y_2_ROW(y) < cmdline_row && button != MOUSE_MIDDLE)
@@ -1485,92 +1504,103 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     };
 
     /*
-     * Allow selection of text in the command line in "normal" modes.
-     * Don't do this when dragging the status line, or extending a Visual
-     * selection.
+     * Allow clipboard selection of text on the command line in "normal"
+     * modes.  Don't do this when dragging the status line, or extending a
+     * Visual selection.
      */
     if ((State == NORMAL || State == NORMAL_BUSY
-		|| State == INSERT || State == REPLACE)
+				       || State == INSERT || State == REPLACE)
 	    && Y_2_ROW(y) >= gui.num_rows - p_ch
-	    && (button != MOUSE_DRAG || clipboard.state == SELECT_IN_PROGRESS))
+	    && button != MOUSE_DRAG)
 	checkfor = ' ';
-
-    /* If a non-Visual mode selection is in progress, handle it */
-    if (clipboard.state == SELECT_IN_PROGRESS)
-    {
-	clip_process_selection(button, x, y, repeated_click, modifiers);
-	/* Return if not also want to position the cursor */
-	if (button == MOUSE_RELEASE || !mouse_has(TO_UPPER(checkfor)))
-	    return;
-	button = MOUSE_LEFT;
-	repeated_click = FALSE;
-	modifiers = 0;
-    }
 
     /*
      * If the mouse settings say to not use the mouse, use the non-Visual mode
      * selection.  But if Visual is active, assume that only the Visual area
      * will be selected.
-     * Exception: On the command line, and when 'mouse' contains 'N' or 'I',
-     * both the selection is used and a mouse key is send.
+     * Exception: On the command line, both the selection is used and a mouse
+     * key is send.
      */
-    else
+    if (!mouse_has(checkfor) || checkfor == MOUSE_COMMAND)
     {
-	if (!mouse_has(checkfor) || checkfor == MOUSE_COMMAND)
+	/* Don't do non-visual selection in Visual mode. */
+	if (VIsual_active)
+	    return;
+
+	/*
+	 * When 'mousemodel' is "popup", shift-left is translated to right.
+	 */
+	if (mouse_model_popup())
 	{
-	    /* Don't do non-visual selection in Visual mode. */
-	    if (VIsual_active)
-		return;
-
-	    /* If the selection is done, allow the right button to extend it.
-	     * If the selection is cleared, allow the right button to start it
-	     * from the cursor position. */
-	    if (button == MOUSE_RIGHT)
+	    if (button == MOUSE_LEFT && (modifiers & MOUSE_SHIFT))
 	    {
-		if (clipboard.state == SELECT_CLEARED)
-		{
-		    if (State == CMDLINE)
-		    {
-			col = msg_col;
-			row = msg_row;
-		    }
-		    else
-		    {
-			col = curwin->w_wcol;
-			row = curwin->w_wrow + curwin->w_winpos;
-		    }
-		    clip_start_selection(MOUSE_LEFT, FILL_X(col), FILL_Y(row),
-								    FALSE, 0);
-		}
-		clip_process_selection(button, x, y, repeated_click, modifiers);
-		did_clip = TRUE;
+		button = MOUSE_RIGHT;
+		modifiers &= ~ MOUSE_SHIFT;
 	    }
-	    /* Allow the left button to start the selection */
-	    else if (button == MOUSE_LEFT)
-	    {
-		clip_start_selection(button, x, y, repeated_click, modifiers);
-		did_clip = TRUE;
-	    }
-
-	    /* Always allow pasting */
-	    if (button != MOUSE_MIDDLE)
-	    {
-		if (button == MOUSE_RELEASE
-			|| (!mouse_has(checkfor)
-					   && !mouse_has(TO_UPPER(checkfor))))
-		    return;
-		button = MOUSE_LEFT;
-	    }
-	    repeated_click = FALSE;
 	}
 
-	if (clipboard.state != SELECT_CLEARED && !did_clip)
+	/* If the selection is done, allow the right button to extend it.
+	 * If the selection is cleared, allow the right button to start it
+	 * from the cursor position. */
+	if (button == MOUSE_RIGHT)
+	{
+	    if (clipboard.state == SELECT_CLEARED)
+	    {
+		if (State == CMDLINE)
+		{
+		    col = msg_col;
+		    row = msg_row;
+		}
+		else
+		{
+		    col = curwin->w_wcol;
+		    row = curwin->w_wrow + curwin->w_winpos;
+		}
+		clip_start_selection(MOUSE_LEFT, FILL_X(col), FILL_Y(row),
+								    FALSE, 0);
+	    }
+	    clip_process_selection(button, x, y, repeated_click, modifiers);
+	    did_clip = TRUE;
+	}
+	/* Allow the left button to start the selection */
+	else if (button ==
+# ifdef RISCOS
+		/* Only start a drag on a drag event. Otherwise
+		 * we don't get a release event.
+		 */
+		    MOUSE_DRAG
+# else
+		    MOUSE_LEFT
+# endif
+				)
+	{
+	    clip_start_selection(button, x, y, repeated_click, modifiers);
+	    did_clip = TRUE;
+	}
+# ifdef RISCOS
+	else if (button == MOUSE_LEFT)
+	{
 	    clip_clear_selection();
+	    did_clip = TRUE;
+	}
+# endif
+
+	/* Always allow pasting */
+	if (button != MOUSE_MIDDLE)
+	{
+	    if (!mouse_has(checkfor) || button == MOUSE_RELEASE)
+		return;
+	    button = MOUSE_LEFT;
+	}
+	repeated_click = FALSE;
     }
+
+    if (clipboard.state != SELECT_CLEARED && !did_clip)
+	clip_clear_selection();
 #endif
 
     /*
-     * Don't put mouse events in the input queue when executing an external
+     * Don't put mouse events in the input queue while executing an external
      * command.
      */
     if (!termcap_active)
@@ -1591,7 +1621,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
      * repeated_click, because we don't want starting Visual mode when
      * clicking on a different character in the text.
      */
-    if (curwin->w_topline != prev_topline)
+    if (curwin->w_topline != gui_prev_topline)
 	repeated_click = FALSE;
 
     string[0] = CSI;	/* this sequence is recognized by check_termcode() */
@@ -1613,7 +1643,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	else
 	    num_clicks = 1;
 	prev_button = button;
-	prev_topline = curwin->w_topline;
+	gui_prev_topline = curwin->w_topline;
 
 	string[3] = (char_u)(button | 0x20);
 	SET_NUM_MOUSE_CLICKS(string[3], num_clicks);
@@ -1661,14 +1691,14 @@ gui_get_menu_index(menu, state)
 
     if (VIsual_active)
 	idx = MENU_INDEX_VISUAL;
-    else if (finish_op)
-	idx = MENU_INDEX_OP_PENDING;
-    else if ((state & NORMAL))
-	idx = MENU_INDEX_NORMAL;
     else if ((state & INSERT))
 	idx = MENU_INDEX_INSERT;
     else if ((state & CMDLINE))
 	idx = MENU_INDEX_CMDLINE;
+    else if (finish_op)
+	idx = MENU_INDEX_OP_PENDING;
+    else if ((state & NORMAL))
+	idx = MENU_INDEX_NORMAL;
     else
 	idx = MENU_INDEX_INVALID;
 
@@ -1704,6 +1734,9 @@ gui_get_menu_cmd_modes(cmd, forceit, noremap, unmenu)
 	case 'i':			/* imenu */
 	    modes = MENU_INSERT_MODE;
 	    break;
+	case 't':
+	    modes = MENU_TIP_MODE;	/* tmenu */
+	    break;
 	case 'c':			/* cmenu */
 	    modes = MENU_CMDLINE_MODE;
 	    break;
@@ -1734,34 +1767,74 @@ gui_get_menu_cmd_modes(cmd, forceit, noremap, unmenu)
     return modes;
 }
 
+#define MENUDEPTH   10		/* maximum depth of menus */
+
 /*
  * Do the :menu commands.
  */
     void
-gui_do_menu(eap)
-    EXARG		*eap;		    /* Ex command arguments */
+do_menu(eap)
+    EXARG	*eap;		    /* Ex command arguments */
 {
-    char_u  *menu_path;
-    int	    modes;
-    char_u  *map_to;
-    int	    noremap;
-    int	    unmenu;
-    char_u  *map_buf;
-    char_u  *arg;
-    int	    old_menu_height;
+    char_u	*menu_path;
+    int		modes;
+    char_u	*map_to;
+    int		noremap;
+    int		unmenu;
+    char_u	*map_buf;
+    char_u	*arg;
+    char_u	*p;
+    int		i;
+    int		old_menu_height;
+    int		pri_tab[MENUDEPTH + 1];
 
     modes = gui_get_menu_cmd_modes(eap->cmd, eap->forceit, &noremap, &unmenu);
     arg = eap->arg;
-    menu_path = eap->arg;
+
+    /* fill in the priority table */
+    for (p = arg; *p; ++p)
+	if (!isdigit(*p) && *p != '.')
+	    break;
+    if (vim_iswhite(*p))
+    {
+	for (i = 0; i < MENUDEPTH && !vim_iswhite(*arg); ++i)
+	{
+	    pri_tab[i] = getdigits(&arg);
+	    if (pri_tab[i] == 0)
+		pri_tab[i] = 500;
+	    if (*arg == '.')
+		++arg;
+	}
+	arg = skipwhite(arg);
+    }
+    else if (eap->addr_count)
+    {
+	pri_tab[0] = eap->line2;
+	i = 1;
+    }
+    else
+	i = 0;
+    while (i < MENUDEPTH)
+	pri_tab[i++] = 500;
+    pri_tab[MENUDEPTH] = -1;		/* mark end of the table */
+
+    menu_path = arg;
     if (*menu_path == NUL)
     {
 	gui_show_menus(menu_path, modes);
 	return;
     }
+
+    /* skip the menu name, and translate <Tab> into a real TAB */
     while (*arg && !vim_iswhite(*arg))
     {
 	if ((*arg == '\\' || *arg == Ctrl('V')) && arg[1] != NUL)
 	    arg++;
+	else if (STRNICMP(arg, "<TAB>", 5) == 0)
+	{
+	    *arg = TAB;
+	    mch_memmove(arg + 1, arg + 5, STRLEN(arg + 4));
+	}
 	arg++;
     }
     if (*arg != NUL)
@@ -1784,21 +1857,86 @@ gui_do_menu(eap)
     {
 	if (STRCMP(menu_path, "*") == 0)	/* meaning: remove all menus */
 	    menu_path = (char_u *)"";
-	gui_remove_menu(&gui.root_menu, menu_path, modes);
+	gui_remove_menu(&gui.root_menu, menu_path, modes, FALSE);
+
+	/*
+	 * For the PopUp menu, remove a menu for each mode separately.
+	 */
+	if (STRNCMP(menu_path, "PopUp", 5) == 0)
+	{
+	    for (i = 0; i < MENU_INDEX_TIP; ++i)
+		if (modes & (1 << i))
+		{
+		    p = popup_mode_name(menu_path, i);
+		    if (p != NULL)
+		    {
+			gui_remove_menu(&gui.root_menu, p, 1 << i, TRUE);
+			vim_free(p);
+		    }
+		}
+	}
     }
     else
     {
 	/* Replace special key codes */
-	map_to = replace_termcodes(map_to, &map_buf, FALSE);
+	map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
 	gui_add_menu_path(menu_path, modes,
-		eap->addr_count ? (int)(eap->line2) : 500,
-		gui_menu_cb, map_to, noremap);
+		pri_tab, gui_menu_cb, map_to, noremap
+#ifdef USE_GUI_WIN32
+		, TRUE
+#endif
+		);
+
+	/*
+	 * For the PopUp menu, add a menu for each mode separately.
+	 */
+	if (STRNCMP(menu_path, "PopUp", 5) == 0)
+	{
+	    for (i = 0; i < MENU_INDEX_TIP; ++i)
+		if (modes & (1 << i))
+		{
+		    p = popup_mode_name(menu_path, i);
+		    if (p != NULL)
+		    {
+			/* Include all modes, to make ":amenu" work */
+			gui_add_menu_path(p, modes,
+				pri_tab, gui_menu_cb, map_to, noremap
+#ifdef USE_GUI_WIN32
+				, TRUE
+#endif
+					 );
+			vim_free(p);
+		    }
+		}
+	}
+
 	vim_free(map_buf);
     }
 
     /* If the menubar height changed, resize the window */
     if (gui.menu_height != old_menu_height)
 	gui_set_winsize(FALSE);
+}
+
+/*
+ * Modify a menu name starting with "PopUp" to include the mode character.
+ * Returns the name in allocated memory (NULL for failure).
+ */
+    static char_u *
+popup_mode_name(name, idx)
+    char_u	*name;
+    int		idx;
+{
+    char_u	*p;
+    int		len = STRLEN(name);
+
+    p = vim_strnsave(name, len + 1);
+    if (p != NULL)
+    {
+	mch_memmove(p + 6, p + 5, len - 4);
+	p[5] = MENU_MODE_CHARS[idx];
+    }
+    return p;
 }
 
 /*
@@ -1809,23 +1947,19 @@ gui_update_menus_recurse(menu, mode)
     GuiMenu *menu;
     int	    mode;
 {
+    int	    i;
+
     while (menu)
     {
 	if (menu->modes & mode)
-	{
-	    if (vim_strchr(p_guioptions, GO_GREY) != NULL)
-		gui_mch_menu_grey(menu, FALSE);
-	    else
-		gui_mch_menu_hidden(menu, FALSE);
-	    gui_update_menus_recurse(menu->children, mode);
-	}
+	    i = FALSE;
 	else
-	{
-	    if (vim_strchr(p_guioptions, GO_GREY) != NULL)
-		gui_mch_menu_grey(menu, TRUE);
-	    else
-		gui_mch_menu_hidden(menu, TRUE);
-	}
+	    i = TRUE;
+	if (vim_strchr(p_guioptions, GO_GREY) != NULL)
+	    gui_mch_menu_grey(menu, i);
+	else
+	    gui_mch_menu_hidden(menu, i);
+	gui_update_menus_recurse(menu->children, mode);
 	menu = menu->next;
     }
 }
@@ -1839,22 +1973,19 @@ gui_update_menus_recurse(menu, mode)
 gui_update_menus(modes)
     int	    modes;
 {
-    static int prev_mode = -1;
-
-    int mode = 0;
+    static int	    prev_mode = -1;
+    int		    mode = 0;
 
     if (modes != 0x0)
 	mode = modes;
-    else if (VIsual_active)
-	mode = MENU_VISUAL_MODE;
-    else if (finish_op)
-	mode = MENU_OP_PENDING_MODE;
-    else if (State & NORMAL)
-	mode = MENU_NORMAL_MODE;
-    else if (State & INSERT)
-	mode = MENU_INSERT_MODE;
-    else if (State & CMDLINE)
-	mode = MENU_CMDLINE_MODE;
+    else
+    {
+	mode = get_menu_mode();
+	if (mode == MENU_INDEX_INVALID)
+	    mode = 0;
+	else
+	    mode = (1 << mode);
+    }
 
     if (force_menu_update || mode != prev_mode)
     {
@@ -1865,117 +1996,324 @@ gui_update_menus(modes)
     }
 }
 
+    static int
+get_menu_mode()
+{
+    if (VIsual_active)
+	return MENU_INDEX_VISUAL;
+    if (State & INSERT)
+	return MENU_INDEX_INSERT;
+    if (State & CMDLINE)
+	return MENU_INDEX_CMDLINE;
+    if (finish_op)
+	return MENU_INDEX_OP_PENDING;
+    if (State & NORMAL)
+	return MENU_INDEX_NORMAL;
+    return MENU_INDEX_INVALID;
+}
+
+/*
+ * Check if a key is used as a mnemonic for a toplevel menu.
+ * Case of the key is ignored.
+ */
+    int
+gui_is_menu_shortcut(key)
+    int		key;
+{
+    GuiMenu	*menu;
+
+    key = TO_LOWER(key);
+    for (menu = gui.root_menu; menu != NULL; menu = menu->next)
+	if (TO_LOWER(menu->mnemonic) == key)
+	    return TRUE;
+    return FALSE;
+}
+
+#if defined(USE_GUI_WIN32) || defined(PROTO)
+
+/*
+ * Deal with tearoff items that are added like a menu item.
+ * Currently only for Win32 GUI.  Others may follow later.
+ */
+
+    void
+gui_mch_toggle_tearoffs(int enable)
+{
+    int		pri_tab[MENUDEPTH + 1];
+    int		i;
+
+    if (enable)
+    {
+	for (i = 0; i < MENUDEPTH; ++i)
+	    pri_tab[i] = 500;
+	pri_tab[MENUDEPTH] = -1;
+	gui_create_tearoffs_recurse(gui.root_menu, (char_u *)"", pri_tab, 0);
+    }
+    else
+	gui_destroy_tearoffs_recurse(gui.root_menu);
+    s_tearoffs = enable;
+}
+
+/*
+ * Recursively add tearoff items
+ */
+    static void
+gui_create_tearoffs_recurse(menu, pname, pri_tab, pri_idx)
+    GuiMenu		*menu;
+    const char_u	*pname;
+    int			*pri_tab;
+    int			pri_idx;
+{
+    char_u	*newpname = NULL;
+    int		len;
+    char_u	*s;
+    char_u	*d;
+
+    if (pri_tab[pri_idx + 1] != -1)
+	++pri_idx;
+    while (menu != NULL)
+    {
+	if (menu->children != NULL && gui_menubar_menu(menu->name))
+	{
+	    /* Add the menu name to the menu path.  Insert a backslash before
+	     * dots (it's used to separate menu names). */
+	    len = STRLEN(pname) + STRLEN(menu->name);
+	    for (s = menu->name; *s; ++s)
+		if (*s == '.' || *s == '\\')
+		    ++len;
+	    newpname = alloc(len + TEAR_LEN + 2);
+	    if (newpname != NULL)
+	    {
+		STRCPY(newpname, pname);
+		d = newpname + STRLEN(newpname);
+		for (s = menu->name; *s; ++s)
+		{
+		    if (*s == '.' || *s == '\\')
+			*d++ = '\\';
+		    *d++ = *s;
+		}
+		*d = NUL;
+
+		/* check if tearoff already exists */
+		if (STRCMP(menu->children->name, TEAR_STRING) != 0)
+		{
+		    gui_add_tearoff(newpname, pri_tab, pri_idx - 1);
+		    *d = NUL;			/* remove TEAR_STRING */
+		}
+
+		STRCAT(newpname, ".");
+		gui_create_tearoffs_recurse(menu->children, newpname,
+							    pri_tab, pri_idx);
+		vim_free(newpname);
+	    }
+	}
+	menu = menu->next;
+    }
+}
+
+/*
+ * Add tear-off menu item for a submenu.
+ * "tearpath" is the menu path, and must have room to add TEAR_STRING.
+ */
+    static void
+gui_add_tearoff(tearpath, pri_tab, pri_idx)
+    char_u	*tearpath;
+    int		*pri_tab;
+    int		pri_idx;
+{
+    char_u	*tbuf;
+    int		t;
+
+    tbuf = alloc(5 + STRLEN(tearpath));
+    if (tbuf != NULL)
+    {
+	tbuf[0] = K_SPECIAL;
+	tbuf[1] = K_SECOND(K_TEAROFF);
+	tbuf[2] = K_THIRD(K_TEAROFF);
+	STRCPY(tbuf + 3, tearpath);
+	STRCAT(tbuf + 3, "\r");
+
+	STRCAT(tearpath, ".");
+	STRCAT(tearpath, TEAR_STRING);
+
+	/* Priority of tear-off is always 1 */
+	t = pri_tab[pri_idx + 1];
+	pri_tab[pri_idx + 1] = 1;
+
+	gui_add_menu_path(tearpath, MENU_ALL_MODES, pri_tab,
+		gui_menu_cb, tbuf, TRUE, FALSE);
+
+	gui_add_menu_path(tearpath, MENU_TIP_MODE, pri_tab,
+		gui_menu_cb, (char_u *)"Tear off this menu", TRUE, FALSE);
+
+	pri_tab[pri_idx + 1] = t;
+	vim_free(tbuf);
+    }
+}
+
+/*
+ * Recursively destroy tearoff items
+ */
+    static void
+gui_destroy_tearoffs_recurse(menu)
+    GuiMenu *menu;
+{
+    GuiMenu *oldmenu;
+
+    while (menu)
+    {
+	if (menu->children)
+	{
+	    /* check if tearoff exists */
+	    if ( STRCMP(menu->children->name, TEAR_STRING) == 0)
+	    {
+		/* Disconnect the item */
+		oldmenu = menu->children;
+		menu->children = oldmenu->next;
+		/* Free the memory */
+		gui_free_menu(oldmenu);
+	    }
+	    if (menu->children != NULL) /* might have been last one */
+		gui_destroy_tearoffs_recurse(menu->children);
+	}
+	menu = menu->next;
+    }
+}
+
+#endif /*USE_GUI_WIN32*/
+
 /*
  * Add the menu with the given name to the menu hierarchy
  */
     static int
-gui_add_menu_path(path_name, modes, priority, call_back, call_data, noremap)
-    char_u  *path_name;
-    int	    modes;
-    int	    priority;
-    void    (*call_back)();
-    char_u  *call_data;
-    int	    noremap;
+gui_add_menu_path(menu_path, modes, pri_tab, call_back, call_data, noremap
+#ifdef USE_GUI_WIN32
+	, addtearoff
+#endif
+	)
+    char_u	*menu_path;
+    int		modes;
+    int		*pri_tab;
+    void	(*call_back)();
+    char_u	*call_data;
+    int		noremap;
+#ifdef USE_GUI_WIN32
+    int		addtearoff;	/* may add tearoff item */
+#endif
 {
-    GuiMenu **menup;
-    GuiMenu *menu = NULL;
-    GuiMenu *parent;
-    GuiMenu **lower_pri;
-    char_u  *p;
-    char_u  *name;
-    int	    i;
-    int	    c;
+    char_u	*path_name;
+    GuiMenu	**menup;
+    GuiMenu	*menu = NULL;
+    GuiMenu	*parent;
+    GuiMenu	**lower_pri;
+    char_u	*p;
+    char_u	*name;
+    char_u	*dname;
+    char_u	*next_name;
+    int		i;
+    int		c;
+    int		idx, new_idx;
+    int		pri_idx = 0;
+    int		old_modes = 0;
+    int		amenu;
 
     /* Make a copy so we can stuff around with it, since it could be const */
-    path_name = vim_strsave(path_name);
+    path_name = vim_strsave(menu_path);
     if (path_name == NULL)
 	return FAIL;
     menup = &gui.root_menu;
-    lower_pri = menup;
     parent = NULL;
     name = path_name;
     while (*name)
     {
-	/* Get name of this element in the menu hierarchy */
-	p = gui_menu_name_skip(name);
+	/* Get name of this element in the menu hierarchy, and the simplified
+	 * name (without mnemonic and accelerator text). */
+	next_name = gui_menu_name_skip(name);
+	dname = gui_menu_text(name, NULL, NULL);
 
 	/* See if it's already there */
+	lower_pri = menup;
+	idx = 0;
+	new_idx = 0;
 	menu = *menup;
 	while (menu != NULL)
 	{
-	    if (STRCMP(name, menu->name) == 0)
+	    if (menu_name_equal(name, menu) || menu_name_equal(dname, menu))
 	    {
-		if (*p == NUL && menu->children != NULL)
+		if (*next_name == NUL && menu->children != NULL)
 		{
-		    EMSG("Menu path must not lead to a sub-menu");
+		    if (!gui_sys_menu)
+			EMSG("Menu path must not lead to a sub-menu");
 		    vim_free(path_name);
+		    vim_free(dname);
 		    return FAIL;
 		}
-		else if (*p != NUL && menu->children == NULL)
+		if (*next_name != NUL && menu->children == NULL
+#ifdef USE_GUI_WIN32
+			&& addtearoff
+#endif
+			)
 		{
-		    EMSG("Part of menu-item path is not sub-menu");
+		    if (!gui_sys_menu)
+			EMSG("Part of menu-item path is not sub-menu");
 		    vim_free(path_name);
+		    vim_free(dname);
 		    return FAIL;
 		}
 		break;
 	    }
 	    menup = &menu->next;
-	    if (menu->priority <= priority)
-		lower_pri = menup;
+
+	    /* Count menus, to find where this one needs to be inserted.
+	     * Ignore menus that are not in the menubar (PopUp and Toolbar) */
+	    if (parent != NULL || gui_menubar_menu(menu->name))
+	    {
+		++idx;
+		if (menu->priority <= pri_tab[pri_idx])
+		{
+		    lower_pri = menup;
+		    new_idx = idx;
+		}
+	    }
 	    menu = menu->next;
 	}
+
 	if (menu == NULL)
 	{
-	    if (*p == NUL && parent == NULL)
+	    if (*next_name == NUL && parent == NULL)
 	    {
 		EMSG("Must not add menu items directly to menu bar");
 		vim_free(path_name);
+		vim_free(dname);
 		return FAIL;
 	    }
 
 	    /* Not already there, so lets add it */
-	    menu = (GuiMenu *)alloc(sizeof(GuiMenu));
+	    menu = (GuiMenu *)alloc_clear(sizeof(GuiMenu));
 	    if (menu == NULL)
 	    {
 		vim_free(path_name);
+		vim_free(dname);
 		return FAIL;
 	    }
 	    menu->modes = modes;
 	    menu->name = vim_strsave(name);
-	    menu->priority = priority;
-	    menu->cb = NULL;
-#ifdef USE_GUI_WIN32
-	    menu->id = 0;
-#else
-	    menu->id = NULL;
-#endif
-	    for (i = 0; i < MENU_MODES; i++)
-	    {
-		menu->strings[i] = NULL;
-		menu->noremap[i] = FALSE;
-	    }
-	    menu->children = NULL;
+	    /* separate mnemonic and accelerator text from actual menu name */
+	    menu->dname = gui_menu_text(name, &menu->mnemonic, &menu->actext);
+	    menu->priority = pri_tab[pri_idx];
 
 	    /*
-	     * For top-menu item, add after menu that has lower priority.
+	     * Add after menu that has lower priority.
 	     */
-	    if (parent == NULL)
-	    {
-		menu->next = *lower_pri;
-		*lower_pri = menu;
-	    }
-	    else
-	    {
-		menu->next = NULL;
-		*menup = menu;
-	    }
+	    menu->next = *lower_pri;
+	    *lower_pri = menu;
 
 	    if (gui.in_use)  /* Otherwise it will be added when GUI starts */
 	    {
-		if (*p == NUL)
+		if (*next_name == NUL)
 		{
 		    /* Real menu item, not sub-menu */
-		    gui_mch_add_menu_item(menu, parent);
+		    gui_mch_add_menu_item(menu, parent, new_idx);
 
 		    /* Want to update menus now even if mode not changed */
 		    force_menu_update = TRUE;
@@ -1983,40 +2321,100 @@ gui_add_menu_path(path_name, modes, priority, call_back, call_data, noremap)
 		else
 		{
 		    /* Sub-menu (not at end of path yet) */
-		    gui_mch_add_menu(menu, parent);
+		    gui_mch_add_menu(menu, parent, new_idx);
 		}
 	    }
+
+#ifdef USE_GUI_WIN32
+	    /* When adding a new submenu, may add a tearoff item */
+	    if (	addtearoff
+		    && *next_name
+		    && vim_strchr(p_guioptions, GO_TEAROFF) != NULL
+		    && gui_menubar_menu(name))
+	    {
+		char_u		*tearpath;
+
+		/*
+		 * The pointers next_name & path_name refer to a string with
+		 * \'s and ^V's stripped out. But menu_path is a "raw"
+		 * string, so we must correct for special characters.
+		 */
+		tearpath = alloc(STRLEN(menu_path) + TEAR_LEN + 2);
+		if (tearpath != NULL)
+		{
+		    char_u  *s;
+		    int	    idx;
+
+		    STRCPY(tearpath, menu_path);
+		    idx = next_name - path_name - 1;
+		    for (s = tearpath; *s && s < tearpath + idx; ++s)
+			if ((*s == '\\' || *s == Ctrl('V')) && s[1])
+			{
+			    ++idx;
+			    ++s;
+			}
+		    tearpath[idx] = NUL;
+		    gui_add_tearoff(tearpath, pri_tab, pri_idx);
+		    vim_free(tearpath);
+		}
+	    }
+#endif
+	    old_modes = 0;
 	}
 	else
 	{
+	    old_modes = menu->modes;
+
 	    /*
 	     * If this menu option was previously only available in other
 	     * modes, then make sure it's available for this one now
 	     */
-	    menu->modes |= modes;
+#ifdef USE_GUI_WIN32
+	    /* If adding a tearbar (addtearoff == FALSE) don't update modes */
+	    if (addtearoff)
+#endif
+		menu->modes |= modes;
 	}
 
 	menup = &menu->children;
 	parent = menu;
-	name = p;
+	name = next_name;
+	vim_free(dname);
+	if (pri_tab[pri_idx + 1] != -1)
+	    ++pri_idx;
     }
     vim_free(path_name);
 
-    if (menu != NULL)
+    /*
+     * Only add system menu items which have not been defined yet.
+     * First check if this was an ":amenu".
+     */
+    amenu = ((modes & (MENU_NORMAL_MODE | MENU_INSERT_MODE)) ==
+				       (MENU_NORMAL_MODE | MENU_INSERT_MODE));
+    if (gui_sys_menu)
+	modes &= ~old_modes;
+
+    if (menu != NULL && modes)
     {
 	menu->cb = call_back;
 	p = (call_data == NULL) ? NULL : vim_strsave(call_data);
 
-	/* May match more than one of these */
+	/* loop over all modes, may add more than one */
 	for (i = 0; i < MENU_MODES; ++i)
 	{
 	    if (modes & (1 << i))
 	    {
+		/* free any old menu */
 		gui_free_menu_string(menu, i);
+
 		/* For "amenu", may insert an extra character */
+		/* Don't do this if adding a tearbar (addtearoff == FALSE) */
 		c = 0;
-		if ((modes & (MENU_NORMAL_MODE | MENU_INSERT_MODE)) ==
-				       (MENU_NORMAL_MODE | MENU_INSERT_MODE))
+		if (amenu
+#ifdef USE_GUI_WIN32
+		       && addtearoff
+#endif
+				       )
 		{
 		    switch (1 << i)
 		    {
@@ -2054,17 +2452,18 @@ gui_add_menu_path(path_name, modes, priority, call_back, call_data, noremap)
  * Called recursively.
  */
     static int
-gui_remove_menu(menup, name, modes)
-    GuiMenu **menup;
-    char_u  *name;
-    int	    modes;
+gui_remove_menu(menup, name, modes, silent)
+    GuiMenu	**menup;
+    char_u	*name;
+    int		modes;
+    int		silent;		/* don't give error messages */
 {
-    GuiMenu *menu;
-    GuiMenu *child;
-    char_u  *p;
+    GuiMenu	*menu;
+    GuiMenu	*child;
+    char_u	*p;
 
     if (*menup == NULL)
-	return OK;	    /* Got to bottom of hierarchy */
+	return OK;		/* Got to bottom of hierarchy */
 
     /* Get name of this element in the menu hierarchy */
     p = gui_menu_name_skip(name);
@@ -2073,21 +2472,23 @@ gui_remove_menu(menup, name, modes)
     menu = *menup;
     while (menu != NULL)
     {
-	if (*name == NUL || STRCMP(name, menu->name) == 0)
+	if (*name == NUL || menu_name_equal(name, menu))
 	{
 	    if (*p != NUL && menu->children == NULL)
 	    {
-		EMSG("Part of menu-item path is not sub-menu");
+		if (!silent)
+		    EMSG("Part of menu-item path is not sub-menu");
 		return FAIL;
 	    }
 	    if ((menu->modes & modes) != 0x0)
 	    {
-		if (gui_remove_menu(&menu->children, p, modes) == FAIL)
+		if (gui_remove_menu(&menu->children, p, modes, silent) == FAIL)
 		    return FAIL;
 	    }
 	    else if (*name != NUL)
 	    {
-		EMSG("Menu only exists in another mode");
+		if (!silent)
+		    EMSG("Menu only exists in another mode");
 		return FAIL;
 	    }
 
@@ -2101,8 +2502,9 @@ gui_remove_menu(menup, name, modes)
 
 	    /* Remove the menu item for the given mode[s] */
 	    menu->modes &= ~modes;
-
-	    if (menu->modes == 0x0)
+	    if (modes & MENU_TIP_MODE)
+		gui_free_menu_string(menu, MENU_INDEX_TIP);
+	    if ((menu->modes & MENU_ALL_MODES) == 0)
 	    {
 		/* The menu item is no longer valid in ANY mode, so delete it */
 		*menup = menu->next;
@@ -2119,17 +2521,31 @@ gui_remove_menu(menup, name, modes)
     {
 	if (menu == NULL)
 	{
-	    EMSG("No menu of that name");
+	    if (!silent)
+		EMSG("No menu of that name");
 	    return FAIL;
 	}
 
+
 	/* Recalculate modes for menu based on the new updated children */
-	menu->modes = 0x0;
-	for (child = menu->children; child != NULL; child = child->next)
+	menu->modes &= ~modes;
+#ifdef USE_GUI_WIN32
+	if ((s_tearoffs) && (menu->children != NULL)) /* there's a tear bar.. */
+	    child = menu->children->next; /* don't count tearoff bar */
+	else
+#endif
+	    child = menu->children;
+	for ( ; child != NULL; child = child->next)
 	    menu->modes |= child->modes;
-	if (menu->modes == 0x0)
+	if (modes & MENU_TIP_MODE)
+	    gui_free_menu_string(menu, MENU_INDEX_TIP);
+	if ((menu->modes & MENU_ALL_MODES) == 0)
 	{
 	    /* The menu item is no longer valid in ANY mode, so delete it */
+#ifdef USE_GUI_WIN32
+	    if ((s_tearoffs) && (menu->children != NULL)) /* there's a tear bar.. */
+		gui_free_menu(menu->children);
+#endif
 	    *menup = menu->next;
 	    gui_free_menu(menu);
 	}
@@ -2151,7 +2567,9 @@ gui_free_menu(menu)
     if (gui.in_use)
 	gui_mch_destroy_menu(menu);
     vim_free(menu->name);
-    for (i = 0; i < 4; i++)
+    vim_free(menu->dname);
+    vim_free(menu->actext);
+    for (i = 0; i < MENU_MODES; i++)
 	gui_free_menu_string(menu, i);
     vim_free(menu);
 
@@ -2202,7 +2620,7 @@ gui_show_menus(path_name, modes)
 	p = gui_menu_name_skip(name);
 	while (menu != NULL)
 	{
-	    if (STRCMP(name, menu->name) == 0)
+	    if (menu_name_equal(name, menu))
 	    {
 		/* Found menu */
 		if (*p != NUL && menu->children == NULL)
@@ -2262,8 +2680,13 @@ gui_show_menus_recursive(menu, modes, depth)
 	    return;
 	for (i = 0; i < depth; i++)
 	    MSG_PUTS("  ");
+	if (menu->priority)
+	{
+	    msg_outnum((long)menu->priority);
+	    MSG_PUTS(" ");
+	}
 				/* Same highlighting as for directories!? */
-	msg_puts_attr(menu->name, highlight_attr[HLF_D]);
+	msg_puts_attr(menu->name, hl_attr(HLF_D));
     }
 
     if (menu != NULL && menu->children == NULL)
@@ -2357,7 +2780,7 @@ gui_set_context_in_menu_cmd(cmd, arg, forceit)
 	    p = gui_menu_name_skip(name);
 	    while (menu != NULL)
 	    {
-		if (STRCMP(name, menu->name) == 0)
+		if (menu_name_equal(name, menu))
 		{
 		    /* Found menu */
 		    if ((*p != NUL && menu->children == NULL)
@@ -2401,19 +2824,39 @@ get_menu_name(idx)
     int	    idx;
 {
     static GuiMenu  *menu = NULL;
+    static int	    get_dname = FALSE;	/* return menu->dname next time */
     char_u	    *str;
 
     if (idx == 0)	    /* first call: start at first item */
+    {
 	menu = expand_menu;
+	get_dname = FALSE;
+    }
     if (menu == NULL)	    /* at end of linked list */
 	return NULL;
 
     if (menu->modes & expand_modes)
-	str = menu->name;
+    {
+	if (get_dname)
+	{
+	    str = menu->dname;
+	    get_dname = FALSE;
+	}
+	else
+	{
+	    str = menu->name;
+	    if (STRCMP(menu->name, menu->dname))
+		get_dname = TRUE;
+	}
+    }
     else
+    {
 	str = (char_u *)"";
+	get_dname = FALSE;
+    }
 
-    menu = menu->next;
+    if (!get_dname)
+	menu = menu->next;
     return str;
 }
 
@@ -2421,7 +2864,7 @@ get_menu_name(idx)
  * Skip over this element of the menu path and return the start of the next
  * element.  Any \ and ^Vs are removed from the current element.
  */
-    static char_u *
+    char_u *
 gui_menu_name_skip(name)
     char_u  *name;
 {
@@ -2430,13 +2873,39 @@ gui_menu_name_skip(name)
     for (p = name; *p && *p != '.'; p++)
 	if (*p == '\\' || *p == Ctrl('V'))
 	{
-	    STRCPY(p, p + 1);
+	    mch_memmove(p, p + 1, STRLEN(p));
 	    if (*p == NUL)
 		break;
 	}
     if (*p)
 	*p++ = NUL;
     return p;
+}
+
+/*
+ * Return TRUE when "name" matches with menu "menu".  The name is compared in
+ * two ways: raw menu name and menu name without '&'.  ignore part after a TAB.
+ */
+    static int
+menu_name_equal(name, menu)
+    char_u	*name;
+    GuiMenu	*menu;
+{
+    return (menu_namecmp(name, menu->name) || menu_namecmp(name, menu->dname));
+}
+
+    static int
+menu_namecmp(name, mname)
+    char_u	*name;
+    char_u	*mname;
+{
+    int		i;
+
+    for (i = 0; name[i] != NUL && name[i] != TAB; ++i)
+	if (name[i] != mname[i])
+	    break;
+    return ((name[i] == NUL || name[i] == TAB)
+	    && (mname[i] == NUL || mname[i] == TAB));
 }
 
 /*
@@ -2448,19 +2917,22 @@ gui_menu_name_skip(name)
  */
     static void
 gui_create_initial_menus(menu, parent)
-    GuiMenu *menu;
-    GuiMenu *parent;
+    GuiMenu	*menu;
+    GuiMenu	*parent;
 {
+    int		idx = 0;
+
     while (menu)
     {
 	if (menu->children != NULL)
 	{
-	    gui_mch_add_menu(menu, parent);
+	    gui_mch_add_menu(menu, parent, idx);
 	    gui_create_initial_menus(menu->children, menu);
 	}
 	else
-	    gui_mch_add_menu_item(menu, parent);
+	    gui_mch_add_menu_item(menu, parent, idx);
 	menu = menu->next;
+	++idx;
     }
 }
 
@@ -2476,13 +2948,19 @@ gui_init_which_components(oldval)
 {
     static int prev_which_scrollbars[3] = {-1, -1, -1};
     static int prev_menu_is_active = -1;
+#ifdef USE_GUI_WIN32_TOOLBAR
+    static int	prev_toolbar = -1;
+    int		using_toolbar = FALSE;
+#endif
+    static int	prev_tearoff = -1;
+    int		using_tearoff = FALSE;
 
     char_u  *p;
     int	    i;
     int	    grey_old, grey_new;
     char_u  *temp;
     WIN	    *wp;
-    int	    changed;
+    int	    need_winsize;
 
     if (oldval != NULL && gui.in_use)
     {
@@ -2521,13 +2999,21 @@ gui_init_which_components(oldval)
 	    case GO_GREY:
 		/* make menu's have grey items, ignored here */
 		break;
+#ifdef USE_GUI_WIN32_TOOLBAR
+	    case GO_TOOLBAR:
+		using_toolbar = TRUE;
+		break;
+#endif
+	    case GO_TEAROFF:
+		using_tearoff = TRUE;
+		break;
 	    default:
 		/* Should give error message for internal error */
 		break;
 	}
     if (gui.in_use)
     {
-	changed = FALSE;
+	need_winsize = FALSE;
 	for (i = 0; i < 3; i++)
 	{
 	    if (gui.which_scrollbars[i] != prev_which_scrollbars[i])
@@ -2543,7 +3029,7 @@ gui_init_which_components(oldval)
 			gui_mch_enable_scrollbar(&wp->w_scrollbars[i],
 						 gui.which_scrollbars[i]);
 		}
-		changed = TRUE;
+		need_winsize = TRUE;
 	    }
 	    prev_which_scrollbars[i] = gui.which_scrollbars[i];
 	}
@@ -2552,10 +3038,23 @@ gui_init_which_components(oldval)
 	{
 	    gui_mch_enable_menu(gui.menu_is_active);
 	    prev_menu_is_active = gui.menu_is_active;
-	    changed = TRUE;
+	    need_winsize = TRUE;
 	}
 
-	if (changed)
+#ifdef USE_GUI_WIN32_TOOLBAR
+	if (using_toolbar != prev_toolbar)
+	{
+	    gui_mch_show_toolbar(using_toolbar);
+	    prev_toolbar = using_toolbar;
+	    need_winsize = TRUE;
+	}
+#endif
+	if (using_tearoff != prev_tearoff)
+	{
+	    gui_mch_toggle_tearoffs(using_tearoff);
+	    prev_tearoff = using_tearoff;
+	}
+	if (need_winsize)
 	    gui_set_winsize(FALSE);
     }
 }
@@ -2576,6 +3075,7 @@ gui_create_scrollbar(sb, wp)
     sb->ident = sbar_ident++;	/* No check for too big, but would it happen? */
     sb->wp = wp;
     sb->value = -1;
+    sb->pixval = -1;
     sb->size = -1;
     sb->max = -1;
     sb->top = -1;
@@ -2662,9 +3162,7 @@ gui_drag_scrollbar(sb, value, still_dragging)
 	value = sb->max - sb->size + 1;
 #endif
 
-#ifndef USE_GUI_ATHENA
     sb->value = value;
-#endif
 
 #ifdef RIGHTLEFT
     if (sb->wp == NULL && curwin->w_p_rl)
@@ -2794,6 +3292,10 @@ gui_update_scrollbars(force)
 	     * scrollbar for now.
 	     */
 	    sb->height = 0;	    /* Force update next time */
+	    if (gui.which_scrollbars[SBAR_LEFT])
+		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT], FALSE);
+	    if (gui.which_scrollbars[SBAR_RIGHT])
+		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT], FALSE);
 	    continue;
 	}
 	if (force || sb->height != wp->w_height
@@ -2806,11 +3308,15 @@ gui_update_scrollbars(force)
 	    sb->status_height = wp->w_status_height;
 
 	    /* Calculate height and position in pixels */
-	    h = sb->height * gui.char_height
-		    + sb->status_height * gui.char_height;
+	    h = (sb->height + sb->status_height) * gui.char_height;
 	    y = sb->top * gui.char_height + gui.border_offset;
 	    if (gui.menu_is_active)
 		y += gui.menu_height;
+
+#ifdef USE_GUI_WIN32
+	    if (vim_strchr(p_guioptions, GO_TOOLBAR) != NULL)
+		y += (TOOLBAR_BUTTON_HEIGHT+12);
+#endif
 
 	    if (wp == firstwin)
 	    {
@@ -2819,20 +3325,39 @@ gui_update_scrollbars(force)
 		y -= gui.border_offset;
 	    }
 	    if (gui.which_scrollbars[SBAR_LEFT])
+	    {
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_LEFT],
 					  gui.left_sbar_x, y,
 					  gui.scrollbar_width, h);
+		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT], TRUE);
+	    }
 	    if (gui.which_scrollbars[SBAR_RIGHT])
+	    {
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_RIGHT],
 					  gui.right_sbar_x, y,
 					  gui.scrollbar_width, h);
+		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT], TRUE);
+	    }
 	}
-	if (force || sb->value != val
-	    || sb->size != size
-	    || sb->max != max)
+
+	/* reduce the number of calls to gui_mch_set_scrollbar_thumb() by
+	 * checking if the thumb moved at least a pixel */
+	if (max == 0)
+	    y = 0;
+	else
+	    y = (val * (sb->height + 2) * gui.char_height + max / 2) / max;
+	if (force
+#ifdef RISCOS
+		/* RISCOS does scrollbars differently - use the old check */
+		|| sb->pixval != val
+#else
+		|| sb->pixval != y
+#endif
+		|| sb->size != size || sb->max != max)
 	{
 	    /* Thumb of scrollbar has moved */
 	    sb->value = val;
+	    sb->pixval = y;
 	    sb->size = size;
 	    sb->max = max;
 	    if (gui.which_scrollbars[SBAR_LEFT] && gui.dragged_sb != SBAR_LEFT)
@@ -3061,142 +3586,6 @@ gui_new_scrollbar_colors()
 #endif
 
 /*
- * Parse the 'guicursor' option.
- * Returns error message for an illegal option, NULL otherwise.
- */
-    char_u *
-parse_guicursor()
-{
-    char_u	*modep;
-    char_u	*colonp;
-    char_u	*commap;
-    char_u	*p, *endp;
-    int		idx = 0;	/* init for GCC */
-    int		all_idx;
-    int		len;
-    int		i;
-    long	n;
-
-    /*
-     * Repeat for all comma separated parts.
-     */
-    modep = p_guicursor;
-    while (*modep)
-    {
-	colonp = vim_strchr(modep, ':');
-	if (colonp == NULL)
-	    return (char_u *)"Missing colon";
-	commap = vim_strchr(modep, ',');
-
-	/*
-	 * Repeat for all mode's before the colon.
-	 * For the 'a' mode, we loop to handle all the modes.
-	 */
-	all_idx = -1;
-	while (modep < colonp || all_idx >= 0)
-	{
-	    if (all_idx < 0)
-	    {
-		/* Find the mode. */
-		if (modep[1] == '-' || modep[1] == ':')
-		    len = 1;
-		else
-		    len = 2;
-		if (len == 1 && TO_LOWER(modep[0]) == 'a')
-		    all_idx = SHAPE_COUNT - 1;
-		else
-		{
-		    for (idx = 0; idx < SHAPE_COUNT; ++idx)
-			if (STRNICMP(modep, cursor_table[idx].name, len) == 0)
-			    break;
-		    if (idx == SHAPE_COUNT)
-			return (char_u *)"Illegal mode";
-		}
-		modep += len + 1;
-	    }
-
-	    if (all_idx >= 0)
-		idx = all_idx--;
-	    else
-	    {
-		/* Set the defaults, for the missing parts */
-		cursor_table[idx].shape = SHAPE_BLOCK;
-		cursor_table[idx].blinkwait = 700L;
-		cursor_table[idx].blinkon = 400L;
-		cursor_table[idx].blinkoff = 250L;
-	    }
-
-	    /* Parse the part after the colon */
-	    for (p = colonp + 1; *p && *p != ','; )
-	    {
-		/*
-		 * First handle the ones with a number argument.
-		 */
-		i = *p;
-		len = 0;
-		if (STRNICMP(p, "ver", 3) == 0)
-		    len = 3;
-		else if (STRNICMP(p, "hor", 3) == 0)
-		    len = 3;
-		else if (STRNICMP(p, "blinkwait", 9) == 0)
-		    len = 9;
-		else if (STRNICMP(p, "blinkon", 7) == 0)
-		    len = 7;
-		else if (STRNICMP(p, "blinkoff", 8) == 0)
-		    len = 8;
-		if (len)
-		{
-		    p += len;
-		    if (!isdigit(*p))
-			return (char_u *)"digit expected";
-		    n = getdigits(&p);
-		    if (len == 3)   /* "ver" or "hor" */
-		    {
-			if (n == 0)
-			    return (char_u *)"Illegal percentage";
-			if (TO_LOWER(i) == 'v')
-			    cursor_table[idx].shape = SHAPE_VER;
-			else
-			    cursor_table[idx].shape = SHAPE_HOR;
-			cursor_table[idx].percentage = n;
-		    }
-		    else if (len == 9)
-			cursor_table[idx].blinkwait = n;
-		    else if (len == 7)
-			cursor_table[idx].blinkon = n;
-		    else
-			cursor_table[idx].blinkoff = n;
-		}
-		else if (STRNICMP(p, "block", 5) == 0)
-		{
-		    cursor_table[idx].shape = SHAPE_BLOCK;
-		    p += 5;
-		}
-		else	/* must be a highlight group name then */
-		{
-		    endp = vim_strchr(p, '-');
-		    if (commap == NULL)		    /* last part */
-		    {
-			if (endp == NULL)
-			    endp = p + STRLEN(p);   /* find end of part */
-		    }
-		    else if (endp > commap || endp == NULL)
-			endp = commap;
-		    cursor_table[idx].id = syn_check_group(p, (int)(endp - p));
-		    p = endp;
-		}
-		if (*p == '-')
-		    ++p;
-	    }
-	}
-	modep = p;
-	if (*modep == ',')
-	    ++modep;
-    }
-    return NULL;
-}
-
-/*
  * Call this when focus has changed.
  */
     void
@@ -3208,3 +3597,177 @@ gui_focus_change(in_focus)
     gui_update_cursor(TRUE, FALSE);
 }
 
+/*
+ * Duplicate the menu item text and then process to see if a mnemonic key
+ * and/or accelerator text has been identified.
+ * Returns a pointer to allocated memory, or NULL for failure.
+ * If mnemonic != NULL, *mnemonic is set to the character after the first '&'.
+ * If actext != NULL, *actext is set to the text after the first TAB.
+ */
+    char_u *
+gui_menu_text(text, mnemonic, actext)
+    char_u	*text;
+    int		*mnemonic;
+    char_u	**actext;
+{
+    char_u	*p;
+    char_u	*menu_text;
+
+    /* Locate accelerator text, after the first TAB */
+    p = vim_strchr(text, TAB);
+    if (p != NULL)
+    {
+	if (actext != NULL)
+	    *actext = vim_strsave(p + 1);
+	menu_text = vim_strnsave(text, (int)(p - text));
+    }
+    else
+	menu_text = vim_strsave(text);
+    if (menu_text != NULL)
+    {
+	p = vim_strchr(menu_text, '&');
+	if (p != NULL)
+	{
+	    if (mnemonic != NULL)
+		*mnemonic = p[1];
+	    mch_memmove(p, p + 1, STRLEN(p));
+	}
+    }
+    return menu_text;
+}
+
+/*
+ * Return TRUE if "name" can be a menu in the MenuBar.
+ */
+    int
+gui_menubar_menu(name)
+    char_u	*name;
+{
+    return (!gui_popup_menu(name)
+	    && !gui_toolbar_menu(name)
+	    && *name != MNU_HIDDEN_CHAR);
+}
+
+    int
+gui_popup_menu(name)
+    char_u	*name;
+{
+    return (STRNCMP(name, "PopUp", 5) == 0);
+}
+
+    int
+gui_toolbar_menu(name)
+    char_u	*name;
+{
+    return (STRNCMP(name, "ToolBar", 7) == 0);
+}
+
+/*
+ * Called when the mouse moved (but not when dragging).
+ * Ignore this while in command-line mode, or while changing the window layout
+ * (causes a mouse-move event in Win32 GUI).
+ */
+    void
+gui_mouse_moved(y)
+    int		y;
+{
+    WIN		*wp;
+    char_u	st[6];
+    int		x;
+
+    if (p_mousef && State != CMDLINE && !need_mouse_correct && gui.in_focus)
+    {
+	x = gui_mch_get_mouse_x();
+	/* Don't move the mouse when it's left or right of the Vim window */
+	if (x < 0 || x > Columns * gui.char_width)
+	    return;
+	wp = y2win(y);
+	if (wp == curwin || wp == NULL)
+	    return;	/* still in the same old window, or none at all */
+
+	/*
+	 * format a mouse click on status line input
+	 * ala gui_send_mouse_event(0, x, y, 0, 0);
+	 */
+	st[0] = CSI;
+	st[1] = KS_MOUSE;
+	st[2] = K_FILLER;
+	st[3] = (char_u)MOUSE_LEFT;
+	st[4] = (char_u)(2 + ' ');
+	st[5] = (char_u)(wp->w_height + wp->w_winpos + ' ' + 1);
+	add_to_input_buf(st, 6);
+    }
+}
+
+/*
+ * Called when mouse should be moved to window with focus.
+ */
+    void
+gui_mouse_correct()
+{
+    int		x, y;
+    WIN		*wp = NULL;
+
+    need_mouse_correct = FALSE;
+    if (gui.in_use && p_mousef)
+    {
+	x = gui_mch_get_mouse_x();
+	/* Don't move the mouse when it's left or right of the Vim window */
+	if (x < 0 || x > Columns * gui.char_width)
+	    return;
+	y = gui_mch_get_mouse_y();
+	if (y >= 0)
+	    wp = y2win(y);
+	if (wp != curwin && wp != NULL)	/* If in other than current window */
+	{
+	    validate_cline_row();
+	    gui_mch_setmouse((int)Columns * gui.char_width - 3,
+			 (curwin->w_winpos + curwin->w_wrow) * gui.char_height
+						     + (gui.char_height) / 2);
+	}
+    }
+}
+
+/*
+ * Find window where the mouse pointer "y" coordinate is in.
+ */
+    static WIN *
+y2win(y)
+    int		y;
+{
+    int		row;
+    WIN		*wp;
+
+    row = Y_2_ROW(y);
+    if (row < firstwin->w_winpos)    /* before first window (Toolbar) */
+	return NULL;
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	if (row < wp->w_winpos + wp->w_height + wp->w_status_height)
+	    break;
+    return wp;
+}
+
+/*
+ * Display the Special "PopUp" menu as a pop-up at the current mouse
+ * position.  The "PopUpn" menu is for Normal mode, "PopUpi" for Insert mode,
+ * etc.
+ */
+    void
+gui_show_popupmenu()
+{
+    GuiMenu	*menu;
+    int		mode;
+
+    mode = get_menu_mode();
+    if (mode == MENU_INDEX_INVALID)
+	return;
+    mode = MENU_MODE_CHARS[mode];
+
+    for (menu = gui.root_menu; menu != NULL; menu = menu->next)
+	if (STRNCMP("PopUp", menu->name, 5) == 0 && menu->name[5] == mode)
+	    break;
+
+    /* Only show a popup when it is defined and has entries */
+    if (menu != NULL && menu->children != NULL)
+	gui_mch_show_popupmenu(menu);
+}

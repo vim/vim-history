@@ -1,5 +1,7 @@
 /* term.c */
 int set_termname __ARGS((char_u *term));
+void set_mouse_termcode __ARGS((int n, char_u *s));
+void del_mouse_termcode __ARGS((int n));
 void getlinecol __ARGS((void));
 int add_termcap_entry __ARGS((char_u *name, int force));
 int term_is_gui __ARGS((char_u *name));
@@ -27,6 +29,7 @@ void stoptermcap __ARGS((void));
 int swapping_screen __ARGS((void));
 void setmouse __ARGS((void));
 int mouse_has __ARGS((int c));
+int mouse_model_popup __ARGS((void));
 void scroll_start __ARGS((void));
 void cursor_on __ARGS((void));
 void cursor_off __ARGS((void));
@@ -38,7 +41,7 @@ char_u *find_termcode __ARGS((char_u *name));
 char_u *get_termcode __ARGS((int i));
 void del_termcode __ARGS((char_u *name));
 int check_termcode __ARGS((int max_offset));
-char_u *replace_termcodes __ARGS((char_u *from, char_u **bufp, int from_part));
+char_u *replace_termcodes __ARGS((char_u *from, char_u **bufp, int from_part, int do_lt));
 void show_termcodes __ARGS((void));
 int show_one_termcode __ARGS((char_u *name, char_u *code, int printit));
 void update_tcap __ARGS((int attr));

@@ -13,7 +13,7 @@
 /*
  * Stuff for signals
  */
-#ifdef HAVE_SIGSET
+#if defined(HAVE_SIGSET) && !defined(signal)
 # define signal sigset
 #endif
 

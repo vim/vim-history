@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: sort.c,v 5.2 1998/03/13 04:19:42 darren Exp $
+*   $Id: sort.c,v 6.2 1998/07/02 06:10:55 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -23,9 +23,7 @@
 
 /*  Tag sorting functions.
  */
-#ifdef EXTERNAL_SORT
-static void reportWarnings __ARGS((void));
-#else
+#ifndef EXTERNAL_SORT
 static void failedSort __ARGS((void));
 static int compareTags __ARGS((const void *const one, const void *const two));
 static void writeSortedTags __ARGS((char **const table, const size_t numTags, const boolean toStdout));
@@ -52,64 +50,40 @@ extern void catFile( name )
 
 #ifdef EXTERNAL_SORT
 
-static void reportWarnings()
-{
-#ifdef AWK
-    if (strlen(AWK) > (size_t)0)
-    {
-	const char *const awkProgTemplate = "%s{if ($1==prev){printf(\"Duplicate entry in \") | \"cat>&2\"; if ($%d!=prevfile) printf(\"%%s and \",prevfile) | \"cat>&2\"; printf(\"%%s: %%s\\n\",$%d,$1) | \"cat>&2\"; } else {prev=$1;prevfile=$%d}}";
-	char *awkProg;
-	const char *begin;
-	size_t length;
-	int fileArg;
-
-	if (Option.xref)    { fileArg = 4;  begin = ""; }
-	else		    { fileArg = 2;  begin = "BEGIN{FS=\"\\t\"}"; }
-
-	length = strlen(awkProgTemplate) + strlen(begin) + 3;
-	awkProg = (char *)malloc(length);
-	if (awkProg != NULL)
-	{
-	    const char *const cmdTemplate = "%s '%s' %s";
-	    char *cmd;
-	    int ret;
-
-	    sprintf(awkProg, awkProgTemplate, begin, fileArg, fileArg, fileArg);
-	    length = strlen(cmdTemplate) + strlen(AWK) +
-		    strlen(awkProg) + strlen(TagFile.name);
-	    cmd = (char *)malloc(length);
-	    if (cmd != NULL)
-	    {
-		sprintf(cmd, cmdTemplate, AWK, awkProg, TagFile.name);
-		ret = system(cmd);
-		free(cmd);
-	    }
-	    free(awkProg);
-	}
-    }
-#endif
-}
-
 extern void externalSortTags( toStdout )
     const boolean toStdout;
 {
-    const char *const sortTemplate = Option.warnings ? "sort -o %s %s" :
-						       "sort -u -o %s %s";
-    const size_t length	= strlen(sortTemplate) + 2 * strlen(TagFile.name);
-    char *const cmd	= (char *)malloc(length);
+    const char *const sortTemplate = "%ssort -u -o %s %s";
+#ifndef NON_CONST_PUTENV_PROTOTYPE
+    const
+#endif
+	  char *const sortOrder = "LC_COLLATE=C ";
+    const char *env = "";
+    const size_t length	= strlen(sortOrder) + strlen(sortTemplate) +
+	    			2 * strlen(TagFile.name);
+    char *const cmd = (char *)malloc(length);
 
     if (cmd != NULL)
     {
 	int ret;
 
-	sprintf(cmd, sortTemplate, TagFile.name, TagFile.name);
+	/*  Ensure ASCII value sort order.
+	 */
+#ifdef HAVE_PUTENV
+	putenv(sortOrder);	
+#else
+# ifdef HAVE_SETENV
+	setenv("LC_COLLATE", "C", 1);
+# else
+	env = sortOrder;
+# endif
+#endif
+	sprintf(cmd, sortTemplate, env, TagFile.name, TagFile.name);
 	ret = system(cmd);
 	free(cmd);
 
 	if (ret != 0)
 	    error(FATAL, "cannot sort tag file");
-	else if (Option.warnings)
-	    reportWarnings();
     }
     if (toStdout)
 	catFile(TagFile.name);
@@ -148,24 +122,7 @@ static void writeSortedTags( table, numTags, toStdout )
     const size_t numTags;
     const boolean toStdout;
 {
-    char *thisTag = NULL, *prevTag = NULL, *thisFile = NULL, *prevFile = NULL;
     size_t i;
-
-    if (Option.warnings)
-    {
-	thisTag  = (char *)malloc(TagFile.max.tag  + (size_t)1);
-	prevTag  = (char *)malloc(TagFile.max.tag  + (size_t)1);
-	thisFile = (char *)malloc(TagFile.max.file + (size_t)1);
-	prevFile = (char *)malloc(TagFile.max.file + (size_t)1);
-
-	if (thisTag  == NULL  ||   prevTag == NULL  ||
-	    thisFile == NULL  ||  prevFile == NULL)
-	{
-	    error(WARNING | PERROR, "cannot generate duplicate tag warnings");
-	}
-	*prevTag  = *thisTag  = '\0';
-	*prevFile = *thisFile = '\0';
-    }
 
     /*	Write the sorted lines back into the tag file.
      */
@@ -185,33 +142,6 @@ static void writeSortedTags( table, numTags, toStdout )
 	if (i == 0  ||  Option.xref  ||  strcmp(table[i], table[i-1]) != 0)
 	    if (fputs(table[i], TagFile.fp) == EOF)
 		failedSort();
-
-	if (Option.warnings)
-	{
-	    int fields;
-
-	    if (Option.xref)
-		fields = sscanf(table[i],"%s %*s %*s %s", thisTag, thisFile);
-	    else
-		fields = sscanf(table[i],"%[^\t]\t%[^\t]", thisTag, thisFile);
-
-	    if (fields == 2  &&  strcmp(thisTag, prevTag) == 0)
-	    {
-		fprintf(errout, "Duplicate entry in ");
-		if (strcmp(thisFile, prevFile) != 0)
-		    fprintf(errout, "%s and ", prevFile);
-		fprintf(errout, "%s: %s\n", thisFile, thisTag);
-	    }
-	    strcpy(prevTag , thisTag );
-	    strcpy(prevFile, thisFile);
-	}
-    }
-    if (Option.warnings)
-    {
-	free(thisTag);
-	free(prevTag);
-	free(thisFile);
-	free(prevFile);
     }
     if (! toStdout)
 	fclose(TagFile.fp);

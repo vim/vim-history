@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: get.c,v 5.2 1998/02/26 05:32:07 darren Exp $
+*   $Id: get.c,v 6.2 1998/07/15 04:15:51 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -69,12 +69,14 @@ static int skipToEndOfChar __ARGS((void));
 *   directives and may emit a tag for #define directives.
 *--------------------------------------------------------------------------*/
 
-extern boolean cppOpen( name )
+extern boolean cppOpen( name, language, isHeader )
     const char *const name;
+    const langType language;
+    const boolean isHeader;
 {
     boolean opened;
 
-    opened = fileOpen(name);
+    opened = fileOpen(name, language, isHeader);
     if (opened)
     {
 	Cpp.ungetch = '\0';
@@ -208,7 +210,7 @@ static boolean pushConditional( firstBranchChosen )
     const boolean ignoreAllBranches = isIgnore();	/* current ignore */
     boolean ignoreBranch = FALSE;
 
-    if (Cpp.directive.nestLevel < MaxCppNestingLevel - 1)
+    if (Cpp.directive.nestLevel < (unsigned int)MaxCppNestingLevel - 1)
     {
 	conditionalInfo *ifdef;
 
@@ -248,7 +250,7 @@ static boolean handleDirective( c )
 {
     enum { maxDirectiveName = 10 };
     char directive[maxDirectiveName];
-    const tagScope scope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
+    const tagScope scope = File.isHeader ? SCOPE_GLOBAL : SCOPE_STATIC;
     boolean ignore = FALSE;
     DebugStatement( const boolean ignore0 = isIgnore(); )
 
@@ -296,7 +298,8 @@ static boolean handleDirective( c )
 	    boolean parameterized;
 
 	    readDefineTag(c, &Cpp.directive.tag, &parameterized);
-	    makeDefineTag(&Cpp.directive.tag, scope, parameterized);
+	    if (! isIgnoreToken(Cpp.directive.tag.name))
+		makeDefineTag(&Cpp.directive.tag, scope, parameterized);
 	}
 	Cpp.directive.state = DRCTV_NONE;
 	break;

@@ -47,11 +47,11 @@ syn keyword VRMLEnums          MFColor MFLong MFVec2f MFVec3f
 syn keyword VRMLInstances      DEF USE
 
 " match definitions.
-syn match   VRMLSpecial           contained "\\[0-9][0-9][0-9]\|\\."
+syn match   VRMLSpecial           contained "\\\d\d\d\|\\."
 syn region  VRMLString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=VRMLSpecial
 syn match   VRMLCharacter         "'[^\\]'"
 syn match   VRMLSpecialCharacter  "'\\.'"
-syn match   VRMLNumber            "-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn match   VRMLNumber            "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 syn match   VRMLNumber            "0[xX][0-9a-fA-F]\+\>"
 syn match   VRMLComment           "#.*$"
 

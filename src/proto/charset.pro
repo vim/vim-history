@@ -26,5 +26,5 @@ char_u *skiptowhite __ARGS((char_u *p));
 char_u *skiptowhite_esc __ARGS((char_u *p));
 long getdigits __ARGS((char_u **pp));
 int vim_isblankline __ARGS((char_u *lbuf));
-long vim_str2nr __ARGS((char_u *start, int *hexp, int *len, int dooct, int dohex));
+void vim_str2nr __ARGS((char_u *start, int *hexp, int *len, int dooct, int dohex, long *nptr, unsigned long *unptr));
 int hex2nr __ARGS((int c));

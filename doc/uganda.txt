@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 5.1.  Last modification: 1997 Nov 19
+*uganda.txt*    For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -109,40 +109,40 @@ check the progress (at our own cost).
 If you have any further questions, send me e-mail: <Bram@vim.org>.
 
 The director of the centre is:
-                        Sekaran Vellasamy
-                        p.o. box 1658
-                        Masaka, Uganda, East Africa
+			Sekaran Vellasamy
+			p.o. box 1658
+			Masaka, Uganda, East Africa
 
 Sending money:
 
 USA and Canada: Contact ICCF in Vancouver.  You can send them a one time
-                donation directly.  Ask for information about sponsorship.
-                        International Child Care Fund
-                        3456 Fraser street
-                        Vancouver, B.C. V5V 4C4
-                        Canada
-                        Fax: 604-8761448
+		donation directly.  Ask for information about sponsorship.
+			International Child Care Fund
+			3456 Fraser street
+			Vancouver, B.C. V5V 4C4
+			Canada
+			Fax: 604-8761448
 
-Holland:        Transfer to the account of "stichting ICCF Holland" in Venlo.
+Holland:	Transfer to the account of "stichting ICCF Holland" in Venlo.
 		This will allow for tax deduction (if you live in Holland)!
-                        Postbank, nr. 4548774
+			Postbank, nr. 4548774
 
-Europe:         To avoid banking costs the best thing is to send me a
-                Eurocheque, written out to "Bram Moolenaar" in Dutch Guilders
-		(DFL).  But any other method should work.  Ask for information
+Europe:		To avoid banking costs the best thing is to send me a
+		Eurocheque, written out to "Bram Moolenaar" in Dutch Guilders
+		(DFL).	But any other method should work.  Ask for information
 		about sponsorship.
-                        stichting ICCF Holland
-                        Bram Moolenaar
-                        Clematisstraat 30
-                        5925 BE  Venlo
-                        The Netherlands.
+			stichting ICCF Holland
+			Bram Moolenaar
+			Clematisstraat 30
+			5925 BE  Venlo
+			The Netherlands.
 
-Others:         Transfer to one of these accounts if possible:
+Others:		Transfer to one of these accounts if possible:
 		    Postbank, nr. 4548774
 			under the name "stichting ICCF Holland", Venlo
 		    If that doesn't work: Rabobank Venlo, nr. 3765.05.117
 			under the name "Bram Moolenaar", Venlo
-                Otherwise, send a cheque in US dollars to the above address.
+		Otherwise, send a cheque in US dollars to the above address.
 		Minimal amount: $70 (my bank does not accept smaller amounts
 		for foreign cheques, sorry)
 

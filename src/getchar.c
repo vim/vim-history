@@ -42,8 +42,10 @@ struct buffheader
 static struct buffheader stuffbuff = {{NULL, {NUL}}, NULL, 0, 0};
 static struct buffheader redobuff = {{NULL, {NUL}}, NULL, 0, 0};
 static struct buffheader old_redobuff = {{NULL, {NUL}}, NULL, 0, 0};
+#if defined(AUTOCMD) || defined(WANT_EVAL) || defined(PROTO)
 static struct buffheader save_redobuff = {{NULL, {NUL}}, NULL, 0, 0};
 static struct buffheader save_old_redobuff = {{NULL, {NUL}}, NULL, 0, 0};
+#endif
 static struct buffheader recordbuff = {{NULL, {NUL}}, NULL, 0, 0};
 
 /*
@@ -405,31 +407,41 @@ ResetRedobuff()
     }
 }
 
+#if defined(AUTOCMD) || defined(WANT_EVAL) || defined(PROTO)
 /*
  * Save redobuff and old_redobuff to save_redobuff and save_old_redobuff.
- * Used before executing autocommands.
+ * Used before executing autocommands and user functions.
  */
+static int save_level = 0;
+
     void
 saveRedobuff()
 {
-    save_redobuff = redobuff;
-    redobuff.bh_first.b_next = NULL;
-    save_old_redobuff = old_redobuff;
-    old_redobuff.bh_first.b_next = NULL;
+    if (save_level++ == 0)
+    {
+	save_redobuff = redobuff;
+	redobuff.bh_first.b_next = NULL;
+	save_old_redobuff = old_redobuff;
+	old_redobuff.bh_first.b_next = NULL;
+    }
 }
 
 /*
  * Restore redobuff and old_redobuff from save_redobuff and save_old_redobuff.
- * Used after executing autocommands.
+ * Used after executing autocommands and user functions.
  */
     void
 restoreRedobuff()
 {
-    free_buff(&redobuff);
-    redobuff = save_redobuff;
-    free_buff(&old_redobuff);
-    old_redobuff = save_old_redobuff;
+    if (--save_level == 0)
+    {
+	free_buff(&redobuff);
+	redobuff = save_redobuff;
+	free_buff(&old_redobuff);
+	old_redobuff = save_old_redobuff;
+    }
 }
+#endif
 
     void
 AppendToRedobuff(s)
@@ -572,6 +584,7 @@ start_redo(count, old_redo)
     {
 	VIsual = curwin->w_cursor;
 	VIsual_active = TRUE;
+	VIsual_reselect = TRUE;
 	redo_VIsual_busy = TRUE;
 	c = read_redo(FALSE, old_redo);
     }
@@ -686,7 +699,7 @@ ins_typebuf(str, noremap, offset, nottyped)
     if (offset == 0 && addlen <= typeoff)
     {
 	typeoff -= addlen;
-	vim_memmove(typebuf + typeoff, str, (size_t)addlen);
+	mch_memmove(typebuf + typeoff, str, (size_t)addlen);
     }
     /*
      * Need to allocate new buffer.
@@ -715,19 +728,19 @@ ins_typebuf(str, noremap, offset, nottyped)
 	typebuflen = newlen;
 
 	/* copy the old chars, before the insertion point */
-	vim_memmove(s1 + newoff, typebuf + typeoff, (size_t)offset);
+	mch_memmove(s1 + newoff, typebuf + typeoff, (size_t)offset);
 	/* copy the new chars */
-	vim_memmove(s1 + newoff + offset, str, (size_t)addlen);
+	mch_memmove(s1 + newoff + offset, str, (size_t)addlen);
 	/* copy the old chars, after the insertion point, including the	NUL at
 	 * the end */
-	vim_memmove(s1 + newoff + offset + addlen, typebuf + typeoff + offset,
+	mch_memmove(s1 + newoff + offset + addlen, typebuf + typeoff + offset,
 					      (size_t)(typelen - offset + 1));
 	if (typebuf != typebuf_init)
 	    vim_free(typebuf);
 	typebuf = s1;
 
-	vim_memmove(s2 + newoff, noremapbuf + typeoff, (size_t)offset);
-	vim_memmove(s2 + newoff + offset + addlen,
+	mch_memmove(s2 + newoff, noremapbuf + typeoff, (size_t)offset);
+	mch_memmove(s2 + newoff + offset + addlen,
 		   noremapbuf + typeoff + offset, (size_t)(typelen - offset));
 	if (noremapbuf != noremapbuf_init)
 	    vim_free(noremapbuf);
@@ -769,6 +782,15 @@ typebuf_typed()
 }
 
 /*
+ * Return the number of characters that are mapped (or not typed).
+ */
+    int
+typebuf_maplen()
+{
+    return typemaplen;
+}
+
+/*
  * remove "len" characters from typebuf[typeoff + offset]
  */
     void
@@ -795,16 +817,16 @@ del_typebuf(len, offset)
 	 */
 	if (typeoff > MAXMAPLEN)
 	{
-	    vim_memmove(typebuf + MAXMAPLEN, typebuf + typeoff, (size_t)offset);
-	    vim_memmove(noremapbuf + MAXMAPLEN, noremapbuf + typeoff,
+	    mch_memmove(typebuf + MAXMAPLEN, typebuf + typeoff, (size_t)offset);
+	    mch_memmove(noremapbuf + MAXMAPLEN, noremapbuf + typeoff,
 							      (size_t)offset);
 	    typeoff = MAXMAPLEN;
 	}
 	/* adjust typebuf (include the NUL at the end) */
-	vim_memmove(typebuf + typeoff + offset, typebuf + i + len,
+	mch_memmove(typebuf + typeoff + offset, typebuf + i + len,
 					      (size_t)(typelen - offset + 1));
 	/* adjust noremapbuf[] */
-	vim_memmove(noremapbuf + typeoff + offset, noremapbuf + i + len,
+	mch_memmove(noremapbuf + typeoff + offset, noremapbuf + i + len,
 						  (size_t)(typelen - offset));
     }
 
@@ -1049,6 +1071,27 @@ vgetc()
 		continue;
 	    }
 	    c = TO_SPECIAL(c2, c);
+
+#ifdef USE_GUI_WIN32
+	    /* Handle K_TEAROFF here, the caller of vgetc() doesn't need to
+	     * know that a menu was torn off */
+	    if (c == K_TEAROFF)
+	    {
+		char_u	name[200];
+		int	i;
+
+		/* get menu path, it ends with a <CR> */
+		for (i = 0; (c = vgetorpeek(TRUE)) != '\r'; )
+		{
+		    name[i] = c;
+		    if (i < 199)
+			++i;
+		}
+		name[i] = NUL;
+		gui_make_tearoff(name);
+		continue;
+	    }
+#endif
 	}
 #ifdef MSDOS
 	/*
@@ -1247,6 +1290,7 @@ vgetorpeek(advance)
 			    && !(State == HITRETURN && (typebuf[typeoff] == CR
 						  || typebuf[typeoff] == ' '))
 			    && State != ASKMORE
+			    && State != CONFIRM
 #ifdef INSERT_EXPAND
 			    && !(ctrl_x_mode
 				       && vim_is_ctrl_x_key(typebuf[typeoff]))
@@ -1409,6 +1453,19 @@ vgetorpeek(advance)
 								 local_State);
 				if (idx != MENU_INDEX_INVALID)
 				{
+				    /*
+				     * In Select mode, a Visual mode menu is
+				     * used.  Switch to Visual mode
+				     * temporarily.  Append K_SELECT to switch
+				     * back to Select mode.
+				     */
+				    if (VIsual_active && VIsual_select)
+				    {
+					VIsual_select = FALSE;
+					(void)ins_typebuf(K_SELECT_STRING, -1,
+							  0, TRUE);
+				    }
+
 				    ins_typebuf(current_menu->strings[idx],
 					current_menu->noremap[idx] ? -1 : 0,
 					0, TRUE);
@@ -1447,6 +1504,18 @@ vgetorpeek(advance)
 			    c = -1;
 			    break;
 			}
+
+			/*
+			 * In Select mode, a Visual mode mapping is used.
+			 * Switch to Visual mode temporarily.  Append K_SELECT
+			 * to switch back to Select mode.
+			 */
+			if (VIsual_active && VIsual_select)
+			{
+			    VIsual_select = FALSE;
+			    (void)ins_typebuf(K_SELECT_STRING, -1, 0, TRUE);
+			}
+
 			/*
 			 * Insert the 'to' part in the typebuf.
 			 * If 'from' field is the same as the start of the
@@ -1788,7 +1857,7 @@ inchar(buf, maxlen, wait_time)
 #endif
 	if (buf[0] == NUL || (buf[0] == K_SPECIAL && c < 0))
 	{
-	    vim_memmove(buf + 3, buf + 1, (size_t)i);
+	    mch_memmove(buf + 3, buf + 1, (size_t)i);
 	    buf[2] = K_THIRD(buf[0]);
 	    buf[1] = K_SECOND(buf[0]);
 	    buf[0] = K_SPECIAL;
@@ -1897,9 +1966,14 @@ do_map(maptype, keys, mode, abbrev)
      * replace_termcodes() also removes CTRL-Vs and sometimes backslashes.
      */
     if (haskey)
-	keys = replace_termcodes(keys, &keys_buf, TRUE);
+	keys = replace_termcodes(keys, &keys_buf, TRUE, TRUE);
     if (hasarg)
-	arg = replace_termcodes(arg, &arg_buf, FALSE);
+    {
+	if (STRICMP(arg, "<nop>") == 0)	    /* "<Nop>" means nothing */
+	    arg = (char_u *)"";
+	else
+	    arg = replace_termcodes(arg, &arg_buf, FALSE, TRUE);
+    }
 
 #ifdef FKMAP
     /*
@@ -2106,6 +2180,11 @@ do_map(maptype, keys, mode, abbrev)
 	goto theend;
     }
 
+#ifdef USE_GUI_WIN32
+    /* If CTRL-C has been mapped, don't use it for Interrupting */
+    if (*keys == Ctrl('C'))
+	mapped_ctrl_c = TRUE;
+#endif
     mp->m_keys = vim_strsave(keys);
     mp->m_str = vim_strsave(arg);
     if (mp->m_keys == NULL || mp->m_str == NULL)
@@ -2310,13 +2389,16 @@ showmap(mp)
 	++len;
     } while (len < 12);
     if (mp->m_noremap)
-	msg_putchar('*');
+	msg_puts_attr((char_u *)"*", hl_attr(HLF_8));
     else
 	msg_putchar(' ');
     /* Use FALSE below if we only want things like <Up> to show up as such on
      * the rhs, and not M-x etc, TRUE gets both -- webb
      */
-    msg_outtrans_special(mp->m_str, TRUE);
+    if (*mp->m_str == NUL)
+	msg_puts_attr((char_u *)"<Nop>", hl_attr(HLF_8));
+    else
+	msg_outtrans_special(mp->m_str, TRUE);
     out_flush();			/* show one line at a time */
 }
 
@@ -2445,8 +2527,11 @@ makemap(fd)
     struct mapblock *mp;
     char_u	    c1, c2;
     char_u	    *p;
+    char	    *cmd;
     int		    abbr;
     int		    hash;
+    int		    did_cpo = FALSE;
+    int		    i;
 
     validate_maphash();
 
@@ -2470,9 +2555,9 @@ makemap(fd)
 		c1 = NUL;
 		c2 = NUL;
 		if (abbr)
-		    p = (char_u *)"abbr";
+		    cmd = "abbr";
 		else
-		    p = (char_u *)"map";
+		    cmd = "map";
 		switch (mp->m_mode)
 		{
 		    case NORMAL + VISUAL + OP_PENDING:
@@ -2500,7 +2585,7 @@ makemap(fd)
 			break;
 		    case CMDLINE + INSERT:
 			if (!abbr)
-			    p = (char_u *)"map!";
+			    cmd = "map!";
 			break;
 		    case CMDLINE:
 			c1 = 'c';
@@ -2514,11 +2599,34 @@ makemap(fd)
 		}
 		do	/* may do this twice if c2 is set */
 		{
+		    /* When outputting <> form, need to make sure that 'cpo'
+		     * is empty. */
+		    if (!did_cpo)
+		    {
+			if (*mp->m_str == NUL)		/* will use <Nop> */
+			    did_cpo = TRUE;
+			else
+			    for (i = 0; i < 2; ++i)
+				for (p = (i ? mp->m_str : mp->m_keys); *p; ++p)
+				    if (*p == K_SPECIAL || *p == NL)
+					did_cpo = TRUE;
+			if (did_cpo)
+			{
+			    if (fprintf(fd,
+#ifdef USE_CRNL
+					"let cpo_save=&cpo\r\nset cpo=\r\n"
+#else
+					"let cpo_save=&cpo\nset cpo=\n"
+#endif
+				       ) < 0)
+				return FAIL;
+			}
+		    }
 		    if (c1 && putc(c1, fd) < 0)
 			return FAIL;
 		    if (mp->m_noremap && fprintf(fd, "nore") < 0)
 			return FAIL;
-		    if (fprintf(fd, (char *)p) < 0)
+		    if (fprintf(fd, cmd) < 0)
 			return FAIL;
 
 		    if (       putc(' ', fd) < 0
@@ -2536,6 +2644,16 @@ makemap(fd)
 		while (c1);
 	    }
 	}
+
+    if (did_cpo)
+	if (fprintf(fd,
+#ifdef USE_CRNL
+		    "let &cpo=cpo_save\r\nunlet cpo_save\r\n"
+#else
+		    "let &cpo=cpo_save\nunlet cpo_save\n"
+#endif
+		    ) < 0)
+	    return FAIL;
     return OK;
 }
 
@@ -2552,6 +2670,13 @@ putescstr(fd, str, set)
 {
     int	    c;
     int	    modifiers;
+
+    /* :map xx <Nop> */
+    if (*str == NUL && !set)
+    {
+	fprintf(fd, "<Nop>");
+	return OK;
+    }
 
     for ( ; *str; ++str)
     {
@@ -2597,13 +2722,15 @@ putescstr(fd, str, set)
 	 * prevent them from misinterpreted in DoOneCmd().
 	 * A space, Tab and '"' has to be escaped with a backslash to
 	 * prevent it to be misinterpreted in do_set().
+	 * A '<' has to be escaped with a CTRL-V to prevent it being
+	 * interpreted as the start of a special key name.
 	 */
 	if (set && (vim_iswhite(c) || c == '"' || c == '\\'))
 	{
 	    if (putc('\\', fd) < 0)
 		return FAIL;
 	}
-	else if (c < ' ' || c > '~' || c == '|')
+	else if (c < ' ' || c > '~' || c == '|' || (!set && c == '<'))
 	{
 	    if (putc(Ctrl('V'), fd) < 0)
 		return FAIL;

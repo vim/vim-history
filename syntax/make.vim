@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last change:	1998 Mar 19
+" Last change:	1998 Jul 22
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -28,10 +28,10 @@ syn match makeSpecTarget	"^\.IGNORE"
 syn match makeSpecTarget	"^\.SILENT"
 syn match makeSpecTarget	"^\.EXPORT_ALL_VARIABLES"
 syn match makeSpecTarget	"^\.KEEP_STATE"
-syn match makeImplicit	"^\.[A-Za-z0-9_]*\.[A-Za-z0-9_]*\s*:[^=]"me=e-2
-syn match makeImplicit	"^\.[A-Za-z0-9_]*\.[A-Za-z0-9_]*\s*:$"me=e-1
-syn match makeTarget		"^[A-Za-z0-9_][A-Za-z0-9_./\t ]*:[^=]"me=e-2
-syn match makeTarget		"^[A-Za-z0-9_][A-Za-z0-9_./\t ]*:$"me=e-1
+syn match makeImplicit	        "^\.\w*\.\w*\s*:[^=]"me=e-2
+syn match makeImplicit	        "^\.\w*\.\w*\s*:$"me=e-1
+syn match makeTarget		"^\w[A-Za-z0-9_./\t ]*:[^=]"me=e-2
+syn match makeTarget		"^\w[A-Za-z0-9_./\t ]*:$"me=e-1
 
 " Statements / Functions (GNU make)
 syn match makeStatement contained "(subst"ms=s+1
@@ -65,7 +65,7 @@ syn match makeIdent		"\$([^)]*)" contains=makeStatement
 syn match makeIdent		"\$\$[A-Za-z0-9_]*"
 syn match makeIdent		"\$[^({]"
 syn match makeIdent		"\${[^}]*}"
-syn match makeIdent		"[A-Za-z][A-Za-z0-9_]*[ \t]*[:+]="me=e-2
+syn match makeIdent		"[A-Za-z][A-Za-z0-9_]*[ \t]*[:+?!]="me=e-2
 syn match makeIdent		"[A-Za-z][A-Za-z0-9_]*[ \t]*="me=e-1
 syn match makeIdent		"%"
 
@@ -74,7 +74,7 @@ syn match  makeComment	"#.*$"
 
 " match escaped quotes, $ and any other escaped character
 " The escaped char is not highlightet currently
-syn match makeEscapedChar 	"\\."
+syn match makeEscapedChar	"\\."
 
 syn region  makeDString      start=+"+  skip=+\\"+  end=+"+  contains=makeIdent
 syn region  makeSString      start=+'+  skip=+\\'+  end=+'+  contains=makeIdent

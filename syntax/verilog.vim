@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mj@core.rose.hp.com>
-" Last Update:  Fri Feb 20 08:47:46 PST 1998
+" Last Update:  Tue Jun 30 09:25:12 PDT 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
+set iskeyword=@,48-57,_,192-255,+,-,?
+
 
 " A bunch of useful Verilog keywords
 syn keyword verilogStatement   disable assign deassign force release
@@ -18,30 +20,37 @@ syn keyword verilogStatement   tri0 tri1 tri trireg
 syn keyword verilogStatement   wand wor triand trior
 syn keyword verilogStatement   defparam
 syn keyword verilogStatement   integer real
+syn keyword verilogStatement   time
+
 syn keyword verilogLabel       begin end fork join
 syn keyword verilogConditional if else case casex casez default endcase
-"syn keyword verilogConditional   ? :
-syn keyword verilogRepeat        forever repeat while for
-"syn keyword verilogUnaryOperator ! ~ & ~& | ^| ^ ~^
-"syn keyword verilogBinaryOperator + - * / % == != === !== && || < <= > >=
-"syn keyword verilogBinaryOperator >> << ^~
+syn keyword verilogRepeat      forever repeat while for
 
 syn keyword verilogTodo contained TODO
 
 syn match   verilogOperator "[&|~><!)(*#%@+/=?:;}{,.\^\-\[\]]"
 
-syn region  verilogComment start="/\*" end="\*/"
-syn match   verilogComment "//.*"
+syn region  verilogComment start="/\*" end="\*/" contains=verilogTodo
+syn match   verilogComment "//.*" oneline
 
 syn match   verilogGlobal "`[a-zA-Z0-9_]\+\>"
 syn match   verilogGlobal "$[a-zA-Z0-9_]\+\>"
 
 syn match   verilogConstant "\<[A-Z][A-Z0-9_]\+\>"
 
-syn match   verilogNumber "\(\<[0-9]\+\|\)'[bdh][0-9a-fxzA-F]\+\>"
-syn match   verilogNumber "\<[+-]\=[0-9]\+\>"
+syn match   verilogNumber "\(\<\d\+\|\)'[bB]\s*[0-1_xXzZ?]\+\>"
+syn match   verilogNumber "\(\<\d\+\|\)'[oO]\s*[0-7_xXzZ?]\+\>"
+syn match   verilogNumber "\(\<\d\+\|\)'[dD]\s*[0-9_xXzZ?]\+\>"
+syn match   verilogNumber "\(\<\d\+\|\)'[hH]\s*[0-9a-fA-F_xXzZ?]\+\>"
+syn match   verilogNumber "\<[+-]\=[0-9_]\+\(\.[0-9_]*\|\)\(e[0-9_]*\|\)\>"
 
 syn region  verilogString start=+"+  end=+"+
+
+" Directives
+syn match   verilogDirective   "//\s*synopsys\>.*$"
+syn region  verilogDirective   start="/\*\s*synopsys\>" end="\*/"
+syn region  verilogDirective   start="//\s*synopsys dc_script_begin\>" end="//\s*synopsys dc_script_end\>"
+
 "Modify the following as needed.  The trade-off is performance versus
 "functionality.
 syn sync lines=50
@@ -50,24 +59,19 @@ if !exists("did_verilog_syntax_inits")
   let did_verilog_syntax_inits = 1
  " The default methods for highlighting.  Can be overridden later
 
- "hi link verilogBinaryOperator  Operator
   hi link verilogCharacter       Character
- "hi link verilogComment         Comment
   hi link verilogConditional     Conditional
- "hi link verilogLabel           Label
- "hi link verilogNumber          Number
   hi link verilogRepeat          Repeat
- "hi link verilogStatement       Statement
   hi link verilogString          String
   hi link verilogTodo            Todo
-
-  hi link verilogComment   Comment
-  hi link verilogConstant  Todo
-  hi link verilogLabel     PreCondit
-  hi link verilogNumber    Special
-  hi link verilogOperator  Type
-  hi link verilogStatement Statement
-  hi link verilogGlobal    String
+  hi link verilogComment         Comment
+  hi link verilogConstant        Constant
+  hi link verilogLabel           Label
+  hi link verilogNumber          Number
+  hi link verilogOperator        Special
+  hi link verilogStatement       Statement
+  hi link verilogGlobal          Define
+  hi link verilogDirective       SpecialComment
 endif
 
 let b:current_syntax = "verilog"

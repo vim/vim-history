@@ -33,7 +33,7 @@ syn keyword povRepeat		while for do
 
 " String and Character constants
 " Highlight special characters (those which have a backslash) differently
-syn match   povSpecial contained "\\[0-9][0-9][0-9]\|\\."
+syn match   povSpecial contained "\\\d\d\d\|\\."
 syn region  povString		  start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=povSpecial
 syn match   povCharacter	  "'[^\\]'"
 syn match   povSpecialCharacter  "'\\.'"
@@ -41,19 +41,19 @@ syn match   povSpecialCharacter  "'\\.'"
 "catch errors caused by wrong parenthesis
 syn region	povParen		transparent start='(' end=')' contains=ALLBUT,povParenError,povIncluded,povSpecial,povTodo,povUserLabel
 syn match	povParenError	")"
-syn match 	povInParen	contained "[{}]"
+syn match	povInParen	contained "[{}]"
 hi link povParenError povError
 hi link povInParen povError
 
 "integer number, or floating point number without a dot and with "f".
 syn case ignore
-syn match  povNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match  povNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match  povFloat		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  povFloat		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  povFloat		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  povFloat		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match  povFloat		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match  povFloat		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match  povNumber		"0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 "syn match  cIdentifier	"\<[a-z_][a-z0-9_]*\>"
@@ -90,7 +90,7 @@ if !exists("did_pov_syntax_inits")
   hi link povNumber		Number
   hi link povString		String
   hi link povCharacter		Character
-  hi link povSpecialCharacter 	povSpecial
+  hi link povSpecialCharacter	povSpecial
   " identifier
   hi link povCommands		Function
   " statements

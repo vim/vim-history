@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	xmath (a simulation tool)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
 " Last change:	December 3, 1997
 
 " Remove any old syntax stuff hanging around
@@ -167,12 +167,12 @@ syn match   xmathLabel             "^\s*<[a-zA-Z_][a-zA-Z0-9]*>"
 
 " String and Character constants
 " Highlight special characters (those which have a backslash) differently
-syn match   xmathSpecial	contained "\\[0-9][0-9][0-9]\|\\."
+syn match   xmathSpecial	contained "\\\d\d\d\|\\."
 syn region  xmathString	start=+"+  skip=+\(\\\\\)*\\"+  end=+"+ contains=xmathSpecial
 syn match   xmathCharacter	"'[^\\]'"
 syn match   xmathSpecialChar	"'\\.'"
 
-syn match   xmathNumber	"-\=\<[0-9]\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn match   xmathNumber	"-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 
 " Comments:
 " xmath supports #...  (like Unix shells)

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 5.1.  Last modification: 1998 Mar 29
+*index.txt*     For Vim version 5.2.  Last modification: 1998 Aug 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -10,15 +10,15 @@ short description.  The lists are sorted on ASCII value.
 Tip: When looking for certain functionality, use a search command.  E.g.,
 to look for deleting something, use: "/delete".
 
-1. Insert mode                          |insert-index|
-2. Normal mode                          |normal-index|
-   2.1. Text objects                	|objects|
-   2.2. Window commands             	|CTRL-W|
-   2.3. Square bracket commands     	|[|
-   2.4. Commands starting with 'g'  	|g|
-3. Visual mode                          |visual-index|
-4. Command-line editing                 |ex-edit-index|
-5. EX commands                          |ex-cmd-index|
+1. Insert mode				|insert-index|
+2. Normal mode				|normal-index|
+   2.1. Text objects			|objects|
+   2.2. Window commands			|CTRL-W|
+   2.3. Square bracket commands		|[|
+   2.4. Commands starting with 'g'	|g|
+3. Visual mode				|visual-index|
+4. Command-line editing			|ex-edit-index|
+5. EX commands				|ex-cmd-index|
 
 For an overview of options see help.txt |option-list|.
 For a complete description of each option see options.txt |options|.
@@ -78,7 +78,8 @@ tag		char		action	~
 		CTRL-\		not used
 |i_CTRL-]|	CTRL-]		trigger abbreviation
 		CTRL-^		not used
-|i_CTRL-_|	CTRL-_		change language (Hebrew, Farsi)
+|i_CTRL-_|	CTRL-_		When 'allowrevins' set: change language
+				(Hebrew, Farsi)
 
 		<Space> to '~'	not used, except '0' and '^' followed by
 				CTRL-D
@@ -347,7 +348,7 @@ tag		char	      note action in Normal mode	~
 				   cursor [into buffer x]
 |y|		["x]y{motion}	   yank Nmove text [into buffer x]
 |yy|		["x]yy		   yank N lines [into buffer x]
-|z<CR>|		z<CR>	   	   redraw, cursor line to top of window,
+|z<CR>|		z<CR>		   redraw, cursor line to top of window,
 				   cursor on first non-blank
 |zN<CR>|	z{height}<CR>	   redraw, make window {height} lines high
 |z.|		z.		   redraw, cursor line to center of window,
@@ -412,7 +413,7 @@ tag		char	      note action in Normal mode	~
 
 These can be used after an operator or in Visual mode to select an object
 
-tag		command	      	   action in Normal mode	~
+tag		command		   action in Normal mode	~
 ------------------------------------------------------------------------------
 |v_aB|		aB		   "a Block" from "[{" and "]}" (with brackets)
 |v_aW|		aW		   "a WORD" (with white space)
@@ -430,7 +431,7 @@ tag		command	      	   action in Normal mode	~
 ==============================================================================
 2.2 Window commands						*CTRL-W*
 
-tag		command	      	   action in Normal mode	~
+tag		command		   action in Normal mode	~
 ------------------------------------------------------------------------------
 |CTRL-W_CTRL-B|	CTRL-W CTRL-B	   same as "CTRL-W b"
 |CTRL-W_CTRL-C|	CTRL-W CTRL-C	   same as "CTRL-W c"
@@ -520,12 +521,12 @@ tag		char	      note action in Normal mode	~
 |[P|		[P		2  same as "[p"
 |[[|		[[		1  cursor N sections backward
 |[]|		[]		1  cursor N SECTIONS backward
-|[d|		[d	   	   show first #define found in current and
+|[d|		[d		   show first #define found in current and
 				   included files matching the word under the
 				   cursor, start searching at beginning of
 				   current file
 |[f|		[f		   same as "gf"
-|[i|		[i 		   show first line found in current and
+|[i|		[i		   show first line found in current and
 				   included files that contains the word under
 				   the cursor, start searching at beginning of
 				   current file
@@ -553,11 +554,11 @@ tag		char	      note action in Normal mode	~
 |]P|		]P		2  same as "[p"
 |][|		][		1  cursor N SECTIONS forward
 |]]|		]]		1  cursor N sections forward
-|]d|		]d	   	   show first #define found in current and
+|]d|		]d		   show first #define found in current and
 				   included files matching the word under the
 				   cursor, start searching at cursor position
 |]f|		]f		   same as "gf"
-|]i|		]i 		   show first line found in current and
+|]i|		]i		   show first line found in current and
 				   included files that contains the word under
 				   the cursor, start searching at cursor
 				   position
@@ -570,6 +571,11 @@ tag		char	      note action in Normal mode	~
 
 tag		char	      note action in Normal mode	~
 ------------------------------------------------------------------------------
+|g_CTRL-A|	g_CTRL-A	   only when compiled with MEM_PROFILE
+				   defined: dump a memory profile
+|g_CTRL-G|	g_CTRL-G	   show information about current cursor
+				   position
+|g_CTRL-H|	g_CTRL-H	   start Select block mode
 |g#|		g#		1  like "#", but without using "\<" and "\>"
 |g$|		g$		1  when 'wrap' off go to rightmost character of
 				   the current line that is on the screen;
@@ -584,15 +590,20 @@ tag		char	      note action in Normal mode	~
 				   current file
 |gE|		gE		1  go backwards to the end of the previous
 				   WORD
+|gH|		gH		   start Select line mode
 |gI|		gI		2  like "I", but always start in column 1
+|gJ|		gJ		2  join lines without inserting space
+|gP|		["x]gP		2  put the text [from register x] before the
+				   cursor N times, leave the cursor after it
 |gU|		gU{motion}	2  make Nmove text uppercase
+|gV|		gV		   don't reselect the previous Visual area
+				   when executing a mapping or menu in Select
+				   mode
 |g^|		g^		1  when 'wrap' off go to leftmost non-white
 				   character of the current line that is on
 				   the screen; when 'wrap' on go to the
 				   leftmost non-white character of the current
 				   screen line
-|g_CTRL-G|	g_CTRL-G	   show information about current cursor
-				   position
 |ga|		ga		   print ascii value of character under the
 				   cursor
 |gd|		gd		1  goto definiton of word under the cursor in
@@ -602,10 +613,13 @@ tag		char	      note action in Normal mode	~
 |gf|		gf		   start editing the file whose name is under
 				   the cursor
 |gg|		gg		1  cursor to line N, default first line
+|gh|		gh		   start Select mode
 |gj|		gj		1  like "j", but when 'wrap' on go N screen
 				   lines down
 |gk|		gk		1  like "k", but when 'wrap' on go N screen
 				   lines up
+|gp|		["x]gp		2  put the text [from register x] after the
+				   cursor N times, leave the cursor after it
 |gq|		gq{motion}	2  format Nmove text
 |gs|		gs		   goto sleep for N seconds (default 1)
 |gu|		gu{motion}	2  make Nmove text lowercase
@@ -626,6 +640,7 @@ here are those that are different.
 
 tag		command	      note action in Visual mode	~
 ------------------------------------------------------------------------------
+|v_CTRL-G|	CTRL-G		   switch to Select mode
 |v_CTRL-V|	CTRL-V		   make Visual mode blockwise or stop Visual
 				   mode
 |v_CTRL-]|	CTRL-]		   jump to highlighted tag
@@ -663,6 +678,8 @@ tag		command	      note action in Visual mode	~
 |v_aw|		aw		   extend the highlighted area with "a word"
 |v_c|		c		2  delete the highlighted text and start insert
 |v_d|		d		2  delete the highlighted text
+|v_gJ|		gJ		2  join the highlighted lines without
+				   inserting spaces
 |v_gq|		gq		2  format the highlighted lines
 |v_gv|		gv		   exchange current and previous highlighted
 				   text
@@ -727,7 +744,6 @@ file names, tags, commands etc. as appropriate.
 |c_CTRL-R|	CTRL-R <0-9a-z"%#:=>
 				insert the contents of a register
 		CTRL-S		(used for terminal control flow)
-		CTRL-T		not used
 |c_CTRL-U|	CTRL-U		remove all characters
 |c_CTRL-V|	CTRL-V		insert next non-digit literally, insert three
 				digit decimal number as a single byte.
@@ -740,7 +756,8 @@ file names, tags, commands etc. as appropriate.
 		CTRL-\		not used
 		CTRL-]		not used
 		CTRL-^		not used
-|c_CTRL-_|	CTRL-_		change language (Hebrew, Farsi)
+|c_CTRL-_|	CTRL-_		when 'allowrevins' set: change language
+				(Hebrew, Farsi)
 |c_<C-Left>|	<C-Left>	cursor one word left
 |c_<C-Right>|	<C-Right>	cursor one word right
 |c_<Del>|	<Del>		delete the character under the cursor
@@ -774,6 +791,7 @@ arguments.
 |:<|		:<		shift lines one 'shiftwidth' left
 |:=|		:=		print the cursor line number
 |:>|		:>		shift lines one 'shiftwidth' right
+|:star|		:*		execute contents of a register
 |:@|		:@		execute contents of a register
 |:@@|		:@@		repeat the previous ":@"
 |:Next|		:N[ext]		go to previous file in the argument list
@@ -791,7 +809,9 @@ arguments.
 |:buffer|	:b[uffer]	go to specific buffer in the buffer list
 |:bNext|	:bN[ext]	go to next buffer in the buffer list
 |:ball|		:ba[ll]		open a window for each file in the buffer list
+|:badd|		:bad[d]		add file to the buffer list
 |:bdelete|	:bd[elete]	delete specific files from the buffer list
+|:behave|	:be[have]	set mouse and selection behaviour
 |:blast|	:bl[ast]	go to last file in the buffer list
 |:bmodified|	:bm[odified]	go to next file in the buffer list that has
 				been modified
@@ -799,12 +819,14 @@ arguments.
 |:bprevious|	:bp[revious]	go to previous file in the buffer list
 |:break|	:brea[k]	break out of while loop
 |:brewind|	:br[ewind]	go to last file in the buffer list
+|:browse|	:bro[wse]	use file selection dialog
 |:buffers|	:buffers	list all files in the buffer list
 |:bunload|	:bun[load]	unload a specific buffer
 |:change|	:c[hange]	replace a line or series of lines
 |:cNext|	:cN[ext]	go to previous error
 |:cabbrev|	:ca[bbrev]	like ":abbreviate" but for command-line mode
 |:cabclear|	:cabc[lear]	clear all abbreviations for command-line mode
+|:call|		:cal[l]		call a function
 |:cc|		:cc		go to specific error
 |:cd|		:cd		change directory
 |:center|	:ce[nter]	format lines at the center
@@ -819,17 +841,27 @@ arguments.
 |:cmenu|	:cme[nu]	add menu for command-line mode
 |:cmapclear|	:cmapc[lear]	clear all mappings for command-line mode
 |:cnext|	:cn[ext]	go to next error
+|:cnewer|	:cnew[er]	go to newer error list
 |:cnoremap|	:cno[remap]	like ":noremap" but for command-line mode
 |:cnoremenu|	:cnoreme[nu]	like ":noremenu" but for command-line mode
 |:cnoreabbrev|	:cnorea[bbrev]	like ":noreabbrev" but for command-line mode
 |:copy|		:co[py]		copy lines
+|:colder|	:col[der]	go to older error list
+|:comclear|	:comc[lear]	clear all user-defined commands
+|:command|	:com[mand]	create user-defined command
+|:continue|	:con[tinue]	go back to :while
+|:confirm|	:conf[irm]	prompt user when confirmation required
 |:cprevious|	:cp[revious]	go to previous error
 |:cquit|	:cq[uit]	quit Vim with an error code
 |:crewind|	:cr[ewind]	go to the specified error, default first one
+|:cscope|	:cs[cope]       execute cscope command
+|:cstag|	:cst[ag]	use cscope to jump to a tag
 |:cunmap|	:cu[nmap]	like ":unmap" but for command-line mode
 |:cunmenu|	:cunme[nu]	remove menu for command-line mode
 |:cunabbrev|	:cuna[bbrev]	like ":unabbrev" but for command-line mode
 |:delete|	:d[elete]	delete lines
+|:delcommand|	:delc[ommand]	delete user-defined command
+|:delfunction|	:delf[unction]	delete a user function
 |:display|	:di[splay]	display registers
 |:digraphs|	:dig[raphs]	show or enter digraphs
 |:djump|	:dj[ump]	jump to #define
@@ -845,6 +877,7 @@ arguments.
 |:else|		:el[se]		part of an :if command
 |:elseif|	:elsei[f]	part of an :if command
 |:endif|	:en[dif]	end previous :if
+|:endfunction|	:endf[unction]	end of a user function
 |:endwhile|	:endw[hile]	end previous :while
 |:ex|		:ex		same as ":edit"
 |:execute|	:exe[cute]	execute result of expressions
@@ -852,7 +885,9 @@ arguments.
 |:file|		:f[ile]		show or set the current file name
 |:files|	:files		list all files in the buffer list
 |:fixdel|	:fix[del]	set key code of <Del>
+|:function|	:fu[nction]	define a user function
 |:global|	:g[lobal]	execute commands for matching lines
+|:grep|		:gr[ep]		run 'grepprg' and jump to first match
 |:gui|		:gu[i]		start the GUI
 |:gvim|		:gv[im]		start the GUI
 |:help|		:h[elp]		open a help window
@@ -896,6 +931,7 @@ arguments.
 |:menu|		:me[nu]		enter a new menu item
 |:mkexrc|	:mk[exrc]	write current mappings and settings to a file
 |:mkvimrc|	:mkv[imrc]	write current mappings and settings to a file
+|:mksession|	:mks[ession]	write session info to a file
 |:mode|		:mod[e]		show or change the screen mode
 |:next|		:n[ext]		go to next file in the argument list
 |:new|		:new		create a new empty window
@@ -905,6 +941,7 @@ arguments.
 |:nnoremap|	:nn[oremap]	like ":noremap" but for Normal mode
 |:nnoremenu|	:nnoreme[nu]	like ":noremenu" but for Normal mode
 |:noremap|	:no[remap]	enter a mapping that will not be remapped
+|:nohlsearch|	:noh[lsearch]	suspend 'hlsearch' highlighting
 |:noremenu|	:noreme[nu]	enter a menu that will not be remapped
 |:noreabbrev|	:norea[bbrev]	enter an abbreviation that will not be
 				remapped
@@ -923,7 +960,10 @@ arguments.
 |:ounmenu|	:ounme[nu]	remove menu for Operator-pending mode
 |:perl|		:pe[rl]		execute Perl command
 |:perldo|	:perld[o]	execute Perl command for each line
+|:Print|	:P[rint]	print lines
 |:print|	:p[rint]	print lines
+|:promptfind|	:promptf[ind]	Search dialog
+|:promptrepl|	:promptr[epl]	Search/Replace dialog
 |:pop|		:po[p]		jump to older entry in tag stack
 |:preserve|	:pre[serve]	write all text to swap file
 |:previous|	:prev[ious]	go to previous file in argument list
@@ -939,6 +979,7 @@ arguments.
 |:registers|	:reg[isters]	display the contents of registers
 |:resize|	:res[ize]	change current window height
 |:retab|	:ret[ab]	change tab size
+|:return|	:retu[rn]	return from a user function
 |:rewind|	:rew[ind]	go to the first file in the argument list
 |:right|	:ri[ght]	right align text
 |:rviminfo|	:rv[iminfo]	read from viminfo file
@@ -965,11 +1006,14 @@ arguments.
 				buffer list
 |:set|		:se[t]		show or set options
 |:shell|	:sh[ell]	escape to a shell
+|:simalt|	:si[malt]	Win32 GUI: simulate Windows ALT key
 |:sleep|	:sl[eep]	do nothing for a few seconds
 |:slast|	:sla[st]	split window and go to last file in the
 				argument list
+|:smagic|	:sm[agic]	:substitute with 'magic'
 |:snext|	:sn[ext]	split window and go to next file in the
 				argument list
+|:snomagic|	:sno[magic]	:substitute with 'nomagic'
 |:source|	:so[urce]	read Vim or Ex commands from a file
 |:split|	:sp[lit]	split current window
 |:sprevious|	:spr[evious]	split window and go to previous file in the
@@ -988,14 +1032,20 @@ arguments.
 |:t|		:t		same as ":copy"
 |:tag|		:ta[g]		jump to tag
 |:tags|		:tags		show the contents of the tag stack
+|:tcl|		:tcl		execute Tcl command
+|:tcldo|	:tcld[o]	execute Tcl command for each line
+|:tclfile|	:tclf[ile]	execute Tcl script file
+|:tearoff|	:te[aroff]	tear-off a menu
 |:tjump|	:tj[ump]	like ":tselect", but jump directly when there
 				is only one match
 |:tlast|	:tl[ast]	jump to last matching tag
+|:tmenu|	:tm[enu]	define menu tooltip
 |:tnext|	:tn[ext]	jump to next matching tag
 |:tNext|	:tN[ext]	jump to previous matching tag
 |:tprevious|	:tp[revious]	jump to previous matching tag
 |:trewind|	:tr[ewind]	jump to first matching tag
 |:tselect|	:ts[elect]	list matching tags and select one
+|:tunmenu|	:tu[nmenu]	remove menu tooltip
 |:undo|		:u[ndo]		undo last change(s)
 |:unabbreviate|	:una[bbreviate]	remove abbreviation
 |:unhide|	:unh[ide]	open a window for each loaded file in the

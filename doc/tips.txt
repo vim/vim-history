@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.1.  Last modification: 1998 Mar 26
+*tips.txt*      For Vim version 5.2.  Last modification: 1998 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,13 +14,13 @@ Switching screens in an xterm			|xterm-screens|
 Scrolling in Insert mode			|scroll-insert|
 Smooth scrolling				|scroll-smooth|
 Correcting common typing mistakes		|type-mistakes|
+Counting words, lines, etc.			|count-items|
 Renaming files					|rename-files|
 Speeding up external commands			|speed-up|
 Useful mappings					|useful-mappings|
 Compressing the help files			|gzip-helpfile|
 Executing shell commands in a window		|shell-window|
 Using <> notation in autocommands		|autocmd-<>|
-Using the "User" event for a function		|User-function|
 
 ==============================================================================
 Editing C programs					*C-editing*
@@ -44,6 +44,7 @@ is an overview with tags to jump to:
 
 |CTRL-]|		Jump to tag under cursor.
 |CTRL-T|		Jump back from tag.
+|:tselect|		Select one of a list of matching tags.
 
 |gd|			Go to Declaration of local variable under cursor.
 |gD|			Go to Declaration of global variable under cursor.
@@ -71,7 +72,7 @@ Finding where identifiers are used			*ident-search*
 Sometimes you wish you could jump to where a function or variable is being
 used.  This is possible in two ways:
 1. Using "grep" and quickfix commands.  This should work on most Unix systems,
-   but can be slow and only searches in one directory
+   but can be slow and only searches in one directory.
 2. Using ID utils.  This is fast and works in multiple directories.  You will
    need some additional programs for this to work.
 
@@ -80,9 +81,12 @@ used.  This is possible in two ways:
 Add one long line to your .vimrc:
 >  map _g :let efsave=&ef<Bar>let &ef=tempname()<Bar>exe ':!grep -n -w "<cword>" *.[ch] *.txt >'.&ef<CR>:cf<CR>:exe ":!rm ".&ef<CR>:let &ef=efsave<Bar>unlet efsave<CR><CR>:cc<CR>
 
+NOTE: This requires that the '<' flag is excluded from 'cpoptions'.
+
 That's all!  You can use this by placing the cursor on any identifier, and
 hitting "_g".  Then go to further matches with ":cn".  ":cc" and ":cp" can be
 used to move around in the list of matches.  Use ":cl" to see all matches.
+Also see |quickfix|.
 
 This depends on the format of what grep produces and 'errorformat'.  It should
 work with the default settings.
@@ -103,22 +107,22 @@ What you need:
 - An identifier database file called "ID" in the current directory.
 
 Put this in your .vimrc:
->	:map su :source $HOME/.vim/such.vim<CR>
->	:map nn :n<CR>n
+>	map _u :source $HOME/.vim/such.vim<CR>
+>	map _n :n<CR>n
 
 Put this in the "$HOME/.vim/such.vim" file:
 >	" such.vim
 >	" lets you find arbitrary strings from the GNU mkid utility
 >	" kind of a reverse tags system
->	:let o = expand("<cword>")
->	:execute "let b = \"`lid --key=none " o "`\""
->	:let x = expand( b )
->	:execute "n " . x
->	:execute "/\\<".o."\\>"
+>	let o = expand("<cword>")
+>	execute "let b = \"`lid --key=none " o "`\""
+>	let x = expand( b )
+>	execute "n " . x
+>	execute "/\\<".o."\\>"
 
-To use it, just step on a word with the cursor, type su and vim should load
+To use it, just step on a word with the cursor, type "_u" and vim should load
 the file[s] that contain the word.  Search for the next occurence with "n" and
-go to the next file with "nn".
+go to the next file with "_n".
 
 This has been tested with id-utils-3.2 (which is the name name of the id-tools
 archive file on your closest gnu-ftp-mirror).
@@ -148,6 +152,7 @@ If you are typing text in Vim that will later go to a word processor, it is
 useful to keep a paragraph as a single line.  To make this more easy:
 - set 'wrap' on, to make lines wrap				|'wrap'|
 - set 'linebreak' on, to make wrapping happen at a blank	|'linebreak'|
+- set 'textwidth' to zero, to avoid linebreaks			|'tw'|
 - use "gk" and "gj" to move one screen line up or down		|gj|
 
 ==============================================================================
@@ -192,7 +197,7 @@ contain entries similar to:
 PS: If you find any difference, someone (your sysadmin?) should better check
     the complete termcap and terminfo database for consistency.
 
-NOTE: If you recompile Vim with SAVE_XTERM_SCREEN defined in feature.h, the
+NOTE 1: If you recompile Vim with SAVE_XTERM_SCREEN defined in feature.h, the
 builtin xterm will include the mentioned "te" and "ti" entries.
 
 NOTE 2: If you want to disable the screen switching, and you don't want to
@@ -210,6 +215,8 @@ To make this easier, you could use these mappings:
 >	:inoremap ^E ^X^E
 >	:inoremap ^Y ^X^Y
 (Type CTRL-V CTRL-E to enter ^E, CTRL-V CTRL-X to enter ^X, etc.)
+You then lose the ability to copy text from the line above/below the cursor
+|i_CTRL-E|.
 
 Also consider setting 'scrolloff' to a larger value, so that you can always see
 some context around the cursor.  If 'scrolloff' is bigger than half the window
@@ -234,14 +241,27 @@ abbreviations that correct them.  For example:
 >	:ab fro for
 
 ==============================================================================
+Counting words, lines, etc.				*count-items*
+
+To count how often any pattern occurs in a buffer, set 'report' to 0, and use
+the substitute command to replace the pattern with itself.  The reported
+number of substitutions is the number of items.  Examples:
+
+>	:set report=0
+>	:%s/./&/g		characters
+>	:%s/\i\+/&/g		words
+>	:%s/^//g		lines
+>	:%s/the/&/g		"the"
+
+==============================================================================
 Renaming files						*rename-files*
 
 Say I have a directory with the following files in them (directory picked at
 random :-):
 
-addcr.c
-alloc.c
-amiga.c
+buffer.c
+charset.c
+digraph.c
 ...
 
 and I want to rename *.c *.bla.  I'd do it like this:
@@ -290,23 +310,25 @@ a mark, instead of going to the first non-blank character in the line.
 							*emacs-keys*
 For Emacs-style editing on the command-line:
 >	" start of line
->	:cnoremap ^A		<Home>
+>	:cnoremap <C-A>		<Home>
 >	" back one character
->	:cnoremap ^B		<Left>
+>	:cnoremap <C-B>		<Left>
 >	" delete character under cursor
->	:cnoremap ^D		<Del>
+>	:cnoremap <C-D>		<Del>
 >	" end of line
->	:cnoremap ^E		<End>
+>	:cnoremap <C-E>		<End>
 >	" forward one character
->	:cnoremap ^F		<Right>
+>	:cnoremap <C-F>		<Right>
 >	" recall newer command-line
->	:cnoremap ^N		<Down>
+>	:cnoremap <C-N>		<Down>
 >	" recall previous (older) command-line
->	:cnoremap ^P		<Up>
+>	:cnoremap <C-P>		<Up>
 >	" back one word
->	:cnoremap <Esc>^B	<S-Left>
+>	:cnoremap <Esc><C-B>	<S-Left>
 >	" forward one word
->	:cnoremap <Esc>^F	<S-Right>
+>	:cnoremap <Esc><C-F>	<S-Right>
+
+NOTE: this requires that the '<' flag is excluded from 'cpoptions'.
 
 							*format-bullet-list*
 This mapping will format any bullet list.  It requires that there is an empty
@@ -320,10 +342,14 @@ be able to give comments to the parts of the mapping.
 >	let m = m . "gq}"		      " format text after the bullet
 >	let m = m . "{dd"		      " remove the empty line
 >	let m = m . "5lDJ"		      " put text after bullet
->	exec m				      " define the mapping
+>	execute m			      |" define the mapping
 
-(<> notation |<>|.  Note that ^W is "^" "W", not CTRL-W.  You can copy/paste
-this into Vim if '<' is not included in 'cpoptions')
+(<> notation |<>|.  Note that this is all typed literally.  ^W is "^" "W", not
+CTRL-W.  You can copy/paste this into Vim if '<' is not included in
+'cpoptions')
+
+Note that the last comment starts with |", because the ":execute" command
+doesn't accept a comment directly.
 
 You also need to set 'textwidth' to a non-zero value, e.g.,
 >	set tw=70
@@ -342,7 +368,7 @@ Compressing the help files				*gzip-helpfile*
 
 For those of you who are really short on disk space, you can compress the help
 files and still be able to view them with Vim.  This makes accessing the help
-files a bit slower.
+files a bit slower and requires the "gzip" program.
 
 (1) Compress all the help files: "gzip doc/*.txt".
 
@@ -362,11 +388,11 @@ files a bit slower.
 >	set helpfile=<dirname>/help.txt.gz
 
 Where <dirname> is the directory where the help files are.  If you have
-already included autocommands to edit ".gz" files, you should omit the three
-"autocmd" lines.  Setting 'cmdheight' to two is to avoid the |hit-return|
-prompt; it is not mandatory.  You must also make sure that $VIM is set to
-where the other Vim files are, when they are not in the same location as the
-compressed "doc" directory.  See |$VIM|.
+already included autocommands to edit ".gz" files (from $VIM/vimrc_example),
+you should omit the three "autocmd" lines.  Setting 'cmdheight' to two is to
+avoid the |hit-return| prompt; it is not mandatory.  You must also make sure
+that $VIM is set to where the other Vim files are, when they are not in the
+same location as the compressed "doc" directory.  See |$VIM|.
 
 ==============================================================================
 Executing shell commands in a window			*shell-window*
@@ -382,7 +408,7 @@ that knows more about this is Sam Lantinga (<slouken@cs.ucdavis.edu>).
 ==============================================================================
 Using <> notation in autocommands			*autocmd-<>*
 
-The <> notation is not recognized in the argument for :autocmd.  To avoid
+The <> notation is not recognized in the argument of an :autocmd.  To avoid
 having to use special characters, you could use a self-destroying mapping to
 get the <> notation and then call the mapping from the autocmd.  Example:
 
@@ -398,42 +424,14 @@ get the <> notation and then call the mapping from the autocmd.  Example:
 > autocmd BufNewFile,BufReadPre * nmap i :nunmap i<CR>O<C-R>%<Esc>:.g/\./s/\./\\./g<CR>0"9y$u:menu Buffers.<C-R>9 :buffer <C-R>%<C-V><CR><CR>
 > autocmd BufNewFile,BufReadPre * normal i
 
-==============================================================================
-Using the "User" event for a function			*User-function*
+Another method, perhaps better, is to use the ":execute" command.  In the
+string you can use the <> notation by preceding it with a backslash.  Don't
+forget to double the number of existing backslashes and put a backslash before
+'"'.
 
-Vim doesn't offer the possibility to define your own functions yet.  But you
-can mostly get the functionality with the |User| autocommand event.
+> autocmd BufNewFile,BufReadPre * exe "normal O\<C-R>%\<Esc>:.g/\\./s/\\./\\\\./g\<CR>0\"9y$u:menu Buffers.\<C-R>9 :buffer \<C-R>%\<C-V>\<CR>\<CR>"
 
-The idea is to create an autocommand group, in which you put several commands.
-These commands can then be executed with the ":doautocmd" command.
-
-This example shows how to push the current file onto a stack with the "gf"
-command, and be able to jump back with the ",p" mapping.  You can put this
-literally in your .vimrc file:
-
->  "initialize the stack variable.  It will contain "file3\nfile2\nfile1"
->  let stackf = ""
->
->  aug pushfile
->    au! User x let stackf = expand("%:p") . "\n" . stackf
->  aug END
->
->  aug popfile
->    au! User x let file = substitute(stackf, "\n.*", "", "")
->    au  User x if file != ""
->    au  User x   execute "e " . file
->    au  User x   let stackf = substitute(stackf, "[^\n]*\n", "", "")
->    au  User x endif
->  aug END
->
->  noremap gf :do pushfile User x<C-M>gf
->  noremap ,p :do popfile User x<C-M>
-
-Notes:
-- The autocommands are not echoed, which works much better than putting the
-  commands in the mapping directly.
-- "au! is used as the first command in each group, to remove any previous
-  autocommands in this group.  This is to avoid trouble when sourcing the
-  .vimrc file twice.
+For a real buffer menu, user functions should be used |:function|, but then
+the <> notation isn't used, which defeats using it as an example here.
 
  vim:ts=8:sw=8:tw=78:

@@ -57,12 +57,12 @@ syn keyword awkStatement	func nextfile
 " Hex   format character.
 syn match   awkSpecialCharacter contained "\\x[0-9A-Fa-f]\+"
 
-syn match   awkFieldVars	"\$[0-9]\+"
+syn match   awkFieldVars	"\$\d\+"
 
 "catch errors caused by wrong parenthesis
 syn region	awkParen	transparent start="(" end=")" contains=ALLBUT,awkParenError,awkSpecialCharacter,awkArrayElement,awkArrayArray,awkTodo,awkRegExp,awkBrktRegExp,awkBrackets,awkCharClass
 syn match	awkParenError	")"
-syn match 	awkInParen	contained "[{}]"
+syn match	awkInParen	contained "[{}]"
 
 " 64 lines for complex &&'s, and ||'s in a big "if"
 syn sync ccomment awkParen maxlines=64
@@ -84,22 +84,22 @@ syn region  awkString	start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=awkSpecialC
 syn match   awkSpecialCharacter contained "\\."
 
 " Some of these combinations may seem weird, but they work.
-syn match   awkSpecialPrintf	contained "%[-+ #]*[0-9]*\.\=[0-9]*[cdefgiosuxEGX%]"
+syn match   awkSpecialPrintf	contained "%[-+ #]*\d*\.\=\d*[cdefgiosuxEGX%]"
 
 " Numbers, allowing signs (both -, and +)
 " Integer number.
-syn match  awkNumber		"[+-]\=\<[0-9]\+\>"
+syn match  awkNumber		"[+-]\=\<\d\+\>"
 " Floating point number.
-syn match  awkFloat		"[+-]\=\<[0-9]\+\.[0-9]+\>"
+syn match  awkFloat		"[+-]\=\<\d\+\.\d+\>"
 " Floating point number, starting with a dot.
-syn match  awkFloat		"[+-]\=\<.[0-9]+\>"
+syn match  awkFloat		"[+-]\=\<.\d+\>"
 syn case ignore
 "floating point number, with dot, optional exponent
-syn match  awkFloat	"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=\>"
+syn match  awkFloat	"\<\d\+\.\d*\(e[-+]\=\d\+\)\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  awkFloat	"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=\>"
+syn match  awkFloat	"\.\d\+\(e[-+]\=\d\+\)\=\>"
 "floating point number, without dot, with exponent
-syn match  awkFloat	"\<[0-9]\+e[-+]\=[0-9]\+\>"
+syn match  awkFloat	"\<\d\+e[-+]\=\d\+\>"
 syn case match
 
 "syn match  awkIdentifier	"\<[a-zA-Z_][a-zA-Z0-9_]*\>"

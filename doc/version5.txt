@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.1.  Last modification: 1998 Apr 07
+*version5.txt*  For Vim version 5.2.  Last modification: 1998 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,7 +13,7 @@ See |version4.txt| for differences between Vim 3.0 and Vim 4.0.
 INCOMPATIBLE:
 Default value for 'compatible' changed	|cp-default|
 Text formatting command "Q" changed	|Q-command-changed|
-Command line arguments changed		|cmdline-changed|
+Command-line arguments changed		|cmdline-changed|
 Autocommands are kept			|autocmds-kept|
 Use of 'hidden' changed			|hidden-changed|
 Text object commands changed		|text-objects-changed|
@@ -38,16 +38,37 @@ Regular expression patterns		|added-regexp|
 Overloaded tags				|tag-overloaded|
 New commands				|new-commands|
 New options				|added-options|
-New command line arguments		|added-cmdline-args|
+New command-line arguments		|added-cmdline-args|
 Various additions			|added-various|
 
 IMPROVEMENTS				|improvements|
 
 COMPILE TIME CHANGES			|compile-changes|
 
-BUG FIXES 				|bug-fixes|
+BUG FIXES				|bug-fixes|
 
-VERSION 5.1				|version-5.1|
+VERSION 5.1			|version-5.1|
+Changed					|changed-5.1|
+Added					|added-5.1|
+Fixed					|fixed-5.1|
+
+VERSION 5.2			|version-5.2|
+Long lines editable			|long-lines|
+File browser added			|file-browser|
+Dialogs added				|dialogs-added|
+Popup menu added			|popup-menu-added|
+Select mode added			|new-Select-mode|
+Session files added			|new-session-files|
+User defined functions and commands	|new-user-defined|
+New interfaces				|interfaces-5.2|
+New ports				|ports-5.2|
+Multi-byte support			|new-multi-byte|
+New functions				|new-functions-5.2|
+New options				|new-options-5.2|
+New Ex commands				|new-ex-commands-5.2|
+Changed					|changed-5.2|
+Added					|added-5.2|
+Fixed					|fixed-5.2|
 
 ==============================================================================
 				 INCOMPATIBLE
@@ -55,30 +76,30 @@ VERSION 5.1				|version-5.1|
 Default value for 'compatible' changed			*cp-default*
 --------------------------------------
 
-Vim version 5.0 tries to be more Vi compatible.  This helps for people that
-use Vim as a drop-in replacement for Vi.  But this causes some items to be
-incompatible with version 4.x.
+Vim version 5.0 tries to be more Vi compatible.  This helps people who use Vim
+as a drop-in replacement for Vi, but causes some things to be incompatible
+with version 4.x.
 
-In version 4.* the default value for the 'compatible' option was off.  Now the
+In version 4.x the default value for the 'compatible' option was off.  Now the
 default is on.  The first thing you will notice is that the "u" command undoes
-itself.  Other side effects will be that mappings may not work in the same
-way, or not at all.
+itself.  Other side effects will be that mappings may work differently or not
+work at all.
 
-Since a lot of people switching from Vim 4.x to 5.0 will be annoyed by this,
-the 'compatible' option is switched off if a vimrc file is found.  This is a
-bit of magic, to make sure that 90% of the Vim users will not be bitten by
+Since a lot of people switching from Vim 4.x to 5.0 will find this annoying,
+the 'compatible' option is switched off if Vim finds a vimrc file.  This is a
+bit of magic to make sure that 90% of the Vim users will not be bitten by
 this change.
 
 What does this mean?
-- If you prefer to run in 'compatible' mode, and don't have a vimrc file, you
+- If you prefer to run in 'compatible' mode and don't have a vimrc file, you
   don't have to do anything.
-- If you prefer to run in 'nocompatible' mode, and do have a vimrc file, you
+- If you prefer to run in 'nocompatible' mode and do have a vimrc file, you
   don't have to do anything.
-- If you prefer to run in 'compatible' mode, and do have a vimrc file, you
+- If you prefer to run in 'compatible' mode and do have a vimrc file, you
   should put this line first in your vimrc file:
 >	:set compatible
-- If you prefer to run in 'nocompatible' mode, and don't have a vimrc file,
-  you can use one of these ways:
+- If you prefer to run in 'nocompatible' mode and don't have a vimrc file,
+  you can do one of the following:
     - Create an empty vimrc file (e.g.: "~/.vimrc" for Unix).
     - Put this command in your .exrc file or $EXINIT:
 >		:set nocompatible
@@ -91,17 +112,16 @@ setting.  See 'compatible'.
 If you like some things from 'compatible' and some not, you can tune the
 compatibility with 'cpoptions'.
 
-When called "ex" or "gex", Vim always starts in compatible mode.
+When you invoke Vim as "ex" or "gex", Vim always starts in compatible mode.
 
 
 Text formatting command "Q" changed			*Q-command-changed*
 -----------------------------------
 
-The "Q" command was formerly used to format lines to the width given with the
-'textwidth' option.  This is now "gq" (see |gq| for more info).
-The reason why this change had to be made was that "Q" is the standard Vi
-command to enter "Ex" mode, and Vim now does in fact have an "Ex" mode (see
-|Q| for more info).
+The "Q" command formerly formatted lines to the width the 'textwidth' option
+specifies.  The command for this is now "gq" (see |gq| for more info).  The
+reason for this change is that "Q" is the standard Vi command to enter "Ex"
+mode, and Vim now does in fact have an "Ex" mode (see |Q| for more info).
 
 If you still want to use "Q" for formatting, use this mapping:
 >	:noremap Q gq
@@ -109,10 +129,10 @@ And if you also want to use the functionality of "Q":
 >	:noremap gQ Q
 
 
-Command line arguments changed				*cmdline-changed*
+Command-line arguments changed				*cmdline-changed*
 ------------------------------
 
-Command line file-arguments and option-arguments can now be mixed.  You can
+Command-line file-arguments and option-arguments can now be mixed.  You can
 give options after the file names.  Example:
 >  vim main.c -g
 
@@ -134,29 +154,29 @@ new: "vim -q errorfile" |-q|
 old: "vim -x file"	|-x|
 new: "vim -f file"	|-f|
 
-Up to ten "+cmd" and "-c cmd" arguments are allowed.  Previously only the last
-one was executed.
+Vim allows up to ten "+cmd" and "-c cmd" arguments.  Previously Vim executed
+only the last one.
 
-"-n" now overrides any setting for 'updatecount' in a vimrc file.  Not in a
-gvimrc file though.
+"-n" now overrides any setting for 'updatecount' in a vimrc file, but not in
+a gvimrc file.
 
 
 Autocommands are kept					*autocmds-kept*
 ---------------------
 
-Before version 5.0, autocommands with the same event, file name pattern and
-command could appear only once.  This was fine for simple autocommands, like
-setting option values.  But for more complicated autocommands, where the same
-command might appear twice, this restriction causes problems.  Therefore,
-all autocommands are stored and kept in the order that they are defined.
+Before version 5.0, autocommands with the same event, file name pattern, and
+command could appear only once.  This was fine for simple autocommands (like
+setting option values), but for more complicated autocommands, where the same
+command might appear twice, this restriction caused problems.  Therefore
+Vim stores all autocommands and keeps them in the order that they are defined.
 
 The most obvious side effect of this change is that when you source a vimrc
 file twice, the autocommands in it will be defined twice.  To avoid this, do
 one of these:
 
-- Remove any autocommands that might potentially defined twice, before
+- Remove any autocommands that might potentially defined twice before
   defining them.  Example:
->   	:au! * *.ext
+>	:au! * *.ext
 >	:au BufEnter *.ext ...
 
 - Put the autocommands inside an ":if" command.  Example:
@@ -165,7 +185,7 @@ one of these:
 >	  autocmd BufEnter *.ext ...
 >	endif
 
-- Put your autocommands in a different autocommand group, to be able to remove
+- Put your autocommands in a different autocommand group so you can remove
   them before defining them |:augroup|:
 >	augroup uncompress
 >	  au!
@@ -176,31 +196,31 @@ one of these:
 Use of 'hidden' changed					*hidden-changed*
 -----------------------
 
-In version 4.x, the 'hidden' option would only be used by some of the
-commands.  Now it is always used, whenever a buffer disappears from a window.
+In version 4.x, only some commands used the 'hidden' option.  Now all commands
+uses it whenever a buffer disappears from a window.
 
-Previously you could do ":buf xxx" in a changed buffer.  That buffer would
-then become hidden.  Now this requires the 'hidden' option to be set.
+Previously you could do ":buf xxx" in a changed buffer and that buffer would
+then become hidden.  Now you must set the 'hidden' option for this to work.
 
-The new behaviour is simpler.  Whether you get hidden files does no longer
-depend on the specific command that is used.
-- When 'hidden' is not set, you never get hidden files.  Exceptions are the
-  ":hide" and ":close!" commands.  And in rare cases, where you would
-  otherwise lose changes to the buffer.
-- When 'hidden' is set, you almost never unload a buffer.  Exceptions are when
-  using the ":bunload" or ":bdel" commands.
+The new behavior is simpler: whether Vim hides buffers no longer depends on
+the specific command that you use.
+- with 'hidden' not set, you never get hidden buffers.  Exceptions are the
+  ":hide" and ":close!" commands and, in rare cases, where you would otherwise
+  lose changes to the buffer.
+- With 'hidden' set, you almost never unload a buffer.  Exceptions are the
+  ":bunload" or ":bdel" commands.
 
-":buffer" now supports a "!": abandon changes in current buffer.  Also
+":buffer" now supports a "!": abandon changes in current buffer.  So do
 ":bnext", ":brewind", etc.
 
 
 Text object commands changed				*text-objects-changed*
 ----------------------------
 
-Text object commands have been renamed.  The main reason is to allow more text
-objects, and to make characters available for other Visual mode commands.
-Since no more single characters were available, text objects are now specified
-with two characters.  The first one is always 'i' or 'a'.
+Text object commands have new names.  This allows more text objects and makes
+characters available for other Visual mode commands.  Since no more single
+characters were available, text objects names now require two characters.
+The first one is always 'i' or 'a'.
 	OLD	NEW	~
 	a	aw	a word			|v_aw|
 	A	aW	a WORD			|v_aW|
@@ -216,43 +236,43 @@ select the same objects, but exclude white space.
 X-Windows Resouces removed				*x-resources*
 --------------------------
 
-The following X resources have been removed:
+Vim no longer supports the following X resources:
 - boldColor
 - italicColor
 - underlineColor
 - cursorColor
 
-Setting colors is now done with highlight groups.  This avoids the confusion
-of using a bold Font, which would imply a certain color.  See |:highlight|.
+Vim now uses highlight groups to set colors.  This avoids the confusion of
+using a bold Font, which would imply a certain color.  See |:highlight|.
 
 
 Use of $VIM						*$VIM-use*
 -----------
 
-The VIM environment variable is now used to find all Vim system files.  This
-includes the global vimrc, gvimrc and menu.vim files, and all on-line help
+Vim now uses the VIM environment variable to find all Vim system files.  This
+includes the global vimrc, gvimrc, and menu.vim files and all on-line help
 and syntax files.  See |$VIM|.
-For Unix, a default value for $VIM is set when doing "make install".
-When using $VIM and it's not set, the directory from 'helpfile' is used,
+For Unix, Vim sets a default value for $VIM when doing "make install".
+When $VIM is not set, its default value is the directory from 'helpfile',
 excluding "/doc/help.txt".
 
 
 Use of $HOME for MS-DOS and Win32			*$HOME-use*
 ---------------------------------
 
-The MS-DOS and Win32 versions of Vim now first check $HOME, when searching for
-a vimrc or exrc file and for reading/storing the viminfo file.
-Previously $VIM was used, but this causes trouble on a system with several
-users.  Now $VIM is only used when $HOME is not set.  See |_vimrc|.
+The MS-DOS and Win32 versions of Vim now first check $HOME when searching for
+a vimrc or exrc file and for reading/storing the viminfo file.  Previously Vim
+used $VIM for these systems, but this causes trouble on a system with several
+users.  Now Vim uses $VIM only when $HOME is not set.  See |_vimrc|.
 
 
 Tags file format changed				*tags-file-changed*
 ------------------------
 
 Only Tabs are allowed to separate fields in a tags file.  This allows for
-spaces in a file name and is still Vi compatible.  But in previous versions of
-Vim any white space was allowed to separate the fields.  If you have a file
-which doesn't use a single Tab between fields, edit the tags file, and execute
+spaces in a file name and is still Vi compatible.  In previous versions of
+Vim, any white space was allowed to separate the fields.  If you have a file
+which doesn't use a single Tab between fields, edit the tags file and execute
 this command:
 >	:%s/\(\S*\)\s\+\(\S*\)\s\+\(.*\)/\1\t\2\t\3/
 
@@ -263,30 +283,30 @@ Options changed						*options-changed*
 The default value of 'errorfile' has changed from "errors.vim" to "errors.err".
 The reason is that only Vim scripts should have the ".vim" extensions.
 
-The 'errorfile' option is no longer used for the ":make" command.  This avoids
-that the output of the ":make" command overwrites a manually saved error file.
-The 'makeef' option is used instead.  This also allows for generating a unique
-name, to avoid that concurrently running ":make" commands overwrite each
-others files.
+The ":make" command no longer uses the 'errorfile' option.  This prevents the
+output of the ":make" command from overwriting a manually saved error file.
+":make" uses the 'makeef' option instead.  This also allows for generating a
+unique name, to prevent concurrently running ":make" commands from overwriting
+each other's files.
 
-When 'insertmode' is set, a few more things change:
+With 'insertmode' set, a few more things change:
 - <Esc> in Normal mode goes to Insert mode.
 - <Esc> in Insert mode doesn't leave Insert mode.
-- When doing ":set im", go to Insert mode right away.
+- When doing ":set im", go to Insert mode immediately.
 
-A buffer is considered changed when the 'fileformat' (formerly the 'textmode'
-option) is different from when it was edited.
+Vim considers a buffer to be changed when the 'fileformat' (formerly the
+'textmode' option) is different from the buffer's initial format.
 
 
 CTRL-B in Insert mode gone				*i_CTRL-B-gone*
 --------------------------
 
-When Vim was compiled with the |+rightleft| feature, CTRL-B could be used to
+When Vim was compiled with the |+rightleft| feature, you could use CTRL-B to
 toggle the 'revins' option.  Unfortunately, some people hit the 'B' key
-accidently when trying to type CTRL-V or CTRL-N.  And then didn't know how to
+accidently when trying to type CTRL-V or CTRL-N and then didn't know how to
 undo this.  Since toggling the 'revins' option can easily be done with the
-mapping below, this use of the CTRL-B key was disabled.  The CTRL-_ key can
-still be used |i_CTRL-_|.
+mapping below, this use of the CTRL-B key is disabled.  You can still use the
+CTRL-_ key for this |i_CTRL-_|.
 >  :imap <C-B> <C-O>:set revins!<CR>
 
 ==============================================================================
@@ -295,17 +315,17 @@ still be used |i_CTRL-_|.
 Syntax highlighting					*new-highlighting*
 -------------------
 
-A very flexible way for highlighting just about any type of file has been
-added.  See |syntax|.  Summary:
+Vim now has a very flexible way to highlighting just about any type of file.
+See |syntax|.  Summary:
 >  :syntax on
 
 Colors and attibutes can be set for the syntax highlighting, and also for
 other highlighted items with the ':' flag in the 'highlight' option.  All
-highlighted items have been assigned a highlight group, to be able to specify
-their highlighting.  See |:highlight|.  The default colors have been improved.
+highlighted items are assigned a highlight group which specifies their
+highlighting.  See |:highlight|.  The default colors have been improved.
 
-The "Normal" group can be used to set the default fore/background colors for a
-color terminal.  For the GUI the font can be set too.
+You can use the "Normal" group to set the default fore/background colors for a
+color terminal.  For the GUI, you can use this group to specify the font, too.
 
 The "2html.vim" script can be used to convert any file that has syntax
 highlighting to HTML.  The colors will be exactly the same as how you see them
@@ -315,19 +335,19 @@ in Vim.  With a HTML viewer you can also print the file with colors.
 Built-in script language				*new-script*
 ------------------------
 
-With a few extra commands and an expression evaluator, simple but powerful
-scripts can be written.  Commands include ":if" and ":while".  Expressions can
-be used to manipulate numbers and strings.  The '=' register can be used to
-directly insert the result of an expression.  See |expression|.
+A few extra commands and an expression evaluator enable you to write simple
+but powerful scripts.  Commands include ":if" and ":while".  Expressions can
+manipulate numbers and strings.  You can use the '=' register to insert
+directly the result of an expression.  See |expression|.
 
 
 Perl and Python support					*new-perl-python*
 -----------------------
 
-Perl commands can be called with ":perldo", ":perl", etc.  See |perl|.
+Vim can call Perl commands with ":perldo", ":perl", etc.  See |perl|.
 Patches made by Sven Verdoolaege and Matt Gerassimoff.
 
-Python commands can be called with ":python" and ":pyfile".  See |python|.
+Vim can call Python commands with ":python" and ":pyfile".  See |python|.
 
 Both of these are only available when enabled at compile time.
 
@@ -340,7 +360,7 @@ GUI are available to Windows users now.  |gui-w32|
 This also fixes problems with running the Win32 console version under Windows
 95, where console support has always been bad.
 There is also a version that supports OLE automation interface.  |if_ole.txt|
-Vim can be integrated with Microsoft Developer Studio, with the VisVim DLL.
+Vim can be integrated with Microsoft Developer Studio using the VisVim DLL.
 It is possible to produce a DLL version of gvim with Borland C++ (Aaron).
 
 
@@ -371,7 +391,7 @@ More Vi compatible					*more-compatible*
 ------------------
 
 There is now a real Ex mode.  Started with the "Q" command, or by calling the
-executable "ex" or "gex".  |ex-mode|
+executable "ex" or "gex".  |Ex-mode|
 
 Always allow multi-level undo, also in Vi compatible mode.  When the 'u' flag
 in 'cpoptions' is included, CTRL-R is used for repeating the undo or redo
@@ -381,7 +401,7 @@ in 'cpoptions' is included, CTRL-R is used for repeating the undo or redo
 Read input from stdin					*read-stdin*
 ---------------------
 
-When using the "-" command line argument, Vim reads its text input from stdin.
+When using the "-" command-line argument, Vim reads its text input from stdin.
 This can be used for putting Vim at the end of a pipe:
 >  grep "^a.*" *.c | vim -
 See |--|.
@@ -412,9 +432,8 @@ overloaded tags:
 |:trewind|	Go to first matching tag.
 |:tlast|	Go to last matching tag.
 
-The ":tag" command now also accepts wildcards.  And when doing command line
-completion on tags, matches with ignoring case are also available (at the
-end).
+The ":tag" command now also accepts wildcards.  When doing command-line
+completion on tags, case-insensitive matching is also available (at the end).
 
 
 New commands						*new-commands*
@@ -425,8 +444,8 @@ New commands						*new-commands*
 		used for the default menus and the Syntax menu.
 
 |:augroup|	Set group to be used for following autocommands.  Allows the
-		grouping of autocommands, to be able to delete only the
-		specified group.
+		grouping of autocommands to enable deletion of a specific
+		group.
 
 |:crewind|	Go to first error.
 |:clast|	Go to last error.
@@ -475,7 +494,7 @@ New options						*added-options*
 
 'complete'	Specifies how Insert mode completion works.
 
-'eventignore'	Makes it possible to ignore autocommands for a moment.
+'eventignore'	Makes it possible to ignore autocommands temporarily.
 
 'fileformat'	Current file format.  Replaces 'textmode'.
 'fileformats'	Possible file formats.  Replaces 'textauto'.
@@ -495,7 +514,9 @@ New options						*added-options*
 
 'hkmapp'	Phonetic Hebrew mapping (Ilya Dogolazky).
 
-'iconstring'	Define the name of the icon, when not empty.
+'iconstring'	Define the name of the icon, when not empty. (version 5.2: the
+		string is used literally, a newline can be used to make two
+		lines).
 
 'lazyredraw'	Don't redraw the screen while executing macros, registers or
 		other not typed commands.
@@ -520,15 +541,17 @@ New options						*added-options*
 		changing the value of 'tabstop'.  Makes it more easy to keep
 		'ts' at 8, while still getting four spaces for a <Tab>.
 
-'titlestring'	String for the window title, when not empty.
+'titlestring'	String for the window title, when not empty.  (version 5.2:
+		this string is used literally, a newline can be used to make
+		two lines).
 
 'verbose'	Level of verbosity.  Makes it possible to show which .vimrc,
 		.exrc, .viminfo files etc. are used for initializing.  Also
 		to show autocommands that are being executed.  Can also be set
-		by using the "-V" command line argument.
+		by using the "-V" command-line argument.
 
 
-New command line arguments				*added-cmdline-args*
+New command-line arguments				*added-cmdline-args*
 --------------------------
 
 |-U|		Set the gvimrc file to be used.  Like "-u" for the vimrc.
@@ -565,7 +588,7 @@ compile time.  See |farsi|.
 				 IMPROVEMENTS		*improvements*
 
 Performance:
-- When 'showcmd' was set, mappings would execute much slower, because the
+- When 'showcmd' was set, mappings would execute much more slowly because the
   output would be flushed very often.  Helps a lot when executing the "life"
   macros with 'showcmd' set.
 - Included patches for binary searching in tags file (David O'Neill).
@@ -624,9 +647,10 @@ Swap file:
   change.  Also create a swapfile when the amount of memory used is getting
   too high. |swap-file|
 - Make swap file "hidden", if possible.  On Unix this is done by prepending a
-  dot to the swap file name.  On MSDOS the hidden file attribute is set.
-  When long file names are used, the DJGPP and Win32 versions also prepend a
-  dot, in case a file on a mounted Unix file system is edited.  |:swapname|
+  dot to the swap file name.  When long file names are used, the DJGPP and
+  Win32 versions also prepend a dot, in case a file on a mounted Unix file
+  system is edited.  |:swapname|  On MSDOS the hidden file attribute is NOT
+  set, because this causes problems with share.exe.
 - 'updatecount' always defaults to non-zero, also for Vi compatible mode.
   This means there is a swap file, which can be used for recovery.
 
@@ -653,8 +677,8 @@ Included xxd version V1.8 (Juergen Weigert).
 Autocommands:
 - VimLeave autocommands are executed after writing the viminfo file, instead
   of before.  |VimLeave|
-- Allow changing auto-commands while executing them.  This allows for
-  self-modifying auto-commands. (idea from Goldberg)
+- Allow changing autocommands while executing them.  This allows for
+  self-modifying autocommands. (idea from Goldberg)
 - When using autocommands with two or more patterns, could not split
   ":if/:endif" over two lines.  Now all matching autocommands are executed in
   one do_cmdline().
@@ -694,8 +718,8 @@ GUI:
   where you want it, independent of the order in which the menus are defined.
   |menu-priority|
 
-Give a warning when running the  Win32 version on Windows 95, in the intro
-screen, because there are problems using the Win32 version under Windows 95.
+Give a warning in the intro screen when running the Win32 console version on
+Windows 95 because there are problems using this version under Windows 95.
 |win32-problems|
 
 Added 'e' flag for ":substitute" command: Don't complain when not finding a
@@ -714,7 +738,7 @@ possible.  (Webb)
 ":all" and ":ball" no longer close and then open a window for the same buffer.
 Avoids losing options, jumplist, and other info.
 
-"-f" command line argument is now ignored if Vim was compiled without GUI.
+"-f" command-line argument is now ignored if Vim was compiled without GUI.
 |-f|
 
 In Visual block mode, the right mouse button picks up the nearest corner.
@@ -755,7 +779,7 @@ CTRL-Y, 'textwidth' is no longer used.  |i_CTRL-E|
 Commands that move in the arglist, like ":n" and ":rew", keep the old cursor
 position of the file (this is mostly Vi compatible).
 
-The '< and '> marks are now remembered for each buffer.  This fixes a problem
+Vim now remembers the '< and '> marks for each buffer.  This fixes a problem
 that a line-delete in one buffer invalidated the '< and '> marks in another
 buffer.  |'<|
 
@@ -772,7 +796,7 @@ Win32 and Unix version: Removed 1100 character limit on external commands.
 Added possibility to include a space in a ":edit +command" argument, by
 putting a backslash before it.  |+cmd|
 
-After recovery, BufReadPost auto-commands are applied.  |:recover|
+After recovery, BufReadPost autocommands are applied.  |:recover|
 
 Added color support for "os2ansi", OS/2 console. (Slootman) |os2ansi|
 
@@ -793,7 +817,7 @@ Removed the requirement for a ":version" command in a .vimrc file.  It wasn't
 used for anything.  You can use ":if" to handle differences between versions.
 |:version|
 
-For MS-DOS, Win32 and OS/2: When comparing file names for auto-commands, don't
+For MS-DOS, Win32 and OS/2: When comparing file names for autocommands, don't
 make a difference between '/' and '\' for path separator.
 
 New termcap options:
@@ -828,14 +852,14 @@ it's done for file names in the tags file. |gf|
 When finishing recording, don't make the recorded register the default put
 register.
 
-When using "!!", don't put ":5,5!" on the command line, but ":.!".  And some
+When using "!!", don't put ":5,5!" on the command-line, but ":.!".  And some
 other enhancements to replace the line number with "." or "$" when possible.
 
 MSDOS et al.: Renamed $VIM/viminfo to $VIM/_viminfo.  It's more consistent:
 .vimrc/_vimrc and .viminfo/_viminfo
 
-For systems where case doesn't matter in file names (MSDOS, Amiga), sort file
-names while ignoring case.  For buffer names too.
+For systems where case doesn't matter in file names (MSDOS, Amiga), ignore
+case while sorting file names.  For buffer names too.
 
 When reading from stdin doesn't work, read from stderr (helps for "foo | xargs
 vim").
@@ -848,7 +872,7 @@ Warning for changed modified time when overwriting a file now also works on
 other systems than Unix.
 
 Unix: Changed the defaults for configure to be the same as the defaults for
-Makefile: include GUI, Perl and Python.
+Makefile: include GUI, Perl, and Python.
 
 Some versions of Motif require "-lXpm".  Added check for this in configure.
 
@@ -859,9 +883,9 @@ Don't add "-L/usr/lib" to the link line, causes problems on a few systems.
 
 When compiling, allow a choice for minimal, normal or maximal features in an
 easy way, by changing a single line in src/feature.h.
-The DOS16 version has been compiled with minimal features, to avoid running
+The DOS16 version has been compiled with minimal features to avoid running
 out of memory too quickly. |dos16|
-The Win32, DJGPP and OS/2 versions use maximal features, because they have
+The Win32, DJGPP, and OS/2 versions use maximal features, because they have
 enough memory.
 The Amiga version is available with normal and maximal features.
 
@@ -901,9 +925,9 @@ Don't use HPUX digraphs by default, but only when HPUX_DIGRAPHS is defined.
 |digraphs-default|
 
 ==============================================================================
-				 BUG FIXES 		*bug-fixes*
+				 BUG FIXES		*bug-fixes*
 
-Note:	Some of these fixes may only apply to test versions, which have been
+Note:	Some of these fixes may only apply to test versions which were
 	created after version 4.6, but before 5.0.
 
 
@@ -925,8 +949,8 @@ empty line.
 For systems where isdigit() can't handle characters > 255, get_number() caused
 a crash when moving the mouse during the prompt for recovery.
 
-In Insert mode, "CTRL-O P" left the cursor on the last putted character.  Now
-the cursor is left after the last putted character.
+In Insert mode, "CTRL-O P" left the cursor on the last inserted character.
+Now the cursor is left after the last putted character.
 
 When quickfix found an error type other than 'e' or 'w', it was never printed.
 
@@ -950,11 +974,11 @@ cause a crash).
 
 ":s!foo!bar!" wasn't possible (Vi compatible).
 
-do_bang() freed memory twice when called recursively, because of auto-commands
+do_bang() freed memory twice when called recursively, because of autocommands
 (test11).  Thanks to Electric Fence!
 
 "v$d" on an empty line didn't remove the "-- VISUAL --" mode message from the
-command line, and inverted the cursor.
+command-line, and inverted the cursor.
 
 ":mkexrc" didn't check for failure to open the file, causing a crash.
 (Felderhoff).
@@ -993,7 +1017,7 @@ message after recovering a file.
 
 The abbreviation ":ab #i #include" could not be removed.
 
-CTRL-L completion (longest common match) on command line didn't work properly
+CTRL-L completion (longest common match) on command-line didn't work properly
 for case-insensitive systems (MS-DOS, Windows, etc.).  (suggested by Richard
 Kilgore).
 
@@ -1048,7 +1072,7 @@ cursor went to a wrong location.
 'cindent' was wrong after "else {".
 
 While editing the cmdline in the GUI, could not use the mouse to select text
-from the command line itself.
+from the command-line itself.
 
 When deleting lines, marks in tag stack were only adjusted for the current
 window, not for other windows on the same buffer.
@@ -1074,7 +1098,7 @@ pointer on the stack to a callback function, now it's static.
 
 Using "#" and "*" with an operator didn't work.  E.g. "c#".
 
-Command line expansion didn't work properly after ":*". (Acevedo)
+Command-line expansion didn't work properly after ":*". (Acevedo)
 
 Setting 'weirdinvert' caused highlighting to be wrong in the GUI.
 
@@ -1105,8 +1129,8 @@ position (if possible).
 ":unmap", ":unab" and ":unmenu" did not accept a double quote, it was seen as
 the start of a comment.  Now it's Vi compatible.
 
-Using <Up><Left><Left><Up> in the command line, when there is no previous
-cmdline in the history, inserted a NUL on the command line.
+Using <Up><Left><Left><Up> in the command-line, when there is no previous
+cmdline in the history, inserted a NUL on the command-line.
 
 "i<Esc>" when on a <Tab> in column 0 left the cursor in the wrong place.
 
@@ -1217,7 +1241,7 @@ Fixed lalloc(0,) error for ":echo %:e:r".  (Acevedo)
 
 The "+command" argument to ":split" didn't work when there was no file name.
 
-When selecting text in the GUI, which is the output of a command line command
+When selecting text in the GUI, which is the output of a command-line command
 or an external command, the inversion would sometimes remain.
 
 GUI: "-mh 70" argument was broken.  Now, when menuheight is specified, it is
@@ -1334,8 +1358,8 @@ key code possible.  This makes the termcode translations and mappings more
 consistant.  Now all modifiers work in all combinations, not only with <Tab>,
 but also with <Space>, <CR>, etc.
 
-For Unix, restore three more signals.  And SIGINT is catched now, so CTRL-C in
-Ex mode doesnt make Vim exit.
+For Unix, restore three more signals.  And Vim catches SIGINT now, so CTRL-C
+in Ex mode doesn't make Vim exit.
 
 ""a5Y" yanked 25 lines instead of 5.
 
@@ -1378,7 +1402,7 @@ When 'hlsearch' set, only the current window was updated for a new search
 pattern.
 
 Sometimes error messages on startup didn't cause a |hit-return| prompt,
-because of auto-commands containing an empty line.
+because of autocommands containing an empty line.
 
 Was possible to select part of the window in the border, below the command
 line.
@@ -1439,7 +1463,7 @@ windows, which required a CTRL-L to be typed.
 
 Possible endless loop when using shell command in the GUI.
 
-Menu's defined in the .vimrc were removed when GUI started.
+Menus defined in the .vimrc were removed when GUI started.
 
 Crash when pasting with the mouse in insert mode.
 
@@ -1513,7 +1537,7 @@ K_SPECIAL x NUL.
 
 CTRL-W ] didn't use count to set window height.
 
-GUI: "-font" command line argument didn't override 'guifont' setting from
+GUI: "-font" command-line argument didn't override 'guifont' setting from
 .gvimrc. (Acevedo)
 
 GUI: clipboard wasn't used for "*y".  And some more Win32/X11 differences
@@ -1540,7 +1564,7 @@ Dos32 version: Underscores were sometimes replaced with y-umlaut (Levin).
 Version 4.1 of ncurses can't handle tputs("", ..).  Avoid calling tputs() with
 an empty string.
 
-<S-Tab> in the command line worked like CTRL-P when no completion started yet.
+<S-Tab> in the command-line worked like CTRL-P when no completion started yet.
 Now it does completion, last match first.
 
 Unix: Could get annoying "can't write viminfo" message after doing "su".  Now
@@ -1571,7 +1595,7 @@ FileWritePost event).
 "vim -h" included "-U" even when GUI is not available, and "-l" when lisp is
 not available.
 
-Crash for ":he <C-A>" (command line longer than screen).
+Crash for ":he <C-A>" (command-line longer than screen).
 
 ":s/this/that/gc", type "y" two times, then undo, did reset the modified
 option, even though the file is still modified.
@@ -1599,7 +1623,11 @@ VERSION 5.1						*version-5.1*
 
 Improvements made between version 5.0 and 5.1.
 
-Changed:
+This was mostly a bug-fix release, not many new features.
+
+
+Changed							*changed-5.1*
+-------
 
 The expand() function now separates file names with <NL> instead of a space.
 This avoids problems for file names with embedded spaces.  To get the old
@@ -1637,14 +1665,12 @@ Init '" mark to the first character of the first line.  Makes it possible to
 use '" in an autocommand without getting an error message.
 
 
-Added:
+Added							*added-5.1*
+-----
 
 "shell_error" internal variable: result of last shell command.
 
 ":echohl" command: Set highlighting for ":echo".
-
-'A', 'N' and 'I' flags to 'mouse': Do position the cursor, but don't start
-Visual mode, only start xterm-like selection.
 
 'S' flag in 'highlight' and StatusLineNC highlight group: highlighting for
 status line of not-current window.  Default is to use bold for current
@@ -1722,7 +1748,8 @@ Added "VimEnter" autocommand.  Executed after loading all the startup stuff.
 BeOS version now also runs on Intel CPUs (Seibert).
 
 
-Fixed:
+Fixed							*fixed-5.1*
+-----
 
 ":ts" changed position in the tag stack when cancelled with <CR>.
 ":ts" changed the cursor position for CTRL-T when cancelled with <CR>.
@@ -1739,7 +1766,7 @@ mouse handling interfering.
 
 Was leaking memory when using selection in X11.
 
-CTRL-D halfway a command line left some characters behind the first line(s)
+CTRL-D halfway a command-line left some characters behind the first line(s)
 of the listing.
 
 When expanding directories for ":set path=", put two extra backslashes
@@ -1766,7 +1793,7 @@ Win32 console: Dead key could cause a crash, because of a missing "WINAPI"
 (Deshpande).
 
 The right mouse button started Visual mode, even when 'mouse' is empty, and
-in the command line, a left click moved the cursor when 'mouse' is empty.
+in the command-line, a left click moved the cursor when 'mouse' is empty.
 In Visual mode, 'n' in 'mouse' would be used instead of 'v'.
 
 A blinking cursor or focus change cleared a non-Visual selection.
@@ -1901,7 +1928,7 @@ auto-wrote the file in the second window. (Webb)
 
 Win32 GUI scrollbar could only handle 32767 lines.  Also makes the
 intellimouse wheel use the configurable number of scrolls. (Robinson)
- 
+
 When using 'patchmode', and the backup file is on another partition, the file
 copying messed up the write-file message.
 
@@ -1922,5 +1949,1023 @@ effect.
 
 Win32 GUI: Don't display "No write since last chance" in a message box, but in
 the Vim window.
+
+==============================================================================
+VERSION 5.2						*version-5.2*
+
+Improvements made between version 5.1 and 5.2.
+
+
+Long lines editable					*long-lines*
+-------------------
+
+A single long line that doesn't fit in the window doesn't show a line of @@@
+anymore.  Redrawing starts at a character further on in the line, such that
+the text around the cursor can be seen.  This makes it possible to edit these
+long lines when wrapping is on.
+
+
+File browser added					*file-browser*
+------------------
+
+The Win32, Athena and Motif GUI bring up a file requester if the user asks to
+":browse" for the ":e", ":w", ":r", ":so", ":redirect" and
+":mkexrc/vimrc/vsess" commands.  ::browse e /foo/bar" opens the requester in
+the /foo/bar directory, so you can have nice mapping rhs's like ":browse so
+$vim/macros".  If no initial dir specified for ":browse e", can be compiled to
+either begin in the current directory, or that of the current buffer. (Negri
+and Kahn)
+Added the 'browsedir' option, with value "current", "last" or "buffer".  Tells
+wether a browse dialog starts in last used dir, dir of current buffer, or
+current dir.  ":browse w" is unaffected.
+The default menus have been changed to use the ":browse" command.
+
+
+Dialogs added						*dialogs-added*
+-------------
+
+Added the ":confirm" command.  Works on ":e", ":q", ":w", ":cl".  Win32,
+Athena and Motif GUI uses a window-dialog.  All other platforms can use
+prompt in command-line.  ":confirm qa" offers a choice to save all modified
+files.
+
+confirm() function: allows user access to the confirm engine.
+
+Added 'v' flag to 'guioptions'.  When included, a vertical button layout is
+always used for the Win32 GUI dialog.  Otherwise, a horizontal layout is
+preferred.
+
+Win32 GUI: ":promptfind" and ":promptrepl" pop up a dialog to find/replace.
+To be used from a menu entry. (Negri)
+
+
+Popup menu added					*popup-menu-added*
+----------------
+
+When the 'mousemodel' option is set to "popup", the right mouse button
+displays the top level menu headed with "PopUp" as pop-up context menu.  The
+"PopUp" menu is not displayed in the normal menu bar.  This currently only
+works for Win32 and Athena GUI.
+
+
+Select mode added					*new-Select-mode*
+-----------------
+
+A new mode has been added: "Select mode".  It is like Visual mode, but typing
+a printable character replaces the selection.
+- CTRL-G can be used to toggle between Visual mode and Select mode.
+- CTRL-O can be used to switch from Select mode to Visual mode for one command.
+- Added 'selectmode' option: tells when to start Select mode instead of Visual
+  mode.
+- Added 'mousemodel' option: Change use of mouse buttons.
+- Added 'keymodel' option: tells to use shifted special keys to start a
+  Visual or Select mode selection.
+- Added ":behave". Can be used to quickly set 'selectmode', 'mousemodel'
+  and 'keymodel' for MS-Windows and xterm behaviour.
+- The xterm-like selection is now called modeless selection.
+- Visual mode mappings and menus are used in Select mode.  They automatically
+  switch to Visual mode first.  Afterwards, reselect the area, unless it was
+  deleted.  The "gV" command can be used in a mapping to skip the reselection.
+- Added the "gh", "gH" and "g^H" commands: start Select (highlight) mode.
+- Backspace in Select mode deletes the selected area.
+
+"mswin.vim" script.  Sets behaviour mostly like MS-Windows.
+
+
+Session files added					*new-session-files*
+-------------------
+
+":mks[ession]" acts like "mkvimrc", but also writes the full filenames of the
+currently loaded buffers and current directory, so that :so'ing the file
+re-loads those files and cd's to that directory.  Also stores and restores
+windows.  File names are made relative to session file.
+The 'sessionoptions' option sets behaviour of ":mksession". (Negri)
+
+
+User defined functions and commands			*new-user-defined*
+-----------------------------------
+
+Added user defined functions.  Defined with ":function" until ":endfunction".
+Called with "Func()".  Allows the use of a variable number of arguments.
+Included support for local variables "l:name".  Return a value with ":return".
+See |:function|.
+Call a function with ":call".  When using a range, the function is called for
+each line in the range. |:call|
+"macros/justify.vim" is an example of using user defined functions.
+User functions do not change the last used search pattern or the command to be
+redone with ".".
+'maxfuncdepth' option.  Restricts the depth of function calls.  Avoids trouble
+(crash because of out-of-memory) when a function uses endless recursiveness.
+
+User defineable Ex commands: ":command", ":delcommand" and ":comclear".
+(Moore)  See |user-commands|.
+
+
+New interfaces						*interfaces-5.2*
+--------------
+
+Tcl interface. (Wilken)  See |tcl|.
+Uses the ":tcl", ":tcldo" and "tclfile" commands.
+
+Cscope support. (Kahn) (Sekera)  See |cscope|.
+Uses the ":cscope" and ":cstag" commands.  Uses the options 'cscopeprg',
+'cscopetag', 'cscopetagorder' and 'cscopeverbose'.
+
+
+New ports						*ports-5.2*
+---------
+
+Amiga GUI port. (Nielsen)  Not tested much yet!
+
+RISC OS version. (Thomas Leonard)  See |riscos|.
+This version can run either with a GUI or in text mode, depending upon where
+it is invoked.
+Deleted the "os_archie" files, they were not working anyway.
+
+
+Multi-byte support					*new-multi-byte*
+------------------
+
+MultiByte support for Win32 GUI. (Baek)
+The 'fileencoding' option decides how the text in the file is encoded.
+":ascii" works for multi-byte characters.  Multi-byte characters work on
+Windows 95, even when using the US version. (Aaron)
+Needs to be enabled in feature.h.
+This has not been tested much yet!
+
+
+New functions						*new-functions-5.2*
+-------------
+
+|browse()|	puts up a file requester when available. (Negri)
+|escape()|	escapes characters in a string with a backslash.
+|fnamemodify()|	modifies a file name.
+|input()|	asks the user to enter a line. (Aaron) There is a separate
+		history for lines typed for the input() function.
+|argc()|
+|argv()|	can be used to access the argument list.
+|winbufnr()|	buffer number of a window. (Aaron)
+|winnr()|	window number. (Aaron)
+|matchstr()|	Return matched string.
+|setline()|	Set a line to a string value.
+
+
+New options						*new-options-5.2*
+-----------
+
+'allowrevins'	Enable the CTRL-_ command in Insert and Command-line mode.
+'browsedir'	Tells in which directory a browse dialog starts.
+'confirm'	when set, :q :w and :e commands always act as if ":confirm"
+		is used.  (Negri)
+'cscopeprg'
+'cscopetag'
+'cscopetagorder'
+'cscopeverbose'	Set the |cscope| behaviour.
+'filetype'	RISC-OS specific type of file.
+'grepformat'
+'grepprog'	For the |:grep| command.
+'keymodel'	Tells to use shifted special keys to start a Visual or Select
+		mode selection.
+'listchars'	Set character to show in 'list' mode for end-of-line, tabs and
+		trailing spaces. (partly by Smith) Also sets character to
+		display if a line doesn't fit when 'nowrap' is set.
+'matchpairs'	Allows matching '<' with '>', and other single character
+		pairs.
+'mousefocus'	Window focus follows mouse (partly by Terhaar).  Changing the
+		focus with a keyboard command moves the pointer to that
+		window.  Also move the pointer when changing the window layout
+		(split window, change window height, etc.).
+'mousemodel'	Change use of mouse buttons.
+'selection'	When set to "inclusive" or "exclusive", the cursor can go one
+		character past the end of the line in Visual or Select mode.
+		When set to "old" the old behaviour is used.  When
+		"inclusive", the character under the cursor is included in the
+		operation.  When using "exclusive", the new "ve" entry of
+		'guicursor' is used.  The default is a vertical bar.
+'selectmode'	Tells when to start Select mode instead of Visual mode.
+'sessionoptions' Sets behaviour of ":mksession". (Negri)
+'showfulltag'	When completing a tag in Insert mode, show the tag search
+		pattern (tidied up) as a choice as well (if there is one).
+'swapfile'	Whether to use a swap file for a buffer.
+'syntax'	When it is set, the syntax by that name is loaded.  Allows for
+		setting a specific syntax from a modeline.
+'ttymouse'	Allows using xterm mouse codes for terminals which name
+		doesn't start with "xterm".
+'wildignore'	List of patterns for files that should not be completed at
+		all.
+'wildmode'	Can be used to set the type of expansion for 'wildchar'.
+		Replaces the CTRL-T command for command line completion.
+		Don't beep when listing all matches.
+'winaltkeys'	Win32 and Motif GUI.  When "yes", ALT keys are handled
+		entirely by the window system.  When "no", ALT keys are never
+		used by the window system.  When "menu" it depends on whether
+		a key is a menu shortcut.
+'winminheight'	Minimal height for each window.  Default is 1.  Set to 0 if
+		you want zero-line windows.  Scrollbar is removed for
+		zero-height windows. (Negri)
+
+
+
+New Ex commands						*new-ex-commands-5.2*
+---------------
+
+|:badd|		Add file name to buffer list without side effects.  (Negri)
+|:behave|	Quickly set MS-Windows or xterm behaviour.
+|:browse|	Use file selection dialog.
+|:call|		Call a function, optionally with a range.
+|:cnewer|
+|:colder|	To access a stack of quickfix error lists.
+|:comclear|	Clear all user-defined commands.
+|:command|	Define a user command.
+|:continue|	Go back to ":while".
+|:confirm|	Ask confirmation if something unexpected happens.
+|:cscope|	Execute cscope command.
+|:cstag|	Use cscope to jump to a tag.
+|:delcommand|	Delete a user-defined command.
+|:delfunction|	Delete a user-defined function.
+|:endfunction|	End of user-defined funciton.
+|:function|	Define a user function.
+|:grep|		Works similar to ":make". (Negri)
+|:mksession|	Create a session file.
+|:nohlsearch|	Stop 'hlsearch' highlighting for a moment.
+|:Print|	This is Vi compatible.  Does the same as ":print".
+|:promptfind|	Search dialog (Win32 GUI).
+|:promptrepl|	Search/replace dialog (Win32 GUI).
+|:return|	Return from a user-defined function.
+|:simalt|	Win32 GUI: Simulate alt-key pressed.  (Negri)
+|:smagic|	Like ":substitute", but alwyas use 'magic'.
+|:snomagic|	Like ":substitute", but alwyas use 'nomagic'.
+|:tcl|		Execute TCL command.
+|:tcldo|	Execute TCL command for a range of lines.
+|:tclfile|	Execute a TCL script file.
+|:tearoff|	Tear-off a menu (Win32 GUI).
+|:tmenu|
+|:tunmenu|	Win32 GUI: menu tooltips.  (Negri)
+|:star|	:*	Execute a register.
+
+
+Changed							*changed-5.2*
+-------
+
+Renamed functions:
+		buffer_exists()	   -> bufexists()
+		buffer_name()      -> bufname()
+		buffer_number()    -> bufnr()
+		file_readable()    -> filereadable()
+		highlight_exists() -> hlexists()
+		highlightID()      -> hlID()
+		last_buffer_nr()   -> bufnr("$")
+The old ones are still there, for backwards compatibility.
+
+The CTRL-_ command in Insert and Command-line mode is only available when the
+new 'allowrevins' option is set.  Avoids that people who want to type SHIFT-_
+accidently enter reverse Insert mode, and don't know how to get out.
+
+When a file name path in ":tselect" listing is too long, remove a part in the
+middle and put "..." there.
+
+Win32 GUI: Made font selector appear inside Vim window, not just any odd
+place. (Negri)
+
+":bn" skips help buffers, unless currently in a help buffer. (Negri)
+
+When there is a status line and only one window, don't show '^' in the status
+line of the current window.
+
+":*" used to be used for "'<,'>", the Visual area.  But in Vi it's used as an
+alternative for ":@".  When 'cpoptions' includes '*' this is Vi compatible.
+
+When 'insertmode' is set, using CTRL-O to execute a mapping will work like
+'inertmode' was not set.  This allows "normal" mappings to be used even when
+'insertmode' is set.
+
+When 'mouse' was set already (e.g., in the .vimrc file), don't automatically
+set 'mouse' when the GUI starts.
+
+Renamed "toggle option" to "boolean option".  Some people thought that ":set
+xyz" would toggle 'xyz' on/off each time.
+
+The internal variable "shell_error" contains the error code from the shell,
+instead of just 0 or 1.
+
+When inserting or replacing, typing CTRL-V CTRL-<CR> used to insert "<C-CR>".
+That is not very useful.  Now the CTRL key is ignored and a <CR> is inserted.
+Same for all other "normal" keys with modifiers.  Mapping these modified key
+combinations is still possible.
+In Insert mode, <C-CR> and <S-Space> can be inserted by using CTRL-K and then
+the special character.
+
+Moved "quotes" file to doc/quotes.txt, and "todo" file to doc/todo.txt.  They
+are now installed like other documentation files.
+
+winheight() function returns -1 for a non-existing window.  It used to be
+zero, but that is a valid height now.
+
+The default for 'selection' is "inclusive", which makes a difference when
+using "$" or the mouse to move the cursor in Visual mode.
+
+":q!" does not exit when there are changed buffers which are hidden.  Use
+":qa!" to exit anyway.
+
+Disabled the Perl/Python/Tcl interfaces by default.  Not many people use them
+and they make the executable a lot bigger.  The internal scripting language is
+now powerful enough for most tasks.
+
+The strings from the 'titlestring' and 'iconstring' options are used
+untranslated for the Window title and icon.  This allows for including a <CR>.
+Previously a <CR> would be shown as "^M" (two characters).
+
+Wnen a mapping is started in Visual or Select mode which was started from
+Insert mode (the mode shows "(insert) Visual"), don't return to Insert mode
+until the mapping has ended.  Makes it possible to use a mapping in Visual
+mode that also works when the Visual mode was started from Select mode.
+
+Menus in $VIM/menu.vim no longer overrule existing menus.  This helps when
+defining menus in the .vimrc file, or when sourcing mswin.vim.
+
+Unix: Use /var/tmp for .swp files, if it exists.  Files there survive a
+reboot (at least on Linux).
+
+
+Added							*added-5.2*
+-----
+
+--with-motif-lib configure argument.  Allows for using a static Motif library.
+
+Support for mapping numeric keypad +,-,*,/ keys. (Negri)
+When not mapped, they produce the normal character.
+
+Win32 GUI: When directory dropped on Gvim, cd there and edit new buffer.
+(Negri)
+
+Win32 GUI: Made CTRL-Break work as interrupt, so that CTRL-C can be
+used for mappings.
+
+In the output of ":map", highlight the "*" to make clear it's not part of the
+rhs. (Roemer)
+
+When showing the Visual area, the cursor is not switched off, so that it can
+be located.  The Visual area is now highlighted with a grey background in the
+GUI.  This makes the cursor visible when it's also reversed.
+
+Win32: When started with single full pathname (e.g. via double-clicked file),
+cd to that file's directory. (Negri)
+
+Win32 GUI: Tear-off menus, with ":tearoff <menu-name>" command. (Negri)
+'t' option to 'guioptions': Add tearoff menu items for Win32 GUI and Motif.
+It's included by default.
+Win32 GUI: tearoff menu with submenus is indicated with a ">>". (Negri)
+
+Added ^Kaa and ^KAA digraphs.
+Added "euro" symbol to digraph.c. (Corry)
+
+Support for Motif menu shortcut keys, using '&' like MS-Windows (Ollis).
+Other GUIs ignore '&' in a menu name.
+
+DJGPP: Faster screen updating (John Lange).
+
+Clustering of syntax groups ":syntax cluster" (Bigham).
+Including syntax files: ":syntax include" (Bigham).
+
+Keep column when switching buffers, when 'nosol' is set (Radics).
+
+Number function for Perl interface.
+
+Support for Intellimouse in Athena GUI. (Jensen)
+
+":sleep" also accepts an argument in milliseconds, when "m" is used.
+
+Added 'p' flag in 'guioptions': Install callbacks for enter/leave window
+events.  Makes cursor blinking work for Terhaar, breaks it for me.
+
+"--help" and "--version" command-line arguments.
+
+Non-text in ":list" output is highlighted with NonText.
+
+Added text objects: "i(" and "i)" as synonym for "ib". "i{" and "i}" as
+synonym for "iB".  New: "i<" and "i>", to select <thing>.  All this also for
+"a" objects.
+
+'O' flag in 'shortmess': message for reading a file overwrites any previous
+message. (Negri)
+
+Win32 GUI: 'T' flag in 'guioptions': switch toolbar on/off.
+Included a list with self-made toolbar bitmaps.  (Negri)
+
+Added menu priority for sub-menus.  Implemented for Win32 and Motif GUI.
+Display menu priority with ":menu" command.
+Default and Syntax menus now include priority for items.  Allows inserting
+menu items in between the default ones.
+
+When the 'number' option is on, highlight line numbers with the LineNr group.
+
+"Ignore" highlight group: Text highlighted with this is made blank.  It is
+used to hide special characters in the help text.
+
+Included Exuberant Ctags version 2.3, with C++ support, Java support and
+recurse into directories. (Hiebert)
+
+When a tags file is not sorted, and this is detected (in a simplistic way), an
+error message is given.
+
+":unlet" accepts a "!", to ignore non-existing variables, and accepts more
+than one argument. (Roemer)
+Completion of variable names for ":unlet". (Roemer)
+
+When there is an error in a function which is called by another function, show
+the call stack in the error message.
+
+New file name modifiers:
+":.": reduce file name to be relative to current dir.
+":~": reduce file name to be relative to home dir.
+":s?pat?sub?": substitute "pat" with "sub" once.
+":gs?pat?sub?": substitute "pat" with "sub" globally.
+
+New configure arguments: --enable-min-features and --enable-max-features.
+Easy way to switch to minimum or maximum features.
+
+New compile-time feature: modify_fname.  For file name modifiers, e.g,
+"%:p:h".  Can be disabled to save some code (16 bit DOS).
+
+When using whole-line completion in Insert mode, and 'cindent' is set, indent
+the line properly.
+
+MSDOS and Win32 console: 'guicursor' sets cursor thickness. (Negri)
+
+Included new set of Farsi fonts. (Shiran)
+
+Accelerator text now also works in Motif.  All menus can be defined with & for
+mnemonic and TAB for accelerator text.  They are ignored on systems that don't
+support them.
+When removing or replacing a menu, compare the menu name only up to the the
+<Tab> before the mnemonic.
+
+'i' and 'I' flags after ":substitute": ignore case or not.
+
+"make install" complains if the runtime files are missing.
+
+Unix: When finding an existing swap file that can't be opened, mention the
+owner of the file in the ATTENTION message.
+
+The 'i', 't' and 'k' options in 'complete' now also print the place where they
+are looking for matches. (Acevedo)
+
+"gJ" command: Join lines without inserting a space.
+
+Setting 'keywordprg' to "man -s" is handled specifically.  The "-s" is removed
+when no count given, the count is added otherwise.  Configure checks if "man
+-s 2 read" works, and sets the default for 'keywordprg' accordingly.
+
+If you do a ":bd" and there is only one window open, Vim tries to move to a
+buffer of the same type (i.e. non-help to non-help, help to help), for
+consistent behaviour to :bnext/:bprev. (Negri)
+
+Allow "<Nop>" to be used as the rhs of a mappping.  ":map xx <Nop>", maps "xx"
+to nothing at all.
+
+In a ":menu" command, "<Tab>" can be used instead of a real tab, in the menu
+path.  This makes it more easy to type, no backslash needed.
+
+POSIX compatible character classes for regexp patterns: [:alnum:], [:alpha:],
+[:blank:], [:cntrl:], [:digit:], [:graph:], [:lower:], [:print:], [:punct:],
+[:space:], [:upper:] and [:xdigit:]. (Briscoe)
+
+regexp character classes (for fast syntax highlight matching):
+	digits:	    \d [0-9]		\D  not digit (Roemer)
+	hex:	    \x [0-9a-fA-F]	\X  not hex
+	octal:	    \o [0-7]		\O  not octal
+	word:	    \w [a-zA-Z0-9_]	\W  not word
+	head:	    \h [a-zA-Z_]	\H  not head
+	alphabetic: \a [a-zA-Z]		\A  not alphabetic
+	lowercase:  \l [a-z]		\L  not lowercase
+	uppercase:  \u [A-Z]		\U  not uppercase
+
+":set" now accepts "+=", |^=" and "-=": add or remove parts of a string
+option, add or subtract a number from a number option.  A comma is
+automagically inserted or deleted for options that are a comma separated list.
+
+Filetype feature, for autocommands.  Uses a file type instead of a pattern to
+match a file.  Currently only used for RISC OS.  (Leonard)
+
+In a pattern for an autocommand, environment variables can be used.  They are
+expanded when the autocommand is defined.
+
+"BufFilePre" and "BufFilePost" autocommand evens: Before and after applying
+the ":file" command to change the name of a buffer.
+"VimLeavePre" autocommand event: before writing the .viminfo file.
+
+For autocommands argument: <abuf> is buffer number, like <afile>.
+
+Made syntax highlighting a bit faster when scrolling backwards, by keeping
+more syncing context.
+
+Win32 GUI: Made scrolling faster by avoiding a redraw when deleting or
+inserting screen lines.
+
+GUI: Made scrolling faster by not redrawing the scrollbar when the thumb moved
+less than a pixel.
+
+Included ":highlight" in bugreport.vim.
+
+Created install.exe program, for simplistic installation on DOS and
+MS-Windows.
+
+New register: '_', the black hole.  When writing to it, nothing happens.  When
+reading from it, it's always empty.  Can be used to avoid a delete or change
+command to modify the registers, or reduce memory use for big changes.
+
+CTRL-V xff enters character by hex number.  CTRL-V o123 enters character by
+octal number. (Aaron)
+
+Improved performance of syntax highlighting by skipping check for "keepend"
+when there isn't any.
+
+Moved the mode message ("-- INSERT --") to the last line of the screen.  When
+'cmdheight' is more than one, messages will remain readable.
+
+When listing matching files, they are also sorted on 'suffixes', such that
+they are listed in the same order as CTRL-N retrieves them.
+
+synIDattr() takes a third argument (optionally), which tells for which
+terminal type to get the attributes for.  This makes it possible to run
+2html.vim outside of gvim (using color names instead of #RRGGBB).
+
+Memory profiling, only for debugging.  Prints at exit, and with "g^A" command.
+(Kahn)
+
+DOS: When using a file in the current drive, remove the drive name:
+"A:\dir\file" -> "\dir\file".  This helps when moving a session file on a
+floppy from "A:\dir" to "B:\dir".
+
+Increased number of remembered jumps from 30 to 50 per window.
+
+Command to temporarily disable 'hls' highlighting until the next search:
+":nohlsearch".
+
+"gp" and "gP" commands: like "p" and "P", but leave the cursor just after the
+inserted text.  Used for the CTRL-V command in MS-Windows mode.
+
+
+Fixed							*fixed-5.2*
+-----
+
+Win32 GUI: Could draw text twice in one place, for fake-bold text.  Removed
+this, Windows will handle the bold text anyway. (Negri)
+
+patch 5.1.1: Win32s GUI: pasting caused a crash (Negri)
+
+patch 5.1.2: When entering another window, where characters before the cursor
+have been deleted, could have a cursor beyond the end of the line.
+
+patch 5.1.3: Win32s GUI: Didn't wait for external command to finish. (Negri)
+
+patch 5.1.4: Makefile.w32 can now also be used to generate the OLE version
+(Scott).
+
+patch 5.1.5: Crashed when using syntax highlighting: cursor on a line that
+doesn't fit in the window, and splitting that line in two.
+
+patch 5.1.6: Visual highlighting bug: After ":set nowrap", go to end of line
+(so that the window scrolls horizontally), ":set wrap".  Following Visual
+selection was wrong.
+
+patch 5.1.7: When 'tagbsearch' off, and 'ignorecase' off, still could do
+binary searching.
+
+patch 5.1.8: Win32 GUI: dragging the scrollbar didn't update the ruler.
+
+patch 5.1.9: Using ":gui" in .vimrc, caused xterm cursor to disappear.
+
+patch 5.1.10: A CTRL-N in Insert mode could cause a crash, when a buffer
+without a name exists.
+
+patch 5.1.11: "make test" didn't work in the shadow directory.  Also adjusted
+"make shadow" for the links in the ctags directory.
+
+patch 5.1.12: "buf 123foo" used "123" as a count, instead as the start of a
+buffer name.
+
+patch 5.1.13: When completing file names on the command-line, reallocating the
+command-line may go wrong.
+
+patch 5.1.14: ":[nvci]unmenu" removed menu for all modes, when full menu patch
+specified.
+
+Graceful handling of NULLs in drag-dropped file list.  Handle passing NULL to
+Fullname_save(). (Negri)
+
+Win32: ":!start" to invoke a program without opening a console, swapping
+screens, or waiting for completion in either console or gui version. e.g. you
+can type ":!start winfile".  ALSO fixes "can't delete swapfile after spawning
+a shell" bug. (enhancement of Aaron patch) (Negri)
+
+Win32 GUI: Fix CTRL-X default keymapping to be more Windows-like. (Negri)
+
+Shorten filenames on startup.  If in /foo/bar, entering "vim ../bar/bang.c"
+displays "bang.c" in status bar, not "/foo/bar/bang.c"  (Negri)
+
+Win32 GUI: No copy to Windows clipboard when it's not desired.
+
+Win32s: Fix pasting from clipboard - made an assumption not valid under
+Win32s. (Negri)
+
+Win32 GUI: Speed up calls to gui_mch_draw_string() and cursor drawing
+functions. (Negri)
+
+Win32 GUI: Middle mouse button emulation now works in GUI! (Negri)
+
+Could skip messages when combining commands in one line, e.g.:
+":echo "hello" | write".
+
+Perl interpreter was disabled before executing VimLeave autocommands.  Could
+not use ":perl" in them.  (Aaron)
+
+Included patch for the Intellimouse (Aaron/Robinson).
+
+Could not set 'ls' to one, when last window has only one line.  (Mitterand)
+
+Fixed a memory leak when removing menues.
+
+After ":only" the ruler could overwrite a message.
+
+Dos32: removed changing of __system_flags.  It appears to work better when
+it's left at the default value.
+
+p_aleph was an int instead of along, caused trouble on systems where
+sizeof(int) != sizeof(long). (Schmidt)
+
+Fixed enum problems for Ultrix. (Seibert)
+
+Small redraw problem: "dd" on last line in file cleared wrong line.
+
+Didn't interpret "cmd | endif" when "cmd" starts with a range.  E.g. "if 0 |
+.d | endif".
+
+Command "+|" on the last line of the file caused ml_get errors.
+
+Memory underrun in eval_vars(). (Aaron)
+
+Don't rename files in a difficult way, except on Windows 95 (was also done on
+Windows NT).
+
+Win32 GUI: An external command that produces an error code put the error
+message in a dialog box.  had to close the window and close the dialog.  Now
+the error code is displayed in the console. (Negri)
+
+"comctl32.lib" was missing from the GUI libraries in Makefile.w32. (Battle)
+
+In Insert mode, when entering a window in Insert mode, allow the cursor to be
+one char beyond the text.
+
+Renamed machine dependent rename() to mch_rename().  Define mch_rename() to
+rename() when it works properly.
+
+Rename vim_chdir() to mch_chdir(), because it's machine dependent.
+
+When using an arglist, and editing file 5 of 4, ":q" could cause "-1 more
+files to edit" error.
+
+In if_python.c, VimCommand() caused an assertion when a do_cmdline() failed.
+Moved the Python_Release_Vim() to before the VimErrorCheck().  (Harkins)
+
+Give an error message for an unknown argument after "--".  E.g. for "vim
+--xyz".
+
+The FileChangedShell autocommand didn't set <afile> to the name of the changed
+file.
+
+When doing ":e file", causing the attention message, there sometimes was no
+hit-return prompt.  Caused by empty line or "endif" at end of sourced file.
+
+A large number of patches for the VMS version. (Hunsaker)
+
+When CTRL-L completion (find longest match) results in a shorter string, no
+completion is done (happens with ":help").
+
+Crash in Win32 GUI version, when using an Ex "@" command, because
+LinePointers[] was used while not initialized.
+
+Win32 GUI: allow mapping of Alt-Space.
+
+Output from "vim -h" was sent to stderr.  Sending it to stdout is better, so
+one can use "vim -h | more".
+
+In command-line mode, ":vi[!]" should reload the file, just like ":e[!]".
+In Ex mode, ":vi" stops Ex mode, but doesn't reload the file.  This is Vi
+compatible.
+
+When using a ":set ls=1" in the .gvimrc file, would get a status line for a
+single window.  (Robinson)
+
+Didn't give an error message for ":set ai,xx". (Roemer)
+Didn't give an error message for ":set ai?xx", ":set ai&xx", ":set ai!xx".
+
+Non-Unix systems: That a file exists but is unreadable is recognized as "new
+file".  Now check for existence when file can't be opened (like Unix).
+
+Unix: osdef.sh didn't handle declarations where the function name is at the
+first column of the line.
+
+DJGPP: Shortening of file names didn't work properly, because get_cwd()
+returned a path with backslashes. (Negri)
+
+When using a 'comments' part where a space is required after the middle part,
+always insert a space when starting a new line.  Helps for C comments, below a
+line with "/****".
+
+Replacing path of home directory with "~/" could be wrong for file names
+with embedded spaces or commas.
+
+A few fixes for the Sniff interface. (Leherbauer)
+
+When asking to hit 'y' or 'n' (e.g. for ":3,1d"), using the mouse caused
+trouble.  Same for ":s/x/y/c" prompt.
+
+With 'nowrap' and 'list', a Tab halfway on the screen was displayed as blanks,
+instead of the characters specified with 'listchars'.  Also for other
+characters that take more than one screen character.
+
+When setting 'guifont' to an unknown font name, the previous font was lost and
+a default font would be used. (Steed)
+
+DOS: Filenames in the root directory didn't get shortened properly. (Negri)
+
+DJGPP: making a full path name out of a file name didn't work properly when
+there is no _fullpath() function. (Negri)
+
+Win32 console: ":sh" caused a crash. (Negri)
+
+Win32 console: Setting 'lines' and/or 'columns' in the _vimrc failed miserably
+(could hang Windows 95). (Negri)
+
+Win32: The change-drive function was not correct, went to the wrong drive.
+(Tsindlekht)
+
+GUI: When editing a command line in Ex mode, Tabs were sometimes not
+backspaced properly, and unprintable characters were displayed directly.
+non-GUI can still be wrong, because a system function is called for this.
+
+":set" didn't stop after an error.  For example ":set no ai" gave an error for
+"no", but still set "ai".  Now ":set" stops after the first error.
+
+When running configure for ctags, $LDFLAGS wasn't passed to it, causing
+trouble for IRIX.
+
+"@%" and "@#" when file name not set gave an error message.  Now they just
+return an empty string. (Steed)
+
+CTRL-X and CTRL-A didn't work correctly with negative hex and octal numbers.
+(Steed)
+
+":echo" always started with a blank.
+
+Updating GUI cursor shape didn't always work (e.g., when blinking is off).
+
+In silent Ex mode ("ex -s" or "ex <file") ":s///p" didn't print a line.  Also
+a few other commands that explicitly print a text line didn't work.  Made this
+Vi compatible.
+
+Win32 version of _chdrive() didn't return correct value. (Tsindlekht)
+
+When using 't' in 'complete' option, no longer give an error message for a
+missing tags file.
+
+Unix: tgoto() can return NULL, which was not handled correctly in configure.
+
+When doing ":help" from a buffer where 'binary' is set, also edited the help
+file in binary mode.  Caused extra ^Ms for DOS systems.
+
+Cursor position in a file was reset to 1 when closing a window.
+
+":!ls" in Ex mode switched off echo.
+
+When doing a double click in window A, while currently in window B, first
+click would reset double click time, had to click three times to select a
+word.
+
+When using <F11> in mappings, ":mkexrc" produced an exrc file that can't be
+used in Vi compatible mode.  Added setting of 'cpo' to avoid this.  Also, add
+a CTRL-V in front of a '<', to avoid a normal string to be interpreted as a
+special key name.
+
+Gave confusing error message for ":set guifont=-*-lucida-*": first "font is
+not fixed width", then "Unknown font".
+
+Some options were still completely left out, instead of included as hidden
+options.
+
+While running the X11 GUI, ignore SIGHUP signals.  Avoids a crash after
+executing an external command (in rare cases).
+
+In os_unixx.h, signal() was defined to sigset(), while it already was.
+
+Memory leak when executing autocommands (was reported as a memory leak in
+syntax highlighting).
+
+Didn't print source of error sometimes, because pointers were the same,
+although names were different.
+
+Avoid a number of UMR errors from Purify (third argument to open()).
+
+A swap file could still be created just after setting 'updatecount' to zero,
+when there is an empty buffer and doing ":e file". (Kutschera)
+
+Test 35 failed on 64 bit machines. (Schild)
+
+With "p" and "P" commands, redrawing was slow.
+
+Awk script for html documentation didn't work correctly with AIX awk.
+Replaced "[ ,.);\]	]" with "[] ,.);	]". (Briscoe)
+The makehtml.awk script had a small problem, causing extra lines to be
+inserted. (Briscoe)
+
+"gqgq" could not be repeated.  Repeating for "gugu" and "gUgU" worked in a
+wrong way.  Also made "gqq" work to be consistent with "guu".
+
+C indent was wrong after "case ':':".
+
+":au BufReadPre *.c put": Line from put text was deleted, because the buffer
+was still assumed to be empty.
+
+Text pasted with the Edit/Paste menu was subject to 'textwidth' and
+'autoindent'.  That was inconsistent with using the mouse to paste.  Now "*p
+is used.
+
+When using CTRL-W CTRL-] on a word that's not a tag, and then CTRL-] on a tag,
+window was split.
+
+":ts" got stuck on a tags line that has two extra fields.
+
+In Insert mode, with 'showmode' on, <C-O><C-G> message was directly
+overwritten by mode message, if preceded with search command warning message.
+
+When putting the result of an expression with "=<expr>p, newlines were
+inserted like ^@ (NUL in the file).  Now the string is split up in lines at
+the newline.
+
+putenv() was declared with "const char *" in pty.c, but with "char *" in
+osdef2.h.in.  Made the last one also "const char *".
+
+":help <word>", where +<word> is a feature, jumped to the feature list instead
+of where the command was explained.  E.g., ":help browse", ":help autocmd".
+
+Using the "\<xx>" form in an expression only got one byte, even when using a
+special character that uses several bytes (e.g., "\<F9>").
+Changed "\<BS>" to produce CTRL-H instead of the special key code for the
+backspace key.  "\<Del>" produces 0x7f.
+
+":mkvimrc" didn't write a command to set 'compatible' or 'nocompatible'.
+
+The shell syntax didn't contain a "syn sync maxlines" setting.  In a long file
+without recognizable items, syncing took so long it looked like Vim hangs.
+Added a maxlines setting, and made syncing interruptable.
+
+The "gs" command didn't flush output before waiting.
+
+Memory leaks for:
+    ":if 0 | let a = b . c | endif"
+    "let a = b[c]"
+    ":so <file>" where <file> contains a ":while"
+
+GUI: allocated fonts were never released. (Leonard)
+
+Makefile.bor:
+- Changed $(DEFINES) into a list of "-D" options, so that it can also be used
+  for the resource compiler. (not tested!)
+- "bcc.cfg" was used for all configurations.  When building for another
+  configuration, the settings for the previous one would be used.  Moved
+  "bcc.cfg" to the object directory. (Geddes)
+- Included targets for vimrun, install, ctags and xxd.  Changed the default to
+  use the Borland DLL Runtime Library, makes Vim.exe a log smaller. (Aaron)
+
+"2*" search for the word under the cursor with "2" prepended. (Leonard)
+
+When deleting into a specific register, would still overwrite the non-Win32
+GUI selection.  Now ""x"*P works.
+
+When deleting into the "" register, would write to the last used register.
+Now ""x always writes to the unnamed register.
+
+GUI Athena: A submenu with a '.' in it didn't work.  E.g.,
+":amenu Syntax.XY\.Z.foo lll".
+
+When first doing ":tag foo" and then ":tnext" and/or ":tselect" the order of
+matching tags could change, because the current file is different.  Now the
+existing matches are kept in the same order, newly found matches are added
+after them, not matter what the current file is.
+
+":ta" didn't find the second entry in a tags file, if the second entry was
+longer than the first one.
+
+When using ":set si tw=7" inserting "foo {^P}" made the "}" inserted at the
+wrong position.  can_si was still TRUE when the cursor is not in the indent of
+the line.
+
+Running an external command in Win32 version had the problem that Vim exits
+when the X on the console is hit (and confirmed).  Now use the "vimrun"
+command to start the external command indirectly. (Negri)
+
+Win32 GUI: When running an external filter, do it in a minimized DOS box.
+(Negri)
+
+":let" listed variables without translation into printable characters.
+
+Win32 console: When resizing the window, switching back to the old size
+(when exiting or executing an external command) sometimes failed. (Negri)
+This appears to also fix a "non fixable" problem:
+Win32 console in NT 4.0: When running Vim in a cmd window with a scrollbar,
+the scollbar disappeared and was not restored when Vim exits.  This does work
+under NT 3.51, it appears not to be a Vim problem.
+
+When executing BufDelete and BufUnload autocommands for a buffer without a
+name, the name of the current buffer was used for <afile>.
+
+When jumping to a tag it reported "tag 1 of >2", while in fact there could be
+only two matches.  Changed to "tag 1 of 2 or more".
+
+":tjump tag" did a linear search in the tags file, which can be slow.
+
+Configure didn't find "LibXm.so.2.0", a Xm library with a version number.
+
+Win32 GUI: When using a shifted key with ALT, the shift modifier would remain
+set, even when it was already used by changing the used key.  E.g., "<M-S-9>"
+resulted in "<M-S-(>", but it should be "<M-(>". (Negri)
+
+A call to ga_init() was often followed by seting growsize and itemsize.
+Created ga_init2() for this, which looks better. (Aaron)
+
+Function filereadable() could call fopen() with an empty string, which might
+be illegal.
+
+X Windows GUI: When executing an external command that outputs text, could
+write one character beyond the end of a buffer, which caused a crash. (Kohan)
+
+When using "*" or "#" on a string that includes '/' or '?' (when these are
+included in 'isk'), they were not escaped. (Parmelan)
+
+When adding a ToolBar menu in the Motif GUI, the submenu_id field was not
+cleared, causing random problems.
+
+When adding a menu, the check if this menu (or submenu) name already exists
+didn't compare with the simplified version (no mnemonic or accelerator) of the
+new menu.  Could get two menus with the same name, e.g., "File" and "&File".
+
+Breaking a line because of 'textwidth' at the last line in the window caused a
+redraw of the whole window instead of a scroll.  Speeds up normal typing with
+'textwidth' a lot for slow terminals.
+
+An invalid line number produced an "invalid range" error, even when it wasn't
+to be executed (inside "if 0").
+
+When the unnamed, first buffer is re-used, the "BufDelete" autocommand was
+not called.  It would stick in a buffer list menu.
+
+When doing "%" on the NUL after the line, a "{" or "}" in the last character
+of the line was not found.
+
+The Insert mode menu was not used for the "s" command, the Operator-pending
+menu was used instead.
+
+With 'compatible' set, some syntax highlighting was not correct, because of
+using "[\t]" for a search pattern.  Now use the regexps for syntax
+highlighting like the 'cpoptions' option is empty (as was documented already).
+
+When using "map <M-Space> ms" or "map <Space> sss" the output of ":map" didn't
+show any lhs for the mapping (if 'isprint' includes 160).  Now always use
+<Space> and <M-Space>, even when they are printable.
+
+Adjusted the Syntax menu, so that the lowest entry fits on a small screen (for
+Athena, where menus don't wrap).
+
+When using CTRL-E or CTRL-Y in Insert mode for characters like 'o', 'x' and
+digits, repeating the insert didn't work.
+
+The file "tools/ccfilter.README.txt" could not be unpacked when using short
+file names, because of the two dots.  Renamed it to
+"tools/ccfilter_README.txt".
+
+For a dark 'background', using Blue for Directory and SpecialKey highlight
+groups is not very readable.  Use Cyan instead.
+
+In the function uc_scan_attr() in ex_docmd.c there was a goto that jumped into
+a block with a local variable.  That's illegal for some compilers.
+
+Win32 GUI: There was a row of pixels at the bottom of the window which was not
+drawn. (Aaron)
+
+Under DOS, editing "filename/" created a swap file of "filename/.swp".  Should
+be "filename/_swp".
+
+Win32 GUI: pointer was hidden when executing an external command.
+
+When 'so' is 999, "J" near the end of the file didn't redisplay correctly.
+
+":0a" inserted after the first line, instead of before the first line.
+
+Unix: Wildcard expansion didn't handle single quotes and {} patterns.  Now
+":file 'window.c'" removes the quotes and ":e 'main*.c'" works (literal '*').
+":file {o}{n}{e}" now results in file name "one".
+
+Memory leak when setting a string option back to its default value.
 
  vim:ts=8:sw=8:tw=78:

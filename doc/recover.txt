@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 5.1.  Last modification: 1998 Jan 07
+*recover.txt*   For Vim version 5.2.  Last modification: 1998 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -203,7 +203,7 @@ message and insert lines with "???" in the text.  If you see an error message
 while recovering, search in the file for "???" to see what is wrong.  You may
 want to cut and paste to get the text you need.
 
-Be sure that the recovery was successful before overwriting the original
+Be sure that the recovery was successfull before overwriting the original
 file or deleting the swap file.  It is good practice to write the recovered
 file elsewhere and run 'diff' to find out if the changes you want are in the
 recovered file.

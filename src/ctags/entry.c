@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: entry.c,v 5.3 1998/03/13 04:19:11 darren Exp $
+*   $Id: entry.c,v 6.4 1998/07/22 02:32:58 darren Exp $
 *
-*   Copyright (c) 1996-1997, Darren Hiebert
+*   Copyright (c) 1996-1998, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -35,10 +35,11 @@
  */
 static const char *TagTypeNames[] = {
     "class", "define", "macro", "enum", "enumerator", "prototype", "function",
-    "member", "file", "struct", "typedef", "union", "variable"
+    "interface", "member", "namespace", "file", "struct", "typedef", "union",
+    "variable", "externvar"
 };
 
-static const char TagTypeChars[] = "cddgepfmFstuv";
+static const char TagTypeChars[] = "cddgepfimnFstuvx";
 
 /*============================================================================
 =   Function prototypes
@@ -49,13 +50,14 @@ static void rememberMaxLengths __ARGS((const size_t nameLength, const size_t lin
 static void writeXrefEntry __ARGS((const tagInfo *const tag, const tagType type));
 static void truncateTagLine __ARGS((char *const line, const char *const token, const boolean discardNewline));
 static int writeEtagsEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type));
-static const char *getTypeString __ARGS((const memberType mType));
 static int addExtensionFlags __ARGS((const memberInfo *const pMember, const tagScope scope, const tagType type));
 static int writeLineNumberEntry __ARGS((const tagInfo *const tag));
 static int writePatternEntry __ARGS((const tagInfo *const tag, const tagType type));
 static int writeCtagsEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static void writeTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static boolean includeTag __ARGS((const tagScope scope, const tagType type));
+static void writeExtraMemberTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber, const char *const format));
+static void makeExtraMemberTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static void makeTagEntry __ARGS((const tagInfo *const tag, const memberInfo *const pMember, const tagScope scope, const tagType type, const boolean useLineNumber));
 static void writePseudoTag __ARGS((const char *const tagName, const char *const fileName, const char *const pattern));
 static void updateSortedFlag __ARGS((const char *const line, FILE *const fp, const long startOfLine));
@@ -69,8 +71,8 @@ extern const char *tagTypeName( type )
 {
     const char *name;
 
-    if (type < TAG_NUMTYPES)
-	name = TagTypeNames[type];
+    if ((int)type < (int)TAG_NUMTYPES)
+	name = TagTypeNames[(int)type];
     else
 	name = "?";
 
@@ -91,7 +93,7 @@ static size_t writeSourceLine( fp, line )
 {
     size_t length = 0;
     const char *p;
-    char c;
+    int c;
 
     /*	Write everything up to, but not including, the newline.
      */
@@ -128,7 +130,7 @@ static size_t writeCompactSourceLine( fp, line )
     boolean lineStarted = FALSE;
     size_t  length = 0;
     const char *p;
-    char c;
+    int c;
 
     /*	Write everything up to, but not including, the newline.
      */
@@ -233,20 +235,37 @@ static int writeEtagsEntry( tag, pMember, scope, type )
     return length;
 }
 
-static const char *getTypeString( mType )
+extern const char *getTypeString( mType )
     const memberType mType;
 {
     const char *typeString;
 
     switch (mType)
     {
-	case MEMBER_ENUM:	typeString = "enum";	break;
-	case MEMBER_CLASS:	typeString = "class";	break;
-	case MEMBER_STRUCT:	typeString = "struct";	break;
-	case MEMBER_UNION:	typeString = "union";	break;
-	default:		typeString = NULL;	break;
+	case MEMBER_ENUM:	typeString = "enum";		break;
+	case MEMBER_CLASS:	typeString = "class";		break;
+	case MEMBER_INTERFACE:	typeString = "interface";	break;
+	case MEMBER_NAMESPACE:	typeString = "namespace";	break;
+	case MEMBER_STRUCT:	typeString = "struct";		break;
+	case MEMBER_UNION:	typeString = "union";		break;
+	default:		typeString = "";		break;
     }
     return typeString;
+}
+
+extern const char *getVisibilityString( visibility )
+    const visibilityType visibility;
+{
+    const char *visibilityString;
+
+    switch (visibility)
+    {
+	case VIS_PRIVATE:	visibilityString = "private";		break;
+	case VIS_PROTECTED:	visibilityString = "protected";		break;
+	case VIS_PUBLIC:	visibilityString = "public";		break;
+	default:		visibilityString = "";			break;
+    }
+    return visibilityString;
 }
 
 static int addExtensionFlags( pMember, scope, type )
@@ -258,14 +277,14 @@ static int addExtensionFlags( pMember, scope, type )
     const char *const separator = "\t";
     int length = 0;
 #ifdef LONG_FORM_TYPE
-    const char *const format = "%stype:%c";
+    const char *const format = "%skind:%c";
 #else
     const char *const format = "%s%c";
 #endif
 
     /*  Add an extension flag designating that the type of the tag.
      */
-    length += fprintf(TagFile.fp, format, prefix, TagTypeChars[type]);
+    length += fprintf(TagFile.fp, format, prefix, TagTypeChars[(int)type]);
 
     /*  If this is a static tag, add the appropriate extension flag.
      */
@@ -277,19 +296,33 @@ static int addExtensionFlags( pMember, scope, type )
      */
     switch (type)
     {
+	case TAG_DEFINE_FUNC:
+	case TAG_DEFINE_OBJ:
+	default:
+	    /* always global scope */
+	    break;
+
 	case TAG_ENUMERATOR:
 	case TAG_FUNCDECL:
 	case TAG_FUNCTION:
 	case TAG_MEMBER:
+	case TAG_TYPEDEF:
 	case TAG_VARIABLE:
 	{
-	    const char *const typeString = getTypeString(pMember->type);
-
-	    if (typeString != NULL)
+	    if (pMember->type != MEMBER_NONE)
+	    {
 		length += fprintf(TagFile.fp, "%s%s:%s", separator,
-				  typeString, pMember->parent);
+				  getTypeString(pMember->type),pMember->parent);
+
+		if ((File.language == LANG_CPP || File.language == LANG_JAVA) &&
+		    pMember->visibility != VIS_UNDEFINED)
+		{
+		    length += fprintf(TagFile.fp, "%s%s:", separator,
+				    getVisibilityString(pMember->visibility));
+		}
+	    }
+	    break;
 	}
-	default: break;
     }
     return length;
 }
@@ -367,29 +400,72 @@ static boolean includeTag( scope, type )
 {
     boolean include;
 
-    if (scope == SCOPE_EXTERN  ||		    /* should never happen */
-	(scope == SCOPE_STATIC  &&  ! Option.include.statics))
-    {
+    if (scope == SCOPE_STATIC  &&  ! Option.include.statics)
 	include = FALSE;
-    }
     else switch (type)
     {
 	case TAG_CLASS:		include = Option.include.classNames;	break;
-	case TAG_DEFINE_FUNC:
-	case TAG_DEFINE_OBJ:    include = Option.include.defines;	break;
+	case TAG_DEFINE_OBJ:
+	case TAG_DEFINE_FUNC:	include = Option.include.defines;	break;
 	case TAG_ENUM:		include = Option.include.enumNames;	break;
 	case TAG_ENUMERATOR:	include = Option.include.enumerators;	break;
-	case TAG_SOURCE_FILE:	include = Option.include.sourceFiles;	break;
-	case TAG_FUNCTION:	include = Option.include.functions;	break;
 	case TAG_FUNCDECL:	include = Option.include.prototypes;	break;
+	case TAG_FUNCTION:	include = Option.include.functions;	break;
+	case TAG_INTERFACE:	include = Option.include.interfaceNames;break;
 	case TAG_MEMBER:	include = Option.include.members;	break;
+	case TAG_NAMESPACE:	include = Option.include.namespaceNames;break;
+	case TAG_SOURCE_FILE:	include = Option.include.sourceFiles;	break;
 	case TAG_STRUCT:	include = Option.include.structNames;	break;
 	case TAG_TYPEDEF:	include = Option.include.typedefs;	break;
 	case TAG_UNION:		include = Option.include.unionNames;	break;
 	case TAG_VARIABLE:	include = Option.include.variables;	break;
+	case TAG_EXTERN_VAR:	include = Option.include.externVars;	break;
 	default:		include = FALSE;			break;
     }
     return include;
+}
+
+static void writeExtraMemberTagEntry( tag, pMember, scope, type,
+				      useLineNumber, format )
+    const tagInfo *const tag;
+    const memberInfo *const pMember;
+    const tagScope scope;
+    const tagType type;
+    const boolean useLineNumber;
+    const char *const format;
+{
+    switch (type)
+    {
+	case TAG_FUNCDECL:
+	case TAG_FUNCTION:
+	case TAG_MEMBER:
+	{
+	    tagInfo prefixedTag;
+
+	    prefixedTag = *tag;
+	    sprintf(prefixedTag.name, format, pMember->parent, tag->name);
+	    writeTagEntry(&prefixedTag, pMember, scope, type, useLineNumber);
+	}
+	default: break;
+    }
+}
+
+static void makeExtraMemberTagEntry( tag, pMember, scope, type, useLineNumber )
+    const tagInfo *const tag;
+    const memberInfo *const pMember;
+    const tagScope scope;
+    const tagType type;
+    const boolean useLineNumber;
+{
+    if (File.language == LANG_CPP  &&
+	(pMember->type == MEMBER_CLASS  ||  pMember->type == MEMBER_STRUCT))
+    {
+	writeExtraMemberTagEntry(tag, pMember, scope, type, useLineNumber, "%s::%s");
+    }
+    else if (File.language == LANG_JAVA  &&  pMember->type == MEMBER_CLASS)
+    {
+	writeExtraMemberTagEntry(tag, pMember, scope, type, useLineNumber, "%s.%s");
+    }
 }
 
 /*  This function generates a tag for the object in name, whose tag line is
@@ -402,38 +478,15 @@ static void makeTagEntry( tag, pMember, scope, type, useLineNumber )
     const tagType type;
     const boolean useLineNumber;
 {
-    if (includeTag(scope, type))
+    if (includeTag(scope, type)  &&  tag->name[0] != '\0')
     {
 	if (Option.xref)
 	    writeXrefEntry(tag, type);
 	else
 	{
 	    writeTagEntry(tag, pMember, scope, type, useLineNumber);
-
-	    /*  When appropriate, add an extra tag entry of the form
-	     *  class::member.
-	     */
-	    if (Option.include.classPrefix  && (pMember->type == MEMBER_CLASS ||
-		pMember->type == MEMBER_STRUCT)  &&  pMember->parent[0] != '0')
-	    {
-		switch (type)
-		{
-		    case TAG_FUNCDECL:
-		    case TAG_FUNCTION:
-		    case TAG_MEMBER:
-		    case TAG_VARIABLE:
-		    {
-			tagInfo prefixedTag;
-
-			prefixedTag = *tag;
-			sprintf(prefixedTag.name, "%s::%s",
-				pMember->parent, tag->name);
-			writeTagEntry(&prefixedTag, pMember, scope, type,
-				    useLineNumber);
-		    }
-		    default: break;
-		}
-	    }
+	    if (Option.include.classPrefix  &&  pMember->parent[0] != '0')
+		makeExtraMemberTagEntry(tag, pMember, scope, type, useLineNumber);
 	}
 	DebugStatement( debugEntry(scope, type, tag->name, pMember); )
     }
@@ -497,7 +550,7 @@ extern void addPseudoTags()
 	writePseudoTag("TAG_PROGRAM_NAME",	PROGRAM_NAME, "");
 	writePseudoTag("TAG_PROGRAM_URL",	PROGRAM_URL,  "official site");
 	writePseudoTag("TAG_PROGRAM_VERSION",	PROGRAM_VERSION,
-		       "with C++ support");
+		       "with C++ and Java support");
     }
 }
 

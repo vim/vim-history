@@ -164,7 +164,7 @@ static void exit_with_usage __P((char *));
 static int huntype __P((FILE *, FILE *, FILE *, char *, int, int, long));
 static void xxdline __P((FILE *, char *, int));
 
-#define TRY_SEEK 	/* attempt to use lseek, or skip forward by reading */
+#define TRY_SEEK	/* attempt to use lseek, or skip forward by reading */
 #define COLS 256	/* change here, if you ever need more columns */
 #define LLEN (9 + 3*COLS + 2 + COLS)
 
@@ -500,11 +500,11 @@ char *argv[];
       argv++;				/* advance to next argument */
       argc--;
     }
-  
+
   if (!cols)
     switch (hextype)
       {
-      case HEX_POSTSCRIPT: 	cols = 30; break;
+      case HEX_POSTSCRIPT:	cols = 30; break;
       case HEX_CINCLUDE:	cols = 12; break;
       case HEX_NORMAL:
       default:			cols = 16; break;
@@ -558,7 +558,7 @@ char *argv[];
 	  return -1;
 	}
       return huntype(fp, fpo, stderr, pname, cols, hextype,
-      		negseek ? -seekoff : seekoff);
+		negseek ? -seekoff : seekoff);
     }
 
   if (seekoff || negseek || !relseek)
@@ -653,7 +653,7 @@ char *argv[];
 	}
       l[c = (9 + (grplen * p) / octspergrp)] = hexx[(e >> 4) & 0xf];
       l[++c]                                 = hexx[ e       & 0xf];
-      if (ebcdic) 
+      if (ebcdic)
         e = (e < 64) ? '.' : etoa64[e-64];
       l[11 + (grplen * cols - 1)/octspergrp + p] = (e > 31 && e < 127) ? e : '.';
       if (e)

@@ -13,13 +13,13 @@ syn match diffAdded	"^+.*$"
 syn match diffChanged	"^! .*$"
 
 syn match diffLine	"^@.*$"
-syn match diffLine	"^\<[0-9]\+\>.*$"
+syn match diffLine	"^\<\d\+\>.*$"
 syn match diffLine	"^\*\*\*\*.*$"
 
 "Some versions of diff have lines like "#c#" and "#d#" (where # is a number)
-syn match diffAdded	"^\<[0-9]\+a[0-9]\+\(,[0-9]\+\)\=\>"
-syn match diffChanged	"^\<[0-9]\+c[0-9]\+\>"
-syn match diffRemoved	"^\<[0-9]\+d[0-9]\+\>"
+syn match diffAdded	"^\<\d\+a\d\+\(,\d\+\)\=\>"
+syn match diffChanged	"^\<\d\+c\d\+\>"
+syn match diffRemoved	"^\<\d\+d\d\+\>"
 
 syn match diffFile	"^diff.*$"
 syn match diffFile	"^+++ .*$"

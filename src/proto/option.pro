@@ -31,3 +31,4 @@ int has_format_option __ARGS((int x));
 int shortmess __ARGS((int x));
 void vimrc_found __ARGS((void));
 void change_compatible __ARGS((int on));
+int option_was_set __ARGS((char_u *name));

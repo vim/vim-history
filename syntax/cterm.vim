@@ -109,13 +109,13 @@ syn match  ctermFuncArg	"\$[1-9]"
 
 syn keyword ctermTodo contained TODO
 
-syn match  ctermNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match  ctermNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match  ctermNumber		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  ctermNumber		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  ctermNumber		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  ctermNumber		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match  ctermNumber		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match  ctermNumber		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match  ctermNumber		"0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 
@@ -129,7 +129,7 @@ syn region ctermVar		start="\$("  end=")"
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
-syn match   ctermSpecial		contained "\\[0-9][0-9][0-9]\|\\."
+syn match   ctermSpecial		contained "\\\d\d\d\|\\."
 syn match   ctermSpecial		contained "\^."
 syn region  ctermString			start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=ctermSpecial,ctermVar,ctermSymbols
 syn match   ctermCharacter		"'[^\\]'"

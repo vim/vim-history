@@ -51,17 +51,17 @@ exec "syn sync ccomment rexxComment minlines=" . rexx_minlines
 if !exists("did_rexx_syntax_inits")
   let did_rexx_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link rexxUserLabel    	Label
-  hi link rexxCharacter    	Character
-  hi link rexxSpecialCharacter 	rexxSpecial
-  hi link rexxParenError   	rexxError
-  hi link rexxInParen      	rexxError
+  hi link rexxUserLabel		Label
+  hi link rexxCharacter		Character
+  hi link rexxSpecialCharacter	rexxSpecial
+  hi link rexxParenError	rexxError
+  hi link rexxInParen		rexxError
   hi link rexxCommentError	rexxError
   hi link rexxError		Error
   hi link rexxKeyword		Statement
   hi link rexxString		String
   hi link rexxComment		Comment
-  hi link rexxSpecial      	SpecialChar
+  hi link rexxSpecial		SpecialChar
   hi link rexxTodo		Todo
 endif
 

@@ -11,7 +11,7 @@ syn keyword slrnrcTodo		contained Todo
 " in some places white space is illegal
 syn match slrnrcSpaceError	contained "\s"
 
-syn match slrnrcNumber		contained "-\=\<[0-9]\+\>"
+syn match slrnrcNumber		contained "-\=\<\d\+\>"
 syn match slrnrcNumber		contained +'[^']\+'+
 
 syn match slrnrcSpecKey		contained +\(\\[e"']\|\^[^'"]\)+
@@ -75,7 +75,7 @@ syn region slrnrcCmdLine	matchgroup=slrnrcCmd start="^\s*\(autobaud\|grouplens_a
 syn keyword slrnrcSet		contained set
 syn match   slrnrcSetStr	"^\s*set\s\+\S\+" skipwhite nextgroup=slrnrcString contains=slrnrcSet,slrnrcVarStr\(Str\)\=
 syn match   slrnrcSetInt	contained "^\s*set\s\+\S\+" contains=slrnrcSet,slrnrcVarInt\(Str\)\=
-syn match   slrnrcSetIntLine	"^\s*set\s\+\S\+\s\+\(-\=[0-9]\+\>\|'[^']\+'\)" contains=slrnrcSetInt,slrnrcNumber,slrnrcVarInt
+syn match   slrnrcSetIntLine	"^\s*set\s\+\S\+\s\+\(-\=\d\+\>\|'[^']\+'\)" contains=slrnrcSetInt,slrnrcNumber,slrnrcVarInt
 
 " color definitions
 syn keyword slrnrcColorObj	contained article author box cursor description error frame

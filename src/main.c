@@ -14,6 +14,7 @@
 #endif
 
 static void mainerr __ARGS((int, char_u *));
+static void main_msg __ARGS((char *s));
 static void usage __ARGS((void));
 static int get_number_arg __ARGS((char_u *p, int *idx, int def));
 
@@ -58,6 +59,18 @@ mainerr(n, str)
     mch_windexit(1);
 }
 
+/*
+ * print a message with three spaces prepended and '\n' appended.
+ */
+    static void
+main_msg(s)
+    char *s;
+{
+    mch_msg("   ");
+    mch_msg(s);
+    mch_msg("\n");
+}
+
     static void
 usage()
 {
@@ -76,96 +89,97 @@ usage()
     reset_signals();		/* kill us with CTRL-C here, if you like */
 #endif
 
-    mch_errmsg(longVersion);
-    mch_errmsg("\nusage:");
+    mch_msg(longVersion);
+    mch_msg("\nusage:");
     for (i = 0; ; ++i)
     {
-	mch_errmsg(" vim [options] ");
-	mch_errmsg((char *)use[i]);
+	mch_msg(" vim [options] ");
+	mch_msg((char *)use[i]);
 	if (i == (sizeof(use) / sizeof(char_u *)) - 1)
 	    break;
-	mch_errmsg("\n   or:");
+	mch_msg("\n   or:");
     }
 
-    mch_errmsg("\n\nOptions:\n");
-    mch_errmsg("   --\t\t\tEnd of options\n");
+    mch_msg("\n\nOptions:\n");
+    main_msg("--\t\t\tEnd of options");
 #ifdef HAVE_OLE
-    mch_errmsg("   -register\t\tRegister this gvim for OLE\n");
-    mch_errmsg("   -unregister\t\tUnregister gvim for OLE\n");
+    main_msg("-register\t\tRegister this gvim for OLE");
+    main_msg("-unregister\t\tUnregister gvim for OLE");
 #endif
 #ifdef USE_GUI
-    mch_errmsg("   -g\t\t\tRun using GUI (like \"gvim\")\n");
-    mch_errmsg("   -f\t\t\tForeground: Don't fork when starting GUI\n");
+    main_msg("-g\t\t\tRun using GUI (like \"gvim\")");
+    main_msg("-f\t\t\tForeground: Don't fork when starting GUI");
 #endif
-    mch_errmsg("   -v\t\t\tVi mode (like \"vi\")\n");
-    mch_errmsg("   -e\t\t\tEx mode (like \"ex\")\n");
-    mch_errmsg("   -s\t\t\tSilent (batch) mode (only for \"ex\")\n");
-    mch_errmsg("   -R\t\t\tReadonly mode (like \"view\")\n");
-    mch_errmsg("   -Z\t\t\tRestricted mode (like \"rvim\")\n");
-    mch_errmsg("   -b\t\t\tBinary mode\n");
+    main_msg("-v\t\t\tVi mode (like \"vi\")");
+    main_msg("-e\t\t\tEx mode (like \"ex\")");
+    main_msg("-s\t\t\tSilent (batch) mode (only for \"ex\")");
+    main_msg("-R\t\t\tReadonly mode (like \"view\")");
+    main_msg("-Z\t\t\tRestricted mode (like \"rvim\")");
+    main_msg("-b\t\t\tBinary mode");
 #ifdef LISPINDENT
-    mch_errmsg("   -l\t\t\tLisp mode\n");
+    main_msg("-l\t\t\tLisp mode");
 #endif
-    mch_errmsg("   -C\t\t\tCompatible with Vi: 'compatible'\n");
-    mch_errmsg("   -N\t\t\tNot fully Vi compatible: 'nocompatible'\n");
-    mch_errmsg("   -V[N]\t\tVerbose level\n");
-    mch_errmsg("   -n\t\t\tNo swap file, use memory only\n");
-    mch_errmsg("   -r\t\t\tList swap files and exit\n");
-    mch_errmsg("   -r (with file name)\tRecover crashed session\n");
-    mch_errmsg("   -L\t\t\tSame as -r\n");
+    main_msg("-C\t\t\tCompatible with Vi: 'compatible'");
+    main_msg("-N\t\t\tNot fully Vi compatible: 'nocompatible'");
+    main_msg("-V[N]\t\tVerbose level");
+    main_msg("-n\t\t\tNo swap file, use memory only");
+    main_msg("-r\t\t\tList swap files and exit");
+    main_msg("-r (with file name)\tRecover crashed session");
+    main_msg("-L\t\t\tSame as -r");
 #ifdef AMIGA
-    mch_errmsg("   -f\t\t\tDon't use newcli to open window\n");
-    mch_errmsg("   -d <device>\t\tUse <device> for I/O\n");
+    main_msg("-f\t\t\tDon't use newcli to open window");
+    main_msg("-d <device>\t\tUse <device> for I/O");
 #endif
 #ifdef RIGHTLEFT
-    mch_errmsg("   -H\t\t\tstart in Hebrew mode\n");
+    main_msg("-H\t\t\tstart in Hebrew mode");
 #endif
 #ifdef FKMAP
-    mch_errmsg("   -F\t\t\tstart in Farsi mode\n");
+    main_msg("-F\t\t\tstart in Farsi mode");
 #endif
-    mch_errmsg("   -T <terminal>\tSet terminal type to <terminal>\n");
-    mch_errmsg("   -o[N]\t\tOpen N windows (default: one for each file)\n");
-    mch_errmsg("   +\t\t\tStart at end of file\n");
-    mch_errmsg("   +<lnum>\t\tStart at line <lnum>\n");
-    mch_errmsg("   -c <command>\t\tExecute <command> first\n");
-    mch_errmsg("   -s <scriptin>\tRead commands from script file <scriptin>\n");
-    mch_errmsg("   -w <scriptout>\tAppend commands to script file <scriptout>\n");
-    mch_errmsg("   -W <scriptout>\tWrite commands to script file <scriptout>\n");
-    mch_errmsg("   -u <vimrc>\t\tUse <vimrc> instead of any .vimrc\n");
+    main_msg("-T <terminal>\tSet terminal type to <terminal>");
+    main_msg("-o[N]\t\tOpen N windows (default: one for each file)");
+    main_msg("+\t\t\tStart at end of file");
+    main_msg("+<lnum>\t\tStart at line <lnum>");
+    main_msg("-c <command>\t\tExecute <command> first");
+    main_msg("-s <scriptin>\tRead commands from script file <scriptin>");
+    main_msg("-w <scriptout>\tAppend commands to script file <scriptout>");
+    main_msg("-W <scriptout>\tWrite commands to script file <scriptout>");
+    main_msg("-u <vimrc>\t\tUse <vimrc> instead of any .vimrc");
 #ifdef USE_GUI
-    mch_errmsg("   -U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc\n");
+    main_msg("-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc");
 #endif
 #ifdef VIMINFO
-    mch_errmsg("   -i <viminfo>\t\tUse <viminfo> instead of .viminfo\n");
+    main_msg("-i <viminfo>\t\tUse <viminfo> instead of .viminfo");
 #endif
-    mch_errmsg("   -h\t\t\tprint Help and exit (this message)\n");
+    main_msg("-h\t\t\tprint Help (this message) and exit");
+    main_msg("--version\t\tprint version information and exit");
 
 #ifdef USE_GUI_X11
 # ifdef USE_GUI_MOTIF
-    mch_errmsg("\nOptions recognised by gvim (Motif version):\n");
+    mch_msg("\nOptions recognised by gvim (Motif version):\n");
 # else
 #  ifdef USE_GUI_ATHENA
-    mch_errmsg("\nOptions recognised by gvim (Athena version):\n");
+    mch_msg("\nOptions recognised by gvim (Athena version):\n");
 #  endif /* USE_GUI_ATHENA */
 # endif /* USE_GUI_MOTIF */
-    mch_errmsg("   -display <display>\tRun vim on <display>\n");
-    mch_errmsg("   -iconic\t\tStart vim iconified\n");
+    main_msg("-display <display>\tRun vim on <display>");
+    main_msg("-iconic\t\tStart vim iconified");
 # if 0
-    mch_errmsg("   -name <name>\t\tUse resource as if vim was <name>\n");
-    mch_errmsg("\t\t\t  (Unimplemented)\n");
+    main_msg("-name <name>\t\tUse resource as if vim was <name>");
+    mch_msg("\t\t\t  (Unimplemented)\n");
 # endif
-    mch_errmsg("   -background <color>\tUse <color> for the background (also: -bg)\n");
-    mch_errmsg("   -foreground <color>\tUse <color> for normal text (also: -fg)\n");
-    mch_errmsg("   -font <font>\t\tUse <font> for normal text (also: -fn)\n");
-    mch_errmsg("   -boldfont <font>\tUse <font> for bold text\n");
-    mch_errmsg("   -italicfont <font>\tUse <font> for italic text\n");
-    mch_errmsg("   -geometry <geom>\tUse <geom> for initial geometry (also: -geom)\n");
-    mch_errmsg("   -borderwidth <width>\tUse a border width of <width> (also: -bw)\n");
-    mch_errmsg("   -scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)\n");
-    mch_errmsg("   -menuheight <height>\tUse a menu bar height of <height> (also: -mh)\n");
-    mch_errmsg("   -reverse\t\tUse reverse video (also: -rv)\n");
-    mch_errmsg("   +reverse\t\tDon't use reverse video (also: +rv)\n");
-    mch_errmsg("   -xrm <resource>\tSet the specified resource\n");
+    main_msg("-background <color>\tUse <color> for the background (also: -bg)");
+    main_msg("-foreground <color>\tUse <color> for normal text (also: -fg)");
+    main_msg("-font <font>\t\tUse <font> for normal text (also: -fn)");
+    main_msg("-boldfont <font>\tUse <font> for bold text");
+    main_msg("-italicfont <font>\tUse <font> for italic text");
+    main_msg("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)");
+    main_msg("-borderwidth <width>\tUse a border width of <width> (also: -bw)");
+    main_msg("-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)");
+    main_msg("-menuheight <height>\tUse a menu bar height of <height> (also: -mh)");
+    main_msg("-reverse\t\tUse reverse video (also: -rv)");
+    main_msg("+reverse\t\tDon't use reverse video (also: +rv)");
+    main_msg("-xrm <resource>\tSet the specified resource");
 #endif /* USE_GUI_X11 */
 
     mch_windexit(1);
@@ -216,7 +230,11 @@ main(argc, argv)
     int		    stdout_isatty;	    /* is stdout a terminal? */
     int		    input_isatty;	    /* is active input a terminal? */
     OPARG	    oa;			    /* operator arguments */
-    WIN		    *wp;
+
+#ifdef RISCOS
+    /* Turn off all the horrible filename munging in UnixLib. */
+    __uname_control = __UNAME_NO_PROCESS;
+#endif
 
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
     /*
@@ -242,7 +260,7 @@ main(argc, argv)
 	{(char_u *)"<C-Insert> \"*y", VISUAL},
 	{(char_u *)"<S-Del> \"*d", VISUAL},
 	{(char_u *)"<C-Del> \"*d", VISUAL},
-	{(char_u *)"<C-X> \"\"d", VISUAL},
+	{(char_u *)"<C-X> \"*d", VISUAL},
 	/* Missing: CTRL-C (can't be mapped) and CTRL-V (means something) */
 # else
 	{(char_u *)"\316\204 H", NORMAL+VISUAL},    /* CTRL-PageUp is "H" */
@@ -294,6 +312,10 @@ main(argc, argv)
 	{(char_u *)"<D-x> \"*d", VISUAL},
 	{(char_u *)"<Backspace> \"\"d", VISUAL},
     };
+#endif
+
+#ifdef MEM_PROFILE
+    atexit(vim_mem_profile_dump);
 #endif
 
 #ifdef __EMX__
@@ -474,7 +496,7 @@ main(argc, argv)
 	    c = argv[0][argv_idx++];
 	    switch (c)
 	    {
-	    case NUL:	    /* "-"  read from stdin */
+	    case NUL:		/* "-"  read from stdin */
 		if (edit_type != EDIT_NONE)
 		    mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 		edit_type = EDIT_STDIN;
@@ -482,31 +504,43 @@ main(argc, argv)
 		argv_idx = -1;		/* skip to next argument */
 		break;
 
-	    case '-':	    /* "--" don't take any more options */
+	    case '-':		/* "--" don't take any more options */
+				/* "--help" give help message */
+				/* "--version" give version message */
+		if (STRCMP(argv[0] + argv_idx, "help") == 0)
+		    usage();
+		if (STRCMP(argv[0] + argv_idx, "version") == 0)
+		{
+		    Columns = 80;	/* need to init Columns */
+		    do_version((char_u *)"");
+		    mch_windexit(1);
+		}
+		if (argv[0][argv_idx])
+		    mainerr(ME_UNKNOWN_OPTION, (char_u *)argv[0]);
 		had_minmin = TRUE;
 		argv_idx = -1;		/* skip to next argument */
 		break;
 
-	    case 'b':	    /* "-b" binary mode */
+	    case 'b':		/* "-b" binary mode */
 		bin_mode = TRUE;    /* postpone to after reading .exrc files */
 		break;
 
-	    case 'C':	    /* "-C"  Compatible */
+	    case 'C':		/* "-C"  Compatible */
 		change_compatible(TRUE);
 		break;
 
-	    case 'e':	    /* "-e" Ex mode */
+	    case 'e':		/* "-e" Ex mode */
 		exmode_active = TRUE;
 		break;
 
-	    case 'f':	    /* "-f"  GUI: run in foreground.  Amiga: open
+	    case 'f':		/* "-f"  GUI: run in foreground.  Amiga: open
 				window directly, not with newcli */
 #ifdef USE_GUI
 		gui.dofork = FALSE;	/* don't fork() when starting GUI */
 #endif
 		break;
 
-	    case 'g':	    /* "-g" start GUI */
+	    case 'g':		/* "-g" start GUI */
 #ifdef USE_GUI
 		gui.starting = TRUE;	/* start GUI a bit later */
 #else
@@ -515,7 +549,7 @@ main(argc, argv)
 #endif
 		break;
 
-	    case 'F':	    /* "-F" start in Farsi mode: rl + fkmap set */
+	    case 'F':		/* "-F" start in Farsi mode: rl + fkmap set */
 #ifdef FKMAP
 		curwin->w_p_rl = p_fkmap = TRUE;
 #else
@@ -524,11 +558,11 @@ main(argc, argv)
 #endif
 		break;
 
-	    case 'h':	    /* "-h" give help message */
+	    case 'h':		/* "-h" give help message */
 		usage();
 		break;
 
-	    case 'H':	    /* "-H" start in Hebrew mode: rl + hkmap set */
+	    case 'H':		/* "-H" start in Hebrew mode: rl + hkmap set */
 #ifdef RIGHTLEFT
 		curwin->w_p_rl = p_hkmap = TRUE;
 #else
@@ -537,49 +571,49 @@ main(argc, argv)
 #endif
 		break;
 
-	    case 'l':	    /* "-l" lisp mode, 'lisp' and 'showmatch' on */
+	    case 'l':		/* "-l" lisp mode, 'lisp' and 'showmatch' on */
 #ifdef LISPINDENT
 		curbuf->b_p_lisp = TRUE;
 		p_sm = TRUE;
 #endif
 		break;
 
-	    case 'N':	    /* "-N"  Nocompatible */
+	    case 'N':		/* "-N"  Nocompatible */
 		change_compatible(FALSE);
 		break;
 
-	    case 'n':	    /* "-n" no swap file */
+	    case 'n':		/* "-n" no swap file */
 		no_swap_file = TRUE;
 		break;
 
-	    case 'o':	    /* "-o[N]" open N windows */
+	    case 'o':		/* "-o[N]" open N windows */
 		/* default is 0: open window for each file */
 		window_count = get_number_arg((char_u *)argv[0], &argv_idx, 0);
 		break;
 
 #ifdef QUICKFIX
-	    case 'q':	    /* "-q" QuickFix mode */
+	    case 'q':		/* "-q" QuickFix mode */
 		if (edit_type != EDIT_NONE)
 		    mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 		edit_type = EDIT_QF;
-		if (argv[0][argv_idx])		    /* "-q{errorfile}" */
+		if (argv[0][argv_idx])		/* "-q{errorfile}" */
 		{
 		    use_ef = (char_u *)argv[0] + argv_idx;
 		    argv_idx = -1;
 		}
-		else if (argc > 1)		    /* "-q {errorfile}" */
+		else if (argc > 1)		/* "-q {errorfile}" */
 		    want_argument = TRUE;
 		break;
 #endif
 
-	    case 'R':	    /* "-R" readonly mode */
+	    case 'R':		/* "-R" readonly mode */
 		readonlymode = TRUE;
 		curbuf->b_p_ro = TRUE;
-		p_uc = 10000;		    /* don't update very often */
+		p_uc = 10000;			/* don't update very often */
 		break;
 
-	    case 'r':	    /* "-r" recovery mode */
-	    case 'L':	    /* "-L" recovery mode */
+	    case 'r':		/* "-r" recovery mode */
+	    case 'L':		/* "-L" recovery mode */
 		recoverymode = 1;
 		break;
 
@@ -590,31 +624,31 @@ main(argc, argv)
 		    want_argument = TRUE;
 		break;
 
-	    case 't':	    /* "-t {tag}" or "-t{tag}" jump to tag */
+	    case 't':		/* "-t {tag}" or "-t{tag}" jump to tag */
 		if (edit_type != EDIT_NONE)
 		    mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 		edit_type = EDIT_TAG;
-		if (argv[0][argv_idx])	    /* "-t{tag}" */
+		if (argv[0][argv_idx])		/* "-t{tag}" */
 		{
 		    tagname = (char_u *)argv[0] + argv_idx;
 		    argv_idx = -1;
 		}
-		else			    /* "-t {tag}" */
+		else				/* "-t {tag}" */
 		    want_argument = TRUE;
 		break;
 
-	    case 'V':	    /* "-V{N}"	Verbose level */
+	    case 'V':		/* "-V{N}"	Verbose level */
 		/* default is 10: a little bit verbose */
 		p_verbose = get_number_arg((char_u *)argv[0], &argv_idx, 10);
 		break;
 
-	    case 'v':	    /* "-v"  Vi-mode (as if called "vi") */
+	    case 'v':		/* "-v"  Vi-mode (as if called "vi") */
 		exmode_active = FALSE;
 		break;
 
-	    case 'w':	    /* "-w{number}"	set window height */
-			    /* "-w {scriptout}"	write to script */
-		if (isdigit(argv[0][argv_idx]))
+	    case 'w':		/* "-w{number}"	set window height */
+				/* "-w {scriptout}"	write to script */
+		if (isdigit(((char_u *)argv[0])[argv_idx]))
 		{
 		    argv_idx = -1;
 		    break;			/* not implemented, ignored */
@@ -626,17 +660,17 @@ main(argc, argv)
 		/* TODO */
 		break;
 
-	    case 'Z':	    /* "-Z"  restricted mode */
+	    case 'Z':		/* "-Z"  restricted mode */
 		restricted = TRUE;
 		break;
 
-	    case 'c':	    /* "-c {command}" execute command */
-	    case 'd':	    /* "-d {device}" device (for Amiga) */
-	    case 'i':	    /* "-i {viminfo}" use for viminfo */
-	    case 'T':	    /* "-T {terminal}" terminal name */
-	    case 'u':	    /* "-u {vimrc}" vim inits file */
-	    case 'U':	    /* "-U {gvimrc}" gvim inits file */
-	    case 'W':	    /* "-W {scriptout}" overwrite */
+	    case 'c':		/* "-c {command}" execute command */
+	    case 'd':		/* "-d {device}" device (for Amiga) */
+	    case 'i':		/* "-i {viminfo}" use for viminfo */
+	    case 'T':		/* "-T {terminal}" terminal name */
+	    case 'u':		/* "-u {vimrc}" vim inits file */
+	    case 'U':		/* "-U {gvimrc}" gvim inits file */
+	    case 'W':		/* "-W {scriptout}" overwrite */
 		want_argument = TRUE;
 		break;
 
@@ -663,7 +697,7 @@ main(argc, argv)
 
 		switch (c)
 		{
-		case 'c':	    /* "-c {command}" execute command */
+		case 'c':	/* "-c {command}" execute command */
 		    if (n_commands >= MAX_ARG_CMDS)
 			mainerr(ME_EXTRA_CMD, NULL);
 		    commands[n_commands++] = (char_u *)argv[0];
@@ -672,16 +706,16 @@ main(argc, argv)
 	    /*	case 'd':   This is handled in mch_check_win() */
 
 #ifdef QUICKFIX
-		case 'q':	    /* "-q {errorfile}" QuickFix mode */
+		case 'q':	/* "-q {errorfile}" QuickFix mode */
 		    use_ef = (char_u *)argv[0];
 		    break;
 #endif
 
-		case 'i':	    /* "-i {viminfo}" use for viminfo */
+		case 'i':	/* "-i {viminfo}" use for viminfo */
 		    use_viminfo = (char_u *)argv[0];
 		    break;
 
-		case 's':	    /* "-s {scriptin}" read from script file */
+		case 's':	/* "-s {scriptin}" read from script file */
 		    if (scriptin[0] != NULL)
 		    {
 			mch_errmsg("Attempt to open script file again: \"");
@@ -702,11 +736,11 @@ main(argc, argv)
 			mch_windexit(2);	/* out of memory */
 		    break;
 
-		case 't':	    /* "-t {tag}" */
+		case 't':	/* "-t {tag}" */
 		    tagname = (char_u *)argv[0];
 		    break;
 
-		case 'T':	    /* "-T {terminal}" terminal name */
+		case 'T':	/* "-T {terminal}" terminal name */
 		    /*
 		     * The -T term option is always available and when
 		     * HAVE_TERMLIB is supported it overrides the environment
@@ -720,16 +754,16 @@ main(argc, argv)
 			term = (char_u *)argv[0];
 		    break;
 
-		case 'u':	    /* "-u {vimrc}" vim inits file */
+		case 'u':	/* "-u {vimrc}" vim inits file */
 		    use_vimrc = (char_u *)argv[0];
 		    break;
 
-		case 'U':	    /* "-U {gvimrc}" gvim inits file */
+		case 'U':	/* "-U {gvimrc}" gvim inits file */
 		    use_gvimrc = (char_u *)argv[0];
 		    break;
 
-		case 'w':	    /* "-w {scriptout}" append to script file */
-		case 'W':	    /* "-W {scriptout}" overwrite script file */
+		case 'w':	/* "-w {scriptout}" append to script file */
+		case 'W':	/* "-W {scriptout}" overwrite script file */
 		    if (scriptout != NULL)
 		    {
 			mch_errmsg("Attempt to open script file again: \"");
@@ -801,6 +835,20 @@ main(argc, argv)
     }
     if (arg_file_count > 1)
 	printf("%d files to edit\n", arg_file_count);
+#ifdef WIN32
+    else if (arg_file_count == 1)
+    {
+	/*
+	 * If there is one filename, fully qualified, we have very probably
+	 * been invoked from explorer, so change to the file's directory.
+	 */
+	if (fname[0] != NUL && fname[1] == ':' && fname[2] == '\\')
+	{
+	    /* If the cd fails, it doesn't matter.. */
+	    (void)vim_chdirfile(fname);
+	}
+    }
+#endif
 
     RedrawingDisabled = TRUE;
 
@@ -891,7 +939,7 @@ main(argc, argv)
 #endif
 
     init_highlight(TRUE);	/* set the default highlight groups */
-#ifdef USE_GUI
+#ifdef CURSOR_SHAPE
     parse_guicursor();		/* set cursor shapes from 'guicursor' */
 #endif
 
@@ -1075,7 +1123,7 @@ main(argc, argv)
     {
 	if (use_ef != NULL)
 	    set_string_option_direct((char_u *)"ef", -1, use_ef, TRUE);
-	if (qf_init(p_ef) < 0)
+	if (qf_init(p_ef, p_efm) < 0)
 	{
 	    out_char('\n');
 	    mch_windexit(3);
@@ -1230,7 +1278,7 @@ main(argc, argv)
 	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 
 #ifdef AUTOCMD
-    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
+    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
     setpcmark();
 
@@ -1297,12 +1345,18 @@ main(argc, argv)
 	(void)buflist_add(arg_files[arg_idx++]);
 
     /*
+     * Now shorten any of the filenames if possible
+     */
+    shorten_fnames();
+
+    /*
      * Need to jump to the tag before executing the '-c command'.
      * Makes "vim -c '/return' -t main" work.
      */
     if (tagname)
     {
 	STRCPY(IObuff, "ta ");
+
 	STRCAT(IObuff, tagname);
 	do_cmdline(IObuff, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
     }
@@ -1337,7 +1391,11 @@ main(argc, argv)
 	need_start_insertmode = TRUE;
 
 #ifdef AUTOCMD
-    apply_autocmds(EVENT_VIMENTER, NULL, NULL, FALSE);
+    apply_autocmds(EVENT_VIMENTER, NULL, NULL, FALSE, curbuf);
+#endif
+
+#if defined(WIN32) && !defined(USE_GUI_WIN32)
+    mch_set_winsize_now();	    /* Allow winsize changes from now on */
 #endif
 
     /*
@@ -1352,7 +1410,7 @@ main(argc, argv)
 		check_timestamps();
 	    if (need_wait_return)	/* if wait_return still needed ... */
 		wait_return(FALSE);	/* ... call it now */
-	    if (need_start_insertmode)
+	    if (need_start_insertmode && goto_im())
 	    {
 		need_start_insertmode = FALSE;
 		stuffReadbuff((char_u *)"i");	/* start insert mode next */
@@ -1393,9 +1451,7 @@ main(argc, argv)
 		update_screen(must_redraw);
 	    else if (redraw_cmdline || clear_cmdline)
 		showmode();
-	    for (wp = firstwin; wp; wp = wp->w_next)
-		if (wp->w_redr_status)
-		    win_redr_status(wp);
+	    redraw_statuslines();
 	    /* display message after redraw */
 	    if (keep_msg != NULL)
 		msg_attr(keep_msg, keep_msg_attr);
@@ -1413,6 +1469,10 @@ main(argc, argv)
 	    setcursor();
 	    cursor_on();
 	}
+#ifdef USE_GUI
+	if (need_mouse_correct)
+	    gui_mouse_correct();
+#endif
 
 	/*
 	 * Update w_curswant if w_set_curswant has been set.
@@ -1463,12 +1523,14 @@ process_env(env)
     char_u	*env;
 {
     char_u	*initstr;
+    char_u	*save_sourcing_name;
 
-    if ((initstr = vim_getenv(env)) != NULL && *initstr != NUL)
+    if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
     {
+	save_sourcing_name = sourcing_name;
 	sourcing_name = env;
 	do_cmdline(initstr, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
-	sourcing_name = NULL;
+	sourcing_name = save_sourcing_name;
 	return OK;
     }
     return FAIL;
@@ -1486,8 +1548,8 @@ getout(r)
 #endif
 	windgoto((int)Rows - 1, 0);
 
-#ifdef HAVE_PERL_INTERP
-    perl_end();
+#ifdef AUTOCMD
+    apply_autocmds(EVENT_VIMLEAVEPRE, NULL, NULL, FALSE, curbuf);
 #endif
 
 #ifdef VIMINFO
@@ -1505,7 +1567,7 @@ getout(r)
 #endif /* VIMINFO */
 
 #ifdef AUTOCMD
-    apply_autocmds(EVENT_VIMLEAVE, NULL, NULL, FALSE);
+    apply_autocmds(EVENT_VIMLEAVE, NULL, NULL, FALSE, curbuf);
 
     /* Position the cursor again, the autocommands may have moved it */
 # ifdef USE_GUI
@@ -1514,12 +1576,16 @@ getout(r)
 	windgoto((int)Rows - 1, 0);
 #endif
 
+#ifdef HAVE_PERL_INTERP
+    perl_end();
+#endif
+
     mch_windexit(r);
 }
 
 /*
  * When FKMAP is defined, also compile the Farsi source code.
  */
-#ifdef FKMAP
+#if defined(FKMAP) || defined(PROTO)
 # include "farsi.c"
 #endif

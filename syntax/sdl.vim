@@ -27,7 +27,7 @@ syn keyword sdlExported		remote exported imported
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
-syn match   sdlSpecial		contained "\\[0-9][0-9][0-9]\|\\."
+syn match   sdlSpecial		contained "\\\d\d\d\|\\."
 syn region  sdlString		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=cSpecial
 syn region  sdlString		start=+'+  skip=+''+  end=+'+
 

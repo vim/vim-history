@@ -31,3 +31,4 @@ void trash_input_buf __ARGS((void));
 int read_from_input_buf __ARGS((char_u *buf, long maxlen));
 void fill_input_buf __ARGS((int exit_on_error));
 void read_error_exit __ARGS((void));
+void ui_cursor_shape __ARGS((void));

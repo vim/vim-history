@@ -2,28 +2,28 @@
 " Language:	Matlab
 " Maintainer:	Preben "Peppe" Guldberg <c928400@student.dtu.dk>
 "		Original author: Mario Eusebio
-" Last change:	Fri Jan 30 02:36:39 1998
+" Last change:	Tue Jul 28 17:44:06 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
 
-syn keyword matlabStatement		continue return
+syn keyword matlabStatement		return
 syn keyword matlabLabel			case switch
 syn keyword matlabConditional		else elseif end if otherwise
 syn keyword matlabRepeat		do for while
 
-syn keyword matlabTodo 			contained  TODO
+syn keyword matlabTodo			contained  TODO
 
 " If you do not want these operators lit, uncommment them and the "hi link" below
 syn match matlabArithmeticOperator	"[-+]"
 syn match matlabArithmeticOperator	"\.\=[*/\\^]"
 syn match matlabRelationalOperator	"[=~]="
 syn match matlabRelationalOperator	"[<>]=\="
-syn match matlabLogicalOperator    	"[&|~]"
+syn match matlabLogicalOperator		"[&|~]"
 
-syn match matlabLineContinuation	"\.\.\."
+syn match matlabLineContinuation	"\.\{3}"
 
-"syn match matlabIdentifier		"\<[a-zA-Z_][a-zA-Z0-9_]*\>"
+"syn match matlabIdentifier		"\<\a\w*\>"
 
 " String
 syn region matlabString			start=+'+ end=+'+	oneline
@@ -32,31 +32,31 @@ syn region matlabString			start=+'+ end=+'+	oneline
 syn match matlabTab			"\t"
 
 " Standard numbers
-syn match matlabNumber		"\<[0-9]\+[ij]\=\>"
+syn match matlabNumber		"\<\d\+[ij]\=\>"
 " floating point number, with dot, optional exponent
-syn match matlabFloat		"\<[0-9]\+\.[0-9]*\([edED][-+]\=[0-9]\+\)\=[ij]\=\>"
+syn match matlabFloat		"\<\d\+\(\.\d*\)\=\([edED][-+]\=\d\+\)\=[ij]\=\>"
 " floating point number, starting with a dot, optional exponent
-syn match matlabFloat		"\.[0-9]\+\([edED][-+]\=[0-9]\+\)\=[ij]\=\>"
-" floating point number, without dot, with exponent
-syn match matlabFloat		"\<[0-9]\+[edED][-+]\=[0-9]\+[ij]\=\>"
+syn match matlabFloat		"\.\d\+\([edED][-+]\=\d\+\)\=[ij]\=\>"
 
 " Transpose character and delimiters: Either use just [...] or (...) aswell
 syn match matlabDelimiter		"[][]"
-"syn match  matlabDelimiter		"[][()]"
+"syn match matlabDelimiter		"[][()]"
 syn match matlabTransposeOperator	"[])a-zA-Z0-9.]'"lc=1
 
-syn match matlabComment		"%.*$"	contains=matlabTodo,matlabTab
+syn match matlabSemicolon		";"
 
-syn keyword matlabOperator		break zeros default margin round
-syn keyword matlabOperator		ceil floor size clear zeros eye mean
+syn match matlabComment			"%.*$"	contains=matlabTodo,matlabTab
+
+syn keyword matlabOperator		break zeros default margin round ones rand
+syn keyword matlabOperator		ceil floor size clear zeros eye mean std cov
 
 syn keyword matlabFunction		error eval function
 
-syn keyword matlabImplicit		abs acos atan asin cos cosh exp log
-syn keyword matlabImplicit		log10 max min sign sin sqrt tan
+syn keyword matlabImplicit		abs acos atan asin cos cosh exp log prod sum
+syn keyword matlabImplicit		log10 max min sign sin sqrt tan reshape
 
-syn match matlabError	"-\=\<[0-9]\+\.[0-9]\+\.[^*/\\^]"
-syn match matlabError	"-\=\<[0-9]\+\.[0-9]\+[eEdD][-+]\=[0-9]\+\.\([^*/\\^]\)"
+syn match matlabError	"-\=\<\d\+\.\d\+\.[^*/\\^]"
+syn match matlabError	"-\=\<\d\+\.\d\+[eEdD][-+]\=\d\+\.\([^*/\\^]\)"
 
 if !exists("did_matlab_syntax_inits")
   let did_matlab_syntax_inits = 1
@@ -77,6 +77,7 @@ if !exists("did_matlab_syntax_inits")
   hi link matlabError			Error
   hi link matlabImplicit		matlabStatement
   hi link matlabStatement		Statement
+  hi link matlabSemicolon		SpecialChar
   hi link matlabComment			Comment
 
   hi link matlabArithmeticOperator	matlabOperator

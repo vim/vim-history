@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language   : sendmail
-" Maintainer : Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
 " Last change: September 29, 1997
 
 " Remove any old syntax stuff hanging around
@@ -25,7 +25,7 @@ syn match smHeader	"^H\(?[a-zA-Z]\+?\)\=[-a-zA-Z_]\+:" contains=smHeaderSep
 syn match smVar		"\$[a-z]"
 
 " Rulesets
-syn match smRuleset	"^S[0-9]*"
+syn match smRuleset	"^S\d*"
 
 " Rewriting Rules
 syn match smRewrite	"^R"			nextgroup=smRewriteLhsToken,smRewriteLhsUser
@@ -36,7 +36,7 @@ syn match smRewriteLhsToken	contained "\(\$[-*+]\|\$[-=][A-Za-z]\)\+"	nextgroup=
 syn match smRewriteLhsSep	contained "\t\+"			nextgroup=smRewriteRhsToken,smRewriteRhsUser
 
 syn match smRewriteRhsUser	contained "[^\t$]\+"		nextgroup=smRewriteRhsToken,smRewriteRhsSep
-syn match smRewriteRhsToken	contained "\(\$[0-9]\|\$>[0-9]\|\$#\|\$@\|\$:[-_a-zA-Z]\+\|\$[[\]]\|\$@\|\$:\|\$[A-Za-z]\)\+" nextgroup=smRewriteRhsUser,smRewriteRhsSep
+syn match smRewriteRhsToken	contained "\(\$\d\|\$>\d\|\$#\|\$@\|\$:[-_a-zA-Z]\+\|\$[[\]]\|\$@\|\$:\|\$[A-Za-z]\)\+" nextgroup=smRewriteRhsUser,smRewriteRhsSep
 
 syn match smRewriteRhsSep	contained "\t\+"			nextgroup=smRewriteComment,smRewriteRhsSep
 syn match smRewriteRhsSep	contained "$"

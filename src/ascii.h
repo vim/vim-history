@@ -27,9 +27,10 @@
 
 /*
  * Character that separates dir names in a path.
- * For MS-DOS, WIN32 and OS/2 we use the backslash.  A slash mostly works
+ * For MS-DOS, WIN32 and OS/2 we use a backslash.  A slash mostly works
  * fine, but there are places where it doesn't (e.g. in a command name).
- * For Macintosh we use the colon.
+ * For Macintosh we use a colon.
+ * For Acorn we use a dot.
  */
 #ifdef BACKSLASH_IN_FILENAME
 # define PATHSEP '\\'
@@ -39,7 +40,12 @@
 #  define PATHSEP ':'
 #  define PATHSEPSTR ":"
 # else
-#  define PATHSEP '/'
-#  define PATHSEPSTR "/"
+#  ifdef RISCOS
+#   define PATHSEP '.'
+#   define PATHSEPSTR "."
+#  else
+#   define PATHSEP '/'
+#   define PATHSEPSTR "/"
+#  endif
 # endif
 #endif

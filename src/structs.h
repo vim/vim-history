@@ -47,7 +47,7 @@ struct fpos
  */
 
 #define NMARKS		26	    /* max. # of named marks */
-#define JUMPLISTSIZE	30	    /* max. # of marks in jump list */
+#define JUMPLISTSIZE	50	    /* max. # of marks in jump list */
 #define TAGSTACKSIZE	20	    /* max. # of tags in tag stack */
 
 struct filemark
@@ -77,15 +77,14 @@ struct taggy
  */
 
 typedef struct window	    WIN;
-typedef struct winlnum	    WINLNUM;
+typedef struct winfpos	    WINFPOS;
 
-struct winlnum
+struct winfpos
 {
-    WINLNUM	*wl_next;	    /* next entry or NULL for last entry */
-    WINLNUM	*wl_prev;	    /* previous entry or NULL for first entry */
+    WINFPOS	*wl_next;	    /* next entry or NULL for last entry */
+    WINFPOS	*wl_prev;	    /* previous entry or NULL for first entry */
     WIN		*wl_win;	    /* pointer to window that did set wl_lnum */
-    linenr_t	 wl_lnum;	    /* last cursor line in the file */
-    colnr_t	 wl_col;	    /* idem, column */
+    FPOS	wl_fpos;	    /* last cursor position in the file */
 };
 
 /*
@@ -302,6 +301,7 @@ struct memline
 struct keyentry
 {
     struct keyentry *next;	/* next keyword in the hash list */
+    int		    syn_inc_lvl;    /* ":syn include" level for this match */
     short	    syn_id;	/* syntax ID for this match (if non-zero) */
     short	    *next_list;	/* ID list for next match (if non-zero) */
     short	    flags;	/* see syntax.c */
@@ -395,7 +395,7 @@ struct buffer
 #endif
 
     int		     b_fnum;		/* file number for this file. */
-    WINLNUM	    *b_winlnum;		/* list of last used lnum for
+    WINFPOS	    *b_winfpos;		/* list of last used lnum for
 					 * each window */
 
     long	     b_mtime;		/* last change time of original file */
@@ -465,14 +465,18 @@ struct buffer
 #ifdef INSERT_EXPAND
     char_u	    *b_p_cpt;		/* 'complete', types of expansions */
 #endif
-    int		     b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_tx;
+    int		     b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_tx, b_p_swf;
 #ifndef SHORT_FNAME
     int		     b_p_sn;
 #endif
 
     long	     b_p_sw, b_p_sts, b_p_ts, b_p_tw, b_p_wm;
     char_u	    *b_p_ff, *b_p_fo, *b_p_com, *b_p_isk;
+#ifdef MULTI_BYTE
+    char_u	    *b_p_fe;
+#endif
     char_u	    *b_p_nf;	    /* Number formats */
+    char_u	    *b_p_mps;
 
     /* saved values for when 'bin' is set */
     long	     b_p_wm_nobin, b_p_tw_nobin;
@@ -493,6 +497,12 @@ struct buffer
 #endif
 #if defined(CINDENT) || defined(SMARTINDENT)
     char_u	    *b_p_cinw;	    /* words extra indent for 'si' and 'cin' */
+#endif
+#ifdef SYNTAX_HL
+    char_u	    *b_p_syn;	    /* 'syntax' */
+#endif
+#ifdef WANT_FILETYPE
+    char_u	    *b_p_ft;	    /* Value of 'filetype' option */
 #endif
     /* end of buffer options */
 
@@ -524,11 +534,16 @@ struct buffer
 				     * this buffer */
 #endif
 
+#ifdef HAVE_TCL
+    void	    *tcl_ref;
+#endif
+
 #ifdef SYNTAX_HL
     struct keyentry	**b_keywtab;	      /* syntax keywords hash table */
     struct keyentry	**b_keywtab_ic;	      /* idem, ignore case */
     int			b_syn_ic;	      /* ignore case for :syn cmds */
     struct growarray	b_syn_patterns;	      /* table for syntax patterns */
+    struct growarray	b_syn_clusters;	      /* table for syntax clusters */
     int			b_syn_sync_flags;     /* flags about how to sync */
     short		b_syn_sync_id;	      /* group to sync on */
     long		b_syn_sync_minlines;  /* minimal sync lines offset */
@@ -536,6 +551,7 @@ struct buffer
     char_u		*b_syn_linecont_pat;  /* line continuation pattern */
     vim_regexp		*b_syn_linecont_prog; /* line continuation program */
     int			b_syn_linecont_ic;    /* ignore-case flag for above */
+    int			b_syn_topgrp;	      /* for ":syntax include" */
 /*
  * b_syn_states[] contains the state stack for a number of consecutive lines,
  * for the start of that line (col == 0).
@@ -552,7 +568,6 @@ struct buffer
     linenr_t		b_syn_states_lnum;
     linenr_t		b_syn_change_lnum;
 #endif /* SYNTAX_HL */
-
 };
 
 /*
@@ -637,7 +652,10 @@ struct window
     colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
     char	w_ru_empty;	    /* TRUE if ruler shows 0-1 (empty line) */
 
-    colnr_t	w_leftcol;	    /* starting column of the screen */
+    colnr_t	w_leftcol;	    /* starting column of the screen when
+				     * 'wrap' is off */
+    colnr_t	w_skipcol;	    /* starting column when a single line
+				       doesn't fit in the window */
 
 /*
  * The height of the lines currently in the window is remembered
@@ -649,7 +667,8 @@ struct window
 
     int		w_alt_fnum;	    /* alternate file (for # and CTRL-^) */
 
-    int		w_arg_idx;	    /* current index in argument list */
+    int		w_arg_idx;	    /* current index in argument list (can be
+				     * out of range!) */
     int		w_arg_idx_invalid;  /* editing another file then w_arg_idx */
 
     /*
@@ -719,6 +738,10 @@ struct window
     void	    *python_ref;    /* The Python value referring to
 				     * this window */
 #endif
+
+#ifdef HAVE_TCL
+    void	    *tcl_ref;
+#endif
 };
 
 /*
@@ -758,3 +781,35 @@ typedef struct cmdarg
     long    count0;	    /* count, default 0 */
     long    count1;	    /* count, default 1 */
 } CMDARG;
+
+#ifdef CURSOR_SHAPE
+/*
+ * struct to store values from 'guicursor'
+ */
+#define SHAPE_N		0   /* Normal mode */
+#define SHAPE_V		1   /* Visual mode */
+#define SHAPE_I		2   /* Insert mode */
+#define SHAPE_R		3   /* Replace mode */
+#define SHAPE_C		4   /* Command line Normal mode */
+#define SHAPE_CI	5   /* Command line Insert mode */
+#define SHAPE_CR	6   /* Command line Replace mode */
+#define SHAPE_SM	7   /* showing matching paren */
+#define SHAPE_O		8   /* Operator-pending mode */
+#define SHAPE_VE	9   /* Visual mode with 'seleciton' exclusive */
+#define SHAPE_COUNT	10
+
+#define SHAPE_BLOCK	0   /* block cursor */
+#define SHAPE_HOR	1   /* horizontal bar cursor */
+#define SHAPE_VER	2   /* vertical bar cursor */
+
+struct cursor_entry
+{
+    int	    shape;	    /* one of the SHAPE_ defines */
+    int	    percentage;	    /* percentage of cell for bar */
+    long    blinkwait;	    /* blinking, wait time before blinking starts */
+    long    blinkon;	    /* blinking, on time */
+    long    blinkoff;	    /* blinking, off time */
+    int	    id;		    /* highlight group ID */
+    char    *name;	    /* mode name (fixed) */
+};
+#endif

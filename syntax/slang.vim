@@ -16,32 +16,32 @@ syn keyword slangOperator	or and andelse orelse shr shl xor not
 syn keyword slangBlock		EXIT_BLOCK ERROR_BLOCK
 syn match slangBlock		"\<USER_BLOCK[0-4]\>"
 syn keyword slangConstant	NULL
-syn keyword slangType 		Integer_Type Double_Type Complex_Type String_Type Struct_Type Ref_Type Null_Type Array_Type DataType_Type
+syn keyword slangType		Integer_Type Double_Type Complex_Type String_Type Struct_Type Ref_Type Null_Type Array_Type DataType_Type
 
-syn match slangOctal		"\<0[0-9]\+\>" contains=slangOctalError
+syn match slangOctal		"\<0\d\+\>" contains=slangOctalError
 syn match slangOctalError	"[89]\+" contained
 syn match slangHex		"\<0[xX][0-9A-Fa-f]*\>"
-syn match slangDecimal		"\<[1-9][0-9]*\>"
-syn match slangFloat		"\<[0-9]\+\."
-syn match slangFloat		"\<[0-9]\+\.[0-9]\+\([Ee][-+]\=[0-9]\+\)\=\>"
-syn match slangFloat		"\<[0-9]\+\.[Ee][-+]\=[0-9]\+\>"
-syn match slangFloat		"\<[0-9]\+[Ee][-+]\=[0-9]\+\>"
-syn match slangFloat		"\.[0-9]\+\([Ee][-+]\=[0-9]\+\)\=\>"
-syn match slangImaginary	"\.[0-9]\+\([Ee][-+]\=[0-9]*\)\=[ij]\>"
-syn match slangImaginary	"\<[0-9]\+\(\.[0-9]*\)\=\([Ee][-+]\=[0-9]\+\)\=[ij]\>"
+syn match slangDecimal		"\<[1-9]\d*\>"
+syn match slangFloat		"\<\d\+\."
+syn match slangFloat		"\<\d\+\.\d\+\([Ee][-+]\=\d\+\)\=\>"
+syn match slangFloat		"\<\d\+\.[Ee][-+]\=\d\+\>"
+syn match slangFloat		"\<\d\+[Ee][-+]\=\d\+\>"
+syn match slangFloat		"\.\d\+\([Ee][-+]\=\d\+\)\=\>"
+syn match slangImaginary	"\.\d\+\([Ee][-+]\=\d*\)\=[ij]\>"
+syn match slangImaginary	"\<\d\+\(\.\d*\)\=\([Ee][-+]\=\d\+\)\=[ij]\>"
 
 syn region slangString oneline start='"' end='"' skip='\\"'
 syn match slangCharacter	"'[^\\]'"
 syn match slangCharacter	"'\\.'"
 syn match slangCharacter	"'\\[0-7]\{1,3}'"
-syn match slangCharacter	"'\\d[0-9]\{1,3}'"
+syn match slangCharacter	"'\\d\d\{1,3}'"
 syn match slangCharacter	"'\\x[0-7a-fA-F]\{1,2}'"
 
 syn match slangDelim		"[][{};:,]"
 syn match slangOperator		"[-%+/&*=<>|!~^@]"
 
 "catch errors caused by wrong parenthesis
-syn region slangParen 	matchgroup=slangDelim transparent start='(' end=')' contains=ALLBUT,slangParenError
+syn region slangParen	matchgroup=slangDelim transparent start='(' end=')' contains=ALLBUT,slangParenError
 syn match slangParenError	")"
 
 syn match slangComment		"%.*$"

@@ -2,7 +2,7 @@
 " Language:	JavaCC, a Java Compiler Compiler written by JavaSoft
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javacc.vim
-" Last change:	1998 Feb 6
+" Last change:	1998 Jul 22
 
 " Uses java.vim, and adds a few special things for JavaCC Parser files.
 " Those files usually have the extension  *.jj
@@ -12,21 +12,20 @@ source <sfile>:p:h/java.vim
 
 "remove catching errors caused by wrong parenthesis (does not work in javacc
 "files) (first define them in case they have not been defined in java)
-syn match 	javaParen "--"
-syn match 	javaParenError "--"
-syn match 	javaInParen "--"
-syn match 	javaError2 "--"
+syn match	javaParen "--"
+syn match	javaParenError "--"
+syn match	javaInParen "--"
+syn match	javaError2 "--"
 syn clear	javaParen
 syn clear	javaParenError
-syn clear 	javaInParen
-syn clear 	javaError2
+syn clear	javaInParen
+syn clear	javaError2
 
 " remove function definitions (they look different) (first define in
 " in case it was not defined in java.vim)
 "syn match javaFuncDef "--"
 syn clear javaFuncDef
-syn match javaFuncDef "[a-zA-Z][a-zA-Z0-9_. \[\]]*([^-+*/()]*)[ \t]*:" contains=javaType
-" syn region javaFuncDef start=+t[a-zA-Z][a-zA-Z0-9_. \[\]]*([^-+*/()]*,[ 	]*+ end=+)[ \t]*:+
+syn match javaFuncDef "[$_a-zA-Z][$_a-zA-Z0-9_. \[\]]*([^-+*/()]*)[ \t]*:" contains=javaType
 
 syn keyword javaccPackages options DEBUG_PARSER DEBUG_LOOKAHEAD DEBUG_TOKEN_MANAGER
 syn keyword javaccPackages COMMON_TOKEN_ACTION IGNORE_CASE CHOICE_AMBIGUITY_CHECK

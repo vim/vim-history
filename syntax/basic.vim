@@ -40,21 +40,21 @@ syn keyword basicFunction	STR$ STRING$ TIME$ UCASE$ VARPTR$
 syn keyword basicTodo contained	TODO
 
 "integer number, or floating point number without a dot.
-syn match  basicNumber		"\<[0-9]\+\>"
+syn match  basicNumber		"\<\d\+\>"
 "floating point number, with dot
-syn match  basicNumber		"\<[0-9]\+\.[0-9]*\>"
+syn match  basicNumber		"\<\d\+\.\d*\>"
 "floating point number, starting with a dot
-syn match  basicNumber		"\.[0-9]\+\>"
+syn match  basicNumber		"\.\d\+\>"
 
 " String and Character contstants
-syn match   basicSpecial contained "\\[0-9][0-9][0-9]\|\\."
+syn match   basicSpecial contained "\\\d\d\d\|\\."
 syn region  basicString		  start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=basicSpecial
 
 syn region  basicComment	start="REM" end="$" contains=basicTodo
-syn region  basicLineNumber	start="^[0-9]" end="\s"
+syn region  basicLineNumber	start="^\d" end="\s"
 syn match   basicTypeSpecifier  "[a-zA-Z0-9][\$%&!#]"ms=s+1
 " Used with OPEN statement
-syn match   basicFilenumber  "#[0-9]\+"
+syn match   basicFilenumber  "#\d\+"
 "syn sync ccomment basicComment
 " syn match   basicMathsOperator "[<>+\*^/\\=-]"
 syn match   basicMathsOperator   "-\|=\|[:<>+\*^/\\]\|AND\|OR"

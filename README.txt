@@ -1,4 +1,7 @@
-README.txt for version 5.1 of Vim: Vi IMproved.
+README.txt for version 5.2 of Vim: Vi IMproved.
+
+
+WHAT IS VIM
 
 Vim is an almost compatible version of the UNIX editor Vi.  Many new features
 have been added: multi level undo, syntax highlighting, command line history,
@@ -11,17 +14,31 @@ with ten fingers can work very fast.  Additionally, function keys can be
 defined by the user, and the mouse can be used.
 
 Vim currently runs under Amiga DOS, MS-DOS, Windows NT, Windows 95, Atari
-MiNT, Macintosh, VMS, OS/2 and almost all flavours of UNIX.  There are some
-things included for the Archimedes, but it does not work yet.  Porting to
-other systems should not be very difficult.
+MiNT, Macintosh, VMS, RISC OS, OS/2 and almost all flavours of UNIX.
+Porting to other systems should not be very difficult.
 
-Documentation:
+
+DISTRIBUTION
+
+There are separate distributions for Unix, PC, Amiga and some other systems.
+This README.txt file comes with the runtime archive.  It includes the
+documentation, syntax files and other files that are used at runtime.  To run
+Vim you must get either one of the binary archives or a source archive.
+Which one you need depends on the system you want to run it on and whether you
+want or must compile it yourself.  Check the ftp site for an overview of
+currently available distributions.
+
+
+DOCUMENTATION
+
 The best is to use ":help" in Vim.  If you don't have an executable (yet),
 read doc/help.txt.  It contains pointers to the other documentation files.
 
 "tutor/README" is a one hour training course for beginners.
 
-Copying:
+
+COPYING
+
 Vim is Charityware.  You can use and copy it as much as you like, but you are
 encouraged to make a donation to orphans in Uganda.  Please read the file
 "doc/uganda.txt" for details.
@@ -35,24 +52,27 @@ CD-ROM or in any other way.  You are also allowed to include executables, made
 from the unmodified Vim sources.
 
 If you distribute a modified version of Vim, you must send the maintainer a
-copy, including the source code.  Or make it available to the maintainer
-through ftp; let him know where It can be found.  If the number of changes is
-small (e.g., a modified Makefile) e-mailing the diffs will do.  The maintainer
-preserves the right to include any changes in the official version of Vim.  It
-is not allowed to distribute a modified version of Vim without making the
-source code available to the maintainer.
-The current maintainer is Bram Moolenaar (Bram@vim.org).  If this changes, it
-will be announced in appropriate places (most likely www.vim.org and
-comp.editors).
+copy of the source code.  Or make it available to the maintainer through ftp;
+let him know where It can be found.  If the number of changes is small (e.g.,
+a modified Makefile) e-mailing the diffs will do.  The maintainer preserves
+the right to include any changes in the official version of Vim.  It is not
+allowed to distribute a modified version of Vim without making the source code
+available to the maintainer.  The current maintainer is Bram Moolenaar
+(Bram@vim.org).  If this changes, it will be announced in appropriate places
+(most likely www.vim.org and comp.editors).
 It is not allowed to remove these restrictions from the distribution of the
 Vim sources.
 
-Compiling:
+
+COMPILING
+
 All stuff for compiling Vim is in the "src" directory.  See src/INSTALL for
 instructions.
 
 
-The latest news about Vim can be found in the Vim home page:
+INFORMATION
+
+The latest news about Vim can be found on the Vim home page:
 	<URL:http://www.vim.org/>
 
 If you have problems, have a look at the Vim FAQ:
@@ -83,7 +103,10 @@ NOTE:
 If you want to join, send a message to
 	<vim-help@vim.org>
 Make sure that your "From:" address is correct.  Then the list server will
-give you a little help.
+send you a help message.
+
+
+MAIN AUTHOR
 
 Send any other comments, patches, pizza and suggestions to:
 

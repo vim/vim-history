@@ -98,13 +98,13 @@ syn match rcInParen contained	"[{}]"
 
 "integer number, or floating point number without a dot and with "f".
 syn case ignore
-syn match rcNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match rcNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match rcFloat		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match rcFloat		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match rcFloat		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match rcFloat		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match rcFloat		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match rcFloat		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match rcNumber		"\<0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 "syn match rcIdentifier	"\<[a-z_][a-z0-9_]*\>"

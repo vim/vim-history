@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Lisp
-" Maintainer:	Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
 " Last change:	December 9, 1997
 
 " remove any old syntax stuff hanging around
@@ -20,7 +20,7 @@ syn match	lispAtom	"'[^ \t()]\+"	contains=lispAtomMark
 syn match	lispAtomBarSymbol	!'|..\{-}|!	contains=lispAtomMark
 syn region	lispAtom	start=+'"+	skip=+\\"+ end=+"+
 syn region	lispAtomList	matchgroup=Special start="("	skip="|.\{-}|" matchgroup=Special end=")"	contained contains=lispAtomList,lispAtomNmbr0,lispString,lispComment,lispAtomBarSymbol
-syn match	lispAtomNmbr	"\<[0-9]\+"			contained
+syn match	lispAtomNmbr	"\<\d\+"			contained
 
 " Standard Lisp Functions and Macros
 syn keyword lispFunc	abs	copy-list	gethash	nreconc	setf
@@ -212,7 +212,7 @@ syn region	lispString	start=+"+	skip=+\\"+ end=+"+
 syn keyword	lispDeclaration	defmacro defsetf deftype defun dotimes flet labels let locally macrolet
 syn keyword	lispDeclaration	do* do-all-symbols do-external-symbols do-symbols multiple-value-bind
 
-syn match	lispNumber	"[0-9]\+"
+syn match	lispNumber	"\d\+"
 
 syn match	lispSpecial	oneline	"\*[a-zA-Z_][a-zA-Z_0-9-]*\*"
 syn match	lispSpecial	oneline	!#|[^()'`,"; \t]\+|#!

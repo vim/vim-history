@@ -12,8 +12,9 @@ The basic steps to make changes to the code:
 1. Adjust the documentation.  Doing this first gives you an impression of how
    your changes affect the user.
 2. Make the source code changes.
-3. Check ../todo if the change affects any listed item.
-4. Add a note to version.c
+3. Check ../doc/todo.txt if the change affects any listed item.
+4. Make a patch with "diff -c" against the unmodified code and docs.
+5. Make a note about what changed and include it with the patch.
 
 
 USE OF COMMON FUNCTIONS

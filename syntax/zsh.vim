@@ -22,7 +22,7 @@ syn keyword	zshRepeat	while for do done
 syn match	zshFunctionName	"[a-zA-Z_][a-zA-Z0-9_]*[ 	]*()"
 syn region	zshCommandSub	start=+`+ skip=+\\`+ end=+`+
 " contains=ALLBUT,zshFunction
-syn match	zshRedir	"[0-9]\=\(<\|<<\|>\|>>\)\(|\|&[0-9]\)\="
+syn match	zshRedir	"\d\=\(<\|<<\|>\|>>\)\(|\|&\d\)\="
 
 syn keyword	zshTodo contained TODO
 
@@ -53,10 +53,10 @@ syn match	zshOperator		"[][}{&;|)(]"
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
-syn match   zshSpecial	contained "\\[0-9][0-9][0-9]\|\\[abcfnrtv\\]"
+syn match   zshSpecial	contained "\\\d\d\d\|\\[abcfnrtv\\]"
 
 
-syn match  zshNumber		"-\=\<[0-9]\+\>"
+syn match  zshNumber		"-\=\<\d\+\>"
 syn match  zshComment	"#.*$" contains=zshNumber,zshTodo
 
 

@@ -197,8 +197,8 @@ update_screenline()
 	/*
 	 * If syntax lost its sync, have to redraw the following lines.
 	 */
-	else if (syntax_present(curbuf) && row < cmdline_row &&
-			      syntax_check_changed(curwin->w_cursor.lnum + 1))
+	else if (syntax_present(curbuf) && row < cmdline_row
+			   && syntax_check_changed(curwin->w_cursor.lnum + 1))
 	    update_screen(VALID_TO_CURSCHAR);
 #endif
 	else if (clear_cmdline || redraw_cmdline)
@@ -334,9 +334,7 @@ update_screen(type)
     if (clear_cmdline)		/* first clear cmdline */
     {
 	check_for_delay(FALSE);
-	msg_row = cmdline_row;
-	msg_col = 0;
-	msg_clr_eos();		/* will reset clear_cmdline */
+	msg_clr_cmdline();	/* will reset clear_cmdline */
     }
 
     /*
@@ -398,7 +396,7 @@ updateWindow(wp)
     start_search_hl();
 #endif
     win_update(wp);
-    if (wp->w_redr_status)
+    if (wp->w_redr_status || p_ru)
 	win_redr_status(wp);
     if (redraw_cmdline)
 	showmode();
@@ -452,7 +450,7 @@ update_other_win()
 win_update(wp)
     WIN	    *wp;
 {
-    int		    type = wp->w_redr_type;
+    int		    type;
     int		    row;
     int		    endrow;
     linenr_t	    lnum;
@@ -468,11 +466,13 @@ win_update(wp)
     int		    must_start_top = FALSE; /* update must start at top row */
     int		    must_end_bot = FALSE;   /* update must end at bottom row */
 
+    type = wp->w_redr_type;
     if (type == NOT_VALID)
     {
 	wp->w_redr_status = TRUE;
 	wp->w_lsize_valid = 0;
     }
+    wp->w_redr_type = 0;	/* reset it now, may be set again later */
 
     idx = 0;
     row = 0;
@@ -516,6 +516,10 @@ win_update(wp)
 		    {
 			must_start_top = TRUE;
 			endrow = i;
+			/* If there are changes, must redraw the rest too */
+			if (type == VALID_TO_CURSCHAR
+				|| type == VALID_BEF_CURSCHAR)
+			    wp->w_redr_type = type;
 
 			if ((wp->w_lsize_valid += j) > wp->w_height)
 			    wp->w_lsize_valid = wp->w_height;
@@ -664,12 +668,25 @@ win_update(wp)
 	{
 	    colnr_t	from1, from2, to1, to2;
 
-	    getvcol(wp, &VIsual, &from1, NULL, &to1);
-	    getvcol(wp, &curwin->w_cursor, &from2, NULL, &to2);
+	    if (lt(VIsual, curwin->w_cursor))
+	    {
+		getvcol(wp, &VIsual, &from1, NULL, &to1);
+		getvcol(wp, &curwin->w_cursor, &from2, NULL, &to2);
+	    }
+	    else
+	    {
+		getvcol(wp, &curwin->w_cursor, &from1, NULL, &to1);
+		getvcol(wp, &VIsual, &from2, NULL, &to2);
+	    }
 	    if (from2 < from1)
 		from1 = from2;
 	    if (to2 > to1)
-		to1 = to2;
+	    {
+		if (*p_sel == 'e' && from2 - 1 >= to1)
+		    to1 = from2 - 1;
+		else
+		    to1 = to2;
+	    }
 	    ++to1;
 	    if (curwin->w_curswant == MAXCOL)
 		to1 = MAXCOL;
@@ -822,13 +839,15 @@ win_update(wp)
     {
 	if (lnum == wp->w_topline)
 	{
+#if 0
 	    /*
 	     * Single line that does not fit!
 	     * Fill last line with '@' characters.
 	     */
 	    screen_fill(wp->w_winpos + wp->w_height - 1,
 		    wp->w_winpos + wp->w_height, 0, (int)Columns, '@', '@',
-		    highlight_attr[HLF_AT]);
+		    hl_attr(HLF_AT));
+#endif
 	    wp->w_botline = lnum + 1;
 	}
 	else
@@ -841,16 +860,16 @@ win_update(wp)
 	    {
 		screen_fill(wp->w_winpos + srow,
 			wp->w_winpos + wp->w_height, 0, (int)Columns - 1,
-			' ', ' ', highlight_attr[HLF_AT]);
+			' ', ' ', hl_attr(HLF_AT));
 		screen_fill(wp->w_winpos + srow,
 			wp->w_winpos + wp->w_height, (int)Columns - 1,
-			(int)Columns, '@', ' ', highlight_attr[HLF_AT]);
+			(int)Columns, '@', ' ', hl_attr(HLF_AT));
 	    }
 	    else
 #endif
 		screen_fill(wp->w_winpos + srow,
 			wp->w_winpos + wp->w_height, 0, (int)Columns, '@', ' ',
-			highlight_attr[HLF_AT]);
+			hl_attr(HLF_AT));
 	    wp->w_botline = lnum;
 	    wp->w_empty_rows = wp->w_height - srow;
 	}
@@ -864,16 +883,16 @@ win_update(wp)
 	{
 	    screen_fill(wp->w_winpos + row,
 		    wp->w_winpos + wp->w_height, 0, (int)Columns - 1,
-		    ' ', ' ', highlight_attr[HLF_AT]);
+		    ' ', ' ', hl_attr(HLF_AT));
 	    screen_fill(wp->w_winpos + row,
 		    wp->w_winpos + wp->w_height, (int)Columns - 1,
-		    (int)Columns, '~', ' ', highlight_attr[HLF_AT]);
+		    (int)Columns, '~', ' ', hl_attr(HLF_AT));
 	}
 	else
 #endif
 	    screen_fill(wp->w_winpos + row,
 			wp->w_winpos + wp->w_height, 0, (int)Columns, '~', ' ',
-			highlight_attr[HLF_AT]);
+			hl_attr(HLF_AT));
 	wp->w_empty_rows = wp->w_height - row;
 
 	if (done)		/* we hit the end of the file */
@@ -894,7 +913,6 @@ win_update(wp)
      * the current window (where changes are relevant).
      */
     wp->w_valid |= VALID_BOTLINE;
-    wp->w_redr_type = 0;
     if (wp == curwin && wp->w_botline != old_botline && !recursive)
     {
 	recursive = TRUE;
@@ -904,6 +922,15 @@ win_update(wp)
 	    win_update(wp);
 	    must_redraw = 0;
 	}
+	recursive = FALSE;
+    }
+
+    /* When insering lines at top, these have been redrawn now.  Still need to
+     * redraw other lines with changes */
+    if (wp->w_redr_type && !recursive)
+    {
+	recursive = TRUE;
+	win_update(wp);
 	recursive = FALSE;
     }
 }
@@ -927,6 +954,7 @@ win_line(wp, lnum, startrow, endrow)
     int		    c = 0;		/* init for GCC */
     int		    col;		/* visual column on screen */
     long	    vcol;		/* visual column for tabs */
+    long	    v;
 #ifdef SYNTAX_HL
     int		    rcol;		/* real column in the line */
 #endif
@@ -937,10 +965,13 @@ win_line(wp, lnum, startrow, endrow)
     char_u	    *line;
 #endif
     char_u	    extra[16];		/* "%ld" must fit in here */
-    char_u	    *p_extra;
+    int		    n_extra = 0;	/* number of extra chars */
+    char_u	    *p_extra = NULL;	/* string of extra chars */
+    int		    c_extra = NUL;	/* extra chars, all the same */
     char_u	    *showbreak = NULL;
-    int		    n_extra;
-    int		    n_spaces = 0;
+    int		    n_attr = 0;		/* chars with current attr */
+    int		    n_skip = 0;		/* nr of chars to skip for 'nowrap' */
+    int		    n_number = 0;	/* chars for 'number' */
 
     int		    fromcol, tocol;	/* start/end of inverting */
     int		    noinvcur = FALSE;	/* don't invert the cursor */
@@ -954,33 +985,40 @@ win_line(wp, lnum, startrow, endrow)
     int		    syntax_attr = 0;	/* attributes desired by syntax */
     int		    has_syntax = FALSE;	/* this buffer has syntax highl. */
 #endif
-    int		    has_syn_or_lbr;	/* has syntax or linebreak */
+    int		    extra_check;	/* has syntax or linebreak */
     int		    char_attr;		/* attributes for next character */
-    int		    saved_attr = 0;	/* char_attr saved for showbreak */
+    int		    saved_attr1 = 0;	/* char_attr saved for showbreak */
+    int		    saved_attr2 = 0;	/* char_attr saved for listtabstring */
+    int		    extra_attr = 0;
 #ifdef EXTRA_SEARCH
     char_u	    *matchp;
     char_u	    *search_hl_start = NULL;
     char_u	    *search_hl_end = NULL;
 #endif
+#ifdef MULTI_BYTE
+    int		    bCharacter = 0;
+    char_u	    *line_head;
+#endif
+    char_u	    *trail = NULL;	/* start of trailing spaces */
 
     if (startrow > endrow)		/* past the end already! */
 	return startrow;
 
     row = startrow;
     screen_row = row + wp->w_winpos;
-    attr = highlight_attr[HLF_V];
+    attr = hl_attr(HLF_V);
 
     /*
-     * To speed up the loop below, set has_syn_or_lbr when there is linebreak
-     * and/or syntax processing to be done.
+     * To speed up the loop below, set extra_check when there is linebreak,
+     * trailing white spcae and/or syntax processing to be done.
      */
-    has_syn_or_lbr = wp->w_p_lbr;
+    extra_check = wp->w_p_lbr;
 #ifdef SYNTAX_HL
     if (syntax_present(wp->w_buffer))
     {
 	syntax_start(wp, lnum);
 	has_syntax = TRUE;
-	has_syn_or_lbr = TRUE;
+	extra_check = TRUE;
     }
 #endif
     col = 0;
@@ -1019,33 +1057,53 @@ win_line(wp, lnum, startrow, endrow)
 	    if (lnum > top->lnum && lnum <= bot->lnum)
 		fromcol = 0;
 	    else if (lnum == top->lnum)
-		getvcol(wp, top, (colnr_t *)&fromcol, NULL, NULL);
-	    if (lnum == bot->lnum)
 	    {
-		getvcol(wp, bot, NULL, NULL, (colnr_t *)&tocol);
-		++tocol;
+		if (VIsual_mode == 'V')	/* linewise */
+		    fromcol = 0;
+		else
+		    getvcol(wp, top, (colnr_t *)&fromcol, NULL, NULL);
+	    }
+	    if (VIsual_mode != 'V' && lnum == bot->lnum)
+	    {
+		if (*p_sel == 'e' && bot->col == 0)
+		{
+		    fromcol = -10;
+		    tocol = MAXCOL;
+		}
+		else
+		{
+		    FPOS pos;
+
+		    pos = *bot;
+		    if (*p_sel == 'e')
+			--pos.col;
+		    getvcol(wp, &pos, NULL, NULL, (colnr_t *)&tocol);
+		    ++tocol;
+		}
 	    }
 
-	    if (VIsual_mode == 'V')	/* linewise */
-	    {
-		if (fromcol > 0)
-		    fromcol = 0;
-		tocol = MAXCOL;
-	    }
 	}
-	    /* if the cursor can't be switched off, don't invert the
-	     * character where the cursor is */
 #ifndef MSDOS
-	if (!highlight_match && *T_VI == NUL &&
-			    lnum == curwin->w_cursor.lnum && wp == curwin)
+	/* Check if the character under the cursor should not be inverted */
+	if (!highlight_match && lnum == curwin->w_cursor.lnum && wp == curwin
+# ifdef USE_GUI
+		&& !gui.in_use
+# endif
+		)
 	    noinvcur = TRUE;
 #endif
 
-	if (tocol <= (int)wp->w_leftcol)    /* inverting is left of screen */
-	    fromcol = 0;
-					/* start of invert is left of screen */
-	else if (fromcol >= 0 && fromcol < (int)wp->w_leftcol)
-	    fromcol = wp->w_leftcol;
+	/*
+	 * 'nowrap': adjust for when the inverted text is left of the screen,
+	 * and when the start of the inverted text is left of the screen.
+	 */
+	if (!wp->w_p_wrap)
+	{
+	    if (tocol <= (int)wp->w_leftcol)
+		fromcol = 0;
+	    else if (fromcol >= 0 && fromcol < (int)wp->w_leftcol)
+		fromcol = wp->w_leftcol;
+	}
 
 	/* if inverting in this line, can't optimize cursor positioning */
 	if (fromcol >= 0)
@@ -1066,7 +1124,7 @@ win_line(wp, lnum, startrow, endrow)
 					    (colnr_t *)&tocol, NULL, NULL);
 	    curwin->w_cursor.col -= search_match_len;
 	    area_highlighting = TRUE;
-	    attr = highlight_attr[HLF_I];
+	    attr = hl_attr(HLF_I);
 	    if (fromcol == tocol)	/* do at least one character */
 		tocol = fromcol + 1;	/* happens when past end of line */
 	}
@@ -1080,20 +1138,46 @@ win_line(wp, lnum, startrow, endrow)
     line = ptr;
     rcol = 0;
 #endif
+#ifdef MULTI_BYTE
+    line_head = ptr;
+#endif
 
-    if (!wp->w_p_wrap)	    /* advance to first character to be displayed */
+    /* find start of trailing whitespace */
+    if (wp->w_p_list && lcs_trail)
     {
-	while ((colnr_t)vcol < wp->w_leftcol && *ptr)
+	trail = ptr + STRLEN(ptr);
+	while (trail > ptr && vim_iswhite(trail[-1]))
+	    --trail;
+	extra_check = TRUE;
+    }
+
+    /*
+     * 'nowrap' or 'wrap' and a single line that doesn't fit: Advance to the
+     * first character to be displayed.
+     */
+    if (!wp->w_p_wrap || wp->w_skipcol)
+    {
+	if (wp->w_p_wrap)
+	    v = wp->w_skipcol;
+	else
+	    v = wp->w_leftcol;
+	while (vcol < v && *ptr)
 	{
-	    vcol += win_chartabsize(wp, *ptr++, (colnr_t)vcol);
+	    c = win_chartabsize(wp, *ptr++, (colnr_t)vcol);
+	    vcol += c;
 #ifdef SYNTAX_HL
 	    ++rcol;
 #endif
 	}
-	if ((colnr_t)vcol > wp->w_leftcol)
+	/* handle a character that's not completely on the screen */
+	if (vcol > v)
 	{
-	    n_spaces = vcol - wp->w_leftcol;	/* begin with some spaces */
-	    vcol = wp->w_leftcol;
+	    vcol -= c;
+	    --ptr;
+#ifdef SYNTAX_HL
+	    --rcol;
+#endif
+	    n_skip = v - vcol;
 	}
     }
 
@@ -1141,14 +1225,16 @@ win_line(wp, lnum, startrow, endrow)
 	screenp += Columns - 1;
     }
 #endif
+
+    /* add a line number if 'number' is set */
     if (wp->w_p_nu)
     {
+	sprintf((char *)extra, "%7ld ", (long)lnum);
 #ifdef RIGHTLEFT
 	if (wp->w_p_rl)			    /* reverse line numbers */
 	{
 	    char_u *c1, *c2, t;
 
-	    sprintf((char *)extra, " %-7ld", (long)lnum);
 	    for (c1 = extra, c2 = extra + STRLEN(extra) - 1; c1 < c2;
 								   c1++, c2--)
 	    {
@@ -1157,30 +1243,38 @@ win_line(wp, lnum, startrow, endrow)
 		*c2 = t;
 	    }
 	}
-	else
 #endif
-	    sprintf((char *)extra, "%7ld ", (long)lnum);
-	p_extra = extra;
+	n_number = 8;
 	n_extra = 8;
-	vcol -= 8;	/* so vcol is 0 when line number has been printed */
-    }
-    else
-    {
-	p_extra = NULL;
-	n_extra = 0;
+	p_extra = extra;
+	c_extra = NUL;
+	vcol -= 8;	/* so vcol is right when line number has been printed */
+	n_attr = 8;
+	extra_attr = hl_attr(HLF_N);
+	saved_attr2 = 0;
     }
 
+    /*
+     * Repeat for the whole displayed line.
+     */
     for (;;)
     {
-	if (area_highlighting)	/* Visual or match highlighting in this line */
+	/* handle Visual or match highlighting in this line (but not when
+	 * still in the line number) */
+	if (area_highlighting && n_number <= 0)
 	{
-	    if (((vcol == fromcol && !(noinvcur &&
-					   (colnr_t)vcol == wp->w_virtcol)) ||
-		    (noinvcur && (colnr_t)vcol == wp->w_virtcol + 1 &&
-			    vcol >= fromcol)) && vcol < tocol)
+	    if (((vcol == fromcol
+			    && !(noinvcur
+				&& (colnr_t)vcol == wp->w_virtcol))
+			|| (noinvcur
+			    && (colnr_t)vcol == wp->w_virtcol + 1
+			    && vcol >= fromcol))
+		    && vcol < tocol)
 		area_attr = attr;		    /* start highlighting */
-	    else if (area_attr && (vcol == tocol ||
-				(noinvcur && (colnr_t)vcol == wp->w_virtcol)))
+	    else if (area_attr
+		    && (vcol == tocol
+			|| (noinvcur
+			    && (colnr_t)vcol == wp->w_virtcol)))
 		area_attr = 0;			    /* stop highlighting */
 
 #ifdef EXTRA_SEARCH
@@ -1190,7 +1284,7 @@ win_line(wp, lnum, startrow, endrow)
 	     * When another match, have to check for start again.
 	     * Watch out for matching an empty string!
 	     */
-	    if (!n_extra && !n_spaces)
+	    if (!n_extra)
 	    {
 		for (;;)
 		{
@@ -1224,38 +1318,42 @@ win_line(wp, lnum, startrow, endrow)
 		char_attr = search_attr;
 	}
 
-    /* Get the next character to put on the screen. */
+    /*
+     * Get the next character to put on the screen.
+     */
 
 	/*
 	 * If 'showbreak' is set it contains the characters to put at the
 	 * start of each broken line.
 	 */
-	if (
+	if (*p_sbr != 0)
+	{
+	    if (
 #ifdef RIGHTLEFT
-		(wp->w_p_rl ? col == -1 : col == Columns)
+		    (wp->w_p_rl ? col == -1 : col == Columns)
 #else
-		col == Columns
+		    col == Columns
 #endif
-		&& (*ptr != NUL
-		    || (wp->w_p_list && n_extra == 0)
-		    || (n_extra && *p_extra)
-		    || n_spaces)
-		&& vcol != 0 && *p_sbr != 0)
-	{
-	    showbreak = p_sbr;
-	    saved_attr = char_attr;	    /* save current attributes */
-	}
-	if (showbreak != NULL)
-	{
-	    if (*showbreak == NUL)
+		    && (*ptr != NUL
+			|| (wp->w_p_list && lcs_eol != NUL)
+			|| (n_extra && (c_extra != NUL || *p_extra != NUL)))
+		    && vcol != 0)
 	    {
-		showbreak = NULL;
-		char_attr = saved_attr;	    /* restore attributes */
+		showbreak = p_sbr;
+		saved_attr1 = char_attr;	/* save current attributes */
 	    }
-	    else
+	    if (showbreak != NULL)
 	    {
-		c = *showbreak++;
-		char_attr = highlight_attr[HLF_AT];
+		if (*showbreak == NUL)
+		{
+		    showbreak = NULL;
+		    char_attr = saved_attr1;	/* restore attributes */
+		}
+		else
+		{
+		    c = *showbreak++;
+		    char_attr = hl_attr(HLF_AT);
+		}
 	    }
 	}
 
@@ -1263,23 +1361,25 @@ win_line(wp, lnum, startrow, endrow)
 	{
 	    /*
 	     * The 'extra' array contains the extra stuff that is inserted to
-	     * represent special characters (non-printable stuff).
+	     * represent special characters (non-printable stuff).  When all
+	     * characters are the same, c_extra is used.
+	     * For the '$' of the 'list' option, n_extra == 1, p_extra == "".
 	     */
 	    if (n_extra)
 	    {
-		c = *p_extra++;
-		n_extra--;
-	    }
-	    else if (n_spaces)
-	    {
-		c = ' ';
-		n_spaces--;
+		if (c_extra)
+		    c = c_extra;
+		else
+		    c = *p_extra++;
+		--n_extra;
 	    }
 	    else
 	    {
 		c = *ptr++;
-
-		if (has_syn_or_lbr)
+#ifdef MULTI_BYTE
+		bCharacter = 1;
+#endif
+		if (extra_check)
 		{
 #ifdef SYNTAX_HL
 		    if (has_syntax)
@@ -1295,10 +1395,22 @@ win_line(wp, lnum, startrow, endrow)
 		    if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(*ptr)
 							  && !wp->w_p_list)
 		    {
-			n_spaces = win_lbr_chartabsize(wp, ptr - 1,
+			n_extra = win_lbr_chartabsize(wp, ptr - 1,
 				(colnr_t)vcol, NULL) - 1;
+			c_extra = ' ';
 			if (vim_iswhite(c))
 			    c = ' ';
+		    }
+
+		    if (trail != NULL && ptr > trail && c == ' ')
+		    {
+			c = lcs_trail;
+			if (!area_attr && !search_attr)
+			{
+			    n_attr = 1;
+			    extra_attr = hl_attr(HLF_AT);
+			    saved_attr2 = char_attr; /* save current attr */
+			}
 		    }
 		}
 
@@ -1312,29 +1424,48 @@ win_line(wp, lnum, startrow, endrow)
 		     * turn it into something else on the way to putting it
 		     * into 'NextScreen'.
 		     */
-		    if (c == TAB && !wp->w_p_list)
+		    if (c == TAB && (!wp->w_p_list || lcs_tab1))
 		    {
 			/* tab amount depends on current column */
-			n_spaces = (int)wp->w_buffer->b_p_ts -
+			n_extra = (int)wp->w_buffer->b_p_ts -
 					 vcol % (int)wp->w_buffer->b_p_ts - 1;
-			c = ' ';
+			if (wp->w_p_list)
+			{
+			    c = lcs_tab1;
+			    c_extra = lcs_tab2;
+			    if (!area_attr && !search_attr)
+			    {
+				n_attr = n_extra + 1;
+				extra_attr = hl_attr(HLF_AT);
+				saved_attr2 = char_attr; /* save current attr */
+			    }
+			}
+			else
+			{
+			    c_extra = ' ';
+			    c = ' ';
+			}
 		    }
-		    else if (c == NUL && wp->w_p_list)
+		    else if (c == NUL && wp->w_p_list && lcs_eol != NUL)
 		    {
 			p_extra = (char_u *)"";
 			n_extra = 1;
-			c = '$';
+			c_extra = NUL;
+			c = lcs_eol;
 			--ptr;	    /* put it back at the NUL */
-			char_attr = highlight_attr[HLF_AT];
+			char_attr = hl_attr(HLF_AT);
 		    }
 		    else if (c != NUL)
 		    {
 			p_extra = transchar(c);
 			n_extra = charsize(c) - 1;
+			c_extra = NUL;
 			c = *p_extra++;
 		    }
 		}
 	    }
+	    if (n_attr)
+		char_attr = extra_attr;
 	}
 
 	/*
@@ -1402,8 +1533,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef RIGHTLEFT
 	    wp->w_p_rl ? (col < 0) :
 #endif
-				    (col >= Columns)
-						    )
+				    (col >= Columns))
 	{
 	    SCREEN_LINE(screen_row, col, TRUE, wp->w_p_rl);
 	    col = 0;
@@ -1451,27 +1581,78 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 	}
 
-	/*
-	 * Store the character.
-	 */
-	*screenp = c;
-	*(screenp + Columns) = char_attr;
+	/* line continues beyond line end */
+	if (lcs_ext
+		&& !wp->w_p_wrap
+		&& (
+#ifdef RIGHTLEFT
+		    wp->w_p_rl ? col == 0 :
+#endif
+		    col == Columns - 1)
+		&& (*ptr != NUL
+		    || (wp->w_p_list && lcs_eol != NUL)
+		    || (n_extra && (c_extra != NUL || *p_extra != NUL))))
+	{
+	    c = lcs_ext;
+	    char_attr = hl_attr(HLF_AT);
+	}
+
+#ifdef MULTI_BYTE
+	if (is_dbcs)
+	{
+	    /* if an mult-byte character splits by line edge,
+	       lead or trail byte is substituted by '~' */
+	    if (col == 0 && bCharacter)
+	    {
+		if (IsTrailByte(line_head, ptr-1))
+		    c = '~';
+	    }
+	    if (
+# ifdef RIGHTLEFT
+		    wp->w_p_rl ? (col <= 0) :
+# endif
+		    (col >= Columns-1))
+	    {
+		if (bCharacter && IsLeadByte(*(ptr-1))
+			&& IsTrailByte(line_head, ptr))
+		    c = '~';
+	    }
+	    bCharacter = 0;
+	}
+#endif
+
+	/* Skip characters that are left of the screen for 'nowrap' */
+	if (n_number > 0 || n_skip <= 0)
+	{
+	    /*
+	     * Store the character.
+	     */
+	    *screenp = c;
+	    *(screenp + Columns) = char_attr;
 
 #ifdef RIGHTLEFT
-	if (wp->w_p_rl)
-	{
-	    --screenp;
-	    --col;
+	    if (wp->w_p_rl)
+	    {
+		--screenp;
+		--col;
+	    }
+	    else
+#endif
+	    {
+		++screenp;
+		++col;
+	    }
+	    --n_number;
 	}
 	else
-#endif
-	{
-	    ++screenp;
-	    ++col;
-	}
+	    --n_skip;
 	++vcol;
 
-	/* stop before '$' of change command */
+	/* restore attributes after last 'listchars' or 'number' char */
+	if (n_attr && --n_attr == 0)
+	    char_attr = saved_attr2;
+
+	/* When still displaying '$' of change command, stop at cursor */
 	if (dollar_vcol && wp == curwin && vcol >= (long)wp->w_virtcol)
 	{
 	    SCREEN_LINE(screen_row, col, FALSE, wp->w_p_rl);
@@ -1536,9 +1717,18 @@ screen_line(row, endcol, clear_rest
     while (col < endcol)
 #endif
     {
-	if (force || *screenp_from != *screenp_to ||
-		*(screenp_from + Columns) != *(screenp_to + Columns))
+
+	if (
+#if defined(MULTI_BYTE)
+		/* a multi byte ch. is misprinted when right/left scrolling. */
+		is_dbcs ||
+#endif
+		   force
+		|| *screenp_from != *screenp_to
+		|| *(screenp_from + Columns) != *(screenp_to + Columns)
+	   )
 	{
+
 	    /*
 	     * Special handling when 'xs' termcap flag set (hpterm):
 	     * Attributes for characters are stored at the position where the
@@ -1669,6 +1859,19 @@ status_redraw_all()
 }
 
 /*
+ * Redraw all status lines that need to be redrawn.
+ */
+    void
+redraw_statuslines()
+{
+    WIN	    *wp;
+
+    for (wp = firstwin; wp; wp = wp->w_next)
+	if (wp->w_redr_status)
+	    win_redr_status(wp);
+}
+
+/*
  * Redraw the status line of window wp.
  *
  * If inversion is possible we use it. Else '=' characters are used.
@@ -1692,7 +1895,7 @@ win_redr_status(wp)
 	    STRCPY(NameBuff, "[No File]");
 	else
 	{
-	    home_replace(wp->w_buffer, p, NameBuff, MAXPATHL);
+	    home_replace(wp->w_buffer, p, NameBuff, MAXPATHL, TRUE);
 	    trans_characters(NameBuff, MAXPATHL);
 	}
 	p = NameBuff;
@@ -1792,10 +1995,10 @@ screen_puts(text, row, col, attr)
     static void
 start_search_hl()
 {
-    if (p_hls)
+    if (p_hls && !no_hlsearch)
     {
 	search_hl_prog = last_pat_prog();
-	search_hl_attr = highlight_attr[HLF_L];
+	search_hl_attr = hl_attr(HLF_L);
 	search_hl_ic = reg_ic;
     }
 }
@@ -2262,8 +2465,10 @@ screenalloc(clear)
     for (wp = firstwin; wp; wp = wp->w_next)
 	win_free_lsize(wp);
 
-    new_NextScreen = (char_u *)malloc((size_t)((Rows + 1) * Columns * 2));
-    new_LinePointers = (char_u **)malloc((size_t)(sizeof(char_u *) * Rows));
+    new_NextScreen =
+	(char_u *)lalloc((long_u)((Rows + 1) * Columns * 2), FALSE);
+    new_LinePointers =
+	(char_u **)lalloc((long_u)(sizeof(char_u *) * Rows), FALSE);
 
     for (wp = firstwin; wp; wp = wp->w_next)
     {
@@ -2304,9 +2509,9 @@ screenalloc(clear)
 			len = screen_Columns;
 		    else
 			len = Columns;
-		    vim_memmove(new_LinePointers[new_row],
+		    mch_memmove(new_LinePointers[new_row],
 			    LinePointers[old_row], (size_t)len);
-		    vim_memmove(new_LinePointers[new_row] + Columns,
+		    mch_memmove(new_LinePointers[new_row] + Columns,
 			    LinePointers[old_row] + screen_Columns,
 								 (size_t)len);
 		}
@@ -2485,7 +2690,15 @@ update_topline()
      * Need to redraw when topline changed.
      */
     if (curwin->w_topline != old_topline)
-	redraw_later(VALID);
+    {
+	if (curwin->w_skipcol)
+	{
+	    curwin->w_skipcol = 0;
+	    redraw_later(NOT_VALID);
+	}
+	else
+	    redraw_later(VALID);
+    }
 }
 
     void
@@ -2521,6 +2734,12 @@ windgoto(row, col)
 #define PLAN_CR	    2
 #define PLAN_NL	    3
 #define PLAN_WRITE  4
+    /* Can't use LinePointers[] unless initialized */
+    if (NextScreen == NULL)
+	return;
+
+    if (row < 0)	/* window without text lines? */
+	row = 0;
 
     if (col != screen_cur_col || row != screen_cur_row)
     {
@@ -3386,6 +3605,7 @@ curs_columns(scroll)
     int	    new_leftcol;
     colnr_t startcol;
     colnr_t endcol;
+    colnr_t prev_skipcol;
 
     /*
      * First make sure that w_topline is valid (after moving the cursor).
@@ -3468,10 +3688,38 @@ curs_columns(scroll)
     else
 	curwin->w_wcol = 0;
 
-	/* Cursor past end of screen */
-	/* happens with line that does not fit on screen */
-    if (curwin->w_wrow > curwin->w_height - 1)
-	curwin->w_wrow = curwin->w_height - 1;
+    prev_skipcol = curwin->w_skipcol;
+
+    if ((curwin->w_wrow > curwin->w_height - 1 || prev_skipcol)
+	    && curwin->w_height
+	    && curwin->w_cursor.lnum == curwin->w_topline)
+    {
+	/* Cursor past end of screen.  Happens with a single line that does
+	 * not fit on screen.  Find a skipcol to show the text around the
+	 * cursor.  Avoid scrolling all the time. */
+	if (curwin->w_skipcol > curwin->w_virtcol)
+	{
+	    extra = (curwin->w_skipcol - curwin->w_virtcol + Columns - 1)
+								    / Columns;
+	    win_ins_lines(curwin, 0, extra, FALSE, FALSE);
+	    curwin->w_skipcol -= extra * Columns;
+	}
+	else if (curwin->w_wrow > curwin->w_height - 1)
+	{
+	    endcol = (curwin->w_wrow - curwin->w_height + 1) * Columns;
+	    if (endcol > curwin->w_skipcol)
+	    {
+		win_del_lines(curwin, 0,
+			(endcol - prev_skipcol) / (int)Columns, FALSE, FALSE);
+		curwin->w_skipcol = endcol;
+	    }
+	}
+	curwin->w_wrow -= curwin->w_skipcol / Columns;
+    }
+    else
+	curwin->w_skipcol = 0;
+    if (prev_skipcol != curwin->w_skipcol)
+	redraw_later(NOT_VALID);
 
     curwin->w_valid |= VALID_WCOL|VALID_WROW|VALID_VIRTCOL;
 }
@@ -4204,7 +4452,7 @@ screen_del_lines(off, row, line_count, end, force)
     int
 showmode()
 {
-    int	    need_clear = FALSE;
+    int	    need_clear;
     int	    length = 0;
     int	    do_mode;
     int	    attr;
@@ -4222,27 +4470,35 @@ showmode()
 	 */
 	if (!redrawing() || (char_avail() && !KeyTyped))
 	{
-	    redraw_cmdline = TRUE;	    /* show mode later */
+	    redraw_cmdline = TRUE;		/* show mode later */
 	    return 0;
 	}
 
+	/* wait a bit before overwriting an important message */
 	check_for_delay(FALSE);
-	msg_didout = FALSE;		/* never scroll up */
+
+	/* if the cmdline is more than one line high, erase top lines */
+	need_clear = clear_cmdline;
+	if (clear_cmdline && cmdline_row < Rows - 1)
+	    msg_clr_cmdline();			/* will reset clear_cmdline */
+
+	/* Position on the last line in the window, column 0 */
 	msg_col = 0;
-	gotocmdline(FALSE);
-	attr = highlight_attr[HLF_CM];	/* Highlight mode */
+	msg_row = Rows - 1;
+	cursor_off();
+	attr = hl_attr(HLF_CM);			/* Highlight mode */
 	if (do_mode)
 	{
 	    MSG_PUTS_ATTR("--", attr);
 #ifdef INSERT_EXPAND
-	    if (edit_submode != NULL)	    /* CTRL-X in Insert mode */
+	    if (edit_submode != NULL)		/* CTRL-X in Insert mode */
 	    {
 		msg_puts_attr(edit_submode, attr);
 		if (edit_submode_extra != NULL)
 		{
 		    MSG_PUTS_ATTR(" ", attr);	/* add a space in between */
-		    if (edit_submode_highl < HLF_COUNT)
-			sub_attr = highlight_attr[edit_submode_highl];
+		    if ((int)edit_submode_highl < (int)HLF_COUNT)
+			sub_attr = hl_attr(edit_submode_highl);
 		    else
 			sub_attr = attr;
 		    msg_puts_attr(edit_submode_extra, sub_attr);
@@ -4277,7 +4533,10 @@ showmode()
 		    MSG_PUTS_ATTR(" (paste)", attr);
 		if (VIsual_active)
 		{
-		    MSG_PUTS_ATTR(" VISUAL", attr);
+		    if (VIsual_select)
+			MSG_PUTS_ATTR(" SELECT", attr);
+		    else
+			MSG_PUTS_ATTR(" VISUAL", attr);
 		    if (VIsual_mode == Ctrl('V'))
 			MSG_PUTS_ATTR(" BLOCK", attr);
 		    else if (VIsual_mode == 'V')
@@ -4299,11 +4558,8 @@ showmode()
 	msg_col = 0;
     }
     else if (clear_cmdline)		/* just clear anything */
-    {
-	msg_row = cmdline_row;
-	msg_col = 0;
-	msg_clr_eos();			/* will reset clear_cmdline */
-    }
+	msg_clr_cmdline();		/* will reset clear_cmdline */
+
     win_redr_ruler(lastwin, TRUE);
     redraw_cmdline = FALSE;
     clear_cmdline = FALSE;
@@ -4335,13 +4591,13 @@ highlight_status(attr, is_curwin)
     int		is_curwin;
 {
     if (is_curwin)
-	*attr = highlight_attr[HLF_S];
+	*attr = hl_attr(HLF_S);
     else
-	*attr = highlight_attr[HLF_SNC];
+	*attr = hl_attr(HLF_SNC);
     /* Use a space when there is highlighting, and highlighting of current
      * window differs, or this is not the current window */
-    if (*attr && (highlight_attr[HLF_S] != highlight_attr[HLF_SNC]
-							       || !is_curwin))
+    if (*attr && (hl_attr(HLF_S) != hl_attr(HLF_SNC)
+		    || !is_curwin || firstwin == lastwin))
 	return ' ';
     if (is_curwin)
 	return '^';
@@ -4414,7 +4670,7 @@ win_redr_ruler(wp, always)
 
 	/* In list mode virtcol needs to be recomputed */
 	virtcol = wp->w_virtcol;
-	if (wp->w_p_list)
+	if (wp->w_p_list && lcs_tab1 == NUL)
 	{
 	    wp->w_p_list = FALSE;
 	    getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
@@ -4454,6 +4710,7 @@ check_for_delay(check_msg_scroll)
 {
     if (emsg_on_display || (check_msg_scroll && msg_scroll))
     {
+	out_flush();
 	ui_delay(1000L, TRUE);
 	emsg_on_display = FALSE;
 	if (check_msg_scroll)
@@ -4581,6 +4838,10 @@ retnomove:
 	}
 
 	curwin->w_cursor.lnum = curwin->w_topline;
+#ifdef USE_GUI
+	/* remember topline, needed for double click */
+	gui_prev_topline = curwin->w_topline;
+#endif
     }
     else if (on_status_line)
     {
@@ -4677,6 +4938,20 @@ retnomove:
 	if ((col -= 8) < 0)
 	    col = 0;
 
+    /* Start Visual mode before coladvance(), for when 'sel' != "old" */
+    if ((flags & MOUSE_MAY_VIS) && !VIsual_active)
+    {
+	check_visual_highlight();
+	VIsual = old_cursor;
+	VIsual_active = TRUE;
+	VIsual_reselect = TRUE;
+	/* if 'selectmode' contains "mouse", start Select mode */
+	may_start_select('o');
+	setmouse();
+	if (p_smd)
+	    redraw_cmdline = TRUE;	/* show visual mode later */
+    }
+
     curwin->w_curswant = col;
     curwin->w_set_curswant = FALSE;	/* May still have been TRUE */
     if (coladvance(col) == FAIL)	/* Mouse click beyond end of line */
@@ -4687,18 +4962,6 @@ retnomove:
     }
     else if (inclusive != NULL)
 	*inclusive = FALSE;
-
-    if ((flags & MOUSE_MAY_VIS) && !VIsual_active)
-    {
-	check_visual_highlight();
-	VIsual = old_cursor;
-	VIsual_active = TRUE;
-#ifdef USE_MOUSE
-	setmouse();
-#endif
-	if (p_smd)
-	    redraw_cmdline = TRUE;	/* show visual mode later */
-    }
 
     if (curwin == old_curwin && curwin->w_cursor.lnum == old_cursor.lnum &&
 				       curwin->w_cursor.col == old_cursor.col)
@@ -5039,13 +5302,13 @@ intro_message()
 #if defined(WIN32) && !defined(USE_GUI_WIN32)
 	if (mch_windows95())
 	{
-	    screen_puts((char_u *)"WARNING: Windows 95 detected", row + 1, col + 8, highlight_attr[HLF_E]);
+	    screen_puts((char_u *)"WARNING: Windows 95 detected", row + 1, col + 8, hl_attr(HLF_E));
 	    screen_puts((char_u *)"type  :help windows95<Enter>  for info on this", row + 2, col, 0);
 	}
 #endif
 #if defined(__BEOS__) && defined(__INTEL__)
-	screen_puts((char_u *)"     WARNING: Intel CPU detected.    ", row + 1, col + 4, highlight_attr[HLF_E]);
-	screen_puts((char_u *)" PPC has a much better architecture. ", row + 2, col + 4, highlight_attr[HLF_E]);
+	screen_puts((char_u *)"     WARNING: Intel CPU detected.    ", row + 1, col + 4, hl_attr(HLF_E));
+	screen_puts((char_u *)" PPC has a much better architecture. ", row + 2, col + 4, hl_attr(HLF_E));
 #endif
     }
 }

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language   : C-shell (csh)
-" Maintainer : Charles E. Campbell, Jr.
-" Last change: March 30, 1997
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Last change: June 4, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -49,14 +49,14 @@ syn keyword cshShellVariables	HOME	LOGNAME	PATH	TERM	USER
 syn match cshExtVar	"\$[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="		contains=cshModifier
 syn match cshSelector	"\$[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_]\+\]\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="	contains=cshModifier
 syn match cshQtyWord	"\$#[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="		contains=cshModifier
-syn match cshArgv	"\$[0-9]\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
+syn match cshArgv	"\$\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
 syn match cshArgv	"\$\*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
 
 " Modifiable Variables with {}
 syn match cshExtVar	"\${[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"		contains=cshModifier
 syn match cshSelector	"\${[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_]\+\]\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"	contains=cshModifier
 syn match cshQtyWord	"\${#[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"	contains=cshModifier
-syn match cshArgv	"\${[0-9]\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"			contains=cshModifier
+syn match cshArgv	"\${\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"			contains=cshModifier
 
 " UnModifiable Substitutions
 syn match cshSubstError	"\$?[a-zA-Z_][a-zA-Z0-9_]*:\(h\|t\|r\|q\|x\|gh\|gt\|gr\)"
@@ -81,11 +81,15 @@ syn region  cshTest	transparent start="if\|while\|exit" skip="\\$" end="$\|;\|th
 
 
 " Highlight special characters (those which have a backslash) differently
-syn match cshSpecial	contained "\\[0-9][0-9][0-9]\|\\[abcfnrtv\\]"
-syn match cshNumber	"-\=\<[0-9]\+\>"
+syn match cshSpecial	contained "\\\d\d\d\|\\[abcfnrtv\\]"
+syn match cshNumber	"-\=\<\d\+\>"
 
 " All other identifiers
 "syn match cshIdentifier	"\<[a-zA-Z._][a-zA-Z0-9._]*\>"
+
+" Shell Input Redirection (Here Documents)
+syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=cshRedir end="^END[a-zA-Z_0-9]*$"
+syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**EOF\**" matchgroup=cshRedir end="^EOF$"
 
 if !exists("did_csh_syntax_inits")
   let did_csh_syntax_inits = 1
@@ -95,10 +99,12 @@ if !exists("did_csh_syntax_inits")
   hi link cshDblQuote	cshString
   hi link cshExprUsing	cshStatement
   hi link cshExtVar	cshVariables
+  hi link cshHereDoc	cshString
   hi link cshNoEndlineBQ	cshNoEndline
   hi link cshNoEndlineDQ	cshNoEndline
   hi link cshNoEndlineSQ	cshNoEndline
   hi link cshQtyWord	cshVariables
+  hi link cshRedir	cshOperator
   hi link cshSelector	cshVariables
   hi link cshSetStmt	cshStatement
   hi link cshSetVariables	cshVariables
@@ -120,7 +126,7 @@ if !exists("did_csh_syntax_inits")
   hi link cshStatement	Statement
   hi link cshString	String
   hi link cshSubstError	Error
-  hi link cshTodo	Todo
+  hi link cshTodo		Todo
   hi link cshVariables	Type
 endif
 

@@ -1,6 +1,6 @@
-*help.txt*	For Vim version 5.1.  Last modification: 1998 Feb 18
+*help.txt*	For Vim version 5.2.  Last modification: 1998 Aug 23
 
-			VIM help file
+			VIM - main help file
 									 k
       Move around:  Use the cursor keys, or "h" to go left,	       h   l
 		    "j" to go down, "k" to go up, "l" to go right.	 j
@@ -9,7 +9,7 @@ Close this window:  Use ":q<Enter>".
 Jump to a subject:  Position the cursor on a tag between |bars| and hit CTRL-].
    With the mouse:  ":set mouse=a" to enable the mouse (in xterm or GUI).
 		    Double-click the left mouse button on a tag between |bars|.
-     To jump back:  Type CTRL-T or CTRL-O.
+	jump back:  Type CTRL-T or CTRL-O.
 Get specific help:  It is possible to go directly to whatever you want help
 		    on, by giving an argument to the ":help" command |:help|.
 		    It is possible to further specify the context:
@@ -24,23 +24,47 @@ Get specific help:  It is possible to go directly to whatever you want help
 
 VIM stands for Vi IMproved.  Most of VIM was made by Bram Moolenaar, but only
 through the help of a lot of people.  See |credits|.
+------------------------------------------------------------------------------
+ tag	  subject			 tag	  subject	~
+								 *quickref*
+|X_lr|	motion: Left-right		|X_km|	Key mapping
+|X_ud|	motion: Up-down			|X_ab|	Abbreviations
+|X_tm|	motion: Text object		|X_op|	Options
+|X_pa|	motion: Pattern searches	|X_ur|	Undo/Redo commands
+|X_ma|	motion: Marks			|X_et|	External commands
+|X_vm|	motion: Various			|X_qf|	Quickfix commands
+|X_ta|	motion: Using tags		|X_vc|	Various commands
+|X_sc|	Scrolling			|X_ce|	Ex: Command-line editing
+|X_in|	insert: Inserting text		|X_ra|	Ex: Ranges
+|X_ai|	insert: Keys			|X_ex|	Ex: Special characters
+|X_ss|	insert: Special keys		|X_ed|	Editing a file
+|X_di|	insert: Digraphs		|X_fl|	Using the argument list
+|X_si|	insert: Special inserts		|X_wq|	Writing and quitting
+|X_de|	change: Deleting text		|X_st|	Starting VIM
+|X_cm|	change: Copying and moving	|X_ac|	Automatic commands
+|X_ch|	change: Changing text		|X_wi|	Multi-window functions
+|X_co|	change: Complex			|X_bu|	Buffer list functions
+|X_vi|	Visual mode			|X_sy|	Syntax highlighting
+|X_to|	Text objects			|X_gu|	GUI commands
+|X_re|	Repeating commands
 
-|quickref|	quick reference of most commands
 |howto.txt|	how to do the most common things
 |tutor|		30 minutes training course for beginners
 |copying|	About copying Vim and Uganda
 |www|		Vim on the World Wide Web
 |bugs|		Where to send bug reports
-------------------------------------------------------------------------------
+
 list of documentation files:				*doc-file-list*
 
 |intro.txt|	introduction to Vim
 |help.txt|	overview and quick reference (this file)
 |index.txt|	alphabetical index for each mode
+|quotes.txt|	remarks from users of Vim
+|todo.txt|	known problems and desired extensions
 
 |autocmd.txt|	automatically executing commands on an event
 |change.txt|	delete and replace text
-|cmdline.txt|	Command line editing
+|cmdline.txt|	Command-line editing
 |digraph.txt|	list of available digraphs
 |editing.txt|	editing and writing files
 |eval.txt|	expression evaluation, conditional commands
@@ -54,15 +78,17 @@ list of documentation files:				*doc-file-list*
 |motion.txt|	commands for moving around
 |options.txt|	options
 |pattern.txt|	regexp patterns and search commands
+|if_cscope.txt|	using cscope with Vim
 |if_perl.txt|	Perl interface
 |if_python.txt|	Python interface
 |if_ole.txt|	OLE automation interface for Win32
+|if_tcl.txt|	Tcl interface
 |quickfix.txt|	quick edit-compile-fix cycle commands
 |recover.txt|	recovering from a crash
 |repeat.txt|	repeating commands
 |rightleft.txt|	right-to-left editing
 |scroll.txt|	scrolling around
-|starting.txt|	starting Vim, command line arguments, initialisation
+|starting.txt|	starting Vim, command-line arguments, initialisation
 |syntax.txt|	syntax highlighting
 |tagsearch.txt|	tags and special searches
 |term.txt|	terminal and mouse
@@ -79,38 +105,17 @@ list of documentation files:				*doc-file-list*
 |help-tags|	all the tags you can jump to (index of tags)
 
 remarks about specific systems:				*sys-file-list*
-|os_amiga.txt|  Amiga
-|os_archi.txt|  Archimedes
-|os_beos.txt| 	BeOS/BeBox
-|os_dos.txt| 	MS-DOS and MS-Windows NT/95 common items
-|os_mac.txt|    Macintosh
-|os_mint.txt|   Atari MiNT
-|os_msdos.txt|  MS-DOS (plain DOS and DOS box under Windows)
-|os_os2.txt|    OS/2
-|os_unix.txt|   Unix
-|os_win32.txt|  MS-Windows NT/95
-------------------------------------------------------------------------------
- tag	  subject			 tag	  subject	~
-								 *quickref*
-|X_lr|	motion: Left-right		|X_re|	Repeating commands
-|X_ud|	motion: Up-down			|X_km|	Key mapping
-|X_tm|	motion: Text object		|X_ab|	Abbreviations
-|X_pa|	motion: Pattern searches	|X_op|	Options
-|X_ma|	motion: Marks			|X_ur|	Undo/Redo commands
-|X_vm|	motion: Various			|X_et|	External commands
-|X_ta|	motion: Using tags		|X_qf|	Quickfix commands
-|X_sc|	Scrolling			|X_vc|	Various commands
-|X_in|	insert: Inserting text		|X_ce|	Ex: Command-line editing
-|X_ai|	insert: Keys			|X_ra|	Ex: Ranges
-|X_ss|	insert: Special keys		|X_ex|	Ex: Special characters
-|X_di|	insert: Digraphs		|X_ed|	Editing a file
-|X_si|	insert: Special inserts		|X_fl|	Using the argument list
-|X_de|	change: Deleting text		|X_wq|	Writing and quitting
-|X_cm|	change: Copying and moving	|X_st|	Starting VIM
-|X_ch|	change: Changing text		|X_ac|	Automatic commands
-|X_co|	change: Complex			|X_wi|	Multi-window functions
-|X_vi|	Visual mode			|X_bu|	Buffer list functions
-|X_to|	Text objects			|X_sy|	Syntax highlighting
+|os_amiga.txt|	Amiga
+|os_beos.txt|	BeOS/BeBox
+|os_dos.txt|	MS-DOS and MS-Windows NT/95 common items
+|os_mac.txt|	Macintosh
+|os_mint.txt|	Atari MiNT
+|os_msdos.txt|	MS-DOS (plain DOS and DOS box under Windows)
+|os_os2.txt|	OS/2
+|os_riscos.txt|	RISC OS
+|os_unix.txt|	Unix
+|os_vms.txt|	VMS
+|os_win32.txt|	MS-Windows NT/95
 ------------------------------------------------------------------------------
 N is used to indicate an optional count that can be given before the command.
 ------------------------------------------------------------------------------
@@ -287,7 +292,7 @@ N is used to indicate an optional count that can be given before the command.
 |:tnext|   :[count]tn[ext][!]	Jump to [count]'th next matching tag
 |:tp|      :[count]tp[revious][!] Jump to [count]'th previous matching tag
 |:tr|	   :[count]tr[ewind][!] Jump to [count]'th matching tag
-|:tl|	   :tl[ast][!]   	Jump to last matching tag
+|:tl|	   :tl[ast][!]		Jump to last matching tag
 ------------------------------------------------------------------------------
 *X_sc*		Scrolling
 
@@ -384,6 +389,8 @@ N is used to indicate an optional count that can be given before the command.
 |D|	N  D		delete to the end of the line (and N-1 more lines)
 |J|	N  J		join N-1 lines (delete <EOL>s)
 |v_J|	{visual}J	join the highlighted lines
+|gJ|	N  gJ		like "J", but without inserting spaces
+|v_gJ|	{visual}gJ	like "{visual}J", but without inserting spaces
 |:d|	:[range]d [x]	delete [range] lines [into register x]
 ------------------------------------------------------------------------------
 *X_cm*		Copying and moving text
@@ -399,6 +406,8 @@ N is used to indicate an optional count that can be given before the command.
 |P|	  N  P		put a register before the cursor position (N times)
 |]p|	  N  ]p		like p, but adjust indent to current line
 |[p|	  N  [p		like P, but adjust indent to current line
+|gp|	  N  gp		like p, but leave cursor after the new text
+|gP|	  N  gP		like P, but leave cursor after the new text
 ------------------------------------------------------------------------------
 *X_ch*		Changing text
 
@@ -553,6 +562,9 @@ N is used to indicate an optional count that can be given before the command.
 				     use ! to overwrite)
 |:mkvimrc|   :mkv[imrc][!] [file]
 				  same as ":mkexrc", but with default ".vimrc"
+|:mksession| :mks[ession][!] [file]
+				  like ":mkvimrc", but store current files
+				     and directory too
 |:mapc|      :mapc[lear]	  remove mappings for Normal and Visual mode
 |:mapc|      :mapc[lear]!	  remove mappings for Insert and Cmdline mode
 |:imapc|     :imapc[lear]	  remove mappings for Insert mode
@@ -579,10 +591,10 @@ N is used to indicate an optional count that can be given before the command.
 
 |:set|	:se[t]			Show all modified options.
 |:set|	:se[t] all		Show all options.
-|:set|	:se[t] {option}		Set toggle option on, show string or number
-				   option.
-|:set|	:se[t] no{option}	Set toggle option off.
-|:set|	:se[t] inv{option}	invert toggle option.
+|:set|	:se[t] {option}		Set boolean option (switch it on), show string
+				   or number option.
+|:set|	:se[t] no{option}	Reset boolean option (switch it off).
+|:set|	:se[t] inv{option}	invert boolean option.
 |:set|	:se[t] {option}={value} Set string or number option to {value}.
 |:set|	:se[t] {option}?	Show value of {option}.
 |:set|	:se[t] {option}&	Reset {option} to its default value.
@@ -592,6 +604,7 @@ N is used to indicate an optional count that can be given before the command.
 
 Short explanation of each option:		*option-list*
 |'aleph'|	   |'al'|	ASCII code of the letter Aleph (Hebrew)
+|'allowrevins'|	   |'ari'|	allow CTRL-_ in Insert and Comamnd-line mode
 |'altkeymap'|	   |'akm'|	for default second laguage (Farsi/Hebrew)
 |'autoindent'|	   |'ai'|	take indent for new line from previous line
 |'autowrite'|	   |'aw'|	automatically write file if changed
@@ -603,6 +616,7 @@ Short explanation of each option:		*option-list*
 |'binary'|	   |'bin'|	edit binary file mode
 |'bioskey'|	   |'biosk'|	MS-DOS: use bios calls for input characters
 |'breakat'|	   |'brk'|	characters that may cause a line break
+|'browsedir'|	   |'bsdir'|	which directory to start browsing in
 |'cindent'|	   |'cin'|	do C program indenting
 |'cinkeys'|	   |'cink'|	keys that trigger indent when 'cindent' is set
 |'cinoptions'|	   |'cino'|	how to do indenting when 'cindent' is set
@@ -612,7 +626,12 @@ Short explanation of each option:		*option-list*
 |'comments'|	   |'com'|	patterns that can start a comment line
 |'compatible'|	   |'cp'|	behave Vi-compatible as much as possible
 |'complete'|	   |'cpt'|	specify how Insert mode completion works
+|'confirm'|	   |'cf'|	ask what to do about unsaved/read-only files
 |'cpoptions'|	   |'cpo'|	flags for Vi-compatible behaviour
+|'cscopeprg'|	   |'csprg'|	command to execute cscope
+|'cscopetag'|	   |'cst'|	use cscope for tag commands
+|'cscopetagorder'| |'csto'|	determines ":cstag" search order
+|'cscopeverbose'|  |'csverb'|	give messages when adding a cscope database
 |'define'|	   |'def'|	pattern to be used to find a macro definition
 |'dictionary'|	   |'dict'|	list of file names used for keyword completion
 |'digraph'|	   |'dg'|	enable the entering of digraphs in Insert mode
@@ -630,10 +649,13 @@ Short explanation of each option:		*option-list*
 |'exrc'|	   |'ex'|	read .vimrc and .exrc in the current directory
 |'fileformat'|	   |'ff'|	file format used for file I/O
 |'fileformats'|	   |'ffs'|	automatically detected values for 'fileformat'
+|'filetype'|	   |'ft'|	system-specific filetype information
 |'fkmap'|	   |'fk'|	Farsi keyboard mapping
 |'formatoptions'|  |'fo'|	how automatic formatting is to be done
 |'formatprg'|	   |'fp'|	name of external program used with "gq" command
 |'gdefault'|	   |'gd'|	the ":substitute" flag 'g' is default on
+|'grepformat'|	   |'gfm'|	format of 'grepprg' output
+|'grepprg'|	   |'gp'|	program to use for ":grep"
 |'guicursor'|	   |'gcr'|	GUI: settings for cursor shape and blinking
 |'guifont'|	   |'gfn'|	GUI: Name(s) of font(s) to be used
 |'guioptions'|	   |'go'|	GUI: Which components and options are used
@@ -657,6 +679,7 @@ Short explanation of each option:		*option-list*
 |'isprint'|	   |'isp'|	printable characters
 |'iskeyword'|	   |'isk'|	characters included in keywords
 |'joinspaces'|	   |'js'|	two spaces after a period with a join command
+|'keymodel'|	   |'km'|	enable starting/stopping selection with keys
 |'keywordprg'|	   |'kp'|	program to use for the "K" command
 |'langmap'|	   |'lmap'|	alphabetic characters for other language mode
 |'laststatus'|	   |'ls'|	tells when last window has status lines
@@ -665,10 +688,12 @@ Short explanation of each option:		*option-list*
 |'lines'|			number of lines in the display
 |'lisp'|			automatic indenting for Lisp
 |'list'|			show <Tab> and <EOL>
+|'listchars'|	   |'lcs'|	characters for displaying in list mode
 |'magic'|			changes special characters in search patterns
 |'makeef'|	   |'mef'|	name of the errorfile for ":make"
 |'makeprg'|	   |'mp'|	program to use for the ":make" command
 |'matchtime'|	   |'mat'|	tenths of a second to show matching paren
+|'maxfuncdepth'|   |'mfd'|	maximum recursive depth for user functions
 |'maxmapdepth'|    |'mmd'|	maximum recursive depth for mapping
 |'maxmem'|	   |'mm'|	maximum memory (in Kbyte) used for one buffer
 |'maxmemtot'|	   |'mmt'|	maximum memory (in Kbyte) used for all buffers
@@ -677,7 +702,9 @@ Short explanation of each option:		*option-list*
 |'modified'|	   |'mod'|	buffer has been modified
 |'more'|			pause listings when the whole screen is filled
 |'mouse'|			enable the use of mouse clicks
+|'mousefocus'|	   |'mousef'|	keyboard focus follows the mouse
 |'mousehide'|	   |'mh'|	hide mouse pointer while typing
+|'mousemodel'|	   |'mousem'|	changes meaning of mouse buttons
 |'mousetime'|	   |'mouset'|	max time between mouse double-click
 |'nrformats'|	   |'nf'|	number formats recognized for CTRL-A command
 |'number'|	   |'nu'|	print the line number in front of each line
@@ -697,6 +724,9 @@ Short explanation of each option:		*option-list*
 |'scrolloff'|	   |'so'|	minimum nr. of lines above and below cursor
 |'sections'|	   |'sect'|	nroff macros that separate sections
 |'secure'|			secure mode for reading .vimrc in current dir
+|'selection'|	   |'sel'|	what type of selection to use
+|'selectmode'|	   |'slm'|	when to use Select mode instead of Visual mode
+|'sessionoptions'| |'ssop'|	options for |:mksession|
 |'shell'|	   |'sh'|	name of shell to use for external commands
 |'shellcmdflag'|   |'shcf'|	flag to shell to execute one command
 |'shellpipe'|	   |'sp'|	string to put output of ":make" in error file
@@ -710,6 +740,7 @@ Short explanation of each option:		*option-list*
 |'shortname'|	   |'sn'|	non-MS-DOS: Filenames assumed to be 8.3 chars
 |'showbreak'|	   |'sbr'|	string to use at the start of wrapped lines
 |'showcmd'|	   |'sc'|	show (partial) command in status line
+|'showfulltag'|	   |'sft'|	show full tag pattern when completing tag
 |'showmatch'|	   |'sm'|	briefly jump to matching bracket if insert one
 |'showmode'|	   |'smd'|	message on status line to show current mode
 |'sidescroll'|	   |'ss'|	minimum number of columns to scroll horizontal
@@ -720,7 +751,9 @@ Short explanation of each option:		*option-list*
 |'splitbelow'|	   |'sb'|	new window from split is below the current one
 |'startofline'|    |'sol'|	commands move cursor to first blank in line
 |'suffixes'|	   |'su'|	suffixes that are ignored with multiple match
+|'swapfile'|	   |'swf'|	whether to use a swapfile for a buffer
 |'swapsync'|	   |'sws'|	how to sync the swap file
+|'syntax'|	   |'syn'|	syntax to be loaded for current buffer
 |'tabstop'|	   |'ts'|	number of spaces that <Tab> in file uses
 |'taglength'|	   |'tl'|	number of significant characters for a tag
 |'tagrelative'|    |'tr'|	file names in tag file are relative
@@ -739,6 +772,7 @@ Short explanation of each option:		*option-list*
 |'titlestring'|			title to use for the Vim window
 |'ttybuiltin'|	   |'tbi'|	use built-in termcap before external termcap
 |'ttyfast'|	   |'tf'|	indicates a fast terminal connection
+|'ttymouse'|	   |'ttym'|	type of mouse codes generated
 |'ttyscroll'|	   |'tsl'|	maximum number of lines for a scroll
 |'ttytype'|	   |'tty'|	alias for 'term'
 |'undolevels'|	   |'ul'|	maximum number of changes that can be undone
@@ -751,7 +785,11 @@ Short explanation of each option:		*option-list*
 |'weirdinvert'|    |'wi'|	for terminals that have weird inversion method
 |'whichwrap'|	   |'ww'|	allow specified keys to cross line boundaries
 |'wildchar'|	   |'wc'|	command-line character for wildcard expansion
+|'wildignore'|	   |'wig'|	files matching these patterns are not completed
+|'wildmode'|	   |'wim'|	mode for 'wilchar' command-line expansion
+|'winaltkeys'|	   |'wak'|	when the windows system handles ALT keys
 |'winheight'|	   |'wh'|	minimum number of lines for the current window
+|'winminheight'|   |'wmh'|	minimum number of lines for any window
 |'wrap'|			long lines wrap and continue on the next line
 |'wrapmargin'|	   |'wm'|	chars from the right where wrapping starts
 |'wrapscan'|	   |'ws'|	searches wrap around the end of the file
@@ -803,6 +841,8 @@ Short explanation of each option:		*option-list*
 				Execute Normal mode commands.
 |Q|		Q		switch to "Ex" mode
 |:redir|	:redir >{file}	redirect messages to {file}
+|:confirm|	:confirm {command}	quit, write, etc., asking about
+				   unsaved changes or read-only files.
 ------------------------------------------------------------------------------
 *X_ce*		Command-line editing
 
@@ -1010,6 +1050,8 @@ Short explanation of each option:		*option-list*
 |-U|	-U {gvimrc}	    idem, for when starting the GUI
 |-i|	-i {viminfo}	    read info from {viminfo} instead of other files
 |---|	--		    end of options, other arguments are file names
+|--help|    --help	    show list of arguments and exit
+|--version| --version	    show version info and exit
 |--|	-		    Read file from stdin.
 ------------------------------------------------------------------------------
 *X_ac*		Automatic Commands
@@ -1084,6 +1126,7 @@ Short explanation of each option:		*option-list*
 |:ball|		:ball	  or  :sball	edit all args/buffers
 |:unhide|	:unhide   or  :sunhide	edit all loaded buffers
 
+|:badd|		:badd {fname}		add file name {fname} to the list
 |:bunload|	:bunload[!] [N]		unload buffer [N] from memory
 |:bdelete|	:bdelete[!] [N]		unload buffer [N] and delete it from
 					   the buffer list
@@ -1116,6 +1159,22 @@ Short explanation of each option:		*option-list*
 |:highlight|	:highlight clear	clear all highlight info
 |:highlight|	:highlight {group-name} {key}={arg} ..
 					set highlighting for {group-name}
+------------------------------------------------------------------------------
+*X_gu*		GUI commands
+
+|:gui|		:gui			UNIX: start the GUI
+|:gui|		:gui {fname} ..		idem, and edit {fname} ..
+
+|:menu|		:menu			list all menus
+|:menu|		:menu {mpath}		list menus starting with {mpath}
+|:menu|		:menu {mpath} {rhs}	add menu {mpath}, giving {lhs}
+|:menu|		:menu {pri} {mpath} {rhs}
+					idem, with priorities {pri}
+|:menu|		:menu ToolBar.{name} {rhs}
+					Win32: add toolbar item, giving {lhs}
+|:tmenu|	:tmenu {mpath} {text}	Win32: add tooltip to menu {mpath}
+|:unmenu|	:unmenu {mpath}		remove menu {mpath}
+
 ------------------------------------------------------------------------------
 *bars*		Bars example
 

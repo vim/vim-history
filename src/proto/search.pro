@@ -20,7 +20,7 @@ int end_word __ARGS((long count, int type, int stop, int empty));
 int bckend_word __ARGS((long count, int type, int eol));
 int current_word __ARGS((OPARG *oap, long count, int include, int type));
 int current_sent __ARGS((OPARG *oap, long count, int include));
-int current_block __ARGS((OPARG *oap, long count, int include, int what));
+int current_block __ARGS((OPARG *oap, long count, int include, int what, int other));
 int current_par __ARGS((OPARG *oap, long count, int include, int type));
 int linewhite __ARGS((linenr_t lnum));
 void find_pattern_in_path __ARGS((char_u *ptr, int dir, int len, int whole, int skip_comments, int type, long count, int action, linenr_t start_lnum, linenr_t end_lnum));

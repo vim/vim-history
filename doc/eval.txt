@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 5.1.  Last modification: 1998 Apr 06
+*eval.txt*      For Vim version 5.2.  Last modification: 1998 Aug 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -12,8 +12,9 @@ done, the features in this document are not available.  See |+eval|.
 1. Variables		|variables|
 2. Expression syntax	|expression-syntax|
 3. Internal variable	|internal-variables|
-4. Function calls	|functions|
-5. Commands		|expression-commands|
+4. Builtin Functions	|functions|
+5. Defining functions	|user-functions|
+6. Commands		|expression-commands|
 
 {Vi does not have any of these commands}
 
@@ -89,7 +90,7 @@ Expression syntax summary, from least to most significant:
 	variable		internal variable
 	$VAR			environment variable
 	@r			contents of register 'r'
-	function(expr1, expr1)	function call
+	function(expr1, ...)	function call
 
 ".." indicates that the operations in this level can be concatenated.
 Example:
@@ -105,7 +106,7 @@ expr1 and expr2						*expr1* *expr2*
 The "||" and "&&" operators take one argument on each side.  The arguments
 are (converted to) Numbers.  The result is:
 
-         input				 output		    ~
+	 input				 output		    ~
     n1		n2		n1 || n2	n1 && n2    ~
     zero	zero		zero		zero
     zero	non-zero	non-zero	zero
@@ -287,7 +288,7 @@ See below |internal-variables|.
 
 function call						*expr-function*
 -------------
-	function(expr1, expr1)	function call
+	function(expr1, ...)	function call
 See below |functions|.
 
 
@@ -304,6 +305,7 @@ been destroyed, results in an error.
 
 A variable name that is preceded with "b:" is local to the current buffer.
 A variable name that is preceded with "w:" is local to the current window.
+Inside functions global variables are accessed with "g:".
 
 Predefined variables:
 						    *count-variable*
@@ -325,11 +327,17 @@ errmsg		Last given error message.  It's allowed to set this variable.
 shell_error	Result of the last shell command.  When non-zero, the last
 		shell command had an error.  When zero, there was no problem.
 		This only works when the shell returns the error code to Vim.
+		The value -1 is often used when the command could not be
+		executed.
 		Example:
 >	:!mv foo bar
 >	:if shell_error
 >	:  echo 'could not rename "foo" to "bar"!'
 >	:endif
+
+						    *this_session-variable*
+this_session	Full filename of the last loaded or saved session file.  See
+		|:mksession|.
 
 						    *version-variable*
 version		Version number of Vim: Major version number times 100 plus
@@ -337,31 +345,41 @@ version		Version number of Vim: Major version number times 100 plus
 		is 501.  Read-only.
 
 ==============================================================================
-4. Function calls						*functions*
+4. Builtin Functions					*functions*
 
 USAGE				RESULT	DESCRIPTION	~
 
-buffer_exists({expr})		Number	TRUE if a buffer {exp} exists
-buffer_name({expr})		String	Name of the buffer {expr}
-buffer_number({expr})		Number	Number of the buffer {expr}
+argc()				Number  number of files in the argument list
+argv({nr})			String  {nr} entry of the argument list
+browse({save}, {title}, {initdir}, {default})
+				String	put up a file requester
+bufexists({expr})		Number	TRUE if a buffer {exp} exists
+bufname({expr})			String	Name of the buffer {expr}
+bufnr({expr})			Number	Number of the buffer {expr}
 char2nr({expr})			Number  ASCII value of first char in {expr}
 col({expr})			Number	column nr of cursor or mark
-delete({expr})			Number	delete file {expr}
+confirm({msg}, {choices}, {default})
+				Number	number of choice picked by user
+delete({fname})			Number	delete file {fname}
+escape({string}, {chars})	String	escape {chars} in {string} with '\'
 exists({var})			Number	TRUE if {var} exists
 expand({expr})			String	expand file wildcards in {expr}
-file_readable({file})		Number	TRUE if {file} is a readable file
+filereadable({file})		Number	TRUE if {file} is a readable file
+fnamemodify({fname}, {mods})	String	modify file name
 getcwd()			String  the current working directory
 getline({lnum})			String	line {lnum} from current buffer
 has({feature})			Number	TRUE if feature {feature} supported
-highlight_exists({name})	Number	TRUE if highlight group {name} exists
-highlightID({name})		Number  syntax ID of highlight group {name}
+hlexists({name})		Number	TRUE if highlight group {name} exists
+hlID({name})			Number  syntax ID of highlight group {name}
 hostname()			String	name of the machine vim is running on
+input({prompt})			String	get input from the user
 isdirectory({directory})	Number	TRUE if {directory} is a directory
-last_buffer_nr()		Number	buffer number of last buffer
 line({expr})			Number	line nr of cursor, last line or mark
 match({expr}, {pat})		Number	position where {pat} matches in {expr}
 matchend({expr}, {pat})		Number	position where {pat} ends in {expr}
+matchstr({expr}, {pat})		String	match of {pat} in {expr}
 nr2char({expr})			String	single char with ASCII value {expr}
+setline({lnum}, {line})		Number	Set line {lnum} to {line}
 strftime({expr})		String	current time in specified format
 strlen({expr})			Number	length of the String {expr}
 strpart({src}, {start}, {len})	String	{len} characters of {src} at {start}
@@ -372,39 +390,82 @@ substitute({expr}, {pat}, {sub}, {flags})
 				String	all {pat} in {expr} replaced with {sub}
 tempname()			String	name for a temporary file
 virtcol({expr})			Number	screen column of cursor or mark
+winbufnr({nr})			Number	buffer number of window {nr}
 winheight({nr})			Number	height of window {nr}
+winnr()				Number	number of current window
 
-							*buffer_exists()*
-buffer_exists({var})
+							*argc()*
+argc()		The result is the number of files in the argument list.  See
+		|arglist|.
+
+							*argv()*
+argv({nr})	The result is the {nr}th file in the argument list.  See
+		|arglist|.  "argv(0)" is the first one.  Example:
+>	let i = 0
+>	while i < argc()
+>	  let f = substitute(argv(i), '\([. ]\)', '\\&', 'g')
+>	  exe 'amenu Arg.' . f . ' :e ' . f . '<CR>'
+>	  let i = i + 1
+>	endwhile
+
+							*browse()*
+browse({save}, {title}, {initdir}, {default})
+		Put up a file requester.  This only works when "has("browse")"
+		returns non-zero (only in some GUI versions).
+		The input fields are:
+		    {save}	when non-zero, select file to write
+		    {title}	title for the requester
+		    {initdir}	directory to start browsing in
+		    {default}	default file name
+		When the "Cancel" button is hit, something went wrong, or
+		browsing is not possible, an empty string is returned.
+
+							*bufexists()*
+bufexists({var})
 		The result is a Number, which is non-zero if a buffer called
 		{var} exists.  If the {var} argument is a string it must match
 		a buffer name exactly.  If the {var} argument is a number
-		buffer numbers are used.  Use "buffer_exists(0)" to test for
-		the existence of an alternate file name.
+		buffer numbers are used.  Use "bufexists(0)" to test for the
+		existence of an alternate file name.
+							*buffer_exists()*
+		Obsolete name: buffer_exists().
 
-							*buffer_name()*
-buffer_name({expr})
+							*bufname()*
+bufname({expr})
 		The result is the name of a buffer, as it is displayed by the
 		":ls" command.
-		If {expr} is a number, that buffer number's name is given.
+		If {expr} is a Number, that buffer number's name is given.
 		Number zero is the alternate buffer for the current window.
-		If {expr} is a string, it is used as a regexp pattern to match
+		If {expr} is a String, it is used as a regexp pattern to match
 		with the buffer names.  When there is more than one match an
 		empty string is returned.  "" or "%" can be used for the
 		current buffer, "#" for the alternate buffer.
+		If the {expr} is a String, but you want to use it as a buffer
+		number, force it to be a Number by adding zero to it:
+>			echo bufname("3" + 0)
 		If the buffer doesn't exist, or doesn't have a name, an empty
 		string is returned.
->  buffer_name("#")		alternate buffer name
->  buffer_name(3)		name of buffer 3
->  buffer_name("%")		name of current buffer
->  buffer_name("file2")		name of buffer where "file2" matches.
+>  bufname("#")			alternate buffer name
+>  bufname(3)			name of buffer 3
+>  bufname("%")			name of current buffer
+>  bufname("file2")		name of buffer where "file2" matches.
+							*buffer_name()*
+		Obsolete name: buffer_name().
 
+							*bufnr()*
+bufnr({expr})	The result is the number of a buffer, as it is displayed by
+		the ":ls" command.  For the use of {expr}, see bufname()
+		above.  If the buffer doesn't exist, -1 is returned.
+		bufnr("$") is the last buffer:
+>  :let last_buffer = bufnr("$")
+		The result is a Number, which is the highest buffer number
+		of existing buffers.  Note that not all buffers with a smaller
+		number necessarily exist, because ":bdel" may have removed
+		them.  Use bufexists() to test for the existence of a buffer.
 							*buffer_number()*
-buffer_number({expr})
-		The result is the number of a buffer, as it is displayed by
-		the ":ls" command.  For the use of {expr}, see buffer_name()
-		above.
-		If the buffer doesn't exist, -1 is returned.
+		Obsolete name: buffer_number().
+							*last_buffer_nr()*
+		Obsolete name for bufnr("$"): last_buffer_nr().
 
 							*char2nr()*
 char2nr({expr})
@@ -425,10 +486,58 @@ col({expr})	The result is a Number, which is the column of the file
 >			col("'" . markname)	column of mark markname
 		The first column is 1.  0 is returned for an error.
 
+							*confirm()*
+confirm({msg}, {choices}[, {default} [, {type}]])
+		Note: confirm() is only supported when compiled with dialog
+		support, see |+dialog_con|.
+		{msg} is displayed in a |dialog| with {choices} as the
+		alternatives.  {default} is the number of the choice that is
+		made if the user hits <CR>.  If {default} is omitted, 0 is
+		used.
+		{msg} is a String, use '\n' to include a newline.  Only on
+		some systems the string is wrapped when it doesn't fit.
+		{choices} is a String, with the individual choices separated
+		by '\n', e.g.
+>			"Yes\nNo\nCancel"
+		By default, the first letter of each choice is used as the
+		shortcut key; in the above example the keys y, n, and c would
+		choose the respective option.  To override this, put a '&'
+		before the letter you want to use:
+>			"Save\nSave &All"
+		The optional {type} argument gives the type of dialog.  This
+		is only used for the icon of the Win32 GUI.  It can be one of
+		these values: "Error", "Question", "Info", "Warning" or
+		"Generic".  Only the first character is relevant.
+		If the user aborts the dialog by pressing <Esc>, CTRL-C,
+		or another valid interrupt key, confirm() returns 0.
+
+		An example:
+>   :let choice = confirm("What do you want?", "Apples\nOranges\nBananas", 2)
+>   :if choice == 0
+>   :	echo "make up your mind!"
+>   :elseif choice == 3
+>   :	echo "tasteful"
+>   :else
+>   :	echo "I prefer bananas myself."
+>   :endif
+		In a GUI dialog, buttons are used.  The layout of the buttons
+		depends on the 'confirm' option.  If it is "vertical", the
+		buttons are always put vertically.  Otherwise,  confirm()
+		tries to put the buttons in one horizontal line.  If they
+		don't fit, a vertical layout is used.
+
 							*delete()*
-delete({expr})	Deletes the file by the name {expr}.  The result is a Number,
-		which is 0 if the file was deleted succesfully, and non-zero
+delete({fname})	Deletes the file by the name {fname}.  The result is a Number,
+		which is 0 if the file was deleted successfully, and non-zero
 		when the deletion failed.
+
+							*escape()*
+escape({string}, {chars})
+		Escape the characters in {chars} that occur in {string} with a
+		backslash.  Example:
+>			:echo escape('c:\program files\vim', ' \')
+		results in:
+>			c:\\program\ files\\vim
 
 							*exists()*
 exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
@@ -472,6 +581,7 @@ expand({expr})	Expand the file wildcards in {expr}.  The result is a String.
 		#n			alternate file name n
 		<cfile>			file name under the cursor
 		<afile>			autocmd file name
+		<abuf>			autocmd buffer number
 		<sfile>			sourced script file name
 		<cword>			word under the cursor
 		<cWORD>			WORD under the cursor
@@ -486,22 +596,35 @@ expand({expr})	Expand the file wildcards in {expr}.  The result is a String.
 >			:let &tags = expand("%:p:h") . "/tags"
 
 		There cannot be white space between the variables and the
-		following modifier.
+		following modifier.  The |fnamemodify()| function can be used
+		to modify normal file names.
 
 		When using '%' or '#', and the current or alternate file name
 		is not defined, an empty string is used.  Using "%:p" in a
 		buffer with no name, results in the current directory, with a
 		'/' added.
 
-							*file_readable()*
-file_readable({file})
+							*filereadable()*
+filereadable({file})
 		The result is a Number, which is TRUE when a file with the
 		name {file} exists, and can be read.  If {file} doesn't exist,
 		or is a directory, the result is FALSE.  {file} is any
 		expression, which is used as a String.
+							*file_readable()*
+		Obsolete name: file_readable().
+
+							*fnamemodify()*
+fnamemodify({fname}, {mods})
+		Modify file name {fname} accoding to {mods}.  {mods} is a
+		string of characters like it is used for file names on the
+		command line.  See |filename-modifiers|.
+		Example:
+>			:echo fnamemodify("main.c", ":p:h")
+		results in:
+>			/home/mool/vim/vim/src/
 
 							*getcwd()*
-getcwd()        The result is a String, which is the name of the current
+getcwd()	The result is a String, which is the name of the current
 		working directory.
 
 							*getline()*
@@ -520,29 +643,47 @@ has({feature})	The result is a Number, which is 1 if the feature {feature} is
 		supported, zero otherwise.  The {feature} argument is a
 		string.  See |feature-list| below.
 
-							*highlight_exists()*
-highlight_exists({name})
+							*hlexists()*
+hlexists({name})
 		The result is a Number, which is non-zero if a highlight group
 		called {name} exists.  This is when the group has been
 		defined in some way.  Not necessarily when highlighting has
 		been defined for it, it may also have been used for a syntax
 		item.
+							*highlight_exists()*
+		Obsolete name: highlight_exists().
 
-							*highlightID()*
-highlightID({name})
-		The result is a Number, which is the ID of the highlight group
+							*hlID()*
+hlID({name})	The result is a Number, which is the ID of the highlight group
 		with name {name}.  When the highlight group doesn't exist,
 		zero is returned.
 		This can be used to retrieve information about the highlight
 		group.  For example, to get the background color of the
 		"Comment" group:
->	echo synIDattr(synIDtrans(highlightID("Comment")), "bg")
+>	:echo synIDattr(synIDtrans(hlID("Comment")), "bg")
+							*highlightID()*
+		Obsolete name: highlightID().
 
 							*hostname()*
 hostname()
 		The result is a String, which is the name of the machine on
 		which Vim is currently running. Machine names greater than
 		256 characters long are truncated.
+
+input({prompt})						*input()*
+		The result is a String, which is whatever the user typed on
+		the command-line.  The parameter is either a prompt string, or
+		a blank string (for no prompt).  A '\n' can be used in the
+		prompt to start a new line.  The highlighting set with
+		|:echohl| is used for the prompt.  The input is entered just
+		like a command-line, with the same editing commands and
+		mappings.  There is a separate history for lines typed for
+		input().
+		NOTE: This must not be used in a startup file, for the
+		versions that only run in GUI mode (e.g., the Win32 GUI).
+
+		Example:
+>	:let choice = input("What is your choice? ")
 
 							*isdirectory()*
 isdirectory({directory})
@@ -551,13 +692,6 @@ isdirectory({directory})
 		isn't a directory, the result is FALSE.  {directory} is any
 		expression, which is used as a String.
 
-							*last_buffer_nr()*
-last_buffer_nr()
-		The result is a Number, which is the highest buffer number
-		of existing buffers.  Note that not all buffers with a smaller
-		number necessarily exist, because ":bdel" may have removed
-		them.  Use buffer_exists() to test for the existence of a
-		buffer.
 							*line()*
 line({expr})	The result is a Number, which is the line number of the file
 		position given with {expr}.  The accepted positions are:
@@ -571,6 +705,45 @@ line({expr})	The result is a Number, which is the line number of the file
 >			line("'t")		line number of mark t
 >			line("'" . marker)	line number of mark marker
 
+							*match()*
+match({expr}, {pat})
+		The result is a Number, which gives the index in {expr} where
+		{pat} matches.  A match at the first character returns zero.
+		If there is no match -1 is returned.  Example:
+>			:echo match("testing", "ing")
+		results in "4".
+		See |pattern| for the patterns that are accepted.
+		The 'ignorecase' option is used to set the ignore-caseness of
+		the pattern.  'smartcase' is NOT used.
+
+							*matchend()*
+matchend({expr}, {pat})
+		Same as match(), but return the index of first character after
+		the match.  Example:
+>			:echo matchend("testing", "ing")
+		results in "7".
+
+							*matchstr()*
+matchstr({expr}, {pat})
+		Same as match(), but return the matched string.  Example:
+>			:echo matchstr("testing", "ing")
+		results in "ing".
+		When there is no match "" is returned.
+
+							*nr2char()*
+nr2char({expr})
+		Return a string with a single chararacter, which has the ASCII
+		value {expr}.  Examples:
+>			nr2char(64)		returns "@"
+>			nr2char(32)		returns " "
+
+							*setline()*
+setline({lnum}, {line})
+		Set line {lnum} of the current buffer to {line}.  If this
+		succeeds, 0 is returned.  If this fails (most likely because
+		{lnum} is invalid) 1 is returned.  Example:
+>			:call setline(5, strftime("%c"))
+
 							*strftime()*
 strftime({format})
 		The result is a String, which is the current date and time, as
@@ -581,29 +754,6 @@ strftime({format})
 >		  :echo strftime("%Y %b %d %X")	   1997 Apr 27 11:53:25
 >		  :echo strftime("%y%m%d %T")	   970427 11:53:55
 >		  :echo strftime("%H:%M")	   11:55
-
-							*match()*
-match({expr}, {pat})
-		The result is a Number, which gives the index in {expr} where
-		{pat} matches.  A match at the first character returns zero.
-		If there is no match -1 is returned.  Example:
->			:echo match("testing", "ing")
-		results in "4".
-		See |pattern| for the patterns that are accepted.
-
-							*matchend()*
-matchend({expr}, {pat})
-		Same as match(), but return the index of first character after
-		the match.  Example:
->			:echo matchend("testing", "ing")
-		results in "7".
-
-							*nr2char()*
-nr2char({expr})
-		Return a string with a single chararacter, which has the ASCII
-		value {expr}.  Examples:
->			nr2char(64)		returns "@"
->			nr2char(32)		returns " "
 
 							*strlen()*
 strlen({expr})	The result is a Number, which is the length of the String
@@ -630,9 +780,9 @@ synID({line}, {col}, {trans})
 		|synIDtrans()| to obtain syntax information about text.
 		{col} is 1 for the leftmost column, {line} is 1 for the first
 		line.
-		When {trans} is non-zero, transparant items are reduced to the
+		When {trans} is non-zero, transparent items are reduced to the
 		item that they reveal.  This is useful when wanting to know
-		the effective color.  When {trans} is zero, the transparant
+		the effective color.  When {trans} is zero, the transparent
 		item is returned.  This is useful when wanting to know which
 		syntax item is effective (e.g. inside parens).
 		Warning: This function can be very slow.  Best speed is
@@ -642,12 +792,14 @@ synID({line}, {col}, {trans})
 >			:echo synIDattr(synID(line("."), col("."), 1), "name")
 
 							*synIDattr()*
-synIDattr({synID}, {what})
+synIDattr({synID}, {what} [, {mode}])
 		The result is a String, which is the {what} attribute of
 		syntax ID {synID}.  This can be used to obtain information
 		about a syntax item.
-		The attributes for the currently active highlighting are used
-		(GUI, cterm or term).
+		{mode} can be "gui", "cterm" or "term", to get the attributes
+		for that mode.  When {mode} is omitted, or an invalid value is
+		used, the attributes for the currently active highlighting are
+		used (GUI, cterm or term).
 		Use synIDtrans() to follow linked highlight groups.
 		{what}		result
 		"name"		the name of the syntax item
@@ -662,6 +814,9 @@ synIDattr({synID}, {what})
 		"inverse"	"1" if inverse (= reverse)
 		"underline"	"1" if underlined
 
+		When the GUI is not running or the cterm mode is asked for,
+		"fg#" is equal to "fg" and "bg#" is equal to "bg".
+
 		Example (echos the color of the syntax item under the cursor):
 >	:echo synIDattr(synIDtrans(synID(line("."), col("."), 1)), "fg")
 
@@ -675,7 +830,10 @@ synIDtrans({synID})
 substitute({expr}, {pat}, {sub}, {flags})
 		The result is a String, which is a copy of {expr}, in which
 		the first match of {pat} is replaced with {sub}.  This works
-		like the ":substitute" command (without any flags).
+		like the ":substitute" command (without any flags).  But the
+		'magic' option is ignored, the {pat} is always processed as if
+		'magic' is set (to make scripts portable).  And a "~" in {sub}
+		is not replaced with the previous {sub}.
 		When {pat} does not match in {expr}, {expr} is returned
 		unmodified.
 		When {flags} is "g", all matches of {pat} in {expr} are
@@ -713,15 +871,26 @@ virtcol({expr})
 >  virtcol("'t")    with text "    there", with 't at 'h', returns 6
 		The first column is 1.  0 is returned for an error.
 
+							*winbufnr()*
+winbufnr({nr})	The result is a Number, which is the number of the buffer
+		associated with window {nr}. When {nr} is zero, the number of
+		the buffer in the current window is returned.  When window
+		{nr} doesn't exist, -1 is returned.
+		Example:
+>  echo "The file in the current window is " . bufname(winbufnr(0))
+
 							*winheight()*
 winheight({nr})
 		The result is a Number, which is the height of window {nr}.
 		When {nr} is zero, the height of the current window is
-		returned.  When window {nr} doesn't exist, zero is returned.
-		An existing window always has a height of one or more.
+		returned.  When window {nr} doesn't exist, -1 is returned.
+		An existing window always has a height of zero or more.
 		Examples:
 >  echo "The current window has " . winheight(0) . " lines."
 
+							*winnr()*
+winnr()		The result is a Number, which is the number of the current
+		window.  The top window has number 1.
 
 							*feature-list*
 There are two types of features:
@@ -735,23 +904,29 @@ There are two types of features:
 all_builtin_terms	Compiled with all builtin terminals enabled.
 amiga			Amiga version of Vim.
 arp			Compiled with ARP support (Amiga).
-autocmd			Complied with autocommands support.
+autocmd			Compiled with autocommands support.
 beos			BeOS version of Vim.
+browse			Compiled with |:browse| support, and browse() will
+			work.
 builtin_terms		Compiled with some builtin terminals.
 cindent			Compiled with 'cindent' support.
+cscope			Compiled with |cscope| support.
 compatible		Compiled to be very Vi compatible.
 debug			Compiled with "DEBUG" defined.
+dialog_con		Compiled with console dialog support.
+dialog_gui		Compiled with GUI dialog support.
 digraphs		Compiled with support for digraphs.
 dos32			32 bits DOS (DJGPP) version of Vim.
 dos16			16 bits DOS version of Vim.
 emacs_tags		Compiled with support for Emacs tags.
-eval			Compiled with exression evaluation support.  Always
+eval			Compiled with expression evaluation support.  Always
 			true, of course!
 ex_extra		Compiled with extra Ex commands |+ex_extra|.
 extra_search		Compiled with support for |'incsearch'| and
 			|'hlsearch'|
 farsi			Compiled with Farsi support |farsi|.
 file_in_path		Compiled with support for |gf| and |<cfile>|
+filetype		Compiled with support for filetypes |+filetype|
 find_in_path		Compiled with support for include file searches
 			|+find_in_path|.
 fname_case		Case in file names matters (for Amiga, MS-DOS, and
@@ -770,10 +945,13 @@ insert_expand		Compiled with support for CTRL-X expansion commands in
 langmap			Compiled with 'langmap' support.
 lispindent		Compiled with support for lisp indenting.
 mac			Macintosh version of Vim.
+modify_fname		Compiled with file name modifiers. |filename-modifiers|
 mouse			Compiled with support mouse.
 mouse_dec		Compiled with support for Dec terminal mouse.
 mouse_netterm		Compiled with support for netterm mouse.
 mouse_xterm		Compiled with support for xterm mouse.
+multi_byte		Compiled with support for Korean et al.
+multi_byte_ime		Compiled with support for IME input method
 ole			Compiled with OLE automation support for Win32.
 perl			Compiled with Perl interface.
 python			Compiled with Python interface.
@@ -792,12 +970,16 @@ tag_old_static		Compiled with support for old static tags
 			|tag-old-static|.
 tag_any_white		Compiled with support for any white characters in tags
 			files |tag-any-white|.
+tcl			Compiled with Tcl interface.
 terminfo		Compiled with terminfo instead of termcap.
 textobjects		Compiled with support for |text-objects|.
 tgetent			Compiled with tgetent support, able to use a termcap
 			or terminfo file.
 unix			Unix version of Vim.
+user-commands		User-defined commands.
 viminfo			Compiled with viminfo support.
+vms			VMS version of Vim.
+wildignore		Compiled with 'wildignore' option
 win32			Win32 version of Vim (Windows 95/NT)
 writebackup		Compiled with 'writebackup' default on.
 xterm_save		Compiled with support for saving and restoring the
@@ -805,7 +987,127 @@ xterm_save		Compiled with support for saving and restoring the
 x11			Compiled with X11 support.
 
 ==============================================================================
-5. Commands						*expression-commands*
+5. Defining functions					*user-functions*
+
+New functions can be defined.  These can be called with "Name()", just like
+builtin functions.  The name must start with an uppercase letter, to avoid
+confusion with builtin functions.
+
+							*:fu* *:function*
+:fu[nction]		List all functions and their arguments.
+
+:fu[nction] {name}	List function {name}.
+
+:fu[nction][!] {name}([arguments]) [range] [abort]
+			Define a new function by the name {name}.  The name
+			must be made of alphanumeric characters and '_', and
+			must start with a capital.
+			An argument can be defined by giving its name.  In the
+			function this can then be used as "a:name" ("a:" for
+			argument).
+			Several arguments can be given, separated by commas.
+			Finally, an argument "..." can be specified, which
+			means that more arguments may be following.  In the
+			function they can be used as "a:1", "a:2", etc.  "a:0"
+			is set to the number of extra arguments (which can be
+			0).
+			When not using "...", the number of arguments in a
+			function call must be equal the number of named
+			arguments.  When using "...", the number of arguments
+			may be larger.
+			It is also possible to define a function without any
+			arguments.  You must still supply the () then.
+			The body of the function follows in the next lines,
+			until ":endfunction".
+			When a function by this name already exists and [!] is
+			not used an error message is given.  When [!] is used,
+			an existing function is silently replaced.
+			When the [range] argument is added, the function is
+			expected to take care of a range itself.  The range is
+			passed as "a:firstline" and "a:lastline".  If [range]
+			is excluded, a ":call" with a range will call the
+			function for each line, with the cursor on the start
+			of each line.
+			When the [abort] argument is added, the function will
+			abort as soon as an error is detected.
+			The last used search pattern and the redo command "."
+			will not be changed by the function.
+
+							*:endf* *:endfunction*
+:endf[unction]		The end of a function definition.
+
+							*:delf* *:delfunction*
+:delf[unction] {name}	Delete function {name}.
+
+							*:retu* *:return*
+:retu[rn] [expr]	Return from a function.  When "[expr]" is given, it is
+			evaluated and returned as the result of the function.
+			If "[expr]" is not given, the number 0 is returned.
+			When a function ends without an explicit ":return",
+			the number 0 is returned.
+			Note that there is no check for unreachable lines,
+			thus there is no warning if commands follow ":return".
+
+Inside a function variables can be used.  These are local variables, which
+will disappear when the function returns.  Global variables need to be
+accessed with "g:".
+
+Example:
+>  :function Table(title, ...)
+>  :  echohl Title
+>  :  echo a:title
+>  :  echohl None
+>  :  let idx = 1
+>  :  while idx <= a:0
+>  :    exe "echo a:" . idx
+>  :    let idx = idx + 1
+>  :  endwhile
+>  :  return idx
+>  :endfunction
+
+This function can then be called with:
+>  let lines = Table("Table", "line1", "line2")
+>  let lines = Table("Empty Table")
+
+To return more than one value, pass the name of a global variable:
+>  :function Compute(n1, n2, divname)
+>  :  if a:n2 == 0
+>  :    return "fail"
+>  :  endif
+>  :  exe "let " . a:divname . " = ". a:n1 / a:n2
+>  :  return "ok"
+>  :endfunction
+
+This function can then be called with:
+>  :let success = Compute(13, 1324, "div")
+>  :if success == "ok"
+>  :  echo div
+>  :endif
+
+							*:cal* *:call*
+:[range]cal[l] {name}([arguments])
+		Call a function.  The name of the function and its arguments
+		are as before.
+		Without a range and for functions that accept a range, the
+		function is called once, with the cursor at the current
+		position.
+		When a range is given and the function doesn't handle it
+		itself, the function is executed for each line in the range,
+		with the cursor in the first column of that line.  The cursor
+		is left at the last line (possibly moved by the last function
+		call).  The arguments are re-evaluated for each line.  Thus
+		this works:
+
+>	:function Mynumber(arg)
+>	:  echo line(".") . " " . a:arg
+>	:endfunction
+>	:1,5call Mynumber(getline("."))
+
+The recursiveness of user functions is restricted with the |'maxfuncdepth'|
+option.
+
+==============================================================================
+6. Commands						*expression-commands*
 
 :let {var-name} = {expr1}				*:let*
 			Set internal variable {var-name} to the result of the
@@ -832,7 +1134,11 @@ x11			Compiled with X11 support.
 			used.
 
 							*:unlet* *:unl*
-:unl[et] {var-name}	Remove the internal variable {var-name}.
+:unl[et][!] {var-name} ...
+			Remove the internal variable {var-name}.  Several
+			variable names can be given, they are all removed.
+			With [!] no error message is given for non-existing
+			variables.
 
 :if {expr1}						*:if* *:endif* *:en*
 :en[dif]		Execute the commands until the next matching ":else"
@@ -852,7 +1158,7 @@ x11			Compiled with X11 support.
 >				:endif
 
 							*:else* *:el*
-:else			Execute the commands until the next matching ":else"
+:el[se]			Execute the commands until the next matching ":else"
 			or ":endif" if they previously were not being
 			executed.
 
@@ -922,7 +1228,7 @@ x11			Compiled with X11 support.
 			commands that don't accept a '|'.  Example:
 >		:execute '!ls' | echo "theend"
 
-			Note: The executed string may be any command line, but
+			Note: The executed string may be any command-line, but
 			you cannot start or end a "while" or "if" command.
 			Thus this is illegal:
 >		:execute 'while i > 5'
@@ -939,5 +1245,6 @@ x11			Compiled with X11 support.
 			start of a string.  But, you can use '|' followed by a
 			comment.  Example:
 >		:echo "foo" | "this is a comment
+
 
  vim:tw=78:ts=8:sw=8:

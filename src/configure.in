@@ -56,10 +56,29 @@ fi
 
 dnl Check user requested features.
 
-AC_MSG_CHECKING(if perlinterp option enabled)
+AC_MSG_CHECKING(--enable-max-features argument)
+AC_ARG_ENABLE(max-features,
+	[  --enable-max-features   Use maximum number of features (but not the ones below).], ,
+	[enable_max_features="no"])
+AC_MSG_RESULT($enable_max_features)
+if test "$enable_max_features" = "yes"; then
+  AC_DEFINE(MAX_FEAT)
+else
+  AC_MSG_CHECKING(--enable-min-features argument)
+  AC_ARG_ENABLE(min-features,
+	[  --enable-min-features   Use minimum number of features.], ,
+	[enable_min_features="no"])
+  AC_MSG_RESULT($enable_min_features)
+  if test "$enable_min_features" = "yes"; then
+      AC_DEFINE(MIN_FEAT)
+  fi
+fi
+
+
+AC_MSG_CHECKING(--enable-perlinterp argument)
 AC_ARG_ENABLE(perlinterp,
 	[  --enable-perlinterp     Include Perl interpreter.], ,
-	[enable_perlinterp="yes"])
+	[enable_perlinterp="no"])
 AC_MSG_RESULT($enable_perlinterp)
 if test "$enable_perlinterp" = "yes"; then
   AC_SUBST(vi_cv_path_perl)
@@ -104,14 +123,12 @@ AC_SUBST(PERL_OBJ)
 AC_SUBST(PERL_PRO)
 AC_SUBST(PERL_CFLAGS)
 
-AC_MSG_CHECKING(if pythoninterp option enabled)
+AC_MSG_CHECKING(--enable-pythoninterp argument)
 AC_ARG_ENABLE(pythoninterp,
         [  --enable-pythoninterp   Include Python interpreter.], ,
-	[enable_pythoninterp="yes"])
+	[enable_pythoninterp="no"])
 AC_MSG_RESULT($enable_pythoninterp)
-
 if test "$enable_pythoninterp" = "yes"; then
-
   dnl -- find the python executable
   AC_PATH_PROG(vi_cv_path_python, python)
   if test "X$vi_cv_path_python" != "X"; then
@@ -218,6 +235,99 @@ AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_SRC)
 AC_SUBST(PYTHON_OBJ)
 
+AC_MSG_CHECKING(--enable-tclinterp argument)
+AC_ARG_ENABLE(tclinterp,
+	[  --enable-tclinterp      Include Tcl interpreter.], ,
+	[enable_tclinterp="no"])
+AC_MSG_RESULT($enable_tclinterp)
+
+if test "$enable_tclinterp" = "yes"; then
+	AC_SUBST(vi_cv_path_tcl)
+	AC_PATH_PROG(vi_cv_path_tcl, tclsh)
+	if test -n "X$vi_cv_path_tcl"; then
+		AC_MSG_CHECKING(Tcl version)
+		if echo 'exit [[expr [info tclversion] < 8.0]]' | $vi_cv_path_tcl - ; then
+			tclver=`echo 'puts [[info tclversion]]' | $vi_cv_path_tcl -`
+			AC_MSG_RESULT($tclver - OK);
+			tclloc=`echo 'set l [[info library]];set i [[string last lib $l]];incr i -2;puts [[string range $l 0 $i]]' | $vi_cv_path_tcl -`
+
+			AC_MSG_CHECKING(for location of Tcl include)
+			tclinc="$tclloc/include $tclloc/include/tcl $tclloc/include/tcl$tclver /usr/local/include"
+			for try in $tclinc; do
+				if test -f "$try/tcl.h"; then
+					AC_MSG_RESULT($try/tcl.h)
+					TCL_INC=$try
+					break
+				fi
+			done
+			if test -z "$TCL_INC"; then
+				AC_MSG_RESULT(<not found>)
+				SKIP_TCL=YES
+			fi
+			if test -z "$SKIP_TCL"; then
+				AC_MSG_CHECKING(for location of tclConfig.sh script)
+				tclcnf=`echo $tclinc | sed s/include/lib/g`
+				for try in $tclcnf; do
+					if test -f $try/tclConfig.sh; then
+						AC_MSG_RESULT($try/tclConfig.sh)
+						. $try/tclConfig.sh
+						TCL_LIBS="$TCL_LIB_SPEC $TCL_LIBS"
+						break
+					fi
+				done
+				if test -z "$TCL_LIBS"; then
+					AC_MSG_RESULT(<not found>)
+					AC_MSG_CHECKING(for Tcl library by myself)
+					tcllib=`echo $tclinc | sed s/include/lib/g`
+					for ext in .so .a ; do
+						for ver in "" $tclver ; do 
+							for try in $tcllib ; do
+								trylib=tcl$ver$ext
+								if test -f $try/lib$trylib ; then
+									AC_MSG_RESULT($try/lib$trylib)
+									TCL_LIBS="-L$try -ltcl$ver -ldl -lm"
+									if test "`(uname) 2>/dev/null`" = SunOS &&
+									  uname -r | grep '^5' >/dev/null; then
+										TCL_LIBS="$TCL_LIBS -R $try"
+									fi
+									break 3
+								fi
+							done
+						done
+					done
+					if test -z "$TCL_LIBS"; then
+						AC_MSG_RESULT(<not found>)
+						SKIP_TCL=YES
+					fi
+				fi
+				if test -z "$SKIP_TCL"; then
+					AC_DEFINE(HAVE_TCL)
+					TCL_SRC=if_tcl.c
+					TCL_OBJ=if_tcl.o
+					TCL_PRO=if_tcl.pro
+					TCL_CFLAGS="-I$TCL_INC"
+				fi
+			fi
+		else
+			AC_MSG_RESULT(too old; need Tcl version 8.0 or later)
+		fi
+	fi
+fi
+AC_SUBST(TCL_SRC)
+AC_SUBST(TCL_OBJ)
+AC_SUBST(TCL_PRO)
+AC_SUBST(TCL_CFLAGS)
+AC_SUBST(TCL_LIBS)
+
+AC_MSG_CHECKING(--enable-cscope argument)
+AC_ARG_ENABLE(cscope,
+	[  --enable-cscope         Include cscope interface.], ,
+	[enable_cscope="no"])
+AC_MSG_RESULT($enable_cscope)
+if test "$enable_cscope" = "yes"; then
+  AC_DEFINE(USE_CSCOPE)
+fi
+
 test -z "$with_x" && with_x=yes
 test "${enable_gui-yes}" != no && with_x=yes
 if test "$with_x" = no; then
@@ -302,13 +412,13 @@ fi
 
 test "x$with_x" = xno && enable_gui=no
 
-AC_MSG_CHECKING(--enable-gui option)
+AC_MSG_CHECKING(--enable-gui argument)
 AC_ARG_ENABLE(gui,
- [  --enable-gui            X11-Athena or Motif Graphical User Interface], , )
+ [  --disable-gui           No Athena or Motif X11 GUI], , )
 SKIP_MOTIF=YES; SKIP_ATHENA=YES; GUITYPE=NONE
 case "$enable_gui" in
   no|No|NO)		AC_MSG_RESULT(no GUI support) ;;
-  yes|Yes|YES|"")	AC_MSG_RESULT(automatic GUI support);
+  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support);
 				SKIP_MOTIF= ; SKIP_ATHENA= ;;
   motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support); SKIP_MOTIF= ;;
   athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support); SKIP_ATHENA= ;;
@@ -346,9 +456,11 @@ if test -z "$SKIP_MOTIF"; then
   gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $MOTIFHOME/lib $GUI_LIB_LOC"
   GUI_LIB_LOC=
   for try in $gui_libs; do
-    if test -f "$try/libXm.a" -o -f "$try/libXm.so" -o -f "$try/libXm.sl"; then
-      GUI_LIB_LOC=$try
-    fi
+    for libtry in "$try"/libXm.a "$try"/libXm.so* "$try"/libXm.sl; do
+      if test -f "$libtry"; then
+        GUI_LIB_LOC=$try
+      fi
+    done
   done
   if test -n "$GUI_LIB_LOC"; then
     dnl Remove /usr/lib, causes trouble on some systems
@@ -370,6 +482,13 @@ fi
 if test -z "$SKIP_MOTIF"; then
   SKIP_ATHENA=YES
   GUITYPE=MOTIF
+  MOTIF_LIBNAME=-lXm
+  AC_MSG_CHECKING(--with-motif-lib argument)
+  AC_ARG_WITH(motif-lib,
+  [  --with-motif-lib=string   Library for Motif ],
+  [ MOTIF_LIBNAME="${withval}" ] )
+  AC_MSG_RESULT($MOTIF_LIBNAME)
+  AC_SUBST(MOTIF_LIBNAME)
 fi
 
 dnl Check if the Athena files can be found
@@ -446,32 +565,6 @@ AC_EGREP_CPP(yes,
 #endif
 ], LIBS="$LIBS -linet" AC_MSG_RESULT(yes), AC_MSG_RESULT(no))
 
-olibs="$LIBS"
-AC_MSG_CHECKING(--with-tlib argument)
-AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)
-if test -n "$with_tlib"; then
-	AC_MSG_RESULT($with_tlib)
-	LIBS="$LIBS -l$with_tlib"
-else
-	AC_MSG_RESULT([automatic terminal library selection])
-	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
-	dnl  curses, because curses is much slower.
-	dnl  Newer versions of ncurses are preferred over anything.
-	dnl  Older versions of ncurses have bugs, get a new one!
-	AC_CHECK_LIB(ncurses, tgetent,,
-	AC_CHECK_LIB(termlib, tgetent,,
-	AC_CHECK_LIB(termcap, tgetent,,
-	AC_CHECK_LIB(curses, tgetent,,
-	))))
-fi
-if test "x$olibs" != "x$LIBS"; then
-  AC_MSG_CHECKING(whether we talk terminfo)
-  AC_TRY_RUN([main() { exit(strcmp(tgoto("%p1%d", 0, 1), "1") ? 0 : 1); }],
-	  AC_MSG_RESULT([no -- we are in termcap land]),
-	  AC_MSG_RESULT([yes -- terminfo spoken here]); AC_DEFINE(TERMINFO),
-	  AC_MSG_ERROR(failed to compile test program.))
-fi
-
 AC_MSG_CHECKING(quality of toupper)
 AC_TRY_RUN([#include <ctype.h>
 main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }],
@@ -522,6 +615,37 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_HEADER_TIME
+
+olibs="$LIBS"
+AC_MSG_CHECKING(--with-tlib argument)
+AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)
+if test -n "$with_tlib"; then
+	AC_MSG_RESULT($with_tlib)
+	LIBS="$LIBS -l$with_tlib"
+else
+	AC_MSG_RESULT([automatic terminal library selection])
+	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
+	dnl  curses, because curses is much slower.
+	dnl  Newer versions of ncurses are preferred over anything.
+	dnl  Older versions of ncurses have bugs, get a new one!
+	AC_CHECK_LIB(ncurses, tgetent,,
+	AC_CHECK_LIB(termlib, tgetent,,
+	AC_CHECK_LIB(termcap, tgetent,,
+	AC_CHECK_LIB(curses, tgetent,,
+	))))
+fi
+if test "x$olibs" != "x$LIBS"; then
+  AC_MSG_CHECKING(whether we talk terminfo)
+  AC_TRY_RUN([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+main()
+{char *s; s=tgoto("%p1%d", 0, 1); exit(!strcmp(s==0 ? "" : s, "1")); }],
+	  AC_MSG_RESULT([no -- we are in termcap land]),
+	  AC_MSG_RESULT([yes -- terminfo spoken here]); AC_DEFINE(TERMINFO),
+	  AC_MSG_ERROR(failed to compile test program.))
+fi
 
 AC_MSG_CHECKING(whether termcap.h contains ospeed)
 AC_TRY_LINK([
@@ -681,6 +805,15 @@ test -f tags && mv tags tags.save
 (eval ctags -i+m  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -i+m"
 test -f tags.save && mv tags.save tags
 AC_MSG_RESULT($TAGPRG) AC_SUBST(TAGPRG)
+
+dnl Check how we can run man with a section number
+AC_MSG_CHECKING(how to run man with a section nr)
+MANDEF="man"
+(eval man -s 2 read) < /dev/null > /dev/null 2>&AC_FD_CC && MANDEF="man -s"
+AC_MSG_RESULT($MANDEF)
+if test "$MANDEF" = "man -s"; then
+	AC_DEFINE(USEMAN_S)
+fi
 
 dnl Check for BeOS, which needs an extra source file
 AC_MSG_CHECKING(for BeOS)

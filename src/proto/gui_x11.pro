@@ -1,12 +1,5 @@
 /* gui_x11.c */
-void gui_x11_timer_cb __ARGS((XtPointer timed_out, XtIntervalId *interval_id));
-void gui_x11_visibility_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
-void gui_x11_expose_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
-void gui_x11_resize_window_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
-void gui_x11_focus_change_cb __ARGS((Widget w, XtPointer data, XEvent *event, Boolean *dum));
 void gui_x11_key_hit_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
-void gui_x11_mouse_cb __ARGS((Widget w, XtPointer dud, XEvent *event, Boolean *dum));
-void gui_x11_sniff_request_cb __ARGS((XtPointer closure, int *source, XtInputId *id));
 void gui_mch_prepare __ARGS((int *argc, char **argv));
 int gui_mch_init __ARGS((void));
 void gui_mch_new_colors __ARGS((void));
@@ -22,6 +15,7 @@ void gui_mch_free_font __ARGS((GuiFont font));
 GuiColor gui_mch_get_color __ARGS((char_u *name));
 void gui_mch_set_fg_color __ARGS((GuiColor color));
 void gui_mch_set_bg_color __ARGS((GuiColor color));
+void gui_mch_mousehide __ARGS((int hide));
 void gui_mch_draw_string __ARGS((int row, int col, char_u *s, int len, int flags));
 int gui_mch_haskey __ARGS((char_u *name));
 int gui_get_x11_windis __ARGS((Window *win, Display **dis));
@@ -53,3 +47,6 @@ void gui_mch_start_blink __ARGS((void));
 int gui_mch_get_lightness __ARGS((GuiColor pixel));
 char_u *gui_mch_get_rgb __ARGS((GuiColor pixel));
 void gui_x11_callbacks __ARGS((Widget textArea, Widget vimForm));
+int gui_mch_get_mouse_x __ARGS((void));
+int gui_mch_get_mouse_y __ARGS((void));
+void gui_mch_setmouse __ARGS((int x, int y));

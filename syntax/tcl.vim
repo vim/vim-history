@@ -13,7 +13,7 @@ set comments=:#
 syn keyword tclStatement	proc global return lindex 
 syn keyword tclStatement	llength lappend lreplace lrange list concat incr 
 syn keyword tclStatement	upvar set
-syn keyword tclLabel 		case default
+syn keyword tclLabel		case default
 syn keyword tclConditional	if then else elseif switch
 syn keyword tclRepeat		while for foreach break continue 
 syn keyword tcltkSwitch	contained	insert create polygon fill outline tag
@@ -135,7 +135,7 @@ syn region tcltkCommand matchgroup=tcltkCommandColor start="\<string\>" matchgro
 
 " ARRAY
 " commands associated with array
-syn keyword tcltkArraySwitch 	contained	anymore donesearch exists get names nextelement size startsearch set
+syn keyword tcltkArraySwitch	contained	anymore donesearch exists get names nextelement size startsearch set
 " match from command name to ] or EOL
 syn region tcltkCommand matchgroup=tcltkCommandColor start="\<array\>" matchgroup=NONE skip="^\s*$" end="]\|[^\\]*\s*$"he=e-1  contains=tclLineContinue,tcltkArraySwitch,tclNumber,tclVarRef,tclString,tcltkCommand 
 
@@ -150,7 +150,7 @@ syn keyword tclTodo contained	TODO
 
 " String and Character contstants
 " Highlight special characters (those which have a backslash) differently
-syn match   tclSpecial contained "\\[0-9][0-9][0-9]\=\|\\."
+syn match   tclSpecial contained "\\\d\d\d\=\|\\."
 " A string needs the skip argument as it may legitimately contain \".
 " Match at start of line
 syn region  tclString		  start=+^"+ end=+"+ contains=tclSpecial skip=+\\\\\|\\"+
@@ -161,13 +161,13 @@ syn match   tclLineContinue "\\\s*$"
 
 "integer number, or floating point number without a dot and with "f".
 syn case ignore
-syn match  tclNumber		"\<[0-9]\+\(u\=l\=\|lu\|f\)\>"
+syn match  tclNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
 "floating point number, with dot, optional exponent
-syn match  tclNumber		"\<[0-9]\+\.[0-9]*\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  tclNumber		"\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  tclNumber		"\.[0-9]\+\(e[-+]\=[0-9]\+\)\=[fl]\=\>"
+syn match  tclNumber		"\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
-syn match  tclNumber		"\<[0-9]\+e[-+]\=[0-9]\+[fl]\=\>"
+syn match  tclNumber		"\<\d\+e[-+]\=\d\+[fl]\=\>"
 "hex number
 syn match  tclNumber		"0x[0-9a-f]\+\(u\=l\=\|lu\)\>"
 "syn match  tclIdentifier	"\<[a-z_][a-z0-9_]*\>"

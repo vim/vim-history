@@ -207,7 +207,7 @@ OpenPTY(ttyn)
     static char TtyName[32];
 
     strcpy(PtyName, "/dev/ptc");
-    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_NONBLOCK | O_EXTRA)) < 0)
+    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_NONBLOCK | O_EXTRA, 0)) < 0)
 	return -1;
     if (fstat(f, &buf) < 0)
     {
@@ -236,7 +236,7 @@ OpenPTY(ttyn)
     static char TtyName[32];
 
     strcpy(PtyName, "/dev/ptmx");
-    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
+    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
 	return -1;
 
     /*
@@ -288,7 +288,7 @@ OpenPTY(ttyn)
 # ifdef _IBMR2
     if (aixhack >= 0)
 	close(aixhack);
-    if ((aixhack = open(TtyName, O_RDWR | O_NOCTTY | O_EXTRA)) < 0)
+    if ((aixhack = open(TtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) < 0)
     {
 	close(f);
 	return -1;
@@ -322,7 +322,7 @@ OpenPTY(ttyn)
 	for (d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
 	{
 	    debug1("OpenPTY tries '%s'\n", PtyName);
-	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
+	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
 		continue;
 	    q[0] = *l;
 	    q[1] = *d;
@@ -424,7 +424,7 @@ putenv(string)
     }
     else
     {				/* name already in env. */
-	p = realloc(environ[i], strlen(string) + 1);
+	p = vim_realloc(environ[i], strlen(string) + 1);
 	if (p == NULL)
 	    return -1;
     }
@@ -491,7 +491,7 @@ moreenv()
     char    **env;
 
     esize = envsize + EXTRASIZE;
-    env = (char **)realloc((char *)environ, esize * sizeof (*env));
+    env = (char **)vim_realloc((char *)environ, esize * sizeof (*env));
     if (env == 0)
 	return -1;
     environ = env;

@@ -76,20 +76,20 @@ syn keyword cobolEXECs        EXEC END-EXEC
 syn match   cobolParas        "^.\{6} \{1,4}[A-Z0-9][^"]\{-}\."hs=s+7
 
 syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+[1-4][0-9] "hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \+[1-4]\d "hs=s+7,he=e-1
 syn match   cobolDecl         "^.\{6} \+0\=[2-9] "hs=s+7,he=e-1
 syn match   cobolDecl         "^.\{6} \+66 "hs=s+7,he=e-1
 
 syn match   cobolWatch        "^.\{6} \+88 "hs=s+7,he=e-1
 
 syn match   cobolBadID        "\k\+-\($\|[^A-Z0-9]\)"
-syn match   cobolBadID        "[^A-Z0-9]-[0-9]*[A-Z-]\+"hs=s+1
+syn match   cobolBadID        "[^A-Z0-9]-\d*[A-Z-]\+"hs=s+1
 
 syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE 
 syn match   cobolCALLs        "EXIT \+PROGRAM"
-syn match   cobolExtras       /\<VALUE \+[0-9]\+\./hs=s+6,he=e-1
+syn match   cobolExtras       /\<VALUE \+\d\+\./hs=s+6,he=e-1
 
-syn match   cobolNumber       "\<-\=[0-9]*\.\=[0-9]\+\>"
+syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
 
 syn match   cobolString       /".\{-}"/
 syn match   cobolString       /'.\{-}'/

@@ -9,7 +9,7 @@ extern char	*malloc __ARGS((unsigned int));
 extern char	*realloc __ARGS((char *, int));
 extern char	*getenv __ARGS((char *));
 extern int	setenv __ARGS((char *, char *, int));
-extern int	putenv __ARGS((char *));
+extern int	putenv __ARGS((const char *));
 
 extern int	gethostname __ARGS((char *, int));
 extern void	perror __ARGS((char *));

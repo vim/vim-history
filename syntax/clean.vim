@@ -21,8 +21,8 @@ syn keyword cleanBoolDenot True False
 syn region  cleanStringDenot start=+"+ end=+"+
 syn match cleanCharDenot "'.'"
 syn match cleanCharsDenot "'.*'" contained
-syn match cleanIntegerDenot "[+-~]\=\<\([0-9]\+\|0[0-7]\+\|0x[0-9A-Fa-f]\+\)\>"
-syn match cleanRealDenot "[+-~]\=\<[0-9]\+\.[0-9]+\(E[+-~]\=[0-9]+\)\="
+syn match cleanIntegerDenot "[+-~]\=\<\(\d\+\|0[0-7]\+\|0x[0-9A-Fa-f]\+\)\>"
+syn match cleanRealDenot "[+-~]\=\<\d\+\.\d+\(E[+-~]\=\d+\)\="
 
 " To highlight the use of lists, tuples and arrays
 syn region cleanList start="\[" end="\]" contains=ALL
@@ -35,7 +35,7 @@ syn region cleanComment start="/\*"  end="\*/"
 syn match cleanComment "//.*"
 
 " Now for some useful typedefinitionrecognition
-syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*[0-9]\=[ \t]*::.*->.*" oneline contains=cleanSpecial
+syn match cleanFuncTypeDef "\([a-zA-Z].*\|(\=[-~@#$%^?!+*<>\/|&=:]\+)\=\)[ \t]*\(infix[lr]\=\)\=[ \t]*\d\=[ \t]*::.*->.*" oneline contains=cleanSpecial
 
 if !exists("did_clean_syntax_init")
    let did_clean_syntax_init = 1

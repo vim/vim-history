@@ -13,7 +13,7 @@
 #include "vim.h"
 #include "termlib.pro"
 
-#if !defined(AMIGA) && !defined(VMS) && !defined(macintosh)
+#if !defined(AMIGA) && !defined(VMS) && !defined(macintosh) && !defined(RISCOS)
 # include <sgtty.h>
 #endif
 
@@ -53,10 +53,12 @@ short	ospeed;		      /* Baud rate (1-16, 1=300, 16=19200), as in stty */
  * - This could be simplified considerably for non-UNIX systems.
  */
 
-#ifdef AMIGA
-# define TERMCAPFILE "s:termcap"
-#else
-# define TERMCAPFILE "/etc/termcap"
+#ifndef TERMCAPFILE
+# ifdef AMIGA
+#  define TERMCAPFILE "s:termcap"
+# else
+#  define TERMCAPFILE "/etc/termcap"
+# endif
 #endif
 
 tgetent(tbuf, term)
@@ -71,7 +73,7 @@ tgetent(tbuf, term)
     int	    retval = 0;
     int	    len;
 
-    if ((tmp = (char *)vim_getenv((char_u *)"TERMCAP")) != NULL)
+    if ((tmp = (char *)mch_getenv((char_u *)"TERMCAP")) != NULL)
     {
 	if (*tmp == '/')		/* TERMCAP = name of termcap file */
 	{

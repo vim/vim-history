@@ -23,6 +23,11 @@ DOCS = \
 	gui_x11.txt \
 	help.txt \
 	howto.txt \
+	if_cscope.txt \
+	if_ole.txt \
+	if_perl.txt \
+	if_python.txt \
+	if_tcl.txt \
 	index.txt \
 	insert.txt \
 	intro.txt \
@@ -31,20 +36,19 @@ DOCS = \
 	motion.txt \
 	options.txt \
 	os_amiga.txt \
-	os_archi.txt \
 	os_beos.txt \
 	os_dos.txt \
 	os_mac.txt \
 	os_mint.txt \
 	os_msdos.txt \
 	os_os2.txt \
+	os_riscos.txt \
 	os_unix.txt \
+	os_vms.txt \
 	os_win32.txt \
 	pattern.txt \
-	if_perl.txt \
-	if_python.txt \
-	if_ole.txt \
 	quickfix.txt \
+	quotes.txt \
 	recover.txt \
 	repeat.txt \
 	rightleft.txt \
@@ -54,6 +58,7 @@ DOCS = \
 	tagsearch.txt \
 	term.txt \
 	tips.txt \
+	todo.txt \
 	uganda.txt \
 	undo.txt \
 	various.txt \
@@ -76,6 +81,11 @@ HTMLS = \
 	gui_x11.html \
 	help.html \
 	howto.html \
+	if_cscope.html \
+	if_ole.html \
+	if_perl.html \
+	if_python.html \
+	if_tcl.html \
 	index.html \
 	insert.html \
 	intro.html \
@@ -84,20 +94,19 @@ HTMLS = \
 	motion.html \
 	options.html \
 	os_amiga.html \
-	os_archi.html \
 	os_beos.html \
 	os_dos.html \
 	os_mac.html \
 	os_mint.html \
 	os_msdos.html \
 	os_os2.html \
+	os_riscos.html \
 	os_unix.html \
+	os_vms.html \
 	os_win32.html \
 	pattern.html \
-	if_perl.html \
-	if_python.html \
-	if_ole.html \
 	quickfix.html \
+	quotes.html \
 	recover.html \
 	repeat.html \
 	rightleft.html \
@@ -107,6 +116,7 @@ HTMLS = \
 	tagsearch.html \
 	term.html \
 	tips.html \
+	todo.html \
 	uganda.html \
 	undo.html \
 	various.html \
@@ -141,7 +151,7 @@ ctags.1: ../src/ctags/ctags.1
 	cp ../src/ctags/ctags.1 ctags.1
 
 html: noerrors tags tags.ref $(HTMLS)
-	-more errors.log
+	@if test -f errors.log; then more errors.log; fi
 
 noerrors:
 	-rm -f errors.log
@@ -169,9 +179,6 @@ if_ole.txt:
 os_amiga.txt:
 	touch os_amiga.txt
 
-os_archi.txt:
-	touch os_archi.txt
-
 os_beos.txt:
 	touch os_beos.txt
 
@@ -189,6 +196,9 @@ os_msdos.txt:
 
 os_os2.txt:
 	touch os_os2.txt
+
+os_riscos.txt:
+	touch os_riscos.txt
 
 os_win32.txt:
 	touch os_win32.txt

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 5.1.  Last modification: 1998 Mar 29
+*windows.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -41,10 +41,10 @@ active:   The buffer is displayed in a window.  If there is a file for this
 	  modified.
 							*hidden-buffer*
 hidden:   The buffer is not displayed.  If there is a file for this buffer, it
-          has been read into the buffer.  The buffer may have been modified.
+	  has been read into the buffer.  The buffer may have been modified.
 							*inactive-buffer*
 inactive: The buffer is not displayed and does not contain anything.  Options
-          for the buffer are remembered if the file was once loaded.
+	  for the buffer are remembered if the file was once loaded.
 
 In a table:
 
@@ -117,6 +117,12 @@ CTRL-W CTRL_N						*CTRL-W_CTRL-N*
 		|+cmd|.  If 'fileformats' is not empty, the first format given
 		will be used for the new buffer.  If 'fileformats' is empty,
 		the 'fileformat' of the current buffer is used.
+		Autocommands are executed in this order:
+		1. WinLeave for the current window
+		2. WinEnter for the new window
+		3. BufLeave for the current buffer
+		4. BufEnter for the new buffer
+		This behaves like a ":split" first, and then a ":e" command.
 
 :[N]new [+cmd] {file}
 :[N]sp[lit] [+cmd] {file}				*:split_f*
@@ -139,7 +145,7 @@ Closing a window
 
 CTRL-W q						*CTRL-W_q*
 CTRL-W CTRL-Q						*CTRL-W_CTRL-Q*
-:quit		Quit current window.  When quitting the last window (not
+:q[uit]		Quit current window.  When quitting the last window (not
 		counting a help window), exit Vim.
 		When 'hidden' is set, and there is only one window for the
 		current buffer, it becomes hidden.
@@ -147,7 +153,7 @@ CTRL-W CTRL-Q						*CTRL-W_CTRL-Q*
 		current buffer, and the buffer was changed, the command fails.
 		(Note: CTRL-Q does not work on all terminals)
 
-:quit!		Quit current window.  If this was the last window for a buffer,
+:q[uit]!	Quit current window.  If this was the last window for a buffer,
 		any changes to that buffer are lost.  When quitting the last
 		window (not counting help windows), exit Vim.  The contents of
 		the buffer are lost, even when 'hidden' is set.
@@ -178,7 +184,7 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 
 CTRL-W o						*CTRL-W_o*
 CTRL-W CTRL-O					*CTRL-W_CTRL-O* *:on* *:only*
-:on[ly]		Make the current window the only one on the screen.  All other
+:on[ly][!]	Make the current window the only one on the screen.  All other
 		windows are closed.
 		When the 'hidden' option is set, all buffers in closed windows
 		become hidden.
@@ -251,10 +257,10 @@ CTRL-W =	make all windows (almost) equally high.
 :res[ize] -N					*:res* *:resize* *CTRL-W_-*
 CTRL-W -	decrease current window height by N
 
-:resize +N					*CTRL-W_+*
+:res[ize] +N					*CTRL-W_+*
 CTRL-W +	increase current window height by N
 
-:resize [N]
+:res[ize] [N]
 CTRL-W CTRL-_					*CTRL-W_CTRL-_* *CTRL-W__*
 CTRL-W _	set current window height to N (default: highest possible)
 
@@ -277,7 +283,7 @@ option, splitting a window will reduce the size of the current window and
 leave the other windows the same.  When closing a window, the extra lines are
 given to the window above it.
 
-The option 'cmdheight' ('ch') is used to set the height of the command line.
+The option 'cmdheight' ('ch') is used to set the height of the command-line.
 If you are annoyed by the |hit-return| prompt for long messages, set this
 option to 2 or 3.
 
@@ -293,15 +299,25 @@ it).
 :qa[ll]		Exit Vim, unless there are some buffers which have been
 		changed.  (Use ":bmod" to go to the next modified buffer).
 
-:qall!		Exit Vim.  Any changes to buffers are lost.
+:conf[irm] qa[ll]
+		Exit Vim.  Bring up a prompt when some buffers have been
+		changed.  See |:confirm|.
+
+:qa[ll]!	Exit Vim.  Any changes to buffers are lost.
 
 :wqa[ll]					*:wqa* *:wqall* *:xa* *:xall*
 :xa[ll]		Write all changed buffers and exit Vim.  If there are buffers
 		without a file name, which are readonly or which cannot be
 		written for another reason, Vim is not quit.
 
-:wqall!
-:xall!		Write all changed buffers, even the ones that are readonly,
+:conf[irm] wqa[ll]
+:conf[irm] xa[ll]
+		Write all changed buffers and exit Vim.  Bring up a prompt
+		when some buffers are readonly or cannot be written for
+		another reason.  See |:confirm|.
+
+:wqa[ll]!
+:xa[ll]!	Write all changed buffers, even the ones that are readonly,
 		and exit Vim.  If there are buffers without a file name or
 		which cannot be written for another reason, Vim is not quit.
 
@@ -329,16 +345,16 @@ it).
 			18. :unhide		edit all loaded buffers
 			19. :[N]bmod [N]	to Nth modified buf
 
-  split & args list 	  split & buffer list 	   meaning ~
+  split & args list	  split & buffer list	   meaning ~
 21. :[N]sargument [N]   31. :[N]sbuffer [N]	split + to arg/buf N
 22. :[N]snext [file ..] 32. :[N]sbnext [N]      split + to Nth next arg/buf
 23. :[N]sNext [N]       33. :[N]sbNext [N]      split + to Nth previous arg/buf
 24. :[N]sprevious [N]   34. :[N]sbprevious [N]  split + to Nth previous arg/buf
-25. :srewind            35. :sbrewind           split + to first arg/buf
-26. :slast              36. :sblast             split + to last arg/buf
+25. :srewind		35. :sbrewind		split + to first arg/buf
+26. :slast		36. :sblast		split + to last arg/buf
 27. :sall		37: :sball		edit all args/buffers
 			38. :sunhide		edit all loaded buffers
-                        39. :[N]sbmod [N]       split + to Nth modified buf
+			39. :[N]sbmod [N]	split + to Nth modified buf
 
 40. :args		list of arguments
 41. :buffers		list of buffers
@@ -482,11 +498,18 @@ Be careful: there may be more hidden, modified buffers!
 		so you can always go to a specific buffer with ":buffer N" or
 		"N CTRL-^", where N is the buffer number.
 
- 		'-' indicates a buffer that is not loaded.  'h' indicates a
+		'-' indicates a buffer that is not loaded.  'h' indicates a
 		hidden buffer: It is loaded, but currently not displayed in a
 		window.  '%' indicates the buffer in the current window.  '#'
 		indicates the alternate buffer for ":e #" or CTRL-^.  '+'
 		indicates a modified buffer.
+
+						*:bad* *:badd*
+:bad[d]	[+lnum] {fname}
+		Add file name {fname} to the buffer list, without loading it.
+		If "lnum" is specified, the cursor will be positioned at that
+		line when the buffer is first entered. Note that other
+		commands after the + will be ignored.
 
 :[N]bd[elete]					*:bd* *:bdel* *:bdelete*
 :bd[elete] [N]
@@ -575,6 +598,12 @@ Be careful: there may be more hidden, modified buffers!
 		Go to [N]th next buffer in buffer list.  [N] defaults to one.
 		Wraps around the end of the buffer list.  See |:buffer-!| for
 		[!].
+		If you are in a help buffer, this takes you to the next help
+		buffer (if there is one). Similarly, if you are in a normal
+		(non-help) buffer, this takes you to the next normal buffer.
+		This is so that if you have invoked help, it doesn't get in
+		the way when you're browsing code/text buffers. The next three
+		commands also work like this.
 
 							*:sbn* *:sbnext*
 :[N]sbn[ext] [N]

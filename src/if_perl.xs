@@ -11,11 +11,9 @@
  */
 
 #define _memory_h	/* avoid memset redeclaration */
-#define IN_PERL_FILE	/* don't include if_perl.pro from prot.h */
+#define IN_PERL_FILE	/* don't include if_perl.pro from proto.h */
 
 #include "vim.h"
-#include "globals.h"
-#include "proto.h"
 
 /*
  * Avoid clashes between Perl and Vim namespace.
@@ -25,7 +23,9 @@
 #undef STRLEN
 #undef FF
 #undef OP_DELETE
-
+#ifdef __BORLANDC__
+#define NOPROTO 1
+#endif
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
@@ -59,7 +59,7 @@ perl_init()
     perl_interp = perl_alloc();
     perl_construct(perl_interp);
     perl_parse(perl_interp, xs_init, 3, args, 0);
-    perl_call_argv("VIM::bootstrap", G_DISCARD, bootargs);
+    perl_call_argv("VIM::bootstrap", (long)G_DISCARD, bootargs);
     VIM_init();
 #ifdef USE_SFIO
     sfdisc(PerlIO_stdout(), sfdcnewvim());
@@ -264,8 +264,11 @@ replace_line(line, end)
 
     if (SvOK(GvSV(defgv)))
     {
-	str = SvPV(GvSV(defgv),na);
+	str = SvPV(GvSV(defgv), na);
 	ml_replace(*line, (char_u *)str, 1);
+#ifdef SYNTAX_HL
+	syn_changed(*line); /* recompute syntax hl. for this line */
+#endif
     }
     else
     {
@@ -273,7 +276,7 @@ replace_line(line, end)
 	ml_delete((*line)--, FALSE);
 	(*end)--;
     }
-    CHANGED;
+    changed();
     return OK;
 }
 
@@ -343,8 +346,11 @@ err:
 }
 
 /* Register any extra external extensions */
-
-extern void boot_DynaLoader _((CV* cv));
+extern void 
+#ifdef __BORLANDC__
+__import
+#endif
+boot_DynaLoader _((CV* cv));
 extern void boot_VIM _((CV* cv));
 
     static void
@@ -590,6 +596,15 @@ Name(vimbuf)
 	XPUSHs(sv_2mortal(newSVpv((char *)vimbuf->b_fname, 0)));
 
 void
+Number(vimbuf)
+    VIBUF vimbuf;
+
+    PPCODE:
+    if (!buf_valid(vimbuf))
+	vimbuf = curbuf;
+    XPUSHs(sv_2mortal(newSViv(vimbuf->b_fnum)));
+
+void
 Count(vimbuf)
     VIBUF vimbuf;
 
@@ -646,7 +661,10 @@ Set(vimbuf, ...)
 		if (u_savesub(lnum) == OK)
 		{
 		    ml_replace(lnum, (char_u *)line, TRUE);
-		    CHANGED;
+		    changed();
+#ifdef SYNTAX_HL
+		    syn_changed(lnum); /* recompute syntax hl. for this line */
+#endif
 		}
 		curbuf = savebuf;
 		update_curbuf(NOT_VALID);
@@ -693,7 +711,7 @@ Delete(vimbuf, ...)
 		    {
 			mark_adjust(lnum, lnum, MAXLNUM, -1);
 			ml_delete(lnum, 0);
-			CHANGED;
+			changed();
 		    }
 		    curbuf = savebuf;
 		    update_curbuf(NOT_VALID);
@@ -729,7 +747,7 @@ Append(vimbuf, ...)
 		{
 		    mark_adjust(lnum + 1, MAXLNUM, 1L, 0L);
 		    ml_append(lnum, (char_u *)line, (colnr_t)0, FALSE);
-		    CHANGED;
+		    changed();
 		}
 		curbuf = savebuf;
 		update_curbuf(NOT_VALID);
