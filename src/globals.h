@@ -210,10 +210,13 @@ EXTERN linenr_T	search_match_lines;		/* lines of of matched string */
 EXTERN colnr_T	search_match_endcol;		/* col nr of match end */
 
 EXTERN int	no_smartcase INIT(= FALSE);	/* don't use 'smartcase' once */
+
 EXTERN int	need_check_timestamps INIT(= FALSE); /* need to check file
 							timestamps asap */
 EXTERN int	did_check_timestamps INIT(= FALSE); /* did check timestamps
 						       recently */
+EXTERN int	no_check_timestamps INIT(= 0);	/* Don't check timestamps */
+
 EXTERN int	highlight_attr[HLF_COUNT];  /* Highl. attr for each context. */
 #ifdef FEAT_STL_OPT
 # define USER_HIGHLIGHT
