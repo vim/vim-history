@@ -637,7 +637,8 @@ do_cmdline(cmdline, getline, cookie, flags)
 	/* stop skipping cmds for an error msg after all endifs and endwhiles */
 	if (next_cmdline == NULL
 #ifdef FEAT_EVAL
-				&& cstack.cs_idx < 0
+		&& cstack.cs_idx < 0
+		&& !(getline == get_func_line && func_has_ended(cookie))
 #endif
 							)
 	    did_emsg = FALSE;
