@@ -3818,7 +3818,8 @@ do_set(arg, opt_flags)
 			     * needed */
 			    if (adding || prepending)
 			    {
-				comma = ((flags & P_COMMA) && *origval);
+				comma = ((flags & P_COMMA) && *origval != NUL
+							   && *newval != NUL);
 				if (adding)
 				{
 				    i = (int)STRLEN(origval);
