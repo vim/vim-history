@@ -412,26 +412,39 @@ incl(lp)
     int
 dec_cursor()
 {
-#ifdef FEAT_MBYTE
-    return (has_mbyte ? mb_dec(&curwin->w_cursor) : dec(&curwin->w_cursor));
-#else
     return dec(&curwin->w_cursor);
-#endif
 }
 
     int
 dec(lp)
     pos_T  *lp;
 {
-    if (lp->col > 0)
-    {		/* still within line */
+    char_u	*p;
+
+#ifdef FEAT_VIRTUALEDIT
+    lp->coladd = 0;
+#endif
+    if (lp->col > 0)		/* still within line */
+    {
 	lp->col--;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    p = ml_get(lp->lnum);
+	    lp->col -= (*mb_head_off)(p, p + lp->col);
+	}
+#endif
 	return 0;
     }
-    if (lp->lnum > 1)
-    {		/* there is a prior line */
+    if (lp->lnum > 1)		/* there is a prior line */
+    {
 	lp->lnum--;
-	lp->col = (colnr_T)STRLEN(ml_get(lp->lnum));
+	p = ml_get(lp->lnum);
+	lp->col = (colnr_T)STRLEN(p);
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    lp->col -= (*mb_head_off)(p, p + lp->col);
+#endif
 	return 1;
     }
     return -1;			/* at start of file */
