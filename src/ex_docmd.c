@@ -7441,6 +7441,11 @@ ex_redraw(eap)
 #endif
     RedrawingDisabled = r;
     p_lz = p;
+
+    /* Reset msg_didout, so that a message that's there is overwritten. */
+    msg_didout = FALSE;
+    msg_col = 0;
+
     out_flush();
 }
 
