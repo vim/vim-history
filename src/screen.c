@@ -4324,7 +4324,11 @@ wm_gettail(s)
 
     for (p = s; *p != NUL; )
     {
-	if (vim_ispathsep(*p))
+	if (vim_ispathsep(*p)
+#ifdef BACKSLASH_IN_FILENAME
+		&& !rem_backslash(p)
+#endif
+	   )
 	    had_sep = TRUE;
 	else if (had_sep)
 	{
