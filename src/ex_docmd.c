@@ -581,6 +581,14 @@ do_cmdline(cmdline, getline, cookie, flags)
 #ifdef WANT_EVAL
     free_cmdlines(&lines_ga);
     ga_clear(&lines_ga);
+
+    if (cstack.cs_idx >= 0 && getline == getsourceline)
+    {
+	if (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
+	    EMSG("Missing :endwhile");
+	else
+	    EMSG("Missing :endif");
+    }
 #endif
 
     /*
