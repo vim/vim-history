@@ -1074,25 +1074,31 @@ struct builtin_term builtin_termcaps[] =
 #  endif
 #endif
     {(int)KS_CL,	"\033[H\033[2J"},
-    {(int)KS_VE,	"\033[9/y\033[12/y"},
-    {(int)KS_VS,	"\033[10/y\033[=1h\033[=2l"},
+    {(int)KS_VE,	"\033[9/y\033[12/y"},	/* These aren't documented */
+    {(int)KS_VS,	"\033[10/y\033[=1h\033[=2l"}, /* These aren't documented */
     {(int)KS_TI,	"\033[=6h"},
     {(int)KS_TE,	"\033[=6l"},
-    {(int)KS_SE,	"\033[m"},
+    {(int)KS_SE,	"\033[21;27m"},
     {(int)KS_SO,	"\033[1;7m"},
     {(int)KS_ME,	"\033[m"},
     {(int)KS_MR,	"\033[7m"},
     {(int)KS_MD,	"\033[1m"},
-    {(int)KS_UE,	"\033[m"},
     {(int)KS_CCO,	"8"},			/* allow 8 colors */
+    {(int)KS_CZH,	"\033[3m"},		/* italic mode on */
+    {(int)KS_CZR,	"\033[23m"},		/* italic mode off */
+    {(int)KS_US,	"\033[4m"},		/* underline on */
+    {(int)KS_UE,	"\033[24m"},		/* underline off */
 #  ifdef TERMINFO
-    {(int)KS_CAB,	"\033[4%p1%dm"},	/* set background color */
-    {(int)KS_CAF,	"\033[3%p1%dm"},	/* set foreground color */
+    {(int)KS_CAB,	"\033[4%p1%dm"},    /* set background color (ANSI) */
+    {(int)KS_CAF,	"\033[3%p1%dm"},    /* set foreground color (ANSI) */
+    {(int)KS_CSB,	"\033[102;%p1%dm"}, /* set screen background color */
+    {(int)KS_CSF,	"\033[101;%p1%dm"}, /* set screen foreground color */
 #  else
-    {(int)KS_CAB,	"\033[4%dm"},		/* set background color */
-    {(int)KS_CAF,	"\033[3%dm"},		/* set foreground color */
+    {(int)KS_CAB,	"\033[4%dm"},	    /* set background color (ANSI) */
+    {(int)KS_CAF,	"\033[3%dm"},	    /* set foreground color (ANSI) */
+    {(int)KS_CSB,	"\033[102;%dm"},    /* set screen background color */
+    {(int)KS_CSF,	"\033[101;%dm"},    /* set screen foreground color */
 #  endif
-    {(int)KS_US,	"\033[4m"},
     {(int)KS_MS,	"y"},		/* guessed */
     {(int)KS_UT,	"y"},		/* guessed */
     {(int)KS_LE,	"\010"},
@@ -1108,13 +1114,15 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CRI,	"\033[%dC"},
 #  endif
     {(int)KS_CIS,	"\033P3.y"},
-    {(int)KS_CIE,	"\234"},
+    {(int)KS_CIE,	"\234"},    /* ST "String Terminator" */
     {(int)KS_TS,	"\033P1.y"},
-    {(int)KS_FS,	"\234"},
+    {(int)KS_FS,	"\234"},    /* ST "String Terminator" */
 #  ifdef TERMINFO
     {(int)KS_CWS,	"\033[203;%p1%d;%p2%d/y"},
+    {(int)KS_CWP,	"\033[205;%p1%d;%p2%d/y"},
 #  else
     {(int)KS_CWS,	"\033[203;%d;%d/y"},
+    {(int)KS_CWP,	"\033[205;%d;%d/y"},
 #  endif
     {K_UP,		"\033[A"},
     {K_DOWN,		"\033[B"},
