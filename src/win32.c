@@ -1546,7 +1546,7 @@ fname_case(
 		if ((hFind = FindFirstFile(szTrueName, &fb)) != INVALID_HANDLE_VALUE)
 		{
 			/* avoid ".." and ".", etc */
-			if ((size_t) (psz - pszPrev) == STRLEN(fb.cFileName))
+			if (_stricoll(pszPrev, fb.cFileName) == 0)
 				STRCPY(pszPrev, fb.cFileName);
 			FindClose(hFind);
 		}
@@ -1719,9 +1719,9 @@ isFullName(
 	FullName(fname, szName, _MAX_PATH, FALSE);
 
 #ifdef DOWNCASE_FILENAMES
-	return stricmp(fname, szName) == 0;
+	return _stricoll(fname, szName) == 0;
 #else /* !DOWNCASE_FILENAMES */
-	return strcmp(fname, szName) == 0;
+	return strcoll(fname, szName) == 0;
 #endif /* !DOWNCASE_FILENAMES */
 }
 
@@ -2160,9 +2160,9 @@ pstrcmp(
 	const void *b)
 {
 #ifdef DOWNCASE_FILENAMES
-    return (stricmp(* (const char **) a, * (const char **) b));
+    return (_stricoll(* (const char **) a, * (const char **) b));
 #else /* !DOWNCASE_FILENAMES */
-    return (strcmp(* (const char **) a, * (const char **) b));
+    return (strcoll(* (const char **) a, * (const char **) b));
 #endif /* !DOWNCASE_FILENAMES */
 }
 

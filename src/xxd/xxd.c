@@ -66,7 +66,12 @@
 # include <unix.h>	/* for fdopen() on MAC */
 #endif
 
-#if defined(sun) && !defined(__SVR4) && defined(__STDC__)
+/*
+ * Include prototypes for Sun OS 4.x, when using an ANSI compiler.
+ * FILE is defined on OS 4.x, not on 5.x (Solaris).
+ * if __SVR4 is defined (some Solaris versions), don't include this.
+ */
+#if defined(sun) && defined(FILE) && !defined(__SVR4) && defined(__STDC__)
 #define __P(a) a
 /* excerpt from my sun_stdlib.h */
 extern int fprintf __P((FILE *, char *, ...));
@@ -511,7 +516,7 @@ char *argv[];
       if (fp != stdin)
 	{
 	  fprintf(fpo, "unsigned char %s", isdigit(argv[1][0]) ? "__" : "");
-	  for (e = 0; (c = argv[1][e]); e++)
+	  for (e = 0; (c = argv[1][e]) != 0; e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fputs("[] = {\n", fpo);
 	}
@@ -530,7 +535,7 @@ char *argv[];
       if (fp != stdin)
 	{
 	  fprintf(fpo, "unsigned int %s", isdigit(argv[1][0]) ? "__" : "");
-	  for (e = 0; (c = argv[1][e]); e++)
+	  for (e = 0; (c = argv[1][e]) != 0; e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fprintf(fpo, "_len = %d;\n", p);
 	}

@@ -1,4 +1,4 @@
-/*  $Revision: 2.2 $		$Date: 1996/08/18 06:41:34 $
+/*  $Revision: 2.25 $		$Date: 1996/10/08 02:42:25 $
  *
  *  vim:set ts=4 sw=4 tw=78:
  *
@@ -39,32 +39,30 @@
 #include <stdio.h>
 #include <string.h>			/* to declare strchr(), strcmp() */
 #include <ctype.h>			/* to declare isalnum(), isalpha(), isspace() */
+
+#if defined(__STDC__) || defined(WIN32)
+# include <stdlib.h>		/* to declare malloc() */
+#else
+# define const				/* not guaranteed to be available on non-ANSI */
+#endif
+
+/*	To declare "struct stat" and stat().
+ */
 #if __MWERKS__
 # include <stat.h>			/* there is no sys directory on the Mac */
 #else
-# include <sys/types.h>		/* for a number of types used in sys/stat.h */
-# include <sys/stat.h>		/* to declare struct stat */
+# include <sys/types.h>
+# include <sys/stat.h>
 #endif
 
-#if defined(__STDC__)
-# include <stdlib.h>		/* to declare malloc() */
-# if defined(__BORLANDC__)
-#  define MSDOS
-#  include <io.h>			/* to declare unlink() */
-#  include <dir.h>			/* to declare mktemp() */
-# else
-#  if defined(AMIGA)
-#   include <fcntl.h>		/* to declare mktemp() */
-#  else
-#   include <unistd.h>		/* to declare mktemp(), stat(), unlink() */
-#  endif
-# endif
+/*	To define the maximum path length (hopefully)
+ */
+#include <limits.h>			/* to define PATH_MAX (hopefully) */
+#ifdef __BORLANDC__
+# include <dir.h>			/* to define MAXPATH */
 #else
-# if defined(WIN32)
-#  include <stdlib.h>		/* to declare malloc() */
-#  include <io.h>			/* to declare mktemp() */
-# else
-#  define const				/* not guaranteed to be available on non-ANSI */
+# if !defined(AMIGA) && !defined(WIN32)
+#  include <dirent.h>		/* to define MAXNAMLEN (hopefully) */
 # endif
 #endif
 
@@ -76,16 +74,15 @@
 =	Defines
 ============================================================================*/
 
-#define VERSION		"Exuberant Ctags, Version 1.4, by Darren Hiebert"
-#define INVOCATION	"\
-Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
-             [-I file] [-L file] [--help] file(s)"
+#define VERSION		"Exuberant Ctags, Version 1.5, by Darren Hiebert"
 
-#if defined(__MSDOS__) && ! defined(MSDOS)
-# define MSDOS
-#endif
+/*----------------------------------------------------------------------------
+ *	Portability defines
+ *--------------------------------------------------------------------------*/
 
-#if ! defined (__ARGS) && (defined(__STDC__) || defined(WIN32))
+/*	Determine whether or not to use prototypes.
+ */
+#if !defined (__ARGS) && (defined(__STDC__) || defined(WIN32))
 # define __ARGS(x)	x
 # define USING_PROTOTYPES
 #else
@@ -93,52 +90,86 @@ Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
 # undef USING_PROTOTYPES
 #endif
 
-/*	Tells us how to open source file.
+#if !defined(MSDOS) && defined(__MSDOS__)
+# define MSDOS
+#endif
+
+/*	External "sort" utility not used (available) on these platforms.
+ */
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(AMIGA)
+# ifndef INTERNAL_SORT
+#  define INTERNAL_SORT
+# endif
+#endif
+
+/*	Tells us how to open source files.
  */
 #if defined(MSDOS) || defined(OS2) || defined(WIN32)
-# define SOURCE_MODE	"rb"		/* open in binary or fseek() misbehaves */
-#else
-# define SOURCE_MODE	"r"
+# ifndef BINARY_OPEN_MODE
+#  define BINARY_OPEN_MODE
+# endif
 #endif
 
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(AMIGA)
-# define INTERNAL_SORT
-# define TMP_TAGS	"tagsXXXXXX"
+#ifdef BINARY_OPEN_MODE
+# define OPEN_MODE	"rb"		/* open in binary or fseek() misbehaves */
 #else
-# define TMP_TAGS	"/tmp/ctagsXXXXXX"
+# define OPEN_MODE	"r"
 #endif
 
-#if __MWERKS__
-/* Using the Metrowerks compiler on the Mac */
-/* My Un*x-box says
- * __EXTERN char * tmpnam __PROTO((char *));
- * is the ANSI-name of this funktion.
+/*	MS-DOS doesn't allow manipulation of standard error, so we send it to
+ *	stdout instead.
  */
-# define mktemp(x)	tmpnam(x)
+#if defined(MSDOS) || defined(WIN32)
+# define errout		stdout
+#else
+# define errout		stderr
 #endif
+
+/*----------------------------------------------------------------------------
+ *	Miscellaneous defines
+ *--------------------------------------------------------------------------*/
+#define INVOCATION	"\
+Usage: ctags [-aBdFnNsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
+             [-I list] [-L file] [--help] file(s)"
 
 #define ENV_VARIABLE_NAME		"CTAGS"
 #define MAX_HEADER_EXTENSIONS	100
-#define MAX_ENV_ARGS			20
+#define MAX_ENV_ARGS			30
 #define CPP_NESTING_LEVEL		20
+#define TAG_MEMORY				2
 
-#ifndef MAXPATH
-# define MAXPATH	256			/* maximum length of file path name with null */
+#ifndef PATH_MAX
+# ifdef MAXNAMLEN
+#  define PATH_MAX MAXNAMLEN
+# else
+#  ifdef MAXPATH                /* found in Borland C dir.h */
+#   define PATH_MAX MAXPATH
+#  else
+#   define PATH_MAX 256         /* fall-back */
+#  endif
+# endif
 #endif
 
-#ifndef MAXNAME
-# define MAXNAME	256			/* maximum length of token with null */
+#ifndef MAX_NAME_LENGTH
+# define MAX_NAME_LENGTH	256		/* maximum length of token with null */
 #endif
 
 /*	Maximum length of tag line and CTAGS option, including null.
  */
-#ifndef MAXLINE
-# define MAXLINE	1024
+#ifndef MAX_TAG_LINE
+# define MAX_TAG_LINE	1024
+#endif
+
+/*	Maximum command line.
+ */
+#ifndef MAX_CMD_LINE
+# define MAX_CMD_LINE	1024
 #endif
 
 /*	The following separators are permitted for list options.
  */
-#define HEADER_SEPARATORS	".,;"		/* header extensions */
+#define HEADER_SEPARATORS	".,;"
+#define IGNORE_SEPARATORS	",; \t\n"
 
 /*	White space characters.
  */
@@ -155,28 +186,32 @@ Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
 #define SINGLE_QUOTE	'\''
 #define BACKSLASH		'\\'
 
+#define STRING_SYMBOL	'S'
+#define CHAR_SYMBOL		'C'
+
 /*============================================================================
 =	Macros
 ============================================================================*/
+#ifdef DEBUG
+#define debug(level)	((Option.debugLevel & (level)) != 0)
+#endif
 
 /*	These may not be defined in a non-UNIX environment.
  */
 #ifndef S_ISREG
-# ifdef AMIGA
-#  define S_ISREG(mode)		TRUE			/* Amiga only has regular files */
-# else
+# if defined(S_IFREG) && !defined(AMIGA)
 #  define S_ISREG(mode)		((mode) & S_IFREG)
+# else
+#  define S_ISREG(mode)		TRUE		/* assume regular file */
 # endif
 #endif
 
 #ifndef S_ISLNK
-# define S_ISLNK(mode)		FALSE
-#endif
-
-#ifdef AMIGA
-# define REMOVE(filename)	remove(filename)
-#else
-# define REMOVE(filename)	unlink(filename)
+# ifdef S_IFLNK
+#  define S_ISLNK(mode)		(((mode) & S_IFMT) == S_IFLNK)
+# else
+#  define S_ISLNK(mode)		FALSE		/* assume no soft links */
+# endif
 #endif
 
 /*  Is the character valid as a character of a C identifier?
@@ -194,6 +229,9 @@ Usage: ctags [-aBdFnsStTuwWx] [-{f|o} name] [-h list] [-i [+-=]types]\n\
 /*============================================================================
 =	Data declarations
 ============================================================================*/
+#ifdef DEBUG
+enum { DEBUG_VISUAL = 1, DEBUG_CPP = 2, DEBUG_STATUS = 4 };
+#endif
 
 #undef FALSE
 #undef TRUE
@@ -242,43 +280,32 @@ typedef enum {
 	SCOPE_TYPEDEF			/* scoping depends upon context */
 } scope_t;
 
-/*	Describes the specifier associated with TOK_SPEC: either unspecified or
- *	one of class, enum, struct or union.
- */
-typedef enum {
-	DECL_UNSPEC,			/* unspecified (non-specific) */
-	DECL_CLASS,				/* C++ class */
-	DECL_ENUM,				/* enumeration */
-	DECL_STRUCT,			/* structure */
-	DECL_UNION				/* union */
-} decl_t;
-
 typedef struct {
 	long	location;		/* file position of line containing name */
 	long	lineNumber;		/* line number of tag */
-	char	name[MAXNAME];	/* the name of the token */
-} tag_info;
-
-typedef enum {
-	DRCTV_NONE,
-	DRCTV_HASH,
-	DRCTV_DEFINE,
-	DRCTV_IF
-} drctv_state;
+	char	name[MAX_NAME_LENGTH];	/* the name of the token */
+} tagInfo;
 
 /*	Describes the statement currently undergoing analysis.
  */
 typedef struct {
 	scope_t	scope;
-	decl_t	declaration;
+	enum {
+		DECL_UNSPEC,			/* unspecified (non-specific) */
+		DECL_CLASS,				/* C++ class */
+		DECL_ENUM,				/* enumeration */
+		DECL_STRUCT,			/* structure */
+		DECL_UNION,				/* union */
+		DECL_NOMANGLE			/* C++ name demangling block */
+	} declaration;			/* describes specifier associated with TOK_SPEC */
 	token_t	token;			/* the most recent type of token */
 	token_t	prev[2];		/* the previous tokens */
 	boolean	funcPtr;		/* whether 'name' is a function pointer */
 	boolean	gotName;		/* whether a name has yet been parsed */
 	boolean	inEnumBody;		/* currently within enumeration value list */
 	boolean buf1;			/* is tag[1] the primary buffer? */
-	tag_info tag[2];		/* information regarding current tag candidate */
-} statement_t;
+	tagInfo tag[2];			/* information regarding last 2 tag candidates */
+} statementInfo;
 
 /*============================================================================
 =	Data definitions
@@ -286,11 +313,7 @@ typedef struct {
 
 /*	Holds a modified copy of the environment option.
  */
-static char EnvArgList[MAXLINE];
-
-/*	Holds a list of tokens to ignore.
- */
-static char **IgnoreList = NULL;
+static char EnvArgList[MAX_CMD_LINE];
 
 /*	Note that the strings in this array must correspond to the types in the
  *	tag_t enumeration.
@@ -302,6 +325,9 @@ static const char *TagTypeNames[] = {
 static const char *const Help[] = {
  "    --help     Prints a more detailed help message.",
  "    -a         Append tags to existing tag file.",
+#ifdef DEBUG
+ "    -b <line>  Set break line.",
+#endif
  "    -B         Use backward searching patterns (?...?).",
 #ifdef DEBUG
  "    -D <level> Set debug level.",
@@ -310,12 +336,10 @@ static const char *const Help[] = {
  "    -F         Use forward searching patterns (/.../) (default).",
  "    -h <list>  List of header file extensions (default \".h.H.hpp.hxx.h++\").",
  "    -i <types> List of tag types to include [defgptvPS] (default \"=defgtvS\").",
- "    -I <file>  List of tokens to ignore are read from specified file.",
+ "    -I <list>  List of tokens to ignore is read from command line or file.",
  "    -L <file>  List of source file names are read from specified file.",
  "    -n         Use line numbers in tag file instead of search patterns.",
-#ifdef DEBUG
- "    -N <line>  Set break line.",
-#endif
+ "    -N         Use search patterns in tag file instead of line numbers.",
  "    -o <name>  Alternative for -f.",
  "    -u         Unsorted; do not sort tags. Disables duplicate tag warnings.",
  "    -w         Exclude warnings about duplicate tags (default).",
@@ -327,6 +351,9 @@ static const char *const Help[] = {
 
 static const char *const LongHelp[] = {
  "    -a   Append the tags to an existing tag file.",
+#ifdef DEBUG
+ "    -b <line>  Set break line.",
+#endif
  "    -B   Use backward searching patterns (?...?).",
 #ifdef DEBUG
  "    -D <level> Set debug level.",
@@ -361,17 +388,16 @@ static const char *const LongHelp[] = {
  "         The default value of list is \"=defgtvS\" (i.e all tag types",
  "         except for function prototypes; include static tags but do not",
  "         prefix them).",
- "    -I <file>",
- "         A list of tokens to ignore are read from the specified file.",
+ "    -I <list | file>",
+ "         A list of tokens to ignore is read from either the command line,",
+ "         or the specified file (if leading character is '.', '/', or '\\').",
  "         Particularly useful when a function definition or declaration",
- "         contains a prototyping macro before the parameter list.",
+ "         contains some special macro before the parameter list.",
  "    -L <file>",
  "         A list of source file names are read from the specified file.",
  "         If specified as \"-\", then standard input is read.",
  "    -n   Use line numbers in tag file instead of search patterns.",
-#ifdef DEBUG
- "    -N <line>  Set break line.",
-#endif
+ "    -N   Use search patterns in tag file instead of line numbers.",
  "    -o   Alternative for -f.",
  "    -u   Unsorted; do not sort tags. Disables warnings for duplicate tags",
  "    -w   Exclude warnings about duplicate tags (default).",
@@ -403,19 +429,26 @@ static struct {
 		boolean	prefix;		/* -iP  prefix static tags with filename */
 		boolean	statics;	/* -iS  include static tags */
 	} include;
+	struct {
+		char **list;
+		unsigned int count, max;
+	} ignore;				/* -I  name of file containing tokens to ignore */
 	boolean	append;			/* -a  append to "tags" files */
 	boolean	backward;		/* -B  regexp patterns search backwards */
-	boolean	lineNumbers;	/* -n  line # in tag file instead of patterns */
+	enum {
+		EX_MIX,				/* default Ex tag location method */
+		EX_LINENUM,			/* -n  only line numbers in tag file */
+		EX_PATTERN			/* -N  only patterns in tag file */
+	} locate;
 	boolean	unsorted;		/* -u  do not sort tags */
 	boolean warnings;		/* -w  generate warnings about duplicate tags */
 	boolean xref;			/* -x  generate xref output instead */
-	const char *ignoreList;	/* -I  name of file containing tokens to ignore */
 	const char *fileList;	/* -L  name of file containing names of files */
 	const char *tagFile;	/* -o  name of tags file */
 	const char *headerExt[MAX_HEADER_EXTENSIONS + 1];/* -h  header extensions */
 #ifdef DEBUG
 	int debugLevel;			/* -D  debugging output */
-	long breakLine;			/* -N  source line at which to call lineBreak() */
+	long breakLine;			/* -b  source line at which to call lineBreak() */
 #endif
 	boolean	braceFormat;	/* use brace formatting to detect end of block */
 } Option = {
@@ -430,18 +463,18 @@ static struct {
 		FALSE,			/* -iP */
 		TRUE			/* -iS */
 	},
+	{ NULL, 0, 0 },		/* -I */
 	FALSE,				/* -a */
 	FALSE,				/* -B */
-	FALSE,				/* -n */
+	EX_MIX,				/* -n */
 	FALSE,				/* -u */
 	FALSE,				/* -w */
 	FALSE,				/* -x */
-	NULL,				/* -I */
 	NULL,				/* -L */
 	"tags",				/* -o */
 	{ "h", "H", "hpp", "hxx", "h++", NULL },		/* -h */
 #ifdef DEBUG
-	0, 0,				/* -D, -N */
+	0, 0,				/* -D, -b */
 #endif
 	FALSE				/* brace formatting */
 };
@@ -466,15 +499,19 @@ static struct {
 	boolean warned;			/* format warning kludge */
 } File = { NULL, NULL, 0, -1, FALSE, 0, FALSE, FALSE };
 
-
 /*	Defines the state of the pre-processor.
  */
 static struct {
 	int		ungetch;			/* an ungotten character, if any */
 	struct {
-		drctv_state	state;
+		enum {
+			DRCTV_NONE,
+			DRCTV_HASH,
+			DRCTV_DEFINE,
+			DRCTV_IF
+		} state;
 		boolean		accept;		/* is a directive syntatically permitted? */
-		tag_info	tag;		/* the name associated with the directive */
+		tagInfo	tag;		/* the name associated with the directive */
 		boolean		resolve;	/* must resolve if/else/elif/endif branch */
 		int			level;		/* level 0 is not used */
 		struct {
@@ -498,6 +535,9 @@ static struct {
  *	the code.
  */
 static const char *const Features[] = {
+#ifdef DEBUG
+	"debug",
+#endif
 #ifdef WIN32
 	"win32",
 #endif
@@ -514,14 +554,8 @@ static const char *const Features[] = {
 #ifdef AMIGA
 	"amiga",
 #endif
-#ifdef __EMX__
-	"emx",
-#endif
 #ifdef INTERNAL_SORT
 	"internal_sort",
-#endif
-#ifdef DEBUG
-	"debug",
 #endif
 	NULL
 };
@@ -531,92 +565,135 @@ static const char *const Features[] = {
 ============================================================================*/
 #if !defined(__STDC__) && !defined(WIN32)
 extern char *getenv();
-extern void free();
 extern void *malloc();
+extern void free();
 extern int stat();
 extern int system();
-extern int unlink();
 #endif
 
-/*	This declaration is often missing from GCC installs.
+/*	GCC on SunOS 4.x is missing these prototypes.
  */
-#ifndef NO_MKTEMP_DECL
-extern char *mktemp __ARGS((char *template));
+#if defined(sun) && defined(FILE) && !defined(__SVR4) && defined(__STDC__)
+#define __P(a) a
+/* excerpt from sun_stdlib.h */
+extern int _filbuf __P((FILE *));
+extern int _flsbuf __P((unsigned char, FILE *));
+extern int fclose  __P((FILE *));
+extern int fprintf __P((FILE *, char *, ...));
+extern int fputc   __P((int, FILE *));
+extern int fputs   __P((char *, FILE *));
+extern int fscanf  __P((FILE *, const char *, ...));
+extern int fseek   __P((FILE *, long, int));
+extern int rewind  __P((FILE *));
+extern int sscanf  __P((const char *, const char *, ...));
+extern int system  __P((const char *));
+extern int ungetc  __P((int, FILE *));
+extern void perror __P((char *));
 #endif
 
+/*	Debug functions.
+ */
 #ifdef DEBUG
-static void lineBreak __ARGS((void)); 
-static void debugOpen __ARGS((const char *const name)); 
-static void debugPutc __ARGS((const int c, const int level)); 
+static void lineBreak __ARGS((void));
+static void debugOpen __ARGS((const char *const name));
+static void debugPutc __ARGS((const int c, const int level));
 static void debugLabel __ARGS((const tag_t tagType, const char *const tagName));
 static void clearString __ARGS((char *const string, const int length));
 #endif
 
-static boolean isFileHeader __ARGS((const char *const name)); 
-static boolean fileOpen __ARGS((const char *const name)); 
-static void fileClose __ARGS((void)); 
-static void fileUngetc __ARGS((int c)); 
-static void fileNewline __ARGS((void)); 
-static int fileGetc __ARGS((void)); 
-static size_t fileCopyLine __ARGS((FILE *const fp, const long int seek)); 
-static size_t fileCopyLineShort __ARGS((FILE *const fp, const long int seek)); 
-static void writeXrefEntry __ARGS((const tag_info *const tag, const tag_t tagType)); 
-static void makeTagEntry __ARGS((const tag_info *const tag, const scope_t scope, const tag_t tagType, const boolean useLineNumber)); 
-static void makeTag __ARGS((const tag_info *const tag, const scope_t scope, const tag_t tagType)); 
-static void makeDefineTag __ARGS((const tag_info *const tag, const scope_t scope)); 
-static boolean cppOpen __ARGS((const char *const name)); 
-static void cppClose __ARGS((void)); 
-static void cppUngetc __ARGS((const int c)); 
-static boolean cppReadDirective __ARGS((int c, char *name)); 
-static boolean cppReadIdentifier __ARGS((int c, tag_info *const tag)); 
-static boolean pushCppIgnore __ARGS((const boolean ignore, const boolean pathChosen)); 
-static boolean popCppIgnore __ARGS((void)); 
-static boolean prevCppIgnore __ARGS((void)); 
-static boolean setCppIgnore __ARGS((const boolean ignore)); 
-static boolean wasPathChosen __ARGS((void)); 
-static boolean handleDirective __ARGS((const int c)); 
-static Comment isComment __ARGS((void)); 
-static int skipOverCComment __ARGS((void)); 
-static int skipOverCplusComment __ARGS((void)); 
-static int skipToEndOfString __ARGS((void)); 
-static int skipToEndOfChar __ARGS((void)); 
-static int cppGetc __ARGS((void)); 
-static int skipToNonWhite __ARGS((void)); 
-static int skipToCharacter __ARGS((const int findchar)); 
-static void skipToFormattedBraceMatch __ARGS((void)); 
-static boolean skipToMatch __ARGS((const char *const pair)); 
-static int skipInitializer __ARGS((const boolean inEnumBody)); 
-static void readIdendifier __ARGS((const int firstChar, char *const name)); 
-static int skipParameterDeclarations __ARGS((int c)); 
-static boolean analyzeParens __ARGS((statement_t *const st)); 
-static boolean isIgnoreToken __ARGS((const char *const name)); 
-static void analyzeIdentifier __ARGS((statement_t *const st)); 
-static boolean nextToken __ARGS((statement_t *const st, const int nesting)); 
-static void initStatement __ARGS((statement_t *const st)); 
-static boolean createTags __ARGS((const int nesting)); 
+/*	Low level source file read functions (line splicing and newline conversion
+ *	are performed at this level).
+ */
+static boolean isFileHeader __ARGS((const char *const name));
+static boolean fileOpen __ARGS((const char *const name));
+static void fileClose __ARGS((void));
+static void fileNewline __ARGS((void));
+static int fileGetc __ARGS((void));
+static void fileUngetc __ARGS((int c));
+static void getFileLine __ARGS((const long int seek, char *const line_buffer, const unsigned int maxLength));
+
+/*	Tag entry creation functions.
+ */
+static size_t writeSourceLine __ARGS((FILE *const fp, const char *const line));
+static size_t writeCompactSourceLine __ARGS((FILE *const fp, const char *const line));
+static void writeXrefEntry __ARGS((const tagInfo *const tag, const tag_t tagType));
+static void truncateTagLine __ARGS((char *const line, const char *const token));
+static void makeTagEntry __ARGS((const tagInfo *const tag, const scope_t scope, const tag_t tagType, const boolean useLineNumber));
+static void makeTag __ARGS((const tagInfo *const tag, const scope_t scope, const tag_t tagType));
+static void makeDefineTag __ARGS((const tagInfo *const tag, const scope_t scope));
+
+/*	High level source read functions (preprocessor directives are handled
+ *	within this level).
+ */
+static boolean cppOpen __ARGS((const char *const name));
+static void cppClose __ARGS((void));
+static void cppUngetc __ARGS((const int c));
+static boolean cppReadDirective __ARGS((int c, char *name));
+static boolean cppReadIdentifier __ARGS((int c, tagInfo *const tag));
+static boolean pushCppIgnore __ARGS((const boolean ignore, const boolean pathChosen));
+static boolean popCppIgnore __ARGS((void));
+static boolean prevCppIgnore __ARGS((void));
+static boolean setCppIgnore __ARGS((const boolean ignore));
+static boolean wasPathChosen __ARGS((void));
+static boolean handleDirective __ARGS((const int c));
+static Comment isComment __ARGS((void));
+static int skipOverCComment __ARGS((void));
+static int skipOverCplusComment __ARGS((void));
+static int skipToEndOfString __ARGS((void));
+static int skipToEndOfChar __ARGS((void));
+static int cppGetc __ARGS((void));
+
+/*	Parsing functions.
+ */
+static int skipToNonWhite __ARGS((void));
+static int skipToCharacter __ARGS((const int findchar));
+static void skipToFormattedBraceMatch __ARGS((void));
+static boolean skipToMatch __ARGS((const char *const pair));
+static int skipInitializer __ARGS((const boolean inEnumBody));
+static void readIdendifier __ARGS((const int firstChar, char *const name));
+static int skipParameterDeclarations __ARGS((int c));
+static boolean analyzeParens __ARGS((statementInfo *const st));
+static boolean isIgnoreToken __ARGS((const char *const name));
+static void analyzeIdentifier __ARGS((statementInfo *const st));
+static boolean nextToken __ARGS((statementInfo *const st, const int nesting));
+
+/*	Scanning functions.
+ */
+static void initStatement __ARGS((statementInfo *const st));
+static boolean createTags __ARGS((const int nesting));
 static boolean createTagsForFile __ARGS((const char *const name));
-static boolean isSourceFile __ARGS((const char *const filename)); 
-static const char *getNextListFile __ARGS((FILE *const fp)); 
-static void createTagsForList __ARGS((const char *const listFile)); 
-static void createTagsForArgs __ARGS((char *const *const argList)); 
+static boolean isSourceFile __ARGS((const char *const filename));
+static const char *getNextListFile __ARGS((FILE *const fp));
+static void createTagsForList __ARGS((const char *const listFile));
+static void createTagsForArgs __ARGS((char *const *const argList));
+
+/*	Tag sorting functions.
+ */
 #ifdef INTERNAL_SORT
-static void fatal __ARGS((const char *const msg)); 
-static int compareTags __ARGS((const void *const one, const void *const two)); 
-static void writeSortedTags __ARGS((char **const table, const boolean toStdout)); 
-static void internalSortTags __ARGS((const boolean toStdout)); 
+static void failedSort __ARGS((const char *const msg));
+static int compareTags __ARGS((const void *const one, const void *const two));
+static void writeSortedTags __ARGS((char **const table, const boolean toStdout));
+static void internalSortTags __ARGS((const boolean toStdout));
 #else
 static void externalSortTags __ARGS((const boolean toStdout));
 #endif
-static void printHelp __ARGS((const char *const *const help, FILE *const where)); 
-static void printUsage __ARGS((const char *const error)); 
-static void readExtensionList __ARGS((char *const list)); 
-static void clearTagList __ARGS((void)); 
-static void applyTagInclusionList __ARGS((const char *const list)); 
-static void readIgnoreList __ARGS((const char *const fileName)); 
-static void freeIgnoreList __ARGS((void)); 
-static char *readOptionArg __ARGS((const int option, char **const arg, char *const *const argList, int *const argNum)); 
-static int parseOptions __ARGS((char *const *const argList)); 
-static void parseEnvironmentOptions __ARGS((void)); 
+
+/*	Start up and terminate functions.
+ */
+static void printHelp __ARGS((const char *const *const help, FILE *const where));
+static void printUsage __ARGS((const char *const error));
+static void readExtensionList __ARGS((char *const list));
+static void clearTagList __ARGS((void));
+static void applyTagInclusionList __ARGS((const char *const list));
+static void readIgnoreList __ARGS((char *const list));
+static void readIgnoreListFromFile __ARGS((const char *const fileName));
+static void freeIgnoreList __ARGS((void));
+static char *readOptionArg __ARGS((const int option, char **const arg, char *const *const argList, int *const argNum));
+static int parseOptions __ARGS((char *const *const argList));
+static void parseEnvironmentOptions __ARGS((void));
+static void openTagFile __ARGS((const boolean toStdout));
+
+extern int main __ARGS((int argc, char **argv));
 
 /*============================================================================
 =	Function definitions
@@ -624,12 +701,12 @@ static void parseEnvironmentOptions __ARGS((void));
 
 #ifdef DEBUG
 
-static void lineBreak() {}
+static void lineBreak() {}		/* provides a line-specified break point */
 
 static void debugOpen( name )
 	const char *const name;
 {
-	if ((Option.debugLevel & 4) != 0)
+	if (debug(DEBUG_STATUS))
 	{
 		printf("Opening: %s\n", name);
 		fflush(stdout);
@@ -640,7 +717,7 @@ static void debugPutc( c, level )
 	const int c;
 	const int level;
 {
-	if ((Option.debugLevel & level) != 0  &&  c != EOF)
+	if (debug(level)  &&  c != EOF)
 	{
 		putchar(c);
 		fflush(stdout);
@@ -651,7 +728,7 @@ static void debugLabel( tagType, tagName )
 	const tag_t tagType;
 	const char *const tagName;
 {
-	if ((Option.debugLevel & 3) != 0)
+	if (debug(DEBUG_VISUAL | DEBUG_CPP))
 	{
 		printf("<#%s:%s#>", tagTypeName(tagType), tagName);
 		fflush(stdout);
@@ -669,6 +746,10 @@ static void clearString( string, length )
 }
 
 #endif
+
+/*----------------------------------------------------------------------------
+*	Source file reading functions
+*--------------------------------------------------------------------------*/
 
 /*	Determines whether the specified file name is considered to be a header
  *	file for the purposes of determining whether enclosed tags are global or
@@ -719,7 +800,7 @@ static boolean fileOpen( name )
 		perror(name);
 	else if (S_ISLNK(status.st_mode) || S_ISREG(status.st_mode))
 	{
-		File.fp = fopen(name, SOURCE_MODE);
+		File.fp = fopen(name, OPEN_MODE);
 		if (File.fp == NULL)
 			perror(name);
 		else
@@ -754,12 +835,8 @@ static void fileClose()
 	}
 }
 
-static void fileUngetc( c )
-	int c;
-{
-	File.ungetch = c;
-}
-
+/*	Action to take for each encountered source newline.
+ */
 static void fileNewline()
 {
 	File.afterNL = FALSE;
@@ -783,10 +860,10 @@ static int fileGetc()
 	 *	other processing on it, though, because we already did that the
 	 *	first time it was read.
 	 */
-	if (File.ungetch != 0)
+	if (File.ungetch != '\0')
 	{
 		c = File.ungetch;
-		File.ungetch = 0;
+		File.ungetch = '\0';
 		return c;			/* return here to avoid re-calling debugPutc() */
 	}
 
@@ -839,8 +916,8 @@ nextChar:		/* not structured, but faster for this critical path */
 		if (escaped)						/* check for line splicing */
 		{
 #ifdef DEBUG
-			debugPutc(BACKSLASH, 1);		/* print the characters */
-			debugPutc(c, 1);				/*   we are throwing away */
+			debugPutc(BACKSLASH, DEBUG_VISUAL);		/* print the characters */
+			debugPutc(c, DEBUG_VISUAL);				/*   we are throwing away */
 #endif
 			escaped = FALSE;				/* BACKSLASH now fully processed */
 			goto nextChar;					/* through away "\NEWLINE" */
@@ -849,9 +926,29 @@ nextChar:		/* not structured, but faster for this critical path */
 	}
 
 #ifdef DEBUG
-	debugPutc(c, 1);
+	debugPutc(c, DEBUG_VISUAL);
 #endif
 	return c;
+}
+
+static void fileUngetc( c )
+	int c;
+{
+	File.ungetch = c;
+}
+
+/*	Places into "line_buffer" the contents of the line referenced by "seek".
+ */
+static void getFileLine( seek, line_buffer, maxLength )
+	const long seek;
+	char *const line_buffer;
+	const unsigned int maxLength;
+{
+	const long oldseek = ftell(File.fp);	/* remember original position */
+
+	fseek(File.fp, seek, 0);
+	fgets(line_buffer, (int)maxLength, File.fp);		
+	fseek(File.fp, oldseek, 0);				/* return to original position */
 }
 
 /*----------------------------------------------------------------------------
@@ -866,22 +963,19 @@ nextChar:		/* not structured, but faster for this critical path */
  *
  *	This is meant to be used when generating a tag line.
  */
-static size_t fileCopyLine( fp, seek )
+static size_t writeSourceLine( fp, line )
 	FILE *const fp;
-	const long seek;
+	const char *const line;
 {
-	const long oldseek = ftell(File.fp);	/* remember original position */
 	size_t	length = 0;
-	int		c;
-
-	fseek(File.fp, seek, 0);
-	c = getc(File.fp);
+	const char *p;
+	char c;
 
 	/*	Write everything up to, but not including, the newline.
 	 */
-	while (c != NEWLINE  &&  c != EOF)
+	for (p = line, c = *p  ;  c != NEWLINE  &&  c != '\0'  ;  ++p, c = *p)
 	{
-		const int next = getc(File.fp);		/* preread next character */
+		const int next = *(p + 1);
 
 		/*	If character is '\', or a terminal '$', then quote it.
 		 */
@@ -894,71 +988,66 @@ static size_t fileCopyLine( fp, seek )
 
 		/*	Copy the character, unless it is a terminal '\r'.
 		 */
-		if (c != CRETURN || next != NEWLINE)
+		if (c != CRETURN  ||  next != NEWLINE)
 		{
 			putc(c, fp);
 			++length;
 		}
-		c = next;
 	}
-	fseek(File.fp, oldseek, 0);				/* return to original position */
 	return length;
 }
 
-static size_t fileCopyLineShort( fp, seek )
-	FILE *const fp;		/* the output stream to copy it to */
-	const long seek;	/* where the lines starts in the source file */
+/*	Writes "line", stripping leading and duplicate white space.
+ */
+static size_t writeCompactSourceLine( fp, line )
+	FILE *const fp;
+	const char *const line;
 {
-	const long oldseek = ftell(File.fp);	/* remember original position */
 	boolean	lineStarted = FALSE;
 	size_t	length = 0;
-	int		c;
-
-	fseek(File.fp, seek, 0);
-	c = getc(File.fp);
+	const char *p;
+	char c;
 
 	/*	Write everything up to, but not including, the newline.
 	 */
-	while (c != NEWLINE  &&  c != EOF)
+	for (p = line, c = *p  ;  c != NEWLINE  &&  c != '\0'  ;  c = *++p)
 	{
-		int next = getc(File.fp);
-
 		if (lineStarted  || ! isspace(c))		/* ignore leading spaces */
 		{
 			lineStarted = TRUE;
 			if (isspace(c))
 			{
-				c = ' ';
-				while (isspace(next)  &&  next != NEWLINE)
-					next = getc(File.fp);
+				int next;
+
+				/*	Consume repeating white space.
+				 */
+				while (next = *(p+1) , isspace(next)  &&  next != NEWLINE)
+					++p;
+				c = ' ';		/* force space character for any white space */
 			}
-			if (c != CRETURN  ||  next != NEWLINE)
+			if (c != CRETURN  ||  *(p + 1) != NEWLINE)
 			{
 				putc(c, fp);
 				++length;
 			}
 		}
-		c = next;
 	}
-	fseek(File.fp, oldseek, 0);			/* seek back to the old position */
 	return length;
 }
 
-/*----------------------------------------------------------------------------
- *	This section handles preprocessor directives.  It strips out all of the
- *	directives, and may emit a tag for #define directives.
- *--------------------------------------------------------------------------*/
-
 static void writeXrefEntry( tag, tagType )
-	const tag_info *const tag;
+	const tagInfo *const tag;
 	const tag_t tagType;
 {
+	char line[MAX_TAG_LINE];
 	size_t length;
 
+	getFileLine(tag->location, line, MAX_TAG_LINE);
 	length = fprintf(TagFile.fp, "%-20s %-6s %4ld  %-14s ",
 					 tag->name, tagTypeName(tagType),
 					 tag->lineNumber, File.name);
-	length += fileCopyLineShort(TagFile.fp, tag->location);
+	line[MAX_TAG_LINE - 2 - length] = '\0';		/* truncate line */
+	length += writeCompactSourceLine(TagFile.fp, line);
 	putc(NEWLINE, TagFile.fp);
 	++length;
 
@@ -969,18 +1058,30 @@ static void writeXrefEntry( tag, tagType )
 		TagFile.max.line = length;
 }
 
+static void truncateTagLine( line, token )
+	char *const line;
+	const char *const token;
+{
+	char *p = strstr(line, token);
+
+	p += strlen(token);
+	*p = '\0';
+}
+
 /*	This function generates a tag for the object in name, whose tag line is
  *	located at a given seek offset.
  */
 static void makeTagEntry( tag, scope, tagType, useLineNumber )
-	const tag_info *const tag;
+	const tagInfo *const tag;
 	const scope_t scope;
 	const tag_t tagType;
 	const boolean useLineNumber;
 {
 	boolean include = FALSE;
 
-	if (scope != SCOPE_EXTERN)		/* should never happen */
+	if (scope != SCOPE_EXTERN  &&		/* should never happen */
+		(scope != SCOPE_STATIC  ||  Option.include.statics))
+	{
 		switch (tagType)
 		{
 		case TAG_BLOCKTAG:	include = Option.include.blockTags;		break;
@@ -993,6 +1094,7 @@ static void makeTagEntry( tag, scope, tagType, useLineNumber )
 
 		default: break;
 		}
+	}
 
 	if (include)
 	{
@@ -1013,12 +1115,18 @@ static void makeTagEntry( tag, scope, tagType, useLineNumber )
 								  tag->name, File.name, tag->lineNumber);
 			else
 			{
+				char line[MAX_TAG_LINE];
+
+				getFileLine(tag->location, line, MAX_TAG_LINE);
+				if (tagType == TAG_DEFINE)
+					truncateTagLine(line, tag->name);
 				length += fprintf(TagFile.fp, "%s\t%s\t", tag->name, File.name);
-				length += fprintf(TagFile.fp, "%c^",
-								  Option.backward ? '?' : '/');
-				length += fileCopyLine(TagFile.fp, tag->location);
-				length += fprintf(TagFile.fp, "$%c\n",
-								  Option.backward ? '?' : '/');
+				length += fprintf(TagFile.fp, "%c^", Option.backward ? '?':'/');
+				length += writeSourceLine(TagFile.fp, line);
+				length += fprintf(TagFile.fp, "%.*s%c\n",
+								  (int)(MAX_TAG_LINE - 3 - length),
+								  (line[strlen(line) - 1] == '\n') ? "$":"\\>",
+								  Option.backward ? '?':'/');
 			}
 
 			++TagFile.numTags;
@@ -1035,22 +1143,25 @@ static void makeTagEntry( tag, scope, tagType, useLineNumber )
 }
 
 static void makeTag( tag, scope, tagType )
-	const tag_info *const tag;
+	const tagInfo *const tag;
 	const scope_t scope;
 	const tag_t tagType;
 {
-	makeTagEntry(tag, scope, tagType, Option.lineNumbers);
+	makeTagEntry(tag, scope, tagType, (Option.locate == EX_LINENUM));
 }
 
 static void makeDefineTag( tag, scope )
-	const tag_info *const tag;
+	const tagInfo *const tag;
 	const scope_t scope;
 {
-	makeTagEntry(tag, scope, TAG_DEFINE, TRUE);
+	makeTagEntry(tag, scope, TAG_DEFINE, (Option.locate != EX_PATTERN));
 }
 
 /*----------------------------------------------------------------------------
 *	Scanning functions	
+*
+*	This section handles preprocessor directives.  It strips out all
+*	directives and may emit a tag for #define directives.
 *--------------------------------------------------------------------------*/
 
 static boolean cppOpen( name )
@@ -1061,7 +1172,7 @@ static boolean cppOpen( name )
 	opened = fileOpen(name);
 	if (opened)
 	{
-		Cpp.ungetch = 0;
+		Cpp.ungetch = '\0';
 		Cpp.directive.state   = DRCTV_NONE;
 		Cpp.directive.accept  = TRUE;
 		Cpp.directive.resolve = FALSE;
@@ -1083,6 +1194,8 @@ static void cppUngetc( c )
 	Cpp.ungetch = c;
 }
 
+/*	Reads a directive, whose first character is given by "c", into "name".
+ */
 static boolean cppReadDirective( c, name )
 	int c;
 	char *name;
@@ -1097,9 +1210,12 @@ static boolean cppReadDirective( c, name )
 	return isspacetab(c);
 }
 
+/*	Reads an identifier, whose first character is given by "c", into "tag",
+ *	together with the file location and corresponding line number.
+ */
 static boolean cppReadIdentifier( c, tag )
 	int c;
-	tag_info *const tag;
+	tagInfo *const tag;
 {
 	char *name = tag->name;
 
@@ -1115,6 +1231,9 @@ static boolean cppReadIdentifier( c, tag )
 	return (isspace(c)  ||  c == '(');
 }
 
+/*	Pushes one nesting level for an #if directive, indicating whether or not
+ *	the path should be ignored and whether a path has already been chosen.
+ */
 static boolean pushCppIgnore( ignore, pathChosen )
 	const boolean ignore;
 	const boolean pathChosen;
@@ -1128,6 +1247,8 @@ static boolean pushCppIgnore( ignore, pathChosen )
 	return cppIgnore();
 }
 
+/*	Pops one nesting level for an #endif directive.
+ */
 static boolean popCppIgnore()
 {
 	if (Cpp.directive.level > 0)
@@ -1136,6 +1257,8 @@ static boolean popCppIgnore()
 	return cppIgnore();
 }
 
+/*	Returns whether or not the parent of this nesting level was ignored.
+ */
 static boolean prevCppIgnore()
 {
 	boolean ignore;
@@ -1158,11 +1281,13 @@ static boolean wasPathChosen()
 	return Cpp.directive.ifdef[Cpp.directive.level].pathChosen;
 }
 
+/*	Handles a pre-processor directive whose first character is given by "c".
+ */
 static boolean handleDirective( c )
 	const int c;
 {
 	char *const name = Cpp.directive.tag.name;
-	scope_t scope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
+	const scope_t scope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
 	boolean ignore = FALSE;
 
 	switch (Cpp.directive.state)
@@ -1200,8 +1325,7 @@ static boolean handleDirective( c )
 
 	case DRCTV_DEFINE:
 		cppReadIdentifier(c, &Cpp.directive.tag);
-		if (File.header || Option.include.statics)
-			makeDefineTag(&Cpp.directive.tag, scope);
+		makeDefineTag(&Cpp.directive.tag, scope);
 		Cpp.directive.state = DRCTV_NONE;
 		break;
 
@@ -1218,6 +1342,9 @@ static boolean handleDirective( c )
 	return ignore;
 }
 
+/*	Called upon reading of a slash ('/') characters, determines whether a
+ *	comment is encountered, and its type.
+ */
 static Comment isComment()
 {
 	Comment comment;
@@ -1235,6 +1362,8 @@ static Comment isComment()
 	return comment;
 }
 
+/*	Skips over a C style comment.
+ */
 static int skipOverCComment()
 {
 	int c = fileGetc();
@@ -1259,6 +1388,8 @@ static int skipOverCComment()
 	return c;
 }
 
+/*	Skips over a C++ style comment.
+ */
 static int skipOverCplusComment()
 {
 	int c;
@@ -1273,7 +1404,8 @@ static int skipOverCplusComment()
 	return c;
 }
 
-/*	ANSI C says a string may not contain a newline character.
+/*	Skips to the end of a string, returning a special character to
+ *	symbolically represent a generic string.
  */
 static int skipToEndOfString()
 {
@@ -1291,9 +1423,12 @@ static int skipToEndOfString()
 			break;
 		}
 	}
-	return 'S';						/* symbolic representation of string */
+	return STRING_SYMBOL;			/* symbolic representation of string */
 }
 
+/*	Skips to the end of the three (possibly four) 'c' sequence, returning a
+ *	special character to symbolically represent a generic character.
+ */
 static int skipToEndOfChar()
 {
 	int c;
@@ -1310,7 +1445,7 @@ static int skipToEndOfChar()
 			break;
 		}
 	}
-	return 'C';						/* symbolic representation of character */
+	return CHAR_SYMBOL;				/* symbolic representation of character */
 }
 
 /*	This function returns the next character, stripping out comments,
@@ -1325,10 +1460,10 @@ static int cppGetc()
 	boolean ignore = FALSE;
 	int c;
 
-	if (Cpp.ungetch != 0)
+	if (Cpp.ungetch != '\0')
 	{
 		c = Cpp.ungetch;
-		Cpp.ungetch = 0;
+		Cpp.ungetch = '\0';
 		return c;			/* return here to avoid re-calling debugPutc() */
 	}
 	else do
@@ -1386,7 +1521,7 @@ static int cppGetc()
 	} while (directive || ignore);
 
 #ifdef DEBUG
-	debugPutc(c, 2);
+	debugPutc(c, DEBUG_CPP);
 #endif
 	return c;
 }
@@ -1452,7 +1587,7 @@ static boolean skipToMatch( pair )
 	const boolean braceFormatting =(Option.braceFormat && strcmp("{}",pair)==0);
 	boolean ok = TRUE;
 	int matchLevel = 1;
-	int c = 0;
+	int c = '\0';
 
 	while (matchLevel > 0  &&  (c = cppGetc()) != EOF)
 	{
@@ -1527,7 +1662,7 @@ static void readIdendifier( firstChar, name )
 	int c, i;
 
 	name[0] = firstChar;
-	for (i = 1, c = cppGetc() ; i < MAXNAME - 1 && isident(c) ;
+	for (i = 1, c = cppGetc() ; i < MAX_NAME_LENGTH - 1 && isident(c) ;
 		 i++, c = cppGetc())
 	{
 		name[i] = c;
@@ -1537,6 +1672,9 @@ static void readIdendifier( firstChar, name )
 	cppUngetc(c);				/* unget non-identifier character */
 }
 
+/*	Skips over interveaning characters declaring function parameters
+ *	(non-ANSI style function declarations).
+ */
 static int skipParameterDeclarations( c )
 	int c;
 {
@@ -1561,8 +1699,10 @@ static int skipParameterDeclarations( c )
 	return c;
 }
 
+/*	Analyzes the context and contents of parentheses.
+ */
 static boolean analyzeParens( st )
-	statement_t *const st;
+	statementInfo *const st;
 {
 	boolean ok = TRUE;
 	int c;
@@ -1576,17 +1716,17 @@ static boolean analyzeParens( st )
 	}
 	else
 	{
-		char name[MAXNAME];
-		boolean gotName = FALSE;
+		char name[MAX_NAME_LENGTH];
+		boolean gotParenName = FALSE;
 		long location = 0, lineNumber = 0;
 
 #ifdef DEBUG
-		clearString(name, MAXNAME);
+		clearString(name, MAX_NAME_LENGTH);
 #endif
 		if (isident1(c))
 		{
 			readIdendifier(c, name);
-			gotName		= TRUE;
+			gotParenName= TRUE;
 			location	= File.seek;
 			lineNumber	= File.lineNumber;
 		}
@@ -1596,7 +1736,7 @@ static boolean analyzeParens( st )
 			 *	prototype macro thingies (e.g. __ARGS((void)) ). If found, we
 			 *	will use the previous name, if it is not empty.
 			 */
-			if (c == '('  &&  st->gotName  &&  *st->tag[!st->buf1].name != 0)
+			if (c == '('  &&  st->gotName  &&  *st->tag[!st->buf1].name != '\0')
 				st->buf1 = !st->buf1;				/* swap name buffers */
 			cppUngetc(c);
 		}
@@ -1607,23 +1747,28 @@ static boolean analyzeParens( st )
 			 *	closing parenthesis.
 			 */
 			c = skipToNonWhite();
-			if (st->gotName  &&  strchr("{;,", c) != NULL)
+			if (st->gotName)
 			{
-				st->token = TOK_ARGS;	/* the parameter list to a function */
-				st->declaration = DECL_UNSPEC;	/* clear any other decl. */
-			}
-			else if (isident1(c))
-			{
-				st->token = TOK_ARGS;	/* the parameter list to a function */
-				st->declaration = DECL_UNSPEC;	/* clear any other decl. */
-				c = skipParameterDeclarations(c);
+				if (strchr("{;,", c) != NULL)
+				{
+					st->token = TOK_ARGS;		/* parameter list to a func. */
+					st->declaration = DECL_UNSPEC;	/* clear any other decl. */
+				}
+				else if (isident1(c))
+				{
+					st->token = TOK_ARGS;		/* parameter list to a func. */
+					st->declaration = DECL_UNSPEC;	/* clear any other decl. */
+					c = skipParameterDeclarations(c);
+				}
+				else
+					st->token = TOK_IGNORE;
 			}
 			/*	The name inside the parentheses must have been a function or
 			 *	variable name.
 			 */
-			else if (gotName)
+			else if (gotParenName)
 			{
-				tag_info *const tag = &st->tag[st->buf1];
+				tagInfo *const tag = &st->tag[st->buf1];
 
 				st->gotName		= TRUE;
 				st->token		= TOK_NAME;
@@ -1631,28 +1776,28 @@ static boolean analyzeParens( st )
 				tag->lineNumber	= lineNumber;
 				strcpy(tag->name, name);
 			}
+			else
+				st->token = TOK_IGNORE;
 			cppUngetc(c);
 		}
 	}
 	return ok;
 }
 
+/*	Determines whether or not "name" should be ignored, per the ignore list.
+ */
 static boolean isIgnoreToken( name )
 	const char *const name;
 {
 	boolean ignore = FALSE;
+	unsigned int i;
 
-	if (IgnoreList != NULL)
+	for (i = 0  ;  i < Option.ignore.count ; ++i)
 	{
-		char **p;
-
-		for (p = IgnoreList ; *p != NULL ; ++p)
+		if (strcmp(Option.ignore.list[i], name) == 0)
 		{
-			if (strcmp(*p, name) == 0)
-			{
-				ignore = TRUE;
-				break;
-			}
+			ignore = TRUE;
+			break;
 		}
 	}
 	return ignore;
@@ -1663,9 +1808,9 @@ static boolean isIgnoreToken( name )
  *	of the identifier.
  */
 static void analyzeIdentifier( st )
-	statement_t *const st;
+	statementInfo *const st;
 {
-	tag_info *const tag = &st->tag[st->buf1];
+	tagInfo *const tag = &st->tag[st->buf1];
 	const char *const name = tag->name;
 	boolean keyWord = FALSE;
 
@@ -1677,37 +1822,54 @@ static void analyzeIdentifier( st )
 	{
 		keyWord = TRUE;
 		st->token = TOK_IGNORE;
+		tag->name[0] = '\0';
 	}
-	else switch (name[0])		/* is it a reserved word? */
+	else switch ((unsigned char)name[0])		/* is it a reserved word? */
 	{
-	case 'c':
-		     if (match("class"	))	st->declaration = DECL_CLASS;
-		else if (match("const"	))	st->token		= TOK_IGNORE;
-		else if (match("char"	))	st->declaration = DECL_UNSPEC;
-		break;
-	case 'd':if (match("double"	))	st->declaration = DECL_UNSPEC;	break;
-	case 'e':
-		     if (match("enum"	))	st->declaration = DECL_ENUM;
-		else if (match("extern"	))	st->scope		= SCOPE_EXTERN;
-		break;
-	case 'f':if (match("float"	))	st->declaration = DECL_UNSPEC;	break;
-	case 'i':if (match("int"	))	st->declaration = DECL_UNSPEC;	break;
-	case 'l':if (match("long"	))	st->declaration = DECL_UNSPEC;	break;
-	case 'p':if (match("private"))	st->scope		= SCOPE_STATIC;	break;
-	case 's':
-		     if (match("static"	))	st->scope		= SCOPE_STATIC;
-		else if (match("struct"	))	st->declaration = DECL_STRUCT;
-		else if (match("short"	))	st->declaration = DECL_UNSPEC;
-		else if (match("signed"	))	st->declaration = DECL_UNSPEC;
-		break;
-	case 't':if (match("typedef"))	st->scope		= SCOPE_TYPEDEF; break;
-	case 'u':
-		     if (match("union"	))	st->declaration = DECL_UNION;
-		else if (match("unsigned"))	st->declaration = DECL_UNSPEC;
-		break;
-	case 'v':
-		     if (match("void"	))	st->declaration = DECL_UNSPEC;
-		else if (match("volatile"))	st->token		= TOK_IGNORE;
+	case 'c':		 if (match("class"	))	st->declaration = DECL_CLASS;
+				else if (match("const"	))	st->token		= TOK_IGNORE;
+				else if (match("char"	))	st->declaration = DECL_UNSPEC;
+				break;
+	case 'd':		 if (match("double"	))	st->declaration = DECL_UNSPEC;
+				break;
+	case 'e':		 if (match("enum"	))	st->declaration = DECL_ENUM;
+				else if (match("extern"	))	st->scope		= SCOPE_EXTERN;
+				break;
+	case 'f':		 if (match("float"	))	st->declaration = DECL_UNSPEC;
+				break;
+	case 'i':		 if (match("int"	))	st->declaration = DECL_UNSPEC;
+				else if (match("inline"	))	st->token		= TOK_IGNORE;
+				break;
+	case 'l':		 if (match("long"	))	st->declaration = DECL_UNSPEC;
+				break;
+	case 'o':		 if (match("overload"))	st->token		= TOK_IGNORE;
+				break;
+	case 'p':		 if (match("private"))	st->scope		= SCOPE_STATIC;
+				else if (match("public"	))	st->token		= TOK_IGNORE;
+				break;
+	case 's':		 if (match("static"	))	st->scope		= SCOPE_STATIC;
+				else if (match("struct"	))	st->declaration = DECL_STRUCT;
+				else if (match("short"	))	st->declaration = DECL_UNSPEC;
+				else if (match("signed"	))	st->declaration = DECL_UNSPEC;
+				break;
+	case 't':		 if (match("typedef"))	st->scope		= SCOPE_TYPEDEF;
+				break;
+	case 'u':		 if (match("union"	))	st->declaration = DECL_UNION;
+				else if (match("unsigned"))	st->declaration = DECL_UNSPEC;
+				break;
+	case 'v':		 if (match("virtual"))	st->token		= TOK_IGNORE;
+				else if (match("void"	))	st->declaration = DECL_UNSPEC;
+				else if (match("volatile"))	st->token		= TOK_IGNORE;
+				break;
+	case STRING_SYMBOL:
+		if (name[1] == '\0')
+		{
+			keyWord = TRUE;
+			if (! st->gotName  &&  st->scope == SCOPE_EXTERN)
+				st->declaration = DECL_NOMANGLE;
+			else
+				st->token = TOK_IGNORE;
+		}
 		break;
 	}
 
@@ -1724,7 +1886,7 @@ static void analyzeIdentifier( st )
  *	the current statement state.
  */
 static boolean nextToken( st, nesting )
-	statement_t *const st;
+	statementInfo *const st;
 	const int nesting;
 {
 	int	c;
@@ -1764,7 +1926,8 @@ static boolean nextToken( st, nesting )
 			{
 				if (st->declaration == DECL_STRUCT  ||
 					st->declaration == DECL_UNION   ||
-					st->declaration == DECL_CLASS)
+					st->declaration == DECL_CLASS	||
+					st->declaration == DECL_NOMANGLE )
 				{
 					ok = createTags(nesting + 1);
 				}
@@ -1824,7 +1987,7 @@ static boolean nextToken( st, nesting )
 					st->buf1 = !st->buf1;				/* swap name buffers */
 				readIdendifier(c, st->tag[st->buf1].name);
 				analyzeIdentifier(st);
-				if (st->token == TOK_IGNORE)
+				if (st->gotName  &&  st->token == TOK_IGNORE)
 					st->buf1 = !st->buf1;				/* swap name buffers */
 			}
 		}
@@ -1838,7 +2001,7 @@ static boolean nextToken( st, nesting )
  *--------------------------------------------------------------------------*/
 
 static void initStatement( st )
-	statement_t *const st;
+	statementInfo *const st;
 {
 	int i;
 
@@ -1854,13 +2017,13 @@ static void initStatement( st )
 
 	for (i = 0 ; i < 2 ; ++i)
 	{
-		tag_info *const tag = &st->tag[i];
+		tagInfo *const tag = &st->tag[i];
 
 		tag->location	= 0;
 		tag->lineNumber	= 0;
 		tag->name[0]	= '\0';
 #ifdef DEBUG
-		clearString(tag->name, MAXNAME);
+		clearString(tag->name, MAX_NAME_LENGTH);
 #endif
 	}
 }
@@ -1871,18 +2034,19 @@ static void initStatement( st )
 static boolean createTags( nesting )
 	const int nesting;
 {
-	statement_t st;
+	const scope_t declScope = File.header ? SCOPE_GLOBAL : SCOPE_STATIC;
+	statementInfo st;
 	boolean ok = TRUE;
 
 #ifdef DEBUG
-	if (nesting > 0  &&  (Option.debugLevel & 3) != 0)
+	if (nesting > 0  &&  debug(DEBUG_VISUAL | DEBUG_STATUS))
 		printf("<#++nesting:%d#>", nesting);
 #endif
 	initStatement(&st);
 
 	while ((ok = nextToken(&st, nesting)))
 	{
-		tag_info *const tag = &st.tag[st.buf1];
+		tagInfo *const tag = &st.tag[st.buf1];
 
 		if (st.token == TOK_EOF)
 			break;
@@ -1897,10 +2061,7 @@ static boolean createTags( nesting )
 				st.declaration == DECL_STRUCT ||
 				st.declaration == DECL_UNION)
 			{
-				if (File.header)
-					makeTag(tag, SCOPE_GLOBAL, TAG_BLOCKTAG);
-				else if (Option.include.statics)
-					makeTag(tag, SCOPE_STATIC, TAG_BLOCKTAG);
+				makeTag(tag, declScope, TAG_BLOCKTAG);
 			}
 		}
 
@@ -1911,69 +2072,55 @@ static boolean createTags( nesting )
 				 (st.inEnumBody  &&  st.token == TOK_COMMA))
 		{
 			if (st.prev[0] == TOK_NAME)
-			{
-				if (File.header)
-					makeTag(tag, SCOPE_GLOBAL, TAG_ENUM);
-				else if (Option.include.statics)
-					makeTag(tag, SCOPE_STATIC, TAG_ENUM);
-			}
+				makeTag(tag, declScope, TAG_ENUM);
 		}
-		else if (nesting == 0)
+
+		/*	If NAME ARGS BODY, then NAME is a function.
+		 */
+		else if (st.token == TOK_BODY  &&  st.prev[0] == TOK_ARGS  &&
+				 st.gotName)
 		{
-			/*	If NAME ARGS BODY, then NAME is a function (ANSI style).
-			 */
-			if (st.token == TOK_BODY  &&  st.prev[0] == TOK_ARGS  && st.gotName)
+			if (st.scope == SCOPE_EXTERN)  /* allowed for func. def. */
+				st.scope = SCOPE_GLOBAL;
+			makeTag(tag, st.scope, TAG_FUNCTION);
+		}
+
+		/*	If SEMICOLON or COMMA, then NAME is either a variable,
+		 *	typedef, or function declaration;
+		 */
+		else if (st.token == TOK_SEMICOLON  ||  st.token == TOK_COMMA)
+		{
+			if (st.prev[0] == TOK_NAME  ||  (st.funcPtr  &&  st.gotName))
 			{
-				if (st.scope != SCOPE_STATIC  ||  Option.include.statics)
+				if (st.scope == SCOPE_TYPEDEF)
+					makeTag(tag, declScope, TAG_TYPEDEF);
+
+				/*	We have to watch that we do not interpret a
+				 *	declaration of the form "struct tag;" as a variable
+				 *	definition. In such a case, the declaration will be
+				 *	either class, enum, struct or union, and prev[1] will
+				 *	be empty (i.e. SEMICOLON).
+				 */
+				else if (nesting == 0  &&
+					 (st.declaration == DECL_UNSPEC  || st.prev[1] != TOK_SPEC))
 				{
-					if (st.scope == SCOPE_EXTERN)  /* allowed for func. def. */
-						st.scope = SCOPE_GLOBAL;
-					makeTag(tag, st.scope, TAG_FUNCTION);
+					if (st.scope != SCOPE_EXTERN)
+						makeTag(tag, st.scope, TAG_VARIABLE);
 				}
 			}
-
-			/*	If SEMICOLON or COMMA, then NAME is either a variable,
-			 *	typedef, or function declaration;
-			 */
-			else if (st.token == TOK_SEMICOLON  ||  st.token == TOK_COMMA)
+			else if (st.prev[0] == TOK_ARGS)
 			{
-				if (st.prev[0] == TOK_NAME  ||  (st.funcPtr  &&  st.gotName))
-				{
-					if (st.scope == SCOPE_TYPEDEF)
-					{
-						if (File.header)
-							makeTag(tag, SCOPE_GLOBAL, TAG_TYPEDEF);
-						else if (Option.include.statics)
-							makeTag(tag, SCOPE_STATIC, TAG_TYPEDEF);
-					}
-					/*	We have to watch that we do not interpret a
-					 *	declaration of the form "struct tag;" as a variable
-					 *	definition. In such a case, the declaration will be
-					 *	either class, enum, struct or union, and prev[1] will
-					 *	be empty (i.e. SEMICOLON).
-					 */
-					else if (st.declaration == DECL_UNSPEC  ||
-							 st.prev[1] != TOK_SPEC)
-					{
-						if (st.scope == SCOPE_GLOBAL || Option.include.statics)
-							makeTag(tag, st.scope, TAG_VARIABLE);
-					}
-				}
-				else if (st.prev[0] == TOK_ARGS)
-				{
-					if (File.header  &&
-						(st.scope == SCOPE_GLOBAL || st.scope == SCOPE_EXTERN))
-					{
-						makeTag(tag, SCOPE_GLOBAL, TAG_FUNCDECL);
-					}
-				}
+				if (! File.header)
+					makeTag(tag, SCOPE_STATIC, TAG_FUNCDECL);
+				else if (st.scope == SCOPE_GLOBAL || st.scope==SCOPE_EXTERN)
+					makeTag(tag, SCOPE_GLOBAL, TAG_FUNCDECL);
 			}
 		}
 
 		/*	Reset after a semicolon or ARGS BODY pair.
 		 */
-		if (st.token == TOK_SEMICOLON  ||
-			(st.token == TOK_BODY  &&  st.prev[0] == TOK_ARGS))
+		if (st.token == TOK_SEMICOLON  ||  (st.token == TOK_BODY  &&
+			 (st.prev[0] == TOK_ARGS  ||  st.declaration == DECL_NOMANGLE)))
 		{
 			initStatement(&st);
 			Cpp.directive.resolve = FALSE;		/* end of statement */
@@ -1985,7 +2132,7 @@ static boolean createTags( nesting )
 	st.prev[0] = st.token;
 	}
 #ifdef DEBUG
-	if (nesting > 0  &&  (Option.debugLevel & 3) != 0)
+	if (nesting > 0  &&  debug(DEBUG_VISUAL | DEBUG_STATUS))
 		printf("<#--nesting:%d#>", nesting - 1);
 #endif
 	return ok;
@@ -2016,26 +2163,26 @@ static boolean createTagsForFile( name )
 static boolean isSourceFile( filename )
 	const char *const filename;
 {
-	static char line[MAXLINE];
+	static char line[MAX_TAG_LINE];
 	boolean isSource = FALSE;		/* we assume not until found otherwise */
 	FILE *const fp = fopen(filename, "r");
 
-	if (fp != NULL  &&  fgets(line, MAXLINE, fp) != NULL)
+	if (fp != NULL  &&  fgets(line, MAX_TAG_LINE, fp) != NULL)
 	{
 		char *tagPrefix, *tagFname, *pattern;
 		char *separator1, *separator2;
-		char *const buffer = malloc((size_t)(5 * MAXLINE));
+		char *const buffer = malloc((size_t)(5 * MAX_TAG_LINE));
 
 		if (buffer == NULL)
 		{
-			fprintf(stderr, "Insufficient memory\n");
+			perror("Insufficient memory");
 			exit(1);
 		}
-		tagPrefix	= &buffer[0 * MAXLINE];
-		separator1	= &buffer[1 * MAXLINE];
-		tagFname	= &buffer[2 * MAXLINE];
-		separator2	= &buffer[3 * MAXLINE];
-		pattern		= &buffer[4 * MAXLINE];
+		tagPrefix	= &buffer[0 * MAX_TAG_LINE];
+		separator1	= &buffer[1 * MAX_TAG_LINE];
+		tagFname	= &buffer[2 * MAX_TAG_LINE];
+		separator2	= &buffer[3 * MAX_TAG_LINE];
+		pattern		= &buffer[4 * MAX_TAG_LINE];
 	    if (sscanf(line, "%[^\t]%[\t]%[^\t]%[\t]%[^\n]",
 				   tagPrefix, separator1, tagFname, separator2, pattern) < 5)
 			isSource = TRUE;
@@ -2054,7 +2201,7 @@ static boolean isSourceFile( filename )
 			}
 			else
 			{
-				*tag = 0;				/* null terminate the tag prefix */
+				*tag = '\0';			/* null terminate the tag prefix */
 				++tag;					/* tag follows tag prefix */
 
 				/*	The filename portion of the prefixed tags must match
@@ -2071,7 +2218,7 @@ static boolean isSourceFile( filename )
 				 */
 				if (! isident1(tag[0]))
 					isSource = TRUE;
-				else for (p = tag + 1 ; *p != 0 && !isSource ; ++p)
+				else for (p = tag + 1 ; *p != '\0' && !isSource ; ++p)
 				{
 					if (! isident(*p))
 						isSource = TRUE;
@@ -2085,7 +2232,7 @@ static boolean isSourceFile( filename )
 					((pattern[0] != '/'  &&  pattern[0] != '?') ||
 					  pattern[0] != pattern[strlen(pattern) - 1]))
 				{
-					for (p = pattern ; *p != 0  && ! isSource ; ++p)
+					for (p = pattern ; *p != '\0'  && ! isSource ; ++p)
 						if (! isdigit(*p))
 							isSource = TRUE;
 				}
@@ -2101,17 +2248,17 @@ static boolean isSourceFile( filename )
 static const char *getNextListFile( fp )
 	FILE *const fp;
 {
-	static char fileName[MAXPATH];
-	const char *const buf = fgets(fileName, MAXPATH, fp);
+	static char fileName[PATH_MAX + 1];
+	const char *const buf = fgets(fileName, PATH_MAX + 1, fp);
 
 	if (buf != NULL)
 	{
 		char *const newline = strchr(fileName, '\n');
 
 		if (newline == NULL)
-			fileName[MAXPATH - 1] = 0;
+			fileName[PATH_MAX] = '\0';
 		else
-			*newline = 0;
+			*newline = '\0';
 	}
 	return buf;
 }
@@ -2144,7 +2291,7 @@ static void createTagsForList( listFile )
 				TagFile.numTags = numTags;			/* restore previous count */
 				Option.braceFormat = TRUE;
 #ifdef DEBUG
-				if (Option.debugLevel & 4)
+				if (debug(DEBUG_STATUS))
 					printf("%s: Formatting error; retrying\n", fileName);
 #endif
 			}
@@ -2177,7 +2324,7 @@ static void createTagsForArgs( argList )
 			TagFile.numTags = numTags;			/* restore previous count */
 			Option.braceFormat = TRUE;
 #ifdef DEBUG
-			if (Option.debugLevel & 4)
+			if (debug(DEBUG_STATUS))
 				printf("%s: Formatting error; retrying\n", argList[argNum]);
 #endif
 		}
@@ -2200,18 +2347,19 @@ static void createTagsForArgs( argList )
  *	so have lots of memory if you have large tag files.
  *--------------------------------------------------------------------------*/
 
-static void fatal( msg )
+static void failedSort( msg )
 	const char *const msg;
 {
 	if (TagFile.fp != NULL)
 		fclose(TagFile.fp);
-	perror(msg);
-	fprintf(stderr, "Unable to sort tag file.\n");
+	if (msg == NULL)
+		fputs("ctags: Insufficient memory\n", errout);
+	else
+		perror(msg);
+	fprintf(errout, "Cannot sort tag file.\n");
 	exit(1);
 }
 
-/*	This is the sorting function called by qsort().
- */
 static int compareTags( one, two )
 	const void *const one;
 	const void *const two;
@@ -2239,11 +2387,10 @@ static void writeSortedTags( table, toStdout )
 		if (thisTag  == NULL  ||   prevTag == NULL  ||
 			thisFile == NULL  ||  prevFile == NULL)
 		{
-			fprintf(stderr,
-					"Insufficient memory to generate duplicate warnings\n");
+			perror("Cannot generate duplicate warnings\n");
 		}
-		*prevTag  = *thisTag  = 0;
-		*prevFile = *thisFile = 0;
+		*prevTag  = *thisTag  = '\0';
+		*prevFile = *thisFile = '\0';
 	}
 
 	/*	Write the sorted lines back into the tag file.
@@ -2254,7 +2401,7 @@ static void writeSortedTags( table, toStdout )
 	{
 		TagFile.fp = fopen(TagFile.name, "w");
 		if (TagFile.fp == NULL)
-			fatal(TagFile.name);
+			failedSort(TagFile.name);
 	}
 	for (i = 0 ; i < TagFile.numTags ; ++i)
 	{
@@ -2263,7 +2410,7 @@ static void writeSortedTags( table, toStdout )
 		 */
 		if (i == 0  ||  Option.xref  ||  strcmp(table[i], table[i-1]) != 0)
 			if (fputs(table[i], TagFile.fp) == EOF)
-				fatal(TagFile.name);
+				failedSort(TagFile.name);
 
 		if (Option.warnings)
 		{
@@ -2276,10 +2423,10 @@ static void writeSortedTags( table, toStdout )
 
 			if (fields == 2  &&  strcmp(thisTag, prevTag) == 0)
 			{
-				fprintf(stderr, "Duplicate entry in ");
+				fprintf(errout, "Duplicate entry in ");
 				if (strcmp(thisFile, prevFile) != 0)
-					fprintf(stderr, "%s and ", prevFile);
-				fprintf(stderr, "%s: %s\n", thisFile, thisTag);
+					fprintf(errout, "%s and ", prevFile);
+				fprintf(errout, "%s: %s\n", thisFile, thisTag);
 			}
 			strcpy(prevTag , thisTag );
 			strcpy(prevFile, thisFile);
@@ -2296,7 +2443,7 @@ static void writeSortedTags( table, toStdout )
 		fclose(TagFile.fp);
 }
 
-static void internalSortTags(toStdout)
+static void internalSortTags( toStdout )
 	const boolean toStdout;
 {
 	char *buffer, **table;
@@ -2311,7 +2458,7 @@ static void internalSortTags(toStdout)
 	buffer = malloc(maxLength);						/* read buffer */
 	table  = malloc(tableSize);
 	if (buffer == NULL  ||  table == NULL)
-		fatal("ctags");
+		failedSort(NULL);
 
 	mallocSize = maxLength + tableSize;
 
@@ -2319,18 +2466,18 @@ static void internalSortTags(toStdout)
 	 */
 	TagFile.fp = fopen(TagFile.name, "r");
 	if (TagFile.fp == NULL)
-		fatal(TagFile.name);
+		failedSort(TagFile.name);
 	for (i = 0 ; i < TagFile.numTags && !feof(TagFile.fp) ; ++i)
 	{
 		size_t stringSize;
 
 		if (fgets(buffer, (int)maxLength, TagFile.fp) == NULL  &&
 															! feof(TagFile.fp))
-			fatal(TagFile.name);
+			failedSort(TagFile.name);
 		stringSize = strlen(buffer) + 1;
 		table[i] = (char *)malloc(stringSize);
 		if (table[i] == NULL)
-			fatal(TagFile.name);
+			failedSort(NULL);
 		mallocSize += stringSize;
 		strcpy(table[i], buffer);
 	}
@@ -2350,8 +2497,8 @@ static void internalSortTags(toStdout)
 	writeSortedTags(table, toStdout);
 
 #ifdef DEBUG
-	if (Option.debugLevel & 4)
-		printf("malloc: %ld bytes\n", (long)mallocSize);
+	if (debug(DEBUG_STATUS))
+		printf("sort memory: %ld bytes\n", (long)mallocSize);
 #endif
 	for (i = 0 ; i < TagFile.numTags ; ++i)
 		free(table[i]);
@@ -2361,17 +2508,17 @@ static void internalSortTags(toStdout)
 
 #else
 
-static void externalSortTags(toStdout)
+static void externalSortTags( toStdout )
 	const boolean toStdout;
 {
-	static char cmd[MAXLINE];
+	static char cmd[MAX_CMD_LINE];
 	int ret;
 
 	sprintf(cmd, "sort -u -o %s %s", TagFile.name, TagFile.name);
 	ret = system(cmd);
 	if (ret == 0  &&  Option.warnings)
 	{
-		char awkProg[MAXLINE];
+		char awkProg[MAX_CMD_LINE];
 		const char *begin;
 		int fileArg;
 
@@ -2427,9 +2574,14 @@ static void printHelp( help, where )
 static void printUsage( error )
 	const char *const error;
 {
-	printHelp(Help, stderr);
+	printHelp(Help, errout);
 	if (error != NULL)
-		fprintf(stderr, "\nError: %s\n\n", error);
+	{
+		fprintf(errout, "\nError: %s\n", error);
+#if !defined(MSDOS) && !defined(WIN32) && !defined(OS2)
+		fputs("\n", errout);
+#endif
+	}
 	exit(1);
 }
 
@@ -2444,7 +2596,7 @@ static void readExtensionList( list )
 	while (extension != NULL  &&  extIndex < MAX_HEADER_EXTENSIONS)
 	{
 #ifdef DEBUG
-		if (Option.debugLevel & 4)
+		if (debug(DEBUG_STATUS))
 			printf("header extension: %s\n", extension);
 #endif
 		Option.headerExt[extIndex++] = extension;
@@ -2472,7 +2624,7 @@ static void applyTagInclusionList( list )
 	boolean mode = TRUE;		/* default mode is to add following types */
 	const char *p;
 
-	for (p = list  ;  *p != 0  ;  ++p)
+	for (p = list  ;  *p != '\0'  ;  ++p)
 	{
 		switch (*p)
 		{
@@ -2505,7 +2657,32 @@ static void applyTagInclusionList( list )
 	}
 }
 
-static void readIgnoreList( fileName )
+static void readIgnoreList( list )
+	char *const list;
+{
+	const char *token = strtok(list, IGNORE_SEPARATORS);
+
+	while (token != NULL)
+	{
+		unsigned int i = Option.ignore.count++;
+
+		if (Option.ignore.count > Option.ignore.max)
+		{
+			Option.ignore.max = Option.ignore.count + 10;
+			Option.ignore.list = (char **)realloc(Option.ignore.list,
+											Option.ignore.max * sizeof(char *));
+		}
+		Option.ignore.list[i] = (char *)malloc(strlen(token) + 1);
+		strcpy(Option.ignore.list[i], token);
+#ifdef DEBUG
+		if (debug(DEBUG_STATUS))
+			printf("ignore token: %s\n", token);
+#endif
+		token = strtok(NULL, IGNORE_SEPARATORS);
+	}
+}
+
+static void readIgnoreListFromFile( fileName )
 	const char *const fileName;
 {
 	FILE *const fp = fopen(fileName, "r");
@@ -2517,40 +2694,49 @@ static void readIgnoreList( fileName )
 	}
 	else
 	{
-		char ignoreToken[MAXNAME];
-		int i, numTokens = 0;
+		char ignoreToken[MAX_NAME_LENGTH];
+		unsigned int i = Option.ignore.count;
 
 		while (fscanf(fp, "%255s", ignoreToken) == 1)
-			++numTokens;
+			++Option.ignore.count;
 		rewind(fp);
-		IgnoreList = (char **)malloc((numTokens + 1) * sizeof(char *));
-		if (IgnoreList == NULL)
-			perror("Cannot create ignore list");
-		else
+		if (Option.ignore.count > Option.ignore.max)
 		{
-			for (i = 0 ; fscanf(fp, "%255s", ignoreToken) == 1 ; ++i)
-			{
-				IgnoreList[i] = (char *)malloc(strlen(ignoreToken) + 1);
-				strcpy(IgnoreList[i], ignoreToken);
-			}
-			IgnoreList[i] = NULL;
+			Option.ignore.max = Option.ignore.count;
+			Option.ignore.list = (char **)realloc(Option.ignore.list,
+											Option.ignore.max * sizeof(char *));
+		}
+		if (Option.ignore.list == NULL)
+			perror("Cannot create ignore list");
+		else while (fscanf(fp, "%255s", ignoreToken) == 1)
+		{
+#ifdef DEBUG
+			assert(i < Option.ignore.count);
+#endif
+			Option.ignore.list[i] = (char *)malloc(strlen(ignoreToken) + 1);
+			strcpy(Option.ignore.list[i], ignoreToken);
+			++i;
+#ifdef DEBUG
+			if (debug(DEBUG_STATUS))
+				printf("ignore token: %s\n", ignoreToken);
+#endif
 		}
 	}
 }
 
 static void freeIgnoreList()
 {
-	if (IgnoreList != NULL)
+	while (Option.ignore.count > 0)
 	{
-		int i;
-
-		for (i = 0 ; IgnoreList[i] != NULL ; ++i)
-			free(IgnoreList[i]);
-		free(IgnoreList);
+		free(Option.ignore.list[--Option.ignore.count]);
 	}
+	if (Option.ignore.list != NULL)
+		free(Option.ignore.list);
+	Option.ignore.list = NULL;
+	Option.ignore.max = 0;
 }
 
-static char *readOptionArg(option, arg, argList, argNum)
+static char *readOptionArg( option, arg, argList, argNum )
 	const int option;
 	char **const arg;
 	char *const *const argList;
@@ -2558,7 +2744,7 @@ static char *readOptionArg(option, arg, argList, argNum)
 {
 	char *list = NULL;
 
-	if ((*arg)[0] != 0)			/* does list immediately follow option? */
+	if ((*arg)[0] != '\0')			/* does list immediately follow option? */
 	{
 		list = *arg;
 		*arg += strlen(*arg);
@@ -2588,27 +2774,28 @@ static int parseOptions( argList )
 
 		if (*arg++ != '-')				/* stop at first non-option switch */
 		  break;
-		while (*arg != 0)  switch (c = *arg++)
+		while (*arg != '\0')  switch (c = *arg++)
 		{
 			/*	Simple options.
 			 */
-			case 'a': Option.append				= TRUE;		break;
-			case 'B': Option.backward			= TRUE;		break;
-			case 'd': Option.include.defines	= TRUE;		break;
-			case 'F': Option.backward			= FALSE;	break;
-			case 'n': Option.lineNumbers		= TRUE;		break;
+			case 'a': Option.append				= TRUE;			break;
+			case 'B': Option.backward			= TRUE;			break;
+			case 'd': Option.include.defines	= TRUE;			break;
+			case 'F': Option.backward			= FALSE;		break;
+			case 'n': Option.locate				= EX_LINENUM;	break;
+			case 'N': Option.locate				= EX_PATTERN;	break;
 			case 's': Option.include.statics	= TRUE;
-					  Option.include.prefix		= TRUE;		break;
+					  Option.include.prefix		= TRUE;			break;
 			case 'S': Option.include.statics	= TRUE;
-					  Option.include.prefix		= FALSE;	break;
-			case 't': Option.include.typedefs	= TRUE;		break;
+					  Option.include.prefix		= FALSE;		break;
+			case 't': Option.include.typedefs	= TRUE;			break;
 			case 'T': Option.include.blockTags	= TRUE;
-					  Option.include.typedefs	= TRUE;		break;
-			case 'u': Option.unsorted			= TRUE;		break;
-			case 'w': Option.warnings			= FALSE;	break;
-			case 'W': Option.warnings			= TRUE;		break;
-			case 'x': Option.xref				= TRUE;		break;
-			case '?': printHelp(LongHelp, stdout);			exit(0);
+					  Option.include.typedefs	= TRUE;			break;
+			case 'u': Option.unsorted			= TRUE;			break;
+			case 'w': Option.warnings			= FALSE;		break;
+			case 'W': Option.warnings			= TRUE;			break;
+			case 'x': Option.xref				= TRUE;			break;
+			case '?': printHelp(LongHelp, stdout);				exit(0);
 
 			/*	Options requiring parameters.
 			 */
@@ -2648,7 +2835,11 @@ static int parseOptions( argList )
 				break;
 
 			case 'I':
-				Option.ignoreList = readOptionArg(c, &arg, argList, &argNum);
+				param = readOptionArg(c, &arg, argList, &argNum);
+				if (strchr("./\\", param[0]) != NULL)
+					readIgnoreListFromFile(param);
+				else
+					readIgnoreList(param);
 				break;
 
 			case 'L':
@@ -2660,7 +2851,7 @@ static int parseOptions( argList )
 				param = readOptionArg(c, &arg, argList, &argNum);
 				Option.debugLevel = atoi(param);
 				break;
-			case 'N':
+			case 'b':
 				param = readOptionArg(c, &arg, argList, &argNum);
 				Option.breakLine = atol(param);
 				break;
@@ -2688,15 +2879,15 @@ static void parseEnvironmentOptions()
 		int i, j = 0, argCount = 0;
 		boolean newArg = TRUE;
 
-		for (i = 0  ;  envOptions[i] != 0  ;  ++i)
+		for (i = 0  ;  envOptions[i] != '\0'  ;  ++i)
 		{
 			if (envOptions[i] == '\\')		/* next character is literal */
 				EnvArgList[j++] = envOptions[++i];
 			else if (envOptions[i] == ' ')
 			{
-				if (j > 0  &&  EnvArgList[j - 1] != 0)
+				if (j > 0  &&  EnvArgList[j - 1] != '\0')
 				{
-					EnvArgList[j++] = 0;
+					EnvArgList[j++] = '\0';
 					if (++argCount > MAX_ENV_ARGS)
 						break;
 					newArg = TRUE;
@@ -2711,44 +2902,19 @@ static void parseEnvironmentOptions()
 				}
 				EnvArgList[j++] = envOptions[i];
 			}
-			if (j >= MAXLINE)
+			if (j >= MAX_CMD_LINE)
 				break;
 		}
-		EnvArgList[j] = 0;				/* null terminate last argument */
+		EnvArgList[j] = '\0';				/* null terminate last argument */
 		envArgs[++argCount] = NULL;
 		parseOptions(envArgs);
 	}
 }
 
-extern int main( argc, argv )
-	int argc;
-	char **const argv;
+static void openTagFile( toStdout )
+	const boolean toStdout;
 {
-	int argNum;
-
-#ifdef __EMX__
-	_wildcard(&argc, &argv);			/* expand wildcards in argument list */
-#endif
-
-	parseEnvironmentOptions();
-	argNum = 1 + parseOptions(&argv[1]);		/* 0th arg is program name */
-
-	/*  Disable warnings, since these are only possible with sorted tags.
-	 */
-	if (Option.unsorted)
-		Option.warnings = FALSE;
-
-	/*	There must always be at least one source file or a file list.
-	 */
-	if (argNum == argc  &&  Option.fileList == NULL)
-		printUsage("No files specified");
-	else
-	{
-		static char tempName[20];
-		boolean toStdout = FALSE;
-
-		if (Option.xref  ||  strcmp(Option.tagFile, "-") == 0)
-			toStdout = TRUE;
+		static char tempName[L_tmpnam];
 
 		/*	Open the tags File.
 		 */
@@ -2756,13 +2922,12 @@ extern int main( argc, argv )
 		{
 			if (Option.unsorted)	/* if not sorting, tags go straight out */
 			{
-				TagFile.fp = stdout;
 				TagFile.name = NULL;
+				TagFile.fp = stdout;
 			}
 			else
 			{
-				strcpy(tempName, TMP_TAGS);
-				TagFile.name = mktemp(tempName);
+				TagFile.name = tmpnam(tempName);
 				TagFile.fp = fopen(TagFile.name, "w");
 			}
 		}
@@ -2778,9 +2943,38 @@ extern int main( argc, argv )
 			perror(TagFile.name);
 			exit(1);
 		}
+}
 
-		if (Option.ignoreList != NULL)
-			readIgnoreList(Option.ignoreList);
+extern int main( argc, argv )
+	int argc;
+	char **argv;
+{
+	int argNum;
+
+#ifdef __EMX__
+	_wildcard(&argc, &argv);			/* expand wildcards in argument list */
+#endif
+
+	parseEnvironmentOptions();
+	argNum = 1 + parseOptions(&argv[1]);		/* 0th arg is program name */
+
+	/*  Disable warnings, since these are only supported with sorted tags.
+	 */
+	if (Option.unsorted)
+		Option.warnings = FALSE;
+
+	/*	There must always be at least one source file or a file list.
+	 */
+	if (argNum == argc  &&  Option.fileList == NULL)
+		printUsage("No files specified");
+	else
+	{
+		boolean toStdout = FALSE;
+
+		if (Option.xref  ||  strcmp(Option.tagFile, "-") == 0)
+			toStdout = TRUE;
+
+		openTagFile(toStdout);
 
 		if (Option.fileList != NULL)
 			createTagsForList(Option.fileList);
@@ -2789,7 +2983,7 @@ extern int main( argc, argv )
 		fclose(TagFile.fp);
 		freeIgnoreList();
 
-		if (! Option.unsorted)
+		if (TagFile.numTags > 0  &&  ! Option.unsorted)
 		{
 #ifdef INTERNAL_SORT
 			internalSortTags(toStdout);
@@ -2798,7 +2992,7 @@ extern int main( argc, argv )
 #endif
 		}
 		if (toStdout  &&  TagFile.name != NULL)
-			REMOVE(TagFile.name);
+			remove(TagFile.name);
 	}
 
 	exit(0);

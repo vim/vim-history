@@ -2984,14 +2984,14 @@ showmode()
 				if (edit_submode_extra != NULL)
 				{
 					msg_outchar(' ');		/* add a space in between */
-					if (edit_submode_highl)
+					if (edit_submode_highl != NUL)
 					{
 						stop_highlight();
-						set_highlight('r');		/* Highlight mode */
+						set_highlight(edit_submode_highl);	/* Highlight mode */
 						start_highlight();
 					}
 					msg_outstr(edit_submode_extra);
-					if (edit_submode_highl)
+					if (edit_submode_highl != NUL)
 					{
 						stop_highlight();
 						set_highlight('M');		/* Highlight mode */

@@ -47,15 +47,15 @@
 " C		'C'ompute one generation.
 " +		idem, time running one generation.
 " R		'R'un 'C'ompute until interrupted.
-" i<nr><Esc>z	Make a number the only thing on the current line and use
+" 1Gi<nr><Esc>z	Make a number the only thing on the first line and use
 "		'z' to time that many generations.
 "
 " Time to run ten generations on my 100Mhz 486 (FreeBSD):
 "   vi	  3.7		3 min 54 sec
-"   vim   4.3		1 min 41 sec
-"   nvi   1.71		1 min 04 sec
+"   vim   4.5		1 min 45 sec
+"   nvi   1.78		1 min 02 sec
 "   Elvis 1.8pl4	failed
-"   Elvis 2.0q		failed
+"   Elvis 2.0		failed
 "
 "
 " And now the macros, more or less in top-down order.

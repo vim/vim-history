@@ -159,6 +159,10 @@ clean:
 	- del $(VIM).pdb
 	- del $(VIM).map
 	- del $(VIM).ncb
+	- del ctags\ctags.obj
+	- del ctags\ctags.exe
+	- del xxd\xxd.obj
+	- del xxd\xxd.exe
 
 addcr:	addcr.c
 	$(CC) addcr.c

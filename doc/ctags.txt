@@ -3,15 +3,16 @@ ANNOUNCE
 Announcing: Exuberant Ctags
 Author    : Darren Hiebert
 
-This is to announce the availability of my new, better ctags utility. I am
-quite pleased with it, and others who have used it have been enthusiastic
-about the greater reliability and functionality it provides.
+This is to announce the availability of a new version my new, better ctags
+utility. I am quite pleased with it, and others who have used it have been
+very enthusiastic about the greater reliability and functionality it
+provides.
 
 You can find it at any of:
 
 	http://fly.hiwaay.net/~darren/ctags.html (Web site)
-	ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/ctags-1.4.tar.gz
-	ftp://ftp.halcyon.com/local/gvr/ctags-1.4.tar.gz
+	ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/ctags-1.5.tar.gz
+	ftp://ftp.halcyon.com/local/gvr/ctags-1.5.tar.gz
 
 What makes this ctags desirable?
 
@@ -27,8 +28,8 @@ What makes this ctags desirable?
             variable declarations
 
 2.  It is far less easily fooled by code containing #if preprocessor
-    conditional constructs, using a conditional path selection algorithm
-    to resolve complicated choices, and a fall-back algorithm when this one
+    conditional constructs, using a conditional path selection algorithm to
+    resolve complicated choices, and a fall-back algorithm when this one
     fails.
 
 3.  Can also be used to print out a list of selected objects found in source
@@ -36,14 +37,15 @@ What makes this ctags desirable?
 
 4.  Supports UNIX, MSDOS, WindowsNT, Windows95, OS/2 and the Amiga. In some
     cases, you may need to play with the include files, depending upon you
-    compiler. Some pre-compiled binaries may become available on the web site.
+    compiler. Some pre-compiled binaries may become available on the web
+    site.
 
-I wrote this because of my disappointment with the other ctags utilities that
-are available. However, it does have a couple of minor limitations (you be the
-judge):
+I wrote this because of my disappointment with the other ctags utilities
+that are available. However, it does have a couple of minor limitations (you
+be the judge):
 
-1)  Support for C++ is limited.
-2)  Supports only C; not Lisp, shell scripts, or anything else you might
+1.  Support for C++ is limited.
+2.  Supports only C; not Lisp, shell scripts, or anything else you might
     think of.
 
 
@@ -52,7 +54,7 @@ README
 Exuberant Ctags
 ===============
 Author: Darren Hiebert (darren@sirsi.com, darren@hiwaay.net,
-	http://fly.hiwaay.net/~darren)
+			http://fly.hiwaay.net/~darren)
 
 This source code is released into the public domain. It is provided on an
 as-is basis and no responsibility is accepted for its failure to perform
@@ -81,11 +83,21 @@ features:
     It is very robust in parsing C code and is extremely hard to fool, even
     with conditional preprocessor contructs.
 
-It is derived from and inspired by the ctags program by Steve Kirkendall
-(kirkenda@cs.pdx.edu) that comes with the Elvis vi clone (though almost
-none of the original code remains). This, too, was freely available.
+Which brings us to the most frequently asked question:
 
-Please report any problems you find. The two problems I expect to be
-most likely are either a tag which you expected but is missing, or a tag
-created in error (shouldn't really be a tag). Please include a sample of
-code (the definition) for the object which misbehaves.
+  Q: Why is it called "Exuberant" ctags?
+  A: Because one of the meanings of the word is:
+
+    exuberant : produced in extreme abundance : PLENTIFUL syn see PROFUSE
+
+Compare the tag file produced by Exuberant Ctags with that produced by any
+other ctags and you will see how appropriate the name is.
+
+Exuberant Ctags is derived from and inspired by the ctags program by Steve
+Kirkendall (kirkenda@cs.pdx.edu) that comes with the Elvis vi clone (though
+almost none of the original code remains). This, too, was freely available.
+
+Please report any problems you find. The two problems I expect to be most
+likely are either a tag which you expected but is missing, or a tag created
+in error (shouldn't really be a tag). Please include a sample of code (the
+definition) for the object which misbehaves.

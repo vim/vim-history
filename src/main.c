@@ -1020,7 +1020,7 @@ main(argc, argv)
 			}
 		}
 		dont_wait_return = FALSE;
-		if (got_int)
+		if (got_int && !global_busy)
 		{
 			(void)vgetc();				/* flush all buffers */
 			got_int = FALSE;

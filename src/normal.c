@@ -714,7 +714,7 @@ goto_line:
 				--n;
 		}
 		else
-			n = Prenum;
+			n = Prenum1 - 1;
 		op_motion_type = MLINE;
 		setpcmark();
 		curwin->w_cursor.lnum = curwin->w_topline + n;
@@ -728,10 +728,10 @@ goto_line:
 		op_motion_type = MLINE;
 		setpcmark();
 		curwin->w_cursor.lnum = curwin->w_botline - 1;
-		if (Prenum >= curwin->w_cursor.lnum)
+		if (Prenum1 - 1 >= curwin->w_cursor.lnum)
 			curwin->w_cursor.lnum = 1;
 		else
-			curwin->w_cursor.lnum -= Prenum;
+			curwin->w_cursor.lnum -= Prenum1 - 1;
 		cursor_correct();		/* correct for 'so' */
 		beginline(MAYBE);
 		break;
@@ -942,21 +942,48 @@ lineop:
 	  case K_S_RIGHT:
 		op_inclusive = FALSE;
 		flag = TRUE;
+
 		/*
-		 * This is a little strange. To match what the real vi does, we
-		 * effectively map 'cw' to 'ce', and 'cW' to 'cE', provided that we
-		 * are not on a space or a TAB. This seems impolite at first, but it's
-		 * really more what we mean when we say 'cw'.
-		 * Another strangeness: When standing on the end of a word "ce" will
-		 * change until the end of the next wordt, but "cw" will change only
-		 * one character! This is done by setting type to 2.
+		 * "cw" and "cW" are a special case.
 		 */
-		if (op_type == CHANGE && (n = gchar_cursor()) != ' ' && n != TAB &&
-																n != NUL)
+		if (op_type == CHANGE)
 		{
-			op_inclusive = TRUE;
-			flag = FALSE;
-			flag2 = TRUE;
+			n = gchar_cursor();
+			if (n != NUL)					/* not an empty line */
+			{
+				if (vim_iswhite(n))
+				{
+					/*
+					 * Reproduce a funny Vi behaviour: "cw" on a blank only
+					 * changes one character, not all blanks until the start
+					 * of the next word.  Only do this when the 'w' flag is
+					 * included in 'cpoptions'.
+					 */
+					if (Prenum1 == 1 && vim_strchr(p_cpo, CPO_CW) != NULL)
+					{
+						op_inclusive = TRUE;
+						op_motion_type = MCHAR;
+						break;
+					}
+				}
+				else
+				{
+					/*
+					 * This is a little strange. To match what the real vi
+					 * does, we effectively map 'cw' to 'ce', and 'cW' to
+					 * 'cE', provided that we are not on a space or a TAB.
+					 * This seems impolite at first, but it's really more what
+					 * we mean when we say 'cw'.
+					 * Another strangeness: When standing on the end of a word
+					 * "ce" will change until the end of the next wordt, but
+					 * "cw" will change only one character! This is done by
+					 * setting flag2.
+					 */
+					op_inclusive = TRUE;
+					flag = FALSE;
+					flag2 = TRUE;
+				}
+			}
 		}
 
 dowrdcmd:
@@ -2384,6 +2411,16 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 				colnr_t		start, end;
 
 				op_block_mode = TRUE;
+
+				/* make the start the upper left corner of the block */
+				if (curbuf->b_op_start.col > curbuf->b_op_end.col)
+				{
+					int t;
+
+					t = curbuf->b_op_start.col;
+					curbuf->b_op_start.col = curbuf->b_op_end.col;
+					curbuf->b_op_end.col = t;
+				}
 				getvcol(curwin, &(curbuf->b_op_start),
 										  &op_start_vcol, NULL, &op_end_vcol);
 				if (!redo_VIsual_busy)

@@ -3,16 +3,17 @@ Simple makefiles are provided for a few environments.
     Makefile.amiga	For Amiga with Manx C
     Makefile.bcc	For Borland C/C++ on MSDOS
     Makefile.djg	For the Gnu GCC (DJGPP) compiler on MSDOS
-    Makefile.os2	For OS/2 with EMX
+    Makefile.os2	For OS/2
     Makefile.unix	For UNIX flavors
     Makefile.w32	For Win32 with Visual C++ or Borland C++
 
-If you are on a host which uses CR-LF newlines, you will need to make sure
-that one of these labels is defined:  MSDOS, OS2, WIN32; or patch the code.
-This causes the source files to be opened in binary mode since the fseek()
+If you are on a host which uses CR-LF newlines, you will need to make
+sure that the label BINARY_OPEN_MODE is defined (this is automatically
+defined when one of either MSDOS, OS2, or WIN32 is defined). This causes
+the source files to be opened in binary mode ("rb"), because the fseek()
 calls do not operate correctly without it.
 
-Compile with -DINTERNAL_SORT if you desire sorted tags and/or warnings for
-duplicate tags, but do not have the external programs "sort" and "awk"
-available (i.e. other than UNIX). This label is automatically defined if
-any of MSDOS, OS2, WIN32, or AMIGA are defined.
+Compile with -DINTERNAL_SORT if you desire sorted tags and/or warnings
+for duplicate tags, but do not have the external programs "sort" and
+"awk" available (i.e. other than UNIX). This label is automatically
+defined if any of MSDOS, OS2, WIN32, or AMIGA are defined.

@@ -262,7 +262,7 @@ static struct option options[] =
 	{"hidden",		"hid",	P_BOOL,				(char_u *)&p_hid,
 							(char_u *)FALSE},
 	{"highlight",	"hl",	P_STRING,			(char_u *)&p_hl,
-							(char_u *)"8b,db,es,hs,mb,Mn,nu,rs,sr,tb,vr,ws"},
+							(char_u *)"8b,db,es,mb,Mn,nu,rs,sr,tb,vr,ws"},
 	{"history",		"hi", 	P_NUM,				(char_u *)&p_hi,
 #ifdef COMPATIBLE
 							(char_u *)0L},

@@ -54,8 +54,10 @@ clean:
 	-del *.o
 	-del *.exe
 	-del cmdtab.h
-	-del *.~
-	-del *~
+	-del ctags\ctags.obj
+	-del ctags\ctags.exe
+	-del xxd\xxd.obj
+	-del xxd\xxd.exe
 
 addcr:	addcr.c
 	$(CC) addcr.c

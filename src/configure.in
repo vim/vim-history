@@ -417,6 +417,19 @@ AC_CHECK_FUNCS(sigset getcwd getwd select strcspn strtol setsid setpgid)
 AC_CHECK_FUNCS(tgetent memset strerror fchown fsync fchdir)
 AC_CHECK_FUNCS(setenv putenv gettimeofday getpwuid getpwnam qsort)
 
+dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible
+AC_MSG_CHECKING(for st_blksize)
+AC_TRY_COMPILE(
+[#include <sys/types.h>
+#include <sys/stat.h>],
+[	struct stat st;
+	int n;
+
+	stat("/", &st);
+	n = (int)st.st_blksize;],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ST_BLKSIZE),
+	AC_MSG_RESULT(no))
+
 dnl rename needs to be checked separately to work on Nextstep with cc
 AC_MSG_CHECKING(for rename)
 AC_TRY_LINK([#include <stdio.h>], [rename("this", "that")],

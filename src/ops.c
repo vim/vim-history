@@ -754,7 +754,10 @@ do_delete()
 		/* replace the line */
 			ml_replace(curwin->w_cursor.lnum, newp, FALSE);
 		}
+
 		curwin->w_cursor.lnum = lnum;
+		adjust_cursor();
+
 		CHANGED;
 		updateScreen(VALID_TO_CURSCHAR);
 		op_line_count = 0;		/* no lines deleted */

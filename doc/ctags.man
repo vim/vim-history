@@ -8,8 +8,8 @@ NAME
        ctags - Generate C language tag files for use with vi(1)
 
 SYNOPSIS
-       ctags [ -aBdFnsStTuwWx ] [ -f tagfile ] [ -h list ]
-             [ -i types ] [ -I ignorefile ] [ -L listfile ]
+       ctags [ -aBdFnNsStTuwWx ] [ -f tagfile ] [ -h list ]
+             [ -i types ] [ -I ignorelist ] [ -L listfile ]
              [ -o tagfile ] [ --help ] [ file(s) ]
 
 DESCRIPTION
@@ -53,15 +53,15 @@ DESCRIPTION
            3.  the name of the file in which the  object  associ-
                ated with the tag is located
            4.  a single tab character
-           5.  a  search  pattern (either /pattern/ or ?pattern?)
-               or line number with which to locate the tag within
-               the file
+           5.  an  Ex  command to locate the tag within the file;
+               generally either a search  pattern  (either  /pat-
+               tern/ or ?pattern?) or line number
 
-       Note  that,  unless  changed  via -n, line number are only
+       Note  that,  unless changed via -n or -N, line numbers are
 
 
 
-Darren Hiebert            18 August 1996                        1
+Darren Hiebert            5 October 1996                        1
 
 
 
@@ -70,8 +70,8 @@ Darren Hiebert            18 August 1996                        1
 CTAGS(1)                                                 CTAGS(1)
 
 
-       used for tags for macro definitions,  while  patterns  are
-       used for all other tags.
+       only used for tags from macro definitions, while  patterns
+       are used for all other tags.
 
        Note that the name of each source file will be recorded in
        the tag file exactly as it appears on  the  command  line.
@@ -93,7 +93,7 @@ CTAGS(1)                                                 CTAGS(1)
        to pursue only one branch can result in ambiguous  syntax,
        as in the following example:
 
-              #ifdef STORE_SEPARATELY
+              #ifdef TWO_ALTERNATIVES
               struct {
               #else
               union {
@@ -119,15 +119,15 @@ CTAGS(1)                                                 CTAGS(1)
        enclosed  in double sets of parentheses in order to accept
        the following conditional construct:
 
-              extern void (*fptr) __ARGS((int one, char two));
+              extern void foo __ARGS((int one, char two));
 
-       Any name immediately preceding the "((" will be  discarded
-       and the previous name will be used.
-
-
+       Any name immediately preceding the "((" will be  automati-
+       cally ignored and the previous name will be used.
 
 
-Darren Hiebert            18 August 1996                        2
+
+
+Darren Hiebert            5 October 1996                        2
 
 
 
@@ -139,9 +139,20 @@ CTAGS(1)                                                 CTAGS(1)
        After  creating or appending to the tag file, it is sorted
        by the tag name, removing identical tag lines.
 
+       Note that the path recorded for filenames in the tag  file
+       and  utilized by the editor to search for tags are identi-
+       cal to the paths specified  for  file(s)  on  the  command
+       line. This means the if you want the paths for files to be
+       relative to some directory, you must invoke ctags with the
+       same pathnames for file(s).
+
 OPTIONS
-       Note that spaces separating options from their  parameters
+       Note  that spaces separating options from their parameters
        are optional.
+
+       --help
+            Prints to standard output a detailed  usage  descrip-
+            tion.
 
        -a   Append the tags to an existing tag file.
 
@@ -178,9 +189,21 @@ OPTIONS
             (default, if omitted) to  add  it  to  those  already
             included,  a  '-'  sign  to  exclude it from the list
             (e.g.  to exclude a default tag type), or an '=' sign
-            to  include  its corresponding tag type at the exclu-
-            sion of those not listed. The following tag types are
-            supported:
+            to   include   its  corresponding  tag  type  at  the
+
+
+
+Darren Hiebert            5 October 1996                        3
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
+            exclusion of those  not  listed.  The  following  tag
+            types are supported:
                d   macro definitions
                e   enumerated values (values inside enum{...})
                f   function and method definitions
@@ -190,18 +213,6 @@ OPTIONS
                v   variable declarations
             In   addition,   the   following  two  modifiers  are
             accepted:
-
-
-
-Darren Hiebert            18 August 1996                        3
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
                P   Prefix static tags (if included)  in  the  tag
                    file  with  the filename in which they appear,
                    followed by a colon (Elvis style;  not  widely
@@ -217,49 +228,38 @@ CTAGS(1)                                                 CTAGS(1)
             types except for function prototypes; include  static
             tags but do not prefix them).
 
-       -I ignorefile
-            Read  from ignorefile a list of names of tokens which
-            are to be  ignored  while  generating  tags  for  the
-            source files. This is useful when preprocessor macros
-            are used in such a way that they cause syntactic con-
-            fusion due to their locations. In the following exam-
-            ple, the macro "ARGDECL2" would be mistakenly  inter-
-            preted  by  ctags  to  be  the  name  of the function
-            instead of the correct name of "foo":
+       -I ignorelist
+            Reads  a  list of names which are to be ignored while
+            generating tags for the source files. The list may be
+            supplied  directly  on the command line or found in a
+            separate file. Normally, the parameter ignorelist  is
+            a  list of names to be ignored, each separated with a
+            comma, a semicolon, or white space (in which case the
+            list  should be quoted to keep the entire list as one
+            command line argument). The parameter ignorelist will
+            be  interpreted  as a filename if its first character
+            is given as either a '.' or a pathname separator ('/'
+            or '\'). In order to specify a file found in the cur-
+            rent directory, use "./filename".
 
-              int foo ARGDECL2(void *, ptr, long int, nbytes)
+            This feature is useful when preprocessor  macros  are
+            used  in  such a way that they cause syntactic confu-
+            sion due to their presence. Some examples will illus-
+            trate this point.
 
-            Placing the name "ARGDECL2" into ignorefile and using
-            the  -I  option causes ctags to ignore every instance
-            of "ARGDECL2".
+              /*  creates  a  global  version string in module */
+              MODULE_VERSION("$Revision: 1.25 $")
 
-       -L listfile
-            Read from listfile a list of  file  names  for  which
-            tags should be generated. If listfile is specified as
-            "-", then file names are read from standard input.
-
-       -n   Places places the line numbers  in  the  source  file
-            where  tags  are  located  rather than patterns to be
-            searched for. This has two advantages:
-            1.  Significantly reduces the size of  the  resulting
-                tag file.
-            2.  Eliminates failures to find tags because the line
-                defining the tag has changed, causing the pattern
-                match  to  fail  (note that some editors, such as
-                vim, are able to recover in many such instances).
-            3.  Eliminates finding identical matching, but incor-
-                rect, source lines (see BUGS, below).
-            However, this option has  one  significant  drawback:
-            changes  to  the source files can cause the line num-
-            bers recorded in the tag file to no longer correspond
-            to  the  lines  in  the source file, causing jumps to
-            some tags to miss the target  definition  by  one  or
-            more  lines. Selecting this option causes the follow-
-            ing options to be ignored: -F and -B.
+            In this example, the macro invocation looks  to  much
+            like a function definition because it is not followed
+            by a semicolon (indeed, it could even be followed  by
+            a  global variable definition that would look exactly
+            like a K&R style function parameter declaration).  In
+            fact,  this  seeming function definition would likely
 
 
 
-Darren Hiebert            18 August 1996                        4
+Darren Hiebert            5 October 1996                        4
 
 
 
@@ -267,6 +267,52 @@ Darren Hiebert            18 August 1996                        4
 
 CTAGS(1)                                                 CTAGS(1)
 
+
+            cause the rest of the file to be skipped  over  while
+            trying  to  complete  the  definition. Ignoring "MOD-
+            ULE_ID" would avoid such a problem.
+
+              int foo ARGDECL2(void *, ptr, long int, nbytes)
+
+            In this example, the macro "ARGDECL2" would  be  mis-
+            takenly  interpreted  to  be the name of the function
+            instead of the correct name of  "foo".  Ignoring  the
+            name "ARGDECL2" results in the correct behavior.
+
+       -L listfile
+            Read  from  listfile  a  list of file names for which
+            tags should be generated. If listfile is specified as
+            "-", then file names are read from standard input.
+
+       -n   Places  into  the tag file line numbers in the source
+            file where tags are located rather than  patterns  to
+            be searched for. This has three advantages:
+            1.  Significantly  reduces  the size of the resulting
+                tag file.
+            2.  Eliminates failures to find tags because the line
+                defining the tag has changed, causing the pattern
+                match to fail (note that some  editors,  such  as
+                vim, are able to recover in many such instances).
+            3.  Eliminates finding identical matching, but incor-
+                rect, source lines (see BUGS, below).
+            However,  this  option  has one significant drawback:
+            changes to the source files can cause the  line  num-
+            bers recorded in the tag file to no longer correspond
+            to the lines in the source  file,  causing  jumps  to
+            some  tags  to  miss  the target definition by one or
+            more lines. Basically, this option is best used  when
+            the source code to which it is applied is not subject
+            to change.  See also the -N  option.  Selecting  this
+            option  causes  the  following options to be ignored:
+            -F, -B and -N.
+
+       -N   Uses search patterns for all tags,  rather  than  the
+            line numbers usually used for macro definitions. This
+            has the advantage of not  referencing  obsolete  line
+            numbers  when  lines have been added or removed since
+            the tag file was generated. See also the  -n  option.
+            Selecting this option causes the following options to
+            be ignored: -F, -B and -n.
 
        -o tagfile
             Alternative for -f.
@@ -276,6 +322,17 @@ CTAGS(1)                                                 CTAGS(1)
             lowed by a colon. This is equivalent to -i+SP and  is
             supported only for backwards compatibility with other
             versions of ctags. Use of -i is preferred.
+
+
+
+Darren Hiebert            5 October 1996                        5
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
 
        -S   Include static tags in the output file,  but  do  not
             prefix  them,  thereby making them appear the same as
@@ -316,16 +373,25 @@ CTAGS(1)                                                 CTAGS(1)
             global variables  located  in  a  source  file  (e.g.
             ctags -xi=v file).
 
-       --help
-            Prints  to  standard output a detailed usage descrip-
-            tion.
-
 ENVIRONMENT VARIABLES
        CTAGS   If found, this variable will be assumed to contain
+               a set of custom default  options  which  are  read
+               when  ctags  starts,  but  before any command line
+               options are read. Options in this variable  should
+               be  in the same form as those on the command line.
+               Command line options will override options  speci-
+               fied  in this variable. Only options may be speci-
+               fied with this variable; no source file names  are
+               read from its value.
+
+HOW TO USE WITH VI
+       Vi  will, by default, expect a tag file by the name "tags"
+       in the current directory. Once the tag file is build,  the
+       following  vi  commands  take  exercise  the  tag indexing
 
 
 
-Darren Hiebert            18 August 1996                        5
+Darren Hiebert            5 October 1996                        6
 
 
 
@@ -334,22 +400,9 @@ Darren Hiebert            18 August 1996                        5
 CTAGS(1)                                                 CTAGS(1)
 
 
-               a  set  of  custom  default options which are read
-               when ctags starts, but  before  any  command  line
-               options  are read. Options in this variable should
-               be in the same form as those on the command  line.
-               Command  line options will override options speci-
-               fied in this variable. Only options may be  speci-
-               fied  with this variable; no source file names are
-               read from its value.
+       feature:
 
-HOW TO USE WITH VI
-       Vi will, by default, expect a tag file by the name  "tags"
-       in  the current directory. Once the tag file is build, the
-       following vi commands take exercise the tag indexing  fea-
-       ture:
-
-       vi -t tag   Start  vi  and position the cursor at the file
+       vi -t tag   Start vi and position the cursor at  the  file
                    and line where "tag" is defined.
 
        Control-]   Find the tag under the cursor.
@@ -364,14 +417,14 @@ BUGS
 
        Because ctags does not look inside brace enclosed function
        blocks, local declarations of class/enum/struct/union tags
-       and  enumeration  values  within  a function will not have
+       and enumeration values within a  function  will  not  have
        tags generated for them.
 
        Note that because ctags generates search patterns for non-
-       macro  tags,  it  is entirely possible that the wrong line
+       macro tags, it is entirely possible that  the  wrong  line
        may be found by your editor if there exists another, iden-
-       tical,  line  (whose context prevents it from generating a
-       tag) which is identical to the line  containing  the  tag.
+       tical, line (whose context prevents it from  generating  a
+       tag)  which  is  identical to the line containing the tag.
        The following example demonstrates this condition:
 
               int variable;
@@ -383,15 +436,28 @@ BUGS
                   /* ... */
               }
 
-       Depending  upon which editor you use and where in the code
-       you happen to be, it is possible that the  search  pattern
+       Depending upon which editor you use and where in the  code
+       you  happen  to be, it is possible that the search pattern
        may locate the local parameter declaration in foo() before
-       it finds the actual global variable definition, since  the
+       it  finds the actual global variable definition, since the
        lines (and therefore their search patterns are identical).
+       This can be avoided by use of the -n option.
+
+       Because  ctags  is  neither a preprocessor nor a compiler,
+       some complex or obscure constructs  can  fool  ctags  into
+       either  missing a tag or improperly generating an inappro-
+       priate tag. In particular, the use  of  preprocessor  con-
+       structs  which  alter  the  textual  syntax  of C can fool
+       ctags, as demonstrated by the following example:
+
+              #ifdef GLOBAL
+              #define EXTERN
+              #define INIT(assign)  assign
+              #else
 
 
 
-Darren Hiebert            18 August 1996                        6
+Darren Hiebert            5 October 1996                        7
 
 
 
@@ -400,29 +466,19 @@ Darren Hiebert            18 August 1996                        6
 CTAGS(1)                                                 CTAGS(1)
 
 
-       Because ctags is neither a preprocessor  nor  a  compiler,
-       some  complex  or  obscure  constructs can fool ctags into
-       either missing a tag or improperly generating an  inappro-
-       priate  tag.  In  particular, the use of preprocessor con-
-       structs which alter the  textual  syntax  of  C  can  fool
-       ctags, as demonstrated by the following example:
-
-              #ifdef GLOBAL
-              #define EXTERN
-              #define INIT(assign)     assign
-              #else
               #define EXTERN extern
               #define INIT(assign)
               #endif
 
               EXTERN BUF *firstbuf INIT(= NULL);
 
-       This  looks  too  much  like  a declaration for a function
-       called "INIT",  which  returns  a  pointer  to  a  typedef
-       "firstbuf",  rather  than  the  actual variable definition
+       This looks too much like  a  declaration  for  a  function
+       called  "INIT",  which  returns  a  pointer  to  a typedef
+       "firstbuf", rather than  the  actual  variable  definition
        that it is, since this distinction can only be resolved by
        the preprocessor. The moral of the story: don't do this if
-       you want a tag generated for it.
+       you  want  a tag generated for it, or use the -I option to
+       specify "INIT" as a keyword to be ignored.
 
 FILES
        tags      The default tag file created by ctags.
@@ -454,18 +510,6 @@ MOTIVATION
 
 CREDITS
        This version of ctags is derived from and inspired by  the
-
-
-
-Darren Hiebert            18 August 1996                        7
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
        ctags  program  by  Steve Kirkendall (kirkenda@cs.pdx.edu)
        that comes with the Elvis vi clone (though almost none  of
        the original code remains).
@@ -479,50 +523,6 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Darren Hiebert            18 August 1996                        8
+Darren Hiebert            5 October 1996                        8
 
 

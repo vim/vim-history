@@ -366,10 +366,10 @@ static void PaintArrows(sbw)
   
     if (XtIsRealized((Widget) sbw))
 	{
-		if (thickness * 2 > sbw->scrollbar.length)
+		if ((int)thickness * 2 > (int)sbw->scrollbar.length)
 		{
 			size = sbw->scrollbar.length / 2;
-			off = (thickness - size) / 2;
+			off = (int)(thickness - size) / 2;
 		}
 		else
 		{
@@ -797,7 +797,7 @@ static void HandleThumb(w, event, params, num_params)
     /* also call Move and Notify if we're already in continuous scroll mode */
     if (sbw->scrollbar.scroll_mode == SMODE_CONT ||
 			(loc >= sbw->scrollbar.topLoc &&
-			 loc <= sbw->scrollbar.topLoc + sbw->scrollbar.shownLength))
+			 loc <= sbw->scrollbar.topLoc + (int)sbw->scrollbar.shownLength))
 	{
 		XtCallActionProc(w, "MoveThumb", event, params, *num_params);
 		XtCallActionProc(w, "NotifyThumb", event, params, *num_params);
@@ -874,7 +874,7 @@ static void NotifyScroll(w, event, params, num_params)
     ExtractPosition(event, &x, &y, &state);
     loc = PICKLENGTH(sbw, x, y);
 
-	if (sbw->scrollbar.thickness * 2 > sbw->scrollbar.length)
+	if ((int)sbw->scrollbar.thickness * 2 > (int)sbw->scrollbar.length)
 		arrow_size = sbw->scrollbar.length / 2;
 	else
 		arrow_size = sbw->scrollbar.thickness;
@@ -965,8 +965,8 @@ static float FractionLoc(sbw, x, y)
     margin = MARGIN(sbw);
     x -= margin;
     y -= margin;
-    height = sbw->core.height - 2 * margin;
-    width = sbw->core.width - 2 * margin;
+    height = (float)sbw->core.height - 2 * margin;
+    width = (float)sbw->core.width - 2 * margin;
     return PICKLENGTH(sbw, x / width, y / height);
 }
 

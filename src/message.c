@@ -271,7 +271,8 @@ wait_return(redraw)
 		do
 		{
 			c = vgetc();
-			got_int = FALSE;
+			if (!global_busy)
+				got_int = FALSE;
 		} while (c == Ctrl('C')
 #ifdef USE_GUI
 								|| c == K_SCROLLBAR || c == K_HORIZ_SCROLLBAR

@@ -286,6 +286,7 @@ do_move(line1, line2, n)
 
 	/*
 	 * First we copy the old text to its new location -- webb
+	 * Also copy the flag that ":global" command uses.
 	 */
 	if (u_save(n, n + 1) == FAIL)
 		return FAIL;
@@ -340,6 +341,15 @@ do_move(line1, line2, n)
 	CHANGED;
 	if (!global_busy && num_lines > p_report)
 		smsg((char_u *)"%ld line%s moved", num_lines, plural(num_lines));
+
+	/*
+	 * Leave the cursor on the last of the moved lines.
+	 */
+	if (n >= line1)
+		curwin->w_cursor.lnum = n;
+	else
+		curwin->w_cursor.lnum = n + (line2 - line1) + 1;
+
 	return OK;
 }
 

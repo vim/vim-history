@@ -1,6 +1,9 @@
 Known problems and priority improvements:
 
 Small problems:
+- When trying to recover a file, when 'shell' is ksh version "PD KSH v4.9
+  93/09/29", this fails because the shell crashes (not a Vim problem).
+  Try recovering by giving the swap file name: "vim -r file.swp".
 - CTRL-F at the end of the file, when 'so' is set, redraws twice.  When the
   window is small (< 2 * 'so') it behaves differently.
 - CTRL-E and CTRL-Y in a small windows, with 'so' set, sometimes doesn't
@@ -33,7 +36,7 @@ Vi incompatibility:
 GUI:
 - Motif: Scrollbar for cmdline disappears with ":set go=", ":set go=lbrm".
 - Motif: Tear-off menu item "----------" crashes Vim on some machines.
-  (Netherton)
+  (Netherton)  It works fine for me, maybe it's a Motif problem.
 - When font shape changes, but not the size, doing ":set font=" does not
   redraw the screen with the new font.
 - Horizontal scrollbar doesn't work in rightleft mode.

@@ -21,11 +21,11 @@
 #define VIM_VERSION_MAJOR			   4
 #define VIM_VERSION_MAJOR_STR		  "4"
 
-#define VIM_VERSION_MINOR			   4
-#define VIM_VERSION_MINOR_STR		  "4"
+#define VIM_VERSION_MINOR			   5
+#define VIM_VERSION_MINOR_STR		  "5"
 
-#define VIM_VERSION_BUILD			   1
-#define VIM_VERSION_BUILD_STR		  "1"
+#define VIM_VERSION_BUILD			   2
+#define VIM_VERSION_BUILD_STR		  "2"
 
 #define VIM_VERSION_PATCHLEVEL		   0
 #define VIM_VERSION_PATCHLEVEL_STR	  "0"

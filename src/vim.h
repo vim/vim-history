@@ -419,7 +419,7 @@ enum auto_events
 
 #define	TERMBUFSIZE	1024
 
-#if defined(AMIGA) || defined(__linux__)
+#if defined(AMIGA) || defined(__linux__) || defined(__QNX__)
 # define TBUFSZ 2048			/* buffer size for termcap entry */
 #else
 # define TBUFSZ 1024			/* buffer size for termcap entry */

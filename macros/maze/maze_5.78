@@ -11,6 +11,6 @@ See Vim solve a maze!
 
    type "g" to start
 
-to interrupt type "<CTRL-C>"
+to interrupt type "<CTRL-C>" or "<CTRL-BREAK>"
      to quit type ":q!<RETURN>"
 

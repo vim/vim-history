@@ -2137,14 +2137,13 @@ vim_tempname(extra_char)
 	return NULL;
 #else
 
-# ifndef USE_TMPNAM		 /* tmpnam() will make its own name */
-	STRCPY(itmp, TEMPNAME);
-# endif
-	if ((p = vim_strchr(itmp, '?')) != NULL)
-		*p = extra_char;
 # ifdef USE_TMPNAM
+	/* tmpnam() will make its own name */
 	if (*tmpnam((char *)itmp) == NUL)
 # else
+	STRCPY(itmp, TEMPNAME);
+	if ((p = vim_strchr(itmp, '?')) != NULL)
+		*p = extra_char;
 	if (*mktemp((char *)itmp) == NUL)
 # endif
 		return NULL;

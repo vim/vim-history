@@ -3136,9 +3136,37 @@ fi
 done
 
 
-echo $ac_n "checking for rename""... $ac_c" 1>&6
+echo $ac_n "checking for st_blksize""... $ac_c" 1>&6
 cat > conftest.$ac_ext <<EOF
 #line 3142 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+int main() { return 0; }
+int t() {
+	struct stat st;
+	int n;
+
+	stat("/", &st);
+	n = (int)st.st_blksize;
+; return 0; }
+EOF
+if { (eval echo configure:3155: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define HAVE_ST_BLKSIZE 1
+EOF
+
+else
+  rm -rf conftest*
+  echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+
+
+echo $ac_n "checking for rename""... $ac_c" 1>&6
+cat > conftest.$ac_ext <<EOF
+#line 3170 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 int main() { return 0; }
@@ -3146,7 +3174,7 @@ int t() {
 rename("this", "that")
 ; return 0; }
 EOF
-if { (eval echo configure:3150: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
+if { (eval echo configure:3178: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
 #define HAVE_RENAME 1
@@ -3167,7 +3195,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 3171 "configure"
+#line 3199 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 main()
@@ -3178,7 +3206,7 @@ main()
   exit(0);
 }
 EOF
-{ (eval echo configure:3182: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:3210: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   ac_cv_sizeof_int=`cat conftestval`
 else
@@ -3214,11 +3242,11 @@ if test "$cross_compiling" = yes; then
   { echo "configure: error: failed to compile test program" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 3218 "configure"
+#line 3246 "configure"
 #include "confdefs.h"
 #define bcopy(s,d,l) memmove(d,s,l) $bcopy_test_prog
 EOF
-{ (eval echo configure:3222: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:3250: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   cat >> confdefs.h <<\EOF
 #define USEMEMMOVE 1
@@ -3229,11 +3257,11 @@ else
   { echo "configure: error: failed to compile test program" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 3233 "configure"
+#line 3261 "configure"
 #include "confdefs.h"
 $bcopy_test_prog
 EOF
-{ (eval echo configure:3237: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:3265: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   cat >> confdefs.h <<\EOF
 #define USEBCOPY 1
@@ -3244,11 +3272,11 @@ else
   { echo "configure: error: failed to compile test program" 1>&2; exit 1; }
 else
 cat > conftest.$ac_ext <<EOF
-#line 3248 "configure"
+#line 3276 "configure"
 #include "confdefs.h"
 #define bcopy(s,d,l) memcpy(d,s,l)  $bcopy_test_prog
 EOF
-{ (eval echo configure:3252: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
+{ (eval echo configure:3280: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }
 if test -s conftest && (./conftest; exit) 2>/dev/null; then
   cat >> confdefs.h <<\EOF
 #define USEMEMCPY 1

@@ -73,7 +73,6 @@ static int mouse_click_y = 0;		/* y of previous mouse click */
 static linenr_t mouse_topline = 0;	/* topline at previous mouse click */
 static int mouse_x_div = 8;			/* column = x coord / mouse_x_div */
 static int mouse_y_div = 8;			/* line   = y coord / mouse_y_div */
-static int mouse_y_max = 199;		/* maximum mouse y coord */
 #endif
 
 #define BIOSTICK	55				/* biostime() increases one tick about
@@ -497,7 +496,7 @@ mch_windinit()
 	if (Columns <= 40)
 		mouse_x_div = 16;
 	if (Rows == 30)
-		mouse_y_div = 4;
+		mouse_y_div = 16;
 #endif
 }
 
@@ -530,14 +529,19 @@ show_mouse(on)
 
 /*
  * Set area where mouse can be moved to: The whole screen.
+ * Rows must be valid when calling!
  */
 	static void
 mouse_area()
 {
 	union REGS		regs;
+	int				mouse_y_max;			/* maximum mouse y coord */
 
 	if (mouse_avail)
 	{	
+		mouse_y_max = Rows * mouse_y_div - 1;
+		if (mouse_y_max < 199)		/* is this needed? */
+			mouse_y_max = 199;
 		regs.x.cx = 0;	/* mouse visible between cx and dx */
 		regs.x.dx = 639;
 		regs.x.ax = 7;
@@ -1043,13 +1047,7 @@ mch_screenmode(arg)
 	/* Screen colors may have changed. */
 	outstr(T_ME);
 #ifdef USE_MOUSE
-	if (mode == 0x10)
-		mouse_y_max = 349;
-	else if (mode == 0x11 || mode == 0x12)
-		mouse_y_max = 479;
-	else
-		mouse_y_max = 199;
-	if (mode <= 1 || mode == 4 || mode == 5 || mode == 0x13)
+	if (mode <= 1 || mode == 4 || mode == 5 || mode == 13 || mode == 0x13)
 		mouse_x_div = 16;
 	else
 		mouse_x_div = 8;
@@ -1059,6 +1057,7 @@ mch_screenmode(arg)
 		mouse_y_div = 14;
 	else
 		mouse_y_div = 8;
+	mch_get_winsize();		/* Rows is used in mouse_area() */
 	mouse_area();			/* set area where mouse can go */
 #endif
 	return OK;

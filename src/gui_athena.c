@@ -473,8 +473,8 @@ gui_mch_get_winsize()
 		XtNwidth,  &total_width,
 		NULL);
 
-	gui.num_rows = (total_height - base_height) / gui.char_height;
-	gui.num_cols = (total_width  - base_width)  / gui.char_width;
+	gui.num_rows = (int)(total_height - base_height) / gui.char_height;
+	gui.num_cols = (int)(total_width  - base_width)  / gui.char_width;
 
 	Rows    = gui.num_rows;
 	Columns = gui.num_cols;
@@ -1008,11 +1008,11 @@ gui_athena_pullright_action(w, event, args, nargs)
 		XtNheight,	&height,
 		NULL);
 
-	if (event->xmotion.x >= width || event->xmotion.y >= height)
+	if (event->xmotion.x >= (int)width || event->xmotion.y >= (int)height)
 		return;
 
 	/* We do the pull-off when the pointer is in the rightmost 1/4th */
-	if (event->xmotion.x < (width * 3) / 4)
+	if (event->xmotion.x < (int)(width * 3) / 4)
 		return;
 
 	pullright_name = strnsave((char_u *)XtName(menuw),

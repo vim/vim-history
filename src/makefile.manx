@@ -76,7 +76,7 @@ proto: $(SYMS) $(PRO)
 objects:
 	makedir objects
 
-ctags:
+tags:
 	csh -c ctags $(SRC) *.h
 
 # can't use delete here, too many file names

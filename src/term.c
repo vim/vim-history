@@ -1361,7 +1361,8 @@ getlinecol()
 {
 	char_u			tbuf[TBUFSZ];
 
-	if (term_strings[KS_NAME] != NULL && TGETENT(tbuf, term_strings[KS_NAME]) > 0)
+	if (term_strings[KS_NAME] != NULL && *term_strings[KS_NAME] != NUL &&
+			TGETENT(tbuf, term_strings[KS_NAME]) > 0)
 	{
 		if (Columns == 0)
 			Columns = tgetnum("co");

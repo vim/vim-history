@@ -1102,7 +1102,7 @@ jumpto_tag(lbuf,
 	}
 	else		/* not a search command, just copy it */
 	{
-		for (p = pbuf; *str && *str != '\n'; )
+		for (p = pbuf; *str && *str != '\n' && *str != '\r'; )
 		{
 #ifdef EMACS_TAGS
 			if (is_etag && *str == ',')		/* stop at ',' after line number */

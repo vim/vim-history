@@ -298,8 +298,13 @@ getcmdline(firstc, count)
 				c = hkmap(c);
 #endif
 		}
-		if (c == Ctrl('C'))
-			got_int = FALSE;	/* ignore got_int when CTRL-C was typed here */
+
+		/*
+		 * Ignore got_int when CTRL-C was typed here.
+		 * Don't ignore it in :global, we really need to break then.
+		 */
+		if (c == Ctrl('C') && !global_busy)
+			got_int = FALSE;
 
 			/* free old command line when finished moving around in the
 			 * history list */
@@ -2468,9 +2473,11 @@ donextfile:		if (i < 0 || i >= arg_count)
 					msg(p);
 				break;
 
+#if 0
 		case CMD_mfstat:		/* print memfile statistics, for debugging */
 				mf_statistics();
 				break;
+#endif
 
 		case CMD_read:
 				if (usefilter)					/* :r!cmd */
@@ -4446,7 +4453,8 @@ showmatches(buff)
 		flushbuf();					/* show one line at a time */
 		if (got_int)
 		{
-			got_int = FALSE;
+			if (!global_busy)
+				got_int = FALSE;
 			break;
 		}
 	}
@@ -5124,24 +5132,27 @@ set_one_cmd_context(firstc, buff)
 		/*
 		 * Allow spaces within back-quotes to count as part of the argument
 		 * being expanded.
+		 * Never accept '<' or '>' inside a file name.
 		 */
 		expand_pattern = skipwhite(arg);
 		for (p = expand_pattern; *p; ++p)
 		{
 			if (*p == '\\' && p[1])
 				++p;
+			else if ((vim_iswhite(*p)
 #ifdef SPACE_IN_FILENAME
-			else if (vim_iswhite(*p) && (!(argt & NOSPC) || usefilter))
-#else
-			else if (vim_iswhite(*p))
+					&& (!(argt & NOSPC) || usefilter)
 #endif
+					 ) || *p == '<' || *p == '>')
 			{
-				p = skipwhite(p);
+				if (p[1] == '&')		/* skip ">&" */
+					++p;
+				if (p[1] == '!')		/* skip ">&!" */
+					++p;
 				if (in_quote)
-					bow = p;
+					bow = p + 1;
 				else
-					expand_pattern = p;
-				--p;
+					expand_pattern = p + 1;
 			}
 			else if (*p == '`')
 			{
