@@ -2633,6 +2633,7 @@ gui_mch_settitle(
 	{
 	    SetWindowTextW(s_hwnd, wbuf);
 	    vim_free(wbuf);
+	    return;
 	}
     }
 #endif
