@@ -2658,6 +2658,12 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
 	c = gui_mch_dialog(type, title, message, buttons, dfltbutton,
 								   textfield);
 	msg_end_prompt();
+
+	/* Flush output to avoid that further messages and redrawing is done
+	 * in the wrong order. */
+	out_flush();
+	gui_mch_update();
+
 	return c;
     }
 #endif
