@@ -479,7 +479,8 @@ CFLAGS = $(CFLAGS) -DMSWINPS
 #
 !message
 
-conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
+# "/map /mapinfo:lines" is for debugging
+conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no /map /mapinfo:lines
 
 LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
@@ -517,7 +518,7 @@ xxd/xxd.exe: xxd/xxd.c
 
 
 tags: notags
-	$(CTAGS) *.c *.h if_perl.xs proto\*.pro
+	$(CTAGS) *.c *.cpp *.h if_perl.xs proto\*.pro
 
 notags:
 	- if exist tags del tags
