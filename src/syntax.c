@@ -4787,13 +4787,20 @@ init_highlight(both)
 {
     int		i;
     char	**pp;
+    static int	had_both = FALSE;
 
     if (both)
     {
+	had_both = TRUE;
 	pp = highlight_init_both;
 	for (i = 0; pp[i] != NULL; ++i)
 	    do_highlight((char_u *)pp[i], FALSE, TRUE);
     }
+    else if (!had_both)
+	/* Don't do anything before the call with both == TRUE from main().
+	 * Not everything has been setup then, and that call will overrule
+	 * everything anyway. */
+	return;
 
     if (TO_LOWER(*p_bg) == 'l')
 	pp = highlight_init_light;
