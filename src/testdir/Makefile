@@ -32,10 +32,10 @@ gui:	nolog $(SCRIPTS) $(SCRIPTS_GUI)
 $(SCRIPTS) $(SCRIPTS_GUI): $(VIMPROG)
 
 clean:
-	-rm -rf *.out test.log tiny.vim small.vim mbyte.vim test.ok X*
+	-rm -rf *.out *.rej *.orig test.log tiny.vim small.vim mbyte.vim test.ok X*
 
 test1.out: test1.in
-	-rm -f $*.failed tiny.vim small.vim mbyte.vim
+	-rm -f $*.failed tiny.vim small.vim mbyte.vim test.ok X*
 	$(VIMPROG) -u unix.vim -U NONE --noplugin -s dotest.in $*.in
 	@/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
@@ -45,7 +45,7 @@ test1.out: test1.in
 	-rm -rf X*
 
 .in.out:
-	-rm -f $*.failed test.ok
+	-rm -f $*.failed test.ok X*
 	cp $*.ok test.ok
 	$(VIMPROG) -u unix.vim -U NONE --noplugin -s dotest.in $*.in
 	@/bin/sh -c "if diff test.out $*.ok; \
