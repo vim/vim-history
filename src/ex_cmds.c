@@ -4627,6 +4627,8 @@ ex_help(eap)
 	else
 #endif
 	    EMSG2(_("E149: Sorry, no help for %s"), arg);
+	if (n != FAIL)
+	    FreeWild(num_matches, matches);
 	return;
     }
 
