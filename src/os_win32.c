@@ -2372,6 +2372,26 @@ mch_dirname(
      * But the Win32s known bug list says that getcwd() doesn't work
      * so use the Win32 system call instead. <Negri>
      */
+#ifdef FEAT_MBYTE
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    {
+	WCHAR	wbuf[_MAX_PATH + 1];
+
+	if (GetCurrentDirectoryW(_MAX_PATH, wbuf) != 0)
+	{
+	    char_u  *p = ucs2_to_enc(wbuf, NULL);
+
+	    if (p != NULL)
+	    {
+		STRNCPY(buf, p, len - 1);
+		buf[len - 1] = NUL;
+		vim_free(p);
+		return OK;
+	    }
+	}
+	/* Retry with non-wide function (for Windows 98). */
+    }
+#endif
     return (GetCurrentDirectory(len, buf) != 0 ? OK : FAIL);
 }
 
@@ -2385,11 +2405,7 @@ mch_getperm(
     char_u *name)
 {
 #ifdef FEAT_MBYTE
-    /* Apparently GetFileAttributesW() exists on Win95/98/ME, but it doesn't
-     * work. */
-    PlatformId();
-    if (g_PlatformId == VER_PLATFORM_WIN32_NT
-			&& enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	WCHAR	*p = enc_to_ucs2(name, NULL);
 	long	n;
@@ -2398,7 +2414,9 @@ mch_getperm(
 	{
 	    n = (long)GetFileAttributesW(p);
 	    vim_free(p);
-	    return n;
+	    if (n >= 0 || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+		return n;
+	    /* Retry with non-wide function (for Windows 98). */
 	}
     }
 #endif
@@ -2425,7 +2443,9 @@ mch_setperm(
 	{
 	    n = (long)SetFileAttributesW(p, perm);
 	    vim_free(p);
-	    return n ? OK : FAIL;
+	    if (n || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+		return n ? OK : FAIL;
+	    /* Retry with non-wide function (for Windows 98). */
 	}
     }
 #endif
@@ -2442,18 +2462,22 @@ mch_hide(char_u *name)
 #ifdef FEAT_MBYTE
     WCHAR	*p = NULL;
 
-    /* Apparently GetFileAttributesW() exists on Win95/98/ME, but it doesn't
-     * work. */
-    PlatformId();
-    if (g_PlatformId == VER_PLATFORM_WIN32_NT
-			&& enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
 	p = enc_to_ucs2(name, NULL);
 #endif
 
 #ifdef FEAT_MBYTE
     if (p != NULL)
+    {
 	perm = GetFileAttributesW(p);
-    else
+	if (perm < 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	{
+	    /* Retry with non-wide function (for Windows 98). */
+	    vim_free(p);
+	    p = NULL;
+	}
+    }
+    if (p == NULL)
 #endif
 	perm = GetFileAttributes((char *)name);
     if (perm >= 0)
@@ -2461,8 +2485,16 @@ mch_hide(char_u *name)
 	perm |= FILE_ATTRIBUTE_HIDDEN;
 #ifdef FEAT_MBYTE
 	if (p != NULL)
-	    SetFileAttributesW(p, perm);
-	else
+	{
+	    if (SetFileAttributesW(p, perm) == 0
+		    && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	    {
+		/* Retry with non-wide function (for Windows 98). */
+		vim_free(p);
+		p = NULL;
+	    }
+	}
+	if (p == NULL)
 #endif
 	    SetFileAttributes((char *)name, perm);
     }
@@ -4033,6 +4065,7 @@ mch_delay(
 
 /*
  * this version of remove is not scared by a readonly (backup) file
+ * Return 0 for success, -1 for failure.
  */
     int
 mch_remove(char_u *name)
@@ -4049,7 +4082,9 @@ mch_remove(char_u *name)
 	    SetFileAttributesW(wn, FILE_ATTRIBUTE_NORMAL);
 	    n = DeleteFileW(wn) ? 0 : -1;
 	    vim_free(wn);
-	    return n;
+	    if (n == 0 || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+		return n;
+	    /* Retry with non-wide function (for Windows 98). */
 	}
     }
 #endif
@@ -4180,21 +4215,19 @@ mch_rename(
 #ifdef FEAT_MBYTE
     WCHAR	*wold = NULL;
     WCHAR	*wnew = NULL;
-    int		retval = 0;
+    int		retval = -1;
 
     if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wold = enc_to_ucs2((char_u *)pszOldFile, NULL);
 	wnew = enc_to_ucs2((char_u *)pszNewFile, NULL);
 	if (wold != NULL && wnew != NULL)
-	{
 	    retval = mch_wrename(wold, wnew);
-	    vim_free(wold);
-	    vim_free(wnew);
-	    return retval;
-	}
 	vim_free(wold);
 	vim_free(wnew);
+	if (retval == 0 || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+	    return retval;
+	/* Retry with non-wide function (for Windows 98). */
     }
 #endif
 
@@ -4325,10 +4358,17 @@ mch_access(char *n, int p)
 
 		hFile = FindFirstFileW(TempNameW, &d);
 		if (hFile == INVALID_HANDLE_VALUE)
-		    goto getout;
+		{
+		    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+			goto getout;
+
+		    /* Retry with non-wide function (for Windows 98). */
+		    vim_free(wn);
+		    wn = NULL;
+		}
 		(void)FindClose(hFile);
 	    }
-	    else
+	    if (wn == NULL)
 #endif
 	    {
 		char		    *pch;
@@ -4358,10 +4398,18 @@ mch_access(char *n, int p)
 	    if (wn != NULL)
 	    {
 		if (!GetTempFileNameW(wn, L"VIM", 0, TempNameW))
-		    goto getout;
-		DeleteFileW(TempNameW);
+		{
+		    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+			goto getout;
+
+		    /* Retry with non-wide function (for Windows 98). */
+		    vim_free(wn);
+		    wn = NULL;
+		}
+		else
+		    DeleteFileW(TempNameW);
 	    }
-	    else
+	    if (wn == NULL)
 #endif
 	    {
 		if (!GetTempFileName(n, "VIM", 0, TempName))
@@ -4378,8 +4426,17 @@ mch_access(char *n, int p)
 		| ((p & R_OK) ? GENERIC_READ : 0);
 #ifdef FEAT_MBYTE
 	if (wn != NULL)
+	{
 	    hFile = CreateFileW(wn, am, 0, NULL, OPEN_EXISTING, 0, NULL);
-	else
+	    if (hFile == INVALID_HANDLE_VALUE
+			      && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	    {
+		/* Retry with non-wide function (for Windows 98). */
+		vim_free(wn);
+		wn = NULL;
+	    }
+	}
+	if (wn == NULL)
 #endif
 	    hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
