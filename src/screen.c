@@ -412,11 +412,8 @@ update_screen(type)
 	type = NOT_VALID;
     }
 
-    if (clear_cmdline)		/* first clear cmdline */
-    {
+    if (clear_cmdline)		/* going to clear cmdline (done below) */
 	check_for_delay(FALSE);
-	msg_clr_cmdline();	/* will reset clear_cmdline */
-    }
 
     /*
      * Only start redrawing if there is really something to do.
@@ -534,7 +531,9 @@ update_screen(type)
     gui_may_resize_shell();
 #endif
 
-    if (redraw_cmdline)
+    /* Clear or redraw the command line.  Done last, because scrolling may
+     * mess up the command line. */
+    if (clear_cmdline || redraw_cmdline)
 	showmode();
 
     /* May put up an introductory message when not editing a file */
