@@ -1031,21 +1031,50 @@ ex_unlet(eap)
     char_u	*arg = eap->arg;
     char_u	*name_end;
     char_u	cc;
+    char_u	*expr_start;
+    char_u	*expr_end;
 
     do
     {
-	name_end = skiptowhite(arg);
-	cc = *name_end;
-	*name_end = NUL;
 
-	if (do_unlet(arg) == FAIL && !eap->forceit)
+	/* Find the end of the name. */
+	name_end = find_name_end(arg, &expr_start, &expr_end);
+
+#ifdef FEAT_MAGIC_BRACES
+	if (expr_start != NULL)
 	{
-	    *name_end = cc;
-	    EMSG2(_("E108: No such variable: \"%s\""), arg);
-	    break;
-	}
+	    char_u  *temp_string;
 
-	*name_end = cc;
+	    temp_string = make_expanded_name(arg, expr_start,
+							 expr_end, name_end);
+	    if (temp_string == NULL)
+		EMSG2(_(e_invarg2), arg);
+	    else
+	    {
+		if (do_unlet(temp_string) == FAIL && !eap->forceit)
+		{
+		    EMSG2(_("E108: No such variable: \"%s\""), temp_string);
+		    vim_free(temp_string);
+		    break;
+		}
+		vim_free(temp_string);
+	    }
+	}
+	else
+#endif
+	{
+	    cc = *name_end;
+	    *name_end = NUL;
+
+	    if (do_unlet(arg) == FAIL && !eap->forceit)
+	    {
+		*name_end = cc;
+		EMSG2(_("E108: No such variable: \"%s\""), arg);
+		break;
+	    }
+
+	    *name_end = cc;
+	}
 	arg = skipwhite(name_end);
     } while (*arg != NUL);
 }
