@@ -51,6 +51,7 @@
 #		of Ruby will cause a compile error on these systems.
 #   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (no)
 # MBYTE		no or yes: set to yes for multi-byte support (yes)
+# GETTEXT	no or yes: set to yes for multi-language support (yes)
 # ICONV		no or yes: set to yes for dynamic iconv support (yes)
 # OLE		no or yes: set to yes to make OLE gvim (no)
 # OSTYPE	DOS16 or WIN32 (WIN32)
@@ -84,6 +85,11 @@ GUI = yes
 ### MBYTE: yes for multibyte support, no to disable it.
 !if ("$(MBYTE)"=="")
 MBYTE = yes
+!endif
+#
+### GETTEXT: yes for multilanguage support, no to disable it.
+!if ("$(GETTEXT)"=="")
+GETTEXT = yes
 !endif
 #
 ### ICONV: yes to enable dynamic-iconv support, no to disable it
@@ -313,10 +319,13 @@ DEFINES = $(DEFINES) -DFEAT_OLE
 !endif
 #
 !if ("$(MBYTE)"=="yes")
-MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_GETTEXT -DDYNAMIC_IME
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_IME
 !endif
 !if ("$(ICONV)"=="yes")
 MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
+!endif
+!if ("$(GETTEXT)"=="yes")
+MBDEFINES = $(MBDEFINES) -DDYNAMIC_GETTEXT
 !endif
 
 !if ("$(GUI)"=="yes")
@@ -532,6 +541,9 @@ MSG = $(MSG) FASTCALL
 !endif
 !if ("$(MBYTE)"=="yes")
 MSG = $(MSG) MBYTE
+!endif
+!if ("$(GETTEXT)"=="yes")
+MSG = $(MSG) GETTEXT
 !endif
 !if ("$(ICONV)"=="yes")
 MSG = $(MSG) ICONV

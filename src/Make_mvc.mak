@@ -47,7 +47,7 @@
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
 #	Intl library support (always dynamically loaded):
-#	  INTL=[yes or no]  (default is yes)
+#	  GETTEXT=[yes or no]  (default is yes)
 #	See http://sourceforge.net/projects/gettext/
 #       PostScript printing: POSTSCRIPT=yes
 #       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE]
@@ -355,10 +355,10 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_ICONV
 !endif
 
 # libintl.dll library
-!ifndef INTL
-INTL = yes
+!ifndef GETTEXT
+GETTEXT = yes
 !endif
-!if "$(INTL)" == "yes"
+!if "$(GETTEXT)" == "yes"
 CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
 !endif
 
