@@ -5941,17 +5941,14 @@ do_next(eap)
     }
 }
 
-#if defined(USE_GUI_MSWIN) || defined(USE_GUI_BEOS) || defined(macintosh) || defined(PROTO)
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_BEOS) || defined(macintosh) \
+	|| defined(USE_GUI_GTK) || defined(PROTO)
 /*
  * Handle a file drop. The code is here because a drop is *nearly* like an
  * :args command, but not quite (we have a list of exact filenames, so we
  * don't want to (a) parse a command line, or (b) expand wildcards. So the
  * code is very similar to :args and hence needs access to a lot of the static
  * functions in this file.
- *
- * Arguments:
- *	FILEC => the number of files dropped
- *	FILEV => the list of files dropped
  *
  * The list should be allocated using vim_alloc(), as should each item in the
  * list. This function takes over responsibility for freeing the list.
@@ -5966,8 +5963,8 @@ do_next(eap)
 
     void
 handle_drop(filec, filev, split)
-    int		filec;
-    char_u	**filev;
+    int		filec;		/* the number of files dropped */
+    char_u	**filev;	/* the list of files dropped */
     int		split;		/* force splitting the window */
 {
     EXARG	ea;

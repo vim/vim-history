@@ -2031,7 +2031,7 @@ get_real_state()
     return State;
 }
 
-#if defined(MKSESSION) || defined(MSWIN) || defined(PROTO)
+#if defined(MKSESSION) || defined(MSWIN) || defined(USE_GUI_GTK) || defined(PROTO)
 /*
  * Change to a file's directory.
  */
