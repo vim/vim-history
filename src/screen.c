@@ -3991,7 +3991,11 @@ screen_line(row, coloff, endcol, clear_width
 	if (clear_width > 0)
 	{
 	    while (col <= endcol && ScreenLines[off_to] == ' '
-						  && ScreenAttrs[off_to] == 0)
+		    && ScreenAttrs[off_to] == 0
+#ifdef FEAT_MBYTE
+				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0)
+#endif
+						  )
 	    {
 		++off_to;
 		++col;
@@ -4220,7 +4224,11 @@ screen_line(row, coloff, endcol, clear_width
 
 	/* blank out the rest of the line */
 	while (col < clear_width && ScreenLines[off_to] == ' '
-						  && ScreenAttrs[off_to] == 0)
+						  && ScreenAttrs[off_to] == 0
+#ifdef FEAT_MBYTE
+				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0)
+#endif
+						  )
 	{
 	    ++off_to;
 	    ++col;
@@ -5841,9 +5849,16 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 	    end_off = LineOffset[row] + end_col;
 
 	    /* skip blanks (used often, keep it fast!) */
-	    while (off < end_off && ScreenLines[off] == ' '
+#ifdef FEAT_MBYTE
+	    if (enc_utf8)
+		while (off < end_off && ScreenLines[off] == ' '
+			  && ScreenAttrs[off] == 0 && ScreenLinesUC[off] == 0)
+		    ++off;
+	    else
+#endif
+		while (off < end_off && ScreenLines[off] == ' '
 						     && ScreenAttrs[off] == 0)
-		++off;
+		    ++off;
 	    if (off < end_off)		/* something to be cleared */
 	    {
 		col = off - LineOffset[row];

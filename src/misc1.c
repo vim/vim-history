@@ -931,7 +931,12 @@ open_line(dir, flags, old_indent)
 	    replace_push(NUL);	    /* end of extra blanks */
 	if (curbuf->b_p_ai || (flags & OPENLINE_DELSPACES))
 	{
-	    while (*p_extra == ' ' || *p_extra == '\t')
+	    while ((*p_extra == ' ' || *p_extra == '\t')
+#ifdef FEAT_MBYTE
+		    && (!enc_utf8
+			       || !utf_iscomposing(utf_ptr2char(p_extra + 1)))
+#endif
+		    )
 	    {
 		if (REPLACE_NORMAL(State))
 		    replace_push(*p_extra);
