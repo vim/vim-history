@@ -95,7 +95,7 @@ static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
 static char msg_sniff_disconnect[] = N_("Cannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n");
-static char* sniff_rq_sep = " ";
+static char sniff_rq_sep[] = " ";
 static struct sn_cmd_list *sniff_cmd_ext = NULL;
 
 /* Initializing vim commands
