@@ -1983,11 +1983,12 @@ main_loop(cmdwin)
 	    emsg_on_display = FALSE;	/* can delete error message now */
 	    did_emsg = FALSE;
 	    msg_didany = FALSE;		/* reset lines_left in msg_start() */
-	    do_redraw = FALSE;
 	    showruler(FALSE);
 
 	    setcursor();
 	    cursor_on();
+
+	    do_redraw = FALSE;
 	}
 #ifdef FEAT_GUI
 	if (need_mouse_correct)
