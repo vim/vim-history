@@ -4714,12 +4714,12 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	    if (STRNICMP(src, "<Leader>", 8) == 0)
 	    {
 		len = 8;
-		p = get_var_value((char_u *)"mapleader");
+		p = get_var_value((char_u *)"g:mapleader");
 	    }
 	    else if (STRNICMP(src, "<LocalLeader>", 13) == 0)
 	    {
 		len = 13;
-		p = get_var_value((char_u *)"maplocalleader");
+		p = get_var_value((char_u *)"g:maplocalleader");
 	    }
 	    else
 	    {
