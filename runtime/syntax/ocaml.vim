@@ -1,12 +1,13 @@
 " Vim syntax file
-" Language:      OCAML
-" Filenames:     *.ml *.mli *.mll *.mly
-" Maintainers:   Markus Mottl     <mottl@miss.wu-wien.ac.at>
-"                Karl-Heinz Sylla <Karl-Heinz.Sylla@gmd.de>
-" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last Change:   2001 May 10
-"                2001 Feb 19 - small fix for functors
-"                2000 May 05 - small fix for optional arguments
+" Language:     OCaml
+" Filenames:    *.ml *.mli *.mll *.mly
+" Maintainers:  Markus Mottl      <markus@oefai.at>
+"               Karl-Heinz Sylla  <Karl-Heinz.Sylla@gmd.de>
+" URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/ocaml.vim
+" Last Change:  2001 Sep 01 - Fixed small bug with '\''  (MM)
+"               2001 Aug 29 - Added rules for scripting directives  (MM)
+"               2001 Aug 28 - Upgraded URL & mail address  (MM)
+"               2001 Apr 26 - upgraded for new Vim version  (MM)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -16,8 +17,14 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-" OCAML is case sensitive.
+" OCaml is case sensitive.
 syn case match
+
+" Script headers highlighted like comments
+syn match    ocamlComment   "^#!.*"
+
+" Scripting directives
+syn match    ocamlScript "^#\<\(quit\|labels\|warnings\|directory\|cd\|load\|use\|install_printer\|remove_printer\|trace\|untrace\|untrace_all\|print_depth\|print_length\)\>"
 
 " lowercase identifier - the standard way to match
 syn match    ocamlLCIdentifier /\<\(\l\|_\)\(\w\|'\)*\>/
@@ -157,7 +164,7 @@ syn match    ocamlConstructor  "`\w\(\w\|'\)*\>"
 " Module prefix
 syn match    ocamlModPath      "\u\(\w\|'\)*\."he=e-1
 
-syn match    ocamlCharacter    "'.'\|'\\\d\d\d'\|'\\[\'ntbr]'"
+syn match    ocamlCharacter    "'\\\d\d\d'\|'\\[\'ntbr]'\|'.'"
 syn match    ocamlCharErr      "'\\\d\d'\|'\\\d'"
 syn match    ocamlCharErr      "'\\[^\'ntbr]'"
 syn region   ocamlString       start=+"+ skip=+\\\\\|\\"+ end=+"+
@@ -239,6 +246,8 @@ if version >= 508 || !exists("did_ocaml_syntax_inits")
   HiLink ocamlModTypeRestr Include
   HiLink ocamlWith         Include
   HiLink ocamlMTDef        Include
+
+  HiLink ocamlScript       Include
 
   HiLink ocamlConstructor  Constant
 

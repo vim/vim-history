@@ -2699,6 +2699,8 @@ parse_shape_opt(what)
 	    colonp = vim_strchr(modep, ':');
 	    if (colonp == NULL)
 		return (char_u *)N_("Missing colon");
+	    if (colonp == modep)
+		return (char_u *)N_("Illegal mode");
 	    commap = vim_strchr(modep, ',');
 
 	    /*

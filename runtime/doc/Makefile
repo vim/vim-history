@@ -30,10 +30,10 @@ DOCS = \
 	hangulin.txt \
 	help.txt \
 	howto.txt \
-	if_cscope.txt \
+	if_cscop.txt \
 	if_ole.txt \
 	if_perl.txt \
-	if_python.txt \
+	if_pyth.txt \
 	if_ruby.txt \
 	if_sniff.txt \
 	if_tcl.txt \
@@ -44,8 +44,8 @@ DOCS = \
 	map.txt \
 	message.txt \
 	motion.txt \
-	multibyte.txt \
-	multilang.txt \
+	mbyte.txt \
+	mlang.txt \
 	options.txt \
 	os_390.txt \
 	os_amiga.txt \
@@ -56,7 +56,7 @@ DOCS = \
 	os_msdos.txt \
 	os_os2.txt \
 	os_qnx.txt \
-	os_riscos.txt \
+	os_risc.txt \
 	os_unix.txt \
 	os_vms.txt \
 	os_win32.txt \
@@ -71,12 +71,12 @@ DOCS = \
 	recover.txt \
 	remote.txt \
 	repeat.txt \
-	rightleft.txt \
+	rileft.txt \
 	scroll.txt \
 	sign.txt \
 	starting.txt \
 	syntax.txt \
-	tagsearch.txt \
+	tags.txt \
 	term.txt \
 	tips.txt \
 	todo.txt \
@@ -143,10 +143,10 @@ HTMLS = \
 	hangulin.html \
 	help.html \
 	howto.html \
-	if_cscope.html \
+	if_cscop.html \
 	if_ole.html \
 	if_perl.html \
-	if_python.html \
+	if_pyth.html \
 	if_ruby.html \
 	if_sniff.html \
 	if_tcl.html \
@@ -157,8 +157,8 @@ HTMLS = \
 	map.html \
 	message.html \
 	motion.html \
-	multibyte.html \
-	multilang.html \
+	mbyte.html \
+	mlang.html \
 	options.html \
 	os_390.html \
 	os_amiga.html \
@@ -169,7 +169,7 @@ HTMLS = \
 	os_msdos.html \
 	os_os2.html \
 	os_qnx.html \
-	os_riscos.html \
+	os_risc.html \
 	os_unix.html \
 	os_vms.html \
 	os_win32.html \
@@ -184,13 +184,13 @@ HTMLS = \
 	recover.html \
 	remote.html \
 	repeat.html \
-	rightleft.html \
+	rileft.html \
 	scroll.html \
 	sign.html \
 	starting.html \
 	syntax.html \
 	tags.html \
-	tagsearch.html \
+	tags.html \
 	term.html \
 	tips.html \
 	todo.html \
@@ -331,8 +331,8 @@ os_os2.txt:
 os_qnx.txt:
 	touch os_qnx.txt
 
-os_riscos.txt:
-	touch os_riscos.txt
+os_risc.txt:
+	touch os_risc.txt
 
 os_win32.txt:
 	touch os_win32.txt

@@ -23,7 +23,7 @@ int vim_isprintc __ARGS((int c));
 int vim_isprintc_strict __ARGS((int c));
 int lbr_chartabsize __ARGS((unsigned char *s, colnr_T col));
 int lbr_chartabsize_adv __ARGS((char_u **s, colnr_T col));
-int win_lbr_chartabsize __ARGS((win_T *wp, unsigned char *s, colnr_T col, int *headp));
+int win_lbr_chartabsize __ARGS((win_T *wp, char_u *s, colnr_T col, int *headp));
 int in_win_border __ARGS((win_T *wp, colnr_T vcol));
 void getvcol __ARGS((win_T *wp, pos_T *pos, colnr_T *start, colnr_T *cursor, colnr_T *end));
 colnr_T getvcol_nolist __ARGS((pos_T *posp));
@@ -42,4 +42,5 @@ int hexhex2nr __ARGS((char_u *p));
 int rem_backslash __ARGS((char_u *str));
 void backslash_halve __ARGS((char_u *p));
 char_u *backslash_halve_save __ARGS((char_u *p));
+void ebcdic2ascii __ARGS((char_u *buffer, int len));
 /* vim: set ft=c : */

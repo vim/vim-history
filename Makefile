@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0au
+MINOR = 0av
 
 # CHECKLIST for creating a new version:
 #
@@ -445,15 +445,12 @@ SRC_DOS_BIN =	\
 		VisVim/StdAfx.cpp \
 		VisVim/StdAfx.h \
 		VisVim/UnRegist.bat \
-		VisVim/VSVTypes.h \
 		VisVim/VisVim.cpp \
 		VisVim/VisVim.def \
-		VisVim/VisVim.dsp \
 		VisVim/VisVim.mak \
 		VisVim/VisVim.h \
 		VisVim/VisVim.odl \
 		VisVim/VisVim.rc \
-		VisVim/VisVim_i.c \
 		VisVim/VsReadMe.txt \
 		src/tearoff.bmp \
 		src/tools.bmp \
@@ -498,7 +495,7 @@ SRC_MAC =	\
 		src/proto/gui_mac.pro \
 		src/proto/os_mac.pro \
 
-# source files for VMS (also in the extra archive)
+# source files for VMS (in the extra archive)
 SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
@@ -511,7 +508,7 @@ SRC_VMS =	\
 		src/testdir/vms.vim \
 		src/xxd/Make_vms.mms \
 
-# source files for OS/2 (also in the extra archive)
+# source files for OS/2 (in the extra archive)
 SRC_OS2 =	\
 		src/Make_os2.mak \
 		src/os_os2_cfg.h \
@@ -520,7 +517,7 @@ SRC_OS2 =	\
 		src/testdir/os2.vim \
 		src/xxd/Make_os2.mak \
 
-# source files for QNX (also in the extra archive)
+# source files for QNX (in the extra archive)
 SRC_QNX =	\
 		src/os_qnx.c \
 		src/os_qnx.h \
@@ -612,13 +609,13 @@ RT_ALL =	\
 		runtime/ftplugof.vim \
 		runtime/indent.vim \
 		runtime/indoff.vim \
-		runtime/procset.ps \
 		runtime/termcap \
 		runtime/tools \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
 		runtime/vimrc_example.vim \
+		runtime/procset.ps \
 
 # runtime script files
 RT_SCRIPTS =	\
@@ -648,6 +645,8 @@ RT_UNIX =	\
 		runtime/vim32x32.xpm \
 		runtime/vim48x48.png \
 		runtime/vim48x48.xpm \
+		runtime/eviso.ps \
+		runtime/evebcdic.ps \
 
 # Unix and DOS runtime without CR-LF translation
 RT_UNIX_DOS_BIN =	\
@@ -669,6 +668,7 @@ RT_AMI_DOS =	\
 RT_DOS =	\
 		README_dos.txt \
 		runtime/rgb.txt \
+		runtime/evwin.ps \
 		vimtutor.bat \
 
 # Amiga runtime (also in the extra archive)
@@ -696,6 +696,8 @@ RT_EXTRA =	\
 		$(RT_AMI) \
 		$(RT_AMI_DOS) \
 		$(RT_DOS) \
+		runtime/evmac.ps \
+		runtime/evvms.ps \
 		README_mac.txt \
 		runtime/macros/file_select.vim \
 
@@ -935,8 +937,10 @@ lang: dist prepare
 		$(LANG_GEN) \
 		$(LANG_SRC) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
-# make sure ja.sjis.po is newer than ja.po to avoid it being regenerated
+# Make sure ja.sjis.po is newer than ja.po to avoid it being regenerated.
+# Same for cs.cp1250.po.
 	touch dist/$(VIMRTDIR)/src/po/ja.sjis.po
+	touch dist/$(VIMRTDIR)/src/po/cs.cp1250.po
 	cd dist && tar cvf $(VIMVER)-lang.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-lang.tar
 
@@ -997,7 +1001,7 @@ amisrc: dist prepare
 	mv dist/vim$(VERSION)src.tar.gz dist/vim$(VERSION)src.tgz
 
 no_title.vim: Makefile
-	echo "set notitle noicon nocp nomodeline" >no_title.vim
+	echo "set notitle noicon nocp nomodeline viminfo=" >no_title.vim
 
 dosrt: dist no_title.vim dist/$(COMMENT_RT)
 	-rm -rf dist/vim$(VERSION)rt.zip
@@ -1137,9 +1141,10 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 # Add the message translations.  Trick: skip ja.mo and use ja.sjis.mo instead.
+# Same for cs.mo and cs.cp1250.mo.
 	for i in $(LANG_DOS); do \
-	      if test "$$i" != "src/po/ja.mo"; then \
-		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\)\(.sjis\)*.mo+\1+"`; \
+	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo"; then \
+		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\)\(.sjis\)*\(.cp1250\)*.mo+\1+"`; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
 		cp $$i dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES/vim.mo; \

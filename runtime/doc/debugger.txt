@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0au.  Last change: 2001 May 20
+*debugger.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -132,4 +132,4 @@ all the above flags:
 Currently the only fully integrated debugger/IPE/IDE is Sun's Visual WorkShop
 Integrated Programming Environment.
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 6.0au.  Last change: 2000 Jul 07
+*os_mac.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -92,4 +92,4 @@ working.
 You have to increase the memory partition to at least 1024 kBytes to prevent
 Vim from crashing due to low memory.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -2731,13 +2731,13 @@ vim_beep()
 	     */
 	    if (beep_count == 0 || beep_count == 10)
 	    {
-		out_char('\007');
+		out_char(BELL);
 		beep_count = 1;
 	    }
 	    else
 		++beep_count;
 #else
-	    out_char('\007');
+	    out_char(BELL);
 #endif
 	}
     }
@@ -6516,7 +6516,8 @@ dos_expandpath(
 	    else
 		s = p + 1;
 	}
-	else if (*path == '*' || *path == '?' || *path == '[' || *path == '~')
+	else if (path >= wildc && (*path == '*' || *path == '?'
+					     || *path == '[' || *path == '~'))
 	    e = p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)

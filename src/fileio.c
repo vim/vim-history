@@ -404,13 +404,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	 */
 	if (mch_stat((char *)fname, &st) >= 0)
 	{
-	    curbuf->b_mtime = curbuf->b_mtime_read = (long)st.st_mtime;
-	    curbuf->b_orig_size = (size_t)st.st_size;
-#ifdef HAVE_ST_MODE
-	    curbuf->b_orig_mode = (int)st.st_mode;
-#else
-	    curbuf->b_orig_mode = mch_getperm(fname);
-#endif
+	    buf_store_time(curbuf, &st, fname);
+	    curbuf->b_mtime_read = curbuf->b_mtime;
+
 #if defined(RISCOS) && defined(FEAT_OSFILETYPE)
 	    /* Read the filetype into the buffer local filetype option. */
 	    mch_read_filetype(fname);
@@ -2207,6 +2203,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    no_eol = FALSE;	    /* no end-of-line written */
     int		    device = FALSE;	    /* writing to a device */
     struct stat	    st_old;
+    int		    prev_got_int = got_int;
 #if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
@@ -2588,6 +2585,14 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
 
     /*
+     * Save the value of got_int and reset it.  We don't want a previous
+     * interruption cancel writing, only hitting CTRL-C while writing should
+     * abort it.
+     */
+    prev_got_int = got_int;
+    got_int = FALSE;
+
+    /*
      * If we are not appending or filtering, the file exists, and the
      * 'writebackup', 'backup' or 'patchmode' option is set, need a backup.
      *
@@ -2830,18 +2835,26 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 					  (perm & 0707) | ((perm & 07) << 3));
 #endif
 
-			/* copy the file. */
+			/*
+			 * copy the file.
+			 */
 			write_info.bw_fd = bfd;
 			write_info.bw_buf = copybuf;
 #ifdef HAS_BW_FLAGS
 			write_info.bw_flags = FIO_NOCONVERT;
 #endif
 			while ((write_info.bw_len = vim_read(fd, copybuf,
-							BUFSIZE)) > 0)
+								BUFSIZE)) > 0)
 			{
 			    if (buf_write_bytes(&write_info) == FAIL)
 			    {
 				errmsg = (char_u *)_("Can't write to backup file (use ! to override)");
+				break;
+			    }
+			    ui_breakcheck();
+			    if (got_int)
+			    {
+				errmsg = (char_u *)_(e_interr);
 				break;
 			    }
 			}
@@ -2998,7 +3011,14 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      */
     if (reset_changed && !newfile && !otherfile(ffname)
 					      && !(exiting && backup != NULL))
+    {
 	ml_preserve(buf, FALSE);
+	if (got_int)
+	{
+	    errmsg = (char_u *)_(e_interr);
+	    goto fail;
+	}
+    }
 
 #ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
     /*
@@ -3149,7 +3169,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    struct stat	st;
 
 	    /* Don't delete the file when it's a hard or symbolic link. */
-	    if (st_old.st_nlink > 1
+	    if ((!newfile && st_old.st_nlink > 1)
 		    || (mch_lstat((char *)fname, &st) == 0
 			&& (st.st_dev != st_old.st_dev
 			    || st.st_ino != st_old.st_ino)))
@@ -3355,6 +3375,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    nchars += bufsize;
 	    s = buffer;
 	    len = 0;
+
+	    ui_breakcheck();
+	    if (got_int)
+	    {
+		end = 0;		/* Interrupted, break loop */
+		break;
+	    }
 	}
 #ifdef VMS
 	/*
@@ -3454,7 +3481,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		errmsg = (char_u *)_("write error, conversion failed");
 	    else
 #endif
-		errmsg = (char_u *)_("write error (file system full?)");
+		if (got_int)
+		    errmsg = (char_u *)_(e_interr);
+		else
+		    errmsg = (char_u *)_("write error (file system full?)");
 	}
 
 	/*
@@ -3470,6 +3500,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	{
 	    if (backup_copy)
 	    {
+		/* This may take a while, if we were interrupted let the user
+		 * know we got the message. */
+		if (got_int)
+		{
+		    MSG(_(e_interr));
+		    out_flush();
+		}
 		if ((fd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0)) >= 0)
 		{
 		    if ((write_info.bw_fd = mch_open((char *)fname,
@@ -3708,11 +3745,20 @@ nofail:
 		    attr | MSG_HIST);
 	    MSG_PUTS_ATTR(_("don't quit the editor until the file is successfully written!"),
 		    attr | MSG_HIST);
+
+	    /* Update the timestamp to avoid an "overwrite changed file"
+	     * prompt when writing again. */
+	    if (mch_stat((char *)fname, &st_old) >= 0)
+	    {
+		buf_store_time(buf, &st_old, fname);
+		buf->b_mtime_read = buf->b_mtime;
+	    }
 	}
     }
     msg_scroll = msg_save;
 
 #ifdef FEAT_AUTOCMD
+    if (!got_int)
     {
 	aco_save_T	aco;
 
@@ -3741,6 +3787,9 @@ nofail:
 	aucmd_restbuf(&aco);
     }
 #endif
+
+    got_int |= prev_got_int;
+
 #ifdef MACOS_CLASSIC /* TODO: Is it need for MACOS_X? (Dany) */
     /* Update machine specific information. */
     mch_post_buffer_write(buf);
@@ -4946,15 +4995,7 @@ buf_check_timestamp(buf, focus)
 	    buf->b_orig_mode = 0;
 	}
 	else
-	{
-	    buf->b_mtime = (long)st.st_mtime;
-	    buf->b_orig_size = (size_t)st.st_size;
-#ifdef HAVE_ST_MODE
-	    buf->b_orig_mode = (int)st.st_mode;
-#else
-	    buf->b_orig_mode = mch_getperm(buf->b_ffname);
-#endif
-	}
+	    buf_store_time(buf, &st, buf->b_ffname);
 
 	/* Don't do anything for a directory.  Might contain the file
 	 * explorer. */
@@ -5117,6 +5158,10 @@ buf_check_timestamp(buf, focus)
 		/* Delete the old lines. */
 		while (old_line_count-- > 0)
 		    ml_delete(buf->b_ml.ml_line_count, FALSE);
+		/* Mark the buffer as unmodified and free undo info. */
+		unchanged(buf, TRUE);
+		u_blockfree(buf);
+		u_clearall(buf);
 	    }
 	    vim_free(ea.cmd);
 
@@ -5141,6 +5186,22 @@ buf_check_timestamp(buf, focus)
     }
 
     return retval;
+}
+
+/*ARGSUSED*/
+    void
+buf_store_time(buf, st, fname)
+    buf_T	*buf;
+    struct stat	*st;
+    char_u	*fname;
+{
+    buf->b_mtime = (long)st->st_mtime;
+    buf->b_orig_size = (size_t)st->st_size;
+#ifdef HAVE_ST_MODE
+    buf->b_orig_mode = (int)st->st_mode;
+#else
+    buf->b_orig_mode = mch_getperm(fname);
+#endif
 }
 
 /*

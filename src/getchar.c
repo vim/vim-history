@@ -2446,6 +2446,11 @@ vgetorpeek(advance)
 						     + typebuf.tb_len] != NUL)
 			typebuf.tb_noremap[typebuf.tb_off
 						 + typebuf.tb_len++] = RM_YES;
+#ifdef USE_IM_CONTROL
+		    /* Get IM status right after getting keys, not after the
+		     * timeout for a mapping (focus may be lost by then). */
+		    vgetc_im_active = im_get_status();
+#endif
 		}
 	    }	    /* for (;;) */
 	}	/* if (!character from stuffbuf) */

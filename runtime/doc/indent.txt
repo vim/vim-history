@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0au.  Last change: 2001 Aug 27
+*indent.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -464,4 +464,4 @@ indenting width (default is 'shiftwidth'): >
   let b:verilog_indent_width = &sw * 2
 <
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -865,10 +865,10 @@ lbr_chartabsize_adv(s, col)
 /*ARGSUSED*/
     int
 win_lbr_chartabsize(wp, s, col, headp)
-    win_T		*wp;
-    unsigned char	*s;
-    colnr_T		col;
-    int			*headp;
+    win_T	*wp;
+    char_u	*s;
+    colnr_T	col;
+    int		*headp;
 {
 #ifdef FEAT_LINEBREAK
     int		c;
@@ -878,6 +878,7 @@ win_lbr_chartabsize(wp, s, col, headp)
     int		added;
     int		numberextra;
     char_u	*ps;
+    int		tab_corr = (*s == TAB);
 
     /*
      * No 'linebreak' and 'showbreak': return quickly.
@@ -944,6 +945,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	    if (col2 >= colmax)		/* doesn't fit */
 	    {
 		size = colmax - col;
+		tab_corr = FALSE;
 		break;
 	    }
 	}
@@ -968,7 +970,10 @@ win_lbr_chartabsize(wp, s, col, headp)
 	if (col == 0 || col + size > (colnr_T)W_WIDTH(wp))
 	{
 	    added = (int)STRLEN(p_sbr);
-	    size += added;
+	    if (tab_corr)
+		size += (added / wp->w_buffer->b_p_ts) * wp->w_buffer->b_p_ts;
+	    else
+		size += added;
 	    if (col != 0)
 		added = 0;
 	}
@@ -1564,3 +1569,61 @@ backslash_halve_save(p)
     backslash_halve(res);
     return res;
 }
+
+#if (defined(EBCDIC) && defined(FEAT_POSTSCRIPT)) || defined(PROTO)
+/*
+ * Table for EBCDIC to ASCII conversion unashamedly taken from xxd.c!
+ * The first 64 entries have been added to map control characters defined in
+ * ascii.h
+ */
+static char_u ebcdic2ascii[256] =
+{
+    0000, 0001, 0002, 0003, 0004, 0011, 0006, 0177,
+    0010, 0011, 0012, 0013, 0014, 0015, 0016, 0017,
+    0020, 0021, 0022, 0023, 0024, 0012, 0010, 0027,
+    0030, 0031, 0032, 0033, 0033, 0035, 0036, 0037,
+    0040, 0041, 0042, 0043, 0044, 0045, 0046, 0047,
+    0050, 0051, 0052, 0053, 0054, 0055, 0056, 0057,
+    0060, 0061, 0062, 0063, 0064, 0065, 0066, 0067,
+    0070, 0071, 0072, 0073, 0074, 0075, 0076, 0077,
+    0040, 0240, 0241, 0242, 0243, 0244, 0245, 0246,
+    0247, 0250, 0325, 0056, 0074, 0050, 0053, 0174,
+    0046, 0251, 0252, 0253, 0254, 0255, 0256, 0257,
+    0260, 0261, 0041, 0044, 0052, 0051, 0073, 0176,
+    0055, 0057, 0262, 0263, 0264, 0265, 0266, 0267,
+    0270, 0271, 0313, 0054, 0045, 0137, 0076, 0077,
+    0272, 0273, 0274, 0275, 0276, 0277, 0300, 0301,
+    0302, 0140, 0072, 0043, 0100, 0047, 0075, 0042,
+    0303, 0141, 0142, 0143, 0144, 0145, 0146, 0147,
+    0150, 0151, 0304, 0305, 0306, 0307, 0310, 0311,
+    0312, 0152, 0153, 0154, 0155, 0156, 0157, 0160,
+    0161, 0162, 0136, 0314, 0315, 0316, 0317, 0320,
+    0321, 0345, 0163, 0164, 0165, 0166, 0167, 0170,
+    0171, 0172, 0322, 0323, 0324, 0133, 0326, 0327,
+    0330, 0331, 0332, 0333, 0334, 0335, 0336, 0337,
+    0340, 0341, 0342, 0343, 0344, 0135, 0346, 0347,
+    0173, 0101, 0102, 0103, 0104, 0105, 0106, 0107,
+    0110, 0111, 0350, 0351, 0352, 0353, 0354, 0355,
+    0175, 0112, 0113, 0114, 0115, 0116, 0117, 0120,
+    0121, 0122, 0356, 0357, 0360, 0361, 0362, 0363,
+    0134, 0237, 0123, 0124, 0125, 0126, 0127, 0130,
+    0131, 0132, 0364, 0365, 0366, 0367, 0370, 0371,
+    0060, 0061, 0062, 0063, 0064, 0065, 0066, 0067,
+    0070, 0071, 0372, 0373, 0374, 0375, 0376, 0377
+};
+
+/*
+ * Convert a buffer worth of characters from EBCDIC to ASCII.  Only useful if
+ * wanting 7-bit ASCII characters out the other end.
+ */
+    void
+ebcdic2ascii(buffer, len)
+    char_u	*buffer;
+    int		len;
+{
+    int		i;
+
+    for (i = 0; i < len; i++)
+	buffer[i] = ebcdic2ascii(buffer[i]);
+}
+#endif

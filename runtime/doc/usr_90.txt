@@ -1,4 +1,4 @@
-*usr_90.txt*	For Vim version 6.0au.  Last change: 2001 Aug 29
+*usr_90.txt*	For Vim version 6.0av.  Last change: 2001 Sep 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -332,7 +332,7 @@ file, viminfo, etc. will be left alone.
    If you want to run the new version next to the old one, you will have to do
 some handwork.  Don't run the install program, it will overwrite a few files
 of the old version.  Execute the new binaries by specifying the full path.
-The program should be able to automatially find the runtime files for the
+The program should be able to automatically find the runtime files for the
 right version.  However, this won't work if you set the $VIMRUNTIME variable
 somewhere.
    If you are satisfied with the upgrade, you can delete the files of the
@@ -496,4 +496,4 @@ files that you created.  You might want to keep that.
 
 Table of contents: |usr_toc.txt|
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

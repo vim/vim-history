@@ -1,4 +1,4 @@
-*usr_45.txt*	For Vim version 6.0au.  Last change: 2001 Aug 07
+*usr_45.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -416,4 +416,4 @@ Don't type the spaces.  See |i_CTRL-V_digit| for the details.
 
 Next chapter: |usr_90.txt|  Installing Vim
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

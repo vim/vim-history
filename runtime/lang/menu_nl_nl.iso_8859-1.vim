@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Aug 31
+" Last Change:	2001 sep 09
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,7 +13,8 @@ scriptencoding iso-8859-1
 " Help menu
 menutrans &Help			&Help
 menutrans &Overview<Tab><F1>	&Overzicht<Tab><F1>
-menutrans &How-to\ links	&How-to\ Index
+menutrans &How-to\ links	&Hoe-doe-ik\ lijst
+menutrans &User\ Manual		Gebruikers\ handleiding
 "menutrans &GUI			&GUI
 menutrans &Credits		&Met\ dank\ aan
 menutrans Co&pying		&Copyright
@@ -58,7 +59,38 @@ menutrans F&ile\ Settings		Bestand\ Opties
 menutrans C&olor\ Scheme		Kleuren\ Schema
 menutrans &Keymap			Toetsenbord\ Indeling
 
-" Programming menu
+" Edit.Global Settings
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Flip\ Patroon\ Kleuring<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!	Flip\ Negeren\ hoofd/kleine\ letters<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!	Flip\ Showmatch<Tab>:set\ sm!
+menutrans &Context\ lines		Context\ regels
+menutrans &Virtual\ Edit		Virtueel\ positioneren
+menutrans Never				Nooit
+menutrans Block\ Selection		Bij\ Blok\ Selectie
+menutrans Insert\ mode			In\ Invoeg\ mode
+menutrans Block\ and\ Insert		Bij\ Blok\ Selectie\ en\ Invoeg\ mode
+menutrans Always			Altijd
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Flip\ Invoeg\ Mode<Tab>:set\ im!
+menutrans Search\ &Path\.\.\.		Zoekpad\.\.\.
+menutrans Ta&g\ Files\.\.\.		Tag\ Bestanden\.\.\.
+menutrans Toggle\ &Toolbar		Toon/verberg\ Knoppen\ balk
+menutrans Toggle\ &Bottom\ Scrollbar	Toon/verberg\ onderste\ schuifbalk
+menutrans Toggle\ &Left\ Scrollbar	Toon/verberg\ linker\ schuifbalk
+menutrans Toggle\ &Right\ Scrollbar	Toon/verberg\ rechter\ schuifbalk
+menutrans None				Geen
+
+" Edit.File Settings
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Flip\ regel\ nummers<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Flip\ list\ mode<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Flip\ regel\ afbreken<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Flip\ afbreken\ op\ woordgrens<tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Flip\ tabs\ expanderen<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Flip\ automatisch\ indenteren<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Flip\ C-indenteren<Tab>:set\ cin!
+menutrans Te&xt\ Width\.\.\.				Tekst\ breedte\.\.\.
+menutrans &File\ Format\.\.\.				Bestands\ formaat\.\.\.
+
+" Tools menu
 menutrans &Tools			&Gereedschap
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Spring\ naar\ Tag<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Spring\ &Terug<Tab>^T
@@ -74,15 +106,40 @@ menutrans Error\ &Window		Fouten\ Venster
 menutrans &Update<Tab>:cwin		&Aanpassen<Tab>:cwin
 menutrans &Open<Tab>:copen		&Openen<Tab>:copen
 menutrans &Close<Tab>:cclose		&Sluiten<Tab>:cclose
-menutrans Convert\ to\ HEX<Tab>:%!xxd	Converteer\ naar\ HEX<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	Converteer\ terug<Tab>:%!xxd\ -r
+menutrans &Convert\ to\ HEX<Tab>:%!xxd	Converteer\ naar\ HEX<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r	Converteer\ terug<Tab>:%!xxd\ -r
 menutrans &Set\ Compiler		Kies\ Compiler
+
+" Tools.Folding
+menutrans &Enable/Disable\ folds<Tab>zi	Flip\ tonen\ folds<Tab>zi
+menutrans &View\ Cursor\ Line<Tab>zv	Toon\ cursor\ regel<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	Toon\ alleen\ cursor\ regel<Tab>zMzx
+menutrans C&lose\ more\ folds<Tab>zm	Sluit\ meer\ folds<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM	Sluit\ alle\ folds<Tab>zM
+menutrans O&pen\ more\ folds<Tab>zr	Open\ meer\ folds<Tab>zr
+menutrans &Open\ all\ folds<Tab>zR	Open\ alle\ folds<Tab>zR
+menutrans Fold\ Met&hod			Fold\ wijze
+menutrans M&anual			Handmatig
+menutrans I&ndent			Kantlijn
+menutrans E&xpression			Expressie
+menutrans S&yntax			Syntax
+menutrans &Diff				Wijzigingen
+menutrans Ma&rker			Markeringen
+menutrans Create\ &Fold<Tab>zf		creëer\ Fold<Tab>zf
+menutrans &Delete\ Fold<Tab>zd		verwijder\ Fold<Tab>zd
+menutrans Delete\ &All\ Folds<Tab>zD	verwijder\ alle\ Folds<Tab>zD
+menutrans Fold\ column\ &width		Fold\ kolom\ breedte
+ 
+" Tools.Diff
+menutrans &Update		Verversen
+menutrans &Get\ Block		Blok\ ophalen\ van\ ander\ venster
+menutrans &Put\ Block		Blok\ naar\ ander\ venster
 
 " Names for buffer menu.
 menutrans &Buffers		&Buffer
 menutrans &Refresh\ menu	Ververs\ menu
-menutrans Delete		Wissen
-menutrans A&lternate		Vorige
+menutrans &Delete		Wissen
+menutrans &Alternate		Vorige
 menutrans &Next			Vooruit
 menutrans &Previous		Achteruit
 
@@ -92,15 +149,16 @@ menutrans &New<Tab>^Wn			&Nieuw<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Splitsen<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	Splits\ naar\ #<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	Splits\ &Vertikaal<Tab>^Wv
+menutrans Split\ File\ E&xplorer	Splits\ Bestand\ verkenner
 menutrans &Close<Tab>^Wc		&Sluiten<Tab>^Wc
-menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ Andere<Tab>^Wo
+menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ alle\ anderen<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Volgende<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Vorige<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=		&Gelijke\ afmetingen<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maximale\ hoogte<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ hoogte<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		Maximale\ breedte<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		Minimale\ breedte<Tab>^W1\|
+menutrans Max\ &Width<Tab>^W\|		Maximale\ breedte<Tab>^W\|
+menutrans Min\ Widt&h<Tab>^W1\|		Minimale\ breedte<Tab>^W1\|
 menutrans Move\ &To			Verplaats\ naar
 menutrans &Top<Tab>^WK			Bovenkant<Tab>^WK
 menutrans &Bottom<Tab>^WJ		Onderkant<Tab>^WJ
@@ -155,13 +213,12 @@ endif
 
 " Syntax menu
 menutrans &Syntax		&Syntax
-menutrans Set\ 'syntax'\ only	Alleen\ 'syntax'\ wijzigen
-menutrans Set\ 'filetype'\ too	Ook\ 'filetype'\ wijzigen
+menutrans Set\ '&syntax'\ only	Alleen\ 'syntax'\ wijzigen
+menutrans Set\ '&filetype'\ too	Ook\ 'filetype'\ wijzigen
 menutrans &Off			&Uit
 menutrans &Manual		&Handmatig
 menutrans A&utomatic		A&utomatisch
-menutrans o&n\ (this\ file)	Aa&n\ (dit\ Bestand)
-menutrans o&ff\ (this\ file)	&Uit\ (dit\ Bestand)
+menutrans on/off\ for\ &This\ file	Aan/Uit\ voor\ dit\ Bestand
 menutrans Co&lor\ test		Test\ de\ &Kleuren
 menutrans &Highlight\ test	Test\ de\ Markeringen
 menutrans &Convert\ to\ HTML	Converteren\ naar\ &HTML

@@ -702,6 +702,10 @@ EXTERN int	ex_normal_busy INIT(= 0); /* recursivenes of ex_normal() */
 
 EXTERN int	KeyTyped;		/* TRUE if user typed current char */
 EXTERN int	KeyStuffed;		/* TRUE if current char from stuffbuf */
+#ifdef USE_IM_CONTROL
+EXTERN int	vgetc_im_active;	/* Input Method was active for last
+					   character obtained from vgetc() */
+#endif
 EXTERN int	maptick INIT(= 0);	/* tick for each non-mapped char */
 
 EXTERN char_u	chartab[256];		/* table used in charset.c; See

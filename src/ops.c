@@ -558,10 +558,9 @@ block_insert(oap, s, b_insert, bdp)
 	    }
 	    else /* spaces = padding to block edge */
 	    {
-		/* if $ used, just append to EOL (ie spaces==0)
-		 * else if cursor was on NUL, we need 1 less padding */
+		/* if $ used, just append to EOL (ie spaces==0) */
 		if (!bdp->is_MAX)
-		    spaces = !bdp->is_EOL + (oap->end_vcol - bdp->end_vcol);
+		    spaces = (oap->end_vcol - bdp->end_vcol) + 1;
 		count = spaces;
 		offset = bdp->textcol + bdp->textlen;
 	    }
@@ -1764,7 +1763,7 @@ op_replace(oap, c)
     oparg_T   *oap;
     int		c;
 {
-    int			n;
+    int			n, numc;
     char_u		*newp, *oldp;
     size_t		oldlen;
     struct block_def	bd;
@@ -1786,6 +1785,7 @@ op_replace(oap, c)
      */
     if (oap->block_mode)
     {
+        bd.is_MAX = (curwin->w_curswant == MAXCOL);
 	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
@@ -1818,7 +1818,12 @@ op_replace(oap, c)
 		    && !bd.is_oneChar
 #endif
 		    && bd.end_char_vcols > 0 ? bd.end_char_vcols - 1 : 0);
-	    n += (oap->end_vcol - oap->start_vcol) - bd.textlen + 1;
+	    /* Figure out how many characters to replace. */
+	    numc = oap->end_vcol - oap->start_vcol + 1;
+	    if (bd.is_short && (!virtual_active() || bd.is_MAX))
+		numc -= (oap->end_vcol - bd.end_vcol) + 1;
+	    /* oldlen includes textlen, so don't double count */
+	    n += numc - bd.textlen;
 
 	    oldp = ml_get_curline();
 	    oldlen = STRLEN(oldp);
@@ -1832,13 +1837,7 @@ op_replace(oap, c)
 	    /* insert pre-spaces */
 	    copy_spaces(newp + bd.textcol, (size_t)bd.startspaces);
 	    /* insert replacement chars CHECK FOR ALLOCATED SPACE */
-	    {
-		colnr_T len = oap->end_vcol - oap->start_vcol + 1;
-
-		if (bd.is_short && !virtual_active())
-		    len -= (oap->end_vcol - bd.end_vcol) + 1;
-		copy_chars(newp + STRLEN(newp), (size_t)len, c);
-	    }
+	    copy_chars(newp + STRLEN(newp), (size_t)numc, c);
 	    if (!bd.is_short)
 	    {
 		/* insert post-spaces */
@@ -4149,6 +4148,7 @@ block_prep(oap, bdp, lnum, is_del)
     bdp->start_char_vcols = incr;
     if (bdp->start_vcol < oap->start_vcol)	/* line too short */
     {
+	bdp->end_vcol = bdp->start_vcol;
 #ifdef FEAT_VISUALEXTRA
 	bdp->is_short = TRUE;
 #endif

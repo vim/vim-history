@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
+*gui_w32.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -403,4 +403,4 @@ to:
 And add gvim to the list of applications.  This problem only appears to happen
 with the Intellimouse driver 2.2 and when "Universal Scrolling" is turned on.
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

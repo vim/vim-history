@@ -2100,6 +2100,7 @@ gui_mch_mousehide(int hide)
     }
 }
 
+#ifdef FEAT_MENU
     static void
 gui_mch_show_popupmenu_at(vimmenu_T *menu, int x, int y)
 {
@@ -2115,6 +2116,7 @@ gui_mch_show_popupmenu_at(vimmenu_T *menu, int x, int y)
      * We deal with this in normal.c.
      */
 }
+#endif
 
 /*
  * Got a message when the system will go down.

@@ -20,7 +20,7 @@ void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_set_fontset __ARGS((GuiFontset fontset));
 void gui_mch_free_font __ARGS((GuiFont font));
 void gui_mch_free_fontset __ARGS((GuiFontset fontset));
-GuiFontset gui_mch_get_fontset __ARGS((char_u *name, int giveErrorIfMissing));
+GuiFontset gui_mch_get_fontset __ARGS((char_u *name, int giveErrorIfMissing, int fixed_width));
 int fontset_height __ARGS((XFontSet fs));
 int fontset_height2 __ARGS((XFontSet fs));
 guicolor_T gui_mch_get_color __ARGS((char_u *reqname));

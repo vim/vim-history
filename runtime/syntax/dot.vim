@@ -1,9 +1,10 @@
 " Vim syntax file
-" Language:      DOT
-" Filenames:     *.dot
-" Maintainer:    Markus Mottl  mottl@miss.wu-wien.ac.at
-" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/dot.vim
-" Last Change:   2001 Aug 27
+" Language:     Dot
+" Filenames:    *.dot
+" Maintainer:   Markus Mottl  <markus@oefai.at>
+" URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/dot.vim
+" Last Change:  2001 Aug 28 - Upgraded URL & mail address
+"               2001 May 04 - initial version
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

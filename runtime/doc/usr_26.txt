@@ -1,4 +1,4 @@
-*usr_26.txt*	For Vim version 6.0au.  Last change: 2001 Aug 05
+*usr_26.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -218,4 +218,4 @@ start all over, use the "-W" argument.  It overwrites any existing file.
 
 Next chapter: |usr_27.txt|  Search commands and patterns
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

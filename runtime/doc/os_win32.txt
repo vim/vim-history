@@ -1,4 +1,4 @@
-*os_win32.txt*  For Vim version 6.0au.  Last change: 2001 Jun 03
+*os_win32.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by George Reilly
@@ -315,4 +315,4 @@ Q. I use Vim under Win32s and NT. In NT, I can define the console to default to
 A. Edit SYSTEM.INI and add 'ScreenLines=50' to the [NonWindowsApp] section. DOS
    prompts and external DOS commands will now run in a 50-line window.
 
- vim:tw=78:fo=tcq2:
+ vim:tw=78:fo=tcq2:ts=8:ft=help:norl:

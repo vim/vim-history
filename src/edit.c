@@ -2322,7 +2322,8 @@ ins_compl_prep(c)
 	    {
 		/* put the cursor on the last char, for 'tw' formatting */
 		curwin->w_cursor.col--;
-		insertchar(NUL, 0, -1);
+		if (stop_arrow() == OK)
+		    insertchar(NUL, 0, -1);
 		curwin->w_cursor.col++;
 	    }
 
@@ -3626,7 +3627,8 @@ insert_special(c, allow_modmask, ctrlv)
 	    ctrlv = FALSE;
 	}
     }
-    insertchar(c, ctrlv ? INSCHAR_CTRLV : 0, -1);
+    if (stop_arrow() == OK)
+	insertchar(c, ctrlv ? INSCHAR_CTRLV : 0, -1);
 }
 
 /*
@@ -3665,9 +3667,6 @@ insertchar(c, flags, second_indent)
 #endif
     int		save_char = NUL;
     int		cc;
-
-    if (stop_arrow() == FAIL)
-	return;
 
     textwidth = comp_textwidth(flags & INSCHAR_FORMAT);
     fo_ins_blank = has_format_option(FO_INS_BLANK);
@@ -6045,7 +6044,7 @@ ins_bs(c, mode, inserted_space_p)
 	{
 	    int		ts;
 	    colnr_T	vcol;
-	    int		want_vcol;
+	    colnr_T	want_vcol;
 	    int		extra = 0;
 
 	    *inserted_space_p = FALSE;
@@ -6053,15 +6052,20 @@ ins_bs(c, mode, inserted_space_p)
 		ts = curbuf->b_p_sw;
 	    else
 		ts = curbuf->b_p_sts;
-	    /* compute the virtual column where we want to be */
+	    /* Compute the virtual column where we want to be.  Since
+	     * 'showbreak' may get in the way, need to get the last column of
+	     * the previous character. */
 	    getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
-	    want_vcol = ((vcol - 1) / ts) * ts;
+	    dec_cursor();
+	    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &want_vcol);
+	    inc_cursor();
+	    want_vcol = (want_vcol / ts) * ts;
+
 	    /* delete characters until we are at or before want_vcol */
 	    while ((int)vcol > want_vcol
 		    && (cc = *(ml_get_cursor() - 1), vim_iswhite(cc)))
 	    {
 		dec_cursor();
-		/* TODO: calling getvcol() each time is slow */
 		getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
 		if (State & REPLACE_FLAG)
 		{
@@ -6110,7 +6114,7 @@ ins_bs(c, mode, inserted_space_p)
 		    if (extra == 2)
 			extra = 1;
 		}
-		vcol++;
+		getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
 	    }
 	}
 
@@ -6635,9 +6639,8 @@ ins_tab()
 #endif
 	pos_T		fpos;
 	pos_T		*cursor;
-	colnr_T		want_vcol, vcol, tab_vcol;
+	colnr_T		want_vcol, vcol;
 	int		change_col = -1;
-	int		ts = curbuf->b_p_ts;
 
 	/*
 	 * Get the current line.  For VREPLACE mode, don't make real changes
@@ -6681,10 +6684,13 @@ ins_tab()
 	getvcol(curwin, &fpos, &vcol, NULL, NULL);
 	getvcol(curwin, cursor, &want_vcol, NULL, NULL);
 
-	/* use as many TABs as possible */
-	tab_vcol = (want_vcol / ts) * ts;
-	while (vcol < tab_vcol)
+	/* Use as many TABs as possible.  Beware of 'showbreak' and
+	 * 'linebreak' adding extra virtual columns. */
+	while (vim_iswhite(*ptr))
 	{
+	    i = lbr_chartabsize((char_u *)"\t", vcol);
+	    if (vcol + i > want_vcol)
+		break;
 	    if (*ptr != TAB)
 	    {
 		*ptr = TAB;
@@ -6698,15 +6704,29 @@ ins_tab()
 	    }
 	    ++fpos.col;
 	    ++ptr;
-	    vcol = ((vcol + ts) / ts) * ts;
+	    vcol += i;
 	}
 
 	if (change_col >= 0)
 	{
-	    /* may need to delete a number of the following spaces */
-	    i = want_vcol - vcol;
-	    ptr += i;
-	    fpos.col += i;
+	    int repl_off = 0;
+
+	    /* Skip over the spaces we need. */
+	    while (vcol < want_vcol && *ptr == ' ')
+	    {
+		vcol += lbr_chartabsize(ptr, vcol);
+		++ptr;
+		++repl_off;
+	    }
+	    if (vcol > want_vcol)
+	    {
+		/* Must have a char with 'showbreak' just before it. */
+		--ptr;
+		--repl_off;
+	    }
+	    fpos.col += repl_off;
+
+	    /* Delete following spaces. */
 	    i = cursor->col - fpos.col;
 	    if (i > 0)
 	    {
@@ -6718,7 +6738,7 @@ ins_tab()
 #endif
 			)
 		    for (temp = i; --temp >= 0; )
-			replace_join(want_vcol - vcol);
+			replace_join(repl_off);
 	    }
 	    cursor->col -= i;
 

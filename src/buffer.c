@@ -33,7 +33,7 @@ static char_u	*buflist_match __ARGS((regprog_T *prog, buf_T *buf));
 # define HAVE_BUFLIST_MATCH
 static char_u	*fname_match __ARGS((regprog_T *prog, char_u *name));
 #endif
-static void	buflist_setfpos __ARGS((buf_T *buf, linenr_T lnum, colnr_T col, int copy_options));
+static void	buflist_setfpos __ARGS((buf_T *buf, win_T *win, linenr_T lnum, colnr_T col, int copy_options));
 static wininfo_T *find_wininfo __ARGS((buf_T *buf));
 #ifdef UNIX
 static buf_T	*buflist_findname_stat __ARGS((char_u *ffname, struct stat *st));
@@ -296,15 +296,15 @@ close_buffer(win, buf, action)
 
     if (win != NULL)
     {
-	/* Set b_last_cursor when closing the last window for a buffer.
-	 * Remember the last cursor position of a buffer for the current
-	 * window. */
+	/* Set b_last_cursor when closing the last window for the buffer.
+	 * Remember the last cursor position and window options of the buffer.
+	 * This used to be only for the current window, but then options like
+	 * 'foldmethod' may be lost with a ":only" command. */
 	if (buf->b_nwindows == 0)
 	    set_last_cursor(win);
-	if (win == curwin)
-	    buflist_setfpos(buf,
-		    curwin->w_cursor.lnum == 1 ? 0 : curwin->w_cursor.lnum,
-		    curwin->w_cursor.col, TRUE);
+	buflist_setfpos(buf, win,
+		    win->w_cursor.lnum == 1 ? 0 : win->w_cursor.lnum,
+		    win->w_cursor.col, TRUE);
     }
 
 #ifdef FEAT_AUTOCMD
@@ -1217,7 +1217,7 @@ buflist_new(ffname, sfname, lnum, flags)
     {
 	vim_free(ffname);
 	if (lnum != 0)
-	    buflist_setfpos(buf, lnum, (colnr_T)0, FALSE);
+	    buflist_setfpos(buf, curwin, lnum, (colnr_T)0, FALSE);
 	/* copy the options now, if 'cpo' doesn't have 's' and not done
 	 * already */
 	buf_copy_options(buf, 0);
@@ -1885,8 +1885,9 @@ buflist_nr2name(n, fullname, helptail)
  * When "lnum" is 0 only do the options.
  */
     static void
-buflist_setfpos(buf, lnum, col, copy_options)
+buflist_setfpos(buf, win, lnum, col, copy_options)
     buf_T	*buf;
+    win_T	*win;
     linenr_T	lnum;
     colnr_T	col;
     int		copy_options;
@@ -1894,7 +1895,7 @@ buflist_setfpos(buf, lnum, col, copy_options)
     wininfo_T	*wip;
 
     for (wip = buf->b_wininfo; wip != NULL; wip = wip->wi_next)
-	if (wip->wi_win == curwin)
+	if (wip->wi_win == win)
 	    break;
     if (wip == NULL)
     {
@@ -1902,7 +1903,7 @@ buflist_setfpos(buf, lnum, col, copy_options)
 	wip = (wininfo_T *)alloc_clear((unsigned)sizeof(wininfo_T));
 	if (wip == NULL)
 	    return;
-	wip->wi_win = curwin;
+	wip->wi_win = win;
 	if (lnum == 0)		/* set lnum even when it's 0 */
 	    lnum = 1;
     }
@@ -1931,10 +1932,10 @@ buflist_setfpos(buf, lnum, col, copy_options)
     if (copy_options)
     {
 	/* Save the window-specific option values. */
-	copy_winopt(&curwin->w_onebuf_opt, &wip->wi_opt);
+	copy_winopt(&win->w_onebuf_opt, &wip->wi_opt);
 #ifdef FEAT_FOLDING
-	wip->wi_fold_manual = curwin->w_fold_manual;
-	cloneFoldGrowArray(&curwin->w_folds, &wip->wi_folds);
+	wip->wi_fold_manual = win->w_fold_manual;
+	cloneFoldGrowArray(&win->w_folds, &wip->wi_folds);
 #endif
 	wip->wi_optset = TRUE;
     }
@@ -2329,7 +2330,8 @@ buflist_slash_adjust()
     void
 buflist_altfpos()
 {
-    buflist_setfpos(curbuf, curwin->w_cursor.lnum, curwin->w_cursor.col, TRUE);
+    buflist_setfpos(curbuf, curwin, curwin->w_cursor.lnum,
+						  curwin->w_cursor.col, TRUE);
 }
 
 /*
@@ -2518,7 +2520,9 @@ fileinfo(fullname, shorthelp, dont_truncate)
 
     if (dont_truncate)
     {
-	/* Temporarily set msg_scroll to avoid the message being truncated */
+	/* Temporarily set msg_scroll to avoid the message being truncated.
+	 * First call msg_start() to get the message in the right place. */
+	msg_start();
 	n = msg_scroll;
 	msg_scroll = TRUE;
 	msg(buffer);
@@ -3997,18 +4001,21 @@ chk_modeline(lnum)
 		end = TRUE;
 		s += 4;
 	    }
-
-#ifdef FEAT_EVAL
-	    save_SID = current_SID;
-	    current_SID = SID_MODELINE;
-#endif
 	    *e = NUL;			/* truncate the set command */
-	    retval = do_set(s, OPT_MODELINE | OPT_LOCAL);
+
+	    if (*s != NUL)		/* skip over an empty "::" */
+	    {
 #ifdef FEAT_EVAL
-	    current_SID = save_SID;
+		save_SID = current_SID;
+		current_SID = SID_MODELINE;
 #endif
-	    if (retval == FAIL)		/* stop if error found */
-		break;
+		retval = do_set(s, OPT_MODELINE | OPT_LOCAL);
+#ifdef FEAT_EVAL
+		current_SID = save_SID;
+#endif
+		if (retval == FAIL)		/* stop if error found */
+		    break;
+	    }
 	    s = e + 1;			/* advance to next part */
 	}
 
@@ -4070,7 +4077,7 @@ read_viminfo_bufferlist(virp, writing)
 	{
 	    buf->b_last_cursor.lnum = lnum;
 	    buf->b_last_cursor.col = col;
-	    buflist_setfpos(buf, lnum, col, FALSE);
+	    buflist_setfpos(buf, curwin, lnum, col, FALSE);
 	}
     }
     vim_free(xline);

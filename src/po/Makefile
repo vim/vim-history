@@ -2,6 +2,7 @@
 
 # TODO make this configurable
 # Note: ja.sjis is only for MS-Windows, it's not installed on Unix
+# cs.cp1250 also is only for MS-Windows
 LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW
 MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
 		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo
@@ -51,6 +52,8 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
+converted: ja.sjis.mo cs.cp1250.mo
+
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.
 ja.sjis.po: ja.po sjiscorr
@@ -58,6 +61,11 @@ ja.sjis.po: ja.po sjiscorr
 
 sjiscorr: sjiscorr.c
 	$(CC) -o sjiscorr sjiscorr.c
+
+# Convert cs.po to create cs.cp1250.po.
+cs.cp1250.po: cs.po
+	iconv -f iso-8859-2 -t cp1250 cs.po | \
+		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from cs.po, DO NOT EDIT/' > cs.cp1250.po
 
 check:
 	@if test "x" = "x$(prefix)"; then \
@@ -68,7 +76,7 @@ check:
 	fi
 
 clean:
-	rm -f core core.* *.old.po *.mo *.pot sjiscorr ja.sjis.po
+	rm -f core core.* *.old.po *.mo *.pot sjiscorr ja.sjis.po cs.cp1250.po
 
 distclean: clean
 

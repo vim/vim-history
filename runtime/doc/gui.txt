@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0au.  Last change: 2001 Aug 05
+*gui.txt*       For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -891,4 +891,4 @@ careful!
 For the Win32 GUI the external commands are executed in a separate window.
 See |gui-shell-win32|.
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0au.  Last change: 2001 Aug 29
+*intro.txt*     For Vim version 6.0av.  Last change: 2001 Sep 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -128,11 +128,11 @@ You can retrieve old messages from the maillist software, and an index of
 messages.  Ask vim-help for instructions.
 
 Archives are kept at:				*maillist-archive*
-http://www.egroups.com/group/vim
-http://www.egroups.com/group/vimdev
-http://www.egroups.com/group/vimannounce
-http://www.egroups.com/group/vim-multibyte
-http://www.egroups.com/group/vim-mac
+http://groups.yahoo.com/group/vim
+http://groups.yahoo.com/group/vimdev
+http://groups.yahoo.com/group/vimannounce
+http://groups.yahoo.com/group/vim-multibyte
+http://groups.yahoo.com/group/vim-mac
 
 Another archive is at http://www.somelist.com in the "Editeurs" section (the
 site is in French, the messages are in English).
@@ -143,7 +143,7 @@ Additional maillists:
 <vim-fr@club.voila.fr>				*french-maillist*
 	Vim list in the French language.  Subscribe by sending a message to
 		<vim-fr-subscribe@club.voila.fr>
-	Or go to http://www.egroups.com/group/vim-fr.
+	Or go to http://groups.yahoo.com/group/vim-fr.
 
 
 Bug reports:				*bugs* *bug-reports* *bugreport.vim*
@@ -869,4 +869,4 @@ buffer lines	logical lines	window lines	screen lines ~
 				6. ~ 
 
 ==============================================================================
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

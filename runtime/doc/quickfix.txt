@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0au.  Last change: 2001 Aug 27
+*quickfix.txt*  For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -171,12 +171,12 @@ The following commands can be used if you are in QuickFix mode:
 							*:cw* *:cwindow*
 :cw[indow] [height]	Open the quickfix window when there are recognized
 			errors.  If the window is already open and there are
-			no recorgnized errors, close the window.
+			no recognized errors, close the window.
 
 
 Normally the quickfix window is at the bottom of the screen.  If there are
-vertical splits, it's at the bottom of the column of windows that contains the
-current window.  To make it always occupy the full width: >
+vertical splits, it's at the bottom of the rightmost column of windows.  To
+make it always occupy the full width: >
 	:botright cwindow
 You can move the window around with |window-moving| commands.
 For example, to move it to the top: CTRL-W K
@@ -213,7 +213,7 @@ list.
 3. Selecting a compiler					*compiler-select*
 
 							*:comp* *:compiler*
-:compiler {name}		Set options to work with comipler {name}.
+:compiler {name}		Set options to work with compiler {name}.
 				{not available when compiled without the
 				|+eval| feature}
 
@@ -607,7 +607,7 @@ parsing jade (see http://www.jclark.com/) errors is simple: >
 <
 						*errorformat-LaTeX*
 The following is an example how an 'errorformat' string can be specified
-for the (La)TeX type setting system which displays error messages over
+for the (La)TeX typesetting system which displays error messages over
 multiple lines.  The output of ":clist" and ":cc" etc. commands displays
 multi-lines in a single line, leading white space is removed.
 It should be easy to adopt the above LaTeX errorformat to any compiler output
@@ -697,4 +697,4 @@ start of the file about how to use it.
 
 
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

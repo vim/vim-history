@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0au.  Last change: 2001 Aug 17
+*help.txt*	For Vim version 6.0av.  Last change: 2001 Sep 05
 
 			VIM - main help file
 									 k
@@ -117,7 +117,7 @@ Advanced editing ~
 |options.txt|	description of all options
 |pattern.txt|	regexp patterns and search commands
 |map.txt|	key mapping and abbreviations
-|tagsearch.txt|	tags and special searches
+|tags.txt|	tags and special searches
 |quickfix.txt|	commands for a quick edit-compile-fix cycle
 |windows.txt|	commands for using multiple windows and buffers
 |syntax.txt|	syntax highlighting
@@ -131,11 +131,11 @@ Special issues ~
 |remote.txt|	using Vim as a server or client
 |term.txt|	using different terminals and mice
 |digraph.txt|	list of available digraphs
-|multibyte.txt|	multi-byte text support
-|multilang.txt|	non-English language support
+|mbyte.txt|	multi-byte text support
+|mlang.txt|	non-English language support
 |farsi.txt|	Farsi (Persian) editing
 |hangulin.txt|	Hangul (Korean) input mode
-|rightleft.txt|	right-to-left editing
+|rileft.txt|	right-to-left editing
 
 GUI ~
 |gui.txt|	Graphical User Interface (GUI)
@@ -144,9 +144,9 @@ GUI ~
 |gui_x11.txt|	X11 GUI
 
 Interfaces ~
-|if_cscope.txt|	using cscope with Vim
+|if_cscop.txt|	using cscope with Vim
 |if_perl.txt|	Perl interface
-|if_python.txt|	Python interface
+|if_pyth.txt|	Python interface
 |if_sniff.txt|	SNiFF+ interface
 |if_tcl.txt|	Tcl interface
 |if_ole.txt|	OLE automation interface for Win32
@@ -171,7 +171,7 @@ Remarks about specific systems ~
 |os_msdos.txt|	MS-DOS (plain DOS and DOS box under Windows)
 |os_os2.txt|	OS/2
 |os_qnx.txt|	QNX
-|os_riscos.txt|	RISC-OS
+|os_risc.txt|	RISC-OS
 |os_unix.txt|	Unix
 |os_vms.txt|	VMS
 |os_win32.txt|	MS-Windows 95/98/NT
@@ -189,4 +189,4 @@ LOCAL ADDITIONS:
 Now that you've jumped here with CTRL-] or a double mouse click, you can use
 CTRL-T, CTRL-O, g<RightMouse>, or <C-RightMouse> to go back to where you were.
 ------------------------------------------------------------------------------
- vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":
+ vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:

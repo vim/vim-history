@@ -3,7 +3,7 @@ Check if modelines are interpreted for the correct buffer.
 
 STARTTEST
 :so small.vim
-:set nocompatible
+:set nocompatible viminfo+=nviminfo
 :au BufEnter Xxx brew
 /start of
 :.,/end of/w! Xxx   " write test file Xxx

@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 02
+" Last Change:	2001 Sep 09
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -80,7 +80,12 @@ endfun
 amenu 10.310 &File.&Open\.\.\.<Tab>:e		:browse confirm e<CR>
 amenu 10.320 &File.Sp&lit-Open\.\.\.<Tab>:sp	:browse sp<CR>
 amenu 10.325 &File.&New<Tab>:enew		:confirm enew<CR>
-amenu 10.330 &File.&Close<Tab>:close		:confirm close<CR>
+amenu <silent> 10.330 &File.&Close<Tab>:close
+	\ :if winheight(2) < 0 <Bar>
+	\   confirm enew <Bar>
+	\ else <Bar>
+	\   confirm close <Bar>
+	\ endif<CR>
 amenu 10.335 &File.-SEP1-			:
 amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
 amenu 10.350 &File.Save\ &As\.\.\.<Tab>:sav	:browse confirm saveas<CR>
@@ -91,7 +96,7 @@ if has("diff")
   amenu 10.420 &File.Split\ Patched\ &By\.\.\.	:browse vert diffpatch<CR>
 endif
 
-if has("win32")
+if has("printer")
   amenu 10.500 &File.-SEP3-			:
   amenu 10.510 &File.&Print			:hardcopy<CR>
   vunmenu &File.&Print
@@ -743,12 +748,14 @@ if has("toolbar")
   cmenu      ToolBar.Paste	<C-R>+
 
   amenu 1.95 ToolBar.-sep3-	<nul>
-  amenu 1.100 ToolBar.Find	:promptfind<CR>
-  amenu 1.110 ToolBar.FindNext	n
-  amenu 1.120 ToolBar.FindPrev	N
-  amenu 1.130 ToolBar.Replace	:promptrepl<CR>
-  vunmenu ToolBar.Replace
-  vmenu ToolBar.Replace		y:promptrepl <C-R>"<CR>
+  if !has("gui_athena")
+    amenu 1.100 ToolBar.Find		:promptfind<CR>
+    amenu 1.110 ToolBar.FindNext	n
+    amenu 1.120 ToolBar.FindPrev	N
+    amenu 1.130 ToolBar.Replace		:promptrepl<CR>
+    vunmenu ToolBar.Replace
+    vmenu ToolBar.Replace		y:promptrepl <C-R>"<CR>
+  endif
 
 if 0	" disabled; These are in the Windows menu
   amenu 1.135 ToolBar.-sep4-		<nul>
@@ -791,10 +798,12 @@ else
   tmenu ToolBar.Cut		Cut to clipboard
   tmenu ToolBar.Copy		Copy to clipboard
   tmenu ToolBar.Paste		Paste from Clipboard
-  tmenu ToolBar.Find		Find...
-  tmenu ToolBar.FindNext	Find Next
-  tmenu ToolBar.FindPrev	Find Previous
-  tmenu ToolBar.Replace		Find / Replace...
+  if !has("gui_athena")
+    tmenu ToolBar.Find		Find...
+    tmenu ToolBar.FindNext	Find Next
+    tmenu ToolBar.FindPrev	Find Previous
+    tmenu ToolBar.Replace		Find / Replace...
+  endif
  if 0	" disabled; These are in the Windows menu
   tmenu ToolBar.New		New Window
   tmenu ToolBar.WinSplit	Split Window

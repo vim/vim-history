@@ -39,7 +39,7 @@ static int get_menu_mode __ARGS((void));
 static void gui_update_menus_recurse __ARGS((vimmenu_T *, int));
 #endif
 
-#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
+#if defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF)
 static void gui_create_tearoffs_recurse __ARGS((vimmenu_T *menu, const char_u *pname, int *pri_tab, int pri_idx));
 static void gui_add_tearoff __ARGS((char_u *tearpath, int *pri_tab, int pri_idx));
 static void gui_destroy_tearoffs_recurse __ARGS((vimmenu_T *menu));
@@ -47,7 +47,7 @@ static int s_tearoffs = FALSE;
 #endif
 
 static int menu_is_hidden __ARGS((char_u *name));
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || (defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF))
 static int menu_is_tearoff __ARGS((char_u *name));
 #endif
 
@@ -584,6 +584,11 @@ add_menu_path(menu_path, menuarg, pri_tab, call_data
 	    menu->icon_builtin = menuarg->icon_builtin;
 	    if (*next_name == NUL && menuarg->iconfile != NULL)
 		menu->iconfile = vim_strsave(menuarg->iconfile);
+#endif
+#if defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF)
+	    /* the tearoff item must be present in the modes of each item. */
+	    if (parent != NULL && menu_is_tearoff(parent->children->dname))
+		parent->children->modes |= modes;
 #endif
 	}
 	else
@@ -1660,7 +1665,8 @@ menu_is_hidden(name)
     return (name[0] == ']') || (menu_is_popup(name) && name[5] != NUL);
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) \
+	|| (defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF))
 /*
  * Return TRUE if the menu is the tearoff menu.
  */
@@ -1714,13 +1720,17 @@ gui_create_initial_menus(menu)
 
     while (menu != NULL)
     {
-	if (menu->children != NULL)
+	/* Don't add a menu when only a tip was defined. */
+	if (menu->modes & MENU_ALL_MODES)
 	{
-	    gui_mch_add_menu(menu, idx);
-	    gui_create_initial_menus(menu->children);
+	    if (menu->children != NULL)
+	    {
+		gui_mch_add_menu(menu, idx);
+		gui_create_initial_menus(menu->children);
+	    }
+	    else
+		gui_mch_add_menu_item(menu, idx);
 	}
-	else
-	    gui_mch_add_menu_item(menu, idx);
 	menu = menu->next;
 	++idx;
     }
@@ -1738,7 +1748,11 @@ gui_update_menus_recurse(menu, mode)
 
     while (menu)
     {
-	if (menu->modes & menu->enabled & mode)
+	if ((menu->modes & menu->enabled & mode)
+#if defined(FEAT_GUI_W32) && defined(FEAT_TEAROFF)
+		|| menu_is_tearoff(menu->dname)
+#endif
+	   )
 	    grey = FALSE;
 	else
 	    grey = TRUE;

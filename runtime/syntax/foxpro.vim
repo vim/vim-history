@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     FoxPro for DOS v2.x
-" Maintainer:   Powing Tse <powing@mcmug.org>
-" Last Change:  25 April 2001
+" Maintainer:   Powing Tse <powing@hkem.com>
+" Last Change:  06 September 2001
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -464,6 +464,7 @@ syn match foxproCmd "^\s*\<resu\%[me]\>"
 syn match foxproCmd "^\s*\<retr\%[y]\>"
 syn match foxproCmd "^\s*\<retu\%[rn]\>"
 syn match foxproCmd "^\s*\<run\>"
+syn match foxproCmd "^\s*\<run\>\s*\/n"
 syn match foxproCmd "^\s*\<runs\%[cript]\>"
 syn match foxproCmd "^\s*\<save\>\s*\<macr\%[os]\>"
 syn match foxproCmd "^\s*\<save\>\s*\<scre\%[en]\>"

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0au.  Last change: 2001 Sep 02
+*version6.txt*  For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -366,6 +366,11 @@ diff feature, this no longer works.  Use "-dev {device}" instead. |-dev|
 
 Made the default mappings for <S-Insert> in Insert mode insert the text
 literally, avoids that special characters like BS cause side effects.
+
+Using ":confirm" applied to the rest of the line.  Now it applies only to the
+command right after it.  Thus ":confirm if x | edit | endif" no longer works,
+use "if x | confirm edit | endif".  This was the original intention, that it
+worked differently was a bug.
 
 ==============================================================================
 NEW FEATURES
@@ -1089,6 +1094,7 @@ file when it matches.  The default is "/tmp/*", this makes "crontab -e" work.
 Added support for Access Control Lists (ACL) for FreeBSD and Win32.  The ACL
 is copied from the original file to the new file (or the backup if it's
 copied).
+ACL is also supported for AIX, Solaris and generic POSIX. (Tomas Ogren)
 
 
 Argument list						*new-argument-list*
@@ -1382,8 +1388,8 @@ New Syntax files: ~
 
 bdf		BDF font definition (Nikolai Weibull)
 catalog		SGML catalog (Johannes Zellner)
-debchangelog	Akkerman)
-debcontrol	Debian Control and Debian Changelog syntax files. (Wichert
+debcontrol	Debian Control (Wichert Akkerman)
+debchangelog	Debian Changelog (Wichert Akkerman)
 dot		dot (Markus Mottl)
 dsl		DSSSL syntax (Johannes Zellner)
 eterm		Eterm configuration (Nikolai Weibull)
@@ -3284,4 +3290,54 @@ When interrupting reading a file, Vi considers the buffer modified.  Added the
 'i' flag in 'cpoptions' flag for this (we don't want it modified to be able to
 do ":q").
 
- vim:tw=78:
+When using an item in 'guicursor' that starts with a colon, Vim would get
+stuck or crash.
+
+When putting a file mark in a help file and later jumping back to it, the
+options would not be set.  Extended the modeline in all help files to make
+this work better.
+
+When a modeline contained "::" the local option values would be printed.  Now
+ignore it.
+
+Some help files did not use a 8.3 names, which causes problems when using
+MS-DOS unzip.  Renamed "multibyte.txt" to "mbyte.txt", "rightleft.txt" to
+"rileft.txt", "tagsearch.txt" to "tags.txt", "os_riscos.txt" to "os_risc.txt".
+
+When Visual mode is blockwise, using "iw" or "aw" made it characterwise.  That
+doesn't seem right, only do this when in linewise mode.  But then do it
+always, not only when start and end of Visual mode are equal.
+
+When using "viw" on a single-letter word and 'selection' is exclusive, would
+not include the word.
+
+When formatting text from Insert mode, using CTRL-O, could mess up undo
+information.
+
+While writing a file (also for the backup file) there was no check for an
+interrupt (hitting CTRL-C).  Vim could hang when writing a large file over a
+slow network, and moving the mouse didn't make it appear (when 'mousehide' is
+set) and the screen wasn't updated in the GUI.  Also allow interrupting when
+syncing the swap file, it can take a long time.
+
+When using ":mksession" while there is help window, it would later be restored
+to the right file but not marked as a help buffer.  ":help" would then open
+another window.  Now use the value "help" for 'buftype' to mark a help buffer.
+
+The session file contained absolute path names in option values, that doesn't
+work when the home directory depends on the situation.  Replace the home
+directory with ~/ when possible.
+
+When using 'showbreak' a TAB just after the shown break would not be counted
+correctly, the cursor would be positioned wrong.
+
+With 'showbreak' set to "--->" or "------->" and 'sts' set to 4, inserting
+tabs did not work right.  Could cause a crash.  Backspacing was also wrong,
+could get stuck at a line break.
+
+Win32: crashed when tearing off a menu with over 300 items.
+
+GUI: A menu or toolbar item would appear when only a tooltip was defined for
+it.
+
+ vim:tw=78:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0au.  Last change: 2001 Aug 21
+*syntax.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,12 +6,11 @@
 
 Syntax highlighting		*syntax* *syntax-highlighting* *coloring*
 
-Syntax highlighting enables the possibility to show parts of the text in
-another font or color.  Those parts can be specific keywords or text
-matching a pattern.  Vim doesn't parse the whole file (to keep it fast), so
-the highlighting has its limitations.  Lexical highlighting might be a
-better name, but everybody calls it syntax highlighting, so we'll stick with
-that.
+Syntax highlighting enables Vim to show parts of the text in another font or
+color.  Those parts can be specific keywords or text matching a pattern.  Vim
+doesn't parse the whole file (to keep it fast), so the highlighting has its
+limitations.  Lexical highlighting might be a better name, but since everybody
+calls it syntax highlighting we'll stick with that.
 
 Vim supports syntax highlighting on all terminals.  But since most ordinary
 terminals have very limited highlighting possibilities, it works best in the
@@ -40,22 +39,22 @@ In the User Manual:
 
 {Vi does not have any of these commands}
 
-The syntax highlighting is not available when the |+syntax| feature has been
+Syntax highlighting is not available when the |+syntax| feature has been
 disabled at compile time.
 
 ==============================================================================
 1. Quick start						*:syn-qstart*
 
 						*:syn-enable* *:syntax-enable*
-Syntax highlighting is switched on with this command: >
+This command switches on syntax highlighting: >
 
 	:syntax enable
 
-What this command actually does, is executing the command >
+What this command actually does is to execute the command >
 	:source $VIMRUNTIME/syntax/syntax.vim
 
 If the VIM environment variable is not set, Vim will try to find
-the path in another way (see |$VIMRUNTIME|).  Normally this will work just
+the path in another way (see |$VIMRUNTIME|).  Usually this works just
 fine.  If it doesn't, try setting the VIM environment variable to the
 directory where the Vim stuff is located.  For example, if your syntax files
 are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
@@ -120,7 +119,7 @@ Also see |syntax-loading|.
 The syntax and highlighting commands for one language are normally stored in
 a syntax file.  The name convention is: "{name}.vim".  Where {name} is the
 name of the language, or an abbreviation (to fit the name in 8.3 characters,
-which is always done, in case the file will be used on a DOS filesystem).
+a requirement in case the file is used on a DOS filesystem).
 Examples:
 	c.vim		perl.vim	java.vim	html.vim
 	cpp.vim		sh.vim		csh.vim
@@ -139,8 +138,8 @@ These commands are normally in the file $VIMRUNTIME/syntax/synload.vim.
 
 MAKING YOUR OWN SYNTAX FILES				*mysyntaxfile*
 
-When you create your own syntax files, and you want to have these
-automatically used with ":syntax enable", do this:
+When you create your own syntax files, and you want to have Vim use these
+automatically with ":syntax enable", do this:
 
 1. Create your user runtime directory.  You would normally use the first item
    of the 'runtimepath' option.  Example for Unix: >
@@ -157,9 +156,9 @@ Now you can start using your syntax file manually: >
 	:set syntax=mine
 You don't have to exit Vim to use this.
 
-If you also want the type of file to be detected, see |new-filetype|.
+If you also want Vim to detect the type of file, see |new-filetype|.
 
-If you are setting up a system with many users, and you don't want each user
+If you are setting up a system with many users and you don't want each user
 to add the same syntax file, you can use another directory from 'runtimepath'.
 
 
@@ -196,9 +195,9 @@ Vim will only load the first syntax file found.
 
 NAMING CONVENTIONS
 							*group-name*
-To be able to allow each user to pick his favorite set of colors, there need
-to be preferred names for highlight groups that are common for many languages.
-These are the ones that are suggested to be used:
+To be able to allow each user to pick his favorite set of colors, there must
+be preferred names for highlight groups that are common for many languages.
+These are the suggested group names:
 
 	*Comment	any comment
 
@@ -245,10 +244,10 @@ These are the ones that are suggested to be used:
 	*Todo		anything that needs extra attention; mostly the
 			keywords TODO FIXME and XXX
 
-The ones marked with * are the preferred groups, the other are minor groups.
+The names marked with * are the preferred groups; the others are minor groups.
 For the preferred groups, the "syntax.vim" file contains default highlighting.
 The minor groups are linked to the preferred groups, so they get the same
-highlighting.  You can override these defaults by giving ":highlight" commands
+highlighting.  You can override these defaults by using ":highlight" commands
 after sourcing the "syntax.vim" file.
 
 Note that highlight group names are not case sensitive.  "String" and "string"
@@ -264,7 +263,7 @@ This explains the details that happen when the command ":syntax enable" is
 issued.  When Vim initializes itself, it finds out where the runtime files are
 located.  This is used here as the variable |$VIMRUNTIME|.
 
-What ":syntax enable" and ":syntax on" do:
+":syntax enable" and ":syntax on" do the following:
 
     Source $VIMRUNTIME/syntax/syntax.vim
     |
@@ -308,7 +307,7 @@ What ":syntax enable" and ":syntax on" do:
 	already loaded buffer.
 
 
-When a file is loaded, its syntax file is found in this way:
+Upon loading a file, Vim finds the relevant syntax file as follows:
 
     Loading the file triggers the BufReadPost autocommands.
     |
@@ -344,7 +343,7 @@ When a file is loaded, its syntax file is found in this way:
 4. Syntax file remarks					*:syn-file-remarks*
 
 						*b:current_syntax-variable*
-The name of the syntax that has been loaded is stored in the
+Vim stores the name of the syntax that has been loaded in the
 "b:current_syntax" variable.  You can use this if you want to load other
 settings, depending on which syntax is active.  Example: >
    :au BufReadPost * if b:current_syntax == "csh"
@@ -355,7 +354,7 @@ settings, depending on which syntax is active.  Example: >
 2HTML						*2html.vim* *convert-to-HTML*
 
 This is not a syntax file itself, but a script that converts the current
-window into HTML.  A new window is opened, in which the HTML file is built.
+window into HTML.  Vim opens a new window in which it builds the HTML file.
 
 You are not supposed to set the 'filetype' or 'syntax' option to "2html"!
 Source the script to convert the current file: >
@@ -364,9 +363,8 @@ Source the script to convert the current file: >
 <
 	Warning: This is slow!
 
-The resulting file can be written where you want it.  You can then view it
-with any HTML viewer, such as Netscape.  The colors should be exactly the same
-as you see them in Vim.
+After you save the resulting file, you can view it with any HTML viewer, such
+as Netscape.  The colors should be exactly the same as you see them in Vim.
 
 The lines are numbered according to 'number' option and the Number
 highlighting.  You can force lines to be numbered in the HTML output by
@@ -384,9 +382,9 @@ shorter and valid HTML 4 file), use: >
 
 Remarks:
 - This only works in a version with GUI support.  If the GUI is not actually
-  running (possible for X11) it still works, but not that good (the colors
+  running (possible for X11) it still works, but not very well (the colors
   may be wrong).
-- In older browsers the background colors will not be shown.
+- Older browsers will not show the background colors.
 - From most browsers you can also print the file (in color)!
 
 Here is an example how to run the script over all .c and .h files from a
@@ -394,11 +392,24 @@ Unix shell: >
    for f in *.[ch]; do gvim -f +"syn on" +"run! syntax/2html.vim" +"wq" +"q" $f; done
 <
 
+ABEL							*abel.vim* *abel-syntax*
+
+ABEL highlighting provides some user-defined options.  To enable them, assign
+any value to the respective variable.  Example: >
+	:let abel_obsolete_ok=1
+To disable them use ":unlet".  Example: >
+	:unlet abel_obsolete_ok
+
+Variable			Highlight ~
+abel_obsolete_ok		obsolete keywords are statements, not errors
+abel_cpp_comments_illegal	do not interpret '//' as inline comment leader
+
+
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
 ASSEMBLY	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
 		*asm68k-syntax*
 
-Files matching "*.i" could be Progress or Assembly  If the automatic detection
+Files matching "*.i" could be Progress or Assembly.  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
 startup vimrc: >
    :let filetype_i = "asm"
@@ -473,12 +484,12 @@ Basic.
 C							*c.vim* *c-syntax*
 
 A few things in C highlighting are optional.  To enable them assign any value
-to the respective value.  Example: >
+to the respective variable.  Example: >
 	:let c_comment_strings=1
 To disable them use ":unlet".  Example: >
 	:unlet c_comment_strings
 
-variable		Highlight ~
+Variable		Highlight ~
 c_gnu			GNU gcc specific items
 c_comment_strings	strings and numbers inside a comment
 c_space_errors		trailing white space and spaces before a <Tab>
@@ -491,6 +502,7 @@ c_no_utf		don't highlight \u and \U in strings
 c_syntax_for_h		use C syntax for *.h files, instead of C++
 c_no_if0		don't highlight "#if 0" blocks as comments
 c_no_cformat		don't highlight %-formats in strings
+c_no_c99		con't highlight C99 standard items
 
 If you notice highlighting errors while scrolling backwards, which are fixed
 when redrawing with CTRL-L, try setting the "c_minlines" internal variable
@@ -504,7 +516,7 @@ When using the "#if 0" / "#endif" comment highlighting, notice that this only
 works when the "#if 0" is within "c_minlines" from the top of the window.  If
 you have a long "#if 0" construct it will not be highlighted correctly.
 
-To match extra items in comments the cCommentGroup cluster can be used.
+To match extra items in comments, use the cCommentGroup cluster.
 Example: >
    :au Syntax c call MyCadd()
    :function MyCadd()
@@ -525,10 +537,10 @@ highlighting for cErrInParen and cErrInBracket.
 
 COBOL						*cobol.vim* *cobol-syntax*
 
-COBOL highlighting for legacy code has different needs than fresh development.
-This is due both to differences in what is being done (maintenance versus
-development) as well as other factors.  To enable legacy code highlighting,
-add this line to you .vimrc: >
+COBOL highlighting has different needs for legacy code than it does for fresh
+development.  This is due to differences in what is being done (maintenance
+versus development) and other factors.  To enable legacy code highlighting,
+add this line to your .vimrc: >
 	:let cobol_legacy_code=1
 To disable it again, use this: >
 	:unlet cobol_legacy_code
@@ -536,12 +548,12 @@ To disable it again, use this: >
 
 COLD FUSION				*coldfusion.vim* *coldfusion-syntax*
 
-The ColdFusion has its own version of html comments. To turn on ColdFusion
+The ColdFusion has its own version of HTML comments. To turn on ColdFusion
 comment highlighting, add the following line to your startup file: >
 
 	:let html_wrong_comments=1
 
-The ColdFusion syntax file is based on the html syntax file.
+The ColdFusion syntax file is based on the HTML syntax file.
 
 
 CYNLIB						*cynlib.vim* *cynlib-syntax*
@@ -1760,16 +1772,21 @@ It will look much better with a font in a quadratic cell size, e.g. for X: >
 5. Defining a syntax					*:syn-define* *E410*
 
 Vim understands three types of syntax items:
-1. A keyword.  It can only contain keyword characters, according to the
-   'iskeyword' option.  It cannot contain other syntax items.  It will only
-   be recognized when it is a complete match (there are no keyword
-   characters before or after the match).  "if" would match in "if(a=b)",
-   but not in "ifdef x".
-2. A match.  This is a match with a single regexp pattern.  It must be within
-   one line.
-3. A region.  This starts at a match of the start regexp pattern and
-   ends with a match with the end regexp pattern.  A skip regexp pattern can
-   be used to avoid matching the end pattern.
+
+1. Keyword.
+   It can only contain keyword characters, according to the 'iskeyword'
+   option.  It cannot contain other syntax items.  It will only match with a
+   complete word (there are no keyword characters before or after the match).
+   The keyword "if" would match in "if(a=b)", but not in "ifdef x", because
+   "(" is not a keyword character and "d" is.
+
+2. Match.
+   This is a match with a single regexp pattern.
+
+3. Region.
+   This starts at a match of the "start" regexp pattern and ends with a match
+   with the "end" regexp pattern.  Any other text can appear in between.  A
+   "skip" regexp pattern can be used to avoid matching the "end" pattern.
 
 Several syntax ITEMs can be put into one syntax GROUP.  For a syntax group
 you can give highlighting attributes.  For example, you could have an item
@@ -1866,6 +1883,10 @@ DEFINING MATCHES					*:syn-match*
 				given before the pattern. |:syn-excludenl|
 	{pattern}		The search pattern that defines the match.
 				See |:syn-pattern| below.
+				Note that the pattern may match more than one
+				line, which makes the match depend on where
+				Vim starts searching for the pattern.  You
+				need to make sure syncing takes care of this.
 
 	Example (match a character constant): >
   :syntax match Character /'.'/s+1e-1
@@ -3441,4 +3462,4 @@ Also make sure TTpro's Setup / Window / Full Color is enabled, and make sure
 that Setup / Font / Enable Bold is NOT enabled.
 (info provided by John Love-Jensen <eljay@Adobe.COM>)
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

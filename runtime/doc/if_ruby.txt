@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0au.  Last change: 2001 Aug 29
+*if_ruby.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -170,4 +170,4 @@ $curwin		The current window object.
 $curbuf		The current buffer object.
 
 ==============================================================================
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

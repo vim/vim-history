@@ -153,6 +153,7 @@ main
 #ifdef MEM_PROFILE
     atexit(vim_mem_profile_dump);
 #endif
+
 #ifdef STARTUPTIME
     time_fd = fopen(STARTUPTIME, "a");
     TIME_MSG("--- VIM STARTING ---");
@@ -196,6 +197,8 @@ main
 #if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
     /*
      * Setup to use the current locale (for ctype() and many other things).
+     * NOTE: Translated messages with encodings other than latin1 will not
+     * work until set_init_1() has been called!
      */
     setlocale(LC_ALL, "");
 
@@ -222,6 +225,10 @@ main
     }
 # endif
     TIME_MSG("locale set");
+#endif
+
+#ifdef FEAT_GUI
+    gui.dofork = TRUE;		    /* default is to use fork() */
 #endif
 
 #if defined(FEAT_XCLIPBOARD) || defined(FEAT_CLIENTSERVER)
@@ -257,9 +264,16 @@ main
 	else if (STRICMP(argv[i], "--serverlist") == 0
 		 || STRICMP(argv[i], "--remote-send") == 0
 		 || STRICMP(argv[i], "--remote-expr") == 0
-		 || STRICMP(argv[i], "--remote-wait") == 0
 		 || STRICMP(argv[i], "--remote") == 0 )
 	    serverArg = TRUE;
+	else if (STRICMP(argv[i], "--remote-wait") == 0)
+	{
+	    serverArg = TRUE;
+#ifdef FEAT_GUI
+	    /* don't fork() when starting the GUI to edit the files ourself */
+	    gui.dofork = FALSE;
+#endif
+	}
 # endif
 # ifdef FEAT_GUI_GTK
 	else if (STRICMP(argv[i], "--socketid") == 0)
@@ -275,38 +289,6 @@ main
 	    if (count != 1)
 		mainerr(ME_INVALID_ARG, (char_u *)argv[i]);
 	    i++;
-	}
-# endif
-    }
-#endif
-
-#ifdef FEAT_CLIENTSERVER
-    /*
-     * Do the client-server stuff, unless "--servername ''" was used.
-     */
-    if (serverName_arg == NULL || *serverName_arg != NUL)
-    {
-# ifdef WIN32
-	/* Initialise the client/server messaging infrastructure. */
-	serverInitMessaging();
-# endif
-
-	/*
-	 * When a command server argument was found, execute it.  This may
-	 * exit Vim when it was successful.
-	 */
-	if (serverArg)
-	    cmdsrv_main(&argc, argv, serverName_arg, &serverStr);
-
-	/* If we're still running, get the name to register ourselves.
-	 * On Win32 can register right now, for X11 need to setup the
-	 * clipboard first, it's further down. */
-	servername = serverMakeName(serverName_arg, argv[0]);
-# ifdef WIN32
-	if (servername != NULL)
-	{
-	    serverSetName(servername);
-	    vim_free(servername);
 	}
 # endif
     }
@@ -346,6 +328,9 @@ main
 
     /*
      * Set the default values for the options.
+     * NOTE: Non-latin1 translated messages are working only after this,
+     * because this is where "has_mbyte" will be set, which is used by
+     * msg_outtrans_len_attr().
      * First find out the home directory, needed to expand "~" in options.
      */
     init_homedir();		/* find real value of $HOME */
@@ -354,6 +339,38 @@ main
 
 #ifdef FEAT_EVAL
     set_lang_var();		/* set v:lang and v:ctype */
+#endif
+
+#ifdef FEAT_CLIENTSERVER
+    /*
+     * Do the client-server stuff, unless "--servername ''" was used.
+     */
+    if (serverName_arg == NULL || *serverName_arg != NUL)
+    {
+# ifdef WIN32
+	/* Initialise the client/server messaging infrastructure. */
+	serverInitMessaging();
+# endif
+
+	/*
+	 * When a command server argument was found, execute it.  This may
+	 * exit Vim when it was successful.
+	 */
+	if (serverArg)
+	    cmdsrv_main(&argc, argv, serverName_arg, &serverStr);
+
+	/* If we're still running, get the name to register ourselves.
+	 * On Win32 can register right now, for X11 need to setup the
+	 * clipboard first, it's further down. */
+	servername = serverMakeName(serverName_arg, argv[0]);
+# ifdef WIN32
+	if (servername != NULL)
+	{
+	    serverSetName(servername);
+	    vim_free(servername);
+	}
+# endif
+    }
 #endif
 
     /*
@@ -2469,6 +2486,11 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     char	**newArgV = argv + 1;
     int		newArgC = 1,
 		Argc = *argc;
+    int		argtype;
+#define ARGTYPE_OTHER		0
+#define ARGTYPE_EDIT		1
+#define ARGTYPE_EDIT_WAIT	2
+#define ARGTYPE_SEND		3
 # ifdef FEAT_X11
     Window	srv;
 
@@ -2492,7 +2514,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 	for (i = 1; i < Argc; i++)
 	{
 	    res = NULL;
-	    if (STRCMP(argv[i], "--") == 0)
+	    if (STRCMP(argv[i], "--") == 0)	/* end of options */
 	    {
 		for (; i < *argc; i++)
 		{
@@ -2501,13 +2523,20 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		}
 		break;
 	    }
-	    else if (STRICMP(argv[i], "--remote") == 0
-		     || STRICMP(argv[i], "--remote-wait") == 0
-		     || STRICMP(argv[i], "--remote-send") == 0)
+
+	    if (STRICMP(argv[i], "--remote") == 0)
+		argtype = ARGTYPE_EDIT;
+	    else if (STRICMP(argv[i], "--remote-wait") == 0)
+		argtype = ARGTYPE_EDIT_WAIT;
+	    else if (STRICMP(argv[i], "--remote-send") == 0)
+		argtype = ARGTYPE_SEND;
+	    else
+		argtype = ARGTYPE_OTHER;
+	    if (argtype != ARGTYPE_OTHER)
 	    {
 		if (i == *argc - 1)
 		    mainerr_arg_missing((char_u *)argv[i]);
-		if (STRICMP(argv[i], "--remote-send") == 0)
+		if (argtype == ARGTYPE_SEND)
 		{
 		    *serverStr = (char_u *)argv[i + 1];
 		    i++;
@@ -2530,7 +2559,19 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    break;      /* Break out to let vim start normally.  */
 		}
 
-		if (ret >= 0 && STRICMP(argv[i], "--remote-wait") == 0)
+# ifdef FEAT_GUI_W32
+		/* Guess that when the server name starts with "g" it's a GUI
+		 * server, which we can bring to the foreground here.
+		 * Foreground() in the server doesn't work very well. */
+		if (argtype != ARGTYPE_SEND && TO_UPPER(*sname) == 'G')
+		    SetForegroundWindow(srv);
+# endif
+
+		/*
+		 * For --remote-wait: Wait until the server did edit each
+		 * file.  Also detect that the server no longer runs.
+		 */
+		if (ret >= 0 && argtype == ARGTYPE_EDIT_WAIT)
 		{
 		    int	    numFiles = *argc - i - 1;
 		    int	    j;

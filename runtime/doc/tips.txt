@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0au.  Last change: 2001 Jul 07
+*tips.txt*      For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -441,4 +441,4 @@ forget to double the number of existing backslashes and put a backslash before
 For a real buffer menu, user functions should be used (see |:function|), but
 then the <> notation isn't used, which defeats using it as an example here.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60au
+VIMRTDIR = /vim60av
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -861,8 +861,10 @@ SYS_INDOFF_FILE = $(DESTDIR)$(SCRIPTLOC)/indoff.vim
 ### Name of the option window script file target.
 SYS_OPTWIN_FILE = $(DESTDIR)$(SCRIPTLOC)/optwin.vim
 
-### Name of the PostScript procset file target.
+### Name of the PostScript procset.ps and eviso.ps file targets.
 SYS_PROCSET_FILE = $(DESTDIR)$(SCRIPTLOC)/procset.ps
+SYS_EVISO_FILE = $(DESTDIR)$(SCRIPTLOC)/eviso.ps
+SYS_EVEBCDIC_FILE = $(DESTDIR)$(SCRIPTLOC)/evebcdic.ps
 
 # Program to install the program in the target directory.  Could also be "mv".
 INSTALL_PROG	= cp
@@ -1374,13 +1376,13 @@ xxd/xxd$(EXEEXT): xxd/xxd.c
 		$(MAKE) -f Makefile
 
 # Build the language specific files if they were unpacked.
-# Generate the ja.sjis.mo file separately, it's no problem if this fails.
+# Generate the converted .mo files separately, it's no problem if this fails.
 languages:
 	@if test -n "$(MAKEMO)"; then \
 		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix); \
 	fi
 	-@if test -n "$(MAKEMO)"; then \
-		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) ja.sjis.mo; \
+		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) converted; \
 	fi
 
 # Update the *.po files for changes in the sources.  Only run manually.
@@ -1516,7 +1518,7 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTLOC)/ftoff.vim+ \
 		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTLOC)/scripts.vim+ \
 		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTLOC)/optwin.vim+ \
-		-e s+$(VIMLOC)/procset.ps+$(SCRIPTLOC)/procset.ps+ \
+		-e 's+$(VIMLOC)/\*.ps+$(SCRIPTLOC)/\*.ps+' \
 		$(HELPSOURCE)/vim.1 > $(DEST_MAN)/$(VIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(VIMNAME).1
 	@echo generating $(DEST_MAN)/$(VIMNAME)tutor.1
@@ -1571,6 +1573,10 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/procset.ps $(SYS_PROCSET_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_PROCSET_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/eviso.ps $(SYS_EVISO_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_EVISO_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/evebcdic.ps $(SYS_EVEBCDIC_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_EVEBCDIC_FILE)
 # install the colorscheme files
 	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_COL)
 	cd $(DEST_COL); chmod $(HELPMOD) *.vim README.txt
@@ -1800,6 +1806,7 @@ uninstall_runtime:
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
 	-rm -f $(SYS_OPTWIN_FILE) $(SYS_PROCSET_FILE)
+	-rm -f $(SYS_EVISO_FILE) $(SYS_EVEBCDIC_FILE)
 	-rm -f $(DEST_COL)/*.vim $(DEST_COL)/README.txt
 	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt $(DEST_IND)/*.vim
 	-rm -rf $(DEST_MACRO)

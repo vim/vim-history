@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 31
+" Last change:	2001 Sep 07
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -561,7 +561,7 @@ au BufNewFile,BufRead *.m4
 au BufNewFile,BufRead *.mgp			setf mgp
 
 " Mail (for Elm, trn, mutt, rn, slrn)
-au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt,/tmp/SLRN[0-9A-Z.]\+ setf mail
+au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt,/tmp/SLRN[0-9A-Z.]\+,*.eml setf mail
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile,GNUmakefile,*.mk,*.mak,*.dsp setf make
@@ -1180,7 +1180,7 @@ au BufNewFile,BufRead *.ms
 " XML
 au BufNewFile,BufRead *.xsl			setf xml
 au BufNewFile,BufRead *.xml
-	\ if getline(1) =~ '<!DOCTYPE.*DocBook' || getline(2) =~ '<!DOCTYPE.*DocBook' |
+	\ if getline(1) . getline(2) . getline(3) =~ '<!DOCTYPE.*DocBook' |
 	\   let b:docbk_type="xml" |
 	\   setf docbk |
 	\ else |

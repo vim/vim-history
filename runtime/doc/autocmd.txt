@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0au.  Last change: 2001 Sep 02
+*autocmd.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -880,4 +880,4 @@ effective.  These should be used for the command that reads/writes the file.
 
 See the $VIMRUNTIME/plugin/netrw.vim for examples.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

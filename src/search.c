@@ -2732,7 +2732,6 @@ current_word(oap, count, include, bigword)
 	{
 	    /* should do something when inclusive == FALSE ! */
 	    VIsual = start_pos;
-	    VIsual_mode = 'v';
 	    redraw_curbuf_later(INVERTED);	/* update the inversion */
 	}
 	else
@@ -2800,8 +2799,13 @@ current_word(oap, count, include, bigword)
 #ifdef FEAT_VISUAL
     if (VIsual_active)
     {
-	if (*p_sel == 'e' && inclusive && lt(VIsual, curwin->w_cursor))
+	if (*p_sel == 'e' && inclusive && ltoreq(VIsual, curwin->w_cursor))
 	    inc_cursor();
+	if (VIsual_mode == 'V')
+	{
+	    VIsual_mode = 'v';
+	    redraw_cmdline = TRUE;		/* show mode later */
+	}
     }
     else
 #endif

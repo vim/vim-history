@@ -1740,6 +1740,7 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	COPYDATASTRUCT	reply;
 	char_u		*res;
 	char_u		winstr[30];
+	int		retval;
 
 	switch (data->dwData)
 	{
@@ -1771,9 +1772,10 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    reply.lpData = res;
 	    reply.cbData = STRLEN(res) + 1;
 
-	    return SendMessage(sender, WM_COPYDATA, (WPARAM)message_window,
-			      (LPARAM)(&reply));
-	    /* TODO: vim_free(res)? */
+	    retval = SendMessage(sender, WM_COPYDATA, (WPARAM)message_window,
+							    (LPARAM)(&reply));
+	    vim_free(res);
+	    return retval;
 
 	case COPYDATA_REPLY:
 	case COPYDATA_RESULT:
@@ -1829,9 +1831,10 @@ serverInitMessaging(void)
     RegisterClass(&wndclass);
 
     /* Create the message window. It will be hidden, so the details don't
-     * matter. */
+     * matter.  Don't use WS_OVERLAPPEDWINDOW, it will make a shortcut remove
+     * focus from gvim. */
     message_window = CreateWindow(VIM_CLASSNAME, "",
-			 WS_OVERLAPPEDWINDOW,
+			 WS_POPUPWINDOW | WS_CAPTION,
 			 CW_USEDEFAULT, CW_USEDEFAULT,
 			 100, 100, NULL, NULL,
 			 s_hinst, NULL);
@@ -1868,7 +1871,7 @@ enumWindowsGetServer(HWND hwnd, LPARAM lparam)
 	return TRUE;
 
     /* If this is the server we're looking for, return its HWND */
-    if (STRCMP(server, id->name) == 0)
+    if (STRICMP(server, id->name) == 0)
     {
 	id->hwnd = hwnd;
 	return FALSE;

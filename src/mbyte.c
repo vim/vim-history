@@ -1756,7 +1756,10 @@ mb_strnicmp(s1, s2, n)
 
     for (i = 0; i < n; i += l)
     {
-	l = (*mb_ptr2len_check)(s1 + i);
+	if (enc_utf8)
+	    l = utf_ptr2len_check(s1 + i);  /* exclude composing chars */
+	else
+	    l = (*mb_ptr2len_check)(s1 + i);
 	if (l <= 1)
 	{
 	    /* Single byte: first check normally, then with ignore case. */
@@ -3286,16 +3289,14 @@ xim_real_init(x11_window, x11_display)
 	}
     }
 
-    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p != NUL)
+    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
-    if (xim == NULL)
-    {
-	/* This is supposed to be useful to obtain characters through
-	 * XmbLookupString() without really using a XIM. */
-	(void)XSetLocaleModifiers("{@im=none}");
+    /* This is supposed to be useful to obtain characters through
+     * XmbLookupString() without really using a XIM. */
+    if (xim == NULL && (p = XSetLocaleModifiers("{@im=none}")) != NULL
+								 && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
-    }
 
     if (xim == NULL)
     {

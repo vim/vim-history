@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0au.  Last change: 2001 Aug 03
+*pattern.txt*   For Vim version 6.0av.  Last change: 2001 Sep 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -608,8 +608,11 @@ endless loop.  If you try it, you will get this error message: >
 \@<!	Matches with zero width if the preceding atom does NOT match just
 	before what follows. |/zero-width| {not in Vi}
 	Like '(?<!pattern)" in Perl, but Vim allows non-fixed-width patterns.
+	The match with the preceding atom is made to end just before the match
+	with what follows, thus an atom that ends in ".*" will work.
 	Example			matches ~
 	\(foo\)\@<!bar		any "bar" that's not in "foobar"
+	\(\/\/.*\)\@\<!in	"in" which is not after "//"
 
 							*/\@>*
 \@>	Matches the preceding atom like matching a whole pattern. {not in Vi}
@@ -944,7 +947,7 @@ x	A single character, with no special meaning, matches itself
 Ignoring case in a pattern					*/ignorecase*
 
 If the 'ignorecase' option is on, the case of normal letters is ignored.
-'smartcase' can be set to ignore case when the pattern contains uppercase
+'smartcase' can be set to ignore case when the pattern contains lowercase
 letters only.
 							*/\c* */\C*
 When "\c" appears anywhere in the pattern, the whole pattern is handled like
@@ -1012,4 +1015,4 @@ doesn't work there, it only works to match text in the buffer.
 :mat[ch] none
 		Clear a previously defined match pattern.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -2156,6 +2156,13 @@ do_write(eap)
 	alt_buf->b_sfname = curbuf->b_sfname;
 	curbuf->b_sfname = fname;
 	buf_name_changed();
+#ifdef FEAT_AUTOCMD
+	if (!alt_buf->b_p_bl)
+	{
+	    alt_buf->b_p_bl = TRUE;
+	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, curbuf);
+	}
+#endif
     }
 
     if (check_overwrite(eap, curbuf, fname, ffname, other) == OK)
@@ -2730,6 +2737,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     if ((flags & ECMD_SET_HELP) || keep_help_flag)
     {
 	curbuf->b_help = TRUE;
+#ifdef FEAT_QUICKFIX
+	set_string_option_direct((char_u *)"buftype", -1,
+				       (char_u *)"help", OPT_FREE |OPT_LOCAL);
+#endif
 	curbuf->b_p_ma = FALSE;
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
 	curwin->w_p_nu = 0;		/* no line numbers */
@@ -5274,7 +5285,7 @@ ex_sign(eap)
 	}
 
 	/*
-	 * Check for line={lnum} name={name} and file={fname}.
+	 * Check for line={lnum} name={name} and file={fname} or buffer={nr}.
 	 * Leave "arg" pointing to {fname}.
 	 */
 	for (;;)
@@ -5296,6 +5307,13 @@ ex_sign(eap)
 	    else if (STRNCMP(arg, "file=", 5) == 0)
 	    {
 		arg += 5;
+		buf = buflist_findname(arg);
+		break;
+	    }
+	    else if (STRNCMP(arg, "buffer=", 7) == 0)
+	    {
+		arg += 7;
+		buf = buflist_findnr(atoi((char *)arg));
 		break;
 	    }
 	    else
@@ -5306,7 +5324,6 @@ ex_sign(eap)
 	    arg = skipwhite(arg);
 	}
 
-	buf = buflist_findname(arg);
 	if (buf == NULL)
 	{
 	    EMSG2(_("E158: Invalid buffer name: %s"), arg);

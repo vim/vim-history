@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0au.  Last change: 2001 Aug 27
+*insert.txt*    For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -203,7 +203,7 @@ CTRL-_		Switch between languages, as follows:
 
 		This command is only available when the 'allowrevins' option
 		is set.
-		Please refer to |rightleft.txt| for more information about
+		Please refer to |rileft.txt| for more information about
 		right-to-left mode.
 		{not in Vi}
 		Only if compiled with the |+rightleft| feature (which is not
@@ -569,7 +569,7 @@ the current line is currently only whitespace, or start/continue a CTRL-N
 completion operation: >
 
 	function! CleverTab()
-	   if strpart( getline('.'), 1, col('.')-1 ) =~ '^\s*$'
+	   if strpart( getline('.'), 0, col('.')-1 ) =~ '^\s*$'
 	      return "\<Tab>"
 	   else
 	      return "\<C-N>"
@@ -1023,4 +1023,4 @@ self explanatory.  Using the long or the short version depends on the
 	[READ ERRORS]			not all of the file could be read
 
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

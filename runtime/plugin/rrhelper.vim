@@ -1,6 +1,6 @@
 " Vim plugin with helper function(s) for --remote-wait
 " Maintainer: Flemming Madsen <fma@cci.dk>
-" Last Change: 2001 Sep 02
+" Last Change: 2001 Sep 05
 
 " Setup answers for a --remote-wait client who will assume
 " a SetupRemoteReplies() function in the command server
@@ -11,6 +11,9 @@ if has("clientserver")
     let max = argc()
 
     let id = expand("<client>")
+    if id == 0
+      return
+    endif
     while cnt < max
       " Handle same file from more clients and file being more than once
       " on the command line by encoding this stuff in the group name

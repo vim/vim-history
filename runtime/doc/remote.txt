@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0au.  Last change: 2001 Sep 01
+*remote.txt*    For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -61,6 +61,17 @@ This way it is not necessary to know whether gvim is already started when
 sending command to it.  If a name with the number postfix is specified with
 the --servername argument, it must match exactly.
 
+The --serverlist argument will cause Vim to print a list of registered command
+servers on the standard output (stdout) and exit.
+
+Win32 Note: Making the Vim server go to the foreground doesn't always work,
+because MS-Windows doesn't allow it.  The client will move the server to the
+foreground when using the --remote or --remote-wait argument and the server
+name starts with "g".
+
+
+REMOTE EDITING
+
 The --remote argument will cause a |:drop| command to be constructed from the
 rest of the command line and sent as described above.
 The --remote-wait argument does the same thing and additionally sets up to
@@ -70,9 +81,6 @@ editing it.
 Note that the --remote and --remote-wait arguments will consume the rest of
 the command line.  Ie. all remaining arguments will be regarded as filenames.
 You can not put options there!
-
-The --serverlist argument will cause Vim to print a list of registered command
-servers on the standard output (stdout) and exit.
 
 
 FUNCTIONS
@@ -134,4 +142,4 @@ When using gvim, the --remote-wait only works properly this way: >
 
 	start /w gvim --remote-wait file.txt
 <
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

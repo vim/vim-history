@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0au.  Last change: 2001 Aug 25
+*mbyte.txt*     For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -12,7 +12,7 @@ and Korean.  Unicode is also covered here.
 
 For an introduction to the most common features, see |usr_45.txt| in the user
 manual.
-For changing the language of messages and menus see |multilang.txt|.
+For changing the language of messages and menus see |mlang.txt|.
 
 {not available when compiled without the +multi_byte feature}
 
@@ -1028,7 +1028,7 @@ it to the Vim maintainer for inclusion in the distribution:
 
 ==============================================================================
 10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*
-
+								*Unicode*
 The Unicode character set was designed to include all characters from other
 character sets.  Therefore it is possible to write text in any language using
 Unicode (with a few rarely used languages excluded).  And it's mostly possible
@@ -1153,7 +1153,7 @@ not everybody is able to type a composing character.
 These options are relevant for editing multi-byte files.  Check the help in
 options.txt for detailed information.
 
-'encoding'	Encoding used for the keyboard and display.  it is alse the
+'encoding'	Encoding used for the keyboard and display.  It is also the
 		default encoding for files.
 
 'fileencoding'	Encoding of a file.  When it's different from 'encoding'
@@ -1184,4 +1184,4 @@ Contributions specifically for the multi-byte features by:
 	Taro Muraoka  <koron@tka.att.ne.jp>
 	Yasuhiro Matsumoto <mattn@mail.goo.ne.jp>
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

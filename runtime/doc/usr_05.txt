@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0au.  Last change: 2001 Aug 27
+*usr_05.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -611,4 +611,4 @@ This does mean there is less room to edit text, thus it's a compromise.
 
 Next chapter: |usr_06.txt|  Using syntax highlighting
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

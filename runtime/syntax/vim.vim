@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0at script
+" Language:	Vim 6.0au script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	August 28, 2001
-" Version:	6.0at-01
+" Last Change:	September 04, 2001
+" Version:	6.0au-01
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -348,7 +348,7 @@ syn region vimInsert	matchgroup=vimCommand start="^[: \t]*i\%[nsert]$"	matchgrou
 
 " Behave!
 " =======
-syn match   vimBehave	"\<be\%[have]\>" contains=vimCommand skipwhite nextgroup=vimBehaveModel,vimBehaveError
+syn match   vimBehave	"\<be\%[have]\>" skipwhite nextgroup=vimBehaveModel,vimBehaveError
 syn keyword vimBehaveModel contained	mswin	xterm
 syn match   vimBehaveError contained	"[^ ]\+"
 
@@ -715,6 +715,7 @@ hi def link vimAugroupKey	vimCommand
 hi def link vimAutoCmd	vimCommand
 hi def link vimAutoCmdOpt	vimOption
 hi def link vimAutoSet	vimCommand
+hi def link vimBehave	vimCommand
 hi def link vimBehaveError	vimError
 hi def link vimCollClassErr	vimError
 hi def link vimCommentString	vimString

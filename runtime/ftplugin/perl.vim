@@ -33,7 +33,11 @@ setlocal define=[^A-Za-z_]
 
 " Set this once, globally.
 if !exists("perlpath")
-  let perlpath = system('perl -e "print join(q/,/,@INC)"')
+  if &shellxquote != '"'
+    let perlpath = system('perl -e "print join(q/,/,@INC)"')
+  else
+    let perlpath = system("perl -e 'print join(q/,/,@INC)'")
+  endif
   let perlpath = substitute(perlpath,',.$',',,','')
 endif
 

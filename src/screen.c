@@ -2723,7 +2723,7 @@ win_line(wp, lnum, startrow, endrow)
 		if (shl->startp == shl->endp)
 		{
 #ifdef FEAT_MBYTE
-		    if (has_mbyte)
+		    if (has_mbyte && *shl->endp != NUL)
 			shl->endp += (*mb_ptr2len_check)(shl->endp);
 		    else
 #endif
@@ -3244,7 +3244,7 @@ win_line(wp, lnum, startrow, endrow)
 		     * displayed at the start of the next line. */
 		    --ptr;
 		}
-		else
+		else if (*ptr != NUL)
 		    ptr += mb_l - 1;
 
 		/* If a double-width char doesn't fit at the left side display
@@ -3536,6 +3536,10 @@ win_line(wp, lnum, startrow, endrow)
 		    }
 		}
 		ScreenLines[off] = ' ';
+#ifdef FEAT_MBYTE
+		if (enc_utf8)
+		    ScreenLinesUC[off] = 0;
+#endif
 #ifdef FEAT_SEARCH_EXTRA
 		if (area_attr == 0)
 		{

@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Sep 02
+" Last Change:		2001 Sep 09
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -254,4 +254,4 @@ menutrans &Highlight\ test		Prueba\ del\ &realzado
 menutrans &Convert\ to\ HTML		&Convertir\ en\ HTML
 
 " Find Help dialog text
-let g:menutrans_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción 8(e.g.: `shiftwidth`)"
+let g:menutrans_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción (e.g.: `shiftwidth`)"

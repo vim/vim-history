@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0au.  Last change: 2001 Aug 23
+*os_dos.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -291,4 +291,4 @@ When starting up, Vim checks for the presence of "sh" anywhere in the 'shell'
 option.  If it is present, Vim sets the 'shellcmdflag' and 'shellquote' or
 'shellxquote' options will be set as described above.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -194,6 +194,20 @@ static char *vimrun_path = "vimrun ";
 static int suppress_winsize = 1;	/* don't fiddle with console */
 #endif
 
+    static void
+get_exe_name(void)
+{
+    char	temp[256];
+
+    if (exe_name == NULL)
+    {
+	/* store the name of the executable, may be used for $VIM */
+	GetModuleFileName(NULL, temp, 255);
+	if (*temp != NUL)
+	    exe_name = FullName_save((char_u *)temp, FALSE);
+    }
+}
+
 #if defined(DYNAMIC_GETTEXT) || defined(PROTO)
 # ifndef GETTEXT_DLL
 #  define GETTEXT_DLL "libintl.dll"
@@ -210,7 +224,7 @@ char* (*dyn_libintl_bindtextdomain)(const char *, const char *)
 						= null_libintl_bindtextdomain;
 
     int
-dyn_libintl_init(char* libname)
+dyn_libintl_init(char *libname)
 {
     int i;
     static struct
@@ -229,9 +243,19 @@ dyn_libintl_init(char* libname)
     if (hLibintlDLL)
 	return 1;
     /* Load gettext library (libintl.dll) */
-    hLibintlDLL = LoadLibrary(libname ? libname : GETTEXT_DLL);
+    hLibintlDLL = LoadLibrary(libname != NULL ? libname : GETTEXT_DLL);
     if (!hLibintlDLL)
-	return 0;
+    {
+	char_u	    dirname[_MAX_PATH];
+
+	/* Try using the path from gvim.exe to find the .dll there. */
+	get_exe_name();
+	STRCPY(dirname, exe_name);
+	STRCPY(gettail(dirname), GETTEXT_DLL);
+	hLibintlDLL = LoadLibrary((char *)dirname);
+	if (!hLibintlDLL)
+	    return 0;
+    }
     for (i = 0; libintl_entry[i].name != NULL
 	    && libintl_entry[i].ptr != NULL; ++i)
     {
@@ -2033,12 +2057,7 @@ mch_check_win(
     int argc,
     char **argv)
 {
-    char	temp[256];
-
-    /* store the name of the executable, may be used for $VIM */
-    GetModuleFileName(NULL, temp, 255);
-    if (*temp != NUL)
-	exe_name = FullName_save((char_u *)temp, FALSE);
+    get_exe_name();
 
 #ifdef FEAT_GUI_W32
     return OK;	    /* GUI always has a tty */
@@ -3827,6 +3846,11 @@ mch_avail_mem(
  * extensions by appending a suffix that does not include ".".
  * Windows NT gets it right, however, with an SFN of "FOO~1.BAR".
  *
+ * There is another problem, which isn't really a bug but isn't right either:
+ * When renaming "abcdef~1.txt" to "abcdef~1.txt~", the short name can be
+ * "abcdef~1.txt" again.  This has been reported on Windows NT 4.0 with
+ * service pack 6.  Doesn't seem to happen on Windows 98.
+ *
  * Like rename(), returns 0 upon success, non-zero upon failure.
  * Should probably set errno appropriately when errors occur.
  */
@@ -3841,10 +3865,15 @@ mch_rename(
     HANDLE	hf;
 
     /*
-     * No need to play tricks if not running Windows 95
+     * No need to play tricks if not running Windows 95, unless the file name
+     * contains a "~" as the seventh character.
      */
     if (!mch_windows95())
-	return rename(pszOldFile, pszNewFile);
+    {
+	pszFilePart = (char *)gettail((char_u *)pszOldFile);
+	if (STRLEN(pszFilePart) < 8 || pszFilePart[6] != '~')
+	    return rename(pszOldFile, pszNewFile);
+    }
 
     /* Get base path of new file name.  Undocumented feature: If pszNewFile is
      * a directory, no error is returned and pszFilePart will be NULL. */

@@ -2738,8 +2738,8 @@ ui_focus_change(in_focus)
 im_save_status(psave)
     long *psave;
 {
-    /* Do save when IM is on, or IM is off and saved status is on */
-    if (im_get_status())
+    /* Do save when IM is on, or IM is off and saved status is on. */
+    if (vgetc_im_active)
 	*psave = B_IMODE_IM;
     else if (*psave == B_IMODE_IM)
 	*psave = B_IMODE_NONE;

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
+*various.txt*   For Vim version 6.0av.  Last change: 2001 Sep 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -188,7 +188,8 @@ g8			Print the hex values of the bytes used in the
 			To avoid this use: >
 				:silent !{cmd}
 <			The screen is not redrawn then, thus you have to use
-			CTRL-L if the command did display something.
+			CTRL-L or ":redraw!" if the command did display
+			something.
 			Also see |shell-window|.
 
 							*:!!*
@@ -414,7 +415,12 @@ N  *+X11*		Unix only: can restore window title |X11|
 				:if v:statusmsg != ""
 				:  " foobar.vim could not be found
 				:endif
-<
+<			When concatenating another command, the ":verbose"
+			only applies to the first one: >
+				:4verbose set verbose | set verbose
+<				  verbose=4 ~
+				  verbose=0 ~
+
 							*K*
 K			Run a program to lookup the keyword under the
 			cursor.  The name of the program is given with the
@@ -582,7 +588,7 @@ command:
 3. Printing						*printing*
 
 On MS-Windows Vim can print your text on any installed printer.  On other
-systems a PostScript file is produced.  This can be directly send to a
+systems a PostScript file is produced.  This can be directly sent to a
 PostScript printer.  For other printers a program like ghostscript needs to be
 used.
 
@@ -638,8 +644,8 @@ considerations:
 3.1 PostScript Printing
 							*E455* *E456* *E457*
 Provided you have enough disk space there should be no problems generating a
-PostScript file.  One file from the runtime files is used:
-$VIMRUNTIME/procset.ps.  If you do have problems check that this file exists.
+PostScript file.  You need to have the runtime files correctly installed (if
+you can find the help files, they probably are).
 
 There are currently a number of limitations with PostScript printing:
 
@@ -649,16 +655,178 @@ There are currently a number of limitations with PostScript printing:
 
 - 'printoptions' - The duplex setting is used when generating PostScript
   output, but it is up to the printer to take notice of the setting.  If the
-  printer does not support duplex printing then it will be silently ignored.
+  printer does not support duplex printing then it should be silently ignored.
+  Some printers, however, don't print at all.
 
-- EBCDIC - There is no explicit support for PostScript generation on EBCDIC
-  platforms.  If you keep to characters that translate to printable 7-bit
-  ASCII characters then translating the generated PostScript file to ASCII may
-  produce a file that will successfully print on a PostScript printer.
+- 8-bit and Multi-byte support - There is limited support for 8-bit character
+  set encodings.  It is based on the Latin-1 encoding, modified for the host
+  platform so that what is printed should match what VIM displays on screen.
+  There is no support for multi-byte character sets - the characters are
+  replaced with spaces.
 
-- 8-bit and Multi-byte support - There is no support for alternate 8-bit code
-  pages or multi-byte characters, just 7-bit ASCII.  Any multi-byte characters
-  in the file are printed as spaces.
+
+3.2 PostScript Printing Troubleshooting
+
+Usually the only sign of a problem when printing with PostScript is that your
+printout does not appear.  If you are lucky you may get a printed page that
+tells you the PostScript operator that generated the error that prevented the
+print job completing.
+
+There are a number of possible causes as to why the printing may have failed:
+
+- Paper size.  Some PostScript printers will abort printing a file if they do
+  not support the requested paper size.  By default VIM uses A4 paper.  Find
+  out what size paper your printer normally uses and set the appropriate paper
+  size with 'printoptions'.  If you cannot find the name of the paper used,
+  measure a sheet and compare it with the table of supported paper sizes listed
+  for 'printoptions', using the paper that is closest in both width AND height.
+  Note: The dimensions of actual paper may vary slightly from the ones listed.
+  If there is no paper listed close enough, then you may want to try psresize
+  from PSUtils, discussed below.
+
+- Two-sided printing (duplex).  Normally a PostScript printer that does not
+  support two-sided printing will ignore any request to do it.  However, some
+  printers may abort the job altogether.  Try printing with duplex turned off.
+
+- Collated printing.  As with Duplex printing, most PostScript printers that
+  do not support collating printouts will ignore a request to do so.  Some may
+  not.  Try printing with collation turned off.
+
+- Syntax highlighting.  Some print management code may prevent the generated
+  PostScript file from being printed on a black and white printer when syntax
+  highlighting is turned on, even if solid black is the only color used.  Try
+  printing with syntax highlighting turned off.
+
+A safe printoptions setting to try is: >
+
+	:set printoptions=paper:A4,duplex:off,collate:n,syntax:n
+
+Replace "A4" with the paper size that best matches your printer paper.
+
+
+3.3 PostScript Utilities
+
+3.3.1 Ghostscript
+
+Ghostscript is a PostScript and PDF interpreter that can be used to display
+and print on non-PostScript printers PostScript and PDF files.  It can also
+generate PDF files from PostScript.
+
+Ghostscript will run on a wide variety of platforms.
+
+There are three available versions:
+
+- AFPL Ghostscript (formerly Aladdin Ghostscript) which is free for
+  non-commercial use.  It can be obtained from:
+
+    http://www.cs.wisc.edu/~ghost/
+
+- GNU Ghostscript which is available under the GNU General Public License.  It
+  can be obtained from:
+
+    ftp://mirror.cs.wisc.edu/pub/mirrors/ghost/gnu/ 
+
+- A commercial version for inclusion in commercial products.
+
+Additional information on Ghostscript can also be found at:
+
+  http://www.ghostscript.com/
+
+Support for a number of non PostScript printers is provided in the
+distribution as standard, but if you cannot find support for your printer
+check the Ghostscript site for other printers not included by default.
+
+
+3.3.2 Ghostscript Previewers.
+
+The interface to Ghostscript is very primitive so a number of graphical front
+ends have been created.  These allow easier PostScript file selection,
+previewing at different zoom levels, and printing.  Check supplied
+documentation for full details.
+
+X11
+
+- Ghostview.  Obtainable from:
+
+    http://www.cs.wisc.edu/~ghost/gv/ 
+
+- gv.  Derived from Ghostview.  Obtainable from:
+
+    http://wwwthep.physik.uni-mainz.de/~plass/gv/ 
+  
+  Copies (possibly not the most recent) can be found at:
+
+    http://www.cs.wisc.edu/~ghost/gv/
+
+OpenVMS
+
+- gv-vms.  A port of gv to OpenVMS.  Obtainable from:	
+
+    ftp://axp.psl.ku.dk/decwindows/xaw3d/
+    ftp://ftp.wku.edu/vms/fileserv/x11kit.zip
+
+Windows and OS/2
+
+- GSview.  Obtainable from:
+
+    http://www.cs.wisc.edu/~ghost/gsview/ 
+
+DOS
+
+- ps_view.  Obtainable from:
+
+    ftp://ftp.pg.gda.pl/pub/TeX/support/ps_view/
+    ftp://ftp.dante.de/tex-archive/support/ps_view/ 
+
+Linux
+
+- GSview.  Linux version of the popular Windows and OS/2 previewer.
+  Obtainable from:
+
+    http://www.cs.wisc.edu/~ghost/gsview/ 
+
+- BMV.  Different to Ghostview and gv in that it doesn't use X but svgalib.
+  Obtainable from:
+
+    ftp://sunsite.unc.edu/pub/Linux/apps/graphics/viewers/svga/bmv-1.2.tgz 
+
+
+3.3.3 PSUtils
+
+PSUtils is a collection of utility programs for manipulating PostScript
+documents.  Binary distributions are available for many platforms, as well as
+the full source.  PSUtils can be found at:
+
+  http://www.dcs.ed.ac.uk/home/ajcd/psutils/
+
+Of particular interest in the collection is the psnup utility, which can take
+an existing PostScript file generated from VIM and convert it to an n-up
+version.  The simplest way to create a 2-up printout is to first create a
+PostScript file with: >
+
+	:hardcopy > test.ps
+
+Then on your command line execute: >
+
+	psnup -n 2 test.ps final.ps
+
+Note: You may get warnings from some Ghostscript previewers for files produced
+by psnup - these may safely be ignored.
+
+Finally print the file final.ps to your PostScript printer with yout
+platform's print command.  (You will need to delete the two PostScript files
+afterwards yourself.)  'printexpr' could be modified to perform this extra
+step before printing.
+
+Other utilities on interest include:
+
+- psselect.  Print defined pages or page ranges.
+- psresize.  Change the page size.
+- psbook.    Reorder and lay out pages ready for making a book.
+
+The output of one program can be used as the input to the next, allowing for
+complex print document creation.
+
 
 ==============================================================================
 4. Using Vim like less or more					*less*
@@ -677,4 +845,4 @@ highlighting.
 
 The "h" key will give you a short overview of the available comands.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0au.  Last change: 2001 Jul 28
+*fold.txt*      For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -118,7 +118,7 @@ be visible then.
 Note: Since the expression has to be evaluated for every line, this fold
 method can be very slow!
 
-Try to avoid the "=", "a" and "s" return values, since Vim oten has to search
+Try to avoid the "=", "a" and "s" return values, since Vim often has to search
 backwards for a line for which the fold level is defined.  Using foldlevel()
 can help here.  Example: >
 	" extra is level compared to previous line
@@ -428,6 +428,16 @@ EXECUTING COMMANDS ON FOLDS ~
 ==============================================================================
 3. Fold options					*fold-options*
 
+COLORS							*fold-colors*
+
+The colors of a closed fold are set with the Folded group |hl-Folded|.  The
+colors of the fold column are set with the FoldColumn group |hl-FoldColumn|.
+Example to set the colors: >
+
+	:highlight Folded guibg=grey guifg=blue
+	:highlight FoldColumn guibg=darkgrey guifg=white
+
+
 FOLDLEVEL						*fold-foldlevel*
 
 'foldlevel' is a number option: The higher the more folded regions are open.
@@ -553,4 +563,4 @@ used.  Otherwise the values from the window where the buffer was edited last
 are used.
 
 ==============================================================================
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

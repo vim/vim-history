@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0au.  Last change: 2001 Aug 23
+*cmdline.txt*   For Vim version 6.0av.  Last change: 2001 Sep 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -225,7 +225,7 @@ CTRL-_		a - switch between Hebrew and English keyboard mode, which is
 		command-line, searches, abbreviations, etc.  Applies only if
 		Vim is compiled with the |+rightleft| feature and the
 		'allowrevins' option is set.
-		See |rightleft.txt|.
+		See |rileft.txt|.
 
 		b - switch between Farsi and English keyboard mode, which is
 		private to the command-line and not related to fkmap.  In
@@ -417,18 +417,33 @@ line.  If you want to use '|' in an argument, precede it with '\'.
 
 These commands see the '|' as their argument, and can therefore not be
 followed by another command:
+    :argdo
     :autocmd
+    :bufdo
+    :command
+    :cscope
+    :debug
+    :folddoopen
+    :folddoclosed
     :global
+    :help
+    :helpfind
+    :make
     :normal
     :perl
     :perldo
+    :promptfind
+    :promptrepl
     :pyfile
     :python
+    :registers
     :read !
+    :scscope
     :tcl
     :tcldo
     :tclfile
     :vglobal
+    :windo
     :write !
     :[range]!
     a user defined command without the "-bar" argument |:command|
@@ -913,4 +928,4 @@ The character used for the pattern indicates the type of command-line:
 	@	string for |input()|
 	-	text for |:insert| or |:append|
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

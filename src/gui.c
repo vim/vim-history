@@ -161,7 +161,6 @@ gui_prepare(argc, argv)
 {
     gui.in_use = FALSE;		    /* No GUI yet (maybe later) */
     gui.starting = FALSE;	    /* No GUI yet (maybe later) */
-    gui.dofork = TRUE;		    /* default is to use fork() */
     gui_mch_prepare(argc, argv);
 }
 
@@ -2541,14 +2540,13 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 
 	/*
 	 * When 'mousemodel' is "popup", shift-left is translated to right.
+	 * But not when also using Ctrl.
 	 */
-	if (mouse_model_popup())
+	if (mouse_model_popup() && button == MOUSE_LEFT
+		&& (modifiers & MOUSE_SHIFT) && !(modifiers & MOUSE_CTRL))
 	{
-	    if (button == MOUSE_LEFT && (modifiers & MOUSE_SHIFT))
-	    {
-		button = MOUSE_RIGHT;
-		modifiers &= ~ MOUSE_SHIFT;
-	    }
+	    button = MOUSE_RIGHT;
+	    modifiers &= ~ MOUSE_SHIFT;
 	}
 
 	/* If the selection is done, allow the right button to extend it.

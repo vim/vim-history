@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 6.0au.  Last change: 2001 Sep 02
+*develop.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -374,4 +374,4 @@ int	    16, 32 or 64 bit signed
 unsigned    16, 32 or 64 bit unsigned
 long	    32 or 64 bit signed, can hold a pointer
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0au.  Last change: 2001 Sep 02
+*todo.txt*      For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,15 +29,15 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Check all readme files.
+
 9   When XIM is being used, sometimes one character is lost.  Probably when
     XIM has just been enabled.  For Irix this can be fixed by avoiding
     "@im=none", but then Ctrl keys stop working.  Disable XIM for SGI?
-    Does patch from David Harrison fix this?
-
-VisVim/VisVim.mak does not work with MSVC 5.0.
 
 
 Vi incompatibility:
+8   ":edit" without argument moves cursor to line 1.
 8   With undo/redo only marks in the changed lines should be changed.  Other
     marks should be kept.  Vi keeps each mark at the same text, even when it
     is deleted or restored. (Webb)
@@ -133,6 +133,8 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+7   Win32: When mouse is hidden and in the toolbar, moving it won't make it
+    appear. (Sami Salonen)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 8   When using two monitors, the code that checks/fixes the window size and
     position (e.g. when a font changes) doesn't work properly. (George Reilly)
@@ -151,6 +153,9 @@ Win32 GUI known bugs:
     button doesn't give popup menu.
     At the hit-enter prompt CTRL-Y doesn't work to copy the modeless
     selection.
+    On the command line, don't get a popup menu for the right mouse button.
+    Let the middle button paste selected text (not the clipboard but the
+    non-Visual selection)?  Otherwise CTRL-Y has to be used to copy the text.
 9   When there are more than 32767 lines, the scrollbar has a roundoff error.
     Clicking the up or down error scrolls two lines or more.  Looks like there
     is an extra event that reports the new position of the scrollbar.
@@ -230,7 +235,7 @@ Athena GUI:
 
 Motif GUI:
 8   Popup menu ordering is wrong.
-8   Accelerators don't work in a dialog.
+8   Accelerators don't work in a dialog.  Include patch from Martin Dalecki.
 8   The texts in the find/replace dialog don't use the right font.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
@@ -424,17 +429,23 @@ Macintosh:
 
 
 VMS:
-8   vimdiff doesn't work, because the diff output looks different.
+8   Vimdiff doesn't work, because the diff output looks different.  This makes
+    test 47 fail.
+8   Tests 21 fails on VAX.  Test 32 fails.
+8   GUI: "help vms" gives "E44: corrupted regexp program" error.  Only when
+    editing a file. (Arpadffy)
 
 
 "Small" problems:
+7   When 'showbreak' is set, the amount of space a Tab occupies changes.
+    Should work like 'showbreak' is inserted without changing the Tabs.
+7   When there is a "help.txt" window in a session file, restoring that
+    session will not get the "LOCAL ADDITIONS" back.
 8   ":hardcopy":
-    - Separate the machine independent and machine specific parts better. (Mike
-      Williams)
     - Need to handle unprintable characters.
     - ml_get error? (Xiangjiang Ma)
-    - On a B&W printer syntax highlighting isn't visible.  Perform dithering
-      to make grey text?
+    - Win32: On a B&W printer syntax highlighting isn't visible.  Perform
+      dithering to make grey text?
 8   In Visual block mode with 'lbr' set, a change command doesn't insert the
     text in following lines where the linebreak changes.
 9   dosinst.c: The DJGPP version can't uninstall the Uninstall registry key on
@@ -444,12 +455,10 @@ VMS:
     ATTENTION message, because the path in the swap file is different.  Using
     a relative path name will cause no ATTENTION for Vim 5.8.
     Somehow add a flag that the swap file is in the same dir as the file?
-7   When 'virtualedit' is used, moving with "$" and the "rx" still replaces
-    the whole block instead of until the end of the line in each line.
-8   When 'virtualedit' is set, selecting a block just after the end of the
-    line, "Ax<Esc>" doesn't position the "x" correctly in following lines.
 8   When 'virtualedit' is "block,insert" and encoding is "utf-8", selecting a
     block of one double-wide character, then "d" deletes only half of it.
+8   When 'virtualedit' is set, should "I" in blockwise visual mode also insert
+    in lines that don't extend into the block?
 8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
@@ -699,6 +708,8 @@ User Friendlier:
 8   Windows uninstall: Have uninstal.c delete the vimfiles directories that
     dosinst.c creates.  List the contents of the directory (recursively) if
     the user asks for it.  Requires an implementation of "rm -rf".
+8   Remember the name of the vimrc file that was used (~/.vimrc, $VIM/_vimrc,
+    $HOME/_vimrc, etc.) and add "edit vimrc" to the File menu.
 -   Add a way to save local settings and mappings into a new plugin file.
     ":mkplugin <file>"?
 8   Add ":plugininstall" command.  Can be used to install a plugin file that
@@ -730,7 +741,8 @@ Folding:
 -   When pressing the down arrow of a scrollbar, a closed fold doesn't scroll
     until after a long time.  How to make scrolling with closed folds
     smoother?
--   When a buffer becomes hidden, keep the manual folds for it?
+-   When creating a session, also store folds for buffers in the buffer list,
+    using the wininfo in wi_folds.
 -   'foldmethod' "textobject": fold on sections and paragraph text objects.
 -   Add 'hidecomment' option: don't display comments in /* */ and after //.
 -   "zu": undo change in manual fold. "zU" redo change in manual fold.  How to
@@ -783,7 +795,13 @@ Printing:
 -   Add "page width" to wrap long lines.
 -   Unix: Use some dialog box to do the obvious settings (paper size, printer
     name, portrait/landscape, etc).
--   PostScript: only works for 7-bit ASCII.
+-   PostScript: only works for 7-bit ASCII and EBCDIC.  Should support
+    different 'encoding' values somehow.
+-   Allow specifying the paper size, instead of using a standard size.  Same
+    units as for the margins.
+-   Support right-to-left text?
+8   Make the foreground color darkening function preserve the hue of the
+    color.
 
 
 Syntax highlighting:
@@ -995,7 +1013,8 @@ Built-in script language:
 	gettext()		Translate a message.  (Patch from Yasuhiro
 				Matsumoto) How to get the messages into the
 				.po files?
-7   Make bufname("'0") return the buffer name from mark '0.
+7   Make bufname("'0") return the buffer name from mark '0.  How to get the
+    column and line number?  col("'0") currently returns zero.
 8   argc() returns 0 when using "vim -t tag".  How to detect that no file was
     specified in any way?  To be able to jump to the last edited file.
 8   Pass the executable name to the Vim scripts in some way.  As v:argv0?
@@ -1686,6 +1705,8 @@ Insert mode:
 -   Make a command to line up a comment after a code line with a previous
     comment after a code line.	Can 'cindent' do this automatically?
 7   Add 'j' flag to 'formatoptions': Remove comment leader when joining lines.
+8   Add flag in 'formatoptions' to format Asian languages: Don't insert a
+    space when joining lines.
 -   formatting of struct/array inits:
     The lines used to initialize the struct or array above should not be
     considered 'continuation' lines just because the previous one does not end
@@ -2260,6 +2281,7 @@ Substitute:
 
 Mouse support:
 8   Add 'o' flag to 'mouse'?
+7   Be able to set a 'mouseshape' for the popup menu.
 8   Add 'mouse' flag, which sets a behavior like Visual mode, but automatic
     yanking at the button-up event.  Or like Select mode, but typing gets you
     out of Select mode, instead of replacing the text. (Bhaskar)
@@ -2323,6 +2345,7 @@ Various improvements:
     the command line?).  Use an ":echouser" command to display the message
     (truncated to fit in the space).
 7   Add %s to 'keywordprg': replace with word under the cursor. (Zellner)
+8   Make 'keywordprg' global-local.
 8   Support printing on Unix.  Can use "lpansi.c" as an example. (Bookout)
 8   Add put command that replaces the text under it.  Esp. for blockwise
     Visual mode.
@@ -2850,5 +2873,5 @@ portion of the total which were negative points.
 -110 (-136) stop changing Vim, it's fine as it is
 -117 (-122) remove functionality, there is too much of it
 
-vim:tw=78:sw=4:sts=4:
+vim:tw=78:sw=4:sts=4:ts=8:ft=help:norl:
 vim: set fo+=n :
