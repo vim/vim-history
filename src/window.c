@@ -1170,7 +1170,7 @@ make_windows(count, vertical)
      * Don't execute autocommands while creating the windows.  Must do that
      * when putting the buffers in the windows.
      */
-    ++autocmd_busy;
+    ++autocmd_block;
 #endif
 
     /* todo is number of windows left to create */
@@ -1192,7 +1192,7 @@ make_windows(count, vertical)
 	}
 
 #ifdef FEAT_AUTOCMD
-    --autocmd_busy;
+    --autocmd_block;
 #endif
 
     /* return actual number of windows */
