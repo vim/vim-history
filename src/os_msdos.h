@@ -21,6 +21,7 @@
 # include <fcntl.h>		/* defines _USE_LFN */
 # define USE_LONG_FNAME _USE_LFN    /* decide at run time */
 # define USE_FNAME_CASE
+# define HAVE_PUTENV
 #else
 # define SHORT_FNAME		/* always 8.3 file name */
 #endif
