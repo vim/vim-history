@@ -3383,7 +3383,7 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
     char_u	*already = NULL;
     char_u	*startp = NULL;
 #ifdef RISCOS
-    int		previous_munging = __uname_control;
+    int		previous_munging = __riscosify_control;
 #endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     win_T	*curwin_save = NULL;
@@ -3399,7 +3399,7 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 
 #ifdef RISCOS
     /* UnixLib knows best how to munge c file names - turn munging back on. */
-    __uname_control = __UNAME_LONG_TRUNC;
+    __riscosify_control = __RISCOSIFY_LONG_TRUNCATE;
 #endif
 
     if (type != CHECK_PATH && type != FIND_DEFINE
@@ -3995,7 +3995,7 @@ fpip_end:
 
 #ifdef RISCOS
    /* Restore previous file munging state. */
-    __uname_control = previous_munging;
+    __riscosify_control = previous_munging;
 #endif
 }
 
