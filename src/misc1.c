@@ -1887,12 +1887,14 @@ del_bytes(count, fixpos)
     {
 	/*
 	 * If we just took off the last character of a non-blank line, and
-	 * fixpos is TRUE, we don't want to end up positioned at the NUL,
-	 * unless we are in virtual mode.
+	 * fixpos is TRUE, we don't want to end up positioned at the NUL.
 	 */
-	if (col > 0 && fixpos && !virtual_active())
+	if (col > 0 && fixpos)
 	{
 	    --curwin->w_cursor.col;
+#ifdef FEAT_VIRTUALEDIT
+	    curwin->w_cursor.coladd = 0;
+#endif
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		curwin->w_cursor.col -=
