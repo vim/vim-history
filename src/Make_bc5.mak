@@ -284,7 +284,7 @@ OPT = $(OPT) -vi-
 # shouldn't have to change:
 LIB = $(BOR)\lib
 INCLUDE = $(BOR)\include;.;proto
-DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC -DHAVE_PATHDEF \
+DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DHAVE_PATHDEF \
 	  -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 
 !ifdef PERL

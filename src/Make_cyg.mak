@@ -91,7 +91,7 @@ endif
 ### See feature.h for a list of optionals.
 ### Any other defines can be included here.
 
-DEFINES = -DWIN32 -DPC -DHAVE_PATHDEF -DFEAT_$(FEATURES) \
+DEFINES = -DWIN32 -DHAVE_PATHDEF -DFEAT_$(FEATURES) \
 	  -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 INCLUDES = -mcpu=$(CPUNR) -march=$(ARCH) -Iproto
 

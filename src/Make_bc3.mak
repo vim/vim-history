@@ -164,7 +164,7 @@ vim.cfg: Make_bc3.mak
 -Iproto
 -I$(INCLUDEPATH)
 -L$(LIBPATH)
--DPC;MSDOS$(SPAWND)
+-DMSDOS$(SPAWND)
 | vim.cfg
 
 test:
