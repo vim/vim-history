@@ -5078,8 +5078,49 @@ EOF
   LDFLAGS=$ldflags_save
 fi
 
+echo $ac_n "checking for _xpg4_setrunelocale in -lxpg4""... $ac_c" 1>&6
+echo "configure:5083: checking for _xpg4_setrunelocale in -lxpg4" >&5
+ac_lib_var=`echo xpg4'_'_xpg4_setrunelocale | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lxpg4  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 5091 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char _xpg4_setrunelocale();
+
+int main() {
+_xpg4_setrunelocale()
+; return 0; }
+EOF
+if { (eval echo configure:5102: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  LIBS="$LIBS -lxpg4"
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+
 echo $ac_n "checking how to create tags""... $ac_c" 1>&6
-echo "configure:5083: checking how to create tags" >&5
+echo "configure:5124: checking how to create tags" >&5
 test -f tags && mv tags tags.save
 (eval etags	  /dev/null) < /dev/null 1>&5 2>&1 && TAGPRG="etags"
 (eval etags -c	  /dev/null) < /dev/null 1>&5 2>&1 && TAGPRG="etags -c"
@@ -5092,7 +5133,7 @@ test -f tags.save && mv tags.save tags
 echo "$ac_t""$TAGPRG" 1>&6 
 
 echo $ac_n "checking how to run man with a section nr""... $ac_c" 1>&6
-echo "configure:5096: checking how to run man with a section nr" >&5
+echo "configure:5137: checking how to run man with a section nr" >&5
 MANDEF="man"
 (eval man -s 2 read) < /dev/null > /dev/null 2>&5 && MANDEF="man -s"
 echo "$ac_t""$MANDEF" 1>&6
