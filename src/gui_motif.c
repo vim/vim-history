@@ -1000,8 +1000,8 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     int			butcount;
     static Widget	dialogbb = NULL;
     static Widget	dialogmessage = NULL;
-#define MAXBUT 10
-    Widget		dialogButton[MAXBUT];
+    Widget		*dialogButton;
+    int			vertical;
 
     if (title == NULL)
 	title = (char_u *)"Vim dialog";
@@ -1032,6 +1032,9 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    NULL);
     XmStringFree(label);
 
+    /* Check 'v' flag in 'guioptions': vertical button placement. */
+    vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
+
     /* Set the title of the Dialog window */
     label = XmStringCreateSimple((char *)title);
     if (label == NULL)
@@ -1039,7 +1042,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     XtVaSetValues(dialogbb,
 	    XmNdialogTitle, label,
 	    XmNhorizontalSpacing, 20,
-	    XmNverticalSpacing, 20,
+	    XmNverticalSpacing, vertical ? 0 : 20,
 	    NULL);
     XmStringFree(label);
 
@@ -1048,11 +1051,23 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     if (buts == NULL)
 	return -1;
 
+    /* Count the number of buttons and allocate dialogButton[]. */
+    butcount = 1;
+    for (p = buts; *p; ++p)
+	if (*p == DLG_BUTTON_SEP)
+	    ++butcount;
+    dialogButton = (Widget *)alloc((unsigned)(butcount * sizeof(Widget)));
+    if (dialogButton == NULL)
+    {
+	vim_free(buts);
+	return -1;
+    }
+
     /*
      * Create the buttons.
      */
     p = buts;
-    for (butcount = 0; butcount < MAXBUT; ++butcount)
+    for (butcount = 0; *p; ++butcount)
     {
 	for (next = p; *next; ++next)
 	{
@@ -1075,30 +1090,31 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		XmNtopWidget, dialogmessage,
 		NULL);
 	XmStringFree(label);
-	if (butcount == 0)
-	    XtVaSetValues(dialogButton[butcount],
-		    XmNleftAttachment, XmATTACH_FORM,
-		    NULL);
-	else
-	    XtVaSetValues(dialogButton[butcount],
-		    XmNleftAttachment, XmATTACH_WIDGET,
-		    XmNleftWidget, dialogButton[butcount - 1],
-		    NULL);
+	if (butcount)
+	{
+	    if (vertical)
+		XtVaSetValues(dialogButton[butcount],
+			XmNtopWidget, dialogButton[butcount - 1],
+			NULL);
+	    else
+		XtVaSetValues(dialogButton[butcount],
+			XmNleftAttachment, XmATTACH_WIDGET,
+			XmNleftWidget, dialogButton[butcount - 1],
+			NULL);
+	}
 
 	XtAddCallback(dialogButton[butcount], XmNactivateCallback,
 						butproc, (XtPointer)butcount);
-	if (*next == NUL)
-	    break;
 	p = next;
     }
-    ++butcount;
     vim_free(buts);
 
     if (dfltbutton < 1)
 	dfltbutton = 1;
     if (dfltbutton > butcount)
 	dfltbutton = butcount;
-    XtVaSetValues(dialogbb, XmNdefaultButton, dialogButton[dfltbutton - 1], NULL);
+    XtVaSetValues(dialogbb,
+	    XmNdefaultButton, dialogButton[dfltbutton - 1], NULL);
     XtManageChild(dialogbb);
 
     app = XtWidgetToApplicationContext(dialogbb);
@@ -1121,6 +1137,8 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	XtUnmanageChild(dialogButton[butcount]);
 	XtDestroyWidget(dialogButton[butcount]);
     }
+
+    vim_free(dialogButton);
 
     return dialogStatus;
 }
