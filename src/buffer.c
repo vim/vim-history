@@ -2712,6 +2712,10 @@ maketitle()
 		{
 		    while (p > buf + off + 1 && vim_ispathsep(p[-1]))
 			--p;
+#ifdef VMS
+		    /* path separator is part of the path */
+		    ++p;
+#endif
 		    *p = NUL;
 		}
 		/* translate unprintable chars */

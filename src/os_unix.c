@@ -1970,6 +1970,10 @@ mch_FullName(fname, buf, len, force)
     char_u	*p;
     int		retval = OK;
 
+#ifdef VMS
+    fname = vms_fixfilename(fname);
+#endif
+
     /* expand it if forced or not an absolute path */
     if (force || !mch_isFullName(fname))
     {
@@ -2088,11 +2092,7 @@ mch_FullName(fname, buf, len, force)
     if (retval == FAIL || STRLEN(buf) + STRLEN(fname) >= len)
 	return FAIL;
 
-#ifdef VMS
-    STRCAT(buf, vms_fixfilename(fname));
-#else
     STRCAT(buf, fname);
-#endif
 
     return OK;
 }
@@ -2108,9 +2108,10 @@ mch_isFullName(fname)
     return _fnisabs(fname);
 #else
 # ifdef VMS
-    return ( fname[0] == '/' || fname[0] == '.' || strchr((char *)fname, ':') ||
-	     strchr((char *)fname,'[') || strchr((char *)fname,']') ||
-	     strchr((char *)fname,'<') || strchr((char *)fname,'>')	 );
+    return ( fname[0] == '/'	       || fname[0] == '.'	    ||
+	     strchr((char *)fname,':') || strchr((char *)fname,'"') ||
+	    (strchr((char *)fname,'[') && strchr((char *)fname,']'))||
+	    (strchr((char *)fname,'<') && strchr((char *)fname,'>'))   );
 # else
     return (*fname == '/' || *fname == '~');
 # endif
@@ -2127,7 +2128,13 @@ mch_getperm(name)
 {
     struct stat statb;
 
-    if (stat((char *)name, &statb))
+    if (stat((char *)
+#ifdef VMS
+		    vms_fixfilename(name),
+#else
+		    name,
+#endif
+		    &statb))
 	return -1;
     return statb.st_mode;
 }
@@ -2142,7 +2149,13 @@ mch_setperm(name, perm)
     char_u  *name;
     long    perm;
 {
-    return (chmod((char *)name, (mode_t)perm) == 0 ? OK : FAIL);
+    return (chmod((char *)
+#ifdef VMS
+		    vms_fixfilename(name),
+#else
+		    name,
+#endif
+		    (mode_t)perm) == 0 ? OK : FAIL);
 }
 
 #if defined(HAVE_ACL) || defined(PROTO)

@@ -2333,9 +2333,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
-#ifdef VMS
-    char_u	    nfname[MAXPATHL];
-#endif
 					/* writing everything */
     int		    whole = (start == 1 && end == buf->b_ml.ml_line_count);
 #ifdef FEAT_AUTOCMD
@@ -3184,9 +3181,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
 
 #ifdef VMS
-    STRCPY(nfname, fname);
-    vms_remove_version(nfname); /* remove version */
-    fname = nfname;
+    vms_remove_version(fname); /* remove version */
 #endif
     /* Default: write the the file directly.  May write to a temp file for
      * multi-byte conversion. */
@@ -3722,14 +3717,8 @@ restore_backup:
     lnum -= start;	    /* compute number of written lines */
     --no_wait_return;	    /* may wait for return now */
 
-#ifndef UNIX
-# ifdef VMS
-    STRCPY(nfname, sfname);
-    vms_remove_version(nfname); /* remove version */
-    fname = nfname;
-# else
+#if !(defined(UNIX) || defined(VMS))
     fname = sfname;	    /* use shortname now, for the messages */
-# endif
 #endif
     if (!filtering)
     {
@@ -4799,7 +4788,6 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	STRCPY(retval, fname);
 #ifdef VMS
 	vms_remove_version(retval); /* we do not need versions here */
-	fnamelen = STRLEN(retval);  /* it can be shorter*/
 #endif
     }
 

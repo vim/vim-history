@@ -6443,9 +6443,6 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
 	    ffname = FullName_save((*file)[i], FALSE);
 	    if (ffname == NULL)		/* out of memory */
 		break;
-#ifdef VMS
-	    vms_remove_version(ffname);
-#endif
 	    if (match_file_list(p_wig, (*file)[i], ffname))
 	    {
 		/* remove this matching file from the list */
