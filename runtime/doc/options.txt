@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 02
+*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 05
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1814,7 +1814,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'indentexpr'.
 
 						*'define'* *'def'*
-'define' 'def'		string	(default "^#\s*define")
+'define' 'def'		string	(default "^\s*#\s*define")
 			global or local to buffer |global-local|
 			{not in Vi}
 	Pattern to be used to find a macro definition.	It is a search
@@ -3284,7 +3284,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	methods.  Use 'imdisable' to disable XIM then.
 
 						*'include'* *'inc'*
-'include' 'inc'		string	(default "^#\s*include")
+'include' 'inc'		string	(default "^\s*#\s*include")
 			global or local to buffer |global-local|
 			{not in Vi}
 			{not available when compiled without the
