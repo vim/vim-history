@@ -42,7 +42,10 @@ Icon icons\vim_16c.ico
 #DisabledBitmap icons\disabled.bmp
 UninstallText "This will uninstall Vim ${VER_MAJOR}.${VER_MINOR} from your system."
 UninstallIcon icons\vim_uninst_16c.ico
-BGGradient 004000 008200 FFFFFF
+
+# On NSIS 2 using the BGGradient causes trouble on Windows 98, in combination
+# with the BringToFront.
+# BGGradient 004000 008200 FFFFFF
 LicenseText "You should read the following before installing:"
 LicenseData ${VIMRT}\doc\uganda.nsis.txt
 
@@ -50,7 +53,8 @@ LicenseData ${VIMRT}\doc\uganda.nsis.txt
   !packhdr temp.dat "upx --best --compress-icons=1 temp.dat"
 !endif
 
-# This adds '\vim' to the user choice automagically.
+# This adds '\vim' to the user choice automagically.  The actual value is
+# obtained below with ReadINIStr.
 InstallDir "$PROGRAMFILES\Vim"
 
 # Types of installs we can perform:
@@ -59,6 +63,14 @@ InstType Minimal
 InstType Full
 
 SilentInstall normal
+
+# These are the pages we use
+Page license
+Page components
+Page directory "" "" CheckInstallDir
+Page instfiles
+UninstPage uninstConfirm
+UninstPage instfiles
 
 ##########################################################
 # Functions
@@ -85,7 +97,7 @@ Function .onInit
   ReadINIStr $INSTDIR $TEMP\vimini.ini vimini dir
   Delete $TEMP\vimini.ini
 
-  # If ReadINIStr failed for some reason, use default dir.
+  # If ReadINIStr failed or did not find a path: use the default dir.
   StrCmp $INSTDIR "" 0 IniOK
   StrCpy $INSTDIR "$PROGRAMFILES\Vim"
   IniOK:
@@ -114,11 +126,13 @@ Function .onUserAbort
   NoCancelAbort:
 FunctionEnd
 
-# Only enable the "Install" button if the install directory ends in "vim".
-Function .onVerifyInstDir
+# We only accept the directory if it ends in "vim".  Using .onVerifyInstDir has
+# the disadvantage that the browse dialog is difficult to use.
+Function CheckInstallDir
   StrCpy $0 $INSTDIR 3 -3
   StrCmp $0 "vim" PathGood
-      Abort
+    MessageBox MB_OK "The path must end in 'vim'."
+    Abort
   PathGood:
 FunctionEnd
 

@@ -130,6 +130,7 @@ static char	*(vimfiles_subdirs[]) =
     "colors",
     "compiler",
     "doc",
+    "ftdetect",
     "ftplugin",
     "indent",
     "keymap",
@@ -412,7 +413,9 @@ get_vim_env(void)
 	    if (default_vim_dir != NULL)
 		vim = default_vim_dir;
 	    else
-		vim = "C:\\Vim";
+		/* Let NSIS know there is no default, it should use
+		 * $PROGRAMFIlES. */
+		vim = "";
 	}
     }
 
