@@ -138,7 +138,6 @@ static void	ex_win_close __ARGS((exarg_T *eap, win_T *win));
 static void	ex_only __ARGS((exarg_T *eap));
 static void	ex_all __ARGS((exarg_T *eap));
 static void	ex_resize __ARGS((exarg_T *eap));
-static void	ex_splitview __ARGS((exarg_T *eap));
 static void	ex_stag __ARGS((exarg_T *eap));
 #else
 # define ex_close		ex_ni
@@ -5537,7 +5536,7 @@ ex_wrongmodifier(eap)
  * :vnew [[+command] file]	split vertically window with no or new file
  * :sfind [+command] file	split window with file in 'path'
  */
-    static void
+    void
 ex_splitview(eap)
     exarg_T	*eap;
 {

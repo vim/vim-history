@@ -921,6 +921,16 @@ static int alist_add_list __ARGS((int count, char_u **files, int after));
 #define AL_DEL	3
 
 /*
+ * Redefine the argument list.
+ */
+    void
+set_arglist(str)
+    char_u	*str;
+{
+    do_arglist(str, AL_SET, 0);
+}
+
+/*
  * "what" == AL_SET: Redefine the argument list to 'str'.
  * "what" == AL_ADD: add files in 'str' to the argument list after "after".
  * "what" == AL_DEL: remove files in 'str' from the argument list.
