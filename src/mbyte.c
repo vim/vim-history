@@ -5284,6 +5284,7 @@ im_get_status()
  * vcp->vc_type must have been initialized to CONV_NONE.
  * Note: cannot be used for conversion from/to ucs-2 and ucs-4 (will use utf-8
  * instead).
+ * Afterwards invoke with "from" and "to" equal to NULL to cleanup.
  * Return FAIL when conversion is not supported, OK otherwise.
  */
     int
@@ -5371,6 +5372,8 @@ convert_setup(vcp, from, to)
     return OK;
 }
 
+#if defined(FEAT_GUI) || defined(AMIGA) || defined(WIN3264) \
+	|| defined(MSDOS) || defined(PROTO)
 /*
  * Do conversion on typed input characters in-place.
  * The input and output are not NUL terminated!
@@ -5384,6 +5387,7 @@ convert_input(ptr, len, maxlen)
 {
     return convert_input_safe(ptr, len, maxlen, NULL, NULL);
 }
+#endif
 
 /*
  * Like convert_input(), but when there is an incomplete byte sequence at the
@@ -5428,25 +5432,37 @@ convert_input_safe(ptr, len, maxlen, restp, restlenp)
 }
 
 #if defined(MACOS_X)
-static char_u *mac_string_convert __ARGS((char_u *ptr, int len, int *lenp, int fail_on_error, CFStringEncoding from, CFStringEncoding to));
+static char_u *mac_string_convert __ARGS((char_u *ptr, int len, int *lenp, int fail_on_error, CFStringEncoding from, CFStringEncoding to, int *unconvlenp));
 
 /*
- * A Mac version of string_convert() for special cases.
+ * A Mac version of string_convert_ext() for special cases.
  */
     static char_u *
-mac_string_convert(ptr, len, lenp, fail_on_error, from, to)
+mac_string_convert(ptr, len, lenp, fail_on_error, from, to, unconvlenp)
     char_u		*ptr;
     int			len;
     int			*lenp;
     int			fail_on_error;
     CFStringEncoding	from;
     CFStringEncoding	to;
+    int			*unconvlenp;
 {
     char_u		*retval, *d;
     CFStringRef		cfstr;
     int			buflen, in, out, l, i;
 
+    if (unconvlenp != NULL)
+	*unconvlenp = 0;
     cfstr = CFStringCreateWithBytes(NULL, ptr, len, from, 0);
+    /* When conversion failed, try excluding bytes from the end, helps when
+     * there is an incomplete byte sequence.  Only do up to 6 bytes to avoid
+     * looping a long time when there really is something unconvertable. */
+    while (cfstr == NULL && unconvlenp != NULL && len > 1 && *unconvlenp < 6)
+    {
+	--len;
+	++*unconvlenp;
+	cfstr = CFStringCreateWithBytes(NULL, ptr, len, from, 0);
+    }
     if (cfstr == NULL)
 	return NULL;
     if (to == kCFStringEncodingUTF8)
@@ -5626,25 +5642,29 @@ string_convert_ext(vcp, ptr, lenp, unconvlenp)
 	case CONV_MAC_LATIN1:
 	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingMacRoman,
-					kCFStringEncodingISOLatin1);
+					kCFStringEncodingISOLatin1,
+					unconvlenp);
 	    break;
 
 	case CONV_LATIN1_MAC:
 	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingISOLatin1,
-					kCFStringEncodingMacRoman);
+					kCFStringEncodingMacRoman,
+					unconvlenp);
 	    break;
 
 	case CONV_MAC_UTF8:
 	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingMacRoman,
-					kCFStringEncodingUTF8);
+					kCFStringEncodingUTF8,
+					unconvlenp);
 	    break;
 
 	case CONV_UTF8_MAC:
 	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingUTF8,
-					kCFStringEncodingMacRoman);
+					kCFStringEncodingMacRoman,
+					unconvlenp);
 	    break;
 # endif
 
