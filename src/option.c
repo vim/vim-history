@@ -5994,6 +5994,25 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	paste_option_changed();
     }
 
+    /* when 'insertmode' is set from an autocommand need to do work here */
+    else if ((int *)varp == &p_im)
+    {
+	if (p_im)
+	{
+	    if ((State & INSERT) == 0)
+		need_start_insertmode = TRUE;
+	    stop_insert_mode = FALSE;
+	}
+	else
+	{
+	    need_start_insertmode = FALSE;
+	    stop_insert_mode = TRUE;
+	    if (p_smd && restart_edit != 0)
+		clear_cmdline = TRUE;	/* remove "(insert)" */
+	    restart_edit = 0;
+	}
+    }
+
     /* when 'ignorecase' is set or reset and 'hlsearch' is set, redraw */
     else if ((int *)varp == &p_ic && p_hls)
     {
