@@ -17,6 +17,7 @@ static int win_comp_pos __ARGS((void));
 static void win_exchange __ARGS((long));
 static void win_rotate __ARGS((int, int));
 static void win_goto __ARGS((WIN *wp));
+static void win_enter_ext __ARGS((WIN *wp, int undo_sync, int no_curwin));
 static void win_append __ARGS((WIN *, WIN *));
 static void win_remove __ARGS((WIN *));
 static void win_new_height __ARGS((WIN *, int));
@@ -871,6 +872,7 @@ close_window(win, free_buf)
 #ifdef AUTOCMD
     int	    other_buffer = FALSE;
 #endif
+    int	    close_curwin = FALSE;
 
     if (lastwin == firstwin)
     {
@@ -932,13 +934,19 @@ close_window(win, free_buf)
 
     win_new_height(wp, wp->w_height + win->w_height + win->w_status_height);
     win_free(win);
+
+    /* Make sure curwin isn't invalid.  It can cause severe trouble when
+     * printing an error message. */
     if (win == curwin)
-	curwin = NULL;
+    {
+	curwin = wp;
+	close_curwin = TRUE;
+    }
     if (p_ea)
 	win_equal(wp, FALSE);
-    if (curwin == NULL)
+    if (close_curwin)
     {
-	win_enter(wp, FALSE);
+	win_enter_ext(wp, FALSE, TRUE);
 #ifdef AUTOCMD
 	if (other_buffer)
 	    /* careful: after this wp and win may be invalid! */
@@ -1106,22 +1114,35 @@ win_goto_nr(winnr)
 
 /*
  * Make window wp the current window.
- * Can be called when curwin == NULL, if curwin already has been closed.
  */
     void
 win_enter(wp, undo_sync)
-    WIN	    *wp;
-    int	    undo_sync;
+    WIN		*wp;
+    int		undo_sync;
+{
+    win_enter_ext(wp, undo_sync, FALSE);
+}
+
+/*
+ * Make window wp the current window.
+ * Can be called with "curwin_invalid" TRUE, which means that curwin has just
+ * been closed and isn't valid.
+ */
+    static void
+win_enter_ext(wp, undo_sync, curwin_invalid)
+    WIN		*wp;
+    int		undo_sync;
+    int		curwin_invalid;
 {
 #ifdef AUTOCMD
     int		other_buffer = FALSE;
 #endif
 
-    if (wp == curwin)		/* nothing to do */
+    if (wp == curwin && !curwin_invalid)	/* nothing to do */
 	return;
 
 #ifdef AUTOCMD
-    if (curwin != NULL)
+    if (!curwin_invalid)
     {
 	/*
 	 * Be careful: If autocommands delete the window, return now.
@@ -1145,7 +1166,7 @@ win_enter(wp, undo_sync)
 	/* may have to copy the buffer options when 'cpo' contains 'S' */
     if (wp->w_buffer != curbuf)
 	buf_copy_options(curbuf, wp->w_buffer, BCO_ENTER | BCO_NOHELP);
-    if (curwin != NULL)
+    if (!curwin_invalid)
     {
 	prevwin = curwin;	/* remember for CTRL-W p */
 	curwin->w_redr_status = TRUE;
