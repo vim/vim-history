@@ -3369,6 +3369,27 @@ expand_filename(eap, cmdlinep, errormsgp)
 	    continue;
 	}
 
+#ifdef UNIX
+	/* For Unix there is a check for a single file name below.  Need to
+	 * escape white space et al. with a backslash. */
+	if ((eap->argt & NOSPC) && !eap->usefilter)
+	{
+	    char_u	*l;
+
+	    for (l = repl; *l; ++l)
+		if (vim_strchr(escape_chars, *l) != NULL)
+		{
+		    l = vim_strsave_escaped(repl, escape_chars);
+		    if (l != NULL)
+		    {
+			vim_free(repl);
+			repl = l;
+		    }
+		    break;
+		}
+	}
+#endif
+
 	p = repl_cmdline(eap, p, srclen, repl, cmdlinep);
 	vim_free(repl);
 	if (p == NULL)
@@ -3390,7 +3411,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 	{
 	    if (n == 2)
 	    {
-#if defined(UNIX)
+#ifdef UNIX
 		/*
 		 * Only for Unix we check for more than one file name.
 		 * For other systems spaces are considered to be part
