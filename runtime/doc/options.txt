@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Mar 22
+*options.txt*	For Vim version 6.2.  Last change: 2004 Mar 30
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -6275,9 +6275,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 				*'viminfo'* *'vi'* *E526* *E527* *E528*
 'viminfo' 'vi'		string	(Vi default: "", Vim default for MS-DOS,
-				   Windows and OS/2: '20,"50,s10,h,rA:,rB:,
-				   for Amiga: '20,"50,s10,h,rdf0:,rdf1:,rdf2:
-				   for others: '20,"50,s10,h)
+				   Windows and OS/2: '20,<50,s10,h,rA:,rB:,
+				   for Amiga: '20,<50,s10,h,rdf0:,rdf1:,rdf2:
+				   for others: '20,<50,s10,h)
 			global
 			{not in Vi}
 			{not available when compiled without the  |+viminfo|
@@ -6295,11 +6295,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 		with an uppercase letter, and don't contain a lowercase
 		letter.  Thus "KEEPTHIS and "K_L_M" are stored, but "KeepThis"
 		and "_K_L_M" are not.
-	"	Maximum number of lines saved for each register.  If zero then
-		registers are not saved.  When not included, all lines are
-		saved.	Dont forget to put a backslash before the ", otherwise
-		it will be recognized as the start of a comment!
-		Also see the 's' item below: limit specified in Kbyte.
+	"	Maximum number of lines saved for each register.  Old name of
+		the '<' item, with the disadvantage that you need to put a
+		backslash before the ", otherwise it will be recognized as the
+		start of a comment!
 	%	When included, save and restore the buffer list.  If Vim is
 		started with a file name argument, the buffer list is not
 		restored.  If Vim is started without a file name argument, the
@@ -6317,6 +6316,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 		'history' is used.
 	:	Maximum number of items in the command-line history to be
 		saved.	When not included, the value of 'history' is used.
+	<	Maximum number of lines saved for each register.  If zero then
+		registers are not saved.  When not included, all lines are
+		saved.  '"' is the old name for this item.
+		Also see the 's' item below: limit specified in Kbyte.
 	@	Maximum number of items in the input-line history to be
 		saved.	When not included, the value of 'history' is used.
 	c	When included, convert the text in the viminfo file from the
@@ -6345,14 +6348,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 	s	Maximum size of an item in Kbyte.  If zero then registers are
 		not saved.  Currently only applies to registers.  The default
 		"s10" will exclude registers with more than 10 Kbyte of text.
-		Also see the '"' item above: line count limit.
+		Also see the '<' item above: line count limit.
 
 	Example: >
-	    :set viminfo='50,\"1000,s100,:0,n~/vim/viminfo
+	    :set viminfo='50,<1000,s100,:0,n~/vim/viminfo
 <
 	'50		Marks will be remembered for the last 50 files you
 			edited.
-	"1000		Contents of registers (up to 1000 lines each) will be
+	<1000		Contents of registers (up to 1000 lines each) will be
 			remembered.
 	s100		Registers with more than 100 Kbyte text are skipped.
 	:0		Command-line history will not be saved.

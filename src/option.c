@@ -2178,13 +2178,13 @@ static struct vimoption
 #ifdef FEAT_VIMINFO
 			    (char_u *)&p_viminfo, PV_NONE,
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)
-			    {(char_u *)"", (char_u *)"'20,\"50,s10,h,rA:,rB:"}
+			    {(char_u *)"", (char_u *)"'20,<50,s10,h,rA:,rB:"}
 #else
 # ifdef AMIGA
 			    {(char_u *)"",
-				 (char_u *)"'20,\"50,s10,h,rdf0:,rdf1:,rdf2:"}
+				 (char_u *)"'20,<50,s10,h,rdf0:,rdf1:,rdf2:"}
 # else
-			    {(char_u *)"", (char_u *)"'20,\"50,s10,h"}
+			    {(char_u *)"", (char_u *)"'20,<50,s10,h"}
 # endif
 #endif
 #else
@@ -5049,7 +5049,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	for (s = p_viminfo; *s;)
 	{
 	    /* Check it's a valid character */
-	    if (vim_strchr((char_u *)"!\"%'/:@cfhnrs", *s) == NULL)
+	    if (vim_strchr((char_u *)"!\"%'/:<@cfhnrs", *s) == NULL)
 	    {
 		errmsg = illegal_char(errbuf, *s);
 		break;

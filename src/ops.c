@@ -5057,7 +5057,10 @@ write_viminfo_registers(fp)
 
     fprintf(fp, _("\n# Registers:\n"));
 
-    max_num_lines = get_viminfo_parameter('"');
+    /* Get '<' value, use old '"' value if '<' is not found. */
+    max_num_lines = get_viminfo_parameter('<');
+    if (max_num_lines < 0)
+	max_num_lines = get_viminfo_parameter('"');
     if (max_num_lines == 0)
 	return;
     max_kbyte = get_viminfo_parameter('s');
