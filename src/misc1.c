@@ -2055,10 +2055,6 @@ del_bytes(count, fixpos)
     colnr_T	col = curwin->w_cursor.col;
     int		was_alloced;
     long	movelen;
-#ifdef FEAT_MBYTE
-    int		p0, p1, p2;
-    int		p0len, p1len, p2len;
-#endif
 
     oldp = ml_get(lnum);
     oldlen = (int)STRLEN(oldp);
@@ -2070,31 +2066,24 @@ del_bytes(count, fixpos)
 	return FAIL;
 
 #ifdef FEAT_MBYTE
-    if (p_deco && enc_utf8)
+    /* If 'delcombine' is set and deleting (less than) one character, only
+     * delete the last combining character. */
+    if (p_deco && enc_utf8 && (*mb_ptr2len_check)(oldp + col) <= count)
     {
-	p1 = p2 = 0;
-	/* see if there are any combining characters: */
-	p0 = utfc_ptr2char(oldp + col, &p1, &p2);
-	p0len = utf_char2len(p0);
-	p1len = p1 != 0 ? utf_char2len(p1) : 0;
-	p2len = p2 != 0 ? utf_char2len(p2) : 0;
+	int	c1, c2;
+	int	n;
 
-	/* don't try anything if trying to del more than one 'char' */
-	if ((count <= (p0len + p1len + p2len)) && p1 != 0)
+	(void)utfc_ptr2char(oldp + col, &c1, &c2);
+	if (c1 != NUL)
 	{
-	    /* We are here because there are combining characters; either
-	     * p1, p2 or both.  We need to remove just that character, and
-	     * leave the cursor where it was. */
-
-	    /* since p1 is always valid, adjust for it */
-	    col += p0len;
-	    count = p1len;
-	    if (p2 != 0)
+	    /* Find the last composing char, there can be several. */
+	    n = col;
+	    do
 	    {
-		/* p2 is valid, so remove it instead of p1 */
-		col += p1len;
-		count = p2len;
-	    }
+		col = n;
+		count = utf_ptr2len_check(oldp + n);
+		n += count;
+	    } while (UTF_COMPOSINGLIKE(oldp + col, oldp + n));
 	    fixpos = 0;
 	}
     }
