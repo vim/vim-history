@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0ah.  Last change: 2000 Sep 1
+*os_vms.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL
@@ -134,6 +134,8 @@ Set up some symbols: >
 	$ !gvi starts Vim in GUI mode.
 	$ gv*im :== spawn/nowait mcr device:<path>VIM.EXE -g
 
+Please, check the notes for customization and configuration of symbols.  
+
 Create .vimrc and .gvimrc files in your home directory (SYS$LOGIN).
 
 The easiest way is just rename example files. You may leave the menu file
@@ -159,8 +161,8 @@ You can check that everything is on the right place with the :version command.
 Example LOGIN.COM: >
 
 	$ define/nolog VIM RF10:[UTIL.VIM]
-	$ vi*m  :== mcr VIM:VIM.EXE
-	$ gv*im :== spawn/nowait mcr VIM:VIM.EXE -g
+	$ vi*m :== mcr VIM:VIM.EXE
+	$ gv*im:== spawn/nowait/input=NLA0 mcr VIM:VIM.EXE -g -GEOMETRY 80x40
 	$ set disp/create/node=192.168.5.223/trans=tcpip
 
 Note: This set-up should be enough, if you are working on standalone server or
@@ -203,7 +205,7 @@ VMS is not a native X window environment, so you can not start Vim in GUI mode
    type: help set disp in VMS prompt.
    Examples: >
 
-	$ set disp/create/node=192.168.5.159             ! default trans is DECnet
+	$ set disp/create/node=192.168.5.159		 ! default trans is DECnet
 	$ set disp/create/node=192.168.5.159/trans=tcpip ! TCP/IP network
 	$ set disp/create/node=192.168.5.159/trans=local ! display on the same node
 
@@ -245,7 +247,7 @@ input/output redirection like Unix (<infile >outfile), you could use >
 Vim is saving files into a new file with the next higher file version
 number, try these settings. >
 
-	:set nobackup        " does not create *.*_ backup files
+	:set nobackup	     " does not create *.*_ backup files
 	:set nowritebackup   " does not have any purpose on VMS. It's default.
 
 Recovery is working perfect as well from the default swap file.
@@ -412,23 +414,43 @@ up $TMP logical which should point to some temporary directory and logical
 SYS$PRINT to your default print queue.
 Example: >
 
-        $define SYS$PRINT HP5ANSI
+	$define SYS$PRINT HP5ANSI
 
 You can print out whole buffer or just the marked area.
 
 (Zoltan Arpadffy, <arpadffy@altavista.net> Vim 6.0c)
 
+8.10 Setting up the symbols
+
+When I use GVIM this way and press CTRL-Y in the parent terminal, gvim exits. 
+I now use a different symbol that seems to work OK and fixes the problem.
+I suggest this instead: >
+	
+	$ GV*IM:==SPAWN/NOWAIT/INPUT=NLA0: MCR VIM:VIM.EXE -G -GEOMETRY 80X40
+
+The /INPUT=NLA0: separates the standard input of the gvim process from the 
+parent terminal, to block signals from the parent window.
+Without the -GEOMETRY, the GVIM window size will be minimal and the menu
+will be confused after a window-resize.
+
+(Coen Engelbarts, <@hotmail.com> Vim 6.0ac)
+
 ==============================================================================
 
 9. VMS related changes					*vms-changes*
 
-Version 6.0 (2001 Apr 26)
+Version 6.0 (2001 May 29)
+- Unix and VMS code has been merged
+	- separated "really" VMS related code
+	- included all possible Unix functionality
+	- simplified or deleted the configuration files
+	- makefile MAKE_VMS.MMS reviewed
 - menu changes (fixed printing, CTAGS and XXD usage)
 - created OS_VMS_FILTER.COM - DECC->VAXC pre-processor directive convert
   script.
 - changed quickfix parameters:
-        - errormessage format to suite DECC
-        - search, make and other commands to suite VMS system
+	- errormessage format to suite DECC
+	- search, make and other commands to suite VMS system
 - updated and renamed MMS make files for Vim and CTAGS.
 - CTAGS has been removed from source distribution of Vim but it will remain 
   in OpenVMS binary distributions.

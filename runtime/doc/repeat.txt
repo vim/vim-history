@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0ah.  Last change: 2001 May 12
+*repeat.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -341,7 +341,7 @@ To enter debugging mode use one of these methods:
 2. Run a command with ":debug" prepended.  Debugging will only be done while
    this command executes.  Useful for debugging a specific script or user
    function.  And for scripts and fuctions used by autocommands.  Example: >
-   	:debug edit test.txt.gz
+	:debug edit test.txt.gz
 
 3. Set a breakpoint in a sourced file or user function.  You could do this in
    the command line: >

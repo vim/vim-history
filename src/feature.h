@@ -706,7 +706,7 @@
 #endif
 #if defined(FEAT_GUI_DIALOG) && \
 	(defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
-	 || defined(FEAT_GUI_GTK))
+	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32))
 # define FEAT_GUI_TEXTDIALOG
 #endif
 

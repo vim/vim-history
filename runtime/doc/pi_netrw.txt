@@ -1,4 +1,4 @@
-*pi_netrw.txt*   For Vim version 6.0ah.  Last change: 2000 Oct 29
+*pi_netrw.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -43,8 +43,8 @@ http is supported read-only.
     :Nread http://machine/path					wget
 
 	(*) transparent file transfer: i.e. vim rcp://machine/path
-	                                    :r  ftp://machine/path
-	                                    :w  ftp://machine/path
+					    :r	ftp://machine/path
+					    :w	ftp://machine/path
 
 	(**) if <.netrc> is present, it is assumed that it will
 	     work with your ftp client.  Otherwise the script will
@@ -61,11 +61,17 @@ The ftp transfers can make use of the optional <.netrc> file.  The typical
 syntax for lines in a <.netrc> file is given as shown below. >
 
 	machine {full machine name} login {user-id} password "{password}"
-	default                     login {user-id} password "{password}"
+	default			    login {user-id} password "{password}"
 
 Your ftp client must handle the use of <.netrc> on its own, but if the
 <.netrc> file exists, an ftp transfer will not ask for the user-id or
 password.
+
+	Note:
+	Since this file contains passwords, make very sure nobody else can
+	read this file!  Most programs will refuse to use a .netrc that is
+	readable for others.  Don't forget that the system administrator can
+	still read the file!
 
 
 PASSWORD						*netrw-passwd*
@@ -75,7 +81,7 @@ explicitly specified both foreground and background colors for Normal
 highlighting (see following example) >
 
   hi Normal      term=NONE cterm=NONE gui=NONE  start=<Esc>[m<Esc>[1;32;m
-  \              stop=t_me   guifg=green      guibg=navyblue  ctermfg=2
+  \		 stop=t_me   guifg=green      guibg=navyblue  ctermfg=2
 
 then the script can use those colors to keep the password request
 "invisible".  See |netrw-uidpass| for how to change the password after

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ah.  Last change: 2001 May 22
+*change.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -646,7 +646,7 @@ magic	nomagic	  action    ~
 
 Examples: >
   :s/a\|b/xxx\0xxx/g		 modifies "a b"	     to "xxxaxxx xxxbxxx"
-  :s/\([abc]\)\([efg]\)/\2\1/g 	 modifies "af fa bg" to "fa fa gb"
+  :s/\([abc]\)\([efg]\)/\2\1/g	 modifies "af fa bg" to "fa fa gb"
   :s/abcde/abc^Mde/		 modifies "abcde"    to "abc", "de" (two lines)
   :s/$/\^M/			 modifies "abcde"    to "abcde^M"
 
@@ -772,7 +772,7 @@ inside of strings can change!  Also see 'softtabstop' option. >
 			[count] times.  {Vi: no count}
 
 							*P*
-["x]P		    	Put the text [from register x] before the cursor
+["x]P			Put the text [from register x] before the cursor
 			[count] times.  {Vi: no count}
 
 							*<MiddleMouse>*

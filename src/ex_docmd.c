@@ -8692,7 +8692,7 @@ static int filetype_plugin = FALSE;
 static int filetype_indent = FALSE;
 
 /*
- * ":filetype [plugin] [indent] {on,off}"
+ * ":filetype [plugin] [indent] {on,off,detect}"
  * on: Load the filetype.vim file to install autocommands for file types.
  * off: Load the ftoff.vim file to remove all autocommands for file types.
  * plugin on: load filetype.vim and ftplugin.vim
@@ -8735,19 +8735,27 @@ ex_filetype(eap)
 	}
 	break;
     }
-    if (STRCMP(arg, "on") == 0)
+    if (STRCMP(arg, "on") == 0 || STRCMP(arg, "detect") == 0)
     {
-	cmd_runtime((char_u *)FILETYPE_FILE, TRUE);
-	filetype_detect = TRUE;
-	if (plugin)
+	if (*arg == 'o' || !filetype_detect)
 	{
-	    cmd_runtime((char_u *)FTPLUGIN_FILE, TRUE);
-	    filetype_plugin = TRUE;
+	    cmd_runtime((char_u *)FILETYPE_FILE, TRUE);
+	    filetype_detect = TRUE;
+	    if (plugin)
+	    {
+		cmd_runtime((char_u *)FTPLUGIN_FILE, TRUE);
+		filetype_plugin = TRUE;
+	    }
+	    if (indent)
+	    {
+		cmd_runtime((char_u *)INDENT_FILE, TRUE);
+		filetype_indent = TRUE;
+	    }
 	}
-	if (indent)
+	if (*arg == 'd')
 	{
-	    cmd_runtime((char_u *)INDENT_FILE, TRUE);
-	    filetype_indent = TRUE;
+	    (void)do_doautocmd((char_u *)"filetypedetect BufRead", TRUE);
+	    do_modelines();
 	}
     }
     else if (STRCMP(arg, "off") == 0)
@@ -9202,31 +9210,31 @@ get_lang_arg(xp, idx)
 
 #ifdef FEAT_SYN_HL
 static const unsigned long  cterm_color[2][16] = {
-    {0x808080UL,
-    0xff6060UL,
+   {0x808080UL,
+    0x6060ffUL,
     0x00ff00UL,
-    0xffff00UL,
-    0x8080ffUL,
-    0xff40ffUL,
     0x00ffffUL,
+    0xff8080UL,
+    0xff40ffUL,
+    0xffff00UL,
     0xffffffUL,
     0, 0, 0, 0, 0, 0, 0, 0},
 
-    {0x000000UL,
-    0xc00000UL,
-    0x008000UL,
-    0x804000UL,
+   {0x000000UL,
     0x0000c0UL,
+    0x008000UL,
+    0x004080UL,
+    0xc00000UL,
     0xc000c0UL,
-    0x008080UL,
+    0x808000UL,
     0xc0c0c0UL,
     0x808080UL,
-    0xff6060UL,
+    0x6060ffUL,
     0x00ff00UL,
-    0xffff00UL,
-    0x8080ffUL,
-    0xff40ffUL,
     0x00ffffUL,
+    0xff8080UL,
+    0xff40ffUL,
+    0xffff00UL,
     0xffffffUL}
 };
 
@@ -9794,6 +9802,9 @@ mch_print_cleanup()
 	fclose(s_ps_file);
 }
 
+static int to_device_units __ARGS((int idx, int dpi, int physsize, int offset));
+static int mch_print_get_cpl __ARGS((int *yChar_out, int *number_width_out));
+static int mch_print_get_lpp __ARGS((int yCharsize));
 
     static int
 to_device_units(idx, dpi, physsize, offset)
@@ -10004,11 +10015,15 @@ mch_print_set_bg(bgcol)
 mch_print_set_fg(fgcol)
     unsigned long fgcol;
 {
-    (void)fprintf(s_ps_file, "%1.2f %1.2f %1.2f setrgbcolor\n",
-		  (float) ((fgcol & 0xff0000) >> 16) / 255,
-		  (float) ((fgcol & 0xff00) >> 8) / 255,
-		  (float) (fgcol & 0xff) / 255
-		  );
+    int	    r, g, b;
+
+    r = (fgcol & 0xff0000) >> 16;
+    g = (fgcol & 0xff00) >> 8;
+    b = fgcol & 0xff;
+    (void)fprintf(s_ps_file, "%d.%02d %d.%02d %d.%02d setrgbcolor\n",
+		  r / 255, (r * 100 + 127) / 255 % 100,
+		  g / 255, (g * 100 + 127) / 255 % 100,
+		  b / 255, (b * 100 + 127) / 255 % 100);
 }
 
 

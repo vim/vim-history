@@ -20,8 +20,14 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+
+#ifdef VAXC
+# include <types.h>
+# include <stat.h>
+#else
+# include <sys/types.h>
+# include <sys/stat.h>
+#endif
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
@@ -81,9 +87,18 @@
 
 /* always use unlink() to remove files */
 #ifndef PROTO
-# define vim_mkdir(x, y) mkdir((char *)(x), y)
-# define mch_rmdir(x) rmdir((char *)(x))
-# define mch_remove(x) unlink((char *)(x))
+# ifdef VMS
+#  define mch_remove(x) delete((char *)(x))
+#  define vim_mkdir(x, y) mkdir((char *)(x), y)
+#  ifdef VAX
+#  else
+#   define mch_rmdir(x) rmdir((char *)(x))
+#  endif
+# else
+#  define vim_mkdir(x, y) mkdir((char *)(x), y)
+#  define mch_rmdir(x) rmdir((char *)(x))
+#  define mch_remove(x) unlink((char *)(x))
+# endif
 #endif
 
 /* The number of arguments to a signal handler is configured here. */
@@ -179,6 +194,33 @@
 # define HAVE_TOTAL_MEM
 #endif
 
+#ifdef VMS
+#include <unixio.h>
+#include <unixlib.h>
+#include <signal.h>
+#include <file.h>
+#include <ssdef.h>
+#include <descrip.h>
+#include <libclidef.h>
+#include <lnmdef.h>
+#include <psldef.h>
+#include <prvdef.h>
+#include <dvidef.h>
+#include <dcdef.h>
+#include <stsdef.h>
+#include <iodef.h>
+#include <ttdef.h>
+#include <tt2def.h>
+#include <jpidef.h>
+#include <rms.h>
+#include <string.h>
+#include <starlet.h>
+#include <socket.h>
+#include <lib$routines.h>
+
+typedef struct dsc$descriptor   DESC;
+#endif
+
 /*
  * Unix system-dependent file names
  */
@@ -214,29 +256,66 @@
 #endif
 
 #ifndef USR_EXRC_FILE
-# define USR_EXRC_FILE	"$HOME/.exrc"
-#endif
-#ifndef USR_VIMRC_FILE
-# define USR_VIMRC_FILE	"$HOME/.vimrc"
-#endif
-#ifdef OS2
-# ifndef USR_VIMRC_FILE2
-#  define USR_VIMRC_FILE2 "$VIM/.vimrc"
+# ifdef VMS
+#  define USR_EXRC_FILE "sys$login:.exrc"
+# else
+#  define USR_EXRC_FILE "$HOME/.exrc"
 # endif
 #endif
-#ifndef USR_GVIMRC_FILE
-# define USR_GVIMRC_FILE "$HOME/.gvimrc"
+
+#if !defined(USR_EXRC_FILE2) && defined(OS2)
+# define USR_EXRC_FILE2 "$VIM/.exrc"
 #endif
+#if !defined(USR_EXRC_FILE2) && defined(VMS)
+# define USR_EXRC_FILE2 "sys$login:_exrc"
+#endif
+
+#ifndef USR_VIMRC_FILE
+# ifdef VMS
+# define USR_VIMRC_FILE  "sys$login:.vimrc"
+# else
+#  define USR_VIMRC_FILE "$HOME/.vimrc"
+# endif
+#endif
+
+#if !defined(USR_VIMRC_FILE2) && defined(OS2)
+# define USR_VIMRC_FILE2 "$VIM/.vimrc"
+#endif
+#if !defined(USR_VIMRC_FILE2) && defined(VMS)
+# define USR_VIMRC_FILE2 "sys$login:_vimrc"
+#endif
+
+#ifndef USR_GVIMRC_FILE
+# ifdef VMS
+#  define USR_GVIMRC_FILE "sys$login:.gvimrc"
+# else
+#  define USR_GVIMRC_FILE "$HOME/.gvimrc"
+# endif
+#endif
+
+#ifdef VMS
+# ifndef USR_GVIMRC_FILE2
+#  define USR_GVIMRC_FILE2  "sys$login:_gvimrc"
+# endif
+#endif
+
 #ifndef EVIM_FILE
 # define EVIM_FILE	"$VIMRUNTIME/evim.vim"
 #endif
 
 #ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE
-#  define VIMINFO_FILE	"$HOME/.viminfo"
+#  ifdef VMS
+#   define VIMINFO_FILE  "sys$login:.viminfo"
+#  else
+#   define VIMINFO_FILE "$HOME/.viminfo"
+#  endif
 # endif
 # if !defined(VIMINFO_FILE2) && defined(OS2)
-#  define VIMINFO_FILE2	"$VIM/.viminfo"
+#  define VIMINFO_FILE2 "$VIM/.viminfo"
+# endif
+# if !defined(VIMINFO_FILE2) && defined(VMS)
+#  define VIMINFO_FILE2 "sys$login:_viminfo"
 # endif
 #endif
 
@@ -260,35 +339,51 @@
 
 #ifndef DFLT_BDIR
 # ifdef OS2
-#  define DFLT_BDIR	".,c:/tmp,~/tmp,~/"
+#  define DFLT_BDIR     ".,c:/tmp,~/tmp,~/"
 # else
-#  define DFLT_BDIR	".,~/tmp,~/"	/* default for 'backupdir' */
+#  ifdef VMS
+#   define DFLT_BDIR    "./,sys$login:,tmp:"
+#  else
+#   define DFLT_BDIR    ".,~/tmp,~/"    /* default for 'backupdir' */
+#  endif
 # endif
 #endif
 
 #ifndef DFLT_DIR
 # ifdef OS2
-#  define DFLT_DIR	".,~/tmp,c:/tmp,/tmp"
+#  define DFLT_DIR      ".,~/tmp,c:/tmp,/tmp"
 # else
-#  define DFLT_DIR	".,~/tmp,/var/tmp,/tmp"	/* default for 'directory' */
+#  ifdef VMS
+#   define DFLT_DIR     "./,sys$login:,tmp:"
+#  else
+#   define DFLT_DIR     ".,~/tmp,/var/tmp,/tmp" /* default for 'directory' */
+#  endif
 # endif
 #endif
 
 #ifndef DFLT_VDIR
 # ifdef OS2
-#  define DFLT_VDIR	"$VIM/vimfiles/view"
+#  define DFLT_VDIR     "$VIM/vimfiles/view"
 # else
-#  define DFLT_VDIR	"$HOME/.vim/view"	/* default for 'viewdir' */
+#  ifdef VMS
+#   define DFLT_VDIR    "sys$login:vimfiles/view"
+#  else
+#   define DFLT_VDIR    "$HOME/.vim/view"       /* default for 'viewdir' */
+#  endif
 # endif
 #endif
-
+  
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		""
 
 #ifdef OS2
 # define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/vimfiles/after"
 #else
-# define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after"
+# ifdef VMS
+#  define DFLT_RUNTIMEPATH      "sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,sys$login:vimfiles/after"
+# else
+#  define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after"
+# endif
 #endif
 
 #ifdef OS2
@@ -298,8 +393,15 @@
 # define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
 # define TEMPNAMELEN	128
 #else
-# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ".", "$HOME"
-# define TEMPNAMELEN	256
+# ifdef VMS
+#  define VMS_TEMPNAM    /* to fix default .LIS extension */
+#  define TEMPDIRNAMES  "$TMP"
+#  define TEMPNAME       "TMP:v?XXXXXX.txt"
+#  define TEMPNAMELEN    28
+# else
+#  define TEMPDIRNAMES  "$TMPDIR", "/tmp", ".", "$HOME"
+#  define TEMPNAMELEN    256
+# endif
 #endif
 
 /* Special wildcards that need to be handled by the shell */
@@ -317,12 +419,20 @@
 
 #define CHECK_INODE		/* used when checking if a swap file already
 				    exists for a file */
-
-#ifndef DFLT_MAXMEM
-# define DFLT_MAXMEM	(5*1024)    /* use up to 5 Mbyte for a buffer */
-#endif
-#ifndef DFLT_MAXMEMTOT
-# define DFLT_MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
+#ifdef VMS  /* Use less memory because of older systems  */
+# ifndef DFLT_MAXMEM
+#  define DFLT_MAXMEM (512)
+# endif
+# ifndef DFLT_MAXMEMTOT
+#  define DFLT_MAXMEMTOT (2*1024)
+# endif
+#else
+# ifndef DFLT_MAXMEM
+#  define DFLT_MAXMEM   (5*1024)         /* use up to 5 Mbyte for a buffer */
+# endif
+# ifndef DFLT_MAXMEMTOT
+#  define DFLT_MAXMEMTOT        (10*1024)    /* use up to 10 Mbyte for Vim */
+# endif
 #endif
 
 /* memmove is not present on all systems, use memmove, bcopy, memcpy or our
@@ -349,15 +459,21 @@
 # else
 int mch_rename __ARGS((const char *src, const char *dest));
 # endif
-# define mch_chdir(s) chdir(s)
-# ifdef __MVS__
+# ifdef VMS
+#  define mch_chdir(s) chdir(vms_fixfilename(s))
+# else
+#  define mch_chdir(s) chdir(s)
+# endif
+# ifndef VMS
+#  ifdef __MVS__
   /* on OS390 Unix getenv() doesn't return a pointer to persistant
    * storage -> use __getenv() */
-#  define mch_getenv(x) (char_u *)__getenv((char *)(x))
-# else
-#  define mch_getenv(x) (char_u *)getenv((char *)(x))
+#   define mch_getenv(x) (char_u *)__getenv((char *)(x))
+#  else
+#   define mch_getenv(x) (char_u *)getenv((char *)(x))
+#  endif
+#  define mch_setenv(name, val, x) setenv(name, val, x)
 # endif
-# define mch_setenv(name, val, x) setenv(name, val, x)
 #endif
 
 #if !defined(S_ISDIR) && defined(S_IFDIR)
@@ -396,7 +512,7 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #endif
 
 /* All Unix versions have dup(). */
-#define HAVE_DUP		/* have dup() */
+#define HAVE_DUP                /* have dup() */
 
 /* We have three kinds of ACL support. */
 #define HAVE_ACL (HAVE_POSIX_ACL || HAVE_SOLARIS_ACL || HAVE_AIX_ACL)

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 May 23
+" Last Change:	2001 May 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -76,6 +76,7 @@ menut C&olor\ Scheme		Schema\ C&olori
 menut default		per\ difetto
 menut evening		notturno
 menut morning		diurno
+menut shine		brillante
 menut peachpuff         alla\ pesca
 menut &Keymap				&Mappa\ tastiera
 

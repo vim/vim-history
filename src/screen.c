@@ -540,7 +540,7 @@ update_screen(type)
 	    && firstwin->w_next == NULL
 #endif
 	    && vim_strchr(p_shm, SHM_INTRO) == NULL)
-	intro_message();
+	intro_message(FALSE);
     did_intro = TRUE;
 
 #ifdef FEAT_GUI
@@ -2847,7 +2847,12 @@ win_line(wp, lnum, startrow, endrow)
 			c_extra = '-';
 		    else
 			c_extra = fill_diff;
-		    n_extra = W_WIDTH(wp) - col;
+#  ifdef FEAT_RIGHTLEFT
+		    if (wp->w_p_rl)
+			n_extra = col + 1;
+		    else
+#  endif
+			n_extra = W_WIDTH(wp) - col;
 		    char_attr = hl_attr(HLF_DED);
 		}
 # endif
@@ -5423,6 +5428,9 @@ screen_char(off, row, col)
     else
 #endif
     {
+#ifdef FEAT_MBYTE
+	out_flush_check();
+#endif
 	out_char(ScreenLines[off]);
 #ifdef FEAT_MBYTE
 	/* double-byte character in single-width cell */
@@ -6377,6 +6385,9 @@ windgoto(row, col)
 			{
 			    if (ScreenAttrs[off] != screen_attr)
 				screen_stop_highlight();
+#ifdef FEAT_MBYTE
+			    out_flush_check();
+#endif
 			    out_char(ScreenLines[off]);
 #ifdef FEAT_MBYTE
 			    if (enc_dbcs == DBCS_JPNU

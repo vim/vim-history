@@ -211,9 +211,6 @@ errout:
 #endif
 	free(argv);
 	free(pszNewCmdLine);
-#ifdef DYNAMIC_GETTEXT
-	dyn_libintl_end();
-#endif
 
 	return 0;
 }

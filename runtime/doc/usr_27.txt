@@ -1,18 +1,20 @@
-*usr_27.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_27.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			 Search commands and patterns
 
 
-|27.1|	Replace a word
+Introduction.
+
+|27.1|	First section
 
      Next chapter: |usr_28.txt|  Folding
  Previous chapter: |usr_26.txt|  Repeating
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*27.1*	Replace a word
+*27.1*	First section
 
 
 ==============================================================================

@@ -159,6 +159,8 @@ static XtIntervalId SFdirModTimerId;
 
 static int	(*SFfunc)();
 
+static int	SFstatus = SEL_FILE_NULL;
+
 /***************** static functions */
 
 static void SFsetText __ARGS((char *path));
@@ -1039,9 +1041,9 @@ SFstatChar(statBuf)
 #include <X11/Xaw/Cardinals.h>
 
 #ifdef FEAT_XFONTSET
-#define SF_DEFAULT_FONT "-misc-fixed-medium-r-normal--14-*"
+# define SF_DEFAULT_FONT "-misc-fixed-medium-r-normal--14-*"
 #else
-#define SF_DEFAULT_FONT "9x15"
+# define SF_DEFAULT_FONT "9x15"
 #endif
 
 #ifdef ABS
@@ -1110,11 +1112,9 @@ SFinitFont()
 #endif
 	if (!SFfont)
 	{
-	    char	sbuf[256];
-
-	    (void)sprintf(sbuf, _("vim_SelFile: can't get font %s"),
-			   SF_DEFAULT_FONT);
-	    XtAppError(SFapp, sbuf);
+	    EMSG2(_("vim_SelFile: can't get font %s"), SF_DEFAULT_FONT);
+	    SFstatus = SEL_FILE_CANCEL;
+	    return;
 	}
     }
 
@@ -2056,8 +2056,6 @@ SFgetDir(dir)
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/Label.h>
 
-static int SFstatus = SEL_FILE_NULL;
-
 static char *oneLineTextEditTranslations = "\
 	<Key>Return:	redraw-display()\n\
 	Ctrl<Key>M:	redraw-display()\n\
@@ -2532,7 +2530,10 @@ SFprepareToReturn()
     XtUnmapWidget(selFile);
     XtRemoveTimeOut(SFdirModTimerId);
     if (SFchdir(SFstartDir))
-	XtAppError(SFapp, _("vim_SelFile: can't return to current directory"));
+    {
+	EMSG(_("vim_SelFile: can't return to current directory"));
+	SFstatus = SEL_FILE_CANCEL;
+    }
 }
 
     char *
@@ -2553,6 +2554,12 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     SFfore = fg;
     SFback = bg;
 
+    if (mch_dirname((char_u *)SFstartDir, MAXPATHL) == FAIL)
+    {
+	EMSG(_("vim_SelFile: can't get current directory"));
+	return NULL;
+    }
+
     if (firstTime)
     {
 	firstTime = 0;
@@ -2565,8 +2572,6 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     XtVaSetValues(selFile, XtNx, x, XtNy, y, NULL);
     XtMapWidget(selFile);
 
-    if (mch_dirname((char_u *)SFstartDir, MAXPATHL) == FAIL)
-	XtAppError(SFapp, _("vim_SelFile: can't get current directory"));
     (void)strcat(SFstartDir, "/");
     (void)strcpy(SFcurrentDir, SFstartDir);
 

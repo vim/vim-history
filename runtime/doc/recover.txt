@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0ah.  Last change: 2001 May 12
+*recover.txt*   For Vim version 6.0ai.  Last change: 2001 May 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -85,60 +85,8 @@ The 'swapfile' option can be reset to avoid creating a swapfile.
 
 
 Detecting an existing swap file ~
-							*ATTENTION* *E325*
-When starting to edit a file, Vim checks if a swap file already exists for
-that file.  If there is one, you will get a message indicating that something
-is wrong:
 
-	ATTENTION
-	Found a swap file by the name "../doc/help.txt.swp"
-		     dated: Thu May 16 11:46:31 1996
-		 file name: ~mool/vim/vim/doc/help.txt
-		 host name: Kibaale
-		 user name: mool
-		process ID: 211 (still running)
-	While opening file "../doc/help.txt"
-		     dated: Wed May 15 21:38:40 1996
-
-You are to take one of four actions:
-
-1. Quit editing this file, because another edit session is active on this
-   file.  Continuing to edit will result in two versions of the same file.
-   The one that is written last will overwrite the other one, resulting in
-   loss of changes.  The text "(still running)" indicates that the process
-   editing this file runs on the same computer (Unix only).  When working over
-   a network you will not see this message, because the process will be
-   running on another computer.
-2. Proceed with caution.  Making changes to the file is likely to cause
-   trouble.  If you are only viewing a file it should be OK.
-3. Recover a previously crashed edit session.  See below |recovery|.
-4. Delete the swap file, if you don't want to recover the file.
-
-If you really don't want to see this message, you can add the 'A' flag to the
-'shortmess' option.  But it's very unusual that you need this.
-
-If dialogs are supported you will be asked to select one of five choices: >
-
-  Swap file already exists!
-  [O]pen Read-Only, (E)dit anyway, (R)ecover, (Q)uit, (D)elete it:
-
-O  Open the file readonly.  Use this when you just want to view the file and
-   don't need to recover it.
-E  Edit the file anyway.  Use this with caution!
-R  Recover the file from the swap file.  Use this if you know that the swap
-   file contains changes that you want to recover.  See |recovery|.
-Q  When just starting Vim: Quit Vim.  When starting Vim with files in several
-   windows, Vim quits only if there is a swap file for the first one.  When
-   using an edit command: Don't load the file, go back to the previously
-   edited file.
-D  Delete the swap file.  Use this when you are sure you no longer need it.
-   On Unix this choice is only offered when the process that created the swap
-   file does not seem to be running.
-
-Vim cannot always detect that a swap file already exists for a file.  This is
-the case when the other edit session puts the swap files in another
-directory or when the path name for the file is different when editing it on
-different machines.
+You can find this in the user manual, section |11.3|.
 
 
 Updating the swapfile ~
@@ -166,7 +114,7 @@ after this.
 If you want to make sure that your changes are in the swap file use this
 command:
 
-						*:pre* *:preserve* *E313* *E314*
+					*:pre* *:preserve* *E313* *E314*
 :pre[serve]		Write all text for all buffers into swap file.  The
 			original file is no longer needed for recovery.  {Vi:
 			emergency exit}
@@ -175,41 +123,9 @@ A Vim swap file can be recognized by the first six characters: "b0VIM ".
 After that comes the version number, e.g., "3.0".
 
 ==============================================================================
-2. Recovery						*recovery* *E308* *E311*
+2. Recovery					*recovery* *E308* *E311*
 
-In most cases recovery is quite easy: Start Vim on the same file you were
-editing when the crash happened, with the "-r" option added.  Vim will read
-the ".swp" file and may read bits and pieces of the original file.
-
-Example: >
-	vim -r help.txt
-
-If you were editing without a file name, give an empty string as argument: >
-	vim -r ""
-
-If there are several swap files that look they may be the one you want to
-use, a list is given of these swap files and you are requested to enter the
-number of the one you want to use.  In case you don't know which one to use,
-just try them one by one and check the resulting files if they are what you
-expected.
-
-If you know which swap file needs to be used, you can recover by giving the
-swap file name.  Vim will then find out the name of the original file from
-the swap file.
-
-Example: >
-	Vim -r .help.txt.swo
-
-This is also handy when the swap file is in another directory than expected.
-If this still does not work, see what file names Vim reports and rename the
-files accordingly.  Check the 'directory' option to see where Vim may have
-put the swap file.
-
-Note: Vim tries to find the swap file by searching the directories in the
-'dir' option, looking for files that match "filename.sw?".  If wildcard
-expansion doesn't work (e.g., when the 'shell' option is invalid), Vim does a
-desperate try to find the file "filename.swp".  If that fails too, you will
-have to give the name of the swapfile itself to be able to recover the file.
+Basic file recovery is explained in the user manual: |usr_11.txt|.
 
 Another way to do recovery is to start Vim and use the ":recover" command.
 This is easy when you start Vim to edit a file and you get the "ATTENTION:

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
+*various.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -507,7 +507,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 <			This command can be followed by '|' and another
 			command, but you don't need to escape the '|' inside a
 			help command.  So these both work: >
- 				:help |
+				:help |
 				:help k| only
 <			Note that a space before the '|' is seen as part of
 			the ":help" argument.

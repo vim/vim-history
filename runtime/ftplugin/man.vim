@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
-" Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2001 Jan 26
+" Maintainer:	Nam SungHyun <namsh@kldp.org>
+" Last Change:	2001 Jun 01
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -33,6 +33,7 @@ endif
 
 if !exists(":Man")
   com -nargs=1 Man call s:GetPage(<f-args>)
+  nmap <Leader>K :call <SID>PreGetPage(0)<CR>
 endif
 
 " Define functions only once.
@@ -54,7 +55,7 @@ func <SID>PreGetPage(cnt)
     setl iskeyword+=(,)
     let str = expand("<cword>")
     let &iskeyword = old_isk
-    let page = substitute(str, '\(\k\+\).*', '\1', '')
+    let page = substitute(str, '(*\(\k\+\).*', '\1', '')
     let sect = substitute(str, '\(\k\+\)(\([^()]*\)).*', '\2', '')
     if match(sect, '^[0-9 ]\+$') == -1
       let sect = ""
@@ -97,6 +98,12 @@ func <SID>GetPage(...)
   else
     return
   endif
+
+  " To support:	    nmap K :Man <cword>
+  if page == '<cword>'
+    let page = expand('<cword>')
+  endif
+
   if sect != "" && s:FindPage(sect, page) == 0
     let sect = ""
   endif

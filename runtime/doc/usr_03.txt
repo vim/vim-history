@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
+*usr_03.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -9,7 +9,6 @@ Before you can insert or delete text the cursor has to be moved to the right
 place.  Vim has a large number of commands to position the cursor.  This
 chapter shows you how to use the most important ones.  You can find a list of
 these commands below |Q_lr|.
-
 
 |03.1|	Word movement
 |03.2|	Moving to the start or end of a line
@@ -64,11 +63,11 @@ The "^" command moves to the first nonblank character of the line.  The "0"
 command (zero) moves to the very first character of the line.  The <Home> key
 does the same thing.  In a picture:
 
-	          ^
+		  ^
 	     <------------
 	.....This is a line with example text ~
 	<-----------------   --------------->
-		0                  $
+		0		   $
 
 (the "....." indicates blanks here)
 
@@ -93,29 +92,29 @@ will be positioned over the h:
 
 	To err is human.  To really foul up you need a computer. ~
 	---------->--------------->
-	    fh           fy
+	    fh		 fy
 
 This also shows that the command "fy" moves to the end of the word really.
    You can specify a count; therefore, you can go to the "l" of "foul" with
 "3l":
 
 	To err is human.  To really foul up you need a computer. ~
-	          --------------------->
-	    	           3fl
+		  --------------------->
+			   3fl
 
 The "F" command searches to the left:
 
 	To err is human.  To really foul up you need a computer. ~
-                  <---------------------
-	    	            Fh
+		  <---------------------
+			    Fh
 
 The "tx" command works like the "fx" command, except it stops one character
 before the searched character.  Hint: To x.  The backward version of this
 command is "Tx".
 
 	To err is human.  To really foul up you need a computer. ~
-                   <------------  ------------->
-	    	        Th              tn
+		   <------------  ------------->
+			Th		tn
 
 These four commands can be repeated with ";".  "," repeats in the other
 direction.
@@ -135,10 +134,10 @@ on a "(" it will move to the matching ")".  If it's on a ")" it will move to
 the matching "(".
 
 			   % 
-		        <----->
+			<----->
 		if (a = (b * c) / d) ~
 		   <---------------> 
-		   	   %
+			   %
 
 This also works for [] and {} pairs.  (This can be defined with the
 'matchpairs' option.)
@@ -149,7 +148,7 @@ one.  Thus if the cursor is at the start of the line of the previous example,
 
 		if (a = (b * c) / d) ~
 		------------------->
-		   	  %
+			  %
 
 ==============================================================================
 *03.5*	Moving to a specific line
@@ -220,7 +219,7 @@ To see where you are in a file, there are three ways:
 3.  Set the 'ruler' option.  This will display the cursor position in the
     lower right corner of the Vim window: >
 
-  	:set ruler
+	:set ruler
 
 Using the 'ruler' option has the advantage that it doesn't take much room,
 thus there is more space for your text.
@@ -236,23 +235,23 @@ which end is up.  Most users have the same problem.
    The CTRL-D command moves the viewing window down half a screen in the file,
 thus scrolls the text up half a screen.
 
-                                       +---------------+
-                                       | some text     |
-                                       | some text     |
-                                       | some text     |
-	+---------------+              | some text     |
-	| some text     |  CTRL-U  --> |               |
-	|               |              | 123456        |
-	| 123456        |              +---------------+
-	| 7890          |
-	|               |              +---------------+
-	| example       |  CTRL-D -->  | 7890          |
-	+---------------+              |               |
-                                       | example       |
-                                       | example       |
-                                       | example       |
-                                       | example       |
-                                       +---------------+
+				       +----------------+
+				       | some text	|
+				       | some text	|
+				       | some text	|
+	+---------------+	       | some text	|
+	| some text	|  CTRL-U  --> |		|
+	|		|	       | 123456		|
+	| 123456	|	       +----------------+
+	| 7890		|
+	|		|	       +----------------+
+	| example	|  CTRL-D -->  | 7890		|
+	+---------------+	       |		|
+				       | example	|
+				       | example	|
+				       | example	|
+				       | example	|
+				       +----------------+
 
 To scroll one line at a time use CTRL-E (scroll up) and CTRL-Y (scroll down).
 Think of CTRL-E to give you one line Extra.
@@ -369,13 +368,13 @@ where it's used.  You could move the cursor to "nr" and use the "*" command
 and press "n" to go along all the matches.
    There is another way.  Type this command: >
 
-   	:set hlsearch
+	:set hlsearch
 
 If you now search for "nr", Vim will highlight all matches.  That is a very
 good way to see where the variable is used, without the need to type commands.
    To switch this off: >
 
-   	:set nohlsearch
+	:set nohlsearch
 
 Then you need to switch it on again if you want to use it for the next search
 command.  If you only want to remove the highlighting, use this command: >
@@ -452,12 +451,12 @@ word was only if it is at the end of a line.
 Let's mark the places where "the" matches in this example line with "x"s:
 
 	the solder holding one of the chips melted and the ~
-	xxx                       xxx                  xxx
+	xxx			  xxx		       xxx
 
 Using "/the$" we find this match:
 
 	the solder holding one of the chips melted and the ~
-	                                               xxx
+						       xxx
 
 And with "/^the" we find this one:
 	the solder holding one of the chips melted and the ~
@@ -475,7 +474,7 @@ pattern "c.m" matches a string whose first character is a c, whose second
 character is anything, and whose the third character is m.  Example:
 
 	We use a computer that became the cummin winter. ~
-	         xxx             xxx      xxx
+		 xxx		 xxx	  xxx
 
 
 MATCHING SPECIAL CHARACTERS
@@ -485,7 +484,7 @@ putting a backslash before it.
    If you search for "ter.", you will find these matches:
 
 	We use a computer that became the cummin winter. ~
-	              xxxx                          xxxx
+		      xxxx			    xxxx
 
 Searching for "ter\." only finds the second match.
 
@@ -524,10 +523,10 @@ where you started.  If you now use CTRL-I you jump to line 33 again.  And
 to the match for "The" with another CTRL-O.
 
 
-	     |	example text   ^             |
+	     |	example text   ^	     |
 	 3G  |	example text   |  CTRL-O     | CTRL-I
-	     |	example text   |             |
-	     V	line 3 text    ^             V
+	     |	example text   |	     |
+	     V	line 3 text    ^	     V
 	     |	example text   |	     |
        /^The |	example text   |  CTRL-O     | CTRL-I
 	     V	There you are  |	     V
@@ -559,7 +558,7 @@ Suppose you have some text near the start of the file you need to look at,
 while working on some text near the end of the file.
    Move to the text at the start and place the s (start) mark there: >
 
-   	ms
+	ms
 
 The move to the text you want to work on and put the e (end) mark there: >
 

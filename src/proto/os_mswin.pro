@@ -1,6 +1,6 @@
 /* os_mswin.c */
-void mch_windexit __ARGS((int r));
-void mch_init __ARGS((void));
+void mch_exit __ARGS((int r));
+void mch_early_init __ARGS((void));
 int mch_input_isatty __ARGS((void));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
 void mch_restore_title __ARGS((int which));
@@ -16,7 +16,7 @@ void mch_set_shellsize __ARGS((void));
 void mch_new_shellsize __ARGS((void));
 void mch_suspend __ARGS((void));
 void display_errors __ARGS((void));
-int mch_has_wildcard __ARGS((char_u *s));
+int mch_has_wildcard __ARGS((char_u *p));
 int mch_chdir __ARGS((char *path));
 int can_end_termcap_mode __ARGS((int give_msg));
 int mch_screenmode __ARGS((char_u *arg));
@@ -36,4 +36,5 @@ int mch_print_text_out __ARGS((int x, int y, char_u *p, int len, int *must_break
 void mch_print_setfont __ARGS((int iBold, int iItalic, int iUnderline));
 void mch_print_set_bg __ARGS((unsigned long bgcol));
 void mch_print_set_fg __ARGS((unsigned long fgcol));
+char_u *mch_resolve_shortcut __ARGS((char_u *fname));
 /* vim: set ft=c : */

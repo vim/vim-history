@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ah.  Last change: 2001 May 26
+*gui.txt*       For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -49,7 +49,7 @@ When the GUI starts up initializations are carried out, in this order:
   disabling the buffer menu must be done before ":syntax on".
   The path names are truncated to 35 characters.  You can truncate them at a
   different length, for example 50, like this: >
-  	:let bmenu_max_pathlen = 50
+	:let bmenu_max_pathlen = 50
 - If the "-U {gvimrc}" command-line option has been used when starting Vim,
   the {gvimrc} file will be read for initializations.  The following
   initializations are skipped.
@@ -579,7 +579,7 @@ items.  Depending on the system this is displayed as a line or a dotted line.
 These items must start with a '-' and end in a '-'.  The part in between is
 used to give it a unique name.  Priorities can be used as with normal items.
 Example: >
-	:menu Example.item1  	:do something
+	:menu Example.item1	:do something
 	:menu Example.-Sep-	:
 	:menu Example.item2	:do something different
 Note that the separator also requires a rhs.  It doesn't matter what it is,
@@ -601,8 +601,8 @@ level.  Vim interprets the items in this menu as follows:
     The file can either be specified with the full path or with the base name.
     In the last case it is searched for in the "bitmaps" directory in
     'runtimepath, like in point 3).  Examples: >
-    	:amenu icon=/usr/local/pixmaps/foo_icon.xpm ToolBar.Foo :echo "Foo"<CR>
-    	:amenu icon=FooIcon ToolBar.Foo :echo "Foo"<CR>
+	:amenu icon=/usr/local/pixmaps/foo_icon.xpm ToolBar.Foo :echo "Foo"<CR>
+	:amenu icon=FooIcon ToolBar.Foo :echo "Foo"<CR>
 <   If the file cannot be opened the next points are tried.
     A space in the file name must be escaped with a backslash.
 2)  An item called 'BuiltIn##', where ## is a number, is taken as number ## of

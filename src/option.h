@@ -188,10 +188,12 @@
 #define GO_GREY		'g'		/* use grey menu items */
 #define GO_ICON		'i'		/* use Vim icon */
 #define GO_LEFT		'l'		/* use left scrollbar */
+#define GO_VLEFT	'L'		/* left scrollbar with vert split */
 #define GO_MENUS	'm'		/* use menu bar */
 #define GO_NOSYSMENU	'M'		/* don't source system menu */
 #define GO_POINTER	'p'		/* pointer enter/leave callbacks */
 #define GO_RIGHT	'r'		/* use right scrollbar */
+#define GO_VRIGHT	'R'		/* right scrollbar with vert split */
 #define GO_TEAROFF	't'		/* add tear-off menu items */
 #define GO_TOOLBAR	'T'		/* add toolbar */
 #define GO_FOOTER	'F'		/* add footer */

@@ -41,7 +41,6 @@ static Cardinal	athena_calculate_ins_pos __ARGS((Widget));
 
 static void gui_athena_menu_timeout __ARGS((XtPointer, XtIntervalId *));
 static void gui_athena_popup_callback __ARGS((Widget, XtPointer, XtPointer));
-static void gui_athena_popdown_callback __ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_delayed_arm_action __ARGS((Widget, XEvent *, String *,
 						 Cardinal *));
 static void gui_athena_popdown_submenus_action __ARGS((Widget, XEvent *,
@@ -521,8 +520,6 @@ gui_mch_add_menu(menu, idx)
 		NULL);
 	    gui_athena_menu_colors(menu->submenu_id);
 	    gui_athena_menu_font(menu->submenu_id);
-	    XtAddCallback(menu->submenu_id, XtNpopdownCallback,
-			  gui_athena_popdown_callback, (XtPointer)menu);
 
 	    /* Don't update the menu height when it was set at a fixed value */
 	    if (!gui.menu_height_fixed)
@@ -564,8 +561,6 @@ gui_mch_add_menu(menu, idx)
 	vim_free(pullright_name);
 	XtAddCallback(menu->submenu_id, XtNpopupCallback,
 		      gui_athena_popup_callback, (XtPointer)menu);
-	XtAddCallback(parent->submenu_id, XtNpopdownCallback,
-		      gui_athena_popdown_callback, (XtPointer)menu);
 
 	if (parent->parent != NULL)
 	    XtOverrideTranslations(parent->submenu_id, parentTrans);
@@ -1056,14 +1051,6 @@ gui_mch_new_menu_colors()
 gui_mch_destroy_menu(menu)
     vimmenu_T *menu;
 {
-    if (menu->submenu_id != (Widget)0)
-    {
-	XtRemoveCallback((menu->parent == NULL) ? menu->submenu_id :
-						  menu->parent->submenu_id,
-			 XtNpopdownCallback,
-			 gui_athena_popdown_callback,
-			 menu);
-    }
     /* Please be sure to destroy the parent widget first (i.e. menu->id).
      *
      * This code should be basically identical to that in the file gui_motif.c
@@ -1192,24 +1179,6 @@ gui_athena_popup_callback(w, client_data, call_data)
 		     NULL);
 }
 
-/*
- * This is called when the submenu is being popped-down and pops-down all
- * SimpleMenuWidget children.
- */
-/*ARGSUSED*/
-    static void
-gui_athena_popdown_callback(w, client_data, call_data)
-    Widget	w;
-    XtPointer	client_data;
-    XtPointer	call_data;
-{
-    /* Assumption: XtIsSubclass(w,simpleMenuWidgetClass) */
-    vimmenu_T	*menu = (vimmenu_T *)client_data;
-
-    if ((menu->submenu_id != NULL) && !XtIsManaged(menu->submenu_id))
-	XtPopdown(menu->submenu_id);
-}
-
 /* ARGSUSED */
     static void
 gui_athena_popdown_submenus_action(w, event, args, nargs)
@@ -1233,7 +1202,7 @@ gui_athena_popdown_submenus_action(w, event, args, nargs)
 	    Widget temp_w;
 
 	    temp_w = submenu_widget(child);
-	    /* gui_athena_popdown_submenus_action(temp_w,event,args,nargs); */
+	    gui_athena_popdown_submenus_action(temp_w,event,args,nargs);
 	    XtPopdown(temp_w);
 	}
     }

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0ah.  Last change: 2001 May 27
+*help.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 			VIM - main help file
 									 k
@@ -13,7 +13,7 @@ Jump to a subject:  Position the cursor on a tag between |bars| and hit CTRL-].
 Get specific help:  It is possible to go directly to whatever you want help
 		    on, by giving an argument to the ":help" command |:help|.
 		    It is possible to further specify the context:
-			  				*help-context*
+							*help-context*
 			  WHAT			PREPEND    EXAMPLE	~
 		      Normal mode commands     (nothing)   :help x
 		      Visual mode commands	  v_	   :help v_u

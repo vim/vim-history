@@ -305,11 +305,6 @@ gui_mswin_get_menu_height(
 #endif /*FEAT_MENU*/
 
 
-#define FEAT_SHORTCUT	/* accept dropping a shortcut on Vim. */
-#ifdef FEAT_SHORTCUT
-# include <shlobj.h>
-#endif
-
     static void
 _OnDropFiles(
     HWND hwnd,
@@ -335,57 +330,6 @@ _OnDropFiles(
     {
 	DragQueryFile(hDrop, i, szFile, _MAX_PATH);
 
-#ifdef FEAT_SHORTCUT
-	{
-	    HRESULT		hr;
-	    IShellLink		*psl = NULL;
-	    IPersistFile	*ppf = NULL;
-	    OLECHAR		wsz[MAX_PATH];
-	    WIN32_FIND_DATA	ffd; // we get those free of charge
-	    TCHAR		buf[MAX_PATH]; // could have simply reused 'wsz'...
-
-	    CoInitialize(NULL);
-
-	    // create a link manager object and request its interface
-	    hr = CoCreateInstance(
-		    &CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-		    &IID_IShellLink, (void**)&psl);
-	    if (hr != S_OK)
-		goto shortcut_error;
-
-	    // Get a pointer to the IPersistFile interface.
-	    hr = psl->lpVtbl->QueryInterface(
-		    psl, &IID_IPersistFile, (void**)&ppf);
-	    if (hr != S_OK)
-		goto shortcut_error;
-
-	    // full path string must be in Unicode.
-	    MultiByteToWideChar(CP_ACP, 0, szFile, -1, wsz, MAX_PATH);
-
-	    // "load" the name and resove the link
-	    hr = ppf->lpVtbl->Load(ppf, wsz, STGM_READ);
-	    if (hr != S_OK)
-		goto shortcut_error;
-	    hr = psl->lpVtbl->Resolve(psl, NULL, SLR_UPDATE);
-	    if (hr != S_OK)
-		goto shortcut_error;
-
-	    // Get the path to the link target.
-	    hr = psl->lpVtbl->GetPath(psl, buf, MAX_PATH, &ffd, 0);
-	    if (hr != S_OK)
-		goto shortcut_error;
-	    strcpy( szFile, buf );
-
-shortcut_error:
-	    // Release all interface pointers (both belong to the same object)
-	    if (ppf != NULL)
-		ppf->lpVtbl->Release(ppf);
-	    if (psl != NULL)
-		psl->lpVtbl->Release(psl);
-
-	    CoUninitialize();
-	}
-#endif
 	mch_dirname(IObuff, IOSIZE);
 	fname = shorten_fname(szFile, IObuff);
 	if (fname == NULL)
@@ -949,10 +893,10 @@ gui_mch_prepare(int *argc, char **argv)
 	{
 #ifdef FEAT_OLE
 	    RegisterMe();
-	    mch_windexit(0);
+	    mch_exit(0);
 #else
 	    gui_w32_oleerr("register");
-	    mch_windexit(2);
+	    mch_exit(2);
 #endif
 	}
 
@@ -961,10 +905,10 @@ gui_mch_prepare(int *argc, char **argv)
 	{
 #ifdef FEAT_OLE
 	    UnregisterMe(TRUE);
-	    mch_windexit(0);
+	    mch_exit(0);
 #else
 	    gui_w32_oleerr("unregister");
-	    mch_windexit(2);
+	    mch_exit(2);
 #endif
 	}
 
@@ -979,7 +923,7 @@ gui_mch_prepare(int *argc, char **argv)
 	    *argc = 1;
 #else
 	    gui_w32_oleerr("embedding");
-	    mch_windexit(2);
+	    mch_exit(2);
 #endif
 	}
     }
@@ -991,7 +935,7 @@ gui_mch_prepare(int *argc, char **argv)
 	InitOLE(&bDoRestart);
 	/* automatically exit after registering */
 	if (bDoRestart)
-	    mch_windexit(0);
+	    mch_exit(0);
     }
 #endif
 
@@ -2262,14 +2206,25 @@ dialog_callback(
 	CenterWindow(hwnd, GetWindow(hwnd, GW_OWNER));
 	/* Set focus to the dialog.  Set the default button, if specified. */
 	(void)SetFocus(hwnd);
-	if (dialog_default_button > 0)
-	    (void)SetFocus(GetDlgItem(hwnd, dialog_default_button + IDCANCEL));
+	if (dialog_default_button > IDCANCEL)
+	    (void)SetFocus(GetDlgItem(hwnd, dialog_default_button));
 	return FALSE;
     }
 
     if (message == WM_COMMAND)
     {
 	int	button = LOWORD(wParam);
+
+	/* Don't end the dialog if something was selected that was
+	 * not a button.
+	 */
+	if (button >= DLG_NONBUTTON_CONTROL)
+	    return TRUE;
+
+	/* If the edit box exists, copy the string. */ 
+	if (s_textfield)
+	    GetDlgItemText(hwnd, DLG_NONBUTTON_CONTROL + 2,
+		s_textfield, IOSIZE);
 
 	/*
 	 * Need to check for IDOK because if the user just hits Return to
@@ -2350,9 +2305,12 @@ gui_mch_dialog(
     WORD	*p, *pdlgtemplate, *pnumitems;
     int		numButtons;
     int		*buttonWidths, *buttonPositions;
+    int		buttonYpos;
     int		nchar, i;
     DWORD	lStyle;
     int		dlgwidth = 0;
+    int		dlgheight;
+    int		editboxheight;
     int		horizWidth;
     int		msgheight;
     char_u	*pstart;
@@ -2556,10 +2514,17 @@ gui_mch_dialog(
 
     // Dialog height.
     if (vertical)
-	add_word(PixelToDialogY(msgheight + 2 * dlgPaddingY +
-			      DLG_VERT_PADDING_Y + 2 * fontHeight * numButtons));
+	dlgheight = msgheight + 2 * dlgPaddingY +
+			      DLG_VERT_PADDING_Y + 2 * fontHeight * numButtons;
     else
-	add_word(PixelToDialogY(msgheight + 3 * dlgPaddingY + 2 * fontHeight));
+	dlgheight = msgheight + 3 * dlgPaddingY + 2 * fontHeight;
+
+    // Dialog needs to be taller if contains an edit box.
+    editboxheight = fontHeight + dlgPaddingY + 4 * DLG_VERT_PADDING_Y;
+    if (type == VIM_QUESTION)
+	dlgheight += editboxheight; 
+
+    add_word(PixelToDialogY(dlgheight));
 
     add_word(0);	// Menu
     add_word(0);	// Class
@@ -2590,6 +2555,11 @@ gui_mch_dialog(
 	p += nchar;
     }
 
+    buttonYpos = msgheight + 2 * dlgPaddingY;
+
+    if (type == VIM_QUESTION)
+	buttonYpos += editboxheight; 
+
     pstart = tbuffer;
     horizWidth = (dlgwidth - horizWidth) / 2;	/* Now it's X offset */
     for (i = 0; i < numButtons; i++)
@@ -2610,13 +2580,21 @@ gui_mch_dialog(
 	 * the default!! Grrr.  Workaround: Make the default button the only
 	 * one with WS_TABSTOP style. Means user can't tab between buttons, but
 	 * he/she can use arrow keys.
+	 *
+	 * NOTE (Thore): Setting BS_DEFPUSHBUTTON seems to work fine, so I changed
+	 * the correct button to be this style. This is necessary because when
+	 * an edit box is added, we need a button to be default. The edit box
+	 * will be the default control, and when the user presses enter from
+	 * the edit box we want the default button to be pressed.
 	 */
 	if (vertical)
 	{
 	    p = add_dialog_element(p,
-		    BS_PUSHBUTTON | WS_TABSTOP,
+		    i == dfltbutton || dfltbutton<0 && type==VIM_QUESTION ?
+		    BS_DEFPUSHBUTTON : BS_PUSHBUTTON
+		    | WS_TABSTOP,
 		    PixelToDialogX(DLG_VERT_PADDING_X),
-		    PixelToDialogY(msgheight + 2 * dlgPaddingY
+		    PixelToDialogY(buttonYpos /* TBK */
 				   + 2 * fontHeight * i),
 		    PixelToDialogX(dlgwidth - 2 * DLG_VERT_PADDING_X),
 		    (WORD)(PixelToDialogY(2 * fontHeight) - 1),
@@ -2625,9 +2603,11 @@ gui_mch_dialog(
 	else
 	{
 	    p = add_dialog_element(p,
-		    BS_PUSHBUTTON | WS_TABSTOP,
+		    i == dfltbutton || dfltbutton<0 && type==VIM_QUESTION ?
+		    BS_DEFPUSHBUTTON : BS_PUSHBUTTON
+		    | WS_TABSTOP,
 		    PixelToDialogX(horizWidth + buttonPositions[i]),
-		    PixelToDialogY(msgheight + 2 * dlgPaddingY),
+		    PixelToDialogY(buttonYpos), /* TBK */
 		    PixelToDialogX(buttonWidths[i]),
 		    (WORD)(PixelToDialogY(2 * fontHeight) - 1),
 		    (WORD)(IDCANCEL + 1 + i), (WORD)0x0080, pstart);
@@ -2642,7 +2622,7 @@ gui_mch_dialog(
 	    PixelToDialogY(dlgPaddingY),
 	    PixelToDialogX(DLG_ICON_WIDTH),
 	    PixelToDialogY(DLG_ICON_HEIGHT),
-	    0, (WORD)0x0082,
+	    DLG_NONBUTTON_CONTROL + 0, (WORD)0x0082,
 	    dlg_icons[type]);
 
     /* Dialog message */
@@ -2651,7 +2631,19 @@ gui_mch_dialog(
 	    PixelToDialogY(dlgPaddingY),
 	    (WORD)(PixelToDialogX(messageWidth) + 1),
 	    PixelToDialogY(msgheight),
-	    1, (WORD)0x0082, message);
+	    DLG_NONBUTTON_CONTROL + 1, (WORD)0x0082, message);
+
+    /* Edit box */
+    if (type == VIM_QUESTION)
+    {
+	p = add_dialog_element(p, ES_LEFT | WS_TABSTOP | WS_BORDER,
+		PixelToDialogX(2 * dlgPaddingX),
+		PixelToDialogY(2 * dlgPaddingY + msgheight),
+		PixelToDialogX(dlgwidth - 4 * dlgPaddingX),
+		PixelToDialogY(fontHeight + dlgPaddingY),
+		DLG_NONBUTTON_CONTROL + 2, (WORD)0x0081, textfield);
+	*pnumitems += 1;
+    }
 
     *pnumitems += 2;
 
@@ -2659,9 +2651,20 @@ gui_mch_dialog(
     DeleteObject(font);
     ReleaseDC(hwnd, hdc);
 
-    /* Let the dialog_callback() function know which button to make default */
-    dialog_default_button = dfltbutton + 1;	/* Back to 1-based for this */
-
+    /* Let the dialog_callback() function know which button to make default
+     * If we have an edit box, make that the default. We also need to tell
+     * dialog_callback() if this dialog contains an edit box or not. We do
+     * this by setting s_textfield if it does.
+     */
+    if (type == VIM_QUESTION)
+    {
+	dialog_default_button = DLG_NONBUTTON_CONTROL + 2;
+        s_textfield = textfield;
+    } else {
+        dialog_default_button = IDCANCEL + 1 + dfltbutton;
+	s_textfield = 0;
+    }
+    
     /* show the dialog box modally and get a return value */
     nchar = DialogBoxIndirect(
 	    s_hinst,

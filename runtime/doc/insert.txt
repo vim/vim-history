@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0ah.  Last change: 2001 May 26
+*insert.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -356,7 +356,7 @@ column.  Example: >
 Position the cursor on the first "int", type "istatic<C-G>j       ".  The
 result is: >
    static int i;
-          int j;
+	  int j;
 When inserting the same text in front of the column in every line, use the
 Visual blockwise command "I" |v_b_I|.
 

@@ -405,7 +405,7 @@ mch_delay(msec, ignoreinput)
 }
 
     void
-mch_shellinit()
+mch_init()
 {
     /*
      *  TODO: Verify if needed, or override later.
@@ -906,12 +906,12 @@ mch_nodetype(name)
 }
 
     void
-mch_init()
+mch_early_init()
 {
 }
 
     void
-mch_windexit(r)
+mch_exit(r)
     int     r;
 {
     display_errors();

@@ -1,9 +1,11 @@
-*usr_43.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_43.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			       Using filetypes
 
+
+Introduction.
 
 |43.1|  Settings for a filetype
 |43.2|  Adding a filetype
@@ -37,7 +39,7 @@ You do this with only two steps:			*your-runtime-dir*
 <
    Check the value of the 'runtimepath' option to see where Vim will look for
    the "ftplugin" directory: >
-   	set runtimepath
+	set runtimepath
 <  You would normally use the first directory name (before the comma).  You
    might want to set this option in your |vimrc| file if you don't like the
    default value.

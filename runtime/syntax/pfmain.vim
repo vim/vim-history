@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	Postfix main.cf configuration
 " Maintainer:	KELEMEN Peter <fuji@elte.hu>
-" Last Change:	2001 May 25
-" Version:	0.06
+" Last Change:	2001 Jun 2
+" Version:	0.07
 " URL:		http://people.inf.elte.hu/~fuji/vim/syntax/pfmain.vim
-" Comment:	Based on Postfix snapshot-20010502 defaults.
+" Comment:	Based on Postfix snapshot-20010502 defaults. (+TLS)
 
 if version < 600
 	syntax clear
@@ -19,7 +19,7 @@ else
 endif
 
 syntax case match
-syntax sync minlines=3
+syntax sync minlines=1
 
 syntax keyword pfmainConf 2bounce_notice_recipient
 syntax keyword pfmainConf access_map_reject_code
@@ -436,12 +436,111 @@ syntax match pfmainRef "$\<virtual_maps\>"
 syntax match pfmainRef "$\<virtual_minimum_uid\>"
 syntax match pfmainRef "$\<virtual_uid_maps\>"
 
+syntax keyword pfmainConfTLS relay_clientcerts
+syntax keyword pfmainConfTLS smtp_enforce_tls
+syntax keyword pfmainConfTLS smtp_starttls_timeout
+syntax keyword pfmainConfTLS smtp_tls_CAfile
+syntax keyword pfmainConfTLS smtp_tls_CApath
+syntax keyword pfmainConfTLS smtp_tls_cert_file
+syntax keyword pfmainConfTLS smtp_tls_cipherlist
+syntax keyword pfmainConfTLS smtp_tls_dcert_file
+syntax keyword pfmainConfTLS smtp_tls_dkey_file
+syntax keyword pfmainConfTLS smtp_tls_enforce_peername
+syntax keyword pfmainConfTLS smtp_tls_key_file
+syntax keyword pfmainConfTLS smtp_tls_loglevel
+syntax keyword pfmainConfTLS smtp_tls_note_starttls_offer
+syntax keyword pfmainConfTLS smtp_tls_per_site
+syntax keyword pfmainConfTLS smtp_tls_scert_verifydepth
+syntax keyword pfmainConfTLS smtp_tls_session_cache_database
+syntax keyword pfmainConfTLS smtp_tls_session_cache_timeout
+syntax keyword pfmainConfTLS smtp_use_tls
+syntax keyword pfmainConfTLS smtpd_enforce_tls
+syntax keyword pfmainConfTLS smtpd_starttls_timeout
+syntax keyword pfmainConfTLS smtpd_tls_CAfile
+syntax keyword pfmainConfTLS smtpd_tls_CApath
+syntax keyword pfmainConfTLS smtpd_tls_ask_ccert
+syntax keyword pfmainConfTLS smtpd_tls_ccert_verifydepth
+syntax keyword pfmainConfTLS smtpd_tls_cert_file
+syntax keyword pfmainConfTLS smtpd_tls_cipherlist
+syntax keyword pfmainConfTLS smtpd_tls_dcert_file
+syntax keyword pfmainConfTLS smtpd_tls_dh1024_param_file
+syntax keyword pfmainConfTLS smtpd_tls_dh512_param_file
+syntax keyword pfmainConfTLS smtpd_tls_dkey_file
+syntax keyword pfmainConfTLS smtpd_tls_key_file
+syntax keyword pfmainConfTLS smtpd_tls_loglevel
+syntax keyword pfmainConfTLS smtpd_tls_received_header
+syntax keyword pfmainConfTLS smtpd_tls_req_ccert
+syntax keyword pfmainConfTLS smtpd_tls_session_cache_database
+syntax keyword pfmainConfTLS smtpd_tls_session_cache_timeout
+syntax keyword pfmainConfTLS smtpd_tls_wrappermode
+syntax keyword pfmainConfTLS smtpd_use_tls
+syntax keyword pfmainConfTLS tls_daemon_random_bytes
+syntax keyword pfmainConfTLS tls_daemon_random_source
+syntax keyword pfmainConfTLS tls_random_bytes
+syntax keyword pfmainConfTLS tls_random_exchange_name
+syntax keyword pfmainConfTLS tls_random_prng_update_period
+syntax keyword pfmainConfTLS tls_random_reseed_period
+syntax keyword pfmainConfTLS tls_random_source
+syntax match pfmainRefTLS "$\<relay_clientcerts\>"
+syntax match pfmainRefTLS "$\<smtp_enforce_tls\>"
+syntax match pfmainRefTLS "$\<smtp_starttls_timeout\>"
+syntax match pfmainRefTLS "$\<smtp_tls_CAfile\>"
+syntax match pfmainRefTLS "$\<smtp_tls_CApath\>"
+syntax match pfmainRefTLS "$\<smtp_tls_cert_file\>"
+syntax match pfmainRefTLS "$\<smtp_tls_cipherlist\>"
+syntax match pfmainRefTLS "$\<smtp_tls_dcert_file\>"
+syntax match pfmainRefTLS "$\<smtp_tls_dkey_file\>"
+syntax match pfmainRefTLS "$\<smtp_tls_enforce_peername\>"
+syntax match pfmainRefTLS "$\<smtp_tls_key_file\>"
+syntax match pfmainRefTLS "$\<smtp_tls_loglevel\>"
+syntax match pfmainRefTLS "$\<smtp_tls_note_starttls_offer\>"
+syntax match pfmainRefTLS "$\<smtp_tls_per_site\>"
+syntax match pfmainRefTLS "$\<smtp_tls_scert_verifydepth\>"
+syntax match pfmainRefTLS "$\<smtp_tls_session_cache_database\>"
+syntax match pfmainRefTLS "$\<smtp_tls_session_cache_timeout\>"
+syntax match pfmainRefTLS "$\<smtp_use_tls\>"
+syntax match pfmainRefTLS "$\<smtpd_enforce_tls\>"
+syntax match pfmainRefTLS "$\<smtpd_starttls_timeout\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_CAfile\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_CApath\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_ask_ccert\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_ccert_verifydepth\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_cert_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_cipherlist\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_dcert_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_dh1024_param_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_dh512_param_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_dkey_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_key_file\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_loglevel\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_received_header\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_req_ccert\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_session_cache_database\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_session_cache_timeout\>"
+syntax match pfmainRefTLS "$\<smtpd_tls_wrappermode\>"
+syntax match pfmainRefTLS "$\<smtpd_use_tls\>"
+syntax match pfmainRefTLS "$\<tls_daemon_random_bytes\>"
+syntax match pfmainRefTLS "$\<tls_daemon_random_source\>"
+syntax match pfmainRefTLS "$\<tls_random_bytes\>"
+syntax match pfmainRefTLS "$\<tls_random_exchange_name\>"
+syntax match pfmainRefTLS "$\<tls_random_prng_update_period\>"
+syntax match pfmainRefTLS "$\<tls_random_reseed_period\>"
+syntax match pfmainRefTLS "$\<tls_random_source\>"
+
+syntax keyword pfmainDictDB	hash btree dbm
+syntax keyword pfmainDictRE	regexp pcre
+syntax keyword pfmainDictEXT	ldap environ nis netinfo
+syntax keyword pfmainQueue	active bounce corrupt defer deferred
+syntax keyword pfmainQueue	flush incoming saved
+syntax keyword pfmainTransport	smtp lmtp unix local error
+syntax keyword pfmainLock	fcntl flock dotlock
+syntax keyword pfmainAnswer	yes no
+
 syntax match pfmainComment	"#.*$"
 syntax match pfmainNumber	"\<\d\+\>"
-syntax match pfmainTime		"\<\d\+\[hmsd\]\>"
+syntax match pfmainTime		"\<\d\+[hmsd]\>"
 syntax match pfmainIP		"\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}\>"
-syntax match pfmainDict		"\<\(pcre\|nis\|regexp\|environ\|ldap\|btree\|unix\|hash\):.*\>"
-syntax match pfmainVariable	/\$\w\+/ contains=pfmainRef
+syntax match pfmainVariable	"\$\w\+" contains=pfmainRef,pfmainRefTLS
 
 if version >= 508 || !exists("pfmain_syntax_init")
 	if version < 508
@@ -456,11 +555,21 @@ if version >= 508 || !exists("pfmain_syntax_init")
 	HiLink pfmainNumber	Number
 	HiLink pfmainTime	Number
 	HiLink pfmainIP		Number
-	HiLink pfmainDict	Type
-	HiLink pfmainVariable	Constant
+	HiLink pfmainDictDB	Type
+	HiLink pfmainDictRE	Type
+	HiLink pfmainDictEXT	Type
+	HiLink pfmainQueue	Constant
+	HiLink pfmainTransport	Constant
+	HiLink pfmainLock	Constant
+	HiLink pfmainAnswer	Constant
 	HiLink pfmainRef	Macro
-	delcommand HiLink
 
+	HiLink pfmainConfTLS	Special
+	HiLink pfmainRefTLS	Macro
+
+	HiLink pfmainVariable	Error
+
+	delcommand HiLink
 endif
 
 let b:current_syntax = "pfmain"

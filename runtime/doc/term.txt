@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0ah.  Last change: 2001 May 12
+*term.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -354,16 +354,16 @@ Note: Use the <> form if possible
 	t_K9	<kMultiply>	keypad multiply   *<kMultiply>* *t_K9* *'t_K9'*
 	t_KA	<kEnter>	keypad enter key     *<kEnter>*	*t_KA* *'t_KA'*
 	t_KB	<kPoint>	keypad decimal point *<kPoint>*	*t_KB* *'t_KB'*
-	t_KC	<k0>		keypad 0 		 *<k0>*	*t_KC* *'t_KC'*
-	t_KD	<k1>		keypad 0 		 *<k1>*	*t_KD* *'t_KD'*
-	t_KE	<k2>		keypad 0 		 *<k2>*	*t_KE* *'t_KE'*
-	t_KF	<k3>		keypad 0 		 *<k3>*	*t_KF* *'t_KF'*
-	t_KG	<k4>		keypad 0 		 *<k4>*	*t_KG* *'t_KG'*
-	t_KH	<k5>		keypad 0 		 *<k5>*	*t_KH* *'t_KH'*
-	t_KI	<k6>		keypad 0 		 *<k6>*	*t_KI* *'t_KI'*
-	t_KJ	<k7>		keypad 0 		 *<k7>*	*t_KJ* *'t_KJ'*
-	t_KK	<k8>		keypad 0 		 *<k8>*	*t_KK* *'t_KK'*
-	t_KL	<k9>		keypad 0 		 *<k9>*	*t_KL* *'t_KL'*
+	t_KC	<k0>		keypad 0		 *<k0>*	*t_KC* *'t_KC'*
+	t_KD	<k1>		keypad 0		 *<k1>*	*t_KD* *'t_KD'*
+	t_KE	<k2>		keypad 0		 *<k2>*	*t_KE* *'t_KE'*
+	t_KF	<k3>		keypad 0		 *<k3>*	*t_KF* *'t_KF'*
+	t_KG	<k4>		keypad 0		 *<k4>*	*t_KG* *'t_KG'*
+	t_KH	<k5>		keypad 0		 *<k5>*	*t_KH* *'t_KH'*
+	t_KI	<k6>		keypad 0		 *<k6>*	*t_KI* *'t_KI'*
+	t_KJ	<k7>		keypad 0		 *<k7>*	*t_KJ* *'t_KJ'*
+	t_KK	<k8>		keypad 0		 *<k8>*	*t_KK* *'t_KK'*
+	t_KL	<k9>		keypad 0		 *<k9>*	*t_KL* *'t_KL'*
 		<Mouse>		leader of mouse code		*<Mouse>*
 
 Note about t_so and t_mr: When the termcap entry "so" is not present the

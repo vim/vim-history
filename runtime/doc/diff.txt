@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ah.  Last change: 2001 May 19
+*diff.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -255,7 +255,7 @@ Example (this does the same as 'diffexpr' being empty): >
 	     let opt = opt . "-b "
 	   endif
 	   silent execute "!diff " . opt . v:fname_in . " " . v:fname_new .
-	   	\  " > " . v:fname_out
+		\  " > " . v:fname_out
 	endfunction
 <
 						*E97*

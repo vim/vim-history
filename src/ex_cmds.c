@@ -2122,15 +2122,12 @@ do_write(eap)
 	}
     }
 
-    if (check_overwrite(eap, curbuf, fname, ffname, other) == OK)
-	retval = buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
-				 eap, eap->append, eap->forceit, TRUE, FALSE);
-
-    if (eap->cmdidx == CMD_saveas && retval == OK && alt_buf != NULL)
+    if (eap->cmdidx == CMD_saveas && alt_buf != NULL)
     {
 	/* Exchange the file names for the current and the alternate buffer.
 	 * This makes it look like we are now editing the buffer under the new
-	 * name. */
+	 * name.  Must be done before buf_write(), because if there is no file
+	 * name and 'cpo' contains 'F', it will set the file name. */
 	fname = alt_buf->b_fname;
 	alt_buf->b_fname = curbuf->b_fname;
 	curbuf->b_fname = fname;
@@ -2142,6 +2139,10 @@ do_write(eap)
 	curbuf->b_sfname = fname;
 	buf_name_changed();
     }
+
+    if (check_overwrite(eap, curbuf, fname, ffname, other) == OK)
+	retval = buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
+				 eap, eap->append, eap->forceit, TRUE, FALSE);
 
 theend:
 #ifdef FEAT_BROWSE

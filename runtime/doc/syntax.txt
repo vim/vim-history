@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ah.  Last change: 2001 May 22
+*syntax.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -98,7 +98,7 @@ You can toggle the syntax on/off with this command >
 
 To put this into a mapping, you can use: >
    :map <F7> :if exists("syntax_on") <Bar>
-   	\   syntax off <Bar>
+	\   syntax off <Bar>
 	\ else <Bar>
 	\   syntax enable <Bar>
 	\ endif <CR>
@@ -1164,7 +1164,7 @@ The newest version of the papp.vim syntax file can usually be found at
 http://papp.plan9.de.
 
 
-PASCAL 						*pascal.vim* *pascal-syntax*
+PASCAL						*pascal.vim* *pascal-syntax*
 
 Files matching "*.p" could be Progress or Pascal.  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
@@ -1721,7 +1721,7 @@ Do you want to draw with the mouse?  Try the following: >
    :   exe "noremap <LeftDrag>  <LeftMouse>r".c
    :endfunction
    :noremap <RightMouse> <LeftMouse>:call GetPixel()<CR>
-   :set guicursor=n:hor20          " to see the color beneath the cursor
+   :set guicursor=n:hor20	   " to see the color beneath the cursor
 This turns the right button into a pipette and the left button into a pen.
 It will work with XPM files that have one character per pixel only and you
 must not click outside of the pixel strings, but feel free to improve it.
@@ -2024,7 +2024,7 @@ can not be used for all commands:
 
 These arguments can be used for all three commands:
 	contained
-        containedin
+	containedin
 	nextgroup
 	transparent
 	skipwhite
@@ -2801,7 +2801,7 @@ specified field is used, and settings are merged with previous ones.  So, the
 result is like this single command has been used: >
    :hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff gui=bold
 <
-					    *highlight-args* *E416* *E417* *E423*
+					*highlight-args* *E416* *E417* *E423*
 There are three types of terminals for highlighting:
 term	a normal terminal (vt100, xterm)
 cterm	a color terminal (MS-DOS console, color-xterm, these have the "Co"
@@ -3159,14 +3159,24 @@ To clean up specific syntax group lists for the current buffer: >
   :syntax clear @{grouplist-name} ..
 This sets {grouplist-name}'s contents to an empty list.
 
-							*:syntax-reset*
-To reset the highlighting used for syntax items: >
+						*:syntax-reset* *:syn-reset*
+If you have changed the colors and messed them up, use this command to get the
+defaults back: >
+
   :syntax reset
+
 This doesn't change the colors for the 'highlight' option.
 
-What this command actually does, is executing the command >
-  :runtime! syntax/syncolor.vim
-With the "syntax_cmd" variable set to "reset".
+Note that the syntax colors that you set in your vimrc file will also be reset
+back to their Vim default.
+Note that if you are using a color scheme, the colors defined by the color
+scheme for syntax highlighting will be lost.
+
+What this actually does is: >
+
+	let g:syntax_cmd = "reset"
+	runtime! syntax/syncolor.vim
+
 Note that this uses the 'runtimepath' option.
 
 							*syncolor*
@@ -3363,7 +3373,7 @@ bold attribute to get bright colors.  Add an ":if" like above when needed. >
        :set t_AF=^[[%?%p1%{8}%<%t3%p1%d%e%p1%{22}%+%d;1%;m
        :set t_AB=^[[%?%p1%{8}%<%t4%p1%d%e%p1%{32}%+%d;1%;m
 <
- 						*TTpro-telnet*
+						*TTpro-telnet*
 These settings should work for TTpro telnet.  Tera Term Pro is a freeware /
 open-source program for MS-Windows. >
 	set t_Co=16

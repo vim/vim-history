@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0ah.  Last change: 2000 Nov 05
+*version5.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6665,7 +6665,7 @@ cvs		CVS commit (Matt Dunford)
 aspperl		ASP Perl (Aaron Hope)
 bc		BC calculator (Vladimir Scholtz)
 latte		Latte (Nick Moffitt)
-wml 		WML (Gerfried Fuchs)
+wml		WML (Gerfried Fuchs)
 
 Included Exuberant ctags 3.5.1. (Darren Hiebert)
 

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ah.  Last change: 2001 May 12
+*quickfix.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -127,14 +127,14 @@ The following commands can be used if you are in QuickFix mode:
 			[Unix trivia: The name for the Unix "grep" command
 			comes from ":g/re/p", where "re" stands for Regular
 			Expression.]
-			                                *:grepa* *:grepadd*
+							*:grepa* *:grepadd*
 :grepa[dd][!] [arguments]
 			Just like ":grep", but instead of making a new list of
-                        errors the matches are appended to the current list.
+			errors the matches are appended to the current list.
 			Example: >
 				:grep nothing %
-			        :bufdo grepadd! something %
-<                       The first command makes a new error list which is
+				:bufdo grepadd! something %
+<			The first command makes a new error list which is
 			empty.  The second command executes "grepadd" for each
 			listed buffer.  Note the use of ! to avoid that
 			":grepadd" jumps to the first error, which is not
@@ -402,11 +402,11 @@ prints information about entering a directory in the form "Making all in dir".
 
    You get the following:
 
-   Make output                    Directory interpreted by Vim
-   ------------------------       ----------------------------
-   Making all in dir1             ./dir1
-   Making all in dir2             ./dir1/dir2
-   Making all in dir2             ./dir1/dir2
+   Make output			  Directory interpreted by Vim
+   ------------------------	  ----------------------------
+   Making all in dir1		  ./dir1
+   Making all in dir2		  ./dir1/dir2
+   Making all in dir2		  ./dir1/dir2
 
    This can be solved by printing absolute directories in the "enter directory"
    message or by printing "leave directory" messages..
@@ -418,10 +418,10 @@ Examples for Makefiles:
 
 Unix:
     libs:
-            for dn in $(LIBDIRS); do                            \
-                (cd $$dn; echo "Entering dir '$$(pwd)'"; make); \
-                echo "Leaving dir";                             \
-            done
+	    for dn in $(LIBDIRS); do				\
+		(cd $$dn; echo "Entering dir '$$(pwd)'"; make); \
+		echo "Leaving dir";				\
+	    done
 
 Add
     %DEntering\ dir\ '%f',%XLeaving\ dir
@@ -466,7 +466,7 @@ This is what the second line (of a build.xml file) below does: >
 
 The 'errorformat' which handles ant with both javac and jikes is: >
   :set efm=\ %#[javac]\ %#%f:%l:%c:%*\\d:%*\\d:\ %t%[%^:]%#:%m,
-           \%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
+	   \%A\ %#[javac]\ %f:%l:\ %m,%-Z\ %#[javac]\ %p^,%-C%.%#
 <
 						*errorformat-jade*
 parsing jade (see http://www.jclark.com/) errors is simple: >

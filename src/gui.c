@@ -1518,9 +1518,13 @@ gui_write(s, len)
 	gui_update_cursor(force_cursor, TRUE);
 
     /* Update the scrollbars after clearing the screen or when switched
-     * to another window. */
+     * to another window.
+     * Update the horizontal scrollbar always, it's difficult to check all
+     * situations where it might change. */
     if (force_scrollbar || old_curwin != curwin)
 	gui_update_scrollbars(force_scrollbar);
+    else
+	gui_update_horiz_scrollbar(FALSE);
     old_curwin = curwin;
 
     /*
@@ -2707,7 +2711,7 @@ gui_menu_cb(menu)
 /*ARGSUSED*/
     void
 gui_init_which_components(oldval)
-    char_u  *oldval;
+    char_u	*oldval;
 {
     static int prev_which_scrollbars[3] = {-1, -1, -1};
 #ifdef FEAT_MENU
@@ -2765,6 +2769,16 @@ gui_init_which_components(oldval)
 	    case GO_RIGHT:
 		gui.which_scrollbars[SBAR_RIGHT] = TRUE;
 		break;
+#ifdef FEAT_VERTSPLIT
+	    case GO_VLEFT:
+		if (win_hasvertsplit())
+		    gui.which_scrollbars[SBAR_LEFT] = TRUE;
+		break;
+	    case GO_VRIGHT:
+		if (win_hasvertsplit())
+		    gui.which_scrollbars[SBAR_RIGHT] = TRUE;
+		break;
+#endif
 	    case GO_BOT:
 		gui.which_scrollbars[SBAR_BOTTOM] = TRUE;
 		break;

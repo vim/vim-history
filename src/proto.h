@@ -151,7 +151,7 @@ void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(con
 #  ifdef UNIX
 #   include "pty.pro"
 #  endif
-#  if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV)
+#  if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV) && !defined(VMS)
 extern int putenv __ARGS((const char *string));		/* from pty.c */
 #   ifdef USE_VIMPTY_GETENV
 extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */

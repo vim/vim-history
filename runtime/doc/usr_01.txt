@@ -1,9 +1,12 @@
-*usr_01.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_01.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			      About the manuals
 
+
+This chapter introduces the manuals available with Vim.  Read this to know the
+conditions under which the commands are explained.
 
 |01.1|  Two manuals
 |01.2|  Vim installed

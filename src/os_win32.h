@@ -11,7 +11,9 @@
  */
 
 #include "os_dos.h"		/* common MS-DOS and Win32 stuff */
+#ifndef __CYGWIN__
 #include <direct.h>		/* for _mkdir() */
+#endif
 
 #define BINARY_FILE_IO
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
@@ -37,6 +39,8 @@
 # define HAVE_FCNTL_H
 #endif
 #define HAVE_QSORT
+
+#define FEAT_SHORTCUT		/* resolve shortcuts */
 
 #if !defined(__MINGW32__) \
 	&& !defined(__CYGWIN__) \

@@ -483,10 +483,7 @@ CreateGC(w)
 
 	if (XGetGeometry (XtDisplay(w), sbw->scrollbar.thumb, &root, &x, &y,
 		&width, &height, &bw, &depth) == 0)
-	{
-	    XtAppError (XtWidgetToApplicationContext (w),
-		 _("Scrollbar Widget: Could not get geometry of thumb pixmap."));
-	}
+	    EMSG(_("Scrollbar Widget: Could not get geometry of thumb pixmap."));
     }
 
     gcValues.foreground = sbw->scrollbar.foreground;

@@ -889,7 +889,7 @@ mch_suspend()
 }
 
     void
-mch_shellinit()
+mch_init()
 {
     Columns = 80;
     Rows = 24;
@@ -2270,7 +2270,7 @@ mch_nodetype(name)
 }
 
     void
-mch_init()
+mch_early_init()
 {
 #ifdef HAVE_CHECK_STACK_GROWTH
     int			i;
@@ -2298,7 +2298,7 @@ mch_init()
 }
 
     void
-mch_windexit(r)
+mch_exit(r)
     int r;
 {
     exiting = TRUE;
@@ -2327,7 +2327,8 @@ mch_windexit(r)
 	    out_char('\n');
 	else
 	{
-	    msg_clr_eos();	/* clear the rest of the display */
+	    restore_cterm_colors();	/* get original colors back */
+	    msg_clr_eos();		/* clear the rest of the display */
 	    windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
 	}
 

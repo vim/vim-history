@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ah.  Last change: 2001 May 12
+*multibyte.txt* For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -396,7 +396,7 @@ writing files may also be specified with the 'charconvert' option.
 
 Useful utilities for converting the charset:
     All:	    iconv
-        GNU iconv can convert most encodings.  Unicode is used as the
+	GNU iconv can convert most encodings.  Unicode is used as the
 	intermediate encoding, which allows conversion from and to all other
 	encodings.  See http://www.gnu.org/directory/libiconv.html.
 
@@ -775,7 +775,7 @@ Wnn 4.2 can be found at:
     window specific to the input method.
 
 
-USING XIM 			*multibyte-input* *E284* *E286* *E287* *E288* *E289*
+USING XIM			*multibyte-input* *E284* *E286* *E287* *E288* *E289*
 				*E285* *E291* *E292* *E290* *ez4*
 
 Note that Display and Input are independent.  It is possible to see your

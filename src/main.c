@@ -132,7 +132,7 @@ main
      * Do any system-specific initialisations.  These can NOT use IObuff or
      * NameBuff.  Thus emsg2() cannot be called!
      */
-    mch_init();
+    mch_early_init();
 
 #ifdef FEAT_TCL
     Tcl_FindExecutable(argv[0]);
@@ -177,7 +177,7 @@ main
      */
     if ((IObuff = alloc(IOSIZE)) == NULL
 	    || (NameBuff = alloc(MAXPATHL)) == NULL)
-	mch_windexit(0);
+	mch_exit(0);
 
     TIME_MSG("Allocated generic buffers");
 
@@ -191,6 +191,10 @@ main
     {
 	int	mustfree = FALSE;
 
+#ifdef DYNAMIC_GETTEXT
+	/* Initialize the gettext library */
+	dyn_libintl_init(NULL);
+#endif
 	/* expand_env() doesn't work yet, because chartab[] is not initialized
 	 * yet, call vim_getenv() directly */
 	p = vim_getenv((char_u *)"VIMRUNTIME", &mustfree);
@@ -333,7 +337,7 @@ main
 #else
 	mch_errmsg(_("This Vim was not compiled with the diff feature."));
 	mch_errmsg("\n");
-	mch_windexit(2);
+	mch_exit(2);
 #endif
     }
 
@@ -400,13 +404,7 @@ main
 		    if (edit_type != EDIT_NONE)
 			mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 		    edit_type = EDIT_STDIN;
-#ifdef HAVE_DUP
-		    /* Use stderr for stdin, also works for shell commands. */
-		    close(0);
-		    dup(2);
-#else
 		    read_cmd_fd = 2;	/* read from stderr instead of stdin */
-#endif
 		}
 		argv_idx = -1;		/* skip to next argument */
 		break;
@@ -422,7 +420,7 @@ main
 		{
 		    Columns = 80;	/* need to init Columns */
 		    list_version();
-		    mch_windexit(1);
+		    mch_exit(1);
 		}
 		if (STRNICMP(argv[0] + argv_idx, "noplugin", 8) == 0)
 		    p_lpl = FALSE;
@@ -474,7 +472,7 @@ main
 		curwin->w_p_rl = p_fkmap = TRUE;
 #else
 		mch_errmsg(_(e_nofarsi));
-		mch_windexit(2);
+		mch_exit(2);
 #endif
 		break;
 
@@ -487,7 +485,7 @@ main
 		curwin->w_p_rl = p_hkmap = TRUE;
 #else
 		mch_errmsg(_(e_nohebrew));
-		mch_windexit(2);
+		mch_exit(2);
 #endif
 		break;
 
@@ -671,7 +669,7 @@ main
 		    {
 			p = alloc((unsigned)(STRLEN(argv[0]) + 4));
 			if (p == NULL)
-			    mch_windexit(2);
+			    mch_exit(2);
 			sprintf((char *)p, "so %s", argv[0]);
 			commands[n_commands++] = p;
 		    }
@@ -709,17 +707,17 @@ scripterror:
 			mch_errmsg(" ");
 			mch_errmsg(argv[0]);
 			mch_errmsg(_("\"\n"));
-			mch_windexit(2);
+			mch_exit(2);
 		    }
 		    if ((scriptin[0] = mch_fopen(argv[0], READBIN)) == NULL)
 		    {
 			mch_errmsg(_("Cannot open for reading: \""));
 			mch_errmsg(argv[0]);
 			mch_errmsg(_("\"\n"));
-			mch_windexit(2);
+			mch_exit(2);
 		    }
 		    if (save_typebuf() == FAIL)
-			mch_windexit(2);	/* out of memory */
+			mch_exit(2);	/* out of memory */
 		    break;
 
 		case 't':	/* "-t {tag}" */
@@ -760,7 +758,7 @@ scripterror:
 			mch_errmsg(_("Cannot open for script output: \""));
 			mch_errmsg(argv[0]);
 			mch_errmsg(_("\"\n"));
-			mch_windexit(2);
+			mch_exit(2);
 		    }
 		    break;
 		}
@@ -789,7 +787,7 @@ scripterror:
 	    /* Add the file to the global argument list. */
 	    if (ga_grow(&global_alist.al_ga, 1) == FAIL
 		    || (p = vim_strsave((char_u *)argv[0])) == NULL)
-		mch_windexit(2);
+		mch_exit(2);
 	    alist_add(&global_alist, p,
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
 		    0		/* add buffer number after expanding */
@@ -830,6 +828,15 @@ scripterror:
 	gui.starting = FALSE;
 # endif
 #endif
+
+    /* "-b" argument used.  Check before expanding file names, because for
+     * Win32 this makes us edit a shortcut file itself, instead of the file it
+     * links to. */
+    if (bin_mode)
+    {
+	set_options_bin(curbuf->b_p_bin, 1, 0);
+	curbuf->b_p_bin = 1;	    /* binary file I/O */
+    }
 
     if (GARGCOUNT > 0)
     {
@@ -890,12 +897,12 @@ scripterror:
 #endif
 
     /*
-     * mch_shellinit() sets up the terminal (window) for use.  This must be
+     * mch_init() sets up the terminal (window) for use.  This must be
      * done after resetting full_screen, otherwise it may move the cursor
      * (MSDOS).
-     * Note that we may use mch_windexit() before mch_shellinit()!
+     * Note that we may use mch_exit() before mch_init()!
      */
-    mch_shellinit();
+    mch_init();
     TIME_MSG("shell init");
 
     /*
@@ -1157,7 +1164,7 @@ scripterror:
     if (recoverymode && fname == NULL)
     {
 	recover_names(NULL, TRUE, 0);
-	mch_windexit(0);
+	mch_exit(0);
     }
 
     /*
@@ -1181,12 +1188,6 @@ scripterror:
 	p_fkmap = TRUE;		/* Set the Farsi keymap mode */
     }
 #endif
-
-    if (bin_mode)		    /* "-b" argument used */
-    {
-	set_options_bin(curbuf->b_p_bin, 1, 0);
-	curbuf->b_p_bin = 1;	    /* binary file I/O */
-    }
 
 #ifdef FEAT_GUI
     if (gui.starting)
@@ -1223,7 +1224,7 @@ scripterror:
 	if (qf_init(p_ef, p_efm, TRUE) < 0)
 	{
 	    out_char('\n');
-	    mch_windexit(3);
+	    mch_exit(3);
 	}
 	TIME_MSG("reading errorfile");
     }
@@ -1830,7 +1831,7 @@ getout(exitval)
     iconv_end();
 #endif
 
-    mch_windexit(exitval);
+    mch_exit(exitval);
 }
 
 /*
@@ -1862,7 +1863,7 @@ main_start_gui()
 #else
     mch_errmsg(_(e_nogvim));
     mch_errmsg("\n");
-    mch_windexit(2);
+    mch_exit(2);
 #endif
 }
 
@@ -1943,7 +1944,7 @@ mainerr(n, str)
     }
     mch_errmsg(_("\nMore info with: \"vim -h\"\n"));
 
-    mch_windexit(1);
+    mch_exit(1);
 }
 
 /*
@@ -2102,7 +2103,7 @@ usage()
     main_msg(_("--help\t\tShow Gnome arguments"));
 # endif
 #endif
-    mch_windexit(1);
+    mch_exit(1);
 }
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)

@@ -965,18 +965,10 @@ static struct vimoption
     {"guioptions",  "go",   P_STRING|P_VI_DEF|P_RALL|P_FLAGLIST,
 #if defined(FEAT_GUI)
 			    (char_u *)&p_go, PV_NONE,
-# ifdef FEAT_TOOLBAR
-#  ifdef UNIX
-			    {(char_u *)"agimrtT", (char_u *)0L}
-#  else
-			    {(char_u *)"gmrtT", (char_u *)0L}
-#  endif
+# ifdef UNIX
+			    {(char_u *)"agimrLtT", (char_u *)0L}
 # else
-#  ifdef UNIX
-			    {(char_u *)"agimrt", (char_u *)0L}
-#  else
-			    {(char_u *)"gmrt", (char_u *)0L}
-#  endif
+			    {(char_u *)"gmrLtT", (char_u *)0L}
 # endif
 #else
 			    (char_u *)NULL, PV_NONE,
@@ -5026,8 +5018,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE) != OK)
 	    errmsg = e_invarg;
-	else if (!virtual_active())
-	    curwin->w_cursor.coladd = 0;
+	else
+	    /* Recompute cursor position in case the new ve setting
+	     * changes something. */
+	    coladvance(curwin->w_virtcol);
     }
 #endif
 

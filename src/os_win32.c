@@ -362,7 +362,7 @@ PlatformId(void)
 
 /*
  * Return TRUE when running on Windows 95.  Only to be used after
- * mch_shellinit().
+ * mch_init().
  */
     int
 mch_windows95(void)
@@ -1357,10 +1357,10 @@ executable_exists(char *name)
 #ifdef FEAT_GUI_W32
 
 /*
- * GUI version of mch_shellinit().
+ * GUI version of mch_init().
  */
     void
-mch_shellinit()
+mch_init()
 {
 #ifndef __MINGW32__
     extern int _fmode;
@@ -1818,10 +1818,10 @@ static DWORD g_cmodein = 0;
 static DWORD g_cmodeout = 0;
 
 /*
- * non-GUI version of mch_shellinit().
+ * non-GUI version of mch_init().
  */
     void
-mch_shellinit()
+mch_init()
 {
 #ifndef FEAT_RESTORE_ORIG_SCREEN
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -1914,13 +1914,12 @@ mch_shellinit()
 }
 
 /*
- * non-GUI version of mch_windexit().
+ * non-GUI version of mch_exit().
  * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_exit() may be called before mch_init()!
  */
     void
-mch_windexit(
-    int r)
+mch_exit(int r)
 {
     stoptermcap();
 
@@ -1957,6 +1956,10 @@ mch_windexit(
     SetConsoleCursorInfo(g_hConOut, &g_cci);
     SetConsoleMode(g_hConIn,  g_cmodein);
     SetConsoleMode(g_hConOut, g_cmodeout);
+
+#ifdef DYNAMIC_GETTEXT
+    dyn_libintl_end();
+#endif
 
     exit(r);
 }

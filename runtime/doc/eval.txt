@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ah.  Last change: 2001 May 25
+*eval.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -391,7 +391,7 @@ does expand all variables that the shell knows about.  Example: >
 :echo $version
 :echo expand("$version")
 The first one probably doesn't echo anything, the second echoes the $version
-variable (if you shell supports it).
+variable (if your shell supports it).
 
 
 internal variable					*expr-variable*
@@ -1257,7 +1257,9 @@ foldtext()	Returns a String, to be displayed for a closed fold.  This is
 		{not available when compiled without the |+folding| feature}
 
 getchar([expr])						*getchar()*
-		Get a single character from the user.
+		Get a single character from the user.  If it is an 8-bit
+		character, the result is a number.  Otherwise a String is
+		returned with the encoded character.
 		If [expr] is omitted, wait until a character is available.
 		If [expr] is 0, only get a character when one is available.
 		If [expr] is 1, only check if a character is available, it is
@@ -1270,7 +1272,13 @@ getchar([expr])						*getchar()*
 		The returned value is zero if no character is available.
 		There is no prompt, you will somehow have to make clear to the
 		user that a character has to be typed.
-		This example redefines "f" to ignore case: >
+		There is no mapping for the character.
+		Key codes are replaced, thus when the user presses the <Del>
+		key you get the code for the <Del> key, not the raw character
+		sequence.  Examples: >
+			getchar() == "\<Del>"
+			getchar() == "\<S-Left>"
+<		This example redefines "f" to ignore case: >
 			:nmap f :call FindChar()<CR>
 			:function FindChar()
 			:  let c = nr2char(getchar())
@@ -1693,10 +1701,10 @@ mapcheck({name}[, {mode}])				*mapcheck()*
 		with a mapping which is equal to the start of {name}.
 
 			matches mapping "a"     "ab"    "abc" ~
-		   mapcheck("a")        yes     yes      yes
-		   mapcheck("abc")      yes     yes      yes
-		   mapcheck("ax")       yes     no       no
-		   mapcheck("b")        no      no       no
+		   mapcheck("a")	yes	yes	 yes
+		   mapcheck("abc")	yes	yes	 yes
+		   mapcheck("ax")	yes	no	 no
+		   mapcheck("b")	no	no	 no
 
 		The difference with maparg() is that mapcheck() finds a
 		mapping that matches with {name}, while maparg() only finds a

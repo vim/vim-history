@@ -1,9 +1,11 @@
-*usr_28.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_28.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 				   Folding
 
+
+Introduction.
 
 |28.1|	What is folding?
 |28.2|  Manual folding
@@ -27,17 +29,17 @@ Folding is used to show a range of lines in the buffer as a single line on the
 screen.  Like a piece of paper which is folded to make it shorter:
 
 	+------------------------+
-	| line 1                 |
-	| line 2                 |
-	| line 3                 |
+	| line 1		 |
+	| line 2		 |
+	| line 3		 |
 	|_______________________ |
-	\                        \
+	\			 \
 	 \________________________\
-	 / folded lines           /
+	 / folded lines		  /
 	/________________________/
-	| line 12                |
-	| line 13                |
-	| line 14                |
+	| line 12		 |
+	| line 13		 |
+	| line 14		 |
 	+------------------------+
 
 The text is still in the buffer, unchanged.  Only the way lines are displayed
@@ -195,7 +197,7 @@ It's easy to see on this example text:
 
 This line is not indented
 	This line is indented once
-	    	This line is indented twice
+		This line is indented twice
 	This line is indented once
 This line is not indented
 	This line is indented once
@@ -304,7 +306,7 @@ You can try it out on this text:
 
 Explanation for the 'foldexpr' used in the example (inside out):
    getline(v:lnum)			gets the current line
-   substitute(...,'\\s','','g') 	removes all white space from the line
+   substitute(...,'\\s','','g')		removes all white space from the line
    substitute(...,'[^>].*','',''))	removes everything after leading '>'s
    strlen(...)				counts the length of the string, which
 					is the number of '>'s found
@@ -338,11 +340,11 @@ For more details see |fold-diff|.
 *28.10*  Which fold method to use?
 
 'foldmethod'	'foldlevel'	change text
-"manual"          nesting           no
-"indent"          indent            no
-"expr"            value             no
-"marker"          nesting           yes
-"syntax"          nesting	    no
+"manual"	  nesting	    no
+"indent"	  indent	    no
+"expr"		  value		    no
+"marker"	  nesting	    yes
+"syntax"	  nesting	    no
 "diff"		  0 or 1	    no
 
 TODO

@@ -1822,7 +1822,7 @@ gui_mch_prepare(
 
 	    /*
 	     * This path should be the normal one taken to exit Vim.
-	     * The main() thread calls mch_windexit() which calls
+	     * The main() thread calls mch_exit() which calls
 	     * gui_mch_exit() which terminates its thread.
 	     */
 	    exit(main_exitcode);
@@ -1992,7 +1992,7 @@ gui_mch_exit(int vim_exitcode)
 	exit_thread(vim_exitcode);
 #endif
     }
-    /* If we are somehow still here, let mch_windexit() handle things. */
+    /* If we are somehow still here, let mch_exit() handle things. */
 }
 
 /*

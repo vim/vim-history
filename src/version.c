@@ -853,7 +853,8 @@ static void do_intro_line __ARGS((int row, char_u *msg, int add_version, int att
  * Or with the ":intro" command (for Sven :-).
  */
     void
-intro_message()
+intro_message(colon)
+    int		colon;		/* TRUE for ":intro" */
 {
     int		i;
     int		row;
@@ -888,9 +889,15 @@ intro_message()
 	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
 #endif
 
+#ifdef FEAT_WINDOWS
+    /* Don't overwrite a statusline.  Depends on 'cmdheight'. */
+    if (p_ls > 1)
+	blanklines -= p_ch;
+#endif
+
     /* start displaying the message lines after half of the blank lines */
     row = blanklines / 2;
-    if (row >= 2 && Columns >= 50)
+    if ((row >= 2 && Columns >= 50) || colon)
     {
 	for (i = 0; i < (int)(sizeof(lines) / sizeof(char *)); ++i)
 	{
@@ -976,6 +983,6 @@ ex_intro(eap)
     exarg_T	*eap;
 {
     screenclear();
-    intro_message();
+    intro_message(TRUE);
     wait_return(TRUE);
 }

@@ -1,18 +1,20 @@
-*usr_42.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_42.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			      Add new menus
 
 
-|42.1|	Replace a word
+Introduction.
+
+|42.1|	First section
 
      Next chapter: |usr_43.txt|  Using filetypes
  Previous chapter: |usr_41.txt|  Make new commands
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*42.1*	Replace a word
+*42.1*	First section
 
 
 ==============================================================================

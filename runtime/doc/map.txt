@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ah.  Last change: 2001 May 12
+*map.txt*       For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -966,7 +966,7 @@ This will invoke: >
    :	let i = 0
    :	while i < argc()
    :	   if filereadable(argv(i))
-   :        execute "e " . argv(i)
+   :	    execute "e " . argv(i)
    :	     execute a:command
    :      endif
    :      let i = i + 1

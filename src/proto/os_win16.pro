@@ -1,6 +1,6 @@
 /* os_win16.c */
 void mch_setmouse __ARGS((int on));
-void mch_shellinit __ARGS((void));
+void mch_init __ARGS((void));
 int mch_check_win __ARGS((int argc, char **argv));
 int mch_get_user_name __ARGS((char_u *s, int len));
 void mch_get_host_name __ARGS((char_u *s, int len));

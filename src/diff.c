@@ -563,12 +563,12 @@ ex_diffupdate(eap)
     fd = fopen((char *)tmp_orig, "w");
     if (fd != NULL)
     {
-	fwrite("line1\n", 6, 1, fd);
+	fwrite("line1\n", (size_t)6, (size_t)1, fd);
 	fclose(fd);
 	fd = fopen((char *)tmp_new, "w");
 	if (fd != NULL)
 	{
-	    fwrite("line2\n", 6, 1, fd);
+	    fwrite("line2\n", (size_t)6, (size_t)1, fd);
 	    fclose(fd);
 	    diff_file(tmp_orig, tmp_new, tmp_diff);
 	    fd = fopen((char *)tmp_diff, "r");
