@@ -1362,6 +1362,13 @@ scripterror:
 #ifdef FEAT_GUI
     if (gui.starting)
     {
+#if defined(UNIX) || defined(VMS)
+	/* When something caused a message from a vimrc script, need to output
+	 * an extra newline before the shell prompt. */
+	if (did_emsg || msg_didout)
+	    putchar('\n');
+#endif
+
 	gui_start();		/* will set full_screen to TRUE */
 	TIME_MSG("starting GUI");
     }
@@ -1502,6 +1509,13 @@ scripterror:
 	dup(2);
 #endif
     }
+
+#if defined(UNIX) || defined(VMS)
+    /* When switching screens and something caused a message from a vimrc
+     * script, need to output an extra newline on exit. */
+    if ((did_emsg || msg_didout) && *T_TI != NUL)
+	newline_on_exit = TRUE;
+#endif
 
     /*
      * When done something that is not allowed or error message call
