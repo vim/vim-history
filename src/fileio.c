@@ -1178,6 +1178,7 @@ retry:
 		char		*top;
 		size_t		from_size;
 		size_t		to_size;
+		size_t		ret;
 
 		fromp = (char *)ptr;
 		from_size = size;
@@ -1189,8 +1190,11 @@ retry:
 		 * If there is conversion error or not enough room try using
 		 * another conversion.
 		 */
-		if ((iconv(iconv_fd, &fromp, &from_size, &top, &to_size)
-			    == (size_t)-1 && ICONV_ERRNO != EINVAL)
+		ret = iconv(iconv_fd, &fromp, &from_size, &top, &to_size);
+		if (ret == (size_t)-1)
+		    /* need to reset the state after an error */
+		    (void)iconv(iconv_fd, NULL, NULL, NULL, NULL);
+		if ((ret == (size_t)-1 && ICONV_ERRNO != EINVAL)
 						  || from_size > CONV_RESTLEN)
 		    goto rewind_retry;
 
