@@ -1620,6 +1620,10 @@ enc_alias_search(name)
     return -1;
 }
 
+#ifdef HAVE_LANGINFO_H
+# include <langinfo.h>
+#endif
+
 /*
  * Return the default value for 'encoding' in an allocated string.
  * Returns NULL when out of memory or no usable default could be found.
