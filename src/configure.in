@@ -1765,8 +1765,10 @@ AC_TRY_LINK([
 	AC_MSG_RESULT(no))
 
 dnl Link with -lposix1e for ACL stuff; if not found, try -lacl for SGI
+dnl when -lacl works, also try to use -lattr (required for Debian).
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],
-	AC_CHECK_LIB(acl, acl_get_file, [LIBS="$LIBS -lacl"],,),)
+	AC_CHECK_LIB(acl, acl_get_file, [LIBS="$LIBS -lacl"
+		  AC_CHECK_LIB(attr, fgetxattr, LIBS="$LIBS -lattr",,)],,),)
 
 AC_MSG_CHECKING(for POSIX ACL support)
 AC_TRY_LINK([
