@@ -2520,7 +2520,7 @@ static struct fst
     {"toupper",		1, 1, f_toupper},
     {"type",		1, 1, f_type},
     {"virtcol",		1, 1, f_virtcol},
-    {"visualmode",	0, 0, f_visualmode},
+    {"visualmode",	0, 1, f_visualmode},
     {"winbufnr",	1, 1, f_winbufnr},
     {"wincol",		0, 0, f_wincol},
     {"winheight",	1, 1, f_winheight},
@@ -6587,9 +6587,16 @@ f_visualmode(argvars, retvar)
     char_u	str[2];
 
     retvar->var_type = VAR_STRING;
-    str[0] = curbuf->b_visual_mode;
+    str[0] = curbuf->b_visual_mode_eval;
     str[1] = NUL;
     retvar->var_val.var_string = vim_strsave(str);
+
+    /* A non-zero number or non-empty string argument: reset mode. */
+    if ((argvars[0].var_type == VAR_NUMBER
+		&& argvars[0].var_val.var_number != 0)
+	    || (argvars[0].var_type == VAR_STRING
+		&& *get_var_string(&argvars[0]) != NUL))
+	curbuf->b_visual_mode_eval = NUL;
 }
 
 /*
