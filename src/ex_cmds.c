@@ -4634,14 +4634,15 @@ ex_help(eap)
     /*
      * Always set these options after jumping to a help tag, because the user
      * may have an autocommand that gets in the way.
-     * accept all chars for keywords, except ' ', '*', '"', '|'.
+     * Accept all ASCII chars for keywords, except ' ', '*', '"', '|', and
+     * latin1 word characters (for translated help files).
      * Only set it when needed, buf_init_chartab() is some work.
      */
     p =
 #ifdef EBCDIC
 	    (char_u *)"65-255,^*,^|,^\"";
 #else
-	    (char_u *)"!-~,^*,^|,^\"";
+	    (char_u *)"!-~,^*,^|,^\",192-255";
 #endif
     if (STRCMP(curbuf->b_p_isk, p) != 0)
     {
