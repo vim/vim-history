@@ -1954,7 +1954,16 @@ CenterWindow(
 
     /* If Vim is minimized put the window in the middle of the screen. */
     if (IsMinimized(hwndParent))
+    {
+#ifdef WIN16
+	rParent.left = 0;
+	rParent.top = 0;
+	rParent.right = GetSystemMetrics(SM_CXSCREEN);
+	rParent.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
+#else
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rParent, 0);
+#endif
+    }
     else
 	GetWindowRect(hwndParent, &rParent);
     wParent = rParent.right - rParent.left;
