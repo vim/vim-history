@@ -3107,6 +3107,33 @@ init_homedir()
 
 #ifdef WIN3264
     /*
+     * Weird but true: $HOME may contain an indirect reference to another
+     * variable, esp. "%USERPROFILE%".  Happens when $USERPROFILE isn't set
+     * when $HOME is being set.
+     */
+    if (var != NULL && *var == '%')
+    {
+	char_u	*p;
+	char_u	*exp;
+
+	p = vim_strchr(var + 1, '%');
+	if (p != NULL)
+	{
+	    STRNCPY(NameBuff, var + 1, p - (var + 1));
+	    NameBuff[p - (var + 1)] = NUL;
+	    exp = mch_getenv(NameBuff);
+	    if (exp != NULL && *exp != NUL
+					&& STRLEN(exp) + STRLEN(p) < MAXPATHL)
+	    {
+		sprintf((char *)NameBuff, "%s%s", exp, p + 1);
+		var = NameBuff;
+		/* Also set $HOME, it's needed for _viminfo. */
+		vim_setenv((char_u *)"HOME", NameBuff);
+	    }
+	}
+    }
+
+    /*
      * Typically, $HOME is not defined on Windows, unless the user has
      * specifically defined it for Vim's sake.  However, on Windows NT
      * platforms, $HOMEDRIVE and $HOMEPATH are automatically defined for
