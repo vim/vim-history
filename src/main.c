@@ -328,6 +328,10 @@ main
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
 #endif
 
+#if defined(HAVE_DATE_TIME) && defined(VMS) && defined(VAXC)
+    make_version();
+#endif
+
     /*
      * Allocate space for the generic buffers (needed for set_init_1() and
      * EMSG2()).
@@ -1019,12 +1023,19 @@ main
 	 */
 	if (p_exrc)
 	{
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 	    {
 		struct stat s;
 
 		/* if ".vimrc" file is not owned by user, set 'secure' mode */
-		if (mch_stat(VIMRC_FILE, &s) || s.st_uid != getuid())
+
+		if (mch_stat(VIMRC_FILE, &s) || s.st_uid !=
+# ifdef UNIX
+				getuid()
+# else	 /* VMS */
+				((getgid() << 16) | getuid())
+# endif
+		    )
 		    secure = p_secure;
 	    }
 #else
@@ -1051,11 +1062,17 @@ main
 
 	    if (i == FAIL)
 	    {
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 		struct stat s;
 
 		/* if ".exrc" is not owned by user set 'secure' mode */
-		if (mch_stat(EXRC_FILE, &s) || s.st_uid != getuid())
+		if (mch_stat(EXRC_FILE, &s) || s.st_uid !=
+# ifdef UNIX
+				getuid()
+# else	 /* VMS */
+				((getgid() << 16) | getuid())
+# endif
+		    )
 		    secure = p_secure;
 		else
 		    secure = 0;

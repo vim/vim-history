@@ -1295,9 +1295,11 @@ write_viminfo(file, forceit)
     char_u	    *tempname = NULL;	/* name of temp viminfo file */
     struct stat	    st_new;		/* mch_stat() of potential new file */
     char_u	    *wp;
+#if defined(UNIX) || defined(VMS)
+     mode_t	    umask_save;
+#endif
 #ifdef UNIX
     int		    shortname = FALSE;	/* use 8.3 file name */
-    mode_t	    umask_save;
     struct stat	    st_old;		/* mch_stat() of existing viminfo file */
 #endif
 
@@ -1315,7 +1317,7 @@ write_viminfo(file, forceit)
 	    /* if it does exist, but we can't read it, don't try writing */
 	    if (mch_stat((char *)file, &st_new) == 0)
 		goto end;
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 	    /*
 	     * For Unix we create the .viminfo non-accessible for others,
 	     * because it may contain text from non-accessible documents.
@@ -1323,7 +1325,7 @@ write_viminfo(file, forceit)
 	    umask_save = umask(077);
 #endif
 	    fp_out = mch_fopen((char *)file, WRITEBIN);
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 	    (void)umask(umask_save);
 #endif
 	}
@@ -1525,7 +1527,11 @@ viminfo_filename(file)
 	{
 #ifdef VIMINFO_FILE2
 	    /* don't use $HOME when not defined (turned into "c:/"!). */
+# ifdef VMS
+	    if (mch_getenv((char_u *)"SYS$LOGIN") == NULL)
+# else
 	    if (mch_getenv((char_u *)"HOME") == NULL)
+# endif
 	    {
 		/* don't use $VIM when not available. */
 		expand_env((char_u *)"$VIM", NameBuff, MAXPATHL);

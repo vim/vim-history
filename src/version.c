@@ -23,8 +23,27 @@
 
 char	*Version = VIM_VERSION_SHORT;
 char	*mediumVersion = VIM_VERSION_MEDIUM;
-#ifdef HAVE_DATE_TIME
+
+#if defined(HAVE_DATE_TIME) || defined(PROTO)
+# if (defined(VMS) && defined(VAXC)) || defined(PROTO)
+char	longVersion[sizeof(VIM_VERSION_LONG_DATE) + sizeof(__DATE__)
+						      + sizeof(__TIME__) + 3];
+    void
+make_version()
+{
+    /*
+     * Construct the long version string.  Necessary because
+     * VAX C can't catenate strings in the preprocessor.
+     */
+    strcpy(longVersion, VIM_VERSION_LONG_DATE);
+    strcat(longVersion, __DATE__);
+    strcat(longVersion, " ");
+    strcat(longVersion, __TIME__);
+    strcat(longVersion, ")");
+}
+# else
 char	*longVersion = VIM_VERSION_LONG_DATE __DATE__ " " __TIME__ ")";
+# endif
 #else
 char	*longVersion = VIM_VERSION_LONG;
 #endif
@@ -419,6 +438,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    6,
+/**/
     5,
 /**/
     4,
@@ -502,6 +523,9 @@ list_version()
 #ifdef RISCOS
     MSG_PUTS("\nRISC OS version");
 #endif
+#ifdef VMS
+    MSG_PUTS("\nOpenVMS version");
+#endif
 
     /* Print the list of patch numbers if there is at least one. */
     /* Print a range when patches are consecutive: "1-10, 12, 15-40, 42-45" */
@@ -532,14 +556,20 @@ list_version()
     }
 
 #if defined(UNIX) || defined(VMS)
-    MSG_PUTS("\nCompiled by ");
-    MSG_PUTS(compiled_user);
-    MSG_PUTS("@");
-    MSG_PUTS(compiled_sys);
-    MSG_PUTS(", with (+) or without (-):\n");
-#else
-    MSG_PUTS("\nCompiled with (+) or without (-):\n");
+    if (*compiled_user != NUL)
+    {
+	MSG_PUTS("\nCompiled by ");
+	MSG_PUTS(compiled_user);
+	if (*compiled_sys != NUL)
+	{
+	    MSG_PUTS("@");
+	    MSG_PUTS(compiled_sys);
+	}
+	MSG_PUTS(", with (+) or without (-):\n");
+    }
+    else
 #endif
+	MSG_PUTS("\nCompiled with (+) or without (-):\n");
 
     /* print all the features */
     for (i = 0; features[i] != NULL; ++i)
@@ -623,6 +653,14 @@ list_version()
     version_msg("Compilation: ");
     version_msg((char *)all_cflags);
     msg_putchar('\n');
+#ifdef VMS
+    if (*compiler_version != NUL)
+    {
+	version_msg("Compiler: ");
+	version_msg((char *)compiler_version);
+	msg_putchar('\n');
+    }
+#endif
     version_msg("Linking: ");
     version_msg((char *)all_lflags);
 #endif

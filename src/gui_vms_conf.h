@@ -65,6 +65,9 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 /* #undef gid_t */
 
+/* Define to `long' if <sys/types.h> doesn't define.  */
+/* #undef ino_t */
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #define TIME_WITH_SYS_TIME 1
 
@@ -76,6 +79,9 @@
 
 /* Define as the command at the end of signal handlers ("" or "return 0;").  */
 #define SIGRETURN return
+
+/* Define if struct sigcontext is present */
+#define HAVE_SIGCONTEXT 1
 
 /* Define if touuper/tolower only work on lower/upercase characters */
 /* #undef BROKEN_TOUPPER */
@@ -112,6 +118,12 @@
 
 /* Define if you have the rename() function. */
 #define HAVE_RENAME 1
+
+/* Define if you have the qsort() function. */
+#define HAVE_QSORT 1
+
+/* Define if you have the strftime() function.  */
+#define HAVE_STRFTIME 1
 
 /* Define if you have the fsync() function. */
 #define HAVE_FSYNC 1
@@ -167,7 +179,11 @@
 /*#define HAVE_TERMCAP_H 1*/
 
 /* Define if you have the <fcntl.h> header file.  */
+#ifdef        VAXC
+#undef HAVE_FCNTL_H
+#else
 #define HAVE_FCNTL_H 1
+#endif
 
 /* Define if you have the <sgtty.h> header file.  */
 /* #undef HAVE_SGTTY_H */
@@ -219,3 +235,19 @@
 
 /* Define if you have the <pwd.h> header file. */
 /*#define HAVE_PWD_H 1*/
+
+/* Define if you have the <Xm/Xm.h> header file (only used by configure). */
+/* #undef HAVE_XM_XM_H */
+
+/* Define if strings.h cannot be included when string.h already is */
+/* #undef NO_STRINGS_WITH_STRING_H */
+
+/* Define if you want to include fontset support. */
+#define USE_FONTSET 1
+
+/* Define if your libc doesn't work POSIX.2 locale function correctly */
+#define BROKEN_LOCALE 1
+
+/* Define if your X has own locale library */
+/* #undef X_LOCALE */
+

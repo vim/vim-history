@@ -121,7 +121,7 @@ static void	do_pwd __ARGS((void));
 static void	do_sleep __ARGS((EXARG *eap));
 static void	do_exmap __ARGS((EXARG *eap, int isabbrev));
 static void	do_winsize __ARGS((char_u *arg));
-#if defined(USE_GUI) || defined(UNIX)
+#if defined(USE_GUI) || defined(UNIX) || defined(VMS)
 static void	do_winpos __ARGS((char_u *arg));
 #endif
 static void	do_exops __ARGS((EXARG *eap));
@@ -1962,7 +1962,7 @@ do_one_cmd(cmdlinep, sourcing,
 		do_winsize(ea.arg);
 		break;
 
-#if defined(USE_GUI) || defined(UNIX)
+#if defined(USE_GUI) || defined(UNIX) || defined(VMS)
 	case CMD_winpos:
 		do_winpos(ea.arg);
 		break;
@@ -6421,7 +6421,7 @@ do_cd(eap)
     char_u	    *tofree;
 
     new_dir = eap->arg;
-#ifndef UNIX
+#if !defined(UNIX) && !defined(VMS)
     /* for non-UNIX ":cd" means: print current directory */
     if (*new_dir == NUL)
 	do_pwd();
@@ -6446,12 +6446,22 @@ do_cd(eap)
 	else
 	    prev_dir = NULL;
 
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 	/* for UNIX ":cd" means: go to home directory */
 	if (*new_dir == NUL)
 	{
 	    /* use NameBuff for home directory name */
+# ifdef VMS
+	    char_u	*p;
+
+	    p = mch_getenv((char_u *)"SYS$LOGIN");
+	    if (p == NULL || *p == NUL)	/* empty is the same as not set */
+		NameBuff[0] = NUL;
+	    else
+		STRNCPY(NameBuff, p, MAXPATHL);
+# else
 	    expand_env((char_u *)"$HOME", NameBuff, MAXPATHL);
+# endif
 	    new_dir = NameBuff;
 	}
 #endif
@@ -6545,7 +6555,7 @@ do_winsize(arg)
     set_winsize(w, h, TRUE);
 }
 
-#if defined(USE_GUI) || defined(UNIX)
+#if defined(USE_GUI) || defined(UNIX) || defined(VMS)
 /*
  * ":winpos" command.
  */

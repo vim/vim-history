@@ -47,6 +47,8 @@
  * 26.09.98 Fixed: 'xxd -i infile outfile' did not truncate outfile.
  * 27.10.98 Fixed: -g option parser required blank.
  *          option -b added: 01000101 binary output in normal format.
+ * 16.05.00 Added VAXC changes by Stephen P. Wall
+ * 16.05.00 Improved MMS file and merege for VMS by Zoltan Arpadffy
  *
  * (c) 1990-1998 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
@@ -55,7 +57,11 @@
  * lose money and don't ask me.
  */
 #include <stdio.h>
-#include <fcntl.h>
+#ifdef VAXC
+# include <file.h>
+#else
+# include <fcntl.h>
+#endif
 #ifdef __TSC__
 # define MSDOS
 #endif
@@ -135,11 +141,20 @@ char osver[] = "";
 # define BIN_ASSIGN(fp, yes) setmode(fileno(fp), (yes) ? O_BINARY : O_TEXT)
 # define PATH_SEP '\\'
 #else
-# define BIN_READ(dummy)  "r"
-# define BIN_WRITE(dummy) "w"
-# define BIN_CREAT(dummy) O_CREAT
-# define BIN_ASSIGN(fp, dummy) fp
-# define PATH_SEP '/'
+# ifdef VMS
+#  define BIN_READ(dummy)  "r"
+#  define BIN_WRITE(dummy) "w"
+#  define BIN_CREAT(dummy) O_CREAT
+#  define BIN_ASSIGN(fp, dummy) fp
+#  define PATH_SEP ']'
+#  define FILE_SEP '.'
+# else
+#  define BIN_READ(dummy)  "r"
+#  define BIN_WRITE(dummy) "w"
+#  define BIN_CREAT(dummy) O_CREAT
+#  define BIN_ASSIGN(fp, dummy) fp
+#  define PATH_SEP '/'
+# endif
 #endif
 
 /* open has only to arguments on the Mac */
@@ -416,6 +431,14 @@ char *argv[];
   for (pp = pname; *pp; )
     if (*pp++ == PATH_SEP)
       pname = pp;
+#ifdef FILE_SEP
+  for (pp = pname; *pp; pp++)
+    if (*pp == FILE_SEP)
+      {
+	*pp = '\0';
+	break;
+      }
+#endif
 
   while (argc >= 2)
     {

@@ -2232,7 +2232,12 @@ init_homedir()
 {
     char_u  *var;
 
+#ifdef VMS
+    var = mch_getenv((char_u *)"SYS$LOGIN");
+#else
     var = mch_getenv((char_u *)"HOME");
+#endif
+
     if (var != NULL && *var == NUL)	/* empty is same as not set */
 	var = NULL;
 #if defined(OS2) || defined(MSDOS) || defined(MSWIN)
@@ -2331,11 +2336,7 @@ expand_env(src, dst, dstlen)
 	    }
 	    else					/* user directory */
 	    {
-#ifndef UNIX
-		/* cannot expand user's home directory, so don't try */
-		var = NULL;
-		tail = (char_u *)"";	/* for gcc */
-#else
+#if defined(UNIX) || (defined(VMS) && defined(USER_HOME))
 		/*
 		 * Copy ~user to dst[], so we can put a NUL after it.
 		 */
@@ -2348,14 +2349,14 @@ expand_env(src, dst, dstlen)
 			&& !vim_ispathsep(*tail))
 		    *var++ = *tail++;
 		*var = NUL;
-
+# ifdef UNIX
 		/*
 		 * If the system supports getpwnam(), use it.
 		 * Otherwise, or if getpwnam() fails, the shell is used to
 		 * expand ~user.  This is slower and may fail if the shell
 		 * does not support ~user (old versions of /bin/sh).
 		 */
-# if defined(HAVE_GETPWNAM) && defined(HAVE_PWD_H)
+#  if defined(HAVE_GETPWNAM) && defined(HAVE_PWD_H)
 		{
 		    struct passwd *pw;
 
@@ -2366,14 +2367,50 @@ expand_env(src, dst, dstlen)
 			var = NULL;
 		}
 		if (var == NULL)
-# endif
+#  endif
 		{
 		    expand_context = EXPAND_FILES;
 		    var = ExpandOne(dst, NULL, WILD_ADD_SLASH|WILD_SILENT,
 							    WILD_EXPAND_FREE);
 		    mustfree = TRUE;
 		}
-#endif /* UNIX */
+
+# else	/* !UNIX, thus VMS */
+		/*
+		 * USER_HOME is a comma-separated list of
+		 * directories to search for the user account in.
+		 */
+		{
+		    char_u	test[MAXPATHL], paths[MAXPATHL];
+		    char_u	*path, *next_path, *ptr;
+		    struct stat	st;
+
+		    STRCPY(paths, USER_HOME);
+		    next_path = paths;
+		    while (*next_path)
+		    {
+			for (path = next_path; *next_path && *next_path != ',';
+				next_path++);
+			if (*next_path)
+			    *next_path++ = NUL;
+			STRCPY(test, path);
+			STRCAT(test, "/");
+			STRCAT(test, dst + 1);
+			if (mch_stat(test, &st) == 0)
+			{
+			    var = alloc(STRLEN(test) + 1);
+			    STRCPY(var, test);
+			    mustfree = TRUE;
+			    break;
+			}
+		    }
+		}
+# endif /* UNIX */
+#else
+		/* cannot expand user's home directory, so don't try */
+		var = NULL;
+		tail = (char_u *)"";	/* for gcc */
+#endif /* UNIX || VMS */
 	    }
 
 	    if (var != NULL && *var != NUL &&
@@ -2699,7 +2736,13 @@ home_replace(buf, src, dst, dstlen, one)
      */
     if (homedir != NULL)
 	dirlen = STRLEN(homedir);
+
+#ifdef VMS
+    homedir_env = mch_getenv((char_u *)"SYS$LOGIN");
+#else
     homedir_env = mch_getenv((char_u *)"HOME");
+#endif
+
     if (homedir_env != NULL && *homedir_env == NUL)
 	homedir_env = NULL;
     if (homedir_env != NULL)

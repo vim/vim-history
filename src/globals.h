@@ -139,7 +139,7 @@ EXTERN int	need_wait_return INIT(= 0); /* need to wait for return later */
 EXTERN int	quit_more INIT(= FALSE);    /* 'q' hit at "--more--" msg */
 EXTERN int	more_back INIT(= 0);	    /* 'b' or 'u' at "--more--" msg */
 EXTERN int	more_back_used INIT(= FALSE); /* using more_back */
-#if defined(UNIX) || defined(__EMX__)
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
 EXTERN int	newline_on_exit INIT(= FALSE);	/* did msg in altern. screen */
 EXTERN int	intr_char INIT(= 0);	    /* extra interrupt character */
 #endif
@@ -623,7 +623,11 @@ EXTERN char	breakat_flags[256];	/* which characters are in 'breakat' */
 /* these are in version.c */
 extern char *Version;
 extern char *mediumVersion;
+#if defined(HAVE_DATE_TIME) && defined(VMS) && defined(VAXC)
+extern char longVersion[];
+#else
 extern char *longVersion;
+#endif
 
 /*
  * Some file names for Unix are stored in pathdef.c, to make their value
@@ -635,6 +639,9 @@ extern char_u *default_vim_dir;
 extern char_u *default_vimruntime_dir;
 extern char_u *all_cflags;
 extern char_u *all_lflags;
+# ifdef VMS
+extern char_u *compiler_version;
+# endif
 extern char_u *compiled_user;
 extern char_u *compiled_sys;
 #endif

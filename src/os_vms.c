@@ -95,10 +95,10 @@ static void	set_x11_icon __ARGS((char_u *));
 static int	get_x11_title __ARGS((int));
 static int	get_x11_icon __ARGS((int));
 static char_u	*oldtitle = NULL;
-static int      did_set_title = FALSE;
+static int	did_set_title = FALSE;
 static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
 static char_u	*oldicon = NULL;
-static int      did_set_icon = FALSE;
+static int	did_set_icon = FALSE;
 #endif
 
 static void	may_core_dump __ARGS((void));
@@ -118,7 +118,7 @@ static int	have_dollars __ARGS((int, char_u **));
 static int	do_resize = FALSE;
 static char_u	*extra_shell_arg = NULL;
 static int	show_shell_mess = TRUE;
-static int      deadly_signal = 0;	/* The signal we caught */
+static int	deadly_signal = 0;	/* The signal we caught */
 static TT_MODE	orgmode;
 
 static void	ass_tty(void);
@@ -380,7 +380,7 @@ sig_alarm SIGDEFARG(sigarg)
    static RETSIGTYPE
 deathtrap SIGDEFARG(sigarg)
 {
-    static int      entered = 0;
+    static int	    entered = 0;
 #ifdef SIGHASARG
     int     i;
 
@@ -589,7 +589,11 @@ catch_signals(func_deadly, func_other)
     for (i = 0; signal_info[i].sig != -1; i++)
 	if (signal_info[i].deadly)
 	    signal(signal_info[i].sig, func_deadly);
+#ifdef SIG_ERR
 	else if (func_other != SIG_ERR)
+#else
+	else if (func_other != BADSIG)
+#endif
 	    signal(signal_info[i].sig, func_other);
 }
 
@@ -1070,8 +1074,12 @@ mch_get_host_name(char_u *s, int len)
     /* presumably compiled with /decc */
     strcpy((char *)s, (char *)sys_hostname);
 #else
+# ifdef VAXC
     /* presumably compiled with /standard=vaxc */
+    vaxc$gethostname((char *)s, len);
+# else
     gethostname((char *)s, len);
+# endif
 #endif
 }
 
@@ -1259,7 +1267,6 @@ mch_isdir(char_u *name)
     void
 mch_windexit(int r)
 {
-    settmode(TMODE_COOK);
     exiting = TRUE;
 
 #ifdef USE_GUI
@@ -1271,6 +1278,15 @@ mch_windexit(int r)
 #endif
 	stoptermcap();
 
+	/*
+	 * A newline is only required after a message in the alternate screen.
+	 * This is set to TRUE by wait_return().
+	 */
+	if (newline_on_exit || (msg_didout && !swapping_screen()))
+	    out_char('\n');
+	else
+	    msg_clr_eos();  /* clear the rest of the display */
+
 	/* Cursor may have been switched off without calling starttermcap()
 	 * when doing "vim -u vimrc" and vimrc contains ":q". */
 	if (full_screen)
@@ -1279,6 +1295,7 @@ mch_windexit(int r)
     vms_flushbuf();
     ml_close_all(TRUE);			/* remove all memfiles */
     may_core_dump();
+    settmode(TMODE_COOK);
 #ifdef USE_GUI
     if (gui.in_use)
 	gui_exit(r);
@@ -1503,17 +1520,32 @@ get_stty(void)
 mch_setmouse(int on)
 {
     static int	ison = FALSE;
+    int		xterm_mouse_vers;
 
     if (on == ison)		/* return quickly if nothing to do */
 	return;
-    if (vim_is_xterm(term_str(KS_NAME)))
+
+    xterm_mouse_vers = use_xterm_mouse();
+    if (xterm_mouse_vers > 0)
     {
-	if (on)
-	    OUT_STR_NF((char_u *)"\033[?1000h"); /* xterm: enable mouse events */
-	else
-	    OUT_STR_NF((char_u *)"\033[?1000l"); /* xterm: disable mouse events */
+      if (on) /* enable mouse events, use mouse tracking if available */
+	  out_str_nf((char_u *)
+		  (xterm_mouse_vers > 1 ? "\033[?1002h" : "\033[?1000h"));
+      else    /* disable mouse events, could probably always send the same */
+	  out_str_nf((char_u *)
+		  (xterm_mouse_vers > 1 ? "\033[?1002l" : "\033[?1000l"));
+      ison = on;
     }
+#if defined(DEC_MOUSE)
+    else if (use_dec_mouse())
+    {
+      if (on) /* enable mouse events */
+	  out_str_nf((char_u *) "\033[1;2'z\033[1;3'{");
+      else    /* disable mouse events */
+	  out_str_nf((char_u *) "\033['z");
     ison = on;
+    }
+#endif /* DEC_MOUSE */
 }
 
 /*
@@ -1571,7 +1603,22 @@ use_xterm_mouse()
     return 0;
 }
 
-#endif
+#if defined(DEC_MOUSE)
+/*
+ * Return non-zero when using a DEC mouse, according to 'ttymouse'.
+ */
+    int
+use_dec_mouse()
+{
+    if (STRNICMP(p_ttym, "dec", 3) == 0)
+    {
+      return 1;
+    }
+    return 0;
+}
+#endif /* DEC_MOUSE */
+
+#endif /* USE_MOUSE */
 
 /*
  * set screen mode, always fails.
@@ -1708,18 +1755,27 @@ mch_breakcheck(void)
     static int
 WaitForChar(long msec)
 {
-    if (vim_is_input_buf_empty())
+    if (!vim_is_input_buf_empty())	/* something in inbuf[] */
+      return 1;
+
+#if defined(DEC_MOUSE)
+    /* May need to query the mouse position. */
+    if (WantQueryMouse)
     {
+      WantQueryMouse = 0;
+      mch_write((char_u *)"\033[1'|", 5);
+    }
+#endif
+
 	if (RealWaitForChar(0, msec))
 	{
 	    add_to_input_buf((char_u *)ibuf, 1);
 	    return 1;
 	}
 	else
+    {
 	    return 0;
     }
-    else
-	return 1;
 }
 
 /*

@@ -8,8 +8,14 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+
+#ifdef VAXC
+# include <types.h>
+# include <stat.h>
+#else
+# include <sys/types.h>
+# include <sys/stat.h>
+#endif
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
@@ -156,17 +162,21 @@
 # define W_OK 2			/* for systems that don't have W_OK in unistd.h */
 #endif
 
+#ifndef R_OK
+# define R_OK 4			/* for systems that don't have R_OK in unistd.h */
+#endif
+
+
 /*
  * System definitions
  */
 
-/* Open VMS is case insensitive */
-#define CASE_INSENSITIVE_FILENAME
+#define CASE_INSENSITIVE_FILENAME	/* Open VMS is case insensitive */
+#define SPACE_IN_FILENAME			/* There is space between user and passwd */
+#define FNAME_ILLEGAL "|*#?%"		/* Illegal characters in a file name */
+#define BINARY_FILE_IO				/* Use binary fileio */
 
-/* Use binary fileio */
-#define BINARY_FILE_IO
-
-/* #define USE_TMPNAM */		/* use tmpnam() instead of mktemp() */
+/* #define USE_TMPNAM */			/* use tmpnam() instead of mktemp() */
 
 /*
  * system-dependent filenames
@@ -176,18 +186,29 @@
 # define USR_EXRC_FILE	"sys$login:.exrc"
 #endif
 
+#ifndef USR_EXRC_FILE2
+# define USR_EXRC_FILE2  "sys$login:_exrc"
+#endif
+
 #ifndef USR_VIMRC_FILE
 # define USR_VIMRC_FILE	"sys$login:.vimrc"
 #endif
 
-#ifndef SYS_VIMRC_FILE
-# define SYS_VIMRC_FILE	"$VIM/vimrc"
+#ifndef USR_VIMRC_FILE2
+# define USR_VIMRC_FILE2 "sys$login:_vimrc"
 #endif
 
 #ifdef USE_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"sys$login:.gvimrc"
 # endif
+# ifndef USR_GVIMRC_FILE2
+#  define USR_GVIMRC_FILE2   "sys$login:_gvimrc"
+# endif
+#endif
+
+#ifndef SYS_VIMRC_FILE
+# define SYS_VIMRC_FILE "$VIM/vimrc"
 #endif
 
 #ifdef USE_GUI
@@ -231,16 +252,28 @@
 
 #ifdef VIMINFO
 # ifndef VIMINFO_FILE
-#  define VIMINFO_FILE	"sys$login:.viminfo"
+#  define VIMINFO_FILE		"sys$login:.viminfo"
+# endif
+# ifndef VIMINFO_FILE2
+#  define VIMINFO_FILE2		"sys$login:_viminfo"
 # endif
 #endif /* VIMINFO */
 
+/*
+* This should contain a comma-separated list of all the user account base
+* directories on your system.  For instance, if accounts are found in
+* USER:[000000] and USER2:[000000], define USER_HOME as follows:
+*/
+#ifndef USER_HOME
+# define USER_HOME    "/user,/user2"
+#endif
+
 #ifndef DEF_BDIR
-# define DEF_BDIR		"./,tmp:,sys$login:"	/* default for 'backupdir' */
+# define DEF_BDIR		"./,sys$login:,tmp:"	/* default for 'backupdir' */
 #endif
 
 #ifndef DEF_DIR
-# define DEF_DIR		"./,tmp:,sys$login:"	/* default for 'directory' */
+# define DEF_DIR		"./,sys$login:,tmp:"	/* default for 'directory' */
 #endif
 
 #define TEMPNAME		"tmp:v?XXXXXX.txt"
@@ -249,8 +282,8 @@
 #define CMDBUFFSIZE	1024	/* size of the command processing buffer */
 #define MAXPATHL	1024	/* VMS has long paths and plenty of memory */
 
-#define CHECK_INODE		     /* used when checking if a swap file already
-							    exists for a file */
+#define CHECK_INODE			/* used when checking if a swap file already
+							   exists for a file */
 
 #ifndef MAXMEM
 # define MAXMEM			512			/* use up to 512Kbyte for buffer */
@@ -282,7 +315,6 @@
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_chdir(s) chdir(vms_fixfilename(s))
 
-/* modifications by C Campbell */
-typedef     struct dsc$descriptor   DESC;
+typedef struct dsc$descriptor   DESC;
 #define ERRORFILE   "errors.err"
 #define MAKEEF	"tmp:vim##.err"	    /* user must assign tmp: */
