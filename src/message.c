@@ -984,7 +984,11 @@ msg_putchar_attr(c, attr)
     int		c;
     int		attr;
 {
+#ifdef FEAT_MBYTE
+    char_u	buf[MB_MAXBYTES + 1];
+#else
     char_u	buf[4];
+#endif
 
     if (IS_SPECIAL(c))
     {
@@ -995,8 +999,12 @@ msg_putchar_attr(c, attr)
     }
     else
     {
+#ifdef FEAT_MBYTE
+	buf[(*mb_char2bytes)(c, buf)] = NUL;
+#else
 	buf[0] = c;
 	buf[1] = NUL;
+#endif
     }
     msg_puts_attr(buf, attr);
 }

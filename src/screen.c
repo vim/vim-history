@@ -2197,7 +2197,16 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     {
 #ifdef FEAT_MBYTE
 	if (enc_utf8)
-	    ScreenLinesUC[off + col] = 0;
+	{
+	    if (fill_fold >= 0x80)
+	    {
+		ScreenLinesUC[off + col] = fill_fold;
+		ScreenLinesC1[off + col] = 0;
+		ScreenLinesC2[off + col] = 0;
+	    }
+	    else
+		ScreenLinesUC[off + col] = 0;
+	}
 #endif
 	ScreenLines[off + col++] = fill_fold;
     }
@@ -3170,7 +3179,14 @@ win_line(wp, lnum, startrow, endrow)
 	    {
 		c = c_extra;
 #ifdef FEAT_MBYTE
-		mb_c = c;	/* doesn't handle multi-byte! */
+		mb_c = c;	/* doesn't handle non-utf-8 multi-byte! */
+		if (enc_utf8 && (*mb_char2len)(c) > 1)
+		{
+		    mb_utf8 = TRUE;
+		    u8c_c1 = u8c_c2 = 0;
+		}
+		else
+		    mb_utf8 = FALSE;
 #endif
 	    }
 	    else
@@ -3438,6 +3454,16 @@ win_line(wp, lnum, startrow, endrow)
 			extra_attr = hl_attr(HLF_8);
 			saved_attr2 = char_attr; /* save current attr */
 		    }
+#ifdef FEAT_MBYTE
+		    mb_c = c;
+		    if (enc_utf8 && (*mb_char2len)(c) > 1)
+		    {
+			mb_utf8 = TRUE;
+			u8c_c1 = u8c_c2 = 0;
+		    }
+		    else
+			mb_utf8 = FALSE;
+#endif
 		}
 	    }
 
@@ -3456,6 +3482,9 @@ win_line(wp, lnum, startrow, endrow)
 		    /* tab amount depends on current column */
 		    n_extra = (int)wp->w_buffer->b_p_ts
 				   - vcol % (int)wp->w_buffer->b_p_ts - 1;
+#ifdef FEAT_MBYTE
+		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
+#endif
 		    if (wp->w_p_list)
 		    {
 			c = lcs_tab1;
@@ -3463,15 +3492,20 @@ win_line(wp, lnum, startrow, endrow)
 			n_attr = n_extra + 1;
 			extra_attr = hl_attr(HLF_8);
 			saved_attr2 = char_attr; /* save current attr */
+#ifdef FEAT_MBYTE
+			mb_c = c;
+			if (enc_utf8 && (*mb_char2len)(c) > 1)
+			{
+			    mb_utf8 = TRUE;
+			    u8c_c1 = u8c_c2 = 0;
+			}
+#endif
 		    }
 		    else
 		    {
 			c_extra = ' ';
 			c = ' ';
 		    }
-#ifdef FEAT_MBYTE
-		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
-#endif
 		}
 		else if (c == NUL && wp->w_p_list && lcs_eol_one > 0)
 		{
@@ -3514,7 +3548,14 @@ win_line(wp, lnum, startrow, endrow)
 			n_attr = 1;
 		    }
 #ifdef FEAT_MBYTE
-		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
+		    mb_c = c;
+		    if (enc_utf8 && (*mb_char2len)(c) > 1)
+		    {
+			mb_utf8 = TRUE;
+			u8c_c1 = u8c_c2 = 0;
+		    }
+		    else
+			mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
 		else if (c != NUL)
@@ -3649,7 +3690,14 @@ win_line(wp, lnum, startrow, endrow)
 	    c = lcs_prec;
 	    lcs_prec_todo = NUL;
 #ifdef FEAT_MBYTE
-	    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
+	    mb_c = c;
+	    if (enc_utf8 && (*mb_char2len)(c) > 1)
+	    {
+		mb_utf8 = TRUE;
+		u8c_c1 = u8c_c2 = 0;
+	    }
+	    else
+		mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 	    if ((area_attr == 0 || char_attr != area_attr)
 		    && (search_attr == 0 || char_attr != search_attr))
@@ -3757,6 +3805,16 @@ win_line(wp, lnum, startrow, endrow)
 	{
 	    c = lcs_ext;
 	    char_attr = hl_attr(HLF_AT);
+#ifdef FEAT_MBYTE
+	    mb_c = c;
+	    if (enc_utf8 && (*mb_char2len)(c) > 1)
+	    {
+		mb_utf8 = TRUE;
+		u8c_c1 = u8c_c2 = 0;
+	    }
+	    else
+		mb_utf8 = FALSE;
+#endif
 	}
 
 	/*
@@ -4379,13 +4437,27 @@ screen_line(row, coloff, endcol, clear_width
 	    int c;
 
 	    c = fillchar_vsep(&hl);
-	    if (ScreenLines[off_to] != c || ScreenAttrs[off_to] != hl)
+	    if (ScreenLines[off_to] != c
+# ifdef FEAT_MBYTE
+		    || (enc_utf8
+			      && ScreenLinesUC[off_to] != (c >= 0x80 ? c : 0))
+# endif
+		    || ScreenAttrs[off_to] != hl)
 	    {
 		ScreenLines[off_to] = c;
 		ScreenAttrs[off_to] = hl;
 # ifdef FEAT_MBYTE
 		if (enc_utf8)
-		    ScreenLinesUC[off_to] = 0;
+		{
+		    if (c >= 0x80)
+		    {
+			ScreenLinesUC[off_to] = c;
+			ScreenLinesC1[off_to] = 0;
+			ScreenLinesC2[off_to] = 0;
+		    }
+		    else
+			ScreenLinesUC[off_to] = 0;
+		}
 # endif
 		screen_char(off_to, row, col + coloff);
 	    }
@@ -5134,7 +5206,11 @@ win_redr_custom(wp, Ruler)
 
     while (width < maxwidth && len < sizeof(buf) - 1)
     {
+#ifdef FEAT_MBYTE
+	len += (*mb_char2bytes)(fillchar, buf + len);
+#else
 	buf[len++] = fillchar;
+#endif
 	++width;
     }
     buf[len] = NUL;
@@ -5167,7 +5243,6 @@ win_redr_custom(wp, Ruler)
 
 /*
  * Output a single character directly to the screen and update ScreenLines.
- * Not for multi-byte chars!
  */
     void
 screen_putchar(c, row, col, attr)
@@ -5175,13 +5250,17 @@ screen_putchar(c, row, col, attr)
     int	    row, col;
     int	    attr;
 {
+#ifdef FEAT_MBYTE
+    char_u	buf[MB_MAXBYTES + 1];
+
+    buf[(*mb_char2bytes)(c, buf)] = NUL;
+#else
     char_u	buf[2];
 
-    {
-	buf[0] = c;
-	buf[1] = NUL;
-	screen_puts(buf, row, col, attr);
-    }
+    buf[0] = c;
+    buf[1] = NUL;
+#endif
+    screen_puts(buf, row, col, attr);
 }
 
 /*
@@ -5956,7 +6035,6 @@ redraw_block(row, end, wp)
  * Fill the screen from 'start_row' to 'end_row', from 'start_col' to 'end_col'
  * with character 'c1' in first column followed by 'c2' in the other columns.
  * Use attributes 'attr'.
- * Cannot handle multi-byte characters, c1 and c2 must be < 0x80!
  */
     void
 screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
@@ -6054,7 +6132,11 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 	c = c1;
 	for (col = start_col; col < end_col; ++col)
 	{
-	    if (ScreenLines[off] != c || ScreenAttrs[off] != attr
+	    if (ScreenLines[off] != c
+#ifdef FEAT_MBYTE
+		    || (enc_utf8 && ScreenLinesUC[off] != (c >= 0x80 ? c : 0))
+#endif
+		    || ScreenAttrs[off] != attr
 #if defined(FEAT_GUI) || defined(UNIX)
 		    || force_next
 #endif
@@ -6088,7 +6170,16 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 		ScreenLines[off] = c;
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
-		    ScreenLinesUC[off] = 0;
+		{
+		    if (c >= 0x80)
+		    {
+			ScreenLinesUC[off] = c;
+			ScreenLinesC1[off] = 0;
+			ScreenLinesC2[off] = 0;
+		    }
+		    else
+			ScreenLinesUC[off] = 0;
+		}
 #endif
 		ScreenAttrs[off] = attr;
 		if (!did_delete || c != ' ')
@@ -8051,7 +8142,7 @@ win_redr_ruler(wp, always)
 	 */
 	i = (int)STRLEN(buffer);
 	get_rel_pos(wp, buffer + i + 1);
-	o = vim_strsize(buffer + i + 1);
+	o = i + vim_strsize(buffer + i + 1);
 #ifdef FEAT_WINDOWS
 	if (wp->w_status_height == 0)	/* can't use last char of screen */
 #endif
@@ -8065,10 +8156,18 @@ win_redr_ruler(wp, always)
 	 * half for the filename. */
 	if (this_ru_col < (WITH_WIDTH(width) + 1) / 2)
 	    this_ru_col = (WITH_WIDTH(width) + 1) / 2;
-	if (this_ru_col + i + o < WITH_WIDTH(width))
+	if (this_ru_col + o < WITH_WIDTH(width))
 	{
-	    while (this_ru_col + i + o < WITH_WIDTH(width))
-		buffer[i++] = fillchar;
+	    while (this_ru_col + o < WITH_WIDTH(width))
+	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    i += (*mb_char2bytes)(fillchar, buffer + i);
+		else
+#endif
+		    buffer[i++] = fillchar;
+		++o;
+	    }
 	    get_rel_pos(wp, buffer + i);
 	}
 	/* Truncate at window boundary. */
