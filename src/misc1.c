@@ -7827,7 +7827,7 @@ dos_expandpath(
     int			ok;
 #ifdef WIN3264
     WIN32_FIND_DATA	fb;
-    HANDLE		hFind;
+    HANDLE		hFind = (HANDLE)0;
 # ifdef FEAT_MBYTE
     WIN32_FIND_DATAW    wfb;
     WCHAR		*wn = NULL;	/* UCS-2 name, NULL when not used. */
