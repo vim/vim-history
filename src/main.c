@@ -2839,7 +2839,9 @@ build_drop_cmd(filec, filev, sendReply)
 	ga_concat(&ga, p);
 	vim_free(p);
     }
-    ga_concat(&ga, (char_u *)"<CR>:cd -");
+    /* The :drop commands goes to Insert mode when 'insertmode' is set, use
+     * CTRL-\ CTRL-N again. */
+    ga_concat(&ga, (char_u *)"<CR><C-\\><C-N>:cd -");
     if (sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
     if (inicmd != NULL)
@@ -2847,8 +2849,9 @@ build_drop_cmd(filec, filev, sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:");
 	ga_concat(&ga, inicmd);
     }
-    /* Bring the window to the foreground & clear command line */
-    ga_concat(&ga, (char_u *)"<CR>:call foreground()<CR>:<CR>");
+    /* Bring the window to the foreground, goto Insert mode when 'im' set and
+     * clear command line */
+    ga_concat(&ga, (char_u *)"<CR>:call foreground()<CR>:if &im|starti|endif|echo<CR>");
     ga_append(&ga, NUL);
     return ga.ga_data;
 }
