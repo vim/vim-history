@@ -2,7 +2,7 @@
 " This file is normally sourced from menu.vim.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Oct 01
+" Last Change:	2003 Jun 22
 
 " Define the SetSyn function, used for the Syntax menu entries.
 " Set 'filetype' and also 'syntax' if it is manually selected.
@@ -404,7 +404,10 @@ an 50.110.370 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
 
 an 50.195 &Syntax.-SEP1-			<Nop>
 
-an 50.200 &Syntax.Set\ '&syntax'\ only		:let s:syntax_menu_synonly=1<CR>
+an <silent> 50.200 &Syntax.Set\ '&syntax'\ only :call <SID>Setsynonly()<CR>
+fun! s:Setsynonly()
+  let s:syntax_menu_synonly = 1
+endfun
 an <silent> 50.202 &Syntax.Set\ '&filetype'\ too :call <SID>Nosynonly()<CR>
 fun! s:Nosynonly()
   if exists("s:syntax_menu_synonly")
