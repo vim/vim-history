@@ -517,20 +517,24 @@ update_screen(type)
     did_intro = TRUE;
 }
 
-#if defined(FEAT_LINE_HL) || defined(PROTO)
+#if defined(FEAT_SIGNS) || defined(PROTO)
     static int
 lnum2row(wp, lnum)
     win_t	*wp;
     int		lnum;
 {
     int		row = 0;
-    int		i, j;
+    int		j;
+    linenr_t	i;
 
     for (i = wp->w_topline, j = 0;
 			      i < wp->w_botline && j < wp->w_lines_valid; i++)
     {
 	row += wp->w_lines[j++].wl_size;
-	if (i == lnum)
+#ifdef FEAT_FOLDING
+	(void)hasFolding(i, NULL, &i);
+#endif
+	if (i >= lnum)
 	    break;
     }
     return row - 1;
@@ -566,7 +570,6 @@ update_debug_sign(buf, lnum)
 	    win_update(wp);
     }
 }
-
 #endif
 
 
@@ -1851,7 +1854,7 @@ win_line(wp, lnum, startrow, endrow)
 #if defined(FEAT_SYN_HL) || defined(FEAT_SEARCH_EXTRA)
     int		save_got_int;
 #endif
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
     int_u	type;			/* sign type (if signs are used) */
     int		debug_attr = 0;		/* debugger atrribute override */
 #endif
@@ -1863,7 +1866,7 @@ win_line(wp, lnum, startrow, endrow)
 #else
 # define WL_FOLD	WL_START
 #endif
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
 # define WL_SIGN	WL_FOLD + 1	/* column for signs */
 #else
 # define WL_SIGN	WL_FOLD		/* column for signs */
@@ -2015,7 +2018,7 @@ win_line(wp, lnum, startrow, endrow)
 	attr = hl_attr(HLF_I);
     }
 
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
     type = buf_getsigntype(wp->w_buffer, lnum);
     if (type != 0)
     {
@@ -2170,7 +2173,7 @@ win_line(wp, lnum, startrow, endrow)
 	    }
 #endif
 
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
 	    if (draw_state == WL_SIGN - 1 && n_extra == 0)
 	    {
 		draw_state = WL_SIGN;
@@ -2225,6 +2228,7 @@ win_line(wp, lnum, startrow, endrow)
 		{
 		    /* Draw 'showbreak' at the start of each broken line. */
 		    p_extra = p_sbr;
+		    c_extra = NUL;
 		    n_extra = STRLEN(p_sbr);
 		    char_attr = hl_attr(HLF_AT);
 		    need_showbreak = FALSE;
@@ -2274,7 +2278,7 @@ win_line(wp, lnum, startrow, endrow)
 								+ wp->w_coladd
 #endif
 			    )))
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
 		area_attr = debug_attr;		    /* stop highlighting */
 	    else if (debug_attr && ((fromcol == -10 && tocol == MAXCOL)
 					 || (vcol < fromcol || vcol > tocol)))
@@ -2429,7 +2433,9 @@ win_line(wp, lnum, startrow, endrow)
 	}
 	else
 	{
-	    /* Finally we get a character from the line itself. */
+	    /*
+	     * Get a character from the line itself.
+	     */
 	    c = *ptr;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
@@ -2615,6 +2621,31 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 	    }
 	}
+
+
+	/*
+	 * Handle the case where we are in column 0 but not on the first
+	 * character of the line and the user wants us to show us a
+	 * special character (via 'listchars' option "preceeds:<char>".
+	 */
+	if (lcs_prec != NUL
+		&& (wp->w_p_wrap ? wp->w_skipcol > 0 : wp->w_leftcol > 0)
+		&& (
+#ifdef FEAT_RIGHTLEFT
+		    wp->w_p_rl ? col == W_WIDTH(wp) - 1 :
+#endif
+		    col == 0)
+		&& c != NUL)
+	{
+	    c = lcs_prec;
+	    extra_attr = hl_attr(HLF_AT); /* later copied to char_attr */
+	    n_attr = 1;
+	    saved_attr2 = char_attr; /* save current attr */
+#ifdef FEAT_MBYTE
+	    mb_l = 1;		 /* (don't draw as UTF-8) */
+#endif
+	}
+
 	if (n_attr)
 	    char_attr = extra_attr;
 
@@ -6484,7 +6515,11 @@ cursor_correct()
 	    below_wanted = max_off;
     }
     validate_botline();
-    if (curwin->w_botline == curbuf->b_ml.ml_line_count + 1)
+    if (curwin->w_botline == curbuf->b_ml.ml_line_count + 1
+#ifdef FEAT_MOUSE
+	    && !mouse_dragging
+#endif
+	    )
     {
 	below_wanted = 0;
 	max_off = (curwin->w_height - 1) / 2;
@@ -6781,6 +6816,7 @@ validate_cursor()
 	curs_columns(TRUE);
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * validate w_cline_row.
  */
@@ -6795,6 +6831,7 @@ validate_cline_row()
     if (!(curwin->w_valid & VALID_CROW))
 	curs_rows(curwin, FALSE);
 }
+#endif
 
 #if 0 /* never used */
 /*
@@ -7018,7 +7055,7 @@ win_col_off(wp)
 #ifdef FEAT_FOLDING
 	    + (wp->w_p_fdc ? 2 : 0)
 #endif
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
 	    + (wp->w_buffer->b_signlist != NULL ? 2 : 0)
 #endif
 	   );
@@ -7031,7 +7068,7 @@ curwin_col_off()
 #ifdef FEAT_FOLDING
 	    + (curwin->w_p_fdc ? 2 : 0)
 #endif
-#ifdef FEAT_LINE_HL
+#ifdef FEAT_SIGNS
 	    + (curwin->w_buffer->b_signlist != NULL ? 2 : 0)
 #endif
 	   );
@@ -7144,18 +7181,22 @@ curs_columns(scroll)
 #endif
 	    )
     {
-	/* If Cursor is left of the screen, scroll rightwards */
-	/* If Cursor is right of the screen, scroll leftwards */
-	if ((extra = (int)startcol - (int)curwin->w_leftcol) < 0
+	/*
+	 * If Cursor is left of the screen, scroll rightwards.
+	 * If Cursor is right of the screen, scroll leftwards
+	 * If we get closer to the edge than 'sidescrolloff', scroll a little
+	 * extra
+	 */
+	if ((extra = (int)startcol - (int)curwin->w_leftcol - p_siso) < 0
 		|| (extra = (int)endcol
-			- (int)(curwin->w_leftcol + W_WIDTH(curwin)) + 1) > 0)
+			- (int)(curwin->w_leftcol + W_WIDTH(curwin) - p_siso) + 1) > 0)
 	{
 	    if (extra < 0)
 		diff = -extra;
 	    else
 		diff = extra;
 
-		/* far off, put cursor in middle of window */
+	    /* far off, put cursor in middle of window */
 	    if (p_ss == 0 || diff >= W_WIDTH(curwin) / 2)
 		new_leftcol = curwin->w_wcol - W_WIDTH(curwin) / 2;
 	    else
@@ -7168,11 +7209,13 @@ curs_columns(scroll)
 		    new_leftcol = curwin->w_leftcol + diff;
 	    }
 	    if (new_leftcol < 0)
-		curwin->w_leftcol = 0;
-	    else
+		new_leftcol = 0;
+	    if (new_leftcol != (int)curwin->w_leftcol)
+	    {
 		curwin->w_leftcol = new_leftcol;
-	    /* screen has to be redrawn with new curwin->w_leftcol */
-	    redraw_later(NOT_VALID);
+		/* screen has to be redrawn with new curwin->w_leftcol */
+		redraw_later(NOT_VALID);
+	    }
 	}
 	curwin->w_wcol -= curwin->w_leftcol;
     }
@@ -8292,9 +8335,14 @@ showruler(always)
 #ifdef FEAT_CMDL_INFO
 	win_redr_ruler(curwin, always);
 #endif
-#if defined(FEAT_TITLE) && defined(FEAT_STL_OPT)
-    if ((p_icon || p_title)
-	    && (stl_syntax & (STL_IN_ICON | STL_IN_TITLE)))
+
+#ifdef FEAT_TITLE
+    if (need_maketitle
+# ifdef FEAT_STL_OPT
+	    || (p_icon && (stl_syntax & STL_IN_ICON))
+	    || (p_title && (stl_syntax & STL_IN_TITLE))
+# endif
+       )
 	maketitle();
 #endif
 }
@@ -8739,6 +8787,18 @@ retnomove:
 		      ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
 	    row = curwin->w_height - 1;
 	}
+	else if (row == 0)
+	{
+	    /* When dragging the mouse, while the text has been scrolled up as
+	     * far as it goes, moving the mouse in the top line should scroll
+	     * the text down (done later when recomputing w_topline). */
+	    if (mouse_dragging
+		    && curwin->w_cursor.lnum
+				       == curwin->w_buffer->b_ml.ml_line_count
+		    && curwin->w_cursor.lnum == curwin->w_topline)
+		curwin->w_valid &= ~(VALID_TOPLINE);
+	}
+
 	curwin->w_cursor.lnum = curwin->w_topline;
     }
 
@@ -8828,8 +8888,8 @@ retnomove:
     else if (inclusive != NULL)
 	*inclusive = FALSE;
 
-    if (curwin == old_curwin && curwin->w_cursor.lnum == old_cursor.lnum &&
-				       curwin->w_cursor.col == old_cursor.col)
+    if (curwin == old_curwin && curwin->w_cursor.lnum == old_cursor.lnum
+	    && curwin->w_cursor.col == old_cursor.col)
 	return IN_BUFFER;		/* Cursor has not moved */
     return IN_BUFFER | CURSOR_MOVED;	/* Cursor has moved */
 }

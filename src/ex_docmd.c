@@ -61,7 +61,7 @@ static void	ex_unmap __ARGS((exarg_t *eap));
 static void	ex_mapclear __ARGS((exarg_t *eap));
 static void	ex_abclear __ARGS((exarg_t *eap));
 #ifndef FEAT_MENU
-# define execute_menu		ex_ni
+# define ex_emenu		ex_ni
 # define ex_menu		ex_ni
 # define ex_menutrans		ex_ni
 #endif
@@ -125,6 +125,7 @@ static void	ex_resize __ARGS((exarg_t *eap));
 static void	ex_splitview __ARGS((exarg_t *eap));
 static void	ex_stag __ARGS((exarg_t *eap));
 static void	ex_ptag __ARGS((exarg_t *eap));
+static void	ex_pedit __ARGS((exarg_t *eap));
 #else
 # define ex_close		ex_ni
 # define ex_pclose		ex_ni
@@ -134,6 +135,7 @@ static void	ex_ptag __ARGS((exarg_t *eap));
 # define ex_splitview		ex_ni
 # define ex_stag		ex_ni
 # define ex_ptag		ex_ni
+# define ex_pedit		ex_ni
 # define do_buffer_all		ex_ni
 #endif
 static void	ex_hide __ARGS((exarg_t *eap));
@@ -165,16 +167,21 @@ static void	ex_edit __ARGS((exarg_t *eap));
 static void	do_exedit __ARGS((exarg_t *eap, win_t *old_curwin));
 #ifdef FEAT_GUI
 static void	ex_gui __ARGS((exarg_t *eap));
+static void	ex_drop __ARGS((exarg_t *eap));
 #else
 # define ex_gui			ex_nogui
+# define ex_drop		ex_ni
 static void	ex_nogui __ARGS((exarg_t *eap));
 #endif
 #if defined(FEAT_GUI_W32) && defined(FEAT_MENU)
 static void	ex_tearoff __ARGS((exarg_t *eap));
+#else
+# define ex_tearoff		ex_ni
+#endif
+#if defined(FEAT_GUI_MSWIN) && defined(FEAT_MENU)
 static void	ex_popup __ARGS((exarg_t *eap));
 #else
 # define ex_popup		ex_ni
-# define ex_tearoff		ex_ni
 #endif
 #ifndef FEAT_GUI_MSWIN
 # define gui_simulate_alt_key	ex_ni
@@ -248,6 +255,7 @@ static void	ex_startinsert __ARGS((exarg_t *eap));
 # define ex_align		ex_ni
 # define ex_retab		ex_ni
 # define ex_startinsert		ex_ni
+# define ex_helptags		ex_ni
 #endif
 #ifdef FEAT_FIND_ID
 static void	ex_checkpath __ARGS((exarg_t *eap));
@@ -255,6 +263,11 @@ static void	ex_findpat __ARGS((exarg_t *eap));
 #else
 # define ex_findpat		ex_ni
 # define ex_checkpath		ex_ni
+#endif
+#if defined(FEAT_FIND_ID) && defined(FEAT_WINDOWS)
+static void	ex_psearch __ARGS((exarg_t *eap));
+#else
+# define ex_psearch		ex_ni
 #endif
 static void	ex_tag __ARGS((exarg_t *eap));
 static void	ex_tag_cmd __ARGS((exarg_t *eap, char_u *name));
@@ -1567,6 +1580,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_execute:
 	    case CMD_help:
 	    case CMD_ijump:
+	    case CMD_psearch:
 	    case CMD_ilist:
 	    case CMD_isearch:
 	    case CMD_isplit:
@@ -2396,6 +2410,7 @@ set_one_cmd_context(buff)
 	case CMD_ilist:
 	case CMD_dlist:
 	case CMD_ijump:
+	case CMD_psearch:
 	case CMD_djump:
 	case CMD_isplit:
 	case CMD_dsplit:
@@ -2546,7 +2561,7 @@ set_one_cmd_context(buff)
 	case CMD_imenu:	    case CMD_inoremenu:	    case CMD_iunmenu:
 	case CMD_cmenu:	    case CMD_cnoremenu:	    case CMD_cunmenu:
 	case CMD_tmenu:				    case CMD_tunmenu:
-	case CMD_popup:	    case CMD_tearoff:	    case CMD_exemenu:
+	case CMD_popup:	    case CMD_tearoff:	    case CMD_emenu:
 	    return set_context_in_menu_cmd(cmd, arg, forceit);
 #endif
 
@@ -3080,8 +3095,8 @@ autowrite(buf, forceit)
 {
     if (!p_aw || !p_write
 #ifdef FEAT_QUICKFIX
-	/* never autowrite a nofile buffer */
-	|| bt_nofile(buf)
+	/* never autowrite a "nofile" or "scratch" buffer */
+	|| bt_nofile(buf) || bt_scratch(buf)
 #endif
 	|| (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
 	return FAIL;
@@ -5718,10 +5733,9 @@ ex_next(eap)
  * FreeWild(), which does a series of vim_free() calls, unless the two defines
  * __EMX__ and __ALWAYS_HAS_TRAILING_NUL_POINTER are set. In this case, a
  * routine _fnexplodefree() is used. This may cause problems, but as the drop
- * file functionality is (currently) Win32-specific (where these defines are
- * not set), this is not presently a problem.
+ * file functionality is (currently) not in EMX this is not presently a
+ * problem.
  */
-
     void
 handle_drop(filec, filev, split)
     int		filec;		/* the number of files dropped */
@@ -5778,6 +5792,42 @@ handle_drop(filec, filev, split)
 #endif
 
     do_argfile(&ea, 0);
+}
+#endif
+
+#if defined(FEAT_GUI) || defined(PROTO)
+/*
+ * ":drop"
+ */
+    static void
+ex_drop(eap)
+    exarg_t	*eap;
+{
+    int		split = FALSE;
+
+    /* Check whether the current buffer is changed. If so, we will need
+     * to split the current window or data could be lost.
+     * We don't need to check if the 'hidden' option is set, as in this
+     * case the buffer won't be lost.
+     */
+    if (!P_HID(curbuf))
+    {
+	int old_emsg = emsg_off;
+
+	emsg_off = TRUE;
+	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
+	emsg_off = old_emsg;
+    }
+
+    /* Fake a ":split" or ":snext" command. */
+    if (split)
+    {
+	eap->cmdidx = CMD_snext;
+	eap->cmd[0] = 's';
+    }
+    else
+	eap->cmdidx = CMD_next;
+    ex_next(eap);
 }
 #endif
 
@@ -6121,7 +6171,7 @@ do_exedit(eap, old_curwin)
 		    (P_HID(curbuf) ? ECMD_HIDE : 0) +
 		    (eap->forceit ? ECMD_FORCEIT : 0) +
 		    (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )) == FAIL
-		&& (eap->cmdidx == CMD_split || eap->cmdidx == CMD_split))
+		&& (eap->cmdidx == CMD_split || eap->cmdidx == CMD_vsplit))
 	{
 #ifdef FEAT_WINDOWS
 	    /* If editing failed after a split command, close the window */
@@ -6134,6 +6184,14 @@ do_exedit(eap, old_curwin)
 		win_close(curwin, !need_hide && !P_HID(curwin->w_buffer));
 	    }
 #endif
+	}
+	else if (readonlymode && curbuf->b_nwindows == 1)
+	{
+	    /* When editing an already visited buffer, 'readonly' won't be set
+	     * but the previous value is kept.  With ":view" and ":sview" we
+	     * want the  file to be readonly, except when another window is
+	     * editing the same buffer. */
+	    curbuf->b_p_ro = TRUE;
 	}
 	readonlymode = n;
     }
@@ -6224,6 +6282,9 @@ ex_tearoff(eap)
 {
     gui_make_tearoff(eap->arg);
 }
+#endif
+
+#if defined(FEAT_GUI_MSWIN) && defined(FEAT_MENU)
     static void
 ex_popup(eap)
     exarg_t	*eap;
@@ -6700,7 +6761,7 @@ ex_copymove(eap)
 	    return;
     }
     else
-	do_copy(eap->line1, eap->line2, n);
+	ex_copy(eap->line1, eap->line2, n);
     u_clearline();
     beginline(BL_SOL | BL_FIX);
 }
@@ -7199,6 +7260,20 @@ ex_checkpath(eap)
 					      (linenr_t)1, (linenr_t)MAXLNUM);
 }
 
+#ifdef FEAT_WINDOWS
+/*
+ * ":psearch"
+ */
+    static void
+ex_psearch(eap)
+    exarg_t	*eap;
+{
+    g_do_tagpreview = p_pvh;
+    ex_findpat(eap);
+    g_do_tagpreview = 0;
+}
+#endif
+
     static void
 ex_findpat(eap)
     exarg_t	*eap;
@@ -7210,8 +7285,11 @@ ex_findpat(eap)
 
     switch (cmdnames[eap->cmdidx].cmd_name[2])
     {
-	case 'e':	/* ":isearch" and ":dsearch" */
-		action = ACTION_SHOW;
+	case 'e':	/* ":psearch", ":isearch" and ":dsearch" */
+		if (cmdnames[eap->cmdidx].cmd_name[0] == 'p')
+		    action = ACTION_GOTO;
+		else
+		    action = ACTION_SHOW;
 		break;
 	case 'i':	/* ":ilist" and ":dlist" */
 		action = ACTION_SHOW_ALL;
@@ -7265,6 +7343,30 @@ ex_ptag(eap)
 {
     g_do_tagpreview = p_pvh;
     ex_tag_cmd(eap, cmdnames[eap->cmdidx].cmd_name + 1);
+}
+
+/*
+ * ":pedit"
+ */
+    static void
+ex_pedit(eap)
+    exarg_t	*eap;
+{
+    win_t	*curwin_save = curwin;
+
+    g_do_tagpreview = p_pvh;
+    prepare_tagpreview();
+    keep_help_flag = curwin_save->w_buffer->b_help;
+    do_exedit(eap, NULL);
+    keep_help_flag = FALSE;
+    if (curwin != curwin_save && win_valid(curwin_save))
+    {
+	/* Return cursor to where we were */
+	validate_cursor();
+	redraw_later(VALID);
+	win_enter(curwin_save, TRUE);
+    }
+    g_do_tagpreview = 0;
 }
 
 /*

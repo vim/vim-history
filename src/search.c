@@ -3249,6 +3249,9 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 #ifdef RISCOS
     int		previous_munging = __uname_control;
 #endif
+#ifdef FEAT_WINDOWS
+    win_t	*curwin_save = NULL;
+#endif
 
     regmatch.regprog = NULL;
     incl_regmatch.regprog = NULL;
@@ -3684,7 +3687,11 @@ search_line:
 	    else if (--count <= 0)
 	    {
 		found = TRUE;
-		if (depth == -1 && lnum == curwin->w_cursor.lnum)
+		if (depth == -1 && lnum == curwin->w_cursor.lnum
+#ifdef FEAT_WINDOWS
+						      && g_do_tagpreview == 0
+#endif
+						      )
 		    EMSG(_("Match is on current line"));
 		else if (action == ACTION_SHOW)
 		{
@@ -3698,6 +3705,14 @@ search_line:
 #ifdef FEAT_GUI
 		    need_mouse_correct = TRUE;
 #endif
+#ifdef FEAT_WINDOWS
+		    /* ":psearch" uses the preview window */
+		    if (g_do_tagpreview != 0)
+		    {
+			curwin_save = curwin;
+			prepare_tagpreview();
+		    }
+#endif
 		    if (action == ACTION_SPLIT)
 		    {
 #ifdef FEAT_WINDOWS
@@ -3707,7 +3722,17 @@ search_line:
 		    }
 		    if (depth == -1)
 		    {
-			setpcmark();
+			/* match in current file */
+#ifdef FEAT_WINDOWS
+			if (g_do_tagpreview != 0)
+			{
+			    if (getfile(0, curwin_save->w_buffer->b_fname,
+						 NULL, TRUE, lnum, FALSE) > 0)
+				break;	/* failed to jump to file */
+			}
+			else
+#endif
+			    setpcmark();
 			curwin->w_cursor.lnum = lnum;
 		    }
 		    else
@@ -3725,6 +3750,17 @@ search_line:
 		    curwin->w_cursor.col = startp - line;
 		    curwin->w_set_curswant = TRUE;
 		}
+
+#ifdef FEAT_WINDOWS
+		if (g_do_tagpreview != 0
+			&& curwin != curwin_save && win_valid(curwin_save))
+		{
+		    /* Return cursor to where we were */
+		    validate_cursor();
+		    redraw_later(VALID);
+		    win_enter(curwin_save, TRUE);
+		}
+#endif
 		break;
 	    }
 #ifdef FEAT_INS_EXPAND

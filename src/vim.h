@@ -231,7 +231,7 @@ typedef unsigned long	long_u;
 
 /*
  * The characters and attributes cached for the screen.
- * Currently a single byte, may become larger for multi-byte encodings.
+ * Currently a single byte.  The attributes may become larger some day.
  */
 #define schar_t	char_u
 #define sattr_t	char_u

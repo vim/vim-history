@@ -33,7 +33,7 @@
 
 #include "version.h"
 
-#define BUFSIZE 512
+#define BUFSIZE 512		/* long enough to hold a file name path */
 #define NUL 0
 
 char	installdir[BUFSIZE];	/* top of the installation dir, where the
@@ -50,8 +50,10 @@ char	*oldgvimbat;		/* path to gvim.bat or NULL */
 char	*oldvimexe;		/* path to vim.exe or NULL */
 char	*oldgvimexe;		/* path to gvim.exe or NULL */
 
-char	vimbat[BUFSIZE];	/* name of Vim batch file to write */
-char	gvimbat[BUFSIZE];	/* name of GVim batch file to write */
+char	vimbat[BUFSIZE];	/* Name of Vim batch file to write.  Not
+				   installed when it's empty. */
+char	gvimbat[BUFSIZE];	/* Name of GVim batch file to write.  Not
+				   installed when it's empty. */
 
 char	oldvimrc[BUFSIZE];	/* name of existing vimrc file */
 char	vimrc[BUFSIZE];		/* name of vimrc file to create */
@@ -73,15 +75,16 @@ int		choice_count = 0;	/* number of choices available */
 
 #define TABLE_SIZE(s)	sizeof(s) / sizeof(char *)
 
-char	*(def_choices[]) =
+char	*(compat_choices[]) =
 {
     "\nChoose the default way to run Vim:",
     "Vi compatible",
     "with some Vim ehancements",
     "with syntax highlighting and other features switched on",
 };
-int	def_choices_default = 3;
-int	def_choice;
+int	compat_choices_default = 3;
+int	compat_choice;
+char	*compat_text = "- run Vim %s";
 
 char	*(remap_choices[]) =
 {
@@ -91,25 +94,17 @@ char	*(remap_choices[]) =
 };
 int	remap_choice_default = 2;
 int	remap_choice;
+char	*remap_text = "- %s";
 
 char	*(mouse_choices[]) =
 {
     "\nChoose the way how Vim uses the mouse:",
     "right button extends selection (the Unix way)",
-    "right button has popup menu (the Windows way)",
+    "right button has a popup menu (the Windows way)",
 };
 int	mouse_choice_default = 2;
 int	mouse_choice;
-
-/*
- * EMX doesn't have a global way of making open() use binary I/O.
- * Use O_BINARY for all open() calls.
- */
-#if defined(__EMX__) || defined(__CYGWIN32__)
-# define O_EXTRA    O_BINARY
-#else
-# define O_EXTRA    0
-#endif
+char	*mouse_text = "- The mouse %s";
 
 /*
  * The toupper() in Bcc 5.5 doesn't work, use our own implementation.
@@ -141,7 +136,7 @@ alloc(int len)
 
 /*
  * Copy a directory name from "dir" to "buf", doubling backslashes.
- * Also make sure it ends in a backslash.
+ * Also make sure it ends in a double backslash.
  */
     static void
 double_bs(char *dir, char *buf)
@@ -161,26 +156,14 @@ double_bs(char *dir, char *buf)
 	*d++ = '\\';
 	*d++ = '\\';
     }
-    *d = 0;
-}
-
-/*
- * Return TRUE if the user types a 'y' or 'Y', FALSE otherwise.
- * Eats white space first.
- */
-    int
-confirm(void)
-{
-    char	answer[10];
-
-    return (scanf(" %c", answer) == 1 && mytoupper(answer[0]) == 'Y');
+    *d = NUL;
 }
 
 /*
  * Obtain a choice from a table.
  * First entry is a question, others are choices.
  */
-    int
+    static int
 get_choice(char **table, int entries)
 {
     int		answer;
@@ -192,7 +175,7 @@ get_choice(char **table, int entries)
 	for (idx = 0; idx < entries; ++idx)
 	{
 	    if (idx)
-		printf("[%d] ", idx);
+		printf("%2d  ", idx);
 	    printf(table[idx]);
 	    printf("\n");
 	}
@@ -274,7 +257,7 @@ mch_chdir(char *path)
 # define my_fullpath(b, n, l) _fullpath(b, n, l)
 
 #else
-    char *
+    static char *
 my_fullpath(char *buf, char *fname, int len)
 {
 # ifdef WIN32
@@ -384,7 +367,7 @@ PlatformId(void)
 }
 
 # ifndef __BORLANDC__
-    char *
+    static char *
 searchpath(char *name)
 {
     static char widename[2 * BUFSIZE];
@@ -417,6 +400,23 @@ searchpath(char *name)
 #endif
 
 /*
+ * Call searchpath() and save the result in allocated memory, or return NULL.
+ */
+    static char *
+searchpath_save(char *name)
+{
+    char	*p;
+    char	*s;
+
+    p = searchpath(name);
+    if (p == NULL)
+	return NULL;
+    s = alloc(strlen(p) + 1);
+    strcpy(s, p);
+    return s;
+}
+
+/*
  * Setup for using this program.
  * Sets "installdir[]".
  */
@@ -439,7 +439,7 @@ do_inits(char **argv)
 	printf("ERROR: Cannot get name of executable\n");
 	exit(1);
     }
-    /* remove the tail, the executable name */
+    /* remove the tail, the executable name "install.exe" */
     for (i = strlen(installdir) - 1; i > 0; --i)
 	if (installdir[i] == '/' || installdir[i] == '\\')
 	{
@@ -450,6 +450,8 @@ do_inits(char **argv)
     /* change to the installdir */
     mch_chdir(installdir);
 
+    /* Find the system drive.  Only used for searching the Vim executable, not
+     * very important. */
     sysdrive = getenv("SYSTEMDRIVE");
     if (sysdrive == NULL || *sysdrive == NUL)
 	sysdrive = "C:\\";
@@ -481,7 +483,8 @@ check_unpack(void)
 	exit(1);
     }
 
-    /* check if filetype.vim is present */
+    /* check if filetype.vim is present, which means the runtime archive has
+     * been unpacked  */
     sprintf(buf, "%s/filetype.vim", installdir);
     if (stat(buf, &st) < 0)
     {
@@ -511,79 +514,99 @@ check_unpack(void)
 }
 
 /*
+ * Compare paths "p[plen]" to "q[qlen]".  Return 0 if they match.
+ */
+    static int
+pathcmp(char *p, int plen, char *q, int qlen)
+{
+    int		i;
+
+    for (i = 0; ; ++i)
+    {
+	/* End of "p": check if "q" also ends or just has a slash. */
+	if (i == plen)
+	{
+	    if (i == qlen)  /* match */
+		return 0;
+	    if (i == qlen - 1 && (q[i] == '\\' || q[i] == '/'))
+		return 0;   /* match with trailing slash */
+	    return 1;	    /* no match */
+	}
+
+	/* End of "q": check if "p" also ends or just has a slash. */
+	if (i == qlen)
+	{
+	    if (i == plen)  /* match */
+		return 0;
+	    if (i == plen - 1 && (p[i] == '\\' || p[i] == '/'))
+		return 0;   /* match with trailing slash */
+	    return 1;	    /* no match */
+	}
+
+	if (!(mytoupper(p[i]) == mytoupper(q[i])
+		|| ((p[i] == '/' || p[i] == '\\')
+		    && (q[i] == '/' || q[i] == '\\'))))
+	    return 1;	    /* no match */
+    }
+    /*NOTREACHED*/
+}
+
+/*
  * Find out information about the system.
  */
     static void
 inspect_system(void)
 {
     char	*p;
-    int		i;
     char	buf[BUFSIZE];
     FILE	*fd;
 
-    /* Check if an existing setting for $VIM is correct */
+    /*
+     * If $VIM is set, check that it's pointing to our directory.
+     */
     p = getenv("VIM");
-    if (p != NULL)
+    if (p != NULL && pathcmp(p, strlen(p), installdir, runtimeidx - 1) != 0)
     {
-	for (i = 0; i < runtimeidx - 1; ++i)
-	{
-	    if (mytoupper(p[i]) == mytoupper(installdir[i]))
-		continue;
-	    if ((p[i] == '/' || p[i] == '\\')
-		    && (installdir[i] == '/' || installdir[i] == '\\'))
-		continue;
-
-	    /* doesn't match */
-	    printf("$VIM is set to \"%s\".\n", p);
-	    printf("This is different from where this version of Vim is:\n");
-	    strcpy(buf, installdir);
-	    *(buf + runtimeidx - 1) = NUL;
-	    printf("\"%s\"\n", buf);
-	    printf("Please manually adjust the setting of $VIM.\n");
-	    exit(1);
-	}
+	printf("$VIM is set to \"%s\".\n", p);
+	printf("This is different from where this version of Vim is:\n");
+	strcpy(buf, installdir);
+	*(buf + runtimeidx - 1) = NUL;
+	printf("\"%s\"\n", buf);
+	printf("Please manually adjust the setting of $VIM.\n");
+	exit(1);
     }
 
     /*
-     * Check if $VIMRUNTIME is set, and it is pointing to our directory.
+     * If $VIMRUNTIME is set, check that it's pointing to our directory.
      */
     p = getenv("VIMRUNTIME");
-    if (p != NULL)
+    if (p != NULL && pathcmp(p, strlen(p), installdir, strlen(installdir)) != 0)
     {
-	for (i = 0; p[i] || installdir[i]; ++i)
-	{
-	    if (mytoupper(p[i]) == mytoupper(installdir[i]))
-		continue;
-	    if ((p[i] == '/' || p[i] == '\\')
-		    && (installdir[i] == '/' || installdir[i] == '\\'))
-		continue;
-
-	    printf("$VIMRUNTIME is set to \"%s\".\n", p);
-	    printf("This is different from where this version of Vim is:\n");
-	    printf("\"%s\"\n", installdir);
-	    printf("Please manually adjust the setting of $VIMRUNTIME or remove it.\n");
-	    exit(1);
-	}
+	printf("$VIMRUNTIME is set to \"%s\".\n", p);
+	printf("This is different from where this version of Vim is:\n");
+	printf("\"%s\"\n", installdir);
+	printf("Please manually adjust the setting of $VIMRUNTIME or remove it.\n");
+	exit(1);
     }
 
     /*
      * Check if there is a vim or gvim in the path.
      */
     mch_chdir(sysdrive);	/* avoid looking in the "installdir" */
-    oldvimbat = searchpath("vim.bat");
-    oldgvimbat = searchpath("gvim.bat");
-    oldvimexe = searchpath("vim.exe");
-    oldgvimexe = searchpath("gvim.exe");
+    oldvimbat = searchpath_save("vim.bat");
+    oldgvimbat = searchpath_save("gvim.bat");
+    oldvimexe = searchpath_save("vim.exe");
+    oldgvimexe = searchpath_save("gvim.exe");
     mch_chdir(installdir);
     if (oldvimexe != NULL || oldgvimexe != NULL)
     {
 	printf("Warning: Found a Vim executable in your $PATH:\n");
 	if (oldvimexe != NULL)
-	    printf("%s", oldvimexe);
+	    printf("%s\n", oldvimexe);
 	if (oldgvimexe != NULL)
-	    printf("%s", oldgvimexe);
+	    printf("%s\n", oldgvimexe);
 	printf("It will be used instead of the version you are installing.\n");
-	printf("Please adjust your $PATH setting manually.\n\n");
+	printf("Please delete or rename it, or adjust your $PATH setting.");
     }
 
     /*
@@ -654,6 +677,7 @@ change_bat_choice(int idx)
     char	*p;
     int		count;
     char	**names = NULL;
+    int		i;
 
     if (choices[idx].arg == 0)
     {
@@ -663,13 +687,13 @@ change_bat_choice(int idx)
     else
     {
 	batname = gvimbat;
-	name = "gvim.vat";
+	name = "gvim.bat";
     }
 
     path = getenv("PATH");
     if (path == NULL)
     {
-	printf("The variable $PATH is not set\n");
+	printf("\nERROR: The variable $PATH is not set\n");
 	return;
     }
 
@@ -693,14 +717,14 @@ change_bat_choice(int idx)
 	    }
 	    ++count;
 	    p = s;
-	    if (*p)
+	    if (*p != NUL)
 		++p;
 	}
 	if (names != NULL)
 	    break;
 	names = alloc((count + 1) * sizeof(char *));
     }
-    names[0] = "Select directory to create (g)vim.bat in";
+    names[0] = "Select directory to create (g)vim.bat in:";
     names[count] = "Do not create a (g)vim.bat file";
     n = get_choice(names, count + 1);
 
@@ -709,7 +733,7 @@ change_bat_choice(int idx)
     {
 	*batname = NUL;
 	choices[idx].text = alloc(30);
-	sprintf(choices[idx].text, "Do not create a %s", name);
+	sprintf(choices[idx].text, "Do NOT create a %s", name);
     }
     else
     {
@@ -719,6 +743,10 @@ change_bat_choice(int idx)
 	choices[idx].text = alloc(strlen(batname) + 20);
 	sprintf(choices[idx].text, "Create %s", batname);
     }
+
+    for (i = 1; i < count; ++i)
+	free(names[i]);
+    free(names);
 }
 
 /*
@@ -754,7 +782,7 @@ install_bat_choice(int idx)
 	else
 	{
 	    fprintf(fd, "@echo off\n");
-	    fprintf(fd, "rem Start Vim\n");
+	    fprintf(fd, "rem Run Vim\n");
 	    strcpy(buf, installdir);
 	    buf[runtimeidx] = NUL;
 	    /* Don't use double quotes for the value here, also when buf
@@ -762,9 +790,10 @@ install_bat_choice(int idx)
 	     * for MSDOS. */
 	    fprintf(fd, "set VIM=%s\n", buf);
 
+	    strcpy(buf, installdir);
 	    add_pathsep(buf);
 	    strcat(buf, exename);
-	    /* Can only handle 8 arguments now.  Use "shift" to use more? */
+	    /* Can only handle 9 arguments now.  Use "shift" to use more? */
 	    fprintf(fd, "%s %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9\n", buf);
 
 	    fclose(fd);
@@ -785,6 +814,7 @@ init_bat_choice(char *name, char *oldname, char *batname, int gvim)
 
     if (oldname != NULL)
     {
+	/* A [g]vim.bat exists: Only choice is to overwrite it or not. */
 	choices[choice_count].text = alloc(strlen(oldname) + 20);
 	sprintf(choices[choice_count].text, "Overwrite %s", oldname);
 	strcpy(batname, oldname);
@@ -792,16 +822,23 @@ init_bat_choice(char *name, char *oldname, char *batname, int gvim)
     }
     else
     {
-	p = getenv("PATH");
-	if (p == NULL)
-	    strcpy(batname, "C:/Windows");
+	/* No [g]vim.bat exists: Write it to a directory in $PATH.  Use
+	 * $WINDIR by default, if it's empty the first item in $PATH. */
+	p = getenv("WINDIR");
+	if (p != NULL && *p != NUL)
+	    strcpy(batname, p);
 	else
 	{
-	    /* TODO: use the windows directory instead of the first entry */
-	    i = 0;
-	    while (*p != NUL && *p != ';')
-		batname[i++] = *p++;
-	    batname[i] = NUL;
+	    p = getenv("PATH");
+	    if (p == NULL || *p == NUL)	    /* "cannot happen" */
+		strcpy(batname, "C:/Windows");
+	    else
+	    {
+		i = 0;
+		while (*p != NUL && *p != ';')
+		    batname[i++] = *p++;
+		batname[i] = NUL;
+	    }
 	}
 	add_pathsep(batname);
 	strcat(batname, name);
@@ -824,8 +861,8 @@ install_vimrc(int idx)
     FILE	*fd;
     char	*fname;
 
-    /* If an old vimrc file exists, overwrite it.  Otherwise create a new one.
-     */
+    /* If an old vimrc file exists, overwrite it.
+     * Otherwise create a new one. */
     if (*oldvimrc != NUL)
 	fname = oldvimrc;
     else
@@ -837,7 +874,7 @@ install_vimrc(int idx)
 	printf("\nERROR: Cannot open \"%s\" for writing.\n", fname);
 	return;
     }
-    switch (def_choice)
+    switch (compat_choice)
     {
 	case 1:     fprintf(fd, "set compatible\n");
 		    break;
@@ -871,7 +908,7 @@ change_vimrc_choice(int idx)
 
     if (choices[idx].installfunc != NULL)
     {
-	/* Change to NOT change or create a vimrc file. */
+	/* Switch to NOT change or create a vimrc file. */
 	if (*oldvimrc != NUL)
 	{
 	    choices[idx].text = alloc(strlen(oldvimrc) + 20);
@@ -889,16 +926,16 @@ change_vimrc_choice(int idx)
     }
     else
     {
-	/* Change to change or create a vimrc file. */
+	/* Switch to change or create a vimrc file. */
 	if (*oldvimrc != NUL)
 	{
 	    choices[idx].text = alloc(strlen(oldvimrc) + 20);
-	    sprintf(choices[idx].text, "Overwrite %s", oldvimrc);
+	    sprintf(choices[idx].text, "Overwrite %s with:", oldvimrc);
 	}
 	else
 	{
 	    choices[choice_count].text = alloc(strlen(vimrc) + 20);
-	    sprintf(choices[choice_count].text, "Create %s", vimrc);
+	    sprintf(choices[choice_count].text, "Create %s with:", vimrc);
 	}
 	choices[idx].installfunc = install_vimrc;
 	choices[idx + 1].active = 1;
@@ -913,8 +950,8 @@ change_vimrc_choice(int idx)
     static void
 change_run_choice(int idx)
 {
-    def_choice = get_choice(def_choices, TABLE_SIZE(def_choices));
-    sprintf(choices[idx].text, "run Vim %s", def_choices[def_choice]);
+    compat_choice = get_choice(compat_choices, TABLE_SIZE(compat_choices));
+    sprintf(choices[idx].text, compat_text, compat_choices[compat_choice]);
 }
 
 /*
@@ -924,7 +961,7 @@ change_run_choice(int idx)
 change_remap_choice(int idx)
 {
     remap_choice = get_choice(remap_choices, TABLE_SIZE(remap_choices));
-    sprintf(choices[idx].text, "%s", remap_choices[remap_choice]);
+    sprintf(choices[idx].text, remap_text, remap_choices[remap_choice]);
 }
 
 /*
@@ -934,7 +971,7 @@ change_remap_choice(int idx)
 change_mouse_choice(int idx)
 {
     mouse_choice = get_choice(mouse_choices, TABLE_SIZE(mouse_choices));
-    sprintf(choices[idx].text, "select text %s", mouse_choices[mouse_choice]);
+    sprintf(choices[idx].text, mouse_text, mouse_choices[mouse_choice]);
 }
 
     static void
@@ -955,7 +992,7 @@ init_vimrc_choices(void)
     else
     {
 	choices[choice_count].text = alloc(strlen(vimrc) + 20);
-	sprintf(choices[choice_count].text, "Create %s", vimrc);
+	sprintf(choices[choice_count].text, "Create %s with:", vimrc);
 	choices[choice_count].installfunc = install_vimrc;
     }
     choices[choice_count].changefunc = change_vimrc_choice;
@@ -964,8 +1001,8 @@ init_vimrc_choices(void)
 
     /* default way to run Vim */
     choices[choice_count].text = alloc(80);
-    sprintf(choices[choice_count].text, "run Vim %s", def_choices[def_choices_default]);
-    def_choice = def_choices_default;
+    sprintf(choices[choice_count].text, compat_text, compat_choices[compat_choices_default]);
+    compat_choice = compat_choices_default;
     choices[choice_count].changefunc = change_run_choice;
     choices[choice_count].installfunc = NULL;;
     choices[choice_count].active = (*oldvimrc == NUL);
@@ -973,7 +1010,7 @@ init_vimrc_choices(void)
 
     /* Wether to remap keys */
     choices[choice_count].text = alloc(80);
-    sprintf(choices[choice_count].text, "%s", remap_choices[remap_choice_default]);
+    sprintf(choices[choice_count].text, remap_text, remap_choices[remap_choice_default]);
     remap_choice = remap_choice_default;
     choices[choice_count].changefunc = change_remap_choice;
     choices[choice_count].installfunc = NULL;;
@@ -982,7 +1019,7 @@ init_vimrc_choices(void)
 
     /* default way to use the mouse */
     choices[choice_count].text = alloc(80);
-    sprintf(choices[choice_count].text, "The mouse %s", mouse_choices[mouse_choice_default]);
+    sprintf(choices[choice_count].text, mouse_text, mouse_choices[mouse_choice_default]);
     mouse_choice = mouse_choice_default;
     choices[choice_count].changefunc = change_mouse_choice;
     choices[choice_count].installfunc = NULL;;
@@ -1049,14 +1086,29 @@ change_popup_choice(int idx)
 {
     if (choices[idx].installfunc == NULL)
     {
-	strcpy(choices[idx].text, "Install an entry for Vim in the popup menu for the right mouse button\n    so that you can edit any file with Vim");
+	strcpy(choices[idx].text, "Install an entry for Vim in the popup menu for the right\n    mouse button so that you can edit any file with Vim");
 	choices[idx].installfunc = install_popup;
     }
     else
     {
-	strcpy(choices[idx].text, "Do NOT install an entry for Vim in the popup menu for the right mouse button\n    to edit any file with Vim");
+	strcpy(choices[idx].text, "Do NOT install an entry for Vim in the popup menu for the\n    right mouse button to edit any file with Vim");
 	choices[idx].installfunc = NULL;
     }
+}
+
+/*
+ * Add a dummy choice to avoid that the numbering changes depending on items
+ * in the environment.  The user may type a number he remembered without
+ * looking.
+ */
+    static void
+add_dummy_choice(void)
+{
+    choices[choice_count].installfunc = NULL;
+    choices[choice_count].active = 0;
+    choices[choice_count].changefunc = NULL;
+    choices[choice_count].installfunc = NULL;
+    ++choice_count;
 }
 
 /*
@@ -1083,6 +1135,8 @@ init_popup_choice(void)
 	change_popup_choice(choice_count);
 	++choice_count;
     }
+    else
+	add_dummy_choice();
 }
 
 /*
@@ -1094,16 +1148,132 @@ setup_choices(void)
     /* (over) write vim.bat file */
     if (oldvimexe == NULL && has_vim)
 	init_bat_choice("vim.bat", oldvimbat, vimbat, 0);
+    else
+	add_dummy_choice();
 
     /* (over) write gvim.bat file */
     if (oldgvimexe == NULL && has_gvim)
 	init_bat_choice("gvim.bat", oldgvimbat, gvimbat, 1);
+    else
+	add_dummy_choice();
 
     /* (over) write _vimrc file */
     init_vimrc_choices();
 
     /* Whether to add Vim to the popup menu */
     init_popup_choice();
+}
+
+/*
+ * Show a few screens full of helpful information.
+ */
+    static void
+show_help(void)
+{
+    static char *(items[]) =
+    {
+"The vim.bat and gvim.bat files\n"
+"------------------------------\n"
+"The vim.bat and/or gvim.bat files are written in one of the directories\n"
+"in $PATH.  This makes it possible to start vim and/or gvim from the\n"
+"command line.\n"
+"If vim.exe can be found in $PATH, the choice or vim.bat will not be\n"
+"present.  It is assumed you will use the existing vim.exe.\n"
+"Similarly for gvim.bat and gvim.exe.\n"
+"If vim.bat can already be found in $PATH this is probably for an old\n"
+"version of Vim (but this is not checked!).\n"
+"If you select this item, you can select one of the directories in $PATH\n"
+"for writing the batch file in, or disable it being written.\n"
+"\n"
+"If you choose not to create the vim.bat and/or gvim.bat file, Vim\n"
+"can still be executed in other ways, but not from the command line.\n"
+,
+"Creating a _vimrc file\n"
+"----------------------\n"
+"The install program can create a simple _vimrc file that contains a few\n"
+"basic choices for how to run Vim.  You can edit this file later to\n"
+"tune your preferences.\n"
+"If you already have a _vimrc or .vimrc file it can be overwritten.  But\n"
+"you probably don't want to do that.\n"
+,
+"Vim features\n"
+"------------\n"
+"(this choice is only available when creating a _vimrc file)\n"
+"1. Vim can run in Vi-compatible mode.  Many nice Vim features are then\n"
+"   disabled.  In the not-Vi-compatible mode Vim is still mostly Vi\n"
+"   compatible, but adds nice features like multi-level undo.  Only\n"
+"   choose Vi-compatible if you really need full Vi compatibility.\n"
+"2. Running Vim with some enhancements is useful when you want some of\n"
+"   the nice Vim features, but have a slow computer and want to keep it\n"
+"   really fast.\n"
+"3. Syntax highlighting shows many files in color.  Not only does this look\n"
+"   nice, it also makes it easier to spot errors and you can work faster.\n"
+"   The other features include editing compressed files.\n"
+,
+"Windows key mapping\n"
+"-------------------\n"
+"(this choice is only available when creating a _vimrc file)\n"
+"Under MS-Windows the CTRL-C key copies text to the clipboard and CTRL-V\n"
+"pastes text from the clipboard.  There are a few more keys like these.\n"
+"Unfortunately, in Vim these keys normally have another meaning.\n"
+"1. Choose to have the keys like they normally are in Vim (useful if you\n"
+"   also use Vim on other systems).\n"
+"2. Choose to have the keys work like they are used on MS-Windows (useful\n"
+"   if you mostly work on MS-Windows).\n"
+,
+"Mouse use\n"
+"---------\n"
+"(this choice is only available when creating a _vimrc file)\n"
+"The right mouse button can be used in two ways:\n"
+"1. The Unix way is to extend an existing selection.  The popup menu is\n"
+"   not available.\n"
+"2. The MS-Windows way is to show a popup menu, which allows you to\n"
+"   copy/paste text, undo/redo, etc.  Extending the selection can still be\n"
+"   done by keeping SHIFT pressed while using the left mouse button\n"
+,
+"Edit with Vim menu entry\n"
+"------------------------\n"
+"(this choice is only available when gvim.exe and gvimext.dll are present)\n"
+"You can associate different file types with Vim, so that you can (double)\n"
+"click on a file to edit it with Vim.  This means you have to individually\n"
+"select each file type.\n"
+"An alternative is the option offered here: Install an \"Edit with Vim\"\n"
+"entry in the popup menu for the right mouse button.  This means you can\n"
+"edit any file you like with Vim\n"
+,
+NULL
+    };
+    int		i;
+    int		c;
+    int		x;
+
+    /* Eat input until we get the CR after the 'h'. */
+    x = 0;
+    while (x != '\n' && x != '\r')
+	x = getchar();
+
+    printf("\n");
+    for (i = 0; items[i] != NULL; ++i)
+    {
+	printf(items[i]);
+	printf("\n");
+	printf("Hit Enter to continue, b (back) or q (quit help): ");
+	c = getchar();
+	/* skip anything typed until a CR */
+	x = c;
+	while (x != '\n' && x != '\r')
+	    x = getchar();
+	if (c == 'b' || c == 'B')
+	{
+	    if (i == 0)
+		--i;
+	    else
+		i -= 2;
+	}
+	if (c == 'q' || c == 'Q')
+	    break;
+	printf("\n");
+    }
 }
 
 /*
@@ -1115,67 +1285,8 @@ install(void)
     int		i;
 
     for (i = 0; i < choice_count; ++i)
-    {
 	if (choices[i].installfunc != NULL)
 	    (choices[i].installfunc)(i);
-    }
-
-    printf("Installation finished\n");
-}
-
-/*
- * Move file "fname" to directory "dir".
- * We actually copy the file and then delete the original, to avoid depending
- * on an external program.
- */
-    void
-move_file(char *fname, char *dir)
-{
-    struct stat	st;
-    char	new_name[256];
-#define COPYBUFSIZE 4096
-    char	*buf;
-    long	len = 0;
-    int		fdr, fdw;
-#ifndef __MINGW32__
-    extern int	_fmode;
-#endif
-
-    /* if the file doesn't exist, silently skip it */
-    if (stat(fname, &st) < 0)
-	return;
-
-    buf = alloc(COPYBUFSIZE);
-
-    _fmode = O_BINARY;	    /* Use binary I/O */
-
-    /* make the destination file name: "dir\fname" */
-    strcpy(new_name, dir);
-    add_pathsep(new_name);
-    strcat(new_name, fname);
-
-    fdr = open(fname, O_RDONLY | O_EXTRA, 0);
-    if (fdr >= 0)
-    {
-	fdw = open(new_name, O_WRONLY|O_CREAT|O_TRUNC|O_EXTRA, 0777);
-	if (fdw >= 0)
-	{
-	    /* copy the file. */
-	    while ((len = read(fdr, buf, COPYBUFSIZE)) > 0)
-		if (write(fdw, buf, len) != len)
-		    break;
-	    close(fdw);
-	}
-	close(fdr);
-    }
-    if (fdr < 0 || fdw < 0 || len > 0 || len < 0)
-	printf("ERROR: Moving \"%s\" to \"%s\" failed\n", fname, dir);
-    else
-    {
-	printf("%s moved to %s\n", fname, new_name);
-	unlink(fname);
-    }
-    free(buf);
 }
 
     int
@@ -1199,35 +1310,41 @@ main(int argc, char **argv)
     /* Setup the default choices. */
     setup_choices();
 
-    /* Let the user change choices. */
+    /* Let the user change choices and finally install (or quit). */
     for (;;)
     {
 	printf("\n\nInstall will do for you:\n");
-	for (i = 1; i <= choice_count; ++i)
-	    if (choices[i - 1].active)
-		printf("%2d  %s\n", i, choices[i - 1].text);
-	printf(" d  do it!\n");
-	printf(" q  quit, don't install anything\n");
-	printf("Number of item to change, d or q: ");
+	for (i = 0; i < choice_count; ++i)
+	    if (choices[i].active)
+		printf("%2d  %s\n", i + 1, choices[i].text);
+	printf("Enter number of item to change, h (help), d (do it) or q (quit): ");
 	if (scanf("%99s", buf) == 1)
 	{
 	    if (isdigit(buf[0]))
 	    {
+		/* Change a choice. */
 		i = atoi(buf);
 		if (i > 0 && i <= choice_count && choices[i - 1].active)
 		    (choices[i - 1].changefunc)(i - 1);
 		else
 		    printf("\nIllegal choice\n");
 	    }
-	    else if (buf[0] == 'q' || buf[0] == 'Q')
+	    else if (buf[0] == 'h' || buf[0] == 'H')
 	    {
-		printf("Exiting without anything done\n");
-		break;
+		/* Help */
+		show_help();
 	    }
 	    else if (buf[0] == 'd' || buf[0] == 'D')
 	    {
+		/* Install! */
 		install();
 		printf("\nThat finishes the installation.  Happy Vimming!\n");
+		break;
+	    }
+	    else if (buf[0] == 'q' || buf[0] == 'Q')
+	    {
+		/* Quit */
+		printf("\nExiting without anything done\n");
 		break;
 	    }
 	    else

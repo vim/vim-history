@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language   : TeX
-" Version    : 5.7-1
+" Version    : 6.0-1
 " Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: June 27, 2000
+" Last Change: August 8, 2000
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -198,8 +198,12 @@ endif
 " will appropriately terminate.  Ideally vim would let me save a
 " character from the start pattern and re-use it in the end-pattern.
 syn region texZone	start="\\begin{verbatim}"		end="\\end{verbatim}\|%stopzone\>"
-syn region texZone	start="\\verb`"		end="`\|%stopzone\>"
-syn region texZone	start="\\verb#"		end="#\|%stopzone\>"
+if version < 600
+ syn region texZone	start="\\verb`"		end="`\|%stopzone\>"
+ syn region texZone	start="\\verb#"		end="#\|%stopzone\>"
+else
+ syn region texZone	start="\\verb\z(.\)"		end="\z1\|%stopzone\>"
+endif
 syn region texZone	start="@samp{"		end="}\|%stopzone\>"
 syn region texRefZone	matchgroup=texStatement start="\\cite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone	matchgroup=texStatement start="\\label{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter

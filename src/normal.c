@@ -336,7 +336,8 @@ struct nv_cmd
     {'}',	nv_findpar,	0,			FORWARD},
     {'~',	nv_tilde,	0,			0},
 
-    {('£' & 0xff), nv_ident,	0,			0},
+    /* pound sign */
+    {0xA3,	nv_ident,	0,			0},
 #ifdef FEAT_MOUSE
     {K_MOUSEUP, nv_mousescroll,	0,			TRUE},
     {K_MOUSEDOWN, nv_mousescroll, 0,			FALSE},
@@ -2199,7 +2200,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 #ifdef FEAT_VISUAL
     /* Set global flag that we are extending the Visual area with mouse
      * dragging; temporarily mimimize 'scrolloff'. */
-    if (moved && VIsual_active && is_drag && p_so)
+    if (VIsual_active && is_drag && p_so)
     {
 	/* In the very first line, allow scrolling one line */
 	if (mouse_row == 0)
@@ -3123,7 +3124,7 @@ nv_help(cap)
     cmdarg_t	*cap;
 {
     if (!checkclearopq(cap->oap))
-	do_help(NULL);
+	ex_help(NULL);
 }
 
 /*
@@ -3664,11 +3665,25 @@ dozet:
     case 'i':	curwin->w_p_fen = !curwin->w_p_fen;
 		break;
 
-		/* "za": open fold at cursor or Visual area */
+		/* "za": open fold at cursor */
     case 'a':	if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
 		    openFold(curwin->w_cursor.lnum);
 		else
+		{
 		    closeFold(curwin->w_cursor.lnum);
+		    curwin->w_p_fen = TRUE;
+		}
+		break;
+
+		/* "zA": open fold at cursor recursively */
+    case 'A':	if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
+		    openFoldRecurse(curwin->w_cursor.lnum);
+		else
+		{
+		    closeFoldRecurse(curwin->w_cursor.lnum);
+		    curwin->w_p_fen = TRUE;
+		}
+		break;
 
 		/* "zo": open fold at cursor or Visual area */
     case 'o':	if (VIsual_active)

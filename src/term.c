@@ -79,6 +79,7 @@ static void gather_termleader __ARGS((void));
 static void req_codes_from_term __ARGS((void));
 static void req_more_codes_from_term __ARGS((void));
 static void got_code_from_term __ARGS((char_u *code, int len));
+static void check_for_codes_from_term __ARGS((void));
 #endif
 #if defined(FEAT_GUI) \
     || (defined(FEAT_MOUSE) && (!defined(UNIX) || defined(FEAT_MOUSE_XTERM)))
@@ -426,7 +427,7 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_CDL,	IF_EB("\033[%dM", ESC_STR "[%dM")},
 #  endif
-    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR "[2J")},
+    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR_nc "[2J")},
     {(int)KS_ME,	IF_EB("\033[0m", ESC_STR "[0m")},
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
@@ -751,7 +752,7 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_CDL,	IF_EB("\033[%dM", ESC_STR "[%dM")},
 #  endif
-    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR "[2J")},
+    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR_nc "[2J")},
     {(int)KS_ME,	IF_EB("\033[0m", ESC_STR "[0m")},
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
     {(int)KS_MS,	"y"},
@@ -854,7 +855,7 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_AL,	IF_EB("\033T", ESC_STR "T")},
     {(int)KS_DL,	IF_EB("\033U", ESC_STR "U")},
-    {(int)KS_CL,	IF_EB("\033H\033J", ESC_STR "H" ESC_STR "J")},
+    {(int)KS_CL,	IF_EB("\033H\033J", ESC_STR "H" ESC_STR_nc "J")},
     {(int)KS_ME,	IF_EB("\033SO", ESC_STR "SO")},
     {(int)KS_MR,	IF_EB("\033S2", ESC_STR "S2")},
     {(int)KS_MS,	"y"},
@@ -886,7 +887,7 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_CS,	IF_EB("\033[%i%d;%dr", ESC_STR "[%i%d;%dr")},
 #  endif
-    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR "[2J")},
+    {(int)KS_CL,	IF_EB("\033[H\033[2J", ESC_STR "[H" ESC_STR_nc "[2J")},
     {(int)KS_CD,	IF_EB("\033[J", ESC_STR "[J")},
     {(int)KS_ME,	IF_EB("\033[m", ESC_STR "[m")},
     {(int)KS_MR,	IF_EB("\033[7m", ESC_STR "[7m")},
@@ -907,12 +908,12 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_CRI,	IF_EB("\033[%dC", ESC_STR "[%dC")},
 #  endif
-    {(int)KS_KS,	IF_EB("\033[?1h\033=", ESC_STR "[?1h" ESC_STR "=")},
-    {(int)KS_KE,	IF_EB("\033[?1l\033>", ESC_STR "[?1l" ESC_STR ">")},
+    {(int)KS_KS,	IF_EB("\033[?1h\033=", ESC_STR "[?1h" ESC_STR_nc "=")},
+    {(int)KS_KE,	IF_EB("\033[?1l\033>", ESC_STR "[?1l" ESC_STR_nc ">")},
 #  ifdef FEAT_XTERM_SAVE
-    {(int)KS_TI,	IF_EB("\0337\033[?47h", ESC_STR "7" ESC_STR "[?47h")},
+    {(int)KS_TI,	IF_EB("\0337\033[?47h", ESC_STR "7" ESC_STR_nc "[?47h")},
     {(int)KS_TE,	IF_EB("\033[2J\033[?47l\0338",
-				  ESC_STR "[2J" ESC_STR "[?47l" ESC_STR "8")},
+				  ESC_STR "[2J" ESC_STR_nc "[?47l" ESC_STR_nc "8")},
 #  endif
     {(int)KS_CIS,	IF_EB("\033]1;", ESC_STR "]1;")},
     {(int)KS_CIE,	"\007"},
@@ -3030,6 +3031,11 @@ stoptermcap()
     reset_cterm_colors();
     if (termcap_active)
     {
+#ifdef FEAT_TERMRESPONSE
+	/* Check for termcodes first, otherwise an external program may get
+	 * them. */
+	check_for_codes_from_term();
+#endif
 	out_str(T_KE);			/* stop "keypad transmit" mode */
 	out_flush();
 	termcap_active = FALSE;
@@ -3058,7 +3064,7 @@ may_req_termresponse()
 	need_get_crv = FALSE;
 	/* check for the characters now, otherwise they might be eaten by
 	 * get_keystroke() */
-	(void)vpeekc();
+	(void)vpeekc_nomap();
     }
 }
 #endif
@@ -3667,8 +3673,8 @@ check_termcode(max_offset, buf, buflen)
 			if (extra >= 95)
 			    set_option_value((char_u *)"ttym", 0L,
 						   (char_u *)"xterm2", FALSE);
-			/* if xterm version >= 140 try to get termcap codes */
-			if (extra >= 140)
+			/* if xterm version >= 141 try to get termcap codes */
+			if (extra >= 141)
 			{
 			    check_for_codes = TRUE;
 			    need_gather = TRUE;
@@ -4672,14 +4678,14 @@ show_one_termcode(name, code, printit)
     return len;
 }
 
-#ifdef FEAT_TERMRESPONSE
+#if defined(FEAT_TERMRESPONSE) || defined(PROTO)
 /*
  * For Xterm >= 140 compiled with OPT_TCAP_QUERY: Obtain the actually used
  * termcap codes from the terminal itself.
  * We get them one by one to avoid a very long response.
  */
-static int xt_index_in;
-static int xt_index_out;
+static int xt_index_in = 0;
+static int xt_index_out = 0;
 
     static void
 req_codes_from_term()
@@ -4693,6 +4699,7 @@ req_codes_from_term()
 req_more_codes_from_term()
 {
     char	buf[10];
+    int		old_idx = xt_index_out;
 
     /* Send up to 10 more requests out than we received.  Avoid sending too
      * many, there can be a buffer overflow somewhere. */
@@ -4705,6 +4712,10 @@ req_more_codes_from_term()
 	out_str_nf((char_u *)buf);
 	++xt_index_out;
     }
+
+    /* Send the codes out right away. */
+    if (xt_index_out != old_idx)
+	out_flush();
 }
 
 /*
@@ -4746,6 +4757,54 @@ got_code_from_term(code, len)
 
     ++xt_index_in;
     req_more_codes_from_term();
+}
+
+/*
+ * This is called before starting an external program.  We don't want
+ * responses to be send to that program.  Check if there are any unanswered
+ * requests and deal with them.
+ */
+    static void
+check_for_codes_from_term()
+{
+    int		i;
+    int		c;
+
+    /* If no codes requested or all are answered, no need to wait. */
+    if (xt_index_out == 0 || xt_index_out == xt_index_in)
+	return;
+
+    /* Vgetc() will check for and handle any response.
+     * Keep calling vpeekc() until we don't get any responses. */
+    ++no_mapping;
+    ++allow_keys;
+    for (;;)
+    {
+	i = xt_index_in;
+	c = vpeekc();
+	if (c == NUL)	    /* nothing available */
+	    break;
+
+	/* If a response is recognized it's replaced with K_IGNORE, must read
+	 * it from the input stream.  If there is no K_IGNORE we can't do
+	 * anything, break here (there might be some responses further on, but
+	 * we don't want to throw away typed chars). */
+	if (c == K_SPECIAL || c == K_IGNORE)
+	{
+	    c = vgetc();
+	    if (c != K_IGNORE)
+	    {
+		vungetc(c);
+		break;
+	    }
+	}
+
+	/* If we didn't receive a response, wait no longer. */
+	if (i == xt_index_in)
+	    break;
+    }
+    --no_mapping;
+    --allow_keys;
 }
 #endif
 

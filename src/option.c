@@ -93,6 +93,7 @@ typedef enum
     , PV_TX
     , PV_WM
     , PV_WRAP
+	, PV_KMAP
 } idopt_t;
 
 /*
@@ -175,6 +176,9 @@ static long	p_ts;
 static long	p_tw;
 static int	p_tx;
 static long	p_wm;
+#ifdef FEAT_KEYMAP
+static char_u	*p_keymap;
+#endif
 
 /* Saved values for when 'bin' is set. */
 static int	p_et_nobin;
@@ -238,8 +242,8 @@ struct vimoption
 #define P_RCLR		0x7000	/* clear and redraw all */
 
 #define P_COMMA		0x8000	/* comma separated list */
-#define P_NODUP		0x10000L    /* don't allow duplicate strings */
-#define P_FLAGLIST	0x20000L    /* list of single-char flags */
+#define P_NODUP		0x10000L/* don't allow duplicate strings */
+#define P_FLAGLIST	0x20000L/* list of single-char flags */
 
 #define P_NOSECURE	0x40000L/* may not be changed in secure mode */
 #define P_NOMLINE	0x80000L/* may not be changed in a modeline */
@@ -309,6 +313,9 @@ static struct vimoption options[] =
     {"backup",	    "bk",   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_bk, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"backupcopy",  "bkc",  P_STRING|P_VI_DEF,
+			    (char_u *)&p_bkc, PV_NONE,
+			    {(char_u *)"auto", (char_u *)0L}},
     {"backupdir",   "bdir", P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_bdir, PV_NONE,
 			    {(char_u *)DFLT_BDIR, (char_u *)0L}},
@@ -959,6 +966,15 @@ static struct vimoption options[] =
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
+    {"keymap",	    "kmp",  P_STRING|P_ALLOCED|P_VI_DEF|P_RBUF|P_RSTAT,
+#ifdef FEAT_KEYMAP
+			    (char_u *)&p_keymap, PV_KMAP,
+			    {(char_u *)DFLT_KMP, (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#endif
+	},
     {"keymodel",    "km",   P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_VISUAL
 			    (char_u *)&p_km, PV_NONE,
@@ -996,6 +1012,13 @@ static struct vimoption options[] =
 			    {(char_u *)NULL,
 #endif
 				(char_u *)0L}},
+    {"langmenu",    "lm",   P_STRING|P_VI_DEF,
+#if defined(FEAT_MENU) && defined(FEAT_MULTI_LANG)
+			    (char_u *)&p_lm, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)"", (char_u *)0L}},
     {"laststatus",  "ls",   P_NUM|P_VI_DEF|P_RALL,
 #ifdef FEAT_WINDOWS
 			    (char_u *)&p_ls, PV_NONE,
@@ -1459,6 +1482,9 @@ static struct vimoption options[] =
     {"sidescroll",  "ss",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_ss, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}},
+    {"sidescrolloff", "siso", P_NUM|P_VI_DEF|P_VIM|P_RBUF,
+			    (char_u *)&p_siso, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}},
     {"slowopen",    "slow", P_BOOL|P_VI_DEF,
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -1870,6 +1896,7 @@ static struct vimoption options[] =
 #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
 
 static char *(p_bg_values[]) = {"light", "dark", NULL};
+static char *(p_bkc_values[]) = {"yes", "auto", "no", NULL};
 static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
 static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
 #ifdef FEAT_MBYTE
@@ -1912,7 +1939,7 @@ static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 static char *(p_cb_values[]) = {"unnamed", "autoselect", NULL};
 #endif
 #if defined(FEAT_QUICKFIX)
-static char *(p_buftype_values[]) = {"nofile", "quickfix", NULL};
+static char *(p_buftype_values[]) = {"nofile", "scratch", "quickfix", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
@@ -3481,6 +3508,10 @@ check_buf_options(buf)
     if (buf->b_p_cpt == NULL)
 	buf->b_p_cpt = empty_option;
 #endif
+#ifdef FEAT_KEYMAP
+    if (buf->b_p_keymap == NULL)
+	buf->b_p_keymap = empty_option;
+#endif
 }
 
 /*
@@ -3644,8 +3675,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	}
     }
 
+    /* 'backupcopy' */
+    else if (varp == &p_bkc)
+    {
+	if (check_opt_strings(p_bkc, p_bkc_values, FALSE) != OK)
+	    errmsg = e_invarg;
+    }
+
     /* 'backupext' and 'patchmode' */
-    else if ((varp == &p_bex || varp == &p_pm))
+    else if (varp == &p_bex || varp == &p_pm)
     {
 	if (STRCMP(*p_bex == '.' ? p_bex + 1 : p_bex,
 		     *p_pm == '.' ? p_pm + 1 : p_pm) == 0)
@@ -3784,6 +3822,13 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
     }
 
 #endif /* FEAT_MBYTE */
+#ifdef FEAT_KEYMAP
+	else if (varp == &(curbuf->b_p_keymap))
+	{
+	/* load or unload key mapping tables */
+		errmsg = keymap_init();
+	}
+#endif
 
     /* 'fileformat' */
     else if (varp == &(curbuf->b_p_ff))
@@ -4182,7 +4227,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	    errmsg = e_invarg;
 	else
 	{
-	    if (bt_nofile(curbuf))
+	    if (bt_nofile(curbuf) || bt_scratch(curbuf))
 	    {
 		/* also close and forbid swapfile */
 		mf_close_file(curbuf, TRUE);	/* remove the swap file */
@@ -4482,6 +4527,7 @@ set_chars_option(varp)
     {
 	{&lcs_eol,	"eol"},
 	{&lcs_ext,	"extends"},
+	{&lcs_prec,	"preceeds"},
 	{&lcs_tab2,	"tab"},
 	{&lcs_trail,	"trail"},
     };
@@ -4687,11 +4733,11 @@ set_bool_option(opt_idx, varp, value, local)
     else if ((int *)varp == &curbuf->b_p_swf)
     {
 #ifdef FEAT_QUICKFIX
-	/* disallow swapfile in nofile buffers */
-	if (bt_nofile(curbuf))
+	/* disallow swapfile in "nofile" and "scratch" buffers */
+	if (bt_nofile(curbuf) || bt_scratch(curbuf))
 	{
 	    curbuf->b_p_swf = FALSE;
-	    return (char_u *)"You cannot :set swapfile if 'buftype' is \"nofile\"";
+	    return (char_u *)"You cannot :set swapfile if 'buftype' is \"nofile\" or \"scratch\"";
 	}
 #endif
 
@@ -5770,7 +5816,7 @@ get_varp_global(p, global)
     if (global && p->indir != PV_NONE)
     {
 	if (p->var == VAR_WIN)
-	    return get_varp(p) + 1;
+	    return (char_u *)((char_u **)get_varp(p) + 1);
 	return p->var;
     }
     return get_varp(p);
@@ -5882,6 +5928,9 @@ get_varp(p)
 	case PV_TW:	return (char_u *)&(curbuf->b_p_tw);
 	case PV_TX:	return (char_u *)&(curbuf->b_p_tx);
 	case PV_WM:	return (char_u *)&(curbuf->b_p_wm);
+#ifdef FEAT_KEYMAP
+	case PV_KMAP:	return (char_u *)&(curbuf->b_p_keymap);
+#endif
 	default:	EMSG(_("get_varp ERROR"));
     }
     /* always return a valid pointer to avoid a crash! */
@@ -6126,9 +6175,12 @@ buf_copy_options(buf, flags)
 #ifdef FEAT_SEARCHPATH
 	    buf->b_p_sua = vim_strsave(p_sua);
 #endif
+#ifdef FEAT_KEYMAP
+	    buf->b_p_keymap = vim_strsave(p_keymap);
+#endif
 
 	    /*
-	     * Don't copy the options set by do_help(), use the saved values,
+	     * Don't copy the options set by ex_help(), use the saved values,
 	     * when going from a help buffer to a non-help buffer.
 	     * Don't touch these at all when BCO_NOHELP is used and going from
 	     * or to a help buffer.

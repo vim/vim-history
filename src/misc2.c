@@ -2099,7 +2099,7 @@ find_special_key(srcp, modp, keycode)
 #ifdef EBCDIC
 			    /*
 			     * TODO: EBCDIC Better use:
-			     * && (Ctrl(key) || key == '?')
+			     * && (Ctrl_chr(key) || key == '?')
 			     * ???
 			     */
 			    && strchr("?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_", key)
@@ -2113,7 +2113,7 @@ find_special_key(srcp, modp, keycode)
 			    key = DEL;
 			else
 #ifdef EBCDIC
-			    key = Ctrl(key);
+			    key = Ctrl_chr(key);
 #else
 			    key &= 0x1f;
 #endif
@@ -2337,6 +2337,9 @@ set_fileformat(t, local)
 #ifdef FEAT_WINDOWS
     check_status(curbuf);
 #endif
+#ifdef FEAT_TITLE
+    need_maketitle = TRUE;	    /* set window title */
+#endif
 }
 
 /*
@@ -2414,7 +2417,7 @@ call_shell(cmd, opt)
     int
 get_real_state()
 {
-    if ((State & NORMAL))
+    if (State & NORMAL)
     {
 #ifdef FEAT_VISUAL
 	if (VIsual_active)
@@ -3580,7 +3583,7 @@ vim_findfile(void *search_ctx)
     char_u	*suf;
 #endif
 
-    if (NULL == search_ctx)
+    if (search_ctx == NULL)
 	return NULL;
 
     ff_search_ctx = (ff_search_ctx_t*)search_ctx;
@@ -4709,5 +4712,35 @@ qsort(base, elm_count, elm_size, cmp)
 	    }
 
     vim_free(buf);
+}
+#endif
+
+#if defined(FEAT_EX_EXTRA) || defined(FEAT_CMDL_COMPL) || defined(PROTO)
+/*
+ * Sort an array of strings.
+ */
+static int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
+sort_compare __ARGS((const void *s1, const void *s2));
+
+    static int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
+sort_compare(s1, s2)
+    const void	*s1;
+    const void	*s2;
+{
+    return STRCMP(*(char **)s1, *(char **)s2);
+}
+
+    void
+sort_strings(files, count)
+    char_u	**files;
+    int		count;
+{
+    qsort((void *)files, (size_t)count, sizeof(char_u *), sort_compare);
 }
 #endif

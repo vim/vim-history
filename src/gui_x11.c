@@ -2891,6 +2891,8 @@ gui_x11_get_last_mouse_event()
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
 
+/* Signs are currently always 2 chars wide.  Hopefully the font is big enough
+ * to provide room for the bitmap! */
 # define SIGN_WIDTH (gui.char_width * 2)
 
     void
@@ -2960,7 +2962,7 @@ gui_mch_register_sign(signfile)
 	    {
 		vim_free(sign);
 		sign = NULL;
-		EMSG(_("Error -- couldn't read in sign data!\n"));
+		EMSG(_("Error -- couldn't read in sign data!"));
 	    }
 	    vim_free((char *) attrs.colorsymbols);
 	}

@@ -1918,6 +1918,9 @@ changed()
 #ifdef FEAT_WINDOWS
 	check_status(curbuf);
 #endif
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;	    /* set window title */
+#endif
     }
     ++curbuf->b_changedtick;
     ++global_changedtick;
@@ -2170,6 +2173,9 @@ unchanged(buf, ff)
 	    save_file_ff(buf);
 #ifdef FEAT_WINDOWS
 	check_status(buf);
+#endif
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;	    /* set window title */
 #endif
     }
     ++buf->b_changedtick;

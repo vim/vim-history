@@ -222,8 +222,13 @@ close_buffer(win, buf, free_buf, del_buf)
 	return;
     }
 
-    /* Always remove the buffer when there is no file name. */
-    if (buf->b_ffname == NULL)
+    /* Always remove the buffer when there is no file name or it is a
+     * "scratch" buffer. */
+    if (buf->b_ffname == NULL
+#ifdef FEAT_QUICKFIX
+	    || bt_scratch(buf)
+#endif
+       )
 	del_buf = TRUE;
 
     /*
@@ -1024,6 +1029,9 @@ free_buf_options(buf, free_p_ff)
     free_string_option(buf->b_p_mps);
     free_string_option(buf->b_p_fo);
     free_string_option(buf->b_p_isk);
+#ifdef FEAT_KEYMAP
+    free_string_option(buf->b_p_keymap);
+#endif
 #ifdef FEAT_COMMENTS
     free_string_option(buf->b_p_com);
 #endif
@@ -2050,7 +2058,7 @@ static char_u *lasticon = NULL;
     void
 maketitle()
 {
-    char_u	*t_name;
+    char_u	*p;
     char_u	*t_str = NULL;
     char_u	*i_name;
     char_u	*i_str = NULL;
@@ -2058,6 +2066,11 @@ maketitle()
     int		len;
     int         mustset;
     char_u	buf[IOSIZE];
+    int		off;
+
+    need_maketitle = FALSE;
+    if (!p_title && !p_icon)
+	return;
 
     if (p_title)
     {
@@ -2080,29 +2093,66 @@ maketitle()
 	}
 	else
 	{
-	    if (curbuf->b_ffname == NULL)
-		t_name = (char_u *)"VIM -";
+	    /* format: "fname + (path) (1 of 2) - VIM" */
+
+	    if (curbuf->b_fname == NULL)
+		STRCPY(buf, _("[No file]"));
 	    else
 	    {
-		t_name = buf + 100; /* No more than a hundred unprintables */
-		STRCPY(t_name, "VIM - ");
+		p = transstr(gettail(curbuf->b_fname));
+		STRNCPY(buf, p, IOSIZE - 100);
+		vim_free(p);
+		buf[IOSIZE - 100] = NUL; /* in case it was too long */
+	    }
+
+	    if (bufIsChanged(curbuf))
+		STRCAT(buf, " +");
+
+	    if (curbuf->b_fname != NULL)
+	    {
+		/* Get path of file, replace home dir with ~ */
+		off = STRLEN(buf);
+		buf[off++] = ' ';
+		buf[off++] = '(';
 		home_replace(curbuf, curbuf->b_ffname,
-			     t_name + 6, IOSIZE - 106, TRUE);
-		append_arg_number(curwin, t_name, FALSE, IOSIZE - 100);
-		if (maxlen)
+					       buf + off, IOSIZE - off, TRUE);
+		/* remove the file name */
+		p = gettail(buf + off);
+		if (p == buf + off)
 		{
-		    len = STRLEN(t_name);
-		    if (len > maxlen)
-		    {
-			mch_memmove(t_name + 6, t_name + 6 + len - maxlen,
-							  (size_t)maxlen - 5);
-			t_name[5] = '<';
-		    }
+		    /* must be a help buffer */
+		    STRCPY(buf + off, _("help"));
+		}
+		else
+		{
+		    while (p > buf + off + 1 && vim_ispathsep(p[-1]))
+			--p;
+		    *p = NUL;
+		}
+		/* translate unprintable chars */
+		p = transstr(buf + off);
+		STRNCPY(buf + off, p, IOSIZE - off);
+		vim_free(p);
+		buf[IOSIZE - 1] = NUL;  /* in case it was too long */
+		STRCAT(buf, ")");
+	    }
+
+	    append_arg_number(curwin, buf, FALSE, IOSIZE);
+
+	    STRCAT(buf, " - VIM");
+
+	    if (maxlen)
+	    {
+		len = STRLEN(buf);
+		if (len > maxlen)
+		{
+		    /* make it shorter by removing a bit in the middle */
+		    mch_memmove(buf + maxlen / 2 + 1,
+			  buf + len - maxlen / 2 + 1, (size_t)maxlen / 2);
+		    buf[maxlen / 2 - 1] = '.';
+		    buf[maxlen / 2] = '.';
 		}
 	    }
-	    *t_str = NUL;
-	    while (*t_name)
-		STRCAT(t_str, transchar(*t_name++));
 	}
     }
     mustset = ti_change(t_str, &lasttitle);
@@ -2847,7 +2897,7 @@ buf_spname(buf)
 	return _("[Error List]");
 #endif
 #ifdef FEAT_QUICKFIX
-    /* There is no _file_ for a NONDISKBUF, b_sfname contains the name as
+    /* There is no _file_ for a "nofile" and "scratch" buffers, b_sfname contains the name as
      * specified by the user */
     if (bt_nofile(buf))
     {
@@ -2855,6 +2905,13 @@ buf_spname(buf)
 	    return (char *)buf->b_sfname;
 	else
 	    return "";
+    }
+    if (bt_scratch(buf))
+    {
+	if (buf->b_sfname != NULL)
+	      return (char *)buf->b_sfname;
+	else
+	      return "[scratch]";
     }
 #endif
     if (buf->b_fname == NULL)

@@ -700,6 +700,9 @@ struct file_buffer
     long	b_p_wm;		/* 'wrapmargin' */
     long	b_p_wm_nobin;	/* b_p_wm saved for binary mode */
     long	b_p_wm_nopaste;	/* b_p_wm saved for paste mode */
+#ifdef FEAT_KEYMAP
+    char_u	*b_p_keymap;	/* 'keymap' */
+#endif
 
     /* end of buffer options */
 
@@ -1253,7 +1256,8 @@ struct VimMenu
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
     int		noremap[MENU_MODES]; /* A noremap flag for each mode */
     vimmenu_t	*children;	    /* Children of sub-menu */
-    vimmenu_t	*next;	    /* Next item in menu */
+    vimmenu_t	*parent;	    /* Parent of menu */
+    vimmenu_t	*next;		    /* Next item in menu */
 #ifdef FEAT_GUI_X11
     Widget	id;		    /* Manage this to enable item */
     Widget	submenu_id;	    /* If this is submenu, add children here */
@@ -1263,22 +1267,18 @@ struct VimMenu
     GtkWidget	*submenu_id;	    /* If this is submenu, add children here */
     GtkWidget	*tearoff_handle;
     GtkWidget   *label;		    /* Used by "set wak=" code. */
-    vimmenu_t	*parent;	    /* Parent of menu (needed for tearoffs) */
 #endif
 #ifdef FEAT_GUI_MOTIF
-    vimmenu_t	*parent;	    /* Parent of menu (needed for tearoffs) */
     int		sensitive;	    /* turn button on/off */
 #endif
 #ifdef FEAT_GUI_W16
     UINT	id;		    /* Id of menu item */
     HMENU	submenu_id;	    /* If this is submenu, add children here */
-    vimmenu_t	*parent;	    /* Parent of menu */
 #endif
 #ifdef FEAT_GUI_W32
     UINT	id;		    /* Id of menu item */
     HMENU	submenu_id;	    /* If this is submenu, add children here */
     HWND	tearoff_handle;	    /* hWnd of tearoff if created */
-    vimmenu_t	*parent;	    /* Parent of menu (needed for tearoffs) */
 #endif
 #if FEAT_GUI_BEOS
     BMenuItem	*id;		    /* Id of menu item */

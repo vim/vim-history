@@ -344,7 +344,7 @@ tgetstr(id, buf)
 		case '^':			/* control characters */
 #ifdef EBCDIC
 		    ++tmp;
-		    *(*buf)++ = Ctrl(*tmp);
+		    *(*buf)++ = Ctrl_chr(*tmp);
 #else
 		    *(*buf)++ = *++tmp - '@';
 #endif

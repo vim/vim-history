@@ -1612,4 +1612,13 @@ bt_nofile(buf)
     return (buf->b_p_bt[0] == 'n');
 }
 
+/*
+ * Return TRUE if "buf" is a "scratch" buffer.
+ */
+    int
+bt_scratch(buf)
+    buf_t	*buf;
+{
+    return (buf->b_p_bt[0] == 's');
+}
 #endif /* FEAT_QUICKFIX */

@@ -29,10 +29,11 @@ dnl -Wmissing-prototypes removed, old versions of GCC don't have it.
 dnl -Wshadow causes too much of trouble for the GTK+ gui.
 test "$GCC" = yes && CFLAGS="$CFLAGS -Wall"
 
-dnl If configure things we are cross compiling, there is probably something
+dnl If configure thinks we are cross compiling, there is probably something
 dnl wrong with the CC or CFLAGS settings, give an understandable error message
 if test "$cross_compiling" = yes; then
-  AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
+  AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS
+  (cross compiling doesn't work)])
 fi
 
 dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies

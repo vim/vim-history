@@ -2241,9 +2241,9 @@ cmdl_fkmap(c)
 F_isalpha(c)
     int	c;
 {
-    return (( c >= TEE_ && c <= _YE) ||
-	( c >= ALEF_A && c <= YE) ||
-	( c >= _IE && c <= YE_));
+    return (( c >= TEE_ && c <= _YE)
+	    || (c >= ALEF_A && c <= YE)
+	    || (c >= _IE && c <= YE_));
 }
 
 /*
@@ -2251,7 +2251,7 @@ F_isalpha(c)
  */
     int
 F_isdigit(c)
-    int	    c;
+    int	c;
 {
     return (c >= FARSI_0 && c <= FARSI_9);
 }
@@ -2261,7 +2261,7 @@ F_isdigit(c)
  */
     int
 F_ischar(c)
-    int	    c;
+    int	c;
 {
     return (c >= TEE_ && c <= YE_);
 }

@@ -483,8 +483,8 @@ syntax_start(wp, lnum)
 	    if (p->sst_lnum <= lnum && p->sst_change_lnum == 0)
 	    {
 		last_valid = p;
-		if (syn_buf->b_syn_sync_minlines == 0
-			|| p->sst_lnum >= lnum - syn_buf->b_syn_sync_minlines)
+		if (syn_buf->b_syn_sync_minlines != 0
+			&& p->sst_lnum >= lnum - syn_buf->b_syn_sync_minlines)
 		    last_min_valid = p;
 	    }
 	}
@@ -3136,9 +3136,14 @@ syn_cmd_list(eap, syncing)
 	}
 	else if (!(curbuf->b_syn_sync_flags & SF_MATCH))
 	{
-	    MSG_PUTS(_("syncing starts "));
-	    msg_outnum(curbuf->b_syn_sync_minlines);
-	    MSG_PUTS(_(" lines before top line"));
+	    if (curbuf->b_syn_sync_minlines == 0)
+		MSG_PUTS(_("no syncing"));
+	    else
+	    {
+		MSG_PUTS(_("syncing starts "));
+		msg_outnum(curbuf->b_syn_sync_minlines);
+		MSG_PUTS(_(" lines before top line"));
+	    }
 	    return;
 	}
 	MSG_PUTS_TITLE(_("\n--- Syntax sync items ---"));
@@ -3778,6 +3783,13 @@ get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
 	    if (STRNICMP(arg, flagtab[fidx].name, len) == 0
 		    && (ends_excmd(arg[len]) || vim_iswhite(arg[len])))
 	    {
+		if (flagtab[fidx].val == HL_DISPLAY && nodisplay)
+		{
+		    /* handle "display" as a keyword, not a flag */
+		    fidx = -1;
+		    break;
+		}
+
 		flags |= flagtab[fidx].val;
 		arg = skipwhite(arg + len);
 
@@ -3818,11 +3830,6 @@ get_syn_options(arg, flagsp, nodisplay, sync_idx, cont_list, next_list)
 
 		    vim_free(gname);
 		    arg = skipwhite(arg);
-		}
-		else if (flagtab[fidx].val == HL_DISPLAY && nodisplay)
-		{
-		    EMSG(_("display argument not accepted here"));
-		    return NULL;
 		}
 #ifdef FEAT_FOLDING
 		else if (flagtab[fidx].val == HL_FOLD
@@ -5322,7 +5329,7 @@ syntax_present(buf)
 	    || curbuf->b_keywtab_ic != NULL);
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
 static enum
 {
@@ -5385,7 +5392,7 @@ get_syntax_name(idx)
 
 #endif /* FEAT_CMDL_COMPL */
 
-#ifdef FEAT_EVAL
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Function called for expression evaluation: get syntax ID at file position.
  */
@@ -5408,7 +5415,7 @@ syn_get_id(lnum, col, trans)
 }
 #endif
 
-#ifdef FEAT_FOLDING
+#if defined(FEAT_FOLDING) || defined(PROTO)
 /*
  * Function called to get folding level for line "lnum" in window "wp".
  */
@@ -6162,7 +6169,7 @@ do_highlight(line, forceit, init)
 	    p = vim_strrchr(arg, ',');
 	    if (p != NULL)
 	    {
-		*p++ = NULL;
+		*p++ = NUL;
 		 HL_TABLE()[idx].sg_sign_idx = atoi((char *)p);
 	    }
 	    HL_TABLE()[idx].sg_sign = gui_mch_register_sign((char *)arg);
@@ -6470,7 +6477,7 @@ hl_do_font(idx, arg, do_normal)
     }
 }
 
-#if defined(FEAT_LINE_HL) || defined(PROTO)
+#if defined(FEAT_SIGNS) || defined(PROTO)
 /*
  * Search all highlights for one with sg_sign_type == type
  */

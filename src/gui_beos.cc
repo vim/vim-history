@@ -2977,9 +2977,10 @@ gui_mch_set_menu_pos(
     void
 gui_mch_add_menu(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		idx)
 {
+    vimmenu_t	*parent = menu->parent;
+
     if (!menu_is_menubar(menu->name)
 	    || (parent != NULL && parent->submenu_id == NULL))
 	return;
@@ -3042,10 +3043,11 @@ MenuMessage(vimmenu_t *menu)
     void
 gui_mch_add_menu_item(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		idx)
 {
     int		mnemonic = 0;
+    vimmenu_t	*parent = menu->parent;
+
     if (parent->submenu_id == NULL)
 	return;
 

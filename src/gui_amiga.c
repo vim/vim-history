@@ -565,13 +565,15 @@ charEventHandler(int wtime)
  * add primary menu
  */
     void
-gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
+gui_mch_add_menu_item(vimmenu_t *menu, int idx)
 {
     union myMenuItemUnion *menuItemUnion = NULL;
     struct IntuiText *menutext = NULL;
+    vimmenu_t *parent;
 
     assert(menu != NULL);
-    assert(parent != NULL);
+    assert(menu->parent != NULL);
+    parent = menu->parent;
 
     /* Don't add menu separator */
     if (menu_is_separator(menu->name))
@@ -665,7 +667,7 @@ getMenu(struct RastPort *rast, int left, STRPTR name)
  * add  1st level submenu item
  */
     void
-gui_mch_add_menu(vimmenu_t *menu, vimmenu_t *parent, int idx)
+gui_mch_add_menu(vimmenu_t *menu, int idx)
 {
     struct Menu	*newMenu;
     int		pos = 0;
