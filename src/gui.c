@@ -1296,7 +1296,7 @@ gui_write(s, len)
 		    gui_stop_highlight(arg1);
 		    break;
 		case 'f':	/* flash the window (visual bell) */
-		    gui_mch_flash();
+		    gui_mch_flash(arg1 == 0 ? 20 : arg1);
 		    break;
 		default:
 		    p = s + 1;	/* Skip the ESC */

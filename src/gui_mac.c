@@ -1114,7 +1114,8 @@ gui_mch_beep()
 }
 
 	void
-gui_mch_flash()
+gui_mch_flash(msec)
+	int		msec;
 {
 	/* Do a visual beep by reversing the foreground and background colors */
 	Rect	rc;
@@ -1128,7 +1129,7 @@ gui_mch_flash()
 	rc.bottom = gui.num_rows * gui.char_height;
 	InvertRect(&rc);
 
-	ui_delay(20L, TRUE);		/* wait 1/50 of a second */
+	ui_delay((long)msec, TRUE);		/* wait for some msec */
 
 	InvertRect(&rc);
 }

@@ -1070,7 +1070,7 @@ gui_mch_beep(void)
 }
 
     void
-gui_mch_flash(void)
+gui_mch_flash(int msec)
 {
     D("gui_mch_flash");
 }

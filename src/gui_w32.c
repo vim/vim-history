@@ -3580,7 +3580,7 @@ gui_mch_beep(void)
 }
 
     void
-gui_mch_flash(void)
+gui_mch_flash(int msec)
 {
     RECT    rc;
 
@@ -3592,8 +3592,9 @@ gui_mch_flash(void)
     rc.right = gui.num_cols * gui.char_width;
     rc.bottom = gui.num_rows * gui.char_height;
     InvertRect(s_hdc, &rc);
+    GdiFlush();			/* make sure it's displayed */
 
-    ui_delay(20L, TRUE);	/* wait 1/50 of a second */
+    ui_delay((long)msec, TRUE);	/* wait for a few msec */
 
     InvertRect(s_hdc, &rc);
 }
@@ -3983,7 +3984,7 @@ gui_mch_wait_for_chars(int wtime)
     void
 gui_mch_flush(void)
 {
-    /* Is anything needed here? */
+    GdiFlush();
 }
 
     static void

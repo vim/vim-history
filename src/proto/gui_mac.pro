@@ -47,7 +47,7 @@ void gui_mch_set_bg_color __PARMS((GuiColor color));
 void gui_mch_draw_string __PARMS((int row, int col, char_u *s, int len, int flags));
 int gui_mch_haskey __PARMS((char_u *name));
 void gui_mch_beep __PARMS((void));
-void gui_mch_flash __PARMS((void));
+void gui_mch_flash __PARMS((int msec));
 void gui_mch_invert_rectangle __PARMS((int r, int c, int nr, int nc));
 void gui_mch_iconify __PARMS((void));
 void gui_mch_settitle __PARMS((char_u *title, char_u *icon));
