@@ -3142,6 +3142,7 @@ do_put(regname, dir, count, flags)
 	    curwin->w_cursor.lnum = lnum - 1;
 	else
 	    curwin->w_cursor.lnum = lnum;
+	curbuf->b_op_start = curwin->w_cursor;	/* for mark_adjust() */
 #endif
     }
     else if (u_save_cursor() == FAIL)
@@ -3434,6 +3435,7 @@ do_put(regname, dir, count, flags)
 		     * First insert y_array[size - 1] in front of second line.
 		     * Then append y_array[0] to first line.
 		     */
+		    lnum = new_cursor.lnum;
 		    ptr = ml_get(lnum) + col;
 		    totlen = (int)STRLEN(y_array[y_size - 1]);
 		    newp = alloc_check((unsigned)(STRLEN(ptr) + totlen + 1));
