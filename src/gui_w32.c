@@ -2965,7 +2965,9 @@ gui_mch_tearoff(
     HFONT	font, oldFont;
     int		col, spaceWidth, len;
     int		columnWidths[2];
-    char_u	*label, *text, *end, *acEnd = NULL;
+    char_u	*label, *text;
+    int		acLen;
+    int		nameLen;
     int		padding0, padding1, padding2 = 0;
     int		sepPadding=0;
 #ifdef USE_SYSMENU_FONT
@@ -2974,11 +2976,8 @@ gui_mch_tearoff(
 #endif
 
     /*
-     * If this menu is already torn off, then don't
-     * tear it off again, but move the existing tearoff
-     * to the mouse position.
+     * If this menu is already torn off, move it to the mouse position.
      */
-
     if (IsWindow(menu->tearoff_handle))
     {
 	POINT mp;
@@ -2991,13 +2990,13 @@ gui_mch_tearoff(
     }
 
     /*
-     * Otherwise, create a new tearoff
+     * Create a new tearoff.
      */
-
     if (*title == MNU_HIDDEN_CHAR)
 	title++;
 
-    /* Allocate some memory to play with.  It's made bigger when needed. */
+    /* Allocate memory to store the dialog template.  It's made bigger when
+     * needed. */
     template_len = DLG_ALLOC_SIZE;
     pdlgtemplate = p = (WORD *)LocalAlloc(LPTR, template_len);
     if (p == NULL)
@@ -3019,33 +3018,34 @@ gui_mch_tearoff(
 	oldFont = SelectFont(hdc, font);
     else
 	oldFont = SelectFont(hdc, GetStockObject(SYSTEM_FONT));
-    /*
-     * Calculate width of a single space.  Used for padding columns to the
-     * right width.
-     */
+
+    /* Calculate width of a single space.  Used for padding columns to the
+     * right width. */
     spaceWidth = GetTextWidth(hdc, " ", 1);
 
+    /* Figure out max width of the text column, the accelerator column and the
+     * optional submenu column. */
     submenuWidth = 0;
-    /* Figure out widths for each column. */
     for (col = 0; col < 2; col++)
     {
 	columnWidths[col] = 0;
 	for (pmenu = menu->children; pmenu != NULL; pmenu = pmenu->next)
 	{
+	    /* Use "dname" here to compute the width of the visible text. */
 	    text = (col == 0) ? pmenu->dname : pmenu->actext;
-	    if (pmenu->children != NULL)
-		submenuWidth = TEAROFF_COLUMN_PADDING * spaceWidth;
 	    if (text != NULL && *text != NUL)
 	    {
-		end = text + strlen(text);
-		textWidth = GetTextWidth(hdc, text, (int)(end - text));
+		textWidth = GetTextWidth(hdc, text, (int)STRLEN(text));
 		if (textWidth > columnWidths[col])
 		    columnWidths[col] = textWidth;
 	    }
+	    if (pmenu->children != NULL)
+		submenuWidth = TEAROFF_COLUMN_PADDING * spaceWidth;
 	}
     }
     if (columnWidths[1] == 0)
     {
+	/* no accelerators */
 	if (submenuWidth != 0)
 	    columnWidths[0] += submenuWidth;
 	else
@@ -3053,19 +3053,19 @@ gui_mch_tearoff(
     }
     else
     {
+	/* there is an accelerator column */
 	columnWidths[0] += TEAROFF_COLUMN_PADDING * spaceWidth;
 	columnWidths[1] += submenuWidth;
     }
+
     /*
-     * Now find the width of our 'menu'.
+     * Now find the total width of our 'menu'.
      */
-    textWidth = 0;
-    for (col = 0; col < 2; col++)
-	textWidth += columnWidths[col];
+    textWidth = columnWidths[0] + columnWidths[1];
     if (submenuWidth != 0)
     {
 	submenuWidth = GetTextWidth(hdc, TEAROFF_SUBMENU_LABEL,
-			      (int)STRLEN(TEAROFF_SUBMENU_LABEL));
+					  (int)STRLEN(TEAROFF_SUBMENU_LABEL));
 	textWidth += submenuWidth;
     }
     dlgwidth = GetTextWidth(hdc, title, (int)STRLEN(title));
@@ -3105,9 +3105,9 @@ gui_mch_tearoff(
     *p++ = 0;		// Class
 
     /* copy the title of the dialog */
-    nchar = nCopyAnsiToWideChar(p, ((*title) ?
-				    (LPSTR)title :
-				    (LPSTR)("Vim "VIM_VERSION_MEDIUM)));
+    nchar = nCopyAnsiToWideChar(p, ((*title)
+				    ? (LPSTR)title
+				    : (LPSTR)("Vim "VIM_VERSION_MEDIUM)));
     p += nchar;
 
     if (s_usenewlook)
@@ -3130,12 +3130,14 @@ gui_mch_tearoff(
 	p += nchar;
     }
 
-    /* Don't include tearbar in tearoff menu */
+    /*
+     * Loop over all the items in the menu.
+     * But skip over the tearbar.
+     */
     if (STRCMP(menu->children->name, TEAR_STRING) == 0)
 	menu = menu->children->next;
     else
 	menu = menu->children;
-
     for ( ; menu != NULL; menu = menu->next)
     {
 	if (menu->modes == 0)	/* this menu has just been deleted */
@@ -3166,23 +3168,25 @@ gui_mch_tearoff(
 	    }
 	}
 
-	/* Figure out length of this menu label */
-	len = (int)STRLEN(menu->dname);
-	end = menu->dname + STRLEN(menu->dname);
+	/* Figure out minimal length of this menu label.  Use "name" for the
+	 * actual text, "dname" for estimating the displayed size.  "name"
+	 * has "&a" for mnemonic and includes the accelerator. */
+	len = nameLen = (int)STRLEN(menu->name);
 	padding0 = (columnWidths[0] - GetTextWidth(hdc, menu->dname,
-		    (int)(end - menu->dname))) / spaceWidth;
+				      (int)STRLEN(menu->dname))) / spaceWidth;
 	len += padding0;
+
 	if (menu->actext != NULL)
 	{
-	    len += (int)STRLEN(menu->actext);
-	    acEnd = menu->actext + STRLEN(menu->actext);
-	    textWidth = GetTextWidth(hdc, menu->actext, (int)(acEnd - menu->actext));
+	    acLen = (int)STRLEN(menu->actext);
+	    len += acLen;
+	    textWidth = GetTextWidth(hdc, menu->actext, acLen);
 	}
 	else
 	    textWidth = 0;
-
 	padding1 = (columnWidths[1] - textWidth) / spaceWidth;
 	len += padding1;
+
 	if (menu->children == NULL)
 	{
 	    padding2 = submenuWidth / spaceWidth;
@@ -3199,14 +3203,17 @@ gui_mch_tearoff(
 	text = label = alloc((unsigned)len + 1);
 	if (label == NULL)
 	    break;
-	STRNCPY(text, menu->dname, end - menu->dname);
-	text += end - menu->dname;
+
+	STRNCPY(text, menu->name, nameLen);
+	text = vim_strchr(text, TAB);	    /* stop at TAB before actext */
+	if (text == NULL)
+	    text = label + nameLen;	    /* no actext, use whole name */
 	while (padding0-- > 0)
 	    *text++ = ' ';
 	if (menu->actext != NULL)
 	{
-	    STRNCPY(text, menu->actext, acEnd - menu->actext);
-	    text += acEnd - menu->actext;
+	    STRNCPY(text, menu->actext, acLen);
+	    text += acLen;
 	}
 	while (padding1-- > 0)
 	    *text++ = ' ';
@@ -3221,7 +3228,6 @@ gui_mch_tearoff(
 		*text++ = ' ';
 	}
 	*text = NUL;
-	*end = NUL;
 
 	/*
 	 * BS_LEFT will just be ignored on Win32s/NT3.5x - on
