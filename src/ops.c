@@ -847,6 +847,54 @@ get_yank_register(regname, writing)
 	y_previous = y_current;
 }
 
+#if defined(FEAT_VISUAL) || defined(PROTO)
+/*
+ * Obtain the contents of a "normal" register. The register is made empty.
+ * The returned pointer has allocated memory, use put_register() later.
+ */
+    void *
+get_register(name, copy)
+    int		name;
+    int		copy;	/* make a copy, if FALSE make register empty. */
+{
+    static struct yankreg	*reg;
+    int				i;
+
+    get_yank_register(name, 0);
+    reg = (struct yankreg *)alloc((unsigned)sizeof(struct yankreg));
+    if (reg != NULL)
+    {
+	*reg = *y_current;
+	if (copy)
+	{
+	    /* If we run out of memory some or all of the lines are empty. */
+	    reg->y_array = (char_u **)alloc((unsigned)sizeof(char_u *));
+	    if (reg->y_array != NULL)
+	    {
+		for (i = 0; i < reg->y_size; ++i)
+		    reg->y_array[i] = vim_strsave(y_current->y_array[i]);
+	    }
+	}
+	else
+	    y_current->y_array = NULL;
+    }
+    return (void *)reg;
+}
+
+/*
+ * Put "reg" into register "name".  Free any previous contents.
+ */
+    void
+put_register(name, reg)
+    int		name;
+    void	*reg;
+{
+    get_yank_register(name, 0);
+    free_yank_all();
+    *y_current = *(struct yankreg *)reg;
+}
+#endif
+
 #if defined(FEAT_MOUSE) || defined(PROTO)
 /*
  * return TRUE if the current yank register has type MLINE
@@ -1403,6 +1451,25 @@ cmdline_paste_str(s, literally)
 	}
 }
 
+#if defined(FEAT_CLIPBOARD) || defined(PROTO)
+/*
+ * Adjust the register name pointed to with "rp" for the clipboard being
+ * used always and the clipboard being available.
+ */
+    void
+adjust_clip_reg(rp)
+    int		*rp;
+{
+    /* If no reg. specified, and "unnamed" is in 'clipboard', use '*' reg. */
+    if (*rp == 0 && clip_unnamed)
+	*rp = '*';
+    if (!clip_star.available && *rp == '*')
+	*rp = 0;
+    if (!clip_plus.available && *rp == '+')
+	*rp = 0;
+}
+#endif
+
 /*
  * op_delete - handle a delete operation
  *
@@ -1436,13 +1503,7 @@ op_delete(oap)
     }
 
 #ifdef FEAT_CLIPBOARD
-    /* If no reg. specified, and "unnamed" is in 'clipboard', use '*' reg. */
-    if (oap->regname == 0 && clip_unnamed)
-	oap->regname = '*';
-    if (!clip_star.available && oap->regname == '*')
-	oap->regname = 0;
-    if (!clip_plus.available && oap->regname == '+')
-	oap->regname = 0;
+    adjust_clip_reg(&oap->regname);
 #endif
 
 #ifdef FEAT_MBYTE
@@ -1754,46 +1815,14 @@ op_delete(oap)
     msgmore(curbuf->b_ml.ml_line_count - old_lcount);
 
 #ifdef FEAT_VISUAL
-    /*
-     * Set "'[" and "']" marks.
-     */
-    if (did_visual_put)
+    if (oap->block_mode)
     {
-	/* "p" in Visual mode: The '] mark is at the end of the inserted text,
-	 * correct it for the deleted text. */
-	if (oap->block_mode)
-	{
-	    if (curbuf->b_op_end.lnum <= oap->end.lnum)
-		curbuf->b_op_end.col -= bd.textlen
-					      - bd.startspaces - bd.endspaces;
-	}
-	else if (oap->motion_type == MLINE)
-	    curbuf->b_op_end.lnum -= oap->line_count;
-	else
-	{
-	    if (curbuf->b_op_end.lnum == curbuf->b_op_start.lnum)
-	    {
-		if (oap->line_count == 1)
-		    curbuf->b_op_end.col -= oap->end.col - oap->start.col + 1;
-		else
-		    curbuf->b_op_end.col -= oap->end.col - 1;
-	    }
-	    curbuf->b_op_end.lnum -= oap->line_count - 1;
-	}
+	curbuf->b_op_end.lnum = oap->end.lnum;
+	curbuf->b_op_end.col = oap->start.col;
     }
     else
 #endif
-    {
-#ifdef FEAT_VISUAL
-	if (oap->block_mode)
-	{
-	    curbuf->b_op_end.lnum = oap->end.lnum;
-	    curbuf->b_op_end.col = oap->start.col;
-	}
-	else
-#endif
-	    curbuf->b_op_end = oap->start;
-    }
+	curbuf->b_op_end = oap->start;
     curbuf->b_op_start = oap->start;
 
     return OK;
@@ -2759,13 +2788,8 @@ op_yank(oap, deleting, mess)
     /*
      * Set "'[" and "']" marks.
      */
-#ifdef FEAT_VISUAL
-    if (!did_visual_put)
-#endif
-    {
-	curbuf->b_op_start = oap->start;
-	curbuf->b_op_end = oap->end;
-    }
+    curbuf->b_op_start = oap->start;
+    curbuf->b_op_end = oap->end;
 
 #ifdef FEAT_CLIPBOARD
     /*
@@ -2909,23 +2933,12 @@ do_put(regname, dir, count, flags)
     long	cnt;
 
 #ifdef FEAT_CLIPBOARD
-    /* If no register specified, and "unnamed" in 'clipboard', use + register */
-    if (regname == 0 && clip_unnamed)
-	regname = '*';
+    /* Adjust register name for "unnamed" in 'clipboard'. */
+    adjust_clip_reg(&regname);
     if (regname == '*')
-    {
-	if (!clip_star.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_star);
-    }
+	clip_get_selection(&clip_star);
     else if (regname == '+')
-    {
-	if (!clip_plus.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_plus);
-    }
+	clip_get_selection(&clip_plus);
 #endif
 
     if (flags & PUT_FIXINDENT)
@@ -3021,26 +3034,37 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_VISUAL
     if (y_type == MLINE)
     {
-	if (flags & PUT_LINE_BACKWARD)
+	if (flags & PUT_LINE_SPLIT)
 	{
-	    /* "P" in Visual mode: Put before the Visual area instead of after
-	     * it.  It's OK to change the cursor position here (special
-	     * case!). */
-	    dir = BACKWARD;
-	    curwin->w_cursor = curbuf->b_visual_start;
+	    /* "p" or "P" in Visual mode: split the lines to put the text in
+	     * between. */
+	    if (u_save_cursor() == FAIL)
+		goto end;
+	    ptr = vim_strsave(ml_get_cursor());
+	    if (ptr == NULL)
+		goto end;
+	    ml_append(curwin->w_cursor.lnum, ptr, (colnr_T)0, FALSE);
+	    vim_free(ptr);
+
+	    ptr = vim_strnsave(ml_get_curline(), curwin->w_cursor.col);
+	    if (ptr == NULL)
+		goto end;
+	    ml_replace(curwin->w_cursor.lnum, ptr, FALSE);
+	    ++nr_lines;
+	    dir = FORWARD;
 	}
-	else if (VIsual_active && VIsual_mode == Ctrl_V)
+	if (flags & PUT_LINE_FORWARD)
 	{
-	    /* "p" in Visual block mode with linewise text: put below the
-	     * block. */
+	    /* Must be "p" for a Visual block, put lines below the block. */
 	    curwin->w_cursor = curbuf->b_visual_end;
+	    dir = FORWARD;
 	}
 	curbuf->b_op_start = curwin->w_cursor;	/* default for '[ mark */
 	curbuf->b_op_end = curwin->w_cursor;	/* default for '] mark */
     }
 #endif
 
-    if (flags & PUT_LINE)	    /* :put command */
+    if (flags & PUT_LINE)	/* :put command or "p" in Visual line mode. */
 	y_type = MLINE;
 
     if (y_size == 0 || y_array == NULL)
@@ -3360,7 +3384,7 @@ do_put(regname, dir, count, flags)
 	else
 	{
 	    /*
-	     * Insert at least one one.  When y_type is MCHAR, break the first
+	     * Insert at least one line.  When y_type is MCHAR, break the first
 	     * line in two.
 	     */
 	    for (cnt = 1; cnt <= count; ++cnt)
