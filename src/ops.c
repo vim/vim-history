@@ -5610,10 +5610,9 @@ str_to_reg(y_ptr, type, str, len, blocklen)
 	if (s == NULL)
 	    break;
 	if (extra)
-	{
 	    mch_memmove(s, y_ptr->y_array[lnum], (size_t)extra);
+	if (append)
 	    vim_free(y_ptr->y_array[lnum]);
-	}
 	if (i)
 	    mch_memmove(s + extra, str + start, (size_t)i);
 	extra += i;

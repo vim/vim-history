@@ -1066,6 +1066,11 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     int		is_etag;		/* current file is emaces style */
 #endif
 
+    struct match_found
+    {
+	int	len;		/* nr of chars of match[] to be compared */
+	char_u	match[1];	/* actually longer */
+    } *mfp, *mfp2;
     garray_T	ga_match[MT_COUNT];
     int		match_count = 0;		/* number of matches found */
     char_u	**matches;
@@ -1110,7 +1115,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     ebuf = alloc(LSIZE);
 #endif
     for (mtt = 0; mtt < MT_COUNT; ++mtt)
-	ga_init2(&ga_match[mtt], (int)sizeof(char_u *), 100);
+	ga_init2(&ga_match[mtt], (int)sizeof(struct match_found *), 100);
 
     /* check for out of memory situation */
     if (lbuf == NULL || tag_fname == NULL
@@ -1726,13 +1731,16 @@ line_read_in:
 		cc = *tagp.tagname_end;
 		*tagp.tagname_end = NUL;
 		match = vim_regexec(&regmatch, tagp.tagname, (colnr_T)0);
-		matchoff = (int)(regmatch.startp[0] - tagp.tagname);
-		if (match && regmatch.rm_ic)
+		if (match)
 		{
-		    regmatch.rm_ic = FALSE;
-		    match_no_ic = vim_regexec(&regmatch, tagp.tagname,
+		    matchoff = (int)(regmatch.startp[0] - tagp.tagname);
+		    if (regmatch.rm_ic)
+		    {
+			regmatch.rm_ic = FALSE;
+			match_no_ic = vim_regexec(&regmatch, tagp.tagname,
 								  (colnr_T)0);
-		    regmatch.rm_ic = TRUE;
+			regmatch.rm_ic = TRUE;
+		    }
 		}
 		*tagp.tagname_end = cc;
 		match_re = TRUE;
@@ -1793,6 +1801,11 @@ line_read_in:
 			mtt += MT_RE_OFF;
 		}
 
+		/*
+		 * Add the found match in ga_match[mtt], avoiding duplicates.
+		 * Store the info we need later, which depends on the kind of
+		 * tags we are dealing with.
+		 */
 		if (ga_grow(&ga_match[mtt], 1) == OK)
 		{
 		    if (help_only)
@@ -1803,44 +1816,65 @@ line_read_in:
 			 */
 			*tagp.tagname_end = NUL;
 			len = (int)(tagp.tagname_end - tagp.tagname);
-			p = vim_strnsave(tagp.tagname, len + 10);
-			if (p != NULL)
+			mfp = (struct match_found *)
+				 alloc(sizeof(struct match_found) + len + 10);
+			if (mfp != NULL)
+			{
+			    mfp->len = len + 1;	/* also compare the NUL */
+			    p = mfp->match;
+			    STRCPY(p, tagp.tagname);
 			    sprintf((char *)p + len + 1, "%06d",
 				    help_heuristic(tagp.tagname,
 				    match_re ? matchoff : 0, !match_no_ic));
+			}
 			*tagp.tagname_end = TAB;
-			++len;	/* compare one more char */
 		    }
 		    else if (name_only)
 		    {
-			p = NULL;
-			len = 0;
 			if (get_it_again)
 			{
 			    char_u *temp_end = tagp.command;
 
-			    if ((*temp_end) == '/')
-				while ( *temp_end && (*temp_end != '\r')
-					&& (*temp_end != '\n')
-					&& (*temp_end != '$'))
+			    if (*temp_end == '/')
+				while (*temp_end && *temp_end != '\r'
+					&& *temp_end != '\n'
+					&& *temp_end != '$')
 				    temp_end++;
 
-			    if ((tagp.command + 2) < temp_end)
+			    if (tagp.command + 2 < temp_end)
 			    {
 				len = (int)(temp_end - tagp.command - 2);
-				p = vim_strnsave(tagp.command + 2, len);
+				mfp = (struct match_found *)
+				      alloc(sizeof(struct match_found) + len);
+				if (mfp != NULL)
+				{
+				    mfp->len = len + 1; /* include the NUL */
+				    p = mfp->match;
+				    STRNCPY(p, tagp.command + 2, len);
+				    p[len] = NUL;
+				}
 			    }
+			    else
+				mfp = NULL;
 			    get_it_again = FALSE;
 			}
 			else
 			{
 			    len = (int)(tagp.tagname_end - tagp.tagname);
-			    p = vim_strnsave(tagp.tagname, len);
-			    /* if wanted, re-read line to get long form too*/
+			    mfp = (struct match_found *)
+				      alloc(sizeof(struct match_found) + len);
+			    if (mfp != NULL)
+			    {
+				mfp->len = len + 1; /* include the NUL */
+				p = mfp->match;
+				STRNCPY(p, tagp.tagname, len);
+				p[len] = NUL;
+			    }
+
+			    /* if wanted, re-read line to get long form too */
 			    if (State & INSERT)
 				get_it_again = p_sft;
 			}
-			++len;	/* compare one more char */
 		    }
 		    else
 		    {
@@ -1856,9 +1890,12 @@ line_read_in:
 			else
 			    ++len;
 #endif
-			p = alloc(len);
-			if (p != NULL)
+			mfp = (struct match_found *)
+				      alloc(sizeof(struct match_found) + len);
+			if (mfp != NULL)
 			{
+			    mfp->len = len;
+			    p = mfp->match;
 			    p[0] = mtt;
 			    STRCPY(p + 1, tag_fname);
 #ifdef BACKSLASH_IN_FILENAME
@@ -1880,7 +1917,7 @@ line_read_in:
 			}
 		    }
 
-		    if (p != NULL)
+		    if (mfp != NULL)
 		    {
 			/*
 			 * Don't add identical matches.
@@ -1895,21 +1932,23 @@ line_read_in:
 #endif
 			  for (i = ga_match[mtt].ga_len; --i >= 0 && !got_int; )
 			  {
-			    if (vim_memcmp(
-				      ((char_u **)(ga_match[mtt].ga_data))[i],
-							 p, (size_t)len) == 0)
-				break;
-			    line_breakcheck();
+			      mfp2 = ((struct match_found **)
+						  (ga_match[mtt].ga_data))[i];
+			      if (mfp2->len == mfp->len
+				      && vim_memcmp(mfp2->match, mfp->match,
+						       (size_t)mfp->len) == 0)
+				  break;
+			      line_breakcheck();
 			  }
 			if (i < 0)
 			{
-			    ((char_u **)(ga_match[mtt].ga_data))
-						 [ga_match[mtt].ga_len++] = p;
+			    ((struct match_found **)(ga_match[mtt].ga_data))
+					       [ga_match[mtt].ga_len++] = mfp;
 			    ga_match[mtt].ga_room--;
 			    ++match_count;
 			}
 			else
-			    vim_free(p);
+			    vim_free(mfp);
 		    }
 		}
 		else    /* Out of memory! Just forget about the rest. */
@@ -2021,11 +2060,18 @@ findtag_end:
     {
 	for (i = 0; i < ga_match[mtt].ga_len; ++i)
 	{
-	    p = ((char_u **)(ga_match[mtt].ga_data))[i];
+	    mfp = ((struct match_found **)(ga_match[mtt].ga_data))[i];
 	    if (matches == NULL)
-		vim_free(p);
+		vim_free(mfp);
 	    else
-		matches[match_count++] = p;
+	    {
+		/* To avoid allocating memory again we turn the struct
+		 * match_found into a string.  For help the priority was not
+		 * included in the length. */
+		mch_memmove(mfp, mfp->match,
+				   (size_t)(mfp->len + (help_only ? 9 : 0)));
+		matches[match_count++] = (char_u *)mfp;
+	    }
 	}
 	ga_clear(&ga_match[mtt]);
     }

@@ -1368,6 +1368,7 @@ open_line(dir, flags, old_indent)
 	curwin->w_cursor.coladd = 0;
 #endif
 	ins_bytes(p_extra);	/* will call changed_bytes() */
+	vim_free(p_extra);
 	next_line = NULL;
     }
 #endif

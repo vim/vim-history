@@ -2129,7 +2129,7 @@ trans_special(srcp, dst, keycode)
     char_u	*dst;
     int		keycode; /* prefer key code, e.g. K_DEL instead of DEL */
 {
-    int		modifiers;
+    int		modifiers = 0;
     int		key;
     int		dlen = 0;
 
@@ -4368,6 +4368,9 @@ ff_free_visited_list(vl)
     while (vl != NULL)
     {
 	vp = vl->ffv_next;
+#ifdef FEAT_PATH_EXTRA
+	vim_free(vl->ffv_wc_path);
+#endif
 	vim_free(vl);
 	vl = vp;
     }

@@ -3233,7 +3233,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
 #if defined(UNIX) && !defined(ARCHIE)
     /* When using ":w!" and the file was read-only: make it writable */
-    if (forceit && st_old.st_uid == getuid() && perm >= 0 && !(perm & 0200)
+    if (forceit && perm >= 0 && !(perm & 0200) && st_old.st_uid == getuid()
 				     && vim_strchr(p_cpo, CPO_FWRITE) == NULL)
     {
 	perm |= 0200;
