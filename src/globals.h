@@ -422,8 +422,7 @@ EXTERN int	secure INIT(= FALSE);
 				 * allowed, e.g. when sourcing .exrc or .vimrc
 				 * in current directory */
 
-#if defined(FEAT_EVAL) && (defined(FEAT_CINDENT) || defined(FEAT_FOLDING) \
-	|| defined(FEAT_PERL))
+#ifdef FEAT_EVAL
 # define HAVE_SANDBOX
 EXTERN int	sandbox INIT(= 0);
 				/* non-zero when evaluating an expression in a
