@@ -3096,7 +3096,13 @@ f_col(argvars, retvar)
     if (fp != NULL)
     {
 	if (fp->col == MAXCOL)
-	    col = MAXCOL;
+	{
+	    /* '> can be MAXCOL, get the length of the line then */
+	    if (fp->lnum <= curbuf->b_ml.ml_line_count)
+		col = STRLEN(ml_get(fp->lnum)) + 1;
+	    else
+		col = MAXCOL;
+	}
 	else
 	{
 	    col = fp->col + 1;
