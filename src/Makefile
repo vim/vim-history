@@ -1627,9 +1627,10 @@ lint:
 #	$(CC) -c -I$(srcdir) $(ALL_CFLAGS) $(*F).c -o $@
 
 if_perl.c: if_perl.xs
-	$(PERL) -MConfig -e 'unless (exists $$Config{apiversion} && \
-	    $$Config{apiversion} >= 5.005) { for (qw(na defgv errgv)) { \
-		print "#define PL_$$_ $$_\n" }} ' > $@
+	$(PERL) -MConfig -e 'unless ( \
+	    (exists $$Config{apiversion} && $$Config{apiversion} >= 5.005) || \
+	    (exists $$Config{xs_apiversion} && $$Config{xs_apiversion} >= 5.005)) \
+	    { for (qw(na defgv errgv)) { print "#define PL_$$_ $$_\n" }}' > $@
 	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
 	    $(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@
 
