@@ -5403,6 +5403,10 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 #ifdef FEAT_EVAL
     static char_u *eval_result = NULL;
 #endif
+#ifdef FEAT_MBYTE
+    int		l;
+#endif
+
 
     /* Be paranoid... */
     if (source == NULL || dest == NULL)
@@ -5482,10 +5486,6 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	}
 	if (no < 0)	      /* Ordinary character. */
 	{
-#ifdef FEAT_MBYTE
-	    int l;
-#endif
-
 	    if (c == '\\' && *src != NUL)
 	    {
 		/* Check for abbreviations -- webb */
@@ -5606,6 +5606,17 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 			    }
 			    dst += 2;
 			}
+#ifdef FEAT_MBYTE
+			else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
+			{
+			    /* TODO: should use "func" here. */
+			    if (copy)
+				mch_memmove(dst, s, l);
+			    dst	+= l;
+			    s += l - 1;
+			    len	-= l - 1;
+			}
+#endif
 			else
 			{
 			    if (copy)
