@@ -2572,6 +2572,8 @@ give_warning(message, hl)
     if (msg_silent != 0)
 	return;
 
+    /* Don't want a hit-enter prompt here. */
+    ++no_wait_return;
 #ifdef FEAT_EVAL
     set_vim_var_string(VV_WARNINGMSG, message, -1);
 #endif
@@ -2590,6 +2592,7 @@ give_warning(message, hl)
     msg_nowait = TRUE;	    /* don't wait for this message */
     msg_col = 0;
 #endif
+    --no_wait_return;
 }
 
 /*
