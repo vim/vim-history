@@ -2072,17 +2072,25 @@ serverSendReply(name, reply)
 }
 
     int
-serverSendToVim(name, cmd, result, ptarget, asExpr)
+serverSendToVim(name, cmd, result, ptarget, asExpr, silent)
     char_u	 *name;			/* Where to send. */
     char_u	 *cmd;			/* What to send. */
     char_u	 **result;		/* Result of eval'ed expression */
     void	 *ptarget;		/* HWND of server */
     int		 asExpr;		/* Expression or keys? */
+    int		 silent;		/* don't complain about no server */
 {
     HWND	target = findServer(name);
     COPYDATASTRUCT data;
     char_u	*retval = NULL;
     int		retcode = 0;
+
+    if (target == 0)
+    {
+	if (!silent)
+	    EMSG2(_("E247: no registered server named \"%s\""), name);
+	return -1;
+    }
 
     if (ptarget)
 	*(HWND *)ptarget = target;

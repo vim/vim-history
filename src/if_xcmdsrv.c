@@ -348,7 +348,7 @@ serverChangeRegisteredWindow(dpy, newwin)
  * Returns 0 for OK, negative for an error.
  */
     int
-serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
+serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop, silent)
     Display	*dpy;			/* Where to send. */
     char_u	*name;			/* Where to send. */
     char_u	*cmd;			/* What to send. */
@@ -356,6 +356,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     Window	*server;		/* Actual ID of receiving app */
     Bool	asExpr;			/* Interpret as keystrokes or expr ? */
     Bool	localLoop;		/* Throw away everything but result */
+    int		silent;			/* don't complain about no server */
 {
     Window	    w;
     char_u	    *property;
@@ -429,7 +430,8 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     }
     if (w == None)
     {
-	EMSG2(_("E247: no registered server named \"%s\""), name);
+	if (!silent)
+	    EMSG2(_("E247: no registered server named \"%s\""), name);
 	return -1;
     }
     else if (loosename != NULL)

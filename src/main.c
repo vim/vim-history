@@ -264,9 +264,11 @@ main
 	else if (STRICMP(argv[i], "--serverlist") == 0
 		 || STRICMP(argv[i], "--remote-send") == 0
 		 || STRICMP(argv[i], "--remote-expr") == 0
-		 || STRICMP(argv[i], "--remote") == 0 )
+		 || STRICMP(argv[i], "--remote") == 0
+		 || STRICMP(argv[i], "--remote-silent") == 0)
 	    serverArg = TRUE;
-	else if (STRICMP(argv[i], "--remote-wait") == 0)
+	else if (STRICMP(argv[i], "--remote-wait") == 0
+		|| STRICMP(argv[i], "--remote-wait-silent") == 0)
 	{
 	    serverArg = TRUE;
 #ifdef FEAT_GUI
@@ -2514,6 +2516,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 #define ARGTYPE_EDIT		1
 #define ARGTYPE_EDIT_WAIT	2
 #define ARGTYPE_SEND		3
+    int		silent = FALSE;
 # ifndef FEAT_X11
     HWND	srv;
 # else
@@ -2549,8 +2552,18 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 
 	    if (STRICMP(argv[i], "--remote") == 0)
 		argtype = ARGTYPE_EDIT;
+	    else if (STRICMP(argv[i], "--remote-silent") == 0)
+	    {
+		argtype = ARGTYPE_EDIT;
+		silent = TRUE;
+	    }
 	    else if (STRICMP(argv[i], "--remote-wait") == 0)
 		argtype = ARGTYPE_EDIT_WAIT;
+	    else if (STRICMP(argv[i], "--remote-wait-silent") == 0)
+	    {
+		argtype = ARGTYPE_EDIT_WAIT;
+		silent = TRUE;
+	    }
 	    else if (STRICMP(argv[i], "--remote-send") == 0)
 		argtype = ARGTYPE_SEND;
 	    else
@@ -2572,9 +2585,9 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		}
 # ifdef FEAT_X11
 		ret = serverSendToVim(xterm_dpy, sname, *serverStr,
-							    NULL, &srv, 0, 0);
+						    NULL, &srv, 0, 0, silent);
 # else
-		ret = serverSendToVim(sname, *serverStr, NULL, &srv, 0);
+		ret = serverSendToVim(sname, *serverStr, NULL, &srv, 0, silent);
 # endif
 		if (ret < 0)
 		{
@@ -2584,7 +2597,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 			mch_errmsg(_("\nSend failed.\n"));
 			didone = TRUE;
 		    }
-		    else
+		    else if (!silent)
 			/* Let vim start normally.  */
 			mch_errmsg(_("\nSend failed. Trying to execute locally\n"));
 		    break;
@@ -2658,10 +2671,10 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    mainerr_arg_missing((char_u *)argv[i]);
 # ifdef WIN32
 		if (serverSendToVim(sname, (char_u *)argv[i + 1],
-							&res, NULL, 1) < 0)
+						    &res, NULL, 1, FALSE) < 0)
 # else
 		if (serverSendToVim(xterm_dpy, sname, (char_u *)argv[i + 1],
-							&res, NULL, 1, 1) < 0)
+						 &res, NULL, 1, 1, FALSE) < 0)
 # endif
 		    mch_errmsg(_("Send expression failed.\n"));
 	    }
