@@ -368,10 +368,13 @@ vms_sys(char *cmd, char *out, char *inp)
  *
  */
 static int
-vms_wproc( char *name )
+vms_wproc(char *name, int val)
 {
-    char xname[MAXPATHL];
     int i;
+    int nlen;
+
+    if (val != DECC$K_FILE) /* Directories and foreing non VMS files are not counting  */
+	return 1;
 
     if (vms_match_num == 0) {
 	/* first time through, setup some things */
@@ -388,12 +391,16 @@ vms_wproc( char *name )
 	}
     }
 
-    strcpy(xname,vms_fixfilename(name));
-    vms_remove_version(xname);
+    vms_remove_version(name);
+
+    /* convert filename to lowercase */
+    nlen = strlen(name);
+    for (i = 0; i < nlen; i++)
+	name[i] = TOLOWER_ASC(name[i]);
 
     /* if name already exists, don't add it */
     for (i = 0; i<vms_match_num; i++) {
-	if (0 == STRCMP((char_u *)xname,vms_fmatch[i]))
+	if (0 == STRCMP((char_u *)name,vms_fmatch[i]))
 	    return 1;
     }
     if (--vms_match_free == 0) {
@@ -405,19 +412,8 @@ vms_wproc( char *name )
 	    return 0;
 	vms_match_free = EXPL_ALLOC_INC;
     }
-#ifdef APPEND_DIR_SLASH
-    if (type == DECC$K_DIRECTORY) {
-	STRCAT(xname,"/");
-	vms_fmatch[vms_match_num] = vim_strsave((char_u *)xname);
-    }
-    else {
-	vms_fmatch[vms_match_num] =
-	    vim_strsave((char_u *)xname);
-    }
-#else
-    vms_fmatch[vms_match_num] =
-	vim_strsave((char_u *)xname);
-#endif
+    vms_fmatch[vms_match_num] = vim_strsave((char_u *)name);
+
     ++vms_match_num;
     return 1;
 }
@@ -462,7 +458,8 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 	    STRCPY(buf,pat[i]);
 
 	vms_match_num = 0; /* reset collection counter */
-	cnt = decc$from_vms( vms_fixfilename(buf), vms_wproc, 1);
+	cnt = decc$to_vms(decc$translate_vms(vms_fixfilename(buf)), vms_wproc, 1, 0);
+						      /* allow wild, no dir */
 	if (cnt > 0)
 	    cnt = vms_match_num;
 
@@ -506,7 +503,8 @@ mch_expandpath(garray_T *gap, char_u *path, int flags)
     char	*cp;
     vms_match_num = 0;
 
-    cnt = decc$from_vms(vms_fixfilename(path), vms_wproc, 1 );
+    cnt = decc$to_vms(decc$translate_vms(vms_fixfilename(path)), vms_wproc, 1, 0);
+						      /* allow wild, no dir */
     if (cnt > 0)
 	cnt = vms_match_num;
     for (i = 0; i < cnt; i++)
@@ -620,7 +618,7 @@ vms_fspec_proc(char *fil, int val)
 }
 
 /*
- * change '/' to '.' (or ']' for the last one)
+ * change unix and mixed filenames to VMS
  */
     void *
 vms_fixfilename(void *instring)
@@ -646,20 +644,22 @@ vms_fixfilename(void *instring)
      strcpy(tmpbuf, instring);
 #endif
 
-    /* if this already is a vms file specification, copy it
-     * else if VMS understands how to translate the file spec, let it do so
-     * else translate mixed unix-vms file specs to pure vms
-     */
-
     Fspec_Rms = buf;				/* for decc$to_vms */
-    if (strchr(instring,'/') == NULL)
-	strcpy(buf, instring);			/* already a vms file spec */
-    else if (strchr(instring,'"') == NULL){	/* regular file */
-	if (decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0)
+
+    if ( strchr(instring,'/') == NULL )
+	/* It is already a VMS file spec */
+	strcpy(buf, instring);
+    else if ( strchr(instring,'"') == NULL ){     /* password in the path ?   */
+	/* Seems it is a regular file, let guess that it is pure Unix fspec */
+	if ( decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0 )
+	    /* No... it must be mixed */
 	    vms_unix_mixed_filespec(instring, buf);
     }
     else
-	vms_unix_mixed_filespec(instring, buf); /* we have a passwd in the path */
+	/* we have a password in the path   */
+	/* decc$ functions can not handle   */
+	/* this is our only hope to resolv  */
+	vms_unix_mixed_filespec(instring, buf);
 
     return buf;
 }
@@ -672,9 +672,20 @@ vms_fixfilename(void *instring)
 vms_remove_version(void * fname)
 {
     char_u	*cp;
+    char_u	*fp;
 
     if ((cp = vim_strchr( fname, ';')) != NULL) /* remove version */
 	*cp = '\0';
-    vms_fixfilename(fname);
+    else if ((cp = vim_strrchr( fname, '.')) != NULL )
+    {
+	if      ((fp = vim_strrchr( fname, ']')) != NULL ) {;}
+	else if ((fp = vim_strrchr( fname, '>')) != NULL ) {;}
+	else fp = fname;
+
+	while ( *fp != '\0' && fp < cp )
+	    if ( *fp++ == '.' )
+		*cp = '\0';
+    }
+
     return fname;
 }

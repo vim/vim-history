@@ -900,25 +900,13 @@ ml_recover()
     }
 
     home_replace(NULL, mfp->mf_fname, NameBuff, MAXPATHL, TRUE);
-    smsg((char_u *)_("Using swap file \"%s\""),
-#ifdef VMS
-	    vms_fixfilename(NameBuff)
-#else
-	    NameBuff
-#endif
-	    );
+    smsg((char_u *)_("Using swap file \"%s\""), NameBuff);
 
     if (buf_spname(curbuf) != NULL)
 	STRCPY(NameBuff, buf_spname(curbuf));
     else
 	home_replace(NULL, curbuf->b_ffname, NameBuff, MAXPATHL, TRUE);
-    smsg((char_u *)_("Original file \"%s\""),
-#ifdef VMS
-	    vms_fixfilename(NameBuff)
-#else
-	    NameBuff
-#endif
-	    );
+    smsg((char_u *)_("Original file \"%s\""), NameBuff);
     msg_putchar('\n');
 
 /*
@@ -1512,13 +1500,7 @@ swapfile_info(fname)
 		if (b0.b0_fname[0] == NUL)
 		    MSG_PUTS(_("[No File]"));
 		else
-		    msg_outtrans(
-#ifdef VMS
-			    vms_fixfilename(b0.b0_fname)
-#else
-			    b0.b0_fname
-#endif
-			    );
+		    msg_outtrans(b0.b0_fname);
 
 		MSG_PUTS(_("\n          modified: "));
 		MSG_PUTS(b0.b0_dirty ? _("YES") : _("no"));

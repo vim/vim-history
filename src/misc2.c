@@ -4883,10 +4883,6 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir, rel_fn
 	    file_name = NULL;
 	    goto theend;
 	}
-#ifdef VMS
-	if (vim_isAbsName(file_to_find))
-	    file_to_find = vms_fixfilename(file_to_find);
-#endif
     }
 
     rel_to_curdir = (file_to_find[0] == '.'

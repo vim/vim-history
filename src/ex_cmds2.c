@@ -1716,9 +1716,6 @@ do_in_runtimepath(name, all, callback)
 		    if (p_verbose > 2)
 			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
 		    /* Expand wildcards and source each match. */
-#ifdef VMS
-		    strcpy((char *)buf, vms_fixfilename(buf));
-#endif
 
 		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
 							       EW_FILE) == OK)
