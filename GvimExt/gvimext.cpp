@@ -361,12 +361,8 @@ STDMETHODIMP CShellExt::GetCommandString(UINT idCmd,
 					 LPSTR pszName,
 					 UINT cchMax)
 {
-    switch (idCmd)
-    {
-	case 0:
-	    lstrcpy(pszName, "Edits the selected file(s) with Vim");
-	    break;
-    }
+    if (uFlags == GCS_HELPTEXT && cchMax > 35)
+	lstrcpy(pszName, "Edits the selected file(s) with Vim");
 
     return NOERROR;
 }
