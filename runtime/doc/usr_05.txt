@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_05.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -178,7 +178,7 @@ This switches on three very clever mechanisms:
 >
 	autocmd FileType text setlocal textwidth=78
 
-This makes Vim wrap text to avoid lines getting longer than 78 characters.
+This makes Vim break text to avoid lines getting longer than 78 characters.
 But only for files that have been detected to be plain text.  There are
 actually two parts here.  "autocmd FileType text" is an autocommand.  This
 defines that when the file type is set to "text" the following command is
@@ -483,6 +483,8 @@ Vim will automatically scroll the text when you move to text that is not
 displayed.  To see a context of ten characters, do this: >
 
 	:set sidescroll=10
+
+This doesn't change the text in the file, only the way it is displayed.
 
 
 WRAPPING MOVEMENT COMMANDS

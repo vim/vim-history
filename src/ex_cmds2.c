@@ -1956,7 +1956,7 @@ get_one_sourceline(sp)
 	    if (fgets((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
 		    || got_int)
 		break;
-	len = STRLEN(buf);
+	len = (int)STRLEN(buf);
 #ifdef USE_CRNL
 	/* Ignore a trailing CTRL-Z, when in Dos mode.	Only recognize the
 	 * CTRL-Z by its own, or after a NL. */

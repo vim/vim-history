@@ -381,7 +381,7 @@ getcmdline(firstc, count, indent)
 		 * cursor */
 		int found = FALSE;
 
-		j = xpc.xp_pattern - ccline.cmdbuff;
+		j = (int)(xpc.xp_pattern - ccline.cmdbuff);
 		i = 0;
 		while (--j > 0)
 		{
@@ -435,7 +435,7 @@ getcmdline(firstc, count, indent)
 		int found = FALSE;
 
 		j = ccline.cmdpos;
-		i = xpc.xp_pattern - ccline.cmdbuff;
+		i = (int)(xpc.xp_pattern - ccline.cmdbuff);
 		while (--j > i)
 		{
 		    if (vim_ispathsep(ccline.cmdbuff[j]))
@@ -459,7 +459,7 @@ getcmdline(firstc, count, indent)
 		int found = FALSE;
 
 		j = ccline.cmdpos - 1;
-		i = xpc.xp_pattern - ccline.cmdbuff;
+		i = (int)(xpc.xp_pattern - ccline.cmdbuff);
 		while (--j > i)
 		{
 #ifdef FEAT_MBYTE
@@ -729,7 +729,8 @@ getcmdline(firstc, count, indent)
 			    i = mb_get_class(p);
 			    while (p > ccline.cmdbuff && mb_get_class(p) == i)
 				p = mb_prevptr(ccline.cmdbuff, p);
-			    p += (*mb_ptr2len_check)(p);
+			    if (mb_get_class(p) != i)
+				p += (*mb_ptr2len_check)(p);
 			}
 		    }
 		    else
@@ -745,7 +746,7 @@ getcmdline(firstc, count, indent)
 		    }
 		    else
 			--p;
-		    ccline.cmdpos = p - ccline.cmdbuff;
+		    ccline.cmdpos = (int)(p - ccline.cmdbuff);
 		    ccline.cmdlen -= j - ccline.cmdpos;
 		    i = ccline.cmdpos;
 		    while (i < ccline.cmdlen)
@@ -1116,7 +1117,7 @@ getcmdline(firstc, count, indent)
 		    lookfor[ccline.cmdpos] = NUL;
 		}
 
-		j = STRLEN(lookfor);
+		j = (int)STRLEN(lookfor);
 		for (;;)
 		{
 		    /* one step backwards */
@@ -1178,7 +1179,7 @@ getcmdline(firstc, count, indent)
 			goto returncmd;
 		    STRCPY(ccline.cmdbuff, p);
 
-		    ccline.cmdpos = ccline.cmdlen = STRLEN(ccline.cmdbuff);
+		    ccline.cmdpos = ccline.cmdlen = (int)STRLEN(ccline.cmdbuff);
 		    redrawcmd();
 		    goto cmdline_changed;
 		}
@@ -1336,22 +1337,26 @@ cmdline_changed:
 	     * positioned in the same way as the actual search command */
 	    curwin->w_leftcol = old_leftcol;
 	    curwin->w_topline = old_topline;
-#ifdef FEAT_DIFF
+# ifdef FEAT_DIFF
 	    curwin->w_topfill = old_topfill;
-#endif
+# endif
 	    curwin->w_botline = old_botline;
 	    changed_cline_bef_curs();
 	    update_topline();
-	    /*
-	     * First move cursor to end of match, then to start.  This moves
-	     * the whole match onto the screen when 'nowrap' is set.
-	     */
-	    i = curwin->w_cursor.col;
-	    curwin->w_cursor.lnum += search_match_lines;
-	    curwin->w_cursor.col = search_match_endcol;
-	    validate_cursor();
-	    curwin->w_cursor.lnum -= search_match_lines;
-	    curwin->w_cursor.col = i;
+
+	    if (i != 0)
+	    {
+		/*
+		 * First move cursor to end of match, then to start.  This
+		 * moves the whole match onto the screen when 'nowrap' is set.
+		 */
+		i = curwin->w_cursor.col;
+		curwin->w_cursor.lnum += search_match_lines;
+		curwin->w_cursor.col = search_match_endcol;
+		validate_cursor();
+		curwin->w_cursor.lnum -= search_match_lines;
+		curwin->w_cursor.col = i;
+	    }
 	    validate_cursor();
 
 	    update_screen(NOT_VALID);
@@ -1376,9 +1381,9 @@ returncmd:
 	curwin->w_curswant = old_curswant;
 	curwin->w_leftcol = old_leftcol;
 	curwin->w_topline = old_topline;
-#ifdef FEAT_DIFF
+# ifdef FEAT_DIFF
 	curwin->w_topfill = old_topfill;
-#endif
+# endif
 	curwin->w_botline = old_botline;
 	highlight_match = FALSE;
 	validate_cursor();	/* needed for TAB */
@@ -1695,6 +1700,8 @@ getexmodeline(c, dummy, indent)
 		    }
 		}
 
+		if (IS_SPECIAL(c1))
+		    c1 = '?';
 		((char_u *)line_ga.ga_data)[line_ga.ga_len] = c1;
 		if (c1 == '\n')
 		    msg_putchar('\n');
@@ -1870,7 +1877,7 @@ put_on_cmdline(str, len, redraw)
     int		c;
 
     if (len < 0)
-	len = STRLEN(str);
+	len = (int)STRLEN(str);
 
     /* Check if ccline.cmdbuff needs to be longer */
     if (ccline.cmdlen + len + 1 >= ccline.cmdbufflen)
@@ -2178,7 +2185,7 @@ nextwild(xp, type, options)
     MSG_PUTS("...");	    /* show that we are busy */
     out_flush();
 
-    i = xp->xp_pattern - ccline.cmdbuff;
+    i = (int)(xp->xp_pattern - ccline.cmdbuff);
     oldlen = ccline.cmdpos - i;
 
     if (type == WILD_NEXT || type == WILD_PREV)
@@ -2219,8 +2226,8 @@ nextwild(xp, type, options)
 
     if (p2 != NULL && !got_int)
     {
-	if (ccline.cmdlen + (difflen = STRLEN(p2) - oldlen) >
-							ccline.cmdbufflen - 4)
+	difflen = (int)STRLEN(p2) - oldlen;
+	if (ccline.cmdlen + difflen > ccline.cmdbufflen - 4)
 	{
 	    v = realloc_cmdbuff(ccline.cmdlen + difflen);
 	    xp->xp_pattern = ccline.cmdbuff + i;
@@ -2467,7 +2474,7 @@ ExpandOne(xp, str, orig, options, mode)
     {
 	len = 0;
 	for (i = 0; i < cmd_numfiles; ++i)
-	    len += STRLEN(cmd_files[i]) + 1;
+	    len += (long_u)STRLEN(cmd_files[i]) + 1;
 	ss = lalloc(len, TRUE);
 	if (ss != NULL)
 	{
@@ -3319,7 +3326,7 @@ globpath(path, file)
 	    p = ExpandOne(&xpc, buf, NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
 	    if (p != NULL)
 	    {
-		len = STRLEN(p);
+		len = (int)STRLEN(p);
 		if (ga.ga_data == NULL)
 		{
 		    ga.ga_data = p;
@@ -3533,7 +3540,7 @@ get_histtype(name)
     char_u	*name;
 {
     int		i;
-    int		len = STRLEN(name);
+    int		len = (int)STRLEN(name);
 
     /* No argument: use current history. */
     if (len == 0)
@@ -4354,7 +4361,7 @@ ex_window()
 	    cmdwin_result = ESC;
 	else
 	{
-	    ccline.cmdlen = STRLEN(ccline.cmdbuff);
+	    ccline.cmdlen = (int)STRLEN(ccline.cmdbuff);
 	    ccline.cmdbufflen = ccline.cmdlen + 1;
 	    ccline.cmdpos = curwin->w_cursor.col;
 	    if (ccline.cmdpos > ccline.cmdlen)

@@ -266,10 +266,10 @@ typedef struct state_item
     int		si_trans_id;		/* idem, transparancy removed */
     int		si_m_lnum;		/* lnum of the match */
     int		si_m_startcol;		/* starting column of the match */
-    pos_T	si_m_endpos;		/* just after end posn of the match */
-    pos_T	si_h_startpos;		/* start position of the highlighting */
-    pos_T	si_h_endpos;		/* end position of the highlighting */
-    pos_T	si_eoe_pos;		/* end position of end pattern */
+    lpos_T	si_m_endpos;		/* just after end posn of the match */
+    lpos_T	si_h_startpos;		/* start position of the highlighting */
+    lpos_T	si_h_endpos;		/* end position of the highlighting */
+    lpos_T	si_eoe_pos;		/* end position of end pattern */
     int		si_end_idx;		/* group ID for end pattern or zero */
     int		si_ends;		/* if match ends before si_m_endpos */
     int		si_attr;		/* attributes in this state */
@@ -293,13 +293,13 @@ typedef struct state_item
  * (All end positions have the column of the char after the end)
  */
 static int next_match_col;	    /* column for start of next match */
-static pos_T next_match_m_endpos;    /* position for end of next match */
-static pos_T next_match_h_startpos;  /* pos. for highl. start of next match */
-static pos_T next_match_h_endpos;    /* pos. for highl. end of next match */
+static lpos_T next_match_m_endpos;    /* position for end of next match */
+static lpos_T next_match_h_startpos;  /* pos. for highl. start of next match */
+static lpos_T next_match_h_endpos;    /* pos. for highl. end of next match */
 static int next_match_idx;	    /* index of matched item */
 static int next_match_flags;	    /* flags for next match */
-static pos_T next_match_eos_pos;	    /* end of start pattern (start of region) */
-static pos_T next_match_eoe_pos;	    /* pos. for end of end pattern */
+static lpos_T next_match_eos_pos;	    /* end of start pattern (start of region) */
+static lpos_T next_match_eoe_pos;	    /* pos. for end of end pattern */
 static int next_match_end_idx;	    /* ID of group for end pattern or zero */
 static reg_extmatch_T *next_match_extmatch = NULL;
 
@@ -355,14 +355,14 @@ static int in_id_list __ARGS((stateitem_T *item, short *cont_list, struct sp_syn
 static int push_current_state __ARGS((int idx));
 static void pop_current_state __ARGS((void));
 
-static void find_endpos __ARGS((int idx, pos_T *startpos, pos_T *m_endpos, pos_T *hl_endpos, int *flagsp, pos_T *end_endpos, int *end_idx, reg_extmatch_T *start_ext));
+static void find_endpos __ARGS((int idx, lpos_T *startpos, lpos_T *m_endpos, lpos_T *hl_endpos, int *flagsp, lpos_T *end_endpos, int *end_idx, reg_extmatch_T *start_ext));
 static void clear_syn_state __ARGS((synstate_T *p));
 static void clear_current_state __ARGS((void));
 
-static void limit_pos __ARGS((pos_T *pos, pos_T *limit));
-static void limit_pos_zero __ARGS((pos_T *pos, pos_T *limit));
-static void syn_add_end_off __ARGS((pos_T *result, regmmatch_T *regmatch, synpat_T *spp, int idx, int extra));
-static void syn_add_start_off __ARGS((pos_T *result, regmmatch_T *regmatch, synpat_T *spp, int idx, int extra));
+static void limit_pos __ARGS((lpos_T *pos, lpos_T *limit));
+static void limit_pos_zero __ARGS((lpos_T *pos, lpos_T *limit));
+static void syn_add_end_off __ARGS((lpos_T *result, regmmatch_T *regmatch, synpat_T *spp, int idx, int extra));
+static void syn_add_start_off __ARGS((lpos_T *result, regmmatch_T *regmatch, synpat_T *spp, int idx, int extra));
 static char_u *syn_getcurline __ARGS((void));
 static int syn_regexec __ARGS((regmmatch_T *rmp, linenr_T lnum, colnr_T col));
 static int check_keyword_id __ARGS((char_u *line, int startcol, int *endcol, int *flags, short **next_list, stateitem_T *cur_si));
@@ -649,7 +649,7 @@ syn_sync(wp, start_lnum, last_valid)
     int		found_match_idx = 0;
     linenr_T	found_current_lnum = 0;
     int		found_current_col= 0;
-    pos_T	found_m_endpos;
+    lpos_T	found_m_endpos;
 
     /*
      * Clear any current state that might be hanging around.
@@ -1668,11 +1668,11 @@ syn_current_attr(syncing, displaying)
     int		displaying;		/* result will be displayed */
 {
     int		syn_id;
-    pos_T	endpos;		/* was: char_u *endp; */
-    pos_T	hl_startpos;	/* was: int hl_startcol; */
-    pos_T	hl_endpos;
-    pos_T	eos_pos;	/* end-of-start match (start region) */
-    pos_T	eoe_pos;	/* end-of-end pattern */
+    lpos_T	endpos;		/* was: char_u *endp; */
+    lpos_T	hl_startpos;	/* was: int hl_startcol; */
+    lpos_T	hl_endpos;
+    lpos_T	eos_pos;	/* end-of-start match (start region) */
+    lpos_T	eoe_pos;	/* end-of-end pattern */
     int		end_idx;	/* group ID for end pattern */
     int		idx;
     synpat_T	*spp;
@@ -1685,7 +1685,7 @@ syn_current_attr(syncing, displaying)
     static int	try_next_column = FALSE;    /* must try in next col */
     int		do_keywords;
     regmmatch_T	regmatch;
-    pos_T	pos;
+    lpos_T	pos;
     int		lc_col;
     reg_extmatch_T *cur_extmatch = NULL;
     char_u	*line;		/* current line.  NOTE: becomes invalid after
@@ -1914,7 +1914,8 @@ syn_current_attr(syncing, displaying)
 				continue;
 			    }
 
-			    endpos = regmatch.endpos[0];
+			    endpos.lnum = regmatch.endpos[0].lnum;
+			    endpos.col = regmatch.endpos[0].col;
 
 			    /* Compute the highlight start. */
 			    syn_add_start_off(&hl_startpos, &regmatch,
@@ -2368,7 +2369,7 @@ update_si_attr(idx)
 check_keepend()
 {
     int		i;
-    pos_T	maxpos;
+    lpos_T	maxpos;
     stateitem_T	*sip;
 
     /*
@@ -2420,10 +2421,10 @@ update_si_end(sip, startcol, force)
     int		startcol;   /* where to start searching for the end */
     int		force;	    /* when TRUE overrule a previous end */
 {
-    pos_T	startpos;
-    pos_T	endpos;
-    pos_T	hl_endpos;
-    pos_T	end_endpos;
+    lpos_T	startpos;
+    lpos_T	endpos;
+    lpos_T	hl_endpos;
+    lpos_T	end_endpos;
     int		end_idx;
 
     /* Don't update when it's already done.  Can be a match of an end pattern
@@ -2450,7 +2451,7 @@ update_si_end(sip, startcol, force)
 	    /* a "oneline" never continues in the next line */
 	    sip->si_ends = TRUE;
 	    sip->si_m_endpos.lnum = current_lnum;
-	    sip->si_m_endpos.col = STRLEN(syn_getcurline());
+	    sip->si_m_endpos.col = (colnr_T)STRLEN(syn_getcurline());
 	}
 	else
 	{
@@ -2522,11 +2523,11 @@ pop_current_state()
 find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 							   end_idx, start_ext)
     int		idx;		/* index of the pattern */
-    pos_T	*startpos;	/* where to start looking for an END match */
-    pos_T	*m_endpos;	/* return: end of match */
-    pos_T	*hl_endpos;	/* return: end of highlighting */
+    lpos_T	*startpos;	/* where to start looking for an END match */
+    lpos_T	*m_endpos;	/* return: end of match */
+    lpos_T	*hl_endpos;	/* return: end of highlighting */
     int		*flagsp;	/* return: flags of matching END */
-    pos_T	*end_endpos;	/* return: end of end pattern match */
+    lpos_T	*end_endpos;	/* return: end of end pattern match */
     int		*end_idx;	/* return: group ID for end pat. match, or 0 */
     reg_extmatch_T *start_ext;	/* submatches from the start pattern */
 {
@@ -2536,7 +2537,7 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
     int		best_idx;
     regmmatch_T	regmatch;
     regmmatch_T	best_regmatch;	    /* startpos/endpos of best match */
-    pos_T	pos;
+    lpos_T	pos;
     char_u	*line;
     int		had_match = FALSE;
 
@@ -2690,9 +2691,15 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 	{
 	    *end_idx = best_idx;
 	    if (spp->sp_off_flags & (1 << (SPO_RE_OFF + SPO_COUNT)))
-		*hl_endpos = best_regmatch.endpos[0];
+	    {
+		hl_endpos->lnum = best_regmatch.endpos[0].lnum;
+		hl_endpos->col = best_regmatch.endpos[0].col;
+	    }
 	    else
-		*hl_endpos = best_regmatch.startpos[0];
+	    {
+		hl_endpos->lnum = best_regmatch.startpos[0].lnum;
+		hl_endpos->col = best_regmatch.startpos[0].col;
+	    }
 	    hl_endpos->col += spp->sp_offsets[SPO_RE_OFF];
 
 	    /* can't end before the start */
@@ -2730,8 +2737,8 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
  */
     static void
 limit_pos(pos, limit)
-    pos_T	*pos;
-    pos_T	*limit;
+    lpos_T	*pos;
+    lpos_T	*limit;
 {
     if (pos->lnum > limit->lnum)
 	*pos = *limit;
@@ -2744,8 +2751,8 @@ limit_pos(pos, limit)
  */
     static void
 limit_pos_zero(pos, limit)
-    pos_T	*pos;
-    pos_T	*limit;
+    lpos_T	*pos;
+    lpos_T	*limit;
 {
     if (pos->lnum == 0)
 	*pos = *limit;
@@ -2758,7 +2765,7 @@ limit_pos_zero(pos, limit)
  */
     static void
 syn_add_end_off(result, regmatch, spp, idx, extra)
-    pos_T	*result;	/* returned position */
+    lpos_T	*result;	/* returned position */
     regmmatch_T	*regmatch;	/* start/end of match */
     synpat_T	*spp;		/* matched pattern */
     int		idx;		/* index of offset */
@@ -2789,7 +2796,7 @@ syn_add_end_off(result, regmatch, spp, idx, extra)
  */
     static void
 syn_add_start_off(result, regmatch, spp, idx, extra)
-    pos_T	*result;	/* returned position */
+    lpos_T	*result;	/* returned position */
     regmmatch_T	*regmatch;	/* start/end of match */
     synpat_T	*spp;
     int		idx;
@@ -2900,7 +2907,7 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	    ktab = syn_buf->b_keywtab[syn_khash(keyword)];
 	else /* round == 2, ignore case */
 	{
-	    str_tolower(keyword);
+	    str_foldcase(keyword);
 	    ktab = syn_buf->b_keywtab_ic[syn_khash(keyword)];
 	}
 
@@ -3704,7 +3711,7 @@ syn_list_keywords(id, ktabp, did_header, attr)
 			|| prev_next_list != ktab->next_list)
 		    outlen = 9999;
 		else
-		    outlen = STRLEN(ktab->keyword);
+		    outlen = (int)STRLEN(ktab->keyword);
 		/* output "contained" and "nextgroup" on each line */
 		if (syn_list_header(did_header, outlen, id))
 		{
@@ -3850,7 +3857,7 @@ add_keyword(name, id, flags, cont_in_list, next_list)
 
     if (curbuf->b_syn_ic)
     {
-	str_tolower(ktab->keyword);
+	str_foldcase(ktab->keyword);
 	ktabpp = &curbuf->b_keywtab_ic;
     }
     else
@@ -6182,7 +6189,7 @@ do_highlight(line, forceit, init)
 	    {
 		for (i = sizeof(hl_attr_table) / sizeof(int); --i >= 0; )
 		{
-		    len = STRLEN(hl_name_table[i]);
+		    len = (int)STRLEN(hl_name_table[i]);
 		    if (STRNICMP(arg + off, hl_name_table[i], len) == 0)
 		    {
 			attr |= hl_attr_table[i];
@@ -6665,7 +6672,7 @@ do_highlight(line, forceit, init)
     void
 restore_cterm_colors()
 {
-#if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
+#if defined(MSDOS) || (defined(WIN3264) && !defined(FEAT_GUI_W32))
     /* Since t_me has been set, this probably means that the user
      * wants to use this as default colors.  Need to reset default
      * background/foreground colors. */

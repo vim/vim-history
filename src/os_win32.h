@@ -66,8 +66,8 @@
 #endif
 #define HAVE_AVAIL_MEM
 
-#ifdef __BORLANDC__
-# define HAVE_PUTENV		/* at least Bcc 5.2 has it */
+#if defined(__BORLANDC__) || defined(_MSC_VER)
+# define HAVE_PUTENV		/* at least Bcc 5.2 and MSC as it */
 #endif
 
 #ifdef FEAT_GUI_W32
@@ -75,7 +75,7 @@
 #endif
 
 /* toupper() is not really broken, but it's very slow.	Probably because of
- * using unicde characters on Windows NT */
+ * using Unicode characters on Windows NT */
 #define BROKEN_TOUPPER
 
 #define FNAME_ILLEGAL "\"*?><|" /* illegal characters in a file name */

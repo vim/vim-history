@@ -607,7 +607,7 @@ NOTA: Il file che tu richiedi è inserito a partire da dove si trova il cursore.
 
   2.  :w NOMEFILE  scrive su disco il file che stai editando con nome NOMEFILE.
 
-  3.  :#,# NOMEFILE  sslva le linee da # a # nel file NOMEFILE.
+  3.  :#,#w NOMEFILE  sslva le linee da # a # nel file NOMEFILE.
 
   4.  :r NOMEFILE  legge il file NOMEFILE da disco e lo inserisce nel
       file che stai editando, dopo il punto dove è posizionato il cursore.

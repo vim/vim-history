@@ -3,7 +3,7 @@ int init_chartab __ARGS((void));
 int buf_init_chartab __ARGS((buf_T *buf, int global));
 void trans_characters __ARGS((char_u *buf, int bufsize));
 char_u *transstr __ARGS((char_u *s));
-void str_tolower __ARGS((char_u *p));
+void str_foldcase __ARGS((char_u *p));
 char_u *transchar __ARGS((int c));
 void transchar_nonprint __ARGS((char_u *buf, int c));
 void transchar_hex __ARGS((char_u *buf, int c));

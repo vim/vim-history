@@ -18,6 +18,9 @@
  *
  * Note: Clipboard stuff, for cutting and pasting text to other windows, is in
  * os_win32.c.	(It can also be done from the terminal version).
+ *
+ * TODO: Some of the function signatures ought to be updated for Win64;
+ * e.g., replace LONG with LONG_PTR, etc.
  */
 
 /*
@@ -207,7 +210,7 @@ static UINT msh_msgmousewheel = 0;
 static int	s_usenewlook;	    /* emulate W95/NT4 non-bold dialogs */
 #ifdef FEAT_TOOLBAR
 static void initialise_toolbar(void);
-static int get_toolbar_bitmap(char_u *name);
+static int get_toolbar_bitmap(vimmenu_T *menu);
 #endif
 
 /*
@@ -350,7 +353,7 @@ _OnDropFiles(
 	    {
 		if (i > 0)
 		    add_to_input_buf(" ", 1);
-		add_to_input_buf(fnames[i], STRLEN(fnames[i]));
+		add_to_input_buf(fnames[i], (int)STRLEN(fnames[i]));
 	    }
 	}
     }
@@ -407,7 +410,7 @@ _OnScroll(
     scrollbar_T *sb, *sb_info;
     long	val;
     int		dragging = FALSE;
-#ifdef WIN32
+#ifdef WIN3264
     SCROLLINFO	si;
 #else
     int		nPos;
@@ -557,7 +560,7 @@ init_mouse_wheel(void)
 	    msh_msgscrolllines = RegisterWindowMessage(VMSH_SCROLL_LINES);
 	    if (msh_msgscrolllines)
 	    {
-		mouse_scroll_lines = SendMessage(hdl_mswheel,
+		mouse_scroll_lines = (int)SendMessage(hdl_mswheel,
 			msh_msgscrolllines, 0, 0);
 		msh_msgmousewheel  = RegisterWindowMessage(VMSH_MOUSEWHEEL);
 	    }
@@ -604,6 +607,8 @@ _OnMouseWheel(
 	_OnScroll(hwnd, hwndCtl, zDelta >= 0 ? SB_PAGEUP : SB_PAGEDOWN, 0);
 }
 
+#if 0	/* disabled, a gap appears below and beside the window, and the window
+	   can be moved (in a strange way) */
 /*
  * Even though we have _DuringSizing() which makes the rubber band a valid
  * size, we need this for when the user maximises the window.
@@ -634,6 +639,7 @@ _OnWindowPosChanging(
     }
     return 0;
 }
+#endif
 
     static int
 _DuringSizing(
@@ -709,7 +715,7 @@ _WndProc(
 	/* HANDLE_MSG(hwnd, WM_SYSCOMMAND,  _OnSysCommand); */
 	/* HANDLE_MSG(hwnd, WM_SYSKEYDOWN,  _OnAltKey); */
 	HANDLE_MSG(hwnd, WM_VSCROLL,	_OnScroll);
-	HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGING,	_OnWindowPosChanging);
+	// HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGING,	_OnWindowPosChanging);
 	HANDLE_MSG(hwnd, WM_ACTIVATEAPP, _OnActivateApp);
 
     case WM_QUERYENDSESSION:	/* System wants to go down. */
@@ -754,7 +760,7 @@ _WndProc(
 	return _OnCreate (hwnd, (LPCREATESTRUCT)lParam);
 
     case WM_SIZING:	/* HANDLE_MSG doesn't seem to handle this one */
-	return _DuringSizing(hwnd, wParam, (LPRECT)lParam);
+	return _DuringSizing(hwnd, (UINT)wParam, (LPRECT)lParam);
 
     case WM_MOUSEWHEEL:
 	_OnMouseWheel(hwnd, HIWORD(wParam));
@@ -772,7 +778,7 @@ _WndProc(
 		    vimmenu_T		*pMenu;
 
 		    lpttt = (LPTOOLTIPTEXT)lParam;
-		    idButton = lpttt->hdr.idFrom;
+		    idButton = (UINT) lpttt->hdr.idFrom;
 		    pMenu = gui_mswin_find_menu(root_menu, idButton);
 		    if (pMenu)
 		    {
@@ -1782,42 +1788,23 @@ gui_mch_draw_string(
 
 	if (enc_utf8 && n < len && unicodebuf != NULL)
 	{
-	    /* Output UTF-8 characters up to a composing character */
-	    /* Composing characters overwrite the preceding char. */
-	    int		c1, c2;
-	    int		coloff = 0;
+	    /* Output UTF-8 characters.  Caller has already separated
+	     * composing characters. */
 	    int		i = 0;
 	    int		clen;	/* string length up to composing char */
 	    int		cells;	/* cell width of string up to composing char */
-	    int		cw;	/* width of last cell */
 
-	    while (i < len)
+	    cells = 0;
+	    for (clen = 0; i < len; )
 	    {
-		cells = 0;
-		for (clen = 0; i < len; )
-		{
-		    unicodebuf[clen] = utfc_ptr2char(text + i, &c1, &c2);
-		    cw = utf_char2cells(unicodebuf[clen]);
-		    cells += cw;
-		    i += utfc_ptr2len_check(text + i);
-		    ++clen;
-		    if (c1 != 0)
-			break;	    /* break at composing char */
-		}
-		ExtTextOutW(s_hdc, TEXT_X(col + coloff), TEXT_Y(row),
-				 foptions, pcliprect, unicodebuf, clen, NULL);
-		coloff += cells;
-		while (c1 != 0)
-		{
-		    /* overwrite the last character with composing char(s) */
-		    unicodebuf[0] = c1;
-		    ExtTextOutW(s_hdc, TEXT_X(col + coloff - cw), TEXT_Y(row),
-				    foptions, pcliprect, unicodebuf, 1, NULL);
-		    c1 = c2;
-		    c2 = 0;
-		}
+		unicodebuf[clen] = utf_ptr2char(text + i);
+		cells += utf_char2cells(unicodebuf[clen]);
+		i += utfc_ptr2len_check(text + i);
+		++clen;
 	    }
-	    len = coloff;	/* used for underlining */
+	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+				 foptions, pcliprect, unicodebuf, clen, NULL);
+	    len = cells;	/* used for underlining */
 	}
 	else if (is_funky_dbcs)
 	{
@@ -1927,7 +1914,7 @@ gui_mch_add_menu(
 	    info.wID = menu->id;
 	    info.fType = MFT_STRING;
 	    info.dwTypeData = (LPTSTR)menu->name;
-	    info.cch = STRLEN(menu->name);
+	    info.cch = (UINT)STRLEN(menu->name);
 	    info.hSubMenu = menu->submenu_id;
 	    InsertMenuItem((parent == NULL) ? s_menuBar : parent->submenu_id,
 		    (UINT)pos, TRUE, &info);
@@ -2023,7 +2010,7 @@ gui_mch_add_menu_item(
 	}
 	else
 	{
-	    newtb.iBitmap = get_toolbar_bitmap(menu->name);
+	    newtb.iBitmap = get_toolbar_bitmap(menu);
 	    newtb.fsStyle = TBSTYLE_BUTTON;
 	}
 	newtb.idCommand = menu->id;
@@ -2061,7 +2048,7 @@ gui_mch_destroy_menu(vimmenu_T *menu)
     {
 	int iButton;
 
-	iButton = SendMessage(s_toolbarhwnd, TB_COMMANDTOINDEX,
+	iButton = (int)SendMessage(s_toolbarhwnd, TB_COMMANDTOINDEX,
 							 (WPARAM)menu->id, 0);
 	SendMessage(s_toolbarhwnd, TB_DELETEBUTTON, (WPARAM)iButton, 0);
     }
@@ -2221,10 +2208,10 @@ dialog_callback(
 	if (button >= DLG_NONBUTTON_CONTROL)
 	    return TRUE;
 
-	/* If the edit box exists, copy the string. */ 
-	if (s_textfield)
+	/* If the edit box exists, copy the string. */
+	if (s_textfield != NULL)
 	    GetDlgItemText(hwnd, DLG_NONBUTTON_CONTROL + 2,
-		s_textfield, IOSIZE);
+							 s_textfield, IOSIZE);
 
 	/*
 	 * Need to check for IDOK because if the user just hits Return to
@@ -2433,7 +2420,7 @@ gui_mch_dialog(
 	if (pend == NULL)
 	    pend = pstart + STRLEN(pstart);	/* Last line of message. */
 	msgheight += fontHeight;
-	textWidth = GetTextWidth(hdc, pstart, pend - pstart);
+	textWidth = GetTextWidth(hdc, pstart, (int)(pend - pstart));
 	if (textWidth > messageWidth)
 	    messageWidth = textWidth;
 	pstart = pend + 1;
@@ -2461,7 +2448,7 @@ gui_mch_dialog(
 	    pend = vim_strchr(pstart, DLG_BUTTON_SEP);
 	    if (pend == NULL)
 		pend = pstart + STRLEN(pstart);	// Last button name.
-	    textWidth = GetTextWidth(hdc, pstart, pend - pstart);
+	    textWidth = GetTextWidth(hdc, pstart, (int)(pend - pstart));
 	    if (textWidth < minButtonWidth)
 		textWidth = minButtonWidth;
 	    textWidth += dlgPaddingX;	    /* Padding within button */
@@ -2486,7 +2473,7 @@ gui_mch_dialog(
 	    pend = vim_strchr(pstart, DLG_BUTTON_SEP);
 	    if (pend == NULL)
 		pend = pstart + STRLEN(pstart);	// Last button name.
-	    textWidth = GetTextWidth(hdc, pstart, pend - pstart);
+	    textWidth = GetTextWidth(hdc, pstart, (int)(pend - pstart));
 	    textWidth += dlgPaddingX;		/* Padding within button */
 	    textWidth += DLG_VERT_PADDING_X * 2; /* Padding around button */
 	    if (textWidth > dlgwidth)
@@ -2522,7 +2509,7 @@ gui_mch_dialog(
     // Dialog needs to be taller if contains an edit box.
     editboxheight = fontHeight + dlgPaddingY + 4 * DLG_VERT_PADDING_Y;
     if (type == VIM_QUESTION)
-	dlgheight += editboxheight; 
+	dlgheight += editboxheight;
 
     add_word(PixelToDialogY(dlgheight));
 
@@ -2557,8 +2544,8 @@ gui_mch_dialog(
 
     buttonYpos = msgheight + 2 * dlgPaddingY;
 
-    if (type == VIM_QUESTION)
-	buttonYpos += editboxheight; 
+    if (textfield != NULL)
+	buttonYpos += editboxheight;
 
     pstart = tbuffer;
     horizWidth = (dlgwidth - horizWidth) / 2;	/* Now it's X offset */
@@ -2581,18 +2568,18 @@ gui_mch_dialog(
 	 * one with WS_TABSTOP style. Means user can't tab between buttons, but
 	 * he/she can use arrow keys.
 	 *
-	 * NOTE (Thore): Setting BS_DEFPUSHBUTTON seems to work fine, so I changed
-	 * the correct button to be this style. This is necessary because when
-	 * an edit box is added, we need a button to be default. The edit box
-	 * will be the default control, and when the user presses enter from
-	 * the edit box we want the default button to be pressed.
+	 * NOTE (Thore): Setting BS_DEFPUSHBUTTON works fine when it's the
+	 * first one, so I changed the correct button to be this style. This
+	 * is necessary because when an edit box is added, we need a button to
+	 * be default.  The edit box will be the default control, and when the
+	 * user presses enter from the edit box we want the default button to
+	 * be pressed.
 	 */
 	if (vertical)
 	{
 	    p = add_dialog_element(p,
-		    i == dfltbutton || dfltbutton<0 && type==VIM_QUESTION ?
-		    BS_DEFPUSHBUTTON : BS_PUSHBUTTON
-		    | WS_TABSTOP,
+		    ((i == dfltbutton || dfltbutton < 0) && textfield != NULL
+			    ?  BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(DLG_VERT_PADDING_X),
 		    PixelToDialogY(buttonYpos /* TBK */
 				   + 2 * fontHeight * i),
@@ -2603,9 +2590,8 @@ gui_mch_dialog(
 	else
 	{
 	    p = add_dialog_element(p,
-		    i == dfltbutton || dfltbutton<0 && type==VIM_QUESTION ?
-		    BS_DEFPUSHBUTTON : BS_PUSHBUTTON
-		    | WS_TABSTOP,
+		    ((i == dfltbutton || dfltbutton < 0) && textfield != NULL
+			    ?  BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(horizWidth + buttonPositions[i]),
 		    PixelToDialogY(buttonYpos), /* TBK */
 		    PixelToDialogX(buttonWidths[i]),
@@ -2634,7 +2620,7 @@ gui_mch_dialog(
 	    DLG_NONBUTTON_CONTROL + 1, (WORD)0x0082, message);
 
     /* Edit box */
-    if (type == VIM_QUESTION)
+    if (textfield != NULL)
     {
 	p = add_dialog_element(p, ES_LEFT | WS_TABSTOP | WS_BORDER,
 		PixelToDialogX(2 * dlgPaddingX),
@@ -2656,17 +2642,19 @@ gui_mch_dialog(
      * dialog_callback() if this dialog contains an edit box or not. We do
      * this by setting s_textfield if it does.
      */
-    if (type == VIM_QUESTION)
+    if (textfield != NULL)
     {
 	dialog_default_button = DLG_NONBUTTON_CONTROL + 2;
         s_textfield = textfield;
-    } else {
-        dialog_default_button = IDCANCEL + 1 + dfltbutton;
-	s_textfield = 0;
     }
-    
+    else
+    {
+        dialog_default_button = IDCANCEL + 1 + dfltbutton;
+	s_textfield = NULL;
+    }
+
     /* show the dialog box modally and get a return value */
-    nchar = DialogBoxIndirect(
+    nchar = (int)DialogBoxIndirect(
 	    s_hinst,
 	    (LPDLGTEMPLATE)pdlgtemplate,
 	    s_hwnd,
@@ -3015,7 +3003,7 @@ gui_mch_tearoff(
 	    if (text != NULL && *text != NUL)
 	    {
 		end = text + strlen(text);
-		textWidth = GetTextWidth(hdc, text, end - text);
+		textWidth = GetTextWidth(hdc, text, (int)(end - text));
 		if (textWidth > columnWidths[col])
 		    columnWidths[col] = textWidth;
 	    }
@@ -3042,10 +3030,10 @@ gui_mch_tearoff(
     if (submenuWidth != 0)
     {
 	submenuWidth = GetTextWidth(hdc, TEAROFF_SUBMENU_LABEL,
-			      STRLEN(TEAROFF_SUBMENU_LABEL));
+			      (int)STRLEN(TEAROFF_SUBMENU_LABEL));
 	textWidth += submenuWidth;
     }
-    dlgwidth = GetTextWidth(hdc, title, strlen(title));
+    dlgwidth = GetTextWidth(hdc, title, (int)STRLEN(title));
     if (textWidth > dlgwidth)
 	dlgwidth = textWidth;
     dlgwidth += 2 * TEAROFF_PADDING_X + TEAROFF_BUTTON_PAD_X;
@@ -3122,16 +3110,16 @@ gui_mch_tearoff(
 	}
 
 	/* Figure out length of this menu label */
-	len = STRLEN(menu->dname);
+	len = (int)STRLEN(menu->dname);
 	end = menu->dname + STRLEN(menu->dname);
 	padding0 = (columnWidths[0] - GetTextWidth(hdc, menu->dname,
-		    end - menu->dname)) / spaceWidth;
+		    (int)(end - menu->dname))) / spaceWidth;
 	len += padding0;
 	if (menu->actext != NULL)
 	{
-	    len += STRLEN(menu->actext);
+	    len += (int)STRLEN(menu->actext);
 	    acEnd = menu->actext + STRLEN(menu->actext);
-	    textWidth = GetTextWidth(hdc, menu->actext, acEnd - menu->actext);
+	    textWidth = GetTextWidth(hdc, menu->actext, (int)(acEnd - menu->actext));
 	}
 	else
 	    textWidth = 0;
@@ -3146,7 +3134,7 @@ gui_mch_tearoff(
 	}
 	else
 	{
-	    len += STRLEN(TEAROFF_SUBMENU_LABEL);
+	    len += (int)STRLEN(TEAROFF_SUBMENU_LABEL);
 	    menuID = (WORD)((WORD)(menu->submenu_id) | (WORD)0x8000);
 	}
 
@@ -3257,28 +3245,19 @@ initialise_toolbar(void)
 }
 
     static int
-get_toolbar_bitmap(char_u *name)
+get_toolbar_bitmap(vimmenu_T *menu)
 {
     int i = -1;
 
-    if (STRNCMP(name, "BuiltIn", 7) == 0)
-    {
-	char *dummy;
-	/*
-	 * reference by index
-	 */
-	i = strtol(name + 7, &dummy, 0);
-	return i;
-    }
     /*
-     * Check user bitmaps next
+     * Check user bitmaps first, unless builtin is specified.
      */
-    if (!is_winnt_3())
+    if (!is_winnt_3() && !menu->icon_builtin)
     {
 	char_u fname[MAXPATHL];
 	HANDLE hbitmap = NULL;
 
-	if (gui_find_bitmap(name, fname, "bmp") == OK)
+	if (gui_find_bitmap(menu->name, fname, "bmp") == OK)
 	    hbitmap = LoadImage(
 		    NULL,
 		    fname,
@@ -3295,19 +3274,14 @@ get_toolbar_bitmap(char_u *name)
 	    tbAddBitmap.hInst = NULL;
 	    tbAddBitmap.nID = (UINT)hbitmap;
 
-	    i = SendMessage(s_toolbarhwnd, TB_ADDBITMAP,
+	    i = (int)SendMessage(s_toolbarhwnd, TB_ADDBITMAP,
 			    (WPARAM)1, (LPARAM)&tbAddBitmap);
 	    /* i will be set to -1 if it fails */
 	}
     }
-    if (i != -1)
-	return i;
+    if (i == -1 && menu->iconidx >= 0 && menu->iconidx < TOOLBAR_BITMAP_COUNT)
+	i = menu->iconidx;
 
-    for (i = 0; BuiltInBitmaps[i]; i++)
-    {
-	if (STRCMP(name, BuiltInBitmaps[i]) == 0)
-	    return i;
-    }
     return i;
 }
 #endif

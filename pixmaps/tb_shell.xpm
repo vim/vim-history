@@ -1,9 +1,9 @@
 /* XPM */
 static char * tb_shell_xpm[] = {
 "18 18 5 1",
-" 	c None",
-".	c #000000",
-"+	c #887777",
+" 	c None    s background",
+".	c #000000 s foreground",
+"+	c #887777 s bottomShadow",
 "@	c #BBBBBB",
 "#	c #FFFFFF",
 "                  ",

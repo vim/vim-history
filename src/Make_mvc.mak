@@ -76,7 +76,7 @@ OBJDIR = .\ObjC
 # ntwin32.mak requires that CPU be set appropriately
 
 !ifdef PROCESSOR_ARCHITECTURE
-# We're on Windows NT
+# We're on Windows NT or using VC 6
 CPU = $(PROCESSOR_ARCHITECTURE)
 ! if "$(CPU)" == "x86"
 CPU = i386
@@ -137,7 +137,8 @@ CVARS = $(cvars)
 # need advapi32.lib for GetUserName()
 # need shell32.lib for ExtractIcon()
 # gdi32.lib and comdlg32.lib for printing support
-CON_LIB = advapi32.lib shell32.lib gdi32.lib comdlg32.lib
+# ole32.lib and uuid.lib are needed for FEAT_SHORTCUT
+CON_LIB = advapi32.lib shell32.lib gdi32.lib comdlg32.lib ole32.lib uuid.lib
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
@@ -150,7 +151,7 @@ CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
 #>>>>> end of choices
 ###########################################################################
 
-!ifdef PROCESSOR_ARCHITECTURE
+!ifdef OS
 OS_TYPE	= winnt
 DEL_TREE = rmdir /s /q
 !else
@@ -210,6 +211,7 @@ OBJ = \
 	$(OUTDIR)\getchar.obj \
 	$(OUTDIR)\main.obj \
 	$(OUTDIR)\mark.obj \
+	$(OUTDIR)\mbyte.obj \
 	$(OUTDIR)\memfile.obj \
 	$(OUTDIR)\memline.obj \
 	$(OUTDIR)\menu.obj \
@@ -217,12 +219,11 @@ OBJ = \
 	$(OUTDIR)\misc1.obj \
 	$(OUTDIR)\misc2.obj \
 	$(OUTDIR)\move.obj \
-	$(OUTDIR)\mbyte.obj \
 	$(OUTDIR)\normal.obj \
-	$(OUTDIR)\option.obj \
 	$(OUTDIR)\ops.obj \
-	$(OUTDIR)\os_win32.obj \
+	$(OUTDIR)\option.obj \
 	$(OUTDIR)\os_mswin.obj \
+	$(OUTDIR)\os_win32.obj \
 	$(OUTDIR)\pathdef.obj \
 	$(OUTDIR)\quickfix.obj \
 	$(OUTDIR)\regexp.obj \
@@ -243,7 +244,7 @@ CFLAGS = $(CFLAGS) -DFEAT_OLE
 RCFLAGS = $(RCFLAGS) -DFEAT_OLE
 OLE_OBJ = $(OUTDIR)\if_ole.obj
 OLE_IDL = if_ole.idl
-OLE_LIB = ole32.lib oleaut32.lib uuid.lib
+OLE_LIB = oleaut32.lib
 !endif
 
 !if "$(IME)" == "yes"
@@ -253,7 +254,6 @@ IME_LIB = imm32.lib
 
 !if "$(GIME)" == "yes"
 CFLAGS = $(CFLAGS) -DFEAT_MBYTE -DGLOBAL_IME
-IME_LIB = $(IME_LIB) ole32.lib uuid.lib
 OBJ = $(OBJ) $(OUTDIR)\dimm_i.obj $(OUTDIR)\glbl_ime.obj
 !endif
 
@@ -282,9 +282,7 @@ GUI_OBJ = \
 GUI_LIB = \
 	oldnames.lib kernel32.lib gdi32.lib $(IME_LIB) \
 	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
-	ole32.lib uuid.lib \
 	/machine:$(CPU) /nodefaultlib
-# ole32.lib and uuid.lib are only needed for FEAT_SHORTCUT
 !else
 SUBSYSTEM = console
 !endif

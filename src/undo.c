@@ -675,6 +675,10 @@ u_undo_end()
 	else
 	    smsg((char_u *)_("%ld changes"), u_newcount);
     }
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_UNDO) && KeyTyped)
+	foldOpenCursor();
+#endif
 }
 
 /*
@@ -1248,7 +1252,7 @@ u_save_line(lnum)
     unsigned	len;
 
     src = ml_get(lnum);
-    len = STRLEN(src);
+    len = (unsigned)STRLEN(src);
     if ((dst = u_alloc_line(len)) != NULL)
 	mch_memmove(dst, src, (size_t)(len + 1));
     return (dst);

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Debian control files
 " Maintainer:	Wichert Akkerman <wakkerma@debian.org>
-" Last Change:	30 April 2001
+" Last Change:	June 10 2001
 
 " Standard syntax initialization
 if version < 600
@@ -17,7 +17,7 @@ syn match debcontrolElse "^.*$"
 syn match debcontrolArchitecture contained "\(all\|any\|alpha\|arm\|hppa\|i386\|m68k\|mips\|mipsel\|powerpc\|sh\|sheb\|sparc\|hurd-i386\)"
 syn match debcontrolName contained "[a-z][a-z0-9+-]*"
 syn match debcontrolPriority contained "\(extra\|important\|optional\|required\|standard\)"
-syn match debcontrolSection contained "\(\(contrib\|non-free\)/\)\=\(admin\|base\|comm\|devel\|docs\|editors\|electronics\|games\|graphics\|hamradio\|interpreters\|libs\|mail\|math\|misc\|net\|news\|oldlibs\|otherosfs\|science\|shells\|sound\|tex\|text\|utils\|web\|x11\|debian-installer\)"
+syn match debcontrolSection contained "\(\(contrib\|non-free\|non-US/main\|non-US/contrib\|non-US/non-free\)/\)\=\(admin\|base\|comm\|devel\|doc\|editors\|electronics\|games\|graphics\|hamradio\|interpreters\|libs\|mail\|math\|misc\|net\|news\|oldlibs\|otherosfs\|science\|shells\|sound\|text\|tex\|utils\|web\|x11\|debian-installer\)"
 syn match debcontrolVariable contained "\${.\{-}}"
 
 " An email address

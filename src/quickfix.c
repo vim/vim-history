@@ -213,9 +213,9 @@ qf_init(efile, errorformat, newlist)
     /*
      * Get some space to modify the format string into.
      */
-    i = (FMT_PATTERNS * 3) + (STRLEN(efm) << 2);
+    i = (FMT_PATTERNS * 3) + ((int)STRLEN(efm) << 2);
     for (round = FMT_PATTERNS; round > 0; )
-	i += strlen(fmt_pat[--round].pattern);
+	i += (int)STRLEN(fmt_pat[--round].pattern);
 #ifdef COLON_IN_FILENAME
     i += 12; /* "%f" can become twelve chars longer */
 #else
@@ -464,7 +464,7 @@ restofline:
 		 */
 		if ((i = (int)fmt_ptr->addr[0]) > 0)		/* %f */
 		{
-		    len = regmatch.endp[i] - regmatch.startp[i];
+		    len = (int)(regmatch.endp[i] - regmatch.startp[i]);
 		    STRNCPY(namebuf, regmatch.startp[i], len);
 		    namebuf[len] = NUL;
 		    if (vim_strchr((char_u *)"OPQ", idx) != NULL
@@ -483,7 +483,7 @@ restofline:
 		    STRCPY(errmsg, IObuff);
 		else if ((i = (int)fmt_ptr->addr[5]) > 0)	/* %m */
 		{
-		    len = regmatch.endp[i] - regmatch.startp[i];
+		    len = (int)(regmatch.endp[i] - regmatch.startp[i]);
 		    STRNCPY(errmsg, regmatch.startp[i], len);
 		    errmsg[len] = NUL;
 		}
@@ -529,7 +529,7 @@ restofline:
 		    goto error1;
 		if (*errmsg)
 		{
-		    len = STRLEN(qfprev->qf_text);
+		    len = (int)STRLEN(qfprev->qf_text);
 		    if ((ptr = alloc((unsigned)(len + STRLEN(errmsg) + 2)))
 								    == NULL)
 			goto error1;
@@ -1111,7 +1111,7 @@ qf_jump(dir, errornr, forceit)
 							       : (char_u *)"",
 		    qf_types(qf_ptr->qf_type, qf_ptr->qf_nr));
 	    /* Add the message, skipping leading whitespace and newlines. */
-	    len = STRLEN(IObuff);
+	    len = (int)STRLEN(IObuff);
 	    qf_fmt_text(qf_ptr->qf_text, IObuff + len, IOSIZE - len);
 
 	    /* Output the message.  Overwrite to avoid scrolling when the 'O'
@@ -1636,7 +1636,7 @@ qf_fill_buffer()
 		    && errbuf->b_fname != NULL)
 	    {
 		STRCPY(IObuff, errbuf->b_fname);
-		len = STRLEN(IObuff);
+		len = (int)STRLEN(IObuff);
 	    }
 	    else
 		len = 0;
@@ -1645,17 +1645,17 @@ qf_fill_buffer()
 	    if (qfp->qf_lnum > 0)
 	    {
 		sprintf((char *)IObuff + len, "%ld", qfp->qf_lnum);
-		len += STRLEN(IObuff + len);
+		len += (int)STRLEN(IObuff + len);
 
 		if (qfp->qf_col > 0)
 		{
 		    sprintf((char *)IObuff + len, " col %d", qfp->qf_col);
-		    len += STRLEN(IObuff + len);
+		    len += (int)STRLEN(IObuff + len);
 		}
 
 		sprintf((char *)IObuff + len, "%s",
 			qf_types(qfp->qf_type, qfp->qf_nr));
-		len += STRLEN(IObuff + len);
+		len += (int)STRLEN(IObuff + len);
 	    }
 	    IObuff[len++] = '|';
 	    IObuff[len++] = ' ';
@@ -1772,9 +1772,9 @@ ex_make(eap)
     /*
      * If 'shellpipe' empty: don't redirect to 'errorfile'.
      */
-    len = STRLEN(p_shq) * 2 + STRLEN(eap->arg) + 1;
+    len = (unsigned)STRLEN(p_shq) * 2 + (unsigned)STRLEN(eap->arg) + 1;
     if (*p_sp != NUL)
-	len += STRLEN(p_sp) + STRLEN(name) + 2;
+	len += (unsigned)STRLEN(p_sp) + (unsigned)STRLEN(name) + 2;
     cmd = alloc(len);
     if (cmd == NULL)
 	return;

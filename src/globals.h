@@ -19,7 +19,7 @@
  */
 EXTERN long	Rows			/* nr of rows in the screen */
 #ifdef DO_INIT
-# if defined(MSDOS) || defined(WIN32) || defined(OS2)
+# if defined(MSDOS) || defined(WIN3264) || defined(OS2)
 			    = 25L
 # else
 			    = 24L

@@ -76,7 +76,7 @@
  */
 
 #include "vim.h"
-#if defined(WIN32) || defined(WIN32UNIX)
+#if defined(WIN3264) || defined(WIN32UNIX)
 # include <windows.h>
 # ifndef __MINGW32__
 #  include <winnls.h>
@@ -205,7 +205,7 @@ enc_alias_table[] =
     {"cyrillic",	IDX_ISO_5},
     {"arabic",		IDX_ISO_6},
     {"greek",		IDX_ISO_7},
-#ifdef WIN32
+#ifdef WIN3264
     {"hebrew",		IDX_CP1255},
 #else
     {"hebrew",		IDX_ISO_8},
@@ -245,7 +245,7 @@ enc_alias_table[] =
     {"euccn",		IDX_EUC_CN},
     {"gb2312",		IDX_EUC_CN},
     {"euctw",		IDX_EUC_TW},
-#if defined(WIN32) || defined(WIN32UNIX)
+#if defined(WIN3264) || defined(WIN32UNIX)
     {"japan",		IDX_CP932},
     {"korea",		IDX_CP949},
     {"prc",		IDX_CP936},
@@ -293,7 +293,7 @@ enc_canon_props(name)
     i = enc_canon_search(name);
     if (i >= 0)
 	return enc_canon_table[i].prop;
-#ifdef WIN32
+#ifdef WIN3264
     if (name[0] == 'c' && name[1] == 'p' && isdigit(name[2]))
     {
 	CPINFO	cpinfo;
@@ -353,7 +353,7 @@ mb_init()
 	return NULL;
     }
 
-#ifdef WIN32
+#ifdef WIN3264
     if (p_enc[0] == 'c' && p_enc[1] == 'p' && isdigit(p_enc[2]))
     {
 	CPINFO	cpinfo;
@@ -392,7 +392,7 @@ codepage_invalid:
     }
     else if (STRNCMP(p_enc, "2byte-", 6) == 0)
     {
-#ifdef WIN32
+#ifdef WIN3264
 	/* Windows: accept only valid codepage numbers, check below. */
 	if (p_enc[6] != 'c' || p_enc[7] != 'p'
 				      || (enc_dbcs_new = atoi(p_enc + 8)) == 0)
@@ -433,7 +433,7 @@ codepage_invalid:
 
     if (enc_dbcs_new != 0)
     {
-#ifdef WIN32
+#ifdef WIN3264
 	/* Check if the DBCS code page is OK. */
 	if (!IsValidCodePage(enc_dbcs_new))
 	    goto codepage_invalid;
@@ -500,7 +500,7 @@ codepage_invalid:
 	    n = 1;
 	else
 	{
-#if defined(WIN32) || defined(WIN32UNIX)
+#if defined(WIN3264) || defined(WIN32UNIX)
 	    /* enc_dbcs is set by setting 'fileencoding'.  It becomes a Windows
 	     * CodePage identifier, which we can pass directly in to Windows
 	     * API */
@@ -658,7 +658,7 @@ dbcs_class(lead, trail)
 		unsigned char tb = trail;
 
 		/* convert process code to JIS */
-# if defined(WIN32) || defined(WIN32UNIX) || defined(macintosh)
+# if defined(WIN3264) || defined(WIN32UNIX) || defined(macintosh)
 		/* process code is SJIS */
 		if (lb <= 0x9f)
 		    lb = (lb - 0x81) * 2 + 0x21;
@@ -748,7 +748,7 @@ dbcs_class(lead, trail)
 		if (c1 >= 0xB0 && c1 <= 0xC8)
 		    /* Hangul */
 		    return 20;
-#if defined(WIN32) || defined(WIN32UNIX)
+#if defined(WIN3264) || defined(WIN32UNIX)
 		else if (c1 <= 0xA0 || c2 <= 0xA0)
 		    /* Extended Hangul Region : MS UHC(Unified Hangul Code) */
 		    /* c1: 0x81-0xA0 with c2: 0x41-0x5A, 0x61-0x7A, 0x81-0xFE
@@ -1493,6 +1493,233 @@ utf_class(c)
 }
 
 /*
+ * Code for Unicode case-dependent operations.  Based on notes in
+ * http://www.unicode.org/Public/UNIDATA/CaseFolding.txt
+ * This code uses simple case folding, not full case folding.
+ */
+
+/*
+ * The following table is built by foldExtract.pl < CaseFolding.txt .
+ * It must be in numeric order, because we use binary search on it.
+ * An entry such as {0x41,0x5a,1,32} means that UCS-4 characters in the range
+ * from 0x41 to 0x5a inclusive, stepping by 1, are folded by adding 32.
+ */
+
+typedef struct
+{
+    int rangeStart;
+    int rangeEnd;
+    int step;
+    int offset;
+} convertStruct;
+
+convertStruct foldCase[] =
+{
+	{0x41,0x5a,1,32}, {0xb5,0xb5,-1,775}, {0xc0,0xd6,1,32},
+	{0xd8,0xde,1,32}, {0x100,0x12e,2,1}, {0x130,0x130,-1,-199},
+	{0x131,0x131,-1,-200}, {0x132,0x136,2,1}, {0x139,0x147,2,1},
+	{0x14a,0x176,2,1}, {0x178,0x178,-1,-121}, {0x179,0x17d,2,1},
+	{0x17f,0x17f,-1,-268}, {0x181,0x181,-1,210}, {0x182,0x184,2,1},
+	{0x186,0x186,-1,206}, {0x187,0x187,-1,1}, {0x189,0x18a,1,205},
+	{0x18b,0x18b,-1,1}, {0x18e,0x18e,-1,79}, {0x18f,0x18f,-1,202},
+	{0x190,0x190,-1,203}, {0x191,0x191,-1,1}, {0x193,0x193,-1,205},
+	{0x194,0x194,-1,207}, {0x196,0x196,-1,211}, {0x197,0x197,-1,209},
+	{0x198,0x198,-1,1}, {0x19c,0x19c,-1,211}, {0x19d,0x19d,-1,213},
+	{0x19f,0x19f,-1,214}, {0x1a0,0x1a4,2,1}, {0x1a6,0x1a6,-1,218},
+	{0x1a7,0x1a7,-1,1}, {0x1a9,0x1a9,-1,218}, {0x1ac,0x1ac,-1,1},
+	{0x1ae,0x1ae,-1,218}, {0x1af,0x1af,-1,1}, {0x1b1,0x1b2,1,217},
+	{0x1b3,0x1b5,2,1}, {0x1b7,0x1b7,-1,219}, {0x1b8,0x1bc,4,1},
+	{0x1c4,0x1c4,-1,2}, {0x1c5,0x1c5,-1,1}, {0x1c7,0x1c7,-1,2},
+	{0x1c8,0x1c8,-1,1}, {0x1ca,0x1ca,-1,2}, {0x1cb,0x1db,2,1},
+	{0x1de,0x1ee,2,1}, {0x1f1,0x1f1,-1,2}, {0x1f2,0x1f4,2,1},
+	{0x1f6,0x1f6,-1,-97}, {0x1f7,0x1f7,-1,-56}, {0x1f8,0x21e,2,1},
+	{0x222,0x232,2,1}, {0x345,0x345,-1,116}, {0x386,0x386,-1,38},
+	{0x388,0x38a,1,37}, {0x38c,0x38c,-1,64}, {0x38e,0x38f,1,63},
+	{0x391,0x3a1,1,32}, {0x3a3,0x3ab,1,32}, {0x3c2,0x3c2,-1,1},
+	{0x3d0,0x3d0,-1,-30}, {0x3d1,0x3d1,-1,-25}, {0x3d5,0x3d5,-1,-15},
+	{0x3d6,0x3d6,-1,-22}, {0x3da,0x3ee,2,1}, {0x3f0,0x3f0,-1,-54},
+	{0x3f1,0x3f1,-1,-48}, {0x3f2,0x3f2,-1,-47}, {0x3f4,0x3f4,-1,-60},
+	{0x3f5,0x3f5,-1,-64}, {0x400,0x40f,1,80}, {0x410,0x42f,1,32},
+	{0x460,0x480,2,1}, {0x48c,0x4be,2,1}, {0x4c1,0x4c3,2,1},
+	{0x4c7,0x4cb,4,1}, {0x4d0,0x4f4,2,1}, {0x4f8,0x4f8,-1,1},
+	{0x531,0x556,1,48}, {0x1e00,0x1e94,2,1}, {0x1e9b,0x1e9b,-1,-58},
+	{0x1ea0,0x1ef8,2,1}, {0x1f08,0x1f0f,1,-8}, {0x1f18,0x1f1d,1,-8},
+	{0x1f28,0x1f2f,1,-8}, {0x1f38,0x1f3f,1,-8}, {0x1f48,0x1f4d,1,-8},
+	{0x1f59,0x1f5f,2,-8}, {0x1f68,0x1f6f,1,-8}, {0x1f88,0x1f8f,1,-8},
+	{0x1f98,0x1f9f,1,-8}, {0x1fa8,0x1faf,1,-8}, {0x1fb8,0x1fb9,1,-8},
+	{0x1fba,0x1fbb,1,-74}, {0x1fbc,0x1fbc,-1,-9}, {0x1fbe,0x1fbe,-1,-7173},
+	{0x1fc8,0x1fcb,1,-86}, {0x1fcc,0x1fcc,-1,-9}, {0x1fd8,0x1fd9,1,-8},
+	{0x1fda,0x1fdb,1,-100}, {0x1fe8,0x1fe9,1,-8}, {0x1fea,0x1feb,1,-112},
+	{0x1fec,0x1fec,-1,-7}, {0x1ff8,0x1ff9,1,-128}, {0x1ffa,0x1ffb,1,-126},
+	{0x1ffc,0x1ffc,-1,-9}, {0x2126,0x2126,-1,-7517}, {0x212a,0x212a,-1,-8383},
+	{0x212b,0x212b,-1,-8262}, {0x2160,0x216f,1,16}, {0x24b6,0x24cf,1,26},
+	{0xff21,0xff3a,1,32}, {0x10400,0x10425,1,40}
+	};
+
+static int utf_convert(int a, convertStruct table[], int tableSize);
+
+/*
+ * Generic conversion function for case operations.
+ * Return the converted equivalent of "a", which is a UCS-4 character.  Use
+ * the given conversion "table".  Uses binary search on "table".
+ */
+    static int
+utf_convert(a, table, tableSize)
+    int			a;
+    convertStruct	table[];
+    int			tableSize;
+{
+    int start, mid, end; /* indices into table */
+
+    start = 0;
+    end = tableSize / sizeof(convertStruct);
+    while (start < end)
+    {
+	/* need to search further */
+	mid = (end + start) /2;
+	if (table[mid].rangeEnd < a)
+	    start = mid + 1;
+	else
+	    end = mid;
+    }
+    if (table[start].rangeStart <= a && a <= table[start].rangeEnd
+	    && (a - table[start].rangeStart) % table[start].step == 0)
+	return (a + table[start].offset);
+    else
+	return a;
+}
+
+/*
+ * Return the folded-case equivalent of "a", which is a UCS-4 character.  Uses
+ * simple case folding.
+ */
+    int
+utf_fold(a)
+    int		a;
+{
+    return utf_convert(a, foldCase, sizeof(foldCase));
+}
+
+/*
+ * The following tables are built by upperLowerExtract.pl < UnicodeData.txt .
+ * They must be in numeric order, because we use binary search on them.
+ * An entry such as {0x41,0x5a,1,32} means that UCS-4 characters in the range
+ * from 0x41 to 0x5a inclusive, stepping by 1, are switched to lower (for
+ * example) by adding 32.
+ */
+convertStruct toLower[] =
+{
+	{0x41,0x5a,1,32}, {0xc0,0xd6,1,32}, {0xd8,0xde,1,32},
+	{0x100,0x12e,2,1}, {0x130,0x130,-1,-199}, {0x132,0x136,2,1},
+	{0x139,0x147,2,1}, {0x14a,0x176,2,1}, {0x178,0x178,-1,-121},
+	{0x179,0x17d,2,1}, {0x181,0x181,-1,210}, {0x182,0x184,2,1},
+	{0x186,0x186,-1,206}, {0x187,0x187,-1,1}, {0x189,0x18a,1,205},
+	{0x18b,0x18b,-1,1}, {0x18e,0x18e,-1,79}, {0x18f,0x18f,-1,202},
+	{0x190,0x190,-1,203}, {0x191,0x191,-1,1}, {0x193,0x193,-1,205},
+	{0x194,0x194,-1,207}, {0x196,0x196,-1,211}, {0x197,0x197,-1,209},
+	{0x198,0x198,-1,1}, {0x19c,0x19c,-1,211}, {0x19d,0x19d,-1,213},
+	{0x19f,0x19f,-1,214}, {0x1a0,0x1a4,2,1}, {0x1a6,0x1a6,-1,218},
+	{0x1a7,0x1a7,-1,1}, {0x1a9,0x1a9,-1,218}, {0x1ac,0x1ac,-1,1},
+	{0x1ae,0x1ae,-1,218}, {0x1af,0x1af,-1,1}, {0x1b1,0x1b2,1,217},
+	{0x1b3,0x1b5,2,1}, {0x1b7,0x1b7,-1,219}, {0x1b8,0x1bc,4,1},
+	{0x1c4,0x1ca,3,2}, {0x1cd,0x1db,2,1}, {0x1de,0x1ee,2,1},
+	{0x1f1,0x1f1,-1,2}, {0x1f4,0x1f4,-1,1}, {0x1f6,0x1f6,-1,-97},
+	{0x1f7,0x1f7,-1,-56}, {0x1f8,0x21e,2,1}, {0x222,0x232,2,1},
+	{0x386,0x386,-1,38}, {0x388,0x38a,1,37}, {0x38c,0x38c,-1,64},
+	{0x38e,0x38f,1,63}, {0x391,0x3a1,1,32}, {0x3a3,0x3ab,1,32},
+	{0x3da,0x3ee,2,1}, {0x3f4,0x3f4,-1,-60}, {0x400,0x40f,1,80},
+	{0x410,0x42f,1,32}, {0x460,0x480,2,1}, {0x48c,0x4be,2,1},
+	{0x4c1,0x4c3,2,1}, {0x4c7,0x4cb,4,1}, {0x4d0,0x4f4,2,1},
+	{0x4f8,0x4f8,-1,1}, {0x531,0x556,1,48}, {0x1e00,0x1e94,2,1},
+	{0x1ea0,0x1ef8,2,1}, {0x1f08,0x1f0f,1,-8}, {0x1f18,0x1f1d,1,-8},
+	{0x1f28,0x1f2f,1,-8}, {0x1f38,0x1f3f,1,-8}, {0x1f48,0x1f4d,1,-8},
+	{0x1f59,0x1f5f,2,-8}, {0x1f68,0x1f6f,1,-8}, {0x1fb8,0x1fb9,1,-8},
+	{0x1fba,0x1fbb,1,-74}, {0x1fc8,0x1fcb,1,-86}, {0x1fd8,0x1fd9,1,-8},
+	{0x1fda,0x1fdb,1,-100}, {0x1fe8,0x1fe9,1,-8}, {0x1fea,0x1feb,1,-112},
+	{0x1fec,0x1fec,-1,-7}, {0x1ff8,0x1ff9,1,-128}, {0x1ffa,0x1ffb,1,-126},
+	{0x2126,0x2126,-1,-7517}, {0x212a,0x212a,-1,-8383},
+	{0x212b,0x212b,-1,-8262}, {0xff21,0xff3a,1,32}, {0x10400,0x10425,1,40}
+};
+
+convertStruct toUpper[] =
+{
+	{0x61,0x7a,1,-32}, {0xb5,0xb5,-1,743}, {0xe0,0xf6,1,-32},
+	{0xf8,0xfe,1,-32}, {0xff,0xff,-1,121}, {0x101,0x12f,2,-1},
+	{0x131,0x131,-1,-232}, {0x133,0x137,2,-1}, {0x13a,0x148,2,-1},
+	{0x14b,0x177,2,-1}, {0x17a,0x17e,2,-1}, {0x17f,0x17f,-1,-300},
+	{0x183,0x185,2,-1}, {0x188,0x18c,4,-1}, {0x192,0x192,-1,-1},
+	{0x195,0x195,-1,97}, {0x199,0x1a1,8,-1}, {0x1a3,0x1a5,2,-1},
+	{0x1a8,0x1ad,5,-1}, {0x1b0,0x1b4,4,-1}, {0x1b6,0x1b9,3,-1},
+	{0x1bd,0x1bd,-1,-1}, {0x1bf,0x1bf,-1,56}, {0x1c6,0x1cc,3,-1},
+	{0x1ce,0x1dc,2,-1}, {0x1dd,0x1dd,-1,-79}, {0x1df,0x1ef,2,-1},
+	{0x1f3,0x1f5,2,-1}, {0x1f9,0x21f,2,-1}, {0x223,0x233,2,-1},
+	{0x253,0x253,-1,-210}, {0x254,0x254,-1,-206}, {0x256,0x257,1,-205},
+	{0x259,0x259,-1,-202}, {0x25b,0x25b,-1,-203}, {0x260,0x260,-1,-205},
+	{0x263,0x263,-1,-207}, {0x268,0x268,-1,-209}, {0x269,0x26f,6,-211},
+	{0x272,0x272,-1,-213}, {0x275,0x275,-1,-214}, {0x280,0x283,3,-218},
+	{0x288,0x288,-1,-218}, {0x28a,0x28b,1,-217}, {0x292,0x292,-1,-219},
+	{0x3ac,0x3ac,-1,-38}, {0x3ad,0x3af,1,-37}, {0x3b1,0x3c1,1,-32},
+	{0x3c2,0x3c2,-1,-31}, {0x3c3,0x3cb,1,-32}, {0x3cc,0x3cc,-1,-64},
+	{0x3cd,0x3ce,1,-63}, {0x3d0,0x3d0,-1,-62}, {0x3d1,0x3d1,-1,-57},
+	{0x3d5,0x3d5,-1,-47}, {0x3d6,0x3d6,-1,-54}, {0x3db,0x3ef,2,-1},
+	{0x3f0,0x3f0,-1,-86}, {0x3f1,0x3f1,-1,-80}, {0x3f2,0x3f2,-1,-79},
+	{0x3f5,0x3f5,-1,-96}, {0x430,0x44f,1,-32}, {0x450,0x45f,1,-80},
+	{0x461,0x481,2,-1}, {0x48d,0x4bf,2,-1}, {0x4c2,0x4c4,2,-1},
+	{0x4c8,0x4cc,4,-1}, {0x4d1,0x4f5,2,-1}, {0x4f9,0x4f9,-1,-1},
+	{0x561,0x586,1,-48}, {0x1e01,0x1e95,2,-1}, {0x1e9b,0x1e9b,-1,-59},
+	{0x1ea1,0x1ef9,2,-1}, {0x1f00,0x1f07,1,8}, {0x1f10,0x1f15,1,8},
+	{0x1f20,0x1f27,1,8}, {0x1f30,0x1f37,1,8}, {0x1f40,0x1f45,1,8},
+	{0x1f51,0x1f57,2,8}, {0x1f60,0x1f67,1,8}, {0x1f70,0x1f71,1,74},
+	{0x1f72,0x1f75,1,86}, {0x1f76,0x1f77,1,100}, {0x1f78,0x1f79,1,128},
+	{0x1f7a,0x1f7b,1,112}, {0x1f7c,0x1f7d,1,126}, {0x1f80,0x1f87,1,8},
+	{0x1f90,0x1f97,1,8}, {0x1fa0,0x1fa7,1,8}, {0x1fb0,0x1fb1,1,8},
+	{0x1fb3,0x1fb3,-1,9}, {0x1fbe,0x1fbe,-1,-7205}, {0x1fc3,0x1fc3,-1,9},
+	{0x1fd0,0x1fd1,1,8}, {0x1fe0,0x1fe1,1,8}, {0x1fe5,0x1fe5,-1,7},
+	{0x1ff3,0x1ff3,-1,9}, {0xff41,0xff5a,1,-32}, {0x10428,0x1044d,1,-40}
+};
+
+/*
+ * Return the upper-case equivalent of "a", which is a UCS-4 character.  Use
+ * simple case folding.
+ */
+    int
+utf_toupper(a)
+    int		a;
+{
+    if (a < 128)
+	return toupper(a);
+    return utf_convert(a, toUpper, sizeof(toUpper));
+}
+
+    int
+utf_islower(a)
+    int		a;
+{
+    return (utf_toupper(a) != a);
+}
+
+/*
+ * Return the lower-case equivalent of "a", which is a UCS-4 character.  Use
+ * simple case folding.
+ */
+    int
+utf_tolower(a)
+    int		a;
+{
+    if (a < 128)
+	return tolower(a);
+    return utf_convert(a, toLower, sizeof(toLower));
+}
+
+    int
+utf_isupper(a)
+    int		a;
+{
+    return (utf_tolower(a) != a);
+}
+
+
+/*
  * "g8": show bytes of the UTF-8 char under the cursor.  Doesn't matter what
  * 'encoding' has been set to.
  */
@@ -1808,7 +2035,7 @@ mb_dec(lp)
     if (lp->lnum > 1)		/* there is a prior line */
     {
 	lp->lnum--;
-	lp->col = STRLEN(ml_get(lp->lnum));
+	lp->col = (colnr_T)STRLEN(ml_get(lp->lnum));
 	mb_adjustpos(lp);
 	return 1;
     }
@@ -2025,14 +2252,14 @@ enc_alias_search(name)
     int
 enc_default()
 {
-#ifndef WIN32
+#ifndef WIN3264
     char	*s;
     char	*p;
     int		i;
 #endif
     char	buf[50];
     char_u	*save_enc;
-#ifdef WIN32
+#ifdef WIN3264
     long	acp = GetACP();
 
     if (acp == 1200)
@@ -2188,7 +2415,7 @@ iconv_string(fd, str, strlen)
 	    /* Allocate enough room for most conversions.  When re-allocating
 	     * increase the buffer size. */
 	    len = len + fromlen * 2 + 40;
-	    p = alloc(len);
+	    p = alloc((unsigned)len);
 	    if (p != NULL && done > 0)
 		mch_memmove(p, result, done);
 	    vim_free(result);
@@ -3404,7 +3631,7 @@ convert_input(ptr, len, maxlen)
     d = string_convert(&input_conv, ptr, &len);
     if (d != NULL)
     {
-	l = STRLEN(d);
+	l = (int)STRLEN(d);
 	if (l <= maxlen)
 	{
 	    mch_memmove(ptr, d, l);
@@ -3435,7 +3662,7 @@ string_convert(vcp, ptr, lenp)
     int		c;
 
     if (lenp == NULL)
-	len = STRLEN(ptr);
+	len = (int)STRLEN(ptr);
     else
 	len = *lenp;
 
@@ -3458,7 +3685,7 @@ string_convert(vcp, ptr, lenp)
 	    }
 	    *d = NUL;
 	    if (lenp != NULL)
-		*lenp = d - retval;
+		*lenp = (int)(d - retval);
 	    break;
 
 	case CONV_TO_LATIN1:	/* utf-8 to latin1 conversion */
@@ -3490,14 +3717,14 @@ string_convert(vcp, ptr, lenp)
 	    }
 	    *d = NUL;
 	    if (lenp != NULL)
-		*lenp = d - retval;
+		*lenp = (int)(d - retval);
 	    break;
 
 # ifdef USE_ICONV
 	case CONV_ICONV:	/* conversion with output_conv.vc_fd */
 	    retval = iconv_string(vcp->vc_fd, ptr, len);
 	    if (retval != NULL && lenp != NULL)
-		*lenp = STRLEN(retval);
+		*lenp = (int)STRLEN(retval);
 # endif
     }
 

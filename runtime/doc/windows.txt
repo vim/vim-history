@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
+*windows.txt*   For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -627,6 +627,7 @@ can also get to them with the buffer list commands, like ":bnext".
 			is not present, the command fails.
 			When an error is detected on one buffer, further
 			buffers will not be visited.
+			Unlisted buffers are skipped.
 			The last buffer (or where an error occurred) becomes
 			the current buffer.
 			{cmd} can contain '|' to concatenate several commands.
@@ -716,7 +717,7 @@ preview window to be able to recognize it.
 
 CTRL-W z					*CTRL-W_z*
 CTRL-W CTRL-Z					*CTRL-W_CTRL-Z* *:pc* *:pclose*
-:pc[lose][!]	Close any "Preview" windows currently open.  When the 'hidden'
+:pc[lose][!]	Close any "Preview" window currently open.  When the 'hidden'
 		option is set, or when the buffer was changed and the [!] is
 		used, the buffer becomes hidden (unless there is another
 		window editing it).  The command fails if any "Preview" buffer
@@ -974,7 +975,7 @@ list of buffers. |unlisted-buffer|
 		Wraps around the end of the buffer list.  
 		See |:buffer-!| for [!].
 		If you are in a help buffer, this takes you to the next help
-		buffer (if there is one). Similarly, if you are in a normal
+		buffer (if there is one).  Similarly, if you are in a normal
 		(non-help) buffer, this takes you to the next normal buffer.
 		This is so that if you have invoked help, it doesn't get in
 		the way when you're browsing code/text buffers. The next three

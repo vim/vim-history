@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
+*usr_40.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -15,6 +15,7 @@ Introduction.
 |40.6|	Autocommands
 |40.7|	Writing a plugin
 |40.8|	Writing a filetype plugin
+|40.9|	Writing a compiler plugin
 
      Next chapter: |usr_41.txt|  Make new commands
  Previous chapter: |usr_31.txt|  Exploiting the GUI
@@ -576,6 +577,34 @@ Summary of special things to use in a filetype plugin:
 exists("*s:Func")	Check if a function was already defined.
 
 Also see |plugin-special|, the special things used for all plugins.
+
+==============================================================================
+*40.9*	Writing a compiler plugin		*write-compiler-plugin*
+
+A compiler plugin sets options for use with a specific compiler.  The user can
+load it with the |:compiler| command.  The main use is to set the
+'errorformat' and 'makeprg' options.
+
+The only special item about these files is a mechanism to allow a user to
+overrule or add to the default file.  The default files start with: >
+
+	if exists("did_load_compiler")
+	  finish
+	endif
+	let did_load_compiler = 1
+
+When you write a compiler file and put it in your personal runtime directory
+(e.g., ~/.vim/runtime/compiler for Unix), you can set the "did_load_compiler"
+variable to make the default file skip the settings.
+
+When you write a compiler plugin for the Vim distribution or for a system-wide
+runtime directory, use the mechanism mentioned above.  When
+"did_load_compiler" was already set by a user plugin nothing will be done.
+
+When you write a compiler plugin to overrule settings from a default plugin,
+you don't check "did_load_compiler".  This plugin is supposed to be loaded
+last, thus it should be in a directory at the end of 'runtimepath'.  For Unix
+that could be ~/.vim/runtime/after/compiler.
 
 ==============================================================================
 

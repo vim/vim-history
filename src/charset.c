@@ -289,7 +289,7 @@ trans_characters(buf, bufsize)
     char_u	*trs;		/* translated character */
     int		trs_len;	/* length of trs[] */
 
-    len = STRLEN(buf);
+    len = (int)STRLEN(buf);
     room = bufsize - len;
     while (*buf != 0)
     {
@@ -301,7 +301,7 @@ trans_characters(buf, bufsize)
 #endif
 	{
 	    trs = transchar(*buf);
-	    trs_len = STRLEN(trs);
+	    trs_len = (int)STRLEN(trs);
 	    if (trs_len > 1)
 	    {
 		room -= trs_len - 1;
@@ -352,19 +352,31 @@ transstr(s)
 }
 #endif
 
-#if defined(FEAT_SYN_HL) || defined(PROTO)
+#if defined(FEAT_SYN_HL) || defined(FEAT_INS_EXPAND) || defined(PROTO)
 /*
- * Convert the string "p" to lower case in-place.
+ * Convert the string "p" to do ignore-case comparing.
+ * It's done in-place.
  */
     void
-str_tolower(p)
+str_foldcase(p)
     char_u	*p;
 {
     while (*p != NUL)
     {
 #ifdef FEAT_MBYTE
 	if (has_mbyte && MB_BYTE2LEN(*p) > 1)
+	{
+	    if (enc_utf8)
+	    {
+		int	c, lc;
+
+		c = utf_ptr2char(p);
+		lc = utf_tolower(c);
+		if (c != lc && utf_char2len(c) == utf_char2len(lc))
+		    (void)utf_char2bytes(c, p);
+	    }
 	    p += (*mb_ptr2len_check)(p);	/* skip multi-byte char */
+	}
 	else
 #endif
 	{
@@ -952,7 +964,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	}
 	if (col == 0 || col + size > (colnr_T)W_WIDTH(wp))
 	{
-	    added = STRLEN(p_sbr);
+	    added = (int)STRLEN(p_sbr);
 	    size += added;
 	    if (col != 0)
 		added = 0;
@@ -1152,9 +1164,7 @@ getvcol(wp, pos, start, cursor, end)
 	if (*ptr == TAB
 		&& (State & NORMAL)
 		&& !wp->w_p_list
-#ifdef FEAT_VIRTUALEDIT
 		&& !virtual_active()
-#endif
 #ifdef FEAT_VISUAL
 		&& !(VIsual_active && *p_sel == 'e')
 #endif
@@ -1441,7 +1451,7 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
     if (hexp != NULL)
 	*hexp = hex;
     if (len != NULL)
-	*len = ptr - start;
+	*len = (int)(ptr - start);
     if (nptr != NULL)
 	*nptr = n;
     if (unptr != NULL)

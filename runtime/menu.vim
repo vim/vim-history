@@ -1,9 +1,9 @@
-" These menu commands create the default Vim menus.
+
 " You can also use this as a start for your own set of menus.
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 31
+" Last Change:	2001 Jun 08
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -28,11 +28,14 @@ if exists("v:lang") || &langmenu != ""
   endif
   " A language name must be at least two characters, don't accept "C"
   if strlen(s:lang) > 1
+    " We always use a lowercase name.
+    " Change "iso-8859" to "iso_8859", some systems appear to use this.
     let s:lang = substitute(s:lang, ".*", "\\L&", "")
+    let s:lang = substitute(s:lang, "\\.iso-", "\\.iso_", "")
     menutrans clear
     exe "runtime! lang/menu_" . s:lang . ".vim"
     " If there is no exact match, try matching with a wildcard added.
-    " (e.g. find menu_de_DE.ISO_8859-1.vim if s:lang == de_DE)
+    " (e.g. find menu_de_de.iso_8859-1.vim if s:lang == de_DE)
     if !exists("did_menu_trans")
       " try to get the first long file name which matches v:lang.
       exe "runtime! lang/menu_" . s:lang . "*.vim"
@@ -109,7 +112,6 @@ if has("vms")
       exec a:range . "w! " . ttt
       let &mod = mod_save
       exec "!print/delete " . ttt
-      exec "bdel " . ttt
     endfun
   endif
 endif
@@ -138,7 +140,7 @@ if has("win32") || has("win16")
 endif
 amenu 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
 amenu 20.405 &Edit.-SEP2-			:
-if has("win32")  || has("win16") || has("gui_gtk")
+if has("win32")  || has("win16") || has("gui_gtk") || has("gui_motif")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
   amenu 20.420 &Edit.Find\ and\ Rep&lace\.\.\.	:promptrepl<CR>
   vunmenu      &Edit.Find\ and\ Rep&lace\.\.\.
@@ -412,11 +414,6 @@ else
 	\ :let &mod = b:mod<CR>
 endif
 
-" Can't delete a menu in Athena version
-if has("gui_athena")
-  let no_buffers_menu = 1
-endif
-
 if !exists("no_buffers_menu")
 
 " Buffer list menu -- Setup functions & actions
@@ -675,7 +672,7 @@ amenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
-  amenu 1.10 ToolBar.Open	:browse e<CR>
+  amenu 1.10 ToolBar.Open	:browse confirm e<CR>
   amenu 1.20 ToolBar.Save	:w<CR>
   amenu 1.30 ToolBar.SaveAll	:wa<CR>
 
@@ -798,9 +795,27 @@ fun! s:SaveVimSesn()
   execute "browse mksession! " . this_session
 endfun
 
-endif " has("win32") || has("gui_gtk")
+endif
 
 endif " !exists("did_install_default_menus")
+
+" Define these items always, so that syntax can be switched on when it wasn't.
+am 50.212 &Syntax.&Manual		:syn manual<CR>
+am 50.214 &Syntax.A&utomatic		:syn on<CR>
+am 50.216 &Syntax.on/off\ for\ &This\ file	:call <SID>SynOnOff()<CR>
+if !exists("*s:SynOnOff")
+  fun s:SynOnOff()
+    if has("syntax_items")
+      syn clear
+    else
+      if !exists("g:syntax_on")
+	syn manual
+      endif
+      set syn=ON
+    endif
+  endfun
+endif
+
 
 " Install the Syntax menu only when filetype.vim has been loaded or when
 " manual syntax highlighting is enabled.
@@ -947,16 +962,17 @@ am 50.40.230 &Syntax.HIJK.Inittab :cal SetSyn("inittab")<CR>
 am 50.40.240 &Syntax.HIJK.Inno\ Setup :cal SetSyn("iss")<CR>
 am 50.40.250 &Syntax.HIJK.InstallShield\ Rules :cal SetSyn("ishd")<CR>
 am 50.40.270 &Syntax.HIJK.Jam :cal SetSyn("jam")<CR>
-am 50.40.280 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
-am 50.40.290 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
-am 50.40.300 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
-am 50.40.310 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
-am 50.40.320 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
-am 50.40.330 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
-am 50.40.340 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
-am 50.40.360 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
-am 50.40.370 &Syntax.HIJK.Kimwitu :cal SetSyn("kwt")<CR>
-am 50.40.380 &Syntax.HIJK.Kixtart :cal SetSyn("kix")<CR>
+am 50.40.280 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
+am 50.40.290 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
+am 50.40.300 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
+am 50.40.310 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
+am 50.40.320 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+am 50.40.330 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+am 50.40.340 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
+am 50.40.350 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
+am 50.40.370 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
+am 50.40.380 &Syntax.HIJK.Kimwitu :cal SetSyn("kwt")<CR>
+am 50.40.390 &Syntax.HIJK.Kixtart :cal SetSyn("kix")<CR>
 am 50.50.100 &Syntax.L-Ma.Lace :cal SetSyn("lace")<CR>
 am 50.50.110 &Syntax.L-Ma.Lamda\ Prolog :cal SetSyn("lprolog")<CR>
 am 50.50.120 &Syntax.L-Ma.Latte :cal SetSyn("latte")<CR>
@@ -1136,21 +1152,6 @@ fun! s:Nosynonly()
 endfun
 
 am 50.210 &Syntax.&Off			:syn off<CR>
-am 50.212 &Syntax.&Manual		:syn manual<CR>
-am 50.214 &Syntax.A&utomatic		:syn on<CR>
-
-am 50.216 &Syntax.on/off\ for\ &This\ file	:call <SID>SynOnOff()<CR>
-fun! s:SynOnOff()
-  if has("syntax_items")
-    syn clear
-  else
-    if !exists("g:syntax_on")
-      syn manual
-    endif
-    set syn=ON
-  endif
-endfun
-
 am 50.700 &Syntax.-SEP3-		:
 am 50.710 &Syntax.Co&lor\ test		:sp $VIMRUNTIME/syntax/colortest.vim<Bar>so %<CR>
 am 50.720 &Syntax.&Highlight\ test	:so $VIMRUNTIME/syntax/hitest.vim<CR>

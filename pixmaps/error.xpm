@@ -1,9 +1,9 @@
 /* XPM */
 static char * error_xpm[] = {
 "34 34 4 1",
-" 	c None",
+" 	c None    s background",
 ".	c #FF1144",
-"+	c #888888",
+"+	c #888888 s bottomShadow",
 "@	c #FFFFFF",
 "                                  ",
 "            ........              ",

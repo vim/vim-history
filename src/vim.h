@@ -59,8 +59,13 @@
 # define FEAT_GUI_MSWIN
 # define HAVE_DROP_FILE
 #endif
-#if defined(WIN32) || defined(WIN16)
+#if defined(WIN16) || defined(WIN32) || defined(_WIN64)
 # define MSWIN
+#endif
+/* Practically everything is common to both Win32 and Win64 */
+#if defined(WIN32) || defined(_WIN64)
+# define WIN3264
+# define SIZEOF_INT 4
 #endif
 #ifdef MSDOS
 # ifdef DJGPP
@@ -75,9 +80,6 @@
 #  define SMALL_MALLOC		/* 16 bit storage allocation */
 #  define DOS16
 # endif
-#endif
-#ifdef WIN32
-# define SIZEOF_INT 4
 #endif
 
 #ifdef AMIGA
@@ -147,7 +149,7 @@
 # define __ARGS(x) x
 #endif
 #ifndef __ARGS
-# if defined(__STDC__) || defined(__GNUC__) || defined(WIN32)
+# if defined(__STDC__) || defined(__GNUC__) || defined(WIN3264)
 #  define __ARGS(x) x
 # else
 #  define __ARGS(x) ()
@@ -181,7 +183,7 @@
 # include "os_win16.h"
 #endif
 
-#ifdef WIN32
+#ifdef WIN3264
 # include "os_win32.h"
 #endif
 
@@ -237,7 +239,13 @@
 typedef unsigned char	char_u;
 typedef unsigned short	short_u;
 typedef unsigned int	int_u;
+/* Make sure long_u is big enough to hold a pointer.  On Win64 longs are 32
+ * bit and pointers 64 bit. */
+#ifdef _WIN64
+typedef unsigned __int64 long_u;
+#else
 typedef unsigned long	long_u;
+#endif
 
 /*
  * The characters and attributes cached for the screen.
@@ -1197,6 +1205,16 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # endif
 #endif
 
+#ifdef MSWIN
+/* On MS-Windows the third argument isn't size_t.  This matters for Win64,
+ * where sizeof(size_t)==8, not 4 */
+# define vim_read(fd, buf, count)   read((fd), (char *)(buf), (unsigned int)(count))
+# define vim_write(fd, buf, count)  write((fd), (char *)(buf), (unsigned int)(count))
+#else
+# define vim_read(fd, buf, count)   read((fd), (char *)(buf), (size_t) (count))
+# define vim_write(fd, buf, count)  write((fd), (char *)(buf), (size_t) (count))
+#endif
+
 /*
  * Enums need a typecast to be used as array index (for Ultrix).
  */
@@ -1410,6 +1428,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 
 #ifndef FEAT_VIRTUALEDIT
 # define getvvcol(w, p, s, c, e) getvcol(w, p, s, c, e)
+# define virtual_active() 0
 #endif
 
 /*

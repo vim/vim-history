@@ -1,4 +1,5 @@
 INSTALLvms.txt - Installation of Vim on OpenVMS
+Last change: 2001 Jun 4 
 
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
@@ -11,7 +12,7 @@ More information and case analysis you can found in os_vms.txt
 ([runtime.doc]os_vms.txt or :help vms from vim prompt)
 
 Contents:
-1. Download files 
+1. Download files
 2. Configuration
 3. Compilation DECC
 4. Compilation VAXC
@@ -37,10 +38,10 @@ Contents:
 1.3. Apply patches if they exist.  (Patch files are found in the ftp
      site in the "patches" directory.)
 
-1.4. You will need either the DECSET mms utility or the freely available clone 
-     of it called mmk (VMS has no make utility in the standard distribution). 
+1.4. You will need either the DECSET mms utility or the freely available clone
+     of it called mmk (VMS has no make utility in the standard distribution).
      You can download mmk from http://www.openvms.digital.com/freeware/MMK/
- 
+
 1.5. If you want to have Perl, Python or Tcl support in Vim you will need VMS
      distributions for them as well.
 
@@ -53,36 +54,30 @@ Contents:
      For example, if you want to add the MULTI_BYTE feature, turn on
      #define MULTI_BYTE
 
-2.2  Edit vim-X.X/src/Make_vms.mms to customize your Vim. Options are:
-     
-        Parameter name  : GUI        
-        Description     : GUI or terminal mode executable 
+2.2  Edit vim-X.X/src/Make_vms.mms to customise your Vim. Options are:
+
+        Parameter name  : GUI
+        Description     : GUI or terminal mode executable
         Options:        : YES - GUI executable
                           Uncommented - char only
         Default         : GUI = YES
-            
-        Parameter name  : DECC       
+
+        Parameter name  : DECC
         Description     : Compiler selection
         Options:        : YES - DECC compiler
                           Uncommented - VAXC compiler
         Default         : DECC = YES
 
-        Parameter name  : CCVER      
-        Description     : Compiler version with :ver command      
+        Parameter name  : CCVER
+        Description     : Compiler version with :ver command
         Options:        : YES - Compiler version info will be added
                           Uncommented - will not be added
         Default         : CCVER = YES
 
-        Parameter name  : DEVELOPMENT
-        Description     : Used to fix dependencies problem during development.
-        Options:        : YES - Ignore some dependencies 
-                          Uncommented - normal building
-        Default         : Uncommented
-
         Parameter name  : DEBUG
         Description     : Building a debug version
         Options:        : YES - debug version will be built
-                          Uncommented - building normal executable 
+                          Uncommented - building normal executable
         Default         : Uncommented
 
         Parameter name  : VIM_TCL
@@ -96,14 +91,14 @@ Contents:
         Options:        : YES - Build with support
                           Uncommented - build without support.
         Default         : Uncommented
-        
+
         Parameter name  : VIM_PYTHON
         Description     : Add Python support
         Options:        : YES - Build with support
                           Uncommented - build without support.
         Default         : Uncommented
 
-     You can edit the *_INC_DIR and *_LIB_DIR qualifiers, but it is really
+     You can edit the *_INC and *_LIB qualifiers, but it is really
      not recommended for beginners.
 
 3. Compilation DECC
@@ -112,10 +107,17 @@ Contents:
 
         mms /descrip=Make_vms.mms
 
-     will start building your own customized version of Vim.
+     will start building your own customised version of Vim.
      The adequate command for mmk is:
 
         mmk /descrip=Make_vms.mms
+
+     NOTE: Because of empty /auto/config.h (needed for Unix configure) build
+     will fail with very strange messages. Therefore before building, it is
+     recommended to make one clean up, to prepare everything for OpenVMS
+     development. The command is:
+
+        mms /descrip=Make_vms.mms clean
 
 4. Compilation VAXC
 
@@ -132,8 +134,8 @@ Contents:
 
 5. CTAGS, XXD
 
-5.1. MMS_VIM.EXE is building together with VIM.EXE, but for CTAGS.EXE and 
-     XXD.EXE you should change to subdirectory <.CTAGS> or <.XXD> and build 
+5.1. MMS_VIM.EXE is building together with VIM.EXE, but for CTAGS.EXE and
+     XXD.EXE you should change to subdirectory <.CTAGS> or <.XXD> and build
      them separately.
 
 5.2. In these directories you can found one make file for VMS as well.
@@ -158,23 +160,24 @@ Contents:
 
      to get vim.exe to find its document, filetype, and syntax files.
 
-     Now, if you are lucky you should have one own built, customized and 
+     Now, if you are lucky you should have one own built, customised and
      working Vim.
 
 7.   Notes
 
 7.1. New Compaq C compiler
 
-     If you are using Compaq C compiler V6.2 or newer, Informational messages 
-     of the type QUESTCOMPARE will be displayed. You should ignore those 
-     messages ; they are generated only because some test comparisons are done 
-     with variables which type vary depending on the OS. Under VMS, those are 
-     "unsigned" and the compiler issue a message whenever the comparison is 
-     done with '<=' to 0. However, the code is correct and will behave as 
-     expected.  
+     If you are using Compaq C compiler V6.2 or newer, Informational messages
+     of the type QUESTCOMPARE will be displayed. You should ignore those
+     messages ; they are generated only because some test comparisons are done
+     with variables which type vary depending on the OS. Under VMS, those are
+     "unsigned" and the compiler issue a message whenever the comparison is
+     done with '<=' to 0. However, the code is correct and will behave as
+     expected.
      ( Jerome Lauret <JLAURET@mail.chem.sunysb.edu> Vim 6.0n )
-
+	NOTE: from version 6.0ad Vim code has been reviewed and these warnings have 
+      been corrected.
 
 8.   Authors
 
-     Initial version, 2000 Jul 19, Zoltan Arpadffy <arpadffy@altavista.net> 
+     Initial version, 2000 Jul 19, Zoltan Arpadffy <arpadffy@altavista.net>   

@@ -1597,6 +1597,7 @@ buflist_findname_stat(ffname, stp)
  * Return fnum of the found buffer.
  * Return < 0 for error.
  */
+/*ARGSUSED*/
     int
 buflist_findpat(pattern, pattern_end, unlisted, diffmode)
     char_u	*pattern;
@@ -2066,10 +2067,10 @@ buflist_list(eap)
 			(buf->b_nwindows == 0 ? 'h' : ' '),
 		bufIsChanged(buf) ? '+' : ' ');
 
-	len = STRLEN(IObuff);
+	len = (int)STRLEN(IObuff);
 	STRNCPY(IObuff + len, NameBuff, IOSIZE - 20 - len);
 
-	len = STRLEN(IObuff);
+	len = (int)STRLEN(IObuff);
 	IObuff[len++] = '"';
 
 	/* put "line 999" in column 40 or after the file name */
@@ -2602,7 +2603,7 @@ maketitle()
 	    if (curbuf->b_fname != NULL)
 	    {
 		/* Get path of file, replace home dir with ~ */
-		off = STRLEN(buf);
+		off = (int)STRLEN(buf);
 		buf[off++] = ' ';
 		buf[off++] = '(';
 		home_replace(curbuf, curbuf->b_ffname,
@@ -2829,7 +2830,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    if (groupdepth < 1)
 		continue;
 	    groupdepth--;
-	    l = p - item[groupitem[groupdepth]].start;
+	    l = (long)(p - item[groupitem[groupdepth]].start);
 	    if (curitem > groupitem[groupdepth] + 1
 		    && item[groupitem[groupdepth]].minwid == 0)
 	    {			    /* remove group if all items are empty */
@@ -3179,7 +3180,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    t++;
 		prevchar_isflag = TRUE;
 	    }
-	    l = STRLEN(t);
+	    l = (long)STRLEN(t);
 	    if (l > 0)
 		prevchar_isitem = TRUE;
 	    if (l > maxwid)
@@ -3255,7 +3256,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     }
     *p = 0;
     itemcnt = curitem;
-    num = STRLEN(out);
+    num = (long)STRLEN(out);
 
     if (maxlen && num > maxlen)
     {					    /* Apply STL_TRUNC */
@@ -4454,7 +4455,7 @@ buf_contents_changed(buf)
     }
 #ifdef FEAT_MBYTE
     sprintf((char *)ea.cmd, "e ++ff=%s ++enc=%s", buf->b_p_ff, buf->b_p_fenc);
-    ea.force_enc = 14 + STRLEN(buf->b_p_ff);
+    ea.force_enc = 14 + (int)STRLEN(buf->b_p_ff);
 #else
     sprintf((char *)ea.cmd, "e ++ff=%s", buf->b_p_ff);
 #endif

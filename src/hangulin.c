@@ -421,6 +421,12 @@ hangul_input_state_set(state)
     hangul_input_clear();
 }
 
+    int
+im_get_status()
+{
+    return hangul_input_state_get();
+}
+
     void
 hangul_input_state_toggle()
 {
@@ -441,6 +447,8 @@ hangul_input_state_toggle()
 	setcursor();
 	out_flush();
     }
+
+    gui_update_cursor(TRUE, FALSE);
 }
 
     static int

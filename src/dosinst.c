@@ -26,7 +26,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef WIN32
+#if defined(_WIN64) || defined(WIN32)
+# define WIN3264
 # include <windows.h>
 #else
 # include <dir.h>
@@ -40,14 +41,14 @@
 #endif
 
 /* shlobj.h is needed for shortcut creation */
-#ifdef WIN32
+#ifdef WIN3264
 # include <shlobj.h>
 #endif
 
 #ifdef DJGPP
 # define vim_mkdir(x, y) mkdir((char *)(x), y)
 #else
-# ifdef WIN32
+# ifdef WIN3264
 #  define vim_mkdir(x, y) _mkdir((char *)(x))
 # else
 #  define vim_mkdir(x, y) mkdir((char *)(x))
@@ -409,7 +410,7 @@ add_pathsep(char *name)
     int
 change_drive(int drive)
 {
-#ifdef WIN32
+#ifdef WIN3264
     char temp[3] = "-:";
     temp[0] = (char)(drive + 'A' - 1);
     return !SetCurrentDirectory(temp);
@@ -450,7 +451,7 @@ mch_chdir(char *path)
 /*
  * Expand the executable name into a full path name.
  */
-#if defined(__BORLANDC__) && !defined(WIN32)
+#if defined(__BORLANDC__) && !defined(WIN3264)
 
 /* Only Borland C++ has this. */
 # define my_fullpath(b, n, l) _fullpath(b, n, l)
@@ -459,7 +460,7 @@ mch_chdir(char *path)
     static char *
 my_fullpath(char *buf, char *fname, int len)
 {
-# ifdef WIN32
+# ifdef WIN3264
     /* Only GetModuleFileName() will get the long file name path.
      * GetFullPathName() may still use the short (FAT) name. */
     DWORD len_read = GetModuleFileName(NULL, buf, len);
@@ -548,7 +549,7 @@ my_fullpath(char *buf, char *fname, int len)
 }
 #endif
 
-#ifdef WIN32
+#ifdef WIN3264
 /* This symbol is not defined in older versions of the SDK or Visual C++ */
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
@@ -1590,7 +1591,7 @@ init_popup_choice(void)
 
     if (has_gvim
 	    && stat("gvimext.dll", &st) >= 0
-#ifndef WIN32
+#ifndef WIN3264
 	    && searchpath("regedit.exe") != NULL
 #endif
        )
@@ -1607,7 +1608,7 @@ init_popup_choice(void)
 	add_dummy_choice();
 }
 
-#ifdef WIN32
+#ifdef WIN3264
 /* create_shortcut
  *
  * Create a shell link.
@@ -2304,7 +2305,7 @@ init_OLE_register_choice(void)
     change_OLE_register_choice(choice_count);
     ++choice_count;
 }
-#endif /* WIN32 */
+#endif /* WIN3264 */
 
 /*
  * Remove the last part of a directory path to get its parent.
@@ -2484,7 +2485,7 @@ setup_choices(void)
     /* Whether to add Vim to the popup menu */
     init_popup_choice();
 
-#ifdef WIN32
+#ifdef WIN3264
     /* Whether to add shortcuts to Vim on desktop or in Start Menu
      * Only available if gvim.exe is present (for now at least)
      */
@@ -2494,7 +2495,7 @@ setup_choices(void)
 #endif
 	add_dummy_choice();
 
-#ifdef WIN32
+#ifdef WIN3264
     /* If gvim is present, it may be OLE enabled.  Since there is no easy way
      * to detect whether gvim is OLE enabled from install, we'll just give the
      * option to register it.  If it is not OLE enabled and we try to register,

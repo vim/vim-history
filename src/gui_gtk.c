@@ -122,10 +122,6 @@ static void find_replace_cb(GtkWidget *widget, unsigned int flags);
 static void exact_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
-#ifdef FEAT_TOOLBAR
-static void get_gtk_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
-#endif
-
 #if defined(FEAT_MENU) || defined(PROTO)
 
 /*
@@ -321,6 +317,90 @@ menu_item_activate(GtkWidget * widget, gpointer data)
 	gtk_main_quit();
 }
 
+#ifdef FEAT_TOOLBAR
+/*
+ * These are the pixmaps used for the default buttons.
+ * Order must exactly match toolbar_names[] in menu.c!
+ */
+static char **(built_in_pixmaps[]) =
+{
+    tb_new_xpm,
+    tb_open_xpm,
+    tb_save_xpm,
+    tb_undo_xpm,
+    tb_redo_xpm,
+    tb_cut_xpm,
+    tb_copy_xpm,
+    tb_paste_xpm,
+    tb_print_xpm,
+    tb_help_xpm,
+    tb_find_xpm,
+    tb_save_all_xpm,
+    tb_save_session_xpm,
+    tb_new_session_xpm,
+    tb_load_session_xpm,
+    tb_macro_xpm,
+    tb_replace_xpm,
+    tb_close_xpm,
+    tb_maximize_xpm,
+    tb_minimize_xpm,
+    tb_split_xpm,
+    tb_shell_xpm,
+    tb_find_prev_xpm,
+    tb_find_next_xpm,
+    tb_find_help_xpm,
+    tb_make_xpm,
+    tb_jump_xpm,
+    tb_ctags_xpm,
+    tb_vsplit_xpm,
+    tb_maxwidth_xpm,
+    tb_minwidth_xpm,
+    tb_exit_xpm
+};
+
+/*
+ * creates a blank pixmap using tb_blank
+ */
+    static void
+pixmap_create_from_xpm(char **xpm, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
+	    NULL,
+	    gtk_widget_get_colormap(gui.mainwin),
+	    mask,
+	    NULL,
+	    xpm);
+}
+
+/*
+ * creates a pixmap by using a built-in number
+ */
+    static void
+pixmap_create_by_num(int pixmap_num, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    if (pixmap_num >= 0 && pixmap_num < (sizeof(built_in_pixmaps)
+					   / sizeof(built_in_pixmaps[0])) - 1)
+	pixmap_create_from_xpm(built_in_pixmaps[pixmap_num], pixmap, mask);
+}
+
+/*
+ * Creates a pixmap by using the pixmap "name" found in 'runtimepath'/bitmaps/
+ */
+    static void
+pixmap_create_by_dir(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    char_u full_pathname[MAXPATHL + 1];
+
+    if (gui_find_bitmap(name, full_pathname, "xpm") == OK)
+	*pixmap = gdk_pixmap_colormap_create_from_xpm(
+		NULL,
+		gtk_widget_get_colormap(gui.mainwin),
+		mask,
+		&gui.mainwin->style->bg[GTK_STATE_NORMAL],
+		(const char *)full_pathname);
+}
+#endif
+
 /*ARGSUSED*/
     void
 gui_mch_add_menu_item(vimmenu_T *menu, int idx)
@@ -336,10 +416,16 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 	}
 	else
 	{
-	    GdkPixmap *pixmap;
-	    GdkBitmap *mask;
+	    GdkPixmap *pixmap = NULL;
+	    GdkBitmap *mask = NULL;
 
-	    get_gtk_pixmap(menu->name, &pixmap, &mask);
+	    /* First try user specified bitmap, then builtin, the a blank. */
+	    if (!menu->icon_builtin)
+		pixmap_create_by_dir(menu->name, &pixmap, &mask);
+	    if (pixmap == NULL && menu->iconidx >= 0)
+		pixmap_create_by_num(menu->iconidx, &pixmap, &mask);
+	    if (pixmap == NULL)
+		pixmap_create_from_xpm(tb_blank_xpm, &pixmap, &mask);
 	    if (pixmap == NULL)
 		return; /* should at least have blank pixmap, but if not... */
 
@@ -386,137 +472,6 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 }
 #endif
 
-
-#ifdef FEAT_TOOLBAR
-/*
- * Those are the pixmaps used for the default buttons.
- */
-struct NameToPixmap
-{
-    char *name;
-    char **xpm;
-};
-
-static const struct NameToPixmap built_in_pixmaps[] =
-{
-    {"New", tb_new_xpm},
-    {"Open", tb_open_xpm},
-    {"Save", tb_save_xpm},
-    {"Undo", tb_undo_xpm},
-    {"Redo", tb_redo_xpm},
-    {"Cut", tb_cut_xpm},
-    {"Copy", tb_copy_xpm},
-    {"Paste", tb_paste_xpm},
-    {"Print", tb_print_xpm},
-    {"Help", tb_help_xpm},
-    {"Find", tb_find_xpm},
-    {"SaveAll",	tb_save_all_xpm},
-    {"SaveSesn", tb_save_session_xpm},
-    {"NewSesn", tb_new_session_xpm},
-    {"LoadSesn", tb_load_session_xpm},
-    {"RunScript", tb_macro_xpm},
-    {"Replace",	tb_replace_xpm},
-    {"WinClose", tb_close_xpm},
-    {"WinMax",	tb_maximize_xpm},
-    {"WinMin", tb_minimize_xpm},
-    {"WinSplit", tb_split_xpm},
-    {"Shell", tb_shell_xpm},
-    {"FindPrev", tb_find_prev_xpm},
-    {"FindNext", tb_find_next_xpm},
-    {"FindHelp", tb_find_help_xpm},
-    {"Make", tb_make_xpm},
-    {"TagJump", tb_jump_xpm},
-    {"RunCtags", tb_ctags_xpm},
-    {"Exit", tb_exit_xpm},
-    {"WinVSplit", tb_vsplit_xpm},
-    {"WinMaxWidth", tb_maxwidth_xpm},
-    {"WinMinWidth", tb_minwidth_xpm},
-    { NULL, NULL} /* end tag */
-};
-
-/*
- * creates a blank pixmap using tb_blank
- */
-    static void
-pixmap_create_from_xpm(char **xpm, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-	    NULL,
-	    gtk_widget_get_colormap(gui.mainwin),
-	    mask,
-	    NULL,
-	    xpm);
-}
-
-/*
- * creates a pixmap by using a built-in number
- */
-    static void
-pixmap_create_by_num(int pixmap_num, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    if (pixmap_num >= 0 && pixmap_num < (sizeof(built_in_pixmaps)
-					   / sizeof(built_in_pixmaps[0])) - 1)
-	pixmap_create_from_xpm(built_in_pixmaps[pixmap_num].xpm, pixmap, mask);
-}
-
-/*
- * creates a pixmap using one of the built-in pixmap names
- */
-    static void
-pixmap_create_by_name(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    const struct NameToPixmap *tmp = built_in_pixmaps;
-
-    /* lookup if we have a corresponding build-in pixmap */
-    for (tmp = built_in_pixmaps; tmp->name != NULL; tmp++)
-	if (STRCMP(tmp->name, name) == 0)
-	{
-	    pixmap_create_from_xpm(tmp->xpm, pixmap, mask);
-	    break;
-	}
-}
-
-/*
- * Creates a pixmap by using the pixmap "name" found in 'runtimepath'/bitmaps/
- */
-    static void
-pixmap_create_by_dir(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    char_u full_pathname[MAXPATHL + 1];
-
-    if (gui_find_bitmap(name, full_pathname, "xpm") == OK)
-	*pixmap = gdk_pixmap_colormap_create_from_xpm(
-		NULL,
-		gtk_widget_get_colormap(gui.mainwin),
-		mask,
-		&gui.mainwin->style->bg[GTK_STATE_NORMAL],
-		(const char *)full_pathname);
-}
-
-/*
- * do ":h toolbar" for details on the order of things searched to
- * find the toolbar pixmap.
- */
-    static void
-get_gtk_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    *pixmap = NULL;
-    *mask = NULL;
-    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
-    {
-	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
-	    pixmap_create_by_num(atoi((char *)menuname + 7), pixmap, mask);
-    }
-    else
-    {
-	pixmap_create_by_dir(menuname, pixmap, mask);
-	if (*pixmap == NULL)
-	    pixmap_create_by_name(menuname, pixmap, mask);
-    }
-    if (*pixmap == NULL)
-	pixmap_create_from_xpm(tb_blank_xpm, pixmap, mask);
-}
-#endif
 
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)

@@ -539,6 +539,7 @@ createBalloonEvalWindow(beval)
 #elif FEAT_GUI_ATHENA
     XtSetArg(args[n], XtNforeground, gui.balloonEval_fg_pixel); n++;
     XtSetArg(args[n], XtNbackground, gui.balloonEval_bg_pixel); n++;
+    XtSetArg(args[n], XtNfont, gui.balloonEval_fontList); n++;
     beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 		    labelWidgetClass, beval->balloonShell, args, n);
 #endif

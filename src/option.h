@@ -23,7 +23,7 @@
 #ifdef AMIGA
 # define DFLT_EFM	"%f>%l:%c:%t:%n:%m,%f:%l: %t%*\\D%n: %m,%f %l %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f:%l:%m"
 #else
-# if defined MSDOS  ||	defined WIN32
+# if defined(MSDOS) || defined(WIN3264)
 #  define DFLT_EFM	"%f(%l) : %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"
 # else
 #  if defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
@@ -377,7 +377,8 @@ EXTERN char_u	*p_fdo;		/* 'foldopen' */
 EXTERN unsigned	fdo_flags;
 # ifdef IN_OPTION_C
 static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
-				 "quickfix", "search", "tag", "insert", NULL};
+				 "quickfix", "search", "tag", "insert",
+				 "undo", "jump", NULL};
 # endif
 # define FDO_ALL		0x001
 # define FDO_BLOCK		0x002
@@ -388,6 +389,8 @@ static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
 # define FDO_SEARCH		0x040
 # define FDO_TAG		0x080
 # define FDO_INSERT		0x100
+# define FDO_UNDO		0x200
+# define FDO_JUMP		0x400
 #endif
 EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
@@ -513,7 +516,7 @@ EXTERN long	p_report;	/* 'report' */
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 EXTERN long	p_pvh;		/* 'previewheight' */
 #endif
-#ifdef WIN32
+#ifdef WIN3264
 EXTERN int	p_rs;		/* 'restorescreen' */
 #endif
 #ifdef FEAT_RIGHTLEFT

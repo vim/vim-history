@@ -1,8 +1,8 @@
 /* XPM */
 static char * tb_exit_xpm[] = {
 "18 18 4 1",
-" 	c None",
-".	c #000000",
+" 	c None    s background",
+".	c #000000 s foreground",
 "+	c #FFFFFF",
 "@	c #FF1144",
 "                  ",

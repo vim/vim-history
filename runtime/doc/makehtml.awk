@@ -162,12 +162,24 @@ substr($0,1,3) == "---" && substr($0,75,1) != "-" { next; }
 FILENAME == "gui.txt" && asciiart == "no"  \
           && $0 ~ /\+----/ && $0 ~ /----\+/ {
 	asciiart= "yes";
+	asciicnt=0;
 	}
 
 FILENAME == "quotes.txt" && asciiart == "no" \
 	  && $0 ~ /In summary:/ {
 	asciiart= "yes";
+	asciicnt=0;
 	}
+
+FILENAME == "usr_20.txt" && asciiart == "no" \
+	  && $0 ~ /an empty line at the end:/ {
+	asciiart= "yes";
+	asciicnt=0;
+	}
+
+asciiart == "yes" && $0=="" { asciicnt++; }
+
+asciiart == "yes" && asciicnt == 2 { asciiart = "no"; }
 
 asciiart == "yes" { npipe = 1; }
 #	{ print NR " <=> " asciiart; }

@@ -17,7 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN64)
+# define WIN3264
 # include <windows.h>
 #endif
 #include "version.h"

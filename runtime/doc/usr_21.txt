@@ -1,4 +1,4 @@
-*usr_21.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_21.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		

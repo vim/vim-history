@@ -4395,7 +4395,7 @@ find_file_name_in_path(ptr, len, options, count)
 	if (tofree != NULL)
 	{
 	    ptr = tofree;
-	    len = STRLEN(ptr);
+	    len = (int)STRLEN(ptr);
 	}
     }
 # endif
@@ -4416,7 +4416,7 @@ find_file_name_in_path(ptr, len, options, count)
 	    if (tofree != NULL)
 	    {
 		ptr = tofree;
-		len = STRLEN(ptr);
+		len = (int)STRLEN(ptr);
 		file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS,
 									TRUE);
 	    }

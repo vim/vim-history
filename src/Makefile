@@ -136,7 +136,8 @@
 #		make -n uninstall
 # }}}
 #
-### This Makefile has been succesfully tested on these systems. {{{
+### This Makefile has been succesfully tested on many systems. {{{
+### Only the ones that require special options are mentioned here.
 ### Check the (*) column for remarks, listed below.
 ### Later code changes may cause small problems, otherwise Vim is supposed to
 ### compile and run without problems.
@@ -146,51 +147,27 @@
 #AIX 3.2.5	      cc (not gcc)   -			4.5  (M) Will Fiveash
 #AIX 4		      cc	     +X11 -GUI		3.27 (4) Axel Kielhorn
 #AIX 4.1.4	      cc	     +X11 +GUI		4.5  (5) Nico Bakker
-#AIX_4.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
-#AIX 4.1.1	      cc	     +X11 +GUI		5.0c	 Jeff Walker
-#AIX 4.2	      gcc 2.7.2.1    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #AIX 4.2.1	      cc				5.2k (C) Will Fiveash
-#AIX 4.3	      cc	     +X11 +GUI_Athena	5.3	 Glauber Ribeiro
 #AIX 4.3.3.12	      xic 3.6.6				5.6  (5) David R. Favor
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
 #BeOS PR	      mwcc DR3				5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
-#Cygwin 1.0 Win-NT    2.9-cygwin-990830 -X11 -GUI	5.6	 Bram Moolenaar
 #CX/UX 6.2	      cc	     +X11 +GUI_Mofif	5.4  (V) Kipp E. Howard
 #DG/UX 5.4*	      gcc 2.5.8      GUI		5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI		5.0s (H) Rocky Olive
-#DigitalUnix OSF 4.0b cc (not gcc)   +X11 +GUI +GTK	5.5b	 Peter Turcan
 #HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
 #HP-UX_9.04	      cc	     +X11 +Motif	5.0  (2) Carton Lao
-#HP-UX_10.01	      gcc 2.7.2      +X11 -GUI		5.2	 D. Rothkamp
-#HP-UX_10.20	      gcc 2.7.2.1    +X11 +Motif	5.0s	 Karsten Sievert
-#HP-UX_10.20	      gcc 2.7.2.1    +X11R6 +Motif	5.1	 Kayhan Demirel
-#HP-UX_10.20	      gcc 2.8.1      +X11R6 +Motif	5.5a	 Axel Kielhorn
-#HP-UX 11.00 64 bit   egcs 1.1.1     -X11		5.4c	 Heiko Nardmann
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
 #Irix 6.4	      cc	     ?			5.0m (S) Rick Sayre
 #Irix 6.5	      cc	     ?			5.3  (S) David Harrison
 #Irix 64 bit						4.5  (K) Jon Wright
-#FreeBSD 2.1.6	      gcc-2.6.3      X11R6 Moo-Tiff	5.0c	 Bram Moolenaar
-#FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 GTK 1.2.5	5.7	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Athena	5.7	 Bram Moolenaar
-#FreeBSD 3.3	      gcc-2.7.2.1    +X11 Lesstif0.89.4 5.7	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
 #Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
-#Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
-#Linux 2.0.34	      gcc-2.90.29    +X11 +GTK 1.2.2	5.4m	 Ant. Colombo
-#Linux 2.2.16	      egcs-1.1.2     +X11               6.0s	 Ant. Colombo
 #LynxOS 3.0.1	      2.9-gnupro-98r2 +X11 +GUI Athena  5.7.1(O) Lorenz Hahn
 #LynxOS 3.1.0	      2.9-gnupro-98r2 +X11 +GUI Athena  5.7.1(O) Lorenz Hahn
-#MacOS		 CodeWarrior Pro 2   -			5.4i	 Axel Kielhorn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
 #NetBSD 1.0A	      gcc-2.4.5      -X11 -GUI		3.21 (X) Juergen Weigert
-#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Athena	5.0n	 Olaf Seibert
-#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Lesstiff	5.0n	 Olaf Seibert
 #QNX 4.2	      wcc386-10.6    -X11		4.2  (D) G.F. Desrochers
 #QNX 4.23	      Watcom	     -X11		4.2  (F) John Oleynick
 #SCO Unix v3.2.5      cc	     +X11 Motif		3.27 (C) M. Kuperblum
@@ -200,19 +177,13 @@
 #SINIX-Y 5.43 RM600 R4000  gcc 2.7.2.3 +X11 +GUI Motif	5.1  (I) Joachim Fehn
 #Reliant/SINIX 5.44   cc	     +X11 +GUI		5.5a (I) B. Pruemmer
 #SNI Targon31 TOS 4.1.11 gcc-2.4.5   +X11 -GUI		4.6c (B) Paul Slootman
-#Solaris 2.3 (sun4m)  cc	     +X11 +GUI Athena	5.0w	 Darren Hiebert
 #Solaris 2.4 (Sparc)  cc	     +X11 +GUI		3.29 (9) Glauber
 #Solaris 2.4/2.5      clcc	     +X11 -GUI openwin	3.20 (7) Robert Colon
 #Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)	4.6b (E) Andrew Large
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.5	 Ant. Colombo
-#Solaris 2.5 (sun4d)  gcc-2.7.2.3    +X11 +GUI Motif    6.0s     Ant. Colombo   
-#Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
-#Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
 #Solaris with -lthread					5.5  (W) K. Nagano
-#SunOS_5.5.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
@@ -799,7 +770,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ai
+VIMRTDIR = /vim60aj
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -807,6 +778,7 @@ INDSUBDIR = /indent
 PLUGSUBDIR = /plugin
 FTPLUGSUBDIR = /ftplugin
 LANGSUBDIR = /lang
+COMPSUBDIR = /compiler
 KMAPSUBDIR = /keymap
 MACROSUBDIR = /macros
 TOOLSSUBDIR = /tools
@@ -824,6 +796,7 @@ PODIR = po
 ### PLUGSUBLOC	location for standard plugin files
 ### FTPLUGSUBLOC  location for ftplugin files
 ### LANGSUBLOC	location for language files
+### COMPSUBLOC	location for compiler files
 ### KMAPSUBLOC	location for keymap files
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
@@ -841,6 +814,7 @@ INDSUBLOC	= $(VIMRTLOC)$(INDSUBDIR)
 PLUGSUBLOC	= $(VIMRTLOC)$(PLUGSUBDIR)
 FTPLUGSUBLOC	= $(VIMRTLOC)$(FTPLUGSUBDIR)
 LANGSUBLOC	= $(VIMRTLOC)$(LANGSUBDIR)
+COMPSUBLOC	= $(VIMRTLOC)$(COMPSUBDIR)
 KMAPSUBLOC	= $(VIMRTLOC)$(KMAPSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
 TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
@@ -948,6 +922,9 @@ TUTORSOURCE = ../runtime/tutor
 
 # Where to look for language specific files
 LANGSOURCE = ../runtime/lang
+
+# Where to look for compiler files
+COMPSOURCE = ../runtime/compiler
 
 # Where to look for keymap files
 KMAPSOURCE = ../runtime/keymap
@@ -1135,6 +1112,7 @@ DEST_IND = $(DESTDIR)$(INDSUBLOC)
 DEST_PLUG = $(DESTDIR)$(PLUGSUBLOC)
 DEST_FTP = $(DESTDIR)$(FTPLUGSUBLOC)
 DEST_LANG = $(DESTDIR)$(LANGSUBLOC)
+DEST_COMP = $(DESTDIR)$(COMPSUBLOC)
 DEST_KMAP = $(DESTDIR)$(KMAPSUBLOC)
 DEST_MACRO = $(DESTDIR)$(MACROSUBLOC)
 DEST_TOOLS = $(DESTDIR)$(TOOLSSUBLOC)
@@ -1511,7 +1489,7 @@ installvimbin: $(VIMTARGET) $(DESTDIR)$(exec_prefix) $(DEST_BIN)
 # install the help files; first adjust the contents for the location
 installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 		$(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND) \
-		$(DEST_FTP) $(DEST_PLUG) $(DEST_TUTOR)
+		$(DEST_FTP) $(DEST_PLUG) $(DEST_TUTOR) $(DEST_COMP)
 	@echo generating $(DEST_MAN)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPSUBLOC)+ \
@@ -1590,6 +1568,9 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 # install the ftplugin files
 	cd $(FTPLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_FTP)
 	cd $(DEST_FTP); chmod $(HELPMOD) *.vim README.txt
+# install the compiler files
+	cd $(COMPSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_COMP)
+	cd $(DEST_COMP); chmod $(HELPMOD) *.vim README.txt
 
 installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
 	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(DEST_MACRO)
@@ -1643,7 +1624,7 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 
 $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) $(DEST_VIM) $(DEST_RT) $(DEST_HELP) \
 		$(DEST_COL) $(DEST_SYN) $(DEST_IND) $(DEST_FTP) \
-		$(DEST_LANG) $(DEST_KMAP) \
+		$(DEST_LANG) $(DEST_KMAP) $(DEST_COMP) \
 		$(DEST_MACRO) $(DEST_TOOLS) $(DEST_TUTOR) $(DEST_PLUG):
 	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
@@ -1781,6 +1762,7 @@ uninstall_runtime:
 	-rm -rf $(DEST_TOOLS)
 	-rm -rf $(DEST_LANG)
 	-rm -rf $(DEST_KMAP)
+	-rm -rf $(DEST_COMP)
 	-rmdir $(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND)
 	-rm -rf $(DEST_FTP)/*.vim $(DEST_FTP)/README.txt
 	-rm -f $(DEST_PLUG)/*.vim $(DEST_PLUG)/README.txt
@@ -2270,7 +2252,9 @@ objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_gtk_f.h
 objects/gui_motif.o: gui_motif.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
+ ../pixmaps/alert.xpm ../pixmaps/error.xpm ../pixmaps/generic.xpm \
+ ../pixmaps/info.xpm ../pixmaps/quest.xpm
 objects/gui_athena.o: gui_athena.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_at_sb.h

@@ -19,7 +19,7 @@ void ins_char __ARGS((int c));
 void ins_char_bytes __ARGS((char_u *buf, int newlen));
 void ins_str __ARGS((char_u *s));
 int del_char __ARGS((int fixpos));
-int del_chars __ARGS((long count, int fixpos));
+int del_bytes __ARGS((long count, int fixpos));
 int truncate_line __ARGS((int fixpos));
 void del_lines __ARGS((long nlines, int undo));
 int gchar_pos __ARGS((pos_T *pos));

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
+*eval.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -783,7 +783,8 @@ mode()				String  current editing mode
 nextnonblank( {lnum})		Number	line nr of non-blank line >= {lnum}
 nr2char( {expr})		String	single char with ASCII value {expr}
 prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
-rename({from}, {to})		Number  rename (move) file from {from} to {to}
+rename( {from}, {to})		Number  rename (move) file from {from} to {to}
+resolve( {filename})		String  get filename a shortcut points to
 search( {pattern} [, {flags}])	Number  search for {pattern}
 searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
 				Number  search for other end of start/end pair
@@ -1810,6 +1811,14 @@ rename({from}, {to})					*rename()*
 		should also work to move files across file systems.  The
 		result is a Number, which is 0 if the file was renamed
 		successfully, and non-zero when the renaming failed.
+
+resolve({filename})					*resolve()*
+		On MS-Windows, when {filename} is a shortcut (a .lnk file),
+		returns the path the shortcut points to.
+		On Unix, when {filename} is a symbolic link, returns the path
+		the symlink points to.  This only happens once, the returned
+		path could be a symlink again.
+		Otherwise {filename} is returned.
 
 search({pattern} [, {flags}])				*search()*
 		Search for regexp pattern {pattern}.  The search starts at the

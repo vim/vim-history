@@ -17,7 +17,7 @@
 #endif
 
 #if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
-static int coladvance2 __ARGS((int addspaces, int finetune, colnr_T wcol));
+static int coladvance2 __ARGS((pos_T *pos, int addspaces, int finetune, colnr_T wcol));
 
 /*
  * Return TRUE if in the current mode we need to use virtual.
@@ -75,7 +75,16 @@ getviscol2(col, coladd)
 coladvance_force(wcol)
     colnr_T wcol;
 {
-    return coladvance2(TRUE, FALSE, wcol);
+    int rc = coladvance2(&curwin->w_cursor, TRUE, FALSE, wcol);
+    if (wcol == MAXCOL)
+	curwin->w_valid &= ~VALID_VIRTCOL;
+    else
+    {
+	/* Virtcol is valid */
+	curwin->w_valid |= VALID_VIRTCOL;
+	curwin->w_virtcol = wcol;
+    }
+    return rc;
 }
 #endif
 
@@ -92,12 +101,30 @@ coladvance_force(wcol)
 coladvance(wcol)
     colnr_T	wcol;
 {
+    int rc = getvpos(&curwin->w_cursor, wcol);
+    if (wcol == MAXCOL)
+	curwin->w_valid &= ~VALID_VIRTCOL;
+    else
+    {
+	/* Virtcol is valid */
+	curwin->w_valid |= VALID_VIRTCOL;
+	curwin->w_virtcol = wcol;
+    }
+    return rc;
+}
+
+    int
+getvpos(pos, wcol)
+    pos_T   *pos;
+    colnr_T wcol;
+{
 #ifdef FEAT_VIRTUALEDIT
-    return coladvance2(FALSE, virtual_active(), wcol);
+    return coladvance2(pos, FALSE, virtual_active(), wcol);
 }
 
     static int
-coladvance2(addspaces, finetune, wcol)
+coladvance2(pos, addspaces, finetune, wcol)
+    pos_T	*pos;
     int		addspaces;	/* change the text to achieve our goal? */
     int		finetune;	/* change char offset for the excact column */
     colnr_T	wcol;		/* column to move to */
@@ -122,11 +149,8 @@ coladvance2(addspaces, finetune, wcol)
      */
     if (wcol >= MAXCOL)
     {
-	    idx = STRLEN(line) - 1 + one_more;
+	    idx = (int)STRLEN(line) - 1 + one_more;
 	    col = wcol;
-
-	    /* Invalidate curwin->w_virtcol */
-	    curwin->w_valid &= ~VALID_VIRTCOL;
 
 #ifdef FEAT_VIRTUALEDIT
 	    if ((addspaces || finetune) && !VIsual_active)
@@ -168,18 +192,14 @@ coladvance2(addspaces, finetune, wcol)
 	    csize = lbr_chartabsize_adv(&ptr, col);
 	    col += csize;
 	}
-	idx = ptr - line;
+	idx = (int)(ptr - line);
 	/*
 	 * Handle all the special cases.  The virtual_active() check
 	 * is needed to ensure that a virtual position off the end of
 	 * a line has the correct indexing.  The one_more comparison
 	 * replaces an explicit add of one_more later on.
 	 */
-	if (col > wcol || (
-#ifdef FEAT_VIRTUALEDIT
-		    !virtual_active() &&
-#endif
-		    one_more == 0))
+	if (col > wcol || (!virtual_active() && one_more == 0))
 	{
 	    idx -= 1;
 	    col -= csize;
@@ -206,15 +226,15 @@ coladvance2(addspaces, finetune, wcol)
 
 	    newline[idx + correct] = NUL;
 
-	    ml_replace(curwin->w_cursor.lnum, newline, FALSE);
-	    changed_bytes(curwin->w_cursor.lnum, (colnr_T)idx);
+	    ml_replace(pos->lnum, newline, FALSE);
+	    changed_bytes(pos->lnum, (colnr_T)idx);
 	    idx += correct;
 	    col = wcol;
 	}
 	else
 	{
 	    /* Break a tab */
-	    int	linelen = STRLEN(line);
+	    int	linelen = (int)STRLEN(line);
 	    int	correct = wcol - col - csize + 1; /* negative!! */
 	    char_u	*newline = alloc(linelen + csize);
 	    int	t, s = 0;
@@ -237,24 +257,23 @@ coladvance2(addspaces, finetune, wcol)
 
 	    newline[linelen + csize - 1] = NUL;
 
-	    ml_replace(curwin->w_cursor.lnum, newline, FALSE);
-	    changed_bytes(curwin->w_cursor.lnum, idx);
+	    ml_replace(pos->lnum, newline, FALSE);
+	    changed_bytes(pos->lnum, idx);
 	    idx += (csize - 1 + correct);
 	    col += correct;
 	}
     }
 
 #endif
-	curwin->w_valid |= VALID_VIRTCOL;
     }
 
     if (idx < 0)
-	curwin->w_cursor.col = 0;
+	pos->col = 0;
     else
-	curwin->w_cursor.col = idx;
+	pos->col = idx;
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_cursor.coladd = 0;
+    pos->coladd = 0;
 
     if (finetune)
     {
@@ -264,7 +283,7 @@ coladvance2(addspaces, finetune, wcol)
 	/* modify the real cursor position to make the cursor appear at
 	 * the wanted column */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
-	    curwin->w_cursor.coladd = b;
+	    pos->coladd = b;
 
 	col += b;
     }
@@ -275,14 +294,10 @@ coladvance2(addspaces, finetune, wcol)
     if (has_mbyte)
 	mb_adjust_cursor();
 #endif
-    /* Set w_virtcol, unless VALID_VIRTCOL was cleared above */
-    if (curwin->w_valid & VALID_VIRTCOL)
-	curwin->w_virtcol = col;
 
     if (col <= wcol)
 	return FAIL;
-    else
-	return OK;
+    return OK;
 }
 
 /*
@@ -377,7 +392,7 @@ dec(lp)
     if (lp->lnum > 1)
     {		/* there is a prior line */
 	lp->lnum--;
-	lp->col = STRLEN(ml_get(lp->lnum));
+	lp->col = (colnr_T)STRLEN(ml_get(lp->lnum));
 	return 1;
     }
     return -1;			/* at start of file */
@@ -428,7 +443,7 @@ check_cursor_col()
     colnr_T oldcol = curwin->w_cursor.col + curwin->w_cursor.coladd;
 #endif
 
-    len = STRLEN(ml_get_curline());
+    len = (colnr_T)STRLEN(ml_get_curline());
     if (len == 0)
 	curwin->w_cursor.col = 0;
     else if (curwin->w_cursor.col >= len)
@@ -439,10 +454,7 @@ check_cursor_col()
 #ifdef FEAT_VISUAL
 		|| (VIsual_active && *p_sel != 'o')
 #endif
-#ifdef FEAT_VIRTUALEDIT
-		|| virtual_active()
-#endif
-		)
+		|| virtual_active())
 	    curwin->w_cursor.col = len;
 	else
 	    curwin->w_cursor.col = len - 1;
@@ -874,7 +886,7 @@ vim_strsave(string)
     char_u	*p;
     unsigned	len;
 
-    len = STRLEN(string) + 1;
+    len = (unsigned)STRLEN(string) + 1;
     p = alloc(len);
     if (p != NULL)
 	mch_memmove(p, string, (size_t)len);
@@ -1539,9 +1551,9 @@ ga_concat(gap, s)
     garray_T	*gap;
     char_u	*s;
 {
-    size_t    len = STRLEN(s);
+    int    len = (int)STRLEN(s);
 
-    if (ga_grow(gap, (int)len) == OK)
+    if (ga_grow(gap, len) == OK)
     {
 	mch_memmove((char *)gap->ga_data + gap->ga_len, s, len);
 	gap->ga_len += len;
@@ -1697,6 +1709,7 @@ static struct key_name_entry
     {NL,		(char_u *)"LF"},	/* Alternative name */
     {CR,		(char_u *)"CR"},
     {CR,		(char_u *)"Return"},	/* Alternative name */
+    {CR,		(char_u *)"Enter"},	/* Alternative name */
     {K_BS,		(char_u *)"BS"},
     {K_BS,		(char_u *)"BackSpace"},	/* Alternative name */
     {ESC,		(char_u *)"Esc"},
@@ -2030,7 +2043,7 @@ get_special_key_name(c, modifiers)
     else		/* use name of special key */
     {
 	STRCPY(string + idx, key_names_table[table_idx].name);
-	idx = STRLEN(string);
+	idx = (int)STRLEN(string);
     }
     string[idx++] = '>';
     string[idx] = NUL;
@@ -2076,7 +2089,7 @@ trans_special(srcp, dst, keycode)
 	dlen += (*mb_char2bytes)(key, dst + dlen);
 #endif
     else if (keycode)
-	dlen = add_char2buf(key, dst + dlen) - dst;
+	dlen = (int)(add_char2buf(key, dst + dlen) - dst);
     else
 	dst[dlen++] = key;
 
@@ -2727,7 +2740,7 @@ parse_shape_opt(what)
 					      getdigits(&p) + MSHAPE_NUMBERED;
 			    break;
 			}
-			len = strlen(mshape_names[i]);
+			len = (int)STRLEN(mshape_names[i]);
 			if (STRNICMP(p, mshape_names[i], len) == 0)
 			{
 			    shape_table[idx].mshape = i;
@@ -3834,7 +3847,7 @@ vim_findfile(void *search_ctx)
 		rest_of_wildcards = ctx->ffs_wc_path;
 		if (*rest_of_wildcards != NUL)
 		{
-		    len = STRLEN(file_path);
+		    len = (int)STRLEN(file_path);
 		    if (STRNCMP(rest_of_wildcards, "**", 2) == 0)
 		    {
 			char_u *p;
@@ -3943,7 +3956,7 @@ vim_findfile(void *search_ctx)
 			 * from 'suffixesadd'.
 			 */
 #ifdef FEAT_SEARCHPATH
-			len = STRLEN(file_path);
+			len = (int)STRLEN(file_path);
 			suf = curbuf->b_p_sua;
 			for (;;)
 #endif
@@ -4707,7 +4720,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 		goto theend;
 	    }
 	    buf = curbuf->b_p_sua;
-	    len = STRLEN(NameBuff);
+	    len = (int)STRLEN(NameBuff);
 	    for (;;)
 	    {
 		if (mch_getperm(NameBuff) >= 0
@@ -5037,7 +5050,7 @@ parse_list_options(option_str, table, table_size)
 	if (commap == NULL)
 		commap = option_str + STRLEN(option_str);
 
-	len = colonp - stringp;
+	len = (int)(colonp - stringp);
 
 	for (idx = 0; idx < table_size; ++idx)
 	    if (STRNICMP(stringp, table[idx].name, len) == 0)
@@ -5058,7 +5071,7 @@ parse_list_options(option_str, table, table_size)
 	}
 
 	table[idx].string = p;
-	table[idx].strlen = commap - p;
+	table[idx].strlen = (int)(commap - p);
 
 	stringp = commap;
 	if (*stringp == ',')

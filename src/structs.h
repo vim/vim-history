@@ -33,6 +33,15 @@ typedef struct
 } pos_T;
 
 /*
+ * Same, but without coladd.
+ */
+typedef struct
+{
+    linenr_T	lnum;	/* line number */
+    colnr_T	col;	/* column number */
+} lpos_T;
+
+/*
  * Structure used for growing arrays.
  * This is used to store information that only grows, is deleted all at
  * once, and needs to be accessed by index.  See ga_clear() and ga_grow().
@@ -720,6 +729,9 @@ struct file_buffer
 #endif
 #ifdef macintosh
     FSSpec	b_FSSpec;	/* MacOS File Identification */
+#endif
+#ifdef VMS
+    char	b_fab_rfm;	/* Record format */
 #endif
 #ifdef FEAT_SNIFF
     int		b_sniff;	/* file was loaded through Sniff */
@@ -1499,6 +1511,8 @@ struct VimMenu
 #ifdef FEAT_GUI
     void	(*cb)();	    /* Call-back routine */
     char_u	*iconfile;	    /* name of file for icon or NULL */
+    int		iconidx;	    /* icon index (-1 if not set) */
+    int		icon_builtin;	    /* icon names is BuiltIn{nr} */
 #endif
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
     int		noremap[MENU_MODES]; /* A REMAP_ flag for each mode */
@@ -1524,7 +1538,7 @@ struct VimMenu
 #ifdef FEAT_GUI_MOTIF
     Pixmap	image_ins;	    /* Toolbar image insensitive */
 #endif
-#if defined(FEAT_BEVAL) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
+#ifdef FEAT_BEVAL
     BalloonEval *tip;		    /* tooltip for this menu item */
 #endif
 #ifdef FEAT_GUI_W16

@@ -1,24 +1,431 @@
-*usr_29.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
+*usr_29.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
-			       Editing program
+			    Moving through program
 
 
-Introduction.
+The creator of Vim is a computer programmer.  It's no surprise that Vim
+contains many features to aid in writing programs.  Jump around to find where
+identifiers are defined and used.  Automatically indent the lines.  And much
+more.
 
-|29.1|	First section
+|29.1|	Using tags
 
-     Next chapter: |usr_30.txt|  Compiling programs
+     Next chapter: |usr_30.txt|  Editing programs
  Previous chapter: |usr_28.txt|  Search commands and patterns
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*29.1*	First section
+*29.1*	Using tags
+
+What is a tag?  It is a location where an identifier is defined.  An example
+is a function definition in a C or C++ program.  A list of tags is kept in a
+tags file.  This can be used by Vim to directly jump from any place to the
+tag, the place where an identifier is defined.
+   To generate the tags file for all C files in the current directory, use the
+following command: >
+
+	ctags *.c
+
+"ctags" is a separate program.  Most Unix systems already have it installed.
+If you do not have it yet, you can find Exuberant ctags here:
+
+	http://ctags.sf.net ~
+
+Now when you are in Vim and you want to go to a function definition, you can
+jump to it by using the following command: >
+
+	:tag startlist
+
+This command will find the function "startlist" even if it is another file.
+   The CTRL-] command jumps to the tag of the word that is under the cursor.
+This makes it easy to explore a tangle of C code.  Suppose, for example, that
+you are in the function "write_block".  You can see that it calls
+"write_line".  But what does "write_line" do?  By placing the cursor on the
+call to "write_line" and pressing CTRL-], you jump to the definition of this
+function.
+   The "write_line" function calls "write_char".  You need to figure out what
+it does.  So you position the cursor over the call to "write_char" and press
+CTRL-].  Now you are at the definition of "write_char".
+
+	+-------------------------------------+
+	|void write_block(char **s; int cnt)  |
+	|{				      |
+	|   int i;			      |
+	|   for (i = 0; i < cnt; ++i)	      |
+	|      write_line(s[i);		      |
+	|}	    |			      |
+	+-----------|-------------------------+
+		    |
+	     CTRL-T |
+		    |	 +----------------------------+
+		    +--> |void write_line(char *s)    |
+			 |{			      |
+			 |   while (*s != 0)	      |
+			 |	write_char(*s++);     |
+			 |}	  |		      |
+			 +--------|-------------------+
+				  |
+			   CTRL-T |
+				  |    +------------------------------------+
+				  +--> |void write_char(char c)		    |
+				       |{				    |
+				       |    putchar((int)(unsigned char)c); |
+				       |}				    |
+				       +------------------------------------+
+
+The ":tags" command shows the list of tags that you traversed through:
+
+	:tags
+	  # TO tag         FROM line  in file/text ~
+	  1  1 write_line          8  write_block.c ~
+	  2  1 write_char          7  write_line.c ~
+	> ~
+>
+Now to go back.  The CTRL-T command goes to the preceding tag.  In the example
+above you get back to the "write_line" function, in the call to 'write_char".
+   This command takes a count argument that indicates how many tags to jump
+back.  You have gone forward, and now back.  Let's go forward again.  The
+following command goes to the tag on top of the list: >
+
+	:tag
+
+You can prefix it with a count and jump forward that many tags.  For example:
+":3tag".  CTRL-T also can be preceded with a count.
+   These commands thus allow you to go down a call tree with CTRL-] and back
+up again with CTRL-T.  Use ":tags" to find out where you are.
+
+
+SPLIT WINDOWS
+
+The ":tag" command replaces the file in the current window with the one
+containing the new function.  But suppose you want to see not only the old
+function but also the new one?  You can split the window using the ":split"
+command followed by the ":tag" command.  Vim has a shorthand command that does
+both: >
+	:stag tagname
+
+To split the current window and jump to the tag under the cursor use this
+command: >
+
+	CTRL-W ]
+
+If a count is specified, the new window will be that many lines high.
+
+
+MORE TAGS FILES
+
+When you have files in many directories, you can create a tags file in each of
+them.  Vim will then only be able to jump to tags within that directory.
+   To find more tags files, set the 'tags' option to include all the relevant
+tags files.  Example: >
+	
+	:set tags=./tags,./../tags,./*/tags
+
+This finds a tags file in the same directory as the current file, one
+directory level higher and in all subdirectories.
+   This is quite a number of tags files, but it may still not be enough.  For
+example, when editing a file in "~/proj/src", you will not find the tags file
+"~/proj/sub/tags".  For this situation Vim offers to search a whole directory
+tree for tags files.  Example: >
+
+	:set tags=~/proj/**/tags
+
+
+ONE TAGS FILE
+
+When Vim has to search many places for tags files, you can hear the disk
+rattling.  It may get a bit slow.  In that case it's better to spend this
+time while generating one big tags file.  You might do this overnight.
+   This requires the Exuberant ctags program, mentioned above.  It offers an
+argument to search a whole directory tree: >
+
+	cd ~/proj
+	ctags -R .
+
+The nice thing about this is that Exuberant ctags recognizes various file
+types.  Thus this doesn't work just for C and C++ programs, also for Eiffel
+and even Vim scripts.  See the ctags documentation to tune this.
+   Now you only need to tell Vim where your big tags file is: >
+
+   	:set tags=~/proj/tags
+
+
+MULTIPLE MATCHES
+
+When a function is defined multiple times (or a method in several classes),
+the ":tag" command will jump to the first one.  If there is a match in the
+current file, that one is used first.
+   You can now jump to other matches for the same tag with: >
+
+   	:tnext
+
+Repeat this to find further matches.  If there are many, you can select which
+one to jump to: >
+
+	:tselect tagname
+
+Vim will present you with a list of choices:
+
+	  # pri kind tag               file ~
+	  1 F   f    mch_init          os_amiga.c ~
+		       mch_init() ~
+	  2 F   f    mch_init          os_mac.c ~
+		       mch_init() ~
+	  3 F   f    mch_init          os_msdos.c ~
+		       mch_init(void) ~
+	  4 F   f    mch_init          os_riscos.c ~
+		       mch_init() ~
+	Enter nr of choice (<CR> to abort):  ~
+
+You can now enter the number (in the first column) of the match that you would
+like to jump to.  The information in the other columns give you a good idea of
+where the match is defined.
+
+To move between the matching tags, these commands can be used:
+
+	:tfirst			go to first match
+	:[count]tprevious	go to [count] previous match
+	:[count]tnext		go to [count] next match
+	:tlast			go to last match
+
+If [count] is omitted then one is used.
+
+
+GUESSING TAG NAMES
+
+Command line completion is a good way to avoid typing a long tag name.  Just
+type the first bit and press <Tab>: >
+
+	:tag write_<Tab>
+
+You will get the first match.  If it's not the one you want, press <Tab> until
+you find the right one.
+   Sometimes you only know part of the name of a function.  Or you have many
+tags that start with the same string, but end differently.  Then you can tell
+Vim to use a pattern to find the tag.
+   Suppose you want to jump to a tag that contains "block".  First type
+this: >
+
+	:tag /block
+
+Now use command line completion: press <Tab>.  Vim will find all tags that
+contain "block" and use the first match.
+   The "/" before a tag name tells Vim that what follows is not a literal tag
+name, but a pattern.  You can use all the items for search patterns here.  For
+example, suppose you want to select a tag that starts with "write_": >
+
+	:tselect /^write_
+
+The "^" specifies that the tag starts with "write".  Otherwise it would also
+be found halfway a tag name.  Similarly "$" at the end makes sure the pattern
+matches until the end of a tag.
+
+
+A TAGS BROWSER
+
+Since CTRL-] takes you to the definition of the identifier under the cursor,
+you can use a list of identifier names as a table of contents.  Here is an
+example.
+   First create a list of identifiers (this requires Exuberant ctags): >
+
+   	ctags --c-types=f -f functions *.c
+
+Now start Vim without a file, and edit this file in Vim, in a vertically split
+window: >
+
+	vim
+	:vsplit functions
+
+The window contains a list of all the functions.  There is some more stuff,
+but you can ignore that.  Do ":set ts=99" to clean it up a bit.
+   In this window, define a mapping: >
+
+	:nmap <buffer> <CR> 0ye<C-W>w:tag <C-R>"<CR>
+
+Move the cursor to the line that contains the function you want to go to.
+Now press <Enter>.  Vim will go to the other window and jump to the selected
+function.
+
+
+RELATED ITEMS
+
+You can set 'ignorecase' to make case in tag names be ignored.
+
+The 'tagbsearch' option tells if the tags file is sorted or not.  The default
+is to assume a sorted tags file, which makes a tags search a lot faster, but
+doesn't work if the tags file isn't sorted.
+
+The 'taglength' option can be used to tell Vim the number of significant
+characters in a tag.
+
+==============================================================================
+*29.2*	The preview window
+
+When you edit code that contains a function call, you need to use the correct
+arguments.  To know what values to pass you can look at how the function is
+defined.  The tags mechanism works very well for this.  Preferably the
+definition is displayed in another window.  For this the preview window can be
+used.
+   To open a preview window to display the function "write_char": >
+
+   	:ptag write_char
+
+Vim will open a window, and jumps to the tag "write_char".  Then it takes you
+back to the original position.  Thus you can continue typing without the need
+to use a CTRL-W command.
+   If the name of a function appears in the text, you can get its definition
+in the preview window with: >
+
+	CTRL-W }
+
+There is a script that automatically displays the text where the word under
+the cursor was defined.  See |CursorHold-example|
+
+To close the preview window again, use this command: >
+
+	:pclose
+
+To edit a specific file in the preview window, use ":pedit".  This can be
+useful to edit a header file, for example: >
+
+	:pedit defs.h
+
+Finally, ":psearch" can be used to find a word in the current file and any
+included files and display the match in the preview window.  This is
+especially useful when using library functions, for which you do not have a
+tags file.  Example: >
+
+	:psearch popen
+
+This will show the "stdio.h" file in the preview window, with the function
+prototype for popen():
+
+	FILE	*popen __P((const char *, const char *)); ~
+
+==============================================================================
+*29.3*	Moving through a program
+
+Since a program is structured, Vim can recognize items in it.  Specific
+commands can be used to move around.
+   C programs often contain constructs like this:
+
+   	#ifdef USE_POPEN ~
+	    fd = popen("ls", "r") ~
+	#else ~
+	    fd = fopen("tmp", "w") ~
+    	#endif ~
+
+But then much longer, and possibly nested.  Position the cursor on the
+"#ifdef" and press %.  Vim will jump to the "#else".  Pressing % again takes
+you to the "#endif".  Another % takes you to the "#ifdef" again.
+   When the construct is nested, Vim will find the matching items.  This is a
+good way to check if you didn't forget an "#endif".
+   When you are somewhere inside a "#if" - "#endif", you can jump to the start
+of it with: >
+
+	[#
+
+If you are not after a "#if" or "#ifdef" Vim will beep.  To jump forward to
+the next "#else" or "#endif" use: >
+
+	]#
+
+These two commands skip any "#if" - "#endif" blocks that it encounters.
+Example:
+
+	#if defined(HAS_INC_H) ~
+	    a = a + inc(); ~
+	# ifdef USE_THEME ~
+	    a += 3; ~
+	# endif ~
+	    set_width(a); ~
+
+With the cursor in the last line, "[#" moves to the first line.  The "#ifdef"
+- "#endif" block in the middle is skipped.
+
+
+MOVING IN CODE BLOCKS
+
+In C code blocks are enclosed in {}.  These can get pretty long.  To move to
+the start of the outer block use the "[[" command.  Use "]]" to find the end.
+This assumes that the "{" and "}" are in the first column.
+   The "[{" command moves to the start of the current block.  It skips over
+pairs of {} at the same level.  "]}" jumps to the end.
+   An overview:
+
+			function(int a)
+	   +->		{
+	   |		    if (a)
+	   |	   +->	    {
+	[[ |	   |		for (;;)	       --+
+	   |	   |	  +->	{			 |
+	   |	[{ |	  |	    foo(32);		 |     --+
+	   |	   |   [{ |	    if (bar(a))  --+	 | ]}	 |
+	   +--	   |	  +--		break;	   | ]}  |	 |
+		   |		}		 <-+	 |	 | ]]
+		   +--		foobar(a)		 |	 |
+			    }			       <-+	 |
+			}				       <-+
+
+When writing C++ or Java, the outer {} block is for the class.  The next level
+of {} is for a method.  When somewhere inside a class use "[m" to find the
+previous start of a method.  "]m" finds the next end of a method.
+
+Additionally, "[]" moves backward to the end of a function and "][" moves
+forward to the end of a function.  The end of a function is defined by a "}"
+in the first column.
+
+
+MOVING IN BRACES
+
+The "[(" and "])" commands work similar to "[{" and "]}", except that they
+work on () pairs instead of {} pairs.
+
+Don't forget you can also use "%" to move between matching (), {} and [].
+>
+				  [(
+<		    <--------------------------------
+			      <-------
+		if (a == b && (c == d || (e > f)) && x > y) ~
+				  -------------->
+			  --------------------------------> >
+				       ])
+
+MOVING IN COMMENTS
+
+To move back to the start of a comment use "[/".  Move forward to the end of a
+comment with "]/".  This only works for /* - */ comments.
+
+          +->  +-> /*
+          |    |    * A comment about      --+
+       [/ |    +--  * wonderful life.        | ]/
+          |         */                     <-+
+          |
+          +--       foo = bar * 3;         --+
+                                             | ]/
+	            /* a short comment */  <-+
+
+==============================================================================
+*29.4*	Finding identifiers
+
+You are editing a C program and wonder if a variable is declared as "int" or
+"unsigned".  A quick way to find this is with the "[I" command.
+   Suppose the cursor is on the word "column".  Type: >
+   
+   	[I
+
+Vim will list the matching lines it can find.  Not only in the current file,
+but also in all included files (and files included in them).  The result can
+look like this:
+
+	structs.h ~
+	 1:   29     unsigned     column;    /* column number */ ~
 
 
 ==============================================================================
 
-Next chapter: |usr_30.txt|  Compiling programs
+Next chapter: |usr_30.txt|  Editing programs
 
 Copyright: see |manual-copyright|  vim:tw=78:

@@ -310,7 +310,7 @@ STDMETHODIMP
 CVim::Eval(BSTR expr, BSTR *result)
 {
 #ifdef FEAT_EVAL
-    size_t len;
+    unsigned len;
     char *buffer;
     char *str;
     wchar_t *w_buffer;
@@ -504,14 +504,14 @@ extern "C" void RegisterMe()
     MultiByteToWideChar(CP_ACP, 0, module, -1, w_module, MAX_PATH);
 
     ITypeLib *typelib = NULL;
-    if (FAILED(LoadTypeLib(w_module, &typelib)))
+    if (LoadTypeLib(w_module, &typelib) != S_OK)
     {
 	MessageBox(0, "Cannot load type library to register", "Vim Registration", 0);
 	ok = FALSE;
     }
     else
     {
-	if (FAILED(RegisterTypeLib(typelib, w_module, NULL)))
+	if (RegisterTypeLib(typelib, w_module, NULL) != S_OK)
 	{
 	    MessageBox(0, "Cannot register type library", "Vim Registration", 0);
 	    ok = FALSE;
@@ -636,7 +636,8 @@ static void SetKeyAndValue(const char* key, const char* subkey, const char* valu
 
     // Set the value
     if (value)
-	RegSetValueEx(hKey, NULL, 0, REG_SZ, (BYTE *)value, strlen(value)+1);
+	RegSetValueEx(hKey, NULL, 0, REG_SZ, (BYTE *)value,
+                      (DWORD)STRLEN(value)+1);
 
     RegCloseKey(hKey);
 }

@@ -69,6 +69,10 @@ static void diff_read __ARGS((int idx_orig, int idx_new, char_u *fname));
 static void diff_copy_entry __ARGS((diff_T *dprev, diff_T *dp, int idx_orig, int idx_new));
 static diff_T *diff_alloc_new __ARGS((diff_T *dprev, diff_T *dp));
 
+#ifndef USE_CR
+# define tag_fgets vim_fgets
+#endif
+
 /*
  * Call this when a new buffer is being edited in the current window.  curbuf
  * must already have been set.
@@ -839,6 +843,18 @@ ex_diffsplit(eap)
 }
 
 /*
+ * Set options to show difs for the current window.
+ */
+/*ARGSUSED*/
+    void
+ex_diffthis(eap)
+    exarg_T	*eap;
+{
+    /* Set 'diff', 'scrollbind' on and 'wrap' off. */
+    diff_win_options(curwin, TRUE);
+}
+
+/*
  * Set options in window "wp" for diff mode.
  */
     void
@@ -1259,7 +1275,9 @@ diff_cmp(s1, s2)
 		break;
 	    if (l > 1)
 	    {
-		if (STRNCMP(p1, p2, l) != 0)
+		if (STRNCMP(p1, p2, l) != 0
+			&& (!enc_utf8 || utf_fold(utf_ptr2char(p1))
+					       != utf_fold(utf_ptr2char(p2))))
 		    break;
 		p1 += l;
 		p2 += l;
@@ -1492,8 +1510,8 @@ diff_find_change(wp, lnum, startp, endp)
 	    /* Search for end of difference, if any. */
 	    if (line_org[si] != NUL || line_new[si] != NUL)
 	    {
-		ei_org = STRLEN(line_org);
-		ei_new = STRLEN(line_new);
+		ei_org = (int)STRLEN(line_org);
+		ei_new = (int)STRLEN(line_new);
 		while (ei_org >= *startp && ei_new >= *startp
 			&& ei_org >= 0 && ei_new >= 0
 			&& line_org[ei_org] == line_new[ei_new])

@@ -452,7 +452,7 @@ edit(cmdchar, startln, count)
 	new_insert_skip = 0;
     else
     {
-	new_insert_skip = STRLEN(ptr);
+	new_insert_skip = (int)STRLEN(ptr);
 	vim_free(ptr);
     }
 
@@ -1604,7 +1604,7 @@ truncate_spaces(line)
     int	    i;
 
     /* find start of trailing white space */
-    for (i = STRLEN(line) - 1; i >= 0 && vim_iswhite(line[i]); i--)
+    for (i = (int)STRLEN(line) - 1; i >= 0 && vim_iswhite(line[i]); i--)
     {
 	if (State & REPLACE_FLAG)
 	    replace_join(0);	    /* remove a NUL from the replace stack */
@@ -1762,7 +1762,7 @@ ins_compl_add(str, len, fname, dir, reuse)
     if (got_int)
 	return RET_ERROR;
     if (len < 0)
-	len = STRLEN(str);
+	len = (int)STRLEN(str);
 
     /*
      * If the same match is already present, don't add it.
@@ -2616,7 +2616,7 @@ ins_compl_get_exp(ini, dir)
 			if (!p_paste)
 			    ptr = skipwhite(ptr);
 		    }
-		    len = STRLEN(ptr);
+		    len = (int)STRLEN(ptr);
 		}
 		else
 		{
@@ -2632,7 +2632,7 @@ ins_compl_get_exp(ini, dir)
 		    }
 		    /* Find end of this word. */
 		    tmp_ptr = find_word_end(tmp_ptr);
-		    len = tmp_ptr - ptr;
+		    len = (int)(tmp_ptr - ptr);
 
 		    if ((continue_status & CONT_ADDING)
 						  && len == completion_length)
@@ -2670,7 +2670,7 @@ ins_compl_get_exp(ini, dir)
 				if (tmp_ptr - ptr >= IOSIZE - len)
 				    tmp_ptr = ptr + IOSIZE - len - 1;
 				STRNCPY(IObuff + len, ptr, tmp_ptr - ptr);
-				len += tmp_ptr - ptr;
+				len += (int)(tmp_ptr - ptr);
 				reuse |= CONT_S_IPOS;
 			    }
 			    IObuff[len] = NUL;
@@ -2886,7 +2886,6 @@ ins_complete(c)
     char_u	    *line;
     char_u	    *tmp_ptr = NULL;		/* init for gcc */
     int		    temp = 0;
-    int		    i;
 
     if (c == Ctrl_P || c == Ctrl_L)
 	complete_direction = BACKWARD;
@@ -2935,7 +2934,7 @@ ins_complete(c)
 		     * it to get a better pattern, but then we don't want the
 		     * "\\<" prefix, check it bellow */
 		    tmp_ptr = skipwhite(line);
-		    initial_pos.col = tmp_ptr - line;
+		    initial_pos.col = (colnr_T) (tmp_ptr - line);
 		    initial_pos.lnum = curwin->w_cursor.lnum;
 		    continue_status &= ~CONT_SOL;    /* clear SOL if present */
 		}
@@ -2947,12 +2946,12 @@ ins_complete(c)
 		    if (continue_status & CONT_S_IPOS)
 		    {
 			continue_status |= CONT_SOL;
-			initial_pos.col = skipwhite(line + completion_length +
-						    initial_pos.col) - line;
+			initial_pos.col = (colnr_T) (skipwhite(line + completion_length +
+						    initial_pos.col) - line);
 		    }
 		    tmp_ptr = line + initial_pos.col;
 		}
-		temp = curwin->w_cursor.col - (tmp_ptr - line);
+		temp = curwin->w_cursor.col - (int)(tmp_ptr - line);
 		/* IObuf is used to add a "word from the next line" would we
 		 * have enough space?  just being paranoic */
 #define	MIN_SPACE 75
@@ -3002,8 +3001,7 @@ ins_complete(c)
 		if (complete_pat == NULL)
 		    return FAIL;
 		if (p_ic)
-		    for (i = 0; i < temp; i++)
-			complete_pat[i] = TO_LOWER(complete_pat[i]);
+		    str_foldcase(complete_pat);
 	    }
 	    else if (continue_status & CONT_ADDING)
 	    {
@@ -3094,15 +3092,14 @@ ins_complete(c)
 	else if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
 	{
 	    tmp_ptr = skipwhite(line);
-	    temp = (int)complete_col - (tmp_ptr - line);
+	    temp = (int)complete_col - (int)(tmp_ptr - line);
 	    if (temp < 0)	/* cursor in indent: empty pattern */
 		temp = 0;
 	    complete_pat = vim_strnsave(tmp_ptr, temp);
 	    if (complete_pat == NULL)
 		return FAIL;
 	    if (p_ic)
-		for (i = 0; i < temp; i ++)
-		    complete_pat[i] = TO_LOWER(complete_pat[i]);
+		str_foldcase(complete_pat);
 	}
 	else if (ctrl_x_mode == CTRL_X_FILES)
 	{
@@ -3124,11 +3121,11 @@ ins_complete(c)
 	    if (complete_xp.xp_context == EXPAND_UNSUCCESSFUL
 		    || complete_xp.xp_context == EXPAND_NOTHING)
 		return FAIL;
-	    temp = complete_xp.xp_pattern - complete_pat;
+	    temp = (int)(complete_xp.xp_pattern - complete_pat);
 	    tmp_ptr = line + temp;
 	    temp = complete_col - temp;
 	}
-	complete_col = tmp_ptr - line;
+	complete_col = (colnr_T) (tmp_ptr - line);
 
 	if (continue_status & CONT_ADDING)
 	{
@@ -3557,7 +3554,7 @@ insert_special(c, allow_modmask, ctrlv)
     if (IS_SPECIAL(c) || (mod_mask && allow_modmask))
     {
 	p = get_special_key_name(c, mod_mask);
-	len = STRLEN(p);
+	len = (int)STRLEN(p);
 	c = p[len - 1];
 	if (len > 2)
 	{
@@ -3683,7 +3680,10 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		fo_do_comments = TRUE;
 
 	    /* Don't break until after the comment leader */
-	    leader_len = get_leader_len(ml_get_curline(), NULL, FALSE);
+	    if (fo_do_comments)
+		leader_len = get_leader_len(ml_get_curline(), NULL, FALSE);
+	    else
+		leader_len = 0;
 #endif
 	    if (!force_formatting
 #ifdef FEAT_COMMENTS
@@ -3868,7 +3868,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		 * may have added or removed indent.
 		 */
 		curwin->w_cursor.col += startcol;
-		len = STRLEN(ml_get_curline());
+		len = (colnr_T)STRLEN(ml_get_curline());
 		if (curwin->w_cursor.col > len)
 		    curwin->w_cursor.col = len;
 	    }
@@ -3912,13 +3912,11 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	char_u	lead_end[COM_MAX_LEN];	    /* end-comment string */
 	int	middle_len, end_len;
 	int	i;
-	int	old_fo_do_comments = fo_do_comments;
 
 	/*
 	 * Need to remove existing (middle) comment leader and insert end
 	 * comment leader.  First, check what comment leader we can find.
 	 */
-	fo_do_comments = TRUE;
 	i = get_leader_len(line = ml_get_curline(), &p, FALSE);
 	if (i > 0 && vim_strchr(p, COM_MIDDLE) != NULL)	/* Just checking */
 	{
@@ -3957,7 +3955,6 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		ins_bytes_len(lead_end, end_len - 1);
 	    }
 	}
-	fo_do_comments = old_fo_do_comments;
     }
     end_comment_pending = NUL;
 #endif
@@ -4602,7 +4599,7 @@ get_last_insert_save()
     s = vim_strsave(last_insert + last_insert_skip);
     if (s != NULL)
     {
-	len = STRLEN(s);
+	len = (int)STRLEN(s);
 	if (len > 0 && s[len - 1] == ESC)	/* remove trailing ESC */
 	    s[len - 1] = NUL;
     }
@@ -6273,10 +6270,7 @@ ins_right()
 	foldOpenCursor();
 #endif
     undisplay_dollar();
-    if (gchar_cursor() != NUL
-#ifdef FEAT_VIRTUALEDIT
-	    || virtual_active()
-#endif
+    if (gchar_cursor() != NUL || virtual_active()
 	    )
     {
 	start_arrow(&curwin->w_cursor);
@@ -6651,7 +6645,7 @@ ins_eol(c)
     /* NL in reverse insert will always start in the end of
      * current line. */
     if (revins_on)
-	curwin->w_cursor.col += STRLEN(ml_get_cursor());
+	curwin->w_cursor.col += (colnr_T)STRLEN(ml_get_cursor());
 #endif
 
     AppendToRedobuff(NL_STR);

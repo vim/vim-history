@@ -1,9 +1,9 @@
 /* XPM */
 static char * tb_macro_xpm[] = {
 "18 18 4 1",
-" 	c None",
-".	c #888888",
-"+	c #000000",
+" 	c None    s background",
+".	c #888888 s bottomShadow",
+"+	c #000000 s foreground",
 "@	c #FFFFFF",
 "      .++.        ",
 "     .+@@+.       ",

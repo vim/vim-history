@@ -7,6 +7,7 @@ void diff_mark_adjust __ARGS((linenr_T line1, linenr_T line2, long amount, long 
 void ex_diffupdate __ARGS((exarg_T *eap));
 void ex_diffpatch __ARGS((exarg_T *eap));
 void ex_diffsplit __ARGS((exarg_T *eap));
+void ex_diffthis __ARGS((exarg_T *eap));
 void diff_win_options __ARGS((win_T *wp, int addbuf));
 int diff_check __ARGS((win_T *wp, linenr_T lnum));
 int diff_check_fill __ARGS((win_T *wp, linenr_T lnum));

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*help.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 			VIM - main help file
 									 k
@@ -65,8 +65,8 @@ Editing Effectively ~
 |usr_26.txt|  Repeating
 |usr_27.txt|  Search commands and patterns
 |usr_28.txt|  Folding
-|usr_29.txt|  Editing programs
-|usr_30.txt|  Compiling programs
+|usr_29.txt|  Moving through programs
+|usr_30.txt|  Editing programs
 |usr_31.txt|  Exploiting the GUI
 
 Tuning Vim ~
@@ -179,6 +179,9 @@ Standard plugins	*standard-plugin-list* ~
 |pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:
+|example.txt|	Example for a locally added help file
+|test.txt|	Testing the help command now
+|typecorr.txt|	Plugin for correcting typing mistakes
 
 ------------------------------------------------------------------------------
 *bars*		Bars example

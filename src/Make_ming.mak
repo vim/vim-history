@@ -38,16 +38,33 @@ CROSS=0
 # set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
 #ICONV="."
 
-# added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
-# Uncomment the first line and one of the others if you want National Language
+# Added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
+# Uncomment the first line and one of the following three if you want Native Language
 # Support.  You'll need gnu_gettext.win32, a MINGW32 Windows PORT of gettext by
 # Franco Bez <franco.bez@gmx.de>.  It may be found at
 # http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
 # Tested with mingw32 with GCC-2.95.2 on Win98
-#NLS=nls
-#NLS_DYNAMIC=nls_dynamic
-#NLS_SAFE_DYNAMIC=nls_safe_dynamic (this don't work)
-#NLS_STATIC=nls_static
+# Updated 2001 Jun 9
+#GETTEXT=c:/gettext.win32.msvcrt
+#STATIC_GETTEXT=USE_STATIC_GETTEXT
+#DYNAMIC_GETTEXT=USE_GETTEXT_DLL
+#DYNAMIC_GETTEXT=USE_SAFE_GETTEXT_DLL
+SAFE_GETTEXT_DLL_OBJ = $(GETTEXT)/src/safe_gettext_dll/safe_gettext_dll.o
+# Alternatively, if you uncomment the two following lines, you get a "safe" version
+# without linking the safe_gettext_dll.o object file.
+#DYNAMIC_GETTEXT=DYNAMIC_GETTEXT
+#GETTEXT_DYNAMIC=gnu_gettext.dll
+INTLPATH=$(GETTEXT)/lib/mingw32
+INTLLIB=gnu_gettext
+
+# If you are using gettext-0.10.35 from http://sourceforge.net/projects/gettext
+# or gettext-0.10.37 from http://sourceforge.net/projects/mingwrep/
+# uncomment the following, but I can't build a static versión with them, ?-(|
+#GETTEXT=c:/gettext-0.10.37-20010430
+#STATIC_GETTEXT=USE_STATIC_GETTEXT
+#DYNAMIC_GETTEXT=DYNAMIC_GETTEXT
+#INTLPATH=$(GETTEXT)/lib
+#INTLLIB=intl
 
 # uncomment 'PERL' if you want a perl-enabled version
 #PERL=perl
@@ -129,9 +146,6 @@ endif # RUBY
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
 DEFINES=-DWIN32 -DPC
-ifdef NLS
-DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
-endif
 ifeq ($(CROSS),1)
 # cross-compiler:
 CC = i586-pc-mingw32msvc-gcc
@@ -149,6 +163,18 @@ endif
 
 CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply -w
 CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
+
+ifdef GETTEXT
+DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
+GETTEXTINCLUDE = $(GETTEXT)/include
+GETTEXTLIB = $(INTLPATH)
+ifdef DYNAMIC_GETTEXT
+DEFINES +=-D$(DYNAMIC_GETTEXT)
+ifdef GETTEXT_DYNAMIC
+DEFINES += -DGETTEXT_DYNAMIC
+endif
+endif
+endif
 
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
@@ -213,22 +239,18 @@ endif
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
-LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32 -lole32 -luuid
 
-# added by E.F. Amatria to include NLS
-ifdef NLS
-LIB += -lgnu_gettext
-   ifdef NLS_DYNAMIC
-	CFLAGS += -DUSE_GETTEXT_DLL
-   else
-   #	ifdef NLS_SAFE_DYNAMIC # this does not work ?:-((
-   #	     CFLAGS += -DUSE_SAFE_GETTEXT_DLL
-   #	     LIB += -lstdc++
-   #	else
-	     CFLAGS += -DUSE_GETTEXT_STATIC
-	     LIB += -lintl
-   #	endif
-   endif
+ifdef GETTEXT
+CFLAGS += -I$(GETTEXTINCLUDE)
+ifndef STATIC_GETTEXT
+LIB += -L$(GETTEXTLIB) -l$(INTLLIB)
+ifeq (USE_SAFE_GETTEXT_DLL, $(DYNAMIC_GETTEXT))
+OBJ+=$(SAFE_GETTEXT_DLL_OBJ) 
+endif
+else
+LIB += -L$(GETTEXTLIB) -lintl
+endif
 endif
 
 ifdef PERL
@@ -242,9 +264,6 @@ LIB += -L$(ICONV)
 DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
-
-GUI_LIB = $(LIB) -lole32 -luuid
-
 
 all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe
 
@@ -262,7 +281,7 @@ vim.exe: $(OBJ)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(GUI_LIB) $(PYTHONLIB) $(RUBYLIB)
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB) $(PYTHONLIB) $(RUBYLIB)
 
 exes:
 	-$(DEL) *.o
@@ -280,6 +299,7 @@ xxd/xxd.exe: xxd/xxd.c
 
 clean:
 	-$(DEL) *.o
+	-$(DEL) *.res
 	-$(DEL) *.exe
 	-$(DEL) xxd\*.exe
 
@@ -296,6 +316,8 @@ if_python.c: dyn-ming.h
 
 if_perl.c: dyn-ming.h if_perl.xs typemap
 	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+
+os_win32.c: dyn-ming.h
 
 # $(SHELL) is set to sh.exe by default, it is reset to the ABSOLUT path if a
 # sh.exe is found; therefore ifeq ("sh.exe", $(SHELL)) means no sh was found
@@ -325,5 +347,12 @@ ifneq (sh.exe, $(SHELL))
 	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
 else
 	@echo #define DYNAMIC_PYTHON_DLL "$(DYNAMIC_PYTHON)" >> dyn-ming.h
+endif
+endif
+ifdef GETTEXT_DYNAMIC
+ifneq (sh.exe, $(SHELL))
+	@echo \#define GETTEXT_DLL \"$(GETTEXT_DYNAMIC)\" >> dyn-ming.h
+else
+	@echo #define GETTEXT_DLL "$(GETTEXT_DYNAMIC)" >> dyn-ming.h
 endif
 endif

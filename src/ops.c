@@ -290,7 +290,7 @@ op_shift(oap, curs_top, amount)
      */
     curbuf->b_op_start = oap->start;
     curbuf->b_op_end.lnum = oap->end.lnum;
-    curbuf->b_op_end.col = STRLEN(ml_get(oap->end.lnum));
+    curbuf->b_op_end.col = (colnr_T)STRLEN(ml_get(oap->end.lnum));
     if (curbuf->b_op_end.col > 0)
 	--curbuf->b_op_end.col;
 }
@@ -419,7 +419,7 @@ shift_block(oap, amount)
 	    j = total;
 	/* if we're splitting a TAB, allow for it */
 	bd.textcol -= bd.pre_whitesp_c - (bd.startspaces != 0);
-	len = STRLEN(bd.textstart) + 1;
+	len = (int)STRLEN(bd.textstart) + 1;
 	newp = alloc_check((unsigned)(bd.textcol + i + j + len));
 	if (newp == NULL)
 	    return;
@@ -524,7 +524,7 @@ block_insert(oap, s, b_insert, bdp)
     int		oldstate = State;
 
     State = INSERT;		/* don't want REPLACE for State */
-    s_len = STRLEN(s);
+    s_len = (unsigned)STRLEN(s);
 
     for (lnum = oap->start.lnum + 1; lnum <= oap->end.lnum; lnum++)
     {
@@ -1646,7 +1646,7 @@ op_delete(oap)
 	    }
 
 	    n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
-	    len = STRLEN(curline);
+	    len = (int)STRLEN(curline);
 
 	    if (oap->end.coladd != 0 && (int)oap->end.col >= len - 1
 		    && !(oap->start.coladd && (int)oap->end.col >= len - 1))
@@ -1660,7 +1660,7 @@ op_delete(oap)
 		curwin->w_cursor.coladd = 0;
 	}
 #endif
-	(void)del_chars((long)n, restart_edit == NUL);
+	(void)del_bytes((long)n, restart_edit == NUL);
     }
     else				/* delete characters between lines */
     {
@@ -1678,7 +1678,7 @@ op_delete(oap)
 	u_clearline();			/* "U" should not be possible now */
 	/* delete from start of line until op_end */
 	curwin->w_cursor.col = 0;
-	(void)del_chars((long)(oap->end.col + 1 - !oap->inclusive),
+	(void)del_bytes((long)(oap->end.col + 1 - !oap->inclusive),
 							 restart_edit == NUL);
 	curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
 
@@ -1732,6 +1732,7 @@ op_replace(oap, c)
 {
     int			n;
     char_u		*newp, *oldp;
+    size_t		oldlen;
     struct block_def	bd;
 
     if ((curbuf->b_ml.ml_flags & ML_EMPTY ) || oap->empty)
@@ -1754,24 +1755,40 @@ op_replace(oap, c)
 	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
-	    if (bd.textlen == 0)	/* nothing to delete */
+	    if (bd.textlen == 0 && !virtual_active())	/* nothing to delete */
 		continue;
 
 	    /* n == number of extra chars required
 	     * If we split a TAB, it may be replaced by several characters.
 	     * Thus the number of characters may increase!
 	     */
-	    /* allow for pre spaces */
-	    n = (bd.startspaces ? bd.start_char_vcols - 1 : 0);
+#ifdef FEAT_VIRTUALEDIT
+	    /* If the range starts in virtual space, count the initial
+	     * coladd offset as part of "startspaces" */
+	    if (virtual_active() && bd.is_short && *bd.textstart == NUL)
+	    {
+		pos_T vpos;
+
+		getvpos(&vpos, oap->start_vcol);
+		bd.startspaces += vpos.coladd;
+		n = bd.startspaces;
+	    }
+	    else
+#endif
+		/* allow for pre spaces */
+		n = (bd.startspaces ? bd.start_char_vcols - 1 : 0);
+
 	    /* allow for post spp */
-	    n += (bd.endspaces && !bd.is_oneChar ? bd.end_char_vcols - 1 : 0);
+	    n += (bd.endspaces && !bd.is_oneChar && bd.end_char_vcols > 0
+						 ? bd.end_char_vcols - 1 : 0);
 	    n += (oap->end_vcol - oap->start_vcol) - bd.textlen + 1;
 
 	    oldp = ml_get_curline();
-	    newp = alloc_check((unsigned)STRLEN(oldp) + 1 + n);
+	    oldlen = STRLEN(oldp);
+	    newp = alloc_check((unsigned)oldlen + 1 + n);
 	    if (newp == NULL)
 		continue;
-	    vim_memset(newp, NUL, (size_t)(STRLEN(oldp) + 1 + n));
+	    vim_memset(newp, NUL, (size_t)(oldlen + 1 + n));
 	    /* copy up to deleted part */
 	    mch_memmove(newp, oldp, (size_t)bd.textcol);
 	    oldp += bd.textcol + bd.textlen;
@@ -1781,7 +1798,7 @@ op_replace(oap, c)
 	    {
 		colnr_T len = oap->end_vcol - oap->start_vcol + 1;
 
-		if (bd.is_short)
+		if (bd.is_short && !virtual_active())
 		    len -= (oap->end_vcol - bd.end_vcol) + 1;
 		copy_chars(newp + STRLEN(newp), (size_t)len, c);
 	    }
@@ -1805,7 +1822,7 @@ op_replace(oap, c)
 	{
 	    oap->start.col = 0;
 	    curwin->w_cursor.col = 0;
-	    oap->end.col = STRLEN(ml_get(oap->end.lnum));
+	    oap->end.col = (colnr_T)STRLEN(ml_get(oap->end.lnum));
 	    if (oap->end.col)
 		--oap->end.col;
 	}
@@ -1829,8 +1846,50 @@ op_replace(oap, c)
 		}
 		else
 #endif
+		{
+#ifdef FEAT_VIRTUALEDIT
+		    if (n == TAB)
+		    {
+			int end_vcol = 0;
+
+			if (curwin->w_cursor.lnum == oap->end.lnum)
+			{
+			    /* oap->end has to be recalculated when
+			     * the tab breaks */
+			    end_vcol = getviscol2(oap->end.col,
+							     oap->end.coladd);
+			}
+			coladvance_force(getviscol());
+			if (curwin->w_cursor.lnum == oap->end.lnum)
+			    getvpos(&oap->end, end_vcol);
+			pchar(curwin->w_cursor, c);
+		    }
+#endif
 		    pchar(curwin->w_cursor, c);
+		}
 	    }
+#ifdef FEAT_VIRTUALEDIT
+	    else if (virtual_active() && curwin->w_cursor.lnum == oap->end.lnum)
+	    {
+		int virtcols = oap->end.coladd;
+
+		if (curwin->w_cursor.lnum == oap->start.lnum
+			&& oap->start.col == oap->end.col && oap->start.coladd)
+		    virtcols -= oap->start.coladd;
+
+		/* oap->end has been trimmed so it's effectively inclusive;
+		 * as a result an extra +1 must be counted so we don't
+		 * trample the NUL byte. */
+		coladvance_force(getviscol2(oap->end.col, oap->end.coladd) + 1);
+		curwin->w_cursor.col -= (virtcols + 1);
+		for (; virtcols >= 0; virtcols--)
+		{
+		    pchar(curwin->w_cursor, c);
+		    if (inc(&curwin->w_cursor) == -1)
+			break;
+		}
+	    }
+#endif
 
 	    /* Advance to next character, stop at the end of the file. */
 	    if (inc(&curwin->w_cursor) == -1)
@@ -1888,7 +1947,7 @@ op_tilde(oap)
 	{
 	    oap->start.col = 0;
 	    pos.col = 0;
-	    oap->end.col = STRLEN(ml_get(oap->end.lnum));
+	    oap->end.col = (colnr_T)STRLEN(ml_get(oap->end.lnum));
 	    if (oap->end.col)
 		--oap->end.col;
 	}
@@ -1943,28 +2002,28 @@ swapchar(op_type, pos)
 
     c = gchar_pos(pos);
 
-#ifdef FEAT_MBYTE
-    if (c >= 0x100)	/* No lower/uppercase letter */
-	return FALSE;
-#endif
     /* Only do rot13 encoding for ASCII characters. */
     if (c >= 0x80 && op_type == OP_ROT13)
 	return FALSE;
 
+#ifdef FEAT_MBYTE
+    if (enc_dbcs != 0 && c >= 0x100)	/* No lower/uppercase letter */
+	return FALSE;
+#endif
     nc = c;
-    if (islower(c))
+    if (MB_ISLOWER(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'a');
 	else if (op_type != OP_LOWER)
-	    nc = TO_UPPER(c);
+	    nc = MB_TOUPPER(c);
     }
-    else if (isupper(c))
+    else if (MB_ISUPPER(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'A');
 	else if (op_type != OP_UPPER)
-	    nc = TO_LOWER(c);
+	    nc = MB_TOLOWER(c);
     }
     if (nc != c)
     {
@@ -2008,7 +2067,7 @@ op_insert(oap, count1)
 	firstline = ml_get(oap->start.lnum) + bd.textcol;
 	if (oap->op_type == OP_APPEND)
 	    firstline += bd.textlen;
-	pre_textlen = STRLEN(firstline);
+	pre_textlen = (long)STRLEN(firstline);
     }
 
     if (oap->op_type == OP_APPEND)
@@ -2077,7 +2136,7 @@ op_insert(oap, count1)
 	firstline = ml_get(oap->start.lnum) + bd.textcol;
 	if (oap->op_type == OP_APPEND)
 	    firstline += bd.textlen;
-	if ((ins_len = STRLEN(firstline) - pre_textlen) > 0)
+	if ((ins_len = (long)STRLEN(firstline) - pre_textlen) > 0)
 	{
 	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
 	    {
@@ -2147,10 +2206,7 @@ op_change(oap)
 	return FALSE;
 
     if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum)
-#ifdef FEAT_VIRTUALEDIT
-	    && !virtual_active()
-#endif
-	    )
+							 && !virtual_active())
 	inc_cursor();
 
 #ifdef FEAT_VISUALEXTRA
@@ -2159,7 +2215,7 @@ op_change(oap)
     if (oap->block_mode)
     {
 	firstline = ml_get(oap->start.lnum);
-	pre_textlen = STRLEN(firstline);
+	pre_textlen = (long)STRLEN(firstline);
 	block_prep(oap, &bd, oap->start.lnum, TRUE);
     }
 #endif
@@ -2183,7 +2239,7 @@ op_change(oap)
 	 * Subsequent calls to ml_get() flush the firstline data - take a
 	 * copy of the required bit.
 	 */
-	if ((ins_len = STRLEN(firstline) - pre_textlen) > 0)
+	if ((ins_len = (long)STRLEN(firstline) - pre_textlen) > 0)
 	{
 	    if ((ins_text = alloc_check((unsigned)(ins_len + 1))) != 0)
 	    {
@@ -2421,7 +2477,7 @@ op_yank(oap, deleting, mess)
 		j = oap->end.col - oap->start.col + 1 - !oap->inclusive;
 		/* Watch out for very big endcol (MAXCOL) */
 		p = ml_get(lnum) + oap->start.col;
-		len = STRLEN(p);
+		len = (long)STRLEN(p);
 		if (j > len || j < 0)
 		    j = len;
 		if ((y_current->y_array[0] = vim_strnsave(p, (int)j)) == NULL)
@@ -2802,7 +2858,7 @@ do_put(regname, dir, count, flags)
     else if (u_save_cursor() == FAIL)
 	goto end;
 
-    yanklen = STRLEN(y_array[0]);
+    yanklen = (int)STRLEN(y_array[0]);
 
 #ifdef FEAT_VIRTUALEDIT
     if (ve_flags == VE_ALL && y_type == MCHAR)
@@ -2899,14 +2955,14 @@ do_put(regname, dir, count, flags)
 	    }
 	    /* get the old line and advance to the position to insert at */
 	    oldp = ml_get_curline();
-	    oldlen = STRLEN(oldp);
+	    oldlen = (int)STRLEN(oldp);
 	    for (ptr = oldp; vcol < col && *ptr; )
 	    {
 		/* Count a tab for what it's worth (if list mode not on) */
 		incr = lbr_chartabsize_adv(&ptr, (colnr_T)vcol);
 		vcol += incr;
 	    }
-	    bd.textcol = ptr - oldp;
+	    bd.textcol = (colnr_T) (ptr - oldp);
 
 	    shortline = (vcol < col) || (vcol == col && !*ptr) ;
 
@@ -2920,7 +2976,7 @@ do_put(regname, dir, count, flags)
 		delcount = 1;
 	    }
 
-	    yanklen = STRLEN(y_array[i]);
+	    yanklen = (int)STRLEN(y_array[i]);
 
 	    /* calculate number of spaces required to fill right side of block*/
 	    spaces = y_width + 1;
@@ -3068,7 +3124,7 @@ do_put(regname, dir, count, flags)
 		     * Then append y_array[0] to first line.
 		     */
 		    ptr = ml_get(lnum) + col;
-		    totlen = STRLEN(y_array[y_size - 1]);
+		    totlen = (int)STRLEN(y_array[y_size - 1]);
 		    newp = alloc_check((unsigned)(STRLEN(ptr) + totlen + 1));
 		    if (newp == NULL)
 			goto error;
@@ -3107,7 +3163,7 @@ do_put(regname, dir, count, flags)
 			curwin->w_cursor.lnum = lnum;
 			ptr = ml_get(lnum);
 			if (cnt == count && i == y_size - 1)
-			    lendiff = STRLEN(ptr);
+			    lendiff = (int)STRLEN(ptr);
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT)
 			if (*ptr == '#' && preprocs_left())
 			    indent = 0;     /* Leave # lines at start */
@@ -3127,7 +3183,7 @@ do_put(regname, dir, count, flags)
 			curwin->w_cursor = old_pos;
 			/* remember how many chars were removed */
 			if (cnt == count && i == y_size - 1)
-			    lendiff -= STRLEN(ml_get(lnum));
+			    lendiff -= (int)STRLEN(ml_get(lnum));
 		    }
 		}
 	    }
@@ -3162,7 +3218,7 @@ error:
 	    /* put '] mark at last inserted character */
 	    curbuf->b_op_end.lnum = lnum;
 	    /* correct length for change in indent */
-	    col = STRLEN(y_array[y_size - 1]) - lendiff;
+	    col = (colnr_T)STRLEN(y_array[y_size - 1]) - lendiff;
 	    if (col > 1)
 		curbuf->b_op_end.col = col - 1;
 	    else
@@ -3488,7 +3544,7 @@ do_join(insert_space)
 	return FAIL;		/* can't join on last line */
 
     curr = ml_get_curline();
-    currsize = STRLEN(curr);
+    currsize = (int)STRLEN(curr);
     endcurr1 = endcurr2 = NUL;
     if (currsize > 0)
     {
@@ -3517,7 +3573,7 @@ do_join(insert_space)
 		++spaces;
 	}
     }
-    nextsize = STRLEN(next);
+    nextsize = (int)STRLEN(next);
 
     newp = alloc_check((unsigned)(currsize + nextsize + spaces + 1));
     if (newp == NULL)
@@ -3830,7 +3886,7 @@ op_format(oap)
 		curwin->w_cursor.lnum++;
 		curwin->w_cursor.col = 0;
 #ifdef FEAT_COMMENTS
-		(void)del_chars((long)next_leader_len, FALSE);
+		(void)del_bytes((long)next_leader_len, FALSE);
 #endif
 		curwin->w_cursor.lnum--;
 		if (do_join(TRUE) == FAIL)
@@ -3885,7 +3941,10 @@ fmt_check_par(lnum, leader_len, leader_flags)
     char_u	*ptr;
 
     ptr = ml_get(lnum);
-    *leader_len = get_leader_len(ptr, leader_flags, FALSE);
+    if (fo_do_comments)
+	*leader_len = get_leader_len(ptr, leader_flags, FALSE);
+    else
+	*leader_len = 0;
 
     if (*leader_len > 0)
     {
@@ -3946,7 +4005,9 @@ block_prep(oap, bdp, lnum, is_del)
     bdp->is_oneChar = FALSE;
     bdp->pre_whitesp = 0;
     bdp->pre_whitesp_c = 0;
+    bdp->end_char_vcols = 0;
 #endif
+    bdp->start_char_vcols = 0;
 
     line = ml_get(lnum);
     pstart = line;
@@ -4061,7 +4122,7 @@ block_prep(oap, bdp, lnum, is_del)
 	    pstart = prev_pstart;
 	bdp->textlen = (int)(pend - pstart);
     }
-    bdp->textcol = pstart - line;
+    bdp->textcol = (colnr_T) (pstart - line);
     bdp->textstart = pstart;
 }
 
@@ -4075,7 +4136,7 @@ reverse_line(s)
     int	    i, j;
     char_u  c;
 
-    if ((i = STRLEN(s) - 1) <= 0)
+    if ((i = (int)STRLEN(s) - 1) <= 0)
 	return;
 
     curwin->w_cursor.col = i - curwin->w_cursor.col;
@@ -4339,7 +4400,7 @@ do_addsub(command, Prenum1)
 	    sprintf((char *)buf2, "%lX", n);
 	else
 	    sprintf((char *)buf2, "%lx", n);
-	length -= STRLEN(buf2);
+	length -= (int)STRLEN(buf2);
 
 	/*
 	 * adjust number of zeros to the new number of digits, so the
@@ -4713,7 +4774,7 @@ clip_convert_selection(str, len, cbd)
 	return -1;
 
     for (i = 0; i < y_ptr->y_size; i++)
-	*len += STRLEN(y_ptr->y_array[i]) + eolsize;
+	*len += (long_u)STRLEN(y_ptr->y_array[i]) + eolsize;
 
     /*
      * Don't want newline character at end of last line if we're in MCHAR mode.
@@ -4813,7 +4874,7 @@ get_reg_contents(regname)
     len = 0;
     for (i = 0; i < y_current->y_size; ++i)
     {
-	len += STRLEN(y_current->y_array[i]);
+	len += (long)STRLEN(y_current->y_array[i]);
 	/*
 	 * Insert a newline between lines and after last line if
 	 * y_type is MLINE.
@@ -4833,7 +4894,7 @@ get_reg_contents(regname)
 	for (i = 0; i < y_current->y_size; ++i)
 	{
 	    STRCPY(retval + len, y_current->y_array[i]);
-	    len += STRLEN(retval + len);
+	    len += (long)STRLEN(retval + len);
 
 	    /*
 	     * Insert a NL between lines and after the last line if y_type is
@@ -4887,7 +4948,7 @@ write_reg_contents(name, str, must_append)
     get_yank_register(name, TRUE);
     if (!y_append && !must_append)
 	free_yank_all();
-    len = STRLEN(str);
+    len = (long)STRLEN(str);
     str_to_reg(y_current,
 	    (len > 0 && (str[len - 1] == '\n' || str[len -1] == '\r'))
 	     ? MLINE : MCHAR, str, len);
@@ -4986,7 +5047,7 @@ str_to_reg(y_ptr, type, str, len)
 	if (append)
 	{
 	    --lnum;
-	    extra = STRLEN(y_ptr->y_array[lnum]);
+	    extra = (int)STRLEN(y_ptr->y_array[lnum]);
 	}
 	else
 	    extra = 0;

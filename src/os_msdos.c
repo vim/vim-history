@@ -2084,9 +2084,9 @@ mch_has_wildcard(char_u *p)
     {
 	if (vim_strchr((char_u *)
 #  ifdef VIM_BACKTICK
-				    "?*$`"
+				    "?*$[`"
 #  else
-				    "?*$"
+				    "?*$["
 #  endif
                                                 , *p) != NULL
 		|| (*p == '~' && p[1] != NUL))

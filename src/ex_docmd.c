@@ -29,7 +29,7 @@ static void ex_hardcopy __ARGS((exarg_T *eap));
 typedef struct ucmd
 {
     char_u	*uc_name;	/* The command name */
-    long	uc_argt;	/* The argument type */
+    long_u	uc_argt;	/* The argument type */
     char_u	*uc_rep;	/* The command's replacement string */
     long	uc_def;		/* The default value for a range/count */
     scid_T	uc_scriptID;	/* SID where the command was defined */
@@ -202,7 +202,7 @@ static void	ex_popup __ARGS((exarg_T *eap));
 #ifndef FEAT_GUI_MSWIN
 # define gui_simulate_alt_key	ex_ni
 #endif
-#if !defined(FEAT_GUI_MSWIN) && !defined(FEAT_GUI_GTK)
+#if !defined(FEAT_GUI_MSWIN) && !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MOTIF)
 # define gui_mch_find_dialog	ex_ni
 # define gui_mch_replace_dialog ex_ni
 #endif
@@ -343,6 +343,11 @@ static char_u	*get_view_file __ARGS((int c));
 #else
 # define ex_loadview		ex_ni
 #endif
+#ifdef FEAT_EVAL
+static void	ex_compiler __ARGS((exarg_T *eap));
+#else
+# define ex_compiler		ex_ni
+#endif
 static void	ex_runtime __ARGS((exarg_T *eap));
 #ifdef FEAT_VIMINFO
 static void	ex_viminfo __ARGS((exarg_T *eap));
@@ -363,6 +368,7 @@ static void	ex_setfiletype  __ARGS((exarg_T *eap));
 # define ex_diffpatch		ex_ni
 # define ex_diffgetput		ex_ni
 # define ex_diffsplit		ex_ni
+# define ex_diffthis		ex_ni
 # define ex_diffupdate		ex_ni
 #endif
 static void	ex_digraphs __ARGS((exarg_T *eap));
@@ -1415,7 +1421,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    i = 1;
 	    while ((pos = (char_u *)strstr((char *)pos + 2, "$*")) != NULL)
 		++i;
-	    len = STRLEN(p);
+	    len = (int)STRLEN(p);
 	    new_cmdline = alloc((int)(STRLEN(program) + i * (len - 2) + 1));
 	    if (new_cmdline == NULL)
 		goto doend;		    /* out of memory */
@@ -1969,7 +1975,7 @@ set_one_cmd_context(xp, buff)
     char_u		*cmd, *arg;
     int			i = 0;
     cmdidx_T		cmdidx;
-    long		argt = 0;
+    long_u		argt = 0;
 #if defined(FEAT_USR_CMDS) && defined(FEAT_CMDL_COMPL)
     int			compl = EXPAND_NOTHING;
 #endif
@@ -3158,10 +3164,10 @@ repl_cmdline(eap, src, srclen, repl, cmdlinep)
      * The new command line is build in new_cmdline[].
      * First allocate it.
      */
-    len = STRLEN(repl);
-    i = STRLEN(*cmdlinep) + len + 3;
+    len = (int)STRLEN(repl);
+    i = (int)STRLEN(*cmdlinep) + len + 3;
     if (eap->nextcmd)
-	i += STRLEN(eap->nextcmd);	/* add space for next command */
+	i += (int)STRLEN(eap->nextcmd);/* add space for next command */
     if ((new_cmdline = alloc((unsigned)i)) == NULL)
 	return NULL;			/* out of memory! */
 
@@ -3171,7 +3177,7 @@ repl_cmdline(eap, src, srclen, repl, cmdlinep)
      * Copy what came after the expanded part.
      * Copy the next commands, if there are any.
      */
-    i = src - *cmdlinep;		/* length of part before match */
+    i = (int)(src - *cmdlinep);	/* length of part before match */
     mch_memmove(new_cmdline, *cmdlinep, (size_t)i);
     mch_memmove(new_cmdline + i, repl, (size_t)len);
     i += len;				/* remember the end of the string */
@@ -3180,7 +3186,7 @@ repl_cmdline(eap, src, srclen, repl, cmdlinep)
 
     if (eap->nextcmd)			/* append next command */
     {
-	i = STRLEN(new_cmdline) + 1;
+	i = (int)STRLEN(new_cmdline) + 1;
 	STRCPY(new_cmdline + i, eap->nextcmd);
 	eap->nextcmd = new_cmdline + i;
     }
@@ -3336,7 +3342,7 @@ getargopt(eap)
 	return FAIL;
 
     ++arg;
-    *pp = arg - eap->cmd;
+    *pp = (int)(arg - eap->cmd);
     arg = skip_cmd_arg(arg);
     eap->arg = skipwhite(arg);
     *arg = NUL;
@@ -3833,7 +3839,7 @@ uc_list(name, name_len)
 	    msg_putchar(' ');
 
 	    msg_outtrans_attr(cmd->uc_name, hl_attr(HLF_D));
-	    len = STRLEN(cmd->uc_name) + 4;
+	    len = (int)STRLEN(cmd->uc_name) + 4;
 
 	    do {
 		msg_putchar(' ');
@@ -3863,7 +3869,7 @@ uc_list(name, name_len)
 		{
 		    /* -count=N */
 		    sprintf((char *)IObuff + len, "%ldc", cmd->uc_def);
-		    len += STRLEN(IObuff + len);
+		    len += (int)STRLEN(IObuff + len);
 		}
 		else if (a & DFLALL)
 		    IObuff[len++] = '%';
@@ -3871,7 +3877,7 @@ uc_list(name, name_len)
 		{
 		    /* -range=N */
 		    sprintf((char *)IObuff + len, "%ld", cmd->uc_def);
-		    len += STRLEN(IObuff + len);
+		    len += (int)STRLEN(IObuff + len);
 		}
 		else
 		    IObuff[len++] = '.';
@@ -3886,7 +3892,7 @@ uc_list(name, name_len)
 		if (command_complete[j].expand == cmd->uc_compl)
 		{
 		    STRCPY(IObuff + len, command_complete[j].name);
-		    len += STRLEN(IObuff + len);
+		    len += (int)STRLEN(IObuff + len);
 		    break;
 		}
 
@@ -4877,7 +4883,7 @@ ex_stop(eap)
      * Disallow suspending for "rvim".
      */
     if (!check_restricted()
-#ifdef WIN32
+#ifdef WIN3264
 	/*
 	 * Check if external commands are allowed now.
 	 */
@@ -7392,7 +7398,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
      */
     for (spec_idx = 0; spec_idx < SPEC_COUNT; ++spec_idx)
     {
-	*usedlen = strlen(spec_str[spec_idx]);
+	*usedlen = (int)STRLEN(spec_str[spec_idx]);
 	if (STRNCMP(src, spec_str[spec_idx], *usedlen) == 0)
 	    break;
     }
@@ -7468,7 +7474,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		}
 		s = src + 1;
 		i = (int)getdigits(&s);
-		*usedlen = s - src;	/* length of what we expand */
+		*usedlen = (int)(s - src); /* length of what we expand */
 
 		buf = buflist_findnr(i);
 		if (buf == NULL)
@@ -7539,7 +7545,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		break;
 	}
 
-	resultlen = STRLEN(result);	/* length of new string */
+	resultlen = (int)STRLEN(result);	/* length of new string */
 	if (src[*usedlen] == '<')	/* remove the file name extension */
 	{
 	    ++*usedlen;
@@ -7548,7 +7554,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 #else
 	    if ((s = vim_strrchr(result, '.')) != NULL && s >= gettail(result))
 #endif
-		resultlen = s - result;
+		resultlen = (int)(s - result);
 	}
 #ifdef FEAT_MODIFY_FNAME
 	else if (!skip_mod)
@@ -7687,7 +7693,7 @@ expand_sfile(arg)
 		p += srclen;
 		continue;
 	    }
-	    len = STRLEN(result) - srclen + STRLEN(repl) + 1;
+	    len = (int)STRLEN(result) - srclen + (int)STRLEN(repl) + 1;
 	    newres = alloc(len);
 	    if (newres == NULL)
 	    {
@@ -7697,7 +7703,7 @@ expand_sfile(arg)
 	    }
 	    mch_memmove(newres, result, (size_t)(p - result));
 	    STRCPY(newres + (p - result), repl);
-	    len = STRLEN(newres);
+	    len = (int)STRLEN(newres);
 	    STRCAT(newres, p + srclen);
 	    vim_free(repl);
 	    vim_free(result);
@@ -8485,6 +8491,27 @@ ex_viminfo(eap)
 }
 #endif
 
+#ifdef FEAT_EVAL
+/*
+ * ":compiler {name}"
+ */
+    static void
+ex_compiler(eap)
+    exarg_T	*eap;
+{
+    char_u	*buf;
+
+    buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
+    if (buf != NULL)
+    {
+	do_unlet((char_u *)"did_load_compiler");
+	sprintf((char *)buf, "compiler/%s.vim", eap->arg);
+	(void)cmd_runtime(buf, TRUE);
+	vim_free(buf);
+    }
+}
+#endif
+
 /*
  * ":runtime {name}"
  */
@@ -8575,6 +8602,10 @@ do_in_runtimepath(name, all, callback)
 		    if (p_verbose > 2)
 			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
 		    /* Expand wildcards and source each match. */
+#ifdef VMS
+                    strcpy((char *)buf,vms_fixfilename(buf));
+#endif
+
 		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
 							       EW_FILE) == OK)
 		    {
@@ -8652,7 +8683,7 @@ dialog_msg(buff, format, fname)
 
     if (fname == NULL)
 	fname = (char_u *)"Untitled";
-    len = STRLEN(format) + STRLEN(fname);
+    len = (int)STRLEN(format) + (int)STRLEN(fname);
     if (len >= IOSIZE)
 	sprintf((char *)buff, format, (int)(IOSIZE - STRLEN(format)), fname);
     else
@@ -9250,6 +9281,7 @@ static int		current_id;
 static int		page_count;
 
 static unsigned long darken_rgb __ARGS((unsigned long rgb));
+static unsigned long prt_get_term_colour __ARGS((int colourindex));
 static void ex_print_number __ARGS((int offset, int y_pos, linenr_T line_num, int format));
 static void ex_print_header __ARGS((int offset, int width, int pagenum, int format));
 
@@ -9260,6 +9292,27 @@ darken_rgb(rgb)
     return	((rgb >> 17) << 16)
 	    +	(((rgb & 0xff00) >> 9) << 8)
 	    +	((rgb & 0xff) >> 1);
+}
+
+    static unsigned long
+prt_get_term_colour(colourindex)
+    int	    colourindex;
+{
+#if 0
+    if (t_colors > 88)
+    {
+	/* assume 256 colour terminal TODO */
+    }
+    else if (t_colors > 16)
+    {
+	/* assume 88 colour terminal TODO */
+    }
+    else
+	return cterm_color[(unsigned)(t_colors - 1) >> 3] [colourindex];
+#else
+    colourindex %= 16; /* force into safe range for now */
+    return cterm_color[(t_colors > 4) ? 1 : 0][colourindex];
+#endif
 }
 
     static void
@@ -9468,7 +9521,7 @@ ex_hardcopy(eap)
      */
     for (no_lines = eap->line1; no_lines <= eap->line2; no_lines++)
     {
-	no_filechars += STRLEN(ml_get(no_lines));
+	no_filechars += (unsigned long)STRLEN(ml_get(no_lines));
 #ifdef COMPUTE_NUM_PAGES
 # ifdef APPROXIMATE_COUNT
 	if(STRLEN(ml_get(no_lines)) % settings.chars_per_line)
@@ -9679,9 +9732,7 @@ ex_hardcopy(eap)
 
 				if (colourindex >= 0 && colourindex < t_colors)
 				{
-				    this_colour = cterm_color[
-						(unsigned)(t_colors - 1) >> 3]
-								[colourindex];
+				    this_colour = prt_get_term_colour(colourindex);
 				    if (this_colour == 0xffffffUL)
 					this_colour = 0;
 				    else if (darken_colours)
@@ -9745,7 +9796,8 @@ ex_hardcopy(eap)
 
 		    if (no_wrapping && need_break)
 		    {
-			total_charcount += (STRLEN(start_line) - (p - start_line));
+			total_charcount += (unsigned long) (STRLEN(start_line)
+                                            - (p - start_line));
 		    }
 
 		    if (*p == NUL || (no_wrapping && need_break))

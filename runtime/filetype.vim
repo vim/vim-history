@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jun 02
+" Last change:	2001 Jun 10
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -22,7 +22,6 @@ au BufNewFile,BufRead *~
 	\ let s:name = expand("<afile>") |
 	\ let s:short = substitute(s:name, '\~$', '', '') |
 	\ if s:name != s:short && s:short != "" |
-	\   echo s:name s:short |
 	\   exe "doau filetypedetect BufRead " . s:short |
 	\ endif |
 	\ unlet s:name |
@@ -225,7 +224,7 @@ au BufNewFile,BufRead *.css			setf css
 au BufNewFile,BufRead *.con			setf cterm
 
 " Changelog
-au BufNewFile,BufRead changelog.Debian		setf debchangelog
+au BufNewFile,BufRead changelog.Debian,changelog.dch setf debchangelog
 au BufNewFile,BufRead [cC]hange[lL]og		if getline(1) =~ '; urgency='
 	\| setf debchangelog | else | setf changelog | endif
 
@@ -1144,6 +1143,10 @@ au BufNewFile,BufRead,StdinReadPost *
 " BIND zone
 au BufNewFile,BufRead /var/named/*		setf bindzone
 
+" Changelog
+au BufNewFile,BufRead [cC]hange[lL]og*		if getline(1) =~ '; urgency='
+	\| setf debchangelog | else | setf changelog | endif
+
 " Crontab
 au BufNewFile,BufRead crontab.*			setf crontab
 
@@ -1161,6 +1164,12 @@ au BufNewFile,BufRead .gtkrc*,gtkrc*		setf gtkrc
 
 " Jam
 au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam
+
+" Jargon
+au! BufNewFile,BufRead *jarg*
+	\ if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'THIS IS THE JARGON FILE' |
+	\   setf jargon |
+	\ endif
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*		setf make

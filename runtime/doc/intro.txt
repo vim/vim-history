@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0ai.  Last change: 2001 Jun 03
+*intro.txt*     For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -223,7 +223,7 @@ Vim would never have become what it is now, without the help of these people!
 	Keith Bostic		Nvi
 	Ralf Brown		SPAWNO library for MS-DOS
 	Robert Colon		many useful remarks
-	Marcin Dalecki		GTK+ GUI port, toolbar icons
+	Marcin Dalecki		GTK+ GUI port, toolbar icons, gettext()
 	Kayhan Demirel		sent me news in Uganda
 	Chris & John Downey	xvi (ideas for multi-windows version)
 	Henk Elbers		first VMS port
@@ -404,6 +404,7 @@ notation	meaning		    equivalent	decimal value(s)	~
 <NL>		linefeed		CTRL-J	 10 (used for <Nul>)
 <FF>		formfeed		CTRL-L	 12	*formfeed*
 <CR>		carriage return		CTRL-M	 13	*carriage-return*
+<Return>	same as <CR>				*<Return>*
 <Enter>		same as <CR>				*<Enter>*
 <Esc>		escape			CTRL-[	 27	*escape* *<Esc>*
 <Space>		space				 32	*space*

@@ -11,7 +11,7 @@
  * Code to handle tags and the tag stack
  */
 
-#if defined MSDOS || defined WIN32
+#if defined MSDOS || defined WIN32 || defined(_WIN64)
 # include <io.h>	/* for lseek(), must be before vim.h */
 #endif
 
@@ -531,7 +531,7 @@ do_tag(tag, type, count, forceit, verbose)
 		 * be, and align the file names to that.
 		 */
 		parse_match(matches[0], &tagp);
-		taglen = tagp.tagname_end - tagp.tagname + 2;
+		taglen = (int)(tagp.tagname_end - tagp.tagname + 2);
 		if (taglen < 18)
 		    taglen = 18;
 		if (taglen > Columns - 25)
@@ -916,6 +916,14 @@ do_tags(eap)
 	MSG_PUTS("\n>");
 }
 
+/* When not using a CR for line separator, use vim_fgets() to read tag lines.
+ * For the Mac use tag_fgets().  It can handle any line separator, but is much
+ * slower than vim_fgets().
+ */
+#ifndef USE_CR
+# define tag_fgets vim_fgets
+#endif
+
 /*
  * find_tags() - search for tags in tags files
  *
@@ -1077,7 +1085,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     if (help_only)				/* want tags from help file */
 	curbuf->b_help = TRUE;			/* will be restored later */
 
-    patlen = STRLEN(pat);
+    patlen = (int)STRLEN(pat);
     if (p_tl != 0 && patlen > p_tl)		/* adjust for 'taglength' */
 	patlen = p_tl;
 
@@ -1486,7 +1494,7 @@ line_read_in:
 		 * Skip this line if the length of the tag is different and
 		 * there is no regexp, or the tag is too short.
 		 */
-		cmplen = tagp.tagname_end - tagp.tagname;
+		cmplen = (int)(tagp.tagname_end - tagp.tagname);
 		if (p_tl != 0 && cmplen > p_tl)	    /* adjust for 'taglength' */
 		    cmplen = p_tl;
 		if (has_re && patheadlen < cmplen)
@@ -1617,7 +1625,7 @@ line_read_in:
 	     * First try matching with the pattern literally (also when it is
 	     * a regexp).
 	     */
-	    cmplen = tagp.tagname_end - tagp.tagname;
+	    cmplen = (int)(tagp.tagname_end - tagp.tagname);
 	    if (p_tl != 0 && cmplen > p_tl)	    /* adjust for 'taglength' */
 		cmplen = p_tl;
 	    /* if tag length does not match, don't try comparing */
@@ -1711,7 +1719,7 @@ line_read_in:
 			 * tagname, for sorting it later.
 			 */
 			*tagp.tagname_end = NUL;
-			len = tagp.tagname_end - tagp.tagname;
+			len = (int)(tagp.tagname_end - tagp.tagname);
 			p = vim_strnsave(tagp.tagname, len + 10);
 			if (p != NULL)
 			    sprintf((char *)p + len + 1, "%06d",
@@ -1736,14 +1744,14 @@ line_read_in:
 
 			    if ((tagp.command + 2) < temp_end)
 			    {
-				len = temp_end - tagp.command - 2;
+				len = (int)(temp_end - tagp.command - 2);
 				p = vim_strnsave(tagp.command + 2, len);
 			    }
 			    get_it_again = FALSE;
 			}
 			else
 			{
-			    len = tagp.tagname_end - tagp.tagname;
+			    len = (int)(tagp.tagname_end - tagp.tagname);
 			    p = vim_strnsave(tagp.tagname, len);
 			    /* if wanted, re-read line to get long form too*/
 			    if (State & INSERT)
@@ -1758,10 +1766,10 @@ line_read_in:
 			 * other tag: <mtt><tag_fname><NUL><NUL><lbuf>
 			 * without Emacs tags: <mtt><tag_fname><NUL><lbuf>
 			 */
-			len = STRLEN(tag_fname) + STRLEN(lbuf) + 3;
+			len = (int)STRLEN(tag_fname) + (int)STRLEN(lbuf) + 3;
 #ifdef FEAT_EMACS_TAGS
 			if (is_etag)
-			    len += STRLEN(ebuf) + 1;
+			    len += (int)STRLEN(ebuf) + 1;
 			else
 			    ++len;
 #endif
@@ -2186,7 +2194,7 @@ test_for_static(tagp)
     /*
      * Check for old style static tag: "file:tag file .."
      */
-    len = tagp->fname_end - tagp->fname;
+    len = (int)(tagp->fname_end - tagp->fname);
     p = tagp->tagname + len;
     if (       p < tagp->tagname_end
 	    && *p == ':'
@@ -2950,7 +2958,7 @@ expand_tags(tagnames, pat, num_file, file)
 	 for (i = 0; i < *num_file; i++)
 	 {
 	     parse_match((*file)[i], &t_p);
-	     c = t_p.tagname_end - t_p.tagname;
+	     c = (int)(t_p.tagname_end - t_p.tagname);
 	     mch_memmove(tagnm, t_p.tagname, (size_t)c);
 	     tagnm[c++] = 0;
 	     tagnm[c++] = (t_p.tagkind != NULL && *t_p.tagkind)

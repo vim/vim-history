@@ -395,7 +395,6 @@ typedef struct dsc$descriptor   DESC;
 #else
 # ifdef VMS
 #  define VMS_TEMPNAM    /* to fix default .LIS extension */
-#  define TEMPDIRNAMES  "$TMP"
 #  define TEMPNAME       "TMP:v?XXXXXX.txt"
 #  define TEMPNAMELEN    28
 # else
@@ -421,10 +420,10 @@ typedef struct dsc$descriptor   DESC;
 				    exists for a file */
 #ifdef VMS  /* Use less memory because of older systems  */
 # ifndef DFLT_MAXMEM
-#  define DFLT_MAXMEM (512)
+#  define DFLT_MAXMEM (2*1024)
 # endif
 # ifndef DFLT_MAXMEMTOT
-#  define DFLT_MAXMEMTOT (2*1024)
+#  define DFLT_MAXMEMTOT (5*1024)
 # endif
 #else
 # ifndef DFLT_MAXMEM

@@ -1,9 +1,9 @@
 /* XPM */
 static char * tb_find_help_xpm[] = {
 "18 18 6 1",
-" 	c None",
-".	c #000000",
-"+	c #888888",
+" 	c None    s background",
+".	c #000000 s foreground",
+"+	c #888888 s bottomShadow",
 "@	c #DDDDDD",
 "#	c #FFFFFF",
 "$	c #BBCCDD",

@@ -10,7 +10,7 @@
 /*
  * eval.c: Expression evaluation.
  */
-#if defined(MSDOS) || defined(WIN32) || defined(WIN16)
+#if defined(MSDOS) || defined(MSWIN32) || defined(WIN16) || defined(_WIN64)
 # include <io.h>	/* for mch_open(), must be before vim.h */
 #endif
 
@@ -1094,7 +1094,7 @@ cat_prefix_varname(prefix, name)
 {
     int		len;
 
-    len = STRLEN(name) + 3;
+    len = (int)STRLEN(name) + 3;
     if (len > varnamebuflen)
     {
 	vim_free(varnamebuf);
@@ -1650,7 +1650,7 @@ eval5(arg, retvar, evaluate)
 	    {
 		s1 = get_var_string_buf(retvar, buf1);
 		s2 = get_var_string_buf(&var2, buf2);
-		op = STRLEN(s1);
+		op = (int)STRLEN(s1);
 		p = alloc((unsigned)(op + STRLEN(s2) + 1));
 		if (p != NULL)
 		{
@@ -2555,7 +2555,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	    else
 	    {
 		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID);
-		i = STRLEN(fname_buf);
+		i = (int)STRLEN(fname_buf);
 	    }
 	}
 	if (i + STRLEN(name + llen) < FLEN_FIXED)
@@ -3363,7 +3363,7 @@ f_filewritable(argvars, retvar)
 #endif
 
     p = get_var_string(&argvars[0]);
-#ifdef WIN32
+#ifdef WIN3264
     if (mch_writable(p))
 #else
 # ifdef UNIX
@@ -3401,7 +3401,7 @@ f_fnamemodify(argvars, retvar)
 
     fname = get_var_string(&argvars[0]);
     mods = get_var_string_buf(&argvars[1], buf);
-    len = STRLEN(fname);
+    len = (int)STRLEN(fname);
 
     (void)modify_fname(mods, &usedlen, &fname, &fbuf, &len);
 
@@ -3529,7 +3529,7 @@ f_foldtext(argvars, retvar)
 	    sprintf((char *)r, txt, vimvars[VV_FOLDDASHES].val,
 		    (long)((linenr_T)vimvars[VV_FOLDEND].val
 				   - (linenr_T)vimvars[VV_FOLDSTART].val + 1));
-	    len = STRLEN(r);
+	    len = (int)STRLEN(r);
 	    STRCAT(r, s);
 	    /* remove 'foldmarker' and 'commentstring' */
 	    foldtext_cleanup(r + len);
@@ -3908,6 +3908,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef WIN32
 	"win32",
+#endif
+#ifdef WIN64
+	"win64",
 #endif
 #ifdef EBCDIC
 	"ebcdic",
@@ -4852,9 +4855,9 @@ find_some_match(argvars, retvar, type)
 	    else
 	    {
 		if (type != 0)
-		    retvar->var_val.var_number = regmatch.startp[0] - str;
+		    retvar->var_val.var_number = (varnumber_T) (regmatch.startp[0] - str);
 		else
-		    retvar->var_val.var_number = regmatch.endp[0] - str;
+		    retvar->var_val.var_number = (varnumber_T) (regmatch.endp[0] - str);
 		retvar->var_val.var_number += start;
 	    }
 	}
@@ -4943,20 +4946,51 @@ f_resolve(argvars, retvar)
     VAR		retvar;
 {
     char_u	*p;
-#ifdef FEAT_SHORTCUT
-    char_u	*v = NULL;
-#endif
 
     p = get_var_string(&argvars[0]);
 #ifdef FEAT_SHORTCUT
-# ifdef WIN32
-    v = mch_resolve_shortcut(p);
+    {
+	char_u	*v = NULL;
+
+	v = mch_resolve_shortcut(p);
+	if (v != NULL)
+	    retvar->var_val.var_string = v;
+	else
+	    retvar->var_val.var_string = vim_strsave(p);
+    }
+#else
+# ifdef HAVE_READLINK
+    {
+	char_u	buf[MAXPATHL + 1];
+	char_u	*cpy;
+	int	len;
+
+	len = readlink((char *)p, (char *)buf, MAXPATHL);
+	if (len > 0)
+	{
+	    buf[len] = NUL;
+	    if (gettail(p) > p && !mch_isFullName(buf))
+	    {
+		/* symlink is relative to directory of argument */
+		cpy = alloc((unsigned)(STRLEN(p) + STRLEN(buf) + 1));
+		if (cpy != NULL)
+		{
+		    STRCPY(cpy, p);
+		    STRCPY(gettail(cpy), buf);
+		    retvar->var_val.var_string = cpy;
+		    p = NULL;
+		}
+	    }
+	    else
+		p = buf;
+	}
+	if (p != NULL)
+	    retvar->var_val.var_string = vim_strsave(p);
+    }
+# else
+    retvar->var_val.var_string = vim_strsave(p);
 # endif
-    if (v != NULL)
-	retvar->var_val.var_string = v;
-    else
 #endif
-	retvar->var_val.var_string = vim_strsave(p);
     retvar->var_type = VAR_STRING;
 }
 
@@ -5395,7 +5429,7 @@ f_stridx(argvars, retvar)
     if (pos == NULL)
 	retvar->var_val.var_number = -1;
     else
-	retvar->var_val.var_number = pos - haystack;
+	retvar->var_val.var_number = (varnumber_T) (pos - haystack);
 }
 
 /*
@@ -5426,7 +5460,7 @@ f_strridx(argvars, retvar)
     if (lastmatch == NULL)
 	retvar->var_val.var_number = -1;
     else
-	retvar->var_val.var_number = lastmatch - haystack;
+	retvar->var_val.var_number = (varnumber_T) (lastmatch - haystack);
 }
 
 /*
@@ -5437,7 +5471,7 @@ f_strlen(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    retvar->var_val.var_number = STRLEN(get_var_string(&argvars[0]));
+    retvar->var_val.var_number = (varnumber_T) (STRLEN(get_var_string(&argvars[0])));
 }
 
 /*
@@ -5458,9 +5492,9 @@ f_strpart(argvars, retvar)
     if (argvars[2].var_type != VAR_UNKNOWN)
         len = get_var_number(&argvars[2]);
     else
-        len = STRLEN(p) - n;
+        len = (int)STRLEN(p) - n;
 
-    slen = STRLEN(p);
+    slen = (int)STRLEN(p);
     /*
      * Only return the overlap between the specified part and the actual
      * string.
@@ -5754,8 +5788,25 @@ f_tolower(argvars, retvar)
     if (p != NULL)
 	while (*p != NUL)
 	{
-	    *p = TO_LOWER(*p);	/* note that tolower() can be a macro */
-	    ++p;
+#ifdef FEAT_MBYTE
+	    if (enc_utf8)
+	    {
+		int c, lc, l;
+
+		c = utf_ptr2char(p);
+		lc = utf_tolower(c);
+		l = utf_ptr2len_check(p);
+		/* TODO: reallocate string when byte count changes. */
+		if (utf_char2len(lc) == l)
+		    utf_char2bytes(lc, p);
+		p += l;
+	    }
+	    else
+#endif
+	    {
+		*p = TO_LOWER(*p); /* note that tolower() can be a macro */
+		++p;
+	    }
 	}
 }
 
@@ -5776,8 +5827,25 @@ f_toupper(argvars, retvar)
     if (p != NULL)
 	while (*p != NUL)
 	{
-	    *p = TO_UPPER(*p);	/* note that toupper() can be a macro */
-	    p++;
+#ifdef FEAT_MBYTE
+	    if (enc_utf8)
+	    {
+		int c, uc, l;
+
+		c = utf_ptr2char(p);
+		uc = utf_toupper(c);
+		l = utf_ptr2len_check(p);
+		/* TODO: reallocate string when byte count changes. */
+		if (utf_char2len(uc) == l)
+		    utf_char2bytes(uc, p);
+		p += l;
+	    }
+	    else
+#endif
+	    {
+		*p = TO_UPPER(*p); /* note that toupper() can be a macro */
+		p++;
+	    }
 	}
 }
 
@@ -5991,7 +6059,7 @@ var2fpos(varp, lnum)
 	else
 	{
 	    pos.lnum = curwin->w_cursor.lnum;
-	    pos.col = STRLEN(ml_get_curline());
+	    pos.col = (colnr_T)STRLEN(ml_get_curline());
 	}
 	return &pos;
     }
@@ -6015,7 +6083,7 @@ get_env_len(arg)
     if (p == *arg)	    /* no name found */
 	return 0;
 
-    len = p - *arg;
+    len = (int)(p - *arg);
     *arg = p;
     return len;
 }
@@ -6038,7 +6106,7 @@ get_id_len(arg)
     if (p == *arg)	    /* no name found */
 	return 0;
 
-    len = p - *arg;
+    len = (int)(p - *arg);
     *arg = skipwhite(p);
 
     return len;
@@ -6098,7 +6166,7 @@ get_func_len(arg, alias)
 	{
 	    *alias = temp_string;
 	    *arg = skipwhite(p);
-	    return STRLEN(temp_string);
+	    return (int)STRLEN(temp_string);
 	}
     }
 #endif
@@ -6248,12 +6316,12 @@ set_cmdarg(eap, oldarg)
     if (eap != NULL)
     {
 	if (eap->force_ff != 0)
-	    len = STRLEN(eap->cmd + eap->force_ff) + 6;
+	    len = (unsigned)STRLEN(eap->cmd + eap->force_ff) + 6;
 	else
 	    len = 0;
 # ifdef FEAT_MBYTE
 	if (eap->force_enc != 0)
-	    len += STRLEN(eap->cmd + eap->force_enc) + 7;
+	    len += (unsigned)STRLEN(eap->cmd + eap->force_enc) + 7;
 # endif
 	newval = alloc(len + 1);
 	if (newval == NULL)
@@ -6927,7 +6995,7 @@ ex_execute(eap)
 	if (!eap->skip)
 	{
 	    p = get_var_string(&retvar);
-	    len = STRLEN(p);
+	    len = (int)STRLEN(p);
 	    if (ga_grow(&ga, len + 2) == FAIL)
 	    {
 		clear_var(&retvar);
@@ -7358,10 +7426,10 @@ trans_function_name(pp)
 	if (temp_string == NULL)
 	    return NULL;
 	start = temp_string;
-	len = STRLEN(temp_string);
+	len = (int)STRLEN(temp_string);
     }
     else
-	len = end - start;
+	len = (int)(end - start);
 
     /*
      * Copy the function name to allocated memory.
@@ -7379,7 +7447,7 @@ trans_function_name(pp)
 		return NULL;
 	    }
 	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
-	    lead += STRLEN(sid_buf);
+	    lead += (int)STRLEN(sid_buf);
 	}
     }
     else
@@ -8174,7 +8242,7 @@ repeat:
     }
 
     tail = gettail(*fnamep);
-    *fnamelen = STRLEN(*fnamep);
+    *fnamelen = (int)STRLEN(*fnamep);
 
     /* ":h" - head, remove "/file_name", can be repeated  */
     /* Don't remove the first "/" or "c:\" */
@@ -8185,7 +8253,7 @@ repeat:
 	s = get_past_head(*fnamep);
 	while (tail > s && vim_ispathsep(tail[-1]))
 	    --tail;
-	*fnamelen = tail - *fnamep;
+	*fnamelen = (int)(tail - *fnamep);
 #ifdef VMS
 	if (*fnamelen > 0)
 	    *fnamelen += 1; /* the path separator is part of the path */
@@ -8198,7 +8266,7 @@ repeat:
     if (src[*usedlen] == ':' && src[*usedlen + 1] == 't')
     {
 	*usedlen += 2;
-	*fnamelen -= tail - *fnamep;
+	*fnamelen -= (int)(tail - *fnamep);
 	*fnamep = tail;
     }
 
@@ -8222,7 +8290,7 @@ repeat:
 	{
 	    if (s > tail)
 	    {
-		*fnamelen += *fnamep - (s + 1);
+		*fnamelen += (int)(*fnamep - (s + 1));
 		*fnamep = s + 1;
 #ifdef VMS
 		/* cut version from the extension */
@@ -8240,7 +8308,7 @@ repeat:
 	else				/* :r */
 	{
 	    if (s > tail)	/* remove one extension */
-		*fnamelen = s - *fnamep;
+		*fnamelen = (int)(s - *fnamep);
 	}
 	*usedlen += 2;
     }
@@ -8285,12 +8353,12 @@ repeat:
 			str = vim_strnsave(*fnamep, *fnamelen);
 			if (sub != NULL && str != NULL)
 			{
-			    *usedlen = p + 1 - src;
+			    *usedlen = (int)(p + 1 - src);
 			    s = do_string_sub(str, pat, sub, flags);
 			    if (s != NULL)
 			    {
 				*fnamep = s;
-				*fnamelen = STRLEN(s);
+				*fnamelen = (int)STRLEN(s);
 				vim_free(*bufp);
 				*bufp = s;
 				didit = TRUE;
@@ -8363,7 +8431,7 @@ do_string_sub(str, pat, sub, flags)
 	    }
 
 	    /* copy the text up to where the match is */
-	    i = regmatch.startp[0] - tail;
+	    i = (int)(regmatch.startp[0] - tail);
 	    mch_memmove((char_u *)ga.ga_data + ga.ga_len, tail, (size_t)i);
 	    /* add the substituted text */
 	    (void)vim_regsub(&regmatch, sub, (char_u *)ga.ga_data

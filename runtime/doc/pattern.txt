@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
+*pattern.txt*   For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -660,11 +660,13 @@ $	At end of pattern or in front of "\|" or "\)": matches end-of-line
 
 							*/\<*
 \<	Matches the beginning of a word: The next char is the first char of a
-	word. |/zero-width|
+	word.  The 'iskeyword' option specifies what is a word character.
+	|/zero-width|
 
 							*/\>*
 \>	Matches the end of a word: The previous char is the last char of a
-	word. |/zero-width|
+	word. The 'iskeyword' option specifies what is a word character.
+	|/zero-width|
 
 							*/\zs*
 \zs	Matches at any position, and sets the start of the match there: The

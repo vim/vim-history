@@ -1,13 +1,13 @@
 /* XPM */
 static char * tb_find_xpm[] = {
 "18 18 7 1",
-" 	c None",
-".	c #000000",
+" 	c None    s background",
+".	c #000000 s foreground",
 "+	c #FFFFFF",
-"@	c #DDDDDD",
+"@	c #DDDDDD s topShadow",
 "#	c #BBCCDD",
 "$	c #BBBBBB",
-"%	c #888888",
+"%	c #888888 s bottomShadow",
 "                  ",
 " .........        ",
 " .+++++++..       ",

@@ -1,10 +1,10 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
-/* File created by MIDL compiler version 3.00.44 */
-/* at Sat Jan 03 16:34:55 1998
+/* File created by MIDL compiler version 3.01.75 */
+/* at Wed Jun 06 18:20:37 2001
  */
-/* Compiler settings for if_ole.idl:
+/* Compiler settings for .\if_ole.idl:
     Os (OptLev=s), W1, Zp8, env=Win32, ms_ext, c_ext
     error checks: none
 */
@@ -31,6 +31,18 @@ typedef interface IVim IVim;
 #endif	/* __IVim_FWD_DEFINED__ */
 
 
+#ifndef __Vim_FWD_DEFINED__
+#define __Vim_FWD_DEFINED__
+
+#ifdef __cplusplus
+typedef class Vim Vim;
+#else
+typedef struct Vim Vim;
+#endif /* __cplusplus */
+
+#endif	/* __Vim_FWD_DEFINED__ */
+
+
 /* header files for imported files */
 #include "oaidl.h"
 
@@ -42,8 +54,8 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 /****************************************
  * Generated header for interface: IVim
- * at Sat Jan 03 16:34:55 1998
- * using MIDL 3.00.44
+ * at Wed Jun 06 18:20:37 2001
+ * using MIDL 3.01.75
  ****************************************/
 /* [oleautomation][dual][unique][helpstring][uuid][object] */
 
@@ -53,7 +65,8 @@ EXTERN_C const IID IID_IVim;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
-    interface IVim : public IDispatch
+    interface DECLSPEC_UUID("0F0BFAE2-4C90-11d1-82D7-0004AC368519")
+    IVim : public IDispatch
     {
     public:
 	virtual HRESULT STDMETHODCALLTYPE SendKeys(
@@ -64,6 +77,10 @@ EXTERN_C const IID IID_IVim;
 	    /* [retval][out] */ BSTR __RPC_FAR *result) = 0;
 
 	virtual HRESULT STDMETHODCALLTYPE SetForeground( void) = 0;
+
+	virtual HRESULT STDMETHODCALLTYPE GetHwnd(
+	    /* [retval][out] */ UINT __RPC_FAR *result) = 0;
+
     };
 
 #else	/* C style interface */
@@ -124,6 +141,10 @@ EXTERN_C const IID IID_IVim;
 	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SetForeground )(
 	    IVim __RPC_FAR * This);
 
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetHwnd )(
+	    IVim __RPC_FAR * This,
+	    /* [retval][out] */ UINT __RPC_FAR *result);
+
 	END_INTERFACE
     } IVimVtbl;
 
@@ -166,6 +187,9 @@ EXTERN_C const IID IID_IVim;
 
 #define IVim_SetForeground(This)	\
     (This)->lpVtbl -> SetForeground(This)
+
+#define IVim_GetHwnd(This,result)	\
+    (This)->lpVtbl -> GetHwnd(This,result)
 
 #endif /* COBJMACROS */
 
@@ -210,6 +234,18 @@ void __RPC_STUB IVim_SetForeground_Stub(
     DWORD *_pdwStubPhase);
 
 
+HRESULT STDMETHODCALLTYPE IVim_GetHwnd_Proxy(
+    IVim __RPC_FAR * This,
+    /* [retval][out] */ UINT __RPC_FAR *result);
+
+
+void __RPC_STUB IVim_GetHwnd_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
 
 #endif	/* __IVim_INTERFACE_DEFINED__ */
 
@@ -220,8 +256,8 @@ void __RPC_STUB IVim_SetForeground_Stub(
 
 /****************************************
  * Generated header for library: Vim
- * at Sat Jan 03 16:34:55 1998
- * using MIDL 3.00.44
+ * at Wed Jun 06 18:20:37 2001
+ * using MIDL 3.01.75
  ****************************************/
 /* [version][helpstring][uuid] */
 
@@ -232,7 +268,8 @@ EXTERN_C const IID LIBID_Vim;
 #ifdef __cplusplus
 EXTERN_C const CLSID CLSID_Vim;
 
-class Vim;
+class DECLSPEC_UUID("0F0BFAE1-4C90-11d1-82D7-0004AC368519")
+Vim;
 #endif
 #endif /* __Vim_LIBRARY_DEFINED__ */
 

@@ -574,7 +574,7 @@ normal_cmd(oap, toplevel)
     /*
      * Get the command character from the user.
      */
-#if defined(WIN32) && defined(FEAT_SNIFF)
+#if defined(WIN3264) && defined(FEAT_SNIFF)
     if (sniff_request_waiting)
     {
 	c = K_SNIFF;
@@ -1334,12 +1334,12 @@ do_pending_operator(cap, old_col, gui_yank)
 		{
 		    VIsual.col = 0;
 		    curwin->w_cursor.col =
-					STRLEN(ml_get(curwin->w_cursor.lnum));
+			       (colnr_T)STRLEN(ml_get(curwin->w_cursor.lnum));
 		}
 		else
 		{
 		    curwin->w_cursor.col = 0;
-		    VIsual.col = STRLEN(ml_get(VIsual.lnum));
+		    VIsual.col = (colnr_T)STRLEN(ml_get(VIsual.lnum));
 		}
 		VIsual_mode = 'v';
 	    }
@@ -1368,7 +1368,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		    oap->start.col = 0;
 		if (hasFolding(curwin->w_cursor.lnum, NULL,
 						      &curwin->w_cursor.lnum))
-		    curwin->w_cursor.col = STRLEN(ml_get_curline());
+		    curwin->w_cursor.col = (colnr_T)STRLEN(ml_get_curline());
 	    }
 #endif
 	    oap->end = curwin->w_cursor;
@@ -1384,7 +1384,7 @@ do_pending_operator(cap, old_col, gui_yank)
 									NULL))
 		    curwin->w_cursor.col = 0;
 		if (hasFolding(oap->start.lnum, NULL, &oap->start.lnum))
-		    oap->start.col = STRLEN(ml_get(oap->start.lnum));
+		    oap->start.col = (colnr_T)STRLEN(ml_get(oap->start.lnum));
 	    }
 #endif
 	    oap->end = oap->start;
@@ -1621,7 +1621,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		oap->motion_type = MLINE;
 	    else
 	    {
-		oap->end.col = STRLEN(ml_get(oap->end.lnum));
+		oap->end.col = (colnr_T)STRLEN(ml_get(oap->end.lnum));
 		if (oap->end.col)
 		{
 		    --oap->end.col;
@@ -3215,8 +3215,8 @@ add_to_showcmd(c)
 #endif
 
     p = transchar(c);
-    old_len = STRLEN(showcmd_buf);
-    extra_len = STRLEN(p);
+    old_len = (int)STRLEN(showcmd_buf);
+    extra_len = (int)STRLEN(p);
     overflow = old_len + extra_len - SHOWCMD_COLS;
     if (overflow > 0)
 	STRCPY(showcmd_buf, showcmd_buf + overflow);
@@ -3250,7 +3250,7 @@ del_from_showcmd(len)
     if (!p_sc)
 	return;
 
-    old_len = STRLEN(showcmd_buf);
+    old_len = (int)STRLEN(showcmd_buf);
     if (len > old_len)
 	len = old_len;
     showcmd_buf[old_len - len] = NUL;
@@ -3284,7 +3284,7 @@ display_showcmd()
 
     cursor_off();
 
-    len = STRLEN(showcmd_buf);
+    len = (int)STRLEN(showcmd_buf);
     if (len == 0)
 	showcmd_is_clear = TRUE;
     else
@@ -3558,9 +3558,6 @@ nv_gd(oap, nchar)
     save_p_scs = p_scs;
     p_ws = FALSE;	/* don't wrap around end of file now */
     p_scs = FALSE;	/* don't switch ignorecase off now */
-#ifdef FEAT_COMMENTS
-    fo_do_comments = TRUE;
-#endif
 
     /*
      * With "gD" go to line 1.
@@ -3604,9 +3601,6 @@ nv_gd(oap, nchar)
     vim_free(pat);
     p_ws = save_p_ws;
     p_scs = save_p_scs;
-#ifdef FEAT_COMMENTS
-    fo_do_comments = FALSE;
-#endif
 }
 
 /*
@@ -4548,7 +4542,7 @@ nv_ident(cap)
 	     * it was.
 	     */
 	    setpcmark();
-	    curwin->w_cursor.col = ptr - ml_get_curline();
+	    curwin->w_cursor.col = (colnr_T) (ptr - ml_get_curline());
 
 	    if (!g_cmd && vim_iswordp(ptr))
 		STRCPY(buf, "\\<");
@@ -4675,7 +4669,7 @@ get_visual_text(cap, pp, lenp)
     if (VIsual_mode == 'V')
     {
 	*pp = ml_get_curline();
-	*lenp = STRLEN(*pp);
+	*lenp = (int)STRLEN(*pp);
     }
     else if (lt(curwin->w_cursor, VIsual))
     {
@@ -5779,7 +5773,7 @@ nv_replace(cap)
 	 * autoindent.	The insert command depends on being on the last
 	 * character of a line or not.
 	 */
-	(void)del_chars(cap->count1, FALSE);	/* delete the characters */
+	(void)del_bytes(cap->count1, FALSE);	/* delete the characters */
 	stuffcharReadbuff('\r');
 	stuffcharReadbuff(ESC);
 	/*
@@ -6808,7 +6802,7 @@ nv_g_cmd(cap)
 	{
 	    curwin->w_cursor = curbuf->b_last_insert;
 	    check_cursor_lnum();
-	    i = STRLEN(ml_get_curline());
+	    i = (int)STRLEN(ml_get_curline());
 	    if (curwin->w_cursor.col > (colnr_T)i)
 		curwin->w_cursor.col = i;
 	}
@@ -7338,7 +7332,7 @@ unadjust_for_sel()
 	else if (pp->lnum > 1)
 	{
 	    --pp->lnum;
-	    pp->col = STRLEN(ml_get(pp->lnum));
+	    pp->col = (colnr_T)STRLEN(ml_get(pp->lnum));
 	}
     }
 }
@@ -7388,6 +7382,10 @@ nv_goto(cap)
 	lnum = curbuf->b_ml.ml_line_count;
     curwin->w_cursor.lnum = lnum;
     beginline(BL_SOL | BL_FIX);
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_JUMP) && KeyTyped && cap->oap->op_type == OP_NOP)
+	foldOpenCursor();
+#endif
 }
 
 /*
@@ -7521,7 +7519,7 @@ nv_edit(cap)
 		}
 		else
 #endif
-		    curwin->w_cursor.col += STRLEN(ml_get_cursor());
+		    curwin->w_cursor.col += (colnr_T)STRLEN(ml_get_cursor());
 		break;
 
 	    case 'I':	/* "I"nsert before the first non-blank */

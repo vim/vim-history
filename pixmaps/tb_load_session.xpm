@@ -1,13 +1,13 @@
 /* XPM */
 static char * tb_load_session_xpm[] = {
 "18 18 7 1",
-" 	c None",
+" 	c None    s background",
 ".	c #880000",
 "+	c #FF1144",
-"@	c #000000",
+"@	c #000000 s foreground",
 "#	c #FFFFFF",
 "$	c #AAAAAA",
-"%	c #888888",
+"%	c #888888 s bottomShadow",
 "        ..        ",
 "       .++.       ",
 "      .++++.      ",

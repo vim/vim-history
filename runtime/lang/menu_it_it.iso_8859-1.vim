@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 May 30
+" Last Change:	2001 Jun 05
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -205,7 +205,6 @@ menut Select\ &Block	Seleziona\ &Blocco
 menut Select\ &All		Seleziona\ &Tutto
  
 " The GUI toolbar (for MS-Windows and GTK)
-menut ToolBar		Barra\ Strumenti
 if has("toolbar")
 menut Open		Apri
 menut Save		Salva
