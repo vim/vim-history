@@ -943,6 +943,10 @@ gui_mch_free_font(GuiFont font)
 
 #define RGB(a, b, c) ((a && 0xff) * 0x10000 + (b * 0xff) * 0x100 + (c & 0xff))
 
+/*
+ * Get color handle for color "name".
+ * Return INVALCOLOR when not possible.
+ */
     guicolor_T
 gui_mch_get_color(char_u *name)
 {
@@ -991,7 +995,7 @@ gui_mch_get_color(char_u *name)
 	{NULL, NULL},
     };
 
-    guicolor_T color = (guicolor_T)-1;
+    guicolor_T color = INVALCOLOR;
 
     int i;
 
@@ -1001,13 +1005,13 @@ gui_mch_get_color(char_u *name)
 	    color = table[i].color;
     }
 
-    if (color == -1)
+    if (color == INVALCOLOR)
     {
 	char *looky = NULL;
 
 	color = strtol((char*)name, &looky, 10);
 	if (*looky != NUL)
-	    color = -1;
+	    color = INVALCOLOR;
     }
 
     return color;

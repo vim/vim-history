@@ -36,9 +36,9 @@ struct hl_group
 #ifdef FEAT_GUI
 /* for when using the GUI */
     int		sg_gui;		/* "gui=" highlighting attributes */
-    guicolor_T	sg_gui_fg;	/* GUI foreground color handle + 1 */
+    guicolor_T	sg_gui_fg;	/* GUI foreground color handle */
     char_u	*sg_gui_fg_name;/* GUI foreground color name */
-    guicolor_T	sg_gui_bg;	/* GUI background color handle + 1 */
+    guicolor_T	sg_gui_bg;	/* GUI background color handle */
     char_u	*sg_gui_bg_name;/* GUI background color name */
     GuiFont	sg_font;	/* GUI font handle */
 #ifdef FEAT_XFONTSET
@@ -6647,9 +6647,8 @@ do_highlight(line, forceit, init)
 	    if (!init)
 		HL_TABLE()[idx].sg_set |= SG_GUI;
 
-	    /* Add one to the argument, to avoid zero */
-	    i = color_name2handle(arg) + 1;
-	    if (i > 0 || STRCMP(arg, "NONE") == 0 || !gui.in_use)
+	    i = color_name2handle(arg);
+	    if (i != INVALCOLOR || STRCMP(arg, "NONE") == 0 || !gui.in_use)
 	    {
 		HL_TABLE()[idx].sg_gui_fg = i;
 		vim_free(HL_TABLE()[idx].sg_gui_fg_name);
@@ -6659,12 +6658,12 @@ do_highlight(line, forceit, init)
 		    HL_TABLE()[idx].sg_gui_fg_name = NULL;
 # ifdef FEAT_GUI_X11
 		if (is_menu_group)
-		    gui.menu_fg_pixel = i - 1;
+		    gui.menu_fg_pixel = i;
 		if (is_scrollbar_group)
-		    gui.scroll_fg_pixel = i - 1;
+		    gui.scroll_fg_pixel = i;
 #  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
-		    gui.tooltip_fg_pixel = i - 1;
+		    gui.tooltip_fg_pixel = i;
 #  endif
 		do_colors = TRUE;
 # endif
@@ -6680,9 +6679,8 @@ do_highlight(line, forceit, init)
 	    if (!init)
 		HL_TABLE()[idx].sg_set |= SG_GUI;
 
-	    /* Add one to the argument, to avoid zero */
-	    i = color_name2handle(arg) + 1;
-	    if (i > 0 || STRCMP(arg, "NONE") == 0 || !gui.in_use)
+	    i = color_name2handle(arg);
+	    if (i != INVALCOLOR || STRCMP(arg, "NONE") == 0 || !gui.in_use)
 	    {
 		HL_TABLE()[idx].sg_gui_bg = i;
 		vim_free(HL_TABLE()[idx].sg_gui_bg_name);
@@ -6692,12 +6690,12 @@ do_highlight(line, forceit, init)
 		    HL_TABLE()[idx].sg_gui_bg_name = NULL;
 # ifdef FEAT_GUI_X11
 		if (is_menu_group)
-		    gui.menu_bg_pixel = i - 1;
+		    gui.menu_bg_pixel = i;
 		if (is_scrollbar_group)
-		    gui.scroll_bg_pixel = i - 1;
+		    gui.scroll_bg_pixel = i;
 #  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
-		    gui.tooltip_bg_pixel = i - 1;
+		    gui.tooltip_bg_pixel = i;
 #  endif
 		do_colors = TRUE;
 # endif
@@ -6915,10 +6913,10 @@ highlight_clear(idx)
     HL_TABLE()[idx].sg_cterm_attr = 0;
 #ifdef FEAT_GUI	    /* in non-GUI fonts are simply ignored */
     HL_TABLE()[idx].sg_gui = 0;
-    HL_TABLE()[idx].sg_gui_fg = 0;
+    HL_TABLE()[idx].sg_gui_fg = INVALCOLOR;
     vim_free(HL_TABLE()[idx].sg_gui_fg_name);
     HL_TABLE()[idx].sg_gui_fg_name = NULL;
-    HL_TABLE()[idx].sg_gui_bg = 0;
+    HL_TABLE()[idx].sg_gui_bg = INVALCOLOR;
     vim_free(HL_TABLE()[idx].sg_gui_bg_name);
     HL_TABLE()[idx].sg_gui_bg_name = NULL;
     gui_mch_free_font(HL_TABLE()[idx].sg_font);
@@ -6999,12 +6997,12 @@ set_group_colors(name, fgp, bgp, do_menu, use_norm, do_tooltip)
     {
 	gui_do_one_color(idx, do_menu, do_tooltip);
 
-	if (HL_TABLE()[idx].sg_gui_fg > 0)
-	    *fgp = HL_TABLE()[idx].sg_gui_fg - 1;
+	if (HL_TABLE()[idx].sg_gui_fg != INVALCOLOR)
+	    *fgp = HL_TABLE()[idx].sg_gui_fg;
 	else if (use_norm)
 	    *fgp = gui.def_norm_pixel;
-	if (HL_TABLE()[idx].sg_gui_bg > 0)
-	    *bgp = HL_TABLE()[idx].sg_gui_bg - 1;
+	if (HL_TABLE()[idx].sg_gui_bg != INVALCOLOR)
+	    *bgp = HL_TABLE()[idx].sg_gui_bg;
 	else if (use_norm)
 	    *bgp = gui.def_back_pixel;
 	return TRUE;
@@ -7094,14 +7092,14 @@ hl_set_fg_color_name(name)
 
 /*
  * Return the handle for a color name.
- * Returns -1 when failed.
+ * Returns INVALCOLOR when failed.
  */
     static guicolor_T
 color_name2handle(name)
     char_u  *name;
 {
     if (STRCMP(name, "NONE") == 0)
-	return (guicolor_T)-1;
+	return INVALCOLOR;
 
     if (STRICMP(name, "fg") == 0 || STRICMP(name, "foreground") == 0)
 	return gui.norm_pixel;
@@ -7571,9 +7569,9 @@ highlight_color(id, what, modec)
 		color = HL_TABLE()[id - 1].sg_gui_fg;
 	    else
 		color = HL_TABLE()[id - 1].sg_gui_bg;
-	    if (color == 0)
+	    if (color == INVALCOLOR)
 		return NULL;
-	    rgb = gui_mch_get_rgb(color - 1);
+	    rgb = gui_mch_get_rgb(color);
 	    sprintf((char *)buf, "#%02x%02x%02x",
 				      (unsigned)(rgb >> 16),
 				      (unsigned)(rgb >> 8) & 255,
@@ -7619,10 +7617,10 @@ highlight_gui_color_rgb(id, fg)
     else
 	color = HL_TABLE()[id - 1].sg_gui_bg;
 
-    if (color == 0)
+    if (color == INVALCOLOR)
 	return 0L;
 
-    return gui_mch_get_rgb(color - 1);
+    return gui_mch_get_rgb(color);
 }
 #endif
 
@@ -7689,8 +7687,8 @@ set_hl_attr(idx)
      * For the GUI mode: If there are other than "normal" highlighting
      * attributes, need to allocate an attr number.
      */
-    if (HL_TABLE()[idx].sg_gui_fg == 0
-	    && HL_TABLE()[idx].sg_gui_bg == 0
+    if (HL_TABLE()[idx].sg_gui_fg == INVALCOLOR
+	    && HL_TABLE()[idx].sg_gui_bg == INVALCOLOR
 	    && HL_TABLE()[idx].sg_font == NOFONT
 # ifdef FEAT_XFONTSET
 	    && HL_TABLE()[idx].sg_fontset == NOFONTSET
@@ -7853,6 +7851,8 @@ syn_add_group(name)
     vim_memset(&(HL_TABLE()[highlight_ga.ga_len]), 0, sizeof(struct hl_group));
     HL_TABLE()[highlight_ga.ga_len].sg_name = name;
     HL_TABLE()[highlight_ga.ga_len].sg_name_u = vim_strsave_up(name);
+    HL_TABLE()[highlight_ga.ga_len].sg_gui_bg = INVALCOLOR;
+    HL_TABLE()[highlight_ga.ga_len].sg_gui_fg = INVALCOLOR;
     ++highlight_ga.ga_len;
     --highlight_ga.ga_room;
 
@@ -7904,7 +7904,7 @@ syn_id2attr(hl_id)
 #ifdef FEAT_GUI
 /*
  * Get the GUI colors and attributes for a group ID.
- * NOTE: the colors will be 0 when not set, the color plus one otherwise.
+ * NOTE: the colors will be INVALCOLOR when not set, the color otherwise.
  */
     int
 syn_id2colors(hl_id, fgp, bgp)
@@ -7987,13 +7987,13 @@ gui_do_one_color(idx, do_menu, do_tooltip)
     if (HL_TABLE()[idx].sg_gui_fg_name != NULL)
     {
 	HL_TABLE()[idx].sg_gui_fg =
-	    color_name2handle(HL_TABLE()[idx].sg_gui_fg_name) + 1;
+			    color_name2handle(HL_TABLE()[idx].sg_gui_fg_name);
 	didit = TRUE;
     }
     if (HL_TABLE()[idx].sg_gui_bg_name != NULL)
     {
 	HL_TABLE()[idx].sg_gui_bg =
-	    color_name2handle(HL_TABLE()[idx].sg_gui_bg_name) + 1;
+			    color_name2handle(HL_TABLE()[idx].sg_gui_bg_name);
 	didit = TRUE;
     }
     if (didit)	/* need to get a new attr number */

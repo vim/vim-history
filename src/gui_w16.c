@@ -460,7 +460,7 @@ gui_mch_init(void)
 #endif
     gui.border_width = 0;
 
-    gui.currBgColor = (long) -1;
+    gui.currBgColor = INVALCOLOR;
 
     s_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 

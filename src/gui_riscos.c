@@ -1090,7 +1090,7 @@ gui_mch_free_font(GuiFont font)
 
 /*
  * Return the Pixel value (colour) for the given colour name.
- * Return -1 for error.
+ * Return INVALCOLOR for error.
  * NB: I've changed Green for now, since it looked really sick
  */
     guicolor_T
@@ -1165,7 +1165,7 @@ gui_mch_get_color(char_u *name)
 	int level = (255 * atoi(name + 4)) / 100;
 	return (guicolor_T) grgb(level, level, level);
     }
-    return (guicolor_T) -1;
+    return INVALCOLOR;
 }
 
 /*

@@ -1698,7 +1698,7 @@ gui_mch_draw_string(
      * becomes a problem. - webb.
      */
     static HBRUSH	hbr_cache[2] = {NULL, NULL};
-    static guicolor_T	brush_color[2] = {-1, -1};
+    static guicolor_T	brush_color[2] = {INVALCOLOR, INVALCOLOR};
     static int		brush_lru = 0;
     HBRUSH		hbr;
     RECT		rc;

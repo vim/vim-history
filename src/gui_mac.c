@@ -3046,6 +3046,7 @@ hex_digit(c)
  * Return the Pixel value (color) for the given color name.  This routine was
  * pretty much taken from example code in the Silicon Graphics OSF/Motif
  * Programmer's Guide.
+ * Return INVALCOLOR when failed.
  */
     guicolor_T
 gui_mch_get_color(name)
@@ -3111,7 +3112,7 @@ gui_mch_get_color(name)
 	g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
 	b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
 	if (r < 0 || g < 0 || b < 0)
-	    return (guicolor_T) -1;
+	    return INVALCOLOR;
 	return RGB(r, g, b);
     }
     else
@@ -3143,12 +3144,12 @@ gui_mch_get_color(name)
 	fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
 #endif
 	if (fname == NULL)
-	    return (guicolor_T)-1;
+	    return INVALCOLOR;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return (guicolor_T)-1;
+	    return INVALCOLOR;
 
 	while (!feof(fd))
 	{
@@ -3179,7 +3180,7 @@ gui_mch_get_color(name)
 	fclose(fd);
     }
 
-    return -1;
+    return INVALCOLOR;
 }
 
 /*

@@ -1992,6 +1992,7 @@ hex_digit(int c)
  * every port does basically the same thing.
  *
  * This is the gui_w32.c version (i think..)
+ * Return INVALCOLOR when failed.
  */
 
     guicolor_T
@@ -2049,7 +2050,7 @@ gui_mch_get_color(char_u *name)
 	g = hex_digit( name[3] ) * 16 + hex_digit( name[4] );
 	b = hex_digit( name[5] ) * 16 + hex_digit( name[6] );
 	if( r < 0 || g < 0 || b < 0 )
-	    return( (guicolor_T) -1 );
+	    return INVALCOLOR;
 	return( RGB( r, g, b ) );
     }
 
@@ -2070,12 +2071,12 @@ gui_mch_get_color(char_u *name)
 
 	fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
 	if (fname == NULL)
-	    return( (guicolor_T) -1 );
+	    return INVALCOLOR;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return( (guicolor_T) -1 );
+	    return INVALCOLOR;
 
 	while (!feof(fd))
 	{
@@ -2108,7 +2109,7 @@ gui_mch_get_color(char_u *name)
     }
 
 
-    return( (guicolor_T) -1 );
+    return INVALCOLOR;
 }
 
     void

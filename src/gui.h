@@ -224,6 +224,9 @@ typedef struct GuiScrollbar
 typedef long	    guicolor_T;	/* handle for a GUI color; for X11 this should
 				   be "Pixel", but that's an unsigned and we
 				   need a signed value */
+#define INVALCOLOR (guicolor_T)-11111	/* number for invalid color; on 32 bit
+				   displays there is a tiny chance this is an
+				   actual color */
 
 #ifdef FEAT_GUI_GTK
   typedef GdkFont	*GuiFont;	/* handle for a GUI font */

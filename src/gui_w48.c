@@ -1124,7 +1124,7 @@ hex_digit(int c)
 }
 /*
  * Return the Pixel value (color) for the given color name.
- * Return -1 for error.
+ * Return INVALCOLOR for error.
  */
     guicolor_T
 gui_mch_get_color(char_u *name)
@@ -1226,7 +1226,7 @@ gui_mch_get_color(char_u *name)
 	g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
 	b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
 	if (r < 0 || g < 0 || b < 0)
-	    return (guicolor_T)-1;
+	    return INVALCOLOR;
 	return RGB(r, g, b);
     }
     else
@@ -1255,12 +1255,12 @@ gui_mch_get_color(char_u *name)
 
 	fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
 	if (fname == NULL)
-	    return (guicolor_T)-1;
+	    return INVALCOLOR;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return (guicolor_T)-1;
+	    return INVALCOLOR;
 
 	while (!feof(fd))
 	{
@@ -1292,7 +1292,7 @@ gui_mch_get_color(char_u *name)
 	fclose(fd);
     }
 
-    return (guicolor_T)-1;
+    return INVALCOLOR;
 }
 /*
  * Return OK if the key with the termcap name "name" is supported.
