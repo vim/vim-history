@@ -26,7 +26,7 @@ set ppcCOpts ""
 set ppcLOpts "{SharedLibraries}AppearanceLib"
 set ppcLibs "{SharedLibraries}ContextualMenu"
 #
-set carbonSources "syntax.c"
+set carbonSources ""
 set carbonOpts "-carbon"
 set carbonCOpts "-d TARGET_API_MAC_CARBON"
 set carbonLOpts ""
