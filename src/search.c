@@ -3077,6 +3077,7 @@ current_block(oap, count, include, what, other)
     pos_T	*end_pos;
     pos_T	old_start, old_end;
     char_u	*save_cpo;
+    int		sol = FALSE;	/* { at start of line */
 
     old_pos = curwin->w_cursor;
     old_end = curwin->w_cursor;		    /* remember where we started */
@@ -3142,11 +3143,15 @@ current_block(oap, count, include, what, other)
     while (!include)
     {
 	incl(&start_pos);
+	sol = (curwin->w_cursor.col == 0);
 	decl(&curwin->w_cursor);
 	if (what == '{')
 	    while (inindent(1))
+	    {
+		sol = TRUE;
 		if (decl(&curwin->w_cursor) != 0)
 		    break;
+	    }
 #ifdef FEAT_VISUAL
 	/*
 	 * In Visual mode, when the resulting area is not bigger than what we
@@ -3181,6 +3186,8 @@ current_block(oap, count, include, what, other)
     {
 	if (*p_sel == 'e')
 	    ++curwin->w_cursor.col;
+	if (sol)
+	    inc(&curwin->w_cursor);	/* include the line break */
 	VIsual = start_pos;
 	VIsual_mode = 'v';
 	redraw_curbuf_later(INVERTED);	/* update the inversion */
@@ -3191,7 +3198,13 @@ current_block(oap, count, include, what, other)
     {
 	oap->start = start_pos;
 	oap->motion_type = MCHAR;
-	oap->inclusive = TRUE;
+	if (sol)
+	{
+	    incl(&curwin->w_cursor);
+	    oap->inclusive = FALSE;
+	}
+	else
+	    oap->inclusive = TRUE;
     }
 
     return OK;
