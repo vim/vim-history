@@ -1897,6 +1897,7 @@ do_source(fname, check_other, is_vimrc)
     int			    save_debug_break_level = debug_break_level;
 # ifdef UNIX
     struct stat		    st;
+    int			    stat_ok;
 # endif
 #endif
 #ifdef STARTUPTIME
@@ -2029,8 +2030,7 @@ do_source(fname, check_other, is_vimrc)
      */
     save_current_SID = current_SID;
 # ifdef UNIX
-    if (mch_stat((char *)fname_exp, &st) < 0)
-	st.st_dev = -1;
+    stat_ok = (mch_stat((char *)fname_exp, &st) >= 0);
 # endif
     for (current_SID = script_names.ga_len; current_SID > 0; --current_SID)
 	if (SCRIPT_NAME(current_SID) != NULL
@@ -2038,7 +2038,7 @@ do_source(fname, check_other, is_vimrc)
 # ifdef UNIX
 		    /* compare dev/ino when possible, it catches symbolic
 		     * links */
-		    (st.st_dev != -1 && SCRIPT_DEV(current_SID) != -1)
+		    (stat_ok && SCRIPT_DEV(current_SID) != -1)
 			? (SCRIPT_DEV(current_SID) == st.st_dev
 			    && SCRIPT_INO(current_SID) == st.st_ino) :
 # endif
@@ -2058,9 +2058,13 @@ do_source(fname, check_other, is_vimrc)
 	    }
 	    SCRIPT_NAME(current_SID) = fname_exp;
 # ifdef UNIX
-	    SCRIPT_DEV(current_SID) = st.st_dev;
-	    if (st.st_dev != -1)
+	    if (stat_ok)
+	    {
+		SCRIPT_DEV(current_SID) = st.st_dev;
 		SCRIPT_INO(current_SID) = st.st_ino;
+	    }
+	    else
+		SCRIPT_DEV(current_SID) = -1;
 # endif
 	    fname_exp = NULL;
 	}
