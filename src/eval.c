@@ -199,6 +199,7 @@ struct vimvar
     {"dying", sizeof("dying") - 1, NULL, VAR_NUMBER, VV_RO},
     {"exception", sizeof("exception") - 1, NULL, VAR_STRING, VV_RO},
     {"throwpoint", sizeof("throwpoint") - 1, NULL, VAR_STRING, VV_RO},
+    {"register", sizeof("register") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -215,6 +216,7 @@ static int get_lit_string_var __ARGS((char_u **arg, VAR retvar, int evaluate));
 static int get_env_var __ARGS((char_u **arg, VAR retvar, int evaluate));
 static int find_internal_func __ARGS((char_u *name));
 static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg, linenr_T firstline, linenr_T lastline, int *doesrange, int evaluate));
+static int call_func __ARGS((char_u *name, int len, VAR retvar, int argcount, VAR argvars, linenr_T firstline, linenr_T lastline, int *doesrange, int evaluate));
 static void f_append __ARGS((VAR argvars, VAR retvar));
 static void f_argc __ARGS((VAR argvars, VAR retvar));
 static void f_argidx __ARGS((VAR argvars, VAR retvar));
@@ -259,6 +261,8 @@ static void f_getcwd __ARGS((VAR argvars, VAR retvar));
 static void f_getfsize __ARGS((VAR argvars, VAR retvar));
 static void f_getftime __ARGS((VAR argvars, VAR retvar));
 static void f_getline __ARGS((VAR argvars, VAR retvar));
+static void f_getreg __ARGS((VAR argvars, VAR retvar));
+static void f_getregtype __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
 static void f_glob __ARGS((VAR argvars, VAR retvar));
@@ -313,6 +317,7 @@ static void f_remote_send __ARGS((VAR argvars, VAR retvar));
 static void f_server2client __ARGS((VAR argvars, VAR retvar));
 static void f_serverlist __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
+static void f_setreg __ARGS((VAR argvars, VAR retvar));
 static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
 static void f_stridx __ARGS((VAR argvars, VAR retvar));
@@ -371,7 +376,7 @@ static int eval_fname_sid __ARGS((char_u *p));
 static void list_func_head __ARGS((ufunc_T *fp, int indent));
 static void cat_func_name __ARGS((char_u *buf, ufunc_T *fp));
 static ufunc_T *find_func __ARGS((char_u *name));
-static void call_func __ARGS((ufunc_T *fp, int argcount, VAR argvars, VAR retvar, linenr_T firstline, linenr_T lastline));
+static void call_user_func __ARGS((ufunc_T *fp, int argcount, VAR argvars, VAR retvar, linenr_T firstline, linenr_T lastline));
 
 /* Magic braces are always enabled, otherwise Vim scripts would not be
  * portable. */
@@ -657,6 +662,69 @@ eval_to_number(expr)
     }
     --emsg_off;
 
+    return retval;
+}
+
+/*
+ * Call some vimL function and return the result as a string
+ * Uses argv[argc] for the function arguments.
+ */
+    char_u *
+call_vim_function(func, argc, argv, safe)
+    char_u      *func;
+    int		argc;
+    char_u      **argv;
+    int		safe;		/* use the sandbox */
+{
+    char_u	*retval = NULL;
+    var		retvar;
+    VAR		argvars;
+    long	n;
+    int		len;
+    int		i;
+    int		doesrange;
+    void	*save_funccalp = NULL;
+
+    argvars = (VAR)alloc(argc * sizeof(var));
+    if (argvars == NULL)
+	return NULL;
+
+    for (i = 0; i < argc; i++)
+    {
+	/* Recognize a number argument, the others must be strings. */
+	vim_str2nr(argv[i], NULL, &len, TRUE, TRUE, &n, NULL);
+	if (len == (int)STRLEN(argv[i]))
+	{
+	    argvars[i].var_type = VAR_NUMBER;
+	    argvars[i].var_val.var_number = n;
+	}
+	else
+	{
+	    argvars[i].var_type = VAR_STRING;
+	    argvars[i].var_val.var_string = argv[i];
+	}
+    }
+
+    if (safe)
+    {
+	save_funccalp = save_funccal();
+	++sandbox;
+    }
+
+    retvar.var_type = VAR_UNKNOWN;	/* clear_var() uses this */
+    if (call_func(func, STRLEN(func), &retvar, argc, argvars,
+		    curwin->w_cursor.lnum, curwin->w_cursor.lnum,
+		    &doesrange, TRUE) == OK)
+	retval = vim_strsave(get_var_string(&retvar));
+
+    clear_var(&retvar);
+    vim_free(argvars);
+
+    if (safe)
+    {
+	--sandbox;
+	restore_funccal(save_funccalp);
+    }
     return retval;
 }
 
@@ -2158,7 +2226,7 @@ eval7(arg, retvar, evaluate)
 		if (evaluate)
 		{
 		    retvar->var_type = VAR_STRING;
-		    retvar->var_val.var_string = get_reg_contents(**arg);
+		    retvar->var_val.var_string = get_reg_contents(**arg, FALSE);
 		}
 		if (**arg != NUL)
 		    ++*arg;
@@ -2647,6 +2715,8 @@ static struct fst
     {"getfsize",	1, 1, f_getfsize},
     {"getftime",	1, 1, f_getftime},
     {"getline",		1, 1, f_getline},
+    {"getreg",		0, 1, f_getreg},
+    {"getregtype",	0, 1, f_getregtype},
     {"getwinposx",	0, 0, f_getwinposx},
     {"getwinposy",	0, 0, f_getwinposy},
     {"getwinvar",	2, 2, f_getwinvar},
@@ -2666,7 +2736,7 @@ static struct fst
     {"iconv",		3, 3, f_iconv},
     {"indent",		1, 1, f_indent},
     {"input",		1, 2, f_input},
-    {"inputdialog",	1, 2, f_inputdialog},
+    {"inputdialog",	1, 3, f_inputdialog},
     {"inputrestore",	0, 0, f_inputrestore},
     {"inputsave",	0, 0, f_inputsave},
     {"inputsecret",	1, 2, f_inputsecret},
@@ -2700,6 +2770,7 @@ static struct fst
     {"serverlist",	0, 0, f_serverlist},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
+    {"setreg",		2, 3, f_setreg},
     {"setwinvar",	3, 3, f_setwinvar},
 #ifdef HAVE_STRFTIME
     {"strftime",	1, 2, f_strftime},
@@ -2835,24 +2906,78 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     int		evaluate;
 {
     char_u	*argp;
-    int		ret = FAIL;
+    int		ret = OK;
 #define MAX_FUNC_ARGS	20
     var		argvars[MAX_FUNC_ARGS];	/* vars for arguments */
     int		argcount = 0;		/* number of arguments found */
+
+    /*
+     * Get the arguments.
+     */
+    argp = *arg;
+    while (argcount < MAX_FUNC_ARGS)
+    {
+	argp = skipwhite(argp + 1);	    /* skip the '(' or ',' */
+	if (*argp == ')' || *argp == ',' || *argp == NUL)
+	    break;
+	if (eval1(&argp, &argvars[argcount], evaluate) == FAIL)
+	{
+	    ret = FAIL;
+	    break;
+	}
+	++argcount;
+	if (*argp != ',')
+	    break;
+    }
+    if (*argp == ')')
+	++argp;
+    else
+	ret = FAIL;
+
+    if (ret == OK)
+	ret = call_func(name, len, retvar, argcount, argvars,
+				    firstline, lastline, doesrange, evaluate);
+    else if (!aborting())
+	EMSG2(_("E116: Invalid arguments for function %s"), name);
+
+    while (--argcount >= 0)
+	clear_var(&argvars[argcount]);
+
+    *arg = skipwhite(argp);
+    return ret;
+}
+
+
+/*
+ * Call a function with its resolved parameters
+ * Return OK or FAIL.
+ */
+    static int
+call_func(name, len, retvar, argcount, argvars, firstline, lastline,
+							  doesrange, evaluate)
+    char_u	*name;		/* name of the function */
+    int		len;		/* length of "name" */
+    VAR		retvar;		/* return value goes here */
+    int		argcount;	/* number of "argvars" */
+    VAR		argvars;	/* vars for arguments */
+    linenr_T	firstline;	/* first line of range */
+    linenr_T	lastline;	/* last line of range */
+    int		*doesrange;	/* return: function handled range */
+    int		evaluate;
+{
+    int		ret = FAIL;
     static char *errors[] =
-		{N_("E116: Invalid arguments for function %s"),
-		 N_("E117: Unknown function: %s"),
+		{N_("E117: Unknown function: %s"),
 		 N_("E118: Too many arguments for function: %s"),
 		 N_("E119: Not enough arguments for function: %s"),
 		 N_("E120: Using <SID> not in a script context: %s"),
 		};
-#define ERROR_INVARG	0
-#define ERROR_UNKNOWN	1
-#define ERROR_TOOMANY	2
-#define ERROR_TOOFEW	3
-#define ERROR_SCRIPT	4
-#define ERROR_NONE	5
-#define ERROR_OTHER	6
+#define ERROR_UNKNOWN	0
+#define ERROR_TOOMANY	1
+#define ERROR_TOOFEW	2
+#define ERROR_SCRIPT	3
+#define ERROR_NONE	4
+#define ERROR_OTHER	5
     int		error = ERROR_NONE;
     int		i;
     int		llen;
@@ -2908,28 +3033,6 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 
     *doesrange = FALSE;
 
-    /*
-     * Get the arguments.
-     */
-    argp = *arg;
-    while (argcount < MAX_FUNC_ARGS)
-    {
-	argp = skipwhite(argp + 1);	    /* skip the '(' or ',' */
-	if (*argp == ')' || *argp == ',' || *argp == NUL)
-	    break;
-	if (eval1(&argp, &argvars[argcount], evaluate) == FAIL)
-	{
-	    error = ERROR_INVARG;
-	    break;
-	}
-	++argcount;
-	if (*argp != ',')
-	    break;
-    }
-    if (*argp == ')')
-	++argp;
-    else if (error == ERROR_NONE)
-	error = ERROR_INVARG;
 
     /* execute the function if no errors detected and executing */
     if (evaluate && error == ERROR_NONE)
@@ -2973,7 +3076,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 		    save_search_patterns();
 		    saveRedobuff();
 		    ++fp->calls;
-		    call_func(fp, argcount, argvars, retvar,
+		    call_user_func(fp, argcount, argvars, retvar,
 							 firstline, lastline);
 		    --fp->calls;
 		    restoreRedobuff();
@@ -3005,11 +3108,6 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     }
     if (error == ERROR_NONE)
 	ret = OK;
-
-    *arg = skipwhite(argp);
-
-    while (--argcount >= 0)
-	clear_var(&argvars[argcount]);
 
     /*
      * Report an error unless the argument evaluation or function call has been
@@ -4221,6 +4319,69 @@ f_getftime(argvars, retvar)
 }
 
 /*
+ * "getreg()" function
+ */
+    static void
+f_getreg(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*strregname;
+    int		regname;
+
+    if (argvars[0].var_type != VAR_UNKNOWN)
+	strregname = get_var_string(&argvars[0]);
+    else
+	strregname = vimvars[VV_REG].val;
+    regname = (strregname == NULL ? '"' : *strregname);
+    if (regname == 0)
+	regname = '"';
+
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = get_reg_contents(regname, TRUE);
+}
+
+/*
+ * "getregtype()" function
+ */
+    static void
+f_getregtype(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*strregname;
+    int		regname;
+    char_u	buf[NUMBUFLEN + 2];
+    long	reglen = 0;
+
+    if (argvars[0].var_type != VAR_UNKNOWN)
+	strregname = get_var_string(&argvars[0]);
+    else
+	/* Default to v:register */
+	strregname = vimvars[VV_REG].val;
+
+    regname = (strregname == NULL ? '"' : *strregname);
+    if (regname == 0)
+	regname = '"';
+
+    buf[0] = NUL;
+    buf[1] = NUL;
+    switch (get_reg_type(regname, &reglen))
+    {
+	case MLINE: buf[0] = 'V'; break;
+	case MCHAR: buf[0] = 'v'; break;
+#ifdef FEAT_VISUAL
+	case MBLOCK:
+		buf[0] = Ctrl_V;
+		sprintf((char *)buf + 1, "%ld", reglen + 1);
+		break;
+#endif
+    }
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = vim_strsave(buf);
+}
+
+/*
  * "getline(lnum)" function
  */
     static void
@@ -5154,7 +5315,13 @@ f_inputdialog(argvars, retvar)
 							      1, IObuff) == 1)
 	    retvar->var_val.var_string = vim_strsave(IObuff);
 	else
-	    retvar->var_val.var_string = NULL;
+	{
+	    if (argvars[2].var_type != VAR_UNKNOWN)
+		retvar->var_val.var_string = vim_strsave(
+					get_var_string_buf(&argvars[2], buf));
+	    else
+		retvar->var_val.var_string = NULL;
+	}
 	retvar->var_type = VAR_STRING;
     }
     else
@@ -5922,6 +6089,67 @@ f_setline(argvars, retvar)
 	retvar->var_val.var_number = 0;
     }
 }
+/*
+ * "setreg()" function
+ */
+    static void
+f_setreg(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		regname;
+    char_u	*strregname;
+    char_u	*stropt;
+    int		append;
+    char_u	yank_type;
+    long	block_len;
+
+    block_len = -1;
+    yank_type = MAUTO;
+    append = FALSE;
+
+    strregname = get_var_string(argvars);
+    retvar->var_val.var_number = 1;		/* FAIL is default */
+
+    regname = (strregname == NULL ? '"' : *strregname);
+    if (regname == 0 || regname == '@')
+	regname = '"';
+    else if (regname == '=')
+	return;
+
+    if (argvars[2].var_type != VAR_UNKNOWN)
+    {
+	for (stropt = get_var_string(&argvars[2]); *stropt != NUL; ++stropt)
+	    switch (*stropt)
+	    {
+		case 'a': case 'A': /* append */
+		    append = TRUE;
+		    break;
+		case 'v': case 'c': /* character-wise selection */
+		    yank_type = MCHAR;
+		    break;
+		case 'V': case 'l': /*line-wise selection */
+		    yank_type = MLINE;
+		    break;
+#ifdef FEAT_VISUAL
+		case 'b': case Ctrl_V: /*block-wise selection*/
+		    yank_type = MBLOCK;
+		    if (isdigit(stropt[1]))
+		    {
+			++stropt;
+			block_len = getdigits(&stropt) - 1;
+			--stropt;
+		    }
+		    break;
+#endif
+	    }
+    }
+
+    write_reg_contents_ex(regname, get_var_string(&argvars[1]),
+						append, yank_type, block_len);
+    retvar->var_val.var_number = 0;
+}
+
 
 /*
  * "setwinvar(expr)" function
@@ -6841,6 +7069,7 @@ f_visualmode(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_VISUAL
     char_u	str[2];
 
     retvar->var_type = VAR_STRING;
@@ -6854,6 +7083,9 @@ f_visualmode(argvars, retvar)
 	    || (argvars[0].var_type == VAR_STRING
 		&& *get_var_string(&argvars[0]) != NUL))
 	curbuf->b_visual_mode_eval = NUL;
+#else
+    retvar->var_val.var_number = 0; /* return anything, it won't work anyway */
+#endif
 }
 
 /*
@@ -7260,6 +7492,24 @@ set_vim_var_string(idx, val, len)
 	vimvars[idx].val = vim_strsave(val);
     else
 	vimvars[idx].val = vim_strnsave(val, len);
+}
+
+/*
+ * Set v:register if needed.
+ */
+    void
+set_reg_var(c)
+    int		c;
+{
+    char_u	regname;
+
+    if (c == 0 || c == ' ')
+	regname = '"';
+    else
+	regname = c;
+    /* Avoid free/alloc when the value is already right. */
+    if (vimvars[VV_REG].val == NULL || vimvars[VV_REG].val[0] != c)
+	set_vim_var_string(VV_REG, &regname, 1);
 }
 
 /*
@@ -8742,7 +8992,7 @@ ex_delfunction(eap)
  * Call a user function.
  */
     static void
-call_func(fp, argcount, argvars, retvar, firstline, lastline)
+call_user_func(fp, argcount, argvars, retvar, firstline, lastline)
     ufunc_T	*fp;		/* pointer to function */
     int		argcount;	/* nr of args */
     VAR		argvars;	/* arguments */

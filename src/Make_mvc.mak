@@ -14,6 +14,7 @@
 # To add interfaces, define any of the following:
 #	GUI interface: GUI=yes
 #	OLE interface: OLE=yes (usually with GUI=yes)
+#	Multibyte support: MBYTE=yes
 #	IME support: IME=yes	(requires GUI=yes)
 #	  DYNAMIC_IME=[yes or no]  (to load the imm32.dll dynamically, default
 #	  is yes)
@@ -21,11 +22,11 @@
 #	Perl interface:
 #	  PERL=[Path to Perl directory]
 #	  DYNAMIC_PERL=yes (to load the Perl DLL dynamically)
-#	  PERL_VER=[Perl version, in the form 55 (5.005), 56 (5.6.x), etc]
+#	  PERL_VER=[Perl version, in the form 55 (5.005), 56 (5.6.x), etc] (default is 56)
 #	Python interface:
 #	  PYTHON=[Path to Python directory]
 #	  DYNAMIC_PYTHON=yes (to load the Python DLL dynamically)
-#	  PYTHON_VER=[Python version, eg 15, 20]  (default is 15)
+#	  PYTHON_VER=[Python version, eg 15, 20]  (default is 22)
 #	Ruby interface:
 #	  RUBY=[Path to Ruby directory]
 #	  DYNAMIC_RUBY=yes (to load the Ruby DLL dynamically)
@@ -38,19 +39,23 @@
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
 #	    You must set TCL_VER_LONG when you set TCL_VER.
+#	Cscope support: CSCOPE=yes
 #	Debug version: DEBUG=yes
 #	Mapfile: MAP=[no, yes or lines] (default is yes)
 #	  no:    Don't write a mapfile.
 #	  yes:   Write a normal mapfile.
 #	  lines: Write a mapfile with line numbers (only for VC6 and later)
 #	SNiFF+ interface: SNIFF=yes
+#	Cscope interface: CSCOPE=yes
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
 #	Intl library support (always dynamically loaded):
 #	  GETTEXT=[yes or no]  (default is yes)
 #	See http://sourceforge.net/projects/gettext/
-#       PostScript printing: POSTSCRIPT=yes
-#       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE]
+#       PostScript printing: POSTSCRIPT=yes (default is no)
+#       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE] (default is BIG)
+#       Version Support: WINVER=[0x400, 0x500] (default is 0x400)
+#       Processor Version: CPUNR=[i386, i486, i586, i686] (default is i386)
 #
 # You can combine any of these interfaces
 #
@@ -71,8 +76,8 @@
 #		nmake -f Make_mvc.mak debug=yes gui=yes
 #	2) Use MS Devstudio and set it up to allow that file to be debugged:
 #	    i) Pass Make_dvc.mak to the IDE.
-#	         Use the "open workspace" menu entry to load Make_dvc.mak.
-#	         Alternatively, from the command line:
+#		 Use the "open workspace" menu entry to load Make_dvc.mak.
+#		 Alternatively, from the command line:
 #			msdev /nologo Make_dvc.mak
 #		Note: Make_dvc.mak is in VC4.0 format. Later VC versions see
 #		this and offer to convert it to their own format. Accept that.
@@ -130,6 +135,8 @@ CPU = i386
 
 !if "$(DEBUG)" != "yes"
 NODEBUG = 1
+!else
+MAKEFLAGS_GVIMEXT = DEBUG=yes
 !endif
 
 
@@ -191,7 +198,7 @@ CON_LIB = $(CON_LIB) /DELAYLOAD:comdlg32.dll /DELAYLOAD:ole32.dll DelayImp.lib
 
 ### Set the default $(WINVER) to make it work with VC++7.0 (VS.NET)
 !ifndef WINVER
-WINVER = -DWINVER=0x400
+WINVER = 0x400
 !endif
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
@@ -200,7 +207,8 @@ WINVER = -DWINVER=0x400
 #VIMRUNTIMEDIR = somewhere
 
 CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
-		$(WINVER) $(SNIFF_DEFS) $(CSCOPE_DEFS) $(DEFINES)
+		$(SNIFF_DEFS) $(CSCOPE_DEFS) $(DEFINES) \
+		-DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 
 #>>>>> end of choices
 ###########################################################################
@@ -216,9 +224,22 @@ DEL_TREE = deltree /y
 INTDIR=$(OBJDIR)
 OUTDIR=$(OBJDIR)
 
+# Convert processor ID to MVC-compatible number
+!if "$(CPUNR)" == "i386"
+CPUARG = /G3
+!elseif "$(CPUNR)" == "i486"
+CPUARG = /G4
+!elseif "$(CPUNR)" == "i586"
+CPUARG = /G5
+!elseif "$(CPUNR)" == "i686"
+CPUARG = /G6
+!else
+CPUARG =
+!endif
+
 !ifdef NODEBUG
 VIM = vim
-CFLAGS = $(CFLAGS) -DNDEBUG /Ox /Zi
+CFLAGS = $(CFLAGS) -DNDEBUG /Ox /Zi $(CPUARG)
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
 PDB = /Fd$(OUTDIR)/
 LINK_PDB = /PDB:$(OUTDIR)/
@@ -320,8 +341,13 @@ IME_LIB = imm32.lib
 !endif
 
 !if "$(GIME)" == "yes"
-CFLAGS = $(CFLAGS) -DFEAT_MBYTE -DGLOBAL_IME
+CFLAGS = $(CFLAGS) -DGLOBAL_IME
 OBJ = $(OBJ) $(OUTDIR)\dimm_i.obj $(OUTDIR)\glbl_ime.obj
+MBYTE = yes
+!endif
+
+!if "$(MBYTE)" == "yes"
+CFLAGS = $(CFLAGS) -DFEAT_MBYTE
 !endif
 
 !if "$(GUI)" == "yes"
@@ -395,7 +421,7 @@ TCL_LIB = $(TCL)\lib\tcl$(TCL_VER)vc.lib
 # PYTHON interface
 !ifdef PYTHON
 !ifndef PYTHON_VER
-PYTHON_VER = 15
+PYTHON_VER = 22
 !endif
 !message Python requested (version $(PYTHON_VER)) - root dir is "$(PYTHON)"
 !if "$(DYNAMIC_PYTHON)" == "yes"
@@ -414,6 +440,9 @@ PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
 
 # Perl interface
 !ifdef PERL
+!ifndef PERL_VER
+PERL_VER = 56
+!endif
 !message Perl requested (version $(PERL_VER)) - root dir is "$(PERL)"
 !if "$(DYNAMIC_PERL)" == "yes"
 !if $(PERL_VER) >= 56
@@ -551,7 +580,7 @@ xxd/xxd.exe: xxd/xxd.c
 
 GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
 	cd GvimExt
-	$(MAKE) /NOLOGO -f Makefile
+	$(MAKE) /NOLOGO -f Makefile $(MAKEFLAGS_GVIMEXT)
 	cd ..
 
 
@@ -579,6 +608,12 @@ clean:
 	- if exist dosinst.exe del dosinst.exe
 	cd xxd
 	$(MAKE) /NOLOGO -f Make_mvc.mak clean
+	cd ..
+	cd GvimExt
+	$(MAKE) /NOLOGO -f Makefile clean
+	cd ..
+	cd GvimExt
+	$(MAKE) /NOLOGO -f Makefile clean
 	cd ..
 	- if exist testdir\*.out del testdir\*.out
 

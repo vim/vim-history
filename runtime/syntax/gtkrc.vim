@@ -2,22 +2,22 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: Gtk+ theme files `gtkrc'
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2002-05-05
-" URL: http://physics.muni.cz/~yeti/download/syntax/gtkrc.vim
+" Last Change: 2002-10-31
+" URL: http://trific.ath.cx/Ftp/vim/syntax/gtkrc.vim
 
 " Setup
 if version >= 600
-  if exists("b:current_syntax")
-    finish
-  endif
+	if exists("b:current_syntax")
+		finish
+	endif
 else
-  syntax clear
+	syntax clear
 endif
 
 if version >= 600
-  setlocal iskeyword=_,-,a-z,A-Z,48-57
+	setlocal iskeyword=_,-,a-z,A-Z,48-57
 else
-  set iskeyword=_,-,a-z,A-Z,48-57
+	set iskeyword=_,-,a-z,A-Z,48-57
 endif
 
 syn case match
@@ -60,14 +60,18 @@ syn keyword gtkrcFunctionName ARROW BOX BOX_GAP CHECK CROSS DIAMOND EXTENSION FL
 syn cluster gtkrcPRIVATE add=gtkrcFunctionName,gtkrcFunctionEq
 
 " Class names
-syn keyword gtkrcClassName GtkObject GtkWidget GtkMisc GtkLabel GtkAccelLabel GtkTipsQuery GtkArrow GtkImage GtkPixmap GtkContainer GtkBin GtkAlignment GtkFrame GtkAspectFrame GtkButton GtkToggleButton GtkCheckButton GtkRadioButton GtkOptionMenu GtkItem GtkMenuItem GtkCheckMenuItem GtkRadioMenuItem GtkTearoffMenuItem GtkListItem GtkTreeItem GtkWindow GtkColorSelectionDialog GtkDialog GtkInputDialog GtkFileSelection GtkFontSelectionDialog GtkPlug GtkEventBox GtkHandleBox GtkScrolledWindow GtkViewport GtkBox GtkButtonBox GtkHButtonBox GtkVButtonBox GtkVBox GtkColorSelection GtkGammaCurve GtkHBox GtkCombo GtkStatusbar GtkCList GtkCTree GtkFixed GtkNotebook GtkFontSelection GtkPaned GtkHPaned GtkVPaned GtkLayout GtkList GtkMenuShell GtkMenu GtkMenuBar GtkPacker GtkSocket GtkTable GtkToolbar GtkTree GtkCalendar GtkDrawingArea GtkCurve GtkEditable GtkEntry GtkSpinButton GtkText GtkRuler GtkHRuler GtkVRuler GtkRange GtkScale GtkHScale GtkVScale GtkScrollbar GtkHScrollbar GtkVScrollbar GtkSeparator GtkHSeparator GtkVSeparator GtkInvisible GtkPreview GtkProgress GtkProgressBar GtkData GtkAdjustment GtkTooltips GtkItemFactory contained
-syn keyword gtkrcClassName Object Widget Misc Label AccelLabel TipsQuery Arrow Image Pixmap Container Bin Alignment Frame AspectFrame Button ToggleButton CheckButton RadioButton OptionMenu Item MenuItem CheckMenuItem RadioMenuItem TearoffMenuItem ListItem TreeItem Window ColorSelectionDialog Dialog InputDialog FileSelection FontSelectionDialog Plug EventBox HandleBox ScrolledWindow Viewport Box ButtonBox HButtonBox VButtonBox VBox ColorSelection GammaCurve HBox Combo Statusbar CList CTree Fixed Notebook FontSelection Paned HPaned VPaned Layout List MenuShell Menu MenuBar Packer Socket Table Toolbar Tree Calendar DrawingArea Curve Editable Entry SpinButton Text Ruler HRuler VRuler Range Scale HScale VScale Scrollbar HScrollbar VScrollbar Separator HSeparator VSeparator Invisible Preview Progress ProgressBar Data Adjustment Tooltips ItemFactory contained
+syn keyword gtkrcClassName GtkAccelLabel GtkAdjustment GtkAlignment GtkArrow GtkAspectFrame GtkBin GtkBox GtkButton GtkButtonBox GtkCList GtkCTree GtkCalendar GtkCheckButton GtkCheckMenuItem GtkColorSelection GtkColorSelectionDialog GtkCombo GtkContainer GtkCurve GtkData GtkDialog GtkDrawingArea GtkEditable GtkEntry GtkEventBox GtkFileSelection GtkFixed GtkFontSelection GtkFontSelectionDialog GtkFrame GtkGammaCurve GtkHBox GtkHButtonBox GtkHPaned GtkHRuler GtkHScale GtkHScrollbar GtkHSeparator GtkHandleBox GtkImage GtkImageMenuItem GtkInputDialog GtkInvisible GtkItem GtkItemFactory GtkLabel GtkLayout GtkList GtkListItem GtkMenu GtkMenuBar GtkMenuItem GtkMenuShell GtkMessageDialog GtkMisc GtkNotebook GtkObject GtkOptionMenu GtkPacker GtkPaned GtkPixmap GtkPlug GtkPreview GtkProgress GtkProgressBar GtkRadioButton GtkRadioMenuItem GtkRange GtkRuler GtkScale GtkScrollbar GtkScrolledWindow GtkSeparatorMenuItem GtkSocket GtkSpinButton GtkStatusbar GtkTable GtkTearoffMenuItem GtkText GtkTextBuffer GtkTextMark GtkTextTag GtkTextView GtkTipsQuery GtkToggleButton GtkToolbar GtkTooltips GtkTree GtkTreeView GtkTreeItem GtkVBox GtkVButtonBox GtkVPaned GtkVRuler GtkVScale GtkVScrollbar GtkVSeparator GtkViewport GtkWidget GtkWindow GtkWindowGroup contained
+syn keyword gtkrcClassName AccelLabel Adjustment Alignment Arrow AspectFrame Bin Box Button ButtonBox CList CTree Calendar CheckButton CheckMenuItem ColorSelection ColorSelectionDialog Combo Container Curve Data Dialog DrawingArea Editable Entry EventBox FileSelection Fixed FontSelection FontSelectionDialog Frame GammaCurve HBox HButtonBox HPaned HRuler HScale HScrollbar HSeparator HandleBox Image ImageMenuItem InputDialog Invisible Item ItemFactory Label Layout List ListItem Menu MenuBar MenuItem MenuShell MessageDialog Misc Notebook Object OptionMenu Packer Paned Pixmap Plug Preview Progress ProgressBar RadioButton RadioMenuItem Range Ruler Scale Scrollbar ScrolledWindow SeparatorMenuItem Socket SpinButton Statusbar Table TearoffMenuItem Text TextBuffer TextMark TextTag TextView TipsQuery ToggleButton Toolbar Tooltips Tree TreeView TreeItem VBox VButtonBox VPaned VRuler VScale VScrollbar VSeparator Viewport Widget Window WindowGroup contained
 syn keyword gtkrcClassNameGnome GnomeAbout GnomeAnimator GnomeApp GnomeAppBar GnomeCalculator GnomeCanvas GnomeCanvasEllipse GnomeCanvasGroup GnomeCanvasImage GnomeCanvasItem GnomeCanvasLine GnomeCanvasPolygon GnomeCanvasRE GnomeCanvasRect GnomeCanvasText GnomeCanvasWidget GnomeClient GnomeColorPicker GnomeDEntryEdit GnomeDateEdit GnomeDialog GnomeDock GnomeDockBand GnomeDockItem GnomeDockLayout GnomeDruid GnomeDruidPage GnomeDruidPageFinish GnomeDruidPageStandard GnomeDruidPageStart GnomeEntry GnomeFileEntry GnomeFontPicker GnomeFontSelector GnomeHRef GnomeIconEntry GnomeIconList GnomeIconSelection GnomeIconTextItem GnomeLess GnomeMDI GnomeMDIChild GnomeMDIGenericChild GnomeMessageBox GnomeNumberEntry GnomePaperSelector GnomePixmap GnomePixmapEntry GnomeProcBar GnomePropertyBox GnomeScores GnomeSpell GnomeStock GtkClock GtkDial GtkPixmapMenuItem GtkTed contained
 syn cluster gtkrcPRIVATE add=gtkrcClassName,gtkrcClassNameGnome
 
 " Stock item names
 syn keyword gtkrcStockName gtk-add gtk-apply gtk-bold gtk-cancel gtk-cdrom gtk-clear gtk-close gtk-convert gtk-copy gtk-cut gtk-delete gtk-dialog-error gtk-dialog-info gtk-dialog-question gtk-dialog-warning gtk-dnd gtk-dnd-multiple gtk-execute gtk-find gtk-find-and-replace gtk-floppy gtk-goto-bottom gtk-goto-first gtk-goto-last gtk-goto-top gtk-go-back gtk-go-down gtk-go-forward gtk-go-up gtk-help gtk-home gtk-index gtk-italic gtk-jump-to gtk-justify-center gtk-justify-fill gtk-justify-left gtk-justify-right gtk-missing-image gtk-new gtk-no gtk-ok gtk-open gtk-paste gtk-preferences gtk-print gtk-print-preview gtk-properties gtk-quit gtk-redo gtk-refresh gtk-remove gtk-revert-to-saved gtk-save gtk-save-as gtk-select-color gtk-select-font gtk-sort-ascending gtk-sort-descending gtk-spell-check gtk-stop gtk-strikethrough gtk-undelete gtk-underline gtk-undo gtk-yes gtk-zoom-100 gtk-zoom-fit gtk-zoom-in gtk-zoom-out contained
 syn cluster gtkrcPRIVATE add=gtkrcStockName
+
+" Gtk Settings
+syn keyword gtkrcSettingsName gtk-double-click-time gtk-cursor-blink gtk-cursor-blink-time gtk-split-cursor gtk-theme-name gtk-key-theme-name gtk-menu-bar-accel gtk-dnd-drag-threshold gtk-font-name gtk-color-palette gtk-entry-select-on-focus gtk-can-change-accels gtk-toolbar-style gtk-toolbar-icon-size
+syn cluster gtkrcPRIVATE add=gtkrcSettingsName
 
 " Catch errors caused by wrong parenthesization
 syn region gtkrcParen start='(' end=')' transparent contains=ALLBUT,gtkrcParenError,@gtkrcPRIVATE
@@ -83,55 +87,56 @@ syn sync match gtkrcSyncClass groupthere NONE "^\s*class\>"
 
 " Define the default highlighting
 if version >= 508 || !exists("did_gtkrc_syntax_inits")
-  if version < 508
-    let did_gtkrc_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
+	if version < 508
+		let did_gtkrc_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-  HiLink gtkrcComment Comment
-  HiLink gtkrcFixme Todo
+	HiLink gtkrcComment Comment
+	HiLink gtkrcFixme Todo
 
-  HiLink gtkrcInclude Preproc
+	HiLink gtkrcInclude Preproc
 
-  HiLink gtkrcACString gtkrcString
-  HiLink gtkrcBString gtkrcString
-  HiLink gtkrcString String
-  HiLink gtkrcNumber Number
-  HiLink gtkrcStateName gtkrcConstant
-  HiLink gtkrcPriorityName gtkrcConstant
-  HiLink gtkrcTextDirName gtkrcConstant
-  HiLink gtkrcStockName Function
-  HiLink gtkrcConstant Constant
+	HiLink gtkrcACString gtkrcString
+	HiLink gtkrcBString gtkrcString
+	HiLink gtkrcString String
+	HiLink gtkrcNumber Number
+	HiLink gtkrcStateName gtkrcConstant
+	HiLink gtkrcPriorityName gtkrcConstant
+	HiLink gtkrcTextDirName gtkrcConstant
+	HiLink gtkrcSettingsName Function
+	HiLink gtkrcStockName Function
+	HiLink gtkrcConstant Constant
 
-  HiLink gtkrcPathSpecial gtkrcSpecial
-  HiLink gtkrcWPathSpecial gtkrcSpecial
-  HiLink gtkrcRGBColor gtkrcSpecial
-  HiLink gtkrcKeyMod gtkrcSpecial
-  HiLink gtkrcSpecial Special
+	HiLink gtkrcPathSpecial gtkrcSpecial
+	HiLink gtkrcWPathSpecial gtkrcSpecial
+	HiLink gtkrcRGBColor gtkrcSpecial
+	HiLink gtkrcKeyMod gtkrcSpecial
+	HiLink gtkrcSpecial Special
 
-  HiLink gtkrcTop gtkrcKeyword
-  HiLink gtkrcPathSet gtkrcKeyword
-  HiLink gtkrcStyleKeyword gtkrcKeyword
-  HiLink gtkrcFunction gtkrcKeyword
-  HiLink gtkrcBind gtkrcKeyword
-  HiLink gtkrcKeyword Keyword
+	HiLink gtkrcTop gtkrcKeyword
+	HiLink gtkrcPathSet gtkrcKeyword
+	HiLink gtkrcStyleKeyword gtkrcKeyword
+	HiLink gtkrcFunction gtkrcKeyword
+	HiLink gtkrcBind gtkrcKeyword
+	HiLink gtkrcKeyword Keyword
 
-  HiLink gtkrcClassNameGnome gtkrcGtkClass
-  HiLink gtkrcClassName gtkrcGtkClass
-  HiLink gtkrcFunctionName gtkrcGtkClass
-  HiLink gtkrcGtkClass Type
+	HiLink gtkrcClassNameGnome gtkrcGtkClass
+	HiLink gtkrcClassName gtkrcGtkClass
+	HiLink gtkrcFunctionName gtkrcGtkClass
+	HiLink gtkrcGtkClass Type
 
-  HiLink gtkrcImage gtkrcOtherword
-  HiLink gtkrcOtherword Function
+	HiLink gtkrcImage gtkrcOtherword
+	HiLink gtkrcOtherword Function
 
-  HiLink gtkrcParenError gtkrcError
-  HiLink gtkrcBraceError gtkrcError
-  HiLink gtkrcBracketError gtkrcError
-  HiLink gtkrcError Error
+	HiLink gtkrcParenError gtkrcError
+	HiLink gtkrcBraceError gtkrcError
+	HiLink gtkrcBracketError gtkrcError
+	HiLink gtkrcError Error
 
-  delcommand HiLink
+	delcommand HiLink
 endif
 
 let b:current_syntax = "gtkrc"

@@ -412,7 +412,7 @@ syn cluster vimUserCmdList	contains=vimAddress,vimSyntax,vimHighlight,vimAutoCmd
 syn keyword vimUserCommand	contained	com[mand]
 syn match   vimUserCmd	"\<com\%[mand]!\=\>.*$"		contains=vimUserAttrb,vimUserCommand,@vimUserCmdList
 syn match   vimUserAttrb	contained	"-n\%[args]=[01*?+]"	contains=vimUserAttrbKey,vimOper
-syn match   vimUserAttrb	contained	"-com\%[plete]="		contains=vimUserAttrbKey,vimOper nextgroup=vimUserAttrbCmplt,vimUserCmdError
+syn match   vimUserAttrb	contained	"-com\%[plete]="		contains=vimUserAttrbKey,vimOper nextgroup=vimUserAttrbCmplt,vimUserAttrbCmpltCust,vimUserCmdError
 syn match   vimUserAttrb	contained	"-ra\%[nge]\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-cou\%[nt]=\d\+"		contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-bang\=\>"		contains=vimOper,vimUserAttrbKey
@@ -425,6 +425,8 @@ syn keyword vimUserAttrbCmplt	contained	augroup	environment	function	mapping	tag
 syn keyword vimUserAttrbCmplt	contained	buffer	event	help	menu	tag_listfiles
 syn keyword vimUserAttrbCmplt	contained	command	expression	highlight	option	var
 syn keyword vimUserAttrbCmplt	contained	dir	file
+syn match   vimUserAttrbCmpltCust	contained	"custom,"		nextgroup=vimUserCmplFuncName
+syn match   vimUserCmplFuncName	contained	"\u\i*\>"
 
 " Numbers
 " =======
@@ -844,6 +846,8 @@ hi def link vimSyncGroup	vimGroupName
 hi def link vimSyncGroupName	vimGroupName
 hi def link vimUserAttrb	vimSpecial
 hi def link vimUserAttrbCmplt	vimSpecial
+hi def link vimUserAttrbCmpltCust	vimSpecial
+hi def link vimUserCmplFuncName	vimFuncName
 hi def link vimUserAttrbKey	vimOption
 hi def link vimUserCommand	vimCommand
 

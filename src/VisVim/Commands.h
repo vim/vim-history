@@ -38,16 +38,16 @@ class CCommands :
 	// event handler object and the Debugger event handler object,
 	// which are declared below.
 	template < class IEvents,
-	        const IID * piidEvents,
-	        const GUID * plibid,
+		const IID * piidEvents,
+		const GUID * plibid,
 		class XEvents,
-	        const CLSID * pClsidEvents >
+		const CLSID * pClsidEvents >
 		class XEventHandler :
-		public        CComDualImpl < IEvents,
+		public	      CComDualImpl < IEvents,
 			      piidEvents,
 			      plibid >,
-		public        CComObjectRoot,
-		public        CComCoClass < XEvents,
+		public	      CComObjectRoot,
+		public	      CComCoClass < XEvents,
 			      pClsidEvents >
 	{
 	    public:

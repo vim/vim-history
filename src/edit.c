@@ -4372,8 +4372,9 @@ auto_format()
     }
 
 #ifdef FEAT_COMMENTS
-    /* With the 'c' flag in 'formatoptions' only format comments. */
-    if (has_format_option(FO_WRAP_COMS)
+    /* With the 'c' flag in 'formatoptions' and 't' missing: only format
+     * comments. */
+    if (has_format_option(FO_WRAP_COMS) && !has_format_option(FO_WRAP)
 				     && get_leader_len(old, NULL, FALSE) == 0)
 	return;
 #endif
@@ -6431,7 +6432,7 @@ ins_bs(c, mode, inserted_space_p)
 	    want_vcol = (want_vcol / ts) * ts;
 
 	    /* delete characters until we are at or before want_vcol */
-	    while ((int)vcol > want_vcol
+	    while (vcol > want_vcol
 		    && (cc = *(ml_get_cursor() - 1), vim_iswhite(cc)))
 	    {
 		dec_cursor();
@@ -6459,7 +6460,7 @@ ins_bs(c, mode, inserted_space_p)
 	    }
 
 	    /* insert extra spaces until we are at want_vcol */
-	    while ((int)vcol < want_vcol)
+	    while (vcol < want_vcol)
 	    {
 		/* Remember the first char we inserted */
 		if (curwin->w_cursor.lnum == Insstart.lnum
@@ -6576,6 +6577,16 @@ ins_bs(c, mode, inserted_space_p)
     if (curwin->w_cursor.lnum == Insstart.lnum
 				       && curwin->w_cursor.col < Insstart.col)
 	Insstart.col = curwin->w_cursor.col;
+
+    /* vi behaviour: the cursor moves backward but the character that
+     *		     was there remains visible
+     * Vim behaviour: the cursor moves backward and the character that
+     *		      was there is erased from the screen.
+     * We can emulate the vi bahaviour by pretending there is a dollar
+     * displayed even when there isn't.
+     *  --pkv Sun Jan 19 01:56:40 EST 2003 */
+    if (vim_strchr(p_cpo, CPO_BACKSPACE) != NULL && dollar_vcol == 0)
+	dollar_vcol = curwin->w_virtcol + 1;
 
     return did_backspace;
 }

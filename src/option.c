@@ -328,7 +328,7 @@ static struct vimoption
 #else
 			    (char_u *)NULL, PV_NONE,
 #endif
-			    {(char_u *)FALSE, (char_u *)0L}},
+			    {(char_u *)TRUE, (char_u *)0L}},
     {"allowrevins", "ari",  P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_RIGHTLEFT
 			    (char_u *)&p_ari, PV_NONE,
@@ -1565,6 +1565,15 @@ static struct vimoption
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
 			    },
+    {"printencoding", "penc", P_STRING|P_VI_DEF,
+#ifdef FEAT_POSTSCRIPT
+			    (char_u *)&p_penc, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
     {"printexpr", "pexpr",  P_STRING|P_VI_DEF,
 #ifdef FEAT_POSTSCRIPT
 			    (char_u *)&p_pexpr, PV_NONE,
@@ -2583,6 +2592,29 @@ set_init_1()
     }
 #endif
 
+#if defined(FEAT_POSTSCRIPT) && (defined(MSWIN) || defined(OS2) || defined(VMS) || defined(EBCDIC) || defined(MAC) || defined(hpux))
+    /* Set print encoding on platforms that don't default to latin1 */
+    set_string_default("penc",
+# if defined(MSWIN) || defined(OS2)
+		       (char_u *)"cp1252"
+# else
+#  ifdef VMS
+		       (char_u *)"dec-mcs"
+#  else
+#   ifdef EBCDIC
+		       (char_u *)"ebcdic-uk"
+#   else
+#    ifdef MAC
+		       (char_u *)"mac-roman"
+#    else /* HPUX */
+		       (char_u *)"hp-roman8"
+#    endif
+#   endif
+#  endif
+# endif
+		       );
+#endif
+
 #ifdef FEAT_POSTSCRIPT
     /* 'printexpr' must be allocated to be able to evaluate it. */
     set_string_default("pexpr",
@@ -3483,7 +3515,7 @@ do_set(arg, opt_flags)
 			    value = (long)options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
-			else if (nextchar == '^')
+			else if (nextchar == '<')
 			    value = *(long *)get_varp_scope(&(options[opt_idx]),
 								  OPT_GLOBAL);
 			else if (((long *)varp == &p_wc
@@ -4676,6 +4708,30 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    {
 		convert_setup(&input_conv, p_tenc, p_enc);
 		convert_setup(&output_conv, p_enc, p_tenc);
+	    }
+	}
+    }
+#endif
+
+#if defined(FEAT_POSTSCRIPT)
+    else if (varp == &p_penc)
+    {
+	/* Canonize printencoding if VIM standard one */
+	p = enc_canonize(p_penc);
+	if (p != NULL)
+	{
+	    vim_free(p_penc);
+	    p_penc = p;
+	}
+	else
+	{
+	    /* Ensure lower case and '-' for '_' */
+	    for (s = p_penc; *s != NUL; s++)
+	    {
+		if (*s == '_')
+		    *s = '-';
+		else
+		    *s = TOLOWER_ASC(*s);
 	    }
 	}
     }
@@ -6200,12 +6256,12 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 		    changed_window_setting();
 		}
 
-		/* 'arabicshape' isn't reset, it is a global variable and
-		 * other window may still need it "on". */
+		/* 'arabicshape' isn't reset, it is a global option and
+		 * another window may still need it "on". */
 	    }
 
-	    /* 'delcombine' isn't reset, it is a global variable and other
-	     * windows may still want it "on". */
+	    /* 'delcombine' isn't reset, it is a global option and another
+	     * window may still want it "on". */
 
 # ifdef FEAT_KEYMAP
 	    /* Revert to the default keymap */

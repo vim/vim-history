@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2b.  Last change: 2003 Apr 27
+*todo.txt*      For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,76 +29,6 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Arabic support:
-- When setting 'arabic' a number of options are changed.  Restore the old
-  values when resetting 'arabic'?
-- Handling of p_arshape in screen.c is inefficient.  Only try shaping on
-  Arabic characters.
-- The location where shaping is done is error prone and inefficient.  Use a
-  separate filter to do the arabic shaping, before doing the actual
-  displaying, so that you can go through it in the right direction?
-
-GTK2 patch problems:
-- ":sp" ":q" leaves cursor on the cmdline.
-- DND doesn't work with KDE?
-- Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
-
-Check that these problems are fixed by the GTK 2 port:
-9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
-    Without Gnome it is OK.
-    Not all Gnome arguments get to gnome_init().
-9   When selecting a font from the font selector with an embedded space it
-    cannot be found. (Tsirkin)
-9   When menus are disabled, 'm' removed from 'guioptions', Alt-F still pops
-    up the File menu and gives a warning for a NULL pointer if the menu was
-    never displayed.
-8   When a font is not fixed width, the message "not fixed-width" disappears
-    immediately. (Tsirkin)
-8   When using "gvim -geom 40x30" or setting 'columns' in .gvimrc or with a
-    GUIEnter autocommand, the width is still set to fit the toolbar.  Also
-    happens when changing the font.  How to avoid that the toolbar specifies
-    the minimal window width?
-8   When using a theme with different scrollbars (gtkstep), the scrollbars can
-    be too narrow. (Drazen Kacar)
-
-Win32: Patches for bc5, cyg et al. Makefiles. (Dan Sharp, April 17)
-On top of that patch for OLE: April 25.  And patch for bc5: April 25.
-
-Win32: patches for GvimExt from Rene de Zwart. (Jan 30)  old patches for mingw
-can be discarded.
-
-8   Aligning comments that are indented a bit more: (Helmut Stiegler)
-	a = b;
-	    // extra indented comment
-	// this one should have the same indent.
-    Patch from Helmut Mar 1.
-
-Win32: Add ":8" file modifier to get short filename? (patch from Michael
-Geddes, Oct 9)
-
-Add patch for v:register, setreg() and getreg(). (Michael Geddes, Jan 8)
-
-Make ":redraw" also update the Visual area.  Test with script:
-    normal V
-    redraw
-    while 1 | sleep | endwhile
-
-Patch to leave text on screen with backspace in Insert mode. (Phillip Vandry,
-Apr 8)
-
-Dosinst.c: Also build gvimext.dll?  Find it in ../GvimExt/?
-
-Using folds + signs + linenumber doesn't work correctly. (patch from Kamil
-Burzynski)  Need to shift the line number for the space signs take up.
-
-7   Add 'tagignorecase' option from Vile: ignore case for tags.
-    Also support ignore-case flag in tags file, see patch from Flemming Madsen
-    (2003 Feb 16, case-insensitive-tags.patch)
-
-When completing a wildcard in a leading path element, as in "../*/Makefile",
-only the last part ("Makefile") would be listed.  (patch from Flemming Madsen,
-2003 Feb 16 custom-completion-and-short-list.patch, docs Feb 17)
-
 X11: patch for session management (Neil Bird)
    http://www.fnxweb.com/data/vim-xsmp.patch.gz
 9   When logging out from KDE, Vim is not told to save its files.  Catching
@@ -125,7 +55,11 @@ Patch for number color for printing (Mike Williams, Aug 3)
 Make printing PostScript work on Mac.  Patch from Mike Williams
     2002 feb 24 (VMS already works?)
 
+Fix runtime/optwin.vim for new options.
+
 Mac OSX multi-lang patch. (Muraoka Taro, Jul 1; update by Axel Jul 30)
+
+Patch to add "\Z" in regexp. (Ron Aaron, May 1)
 
 When auto-indenting doesn't change the indent, don't change the line at all.
 Add an option for this, because I sometimes use "==" to change spaces to tabs.
@@ -134,15 +68,21 @@ Patch from Chris Leishman, Jan 23.
 NSIS 2.0 patch from Rene de Zwart. (18 dec 2002)
 Also check work from Steve Hall for NSIS.
 
+Unicode 4.0 tables from Raphael Finkel (Apr 29).
+
 8   Make 'keywordprg' global-local.  Patch from Christian Robinson (Dec 26
     2002)
 
 "%" does not ignore "\(".  Patch from Haakon Riiser (Feb 25).
 Is this Vi compatible?  If not, disable it for some flag in 'cpoptions'.
 
-":try" patch: (Servatius Brandt)
-- test49 fails
+Perl: cur_val() now works for Perl 5.8 but not for 5.6.  How can it be made to
+work for both?
+
+Exception hanlding: (Servatius Brandt)
 - Add section to user manual
+- remove the workarounds for not being able to define a function in a while
+  loop.  It's not supported.
 
 "/$" causes "e" in last column of screen to disappear, highlighted char is
 displayed instead.
@@ -163,6 +103,29 @@ The syntax must be different in the previous current window and the window
 above the status line being dragged.
 
 Crash and/or out-of-memory error. (Luc Hermitte, Mar 1)
+
+GTK2 patch problems:
+- ":sp" ":q" leaves cursor on the cmdline.
+- DND doesn't work with KDE?
+- Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
+
+Check that these problems are fixed by the GTK 2 port:
+9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
+    Without Gnome it is OK.
+    Not all Gnome arguments get to gnome_init().
+9   When selecting a font from the font selector with an embedded space it
+    cannot be found. (Tsirkin)
+9   When menus are disabled, 'm' removed from 'guioptions', Alt-F still pops
+    up the File menu and gives a warning for a NULL pointer if the menu was
+    never displayed.
+8   When a font is not fixed width, the message "not fixed-width" disappears
+    immediately. (Tsirkin)
+8   When using "gvim -geom 40x30" or setting 'columns' in .gvimrc or with a
+    GUIEnter autocommand, the width is still set to fit the toolbar.  Also
+    happens when changing the font.  How to avoid that the toolbar specifies
+    the minimal window width?
+8   When using a theme with different scrollbars (gtkstep), the scrollbars can
+    be too narrow. (Drazen Kacar)
 
 WinNT: check displaying cursor in a console, does it disappear? (Yasuhiro
 Matsumoto)
@@ -287,7 +250,7 @@ than 2.
 
 Win32: When saving a file takes a while, switching to another application and
 back causes a "file changed" prompt and when reloading it in ml_get errors.
-(Mike Williams)
+(Mike Williams)  Probably also happens for GTK2 with the "save file" dialog.
 
 Win32: Polish characters  copied/pasted through clipboard end up translated to
 utf-8.  (Mikolaj Machowski, Apr 3)
@@ -314,6 +277,9 @@ After patch 6.1.091 on IRIX 6.5 control key stops working. (Thomas Olsen, Jul
 5)
 
 Python interface: add vim.message() function. (Michal Vitecek, Nov 5)
+
+FreeBSD: When compiled with Python a "!mv x y" command doesn't echo keys
+typed at the prompt.  Caused by "-lpthread"?
 
 In buf_contents_changed() set a variable v:contentscheck?
 
@@ -803,6 +769,8 @@ MSDOS, OS/2 and Win32:
     special keys for these.  Should use modifier + key.
 8   Win32 console: caps-lock makes non-alpha keys work like with shift.
     Should work like in the GUI version.
+6   Win32: Add ":8" file modifier to get short filename? (patch from Michael
+    Geddes, Oct 9, needs more work)
 8   Environment variables in DOS are not case sensitive.  Make a define for
     STRCMP_ENV(), and use it when comparing environment var names.
 8   Setting 'shellslash' has no immediate effect.  Change all file names when

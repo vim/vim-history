@@ -19,11 +19,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #if defined(UNIX)
-#include <sys/wait.h>
-#elif defined(WIN32)
+# include <sys/wait.h>
+#else
+    /* not UNIX, must be WIN32 */
 # include <io.h>
 # include <fcntl.h>
 # include <process.h>
+# ifdef __BORLANDC__
+/* BCC 5.5 uses a different function name for spawnlp */
+#  define _spawnlp spawnlp
+# endif
 # define STDIN_FILENO    0
 # define STDOUT_FILENO   1
 # define STDERR_FILENO   2
@@ -399,6 +404,7 @@ cs_add_common(arg1, arg2, flags)
     char *ppath = NULL;
     char *buf = NULL;
     int i;
+    static char *stat_emsg = N_("E563: stat(%s) error: %d");
 
     /* buf is for general purpose msgs.  let's hope MAXPATHL*2 is big enough */
     if ((buf = (char *)alloc(MAXPATHL * 2)) == NULL)
@@ -415,7 +421,7 @@ cs_add_common(arg1, arg2, flags)
 staterr:
 	if (p_csverbose)
 	{
-	    (void)sprintf(buf, _("E563: stat(%s) error: %d"), fname, errno);
+	    (void)sprintf(buf, _(stat_emsg), fname, errno);
 	    (void)EMSG(buf);
 	}
 	goto add_err;
@@ -463,8 +469,7 @@ staterr:
 	{
 	    if (p_csverbose)
 	    {
-		(void)sprintf(buf, _("E563: stat(%s) error: %d"),
-			      fname2, errno);
+		(void)sprintf(buf, _(stat_emsg), fname2, errno);
 		(void)EMSG(buf);
 	    }
 	    vim_free(fname2);
@@ -478,9 +483,9 @@ staterr:
     }
 #if defined(UNIX)
     else if (S_ISREG(statbuf.st_mode) || S_ISLNK(statbuf.st_mode))
-#elif defined(WIN32)
+#else
 	/* substitute define S_ISREG from os_unix.h */
-    else if (((statbuf.st_mode) & S_IFMT) == S_IFREG) 
+    else if (((statbuf.st_mode) & S_IFMT) == S_IFREG)
 #endif
     {
 	i = cs_insert_filelist(fname, ppath, flags, &statbuf);
@@ -501,7 +506,8 @@ staterr:
 
     if (i != -1)
     {
-	(void)cs_create_connection(i);
+	if (cs_create_connection(i) == CSCOPE_FAILURE)
+	    return CSCOPE_FAILURE;
 	(void)cs_read_prompt(i);
 	if (p_csverbose)
 	{
@@ -679,11 +685,12 @@ cs_create_connection(i)
 {
     int to_cs[2], from_cs[2], len;
     char *prog, *cmd, *ppath = NULL;
-#ifdef WIN32
+#ifndef UNIX
     int in_save, out_save, err_save;
     int ph;
 # ifdef FEAT_GUI
     char *console = NULL;
+    HWND activewnd = NULL;
 # endif
 #endif
 
@@ -693,19 +700,9 @@ cs_create_connection(i)
      */
     to_cs[0] = to_cs[1] = from_cs[0] = from_cs[1] = -1;
     if (pipe(to_cs) < 0 || pipe(from_cs) < 0)
-#if defined(UNIX)
-	goto err;
-
-    switch (csinfo[i].pid = fork())
     {
-    case -1:
-#elif defined(WIN32)
-        /*
-         * Don't want to duplicate code, so some spaghetti code
-         */
-        {
-#endif
-err:
+	(void)EMSG(_("E566: Could not create cscope pipes"));
+err_closing:
 	if (to_cs[0] != -1)
 	    (void)close(to_cs[0]);
 	if (to_cs[1] != -1)
@@ -714,15 +711,20 @@ err:
 	    (void)close(from_cs[0]);
 	if (from_cs[1] != -1)
 	    (void)close(from_cs[1]);
-	(void)EMSG(_("E566: Could not create cscope pipes"));
 	return CSCOPE_FAILURE;
-#if defined(WIN32)
-        }
-        in_save = dup(STDIN_FILENO);
-        out_save = dup(STDOUT_FILENO);
-        err_save = dup(STDERR_FILENO);
-#elif defined(UNIX)
+    }
+
+#if defined(UNIX)
+    switch (csinfo[i].pid = fork())
+    {
+    case -1:
+	(void)EMSG(_("E622: Could not fork for cscope"));
+	goto err_closing;
     case 0:				/* child: run cscope. */
+#else
+	in_save = dup(STDIN_FILENO);
+	out_save = dup(STDOUT_FILENO);
+	err_save = dup(STDERR_FILENO);
 #endif
 	if (dup2(to_cs[0], STDIN_FILENO) == -1)
 	    perror("cs_create_connection 1");
@@ -735,19 +737,21 @@ err:
 #if defined(UNIX)
 	(void)close(to_cs[1]);
 	(void)close(from_cs[0]);
-#elif defined(WIN32)
-        /* On win32 we must close opposite ends because we are the parent */
+#else
+	/* On win32 we must close opposite ends because we are the parent */
 	(void)close(to_cs[0]);
+	to_cs[0] = -1;
 	(void)close(from_cs[1]);
-        
-        to_cs[0] = -1;
-        from_cs[1] = -1;
+	from_cs[1] = -1;
 #endif
 	/* expand the cscope exec for env var's */
 	if ((prog = (char *)alloc(MAXPATHL + 1)) == NULL)
 	{
-	    perror("cs_create_connection: alloc fail #1");
+#ifdef UNIX
 	    return CSCOPE_FAILURE;
+#else
+	    goto err_closing;
+#endif
 	}
 	expand_env((char_u *)p_csprg, (char_u *)prog, MAXPATHL);
 
@@ -758,9 +762,12 @@ err:
 	    /* expand the prepend path for env var's */
 	    if ((ppath = (char *)alloc(MAXPATHL + 1)) == NULL)
 	    {
-		perror("cs_create_connection: alloc fail #2");
 		vim_free(prog);
+#ifdef UNIX
 		return CSCOPE_FAILURE;
+#else
+		goto err_closing;
+#endif
 	    }
 	    expand_env((char_u *)csinfo[i].ppath, (char_u *)ppath, MAXPATHL);
 
@@ -772,16 +779,19 @@ err:
 
 	if ((cmd = (char *)alloc(len)) == NULL)
 	{
-	    perror("cs_create_connection: alloc fail #3");
 	    vim_free(prog);
 	    vim_free(ppath);
+#ifdef UNIX
 	    return CSCOPE_FAILURE;
+#else
+	    goto err_closing;
+#endif
 	}
 
 	/* run the cscope command; is there execl for non-unix systems? */
 #if defined(UNIX)
 	(void)sprintf(cmd, "exec %s -dl -f %s", prog, csinfo[i].fname);
-#elif defined(WIN32)
+#else
 	(void)sprintf(cmd, "%s -dl -f %s", prog, csinfo[i].fname);
 #endif
 	if (csinfo[i].ppath != NULL)
@@ -794,56 +804,62 @@ err:
 	    (void)strcat(cmd, " ");
 	    (void)strcat(cmd, csinfo[i].flags);
 	}
-# ifdef UNIX        
+# ifdef UNIX
       /* on Win32 we still need prog */
 	vim_free(prog);
-# endif      
+# endif
 	vim_free(ppath);
 
 #if defined(UNIX)
 	if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1)
 	    perror(_("cs_create_connection exec failed"));
 
-	exit (127);
+	exit(127);
 	/* NOTREACHED */
     default:	/* parent. */
-#elif defined(WIN32)
+#else
 # ifdef FEAT_GUI
-        /* Dirty hack to hide anoying console window */
-        if (AllocConsole())
-        {
-            console = (char *)alloc(1024);
-            if (console == NULL)
-                FreeConsole();
-            else
-            {
-                GetConsoleTitle(console, 1024); /* save for future restore */
-                SetConsoleTitle("GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS");
-            }
-        }
+	/* on Win9x cscope steals focus */
+	activewnd = GetForegroundWindow();
+	/* Dirty hack to hide anoying console window */
+	if (AllocConsole())
+	{
+	    console = (char *)alloc(1024);
+	    if (console == NULL)
+		FreeConsole();
+	    else
+	    {
+		GetConsoleTitle(console, 1024); /* save for future restore */
+		SetConsoleTitle("GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS");
+	    }
+	}
 # endif
-        /* May be use &shell, &shellquote etc */        
-	  ph = _spawnlp(_P_NOWAIT, prog, cmd, NULL);
-        vim_free(prog);
-        vim_free(cmd);
+	/* May be use &shell, &shellquote etc */
+	ph = _spawnlp(_P_NOWAIT, prog, cmd, NULL);
+	vim_free(prog);
+	vim_free(cmd);
 # ifdef FEAT_GUI
-        /* Dirty hack part two */
-        if (console != NULL)
-        {
-            HWND h;
-            if (h = FindWindow(NULL, "GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS"))
-                ShowWindow(h, SW_HIDE);
-            SetConsoleTitle(console);
-            FreeConsole();
-            vim_free(console);
-        }
+	/* Dirty hack part two */
+	if (console != NULL)
+	{
+	    HWND h;
+
+	    if (h = FindWindow(NULL, "GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS"))
+		ShowWindow(h, SW_HIDE);
+	    SetConsoleTitle(console);
+	    FreeConsole();
+	    vim_free(console);
+	    /* restore focus */
+	    SetForegroundWindow(activewnd);
+	}
 # endif
-        if (ph == -1)
-        {
-            perror(_("cs_create_connection exec failed"));
-            goto err;
-        }
-#endif /* defined(WIN32) */
+	if (ph == -1)
+	{
+	    perror(_("cs_create_connection exec failed"));
+	    (void)EMSG(_("E623: Could not spawn cscope process"));
+	    goto err_closing;
+	}
+#endif /* !UNIX */
 	/*
 	 * Save the file descriptors for later duplication, and
 	 * reopen as streams.
@@ -860,7 +876,7 @@ err:
 
 	break;
     }
-#elif defined(WIN32)
+#else
 	/* restore stdhandles */
     dup2(in_save, STDIN_FILENO);
     dup2(out_save, STDOUT_FILENO);
@@ -1050,7 +1066,7 @@ clear_csinfo(i)
 #if defined(UNIX)
     csinfo[i].st_dev = (dev_t)0;
     csinfo[i].st_ino = (ino_t)0;
-#elif defined(WIN32)
+#else
     csinfo[i].nVolume = 0;
     csinfo[i].nIndexHigh = 0;
     csinfo[i].nIndexLow = 0;
@@ -1073,7 +1089,7 @@ cs_insert_filelist(fname, ppath, flags, sb)
     struct stat *sb;
 {
     short i;
-#ifdef WIN32
+#ifndef UNIX
     HANDLE hFile;
     BY_HANDLE_FILE_INFORMATION bhfi;
     hFile = CreateFile (fname, GENERIC_READ, 0, NULL, OPEN_EXISTING,
@@ -1097,10 +1113,10 @@ cs_insert_filelist(fname, ppath, flags, sb)
 
     for (i = 0; i < CSCOPE_MAX_CONNECTIONS; i++)
     {
-	if (csinfo[i].fname 
+	if (csinfo[i].fname
 #if defined(UNIX)
 	    && csinfo[i].st_dev == sb->st_dev && csinfo[i].st_ino == sb->st_ino
-#elif defined(WIN32)
+#else
 	    && csinfo[i].nVolume == bhfi.dwVolumeSerialNumber
 	    && csinfo[i].nIndexHigh == bhfi.nFileIndexHigh
 	    && csinfo[i].nIndexLow == bhfi.nFileIndexLow
@@ -1123,14 +1139,14 @@ cs_insert_filelist(fname, ppath, flags, sb)
 	return -1;
     }
 
-    if ((csinfo[i].fname = (char *) alloc(strlen(fname)+1)) == NULL)
+    if ((csinfo[i].fname = (char *)alloc(strlen(fname)+1)) == NULL)
 	return -1;
 
     (void)strcpy(csinfo[i].fname, (const char *)fname);
 
     if (ppath != NULL)
     {
-	if ((csinfo[i].ppath = (char *) alloc(strlen(ppath) + 1)) == NULL)
+	if ((csinfo[i].ppath = (char *)alloc(strlen(ppath) + 1)) == NULL)
 	{
 	    vim_free(csinfo[i].fname);
 	    csinfo[i].fname = NULL;
@@ -1142,7 +1158,7 @@ cs_insert_filelist(fname, ppath, flags, sb)
 
     if (flags != NULL)
     {
-	if ((csinfo[i].flags = (char *) alloc(strlen(flags) + 1)) == NULL)
+	if ((csinfo[i].flags = (char *)alloc(strlen(flags) + 1)) == NULL)
 	{
 	    vim_free(csinfo[i].fname);
 	    vim_free(csinfo[i].ppath);
@@ -1158,7 +1174,7 @@ cs_insert_filelist(fname, ppath, flags, sb)
     csinfo[i].st_dev = sb->st_dev;
     csinfo[i].st_ino = sb->st_ino;
 
-#elif defined(WIN32)
+#else
     csinfo[i].nVolume = bhfi.dwVolumeSerialNumber;
     csinfo[i].nIndexLow = bhfi.nFileIndexLow;
     csinfo[i].nIndexHigh = bhfi.nFileIndexHigh;
@@ -1344,7 +1360,7 @@ cs_make_vim_style_matches(fname, slno, search, tagstr)
     if (search != NULL)
     {
 	amt = strlen(fname) + strlen(slno) + strlen(tagstr) + strlen(search)+6;
-	if ((buf = (char *) alloc(amt)) == NULL)
+	if ((buf = (char *)alloc(amt)) == NULL)
 	    return NULL;
 
 	(void)sprintf(buf, "%s\t%s\t%s;\"\t%s", tagstr, fname, slno, search);
@@ -1352,7 +1368,7 @@ cs_make_vim_style_matches(fname, slno, search, tagstr)
     else
     {
 	amt = strlen(fname) + strlen(slno) + strlen(tagstr) + 5;
-	if ((buf = (char *) alloc(amt)) == NULL)
+	if ((buf = (char *)alloc(amt)) == NULL)
 	    return NULL;
 
 	(void)sprintf(buf, "%s\t%s\t%s;\"", tagstr, fname, slno);
@@ -1469,9 +1485,9 @@ cs_parse_results(tagstr, totmatches, nummatches_a, matches_p, cntxts_p, matched)
 
     assert(totmatches > 0);
 
-    if ((matches = (char **) alloc(sizeof(char *) * totmatches)) == NULL)
+    if ((matches = (char **)alloc(sizeof(char *) * totmatches)) == NULL)
 	goto parse_out;
-    if ((cntxts = (char **) alloc(sizeof(char *) * totmatches)) == NULL)
+    if ((cntxts = (char **)alloc(sizeof(char *) * totmatches)) == NULL)
 	goto parse_out;
 
     for (i = 0; i < CSCOPE_MAX_CONNECTIONS; i++)
@@ -1567,7 +1583,7 @@ cs_pathcomponents(path)
     s = path + strlen(path) - 1;
     for (i = 0; i < p_cspc; ++i)
 	while (s > path && *--s != '/'
-#ifdef WIN32 
+#ifdef WIN32
 		&& *--s != '\\'
 #endif
 		)
@@ -1600,10 +1616,7 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     assert (num_matches > 0);
 
     if ((tbuf = (char *)alloc(strlen(matches[0]) + 1)) == NULL)
-    {
-	MSG_PUTS_ATTR(_("couldn't malloc\n"), hl_attr(HLF_T) | MSG_HIST);
 	return;
-    }
 
     strcpy(tbuf, matches[0]);
     (void)sprintf(buf, _("Cscope tag: %s\n"), strtok(tbuf, "\t"));
@@ -1702,14 +1715,7 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 			  (cntxts[idx] == NULL) ? "GLOBAL" : cntxts[idx]);
 
 	    /* print the context only if it fits on the same line */
-#ifdef _MSC_VER
-# pragma warning( push )
-# pragma warning( disable : 4018 ) /* 'expression' : signed/unsigned mismatch */
-#endif
-	    if (msg_col + strlen(buf) >= (int)Columns)
-#ifdef _MSC_VER
-# pragma warning( pop )
-#endif
+	    if (msg_col + (int)strlen(buf) >= (int)Columns)
 		msg_putchar('\n');
 	    msg_advance(12);
 	    MSG_PUTS_LONG(buf);
@@ -1795,7 +1801,7 @@ cs_release_csp(i, freefnpp)
 {
 #if defined(UNIX)
     int pstat;
-#elif defined(WIN32)
+#else
     /*
      * Trying to exit normally (not sure whether it is fit to UNIX cscope
      */

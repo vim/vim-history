@@ -516,6 +516,11 @@ char * xx = "asdf\
 	bor";
 int x;
 
+int y;		// comment
+// comment
+
+// comment
+
 /* end of AUTO */
 
 

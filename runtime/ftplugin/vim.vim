@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 25
+" Last Change:	2003 May 01
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -10,6 +10,12 @@ endif
 
 " Don't load another plugin for this buffer
 let b:did_ftplugin = 1
+
+let cpo_save = &cpo
+set cpo-=C
+
+let b:undo_ftplugin = "setl fo< com< tw< commentstring<"
+	\ . "| unlet b:match_ignorecase b:match_words b:match_skip"
 
 " Set 'formatoptions' to break comment lines but not other lines,
 " and insert the comment leader when hitting <CR> or using "o".
@@ -23,8 +29,6 @@ setlocal tw=78
 
 " Comments start with a double quote
 setlocal commentstring=\"%s
-
-set cpo-=C
 
 " Let the matchit plugin know what items can be matched.
 if exists("loaded_matchit")
@@ -41,3 +45,4 @@ if exists("loaded_matchit")
 	\ synIDattr(synID(line("."),col("."),1),"name") =~? "comment\\|string"'
 endif
 
+let &cpo = cpo_save

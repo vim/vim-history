@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2b.  Last change: 2003 Apr 25
+*eval.txt*      For Vim version 6.2c.  Last change: 2003 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -700,6 +700,10 @@ v:progname	Contains the name (with path removed) with which Vim was
 		"evim" etc., or any other name you might symlink to Vim.
 		Read-only.
 
+					*v:register* *register-variable*
+v:register	The name of the register supplied to the last normal mode
+		command.  Empty if none were supplied. |getreg()| |setreg()|
+
 					*v:servername* *servername-variable*
 v:servername	The resulting registered |x11-clientserver| name if any.
 		Read-only.
@@ -818,6 +822,8 @@ getcwd()			String	the current working directory
 getfsize( {fname})		Number	size in bytes of file
 getftime( {fname})		Number	last modification time of file
 getline( {lnum})		String	line {lnum} from current buffer
+getreg( [{regname}])		String  contents of register
+getregtype( [{regname}])	String  type of register
 getwinposx()			Number	X coord in pixels of GUI Vim window
 getwinposy()			Number	Y coord in pixels of GUI Vim window
 getwinvar( {nr}, {varname})		variable {varname} in window {nr}
@@ -835,7 +841,7 @@ hostname()			String	name of the machine Vim is running on
 iconv( {expr}, {from}, {to})	String  convert encoding of {expr}
 indent( {lnum})			Number  indent of line {lnum}
 input( {prompt} [, {text}])	String	get input from the user
-inputdialog( {prompt} [, {text}]) String  like input() but in a GUI dialog
+inputdialog( {p} [, {t} [, {c}]]) String  like input() but in a GUI dialog
 inputrestore()			Number  restore typeahead
 inputsave()			Number  save and clear typeahead
 inputsecret( {prompt} [, {text}]) String  like input() but hiding the text
@@ -876,6 +882,7 @@ server2client( {clientid}, {string})
 serverlist()			String	get a list of available servers
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
+setreg( {n}, {v}[, {opt}])	Number  set register to value and type
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
 strftime( {format}[, {time}])	String	time in specified format
 stridx( {haystack}, {needle})	Number	first index of {needle} in {haystack}
@@ -1486,6 +1493,24 @@ getline({lnum}) The result is a String, which is line {lnum} from the current
 <		When {lnum} is smaller than 1 or bigger than the number of
 		lines in the buffer, an empty string is returned.
 
+getreg([{regname}])					*getreg()*
+		The result is a String, which is the contents of register
+		{regname}. Example: >
+			:let cliptext = getreg('*')
+<		getreg('=') returns the last evaluated value of the expression
+		register. (For use in maps).
+		If {regname} is not specified, |v:register| is used.
+
+getregtype([{regname}])					*getregtype()*
+		The result is a String, which is type of register {regname}.
+		The value will be one of:
+		    "v"			for |characterwise| text
+		    "V"			for |linewise| text
+		    "<CTRL-V>{width}"	for |blockwise-visual| text
+		    0			for an empty or unknown register
+		<CTRL-V> is one character with value 0x16.
+		If {regname} is not specified, |v:register| is used.
+
 							*getwinposx()*
 getwinposx()	The result is a Number, which is the X coordinate in pixels of
 		the left hand side of the GUI Vim window.  The result will be
@@ -1722,7 +1747,7 @@ input({prompt} [, {text}])				*input()*
 			:  call inputrestore()
 			:endfunction
 
-inputdialog({prompt} [, {text})				*inputdialog()*
+inputdialog({prompt} [, {text} [, {cancelreturn}]])		*inputdialog()*
 		Like input(), but when the GUI is running and text dialogs are
 		supported, a dialog window pops up to input the text.
 		Example: >
@@ -1730,7 +1755,9 @@ inputdialog({prompt} [, {text})				*inputdialog()*
 			:if n != ""
 			:  let &sw = n
 			:endif
-<		Hitting <Enter> works like pressing the OK button.  Hitting
+<		When the dialog is cancelled {cancelreturn} is returned.  When
+		omitted an empty string is returned.
+		Hitting <Enter> works like pressing the OK button.  Hitting
 		<Esc> works like pressing the Cancel button.
 
 inputrestore()						*inputrestore()*
@@ -2227,6 +2254,41 @@ setline({lnum}, {line})					*setline()*
 			:call setline(5, strftime("%c"))
 <		Note: The '[ and '] marks are not set.
 
+							*setreg()*
+setreg({regname}, {value} [,{options}])
+		Set the register {regname} to {value}.
+		If {options} contains "a" or {regname} is upper case,
+		then the value is appended.
+		{options} can also contains a register type specification:
+		    "c" or "v"	      |characterwise| mode
+		    "l" or "V"	      |linewise| mode
+		    "b" or "<CTRL-V>" |blockwise-visual| mode
+		If a number immediately follows "b" or "<CTRL-V>" then this is
+		used as the width of the selection - if it is not specified
+		then the width of the block is set to the number of characters
+		in the longest line (counting a <TAB> as 1 character).
+
+		If {options} contains no register settings, then the default
+		is to use character mode unless {value} ends in a <NL>.
+		Setting the '=' register is not possible.
+		Returns zero for success, non-zero for failure.
+
+		Examples: >
+			:call setreg(v:register, @*)
+			:call setreg('*', @%, 'ac')
+			:call setreg('a', "1\n2\n3", 'b5')
+
+<		This example shows using the functions to save and restore a
+		register. >
+			:let var_a = getreg('a')
+			:let var_amode = getregtype('a')
+			    ....
+			:call setreg('a', var_a, var_amode)
+
+<		You can also change the type of a register by appending
+		nothing: >
+			:call setreg('a', '', 'al')
+
 setwinvar({nr}, {varname}, {val})			*setwinvar()*
 		Set option or local variable {varname} in window {nr} to
 		{val}.
@@ -2310,6 +2372,7 @@ submatch({nr})						*submatch()*
 		Example: >
 			:s/\d\+/\=submatch(0) + 1/
 <		This finds the first number in the line and adds one to it.
+		Line breaks are included as a newline character.
 
 substitute({expr}, {pat}, {sub}, {flags})		*substitute()*
 		The result is a String, which is a copy of {expr}, in which

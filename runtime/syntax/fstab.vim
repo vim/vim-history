@@ -1,9 +1,10 @@
 " Vim syntax file
-" Language:     fstab file
-" Maintaner:    Radu Dineiu <littledragon@altern.org>
-" URL:          http://ld.yi.org/vim/fstab.vim
-" Last Change:  2003 Apr 25
-" Version:      0.5
+" Language:	fstab file
+" Maintaner:	Radu Dineiu <littledragon@altern.org>
+" URL:		http://ld.yi.org/vim/fstab.vim
+" ChangeLog:	http://ld.yi.org/vim/fstab.ChangeLog
+" Last Change:	2003 Apr 30
+" Version:	0.61
 
 if version < 600
 	syntax clear
@@ -19,7 +20,7 @@ syn match fsOperator /[,=]/
 " Device
 syn cluster fsDeviceCluster contains=fsOperator,fsDeviceKeyword,fsDeviceError
 syn match fsDeviceError /\%([^a-zA-Z0-9_\/#@]\|^\w\{-}\ze\W\)/ contained
-syn keyword fsDeviceKeyword contained none proc linproc
+syn keyword fsDeviceKeyword contained none proc linproc tmpfs
 syn keyword fsDeviceKeyword contained LABEL nextgroup=fsDeviceLabel
 syn match fsDeviceLabel contained /=[^ \t]\+/hs=s+1 contains=fsOperator
 
@@ -38,11 +39,12 @@ syn keyword fsTypeKeyword contained adfs affs auto autofs cd9660 coda cramfs dev
 " Options: General
 syn cluster fsOptionsCluster contains=fsOperator,fsOptionsGeneral,fsOptionsKeywords,fsTypeError
 syn match fsOptionsNumber /\d\+/
-syn match fsOptionsString /\w\+/
+syn match fsOptionsNumberOctal /[0-8]\+/
+syn match fsOptionsString /[a-zA-Z0-9_-]\+/
 syn keyword fsOptionsYesNo yes no
 syn cluster fsOptionsCheckCluster contains=fsOptionsExt2Check,fsOptionsFatCheck
 syn keyword fsOptionsSize 512 1024 2048
-syn keyword fsOptionsGeneral async atime auto current defaults dev exec force fstab noatime noauto noclusterr noclusterw nodev noexec nosuid nosymfollow nouser owner ro rdonly rw rq sw xx suid suiddir sync kudzu union update user
+syn keyword fsOptionsGeneral async atime auto current defaults dev exec force fstab noatime noauto noclusterr noclusterw nodev noexec nosuid nosymfollow nouser owner ro rdonly rw rq sw xx suid suiddir sync kudzu union update user supermount
 syn match fsOptionsGeneral /_netdev/
 
 " Options: adfs
@@ -78,7 +80,7 @@ syn keyword fsOptionsKeywords contained noload
 
 " Options: fat
 syn match fsOptionsKeywords contained /blocksize=/ nextgroup=fsOptionsSize
-syn match fsOptionsKeywords contained /\%(umask\|codepage\)=/ nextgroup=fsOptionsNumber
+syn match fsOptionsKeywords contained /\%([dfu]mask\|codepage\)=/ nextgroup=fsOptionsNumberOctal
 syn match fsOptionsKeywords contained /\%(cvf_\%(format\|option\)\|iocharset\)=/ nextgroup=fsOptionsString
 syn match fsOptionsKeywords contained /check=/ nextgroup=@fsOptionsCheckCluster
 syn match fsOptionsKeywords contained /conv=*/ nextgroup=fsOptionsConv
@@ -130,7 +132,9 @@ syn match fsOptionsUfsType contained /nextstep-cd/
 syn keyword fsOptionsUfsError contained panic lock umount repair
 
 " Options: vfat
-syn keyword fsOptionsKeywords contained nonumtail
+syn keyword fsOptionsKeywords contained nonumtail posix utf8
+syn match fsOptionsKeywords contained /shortname=/ nextgroup=fsOptionsVfatShortname
+syn keyword fsOptionsVfatShortname contained lower win95 winnt mixed
 
 " Options: xfs
 syn match fsOptionsKeywords contained /\%(biosize\|logbufs\|logbsize\|logdev\|rtdev\|sunit\|swidth\)=/ nextgroup=fsOptionsString
@@ -177,6 +181,7 @@ if version >= 508 || !exists("did_config_syntax_inits")
 	HiLink fsOptionsGeneral Type
 	HiLink fsOptionsKeywords Keyword
 	HiLink fsOptionsNumber Number
+	HiLink fsOptionsNumberOctal Number
 	HiLink fsOptionsString String
 	HiLink fsOptionsSize Number
 	HiLink fsOptionsExt2Check String
@@ -192,6 +197,8 @@ if version >= 508 || !exists("did_config_syntax_inits")
 	HiLink fsOptionsReiserHash String
 	HiLink fsOptionsUfsType String
 	HiLink fsOptionsUfsError String
+
+	HiLink fsOptionsVfatShortname String
 
 	delcommand HiLink
 endif

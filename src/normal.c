@@ -1079,6 +1079,9 @@ getcount:
     {
 	oap->regname = 0;
 	oap->motion_force = NUL;
+#ifdef FEAT_EVAL
+	set_reg_var('"');
+#endif
     }
 
     /*
@@ -6517,6 +6520,9 @@ nv_regname(cap)
     {
 	cap->oap->regname = cap->nchar;
 	cap->opcount = cap->count0;	/* remember count before '"' */
+#ifdef FEAT_EVAL
+	set_reg_var(cap->oap->regname);
+#endif
     }
     else
 	clearopbeep(cap->oap);

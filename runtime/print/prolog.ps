@@ -1,4 +1,7 @@
 %!PS-Adobe-3.0 Resource-ProcSet
+%%Title: VIM-Prolog
+%%Version: 1.3 0
+%%EndComments
 % Editing of this file is NOT RECOMMENDED.  You run a very good risk of causing
 % all PostScript printing from VIM failing if you do.  PostScript is not called
 % a write-only language for nothing!
@@ -27,7 +30,11 @@ statusdict/setduplexmode 2 copy known{get exec}{pop pop pop}ifelse}bd
 /c{pop}bd
 }ifelse
 /ffs{findfont exch scalefont d}bd/sf{setfont}bd
-/ref{1 db findfont dup maxlength dict/NFD ed{exch dup/FID ne{exch NFD 3 1 roll
-put}{pop pop}ifelse}forall dup length 256 eq{NFD/Encoding 3 -1 roll
-put}{pop}ifelse dup NFD/FontName 3 -1 roll put NFD definefont pop end}bind def
+/ref{1 db findfont dup maxlength dict /NFD ed{exch dup/FID ne{exch NFD 3 1 roll
+put}{pop pop}ifelse}forall/Encoding findresource dup length 256 eq{NFD/Encoding
+3 -1 roll put}{pop}ifelse NFD dup/FontType get 3 ne{/CharStrings}{/CharProcs}
+ifelse 2 copy get dup maxlength dict copy[/questiondown/space]{2 copy known{2
+copy get 2 index/.notdef 3 -1 roll put pop exit}if pop}forall put dup NFD
+/FontName 3 -1 roll put NFD definefont pop end}bd
 % vim:ff=unix:
+%%EOF 

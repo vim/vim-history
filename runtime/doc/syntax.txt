@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.2b.  Last change: 2003 Apr 27
+*syntax.txt*    For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -474,16 +474,16 @@ to your "~/.vimrc" file.
 
 Here are the Ada mode options:
 
-Variable                 Action
-ada_standard_types       Highlight types in package Standard (e.g., "Float")
-ada_space_errors         Highlight extraneous errors in spaces...
+Variable		 Action	~
+ada_standard_types	 Highlight types in package Standard (e.g., "Float")
+ada_space_errors	 Highlight extraneous errors in spaces...
 ada_no_trail_space_error   but ignore trailing spaces at the end of a line
-ada_no_tab_space_error     but ignore tabs after spaces
-ada_withuse_ordinary     Show "with" and "use" as ordinary keywords
-                           (when used to reference other compilation units
-                           they're normally highlighted specially).
-ada_begin_preproc        Show all begin-like keywords using the coloring
-                           of C preprocessor commands.
+ada_no_tab_space_error	   but ignore tabs after spaces
+ada_withuse_ordinary	 Show "with" and "use" as ordinary keywords
+			   (when used to reference other compilation units
+			   they're normally highlighted specially).
+ada_begin_preproc	 Show all begin-like keywords using the coloring
+			   of C preprocessor commands.
 
 Even on a slow (90Mhz) PC this mode works quickly, but if you find
 the performance unacceptable, turn on ada_withuse_ordinary.
@@ -1023,7 +1023,7 @@ GROFF						*groff.vim* *groff-syntax*
 The groff syntax file is a wrapper for |nroff.vim|. See the notes under
 that heading.  You can use this wrapper to create a filetype mapping
 that uses groff syntax features by default, instead of the mappings
-defined in filetype.vim. 
+defined in filetype.vim.
 
 
 HTML						*html.vim* *html-syntax*
@@ -1458,7 +1458,7 @@ files. For example: >
 
   hi def nroffDefinition term=italic cterm=italic gui=reverse
   hi def nroffDefSpecial term=italic,bold cterm=italic,bold
-                         \ gui=reverse,bold
+			 \ gui=reverse,bold
 
 Finally, there is a |groff.vim| syntax file that can be used for
 enabling groff syntax highlighting globally by default.
@@ -2098,19 +2098,19 @@ for external scripting languages (currently perl, python, ruby, and tcl).
 					 languages: perl, python, ruby and
 					 tcl.
 
-	g:vimembedscript == 0            Syntax highlighting for embedded
+	g:vimembedscript == 0		 Syntax highlighting for embedded
 					 scripting languages will not be
 					 loaded.
 
 
-XF86CONFIG                              *xf86conf.vim* *xf86conf-syntax*
+XF86CONFIG				*xf86conf.vim* *xf86conf-syntax*
 
 The syntax of XF86Config file differs in XFree86 v3.x and v4.x.  Both
 variants are supported.  Automatic detection is used, but is far from perfect.
 You may need to specify the version manually.  Set the variable
 xf86conf_xfree86_version to 3 or 4 according to your XFree86 version in
 your .vimrc.  Example: >
-        :let xf86conf_xfree86_version=3
+	:let xf86conf_xfree86_version=3
 When using a mix of versions, set the b:xf86conf_xfree86_version variable.
 
 Note that spaces and underscores in option names are not supported.  Use

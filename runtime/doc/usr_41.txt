@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.2b.  Last change: 2003 Mar 15
+*usr_41.txt*	For Vim version 6.2c.  Last change: 2003 May 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -1072,7 +1072,7 @@ the top of the plugin should be sufficient.  Example: >
   4	" License:	This file is placed in the public domain.
 
 
-LINE CONTINUATION, AVOIDING SIDE EFFECTS
+LINE CONTINUATION, AVOIDING SIDE EFFECTS		*use-cpo-save*
 
 In line 18 above, the line-continuation mechanism is used |line-continuation|.
 Users with 'compatible' set will run into trouble here, they will get an error
@@ -1425,8 +1425,8 @@ chance to disable loading it.  Put this at the top of the plugin: >
 This also needs to be used to avoid that the same plugin is executed twice for
 the same buffer (happens when using an ":edit" command without arguments).
 
-Now users can disable loading the default plugin completely by making a filetype
-plugin with only this line: >
+Now users can disable loading the default plugin completely by making a
+filetype plugin with only this line: >
 
 	let b:did_ftplugin = 1
 
@@ -1436,7 +1436,7 @@ in 'runtimepath'!
 If you do want to use the default plugin, but overrule one of the settings,
 you can write the different setting in a script: >
 
-	set textwidth=70
+	setlocal textwidth=70
 
 Now write this in the "after" directory, so that it gets sourced after the
 distributed "vim.vim" ftplugin |after-directory|.  For Unix this would be
@@ -1536,6 +1536,22 @@ This construct make sure the function is only defined once: >
 	:endif
 <
 
+UNDO
+
+When the user does ":setfiletype xyz" the effect of the previous filetype
+should be undone.  Set the b:undo_ftplugin variable to the commands that will
+undo the settings in your filetype plugin.  Example: >
+
+	let b:undo_ftplugin = "setlocal fo< com< tw< commentstring<"
+		\ . "| unlet b:match_ignorecase b:match_words b:match_skip"
+
+Using ":setlocal" with "<" after the option name resets the option to its
+global value.  That is mostly be best way to reset the option value.
+
+This does require removing the "C" flag from 'cpoptions' to allow line
+continuation, as mentioned above |use-cpo-save|.
+
+
 FILE NAME
 
 The filetype must be included in the file name |ftplugin-name|.  Use one of
@@ -1575,6 +1591,13 @@ A compiler plugin sets options for use with a specific compiler.  The user can
 load it with the |:compiler| command.  The main use is to set the
 'errorformat' and 'makeprg' options.
 
+Easiest is to have a look at examples.  This command will edit all the default
+compiler plugins: >
+
+	:next $VIMRUNTIME/compiler/*.vim
+
+Use |:next| to go to the next plugin file.
+
 The only special item about these files is a mechanism to allow a user to
 overrule or add to the default file.  The default files start with: >
 
@@ -1584,8 +1607,8 @@ overrule or add to the default file.  The default files start with: >
 	:let current_compiler = "mine"
 
 When you write a compiler file and put it in your personal runtime directory
-(e.g., ~/.vim/runtime/compiler for Unix), you set the "current_compiler"
-variable to make the default file skip the settings.
+(e.g., ~/.vim/compiler for Unix), you set the "current_compiler" variable to
+make the default file skip the settings.
 
 When you write a compiler plugin for the Vim distribution or for a system-wide
 runtime directory, use the mechanism mentioned above.  When

@@ -5799,7 +5799,7 @@ reg_submatch(no)
 		if (round == 2)
 		{
 		    STRCPY(retval, s);
-		    retval[len] = '\r';
+		    retval[len] = '\n';
 		}
 		++len;
 		++lnum;
@@ -5810,7 +5810,7 @@ reg_submatch(no)
 			STRCPY(retval + len, s);
 		    len += (int)STRLEN(s);
 		    if (round == 2)
-			retval[len] = '\r';
+			retval[len] = '\n';
 		    ++len;
 		}
 		if (round == 2)

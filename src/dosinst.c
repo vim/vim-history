@@ -1317,13 +1317,22 @@ install_registry(void)
 	fprintf(fd, "\n");
 	if (install_popup)
 	{
+	    char	bufg[BUFSIZE];
+	    struct stat st;
+
+	    if (stat("gvimext.dll", &st) >= 0)
+		strcpy(bufg, buf);
+	    else
+		/* gvimext.dll is in gvimext subdir */
+		sprintf(bufg, "%sgvimext\\\\", buf);
+
 	    printf("Creating \"Edit with Vim\" popup menu entry\n");
 
 	    fprintf(fd, "HKEY_CLASSES_ROOT\\CLSID\\%s\n", vim_ext_clsid);
 	    fprintf(fd, "@=\"%s\"\n", vim_ext_name);
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\%s\\InProcServer32]\n",
 							       vim_ext_clsid);
-	    fprintf(fd, "@=\"%sgvimext.dll\"\n", buf);
+	    fprintf(fd, "@=\"%sgvimext.dll\"\n", bufg);
 	    fprintf(fd, "\"ThreadingModel\"=\"%s\"\n", vim_ext_ThreadingModel);
 	    fprintf(fd, "\n");
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shellex\\ContextMenuHandlers\\gvim]\n");
@@ -1388,7 +1397,8 @@ init_popup_choice(void)
     struct stat	st;
 
     if (has_gvim
-	    && stat("gvimext.dll", &st) >= 0
+	    && (stat("gvimext.dll", &st) >= 0
+		|| stat("gvimext/gvimext.dll", &st) >= 0)
 #ifndef WIN3264
 	    && searchpath("regedit.exe") != NULL
 #endif

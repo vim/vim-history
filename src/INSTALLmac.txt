@@ -18,17 +18,17 @@ A. Supported compiler and environement
 B. Supported user interface
 
  1. Original MacOS Toolbox   [Compile with A.1 and A.2]
- 2. Carbon MacOS             [Compile with A.3]
+ 2. Carbon MacOS	     [Compile with A.3]
  3. X (Athena, GTK, Motif).  [Compile with A.4]
- 4. Plain Text               [Compile with A.4]
+ 4. Plain Text		     [Compile with A.4]
 
  NOTE: Sorry, Cocoa is not expected to be supported for now.
 
 C. Supported "OS" style
 
- 1. MacOS                    [Compile as B.1]
- 2. MacOS X                  [Compile as B.2]
- 3. BSD Unix                 [Compile as B.2, B.3 and B.4]
+ 1. MacOS		     [Compile as B.1]
+ 2. MacOS X		     [Compile as B.2]
+ 3. BSD Unix		     [Compile as B.2, B.3 and B.4]
 
 -----------------------------------------------------------
 
@@ -75,7 +75,7 @@ A.1: Compiling with CodeWarior
    access path.
 
    NOTE: the current project file is old, you need to add a few files:
-         (ex_cmds2.c, fold.c, mbyte.c, move.c)
+	 (ex_cmds2.c, fold.c, mbyte.c, move.c)
 
  4. Select the target PPC, 68k FAT (with/without debugger)
 

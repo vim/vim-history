@@ -2321,10 +2321,9 @@ SFsetColors(bg, fg, scroll_bg, scroll_fg)
 	    if (selFileLists[i])
 	    {
 		XtVaSetValues(selFileLists[i], XtNbackground,  bg,
- 					       XtNforeground,  fg,
- 					       XtNborderColor, fg,
- 					       NULL);
-	
+					       XtNforeground,  fg,
+					       XtNborderColor, fg,
+					       NULL);
 	    }
 	}
     }

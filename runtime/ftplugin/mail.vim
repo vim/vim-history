@@ -1,13 +1,15 @@
 " Vim filetype plugin file
 " Language:	Mail
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 13
+" Last Change:	2003 May 04
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
   finish
 endif
 let b:did_ftplugin = 1
+
+let b:undo_ftplugin = "setl modeline< tw< fo<"
 
 " Don't use modelines in e-mail messages, avoid trojan horses
 setlocal nomodeline

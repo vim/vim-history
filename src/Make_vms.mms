@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@polarfox.com>
-# Last change:  2003 Apr 25
+# Last change:  2003 May 04
 #
 # This has script been tested on VMS 6.2 to 7.3 on DEC Alpha and VAX
 # with MMS and MMK
@@ -93,15 +93,15 @@ CCVER = YES
 # Compiler setup
 
 .IFDEF VAX
-.IFDEF DECC          # VAX with DECC
+.IFDEF DECC	     # VAX with DECC
 CC_DEF  = cc/decc
 PREFIX  = /prefix=all
-.ELSE                # VAX with VAXC
-CC_DEF  = cc
-PREFIX  =
-CCVER   =
+.ELSE		     # VAX with VAXC
+CC_DEF	= cc
+PREFIX	=
+CCVER	=
 .ENDIF
-.ELSE                # AXP wixh DECC
+.ELSE		     # AXP wixh DECC
 CC_DEF  = cc
 PREFIX  = /prefix=all
 .ENDIF
@@ -299,12 +299,12 @@ all : [.auto]config.h mmk_compat motif_env gtk_env perl_env python_env tcl_env r
 	copy/nolog $(CONFIG_H) [.auto]config.h
 
 mmk_compat :
-        -@ open/write pd pathdef.c
-        -@ write pd "/* Empty file to satisfy MMK depend.  */"
-        -@ write pd "/* It will be owerwritten later on... */"
-        -@ close pd
+	-@ open/write pd pathdef.c
+	-@ write pd "/* Empty file to satisfy MMK depend.  */"
+	-@ write pd "/* It will be owerwritten later on... */"
+	-@ close pd
 clean :
-        -@ if "''F$SEARCH("*.exe")'" .NES. "" then delete/noconfirm/nolog *.exe;*
+	-@ if "''F$SEARCH("*.exe")'" .NES. "" then delete/noconfirm/nolog *.exe;*
 	-@ if "''F$SEARCH("*.obj")'" .NES. "" then delete/noconfirm/nolog *.obj;*
 	-@ if "''F$SEARCH("[.auto]config.h")'" .NES. "" then delete/noconfirm/nolog [.auto]config.h;*
 	-@ if "''F$SEARCH("pathdef.c")'" .NES. "" then delete/noconfirm/nolog pathdef.c;*
@@ -359,98 +359,98 @@ check_ccver :
 
 .IFDEF MOTIF
 motif_env :
-        -@ write sys$output "using DECW/Motif environment."
+	-@ write sys$output "using DECW/Motif environment."
 	-@ write sys$output "creating OS_VMS_MOTIF.OPT file."
-        -@ open/write opt_file OS_VMS_MOTIF.OPT
-        -@ write opt_file "sys$share:decw$xmlibshr12.exe/share,-"
-        -@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-"
-        -@ write opt_file "sys$share:decw$xlibshr.exe/share"
+	-@ open/write opt_file OS_VMS_MOTIF.OPT
+	-@ write opt_file "sys$share:decw$xmlibshr12.exe/share,-"
+	-@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-"
+	-@ write opt_file "sys$share:decw$xlibshr.exe/share"
 	-@ close opt_file
 .ELSE
 motif_env :
-        -@ !
+	-@ !
 .ENDIF
 
 
 .IFDEF GTK
 gtk_env :
-        -@ write sys$output "using GTK environment:"
-        -@ define/nolog gtk_root /trans=conc $(GTK_DIR)
-        -@ show logical gtk_root
-        -@ write sys$output "    include path: "$(GUI_INC)""
+	-@ write sys$output "using GTK environment:"
+	-@ define/nolog gtk_root /trans=conc $(GTK_DIR)
+	-@ show logical gtk_root
+	-@ write sys$output "    include path: "$(GUI_INC)""
 	-@ write sys$output "creating OS_VMS_GTK.OPT file."
-        -@ open/write opt_file OS_VMS_GTK.OPT
+	-@ open/write opt_file OS_VMS_GTK.OPT
 	-@ write opt_file "gtk_root:[glib]libglib.exe /share,-"
-        -@ write opt_file "gtk_root:[glib.gmodule]libgmodule.exe /share,-"
-        -@ write opt_file "gtk_root:[gtk.gdk]libgdk.exe /share,-"
+	-@ write opt_file "gtk_root:[glib.gmodule]libgmodule.exe /share,-"
+	-@ write opt_file "gtk_root:[gtk.gdk]libgdk.exe /share,-"
 	-@ write opt_file "gtk_root:[gtk.gtk]libgtk.exe /share,-"
 	-@ write opt_file "sys$share:decw$xmlibshr12.exe/share,-"
-        -@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-"
-        -@ write opt_file "sys$share:decw$xlibshr.exe/share"
-        -@ close opt_file
+	-@ write opt_file "sys$share:decw$xtlibshrr5.exe/share,-"
+	-@ write opt_file "sys$share:decw$xlibshr.exe/share"
+	-@ close opt_file
 .ELSE
 gtk_env :
-        -@ !
+	-@ !
 .ENDIF
 
 .IFDEF VIM_PERL
 perl_env :
-        -@ write sys$output "using PERL environment:"
-        -@ show logical PERLSHR
-        -@ write sys$output "    include path: ""$(PERL_INC)"""
+	-@ write sys$output "using PERL environment:"
+	-@ show logical PERLSHR
+	-@ write sys$output "    include path: ""$(PERL_INC)"""
 	-@ show symbol perl
-        -@ open/write pd if_perl.c
-        -@ write pd "/* Empty file to satisfy MMK depend.  */"
-        -@ write pd "/* It will be owerwritten later on... */"
-        -@ close pd
-        -@ write sys$output "creating OS_VMS_PERL.OPT file."
-        -@ open/write opt_file OS_VMS_PERL.OPT
-        -@ write opt_file "PERLSHR /share"
-        -@ close opt_file
+	-@ open/write pd if_perl.c
+	-@ write pd "/* Empty file to satisfy MMK depend.  */"
+	-@ write pd "/* It will be owerwritten later on... */"
+	-@ close pd
+	-@ write sys$output "creating OS_VMS_PERL.OPT file."
+	-@ open/write opt_file OS_VMS_PERL.OPT
+	-@ write opt_file "PERLSHR /share"
+	-@ close opt_file
 .ELSE
 perl_env :
-        -@ !
+	-@ !
 .ENDIF
 
 .IFDEF VIM_PYTHON
 python_env :
-        -@ write sys$output "using PYTHON environment:"
-        -@ show logical PYTHON_INCLUDE
-        -@ show logical PYTHON_OLB
-        -@ write sys$output "creating OS_VMS_PYTHON.OPT file."
-        -@ open/write opt_file OS_VMS_PYTHON.OPT
-        -@ write opt_file "PYTHON_OLB:PYTHON.OLB /share"
-        -@ close opt_file
+	-@ write sys$output "using PYTHON environment:"
+	-@ show logical PYTHON_INCLUDE
+	-@ show logical PYTHON_OLB
+	-@ write sys$output "creating OS_VMS_PYTHON.OPT file."
+	-@ open/write opt_file OS_VMS_PYTHON.OPT
+	-@ write opt_file "PYTHON_OLB:PYTHON.OLB /share"
+	-@ close opt_file
 .ELSE
 python_env :
-        -@ !
+	-@ !
 .ENDIF
 
 .IFDEF VIM_TCL
 tcl_env :
-        -@ write sys$output "using TCL environment:"
-        -@ show logical TCLSHR
-        -@ write sys$output "    include path: ""$(TCL_INC)"""
-        -@ write sys$output "creating OS_VMS_TCL.OPT file."
-        -@ open/write opt_file OS_VMS_TCL.OPT
-        -@ write opt_file "TCLSHR /share"
-        -@ close opt_file
+	-@ write sys$output "using TCL environment:"
+	-@ show logical TCLSHR
+	-@ write sys$output "    include path: ""$(TCL_INC)"""
+	-@ write sys$output "creating OS_VMS_TCL.OPT file."
+	-@ open/write opt_file OS_VMS_TCL.OPT
+	-@ write opt_file "TCLSHR /share"
+	-@ close opt_file
 .ELSE
 tcl_env :
-        -@ !
+	-@ !
 .ENDIF
 
 .IFDEF VIM_RUBY
 ruby_env :
-        -@ write sys$output "using RUBY environment:"
-        -@ write sys$output "    include path: ""$(RUBY_INC)"""
-        -@ write sys$output "creating OS_VMS_RUBY.OPT file."
-        -@ open/write opt_file OS_VMS_RUBY.OPT
-        -@ write opt_file "RUBYSHR /share"
-        -@ close opt_file
+	-@ write sys$output "using RUBY environment:"
+	-@ write sys$output "    include path: ""$(RUBY_INC)"""
+	-@ write sys$output "creating OS_VMS_RUBY.OPT file."
+	-@ open/write opt_file OS_VMS_RUBY.OPT
+	-@ write opt_file "RUBYSHR /share"
+	-@ close opt_file
 .ELSE
 ruby_env :
-        -@ !
+	-@ !
 .ENDIF
 
 

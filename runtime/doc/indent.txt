@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.2b.  Last change: 2001 Nov 01
+*indent.txt*    For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -297,6 +297,12 @@ assume a 'shiftwidth' of 4.
 		  ********/		    ********/
 <	      (Example uses ":set comments& comments-=s1:/* comments^=s0:/*")
 
+	/N    Indent comment lines N characters extra. (default 0).
+		cino=			  cino=/4 >
+		  a = b;		    a = b;
+		  /* comment */			/* comment */
+		  c = d;		    c = d;
+<
 	(N    When in unclosed parentheses, indent N characters from the line
 	      with the unclosed parentheses.  Add a 'shiftwidth' for every
 	      unclosed parentheses.  When N is 0 or the unclosed parentheses

@@ -120,7 +120,7 @@ static void	dis_msg __ARGS((char_u *p, int skip_esc));
 static void	block_prep __ARGS((oparg_T *oap, struct block_def *, linenr_T, int));
 #endif
 #if defined(FEAT_CLIPBOARD) || defined(FEAT_EVAL)
-static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len));
+static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len, long blocklen));
 #endif
 static int	ends_in_white __ARGS((linenr_T lnum));
 #ifdef FEAT_COMMENTS
@@ -5183,7 +5183,7 @@ clip_yank_selection(type, str, len, cbd)
 
     clip_free_selection(cbd);
 
-    str_to_reg(y_ptr, type, str, len);
+    str_to_reg(y_ptr, type, str, len, 0L);
 }
 
 /*
@@ -5293,30 +5293,81 @@ dnd_yank_drag_data(str, len)
     curr = y_current;
     y_current = &y_regs[TILDE_REGISTER];
     free_yank_all();
-    str_to_reg(y_current, MCHAR, str, len);
+    str_to_reg(y_current, MCHAR, str, len, 0L);
     y_current = curr;
 }
-#endif /* FEAT_DND */
+#endif
 
 
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*
+ * Return the type of a register.
+ * Used for getregtype()
+ * Returns MAUTO for error.
+ */
+    char_u
+get_reg_type(regname, reglen)
+    int	    regname;
+    long    *reglen;
+{
+    switch (regname)
+    {
+	case '%':		/* file name */
+	case '#':		/* alternate file name */
+	case '=':		/* expression */
+	case ':':		/* last command line */
+	case '/':		/* last search-pattern */
+	case '.':		/* last inserted text */
+#ifdef FEAT_SEARCHPATH
+	case Ctrl_F:		/* Filename under cursor */
+	case Ctrl_P:		/* Path under cursor, expand via "path" */
+#endif
+	case Ctrl_W:		/* word under cursor */
+	case Ctrl_A:		/* WORD (mnemonic All) under cursor */
+	case '_':		/* black hole: always empty */
+	    return MCHAR;
+    }
+
+#ifdef FEAT_CLIPBOARD
+    regname = may_get_selection(regname);
+#endif
+
+    /* Should we check for a valid name? */
+    get_yank_register(regname, FALSE);
+
+    if (y_current->y_array != NULL)
+    {
+#ifdef FEAT_VISUAL
+	if (reglen != NULL && y_current->y_type == MBLOCK)
+	    *reglen = y_current->y_width;
+#endif
+	return y_current->y_type;
+    }
+    return MAUTO;
+}
+
+/*
  * Return the contents of a register as a single allocated string.
- * Used for "@r" in expressions.
+ * Used for "@r" in expressions and for getreg().
  * Returns NULL for error.
  */
     char_u *
-get_reg_contents(regname)
-    int	    regname;
+get_reg_contents(regname, allowexpr)
+    int		regname;
+    int		allowexpr;	/* allow "=" register. */
 {
-    long    i;
-    char_u  *retval;
-    int	    allocated;
-    long    len;
+    long	i;
+    char_u	*retval;
+    int		allocated;
+    long	len;
 
     /* Don't allow using an expression register inside an expression */
     if (regname == '=')
+    {
+	if (allowexpr)
+	    return get_expr_line();
 	return NULL;
+    }
 
     if (regname == '@')	    /* "@@" is used for unnamed register */
 	regname = '"';
@@ -5396,6 +5447,17 @@ write_reg_contents(name, str, must_append)
     char_u	*str;
     int		must_append;
 {
+    write_reg_contents_ex(name, str, must_append, MAUTO, 0L);
+}
+
+    void
+write_reg_contents_ex(name, str, must_append, yank_type, block_len)
+    int		name;
+    char_u	*str;
+    int		must_append;
+    int		yank_type;
+    long	block_len;
+{
     struct yankreg  *old_y_previous, *old_y_current;
     long	    len;
 
@@ -5423,9 +5485,15 @@ write_reg_contents(name, str, must_append)
     if (!y_append && !must_append)
 	free_yank_all();
     len = (long)STRLEN(str);
-    str_to_reg(y_current,
-	    (len > 0 && (str[len - 1] == '\n' || str[len -1] == '\r'))
-	     ? MLINE : MCHAR, str, len);
+#ifndef FEAT_VISUAL
+    /* Just in case - make sure we don't use MBLOCK */
+    if (yank_type == MBLOCK)
+	yank_type = MAUTO;
+#endif
+    if (yank_type == MAUTO)
+	yank_type = ((len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r'))
+							     ? MLINE : MCHAR);
+    str_to_reg(y_current, yank_type, str, len, block_len);
 
 # ifdef FEAT_CLIPBOARD
     /* Send text of clipboard register to the clipboard. */
@@ -5445,11 +5513,12 @@ write_reg_contents(name, str, must_append)
  * is appended.
  */
     static void
-str_to_reg(y_ptr, type, str, len)
+str_to_reg(y_ptr, type, str, len, blocklen)
     struct yankreg	*y_ptr;		/* pointer to yank register */
-    int			type;		/* MCHAR or MLINE */
+    int			type;		/* MCHAR, MLINE or MBLOCK */
     char_u		*str;		/* string to put in register */
-    long		len;		/* lenght of string */
+    long		len;		/* length of string */
+    long		blocklen;	/* width of Visual block */
 {
     int		lnum;
     long	start;
@@ -5460,6 +5529,9 @@ str_to_reg(y_ptr, type, str, len)
     int		append = FALSE;		/* append to last line in register */
     char_u	*s;
     char_u	**pp;
+#ifdef FEAT_VISUAL
+    long	maxlen;
+#endif
 
     if (y_ptr->y_array == NULL)		/* NULL means emtpy register */
 	y_ptr->y_size = 0;
@@ -5494,6 +5566,9 @@ str_to_reg(y_ptr, type, str, len)
 	pp[lnum] = y_ptr->y_array[lnum];
     vim_free(y_ptr->y_array);
     y_ptr->y_array = pp;
+#ifdef FEAT_VISUAL
+    maxlen = 0;
+#endif
 
     /*
      * Find the end of each line and save it into the array.
@@ -5504,6 +5579,10 @@ str_to_reg(y_ptr, type, str, len)
 	    if (str[i] == '\n')
 		break;
 	i -= start;			/* i is now length of line */
+#ifdef FEAT_VISUAL
+	if (i > maxlen)
+	    maxlen = i;
+#endif
 	if (append)
 	{
 	    --lnum;
@@ -5535,7 +5614,10 @@ str_to_reg(y_ptr, type, str, len)
     y_ptr->y_type = type;
     y_ptr->y_size = lnum;
 # ifdef FEAT_VISUAL
-    y_ptr->y_width = 0;
+    if (type == MBLOCK)
+	y_ptr->y_width = (blocklen < 0 ? maxlen - 1 : blocklen);
+    else
+	y_ptr->y_width = 0;
 # endif
 }
 #endif /* FEAT_CLIPBOARD || FEAT_EVAL || PROTO */

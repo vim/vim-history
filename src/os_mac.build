@@ -7,7 +7,7 @@ if !"{vimTargets}"
    exit 0
 end
 #
-set generalSources "buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c ex_getln.c fileio.c fold.c getchar.c gui.c gui_mac.c if_cscope.c main.c mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c mbyte.c normal.c ops.c option.c os_mac.c pty.c quickfix.c regexp.c screen.c search.c tag.c term.c termlib.c ui.c undo.c version.c window.c"
+set generalSources "buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c ex_eval.c ex_getln.c fileio.c fold.c getchar.c gui.c gui_mac.c if_cscope.c main.c mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c mbyte.c normal.c ops.c option.c os_mac.c pty.c quickfix.c regexp.c screen.c search.c tag.c term.c termlib.c ui.c undo.c version.c window.c"
 set generalOpts "-app -c 'VIM!' -t 'APPL' -i :proto"
 set generalCOpts "-w 2,35 -enum int"
 set generalLOpts "-mf -d"

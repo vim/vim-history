@@ -1,12 +1,13 @@
 " Vim filetype plugin file
 " Language:	csh
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Changed: 2002 Nov 26
+" Last Changed: 2003 Apr 16
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
 
+setlocal commentstring=#%s
 " Csh:  thanks to Johannes Zellner
 " - Both foreach and end must appear alone on separate lines.
 " - The words else and endif must appear at the beginning of input lines;

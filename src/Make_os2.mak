@@ -10,10 +10,10 @@
 ### compile and run without problems.
 ### Just to show that this is just like the Unix version!
 
-#system:              configurations:		     version (*) tested by:
-#-------------        ------------------------       -------  -  ----------
-#OS/2 Warp HPFS       gcc-2.7.2+emx-0.9b -GUI           4.5      Paul Slootman
-#OS/2 FAT             gcc-2.6.3+emx      -GUI           4.5      Karsten Sievert
+#system:	      configurations:		     version (*) tested by:
+#-------------	      ------------------------	     -------  -  ----------
+#OS/2 Warp HPFS       gcc-2.7.2+emx-0.9b -GUI		4.5	 Paul Slootman
+#OS/2 FAT	      gcc-2.6.3+emx	 -GUI		4.5	 Karsten Sievert
 
 #>>>>> choose options:
 

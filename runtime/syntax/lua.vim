@@ -2,7 +2,7 @@
 " Language:	Lua 4.0 and Lua 5.0
 " Maintainer:	Marcus Aurelius Farias <marcuscf@vant.com.br>
 " First Author:	Carlos Augusto Teixeira Mendes <cmendes@inf.puc-rio.br>
-" Last Change:	2003 Apr 20
+" Last Change:	2003 May 04
 " Options:	lua_version = 4 or 5 [default]
 "
 " Still has some syncing problems (long [[strings]])...
@@ -80,7 +80,7 @@ if lua_version > 4
 endif
 
 " Pre processor doesn't exist since Lua 4.0
-" syn match   luaPreProc          "^\s*$\(debug\|nodebug\|if\|ifnot\|end\|else\|endinput\)\>"
+" syn match   luaPreProc	  "^\s*$\(debug\|nodebug\|if\|ifnot\|end\|else\|endinput\)\>"
 
 " Strings
 syn match   luaSpecial		contained "\\[\\abfnrtv\'\"[\]]\|\\\d\{,3}"
@@ -238,7 +238,7 @@ if version >= 508 || !exists("did_lua_syntax_inits")
   HiLink luaFloat		Float
   HiLink luaOperator		Operator
   HiLink luaConstant		Constant
-  HiLink luaCond	        Conditional
+  HiLink luaCond		Conditional
   HiLink luaFunction		Function
   HiLink luaComment		Comment
   HiLink luaTodo		Todo

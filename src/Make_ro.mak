@@ -2,11 +2,11 @@
 # Makefile for Vim on RISC OS - Andy Wingate
 #
 
-GCC         = gcc -mthrowback
-CFLAGS     = -DRISCOS -DFEAT_GUI
+GCC	    = gcc -mthrowback
+CFLAGS	   = -DRISCOS -DFEAT_GUI
 # Optimising on ex_docmd.c seems to cause segfaults on compilation. Needs investigation.
 CCEX_DOCMD = $(GCC) $(CFLAGS)
-CC         = $(GCC) $(CFLAGS) -O2
+CC	   = $(GCC) $(CFLAGS) -O2
 # -DUP_BC_PC_EXTERN for term.c needed as BC defined in termlib.c and term.c
 
 TERMFLAG   = -DUP_BC_PC_EXTERN

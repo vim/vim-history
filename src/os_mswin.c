@@ -164,6 +164,8 @@ static HWND s_hwnd = 0;	    /* console window handle, set by GetConsoleHwnd() */
 #endif
 
 
+/* Don't generate prototypes here, because some systems do have these
+ * functions. */
 #if defined(__GNUC__) && !defined(PROTO)
 # ifndef __MINGW32__
 int _stricoll(char *a, char *b)
@@ -190,25 +192,25 @@ int _chdrive(int drive)
     return !SetCurrentDirectory(temp);
 }
 #else
-#ifdef __BORLANDC__
+# ifdef __BORLANDC__
 /* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
  * but it does in BC 5.02! */
-#if __BORLANDC__ < 0x502
+#  if __BORLANDC__ < 0x502
 int _stricoll(char *a, char *b)
 {
-#if 1
+#   if 1
     // this is fast but not correct:
-    return stricmp(a,b);
-#else
+    return stricmp(a, b);
+#   else
     // the ANSI-ish correct way is to use strxfrm():
     char a_buff[512], b_buff[512];  // file names, so this is enough on Win32
     strxfrm(a_buff, a, 512);
     strxfrm(b_buff, b, 512);
     return strcoll(a_buff, b_buff);
-#endif
+#   endif
 }
-#endif
-#endif
+#  endif
+# endif
 #endif
 
 
@@ -644,25 +646,25 @@ mch_screenmode(
 }
 
 
-#ifdef FEAT_EVAL
+#if defined(FEAT_LIBCALL) || defined(PROTO)
 /*
  * Call a DLL routine which takes either a string or int param
  * and returns an allocated string.
  * Return OK if it worked, FAIL if not.
  */
-#ifdef WIN3264
+# ifdef WIN3264
 typedef LPTSTR (*MYSTRPROCSTR)(LPTSTR);
 typedef LPTSTR (*MYINTPROCSTR)(int);
 typedef int (*MYSTRPROCINT)(LPTSTR);
 typedef int (*MYINTPROCINT)(int);
-#else
+# else
 typedef LPSTR (*MYSTRPROCSTR)(LPSTR);
 typedef LPSTR (*MYINTPROCSTR)(int);
 typedef int (*MYSTRPROCINT)(LPSTR);
 typedef int (*MYINTPROCINT)(int);
-#endif
+# endif
 
-#ifndef WIN16
+# ifndef WIN16
 /*
  * Check if a pointer points to a valid NUL terminated string.
  * Return the length of the string, including terminating NUL.
@@ -702,7 +704,7 @@ check_str_len(char_u *str)
 
     return 0;
 }
-#endif
+# endif
 
     int
 mch_libcall(
@@ -862,7 +864,8 @@ MultiByteToWideChar_alloc(UINT cp, DWORD flags,
 	LPWSTR *out, int *outlen)
 {
     *outlen = MultiByteToWideChar(cp, flags, in, inlen, 0, 0);
-    *out = (LPWSTR)alloc(sizeof(WCHAR) * *outlen);
+    /* Add one one word to avoid a zero-length alloc(). */
+    *out = (LPWSTR)alloc(sizeof(WCHAR) * (*outlen + 1));
     if (*out != NULL)
 	MultiByteToWideChar(cp, flags, in, inlen, *out, *outlen);
 }
@@ -878,7 +881,8 @@ WideCharToMultiByte_alloc(UINT cp, DWORD flags,
 	LPCSTR def, LPBOOL useddef)
 {
     *outlen = WideCharToMultiByte(cp, flags, in, inlen, NULL, 0, def, useddef);
-    *out = alloc((unsigned)*outlen);
+    /* Add one one byte to avoid a zero-length alloc(). */
+    *out = alloc((unsigned)*outlen + 1);
     if (*out != NULL)
 	WideCharToMultiByte(cp, flags, in, inlen, *out, *outlen, def, useddef);
 }
@@ -1041,9 +1045,9 @@ ucs2_to_enc(short_u *str, int *lenp)
 	int length;
 
 	WideCharToMultiByte_alloc(enc_codepage, 0, str, *lenp,
-						     &enc_str, &length, 0, 0);
+					    (LPSTR *)&enc_str, &length, 0, 0);
 	*lenp = length;
-        return enc_str;
+	return enc_str;
     }
 
     utf8_str = alloc(ucs2_to_utf8(str, *lenp, NULL));
@@ -1125,7 +1129,7 @@ clip_mch_request_selection(VimClipboard *cbd)
     /* Try to get the clipboard in Unicode. */
     if (IsClipboardFormatAvailable(CF_UNICODETEXT))
     {
-        HGLOBAL hMemW;
+	HGLOBAL hMemW;
 
 	if ((hMemW = GetClipboardData(CF_UNICODETEXT)) != NULL)
 	{
@@ -1251,8 +1255,8 @@ clip_mch_set_selection(VimClipboard *cbd)
 
 # if defined(FEAT_MBYTE) && defined(WIN3264)
     {
-        WCHAR		*out;
-        int		len = metadata.txtlen;
+	WCHAR		*out;
+	int		len = metadata.txtlen;
 
 	/* Convert the text to UCS-2. This is put on the clipboard as
 	 * CF_UNICODETEXT. */
@@ -1286,7 +1290,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 		lpszMemW[len] = NUL;
 		GlobalUnlock(hMemW);
 	    }
-            vim_free(out);
+	    vim_free(out);
 	    metadata.ucslen = len;
 	}
     }
@@ -1308,7 +1312,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 
     /* Set up metadata: */
     {
-        VimClipType_t *lpszMemVim = NULL;
+	VimClipType_t *lpszMemVim = NULL;
 
 	hMemVim = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 						       sizeof(VimClipType_t));
@@ -2761,7 +2765,8 @@ charset_pairs[] =
     {"RUSSIAN",		RUSSIAN_CHARSET},
     {"THAI",		THAI_CHARSET},
     {"TURKISH",		TURKISH_CHARSET},
-# if !defined(_MSC_VER) || (_MSC_VER > 1010)
+# if (!defined(_MSC_VER) || (_MSC_VER > 1010)) \
+	&& (!defined(__BORLANDC__) || (__BORLANDC__ > 0x0500))
     {"VIETNAMESE",	VIETNAMESE_CHARSET},
 # endif
 #endif

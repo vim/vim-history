@@ -319,7 +319,7 @@
  * +arabic		Arabic keymap and shaping support.
  *			Requires FEAT_RIGHTLEFT.
  */
-#ifdef FEAT_BIG
+#if defined(FEAT_BIG) && !defined(WIN16)
 # define FEAT_ARABIC
 #endif
 #ifdef FEAT_ARABIC
@@ -576,7 +576,7 @@
  * Disabled for EBCDIC:
  * Multibyte support doesn't work on OS390 Unix currently.
  */
-#if (defined(FEAT_BIG) || defined(HAVE_GTK2)) \
+#if (defined(FEAT_BIG) || defined(HAVE_GTK2) || defined(FEAT_ARABIC)) \
 	&& !defined(FEAT_MBYTE) && !defined(WIN16) \
 	&& SIZEOF_INT >= 4 && !defined(EBCDIC)
 # define FEAT_MBYTE
@@ -1001,7 +1001,7 @@
 #endif
 
 /*
- * +dnd	        Drag'n'drop support.  Always used for the GTK+ GUI.
+ * +dnd		Drag'n'drop support.  Always used for the GTK+ GUI.
  */
 #if defined(FEAT_CLIPBOARD) && defined(FEAT_GUI_GTK)
 # define FEAT_DND
@@ -1121,10 +1121,10 @@
  *			Currently only for Athena and Motif.
  */
 #if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
-                             || defined(FEAT_GUI_GTK)) \
+			     || defined(FEAT_GUI_GTK)) \
 	&& (   (defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_GTK)) \
-            || defined(FEAT_SUN_WORKSHOP) \
-            || defined(FEAT_NETBEANS_INTG))
+	    || defined(FEAT_SUN_WORKSHOP) \
+	    || defined(FEAT_NETBEANS_INTG))
 # define FEAT_BEVAL
 # if !defined(FEAT_XFONTSET) && !defined(FEAT_GUI_GTK)
 #  define FEAT_XFONTSET

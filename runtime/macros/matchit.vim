@@ -289,7 +289,7 @@ fun! s:CleanUp(options, mode, startline, startcol, ...)
     " (for example, d%).
     " This is only a problem if we end up moving in the forward direction.
   elseif (a:startline < line(".")) ||
-        \ (a:startline == line(".") && a:startcol < col("."))
+	\ (a:startline == line(".") && a:startcol < col("."))
     if a:0
       " Check whether the match is a single character.  If not, move to the
       " end of the match.
@@ -298,7 +298,7 @@ fun! s:CleanUp(options, mode, startline, startcol, ...)
       let regexp = s:Wholematch(matchline, a:1, currcol-1)
       let endcol = matchend(matchline, regexp)
       if endcol > currcol  " This is NOT off by one!
-        execute "normal!" . (endcol - currcol) . "l"
+	execute "normal!" . (endcol - currcol) . "l"
       endif
     endif " a:0
   endif " a:mode != "o" && etc.

@@ -27,7 +27,7 @@
 # let the make utility do the hard work:
 .AUTODEPEND
 .CACHEAUTODEPEND
-#
+
 # VARIABLES:
 # name		value (default)
 #
@@ -39,7 +39,7 @@
 #   PERL_VER	  define to version of Perl being used (56)
 #   DYNAMIC_PERL  no or yes: set to yes to load the Perl DLL dynamically (no)
 # PYTHON	define to path to Python dir to get PYTHON support (not defined)
-#   PYTHON_VER	    define to version of Python being used (15)
+#   PYTHON_VER	    define to version of Python being used (22)
 #   DYNAMIC_PYTHON  no or yes: use yes to load the Python DLL dynamically (no)
 # TCL		define to path to TCL dir to get TCL support (not defined)
 #   TCL_VER	define to version of TCL being used (83)
@@ -51,6 +51,8 @@
 #		of Ruby will cause a compile error on these systems.
 #   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (no)
 # MBYTE		no or yes: set to yes for multi-byte support (yes)
+# IME		no or yes: set to yes for multi-byte IME support (yes)
+#   DYNAMIC_IME no or yes: set to yes to load imm32.dll dynamically (yes)
 # GETTEXT	no or yes: set to yes for multi-language support (yes)
 # ICONV		no or yes: set to yes for dynamic iconv support (yes)
 # OLE		no or yes: set to yes to make OLE gvim (no)
@@ -68,84 +70,107 @@
 # POSTSCRIPT	no or yes: set to yes for PostScript printing
 # FEATURES	TINY, SMALL, NORMAL, BIG or HUGE
 #		(BIG for WIN32, SMALL for DOS16)
-#
+# WINVER	0x400 or 0x500: minimum Win32 version to support (0x400)
+# CSCOPE	no or yes: include support for Cscope interface (yes)
+
 ### BOR: root of the BC installation
 !if ("$(BOR)"=="")
 BOR = c:\bc5
 !endif
-#
+
 ### LINK: Name of the linker: tlink or ilink32 (this is below, depends on
 # $(OSTYPE)
-#
+
 ### GUI: yes for GUI version, no for console version
 !if ("$(GUI)"=="")
 GUI = yes
 !endif
-#
+
 ### MBYTE: yes for multibyte support, no to disable it.
 !if ("$(MBYTE)"=="")
 MBYTE = yes
 !endif
-#
+
+### IME: yes for multibyte support, no to disable it.
+!if ("$(IME)"=="")
+IME = yes
+!endif
+!if ("$(DYNAMIC_IME)"=="")
+DYNAMIC_IME = yes
+!endif
+
 ### GETTEXT: yes for multilanguage support, no to disable it.
 !if ("$(GETTEXT)"=="")
 GETTEXT = yes
 !endif
-#
+
 ### ICONV: yes to enable dynamic-iconv support, no to disable it
 !if ("$(ICONV)"=="")
 ICONV = yes
 !endif
-#
+
+### CSCOPE: yes to enable Cscope support, no to disable it
+!if ("$(CSCOPE)"=="")
+CSCOPE = yes
+!endif
+
 ### PERL: uncomment this line if you want perl support in vim
 # PERL=c:\perl
-#
+
 ### PYTHON: uncomment this line if you want python support in vim
-# PYTHON=c:\python20
-#
+# PYTHON=c:\python22
+
 ### RUBY: uncomment this line if you want ruby support in vim
 # RUBY=c:\ruby
-#
+
 ### TCL: uncomment this line if you want tcl support in vim
 # TCL=c:\tcl
-#
+
 ### OLE: no for normal gvim, yes for OLE-capable gvim (only works with GUI)
 #OLE = yes
-#
+
 ### OSTYPE: DOS16 for Windows 3.1 version, WIN32 for Windows 95/98/NT/2000
 #   version
 !if ("$(OSTYPE)"=="")
 OSTYPE = WIN32
 !endif
-#
+
 ### DEBUG: Uncomment to make an executable for debugging
 # DEBUG = yes
 !if ("$(DEBUG)"=="yes")
 DEBUG_FLAG = -v
 !endif
-#
+
 ### CODEGUARD: Uncomment to use the CODEGUARD stuff (BC 5.0 or later):
 # CODEGUARD = yes
 !if ("$(CODEGUARD)"=="yes")
 CODEGUARD_FLAG = -vG
 !endif
-#
+
 ### CPUNR: set your target processor (3 to 6)
-!if ("$(CPUNR)"=="")
+!if ("$(CPUNR)" == "i386") || ("$(CPUNR)" == "3")
+CPUNR = 3
+!elif ("$(CPUNR)" == "i486") || ("$(CPUNR)" == "4")
+CPUNR = 4
+!elif ("$(CPUNR)" == "i586") || ("$(CPUNR)" == "5")
+CPUNR = 5
+!elif ("$(CPUNR)" == "i686") || ("$(CPUNR)" == "6")
+CPUNR = 6
+!else
 CPUNR = 3
 !endif
-#
+
 ### Comment out to use precompiled headers (faster, but uses lots of disk!)
 HEADERS = -H -H=vim.csm -Hc
-#
+
 ### USEDLL: no for statically linked version of run-time, yes for DLL runtime
 !if ("$(USEDLL)"=="")
 USEDLL = no
 !endif
-#
+
 ### VIMDLL: yes for a DLL version of VIM (NOT RECOMMENDED), no otherwise
 #VIMDLL = yes
-#
+
 ### ALIGN: alignment you desire: (1,2 or 4: s/b 4 for Win32, 2 for DOS)
 !if ("$(ALIGN)"=="")
 !if ($(OSTYPE)==DOS16)
@@ -154,7 +179,7 @@ ALIGN = 2
 ALIGN = 4
 !endif
 !endif
-#
+
 ### FASTCALL: yes to use FASTCALL calling convention (RECOMMENDED!), no otherwise
 #   Incompatible when calling external functions (like MSVC-compiled DLLs), so
 #   don't use FASTCALL when linking with external libs.
@@ -164,10 +189,11 @@ ALIGN = 4
 	("$(TCL)"=="") && \
 	("$(RUBY)"=="") && \
 	("$(ICONV)"!="yes") && \
+	("$(IME)"!="yes") && \
 	("$(MBYTE)"!="yes")
 FASTCALL = yes
 !endif
-#
+
 ### OPTIMIZE: SPEED to optimize for speed, SPACE otherwise (SPEED RECOMMENDED)
 !if ("$(OPTIMIZE)"=="")
 OPTIMIZE = SPEED
@@ -180,10 +206,11 @@ FEATURES = SMALL
 FEATURES = BIG
 ! endif
 !endif
-#
+
 ### POSTSCRIPT: uncomment this line if you want PostScript printing
 #POSTSCRIPT = yes
-#
+
+###
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
 #VIMRCLOC = somewhere
@@ -191,29 +218,32 @@ FEATURES = BIG
 
 ### Set the default $(WINVER) to make it work with Bcc 5.5.
 !ifndef WINVER
-WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
+WINVER = 0x400
 !endif
+
 #
 # Sanity checks for the above options:
 #
+
 !if ($(OSTYPE)==DOS16)
 !if (($(CPUNR)+0)>4)
 !error CPUNR Must be less than or equal to 4 for DOS16
 !endif
-#
+
 !if (($(ALIGN)+0)>2)
 !error ALIGN Must be less than or equal to 2 for DOS16
 !endif
-#
+
 !else	# not DOS16
 !if (($(CPUNR)+0)<3)
 !error CPUNR Must be greater or equal to 3 for WIN32
 !endif
 !endif
-#
+
 !if ($(OSTYPE)!=WIN32) && ($(OSTYPE)!=DOS16)
 !error Check the OSTYPE variable again: $(OSTYPE) is not supported!
 !endif
+
 #
 # Optimizations: change as desired (RECOMMENDATION: Don't change!):
 #
@@ -240,8 +270,9 @@ OPT = $(OPT) -vi-
 # shouldn't have to change:
 LIB = $(BOR)\lib
 INCLUDE = $(BOR)\include;.;proto
-DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC $(WINVER) -DHAVE_PATHDEF
-#
+DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC -DHAVE_PATHDEF \
+	  -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
+
 !ifdef PERL
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PERL
 INCLUDE = $(PERL)\lib\core;$(INCLUDE)
@@ -257,19 +288,19 @@ PERL_LIB_FLAG = /nodefaultlib:
 !    endif
 !  endif
 !endif
-#
+
 !ifdef PYTHON
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PYTHON
 INCLUDE = $(PYTHON)\include;$(INCLUDE)
 !ifndef PYTHON_VER
-PYTHON_VER = 15
+PYTHON_VER = 22
 !endif
 !if "$(DYNAMIC_PYTHON)" == "yes"
 INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
 PYTHON_LIB_FLAG = /nodefaultlib:
 !endif
 !endif
-#
+
 !ifdef RUBY
 !ifndef RUBY_VER
 RUBY_VER = 16
@@ -289,7 +320,7 @@ INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_IN
 RUBY_LIB_FLAG = /nodefaultlib:
 !endif
 !endif
-#
+
 !ifdef TCL
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_TCL
 INCLUDE = $(TCL)\include;$(INCLUDE)
@@ -319,13 +350,23 @@ DEFINES = $(DEFINES) -DFEAT_OLE
 !endif
 #
 !if ("$(MBYTE)"=="yes")
-MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_IME
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE
+!endif
+!if ("$(IME)"=="yes")
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE_IME
+!if ("$(DYNAMIC_IME)" == "yes")
+MBDEFINES = $(MBDEFINES) -DDYNAMIC_IME
+!endif
 !endif
 !if ("$(ICONV)"=="yes")
 MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
 !endif
 !if ("$(GETTEXT)"=="yes")
 MBDEFINES = $(MBDEFINES) -DDYNAMIC_GETTEXT
+!endif
+
+!if ("$(CSCOPE)"=="yes")
+DEFINES = $(DEFINES) -DFEAT_CSCOPE
 !endif
 
 !if ("$(GUI)"=="yes")
@@ -397,7 +438,7 @@ LINK	= $(BOR)\BIN\TLink
 CC   = $(BOR)\BIN\Bcc
 LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  =
-CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -H- -P- $(HEADERS)
+CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -H- $(HEADERS)
 !else
 BRC = $(BOR)\BIN\brc32
 !if ("$(LINK)"=="")
@@ -406,16 +447,23 @@ LINK	= $(BOR)\BIN\ILink32
 CC   = $(BOR)\BIN\Bcc32
 LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
-CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -f-
+CFLAGS = -w-aus -w-par -w-pch -I$(INCLUDE) -d -x- -RT- -k- -Oi $(HEADERS) -f-
 !endif
 
-CC1 = -q -c
+CC1 = -c
 CC2 = -o
 CCARG = +$(OBJDIR)\bcc.cfg
 
 # implicit rules:
-.c.obj:
-	$(CC) $(CCARG) $(CC1) $(CC2)$@ $*.c
+
+# Without the following, the implicit rule in BUILTINS.MAK is picked up
+# for a rule for .c.obj rather than the local implicit rule
+.SUFFIXES
+.SUFFIXES .c .obj
+.path.c = .
+
+{.}.c{$(OBJDIR)}.obj:
+	$(CC) $(CCARG) $(CC1) -n$(OBJDIR)\ {$< }
 
 .cpp.obj:
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ $*.cpp
@@ -499,6 +547,11 @@ vimobj = $(vimobj) \
     $(OBJDIR)\if_tcl.obj
 !endif
 
+!ifdef CSCOPE
+vimobj = $(vimobj) \
+    $(OBJDIR)\if_cscope.obj
+!endif
+
 !if ("$(VIMDLL)"=="yes")
 vimdllobj = $(vimobj)
 !if ("$(DEBUG)"=="yes")
@@ -543,6 +596,12 @@ MSG = $(MSG) FASTCALL
 !if ("$(MBYTE)"=="yes")
 MSG = $(MSG) MBYTE
 !endif
+!if ("$(IME)"=="yes")
+MSG = $(MSG) IME
+! if "$(DYNAMIC_IME)" == "yes"
+MSG = $(MSG)(dynamic)
+! endif
+!endif
 !if ("$(GETTEXT)"=="yes")
 MSG = $(MSG) GETTEXT
 !endif
@@ -555,27 +614,30 @@ MSG = $(MSG) DEBUG
 !if ("$(CODEGUARD)"=="yes")
 MSG = $(MSG) CODEGUARD
 !endif
+!if ("$(CSCOPE)"=="yes")
+MSG = $(MSG) CSCOPE
+!endif
 !ifdef PERL
 MSG = $(MSG) PERL
-! if "DYNAMIC_PERL" == "yes"
+! if "$(DYNAMIC_PERL)" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef PYTHON
 MSG = $(MSG) PYTHON
-! if "DYNAMIC_PYTHON" == "yes"
+! if "$(DYNAMIC_PYTHON)" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef RUBY
 MSG = $(MSG) RUBY
-! if "DYNAMIC_RUBY" == "yes"
+! if "$(DYNAMIC_RUBY)" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef TCL
 MSG = $(MSG) TCL
-! if "DYNAMIC_TCL" == "yes"
+! if "$(DYNAMIC_TCL)" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
@@ -594,7 +656,7 @@ TARGETS = $(TARGETS) $(TARGET)
 !endif
 
 # Targets:
-all: vim vimrun.exe install.exe xxd uninstal.exe
+all: vim vimrun.exe install.exe xxd uninstal.exe GvimExt/gvimext.dll
 
 vim: $(OSTYPE) $(OBJDIR) $(OBJDIR)\bcc.cfg $(TARGETS)
 	@if exist $(OBJDIR)\version.obj del $(OBJDIR)\version.obj
@@ -611,6 +673,11 @@ xxd:
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
+GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+	cd GvimExt
+	$(MAKE) /f Make_bc5.mak USEDLL=$(USEDLL)
+	cd ..
+
 install.exe: dosinst.c $(OBJDIR)\bcc.cfg
 !if ($(OSTYPE)==WIN32)
 	$(CC) $(CCARG) -WC -DWIN32 -einstall dosinst.c
@@ -626,19 +693,41 @@ uninstal.exe: uninstal.c $(OBJDIR)\bcc.cfg
 !endif
 
 clean:
-#	For Windows NT/2000, doesn't work on Windows 95/98...
+!if "$(OS)" == "Windows_NT"
+	# For Windows NT/2000, doesn't work on Windows 95/98...
 	-@rmdir /s /q $(OBJDIR)
-#	For Windows 95/98, doesn't work on Windows NT/2000...
+!else
+	# For Windows 95/98, doesn't work on Windows NT/2000...
 	-@deltree /y $(OBJDIR)
+!endif
 	-@del *.res
-	-@del *.dll
+	-@del vim32*.dll
+	-@del vim32*.lib
 	-@del *vim*.exe
 	-@del *install*.exe
 	-@del *.csm
 	-@del *.map
+	-@del *.ilc
+	-@del *.ild
+	-@del *.ilf
+	-@del *.ils
 	-@del *.tds
-	-@del *.lib
+!ifdef PERL
+	-@del perl.lib
+!endif
+!ifdef PYTHON
+	-@del python.lib
+!endif
+!ifdef RUBY
+	-@del ruby.lib
+!endif
+!ifdef TCL
+	-@del tcl.lib
+!endif
 	@cd xxd
+	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
+	@cd ..
+	@cd GvimExt
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
 	@cd ..
 
@@ -651,7 +740,8 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !if ("$(CODEGUARD)"=="yes")
 	cg32.lib+
 !endif
-!if ("$(OLE)"=="yes")
+# $(OSTYPE)==WIN32 causes os_mswin.c compilation. FEAT_SHORTCUT in it needs OLE
+!if ("$(OLE)"=="yes" || $(OSTYPE)==WIN32)
 	ole2w32.lib +
 !endif
 !if ($(OSTYPE)==WIN32)
@@ -697,7 +787,8 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !if ("$(CODEGUARD)"=="yes")
 	cg32.lib+
 !endif
-!if ("$(OLE)"=="yes")
+# $(OSTYPE)==WIN32 causes os_mswin.c compilation. FEAT_SHORTCUT in it needs OLE
+!if ("$(OLE)"=="yes" || $(OSTYPE)==WIN32)
 	ole2w32.lib +
 !endif
 	import32.lib+
@@ -813,6 +904,8 @@ $(OBJDIR)\gui_w32.obj: gui_w32.c
 
 $(OBJDIR)\os_w32dll.obj: os_w32dll.c
 
+$(OBJDIR)\if_cscope.obj: if_cscope.c
+
 $(OBJDIR)\if_ole.obj: if_ole.cpp
 
 $(OBJDIR)\os_w32exe.obj: os_w32exe.c
@@ -835,9 +928,11 @@ $(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
 
 $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
 	vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
-    $(BRC) $(DEFINES) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc
+    $(BRC) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc @&&|
+	$(DEFINES)
 
 $(OBJDIR)\pathdef.obj:	auto\pathdef.c
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ auto\pathdef.c
 
 # Note:  the silly /*"*/ below are there to trick make into accepting
 # the # character as something other than a comment without messing up

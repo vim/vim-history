@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.2b.  Last change: 2002 Oct 29
+*usr_20.txt*	For Vim version 6.2c.  Last change: 2003 Apr 30
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -320,8 +320,9 @@ command: >
 
 	:history /
 
-In case you don't want to use the cursor keys, CTRL-P will do the same as <Up>
-and CTRL-N as <Down>.  CTRL-P stands for previous, CTRL-N for next.
+CTRL-P will work like <Up>, except that it doesn't matter what you already
+typed.  Similarly for CTRL-N and <Down>.  CTRL-P stands for previous, CTRL-N
+for next.
 
 ==============================================================================
 *20.5*	Command line window

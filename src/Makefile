@@ -190,7 +190,7 @@
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
 #Unisys 6035	      cc	     +X11 Motif		5.3  (8) Glauber Ribeiro
-#ESIX V4.2            cc             +X11               6.0  (a) Reinhard Wobst
+#ESIX V4.2	      cc	     +X11		6.0  (a) Reinhard Wobst
 # }}}
 
 # (*)  Remarks: {{{
@@ -797,7 +797,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim62b
+VIMRTDIR = /vim62c
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -810,6 +810,7 @@ KMAPSUBDIR = /keymap
 MACROSUBDIR = /macros
 TOOLSSUBDIR = /tools
 TUTORSUBDIR = /tutor
+PRINTSUBDIR = /print
 PODIR = po
 
 ### VIMLOC	common root of the Vim files (all versions)
@@ -828,6 +829,7 @@ PODIR = po
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
 ### TUTORSUBLOC	location for tutor files
+### PRINTSUBLOC	location for PostScript files (prolog, latin1, ..)
 ### SCRIPTLOC	location for script files (menu.vim, bugreport.vim, ..)
 ### You can override these if you want to install them somewhere else.
 ### Edit feature.h for compile-time settings.
@@ -846,6 +848,7 @@ KMAPSUBLOC	= $(VIMRTLOC)$(KMAPSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
 TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
 TUTORSUBLOC	= $(VIMRTLOC)$(TUTORSUBDIR)
+PRINTSUBLOC	= $(VIMRTLOC)$(PRINTSUBDIR)
 SCRIPTLOC	= $(VIMRTLOC)
 
 ### Only set VIMRUNTIMEDIR when VIMRTLOC is set to a different location and
@@ -887,11 +890,6 @@ SYS_INDOFF_FILE = $(DESTDIR)$(SCRIPTLOC)/indoff.vim
 
 ### Name of the option window script file target.
 SYS_OPTWIN_FILE = $(DESTDIR)$(SCRIPTLOC)/optwin.vim
-
-### Name of the PostScript procset.ps and eviso.ps file targets.
-SYS_PROCSET_FILE = $(DESTDIR)$(SCRIPTLOC)/procset.ps
-SYS_EVISO_FILE = $(DESTDIR)$(SCRIPTLOC)/eviso.ps
-SYS_EVEBCDIC_FILE = $(DESTDIR)$(SCRIPTLOC)/evebcdic.ps
 
 # Program to install the program in the target directory.  Could also be "mv".
 INSTALL_PROG	= cp
@@ -962,6 +960,9 @@ COMPSOURCE = ../runtime/compiler
 
 # Where to look for keymap files
 KMAPSOURCE = ../runtime/keymap
+
+# Where to look for print resource files
+PRINTSOURCE = ../runtime/print
 
 # If you are using Linux, you might want to use this to make vim the
 # default vi editor, it will create a link from vi to Vim when doing
@@ -1171,6 +1172,7 @@ DEST_MACRO = $(DESTDIR)$(MACROSUBLOC)
 DEST_TOOLS = $(DESTDIR)$(TOOLSSUBLOC)
 DEST_TUTOR = $(DESTDIR)$(TUTORSUBLOC)
 DEST_SCRIPT = $(DESTDIR)$(SCRIPTLOC)
+DEST_PRINT = $(DESTDIR)$(PRINTSUBLOC)
 DEST_MAN = $(DESTDIR)$(MANSUBDIR)
 
 #	     BASIC_SRC: files that are always used
@@ -1555,7 +1557,7 @@ installvimbin: $(VIMTARGET) $(DESTDIR)$(exec_prefix) $(DEST_BIN)
 
 # install the help files; first adjust the contents for the location
 installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
-		$(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND) \
+		$(DEST_HELP) $(DEST_PRINT) $(DEST_COL) $(DEST_SYN) $(DEST_IND) \
 		$(DEST_FTP) $(DEST_PLUG) $(DEST_TUTOR) $(DEST_COMP)
 	@echo generating $(DEST_MAN)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
@@ -1627,12 +1629,9 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	chmod $(VIMSCRIPTMOD) $(SYS_INDOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
-	$(INSTALL_DATA) $(SCRIPTSOURCE)/procset.ps $(SYS_PROCSET_FILE)
-	chmod $(VIMSCRIPTMOD) $(SYS_PROCSET_FILE)
-	$(INSTALL_DATA) $(SCRIPTSOURCE)/eviso.ps $(SYS_EVISO_FILE)
-	chmod $(VIMSCRIPTMOD) $(SYS_EVISO_FILE)
-	$(INSTALL_DATA) $(SCRIPTSOURCE)/evebcdic.ps $(SYS_EVEBCDIC_FILE)
-	chmod $(VIMSCRIPTMOD) $(SYS_EVEBCDIC_FILE)
+# install the print resource files
+	cd $(PRINTSOURCE); $(INSTALL_DATA) *.ps $(DEST_PRINT)
+	cd $(DEST_PRINT); chmod $(FILEMOD) *.ps
 # install the colorscheme files
 	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_COL)
 	cd $(DEST_COL); chmod $(HELPMOD) *.vim README.txt
@@ -1657,10 +1656,10 @@ installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
 	chmod $(DIRMOD) `find $(DEST_MACRO) -type d -print`
 	chmod $(FILEMOD) `find $(DEST_MACRO) -type f -print`
 	chmod $(SCRIPTMOD) $(DEST_MACRO)/less.sh
-	# When using CVS some CVS directories might have been copied.
+# When using CVS some CVS directories might have been copied.
 	cvs=`find $(DEST_MACRO) -name CVS -print`; \
 	      if test -n "$$cvs"; then \
-	         rm -rf $$cvs; \
+		 rm -rf $$cvs; \
 	      fi
 
 # install the tutor files
@@ -1684,10 +1683,10 @@ installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 	chmod $(MANMOD) $(DEST_MAN)/xxd.1
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
-	# When using CVS some CVS directories might have been copied.
+# When using CVS some CVS directories might have been copied.
 	cvs=`find $(DEST_TOOLS) -name CVS -print`; \
 	      if test -n "$$cvs"; then \
-	         rm -rf $$cvs; \
+		 rm -rf $$cvs; \
 	      fi
 	-chmod $(FILEMOD) $(DEST_TOOLS)/*
 # replace the path in some tools
@@ -1738,7 +1737,7 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	test -f error
 
 $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) $(DEST_VIM) $(DEST_RT) $(DEST_HELP) \
-		$(DEST_COL) $(DEST_SYN) $(DEST_IND) $(DEST_FTP) \
+		$(DEST_PRINT) $(DEST_COL) $(DEST_SYN) $(DEST_IND) $(DEST_FTP) \
 		$(DEST_LANG) $(DEST_KMAP) $(DEST_COMP) \
 		$(DEST_MACRO) $(DEST_TOOLS) $(DEST_TUTOR) $(DEST_PLUG):
 	-$(SHELL) ./mkinstalldirs $@
@@ -1872,8 +1871,7 @@ uninstall_runtime:
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
-	-rm -f $(SYS_OPTWIN_FILE) $(SYS_PROCSET_FILE)
-	-rm -f $(SYS_EVISO_FILE) $(SYS_EVEBCDIC_FILE)
+	-rm -f $(SYS_OPTWIN_FILE)
 	-rm -f $(DEST_COL)/*.vim $(DEST_COL)/README.txt
 	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt
 	-rm -f $(DEST_IND)/*.vim $(DEST_IND)/README.txt
@@ -1883,7 +1881,8 @@ uninstall_runtime:
 	-rm -rf $(DEST_LANG)
 	-rm -rf $(DEST_KMAP)
 	-rm -rf $(DEST_COMP)
-	-rmdir $(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND)
+	-rm -f $(DEST_PRINT)/*.ps
+	-rmdir $(DEST_HELP) $(DEST_PRINT) $(DEST_COL) $(DEST_SYN) $(DEST_IND)
 	-rm -rf $(DEST_FTP)/*.vim $(DEST_FTP)/README.txt
 	-rm -f $(DEST_PLUG)/*.vim $(DEST_PLUG)/README.txt
 	-rmdir $(DEST_FTP) $(DEST_PLUG) $(DEST_RT)

@@ -3,7 +3,7 @@
 " Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
 " Last Change: Don 19 Sep 2002 10:05:36 CEST
 " Filenames:   *.fs,*.ft
-" URL:         http://www.cvjb.de/comp/vim/forth.vim
+" URL:	       http://www.cvjb.de/comp/vim/forth.vim
 
 " $Id$
 
@@ -32,9 +32,9 @@
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
-	syntax clear
+    syntax clear
 elseif exists("b:current_syntax")
-	finish
+    finish
 endif
 
 " Synchronization method
@@ -50,9 +50,9 @@ syn match forthTodo contained 'Copyright\(\s([Cc])\)\=\(\s[0-9]\{2,4}\)\='
 " Characters allowed in keywords
 " I don't know if 128-255 are allowed in ANS-FORHT
 if version >= 600
-	setlocal iskeyword=!,@,33-35,%,$,38-64,A-Z,91-96,a-z,123-126,128-255
+    setlocal iskeyword=!,@,33-35,%,$,38-64,A-Z,91-96,a-z,123-126,128-255
 else
-	set iskeyword=!,@,33-35,%,$,38-64,A-Z,91-96,a-z,123-126,128-255
+    set iskeyword=!,@,33-35,%,$,38-64,A-Z,91-96,a-z,123-126,128-255
 endif
 
 
@@ -174,43 +174,43 @@ syn match forthInclude '^INCLUDE\s\+\k\+'
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_forth_syn_inits")
-	if version < 508
-		let did_forth_syn_inits = 1
-		command -nargs=+ HiLink hi link <args>
-	else
-		command -nargs=+ HiLink hi def link <args>
-	endif
+    if version < 508
+	let did_forth_syn_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
 
-	" The default methods for highlighting. Can be overriden later.
-	HiLink forthTodo Todo
-	HiLink forthOperators Operator
-	HiLink forthMath Number
-	HiLink forthInteger Number
-	HiLink forthFloat Float
-	HiLink forthStack Special
-	HiLink forthRstack Special
-	HiLink forthFStack Special
-	HiLink forthSP Special
-	HiLink forthMemory Function
-	HiLink forthAdrArith Function
-	HiLink forthMemBlks Function
-	HiLink forthCond Conditional
-	HiLink forthLoop Repeat
-	HiLink forthColonDef Define
-	HiLink forthEndOfColonDef Define
-	HiLink forthDefine Define
-	HiLink forthDebug Debug
-	HiLink forthAssembler Include
-	HiLink forthCharOps Character
-	HiLink forthConversion String
-	HiLink forthForth Statement
-	HiLink forthVocs Statement
-	HiLink forthString String
-	HiLink forthComment Comment
+    " The default methods for highlighting. Can be overriden later.
+    HiLink forthTodo Todo
+    HiLink forthOperators Operator
+    HiLink forthMath Number
+    HiLink forthInteger Number
+    HiLink forthFloat Float
+    HiLink forthStack Special
+    HiLink forthRstack Special
+    HiLink forthFStack Special
+    HiLink forthSP Special
+    HiLink forthMemory Function
+    HiLink forthAdrArith Function
+    HiLink forthMemBlks Function
+    HiLink forthCond Conditional
+    HiLink forthLoop Repeat
+    HiLink forthColonDef Define
+    HiLink forthEndOfColonDef Define
+    HiLink forthDefine Define
+    HiLink forthDebug Debug
+    HiLink forthAssembler Include
+    HiLink forthCharOps Character
+    HiLink forthConversion String
+    HiLink forthForth Statement
+    HiLink forthVocs Statement
+    HiLink forthString String
+    HiLink forthComment Comment
 
-	delcommand HiLink
+    delcommand HiLink
 endif
 
 let b:current_syntax = "forth"
 
-" vim:ts=4:sw=4:nocindent:smartindent:
+" vim:ts=8:sw=4:nocindent:smartindent:

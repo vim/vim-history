@@ -1575,6 +1575,7 @@ ga_grow(gap, n)
 #if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(FEAT_PYTHON) \
 	|| defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL) \
 	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
+	|| defined(MSWIN_FIND_REPLACE) \
 	|| defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * Concatenate a string to a growarray which contains characters.
@@ -2027,8 +2028,8 @@ get_special_key_name(c, modifiers)
     if (IS_SPECIAL(c))
     {
 	for (i = 0; modifier_keys_table[i] != 0; i += MOD_KEYS_ENTRY_SIZE)
-	    if (       KEY2TERMCAP0(c) == modifier_keys_table[i + 1]
-		    && KEY2TERMCAP1(c) == modifier_keys_table[i + 2])
+	    if (       KEY2TERMCAP0(c) == (int)modifier_keys_table[i + 1]
+		    && KEY2TERMCAP1(c) == (int)modifier_keys_table[i + 2])
 	    {
 		modifiers |= modifier_keys_table[i];
 		c = TERMCAP2KEY(modifier_keys_table[i + 3],

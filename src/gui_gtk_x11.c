@@ -5565,7 +5565,7 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 	    TRUE,
 #ifdef FEAT_RIGHTLEFT
 	    /* vertical line should be on the right of current point */
-	    !(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+	    CURSOR_BAR_RIGHT ? FILL_X(gui.col + 1) - w :
 #endif
 	    FILL_X(gui.col),
 	    FILL_Y(gui.row) + gui.char_height - h,

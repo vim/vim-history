@@ -1,6 +1,6 @@
 #!/bin/sh
 # toolcheck -- check for tools that have severe bugs. Good that all the buggy
-#              tools identify by version numbers. This is the spirit of GNU :-)
+#	       tools identify by version numbers. This is the spirit of GNU :-)
 #
 # 24.7.95 jw.
 

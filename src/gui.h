@@ -316,8 +316,8 @@ typedef struct Gui
     GuiFont	ital_font;	    /* Italic font */
     GuiFont	boldital_font;	    /* Bold-Italic font */
 #else
-    int         font_can_bold;      /* Whether norm_font supports bold weight.
-                                     * The styled font variants are not used. */
+    int		font_can_bold;	    /* Whether norm_font supports bold weight.
+				     * The styled font variants are not used. */
 #endif
 
 #if defined(FEAT_MENU) && !defined(HAVE_GTK2)
@@ -403,7 +403,7 @@ typedef struct Gui
     GdkGC	*text_gc;	    /* cached GC for normal text */
 # ifdef HAVE_GTK2
     PangoContext     *text_context; /* the context used for all text */
-    PangoFont        *ascii_font;   /* cached font for ASCII strings */
+    PangoFont	     *ascii_font;   /* cached font for ASCII strings */
     PangoGlyphString *ascii_glyphs; /* cached code point -> glyph map */
 # endif
 

@@ -388,10 +388,10 @@ EXTERN int	sys_menu INIT(= FALSE);
 EXTERN int	updating_screen INIT(= FALSE);
 
 #ifdef FEAT_GUI
+# ifdef FEAT_MENU
 /* Menu item just selected, set by check_termcode() */
 EXTERN vimmenu_T	*current_menu;
 
-# ifdef FEAT_MENU
 /* Set to TRUE after adding/removing menus to ensure they are updated */
 EXTERN int force_menu_update INIT(= FALSE);
 # endif
@@ -636,7 +636,7 @@ EXTERN int lc_signal;		/* catched signal number, 0 when no was signal
 EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
 #endif
 
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) || defined(FEAT_POSTSCRIPT)
 /*
  * These flags are set based upon 'fileencoding'.
  * Note that "enc_utf8" is also set for "unicode", because the characters are
@@ -652,7 +652,9 @@ EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
 # define DBCS_CHTU	9950	/* euc-tw */
 # define DBCS_2BYTE	1	/* 2byte- */
 # define DBCS_DEBUG	-1
+#endif
 
+#ifdef FEAT_MBYTE
 EXTERN int	enc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
 						   DBCS encoding */
 EXTERN int	enc_unicode INIT(= 0);	/* 2: UCS-2 or UTF-16, 4: UCS-4 */

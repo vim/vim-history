@@ -1,6 +1,10 @@
 let encoding = &enc
-if encoding == ''
+if encoding == 'latin1'
+    if has("unix")
+	let encoding = 'iso-8859-8'
+    else
 	let encoding = 'cp1255'
+    endif
 endif
 
 if encoding == 'utf-8'

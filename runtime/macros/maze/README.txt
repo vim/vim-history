@@ -42,9 +42,9 @@ Thanks to antonyc@nntp-server.caltech.edu (Bill T. Cat) for maze.ansi.c.
 
 Any donations should be in unmarked small denomination bills :^)=.
 
-                   ACSnet:  gregm@otc.otca.oz.au
-Greg McFarlane       UUCP:  {uunet,mcvax}!otc.otca.oz.au!gregm
-|||| OTC ||         Snail:  OTC R&D GPO Box 7000, Sydney 2001, Australia
-                    Phone:  +61 2 287 3139    Fax: +61 2 287 3299
+		   ACSnet:  gregm@otc.otca.oz.au
+Greg McFarlane	     UUCP:  {uunet,mcvax}!otc.otca.oz.au!gregm
+|||| OTC ||	    Snail:  OTC R&D GPO Box 7000, Sydney 2001, Australia
+		    Phone:  +61 2 287 3139    Fax: +61 2 287 3299
 
 

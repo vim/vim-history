@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 20
+" Last Change:	2003 May 04
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -671,7 +671,7 @@ func! s:BMTruncName(fname)
       let left = substitute(name, pattern, '\1', '')
       let right = substitute(name, pattern, '\2', '')
       if strlen(left) + strlen(right) < len
-        let name = left . '...' . right
+	let name = left . '...' . right
       endif
     endif
   endif

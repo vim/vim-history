@@ -146,7 +146,7 @@ typedef int GtkWidget;
 # define CONVERT_TO_UTF8(String)				\
     ((output_conv.vc_type == CONV_NONE || (String) == NULL)	\
 	    ? (String)						\
-	    : string_convert(&output_conv, String, NULL))
+	    : string_convert(&output_conv, (String), NULL))
 
 # define CONVERT_TO_UTF8_FREE(String)				\
     ((String) = ((output_conv.vc_type == CONV_NONE)		\
@@ -156,7 +156,7 @@ typedef int GtkWidget;
 # define CONVERT_FROM_UTF8(String)				\
     ((input_conv.vc_type == CONV_NONE || (String) == NULL)	\
 	    ? (String)						\
-	    : string_convert(&input_conv, String, NULL))
+	    : string_convert(&input_conv, (String), NULL))
 
 # define CONVERT_FROM_UTF8_FREE(String)				\
     ((String) = ((input_conv.vc_type == CONV_NONE)		\
@@ -1225,11 +1225,11 @@ browse_destroy_cb(GtkWidget * widget)
 /*ARGSUSED*/
     char_u *
 gui_mch_browse(int saving,
-	       char_u * title,
-	       char_u * dflt,
-	       char_u * ext,
-	       char_u * initdir,
-	       char_u * filter)
+	       char_u *title,
+	       char_u *dflt,
+	       char_u *ext,
+	       char_u *initdir,
+	       char_u *filter)
 {
     GtkFileSelection *fs;	/* shortcut */
     char_u dirbuf[MAXPATHL];
@@ -1900,6 +1900,10 @@ split_button_string(char_u *button_string, int *n_buttons)
 	    }
 	    else if (*p == DLG_HOTKEY_CHAR)
 		*p = '_';
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p) - 1;
+#endif
 	}
 	array[count] = NULL; /* currently not relied upon, but doesn't hurt */
     }
@@ -2000,7 +2004,8 @@ dialog_add_buttons(GtkDialog *dialog, char_u *button_string)
      */
     for (index = n_buttons; index > 0; --index)
     {
-	const char *label;
+	char	*label;
+	char_u	*label8;
 
 	label = buttons[index - 1];
 	/*
@@ -2023,7 +2028,9 @@ dialog_add_buttons(GtkDialog *dialog, char_u *button_string)
 	    else if (button_equal(label, "No"))     label = GTK_STOCK_NO;
 	    else if (button_equal(label, "Cancel")) label = GTK_STOCK_CANCEL;
 	}
-	gtk_dialog_add_button(dialog, label, index);
+	label8 = CONVERT_TO_UTF8((char_u *)label);
+	gtk_dialog_add_button(dialog, (const gchar *)label8, index);
+	CONVERT_TO_UTF8_FREE(label8);
     }
 
     if (ok != NULL)

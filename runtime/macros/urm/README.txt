@@ -6,10 +6,10 @@ Getting started:
 
 type
 in your shell:	 vim urm<RETURN>
-in vim:	         :so urm.vim<RETURN>
-in vim:	         *	(to load the registers and boot the URM-machine :-)
-in vim:	         g      (for 'go') and watch the fun. Per default, 3 and 4
-                        are multiplied. Watch the Program counter, it is
+in vim:		 :so urm.vim<RETURN>
+in vim:		 *	(to load the registers and boot the URM-machine :-)
+in vim:		 g	(for 'go') and watch the fun. Per default, 3 and 4
+			are multiplied. Watch the Program counter, it is
 			visible as a komma moving around.
 
 This is a "standard URM" (Universal register machine)  interpreter. The URM

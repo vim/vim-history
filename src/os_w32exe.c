@@ -10,7 +10,7 @@
 /*
  * Windows GUI: main program (EXE) entry point:
  *
- * Ron Aaron <ron@mossbayeng.com> wrote this and  the DLL support code.
+ * Ron Aaron <ronaharon@yahoo.com> wrote this and  the DLL support code.
  */
 #include "vim.h"
 

@@ -2868,6 +2868,8 @@ add_long_to_buf(val, dst)
     }
 }
 
+static int get_long_from_buf __ARGS((char_u *buf, long_u *val));
+
 /*
  * Interpret the next string of bytes in buf as a long integer, with the most
  * significant byte first.  Note that it is assumed that buf has been through
@@ -2876,7 +2878,7 @@ add_long_to_buf(val, dst)
  * (between sizeof(long_u) and 2 * sizeof(long_u)), or -1 if not enough bytes
  * were present.
  */
-    int
+    static int
 get_long_from_buf(buf, val)
     char_u  *buf;
     long_u  *val;
@@ -3667,9 +3669,6 @@ check_termcode(max_offset, buf, buflen)
     char_u	string[MAX_KEY_CODE_LEN + 1];
     int		i, j;
     int		idx = 0;
-#ifdef FEAT_GUI
-    long_u	val;
-#endif
 #ifdef FEAT_MOUSE
 # if !defined(UNIX) || defined(FEAT_MOUSE_XTERM) || defined(FEAT_GUI)
     char_u	bytes[4];
@@ -4246,9 +4245,9 @@ check_termcode(max_offset, buf, buflen)
 		* Pp is the page coordinate of the locator position
 		*   encoded as an ASCII decimal value.
 		*   The page coordinate may be omitted if the locator is on
-		*   page one (the default).
+		*   page one (the default).  We ignore it anyway.
 		*/
-		int Pe, Pb, Pr, Pc /* , Pp */;
+		int Pe, Pb, Pr, Pc;
 
 		p = tp + slen;
 
@@ -4274,10 +4273,8 @@ check_termcode(max_offset, buf, buflen)
 		if (*p == ';')
 		{
 		    p++;
-		    /* Pp = getdigits(&p); */
+		    (void)getdigits(&p);
 		}
-		/* else
-		    Pp = 0; */
 		if (*p++ != '&')
 		    return -1;
 		if (*p++ != 'w')
@@ -4326,7 +4323,6 @@ check_termcode(max_offset, buf, buflen)
 		default: return -1; /* should never occur */
 		}
 
-		/* we ignore the Pp word */
 		mouse_col = Pc - 1;
 		mouse_row = Pr - 1;
 
@@ -4522,16 +4518,23 @@ check_termcode(max_offset, buf, buflen)
 	 * KE_FILLER followed by four bytes representing a long_u which is the
 	 * new value of the scrollbar.
 	 */
+# ifdef FEAT_MENU
 	else if (key_name[0] == (int)KS_MENU)
 	{
+	    long_u	val;
+
 	    num_bytes = get_long_from_buf(tp + slen, &val);
 	    if (num_bytes == -1)
 		return -1;
 	    current_menu = (vimmenu_T *)val;
 	    slen += num_bytes;
 	}
+# endif
+# ifndef USE_ON_FLY_SCROLL
 	else if (key_name[0] == (int)KS_VER_SCROLLBAR)
 	{
+	    long_u	val;
+
 	    /* Get the last scrollbar event in the queue of the same type */
 	    j = 0;
 	    for (i = 0; tp[j] == CSI && tp[j + 1] == KS_VER_SCROLLBAR
@@ -4558,6 +4561,8 @@ check_termcode(max_offset, buf, buflen)
 	}
 	else if (key_name[0] == (int)KS_HOR_SCROLLBAR)
 	{
+	    long_u	val;
+
 	    /* Get the last horiz. scrollbar event in the queue */
 	    j = 0;
 	    for (i = 0; tp[j] == CSI && tp[j + 1] == KS_HOR_SCROLLBAR
@@ -4574,7 +4579,9 @@ check_termcode(max_offset, buf, buflen)
 	    if (i == 0)		/* not enough characters to make one */
 		return -1;
 	}
+# endif /* !USE_ON_FLY_SCROLL */
 #endif /* FEAT_GUI */
+
 	/* Finally, add the special key code to our string */
 	if (key_name[0] == KS_KEY)
 	    string[new_slen++] = key_name[1];	/* from ":set <M-b>=xx" */

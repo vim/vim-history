@@ -5952,9 +5952,9 @@ vim_tempname(extra_char)
 	return NULL;
 #   endif
 #  endif
-# endif /* WIN3264 */
 
     return vim_strsave(itmp);
+# endif /* WIN3264 */
 #endif /* TEMPDIRNAMES */
 }
 

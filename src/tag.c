@@ -929,6 +929,37 @@ do_tags(eap)
 # define tag_fgets vim_fgets
 #endif
 
+#ifdef FEAT_TAG_BINS
+static int tag_strnicmp __ARGS((char_u *s1, char_u *s2, size_t len));
+
+/*
+ * Compare two strings, for length "len", ignoring case the ASCII way.
+ * return 0 for match, < 0 for smaller, > 0 for bigger
+ * Make sure case is folded to uppercase in comparison (like for 'sort -f')
+ */
+    static int
+tag_strnicmp(s1, s2, len)
+    char_u	*s1;
+    char_u	*s2;
+    size_t	len;
+{
+    int		i;
+
+    while (len > 0)
+    {
+	i = (int)TOUPPER_ASC(*s1) - (int)TOUPPER_ASC(*s2);
+	if (i != 0)
+	    return i;			/* this character different */
+	if (*s1 == NUL)
+	    break;			/* strings match until NUL */
+	++s1;
+	++s2;
+	--len;
+    }
+    return 0;				/* strings match */
+}
+#endif
+
 /*
  * find_tags() - search for tags in tags files
  *
@@ -1042,6 +1073,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 						/* find all matching tags */
     int		sort_error = FALSE;		/* tags file not sorted */
     int		linear;				/* do a linear search */
+    int		sortic = FALSE;			/* tag file sorted in nocase */
 #endif
     int		line_error = FALSE;		/* syntax error */
     int		has_re = (flags & TAG_REGEXP);	/* regexp used */
@@ -1127,6 +1159,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
  * When finding all matches, 'tagbsearch' is off, or there is no fixed string
  * to look for, ignore case right away to avoid going though the tags files
  * twice.
+ * When the tag file is case-fold sorted, it is either one or the other.
  * Only ignore case when TAG_NOIC not used or 'ignorecase' set.
  */
 #ifdef FEAT_TAG_BINS
@@ -1134,19 +1167,11 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 				   && (findall || patheadlen == 0 || !p_tbs));
     for (;;)
     {
-      linear = (regmatch.rm_ic || patheadlen == 0 || !p_tbs);
+      linear = (patheadlen == 0 || !p_tbs);
 #else
       regmatch.rm_ic = (p_ic || !noic);
 #endif
 
-#if 0	    /* debug message about binary or linear search */
-      if (linear)
-	  MSG(_("Linear tag search"));
-      else
-	  MSG(_("Binary tag search"));
-      ui_delay(2000, TRUE);
-      MSG("");
-#endif
       /*
        * Try tag file names from tags option one by one.
        */
@@ -1391,11 +1416,11 @@ line_read_in:
 		 * flag set.
 		 * For cscope, it's always linear.
 		 */
-#ifdef FEAT_CSCOPE
+# ifdef FEAT_CSCOPE
 		if (linear || use_cscope)
-#else
+# else
 		if (linear)
-#endif
+# endif
 		    state = TS_LINEAR;
 		else if (STRNCMP(lbuf, "!_TAG_", 6) > 0)
 		    state = TS_BINARY;
@@ -1404,6 +1429,12 @@ line_read_in:
 		    /* Check sorted flag */
 		    if (lbuf[18] == '1')
 			state = TS_BINARY;
+		    else if (lbuf[18] == '2')
+		    {
+			state = TS_BINARY;
+			sortic = TRUE;
+			regmatch.rm_ic = (p_ic || !noic);
+		    }
 		    else
 			state = TS_LINEAR;
 		}
@@ -1513,14 +1544,19 @@ line_read_in:
 		    /*
 		     * Simplistic check for unsorted tags file.
 		     */
-		    if ((int)tagp.tagname[0] < search_info.low_char
-			    || (int)tagp.tagname[0] > search_info.high_char)
+		    i = (int)tagp.tagname[0];
+		    if (sortic)
+			i = (int)TOUPPER_ASC(tagp.tagname[0]);
+		    if (i < search_info.low_char || i > search_info.high_char)
 			sort_error = TRUE;
 
 		    /*
 		     * Compare the current tag with the searched tag.
 		     */
-		    tagcmp = STRNCMP(tagp.tagname, pathead, cmplen);
+		    if (sortic)
+			tagcmp = tag_strnicmp(tagp.tagname, pathead, cmplen);
+		    else
+			tagcmp = STRNCMP(tagp.tagname, pathead, cmplen);
 
 		    /*
 		     * A match with a shorter tag means to search forward.
@@ -1549,7 +1585,11 @@ line_read_in:
 			if (search_info.curr_offset < search_info.high_offset)
 			{
 			    search_info.low_offset = search_info.curr_offset;
-			    search_info.low_char = tagp.tagname[0];
+			    if (sortic)
+				search_info.low_char =
+						 TOUPPER_ASC(tagp.tagname[0]);
+			    else
+				search_info.low_char = tagp.tagname[0];
 			    continue;
 			}
 		    }
@@ -1557,7 +1597,11 @@ line_read_in:
 			&& search_info.curr_offset != search_info.high_offset)
 		    {
 			search_info.high_offset = search_info.curr_offset;
-			search_info.high_char = tagp.tagname[0];
+			if (sortic)
+			    search_info.high_char =
+						 TOUPPER_ASC(tagp.tagname[0]);
+			else
+			    search_info.high_char = tagp.tagname[0];
 			continue;
 		    }
 
@@ -1905,8 +1949,9 @@ line_read_in:
 
 #ifdef FEAT_TAG_BINS
       /* stop searching when already did a linear search, or when
-       * TAG_NOIC used, and 'ignorecase' not set */
-      if (stop_searching || linear || (!p_ic && noic))
+       * TAG_NOIC used, and 'ignorecase' not set
+       * or tag file was case-fold sorted */
+      if (stop_searching || linear || (!p_ic && noic) || sortic)
 	  break;
 # ifdef FEAT_CSCOPE
       if (use_cscope)

@@ -253,3 +253,6 @@
 #define a_f_LAM_ALEF			0xfefc
 
 #define a_BYTE_ORDER_MARK		0xfeff
+
+/* Range of Arabic characters that might be shaped. */
+#define ARABIC_CHAR(c)		((c) >= a_HAMZA && (c) <= a_MINI_ALEF)

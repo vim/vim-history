@@ -66,8 +66,8 @@ syn match  OPLNumber		"\<\d\+\>"
 syn match  OPLNumber		"\<\d\+\.\d*\>"
 syn match  OPLNumber		"\.\d\+\>"
 
-syn region  OPLString	        start=+"+   end=+"+
-syn region  OPLComment	        start="REM[\t ]" end="$"
+syn region  OPLString		start=+"+   end=+"+
+syn region  OPLComment		start="REM[\t ]" end="$"
 syn match   OPLMathsOperator    "-\|=\|[:<>+\*^/\\]"
 
 " Define the default highlighting.

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2b.  Last change: 2003 Apr 27
+*version6.txt*  For Vim version 6.2c.  Last change: 2003 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5974,8 +5974,12 @@ This section is about improvements made between version 6.1 and 6.2.
 This is mainly a bug-fix release.  There are also a few new features.
 
 Main new features:
-- Support for GTK 2 (Daniel Elstner)
-- ":try" command and friends (Servatius Brandt)
+- Support for GTK 2. (Daniel Elstner)
+- Support for editing Arabic text. (Nadim Shaikli & Isam Bayazidi)
+- ":try" command and friends. (Servatius Brandt)
+- Support for the neXtaw GUI toolkit (mostly like Athena). (Alexey Froloff)
+- Cscope support for Win32. (Khorev Sergey)
+- Support for PostScript printing in various 8-bit encodings. (Mike Williams)
 
 
 Changed							*changed-6.2*
@@ -5989,6 +5993,16 @@ This is more consistent with how xxd is handled.
 The VisVim.dll file is installed in the top directory, next to gvimext.dll,
 instead of in a subdirectory "VisVim".  Fixes that NSIS was uninstalling it
 from the wrong directory.
+
+Removed the art indent file, it didn't do anything.
+
+submatch() returned line breaks with CR instead of LF.
+
+Changed the Win32 Makefiles to become more uniform and compile gvimext.dll.
+(Dan Sharp)
+
+'cindent': Align a "//" comment with a "//" comment in a previous line.
+(Helmut Stiegler)
 
 
 Added							*added-6.2*
@@ -6031,6 +6045,7 @@ New syntax files:
 	WildPackets EtherPeek Decoder (Christopher Shinn)
 	Spyce (Rimon Barr)
 	Resolv.conf (Radu Dineiu)
+	A65 (Clemens Kirchgatterer)
 
 New indent files:
 	Eiffel (David Clarke)
@@ -6071,7 +6086,7 @@ New color scheme:
 Arabic specific features. 'arabicshape', 'termbidi', 'arabic' and
 'righleftcmd' options.  (Nadim Shaikli & Isam Bayazidi)
 
-Support for neXtaw GUI toolkit.  Mostly like Athena. (Alexey Froloff)
+Support for neXtaw GUI toolkit, mostly like Athena. (Alexey Froloff)
 
 Win32: cscope support. (Khorev Sergey)
 
@@ -6098,6 +6113,32 @@ prototype.
 
 When selecting an item in the error window to jump to, take some effort to
 find an ordinary window to show the file in (not a preview window).
+
+Support for PostScript printing of various 8-bit encodings. (Mike Williams)
+
+inputdialog() accepts a third argument that is used when the dialog is
+cancelled.  Makes it possible to see a difference between cancelling and
+entering nothing.
+
+Included Aap recipes.  Can be used to update Vim to the latest version,
+building and installing.
+
+"/" option in 'cinoptions': extra indent for comment lines. (Helmut Stiegler)
+
+Vim variable "v:register" and functions setreg(), getreg() and getregtype().
+(Michael Geddes)
+
+"v" flag in 'cpoptions': Leave text on screen with backspace in Insert mode.
+(Phillip Vandry)
+
+Dosinst.exe also finds gvimext.dll in the "GvimExt" directory.  Useful when
+runing install in the "src" directory for testing.
+
+Support tag files that were sorted with case ignored. (Flemming Madsen)
+
+When completing a wildcard in a leading path element, as in "../*/Makefile",
+only the last part ("Makefile") was listed.  Support custom defined
+command line completion.  (Flemming Madsen)
 
 
 Fixed							*fixed-6.2*
@@ -6153,6 +6194,25 @@ gui_get_base_width(). (David Harrison)
 
 Using CTRL-R CTRL-P in Insert mode puts the '] mark in the wrong position.
 (Helmut Stiegler)
+
+When 'formatoptions' includes "awct" a non-comment wasn't auto-formatted.
+
+Using a "--cmd" argument more than 10 times caused a crash.
+
+DEC style mouse support didn't work if the page field is not empty.
+(Uribarri)
+
+"vim -l one two" did only set 'lisp' in the first file.  Vi does it for every
+file.
+
+":set tw<" didn't work.  Was checking for '^' instead of '<'.
+
+In ":hardcopy > %.ps" the "%" was not expanded to the current filename.
+
+Made ":redraw" also update the Visual area.
+
+When a not implemented command, such as ":perl", has wrong arguments the less
+important error was reported, giving the user the idea the command could work.
 
 
 Patch 6.1.001
@@ -7306,7 +7366,7 @@ Files:	    src/ex_docmd.c
 
 Patch 6.1.178
 Problem:    When 'expandtab' is set "r<C-V><Tab>" still expands the Tab.
-            (Bruce deVisser)
+	    (Bruce deVisser)
 Solution:   Replace with a literal Tab.
 Files:	    src/normal.c
 
@@ -8744,7 +8804,7 @@ Files:	    src/auto/configure,, src/configure.in
 Patch 6.1.394 (depends on 6.1.390)
 Problem:    The netbeans interface doesn't recognize multibyte glyph names.
 Solution:   Check the number of cells rather than bytes to decide
-            whether a glyph name is not a filename. (Daniel Elstner)
+	    whether a glyph name is not a filename. (Daniel Elstner)
 Files:	    src/netbeans.c
 
 Patch 6.1.395 (extra, depends on 6.1.369)

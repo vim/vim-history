@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
+*quickfix.txt*  For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -492,7 +492,7 @@ letter will not be detected.
 
 The "%p" conversion is normally followed by a "^".  It's used for compilers
 that output a line like: >
-            ^
+	    ^
 or >
    ---------^
 to indicate the column of the error.  This is to be used in a multi-line error

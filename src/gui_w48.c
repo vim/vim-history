@@ -951,10 +951,13 @@ gui_mch_def_colors()
     int
 gui_mch_open(void)
 {
+#ifndef SW_SHOWDEFAULT
+# define SW_SHOWDEFAULT 10	/* Borland 5.0 doesn't have it */
+#endif
     /* Actually open the window, if not already visible
      * (may be done already in gui_mch_set_shellsize) */
     if (!IsWindowVisible(s_hwnd))
-        ShowWindow(s_hwnd, SW_SHOWDEFAULT);
+	ShowWindow(s_hwnd, SW_SHOWDEFAULT);
 
     return OK;
 }
@@ -1431,7 +1434,7 @@ gui_mch_draw_part_cursor(
     rc.left =
 #ifdef FEAT_RIGHTLEFT
 		/* vertical line should be on the right of current point */
-		!(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+		CURSOR_BAR_RIGHT ? FILL_X(gui.col + 1) - w :
 #endif
 		    FILL_X(gui.col);
     rc.top = FILL_Y(gui.row) + gui.char_height - h;
@@ -2860,7 +2863,7 @@ _OnScroll(
     int		dragging = FALSE;
     int		dont_scroll_save = dont_scroll;
 #ifndef WIN3264
-    int               nPos;
+    int		nPos;
 #else
     SCROLLINFO	si;
 

@@ -1,7 +1,7 @@
 INSTALLvms.txt - Installation of Vim on OpenVMS
 
 Maintainer:   Zoltan Arpadffy <arpadffy@polarfox.com>
-Last change:  2003 Apr 25
+Last change:  2003 May 04
 
 This file contains instructions for compiling Vim on Openvms.
 If you already have an executable version of Vim, you don't need this.
@@ -74,90 +74,90 @@ from CVS mirror ftp://ftp.polarhome.com/pub/cvs/SOURCE/
 
 2.2  Edit vim-X.X/src/Make_vms.mms to customize your Vim. Options are:
 
-        Parameter name  : MODEL
-        Description     : Build model selection
-        Options:        : TINY    - Almost no features enabled, not even
+	Parameter name	: MODEL
+	Description	: Build model selection
+	Options:	: TINY	  - Almost no features enabled, not even
 			  multiple windows
-                          SMALL   - Few features enabled, as basic as possible
-                          NORMAL  - A default selection of features enabled
-                          BIG     - Many features enabled, as rich as possible.
+			  SMALL   - Few features enabled, as basic as possible
+			  NORMAL  - A default selection of features enabled
+			  BIG	  - Many features enabled, as rich as possible.
 			  (OpenVMS default)
-                          HUGE    - All possible featues enabled.
-                          Uncommented - will default to BIG
-        Default         : MODEL = BIG
+			  HUGE	  - All possible featues enabled.
+			  Uncommented - will default to BIG
+	Default		: MODEL = BIG
 
-        Parameter name  : GUI
-        Description     : GUI or terminal mode executable
-        Options:        : YES - GUI executable
-                          Uncommented - char only
-        Default         : GUI = YES
+	Parameter name	: GUI
+	Description	: GUI or terminal mode executable
+	Options:	: YES - GUI executable
+			  Uncommented - char only
+	Default		: GUI = YES
 
-	Parameter name  : GTK
-        Description     : Enable GTK in GUI mode.
-                          It enables features as toolbar etc.
-        Options:        : YES - GTK executable
-                          Uncommented - without GTK
-        Default         : Uncommented
+	Parameter name	: GTK
+	Description	: Enable GTK in GUI mode.
+			  It enables features as toolbar etc.
+	Options:	: YES - GTK executable
+			  Uncommented - without GTK
+	Default		: Uncommented
 
-        Parameter name  : DECC
-        Description     : Compiler selection
-        Options:        : YES - DECC compiler
-                          Uncommented - VAXC compiler
-        Default         : DECC = YES
+	Parameter name	: DECC
+	Description	: Compiler selection
+	Options:	: YES - DECC compiler
+			  Uncommented - VAXC compiler
+	Default		: DECC = YES
 
-        Parameter name  : CCVER
-        Description     : Compiler version with :ver command
-        Options:        : YES - Compiler version info will be added
-                          Uncommented - will not be added
-        Default         : CCVER = YES
+	Parameter name	: CCVER
+	Description	: Compiler version with :ver command
+	Options:	: YES - Compiler version info will be added
+			  Uncommented - will not be added
+	Default		: CCVER = YES
 
-        Parameter name  : DEBUG
-        Description     : Building a debug version
-        Options:        : YES - debug version will be built
-                          Uncommented - building normal executable
-        Default         : Uncommented
+	Parameter name	: DEBUG
+	Description	: Building a debug version
+	Options:	: YES - debug version will be built
+			  Uncommented - building normal executable
+	Default		: Uncommented
 
-        Parameter name  : VIM_TCL
-        Description     : Add Tcl support
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+	Parameter name	: VIM_TCL
+	Description	: Add Tcl support
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
-        Parameter name  : VIM_PERL
-        Description     : Add Perl support
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+	Parameter name	: VIM_PERL
+	Description	: Add Perl support
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
-        Parameter name  : VIM_PYTHON
-        Description     : Add Python support
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+	Parameter name	: VIM_PYTHON
+	Description	: Add Python support
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
 
-        Parameter name  : VIM_XIM
-        Description     : X Input Method. For entering special languages
+	Parameter name	: VIM_XIM
+	Description	: X Input Method. For entering special languages
 			  like chinese and Japanese. Please define just
 			  one: VIM_XIM or VIM_HANGULIN
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
-        Parameter name  : VIM_HANGULIN
-        Description     : Internal Hangul input method. GUI only.
-                          Please define just one: VIM_XIM or VIM_HANGULIN
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+	Parameter name	: VIM_HANGULIN
+	Description	: Internal Hangul input method. GUI only.
+			  Please define just one: VIM_XIM or VIM_HANGULIN
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
-        Parameter name  : VIM_TAG_ANYWHITE
-        Description     : Allow any white space to separate the fields in a
+	Parameter name	: VIM_TAG_ANYWHITE
+	Description	: Allow any white space to separate the fields in a
 			  tags file
-                          When not defined, only a TAB is allowed.
-        Options:        : YES - Build with support
-                          Uncommented - build without support.
-        Default         : Uncommented
+			  When not defined, only a TAB is allowed.
+	Options:	: YES - Build with support
+			  Uncommented - build without support.
+	Default		: Uncommented
 
      You can edit the *_INC and *_LIB qualifiers, but it is really
      not recommended for beginners.
@@ -166,19 +166,19 @@ from CVS mirror ftp://ftp.polarhome.com/pub/cvs/SOURCE/
 
 3.1. If you have MSS on your system, the command
 
-        mms /descrip=Make_vms.mms
+	mms /descrip=Make_vms.mms
 
      will start building your own customized version of Vim.
      The adequate command for mmk is:
 
-        mmk /descrip=Make_vms.mms
+	mmk /descrip=Make_vms.mms
 
      NOTE: Because of empty /auto/config.h (needed for Unix configure) build
      will fail with very strange messages. Therefore before building, it is
      recommended to make one clean up, to prepare everything for OpenVMS
      development. The command is:
 
-        mms /descrip=Make_vms.mms clean
+	mms /descrip=Make_vms.mms clean
 
 4. Compilation VAXC
 
@@ -186,7 +186,7 @@ from CVS mirror ftp://ftp.polarhome.com/pub/cvs/SOURCE/
      semantics, therefore you have to use a converter program what will do the
      lion part of the job.
 
-        @os_vms_fix.com *.c *.h <.proto>*.pro
+	@os_vms_fix.com *.c *.h <.proto>*.pro
 
      more information can be found in os_vms_fix.com file itself.
 
@@ -221,7 +221,7 @@ from CVS mirror ftp://ftp.polarhome.com/pub/cvs/SOURCE/
 
 6.3 Define logicals VIM
 
-        define/nolog VIM device:[leading-path-here.vim]
+	define/nolog VIM device:[leading-path-here.vim]
 
      to get vim.exe to find its document, filetype, and syntax files.
 
@@ -272,13 +272,13 @@ from CVS mirror ftp://ftp.polarhome.com/pub/cvs/SOURCE/
 
 .IFDEF VIM_PERL
 perl_env :
-        -@ write sys$output "creating OS_VMS_PERL.OPT file."
-        -@ open/write opt_file OS_VMS_PERL.OPT
-        -@ write opt_file "PERLSHR /share"
-        -@ close opt_file
+	-@ write sys$output "creating OS_VMS_PERL.OPT file."
+	-@ open/write opt_file OS_VMS_PERL.OPT
+	-@ write opt_file "PERLSHR /share"
+	-@ close opt_file
 .ELSE
 perl_env :
-        -@ !
+	-@ !
 .ENDIF
 
 

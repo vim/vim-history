@@ -4,7 +4,7 @@
 # When       Who       What
 # 1999-08-01 Anon      Original VisVim.dsp
 # 2001-08-08 W.Briscoe Back-ported to a condensed VC4 Makefile
-#                      Reduced inter-dependency of Release and Debug builds.
+#		       Reduced inter-dependency of Release and Debug builds.
 #
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102

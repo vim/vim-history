@@ -3076,7 +3076,18 @@ ex_hardcopy(eap)
 
 # ifdef FEAT_POSTSCRIPT
     if (*eap->arg == '>')
+    {
+	char_u	*errormsg = NULL;
+
+	/* Expand things like "%.ps". */
+	if (expand_filename(eap, eap->cmdlinep, &errormsg) == FAIL)
+	{
+	    if (errormsg != NULL)
+		EMSG(errormsg);
+	    return;
+	}
 	settings.outfile = skipwhite(eap->arg + 1);
+    }
     else if (*eap->arg != NUL)
 	settings.arguments = eap->arg;
 # endif
@@ -3519,30 +3530,45 @@ static struct prt_ps_font_S prt_ps_font =
     {"Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique"}
 };
 
-#define PRT_RESOURCE_PROLOG		"VIM-Prolog 1.2 0"
+struct prt_ps_resource_S
+{
+    char_u  name[64];
+    char_u  filename[MAXPATHL + 1];
+    int     type;
+    char_u  title[256];
+    char_u  version[256];
+};
 
-#if defined(WIN32)
-#define PRT_RESOURCE_ENCODING		"VIM-Encoding-Windows 1.0 0"
-#define PRT_RESOURCE_ENCODING_FILE	"evwin.ps"
-#else /* !WIN32 */
-#if defined(MACOS)
-#define PRT_RESOURCE_ENCODING		"VIM-Encoding-Macintosh 1.0 0"
-#define PRT_RESOURCE_ENCODING_FILE	"evmac.ps"
-#else /* !MACOS */
-#if defined(VMS)
-#define PRT_RESOURCE_ENCODING		"VIM-Encoding-VMS 1.0 0"
-#define PRT_RESOURCE_ENCODING_FILE	"evvms.ps"
-#else /* !VMS */
-#if defined(EBCDIC)
-#define PRT_RESOURCE_ENCODING		"VIM-Encoding-EBCDIC 1.0 0"
-#define PRT_RESOURCE_ENCODING_FILE	"evebcdic.ps"
-#else /* !EBCDIC */
-#define PRT_RESOURCE_ENCODING		"VIM-Encoding-ISOLatin1 1.0 0"
-#define PRT_RESOURCE_ENCODING_FILE	"eviso.ps"
-#endif /* !EBCDIC */
-#endif /* !VMS */
-#endif /* !MACOS */
-#endif /* !WIN32 */
+/* Types of PS resource file currently used */
+#define PRT_RESOURCE_TYPE_PROCSET   (0)
+#define PRT_RESOURCE_TYPE_ENCODING  (1)
+
+/* The PS prolog file version number has to match - if the prolog file is
+ * updated, increment the number in the file and here.  Version checking was
+ * added as of VIM 6.2.
+ * Table of VIM and prolog versions:
+ *
+ * VIM      Prolog
+ * 6.2      1.3
+ */
+#define PRT_PROLOG_VERSION  ((char_u *)"1.3")
+
+/* String versions of PS resource types - indexed by constants above so don't
+ * re-order!
+ */
+static char *resource_types[] =
+{
+    "procset",
+    "encoding"
+};
+
+/* Strings to look for in a PS resource file */
+#define PRT_RESOURCE_HEADER	    "%!PS-Adobe-"
+#define PRT_RESOURCE_RESOURCE	    "Resource-"
+#define PRT_RESOURCE_PROCSET	    "ProcSet"
+#define PRT_RESOURCE_ENCODING	    "Encoding"
+#define PRT_RESOURCE_TITLE	    "%%Title:"
+#define PRT_RESOURCE_VERSION	    "%%Version:"
 
 static void prt_write_file_raw_len __ARGS((char_u *buffer, int bytes));
 static void prt_write_file __ARGS((char_u *buffer));
@@ -3550,11 +3576,15 @@ static void prt_write_file_len __ARGS((char_u *buffer, int bytes));
 static void prt_write_string __ARGS((char *s));
 static void prt_write_int __ARGS((int i));
 static void prt_write_boolean __ARGS((int b));
-static void prt_def_font __ARGS((char *new_name, int height, char *font));
+static void prt_def_font __ARGS((char *new_name, char *encoding, int height, char *font));
 static void prt_real_bits __ARGS((double real, int precision, int *pinteger, int *pfraction));
 static void prt_write_real __ARGS((double val, int prec));
 static void prt_def_var __ARGS((char *name, double value, int prec));
 static void prt_flush_buffer __ARGS((void));
+static void prt_resource_name __ARGS((char_u *filename));
+static int prt_find_resource __ARGS((char *name, struct prt_ps_resource_S *resource));
+static int prt_open_resource __ARGS((struct prt_ps_resource_S *resource));
+static int prt_check_resource __ARGS((struct prt_ps_resource_S *resource, char_u *version));
 static void prt_dsc_start __ARGS((void));
 static void prt_dsc_noarg __ARGS((char *comment));
 static void prt_dsc_textline __ARGS((char *comment, char *text));
@@ -3568,7 +3598,7 @@ static void prt_page_margins __ARGS((double width, double height, double *left, 
 static void prt_font_metrics __ARGS((int font_scale));
 static int prt_get_cpl __ARGS((void));
 static int prt_get_lpp __ARGS((void));
-static int prt_add_resource __ARGS((char *type, char *name, char *file));
+static int prt_add_resource __ARGS((struct prt_ps_resource_S *resource));
 
 /*
  * Variables for the output PostScript file.
@@ -3632,6 +3662,10 @@ static int prt_collate;
 static char_u prt_line_buffer[257];
 static garray_T prt_ps_buffer;
 
+# ifdef FEAT_MBYTE
+static int prt_do_conv;
+static vimconv_T prt_conv;
+# endif
 
     static void
 prt_write_file_raw_len(buffer, bytes)
@@ -3702,12 +3736,13 @@ prt_write_boolean(b)
  * Write a line to define the font.
  */
     static void
-prt_def_font(new_name, height, font)
+prt_def_font(new_name, encoding, height, font)
     char	*new_name;
+    char	*encoding;
     int		height;
     char	*font;
 {
-    sprintf((char *)prt_line_buffer, "/_%s EV /%s ref\n", new_name, font);
+    sprintf((char *)prt_line_buffer, "/_%s /VIM-%s /%s ref\n", new_name, encoding, font);
     prt_write_file(prt_line_buffer);
     sprintf((char *)prt_line_buffer, "/%s %d /_%s ffs\n",
 						    new_name, height, new_name);
@@ -3866,6 +3901,185 @@ prt_flush_buffer()
     }
 }
 
+static char_u *resource_filename;
+
+    static void
+prt_resource_name(filename)
+    char_u  *filename;
+{
+    if (STRLEN(filename) >= MAXPATHL)
+	*resource_filename = NUL;
+    else
+	STRCPY(resource_filename, filename);
+}
+
+    static int
+prt_find_resource(name, resource)
+    char	*name;
+    struct prt_ps_resource_S *resource;
+{
+    char_u	buffer[MAXPATHL + 1];
+
+    STRCPY(resource->name, name);
+    /* Look for named resource file in runtimepath */
+    STRCPY(buffer, "print");
+    add_pathsep(buffer);
+    STRCAT(buffer, name);
+    STRCAT(buffer, ".ps");
+    resource_filename = resource->filename;
+    *resource_filename = NUL;
+    return (do_in_runtimepath(buffer, FALSE, prt_resource_name)
+	    && resource->filename[0] != NUL);
+}
+
+/* PS CR and LF characters have platform independent values */
+#define PSLF  (0x0a)
+#define PSCR  (0x0d)
+
+/* Very simple hand crafted parser to get the type, title, and version number of
+ * a PS resource file so the file details can be added to the DSC header
+ * comments. */
+    static int
+prt_open_resource(resource)
+    struct prt_ps_resource_S *resource;
+{
+    FILE	*fd_resource;
+    char_u	buffer[128];
+    char_u	*ch = buffer;
+    char_u	*ch2;
+
+    fd_resource = mch_fopen((char *)resource->filename, READBIN);
+    if (fd_resource == NULL)
+    {
+	EMSG2(_("E456: Can't open file \"%s\""), resource->filename);
+	return FALSE;
+    }
+    vim_memset(buffer, NUL, sizeof(buffer));
+
+    /* Parse first line to ensure valid resource file */
+    (void)fread((char *)buffer, sizeof(char_u), sizeof(buffer),
+								 fd_resource);
+    if (ferror(fd_resource))
+    {
+	EMSG2(_("E457: Can't read PostScript resource file \"%s\""),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+
+    if (STRNCMP(ch, PRT_RESOURCE_HEADER, STRLEN(PRT_RESOURCE_HEADER)) != 0)
+    {
+	EMSG2(_("E618: file \"%s\" is not a PostScript resource file"),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+
+    /* Skip over any version numbers and following ws */
+    ch += STRLEN(PRT_RESOURCE_HEADER);
+    while (!isspace(*ch))
+	ch++;
+    while (isspace(*ch))
+	ch++;
+
+    if (STRNCMP(ch, PRT_RESOURCE_RESOURCE, STRLEN(PRT_RESOURCE_RESOURCE)) != 0)
+    {
+	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+    ch += STRLEN(PRT_RESOURCE_RESOURCE);
+
+    /* Decide type of resource in the file */
+    if (STRNCMP(ch, PRT_RESOURCE_PROCSET, STRLEN(PRT_RESOURCE_PROCSET)) == 0)
+    {
+	resource->type = PRT_RESOURCE_TYPE_PROCSET;
+	ch += STRLEN(PRT_RESOURCE_PROCSET);
+    }
+    else if (STRNCMP(ch, PRT_RESOURCE_ENCODING, STRLEN(PRT_RESOURCE_ENCODING)) == 0)
+    {
+	resource->type = PRT_RESOURCE_TYPE_ENCODING;
+	ch += STRLEN(PRT_RESOURCE_ENCODING);
+    }
+    else
+    {
+	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+
+    /* Consume up to and including the CR/LF/CR_LF */
+    while (*ch != PSCR && *ch != PSLF)
+	ch++;
+    while (*ch == PSCR || *ch == PSLF)
+	ch++;
+
+    /* Match %%Title: */
+    if (STRNCMP(ch, PRT_RESOURCE_TITLE, STRLEN(PRT_RESOURCE_TITLE)) != 0)
+    {
+	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+    ch += STRLEN(PRT_RESOURCE_TITLE);
+
+    /* Skip ws after %%Title: */
+    while (isspace(*ch))
+	ch++;
+
+    /* Copy up to the CR/LF/CR_LF */
+    ch2 = resource->title;
+    while (*ch != PSCR && *ch != PSLF)
+	*ch2++ = *ch++;
+    *ch2 = '\0';
+    while (*ch == PSCR || *ch == PSLF)
+	ch++;
+
+    /* Match %%Version: */
+    if (STRNCMP(ch, PRT_RESOURCE_VERSION, STRLEN(PRT_RESOURCE_VERSION)) != 0)
+    {
+	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
+		resource->filename);
+	fclose(fd_resource);
+	return FALSE;
+    }
+    ch += STRLEN(PRT_RESOURCE_VERSION);
+
+    /* Skip ws after %%Version: */
+    while (isspace(*ch))
+	ch++;
+
+    /* Copy up to the CR/LF/CR_LF */
+    ch2 = resource->version;
+    while (*ch != PSCR && *ch != PSLF)
+	*ch2++ = *ch++;
+    *ch2 = '\0';
+
+    fclose(fd_resource);
+
+    return TRUE;
+}
+
+    static int
+prt_check_resource(resource, version)
+    struct prt_ps_resource_S *resource;
+    char_u  *version;
+{
+    /* Version number m.n should match, the revision number does not matter */
+    if (STRNCMP(resource->version, version, STRLEN(version)))
+    {
+	EMSG2(_("E621: \"%s\" resource file has wrong version"),
+		resource->name);
+	return FALSE;
+    }
+
+    /* Other checks to be added as needed */
+    return TRUE;
+}
+
     static void
 prt_dsc_start()
 {
@@ -4012,6 +4226,13 @@ prt_dsc_docmedia(paper_name, width, height, weight, colour, type)
     void
 mch_print_cleanup()
 {
+#ifdef FEAT_MBYTE
+    if (prt_do_conv)
+    {
+	convert_setup(&prt_conv, NULL, NULL);
+	prt_do_conv = FALSE;
+    }
+#endif
     if (prt_ps_fd != NULL)
     {
 	fclose(prt_ps_fd);
@@ -4339,31 +4560,26 @@ mch_print_init(psettings, jobname, forceit)
 }
 
     static int
-prt_add_resource(type, name, file)
-    char	*type;
-    char	*name;
-    char	*file;
+prt_add_resource(resource)
+    struct prt_ps_resource_S *resource;
 {
     FILE*	fd_resource;
-    char_u	resource_buffer[128];
-    char_u	resource_filename[MAXPATHL + 1];
+    char_u	resource_buffer[512];
     char	*resource_name[1];
     size_t	bytes_read;
 
-#ifdef COLON_AS_PATHSEP
-    sprintf((char *)resource_buffer, "$VIMRUNTIME:%s", file); /* ak */
-#else
-    sprintf((char *)resource_buffer, "$VIMRUNTIME/%s", file);
-#endif
-    expand_env(resource_buffer, resource_filename, MAXPATHL);
-    fd_resource = mch_fopen((char *)resource_filename, READBIN);
+    fd_resource = mch_fopen((char *)resource->filename, READBIN);
     if (fd_resource == NULL)
     {
-	EMSG2(_("E456: Can't open file \"%s\""), resource_filename);
+	EMSG2(_("E456: Can't open file \"%s\""), resource->filename);
 	return FALSE;
     }
-    resource_name[0] = name;
-    prt_dsc_resources("BeginResource", type, 1, resource_name);
+    resource_name[0] = (char *)resource->title;
+    prt_dsc_resources("BeginResource",
+			    resource_types[resource->type], 1, resource_name);
+
+    prt_dsc_textline("BeginDocument", (char *)resource->filename);
+
     for (;;)
     {
 	bytes_read = fread((char *)resource_buffer, sizeof(char_u),
@@ -4371,7 +4587,7 @@ prt_add_resource(type, name, file)
 	if (ferror(fd_resource))
 	{
 	    EMSG2(_("E457: Can't read PostScript resource file \"%s\""),
-							    resource_filename);
+							    resource->filename);
 	    fclose(fd_resource);
 	    return FALSE;
 	}
@@ -4385,6 +4601,8 @@ prt_add_resource(type, name, file)
 	}
     }
     fclose(fd_resource);
+
+    prt_dsc_noarg("EndDocument");
 
     prt_dsc_noarg("EndResource");
 
@@ -4403,6 +4621,13 @@ mch_print_begin(psettings)
     double      right;
     double      top;
     double      bottom;
+    struct prt_ps_resource_S res_prolog;
+    struct prt_ps_resource_S res_encoding;
+    char_u      buffer[256];
+    char_u      *p_encoding;
+#ifdef FEAT_MBYTE
+    int		props;
+#endif
 
     /*
      * PS DSC Header comments - no PS code!
@@ -4461,9 +4686,76 @@ mch_print_begin(psettings)
 				(double)0, NULL, NULL);
     prt_dsc_resources("DocumentNeededResources", "font", 4,
 						     prt_ps_font.ps_fontname);
-    resource[0] = PRT_RESOURCE_PROLOG;
+
+    /* Search for external resources we supply */
+    if (!prt_find_resource("prolog", &res_prolog))
+    {
+	EMSG(_("E456: Can't find PostScript resource file \"prolog\""));
+	return FALSE;
+    }
+    if (!prt_open_resource(&res_prolog))
+	return FALSE;
+    if (!prt_check_resource(&res_prolog, PRT_PROLOG_VERSION))
+	return FALSE;
+    /* Find an encoding to use for printing.
+     * Check 'printencoding'. If not set or not found, then use 'encoding'. If
+     * that cannot be found then default to "latin1".
+     * Note: VIM specific encoding header is always skipped.
+     */
+#ifdef FEAT_MBYTE
+    props = enc_canon_props(p_enc);
+#endif
+    p_encoding = enc_skip(p_penc);
+    if (*p_encoding == NUL
+	    || !prt_find_resource((char *)p_encoding, &res_encoding))
+    {
+	/* 'printencoding' not set or not supported - find alternate */
+#ifdef FEAT_MBYTE
+	p_encoding = enc_skip(p_enc);
+	if (!(props & ENC_8BIT)
+		|| !prt_find_resource((char *)p_encoding, &res_encoding))
+	{
+	    /* 8-bit 'encoding' is not supported */
+#endif
+	    /* Use latin1 as default printing encoding */
+	    p_encoding = (char_u *)"latin1";
+	    if (!prt_find_resource((char *)p_encoding, &res_encoding))
+	    {
+		EMSG2(_("E456: Can't find PostScript resource file \"%s\""),
+			p_encoding);
+		return FALSE;
+	    }
+#ifdef FEAT_MBYTE
+	}
+#endif
+    }
+    if (!prt_open_resource(&res_encoding))
+	return FALSE;
+    /* For the moment there are no checks on encoding resource files to perform */
+#ifdef FEAT_MBYTE
+    /* Set up encoding conversion if starting from multi-byte */
+    props = enc_canon_props(p_enc);
+    if (!(props & ENC_8BIT))
+    {
+	if (FAIL == convert_setup(&prt_conv, p_enc, p_encoding))
+	{
+	    EMSG2(_("E620: Unable to convert from multi-byte to \"%s\" encoding"),
+		    p_encoding);
+	    return FALSE;
+	}
+	prt_do_conv = TRUE;
+    }
+#endif
+
+    /* List resources supplied */
+    resource[0] = (char *)buffer;
+    STRCPY(buffer, res_prolog.title);
+    STRCAT(buffer, " ");
+    STRCAT(buffer, res_prolog.version);
     prt_dsc_resources("DocumentSuppliedResources", "procset", 1, resource);
-    resource[0] = PRT_RESOURCE_ENCODING;
+    STRCPY(buffer, res_encoding.title);
+    STRCAT(buffer, " ");
+    STRCAT(buffer, res_encoding.version);
     prt_dsc_resources(NULL, "encoding", 1, resource);
     prt_dsc_requirements(prt_duplex, prt_tumble, prt_collate,
 #ifdef FEAT_SYN_HL
@@ -4492,12 +4784,11 @@ mch_print_begin(psettings)
     prt_dsc_noarg("BeginProlog");
 
     /* For now there is just the one procset to be included in the PS file. */
-    if (!prt_add_resource("procset", PRT_RESOURCE_PROLOG, "procset.ps"))
+    if (!prt_add_resource(&res_prolog))
 	return FALSE;
 
     /* There will be only one font encoding to be included in the PS file. */
-    if (!prt_add_resource("encoding", PRT_RESOURCE_ENCODING,
-						    PRT_RESOURCE_ENCODING_FILE))
+    if (!prt_add_resource(&res_encoding))
 	return FALSE;
 
     prt_dsc_noarg("EndProlog");
@@ -4523,19 +4814,19 @@ mch_print_begin(psettings)
     /* Font resource inclusion and definition */
     prt_dsc_resources("IncludeResource", "font", 1,
 				 &prt_ps_font.ps_fontname[PRT_PS_FONT_ROMAN]);
-    prt_def_font("F0", (int)prt_line_height,
+    prt_def_font("F0", (char *)p_encoding, (int)prt_line_height,
 				  prt_ps_font.ps_fontname[PRT_PS_FONT_ROMAN]);
     prt_dsc_resources("IncludeResource", "font", 1,
 				  &prt_ps_font.ps_fontname[PRT_PS_FONT_BOLD]);
-    prt_def_font("F1", (int)prt_line_height,
+    prt_def_font("F1", (char *)p_encoding, (int)prt_line_height,
 				   prt_ps_font.ps_fontname[PRT_PS_FONT_BOLD]);
     prt_dsc_resources("IncludeResource", "font", 1,
 			       &prt_ps_font.ps_fontname[PRT_PS_FONT_OBLIQUE]);
-    prt_def_font("F2", (int)prt_line_height,
+    prt_def_font("F2", (char *)p_encoding, (int)prt_line_height,
 				prt_ps_font.ps_fontname[PRT_PS_FONT_OBLIQUE]);
     prt_dsc_resources("IncludeResource", "font", 1,
 			   &prt_ps_font.ps_fontname[PRT_PS_FONT_BOLDOBLIQUE]);
-    prt_def_font("F3", (int)prt_line_height,
+    prt_def_font("F3", (char *)p_encoding, (int)prt_line_height,
 			    prt_ps_font.ps_fontname[PRT_PS_FONT_BOLDOBLIQUE]);
 
     /* Misc constant vars used for underlining and background rects */
@@ -4730,14 +5021,20 @@ mch_print_text_out(p, len)
 	prt_attribute_change = FALSE;
     }
 
+#ifdef FEAT_MBYTE
+    if (prt_do_conv)
+    {
+	/* Convert from multi-byte to 8-bit encoding */
+	p = string_convert(&prt_conv, p, &len);
+	if (p == NULL)
+	    p = (char_u *)"";
+    }
+#endif
     /* Add next character to buffer of characters to output.
      * Note: One printed character may require several PS characters to
      * represent it, but we only count them as one printed character.
      */
     ch = *p;
-    /* Not handing multi-byte just yet, convert char to a blank for now */
-    if (len > 1)
-	ch = ' ';
     if (ch < 32 || ch == '(' || ch == ')' || ch == '\\')
     {
 	/* Convert non-printing characters to either their escape or octal
@@ -4772,6 +5069,13 @@ mch_print_text_out(p, len)
     }
     else
     ga_append(&prt_ps_buffer, ch);
+
+#ifdef FEAT_MBYTE
+    /* Need to free any translated characters */
+    if (prt_do_conv && (*p != NUL))
+	vim_free(p);
+#endif
+
     prt_text_count++;
     prt_pos_x += prt_char_width;
 

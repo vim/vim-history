@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.2b.  Last change: 2003 Apr 26
+*starting.txt*  For Vim version 6.2c.  Last change: 2003 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -173,8 +173,9 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 			vim  -c "set ff=dos"  -c wq  mine.mak
 <
 		Note: You can use up to 10 "+" or "-c" arguments in a Vim
-		command.  They are executed in the order given. {Vi only
-		allows one command}
+		command.  They are executed in the order given.  A "-S"
+		argument counts as a "-c" argument as well.
+		{Vi only allows one command}
 
 --cmd {command}						*--cmd*
 		{command} will be executed before processing any vimrc file.
@@ -187,6 +188,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		This is an easy way to do the equivalent of: >
 			-c "source {file}"
 <		It can be mixed with "-c" arguments and repeated like "-c".
+		The limit of 10 "-c" arguments applies here as well.
 		{file} cannot start with a "-".
 		{not in Vi}
 

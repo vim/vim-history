@@ -1,5 +1,5 @@
 " Vim Keymap file for hebrew
-" Maintainer  : Ron Aaron <ron@mossbayeng.com>
+" Maintainer  : Ron Aaron <ronaharon@yahoo.com>
 " Last Updated: Wed 28 Feb 2001 21:28:51
 " This is the standard Israeli keyboard layout with (my nonstandard locations
 " for) niqud, for utf:

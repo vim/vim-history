@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
-" URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2003 Apr 25
+" URL:		http://www.fleiner.com/vim/syntax/java.vim
+" Last Change:  2003 May 04
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -35,27 +35,27 @@ JavaHiLink javaError2 javaError
 
 
 " keyword definitions
-syn keyword javaExternal        import native package
-syn keyword javaError           goto const
-syn keyword javaConditional     if else switch
-syn keyword javaRepeat          while for do
-syn keyword javaBoolean         true false
-syn keyword javaConstant        null
-syn keyword javaTypedef         this super
-syn keyword javaOperator        new instanceof
-syn keyword javaType            boolean char byte short int long float double
-syn keyword javaType            void
-syn keyword javaStatement       return
+syn keyword javaExternal	import native package
+syn keyword javaError		goto const
+syn keyword javaConditional	if else switch
+syn keyword javaRepeat		while for do
+syn keyword javaBoolean		true false
+syn keyword javaConstant	null
+syn keyword javaTypedef		this super
+syn keyword javaOperator	new instanceof
+syn keyword javaType		boolean char byte short int long float double
+syn keyword javaType		void
+syn keyword javaStatement	return
 syn keyword javaStorageClass    static synchronized transient volatile final strictfp serializable
 syn keyword javaExceptions      throw try catch finally
-syn keyword javaAssert          assert
+syn keyword javaAssert		assert
 syn keyword javaMethodDecl      synchronized throws
 syn keyword javaClassDecl       extends implements interface
 " to differentiate the keyword class from MyClass.class we use a match here
-syn match   javaTypedef         "\.\s*\<class\>"ms=s+1
+syn match   javaTypedef		"\.\s*\<class\>"ms=s+1
 syn match   javaClassDecl       "^class\>"
 syn match   javaClassDecl       "[^.]\s*\<class\>"ms=s+1
-syn keyword javaBranch          break continue nextgroup=javaUserLabelRef skipwhite
+syn keyword javaBranch		break continue nextgroup=javaUserLabelRef skipwhite
 syn match   javaUserLabelRef    "\k\+" contained
 syn keyword javaScopeDecl       public protected private abstract
 
@@ -97,8 +97,8 @@ if exists("java_highlight_java_lang_ids") || exists("java_highlight_java_lang") 
   syn keyword javaLangClass  VirtualMachineError
   syn keyword javaLangObject clone equals finalize getClass hashCode
   syn keyword javaLangObject notify notifyAll toString wait
-  JavaHiLink javaLangClass                   javaConstant
-  JavaHiLink javaLangObject                  javaConstant
+  JavaHiLink javaLangClass		     javaConstant
+  JavaHiLink javaLangObject		     javaConstant
   syn cluster javaTop add=javaLangObject,javaLangClass
   syn cluster javaClasses add=javaLangClass
 endif
@@ -118,7 +118,7 @@ endif
 
 syn region  javaLabelRegion     transparent matchgroup=javaLabel start="\<case\>" matchgroup=NONE end=":" contains=javaNumber,javaCharacter
 syn match   javaUserLabel       "^\s*[_$a-zA-Z][_$a-zA-Z0-9_]*\s*:"he=e-1 contains=javaLabel
-syn keyword javaLabel           default
+syn keyword javaLabel		default
 
 if !exists("java_allow_cpp_keywords")
   syn keyword javaError auto delete enum extern friend inline redeclared
@@ -131,7 +131,7 @@ syn cluster javaTop add=javaExternal,javaError,javaError,javaBranch,javaLabelReg
 
 
 " Comments
-syn keyword javaTodo             contained TODO FIXME XXX
+syn keyword javaTodo		 contained TODO FIXME XXX
 if exists("java_comment_strings")
   syn region  javaCommentString    contained start=+"+ end=+"+ end=+$+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
   syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar,@Spell
@@ -141,7 +141,7 @@ if exists("java_comment_strings")
   syn cluster javaCommentSpecial add=javaCommentString,javaCommentCharacter,javaNumber
   syn cluster javaCommentSpecial2 add=javaComment2String,javaCommentCharacter,javaNumber
 endif
-syn region  javaComment          start="/\*"  end="\*/" contains=@javaCommentSpecial,javaTodo,@Spell
+syn region  javaComment		 start="/\*"  end="\*/" contains=@javaCommentSpecial,javaTodo,@Spell
 syn match   javaCommentStar      contained "^\s*\*[^/]"me=e-1
 syn match   javaCommentStar      contained "^\s*\*$"
 syn match   javaLineComment      "//.*" contains=@javaCommentSpecial2,javaTodo,@Spell
@@ -167,22 +167,22 @@ if !exists("java_ignore_javadoc") && main_syntax != 'jsp'
 endif
 
 " match the special comment /**/
-syn match   javaComment          "/\*\*/"
+syn match   javaComment		 "/\*\*/"
 
 " Strings and constants
 syn match   javaSpecialError     contained "\\."
 syn match   javaSpecialCharError contained "[^']"
 syn match   javaSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
-syn region  javaString          start=+"+ end=+"+ end=+$+ contains=javaSpecialChar,javaSpecialError,@Spell
+syn region  javaString		start=+"+ end=+"+ end=+$+ contains=javaSpecialChar,javaSpecialError,@Spell
 " next line disabled, it can cause a crash for a long line
-"syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
-syn match   javaCharacter        "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
-syn match   javaCharacter        "'\\''" contains=javaSpecialChar
-syn match   javaCharacter        "'[^\\]'"
-syn match   javaNumber           "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
-syn match   javaNumber           "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
-syn match   javaNumber           "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
-syn match   javaNumber           "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
+"syn match   javaStringError	  +"\([^"\\]\|\\.\)*$+
+syn match   javaCharacter	 "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
+syn match   javaCharacter	 "'\\''" contains=javaSpecialChar
+syn match   javaCharacter	 "'[^\\]'"
+syn match   javaNumber		 "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
+syn match   javaNumber		 "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
+syn match   javaNumber		 "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
+syn match   javaNumber		 "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
 
 " unicode characters
 syn match   javaSpecial "\\u\d\{4\}"
@@ -209,18 +209,18 @@ endif
 if exists("java_highlight_debug")
 
   " Strings and constants
-  syn match   javaDebugSpecial          contained "\\\d\d\d\|\\."
-  syn region  javaDebugString           contained start=+"+  end=+"+  contains=javaDebugSpecial
+  syn match   javaDebugSpecial		contained "\\\d\d\d\|\\."
+  syn region  javaDebugString		contained start=+"+  end=+"+  contains=javaDebugSpecial
   syn match   javaDebugStringError      +"\([^"\\]\|\\.\)*$+
-  syn match   javaDebugCharacter        contained "'[^\\]'"
+  syn match   javaDebugCharacter	contained "'[^\\]'"
   syn match   javaDebugSpecialCharacter contained "'\\.'"
   syn match   javaDebugSpecialCharacter contained "'\\''"
-  syn match   javaDebugNumber           contained "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
-  syn match   javaDebugNumber           contained "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
-  syn match   javaDebugNumber           contained "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
-  syn match   javaDebugNumber           contained "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
-  syn keyword javaDebugBoolean          contained true false
-  syn keyword javaDebugType             contained null this super
+  syn match   javaDebugNumber		contained "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
+  syn match   javaDebugNumber		contained "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
+  syn match   javaDebugNumber		contained "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
+  syn match   javaDebugNumber		contained "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
+  syn keyword javaDebugBoolean		contained true false
+  syn keyword javaDebugType		contained null this super
   syn region javaDebugParen  start=+(+ end=+)+ contained contains=javaDebug.*,javaDebugParen
 
   " to make this work you must define the highlighting for these groups
@@ -231,27 +231,27 @@ if exists("java_highlight_debug")
   syn cluster javaTop add=javaDebug
 
   if version >= 508 || !exists("did_c_syn_inits")
-    JavaHiLink javaDebug                 Debug
-    JavaHiLink javaDebugString           DebugString
-    JavaHiLink javaDebugStringError      javaError
-    JavaHiLink javaDebugType             DebugType
-    JavaHiLink javaDebugBoolean          DebugBoolean
-    JavaHiLink javaDebugNumber           Debug
-    JavaHiLink javaDebugSpecial          DebugSpecial
+    JavaHiLink javaDebug		 Debug
+    JavaHiLink javaDebugString		 DebugString
+    JavaHiLink javaDebugStringError	 javaError
+    JavaHiLink javaDebugType		 DebugType
+    JavaHiLink javaDebugBoolean		 DebugBoolean
+    JavaHiLink javaDebugNumber		 Debug
+    JavaHiLink javaDebugSpecial		 DebugSpecial
     JavaHiLink javaDebugSpecialCharacter DebugSpecial
-    JavaHiLink javaDebugCharacter        DebugString
-    JavaHiLink javaDebugParen            Debug
+    JavaHiLink javaDebugCharacter	 DebugString
+    JavaHiLink javaDebugParen		 Debug
 
-    JavaHiLink DebugString               String
-    JavaHiLink DebugSpecial              Special
-    JavaHiLink DebugBoolean              Boolean
-    JavaHiLink DebugType                 Type
+    JavaHiLink DebugString		 String
+    JavaHiLink DebugSpecial		 Special
+    JavaHiLink DebugBoolean		 Boolean
+    JavaHiLink DebugType		 Type
   endif
 endif
 
 if exists("java_mark_braces_in_parens_as_errors")
-  syn match javaInParen          contained "[{}]"
-  JavaHiLink javaInParen        javaError
+  syn match javaInParen		 contained "[{}]"
+  JavaHiLink javaInParen	javaError
   syn cluster javaTop add=javaInParen
 endif
 

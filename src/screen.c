@@ -2117,6 +2117,11 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	int	cells;
 	int	u8c, u8c_c1, u8c_c2;
 	int	idx;
+	int	c_len;
+# ifdef FEAT_ARABIC
+	int	prev_c = 0;		/* previous Arabic character */
+	int	prev_c1 = 0;		/* first composing char for prev_c */
+# endif
 
 # ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
@@ -2129,6 +2134,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	for (p = text; *p != NUL; )
 	{
 	    cells = (*mb_ptr2cells)(p);
+	    c_len = (*mb_ptr2len_check)(p);
 	    if (col + cells > W_WIDTH(wp)
 # ifdef FEAT_RIGHTLEFT
 		    - (wp->w_p_rl ? col : 0)
@@ -2140,9 +2146,44 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	    {
 		u8c = utfc_ptr2char(p, &u8c_c1, &u8c_c2);
 		if (*p < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
+		{
 		    ScreenLinesUC[idx] = 0;
+#ifdef FEAT_ARABIC
+		    prev_c = u8c;
+#endif
+		}
 		else
 		{
+#ifdef FEAT_ARABIC
+		    if (p_arshape && !p_tbidi && ARABIC_CHAR(u8c))
+		    {
+			/* Do Arabic shaping. */
+			int	pc, pc1, nc, dummy;
+			int	firstbyte = *p;
+
+			/* The idea of what is the previous and next
+			 * character depends on 'rightleft'. */
+			if (wp->w_p_rl)
+			{
+			    pc = prev_c;
+			    pc1 = prev_c1;
+			    nc = utf_ptr2char(p + c_len);
+			    prev_c1 = u8c_c1;
+			}
+			else
+			{
+			    pc = utfc_ptr2char(p + c_len, &pc1, &dummy);
+			    nc = prev_c;
+			}
+			prev_c = u8c;
+
+			u8c = arabic_shape(u8c, &firstbyte, &u8c_c1,
+						     pc, pc1, nc, wp->w_p_rl);
+			ScreenLines[idx] = firstbyte;
+		    }
+		    else
+			prev_c = u8c;
+#endif
 		    /* Non-BMP character: display as ? or fullwidth ?. */
 		    if (u8c >= 0x10000)
 			ScreenLinesUC[idx] = (cells == 2) ? 0xff1f : (int)'?';
@@ -2163,7 +2204,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	    }
 	    col += cells;
 	    idx += cells;
-	    p += (*mb_ptr2len_check)(p);
+	    p += c_len;
 	}
     }
     else
@@ -2441,6 +2482,10 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 #ifdef FEAT_SEARCH_EXTRA
     match_T	*shl;			/* points to search_hl or match_hl */
+#endif
+#ifdef FEAT_ARABIC
+    int		prev_c = 0;		/* previous Arabic character */
+    int		prev_c1 = 0;		/* first composing char for prev_c */
 #endif
 
     /* draw_state: items that are drawn in sequence: */
@@ -3274,6 +3319,7 @@ win_line(wp, lnum, startrow, endrow)
 			    c = mb_c;
 			mb_utf8 = TRUE;
 		    }
+
 		    if ((mb_l == 1 && c >= 0x80)
 			    || (mb_l >= 1 && mb_c == 0)
 			    || (mb_l > 1 && (!vim_isprintc(mb_c)
@@ -3312,6 +3358,34 @@ win_line(wp, lnum, startrow, endrow)
 		    }
 		    else if (mb_l == 0)  /* at the NUL at end-of-line */
 			mb_l = 1;
+#ifdef FEAT_ARABIC
+		    else if (p_arshape && !p_tbidi && ARABIC_CHAR(mb_c))
+		    {
+			/* Do Arabic shaping. */
+			int	pc, pc1, nc, dummy;
+
+			/* The idea of what is the previous and next
+			 * character depends on 'rightleft'. */
+			if (wp->w_p_rl)
+			{
+			    pc = prev_c;
+			    pc1 = prev_c1;
+			    nc = utf_ptr2char(ptr + mb_l);
+			    prev_c1 = u8c_c1;
+			}
+			else
+			{
+			    pc = utfc_ptr2char(ptr + mb_l, &pc1, &dummy);
+			    nc = prev_c;
+			}
+			prev_c = mb_c;
+
+			mb_c = arabic_shape(mb_c, &c, &u8c_c1, pc, pc1, nc,
+								  wp->w_p_rl);
+		    }
+		    else
+			prev_c = mb_c;
+#endif
 		}
 		else	/* enc_dbcs */
 		{
@@ -4291,31 +4365,6 @@ screen_line(row, coloff, endcol, clear_width
 		{
 		    ScreenLinesC1[off_to] = ScreenLinesC1[off_from];
 		    ScreenLinesC2[off_to] = ScreenLinesC2[off_from];
-#ifdef FEAT_ARABIC
-		    /* Do this only in non-bidi supported windows */
-		    if (p_arshape && !p_tbidi && col + 1 != endcol)
-		    {
-			/* PROBLEM: need next char to make shaping decisions.
-			 * IDEAL fix - the screenlines should be completely
-			 *	       updated before a call to display is made
-			 *	*OR*
-			 *	the loop should be made from
-			 *	right-to-left in rightleft mode; the
-			 *	current variables redraw_this and
-			 *	redraw_next simply aren't correct in
-			 *	rightleft mode
-			 */
-			ScreenLines[off_to+1] = ScreenLines[off_from+1];
-			ScreenAttrs[off_to+1] = ScreenAttrs[off_from+1];
-			ScreenLinesUC[off_to+1] = ScreenLinesUC[off_from+1];
-			ScreenLinesC1[off_to+1] = ScreenLinesC1[off_from+1];
-			ScreenLinesC2[off_to+1] = ScreenLinesC2[off_from+1];
-
-			/* Now we don't know if the next character is to be
-			 * redrawn or not, redraw it always. */
-			redraw_next = TRUE;
-		    }
-#endif
 		}
 	    }
 	    if (char_cells == 2)
@@ -4598,43 +4647,7 @@ draw_vsep_win(wp, row)
 #endif
 
 #ifdef FEAT_WILDMENU
-/*
- * Private gettail for win_redr_status_matches(): Find tail of file name path
- * but ignore trailing "/".
- */
-static char_u *wm_gettail __ARGS((char_u *s));
 static int status_match_len __ARGS((expand_T *xp, char_u *s));
-
-    static char_u *
-wm_gettail(s)
-    char_u	*s;
-{
-    char_u	*p;
-    char_u	*t = s;
-    int		had_sep = FALSE;
-
-    for (p = s; *p != NUL; )
-    {
-	if (vim_ispathsep(*p)
-#ifdef BACKSLASH_IN_FILENAME
-		&& !rem_backslash(p)
-#endif
-	   )
-	    had_sep = TRUE;
-	else if (had_sep)
-	{
-	    t = p;
-	    had_sep = FALSE;
-	}
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
-	    p += (*mb_ptr2len_check)(p);
-	else
-#endif
-	    ++p;
-    }
-    return t;
-}
 
 /*
  * Get the lenght of an item as it will be shown in the status line.
@@ -4687,15 +4700,14 @@ status_match_len(xp, s)
  * If inversion is possible we use it. Else '=' characters are used.
  */
     void
-win_redr_status_matches(xp, num_matches, matches, match)
+win_redr_status_matches(xp, num_matches, matches, match, showtail)
     expand_T	*xp;
     int		num_matches;
     char_u	**matches;	/* list of matches */
     int		match;
+    int		showtail;
 {
-#define L_MATCH(m) (fmatch ? wm_gettail(matches[m]) : matches[m])
-    int		fmatch = (xp->xp_context == EXPAND_FILES);
-
+#define L_MATCH(m) (showtail ? sm_gettail(matches[m]) : matches[m])
     int		row;
     char_u	*buf;
     int		len;
@@ -5330,6 +5342,7 @@ screen_puts(text, row, col, attr)
 {
     unsigned	off;
     char_u	*ptr = text;
+    int		c;
 #ifdef FEAT_MBYTE
     int		mbyte_blen = 1;
     int		mbyte_cells = 1;
@@ -5338,18 +5351,22 @@ screen_puts(text, row, col, attr)
     int		u8c_c2 = 0;
     int		clear_next_cell = FALSE;
 #endif
+# ifdef FEAT_ARABIC
+    int	prev_c = 0;		/* previous Arabic character */
+# endif
 
     if (ScreenLines != NULL && row < screen_Rows)	/* safety check */
     {
 	off = LineOffset[row] + col;
 	while (*ptr != NUL && col < screen_Columns)
 	{
+	    c = *ptr;
 #ifdef FEAT_MBYTE
 	    /* check if this is the first byte of a multibyte */
 	    if (has_mbyte)
 	    {
 		mbyte_blen = (*mb_ptr2len_check)(ptr);
-		if (enc_dbcs == DBCS_JPNU && *ptr == 0x8e)
+		if (enc_dbcs == DBCS_JPNU && c == 0x8e)
 		    mbyte_cells = 1;
 		else if (enc_dbcs != 0)
 		    mbyte_cells = mbyte_blen;
@@ -5364,16 +5381,32 @@ screen_puts(text, row, col, attr)
 			if (attr == 0)
 			    attr = hl_attr(HLF_8);
 		    }
+#ifdef FEAT_ARABIC
+		    if (p_arshape && !p_tbidi && ARABIC_CHAR(u8c))
+		    {
+			/* Do Arabic shaping. */
+			int	pc, pc1, nc, dummy;
+
+			/* This is never drawn right-left, that may not work
+			 * properly here... */
+			pc = utfc_ptr2char(ptr + mbyte_blen, &pc1, &dummy);
+			nc = prev_c;
+			prev_c = u8c;
+			u8c = arabic_shape(u8c, &c, &u8c_c1, pc, pc1, nc, 0);
+		    }
+		    else
+			prev_c = u8c;
+#endif
 		}
 	    }
 #endif
 
-	    if (ScreenLines[off] != *ptr
+	    if (ScreenLines[off] != c
 #ifdef FEAT_MBYTE
 		    || (mbyte_cells == 2
 			&& ScreenLines[off + 1] != (enc_dbcs ? ptr[1] : 0))
 		    || (enc_dbcs == DBCS_JPNU
-			&& *ptr == 0x8e
+			&& c == 0x8e
 			&& ScreenLines2[off] != ptr[1])
 		    || (enc_utf8
 			&& mbyte_blen > 1
@@ -5447,12 +5480,12 @@ screen_puts(text, row, col, attr)
 				&& (*mb_off2cells)(off + 1) > 1)))
 		    ScreenLines[off + mbyte_blen] = 0;
 #endif
-		ScreenLines[off] = *ptr;
+		ScreenLines[off] = c;
 		ScreenAttrs[off] = attr;
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
-		    if (*ptr < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
+		    if (c < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
 			ScreenLinesUC[off] = 0;
 		    else
 		    {
@@ -5473,7 +5506,7 @@ screen_puts(text, row, col, attr)
 		    ScreenAttrs[off + 1] = attr;
 		    screen_char_2(off, row, col);
 		}
-		else if (enc_dbcs == DBCS_JPNU && *ptr == 0x8e)
+		else if (enc_dbcs == DBCS_JPNU && c == 0x8e)
 		{
 		    ScreenLines2[off] = ptr[1];
 		    screen_char(off, row, col);
@@ -5922,29 +5955,6 @@ screen_char(off, row, col)
 
 	buf[utfc_char2bytes(off, buf)] = NUL;
 
-# ifdef FEAT_ARABIC
-	/* Do this only in non-bidi supported windows */
-	if (p_arshape && !p_tbidi)
-	{
-	    int c, oldc, oldc1, clen;
-
-	    /* intercept character and shape it (only if its Arabic) */
-	    oldc = ScreenLinesUC[off];
-	    oldc1 = ScreenLinesC1[off];
-	    c = arabic_shape(off, oldc);
-	    if (c != oldc || ScreenLinesC1[off] != oldc1)
-	    {
-		/* Turn the shaped character to bytes. */
-		clen = (*mb_char2bytes)(c, buf);
-
-		/* Account for any Tanween/Harakat */
-		if (ScreenLinesC1[off] != 0)
-		    clen += (*mb_char2bytes)(ScreenLinesC1[off], buf + clen);
-
-		buf[clen] = NUL;
-	    }
-	}
-# endif
 	out_str(buf);
 	if (utf_char2cells(ScreenLinesUC[off]) > 1)
 	    ++screen_cur_col;

@@ -3,21 +3,21 @@
 #   Created:    Sunday, December 29, 2000 09:55:14 PM
 
 
-MAKEFILE        = VIm.make
-¥MondoBuild¥    = {MAKEFILE}  # Make blank to avoid rebuilds when makefile is modified
+MAKEFILE	= VIm.make
+¥MondoBuild¥	= {MAKEFILE}  # Make blank to avoid rebuilds when makefile is modified
 
-ObjDir          = :obj:
-Includes        =  ¶
+ObjDir		= :obj:
+Includes	=  ¶
 				  -i :src:proto:
-CFlags          = -w 2,35 -enum int
-Sym-PPC         = -sym off
+CFlags		= -w 2,35 -enum int
+Sym-PPC		= -sym off
 
-PPCCOptions     = {Includes} {CFlags} {Sym-PPC}
+PPCCOptions	= {Includes} {CFlags} {Sym-PPC}
 
 
 ### Source Files ###
 
-SrcFiles        =  ¶
+SrcFiles	=  ¶
 				  :src:buffer.c ¶
 				  :src:charset.c ¶
 				  :src:diff.c ¶

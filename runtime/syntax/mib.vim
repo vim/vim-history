@@ -47,7 +47,7 @@ syn keyword mibEpilogue test-function-async next-function next-function-async
 syn keyword mibEpilogue leaf-name
 syn keyword mibEpilogue DEFAULT contained
 
-syn match  mibComment           "\ *--.*$"
+syn match  mibComment		"\ *--.*$"
 syn match  mibNumber		"\<['0-9a-fA-FhH]*\>"
 syn region mibDescription start="\"" end="\"" contains=DEFAULT
 
@@ -63,12 +63,12 @@ if version >= 508 || !exists("did_mib_syn_inits")
   endif
 
   HiLink mibImplicit	     Statement
-  HiLink mibComment          Comment
-  HiLink mibConstants        String
-  HiLink mibNumber           Number
+  HiLink mibComment	     Comment
+  HiLink mibConstants	     String
+  HiLink mibNumber	     Number
   HiLink mibDescription      Identifier
-  HiLink mibEpilogue         SpecialChar
-  HiLink mibValue            Structure
+  HiLink mibEpilogue	     SpecialChar
+  HiLink mibValue	     Structure
   delcommand HiLink
 endif
 

@@ -57,6 +57,7 @@ static void	rewind_conditionals __ARGS((struct condstack *,
 /* Expressions used for testing during the development phase. */
 # define THROW_ON_ERROR		(!eval_to_number("$VIMNOERRTHROW"))
 # define THROW_ON_INTERRUPT	(!eval_to_number("$VIMNOINTTHROW"))
+# define THROW_TEST
 #else
 /* Values used for the Vim release. */
 # define THROW_ON_ERROR		TRUE
@@ -210,7 +211,18 @@ cause_errthrow(msg, severe, ignore)
 	discard_current_exception();
     }
 
-    if (THROW_ON_ERROR)
+#ifdef THROW_TEST
+    if (!THROW_ON_ERROR)
+    {
+	/*
+	 * Print error message immediately without searching for a matching
+	 * catch clause; just finally clauses are executed before the script
+	 * is terminated.
+	 */
+	return FALSE;
+    }
+    else
+#endif
     {
 	/*
 	 * Prepare the throw of an error exception, so that everything will
@@ -265,15 +277,6 @@ cause_errthrow(msg, severe, ignore)
 	    }
 	}
 	return TRUE;
-    }
-    else
-    {
-	/*
-	 * Print error message immediately without searching for a matching
-	 * catch clause; just finally clauses are executed before the script
-	 * is terminated.
-	 */
-	return FALSE;
     }
 }
 
@@ -349,7 +352,19 @@ do_intthrow(cstack)
     if (!got_int || (trylevel == 0 && !did_throw))
 	return FALSE;
 
-    if (THROW_ON_INTERRUPT)
+#ifdef THROW_TEST	/* avoid warning for condition always true */
+    if (!THROW_ON_INTERRUPT)
+    {
+	/*
+	 * The interrupt aborts everything except for executing finally clauses.
+	 * Discard any user or error or interrupt exception currently being
+	 * thrown.
+	 */
+	if (did_throw)
+	    discard_current_exception();
+    }
+    else
+#endif
     {
 	/*
 	 * Throw an interrupt exception, so that everything will be aborted
@@ -369,16 +384,6 @@ do_intthrow(cstack)
 	}
 	if (throw_exception("Vim:Interrupt", ET_INTERRUPT, NULL) != FAIL)
 	    do_throw(cstack);
-    }
-    else
-    {
-	/*
-	 * The interrupt aborts everything except for executing finally clauses.
-	 * Discard any user or error or interrupt exception currently being
-	 * thrown.
-	 */
-	if (did_throw)
-	    discard_current_exception();
     }
 
     return TRUE;
