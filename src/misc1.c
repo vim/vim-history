@@ -1049,7 +1049,8 @@ open_line(dir, flags, old_indent)
 	{
 	    /* truncate current line at cursor */
 	    saved_line[curwin->w_cursor.col] = NUL;
-	    if (trunc_line)	    /* Remove trailing white space */
+	    /* Remove trailing white space, unless OPENLINE_KEEPTRAIL used. */
+	    if (trunc_line && !(flags & OPENLINE_KEEPTRAIL))
 		truncate_spaces(saved_line);
 	    ml_replace(curwin->w_cursor.lnum, saved_line, FALSE);
 	    saved_line = NULL;

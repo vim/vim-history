@@ -30,6 +30,7 @@ void dis_msg __ARGS((char_u *p, int skip_esc));
 void do_do_join __ARGS((long count, int insert_space));
 int do_join __ARGS((int insert_space));
 void op_format __ARGS((oparg_T *oap));
+void format_lines __ARGS((linenr_T line_count));
 int do_addsub __ARGS((int command, linenr_T Prenum1));
 int read_viminfo_register __ARGS((vir_T *virp, int force));
 void write_viminfo_registers __ARGS((FILE *fp));

@@ -1701,6 +1701,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		    oap->is_VIsual ? (int)cap->count1 :
 #endif
 		    1);
+	    auto_format();
 	    break;
 
 	case OP_JOIN_NS:
@@ -1711,7 +1712,10 @@ do_pending_operator(cap, old_col, gui_yank)
 						   curbuf->b_ml.ml_line_count)
 		beep_flush();
 	    else
+	    {
 		do_do_join(oap->line_count, oap->op_type == OP_JOIN);
+		auto_format();
+	    }
 	    break;
 
 	case OP_DELETE:
@@ -1721,7 +1725,10 @@ do_pending_operator(cap, old_col, gui_yank)
 	    if (empty_region_error)
 		vim_beep();
 	    else
+	    {
 		(void)op_delete(oap);
+		auto_format();
+	    }
 	    break;
 
 	case OP_YANK:
@@ -1832,6 +1839,10 @@ do_pending_operator(cap, old_col, gui_yank)
 		restart_edit = 0;
 
 		op_insert(oap, cap->count1);
+
+		/* TODO: when inserting in several lines, should format all
+		 * the lines. */
+		auto_format();
 
 		if (restart_edit == 0)
 		    restart_edit = restart_edit_save;
@@ -7987,6 +7998,7 @@ nv_put(cap)
 	    did_visual_put = TRUE;  /* tell op_delete() to correct '] mark */
 	}
 #endif
+	auto_format();
     }
 }
 

@@ -111,6 +111,7 @@ static void	block_prep __ARGS((oparg_T *oap, struct block_def *, linenr_T, int))
 #if defined(FEAT_CLIPBOARD) || defined(FEAT_EVAL)
 static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len));
 #endif
+static int	ends_in_white __ARGS((linenr_T lnum));
 #ifdef FEAT_COMMENTS
 static int	same_leader __ARGS((int, char_u *, int, char_u *));
 static int	fmt_check_par __ARGS((linenr_T, int *, char_u **, int do_comments));
@@ -2415,7 +2416,7 @@ op_change(oap)
 			copy_spaces(newp + offset, (size_t)vpos.coladd);
 			offset += vpos.coladd;
 # endif
-			mch_memmove(newp + offset, ins_text, ins_len);
+			mch_memmove(newp + offset, ins_text, (size_t)ins_len);
 			offset += ins_len;
 			oldp += bd.textcol;
 			mch_memmove(newp + offset, oldp, STRLEN(oldp) + 1);
@@ -3984,6 +3985,68 @@ op_format(oap)
     oparg_T	*oap;
 {
     long	old_line_count = curbuf->b_ml.ml_line_count;
+
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
+	return;
+
+#ifdef FEAT_VISUAL
+    if (oap->is_VIsual)
+	/* When there is no change: need to remove the Visual selection */
+	redraw_curbuf_later(INVERTED);
+#endif
+
+    /* Set '[ mark at the start of the formatted area */
+    curbuf->b_op_start = oap->start;
+
+    format_lines(oap->line_count);
+
+    /*
+     * Leave the cursor at the first non-blank of the last formatted line.
+     * If the cursor was moved one line back (e.g. with "Q}") go to the next
+     * line, so "." will do the next lines.
+     */
+    if (oap->end_adjusted && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+	++curwin->w_cursor.lnum;
+    beginline(BL_WHITE | BL_FIX);
+    old_line_count = curbuf->b_ml.ml_line_count - old_line_count;
+    msgmore(old_line_count);
+
+    /* put '] mark on the end of the formatted area */
+    curbuf->b_op_end = curwin->w_cursor;
+
+#ifdef FEAT_VISUAL
+    if (oap->is_VIsual)
+    {
+	win_T	*wp;
+
+	FOR_ALL_WINDOWS(wp)
+	{
+	    if (wp->w_old_cursor_lnum != 0)
+	    {
+		/* When lines have been inserted or deleted, adjust the end of
+		 * the Visual area to be redrawn. */
+		if (wp->w_old_cursor_lnum > wp->w_old_visual_lnum)
+		    wp->w_old_cursor_lnum += old_line_count;
+		else
+		    wp->w_old_visual_lnum += old_line_count;
+	    }
+	}
+    }
+#endif
+}
+
+/*
+ * Format "line_count" lines, starting at the cursor position.
+ * When "line_count" is negative, format until the end of the paragraph.
+ * Lines after the cursor line are saved for undo, caller must have saved the
+ * first line.
+ */
+    void
+format_lines(line_count)
+    linenr_T	line_count;
+{
+    int		max_len;
     int		is_not_par;		/* current line not part of parag. */
     int		next_is_not_par;	/* next line not part of paragraph */
     int		is_end_par;		/* at end of paragraph */
@@ -4000,28 +4063,16 @@ op_format(oap)
     int		second_indent = -1;
     int		do_second_indent;
     int		do_number_indent;
+    int		do_trail_white;
     int		first_par_line = TRUE;
     int		smd_save;
     long	count;
     int		need_set_indent = TRUE;	/* set indent of next paragraph */
     int		force_format = FALSE;
-    int		max_len;
-
-    if (u_save((linenr_T)(oap->start.lnum - 1),
-				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
-	return;
-
-#ifdef FEAT_VISUAL
-    if (oap->is_VIsual)
-	/* When there is no change: need to remove the Visual selection */
-	redraw_curbuf_later(INVERTED);
-#endif
+    int		old_State = State;
 
     /* length of a line to force formatting: 3 * 'tw' */
     max_len = comp_textwidth(TRUE) * 3;
-
-    /* Set '[ mark at the start of the formatted area */
-    curbuf->b_op_start = oap->start;
 
     /* check for 'q', '2' and '1' in 'formatoptions' */
 #ifdef FEAT_COMMENTS
@@ -4029,6 +4080,7 @@ op_format(oap)
 #endif
     do_second_indent = has_format_option(FO_Q_SECOND);
     do_number_indent = has_format_option(FO_Q_NUMBER);
+    do_trail_white = has_format_option(FO_WHITE_PAR);
 
     /*
      * Get info about the previous and current line.
@@ -4047,9 +4099,11 @@ op_format(oap)
 #endif
 				);
     is_end_par = (is_not_par || next_is_not_par);
+    if (!is_end_par && do_trail_white)
+	is_end_par = !ends_in_white(curwin->w_cursor.lnum - 1);
 
     curwin->w_cursor.lnum--;
-    for (count = oap->line_count; count > 0 && !got_int; --count)
+    for (count = line_count; count != 0 && !got_int; --count)
     {
 	/*
 	 * Advance to next paragraph.
@@ -4068,7 +4122,7 @@ op_format(oap)
 	/*
 	 * The last line to be formatted.
 	 */
-	if (count == 1)
+	if (count == 1 || curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
 	{
 	    next_is_not_par = TRUE;
 #ifdef FEAT_COMMENTS
@@ -4089,11 +4143,18 @@ op_format(oap)
 	}
 	advance = TRUE;
 	is_end_par = (is_not_par || next_is_not_par || next_is_start_par);
+	if (!is_end_par && do_trail_white)
+	    is_end_par = !ends_in_white(curwin->w_cursor.lnum);
 
 	/*
 	 * Skip lines that are not in a paragraph.
 	 */
-	if (!is_not_par)
+	if (is_not_par)
+	{
+	    if (line_count < 0)
+		break;
+	}
+	else
 	{
 	    /*
 	     * For the first line of a paragraph, check indent of second line.
@@ -4152,13 +4213,19 @@ op_format(oap)
 			+ (do_comments ? INSCHAR_DO_COM : 0)
 #endif
 			, second_indent);
-		State = NORMAL;
+		State = old_State;
 		p_smd = smd_save;
 		second_indent = -1;
 		/* at end of par.: need to set indent of next par. */
 		need_set_indent = is_end_par;
 		if (is_end_par)
+		{
+		    /* When called with a negative line count, break at the
+		     * end of the paragraph. */
+		    if (line_count < 0)
+			break;
 		    first_par_line = TRUE;
+		}
 		force_format = FALSE;
 	    }
 
@@ -4171,6 +4238,8 @@ op_format(oap)
 		advance = FALSE;
 		curwin->w_cursor.lnum++;
 		curwin->w_cursor.col = 0;
+		if (line_count < 0 && u_save_cursor() == FAIL)
+			break;
 #ifdef FEAT_COMMENTS
 		(void)del_bytes((long)next_leader_len, FALSE);
 #endif
@@ -4190,40 +4259,18 @@ op_format(oap)
 	}
 	line_breakcheck();
     }
+}
 
-    /*
-     * Leave the cursor at the first non-blank of the last formatted line.
-     * If the cursor was moved one line back (e.g. with "Q}") go to the next
-     * line, so "." will do the next lines.
-     */
-    if (oap->end_adjusted && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
-	++curwin->w_cursor.lnum;
-    beginline(BL_WHITE | BL_FIX);
-    old_line_count = curbuf->b_ml.ml_line_count - old_line_count;
-    msgmore(old_line_count);
+/*
+ * Return TRUE if line "lnum" ends in a white character.
+ */
+    static int
+ends_in_white(lnum)
+    linenr_T	lnum;
+{
+    char_u	*s = ml_get(lnum);
 
-    /* put '] mark on the end of the formatted area */
-    curbuf->b_op_end = curwin->w_cursor;
-
-#ifdef FEAT_VISUAL
-    if (oap->is_VIsual)
-    {
-	win_T	*wp;
-
-	FOR_ALL_WINDOWS(wp)
-	{
-	    if (wp->w_old_cursor_lnum != 0)
-	    {
-		/* When lines have been inserted or deleted, adjust the end of
-		 * the Visual area to be redrawn. */
-		if (wp->w_old_cursor_lnum > wp->w_old_visual_lnum)
-		    wp->w_old_cursor_lnum += old_line_count;
-		else
-		    wp->w_old_visual_lnum += old_line_count;
-	    }
-	}
-    }
-#endif
+    return (*s != NUL && vim_iswhite(s[STRLEN(s) - 1]));
 }
 
 /*
