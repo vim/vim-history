@@ -6599,11 +6599,24 @@ f_prevnonblank(argvars, retvar)
 }
 
 #if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
+static int make_connection __ARGS((void));
 static int check_connection __ARGS((void));
+
+    static int
+make_connection()
+{
+    if (X_DISPLAY == NULL && !gui.in_use)
+    {
+	x_force_connect = TRUE;
+	setup_term_clip();
+	x_force_connect = FALSE;
+    }
+}
 
     static int
 check_connection()
 {
+    make_connection();
     if (X_DISPLAY == NULL)
     {
 	EMSG(_("E240: No connection to Vim server"));
@@ -6625,6 +6638,7 @@ f_serverlist(argvars, retvar)
 # ifdef WIN32
     r = serverGetVimNames();
 # else
+    make_connection();
     if (X_DISPLAY != NULL)
 	r = serverGetVimNames(X_DISPLAY);
 # endif
