@@ -164,6 +164,7 @@ HTMLS = \
 	motion.html \
 	mbyte.html \
 	mlang.html \
+	netbeans.html \
 	options.html \
 	os_390.html \
 	os_amiga.html \

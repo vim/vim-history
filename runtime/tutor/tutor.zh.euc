@@ -242,7 +242,7 @@
 			 第二讲第五节∶撤消类命令
 
 
-         ** 输入 u 来撤消最后执行的命令，输入 U 来修正整行。**
+	 ** 输入 u 来撤消最后执行的命令，输入 U 来修正整行。**
 
   1. 请将光标移动到本节中下面标记有 ---> 的那一行，并将其置于第一个错误
      处。
@@ -770,7 +770,7 @@ Open up a line above this by typing Shift-O while the cursor is on this line.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		       第八讲∶创建一个启动脚本
 
-		          ** 启用vim的功能 **
+			  ** 启用vim的功能 **
 
   Vim的功能特性要比vi多得多，但大部分功能都没有缺省激活。为了启动更多的
   功能，您得创建一个vimrc文件。
@@ -819,7 +819,7 @@ Open up a line above this by typing Shift-O while the cursor is on this line.
   Ware 所编写的，其中来自Colorado State University的Charles Smith提供了
   很多创意。编者通信地址是∶
 
-        bware@mines.colorado.edu
+	bware@mines.colorado.edu
 
   本教程已由Bram Moolenaar专为vim进行修订。
 

@@ -3226,7 +3226,7 @@ msgstr "E297: 交换文件写入错误"
 
 #: memfile.c:1244
 msgid "E300: Swap file already exists (symlink attack?)"
-msgstr "E3000: 交换文件已经存在! (小心符号连结的安全漏洞!?)"
+msgstr "E300: 交换文件已经存在! (小心符号连结的安全漏洞!?)"
 
 #: memline.c:275
 msgid "E298: Didn't get block nr 0?"

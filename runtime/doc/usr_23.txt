@@ -1,4 +1,4 @@
-*usr_23.txt*	For Vim version 6.2f.  Last change: 2001 Sep 03
+*usr_23.txt*	For Vim version 6.2.  Last change: 2001 Sep 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

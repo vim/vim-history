@@ -688,9 +688,8 @@ pointerEvent(beval, event)
 	    break;
 
 	/*
-	 * Motif and Athena version: Keystrokes will be caught by the "textArea"
-	 *                           widget, and handled in
-	 *                           gui_x11_key_hit_cb().
+	 * Motif and Athena version: Keystrokes will be caught by the
+	 * "textArea" widget, and handled in gui_x11_key_hit_cb().
 	 */
 	case KeyPress:
 	    if (beval->showState == ShS_SHOWING && beval->msgCB != NULL)

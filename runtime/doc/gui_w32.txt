@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.2f.  Last change: 2003 May 11
+*gui_w32.txt*   For Vim version 6.2.  Last change: 2003 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -406,7 +406,7 @@ and directories will be inserted at the cursor.  This allows you to use these
 names with any Ex command.
 
 							*:simalt* *:si*
-:si[malt] {key}		simulate pressing {key} while holding Alt pressed.
+:sim[alt] {key}		simulate pressing {key} while holding Alt pressed.
 			{not in Vi} {only for Win32 versions}
 
 Normally, Vim takes control of all Alt-<Key> combinations, to increase the

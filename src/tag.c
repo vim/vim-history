@@ -139,6 +139,7 @@ do_tag(tag, type, count, forceit, verbose)
     int		tagstacklen = curwin->w_tagstacklen;
     int		cur_match = 0;
     int		oldtagstackidx = tagstackidx;
+    int		prevtagstackidx = tagstackidx;
     int		prev_num_matches;
     int		new_tag = FALSE;
     int		other_name;
@@ -363,6 +364,9 @@ do_tag(tag, type, count, forceit, verbose)
 	    }
 	    else				/* go to other matching tag */
 	    {
+		/* Save index for when selection is cancelled. */
+		prevtagstackidx = tagstackidx;
+
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 		if (g_do_tagpreview)
 		    cur_match = ptag_entry.cur_match;
@@ -718,7 +722,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    if (use_tagstack)
 		    {
 			tagstack[tagstackidx].fmark = saved_fmark;
-			++tagstackidx;
+			tagstackidx = prevtagstackidx;
 		    }
 #ifdef FEAT_CSCOPE
 		    cs_free_tags();

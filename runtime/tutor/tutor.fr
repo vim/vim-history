@@ -1,5 +1,5 @@
 ===============================================================================
-= B i e n v e n u e  dans le  T u t o r i e l  de  V I M  -  Version 1.5.fr.1 =
+= B i e n v e n u e  dans le  T u t o r i e l  de  V I M  -  Version 1.5.fr.2 =
 ===============================================================================
 
      Vim est un éditeur très puissant qui a trop de commandes pour pouvoir
@@ -210,7 +210,7 @@ NOTE: Pour les aventureux, le seul appui d' objet  en mode Normal, sans
 	      ** Tapez	dd  pour effacer une ligne complète. **
 
   Vu le nombre de fois où l'on efface des lignes complètes, les concepteurs
-  de Vim ont décidé qu'il serait plus facile de taper simplement deux d à la
+  de Vi ont décidé qu'il serait plus facile de taper simplement deux d à la
   suite pour effacer une ligne.
 
   1. Placez le curseur sur la seconde ligne de la phrase ci-dessous.
@@ -428,9 +428,9 @@ Passez maintenant à la leçon suivante.
   4. Si vous voulez rechercher un texte vers le haut du fichier, utilisez  ?
      à la place de  / .
 
----> Quand la recherche atteint la fin du fichier, elle reprend au début.
+---> erreur ne s'écrit pas "errreuur"; errreuur est une erreur.
 
-  erreur ne s'écrit pas "errreuur"; errreuur est une erreur.
+Note: Quand la recherche atteint la fin du fichier, elle reprend au début.
 
 
 
@@ -519,10 +519,10 @@ Note: Cette fonctionnalité est très utile lors du débogage d'un programme qui
      la liste des fichiers du dossier courant, comme si vous aviez tapé la
      commande à l'invite du shell. Utilisez  :!dir  si	:!ls  ne marche pas.
 
----> Note:  Il est possible d'exécuter n'importe quelle commande externe de
-	    cette manière.
+Note:  Il est possible d'exécuter n'importe quelle commande externe de cette
+       manière.
 
----> Note:  Toutes les commandes  :  doivent finir par la frappe de <Entrée>.
+Note:  Toutes les commandes  :  doivent finir par la frappe de <Entrée>.
 
 
 
@@ -542,11 +542,11 @@ Note: Cette fonctionnalité est très utile lors du débogage d'un programme qui
   4. Cela sauvegarde tout le fichier (Tutoriel Vim) sous le nom TEST.
      Pour le vérifier, tapez  :!dir  pour revisualiser le contenu du dossier.
 
----> Notez que si vous quittez Vim et y retournez avec le fichier TEST,
-     celui-ci sera une copie exacte du cours au moment où vous l'avez sauvé.
+Notez que si vous quittez Vim et y retournez avec le fichier TEST, celui-ci
+sera une copie exacte du cours au moment où vous l'avez sauvé.
 
-  5. Maintenant, effacez le fichier en tapant  :!del TEST  ou  :!rm TEST .
-
+  5. Maintenant, effacez le fichier en tapant (MS-DOS):    :!del TEST
+					   ou (Unix):	   :!rm TEST
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -602,11 +602,9 @@ NOTE:  Le fichier que vous récupérez est placé là où se trouve le curseur.
   1.  :!commande  exécute une commande externe.
 
       Quelques exemples pratiques:
-	  :!dir		      affiche le contenu du dossier courant.
-	  :!del FICHIER       efface FICHIER.
-      Les mêmes exemples, pour les systèmes Unix:
-	  :!ls		      affiche le contenu du dossier courant.
-	  :!rm FICHIER	      efface FICHIER.
+	(MS-DOS)	(Unix)
+	 :!dir		 :!ls		 affiche le contenu du dossier courant.
+	 :!del FICHIER   :!rm FICHIER    efface FICHIER.
 
   2.  :w FICHIER  enregistre le fichier Vim courant sur le disque avec pour
 		  nom FICHIER.
@@ -615,6 +613,8 @@ NOTE:  Le fichier que vous récupérez est placé là où se trouve le curseur.
 
   4.  :r FICHIER  récupère le fichier FICHIER et l'insère dans le fichier
 		  courant à partir de la position du curseur.
+
+
 
 
 
@@ -707,8 +707,8 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
   5. Puis recommencez une recherche, et faites bien attention à ce qui se
      produit:  /ignore .
 
-
-
+  6. Pour interrompre la mise en surbrillance des résultats, tapez:
+     :nohlsearch
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			     RÉSUMÉ DE LA LEÇON 6
@@ -805,5 +805,5 @@ Note: Ceci évite de taper  i , le dernier caractère, le texte à insérer,
 
   Traduit en Français par Adrien Beau, en avril 2001.
   E-mail:	version.francaise@free.fr
-  Last Change:	2002 Mar 16
+  Last Change:	2003 May 29
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

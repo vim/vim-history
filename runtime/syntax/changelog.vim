@@ -2,7 +2,7 @@
 " Language:	generic ChangeLog file
 " Written By:	Gediminas Paulauskas <menesis@delfi.lt>
 " Maintainer:	Corinna Vinschen <vinschen@redhat.com>
-" Last Change:	Aug 14, 2002
+" Last Change:	June 1, 2003
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -14,26 +14,36 @@ endif
 
 syn case ignore
 
+if exists('b:changelog_spacing_errors')
+  let s:spacing_errors = b:changelog_spacing_errors
+elseif exists('g:changelog_spacing_errors')
+  let s:spacing_errors = g:changelog_spacing_errors
+else
+  let s:spacing_errors = 1
+endif
+
+if s:spacing_errors
+  syn match	changelogError "^ \+"
+endif
+
 syn match	changelogText	"^\s.*$" contains=changelogMail,changelogNumber,changelogMonth,changelogDay
 syn match	changelogHeader	"^\S.*$" contains=changelogNumber,changelogMonth,changelogDay,changelogMail
 if version < 600
-  syn region	changelogFiles	start="^\t\+[+*]\s" end=":\s" end="^$" contains=changelogBullet,changelogColon keepend
-  syn region	changelogFiles	start="^\t\+[([]" end=":\s" end="^$" contains=changelogBullet,changelogColon keepend
+  syn region	changelogFiles	start="^\s\+[+*]\s" end=":\s" end="^$" contains=changelogBullet,changelogColon,changelogError keepend
+  syn region	changelogFiles	start="^\s\+[([]" end=":\s" end="^$" contains=changelogBullet,changelogColon,changelogError keepend
   syn match	changelogColon	contained ":\s"
 else
-  syn region	changelogFiles	start="^\t\+[+*]\s" end=":" end="^$" contains=changelogBullet,changelogColon,changeLogFuncs keepend
-  syn region	changelogFiles	start="^\t\+[([]" end=":" end="^$" contains=changelogBullet,changelogColon,changeLogFuncs keepend
+  syn region	changelogFiles	start="^\s\+[+*]\s" end=":" end="^$" contains=changelogBullet,changelogColon,changeLogFuncs,changelogError keepend
+  syn region	changelogFiles	start="^\s\+[([]" end=":" end="^$" contains=changelogBullet,changelogColon,changeLogFuncs,changelogError keepend
   syn match	changeLogFuncs  contained "(.\{-})" extend
   syn match	changeLogFuncs  contained "\[.\{-}]" extend
   syn match	changelogColon	contained ":"
 endif
-syn match	changelogBullet	contained "^\s\+[+*]\s"
+syn match	changelogBullet	contained "^\s\+[+*]\s" contains=changelogError
 syn match	changelogMail	contained "<[A-Za-z0-9\._:+-]\+@[A-Za-z0-9\._-]\+>"
 syn keyword	changelogMonth	contained jan feb mar apr may jun jul aug sep oct nov dec
 syn keyword	changelogDay	contained mon tue wed thu fri sat sun
 syn match	changelogNumber	contained "[.-]*[0-9]\+"
-
-syn match       changelogError "^\ \+"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -58,7 +68,7 @@ if version >= 508 || !exists("did_changelog_syntax_inits")
   HiLink changelogNumber	Number
   HiLink changelogMonth		Number
   HiLink changelogDay		Number
-  HiLink changelogError		Error
+  HiLink changelogError		Folded
 
   delcommand HiLink
 endif

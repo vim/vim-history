@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2f.  Last change: 2003 May 18
+*options.txt*	For Vim version 6.2.  Last change: 2003 May 29
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1827,6 +1827,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	"x" delete each combining character on its own.  When it is off (the
 	default) the character along with its combining characters are
 	deleted.
+	Note: When 'delcombine' is set "xx" may work different from "2x"!
 
 	This is useful for Arabic, Hebrew and many other languages where one
 	may have combining characters overtop of base characters, and want
@@ -2957,11 +2958,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 					 (others) "$VIMRUNTIME/doc/help.txt")
 			global
 			{not in Vi}
-	Name of the help file.	All help files should be placed together in
-	one directory.	Environment variables are expanded |:set_env|.	For
-	example: "$VIMRUNTIME/doc/help.txt".  If $VIMRUNTIME is not set, $VIM
-	is also tried.	Also see |$VIMRUNTIME| and |option-backslash|
-	about including spaces and backslashes.
+	Name of the main help file.  All distributed help files should be
+	placed together in one directory.  Additionally, all "doc" directories
+	in 'runtimepath' will be used.
+	Environment variables are expanded |:set_env|.  For example:
+	"$VIMRUNTIME/doc/help.txt".  If $VIMRUNTIME is not set, $VIM is also
+	tried.	Also see |$VIMRUNTIME| and |option-backslash| about including
+	spaces and backslashes.
 	This option cannot be set from a |modeline|, for security reasons.
 
 						*'helpheight'* *'hh'*
@@ -4295,6 +4298,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	enabled, in which case only spaces are used).  Enabling this option
 	means the indent will preserve as many existing characters as possible
 	for indenting, and only add additional tabs or spaces as required.
+	NOTE: When using ">>" multiple times the resulting indent is a mix of
+	tabs and spaces.  You might not like this.
 	NOTE: 'preserveindent' is reset when 'compatible' is set.
 	Also see 'copyindent'.
 	Use |:retab| to clean up white space.

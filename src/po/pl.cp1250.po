@@ -1651,7 +1651,7 @@ msgstr "E209: B³¹d w trakcie zamykania \"%s\""
 #: fileio.c:4818
 #, c-format
 msgid "E210: Error reading \"%s\""
-msgstr "E210; B³¹d odczytu w \"%s\""
+msgstr "E210: B³¹d odczytu w \"%s\""
 
 #: fileio.c:4974
 msgid "E246: FileChangedShell autocommand deleted buffer"
@@ -5058,7 +5058,7 @@ msgstr "E423: Niedozwolony argument: %s"
 
 #: syntax.c:7211
 msgid "E424: Too many different highlighting attributes in use"
-msgstr "E424 Zbyt wiele ró¿nych atrybutów podkreœlania w zastosowaniu"
+msgstr "E424: Zbyt wiele ró¿nych atrybutów podkreœlania w zastosowaniu"
 
 #: tag.c:90
 msgid "at bottom of tag stack"

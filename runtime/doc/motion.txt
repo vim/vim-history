@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2f.  Last change: 2003 May 17
+*motion.txt*    For Vim version 6.2.  Last change: 2003 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -523,11 +523,15 @@ is			"inner sentence", select [count] sentences (see
 							*v_ap* *ap*
 ap			"a paragraph", select [count] paragraphs (see
 			|paragraph|).
+			Exception: a blank line (only containing white space)
+			is also a paragraph boundary.
 			When used in Visual mode it is made linewise.
 
 							*v_ip* *ip*
 ip			"inner paragraph", select [count] paragraphs (see
 			|paragraph|).
+			Exception: a blank line (only containing white space)
+			is also a paragraph boundary.
 			When used in Visual mode it is made linewise.
 
 a]						*v_a]* *v_a[* *a]* *a[*

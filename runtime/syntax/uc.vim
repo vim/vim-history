@@ -3,7 +3,7 @@
 " Maintainer:	Mark Ferrell <major@chaoticdreams.org>
 " URL:		ftp://ftp.chaoticdreams.org/pub/ut/vim/uc.vim
 " Credits:	Based on the java.vim syntax file by Claudio Fleiner
-" Last change:	2003 May 11
+" Last change:	2003 May 31
 
 " Please check :help uc.vim for comments on some of the options available.
 
@@ -78,21 +78,21 @@ hi link ucCommentCharacter ucCharacter
 syn cluster ucTop add=ucComment,ucLineComment
 
 " match the special comment /**/
-syn match   ucComment          "/\*\*/"
+syn match   ucComment	       "/\*\*/"
 
 " Strings and constants
 syn match   ucSpecialError     contained "\\."
 "syn match   ucSpecialCharError contained "[^']"
 syn match   ucSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
-syn region  ucString           start=+"+ end=+"+  contains=ucSpecialChar,ucSpecialError
+syn region  ucString	       start=+"+ end=+"+  contains=ucSpecialChar,ucSpecialError
 syn match   ucStringError      +"\([^"\\]\|\\.\)*$+
 syn match   ucCharacter        "'[^']*'" contains=ucSpecialChar,ucSpecialCharError
 syn match   ucCharacter        "'\\''" contains=ucSpecialChar
 syn match   ucCharacter        "'[^\\]'"
-syn match   ucNumber           "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
-syn match   ucNumber           "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
-syn match   ucNumber           "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
-syn match   ucNumber           "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
+syn match   ucNumber	       "\<\(0[0-7]*\|0[xX]\x\+\|\d\+\)[lL]\=\>"
+syn match   ucNumber	       "\(\<\d\+\.\d*\|\.\d\+\)\([eE][-+]\=\d\+\)\=[fFdD]\="
+syn match   ucNumber	       "\<\d\+[eE][-+]\=\d\+[fFdD]\=\>"
+syn match   ucNumber	       "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
 
 " unicode characters
 syn match   ucSpecial "\\u\d\{4\}"
@@ -100,7 +100,7 @@ syn match   ucSpecial "\\u\d\{4\}"
 syn cluster ucTop add=ucString,ucCharacter,ucNumber,ucSpecial,ucStringError
 
 " catch errors caused by wrong parenthesis
-syn region  ucParen            transparent start="(" end=")" contains=@ucTop,ucParen
+syn region  ucParen	       transparent start="(" end=")" contains=@ucTop,ucParen
 syn match   ucParenError       ")"
 hi link     ucParenError       ucError
 

@@ -6539,7 +6539,7 @@ ins_bs(c, mode, inserted_space_p)
 	    {
 #ifdef FEAT_MBYTE
 		if (enc_utf8 && p_deco)
-		    utfc_ptr2char(ml_get_cursor(), &p1, &p2);
+		    (void)utfc_ptr2char(ml_get_cursor(), &p1, &p2);
 #endif
 		(void)del_char(FALSE);
 #ifdef FEAT_MBYTE

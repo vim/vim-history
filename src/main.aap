@@ -204,7 +204,7 @@ reconfig {virtual}: $Target
 # If everything is allright, the final message will be "ALL DONE".
 #
 test check:
-    VIMPROG = ../$Target
+    VimProg = ../$Target
     :execute testdir/main.aap $GUI_TESTTARGET
 
 testclean {virtual}:

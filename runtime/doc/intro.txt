@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.2f.  Last change: 2003 Apr 25
+*intro.txt*     For Vim version 6.2.  Last change: 2003 May 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -663,7 +663,8 @@ If the 'insertmode' option is on, editing a file will start in Insert mode.
 	*CTRL-\_CTRL-N* *i_CTRL-\_CTRL-N* *c_CTRL-\_CTRL-N* *v_CTRL-\_CTRL-N*
 Additionally the command CTRL-\ CTRL-N or <C-\><C-N> can be used to go to
 Normal mode from any other mode.  This can be used to make sure Vim is in
-Normal mode, without causing a beep like <Esc> would.
+Normal mode, without causing a beep like <Esc> would.  However, this does not
+work in Ex mode.
 
 	*CTRL-\_CTRL-G* *i_CTRL-\_CTRL-G* *c_CTRL-\_CTRL-G* *v_CTRL-\_CTRL-G*
 The command CTRL-\ CTRL-G or <C-\><C-G> can be used to go to Insert mode when

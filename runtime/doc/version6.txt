@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2f.  Last change: 2003 May 25
+*version6.txt*  For Vim version 6.2.  Last change: 2003 Jun 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5976,7 +5976,7 @@ This is mainly a bug-fix release.  There are also a few new features.
 Main new features:
 - Support for GTK 2. (Daniel Elstner)
 - Support for editing Arabic text. (Nadim Shaikli & Isam Bayazidi)
-- ":try" command and friends. (Servatius Brandt)
+- ":try" command and exception handling. (Servatius Brandt)
 - Support for the neXtaw GUI toolkit (mostly like Athena). (Alexey Froloff)
 - Cscope support for Win32. (Khorev Sergey)
 - Support for PostScript printing in various 8-bit encodings. (Mike Williams)
@@ -6082,6 +6082,7 @@ New syntax files:
 	A65 (Clemens Kirchgatterer)
 	sshconfig and sshdconfig (David Necas)
 	Cheetah and HTMLCheetah (Max Ischenko)
+	Packet filter (Camiel Dobbelaar)
 
 New indent files:
 	Eiffel (David Clarke)
@@ -6117,6 +6118,7 @@ New menu translations:
 	British (Mike Williams)
 	Korean in UTF-8. (Nam SungHyun)
 	Norwegian (Øyvind Holm)
+	Serbian (Aleksandar Jelenak)
 
 New message translation for Norwegian. (Øyvind Holm)
 
@@ -6341,6 +6343,10 @@ Fixed Arabic shaping for the command line. (Nadim Shaikli)
 Avoid splitting up a string displayed on the command line into individual
 characters, it breaks Arabic shaping.
 
+Updated Cygwin and MingW makefiles to use more dependencies. (Dan Sharp)
+
+2html.vim didn't work with 'nomagic' set.
+
 When a local argument list is used and doing ":only" Vim could crash later.
 (Muraoka Taro)
 
@@ -6435,6 +6441,9 @@ MingW and Cygwin: Don't strip the debug executable. (Dan Sharp)
 
 An assignment to a variable with curlies that includes "==" doesn't work.
 Skip over the curlies before searching for an "=". (Vince Negri)
+
+When cancelling the selection of alternate matching tags the tag stack index
+could be advanced too far, resulting in an error message when using CTRL-T.
 
 
 Patch 6.1.001
@@ -9546,6 +9555,242 @@ Problem:    When opening the command-line window in Ex mode it's impossible to
 Solution:   Reset "exmode_active" and restore it when the command-line window
 	    is closed.
 Files:	    src/ex_getln.c
+
+
+Patch 6.2f.001
+Problem:    The configure check for Ruby didn't work properly for Ruby 1.8.0.
+Solution:   Change the way the Ruby check is done. (Aron Griffis)
+Files:	    src/auto/configure, src/configure.in
+
+Patch 6.2f.002
+Problem:    The output of ":ls" doesn't show whether a buffer had read errors.
+Solution:   Add the "x" flag in the ":ls" output.
+Files:	    runtime/doc/windows.txt, src/buffer.c
+
+Patch 6.2f.003
+Problem:    Test49 doesn't properly test the behavior of ":catch" without an
+	    argument.
+Solution:   Update test49. (Servatius Brandt)
+Files:	    src/testdir/test49.ok, src/testdir/test49.vim
+
+Patch 6.2f.004
+Problem:    "vim --version" always uses CR/LF in the output.
+Solution:   Omit the CR.
+Files:	    src/message.c, src/os_unix.c
+
+Patch 6.2f.005
+Problem:    Two error messages without a colon after the number.
+Solution:   Add the colon. (Taro Muraoka)
+Files:	    src/if_cscope.c
+
+Patch 6.2f.006
+Problem:    When saving a file takes a while and Vim regains focus this can
+	    result in a "file changed outside of Vim" warning and ml_get()
+	    errors. (Mike Williams)
+Solution:   Add the "b_saving" flag to avoid checking the timestamp while the
+	    buffer is being saved. (Michael Schaap)
+Files:	    src/fileio.c, src/structs.h
+
+Patch 6.2f.007
+Problem:    Irix compiler complains about multiple defined symbols.
+	    vsnprintf() is not available.  (Charles Campbell)
+Solution:   Insert EXTERN for variables in globals.h.  Change the configure
+	    check for vsnprintf() from compiling to linking.
+Files:	    src/auto/configure, src/configure.in, src/globals.h
+
+Patch 6.2f.008
+Problem:    The Aap recipe doesn't work with Aap 0.149.
+Solution:   Change targetarg to TARGETARG.  Update the mysign file.
+Files:	    src/main.aap, src/mysign
+
+Patch 6.2f.009 (extra)
+Problem:    Small problem when building with Borland 5.01.
+Solution:   Use mkdir() instead of _mkdir(). (Walter Briscoe)
+Files:	    src/dosinst.h
+
+Patch 6.2f.010
+Problem:    Warning for missing prototypes.
+Solution:   Add missing prototypes. (Walter Briscoe)
+Files:	    src/if_cscope.c
+
+Patch 6.2f.011
+Problem:    The configure script doesn't work with autoconf 2.5x.
+Solution:   Add square brackets around a header check. (Aron Griffis)
+	    Note: touch src/auto/configure after applying this patch.
+Files:	    src/configure.in
+
+Patch 6.2f.012
+Problem:    ":echoerr" doesn't work correctly inside try/endtry.
+Solution:   Don't reset did_emsg inside a try/endtry. (Servatius Brandt)
+Files:	    src/eval.c
+
+Patch 6.2f.013 (extra)
+Problem:    Macintosh: Compiler warning for a trigraph.
+Solution:   Insert a backslash before each question mark. (Peter Cucka)
+Files:	    src/os_mac.h
+
+Patch 6.2f.014 (extra)
+Problem:    Macintosh: ex_eval is not included in the project file.
+Solution:   Add ex_eval. (Dany St-Amant)
+Files:	    src/os_mac.pbproj/project.pbxproj
+
+Patch 6.2f.015 (extra)
+Problem:    Win32: When changing header files not all source files involved
+	    are recompiled.
+Solution:   Improve the dependency rules. (Dan Sharp)
+Files:	    src/Make_cyg.mak, src/Make_ming.mak
+
+Patch 6.2f.016
+Problem:    "vim --version > ff" on non-Unix systems results in a file with a
+	    missing line break at the end. (Bill McCArthy)
+Solution:   Add a line break.
+Files:	    src/main.c
+
+Patch 6.2f.017
+Problem:    Unix: starting Vim in the background and then bringing it to the
+	    foreground may cause the termainal settings to be wrong.
+Solution:   Check for tcsetattr() to return an error, retry when it does.
+	    (Paul Tapper)
+Files:	    src/os_unix.c
+
+Patch 6.2f.018
+Problem:    Mac OS X 10.2: OK is defined to zero in cursus.h while Vim uses
+	    one.  Redefining it causes a warning message.
+Solution:   Undefine OK before defining it to one. (Taro Muraoka)
+Files:	    src/vim.h
+
+Patch 6.2f.019
+Problem:    Mac OS X 10.2: COLOR_BLACK and COLOR_WHITE are defined in
+	    curses.h.
+Solution:   Rename them to PRCOLOR_BLACK and PRCOLOR_WHITE.
+Files:	    src/ex_cmds2.c
+
+Patch 6.2f.020
+Problem:    Win32: test50 produces beeps and fails with some versions of diff.
+Solution:   Remove empty lines and convert the output to dos fileformat.
+Files:	    src/testdir/test50.in
+
+Patch 6.2f.021
+Problem:    Running configure with "--enable-netbeans" disables Netbeans.
+	    (Gordon Prieur)
+Solution:   Fix the tests in configure.in where the default is to enable a
+	    feature.  Fix that "--enable-acl" reported "yes" confusingly.
+Files:	    src/auto/configure, src/configure.in, src/mysign
+
+Patch 6.2f.022
+Problem:    A bogus value for 'foldmarker' is not rejected, possibly causing a
+	    hang. (Derek Wyatt)
+Solution:   Check for a non-empty string before and after the comma.
+Files:	    src/option.c
+
+Patch 6.2f.023
+Problem:    When the help files are not in $VIMRUNTIME but 'helpfile' is
+	    correct Vim still can't find the help files.
+Solution:   Also look for a tags file in the directory of 'helpfile'.
+Files:	    src/tag.c
+
+Patch 6.2f.024
+Problem:    When 'delcombine' is set and a character has more than two
+	    composing characters "x" deletes them all.
+Solution:   Always delete only the last composing character.
+Files:	    src/misc1.c
+
+Patch 6.2f.025
+Problem:    When reading a file from stdin that has DOS line endings but a
+	    missing end-of-line for the last line 'fileformat' becomes "unix".
+	    (Bill McCarthy)
+Solution:   Don't add the missing line break when re-reading the text from the
+	    buffer.
+Files:	    src/fileio.c
+
+Patch 6.2f.026
+Problem:    When typing new text at the command line, old composing characters
+	    may be displayed.
+Solution:   Don't read composing characters from after the end of the
+	    text to be displayed.
+Files:	    src/ex_getln.c, src/mbyte.c, src/message.c, src/proto/mbyte.pro,
+	    src/screen.c
+
+Patch 6.2f.027
+Problem:    Compiler warnings for unsigned char pointers. (Tony Leneis)
+Solution:   Add typecasts to char pointer.
+Files:	    src/quickfix.c
+
+Patch 6.2f.028
+Problem:    GTK: When 'imactivatekey' is empty and XIM is inactive it can't be
+	    made active again.  Cursor isn't updated immediately when changing
+	    XIM activation.  Japanese XIM may hang when using 'imactivatekey'.
+	    Can't activate XIM after typing fFtT command or ":sh".
+Solution:   Properly set the flag that indicates the IM is active.  Update the
+	    cursor right away.  Do not send a key-release event.  Handle
+	    Normal mode and running an external command differently.
+	    (Yasuhiro Matsumoto)
+Files:	    src/mbyte.c
+
+Patch 6.2f.029
+Problem:    Mixing use of int and enum.
+Solution:   Adjust argument type of cs_usage_msg().  Fix wrong typedef.
+Files:	    src/if_cscope.c, src/if_cscope.h
+
+Patch 6.2f.030 (after 6.2f.028)
+Problem:    Cursor moves up when using XIM.
+Solution:   Reset im_preedit_cursor.  (Yasuhiro Matsumoto)
+Files:	    src/mbyte.c
+
+Patch 6.2f.031
+Problem:    Crash when listing a function argument in the debugger. (Ron Aaron)
+Solution:   Init the name field of an argument to NULL.
+Files:	    src/eval.c
+
+Patch 6.2f.032
+Problem:    When a write fails for a ":silent!" while inside try/endtry the
+	    BufWritePost autocommands are not triggered.
+Solution:   Check the emsg_silent flag in should_abort(). (Servatius Brandt)
+Files:	    src/ex_eval.c, src/testdir/test49.ok, src/testdir/test49.vim
+
+Patch 6.2f.033
+Problem:    Cscope: re-entrance problem for ":cscope" command.  Checking for
+	    duplicate database didn't work well for Win95.  Didn't check for
+	    duplicate databases after an empty entry.
+Solution:   Don't set postponed_split too early.  Remember first empty
+	    database entry. (Sergey Khorev)
+Files:	    src/if_cscope.c
+
+Patch 6.2f.034
+Problem:    The netbeans interface cannot be used on systems without
+	    vsnprintf(). (Tony Leneis)
+Solution:   Use EMSG(), EMSGN() and EMSG2() instead.
+Files:	    src/auto/configure, src/configure.in, src/netbeans.c
+
+Patch 6.2f.035
+Problem:    The configure check for the netbeans interface doesn't work if the
+	    socket and nsl libraries are required.
+Solution:   Check for the socket and nsl libraries before the netbeans check.
+Files:	    src/auto/configure, src/configure.in
+
+Patch 6.2f.036
+Problem:    Moving leftwards over text with an illegal UTF-8 byte moves one
+	    byte instead of one character.
+Solution:   Ignore an illegal byte after the cursor position.
+Files:	    src/mbyte.c
+
+Patch 6.2f.037
+Problem:    When receiving a Netbeans command at the hit-enter or more prompt
+	    the screen is redrawn but Vim is still waiting at the prompt.
+Solution:   Quit the prompt like a CTRL-C was typed.
+Files:	    src/netbeans.c
+
+Patch 6.2f.038
+Problem:    The dependency to run autoconf causes a patch for configure.in
+	    to run autoconf, even though the configure script was updated as
+	    well.
+Solution:   Only run autoconf with "make autoconf".
+Files:	    src/Makefile
+
+Patch 6.2f.039
+Problem:    CTRL-W K makes the new top window very high.
+Solution:   When 'equalalways' is set equalize the window heights.
+Files:	    src/window.c
 
 
  vim:tw=78:ts=8:ft=help:norl:

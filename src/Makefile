@@ -334,6 +334,7 @@ CClink = $(CC)
 #CONF_OPT_GUI = --enable-gui=gtk2 --disable-gtktest
 #CONF_OPT_GUI = --enable-gui=gnome
 #CONF_OPT_GUI = --enable-gui=gnome2
+#CONF_OPT_GUI = --enable-gui=gnome2 --disable-gtktest
 #CONF_OPT_GUI = --enable-gui=motif
 #CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
@@ -673,7 +674,8 @@ LINT_OPTIONS = -beprxzF
 #EXTRA_LIBS = -lsocket -lgen
 
 ### (R) for Solaris 2.5 (or 2.5.1) with gcc > 2.5.6 you might need this:
-#LDFLAGS = -lw -ldl
+#LDFLAGS = -lw -ldl -lXmu
+#GUI_LIB_LOC = -L/usr/local/lib
 
 ### Irix 4.0 & 5.2 (Silicon Graphics Machines, __sgi will be defined)
 # Not needed for Irix 5.3, Ives Aerts reported
@@ -820,7 +822,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim62f
+VIMRTDIR = /vim62
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax

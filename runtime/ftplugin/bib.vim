@@ -1,7 +1,7 @@
 " Vim filetype plugin
-" Language:      BibTeX 
+" Language:      BibTeX
 " Maintainer:    Dorai Sitaram <ds26@gte.com>
-" URL:           http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html 
+" URL:		 http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html
 " Last Change:   May 21, 2003
 
 " Only do this when not done yet for this buffer

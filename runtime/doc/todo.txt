@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2f.  Last change: 2003 May 25
+*todo.txt*      For Vim version 6.2.  Last change: 2003 May 31
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,27 +29,8 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Test50 output is a Unix format file but test50.ok is normallya dos file.
-
-Hang with folding, reproducable. (Derek Wyatt, Oct 30)
-Crash with folding. (Kamil Burzynski, Apr 7)
-
-Crash when creating/wiping out buffers in autocommand, reproducable. (Hari
-Krishna Dara, April 10)
-
-Crash for some script which contains:
-    execute "syn match Ranges '\\%" . i . "l.*' containedin=ALL"
-(Salman Halim, Dan Sharp)
-
-Win32: Crash when adding and deleting menu items. (Klaus Bosau Dec 29)
-
 When using 'arabic' and searching for a string that starts with a composing
 character the command line isn't drawn properly.
-
-After searching for a string with composing characters, typing another command
-shows some of the composing characters, they are not cleared.
-
-Compare regexp to Perl. (Piet Delport, May 19)
 
 Redraw problem in help file after listing completions. (Jacob Lerner, Apr 27)
 
@@ -59,34 +40,46 @@ removes some highlighting in one of the windows. (Brett Pershing Stahlman)
 The syntax must be different in the previous current window and the window
 above the status line being dragged.
 
+Bug in "3P" (Daniel Goujot):
+    vim -i NONE -u NONE -U NONE<enter>iabcdef<enter>ghijkl<Esc>vhky3P
+Redraw is wrong and "PPP" works differently.
+
+Fold nesting wrong when deleting first of these lines:
+a{{{
+b{{{
+c{{{
+}}} }}} }}}
+'foldmethod' is "marker". (Kamil Burzynski, Feb 4)
+
+Create wrong fold when using "P" on closed fold. (Kamil Burzynski, Feb 12)
+
+Fold continues beyond "}}}" when a "{{{2" follows. (Muraoka Taro, Mar 15)
+
 Exception handling: (Servatius Brandt)
-- Add section to user manual
 - remove the workarounds for not being able to define a function in a while
   loop.  It's not supported.
-- Check use of aborting() in functions like win_close() and close_buffer():
-  When aborting() already returned TRUE at the start of the function should
-  autocommands and other things still be executed?
 
 GTK2 patch problems:
-- ":sp" ":q" leaves cursor on the cmdline.
+- ":sp" ":q" leaves cursor on the cmdline.  Setting 'writedelay' to one avoids
+  it.
 - DND doesn't work with KDE?
-- Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
+- Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM"
+  (GTK 2.0.9).
 - Combining UTF-8 characters not displayed properly in menus (Mikolaj
   Machowski)
-- After ":set guifont=fixed" using ":set guifont=*" goes wrong. (Erik
-  Edelmann, May 22)
+- After ":set guifont=fixed" using ":set guifont=*" crashes Vim. (Erik
+  Edelmann, May 22)  Verified with GTK 2.0.9.
+- Composing characters under the cursor sometimes disappear. (GTK 2.0.9)
 
 Check that these problems are fixed by the GTK 2 port:
-9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
-    Without Gnome it is OK.
-    Not all Gnome arguments get to gnome_init().
+9   GTK GUI with Gnome: Not all Gnome arguments get to gnome_init().
 9   When selecting a font from the font selector with an embedded space it
     cannot be found. (Tsirkin)
+8   When a font is not fixed width, the message "not fixed-width" disappears
+    immediately. (Tsirkin)
 9   When menus are disabled, 'm' removed from 'guioptions', Alt-F still pops
     up the File menu and gives a warning for a NULL pointer if the menu was
     never displayed.
-8   When a font is not fixed width, the message "not fixed-width" disappears
-    immediately. (Tsirkin)
 8   When using "gvim -geom 40x30" or setting 'columns' in .gvimrc or with a
     GUIEnter autocommand, the width is still set to fit the toolbar.  Also
     happens when changing the font.  How to avoid that the toolbar specifies
@@ -94,30 +87,8 @@ Check that these problems are fixed by the GTK 2 port:
 8   When using a theme with different scrollbars (gtkstep), the scrollbars can
     be too narrow. (Drazen Kacar)
 
-WinNT: check displaying cursor in a console, does it disappear? (Yasuhiro
-Matsumoto)
-
-A very long line in an XML file causes Vim the crawl.  Limit the searching for
-items to a few hundred characters?
-9   Editing a XML file with a long line is extremely slow.  Example file from
-    Randy Parker (Dec 13).
-
-Translated options are not expanded, add flag and invoke _().  For 'titleold'
-and 'printheader'.
-
-When searching, is order of composing characters ignored?
-
-UTF-8: When three combining chars and 'delcombine' set, "x" deletes all the
-bytes instead of the last combining char. (Raphael Finkel)
-Backspacing also does this, and moves the cursor to the start of the next
-line. (Nadim Shaikli)
-Should implement 'delcombine' for command line editing.
-
 diff_find_change() isn't multi-byte aware.  Should highlight a char when it's
 combining char changes. (Raphael Finkel, Jul 3)
-
-Loading plugins takes startup time.  Only load the part that is used to
-trigger the rest, and load the rest when it's needed?
 
 In filetype plugins only set 'tw' when it's zero.  Avoid overwriting a user
 preference. (Piet Delport)
@@ -145,35 +116,17 @@ correctly shows "1,1", but pressing ESC doesn't change it.  (Andrew Pimlott)
 configure: after adding compilation arguments from Perl, Python, etc. check
 that compiling and linking still works.  Catch errornous "-lelf" argument.
 
-Add a configure check for tgetent(): whether it returns 0 for OK or entry not
-found. (uribarri)
+Add a configure check for tgetent(): whether it returns 0 for OK or "entry not
+found". (uribarri)
 
 :let test = "\n"  :echo test =~ '\n'  should result in "1", results in "0".
 (Yasuhiro Matsumoto)
 
-Fold nesting wrong when deleting first of these lines:
-a{{{
-b{{{
-c{{{
-}}} }}} }}}
-'foldmethod' is "marker". (Kamil Burzynski, Feb 4)
-
-Create wrong fold when using "P" on closed fold. (Kamil Burzynski, Feb 12)
-
-Fold continues beyond "}}}" when a "{{{2" follows. (Muraoka Taro, Mar 15)
-
-Remove dependency to run autoconf, so that patching configure.in doesn't cause
-trouble?  Make people who change configure.in do "make autoconf".
-
 When 'mousefocus' is set and jumping to another window, apply 'mousehide'
 immediately.
 
-2html.vim doesn't work with 'nomagic' (Steve Hall)
-
 With 'splitbelow' set, open a preview window and then a quickfix window.
 CTRL-W p goes to the preview window instead of the first one (Gary Holloway).
-
-CTRL-W K makes top window very high, equalize the windows.
 
 GTK: Adding an item in the popup menu is put just after instead of just before
 the right item. (Gabriel Zachmann)
@@ -184,52 +137,32 @@ Thakkar, Mar 12)
 When using the accents keymap and Select mode is used, ^e inserts ^ instead of
 ê. (Alex Jakushev)  Also, Visual mode mappings get in the way of keymaps.
 
-"ga" and "g8" should show all composing characters, also if there are more
-than 2.
-
-Win32: When saving a file takes a while, switching to another application and
-back causes a "file changed" prompt and when reloading it in ml_get errors.
-(Mike Williams)  Probably also happens for GTK2 with the "save file" dialog.
-
 Win32: Polish characters  copied/pasted through clipboard end up translated to
 utf-8.  (Mikolaj Machowski, Apr 3)
 
 Win32 clipboard: Add another type of clipboard data that is the raw bytes with
 the 'encoding' setting.  Use this when pasting and 'encoding' matches, so that
-illegal bytes are also included unchanged.
+illegal bytes (caused by a wrong value of 'encoding') are also included
+unchanged.
 
 Don't include 'bufhidden' in ":mkvimrc". (Michael Naumann)
 
 Win32: Some people set $HOME to %USERPROFILE%.  Expand it when found.
 
-Also add 'winfixwidth'?
-
-CTRL-\ CTRL-N doesn't work in Ex mode. (Don Yang)
-
-After patch 6.1.091 on IRIX 6.5 control key stops working. (Thomas Olsen, Jul
-5)
-
-Python interface: add vim.message() function. (Michal Vitecek, Nov 5)
+After patch 6.1.091 on IRIX 6.5 control key stops working. (Thomas Olsen, 2002
+Jul 5)
 
 FreeBSD: When compiled with Python a "!mv x y" command doesn't echo keys
-typed at the prompt.  Caused by "-lpthread"?
-
-In buf_contents_changed() set a variable v:contentscheck?
+typed at the prompt.  Caused by "-lpthread"?  Or is this something with the
+terminal settings?  Also drawing problems when a WxPython program was started
+in the background from the same terminal.
 
 When working over a slow connection, it's very annoying that the last @ line
 is redrawn and then cleared each time.
 
 ":@y" uses vpeekc() to find the end of the executed commands.  But when
 starting up the GUI from a shortcut this doesn't work and Vim exits. (Ned Konz
-Jul 6)
-
-Make 'fillchars' work for multi-byte characters.
-
-":set nowrap virtualedit=all" Block select lines of different length, use "l",
-selection is no longer a block.
-
-Add ColorSchemePost autocommand event, so that scripts can set up their
-highlighting. (Salman Halim)
+2002 Jul 6)
 
 In a compiler plugin "current_compiler" should be local to the buffer. (Doug
 Potts).  But how to keep it backwards compatible?  use both b:current_compiler
@@ -247,9 +180,6 @@ Make all GUIs work the same way: <Return> ignored when there is no default.
 GTK: <Tab> changes the default, but how to obtain it?
 Motif: uses 1 for CR and 2 for ESC, that's wrong.
 
-When cursor is first moved because of scrolling, set a mark at this position.
-(Rimon Barr)  Use '-.
-
 For ":unmenu" is it possible to ignore & in translations?
 
 Add docs for two docbook syntax files. (Johannes Zellner)
@@ -259,41 +189,23 @@ At least in enumWindowsGetServer() and enumWindowsGetNames().
 
 Win32: Memory leak when using ctags stuff from Steve Amerige?
 
-":e http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt" leaves 'fenc'
-empty, while editing the same file locally sets it to "latin1".
-Netrw.vim uses ":0r tmpfile" instead of ":e tmpfile".  Can this be changed?
-
 Editing a new file sets 'fenc' empty.  Editing an empty file sets 'fenc' to
 the first entry in 'fencs' and may mention [converted].  Is this right?
-
-":edit +set\ ro file" does not work, should remove the backslash.
 
 When __STDC_ISO_10646__ is defined, use wcwidth() from the library instead of
 built-in one? (Markus Kuhn)
 
 Solaris: It's possible that configure uses a different search path for
-libraries than when linking, two versions of libintl.so the may cause trouble.
-(Antonio Columbo)
+libraries than when linking, two versions of libintl.so then may cause
+trouble.  (Antonio Columbo)
 
-ml_find_line_or_offset() returns offset instead of line number when passing
-the offset of the last byte in the file. (Gordon Prieur Nov 22)
-
-Using "%" on a ";" at the end of a line, it jumps back to any "=", no matter
-what is in between.  Should be an error when crossing a ( or ;.
-
-CTRL-O and CTRL-I can't be used in Visual mode.  Allow this? (Anand Hariharan)
-
-MDI child window in MS Visual studio, add -P argument. (Zibo Zhao, Oct 31)
+Patch to use Vim in an MDI child window in MS Visual studio: add -P argument
+to Vim. (Zibo Zhao, 2002 Oct 31)
 
 Install Ruby and use in default Win32 compiled version? (Dan Sharp)
 
-Win32: New compiling howto http://mywebpage.netscape.com/sharppeople/vim/howto
-
 Ruby: "ruby << EOF" inside a function doesn't always work.  Recognize this and
 skip until the matching "EOF".  Also for ":python", ":tcl" and ":perl".
-
-DJGPP: install 2.03 refresh: http://clio.rice.edu/djgpp/win2k/main_203.htm
-Fixes problems with Windows XP.
 
 When 'selection' is "exclusive", selecting with the mouse from right to left
 does not select the character the mouse first pointed to.  When dragging the
@@ -311,12 +223,8 @@ them to set the marks back to the just read lines.
 When 'lazyredraw' is set don't update the window title, status line, 'showcmd'
 or mode.
 
-Bug in "3P" (Daniel Goujot):
-    vim -i NONE -u NONE -U NONE<enter>iabcdef<enter>ghijkl<Esc>vhky3P
-Redraw is wrong and "PPP" works differently.
-
 BufEnter autocommand stops 'mousefocus' from working in Insert mode (Normal
-mode is OK). (Gregory Seidman, Jan 17)
+mode is OK). (Gregory Seidman, 2003 Jan 17)
 
 Win32: use wide character function to display window title, otherwise it
 doesn't work when 'encoding' is different from the current codepage. (Yasuhiro
@@ -350,9 +258,6 @@ Obscure problem in gvim: (Jens Schicke)
 Get message "Error detected while processing BufRead Auto commands for "*.txt":
 Need at least 101 lines: tw=78"
 And the screen size is messed up.
-
-strftime() returns the text in the current locale, need to convert it to
-'encoding'.
 
 The main() function is very long.  Move parts to separate functions,
 especially loops.  Ideas from Walter Briscoe (Apr 3).
@@ -507,6 +412,8 @@ Win32 GUI known bugs:
 
 
 Athena and Motif:
+9   Can configure be changed to disable netbeans if the Xpm library is
+    required and it's missing?
 8   When using the resource "Vim*borderwidth 2" the widgets are positioned
     wrong.
 9   XIM is disabled by default for SGI/IRIX.  Fix XIM so that 'imdisable' can
@@ -578,8 +485,8 @@ GUI:
     Need better separation of Vim core and GUI code.
 8   When fontset support is enabled, setting 'guifont' to a single font
     doesn't work.
-8   Menu priority for sub-menus for: Amiga, Mac, BeOS.
-8   Add menu separators for Amiga, Mac, RISCOS.
+8   Menu priority for sub-menus for: Amiga, BeOS.
+8   Add menu separators for Amiga, RISCOS.
 8   Add a few more command names.  Patch from Jiri Brezina (28 feb 2002).
 8   Add way to specify the file filter for the browse dialog.  At least for
     browse().
@@ -750,33 +657,26 @@ Macintosh:
     - scrollbar (2002 Dec 8)
     - Quartz fonts (2002 Dec 8)
 9   Problems in Carbon version for OS X: (Benji Fisher)
-    - ":map % something" doesn't work.
-    - Dialog boxes pop up but don't do anything.
     - keyboard shortcuts in the menus get lost.
+8   The Vim/About menu doesn't work.
 8   Define vim_mkdir() for Macintosh.
 8   Define mch_writable() for Macintosh.
-9   Explorer.vim isn't working properly.  Benji Fisher has a better version.
-8   Carbon version under MacOS X is slower than Classic version.
-9   Vim cannot be renamed to something else (or it won't be able to find the
-    $VIMRUNTIME)
-8   $HOME is supported under MacOS X, but ~ is not.
 9   When DiskLock is running, using a swap file causes a crash.  Appears to be
     a problem with writing a file that starts with a dot. (Giacalone)
 9   On G3 Mac, OS version 8, control strip causes characters messed up when
     scrolling (CTRL-L cleans it up). (Benji Fisher)
 9   On G3 Mac, OS version 8, variable-speed scrolling doesn't work, after two
     seconds of scrolling the screen freezes. (Benji Fisher)
-    scrolling (CTRL-L cleans it up). (Benji Fisher)
 9   In mac_expandpath() check that handling of backslashes is done properly.
-9   Executable is called "vimPPC" instead of "gvim"? (Amerige)
-8   Standard Mac buttons and shortcuts are missing.  No close button.
-    (Amerige)
-8   An invocation of gvim hands over control to an existing gvim. (Amerige)
+8   Standard Mac shortcuts are missing.  (Amerige)
 8   Handling of non-fixed width fonts is wrong. (Amerige)
-8   StatusLine and StatusLineNC highlighting isn't right. (Amerige)
 
 
 "Small" problems:
+8   'fillchars' doesn't work for multi-byte characters.
+9   Editing a XML file with a long line is extremely slow.  Example file from
+    Randy Parker (Dec 13).
+    Limit the searching for items to a few hundred characters?
 8   Command line completion: buffers "foo.txt" and "../b/foo.txt", completing
     ":buf foo<Tab>" doesn't find the second one. (George V. Reilly)
 7   Output for ":scriptnames" and ":breaklist" should shorten the file names:
@@ -1093,7 +993,7 @@ Problems that will (probably) not be solved:
 ---------------------  extensions and improvements ----------------------
 						    *extensions-improvements*
 
-For version 6.2:
+For version 6.3:
 -   Give a warning when highlight group names use something else than ASCII
     letters, digits and "_".
 -   Include kvim patch? http://freenux.org/vim/ (Mickael Marchand, 2003 Jan 29)
@@ -1120,6 +1020,12 @@ Documentation:
 
 
 Help:
+-   When the user manual has been translated, how to make ":help" jump to tags
+    inside it?
+    - Append ".xx" to each tag in the translated help file (e.g., .it, .de)
+    - Add the 'helplang' option, user can set it to "it" or "de".
+    - The ":help" command appends ".it" or ".de" to the tag, when it doesn't
+      exist use the tag without appending.
 -   First try using the ":help" argument literally, before using it as a
     pattern.  And then match it as part of a tag.
 -   When a help item has multiple matches make it possible to use ":tn" to go
@@ -1246,6 +1152,9 @@ Multi-byte characters:
 8   'infercase' doesn't work with multi-byte characters.
 8   toupper() function doesn't handle byte count changes.
 8   Support four composing characters, needed for Hebrew. (Ron Aaron)
+8   "ga" should show all composing characters, also if there are more than 2.
+7   When searching, should order of composing characters be ignored?
+8   Should implement 'delcombine' for command line editing.
 8   Detect overlong UTF-8 sequences and handle them like illegal bytes.
 8   ":s/x/\u\1/" doesn't work, making uppercase isn't done for multi-byte
     characters.
@@ -1412,6 +1321,8 @@ Syntax highlighting:
 7   Should find a better way to parse the :syntax and :highlight commands.
     Use tables or lists that can be shared by parsing for execution and
     completion?
+8   Add ColorSchemePost autocommand event, so that scripts can set up their
+    highlighting. (Salman Halim)
 7   Add a few sets of colors (e.g. Borland Turbo C one).  With a menu to
     select one of the sets.
 8   Add offsets to sub-matches: "\(a*\) *"he=e1-1
@@ -1599,6 +1510,8 @@ Robustness:
 
 
 Performance:
+8   Loading plugins takes startup time.  Only load the part that is used to
+    trigger the rest, and load the rest when it's needed?
 8   Turn b_syn_ic and b_syn_containedin into b_syn_flags.
 9   Loading menu.vim still takes quite a bit of time.  How to make it faster?
 8   in_id_list() takes much time for syntax highlighting.  Cache the result?
@@ -1905,7 +1818,7 @@ Win32 GUI:
 
 GUI:
 8   Make GTK GUI work with GTK 2.0. http://developer.gnome.org/dotplan/porting/
-8   Make inputdialog() work for Photon, Amiga, Mac, RiscOS.
+8   Make inputdialog() work for Photon, Amiga, RiscOS.
 -   <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
 7   Implement ":popup" for other systems than Windows.
@@ -2839,6 +2752,7 @@ External commands:
 
 
 Multiple Windows:
+7   Also add 'winfixwidth'?
 6   Add an option to resize the shell when splitting and/or closing a window.
     ":vsp" would make the shell wider by as many columns as needed for the new
     window.  Specify a maximum size (or use the screen size). ":close" would
@@ -2855,6 +2769,8 @@ Multiple Windows:
 
 
 Marks:
+8   When cursor is first moved because of scrolling, set a mark at this
+    position.  (Rimon Barr)  Use '-.
 8   Add a command to jump to a mark and make the motion inclusive. g'm and g`m?
 8   When deleting lines, don't delete uppercase marks in them.  Move the mark
     to the nearest line.
@@ -2905,6 +2821,8 @@ Writing files:
 8   'backupskip' doesn't write a backup file at all, a bit dangerous for some
     applications.  Add 'backupelsewhere' to write a backup file in another
     directory?  Or add a flag to 'backupdir'?
+7   The 'directory' option supports changing path separators to "%" to make
+    file names unique, also support this for 'backupdir'. (Mikolaj Machowski)
 6   Add an option to write a new, numbered, backup file each time.  Like
     'patchmode', e.g., 'backupmode'.
 6   Make it possible to write 'patchmode' files to a different directory.
@@ -2995,6 +2913,7 @@ Registers:
 
 
 Various improvements:
+6   Python interface: add vim.message() function. (Michal Vitecek, 2002 Nov 5)
 7   Support using ":vert" with User commands.  Add expandable items <vert>.
     Do the same for ":browse" and ":confirm"?
     For ":silent" and ":debug" apply to the whole user command.

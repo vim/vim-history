@@ -1,8 +1,8 @@
 " Vim filetype plugin file
-" Language:     SQL (Common for Oracle, Microsoft SQL Server, Sybase)
-" Version:      0.01
-" Maintainer:   David Fishburn <fishburn@sybase.com>
-" Last Change:  21st October 2002
+" Language:	SQL (Common for Oracle, Microsoft SQL Server, Sybase)
+" Version:	0.02
+" Maintainer:	David Fishburn <fishburn@ianywhere.com>
+" Last Change:	Tue May 27 2003 09:33:31
 
 " This file should only contain values that are common to all SQL languages
 " Oracle, Microsoft SQL Server, Sybase ASA/ASE, MySQL, and so on
@@ -20,7 +20,8 @@ let b:did_ftplugin = 1
 
 " Define patterns for the matchit macro
 if !exists("b:match_words")
-    let b:match_ignorecase = 0
+    " SQL is generally case insensitive
+    let b:match_ignorecase = 1
     let b:match_words =
 		\ '\<begin\>:\<end\>\(;\)\?$,'.
 		\ '\<if\>:\<elsif\>:\<elseif\>:\<else\>:'.

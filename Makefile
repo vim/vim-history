@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 2f
+MINOR = 2
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s

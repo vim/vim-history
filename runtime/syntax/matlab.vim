@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Matlab
-" Maintainer:	Preben "Peppe" Guldberg <c928400@student.dtu.dk>
+" Maintainer:	Preben 'Peppe' Guldberg <peppe-vim@wielders.org>
 "		Original author: Mario Eusebio
-" Last Change:	Tue Jul 28 17:44:06 1998
+" Last Change:	30 May 2003
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

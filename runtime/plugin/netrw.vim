@@ -882,8 +882,8 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  " rcphf    : [user@]host:filename		    Use rcp
  " scpurm   : scp://[user@]host/filename	    Use scp
  " httpurm  : http://[user@]host/filename	    Use wget
- " davurm   : dav://host[:port]/path                Use cadaver
- " rsyncurm : rsync://host[:port]/path              Use rsync
+ " davurm   : dav://host[:port]/path		    Use cadaver
+ " rsyncurm : rsync://host[:port]/path		    Use rsync
  let mipf     = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'
  let mf       = '\(\S\+\)\s\+\(\S\+\)'
  let ftpurm   = 'ftp://\([^/@]@\)\=\([^/#:]\{-}\)\([#:]\d\+\)\=/\(.*\)$'
@@ -899,7 +899,7 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  if match(a:choice,rcpurm) == 0
 "  call Decho("DBG: NetMethod: rcp://...")
   let b:netrw_method = 1
-  let userid         = substitute(a:choice,rcpurm,'\1',"")
+  let userid	     = substitute(a:choice,rcpurm,'\1',"")
   let g:netrw_machine= substitute(a:choice,rcpurm,'\2',"")
   let b:netrw_fname  = substitute(a:choice,rcpurm,'\3',"")
   if userid != ""
@@ -936,7 +936,7 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  " ftp://[user@]hostname[[:#]port]/...path-to-file
  elseif match(a:choice,ftpurm) == 0
 "  call Decho("DBG: NetMethod: ftp://...")
-  let userid         = substitute(a:choice,ftpurm,'\1',"")
+  let userid	     = substitute(a:choice,ftpurm,'\1',"")
   let g:netrw_machine= substitute(a:choice,ftpurm,'\2',"")
   let g:netrw_port   = substitute(a:choice,ftpurm,'\3',"")
   let b:netrw_fname  = substitute(a:choice,ftpurm,'\4',"")
@@ -966,7 +966,7 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  elseif match(a:choice,rcphf) == 0
 "  call Decho("DBG: NetMethod: (rcp) host:file")
   let b:netrw_method = 1
-  let userid         = substitute(a:choice,rcphf,'\1',"")
+  let userid	     = substitute(a:choice,rcphf,'\1',"")
   let g:netrw_machine= substitute(a:choice,rcphf,'\2',"")
   let b:netrw_fname  = substitute(a:choice,rcphf,'\3',"")
   if userid != ""
@@ -1089,7 +1089,7 @@ function! s:NetOptionRestore()
  let &com	= s:comkeep
  let &cpo	= s:cpokeep
  exe "lcd ".s:dirkeep
- let &gd        = s:gdkeep
+ let &gd	= s:gdkeep
  let &tw	= s:twkeep
  if exists("s:swfkeep")
   let &swf= s:swfkeep
@@ -1108,11 +1108,11 @@ endfunction
 " ------------------------------------------------------------------------
 
 " NetReadFixup: this sort of function is typically written by
-"               the user to handle extra junk that their system's
-"               ftp dumps into the transfer.  This function is
-"               provided as an example and as a fix for a
-"               Windows 95 problem: in my experience, it always
-"               dumped four blank lines at the end of the transfer.
+"		the user to handle extra junk that their system's
+"		ftp dumps into the transfer.  This function is
+"		provided as an example and as a fix for a
+"		Windows 95 problem: in my experience, it always
+"		dumped four blank lines at the end of the transfer.
 if has("win95") && g:netrw_win95ftp
  fu! NetReadFixup(method, line1, line2)
    if method == 3   " ftp (no <.netrc>)

@@ -1,7 +1,7 @@
 " Menu Translations:	Hungarian (Magyar)
 " Original Translation:	Zoltán Árpádffy
 " Maintained By:	Kontra Gergely <kgergely@mcl.hu>
-" Last Change:		2003 May 20
+" Last Change:		2003 May 31
 " I'm working on defining (unaccented) hotkeys for everything.
 " I want to remove y and z hotkeys, because on the hungarian keymap they're at
 " a differrent place.
@@ -238,7 +238,7 @@ endif
 
 " Syntax menu
 menutrans &Syntax			Sz&intaxis
-menutrans &Show\ filetypes\ in\ menu	Fájl&típusok\ menü 
+menutrans &Show\ filetypes\ in\ menu	Fájl&típusok\ menü
 menutrans Set\ '&syntax'\ only		Csak\ '&syntax'
 menutrans Set\ '&filetype'\ too		'&filetype'\ is
 menutrans &Off				&Ki

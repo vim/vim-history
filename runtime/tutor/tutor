@@ -546,7 +546,7 @@ Note: If you were to exit Vim and enter again with the filename TEST, the file
       would be an exact copy of the tutor when you saved it.
 
   5. Now remove the file by typing (MS-DOS):    :!del TEST
-                                or (Unix):      :!rm TEST
+				or (Unix):	:!rm TEST
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -602,7 +602,7 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
   1.  :!command  executes an external command.
 
       Some useful examples are:
-         (MS-DOS)         (Unix)
+	 (MS-DOS)	  (Unix)
 	  :!dir		   :!ls		   -  shows a directory listing.
 	  :!del FILENAME   :!rm FILENAME   -  removes file FILENAME.
 
