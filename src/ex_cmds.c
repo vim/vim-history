@@ -3511,6 +3511,8 @@ do_sub(eap)
 	}
 	eap->line1 = eap->line2;
 	eap->line2 += i - 1;
+	if (eap->line2 > curbuf->b_ml.ml_line_count)
+	    eap->line2 = curbuf->b_ml.ml_line_count;
     }
 
     /*
