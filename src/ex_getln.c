@@ -4397,7 +4397,7 @@ ex_window()
 
 # ifdef FEAT_AUTOCMD
     /* Don't execute autocommands while creating the window. */
-    ++autocmd_busy;
+    ++autocmd_block;
 # endif
     /* Create a window for the command-line buffer. */
     if (win_split((int)p_cwh, WSP_BOT) == FAIL)
@@ -4421,7 +4421,7 @@ ex_window()
 
 # ifdef FEAT_AUTOCMD
     /* Do execute autocommands for setting the filetype (load syntax). */
-    --autocmd_busy;
+    --autocmd_block;
 # endif
 
     histtype = hist_char2type(ccline.cmdfirstc);
@@ -4542,7 +4542,7 @@ ex_window()
 
 # ifdef FEAT_AUTOCMD
 	/* Don't execute autocommands while deleting the window. */
-	++autocmd_busy;
+	++autocmd_block;
 # endif
 	wp = curwin;
 	bp = curbuf;
@@ -4554,7 +4554,7 @@ ex_window()
 	win_size_restore(&winsizes);
 
 # ifdef FEAT_AUTOCMD
-	--autocmd_busy;
+	--autocmd_block;
 # endif
     }
 

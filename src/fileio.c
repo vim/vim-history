@@ -6785,7 +6785,7 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 	    }
 	    ac->next = NULL;
 	    *prev_ac = ac;
-	    ac->nested = (event == EVENT_FILECHANGEDSHELL ? FALSE : nested);
+	    ac->nested = nested;
 	}
     }
 
@@ -7084,6 +7084,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     void	*save_funccalp;
     char_u	*save_cmdarg;
 #endif
+    static int	filechangeshell_busy = FALSE;
 
     /*
      * Quickly return if there are no autocommands for this event or
@@ -7097,6 +7098,12 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      * explicitly enabled with the "nested" flag.
      */
     if (autocmd_busy && !(force || autocmd_nested))
+	return retval;
+
+    /*
+     * FileChangedShell never nests, because it can create an endless loop.
+     */
+    if (filechangeshell_busy && event == EVENT_FILECHANGEDSHELL)
 	return retval;
 
     /*
@@ -7255,6 +7262,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      * Note that we are applying autocmds.  Some commands need to know.
      */
     autocmd_busy = TRUE;
+    filechangeshell_busy = (event == EVENT_FILECHANGEDSHELL);
     ++nesting;
 
     /* Remember that FileType was triggered.  Used for did_filetype(). */
@@ -7300,6 +7308,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 
     --RedrawingDisabled;
     autocmd_busy = save_autocmd_busy;
+    filechangeshell_busy = FALSE;
     autocmd_nested = save_autocmd_nested;
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
