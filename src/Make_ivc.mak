@@ -273,6 +273,13 @@ CLEAN :
 	-@if exist Make_ivc.ncb erase Make_ivc.ncb
 	-@if exist Make_ivc.opt erase Make_ivc.opt
 	-@if exist Make_ivc.plg erase Make_ivc.plg
+	-@if exist dosinst.obj erase dosinst.obj
+	-@if exist install.exe erase install.exe
+	-@if exist uninstal.exe erase uninstal.exe
+	-@if exist uninstal.obj erase uninstal.obj
+	-@if exist vimrun.exe erase vimrun.exe
+	-@if exist vimrun.obj erase vimrun.obj
+
 
 install.exe: dosinst.c
 	$(CPP) /Fe$@ /nologo /W3 -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib ole32.lib advapi32.lib uuid.lib
