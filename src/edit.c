@@ -613,7 +613,7 @@ edit(cmdchar, startln, count)
 #endif
 
 #ifdef FEAT_INS_EXPAND
-	if (c == Ctrl_V && ctrl_x_mode == CTRL_X_CMDLINE)
+	if ((c == Ctrl_V || c == Ctrl_Q) && ctrl_x_mode == CTRL_X_CMDLINE)
 	    goto docomplete;
 #endif
 	if (c == Ctrl_V || c == Ctrl_Q)
@@ -1698,7 +1698,8 @@ vim_is_ctrl_x_key(c)
 	    return (       c == Ctrl_X || c == Ctrl_Y || c == Ctrl_E
 		    || c == Ctrl_L || c == Ctrl_F || c == Ctrl_RSB
 		    || c == Ctrl_I || c == Ctrl_D || c == Ctrl_P
-		    || c == Ctrl_N || c == Ctrl_T || c == Ctrl_V);
+		    || c == Ctrl_N || c == Ctrl_T || c == Ctrl_V
+		    || c == Ctrl_Q);
 	case CTRL_X_SCROLL:
 	    return (c == Ctrl_Y || c == Ctrl_E);
 	case CTRL_X_WHOLE_LINE:
@@ -1718,7 +1719,8 @@ vim_is_ctrl_x_key(c)
 	    return (c == Ctrl_D || c == Ctrl_P || c == Ctrl_N);
 #endif
 	case CTRL_X_CMDLINE:
-	    return (c == Ctrl_V || c == Ctrl_P || c == Ctrl_N || c == Ctrl_X);
+	    return (c == Ctrl_V || c == Ctrl_Q || c == Ctrl_P || c == Ctrl_N
+		    || c == Ctrl_X);
     }
     EMSG(_(e_internal));
     return FALSE;
@@ -2219,6 +2221,7 @@ ins_compl_prep(c)
 		break;
 #endif
 	    case Ctrl_V:
+	    case Ctrl_Q:
 		ctrl_x_mode = CTRL_X_CMDLINE;
 		break;
 	    case Ctrl_P:
