@@ -5777,7 +5777,9 @@ ex_sign(eap)
 	    else if (STRNCMP(arg, "buffer=", 7) == 0)
 	    {
 		arg += 7;
-		buf = buflist_findnr(atoi((char *)arg));
+		buf = buflist_findnr(getdigits(&arg));
+		if (*skipwhite(arg) != NUL)
+		    EMSG(_(e_trailing));
 		break;
 	    }
 	    else
