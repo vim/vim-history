@@ -4463,7 +4463,12 @@ mch_open(char *name, int flags, int mode)
     WCHAR	*wn;
     int		f;
 
-    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
+# ifdef __BORLANDC__
+	    /* Wide functions of Borland C 5.5 do not work on Windows 98. */
+	    && g_PlatformId == VER_PLATFORM_WIN32_NT
+# endif
+       )
     {
 	wn = enc_to_ucs2(name, NULL);
 	if (wn != NULL)
@@ -4490,7 +4495,12 @@ mch_fopen(char *name, char *mode)
     WCHAR	*wn, *wm;
     FILE	*f = NULL;
 
-    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
+# ifdef __BORLANDC__
+	    /* Wide functions of Borland C 5.5 do not work on Windows 98. */
+	    && g_PlatformId == VER_PLATFORM_WIN32_NT
+# endif
+       )
     {
 	wn = enc_to_ucs2(name, NULL);
 	wm = enc_to_ucs2(mode, NULL);
