@@ -1,18 +1,20 @@
 #
 # Makefile to run all tests for Vim on VMS
 #
-# Authors:	Zoltan Arpadffy, <arpadffy@altavista.net>
-#		Sandor Kopanyi,  <sandor.kopanyi@altavista.net>
+# Authors:	Zoltan Arpadffy, <arpadffy@polarfox.com>
+#		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2001 May 15
+# Last change:  2002 Apr 08
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
 #
 # Execute with:
 #		mms/descrip=Make_vms.mms
-#			   or
-#		mmk/descrip=Make_vms.mms
+# Clean up with:
+#		mmk/descrip=Make_vms.mms clean
+#
+# Make files are MMK compatible.
 #
 # NOTE: You can run this script just in X/Window environment. It will
 # create a new terminals, therefore you have to set up your DISPLAY
@@ -35,11 +37,10 @@
 
 #######################################################################
 # End of configuration section.
-#
 # Please, do not change anything below without programming experience.
 #######################################################################
 
-VIMPROG = create/term/wait mc <->vim.exe
+VIMPROG = <->vim.exe
 
 .SUFFIXES : .out .in
 
@@ -72,7 +73,7 @@ SCRIPT_GZIP = test11.out
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                "$*" "
 	-@ write sys$output "-----------------------------------------------"
-	-@ $(VIMPROG) $(GUI_OPTION) -u vms.vim --noplugin -s dotest.in $*.in
+	-@ create/term/wait mcr $(VIMPROG) $(GUI_OPTION) -u vms.vim --noplugin -s dotest.in $*.in
 	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then differences test.out $*.ok;
 	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then rename test.out $*.out
 	-@ if "''F$SEARCH("Xdotest.*")'"  .NES. "" then delete/noconfirm/nolog Xdotest.*.*
@@ -88,11 +89,18 @@ all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP)
 
 nolog :
 	-@ define sys$output test.log
+        -@ write sys$output "-----------------------------------------------"
+        -@ write sys$output "           Standard VIM test cases"
+        -@ write sys$output "-----------------------------------------------"
+        -@ write sys$output " OpenVMS version: ''F$GETSYI("VERSION")'"
+        -@ write sys$output " Vim version:"
+        -@ mcr $(VIMPROG) --version
+        -@ write sys$output " Test date:"
+        -@ show time
 	-@ write sys$output "-----------------------------------------------"
-	-@ write sys$output "                Test results:"
+	-@ write sys$output "                Test results"
 	-@ write sys$output "-----------------------------------------------"
-	-@ write sys$output "This file has been generated automatically by "
-	-@ write sys$output "MAKE_VMS.MMS with options:"
+	-@ write sys$output "MAKE_VMS.MMS options:"
 	-@ write sys$output "   WANT_GUI  = ""$(WANT_GUI)"" "
 	-@ write sys$output "   WANT_UNIX = ""$(WANT_UNIX)"" "
 	-@ write sys$output "   HAVE_GZIP = ""$(HAVE_GZIP)"" "
@@ -103,5 +111,5 @@ nolog :
 clean :
 	-@ if "''F$SEARCH("*.out")'"     .NES. "" then delete/noconfirm/nolog *.out.*
 	-@ if "''F$SEARCH("test.log")'"  .NES. "" then delete/noconfirm/nolog test.log.*
-	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
+        -@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
 	-@ if "''F$SEARCH("*.*_sw*")'"   .NES. "" then delete/noconfirm/nolog *.*_sw*.*
