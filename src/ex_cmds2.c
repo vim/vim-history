@@ -1258,7 +1258,8 @@ do_argfile(eap, argn)
 					   (eap->forceit ? ECMD_FORCEIT : 0));
 
 	/* like Vi: set the mark where the cursor is in the file. */
-	setmark('\'');
+	if (eap->cmdidx != CMD_argdo)
+	    setmark('\'');
     }
 }
 
@@ -1428,8 +1429,13 @@ ex_listdo(eap)
 #ifdef FEAT_WINDOWS
 	win = firstwin;
 #endif
+	/* set pcmark now */
 	if (eap->cmdidx == CMD_bufdo)
 	    goto_buffer(eap, DOBUF_FIRST, FORWARD, 0);
+	else
+	    setpcmark();
+	listcmd_busy = TRUE;	    /* avoids setting pcmark below */
+
 	while (!got_int)
 	{
 	    if (eap->cmdidx == CMD_argdo)
@@ -1454,10 +1460,8 @@ ex_listdo(eap)
 #endif
 
 	    /* execute the command */
-	    listcmd_busy = TRUE;
 	    do_cmdline(eap->arg, eap->getline, eap->cookie,
 						DOCMD_VERBOSE + DOCMD_NOWAIT);
-	    listcmd_busy = FALSE;
 
 	    if (eap->cmdidx == CMD_bufdo)
 	    {
@@ -1482,7 +1486,9 @@ ex_listdo(eap)
 	    }
 #endif
 	}
+	listcmd_busy = FALSE;
     }
+
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
     if (new_ei != NULL)
     {

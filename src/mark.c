@@ -99,7 +99,7 @@ setpcmark()
 #endif
 
     /* for :global the mark is set only once */
-    if (global_busy)
+    if (global_busy || listcmd_busy)
 	return;
 
     curwin->w_prev_pcmark = curwin->w_pcmark;
