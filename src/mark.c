@@ -1140,12 +1140,13 @@ write_one_filemark(fp, fm, c1, c2)
 	name = buflist_nr2name(fm->fmark.fnum, TRUE, FALSE);
     else
 	name = fm->fname;		/* use name from .viminfo */
-    if (name == NULL || *name == NUL)
-	return;
-
-    fprintf(fp, "%c%c  %ld  %ld  ", c1, c2, (long)fm->fmark.mark.lnum,
+    if (name != NULL && *name != NUL)
+    {
+	fprintf(fp, "%c%c  %ld  %ld  ", c1, c2, (long)fm->fmark.mark.lnum,
 						    (long)fm->fmark.mark.col);
-    viminfo_writestring(fp, name);
+	viminfo_writestring(fp, name);
+    }
+
     if (fm->fmark.fnum != 0)
 	vim_free(name);
 }

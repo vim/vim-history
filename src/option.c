@@ -7008,6 +7008,7 @@ find_key_option(arg)
     else
     {
 	--arg;			    /* put arg at the '<' */
+	modifiers = 0;
 	key = find_special_key(&arg, &modifiers, TRUE);
 	if (modifiers)		    /* can't handle modifiers here */
 	    key = 0;

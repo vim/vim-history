@@ -4085,6 +4085,7 @@ do_arg_all(count, forceit)
 #ifdef FEAT_AUTOCMD
     --autocmd_no_leave;
 #endif
+    vim_free(opened);
 }
 
 # if defined(FEAT_LISTCMDS) || defined(PROTO)

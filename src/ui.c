@@ -1539,6 +1539,7 @@ get_input_buf()
 
 /*
  * Restore the input buffer with a pointer returned from get_input_buf().
+ * The allocated memory is freed, this only works once!
  */
     void
 set_input_buf(p)
@@ -1546,10 +1547,15 @@ set_input_buf(p)
 {
     garray_T	*gap = (garray_T *)p;
 
-    if (gap != NULL && gap->ga_data != NULL)
+    if (gap != NULL)
     {
-	mch_memmove(inbuf, gap->ga_data, gap->ga_len);
-	inbufcount = gap->ga_len;
+	if (gap->ga_data != NULL)
+	{
+	    mch_memmove(inbuf, gap->ga_data, gap->ga_len);
+	    inbufcount = gap->ga_len;
+	    vim_free(gap->ga_data);
+	}
+	vim_free(gap);
     }
 }
 #endif
