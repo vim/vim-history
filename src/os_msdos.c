@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -981,6 +982,10 @@ mch_inchar(
     if (time != 0)
 	show_mouse(TRUE);
 #endif
+#ifdef DJGPP
+    myflush();
+    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+#endif
     if (time >= 0)
     {
 	if (WaitForChar(time) == 0)	/* no character available */
@@ -996,10 +1001,6 @@ mch_inchar(
     }
     else    /* time == -1 */
     {
-#ifdef DJGPP
-	myflush();
-	gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
-#endif
 #ifdef FEAT_AUTOCMD
 	if (once_already == 2)
 	    updatescript(0);

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -18,12 +19,31 @@
 #include "vim.h"
 
 /*
- * structure used to store one block of the stuff/redo/macro buffers
+ * These buffers are used for storing:
+ * - stuffed characters: A command that is translated into another command.
+ * - redo characters: will redo the last change.
+ * - recorded chracters: for the "q" command.
+ *
+ * The bytes are stored like in the typeahead buffer:
+ * - K_SPECIAL introduces a special key (two more bytes follow).  A literal
+ *   K_SPECIAL is stored as K_SPECIAL KS_SPECIAL KE_FILLER.
+ * - CSI introduces a GUI termcap code (only when gui.in_use is TRUE).
+ *   A literal CSI is stored as CSI KS_EXTRA KE_CSI.
+ * These translations are also done on multi-byte characters!
+ *
+ * Escaping CSI bytes is done by the system-specific input functions, called
+ * by ui_inchar().
+ * Escaping K_SPECIAL is done by inchar().
+ * Un-escaping is done by vgetc().
  */
-struct bufblock
+
+/*
+ * structure used to store one block of the stuff/redo/recording buffers
+ */
+struct buffblock
 {
-	struct bufblock *b_next;	/* pointer to next bufblock */
-	char_u		b_str[1];	/* contents (actually longer) */
+    struct buffblock	*b_next;	/* pointer to next buffblock */
+    char_u		b_str[1];	/* contents (actually longer) */
 };
 
 #define MINIMAL_SIZE 20			/* minimal size for b_str */
@@ -33,10 +53,10 @@ struct bufblock
  */
 struct buffheader
 {
-	struct bufblock bh_first;	/* first (dummy) block of list */
-	struct bufblock *bh_curr;	/* bufblock for appending */
-	int		bh_index;	/* index for reading */
-	int		bh_space;	/* space in bh_curr for appending */
+    struct buffblock	bh_first;	/* first (dummy) block of list */
+    struct buffblock	*bh_curr;	/* buffblock for appending */
+    int			bh_index;	/* index for reading */
+    int			bh_space;	/* space in bh_curr for appending */
 };
 
 static struct buffheader stuffbuff = {{NULL, {NUL}}, NULL, 0, 0};
@@ -110,8 +130,8 @@ static int	no_abbr_cnt = 0;    /* nr of chars without abbrev. in typebuf */
 static int	last_recorded_len = 0;	/* number of last recorded chars */
 
 static void	free_buff __ARGS((struct buffheader *));
-static char_u	*get_bufcont __ARGS((struct buffheader *, int));
-static void	add_buff __ARGS((struct buffheader *, char_u *));
+static char_u	*get_buffcont __ARGS((struct buffheader *, int));
+static void	add_buff __ARGS((struct buffheader *, char_u *, long n));
 static void	add_num_buff __ARGS((struct buffheader *, long));
 static void	add_char_buff __ARGS((struct buffheader *, int));
 static int	read_stuff __ARGS((int advance));
@@ -128,27 +148,28 @@ static void	validate_maphash __ARGS((void));
 static void	showmap __ARGS((mapblock_t *mp, int local));
 
 /*
- * free and clear a buffer
+ * Free and clear a buffer.
  */
     static void
 free_buff(buf)
-    struct buffheader *buf;
+    struct buffheader	*buf;
 {
-	struct bufblock	    *p, *np;
+    struct buffblock	*p, *np;
 
-	for (p = buf->bh_first.b_next; p != NULL; p = np)
-	{
-		np = p->b_next;
-		vim_free(p);
-	}
-	buf->bh_first.b_next = NULL;
+    for (p = buf->bh_first.b_next; p != NULL; p = np)
+    {
+	np = p->b_next;
+	vim_free(p);
+    }
+    buf->bh_first.b_next = NULL;
 }
 
 /*
- * return the contents of a buffer as a single string
+ * Return the contents of a buffer as a single string.
+ * K_SPECIAL and CSI in the returned string are escaped.
  */
     static char_u *
-get_bufcont(buffer, dozero)
+get_buffcont(buffer, dozero)
     struct buffheader	*buffer;
     int			dozero;	    /* count == zero is not an error */
 {
@@ -156,7 +177,7 @@ get_bufcont(buffer, dozero)
     char_u	    *p = NULL;
     char_u	    *p2;
     char_u	    *str;
-    struct bufblock *bp;
+    struct buffblock *bp;
 
 /* compute the total length of the string */
     for (bp = buffer->bh_first.b_next; bp != NULL; bp = bp->b_next)
@@ -174,21 +195,22 @@ get_bufcont(buffer, dozero)
 }
 
 /*
- * return the contents of the record buffer as a single string
- *  and clear the record buffer
+ * Return the contents of the record buffer as a single string
+ * and clear the record buffer.
+ * K_SPECIAL and CSI in the returned string are escaped.
  */
     char_u *
 get_recorded()
 {
-    char_u *p;
-    size_t  len;
+    char_u	*p;
+    size_t	len;
 
-    p = get_bufcont(&recordbuff, TRUE);
+    p = get_buffcont(&recordbuff, TRUE);
     free_buff(&recordbuff);
 
     /*
      * Remove the characters that were added the last time, these must be the
-     * (possibly mapped) characters that stopped recording.
+     * (possibly mapped) characters that stopped the recording.
      */
     len = STRLEN(p);
     if ((int)len >= last_recorded_len)
@@ -208,35 +230,39 @@ get_recorded()
 }
 
 /*
- * return the contents of the redo buffer as a single string
+ * Return the contents of the redo buffer as a single string.
+ * K_SPECIAL and CSI in the returned string are escaped.
  */
     char_u *
 get_inserted()
 {
-    return(get_bufcont(&redobuff, FALSE));
+    return(get_buffcont(&redobuff, FALSE));
 }
 
 /*
  * add string "s" after the current block of buffer "buf"
+ * K_SPECIAL and CSI should have been escaped already.
  */
     static void
-add_buff(buf, s)
+add_buff(buf, s, slen)
     struct buffheader	*buf;
     char_u		*s;
+    long		slen;	/* length of "s" or -1 */
 {
-    struct bufblock *p;
-    long_u	    n;
+    struct buffblock *p;
     long_u	    len;
 
-    if ((n = STRLEN(s)) == 0)		    /* don't add empty strings */
+    if (slen < 0)
+	slen = STRLEN(s);
+    if (slen == 0)				/* don't add empty strings */
 	return;
 
-    if (buf->bh_first.b_next == NULL)	    /* first add to list */
+    if (buf->bh_first.b_next == NULL)	/* first add to list */
     {
 	buf->bh_space = 0;
 	buf->bh_curr = &(buf->bh_first);
     }
-    else if (buf->bh_curr == NULL)	    /* buffer has already been read */
+    else if (buf->bh_curr == NULL)	/* buffer has already been read */
     {
 	EMSG(_("Add to read buffer"));
 	return;
@@ -246,23 +272,26 @@ add_buff(buf, s)
 				 buf->bh_first.b_next->b_str + buf->bh_index);
     buf->bh_index = 0;
 
-    if (buf->bh_space >= (int)n)
+    if (buf->bh_space >= (int)slen)
     {
-	strcat((char *)buf->bh_curr->b_str, (char *)s);
-	buf->bh_space -= n;
+	len = STRLEN(buf->bh_curr->b_str);
+	STRNCPY(buf->bh_curr->b_str + len, s, slen);
+	buf->bh_curr->b_str[len + slen] = NUL;
+	buf->bh_space -= slen;
     }
     else
     {
-	if (n < MINIMAL_SIZE)
+	if (slen < MINIMAL_SIZE)
 	    len = MINIMAL_SIZE;
 	else
-	    len = n;
-	p = (struct bufblock *)lalloc((long_u)(sizeof(struct bufblock) + len),
+	    len = slen;
+	p = (struct buffblock *)lalloc((long_u)(sizeof(struct buffblock) + len),
 									TRUE);
 	if (p == NULL)
 	    return; /* no space, just forget it */
-	buf->bh_space = len - n;
-	STRCPY(p->b_str, s);
+	buf->bh_space = len - slen;
+	STRNCPY(p->b_str, s, slen);
+	p->b_str[slen] = NUL;
 
 	p->b_next = buf->bh_curr->b_next;
 	buf->bh_curr->b_next = p;
@@ -271,52 +300,87 @@ add_buff(buf, s)
     return;
 }
 
+/*
+ * Add number "n" to buffer "buf".
+ */
     static void
 add_num_buff(buf, n)
     struct buffheader *buf;
     long	      n;
 {
-	char_u	number[32];
+    char_u	number[32];
 
-	sprintf((char *)number, "%ld", n);
-	add_buff(buf, number);
-}
-
-    static void
-add_char_buff(buf, c)
-    struct buffheader *buf;
-    int		      c;
-{
-    char_u  temp[4];
-
-    /*
-     * translate special key code into three byte sequence
-     */
-    if (IS_SPECIAL(c) || c == K_SPECIAL || c == NUL)
-    {
-	temp[0] = K_SPECIAL;
-	temp[1] = K_SECOND(c);
-	temp[2] = K_THIRD(c);
-	temp[3] = NUL;
-    }
-    else
-    {
-	temp[0] = c;
-	temp[1] = NUL;
-    }
-    add_buff(buf, temp);
+    sprintf((char *)number, "%ld", n);
+    add_buff(buf, number, -1L);
 }
 
 /*
- * get one character from the stuff buffer
+ * Add character 'c' to buffer "buf".
+ * Translates special keys, NUL, CSI, K_SPECIAL and multibyte characters.
+ */
+    static void
+add_char_buff(buf, c)
+    struct buffheader	*buf;
+    int			c;
+{
+#ifdef FEAT_MBYTE
+    char_u	bytes[MB_MAXBYTES + 1];
+    int		len;
+    int		i;
+#endif
+    char_u	temp[4];
+
+#ifdef FEAT_MBYTE
+    if (IS_SPECIAL(c))
+	len = 1;
+    else
+	len = (*mb_char2bytes)(c, bytes);
+    for (i = 0; i < len; ++i)
+    {
+	if (!IS_SPECIAL(c))
+	    c = bytes[i];
+#endif
+
+	if (IS_SPECIAL(c) || c == K_SPECIAL || c == NUL)
+	{
+	    /* translate special key code into three byte sequence */
+	    temp[0] = K_SPECIAL;
+	    temp[1] = K_SECOND(c);
+	    temp[2] = K_THIRD(c);
+	    temp[3] = NUL;
+	}
+#ifdef FEAT_GUI
+	else if (gui.in_use && c == CSI)
+	{
+	    /* Translate a CSI to a CSI - KS_EXTRA - KE_CSI sequence */
+	    temp[0] = CSI;
+	    temp[1] = KS_EXTRA;
+	    temp[2] = (int)KE_CSI;
+	    temp[3] = NUL;
+	}
+#endif
+	else
+	{
+	    temp[0] = c;
+	    temp[1] = NUL;
+	}
+	add_buff(buf, temp, -1L);
+#ifdef FEAT_MBYTE
+    }
+#endif
+}
+
+/*
+ * Get one byte from the stuff buffer.
  * If advance == TRUE go to the next char.
+ * No translation is done K_SPECIAL and CSI are escaped.
  */
     static int
 read_stuff(advance)
     int		advance;
 {
     char_u		c;
-    struct bufblock	*curr;
+    struct buffblock	*curr;
 
     if (stuffbuff.bh_first.b_next == NULL)  /* buffer is empty */
 	return NUL;
@@ -337,7 +401,7 @@ read_stuff(advance)
 }
 
 /*
- * prepare stuff buffer for reading (if it contains something)
+ * Prepare the stuff buffer for reading (if it contains something).
  */
     static void
 start_stuff()
@@ -350,7 +414,7 @@ start_stuff()
 }
 
 /*
- * check if the stuff buffer is empty
+ * Return TRUE if the stuff buffer is empty.
  */
     int
 stuff_empty()
@@ -360,7 +424,7 @@ stuff_empty()
 
 /*
  * Remove the contents of the stuff buffer and the mapped characters in the
- * typeahead buffer (used in case of an error). If 'typeahead' is true,
+ * typeahead buffer (used in case of an error).  If 'typeahead' is true,
  * flush all typeahead characters (used when interrupted by a CTRL-C).
  */
     void
@@ -445,14 +509,76 @@ restoreRedobuff()
 }
 #endif
 
+/*
+ * Append "s" to the redo buffer.
+ * K_SPECIAL and CSI should already have been escaped.
+ */
     void
 AppendToRedobuff(s)
     char_u	   *s;
 {
     if (!block_redo)
-	add_buff(&redobuff, s);
+	add_buff(&redobuff, s, -1L);
 }
 
+/*
+ * Append to Redo buffer literally, escaping special characters with CTRL-V.
+ * K_SPECIAL and CSI are escaped as well.
+ */
+    void
+AppendToRedobuffLit(s)
+    char_u	*s;
+{
+    int		c;
+    char_u	*start;
+
+    if (block_redo)
+	return;
+
+    while (*s != NUL)
+    {
+	/* Put a string of normal characters in the redo buffer (that's
+	 * faster).  TODO: EBCDIC */
+	start = s;
+	while (*s >= ' ' && *s < DEL)
+	    ++s;
+
+	/* Don't put '0' or '^' as last character, just in case a CTRL-D is
+	 * typed next. */
+	if (*s == NUL && (s[-1] == '0' || s[-1] == '^'))
+	    --s;
+	if (s > start)
+	    add_buff(&redobuff, start, (long)(s - start));
+
+	if (*s != NUL)
+	{
+	    /* Handle a special or multibyte character. */
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		c = mb_ptr2char_adv(&s);
+	    else
+#endif
+		c = *s++;
+	    if (c < ' ' || c == DEL || (*s == NUL && (c == '0' || c == '^')))
+		add_char_buff(&redobuff, Ctrl_V);
+
+	    /* CTRL-V '0' must be inserted as CTRL-V 048 (EBCDIC: xf0) */
+	    if (*s == NUL && c == '0')
+#ifdef EBCDIC
+		add_buff(&redobuff, (char_u *)"xf0", 3L);
+#else
+		add_buff(&redobuff, (char_u *)"048", 3L);
+#endif
+	    else
+		add_char_buff(&redobuff, c);
+	}
+    }
+}
+
+/*
+ * Append a character to the redo buffer.
+ * Translates special keys, NUL, CSI, K_SPECIAL and multibyte characters.
+ */
     void
 AppendCharToRedobuff(c)
     int		   c;
@@ -461,6 +587,9 @@ AppendCharToRedobuff(c)
 	add_char_buff(&redobuff, c);
 }
 
+/*
+ * Append a number to the redo buffer.
+ */
     void
 AppendNumberToRedobuff(n)
     long	    n;
@@ -469,13 +598,56 @@ AppendNumberToRedobuff(n)
 	add_num_buff(&redobuff, n);
 }
 
+/*
+ * Append string "s" to the stuff buffer.
+ * CSI and K_SPECIAL must already have been escaped.
+ */
     void
 stuffReadbuff(s)
-    char_u	   *s;
+    char_u	*s;
 {
-    add_buff(&stuffbuff, s);
+    add_buff(&stuffbuff, s, -1L);
 }
 
+    void
+stuffReadbuffLen(s, len)
+    char_u	*s;
+    long	len;
+{
+    add_buff(&stuffbuff, s, len);
+}
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Stuff "s" into the stuff buffer, leaving special key codes unmodified and
+ * escaping other K_SPECIAL and CSI bytes.
+ */
+    void
+stuffReadbuffSpec(s)
+    char_u	*s;
+{
+    while (*s != NUL)
+    {
+	if (*s == K_SPECIAL && s[1] != NUL && s[2] != NUL)
+	{
+	    /* Insert special key literally. */
+	    stuffReadbuffLen(s, 3L);
+	    s += 3;
+	}
+	else
+#ifdef FEAT_MBYTE
+	    stuffcharReadbuff(mb_ptr2char_adv(&s));
+#else
+	    stuffcharReadbuff(*s++);
+#endif
+    }
+}
+#endif
+
+/*
+ * Append a character to the stuff buffer.
+ * Translates special keys, NUL, CSI, K_SPECIAL and multibyte characters.
+ */
     void
 stuffcharReadbuff(c)
     int		   c;
@@ -483,6 +655,9 @@ stuffcharReadbuff(c)
     add_char_buff(&stuffbuff, c);
 }
 
+/*
+ * Append a number to the stuff buffer.
+ */
     void
 stuffnumReadbuff(n)
     long    n;
@@ -491,7 +666,8 @@ stuffnumReadbuff(n)
 }
 
 /*
- * Read a character from the redo buffer.
+ * Read a character from the redo buffer.  Translates K_SPECIAL, CSI and
+ * multibyte characters.
  * The redo buffer is left as it is.
  * if init is TRUE, prepare for redo, return FAIL if nothing to redo, OK
  * otherwise
@@ -502,9 +678,14 @@ read_redo(init, old_redo)
     int		init;
     int		old_redo;
 {
-    static struct bufblock  *bp;
-    static char_u	    *p;
-    int			    c;
+    static struct buffblock	*bp;
+    static char_u		*p;
+    int				c;
+#ifdef FEAT_MBYTE
+    int				n;
+    char_u			buf[MB_MAXBYTES];
+    int				i;
+#endif
 
     if (init)
     {
@@ -519,23 +700,53 @@ read_redo(init, old_redo)
     }
     if ((c = *p) != NUL)
     {
-	if (c == K_SPECIAL)
+	/* Reverse the conversion done by add_char_buff() */
+#ifdef FEAT_MBYTE
+	/* For a multi-byte character get all the bytes and return the
+	 * converted character. */
+	if (has_mbyte && (c != K_SPECIAL || p[1] == KS_SPECIAL))
+	    n = MB_BYTE2LEN_CHECK(c);
+	else
+	    n = 1;
+	for (i = 0; ; ++i)
+#endif
 	{
-	    c = TO_SPECIAL(p[1], p[2]);
-	    p += 2;
-	}
-	if (*++p == NUL && bp->b_next != NULL)
-	{
-	    bp = bp->b_next;
-	    p = bp->b_str;
+	    if (c == K_SPECIAL) /* special key or escaped K_SPECIAL */
+	    {
+		c = TO_SPECIAL(p[1], p[2]);
+		p += 2;
+	    }
+#ifdef FEAT_GUI
+	    if (gui.in_use && c == CSI)	/* escaped CSI */
+		p += 2;
+#endif
+	    if (*++p == NUL && bp->b_next != NULL)
+	    {
+		bp = bp->b_next;
+		p = bp->b_str;
+	    }
+#ifdef FEAT_MBYTE
+	    buf[i] = c;
+	    if (i == n - 1)	/* last byte of a character */
+	    {
+		if (n != 1)
+		    c = (*mb_ptr2char)(buf);
+		break;
+	    }
+	    c = *p;
+	    if (c == NUL)	/* cannot happen? */
+		break;
+#endif
 	}
     }
+
     return c;
 }
 
 /*
- * copy the rest of the redo buffer into the stuff buffer (could be done faster)
- * if old_redo is TRUE, use old_redobuff instead of redobuff
+ * Copy the rest of the redo buffer into the stuff buffer (in a slow way).
+ * If old_redo is TRUE, use old_redobuff instead of redobuff.
+ * The escaped K_SPECIAL and CSI are copied without translation.
  */
     static void
 copy_redo(old_redo)
@@ -572,7 +783,7 @@ start_redo(count, old_redo)
     /* copy the buffer name, if present */
     if (c == '"')
     {
-	add_buff(&stuffbuff, (char_u *)"\"");
+	add_buff(&stuffbuff, (char_u *)"\"", 1L);
 	c = read_redo(FALSE, old_redo);
 
 	/* if a numbered buffer is used, increment the number */
@@ -621,7 +832,7 @@ start_redo_ins()
 	return FAIL;
     start_stuff();
 
-/* skip the count and the command character */
+    /* skip the count and the command character */
     while ((c = read_redo(FALSE, FALSE)) != NUL)
     {
 	if (vim_strchr((char_u *)"AaIiRrOo", c) != NULL)
@@ -632,7 +843,7 @@ start_redo_ins()
 	}
     }
 
-/* copy the typed text from the redo buffer into the stuff buffer */
+    /* copy the typed text from the redo buffer into the stuff buffer */
     copy_redo(FALSE);
     block_redo = TRUE;
     return OK;
@@ -863,11 +1074,11 @@ del_typebuf(len, offset)
  */
     static void
 gotchars(s, len)
-    char_u  *s;
-    int	    len;
+    char_u	*s;
+    int		len;
 {
-    int	    c;
-    char_u  buf[2];
+    int		c;
+    char_u	buf[2];
 
     /* remember how many chars were last recorded */
     if (Recording)
@@ -876,13 +1087,14 @@ gotchars(s, len)
     buf[1] = NUL;
     while (len--)
     {
+	/* Handle one byte at a time; no translation to be done. */
 	c = *s++;
 	updatescript(c);
 
 	if (Recording)
 	{
 	    buf[0] = c;
-	    add_buff(&recordbuff, buf);
+	    add_buff(&recordbuff, buf, 1L);
 	}
     }
     may_sync_undo();
@@ -908,8 +1120,8 @@ gotchars(s, len)
     static void
 may_sync_undo()
 {
-    if ((!(State & (INSERT + CMDLINE)) || arrow_used) &&
-				    scriptin[curscript] == NULL && !no_u_sync)
+    if ((!(State & (INSERT + CMDLINE)) || arrow_used)
+	    && scriptin[curscript] == NULL && !no_u_sync)
 	u_sync();
 }
 
@@ -1075,6 +1287,8 @@ static int old_mod_mask;	/* mod_mask for ungotten character */
  * Can return a special key or a multi-byte character.
  * Can return NUL when called recursively, use safe_vgetc() if that's not
  * wanted.
+ * This translates escaped K_SPECIAL and CSI bytes to a K_SPECIAL or CSI byte.
+ * Collects the bytes of a multibyte character into the whole character.
  * Returns the modifers in the global "mod_mask".
  */
     int
@@ -1116,7 +1330,11 @@ vgetc()
 	}
 
 	/* Get two extra bytes for special keys */
-	if (c == K_SPECIAL)
+	if (c == K_SPECIAL
+#ifdef FEAT_GUI
+		|| (gui.in_use && c == CSI)
+#endif
+	   )
 	{
 	    ++no_mapping;
 	    c2 = vgetorpeek(TRUE);	/* no mapping for these chars */
@@ -1201,25 +1419,24 @@ vgetc()
 	    for (i = 1; i < n; ++i)
 	    {
 		buf[i] = vgetorpeek(TRUE);
-		if (buf[i] == K_SPECIAL)
+		if (buf[i] == K_SPECIAL
+#ifdef FEAT_GUI
+			|| (gui.in_use && buf[i] == CSI)
+#endif
+			)
 		{
 		    /* Must be a K_SPECIAL - KS_SPECIAL - KE_FILLER sequence,
-		     * which represents a K_SPECIAL (0x80). */
-		    c2 = vgetorpeek(TRUE);
-		    c = vgetorpeek(TRUE);
+		     * which represents a K_SPECIAL (0x80),
+		     * or a CSI - KS_EXTRA - KE_CSI sequence, which represents
+		     * a CSI (0x9B),
+		     * of a K_SPECIAL - KS_EXTRA - KE_CSI, which is CSI too. */
+		    if (vgetorpeek(TRUE) == KS_EXTRA
+			    && vgetorpeek(TRUE) == (int)KE_CSI)
+			buf[i] = CSI;
 		}
-#ifdef FEAT_GUI
-		else if (gui.in_use && buf[i] == CSI)
-		{
-		    /* Must be a CSI - KS_EXTRA - KE_CSI sequence, which
-		     * represents a CSI (0x9B). */
-		    c2 = vgetorpeek(TRUE);
-		    c = vgetorpeek(TRUE);
-		}
-#endif
 	    }
 	    --no_mapping;
-	    c = mb_ptr2char(buf);
+	    c = (*mb_ptr2char)(buf);
 	}
 #endif
 
@@ -1327,7 +1544,8 @@ vungetc(c)	/* unget one character (can only be done once!) */
  *	KeyStuffed is TRUE if the character comes from the stuff buffer.
  * if "advance" is FALSE (vpeekc()):
  *	just look whether there is a character available.
- * Only returns one byte.
+ * Only returns one byte (of a multi-byte character).
+ * K_SPECIAL and CSI may be escaped, need to get two more bytes then.
  */
     static int
 vgetorpeek(advance)
@@ -1396,7 +1614,9 @@ vgetorpeek(advance)
 	{
 	    if (advance)
 	    {
-		KeyTyped = FALSE;
+		/* KeyTyped = FALSE;  When the command that stuffed something
+		 * was typed, behave like the stuffed command was typed.
+		 * needed for CTRL-W CTRl-] to open a fold, for example. */
 		KeyStuffed = TRUE;
 	    }
 	    if (no_abbr_cnt == 0)
@@ -1443,7 +1663,7 @@ vgetorpeek(advance)
 		else if (typelen > 0)	/* check for a mappable key sequence */
 		{
 		    /*
-		     * walk through one maphash[] list until we find an
+		     * Walk through one maphash[] list until we find an
 		     * entry that matches.
 		     *
 		     * Don't look for mappings if:
@@ -1735,7 +1955,7 @@ vgetorpeek(advance)
 			if (++mapdepth >= p_mmd)
 			{
 			    EMSG(_("recursive mapping"));
-			    if (State == CMDLINE)
+			    if (State & CMDLINE)
 				redrawcmdline();
 			    else
 				setcursor();
@@ -1851,7 +2071,7 @@ vgetorpeek(advance)
 							       (colnr_t)vcol);
 #ifdef FEAT_MBYTE
 				    if (has_mbyte)
-					col += mb_ptr2len_check(ptr + col);
+					col += (*mb_ptr2len_check)(ptr + col);
 				    else
 #endif
 					++col;
@@ -1889,30 +2109,63 @@ vgetorpeek(advance)
 /*
  * get a character: 4. from the user
  */
-#ifdef FEAT_CMDL_INFO
+		/* In insert mode a screen update is skipped when characters
+		 * are still available.  But when those available characters
+		 * are part of a mapping, and we are going to do a blocking
+		 * wait here.  Need to update the screen to display the
+		 * changed text so far. */
+		if ((State & INSERT) && advance && must_redraw != 0)
+		{
+		    update_screen(0);
+		    setcursor(); /* put cursor back where it belongs */
+		}
+
 		/*
 		 * If we have a partial match (and are going to wait for more
 		 * input from the user), show the partially matched characters
-		 * to the user with showcmd -- webb.
+		 * to the user with showcmd.
 		 */
+#ifdef FEAT_CMDL_INFO
 		i = 0;
-		if (typelen > 0 && (State & (NORMAL | INSERT))
-			   && State != HITRETURN && advance && !exmode_active)
-		{
-		    /* need to use the col and row from above here */
-		    old_wcol = curwin->w_wcol;
-		    old_wrow = curwin->w_wrow;
-		    curwin->w_wcol = new_wcol;
-		    curwin->w_wrow = new_wrow;
-		    push_showcmd();
-		    if (typelen > SHOWCMD_COLS)
-			i = typelen - SHOWCMD_COLS;
-		    while (i < typelen)
-			(void)add_to_showcmd(typebuf[typeoff + i++]);
-		    curwin->w_wcol = old_wcol;
-		    curwin->w_wrow = old_wrow;
-		}
 #endif
+		c1 = 0;
+		if (typelen > 0 && advance && !exmode_active)
+		{
+		    if (((State & (NORMAL | INSERT)) || State == LANGMAP)
+			    && State != HITRETURN)
+		    {
+			/* this looks nice when typing a dead character map */
+			if (State & INSERT
+			    && ptr2cells(typebuf + typeoff + typelen - 1) == 1)
+			{
+			    edit_putchar(typebuf[typeoff + typelen - 1], FALSE);
+			    setcursor(); /* put cursor back where it belongs */
+			    c1 = 1;
+			}
+#ifdef FEAT_CMDL_INFO
+			/* need to use the col and row from above here */
+			old_wcol = curwin->w_wcol;
+			old_wrow = curwin->w_wrow;
+			curwin->w_wcol = new_wcol;
+			curwin->w_wrow = new_wrow;
+			push_showcmd();
+			if (typelen > SHOWCMD_COLS)
+			    i = typelen - SHOWCMD_COLS;
+			while (i < typelen)
+			    (void)add_to_showcmd(typebuf[typeoff + i++]);
+			curwin->w_wcol = old_wcol;
+			curwin->w_wrow = old_wrow;
+#endif
+		    }
+
+		    /* this looks nice when typing a dead character map */
+		    if ((State & CMDLINE)
+			    && ptr2cells(typebuf + typeoff + typelen - 1) == 1)
+		    {
+			putcmdline(typebuf[typeoff + typelen - 1], FALSE);
+			c1 = 1;
+		    }
+		}
 
 		c = inchar(typebuf + typeoff + typelen,
 			typebuflen - typeoff - typelen - 1,
@@ -1926,9 +2179,16 @@ vgetorpeek(advance)
 					    : p_tm)));
 
 #ifdef FEAT_CMDL_INFO
-		if (i)
+		if (i != 0)
 		    pop_showcmd();
 #endif
+		if (c1 == 1)
+		{
+		    if (State & INSERT)
+			edit_unputchar();
+		    if (State & CMDLINE)
+			unputcmdline();
+		}
 
 		if (c < 0)
 		    continue;		/* end of input script reached */
@@ -2108,7 +2368,7 @@ inchar(buf, maxlen, wait_time)
 	if (gui.in_use && buf[0] == CSI && i >= 2)
 	{
 	    buf += 2;
-	    i   -= 2;
+	    i -= 2;
 	    continue;
 	}
 #endif
@@ -2147,6 +2407,7 @@ inchar(buf, maxlen, wait_time)
  * for :map!  mode is INSERT + CMDLINE
  * for :cmap  mode is CMDLINE
  * for :imap  mode is INSERT
+ * for :lmap  mode is LANGMAP
  * for :nmap  mode is NORMAL
  * for :vmap  mode is VISUAL
  * for :omap  mode is OP_PENDING
@@ -2350,6 +2611,15 @@ do_map(maptype, arg, mode, abbrev, ambig)
 
     if (!haskey || (maptype != 1 && !hasarg))
 	msg_start();
+
+    /* When definding a ":lmap" switch on using them. */
+    if (hasarg && maptype != 1 && mode == LANGMAP)
+    {
+	curbuf->b_lmap |= B_LMAP_INSERT | B_LMAP_SEARCH;
+#ifdef FEAT_WINDOWS
+	status_redraw_curbuf();
+#endif
+    }
 
 #ifdef FEAT_LOCALMAP
     /*
@@ -2699,6 +2969,8 @@ get_map_mode(cmdp, forceit)
     modec = *p++;
     if (modec == 'i')
 	mode = INSERT;				/* :imap */
+    else if (modec == 'l')
+	mode = LANGMAP;				/* :lmap */
     else if (modec == 'c')
 	mode = CMDLINE;				/* :cmap */
     else if (modec == 'n' && *p != 'o')		    /* avoid :noremap */
@@ -2824,6 +3096,8 @@ showmap(mp, local)
 	msg_putchar('!');			/* :map! */
     else if (mp->m_mode & INSERT)
 	msg_putchar('i');			/* :imap */
+    else if (mp->m_mode & LANGMAP)
+	msg_putchar('l');			/* :lmap */
     else if (mp->m_mode & CMDLINE)
 	msg_putchar('c');			/* :cmap */
     else if ((mp->m_mode & (NORMAL + VISUAL + OP_PENDING))
@@ -2912,6 +3186,8 @@ map_to_exists(str, modechars)
 	mode |= OP_PENDING;
     if (vim_strchr(modechars, 'i') != NULL)
 	mode |= INSERT;
+    if (vim_strchr(modechars, 'l') != NULL)
+	mode |= LANGMAP;
     if (vim_strchr(modechars, 'c') != NULL)
 	mode |= CMDLINE;
 
@@ -3361,6 +3637,9 @@ makemap(fd, buf)
 			break;
 		    case INSERT:
 			c1 = 'i';
+			break;
+		    case LANGMAP:
+			c1 = 'l';
 			break;
 		    default:
 			EMSG(_("makemap: Illegal mode"));

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -188,6 +189,7 @@ static void f_argv __ARGS((VAR argvars, VAR retvar));
 static void f_browse __ARGS((VAR argvars, VAR retvar));
 static buf_t *find_buffer __ARGS((VAR avar));
 static void f_bufexists __ARGS((VAR argvars, VAR retvar));
+static void f_buflisted __ARGS((VAR argvars, VAR retvar));
 static void f_bufloaded __ARGS((VAR argvars, VAR retvar));
 static buf_t *get_buf_var __ARGS((VAR avar));
 static void f_bufname __ARGS((VAR argvars, VAR retvar));
@@ -223,6 +225,7 @@ static void f_getline __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
 static void f_glob __ARGS((VAR argvars, VAR retvar));
+static void f_globpath __ARGS((VAR argvars, VAR retvar));
 static void f_has __ARGS((VAR argvars, VAR retvar));
 static void f_hasmapto __ARGS((VAR argvars, VAR retvar));
 static void f_histadd __ARGS((VAR argvars, VAR retvar));
@@ -2137,6 +2140,7 @@ static struct fst
     {"buffer_exists",	1, 1, f_bufexists},	/* obsolete */
     {"buffer_name",	1, 1, f_bufname},	/* obsolete */
     {"buffer_number",	1, 1, f_bufnr},		/* obsolete */
+    {"buflisted",	1, 1, f_buflisted},
     {"bufloaded",	1, 1, f_bufloaded},
     {"bufname",		1, 1, f_bufname},
     {"bufnr",		1, 1, f_bufnr},
@@ -2171,6 +2175,7 @@ static struct fst
     {"getwinposy",	0, 0, f_getwinposy},
     {"getwinvar",	2, 2, f_getwinvar},
     {"glob",		1, 1, f_glob},
+    {"globpath",	2, 2, f_globpath},
     {"has",		1, 1, f_has},
     {"hasmapto",	1, 2, f_hasmapto},
     {"highlightID",	1, 1, f_hlID},		/* obsolete */
@@ -2184,8 +2189,8 @@ static struct fst
     {"hostname",	0, 0, f_hostname},
     {"iconv",		3, 3, f_iconv},
     {"indent",		1, 1, f_indent},
-    {"input",		1, 1, f_input},
-    {"inputsecret",	1, 1, f_inputsecret},
+    {"input",		1, 2, f_input},
+    {"inputsecret",	1, 2, f_inputsecret},
     {"isdirectory",	1, 1, f_isdirectory},
     {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
     {"libcall",		3, 3, f_libcall},
@@ -2646,6 +2651,20 @@ f_bufexists(argvars, retvar)
     VAR		retvar;
 {
     retvar->var_val.var_number = (find_buffer(&argvars[0]) != NULL);
+}
+
+/*
+ * "buflisted(expr)" function
+ */
+    static void
+f_buflisted(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    buf_t	*buf;
+
+    buf = find_buffer(&argvars[0]);
+    retvar->var_val.var_number = (buf != NULL && buf->b_p_bl);
 }
 
 /*
@@ -3284,6 +3303,7 @@ f_foldtext(argvars, retvar)
     linenr_t	lnum;
     char_u	*s;
     char_u	*r;
+    int		len;
 #endif
 
     retvar->var_type = VAR_STRING;
@@ -3304,21 +3324,20 @@ f_foldtext(argvars, retvar)
 
 	/* Find interesting text in this line. */
 	s = skipwhite(ml_get(lnum));
-	/* skip comment-start */
+	/* skip C comment-start */
 	if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
 	    s = skipwhite(s + 2);
 	r = alloc((unsigned)(STRLEN(s)
 				  + STRLEN(vimvars[VV_FOLDDASHES].val) + 20));
 	if (r != NULL)
 	{
-	    sprintf((char *)r, "+-%s %ld lines: %s", vimvars[VV_FOLDDASHES].val,
+	    sprintf((char *)r, "+-%s%3ld lines: ", vimvars[VV_FOLDDASHES].val,
 		    (long)((linenr_t)vimvars[VV_FOLDEND].val
-				   - (linenr_t)vimvars[VV_FOLDSTART].val + 1),
-		    s);
-	    /* remove trailing "{{{" foldmarker */
-	    s = (char_u *)strstr((char *)r, "{{{");
-	    if (s != NULL)
-		*s = NUL;
+				   - (linenr_t)vimvars[VV_FOLDSTART].val + 1));
+	    len = STRLEN(r);
+	    STRCAT(r, s);
+	    /* remove 'foldmarker' and 'commentstring' */
+	    foldtext_cleanup(r + len);
 	    retvar->var_val.var_string = r;
 	}
     }
@@ -3592,6 +3611,70 @@ f_glob(argvars, retvar)
 }
 
 /*
+ * "globpath()" function
+ */
+    static void
+f_globpath(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    expand_t	xpc;
+    char_u	*buf;
+    char_u	buf1[NUMBUFLEN];
+    char_u	*path, *file;
+    garray_t	ga;
+    int		len;
+    char_u	*p;
+
+    buf = alloc(MAXPATHL);
+    if (buf == NULL)
+	return;
+
+    xpc.xp_context = EXPAND_FILES;
+    path = get_var_string(&argvars[0]);
+    file = get_var_string_buf(&argvars[1], buf1);
+    ga_init2(&ga, 1, 100);
+
+    /* Loop over all entries in {path}. */
+    while (*path != NUL)
+    {
+	/* Copy one item of the path to buf[] and concatenate the file name. */
+	copy_option_part(&path, buf, MAXPATHL, ",");
+	if (STRLEN(buf) + STRLEN(file) + 2 < MAXPATHL)
+	{
+	    add_pathsep(buf);
+	    STRCAT(buf, file);
+	    p = ExpandOne(&xpc, buf, NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
+	    if (p != NULL)
+	    {
+		len = STRLEN(p);
+		if (ga.ga_data == NULL)
+		{
+		    ga.ga_data = p;
+		    ga.ga_room = 0;
+		    ga.ga_len = len;
+		}
+		else
+		{
+		    /* Concatenate new results to previous ones. */
+		    if (ga_grow(&ga, len + 2) == OK)
+		    {
+			STRCAT(ga.ga_data, "\n");
+			STRCAT(ga.ga_data, p);
+			ga.ga_len += len;
+			ga.ga_room -= len;
+		    }
+		    vim_free(p);
+		}
+	    }
+	}
+    }
+    vim_free(buf);
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = ga.ga_data;
+}
+
+/*
  * "has()" function
  */
     static void
@@ -3670,6 +3753,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_CMDL_COMPL
 	"cmdline_compl",
+#endif
+#ifdef FEAT_CMDHIST
+	"cmdline_hist",
 #endif
 #ifdef FEAT_COMMENTS
 	"comments",
@@ -3755,6 +3841,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_INS_EXPAND
 	"insert_expand",
+#endif
+#ifdef FEAT_KEYMAP
+	"keymap",
 #endif
 #ifdef FEAT_LANGMAP
 	"langmap",
@@ -4016,11 +4105,13 @@ f_hasmapto(argvars, retvar)
 /*
  * "histadd()" function
  */
+/*ARGSUSED*/
     static void
 f_histadd(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_CMDHIST
     int		histype;
     char_u	*str;
     char_u	buf[NUMBUFLEN];
@@ -4036,17 +4127,20 @@ f_histadd(argvars, retvar)
 	    return;
 	}
     }
+#endif
     retvar->var_val.var_number = FALSE;
 }
 
 /*
  * "histdel()" function
  */
+/*ARGSUSED*/
     static void
 f_histdel(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_CMDHIST
     int		n;
     char_u	buf[NUMBUFLEN];
 
@@ -4062,16 +4156,21 @@ f_histdel(argvars, retvar)
 	n = del_history_entry(get_histtype(get_var_string(&argvars[0])),
 					get_var_string_buf(&argvars[1], buf));
     retvar->var_val.var_number = n;
+#else
+    retvar->var_val.var_number = 0;
+#endif
 }
 
 /*
  * "histget()" function
  */
+/*ARGSUSED*/
     static void
 f_histget(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_CMDHIST
     int		type;
     int		idx;
 
@@ -4082,11 +4181,13 @@ f_histget(argvars, retvar)
     else
 	idx = (int)get_var_number(&argvars[1]);
     retvar->var_val.var_string = vim_strsave(get_history_entry(type, idx));
+#endif
 }
 
 /*
  * "histnr()" function
  */
+/*ARGSUSED*/
     static void
 f_histnr(argvars, retvar)
     VAR		argvars;
@@ -4094,10 +4195,12 @@ f_histnr(argvars, retvar)
 {
     int		i;
 
+#ifdef FEAT_CMDHIST
     i = get_histtype(get_var_string(&argvars[0]));
     if (i >= HIST_CMD && i < HIST_COUNT)
 	i = get_history_idx(i);
     else
+#endif
 	i = -1;
     retvar->var_val.var_number = i;
 }
@@ -4208,6 +4311,7 @@ f_input(argvars, retvar)
     char_u	*prompt = get_var_string(&argvars[0]);
     char_u	*p = NULL;
     int		c;
+    char_u	buf[NUMBUFLEN];
 
     retvar->var_type = VAR_STRING;
 
@@ -4243,6 +4347,8 @@ f_input(argvars, retvar)
 	}
 	cmdline_row = msg_row;
     }
+
+    stuffReadbuffSpec(get_var_string_buf(&argvars[1], buf));
 
     retvar->var_val.var_string =
 		getcmdline_prompt(inputsecret_flag ? NUL : '@', p, echo_attr);
@@ -4538,7 +4644,7 @@ f_mode(argvars, retvar)
 	buf[0] = 'r';
     else if (State & INSERT)
     {
-	if (State & REPLACE)
+	if (State & REPLACE_FLAG)
 	    buf[0] = 'R';
 	else
 	    buf[0] = 'i';
@@ -6359,7 +6465,7 @@ ex_echo(eap)
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
 		    {
-			int i = mb_ptr2len_check(p);
+			int i = (*mb_ptr2len_check)(p);
 
 			(void)msg_outtrans_len_attr(p, i, echo_attr);
 			p += i - 1;

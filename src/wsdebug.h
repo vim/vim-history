@@ -8,8 +8,10 @@
  */
 
 
-#if defined(WSDEBUG) && !defined(WSDEBUG_H)
+#ifndef WSDEBUG_H
 #define WSDEBUG_H
+
+#ifdef WSDEBUG
 
 #ifndef ASSERT
 #define ASSERT(c) \
@@ -76,3 +78,4 @@ wstrace(
 }
 
 #endif /* WSDEBUG */
+#endif /* WSDEBUG_H */

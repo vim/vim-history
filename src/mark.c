@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -66,18 +67,12 @@ setmark(c)
     {
 	i = c - 'a';
 	curbuf->b_namedm[i] = curwin->w_cursor;
-#ifdef FEAT_VIRTUALEDIT
-	curbuf->b_namedmc[i] = curwin->w_coladd;
-#endif
 	return OK;
     }
     if (isupper(c))
     {
 	i = c - 'A';
 	namedfm[i].fmark.mark = curwin->w_cursor;
-#ifdef FEAT_VIRTUALEDIT
-	namedfm[i].fmark.coladd = curwin->w_coladd;
-#endif
 	namedfm[i].fmark.fnum = curbuf->b_fnum;
 	vim_free(namedfm[i].fname);
 	namedfm[i].fname = NULL;
@@ -209,11 +204,7 @@ movemark(count)
 							    0, FALSE) == FAIL)
 		return (pos_t *)NULL;
 	    /* Set lnum again, autocommands my have changed it */
-	    curwin->w_cursor.lnum = jmp->fmark.mark.lnum;
-	    curwin->w_cursor.col = jmp->fmark.mark.col;
-#ifdef FEAT_VIRTUALEDIT
-	    curwin->w_coladd = jmp->fmark.coladd;
-#endif
+	    curwin->w_cursor = jmp->fmark.mark;
 	    pos = (pos_t *)-1;
 	}
 	else
@@ -226,7 +217,7 @@ movemark(count)
 static pos_t *getmark2 __ARGS((int c, int changefile, int fcoladd));
 
 /*
- * Call getmark() and set curwin->w_coladd.
+ * Call getmark() and set curwin->w_cursor.coladd.
  */
     pos_t *
 getmark_coladd(c, changefile)
@@ -305,7 +296,7 @@ getmark2(c, changefile, fcoladd)
 	}
 	curwin->w_cursor = pos;
 #ifdef FEAT_VIRTUALEDIT
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
     }
     else if (c == '(' || c == ')')	/* to previous/next sentence */
@@ -320,7 +311,7 @@ getmark2(c, changefile, fcoladd)
 	}
 	curwin->w_cursor = pos;
 #ifdef FEAT_VIRTUALEDIT
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
     }
 #ifdef FEAT_VISUAL
@@ -328,19 +319,18 @@ getmark2(c, changefile, fcoladd)
     {
 	startp = &curbuf->b_visual_start;
 	endp = &curbuf->b_visual_end;
-	if ((c == '<') == lt_coladd(*startp, curbuf->b_visual_start_coladd,
-					  *endp, curbuf->b_visual_end_coladd))
+	if ((c == '<') == lt(*startp, *endp))
 	{
 	    posp = startp;
 #ifdef FEAT_VIRTUALEDIT
-	    coladd = curbuf->b_visual_start_coladd;
+	    coladd = curbuf->b_visual_start.coladd;
 #endif
 	}
 	else
 	{
 	    posp = endp;
 #ifdef FEAT_VIRTUALEDIT
-	    coladd = curbuf->b_visual_end_coladd;
+	    coladd = curbuf->b_visual_end.coladd;
 #endif
 	}
 	/*
@@ -361,7 +351,7 @@ getmark2(c, changefile, fcoladd)
     {
 	posp = &(curbuf->b_namedm[c - 'a']);
 #ifdef FEAT_VIRTUALEDIT
-	coladd = curbuf->b_namedmc[c - 'a'];
+	coladd = curbuf->b_namedm[c - 'a'].coladd;
 #endif
     }
     else if (isupper(c) || vim_isdigit(c))	/* named file mark */
@@ -372,7 +362,7 @@ getmark2(c, changefile, fcoladd)
 	    c -= 'A';
 	posp = &(namedfm[c].fmark.mark);
 #ifdef FEAT_VIRTUALEDIT
-	coladd = namedfm[c].fmark.coladd;
+	coladd = namedfm[c].fmark.mark.coladd;
 #endif
 
 	if (namedfm[c].fmark.fnum == 0)
@@ -391,9 +381,9 @@ getmark2(c, changefile, fcoladd)
 		    curwin->w_cursor.col = namedfm[c].fmark.mark.col;
 #ifdef FEAT_VIRTUALEDIT
 		    if (fcoladd)
-			curwin->w_coladd = namedfm[c].fmark.coladd;
+			curwin->w_cursor.coladd = namedfm[c].fmark.mark.coladd;
 		    else
-			curwin->w_coladd = 0;
+			curwin->w_cursor.coladd = 0;
 #endif
 		    return (pos_t *)-1;
 		}
@@ -406,9 +396,9 @@ getmark2(c, changefile, fcoladd)
 
 #ifdef FEAT_VIRTUALEDIT
     if (fcoladd)
-	curwin->w_coladd = coladd;
+	curwin->w_cursor.coladd = coladd;
     else
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
 
     return posp;
@@ -586,6 +576,9 @@ clrallmarks(buf)
     buf->b_op_end.lnum = 0;
     buf->b_last_cursor.lnum = 1;	/* '" mark cleared */
     buf->b_last_cursor.col = 0;
+#ifdef FEAT_VIRTUALEDIT
+    buf->b_last_cursor.coladd = 0;
+#endif
     buf->b_last_insert.lnum = 0;	/* '^ mark cleared */
     buf->b_last_change.lnum = 0;	/* '. mark cleared */
 }
@@ -631,7 +624,7 @@ mark_line(mp, lead_len)
 	    break;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    p += mb_ptr2len_check(p) - 1;
+	    p += (*mb_ptr2len_check)(p) - 1;
 #endif
     }
     *p = NUL;
@@ -1053,7 +1046,7 @@ read_viminfo_filemark(virp, force)
 	    str = skipwhite(str);
 	    fm->fmark.mark.col = getdigits(&str);
 #ifdef FEAT_VIRTUALEDIT
-	    fm->fmark.coladd = 0;
+	    fm->fmark.mark.coladd = 0;
 #endif
 	    fm->fmark.fnum = 0;
 	    str = skipwhite(str);
@@ -1100,9 +1093,6 @@ write_viminfo_filemarks(fp)
 	for ( ; i > NMARKS; --i)
 	    namedfm[i] = namedfm[i - 1];
 	namedfm[NMARKS].fmark.mark = curwin->w_cursor;
-#ifdef FEAT_VIRTUALEDIT
-	namedfm[NMARKS].fmark.coladd = curwin->w_coladd;
-#endif
 	namedfm[NMARKS].fmark.fnum = curbuf->b_fnum;
 	namedfm[NMARKS].fname = NULL;
     }
@@ -1351,19 +1341,24 @@ copy_viminfo_marks(virp, fp_out, count, eof)
 	}
 	vim_free(str);
 
+#ifdef FEAT_VIRTUALEDIT
+	pos.coladd = 0;
+#endif
 	while (!(eof = viminfo_readline(virp)) && line[0] == TAB)
 	{
 	    if (load_marks)
 	    {
 		if (line[1] != NUL)
-		    sscanf((char *)line + 2, "%ld %d", &pos.lnum, &pos.col);
-		switch (line[1])
 		{
-		    case '"': curbuf->b_last_cursor = pos; break;
-		    case '^': curbuf->b_last_insert = pos; break;
-		    case '.': curbuf->b_last_change = pos; break;
-		    default:  if ((i = line[1] - 'a') >= 0 && i < NMARKS)
-				  curbuf->b_namedm[i] = pos;
+		    sscanf((char *)line + 2, "%ld %d", &pos.lnum, &pos.col);
+		    switch (line[1])
+		    {
+			case '"': curbuf->b_last_cursor = pos; break;
+			case '^': curbuf->b_last_insert = pos; break;
+			case '.': curbuf->b_last_change = pos; break;
+			default:  if ((i = line[1] - 'a') >= 0 && i < NMARKS)
+				      curbuf->b_namedm[i] = pos;
+		    }
 		}
 	    }
 	    else if (copy_marks_out)

@@ -389,10 +389,10 @@ typedef unsigned short u8char_t;
 /*
  * values for State
  *
- * The lower byte is used to distinguish normal/visual/op_pending and cmdline/
- * insert+replace mode.  This is used for mapping.  If none of these bits are
- * set, no mapping is done.
- * The upper byte is used to distinguish between other states.
+ * The lower bits up to 0x20 are used to distinguish normal/visual/op_pending
+ * and cmdline/insert+replace mode.  This is used for mapping.  If none of
+ * these bits are set, no mapping is done.
+ * The upper bits are used to distinguish between other states.
  */
 #define NORMAL		0x01	/* Normal mode, command expected */
 #define VISUAL		0x02	/* Visual mode - use get_real_state() */
@@ -400,17 +400,22 @@ typedef unsigned short u8char_t;
 				   get_real_state() */
 #define CMDLINE		0x08	/* Editing command line */
 #define INSERT		0x10	/* Insert mode */
+#define LANGMAP		0x20	/* Language mapping, can be combined with
+				   INSERT and CMDLINE */
+
+#define REPLACE_FLAG	0x40	/* Replace mode flag */
+#define VREPLACE_FLAG	0x80	/* Virtual-replace mode flag */
+#define REPLACE		(REPLACE_FLAG + INSERT)
+#define VREPLACE	(REPLACE_FLAG + VREPLACE_FLAG + INSERT)
 
 #define NORMAL_BUSY	(0x100 + NORMAL) /* Normal mode, busy with a command */
-#define REPLACE		(0x200 + INSERT) /* Replace mode */
-#define VREPLACE	(0x300 + INSERT) /* Virtual replace mode */
-#define HITRETURN	(0x600 + NORMAL) /* waiting for return or command */
-#define ASKMORE		0x700	/* Asking if you want --more-- */
-#define SETWSIZE	0x800	/* window size has changed */
-#define ABBREV		0x900	/* abbreviation instead of mapping */
-#define EXTERNCMD	0xa00	/* executing an external command */
-#define SHOWMATCH	(0xb00 + INSERT) /* show matching paren */
-#define CONFIRM		0xc00	/* ":confirm" prompt */
+#define HITRETURN	(0x200 + NORMAL) /* waiting for return or command */
+#define ASKMORE		0x300	/* Asking if you want --more-- */
+#define SETWSIZE	0x400	/* window size has changed */
+#define ABBREV		0x500	/* abbreviation instead of mapping */
+#define EXTERNCMD	0x600	/* executing an external command */
+#define SHOWMATCH	(0x700 + INSERT) /* show matching paren */
+#define CONFIRM		0x800	/* ":confirm" prompt */
 
 /* directions */
 #define FORWARD			1
@@ -712,10 +717,10 @@ typedef unsigned short u8char_t;
 /*
  * Flags for chartab[].
  */
-#define CT_CELL_MASK	0x03	/* mask: nr of display cells (1 or 2) */
-#define CT_PRINT_CHAR	0x04	/* flag: set for printable chars */
-#define CT_ID_CHAR	0x08	/* flag: set for ID chars */
-#define CT_FNAME_CHAR	0x10	/* flag: set for file name chars */
+#define CT_CELL_MASK	0x07	/* mask: nr of display cells (1, 2 or 4) */
+#define CT_PRINT_CHAR	0x10	/* flag: set for printable chars */
+#define CT_ID_CHAR	0x20	/* flag: set for ID chars */
+#define CT_FNAME_CHAR	0x40	/* flag: set for file name chars */
 
 /*
  * Values for do_tag().
@@ -1293,10 +1298,24 @@ typedef struct VimClipboard
 # define stat(a,b) (access(a,0) ? -1 : stat(a,b))
 #endif
 
-#include "globals.h"	    /* global variables and messages */
+/*
+ * EXTERN is only defined in main.c.  That's where global variables are
+ * actually defined and initialized.
+ */
+#ifndef EXTERN
+# define EXTERN extern
+# define INIT(x)
+#else
+# ifndef INIT
+#  define INIT(x) x
+#  define DO_INIT
+# endif
+#endif
+
 #include "option.h"	    /* option variables and defines */
 #include "ex_cmds.h"	    /* Ex command defines */
 #include "proto.h"	    /* function prototypes */
+#include "globals.h"	    /* global variables and messages */
 
 #ifdef FEAT_SNIFF
 # include "if_sniff.h"
@@ -1371,8 +1390,10 @@ typedef struct VimClipboard
 /*
  * Return byte length of character that starts with byte "b".
  * Returns 1 for a single-byte character.
+ * MB_BYTE2LEN_CHECK() can be used to count a special key as one byte.
+ * Don't call MB_BYTE2LEN(b) with b < 0 or b > 255!
  */
-# define MB_BYTE2LEN(b)	mb_bytelen_tab[b]
+# define MB_BYTE2LEN(b)		mb_bytelen_tab[b]
 # define MB_BYTE2LEN_CHECK(b)	(((b) < 0 || (b) > 255) ? 1 : mb_bytelen_tab[b])
 
 /* properties used in enc_canon_table[] (first three mutually exclusive) */
@@ -1382,10 +1403,12 @@ typedef struct VimClipboard
 
 # define ENC_ENDIAN_B	0x10	    /* Unicode: Big endian */
 # define ENC_ENDIAN_L	0x20	    /* Unicode: Little endian */
+
 # define ENC_2BYTE	0x40	    /* Unicode: UCS-2 */
 # define ENC_4BYTE	0x80	    /* Unicode: UCS-4 */
+# define ENC_2WORD	0x100	    /* Unicode: UTF-16 */
 
-# define ENC_LATIN1	0x100	    /* Latin1 */
+# define ENC_LATIN1	0x200	    /* Latin1 */
 
 # ifdef USE_ICONV
 /* On Win32 iconv.dll is dynamically loaded. */

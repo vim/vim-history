@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #if defined(MSDOS) || defined(WIN32)
@@ -337,7 +338,10 @@ main
 	mch_windexit(0);
 
 #if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
-    setlocale(LC_ALL, "");	/* for ctype() and the like */
+    /*
+     * Setup to use the current locale (for ctype() and many other things).
+     */
+    setlocale(LC_ALL, "");
 # ifdef FEAT_GETTEXT
     {
 	int	mustfree = FALSE;
@@ -790,18 +794,19 @@ main
 		case 's':	/* "-s {scriptin}" read from script file */
 		    if (scriptin[0] != NULL)
 		    {
+scripterror:
 			mch_errmsg(_("Attempt to open script file again: \""));
 			mch_errmsg(argv[-1]);
 			mch_errmsg(" ");
 			mch_errmsg(argv[0]);
-			mch_errmsg("\"\n");
+			mch_errmsg(_("\"\n"));
 			mch_windexit(2);
 		    }
 		    if ((scriptin[0] = mch_fopen(argv[0], READBIN)) == NULL)
 		    {
 			mch_errmsg(_("Cannot open for reading: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg("\"\n");
+			mch_errmsg(_("\"\n"));
 			mch_windexit(2);
 		    }
 		    if (save_typebuf() == FAIL)
@@ -839,14 +844,7 @@ main
 		case 'w':	/* "-w {scriptout}" append to script file */
 		case 'W':	/* "-W {scriptout}" overwrite script file */
 		    if (scriptout != NULL)
-		    {
-			mch_errmsg(_("Attempt to open script file again: \""));
-			mch_errmsg(argv[-1]);
-			mch_errmsg(" ");
-			mch_errmsg(argv[0]);
-			mch_errmsg("\"\n");
-			mch_windexit(2);
-		    }
+			goto scripterror;
 		    if ((scriptout = mch_fopen(argv[0],
 				    c == 'w' ? APPENDBIN : WRITEBIN)) == NULL)
 		    {
@@ -1646,7 +1644,7 @@ main_loop(cmdwin)
 	     * When 'foldopen' is "all", open the fold(s) under the cursor.
 	     * This may mark the window for redrawing.
 	     */
-	    if (!char_avail())
+	    if (hasAnyFolding(curwin) && !char_avail())
 	    {
 		foldCheckClose();
 		if (fdo_flags & FDO_ALL)

@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include <Xm/Form.h>
@@ -334,7 +335,6 @@ static void gui_motif_add_actext __ARGS((vimmenu_t *menu));
 static void toggle_tearoff __ARGS((Widget wid));
 static void gui_mch_recurse_tearoffs __ARGS((vimmenu_t *menu));
 #endif
-static void gui_mch_compute_menu_height __ARGS((Widget));
 static void gui_mch_submenu_colors __ARGS((vimmenu_t *mp));
 
 static void do_set_mnemonics __ARGS((int enable));
@@ -632,7 +632,7 @@ gui_mch_text_area_extra_height()
  * We need to check all the items for their position and height, for the case
  * there are several rows, and/or some characters extend higher or lower.
  */
-    static void
+    void
 gui_mch_compute_menu_height(id)
     Widget	id;		    /* can be NULL when deleting menu */
 {
@@ -701,8 +701,10 @@ gui_mch_compute_menu_height(id)
     gui.menu_height = maxy + height - 2 * shadow + 2 * margin + 4;
 
     /* Somehow the menu bar doesn't resize automatically.  Set it here,
-     * even though this is a catch 22. */
-    XtVaSetValues(menuBar, XmNheight, gui.menu_height, NULL);
+     * even though this is a catch 22.  Don't do this when starting up,
+     * somehow the menu gets very high then. */
+    if (gui.shell_created)
+	XtVaSetValues(menuBar, XmNheight, gui.menu_height, NULL);
 }
 
     void

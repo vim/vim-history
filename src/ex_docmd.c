@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -112,9 +113,6 @@ static int	getargopt __ARGS((exarg_t *eap));
 #endif
 #if !defined(FEAT_QUICKFIX) || !defined(FEAT_WINDOWS)
 # define ex_cwindow		ex_ni
-#endif
-#ifndef FEAT_MBYTE
-# define ex_scriptencoding	ex_ni
 #endif
 
 static int	check_more __ARGS((int, int));
@@ -230,6 +228,9 @@ static void	ex_popup __ARGS((exarg_t *eap));
 #endif
 #ifndef FEAT_SNIFF
 # define ex_sniff		ex_ni
+#endif
+#ifndef FEAT_KEYMAP
+# define ex_loadkeymap		ex_ni
 #endif
 static void	ex_swapname __ARGS((exarg_t *eap));
 static void	ex_syncbind __ARGS((exarg_t *eap));
@@ -389,6 +390,10 @@ static void	ex_language __ARGS((exarg_t *eap));
 # define ex_breakadd		ex_ni
 # define ex_breakdel		ex_ni
 # define ex_breaklist		ex_ni
+#endif
+
+#ifndef FEAT_CMDHIST
+# define ex_history		ex_ni
 #endif
 
 /*
@@ -766,7 +771,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 	{
 	    vim_free(cmdline_copy);
 	    cmdline_copy = NULL;
-
+#ifdef FEAT_CMDHIST
 	    /*
 	     * If the command was typed, remember it for the ':' register.
 	     * Do this AFTER executing the command to make :@: work.
@@ -777,6 +782,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 		last_cmdline = new_last_cmdline;
 		new_last_cmdline = NULL;
 	    }
+#endif
 	}
 	else
 	{
@@ -1647,7 +1653,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    while (p > ea.arg && vim_iswhite(p[-1]))
 		--p;
 	}
-	ea.line2 = buflist_findpat(ea.arg, p, ea.cmdidx == CMD_bwipeout);
+	ea.line2 = buflist_findpat(ea.arg, p, (ea.argt & BUFUNL) != 0);
 	if (ea.line2 < 0)	    /* failed */
 	    goto doend;
 	ea.addr_count = 1;
@@ -2242,7 +2248,11 @@ set_one_cmd_context(xp, buff)
 	xp->xp_context = EXPAND_FILES;
 
 	/* Check for environment variable */
-	if (*xp->xp_pattern == '$')
+	if (*xp->xp_pattern == '$'
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+		|| *xp->xp_pattern == '%'
+#endif
+		)
 	{
 	    for (p = xp->xp_pattern + 1; *p != NUL; ++p)
 		if (!vim_isIDc(*p))
@@ -3128,7 +3138,7 @@ separate_nextcmd(eap)
 	}
 #ifdef FEAT_MBYTE
 	else if (has_mbyte)
-	    p += mb_ptr2len_check(p) - 1; /* skip bytes of multi-byte char */
+	    p += (*mb_ptr2len_check)(p) - 1; /* skip bytes of multi-byte char */
 #endif
     }
     if (!(eap->argt & NOTRLCOM))	/* remove trailing spaces */
@@ -5821,9 +5831,25 @@ ex_sleep(eap)
 	if (n >= 0)
 	    windgoto((int)n, curwin->w_wcol);
     }
+    do_sleep(eap->line2 * (*eap->arg == 'm' ? 1L : 1000L));
+}
+
+/*
+ * Sleep for "msec" milliseconds, but keep checking for a CTRL-C every second.
+ */
+    void
+do_sleep(msec)
+    long	msec;
+{
+    long	done;
+
     cursor_on();
     out_flush();
-    ui_delay(eap->line2 * (*eap->arg == 'm' ? 1L : 1000L), TRUE);
+    for (done = 0; !got_int && done < msec; done += 1000L)
+    {
+	ui_delay(msec - done > 1000L ? 1000L : msec - done, TRUE);
+	ui_breakcheck();
+    }
 }
 
     static void
@@ -6248,7 +6274,7 @@ ex_mkrc(eap)
 #endif
 #ifdef FEAT_SESSION
     int		view_session = FALSE;
-    int		add_edit = TRUE;	/* add ":edit" cmd in view file? */
+    int		using_vdir = FALSE;	/* using 'viewdir'? */
     char_u	*viewFile = NULL;
     unsigned	*flagp;
 #endif
@@ -6274,7 +6300,7 @@ ex_mkrc(eap)
 	if (fname == NULL)
 	    return;
 	viewFile = fname;
-	add_edit = FALSE;
+	using_vdir = TRUE;
     }
     else
 #endif
@@ -6304,6 +6330,12 @@ ex_mkrc(eap)
 	fname = browseFile;
 	eap->forceit = TRUE;	/* since dialog already asked */
     }
+#endif
+
+#if defined(FEAT_SESSION) && defined(mch_mkdir)
+    /* When using 'viewdir' may have to create the directory. */
+    if (using_vdir && !mch_isdir(p_vdir))
+	mch_mkdir(p_vdir, 0755); /* ignore errors, open_exfile() will fail */
 #endif
 
     fd = open_exfile(fname, eap->forceit, WRITEBIN);
@@ -6383,7 +6415,7 @@ ex_mkrc(eap)
 	    }
 	    else
 	    {
-		failed |= (put_view(fd, curwin, add_edit, flagp) == FAIL);
+		failed |= (put_view(fd, curwin, !using_vdir, flagp) == FAIL);
 	    }
 	    if (put_line(fd, "let &so = s:so_save | let &siso = s:siso_save")
 								      == FAIL)
@@ -6527,7 +6559,7 @@ ex_normal(eap)
 	    if (gui.in_use && *p == CSI)  /* leadbyte CSI */
 		len += 2;
 # endif
-	    for (l = mb_ptr2len_check(p) - 1; l > 0; --l)
+	    for (l = (*mb_ptr2len_check)(p) - 1; l > 0; --l)
 		if (*++p == K_SPECIAL	  /* trailbyte K_SPECIAL or CSI */
 # ifdef FEAT_GUI
 			|| (gui.in_use && *p == CSI)
@@ -6551,7 +6583,7 @@ ex_normal(eap)
 			arg[len++] = (int)KE_CSI;
 		    }
 # endif
-		    for (l = mb_ptr2len_check(p) - 1; l > 0; --l)
+		    for (l = (*mb_ptr2len_check)(p) - 1; l > 0; --l)
 		    {
 			arg[len++] = *++p;
 			if (*p == K_SPECIAL)
@@ -8274,8 +8306,9 @@ ex_runtime(eap)
  * Source the file "name" from all directories in 'runtimepath'.
  * "name" can contain wildcards.
  * When "all" is TRUE, source all files, otherwise only the first one.
+ * return FAIL when no file could be sourced, OK otherwise.
  */
-    void
+    int
 cmd_runtime(name, all)
     char_u	*name;
     int		all;
@@ -8347,6 +8380,8 @@ cmd_runtime(name, all)
 #ifdef AMIGA
     proc->pr_WindowPtr = save_winptr;
 #endif
+
+    return did_one ? OK : FAIL;
 }
 
 /*

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0v.  Last change: 2001 Feb 08
+*map.txt*       For Vim version 6.0w.  Last change: 2001 Feb 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -18,39 +18,42 @@ There are commands to enter new mappings, remove mappings and list mappings.
 See |map-overview| for the various forms of "map" and their relationships with
 modes.
 
-:map     {lhs} {rhs}					*:map*
-:nm[ap]  {lhs} {rhs}					*:nm* *:nmap*
-:vm[ap]  {lhs} {rhs}					*:vm* *:vmap*
-:om[ap]  {lhs} {rhs}					*:om* *:omap*
-:map!    {lhs} {rhs}					*:map!*
-:im[ap]  {lhs} {rhs}					*:im* *:imap*
-:cm[ap]  {lhs} {rhs}					*:cm* *:cmap*
+:map	{lhs} {rhs}					*:map*
+:nm[ap]	{lhs} {rhs}					*:nm* *:nmap*
+:vm[ap]	{lhs} {rhs}					*:vm* *:vmap*
+:om[ap]	{lhs} {rhs}					*:om* *:omap*
+:map!	{lhs} {rhs}					*:map!*
+:im[ap]	{lhs} {rhs}					*:im* *:imap*
+:lm[ap]	{lhs} {rhs}					*:lm* *:lmap*
+:cm[ap]	{lhs} {rhs}					*:cm* *:cmap*
 			Map the key sequence {lhs} to {rhs} for the modes
 			where the map command applies.  The result, including
 			{rhs}, is then further scanned for mappings.  This
 			allows for nested and recursive use of mappings.
 
 
-:no[remap]   {lhs} {rhs}				*:no*  *:noremap*
-:nn[oremap]  {lhs} {rhs}				*:nn*  *:nnoremap*
-:vn[oremap]  {lhs} {rhs}				*:vn*  *:vnoremap*
-:ono[remap]  {lhs} {rhs}				*:ono* *:onoremap*
-:no[remap]!  {lhs} {rhs}				*:no!* *:noremap!*
-:ino[remap]  {lhs} {rhs}				*:ino* *:inoremap*
-:cno[remap]  {lhs} {rhs}				*:cno* *:cnoremap*
+:no[remap]  {lhs} {rhs}					*:no*  *:noremap*
+:nn[oremap] {lhs} {rhs}					*:nn*  *:nnoremap*
+:vn[oremap] {lhs} {rhs}					*:vn*  *:vnoremap*
+:ono[remap] {lhs} {rhs}					*:ono* *:onoremap*
+:no[remap]! {lhs} {rhs}					*:no!* *:noremap!*
+:ino[remap] {lhs} {rhs}					*:ino* *:inoremap*
+:lno[remap] {lhs} {rhs}					*:ln*  *:lnoremap*
+:cno[remap] {lhs} {rhs}					*:cno* *:cnoremap*
 			Map the key sequence {lhs} to {rhs} for the modes
 			where the map command applies.  Disallow mapping of
 			{rhs}, to avoid nested and recursive mappings.  Often
 			used to redefine a command.  {not in Vi}
 
 
-:unm[ap]   {lhs}					*:unm*  *:unmap*
-:nun[map]  {lhs}					*:nun*  *:nunmap*
-:vu[nmap]  {lhs}					*:vu*   *:vunmap*
-:ou[nmap]  {lhs}					*:ou*   *:ounmap*
-:unm[ap]!  {lhs}					*:unm!* *:unmap!*
-:iu[nmap]  {lhs}					*:iu*   *:iunmap*
-:cu[nmap]  {lhs}					*:cu*   *:cunmap*
+:unm[ap]  {lhs}						*:unm*  *:unmap*
+:nun[map] {lhs}						*:nun*  *:nunmap*
+:vu[nmap] {lhs}						*:vu*   *:vunmap*
+:ou[nmap] {lhs}						*:ou*   *:ounmap*
+:unm[ap]! {lhs}						*:unm!* *:unmap!*
+:iu[nmap] {lhs}						*:iu*   *:iunmap*
+:lu[nmap] {lhs}						*:lu*   *:lunmap*
+:cu[nmap] {lhs}						*:cu*   *:cunmap*
 			Remove the mapping of {lhs} for the modes where the
 			map command applies.  The mapping may remain defined
 			for other modes where it applies.
@@ -65,6 +68,7 @@ modes.
 :omapc[lear]						*:omapc*  *:omapclear*
 :mapc[lear]!						*:mapc!*  *:mapclear!*
 :imapc[lear]						*:imapc*  *:imapclear*
+:lmapc[lear]						*:lmapc*  *:lmapclear*
 :cmapc[lear]						*:cmapc*  *:cmapclear*
 			Remove ALL mappings for the modes where the map
 			command applies.  {not in Vi}
@@ -76,18 +80,20 @@ modes.
 :om[ap]
 :map!
 :im[ap]
+:lm[ap]
 :cm[ap]
 			List all key mappings for the modes where the map
 			command applies.  Note that ":map" and ":map!" are
 			used most often, because they include the other modes.
 
-:map     {lhs}						*:map_l*
-:nm[ap]  {lhs}						*:nmap_l*
-:vm[ap]  {lhs}						*:vmap_l*
-:om[ap]  {lhs}						*:omap_l*
-:map!    {lhs}						*:map_l!*
-:im[ap]  {lhs}						*:imap_l*
-:cm[ap]  {lhs}						*:cmap_l*
+:map    {lhs}						*:map_l*
+:nm[ap] {lhs}						*:nmap_l*
+:vm[ap] {lhs}						*:vmap_l*
+:om[ap] {lhs}						*:omap_l*
+:map!   {lhs}						*:map_l!*
+:im[ap] {lhs}						*:imap_l*
+:lm[ap] {lhs}						*:lmap_l*
+:cm[ap] {lhs}						*:cmap_l*
 			List the key mappings for the key sequences starting
 			with {lhs} in the modes where the map command applies.
 			{not in Vi}
@@ -143,17 +149,18 @@ are used |Select-mode-mapping|.
 						*map-overview* *map-modes*
 Overview of which map command works in which mode:
 
-    commands:				      modes:			      ~
+    commands:				      modes: ~
 					  Normal     Visual  Operator-pending ~
-:map   :noremap   :unmap   :mapclear	     X		X	   X
-:nmap  :nnoremap  :nunmap  :nmapclear	     X		.	   .
-:vmap  :vnoremap  :vunmap  :vmapclear	     .		X	   .
-:omap  :onoremap  :ounmap  :omapclear	     .		.	   X
+:map   :noremap   :unmap   :mapclear	    yes	       yes	  yes
+:nmap  :nnoremap  :nunmap  :nmapclear	    yes		-	   -
+:vmap  :vnoremap  :vunmap  :vmapclear	     -	       yes	   -
+:omap  :onoremap  :ounmap  :omapclear	     -		-	  yes
 
-					  Insert Command-line		~
-:map!  :noremap!  :unmap!  :mapclear!	     X	       X
-:imap  :inoremap  :iunmap  :imapclear	     X	       .
-:cmap  :cnoremap  :cunmap  :cmapclear	     .	       X
+					  Insert  Command-line	Lang-Arg ~
+:map!  :noremap!  :unmap!  :mapclear!	    yes	       yes	   -
+:imap  :inoremap  :iunmap  :imapclear	    yes		-	   -
+:cmap  :cnoremap  :cunmap  :cmapclear	     -	       yes	   -
+:lmap  :lnoremap  :lunmap  :lmapclear	    yes*       yes*	  yes*
 
 The original Vi did not have separate mappings for
 Normal/Visual/Operator-pending mode and for Insert/Command-line mode.
@@ -168,6 +175,21 @@ first define it for all three modes, then unmap it for Operator-pending mode:
 Likewise for a mapping for Visual and Operator-pending mode or Normal and
 Operator-pending mode.
 
+						*language-mapping*
+":lmap" defines a mapping that applies to Insert and Command-line mode, the
+argument of the commands that accept a text character, when entering a search
+pattern and for the input() line.  Generally: Whenever a character is to be
+typed that is inserted in the text, not a Vim command character.  "Lang-Arg"
+isn't really another mode, it's just used here for this situation.
+In Insert mode and in Command-line mode the mappings can be disabled with the
+CTRL-^ command |i_CTRL-^| |c_CTRL-^|.  When starting to enter a normal command
+line (not a search pattern) the mappings are disabled until a CTRL-^ is typed.
+The state last used is remembered for Insert mode and Search patterns
+separately.  The state for Insert mode is also used when typing a character as
+an argument to command like "f" or "t".
+When adding a ":lmap" mapping the use of these mappings in Insert mode and for
+Search patterns will be switched on.
+
 							*map-listing*
 When listing mappings the characters in the first two columns are:
 
@@ -178,6 +200,7 @@ When listing mappings the characters in the first two columns are:
 	o	Operator-pending
 	!	Insert and Command-line
 	i	Insert
+	l	":lmap" mappings for Insert, Command-line and Lang-Arg
 	c	Command-line
 
 Just before the {rhs} a special character can appear:
@@ -258,6 +281,15 @@ that's local to the script.  See |<SID>| for details.
 The special key name "<Plug>" can be used for an internal mapping, which is
 not to be matched with any key sequence.  This is useful in plugins
 |write-plugin|.
+
+							*<Char>* *<Char->*
+To map a character by its decimal, octal or hexadecimal number the <Char>
+construct can be used:
+	<Char-123>	character 123
+	<Char-033>	character 27
+	<Char-0x7f>	character 127
+This is useful to specify a (multi-byte) character in a 'keymap' file.
+Upper and lower case differences are ignored.
 
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'

@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 /*
  * multibyte.c: Code specifically for handling multi-byte characters.
@@ -29,7 +30,7 @@
  *		    are allowed.  These are drawn on top of the first char.
  *		    For most editing the sequence of bytes with composing
  *		    characters included is considered to be one character.
- * "enc_unicode"    When 2 use 16-bit Unicode characters.
+ * "enc_unicode"    When 2 use 16-bit Unicode characters (or UTF-16).
  *		    When 4 use 32-but Unicode characters.
  *		    Internally characters are stored in UTF-8 encoding to
  *		    avoid NUL bytes.  Conversion happens when doing I/O.
@@ -75,8 +76,6 @@
  */
 
 #include "vim.h"
-#include "globals.h"
-#include "option.h"
 #if defined(WIN32) || defined(WIN32UNIX)
 # include <windows.h>
 # ifndef __MINGW32__
@@ -92,6 +91,14 @@
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
+static int dbcs_ptr2len_check __ARGS((char_u *p));
+static int dbcs_ptr2cells __ARGS((char_u *p));
+static int dbcs_char2cells __ARGS((int c));
+static int dbcs_off2cells __ARGS((unsigned off));
+static int dbcs_char2len __ARGS((int c));
+static int dbcs_char2bytes __ARGS((int c, char_u *buf));
+static int utf_off2cells __ARGS((unsigned off));
+static int dbcs_ptr2char __ARGS((char_u *p));
 static int enc_alias_search __ARGS((char_u *name));
 
 /* Lookup table to quickly get the length in bytes of a UTF-8 character from
@@ -131,8 +138,13 @@ enc_canon_table[] =
     {"iso-8859-6",	ENC_8BIT,		0},
 #define IDX_ISO_7	6
     {"iso-8859-7",	ENC_8BIT,		0},
-#define IDX_ISO_8	7
+#ifdef WIN32
+# define IDX_CP1255	7
+    {"cp1255",		ENC_8BIT,		0},
+#else
+# define IDX_ISO_8	7
     {"iso-8859-8",	ENC_8BIT,		0},
+#endif
 #define IDX_ISO_9	8
     {"iso-8859-9",	ENC_8BIT,		0},
 #define IDX_ISO_10	9
@@ -151,32 +163,43 @@ enc_canon_table[] =
     {"ucs-2",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2BYTE, 0},
 #define IDX_UCS2LE	16
     {"ucs-2le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_2BYTE, 0},
-#define IDX_UCS4	17
+#define IDX_UTF16	17
+    {"utf-16",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2WORD, 0},
+#define IDX_UTF16LE	18
+    {"utf-16le",	ENC_UNICODE + ENC_ENDIAN_L + ENC_2WORD, 0},
+#define IDX_UCS4	19
     {"ucs-4",		ENC_UNICODE + ENC_ENDIAN_B + ENC_4BYTE, 0},
-#define IDX_UCS4LE	18
+#define IDX_UCS4LE	20
     {"ucs-4le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_4BYTE, 0},
-#ifdef WIN32
-# define IDX_CP932	19
-    {"cp932",		ENC_DBCS,		DBCS_JPN},
-# define IDX_CP949	20
-    {"cp949",		ENC_DBCS,		DBCS_KOR},
-# define IDX_CP936	21
-    {"cp936",		ENC_DBCS,		DBCS_CHS},
-# define IDX_CP950	22
-    {"cp950",		ENC_DBCS,		DBCS_CHT},
-#else
-# define IDX_EUC_JP	19
-    {"euc-jp",		ENC_DBCS,		DBCS_JPN},
-# define IDX_EUC_KR	20
-    {"euc-kr",		ENC_DBCS,		DBCS_KOR},
-# define IDX_CHINESE	21
-    {"chinese",		ENC_DBCS,		DBCS_CHS},
-# define IDX_EUC_TW	22
-    {"euc-tw",		ENC_DBCS,		DBCS_CHT},
-#endif
-#define IDX_DEBUG	23
+#define IDX_DEBUG	21
     {"debug",		ENC_DBCS,		DBCS_DEBUG},
-#define IDX_COUNT	24
+#ifdef WIN32
+# define IDX_CP932	22
+    {"cp932",		ENC_DBCS,		DBCS_JPN},
+# define IDX_CP949	23
+    {"cp949",		ENC_DBCS,		DBCS_KOR},
+# define IDX_CP936	24
+    {"cp936",		ENC_DBCS,		DBCS_CHS},
+# define IDX_CP950	25
+    {"cp950",		ENC_DBCS,		DBCS_CHT},
+#define IDX_COUNT	26
+#else
+# define IDX_EUC_JP	22
+    {"euc-jp",		ENC_DBCS,		DBCS_JPNU},
+# define IDX_CP932	23
+    {"cp932",		ENC_DBCS,		DBCS_JPN},
+# define IDX_EUC_KR	24
+    {"euc-kr",		ENC_DBCS,		DBCS_KORU},
+# define IDX_CP949	25
+    {"cp949",		ENC_DBCS,		DBCS_KOR},
+# define IDX_EUC_CN	26
+    {"euc-cn",		ENC_DBCS,		DBCS_CHSU},
+# define IDX_EUC_TW	27
+    {"euc-tw",		ENC_DBCS,		DBCS_CHTU},
+# define IDX_BIG5	28
+    {"big5",		ENC_DBCS,		DBCS_CHT},
+#define IDX_COUNT	29
+#endif
 };
 
 /*
@@ -194,7 +217,13 @@ enc_alias_table[] =
     {"cyrillic",	IDX_ISO_5},
     {"arabic",		IDX_ISO_6},
     {"greek",		IDX_ISO_7},
+#ifdef WIN32
+    {"hebrew",		IDX_CP1255},
+    {"iso-8859-8",	IDX_CP1255},
+#else
     {"hebrew",		IDX_ISO_8},
+    {"cp1255",		IDX_ISO_8},
+#endif
     {"latin5",		IDX_ISO_9},
     {"turkish",		IDX_ISO_9}, /* ? */
     {"latin6",		IDX_ISO_10},
@@ -206,39 +235,48 @@ enc_alias_table[] =
     {"utf8",		IDX_UTF8},
     {"unicode",		IDX_UCS2},
     {"ucs2",		IDX_UCS2},
-    {"ucs-2be",		IDX_UCS2},
     {"ucs2be",		IDX_UCS2},
+    {"ucs-2be",		IDX_UCS2},
     {"ucs2le",		IDX_UCS2LE},
+    {"utf16",		IDX_UTF16},
+    {"utf16be",		IDX_UTF16},
+    {"utf-16be",	IDX_UTF16},
+    {"utf16le",		IDX_UTF16LE},
     {"ucs4",		IDX_UCS4},
-    {"ucs-4be",		IDX_UCS4},
     {"ucs4be",		IDX_UCS4},
+    {"ucs-4be",		IDX_UCS4},
     {"ucs4le",		IDX_UCS4LE},
 #if defined(WIN32) || defined(WIN32UNIX)
     {"japan",		IDX_CP932},
+    {"932",		IDX_CP932},
     {"shift-jis",	IDX_CP932}, /* not exactly the same */
     {"korea",		IDX_CP949},
-    {"euc-kr",		IDX_CP949}, /* ? */
-    {"euckr",		IDX_CP949}, /* ? */
+    {"949",		IDX_CP949},
     {"prc",		IDX_CP936},
     {"chinese",		IDX_CP936},
+    {"936",		IDX_CP936},
     {"taiwan",		IDX_CP950},
-    {"euc-tw",		IDX_CP950}, /* ? */
-    {"euctw",		IDX_CP950}, /* ? */
-    {"big5",		IDX_CP950}, /* ? */
+    {"950",		IDX_CP950},
+    {"big5",		IDX_CP950},
 #else
     {"japan",		IDX_EUC_JP},
     {"eucjp",		IDX_EUC_JP},
     {"unix-jis",	IDX_EUC_JP},
     {"ujis",		IDX_EUC_JP},
+    {"932",		IDX_CP932},
+    {"shift-jis",	IDX_CP932}, /* not exactly the same */
     {"korea",		IDX_EUC_KR},
     {"euckr",		IDX_EUC_KR},
-    {"cp949",		IDX_EUC_KR}, /* ? */
-    {"prc",		IDX_CHINESE},
-    {"cp936",		IDX_CHINESE}, /* ? */
+    {"949",		IDX_CP949},
+    {"chinese",		IDX_EUC_CN},
+    {"prc",		IDX_EUC_CN},
+    {"euccn",		IDX_EUC_CN},
+    {"cp936",		IDX_EUC_CN}, /* ? */
+    {"936",		IDX_EUC_CN}, /* ? */
     {"taiwan",		IDX_EUC_TW},
     {"euctw",		IDX_EUC_TW},
-    {"cp950",		IDX_EUC_TW}, /* ? */
-    {"big5",		IDX_EUC_TW}, /* ? */
+    {"cp950",		IDX_BIG5},
+    {"950",		IDX_BIG5},
 #endif
     {NULL,		0}
 };
@@ -388,7 +426,7 @@ codepage_invalid:
 	{
 	    /* Unicode */
 	    enc_utf8 = TRUE;
-	    if (i & ENC_2BYTE)
+	    if (i & (ENC_2BYTE | ENC_2WORD))
 		enc_unicode = 2;
 	    else if (i & ENC_4BYTE)
 		enc_unicode = 4;
@@ -427,7 +465,44 @@ codepage_invalid:
     is_funky_dbcs = (enc_dbcs != 0 && ((int)GetACP() != enc_dbcs));
 #endif
 
-    has_mbyte = (enc_dbcs || enc_utf8);
+    has_mbyte = (enc_dbcs != 0 || enc_utf8);
+
+    /*
+     * Set the function pointers.
+     */
+    if (enc_utf8)
+    {
+	mb_ptr2len_check = utfc_ptr2len_check;
+	mb_char2len = utf_char2len;
+	mb_char2bytes = utf_char2bytes;
+	mb_ptr2cells = utf_ptr2cells;
+	mb_char2cells = utf_char2cells;
+	mb_off2cells = utf_off2cells;
+	mb_ptr2char = utf_ptr2char;
+	mb_head_off = utf_head_off;
+    }
+    else if (enc_dbcs != 0)
+    {
+	mb_ptr2len_check = dbcs_ptr2len_check;
+	mb_char2len = dbcs_char2len;
+	mb_char2bytes = dbcs_char2bytes;
+	mb_ptr2cells = dbcs_ptr2cells;
+	mb_char2cells = dbcs_char2cells;
+	mb_off2cells = dbcs_off2cells;
+	mb_ptr2char = dbcs_ptr2char;
+	mb_head_off = dbcs_head_off;
+    }
+    else
+    {
+	mb_ptr2len_check = latin_ptr2len_check;
+	mb_char2len = latin_char2len;
+	mb_char2bytes = latin_char2bytes;
+	mb_ptr2cells = latin_ptr2cells;
+	mb_char2cells = latin_char2cells;
+	mb_off2cells = latin_off2cells;
+	mb_ptr2char = latin_ptr2char;
+	mb_head_off = latin_head_off;
+    }
 
     /*
      * Fill the mb_bytelen_tab[] for MB_BYTE2LEN().
@@ -520,7 +595,7 @@ codepage_invalid:
 /*
  * Return the size of the BOM for the current buffer:
  * 0 - no BOM
- * 2 - UCS-2 BOM
+ * 2 - UCS-2 or UTF-16 BOM
  * 4 - UCS-4 BOM
  * 3 - UTF-8 BOM
  */
@@ -543,7 +618,8 @@ bomb_size()
 	}
 	else if (STRCMP(curbuf->b_p_fenc, "utf-8") == 0)
 	    n = 3;
-	else if (STRNCMP(curbuf->b_p_fenc, "ucs-2", 5) == 0)
+	else if (STRNCMP(curbuf->b_p_fenc, "ucs-2", 5) == 0
+		|| STRNCMP(curbuf->b_p_fenc, "utf-16", 6) == 0)
 	    n = 2;
 	else if (STRNCMP(curbuf->b_p_fenc, "ucs-4", 5) == 0)
 	    n = 4;
@@ -560,7 +636,7 @@ mb_get_class(p)
 {
     int this_class = 0;
 
-    if (enc_dbcs && p[0] != NUL && p[1] != NUL && MB_BYTE2LEN(p[0]) > 1)
+    if (enc_dbcs != 0 && p[0] != NUL && p[1] != NUL && MB_BYTE2LEN(p[0]) > 1)
 	this_class = mb_class(p[0], p[1]);
     return this_class;
 }
@@ -577,6 +653,7 @@ mb_class(lead, trail)
     {
 	/* please add classfy routine for your language in here */
 
+	case DBCS_JPNU:	/* ? */
 	case DBCS_JPN:
 	    {
 		/* JIS code classification */
@@ -649,6 +726,8 @@ mb_class(lead, trail)
 			return 17;
 		}
 	    }
+
+	case DBCS_KORU:	/* ? */
 	case DBCS_KOR:
 	    {
 		/* KS code classification */
@@ -730,44 +809,46 @@ mb_class(lead, trail)
 }
 
 /*
+ * mb_char2len() function pointer.
  * Return length in bytes of character "c".
  * Returns 1 for a single-byte character.
  */
+/* ARGSUSED */
     int
-mb_char2len(c)
+latin_char2len(c)
     int		c;
 {
-    if (c < 0x80 || !has_mbyte)	/* be quick for ASCII */
-	return 1;
+    return 1;
+}
 
-    if (enc_utf8)
-	return utf_char2len(c);
-
-    /* enc_dbcs */
+    static int
+dbcs_char2len(c)
+    int		c;
+{
     if (c >= 0x100)
 	return 2;
     return 1;
 }
 
 /*
+ * mb_char2bytes() function pointer.
  * Convert a character to its bytes.
  * Returns the length in bytes.
  */
     int
-mb_char2bytes(c, buf)
+latin_char2bytes(c, buf)
     int		c;
     char_u	*buf;
 {
-    if (c < 0x80 || !has_mbyte)	/* be quick for ASCII */
-    {
-	buf[0] = c;
-	return 1;
-    }
+    buf[0] = c;
+    return 1;
+}
 
-    if (enc_utf8)
-	return utf_char2bytes(c, buf);
-
-    /* enc_dbcs */
+    static int
+dbcs_char2bytes(c, buf)
+    int		c;
+    char_u	*buf;
+{
     if (c >= 0x100)
     {
 	buf[0] = (unsigned)c >> 8;
@@ -779,23 +860,29 @@ mb_char2bytes(c, buf)
 }
 
 /*
+ * mb_ptr2len_check() function pointer.
  * Get byte length of character at "*p" but stop at a NUL.
  * For UTF-8 this includes following composing characters.
+ * Returns 0 when *p is NUL.
+ *
  */
     int
-mb_ptr2len_check(p)
+latin_ptr2len_check(p)
+    char_u	*p;
+{
+    return MB_BYTE2LEN(*p);
+}
+
+    static int
+dbcs_ptr2len_check(p)
     char_u	*p;
 {
     int		len;
 
-    if (enc_utf8)
-	return utfc_ptr2len_check(p);
-
-    /* Latin1 or DBCS: up to two bytes */
+    /* Check if second byte is not missing. */
     len = MB_BYTE2LEN(*p);
-    if (len == 1 || p[1] == NUL)
-	return 1;
-
+    if (len == 2 && p[1] == NUL)
+	len = 1;
     return len;
 }
 
@@ -824,21 +911,26 @@ utf_char2cells(c)
 }
 
 /*
+ * mb_ptr2cells() function pointer.
  * Return the number of display cells character at "*p" occupies.
- * This doesn't take care of ASCII characters, use ptr2cells() for that.
+ * This doesn't take care of unprintable characters, use ptr2cells() for that.
  */
+/*ARGSUSED*/
     int
-mb_ptr2cells(p)
+latin_ptr2cells(p)
+    char_u	*p;
+{
+    return 1;
+}
+
+    int
+utf_ptr2cells(p)
     char_u	*p;
 {
     int		c;
 
-    /* For DBCS we only need to check the first byte. */
-    if (enc_dbcs != 0)
-	return MB_BYTE2LEN(*p);
-
-    /* For UTF-8 we need to convert to a wide character. */
-    if (enc_utf8 && *p >= 0x80)
+    /* Need to convert to a wide character. */
+    if (*p >= 0x80)
     {
 	c = utf_ptr2char(p);
 	/* An illegal byte is displayed as <xx>. */
@@ -849,54 +941,92 @@ mb_ptr2cells(p)
 	    return char2cells(c);
 	return utf_char2cells(c);
     }
-
     return 1;
 }
 
+    static int
+dbcs_ptr2cells(p)
+    char_u	*p;
+{
+    /* Number of cells is equal to number of bytes, except for euc-jp when
+     * the first byte is 0x8e. */
+    if (enc_dbcs == DBCS_JPNU && *p == 0x8e)
+	return 1;
+    return MB_BYTE2LEN(*p);
+}
+
 /*
+ * mb_char2cells() function pointer.
  * Return the number of display cells character "c" occupies.
  * Only takes care of multi-byte chars, not "^C" and such.
  */
+/*ARGSUSED*/
     int
-mb_char2cells(c)
+latin_char2cells(c)
     int		c;
 {
-    /* For DBCS we only need to check the first byte. */
-    if (enc_dbcs != 0)
-	return MB_BYTE2LEN((unsigned)c >> 8);
-
-    /* For UTF-8 we need to check the value. */
-    if (enc_utf8)
-	return utf_char2cells(c);
-
     return 1;
 }
 
+    static int
+dbcs_char2cells(c)
+    int		c;
+{
+    /* Number of cells is equal to number of bytes, except for euc-jp when
+     * the first byte is 0x8e. */
+    if (enc_dbcs == DBCS_JPNU && ((unsigned)c >> 8) == 0x8e)
+	return 1;
+    /* use the first byte */
+    return MB_BYTE2LEN((unsigned)c >> 8);
+}
+
 /*
+ * mb_off2cells() function pointer.
  * Return number of display cells for char at ScreenLines[off].
  * Caller must make sure "off" and "off + 1" are valid!
  */
+/*ARGSUSED*/
     int
-mb_off2cells(off)
+latin_off2cells(off)
     unsigned	off;
 {
-    if (enc_dbcs != 0)
-	return MB_BYTE2LEN(ScreenLines[off]);
-    if (enc_utf8)
-	return ScreenLines[off + 1] == 0 ? 2 : 1;
     return 1;
 }
 
+    static int
+dbcs_off2cells(off)
+    unsigned	off;
+{
+    /* Number of cells is equal to number of bytes, except for euc-jp when
+     * the first byte is 0x8e. */
+    if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+	return 1;
+    return MB_BYTE2LEN(ScreenLines[off]);
+}
+
+    static int
+utf_off2cells(off)
+    unsigned	off;
+{
+    return ScreenLines[off + 1] == 0 ? 2 : 1;
+}
+
 /*
+ * mb_ptr2char() function pointer.
  * Convert a byte sequence into a character.
  */
     int
-mb_ptr2char(p)
+latin_ptr2char(p)
     char_u	*p;
 {
-    if (enc_utf8)
-	return utf_ptr2char(p);
-    if (enc_dbcs && MB_BYTE2LEN(*p) > 1)
+    return *p;
+}
+
+    static int
+dbcs_ptr2char(p)
+    char_u	*p;
+{
+    if (MB_BYTE2LEN(*p) > 1)
 	return (p[0] << 8) + p[1];
     return *p;
 }
@@ -905,6 +1035,7 @@ mb_ptr2char(p)
  * Convert a UTF-8 byte sequence to a wide character.
  * If the sequence is illegal or truncated by a NUL the first byte is
  * returned.
+ * Does not include composing characters, of course.
  */
     int
 utf_ptr2char(p)
@@ -946,6 +1077,20 @@ utf_ptr2char(p)
     }
     /* Illegal value, just return the first byte */
     return p[0];
+}
+
+/*
+ * Get character at **pp and advance *pp to the next character.
+ */
+    int
+mb_ptr2char_adv(pp)
+    char_u	**pp;
+{
+    int		c;
+
+    c = (*mb_ptr2char)(*pp);
+    *pp += (*mb_ptr2len_check)(*pp);
+    return c;
 }
 
 /*
@@ -1280,29 +1425,36 @@ show_utf8()
 }
 
 /*
+ * mb_head_off() function pointer.
  * Return offset from "p" to the first byte of the character it points into.
  * Returns 0 when already at the first byte of a character.
  */
+/*ARGSUSED*/
     int
-mb_head_off(base, p)
+latin_head_off(base, p)
+    char_u	*base;
+    char_u	*p;
+{
+    return 0;
+}
+
+    int
+dbcs_head_off(base, p)
     char_u	*base;
     char_u	*p;
 {
     char_u	*q;
 
-    if (enc_utf8)
-	return utf_head_off(base, p);
-
     /* It can't be a trailing byte when not using DBCS, at the start of the
      * string or the previous byte can't start a double-byte. */
-    if (enc_dbcs == 0 || p <= base || MB_BYTE2LEN(p[-1]) == 1)
+    if (p <= base || MB_BYTE2LEN(p[-1]) == 1)
 	return 0;
 
     /* This is slow: need to start at the base and go forward until the
      * byte we are looking for.  Return 1 when we went past it, 0 otherwise. */
     q = base;
     while (q < p)
-	q += mb_ptr2len_check(q);
+	q += dbcs_ptr2len_check(q);
     return (q == p) ? 0 : 1;
 }
 
@@ -1372,7 +1524,7 @@ mb_off_next(base, p)
 
     /* Only need to check if we're on a trail byte, it doesn't matter if we
      * want the offset to the next or current character. */
-    return mb_head_off(base, p);
+    return (*mb_head_off)(base, p);
 }
 
 /*
@@ -1410,7 +1562,7 @@ mb_tail_off(base, p)
 	return 0;
 
     /* Return 1 when on the lead byte, 0 when on the tail byte. */
-    return 1 - mb_head_off(base, p);
+    return 1 - dbcs_head_off(base, p);
 }
 
 /*
@@ -1437,7 +1589,7 @@ mb_adjustpos(lp)
     if (lp->col > 0)
     {
 	p = ml_get(lp->lnum);
-	lp->col -= mb_head_off(p, p + lp->col);
+	lp->col -= (*mb_head_off)(p, p + lp->col);
     }
 }
 
@@ -1454,7 +1606,7 @@ mb_charlen(str)
 	return 0;
 
     for (count = 0; *str != NUL; count++)
-	str += mb_ptr2len_check(str);
+	str += (*mb_ptr2len_check)(str);
 
     return count;
 }
@@ -1484,26 +1636,21 @@ mb_dec(lp)
 
 #if defined(FEAT_GUI) || defined(PROTO)
 /*
- * Check if buf[x] is the lead byte of a multi-byte.  Can be used anywhere in
- * a string.
+ * Check if buf[x] is the lead byte of a double-byte character.  Can be used
+ * anywhere in a string.
  */
     int
-mb_isbyte1(buf, x)
+dbcs_isbyte1(buf, x)
     char_u	*buf;
     int		x;
 {
-    if (enc_utf8)
-	return (buf[x] & 0xc0) == 0xc0;
-
     /* Check with MB_BYTE2LEN() first, mb_head_off() is slow! */
-    return (enc_dbcs != 0
-	    && MB_BYTE2LEN(buf[x]) > 1
-	    && mb_head_off(buf, buf + x) == 0);
+    return (MB_BYTE2LEN(buf[x]) > 1 && dbcs_head_off(buf, buf + x) == 0);
 }
 
 /*
- * Return TRUE if the character at "row"/"col" on the screen if it is the left
- * side of a double-width character.
+ * Return TRUE if the character at "row"/"col" on the screen is the left side
+ * of a double-width character.
  * Caller must make sure "row" and "col" are not invalid!
  */
     int
@@ -1515,8 +1662,8 @@ mb_lefthalve(row, col)
     if (composing_hangul)
 	return TRUE;
 #endif
-    if (enc_dbcs)
-	return MB_BYTE2LEN(ScreenLines[LineOffset[row] + col]) > 1;
+    if (enc_dbcs != 0)
+	return dbcs_off2cells(LineOffset[row] + col) > 1;
     if (enc_utf8)
 	return (col + 1 < Columns
 		&& ScreenLines[LineOffset[row] + col + 1] == 0);
@@ -2316,30 +2463,25 @@ xim_real_init(x11_window, x11_display)
     if (xic != NULL)
 	return FALSE;
 
-    if (!gui.input_method || !*gui.input_method)
-    {
-	if ((p = XSetLocaleModifiers("")) != NULL && *p)
-	    xim = XOpenIM(x11_display, NULL, NULL, NULL);
-    }
-    else
+    if (gui.input_method != NULL && *gui.input_method == NUL)
     {
 	strcpy(tmp, gui.input_method);
-	for (ns = s = tmp; ns && *s;)
+	for (ns = s = tmp; ns != NULL && *s != NUL;)
 	{
 	    while (*s && isspace((unsigned char)*s))
 		s++;
 	    if (!*s)
 		break;
-	    if ((ns = end = strchr(s, ',')) == 0)
+	    if ((ns = end = strchr(s, ',')) == NULL)
 		end = s + strlen(s);
 	    while (isspace((unsigned char)*end))
 		end--;
-	    *end = '\0';
+	    *end = NUL;
 
 	    strcpy(buf, "@im=");
 	    strcat(buf, s);
 	    if ((p = XSetLocaleModifiers(buf)) != NULL
-		&& *p
+		&& *p != NUL
 		&& (xim = XOpenIM(x11_display, NULL, NULL, NULL)) != NULL)
 		break;
 
@@ -2347,13 +2489,19 @@ xim_real_init(x11_window, x11_display)
 	}
     }
 
-    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p)
+    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
-    if (!xim)
+    /* This is supposed to be useful to obtain characters through
+     * XmbLookupString() without using a XIM. */
+    if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL
+								 && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
-    if (!xim)
+    if (xim == NULL)
+	xim = XOpenIM(x11_display, NULL, NULL, NULL);
+
+    if (xim == NULL)
     {
 	EMSG(_("Failed to open input method"));
 	return FALSE;
@@ -2789,7 +2937,7 @@ xim_init(void)
 	    }
 	}
 	else if ((xim_input_style & GDK_IM_STATUS_MASK)
-		 == GDK_IM_STATUS_CALLBACKS)
+						   == GDK_IM_STATUS_CALLBACKS)
 	{
 	    /* FIXME */
 	}
@@ -3006,3 +3154,167 @@ string_convert(vcp, ptr, lenp)
     return retval;
 }
 #endif
+
+#if defined(FEAT_KEYMAP) || defined(PROTO)
+
+/* structure used for b_kmap_ga.ga_data */
+typedef struct
+{
+    char_u	*from;
+    char_u	*to;
+} kmap_t;
+
+#define KMAP_MAXLEN 20	    /* maximum length of "from" or "to" */
+
+static void keymap_unload __ARGS((void));
+
+/*
+ * Set up key mapping tables for the 'keymap' option
+ */
+    char_u *
+keymap_init()
+{
+    curbuf->b_kmap_state &= ~KEYMAP_INIT;
+
+    if (*curbuf->b_p_keymap == NUL)
+    {
+	/* Stop any active keymap and clear the table. */
+	keymap_unload();
+    }
+    else
+    {
+	char_u	*buf;
+
+	/* Source the keymap file.  It will contain a ":loadkeymap" command
+	 * which will call ex_loadkeymap() below. */
+	buf = alloc((unsigned)(STRLEN(curbuf->b_p_keymap)
+						       + STRLEN(p_enc) + 14));
+	if (buf == NULL)
+	    return e_outofmem;
+
+	/* try finding "keymap/'keymap'_'encoding'.vim"  in 'runtimepath' */
+	sprintf((char *)buf, "keymap/%s_%s.vim", curbuf->b_p_keymap, p_enc);
+	if (cmd_runtime(buf, FALSE) == FAIL)
+	{
+	    /* try finding "keymap/'keymap'.vim" in 'runtimepath'  */
+	    sprintf((char *)buf, "keymap/%s.vim", curbuf->b_p_keymap);
+	    if (cmd_runtime(buf, FALSE) == FAIL)
+	    {
+		vim_free(buf);
+		return (char_u *)N_("Keymap file not found");
+	    }
+	}
+	vim_free(buf);
+    }
+
+    return NULL;
+}
+
+/*
+ * ":loadkeymap" command: load the following lines as the keymap.
+ */
+    void
+ex_loadkeymap(eap)
+    exarg_t	*eap;
+{
+    char_u	*line;
+    char_u	*p;
+    char_u	*s;
+    kmap_t	*kp;
+    char_u	buf[2 * KMAP_MAXLEN + 11];
+    int		i;
+
+    if (eap->getline != getsourceline)
+    {
+	EMSG(_("Using :loadkeymap not in a sourced file"));
+	return;
+    }
+
+    /*
+     * Stop any active keymap and clear the table.
+     */
+    keymap_unload();
+
+    curbuf->b_kmap_state = 0;
+    ga_init2(&curbuf->b_kmap_ga, sizeof(kmap_t), 20);
+
+    /*
+     * Get each line of the sourced file, break at the end.
+     */
+    for (;;)
+    {
+	line = getsourceline(0, eap->cookie, 0);
+	if (line == NULL)
+	    break;
+
+	p = skipwhite(line);
+	if (*p != '"' && *p != NUL && ga_grow(&curbuf->b_kmap_ga, 1) == OK)
+	{
+	    kp = (kmap_t *)curbuf->b_kmap_ga.ga_data + curbuf->b_kmap_ga.ga_len;
+	    s = skiptowhite(p);
+	    kp->from = vim_strnsave(p, (int)(s - p));
+	    p = skipwhite(s);
+	    s = skiptowhite(p);
+	    kp->to = vim_strnsave(p, (int)(s - p));
+
+	    if (kp->from == NULL || STRLEN(kp->from) >= KMAP_MAXLEN
+		    || kp->to == NULL || STRLEN(kp->to) >= KMAP_MAXLEN)
+	    {
+		vim_free(kp->from);
+		vim_free(kp->to);
+	    }
+	    else
+	    {
+		++curbuf->b_kmap_ga.ga_len;
+		--curbuf->b_kmap_ga.ga_room;
+	    }
+	}
+	vim_free(line);
+    }
+
+    /*
+     * setup ":lnoremap" to map the keys
+     */
+    for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
+    {
+	sprintf((char *)buf, "<buffer> %s %s",
+				((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from,
+				 ((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].to);
+	(void)do_map(2, buf, LANGMAP, FALSE, NULL);
+    }
+
+    curbuf->b_kmap_state |= KEYMAP_LOADED;
+#ifdef FEAT_WINDOWS
+    status_redraw_curbuf();
+#endif
+}
+
+/*
+ * Stop using 'keymap'.
+ */
+    static void
+keymap_unload()
+{
+    char_u	buf[KMAP_MAXLEN + 10];
+    int		i;
+
+    if (!(curbuf->b_kmap_state & KEYMAP_LOADED))
+	return;
+
+    /* clear the ":lmap"s */
+    for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
+    {
+	sprintf((char *)buf, "<buffer> %s",
+		((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from);
+	(void)do_map(1, buf, LANGMAP, FALSE, NULL);
+    }
+
+    ga_clear(&curbuf->b_kmap_ga);
+    curbuf->b_kmap_state &= ~KEYMAP_LOADED;
+#ifdef FEAT_WINDOWS
+    status_redraw_curbuf();
+#endif
+}
+
+#endif /* FEAT_KEYMAP */
+

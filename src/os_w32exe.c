@@ -5,7 +5,9 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
- *
+ * See README.txt for an overview of the Vim source code.
+ */
+/*
  * Windows GUI: main program (EXE) entry point:
  *
  * Ron Aaron <ron@mossbayeng.com> wrote this and  the DLL support code.

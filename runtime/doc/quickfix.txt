@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0v.  Last change: 2001 Jan 28
+*quickfix.txt*  For Vim version 6.0w.  Last change: 2001 Feb 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -244,7 +244,7 @@ be escaped), meta symbols have to be written with leading '%':
 	%#		the single '*'(!) character.
 	%^		the single '^' character.
 	%$		the single '$' character.
-	%[		the single '[' character.
+	%[		the single '[' character for a [] character range.
 	%~		the single '~' character.
 When using character classes in expressions (see |/\i| for an overview),
 terms containing the "\+" quantifier can be written in the scanf() "%*"
@@ -282,9 +282,14 @@ The "%f" conversion depends on the current 'isfname' setting.
 
 The "%f" and "%m" conversions have to detect the end of the string.  They
 should be followed by a character that cannot be in the string.  Everything
-up to that character is included in the string.  Be careful: "%f%l" will
-include everything up to the first '%' in the file name.  If the "%f" or "%m"
-is at the end, everything up to the end of the line is included.
+up to that character is included in the string.  But when the next character
+is '%' or a backslash, "%f" will look for any 'isfname' character and "%m"
+finds anything.  If the "%f" or "%m" is at the end, everything up to the end
+of the line is included.
+
+On MS-DOS, MS-Windows and OS/2 a leading "C:" will be included in "%f", even
+when using "%f:".  This means that a file name which is a single alphabetical
+letter will not be detected.
 
 The "%p" conversion is normally followed by a "^".  It's used for compilers
 that output a line like: >

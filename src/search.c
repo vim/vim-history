@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 /*
  * search.c: code for normal mode searching commands
@@ -165,8 +166,10 @@ search_regcomp(pat, pat_save, pat_use, options, regmatch)
 	magic = spats[i].magic;
 	no_smartcase = spats[i].no_scs;
     }
+#ifdef FEAT_CMDHIST
     else if (options & SEARCH_HIS)	/* put new pattern in history */
 	add_to_history(HIST_SEARCH, pat, TRUE);
+#endif
 
     mr_pattern = pat;
 
@@ -288,7 +291,7 @@ ignorecase(pat)
 #ifdef FEAT_MBYTE
 	    int		l;
 
-	    if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 		p += l;
 	    else
 #endif
@@ -1229,12 +1232,7 @@ searchc(c, dir, type, count)
 	    lastcdir = dir;
 	    lastctype = type;
 #ifdef FEAT_MBYTE
-	    if (has_mbyte)
-	    {
-		bytelen = mb_char2len(c);
-		if (bytelen > 1)
-		    mb_char2bytes(c, bytes);
-	    }
+	    bytelen = (*mb_char2bytes)(c, bytes);
 #endif
 	}
     }
@@ -1250,7 +1248,7 @@ searchc(c, dir, type, count)
 	c = lastc;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    bytelen = mb_char2len(c);
+	    bytelen = (*mb_char2len)(c);
 #endif
     }
 
@@ -1267,7 +1265,7 @@ searchc(c, dir, type, count)
 	    {
 		if (dir > 0)
 		{
-		    col += mb_ptr2len_check(p + col);
+		    col += (*mb_ptr2len_check)(p + col);
 		    if (col >= len)
 			return FALSE;
 		}
@@ -1275,7 +1273,7 @@ searchc(c, dir, type, count)
 		{
 		    if (col == 0)
 			return FALSE;
-		    col -= mb_head_off(p, p + col - 1) + 1;
+		    col -= (*mb_head_off)(p, p + col - 1) + 1;
 		}
 		if (bytelen == 1)
 		{
@@ -1314,7 +1312,7 @@ searchc(c, dir, type, count)
 		col += bytelen - 1;
 	    else
 		/* To previous char, which may be multi-byte. */
-		col -= mb_head_off(p, p + col);
+		col -= (*mb_head_off)(p, p + col);
 	}
 #endif
     }
@@ -1658,7 +1656,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		--pos.col;
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
-		    pos.col -= mb_head_off(linep, linep + pos.col);
+		    pos.col -= (*mb_head_off)(linep, linep + pos.col);
 #endif
 	    }
 	}
@@ -1682,7 +1680,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	    {
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
-		    pos.col += mb_ptr2len_check(linep + pos.col);
+		    pos.col += (*mb_ptr2len_check)(linep + pos.col);
 		else
 #endif
 		    ++pos.col;
@@ -2290,7 +2288,7 @@ fwd_word(count, type, eol)
     int		last_line;
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 #endif
     stype = type;
     while (--count >= 0)
@@ -2360,7 +2358,7 @@ bck_word(count, type, stop)
     int		sclass;	    /* starting class */
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 #endif
     stype = type;
     while (--count >= 0)
@@ -2429,7 +2427,7 @@ end_word(count, type, stop, empty)
     int		sclass;	    /* starting class */
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 #endif
     stype = type;
     while (--count >= 0)
@@ -2501,7 +2499,7 @@ bckend_word(count, type, eol)
     int		i;
 
 #ifdef FEAT_VIRTUALEDIT
-    curwin->w_coladd = 0;
+    curwin->w_cursor.coladd = 0;
 #endif
     stype = type;
     while (--count >= 0)

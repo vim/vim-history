@@ -208,6 +208,7 @@ If you are dismayed by how big the EXE is, I strongly recommend you get 'UPX'
 found at 
 	http://upx.tsx.org/
 
+
 6. Cross compiling for Win32 from a Linux machine
 =================================================
 

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0v.  Last change: 2001 Feb 08
+*starting.txt*  For Vim version 6.0w.  Last change: 2001 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -821,7 +821,8 @@ To change it later, use a ":let" command like this: >
 CTRL-Z			Suspend Vim, like ":stop".
 			Works in Normal and in Visual mode.  In Insert and
 			Command-line mode, the CTRL-Z is inserted as a normal
-			character.
+			character.  In Visual mode Vim goes back to Normal
+			mode.
 
 
 :sus[pend][!]	or			*:sus* *:suspend* *:st* *:stop*
@@ -840,6 +841,10 @@ possible in Normal and Visual mode (see next chapter, |vim-modes|).  Vim will
 continue if you make it the foreground job again.  On other systems, CTRL-Z
 will start a new shell.  This is the same as the ":sh" command.  Vim will
 continue if you exit from the shell.
+
+In X-windows the selection is disowned when Vim suspends.  this means you
+can't paste it in another application (since Vim is going to sleep an attempt
+to get the selection would make the program hang).
 
 ==============================================================================
 7. The vimrc file			*vimrc-intro* *vim-script-intro*
@@ -1287,8 +1292,10 @@ This saves the current Session, and starts off the command to load another.
 			current window.
 			When [!] is included an existing file is overwritten.
 			When [file] is omitted or is a number from 1 to 9, a
-			name is generated and 'viewdir' prepended.  An
-			existing file is always overwritten then.  Use
+			name is generated and 'viewdir' prepended.  When last
+			directory name in 'viewdir' does not exist, this
+			directory is created.
+			An existing file is always overwritten then.  Use
 			|:loadview| to load this view again.
 			When [file] is the name of a file ('viewdir' is not
 			used), a command to edit the file is added to the

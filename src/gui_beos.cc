@@ -2774,7 +2774,7 @@ gui_mch_draw_part_cursor(
     r.left =
 #ifdef FEAT_RIGHTLEFT
 	/* vertical line should be on the right of current point */
-	State != CMDLINE && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+	!(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
 	    FILL_X(gui.col);
     r.right = r.left + w - PEN_WIDTH;

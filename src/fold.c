@@ -5,6 +5,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -43,14 +44,12 @@ typedef struct
 
 /* static functions {{{2 */
 static int checkCloseRec __ARGS((garray_t *gap, linenr_t lnum, int level));
-static void cloneFoldGrowArray __ARGS((garray_t *item, garray_t *result));
 static int foldFind __ARGS((garray_t *gap, linenr_t lnum, fold_t **fpp));
 static void checkupdate __ARGS((win_t *wp));
 static void setFoldRepeat __ARGS((linenr_t lnum, long count, int open));
 static linenr_t setManualFold __ARGS((linenr_t lnum, int opening, int recurse, int *donep));
 static void foldOpenNested __ARGS((fold_t *fpr));
 static void deleteFoldEntry __ARGS((garray_t *gap, int idx, int recursive));
-static void deleteFoldRecurse __ARGS((garray_t *gap));
 static void foldMarkAdjustRecurse __ARGS((garray_t *gap, linenr_t line1, linenr_t line2, long amount, long amount_after));
 static int getDeepestNestingRecurse __ARGS((garray_t *gap));
 static int check_closed __ARGS((win_t *win, fold_t *fp, int *use_levelp, int level, int *maybe_smallp, linenr_t lnum_off));
@@ -1032,7 +1031,7 @@ foldAdjustCursor()
  *
  * Return FAIL if the operation cannot be completed, otherwise OK.
  */
-    static void
+    void
 cloneFoldGrowArray(from, to)
     garray_t	*from;
     garray_t	*to;
@@ -1342,7 +1341,7 @@ deleteFoldEntry(gap, idx, recursive)
 /*
  * Delete nested folds in a fold.
  */
-    static void
+    void
 deleteFoldRecurse(gap)
     garray_t	*gap;
 {
@@ -1748,6 +1747,57 @@ foldDelMarker(lnum, marker, markerlen)
 	    }
 	    break;
 	}
+}
+
+/* foldtext_cleanup() {{{2 */
+/*
+ * Remove 'foldmarker' and 'commentstring' from "str" (in-place).
+ */
+    void
+foldtext_cleanup(str)
+    char_u	*str;
+{
+    char_u	*cmtp;
+    int		cmtp_len = 0;
+    char_u	*s;
+    int		len;
+
+    /* locate "%s" in 'commentstring', use the part before and after it. */
+    cmtp = (char_u *)strstr((char *)curbuf->b_p_cms, "%s");
+    if (cmtp != NULL)
+	cmtp_len = STRLEN(cmtp + 2);
+    parseMarker(curwin);
+
+    for (s = str; *s != NUL; ++s)
+    {
+	len = 0;
+	if (STRNCMP(s, curwin->w_p_fmr, foldstartmarkerlen) == 0)
+	{
+	    len = foldstartmarkerlen;
+	    if (isdigit(s[len]))
+		++len;
+	}
+	else if (STRNCMP(s, foldendmarker, foldendmarkerlen) == 0)
+	{
+	    len = foldendmarkerlen;
+	    if (isdigit(s[len]))
+		++len;
+	}
+	else if (cmtp != NULL)
+	{
+	    if (STRNCMP(s, curbuf->b_p_cms, cmtp - curbuf->b_p_cms) == 0)
+		len = cmtp - curbuf->b_p_cms;
+	    else if (STRNCMP(s, cmtp + 2, cmtp_len) == 0)
+		len = cmtp_len;
+	}
+	if (len != 0)
+	{
+	    while (vim_iswhite(s[len]))
+		++len;
+	    mch_memmove(s, s + len, STRLEN(s + len) + 1);
+	    --s;
+	}
+    }
 }
 
 /* Folding by indent, expr, marker and syntax. {{{1 */
@@ -2294,8 +2344,10 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 	fold_changed = TRUE;
     }
 
-    /* Delete contained folds from end of last one found until bot. */
-    foldRemove(&fp->fd_nested, startlnum2 - fp->fd_top, bot - fp->fd_top);
+    /* Delete contained folds from the end of the last one found until where
+     * we stopped looking. */
+    foldRemove(&fp->fd_nested, startlnum2 - fp->fd_top,
+						  flp->lnum - 1 - fp->fd_top);
 
     if (lvl < level)
     {

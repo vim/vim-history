@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0v.  Last change: 2001 Feb 10
+*multibyte.txt* For Vim version 6.0w.  Last change: 2001 Feb 13
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -737,12 +737,22 @@ Supported 'encoding' values are:
 1   ansi	same as latin1 (obsolete, for backward compatibility)
 1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
 1   8bit-{name} any 8-bit encoding (Vim specific name)
+1   cp{number}	MS-Windows: any installed single-byte codepage
 2   japan	Japanese: on Unix "euc-jp", on MS-Windows shift-JIS (cp932)
+2   cp932	Japanese (Windows only)
+2   euc-jp	Japanese (Unix only)
 2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
+2   cp949	Korean (Windows only)
+2   euc-kr	Korean (Unix only)
 2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
+2   cp936	simplified Chinese (Windows only)
+2   chinese	simplified Chinese (Unix only, on Windows an alias for cp936)
 2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
+2   cp950	traditional Chinese (on Unix alias for big5)
+2   big5	traditional Chinese (on Windows alias for cp950)
+2   euc-tw	traditional Chinese (Unix only)
 2   2byte-{name} Unix: any double-byte encoding (Vim specific name)
-2   2byte-cp{number} MS-Windows: any double-byte codepage (Vim specific name)
+2   cp{number}	MS-Windows: any installed double-byte codepage
 u   utf-8	32 bit UTF-8 encoded Unicode (ISO/IEC 10646-1)
 u   ucs-2	16 bit UCS-2 encoded Unicode (ISO/IEC 10646-1)
 u   unicode	same as ucs-2

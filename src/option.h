@@ -8,8 +8,6 @@
 
 /*
  * option.h: definition of global variables for settable options
- *
- * EXTERN is only defined in main.c (and vim.h)
  */
 
 #ifndef EXTERN
@@ -68,10 +66,6 @@
 #  define DFLT_FFS_VI	""
 #  define DFLT_TEXTAUTO	FALSE
 # endif
-#endif
-
-#ifdef FEAT_KEYMAP
-#define	DFLT_KMP	""
 #endif
 
 
@@ -223,6 +217,7 @@
 #define STL_LINE	'l'		/* line number of cursor */
 #define STL_NUMLINES	'L'		/* number of lines in buffer */
 #define STL_BUFNO	'n'		/* current buffer number */
+#define STL_KEYMAP	'k'		/* 'keymap' when active */
 #define STL_OFFSET	'o'		/* offset of character under cursor*/
 #define STL_OFFSET_X	'O'		/* - in hexadecimal */
 #define STL_BYTEVAL	'b'		/* byte value of character */
@@ -244,7 +239,7 @@
 #define STL_MIDDLEMARK	'='		/* separation between left and right */
 #define STL_TRUNCMARK	'<'		/* truncation mark if line is too long*/
 #define STL_HIGHLIGHT	'*'		/* highlight from (User)1..9 or 0 */
-#define STL_ALL		((char_u *) "fFtcvVlLnoObBrRhHmYyWwMpPa{")
+#define STL_ALL		((char_u *) "fFtcvVlLknoObBrRhHmYyWwMpPa{")
 
 /* flags used for parsed 'wildmode' */
 #define WIM_FULL	1
@@ -325,6 +320,12 @@ EXTERN int	p_dg;		/* 'digraph' */
 #endif
 EXTERN char_u	*p_dir;		/* 'directory' */
 EXTERN char_u	*p_dy;		/* 'display' */
+EXTERN unsigned	dy_flags;
+#ifdef IN_OPTION_C
+static char *(p_dy_values[]) = {"lastline", "uhex", NULL};
+#endif
+#define DY_LASTLINE		0x001
+#define DY_UHEX			0x002
 EXTERN int	p_ed;		/* 'edcompatible' */
 #ifdef FEAT_VERTSPLIT
 EXTERN char_u	*p_ead;		/* 'eadirection' */

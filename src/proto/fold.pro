@@ -29,7 +29,10 @@ void foldInitWin __ARGS((win_t *newwin));
 int find_wl_entry __ARGS((win_t *win, linenr_t lnum));
 void foldAdjustVisual __ARGS((void));
 void foldAdjustCursor __ARGS((void));
+void cloneFoldGrowArray __ARGS((garray_t *from, garray_t *to));
+void deleteFoldRecurse __ARGS((garray_t *gap));
 void foldMarkAdjust __ARGS((win_t *wp, linenr_t line1, linenr_t line2, long amount, long amount_after));
 int getDeepestNesting __ARGS((void));
+void foldtext_cleanup __ARGS((char_u *str));
 int put_folds __ARGS((FILE *fd, win_t *wp));
 /* vim: set ft=c : */

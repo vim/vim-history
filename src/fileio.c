@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -72,11 +73,12 @@ static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fn
 
 #if defined(FEAT_CRYPT) || defined(FEAT_MBYTE)
 # define HAS_BW_FLAGS
-# define FIO_UCS2	0x01	/* convert UCS-2 */
-# define FIO_UCS4	0x02	/* convert UCS-4 */
-# define FIO_LATIN1	0x04	/* convert Latin1 */
-# define FIO_UTF8	0x08	/* convert UTF-8 */
-# define FIO_ENDIAN_L	0x10	/* little endian */
+# define FIO_LATIN1	0x01	/* convert Latin1 */
+# define FIO_UTF8	0x02	/* convert UTF-8 */
+# define FIO_UCS2	0x04	/* convert UCS-2 */
+# define FIO_UCS4	0x08	/* convert UCS-4 */
+# define FIO_UTF16	0x10	/* convert UTF-16 */
+# define FIO_ENDIAN_L	0x80	/* little endian */
 # define FIO_ENCRYPTED	0x1000	/* encrypt written bytes */
 # define FIO_NOCONVERT	0x2000	/* skip encoding conversion */
 # define FIO_UCSBOM	0x4000	/* check for BOM at start of file */
@@ -548,7 +550,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     /* If "Quit" selected at ATTENTION dialog, don't load the file */
     if (swap_exists_action == SEA_QUIT)
     {
-	if (!read_buffer)
+	if (!read_buffer && !read_stdin)
 	    close(fd);
 	return FAIL;
     }
@@ -778,7 +780,7 @@ retry:
 
     /*
      * Conversion is required when the encoding of the file is different
-     * from 'encoding' or 'encoding' is UCS-2 or UCS-4 (requires
+     * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4 (requires
      * conversion to UTF-8).
      */
     fio_flags = 0;
@@ -935,6 +937,8 @@ retry:
 		 * For iconv() we don't really know the required space, use a
 		 * factor ICONV_MULT.
 		 * latin1 to utf-8: 1 byte becomes up to 2 bytes
+		 * utf-16 to utf-8: 2 bytes become up to 3 bytes, 4 bytes
+		 * become up to 4 bytes, size must be multiple of 2
 		 * ucs-2 to utf-8: 2 bytes become up to 3 bytes, size must be
 		 * multiple of 2
 		 * ucs-4 to utf-8: 4 bytes become up to 6 bytes, size must be
@@ -947,7 +951,7 @@ retry:
 # endif
 		    if (fio_flags & FIO_LATIN1)
 		    size = size / 2;
-		else if (fio_flags & FIO_UCS2)
+		else if (fio_flags & (FIO_UCS2 | FIO_UTF16))
 		    size = (size * 2 / 3) & ~1;
 		else if (fio_flags & FIO_UCS4)
 		    size = (size * 2 / 3) & ~3;
@@ -1162,21 +1166,7 @@ retry:
 	    {
 		int	u8c;
 		char_u	*dest;
-
-		if (fio_flags == FIO_UTF8)
-		{
-		    /* Check for a trailing incomplete UTF-8 sequence and move
-		     * it to conv_rest[]. */
-		    p = ptr + size - 1;
-		    while (p > ptr && (*p & 0xc0) == 0x80)
-			--p;
-		    if (p + utf_byte2len(*p) > ptr + size)
-		    {
-			conv_restlen = (ptr + size) - p;
-			mch_memmove(conv_rest, (char_u *)p, conv_restlen);
-			size -= conv_restlen;
-		    }
-		}
+		char_u	*tail = NULL;
 
 		/*
 		 * "enc_utf8" set: Convert Unicode or Latin1 to UTF-8.
@@ -1188,17 +1178,68 @@ retry:
 		 */
 		dest = ptr + real_size;
 		if (fio_flags == FIO_LATIN1 || fio_flags == FIO_UTF8)
+		{
 		    p = ptr + size;
-		else if (fio_flags & FIO_UCS2)
-		    p = ptr + (size & ~1); /* TODO_UTF8: what if (size & 1)? */
+		    if (fio_flags == FIO_UTF8)
+		    {
+			/* Check for a trailing incomplete UTF-8 sequence */
+			tail = ptr + size - 1;
+			while (tail > ptr && (*tail & 0xc0) == 0x80)
+			    --tail;
+			if (tail + utf_byte2len(*tail) <= ptr + size)
+			    tail = NULL;
+			else
+			    p = tail;
+		    }
+		}
+		else if (fio_flags & (FIO_UCS2 | FIO_UTF16))
+		{
+		    /* Check for a trailing byte */
+		    p = ptr + (size & ~1);
+		    if (size & 1)
+			tail = p;
+		    if ((fio_flags & FIO_UTF16) && p > ptr)
+		    {
+			/* Check for a trailing leading word */
+			if (fio_flags & FIO_ENDIAN_L)
+			{
+			    u8c = (*--p << 8);
+			    u8c += *--p;
+			}
+			else
+			{
+			    u8c = *--p;
+			    u8c += (*--p << 8);
+			}
+			if (u8c >= 0xd800 && u8c <= 0xdbff)
+			    tail = p;
+			else
+			    p += 2;
+		    }
+		}
 		else /*  FIO_UCS4 */
-		    p = ptr + (size & ~3); /* TODO_UTF8 what if (size & 3)? */
+		{
+		    /* Check for trailing 1, 2 or 3 bytes */
+		    p = ptr + (size & ~3);
+		    if (size & 3)
+			tail = p;
+		}
+
+		/* If there is a trailing incomplete sequence move it to
+		 * conv_rest[]. */
+		if (tail != NULL)
+		{
+		    conv_restlen = (ptr + size) - tail;
+		    mch_memmove(conv_rest, (char_u *)tail, conv_restlen);
+		    size -= conv_restlen;
+		}
+
 
 		while (p > ptr)
 		{
 		    if (fio_flags & FIO_LATIN1)
 			u8c = *--p;
-		    else if (fio_flags & FIO_UCS2)
+		    else if (fio_flags & (FIO_UCS2 | FIO_UTF16))
 		    {
 			if (fio_flags & FIO_ENDIAN_L)
 			{
@@ -1209,6 +1250,41 @@ retry:
 			{
 			    u8c = *--p;
 			    u8c += (*--p << 8);
+			}
+			if ((fio_flags & FIO_UTF16)
+					    && u8c >= 0xdc00 && u8c <= 0xdfff)
+			{
+			    int u16c;
+
+			    if (p == ptr)
+			    {
+				/* Missing leading word. */
+				if (can_retry)
+				    goto rewind_retry;
+				conv_error = TRUE;
+			    }
+
+			    /* found second word of double-word, get the first
+			     * word and compute the resulting character */
+			    if (fio_flags & FIO_ENDIAN_L)
+			    {
+				u16c = (*--p << 8);
+				u16c += *--p;
+			    }
+			    else
+			    {
+				u16c = *--p;
+				u16c += (*--p << 8);
+			    }
+			    /* Check if the word is indeed a leading word. */
+			    if (u16c < 0xd800 || u16c > 0xdbff)
+			    {
+				if (can_retry)
+				    goto rewind_retry;
+				conv_error = TRUE;
+			    }
+			    u8c = 0x10000 + ((u16c & 0x3ff) << 10)
+							      + (u8c & 0x3ff);
 			}
 		    }
 		    else if (fio_flags & FIO_UCS4)
@@ -1543,7 +1619,7 @@ failed:
 # endif
 #endif
 
-    if (!read_buffer)
+    if (!read_buffer && !read_stdin)
 	close(fd);				/* errors are ignored */
     vim_free(buffer);
 
@@ -1570,7 +1646,7 @@ failed:
 	linecnt = curbuf->b_ml.ml_line_count - linecnt;
 	if (filesize == 0)
 	    linecnt = 0;
-	if (newfile)
+	if (newfile || read_buffer)
 	    redraw_curbuf_later(NOT_VALID);
 	else if (linecnt)		/* appended at least one line */
 	    appended_lines_mark(from, linecnt);
@@ -2889,10 +2965,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     if (converted && (enc_utf8 || !has_mbyte))
     {
 	wb_flags = get_fio_flags(fenc);
-	if (wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_UTF8))
+	if (wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_UTF16 | FIO_UTF8))
 	{
 	    /* Need to allocate a buffer to translate into. */
-	    if (wb_flags & (FIO_UCS2 | FIO_UTF8))
+	    if (wb_flags & (FIO_UCS2 | FIO_UTF16 | FIO_UTF8))
 		write_info.bw_conv_buflen = bufsize * 2;
 	    else /* FIO_UCS4 */
 		write_info.bw_conv_buflen = bufsize * 4;
@@ -3726,11 +3802,11 @@ buf_write_bytes(ip)
 	    buf = ip->bw_conv_buf;
 	    len = p - ip->bw_conv_buf;
 	}
-	else if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
+	else if (flags & (FIO_UCS4 | FIO_UTF16 | FIO_UCS2 | FIO_LATIN1))
 	{
 	    /*
-	     * Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin1
-	     * chars in the file.
+	     * Convert UTF-8 bytes in the buffer to UCS-2, UCS-4, UTF-16 or
+	     * Latin1 chars in the file.
 	     */
 	    if (flags & FIO_LATIN1)
 		p = buf;	/* translate in-place (can only get shorter) */
@@ -3914,6 +3990,8 @@ ucs2bytes(c, pp, flags)
 {
     char_u	*p = *pp;
     int		error = FALSE;
+    int		cc;
+
 
     if (flags & FIO_UCS4)
     {
@@ -3932,10 +4010,33 @@ ucs2bytes(c, pp, flags)
 	    *p++ = c;
 	}
     }
-    else if (flags & FIO_UCS2)
+    else if (flags & (FIO_UCS2 | FIO_UTF16))
     {
 	if (c >= 0x10000)
-	    error = TRUE;
+	{
+	    if (flags & FIO_UTF16)
+	    {
+		/* Make two words, ten bits of the character in each.  First
+		 * word is 0xd800 - 0xdbff, second one 0xdc00 - 0xdfff */
+		c -= 0x10000;
+		if (c >= 0x100000)
+		    error = TRUE;
+		cc = ((c >> 10) & 0x3ff) + 0xd800;
+		if (flags & FIO_ENDIAN_L)
+		{
+		    *p++ = cc;
+		    *p++ = ((unsigned)cc >> 8);
+		}
+		else
+		{
+		    *p++ = ((unsigned)cc >> 8);
+		    *p++ = cc;
+		}
+		c = (c & 0x3ff) + 0xdc00;
+	    }
+	    else
+		error = TRUE;
+	}
 	if (flags & FIO_ENDIAN_L)
 	{
 	    *p++ = c;
@@ -4008,6 +4109,12 @@ get_fio_flags(ptr)
 		return FIO_UCS4 | FIO_ENDIAN_L;
 	    return FIO_UCS4;
 	}
+	if (prop & ENC_2WORD)
+	{
+	    if (prop & ENC_ENDIAN_L)
+		return FIO_UTF16 | FIO_ENDIAN_L;
+	    return FIO_UTF16;
+	}
 	return FIO_UTF8;
     }
     if (prop & ENC_LATIN1)
@@ -4048,11 +4155,16 @@ check_for_bom(p, size, lenp, flags)
 	}
 	else if (flags == FIO_ALL || flags == (FIO_UCS2 | FIO_ENDIAN_L))
 	    name = "ucs-2le";	/* FF FE */
+	else if (flags == (FIO_UTF16 | FIO_ENDIAN_L))
+	    name = "utf-16le";	/* FF FE */
     }
     else if (p[0] == 0xfe && p[1] == 0xff
-	    && (flags == FIO_ALL || flags == FIO_UCS2))
+	    && (flags == FIO_ALL || flags == FIO_UCS2 || flags == FIO_UTF16))
     {
-	name = "ucs-2";		/* FE FF */
+	if (flags == FIO_UTF16)
+	    name = "utf-16";	/* FE FF */
+	else
+	    name = "ucs-2";	/* FE FF */
     }
     else if (size >= 4 && p[0] == 0 && p[1] == 0 && p[2] == 0xfe
 	    && p[3] == 0xff && (flags == FIO_ALL || flags == FIO_UCS4))
@@ -4733,7 +4845,7 @@ buf_check_timestamp(buf, focus)
 	{
 	    tbuf = alloc((unsigned)STRLEN(path) + 65);
 	    sprintf((char *)tbuf, mesg, path);
-	    if (State > NORMAL_BUSY || State == CMDLINE || already_warned)
+	    if (State > NORMAL_BUSY || (State & CMDLINE) || already_warned)
 	    {
 		EMSG(tbuf);
 		message_put = TRUE;

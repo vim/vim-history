@@ -8,19 +8,7 @@
 
 /*
  * definition of global variables
- *
- * EXTERN is only defined in main.c (and in option.h)
  */
-
-#ifndef EXTERN
-# define EXTERN extern
-# define INIT(x)
-#else
-# ifndef INIT
-#  define INIT(x) x
-#  define DO_INIT
-# endif
-#endif
 
 /*
  * Number of Rows and Columns in the screen.
@@ -63,6 +51,10 @@ EXTERN unsigned	*LineOffset INIT(= NULL);
 EXTERN u8char_t	*ScreenLinesUC INIT(= NULL);	/* decoded UTF-8 characters */
 EXTERN u8char_t	*ScreenLinesC1 INIT(= NULL);	/* first composing char */
 EXTERN u8char_t	*ScreenLinesC2 INIT(= NULL);	/* second composing char */
+
+/* Only used for euc-jp: Second byte of a character that starts with 0x8e.
+ * These are single-width. */
+EXTERN schar_t	*ScreenLines2 INIT(= NULL);
 #endif
 
 EXTERN int	screen_Rows INIT(= 0);	    /* actual size of ScreenLines[] */
@@ -413,10 +405,7 @@ EXTERN int	VIsual_reselect;
 
 EXTERN int	VIsual_mode INIT(= 'v');
 				/* type of Visual mode */
-# ifdef FEAT_VIRTUALEDIT
-EXTERN int	VIsual_coladd INIT(= 0);
-				/* Columns to add for 'virtualedit' */
-# endif
+
 EXTERN int	redo_VIsual_busy INIT(= FALSE);
 				/* TRUE when redoing Visual */
 #endif
@@ -517,15 +506,19 @@ EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
  * internally stored as UTF-8 (to avoid trouble with NUL bytes).
  */
 # define DBCS_JPN	932	/* japan */
+# define DBCS_JPNU	9932	/* euc-jp */
 # define DBCS_KOR	949	/* korea */
+# define DBCS_KORU	9949	/* euc-kr */
 # define DBCS_CHS	936	/* chinese */
+# define DBCS_CHSU	9936	/* euc-cn */
 # define DBCS_CHT	950	/* taiwan */
+# define DBCS_CHTU	9950	/* euc-tw */
 # define DBCS_2BYTE	1	/* 2byte- */
 # define DBCS_DEBUG	-1
 
 EXTERN int	enc_dbcs INIT(= 0);		/* One of DBCS_xxx values if
 						   DBCS encoding */
-EXTERN int	enc_unicode INIT(= 0);		/* 2: UCS-2, 4: UCS-4 */
+EXTERN int	enc_unicode INIT(= 0);	/* 2: UCS-2 or UTF-16, 4: UCS-4 */
 EXTERN int	enc_utf8 INIT(= FALSE);		/* UTF-8 encoded Unicode */
 # ifdef FEAT_GUI_W32
 EXTERN int	is_funky_dbcs INIT(= FALSE);	/* if DBCS encoding, but not
@@ -539,6 +532,26 @@ EXTERN int	has_mbyte INIT(= 0);		/* any multi-byte encoding */
  */
 EXTERN char	mb_bytelen_tab[256];
 
+/* Variables that tell what conversion is used for keyboard input and display
+ * output. */
+EXTERN vimconv_t input_conv;			/* type of input conversion */
+EXTERN vimconv_t output_conv;			/* type of output conversion */
+
+/*
+ * Function pointers, used to quickly get to the right function.  Each has
+ * three possible values: latin_ (8-bit), utfc_ or utf_ (utf-8) and dbcs_
+ * (DBCS).
+ * The value is set in mb_init();
+ */
+EXTERN int (*mb_ptr2len_check) __ARGS((char_u *p)) INIT(= latin_ptr2len_check);
+EXTERN int (*mb_char2len) __ARGS((int c)) INIT(= latin_char2len);
+EXTERN int (*mb_char2bytes) __ARGS((int c, char_u *buf)) INIT(= latin_char2bytes);
+EXTERN int (*mb_ptr2cells) __ARGS((char_u *p)) INIT(= latin_ptr2cells);
+EXTERN int (*mb_char2cells) __ARGS((int c)) INIT(= latin_char2cells);
+EXTERN int (*mb_off2cells) __ARGS((unsigned off)) INIT(= latin_off2cells);
+EXTERN int (*mb_ptr2char) __ARGS((char_u *p)) INIT(= latin_ptr2char);
+EXTERN int (*mb_head_off) __ARGS((char_u *base, char_u *p)) INIT(= latin_head_off);
+
 # if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
 /* Pointers to functions and variables to be loaded at runtime */
 EXTERN size_t (*iconv) (iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
@@ -548,10 +561,6 @@ EXTERN int (*iconvctl) (iconv_t cd, int request, void *argument);
 EXTERN int *iconv_errno INIT(= 0);
 # endif
 
-/* Variables that tell what conversion is used for keyboard input and display
- * output. */
-EXTERN vimconv_t input_conv;			/* type of input conversion */
-EXTERN vimconv_t output_conv;			/* type of output conversion */
 #endif /* FEAT_MBYTE */
 
 #ifdef FEAT_XIM
@@ -704,7 +713,9 @@ EXTERN int	global_busy INIT(= 0);	    /* set when :global is executing */
 EXTERN int	need_start_insertmode INIT(= FALSE);
 					    /* start insert mode soon */
 EXTERN char_u	*last_cmdline INIT(= NULL); /* last command line (for ":) */
+#ifdef FEAT_CMDHIST
 EXTERN char_u	*new_last_cmdline INIT(= NULL);	/* new value for last_cmdline */
+#endif
 #ifdef FEAT_AUTOCMD
 EXTERN char_u	*autocmd_fname INIT(= NULL); /* fname for <afile> on cmdline */
 EXTERN int	autocmd_bufnr INIT(= 0);     /* fnum for <abuf> on cmdline */
@@ -853,6 +864,10 @@ EXTERN Display	*xterm_dpy INIT(= NULL);	/* xterm display pointer */
 EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 #endif
 
+#if defined(UNIX) || defined(VMS)
+EXTERN int	term_is_xterm INIT(= FALSE);	/* xterm-like 'term' */
+#endif
+
 #ifdef BACKSLASH_IN_FILENAME
 EXTERN char	psepc INIT(= '\\');	/* normal path separator character */
 EXTERN char	psepcN INIT(= '/');	/* abnormal path separator character */
@@ -973,6 +988,7 @@ EXTERN char_u e_readerrf[]	INIT(=N_("Error while reading errorfile"));
 EXTERN char_u e_sandbox[]	INIT(=N_("Not allowed in sandbox"));
 #endif
 EXTERN char_u e_scroll[]	INIT(=N_("Invalid scroll size"));
+EXTERN char_u e_shellempty[]	INIT(=N_("'shell' option is empty"));
 EXTERN char_u e_tagstack[]	INIT(=N_("tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("Name too long"));

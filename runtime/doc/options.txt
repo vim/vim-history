@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0v.  Last change: 2001 Feb 11
+*options.txt*   For Vim version 6.0w.  Last change: 2001 Feb 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -274,7 +274,7 @@ For buffer-local and window-local options:
 
 Global options with a local value			*global-local*
 
-Options are global when you use mostly one value for all buffers.  For some
+Options are global when you mostly use one value for all buffers.  For some
 global options it's useful to sometimes have a different local value.  You can
 set the local value with ":setlocal".  That buffer will then use the local
 value, while other buffers continue using the global value.
@@ -518,7 +518,7 @@ is entered, this is almost like having global options.  If 's' and 'S' are not
 present, the options are copied from the currently active buffer when the
 buffer is created.
 
-A jump table for the options with a short description can be found at |X_op|.
+A jump table for the options with a short description can be found at |Q_op|.
 
 					*'aleph'* *'al'* *aleph* *Aleph*
 'aleph' 'al'		number	(default 128 for MS-DOS, 224 otherwise)
@@ -1686,10 +1686,12 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	Change the way text is displayed.  This is comma separated list of
-	flags.  Currently only one is supported:
+	flags:
 	lastline	When included, as much as possible of the last line
 			in a window will be displayed.  When not included, a
 			last line that doesn't fit is replaced with "@" lines.
+	uhex		Show unprintable characters hexadecimal as <xx>
+			instead of using ^C and ~C.
 
 			   *'ed'* *'edcompatible'* *'noed'* *'noedcompatible'*
 'edcompatible' 'ed'	boolean	(default off)
@@ -1856,6 +1858,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	"ISO8859-2" becomes "iso-8859-2".
 	When this option is set, after starting to edit a file, the 'modified'
 	option is set, because the file would be different when written.
+	This option can not be changed when 'modifiable' is off.
 
 	NOTE: Before version 6.0 this option specified the encoding for the
 	whole of Vim, this was a mistake.  Now use 'encoding' instead.
@@ -1908,6 +1911,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'fileformats' is not empty and 'binary' is off.
 	When this option is set, after starting to edit a file, the 'modified'
 	option is set, because the file would be different when written.
+	This option can not be changed when 'modifiable' is off.
 	For backwards compatibility: When this option is set to "dos",
 	'textmode' is set, otherwise 'textmode' is reset.
 
@@ -2022,7 +2026,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 	toggle this option |i_CTRL-_|.  See |farsi.txt|.
 
-			*'foldclose'* *'fcl'* *'nofoldclose'* *'nofcl'*
+						*'foldclose'* *'fcl'*
 'foldclose' 'fcl'	string (default "")
 			global
 			{not in Vi}
@@ -2830,6 +2834,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	always included (this depends on the character set and "locale").
 	Multi-byte characters 256 and above are always included, only the
 	characters up to 255 are specified with this option.
+	For UTF-8 the characters 0xa0 to 0xff are included as well.
 
 	Note that on systems using a backslash as path separator, Vim tries to
 	do its best to make it work as you would expect.  That is a bit
@@ -2907,6 +2912,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	space (ascii 32) to '~' (ascii 126) are always displayed directly,
 	even when they are not included in 'isprint' or excluded.  See
 	'isfname' for a description of the format of this option.
+
 	Non-printable characters are displayed with two characters:
 		  0 -  31	"^@" - "^_"
 		 32 - 126	always single characters
@@ -2914,6 +2920,12 @@ A jump table for the options with a short description can be found at |X_op|.
 		128 - 159	"~@" - "~_"
 		160 - 254	"| " - "|~"
 		   255		"~?"
+	When 'encoding' is a Unicode one, illegal bytes from 128 to 255 are
+	displayed as <xx>, with the hexadecimal value of the byte.
+	When 'display' contains "uhex" all unprintable characters are
+	displayed as <xx>.
+	The NonText highlighting will be used for unprintable characters.
+	|hl-NonText|
 
 	Multi-byte characters 256 and above are always included, only the
 	characters up to 255 are specified with this option.  When a character
@@ -2947,10 +2959,9 @@ A jump table for the options with a short description can be found at |X_op|.
 'keymap' 'kmp'		string	(default "")
 			local to buffer
 			{not in Vi}
-	Name of a keyboard mapping file, consists of mappings from keyboard
-	characters to single and/or double byte (Unicode) mappings.
-
-	It is not implemented yet, this is just placeholder documentation.
+			{only available when compiled with the |+keymap|
+			feature}
+	Name of a keyboard mapping.  See |multilang-typing|.
 
 					*'keymodel'* *'km'*
 'keymodel' 'km'		string	(default "")
@@ -2987,14 +2998,17 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 			{only available when compiled with the |+langmap|
 			feature}
-	This option allows support for keyboards that have a mode for a
-	special language.  The idea is that when you are typing text in Insert
-	mode your keyboard is switched in the special language mode, you get
-	different key codes for the special characters.  When in command mode
-	the 'langmap' option takes care of translating these special
-	characters to the original meaning of the key.  This means you don't
-	have to change the keyboard mode to be able to execute normal mode
-	commands.
+	This option allows switching your keyboard into a special language
+	mode.   When you are typing text in Insert mode the characters are
+	inserted directly.  When in command mode the 'langmap' option takes
+	care of translating these special characters to the original meaning
+	of the key.  This means you don't have to change the keyboard mode to
+	be able to execute Normal mode commands.
+	This is the opposite of the 'keymap' option, where characters are
+	mapped in Insert mode.
+	This only works for 8-bit characters.  The value of 'langmap' may be
+	specified with multi-byte characters (e.g., UTF-8), but only the lower
+	8 bits of each character will be used.
 
 	Example (for Greek):					*greek*  >
 	    :set langmap=ÁA,ÂB,ØC,ÄD,ÅE,ÖF,ÃG,ÇH,ÉI,ÎJ,ÊK,ËL,ÌM,ÍN,ÏO,ÐP,QQ,ÑR,ÓS,ÔT,ÈU,ÙV,WW,×X,ÕY,ÆZ,áa,âb,øc,äd,åe,öf,ãg,çh,éi,îj,êk,ël,ìm,ín,ïo,ðp,qq,ñr,ós,ôt,èu,ùv,òw,÷x,õy,æz
@@ -3299,7 +3313,8 @@ A jump table for the options with a short description can be found at |X_op|.
 'modifiable' 'ma'	boolean	(default on)
 			local to buffer
 			{not in Vi}
-	When off the buffer contents cannot be changed.
+	When off the buffer contents cannot be changed.  The 'fileformat' and
+	'fileencoding' options also can't be changed.
 
 				 *'modified'* *'mod'* *'nomodified'* *'nomod'*
 'modified' 'mod'	boolean	(default off)
@@ -4497,8 +4512,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	item	    A one letter code as described below.
 
 	Following is a description of the possible statusline items.  The
-	second character in "item" is the type: N for number, S for string
-	and F for flags as described below.  A - is used if not applicable.
+	second character in "item" is the type:
+		N for number
+		S for string
+		F for flags as described below
+		- not applicable
 
 	item  meaning ~
 	f S   Path to the file in the buffer, relative to current directory.
@@ -4515,6 +4533,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	y F   Type of file in the buffer, e.g., " [vim]".  See 'filetype'.
 	Y F   Type of file in the buffer, e.g., ",VIM".  See 'filetype'.
 	      {not available when compiled without |+autocmd| feature}
+	k S   Value of "b:keymap_name" or 'keymap' when |:lmap| mappings are
+	      being used: "<keymap>"
 	n N   Buffer number.
 	b N   Value of byte under cursor.
 	B N   As above, in hexadecimal.
@@ -4781,7 +4801,7 @@ A jump table for the options with a short description can be found at |X_op|.
 						*'tags'* *'tag'*
 'tags' 'tag'		string	(default "./tags,tags", when compiled with
 				|+emacs_tags|: "./tags,./TAGS,tags,TAGS")
-			global
+			global or local to buffer |global-local|
 	Filenames for the tag command, separated by spaces or commas.  To
 	include a space or comma in a file name, precede it with a backslash
 	(see |option-backslash| about including spaces and backslashes).

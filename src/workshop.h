@@ -17,6 +17,10 @@
 
 #ifdef WSDEBUG
 # include "wsdebug.h"
+#else
+# ifndef ASSERT
+#  define ASSERT(c)
+# endif
 #endif
 
 extern int	usingSunWorkShop;	/* set if -ws flag is used */

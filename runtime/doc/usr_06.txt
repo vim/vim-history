@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0v.  Last change: 2001 Jan 13
+*usr_06.txt*	For Vim version 6.0w.  Last change: 2001 Feb 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -213,6 +213,7 @@ Further reading:
 |filetype-plugins|	Documentation for the filetype plugins and information
 			about how to avoid that mappings cause problems.
 |load-plugins|		When the global plugins are loaded during startup.
+|ftplugin-overrule|	Overruling the settings from a global plugin.
 |write-plugin|		How to write a plugin script.
 |plugin-details|	For more information about using plugins or when your
 			plugin doesn't work.

@@ -4,8 +4,8 @@
 xxd: xxd.exe
 
 xxd.exe: xxd.c
-     cl -DWIN32 xxd.c /link setargv.obj
+     cl /nologo -DWIN32 xxd.c /link setargv.obj
 
 clean:
-     - del xxd.obj
-     - del xxd.exe
+     - if exist xxd.obj del xxd.obj
+     - if exist xxd.exe del xxd.exe

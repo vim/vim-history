@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -2039,7 +2040,7 @@ get_digraph(cmdline)
 	if (cmdline)
 	{
 	    if (char2cells(c) == 1)
-		putcmdline(c);
+		putcmdline(c, TRUE);
 	}
 #ifdef FEAT_CMDL_INFO
 	else
@@ -2265,7 +2266,7 @@ printdigraph(dp)
 	    /* add a space to draw a composing char on */
 	    if (enc_utf8 && utf_iscomposing(dp->result))
 		*p++ = ' ';
-	    p += mb_char2bytes(dp->result, p);
+	    p += (*mb_char2bytes)(dp->result, p);
 	}
 	else
 #endif

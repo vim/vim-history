@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 6.0v.  Last change: 2000 Jul 07
+*develop.txt*   For Vim version 6.0w.  Last change: 2001 Feb 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,6 +13,9 @@ Vim.
 2. Coding style		|coding-style|
 3. Design decisions	|design-decisions|
 4. Assumptions		|design-assumptions|
+
+See the file README.txt in the "src" directory for an overview of the source
+code.
 
 ==============================================================================
 1. Design goals						*design-goals*

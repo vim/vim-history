@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -85,7 +86,7 @@ static char_u	*get_expr_line __ARGS((void));
 static void	get_yank_register __ARGS((int regname, int writing));
 static int	stuff_yank __ARGS((int, char_u *));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
-static void	stuffescaped __ARGS((char_u *arg));
+static void	stuffescaped __ARGS((char_u *arg, int literally));
 static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated, int errmsg));
 static void	cmdline_paste_str __ARGS((char_u *s, int literally));
 #ifdef FEAT_MBYTE
@@ -330,7 +331,7 @@ shift_line(left, round, amount)
     }
 
     /* Set new indent */
-    if (State == VREPLACE)
+    if (State & VREPLACE_FLAG)
 	change_indent(INDENT_SET, count, FALSE, NUL);
     else
 	(void)set_indent(count, SIN_CHANGED);
@@ -838,6 +839,11 @@ do_record(c)
     }
     else			    /* stop recording */
     {
+	/*
+	 * Get the recorded key hits.  K_SPECIAL and CSI will be escaped, so
+	 * that the register can be put into the typeahead buffer without
+	 * translation.
+	 */
 	Recording = FALSE;
 	MSG("");
 	p = get_recorded();
@@ -862,8 +868,8 @@ do_record(c)
 }
 
 /*
- * Stuff string 'p' into yank register 'regname' as a single line (append if
- * uppercase).	'p' must have been alloced.
+ * Stuff string "p" into yank register "regname" as a single line (append if
+ * uppercase).	"p" must have been alloced.
  *
  * return FAIL for failure, OK otherwise
  */
@@ -945,6 +951,7 @@ do_execreg(regname, colon, addcr)
     if (regname == '_')			/* black hole: don't stuff anything */
 	return OK;
 
+#ifdef FEAT_CMDHIST
     if (regname == ':')			/* use last command line */
     {
 	if (last_cmdline == NULL)
@@ -956,6 +963,7 @@ do_execreg(regname, colon, addcr)
 	new_last_cmdline = NULL;
 	retval = put_in_typebuf(last_cmdline, TRUE);
     }
+#endif
 #ifdef FEAT_EVAL
     else if (regname == '=')
     {
@@ -1069,10 +1077,7 @@ insert_reg(regname, literally)
     {
 	if (arg == NULL)
 	    return FAIL;
-	if (literally)
-	    stuffescaped(arg);
-	else
-	    stuffReadbuff(arg);
+	stuffescaped(arg, literally);
 	if (allocated)
 	    vim_free(arg);
     }
@@ -1085,10 +1090,7 @@ insert_reg(regname, literally)
 	{
 	    for (i = 0; i < y_current->y_size; ++i)
 	    {
-		if (literally)
-		    stuffescaped(y_current->y_array[i]);
-		else
-		    stuffReadbuff(y_current->y_array[i]);
+		stuffescaped(y_current->y_array[i], literally);
 		/*
 		 * Insert a newline between lines and after last line if
 		 * y_type is MLINE.
@@ -1107,14 +1109,35 @@ insert_reg(regname, literally)
  * literally.
  */
     static void
-stuffescaped(arg)
+stuffescaped(arg, literally)
     char_u	*arg;
+    int		literally;
 {
-    while (*arg)
+    int		c;
+    char_u	*start;
+
+    while (*arg != NUL)
     {
-	if ((*arg < ' ' && *arg != TAB) || *arg > '~')
-	    stuffcharReadbuff(Ctrl_V);
-	stuffcharReadbuff(*arg++);
+	/* stuff a sequence of normal ASCII characters, that's fast */
+	start = arg;
+	while (*arg >= ' ' && *arg < DEL)	/* TODO: EBCDIC */
+	    ++arg;
+	if (arg > start)
+	    stuffReadbuffLen(start, (long)(arg - start));
+
+	/* stuff a single special character */
+	if (*arg != NUL)
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		c = mb_ptr2char_adv(&arg);
+	    else
+#endif
+		c = *arg++;
+	    if (literally && ((c < ' ' && c != TAB) || c == DEL))
+		stuffcharReadbuff(Ctrl_V);
+	    stuffcharReadbuff(c);
+	}
     }
 }
 
@@ -1274,20 +1297,29 @@ cmdline_paste_str(s, literally)
     char_u	*s;
     int		literally;
 {
+    int		c, cv;
+
     if (literally)
 	put_on_cmdline(s, -1, TRUE);
     else
-	while (*s)
+	while (*s != NUL)
 	{
-	    if (*s == Ctrl_V && s[1])
-		stuffcharReadbuff(*s++);
-	    else if (*s == ESC || *s == Ctrl_C || *s == CR || *s == NL
-#ifdef UNIX
-		    || *s == intr_char
+	    cv = *s;
+	    if (cv == Ctrl_V && s[1])
+		++s;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		c = mb_ptr2char_adv(&s);
+	    else
 #endif
-		    || (*s == Ctrl_BSL && s[1] == Ctrl_N))
+		c = *s++;
+	    if (cv == Ctrl_V || c == ESC || c == Ctrl_C || c == CR || c == NL
+#ifdef UNIX
+		    || c == intr_char
+#endif
+		    || (c == Ctrl_BSL && *s == Ctrl_N))
 		stuffcharReadbuff(Ctrl_V);
-	    stuffcharReadbuff(*s++);
+	    stuffcharReadbuff(c);
 	}
 }
 
@@ -1519,7 +1551,64 @@ op_delete(oap)
 #endif
 		)
 	    display_dollar(oap->end.col - !oap->inclusive);
+
 	n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
+#ifdef FEAT_VIRTUALEDIT
+
+	if (virtual_active())
+	{
+	    /* fix up things for virtualedit-delete:
+	     * make sure the coladds are in the right order, and
+	     * break the tabs which are going to get in our way
+	     */
+	    char_u	*curline = ml_get_curline();
+	    int		oldcol = getviscol();
+	    int		len;
+	    int		endcol;
+
+	    if (oap->start.col == oap->end.col
+		    && oap->end.coladd < oap->start.coladd)
+	    {
+		colnr_t tmp = oap->start.coladd;
+		oap->start.coladd = oap->end.coladd;
+		oap->end.coladd = tmp;
+
+		curwin->w_cursor.coladd = oap->start.coladd;
+	    }
+
+	    if (curline[oap->start.col] == '\t')
+	    {
+		endcol = getviscol2(oap->end.col, oap->end.coladd);
+		coladvance_force(getviscol2(oap->start.col, oap->start.coladd));
+		oap->start.col = curwin->w_cursor.col;
+		oap->start.coladd = 0;
+		coladvance(endcol);
+		oap->end.col = curwin->w_cursor.col;
+		oap->end.coladd = curwin->w_cursor.coladd;
+		coladvance(oldcol);
+		curline = ml_get_curline();
+	    }
+
+	    if (curline[oap->end.col] == '\t')
+	    {
+		coladvance_force(getviscol2(oap->end.col, oap->end.coladd));
+		oap->end.col = curwin->w_cursor.col;
+		oap->end.coladd = 0;
+		coladvance(oldcol);
+		curline = ml_get_curline();
+	    }
+
+	    n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
+	    len = STRLEN(curline);
+
+	    if (oap->end.coladd != 0 && (int)oap->end.col >= len - 1
+		    && !(oap->start.coladd && (int)oap->end.col >= len - 1))
+	    {
+	        n++;
+		curwin->w_cursor.coladd = 0;
+	    }
+	}
+#endif
 	(void)del_chars((long)n, restart_edit == NUL);
     }
     else				/* delete characters between lines */
@@ -1541,6 +1630,7 @@ op_delete(oap)
 	(void)del_chars((long)(oap->end.col + 1 - !oap->inclusive),
 							 restart_edit == NUL);
 	curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
+	
 	(void)do_join(FALSE);
     }
 
@@ -1677,7 +1767,7 @@ op_replace(oap, c)
 	    if (n != NUL)
 	    {
 #ifdef FEAT_MBYTE
-		if (mb_char2len(c) > 1 || mb_char2len(n) > 1)
+		if ((*mb_char2len)(c) > 1 || (*mb_char2len)(n) > 1)
 		{
 		    /* This is slow, but it handles replacing a single-byte
 		     * with a multi-byte and the other way around. */
@@ -1764,6 +1854,12 @@ op_tilde(oap)
 	    changed_lines(oap->start.lnum, oap->start.col, oap->end.lnum + 1,
 									  0L);
     }
+
+#ifdef FEAT_VISUAL
+    if (!did_change && oap->is_VIsual)
+	/* No change: need to remove the Visual selection */
+	redraw_curbuf_later(INVERTED);
+#endif
 
     /*
      * Set '[ and '] marks.
@@ -2477,7 +2573,7 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    bytelen = mb_ptr2len_check(ml_get_cursor());
+	    bytelen = (*mb_ptr2len_check)(ml_get_cursor());
 	    curbuf->b_op_start.col += bytelen;
 	}
 	else
@@ -2622,10 +2718,10 @@ do_put(regname, dir, count, flags)
     {
 	if (gchar_cursor() == TAB)
 	{
-	    if (dir == FORWARD || curwin->w_coladd)
+	    if (dir == FORWARD || curwin->w_cursor.coladd)
 		coladvance_force(getviscol());
 	}
-	else if (curwin->w_coladd)
+	else if (curwin->w_cursor.coladd)
 	{
 	    if (dir == FORWARD)
 		coladvance_force(getviscol() + 1);
@@ -2674,8 +2770,8 @@ do_put(regname, dir, count, flags)
 	    getvcol(curwin, &curwin->w_cursor, &col, NULL, &endcol2);
 
 #ifdef FEAT_VIRTUALEDIT
-	col += curwin->w_coladd;
-	if (ve_flags == VE_ALL && curwin->w_coladd)
+	col += curwin->w_cursor.coladd;
+	if (ve_flags == VE_ALL && curwin->w_cursor.coladd)
 	{
 	    if (dir == FORWARD && c == NUL)
 		++col;
@@ -2689,14 +2785,8 @@ do_put(regname, dir, count, flags)
 		    curwin->w_cursor.col++;
 	    }
 	}
-	curwin->w_coladd = 0;
+	curwin->w_cursor.coladd = 0;
 #endif
-
-#ifdef FEAT_VIRTUALEDIT
-	col += curwin->w_coladd;
-	curwin->w_coladd = 0;
-#endif
-
 	for (i = 0; i < y_size; ++i)
 	{
 	    int spaces;
@@ -3143,7 +3233,7 @@ ex_display(eap)
 		    msg_outtrans_len(p, 1);
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
-			p += mb_ptr2len_check(p) - 1;
+			p += (*mb_ptr2len_check)(p) - 1;
 #endif
 		}
 	    }
@@ -3239,7 +3329,7 @@ dis_msg(p, skip_esc)
 	    && (n -= ptr2cells(p)) >= 0)
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+	if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	{
 	    msg_outtrans_len(p, l);
 	    p += l;
@@ -3489,6 +3579,12 @@ op_format(oap)
     if (u_save((linenr_t)(oap->start.lnum - 1),
 				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
 	return;
+
+#ifdef FEAT_VISUAL
+    if (oap->is_VIsual)
+	/* When there is no change: need to remove the Visual selection */
+	redraw_curbuf_later(INVERTED);
+#endif
 
     /* length of a line to force formatting: 3 * 'tw' */
     max_len = comp_textwidth(TRUE) * 3;
@@ -3778,7 +3874,7 @@ block_prep(oap, bdp, lnum, is_del)
 #endif
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    pstart += mb_ptr2len_check(pstart);
+	    pstart += (*mb_ptr2len_check)(pstart);
 	else
 #endif
 	    ++pstart;

@@ -18,26 +18,27 @@
 /*
  * Position comparisons
  */
-#define lt(a, b) (((a).lnum != (b).lnum) \
-		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
-
-#define ltp(a, b) (((a)->lnum != (b)->lnum) \
-		   ? ((a)->lnum < (b)->lnum) : ((a)->col < (b)->col))
-
 #ifdef FEAT_VIRTUALEDIT
-# define lt_coladd(a, aa, b, bb) (((a).lnum != (b).lnum) \
+# define lt(a, b) (((a).lnum != (b).lnum) \
 		   ? (a).lnum < (b).lnum \
 		   : (a).col != (b).col \
 		       ? (a).col < (b).col \
-		       : aa < bb)
+		       : (a).coladd < (b).coladd)
+# define ltp(a, b) (((a)->lnum != (b)->lnum) \
+		   ? (a)->lnum < (b)->lnum \
+		   : (a)->col != (b)->col \
+		       ? (a)->col < (b)->col \
+		       : (a)->coladd < (b)->coladd)
+# define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col) && ((a).coladd == (b).coladd))
 #else
-# define lt_coladd(a, aa, b, bb) lt(a, b)
+# define lt(a, b) (((a).lnum != (b).lnum) \
+		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
+# define ltp(a, b) (((a)->lnum != (b)->lnum) \
+		   ? ((a)->lnum < (b)->lnum) : ((a)->col < (b)->col))
+# define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
 #endif
 
-#define ltoreq(a, b) (((a).lnum != (b).lnum) \
-		   ? ((a).lnum < (b).lnum) : ((a).col <= (b).col))
-
-#define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
+#define ltoreq(a, b) (lt(a, b) || equal(a, b))
 
 /*
  * lineempty() - return TRUE if the line is empty

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -216,7 +217,7 @@ change_drive(int drive)
 {
 #ifdef WIN32
     char temp[3] = "-:";
-    temp[0] = drive + 'A' - 1;
+    temp[0] = (char)(drive + 'A' - 1);
     return !SetCurrentDirectory(temp);
 #else
     union REGS regs;
@@ -253,10 +254,11 @@ mch_chdir(char *path)
 }
 
 /*
- * Expand a file name into a full path name.
+ * Expand the executable name into a full path name.
  */
-#ifdef __BORLANDC__	/* Only Borland C++ has this */
+#if defined(__BORLANDC__) && !defined(WIN32)
 
+/* Only Borland C++ has this. */
 # define my_fullpath(b, n, l) _fullpath(b, n, l)
 
 #else
@@ -264,9 +266,11 @@ mch_chdir(char *path)
 my_fullpath(char *buf, char *fname, int len)
 {
 # ifdef WIN32
-    LPTSTR toss;
+    /* Only GetModuleFileName() will get the long file name path.
+     * GetFullPathName() may still use the short (FAT) name. */
+    DWORD len_read = GetModuleFileName(NULL, buf, len);
 
-    return (char *)GetFullPathName(fname, len, buf, &toss);
+    return (len_read > 0 && len_read < (DWORD)len) ? buf : NULL;
 # else
     char	olddir[BUFSIZE];
     char	*p, *q;
@@ -873,19 +877,20 @@ install_bat_choice(int idx)
 	    fprintf(fd, ":loopend\n\n");
 
 	    strcpy(buf, installdir);
-	    buf[runtimeidx] = NUL;
+	    buf[runtimeidx - 1] = NUL;
 	    /* Don't use double quotes for the value here, also when buf
 	     * contains a space.  The quotes would be included in the value
 	     * for MSDOS. */
 	    fprintf(fd, "set VIM=%s\n", buf);
 
-	    strcpy(buf, installdir);
+	    strcpy(buf, installdir + runtimeidx);
 	    add_pathsep(buf);
 	    strcat(buf, exename);
-	    if (strchr(buf, ' ') != NULL)
-		fprintf(fd, "\"%s\" %%VIMARGS%%\n", buf);
+	    /* Do use quotes here if the path includes a space. */
+	    if (strchr(installdir, ' ') != NULL)
+		fprintf(fd, "\"%%VIM%%\\%s\" %%VIMARGS%%\n", buf);
 	    else
-		fprintf(fd, "%s %%VIMARGS%%\n", buf);
+		fprintf(fd, "%%VIM%%\\%s %%VIMARGS%%\n", buf);
 	    fprintf(fd, "set VIMARGS=\n");
 
 	    fclose(fd);

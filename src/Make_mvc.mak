@@ -150,7 +150,7 @@ CON_LIB = $(CON_LIB) shell32.lib
 #VIMRCLOC = somewhere
 #VIMRUNTIMEDIR = somewhere
 
-CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto $(cflags) -DHAVE_PATHDEF \
+CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF \
 		$(SNIFF_DEFS) $(DEFINES)
 
 #>>>>> end of choices
@@ -387,8 +387,8 @@ $(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_O
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
 		$(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
 		$(OUTDIR)\version.obj $(LINKARGS2)
-	del $(OUTDIR)\version.obj
-	del auto\pathdef.c
+	if exist $(OUTDIR)\version.obj del $(OUTDIR)\version.obj
+	if exist auto\pathdef.c del auto\pathdef.c
 
 $(VIM).exe: $(VIM)
 
@@ -396,19 +396,19 @@ $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
 
 install.exe: dosinst.c
-	$(CC) -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib
-	- del install.exe
+	$(CC) /nologo -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib
+	- if exist install.exe del install.exe
 	ren dosinst.exe install.exe
 
 uninstal.exe: uninstal.c
-	$(CC) -DNDEBUG -DWIN32 uninstal.c advapi32.lib
+	$(CC) /nologo -DNDEBUG -DWIN32 uninstal.c advapi32.lib
 
 vimrun.exe: vimrun.c
-	$(CC) -DNDEBUG vimrun.c
+	$(CC) /nologo -DNDEBUG vimrun.c
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
-	$(MAKE) -f Make_mvc.mak
+	$(MAKE) /NOLOGO -f Make_mvc.mak
 	cd ..
 
 
@@ -416,31 +416,32 @@ tags: notags
 	$(CTAGS) *.c *.h proto\*.pro
 
 notags:
-	- del tags
+	- if exist tags del tags
 
 clean:
-	- $(DEL_TREE) $(OUTDIR)
-	- del *.obj
-	- del $(VIM).exe
-	- del $(VIM).ilk
-	- del $(VIM).pdb
-	- del $(VIM).map
-	- del $(VIM).ncb
-	- del vimrun.exe
-	- del install.exe
-	- del uninstal.exe
-	- del if_perl.c
-	- del dimm.h
-	- del dimm_i.c
-	- del dimm.tlb
+	- $(DEL_TREE) $(OUTDIR) auto
+	- if exist *.obj del *.obj
+	- if exist $(VIM).exe del $(VIM).exe
+	- if exist $(VIM).ilk del $(VIM).ilk
+	- if exist $(VIM).pdb del $(VIM).pdb
+	- if exist $(VIM).map del $(VIM).map
+	- if exist $(VIM).ncb del $(VIM).ncb
+	- if exist vimrun.exe del vimrun.exe
+	- if exist install.exe del install.exe
+	- if exist uninstal.exe del uninstal.exe
+	- if exist if_perl.c del if_perl.c
+	- if exist dimm.h del dimm.h
+	- if exist dimm_i.c del dimm_i.c
+	- if exist dimm.tlb del dimm.tlb
+	- if exist dosinst.exe del dosinst.exe
 	cd xxd
-	$(MAKE) -f Make_mvc.mak clean
+	$(MAKE) /NOLOGO -f Make_mvc.mak clean
 	cd ..
-	-del testdir\*.out
+	- if exist testdir\*.out del testdir\*.out
 
 test:
 	cd testdir
-	$(MAKE) -f Make_dos.mak
+	$(MAKE) /NOLOGO -f Make_dos.mak
 	cd ..
 
 ###########################################################################
@@ -596,10 +597,10 @@ $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_
 	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
 
 iid_ole.c if_ole.h vim.tlb: if_ole.idl $(INTDIR) $(OUTDIR)
-	midl /proxy nul /iid iid_ole.c /tlb vim.tlb /header if_ole.h if_ole.idl
+	midl /nologo /proxy nul /iid iid_ole.c /tlb vim.tlb /header if_ole.h if_ole.idl
 
 dimm.h dimm_i.c: dimm.idl
-	midl /proxy nul dimm.idl
+	midl /nologo /proxy nul dimm.idl
 
 $(OUTDIR)/dimm_i.obj: $(OUTDIR) dimm_i.c $(INCL)
 	$(CC) $(CFLAGS) dimm_i.c /Fo$(OUTDIR)/dimm_i.obj $(PDB)

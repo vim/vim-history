@@ -9,6 +9,7 @@ void gui_motif_set_mnemonics __ARGS((int enable));
 void gui_mch_add_menu __ARGS((vimmenu_t *menu, int idx));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 int gui_mch_text_area_extra_height __ARGS((void));
+void gui_mch_compute_menu_height __ARGS((Widget id));
 void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, int idx));
 void gui_motif_update_mousemodel __ARGS((vimmenu_t *menu));
 void gui_mch_new_menu_colors __ARGS((void));

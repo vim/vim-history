@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -251,111 +252,6 @@ mch_input_isatty()
 #endif
 }
 
-#if defined(FEAT_GUI_MSWIN) || defined(PROTO)
-/*
- * Key hit, add it to the input buffer.
- * Careful: CSI arrives as 0xffffff9b.
- */
-    void
-key_hit(unsigned ch)
-{
-    char_u	string[40];
-
-    string[0] = ch;
-    if (string[0] == Ctrl_C && !mapped_ctrl_c)
-    {
-	trash_input_buf();
-	got_int = TRUE;
-    }
-
-    if (string[0] == CSI)
-    {
-	/* Insert CSI as K_CSI. */
-	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
-	add_to_input_buf(string, 3);
-    }
-    else
-    {
-	int	len = 1;
-#ifdef FEAT_MBYTE
-
-	if (input_conv.vc_type != CONV_NONE)
-	    len = convert_input(string, len, sizeof(string));
-#endif
-	add_to_input_buf(string, len);
-    }
-}
-
-/*
- * Alt-Key hit, add it to the input buffer.
- */
-    void
-sys_key_hit(unsigned cch)
-{
-    char_u	string[40]; /* Enough for multibyte character */
-    int		len;
-    int		modifiers;
-    int		ch = cch;   /* special keys are negative */
-
-    /* TRACE("OnSysChar(%d, %c)\n", ch, ch); */
-
-    /* OK, we have a character key (given by ch) which was entered with the
-     * ALT key pressed. Eg, if the user presses Alt-A, then ch == 'A'. Note
-     * that the system distinguishes Alt-a and Alt-A (Alt-Shift-a unless
-     * CAPSLOCK is pressed) at this point.
-     */
-    modifiers = MOD_MASK_ALT;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-	modifiers |= MOD_MASK_SHIFT;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-	modifiers |= MOD_MASK_CTRL;
-
-    ch = simplify_key(ch, &modifiers);
-    /* remove the SHIFT modifier for keys where it's already included, e.g.,
-     * '(' and '*' */
-    if (ch < 0x100 && (!isalpha(ch)) && isprint(ch))
-	modifiers &= ~MOD_MASK_SHIFT;
-
-    /* Interpret the ALT key as making the key META, include SHIFT, etc. */
-    ch = extract_modifiers(ch, &modifiers);
-    if (ch == CSI)
-	ch = K_CSI;
-
-    len = 0;
-    if (modifiers)
-    {
-	string[len++] = CSI;
-	string[len++] = KS_MODIFIER;
-	string[len++] = modifiers;
-    }
-
-    if (IS_SPECIAL((int)ch))
-    {
-	string[len++] = CSI;
-	string[len++] = K_SECOND((int)ch);
-	string[len++] = K_THIRD((int)ch);
-    }
-    else if (ch == CSI)
-    {
-	string[len++] = CSI;
-	string[len++] = KS_EXTRA;
-	string[len++] = KE_CSI;
-    }
-    else
-    {
-	string[len++] = ch;
-#ifdef FEAT_MBYTE
-	if (input_conv.vc_type != CONV_NONE)
-	    len += convert_input(string + len - 1, 1, sizeof(string) - len) - 1;
-#endif
-    }
-
-    add_to_input_buf(string, len);
-}
-#endif
-
-
 #ifdef FEAT_TITLE
 /*
  * mch_settitle(): set titlebar of our window
@@ -365,12 +261,12 @@ mch_settitle(
     char_u *title,
     char_u *icon)
 {
-#ifdef FEAT_GUI_MSWIN
+# ifdef FEAT_GUI_MSWIN
     gui_mch_settitle(title, icon);
-#else
+# else
     if (title != NULL)
 	SetConsoleTitle(title);
-#endif
+# endif
 }
 
 

@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -2034,14 +2035,16 @@ get_one_sourceline(sp)
     return NULL;
 }
 
-#if defined(FEAT_MBYTE) || defined(PROTO)
 /*
  * ":scriptencoding": Set encoding conversion for a sourced script.
+ * Without the multi-byte feature it's simply ignored.
  */
+/*ARGSUSED*/
     void
 ex_scriptencoding(eap)
     exarg_t	*eap;
 {
+#ifdef FEAT_MBYTE
     struct source_cookie	*sp;
     char_u			*name;
 
@@ -2066,8 +2069,8 @@ ex_scriptencoding(eap)
 
     if (name != eap->arg)
 	vim_free(name);
-}
 #endif
+}
 
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Make
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Dec 21
+" Last Change:	2001 Feb 16
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -18,3 +18,6 @@ setlocal fo-=t fo+=croql
 
 " Set 'comments' to format dashed lists in comments
 setlocal com=sO:#\ -,mO:#\ \ ,b:#
+
+" Set 'commentstring' to put the marker after a #.
+setlocal commentstring=#\ %s

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0v.  Last change: 2001 Feb 08
+*editing.txt*   For Vim version 6.0w.  Last change: 2001 Feb 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -50,13 +50,20 @@ CTRL-G		or				*CTRL-G* *:f* *:fi* *:file*
 			buffer number is also given.  {not in Vi}
 
 							*g_CTRL-G*
-g CTRL-G		Prints the current position of the cursor in three
-			ways: Column, Line and Character.  If there are
+g CTRL-G		Prints the current position of the cursor in four
+			ways: Column, Line, Word and Character.  If there are
 			characters in the line that take more than one
 			position on the screen (<Tab> or special character),
 			both the "real" column and the screen column are
 			shown, separated with a dash.  See also 'ruler'
 			option.  {not in Vi}
+
+							*v_g_CTRL-G*
+{Visual}g CTRL-G	Similar to "g CTRL-G", but Word, Line, and
+			Character counts for the visually selected region
+			are displayed.  In Blockwise mode, Column count is
+			also shown.  (For {Visual} see |Visual-mode|.)
+			{not in VI}
 
 							*:file_f*
 :f[ile] {name}		Sets the current file name to {name}.

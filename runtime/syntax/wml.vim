@@ -2,7 +2,7 @@
 " Language:    WML
 " Maintainer:  Gerfried Fuchs <alfie@innocent.com>
 " URL:         http://alfie.ist.org/vim/syntax/wml.vim
-" Last Change: 2001 Jan 15
+" Last Change: 2001 Feb 12
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
@@ -15,7 +15,7 @@ if exists("b:current_syntax")
 endif
 
 " A lot of the web stuff looks like HTML so we load that first
-runtime! syntax/syntax/html.vim
+runtime! syntax/html.vim
 unlet b:current_syntax
 
 if !exists("main_syntax")

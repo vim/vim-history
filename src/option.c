@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -110,6 +111,7 @@ typedef enum
     , PV_SW
     , PV_SWF
     , PV_SYN
+    , PV_TAGS
     , PV_TS
     , PV_TSR
     , PV_TW
@@ -1106,7 +1108,7 @@ static struct vimoption options[] =
     {"keymap",	    "kmp",  P_STRING|P_ALLOCED|P_VI_DEF|P_RBUF|P_RSTAT,
 #ifdef FEAT_KEYMAP
 			    (char_u *)&p_keymap, PV_KMAP,
-			    {(char_u *)DFLT_KMP, (char_u *)0L}
+			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}
@@ -1734,7 +1736,7 @@ static struct vimoption options[] =
 			    (char_u *)&p_tr, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)TRUE}},
     {"tags",	    "tag",  P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
-			    (char_u *)&p_tags, PV_NONE,
+			    (char_u *)&p_tags, OPT_BOTH(PV_TAGS),
 			    {
 #ifdef FEAT_EMACS_TAGS
 			    (char_u *)"./tags,./TAGS,tags,TAGS",
@@ -2109,7 +2111,6 @@ static char *(p_scbopt_values[]) = {"ver", "hor", "jump", NULL};
 #endif
 static char *(p_swb_values[]) = {"useopen", "split", NULL};
 static char *(p_debug_values[]) = {"msg", NULL};
-static char *(p_dy_values[]) = {"lastline", NULL};
 #ifdef FEAT_VERTSPLIT
 static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 #endif
@@ -3685,6 +3686,7 @@ didset_options()
 #ifdef FEAT_FOLDING
     (void)opt_strings_flags(p_fdo, p_fdo_values, &fdo_flags, TRUE);
 #endif
+    (void)opt_strings_flags(p_dy, p_dy_values, &dy_flags, TRUE);
 #ifdef FEAT_VIRTUALEDIT
     (void)opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE);
 #endif
@@ -3779,6 +3781,7 @@ check_buf_options(buf)
 #endif
     check_string_option(&buf->b_p_ep);
     check_string_option(&buf->b_p_path);
+    check_string_option(&buf->b_p_tags);
 #ifdef FEAT_FIND_ID
     check_string_option(&buf->b_p_def);
 #endif
@@ -4133,15 +4136,20 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'encoding' and 'fileencoding' */
     else if (varp == &p_enc || varp == &curbuf->b_p_fenc || varp == &p_tenc)
     {
-	/* canonize the value, so that STRCMP() can be used on it */
-	p = enc_canonize(*varp);
-	if (p != NULL)
+	if (varp == &curbuf->b_p_fenc && !curbuf->b_p_ma)
+	    errmsg = e_modifiable;
+	else
 	{
-	    vim_free(*varp);
-	    *varp = p;
+	    /* canonize the value, so that STRCMP() can be used on it */
+	    p = enc_canonize(*varp);
+	    if (p != NULL)
+	    {
+		vim_free(*varp);
+		*varp = p;
+	    }
+	    if (varp == &p_enc)
+		errmsg = mb_init();
 	}
-	if (varp == &p_enc)
-	    errmsg = mb_init();
 
 	/* When 'termencoding' is not empty and 'encoding' changes or when
 	 * 'termencoding' changes, need to setup for keyboard input and
@@ -4166,7 +4174,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'fileformat' */
     else if (varp == &(curbuf->b_p_ff))
     {
-	if (check_opt_strings(curbuf->b_p_ff, p_ff_values, FALSE) != OK)
+	if (!curbuf->b_p_ma)
+	    errmsg = e_modifiable;
+	else if (check_opt_strings(curbuf->b_p_ff, p_ff_values, FALSE) != OK)
 	    errmsg = e_invarg;
 	else
 	{
@@ -4193,7 +4203,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	}
     }
 
-#ifdef FEAT_CRYPT
+#if defined(FEAT_CRYPT) && defined(FEAT_CMDHIST)
     /* 'cryptkey' */
     else if (varp == &(curbuf->b_p_key))
     {
@@ -4533,8 +4543,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'display' */
     else if (varp == &p_dy)
     {
-	if (check_opt_strings(p_dy, p_dy_values, TRUE) != OK)
+	if (opt_strings_flags(p_dy, p_dy_values, &dy_flags, TRUE) != OK)
 	    errmsg = e_invarg;
+	else
+	    (void)init_chartab();
+
     }
 
 #ifdef FEAT_VERTSPLIT
@@ -4763,7 +4776,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	if (opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE) != OK)
 	    errmsg = e_invarg;
 	else if (!virtual_active())
-	    curwin->w_coladd = 0;
+	    curwin->w_cursor.coladd = 0;
     }
 #endif
 
@@ -6440,6 +6453,7 @@ get_varp_scope(p, opt_flags)
 #endif
 	    case OPT_BOTH(PV_EP):   return (char_u *)&(curbuf->b_p_ep);
 	    case OPT_BOTH(PV_PATH): return (char_u *)&(curbuf->b_p_path);
+	    case OPT_BOTH(PV_TAGS): return (char_u *)&(curbuf->b_p_tags);
 #ifdef FEAT_FIND_ID
 	    case OPT_BOTH(PV_DEF):  return (char_u *)&(curbuf->b_p_def);
 #endif
@@ -6473,6 +6487,8 @@ get_varp(p)
 				    ? (char_u *)&curbuf->b_p_ep : p->var;
 	case OPT_BOTH(PV_PATH):	return *curbuf->b_p_path != NUL
 				    ? (char_u *)&(curbuf->b_p_path) : p->var;
+	case OPT_BOTH(PV_TAGS):	return *curbuf->b_p_tags != NUL
+				    ? (char_u *)&(curbuf->b_p_tags) : p->var;
 #ifdef FEAT_FIND_ID
 	case OPT_BOTH(PV_DEF):	return *curbuf->b_p_def != NUL
 				    ? (char_u *)&(curbuf->b_p_def) : p->var;
@@ -6880,6 +6896,7 @@ buf_copy_options(buf, flags)
 #endif
 #ifdef FEAT_KEYMAP
 	    buf->b_p_keymap = vim_strsave(p_keymap);
+	    buf->b_kmap_state |= KEYMAP_INIT;
 #endif
 	    /* options that are normally global but also have a local value
 	     * are not copied, start using the global value */
@@ -6889,6 +6906,7 @@ buf_copy_options(buf, flags)
 #endif
 	    buf->b_p_ep = empty_option;
 	    buf->b_p_path = empty_option;
+	    buf->b_p_tags = empty_option;
 #ifdef FEAT_FIND_ID
 	    buf->b_p_def = empty_option;
 #endif
@@ -7414,31 +7432,53 @@ langmap_set()
 
     langmap_init();			    /* back to one-to-one map first */
 
-    for (p = p_langmap; p[0]; )
+    for (p = p_langmap; p[0] != NUL; )
     {
-	for (p2 = p; p2[0] && p2[0] != ',' && p2[0] != ';'; ++p2)
-	    if (p2[0] == '\\' && p2[1])
+	for (p2 = p; p2[0] != NUL && p2[0] != ',' && p2[0] != ';'; ++p2)
+	{
+	    if (p2[0] == '\\' && p2[1] != NUL)
 		++p2;
+#ifdef FEAT_MBYTE
+	    p2 += (*mb_ptr2len_check)(p2) - 1;
+#endif
+	}
 	if (p2[0] == ';')
 	    ++p2;	    /* abcd;ABCD form, p2 points to A */
 	else
 	    p2 = NULL;	    /* aAbBcCdD form, p2 is NULL */
 	while (p[0])
 	{
-	    if (p[0] == '\\' && p[1])
+	    if (p[0] == '\\' && p[1] != NUL)
 		++p;
+#ifdef FEAT_MBYTE
+	    from = (*mb_ptr2char)(p);
+#else
 	    from = p[0];
+#endif
 	    if (p2 == NULL)
 	    {
-		if (p[1] == '\\')
+#ifdef FEAT_MBYTE
+		p += (*mb_ptr2len_check)(p);
+#else
+		++p;
+#endif
+		if (p[0] == '\\')
 		    ++p;
-		to = p[1];
+#ifdef FEAT_MBYTE
+		to = (*mb_ptr2char)(p);
+#else
+		to = p[0];
+#endif
 	    }
 	    else
 	    {
 		if (p2[0] == '\\')
 		    ++p2;
+#ifdef FEAT_MBYTE
+		to = (*mb_ptr2char)(p2);
+#else
 		to = p2[0];
+#endif
 	    }
 	    if (to == NUL)
 	    {
@@ -7446,12 +7486,16 @@ langmap_set()
 							     transchar(from));
 		return;
 	    }
-	    langmap_mapchar[from] = to;
+	    langmap_mapchar[from & 255] = to;
 
 	    /* Advance to next pair */
+#ifdef FEAT_MBYTE
+	    p += (*mb_ptr2len_check)(p);
+#else
+	    ++p;
+#endif
 	    if (p2 == NULL)
 	    {
-		p += 2;
 		if (p[0] == ',')
 		{
 		    ++p;
@@ -7460,12 +7504,15 @@ langmap_set()
 	    }
 	    else
 	    {
-		++p;
+#ifdef FEAT_MBYTE
+		p2 += (*mb_ptr2len_check)(p2);
+#else
 		++p2;
+#endif
 		if (*p == ';')
 		{
 		    p = p2;
-		    if (p[0])
+		    if (p[0] != NUL)
 		    {
 			if (p[0] != ',')
 			{

@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0v
+MINOR = 0w
 
 # CHECKLIST for creating a new version:
 #
@@ -152,6 +152,7 @@ VIMRTDIR = vim$(VERSION)
 
 # source files for all source archives
 SRC_ALL =	\
+		src/README.txt \
 		src/ascii.h \
 		src/buffer.c \
 		src/charset.c \
@@ -348,6 +349,7 @@ SRC_DOS =	\
 		src/glbl_ime.h \
 		src/gui_w16.c \
 		src/gui_w32.c \
+		src/gui_w48.c \
 		src/guiw16rc.h \
 		src/gui_w32_rc.h \
 		src/if_ole.cpp \
@@ -711,6 +713,10 @@ LANGUAGE = \
 		src/po/*.po \
 		runtime/lang/README.txt \
 		runtime/lang/menu_*.vim \
+		runtime/keymap/README.txt \
+		runtime/keymap/*.vim \
+		runtime/tutor/tutor.es \
+		runtime/tutor/tutor.it \
 
 # All output is put in the "dist" directory.
 dist:

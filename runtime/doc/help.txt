@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0v.  Last change: 2001 Feb 04
+*help.txt*	For Vim version 6.0w.  Last change: 2001 Feb 24
 
 			VIM - main help file
 									 k
@@ -27,7 +27,7 @@ Get specific help:  It is possible to go directly to whatever you want help
 VIM stands for Vi IMproved.  Most of VIM was made by Bram Moolenaar, but only
 through the help of a lot of people.  See |credits|.
 ------------------------------------------------------------------------------
-						*doc-file-list* *X_ct*
+						*doc-file-list* *Q_ct*
 BASIC:
 |quickref|	Overview of the most common commands you will use
 |tutor|		30 minutes training course for beginners

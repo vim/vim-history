@@ -4,6 +4,8 @@
  *
  * The basic idea/structure of cscope for Vim was borrowed from Nvi.  There
  * might be a few lines of code that look similar to what Nvi has.
+ *
+ * See README.txt for an overview of the Vim source code.
  */
 
 #include "vim.h"
@@ -507,7 +509,7 @@ cs_check_for_connections()
     static int
 cs_check_for_tags()
 {
-    return (p_tags != NULL && p_tags[0] != '\0');
+    return (p_tags[0] != NUL && curbuf->b_p_tags != NUL);
 } /* cs_check_for_tags */
 
 

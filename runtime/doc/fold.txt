@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0v.  Last change: 2001 Feb 04
+*fold.txt*      For Vim version 6.0w.  Last change: 2001 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -360,11 +360,13 @@ MOVING OVER FOLDS ~
 		When a count is used, repeats the command N times.
 
 							*zj*
-zj		Move downwards. to the start of the next open fold
+zj		Move downwards. to the start of the next fold.  A closed fold
+		is counted as one fold.
 		When a count is used, repeats the command N times.
 
 							*zk*
-zk		Move upwards to the end of the previous open fold.
+zk		Move upwards to the end of the previous fold.  A closed fold
+		is counted as one fold.
 		When a count is used, repeats the command N times.
 
 
@@ -409,9 +411,23 @@ folds will be opened.
 FOLDTEXT						*fold-foldtext*
 
 'foldtext' is a string option that specifies an expression.  This expression
-is evaluated to obtain the text displayed for a closed fold.  This is done in
-the |sandbox|.  The current window is set to the window that displays the
-line.  Errors are ignored.
+is evaluated to obtain the text displayed for a closed fold.  Example: >
+
+    :set foldtext=v:folddashes.substitute(getline(v:foldstart),'/\\*\\\|\\*/\\\|{{{\\d\\=','','g')
+
+This shows the first line of the fold, with "/*", "*/" and "{{{" removed.
+Note the use of backslashes to avoid some characters to be interpreted by the
+":set" command.  It's simpler to define a function and call that: >
+
+    :set foldtext=MyFoldText()
+    :function MyFoldText()
+    :  let line = getline(v:foldstart)
+    :  let sub = substitute(line, '/\*\|\*/\|{{{\d\=', '', 'g')
+    :  return v:folddashes . sub
+    :endfunction
+
+Evaluationg 'foldtext' is done in the |sandbox|.  The current window is set to
+the window that displays the line.  Errors are ignored.
 
 The default value is |foldtext()|.  This returns a reasonable text for most
 types of folding.  If you don't like it, you can specify your own 'foldtext'
@@ -494,6 +510,13 @@ fold and end at the last line of a fold.  Thus this command: >
 when used with the cursor on a closed fold, will replace "foo" with "bar" in
 all lines of the fold.
 This does not happen for |:folddoopen| and |:folddoclosed|.
+
+When editing a buffer that has been edited before, the last used folding
+settings are used again.  For manual folding the defined folds are restored.
+For all folding methods the manually opened and closed folds are restored.
+If this buffer has been edited in this window, the values from back then are
+used.  Otherwise the values from the window where the buffer was edited last
+are used.
 
 ==============================================================================
  vim:tw=78:

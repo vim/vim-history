@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0v.  Last change: 2000 Jul 07
+*visual.txt*    For Vim version 6.0w.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

@@ -1,5 +1,7 @@
 /* edit.c */
 int edit __ARGS((int cmdchar, int startln, long count));
+void edit_putchar __ARGS((int c, int highlight));
+void edit_unputchar __ARGS((void));
 void display_dollar __ARGS((colnr_t col));
 void change_indent __ARGS((int type, int amount, int round, int replaced));
 void truncate_spaces __ARGS((char_u *line));
@@ -25,7 +27,6 @@ int get_replace_stack_virtcol __ARGS((void));
 void fixthisline __ARGS((int (*get_the_indent)(void)));
 void fix_indent __ARGS((void));
 int in_cinkeys __ARGS((int keytyped, int when, int line_is_empty));
-char_u *keymap_init __ARGS((void));
 int hkmap __ARGS((int c));
 void ins_scroll __ARGS((void));
 void ins_horscroll __ARGS((void));

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Feb 11
+" Last Change:	2001 Feb 15
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -92,7 +92,7 @@ menutrans M&in\ Height<Tab>^W1_		A&ltezza\ minima<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Larghezza\ massima<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Larghezza\ minima<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Ruotare\ verso\ l'&alto<Tab>^WR
-menutrans Rotate\ &Down<Tab>^Wr		Ruotare\ verso\ il &basso<Tab>^Wr
+menutrans Rotate\ &Down<Tab>^Wr		Ruotare\ verso\ il\ &basso<Tab>^Wr
 menutrans Select\ &Font\.\.\.		Scegli\ &Font\.\.\.
 
 " The popup menu

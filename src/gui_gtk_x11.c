@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 
 /*
@@ -734,7 +735,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 		string[0] = CSI;
 		string[1] = special_keys[i].code0;
 		string[2] = special_keys[i].code1;
-		len = 3;
+		len = -3;
 		break;
 	    }
 	}
@@ -744,7 +745,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	return TRUE;
 
     /* Special keys (and a few others) may have modifiers */
-    if (len == 3 || key_sym == GDK_space || key_sym == GDK_Tab
+    if (len == -3 || key_sym == GDK_space || key_sym == GDK_Tab
 	    || key_sym == GDK_Return || key_sym == GDK_Linefeed
 	    || key_sym == GDK_Escape)
     {
@@ -755,38 +756,30 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    modifiers |= MOD_MASK_CTRL;
 	if (state & GDK_MOD1_MASK)
 	    modifiers |= MOD_MASK_ALT;
-#if defined(FEAT_XIM) && defined(FEAT_MBYTE)
-	/* It seems GDK returns GDK_VoidSymbol if the len is 3 and it
-	 * contains multi-byte characters. Is next is right?
-	 */
-	if (!enc_dbcs || key_sym != GDK_VoidSymbol)
-#endif
-	{
-	    /*
-	     * For some keys a shift modifier is translated into another key
-	     * code. Do we need to handle the case where len != 1 and
-	     * string[0] != CSI?
-	     */
-	    if (string[0] == CSI && len == 3)
-		key = TO_SPECIAL(string[1], string[2]);
-	    else
-		key = string[0];
 
-	    key = simplify_key(key, &modifiers);
-	    if (key == CSI)
-		key = K_CSI;
-	    if (IS_SPECIAL(key))
-	    {
-		string[0] = CSI;
-		string[1] = K_SECOND(key);
-		string[2] = K_THIRD(key);
-		len = 3;
-	    }
-	    else
-	    {
-		string[0] = key;
-		len = 1;
-	    }
+	/*
+	 * For some keys a shift modifier is translated into another key
+	 * code.
+	 */
+	if (len == -3)
+	    key = TO_SPECIAL(string[1], string[2]);
+	else
+	    key = string[0];
+
+	key = simplify_key(key, &modifiers);
+	if (key == CSI)
+	    key = K_CSI;
+	if (IS_SPECIAL(key))
+	{
+	    string[0] = CSI;
+	    string[1] = K_SECOND(key);
+	    string[2] = K_THIRD(key);
+	    len = 3;
+	}
+	else
+	{
+	    string[0] = key;
+	    len = 1;
 	}
 
 	if (modifiers)
@@ -796,7 +789,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    string2[2] = modifiers;
 	    add_to_input_buf(string2, 3);
 	}
-    } /* special keys */
+    }
 
     if (len == 1 && (string[0] == Ctrl_C || string[0] == intr_char))
     {
@@ -919,8 +912,10 @@ selection_get_event(GtkWidget *widget,
     if (!clipboard.owned)
 	return;			/* Shouldn't ever happen */
 
-    if (info != SELECTION_STRING && info != SELECTION_CLIPBOARD
-	    && info != SELECTION_COMPOUND_TEXT && info != SELECTION_TEXT)
+    if (info != (guint)SELECTION_STRING
+	    && info != (guint)SELECTION_CLIPBOARD
+	    && info != (guint)SELECTION_COMPOUND_TEXT
+	    && info != (guint)SELECTION_TEXT)
 	return;
 
     clip_get_selection();
@@ -931,7 +926,7 @@ selection_get_event(GtkWidget *widget,
 	return;
 
     /* For our own format, the first byte contains the motion type */
-    if (info == SELECTION_CLIPBOARD)
+    if (info == (guint)SELECTION_CLIPBOARD)
 	length++;
 
     result = lalloc((long_u)(2 * length), FALSE);
@@ -941,13 +936,14 @@ selection_get_event(GtkWidget *widget,
 	return;
     }
 
-    if (info == SELECTION_CLIPBOARD)
+    if (info == (guint)SELECTION_CLIPBOARD)
     {
 	result[0] = motion_type;
 	mch_memmove(result + 1, string, (size_t)(length - 1));
 	type = clipboard.atom;
     }
-    else if (info == SELECTION_COMPOUND_TEXT || info == SELECTION_TEXT)
+    else if (info == (guint)SELECTION_COMPOUND_TEXT
+					     || info == (guint)SELECTION_TEXT)
     {
 	char *str;
 	gint format, new_len;
@@ -1822,7 +1818,7 @@ gui_mch_init()
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "selection_received",
 		       GTK_SIGNAL_FUNC(selection_received_event), NULL);
 
-    gtk_selection_add_targets(gui.drawarea, GDK_SELECTION_PRIMARY,
+    gtk_selection_add_targets(gui.drawarea, (long)GDK_SELECTION_PRIMARY,
 	    primary_targets,
 	    sizeof(primary_targets)/sizeof(primary_targets[0]));
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "selection_get",
@@ -2997,7 +2993,7 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_t color)
 	    TRUE,
 #ifdef FEAT_RIGHTLEFT
 	    /* vertical line should be on the right of current point */
-	    State != CMDLINE && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+	    !(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
 #endif
 	    FILL_X(gui.col),
 	    FILL_Y(gui.row) + gui.char_height - h + (int)p_linespace / 2,
@@ -3325,7 +3321,8 @@ clip_mch_request_selection()
     /* First try to get the content of our own special clipboard. */
     received_selection = RS_NONE;
     (void)gtk_selection_convert(gui.drawarea,
-				    GDK_SELECTION_PRIMARY, clipboard.atom,
+				    (GdkAtom)GDK_SELECTION_PRIMARY,
+				    clipboard.atom,
 				    (guint32)GDK_CURRENT_TIME);
     while (received_selection == RS_NONE)
 	gtk_main();		/* wait for selection_received_event */
@@ -3334,7 +3331,8 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+	(void)gtk_selection_convert(gui.drawarea,
+				    (GdkAtom)GDK_SELECTION_PRIMARY,
 				    gdk_atom_intern("COMPOUND_TEXT", FALSE),
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
@@ -3344,7 +3342,8 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+	(void)gtk_selection_convert(gui.drawarea,
+				    (GdkAtom)GDK_SELECTION_PRIMARY,
 				    gdk_atom_intern("TEXT", FALSE),
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
@@ -3354,8 +3353,9 @@ clip_mch_request_selection()
     {
 	/* Now try to get it out of the usual string selection. */
 	received_selection = RS_NONE;
-	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
-				    GDK_TARGET_STRING,
+	(void)gtk_selection_convert(gui.drawarea,
+				    (GdkAtom)GDK_SELECTION_PRIMARY,
+				    (GdkAtom)GDK_TARGET_STRING,
 				    (guint32)GDK_CURRENT_TIME);
 	while (received_selection == RS_NONE)
 	    gtk_main();		/* wait for selection_received_event */
@@ -3365,8 +3365,8 @@ clip_mch_request_selection()
     void
 clip_mch_lose_selection()
 {
-    gtk_selection_owner_set(gui.drawarea,
-			    GDK_SELECTION_PRIMARY, (guint32)GDK_CURRENT_TIME);
+    gtk_selection_owner_set(gui.drawarea, (GdkAtom)GDK_SELECTION_PRIMARY,
+						   (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 
@@ -3392,9 +3392,8 @@ clip_mch_own_selection()
     void
 clip_mch_set_selection()
 {
-    gtk_selection_owner_set(gui.drawarea,
-			    GDK_SELECTION_PRIMARY,
-			    (guint32)GDK_CURRENT_TIME);
+    gtk_selection_owner_set(gui.drawarea, (GdkAtom)GDK_SELECTION_PRIMARY,
+						   (guint32)GDK_CURRENT_TIME);
     gui_mch_update();
 }
 

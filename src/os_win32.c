@@ -4,8 +4,8 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
-
 /*
  * os_win32.c
  *
@@ -2853,7 +2853,7 @@ win32_expandpath(
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    len = mb_ptr2len_check(path);
+	    len = (*mb_ptr2len_check)(path);
 	    STRNCPY(p, path, len);
 	    p += len;
 	    path += len;

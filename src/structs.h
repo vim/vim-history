@@ -27,7 +27,24 @@ typedef struct
 {
     linenr_t	lnum;	/* line number */
     colnr_t	col;	/* column number */
+#ifdef FEAT_VIRTUALEDIT
+    colnr_t	coladd;
+#endif
 } pos_t;
+
+/*
+ * Structure used for growing arrays.
+ * This is used to store information that only grows, is deleted all at
+ * once, and needs to be accessed by index.  See ga_clear() and ga_grow().
+ */
+typedef struct growarray
+{
+    int	    ga_len;		    /* current number of items used */
+    int	    ga_room;		    /* number of unused items at the end */
+    int	    ga_itemsize;	    /* sizeof one item */
+    int	    ga_growsize;	    /* number of items to grow each time */
+    void    *ga_data;		    /* pointer to the first item */
+} garray_t;
 
 /*
  * This is here because regexp.h needs pos_t and below regprog_t is used.
@@ -67,9 +84,6 @@ typedef int		scid_t;		/* script ID */
 typedef struct filemark
 {
     pos_t	mark;		/* cursor position */
-#ifdef FEAT_VIRTUALEDIT
-    int		coladd;		/* offset for 'virtualedit' */
-#endif
     int		fnum;		/* file number */
 } fmark_t;
 
@@ -163,6 +177,10 @@ struct wininfo
     pos_t	wi_fpos;	/* last cursor position in the file */
     int		wi_optset;	/* TRUE when wi_opt has useful values */
     winopt_t	wi_opt;		/* local window options */
+#ifdef FEAT_FOLDING
+    int		wi_fold_manual;	/* copy of w_fold_manual */
+    garray_t	wi_folds;	/* clone of w_folds */
+#endif
 };
 
 /*
@@ -232,20 +250,6 @@ struct m_block
     size_t	mb_size;	/* total size of all chunks in this block */
     minfo_t	mb_info;	/* head of free chuck list for this block */
 };
-
-/*
- * Structure used for growing arrays.
- * This is used to store information that only grows, is deleted all at
- * once, and needs to be accessed by index.  See ga_clear() and ga_grow().
- */
-typedef struct growarray
-{
-    int	    ga_len;		    /* current number of items used */
-    int	    ga_room;		    /* number of unused items at the end */
-    int	    ga_itemsize;	    /* sizeof one item */
-    int	    ga_growsize;	    /* number of items to grow each time */
-    void    *ga_data;		    /* pointer to the first item */
-} garray_t;
 
 /*
  * things used in memfile.c
@@ -711,19 +715,12 @@ struct file_buffer
     long	b_mtime_read;	/* last change time when reading */
 
     pos_t	b_namedm[NMARKS]; /* current named marks (mark.c) */
-#ifdef FEAT_VIRTUALEDIT
-    int		b_namedmc[NMARKS]; /* idem, offset for 'virtualedit' */
-#endif
 
 #ifdef FEAT_VISUAL
     /* These variables are set when VIsual_active becomes FALSE */
     pos_t	b_visual_start;	/* start pos of last VIsual */
     pos_t	b_visual_end;	/* end position of last VIsual */
     int		b_visual_mode;	/* VIsual_mode of last VIsual */
-# ifdef FEAT_VIRTUALEDIT
-    int		b_visual_start_coladd;
-    int		b_visual_end_coladd;
-# endif
 #endif
 
     pos_t	b_last_cursor;	/* cursor position when last unloading this
@@ -782,6 +779,17 @@ struct file_buffer
     mblock_t	*b_mb_current;	/* block where m_search points in */
 #ifdef FEAT_INS_EXPAND
     int		b_scanned;	/* ^N/^P have scanned this buffer */
+#endif
+
+    short	b_lmap;		/* flags for use of ":lmap" mappings */
+#define B_LMAP_INSERT	1	/* ":lmap"s are used in Insert mode */
+#define B_LMAP_SEARCH	2	/* ":lmap"s are used for search patterns */
+
+#ifdef FEAT_KEYMAP
+    short	b_kmap_state;	/* using "lmap" mappings */
+# define KEYMAP_INIT	1	/* 'keymap' was set, call keymap_init() */
+# define KEYMAP_LOADED	2	/* 'keymap' mappings have been loaded */
+    garray_t	b_kmap_ga;	/* the keymap table */
 #endif
 
     /*
@@ -887,17 +895,18 @@ struct file_buffer
 
     /* local values for options which are normally global */
 #ifdef FEAT_QUICKFIX
-    char_u	*b_p_gp;	/* 'grepprg' */
-    char_u	*b_p_mp;	/* 'makeprg' */
+    char_u	*b_p_gp;	/* 'grepprg' local value */
+    char_u	*b_p_mp;	/* 'makeprg' local value */
 #endif
-    char_u	*b_p_ep;	/* 'equalprg' */
-    char_u	*b_p_path;	/* 'path' */
+    char_u	*b_p_ep;	/* 'equalprg' local value */
+    char_u	*b_p_path;	/* 'path' local value */
+    char_u	*b_p_tags;	/* 'tags' local value */
 #ifdef FEAT_FIND_ID
-    char_u	*b_p_def;	/* 'define' */
+    char_u	*b_p_def;	/* 'define' local value */
 #endif
 #ifdef FEAT_INS_EXPAND
-    char_u	*b_p_dict;	/* 'dictionary' */
-    char_u	*b_p_tsr;	/* 'thesaurus' */
+    char_u	*b_p_dict;	/* 'dictionary' local value */
+    char_u	*b_p_tsr;	/* 'thesaurus' local value */
 #endif
 
     /* end of buffer options */
@@ -1119,9 +1128,6 @@ struct window
     pos_t	w_valid_cursor;	    /* last known position of w_cursor, used
 				       to adjust w_valid */
     colnr_t	w_valid_leftcol;    /* last known w_leftcol */
-#ifdef FEAT_VIRTUALEDIT
-    int		w_valid_coladd;	    /* last known w_coladd */
-#endif
 
     /*
      * w_cline_height is the number of physical lines taken by the buffer line
@@ -1147,9 +1153,6 @@ struct window
      * buffer, thus w_wrow is relative to w_winrow.
      */
     int		w_wrow, w_wcol;	    /* cursor position in window */
-#ifdef FEAT_VIRTUALEDIT
-    int		w_coladd;	    /* offset for 'virtualedit' */
-#endif
 
     linenr_t	w_botline;	    /* number of the line below the bottom of
 				       the screen */
@@ -1192,9 +1195,6 @@ struct window
     /* remember what is shown in the ruler for this window (if 'ruler' set) */
     pos_t	w_ru_cursor;	    /* cursor position shown in ruler */
     colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
-#ifdef FEAT_VIRTUALEDIT
-    int		w_ru_coladd;	    /* coladd used in ruler */
-#endif
     linenr_t	w_ru_topline;	    /* topline shown in ruler */
     char	w_ru_empty;	    /* TRUE if ruler shows 0-1 (empty line) */
 
@@ -1305,6 +1305,7 @@ typedef struct oparg
 				   do_format()) */
     pos_t	start;		/* start of the operator */
     pos_t	end;		/* end of the operator */
+
     long	line_count;	/* number of lines from op_start to op_end
 				   (inclusive) */
     int		empty;		/* op_start and op_end the same (only used by

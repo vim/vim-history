@@ -4,6 +4,7 @@
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
+ * See README.txt for an overview of the Vim source code.
  */
 /*
  *
@@ -1794,6 +1795,10 @@ set_termname(term)
 	    add_termcode((char_u *)"kD", (char_u *)DEL_STR, FALSE);
     }
 
+#if defined(UNIX) || defined(VMS)
+    term_is_xterm = vim_is_xterm(term);
+#endif
+
 #ifdef FEAT_MOUSE
 # if defined(UNIX) || defined(VMS)
     /*
@@ -1811,7 +1816,7 @@ set_termname(term)
 #    endif
 	    clip_init(FALSE);
 #   endif
-	if (vim_is_xterm(term))
+	if (term_is_xterm)
 	{
 	    if (use_xterm_mouse())
 		p = NULL;	/* keep existing value, might be "xterm2" */
@@ -2976,7 +2981,7 @@ set_shellsize(width, height, mustset)
 	    screenalloc(FALSE);
 	    repeat_message();
 	}
-	else if (State == CMDLINE)
+	else if (State & CMDLINE)
 	{
 	    update_screen(NOT_VALID);
 	    redrawcmdline();
@@ -4600,7 +4605,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 #ifdef FEAT_MBYTE
 	/* skip multibyte char correctly */
 	if (has_mbyte)
-	    for (i = mb_ptr2len_check(src); i > 0; --i)
+	    for (i = (*mb_ptr2len_check)(src); i > 0; --i)
 	    {
 		if (*src == K_SPECIAL)
 		{
