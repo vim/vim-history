@@ -1461,6 +1461,7 @@ buflist_list()
 {
     BUF		*buf;
     int		len;
+    int		i;
 
     for (buf = firstbuf; buf != NULL && !got_int; buf = buf->b_next)
     {
@@ -1483,13 +1484,14 @@ buflist_list()
 
 	len = STRLEN(IObuff);
 	IObuff[len++] = '"';
-	/*
-	 * try to put the "line" strings in column 40
-	 */
+
+	/* put "line 999" in column 40 or after the file name */
+	IObuff[len] = NUL;
+	i = 40 - vim_strsize(IObuff);
 	do
 	{
 	    IObuff[len++] = ' ';
-	} while (len < 40 && len < IOSIZE - 18);
+	} while (--i > 0 && len < IOSIZE - 18);
 	sprintf((char *)IObuff + len, "line %ld",
 		buf == curbuf ? curwin->w_cursor.lnum :
 				(long)buflist_findlnum(buf));
@@ -2610,16 +2612,21 @@ read_viminfo_bufferlist(line, fp, writing)
     /* don't read in if there are files on the command-line or if writing: */
     if (!writing && arg_file_count == 0 && find_viminfo_parameter('%') != NULL)
     {
-	tab = vim_strchr(line + 1, '\t');
+	/* Format is: <fname> Tab <lnum> Tab <col>.
+	 * Watch out for a Tab in the file name, work from the end. */
 	lnum = 0;
 	col = 0;
+	tab = vim_strrchr(line + 1, '\t');
 	if (tab != NULL)
 	{
 	    *tab++ = '\0';
-	    lnum = atol((char *)tab);
-	    tab = vim_strchr(tab, '\t');
+	    col = atoi((char *)tab);
+	    tab = vim_strrchr(line + 1, '\t');
 	    if (tab != NULL)
-		col = atoi((char *)tab + 1);
+	    {
+		*tab++ = '\0';
+		lnum = atol((char *)tab);
+	    }
 	}
 
 	/* Expand "~/" in the file name at "line + 1" to a full path.
