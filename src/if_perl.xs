@@ -95,10 +95,6 @@ static void xs_init __ARGS((pTHX));
 static void VIM_init __ARGS((void));
 EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 
-#ifdef __MINGW32__
-# include "dyn-ming.h"
-#endif
-
 /*
  * For dynamic linked perl. (Windows)
  */

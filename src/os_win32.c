@@ -32,10 +32,6 @@
 #include <limits.h>
 #include <process.h>
 
-#if defined(__MINGW32__) && defined(GETTEXT_DYNAMIC)
-# include "dyn-ming.h"
-#endif
-
 #undef chdir
 #ifdef __GNUC__
 # ifndef __MINGW32__

@@ -48,10 +48,6 @@
 #undef main /* Defined in python.h - aargh */
 #undef HAVE_FCNTL_H /* Clash with os_win32.h */
 
-#ifdef __MINGW32__
-# include "dyn-ming.h"
-#endif
-
 #if !defined(FEAT_PYTHON) && defined(PROTO)
 /* Use this to be able to generate prototypes without python being used. */
 # define PyObject int

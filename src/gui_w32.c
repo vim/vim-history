@@ -1202,8 +1202,9 @@ gui_mch_set_bg_color(guicolor_T color)
  * Multi-byte handling, originally by Sung-Hoon Baek.
  * First static functions (no prototypes generated).
  */
-
-#include <ime.h>
+#ifdef __MSVC
+# include <ime.h>   /* Apparently not needed for Cygwin, MingW or Borland. */
+#endif
 #include <imm.h>
 
 /*
@@ -1348,7 +1349,7 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
     static char_u *
 GetResultStr(HWND hwnd, int GCS)
 {
-    DWORD	dwBufLen;	/* Stogare for len. of composition str. */
+    DWORD	dwBufLen;	/* Storage for len. of composition str. */
     int		buflen;
     HIMC	hIMC;		/* Input context handle. */
     unsigned short *buf = NULL;
