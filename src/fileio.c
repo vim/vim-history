@@ -1658,6 +1658,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    fd;
     char_u	    *backup = NULL;
     int		    backup_copy = FALSE; /* copy the original file? */
+    int		    dobackup;
     char_u	    *ffname;
     char_u	    *wfname;		/* name of file to write to */
     char_u	    *s;
@@ -2016,20 +2017,36 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
 
     /*
+     * If 'backupskip' is not empty, don't make a backup for some files.
+     */
+    dobackup = (p_wb || p_bk || *p_pm != NUL);
+    if (dobackup && *p_bsk != NUL)
+    {
+	regmatch_t	regmatch;
+
+	regmatch.regprog = vim_regcomp(p_bsk, TRUE);
+	if (regmatch.regprog != NULL
+		&& ffname != NULL
+		&& vim_regexec(&regmatch, ffname, (colnr_t)0))
+	    dobackup = FALSE;
+	vim_free(regmatch.regprog);
+    }
+
+    /*
      * If we are not appending or filtering, the file exists, and the
      * 'writebackup', 'backup' or 'patchmode' option is set, need a backup.
      *
      * Do not make any backup, if 'writebackup' and 'backup' are both switched
      * off.  This helps when editing large files on almost-full disks.
      */
-    if (!append && !filtering && perm >= 0 && (p_wb || p_bk || *p_pm != NUL))
+    if (!append && !filtering && perm >= 0 && dobackup)
     {
 
 	if (*p_bkc == 'y')		/* "yes" */
 	    backup_copy = TRUE;
+#ifdef UNIX
 	else if (*p_bkc == 'a')		/* "auto" */
 	{
-#ifdef UNIX
 	    struct stat	st;
 	    int		i;
 
@@ -2074,8 +2091,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    mch_remove(IObuff);
 		}
 	    }
-#endif
 	}
+#endif
 
 	if (backup_copy
 		&& (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
@@ -5818,9 +5835,11 @@ getnextac(c, cookie, indent)
  * Function given to ExpandGeneric() to obtain the list of autocommand group
  * names.
  */
+/*ARGSUSED*/
     char_u *
-get_augroup_name(idx)
-    int	    idx;
+get_augroup_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     if (idx == augroups.ga_len)		/* add "END" add the end */
 	return (char_u *)"END";
@@ -5834,12 +5853,13 @@ get_augroup_name(idx)
 static int include_groups = FALSE;
 
     char_u  *
-set_context_in_autocmd(arg, doautocmd)
-    char_u  *arg;
-    int	    doautocmd;	    /* TRUE for :doautocmd, FALSE for :autocmd */
+set_context_in_autocmd(xp, arg, doautocmd)
+    expand_t	*xp;
+    char_u	*arg;
+    int		doautocmd;	/* TRUE for :doautocmd, FALSE for :autocmd */
 {
-    char_u  *p;
-    int	    group;
+    char_u	*p;
+    int		group;
 
     /* check for a group name, skip it if present */
     include_groups = FALSE;
@@ -5862,8 +5882,8 @@ set_context_in_autocmd(arg, doautocmd)
     {
 	if (group == AUGROUP_ALL)
 	    include_groups = TRUE;
-	expand_context = EXPAND_EVENTS;	    /* expand event name */
-	expand_pattern = arg;
+	xp->xp_context = EXPAND_EVENTS;	    /* expand event name */
+	xp->xp_pattern = arg;
 	return NULL;
     }
 
@@ -5875,18 +5895,20 @@ set_context_in_autocmd(arg, doautocmd)
 	return arg;			    /* expand (next) command */
 
     if (doautocmd)
-	expand_context = EXPAND_FILES;	    /* expand file names */
+	xp->xp_context = EXPAND_FILES;	    /* expand file names */
     else
-	expand_context = EXPAND_NOTHING;    /* pattern is not expanded */
+	xp->xp_context = EXPAND_NOTHING;    /* pattern is not expanded */
     return NULL;
 }
 
 /*
  * Function given to ExpandGeneric() to obtain the list of event names.
  */
+/*ARGSUSED*/
     char_u *
-get_event_name(idx)
-    int	    idx;
+get_event_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     if (idx < augroups.ga_len)		/* First list group names, if wanted */
     {

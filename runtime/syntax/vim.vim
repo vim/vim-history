@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0k script
+" Language:	Vim 6.0l script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	October 30, 2000
-" Version:	6.0k-01	NOT RELEASED
+" Last Change:	November 06, 2000
+" Version:	6.0l-01
 
 " Remove old syntax
 syn clear
@@ -14,7 +14,7 @@ syn cluster vimCommentGroup	contains=vimTodo
 
 " regular vim commands
 syn keyword vimCommand contained	N[ext]	cr[ewind]	ju[mps]	ptf[irst]	star[tinsert]
-syn keyword vimCommand contained	Nr	cuna[bbrev]	k	ptj[ump]	stj[ump]
+syn keyword vimCommand contained	Nread	cuna[bbrev]	k	ptj[ump]	stj[ump]
 syn keyword vimCommand contained	Nw	cu[nmap]	lan[guage]	ptl[ast]	st[op]
 syn keyword vimCommand contained	P[rint]	cunme	la[st]	ptn[ext]	sts[elect]
 syn keyword vimCommand contained	X	cunmenu	lc[d]	ptp[revious]	sun[hide]

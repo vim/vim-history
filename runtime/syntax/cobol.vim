@@ -1,71 +1,85 @@
 " Vim syntax file
-" Language:	COBOL
-" Maintainers:	Sitaram Chamarty <sitaram@dimensional.com> and
-"		James Mitchell <james_mitchell@acm.org>
-" Last Change:	2000 Nov 04
+" Language: COBOL
+" Maintainers:  Davyd Ondrejko <vondraco@columbus.rr.com>
+"     (formerly Sitaram Chamarty <sitaram@diac.com> and
+"               James Mitchell <james_mitchell@acm.org>)
+" Last change:  2000 Nov 12
 
 " MOST important - else most of the keywords wont work!
 set isk=@,48-57,-
+
 " set up other basic parameters
 syn clear
 syn case ignore
 
+syn match cobolKeys "^\a\{1,6\}" contains=cobolReserved
 syn keyword cobolReserved contained ACCEPT ACCESS ADD ADDRESS ADVANCING AFTER ALPHABET ALPHABETIC
-syn keyword cobolReserved ALPHABETIC-LOWER ALPHABETIC-UPPER ALPHANUMERIC ALPHANUMERIC-EDITED ALS
-syn keyword cobolReserved ALTERNATE AND ANY ARE AREA AREAS ASCENDING ASSIGN AT AUTHOR BEFORE BINARY
-syn keyword cobolReserved BLANK BLOCK BOTTOM BY CANCEL CBLL CD CF CH CHARACTER CHARACTERS CLASS
-syn keyword cobolReserved CLOCK-UNITS CLOSE COBOL CODE CODE-SET COLLATING COLUMN COMMA COMMON
-syn keyword cobolReserved COMMUNICATIONS COMPUTATIONAL COMPUTE CONFIGURATION CONTENT CONTINUE
-syn keyword cobolReserved CONTROL CONVERTING CORR CORRESPONDING COUNT CURRENCY DATA DATE DATE-COMPILED
-syn keyword cobolReserved DATE-WRITTEN DAY DAY-OF-WEEK DE DEBUG-CONTENTS DEBUG-ITEM DEBUG-LINE
-syn keyword cobolReserved DEBUG-NAME DEBUG-SUB-1 DEBUG-SUB-2 DEBUG-SUB-3 DEBUGGING DECIMAL-POINT
-syn keyword cobolReserved DELARATIVES DELETE DELIMITED DELIMITEER DEPENDING DESCENDING DESTINATION
-syn keyword cobolReserved DETAIL DISABLE DISPLAY DIVIDE DIVISION DOWN DUPLICATES DYNAMIC EGI ELSE EMI
-syn keyword cobolReserved ENABLE END-ADD END-COMPUTE END-DELETE END-DIVIDE END-EVALUATE END-IF
-syn keyword cobolReserved END-MULTIPLY END-OF-PAGE END-PERFORM END-READ END-RECEIVE END-RETURN
-syn keyword cobolReserved END-REWRITE END-SEARCH END-START END-STRING END-SUBTRACT END-UNSTRING
-syn keyword cobolReserved END-WRITE ENVIRONMENT EQUAL ERROR ESI EVALUATE EVERY EXCEPTION EXIT
-syn keyword cobolReserved EXTEND EXTERNAL FALSE FD FILE FILE-CONTROL FILLER FINAL FIRST FOOTING FOR FROM
-syn keyword cobolReserved GENERATE GIVING GLOBAL GREATER GROUP HEADING HIGH-VALUE HIGH-VALUES I-O
-syn keyword cobolReserved I-O-CONTROL IDENTIFICATION IN INDEX INDEXED INDICATE INITIAL INITIALIZE
-syn keyword cobolReserved INITIATE INPUT INPUT-OUTPUT INSPECT INSTALLATION INTO IS JUST
-syn keyword cobolReserved JUSTIFIED KEY LABEL LAST LEADING LEFT LENGTH LOCK MEMORY
-syn keyword cobolReserved MERGE MESSAGE MODE MODULES MOVE MULTIPLE MULTIPLY NATIVE NEGATIVE NEXT NO NOT
-syn keyword cobolReserved NUMBER NUMERIC NUMERIC-EDITED OBJECT-COMPUTER OCCURS OF OFF OMITTED ON OPEN
-syn keyword cobolReserved OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PACKED-DECIMAL PADDING
-syn keyword cobolReserved PAGE PAGE-COUNTER PERFORM PF PH PIC PICTURE PLUS POINTER POSITION POSITIVE
-syn keyword cobolReserved PRINTING PROCEDURE PROCEDURES PROCEDD PROGRAM PROGRAM-ID PURGE QUEUE QUOTES
-syn keyword cobolReserved RANDOM RD READ RECEIVE RECORD RECORDS REDEFINES REEL REFERENCE REFERENCES
-syn keyword cobolReserved RELATIVE RELEASE REMAINDER REMOVAL REPLACE REPLACING REPORT REPORTING
-syn keyword cobolReserved REPORTS RERUN RESERVE RESET RETURN RETURNING REVERSED REWIND REWRITE RF RH
-syn keyword cobolReserved RIGHT ROUNDED RUN SAME SD SEARCH SECTION SECURITY SEGMENT SEGMENT-LIMITED
-syn keyword cobolReserved SELECT SEND SENTENCE SEPARATE SEQUENCE SEQUENTIAL SET SIGN SIZE SORT
-syn keyword cobolReserved SORT-MERGE SOURCE SOURCE-COMPUTER SPECIAL-NAMES STANDARD
-syn keyword cobolReserved STANDARD-1 STANDARD-2 START STATUS STOP STRING SUB-QUEUE-1 SUB-QUEUE-2
-syn keyword cobolReserved SUB-QUEUE-3 SUBTRACT SUM SUPPRESS SYMBOLIC SYNC SYNCHRONIZED TABLE TALLYING
-syn keyword cobolReserved TAPE TERMINAL TERMINATE TEST TEXT THAN THEN THROUGH THRU TIME TIMES TO TOP
-syn keyword cobolReserved TRAILING TRUE TYPE UNIT UNSTRING UNTIL UP UPON USAGE USE USING VALUE VALUES
-syn keyword cobolReserved VARYING WHEN WITH WORDS WORKING-STORAGE WRITE 
-syn match   cobolReserved "\<CONTAINS\>"
-syn match   cobolReserved "\<\(IF\|INVALID\|END\|EOP\)\>"
-syn match   cobolReserved "\<ALL\>"
-
-syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
-syn match   cobolAreaA        "^......"
+syn keyword cobolReserved contained ALPHABETIC-LOWER ALPHABETIC-UPPER ALPHANUMERIC ALPHANUMERIC-EDITED ALS
+syn keyword cobolReserved contained ALTERNATE AND ANY ARE AREA AREAS ASCENDING ASSIGN AT AUTHOR BEFORE BINARY
+syn keyword cobolReserved contained BLANK BLOCK BOTTOM BY CANCEL CBLL CD CF CH CHARACTER CHARACTERS CLASS
+syn keyword cobolReserved contained CLOCK-UNITS CLOSE COBOL CODE CODE-SET COLLATING COLUMN COMMA COMMON
+syn keyword cobolReserved contained COMMUNICATIONS COMPUTATIONAL COMPUTE CONFIGURATION CONTENT CONTINUE
+syn keyword cobolReserved contained CONTROL CONVERTING CORR CORRESPONDING COUNT CURRENCY DATA DATE DATE-COMPILED
+syn keyword cobolReserved contained DATE-WRITTEN DAY DAY-OF-WEEK DE DEBUG-CONTENTS DEBUG-ITEM DEBUG-LINE
+syn keyword cobolReserved contained DEBUG-NAME DEBUG-SUB-1 DEBUG-SUB-2 DEBUG-SUB-3 DEBUGGING DECIMAL-POINT
+syn keyword cobolReserved contained DELARATIVES DELETE DELIMITED DELIMITER DEPENDING DESCENDING DESTINATION
+syn keyword cobolReserved contained DETAIL DISABLE DISPLAY DIVIDE DIVISION DOWN DUPLICATES DYNAMIC EGI ELSE EMI
+syn keyword cobolReserved contained ENABLE END-ADD END-COMPUTE END-DELETE END-DIVIDE END-EVALUATE END-IF
+syn keyword cobolReserved contained END-MULTIPLY END-OF-PAGE END-PERFORM END-READ END-RECEIVE END-RETURN
+syn keyword cobolReserved contained END-REWRITE END-SEARCH END-START END-STRING END-SUBTRACT END-UNSTRING
+syn keyword cobolReserved contained END-WRITE ENVIRONMENT EQUAL ERROR ESI EVALUATE EVERY EXCEPTION EXIT
+syn keyword cobolReserved contained EXTEND EXTERNAL FALSE FD FILE FILE-CONTROL FILLER FINAL FIRST FOOTING FOR FROM
+syn keyword cobolReserved contained GENERATE GIVING GLOBAL GREATER GROUP HEADING HIGH-VALUE HIGH-VALUES I-O
+syn keyword cobolReserved contained I-O-CONTROL IDENTIFICATION IN INDEX INDEXED INDICATE INITIAL INITIALIZE
+syn keyword cobolReserved contained INITIATE INPUT INPUT-OUTPUT INSPECT INSTALLATION INTO IS JUST
+syn keyword cobolReserved contained JUSTIFIED KEY LABEL LAST LEADING LEFT LENGTH LOCK MEMORY
+syn keyword cobolReserved contained MERGE MESSAGE MODE MODULES MOVE MULTIPLE MULTIPLY NATIVE NEGATIVE NEXT NO NOT
+syn keyword cobolReserved contained NUMBER NUMERIC NUMERIC-EDITED OBJECT-COMPUTER OCCURS OF OFF OMITTED ON OPEN
+syn keyword cobolReserved contained OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PACKED-DECIMAL PADDING
+syn keyword cobolReserved contained PAGE PAGE-COUNTER PERFORM PF PH PIC PICTURE PLUS POINTER POSITION POSITIVE
+syn keyword cobolReserved contained PRINTING PROCEDURE PROCEDURES PROCEDD PROGRAM PROGRAM-ID PURGE QUEUE QUOTES
+syn keyword cobolReserved contained RANDOM RD READ RECEIVE RECORD RECORDS REDEFINES REEL REFERENCE REFERENCES
+syn keyword cobolReserved contained RELATIVE RELEASE REMAINDER REMOVAL REPLACE REPLACING REPORT REPORTING
+syn keyword cobolReserved contained REPORTS RERUN RESERVE RESET RETURN RETURNING REVERSED REWIND REWRITE RF RH
+syn keyword cobolReserved contained RIGHT ROUNDED RUN SAME SD SEARCH SECTION SECURITY SEGMENT SEGMENT-LIMITED
+syn keyword cobolReserved contained SELECT SEND SENTENCE SEPARATE SEQUENCE SEQUENTIAL SET SIGN SIZE SORT
+syn keyword cobolReserved contained SORT-MERGE SOURCE SOURCE-COMPUTER SPECIAL-NAMES STANDARD
+syn keyword cobolReserved contained STANDARD-1 STANDARD-2 START STATUS STOP STRING SUB-QUEUE-1 SUB-QUEUE-2
+syn keyword cobolReserved contained SUB-QUEUE-3 SUBTRACT SUM SUPPRESS SYMBOLIC SYNC SYNCHRONIZED TABLE TALLYING
+syn keyword cobolReserved contained TAPE TERMINAL TERMINATE TEST TEXT THAN THEN THROUGH THRU TIME TIMES TO TOP
+syn keyword cobolReserved contained TRAILING TRUE TYPE UNIT UNSTRING UNTIL UP UPON USAGE USE USING VALUE VALUES
+syn keyword cobolReserved contained VARYING WHEN WITH WORDS WORKING-STORAGE WRITE
+syn match   cobolReserved contained "\<CONTAINS\>"
+syn match   cobolReserved contained "\<\(IF\|INVALID\|END\|EOP\)\>"
+syn match   cobolReserved contained "\<ALL\>"
 
 syn keyword cobolConstant SPACE SPACES NULL ZERO ZEROES ZEROS LOW-VALUE LOW-VALUES
 
-syn match   cobolTodo         "todo" contained
-syn match   cobolComment      "^.\{6}\*.*"lc=6,hs=s+6 contains=cobolTodo
-syn match   cobolComment      "^.\{6}/.*"lc=6,hs=s+6 contains=cobolTodo
-syn region  cobolComment      start="*>" end="$" contains=cobolTodo
-syn match   cobolCompiler     "^.\{6}$.*"lc=6,hs=s+6
-syn match   cobolContinue     "^.\{6}-"
+syn match   cobolMarker       "^.\{6\}"
+syn match   cobolBadLine      "^.\{6\}[^ D\-*$/].*"hs=s+6
 
-syn match   cobolBadLine      "^.\{6}[^ D*$/].*"lc=6,hs=s+6
+" If comment mark somehow gets into column past Column 7.
+syn match   cobolBadLine      "^.\{6\}\s\+\*.*"
+
+syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<S*9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<$*\.\=9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<Z*\.\=9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<V9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<9\+V\>" contains=cobolMarker,cobolComment
+syn match   cobolPic          "\<-\+[Z9]\+\>" contains=cobolMarker,cobolComment
+syn match   cobolTodo         "todo" contained
+syn match   cobolComment      "^.\{6\}\*.*"hs=s+6 contains=cobolTodo,cobolMarker
+syn match   cobolComment      "^.\{6\}/.*"hs=s+6 contains=cobolTodo,cobolMarker
+syn match   cobolComment      "^.\{6\}C.*"hs=s+6 contains=cobolTodo,cobolMarker
+syn match   cobolCompiler     "^.\{6\}$.*"hs=s+6
+
+" For MicroFocus or other inline comments, include this line.
+" syn region  cobolComment      start="*>" end="$" contains=cobolTodo,cobolMarker
 
 syn keyword cobolGoTo         GO GOTO
 syn keyword cobolCopy         COPY
+
 " cobolBAD: things that are BAD NEWS!
 syn keyword cobolBAD          ALTER ENTER RENAMES
 
@@ -73,32 +87,30 @@ syn keyword cobolBAD          ALTER ENTER RENAMES
 syn keyword cobolWatch        OCCURS DEPENDING VARYING BINARY COMP REDEFINES
 syn keyword cobolWatch        REPLACING RUN
 syn match   cobolWatch        "COMP-[123456XN]"
+
 syn keyword cobolEXECs        EXEC END-EXEC
 
-syn match   cobolParas        "^.\{6} \{1,4}[A-Z0-9][^"]\{-}\."lc=6,hs=s+7
 
-syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "lc=6,hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+[1-4]\d "lc=6,hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+0\=[2-9] "lc=6,hs=s+7,he=e-1
-syn match   cobolDecl         "^.\{6} \+66 "lc=6,hs=s+7,he=e-1
+syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl         "^.\{6} \+[1-4]\d "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl         "^.\{6} \+0\=[2-9] "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl         "^.\{6} \+66 "hs=s+7,he=e-1 contains=cobolMarker
 
-syn match   cobolWatch        "^.\{6} \+88 "lc=6,hs=s+7,he=e-1
+syn match   cobolWatch        "^.\{6} \+88 "hs=s+7,he=e-1 contains=cobolMarker
 
-syn match   cobolBadID        "\k\+-\($\|[^A-Z0-9]\)"
-syn match   cobolBadID        "[^A-Z0-9]-\d*[A-Z-]\+"hs=s+1
+syn match   cobolBadID        "\k\+-\($\|[^-A-Z0-9]\)"
 
-syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE 
+syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE
 syn match   cobolCALLs        "EXIT \+PROGRAM"
 syn match   cobolExtras       /\<VALUE \+\d\+\./hs=s+6,he=e-1
 
-" syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>"
-
-syn match   cobolString       /".\{-}"/
-syn match   cobolString       /'.\{-}'/
+syn match   cobolString       /"[^"]*\("\|$\)/
+syn match   cobolString       /'[^']*\('\|$\)/
 
 syn region  cobolLine       start="^.\{6} " end="$" contains=ALL
+
 if exists("cobol_legacy_code")
-    syn region  cobolCondFlow     contains=ALLBUT,cobolLine,cobolCondFlow start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/"[^"]\+"/ end="\."
+syn region  cobolCondFlow     contains=ALLBUT,cobolLine start="\<\(IF\|INVALID\|END\|EOP\)\>" skip=/\('\|"\)[^"]\{-}\("\|'\|$\)/ end="\." keepend
 endif
 
 if ! exists("cobol_legacy_code")
@@ -114,26 +126,29 @@ else
     syn match   cobolBadLine      "^.\{6}.\{67,\}"
 endif
 
-" hi def link cobolJunk   Error
+" The default highlighting.
 hi def link cobolBAD      Error
 hi def link cobolBadID    Error
 hi def link cobolBadLine  Error
+hi def link cobolMarker   Comment
 hi def link cobolCALLs    Function
 hi def link cobolComment  Comment
-hi def link cobolAreaA    LineNr
+hi def link cobolKeys     Comment
+hi def link cobolAreaB    Special
 hi def link cobolCompiler PreProc
 hi def link cobolCondFlow Special
 hi def link cobolCopy     PreProc
 hi def link cobolDecl     Type
-hi def link cobolEXECs    Special
 hi def link cobolExtras   Special
 hi def link cobolGoTo     Special
 hi def link cobolConstant Constant
 hi def link cobolNumber   Constant
-hi def link cobolParas    Function
+hi def link cobolPic      Constant
 hi def link cobolReserved Statement
 hi def link cobolString   Constant
 hi def link cobolTodo     Todo
 hi def link cobolWatch    Special
 
 let b:current_syntax = "cobol"
+
+" vim: ts=6 nowrap

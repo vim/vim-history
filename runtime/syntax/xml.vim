@@ -3,18 +3,19 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
+" Last Change:	Fre, 10 Nov 2000 16:04:07 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
-" Last Change:	Dec 09 1999
 " $Id$
 
 " CREDITS:
-" - This syntax file will highlight xml tags and arguments.
-"   The original version was derived by Paul Siegmann from
+" - The original version was derived by Paul Siegmann from
 "   Claudio Fleiner's html.vim.
 "
 " - suggestions and patches by:
 "       Rafael Garcia-Suarez
+"       Akbar Ibrahim <akbar.ibrahim@wipro.com>
+"       Devin Weaver
 "
 " REFERENCES:
 "   http://www.w3.org/TR/1998/REC-xml-19980210
@@ -32,15 +33,25 @@ syn match xmlError "[<>&]"
 
 
 " tags
-syn match   xmlSpecial  contained "\\\d\d\d\|\\."
-syn region  xmlString   contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlSpecial
-syn region  xmlString   contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlSpecial
-syn region  xmlEndTag             start=+</+    end=+>+              contains=xmlTagError
-syn region  xmlTag                start=+<[^/]+ end=+>+              contains=xmlString,xmlTagError
-syn match   xmlTagError contained "[^>]<"ms=s+1
+syn region  xmlString   contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlEntity
+syn region  xmlString   contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlEntity
+syn region  xmlEndTag             start=+</+                 end=+>+ contains=xmlTagError,@xmlTagHook
+syn region  xmlTag                start=+<[^/]+              end=+>+ contains=xmlString,xmlTagError,@xmlTagHook
+syn match   xmlTagError                                              contained "[^>]<"ms=s+1
 
-" special characters
-syn match   xmlSpecialChar "&[^;]*;"
+" syntax-folding
+if v:version >= 600
+    syn cluster xmlFoldCluster
+	\ contains=xmlTag,xmlEndTag,xmlProcessing,xmlComment,xmlFold,xmlCdata,xmlEntity
+    syn region  xmlFold 
+	\ start=+<\z([^ /!?>]\+\)\(\(\_[^>]*[^/!?]>\)\|>\)+ 
+	\ end=+</\z1>+ 
+	\ transparent fold contains=@xmlFoldCluster keepend
+endif
+
+" &entities; compare with dtd
+syn match   xmlEntity                 "&[^; \t]*;" contains=xmlEntityPunct
+syn match   xmlEntityPunct  contained "[&.;]"
 
 syn keyword xmlTodo         contained TODO FIXME XXX
 
@@ -71,12 +82,11 @@ syn sync match xmlHighlightSkip "^.*['\"].*$"
 syn sync minlines=10
 
 " The default highlighting.
-  "
 hi def link xmlTodo                      Todo
 hi def link xmlTag                       Function
 hi def link xmlEndTag                    Identifier
-hi def link xmlSpecial                   Special
-hi def link xmlSpecialChar               Special
+hi def link xmlEntity                    Statement
+hi def link xmlEntityPunct               Type
 hi def link xmlString                    String
 hi def link xmlComment                   Comment
 hi def link xmlCommentPart               Comment

@@ -21,7 +21,6 @@
 " 3. The help is only one line with an option for detailed help
 " 4. Works as a plugin for Vim6.0+
 "=============================================================================
-
 "Default settings :
 if (!exists("g:explVertical"))
   let g:explVertical=0
@@ -47,25 +46,25 @@ if (!exists("g:explDateFormat"))
   let g:explDateFormat="%d %b %Y %H:%M"
 endif
 
-if (!exists("g:explShowDotFiles"))
-  let g:explShowDotFiles=0
+if (!exists("g:explHideFiles"))
+  let g:explHideFiles='^\.,\.zip$'
 endif
 
 
-if exists("loaded_explorer") || &cp
+if exists("loaded_explorer")
   finish
 endif
 let loaded_explorer=1
 
-if !hasmapto('<Plug>ExplorerInitiate0')
-  nmap <unique> <Leader>e <Plug>ExplorerInitiate0
+if !hasmapto('<Plug>ExplorerInitiate(0)')
+  nmap <unique> <Leader>e <Plug>ExplorerInitiate(0)
 endif
-if !hasmapto('<Plug>ExplorerInitiate1')
-  nmap <unique> <Leader>s <Plug>ExplorerInitiate1
+if !hasmapto('<Plug>ExplorerInitiate(1)')
+  nmap <unique> <Leader>s <Plug>ExplorerInitiate(1)
 endif
 
-nnoremap <unique> <script> <Plug>ExplorerInitiate0 :call <SID>Initiate(0)<cr>
-nnoremap <unique> <script> <Plug>ExplorerInitiate1 :call <SID>Initiate(1)<cr>
+nnoremap <unique> <script> <Plug>ExplorerInitiate(0) :call <SID>Initiate(0)<cr>
+nnoremap <unique> <script> <Plug>ExplorerInitiate(1) :call <SID>Initiate(1)<cr>
 
 function! <SID>Initiate(split, ...)
   if (expand("%:p:t")=="_fileExplorer.tmp")
@@ -91,7 +90,10 @@ function! <SID>Initiate(split, ...)
       e /_fileExplorer.tmp
       let b:splitWindow=0
     endif
+    let s:tempShowFileSize=0
+    let s:tempShowFileDate=0
     call <SID>SyntaxFile()
+    let g:filterFormula=substitute(g:explHideFiles, '\([^\\]\),', '\1\\|', 'g')
     call <SID>ProcessFile(g:currDir)
   endif
 endfunction
@@ -132,8 +134,8 @@ function! <SID>ProcessFile(fileName, ...)
     else
       let g:currDir=a:fileName
     endif
-    let s:verboseDisplay=0
     call <SID>AddHeader(g:explDetailedHelp)
+    $ d
     call <SID>DisplayFiles(g:currDir)
     normal zz
     if (isdirectory(@#))
@@ -159,12 +161,13 @@ function! <SID>ProcessFile(fileName, ...)
           exec 'vertical resize '.g:explWinSize
           exec "norm \<c-w>p"
         endif
+      else
+        if (filereadable(@#))
+          exec("e! ".escape(@#, ' %'))
+        endif
       endif
     endif
-    if (filereadable(@#))
-      exec("e! ".escape(@#, ' %'))
-    endif
-    exec("e! ".escape(a:fileName, ' %'))
+    exec("e! ".escape(a:fileName, ' %#'))
     if (newWindow==0)
       call <SID>CloseExplorer()
     endif
@@ -173,7 +176,7 @@ function! <SID>ProcessFile(fileName, ...)
 endfunction
 
 function! <SID>GetFileName()
-  if (s:verboseDisplay==0)
+  if ((s:fileSizesShown==0) && (s:fileDatesShown==0))
     return g:currDir.getline(".")
   else
     let firstField=substitute(getline("."), '^\(.\{'.s:maxFileLen.'}\).*$',
@@ -184,6 +187,7 @@ endfunction
 
 function! <SID>AddHeader(detailed)
     let save_f=@f
+    exe '1'
     if (a:detailed==1)
       " Give a very brief help
       let @f="\" <enter> : open file or directory\n"
@@ -191,6 +195,7 @@ function! <SID>AddHeader(detailed)
       let @f=@f."\" r : rename file          d : delete file\n"
       let @f=@f."\" q : quit file explorer   s : set this dir to current directory\n"
       let @f=@f."\" i : increase verbosity   e : edit file in new window\n"
+      let @f=@f."\" a : show all files\n"
     else
       let @f="\"Press h for detailed help\n"
     endif
@@ -200,7 +205,6 @@ function! <SID>AddHeader(detailed)
     " Add parent directory
     let @f=@f."../\n"
     put! f
-    /\.\.\//+ d _
     let @f=save_f
 endfunction
 
@@ -211,19 +215,19 @@ function! <SID>DisplayFiles(dir)
   " are not included, but in Windows they are!
   let @f=substitute(@f, "[^\n]*[\\\\/]\\.[^\\\\/\n]*\n", '', 'g')
 
-  " Now see what the user wants :
-  if (g:explShowDotFiles==1)
-    let @f=@f.glob(a:dir.".*")
-  endif
+  " Add the dot files now, making sure "." and ".." files are not included!
+  let @f=@f.substitute(glob(a:dir.".*"), "[^\n]*".'[\\/]\.[\\/]\='."\n[^\n]*".'\.\.[\\/]\='."[\n]".'\=', '' , '')
 
   if (@f!="")
     normal mt
     put f
     let s:maxFileLen=0
-    .,$g/^/call <SID>MarkDirs()
+    let s:fileSizesShown=0
+    let s:fileDatesShown=0
+    /^\.\.\//,$g/^/call <SID>MarkDirs()
     normal `t
-    call <SID>ShowFileSizes(g:explShowFileSize)
-    call <SID>ShowDates(g:explShowFileDate)
+    call <SID>ShowFileSizes((g:explShowFileSize) || (s:tempShowFileSize))
+    call <SID>ShowFileDates((g:explShowFileDate) || (s:tempShowFileDate))
   endif
   let @f=save_f
 endfunction
@@ -237,13 +241,19 @@ function! <SID>MarkDirs()
   s;^.*\\\([^\\]*\)$;\1;e
   s;^.*/\([^/]*\)$;\1;e
   "normal ^
+  let currLine=getline(".")
   if (isdirectory(<SID>GetFileName()))
     s;$;/;
-    let fileLen=strlen(getline("."))
+    let fileLen=strlen(currLine)+1
   else
-    " Move the file at the end so that directories appear first
-    let fileLen=strlen(getline("."))
-    m$
+    let fileLen=strlen(currLine)
+    if ((g:filterFormula!="") && (currLine =~ g:filterFormula))
+      " Don't show the file if it is to be filtered.
+      d     
+    else
+      " Move the file at the end so that directories appear first
+      m$
+    endif
   endif
   if (fileLen > s:maxFileLen)
     let s:maxFileLen=fileLen
@@ -254,36 +264,38 @@ endfunction
 function! <SID>ShowFileSizes(enable)
   if (a:enable==1)
     normal mt
-    if (s:verboseDisplay==1)
+    if (s:fileDatesShown==1)
       "Check if date field exists
       /^\.\.\//,$g/^/let fileSize=getfsize(<SID>GetFileName()) |
-          \exec "norm $".(9-strlen(fileSize))."a \<esc>" |
+          \exec "norm ".(9-strlen(fileSize))."A \<esc>" |
           \exec 's/$/'.fileSize.'/'
     else
       /^\.\.\//,$g/^/let fileSize=getfsize(<SID>GetFileName()) |
-          \exec "norm $".(s:maxFileLen-strlen(getline("."))+2+9-strlen(fileSize))."a \<esc>" |
+          \exec "norm ".(s:maxFileLen-strlen(getline("."))+2+9-strlen(fileSize))."A \<esc>" |
           \exec 's/$/'.fileSize.'/'
     endif
-    let s:verboseDisplay=s:verboseDisplay+1
+    let s:fileSizesShown=1
+    let s:maxLenCorrect=1
     set nomodified
     normal `t
   endif
 endfunction
 
-function! <SID>ShowDates(enable)
+function! <SID>ShowFileDates(enable)
   if (a:enable==1)
     normal mt
-      if (s:verboseDisplay==1)
-        "If file size field exists
-        /^\.\.\//,$g/^/exec 's/$/ '.escape(strftime(g:explDateFormat, getftime(<SID>GetFileName())), '/').'/'
-      else
-        /^\.\.\//,$g/^/let fileTime=getftime(<SID>GetFileName()) |
-                       \exec "norm $".(s:maxFileLen-strlen(getline("."))+2)."a \<esc>" |
-                       \exec 's/$/ '.escape(strftime(g:explDateFormat, fileTime), '/').'/'
+    if (s:fileSizesShown==1)
+      "If file size field exists
+      /^\.\.\//,$g/^/exec 's/$/ '.escape(strftime(g:explDateFormat, getftime(<SID>GetFileName())), '/').'/'
+    else
+      /^\.\.\//,$g/^/let fileTime=getftime(<SID>GetFileName()) |
+                     \exec "norm $".(s:maxFileLen-strlen(getline("."))+2)."a \<esc>" |
+                     \exec 's/$/ '.escape(strftime(g:explDateFormat, fileTime), '/').'/'
 
-      endif
-      let s:verboseDisplay=s:verboseDisplay+1
-      set nomodified
+    endif
+    let s:fileDatesShown=1
+    let s:maxLenCorrect=1
+    set nomodified
     normal `t
   endif
 endfunction
@@ -414,29 +426,34 @@ function! <SID>EditDir(fileName)
 endfunction
 
 function! <SID>ExpandHelp()
-  1,/^\.\.\//-d
+  normal mt
+  1, /^\.\.\//- d
   call <SID>AddHeader(1)
-  ?^\.\.\/?
+  /^\.\.\// d _
+  normal `t
   let &modified=0
 endfunction
 
 function! <SID>IncrVerbosity()
-  if (s:verboseDisplay==0)
+  if (s:fileSizesShown==0)
     call <SID>ShowFileSizes(1)
-  elseif (s:verboseDisplay==1)
-    if ((g:explShowFileSize==0) && (g:explShowFileDate==1))
-      call <SID>ShowFileSizes(1)
-    else
-      call <SID>ShowDates(1)
-    endif
+    let s:tempShowFileSize=1
+  elseif (s:fileDatesShown==0)
+    call <SID>ShowFileDates(1)
+    let s:tempShowFileDate=1
   endif
+endfunction
+
+function! <SID>ShowAllFiles()
+  let g:filterFormula=""
+  call <SID>ProcessFile(g:currDir)
 endfunction
 
 augroup fileExplorer
   au!
   au BufEnter _fileExplorer.tmp let s:oldSwap=&swapfile | set noswapfile
   au BufLeave _fileExplorer.tmp let &swapfile=s:oldSwap
-  au BufEnter _fileExplorer.tmp let s:oldCpo=&cpo | set cpo&vim
+  au BufEnter _fileExplorer.tmp let s:oldCpo=&cpo | set cpo=
   au BufLeave _fileExplorer.tmp let &cpo=s:oldCpo
   au BufEnter _fileExplorer.tmp nm <cr> :call <SID>ProcessFile(<SID>GetFileName())<cr>
   au BufLeave _fileExplorer.tmp nun <cr>
@@ -448,6 +465,8 @@ augroup fileExplorer
   au BufLeave _fileExplorer.tmp nun h
   au BufEnter _fileExplorer.tmp nm c :ChangeDirectory to: 
   au BufLeave _fileExplorer.tmp nun c
+  au BufEnter _fileExplorer.tmp nnoremap a :call <SID>ShowAllFiles()<cr>
+  au BufLeave _fileExplorer.tmp nun a
   au BufEnter _fileExplorer.tmp nm r :call <SID>RenameFile()<cr>
   au BufLeave _fileExplorer.tmp nun r
   au BufEnter _fileExplorer.tmp nm d :. call <SID>DeleteFile()<cr>

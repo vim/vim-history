@@ -1,6 +1,7 @@
 " Vim syntax file
 " Language:	TCL/TK
-" Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
+" Maintainer:	Matt Neumann <mattneu@purpleturtle.com>
+"		(previously Allan Kelly <allan@fruitloaf.co.uk>)
 " Original:	Robin Becker <robin@jessikat.demon.co.uk>
 " Version:	5.1(synched), 1998 June 29
 "

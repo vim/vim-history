@@ -2821,12 +2821,12 @@ showmap(mp)
 }
 
 /*
- * Return TRUE if a map exists that has "name" in the rhs for mode "modechars".
+ * Return TRUE if a map exists that has "str" in the rhs for mode "modechars".
  * Also checks mappings local to the current buffer.
  */
     int
-map_to_exists(name, modechars)
-    char_u	*name;
+map_to_exists(str, modechars)
+    char_u	*str;
     char_u	*modechars;
 {
     int		mode = 0;
@@ -2835,6 +2835,10 @@ map_to_exists(name, modechars)
 #endif
     mapblock_t	*mp;
     int		hash;
+    char_u	*rhs;
+    char_u	*buf;
+
+    rhs = replace_termcodes(str, &buf, FALSE, TRUE);
 
     validate_maphash();
 
@@ -2865,8 +2869,11 @@ map_to_exists(name, modechars)
 	    for (; mp; mp = mp->m_next)
 	    {
 		if ((mp->m_mode & mode)
-			&& strstr((char *)mp->m_str, (char *)name) != NULL)
+			&& strstr((char *)mp->m_str, (char *)rhs) != NULL)
+		{
+		    vim_free(buf);
 		    return TRUE;
+		}
 	    }
 	}
 #ifdef FEAT_LOCALMAP
@@ -2876,6 +2883,7 @@ map_to_exists(name, modechars)
     }
 #endif
 
+    vim_free(buf);
     return FALSE;
 }
 
@@ -2894,7 +2902,8 @@ static int	expand_buffer = FALSE;
  * or abbreviation names.
  */
     char_u *
-set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
+set_context_in_map_cmd(xp, cmd, arg, forceit, isabbrev, isunmap, cmdidx)
+    expand_t	*xp;
     char_u	*cmd;
     char_u	*arg;
     int		forceit;	/* TRUE if '!' given */
@@ -2903,7 +2912,7 @@ set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
     cmdidx_t	cmdidx;
 {
     if (forceit && cmdidx != CMD_map && cmdidx != CMD_unmap)
-	expand_context = EXPAND_NOTHING;
+	xp->xp_context = EXPAND_NOTHING;
     else
     {
 	if (isunmap)
@@ -2915,7 +2924,7 @@ set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
 		expand_mapmodes += VISUAL + NORMAL + OP_PENDING;
 	}
 	expand_isabbrev = isabbrev;
-	expand_context = EXPAND_MAPPINGS;
+	xp->xp_context = EXPAND_MAPPINGS;
 #ifdef FEAT_LOCALMAP
 	expand_buffer = FALSE;
 	for (;;)
@@ -2938,7 +2947,7 @@ set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
 	    break;
 	}
 #endif
-	expand_pattern = arg;
+	xp->xp_pattern = arg;
     }
 
     return NULL;

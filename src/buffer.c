@@ -2482,7 +2482,7 @@ do_arg_all(count, forceit)
 		if (!P_HID(wp->w_buffer) && wp->w_buffer->b_nwindows <= 1
 						 && bufIsChanged(wp->w_buffer))
 		{
-		    autowrite(wp->w_buffer, FALSE);
+		    (void)autowrite(wp->w_buffer, FALSE);
 #ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the window */
 		    if (!win_valid(wp))

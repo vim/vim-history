@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 21
+" Last change:	2000 Nov 07
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -20,8 +20,6 @@ if has("vms")
 else
   set backup		" keep a backup file
 endif
-set viminfo='20,\"50	" read/write a .viminfo file, don't store more
-			" than 50 lines of registers
 set history=50		" keep 50 lines of command line history
 set ruler		" show the cursor position all the time
 

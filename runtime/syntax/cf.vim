@@ -1,12 +1,12 @@
 " Vim syntax file
-" Language:	CF (Cold Fusion)
-" Maintainer:	Jeff Lanzarotta
-" URL:		http://members.tripod.com/lanzarotta/vim/syntax/cf.vim
-" Last Change:	2000 Nov 04
-" Note:		Since Cold Fusion has its' own version of html comments, make sure
-"		that you put 'let html_wrong_comments=1' in your _vimrc file.
+"    Language: Cold Fusion
+"  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
+" Last Change: November 8, 2000
+"       Usage: Since Cold Fusion has its own version of html
+"              comments, make sure that you put
+"              'let html_wrong_comments=1' in your _vimrc file.
+"     Version: 6.0-1
 
-" Please check :help html.vim for some comments and a description of the options
 syntax clear
 
 " Use all the stuff from the original html syntax file.

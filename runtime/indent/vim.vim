@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 13
+" Last Change:	2000 Nov 08
 
 setlocal indentexpr=GetVimIndent()
 setlocal indentkeys+==end,=else
@@ -13,7 +13,7 @@ endif
 
 function GetVimIndent()
   " Find a non-blank line above the current line.
-  let lnum = skipblank(v:lnum - 1)
+  let lnum = prevnonblank(v:lnum - 1)
 
   " At the start of the file use zero indent.
   if lnum == 0

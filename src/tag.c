@@ -113,6 +113,7 @@ static char_u	*tagmatchname = NULL;	/* name of last used tag */
  * type == DT_LAST:	jump to last match of same tag
  * type == DT_SELECT:	":tselect [tag]", select tag from a list of all matches
  * type == DT_JUMP:	":tjump [tag]", jump to tag or select tag from a list
+ * type == DT_CSCOPE:	use cscope to find the tag.
  *
  * for cscope, returns TRUE if we jumped to tag or aborted, FALSE otherwise
  */
@@ -2590,14 +2591,15 @@ expand_tag_fname(fname, tag_fname, expand)
     char_u	*p;
     char_u	*retval;
     char_u	*expanded_fname = NULL;
+    expand_t	xpc;
 
     /*
      * Expand file name (for environment variables) when needed.
      */
     if (expand && mch_has_wildcard(fname))
     {
-	expand_context = EXPAND_FILES;
-	expanded_fname = ExpandOne((char_u *)fname, NULL,
+	xpc.xp_context = EXPAND_FILES;
+	expanded_fname = ExpandOne(&xpc, (char_u *)fname, NULL,
 			    WILD_LIST_NOTFOUND|WILD_SILENT, WILD_EXPAND_FREE);
 	if (expanded_fname != NULL)
 	    fname = expanded_fname;

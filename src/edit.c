@@ -2028,7 +2028,6 @@ ins_compl_clear()
     continue_status = 0;
     started_completion = FALSE;
     completion_matches = 0;
-    msg_clr_cmdline();		/* necessary for "noshowmode" */
     complete_pat = NULL;
     save_sm = -1;
 }

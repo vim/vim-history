@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	sendmail
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	June 29, 1999
+" Last Change:	October 27, 2000
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -9,14 +9,16 @@ syn clear
 " Comments
 syn match smComment	"^#.*$"
 
-" Operators
-syn match smOper	"$"
-
 " Definitions, Classes, Files, Options, Precedence, Trusted Users, Mailers
-syn match smDefine	"^[CDFPT]."
+syn match smDefine	"^[CDF]."
 syn match smDefine	"^O[AaBcdDeFfgHiLmNoQqrSsTtuvxXyYzZ]"
 syn match smDefine	"^O\s"he=e-1
 syn match smDefine	"^M[a-zA-Z0-9]\+,"he=e-1
+syn match smDefine	"^T"	nextgroup=smTrusted
+syn match smDefine	"^P"	nextgroup=smMesg
+syn match smTrusted	"\S\+$"		contained
+syn match smMesg		"\S*="he=e-1	contained nextgroup=smPrecedence
+syn match smPrecedence	"-\=[0-9]\+"		contained
 
 " Header Format  H?list-of-mailer-flags?name: format
 syn match smHeaderSep contained "[?:]"
@@ -29,17 +31,17 @@ syn match smVar		"\$[a-z\.\|]"
 syn match smRuleset	"^S\d*"
 
 " Rewriting Rules
-syn match smRewrite	"^R"			skipwhite skipnl nextgroup=smRewriteLhsToken,smRewriteLhsUser
+syn match smRewrite	"^R"			skipwhite nextgroup=smRewriteLhsToken,smRewriteLhsUser
 
-syn match smRewriteLhsUser	contained "[^\t$]\+"		skipwhite skipnl nextgroup=smRewriteLhsToken,smRewriteLhsSep
-syn match smRewriteLhsToken	contained "\(\$[-*+]\|\$[-=][A-Za-z]\)\+"	skipwhite skipnl nextgroup=smRewriteLhsUser,smRewriteLhsSep
+syn match smRewriteLhsUser	contained "[^\t$]\+"		skipwhite nextgroup=smRewriteLhsToken,smRewriteLhsSep
+syn match smRewriteLhsToken	contained "\(\$[-*+]\|\$[-=][A-Za-z]\|\$Y\)\+"	skipwhite nextgroup=smRewriteLhsUser,smRewriteLhsSep
 
-syn match smRewriteLhsSep	contained "\t\+"			skipwhite skipnl nextgroup=smRewriteRhsToken,smRewriteRhsUser
+syn match smRewriteLhsSep	contained "\t\+"			skipwhite nextgroup=smRewriteRhsToken,smRewriteRhsUser
 
-syn match smRewriteRhsUser	contained "[^\t$]\+"		skipwhite skipnl nextgroup=smRewriteRhsToken,smRewriteRhsSep
-syn match smRewriteRhsToken	contained "\(\$\d\|\$>\d\|\$#\|\$@\|\$:[-_a-zA-Z]\+\|\$[[\]]\|\$@\|\$:\|\$[A-Za-z]\)\+" skipwhite skipnl nextgroup=smRewriteRhsUser,smRewriteRhsSep
+syn match smRewriteRhsUser	contained "[^\t$]\+"		skipwhite nextgroup=smRewriteRhsToken,smRewriteRhsSep
+syn match smRewriteRhsToken	contained "\(\$\d\|\$>\d\|\$#\|\$@\|\$:[-_a-zA-Z]\+\|\$[[\]]\|\$@\|\$:\|\$[A-Za-z]\)\+" skipwhite nextgroup=smRewriteRhsUser,smRewriteRhsSep
 
-syn match smRewriteRhsSep	contained "\t\+"			skipwhite skipnl nextgroup=smRewriteComment,smRewriteRhsSep
+syn match smRewriteRhsSep	contained "\t\+"			skipwhite nextgroup=smRewriteComment,smRewriteRhsSep
 syn match smRewriteRhsSep	contained "$"
 
 syn match smRewriteComment	contained "[^\t$]*$"

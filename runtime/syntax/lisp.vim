@@ -2,7 +2,7 @@
 " Language:    Lisp
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change: Sept 28, 2000
-" Version:     1.06	NOT RELEASED
+" Version:     1.06
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
 

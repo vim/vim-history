@@ -371,22 +371,24 @@ update_screen(type)
 		type = CLEAR;
 	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	    {
-		if (W_WINROW(wp) >= msg_scrolled)
-		    break;
-		if (W_WINROW(wp) + wp->w_height > msg_scrolled
-			&& wp->w_redr_type < REDRAW_TOP)
+		if (W_WINROW(wp) < msg_scrolled)
 		{
-		    wp->w_upd_rows = msg_scrolled - W_WINROW(wp);
-		    wp->w_redr_type = REDRAW_TOP;
-		    break;
-		}
-		wp->w_redr_type = NOT_VALID;
-		if (W_WINROW(wp) + wp->w_height + W_STATUS_HEIGHT(wp)
-							       > msg_scrolled)
-		    break;
+		    if (W_WINROW(wp) + wp->w_height > msg_scrolled
+			    && wp->w_redr_type < REDRAW_TOP)
+		    {
+			wp->w_upd_rows = msg_scrolled - W_WINROW(wp);
+			wp->w_redr_type = REDRAW_TOP;
+		    }
+		    else
+		    {
+			wp->w_redr_type = NOT_VALID;
 #ifdef FEAT_WINDOWS
-		wp->w_redr_status = TRUE;
+			if (W_WINROW(wp) + wp->w_height + W_STATUS_HEIGHT(wp)
+				<= msg_scrolled)
+			    wp->w_redr_status = TRUE;
 #endif
+		    }
+		}
 	    }
 	    redraw_cmdline = TRUE;
 	}
@@ -1015,6 +1017,11 @@ win_update(wp)
 		    from = VIsual.lnum;
 		    to = curwin->w_cursor.lnum;
 		}
+		/* redraw more when the cursor moved as well */
+		if (wp->w_old_cursor_lnum < from)
+		    from = wp->w_old_cursor_lnum;
+		if (wp->w_old_cursor_lnum > to)
+		    to = wp->w_old_cursor_lnum;
 	    }
 	    else
 	    {
@@ -2446,7 +2453,8 @@ win_line(wp, lnum, startrow, endrow)
 			else if (mb_l > 1)
 			    mb_c = (c << 8) + p_extra[1];
 		    }
-		    /* if a double-width char doesn't fit use a '>' */
+		    /* If a double-width char doesn't fit display a '>' in the
+		     * last column. */
 		    if (
 # ifdef FEAT_RIGHTLEFT
 			    wp->w_p_rl ? (col <= 0) :
@@ -2458,12 +2466,11 @@ win_line(wp, lnum, startrow, endrow)
 			mb_c = c;
 			mb_l = 1;
 			mb_utf8 = FALSE;
+			multi_attr = hl_attr(HLF_AT);
+			/* put the pointer back to output the double-width
+			 * character at the start of the next line. */
 			++n_extra;
 			--p_extra;
-			/* FIXME: Bad hack! however it works */
-			extra_attr = char_attr;
-			n_attr = 2;
-			multi_attr = hl_attr(HLF_AT);
 		    }
 		    else
 		    {
@@ -2533,23 +2540,24 @@ win_line(wp, lnum, startrow, endrow)
 		    else if (mb_l > 1)
 			mb_c = (c << 8) + ptr[1];
 		}
-		/* if a double-width char doesn't fit use a '>' */
-		if (
+		/* If a double-width char doesn't fit display a '>' in the
+		 * last column; the character is displayed at the start of the
+		 * next line. */
+		if ((
 # ifdef FEAT_RIGHTLEFT
-			wp->w_p_rl ? (col <= 0) :
+			    wp->w_p_rl ? (col <= 0) :
 # endif
-			(col >= W_WIDTH(wp) - 1)
+				(col >= W_WIDTH(wp) - 1))
 			&& mb_char2cells(mb_c) == 2)
 		{
 		    c = '>';
 		    mb_c = c;
 		    mb_utf8 = FALSE;
 		    mb_l = 1;
-		    --ptr;
-		    /* FIXME: Bad hack! however it works */
-		    extra_attr = char_attr;
-		    n_attr = 2;
 		    multi_attr = hl_attr(HLF_AT);
+		    /* Put pointer back so that the character will be
+		     * displayed at the start of the next line. */
+		    --ptr;
 		}
 		else
 		    ptr += mb_l - 1;
@@ -3422,7 +3430,7 @@ draw_vsep_win(wp, row)
  * but ignore trailing "/".
  */
 static char_u *m_gettail __ARGS((char_u *s));
-static int status_match_len __ARGS((char_u *s));
+static int status_match_len __ARGS((expand_t *xp, char_u *s));
 
     static char_u *
 m_gettail(s)
@@ -3455,14 +3463,15 @@ m_gettail(s)
  * Get the lenght of an item as it will be shown in that status line.
  */
     static int
-status_match_len(s)
+status_match_len(xp, s)
+    expand_t	*xp;
     char_u	*s;
 {
     int	len = 0;
 
 #ifdef FEAT_MENU
-    int emenu = (expand_context == EXPAND_MENUS
-				       || expand_context == EXPAND_MENUNAMES);
+    int emenu = (xp->xp_context == EXPAND_MENUS
+	    || xp->xp_context == EXPAND_MENUNAMES);
 
     /* Check for menu separators - replace with '|'. */
     if (emenu && menu_is_separator(s))
@@ -3501,13 +3510,14 @@ status_match_len(s)
  * If inversion is possible we use it. Else '=' characters are used.
  */
     void
-win_redr_status_matches(num_matches, matches, match)
+win_redr_status_matches(xp, num_matches, matches, match)
+    expand_t	*xp;
     int		num_matches;
     char_u	**matches;	/* list of matches */
     int		match;
 {
 #define L_MATCH(m) (fmatch ? m_gettail(matches[m]) : matches[m])
-    int		fmatch = (expand_context == EXPAND_FILES);
+    int		fmatch = (xp->xp_context == EXPAND_FILES);
 
     int		row;
     char_u	*buf;
@@ -3537,7 +3547,8 @@ win_redr_status_matches(num_matches, matches, match)
 	match = 0;
 	highlight = FALSE;
     }
-    len = status_match_len(L_MATCH(match)) + 3;	/* count 1 for the ending ">" */
+    /* count 1 for the ending ">" */
+    len = status_match_len(xp, L_MATCH(match)) + 3;
     if (match == 0)
 	first_match = 0;
     else if (match < first_match)
@@ -3550,7 +3561,7 @@ win_redr_status_matches(num_matches, matches, match)
     {
 	/* check if match fits on the screen */
 	for (i = first_match; i < match; ++i)
-	    len += status_match_len(L_MATCH(i)) + 2;
+	    len += status_match_len(xp, L_MATCH(i)) + 2;
 	if (first_match > 0)
 	    len += 2;
 	/* jumping right, put match at the left */
@@ -3561,7 +3572,7 @@ win_redr_status_matches(num_matches, matches, match)
 	    len = 2;
 	    for (i = match; i < num_matches; ++i)
 	    {
-		len += status_match_len(L_MATCH(i)) + 2;
+		len += status_match_len(xp, L_MATCH(i)) + 2;
 		if ((long)len >= Columns)
 		    break;
 	    }
@@ -3572,7 +3583,7 @@ win_redr_status_matches(num_matches, matches, match)
     if (add_left)
 	while (first_match > 0)
 	{
-	    len += status_match_len(L_MATCH(first_match - 1)) + 2;
+	    len += status_match_len(xp, L_MATCH(first_match - 1)) + 2;
 	    if ((long)len >= Columns)
 		break;
 	    --first_match;
@@ -3592,7 +3603,7 @@ win_redr_status_matches(num_matches, matches, match)
     }
 
     i = first_match;
-    while ((long)(len + status_match_len(L_MATCH(i)) + 2) < Columns)
+    while ((long)(len + status_match_len(xp, L_MATCH(i)) + 2) < Columns)
     {
 	if (i == match)
 	    selstart = buf + len;
@@ -3600,8 +3611,8 @@ win_redr_status_matches(num_matches, matches, match)
 	s = L_MATCH(i);
 	/* Check for menu separators - replace with '|' */
 #ifdef FEAT_MENU
-	emenu = (expand_context == EXPAND_MENUS
-				       || expand_context == EXPAND_MENUNAMES);
+	emenu = (xp->xp_context == EXPAND_MENUS
+		|| xp->xp_context == EXPAND_MENUNAMES);
 	if (emenu && menu_is_separator(s))
 	{
 	    STRCPY(buf + len, transchar('|'));

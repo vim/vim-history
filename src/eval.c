@@ -224,14 +224,15 @@ static void f_match __ARGS((VAR argvars, VAR retvar));
 static void f_matchend __ARGS((VAR argvars, VAR retvar));
 static void f_matchstr __ARGS((VAR argvars, VAR retvar));
 static void f_mode __ARGS((VAR argvars, VAR retvar));
+static void f_nextnonblank __ARGS((VAR argvars, VAR retvar));
 static void f_nr2char __ARGS((VAR argvars, VAR retvar));
+static void f_prevnonblank __ARGS((VAR argvars, VAR retvar));
 static void f_setbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
-static void f_skipblank __ARGS((VAR argvars, VAR retvar));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
 static void f_stridx __ARGS((VAR argvars, VAR retvar));
 static void f_strlen __ARGS((VAR argvars, VAR retvar));
@@ -689,45 +690,46 @@ ex_let(eap)
 #ifdef FEAT_CMDL_COMPL
 
     void
-set_context_for_expression(arg, cmdidx)
+set_context_for_expression(xp, arg, cmdidx)
+    expand_t	*xp;
     char_u	*arg;
     cmdidx_t	cmdidx;
 {
     int		got_eq = FALSE;
     int		c;
 
-    expand_context = cmdidx == CMD_let ? EXPAND_USER_VARS
+    xp->xp_context = cmdidx == CMD_let ? EXPAND_USER_VARS
 				       : cmdidx == CMD_call ? EXPAND_FUNCTIONS
 				       : EXPAND_EXPRESSION;
-    while ((expand_pattern = vim_strpbrk(arg,
+    while ((xp->xp_pattern = vim_strpbrk(arg,
 				  (char_u *)"\"'+-*/%.=!?~|&$([<>,#")) != NULL)
     {
-	c = *expand_pattern;
+	c = *xp->xp_pattern;
 	if (c == '&')
 	{
-	    c = expand_pattern[1];
+	    c = xp->xp_pattern[1];
 	    if (c == '&')
 	    {
-		++expand_pattern;
-		expand_context = cmdidx != CMD_let || got_eq
+		++xp->xp_pattern;
+		xp->xp_context = cmdidx != CMD_let || got_eq
 					 ? EXPAND_EXPRESSION : EXPAND_NOTHING;
 	    }
 	    else if (c != ' ')
-		expand_context = EXPAND_SETTINGS;
+		xp->xp_context = EXPAND_SETTINGS;
 	}
 	else if (c == '$')
 	{
 	    /* environment variable */
-	    expand_context = EXPAND_ENV_VARS;
+	    xp->xp_context = EXPAND_ENV_VARS;
 	}
 	else if (c == '=')
 	{
 	    got_eq = TRUE;
-	    expand_context = EXPAND_EXPRESSION;
+	    xp->xp_context = EXPAND_EXPRESSION;
 	}
 	else if (c == '<'
-		&& expand_context == EXPAND_FUNCTIONS
-		&& vim_strchr(expand_pattern, '(') == NULL)
+		&& xp->xp_context == EXPAND_FUNCTIONS
+		&& vim_strchr(xp->xp_pattern, '(') == NULL)
 	{
 	    /* Function name can start with "<SNR>" */
 	    break;
@@ -736,38 +738,38 @@ set_context_for_expression(arg, cmdidx)
 	{
 	    if (c == '"')	    /* string */
 	    {
-		while ((c = *++expand_pattern) != NUL && c != '"')
-		    if (c == '\\' && expand_pattern[1] != NUL)
-			++expand_pattern;
-		expand_context = EXPAND_NOTHING;
+		while ((c = *++xp->xp_pattern) != NUL && c != '"')
+		    if (c == '\\' && xp->xp_pattern[1] != NUL)
+			++xp->xp_pattern;
+		xp->xp_context = EXPAND_NOTHING;
 	    }
 	    else if (c == '\'')	    /* literal string */
 	    {
-		while ((c = *++expand_pattern) != NUL && c != '\'')
+		while ((c = *++xp->xp_pattern) != NUL && c != '\'')
 		    /* skip */ ;
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 	    }
 	    else if (c == '|')
 	    {
-		if (expand_pattern[1] == '|')
+		if (xp->xp_pattern[1] == '|')
 		{
-		    ++expand_pattern;
-		    expand_context = EXPAND_EXPRESSION;
+		    ++xp->xp_pattern;
+		    xp->xp_context = EXPAND_EXPRESSION;
 		}
 		else
-		    expand_context = EXPAND_COMMANDS;
+		    xp->xp_context = EXPAND_COMMANDS;
 	    }
 	    else
-		expand_context = EXPAND_EXPRESSION;
+		xp->xp_context = EXPAND_EXPRESSION;
 	}
 	else
-	    expand_context = EXPAND_NOTHING;
-	arg = expand_pattern;
+	    xp->xp_context = EXPAND_NOTHING;
+	arg = xp->xp_pattern;
 	if (*arg != NUL)
 	    while ((c = *++arg) != NUL && (c == ' ' || c == '\t'))
 		/* skip */ ;
     }
-    expand_pattern = arg;
+    xp->xp_pattern = arg;
 }
 
 #endif /* FEAT_CMDL_COMPL */
@@ -931,9 +933,11 @@ cat_prefix_varname(prefix, name)
  * Function given to ExpandGeneric() to obtain the list of user defined
  * (global/buffer/window/built-in) variable names.
  */
+/*ARGSUSED*/
     char_u *
-get_user_var_name(idx)
-    int	    idx;
+get_user_var_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static int	gidx;
     static int	bidx;
@@ -2137,13 +2141,14 @@ static struct fst
     {"matchend",	2, 3, f_matchend},
     {"matchstr",	2, 3, f_matchstr},
     {"mode",		0, 0, f_mode},
+    {"nextnonblank",	1, 1, f_nextnonblank},
     {"nr2char",		1, 1, f_nr2char},
+    {"prevnonblank",	1, 1, f_prevnonblank},
     {"rename",		2, 2, f_rename},
     {"search",		1, 2, f_search},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
     {"setwinvar",	3, 3, f_setwinvar},
-    {"skipblank",	1, 1, f_skipblank},
 #ifdef HAVE_STRFTIME
     {"strftime",	1, 2, f_strftime},
 #endif
@@ -2177,8 +2182,9 @@ static struct fst
  * or user defined function names.
  */
     char_u *
-get_function_name(idx)
-    int	    idx;
+get_function_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static int	intidx = -1;
     char_u	*name;
@@ -2187,7 +2193,7 @@ get_function_name(idx)
 	intidx = -1;
     if (intidx < 0)
     {
-	name = get_user_func_name(idx);
+	name = get_user_func_name(xp, idx);
 	if (name != NULL)
 	    return name;
     }
@@ -2204,9 +2210,11 @@ get_function_name(idx)
  * Function given to ExpandGeneric() to obtain the list of internal or
  * user defined variable or function names.
  */
+/*ARGSUSED*/
     char_u *
-get_expr_name(idx)
-    int	    idx;
+get_expr_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static int	intidx = -1;
     char_u	*name;
@@ -2215,11 +2223,11 @@ get_expr_name(idx)
 	intidx = -1;
     if (intidx < 0)
     {
-	name = get_function_name(idx);
+	name = get_function_name(xp, idx);
 	if (name != NULL)
 	    return name;
     }
-    return get_user_var_name(++intidx);
+    return get_user_var_name(xp, ++intidx);
 }
 
 #endif /* FEAT_CMDL_COMPL */
@@ -2994,6 +3002,7 @@ f_expand(argvars, retvar)
     int		len;
     char_u	*errormsg;
     int		flags = WILD_SILENT|WILD_USE_NL;
+    expand_t	xpc;
 
     retvar->var_type = VAR_STRING;
     s = get_var_string(&argvars[0]);
@@ -3009,8 +3018,8 @@ f_expand(argvars, retvar)
 	 * for 'suffixes' and 'wildignore' */
 	if (argvars[1].var_type != VAR_UNKNOWN && get_var_number(&argvars[1]))
 	    flags |= WILD_KEEP_ALL;
-	expand_context = EXPAND_FILES;
-	retvar->var_val.var_string = ExpandOne(s, NULL, flags, WILD_ALL);
+	xpc.xp_context = EXPAND_FILES;
+	retvar->var_val.var_string = ExpandOne(&xpc, s, NULL, flags, WILD_ALL);
     }
 }
 
@@ -3339,9 +3348,11 @@ f_glob(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    expand_context = EXPAND_FILES;
+    expand_t	xpc;
+
+    xpc.xp_context = EXPAND_FILES;
     retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = ExpandOne(get_var_string(&argvars[0]),
+    retvar->var_val.var_string = ExpandOne(&xpc, get_var_string(&argvars[0]),
 				     NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
 }
 
@@ -4440,10 +4451,33 @@ f_setwinvar(argvars, retvar)
 }
 
 /*
- * "skipblank()" function
+ * "nextnonblank()" function
  */
     static void
-f_skipblank(argvars, retvar)
+f_nextnonblank(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    linenr_t	lnum;
+
+    for (lnum = get_var_lnum(argvars); ; ++lnum)
+    {
+	if (lnum > curbuf->b_ml.ml_line_count)
+	{
+	    lnum = 0;
+	    break;
+	}
+	if (*skipwhite(ml_get(lnum)) != NUL)
+	    break;
+    }
+    retvar->var_val.var_number = lnum;
+}
+
+/*
+ * "prevnonblank()" function
+ */
+    static void
+f_prevnonblank(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
@@ -4695,7 +4729,7 @@ f_synIDattr(argvars, retvar)
 		break;
 
 	case 'n':					/* name */
-		p = get_highlight_name(id - 1);
+		p = get_highlight_name(NULL, id - 1);
 		break;
 
 	case 'r':					/* reverse */
@@ -5930,6 +5964,8 @@ ex_function(eap)
 
     p = eap->arg;
     name = trans_function_name(&p);
+    if (name == NULL)
+	return;
 
     /*
      * ":function func" with only function name: list function.
@@ -6306,8 +6342,9 @@ find_func(name)
  * function names.
  */
     char_u *
-get_user_func_name(idx)
-    int	    idx;
+get_user_func_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static ufunc_t *fp = NULL;
 
@@ -6325,7 +6362,7 @@ get_user_func_name(idx)
 	}
 	else
 	    STRCPY(IObuff, fp->name);
-	if (expand_context != EXPAND_USER_FUNC)
+	if (xp->xp_context != EXPAND_USER_FUNC)
 	    STRCAT(IObuff, "(");
 
 	fp = fp->next;
@@ -6349,6 +6386,8 @@ ex_delfunction(eap)
 
     p = eap->arg;
     name = trans_function_name(&p);
+    if (name == NULL)
+	return;
     fp = find_func(name);
     vim_free(name);
 

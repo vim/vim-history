@@ -286,6 +286,16 @@ struct nr_trans
 };
 
 /*
+ * used for completion on the command line
+ */
+typedef struct expand
+{
+    int		xp_context;		/* type of expansion */
+    char_u	*xp_pattern;		/* start of item to expand */
+    int		xp_set_path;		/* ":set path=/dir/<Tab>" */
+} expand_t;
+
+/*
  * Command modifiers ":vertical", ":browse", ":confirm" and ":hide" set a flag.
  * This needs to be saved for recursive commands, put them in a structure for
  * easy manipulation.

@@ -1421,11 +1421,9 @@ op_delete(oap)
 			       (linenr_t)(oap->end.lnum + 1)) == FAIL)
 	    return FAIL;
 
-	for (lnum = curwin->w_cursor.lnum;
-			       curwin->w_cursor.lnum <= oap->end.lnum;
-						      ++curwin->w_cursor.lnum)
+	for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; ++lnum)
 	{
-	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
+	    block_prep(oap, &bd, lnum, TRUE);
 	    if (bd.textlen == 0)	/* nothing to delete */
 		continue;
 
@@ -1434,7 +1432,7 @@ op_delete(oap)
 	     * Thus the number of characters may increase!
 	     */
 	    n = bd.textlen - bd.startspaces - bd.endspaces;
-	    oldp = ml_get_curline();
+	    oldp = ml_get(lnum);
 	    newp = alloc_check((unsigned)STRLEN(oldp) + 1 - n);
 	    if (newp == NULL)
 		continue;
@@ -1448,14 +1446,14 @@ op_delete(oap)
 	    mch_memmove(newp + bd.textcol + bd.startspaces + bd.endspaces,
 						      oldp, STRLEN(oldp) + 1);
 	    /* replace the line */
-	    ml_replace(curwin->w_cursor.lnum, newp, FALSE);
+	    ml_replace(lnum, newp, FALSE);
 	}
 
 	/* Put cursor back at start of changed block */
-	curwin->w_cursor.lnum = lnum;
-	adjust_cursor();
 	changed_lines(curwin->w_cursor.lnum, curwin->w_cursor.col,
 						       oap->end.lnum + 1, 0L);
+	/* Adjust cursor position for tab replaced by spaces. */
+	coladvance(oap->start_vcol);
 	oap->line_count = 0;	    /* no lines deleted */
     }
     else if (oap->motion_type == MLINE)
@@ -1778,10 +1776,15 @@ swapchar(op_type, pos)
     int	    nc;
 
     c = gchar_pos(pos);
+
 #ifdef FEAT_MBYTE
     if (c >= 0x100)	/* No lower/uppercase letter */
 	return FALSE;
 #endif
+    /* Only do rot13 encoding for ASCII characters. */
+    if (c >= 0x80 && op_type == OP_ROT13)
+	return FALSE;
+
     nc = c;
     if (islower(c))
     {

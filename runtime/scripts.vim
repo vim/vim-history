@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 05
+" Last change:	2000 Nov 12
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -166,6 +166,10 @@ elseif s:line1 =~ '^#!.*wml.*'
 " Strace
 elseif s:line1 =~ '^execve('
   set ft=strace
+
+" VSE JCL
+elseif s:line1 =~ '^\* $$ JOB\>' || s:line1 =~ '^// *JOB\>'
+  set ft=vsejcl
 
 " Generic configuration file (check this last, it's just guessing!)
 elseif s:line1 =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'

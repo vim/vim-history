@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0l.  Last change: 2000 Nov 05
+*options.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -683,6 +683,17 @@ A jump table for the options with a short description can be found at |X_op|.
 	:next, :rewind, :last, :first, :previous, :stop, :suspend, :tag, :!,
 	:make, CTRL-] and CTRL-^ command; and when a CTRL-O, CTRL-I,
 	'{A-Z0-9}, or `{A-Z0-9} command takes one to another file.
+	Note that for some commands the 'autowrite' option is not used, see
+	'autowriteall' for that.
+
+			 *'autowriteall'* *'awa'* *'noautowriteall'* *'noawa'*
+'autowriteall' 'awa'	boolean	(default off)
+			global
+			{not in Vi}
+	Like 'autowrite', but also used for commands ":edit", ":quit",
+	":qall", ":exit", ":xit", ":recover" and closing the Vim window.
+	Setting this option also implies that Vim behaves like 'autowrite' has
+	been set.
 
 							*'background'* *'bg'*
 'background' 'bg'	string	(default "dark" or "light")
@@ -753,6 +764,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	the default).  If you do not want a backup file at all reset both
 	options (use this if your file system is almost full).  See the
 	|backup-table| for more explanations.
+	When the 'backupskip' pattern matches, a backup is not made anyway.
 	NOTE: This option is reset when 'compatible' is set.
 
 						*'backupcopy'* *'bkc'*
@@ -852,6 +864,17 @@ A jump table for the options with a short description can be found at |X_op|.
 	accidentally overwriting existing files with a backup file.  You might
 	prefer using ".bak", but make sure that you don't have files with
 	".bak" that you want to keep.
+
+						*'backupskip'* *'bsk'*
+'backupskip' 'bsk'	string  (default: "^/tmp/")
+			global
+			{not in Vi}
+	Pattern that specifies which files will not have a backup file.  When
+	the pattern matches with the name of the file which is written, no
+	backup file is created.  The full path name of the file is used.
+	Note that search pattern syntax is used here, not file patterns.  Thus
+	".*\.c" should be used instead of *.c".  See |pattern|.
+	Watch out for special characters, see |option-backslash|.
 
 						*'balloondelay'* *'bdlay'*
 'balloondelay' 'bdlay'	number	(default: 600)
@@ -2960,8 +2983,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	'wrapmargin' and 'textwidth', this does not insert <EOL>s in the file,
 	it only affects the way the file is displayed, not its contents.  The
 	value of 'showbreak' is used to put in front of wrapped lines.  This
-	option is not used when the 'wrap' option is off.  Note that <Tab>
-	characters after an <EOL> are mostly not displayed correctly.
+	option is not used when the 'wrap' option is off or 'list' is on.
+	Note that <Tab> characters after an <EOL> are mostly not displayed
+	correctly.
 
 						*'lines'*
 'lines'			number	(default 24 or terminal height)
@@ -5000,7 +5024,10 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'viminfo'* *'vi'*
 
-'viminfo' 'vi'		string	(default "")
+'viminfo' 'vi'		string	(Vi default: "", Vim default for MS-DOS,
+					Windows and OS/2: '50,"50,h,rA:,rB:,
+					for Amiga: '50,"50,h,rdf0:,rdf1:,rdf2:
+					for others: '50,"50,h)
 			global
 			{not in Vi}
 			{not available when compiled without the  |+viminfo|
@@ -5156,8 +5183,9 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	Character you have to type to start wildcard expansion in the
 	command-line.
-	The character is not recognized when used inside a macro.  Although
-	'wc' is a number option, you can set it to a special key: >
+	The character is not recognized when used inside a macro.  See
+	'wildcharm' for that.
+	Although 'wc' is a number option, you can set it to a special key: >
 		:set wc=<Esc>
 <	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
@@ -5404,6 +5432,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	the file was successfully written, unless the 'backup' option is
 	also on.  Reset this option if your file system is almost full.  See
 	|backup-table| for another explanation.
+	When the 'backupskip' pattern matches, a backup is not made anyway.
 	NOTE: This option is set to the default value when 'compatible' is
 	set.
 

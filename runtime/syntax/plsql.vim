@@ -1,9 +1,8 @@
 " Vim syntax file
-"    Language:	PL/SQL - Oracle Procedural SQL
-"  Maintainer:	Jeff Lanzarotta <roc_head@yahoo.com>
-"					Originally by C. Laurence Gonsalves <clgonsal@kami.com>
-"         URL:	http://members.tripod.com/lanzarotta/vim/syntax/plsql.vim
-" Last Change:	2000 Nov 04
+"    Language: Oracle Procedureal SQL (PL/SQL)
+"  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
+" Last Change: November 8, 2000
+"     Version: 6.0-1
 
 " Remove any old syntax stuff hanging around.
 syn clear
@@ -105,36 +104,35 @@ syn match   plsqlAttribute	"%\(NOTFOUND\|ROWCOUNT\|FOUND\|ISOPEN\)\>"
 syn region plsqlParen		transparent start='(' end=')' contains=ALLBUT,plsqlParenError
 syn match plsqlParenError	")"
 
-
 " The default highlighting.
 " These are general categories that should maybe become standard.
-hi def link Attribute				Macro
-hi def link Query						Function
-hi def link Event						Function
+hi def link Attribute Macro
+hi def link Query Function
+hi def link Event Function
 
-hi def link plsqlAttribute			Attribute
-hi def link plsqlBooleanLiteral	Boolean
-hi def link plsqlCharLiteral		Character
-hi def link plsqlComment			Comment
-hi def link plsqlConditional		Conditional
-hi def link plsqlFloatLiteral		Float
-hi def link plsqlGarbage			Error
-hi def link plsqlHostIdentifier	Label
-hi def link plsqlIdentifier		Normal
-hi def link plsqlIntLiteral		Number
-hi def link plsqlOperator			Operator
-hi def link plsqlParen				Normal
-hi def link plsqlParenError		Error
-hi def link plsqlKeyword			Keyword
-hi def link plsqlRepeat				Repeat
-hi def link plsqlStorage			StorageClass
-hi def link plsqlSQLKeyword		Query
-hi def link plsqlStringError		Error
-hi def link plsqlStringLiteral	String
-hi def link plsqlSymbol				Normal
-hi def link plsqlTrigger			Event
-hi def link plsqlTypeAttribute	StorageClass
-hi def link plsqlTodo				Todo
+hi def link plsqlAttribute Attribute
+hi def link plsqlBooleanLiteral Boolean
+hi def link plsqlCharLiteral Character
+hi def link plsqlComment Comment
+hi def link plsqlConditional Conditional
+hi def link plsqlFloatLiteral Float
+hi def link plsqlGarbage Error
+hi def link plsqlHostIdentifier Label
+hi def link plsqlIdentifier Normal
+hi def link plsqlIntLiteral Number
+hi def link plsqlOperator Operator
+hi def link plsqlParen Normal
+hi def link plsqlParenError Error
+hi def link plsqlKeyword Keyword
+hi def link plsqlRepeat Repeat
+hi def link plsqlStorage StorageClass
+hi def link plsqlSQLKeyword Query
+hi def link plsqlStringError Error
+hi def link plsqlStringLiteral String
+hi def link plsqlSymbol Normal
+hi def link plsqlTrigger Event
+hi def link plsqlTypeAttribute StorageClass
+hi def link plsqlTodo Todo
 
 let b:current_syntax = "plsql"
 

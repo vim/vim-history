@@ -133,7 +133,8 @@ syn keyword mvConstant	FAIL	Pi
 
 " Comments:  DEBUG, if in a comment, is specially highlighted.
 syn keyword mvDebug	contained	DEBUG
-syn match mvComment "#.*$"	contains=mvTodo,mvDebug
+syn cluster mvCommentGroup	contains=mvTodo,mvDebug
+syn match mvComment "#.*$"	contains=@mvCommentGroup
 
 " Basic Library Functions: ? index[function]
 syn keyword mvLibrary $	@	@@	ERROR

@@ -45,7 +45,7 @@ void expand_env __ARGS((char_u *src, char_u *dst, int dstlen));
 char_u *vim_getenv __ARGS((char_u *name, int *mustfree));
 char_u *expand_env_save __ARGS((char_u *src));
 void vim_setenv __ARGS((char_u *name, char_u *val));
-char_u *get_env_name __ARGS((int idx));
+char_u *get_env_name __ARGS((expand_t *xp, int idx));
 void home_replace __ARGS((buf_t *buf, char_u *src, char_u *dst, int dstlen, int one));
 char_u *home_replace_save __ARGS((buf_t *buf, char_u *src));
 int fullpathcmp __ARGS((char_u *s1, char_u *s2, int checkname));

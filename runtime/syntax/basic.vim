@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	BASIC
-" Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
+" Maintainer:	Allan Kelly <allan@fruitloaf.co.uk>
 " Last Change:	Tue Sep 14 14:24:23 BST 1999
 
 " First version based on Micro$soft QBASIC circa 1989, as documented in

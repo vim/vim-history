@@ -277,12 +277,14 @@ EXTERN long	p_aleph;	/* 'aleph' */
 #endif
 EXTERN int	p_ar;		/* 'autoread' */
 EXTERN int	p_aw;		/* 'autowrite' */
+EXTERN int	p_awa;		/* 'autowriteall' */
 EXTERN char_u	*p_bs;		/* 'backspace' */
 EXTERN char_u	*p_bg;		/* 'background' */
 EXTERN int	p_bk;		/* 'backup' */
 EXTERN char_u	*p_bkc;		/* 'backupcopy' */
 EXTERN char_u	*p_bdir;	/* 'backupdir' */
 EXTERN char_u	*p_bex;		/* 'backupext' */
+EXTERN char_u	*p_bsk;		/* 'backupskip' */
 #ifdef FEAT_BEVAL
 EXTERN int	p_bdlay;	/* 'balloondelay' */
 EXTERN int	p_beval;	/* 'ballooneval' */

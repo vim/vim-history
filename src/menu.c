@@ -1007,7 +1007,8 @@ static int		expand_modes = 0x0;
  * Work out what to complete when doing command line completion of menu names.
  */
     char_u *
-set_context_in_menu_cmd(cmd, arg, forceit)
+set_context_in_menu_cmd(xp, cmd, arg, forceit)
+    expand_t	*xp;
     char_u	*cmd;
     char_u	*arg;
     int		forceit;
@@ -1020,7 +1021,7 @@ set_context_in_menu_cmd(cmd, arg, forceit)
     vimmenu_t	*menu;
     int		expand_menus;
 
-    expand_context = EXPAND_UNSUCCESSFUL;
+    xp->xp_context = EXPAND_UNSUCCESSFUL;
 
 
     /* Check for priority numbers, enable and disable */
@@ -1108,12 +1109,12 @@ set_context_in_menu_cmd(cmd, arg, forceit)
 	    menu = menu->children;
 	}
 
-	expand_context = expand_menus ? EXPAND_MENUNAMES : EXPAND_MENUS;
-	expand_pattern = after_dot;
+	xp->xp_context = expand_menus ? EXPAND_MENUNAMES : EXPAND_MENUS;
+	xp->xp_pattern = after_dot;
 	expand_menu = menu;
     }
     else			/* We're in the mapping part */
-	expand_context = EXPAND_NOTHING;
+	xp->xp_context = EXPAND_NOTHING;
     return NULL;
 }
 
@@ -1121,8 +1122,9 @@ set_context_in_menu_cmd(cmd, arg, forceit)
  * Function given to ExpandGeneric() to obtain the list of group names.
  */
     char_u *
-get_menu_name(idx)
-    int	    idx;
+get_menu_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static vimmenu_t	*menu = NULL;
     static int		get_dname = FALSE; /* return menu->dname next time */
@@ -1138,7 +1140,7 @@ get_menu_name(idx)
     while (menu != NULL && (menu_is_hidden(menu->dname)
 /*	    || menu_is_separator(menu->dname) */
 	    || menu_is_tearoff(menu->dname)
-	    || (expand_context == EXPAND_MENUS && menu->children == NULL)))
+	    || (xp->xp_context == EXPAND_MENUS && menu->children == NULL)))
 	menu = menu->next;
 
     if (menu == NULL)	    /* at end of linked list */
@@ -1175,8 +1177,9 @@ get_menu_name(idx)
  * Function given to ExpandGeneric() to obtain the list of group names.
  */
     char_u *
-get_menu_names(idx)
-    int	    idx;
+get_menu_names(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     static vimmenu_t	*menu = NULL;
     static char_u	tbuffer[256]; /*hack*/
@@ -1190,7 +1193,7 @@ get_menu_names(idx)
 	    && (  menu_is_hidden(menu->dname)
 /*		|| menu_is_separator(menu->dname) */
 		|| menu_is_tearoff(menu->dname)
-		|| (expand_context == EXPAND_MENUS && menu->children == NULL)
+		|| (xp->xp_context == EXPAND_MENUS && menu->children == NULL)
 #ifndef FEAT_BROWSE
 		|| menu->dname[STRLEN(menu->dname) - 1] == '.'
 #endif

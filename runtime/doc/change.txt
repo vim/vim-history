@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0l.  Last change: 2000 Nov 05
+*change.txt*    For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -283,6 +283,12 @@ g~~			Switch case of current line. {not in Vi}.
 
 							*gU* *uppercase*
 gU{motion}		Make {motion} text uppercase. {not in Vi}
+			Example: >
+				:map! <C-F> <Esc>gUiw`]a
+<			This works in Insert mode: press CTRL-F to make the
+			before the cursor upper case.  Handy to type words in
+			lower case and then make them uppercase.
+
 
 gUgU							*gUgU* *gUU*
 gUU			Make current line uppercase. {not in Vi}.
@@ -297,7 +303,7 @@ gu{motion}		Make {motion} text lowercase. {not in Vi}
 gugu							*gugu* *guu*
 guu			Make current line lowercase. {not in Vi}.
 
-							*g?*
+							*g?* *rot13*
 g?{motion}		Rot13 encode {motion} text. {not in Vi}
 
 							*v_g?*
@@ -897,7 +903,7 @@ and ":put" commands and with CTRL-R.  {not in Vi}
 	":	Contains the most recent executed command-line.  Example: Use
 		"@:" to repeat the previous command-line command.
 		The command-line is only stored in this register when at least
-		one character of it was typed.  Thus it remains unchanged of
+		one character of it was typed.  Thus it remains unchanged if
 		the command was completely from a mapping.
 
 6. Expression register "=				*quote_=* *quote=*

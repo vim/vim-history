@@ -293,6 +293,9 @@ static struct vimoption options[] =
     {"autowrite",   "aw",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_aw, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"autowriteall","awa",  P_BOOL|P_VI_DEF,
+			    (char_u *)&p_awa, PV_NONE,
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"background",  "bg",   P_STRING|P_VI_DEF|P_RCLR,
 			    (char_u *)&p_bg, PV_NONE,
 			    {
@@ -328,6 +331,9 @@ static struct vimoption options[] =
 			    (char_u *)"~",
 #endif
 					    (char_u *)0L}},
+    {"backupskip",  "bsk",  P_STRING|P_VI_DEF,
+			    (char_u *)&p_bsk, PV_NONE,
+			    {(char_u *)"^/tmp/", (char_u *)0L}},
 #ifdef FEAT_BEVAL
     {"balloondelay","bdlay",P_NUM|P_VI_DEF,
 			    (char_u *)&p_bdlay, PV_NONE,
@@ -1722,13 +1728,23 @@ static struct vimoption options[] =
     {"verbose",	    "vbs",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_verbose, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}},
-    {"viminfo",	    "vi",   P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
+    {"viminfo",	    "vi",   P_STRING|P_COMMA|P_NODUP,
 #ifdef FEAT_VIMINFO
 			    (char_u *)&p_viminfo, PV_NONE,
 #else
 			    (char_u *)NULL, PV_NONE,
 #endif
-			    {(char_u *)"", (char_u *)0L}},
+			    {(char_u *)"",
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+				(char_u *)"'20,\"50,h,rA:,rB:"}
+#else
+# ifdef AMIGA
+				(char_u *)"'20,\"50,h,rdf0:,rdf1:,rdf2:"}
+# else
+				(char_u *)"'20,\"50,h"}
+# endif
+#endif
+    },
     {"virtualedit", "ve",   P_STRING|P_COMMA|P_NODUP|P_VI_DEF|P_VIM,
 #ifdef FEAT_VIRTUALEDIT
 			    (char_u *)&p_ve, PV_NONE,
@@ -6295,7 +6311,8 @@ static char_u expand_option_name[5] = {'t', '_', NUL, NUL, NUL};
 static int expand_option_global = FALSE;
 
     void
-set_context_in_set_cmd(arg, opt_flags)
+set_context_in_set_cmd(xp, arg, opt_flags)
+    expand_t	*xp;
     char_u	*arg;
     int		opt_flags;	/* OPT_GLOBAL and/or OPT_LOCAL */
 {
@@ -6312,16 +6329,16 @@ set_context_in_set_cmd(arg, opt_flags)
     if (opt_flags & OPT_GLOBAL)
 	expand_option_global = TRUE;
 
-    expand_context = EXPAND_SETTINGS;
+    xp->xp_context = EXPAND_SETTINGS;
     if (*arg == NUL)
     {
-	expand_pattern = arg;
+	xp->xp_pattern = arg;
 	return;
     }
     p = arg + STRLEN(arg) - 1;
     if (*p == ' ' && *(p - 1) != '\\')
     {
-	expand_pattern = p + 1;
+	xp->xp_pattern = p + 1;
 	return;
     }
     while (p > arg)
@@ -6348,15 +6365,15 @@ set_context_in_set_cmd(arg, opt_flags)
     }
     if (STRNCMP(p, "no", 2) == 0)
     {
-	expand_context = EXPAND_BOOL_SETTINGS;
+	xp->xp_context = EXPAND_BOOL_SETTINGS;
 	p += 2;
     }
     if (STRNCMP(p, "inv", 3) == 0)
     {
-	expand_context = EXPAND_BOOL_SETTINGS;
+	xp->xp_context = EXPAND_BOOL_SETTINGS;
 	p += 3;
     }
-    expand_pattern = arg = p;
+    xp->xp_pattern = arg = p;
     if (*arg == '<')
     {
 	while (*p != '>')
@@ -6365,7 +6382,7 @@ set_context_in_set_cmd(arg, opt_flags)
 	key = get_special_key_code(arg + 1);
 	if (key == 0)		    /* unknown name */
 	{
-	    expand_context = EXPAND_NOTHING;
+	    xp->xp_context = EXPAND_NOTHING;
 	    return;
 	}
 	nextchar = *++p;
@@ -6399,13 +6416,13 @@ set_context_in_set_cmd(arg, opt_flags)
 	    *p = nextchar;
 	    if (opt_idx == -1 || options[opt_idx].var == NULL)
 	    {
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 		return;
 	    }
 	    flags = options[opt_idx].flags;
 	    if (flags & P_BOOL)
 	    {
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 		return;
 	    }
 	}
@@ -6417,28 +6434,28 @@ set_context_in_set_cmd(arg, opt_flags)
 	nextchar = '=';
     }
     if ((nextchar != '=' && nextchar != ':')
-				    || expand_context == EXPAND_BOOL_SETTINGS)
+				    || xp->xp_context == EXPAND_BOOL_SETTINGS)
     {
-	expand_context = EXPAND_UNSUCCESSFUL;
+	xp->xp_context = EXPAND_UNSUCCESSFUL;
 	return;
     }
-    if (expand_context != EXPAND_BOOL_SETTINGS && p[1] == NUL)
+    if (xp->xp_context != EXPAND_BOOL_SETTINGS && p[1] == NUL)
     {
-	expand_context = EXPAND_OLD_SETTING;
+	xp->xp_context = EXPAND_OLD_SETTING;
 	if (is_term_option)
 	    expand_option_idx = -1;
 	else
 	    expand_option_idx = opt_idx;
-	expand_pattern = p + 1;
+	xp->xp_pattern = p + 1;
 	return;
     }
-    expand_context = EXPAND_NOTHING;
+    xp->xp_context = EXPAND_NOTHING;
     if (is_term_option || (flags & P_NUM))
 	return;
     if (after_blank != NULL)
-	expand_pattern = after_blank;
+	xp->xp_pattern = after_blank;
     else
-	expand_pattern = p + 1;
+	xp->xp_pattern = p + 1;
     if (flags & P_EXPAND)
     {
 	p = options[opt_idx].var;
@@ -6451,22 +6468,23 @@ set_context_in_set_cmd(arg, opt_flags)
 #endif
 		)
 	{
-	    expand_context = EXPAND_DIRECTORIES;
+	    xp->xp_context = EXPAND_DIRECTORIES;
 	    if (p == (char_u *)&p_path
 #ifdef FEAT_SEARCHPATH
 		    || p == (char_u *)&p_cdpath
 #endif
 		   )
-		expand_set_path = TRUE;
+		xp->xp_set_path = TRUE;
 	}
 	else
-	    expand_context = EXPAND_FILES;
+	    xp->xp_context = EXPAND_FILES;
     }
     return;
 }
 
     int
-ExpandSettings(prog, num_file, file)
+ExpandSettings(xp, prog, num_file, file)
+    expand_t	*xp;
     regprog_t	*prog;
     int		*num_file;
     char_u	***file;
@@ -6491,7 +6509,7 @@ ExpandSettings(prog, num_file, file)
     regmatch.regprog = prog;
     for (loop = 0; loop <= 1; ++loop)
     {
-	if (expand_context != EXPAND_BOOL_SETTINGS)
+	if (xp->xp_context != EXPAND_BOOL_SETTINGS)
 	{
 	    for (match = 0; match < sizeof(names) / sizeof(char *); ++match)
 		if (vim_regexec(&regmatch, (char_u *)names[match], (colnr_t)0))
@@ -6507,7 +6525,7 @@ ExpandSettings(prog, num_file, file)
 	{
 	    if (options[opt_idx].var == NULL)
 		continue;
-	    if (expand_context == EXPAND_BOOL_SETTINGS
+	    if (xp->xp_context == EXPAND_BOOL_SETTINGS
 	      && !(options[opt_idx].flags & P_BOOL))
 		continue;
 	    is_term_opt = istermoption(&options[opt_idx]);
@@ -6550,7 +6568,7 @@ ExpandSettings(prog, num_file, file)
 	/*
 	 * Check terminal key codes, these are not in the option table
 	 */
-	if (expand_context != EXPAND_BOOL_SETTINGS  && num_normal == 0)
+	if (xp->xp_context != EXPAND_BOOL_SETTINGS  && num_normal == 0)
 	{
 	    for (opt_idx = 0; (str = get_termcode(opt_idx)) != NULL; opt_idx++)
 	    {

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Shell script
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Nov 01
+" Last Change:	2000 Nov 08
 
 setlocal indentexpr=GetShIndent()
 setlocal indentkeys+==else,=elif,=esac,=fi,=done indentkeys-=0#
@@ -13,7 +13,7 @@ endif
 
 function GetShIndent()
   " Find a non-blank line above the current line.
-  let lnum = skipblank(v:lnum - 1)
+  let lnum = prevnonblank(v:lnum - 1)
 
   " Hit the start of the file, use zero indent.
   if lnum == 0

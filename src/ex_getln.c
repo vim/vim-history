@@ -78,10 +78,10 @@ static void	redrawcmdprompt __ARGS((void));
 static void	redrawcmd __ARGS((void));
 static void	cursorcmd __ARGS((void));
 static int	ccheck_abbr __ARGS((int));
-static int	nextwild __ARGS((int, int));
-static int	showmatches __ARGS((int wildmenu));
-static void	set_expand_context __ARGS((void));
-static int	ExpandFromContext __ARGS((char_u *, int *, char_u ***, int, int));
+static int	nextwild __ARGS((expand_t *xp, int type, int options));
+static int	showmatches __ARGS((expand_t *xp, int wildmenu));
+static void	set_expand_context __ARGS((expand_t *xp));
+static int	ExpandFromContext __ARGS((expand_t *xp, char_u *, int *, char_u ***, int, int));
 
 /*
  * getcmdline() - accept a command line starting with firstc.
@@ -140,6 +140,7 @@ getcmdline(firstc, count, indent)
 #ifdef FEAT_EVAL
     int		break_ctrl_c = FALSE;
 #endif
+    expand_t	xpc;
 
 #ifdef FEAT_SNIFF
     want_sniff_request = 0;
@@ -183,7 +184,7 @@ getcmdline(firstc, count, indent)
     msg_scrolled += i;
     redrawcmdprompt();		/* draw prompt or indent */
     set_cmdspos();
-    expand_context = EXPAND_NOTHING;
+    xpc.xp_context = EXPAND_NOTHING;
 
     /*
      * Avoid scrolling when called by a recursive do_cmdline(), e.g. when doing
@@ -276,7 +277,7 @@ getcmdline(firstc, count, indent)
 		c = Ctrl_N;
 	}
 	/* Hitting CR after "emenu Name.": complete submenu */
-	if (expand_context == EXPAND_MENUNAMES && p_wmnu
+	if (xpc.xp_context == EXPAND_MENUNAMES && p_wmnu
 		&& ccline.cmdpos > 1
 		&& ccline.cmdbuff[ccline.cmdpos - 1] == '.'
 		&& ccline.cmdbuff[ccline.cmdpos - 2] != '\\'
@@ -290,12 +291,12 @@ getcmdline(firstc, count, indent)
 		&& c != Ctrl_N && c != Ctrl_P && c != Ctrl_A
 		&& c != Ctrl_L)
 	{
-	    (void)ExpandOne(NULL, NULL, 0, WILD_FREE);
+	    (void)ExpandOne(&xpc, NULL, NULL, 0, WILD_FREE);
 	    did_wild_list = FALSE;
 #ifdef FEAT_WILDMENU
 	    if (!p_wmnu || (c != K_UP && c != K_DOWN))
 #endif
-		expand_context = EXPAND_NOTHING;
+		xpc.xp_context = EXPAND_NOTHING;
 	    wim_index = 0;
 #ifdef FEAT_WILDMENU
 	    if (p_wmnu && wild_menu_showing)
@@ -327,7 +328,7 @@ getcmdline(firstc, count, indent)
 
 #ifdef FEAT_WILDMENU
 	/* Special translations for 'wildmenu' */
-	if (expand_context == EXPAND_MENUNAMES && p_wmnu)
+	if (xpc.xp_context == EXPAND_MENUNAMES && p_wmnu)
 	{
 	    /* Hitting <Down> after "emenu Name.": complete submenu */
 	    if (ccline.cmdbuff[ccline.cmdpos - 1] == '.' && c == K_DOWN)
@@ -338,7 +339,7 @@ getcmdline(firstc, count, indent)
 		 * cursor */
 		int found = FALSE;
 
-		j = expand_pattern - ccline.cmdbuff;
+		j = xpc.xp_pattern - ccline.cmdbuff;
 		i = 0;
 		while (--j > 0)
 		{
@@ -365,10 +366,10 @@ getcmdline(firstc, count, indent)
 		if (i > 0)
 		    cmdline_del(i);
 		c = p_wc;
-		expand_context = EXPAND_NOTHING;
+		xpc.xp_context = EXPAND_NOTHING;
 	    }
 	}
-	if (expand_context == EXPAND_FILES && p_wmnu)
+	if (xpc.xp_context == EXPAND_FILES && p_wmnu)
 	{
 	    char_u upseg[5];
 
@@ -386,13 +387,13 @@ getcmdline(firstc, count, indent)
 		/* go down a directory */
 		c = p_wc;
 	    }
-	    else if (STRNCMP(expand_pattern, upseg + 1, 3) == 0 && c == K_DOWN)
+	    else if (STRNCMP(xpc.xp_pattern, upseg + 1, 3) == 0 && c == K_DOWN)
 	    {
 		/* If in a direct ancestor, strip off one ../ to go down */
 		int found = FALSE;
 
 		j = ccline.cmdpos;
-		i = expand_pattern - ccline.cmdbuff;
+		i = xpc.xp_pattern - ccline.cmdbuff;
 		while (--j > i)
 		{
 		    if (vim_ispathsep(ccline.cmdbuff[j]))
@@ -416,7 +417,7 @@ getcmdline(firstc, count, indent)
 		int found = FALSE;
 
 		j = ccline.cmdpos - 1;
-		i = expand_pattern - ccline.cmdbuff;
+		i = xpc.xp_pattern - ccline.cmdbuff;
 		while (--j > i)
 		{
 #ifdef FEAT_MBYTE
@@ -463,10 +464,10 @@ getcmdline(firstc, count, indent)
 	}
 #if 0 /* If enabled <Down> on a file takes you _completely_ out of wildmenu */
 	if (p_wmnu
-		&& (expand_context == EXPAND_FILES
-		    || expand_context == EXPAND_MENUNAMES)
+		&& (xpc.xp_context == EXPAND_FILES
+		    || xpc.xp_context == EXPAND_MENUNAMES)
 		&& (c == K_UP || c == K_DOWN))
-	    expand_context = EXPAND_NOTHING;
+	    xpc.xp_context = EXPAND_NOTHING;
 #endif
 #endif
 
@@ -522,14 +523,14 @@ getcmdline(firstc, count, indent)
 			&& !did_wild_list
 			&& (wim_flags[wim_index] & WIM_LIST))
 		{
-		    showmatches(FALSE);
+		    showmatches(&xpc, FALSE);
 		    redrawcmd();
 		    did_wild_list = TRUE;
 		}
 		if (wim_flags[wim_index] & WIM_LONGEST)
-		    res = nextwild(WILD_LONGEST, WILD_NO_BEEP);
+		    res = nextwild(&xpc, WILD_LONGEST, WILD_NO_BEEP);
 		else if (wim_flags[wim_index] & WIM_FULL)
-		    res = nextwild(WILD_NEXT, WILD_NO_BEEP);
+		    res = nextwild(&xpc, WILD_NEXT, WILD_NO_BEEP);
 		else
 		    res = OK;	    /* don't insert 'wildchar' now */
 	    }
@@ -540,18 +541,18 @@ getcmdline(firstc, count, indent)
 		/* if 'wildmode' first contains "longest", get longest
 		 * common part */
 		if (wim_flags[0] & WIM_LONGEST)
-		    res = nextwild(WILD_LONGEST, WILD_NO_BEEP);
+		    res = nextwild(&xpc, WILD_LONGEST, WILD_NO_BEEP);
 		else
-		    res = nextwild(WILD_EXPAND_KEEP, WILD_NO_BEEP);
+		    res = nextwild(&xpc, WILD_EXPAND_KEEP, WILD_NO_BEEP);
 
 		/* if interrupted while completing, behave like it failed */
 		if (got_int)
 		{
 		    (void)vpeekc();	/* remove <C-C> from input stream */
 		    got_int = FALSE;	/* don't abandon the command line */
-		    (void)ExpandOne(NULL, NULL, 0, WILD_FREE);
+		    (void)ExpandOne(&xpc, NULL, NULL, 0, WILD_FREE);
 #ifdef FEAT_WILDMENU
-		    expand_context = EXPAND_NOTHING;
+		    xpc.xp_context = EXPAND_NOTHING;
 #endif
 		    goto cmdline_changed;
 		}
@@ -577,29 +578,30 @@ getcmdline(firstc, count, indent)
 			    int p_wmnu_save = p_wmnu;
 			    p_wmnu = 0;
 #endif
-			    nextwild(WILD_PREV, 0);	/* remove match */
+			    nextwild(&xpc, WILD_PREV, 0); /* remove match */
 #ifdef FEAT_WILDMENU
 			    p_wmnu = p_wmnu_save;
 #endif
 			}
 #ifdef FEAT_WILDMENU
-			showmatches(p_wmnu && ((wim_flags[wim_index] & WIM_LIST) == 0));
+			showmatches(&xpc, p_wmnu
+				&& ((wim_flags[wim_index] & WIM_LIST) == 0));
 #else
-			showmatches(FALSE);
+			showmatches(&xpc, FALSE);
 #endif
 			redrawcmd();
 			did_wild_list = TRUE;
 			if (wim_flags[wim_index] & WIM_LONGEST)
-			    nextwild(WILD_LONGEST, WILD_NO_BEEP);
+			    nextwild(&xpc, WILD_LONGEST, WILD_NO_BEEP);
 			else if (wim_flags[wim_index] & WIM_FULL)
-			    nextwild(WILD_NEXT, WILD_NO_BEEP);
+			    nextwild(&xpc, WILD_NEXT, WILD_NO_BEEP);
 		    }
 		    else
 			vim_beep();
 		}
 #ifdef FEAT_WILDMENU
 		else if (cmd_numfiles == -1)
-		    expand_context = EXPAND_NOTHING;
+		    xpc.xp_context = EXPAND_NOTHING;
 #endif
 	    }
 	    if (wim_index < 3)
@@ -614,9 +616,9 @@ getcmdline(firstc, count, indent)
 	/* <S-Tab> goes to last match, in a clumsy way */
 	if (c == K_S_TAB && KeyTyped)
 	{
-	    if (nextwild(WILD_EXPAND_KEEP, 0) == OK
-		    && nextwild(WILD_PREV, 0) == OK
-		    && nextwild(WILD_PREV, 0) == OK)
+	    if (nextwild(&xpc, WILD_EXPAND_KEEP, 0) == OK
+		    && nextwild(&xpc, WILD_PREV, 0) == OK
+		    && nextwild(&xpc, WILD_PREV, 0) == OK)
 		goto cmdline_changed;
 	}
 
@@ -774,7 +776,7 @@ getcmdline(firstc, count, indent)
 		goto cmdline_changed;
 
 	case Ctrl_D:
-		if (showmatches(FALSE) == FAIL)
+		if (showmatches(&xpc, FALSE) == FAIL)
 		    break;	/* Use ^D as normal char instead */
 
 		redrawcmd();
@@ -931,12 +933,12 @@ getcmdline(firstc, count, indent)
 		goto cmdline_not_changed;
 
 	case Ctrl_A:	    /* all matches */
-		if (nextwild(WILD_ALL, 0) == FAIL)
+		if (nextwild(&xpc, WILD_ALL, 0) == FAIL)
 		    break;
 		goto cmdline_changed;
 
 	case Ctrl_L:	    /* longest common part */
-		if (nextwild(WILD_LONGEST, 0) == FAIL)
+		if (nextwild(&xpc, WILD_LONGEST, 0) == FAIL)
 		    break;
 		goto cmdline_changed;
 
@@ -944,7 +946,7 @@ getcmdline(firstc, count, indent)
 	case Ctrl_P:	    /* previous match */
 		if (cmd_numfiles > 0)
 		{
-		    if (nextwild((c == Ctrl_P) ? WILD_PREV : WILD_NEXT, 0)
+		    if (nextwild(&xpc, (c == Ctrl_P) ? WILD_PREV : WILD_NEXT, 0)
 								      == FAIL)
 			break;
 		    goto cmdline_changed;
@@ -1923,26 +1925,27 @@ ccheck_abbr(c)
  * normal character (instead of being expanded).  This allows :s/^I^D etc.
  */
     static int
-nextwild(type, options)
-    int	    type;
-    int	    options;	    /* extra options for ExpandOne() */
+nextwild(xp, type, options)
+    expand_t	*xp;
+    int		type;
+    int		options;	/* extra options for ExpandOne() */
 {
-    int	    i, j;
-    char_u  *p1;
-    char_u  *p2;
-    int	    oldlen;
-    int	    difflen;
-    int	    v;
+    int		i, j;
+    char_u	*p1;
+    char_u	*p2;
+    int		oldlen;
+    int		difflen;
+    int		v;
 
     if (cmd_numfiles == -1)
-	set_expand_context();
+	set_expand_context(xp);
 
-    if (expand_context == EXPAND_UNSUCCESSFUL)
+    if (xp->xp_context == EXPAND_UNSUCCESSFUL)
     {
 	beep_flush();
 	return OK;  /* Something illegal on command line */
     }
-    if (expand_context == EXPAND_NOTHING)
+    if (xp->xp_context == EXPAND_NOTHING)
     {
 	/* Caller can use the character as a normal char instead */
 	return FAIL;
@@ -1951,7 +1954,7 @@ nextwild(type, options)
     MSG_PUTS("...");	    /* show that we are busy */
     out_flush();
 
-    i = expand_pattern - ccline.cmdbuff;
+    i = xp->xp_pattern - ccline.cmdbuff;
     oldlen = ccline.cmdpos - i;
 
     if (type == WILD_NEXT || type == WILD_PREV)
@@ -1959,18 +1962,18 @@ nextwild(type, options)
 	/*
 	 * Get next/previous match for a previous expanded pattern.
 	 */
-	p2 = ExpandOne(NULL, NULL, 0, type);
+	p2 = ExpandOne(xp, NULL, NULL, 0, type);
     }
     else
     {
 	/*
 	 * Translate string into pattern and expand it.
 	 */
-	if ((p1 = addstar(&ccline.cmdbuff[i], oldlen, expand_context)) == NULL)
+	if ((p1 = addstar(&ccline.cmdbuff[i], oldlen, xp->xp_context)) == NULL)
 	    p2 = NULL;
 	else
 	{
-	    p2 = ExpandOne(p1, vim_strnsave(&ccline.cmdbuff[i], oldlen),
+	    p2 = ExpandOne(xp, p1, vim_strnsave(&ccline.cmdbuff[i], oldlen),
 		    WILD_HOME_REPLACE|WILD_ADD_SLASH|WILD_SILENT|WILD_ESCAPE
 							      |options, type);
 	    vim_free(p1);
@@ -1996,7 +1999,7 @@ nextwild(type, options)
 							ccline.cmdbufflen - 4)
 	{
 	    v = realloc_cmdbuff(ccline.cmdlen + difflen);
-	    expand_pattern = ccline.cmdbuff + i;
+	    xp->xp_pattern = ccline.cmdbuff + i;
 	}
 	else
 	    v = OK;
@@ -2016,13 +2019,14 @@ nextwild(type, options)
 
     /* When expanding a ":map" command and no matches are found, assume that
      * the key is supposed to be inserted literally */
-    if (expand_context == EXPAND_MAPPINGS && p2 == NULL)
+    if (xp->xp_context == EXPAND_MAPPINGS && p2 == NULL)
 	return FAIL;
 
     if (cmd_numfiles <= 0 && p2 == NULL)
 	beep_flush();
     else if (cmd_numfiles == 1)
-	(void)ExpandOne(NULL, NULL, 0, WILD_FREE);  /* free expanded pattern */
+	/* free expanded pattern */
+	(void)ExpandOne(xp, NULL, NULL, 0, WILD_FREE);
 
     return OK;
 }
@@ -2050,10 +2054,11 @@ nextwild(type, options)
  * options = WILD_SILENT:	    don't print warning messages
  * options = WILD_ESCAPE:	    put backslash before special chars
  *
- * The global variable expand_context must have been set!
+ * The variable xp->xp_context must have been set!
  */
     char_u *
-ExpandOne(str, orig, options, mode)
+ExpandOne(xp, str, orig, options, mode)
+    expand_t	*xp;
     char_u	*str;
     char_u	*orig;	    /* allocated copy of original of expanded string */
     int		options;
@@ -2103,7 +2108,7 @@ ExpandOne(str, orig, options, mode)
 	    }
 #ifdef FEAT_WILDMENU
 	    if (p_wmnu)
-		win_redr_status_matches(cmd_numfiles, cmd_files, findex);
+		win_redr_status_matches(xp, cmd_numfiles, cmd_files, findex);
 #endif
 	    if (findex == -1)
 		return vim_strsave(orig_save);
@@ -2134,7 +2139,7 @@ ExpandOne(str, orig, options, mode)
 	/*
 	 * Do the expansion.
 	 */
-	if (ExpandFromContext(str, &cmd_numfiles, &cmd_files, FALSE,
+	if (ExpandFromContext(xp, str, &cmd_numfiles, &cmd_files, FALSE,
 							     options) == FAIL)
 	{
 #ifdef FNAME_ILLEGAL
@@ -2161,9 +2166,9 @@ ExpandOne(str, orig, options, mode)
 
 	    if (options & WILD_ESCAPE)
 	    {
-	      if (expand_context == EXPAND_FILES
-			|| expand_context == EXPAND_BUFFERS
-			|| expand_context == EXPAND_DIRECTORIES)
+	      if (xp->xp_context == EXPAND_FILES
+			|| xp->xp_context == EXPAND_BUFFERS
+			|| xp->xp_context == EXPAND_DIRECTORIES)
 	      {
 		/*
 		 * Insert a backslash into a file name before a space, \, %, #
@@ -2172,7 +2177,7 @@ ExpandOne(str, orig, options, mode)
 		for (i = 0; i < cmd_numfiles; ++i)
 		{
 		    /* for ":set path=" we need to escape spaces twice */
-		    if (expand_set_path)
+		    if (xp->xp_set_path)
 		    {
 			p = vim_strsave_escaped(cmd_files[i], (char_u *)" ");
 			if (p != NULL)
@@ -2222,9 +2227,9 @@ ExpandOne(str, orig, options, mode)
 			}
 		    }
 		}
-		expand_set_path = FALSE;
+		xp->xp_set_path = FALSE;
 	      }
-	      else if (expand_context == EXPAND_TAGS)
+	      else if (xp->xp_context == EXPAND_TAGS)
 	      {
 		/*
 		 * Insert a backslash before characters in a tag name that
@@ -2251,8 +2256,8 @@ ExpandOne(str, orig, options, mode)
 		    non_suf_match = cmd_numfiles;
 		else
 		    non_suf_match = 1;
-		if ((expand_context == EXPAND_FILES
-			    || expand_context == EXPAND_DIRECTORIES)
+		if ((xp->xp_context == EXPAND_FILES
+			    || xp->xp_context == EXPAND_DIRECTORIES)
 			&& cmd_numfiles > 1)	/* more than one match; check suffix */
 		{
 		    /*
@@ -2290,9 +2295,9 @@ ExpandOne(str, orig, options, mode)
 	    for (i = 0; i < cmd_numfiles; ++i)
 	    {
 #ifdef CASE_INSENSITIVE_FILENAME
-		if (expand_context == EXPAND_DIRECTORIES
-			|| expand_context == EXPAND_FILES
-			|| expand_context == EXPAND_BUFFERS)
+		if (xp->xp_context == EXPAND_DIRECTORIES
+			|| xp->xp_context == EXPAND_FILES
+			|| xp->xp_context == EXPAND_BUFFERS)
 		{
 		    if (TO_LOWER(cmd_files[i][len]) !=
 						   TO_LOWER(cmd_files[0][len]))
@@ -2379,7 +2384,8 @@ tilde_replace(orig_pat, num_files, files)
  */
 /*ARGSUSED*/
     static int
-showmatches(wildmenu)
+showmatches(xp, wildmenu)
+    expand_t	*xp;
     int		wildmenu;
 {
     char_u	*file_str = NULL;
@@ -2395,27 +2401,27 @@ showmatches(wildmenu)
 
     if (cmd_numfiles == -1)
     {
-	set_expand_context();
-	if (expand_context == EXPAND_UNSUCCESSFUL)
+	set_expand_context(xp);
+	if (xp->xp_context == EXPAND_UNSUCCESSFUL)
 	{
 	    beep_flush();
 	    return OK;  /* Something illegal on command line */
 	}
-	if (expand_context == EXPAND_NOTHING)
+	if (xp->xp_context == EXPAND_NOTHING)
 	{
 	    /* Caller can use the character as a normal char instead */
 	    return FAIL;
 	}
 
 	/* add star to file name, or convert to regexp if not exp. files. */
-	file_str = addstar(expand_pattern,
-		      (int)(ccline.cmdbuff + ccline.cmdpos - expand_pattern),
-							      expand_context);
+	file_str = addstar(xp->xp_pattern,
+		      (int)(ccline.cmdbuff + ccline.cmdpos - xp->xp_pattern),
+							      xp->xp_context);
 	if (file_str == NULL)
 	    return OK;
 
 	/* find all files that match the description */
-	if (ExpandFromContext(file_str, &num_files, &files_found, FALSE,
+	if (ExpandFromContext(xp, file_str, &num_files, &files_found, FALSE,
 					  WILD_ADD_SLASH|WILD_SILENT) == FAIL)
 	{
 	    num_files = 0;
@@ -2447,7 +2453,7 @@ showmatches(wildmenu)
 	got_int = FALSE;	/* only int. the completion, not the cmd line */
 #ifdef FEAT_WILDMENU
     else if (wildmenu)
-	win_redr_status_matches(num_files, files_found, 0);
+	win_redr_status_matches(xp, num_files, files_found, 0);
 #endif
     else
     {
@@ -2455,8 +2461,8 @@ showmatches(wildmenu)
 	maxlen = 0;
 	for (i = 0; i < num_files; ++i)
 	{
-	    if (expand_context == EXPAND_FILES
-					  || expand_context == EXPAND_BUFFERS)
+	    if (xp->xp_context == EXPAND_FILES
+					  || xp->xp_context == EXPAND_BUFFERS)
 	    {
 		home_replace(NULL, files_found[i], NameBuff, MAXPATHL, TRUE);
 		j = vim_strsize(NameBuff);
@@ -2467,7 +2473,7 @@ showmatches(wildmenu)
 		maxlen = j;
 	}
 
-	if (expand_context == EXPAND_TAGS_LISTFILES)
+	if (xp->xp_context == EXPAND_TAGS_LISTFILES)
 	    lines = num_files;
 	else
 	{
@@ -2481,7 +2487,7 @@ showmatches(wildmenu)
 
 	attr = hl_attr(HLF_D);	/* find out highlighting for directories */
 
-	if (expand_context == EXPAND_TAGS_LISTFILES)
+	if (xp->xp_context == EXPAND_TAGS_LISTFILES)
 	{
 	    MSG_PUTS_ATTR(_("tagname"), hl_attr(HLF_T));
 	    msg_clr_eos();
@@ -2495,7 +2501,7 @@ showmatches(wildmenu)
 	    lastlen = 999;
 	    for (k = i; k < num_files; k += lines)
 	    {
-		if (expand_context == EXPAND_TAGS_LISTFILES)
+		if (xp->xp_context == EXPAND_TAGS_LISTFILES)
 		{
 		    msg_outtrans_attr(files_found[k], hl_attr(HLF_D));
 		    p = files_found[k] + STRLEN(files_found[k]) + 1;
@@ -2507,8 +2513,8 @@ showmatches(wildmenu)
 		}
 		for (j = maxlen - lastlen; --j >= 0; )
 		    msg_putchar(' ');
-		if (expand_context == EXPAND_FILES
-					  || expand_context == EXPAND_BUFFERS)
+		if (xp->xp_context == EXPAND_FILES
+					  || xp->xp_context == EXPAND_BUFFERS)
 		{
 			    /* highlight directories */
 		    j = (mch_isdir(files_found[k]));
@@ -2665,10 +2671,10 @@ addstar(fname, len, context)
 /*
  * Must parse the command line so far to work out what context we are in.
  * Completion can then be done based on that context.
- * This routine sets two global variables:
- *  char_u *expand_pattern  The start of the pattern to be expanded within
+ * This routine sets the variables:
+ *  xp->xp_pattern	    The start of the pattern to be expanded within
  *				the command line (ends at the cursor).
- *  int expand_context	    The type of thing to expand.  Will be one of:
+ *  xp->xp_context	    The type of thing to expand.  Will be one of:
  *
  *  EXPAND_UNSUCCESSFUL	    Used sometimes when there is something illegal on
  *			    the command line, like an unknown command.	Caller
@@ -2704,14 +2710,15 @@ addstar(fname, len, context)
  *  EXPAND_ENV_VARS	    Complete environment variable names
  */
     static void
-set_expand_context()
+set_expand_context(xp)
+    expand_t	*xp;
 {
     char_u	*nextcomm;
     int		old_char = NUL;
 
     if (ccline.cmdfirstc != ':')	/* only expansion for ':' commands */
     {
-	expand_context = EXPAND_NOTHING;
+	xp->xp_context = EXPAND_NOTHING;
 	return;
     }
 
@@ -2724,21 +2731,21 @@ set_expand_context()
     ccline.cmdbuff[ccline.cmdpos] = NUL;
     nextcomm = ccline.cmdbuff;
     while (nextcomm != NULL)
-	nextcomm = set_one_cmd_context(nextcomm);
+	nextcomm = set_one_cmd_context(xp, nextcomm);
     ccline.cmdbuff[ccline.cmdpos] = old_char;
 }
 
 /*
- * Do the expansion based on the global variables expand_context and
- * expand_pattern -- webb.
+ * Do the expansion based on xp->xp_context and xp->xp_pattern.
  */
     static int
-ExpandFromContext(pat, num_file, file, files_only, options)
-    char_u  *pat;
-    int	    *num_file;
-    char_u  ***file;
-    int	    files_only;
-    int	    options;
+ExpandFromContext(xp, pat, num_file, file, files_only, options)
+    expand_t	*xp;
+    char_u	*pat;
+    int		*num_file;
+    char_u	***file;
+    int		files_only;
+    int		options;
 {
 #ifdef FEAT_CMDL_COMPL
     regprog_t	*prog;
@@ -2757,14 +2764,14 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     if (options & WILD_SILENT)
 	flags |= EW_SILENT;
 
-    if (expand_context == EXPAND_FILES)
+    if (xp->xp_context == EXPAND_FILES)
     {
 	/*
 	 * Expand file names.
 	 */
 	return expand_wildcards(1, &pat, num_file, file, flags|EW_FILE);
     }
-    else if (expand_context == EXPAND_DIRECTORIES)
+    else if (xp->xp_context == EXPAND_DIRECTORIES)
     {
 	/*
 	 * Expand directory names.
@@ -2773,7 +2780,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 	int	i;
 
 	/* for ":set path=" we need to remove backslashes for escaped space */
-	if (expand_set_path)
+	if (xp->xp_set_path)
 	{
 	    free_pat = TRUE;
 	    pat = vim_strsave(pat);
@@ -2794,91 +2801,84 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 
     *file = (char_u **)"";
     *num_file = 0;
-    if (expand_context == EXPAND_HELP)
+    if (xp->xp_context == EXPAND_HELP)
 	return find_help_tags(pat, num_file, file);
 
 #ifndef FEAT_CMDL_COMPL
     return FAIL;
 #else
-    if (expand_context == EXPAND_OLD_SETTING)
+    if (xp->xp_context == EXPAND_OLD_SETTING)
 	return ExpandOldSetting(num_file, file);
 
     set_reg_ic(pat);	    /* set reg_ic according to p_ic, p_scs and pat */
 
-    if (expand_context == EXPAND_BUFFERS)
+    if (xp->xp_context == EXPAND_BUFFERS)
 	return ExpandBufnames(pat, num_file, file, options);
-    else if (expand_context == EXPAND_TAGS
-	    || expand_context == EXPAND_TAGS_LISTFILES)
-	return expand_tags(expand_context == EXPAND_TAGS, pat, num_file, file);
+    else if (xp->xp_context == EXPAND_TAGS
+	    || xp->xp_context == EXPAND_TAGS_LISTFILES)
+	return expand_tags(xp->xp_context == EXPAND_TAGS, pat, num_file, file);
 
     prog = vim_regcomp(pat, (int)p_magic);
     if (prog == NULL)
 	return FAIL;
 
-    if (expand_context == EXPAND_COMMANDS)
-	ret = ExpandGeneric(prog, num_file, file, get_command_name);
-    else if (expand_context == EXPAND_SETTINGS ||
-				       expand_context == EXPAND_BOOL_SETTINGS)
-	ret = ExpandSettings(prog, num_file, file);
+    if (xp->xp_context == EXPAND_SETTINGS
+	    || xp->xp_context == EXPAND_BOOL_SETTINGS)
+	ret = ExpandSettings(xp, prog, num_file, file);
+    else if (xp->xp_context == EXPAND_MAPPINGS)
+	ret = ExpandMappings(prog, num_file, file);
+    else
+    {
+	static struct expgen
+	{
+	    int		context;
+	    char_u	*((*func)__ARGS((expand_t *, int)));
+	    int		ic;
+	} tab[] =
+	{
+	    {EXPAND_COMMANDS, get_command_name, FALSE},
 #ifdef FEAT_USR_CMDS
-    else if (expand_context == EXPAND_USER_COMMANDS)
-	ret = ExpandGeneric(prog, num_file, file, get_user_commands);
-    else if (expand_context == EXPAND_USER_CMD_FLAGS)
-	ret = ExpandGeneric(prog, num_file, file, get_user_cmd_flags);
-    else if (expand_context == EXPAND_USER_NARGS)
-	ret = ExpandGeneric(prog, num_file, file, get_user_cmd_nargs);
-    else if (expand_context == EXPAND_USER_COMPLETE)
-	ret = ExpandGeneric(prog, num_file, file, get_user_cmd_complete);
+	    {EXPAND_USER_COMMANDS, get_user_commands, FALSE},
+	    {EXPAND_USER_CMD_FLAGS, get_user_cmd_flags, FALSE},
+	    {EXPAND_USER_NARGS, get_user_cmd_nargs, FALSE},
+	    {EXPAND_USER_COMPLETE, get_user_cmd_complete, FALSE},
 #endif
 #ifdef FEAT_EVAL
-    else if (expand_context == EXPAND_USER_VARS)
-	ret = ExpandGeneric(prog, num_file, file, get_user_var_name);
-    else if (expand_context == EXPAND_FUNCTIONS)
-	ret = ExpandGeneric(prog, num_file, file, get_function_name);
-    else if (expand_context == EXPAND_USER_FUNC)
-	ret = ExpandGeneric(prog, num_file, file, get_user_func_name);
-    else if (expand_context == EXPAND_EXPRESSION)
-	ret = ExpandGeneric(prog, num_file, file, get_expr_name);
+	    {EXPAND_USER_VARS, get_user_var_name, FALSE},
+	    {EXPAND_FUNCTIONS, get_function_name, FALSE},
+	    {EXPAND_USER_FUNC, get_user_func_name, FALSE},
+	    {EXPAND_EXPRESSION, get_expr_name, FALSE},
 #endif
-    else if (expand_context == EXPAND_MAPPINGS)
-	ret = ExpandMappings(prog, num_file, file);
 #ifdef FEAT_MENU
-    else if (expand_context == EXPAND_MENUS)
-	ret = ExpandGeneric(prog, num_file, file, get_menu_name);
-    else if (expand_context == EXPAND_MENUNAMES)
-	ret = ExpandGeneric(prog, num_file, file, get_menu_names);
+	    {EXPAND_MENUS, get_menu_name, FALSE},
+	    {EXPAND_MENUNAMES, get_menu_names, FALSE},
 #endif
 #ifdef FEAT_SYN_HL
-    else if (expand_context == EXPAND_SYNTAX)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_syntax_name);
-    }
+	    {EXPAND_SYNTAX, get_syntax_name, TRUE},
 #endif
-    else if (expand_context == EXPAND_HIGHLIGHT)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_highlight_name);
-    }
+	    {EXPAND_HIGHLIGHT, get_highlight_name, TRUE},
 #ifdef FEAT_AUTOCMD
-    else if (expand_context == EXPAND_EVENTS)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_event_name);
-    }
-    else if (expand_context == EXPAND_AUGROUP)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_augroup_name);
-    }
+	    {EXPAND_EVENTS, get_event_name, TRUE},
+	    {EXPAND_AUGROUP, get_augroup_name, TRUE},
 #endif
-    else if (expand_context == EXPAND_ENV_VARS)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_env_name);
-    }
-    else
+	    {EXPAND_ENV_VARS, get_env_name, TRUE},
+	};
+	int	i;
+
+	/*
+	 * Find a context in the table and call the ExpandGeneric() with the
+	 * right function to do the expansion.
+	 */
 	ret = FAIL;
+	for (i = 0; i < sizeof(tab) / sizeof(struct expgen); ++i)
+	    if (xp->xp_context == tab[i].context)
+	    {
+		if (tab[i].ic)
+		    reg_ic = TRUE;
+		ret = ExpandGeneric(xp, prog, num_file, file, tab[i].func);
+		break;
+	    }
+    }
 
     vim_free(prog);
     return ret;
@@ -2896,11 +2896,13 @@ ExpandFromContext(pat, num_file, file, files_only, options)
  * Returns OK when no problems encountered, FAIL for error (out of memory).
  */
     int
-ExpandGeneric(prog, num_file, file, func)
+ExpandGeneric(xp, prog, num_file, file, func)
+    expand_t	*xp;
     regprog_t	*prog;
     int		*num_file;
     char_u	***file;
-    char_u	*((*func)__ARGS((int))); /* returns a string from the list */
+    char_u	*((*func)__ARGS((expand_t *, int)));
+					  /* returns a string from the list */
 {
     int		i;
     int		count = 0;
@@ -2916,7 +2918,7 @@ ExpandGeneric(prog, num_file, file, func)
     {
 	for (i = 0; ; ++i)
 	{
-	    str = (*func)(i);
+	    str = (*func)(xp, i);
 	    if (str == NULL)	    /* end of list */
 		break;
 	    if (*str == NUL)	    /* skip empty strings */

@@ -1,16 +1,12 @@
 " Vim syntax file
-" Language:	SGML-DTD (DocBook 3.1 and LinuxDoc)
+" Language:	SGML-DTD (DocBook 4.1 and LinuxDoc)
 " Maintainer:	Lorance Stinson <madlinux@yahoo.com>
-" Last Change:	Thu Sep 8 14:39 EDT 2000
+" Last Change:	Sat Oct 28 20:54 EDT 2000
 " Filenames:    *.ent *.sgml *.sgm
 
 " Adapted from the HTML syntax file by Claudio Fleiner <claudio@fleiner.com>
 " and the SGML syntax files by Sung-Hyun Nam <namsh@kldp.org>.
-
-" The option "sgml_no_rendering" can be set to turnrendering off.
-" The option "sgml_my_rendering" can be set to use custome rendering.
-" If custome rendering is used the color definitions sgmlLink, sgmlBold
-" sgmlBoldItalic, sgmlUnderline and sgmlItalic should be set to taste.
+" Please check :help sgml.vim for some comments and a description of the options
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -42,11 +38,10 @@ syn match   sgmlTagName contained "sect\d\+info"
 syn match   sgmlTagName contained "refsect\d\+"
 syn keyword sgmlTagName contained abbrev abstract accel acronym action address
 				\ affiliation alt anchor answer appendix
-				\ application
-				\ area areaset areaspec arg artheader article
-				\ artpagenums attribution author authorblurb
-				\ authorgroup authorinitials bibliodiv
-				\ biblioentry bibliography bibliomixed
+				\ application area areaset areaspec arg
+                                \ artheader article artpagenums attribution
+                                \ author authorblurb authorgroup authorinitials
+                                \ bibliodiv biblioentry bibliography bibliomixed
 				\ bibliomset biblioset blockquote book
 				\ bookbiblio bookinfo bridgehead callout
 				\ calloutlist caption caution chapter citation
@@ -87,19 +82,17 @@ syn keyword sgmlTagName contained abbrev abstract accel acronym action address
 				\ publishername qandadiv qandaentry qandaset
 				\ question quote refdescriptor refentry
 				\ refentrytitle reference refmeta refmiscinfo
-				\ refname
-				\ refnamediv refpurpose refsynopsisdiv
+				\ refname refnamediv refpurpose refsynopsisdiv
 				\ releaseinfo replaceable returnvalue
 				\ revhistory revision revnumber revremark row
 				\ sbr screen screeninfo screenshot secondary
-				\ secondaryie section sectioninfo
-				\ see seealso seealsoie
-				\ seeie seg seglistitem segmentedlist segtitle
-				\ seriesinfo set setinfo sgmltag shortaffil
-				\ sidebar simpara simplelist simplesect
-				\ spanspec state step street structfield
-				\ structname subscript substeps subtitle
-				\ superscript surname symbol synopsis
+				\ secondaryie section sectioninfo see seealso
+                                \ seealsoie seeie seg seglistitem segmentedlist
+                                \ segtitle seriesinfo set setinfo sgmltag
+                                \ shortaffil sidebar simpara simplelist
+                                \ simplesect spanspec state step street
+                                \ structfield structname subscript substeps
+                                \ subtitle superscript surname symbol synopsis
 				\ systemitem table tbody term tertiaryie
 				\ textobject tgroup thead tip title
 				\ titleabbrev toc token trademark type ulink
@@ -112,12 +105,16 @@ syn keyword sgmlTagName contained bf code descrip enum em htmlurl itemize item
 				\ p ref sect tag tscreen tt url verb
 
 " legal arg names
-syn keyword sgmlArg     contained arch conformance filename graphics
+syn keyword sgmlArg     contained action align arch choice class condition 
+                                \ conformance coords depth
+                                \ entityref filename fileref format graphics
                                 \ id idreq keyaction label lang linespecific
                                 \ linkend linkendreq linkends linkendsreq
-                                \ mark moreinfo name os pagenum remap revision
-                                \ revisionflag role status url userlevel vendor
-                                \ width xreflabel
+                                \ mark moreinfo name os otheraction otherunits
+                                \ override pagenum remap revision
+                                \ rep revisionflag role scale scalefit security
+                                \ srccredit status units url vendor
+                                \ userlevel width xreflabel
 
 " special characters
 syn match sgmlSpecialChar "&[^;]*;"
@@ -148,43 +145,43 @@ if main_syntax == "sgml"
   syn sync minlines=10
 endif
 
-" The default highlighting.
-hi def link sgmlTag                       Function
-hi def link sgmlEndTag                    Identifier
-hi def link sgmlArg                       Type
-hi def link sgmlTagName                   sgmlStatement
-hi def link sgmlSpecialTagName            Exception
-hi def link sgmlValue                     Value
-hi def link sgmlSpecialChar               Special
-hi def link sgmlDocEnt                    Type
-hi def link sgmlDocType                   PreProc
-hi def link sgmlTitle                     Title
-hi def link sgmlPreStmt                   PreProc
-hi def link sgmlPreErr                    Error
-hi def link sgmlPreProc                   PreProc
-hi def link sgmlPreAttr                   String
-hi def link sgmlPreProcAttrName           PreProc
-hi def link sgmlPreProcAttrErr            Error
-hi def link sgmlSpecial                   Special
-hi def link sgmlSpecialChar               Special
-hi def link sgmlString                    String
-hi def link sgmlStatement                 Statement
-hi def link sgmlComment                   Comment
-hi def link sgmlValue                     String
-hi def link sgmlTagErr                    sgmlErr
-hi def link sgmlErr                       Error
+" The default highlighing.
+hi link sgmlTag			Function
+hi link sgmlEndTag		Type
+hi link sgmlArg			Type
+hi link sgmlTagName		sgmlStatement
+hi link sgmlSpecialTagName	Exception
+hi link sgmlValue		Value
+hi link sgmlSpecialChar		Special
+hi link sgmlDocEnt		Type
+hi link sgmlDocType		PreProc
+hi link sgmlTitle		Title
+hi link sgmlPreStmt		PreProc
+hi link sgmlPreErr		Error
+hi link sgmlPreProc		PreProc
+hi link sgmlPreAttr		String
+hi link sgmlPreProcAttrName	PreProc
+hi link sgmlPreProcAttrErr	Error
+hi link sgmlSpecial		Special
+hi link sgmlSpecialChar		Special
+hi link sgmlString		String
+hi link sgmlStatement		Statement
+hi link sgmlComment		Comment
+hi link sgmlValue		String
+hi link sgmlTagErr		sgmlErr
+hi link sgmlErr			Error
 
 if !exists("sgml_no_rendering")
   if !exists("sgml_my_rendering")
     if &background == "dark"
-      hi def sgmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
-    else
-      hi def sgmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
-    endif
-    hi def sgmlBold                term=bold cterm=bold gui=bold
-    hi def sgmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
-    hi def sgmlUnderline           term=underline cterm=underline gui=underline
-    hi def sgmlItalic              term=italic cterm=italic gui=italic
+	hi sgmlLink		term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
+     else
+	hi sgmlLink		term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
+     endif
+     hi sgmlBold		term=bold cterm=bold gui=bold
+     hi sgmlBoldItalic		term=bold,italic cterm=bold,italic gui=bold,italic
+     hi sgmlUnderline		term=underline cterm=underline gui=underline
+     hi sgmlItalic		term=italic cterm=italic gui=italic
   endif
 endif
 

@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0l.  Last change: 2000 Nov 05
+*pi_expl.txt*    For Vim version 6.0m.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -35,7 +35,7 @@ To split the window vertically, inside explorer.vim, set the following: >
   let g:explVertical=1
 Setting it to zero will cause the window to split horizontally.
 
->From inside the explorer, pressing <enter> on a filename will close the
+From inside the explorer, pressing <enter> on a filename will close the
 explorer and open the file chosen. To open the file in a new window, press e.
 The new window will be split horizontally or vertically based on the value of
 the variable g:explVertical.
@@ -45,10 +45,8 @@ After opening a file with the e command, you might want to resize the explorer
 window. This can be done by setting the variable >
   let g:explWinSize=N
 N is the number of rows (when the window is split horizontally) or the number
-of columns (when the window is split vertically). If you don't want to use this
-feature, use >
-  let g:explWinSize=""
-<
+of columns (when the window is split vertically).
+
 							*g:explShowFileSize*
 							*g:explShowFileDate*
 Extra information about the files (size in bytes and modified time) can also
@@ -66,11 +64,18 @@ The format of date displayed is configurable using the variable
 g:explDateFormat.  explorer uses this variable to pass to strftime() to fetch
 the date information. |strftime()|
 
-							*g:explShowDotFiles*
-On some systems, files beginning with "." are hidden files. If you would like
-explorer to show these files, you can set the following option >
-  let g:explShowDotFiles
-<
+							*g:explHideFiles*
+You can hide some files by filling the variable g:explHidFiles with regular
+expressions. A filename that matches any of these regular expressions will not
+be shown. For example,
+
+  let g:explHideFiles='^\.,\.gz$,\.exe$,\.zip$'
+
+will not show files that begin with "." and those that end in .gz, .exe or
+.zip. However, all directory names will always be shown. If while exploring,
+you'd like to see anytime the hidden files as well, use the command "a".
+
+
 							*g:explDetailedHelp*
 The help information spanning a few lines can be turned off (and just a single
 help message enabled) using the option >

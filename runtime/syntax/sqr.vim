@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Structured Query Report Writer (SQR)
-" Maintainer:	Jeff Lanzarotta
-" URL:		http://members.tripod.com/lanzarotta/vim/syntax/sqr.vim
-" Last Change:	2000 Nov 04
+"    Language: Structured Query Report Writer (SQR)
+"  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
+" Last Change: November 8, 2000
+"     Version: 6.0-1
 
 set isk=@,48-57,_,-
 
@@ -64,17 +64,17 @@ syn match	sqrComment	"!.*" contains=sqrTodo
 syn sync ccomment sqrComment
 
 " The default highlighting.
-hi def link sqrComment		Comment
-hi def link sqrNumber		Number
-hi def link sqrOperator		Operator
-hi def link sqrStatement	Statement
-hi def link sqrString		String
-hi def link sqrType		Type
-hi def link sqrDefine		Macro
-hi def link sqrInclude		Include
-hi def link sqrTodo		Todo
-hi def link sqrFunction		Function
-hi def link sqrParameter	Function
+hi def link sqrComment Comment
+hi def link sqrNumber Number
+hi def link sqrOperator Operator
+hi def link sqrStatement Statement
+hi def link sqrString String
+hi def link sqrType Type
+hi def link sqrDefine Macro
+hi def link sqrInclude Include
+hi def link sqrTodo Todo
+hi def link sqrFunction Function
+hi def link sqrParameter Function
 
 let b:current_syntax = "sqr"
 

@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0l.  Last change: 2000 Oct 15
+*uganda.txt*    For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -148,10 +148,13 @@ Europe:		To avoid banking costs the best thing is to send me a
 		sponsorship.
 
 Others:		Transfer to one of these accounts if possible:
-		    Postbank, account 4548774, Swift code: INGB NL 2A
+		    Postbank, account 4548774
+		    		Swift code: INGB NL 2A
+				IBAN: NL47 PSTB 0004 5487 74
 			under the name "stichting ICCF Holland", Venlo
 		    If that doesn't work:
-		    Rabobank Venlo, account 3765.05.117, Swift code: RABO NL 2U
+		    Rabobank Venlo, account 3765.05.117
+		    		Swift code: RABO NL 2U
 			under the name "Bram Moolenaar", Venlo
 		Otherwise, send a cheque in US dollars to the above address.
 		Minimal amount: $70 (my bank does not accept smaller amounts

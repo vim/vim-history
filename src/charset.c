@@ -12,6 +12,10 @@
 static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
 #endif
 
+#ifdef FEAT_MBYTE
+static int win_nolbr_chartabsize __ARGS((win_t *wp, char_u *s, colnr_t col, int *headp));
+#endif
+
 #if defined(FEAT_MBYTE)
 static int nr2hex __ARGS((int c));
 #endif
@@ -690,12 +694,16 @@ safe_vim_isprintc(c)
  */
     int
 lbr_chartabsize(s, col)
-    unsigned char   *s;
-    colnr_t	    col;
+    unsigned char	*s;
+    colnr_t		col;
 {
 #ifdef FEAT_LINEBREAK
     if (!curwin->w_p_lbr && *p_sbr == NUL)
     {
+#endif
+#ifdef FEAT_MBYTE
+	if (curwin->w_p_wrap)
+	    return win_nolbr_chartabsize(curwin, s, col, NULL);
 #endif
 	RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, s, col)
 #ifdef FEAT_LINEBREAK
@@ -709,8 +717,8 @@ lbr_chartabsize(s, col)
  */
     int
 lbr_chartabsize_adv(s, col)
-    unsigned char   **s;
-    colnr_t	    col;
+    char_u	**s;
+    colnr_t	col;
 {
     int		retval;
 
@@ -727,20 +735,20 @@ lbr_chartabsize_adv(s, col)
 /*
  * This function is used very often, keep it fast!!!!
  *
- * If "head" not NULL, set *head to the size of what we for 'showbreak' string
- * at start of line.  Warning: *head is only set if it's a non-zero value,
- * init to 0 before calling.
+ * If "headp" not NULL, set *headp to the size of what we for 'showbreak'
+ * string at start of line.  Warning: *headp is only set if it's a non-zero
+ * value, init to 0 before calling.
  */
 /*ARGSUSED*/
     int
-win_lbr_chartabsize(wp, s, col, head)
+win_lbr_chartabsize(wp, s, col, headp)
     win_t		*wp;
     unsigned char	*s;
     colnr_t		col;
-    int			*head;
+    int			*headp;
 {
 #ifdef FEAT_LINEBREAK
-    int		c = *s;
+    int		c;
     int		size;
     colnr_t	col2;
     colnr_t	colmax;
@@ -752,23 +760,31 @@ win_lbr_chartabsize(wp, s, col, head)
      * No 'linebreak' and 'showbreak': return quickly.
      */
     if (!wp->w_p_lbr && *p_sbr == NUL)
+#endif
     {
+#ifdef FEAT_MBYTE
+	if (wp->w_p_wrap)
+	    return win_nolbr_chartabsize(wp, s, col, headp);
 #endif
 	RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, s, col)
-#ifdef FEAT_LINEBREAK
     }
 
+#ifdef FEAT_LINEBREAK
     /*
      * First get normal size, without 'linebreak'
      */
     size = win_chartabsize(wp, s, col);
+    c = *s;
 
     /*
      * If 'linebreak' set check at a blank before a non-blank if the line
      * needs a break here
      */
-    if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(s[1])
-	    && !wp->w_p_list && wp->w_p_wrap
+    if (wp->w_p_lbr
+	    && vim_isbreak(c)
+	    && !vim_isbreak(s[1])
+	    && !wp->w_p_list
+	    && wp->w_p_wrap
 # ifdef FEAT_VERTSPLIT
 	    && wp->w_width != 0
 # endif
@@ -812,7 +828,7 @@ win_lbr_chartabsize(wp, s, col, head)
 
     /*
      * May have to add something for 'showbreak' string at start of line
-     * Set *head to the size of what we add.
+     * Set *headp to the size of what we add.
      */
     added = 0;
     if (*p_sbr != NUL && wp->w_p_wrap && col != 0
@@ -837,11 +853,69 @@ win_lbr_chartabsize(wp, s, col, head)
 		added = 0;
 	}
     }
-    if (head != NULL)
-	*head = added;
+    if (headp != NULL)
+	*headp = added;
     return size;
 #endif
 }
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Like win_lbr_chartabsize(), except that we know 'linebreak' is off and
+ * 'wrap' is on.  This means we need to check for a double-byte character that
+ * doesn't fit at the end of the screen line.
+ */
+    static int
+win_nolbr_chartabsize(wp, s, col, headp)
+    win_t	*wp;
+    char_u	*s;
+    colnr_t	col;
+    int		*headp;
+{
+    int		n;
+
+    if (*s == TAB && (!wp->w_p_list || lcs_tab1))
+    {
+	n = wp->w_buffer->b_p_ts;
+	return (int)(n - (col % n));
+    }
+    n = ptr2cells(s);
+    /* Add one cell for a double-width character in the last column of the
+     * window, displayed with a ">". */
+    if (n == 2 && MB_BYTE2LEN(*s) > 1 && in_win_border(wp, col))
+    {
+	if (headp != NULL)
+	    *headp = 1;
+	return 3;
+    }
+    return n;
+}
+
+/*
+ * Return TRUE if virtual column "vcol" is in the rightmost column of window
+ * "wp".
+ */
+    int
+in_win_border(wp, vcol)
+    win_t	*wp;
+    colnr_t	vcol;
+{
+    colnr_t	width1;		/* width of first line (after line number) */
+    colnr_t	width2;		/* width of further lines */
+
+#ifdef FEAT_VERTSPLIT
+    if (wp->w_width == 0)	/* there is no border */
+	return FALSE;
+#endif
+    width1 = W_WIDTH(wp) - win_col_off(wp);
+    if (vcol < width1 - 1)
+	return FALSE;
+    if (vcol == width1 - 1)
+	return TRUE;
+    width2 = width1 + win_col_off2(wp);
+    return ((vcol - width1) % width2 == width2 - 1);
+}
+#endif /* FEAT_MBYTE */
 
 /*
  * Get virtual column number of pos.
@@ -882,9 +956,14 @@ getvcol(wp, pos, start, cursor, end)
 #endif
        )
     {
+#ifndef FEAT_MBYTE
 	head = 0;
+#endif
 	for (;;)
 	{
+#ifdef FEAT_MBYTE
+	    head = 0;
+#endif
 	    c = *ptr;
 	    /* make sure we don't go past the end of the line */
 	    if (c == NUL)
@@ -910,14 +989,11 @@ getvcol(wp, pos, start, cursor, end)
 		    /* If a double-cell char doesn't fit at the end of a line
 		     * it wraps to the next line, it's like this char is three
 		     * cells wide. */
-		    if (incr == 2
-			    && wp->w_p_wrap
-#ifdef FEAT_VERTSPLIT
-			    && wp->w_width != 0
-#endif
-			    && (int)(vcol % W_WIDTH(wp))
-						      == (int)W_WIDTH(wp) - 1)
+		    if (incr == 2 && wp->w_p_wrap && in_win_border(wp, vcol))
+		    {
 			++incr;
+			head = 1;
+		    }
 		}
 		else
 #endif
@@ -950,18 +1026,6 @@ getvcol(wp, pos, start, cursor, end)
 		break;
 	    }
 
-#ifdef FEAT_MBYTE
-	    /* If a double-cell char doesn't fit at the end of a line it wraps
-	     * to the next line, it's like this char is three cells wide. */
-	    if (has_mbyte
-		    && mb_ptr2cells(ptr) == 2
-		    && wp->w_p_wrap
-#ifdef FEAT_VERTSPLIT
-		    && wp->w_width != 0
-#endif
-		    && (int)(vcol % W_WIDTH(wp)) == (int)W_WIDTH(wp) - 1)
-		++incr;
-#endif
 	    if (ptr >= posptr)	/* character at pos->col */
 		break;
 
