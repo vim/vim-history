@@ -1970,6 +1970,11 @@ mch_rename(const char *OldFile, const char *NewFile)
 	retval = rename(TempFile, NewFile);
 	close(fd);
 	mch_remove((char_u *)OldFile);
+
+	/* If renaming to NewFile failed, rename TempFile back to OldFile, so
+	 * that it looks like nothing happened. */
+	if (retval)
+	    rename(TempFile, OldFile);
     }
     vim_free(TempFile);
 
