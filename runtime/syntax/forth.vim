@@ -12,7 +12,7 @@
 " the patches.
 
 " Many Thanks to...
-" 
+"
 " 2003-04-03:
 " Ron Aaron <ronaaron@exchange.microsoft.com> made updates for an
 " improved Win32Forth support.

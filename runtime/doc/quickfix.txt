@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.2f.  Last change: 2003 May 04
+*quickfix.txt*  For Vim version 6.2.  Last change: 2003 May 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -435,6 +435,26 @@ solution for substituting % for no arguments is welcome). This is not in the
 semantics of make, but you may specify filename without extension ".tex" and
 mean this as "make filename.dvi or filename.pdf or
 filename.some_result_extension according to compiler".
+
+Used variables:
+b:tex_ignore_makefile or g:tex_ignore_makefile
+  usually if a file 'Makefile' or 'makefile' exists in the current
+  directory, it is considered a sign that user wants to process his *TeX
+  files with make (e.g. he has a multifile book with a master file - in this
+  case :make should process master file regardless of which file is edited).
+  If this is not the case, you can set one of the variables above before
+  running :compiler tex.
+b:tex_flavor or g:tex_flavor
+  by default this compiler thinks that you use LaTeX (don't you? why!?) and
+  run it with "latex" command. If this assumption is invalid for you, set
+  b:tex_flavor or g:tex_flavor to the name of command you run.
+
+Note: latex command line syntax is set to usable both for MikTeX (suggestion
+by Srinath Avadhanula) and teTeX (checked by Artem Chuprina). Suggestion
+from :help errorformat-LaTeX is too complex to keep it working for different
+shells and OSes and also does not allow to use other available TeX options,
+if any. If your TeX doesn't support "-interaction=nonstopmode", please
+report it with different means to express \nonstopmode from the command line
 
 =============================================================================
 7. The error format					*error-file-format*

@@ -1087,6 +1087,16 @@ gui_mch_set_shellsize(int width, int height,
     wndpl.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(s_hwnd, &wndpl);
 
+    /* Resizing a maximized window looks very strange, unzoom it first.
+     * But don't do it when still starting up, it may have been requested in
+     * the shortcut. */
+    if (wndpl.showCmd == SW_SHOWMAXIMIZED && starting == 0)
+    {
+	ShowWindow(s_hwnd, SW_SHOWNORMAL);
+	/* Need to get the settings of the normal window. */
+	GetWindowPlacement(s_hwnd, &wndpl);
+    }
+
     win_xpos = wndpl.rcNormalPosition.left;
     win_ypos = wndpl.rcNormalPosition.top;
 

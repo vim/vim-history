@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Apr 25
+" Last Change: 2003 May 31
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -177,6 +177,8 @@ set modifiable
 %d
 let s:old_paste = &paste
 set paste
+let s:old_magic = &magic
+set magic
 
 " The DTD
 if exists("html_use_css")
@@ -369,6 +371,7 @@ let &report = s:old_report
 let &title = s:old_title
 let &icon = s:old_icon
 let &paste = s:old_paste
+let &magic = s:old_magic
 let @/ = s:old_search
 wincmd p
 let &l:et = s:old_et
@@ -376,7 +379,7 @@ wincmd p
 
 " Save a little bit of memory (worths doing?)
 unlet s:old_et s:old_paste s:old_icon s:old_report s:old_title s:old_search
-unlet s:whatterm s:idlist s:lnum s:end s:fgc s:bgc
+unlet s:whatterm s:idlist s:lnum s:end s:fgc s:bgc s:old_magic
 unlet! s:col s:id s:attr s:len s:line s:new s:did_retab s:numblines
 delfunc s:HtmlColor
 delfunc s:CSS1

@@ -229,12 +229,12 @@ EXTERN int check_cstack INIT(= FALSE);
 EXTERN int trylevel INIT(= 0);
 
 /*
- * When "force_abort" is TRUE, always skip commands after an error message, even
- * after the outermost ":endif" or ":endwhile" or for a function whithout the
- * "abort" flag.  It is set to TRUE when "trylevel" is non-zero (and ":silent!"
- * was not used) or an exception is being thrown at the time an error is
- * detected.  It is set to FALSE when "trylevel" gets zero again and there
- * was no error or interrupt or throw.
+ * When "force_abort" is TRUE, always skip commands after an error message,
+ * even after the outermost ":endif" or ":endwhile" or for a function whithout
+ * the "abort" flag.  It is set to TRUE when "trylevel" is non-zero (and
+ * ":silent!" was not used) or an exception is being thrown at the time an
+ * error is detected.  It is set to FALSE when "trylevel" gets zero again and
+ * there was no error or interrupt or throw.
  *
  */
 EXTERN int force_abort INIT(= FALSE);

@@ -5170,14 +5170,16 @@ not_ascii:
 	    item = (PangoItem *)item_list->data;
 	    item_list = g_list_delete_link(item_list, item_list);
 	    /*
-	     * Increment the bidirectional embedding level by 1 if it is not even.
-	     * An odd number means the output will be RTL, but we don't want that
-	     * since Vim handles right-to-left text on its own.  It would probably
-	     * be sufficient to just set level = 0, but you can never know :)
+	     * Increment the bidirectional embedding level by 1 if it is not
+	     * even.  An odd number means the output will be RTL, but we don't
+	     * want that since Vim handles right-to-left text on its own.  It
+	     * would probably be sufficient to just set level = 0, but you can
+	     * never know :)
 	     *
-	     * Unfortunately we can't take advantage of Pango's ability to render
-	     * both LTR and RTL at the same time.  In order to support that, Vim's
-	     * main screen engine would have to make use of Pango functionality.
+	     * Unfortunately we can't take advantage of Pango's ability to
+	     * render both LTR and RTL at the same time.  In order to support
+	     * that, Vim's main screen engine would have to make use of Pango
+	     * functionality.
 	     */
 	    item->analysis.level = (item->analysis.level + 1) & (~1U);
 
@@ -5211,7 +5213,8 @@ not_ascii:
 			int width;
 
 			width = cellcount * gui.char_width * PANGO_SCALE;
-			glyph->geometry.x_offset += MAX(0, width - cluster_width) / 2;
+			glyph->geometry.x_offset +=
+					    MAX(0, width - cluster_width) / 2;
 			glyph->geometry.width = width;
 		    }
 		    else
@@ -5238,7 +5241,8 @@ not_ascii:
 		    glyphs->glyphs[i - 1].geometry.width = 0;
 
 		    width = cells * gui.char_width * PANGO_SCALE;
-		    glyph->geometry.x_offset += MAX(0, width - cluster_width) / 2;
+		    glyph->geometry.x_offset +=
+					    MAX(0, width - cluster_width) / 2;
 		    glyph->geometry.width = width;
 		}
 		else

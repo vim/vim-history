@@ -2547,7 +2547,7 @@ msgstr "E278: SNiFF+ no conectado"
 
 #: if_sniff.c:1019
 msgid "E279: Not a SNiFF+ buffer"
-msgstr "E2279: No es un buffer de SNiFF+"
+msgstr "E279: No es un buffer de SNiFF+"
 
 #: if_sniff.c:1084
 msgid "Sniff: Error during write. Disconnected"

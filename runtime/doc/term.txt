@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.2f.  Last change: 2003 Apr 06
+*term.txt*      For Vim version 6.2.  Last change: 2003 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -98,7 +98,7 @@ with "stty cs8 parenb", which is restored as "stty cs7 parenb".  Use
 Some termcap entries are wrong in the sense that after sending 't_ks' the
 cursor keys send codes different from the codes defined in the termcap.  To
 avoid this you can set 't_ks' (and 't_ke') to empty strings.  This must be
-done during initialization (see |initialization|), otherwise its too late.
+done during initialization (see |initialization|), otherwise it's too late.
 
 Some termcap entries assume that the highest bit is always reset.  For
 example: The cursor-up entry for the amiga could be ":ku=\EA:".  But the Amiga
@@ -138,8 +138,8 @@ key sequence as a cursor key movement.  To avoid this and make Vim do what you
 want in either case you could use these settings:
 	:set notimeout		" don't timeout on mappings
 	:set ttimeout		" do timeout on terminal key codes
-	:set timeoutlen=100	" timemout in 100 msec
-This requires the key-codes to be send within 100msec in order to recognize
+	:set timeoutlen=100	" timeout in 100 msec
+This requires the key-codes to be sent within 100msec in order to recognize
 them as a cursor key.  When you type you normally are not that fast, so they
 are recognized as individual typed commands, even though Vim receives the same
 sequence of bytes.
@@ -380,8 +380,8 @@ There is a special trick to obtain the key codes which currently only works
 for xterm.  When |t_RV| is defined and a response is received which indicates
 an xterm with patchlevel 141 or higher, Vim uses special escape sequences to
 request the key codes directly from the xterm.  The responses are used to
-adjust the set the various t_ codes.  This avoids the problem that the xterm
-can produce different codes, depending on the mode it is in (8-bit, VT102,
+adjust the various t_ codes.  This avoids the problem that the xterm can
+produce different codes, depending on the mode it is in (8-bit, VT102,
 VT220, etc.).  The result is that codes like <xF1> are no longer needed.
 Note: This is only done on startup.  If the xterm options are changed after
 Vim has started, the escape sequences may not be recognized any more.

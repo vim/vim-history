@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.2f.  Last change: 2003 May 24
+*syntax.txt*    For Vim version 6.2.  Last change: 2003 Jun 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -647,13 +647,29 @@ If you see '{' and '}' highlighted as an error where they are OK, reset the
 highlighting for cErrInParen and cErrInBracket.
 
 
+CHANGELOG				*changelog.vim* *changelog-syntax*
+
+ChangeLog supports highlighting spaces at the start of a line.
+If you do not like this, add following line to your .vimrc: >
+	let g:changelog_spacing_errors = 0
+This works the next time you edit a changelog file.  You can also use
+"b:changelog_spacing_errors" to set this per buffer (before loading the syntax
+file).
+
+You can change the highlighting used, e.g., to flag the spaces as an error: >
+	:hi link ChangelogError Error
+Or to avoid the highlighting: >
+	:hi link ChangelogError NONE
+This works immediately.
+
+
 COBOL						*cobol.vim* *cobol-syntax*
 
 COBOL highlighting has different needs for legacy code than it does for fresh
 development.  This is due to differences in what is being done (maintenance
 versus development) and other factors.  To enable legacy code highlighting,
 add this line to your .vimrc: >
-	:let cobol_legacy_code=1
+	:let cobol_legacy_code = 1
 To disable it again, use this: >
 	:unlet cobol_legacy_code
 
@@ -663,7 +679,7 @@ COLD FUSION				*coldfusion.vim* *coldfusion-syntax*
 The ColdFusion has its own version of HTML comments. To turn on ColdFusion
 comment highlighting, add the following line to your startup file: >
 
-	:let html_wrong_comments=1
+	:let html_wrong_comments = 1
 
 The ColdFusion syntax file is based on the HTML syntax file.
 
@@ -1455,7 +1471,7 @@ as an error, use: >
 
 Another technique to detect extra spacing and other errors that
 will interfere with correct typesetting of your file, is to define
-an eye-catching highliting definition for the syntax groups 
+an eye-catching highliting definition for the syntax groups
 nroffDefinition and nroffDefSpecial in your configuration
 files. For example: >
 

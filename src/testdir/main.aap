@@ -2,9 +2,9 @@
 # Makefile to run al tests for Vim
 #
 
-VIMPROG ?= ../vim
+VimProg ?= ../vim
 
-SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out
+Scripts = test1.out test2.out test3.out test4.out test5.out test6.out
 		test7.out test8.out test9.out test10.out test11.out
 		test12.out  test13.out test14.out test15.out test17.out
 		test18.out test19.out test20.out test21.out test22.out
@@ -15,21 +15,21 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out
 		test43.out test44.out test45.out test46.out test47.out
 		test48.out test49.out
 
-SCRIPTS_GUI = test16.out
+ScriptsGUI = test16.out
 
 # Build "nongui" when no target was specified.
-nongui:	newlog $SCRIPTS
+nongui:	newlog $Scripts
 	:print
 	:cat test.log
 	:print ALL DONE
 
 # Build "ngui" when specified.
-gui:	newlog $SCRIPTS $SCRIPTS_GUI
+gui:	newlog $Scripts $ScriptsGUI
 	:print
 	:cat test.log
 	:print ALL DONE
 
-$SCRIPTS $SCRIPTS_GUI: $VIMPROG
+$Scripts $ScriptsGUI: $VimProg
 
 clean:
 	:del {r}{force} *.out test.log tiny.vim small.vim mbyte.vim test.ok X*
@@ -37,7 +37,7 @@ clean:
 # test1 is special, it checks for features
 test1.out: test1.in
 	:del {force} test1.failed tiny.vim small.vim mbyte.vim
-	:sys {i} $VIMPROG -u unix.vim -U NONE --noplugin -s dotest.in test1.in
+	:sys {i} $VimProg -u unix.vim -U NONE --noplugin -s dotest.in test1.in
 	@if os.system("diff test.out test1.ok") != 0:
 		:error test1 FAILED - Something basic is wrong
 	:move {force} test.out test1.out
@@ -46,7 +46,7 @@ test1.out: test1.in
 :rule %.out : %.in
 	:del {force} $(match).failed test.ok
 	:copy $(match).ok test.ok
-	:sys {i} $VIMPROG -u unix.vim -U NONE --noplugin -s dotest.in $(match).in
+	:sys {i} $VimProg -u unix.vim -U NONE --noplugin -s dotest.in $(match).in
 	@if os.system("diff test.out " + match + ".ok") != 0:
 		:print $match FAILED >>test.log
 		:move {force} test.out $(match).failed

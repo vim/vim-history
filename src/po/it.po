@@ -1254,7 +1254,7 @@ msgstr "E182: Nome comando non valido"
 #: ex_docmd.c:4758
 msgid "E183: User defined commands must start with an uppercase letter"
 msgstr ""
-"E183 I comandi definiti dall'utente devono iniziare con lettera maiuscola"
+"E183: I comandi definiti dall'utente devono iniziare con lettera maiuscola"
 
 #: ex_docmd.c:4828
 #, c-format
@@ -2405,8 +2405,8 @@ msgstr "E259: nessuna corrispondenza trovata per la richiesta cscope %s di %s"
 
 #: if_cscope.c:1055
 #, c-format
-msgid "E469 invalid cscopequickfix flag %c for %c"
-msgstr "E469 flag cscopequickfix %c non valido per %c"
+msgid "E469: invalid cscopequickfix flag %c for %c"
+msgstr "E469: flag cscopequickfix %c non valido per %c"
 
 #: if_cscope.c:1112
 msgid "cscope commands:\n"

@@ -1842,7 +1842,7 @@ msgstr "Žiadne mapovanie nebolo nájdené"
 
 #: getchar.c:3992
 msgid "E228: makemap: Illegal mode"
-msgstr "E228_ makemap: neprístupný mód"
+msgstr "E228: makemap: neprístupný mód"
 
 #: gui_at_fs.c:290
 msgid "<cannot open> "

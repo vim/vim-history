@@ -1,7 +1,7 @@
 " Menu Translations:	Francais
 " Maintainer:		Adrien Beau <version.francaise@free.fr>
 " First Version:	Francois Thunus <thunus@systran.fr>
-" Last Change:		2003 Mar 30
+" Last Change:		2003 May 29
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -156,7 +156,7 @@ menutrans Create\ &Fold<Tab>zf				&Créer\ repli<Tab>zf
 menutrans &Delete\ Fold<Tab>zd				E&ffacer\ repli<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD			Effacer\ &tous\ les\ replis<Tab>zD
 " -SEP2-
-menutrans Fold\ column\ &width				&Largeur\ colonne\ replis
+menutrans Fold\ col&umn\ width				&Largeur\ colonne\ replis
 
 menutrans &Diff					&Différence
 
@@ -281,7 +281,6 @@ menutrans SaveSesn				EnregSess
 menutrans RunScript				LancScript
 " -sep6-
 menutrans Make					Make
-menutrans Shell					Shell
 menutrans RunCtags				CréerEtiqu
 menutrans TagJump				AllerEtiqu
 " -sep7-
@@ -319,7 +318,6 @@ fun! Do_toolbar_tmenu()
   tmenu ToolBar.SaveSesn			Enregister session courante
   tmenu ToolBar.RunScript			Lancer un script Vim
   tmenu ToolBar.Make				Lancer make
-  tmenu ToolBar.Shell				Ouvrir un terminal
   tmenu ToolBar.RunCtags			Créer les étiquettes
   tmenu ToolBar.TagJump				Atteindre cette étiquette
   tmenu ToolBar.Help				Aide de Vim
@@ -346,8 +344,10 @@ menutrans BDF\ font			Fonte\ BDF
 menutrans BIND\ config			Config\.\ BIND
 menutrans BIND\ zone			Zone\ BIND
 menutrans Cascading\ Style\ Sheets	Feuilles\ de\ style\ en\ cascade
-menutrans Cfg\ Config\ file		Fichier\ de\ config\ \.cfg
-menutrans Generic			Fichier\ de\ config\ générique
+menutrans Cfg\ Config\ file		Fichier\ de\ config\.\ \.cfg
+menutrans Cheetah\ template		Patron\ Cheetah
+menutrans commit\ file			Fichier\ commit
+menutrans Generic\ Config\ file		Fichier\ de\ config\.\ générique
 menutrans Digital\ Command\ Lang	DCL
 menutrans DNS/BIND\ zone		Zone\ BIND/DNS
 menutrans Dylan\ interface		Interface
@@ -356,10 +356,15 @@ menutrans Elm\ filter\ rules		Règles\ de\ filtrage\ Elm
 menutrans ERicsson\ LANGuage		Erlang\ (langage\ Ericsson)
 menutrans Essbase\ script		Script\ Essbase
 menutrans Eterm\ config			Config\.\ Eterm
+menutrans Exim\ conf			Config\.\ Exim
 menutrans Fvwm\ configuration		Config\.\ Fvwm
 menutrans Fvwm2\ configuration		Config\.\ Fvwm2
+menutrans Fvwm2\ configuration\ with\ M4	Config\.\ Fvwm2\ avec\ M4
 menutrans GDB\ command\ file		Fichier\ de\ commandes\ GDB
 menutrans HTML\ with\ M4		HTML\ avec\ M4
+menutrans Cheetah\ HTML\ template	Patron\ Cheetah\ pour\ HTML
+menutrans IDL\Generic\ IDL		IDL\IDL\ générique
+menutrans IDL\Microsoft\ IDL		IDL\IDL\ Microsoft
 menutrans Indent\ profile		Profil\ Indent
 menutrans Inno\ setup			Config\.\ Inno
 menutrans InstallShield\ script		Script\ InstallShield
@@ -387,6 +392,8 @@ menutrans Povray\ configuration		Config\.\ Povray
 menutrans Purify\ log			Log\ Purify
 menutrans Readline\ config		Config\.\ Readline
 menutrans RCS\ log\ output		Log\ RCS
+menutrans RCS\ file			Fichier\ RCS
+menutrans RockLinux\ package\ desc\.	Desc\.\ pkg\.\ RockLinux
 menutrans Samba\ config			Config\.\ Samba
 menutrans SGML\ catalog			Catalogue\ SGML
 menutrans SGML\ DTD			DTD\ SGML
@@ -397,11 +404,13 @@ menutrans Sinda\ compare		Comparaison\ Sinda
 menutrans Sinda\ input			Entrée\ Sinda
 menutrans Sinda\ output			Sortie\ Sinda
 menutrans SKILL\ for\ Diva		SKILL\ pour\ Diva
+menutrans Smarty\ Templates		Patrons\ Smarty
 menutrans SNNS\ network			Réseau\ SNNS
 menutrans SNNS\ pattern			Motif\ SNNS
 menutrans SNNS\ result			Résultat\ SNNS
 menutrans Snort\ Configuration		Config\.\ Snort
 menutrans Squid\ config			Config\.\ Squid
+menutrans Subversion\ commit		Commit\ Subversion
 menutrans TAK\ compare			Comparaison\ TAK
 menutrans TAK\ input			Entrée\ TAK
 menutrans TAK\ output			Sortie\ TAK
@@ -418,11 +427,13 @@ menutrans Viminfo\ file			Fichier\ Viminfo
 menutrans Virata\ config		Config\.\ Virata
 menutrans Wget\ config			Config\.\ wget
 menutrans Whitespace\ (add)		Espaces\ et\ tabulations
+menutrans WildPackets\ EtherPeek\ Decoder	Décodeur\ WildPackets\ EtherPeek
 menutrans X\ resources			Resources\ X
 menutrans XXD\ hex\ dump		Sortie\ hexa\.\ de\ xxd
 menutrans XFree86\ Config		Config\.\ XFree86
 " The End Of The Syntax Menu
 
+menutrans &Show\ filetypes\ in\ menu		&Afficher\ tout\ le\ menu
 " -SEP1-
 menutrans Set\ '&syntax'\ only			Changer\ '&syntax'\ seulement
 menutrans Set\ '&filetype'\ too			Changer\ '&filetype'\ aussi

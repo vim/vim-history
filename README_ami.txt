@@ -1,4 +1,4 @@
-README_ami.txt for version 6.2f of Vim: Vi IMproved.
+README_ami.txt for version 6.2 of Vim: Vi IMproved.
 
 This file explains the installation of Vim on Amiga systems.
 See README.txt for general information about Vim.

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2f.  Last change: 2003 May 24
+*eval.txt*      For Vim version 6.2.  Last change: 2003 Jun 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -12,16 +12,17 @@ Note: Expression evaluation can be disabled at compile time.  If this has been
 done, the features in this document are not available.  See |+eval| and the
 last chapter below.
 
-1. Variables		|variables|
-2. Expression syntax	|expression-syntax|
-3. Internal variable	|internal-variables|
-4. Builtin Functions	|functions|
-5. Defining functions	|user-functions|
-6. Curly braces names	|curly-braces-names|
-7. Commands		|expression-commands|
-8. Examples		|eval-examples|
-9. No +eval feature	|no-eval-feature|
-10. The sandbox		|eval-sandbox|
+1.  Variables		|variables|
+2.  Expression syntax	|expression-syntax|
+3.  Internal variable	|internal-variables|
+4.  Builtin Functions	|functions|
+5.  Defining functions	|user-functions|
+6.  Curly braces names	|curly-braces-names|
+7.  Commands		|expression-commands|
+8.  Exception handling	|exception-handling|
+9.  Examples		|eval-examples|
+10. No +eval feature	|no-eval-feature|
+11. The sandbox		|eval-sandbox|
 
 {Vi does not have any of these commands}
 
@@ -611,7 +612,7 @@ v:errmsg	Last given error message.  It's allowed to set this variable.
 
 					*v:exception* *exception-variable*
 v:exception	The value of the exception most recently caught and not
-		finished.  See also |v:throwpoint|.
+		finished.  See also |v:throwpoint| and |throw-variables|.
 		Example: >
 	:try
 	:  throw "oops"
@@ -747,7 +748,7 @@ v:this_session	Full filename of the last loaded or saved session file.  See
 					*v:throwpoint* *throwpoint-variable*
 v:throwpoint	The point where the exception most recently caught and not
 		finished was thrown.  Not set when commands are typed.  See
-		also |v:exception|.
+		also |v:exception| and |throw-variables|.
 		Example: >
 	:try
 	:  throw "oops"
@@ -2331,7 +2332,12 @@ stridx({haystack}, {needle})				*stridx()*
 <
 							*strlen()*
 strlen({expr})	The result is a Number, which is the length of the String
-		{expr}.
+		{expr} in bytes.  If you want to count the number of
+		multi-byte characters use something like this: >
+
+			:let len = strlen(substitute(str, ".", "x", "g"))
+
+<		Composing characters are not counted.
 
 strpart({src}, {start}[, {len}])			*strpart()*
 		The result is a String, which is part of {src},
@@ -3126,7 +3132,7 @@ This would call the function "my_func_whizz(parameter)".
 			or autocommand invocations.
 
 			When an error or interrupt is detected and there is
-			a ":finally" command following, execution continues
+			a |:finally| command following, execution continues
 			after the ":finally".  Otherwise, or when the
 			":endtry" is reached thereafter, the next
 			(dynamically) surrounding ":try" is checked for
@@ -3157,8 +3163,8 @@ This would call the function "my_func_whizz(parameter)".
 <
 					*:cat* *:catch* *E603* *E604* *E605*
 :cat[ch] /{pattern}/	The following commands until the next ":catch",
-			":finally", or ":endtry" that belongs to the same
-			":try" as the ":catch" are executed when an exception
+			|:finally|, or |:endtry| that belongs to the same
+			|:try| as the ":catch" are executed when an exception
 			matching {pattern} is being thrown and has not yet
 			been caught by a previous ":catch".  Otherwise, these
 			commands are skipped.
@@ -3270,7 +3276,9 @@ This would call the function "my_func_whizz(parameter)".
 			message in the |message-history|.  When used in a
 			script or function the line number will be added.
 			Spaces are placed between the arguments as with the
-			:echo command.
+			:echo command.  When used inside a try conditional,
+			the message is raised as an error exception instead
+			(see |try-echoerr|).
 			Example: >
 		:echoerr "This script just failed!"
 <			If you just want a highlighted message use |:echohl|.
@@ -3317,7 +3325,1001 @@ This would call the function "my_func_whizz(parameter)".
 		:echo "foo" | "this is a comment
 
 ==============================================================================
-8. Examples						*eval-examples*
+8. Exception handling					*exception-handling*
+
+The Vim script language comprises an exception handling feature.  This section
+explains how it can be used in a Vim script.
+
+Exceptions may be raised by Vim on an error or on interrupt, see
+|catch-errors| and |catch-interrupt|.  You can also explicitly throw an
+exception by using the ":throw" command, see |throw-catch|.
+
+
+TRY CONDITIONALS					*try-conditionals*
+
+Exceptions can be caught or can cause cleanup code to be executed.  You can
+use a try conditional to specify catch clauses (that catch exceptions) and/or
+a finally clause (to be executed for cleanup).
+    A try conditional begins with a |:try| command and ends at the matching
+|:endtry| command.  In between, you can use a |:catch| command to start
+a catch clause, or a |:finally| command to start a finally clause.  There may
+be none or multiple catch clauses, but there is at most one finally clause,
+which must not be followed by any catch clauses.  The lines before the catch
+clauses and the finally clause is called a try block. >
+
+     :try
+     :  ...
+     :  ...				TRY BLOCK
+     :  ...
+     :catch /{pattern}/
+     :  ...
+     :  ...				CATCH CLAUSE
+     :  ...
+     :catch /{pattern}/
+     :  ...
+     :  ...				CATCH CLAUSE
+     :  ...
+     :finally
+     :  ...
+     :  ...				FINALLY CLAUSE
+     :  ...
+     :endtry
+
+The try conditional allows to watch code for exceptions and to take the
+appropriate actions.  Exceptions from the try block may be caught.  Exceptions
+from the try block and also the catch clauses may cause cleanup actions.
+   When no exception is thrown during execution of the try block, the control
+is transferred to the finally clause, if present.  After its execution, the
+script continues with the line following the ":endtry".
+   When an exception occurs during execution of the try block, the remaining
+lines in the try block are skipped.  The exception is matched against the
+patterns specified as arguments to the ":catch" commands.  The catch clause
+after the first matching ":catch" is taken, other catch clauses are not
+executed.  The catch clause ends when the next ":catch", ":finally", or
+":endtry" command is reached - whatever is first.  Then, the finally clause
+(if present) is executed.  When the ":endtry" is reached, the script execution
+continues in the following line as usual.
+   When an exception that does not match any of the patterns specified by the
+":catch" commands is thrown in the try block, the exception is not caught by
+that try conditional and none of the catch clauses is executed.  Only the
+finally clause, if present, is taken.  The exception pends during execution of
+the finally clause.  It is resumed at the ":endtry", so that commands after
+the ":endtry" are not executed and the exception might be caught elsewhere,
+see |try-nesting|.
+   When during execution of a catch clause another exception is thrown, the
+remaining lines in that catch clause are not executed.  The new exception is
+not matched against the patterns in any of the ":catch" commands of the same
+try conditional and none of its catch clauses is taken.  If there is, however,
+a finally clause, it is executed, and the exception pends during its
+execution.  The commands following the ":endtry" are not executed.  The new
+exception might, however, be caught elsewhere, see |try-nesting|.
+   When during execution of the finally clause (if present) an exception is
+thrown, the remaining lines in the finally clause are skipped.  If the finally
+clause has been taken because of an exception from the try block or one of the
+catch clauses, the original (pending) exception is discarded.  The commands
+following the ":endtry" are not executed, and the exception from the finally
+clause is propagated and can be caught elsewhere, see |try-nesting|.
+
+The finally clause is also executed, when a ":break" or ":continue" for
+a ":while" loop enclosing the complete try conditional is executed from the
+try block or a catch clause.  Or when a ":return" or ":finish" is executed
+from the try block or a catch clause of a try conditional in a function or
+sourced script, respectively.  The ":break", ":continue", ":return", or
+":finish" pends during execution of the finally clause and is resumed when the
+":endtry" is reached.  It is, however, discarded when an exception is thrown
+from the finally clause.
+   When a ":break" or ":continue" for a ":while" loop enclosing the complete
+try conditional or when a ":return" or ":finish" is encountered in the finally
+clause, the rest of the finally clause is skipped, and the ":break",
+":continue", ":return" or ":finish" is executed as usual.  If the finally
+clause has been taken because of an exception or an earlier ":break",
+":continue", ":return", or ":finish" from the try block or a catch clause,
+this pending exception or command is discarded.
+
+For examples see |throw-catch| and |try-finally|.
+
+
+NESTING	OF TRY CONDITIONALS				*try-nesting*
+
+Try conditionals can be nested arbitrarily.  That is, a complete try
+conditional can be put into the try block, a catch clause, or the finally
+clause of another try conditional.  If the inner try conditional does not
+catch an exception thrown in its try block or throws a new exception from one
+of its catch clauses or its finally clause, the outer try conditional is
+checked according to the rules above.  If the inner try conditional is in the
+try block of the outer try conditional, its catch clauses are checked, but
+otherwise only the finally clause is executed.  It does not matter for
+nesting, whether the inner try conditional is directly contained in the outer
+one, or whether the outer one sources a script or calls a function containing
+the inner try conditional.
+
+When none of the active try conditionals catches an exception, just their
+finally clauses are executed.  Thereafter, the script processing terminates.
+An error message is displayed in case of an uncaught exception explicitly
+thrown by a ":throw" command.  For uncaught error and interrupt exceptions
+implicitly raised by Vim, the error message(s) or interrupt message are shown
+as usual.
+
+For examples see |throw-catch|.
+
+
+EXAMINIG EXCEPTION HANDLING CODE			*except-examine*
+
+Exception handling code can get tricky.  If you are in doubt what happens, set
+'verbose' to 13 or use the ":13verbose" command modifier when sourcing your
+script file.  Then you see when an exception is thrown, discarded, caught, or
+finished.  When using a verbosity level of at least 14, things pending in
+a finally clause are also shown.  This information is also given in debug mode
+(see |debug-scripts|).
+
+
+THROWING AND CATCHING EXCEPTIONS			*throw-catch*
+
+You can throw any number or string as an exception.  Use the |:throw| command
+and pass the value to be thrown as argument: >
+	:throw 4711
+	:throw "string"
+<							*throw-expression*
+You can also specify an expression argument.  The expression is then evaluated
+first, and the result is thrown: >
+	:throw 4705 + strlen("string")
+	:throw strpart("strings", 0, 6)
+
+An exception might be thrown during evaluation of the argument of the ":throw"
+command.  Unless it is caught there, the expression evaluation is abandoned.
+The ":throw" command then does not throw a new exception.
+   Example: >
+
+	:function! Foo(arg)
+	:  try
+	:    throw a:arg
+	:  catch /foo/
+	:  endtry
+	:  return 1
+	:endfunction
+	:
+	:function! Bar()
+	:  echo "in Bar"
+	:  return 4710
+	:endfunction
+	:
+	:throw Foo("arrgh") + Bar()
+
+This throws "arrgh", and "in Bar" is not displayed since Bar() is not
+executed. >
+	:throw Foo("foo") + Bar()
+however displays "in Bar" and throws 4711.
+
+Any other command that takes an expression as argument might also be
+abandoned by an (uncaught) exception during the expression evaluation.  The
+exception is then propagated to the caller of the command.
+   Example: >
+
+	:if Foo("arrgh")
+	:  echo "then"
+	:else
+	:  echo "else"
+	:endif
+
+Here neither of "then" or "else" is displayed.
+
+							*catch-order*
+Exceptions can be caught by a try conditional with one or more |:catch|
+commands, see |try-conditionals|.   The values to be caught by each ":catch"
+command can be specified as a pattern argument.  The subsequent catch clause
+gets executed when a matching exception is caught.
+   Example: >
+
+	:function! Foo(value)
+	:  try
+	:    throw a:value
+	:  catch /^\d\+$/
+	:    echo "Number thrown"
+	:  catch /.*/
+	:    echo "String thrown"
+	:  endtry
+	:endfunction
+	:
+	:call Foo(0x1267)
+	:call Foo('string')
+
+The first call to Foo() displays "Number thrown", the second "String thrown".
+An exception is matched against the ":catch" commands in the order they are
+specified.  Only the first match counts.  So you should place the more
+specific ":catch" first.  The following order does not make sense: >
+
+	:  catch /.*/
+	:    echo "String thrown"
+	:  catch /^\d\+$/
+	:    echo "Number thrown"
+
+The first ":catch" here matches always, so that the second catch clause is
+never taken.
+
+							*throw-variables*
+If you catch an exception by a general pattern, you may access the exact value
+in the variable |v:exception|: >
+
+	:  catch /^\d\+$/
+	:    echo "Number thrown.  Value is" v:exception
+
+You may also be interested where an exception was thrown.  This is stored in
+|v:throwpoint|.  Note that "v:exception" and "v:throwpoint" are valid for the
+exception most recently caught as long it is not finished.
+   Example: >
+
+	:function! Caught()
+	:  if v:exception != ""
+	:    echo 'Caught "' . v:exception . '" in ' . v:throwpoint
+	:  else
+	:    echo 'Nothing caught'
+	:  endif
+	:endfunction
+	:
+	:function! Foo()
+	:  try
+	:    try
+	:      try
+	:	 throw 4711
+	:      finally
+	:	 call Caught()
+	:      endtry
+	:    catch /.*/
+	:      call Caught()
+	:      throw "oops"
+	:    endtry
+	:  catch /.*/
+	:    call Caught()
+	:  finally
+	:    call Caught()
+	:  endtry
+	:endfunction
+	:
+	:call Foo()
+
+This displays >
+
+	Nothing caught
+	Caught "4711" in function Foo, line 4
+	Caught "oops" in function Foo, line 10
+	Nothing caught
+
+A practical example:  The following command ":LineNumber" displays the line
+number in the script or function where it has been used: >
+
+	:function! LineNumber()
+	:    return substitute(v:throwpoint, '.*\D\(\d\+\).*', '\1', "")
+	:endfunction
+	:command! LineNumber try | throw "" | catch | echo LineNumber() | endtry
+<
+							*try-nested*
+An exception that is not caught by a try conditional can be caught by
+a surrounding try conditional: >
+
+	:try
+	:  try
+	:    throw "foo"
+	:  catch /foobar/
+	:    echo "foobar"
+	:  finally
+	:    echo "inner finally"
+	:  endtry
+	:catch /foo/
+	:  echo "foo"
+	:endtry
+
+The inner try conditional does not catch the exception, just its finally
+clause is executed.  The exception is then caught by the outer try
+conditional.  The example displays "inner finally" and then "foo".
+
+							*throw-from-catch*
+You can catch an exception and throw a new one to be caught elsewhere from the
+catch clause: >
+
+	:function! Foo()
+	:  throw "foo"
+	:endfunction
+	:
+	:function! Bar()
+	:  try
+	:    call Foo()
+	:  catch /foo/
+	:    echo "Caught foo, throw bar"
+	:    throw "bar"
+	:  endtry
+	:endfunction
+	:
+	:try
+	:  call Bar()
+	:catch /.*/
+	:  echo "Caught" v:exception
+	:endtry
+
+This displays "Caught foo, throw bar" and then "Caught bar".
+
+							*rethrow*
+There is no real rethrow in the Vim script language, but you may throw
+"v:exception" instead: >
+
+	:function! Bar()
+	:  try
+	:    call Foo()
+	:  catch /.*/
+	:    echo "Rethrow" v:exception
+	:    throw v:exception
+	:  endtry
+	:endfunction
+<							*try-echoerr*
+Note that this method cannot be used to "rethrow" Vim error or interrupt
+exceptions, because it is not possible to fake Vim internal exceptions.
+Trying so causes an error exception.  You should throw your own exception
+denoting the situation.  If you want to cause a Vim error exception containing
+the original error exception value, you can use the |:echoerr| command: >
+
+	:try
+	:  try
+	:    asdf
+	:  catch /.*/
+	:    echoerr v:exception
+	:  endtry
+	:catch /.*/
+	:  echo v:exception
+	:endtry
+
+This code displays >
+
+	Vim(echoerr):Vim:E492: Not an editor command:   asdf
+
+
+CLEANUP CODE						*try-finally*
+
+Scripts often change global settings and restore them at their end.  If the
+user however interrupts the script by pressing CTRL-C, the settings remain in
+an inconsistent state.  The same may happen to you in the development phase of
+a script when an error occurs or you explicitly throw an exception without
+catching it.  You can solve these problems by using a try conditional with
+a finally clause for restoring the settings.  Its execution is guaranteed on
+normal control flow, on error, on an explicit ":throw", and on interrupt.
+(Note that errors and interrupts from inside the try conditional are converted
+to exceptions.  When not caught, they terminate the script after the finally
+clause has been executed.)
+Example: >
+
+	:try
+	:  let s:saved_ts = &ts
+	:  set ts=17
+	:
+	:  " Do the hard work here.
+	:
+	:finally
+	:  let &ts = s:saved_ts
+	:  unlet s:saved_ts
+	:endtry
+
+This method should be used locally whenever a function or part of a script
+changes global settings which need to be restored on failure or normal exit of
+that function or script part.
+
+							*break-finally*
+Cleanup code works also when the try block or a catch clause is left by
+a ":continue", ":break", ":return", or ":finish".
+   Example: >
+
+	:let first = 1
+	:while 1
+	:  try
+	:    if first
+	:      echo "first"
+	:      let first = 0
+	:      continue
+	:    else
+	:      throw "second"
+	:    endif
+	:  catch /.*/
+	:    echo v:exception
+	:    break
+	:  finally
+	:    echo "cleanup"
+	:  endtry
+	:  echo "still in while"
+	:endwhile
+	:echo "end"
+
+This displays "first", "cleanup", "second", "cleanup", and "end". >
+
+	:function! Foo()
+	:  try
+	:    return 4711
+	:  finally
+	:    echo "cleanup\n"
+	:  endtry
+	:  echo "Foo still active"
+	:endfunction
+	:
+	:echo Foo() "returned by Foo"
+
+This displays "cleanup" and "4711 returned by Foo".  You don't need to add an
+extra ":return" in the finally clause.  (Above all, this would override the
+return value.)
+
+							*except-from-finally*
+Using either of ":continue", ":break", ":return", ":finish", or ":throw" in
+a finally clause is possible, but not recommended since it abandons the
+cleanup actions for the try conditional.  But, of course, interrupt and error
+exceptions might get raised from a finally clause.
+   Example where an error in the finally clause stops an interrupt from
+working correctly: >
+
+	:try
+	:  try
+	:    echo "Press CTRL-C for interrupt"
+	:    while 1
+	:    endwhile
+	:  finally
+	:    unlet novar
+	:  endtry
+	:catch /novar/
+	:endtry
+	:echo "Script still running"
+	:sleep 1
+
+If you need to put commands that could fail into a finally clause, you should
+think about catching or ignoring the errors in these commands, see
+|catch-errors| and |ignore-errors|.
+
+
+CATCHING ERRORS						*catch-errors*
+
+If you want to catch specific errors, you just have to put the code to be
+watched in a try block and add a catch clause for the error message.  The
+presence of the try conditional causes all errors to be converted to an
+exception.  No message is displayed and |v:errmsg| is not set then.  To find
+the right pattern for the ":catch" command, you have to know how the format of
+the error exception is.
+   Error exceptions have the following format: >
+
+	Vim({cmdname}):{errmsg}
+or >
+	Vim:{errmsg}
+
+{cmdname} is the name of the command that failed; the second form is used when
+the command name is not known.  {errmsg} is the error message usually produced
+when the error occurs outside try conditionals.  It always begins with
+a capital "E", followed by a two or three-digit error number, a colon, and
+a space.
+
+Examples:
+
+The command >
+	:unlet novar
+normally produces the error message >
+	E108: No such variable: "novar"
+which is converted inside try conditionals to an exception >
+	Vim(unlet):E108: No such variable: "novar"
+
+The command >
+	:dwim
+normally produces the error message >
+	E492: Not an editor command: dwim
+which is converted inside try conditionals to an exception >
+	Vim:E492: Not an editor command: dwim
+
+You can catch all ":unlet" errors by a >
+	:catch /^Vim(unlet):/
+or all errors for misspelled command names by a >
+	:catch /^Vim:E492:/
+
+Some error messages may be produced by different commands: >
+	:function nofunc
+and >
+	:delfunction nofunc
+both produce the error message >
+	E128: Function name must start with a capital: nofunc
+which is converted inside try conditionals to an exception >
+	Vim(function):E128: Function name must start with a capital: nofunc
+or >
+	Vim(delfunction):E128: Function name must start with a capital: nofunc
+respectively.  You can catch the error by its number independently on the
+command that caused it if you use the following pattern: >
+	:catch /^Vim(\a\+):E128:/
+
+Some commands like >
+	:let x = novar
+produce multiple error messages, here: >
+	E121: Undefined variable: novar
+	E15: Invalid expression:  novar
+Only the first is used for the exception value, since it is the most specific
+one (see |except-several-errors|).  So you can catch it by >
+	:catch /^Vim(\a\+):E121:/
+
+You can catch all errors related to the name "nofunc" by >
+	:catch /\<nofunc\>/
+
+You can catch all Vim errors in the ":write" and ":read" commands by >
+	:catch /^Vim(\(write\|read\)):E\d\+:/
+
+You can catch all Vim errors by the pattern >
+	:catch /^Vim\((\a\+)\)\=:E\d\+:/
+<
+							*catch-text*
+NOTE: You should never catch the error message text itself: >
+	:catch /No such variable/
+only works in the english locale, but not when the user has selected
+a different language by the |:language| command.  It is however helpful to
+cite the message text in a comment: >
+	:catch /^Vim(\a\+):E108:/   " No such variable
+
+
+IGNORING ERRORS						*ignore-errors*
+
+You can ignore errors in a specific Vim command by catching them locally: >
+
+	:try
+	:  write
+	:catch
+	:endtry
+
+But you are strongly recommended NOT to use this simple form, since it could
+catch more than you want.  With the ":write" command, some autocommands could
+be executed and cause errors not related to writing, for instance: >
+
+	:au BufWritePre * unlet novar
+
+There could even be such errors you are not responsible for as a script
+writer: a user of your script might have defined such autocommands.  You would
+then hide the error from the user.
+   It is much better to use >
+
+	:try
+	:  write
+	:catch /^Vim(write):/
+	:endtry
+
+which only catches real write errors.  So catch only what you'd like to ignore
+intentionally.
+
+For a single command that does not cause execution of autocommands, you could
+even suppress the conversion of errors to exceptions by the ":silent!"
+command: >
+	:silent! nunmap k
+This works also when a try conditional is active.
+
+
+CATCHING INTERRUPTS					*catch-interrupt*
+
+When there are active try conditionals, an interrupt (CTRL-C) is converted to
+the exception "Vim:Interrupt".  You can catch it like every exception.  The
+script is not terminated, then.
+   Example: >
+
+	:function! TASK1()
+	:  sleep 10
+	:endfunction
+
+	:function! TASK2()
+	:  sleep 20
+	:endfunction
+
+	:while 1
+	:  let command = input("Type a command: ")
+	:  try
+	:    if command == ""
+	:      continue
+	:    elseif command == "END"
+	:      break
+	:    elseif command == "TASK1"
+	:      call TASK1()
+	:    elseif command == "TASK2"
+	:      call TASK2()
+	:    else
+	:      echo "\nIllegal command:" command
+	:      continue
+	:    endif
+	:  catch /^Vim:Interrupt$/
+	:    echo "\nCommand interrupted"
+	:    " Caught the interrupt.  Continue with next prompt.
+	:  endtry
+	:endwhile
+
+You can interrupt a task here by pressing CTRL-C; the script then asks for
+a new command.  If you press CTRL-C at the prompt, the script is terminated.
+
+For testing what happens when CTRL-C would be pressed on a specific line in
+your script, use the debug mode and execute the |>quit| or |>interrupt|
+command on that line.  See |debug-scripts|.
+
+
+CATCHING ALL						*catch-all*
+
+The commands >
+
+	:catch /.*/
+	:catch //
+	:catch
+
+catch everything, error exceptions, interrupt exceptions and exceptions
+explicitly thrown by the |:throw| command.  This is useful at the top level of
+a script in order to catch unexpected things.
+   Example: >
+
+	:try
+	:
+	:  " do the hard work here
+	:
+	:catch /MyException/
+	:
+	:  " handle known problem
+	:
+	:catch /^Vim:Interrupt$/
+	:    echo "Script interrupted"
+	:catch /.*/
+	:  echo "Internal error (" . v:exception . ")"
+	:  echo " - occurred at " . v:throwpoint
+	:endtry
+	:" end of script
+
+Note: Catching all might catch more things than you want.  Thus, you are
+strongly encouraged to catch only for problems that you can really handle by
+specifying a pattern argument to the ":catch".
+   Example: Catching all could make it nearly impossible to interrupt a script
+by pressing CTRL-C: >
+
+	:while 1
+	:  try
+	:    sleep 1
+	:  catch
+	:  endtry
+	:endwhile
+
+
+EXCEPTIONS AND AUTOCOMMANDS				*except-autocmd*
+
+Exceptions may be used during execution of autocommands.  Example: >
+
+	:autocmd User x try
+	:autocmd User x   throw "Oops!"
+	:autocmd User x catch
+	:autocmd User x   echo v:exception
+	:autocmd User x endtry
+	:autocmd User x throw "Arrgh!"
+	:autocmd User x echo "Should not be displayed"
+	:
+	:try
+	:  doautocmd User x
+	:catch
+	:  echo v:exception
+	:endtry
+
+This displays "Oops!" and "Arrgh!".
+
+							*except-autocmd-Pre*
+For some commands, autocommands get executed before the main action of the
+command takes place.  If an exception is thrown and not caught in the sequence
+of autocommands, the sequence and the command that caused its execution are
+abandoned and the exception is propagated to the caller of the command.
+   Example: >
+
+	:autocmd BufWritePre * throw "FAIL"
+	:autocmd BufWritePre * echo "Should not be displayed"
+	:
+	:try
+	:  write
+	:catch
+	:  echo "Caught:" v:exception "from" v:throwpoint
+	:endtry
+
+Here, the ":write" command does not write the file currently being edited (as
+you can see by checking 'modified'), since the exception from the BufWritePre
+autocommand abandons the ":write".  The exception is then caught and the
+script displays: >
+
+	Caught: FAIL from BufWrite Auto commands for "*"
+<
+							*except-autocmd-Post*
+For some commands, autocommands get executed after the main action of the
+command has taken place.  If this main action fails and the command is inside
+an active try conditional, the autocommands are skipped and an error exception
+is thrown that can be caught by the caller of the command.
+   Example: >
+
+	:autocmd BufWritePost * echo "File successfully written!"
+	:
+	:try
+	:  write /i/m/p/o/s/s/i/b/l/e
+	:catch
+	:  echo v:exception
+	:endtry
+
+This just displays: >
+
+	Vim(write):E212: Can't open file for writing (/i/m/p/o/s/s/i/b/l/e)
+
+If you really need to execute the autocommands even when the main action
+fails, trigger the event from the catch clause.
+   Example: >
+
+	:autocmd BufWritePre  * set noreadonly
+	:autocmd BufWritePost * set readonly
+	:
+	:try
+	:  write /i/m/p/o/s/s/i/b/l/e
+	:catch
+	:  doautocmd BufWritePost /i/m/p/o/s/s/i/b/l/e
+	:endtry
+<
+You can also use ":silent!": >
+
+	:let x = "ok"
+	:let v:errmsg = ""
+	:autocmd BufWritePost * if v:errmsg != ""
+	:autocmd BufWritePost *   let x = "after fail"
+	:autocmd BufWritePost * endif
+	:try
+	:  silent! write /i/m/p/o/s/s/i/b/l/e
+	:catch
+	:endtry
+	:echo x
+
+This displays "after fail".
+
+If the main action of the command does not fail, exceptions from the
+autocommands will be catchable by the caller of the command:  >
+
+	:autocmd BufWritePost * throw ":-("
+	:autocmd BufWritePost * echo "Should not be displayed"
+	:
+	:try
+	:  write
+	:catch
+	:  echo v:exception
+	:endtry
+<
+							*except-autocmd-Cmd*
+For some commands, the normal action can be replaced by a sequence of
+autocommands.  Exceptions from that sequence will be catchable by the caller
+of the command.
+   Example:  For the ":write" command, the caller cannot know whether the file
+had actually been written when the exception occurred.  You need to tell it in
+some way. >
+
+	:if !exists("cnt")
+	:  let cnt = 0
+	:
+	:  autocmd BufWriteCmd * if &modified
+	:  autocmd BufWriteCmd *   let cnt = cnt + 1
+	:  autocmd BufWriteCmd *   if cnt % 3 == 2
+	:  autocmd BufWriteCmd *     throw "BufWriteCmdError"
+	:  autocmd BufWriteCmd *   endif
+	:  autocmd BufWriteCmd *   write | set nomodified
+	:  autocmd BufWriteCmd *   if cnt % 3 == 0
+	:  autocmd BufWriteCmd *     throw "BufWriteCmdError"
+	:  autocmd BufWriteCmd *   endif
+	:  autocmd BufWriteCmd *   echo "File successfully written!"
+	:  autocmd BufWriteCmd * endif
+	:endif
+	:
+	:try
+	:	write
+	:catch /^BufWriteCmdError$/
+	:  if &modified
+	:    echo "Error on writing (file contents not changed)"
+	:  else
+	:    echo "Error after writing"
+	:  endif
+	:catch /^Vim(write):/
+	:    echo "Error on writing"
+	:endtry
+
+When this script is sourced several times after making changes, it displays
+first >
+	File successfully written!
+then >
+	Error on writing (file contents not changed)
+then >
+	Error after writing
+etc.
+
+							*except-autocmd-ill*
+You cannot spread a try conditional over autocommands for different events.
+The following code is ill-formed: >
+
+	:autocmd BufWritePre  * try
+	:
+	:autocmd BufWritePost * catch
+	:autocmd BufWritePost *   echo v:exception
+	:autocmd BufWritePost * endtry
+	:
+	:write
+
+
+EXCEPTION HIERARCHIES AND PARAMETERIZED EXCEPTIONS	*except-hier-param*
+
+Some programming languages allow to use hierarchies of exception classes or to
+pass additional information with the object of an exception class.  You can do
+similar things in Vim.
+   In order to throw an exception from a hierarchy, just throw the complete
+class name with the components separated by a colon, for instance throw the
+string "EXCEPT:MATHERR:OVERFLOW" for an overflow in a mathematical library.
+   When you want to pass additional information with your exception class, add
+it in parentheses, for instance throw the string "EXCEPT:IO:WRITEERR(myfile)"
+for an error when writing "myfile".
+   With the appropriate patterns in the ":catch" command, you can catch for
+base classes or derived classes of your hierarchy.  Additional information in
+parentheses can be cut out from |v:exception| with the ":substitute" command.
+   Example: >
+
+	:function! CheckRange(a, func)
+	:  if a:a < 0
+	:    throw "EXCEPT:MATHERR:RANGE(" . a:func . ")"
+	:  endif
+	:endfunction
+	:
+	:function! Add(a, b)
+	:  call CheckRange(a:a, "Add")
+	:  call CheckRange(a:b, "Add")
+	:  let c = a:a + a:b
+	:  if c < 0
+	:    throw "EXCEPT:MATHERR:OVERFLOW"
+	:  endif
+	:  return c
+	:endfunction
+	:
+	:function! Div(a, b)
+	:  call CheckRange(a:a, "Div")
+	:  call CheckRange(a:b, "Div")
+	:  if (a:b == 0)
+	:    throw "EXCEPT:MATHERR:ZERODIV"
+	:  endif
+	:  return a:a / a:b
+	:endfunction
+	:
+	:function! Write(file)
+	:  try
+	:    execute "write" a:file
+	:  catch /^Vim(write):/
+	:    throw "EXCEPT:IO(" . getcwd() . ", " . a:file . "):WRITEERR"
+	:  endtry
+	:endfunction
+	:
+	:try
+	:
+	:  " something with arithmetics and I/O
+	:
+	:catch /^EXCEPT:MATHERR:RANGE/
+	:  let function = substitute(v:exception, '.*(\(\a\+\)).*', '\1', "")
+	:  echo "Range error in" function
+	:
+	:catch /^EXCEPT:MATHERR/	" catches OVERFLOW and ZERODIV
+	:  echo "Math error"
+	:
+	:catch /^EXCEPT:IO/
+	:  let dir = substitute(v:exception, '.*(\(.\+\),\s*.\+).*', '\1', "")
+	:  let file = substitute(v:exception, '.*(.\+,\s*\(.\+\)).*', '\1', "")
+	:  if file !~ '^/'
+	:    let file = dir . "/" . file
+	:  endif
+	:  echo 'I/O error for "' . file . '"'
+	:
+	:catch /^EXCEPT/
+	:  echo "Unspecified error"
+	:
+	:endtry
+
+The exceptions raised by Vim itself (on error or when pressing CTRL-C) use
+a flat hierarchy:  they are all in the "Vim" class.  You cannot throw yourself
+exceptions with the "Vim" prefix; they are reserved for Vim.
+   Vim error exceptions are parameterized with the name of the command that
+failed, if known.  See |catch-errors|.
+
+
+PECULARITIES
+							*except-compat*
+The exception handling concept requires that the command sequence causing the
+exception is aborted immediately and control is transferred to finally clauses
+and/or a catch clause.
+
+In the Vim script language there are cases where scripts and functions
+continue after an error: in functions without the "abort" flag or in a command
+after ":silent!", control flow goes to the following line, and outside
+functions, control flow goes to the line following the outermost ":endwhile"
+or ":endif".  On the other hand, errors should be catchable as exceptions
+(thus, requiring the immediate abortion).
+
+This problem has been solved by converting errors to exceptions and using
+immediate abortion (if not suppressed by ":silent!") only when a try
+conditional is active.  This is no restriction since an (error) exception can
+be caught only from an active try conditional.  If you want an immediate
+termination without catching the error, just use a try conditional without
+catch clause.  (You can cause cleanup code being executed before termination
+by specifying a finally clause.)
+
+When no try conditional is active, the usual abortion and continuation
+behavior is used instead of immediate abortion.  This ensures compatibility of
+scripts written for Vim 6.1 and earlier.
+
+However, when sourcing an existing script that does not use exception handling
+commands (or when calling one of its functions) from inside an active try
+conditional of a new script, you might change the control flow of the existing
+script on error.  You get the immediate abortion on error and can catch the
+error in the new script.  If however the sourced script suppresses error
+messages by using the ":silent!" command (checking for errors by testing
+|v:errmsg| if appropriate), its execution path is not changed.  The error is
+not converted to an exception.  (See |:silent|.)  So the only remaining cause
+where this happens is for scripts that don't care about errors and produce
+error messages.  You probably won't want to use such code from your new
+scripts.
+
+							*except-syntax-err*
+Syntax errors in the exception handling commands are never caught by any of
+the ":catch" commands of the try conditional they belong to.  Its finally
+clauses, however, is executed.
+   Example: >
+
+	:try
+	:  try
+	:    throw 4711
+	:  catch /\(/
+	:    echo "in catch with syntax error"
+	:  catch
+	:    echo "inner catch-all"
+	:  finally
+	:    echo "inner finally"
+	:  endtry
+	:catch
+	:  echo 'outer catch-all caught "' . v:exception . '"'
+	:  finally
+	:    echo "outer finally"
+	:endtry
+
+This displays: >
+    inner finally
+    outer catch-all caught "Vim(catch):E54: Unmatched \("
+    outer finally
+The original exception is discarded and an error exception is raised, instead.
+
+							*except-single-line*
+The ":try", ":catch", ":finally", and ":endtry" commands can be put on
+a single line, but then syntax errors may make it difficult to recognize the
+"catch" line, thus you better avoid this.
+   Example: >
+	:try | unlet! foo # | catch | endtry
+raises an error exception for the trailing characters after the ":unlet!"
+argument, but does not see the ":catch" and ":endtry" commands, so that the
+error exception is discarded and the "E488: Trailing characters" message gets
+displayed.
+
+							*except-several-errors*
+When several errors appear in a single command, the first error message is
+usually the most specific one and therefor converted to the error exception.
+   Example: >
+	echo novar
+causes >
+	E121: Undefined variable: novar
+	E15: Invalid expression: novar
+The value of the error exception inside try conditionals is: >
+	Vim(echo):E121: Undefined variable: novar
+<							*except-syntax-error*
+But when a syntax error is detected after a normal error in the same command,
+the syntax error is used for the exception being thrown.
+   Example: >
+	unlet novar #
+causes >
+	E108: No such variable: "novar"
+	E488: Trailing characters
+The value of the error exception inside try conditionals is: >
+	Vim(unlet):E488: Trailing characters
+This is done because the syntax error might change the execution path in a way
+not intended by the user.  Example: >
+	try
+	    try | unlet novar # | catch | echo v:exception | endtry
+	catch /.*/
+	    echo "outer catch:" v:exception
+	endtry
+This displays "outer catch: Vim(unlet):E488: Trailing characters", and then
+a "E600: Missing :endtry" error message is given, see |except-single-line|.
+
+==============================================================================
+9. Examples						*eval-examples*
 
 Printing in Hex ~
 >
@@ -3437,7 +4439,7 @@ The input is in the variable "line", the results in the variables "file",
 "lnum" and "col". (idea from Michael Geddes)
 
 ==============================================================================
-9. No +eval feature				*no-eval-feature*
+10. No +eval feature				*no-eval-feature*
 
 When the |+eval| feature was disabled at compile time, none of the expression
 evaluation commands are available.  To prevent this from causing Vim scripts
@@ -3457,7 +4459,7 @@ missing: >
 	:endif
 <
 ==============================================================================
-10. The sandbox					*eval-sandbox* *sandbox* *E48*
+11. The sandbox					*eval-sandbox* *sandbox* *E48*
 
 The 'foldexpr', 'includeexpr', 'indentexpr', 'statusline' and 'foldtext'
 options are evaluated in a sandbox.  This means that you are protected from

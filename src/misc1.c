@@ -3258,7 +3258,7 @@ expand_env_esc(src, dst, dstlen, esc)
 	    }
 
 	    /* If "var" contains white space, escape it with a backslash.
-	     * Required for ":e ~/tt" $HOME includes a space. */
+	     * Required for ":e ~/tt" when $HOME includes a space. */
 	    if (esc && var != NULL && vim_strpbrk(var, (char_u *)" \t") != NULL)
 	    {
 		char_u	*p = vim_strsave_escaped(var, (char_u *)" \t");

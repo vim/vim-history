@@ -621,7 +621,7 @@ nb_parse_cmd(char_u *cmd)
 
     if (*verb != ':')
     {
-	EMSG2("missing colon: %s", cmd);
+	EMSG2("E627: missing colon: %s", cmd);
 	return;
     }
     ++verb; /* skip colon */
@@ -644,7 +644,7 @@ nb_parse_cmd(char_u *cmd)
 
     if (isfunc < 0)
     {
-	EMSG2("missing ! or / in: %s", cmd);
+	EMSG2("E628: missing ! or / in: %s", cmd);
 	return;
     }
 
@@ -653,7 +653,7 @@ nb_parse_cmd(char_u *cmd)
     if (nb_do_cmd(bufno, verb, isfunc, cmdno, q) == FAIL)
     {
 	nbdebug(("nb_parse_cmd: Command error for \"%s\"\n", cmd));
-	EMSG("bad return from nb_do_cmd");
+	EMSG("E629: bad return from nb_do_cmd");
     }
 }
 
@@ -812,9 +812,9 @@ netbeans_end(void)
 nb_send(char *buf, char *fun)
 {
     if (sd < 0)
-	EMSG2("%s(): write while not connected", fun);
+	EMSG2("E630: %s(): write while not connected", fun);
     else if (write(sd, buf, STRLEN(buf)) != STRLEN(buf))
-	EMSG2("%s(): write failed", fun);
+	EMSG2("E631: %s(): write failed", fun);
 }
 
 /*
@@ -1043,7 +1043,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in getLength"));
-		EMSG("null bufp in getLength");
+		EMSG("E632: null bufp in getLength");
 		retval = FAIL;
 	    }
 	    else
@@ -1072,7 +1072,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in getText"));
-		EMSG("null bufp in getText");
+		EMSG("E633: null bufp in getText");
 		retval = FAIL;
 	    }
 	    else
@@ -1134,7 +1134,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in remove"));
-		EMSG("null bufp in remove");
+		EMSG("E634: null bufp in remove");
 		retval = FAIL;
 	    }
 	    else
@@ -1238,7 +1238,7 @@ nb_do_cmd(
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
 		nbdebug(("    null bufp in insert"));
-		EMSG("null bufp in insert");
+		EMSG("E635: null bufp in insert");
 		retval = FAIL;
 	    }
 	    else if (args != NULL)
@@ -1343,7 +1343,7 @@ nb_do_cmd(
 	    /* Create a buffer without a name. */
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in create");
+		EMSG("E636: null buf in create");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1362,7 +1362,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in startDocumentListen");
+		EMSG("E637: null buf in startDocumentListen");
 		return FAIL;
 	    }
 	    buf->fireChanges = 1;
@@ -1372,7 +1372,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in stopDocumentListen");
+		EMSG("E638: null buf in stopDocumentListen");
 		return FAIL;
 	    }
 	    buf->fireChanges = 0;
@@ -1382,7 +1382,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in setTitle");
+		EMSG("E639: null buf in setTitle");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1394,7 +1394,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		EMSG("null buf in initDone");
+		EMSG("E640: null buf in initDone");
 		return FAIL;
 	    }
 	    doupdate = 1;
@@ -1417,7 +1417,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in setBufferNumber");
+		EMSG("E641: null buf in setBufferNumber");
 		return FAIL;
 	    }
 	    to_free = (char_u *)nb_unquote(++args, NULL);
@@ -1427,7 +1427,7 @@ nb_do_cmd(
 	    vim_free(to_free);
 	    if (bufp == NULL)
 	    {
-		EMSG2("File %s not found in setBufferNumber", args);
+		EMSG2("E642: File %s not found in setBufferNumber", args);
 		return FAIL;
 	    }
 	    buf->bufp = bufp;
@@ -1455,7 +1455,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in setFullName");
+		EMSG("E643: null buf in setFullName");
 		return FAIL;
 	    }
 	    vim_free(buf->displayname);
@@ -1475,7 +1475,7 @@ nb_do_cmd(
 	{
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in editFile");
+		EMSG("E644: null buf in editFile");
 		return FAIL;
 	    }
 	    /* Edit a file: like create + setFullName + read the file. */
@@ -1498,7 +1498,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-/*		EMSG("null bufp in setVisible"); */
+/*		EMSG("E645: null bufp in setVisible"); */
 		return FAIL;
 	    }
 	    if (streq((char *)args, "T"))
@@ -1531,7 +1531,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-/*		EMSG("null bufp in setModified"); */
+/*		EMSG("E646: null bufp in setModified"); */
 		return FAIL;
 	    }
 	    if (streq((char *)args, "T"))
@@ -1576,7 +1576,7 @@ nb_do_cmd(
 	    ++args;
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		EMSG("null bufp in setDot");
+		EMSG("E647: null bufp in setDot");
 		return FAIL;
 	    }
 
@@ -1626,7 +1626,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in close");
+		EMSG("E648: null buf in close");
 		return FAIL;
 	    }
 
@@ -1635,7 +1635,7 @@ nb_do_cmd(
 		name = buf->displayname;
 #endif
 /*	    if (buf->bufp == NULL) */
-/*		EMSG("null bufp in close"); */
+/*		EMSG("E649: null bufp in close"); */
 	    nbdebug(("    CLOSE %d: %s\n", bufno, name));
 	    need_mouse_correct = TRUE;
 	    if (buf->bufp != NULL)
@@ -1668,7 +1668,7 @@ nb_do_cmd(
 
 	    if (buf == NULL)
 	    {
-		EMSG("null buf in defineAnnoType");
+		EMSG("E650: null buf in defineAnnoType");
 		return FAIL;
 	    }
 
@@ -1720,7 +1720,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
-		EMSG("null bufp in addAnno");
+		EMSG("E651: null bufp in addAnno");
 		return FAIL;
 	    }
 
@@ -1961,7 +1961,7 @@ resolve_symlinks(char *filename, int level)
 
 	if (len < 0 || len == MAXPATHLEN)
 	{
-	    EMSGN("readlink() failed, errno = %ld\n", errno);
+	    EMSGN("E652: readlink() failed, errno = %ld\n", errno);
 	}
 	else
 	{
@@ -1978,10 +1978,10 @@ resolve_symlinks(char *filename, int level)
 		char *p = strrchr(filename, '/');
 
 		if (p == 0)
-		    EMSG("missing slash!?!");
+		    EMSG("E653: missing slash!?!");
 		else
 		    if ((p - filename) + strlen(buf) > MAXPATHLEN)
-			EMSG("buffer overflow in resolve_symlinks()");
+			EMSG("E654: buffer overflow in resolve_symlinks()");
 		    else
 			strcpy(p+1, buf);
 	    }

@@ -4,13 +4,13 @@
 # Do ":help credits" in Vim to see a list of people who contributed.
 #
 # MURAOKA Taro <koron@tka.att.ne.jp>, 2001-3.
-# Last Change: 29-Apr-2003.
+# Last Change: 01-Jun-2003.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Vim 6.1\n"
-"POT-Creation-Date: 2003-04-28 23:34+0900\n"
-"PO-Revision-Date: 2002-04-28 23:38+0900\n"
+"Project-Id-Version: Vim 6.2\n"
+"POT-Creation-Date: 2003-05-26 15:09+0900\n"
+"PO-Revision-Date: 2003-06-01 03:00+0900\n"
 "Last-Translator: MURAOKA Taro <koron@tka.att.ne.jp>\n"
 "Language-Team: MURAOKA Taro <koron@tka.att.ne.jp>\n"
 "MIME-Version: 1.0\n"
@@ -95,96 +95,96 @@ msgstr "E89: バッファ %ld の変更は保存されていません (! で変更を破棄)"
 msgid "E90: Cannot unload last buffer"
 msgstr "E90: 最後のバッファは解放できません"
 
-#: buffer.c:1494
+#: buffer.c:1500
 msgid "W14: Warning: List of file names overflow"
 msgstr "W14: 警告: ファイル名のリストが長すぎます"
 
-#: buffer.c:1664
+#: buffer.c:1671
 #, c-format
 msgid "E92: Buffer %ld not found"
 msgstr "E92: バッファ %ld がみつかりません"
 
-#: buffer.c:1890
+#: buffer.c:1902
 #, c-format
 msgid "E93: More than one match for %s"
 msgstr "E93: %s に複数の該当がありました"
 
-#: buffer.c:1892
+#: buffer.c:1904
 #, c-format
 msgid "E94: No matching buffer for %s"
 msgstr "E94: %s に該当するバッファはありませんでした"
 
-#: buffer.c:2297 ex_docmd.c:6479
+#: buffer.c:2309 ex_docmd.c:6560
 #, c-format
 msgid "line %ld"
 msgstr "行 %ld"
 
-#: buffer.c:2380
+#: buffer.c:2392
 msgid "E95: Buffer with this name already exists"
 msgstr "E95: この名前のバッファは既にあります"
 
-#: buffer.c:2673
+#: buffer.c:2685
 msgid " [Modified]"
 msgstr " [変更あり]"
 
-#: buffer.c:2678
+#: buffer.c:2690
 msgid "[Not edited]"
 msgstr "[未編集]"
 
-#: buffer.c:2683
+#: buffer.c:2695
 msgid "[New file]"
 msgstr "[新ファイル]"
 
-#: buffer.c:2684
+#: buffer.c:2696
 msgid "[Read errors]"
 msgstr "[読込エラー]"
 
-#: buffer.c:2686 fileio.c:1914
+#: buffer.c:2698 fileio.c:1914
 msgid "[readonly]"
 msgstr "[読込専用]"
 
-#: buffer.c:2701
+#: buffer.c:2713
 msgid "1 line --%d%%--"
 msgstr "1 行 --%d%%--"
 
-#: buffer.c:2703
+#: buffer.c:2715
 msgid "%ld lines --%d%%--"
 msgstr "%ld 行 --%d%%--"
 
-#: buffer.c:2710
+#: buffer.c:2722
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "行 %ld (全体 %ld) --%d%%-- col "
 
-#: buffer.c:2811
+#: buffer.c:2823
 msgid "[No file]"
 msgstr "[無題]"
 
 #. must be a help buffer
-#: buffer.c:2851
+#: buffer.c:2863
 msgid "help"
 msgstr "ヘルプ"
 
-#: buffer.c:3405 screen.c:4968
+#: buffer.c:3422 screen.c:4996
 msgid "[help]"
 msgstr "[ヘルプ]"
 
-#: buffer.c:3437 screen.c:4974
+#: buffer.c:3454 screen.c:5002
 msgid "[Preview]"
 msgstr "[プレビュー]"
 
-#: buffer.c:3708
+#: buffer.c:3734
 msgid "All"
 msgstr "全て"
 
-#: buffer.c:3708
+#: buffer.c:3734
 msgid "Bot"
 msgstr "末尾"
 
-#: buffer.c:3710
+#: buffer.c:3736
 msgid "Top"
 msgstr "先頭"
 
-#: buffer.c:4454
+#: buffer.c:4480
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -192,15 +192,15 @@ msgstr ""
 "\n"
 "# バッファリスト:\n"
 
-#: buffer.c:4487
+#: buffer.c:4513
 msgid "[Error List]"
 msgstr "[エラーリスト]"
 
-#: buffer.c:4500 memline.c:1501
+#: buffer.c:4526 memline.c:1501
 msgid "[No File]"
 msgstr "[無題]"
 
-#: buffer.c:4803
+#: buffer.c:4829
 msgid ""
 "\n"
 "--- Signs ---"
@@ -208,12 +208,12 @@ msgstr ""
 "\n"
 "--- サイン ---"
 
-#: buffer.c:4813
+#: buffer.c:4848
 #, c-format
 msgid "Signs for %s:"
 msgstr "%s のサイン:"
 
-#: buffer.c:4819
+#: buffer.c:4854
 #, c-format
 msgid "    line=%ld  id=%d  name=%s"
 msgstr "    行=%ld  識別子=%d  名前=%s"
@@ -245,7 +245,8 @@ msgstr "E100: 差分モードである他のバッファはありません"
 
 #: diff.c:1762
 msgid "E101: More than two buffers in diff mode, don't know which one to use"
-msgstr "E101: 差分モードのバッファが3個あるため、どれを使うか特定できません"
+msgstr ""
+"E101: 差分モードのバッファが2個以上あるので、どれを使うか特定できません"
 
 #: diff.c:1785
 #, c-format
@@ -320,37 +321,37 @@ msgstr " コマンドライン補完 (^V/^N/^P)"
 msgid "Hit end of paragraph"
 msgstr "段落の最後にヒット"
 
-#: edit.c:941
+#: edit.c:955
 msgid "'thesaurus' option is empty"
-msgstr "'thesaurus'オプションが空です"
+msgstr "'thesaurus' オプションが空です"
 
-#: edit.c:1145
+#: edit.c:1159
 msgid "'dictionary' option is empty"
-msgstr "'dictionary'オプションが空です"
+msgstr "'dictionary' オプションが空です"
 
-#: edit.c:2130
+#: edit.c:2144
 #, c-format
 msgid "Scanning dictionary: %s"
 msgstr "辞書をスキャン中: %s"
 
-#: edit.c:2336
+#: edit.c:2350
 msgid " (insert) Scroll (^E/^Y)"
 msgstr " (挿入) スクロール(^E/^Y)"
 
-#: edit.c:2338
+#: edit.c:2352
 msgid " (replace) Scroll (^E/^Y)"
 msgstr " (置換) スクロール (^E/^Y)"
 
-#: edit.c:2652
+#: edit.c:2666
 #, c-format
 msgid "Scanning: %s"
 msgstr "スキャン中: %s"
 
-#: edit.c:2687
+#: edit.c:2701
 msgid "Scanning tags."
 msgstr "タグをスキャン中."
 
-#: edit.c:3349
+#: edit.c:3363
 msgid " Adding"
 msgstr " 追加中"
 
@@ -358,102 +359,102 @@ msgstr " 追加中"
 #. * be called before line = ml_get(), or when this address is no
 #. * longer needed.  -- Acevedo.
 #.
-#: edit.c:3398
+#: edit.c:3412
 msgid "-- Searching..."
 msgstr "-- 検索中..."
 
-#: edit.c:3454
+#: edit.c:3468
 msgid "Back at original"
 msgstr "始めに戻る"
 
-#: edit.c:3459
+#: edit.c:3473
 msgid "Word from other line"
 msgstr "他の行の単語"
 
-#: edit.c:3464
+#: edit.c:3478
 msgid "The only match"
 msgstr "唯一の該当"
 
-#: edit.c:3523
+#: edit.c:3537
 #, c-format
 msgid "match %d of %d"
-msgstr "%d 番目の該当 (全該当 %d)"
+msgstr "%d 番目の該当 (全該当 %d 個中)"
 
-#: edit.c:3526
+#: edit.c:3540
 #, c-format
 msgid "match %d"
 msgstr "%d 番目の該当"
 
 #. Skip further arguments but do continue to
 #. * search for a trailing command.
-#: eval.c:890
+#: eval.c:979
 #, c-format
 msgid "E106: Unknown variable: \"%s\""
 msgstr "E106: 未知の変数: \"%s\""
 
-#: eval.c:1186
+#: eval.c:1275
 #, c-format
 msgid "E107: Missing braces: %s"
 msgstr "E107: カッコ '(' がありません: %s"
 
-#: eval.c:1291 eval.c:1305
+#: eval.c:1380 eval.c:1394
 #, c-format
 msgid "E108: No such variable: \"%s\""
 msgstr "E108: その変数はありません: \"%s\""
 
-#: eval.c:1561
+#: eval.c:1650
 msgid "E109: Missing ':' after '?'"
 msgstr "E109: '?' の後に ':' がありません"
 
-#: eval.c:2177
+#: eval.c:2266
 msgid "E110: Missing ')'"
 msgstr "E110: ')' がみつかりません"
 
-#: eval.c:2234
+#: eval.c:2323
 msgid "E111: Missing ']'"
 msgstr "E111: ']' がみつかりません"
 
-#: eval.c:2310
+#: eval.c:2399
 #, c-format
 msgid "E112: Option name missing: %s"
 msgstr "E112: オプション名がありません: %s"
 
-#: eval.c:2328
+#: eval.c:2417
 #, c-format
 msgid "E113: Unknown option: %s"
 msgstr "E113: 未知のオプションです: %s"
 
-#: eval.c:2392
+#: eval.c:2481
 #, c-format
 msgid "E114: Missing quote: %s"
-msgstr "E114: 引用符 '\"' がありません: %s"
+msgstr "E114: 引用符 (\") がありません: %s"
 
-#: eval.c:2524
+#: eval.c:2613
 #, c-format
 msgid "E115: Missing quote: %s"
-msgstr "E115: 引用符 ''' がありません: %s"
+msgstr "E115: 引用符 (') がありません: %s"
 
-#: eval.c:2845
+#: eval.c:2963
 #, c-format
 msgid "E116: Invalid arguments for function %s"
 msgstr "E116: 関数 %s には無効な引数です"
 
-#: eval.c:2846
+#: eval.c:2992
 #, c-format
 msgid "E117: Unknown function: %s"
 msgstr "E117: 未知の関数です: %s"
 
-#: eval.c:2847
+#: eval.c:2993
 #, c-format
 msgid "E118: Too many arguments for function: %s"
 msgstr "E118: 関数の引数が多すぎます: %s"
 
-#: eval.c:2848
+#: eval.c:2994
 #, c-format
 msgid "E119: Not enough arguments for function: %s"
 msgstr "E119: 関数の引数が足りません: %s"
 
-#: eval.c:2849
+#: eval.c:2995
 #, c-format
 msgid "E120: Using <SID> not in a script context: %s"
 msgstr "E120: スクリプト以外で<SID>が使われました: %s"
@@ -463,16 +464,16 @@ msgstr "E120: スクリプト以外で<SID>が使われました: %s"
 #. * this way has the compelling advantage that translations need not to
 #. * be touched at all.  See below what 'ok' and 'ync' are used for.
 #.
-#: eval.c:3467 gui.c:4246 gui_gtk.c:1993
+#: eval.c:3585 gui.c:4254 gui_gtk.c:1997
 msgid "&Ok"
 msgstr "&Ok"
 
-#: eval.c:4002
+#: eval.c:4120
 #, c-format
 msgid "+-%s%3ld lines: "
 msgstr "+-%s%3ld 行:"
 
-#: eval.c:5168
+#: eval.c:5345
 msgid ""
 "&OK\n"
 "&Cancel"
@@ -480,125 +481,125 @@ msgstr ""
 "決定(&O)\n"
 "キャンセル(&C)"
 
-#: eval.c:5201
+#: eval.c:5385
 msgid "called inputrestore() more often than inputsave()"
 msgstr "inputrestore() が inputsave() よりも多く呼ばれました"
 
-#: eval.c:6073
+#: eval.c:6300
 msgid "E240: No connection to Vim server"
 msgstr "E240: Vim サーバへの接続がありません"
 
-#: eval.c:6170
+#: eval.c:6397
 msgid "E277: Unable to read a server reply"
 msgstr "E277: サーバの応答がありません"
 
-#: eval.c:6198
+#: eval.c:6425
 msgid "E258: Unable to send to client"
 msgstr "E258: クライアントへ送ることができません"
 
-#: eval.c:6246
+#: eval.c:6473
 #, c-format
 msgid "E241: Unable to send to %s"
 msgstr "E241: %s へ送ることができません"
 
-#: eval.c:6346
+#: eval.c:6573
 msgid "(Invalid)"
 msgstr "(無効)"
 
-#: eval.c:7439
+#: eval.c:7688
 #, c-format
 msgid "E121: Undefined variable: %s"
 msgstr "E121: 未定義の変数です: %s"
 
-#: eval.c:7871
+#: eval.c:8120
 #, c-format
 msgid "E461: Illegal variable name: %s"
 msgstr "E461: 不正な変数名です: %s"
 
-#: eval.c:8158
+#: eval.c:8407
 #, c-format
 msgid "E122: Function %s already exists, add ! to replace it"
 msgstr "E122: 関数 %s は定義済です, 再定義するには ! を追加してください"
 
-#: eval.c:8225
+#: eval.c:8474
 #, c-format
 msgid "E123: Undefined function: %s"
 msgstr "E123: 未定義の関数です: %s"
 
-#: eval.c:8238
+#: eval.c:8487
 #, c-format
 msgid "E124: Missing '(': %s"
 msgstr "E124: '(' がありません: %s"
 
-#: eval.c:8271
+#: eval.c:8520
 #, c-format
 msgid "E125: Illegal argument: %s"
 msgstr "E125: 不正な引数です: %s"
 
-#: eval.c:8350
+#: eval.c:8599
 msgid "E126: Missing :endfunction"
 msgstr "E126: :endfunction がありません"
 
-#: eval.c:8433
+#: eval.c:8682
 #, c-format
 msgid "E127: Cannot redefine function %s: It is in use"
 msgstr "E127: 関数 %s を再定義できません: 使用中です"
 
-#: eval.c:8501
+#: eval.c:8750
 msgid "E129: Function name required"
 msgstr "E129: 関数名が要求されます"
 
-#: eval.c:8552
+#: eval.c:8801
 #, c-format
 msgid "E128: Function name must start with a capital: %s"
 msgstr "E128: 関数名は大文字で始まらなければなりません: %s"
 
-#: eval.c:8744
+#: eval.c:8993
 #, c-format
 msgid "E130: Undefined function: %s"
 msgstr "E130: 未定義の関数です: %s"
 
-#: eval.c:8749
+#: eval.c:8998
 #, c-format
 msgid "E131: Cannot delete function %s: It is in use"
 msgstr "E131: 関数 %s を削除できません: 使用中です"
 
-#: eval.c:8797
+#: eval.c:9046
 msgid "E132: Function call depth is higher than 'maxfuncdepth'"
 msgstr "E132: 関数呼出の入れ子数が 'maxfuncdepth' を超えました"
 
 #. always scroll up, don't overwrite
-#: eval.c:8850
+#: eval.c:9099
 #, c-format
 msgid "calling %s"
-msgstr "%s を呼び出し中です"
+msgstr "%s を実行中です"
 
-#: eval.c:8904
+#: eval.c:9161
 #, c-format
 msgid "%s aborted"
 msgstr "%s が中断されました"
 
-#: eval.c:8906
+#: eval.c:9163
 #, c-format
 msgid "%s returning #%ld"
 msgstr "%s が #%ld を返しました"
 
-#: eval.c:8909
+#: eval.c:9170
 #, c-format
 msgid "%s returning \"%s\""
 msgstr "%s が \"%s\" を返しました"
 
 #. always scroll up, don't overwrite
-#: eval.c:8925 ex_cmds2.c:2257
+#: eval.c:9186 ex_cmds2.c:2244
 #, c-format
 msgid "continuing in %s"
-msgstr "%s の実行を続けます"
+msgstr "%s の実行を継続中です"
 
-#: eval.c:8972
+#: eval.c:9212
 msgid "E133: :return not inside a function"
-msgstr "E133: 関数以外で :return がありました"
+msgstr "E133: 関数外に :return がありました"
 
-#: eval.c:9303
+#: eval.c:9543
 msgid ""
 "\n"
 "# global variables:\n"
@@ -644,165 +645,165 @@ msgstr "%sviminfo: %s 行目: "
 
 #: ex_cmds.c:1273
 msgid "E136: viminfo: Too many errors, skipping rest of file"
-msgstr "E136: viminfo: エラーが多いので, ファイルの残りをスキップします"
+msgstr "E136: viminfo: エラーが多過ぎるので, 以降はスキップします"
 
-#: ex_cmds.c:1302
+#: ex_cmds.c:1308
 #, c-format
 msgid "Reading viminfo file \"%s\"%s%s%s"
-msgstr "viminfoファイル \"%s\"%s%s%s を読み込み中 "
+msgstr "viminfoファイル \"%s\"%s%s%s を読込み中 "
 
-#: ex_cmds.c:1303
+#: ex_cmds.c:1309
 msgid " info"
 msgstr " 情報"
 
-#: ex_cmds.c:1304
+#: ex_cmds.c:1310
 msgid " marks"
 msgstr " マーク"
 
-#: ex_cmds.c:1305
+#: ex_cmds.c:1311
 msgid " FAILED"
 msgstr " 失敗"
 
-#: ex_cmds.c:1396
+#: ex_cmds.c:1403
 #, c-format
 msgid "E137: Viminfo file is not writable: %s"
-msgstr "E137: viminfoファイルが書込み不能です: %s"
+msgstr "E137: viminfoファイルが書込みできません: %s"
 
-#: ex_cmds.c:1521
+#: ex_cmds.c:1528
 #, c-format
 msgid "E138: Can't write viminfo file %s!"
 msgstr "E138: viminfoファイル %s を保存できません!"
 
-#: ex_cmds.c:1529
+#: ex_cmds.c:1536
 #, c-format
 msgid "Writing viminfo file \"%s\""
 msgstr "viminfoファイル \"%s\" を書込み中"
 
 #. Write the info:
-#: ex_cmds.c:1627
+#: ex_cmds.c:1634
 #, c-format
 msgid "# This viminfo file was generated by Vim %s.\n"
 msgstr "# この viminfo ファイルは Vim %s によって生成されました.\n"
 
-#: ex_cmds.c:1629
+#: ex_cmds.c:1636
 msgid ""
 "# You may edit it if you're careful!\n"
 "\n"
 msgstr ""
-"# 変更する時には十分注意してください!\n"
+"# 変更する際には十分注意してください!\n"
 "\n"
 
-#: ex_cmds.c:1631
+#: ex_cmds.c:1638
 msgid "# Value of 'encoding' when this file was written\n"
 msgstr "# このファイルが書かれた時の 'encoding' の値\n"
 
-#: ex_cmds.c:1730
+#: ex_cmds.c:1737
 msgid "Illegal starting char"
 msgstr "不正な先頭文字です"
 
-#: ex_cmds.c:2075 ex_cmds.c:2340 ex_cmds2.c:744
+#: ex_cmds.c:2082 ex_cmds.c:2347 ex_cmds2.c:754
 msgid "Save As"
-msgstr "別名保存"
+msgstr "別名で保存"
 
 #. Overwriting a file that is loaded in another buffer is not a
 #. * good idea.
-#: ex_cmds.c:2118
+#: ex_cmds.c:2125
 msgid "E139: File is loaded in another buffer"
 msgstr "E139: 同じ名前のファイルが他のバッファで読込まれています"
 
-#: ex_cmds.c:2152
+#: ex_cmds.c:2159
 msgid "Write partial file?"
 msgstr "ファイルを部分的に保存しますか?"
 
-#: ex_cmds.c:2159
+#: ex_cmds.c:2166
 msgid "E140: Use ! to write partial buffer"
 msgstr "E140: バッファを部分的に保存するには ! を使ってください"
 
-#: ex_cmds.c:2274
+#: ex_cmds.c:2281
 #, c-format
 msgid "Overwrite existing file \"%.*s\"?"
 msgstr "既存のファイル \"%.*s\" を上書きしますか?"
 
-#: ex_cmds.c:2345
+#: ex_cmds.c:2352
 #, c-format
 msgid "E141: No file name for buffer %ld"
 msgstr "E141: バッファ %ld には名前がありません"
 
-#: ex_cmds.c:2383
+#: ex_cmds.c:2390
 msgid "E142: File not written: Writing is disabled by 'write' option"
 msgstr "E142: ファイルは保存されませんでした: 'write' オプションにより無効です"
 
-#: ex_cmds.c:2403
+#: ex_cmds.c:2410
 #, c-format
 msgid ""
 "'readonly' option is set for \"%.*s\".\n"
 "Do you wish to write anyway?"
 msgstr ""
 "\"%.*s\" には 'readonly' オプションが設定されています\n"
-"上書きしたいのですか?"
+"強制的に上書きしますか?"
 
-#: ex_cmds.c:2568
+#: ex_cmds.c:2575
 msgid "Edit File"
 msgstr "ファイルを編集"
 
-#: ex_cmds.c:3140
+#: ex_cmds.c:3147
 #, c-format
 msgid "E143: Autocommands unexpectedly deleted new buffer %s"
 msgstr "E143: autocommandが予期せず新しいバッファ %s を削除しました"
 
-#: ex_cmds.c:3272
+#: ex_cmds.c:3279
 msgid "E144: non-numeric argument to :z"
 msgstr "E144: 数ではない引数が :z に渡されました"
 
-#: ex_cmds.c:3357
+#: ex_cmds.c:3364
 msgid "E145: Shell commands not allowed in rvim"
 msgstr "E145: rvimではシェルコマンドを使えません"
 
-#: ex_cmds.c:3464
+#: ex_cmds.c:3471
 msgid "E146: Regular expressions can't be delimited by letters"
 msgstr "E146: 正規表現は文字で区切ることができません"
 
-#: ex_cmds.c:3810
+#: ex_cmds.c:3817
 #, c-format
 msgid "replace with %s (y/n/a/q/l/^E/^Y)?"
 msgstr "%s に置換しますか? (y/n/a/q/l/^E/^Y)"
 
-#: ex_cmds.c:4175
+#: ex_cmds.c:4189
 msgid "(Interrupted) "
 msgstr "(割込まれました)"
 
-#: ex_cmds.c:4179
+#: ex_cmds.c:4193
 msgid "1 substitution"
 msgstr "1 箇所置換しました"
 
-#: ex_cmds.c:4181
+#: ex_cmds.c:4195
 #, c-format
 msgid "%ld substitutions"
 msgstr "%ld 箇所置換しました"
 
-#: ex_cmds.c:4184
+#: ex_cmds.c:4198
 msgid " on 1 line"
 msgstr " (計 1 行内)"
 
-#: ex_cmds.c:4186
+#: ex_cmds.c:4200
 #, c-format
 msgid " on %ld lines"
 msgstr " (計 %ld 行内)"
 
-#: ex_cmds.c:4237
+#: ex_cmds.c:4251
 msgid "E147: Cannot do :global recursive"
-msgstr "E147: :global は再帰的に使えません"
+msgstr "E147: :global を再帰的には使えません"
 
-#: ex_cmds.c:4272
+#: ex_cmds.c:4286
 msgid "E148: Regular expression missing from global"
 msgstr "E148: globalコマンドに正規表現が指定されていません"
 
-#: ex_cmds.c:4321
+#: ex_cmds.c:4335
 #, c-format
 msgid "Pattern found in every line: %s"
 msgstr "パターンが全ての行でみつかりました: %s"
 
-#: ex_cmds.c:4402
+#: ex_cmds.c:4416
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -812,341 +813,383 @@ msgstr ""
 "# 最後に置換された文字列:\n"
 "$"
 
-#: ex_cmds.c:4506
+#: ex_cmds.c:4529
 #, c-format
 msgid "E149: Sorry, no help for %s"
 msgstr "E149: 残念ですが %s にはヘルプがありません"
 
-#: ex_cmds.c:4540
+#: ex_cmds.c:4563
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "残念ですがヘルプファイル \"%s\" がみつかりません"
 
-#: ex_cmds.c:5015
+#: ex_cmds.c:5039
 #, c-format
 msgid "E150: Not a directory: %s"
 msgstr "E150: ディレクトリではありません: %s"
 
-#: ex_cmds.c:5043
+#: ex_cmds.c:5067
 #, c-format
 msgid "E152: Cannot open %s for writing"
 msgstr "E152: 書込み用に %s を開けません"
 
-#: ex_cmds.c:5078
+#: ex_cmds.c:5102
 #, c-format
 msgid "E153: Unable to open %s for reading"
 msgstr "E153: 読込用に %s を開けません"
 
-#: ex_cmds.c:5157
+#: ex_cmds.c:5181
 #, c-format
 msgid "E154: Duplicate tag \"%s\" in file %s"
 msgstr "E154: タグ \"%s\" がファイル %s に重複しています"
 
-#: ex_cmds.c:5264
+#: ex_cmds.c:5288
 #, c-format
 msgid "E160: Unknown sign command: %s"
 msgstr "E160: 未知のsignコマンドです: %s"
 
-#: ex_cmds.c:5284
+#: ex_cmds.c:5308
 msgid "E156: Missing sign name"
 msgstr "E156: sign名がありません"
 
-#: ex_cmds.c:5330
+#: ex_cmds.c:5354
 msgid "E612: Too many signs defined"
 msgstr "E612: signの定義が多数見つかりました"
 
-#: ex_cmds.c:5397
+#: ex_cmds.c:5421
 #, c-format
 msgid "E239: Invalid sign text: %s"
 msgstr "E239: 無効なsignのテキストです: %s"
 
-#: ex_cmds.c:5428 ex_cmds.c:5614
+#: ex_cmds.c:5452 ex_cmds.c:5638
 #, c-format
 msgid "E155: Unknown sign: %s"
 msgstr "E155: 未知のsignです: %s"
 
-#: ex_cmds.c:5474
+#: ex_cmds.c:5498
 msgid "E159: Missing sign number"
 msgstr "E159: signの番号がありません"
 
-#: ex_cmds.c:5554
+#: ex_cmds.c:5578
 #, c-format
 msgid "E158: Invalid buffer name: %s"
 msgstr "E158: 無効なバッファ名です: %s"
 
-#: ex_cmds.c:5593
+#: ex_cmds.c:5617
 #, c-format
 msgid "E157: Invalid sign ID: %ld"
 msgstr "E157: 無効なsign識別子です: %ld"
 
-#: ex_cmds.c:5764
+#: ex_cmds.c:5788
 msgid "[Deleted]"
 msgstr "[削除済]"
 
-#: ex_cmds2.c:82
+#: ex_cmds2.c:83
 msgid "Entering Debug mode.  Type \"cont\" to continue."
 msgstr "デバッグモードに入ります. 続けるには \"cont\" と入力してください."
 
-#: ex_cmds2.c:86 ex_docmd.c:850
+#: ex_cmds2.c:87 ex_docmd.c:854
 #, c-format
 msgid "line %ld: %s"
 msgstr "行 %ld: %s"
 
-#: ex_cmds2.c:88
+#: ex_cmds2.c:89
 #, c-format
 msgid "cmd: %s"
 msgstr "コマンド: %s"
 
-#: ex_cmds2.c:271
+#: ex_cmds2.c:281
 #, c-format
 msgid "Breakpoint in \"%s%s\" line %ld"
 msgstr "ブレークポイント \"%s%s\" 行 %ld"
 
-#: ex_cmds2.c:521
+#: ex_cmds2.c:531
 #, c-format
 msgid "E161: Breakpoint not found: %s"
 msgstr "E161: ブレークポイントがみつかりません: %s"
 
-#: ex_cmds2.c:547
+#: ex_cmds2.c:557
 msgid "No breakpoints defined"
 msgstr "ブレークポイントが定義されていません"
 
-#: ex_cmds2.c:552
+#: ex_cmds2.c:562
 #, c-format
 msgid "%3d  %s %s  line %ld"
 msgstr "%3d  %s %s  行 %ld"
 
-#: ex_cmds2.c:767
+#: ex_cmds2.c:777
 #, c-format
 msgid "Save changes to \"%.*s\"?"
 msgstr "変更を \"%.*s\" に保存しますか?"
 
-#: ex_cmds2.c:769 ex_docmd.c:8820
+#: ex_cmds2.c:779 ex_docmd.c:8917
 msgid "Untitled"
 msgstr "無題"
 
-#: ex_cmds2.c:905
+#: ex_cmds2.c:915
 #, c-format
 msgid "E162: No write since last change for buffer \"%s\""
 msgstr "E162: バッファ \"%s\" の変更は保存されていません"
 
-#: ex_cmds2.c:974
+#: ex_cmds2.c:984
 msgid "Warning: Entered other buffer unexpectedly (check autocommands)"
 msgstr "警告: 予期せず他バッファへ移動しました (autocommands を調べてください)"
 
-#: ex_cmds2.c:1377
+#: ex_cmds2.c:1387
 msgid "E163: There is only one file to edit"
 msgstr "E163: 編集するファイルは1つしかありません"
 
-#: ex_cmds2.c:1379
+#: ex_cmds2.c:1389
 msgid "E164: Cannot go before first file"
 msgstr "E164: 最初のファイルより前には行けません"
 
-#: ex_cmds2.c:1381
+#: ex_cmds2.c:1391
 msgid "E165: Cannot go beyond last file"
 msgstr "E165: 最後のファイルを越えて後には行けません"
 
-#: ex_cmds2.c:1828
+#: ex_cmds2.c:1841
 #, c-format
 msgid "Searching for \"%s\" in \"%s\""
 msgstr "\"%s\" を \"%s\" から検索中"
 
-#: ex_cmds2.c:1850
+#: ex_cmds2.c:1863
 #, c-format
 msgid "Searching for \"%s\""
 msgstr "\"%s\" を検索中"
 
-#: ex_cmds2.c:1871
+#: ex_cmds2.c:1884
 #, c-format
 msgid "not found in 'runtimepath': \"%s\""
 msgstr "'runtimepath' の中にはみつかりません: \"%s\""
 
-#: ex_cmds2.c:1905
+#: ex_cmds2.c:1918
 msgid "Source Vim script"
-msgstr "Vimスクリプトの読み込み"
+msgstr "Vimスクリプトの取込み"
 
-#: ex_cmds2.c:2082
+#: ex_cmds2.c:2069
 #, c-format
 msgid "Cannot source a directory: \"%s\""
-msgstr "ディレクトリは取り込めません: \"%s\""
+msgstr "ディレクトリは取込めません: \"%s\""
 
-#: ex_cmds2.c:2112
+#: ex_cmds2.c:2099
 #, c-format
 msgid "could not source \"%s\""
 msgstr "\"%s\" を取込めません"
 
-#: ex_cmds2.c:2114
+#: ex_cmds2.c:2101
 #, c-format
 msgid "line %ld: could not source \"%s\""
 msgstr "行 %ld: \"%s\" を取込めません"
 
-#: ex_cmds2.c:2128
+#: ex_cmds2.c:2115
 #, c-format
 msgid "sourcing \"%s\""
 msgstr "\"%s\" を取込中"
 
-#: ex_cmds2.c:2130
+#: ex_cmds2.c:2117
 #, c-format
 msgid "line %ld: sourcing \"%s\""
 msgstr "行 %ld: %s を取込中"
 
-#: ex_cmds2.c:2255
+#: ex_cmds2.c:2242
 #, c-format
 msgid "finished sourcing %s"
 msgstr "%s の取込を完了"
 
-#: ex_cmds2.c:2554
+#: ex_cmds2.c:2580
 msgid "W15: Warning: Wrong line separator, ^M may be missing"
 msgstr "W15: 警告: 行区切が不正です. ^M がないのでしょう"
 
-#: ex_cmds2.c:2603
+#: ex_cmds2.c:2629
 msgid "E167: :scriptencoding used outside of a sourced file"
 msgstr "E167: :scriptencoding が取込スクリプト以外で使用されました"
 
-#: ex_cmds2.c:2636
+#: ex_cmds2.c:2662
 msgid "E168: :finish used outside of a sourced file"
 msgstr "E168: :finish が取込スクリプト以外で使用されました"
 
-#: ex_cmds2.c:3033
+#: ex_cmds2.c:3105
 #, c-format
 msgid "Page %d"
 msgstr "%d ページ"
 
-#: ex_cmds2.c:3145
+#: ex_cmds2.c:3261
 msgid "No text to be printed"
 msgstr "印刷するテキストがありません"
 
-#: ex_cmds2.c:3223
+#: ex_cmds2.c:3339
 msgid "Printing page %d (%d%%)"
 msgstr "印刷中: ページ %d (%d%%)"
 
-#: ex_cmds2.c:3232
+#: ex_cmds2.c:3348
 #, c-format
 msgid " Copy %d of %d"
 msgstr " コピー %d (全 %d 中)"
 
-#: ex_cmds2.c:3284
+#: ex_cmds2.c:3406
 #, c-format
 msgid "Printed: %s"
 msgstr "印刷しました: %s"
 
-#: ex_cmds2.c:3291
+#: ex_cmds2.c:3413
 msgid "Printing aborted"
 msgstr "印刷が中止されました"
 
-#: ex_cmds2.c:3674
+#: ex_cmds2.c:3778
 msgid "E455: Error writing to PostScript output file"
-msgstr "E455: PostScript出力ファイルの書き込みエラーです"
+msgstr "E455: PostScript出力ファイルの書込みエラーです"
 
-#: ex_cmds2.c:4349
-msgid "E324: Can't open PostScript output file"
-msgstr "E324: PostScript出力用のファイルを開けません"
-
-#: ex_cmds2.c:4391
+#: ex_cmds2.c:4053
 #, c-format
-msgid "E456: Can't open file \"%s\""
-msgstr "E456: ファイル \"%s\" を開けません"
+msgid "E624: Can't open file \"%s\""
+msgstr "E624: ファイル \"%s\" を開けません"
 
-#: ex_cmds2.c:4402
+#: ex_cmds2.c:4063 ex_cmds2.c:4688
 #, c-format
 msgid "E457: Can't read PostScript resource file \"%s\""
 msgstr "E457: PostScriptのリソースファイル \"%s\" を読込めません"
 
-#: ex_cmds2.c:4605
+#: ex_cmds2.c:4071
+#, c-format
+msgid "E618: file \"%s\" is not a PostScript resource file"
+msgstr "E618: ファイル \"%s\" は PostScript リソースファイルではありません"
+
+#: ex_cmds2.c:4086 ex_cmds2.c:4106 ex_cmds2.c:4121 ex_cmds2.c:4143
+#, c-format
+msgid "E619: file \"%s\" is not a supported PostScript resource file"
+msgstr "E619: ファイル \"%s\" は対応していない PostScript リソースファイルです"
+
+#: ex_cmds2.c:4173
+#, c-format
+msgid "E621: \"%s\" resource file has wrong version"
+msgstr "E621: リソースファイル \"%s\" はバージョンが異なります"
+
+#: ex_cmds2.c:4640
+msgid "E324: Can't open PostScript output file"
+msgstr "E324: PostScript出力用のファイルを開けません"
+
+#: ex_cmds2.c:4673
+#, c-format
+msgid "E456: Can't open file \"%s\""
+msgstr "E456: ファイル \"%s\" を開けません"
+
+#: ex_cmds2.c:4792
+msgid "E456: Can't find PostScript resource file \"prolog.ps\""
+msgstr "E456: PostScriptのリソースファイル \"prolog.ps\" がみつかりません"
+
+#: ex_cmds2.c:4823
+#, c-format
+msgid "E456: Can't find PostScript resource file \"%s.ps\""
+msgstr "E456: PostScriptのリソースファイル \"%s.ps\" がみつかりません"
+
+#: ex_cmds2.c:4841
+#, c-format
+msgid "E620: Unable to convert from multi-byte to \"%s\" encoding"
+msgstr "E620: マルチバイト文字をエンコード \"%s\" へ変換できません"
+
+#: ex_cmds2.c:4966
 msgid "Sending to printer..."
 msgstr "プリンタに送信中..."
 
-#: ex_cmds2.c:4609
+#: ex_cmds2.c:4970
 msgid "E365: Failed to print PostScript file"
 msgstr "E365: PostScriptファイルの印刷に失敗しました"
 
-#: ex_cmds2.c:4611
+#: ex_cmds2.c:4972
 msgid "Print job sent."
 msgstr "印刷ジョブを送信しました."
 
-#: ex_cmds2.c:5007
+#: ex_cmds2.c:5381
 #, c-format
 msgid "Current %slanguage: \"%s\""
-msgstr "現在の %s選択言語: \"%s\""
+msgstr "現在の %s言語: \"%s\""
 
-#: ex_cmds2.c:5018
+#: ex_cmds2.c:5392
 #, c-format
 msgid "E197: Cannot set language to \"%s\""
 msgstr "E197: 言語を \"%s\" に設定できません"
 
-#: ex_docmd.c:486
+#: ex_docmd.c:489
 msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
 msgstr "Exモードに入ります. ノーマルに戻るには\"visual\"と入力してください."
 
 #. must be at EOF
-#: ex_docmd.c:522
+#: ex_docmd.c:525
 msgid "E501: At end-of-file"
 msgstr "E501: ファイルの終了位置"
 
-#: ex_docmd.c:624
+#: ex_docmd.c:627
 msgid "E169: Command too recursive"
 msgstr "E169: コマンドが再帰的過ぎます"
 
-#: ex_docmd.c:1090
+#: ex_docmd.c:1094
 #, c-format
 msgid "E605: Exception not caught: %s"
 msgstr "E605: 例外が捕捉されませんでした: %s"
 
-#: ex_docmd.c:1176
+#: ex_docmd.c:1180
 msgid "End of sourced file"
 msgstr "取込ファイルの最後です"
 
-#: ex_docmd.c:1177
+#: ex_docmd.c:1181
 msgid "End of function"
 msgstr "関数の最後です"
 
-#: ex_docmd.c:1628
+#: ex_docmd.c:1633
 msgid "E464: Ambiguous use of user-defined command"
 msgstr "E464: ユーザ定義コマンドのあいまいな使用です"
 
-#: ex_docmd.c:1642
+#: ex_docmd.c:1647
 msgid "E492: Not an editor command"
 msgstr "E492: エディタのコマンドではありません"
 
-#: ex_docmd.c:1725
+#: ex_docmd.c:1737
 msgid "E478: Don't panic!"
 msgstr "E478: 慌てないでください"
 
-#: ex_docmd.c:1744
+#: ex_docmd.c:1756
 msgid "E493: Backwards range given"
-msgstr "E493: 逆の範囲指定がされました"
+msgstr "E493: 逆さまの範囲が指定されました"
 
-#: ex_docmd.c:1753
+#: ex_docmd.c:1765
 msgid "Backwards range given, OK to swap"
-msgstr "逆の範囲指定がされましたが, 交換して良いならばOKを押してください"
+msgstr "逆さまの範囲が指定されました, 入替えますか?"
 
-#: ex_docmd.c:1864
+#: ex_docmd.c:1876
 msgid "E494: Use w or w>>"
 msgstr "E494: w もしくは w>> を使用してください"
 
-#: ex_docmd.c:3446
+#: ex_docmd.c:3463
 msgid "E319: Sorry, the command is not available in this version"
 msgstr "E319: このバージョンではこのコマンドは利用できません, ごめんなさい"
 
-#: ex_docmd.c:3624
+#: ex_docmd.c:3649
 msgid "E172: Only one file name allowed"
 msgstr "E172: ファイル名は 1 つにしてください"
 
-#: ex_docmd.c:4191
+#: ex_docmd.c:4211
+msgid "1 more file to edit.  Quit anyway?"
+msgstr "編集すべきファイルが 1 個ありますが, 終了しますか?"
+
+#: ex_docmd.c:4214
 #, c-format
 msgid "%d more files to edit.  Quit anyway?"
 msgstr "編集すべきファイルがあと %d 個ありますが, 終了しますか?"
 
-#: ex_docmd.c:4198
+#: ex_docmd.c:4221
+msgid "E173: 1 more file to edit"
+msgstr "E173: 編集すべきファイルが 1 個あります"
+
+#: ex_docmd.c:4223
 #, c-format
 msgid "E173: %ld more files to edit"
 msgstr "E173: 編集すべきファイルがあと %ld 個あります"
 
-#: ex_docmd.c:4292
+#: ex_docmd.c:4318
 msgid "E174: Command already exists: add ! to replace it"
 msgstr "E174: コマンドが既にあります: 再定義するには ! を追加してください"
 
-#: ex_docmd.c:4397
+#: ex_docmd.c:4428
 msgid ""
 "\n"
 "    Name        Args Range Complete  Definition"
@@ -1154,315 +1197,323 @@ msgstr ""
 "\n"
 "    名前        引数 範囲  補完      定義"
 
-#: ex_docmd.c:4486
+#: ex_docmd.c:4517
 msgid "No user-defined commands found"
 msgstr "ユーザ定義コマンドが見つかりませんでした"
 
-#: ex_docmd.c:4517
+#: ex_docmd.c:4549
 msgid "E175: No attribute specified"
 msgstr "E175: 属性は定義されていません"
 
-#: ex_docmd.c:4569
+#: ex_docmd.c:4601
 msgid "E176: Invalid number of arguments"
 msgstr "E176: 引数の数が無効です"
 
-#: ex_docmd.c:4584
+#: ex_docmd.c:4616
 msgid "E177: Count cannot be specified twice"
 msgstr "E177: カウントを2重指定することはできません"
 
-#: ex_docmd.c:4594
+#: ex_docmd.c:4626
 msgid "E178: Invalid default value for count"
 msgstr "E178: カウントの省略値が無効です"
 
-#: ex_docmd.c:4622
+#: ex_docmd.c:4657
 msgid "E179: argument required for complete"
 msgstr "E179: 補完のための引数が必要です"
 
-#: ex_docmd.c:4641
+#: ex_docmd.c:4689
 #, c-format
 msgid "E180: Invalid complete value: %s"
 msgstr "E180: 無効な補完指定です: %s"
 
-#: ex_docmd.c:4649
+#: ex_docmd.c:4694
+msgid "E467: Custom completion requires a function argument"
+msgstr "E467: カスタム補完には引数として関数が必要です"
+
+#: ex_docmd.c:4699
+msgid "E468: Completion argument only allowed for custom completion"
+msgstr "E468: 補完引数はカスタム補完でしか使用できません"
+
+#: ex_docmd.c:4709
 #, c-format
 msgid "E181: Invalid attribute: %s"
 msgstr "E181: 無効な属性です: %s"
 
-#: ex_docmd.c:4690
+#: ex_docmd.c:4752
 msgid "E182: Invalid command name"
 msgstr "E182: 無効なコマンド名です"
 
-#: ex_docmd.c:4705
+#: ex_docmd.c:4767
 msgid "E183: User defined commands must start with an uppercase letter"
 msgstr "E183: ユーザ定義コマンドは英大文字で始まらなければなりません"
 
-#: ex_docmd.c:4774
+#: ex_docmd.c:4837
 #, c-format
 msgid "E184: No such user-defined command: %s"
 msgstr "E184: そのユーザ定義コマンドはありません: %s"
 
-#: ex_docmd.c:5230
+#: ex_docmd.c:5294
 #, c-format
 msgid "E185: Cannot find color scheme %s"
 msgstr "E185: カラースキーム %s がみつかりません"
 
-#: ex_docmd.c:5238
+#: ex_docmd.c:5302
 msgid "Greetings, Vim user!"
 msgstr "Vim 使いさん、やあ!"
 
-#: ex_docmd.c:5946
+#: ex_docmd.c:6013
 msgid "Edit File in new window"
 msgstr "新しいウィンドウでファイルを編集します"
 
-#: ex_docmd.c:6219
+#: ex_docmd.c:6300
 msgid "No swap file"
 msgstr "スワップファイルがありません"
 
-#: ex_docmd.c:6323
+#: ex_docmd.c:6404
 msgid "Append File"
 msgstr "追加ファイル"
 
-#: ex_docmd.c:6387
+#: ex_docmd.c:6468
 msgid "E186: No previous directory"
 msgstr "E186: 前のディレクトリはありません"
 
-#: ex_docmd.c:6469
+#: ex_docmd.c:6550
 msgid "E187: Unknown"
 msgstr "E187: 未知"
 
-#: ex_docmd.c:6554
+#: ex_docmd.c:6635
 msgid "E465: :winsize requires two number arguments"
 msgstr "E465: "
 
-#: ex_docmd.c:6605
+#: ex_docmd.c:6686
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "ウィンドウ位置: X %d, Y %d"
 
-#: ex_docmd.c:6610
+#: ex_docmd.c:6691
 msgid "E188: Obtaining window position not implemented for this platform"
 msgstr ""
-"E188: このプラットホームにはウィンドウ位置の取得機能が実装されていません"
+"E188: このプラットホームにはウィンドウ位置の取得機能は実装されていません"
 
-#: ex_docmd.c:6620
+#: ex_docmd.c:6701
 msgid "E466: :winpos requires two number arguments"
 msgstr "E466: :winpos には2つの数値の引数が必要です"
 
-#: ex_docmd.c:6899
+#: ex_docmd.c:6980
 msgid "Save Redirection"
 msgstr "リダイレクトを保存します"
 
-#: ex_docmd.c:7046
+#: ex_docmd.c:7131
 msgid "Save View"
 msgstr "ビューを保存します"
 
-#: ex_docmd.c:7047
+#: ex_docmd.c:7132
 msgid "Save Session"
 msgstr "セッション情報を保存します"
 
-#: ex_docmd.c:7049
+#: ex_docmd.c:7134
 msgid "Save Setup"
 msgstr "設定を保存します"
 
-#: ex_docmd.c:7200
+#: ex_docmd.c:7285
 #, c-format
 msgid "E189: \"%s\" exists (add ! to override)"
 msgstr "E189: \"%s\" が存在します (上書するには ! を追加してください)"
 
-#: ex_docmd.c:7205
+#: ex_docmd.c:7290
 #, c-format
 msgid "E190: Cannot open \"%s\" for writing"
 msgstr "E190: \"%s\" を書込み用として開けません"
 
 #. set mark
-#: ex_docmd.c:7229
+#: ex_docmd.c:7314
 msgid "E191: Argument must be a letter or forward/backward quote"
 msgstr "E191: 引数は文字か前進/後退クォートでしなければいけません"
 
-#: ex_docmd.c:7271
+#: ex_docmd.c:7356
 msgid "E192: Recursive use of :normal too deep"
-msgstr "E192: :normal の再帰使用が深くなりすぎました"
+msgstr "E192: :normal の再帰利用が深くなりすぎました"
 
-#: ex_docmd.c:7772
+#: ex_docmd.c:7869
 msgid "E194: No alternate file name to substitute for '#'"
 msgstr "E194: '#'を置き換える副ファイルの名前がありません"
 
-#: ex_docmd.c:7803
+#: ex_docmd.c:7900
 msgid "E495: no autocommand file name to substitute for \"<afile>\""
 msgstr "E495: \"<afile>\"を置き換えるautocommandのファイル名がありません"
 
-#: ex_docmd.c:7811
+#: ex_docmd.c:7908
 msgid "E496: no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "E496: \"<abuf>\"を置き換えるautocommandバッファ番号がありません"
 
-#: ex_docmd.c:7822
+#: ex_docmd.c:7919
 msgid "E497: no autocommand match name to substitute for \"<amatch>\""
-msgstr "E497: \"<amatch>\"を置き換えるautocommandのマッチ名がありません"
+msgstr "E497: \"<amatch>\"を置き換えるautocommandの該当名がありません"
 
-#: ex_docmd.c:7832
+#: ex_docmd.c:7929
 msgid "E498: no :source file name to substitute for \"<sfile>\""
-msgstr "E498: \"<sfile>\"を置き換える :source のファイル名がありません"
+msgstr "E498: \"<sfile>\"を置き換える :source 対象ファイル名がありません"
 
-#: ex_docmd.c:7873
+#: ex_docmd.c:7970
 #, no-c-format
 msgid "E499: Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "E499: '%' か '#' の空のファイル名が空なので \":p:h\" しか使えません"
 
-#: ex_docmd.c:7875
+#: ex_docmd.c:7972
 msgid "E500: Evaluates to an empty string"
 msgstr "E500: 空文字列として評価されました"
 
-#: ex_docmd.c:8802
+#: ex_docmd.c:8899
 msgid "E195: Cannot open viminfo file for reading"
 msgstr "E195: viminfoファイルを読込用として開けません"
 
-#: ex_docmd.c:8975
+#: ex_docmd.c:9072
 msgid "E196: No digraphs in this version"
 msgstr "E196: このバージョンに合字はありません"
 
-#: ex_eval.c:415
+#: ex_eval.c:423
 msgid "E608: Cannot :throw exceptions with 'Vim' prefix"
-msgstr "E608: "
+msgstr "E608: 'Vim' で始まる例外は :throw できません"
 
 #. always scroll up, don't overwrite
-#: ex_eval.c:497
+#: ex_eval.c:509
 #, c-format
 msgid "Exception thrown: %s"
 msgstr "例外が発生しました: %s"
 
-#: ex_eval.c:538
+#: ex_eval.c:556
 #, c-format
 msgid "Exception finished: %s"
 msgstr "例外が収束しました: %s"
 
-#: ex_eval.c:539
+#: ex_eval.c:557
 #, c-format
 msgid "Exception discarded: %s"
 msgstr "例外が破棄されました: %s"
 
-#: ex_eval.c:580 ex_eval.c:618
+#: ex_eval.c:600 ex_eval.c:644
 #, c-format
 msgid "%s, line %ld"
 msgstr "%s, 行 %ld"
 
 #. always scroll up, don't overwrite
-#: ex_eval.c:594
+#: ex_eval.c:618
 #, c-format
 msgid "Exception caught: %s"
 msgstr "例外が捕捉されました: %s"
 
-#: ex_eval.c:665
+#: ex_eval.c:693
 #, c-format
 msgid "%s made pending"
 msgstr "%s により未決定状態が生じました"
 
-#: ex_eval.c:668
+#: ex_eval.c:696
 #, c-format
 msgid "%s resumed"
 msgstr "%s が再開しました"
 
-#: ex_eval.c:672
+#: ex_eval.c:700
 #, c-format
 msgid "%s discarded"
 msgstr "%s が破棄されました"
 
-#: ex_eval.c:698
+#: ex_eval.c:726
 msgid "Exception"
 msgstr "例外"
 
-#: ex_eval.c:704
+#: ex_eval.c:732
 msgid "Error and interrupt"
 msgstr "エラーと割込み"
 
-#: ex_eval.c:706 gui.c:4245
+#: ex_eval.c:734 gui.c:4253
 msgid "Error"
 msgstr "エラー"
 
 #. if (pending & CSTP_INTERRUPT)
-#: ex_eval.c:708
+#: ex_eval.c:736
 msgid "Interrupt"
 msgstr "割込み"
 
-#: ex_eval.c:777
+#: ex_eval.c:810
 msgid "E579: :if nesting too deep"
-msgstr "E579: :if の入れ子が深く過ぎます"
+msgstr "E579: :if の入れ子が深過ぎます"
 
-#: ex_eval.c:814
+#: ex_eval.c:847
 msgid "E580: :endif without :if"
 msgstr "E580: :if のない :endif があります"
 
-#: ex_eval.c:858
+#: ex_eval.c:891
 msgid "E581: :else without :if"
 msgstr "E581: :if のない :else があります"
 
-#: ex_eval.c:861
+#: ex_eval.c:894
 msgid "E582: :elseif without :if"
 msgstr "E582: :if のない :elseif があります"
 
-#: ex_eval.c:868
+#: ex_eval.c:901
 msgid "E583: multiple :else"
-msgstr "E583: "
+msgstr "E583: 複数の :else があります"
 
-#: ex_eval.c:871
+#: ex_eval.c:904
 msgid "E584: :elseif after :else"
 msgstr "E584: :else の後に :elseif があります"
 
-#: ex_eval.c:938
+#: ex_eval.c:971
 msgid "E585: :while nesting too deep"
 msgstr "E585: :while の入れ子が深く過ぎます"
 
-#: ex_eval.c:994
+#: ex_eval.c:1027
 msgid "E586: :continue without :while"
 msgstr "E586: :while のない :continue があります"
 
-#: ex_eval.c:1034
+#: ex_eval.c:1067
 msgid "E587: :break without :while"
 msgstr "E587: :while のない :break があります"
 
-#: ex_eval.c:1233
+#: ex_eval.c:1266
 msgid "E601: :try nesting too deep"
 msgstr "E601: :try の入れ子が深過ぎます"
 
-#: ex_eval.c:1277
+#: ex_eval.c:1346
 msgid "E603: :catch without :try"
 msgstr "E603: :try のない :catch があります"
 
 #. Give up for a ":catch" after ":finally" and ignore it.
 #. * Just parse.
-#: ex_eval.c:1299
+#: ex_eval.c:1368
 msgid "E604: :catch after :finally"
 msgstr "E604: :finally の後に :catch があります"
 
-#: ex_eval.c:1429
+#: ex_eval.c:1501
 msgid "E606: :finally without :try"
 msgstr "E606: :try のない :finally があります"
 
 #. Give up for a multiple ":finally" and ignore it.
-#: ex_eval.c:1453
+#: ex_eval.c:1525
 msgid "E607: multiple :finally"
 msgstr "E607: 複数の :finalyy があります"
 
-#: ex_eval.c:1562
+#: ex_eval.c:1634
 msgid "E602: :endtry without :try"
 msgstr "E602: :try のない :endtry です"
 
-#: ex_eval.c:1868
+#: ex_eval.c:1966
 msgid "E193: :endfunction not inside a function"
 msgstr "E193: 関数の外に :endfunction がありました"
 
-#: ex_getln.c:3048
+#: ex_getln.c:3145
 msgid "tagname"
 msgstr "タグ名"
 
-#: ex_getln.c:3051
+#: ex_getln.c:3148
 msgid " kind file\n"
 msgstr " ファイル種類\n"
 
-#: ex_getln.c:4257
+#: ex_getln.c:4499
 msgid "'history' option is zero"
 msgstr "オプション 'history' がゼロです"
 
-#: ex_getln.c:4497
+#: ex_getln.c:4739
 #, c-format
 msgid ""
 "\n"
@@ -1471,27 +1522,27 @@ msgstr ""
 "\n"
 "# %s 項目の履歴 (新しいものから古いものへ):\n"
 
-#: ex_getln.c:4498
+#: ex_getln.c:4740
 msgid "Command Line"
 msgstr "コマンドライン"
 
-#: ex_getln.c:4499
+#: ex_getln.c:4741
 msgid "Search String"
 msgstr "検索文字列"
 
-#: ex_getln.c:4500
+#: ex_getln.c:4742
 msgid "Expression"
-msgstr "表現"
+msgstr "式"
 
-#: ex_getln.c:4501
+#: ex_getln.c:4743
 msgid "Input Line"
 msgstr "入力行"
 
-#: ex_getln.c:4531
+#: ex_getln.c:4773
 msgid "E198: cmd_pchar beyond the command length"
 msgstr "E198: cmd_pchar がコマンド長を超えました"
 
-#: ex_getln.c:4705
+#: ex_getln.c:4950
 msgid "E199: Active window or buffer deleted"
 msgstr "E199: アクティブなウィンドウかバッファが削除されました"
 
@@ -1513,7 +1564,7 @@ msgstr "[新ファイル]"
 
 #: fileio.c:566
 msgid "[Permission Denied]"
-msgstr "[認可拒否]"
+msgstr "[認可がありません]"
 
 #: fileio.c:670
 msgid "E200: *ReadPre autocommands made the file unreadable"
@@ -1529,7 +1580,7 @@ msgstr "Vim: 標準入力から読込中...\n"
 
 #: fileio.c:699
 msgid "Reading from stdin..."
-msgstr "標準入力から読み込み中..."
+msgstr "標準入力から読込み中..."
 
 #. Re-opening the original file failed!
 #: fileio.c:944
@@ -1652,7 +1703,7 @@ msgstr "E213: 変換できません (! を追加で変換せずに保存)"
 
 #: fileio.c:3414
 msgid "E166: Can't open linked file for writing"
-msgstr "E166: リンクされたファイルに書き込めません"
+msgstr "E166: リンクされたファイルに書込めません"
 
 #: fileio.c:3418
 msgid "E212: Can't open file for writing"
@@ -1812,7 +1863,7 @@ msgstr "E211: 警告: ファイル \"%s\" は既に存在しません"
 msgid ""
 "W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as "
 "well"
-msgstr "W12: 警告: ファイル \"%s\" は変更されVimのバッファも変更されました"
+msgstr "W12: 警告: ファイル \"%s\" が変更されVimのバッファも変更されました"
 
 #: fileio.c:5472
 #, c-format
@@ -1932,56 +1983,56 @@ msgstr "E351: 現在の 'foldmethod' では折畳みを削除できません"
 msgid "E222: Add to read buffer"
 msgstr "E222: 読込バッファへ追加"
 
-#: getchar.c:2147
+#: getchar.c:2156
 msgid "E223: recursive mapping"
 msgstr "E223: 再帰的マッピング"
 
-#: getchar.c:2995
+#: getchar.c:3022
 #, c-format
 msgid "E224: global abbreviation already exists for %s"
 msgstr "E224: %s というグローバル短縮入力は既に存在します"
 
-#: getchar.c:2998
+#: getchar.c:3025
 #, c-format
 msgid "E225: global mapping already exists for %s"
 msgstr "E225: %s というグローバルマッピングは既に存在します"
 
-#: getchar.c:3125
+#: getchar.c:3152
 #, c-format
 msgid "E226: abbreviation already exists for %s"
 msgstr "E226: %s という短縮入力は既に存在します"
 
-#: getchar.c:3128
+#: getchar.c:3155
 #, c-format
 msgid "E227: mapping already exists for %s"
 msgstr "E227: %s というマッピングは既に存在します"
 
-#: getchar.c:3192
+#: getchar.c:3219
 msgid "No abbreviation found"
 msgstr "短縮入力はみつかりませんでした"
 
-#: getchar.c:3194
+#: getchar.c:3221
 msgid "No mapping found"
 msgstr "マッピングはみつかりませんでした"
 
-#: getchar.c:4084
+#: getchar.c:4111
 msgid "E228: makemap: Illegal mode"
 msgstr "E228: makemap: 不正なモード"
 
-#: gui.c:218
+#: gui.c:219
 msgid "E229: Cannot start the GUI"
 msgstr "E229: GUIを開始できません"
 
-#: gui.c:347
+#: gui.c:348
 #, c-format
 msgid "E230: Cannot read from \"%s\""
 msgstr "E230: \"%s\"から読込むことができません"
 
-#: gui.c:472
+#: gui.c:473
 msgid "E231: 'guifontwide' invalid"
 msgstr "E231: 'guifontwide' が無効です"
 
-#: gui.c:3933
+#: gui.c:3939
 #, c-format
 msgid "E254: Cannot allocate color %s"
 msgstr "E254: %s の色を割り当てられません"
@@ -1995,23 +2046,23 @@ msgstr "<開けません>"
 msgid "E616: vim_SelFile: can't get font %s"
 msgstr "E616: vim_SelFile: フォント %s を取得できません"
 
-#: gui_at_fs.c:2782
+#: gui_at_fs.c:2781
 msgid "E614: vim_SelFile: can't return to current directory"
 msgstr "E614: vim_SelFile: 現在のディレクトリに戻れません"
 
-#: gui_at_fs.c:2802
+#: gui_at_fs.c:2801
 msgid "Pathname:"
 msgstr "パス名:"
 
-#: gui_at_fs.c:2808
+#: gui_at_fs.c:2807
 msgid "E615: vim_SelFile: can't get current directory"
 msgstr "E615: vim_SelFile: 現在のディレクトリを取得できません"
 
-#: gui_at_fs.c:2816 gui_motif.c:1619
+#: gui_at_fs.c:2815 gui_motif.c:1623
 msgid "OK"
 msgstr "OK"
 
-#: gui_at_fs.c:2816 gui_gtk.c:2627 gui_motif.c:1614 gui_motif.c:2844
+#: gui_at_fs.c:2815 gui_gtk.c:2634 gui_motif.c:1618 gui_motif.c:2849
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -2019,11 +2070,11 @@ msgstr "キャンセル"
 msgid "Scrollbar Widget: Could not get geometry of thumb pixmap."
 msgstr "スクロールバー: 画像を取得できませんでした."
 
-#: gui_athena.c:2027 gui_motif.c:1867
+#: gui_athena.c:2047 gui_motif.c:1871
 msgid "Vim dialog"
 msgstr "Vim ダイアログ"
 
-#: gui_beval.c:91
+#: gui_beval.c:98
 msgid "E232: Cannot create BalloonEval with both message and callback"
 msgstr "E232: メッセージとコールバックのある BalloonEval を作成できません"
 
@@ -2031,7 +2082,7 @@ msgstr "E232: メッセージとコールバックのある BalloonEval を作成できません"
 msgid "Vim dialog..."
 msgstr "Vim ダイアログ..."
 
-#: gui_gtk.c:1994 message.c:2604
+#: gui_gtk.c:1998 message.c:2757
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -2041,58 +2092,58 @@ msgstr ""
 "いいえ(&N)\n"
 "キャンセル(&C)"
 
-#: gui_gtk.c:2154
+#: gui_gtk.c:2161
 msgid "Input _Methods"
 msgstr "インプットメソッド"
 
-#: gui_gtk.c:2420 gui_motif.c:2763
+#: gui_gtk.c:2427 gui_motif.c:2768
 msgid "VIM - Search and Replace..."
 msgstr "VIM - 検索と置換..."
 
-#: gui_gtk.c:2428 gui_motif.c:2765
+#: gui_gtk.c:2435 gui_motif.c:2770
 msgid "VIM - Search..."
-msgstr "Vim - 検索..."
+msgstr "VIM - 検索..."
 
-#: gui_gtk.c:2460 gui_motif.c:2883
+#: gui_gtk.c:2467 gui_motif.c:2888
 msgid "Find what:"
 msgstr "検索文字列:"
 
-#: gui_gtk.c:2480 gui_motif.c:2915
+#: gui_gtk.c:2487 gui_motif.c:2920
 msgid "Replace with:"
 msgstr "置換文字列:"
 
 #. whole word only button
-#: gui_gtk.c:2512 gui_motif.c:3031
+#: gui_gtk.c:2519 gui_motif.c:3036
 msgid "Match whole word only"
 msgstr "正確に該当するものだけ"
 
 #. match case button
-#: gui_gtk.c:2525 gui_motif.c:3043
+#: gui_gtk.c:2532 gui_motif.c:3048
 msgid "Match case"
 msgstr "大文字/小文字を区別する"
 
-#: gui_gtk.c:2537 gui_motif.c:2985
+#: gui_gtk.c:2544 gui_motif.c:2990
 msgid "Direction"
 msgstr "方向"
 
 #. 'Up' and 'Down' buttons
-#: gui_gtk.c:2549 gui_motif.c:2997
+#: gui_gtk.c:2556 gui_motif.c:3002
 msgid "Up"
 msgstr "上"
 
-#: gui_gtk.c:2553 gui_motif.c:3005
+#: gui_gtk.c:2560 gui_motif.c:3010
 msgid "Down"
 msgstr "下"
 
-#: gui_gtk.c:2579 gui_gtk.c:2581 gui_motif.c:2787
+#: gui_gtk.c:2586 gui_gtk.c:2588 gui_motif.c:2792
 msgid "Find Next"
 msgstr "次を検索"
 
-#: gui_gtk.c:2598 gui_gtk.c:2600 gui_motif.c:2804
+#: gui_gtk.c:2605 gui_gtk.c:2607 gui_motif.c:2809
 msgid "Replace"
 msgstr "置換"
 
-#: gui_gtk.c:2611 gui_gtk.c:2613 gui_motif.c:2817
+#: gui_gtk.c:2618 gui_gtk.c:2620 gui_motif.c:2822
 msgid "Replace All"
 msgstr "全て置換"
 
@@ -2100,39 +2151,39 @@ msgstr "全て置換"
 msgid "Vim: Received \"die\" request from session manager\n"
 msgstr "Vim: セッションマネージャから \"die\" 要求を受け取りました\n"
 
-#: gui_gtk_x11.c:3424
+#: gui_gtk_x11.c:3474
 msgid "Vim: Main window unexpectedly destroyed\n"
 msgstr "Vim: メインウィンドウが不意に破壊されました\n"
 
-#: gui_gtk_x11.c:4038
+#: gui_gtk_x11.c:4088
 msgid "Font Selection"
 msgstr "フォント選択"
 
-#: gui_gtk_x11.c:5890 ui.c:2010
+#: gui_gtk_x11.c:5940 ui.c:2009
 msgid "Used CUT_BUFFER0 instead of empty selection"
 msgstr "空の選択領域のかわりにCUT_BUFFER0が使用されました"
 
-#: gui_motif.c:1613 gui_motif.c:1616
+#: gui_motif.c:1617 gui_motif.c:1620
 msgid "Filter"
 msgstr "フィルタ"
 
-#: gui_motif.c:1615
+#: gui_motif.c:1619
 msgid "Directories"
 msgstr "ディレクトリ"
 
-#: gui_motif.c:1617
+#: gui_motif.c:1621
 msgid "Help"
 msgstr "ヘルプ"
 
-#: gui_motif.c:1618
+#: gui_motif.c:1622
 msgid "Files"
 msgstr "ファイル"
 
-#: gui_motif.c:1620
+#: gui_motif.c:1624
 msgid "Selection"
 msgstr "選択"
 
-#: gui_motif.c:2830
+#: gui_motif.c:2835
 msgid "Undo"
 msgstr "アンドゥ"
 
@@ -2146,72 +2197,72 @@ msgstr "E610: Zapフォント '%s' を読込めません"
 msgid "E611: Can't use font %s"
 msgstr "E611: フォント %s を使用できません"
 
-#: gui_riscos.c:3269
+#: gui_riscos.c:3270
 msgid ""
 "\n"
 "Sending message to terminate child process.\n"
 msgstr ""
 "\n"
-"子プロセスを停止するためにメッセージを送信中.\n"
+"子プロセスへ停止メッセージを送信中です.\n"
 
-#: gui_w32.c:815
+#: gui_w32.c:760
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "E243: 引数はサポートされません: \"-%s\"; OLE版を使用してください."
 
-#: gui_w48.c:2100
+#: gui_w48.c:2048
 msgid "Find string (use '\\\\' to find  a '\\')"
 msgstr "検索文字列 ('\\' を検索するには '\\\\')"
 
-#: gui_w48.c:2125
+#: gui_w48.c:2073
 msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "検索・置換 ('\\' を検索するには '\\\\')"
 
-#: gui_x11.c:1445
+#: gui_x11.c:1479
 msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr "Vim E458: 色指定が正しくないのでエントリを割り当てられません"
 
-#: gui_x11.c:2019
+#: gui_x11.c:2060
 #, c-format
 msgid "E250: Fonts for the following charsets are missing in fontset %s:"
 msgstr "E250: 以下の文字セットのフォントがありません %s:"
 
-#: gui_x11.c:2062
+#: gui_x11.c:2103
 #, c-format
 msgid "E252: Fontset name: %s"
 msgstr "E252: フォントセット名: %s"
 
-#: gui_x11.c:2063
+#: gui_x11.c:2104
 #, c-format
 msgid "Font '%s' is not fixed-width"
 msgstr "フォント '%s' は固定幅ではありません"
 
-#: gui_x11.c:2082
+#: gui_x11.c:2123
 #, c-format
 msgid "E253: Fontset name: %s\n"
 msgstr "E253: フォントセット名: %s\n"
 
-#: gui_x11.c:2083
+#: gui_x11.c:2124
 #, c-format
 msgid "Font0: %s\n"
 msgstr "フォント0: %s\n"
 
-#: gui_x11.c:2084
+#: gui_x11.c:2125
 #, c-format
 msgid "Font1: %s\n"
 msgstr "フォント1: %s\n"
 
-#: gui_x11.c:2085
+#: gui_x11.c:2126
 #, c-format
 msgid "Font%d width is not twice that of font0\n"
 msgstr "フォント%d の幅がフォント0の倍ではありません\n"
 
-#: gui_x11.c:2086
+#: gui_x11.c:2127
 #, c-format
 msgid "Font0 width: %ld\n"
 msgstr "フォント0の幅: %ld\n"
 
-#: gui_x11.c:2087
+#: gui_x11.c:2128
 #, c-format
 msgid ""
 "Font1 width: %ld\n"
@@ -2224,177 +2275,203 @@ msgstr ""
 msgid "E256: Hangul automata ERROR"
 msgstr "E256: ハングルオートマトンエラー"
 
-#: if_cscope.c:78
+#: if_cscope.c:72
 msgid "Add a new database"
 msgstr "新データベースを追加"
 
-#: if_cscope.c:80
+#: if_cscope.c:74
 msgid "Query for a pattern"
 msgstr "パターンのクエリーを追加"
 
-#: if_cscope.c:82
+#: if_cscope.c:76
 msgid "Show this message"
 msgstr "このメッセージを表示する"
 
-#: if_cscope.c:84
+#: if_cscope.c:78
 msgid "Kill a connection"
 msgstr "接続を終了する"
 
-#: if_cscope.c:86
+#: if_cscope.c:80
 msgid "Reinit all connections"
 msgstr "全ての接続を再初期化する"
 
-#: if_cscope.c:88
+#: if_cscope.c:82
 msgid "Show connections"
 msgstr "接続を表示する"
 
-#: if_cscope.c:119
+#: if_cscope.c:90
+#, c-format
+msgid "E560: Usage: cs[cope] %s"
+msgstr "E560: 使用方法: cs[cope] %s"
+
+#: if_cscope.c:122
 msgid "This cscope command does not support splitting the window.\n"
 msgstr "このcscopeコマンドは分割ウィンドウではサポートされません.\n"
 
-#: if_cscope.c:154
+#: if_cscope.c:163
 msgid "E562: Usage: cstag <ident>"
 msgstr "E562: 使用法: cstag <ident>"
 
-#: if_cscope.c:210
+#: if_cscope.c:219
 msgid "E257: cstag: tag not found"
 msgstr "E257: cstag: タグがみつかりません"
 
-#: if_cscope.c:418 if_cscope.c:466
+#: if_cscope.c:397
 #, c-format
 msgid "E563: stat(%s) error: %d"
 msgstr "E563: stat(%s) エラー: %d"
 
-#: if_cscope.c:476 if_cscope.c:488
-#, c-format
-msgid "Added cscope database %s"
-msgstr "cscopeデータベース %s を追加"
+#: if_cscope.c:407
+msgid "E563: stat error"
+msgstr "E563: stat エラー"
 
-#: if_cscope.c:495
+#: if_cscope.c:504
 #, c-format
 msgid "E564: %s is not a directory or a valid cscope database"
 msgstr "E564: %s はディレクトリ及び有効なcscopeのデータベースではありません"
 
-#: if_cscope.c:579
+#: if_cscope.c:519
 #, c-format
-msgid "E565: error reading cscope connection %d"
-msgstr "E565:cscopeの接続 %d を読み込み中のエラーです"
+msgid "Added cscope database %s"
+msgstr "cscopeデータベース %s を追加"
 
-#: if_cscope.c:656
+#: if_cscope.c:574
+#, c-format
+msgid "E262: error reading cscope connection %ld"
+msgstr "E262: cscopeの接続 %ld を読込み中のエラーです"
+
+#: if_cscope.c:679
 msgid "E561: unknown cscope search type"
 msgstr "E561: 未知のcscope検索型です"
 
-#: if_cscope.c:717
+#: if_cscope.c:721
 msgid "E566: Could not create cscope pipes"
 msgstr "E566: cscopeパイプを作成できませんでした"
 
-#: if_cscope.c:805 if_cscope.c:843
+#: if_cscope.c:738
+msgid "E622: Could not fork for cscope"
+msgstr "E622: cscopeの起動準備(fork)に失敗しました"
+
+#: if_cscope.c:832 if_cscope.c:882
 msgid "cs_create_connection exec failed"
 msgstr "cs_create_connection の実行に失敗しました"
 
-#: if_cscope.c:852
+#: if_cscope.c:883
+msgid "E623: Could not spawn cscope process"
+msgstr "E623: cscopeプロセスを起動できませんでした"
+
+#: if_cscope.c:896
 msgid "cs_create_connection: fdopen for to_fp failed"
 msgstr "cs_create_connection: to_fp の fdopen に失敗しました"
 
-#: if_cscope.c:854
+#: if_cscope.c:898
 msgid "cs_create_connection: fdopen for fr_fp failed"
 msgstr "cs_create_connection: fr_fp の fdopen に失敗しました"
 
-#: if_cscope.c:892
+#: if_cscope.c:936
 msgid "E567: no cscope connections"
 msgstr "E567: cscope接続に失敗しました"
 
-#: if_cscope.c:962
+#: if_cscope.c:1010
 #, c-format
 msgid "E259: no matches found for cscope query %s of %s"
 msgstr "E259: cscopeクエリー %s of %s に該当がありませんでした"
 
-#: if_cscope.c:1006
+#: if_cscope.c:1067
+#, c-format
+msgid "E469: invalid cscopequickfix flag %c for %c"
+msgstr "E469: 無効な cscopequickfix フラグ %c の %c です"
+
+#: if_cscope.c:1124
 msgid "cscope commands:\n"
 msgstr "cscopeコマンド:\n"
 
-#: if_cscope.c:1009
+#: if_cscope.c:1127
 #, c-format
-msgid "%-5s: %-30s (Usage: %s)\n"
-msgstr "%-5s: %-30s (使用法: %s)\n"
+msgid "%-5s: %-30s (Usage: %s)"
+msgstr "%-5s: %-30s (使用法: %s)"
 
-#: if_cscope.c:1084
-msgid "cannot open cscope database"
-msgstr "cscopeデータベースを開くことができません"
+#: if_cscope.c:1218
+#, c-format
+msgid "E625: cannot open cscope database: %s"
+msgstr "E625: cscopeデータベース: %s を開くことができません"
 
-#: if_cscope.c:1091
-msgid "cannot get cscope database information"
-msgstr "cscopeデータベースの情報を取得できません"
+#: if_cscope.c:1235
+msgid "E626: cannot get cscope database information"
+msgstr "E626: cscopeデータベースの情報を取得できません"
 
-#: if_cscope.c:1111
+#: if_cscope.c:1255
 msgid "E568: duplicate cscope database not added"
 msgstr "E568: 重複するcscopeデータベースは追加されませんでした"
 
-#: if_cscope.c:1122
+#: if_cscope.c:1266
 msgid "E569: maximum number of cscope connections reached"
 msgstr "E569: cscope接続の最大数に達しました"
 
-#: if_cscope.c:1249
-msgid "E260: cscope connection not found"
-msgstr "E260: cscope接続がみつかりませんでした"
-
-#: if_cscope.c:1252
+#: if_cscope.c:1382
 #, c-format
 msgid "E261: cscope connection %s not found"
 msgstr "E261: cscope接続 %s がみつかりませんでした"
 
-#: if_cscope.c:1288
-msgid "cscope connection closed"
-msgstr "cscope接続が閉じられました"
-
-#: if_cscope.c:1296
+#: if_cscope.c:1416
 #, c-format
-msgid "cscope connection %s closed\n"
-msgstr "cscope接続 %s が閉じられました\n"
+msgid "cscope connection %s closed"
+msgstr "cscope接続 %s が閉じられました"
 
 #. should not reach here
-#: if_cscope.c:1437
+#: if_cscope.c:1556
 msgid "E570: fatal error in cs_manage_matches"
 msgstr "E570: cs_manage_matches で致命的なエラーです"
 
-#: if_cscope.c:1488
+#: if_cscope.c:1816
 #, c-format
-msgid "E262: error reading cscope connection %d"
-msgstr "E262:cscopeの接続 %d を読み込み中のエラーです"
+msgid "Cscope tag: %s"
+msgstr "Cscope タグ: %s"
 
-#: if_cscope.c:1604
-msgid "couldn't malloc\n"
-msgstr "malloc できません\n"
+#: if_cscope.c:1820
+msgid ""
+"\n"
+"   #   line"
+msgstr ""
+"\n"
+"   #   行番号"
 
-#: if_cscope.c:1609
-#, c-format
-msgid "Cscope tag: %s\n"
-msgstr "Cscope タグ: %s\n"
-
-#: if_cscope.c:1613
-msgid "   #   line"
-msgstr "   #   行番号"
-
-#: if_cscope.c:1615
+#: if_cscope.c:1822
 msgid "filename / context / line\n"
 msgstr "ファイル名 / 文脈 / 行\n"
 
-#: if_cscope.c:1890
+#: if_cscope.c:1973
+#, c-format
+msgid "E609: Cscope error: %s"
+msgstr "E609: cscopeエラー: %s"
+
+#: if_cscope.c:2135
 msgid "All cscope databases reset"
 msgstr "全てのcscopeデータベースをリセットします"
 
-#: if_cscope.c:1961
+#: if_cscope.c:2203
 msgid "no cscope connections\n"
 msgstr "cscope接続がありません\n"
 
-#: if_cscope.c:1965
+#: if_cscope.c:2207
 msgid " # pid    database name                       prepend path\n"
 msgstr " # pid    データベース名                      prepend パス\n"
 
-#: if_cscope.c:1976
+#: globals.h:1208 if_perl.xs:363
 #, c-format
-msgid "%2d %-5ld  %-34s  <none>\n"
-msgstr "%2d %-5ld  %-34s  <none>\n"
+msgid "E370: Could not load library %s"
+msgstr "E370: ライブラリ %s をロードできませんでした"
+
+#: if_perl.xs:591
+msgid "Sorry, this command is disabled: the Perl library could not be loaded."
+msgstr ""
+"このコマンドは無効です, ごめんなさい: Perlライブラリをロードできませんでした."
+
+#: if_perl.xs:637
+msgid "E299: Perl evaluation forbidden in sandbox without the Safe module"
+msgstr ""
+"E299: サンドボックスでは Safe "
+"モジュールを使用しないPerlスクリプトは禁じられています"
 
 #: if_python.c:394
 msgid ""
@@ -2434,11 +2511,11 @@ msgstr "式はコンパイル時に無効にされています"
 
 #: if_python.c:1002
 msgid "attempt to refer to deleted buffer"
-msgstr "消されたバッファに任せようと試します"
+msgstr "消されたバッファが参照されました"
 
 #: if_python.c:1017 if_python.c:1058 if_python.c:1122 if_tcl.c:1214
 msgid "line number out of range"
-msgstr "行番号が範囲内ではありません"
+msgstr "範囲外の行番号です"
 
 #: if_python.c:1257
 #, c-format
@@ -2455,7 +2532,7 @@ msgstr "そのようなバッファはありません"
 
 #: if_python.c:1711
 msgid "attempt to refer to deleted window"
-msgstr "消されたウィンドウに任せようと試みます"
+msgstr "消されたウィンドウが参照されました"
 
 #: if_python.c:1756
 msgid "readonly attribute"
@@ -2528,7 +2605,7 @@ msgstr "次のクラスの基底を表示"
 
 #: if_sniff.c:69
 msgid "Show overridden member function"
-msgstr "オーバーライドされたメンバ関数をひょうじ"
+msgstr "オーバーライドされたメンバ関数を表示"
 
 #: if_sniff.c:70
 msgid "Retrieve from file"
@@ -2572,7 +2649,7 @@ msgstr "Xref の参照先"
 
 #: if_sniff.c:81
 msgid "Xref referred by"
-msgstr "Xreg が参照される"
+msgstr "Xref が参照される"
 
 #: if_sniff.c:82
 msgid "Xref has a"
@@ -2600,7 +2677,7 @@ msgstr ""
 
 #: if_sniff.c:425
 msgid "E274: Sniff: Error during read. Disconnected"
-msgstr "E274: Sniff: 読込中にエラーが発生しため切断しました"
+msgstr "E274: Sniff: 読込中にエラーが発生しました. 切断しました"
 
 #: if_sniff.c:553
 msgid "SNiFF+ is currently "
@@ -2692,7 +2769,7 @@ msgid ""
 "cannot register callback command: buffer/window is already being deleted"
 msgstr ""
 "コールバックコマンドを登録できません: "
-"バッファ/ウィンドウが既に消去されていました"
+"バッファ/ウィンドウが既に消去されました"
 
 #. This should never happen.  Famous last word?
 #: if_tcl.c:1562
@@ -2741,7 +2818,7 @@ msgstr "E573: 無効なサーバIDが使われました: %s"
 
 #: if_xcmdsrv.c:1098
 msgid "E251: VIM instance registry property is badly formed.  Deleted!"
-msgstr "E251: VIM 実体の登録特性が不正です. 消去しました!"
+msgstr "E251: VIM 実体の登録プロパティが不正です. 消去しました!"
 
 #: main.c:60
 msgid "Unknown option"
@@ -2760,8 +2837,8 @@ msgid "Garbage after option"
 msgstr "オプションの後にゴミがあります"
 
 #: main.c:68
-msgid "Too many \"+command\" or \"-c command\" arguments"
-msgstr "\"+command\" か \"-c command\" の引数が多すぎます"
+msgid "Too many \"+command\", \"-c command\" or \"--cmd command\" arguments"
+msgstr "\"+command\", \"-c command\", \"--cmd command\" の引数が多すぎます"
 
 #: main.c:70
 msgid "Invalid argument for"
@@ -2776,9 +2853,6 @@ msgid "Attempt to open script file again: \""
 msgstr "スクリプトファイルを再び開いてみます: \""
 
 #: main.c:930 main.c:937 main.c:981 memline.c:3682 memline.c:3686
-#: version.c:881 version.c:886 version.c:891 version.c:896 version.c:901
-#: version.c:906 version.c:912 version.c:916 version.c:920 version.c:925
-#: version.c:932 version.c:940 version.c:946
 msgid "\"\n"
 msgstr "\"\n"
 
@@ -2795,25 +2869,25 @@ msgstr "スクリプト出力用を開けません"
 msgid "%d files to edit\n"
 msgstr "%d 個のファイルが編集を控えています\n"
 
-#: main.c:1187
+#: main.c:1203
 msgid "Vim: Warning: Output is not to a terminal\n"
 msgstr "Vim: 警告: 端末への出力ではありません\n"
 
-#: main.c:1189
+#: main.c:1205
 msgid "Vim: Warning: Input is not from a terminal\n"
 msgstr "Vim: 警告: 端末からの入力ではありません\n"
 
 #. just in case..
-#: main.c:1251
+#: main.c:1267
 msgid "pre-vimrc command line"
 msgstr "vimrc前のコマンドライン"
 
-#: main.c:1286
+#: main.c:1302
 #, c-format
 msgid "E282: Cannot read from \"%s\""
 msgstr "E282: \"%s\"から読込むことができません"
 
-#: main.c:2313
+#: main.c:2344
 msgid ""
 "\n"
 "More info with: \"vim -h\"\n"
@@ -2821,23 +2895,23 @@ msgstr ""
 "\n"
 "より詳細な情報は: \"vim -h\"\n"
 
-#: main.c:2346
+#: main.c:2377
 msgid "[file ..]       edit specified file(s)"
 msgstr "[ファイル..]    あるファイルを編集する"
 
-#: main.c:2347
+#: main.c:2378
 msgid "-               read text from stdin"
 msgstr "-               標準入力からテキストを読込む"
 
-#: main.c:2348
+#: main.c:2379
 msgid "-t tag          edit file where tag is defined"
 msgstr "-t タグ         タグが定義されたところから編集する"
 
-#: main.c:2350
+#: main.c:2381
 msgid "-q [errorfile]  edit file with first error"
 msgstr "-q [errorfile]  最初のエラーで編集する"
 
-#: main.c:2359
+#: main.c:2390
 msgid ""
 "\n"
 "\n"
@@ -2847,11 +2921,11 @@ msgstr ""
 "\n"
 "使用法:"
 
-#: main.c:2362
+#: main.c:2393
 msgid " vim [arguments] "
 msgstr " vim [引数]"
 
-#: main.c:2366
+#: main.c:2397
 msgid ""
 "\n"
 "   or:"
@@ -2859,7 +2933,7 @@ msgstr ""
 "\n"
 "   もしくは:"
 
-#: main.c:2369
+#: main.c:2400
 msgid ""
 "\n"
 "\n"
@@ -2869,241 +2943,241 @@ msgstr ""
 "\n"
 "引数:\n"
 
-#: main.c:2370
+#: main.c:2401
 msgid "--\t\t\tOnly file names after this"
 msgstr "--\t\t\tこのあとにはファイル名だけ"
 
-#: main.c:2372
+#: main.c:2403
 msgid "--literal\t\tDon't expand wildcards"
 msgstr "--literal\t\tワイルドカードを展開しない"
 
-#: main.c:2375
+#: main.c:2406
 msgid "-register\t\tRegister this gvim for OLE"
 msgstr "-register\t\tこのgvimをOLEとして登録する"
 
-#: main.c:2376
+#: main.c:2407
 msgid "-unregister\t\tUnregister gvim for OLE"
 msgstr "-unregister\t\tgvimのOLE登録を解除する"
 
-#: main.c:2379
+#: main.c:2410
 msgid "-g\t\t\tRun using GUI (like \"gvim\")"
 msgstr "-g\t\t\tGUIで起動する (\"gvim\" と同じ)"
 
-#: main.c:2380
+#: main.c:2411
 msgid "-f  or  --nofork\tForeground: Don't fork when starting GUI"
 msgstr "-f or  --nofork\tフォアグラウンド: GUIを始めるときにforkしない"
 
-#: main.c:2382
+#: main.c:2413
 msgid "-v\t\t\tVi mode (like \"vi\")"
 msgstr "-v\t\t\tViモード (\"vi\" と同じ)"
 
-#: main.c:2383
+#: main.c:2414
 msgid "-e\t\t\tEx mode (like \"ex\")"
 msgstr "-e\t\t\tExモード (\"ex\" と同じ)"
 
-#: main.c:2384
+#: main.c:2415
 msgid "-s\t\t\tSilent (batch) mode (only for \"ex\")"
 msgstr "-s\t\t\tサイレント(バッチ)モード (\"ex\" 専用)"
 
-#: main.c:2386
+#: main.c:2417
 msgid "-d\t\t\tDiff mode (like \"vimdiff\")"
 msgstr "-d\t\t\t差分モード (\"vidiff\" と同じ)"
 
-#: main.c:2388
+#: main.c:2419
 msgid "-y\t\t\tEasy mode (like \"evim\", modeless)"
 msgstr "-y\t\t\tイージーモード (\"evim\" と同じ, モード無)"
 
-#: main.c:2389
+#: main.c:2420
 msgid "-R\t\t\tReadonly mode (like \"view\")"
 msgstr "-R\t\t\t読込専用モード (\"view\" と同じ)"
 
-#: main.c:2390
+#: main.c:2421
 msgid "-Z\t\t\tRestricted mode (like \"rvim\")"
 msgstr "-Z\t\t\t制限モード (\"rvim\" と同じ)"
 
-#: main.c:2391
+#: main.c:2422
 msgid "-m\t\t\tModifications (writing files) not allowed"
-msgstr "-m\t\t\t変更 (ファイル保存時) を行ない得ないようにする"
+msgstr "-m\t\t\t変更 (ファイル保存時) をできないようにする"
 
-#: main.c:2392
+#: main.c:2423
 msgid "-M\t\t\tModifications in text not allowed"
 msgstr "-M\t\t\tテキストの編集を行なえないようにする"
 
-#: main.c:2393
+#: main.c:2424
 msgid "-b\t\t\tBinary mode"
 msgstr "-b\t\t\tバイナリモード"
 
-#: main.c:2395
+#: main.c:2426
 msgid "-l\t\t\tLisp mode"
 msgstr "-l\t\t\tLispモード"
 
-#: main.c:2397
+#: main.c:2428
 msgid "-C\t\t\tCompatible with Vi: 'compatible'"
 msgstr "-C\t\t\tVi互換モード: 'compatible'"
 
-#: main.c:2398
+#: main.c:2429
 msgid "-N\t\t\tNot fully Vi compatible: 'nocompatible'"
 msgstr "-N\t\t\tVi非互換モード: 'nocompatible"
 
-#: main.c:2399
+#: main.c:2430
 msgid "-V[N]\t\tVerbose level"
 msgstr "-V[N]\t\tVerbose レベル"
 
-#: main.c:2400
+#: main.c:2431
 msgid "-D\t\t\tDebugging mode"
 msgstr "-D\t\t\tデバッグモード"
 
-#: main.c:2401
+#: main.c:2432
 msgid "-n\t\t\tNo swap file, use memory only"
 msgstr "-n\t\t\tスワップファイルを使用せずメモリだけ"
 
-#: main.c:2402
+#: main.c:2433
 msgid "-r\t\t\tList swap files and exit"
 msgstr "-r\t\t\tスワップファイルを列挙し終了"
 
-#: main.c:2403
+#: main.c:2434
 msgid "-r (with file name)\tRecover crashed session"
 msgstr "-r (ファイル名)\tクラッシュしたセッションを復帰"
 
-#: main.c:2404
+#: main.c:2435
 msgid "-L\t\t\tSame as -r"
 msgstr "-L\t\t\t-rと同じ"
 
-#: main.c:2406
+#: main.c:2437
 msgid "-f\t\t\tDon't use newcli to open window"
 msgstr "-f\t\t\tウィンドウを開くのに newcli を使用しない"
 
-#: main.c:2407
+#: main.c:2438
 msgid "-dev <device>\t\tUse <device> for I/O"
 msgstr "-dev <device>\t\tI/Oに <device> を使用する"
 
-#: main.c:2410
+#: main.c:2441
 msgid "-A\t\t\tstart in Arabic mode"
-msgstr "-A\t\t\tアラブ語モードで起動する"
+msgstr "-A\t\t\tアラビア語モードで起動する"
 
-#: main.c:2413
+#: main.c:2444
 msgid "-H\t\t\tStart in Hebrew mode"
 msgstr "-H\t\t\tヘブライ語モードで起動する"
 
-#: main.c:2416
+#: main.c:2447
 msgid "-F\t\t\tStart in Farsi mode"
-msgstr "-F\t\t\tアラブ語モードで起動する"
+msgstr "-F\t\t\tペルシア語モードで起動する"
 
-#: main.c:2418
+#: main.c:2449
 msgid "-T <terminal>\tSet terminal type to <terminal>"
 msgstr "-T <terminal>\t端末を <terminal> に設定する"
 
-#: main.c:2419
+#: main.c:2450
 msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
 msgstr "-u <vimrc>\t\t.vimrcの代わりに <vimrc> を使う"
 
-#: main.c:2421
+#: main.c:2452
 msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
 msgstr "-U <gvimrc>\t\t.gvimrcの代わりに <gvimrc> を使う"
 
-#: main.c:2423
+#: main.c:2454
 msgid "--noplugin\t\tDon't load plugin scripts"
 msgstr "--noplugin\t\tプラグインスクリプトをロードしない"
 
-#: main.c:2424
+#: main.c:2455
 msgid "-o[N]\t\tOpen N windows (default: one for each file)"
 msgstr "-o[N]\t\tN 個ウィンドウを開く(省略値: ファイルにつき1個)"
 
-#: main.c:2425
+#: main.c:2456
 msgid "-O[N]\t\tLike -o but split vertically"
 msgstr "-O[N]\t\t-oと同じだが垂直分割"
 
-#: main.c:2426
+#: main.c:2457
 msgid "+\t\t\tStart at end of file"
 msgstr "+\t\t\tファイルの最後からはじめる"
 
-#: main.c:2427
+#: main.c:2458
 msgid "+<lnum>\t\tStart at line <lnum>"
 msgstr "+<lnum>\t\t<lnum> 行からはじめる"
 
-#: main.c:2429
+#: main.c:2460
 msgid "--cmd <command>\tExecute <command> before loading any vimrc file"
 msgstr "--cmd <command>\tvimrcをロードする前に <command> を実行する"
 
-#: main.c:2431
+#: main.c:2462
 msgid "-c <command>\t\tExecute <command> after loading the first file"
 msgstr "-c <command>\t\t最初のファイルをロード後 <command> を実行する"
 
-#: main.c:2432
+#: main.c:2463
 msgid "-S <session>\t\tSource file <session> after loading the first file"
-msgstr "-S <session>\t\t最初のファイルをロード後ファイル <session> を取り込む"
+msgstr "-S <session>\t\t最初のファイルをロード後ファイル <session> を取込む"
 
-#: main.c:2433
+#: main.c:2464
 msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
 msgstr "-s <scriptin>\tファイル <scriptin> からノーマルコマンドを読込む"
 
-#: main.c:2434
+#: main.c:2465
 msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
 msgstr "-w <scriptout>\t入力した全コマンドをファイル <scriptout> に追加する"
 
-#: main.c:2435
+#: main.c:2466
 msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
 msgstr "-W <scriptout>\t入力した全コマンドをファイル <scriptout> に保存する"
 
-#: main.c:2437
+#: main.c:2468
 msgid "-x\t\t\tEdit encrypted files"
-msgstr "-x\t\t\t暗号化ファイルを編集する"
+msgstr "-x\t\t\t暗号化されたファイルを編集する"
 
-#: main.c:2441
+#: main.c:2472
 msgid "-display <display>\tConnect vim to this particular X-server"
 msgstr "-display <display>\tvimを指定した X サーバに接続する"
 
-#: main.c:2443
+#: main.c:2474
 msgid "-X\t\t\tDo not connect to X server"
 msgstr "-X\t\t\tXサーバに接続しない"
 
-#: main.c:2446
+#: main.c:2477
 msgid "--remote <files>\tEdit <files> in a Vim server if possible"
 msgstr "--remote <files>\t可能ならばVimサーバで <files> を編集する"
 
-#: main.c:2447
+#: main.c:2478
 msgid "--remote-silent <files>  Same, don't complain if there is no server"
 msgstr "--remote-silnet <files>  同上, サーバが無くても警告文を出力しない"
 
-#: main.c:2448
+#: main.c:2479
 msgid ""
 "--remote-wait <files>  As --remote but wait for files to have been edited"
 msgstr "--remote-wait <files>\t--remote後 ファイルの編集が終わるのを待つ"
 
-#: main.c:2449
+#: main.c:2480
 msgid ""
 "--remote-wait-silent <files>  Same, don't complain if there is no server"
 msgstr "--remote-wait-silent <files>  同上, サーバが無くても警告文を出力しない"
 
-#: main.c:2450
+#: main.c:2481
 msgid "--remote-send <keys>\tSend <keys> to a Vim server and exit"
 msgstr "--remote-send <keys>\tVimサーバに <keys> を送信して終了する"
 
-#: main.c:2451
+#: main.c:2482
 msgid "--remote-expr <expr>\tEvaluate <expr> in a Vim server and print result"
 msgstr "--remote-expr <expr>\tサーバで <expr> を実行して結果を表示する"
 
-#: main.c:2452
+#: main.c:2483
 msgid "--serverlist\t\tList available Vim server names and exit"
 msgstr "--serverlist\t\tVimサーバ名の一覧を表示して終了する"
 
-#: main.c:2453
+#: main.c:2484
 msgid "--servername <name>\tSend to/become the Vim server <name>"
-msgstr "--servename <name>\t\tVimサーバ <name> に送信/改名する"
+msgstr "--servename <name>\t\tVimサーバ <name> に送信/名前設定する"
 
-#: main.c:2456
+#: main.c:2487
 msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
 msgstr "-i <viminfo>\t\t.viminfoの代わりに <viminfo> を使う"
 
-#: main.c:2458
+#: main.c:2489
 msgid "-h  or  --help\tPrint Help (this message) and exit"
 msgstr "-h or  --help\tヘルプ(このメッセージ)を表示し終了する"
 
-#: main.c:2459
+#: main.c:2490
 msgid "--version\t\tPrint version information and exit"
 msgstr "--version\t\tバージョン情報を表示し終了する"
 
-#: main.c:2463
+#: main.c:2494
 msgid ""
 "\n"
 "Arguments recognised by gvim (Motif version):\n"
@@ -3111,7 +3185,7 @@ msgstr ""
 "\n"
 "gvimによって解釈される引数(Motifバージョン):\n"
 
-#: main.c:2467
+#: main.c:2498
 msgid ""
 "\n"
 "Arguments recognised by gvim (neXtaw version):\n"
@@ -3119,7 +3193,7 @@ msgstr ""
 "\n"
 "gvimによって解釈される引数(neXtawバージョン):\n"
 
-#: main.c:2469
+#: main.c:2500
 msgid ""
 "\n"
 "Arguments recognised by gvim (Athena version):\n"
@@ -3127,72 +3201,72 @@ msgstr ""
 "\n"
 "gvimによって解釈される引数(Athenaバージョン):\n"
 
-#: main.c:2473
+#: main.c:2504
 msgid "-display <display>\tRun vim on <display>"
 msgstr "-display <display>\t<display> でvimを実行する"
 
-#: main.c:2474
+#: main.c:2505
 msgid "-iconic\t\tStart vim iconified"
 msgstr "-iconic\t\t最小化した状態でvimを起動する"
 
-#: main.c:2476
+#: main.c:2507
 msgid "-name <name>\t\tUse resource as if vim was <name>"
 msgstr "-name <name>\t\tvimの名が <name> であるとしてリソースを使う"
 
-#: main.c:2477
+#: main.c:2508
 msgid "\t\t\t  (Unimplemented)\n"
 msgstr "\t\t\t  (実装されていない)\n"
 
-#: main.c:2479
+#: main.c:2510
 msgid "-background <color>\tUse <color> for the background (also: -bg)"
 msgstr "-background <color>\t背景色に <color> を使う(同義: -bg)"
 
-#: main.c:2480
+#: main.c:2511
 msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
 msgstr "-foreground <color>\t前景色に <color> を使う(同義: -fg)"
 
-#: main.c:2481 main.c:2501
+#: main.c:2512 main.c:2532
 msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
 msgstr "-font <font>\t\tテキスト表示に <font> を使う(同義: -fn)"
 
-#: main.c:2482
+#: main.c:2513
 msgid "-boldfont <font>\tUse <font> for bold text"
 msgstr "-boldfont <font>\t太字に <font> を使う"
 
-#: main.c:2483
+#: main.c:2514
 msgid "-italicfont <font>\tUse <font> for italic text"
 msgstr "-italicfont <for>\t斜体字に <font> を使う"
 
-#: main.c:2484 main.c:2502
+#: main.c:2515 main.c:2533
 msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
 msgstr "-geometry <geom>\t初期配置に <geom> を使う(同義: -geom)"
 
-#: main.c:2485
+#: main.c:2516
 msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr "-borderwidth <width>\t境界の幅を <width> にする(同義: -bw)"
 
-#: main.c:2486
+#: main.c:2517
 msgid "-scrollbarwidth <width>  Use a scrollbar width of <width> (also: -sw)"
 msgstr ""
 "-scrollbarwidth <width>  スクロールバーの幅を <width> にする(同義: -sw)"
 
-#: main.c:2488
+#: main.c:2519
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
 msgstr "-menuheight <height>\tメニューバーの高さを <height> にする(同義: -mh)"
 
-#: main.c:2490 main.c:2503
+#: main.c:2521 main.c:2534
 msgid "-reverse\t\tUse reverse video (also: -rv)"
-msgstr "-reverse\t\t画像反転を使用する(同義: -rv)"
+msgstr "-reverse\t\t反転映像を使用する(同義: -rv)"
 
-#: main.c:2491
+#: main.c:2522
 msgid "+reverse\t\tDon't use reverse video (also: +rv)"
-msgstr "+reverse\t\t画像反転を使用しない(同義: +rv)"
+msgstr "+reverse\t\t反転映像を使用しない(同義: +rv)"
 
-#: main.c:2492
+#: main.c:2523
 msgid "-xrm <resource>\tSet the specified resource"
 msgstr "-xrm <resource>\t特定のリソースを使用する"
 
-#: main.c:2495
+#: main.c:2526
 msgid ""
 "\n"
 "Arguments recognised by gvim (RISC OS version):\n"
@@ -3200,15 +3274,15 @@ msgstr ""
 "\n"
 "gvimによって解釈される引数(RISC OSバージョン):\n"
 
-#: main.c:2496
+#: main.c:2527
 msgid "--columns <number>\tInitial width of window in columns"
 msgstr "--columns <number>\t初期のウィンドウのコラム単位の幅"
 
-#: main.c:2497
+#: main.c:2528
 msgid "--rows <number>\tInitial height of window in rows"
 msgstr "--rows <number>\t初期のウィンドウの行単位の高さ"
 
-#: main.c:2500
+#: main.c:2531
 msgid ""
 "\n"
 "Arguments recognised by gvim (GTK+ version):\n"
@@ -3216,46 +3290,46 @@ msgstr ""
 "\n"
 "gvimによって解釈される引数(GTK+バージョン):\n"
 
-#: main.c:2504
+#: main.c:2535
 msgid "-display <display>\tRun vim on <display> (also: --display)"
 msgstr "-display <display>\t<display> でvimを実行する(同義: --display)"
 
-#: main.c:2506
+#: main.c:2537
 msgid "--role <role>\tSet a unique role to identify the main window"
 msgstr "--role <role>\tメインウィンドウを識別する一意な役割(role)を設定する"
 
-#: main.c:2508
+#: main.c:2539
 msgid "--socketid <xid>\tOpen Vim inside another GTK widget"
 msgstr "--socketid <xid>\t異なるGTK widgetでVimを開く"
 
-#: main.c:2510
+#: main.c:2541
 msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\tGNOMEの引数を見せる"
 
-#: main.c:2742
+#: main.c:2773
 msgid "No display"
 msgstr "ディスプレイが見つかりません"
 
 #. Failed to send, abort.
-#: main.c:2757
+#: main.c:2788
 msgid ": Send failed.\n"
 msgstr ": 送信に失敗しました.\n"
 
 #. Let vim start normally.
-#: main.c:2763
+#: main.c:2794
 msgid ": Send failed. Trying to execute locally\n"
 msgstr ": 送信に失敗しました. ローカルでの実行を試みています\n"
 
-#: main.c:2801 main.c:2822
+#: main.c:2832 main.c:2853
 #, c-format
 msgid "%d of %d edited"
 msgstr "%d 個 (%d 個中) のファイルを編集しました"
 
-#: main.c:2844
+#: main.c:2875
 msgid "No display: Send expression failed.\n"
 msgstr "ディスプレイがありません: 式の送信に失敗しました.\n"
 
-#: main.c:2856
+#: main.c:2887
 msgid ": Send expression failed.\n"
 msgstr ": 式の送信に失敗しました.\n"
 
@@ -3319,39 +3393,39 @@ msgstr "'>' がみつかりません"
 msgid "E543: Not a valid codepage"
 msgstr "E543: 無効なコードページです"
 
-#: mbyte.c:4008
+#: mbyte.c:4014
 msgid "E284: Cannot set IC values"
 msgstr "E284: ICの値を設定できません"
 
-#: mbyte.c:4160
+#: mbyte.c:4166
 msgid "E285: Failed to create input context"
 msgstr "E285: インプットコンテキストの作成に失敗しました"
 
-#: mbyte.c:4307
+#: mbyte.c:4313
 msgid "E286: Failed to open input method"
 msgstr "E286: インプットメソッドのオープンに失敗しました"
 
-#: mbyte.c:4318
+#: mbyte.c:4324
 msgid "E287: Warning: Could not set destroy callback to IM"
 msgstr "E287: 警告: IMの破壊コールバックを設定できませんでした"
 
-#: mbyte.c:4324
+#: mbyte.c:4330
 msgid "E288: input method doesn't support any style"
 msgstr "E288: インプットメソッドはどんなスタイルもサポートしません"
 
-#: mbyte.c:4381
+#: mbyte.c:4387
 msgid "E289: input method doesn't support my preedit type"
 msgstr "E289: インプットメソッドは my preedit type をサポートしません"
 
-#: mbyte.c:4455
+#: mbyte.c:4461
 msgid "E290: over-the-spot style requires fontset"
 msgstr "E290: over-the-spot スタイルにはfontsetが必要です"
 
-#: mbyte.c:4487
+#: mbyte.c:4493
 msgid "E291: Your GTK+ is older than 1.2.3. Status area disabled"
 msgstr "E291: GTK+が1.2.3よりも古いのでステータスエリアが無効です"
 
-#: mbyte.c:4766
+#: mbyte.c:4772
 msgid "E292: Input Method Server is not running"
 msgstr "E292: インプットメソッドサーバ が動作していません"
 
@@ -3472,11 +3546,11 @@ msgstr "スワップファイル \"%s\" を使用中"
 #: memline.c:909
 #, c-format
 msgid "Original file \"%s\""
-msgstr "オリジナルファイル \"%s\""
+msgstr "原本ファイル \"%s\""
 
 #: memline.c:922
 msgid "E308: Warning: Original file may have been changed"
-msgstr "E308: 警告: オリジナルファイルが変更されています"
+msgstr "E308: 警告: 原本ファイルが変更されています"
 
 #: memline.c:963
 #, c-format
@@ -3544,7 +3618,7 @@ msgstr ""
 
 #: memline.c:1138
 msgid "and run diff with the original file to check for changes)\n"
-msgstr "オリジナルファイルとの diff を実行すると良いでしょう)\n"
+msgstr "原本ファイルとの diff を実行すると良いでしょう)\n"
 
 #: memline.c:1139
 msgid ""
@@ -3774,8 +3848,8 @@ msgid ""
 "    different instances of the same file when making changes.\n"
 msgstr ""
 "\n"
-"(1) 別のプログラムが同じファイルを編集しているのでしょう.\n"
-"    そうであるならば, 変更をした際に最終的に, 同じファイルの異なる\n"
+"(1) 別のプログラムが同じファイルを編集しているかもしれません.\n"
+"    この場合には, 変更をした際に最終的に, 同じファイルの異なる\n"
 "    2つのインスタンスができてしまうことに注意してください.\n"
 
 #: memline.c:3698
@@ -3792,7 +3866,7 @@ msgstr ""
 
 #: memline.c:3700
 msgid "    If this is the case, use \":recover\" or \"vim -r "
-msgstr "    その場合には \":recover\" か \"vim -r "
+msgstr "    この場合には \":recover\" か \"vim -r "
 
 #: memline.c:3702
 msgid ""
@@ -3840,7 +3914,7 @@ msgstr ""
 "読込専用で開く(&O)\n"
 "とにかく編集する(&E)\n"
 "復活させる(&R)ecover\n"
-"消去する(&D)"
+"終了する(&Q)"
 
 #: memline.c:3737
 msgid ""
@@ -3920,53 +3994,53 @@ msgstr "E336: メニューパスはサブメニューを生じなければいけません"
 msgid "E337: Menu not found - check menu names"
 msgstr "E337: メニューがみつかりません - メニュー名を確認してください"
 
-#: message.c:509
+#: message.c:519
 #, c-format
 msgid "Error detected while processing %s:"
 msgstr "%s の処理中にエラーが検出されました:"
 
-#: message.c:525
+#: message.c:535
 #, c-format
 msgid "line %4ld:"
 msgstr "行 %4ld:"
 
-#: message.c:565
+#: message.c:575
 msgid "[string too long]"
 msgstr "[文字列が長すぎます]"
 
-#: message.c:711
+#: message.c:721
 msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
 msgstr "日本語メッセージ翻訳/監修: 村岡 太郎 <koron@tka.att.ne.jp>"
 
-#: message.c:935
+#: message.c:945
 msgid "Interrupt: "
 msgstr "割込み: "
 
-#: message.c:938
+#: message.c:948
 msgid "Hit ENTER to continue"
 msgstr "続けるにはENTERを押してください"
 
-#: message.c:940
+#: message.c:950
 msgid "Hit ENTER or type command to continue"
 msgstr "続けるにはENTERを押すかコマンドを入力してください"
 
-#: message.c:2096
+#: message.c:2244
 msgid "-- More --"
 msgstr "-- 継続 --"
 
-#: message.c:2099
+#: message.c:2247
 msgid " (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
 msgstr " (RET/BS: 行送り, SPACE/b: ページ送り, d/u: 半ページ送り, q: 終了)"
 
-#: message.c:2100
+#: message.c:2248
 msgid " (RET: line, SPACE: page, d: half page, q: quit)"
 msgstr " (RET: 行送り, SPACE: ページ送り, d: 半ページ送り, q: 終了)"
 
-#: message.c:2587 message.c:2602
+#: message.c:2740 message.c:2755
 msgid "Question"
 msgstr "質問"
 
-#: message.c:2589
+#: message.c:2742
 msgid ""
 "&Yes\n"
 "&No"
@@ -3974,7 +4048,7 @@ msgstr ""
 "はい(&Y)\n"
 "いいえ(&N)"
 
-#: message.c:2622
+#: message.c:2775
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3988,51 +4062,51 @@ msgstr ""
 "全て放棄(&D)\n"
 "キャンセル(&C)"
 
-#: message.c:2663
+#: message.c:2816
 msgid "Save File dialog"
-msgstr "ファイルダイアログを保存する"
+msgstr "ファイル保存ダイアログ"
 
-#: message.c:2665
+#: message.c:2818
 msgid "Open File dialog"
-msgstr "ファイルダイアログを開く"
+msgstr "ファイル読込ダイアログ"
 
 #. TODO: non-GUI file selector here
-#: message.c:2736
+#: message.c:2889
 msgid "E338: Sorry, no file browser in console mode"
 msgstr "E338: コンソールモードではファイルブラウザを使えません, ごめんなさい"
 
-#: misc1.c:2477
+#: misc1.c:2692
 msgid "W10: Warning: Changing a readonly file"
 msgstr "W10: 警告: 読込専用ファイルを変更します"
 
-#: misc1.c:2712
+#: misc1.c:2927
 msgid "1 more line"
 msgstr "1 行 追加しました"
 
-#: misc1.c:2714
+#: misc1.c:2929
 msgid "1 line less"
 msgstr "1 行 削除しました"
 
-#: misc1.c:2719
+#: misc1.c:2934
 #, c-format
 msgid "%ld more lines"
 msgstr "%ld 行 追加しました"
 
-#: misc1.c:2721
+#: misc1.c:2936
 #, c-format
 msgid "%ld fewer lines"
 msgstr "%ld 行 削除しました"
 
-#: misc1.c:2724
+#: misc1.c:2939
 msgid " (Interrupted)"
 msgstr " (割込まれました)"
 
-#: misc1.c:6348
+#: misc1.c:6631
 msgid "Vim: preserving files...\n"
 msgstr "Vim: ファイルを保存中...\n"
 
 #. close all memfiles, without deleting
-#: misc1.c:6358
+#: misc1.c:6641
 msgid "Vim: Finished.\n"
 msgstr "Vim: 終了しました.\n"
 
@@ -4072,80 +4146,81 @@ msgstr "E341: 内部エラー: lalloc(%ld,)"
 msgid "E342: Out of memory!  (allocating %lu bytes)"
 msgstr "E342: メモリが足りません!  (%lu バイトを割当要求)"
 
-#: misc2.c:2564
+#: misc2.c:2565
 #, c-format
 msgid "Calling shell to execute: \"%s\""
 msgstr "実行のためにシェルを呼出し中: \"%s\""
 
-#: misc2.c:2785
+#: misc2.c:2786
 msgid "E545: Missing colon"
 msgstr "E545: コロンがありません"
 
-#: misc2.c:2787 misc2.c:2814
+#: misc2.c:2788 misc2.c:2815
 msgid "E546: Illegal mode"
 msgstr "E546: 不正なモードです"
 
-#: misc2.c:2853
+#: misc2.c:2854
 msgid "E547: Illegal mouseshape"
 msgstr "E547: 不正な 'mouseshape' です"
 
-#: misc2.c:2893
+#: misc2.c:2894
 msgid "E548: digit expected"
 msgstr "E548: 数値が必要です"
 
-#: misc2.c:2898
+#: misc2.c:2899
 msgid "E549: Illegal percentage"
 msgstr "E549: 不正なパーセンテージです"
 
-#: misc2.c:3208
+#: misc2.c:3209
 msgid "Enter encryption key: "
 msgstr "暗号化用のキーを入力してください: "
 
-#: misc2.c:3209
+#: misc2.c:3210
 msgid "Enter same key again: "
 msgstr "もう一度同じキーを入力してください: "
 
-#: misc2.c:3219
+#: misc2.c:3220
 msgid "Keys don't match!"
 msgstr "キーが一致しません"
 
-#: misc2.c:3768
+#: misc2.c:3769
 #, c-format
 msgid ""
 "E343: Invalid path: '**[number]' must be at the end of the path or be "
 "followed by '%s'."
 msgstr ""
-"E343: 無効なパスです: '**[数値]' はpathの最後か'%s'が続いてないといけません."
+"E343: 無効なパスです: '**[数値]' はpathの最後か '%s' "
+"が続いてないといけません."
 
-#: misc2.c:5044
+#: misc2.c:5045
 #, c-format
 msgid "E344: Can't find directory \"%s\" in cdpath"
 msgstr "E344: cdpathには \"%s\" というファイルがありません"
 
-#: misc2.c:5047
+#: misc2.c:5048
 #, c-format
 msgid "E345: Can't find file \"%s\" in path"
 msgstr "E345: pathには \"%s\" というファイルがありません"
 
-#: misc2.c:5053
+#: misc2.c:5054
 #, c-format
 msgid "E346: No more directory \"%s\" found in cdpath"
 msgstr "E346: cdpathにはこれ以上 \"%s\" というファイルがありません"
 
-#: misc2.c:5056
+#: misc2.c:5057
 #, c-format
 msgid "E347: No more file \"%s\" found in path"
 msgstr "E347: パスにはこれ以上 \"%s\" というファイルがありません"
 
-#: misc2.c:5290
+#: misc2.c:5291
 msgid "E550: Missing colon"
 msgstr "E550: コロンがありません"
 
-#: misc2.c:5302
+#: misc2.c:5303
 msgid "E551: Illegal component"
 msgstr "E551: 不正な構文要素です"
 
-#: misc2.c:5310
+#: misc2.c:5311
 msgid "E552: digit expected"
 msgstr "E552: 数値が必要です"
 
@@ -4160,21 +4235,21 @@ msgstr "Netbeans に接続できません"
 
 #: netbeans.c:565
 msgid "read from Netbeans socket"
-msgstr "Netbeans のソケットを読み込み"
+msgstr "Netbeans のソケットを読込み"
 
-#: normal.c:2913
+#: normal.c:2916
 msgid "Warning: terminal cannot highlight"
 msgstr "警告: 使用している端末はハイライトできません"
 
-#: normal.c:3128
+#: normal.c:3131
 msgid "E348: No string under cursor"
 msgstr "E348: カーソルの位置には文字列がありません"
 
-#: normal.c:3130
+#: normal.c:3133
 msgid "E349: No identifier under cursor"
 msgstr "E349: カーソルの位置には識別子がありません"
 
-#: normal.c:4348
+#: normal.c:4351
 msgid "E352: Cannot erase folds with current 'foldmethod'"
 msgstr "E352: 現在の 'foldmethod' では折畳みを消去できません"
 
@@ -4213,40 +4288,40 @@ msgid "%ld lines indented "
 msgstr "%ld 行をインデントしました"
 
 #. must display the prompt
-#: ops.c:1645
+#: ops.c:1647
 msgid "cannot yank; delete anyway"
 msgstr "ヤンクできません; とにかく消去"
 
-#: ops.c:2152
+#: ops.c:2155
 msgid "1 line changed"
 msgstr "1 行が変更されました"
 
-#: ops.c:2154
+#: ops.c:2157
 #, c-format
 msgid "%ld lines changed"
 msgstr "%ld 行が変更されました"
 
-#: ops.c:2538
+#: ops.c:2541
 #, c-format
 msgid "freeing %ld lines"
 msgstr "%ld 行を開放中"
 
-#: ops.c:2819
+#: ops.c:2822
 msgid "1 line yanked"
 msgstr "1 行がヤンクされました"
 
-#: ops.c:2821
+#: ops.c:2824
 #, c-format
 msgid "%ld lines yanked"
 msgstr "%ld 行がヤンクされました"
 
-#: ops.c:3106
+#: ops.c:3109
 #, c-format
 msgid "E353: Nothing in register %s"
 msgstr "E353: レジスタ %s には何もありません"
 
 #. Highlight title
-#: ops.c:3663
+#: ops.c:3666
 msgid ""
 "\n"
 "--- Registers ---"
@@ -4254,11 +4329,11 @@ msgstr ""
 "\n"
 "--- レジスタ ---"
 
-#: ops.c:4872
+#: ops.c:4875
 msgid "Illegal register name"
 msgstr "不正なレジスタ名"
 
-#: ops.c:4958
+#: ops.c:4961
 msgid ""
 "\n"
 "# Registers:\n"
@@ -4266,57 +4341,57 @@ msgstr ""
 "\n"
 "# レジスタ:\n"
 
-#: ops.c:4991
+#: ops.c:4994
 #, c-format
 msgid "E574: Unknown register type %d"
 msgstr "E574: 未知のレジスタ型 %d です"
 
-#: ops.c:5411
+#: ops.c:5480
 #, c-format
 msgid "E354: Invalid register name: '%s'"
 msgstr "E354: 無効なレジスタ名: '%s'"
 
-#: ops.c:5749
+#: ops.c:5841
 #, c-format
 msgid "%ld Cols; "
 msgstr "%ld 列; "
 
-#: ops.c:5756
+#: ops.c:5848
 #, c-format
 msgid "Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Bytes"
 msgstr "選択 %s%ld / %ld 行; %ld / %ld 単語; %ld / %ld 文字"
 
-#: ops.c:5772
+#: ops.c:5864
 #, c-format
 msgid "Col %s of %s; Line %ld of %ld; Word %ld of %ld; Byte %ld of %ld"
 msgstr "列 %s / %s; 行 %ld of %ld; 単語 %ld / %ld; 文字 %ld / %ld"
 
-#: ops.c:5783
+#: ops.c:5875
 #, c-format
 msgid "(+%ld for BOM)"
 msgstr "(+%ld for BOM)"
 
-#: option.c:1614
+#: option.c:1623
 msgid "%<%f%h%m%=Page %N"
 msgstr "%<%f%h%m%=%N ページ"
 
-#: option.c:2063
+#: option.c:2072
 msgid "Thanks for flying Vim"
 msgstr "Vim を使ってくれてありがとう"
 
-#: option.c:3317 option.c:3424
+#: option.c:3344 option.c:3451
 msgid "E518: Unknown option"
 msgstr "E518: 未知のオプションです"
 
-#: option.c:3330
+#: option.c:3357
 msgid "E519: Option not supported"
 msgstr "E519: オプションはサポートされていません"
 
-#: option.c:3355
+#: option.c:3382
 msgid "E520: Not allowed in a modeline"
 msgstr "E520: modeline では許可されません"
 
-#: option.c:3411
+#: option.c:3438
 msgid ""
 "\n"
 "\tLast set from "
@@ -4324,139 +4399,139 @@ msgstr ""
 "\n"
 "\tLast set from "
 
-#: option.c:3550
+#: option.c:3577
 msgid "E521: Number required after ="
 msgstr "E521: = の後には数字が必要です"
 
-#: option.c:3864 option.c:4485
+#: option.c:3903 option.c:4520
 msgid "E522: Not found in termcap"
 msgstr "E522: termcap 内にみつかりません"
 
-#: option.c:3930
+#: option.c:3969
 #, c-format
 msgid "E539: Illegal character <%s>"
 msgstr "E539: 不正な文字です <%s>"
 
-#: option.c:4477
+#: option.c:4512
 msgid "E529: Cannot set 'term' to empty string"
 msgstr "E529: 'term' には空文字列を設定できません"
 
-#: option.c:4480
+#: option.c:4515
 msgid "E530: Cannot change term in GUI"
-msgstr "E530: GUIでは端末を変更しないでください"
+msgstr "E530: GUIでは 'term' を変更できません"
 
-#: option.c:4482
+#: option.c:4517
 msgid "E531: Use \":gui\" to start the GUI"
 msgstr "E531: GUIをスタートするには \":gui\" を使用してください"
 
-#: option.c:4503
+#: option.c:4538
 msgid "E589: 'backupext' and 'patchmode' are equal"
 msgstr "E589: 'backupext' と 'patchmode' が同じです"
 
-#: option.c:4688
+#: option.c:4723
 msgid "E617: Cannot be changed in the GTK+ 2 GUI"
 msgstr "E617: GTK+2 GUIでは変更できません"
 
-#: option.c:4820
+#: option.c:4879
 msgid "E524: Missing colon"
 msgstr "E524: コロンがありません"
 
-#: option.c:4822
+#: option.c:4881
 msgid "E525: Zero length string"
 msgstr "E525: 文字列の長さがゼロです"
 
-#: option.c:4890
+#: option.c:4949
 #, c-format
 msgid "E526: Missing number after <%s>"
 msgstr "E526: <%s> の後に数字がありません"
 
-#: option.c:4904
+#: option.c:4963
 msgid "E527: Missing comma"
 msgstr "E527: カンマがありません"
 
-#: option.c:4911
+#: option.c:4970
 msgid "E528: Must specify a ' value"
 msgstr "E528: ' の値を指定しなければなりません"
 
-#: option.c:4952
+#: option.c:5011
 msgid "E595: contains unprintable or wide character"
-msgstr "E595: 表示不能な文字かワイド文字を含んでいます"
+msgstr "E595: 表示できない文字かワイド文字を含んでいます"
 
-#: option.c:5001
+#: option.c:5060
 msgid "E596: Invalid font(s)"
 msgstr "E596: 無効なフォントです"
 
-#: option.c:5009
+#: option.c:5068
 msgid "E597: can't select fontset"
 msgstr "E597: フォントセットを選択できません"
 
-#: option.c:5011
+#: option.c:5070
 msgid "E598: Invalid fontset"
 msgstr "E598: 無効なフォントセットです"
 
-#: option.c:5018
+#: option.c:5077
 msgid "E533: can't select wide font"
 msgstr "E533: ワイドフォントを選択できません"
 
-#: option.c:5020
+#: option.c:5079
 msgid "E534: Invalid wide font"
 msgstr "E534: 無効なワイドフォントです"
 
-#: option.c:5290
+#: option.c:5349
 #, c-format
 msgid "E535: Illegal character after <%c>"
 msgstr "E535: <%c> の後に不正な文字があります"
 
-#: option.c:5394
+#: option.c:5453
 msgid "E536: comma required"
 msgstr "E536: カンマが必要です"
 
-#: option.c:5402
+#: option.c:5461
 #, c-format
 msgid "E537: 'commentstring' must be empty or contain %s"
 msgstr "E537: 'commentstring' は空であるか %s を含む必要があります"
 
-#: option.c:5449
+#: option.c:5534
 msgid "E538: No mouse support"
 msgstr "E538: マウスはサポートされません"
 
-#: option.c:5717
+#: option.c:5802
 msgid "E540: Unclosed expression sequence"
 msgstr "E540: 式が終了していません"
 
-#: option.c:5721
+#: option.c:5806
 msgid "E541: too many items"
 msgstr "E541: 要素が多すぎます"
 
-#: option.c:5723
+#: option.c:5808
 msgid "E542: unbalanced groups"
 msgstr "E542: グループが釣合いません"
 
-#: option.c:5944
+#: option.c:6029
 msgid "E590: A preview window already exists"
 msgstr "E590: プレビューウィンドウが既に存在します"
 
-#: option.c:6198
+#: option.c:6286
 msgid "W17: Arabic requires UTF-8, do ':set encoding=utf-8'"
 msgstr ""
 "W17: アラビア文字にはUTF-8が必要なので, ':set encoding=utf-8' してください"
 
-#: option.c:6524
+#: option.c:6603
 #, c-format
 msgid "E593: Need at least %d lines"
 msgstr "E593: 最低 %d の行数が必要です"
 
-#: option.c:6533
+#: option.c:6612
 #, c-format
 msgid "E594: Need at least %d columns"
 msgstr "E594: 最低 %d のカラム幅が必要です"
 
-#: option.c:6838
+#: option.c:6917
 #, c-format
 msgid "E355: Unknown option: %s"
 msgstr "E355: 未知のオプションです: %s"
 
-#: option.c:6947
+#: option.c:7026
 msgid ""
 "\n"
 "--- Terminal codes ---"
@@ -4464,7 +4539,7 @@ msgstr ""
 "\n"
 "--- 端末コード ---"
 
-#: option.c:6949
+#: option.c:7028
 msgid ""
 "\n"
 "--- Global option values ---"
@@ -4472,7 +4547,7 @@ msgstr ""
 "\n"
 "--- グローバルオプション値 ---"
 
-#: option.c:6951
+#: option.c:7030
 msgid ""
 "\n"
 "--- Local option values ---"
@@ -4480,7 +4555,7 @@ msgstr ""
 "\n"
 "--- ローカルオプション値 ---"
 
-#: option.c:6953
+#: option.c:7032
 msgid ""
 "\n"
 "--- Options ---"
@@ -4488,16 +4563,16 @@ msgstr ""
 "\n"
 "--- オプション ---"
 
-#: option.c:7652
+#: option.c:7733
 msgid "E356: get_varp ERROR"
 msgstr "E356: get_varp エラー"
 
-#: option.c:8625
+#: option.c:8704
 #, c-format
 msgid "E357: 'langmap': Matching character missing for %s"
 msgstr "E357: 'langmap': %s に対応する文字がありません"
 
-#: option.c:8659
+#: option.c:8738
 #, c-format
 msgid "E358: 'langmap': Extra characters after semicolon: %s"
 msgstr "E358: 'langmap': セミコロンの後に余分な文字があります: %s"
@@ -4512,12 +4587,12 @@ msgstr "VIM: ウィンドウを開けません!\n"
 
 #: os_amiga.c:329
 msgid "Need Amigados version 2.04 or later\n"
-msgstr "Amigadosのversion 2.04かそれ以上が必要です\n"
+msgstr "Amigadosのバージョン 2.04かそれ以降が必要です\n"
 
 #: os_amiga.c:335
 #, c-format
 msgid "Need %s version %ld\n"
-msgstr "%s のversion %ld が必要です\n"
+msgstr "%s のバージョン %ld が必要です\n"
 
 #: os_amiga.c:407
 msgid "Cannot open NIL:\n"
@@ -4565,48 +4640,48 @@ msgstr "ANCHOR_BUF_SIZE が小さすぎます."
 msgid "I/O ERROR"
 msgstr "入出力エラー"
 
-#: os_mswin.c:515
+#: os_mswin.c:517
 msgid "...(truncated)"
 msgstr "...(省略)"
 
-#: os_mswin.c:617
+#: os_mswin.c:619
 msgid "'columns' is not 80, cannot execute external commands"
 msgstr "'columns' が80ではないため, 外部コマンドを実行できません"
 
-#: os_mswin.c:1813
+#: os_mswin.c:1854
 msgid "E237: Printer selection failed"
 msgstr "E237: プリンタの選択に失敗しました"
 
-#: os_mswin.c:1853
+#: os_mswin.c:1894
 #, c-format
 msgid "to %s on %s"
 msgstr "%s へ (%s 上の)"
 
-#: os_mswin.c:1868
+#: os_mswin.c:1909
 #, c-format
 msgid "E613: Unknown printer font: %s"
 msgstr "E613: 未知のプリンタオプションです: %s"
 
-#: os_mswin.c:1918 os_mswin.c:1928
+#: os_mswin.c:1959 os_mswin.c:1969
 #, c-format
 msgid "E238: Print error: %s"
 msgstr "E238: 印刷エラー: %s"
 
-#: os_mswin.c:1929
+#: os_mswin.c:1970
 msgid "Unknown"
 msgstr "不明"
 
-#: os_mswin.c:1956
+#: os_mswin.c:1997
 #, c-format
 msgid "Printing '%s'"
 msgstr "印刷しています: '%s'"
 
-#: os_mswin.c:3060
+#: os_mswin.c:3083
 #, c-format
 msgid "E244: Illegal charset name \"%s\" in font name \"%s\""
 msgstr "E244: 文字セット名 \"%s\" は不正です (フォント名 \"%s\")"
 
-#: os_mswin.c:3068
+#: os_mswin.c:3091
 #, c-format
 msgid "E245: Illegal char '%c' in font name \"%s\""
 msgstr "E245: '%c' は不正な文字です (フォント名 \"%s\")"
@@ -4615,25 +4690,25 @@ msgstr "E245: '%c' は不正な文字です (フォント名 \"%s\")"
 msgid "E366: Invalid 'osfiletype' option - using Text"
 msgstr "E366: 無効な 'osfiletype' オプション - \"Text\" を使います"
 
-#: os_unix.c:873
+#: os_unix.c:887
 msgid "Vim: Double signal, exiting\n"
-msgstr "Vim: 2重のシグナルのため終了します\n"
+msgstr "Vim: 2重のシグナルのため, 終了します\n"
 
-#: os_unix.c:879
+#: os_unix.c:893
 #, c-format
 msgid "Vim: Caught deadly signal %s\n"
 msgstr "Vim: 致命的シグナル %s を検知しました\n"
 
-#: os_unix.c:882
+#: os_unix.c:896
 msgid "Vim: Caught deadly signal\n"
 msgstr "Vim: 致命的シグナル %s を検知しました\n"
 
-#: os_unix.c:1145
+#: os_unix.c:1159
 #, c-format
 msgid "Opening the X display took %ld msec"
 msgstr "Xサーバへの接続に %ld ミリ秒かかりました"
 
-#: os_unix.c:1172
+#: os_unix.c:1186
 msgid ""
 "\n"
 "Vim: Got X error\n"
@@ -4641,15 +4716,15 @@ msgstr ""
 "\n"
 "Vim: X のエラーを検出しましたr\n"
 
-#: os_unix.c:1278
+#: os_unix.c:1294
 msgid "Testing the X display failed"
 msgstr "X display のチェックに失敗しました"
 
-#: os_unix.c:1417
+#: os_unix.c:1433
 msgid "Opening the X display timed out"
 msgstr "X display の open がタイムアウトしました"
 
-#: os_unix.c:3147 os_unix.c:3827
+#: os_unix.c:3165 os_unix.c:3845
 msgid ""
 "\n"
 "Cannot execute shell "
@@ -4657,7 +4732,7 @@ msgstr ""
 "\n"
 "シェルを実行できません "
 
-#: os_unix.c:3195
+#: os_unix.c:3213
 msgid ""
 "\n"
 "Cannot execute shell sh\n"
@@ -4665,7 +4740,7 @@ msgstr ""
 "\n"
 "sh シェルを実行できません\n"
 
-#: os_unix.c:3199 os_unix.c:3833
+#: os_unix.c:3217 os_unix.c:3851
 msgid ""
 "\n"
 "shell returned "
@@ -4673,7 +4748,7 @@ msgstr ""
 "\n"
 "シェルが値を返しました "
 
-#: os_unix.c:3334
+#: os_unix.c:3352
 msgid ""
 "\n"
 "Cannot create pipes\n"
@@ -4681,7 +4756,7 @@ msgstr ""
 "\n"
 "パイプを作成できません\n"
 
-#: os_unix.c:3349
+#: os_unix.c:3367
 msgid ""
 "\n"
 "Cannot fork\n"
@@ -4689,7 +4764,7 @@ msgstr ""
 "\n"
 "fork できません\n"
 
-#: os_unix.c:3840
+#: os_unix.c:3858
 msgid ""
 "\n"
 "Command terminated\n"
@@ -4697,27 +4772,52 @@ msgstr ""
 "\n"
 "コマンドを中断しました\n"
 
-#: os_unix.c:5400
+#: os_unix.c:4111 os_unix.c:4236 os_unix.c:5894
+msgid "XSMP lost ICE connection"
+msgstr "XSMP がICE接続を失いました"
+
+#: os_unix.c:5478
 msgid "Opening the X display failed"
 msgstr "X display の open に失敗しました"
+
+#: os_unix.c:5800
+msgid "XSMP handling save-yourself request"
+msgstr "XSMP がsave-yourself要求を処理しています"
+
+#: os_unix.c:5917
+msgid "XSMP opening connection"
+msgstr "XSMP が接続を開始しています"
+
+#: os_unix.c:5935
+msgid "XSMP ICE connection watch failed"
+msgstr "XSMP ICE接続が失敗したようです"
+
+#: os_unix.c:5955
+#, c-format
+msgid "XSMP SmcOpenConnection failed: %s"
+msgstr "XSMP SmcOpenConnectionが失敗しました: %s"
 
 #: os_vms_mms.c:59
 msgid "At line"
 msgstr "行"
 
-#: os_w32exe.c:169
-msgid "Could not load vim32.dll!"
-msgstr "vim32.dll をロードできませんでした"
+#: os_w32exe.c:65
+msgid "Could not allocate memory for command line."
+msgstr "コマンドラインにメモリを割り当てられません"
 
-#: os_w32exe.c:169 os_w32exe.c:179
+#: os_w32exe.c:66 os_w32exe.c:89 os_w32exe.c:100
 msgid "VIM Error"
 msgstr "VIMエラー"
 
-#: os_w32exe.c:179
+#: os_w32exe.c:89
+msgid "Could not load vim32.dll!"
+msgstr "vim32.dll をロードできませんでした"
+
+#: os_w32exe.c:99
 msgid "Could not fix up function pointers to the DLL!"
 msgstr "DLLから関数ポインタを取得できませんでした"
 
-#: os_win16.c:583 os_win32.c:3050
+#: os_win16.c:341 os_win32.c:3049
 #, c-format
 msgid "shell returned %d"
 msgstr "シェルがコード %d で終了しました"
@@ -4739,11 +4839,11 @@ msgstr "ログオフ"
 msgid "shutdown"
 msgstr "シャットダウン"
 
-#: os_win32.c:3003
+#: os_win32.c:3002
 msgid "E371: Command not found"
 msgstr "E371: コマンドがありません"
 
-#: os_win32.c:3016
+#: os_win32.c:3015
 msgid ""
 "VIMRUN.EXE not found in your $PATH.\n"
 "External commands will not pause after completion.\n"
@@ -4753,7 +4853,7 @@ msgstr ""
 "外部コマンドの終了後に一時停止をしません.\n"
 "詳細は  :help win32-vimrun  を参照してください."
 
-#: os_win32.c:3019
+#: os_win32.c:3018
 msgid "Vim Warning"
 msgstr "Vimの警告"
 
@@ -4789,229 +4889,229 @@ msgstr "E378: 'errorformat' にパターンが指定されていません"
 msgid "E379: Missing or empty directory name"
 msgstr "E379: ディレクトリ名が無いか空です"
 
-#: quickfix.c:979
+#: quickfix.c:984
 msgid "E553: No more items"
 msgstr "E553: 要素がもうありません"
 
-#: quickfix.c:1213
+#: quickfix.c:1221
 #, c-format
 msgid "(%d of %d)%s%s: "
 msgstr "(%d of %d)%s%s: "
 
-#: quickfix.c:1215
+#: quickfix.c:1223
 msgid " (line deleted)"
 msgstr " (行が削除されました)"
 
-#: quickfix.c:1425
+#: quickfix.c:1433
 msgid "E380: At bottom of quickfix stack"
 msgstr "E380: quickfix スタックの末尾です"
 
-#: quickfix.c:1434
+#: quickfix.c:1442
 msgid "E381: At top of quickfix stack"
 msgstr "E381: quickfix スタックの先頭です"
 
-#: quickfix.c:1446
+#: quickfix.c:1454
 #, c-format
 msgid "error list %d of %d; %d errors"
 msgstr "エラー一覧 %d of %d; %d 個エラー"
 
-#: quickfix.c:1917
+#: quickfix.c:1928
 msgid "E382: Cannot write, 'buftype' option is set"
 msgstr "E382: 'buftype' オプションが設定されているので書込みません"
 
-#: regexp.c:826
+#: regexp.c:827
 msgid "E339: Pattern too long"
 msgstr "E339: パターンが長すぎます"
 
-#: regexp.c:995
+#: regexp.c:996
 msgid "E50: Too many \\z("
 msgstr "E50: \\z( が多すぎます"
 
-#: regexp.c:1006
+#: regexp.c:1007
 #, c-format
 msgid "E51: Too many %s("
 msgstr "E51: %s( が多すぎます"
 
-#: regexp.c:1063
+#: regexp.c:1064
 msgid "E52: Unmatched \\z("
 msgstr "E52: \\z( が釣り合っていません"
 
-#: regexp.c:1067
+#: regexp.c:1068
 msgid "E53: Unmatched %s%%("
 msgstr "E53: %s%%( が釣り合っていません"
 
-#: regexp.c:1069
+#: regexp.c:1070
 #, c-format
 msgid "E54: Unmatched %s("
 msgstr "E54: %s( が釣り合っていません"
 
-#: regexp.c:1074
+#: regexp.c:1075
 #, c-format
 msgid "E55: Unmatched %s)"
 msgstr "E55: %s) が釣り合っていません"
 
-#: regexp.c:1237
+#: regexp.c:1244
 #, c-format
 msgid "E56: %s* operand could be empty"
 msgstr "E56: %s* が空文字列になる可能性があります"
 
-#: regexp.c:1240
+#: regexp.c:1247
 #, c-format
 msgid "E57: %s+ operand could be empty"
 msgstr "E57: %s+ が空文字列になる可能性があります"
 
-#: regexp.c:1294
+#: regexp.c:1301
 #, c-format
 msgid "E59: invalid character after %s@"
 msgstr "E59: %s@ の後に不正な文字がありました"
 
-#: regexp.c:1319
+#: regexp.c:1326
 #, c-format
 msgid "E58: %s{ operand could be empty"
 msgstr "E58: %s{ が空文字列になる可能性があります"
 
-#: regexp.c:1329
+#: regexp.c:1336
 #, c-format
 msgid "E60: Too many complex %s{...}s"
 msgstr "E60: 複雑な %s{...} が多すぎます"
 
-#: regexp.c:1345
+#: regexp.c:1352
 #, c-format
 msgid "E61: Nested %s*"
 msgstr "E61:%s* が入れ子になっています"
 
-#: regexp.c:1348
+#: regexp.c:1355
 #, c-format
 msgid "E62: Nested %s%c"
 msgstr "E62:%s%c が入れ子になっています"
 
 #
-#: regexp.c:1466
+#: regexp.c:1473
 msgid "E63: invalid use of \\_"
 msgstr "E63: \\_ の無効な使用方法です"
 
-#: regexp.c:1511
+#: regexp.c:1518
 #, c-format
 msgid "E64: %s%c follows nothing"
 msgstr "E64:%s%c の後になにもありません"
 
 #
-#: regexp.c:1567
+#: regexp.c:1574
 msgid "E65: Illegal back reference"
 msgstr "E65: 不正な後方参照です"
 
 #
-#: regexp.c:1580
+#: regexp.c:1587
 msgid "E66: \\z( not allowed here"
 msgstr "E66: \\z( はココでは許可されていません"
 
 #
-#: regexp.c:1599
+#: regexp.c:1606
 msgid "E67: \\z1 et al. not allowed here"
 msgstr "E67: \\z1 その他はココでは許可されていません"
 
 #
-#: regexp.c:1610
+#: regexp.c:1617
 msgid "E68: Invalid character after \\z"
 msgstr "E68: \\z の後に不正な文字がありました"
 
 #
-#: regexp.c:1659
+#: regexp.c:1666
 msgid "E69: Missing ] after %s%%["
 msgstr "E69: %s%%[ の後に ] がありません"
 
-#: regexp.c:1675
+#: regexp.c:1682
 msgid "E70: Empty %s%%[]"
 msgstr "E70: %s%%[] が空です"
 
 #
-#: regexp.c:1735
+#: regexp.c:1742
 msgid "E71: Invalid character after %s%%"
 msgstr "E71: %s%% の後に不正な文字がありました"
 
-#: regexp.c:2532
+#: regexp.c:2539
 #, c-format
 msgid "E554: Syntax error in %s{...}"
 msgstr "E554: %s{...} 内に文法エラーがあります"
 
-#: regexp.c:2779
+#: regexp.c:2800
 msgid "E361: Crash intercepted; regexp too complex?"
 msgstr "E361: クラッシュにより中断; 正規表現が複雑過ぎるかも?"
 
-#: regexp.c:2914
+#: regexp.c:2941
 msgid "E363: pattern caused out-of-stack error"
 msgstr "E363: パターンによるスタック不足エラーです"
 
-#: regexp.c:3150
+#: regexp.c:3180
 msgid "External submatches:\n"
-msgstr "外部の部分マッチ:\n"
+msgstr "外部の部分該当:\n"
 
-#: screen.c:2103
+#: screen.c:2113
 #, c-format
 msgid "+--%3ld lines folded "
 msgstr "+--%3ld 行が折畳まれました"
 
-#: screen.c:7840
+#: screen.c:7884
 msgid " VREPLACE"
 msgstr " 仮想置換"
 
-#: screen.c:7844
+#: screen.c:7888
 msgid " REPLACE"
 msgstr " 置換"
 
-#: screen.c:7849
+#: screen.c:7893
 msgid " REVERSE"
 msgstr " 反転"
 
-#: screen.c:7851
+#: screen.c:7895
 msgid " INSERT"
 msgstr " 挿入"
 
-#: screen.c:7854
+#: screen.c:7898
 msgid " (insert)"
 msgstr " (挿入)"
 
-#: screen.c:7856
+#: screen.c:7900
 msgid " (replace)"
 msgstr " (置換)"
 
-#: screen.c:7858
+#: screen.c:7902
 msgid " (vreplace)"
 msgstr " (仮想置換)"
 
-#: screen.c:7861
+#: screen.c:7905
 msgid " Hebrew"
 msgstr " ヘブライ"
 
-#: screen.c:7872
+#: screen.c:7916
 msgid " Arabic"
 msgstr " アラビア"
 
-#: screen.c:7875
+#: screen.c:7919
 msgid " (lang)"
 msgstr " (言語)"
 
-#: screen.c:7879
+#: screen.c:7923
 msgid " (paste)"
 msgstr " (貼り付け)"
 
-#: screen.c:7885
+#: screen.c:7929
 msgid " SELECT"
 msgstr " セレクト"
 
-#: screen.c:7887
+#: screen.c:7931
 msgid " VISUAL"
 msgstr " ビジュアル"
 
-#: screen.c:7889
+#: screen.c:7933
 msgid " BLOCK"
 msgstr " ブロック"
 
-#: screen.c:7891
+#: screen.c:7935
 msgid " LINE"
 msgstr " 行"
 
-#: screen.c:7904 screen.c:7964
+#: screen.c:7948 screen.c:8008
 msgid "recording"
 msgstr "記録中"
 
@@ -5023,72 +5123,72 @@ msgstr "上まで検索したので下に戻ります"
 msgid "search hit BOTTOM, continuing at TOP"
 msgstr "下まで検索したので上に戻ります"
 
-#: search.c:504
+#: search.c:525
 #, c-format
 msgid "E383: Invalid search string: %s"
 msgstr "E383: 無効な検索文字列です: %s"
 
-#: search.c:831
+#: search.c:852
 #, c-format
 msgid "E384: search hit TOP without match for: %s"
 msgstr "E384: 上まで検索したけれど該当箇所はありません: %s"
 
-#: search.c:834
+#: search.c:855
 #, c-format
 msgid "E385: search hit BOTTOM without match for: %s"
 msgstr "E385: 下まで検索したけれど該当箇所はありません: %s"
 
-#: search.c:1514
+#: search.c:1247
 msgid "E386: Expected '?' or '/'  after ';'"
 msgstr "E386: ';' のあとには '?' か '/' が期待されている"
 
-#: search.c:3924
+#: search.c:3685
 msgid " (includes previously listed match)"
 msgstr " (前に列挙した該当箇所を含む)"
 
 #. cursor at status line
-#: search.c:3944
+#: search.c:3705
 msgid "--- Included files "
 msgstr "--- インクルードされたファイル"
 
-#: search.c:3946
+#: search.c:3707
 msgid "not found "
 msgstr "みつかりません "
 
-#: search.c:3947
+#: search.c:3708
 msgid "in path ---\n"
 msgstr "パスに ----\n"
 
-#: search.c:3986
+#: search.c:3747
 msgid "  (Already listed)"
 msgstr "  (既に列挙)"
 
-#: search.c:3988
+#: search.c:3749
 msgid "  NOT FOUND"
 msgstr "  みつかりません"
 
-#: search.c:4040
+#: search.c:3801
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "インクルードされたファイルをスキャン中: %s"
 
-#: search.c:4258
+#: search.c:4019
 msgid "E387: Match is on current line"
 msgstr "E387: 現在行に該当があります"
 
-#: search.c:4398
+#: search.c:4162
 msgid "All included files were found"
 msgstr "全てのインクルードされたファイルがみつかりました"
 
-#: search.c:4400
+#: search.c:4164
 msgid "No included files"
 msgstr "インクルードファイルはありません"
 
-#: search.c:4416
+#: search.c:4180
 msgid "E388: Couldn't find definition"
 msgstr "E388: 定義をみつけられません"
 
-#: search.c:4418
+#: search.c:4182
 msgid "E389: Couldn't find pattern"
 msgstr "E389: パターンをみつけられません"
 
@@ -5296,7 +5396,7 @@ msgstr "E419: 未知の前景色です"
 
 #: syntax.c:6504
 msgid "E420: BG color unknown"
-msgstr "E420: 未知の前景色です"
+msgstr "E420: 未知の背景色です"
 
 #: syntax.c:6565
 #, c-format
@@ -5364,26 +5464,26 @@ msgid "File \"%s\" does not exist"
 msgstr "ファイル \"%s\" がありません"
 
 #. Give an indication of the number of matching tags
-#: tag.c:780
+#: tag.c:781
 #, c-format
 msgid "tag %d of %d%s"
 msgstr "タグ %d (全%d%s)"
 
-#: tag.c:783
+#: tag.c:784
 msgid " or more"
 msgstr " かそれ以上"
 
-#: tag.c:785
+#: tag.c:786
 msgid "  Using tag with different case!"
 msgstr "  タグを異なるcaseで使用します!"
 
-#: tag.c:828
+#: tag.c:830
 #, c-format
 msgid "E429: File \"%s\" does not exist"
 msgstr "E429: ファイル \"%s\" がありません"
 
 #. Highlight title
-#: tag.c:897
+#: tag.c:899
 msgid ""
 "\n"
 "  # TO tag         FROM line  in file/text"
@@ -5391,83 +5491,75 @@ msgstr ""
 "\n"
 "  # TO タグ        FROM 行    in file/text"
 
-#: tag.c:1144
-msgid "Linear tag search"
-msgstr "タグ線形探索"
-
-#: tag.c:1146
-msgid "Binary tag search"
-msgstr "タグ二分検索"
-
-#: tag.c:1172
+#: tag.c:1200
 #, c-format
 msgid "Searching tags file %s"
 msgstr "タグファイル %s を検索中"
 
-#: tag.c:1356
+#: tag.c:1384
 #, c-format
 msgid "E430: Tag file path truncated for %s\n"
 msgstr "E430: タグファイルのパスが %s に切り捨てられました\n"
 
-#: tag.c:1858
+#: tag.c:1914
 #, c-format
 msgid "E431: Format error in tags file \"%s\""
 msgstr "E431: タグファイル \"%s\" のフォーマットにエラーがあります"
 
-#: tag.c:1862
+#: tag.c:1918
 #, c-format
 msgid "Before byte %ld"
 msgstr "直前の %ld バイト"
 
-#: tag.c:1883
+#: tag.c:1939
 #, c-format
 msgid "E432: Tags file not sorted: %s"
 msgstr "E432: タグファイルがソートされていません: %s"
 
 #. never opened any tags file
-#: tag.c:1922
+#: tag.c:1979
 msgid "E433: No tags file"
 msgstr "E433: タグファイルがありません"
 
-#: tag.c:2600
+#: tag.c:2666
 msgid "E434: Can't find tag pattern"
 msgstr "E434: タグパターンをみつけられません"
 
-#: tag.c:2611
+#: tag.c:2677
 msgid "E435: Couldn't find tag, just guessing!"
 msgstr "E435: タグをみつけられないので単に推測します!"
 
-#: term.c:1750
+#: term.c:1745
 msgid "' not known. Available builtin terminals are:"
 msgstr "' は未知です. 現行の組み込み端末は次のとおりです:"
 
-#: term.c:1774
+#: term.c:1769
 msgid "defaulting to '"
 msgstr "省略値を次のように設定します '"
 
-#: term.c:2132
+#: term.c:2127
 msgid "E557: Cannot open termcap file"
 msgstr "E557: termcapファイルを開けません"
 
-#: term.c:2136
+#: term.c:2131
 msgid "E558: Terminal entry not found in terminfo"
 msgstr "E558: terminfoに端末エントリをみつけられません"
 
-#: term.c:2138
+#: term.c:2133
 msgid "E559: Terminal entry not found in termcap"
 msgstr "E559: termcapに端末エントリをみつけられません"
 
-#: term.c:2297
+#: term.c:2292
 #, c-format
 msgid "E436: No \"%s\" entry in termcap"
 msgstr "E436: termcapに \"%s\" のエントリがありません"
 
-#: term.c:2771
+#: term.c:2766
 msgid "E437: terminal capability \"cm\" required"
 msgstr "E437: 端末に \"cm\" 機能が必要です"
 
 #. Highlight title
-#: term.c:4932
+#: term.c:4970
 msgid ""
 "\n"
 "--- Terminal keys ---"
@@ -5479,9 +5571,9 @@ msgstr ""
 msgid "new shell started\n"
 msgstr "新しいシェルを起動します\n"
 
-#: ui.c:1785
+#: ui.c:1784
 msgid "Vim: Error reading input, exiting...\n"
-msgstr "Vim: 入力を読み込み中のエラーにより終了します...\n"
+msgstr "Vim: 入力を読込み中のエラーにより終了します...\n"
 
 #. must display the prompt
 #: undo.c:394
@@ -5510,7 +5602,7 @@ msgid "E440: undo line missing"
 msgstr "E440: アンドゥ行がありません"
 
 #. Only MS VC 4.1 and earlier can do Win32s
-#: version.c:702
+#: version.c:696
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -5518,7 +5610,7 @@ msgstr ""
 "\n"
 "MS-Windows 16/32 ビット GUI 版"
 
-#: version.c:704
+#: version.c:698
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -5526,15 +5618,15 @@ msgstr ""
 "\n"
 "MS-Windows 32 ビット GUI 版"
 
-#: version.c:707
+#: version.c:701
 msgid " in Win32s mode"
 msgstr " in Win32s モード"
 
-#: version.c:709
+#: version.c:703
 msgid " with OLE support"
 msgstr " with OLE サポート"
 
-#: version.c:712
+#: version.c:706
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -5542,7 +5634,7 @@ msgstr ""
 "\n"
 "MS-Windows 32 ビット コンソール 版"
 
-#: version.c:716
+#: version.c:710
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -5550,7 +5642,7 @@ msgstr ""
 "\n"
 "MS-Windows 16 ビット 版"
 
-#: version.c:720
+#: version.c:714
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -5558,7 +5650,7 @@ msgstr ""
 "\n"
 "32 ビット MS-DOS 版"
 
-#: version.c:722
+#: version.c:716
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -5566,7 +5658,7 @@ msgstr ""
 "\n"
 "16 ビット MS-DOS 版"
 
-#: version.c:728
+#: version.c:722
 msgid ""
 "\n"
 "MacOS X (unix) version"
@@ -5574,7 +5666,7 @@ msgstr ""
 "\n"
 "MacOS X (unix) 版"
 
-#: version.c:730
+#: version.c:724
 msgid ""
 "\n"
 "MacOS X version"
@@ -5582,7 +5674,7 @@ msgstr ""
 "\n"
 "MacOS X 版"
 
-#: version.c:733
+#: version.c:727
 msgid ""
 "\n"
 "MacOS version"
@@ -5590,7 +5682,7 @@ msgstr ""
 "\n"
 "MacOS 版"
 
-#: version.c:738
+#: version.c:732
 msgid ""
 "\n"
 "RISC OS version"
@@ -5598,7 +5690,7 @@ msgstr ""
 "\n"
 "RISC OS 版"
 
-#: version.c:748
+#: version.c:742
 msgid ""
 "\n"
 "Included patches: "
@@ -5606,11 +5698,11 @@ msgstr ""
 "\n"
 "適用済パッチ: "
 
-#: version.c:774 version.c:1121
+#: version.c:768 version.c:1117
 msgid "Modified by "
 msgstr "Modified by "
 
-#: version.c:781
+#: version.c:775
 msgid ""
 "\n"
 "Compiled "
@@ -5618,11 +5710,11 @@ msgstr ""
 "\n"
 "Compiled "
 
-#: version.c:784
+#: version.c:778
 msgid "by "
 msgstr "by "
 
-#: version.c:796
+#: version.c:790
 msgid ""
 "\n"
 "Huge version "
@@ -5630,7 +5722,7 @@ msgstr ""
 "\n"
 "Huge 版 "
 
-#: version.c:799
+#: version.c:793
 msgid ""
 "\n"
 "Big version "
@@ -5638,7 +5730,7 @@ msgstr ""
 "\n"
 "Big 版 "
 
-#: version.c:802
+#: version.c:796
 msgid ""
 "\n"
 "Normal version "
@@ -5646,7 +5738,7 @@ msgstr ""
 "\n"
 "通常 版 "
 
-#: version.c:805
+#: version.c:799
 msgid ""
 "\n"
 "Small version "
@@ -5654,7 +5746,7 @@ msgstr ""
 "\n"
 "Small 版 "
 
-#: version.c:807
+#: version.c:801
 msgid ""
 "\n"
 "Tiny version "
@@ -5662,211 +5754,211 @@ msgstr ""
 "\n"
 "Tiny 版 "
 
-#: version.c:813
+#: version.c:807
 msgid "without GUI."
 msgstr "without GUI."
 
-#: version.c:818
+#: version.c:812
 msgid "with GTK2-GNOME GUI."
 msgstr "with GTK2-GNOME GUI."
 
-#: version.c:820
+#: version.c:814
 msgid "with GTK-GNOME GUI."
 msgstr "with GTK-GNOME GUI."
 
-#: version.c:824
+#: version.c:818
 msgid "with GTK2 GUI."
 msgstr "with GTK2 GUI."
 
-#: version.c:826
+#: version.c:820
 msgid "with GTK GUI."
 msgstr "with GTK GUI."
 
-#: version.c:831
+#: version.c:825
 msgid "with X11-Motif GUI."
 msgstr "with X11-Motif GUI."
 
-#: version.c:835
+#: version.c:829
 msgid "with X11-neXtaw GUI."
 msgstr "with X11-neXtaw GUI."
 
-#: version.c:837
+#: version.c:831
 msgid "with X11-Athena GUI."
 msgstr "with X11-Athena GUI."
 
-#: version.c:841
+#: version.c:835
 msgid "with BeOS GUI."
 msgstr "with BeOS GUI."
 
-#: version.c:844
+#: version.c:838
 msgid "with Photon GUI."
 msgstr "with Photon GUI."
 
-#: version.c:847
+#: version.c:841
 msgid "with GUI."
 msgstr "with GUI."
 
-#: version.c:850
+#: version.c:844
 msgid "with Carbon GUI."
 msgstr "with Carbon GUI."
 
-#: version.c:853
+#: version.c:847
 msgid "with Cocoa GUI."
 msgstr "with Cocoa GUI."
 
-#: version.c:856
+#: version.c:850
 msgid "with (classic) GUI."
 msgstr "with (クラシック) GUI."
 
-#: version.c:867
+#: version.c:861
 msgid "  Features included (+) or not (-):\n"
 msgstr "  機能の一覧 有効(+)/無効(-)\n"
 
-#: version.c:879
+#: version.c:873
 msgid "   system vimrc file: \""
 msgstr "      システム vimrc: \""
 
-#: version.c:884
+#: version.c:878
 msgid "     user vimrc file: \""
 msgstr "        ユーザ vimrc: \""
 
-#: version.c:889
+#: version.c:883
 msgid " 2nd user vimrc file: \""
 msgstr "     第2ユーザ vimrc: \""
 
-#: version.c:894
+#: version.c:888
 msgid " 3rd user vimrc file: \""
 msgstr "     第3ユーザ vimrc: \""
 
-#: version.c:899
+#: version.c:893
 msgid "      user exrc file: \""
 msgstr "         ユーザ exrc: \""
 
-#: version.c:904
+#: version.c:898
 msgid "  2nd user exrc file: \""
 msgstr "      第2ユーザ exrc: \""
 
-#: version.c:910
+#: version.c:904
 msgid "  system gvimrc file: \""
 msgstr "     システム gvimrc: \""
 
-#: version.c:914
+#: version.c:908
 msgid "    user gvimrc file: \""
 msgstr "       ユーザ gvimrc: \""
 
-#: version.c:918
+#: version.c:912
 msgid "2nd user gvimrc file: \""
 msgstr "    第2ユーザ gvimrc: \""
 
-#: version.c:923
+#: version.c:917
 msgid "3rd user gvimrc file: \""
 msgstr "    第3ユーザ gvimrc: \""
 
-#: version.c:930
+#: version.c:924
 msgid "    system menu file: \""
 msgstr "    システムメニュー: \""
 
-#: version.c:938
+#: version.c:932
 msgid "  fall-back for $VIM: \""
 msgstr "       省略時の $VIM: \""
 
-#: version.c:944
+#: version.c:938
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "省略時の $VIMRUNTIME: \""
 
-#: version.c:948
+#: version.c:942
 msgid "Compilation: "
 msgstr "コンパイル: "
 
-#: version.c:954
+#: version.c:948
 msgid "Compiler: "
 msgstr "コンパイラ: "
 
-#: version.c:959
+#: version.c:953
 msgid "Linking: "
 msgstr "リンク: "
 
-#: version.c:964
+#: version.c:958
 msgid "  DEBUG BUILD"
 msgstr "デバッグビルド"
 
-#: version.c:1000
+#: version.c:996
 msgid "VIM - Vi IMproved"
 msgstr "VIM - Vi IMproved"
 
-#: version.c:1002
+#: version.c:998
 msgid "version "
 msgstr "version "
 
-#: version.c:1003
+#: version.c:999
 msgid "by Bram Moolenaar et al."
 msgstr "by Bram Moolenaar 他."
 
-#: version.c:1007
+#: version.c:1003
 msgid "Vim is open source and freely distributable"
 msgstr "Vim はオープンソースであり自由に配布可能です"
 
-#: version.c:1009
+#: version.c:1005
 msgid "Help poor children in Uganda!"
 msgstr "ウガンダの恵まれない子供たちに援助を!"
 
-#: version.c:1010
+#: version.c:1006
 msgid "type  :help iccf<Enter>       for information "
 msgstr "詳細な情報は           :help iccf<Enter>      "
 
-#: version.c:1012
+#: version.c:1008
 msgid "type  :q<Enter>               to exit         "
 msgstr "終了するには           :q<Enter>              "
 
-#: version.c:1013
+#: version.c:1009
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "オンラインヘルプは     :help<Enter> か <F1>   "
 
-#: version.c:1014
+#: version.c:1010
 msgid "type  :help version6<Enter>   for version info"
 msgstr "バージョン情報は       :help version6<Enter>  "
 
-#: version.c:1017
+#: version.c:1013
 msgid "Running in Vi compatible mode"
 msgstr "Vi互換モードで動作中"
 
-#: version.c:1018
+#: version.c:1014
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "Vim推奨値にするには    :set nocp<Enter>       "
 
-#: version.c:1019
+#: version.c:1015
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "詳細な情報は           :help cp-default<Enter>"
 
-#: version.c:1034
+#: version.c:1030
 msgid "menu  Help->Orphans           for information    "
 msgstr "詳細はメニューの ヘルプ→孤児 を参照して下さい   "
 
-#: version.c:1036
+#: version.c:1032
 msgid "Running modeless, typed text is inserted"
 msgstr "モード無で実行中, タイプした文字が挿入されます"
 
-#: version.c:1037
+#: version.c:1033
 msgid "menu  Edit->Global Settings->Toggle Insert Mode  "
 msgstr "メニューの 編集→全体設定→挿入(初心者)モード切替"
 
-#: version.c:1038
+#: version.c:1034
 msgid "                              for two modes      "
 msgstr "                              でモード有に       "
 
-#: version.c:1042
+#: version.c:1038
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
 msgstr "メニューの 編集→全体設定→Vi互換モード切替      "
 
-#: version.c:1043
+#: version.c:1039
 msgid "                              for Vim defaults   "
 msgstr "                              でVimとして動作    "
 
-#: version.c:1089
+#: version.c:1085
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "   警告: Windows 95/98/Me を検出  "
 
-#: version.c:1092
+#: version.c:1088
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr " 詳細な情報は          :help windows95<Enter> "
 
@@ -5874,88 +5966,72 @@ msgstr " 詳細な情報は          :help windows95<Enter> "
 msgid "E441: There is no preview window"
 msgstr "E441: プレビューウィンドウがありません"
 
-#: window.c:577
+#: window.c:582
 msgid "E442: Can't split topleft and botright at the same time"
 msgstr "E442: 左上と右下を同時に分割することはできません"
 
-#: window.c:1336
+#: window.c:1341
 msgid "E443: Cannot rotate when another window is split"
 msgstr "E443: 他のウィンドウが分割されている時には順回できません"
 
-#: window.c:1827
+#: window.c:1832
 msgid "E444: Cannot close last window"
 msgstr "E444: 最後のウィンドウを閉じることはできません"
 
-#: window.c:2557
+#: window.c:2563
 msgid "Already only one window"
 msgstr "既にウィンドウは1つしかありません"
 
-#: window.c:2604
+#: window.c:2610
 msgid "E445: Other window contains changes"
 msgstr "E445: 他のウィンドウには変更があります"
 
-#: window.c:4449
+#: window.c:4456
 msgid "E446: No file name under cursor"
 msgstr "E446: カーソルの下にファイル名がありません"
 
-#: window.c:4568
+#: window.c:4575
 #, c-format
 msgid "E447: Can't find file \"%s\" in path"
 msgstr "E447: pathには \"%s\" というファイルがありません"
 
-#: globals.h:1206 if_perl.xs:363
-#, c-format
-msgid "E370: Could not load library %s"
-msgstr "E370: ライブラリ %s をロードできませんでした"
-
-#: if_perl.xs:583
-msgid "Sorry, this command is disabled: the Perl library could not be loaded."
-msgstr ""
-"このコマンドは無効です, ごめんなさい: Perlライブラリをロードできませんでした."
-
-#: if_perl.xs:629
-msgid "E299: Perl evaluation forbidden in sandbox without the Safe module"
-msgstr ""
-"E299: サンドボックスでは Safe "
-"モジュールを使用しないPerlスクリプトは禁じられています"
-
-#: GvimExt/gvimext.cpp:610
+#: GvimExt/gvimext.cpp:583
 msgid "Edit with &multiple Vims"
 msgstr "各ファイルを別々の Vim で編集(&M)"
 
-#: GvimExt/gvimext.cpp:616
+#: GvimExt/gvimext.cpp:589
 msgid "Edit with single &Vim"
 msgstr "全ファイルを1つの Vim で編集(&V)"
 
-#: GvimExt/gvimext.cpp:625
+#: GvimExt/gvimext.cpp:598
 msgid "&Diff with Vim"
 msgstr "Vim で差分編集(&D)"
 
-#: GvimExt/gvimext.cpp:638
+#: GvimExt/gvimext.cpp:611
 msgid "Edit with &Vim"
 msgstr "Vim で編集(&V)"
 
-#: GvimExt/gvimext.cpp:660
+#: GvimExt/gvimext.cpp:633
 msgid "Edit with existing Vim - &"
 msgstr "既存の Vim で編集 - &"
 
-#: GvimExt/gvimext.cpp:773
+#: GvimExt/gvimext.cpp:746
 msgid "Edits the selected file(s) with Vim"
 msgstr "選択されたファイルを Vim で編集"
 
-#: GvimExt/gvimext.cpp:912 GvimExt/gvimext.cpp:993
+#: GvimExt/gvimext.cpp:885 GvimExt/gvimext.cpp:966
 msgid "Error creating process: Check if gvim is in your path!"
 msgstr "起動エラー: gvim にパスが通っているか確かめてください!"
 
-#: GvimExt/gvimext.cpp:913 GvimExt/gvimext.cpp:927 GvimExt/gvimext.cpp:994
+#: GvimExt/gvimext.cpp:886 GvimExt/gvimext.cpp:900 GvimExt/gvimext.cpp:967
 msgid "gvimext.dll error"
 msgstr "gvimext.dll エラー"
 
-#: GvimExt/gvimext.cpp:926
+#: GvimExt/gvimext.cpp:899
 msgid "Path length too long!"
 msgstr "パスが長すぎます!"
 
-#: globals.h:1000
+#: globals.h:998
 msgid "--No lines in buffer--"
 msgstr "--バッファに行がありません--"
 
@@ -5963,388 +6039,388 @@ msgstr "--バッファに行がありません--"
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #.
-#: globals.h:1159
+#: globals.h:1161
 msgid "E470: Command aborted"
 msgstr "E470: コマンドが中断されました"
 
-#: globals.h:1160
+#: globals.h:1162
 msgid "E471: Argument required"
 msgstr "E471: 引数が必要です"
 
-#: globals.h:1161
+#: globals.h:1163
 msgid "E10: \\ should be followed by /, ? or &"
 msgstr "E10: \\ の後は / か ? か & でなければなりません"
 
-#: globals.h:1163
+#: globals.h:1165
 msgid "E11: Invalid in command-line window; <CR> executes, CTRL-C quits"
 msgstr "E11: コマンドラインでは無効です; <CR>で実行, CTRL-Cでやめる"
 
-#: globals.h:1165
+#: globals.h:1167
 msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr ""
-"E12: 現在のディレクトリ・タグ検索ではexrc/vimrcのコマンドは許可されません"
+"E12: 現在のディレクトリやタグ検索ではexrc/vimrcのコマンドは許可されません"
 
-#: globals.h:1167
+#: globals.h:1169
 msgid "E171: Missing :endif"
 msgstr "E171: :endif がありません"
 
-#: globals.h:1168
+#: globals.h:1170
 msgid "E600: Missing :endtry"
 msgstr "E600: :endtry がありません"
 
-#: globals.h:1169
+#: globals.h:1171
 msgid "E170: Missing :endwhile"
 msgstr "E170: :endwhile がありません"
 
-#: globals.h:1170
+#: globals.h:1172
 msgid "E588: :endwhile without :while"
 msgstr "E588: :while のない :endwhile があります"
 
-#: globals.h:1172
+#: globals.h:1174
 msgid "E13: File exists (add ! to override)"
 msgstr "E13: ファイルが存在します (! を追加で上書)"
 
-#: globals.h:1173
+#: globals.h:1175
 msgid "E472: Command failed"
 msgstr "E472: コマンドが失敗しました"
 
-#: globals.h:1175
+#: globals.h:1177
 #, c-format
 msgid "E234: Unknown fontset: %s"
 msgstr "E234: 未知のフォントセット: %s"
 
-#: globals.h:1179
+#: globals.h:1181
 #, c-format
 msgid "E235: Unknown font: %s"
 msgstr "E235: 未知のフォント: %s"
 
-#: globals.h:1182
+#: globals.h:1184
 #, c-format
 msgid "E236: Font \"%s\" is not fixed-width"
 msgstr "E236: フォント \"%s\" は固定幅ではありません"
 
-#: globals.h:1184
+#: globals.h:1186
 msgid "E473: Internal error"
 msgstr "E473: 内部エラーです"
 
-#: globals.h:1185
+#: globals.h:1187
 msgid "Interrupted"
 msgstr "割込まれました"
 
-#: globals.h:1186
+#: globals.h:1188
 msgid "E14: Invalid address"
 msgstr "E14: 無効なアドレスです"
 
-#: globals.h:1187
+#: globals.h:1189
 msgid "E474: Invalid argument"
 msgstr "E474: 無効な引数です"
 
-#: globals.h:1188
+#: globals.h:1190
 #, c-format
 msgid "E475: Invalid argument: %s"
 msgstr "E475: 無効な引数です: %s"
 
-#: globals.h:1190
+#: globals.h:1192
 #, c-format
 msgid "E15: Invalid expression: %s"
-msgstr "E15: 無効な表現です: %s"
+msgstr "E15: 無効な式です: %s"
 
-#: globals.h:1192
+#: globals.h:1194
 msgid "E16: Invalid range"
 msgstr "E16: 無効な範囲です"
 
-#: globals.h:1193
+#: globals.h:1195
 msgid "E476: Invalid command"
 msgstr "E476: 無効なコマンドです"
 
-#: globals.h:1195
+#: globals.h:1197
 #, c-format
 msgid "E17: \"%s\" is a directory"
 msgstr "E17: \"%s\" はディレクトリです"
 
-#: globals.h:1198
+#: globals.h:1200
 msgid "E18: Unexpected characters before '='"
 msgstr "E18: 予期せぬ文字が '=' の前にありました"
 
-#: globals.h:1201
+#: globals.h:1203
 #, c-format
 msgid "E364: Library call failed for \"%s()\""
 msgstr "E364: \"%s\"() のライブラリ呼出に失敗しました"
 
-#: globals.h:1207
+#: globals.h:1209
 #, c-format
 msgid "E448: Could not load library function %s"
 msgstr "E448: ライブラリの関数 %s をロードできませんでした"
 
-#: globals.h:1209
+#: globals.h:1211
 msgid "E19: Mark has invalid line number"
 msgstr "E19: マークに無効な行番号が指定されていました"
 
-#: globals.h:1210
+#: globals.h:1212
 msgid "E20: Mark not set"
 msgstr "E20: マークは設定されていません"
 
-#: globals.h:1211
+#: globals.h:1213
 msgid "E21: Cannot make changes, 'modifiable' is off"
 msgstr "E21: 'modifiable' がオフなので, 変更できません"
 
-#: globals.h:1212
+#: globals.h:1214
 msgid "E22: Scripts nested too deep"
 msgstr "E22: スクリプトの入れ子が深すぎます"
 
-#: globals.h:1213
+#: globals.h:1215
 msgid "E23: No alternate file"
 msgstr "E23: 副ファイルはありません"
 
-#: globals.h:1214
+#: globals.h:1216
 msgid "E24: No such abbreviation"
 msgstr "E24: そのような短縮入力はありません"
 
-#: globals.h:1215
-msgid "E477: No ! allowed"
-msgstr "E477: ! が許可されていません"
-
 #: globals.h:1217
+msgid "E477: No ! allowed"
+msgstr "E477: ! は許可されていません"
+
+#: globals.h:1219
 msgid "E25: GUI cannot be used: Not enabled at compile time"
 msgstr "E25: GUIは使用不可能です: コンパイル時に無効にされています"
 
-#: globals.h:1220
+#: globals.h:1222
 msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
 msgstr "E26: ヘブライ語は使用不可能です: コンパイル時に無効にされています\n"
 
-#: globals.h:1223
+#: globals.h:1225
 msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
-msgstr "E27: アラブ語は使用不可能です: コンパイル時に無効にされています\n"
+msgstr "E27: ペルシア語は使用不可能です: コンパイル時に無効にされています\n"
 
-#: globals.h:1226
+#: globals.h:1228
 msgid "E800: Arabic cannot be used: Not enabled at compile time\n"
-msgstr "E800: アラブ語は使用不可能です: コンパイル時に無効にされています\n"
-
-#: globals.h:1229
-#, c-format
-msgid "E28: No such highlight group name: %s"
-msgstr "E28: そのようなハイライトグループ名はありません: %s"
+msgstr "E800: アラビア語は使用不可能です: コンパイル時に無効にされています\n"
 
 #: globals.h:1231
+#, c-format
+msgid "E28: No such highlight group name: %s"
+msgstr "E28: そのような名のハイライトグループはありません: %s"
+
+#: globals.h:1233
 msgid "E29: No inserted text yet"
 msgstr "E29: まだテキストが挿入されていません"
 
-#: globals.h:1232
+#: globals.h:1234
 msgid "E30: No previous command line"
 msgstr "E30: 以前にコマンド行がありません"
 
-#: globals.h:1233
+#: globals.h:1235
 msgid "E31: No such mapping"
 msgstr "E31: そのようなマッピングはありません"
 
-#: globals.h:1234
+#: globals.h:1236
 msgid "E479: No match"
 msgstr "E479: 該当はありません"
 
-#: globals.h:1235
+#: globals.h:1237
 #, c-format
 msgid "E480: No match: %s"
 msgstr "E480: 該当はありません: %s"
 
-#: globals.h:1236
+#: globals.h:1238
 msgid "E32: No file name"
 msgstr "E32: ファイル名がありません"
 
-#: globals.h:1237
+#: globals.h:1239
 msgid "E33: No previous substitute regular expression"
 msgstr "E33: 正規表現置換がまだ実行されていません"
 
-#: globals.h:1238
+#: globals.h:1240
 msgid "E34: No previous command"
 msgstr "E34: コマンドがまだ実行されていません"
 
-#: globals.h:1239
+#: globals.h:1241
 msgid "E35: No previous regular expression"
 msgstr "E35: 正規表現がまだ実行されていません"
 
-#: globals.h:1240
+#: globals.h:1242
 msgid "E481: No range allowed"
 msgstr "E481: 範囲指定は許可されていません"
 
-#: globals.h:1242
+#: globals.h:1244
 msgid "E36: Not enough room"
 msgstr "E36: 充分な容量がありません"
 
-#: globals.h:1245
+#: globals.h:1247
 #, c-format
 msgid "E247: no registered server named \"%s\""
 msgstr "E247: %s という名前の登録されたサーバはありません"
 
-#: globals.h:1247
+#: globals.h:1249
 #, c-format
 msgid "E482: Can't create file %s"
 msgstr "E482: ファイル %s を作成できません"
 
-#: globals.h:1248
+#: globals.h:1250
 msgid "E483: Can't get temp file name"
 msgstr "E483: 一時ファイルの名前を取得できません"
 
-#: globals.h:1249
+#: globals.h:1251
 #, c-format
 msgid "E484: Can't open file %s"
 msgstr "E484: ファイル \"%s\" を開けません"
 
-#: globals.h:1250
+#: globals.h:1252
 #, c-format
 msgid "E485: Can't read file %s"
 msgstr "E485: ファイル %s を読込めません"
 
-#: globals.h:1251
+#: globals.h:1253
 msgid "E37: No write since last change (add ! to override)"
 msgstr "E37: 最後の変更が保存されていません (! を追加で変更を破棄)"
 
-#: globals.h:1252
+#: globals.h:1254
 msgid "E38: Null argument"
 msgstr "E38: 引数が空です"
 
-#: globals.h:1254
+#: globals.h:1256
 msgid "E39: Number expected"
 msgstr "E39: 数値が要求されています"
 
-#: globals.h:1257
+#: globals.h:1259
 #, c-format
 msgid "E40: Can't open errorfile %s"
 msgstr "E40: エラーファイル %s を開けません"
 
-#: globals.h:1260
+#: globals.h:1262
 msgid "E233: cannot open display"
 msgstr "E233: ディスプレイを開けません"
 
-#: globals.h:1262
+#: globals.h:1264
 msgid "E41: Out of memory!"
 msgstr "E41: メモリが尽き果てました!"
 
-#: globals.h:1264
+#: globals.h:1266
 msgid "Pattern not found"
 msgstr "パターンはみつかりませんでした"
 
-#: globals.h:1266
+#: globals.h:1268
 #, c-format
 msgid "E486: Pattern not found: %s"
 msgstr "E486: パターンはみつかりませんでした: %s"
 
-#: globals.h:1267
+#: globals.h:1269
 msgid "E487: Argument must be positive"
 msgstr "E487: 引数は正の値でなければなりません"
 
-#: globals.h:1269
+#: globals.h:1271
 msgid "E459: Cannot go back to previous directory"
 msgstr "E459: 前のディレクトリに戻れません"
 
-#: globals.h:1273
+#: globals.h:1275
 msgid "E42: No Errors"
 msgstr "E42: エラーはありません"
 
-#: globals.h:1275
+#: globals.h:1277
 msgid "E43: Damaged match string"
 msgstr "E43: 該当文字列が破損しています"
 
-#: globals.h:1276
+#: globals.h:1278
 msgid "E44: Corrupted regexp program"
 msgstr "E44: 不正な正規表現プログラムです"
 
-#: globals.h:1277
+#: globals.h:1279
 msgid "E45: 'readonly' option is set (add ! to override)"
 msgstr "E45: 'readonly' オプションが設定されています (! を追加で上書き)"
 
-#: globals.h:1279
+#: globals.h:1281
 #, c-format
 msgid "E46: Cannot set read-only variable \"%s\""
-msgstr "E46: 読込専用変数 \"%s\" に設定することはできません"
+msgstr "E46: 読取専用変数 \"%s\" に設定することはできません"
 
-#: globals.h:1282
+#: globals.h:1284
 msgid "E47: Error while reading errorfile"
 msgstr "E47: エラーファイルの読込中にエラーが発生しました"
 
-#: globals.h:1285
+#: globals.h:1287
 msgid "E48: Not allowed in sandbox"
 msgstr "E48: サンドボックスでは許されません"
 
-#: globals.h:1287
+#: globals.h:1289
 msgid "E523: Not allowed here"
 msgstr "E523: ここでは許可されません"
 
-#: globals.h:1290
+#: globals.h:1292
 msgid "E359: Screen mode setting not supported"
 msgstr "E359: スクリーンモードの設定には対応していません"
 
-#: globals.h:1292
+#: globals.h:1294
 msgid "E49: Invalid scroll size"
 msgstr "E49: 無効なスクロール量です"
 
-#: globals.h:1293
+#: globals.h:1295
 msgid "E91: 'shell' option is empty"
 msgstr "E91: 'shell' オプションが空です"
 
-#: globals.h:1295
+#: globals.h:1297
 msgid "E255: Couldn't read in sign data!"
 msgstr "E255: sign のデータを読込めませんでした"
 
-#: globals.h:1297
+#: globals.h:1299
 msgid "E72: Close error on swap file"
 msgstr "E72: スワップファイルのクローズ時エラーです"
 
-#: globals.h:1298
+#: globals.h:1300
 msgid "E73: tag stack empty"
 msgstr "E73: タグスタックが空です"
 
-#: globals.h:1299
+#: globals.h:1301
 msgid "E74: Command too complex"
 msgstr "E74: コマンドが複雑すぎます"
 
-#: globals.h:1300
+#: globals.h:1302
 msgid "E75: Name too long"
 msgstr "E75: 名前が長すぎます"
 
-#: globals.h:1301
+#: globals.h:1303
 msgid "E76: Too many ["
 msgstr "E76: [ が多すぎます"
 
-#: globals.h:1302
+#: globals.h:1304
 msgid "E77: Too many file names"
 msgstr "E77: ファイル名が多すぎます"
 
-#: globals.h:1303
+#: globals.h:1305
 msgid "E488: Trailing characters"
 msgstr "E488: 余分な文字が後ろにあります"
 
-#: globals.h:1304
+#: globals.h:1306
 msgid "E78: Unknown mark"
 msgstr "E78: 未知のマーク"
 
-#: globals.h:1305
+#: globals.h:1307
 msgid "E79: Cannot expand wildcards"
 msgstr "E79: ワイルドカードを展開できません"
 
-#: globals.h:1307
+#: globals.h:1309
 msgid "E591: 'winheight' cannot be smaller than 'winminheight'"
 msgstr "E591: 'winheight' は 'winminheight' より小さくできません"
 
-#: globals.h:1309
+#: globals.h:1311
 msgid "E592: 'winwidth' cannot be smaller than 'winminwidth'"
 msgstr "E592: 'winwidth' は 'winminwidth' より小さくできません"
 
-#: globals.h:1312
+#: globals.h:1314
 msgid "E80: Error while writing"
 msgstr "E80: 書込み中のエラー"
 
-#: globals.h:1313
+#: globals.h:1315
 msgid "Zero count"
 msgstr "ゼロカウント"
 
-#: globals.h:1315
+#: globals.h:1317
 msgid "E81: Using <SID> not in a script context"
 msgstr "E81: スクリプト以外で<SID>が使われました"
 
-#: globals.h:1318
+#: globals.h:1320
 msgid "E449: Invalid expression received"
 msgstr "E449: 無効な式を受け取りました"
 
-#: globals.h:1321
+#: globals.h:1323
 msgid "E463: Region is guarded, cannot modify"
 msgstr "E463: 領域が保護されているので, 変更できません"

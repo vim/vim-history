@@ -1,31 +1,36 @@
 " Vim compiler file
 " Compiler:     TeX
 " Maintainer:   Artem Chuprina <ran@ran.pp.ru>
-" Last Change:  2001 Sep 20
+" Last Change:  2003 May 30
 
 if exists("current_compiler")
 	finish
 endif
-" If buffer-local variable 'tex_flavor' exists, it defines TeX flavor,
-" otherwize the same for global variable with same name, else it will be LaTeX
-if exists("b:tex_flavor")
-	let current_compiler = b:tex_flavor
-elseif exists("g:tex_flavor")
-	let current_compiler = g:tex_flavor
+
+" If makefile exists and we are not asked to ignore it, we use standard make
+" (do not redefine makeprg)
+if exists('b:tex_ignore_makefile') || exists('g:tex_ignore_makefile') ||
+			\(!filereadable('Makefile') && !filereadable('makefile'))
+	" If buffer-local variable 'tex_flavor' exists, it defines TeX flavor,
+	" otherwize the same for global variable with same name, else it will be
+	" LaTeX
+	if exists("b:tex_flavor")
+		let current_compiler = b:tex_flavor
+	elseif exists("g:tex_flavor")
+		let current_compiler = g:tex_flavor
+	else
+		let current_compiler = "latex"
+	endif
+	let &l:makeprg=current_compiler.' -interaction=nonstopmode'
 else
-	let current_compiler = "latex"
+	let current_compiler = 'make'
 endif
 
 let s:cpo_save = &cpo
 set cpo-=C
 
-" Values for makeprg and errorformat are taken from vim help, see
-" :help errorformat-LaTeX
-if &shell =~ 'sh'
-	let &makeprg=current_compiler.' \\nonstopmode \\input\{$*\}'
-else
-	let &makeprg=current_compiler.' \nonstopmode \input{$*}'
-endif
+" Value errorformat are taken from vim help, see :help errorformat-LaTeX, with
+" addition from Srinath Avadhanula <srinath@fastmail.fm>
 setlocal errorformat=%E!\ LaTeX\ %trror:\ %m,
 	\%E!\ %m,
 	\%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#,
@@ -45,7 +50,8 @@ setlocal errorformat=%E!\ LaTeX\ %trror:\ %m,
 	\%-G%.%#\ (C)\ %.%#,
 	\%-G(see\ the\ transcript%.%#),
 	\%-G\\s%#,
-	\%+O(%f)%r,
+	\%+O(%*[^()])%r,
+	\%+O%*[^()](%*[^()])%r,
 	\%+P(%f%r,
 	\%+P\ %\\=(%f%r,
 	\%+P%*[^()](%f%r,

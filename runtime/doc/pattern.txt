@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.2f.  Last change: 2003 May 24
+*pattern.txt*   For Vim version 6.2.  Last change: 2003 May 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,7 +11,12 @@ explanations are in chapter 27 |usr_27.txt|.
 
 1. Search commands		|search-commands|
 2. The definition of a pattern	|search-pattern|
-3. Highlighting matches		|match-highlight|
+3. Overview of pattern items	|pattern-overview|
+4. Multi items			|pattern-multi-items|
+5. Ordinary atoms		|pattern-atoms|
+6. Ignoring case in a pattern	|/ignorecase|
+7. Compare with Perl patterns	|perl-patterns|
+8. Highlighting matches		|match-highlight|
 
 ==============================================================================
 1. Search commands				*search-commands* *E486*
@@ -279,7 +284,7 @@ For starters, read chapter 27 of the user manual |usr_27.txt|.
 2. A branch is one or more concats, separated by "\&".  It matches the last
    concat, but only if all the preceding concats also match at the same
    position.  Examples:
-   	"foobeep\&..." matches "foo" in "foobeep".
+	"foobeep\&..." matches "foo" in "foobeep".
 	".*Peter\&.*Bob" matches in a line containing both "Peter" and "Bob"
 
    branch ::=	    concat
@@ -316,6 +321,9 @@ For starters, read chapter 27 of the user manual |usr_27.txt|.
 		or  \%( pattern \)		|/\%(|
 		or  \z( pattern \)		|/\z(|
 
+
+==============================================================================
+3. Overview of pattern items				*pattern-overview*
 
 Overview of multi items.				*/multi* *E61* *E62*
 More explanation and examples below, follow the links.			*E64*
@@ -450,7 +458,8 @@ cat\Z			Both "cat" and "càt" ("a" followed by 0x0300)
 			though it may look the same.
 
 
-Magic							*/magic*
+==============================================================================
+3. Magic							*/magic*
 
 Some characters in the pattern are taken literally.  They match with the same
 character in the text.  When preceded with a backslash however, these
@@ -494,7 +503,8 @@ to the 'magic' option being set or not, put "\m" or "\M" at the start of the
 pattern.
 
 
-Multi items
+==============================================================================
+4. Multi items						*pattern-multi-items*
 
 An atom can be followed by an indication of how many times the atom can be
 matched and in what way.  This is called a multi.  See |/multi| for an
@@ -665,6 +675,9 @@ endless loop.  If you try it, you will get this error message: >
 	"a"s.  "\(a*\)\@>ab" will not match "aaab", because the "a*" matches
 	the "aaa" (as many "a"s as possible), thus the "ab" can't match.
 
+
+==============================================================================
+5.  Ordinary atoms					*pattern-atoms*
 
 An ordinary atom can be:
 
@@ -987,7 +1000,8 @@ x	A single character, with no special meaning, matches itself
 	{not available when compiled without the +syntax feature}
 
 
-Ignoring case in a pattern					*/ignorecase*
+==============================================================================
+6. Ignoring case in a pattern					*/ignorecase*
 
 If the 'ignorecase' option is on, the case of normal letters is ignored.
 'smartcase' can be set to ignore case when the pattern contains lowercase
@@ -1038,7 +1052,53 @@ But invalid bytes may cause trouble, a pattern with an invalid byte will
 probably never match.
 
 ==============================================================================
-3. Highlighting matches					*match-highlight*
+7. Compare with Perl patterns				*perl-patterns*
+
+Vim's regexes are most similar to Perl's, in terms of what you can do.  The
+difference between them is mostly just notation;  here's a summary of where
+they differ:
+
+Capability			in Vimspeak	in Perlspeak ~
+----------------------------------------------------------------
+force case insensitivity	\c		(?i)
+force case sensitivity		\C		(?-i)
+backref-less grouping		\%(atom)	(?:atom)
+conservative quantifiers	\{-n,m}		*?, +?, ??, {}?
+0-width match			atom\@=		(?=atom)
+0-width non-match		atom\@!		(?!atom)
+0-width preceding match		atom\@<=	(?<=atom)
+0-width preceding non-match	atom\@<!	(?<!atom)
+match without retry		atom\@>		(?>atom)
+
+Vim and Perl handle newlines inside a string a bit differently:
+
+In Perl, ^ and $ only match at the very beginning and end of the text,
+by default, but you can set the 'm' flag, which lets them match at
+embedded newlines as well.  You can also set the 's' flag, which causes
+a . to match newlines as well.  (Both these flags can be changed inside
+a pattern using the same syntax used for the i flag above, BTW.)
+
+On the other hand, Vim's ^ and $ always match at embedded newlines, and
+you get two separate atoms, \%^ and \%$, which only match at the very
+start and end of the text, respectively.  Vim solves the second problem
+by giving you the \_ "modifier":  put it in front of a . or a character
+class, and they will match newlines as well.
+
+Finally, these constructs are unique to Perl:
+- execution of arbitrary code in the regex:  (?{perl code})
+- conditional expressions:  (?(condition)true-expr|false-expr)
+
+...and these are unique to Vim:
+- changing the magic-ness of a pattern:  \v \V \m \M
+   (very useful for avoiding backslashitis)
+- sequence of optionally matching atoms:  \%[atoms]
+- \& (which is to \| what "and" is to "or";  it forces several branches
+   to match at one spot)
+- matching lines/columns by number:  \%5l \%5c \%5v
+- limiting the "return value" of a regex:  \zs \ze
+
+==============================================================================
+8. Highlighting matches					*match-highlight*
 
 							*:mat* *:match*
 :mat[ch] {group} /{pattern}/

@@ -242,7 +242,7 @@
 			 第二講第五節︰撤消類命令
 
 
-         ** 輸入 u 來撤消最後執行的命令，輸入 U 來修正整行。**
+	 ** 輸入 u 來撤消最後執行的命令，輸入 U 來修正整行。**
 
   1. 請將光標移動到本節中下面標記有 ---> 的那一行，並將其置于第一個錯誤
      處。
@@ -606,8 +606,8 @@
   1. :!command 用于執行一個外部命令 command。
 
      請看一些實際例子︰
-         :!dir          -  用于顯示當前目錄的內容。
-         :!rm FILENAME  -  用于刪除名為 FILENAME 的文件。
+	 :!dir		-  用于顯示當前目錄的內容。
+	 :!rm FILENAME	-  用于刪除名為 FILENAME 的文件。
 
   2. :w FILENAME  可將當前 VIM 中正在編輯的文件保存到名為 FILENAME
      的文件中。
@@ -768,17 +768,17 @@ Open up a line above this by typing Shift-O while the cursor is on this line.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                      第八講︰創建一個啟動腳本
+		      第八講︰創建一個啟動腳本
 
-                         ** 啟用vim的功能 **
+			 ** 啟用vim的功能 **
 
   Vim的功能特性要比vi多得多，但大部分功能都沒有缺省激活。為了啟動更多的
   功能，您得創建一個vimrc文件。
 
   1. 開始編輯vimrc文件，這取決于您所使用的操作系統︰
 
-     :edit ~/.vimrc             這是Unix系統所使用的命令
-     :edit $VIM/_vimrc          這是Windows系統所使用的命令
+     :edit ~/.vimrc		這是Unix系統所使用的命令
+     :edit $VIM/_vimrc		這是Windows系統所使用的命令
 
   2. 接著導入vimrc范例文件︰
 
@@ -819,7 +819,7 @@ Open up a line above this by typing Shift-O while the cursor is on this line.
   Ware 所編寫的，其中來自Colorado State University的Charles Smith提供了
   很多創意。編者通信地址是︰
 
-        bware@mines.colorado.edu
+	bware@mines.colorado.edu
 
   本教程已由Bram Moolenaar專為vim進行修訂。
 

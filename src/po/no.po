@@ -2395,8 +2395,8 @@ msgstr "E259: Ingen treff funnet for cscope-forespørsel %s av %s"
 
 #: if_cscope.c:1055
 #, c-format
-msgid "E469 invalid cscopequickfix flag %c for %c"
-msgstr "Ugyldig «cscopequickfix»-flagg %c for %c"
+msgid "E469: invalid cscopequickfix flag %c for %c"
+msgstr "E469: Ugyldig «cscopequickfix»-flagg %c for %c"
 
 #: if_cscope.c:1112
 msgid "cscope commands:\n"

@@ -1066,9 +1066,9 @@ return 1;
     fi
     if test "x$no_gtk" = x ; then
       if test "x$enable_gtktest" = "xyes"; then
-        AC_MSG_RESULT(yes; found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
+	AC_MSG_RESULT(yes; found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
       else
-        AC_MSG_RESULT(found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
+	AC_MSG_RESULT(found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
       fi
       ifelse([$2], , :, [$2])
     else
