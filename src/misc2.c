@@ -38,32 +38,28 @@ virtual_active()
     int
 getviscol()
 {
-    int		x = 0;
-    char_u	*line = ml_get_curline();
-    char_u	*p;
+    colnr_T	x;
 
-    for (p = line; (colnr_T)(p - line) < curwin->w_cursor.col; )
-	x += lbr_chartabsize_adv(&p, x);
-
-    return x + curwin->w_cursor.coladd;
+    getvvcol(curwin, &curwin->w_cursor, &x, NULL, NULL);
+    return (int)x;
 }
 
 /*
- * Get the screen position of character col with a coladd.
+ * Get the screen position of character col with a coladd in the cursor line.
  */
     int
 getviscol2(col, coladd)
     colnr_T	col;
     colnr_T	coladd;
 {
-    int		x = 0;
-    char_u	*line = ml_get_curline();
-    char_u	*p;
+    colnr_T	x;
+    pos_T	pos;
 
-    for (p = line; (colnr_T)(p - line) < col; )
-	x += lbr_chartabsize_adv(&p, x);
-
-    return x + coladd;
+    pos.lnum = curwin->w_cursor.lnum;
+    pos.col = col;
+    pos.coladd = coladd;
+    getvvcol(curwin, &pos, &x, NULL, NULL);
+    return (int)x;
 }
 
 /*
@@ -138,6 +134,9 @@ coladvance2(pos, addspaces, finetune, wcol)
     colnr_T	col = 0;
     int		csize = 0;
     int		one_more;
+#ifdef FEAT_LINEBREAK
+    int		head = 0;
+#endif
 
     one_more = (State & INSERT) || restart_edit != NUL
 #ifdef FEAT_VISUAL
@@ -146,9 +145,6 @@ coladvance2(pos, addspaces, finetune, wcol)
 					  ;
     line = ml_get_curline();
 
-    /* The difference between wcol and col will be used to set coladd
-     * and insert spaces.
-     */
     if (wcol >= MAXCOL)
     {
 	    idx = (int)STRLEN(line) - 1 + one_more;
@@ -193,7 +189,17 @@ coladvance2(pos, addspaces, finetune, wcol)
 	while (col <= wcol && *ptr != NUL)
 	{
 	    /* Count a tab for what it's worth (if list mode not on) */
+#ifdef FEAT_LINEBREAK
+	    csize = win_lbr_chartabsize(curwin, ptr, col, &head);
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		ptr += (*mb_ptr2len_check)(ptr);
+	    else
+# endif
+		++ptr;
+#else
 	    csize = lbr_chartabsize_adv(&ptr, col);
+#endif
 	    col += csize;
 	}
 	idx = (int)(ptr - line);
@@ -206,13 +212,21 @@ coladvance2(pos, addspaces, finetune, wcol)
 	if (col > wcol || (!virtual_active() && one_more == 0))
 	{
 	    idx -= 1;
+# ifdef FEAT_LINEBREAK
+	    /* Don't count the chars from 'showbreak'. */
+	    csize -= head;
+# endif
 	    col -= csize;
 	}
 
 #ifdef FEAT_VIRTUALEDIT
-	if (virtual_active() && addspaces
+	if (virtual_active()
+		&& addspaces
 		&& ((col != wcol && col != wcol + 1) || csize > 1))
 	{
+	    /* 'virtualedit' is set: The difference between wcol and col is
+	     * filled with spaces. */
+
 	    if (line[idx] == NUL)
 	    {
 		/* Append spaces */
@@ -284,8 +298,8 @@ coladvance2(pos, addspaces, finetune, wcol)
 	int a = col;
 	int b = wcol - a;
 
-	/* modify the real cursor position to make the cursor appear at
-	 * the wanted column */
+	/* 'virtualedit' is set: The difference between wcol and col is used
+	 * to set coladd. */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
 	    pos->coladd = b;
 

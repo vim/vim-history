@@ -4478,7 +4478,20 @@ oneleft()
 	if (v == 0)
 	    return FAIL;
 
+# ifdef FEAT_LINEBREAK
+	/* We might get stuck on 'showbreak', skip over it. */
+	width = 1;
+	for (;;)
+	{
+	    coladvance(v - width);
+	    if (*p_sbr == NUL || getviscol() < v)
+		break;
+	    ++width;
+	}
+# else
 	coladvance(v - 1);
+# endif
+
 	/* Adjust for multi-wide char (not include TAB) */
 	ptr = ml_get_cursor();
 	if (*ptr != TAB && *ptr != NUL && (width = ptr2cells(ptr)) > 1)
