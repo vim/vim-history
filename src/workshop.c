@@ -1717,14 +1717,20 @@ coloncmd(
 	char	*cmd,		/* the command to print */
 	Boolean	force)		/* force cursor update */
 {
+    char_u	*cpo_save = p_cpo;
+
 #ifdef WSDEBUG
     if (WSDLEVEL(WS_TRACE_COLONCMD))
 	wsdebug("Cmd: %s\n", cmd);
 #endif
 
+    p_cpo = empty_option;
+
     ALT_INPUT_LOCK_ON;
     do_cmdline_cmd((char_u *)cmd);
     ALT_INPUT_LOCK_OFF;
+
+    p_cpo = cpo_save;
 
     if (force)
 	gui_update_screen();
