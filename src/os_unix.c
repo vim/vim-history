@@ -1607,6 +1607,13 @@ get_x11_thing(get_title, test_only)
     return retval;
 }
 
+/* Are Xutf8 functions available?  Avoid error from old compilers. */
+#if defined(X_HAVE_UTF8_STRING) && defined(FEAT_MBYTE)
+# if X_HAVE_UTF8_STRING
+#  define USE_UTF8_STRING
+# endif
+#endif
+
 /*
  * Set x11 Window Title
  *
@@ -1616,31 +1623,33 @@ get_x11_thing(get_title, test_only)
 set_x11_title(title)
     char_u	*title;
 {
-#if XtSpecificationRelease >= 4
-    XTextProperty	text_prop;
-# ifdef FEAT_XFONTSET
-    Status		status;
-
-    status = XmbTextListToTextProperty(x11_display, (char **)&title, 1,
-					      XCompoundTextStyle, &text_prop);
-    /* Status is a positive number when some chars could not be converted.
-     * Accept that, we don't know what to do otherwise. */
-    if (status < Success)
-# endif
+	/* XmbSetWMProperties() and Xutf8SetWMProperties() should use a STRING
+	 * when possible, COMPOUND_TEXT otherwise.  COMPOUND_TEXT isn't
+	 * supported everywhere and STRING doesn't work for multi-byte titles.
+	 */
+#ifdef USE_UTF8_STRING
+    if (enc_utf8)
+	Xutf8SetWMProperties(x11_display, x11_window, (const char *)title,
+					     NULL, NULL, 0, NULL, NULL, NULL);
+    else
+#endif
     {
-	text_prop.value = title;
-	text_prop.nitems = STRLEN(title);
-	text_prop.encoding = XA_STRING;
-	text_prop.format = 8;
-    }
-    XSetWMName(x11_display, x11_window, &text_prop);
+#if XtSpecificationRelease >= 4
 # ifdef FEAT_XFONTSET
-    if (status >= Success)
-	XFree((void *)text_prop.value);
+	XmbSetWMProperties(x11_display, x11_window, (const char *)title,
+					     NULL, NULL, 0, NULL, NULL, NULL);
+# else
+	XTextProperty	text_prop;
+
+	/* directly from example 3-18 "basicwin" of Xlib Programming Manual */
+	(void)XStringListToTextProperty((char **)&title, 1, &text_prop);
+	XSetWMProperties(x11_display, x11_window, &text_prop,
+					     NULL, NULL, 0, NULL, NULL, NULL);
 # endif
 #else
-    XStoreName(x11_display, x11_window, (char *)title);
+	XStoreName(x11_display, x11_window, (char *)title);
 #endif
+    }
     XFlush(x11_display);
 }
 
@@ -1653,31 +1662,29 @@ set_x11_title(title)
 set_x11_icon(icon)
     char_u	*icon;
 {
-#if XtSpecificationRelease >= 4
-    XTextProperty	text_prop;
-# ifdef FEAT_XFONTSET
-    Status		status;
-
-    status = XmbTextListToTextProperty(x11_display, (char **)&icon, 1,
-					      XCompoundTextStyle, &text_prop);
-    /* Status is a positive number when some chars could not be converted.
-     * Accept that, we don't know what to do otherwise. */
-    if (status < Success)
-# endif
+    /* See above for comments about using X*SetWMProperties(). */
+#ifdef USE_UTF8_STRING
+    if (enc_utf8)
+	Xutf8SetWMProperties(x11_display, x11_window, NULL, (const char *)icon,
+						   NULL, 0, NULL, NULL, NULL);
+    else
+#endif
     {
-	text_prop.value = icon;
-	text_prop.nitems = STRLEN(icon);
-	text_prop.encoding = XA_STRING;
-	text_prop.format = 8;
-    }
-    XSetWMIconName(x11_display, x11_window, &text_prop);
+#if XtSpecificationRelease >= 4
 # ifdef FEAT_XFONTSET
-    if (status >= Success)
-	XFree((void *)text_prop.value);
+	XmbSetWMProperties(x11_display, x11_window, NULL, (const char *)icon,
+						   NULL, 0, NULL, NULL, NULL);
+# else
+	XTextProperty	text_prop;
+
+	(void)XStringListToTextProperty((char **)&icon, 1, &text_prop);
+	XSetWMProperties(x11_display, x11_window, NULL, &text_prop,
+						   NULL, 0, NULL, NULL, NULL);
 # endif
 #else
-    XSetIconName(x11_display, x11_window, (char *)icon);
+	XSetIconName(x11_display, x11_window, (char *)icon);
 #endif
+    }
     XFlush(x11_display);
 }
 
