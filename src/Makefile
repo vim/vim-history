@@ -1548,6 +1548,8 @@ types.vim: $(TAGS_SRC) $(TAGS_INCL)
 			{printf("%s ", $$1)}END{print ""}' > $@
 
 # Execute the test scripts.  Run these after compiling Vim, before installing.
+# This doesn't depend on $(VIMTARGET), because that won't work when configure
+# wasn't run yet.  Restart make to build it instead.
 #
 # This will produce a lot of garbage on your screen, including a few error
 # messages.  Don't worry about that.
@@ -1556,6 +1558,7 @@ types.vim: $(TAGS_SRC) $(TAGS_INCL)
 # If everything is allright, the final message will be "ALL DONE".
 #
 test check:
+	$(MAKE) -f Makefile $(VIMTARGET)
 	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET) VIMPROG=../$(VIMTARGET)
 
 testclean:
