@@ -4441,7 +4441,7 @@ gui_mch_browse(
     if (saving)
     {
 	/* Change first parm AEDesc (typeFSS) *defaultLocation to match dflt */
-	NavPutFile (NULL, &reply, &navOptions, NULL, 'VIM!', 'TEXT', NULL);
+	NavPutFile (NULL, &reply, &navOptions, NULL, 'TEXT', 'VIM!', NULL);
 	if (!reply.validRecord)
 	    return NULL;
     }
@@ -4829,6 +4829,7 @@ gui_mch_dialog(
 	 * For some reason this change need to be done last (Dany) */
 	GetDialogItem (theDialog, inputItm.idx, &itemType, &itemHandle, &inputItm.box);
 	SetDialogItem (theDialog, inputItm.idx, kEditTextDialogItem, itemHandle, &inputItm.box);
+	SelectDialogItemText(theDialog, inputItm.idx, 0, 32767);
     }
 
     /* Place Button */
@@ -5247,16 +5248,47 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
      * The function used here are available in Carbon, but
      * do nothing une MacOS 8 and 9
      */
+    if (error == fnfErr)
+    {
+	/* If the file to be saved does not already exist, it isn't possible
+	   to convert its FSSpec into an FSRef.  But we can construct an
+	   FSSpec for the file's parent folder (since we have its volume and
+	   directory IDs), and since that folder does exist, we can convert
+	   that FSSpec into an FSRef, convert the FSRef in turn into a path,
+	   and, finally, append the filename. */
+	FSSpec dirSpec;
+	FSRef dirRef;
+	Str255 emptyFilename = "\p";
+	error = FSMakeFSSpec(theCPB.dirInfo.ioVRefNum,
+	    theCPB.dirInfo.ioDrDirID, emptyFilename, &dirSpec);
+	if (error)
+	    return NULL;
 
-    error=FSpMakeFSRef (&file, &refFile);
-    if (error)
-	return NULL;
+	error = FSpMakeFSRef(&dirSpec, &dirRef);
+	if (error)
+	    return NULL;
 
-    status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
-    if (status)
-	return NULL;
+	status = FSRefMakePath(&dirRef, (UInt8*)path, pathSize);
+	if (status)
+	    return NULL;
 
-    /* Add the the slash at the end if needed */
+	STRCAT(path, "/");
+	STRCAT(path, filenamePtr);
+    }
+    else
+    {
+	/* If the file to be saved already exists, we can get its full path
+	   by converting its FSSpec into an FSRef. */
+	error=FSpMakeFSRef (&file, &refFile);
+	if (error)
+	    return NULL;
+
+	status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
+	if (status)
+	    return NULL;
+    }
+
+    /* Add a slash at the end if needed */
     if (folder)
 	STRCAT (path, "/");
 

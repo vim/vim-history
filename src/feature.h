@@ -710,7 +710,7 @@
 		&& defined(HAVE_X11_XPM_H)) \
 	|| defined(FEAT_GUI_GTK) \
 	|| defined(FEAT_GUI_PHOTON) \
-	|| (defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON)
+	|| defined(FEAT_GUI_MAC)
 #   define FEAT_CON_DIALOG
 #   define FEAT_GUI_DIALOG
 #  else
