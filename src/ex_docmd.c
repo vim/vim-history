@@ -3315,6 +3315,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 		    expand_T	xpc;
 
 		    xpc.xp_context = EXPAND_FILES;
+		    xpc.xp_backslash = XP_BS_NONE;
 		    if ((p = ExpandOne(&xpc, eap->arg, NULL,
 					    WILD_LIST_NOTFOUND|WILD_ADD_SLASH,
 						   WILD_EXPAND_FREE)) == NULL)
