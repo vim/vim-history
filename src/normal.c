@@ -842,6 +842,9 @@ getcount:
 	     * "gr", "g'" and "g`".
 	     */
 	    ca.nchar = safe_vgetc();
+#ifdef FEAT_LANGMAP
+	    LANGMAP_ADJUST(ca.nchar, TRUE);
+#endif
 #ifdef FEAT_CMDL_INFO
 	    need_flushbuf |= add_to_showcmd(ca.nchar);
 #endif
