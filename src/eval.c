@@ -4070,6 +4070,9 @@ f_has(argvars, retvar)
 #ifdef MACOS /* TODO: Should we add MACOS_CLASSIC, MACOS_X? (Dany) */
 	"mac",
 #endif
+#if defined(MACOS_X_UNIX)
+	"macunix",
+#endif
 #ifdef OS2
 	"os2",
 #endif
@@ -4090,6 +4093,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef WIN32
 	"win32",
+#endif
+#if defined(UNIX) && (defined(__CYGWIN32__) || defined(__CYGWIN__))
+	"win32unix",
 #endif
 #ifdef WIN64
 	"win64",
