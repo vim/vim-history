@@ -1575,7 +1575,7 @@ op_delete(oap)
 	    ml_replace(lnum, newp, FALSE);
 	}
 
-	/* Put cursor back at start of changed block */
+	check_cursor_col();
 	changed_lines(curwin->w_cursor.lnum, curwin->w_cursor.col,
 						       oap->end.lnum + 1, 0L);
 	oap->line_count = 0;	    /* no lines deleted */
