@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 5.4.  Last change: 1999 Jul 20
+*starting.txt*  For Vim version 5.5.  Last change: 1999 Sep 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -495,7 +495,7 @@ accordingly.  Vim proceeds in this order:
 	If Vim was started in Ex mode with the "-s" argument, all following
 	initializations until 4. are skipped.  Only the "-u" option is
 	interpreted.
-
+     							*system-vimrc*
      a. For Unix, OS/2, VMS, Macintosh, RISC-OS and Amiga the system vimrc
 	file is read for initializations.  The path of this file is shown with
 	the ":version" command.  Note that this file is ALWAYS read in
@@ -706,16 +706,19 @@ To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
 5. Suspending						*suspend*
 
 						*iconise* *CTRL-Z* *v_CTRL-Z*
-CTRL-Z			Suspend Vim.
+CTRL-Z			Suspend Vim, like ":stop".
 			Works in Normal and in Visual mode.  In Insert and
 			Command-line mode, the CTRL-Z is inserted as a normal
 			character.
 
 
 :sus[pend][!]	or			*:sus* *:suspend* *:st* *:stop*
-:st[op][!]		Suspend Vim, like with CTRL-Z.  If the '!' is
-			not given, the buffer was changed, 'autowrite' is set,
-			and a file name is known, the buffer will be written.
+:st[op][!]		Suspend Vim.
+			If the '!' is not given and 'autowrite' is set, every
+			buffer with changes and a file name is written out.
+			If the '!' is given or 'autowrite' is not set, changed
+			buffers are not written, don't forget to bring Vim
+			back to the foreground later!
 
 In the GUI, suspending is implemented as iconising gvim.  In Windows 95/NT,
 gvim is minimized.
@@ -1123,10 +1126,11 @@ In (c)sh, you could make an alias for it:
 >	alias lvim vim -c '"'normal "'"0'"'
 
 Viminfo file name:					*viminfo-file-name*
-- The default name of the viminfo file is "$HOME/.viminfo" for Unix,
+- The default name of the viminfo file is "$HOME/.viminfo" for Unix and OS/2,
   "s:.viminfo" for Amiga, "$HOME\_viminfo" for MS-DOS and Win32.  For the last
   two, when $HOME is not set, "$VIM\_viminfo" is used.  When $VIM is also not
-  set, "c:\_viminfo" is used.
+  set, "c:\_viminfo" is used.  For OS/2 "$VIM/.viminfo" is used when $HOME is
+  not set and $VIM is set.
 - The 'n' flag in the 'viminfo' option can be used to specify another viminfo
   file name |'viminfo'|.
 - The "-i" Vim argument can be used to set another file name, |-i|.  When the

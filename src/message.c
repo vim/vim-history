@@ -28,6 +28,7 @@ static int  msg_check_screen __ARGS((void));
 static void redir_write __ARGS((char_u *s));
 #ifdef CON_DIALOG
 static char_u *msg_show_console_dialog __ARGS((char_u *message, char_u *buttons, int dfltbutton));
+static int msg_noquit_more = FALSE; /* quit not allowed at more prompt */
 #endif
 
 struct msg_hist
@@ -109,9 +110,11 @@ msg_attr(s, attr)
 	return TRUE;
     ++entered;
 
-    /* Add message to history (unless it's a repeated kept message) */
+    /* Add message to history (unless it's a repeated kept message or a
+     * truncated message) */
     if (s != keep_msg
-	    || (last_msg_hist != NULL
+	    || (*s != '<'
+		&& last_msg_hist != NULL
 		&& last_msg_hist->msg != NULL
 		&& STRCMP(s, last_msg_hist->msg)))
 	add_msg_hist(s, -1, attr);
@@ -586,6 +589,7 @@ wait_return(redraw)
 				|| c == K_LEFTDRAG   || c == K_LEFTRELEASE
 				|| c == K_MIDDLEDRAG || c == K_MIDDLERELEASE
 				|| c == K_RIGHTDRAG  || c == K_RIGHTRELEASE
+				|| c == K_MOUSEDOWN  || c == K_MOUSEUP
 				|| c == K_IGNORE     ||
 				(!mouse_has(MOUSE_RETURN) &&
 				     (c == K_LEFTMOUSE ||
@@ -1273,8 +1277,19 @@ msg_puts_attr(s, attr)
 		    case 'q':		/* quit */
 		    case Ctrl('C'):
 		    case ESC:
-			got_int = TRUE;
-			quit_more = TRUE;
+#ifdef CON_DIALOG
+			if (msg_noquit_more)
+			{
+			    /* When quitting is not possible, behave like
+			     * another page can be printed */
+			    lines_left = Rows - 1;
+			}
+			else
+#endif
+			{
+			    got_int = TRUE;
+			    quit_more = TRUE;
+			}
 			break;
 		    case 'u':		/* Up half a page */
 		    case K_PAGEUP:
@@ -1841,8 +1856,11 @@ msg_show_console_dialog(message, buttons, dfltbutton)
     void
 display_confirm_msg()
 {
+    /* avoid that 'q' at the more prompt truncates the message here */
+    ++msg_noquit_more;
     if (confirm_msg != NULL)
 	msg_puts_attr(confirm_msg, hl_attr(HLF_M));
+    --msg_noquit_more;
 }
 
 #endif /* CON_DIALOG */

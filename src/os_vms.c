@@ -892,8 +892,8 @@ vim_is_xterm(char_u *name)
 {
     if (name == NULL)
 	return FALSE;
-    return(vim_strnicmp((char *)name, "xterm", (size_t)5) == 0 ||
-	    STRCMP(name, "builtin_xterm") == 0);
+    return (vim_strnicmp((char *)name, "xterm", (size_t)5) == 0
+	    || STRCMP(name, "builtin_xterm") == 0);
 }
 
     int
@@ -901,8 +901,8 @@ vim_is_iris_ansi(char_u *name)
 {
     if (name == NULL)
 	return FALSE;
-    return(vim_strnicmp((char *)name, "iris-ansi", (size_t)9) == 0 ||
-	    STRCMP(name, "builtin_iris-ansi") == 0);
+    return (vim_strnicmp((char *)name, "iris-ansi", (size_t)9) == 0
+	    || STRCMP(name, "builtin_iris-ansi") == 0);
 }
 
 /*
@@ -916,8 +916,8 @@ is_fastterm(char_u *name)
 	return FALSE;
     if (vim_is_xterm(name) || vim_is_iris_ansi(name))
 	return TRUE;
-    return(vim_strnicmp((char *)name, "hpterm", (size_t)6) == 0 ||
-	    vim_strnicmp((char *)name, "sun-cmd", (size_t)7) == 0);
+    return (vim_strnicmp((char *)name, "hpterm", (size_t)6) == 0
+	    || vim_strnicmp((char *)name, "sun-cmd", (size_t)7) == 0);
 }
 
 /*
@@ -938,7 +938,7 @@ mch_get_user_name(char_u *s, int len)
     void
 mch_get_host_name(char_u *s, int len)
 {
-#if defined(__DECC) && defined(__STDC__)
+#if 0 /* defined(__DECC) && defined(__STDC__) */
     extern char_u *sys_hostname;
 
     /* presumably compiled with /decc */
@@ -1418,9 +1418,7 @@ mch_set_winsize(void)
 }
 
 /*
- *	options		SHELL_FILTER	if called by do_filter()
- *			SHELL_COOKED	if term needs cooked mode
- *			SHELL_EXPAND	if called by mch_expand_wildcards()
+ *	options: SHELL_*, see vim.h
  */
 
     int
@@ -1455,7 +1453,7 @@ mch_call_shell(char_u *cmd, int options)
 	x = system((char *)p_sh);
     if (x == 127)
 	OUT_STR("\nCannot execute shell sh\n");
-    else if (x && !expand_interactively)
+    else if (x && !(options & SHELL_SILENT))
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
@@ -1673,27 +1671,30 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 	    STRCPY(buf,pat[i]);
 
 	vms_match_num = 0; /* reset collection counter */
-	cnt = decc$to_vms((char *)buf,vms_wproc,1,0);
+	cnt = decc$to_vms((char *)buf, vms_wproc, 1, 0);
 	if (cnt > 0)
 	    cnt = vms_match_num;
 
 	if (cnt < 1)
 	    continue;
 
-	for (i = 0; i<cnt; i++) {
+	for (i = 0; i < cnt; i++)
+	{
 	    /* files should exist if expanding interactively */
-	    if (expand_interactively && mch_getperm(vms_fmatch[i]) < 0)
+	    if (!(flags & EW_NOTFOUND) && mch_getperm(vms_fmatch[i]) < 0)
 		continue;
 	    /* check if this entry should be included */
 	    dir = (mch_isdir(vms_fmatch[i]));
 	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
 		continue;
 	    /* allocate memory for pointers */
-	    if (--files_free < 1) {
+	    if (--files_free < 1)
+	    {
 		files_alloced += EXPL_ALLOC_INC;
 		*file = (char_u **)realloc(*file,
 		    sizeof(char_u **) * files_alloced);
-		if (*file == NULL) {
+		if (*file == NULL)
+		{
 		    *file = (char_u **)"";
 		    *num_file = 0;
 		    return(FAIL);
@@ -1705,7 +1706,7 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 	    (*file)[*num_file++] = vms_fmatch[i];
 	}
     }
-    return(OK);
+    return OK;
 }
 
 /*

@@ -32,18 +32,23 @@ static WIN *y2win __ARGS((int y));
 
 /*
  * gui_start -- Called when user wants to start the GUI.
+ *
+ * Careful: This function can be called recursively when there is a ":gui"
+ * command in the .gvimrc file.  Only the first call should fork, not the
+ * recursive call.
  */
     void
 gui_start()
 {
-    char_u  *old_term;
+    char_u	*old_term;
 #if defined(UNIX) && !defined(__BEOS__)
-    pid_t   pid = -1;
-    int	    dofork = TRUE;
+    pid_t	pid = -1;
+    int		dofork = TRUE;
 #endif
 #ifdef USE_GUI_GTK
     int	    pfd[2];
 #endif
+    static int	recursive = 0;
 
     old_term = vim_strsave(T_NAME);
 
@@ -64,9 +69,10 @@ gui_start()
     full_screen = FALSE;
 
 #if defined(UNIX) && !defined(__BEOS__)
-    if (!gui.dofork || vim_strchr(p_go, GO_FORG))
+    if (!gui.dofork || vim_strchr(p_go, GO_FORG) || recursive)
 	dofork = FALSE;
 #endif
+    ++recursive;
 
 #ifdef USE_GUI_GTK
     /*
@@ -95,21 +101,25 @@ gui_start()
 	if (pid == 0)	/* child */
 	{
 	    (void)close(pfd[0]);	/* child closes its read end */
-	    termcapinit((char_u *)"builtin_gui");   /* goes to gui_init() */
-	    gui.starting = FALSE;
-	    (void)write(pfd[1], &gui.in_use, sizeof(int));
-	    (void)close(pfd[1]);
-	    if (!gui.in_use)
-		exit(1);
 
+	    /* Do the setsid() first, otherwise the exit() of the parent may
+	     * kill the child too (when starting gvim from inside a gvim). */
 # if defined(HAVE_SETSID)
 	    (void)setsid();
 # else
 	    (void)setpgid(0, 0);
 # endif
+	    termcapinit((char_u *)"builtin_gui");   /* goes to gui_init() */
+	    gui.starting = recursive - 1;
+	    (void)write(pfd[1], &gui.in_use, sizeof(int));
+	    (void)close(pfd[1]);
+	    if (!gui.in_use)
+		exit(1);
+
 #ifdef AUTOCMD
 	    apply_autocmds(EVENT_GUIENTER, NULL, NULL, FALSE, curbuf);
 #endif
+	    --recursive;
 	    return; /* child successfully started gui */
 	}
 	else		/* parent */
@@ -134,7 +144,7 @@ gui_start()
 
     {
 	termcapinit((char_u *)"builtin_gui");
-	gui.starting = FALSE;
+	gui.starting = recursive - 1;
     }
 
 
@@ -160,7 +170,14 @@ gui_start()
     {
 	pid = fork();
 	if (pid > 0)	    /* Parent */
+	{
+	    /* Give the child some time to do the setsid(), otherwise the
+	     * exit() may kill the child too (when starting gvim from inside a
+	     * gvim). */
+	    ui_delay(100L, TRUE);
 	    exit(0);
+	}
+
 # if defined(HAVE_SETSID) || defined(HAVE_SETPGID)
 	/*
 	 * Change our process group.  On some systems/shells a CTRL-C in the
@@ -181,6 +198,7 @@ gui_start()
     if (gui.in_use)
 	apply_autocmds(EVENT_GUIENTER, NULL, NULL, FALSE, curbuf);
 #endif
+    --recursive;
 }
 
 /*
@@ -856,7 +874,7 @@ gui_position_components(total_width)
     if (gui.which_scrollbars[SBAR_LEFT])
 	text_area_x += gui.scrollbar_width;
 
-#ifdef USE_GUI_MSWIN
+#if defined(USE_GUI_MSWIN) && defined(USE_TOOLBAR)
     if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
 	text_area_y = TOOLBAR_BUTTON_HEIGHT + TOOLBAR_BORDER_HEIGHT;
     else
@@ -1799,6 +1817,7 @@ gui_wait_for_chars(wtime)
  * the given properties.
  *  button	    --- may be any of MOUSE_LEFT, MOUSE_MIDDLE, MOUSE_RIGHT,
  *			MOUSE_DRAG, or MOUSE_RELEASE.
+ *			MOUSE_4 and MOUSE_5 are used for a scroll wheel.
  *  x, y	    --- Coordinates of mouse in pixels.
  *  repeated_click  --- TRUE if this click comes only a short time after a
  *			previous click.
@@ -1820,12 +1839,42 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     static int	    num_clicks = 1;
     char_u	    string[6];
     int		    row, col;
-
 #ifdef USE_CLIPBOARD
-
     int		    checkfor;
     int		    did_clip = FALSE;
+#endif
 
+    /*
+     * Scrolling may happen at any time, also while a selection is present.
+     */
+    if (button == MOUSE_4 || button == MOUSE_5)
+    {
+	/* Don't put events in the input queue now. */
+	if (hold_gui_events)
+	    return;
+
+	string[3] = CSI;
+	string[4] = KS_EXTRA;
+	string[5] = (int)(button == MOUSE_4 ? KE_MOUSEDOWN : KE_MOUSEUP);
+	if (modifiers == 0)
+	    add_to_input_buf(string + 3, 3);
+	else
+	{
+	    string[0] = CSI;
+	    string[1] = KS_MODIFIER;
+	    string[2] = 0;
+	    if (modifiers & MOUSE_SHIFT)
+		string[2] |= MOD_MASK_SHIFT;
+	    if (modifiers & MOUSE_CTRL)
+		string[2] |= MOD_MASK_CTRL;
+	    if (modifiers & MOUSE_ALT)
+		string[2] |= MOD_MASK_ALT;
+	    add_to_input_buf(string, 6);
+	}
+	return;
+    }
+
+#ifdef USE_CLIPBOARD
     /* If a clipboard selection is in progress, handle it */
     if (clipboard.state == SELECT_IN_PROGRESS)
     {
@@ -2537,7 +2586,7 @@ gui_update_scrollbars(force)
 		y += gui.menu_height;
 #endif
 
-#ifdef USE_GUI_MSWIN
+#if defined(USE_GUI_MSWIN) && defined(USE_TOOLBAR)
 	    if (vim_strchr(p_go, GO_TOOLBAR) != NULL)
 		y += TOOLBAR_BUTTON_HEIGHT + TOOLBAR_BORDER_HEIGHT;
 #endif
@@ -2855,8 +2904,6 @@ gui_focus_change(in_focus)
 
 /*
  * Called when the mouse moved (but not when dragging).
- * Ignore this while in command-line mode, or while changing the window layout
- * (causes a mouse-move event in Win32 GUI).
  */
     void
 gui_mouse_moved(y)
@@ -2866,11 +2913,14 @@ gui_mouse_moved(y)
     char_u	st[6];
     int		x;
 
-    /* Don't put events in the input queue now. */
-    if (hold_gui_events)
-	return;
-
-    if (p_mousef && State != CMDLINE && !need_mouse_correct && gui.in_focus)
+    /* Only handle this when 'mousefocus' set and ... */
+    if (p_mousef
+	    && !hold_gui_events		/* not holding events */
+	    && (State & (NORMAL|INSERT))/* Normal/Visual/Insert mode */
+	    && State != HITRETURN	/* but not hit-return prompt */
+	    && msg_scrolled == 0	/* no scrolled message */
+	    && !need_mouse_correct	/* not moving the pointer */
+	    && gui.in_focus)		/* gvim in focus */
     {
 	x = gui_mch_get_mouse_x();
 	/* Don't move the mouse when it's left or right of the Vim window */
@@ -2886,6 +2936,12 @@ gui_mouse_moved(y)
 	 * Trick: Use a column of -1, so that check_termcode will generate a
 	 * K_LEFTMOUSE_NM key code.
 	 */
+	if (finish_op)
+	{
+	    /* abort the current operator first */
+	    st[0] = ESC;
+	    add_to_input_buf(st, 1);
+	}
 	st[0] = CSI;
 	st[1] = KS_MOUSE;
 	st[2] = K_FILLER;

@@ -200,7 +200,10 @@ enum key_extra
     KE_S_XF1,		/* extra vt100 shifted function keys for xterm */
     KE_S_XF2,
     KE_S_XF3,
-    KE_S_XF4
+    KE_S_XF4,
+
+    KE_MOUSEDOWN,	/* scroll wheel pseudo-button Down */
+    KE_MOUSEUP		/* scroll wheel pseudo-button Up */
 };
 
 /*
@@ -362,6 +365,9 @@ enum key_extra
 #define K_IGNORE	    TERMCAP2KEY(KS_EXTRA, KE_IGNORE)
 
 #define K_SNIFF		    TERMCAP2KEY(KS_EXTRA, KE_SNIFF)
+
+#define K_MOUSEDOWN	    TERMCAP2KEY(KS_EXTRA, KE_MOUSEDOWN)
+#define K_MOUSEUP	    TERMCAP2KEY(KS_EXTRA, KE_MOUSEUP)
 
 /* Bits for modifier mask */
 /* 0x01 cannot be used, because the modifier must be 0x02 or higher */

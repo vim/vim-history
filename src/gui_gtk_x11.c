@@ -753,15 +753,14 @@ gui_mch_init_check(void)
     gtk_set_locale();
 #endif
 
-    gtk_init(&gui_argc, &gui_argv);
-    vim_free(gui_argv);
-
-    if (!GDK_DISPLAY())
+    /* Don't use gtk_init(), it exits on failure. */
+    if (!gtk_init_check(&gui_argc, &gui_argv))
     {
 	gui.dying = TRUE;
 	EMSG("cannot open display");
 	return FAIL;
     }
+    vim_free(gui_argv);
 
     /* Somehow I can't resist the feeling that we should move the
      * corrseponding code out of the terminal section and
@@ -2643,7 +2642,8 @@ button_press_event(GtkWidget * widget, GdkEventButton * event)
     mouse_click_timer = gtk_timeout_add(p_mouset,
 				  mouse_click_timer_cb, &mouse_timed_out);
 
-    switch (event->button) {
+    switch (event->button)
+    {
     case 1:
 	button = MOUSE_LEFT;
 	break;
@@ -2652,6 +2652,12 @@ button_press_event(GtkWidget * widget, GdkEventButton * event)
 	break;
     case 3:
 	button = MOUSE_RIGHT;
+	break;
+    case 4:
+	button = MOUSE_4;
+	break;
+    case 5:
+	button = MOUSE_5;
 	break;
     default:
 	return FALSE;		/* Unknown button */

@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: debug.h,v 8.1 1999/03/04 04:16:38 darren Exp $
+*   $Id: debug.h,v 8.2 1999/08/29 04:41:42 darren Exp $
 *
 *   Copyright (c) 1998-1999, Darren Hiebert
 *
@@ -28,9 +28,11 @@
 #ifdef DEBUG
 # define debug(level)	((Option.debugLevel & (int)(level)) != 0)
 # define DebugStatement(x)	x
+# define PrintStatus(x)		if (debug(DEBUG_STATUS)) printf x;
 # define Assert(c)		assert(c)
 #else
 # define DebugStatement(x)
+# define PrintStatus(x)
 # define Assert(c)
 # ifndef NDEBUG
 #  define NDEBUG

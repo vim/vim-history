@@ -1,17 +1,19 @@
 " VIM syntax file
 " Language: Nroff/Troff
-" Maintainer: Matthias Burian <office@grabner-instruments.com>
-" Last change: Aug. 18, 1998
-"
+" Maintainer: Matthias Burian <burian@grabner-instruments.com>
+" Last change: Aug. 09, 1999
+
 syn clear
 
 syn match nroffCommand "^\.[a-zA-Z]" nextgroup=nroffCmdArg
-syn match nroffCommand "^\.[a-zA-Z][a-zA-Z0-9\\]" nextgroup=nroffCmdArg
+syn match nroffCommand "^\.[a-zA-Z][a-zA-Z0-9\\]\+" nextgroup=nroffCmdArg
+
 syn match nroffCmdArg contained ".*" contains=nroffString,nroffComArg
 syn region nroffString contained start=/"/ end=/"/ contains=nroffFont
 syn region nroffString contained start=/'/ end=/'/ contains=nroffFont
-syn match nroffComArg +\\".*+
+syn match nroffComArg +\\["#].*+
 syn match nroffComment +^\.\\".*+
+
 syn region nroffFont start="\\f[A-Z]"hs=s+3 end="\\f[A-Z]"he=e-3 end="$"
 syn region nroffFont start="\\\*<"hs=s+3 end="\\\*>"he=e-3
 syn region nroffDefine start="\.ds\ [A-Za-z_]\+" end="$" contains=ALL

@@ -219,6 +219,9 @@
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE	"$HOME/.viminfo"
 # endif
+# if !defined(VIMINFO_FILE2) && defined(OS2)
+#  define VIMINFO_FILE2	"$VIM/.viminfo"
+# endif
 #endif
 
 #ifndef EXRC_FILE

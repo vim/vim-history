@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.4.  Last change: 1999 Mar 31
+*scroll.txt*    For Vim version 5.5.  Last change: 1999 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,6 +19,7 @@ upwards in the buffer, the text in the window moves downwards on your screen.
 3. Scrolling relative to cursor	|scroll-cursor|
 4. Scrolling horizontally	|scroll-horizontal|
 5. Scrolling synchronously	|scroll-binding|
+6. Scrolling with a mouse wheel |scroll-mouse-wheel|
 
 ==============================================================================
 1. Scrolling downwards					*scroll-down*
@@ -195,5 +196,74 @@ scroll a window, and also meaningful when using the vertical scrollbar of the
 window which has the cursor focus.  However, when using the vertical scrollbar
 of a window which doesn't have the cursor focus, 'scrollbind' is ignored.
 This allows quick adjustment of the relative offset of 'scrollbind' windows.
+
+==============================================================================
+6. Scrolling with a mouse wheel				*scroll-mouse-wheel*
+
+When your mouse has a scroll wheel, it should work with Vim in the GUI.  How
+it works depends on your system.  It might also work in an xterm
+|xterm-mouse-wheel|.
+
+For the Win32 GUI the scroll action is hard coded.  It works just like
+dragging the scrollbar of the current window.  How many lines are scrolled
+depends on your mouse driver.  If the scroll action causes input focus
+problems, see |intellimouse-wheel-problems|.
+
+For the X11 GUIs (Motif, Athena and GTK) scrolling the wheel generates key
+presses <MouseDown> and <MouseUp>.  The default action for these keys are:
+    <MouseDown>		scroll three lines down.	*<MouseDown>*
+    <S-MouseDown>	scroll a full page down.	*<S-MouseDown>*
+    <MouseUp>		scroll three lines up.		*<MouseUp>*
+    <S-MouseUp>		scroll a full page up.		*<S-MouseUp>*
+This should work in all modes, except when editing the command line.
+
+You can modify this behavior by mapping the keys.  For example, to make the
+scroll wheel move one line or half a page in Normal mode:
+>   map <MouseDown> <C-Y>
+>   map <S-MouseDown> <C-U>
+>   map <MouseUp> <C-E>
+>   map <S-MouseUp> <C-D>
+You can also use Alt and Ctrl modifiers.
+
+This only works when Vim gets the scroll wheel events, of course.  You can
+check if this works with the "xev" program.
+
+When using Xfree86, the /etc/XF86Config file should have the correct entry for
+your mouse.  For FreeBSD, this entry works for a Logitech scrollmouse:
+>   Protocol     "MouseMan"
+>   Device       "/dev/psm0"
+>   ZAxisMapping 4 5
+See the Xfree86 documentation for information.
+
+							*xterm-mouse-wheel*
+To use the mouse wheel in an xterm you must do this:
+1. Make it work in your Xserver, as mentioned above.
+2. Add translations for the xterm, so that the xterm will pass a scroll event
+   to Vim as an escape sequence.
+3. Add mappings in Vim, to interpret the escape sequences as <MouseUp> or
+   <MouseDown> keys.
+
+You can do the translations by adding this to your ~.Xdefaults file (or other
+file where your X resources are kept):
+
+> *VT100.Translations:		#override \n\
+> 		s<Btn4Down>: string("0x1b") string("[64~") \n\
+> 		s<Btn5Down>: string("0x1b") string("[65~") \n\
+> 		<Btn4Down>: string("0x1b") string("[62~") \n\
+> 		<Btn5Down>: string("0x1b") string("[63~")
+
+If these don't work (because other translations get in the way), try these:
+
+> *VT100.Translations:		#override \n\
+> 		s<Btn4Up>: string("0x1b") string("[64~") \n\
+> 		s<Btn5Up>: string("0x1b") string("[65~") \n\
+> 		<Btn4Up>: string("0x1b") string("[62~") \n\
+> 		<Btn5Up>: string("0x1b") string("[63~")
+
+Add these mappings to your vimrc file:
+> map <Esc>[62~ <MouseDown>
+> map <Esc>[63~ <MouseUp>
+> map <Esc>[64~ <S-MouseDown>
+> map <Esc>[65~ <S-MouseUp>
 
  vim:tw=78:ts=8:sw=8:

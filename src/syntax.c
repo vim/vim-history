@@ -2380,6 +2380,8 @@ syn_cmd_clear(eap, syncing)
 	}
     }
     redraw_curbuf_later(NOT_VALID);
+    /* invalidate saved status, it may contain a deleted item */
+    syn_changed((linenr_t)0);
 }
 
 /*

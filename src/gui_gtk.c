@@ -1723,7 +1723,7 @@ helpfind_ok(GtkWidget *wgt, gpointer cbdata)
 	return;
 
     /* use CTRL-\ CTRL-N to get Vim into Normal mode first */
-    g_snprintf(cmd, strlen(txt) + 7, "\034\016:h %s\r", txt);
+    g_snprintf(cmd, (gulong)(strlen(txt) + 7), "\034\016:h %s\r", txt);
     add_to_input_buf((char_u *)cmd, STRLEN(cmd));
 
     gtk_widget_destroy(helpfind);

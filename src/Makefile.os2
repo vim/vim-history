@@ -35,7 +35,7 @@ TOOLS = ctags/ctags.exe xxd/xxd.exe tee/tee.exe
 
 ###########################################################################
 
-INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_msdos.h structs.h os_os2_cfg.h
+INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_unix.h structs.h os_os2_cfg.h
 CFLAGS = -O2 -fno-strength-reduce -DOS2 -Wall -Iproto $(DEFINES)
 
 OBJ = \

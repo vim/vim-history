@@ -45,7 +45,7 @@ do_ascii()
     char	buf2[20];
     char_u	buf3[3];
 #ifdef MULTI_BYTE
-    int		c2 = NUL;
+    int		c2;
 #endif
 
     c = gchar_cursor();
@@ -1617,7 +1617,7 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
 	    case '-': /* to be defined */
 	    case '^': /* to be defined */
 	    case '*': /* to be defined */
-	    case '<': /* to be defined */
+	    case '<': /* long line - ignored */
 		/* A comment */
 	    case NUL:
 	    case '\r':
@@ -1675,22 +1675,58 @@ read_viminfo_up_to_marks(line, fp, forceit, writing)
  * remove '\n' at the end of the line
  * - replace CTRL-V CTRL-V with CTRL-V
  * - replace CTRL-V 'n'    with '\n'
+ *
+ * Check for a long line as written by viminfo_writestring().
+ *
+ * Return the string in allocated memory (NULL when out of memory).
  */
-    void
-viminfo_readstring(p)
+    char_u *
+viminfo_readstring(p, fp)
     char_u	*p;
+    FILE	*fp;
 {
-    while (*p != NUL && *p != '\n')
+    char_u	*retval;
+    char_u	*s, *d;
+    long	len;
+
+    if (p[0] == Ctrl('V') && isdigit(p[1]))
     {
-	if (*p == Ctrl('V'))
+	len = atol((char *)p + 1);
+	retval = lalloc(len, TRUE);
+	if (retval == NULL)
 	{
-	    if (p[1] == 'n')
-		p[0] = '\n';
-	    mch_memmove(p + 1, p + 2, STRLEN(p));
+	    /* Line too long?  File messed up?  Skip next line. */
+	    (void)vim_fgets(p, 10, fp);
+	    return NULL;
 	}
-	++p;
+	(void)vim_fgets(retval, (int)len, fp);
+	s = retval + 1;	    /* Skip the leading '<' */
     }
-    *p = NUL;
+    else
+    {
+	retval = vim_strsave(p);
+	if (retval == NULL)
+	    return NULL;
+	s = retval;
+    }
+
+    /* Change CTRL-V CTRL-V to CTRL-V and CTRL-V n to \n in-place. */
+    d = retval;
+    while (*s != NUL && *s != '\n')
+    {
+	if (s[0] == Ctrl('V') && s[1] != NUL)
+	{
+	    if (s[1] == 'n')
+		*d++ = '\n';
+	    else
+		*d++ = Ctrl('V');
+	    s += 2;
+	}
+	else
+	    *d++ = *s++;
+    }
+    *d = NUL;
+    return retval;
 }
 
 /*
@@ -1698,13 +1734,33 @@ viminfo_readstring(p)
  * - replace CTRL-V with CTRL-V CTRL-V
  * - replace '\n'   with CTRL-V 'n'
  * - add a '\n' at the end
+ *
+ * For a long line:
+ * - write " CTRL-V <length> \n " in first line
+ * - write " < <string> \n "	  in second line
  */
     void
 viminfo_writestring(fd, p)
-    FILE    *fd;
-    char_u  *p;
+    FILE	*fd;
+    char_u	*p;
 {
-    int	    c;
+    int		c;
+    char_u	*s;
+    int		len = 0;
+
+    for (s = p; *s != NUL; ++s)
+    {
+	if (*s == Ctrl('V') || *s == '\n')
+	    ++len;
+	++len;
+    }
+
+    /* If the string will be too long, write its length and put it in the next
+     * line.  Take into account that some room is needed for what comes before
+     * the string (e.g., variable name).  Add something to the length for the
+     * '<', NL and trailing NUL. */
+    if (len > LSIZE / 2)
+	fprintf(fd, "\026%d\n<", len + 3);
 
     while ((c = *p++) != NUL)
     {
@@ -3633,10 +3689,7 @@ read_viminfo_sub_string(line, fp, force)
     if (old_sub != NULL && force)
 	vim_free(old_sub);
     if (force || old_sub == NULL)
-    {
-	viminfo_readstring(line);
-	old_sub = vim_strsave(line + 1);
-    }
+	old_sub = viminfo_readstring(line + 1, fp);
     return vim_fgets(line, LSIZE, fp);
 }
 

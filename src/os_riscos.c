@@ -727,10 +727,8 @@ mch_set_winsize()
 
     int
 mch_call_shell(cmd, options)
-    char_u  *cmd;
-    int	    options;/* SHELL_FILTER if called by do_filter() */
-		    /* SHELL_COOKED if term needs cooked mode */
-		    /* SHELL_EXPAND if called by mch_expand_wildcards() - NOT USED */
+    char_u	*cmd;
+    int		options;	/* SHELL_*, see vim.h */
 {
     int		retval;
 
@@ -749,7 +747,7 @@ mch_call_shell(cmd, options)
     * be doing to allow this to work...
     */
     retval = system(cmd);
-    if (retval)
+    if (retval && !(options & SHELL_SILENT))
 	EMSG(strerror(EOPSYS));		/* Doesn't seem to set errno? */
 
     swi(OS_Byte, 229, 1, 0);		/* Re-disable escape */
@@ -783,7 +781,7 @@ mch_breakcheck()
 mch_expandpath(gap, path, flags)
     struct growarray	*gap;	/* Grow array for results. */
     char_u		*path;
-    int			flags;	/* Add dirs/files/missing objects. */
+    int			flags;	/* EW_* flags */
 {
     int			got;	/* Number of matches. */
     char_u		*pattern;
@@ -981,7 +979,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     char_u	  **pat;
     int		   *num_file;
     char_u	 ***file;
-    int		    flags;
+    int		    flags;		/* EW_* flags */
 {
     /* This doesn't get called unless SPECIAL_WILDCHAR is defined. */
     return FAIL;

@@ -1,4 +1,4 @@
-*multibyte.txt*    For Vim version 5.4.  Last change: 1999 Jun 11
+*multibyte.txt*    For Vim version 5.5.  Last change: 1999 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,8 @@ Send any other comments, patches and suggestions to:
 
 This is a short explanation of how to use UTF-8 character encoding in the
 xterm that comes with XFree86 by Thomas Dickey (text by Markus Kuhn).
+
+NOTE: Editing and viewing UTF-8 text in Vim does not work as expected yet!
 
 Get the latest xterm version which has now UTF-8 support:
 

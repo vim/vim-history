@@ -1,9 +1,10 @@
-*os_mint.txt*   For Vim version 5.4.  Last change: 1997 Apr 13
+*os_mint.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Jens M. Felderhoff
 
 
+							*MiNT* *Atari*
 This file contains the particularities for the Atari MiNT version of Vim.
 
 For compiling Vim on the Atari running MiNT see "INSTALL" and "Makefile"

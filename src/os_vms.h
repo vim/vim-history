@@ -212,10 +212,15 @@
 #endif
 
 #ifndef VIM_HLP
-/* # define VIM_HLP		"vim_hlp:vim_help.txt" */
-/* next line changed SK 980904 */
-/* # define VIM_HLP		"$VIM_DOC:help.txt" */
-# define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
+/*
+ * If the line with $VIMRUNTIME doesn't work for you (":help" doesn't find the
+ * help files), then change the zero into a one and try again.
+ */
+# if 0
+#  define VIM_HLP		"$VIM_DOC:help.txt"
+# else
+#  define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
+# endif
 #endif
 
 #ifndef SYNTAX_FNAME

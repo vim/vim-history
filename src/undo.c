@@ -100,7 +100,7 @@ u_save(top, bot)
 }
 
 /*
- * save the line "lnum" (used by :s command)
+ * save the line "lnum" (used by ":s" and "~" command)
  * The line is replaced, so the new bottom line is lnum + 1.
  */
     int

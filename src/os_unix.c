@@ -100,7 +100,6 @@ static int mch_gpm_process __ARGS((void));
 #  include <X11/Intrinsic.h>
 #  include <X11/Shell.h>
 #  include <X11/StringDefs.h>
-static Display	*xterm_dpy = NULL;
 static Widget	xterm_Shell = (Widget)0;
 static void xterm_update __ARGS((void));
 # endif
@@ -108,16 +107,6 @@ static void xterm_update __ARGS((void));
 Window	    x11_window = 0;
 Display	    *x11_display = NULL;
 int	    got_x_error = FALSE;
-
-#if defined(USE_GUI) && defined(XTERM_CLIP)
-# define X_DISPLAY	gui.in_use ? gui.dpy : xterm_dpy
-#else
-# ifdef USE_GUI
-#  define X_DISPLAY	gui.dpy
-# else
-#  define X_DISPLAY	xterm_dpy
-# endif
-#endif
 
 # ifdef WANT_TITLE
 static int  get_x11_windis __ARGS((void));
@@ -243,7 +232,7 @@ static struct signalinfo
     {SIGSYS,	    "SYS",	TRUE},
 #endif
 #ifdef SIGALRM
-    {SIGALRM,	    "ALRM",	TRUE},
+    {SIGALRM,	    "ALRM",	FALSE},	/* Perl's alarm() can trigger it */
 #endif
 #ifdef SIGTERM
     {SIGTERM,	    "TERM",	TRUE},
@@ -573,6 +562,27 @@ deathtrap SIGDEFARG(sigarg)
     SIGRETURN;
 }
 
+#ifdef _REENTRANT
+/*
+ * On Solaris with multi-threading, suspending might not work immediately.
+ * Catch the SIGCONT signal, which will be used as an indication whether the
+ * suspending has been done or not.
+ */
+static int sigcont_received;
+static RETSIGTYPE sigcont_handler __ARGS(SIGPROTOARG);
+
+/*
+ * signal handler for SIGCONT
+ */
+/* ARGSUSED */
+    static RETSIGTYPE
+sigcont_handler SIGDEFARG(sigarg)
+{
+    sigcont_received = TRUE;
+    SIGRETURN;
+}
+#endif
+
 /*
  * If the machine has job control, use it to suspend the program,
  * otherwise fake it by starting a new shell.
@@ -580,11 +590,22 @@ deathtrap SIGDEFARG(sigarg)
     void
 mch_suspend()
 {
-#ifdef SIGTSTP
+    /* BeOS does have SIGTSTP, but it doesn't work. */
+#if defined(SIGTSTP) && !defined(__BEOS__)
     out_flush();	    /* needed to make cursor visible on some systems */
     settmode(TMODE_COOK);
     out_flush();	    /* needed to disable mouse on some systems */
+
+# ifdef _REENTRANT
+    sigcont_received = FALSE;
+# endif
     kill(0, SIGTSTP);	    /* send ourselves a STOP signal */
+# ifdef _REENTRANT
+    /* When we didn't suspend immediately in the kill(), do it now.  Happens
+     * on multi-threaded Solaris. */
+    if (!sigcont_received)
+	pause();
+# endif
 
 # ifdef WANT_TITLE
     /*
@@ -627,6 +648,9 @@ set_signals()
 #ifdef SIGTSTP
     signal(SIGTSTP, restricted ? SIG_IGN : SIG_DFL);
 #endif
+#ifdef _REENTRANT
+    signal(SIGCONT, sigcont_handler);
+#endif
 
     /*
      * We want to ignore breaking of PIPEs.
@@ -640,6 +664,13 @@ set_signals()
      */
 #ifdef SIGINT
     signal(SIGINT, (RETSIGTYPE (*)())catch_sigint);
+#endif
+
+    /*
+     * Ignore alarm signals (Perl's alarm() generates it).
+     */
+#ifdef SIGALRM
+    signal(SIGALRM, SIG_IGN);
 #endif
 
     /*
@@ -660,6 +691,10 @@ set_signals()
 reset_signals()
 {
     catch_signals(SIG_DFL, SIG_DFL);
+#ifdef _REENTRANT
+    /* SIGCONT isn't in the list, because its default action is ignore */
+    signal(SIGCONT, SIG_DFL);
+#endif
 }
 
     static void
@@ -1231,6 +1266,7 @@ vim_is_xterm(name)
 		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
+#if defined(USE_MOUSE) || defined(PROTO)
 /*
  * Return non-zero when using an xterm mouse, according to 'ttymouse'.
  * Return 1 for "xterm".
@@ -1247,6 +1283,7 @@ use_xterm_mouse()
     }
     return 0;
 }
+#endif
 
     int
 vim_is_iris(name)
@@ -2004,6 +2041,11 @@ mch_set_winsize()
 {
     if (*T_CWS)
     {
+	/*
+	 * NOTE: if you get an error here that term_set_winsize() is
+	 * undefined, check the output of configure.  It could probably not
+	 * find a ncurses, termcap or termlib library.
+	 */
 	term_set_winsize((int)Rows, (int)Columns);
 	out_flush();
 	screen_start();			/* don't know where cursor is now */
@@ -2012,10 +2054,8 @@ mch_set_winsize()
 
     int
 mch_call_shell(cmd, options)
-    char_u  *cmd;
-    int	    options;	/* SHELL_FILTER if called by do_filter() */
-			/* SHELL_COOKED if term needs cooked mode */
-			/* SHELL_EXPAND if called by mch_expand_wildcards() */
+    char_u	*cmd;
+    int		options;	/* SHELL_*, see vim.h */
 {
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
 
@@ -2086,7 +2126,7 @@ mch_call_shell(cmd, options)
 	MSG_PUTS("\nCannot execute shell sh\n");
     }
 #endif	/* __EMX__ */
-    else if (x && !expand_interactively)
+    else if (x && !(options & SHELL_SILENT))
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
@@ -2110,6 +2150,7 @@ mch_call_shell(cmd, options)
 
     char_u	*newcmd = NULL;
     pid_t	pid;
+    pid_t	wait_pid;
 #ifdef HAVE_UNION_WAIT
     union wait	status;
 #else
@@ -2235,6 +2276,9 @@ mch_call_shell(cmd, options)
 #endif
 
     {
+#ifdef __BEOS__
+	beos_cleanup_read_thread();
+#endif
 	if ((pid = fork()) == -1)	/* maybe we should use vfork() */
 	{
 	    MSG_PUTS("\nCannot fork\n");
@@ -2400,7 +2444,6 @@ mch_call_shell(cmd, options)
 		int	    c;
 		int	    toshell_fd;
 		int	    fromshell_fd;
-		pid_t	    wait_pid;
 
 		if (pty_master_fd >= 0)
 		{
@@ -2592,10 +2635,10 @@ finished:
 	     */
 	    for (;;)
 	    {
-		i = wait(&status);
-		if (i == pid)
+		wait_pid = wait(&status);
+		if (wait_pid == pid)
 		    break;
-		if (i <= 0
+		if (wait_pid <= 0
 #ifdef ECHILD
 			&& errno == ECHILD
 #endif
@@ -2628,7 +2671,7 @@ finished:
 			msg_outtrans(p_sh);
 			msg_putchar('\n');
 		    }
-		    else if (!expand_interactively)
+		    else if (!(options & SHELL_SILENT))
 		    {
 			msg_putchar('\n');
 			msg_outnum((long)retval);
@@ -2963,7 +3006,7 @@ pstrcmp(a, b)
 mch_expandpath(gap, path, flags)
     struct growarray	*gap;
     char_u		*path;
-    int			flags;
+    int			flags;		/* EW_* flags */
 {
     return unix_expandpath(gap, path, 0, flags);
 }
@@ -2973,7 +3016,7 @@ unix_expandpath(gap, path, wildoff, flags)
     struct growarray	*gap;
     char_u		*path;
     int			wildoff;
-    int			flags;
+    int			flags;		/* EW_* flags */
 {
     char_u		*buf;
     char_u		*path_end;
@@ -3125,22 +3168,22 @@ unix_expandpath(gap, path, wildoff, flags)
 /* ARGSUSED */
     int
 mch_expand_wildcards(num_pat, pat, num_file, file, flags)
-    int		    num_pat;
-    char_u	  **pat;
-    int		   *num_file;
-    char_u	 ***file;
-    int		    flags;
+    int		   num_pat;
+    char_u	 **pat;
+    int		  *num_file;
+    char_u	***file;
+    int		   flags;	/* EW_* flags */
 {
-    int	    i;
-    size_t  len;
-    char_u  *p;
-    int	    dir;
+    int		i;
+    size_t	len;
+    char_u	*p;
+    int		dir;
 #ifdef __EMX__
 # define EXPL_ALLOC_INC	16
-    char_u  **expl_files;
-    size_t  files_alloced, files_free;
-    char_u  *buf;
-    int	    has_wildcard;
+    char_u	**expl_files;
+    size_t	files_alloced, files_free;
+    char_u	*buf;
+    int		has_wildcard;
 
     *num_file = 0;	/* default: no files found */
     files_alloced = EXPL_ALLOC_INC; /* how much space is allocated */
@@ -3344,7 +3387,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	    STRCAT(command, pat[i]);
 #endif
 	}
-    if (expand_interactively)
+    if (flags & EW_SILENT)
 	show_shell_mess = FALSE;
     if (ampersent)
 	STRCAT(command, "&");		    /* put the '&' back after the
@@ -3366,7 +3409,11 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     else if (shell_style == STYLE_GLOB && !have_dollars(num_pat, pat))
 	extra_shell_arg = (char_u *)"-f";	/* Use csh fast option */
 
-    i = call_shell(command, SHELL_EXPAND);	/* execute it */
+    /*
+     * execute the shell command
+     */
+    i = call_shell(command,
+		     SHELL_EXPAND | ((flags & EW_SILENT) ? SHELL_SILENT : 0));
 
     /* When running in the background, give it some time to create the temp
      * file, but don't wait for it to finish. */
@@ -3387,7 +3434,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	 * from the shell, so screen may still get messed up -- webb.
 	 */
 #ifndef USE_SYSTEM
-	if (!expand_interactively)
+	if (!(flags & EW_SILENT))
 #endif
 	{
 	    must_redraw = CLEAR;	/* probably messed up screen */
@@ -3546,7 +3593,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     for (j = 0, i = 0; i < *num_file; ++i)
     {
 	/* Require the files to exist.	Helps when using /bin/sh */
-	if (expand_interactively && mch_getperm((*file)[i]) < 0)
+	if (!(flags & EW_NOTFOUND) && mch_getperm((*file)[i]) < 0)
 	    continue;
 
 	/* check if this entry should be included */
@@ -3807,34 +3854,6 @@ mch_gpm_process()
 }
 #endif /* GPM_MOUSE */
 
-#if defined(XTERM_CLIP) || defined(USE_GUI_X11) || defined(PROTO)
-/*
- * Open the application context (if it hasn't been opened yet).
- * Used for Motif and Athena GUI and the xterm clipboard.
- */
-    void
-open_app_context()
-{
-    if (app_context == NULL)
-    {
-	XtToolkitInitialize();
-	app_context = XtCreateApplicationContext();
-    }
-}
-#endif
-
-#if defined(XTERM_CLIP) || defined(USE_GUI_X11) || defined(PROTO)
-    void
-x11_setup_atoms(dpy)
-    Display	*dpy;
-{
-    clipboard.xatom = XInternAtom(dpy, "_VIM_TEXT", False);
-    clipboard.xa_compound_text = XInternAtom(dpy, "COMPOUND_TEXT", False);
-    clipboard.xa_text = XInternAtom(dpy, "TEXT", False);
-    clipboard.xa_targets = XInternAtom(dpy, "TARGETS", False);
-}
-#endif
-
 #if (defined(HAVE_X11) && defined(WANT_X11) && defined(XTERM_CLIP)) \
 	|| defined(PROTO)
 static int	    xterm_trace = -1;	/* default: disabled */
@@ -4075,258 +4094,5 @@ clip_xterm_request_selection()
 clip_xterm_set_selection()
 {
     clip_x11_set_selection();
-}
-#endif
-
-#if defined(XTERM_CLIP) || defined(USE_GUI_X11) || defined(PROTO)
-
-/*
- * X Selection stuff, for cutting and pasting text to other windows.
- */
-
-static void  clip_x11_request_selection_cb __ARGS((Widget, XtPointer, Atom *, Atom *, XtPointer, long_u *, int *));
-
-/* ARGSUSED */
-    static void
-clip_x11_request_selection_cb(w, success, selection, type, value, length,
-			      format)
-    Widget	w;
-    XtPointer	success;
-    Atom	*selection;
-    Atom	*type;
-    XtPointer	value;
-    long_u	*length;
-    int		*format;
-{
-    int		motion_type;
-    long_u	len;
-    char_u	*p;
-    char	**text_list = NULL;
-
-    if (value == NULL || *length == 0)
-    {
-	clip_free_selection();	/* ??? */
-	*(int *)success = FALSE;
-	return;
-    }
-    motion_type = MCHAR;
-    p = (char_u *)value;
-    len = *length;
-    if (*type == clipboard.xatom)
-    {
-	motion_type = *p++;
-	len--;
-    }
-    else if (*type == clipboard.xa_compound_text || (
-#ifdef MULTI_BYTE
-		is_dbcs &&
-#endif
-		*type == clipboard.xa_text))
-    {
-	XTextProperty	text_prop;
-	int		n_text = 0;
-	int		status;
-
-	text_prop.value = (unsigned char *)value;
-	text_prop.encoding = *type;
-	text_prop.format = *format;
-	text_prop.nitems = STRLEN(value);
-	status = XmbTextPropertyToTextList(X_DISPLAY, &text_prop,
-							 &text_list, &n_text);
-	if (status != Success || n_text < 1)
-	{
-	    *(int *)success = FALSE;
-	    return;
-	}
-	p = (char_u *)text_list[0];
-	len = STRLEN(p);
-    }
-    clip_yank_selection(motion_type, p, (long)len);
-
-    if (text_list != NULL)
-	XFreeStringList(text_list);
-
-    XtFree((char *)value);
-    *(int *)success = TRUE;
-}
-
-    void
-clip_x11_request_selection(myShell, dpy)
-    Widget	myShell;
-    Display	*dpy;
-{
-    XEvent	event;
-    Atom	type;
-    static int	success;
-    int		i;
-
-    for (i = 0; i < 4; i++)
-    {
-	switch (i)
-	{
-	    case 0:  type = clipboard.xatom;
-	    case 1:  type = clipboard.xa_compound_text;
-	    case 2:  type = clipboard.xa_text;
-	    default: type = XA_STRING;
-	}
-	XtGetSelectionValue(myShell, XA_PRIMARY, type,
-	    clip_x11_request_selection_cb, (XtPointer)&success, CurrentTime);
-
-	/* Do we need this?: */
-	XFlush(dpy);
-
-	/*
-	 * Wait for result of selection request, otherwise if we type more
-	 * characters, then they will appear before the one that requested the
-	 * paste!  Don't worry, we will catch up with any other events later.
-	 */
-	for (;;)
-	{
-	    if (XCheckTypedEvent(dpy, SelectionNotify, &event))
-		break;
-
-	    /* Do we need this?: */
-	    XSync(dpy, False);
-	}
-
-	/* this is where clip_x11_request_selection_cb() is actually called */
-	XtDispatchEvent(&event);
-
-	if (success)
-	    return;
-    }
-}
-
-static Boolean	clip_x11_convert_selection_cb __ARGS((Widget, Atom *, Atom *, Atom *, XtPointer *, long_u *, int *));
-
-/* ARGSUSED */
-    static Boolean
-clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
-    Widget	w;
-    Atom	*selection;
-    Atom	*target;
-    Atom	*type;
-    XtPointer	*value;
-    long_u	*length;
-    int		*format;
-{
-    char_u	*string;
-    char_u	*result;
-    int		motion_type;
-
-    if (!clipboard.owned)
-	return False;	    /* Shouldn't ever happen */
-
-    /* requestor wants to know what target types we support */
-    if (*target == clipboard.xa_targets)
-    {
-	Atom *array;
-
-	if ((array = (Atom *)XtMalloc((unsigned)(sizeof(Atom) * 5))) == NULL)
-	    return False;
-	*value = (XtPointer)array;
-	array[0] = XA_STRING;
-	array[1] = clipboard.xa_targets;
-	array[2] = clipboard.xatom;
-	array[3] = clipboard.xa_text;
-	array[4] = clipboard.xa_compound_text;
-	*type = XA_ATOM;
-	*format = sizeof(Atom) * 8;
-	*length = 5;
-	return True;
-    }
-
-    if (       *target != XA_STRING
-	    && *target != clipboard.xatom
-	    && *target != clipboard.xa_text
-	    && *target != clipboard.xa_compound_text)
-	return False;
-
-    clip_get_selection();
-    motion_type = clip_convert_selection(&string, length);
-    if (motion_type < 0)
-	return False;
-
-    /* For our own format, the first byte contains the motion type */
-    if (*target == clipboard.xatom)
-	(*length)++;
-
-    *value = XtMalloc((Cardinal)*length);
-    result = (char_u *)*value;
-    if (result == NULL)
-    {
-	vim_free(string);
-	return False;
-    }
-
-    if (*target == XA_STRING)
-    {
-	mch_memmove(result, string, (size_t)(*length));
-	*type = XA_STRING;
-    }
-    else if (*target == clipboard.xa_compound_text
-	    || *target == clipboard.xa_text)
-    {
-	XTextProperty	text_prop;
-	char		*string_nt = (char *)alloc((unsigned)*length + 1);
-
-	/* create NUL terminated string which XmbTextListToTextProperty wants */
-	mch_memmove(string_nt, string, (size_t)*length);
-	string_nt[*length] = NUL;
-	XmbTextListToTextProperty(X_DISPLAY, (char **)&string_nt, 1,
-					      XCompoundTextStyle, &text_prop);
-	vim_free(string_nt);
-	XtFree(*value);			/* replace with COMPOUND text */
-	*value = (XtPointer)(text_prop.value);	/*    from plain text */
-	*length = text_prop.nitems;
-	*type = clipboard.xa_compound_text;
-    }
-    else
-    {
-	result[0] = motion_type;
-	mch_memmove(result + 1, string, (size_t)(*length - 1));
-	*type = clipboard.xatom;
-    }
-    *format = 8;	    /* 8 bits per char */
-    vim_free(string);
-    return True;
-}
-
-static void  clip_x11_lose_ownership_cb __ARGS((Widget, Atom *));
-
-/* ARGSUSED */
-    static void
-clip_x11_lose_ownership_cb(w, selection)
-    Widget  w;
-    Atom    *selection;
-{
-    clip_lose_selection();
-}
-
-    void
-clip_x11_lose_selection(myShell)
-    Widget	myShell;
-{
-    XtDisownSelection(myShell, XA_PRIMARY, CurrentTime);
-}
-
-    int
-clip_x11_own_selection(myShell)
-    Widget	myShell;
-{
-    if (XtOwnSelection(myShell, XA_PRIMARY, CurrentTime,
-	    clip_x11_convert_selection_cb, clip_x11_lose_ownership_cb,
-	    NULL) == False)
-	return FAIL;
-    return OK;
-}
-
-/*
- * Send the current selection to the clipboard.  Do nothing for X because we
- * will fill in the selection only when requested by another app.
- */
-    void
-clip_x11_set_selection()
-{
 }
 #endif

@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: ctags.h,v 8.1 1999/03/04 04:16:38 darren Exp $
+*   $Id: ctags.h,v 8.2 1999/09/16 05:03:29 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
@@ -22,7 +22,7 @@
 =   General defines
 ============================================================================*/
 #ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION	"3.2.4"
+# define PROGRAM_VERSION	"3.3"
 #endif
 #define PROGRAM_NAME	"Exuberant Ctags"
 #define PROGRAM_URL	"http://darren.hiebert.com/ctags/"
@@ -66,8 +66,8 @@ enum eCharacters {
 };
 
 typedef enum eLangType {
-    LANG_AUTO = -2,		/* automatically determine language */
     LANG_IGNORE = -1,		/* ignore file (unknown/unsupported language) */
+    LANG_AUTO,			/* automatically determine language */
     LANG_C,
     LANG_CPP,
     LANG_EIFFEL,

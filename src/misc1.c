@@ -290,8 +290,8 @@ open_line(dir, redraw, del_spaces, old_indent)
 	 * don't add an indent. Fixes inserting a NL before '{' in line
 	 *	"if (condition) {"
 	 */
-	else if (curbuf->b_p_si && *saved_line != NUL &&
-				       (p_extra == NULL || first_char != '{'))
+	if (!trunc_line && curbuf->b_p_si && *saved_line != NUL
+				    && (p_extra == NULL || first_char != '{'))
 	{
 	    char_u  *ptr;
 	    char_u  last_char;
@@ -1004,9 +1004,9 @@ open_line(dir, redraw, del_spaces, old_indent)
      * May do indenting after opening a new line.
      */
     if (
-#ifdef COMMENTS
-	    leader == NULL &&
-#endif
+# ifdef COMMENTS
+	    (leader == NULL || !curbuf->b_p_ai) &&
+# endif
 	    curbuf->b_p_cin &&
 	    in_cinkeys(dir == FORWARD ? KEY_OPEN_FORW :
 			KEY_OPEN_BACK, ' ', linewhite(curwin->w_cursor.lnum)))
@@ -1133,7 +1133,6 @@ get_leader_len(line, flags, backward)
 	     * (but the amount does not need to match, there might be a mix of
 	     * TABs and spaces).
 	     */
-	    j = 0;
 	    if (vim_iswhite(string[0]))
 	    {
 		if (i == 0 || !vim_iswhite(line[i - 1]))
@@ -1515,7 +1514,7 @@ del_char(fixpos)
     if (is_dbcs)
     {
 	/* delete two-bytes, when the character is an multi-byte character */
-	if (AdjustCursorForMultiByteCharacter())
+	if (AdjustCursorForMultiByteChar())
 	    return del_chars(2L, fixpos); /* do BACKSPACE key */
 	else
 	{
@@ -1933,6 +1932,7 @@ change_warning(col)
 						   hl_attr(HLF_W) | MSG_HIST);
 	msg_clr_eos();
 	(void)msg_end();
+	out_flush();
 	ui_delay(1000L, TRUE);	/* give him some time to think about it */
 	curbuf->b_did_warn = TRUE;
 	redraw_cmdline = FALSE;	/* don't redraw and erase the message */
@@ -2055,6 +2055,8 @@ get_keystroke()
 		    || n ==  K_RIGHTMOUSE
 		    || n ==  K_RIGHTDRAG
 		    || n ==  K_RIGHTRELEASE
+		    || n ==  K_MOUSEDOWN
+		    || n ==  K_MOUSEUP
 # ifdef USE_GUI
 		    || n == K_SCROLLBAR
 		    || n == K_HORIZ_SCROLLBAR
@@ -2343,7 +2345,8 @@ expand_env(src, dst, dstlen)
 		if (var == NULL)
 # endif
 		{
-		    var = ExpandOne(dst, NULL, WILD_ADD_SLASH,
+		    expand_context = EXPAND_FILES;
+		    var = ExpandOne(dst, NULL, WILD_ADD_SLASH|WILD_SILENT,
 							    WILD_EXPAND_FREE);
 		    mustfree = TRUE;
 		}
@@ -3583,7 +3586,7 @@ cin_skip2pos(trypos)
 	    ++p;
 	}
     }
-    return (p - line);
+    return (int)(p - line);
 }
 
 /*
@@ -5210,16 +5213,16 @@ static int	gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file
  */
     int
 expand_wildcards(num_pat, pat, num_file, file, flags)
-    int	    num_pat;	    /* number of input patterns */
-    char_u  **pat;	    /* array of input patterns */
-    int	    *num_file;	    /* resulting number of files */
-    char_u  ***file;	    /* array of resulting files */
-    int	    flags;	    /* EW_DIR, etc. */
+    int		   num_pat;	/* number of input patterns */
+    char_u	 **pat;		/* array of input patterns */
+    int		  *num_file;	/* resulting number of files */
+    char_u	***file;	/* array of resulting files */
+    int		   flags;	/* EW_DIR, etc. */
 {
     int		retval;
     int		i, j;
     char_u	*p;
-    int		non_suf_match;		/* number without matching suffix */
+    int		non_suf_match;	/* number without matching suffix */
 #ifdef WILDIGNORE
     char_u	buf[100];
     char_u	*ffname;
@@ -5329,6 +5332,11 @@ match_suffix(fname)
 }
 
 #ifndef NO_EXPANDPATH
+
+# ifdef VIM_BACKTICK
+static int expand_backtick __ARGS((struct growarray *gap, char_u *pat, int flags));
+# endif
+
 /*
  * Generic wildcard expansion code.
  *
@@ -5346,7 +5354,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     char_u	**pat;		/* array of input patterns */
     int		*num_file;	/* resulting number of files */
     char_u	***file;	/* array of resulting files */
-    int		flags;		/* EW_DIR, EW_FILE, EW_NOTFOUND, EW_ADDSLASH */
+    int		flags;		/* EW_* flags */
 {
     int			i;
     struct growarray	ga;
@@ -5416,8 +5424,10 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 		{
 		    vim_free(p);
 		    ga_clear(&ga);
-		    return mch_expand_wildcards(num_pat, pat, num_file, file,
+		    i = mch_expand_wildcards(num_pat, pat, num_file, file,
 								       flags);
+		    recursive = FALSE;
+		    return i;
 		}
 #endif
 	    }
@@ -5454,17 +5464,17 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     return (ga.ga_data != NULL) ? OK : FAIL;
 }
 
-#if defined(VIM_BACKTICK) || defined(PROTO)
+# ifdef VIM_BACKTICK
 
 /*
  * Expand an item in `backticks` by executing it as a command.
  * Currently only works when pat[] starts and ends with a `.
  */
-    int
+    static int
 expand_backtick(gap, pat, flags)
     struct growarray	*gap;
     char_u		*pat;
-    int			flags;
+    int			flags;	/* EW_* flags */
 {
     char_u	*p;
     char_u	*cmd;
@@ -5477,7 +5487,7 @@ expand_backtick(gap, pat, flags)
     if (cmd == NULL)
 	return 0;
 
-    buffer = get_cmd_output(cmd);
+    buffer = get_cmd_output(cmd, (flags & EW_SILENT) ? SHELL_SILENT : 0);
     vim_free(cmd);
     if (buffer == NULL)
 	return 0;
@@ -5506,7 +5516,7 @@ expand_backtick(gap, pat, flags)
     vim_free(buffer);
     return cnt;
 }
-#endif
+# endif /* VIM_BACKTICK */
 
 /*
  * Add a file to a file list.  Accepted flags:
@@ -5576,8 +5586,9 @@ addfile(gap, f, flags)
  * Returns an allocated string, or NULL for error.
  */
     char_u *
-get_cmd_output(cmd)
+get_cmd_output(cmd, flags)
     char_u	*cmd;
+    int		flags;		/* can be SHELL_SILENT */
 {
     char_u	*tempname;
     char_u	*command;
@@ -5601,7 +5612,7 @@ get_cmd_output(cmd)
     /*
      * Call the shell to execute the command (errors are ignored).
      */
-    call_shell(command, SHELL_DOOUT | SHELL_EXPAND);
+    call_shell(command, SHELL_DOOUT | SHELL_EXPAND | flags);
     vim_free(command);
 
     /*

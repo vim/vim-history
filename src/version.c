@@ -352,9 +352,9 @@ static char *(features[]) =
 	"-title",
 #endif
 #ifdef USER_COMMANDS
-	"+user-commands",
+	"+user_commands",
 #else
-	"-user-commands",
+	"-user_commands",
 #endif
 #ifdef VISUALEXTRA
 	"+visualextra",
@@ -416,152 +416,206 @@ static char *(features[]) =
 	NULL
 };
 
+static int included_patches[] =
+{   /* Add new patch number below this line */
+    0
+};
+
+    int
+highest_patch()
+{
+    int		i;
+    int		h = 0;
+
+    for (i = 0; included_patches[i] != 0; ++i)
+	if (included_patches[i] > h)
+	    h = included_patches[i];
+    return h;
+}
+
     void
 do_version(arg)
     char_u  *arg;
 {
-    int i;
-
     /*
      * Ignore a ":version 9.99" command.
      */
     if (*arg == NUL)
     {
-	/*
-	 * When adding features here, don't forget to update the list of
-	 * internal variables in eval.c!
-	 */
 	msg_putchar('\n');
-	MSG(longVersion);
+	list_version();
+    }
+}
+
+    void
+list_version()
+{
+    int		i;
+    int		first;
+    char	*s = "";
+
+    /*
+     * When adding features here, don't forget to update the list of
+     * internal variables in eval.c!
+     */
+    MSG(longVersion);
 #ifdef WIN32
 # ifdef USE_GUI_WIN32
 #  if (_MSC_VER <= 1010)    /* Only MS VC 4.1 and earlier can do Win32s */
-	MSG_PUTS("\nMS-Windows 16/32 bit GUI version");
+    MSG_PUTS("\nMS-Windows 16/32 bit GUI version");
 #  else
-	MSG_PUTS("\nMS-Windows 32 bit GUI version");
+    MSG_PUTS("\nMS-Windows 32 bit GUI version");
 #  endif
-	if (gui_is_win32s())
-	    MSG_PUTS(" in Win32s mode");
+    if (gui_is_win32s())
+	MSG_PUTS(" in Win32s mode");
 # ifdef HAVE_OLE
-	MSG_PUTS(" with OLE support");
+    MSG_PUTS(" with OLE support");
 # endif
 # else
-	MSG_PUTS("\nMS-Windows 32 bit console version");
+    MSG_PUTS("\nMS-Windows 32 bit console version");
 # endif
 #endif
 #ifdef WIN16
-	MSG_PUTS("\nMS-Windows 16 bit version");
+    MSG_PUTS("\nMS-Windows 16 bit version");
 #endif
 #ifdef MSDOS
 # ifdef DJGPP
-	MSG_PUTS("\n32 bit MS-DOS version");
+    MSG_PUTS("\n32 bit MS-DOS version");
 # else
-	MSG_PUTS("\n16 bit MS-DOS version");
+    MSG_PUTS("\n16 bit MS-DOS version");
 # endif
 #endif
 #ifdef macintosh
-	MSG_PUTS("\nMacOS version");
+    MSG_PUTS("\nMacOS version");
 #endif
 #ifdef RISCOS
-	MSG_PUTS("\nRISC OS version");
-#endif
-#ifdef UNIX
-	MSG_PUTS("\nCompiled by ");
-	MSG_PUTS(compiled_user);
-	MSG_PUTS("@");
-	MSG_PUTS(compiled_sys);
-	MSG_PUTS(", with (+) or without (-):\n");
-#else
-	MSG_PUTS("\nCompiled with (+) or without (-):\n");
+    MSG_PUTS("\nRISC OS version");
 #endif
 
-	/* print all the features */
-	for (i = 0; features[i] != NULL; ++i)
+    /* Print the list of patch numbers if there is at least one. */
+    /* Print a range when patches are consecutive: "1-10, 12, 15-40, 42-45" */
+    if (included_patches[0] != 0)
+    {
+	MSG_PUTS("\nIncluded patches: ");
+	first = -1;
+	/* find last one */
+	for (i = 0; included_patches[i] != 0; ++i)
+	    ;
+	while (--i >= 0)
 	{
-	    version_msg(features[i]);
-	    if (msg_col > 0)
-		msg_putchar(' ');
+	    if (first < 0)
+		first = included_patches[i];
+	    if (i == 0 || included_patches[i - 1] != included_patches[i] + 1)
+	    {
+		MSG_PUTS(s);
+		s = ", ";
+		msg_outnum((long)first);
+		if (first != included_patches[i])
+		{
+		    MSG_PUTS("-");
+		    msg_outnum((long)included_patches[i]);
+		}
+		first = -1;
+	    }
 	}
+    }
 
-	msg_putchar('\n');
+#ifdef UNIX
+    MSG_PUTS("\nCompiled by ");
+    MSG_PUTS(compiled_user);
+    MSG_PUTS("@");
+    MSG_PUTS(compiled_sys);
+    MSG_PUTS(", with (+) or without (-):\n");
+#else
+    MSG_PUTS("\nCompiled with (+) or without (-):\n");
+#endif
+
+    /* print all the features */
+    for (i = 0; features[i] != NULL; ++i)
+    {
+	version_msg(features[i]);
+	if (msg_col > 0)
+	    msg_putchar(' ');
+    }
+
+    msg_putchar('\n');
 #ifdef SYS_VIMRC_FILE
-	version_msg("   system vimrc file: \"");
-	version_msg(SYS_VIMRC_FILE);
-	version_msg("\"\n");
+    version_msg("   system vimrc file: \"");
+    version_msg(SYS_VIMRC_FILE);
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE
-	version_msg("     user vimrc file: \"");
-	version_msg(USR_VIMRC_FILE);
-	version_msg("\"\n");
+    version_msg("     user vimrc file: \"");
+    version_msg(USR_VIMRC_FILE);
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE2
-	version_msg(" 2nd user vimrc file: \"");
-	version_msg(USR_VIMRC_FILE2);
-	version_msg("\"\n");
+    version_msg(" 2nd user vimrc file: \"");
+    version_msg(USR_VIMRC_FILE2);
+    version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE3
-	version_msg(" 3d user vimrc file: \"");
-	version_msg(USR_VIMRC_FILE3);
-	version_msg("\"\n");
+    version_msg(" 3d user vimrc file: \"");
+    version_msg(USR_VIMRC_FILE3);
+    version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE
-	version_msg("      user exrc file: \"");
-	version_msg(USR_EXRC_FILE);
-	version_msg("\"\n");
+    version_msg("      user exrc file: \"");
+    version_msg(USR_EXRC_FILE);
+    version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE2
-	version_msg("  2nd user exrc file: \"");
-	version_msg(USR_EXRC_FILE2);
-	version_msg("\"\n");
+    version_msg("  2nd user exrc file: \"");
+    version_msg(USR_EXRC_FILE2);
+    version_msg("\"\n");
 #endif
 #ifdef USE_GUI
 # ifdef SYS_GVIMRC_FILE
-	version_msg("  system gvimrc file: \"");
-	version_msg(SYS_GVIMRC_FILE);
-	MSG_PUTS("\"\n");
+    version_msg("  system gvimrc file: \"");
+    version_msg(SYS_GVIMRC_FILE);
+    MSG_PUTS("\"\n");
 # endif
-	version_msg("    user gvimrc file: \"");
-	version_msg(USR_GVIMRC_FILE);
-	version_msg("\"\n");
+    version_msg("    user gvimrc file: \"");
+    version_msg(USR_GVIMRC_FILE);
+    version_msg("\"\n");
 # ifdef USR_GVIMRC_FILE2
-	version_msg("2nd user gvimrc file: \"");
-	version_msg(USR_GVIMRC_FILE2);
-	version_msg("\"\n");
+    version_msg("2nd user gvimrc file: \"");
+    version_msg(USR_GVIMRC_FILE2);
+    version_msg("\"\n");
 # endif
 # ifdef USR_GVIMRC_FILE3
-	version_msg("3d user gvimrc file: \"");
-	version_msg(USR_GVIMRC_FILE3);
-	version_msg("\"\n");
+    version_msg("3d user gvimrc file: \"");
+    version_msg(USR_GVIMRC_FILE3);
+    version_msg("\"\n");
 # endif
 #endif
 #ifdef USE_GUI
 # ifdef SYS_MENU_FILE
-	version_msg("    system menu file: \"");
-	version_msg(SYS_MENU_FILE);
-	MSG_PUTS("\"\n");
+    version_msg("    system menu file: \"");
+    version_msg(SYS_MENU_FILE);
+    MSG_PUTS("\"\n");
 # endif
 #endif
 #ifdef HAVE_PATHDEF
-	version_msg("  fall-back for $VIM: \"");
-	version_msg((char *)default_vim_dir);
+    version_msg("  fall-back for $VIM: \"");
+    version_msg((char *)default_vim_dir);
+    MSG_PUTS("\"\n");
+    if (*default_vimruntime_dir != NUL)
+    {
+	version_msg(" and for $VIMRUNTIME: \"");
+	version_msg((char *)default_vimruntime_dir);
 	MSG_PUTS("\"\n");
-	if (*default_vimruntime_dir != NUL)
-	{
-	    version_msg(" and for $VIMRUNTIME: \"");
-	    version_msg((char *)default_vimruntime_dir);
-	    MSG_PUTS("\"\n");
-	}
-	version_msg("Compilation: ");
-	version_msg((char *)all_cflags);
-	msg_putchar('\n');
-	version_msg("Linking: ");
-	version_msg((char *)all_lflags);
+    }
+    version_msg("Compilation: ");
+    version_msg((char *)all_cflags);
+    msg_putchar('\n');
+    version_msg("Linking: ");
+    version_msg((char *)all_lflags);
 #endif
 #ifdef DEBUG
-	msg_putchar('\n');
-	version_msg("  DEBUG BUILD");
+    msg_putchar('\n');
+    version_msg("  DEBUG BUILD");
 #endif
-    }
 }
 
 /*

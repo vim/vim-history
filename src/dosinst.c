@@ -9,7 +9,7 @@
 /*
  * install.c: Minimalistic install program for Vim on MS-DOS/Windows
  *
- * Compile with Makefile.bcc or Makefile.djg.
+ * Compile with Makefile.w32, Makefile.bcc or Makefile.djg.
  */
 
 #include <io.h>
@@ -443,6 +443,30 @@ move_to_path(char *exedir)
     return exedir;	/* return dir name where exe is */
 }
 
+/*
+ * Copy a directory name from "dir" to "buf", doubling backslashes.
+ */
+    static void
+double_bs(char *dir, char *buf)
+{
+    char *d = buf;
+    char *s;
+
+    for (s = dir; *s; ++s)
+    {
+	if (*s == '\\')
+	    *d++ = '\\';
+	*d++ = *s;
+    }
+    /* when dir is not empty, it must end in a double backslash */
+    if (d > buf && d[-1] != '\\')
+    {
+	*d++ = '\\';
+	*d++ = '\\';
+    }
+    *d = 0;
+}
+
 #define TABLE_SIZE(s)	sizeof(s) / sizeof(char *)
 
     int
@@ -481,6 +505,8 @@ main(int argc, char **argv)
     int		i;
     char	*p;
     int		vimdirend;
+    int		need_vimvar = 1;	/* need to set $VIM */
+    int		has_gvim = 0;		/* gvim.exe exists */
 
 #ifdef DJGPP
     /*
@@ -558,9 +584,12 @@ main(int argc, char **argv)
     /*
      * Check if vim.exe or gvim.exe is in the current directory.
      */
-    if ((fd = fopen("vim.exe", "r")) != NULL)
+    if ((fd = fopen("gvim.exe", "r")) != NULL)
+    {
 	fclose(fd);
-    else if ((fd = fopen("gvim.exe", "r")) != NULL)
+	has_gvim = 1;
+    }
+    else if ((fd = fopen("vim.exe", "r")) != NULL)
 	fclose(fd);
     else
     {
@@ -657,23 +686,6 @@ main(int argc, char **argv)
     }
 
     /*
-     * Set $VIM, if it hasn't been set yet.
-     */
-    if (getenv("VIM") == NULL)
-    {
-	printf("\nI can append a command to c:\\autoexec.bat to set $VIM.\n");
-	printf("(this will not work if c:\\autoexec.bat contains sections)\n");
-	printf("Do you want me to append to your c:\\autoexec.bat? (Y/N) ");
-	if (!confirm())
-	    printf("Skipping appending to c:\\autoexec.bat\n");
-	else
-	{
-	    vimrc[vimdirend - 1] = NUL;
-	    append_autoexec("set VIM=%s\n", vimrc);
-	}
-    }
-
-    /*
      * Set PATH or move executables, unless it's already in the $PATH.
      */
     mch_chdir("C:\\");	/* avoid looking in the "vimrdir" directory */
@@ -693,6 +705,7 @@ main(int argc, char **argv)
 	switch (exe)
 	{
 	    case 1: append_autoexec("set PATH=%%PATH%%;%s\n", vimdir);
+		    need_vimvar = 0;
 		    break;
 
 	    case 2: exedir = move_to_path(vimdir);
@@ -705,12 +718,32 @@ main(int argc, char **argv)
     }
 
     /*
+     * Set $VIM, if it hasn't been set yet.
+     */
+    if (need_vimvar && getenv("VIM") == NULL)
+    {
+	printf("\nI can append a command to c:\\autoexec.bat to set $VIM.\n");
+	printf("(this will not work if c:\\autoexec.bat contains sections)\n");
+	printf("Do you want me to append to your c:\\autoexec.bat? (Y/N) ");
+	if (!confirm())
+	    printf("Skipping appending to c:\\autoexec.bat\n");
+	else
+	{
+	    vimrc[vimdirend - 1] = NUL;
+	    append_autoexec("set VIM=%s\n", vimrc);
+	}
+    }
+
+    /*
      * Add some entries to the registry to add "Edit with Vim" to the context
      * menu.
+     * Only do this when gvim.exe was found and regedit.exe exists.
      */
+    if (has_gvim
 #ifndef WIN32
-    if (searchpath("regedit.exe") != NULL)
+	    && searchpath("regedit.exe") != NULL
 #endif
+       )
     {
 	printf("\nI can install an entry in the popup menu for the right\n");
 	printf("mouse button, so that you can edit any file with Vim.\n");
@@ -726,35 +759,30 @@ main(int argc, char **argv)
 	    else
 	    {
 		char	buf[BUFSIZE];
-		char	*s, *d;
 
-		/* double the backslashes in the directory */
-		d = buf;
-		for (s = exedir; *s; ++s)
-		{
-		    if (*s == '\\')
-			*d++ = '\\';
-		    *d++ = *s;
-		}
-		/* when dir is not empty, it must end in a double backslash */
-		if (d > buf && d[-1] != '\\')
-		{
-		    *d++ = '\\';
-		    *d++ = '\\';
-		}
-		*d = 0;
+		/* The registry entries for the "Edit with Vim" menu */
 		fprintf(fd, "REGEDIT4\n\n");
 		fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shell\\Vim]\n");
 		fprintf(fd, "@=\"Edit with &Vim\"\n\n");
 		fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shell\\Vim\\command]\n");
-		fprintf(fd, "@=\"%sgvim.exe \\\"%%L\\\"\"\n", buf);
+		double_bs(exedir, buf); /* double the backslashes */
+		fprintf(fd, "@=\"%sgvim.exe \\\"%%L\\\"\"\n\n", buf);
+
+		/* The registry entries for uninstalling the menu */
+		fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\vim %s]\n", VIM_VERSION_SHORT);
+		fprintf(fd, "\"DisplayName\"=\"Vim %s: Edit with Vim popup menu entry\"\n", VIM_VERSION_SHORT);
+		double_bs(vimdir, buf); /* double the backslashes */
+		fprintf(fd, "\"UninstallString\"=\"%suninstal.exe\"\n", buf);
+
 		fclose(fd);
 		system("regedit vim.reg");
 		/* Can't delete the file, because regedit detaches itself,
-		 * thus we don't know when it is finished */
-		/* unlink("vim.reg"); */
+		 * thus we don't know when it is finished. */
+
 		printf("The registry editor has been started to install Vim in the popup menu.\n");
-		printf("If you want to remove it, see \":help win32-popup-menu\" in Vim.\n");
+		printf("Hit the \"Yes\" button in the dialog to confirm this.\n\n");
+		printf("Use uninstal.exe if you want to remove it again.\n");
+		printf("Also see \":help win32-popup-menu\" in Vim.\n");
 	    }
 	}
     }

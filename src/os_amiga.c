@@ -1047,18 +1047,17 @@ dos_packet(pid, action, arg)
  */
     int
 mch_call_shell(cmd, options)
-    char_u  *cmd;
-    int	    options;	    /* SHELL_FILTER if called by do_filter() */
-			    /* SHELL_COOKED if term needs cooked mode */
+    char_u	*cmd;
+    int		options;	/* SHELL_*, see vim.h */
 {
-    BPTR    mydir;
-    int	    x;
+    BPTR	mydir;
+    int		x;
 #ifdef AZTEC_C
-    int	    use_execute;
-    char_u  *shellcmd = NULL;
-    char_u  *shellarg;
+    int		use_execute;
+    char_u	*shellcmd = NULL;
+    char_u	*shellarg;
 #endif
-    int	    retval = 0;
+    int		retval = 0;
 
     if (close_win)
     {
@@ -1123,7 +1122,7 @@ mch_call_shell(cmd, options)
     {
 	if (x = IoErr())
 	{
-	    if (!expand_interactively)
+	    if (!(options & SHELL_SILENT))
 	    {
 		msg_putchar('\n');
 		msg_outnum((long)x);
@@ -1133,7 +1132,7 @@ mch_call_shell(cmd, options)
 	}
     }
 #else	/* else part is for AZTEC_C */
-    if (p_st >= 4 || (p_st >= 2 && options != SHELL_FILTER))
+    if (p_st >= 4 || (p_st >= 2 && !(options & SHELL_FILTER)))
 	use_execute = 1;
     else
 	use_execute = 0;
@@ -1225,7 +1224,7 @@ mch_call_shell(cmd, options)
 	    x = wait();
 	if (x)
 	{
-	    if (!expand_interactively)
+	    if (!(options & SHELL_SILENT))
 	    {
 		msg_putchar('\n');
 		msg_outnum((long)x);
@@ -1302,7 +1301,7 @@ Chk_Abort(void)
 mch_expandpath(gap, pat, flags)
     struct growarray	*gap;
     char_u		*pat;
-    int			flags;
+    int			flags;		/* EW_* flags */
 {
     struct AnchorPath	*Anchor;
     LONG		Result;

@@ -19,9 +19,7 @@
  */
 
 #define WIN32_FIND_REPLACE	/* include code for find/replace dialog */
-#ifdef WANT_MENU
 #define MENUHINTS		/* show menu hints in command line */
-#endif
 
 #include "vim.h"
 #include "version.h"	/* used by dialog box routine for default title */
@@ -671,34 +669,34 @@ _OnDropFiles(
 
     /*
      * Handle dropping a directory on Vim.
+     * Change to that directory and don't open any file.
      */
-    if (cFiles == 1)
+    if (cFiles == 1 && mch_isdir(fnames[0]))
     {
-	if (mch_isdir(fnames[0]))
+	if (mch_chdir(fnames[0]) == 0)
 	{
-	    if (mch_chdir(fnames[0]) == 0)
-	    {
-		vim_free(fnames[0]);
-		fnames[0] = NULL;
-		redo_dirs = TRUE;
-	    }
+	    smsg((char_u *)":cd %s", fnames[0]);
+	    vim_free(fnames[0]);
+	    fnames[0] = NULL;
+	    redo_dirs = TRUE;
 	}
     }
 
     DragFinish(hDrop);
 
-    if (GetKeyState(VK_SHIFT) & 0x8000)
+    if (fnames[0] != NULL)
     {
 	/* Shift held down, change to first file's directory */
-	if (vim_chdirfile(fnames[0]) == 0)
-	    redo_dirs = TRUE;
+	if (GetKeyState(VK_SHIFT) & 0x8000)
+	    if (vim_chdirfile(fnames[0]) == 0)
+		redo_dirs = TRUE;
+
+	/* Handle the drop, :edit or :split to get to the file */
+	handle_drop(cFiles, fnames, ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
     }
 
-    /* Handle the drop, :edit or :split to get to the file */
-    handle_drop(cFiles, fnames, ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
-
     if (redo_dirs)
-	shorten_fnames();
+	shorten_fnames(TRUE);
 
     /* Update the screen display */
     update_screen(NOT_VALID);
@@ -1698,7 +1696,7 @@ _WndProc(
 	}
 	break;
 #endif
-#ifdef MENUHINTS
+#if defined(MENUHINTS) && defined(WANT_MENU)
     case WM_MENUSELECT:
 	if (((UINT) HIWORD(wParam)
 		    & (0xffff ^ (MF_MOUSESELECT + MF_BITMAP + MF_POPUP)))
@@ -4179,7 +4177,12 @@ gui_mch_destroy_menu(VimMenu *menu)
     else
 #endif
     {
-	RemoveMenu(s_menuBar, menu->id, MF_BYCOMMAND);
+	if (menu->parent != NULL
+		&& popup_menu(menu->parent->dname)
+		&& menu->parent->submenu_id != NULL)
+	    RemoveMenu(menu->parent->submenu_id, menu->id, MF_BYCOMMAND);
+	else
+	    RemoveMenu(s_menuBar, menu->id, MF_BYCOMMAND);
 	if (menu->submenu_id != NULL)
 	    DestroyMenu(menu->submenu_id);
 	if (IsWindow(menu->tearoff_handle))

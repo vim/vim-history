@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.4.  Last change: 1999 Jul 20
+*change.txt*    For Vim version 5.5.  Last change: 1999 Sep 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -124,7 +124,7 @@ option is on, these commands insert two spaces after a '.', '!' or '?' (but if
 
 
 ==============================================================================
-2. Delete and insert					*delete-insert*
+2. Delete and insert				*delete-insert* *replacing*
 
 							*R*
 R			Enter Replace mode: Each character you type replaces
@@ -573,8 +573,8 @@ magic	nomagic	  action    ~
       \U	  following characters made uppercase
       \l	  next character made lowercase
       \L	  following characters made lowercase
-      \e	  end of /u, /U, /l and /L (NOTE: not <Esc>!)
-      \E	  end of /u, /U, /l and /L
+      \e	  end of \u, \U, \l and \L (NOTE: not <Esc>!)
+      \E	  end of \u, \U, \l and \L
       <CR>	  split line in two at this point
       \r	  idem
   CTRL-V <CR>	  insert a carriage-return (CTRL-M)
@@ -631,6 +631,8 @@ either the first or second pattern in parentheses did not match, so either
 			change.  Careful: This command modifies any <Tab>
 			characters inside of strings in a C program.  Use
 			"\t" to avoid this (that's a good habit anyway).
+			":retab!" may also change a sequence of spaces by
+			<Tab> characters, which can mess up a printf().
 			{not in Vi}
 			Not available when |+ex_extra| feature was disabled at
 			compile time.
@@ -1051,7 +1053,7 @@ Examples:
 
 By default, "b:#" is included.  This means that a line that starts with
 "#include" is not recognized as a comment line.  But a line that starts with
-"# define" is recognized.  This is a compromize.
+"# define" is recognized.  This is a compromise.
 
 Often the alignment can be changed from right alignment to a left alignment
 with an additional space.  For example, for Javadoc comments, this can be

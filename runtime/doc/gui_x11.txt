@@ -1,11 +1,11 @@
-*gui_x11.txt*   For Vim version 5.4.  Last change: 1999 Jul 21
+*gui_x11.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 Vim's Graphical User Interface				*gui-x11* *GUI-X11*
-
+							*Athena* *Motif*
 1. Starting the X11 GUI		|gui-x11-start|
 2. GUI Resources		|gui-resources|
 3. Shell Commands		|gui-pty|
@@ -242,7 +242,7 @@ For "mwm" (Motif window manager) the line would be:
 >  Mwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
 
 ==============================================================================
-5. GTK version						*gui-gtk*
+5. GTK version						*gui-gtk* *GTK+* *GTK*
 
 The GTK version of the GUI works a little bit different.
 
@@ -286,7 +286,7 @@ Example, which sets the tooltip colors to black on light-yellow:
 >		bg[NORMAL] = "#ffffcc"
 >		fg[NORMAL] = "#000000"
 >	}
->	
+
 >	widget "gtk-tooltips*"          style "tooltips"
 
 Write this in the file ~/.gtkrc and it will be used by GTK.  Don't forget to

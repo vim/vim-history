@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.4.  Last change: 1999 Jun 10
+*various.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -213,10 +213,10 @@ ga			Print the ascii value of the character under the
 *+mksession*		|:mksession|
 *+modify_fname*		|filename-modifiers|
 *+mouse*		Mouse handling |mouse-using|
-*+mouse_dec*		Unix only: Dec terminal mouse handling
-*+mouse_gpm*		Unix only: Linux console mouse handling.
-*+mouse_netterm*	Unix only: netterm mouse handling
-*+mouse_xterm*		Unix only: xterm mouse handling
+*+mouse_dec*		Unix only: Dec terminal mouse handling |dec-mouse|
+*+mouse_gpm*		Unix only: Linux console mouse handling |gpm-mouse|
+*+mouse_netterm*	Unix only: netterm mouse handling |netterm-mouse|
+*+mouse_xterm*		Unix only: xterm mouse handling |xterm-mouse|
 *+multi_byte*		Korean and other languages |multibyte|
 *+multi_byte_ime*	Win32 input method for multi_byte characters.
 *+ole*			Win32 GUI only: |ole-interface|
@@ -230,7 +230,7 @@ ga			Print the ascii value of the character under the
 *+smartindent*		|'smartindent'|
 *+sniff*		SniFF interface (no docs available...)
 *+statusline*		Options 'statusline', 'rulerformat' and special
-			formats of 'titlestring' and 'iconstring'.
+			formats of 'titlestring' and 'iconstring'
 *+syntax*		Syntax highlighting |syntax|
 *+system()*		Unix only: opposite of |+fork|
 *+tag_binary*		binary searching in tags file |tag-binary-search|
@@ -331,7 +331,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			read-only mode.  If there is a help window open
 			already, use that one.  {not in Vi}
 
-								*subject*
+								*{subject}*
 :h[elp] {subject}	Like ":help", additionally jump to the tag {subject}.
 			{subject} can include wildcards like "*", "?" and
 			"[a-z]":

@@ -16,7 +16,7 @@ CC = gcc
 ###########################################################################
 
 INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_msdos.h structs.h
-CFLAGS = -O4 -DMSDOS -Iproto $(DEFINES) -Wall -Dinterrupt= -Dfar= -DMAXMEM=512 -D_NAIVE_DOS_REGS
+CFLAGS = -O2 -DMSDOS -Iproto $(DEFINES) -Wall -Dinterrupt= -Dfar= -DMAXMEM=512 -D_NAIVE_DOS_REGS
 
 OBJ = \
 	obj/buffer.o \
@@ -54,7 +54,7 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
@@ -80,10 +80,11 @@ ctags:
 
 clean:
 	-del obj\*.o
-	-del *.o
-	-del *.exe
-	-del *.~
-	-del *~
+	-del vim.exe
+	-del install.exe
+	-del ctags\ctags.exe
+	-del xxd\xxd.exe
+	-del testdir\*.out
 
 test:
 	cd testdir

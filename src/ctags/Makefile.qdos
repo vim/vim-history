@@ -30,23 +30,16 @@ LIBS =
 
 # Target dependencies:
 
-OBJECTS = eiffel.o entry.o fortran.o get.o keyword.o main.o\
- options.o parse.o read.o sort.o vstring.o qdos.o
+HEADERS	 = args.h ctags.h debug.h entry.h general.h get.h \
+ keyword.h main.h options.h parse.h read.h sort.h strlist.h vstring.h
+
+OBJECTS = args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
+ options.o parse.o read.o sort.o strlist.o vstring.o qdos.o
 
 $(EXEC) : $(OBJECTS)
     $(LD) -o$(EXEC) $(LDFLAGS) $(OBJECTS) $(LIBS)
 
-eiffel.o  : general.h debug.h entry.h keyword.h main.h options.h parse.h read.h vstring.h
-entry.o   : general.h debug.h entry.h main.h options.h read.h
-fortran.o : general.h debug.h entry.h keyword.h main.h options.h parse.h read.h vstring.h
-get.o     : general.h debug.h entry.h get.h main.h options.h read.h vstring.h
-keyword.o : general.h debug.h keyword.h main.h options.h
-main.o    : general.h ctags.h debug.h entry.h keyword.h main.h options.h parse.h read.h sort.h vstring.h
-options.o : general.h ctags.h debug.h main.h options.h
-parse.o   : general.h ctags.h debug.h entry.h get.h keyword.h main.h options.h parse.h read.h
-read.o    : general.h ctags.h debug.h entry.h main.h options.h read.h
-sort.o    : general.h debug.h entry.h main.h options.h read.h sort.h
-vstring.o : general.h debug.h main.h vstring.h
+$(OBJECTS): $(HEADERS)
 
 # Construction rules:
 

@@ -1,10 +1,10 @@
-*if_python.txt* For Vim version 5.4.  Last change: 1999 Jun 07
+*if_python.txt* For Vim version 5.5.  Last change: 1999 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
 
 
-The Python Interface to Vim				*python*
+The Python Interface to Vim				*python* *Python*
 
 1. Commands			|python-commands|
 2. The vim module		|python-vim|

@@ -339,10 +339,12 @@ typedef unsigned long	long_u;
 
 #define WILD_LIST_NOTFOUND	1
 #define WILD_HOME_REPLACE	2
-#define WILD_USE_NL		4	/* separate names with '\n' */
-#define WILD_NO_BEEP		8	/* don't beep for multiple matches */
-#define WILD_ADD_SLASH		16	/* add slash after directory name */
-#define WILD_KEEP_ALL		32	/* keep all matches */
+#define WILD_USE_NL		4
+#define WILD_NO_BEEP		8
+#define WILD_ADD_SLASH		16
+#define WILD_KEEP_ALL		32
+#define WILD_SILENT		64
+#define WILD_ESCAPE		128
 
 /* Flags for expand_wildcards() */
 #define EW_DIR		1	/* include directory names */
@@ -350,6 +352,10 @@ typedef unsigned long	long_u;
 #define EW_NOTFOUND	4	/* include not found names */
 #define EW_ADDSLASH	8	/* append slash to directory name */
 #define EW_KEEPALL	16	/* keep all matches */
+#define EW_SILENT	32	/* don't print "1 returned" from shell */
+/* Note: mostly EW_NOTFOUND and EW_SILENT are mutually exclusive: EW_NOTFOUND
+ * is used when executing commands and EW_SILENT for interactive expanding. */
+
 #ifdef NO_EXPANDPATH
 # define gen_expand_wildcards mch_expand_wildcards
 #endif
@@ -403,6 +409,7 @@ typedef unsigned long	long_u;
 #define SHELL_EXPAND	2	/* expanding wildcards */
 #define SHELL_COOKED	4	/* set term to cooked mode */
 #define SHELL_DOOUT	8	/* redirecting output */
+#define SHELL_SILENT	16	/* don't print error returned by command */
 
 /* Values for readfile() flags */
 #define READ_NEW	0x01	/* read a file into a new buffer */
@@ -878,6 +885,10 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define MOUSE_SHIFT	0x04
 # define MOUSE_ALT	0x08
 # define MOUSE_CTRL	0x10
+
+/* mouse buttons that are handled like a key press */
+# define MOUSE_4	0x100	/* scroll wheel down */
+# define MOUSE_5	0x200	/* scroll wheel up */
 
 /* 0x20 is reserved by xterm */
 # define MOUSE_DRAG_XTERM   0x40

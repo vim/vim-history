@@ -227,7 +227,7 @@ GUI_OBJ = \
 GUI_LIB = \
 	oldnames.lib kernel32.lib gdi32.lib $(IME_LIB) \
 	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
-	/machine:I386 /nodefaultlib
+	/machine:$(CPU) /nodefaultlib
 !else
 SUBSYSTEM = console
 !endif
@@ -266,7 +266,7 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-all:	$(VIM) vimrun.exe ctags/ctags.exe xxd/xxd.exe
+all:	$(VIM) vimrun.exe install.exe uninstal.exe ctags/ctags.exe xxd/xxd.exe
 
 $(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
 	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
@@ -280,7 +280,11 @@ $(OUTDIR):
 
 install.exe: dosinst.c
 	$(CC) -DWIN32 dosinst.c kernel32.lib shell32.lib
+	- del install.exe
 	ren dosinst.exe install.exe
+
+uninstal.exe: uninstal.c
+	$(CC) -DWIN32 uninstal.c advapi32.lib
 
 vimrun.exe: vimrun.c
 	$(CC) vimrun.c
@@ -303,13 +307,23 @@ notags:
 	- del tags
 
 clean:
+	- del if_perl.c
 	- $(DEL_TREE) $(OUTDIR)
 	- del $(VIM).exe
 	- del $(VIM).ilk
 	- del $(VIM).pdb
 	- del $(VIM).map
 	- del $(VIM).ncb
-	- del if_perl.c
+	- del vimrun.exe
+	- del install.exe
+	- del uninstal.exe
+	cd ctags
+	$(MAKE) -f Makefile.w32 clean
+	cd ..
+	cd xxd
+	$(MAKE) -f Makefile.w32 clean
+	cd ..
+	-del testdir\*.out
 
 test:
 	cd testdir

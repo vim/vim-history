@@ -531,8 +531,9 @@ decode_key_event(
     else
     {
 	*pch = (i > 0)	? pker->AChar  :  NUL;
-	/* Interpret the ALT key as making the key META */
-	if ((nModifs & ALT) != 0)
+	/* Interpret the ALT key as making the key META, but only when not
+	 * combined with CTRL (which is ALTGR). */
+	if ((nModifs & ALT) != 0 && (nModifs & CTRL) == 0)
 	    *pch |= 0x80;
     }
 
@@ -2276,6 +2277,7 @@ mch_system(char *cmd, int options)
     STARTUPINFO		si;
     PROCESS_INFORMATION pi;
     DWORD		ret = 0;
+    HWND		hwnd = GetFocus();
 
     si.cb = sizeof(si);
     si.lpReserved = NULL;
@@ -2383,6 +2385,9 @@ mch_system(char *cmd, int options)
 	mch_close_console(!(options & SHELL_DOOUT), ret);
 #endif
 
+    /* Try to get input focus back.  Doesn't always work though. */
+    SetFocus(hwnd);
+
     return ret;
 }
 #else
@@ -2397,8 +2402,7 @@ mch_system(char *cmd, int options)
     int
 mch_call_shell(
     char_u *cmd,
-    int options)	    /* SHELL_FILTER if called by do_filter() */
-			    /* SHELL_COOKED if term needs cooked mode */
+    int options)	/* SHELL_*, see vim.h */
 {
     int	    x;
 #ifndef USE_GUI_WIN32
@@ -2528,11 +2532,11 @@ mch_call_shell(
 
     settmode(TMODE_RAW);	    /* set to raw mode */
 
+    if (x && !(options & SHELL_SILENT)
 #ifdef USE_GUI_WIN32
-    if (x && !expand_interactively && !fUseConsole)
-#else
-    if (x && !expand_interactively)
+	    && !fUseConsole
 #endif
+       )
     {
 	smsg("%d returned", x);
 	msg_putchar('\n');
@@ -2601,7 +2605,7 @@ win32_expandpath(
     struct growarray	*gap,
     char_u		*path,
     char_u		*wildc,
-    int			flags)
+    int			flags)		/* EW_* flags */
 {
     char		*buf;
     char		*p, *s, *e;
@@ -2664,7 +2668,7 @@ win32_expandpath(
     }
 #endif
 
-    start_dot_ok = (buf[0] == '.' || buf[0] == '*');
+    start_dot_ok = (s[0] == '.' || s[0] == '*');
 
     /* If we are expanding wildcards, we try both files and directories */
     if ((hFind = FindFirstFile(buf, &fb)) != INVALID_HANDLE_VALUE)
@@ -2719,7 +2723,7 @@ win32_expandpath(
 mch_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags)
+    int			flags)		/* EW_* flags */
 {
     return win32_expandpath(gap, path, path, flags);
 }

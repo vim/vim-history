@@ -334,8 +334,8 @@ VIM(1)                                                     VIM(1)
 VIM(1)                                                     VIM(1)
 
 
-       -x          Filter  read  and written files through crypt.
-                   Not implemented yet.
+       -x          Use  encryption  when  writing  files.    Will
+                   prompt for a crypt key.
 
        -Z          Restricted mode.  Works  like  the  executable
                    starts with "r".

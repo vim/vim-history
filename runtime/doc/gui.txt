@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 5.4.  Last change: 1999 Jul 16
+*gui.txt*       For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -231,6 +231,8 @@ compatible, since it uses the CTRL-V, CTRL-X and CTRL-C keys.  If you don't
 mind, use this command:
 >	:so $VIMRUNTIME/mswin.vim
 
+For scrolling with a wheel on a mouse, see |scroll-mouse-wheel|.
+
 
 3.1 Moving Cursor with Mouse				*gui-mouse-move*
 
@@ -361,7 +363,12 @@ selection (contents of the clipboard):
 >	"*p
 
 Note that when pasting text from one Vim into another separate Vim, the type
-of selection (character, line, or block) will also be copied.
+of selection (character, line, or block) will also be copied.  For other
+applications the type is always character.
+
+When the "unnamed" string is included in the 'clipboard' option, the unnamed
+register is the same as the "* register.  Thus you can yank to and paste the
+selection without prepending "* to commands.
 
 ==============================================================================
 5. Menus						*menus*
@@ -379,7 +386,12 @@ The default menus are read from the file "$VIMRUNTIME/menu.vim".  See
 |$VIMRUNTIME| for where the path comes from.  You can set up your own menus.
 Starting off with the default set is a good idea.  You can add more items, or,
 if you don't like the defaults at all, start with removing all menus
-|:unmenu-all|.
+|:unmenu-all|.  You can also avoid the default menus being loaded by adding
+this line to your .vimrc file (NOT your .gvimrc file!):
+>	let did_install_default_menus = 1
+If you also want to avoid the Syntax menu:
+>	let did_install_syntax_menu = 1
+
 The contents of the buffer menu can be controlled by setting the variables
 bufmenu_fullpath and bufmenu_maxlen. The former specifies full path of files
 to be used in the menu if set to 1. The latter specifies the maximum length of
@@ -676,7 +688,7 @@ The tip is defined like this:
 
 When a tip is defined for a menu item, it appears in the command-line area
 when the mouse is over that item, much like a standard Windows menu hint in
-the status bar. (Except when Vim is in command-line mode, when of course
+the status bar. (Except when Vim is in Command-line mode, when of course
 nothing is displayed.)
 When a tip is defined for a toolbar item, it appears as a tooltip when the
 mouse pauses over that button, in the usual fashion.

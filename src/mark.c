@@ -758,8 +758,7 @@ read_viminfo_filemark(line, fp, force)
 	    str = skipwhite(str);
 	    namedfm[idx].mark.col = getdigits(&str);
 	    str = skipwhite(str);
-	    viminfo_readstring(line);
-	    namedfm_names[idx] = vim_strsave(str);
+	    namedfm_names[idx] = viminfo_readstring(str, fp);
 	}
     }
     return vim_fgets(line, LSIZE, fp);

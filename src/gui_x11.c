@@ -792,6 +792,8 @@ gui_x11_mouse_cb(w, dud, event, dum)
 		case Button1:	button = MOUSE_LEFT;	break;
 		case Button2:	button = MOUSE_MIDDLE;	break;
 		case Button3:	button = MOUSE_RIGHT;	break;
+		case Button4:	button = MOUSE_4;	break;
+		case Button5:	button = MOUSE_5;	break;
 		default:
 		    return;	/* Unknown button */
 	    }

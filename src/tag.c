@@ -1123,6 +1123,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 			&& !use_cscope
 #endif
 				       )
+		{
 #ifdef EMACS_TAGS
 		    if (incstack_idx)	/* this was an included file */
 		    {
@@ -1137,6 +1138,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 		    else
 #endif
 			break;			    /* end of file */
+		}
 	    }
 line_read_in:
 
@@ -2262,8 +2264,9 @@ jumpto_tag(lbuf, forceit)
     /*
      * expand file name (for environment variables)
      */
-    expanded_fname = ExpandOne((char_u *)fname, NULL, WILD_LIST_NOTFOUND,
-							    WILD_EXPAND_FREE);
+    expand_context = EXPAND_FILES;
+    expanded_fname = ExpandOne((char_u *)fname, NULL,
+			    WILD_LIST_NOTFOUND|WILD_SILENT, WILD_EXPAND_FREE);
     if (expanded_fname != NULL)
 	fname = expanded_fname;
 

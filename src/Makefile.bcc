@@ -125,7 +125,8 @@ cl.lib
 
 install.exe: dosinst.c
 	$(CC) dosinst.c
-	copy dosinst.exe install.exe
+	-del install.exe
+	ren dosinst.exe install.exe
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
@@ -140,12 +141,18 @@ xxd/xxd.exe: xxd/xxd.c
 	cd ..
 
 
-# cleaning up
+# cleaning up: Delete all generated files
 clean:
 	-del *.obj
-	-del *.exe
-	-del *~
-	-del *.*~
+	-del vim.exe
+	-del install.exe
+	-del ctags\*.obj
+	-del ctags\ctags.exe
+	-del ctags\respbcc
+	-del xxd\*.obj
+	-del xxd\xxd.exe
+	-del vim.cfg
+	-del testdir\*.out
 
 #		*Individual File Dependencies*
 buffer.obj: buffer.c

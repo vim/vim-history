@@ -193,6 +193,7 @@ static void f_match __ARGS((VAR argvars, VAR retvar));
 static void f_matchend __ARGS((VAR argvars, VAR retvar));
 static void f_matchstr __ARGS((VAR argvars, VAR retvar));
 static void f_nr2char __ARGS((VAR argvars, VAR retvar));
+static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
@@ -1866,6 +1867,7 @@ static struct fst
     {"matchend",	2, 2, f_matchend},
     {"matchstr",	2, 2, f_matchstr},
     {"nr2char",		1, 1, f_nr2char},
+    {"rename",		2, 2, f_rename},
     {"setline",		2, 2, f_setline},
 #ifdef HAVE_STRFTIME
     {"strftime",	1, 2, f_strftime},
@@ -2143,12 +2145,18 @@ f_append(argvars, retvar)
     if (lnum >= 0 && lnum <= curbuf->b_ml.ml_line_count
 	    && u_save(lnum, lnum + 1) == OK)
     {
+#ifdef SYNTAX_HL
+	/* recompute syntax hl., starting with lnum */
+	syn_changed(lnum + 1);
+#endif
+	mark_adjust(lnum + 1, (linenr_t)MAXLNUM, 1L, 0L);
 	ml_append(lnum, get_var_string(&argvars[1]), (colnr_t)0, FALSE);
 	if (curwin->w_cursor.lnum > lnum)
 	{
 	    ++curwin->w_cursor.lnum;
 	    changed_line_abv_curs();
 	}
+	changed();
 	update_curbuf(NOT_VALID);
 	retvar->var_val.var_number = 0;
     }
@@ -2601,7 +2609,7 @@ f_expand(argvars, retvar)
     char_u	*s;
     int		len;
     char_u	*errormsg;
-    int		flags = WILD_LIST_NOTFOUND|WILD_USE_NL;
+    int		flags = WILD_SILENT|WILD_USE_NL;
 
     retvar->var_type = VAR_STRING;
     s = get_var_string(&argvars[0]);
@@ -2613,8 +2621,11 @@ f_expand(argvars, retvar)
     }
     else
     {
+	/* When the optional second argument is non-zero, don't remove matches
+	 * for 'suffixes' and 'wildignore' */
 	if (argvars[1].var_type != VAR_UNKNOWN && get_var_number(&argvars[1]))
 	    flags |= WILD_KEEP_ALL;
+	expand_context = EXPAND_FILES;
 	retvar->var_val.var_string = ExpandOne(s, NULL, flags, WILD_ALL);
     }
 }
@@ -2787,9 +2798,10 @@ f_glob(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    expand_context = EXPAND_FILES;
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = ExpandOne(get_var_string(&argvars[0]),
-						 NULL, WILD_USE_NL, WILD_ALL);
+				     NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
 }
 
 /*
@@ -3042,7 +3054,8 @@ f_has(argvars, retvar)
 	"title",
 #endif
 #ifdef USER_COMMANDS
-	"user-commands",
+	"user-commands",    /* was accidentally included in 5.4 */
+	"user_commands",
 #endif
 #ifdef VIMINFO
 	"viminfo",
@@ -3152,7 +3165,7 @@ f_histdel(argvars, retvar)
 
     if (argvars[1].var_type == VAR_UNKNOWN)
 	/* only one argument: clear entire history */
-	n = clear_history(get_histtype(get_var_string(&argvars[0])));
+	n = clr_history(get_histtype(get_var_string(&argvars[0])));
     else if (argvars[1].var_type == VAR_NUMBER)
 	/* index given: remove that entry */
 	n = del_history_idx(get_histtype(get_var_string(&argvars[0])),
@@ -3355,10 +3368,10 @@ f_line2byte(argvars, retvar)
 #ifndef BYTE_OFFSET
     retvar->var_val.var_number = -1;
 #else
-    linenr_t	lnum = 0;
+    linenr_t	lnum;
 
     lnum = get_var_number(&argvars[0]);
-    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
+    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count + 1)
 	retvar->var_val.var_number = -1;
     else
 	retvar->var_val.var_number = ml_find_line_or_offset(curbuf, lnum, NULL);
@@ -3538,6 +3551,20 @@ f_nr2char(argvars, retvar)
     buf[0] = (char_u)get_var_number(&argvars[0]);
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = vim_strnsave(buf, 1);
+}
+
+/*
+ * "rename({from}, {to})" function
+ */
+    static void
+f_rename(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	buf[NUMBUFLEN];
+
+    retvar->var_val.var_number = vim_rename(get_var_string(&argvars[0]),
+					get_var_string_buf(&argvars[1], buf));
 }
 
 /*
@@ -3805,7 +3832,7 @@ f_system(argvars, retvar)
 {
     char_u	*p;
 
-    p = get_cmd_output(get_var_string(&argvars[0]));
+    p = get_cmd_output(get_var_string(&argvars[0]), SHELL_SILENT);
 #ifdef USE_CR
     /* translate <CR> into <NL> */
     if (p != NULL)
@@ -5280,25 +5307,27 @@ read_viminfo_varlist(line, fp, writing)
 {
     char_u	*tab;
     int		is_string = FALSE;
-    VAR		varp;
+    VAR		varp = NULL;
+    char_u	*val;
 
     if (!writing && (find_viminfo_parameter('!') != NULL))
     {
 	tab = vim_strchr(line + 1, '\t');
 	if (tab != NULL)
 	{
-	    *tab++ = '\0';
-	    if (*tab == 'S') /*string var*/
+	    *tab++ = '\0';	/* isolate the variable name */
+	    if (*tab == 'S')	/* string var */
 		is_string = TRUE;
 
 	    tab = vim_strchr(tab, '\t');
 	    if (tab != NULL)
 	    {
-		/* set variable */
+		/* create a nameless variable to hold the value */
 		if (is_string)
 		{
-		    viminfo_readstring(tab + 1);
-		    set_internal_string_var(line + 1, tab + 1);
+		    val = viminfo_readstring(tab + 1, fp);
+		    if (val != NULL)
+			varp = alloc_string_var(val);
 		}
 		else
 		{
@@ -5306,10 +5335,14 @@ read_viminfo_varlist(line, fp, writing)
 		    if (varp != NULL)
 		    {
 			varp->var_type = VAR_NUMBER;
-			varp->var_val.var_number = atol((char *)tab);
-			set_var(line + 1, varp);
-			free_var(varp);
+			varp->var_val.var_number = atol((char *)tab + 1);
 		    }
+		}
+		/* assign the value to the variable */
+		if (varp != NULL)
+		{
+		    set_var(line + 1, varp);
+		    free_var(varp);
 		}
 	    }
 	}

@@ -1,10 +1,10 @@
-*digraph.txt*   For Vim version 5.4.  Last change: 1998 Apr 15
+*digraph.txt*   For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Digraphs						*digraphs*
+Digraphs						*digraphs* *Digraphs*
 
 Digraphs are used to enter characters that normally cannot be entered by
 an ordinary keyboard.  These are mostly accented characters which have the
@@ -61,7 +61,7 @@ For CTRL-K, there is one general digraph: CTRL-K <Space> {char} will enter
 {char} with the highest bit set.  You can use this to enter meta-characters.
 
 The <Esc> character cannot be part of a digraph.  When hitting <Esc>, Vim
-stops digraph entry and ends insert mode or command-line mode, just like
+stops digraph entry and ends Insert mode or Command-line mode, just like
 hitting an <Esc> out of digraph context.
 
 If you accidentally typed an 'a' that should be an 'e', you will type 'a' <BS>

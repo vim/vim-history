@@ -29,6 +29,12 @@ MIN=0
 CPU=i686
 # set to same choices as 'CPU', but will prevent running on 'lower' cpus:
 ARCH=i386
+# uncomment 'PERL' if you want a perl-enabled version
+# Not working just yet.  I'm not sure that the ActiveState perl port can be made
+# to work if you aren't useing VisualC.  Shame...
+#PERL=perl.exe
+PERLLIB=c:/perl/lib
+PERLLIBS=$(PERLLIB)/core
 
 # See feature.h for a list of options.
 # Any other defines can be included here.
@@ -40,20 +46,24 @@ CC = gcc
 #>>>>> end of choices
 ###########################################################################
 
-CFLAGS = -Iproto $(DEFINES)
-CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -finline-functions
-CFLAGS += -pipe -fomit-frame-pointer -freg-struct-return
-CFLAGS += -malign-double -mwide-multiply
+CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -mwide-multiply
+CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
+
+ifdef PERL
+CFLAGS += -I$(PERLLIBS) -DHAVE_PERL_INTERP -L$(PERLLIBS)
+endif
 
 ifeq ($(DEBUG),1)
-CFLAGS += -g
+CFLAGS += -g -fstack-check
 else
 CFLAGS += -s
-endif
+CFLAGS += -fomit-frame-pointer -freg-struct-return
+CFLAGS += -malign-double -mwide-multiply -finline-functions
 ifeq ($(OPTSIZE),1)
 CFLAGS += -Os
 else
-CFLAGS += -O4
+CFLAGS += -O3
+endif
 endif
 ifeq ($(GUI),1)
 TARGET := gvim.exe
@@ -70,10 +80,16 @@ SRC    =  os_w32exe.c buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c \
 	  memline.c menu.c message.c misc1.c misc2.c multbyte.c normal.c   \
 	  ops.c option.c os_win32.c quickfix.c regexp.c screen.c search.c  \
 	  syntax.c tag.c term.c ui.c undo.c window.c version.c
+ifdef PERL
+SRC += if_perl.c
+endif
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
-
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
+ifdef PERL
+LIB += -lperlcapi -lperlcore
+endif
 all: $(TARGET) vimrun.exe ctags/ctags.exe xxd/xxd.exe
 
 vimrun.exe: vimrun.c
@@ -84,7 +100,14 @@ vim.exe: $(OBJ)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32 -Xlinker "--subsystem windows"
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ $(LIB) -Xlinker "--subsystem windows"
+
+exes:
+	@del *.o
+	$(MAKE) -f makefile.ming gvim.exe
+	@del *.o
+	$(MAKE) -f makefile.ming vim.exe
+	@del *.o
 
 ctags/ctags.exe: ctags/main.c
 	$(MAKE) -C ctags  -f Makefile.ming
@@ -99,7 +122,11 @@ clean:
 	cd xxd && del *.exe && cd ..
 
 ###########################################################################
-
-vimres.o: vim.rc
+vimres.res: vim.rc
 	windres --define MING --define USE_GUI_WIN32 vim.rc vimres.res
+
+vimres.o: vimres.res
 	windres vimres.res vimres.o
+
+if_perl.c: if_perl.xs typemap
+	$(PERL) $(PERLLIB)\ExtUtils\xsubpp -prototypes -typemap $(PERLLIB)\ExtUtils\typemap if_perl.xs > $@

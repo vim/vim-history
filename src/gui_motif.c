@@ -310,7 +310,7 @@ gui_mch_add_menu(menu, parent, idx)
 	XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel);
 	XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel);
 	menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu", arg, 2);
-	menu->id = XtParent(menu->submenu_id);;
+	menu->id = (Widget)0;
 	return;
     }
 #endif
@@ -330,9 +330,9 @@ gui_mch_add_menu(menu, parent, idx)
 	    XmNbackground, gui.menu_bg_pixel,
 	    XmNmnemonic, p_wak[0] == 'n' ? NUL : menu->mnemonic,
 #if (XmVersion >= 1002)
-	    /* count the tearoff item (neede for LessTif) */
-	    XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
-								     ? 1 : 0),
+	    /* submenu: count the tearoff item (needed for LessTif) */
+	    XmNpositionIndex, idx + (parent != NULL
+			   && tearoff_val == (int)XmTEAR_OFF_ENABLED ? 1 : 0),
 #endif
 	    NULL);
     XmStringFree(label);

@@ -1,10 +1,10 @@
-*visual.txt*    For Vim version 5.4.  Last change: 1999 Jul 14
+*visual.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Visual mode					*Visual-mode* *visual-mode*
+Visual mode				*Visual* *Visual-mode* *visual-mode*
 
 Visual mode is a flexible and easy way to select a piece of text for an
 operator.  It is the only way to select a block of text.
@@ -394,7 +394,7 @@ abcdef  ghi   XXXXXX    jklmnopqrstuvwxyz
 abcdefghijklmnXXXXXXuvwxyz
 
 ==============================================================================
-8. Select mode						*Select-mode*
+8. Select mode						*Select* *Select-mode*
 
 Select mode looks like Visual mode, but the commands accepted are quite
 different.  This resembles the selection mode in Microsoft Windows.

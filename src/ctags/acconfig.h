@@ -1,4 +1,4 @@
-/* $Id: acconfig.h,v 8.1 1999/03/04 04:16:38 darren Exp $   */
+/* $Id: acconfig.h,v 8.2 1999/09/11 17:54:22 darren Exp $   */
 
 /*  Package name.
  */
@@ -33,6 +33,13 @@
 /*  Define as the maximum integer on your system if not defined <limits.h>.
  */
 #undef INT_MAX
+
+/*  You can define this label to be a string containing the name of a
+ *  site-specific configuration file containing site-wide default options. The
+ *  files /etc/ctags.conf and /usr/local/etc/ctags.conf are already checked,
+ *  so only define one here if you need a file somewhere else.
+ */
+#undef CUSTOM_CONFIGURATION_FILE
 
 /*  Define this label if you want macro tags (defined lables) to use patterns
  *  in the EX command by default (original ctags behavior is to use line

@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 5.4.  Last change: 1999 Jun 07
+*if_ole.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -67,7 +67,7 @@ start the key sequence with CTRL-\ CTRL-N as in
 
 >	Vim.SendKeys "<C-\><C-N>ihello<Esc>"
 
-CTRL-\ CTRL-N returns Vim to Normal mode, when in Insert or command-line mode.
+CTRL-\ CTRL-N returns Vim to Normal mode, when in Insert or Command-line mode.
 Note that this doesn't work halfway a Vim command
 
 							*ole-eval*

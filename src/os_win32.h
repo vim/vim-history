@@ -69,9 +69,11 @@
  */
 #define CMDBUFFSIZE 1024	/* size of the command processing buffer */
 
-#define MAXPATHL    _MAX_PATH	/* Win32 has long paths and plenty of memory */
+/* _MAX_PATH is only 256 (stdlib.h), but we want more for the 'path' option,
+ * thus use a larger number. */
+#define MAXPATHL	1024
 
-#define BASENAMELEN	(MAXPATHL-5)	/* length of base of file name */
+#define BASENAMELEN	(_MAX_PATH - 5)	/* length of base of file name */
 
 #ifndef MAXMEM
 # define MAXMEM		(2*1024)    /* use up to 2 Mbyte for a buffer */

@@ -1,4 +1,33 @@
-Current Version: 3.2.4
+Current Version: 3.3
+
+ctags-3.3 (Fri Sep 17 1999)
+* Fixed missing class-qualified tags [Java].
+* Fixed missing tag for functions having function pointer argument [C].
+* Fixed parsing of conversion functions [C++].
+* Added missing space following "operator" keyword to the tag names generated
+  for function call operators [C++].
+* Fixed string parsing to retry file as free source form upon EOF [Fortran].
+* Fixed missing tags following comments [Fortran].
+* Fixed missing labels for free source form [Fortran].
+* Removed 72 character limit for fixed form source lines, since many compilers
+  relax this limit and it is commonly taken advantage of. This was sometimes
+  causing fixed form source to be parsed as free form source [Fortran].
+* Changed misleading message when file could not be accessed.
+* Changed behavior of --verbose option to display option processing.
+* Changed -I option to permit clearing the token list with "-I-".
+* Changed --lang option to accept new "auto" parameter.
+* Changed --langmap option to accept new "default" parameter.
+* Changed --eiffel-types option to accept new 'C' flag to generate
+  class-qualified tags.
+* Changed -h option to accept new "default" parameter.
+* Changed option processing. Most options may now appear anywhere on the
+  command line, affecting only those files which follow them.
+* Added ability to specify default options in any of the files /etc/ctags.conf,
+  /usr/local/etc/ctags.conf, $HOME/.ctags, .ctags, and one optional file,
+  which can be supplied at configure time.
+* Added --filter option.
+* Added --filter-terminator option.
+
 
 ctags-3.2.4 (Thu Jul 01 1999)
 * Changed name of macro in Makefile.in to avoid being overriden by CTAGS

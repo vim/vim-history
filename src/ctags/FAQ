@@ -76,10 +76,11 @@ NEdit, specify the option "--format=1".
 6.  Why can't I jump to "class::member"?
 
 Because, by default, ctags only generates tags for the separate identifiers
-found in the source files. If you specify the -iC option, then ctags will
-also generate a second, class-qualified tag for each class member (data and
-function/method) of the form "class::member" for C++ or "class.method" for
-Java.
+found in the source files. If you specify the --c-types=+C option, then ctags
+will also generate a second, class-qualified tag for each class member (data
+and function/method) of the form "class::member" for C++. For Eiffel and Java
+you can generate an extra class-qualified tag of the form or "class.method" by
+adding the 'C' flag to either --eiffel-types or --java-types.
 
   ----------------------------------------------------------------------
 7.  How can I avoid having to specify my favorite option every time?

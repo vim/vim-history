@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 8.3 1999/06/23 00:47:15 darren Exp $
+# $Id: Makefile.in,v 8.5 1999/09/16 05:02:20 darren Exp $
 #
 # Makefile for UNIX-like platforms.
 #
@@ -6,8 +6,8 @@
 # These are the names of the installed programs, in case you wish to change
 # them.
 #
-CTAGS_PROG	= ctags
-ETAGS_PROG	= etags
+CTAGS_PROG = ctags
+ETAGS_PROG = etags
 
 # This suffix will be added to all program names. This is especially for
 # installation on Win95/NT hosts using GNU-Win32
@@ -61,12 +61,12 @@ INSTALL		= cp
 INSTALL_PROG	= $(INSTALL)
 INSTALL_DATA	= $(INSTALL)
 
-SRCS =	eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
-	parse.c read.c sort.c vstring.c
-OBJS =	eiffel.o entry.o fortran.o get.o keyword.o main.o options.o \
-	parse.o read.o sort.o vstring.o
-HDRS =	ctags.h debug.h entry.h general.h get.h keyword.h main.h options.h \
-	parse.h read.h sort.h vstring.h
+SRCS =	args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
+	options.c parse.c read.c sort.c strlist.c vstring.c
+OBJS =	args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
+	options.o parse.o read.o sort.o strlist.o vstring.o
+HDRS =	args.h ctags.h debug.h entry.h general.h get.h keyword.h main.h \
+	options.h parse.h read.h sort.h strlist.h vstring.h
 
 MANPAGE	= ctags.1
 

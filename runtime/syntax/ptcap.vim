@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	printcap/termcap database
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1998 Dec 5
+" Last change:	1999 Sep 14
 
 " Clear old syntax defs
 syn clear
@@ -32,6 +32,7 @@ syn match ptcapDelimiter    "[:|]" contained
 " Escaped characters receive special highlighting
 syn match ptcapEscapedChar  "\\." contained
 syn match ptcapEscapedChar  "\^." contained
+syn match ptcapEscapedChar  "\\\o\{3}" contained
 
 " A backslash at the end of a line will suppress the newline
 syn match ptcapLineCont	    "\\$" contained
@@ -70,6 +71,9 @@ if !exists("did_ptcap_syntax_inits")
     let did_ptcap_syntax_inits = 1
     hi link ptcapComment	Comment
     hi link ptcapDelimiter	Delimiter
+    " The highlighting of "ptcapEntry" should always be overridden by
+    " its contents, so I use Todo highlighting to indicate that there
+    " is work to be done with the syntax file if you can see it :-)
     hi link ptcapEntry		Todo
     hi link ptcapError		Error
     hi link ptcapEscapedChar	SpecialChar

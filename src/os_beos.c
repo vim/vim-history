@@ -125,7 +125,7 @@ beos_select(int nbits,
        struct fd_set *ebits,
        struct timeval *timeout)
 {
-    double tmo;
+    bigtime_t tmo;
 
     if (nbits == 0) {
 	/* select is purely being used for delay */
@@ -186,13 +186,15 @@ beos_select(int nbits,
 	    if (tmo == 0)
 		tmo = 1.0;
 	} else {
-	    tmo = B_INFINITE_TIMEOUT;
 	    check_for_bebox();
 	}
 #if TRY_ABORT
 	release_sem(character_wanted);
 #endif
-	acquired = acquire_sem_etc(character_present, 1, B_TIMEOUT, tmo);
+	if (timeout)
+	    acquired = acquire_sem_etc(character_present, 1, B_TIMEOUT, tmo);
+	else
+	    acquired = acquire_sem(character_present);
 	if (acquired == B_NO_ERROR) {
 	    if (charcount > 0) {
 		add_to_input_buf(&charbuf, 1);

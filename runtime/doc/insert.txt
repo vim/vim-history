@@ -1,10 +1,10 @@
-*insert.txt*    For Vim version 5.4.  Last change: 1999 Jun 29
+*insert.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-							*Insert-mode*
+						*Insert* *Insert-mode*
 Inserting and replacing text				*mode-ins-repl*
 
 Most of this file is about Insert and Replace mode.  At the end are a few
@@ -54,14 +54,16 @@ CTRL-A		Insert previously inserted text.  {not in Vi}
 
 						*i_CTRL-H* *i_<BS>*
 <BS> or CTRL-H	Delete the character before the cursor (see |i_backspacing|
-		about joining lines).  See |:fixdel| if your <BS> does not do
-		what you want.  {Vi: does not delete autoindents}
+		about joining lines).
+		See |:fixdel| if your <BS> key does not do what you want.
+		{Vi: does not delete autoindents}
 						*i_<Del>*
 <Del>		Delete the character under the cursor.  If the cursor is at
-		the end of the line, and the 'backspace' option is non-zero,
-		delete the <EOL>; the next line is appended after the current
-		one.  See |:fixdel| if your <Del> key does not do what you
-		want.  {not in Vi}
+		the end of the line, and the 'backspace' option includes
+		"eol", delete the <EOL>; the next line is appended after the
+		current one.
+		See |:fixdel| if your <Del> key does not do what you want.
+		{not in Vi}
 						*i_CTRL-W*
 CTRL-W		Delete the word before the cursor (see |i_backspacing| about
 		joining lines).  See the section "word motions",
@@ -120,9 +122,22 @@ CTRL-R CTRL-R {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
 >	CTRL-R a		results in "ac".
 >	CTRL-R CTRL-R a		results in "ab^Hc".
 		Options 'textwidth', 'formatoptions', etc. still apply.  If
-		you also want to avoid these, use "<C-O>"xP", where 'x' is the
-		name of the register.  However, this cannot be used to replace
-		text.
+		you also want to avoid these, use "<C-R><C-O>r", see below.
+		The '.' register (last inserted text) is still inserted as
+		typed.  {not in Vi}
+
+CTRL-R CTRL-O {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-O* *i_<C-R>_<C-O>*
+		Insert the contents of a register literally and don't
+		auto-indent.  Does the same as pasting with the mouse
+		|<MiddleMouse>|.
+		Does not replace characters!
+		The '.' register (last inserted text) is still inserted as
+		typed.  {not in Vi}
+
+CTRL-R CTRL-P {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-P* *i_<C-R>_<C-P>*
+		Insert the contents of a register literally and fix the
+		indent, like |[<MiddleMouse>|.
+		Does not replace characters!
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
 
@@ -194,19 +209,24 @@ CTRL-]		Trigger abbreviation, without inserting a character.  {not in
 
 						*i_backspacing*
 The effect of the <BS>, CTRL-W, and CTRL-U depend on the 'backspace' option
-(unless 'revins' is set):
+(unless 'revins' is set).  This is a comma separated list of items:
 
-backspace	action
- option
-   0	   delete stops in column 1 and start position of insert
-   1	   delete stops at start position of insert
-   2	   delete always; CTRL-W and CTRL-U stop once at start position of
-	   insert
+item	    action ~
+indent	    allow backspacing over autoindent
+eol	    allow backspacing over end-of-line (join lines)
+start	    allow backspacing over the start position of insert; CTRL-W and
+	    CTRL-U stop once at the start position
 
-If the 'backspace' option is non-zero and the cursor is in column 1 when one
-of the three keys is used, the current line is joined with the previous
-line.  This effectively deletes the <EOL> in front of the cursor.  {Vi: does
-not cross lines, does not delete past start position of insert}
+When 'backspace' is empty, Vi compatible backspacing is used.  You cannot
+backspace over autoindent, before column 1 or before where insert started.
+
+For backwards compatibility the values "0", "1" and "2" are also allowed, see
+|'backspace'|.
+
+If the 'backspace' option does contain "eol" and the cursor is in column 1
+when one of the three keys is used, the current line is joined with the
+previous line.  This effectively deletes the <EOL> in front of the cursor.
+{Vi: does not cross lines, does not delete past start position of insert}
 
 						*i_CTRL-V_digit*
 With CTRL-V followed by one, two, or three digits, you can enter the decimal
@@ -248,8 +268,9 @@ The following keys are special.  They stop the current insert, do something,
 and then restart insertion.  This means you can do something without getting
 out of Insert mode.  This is very handy if you prefer to use the Insert mode
 all the time, just like editors that don't have a separate Normal mode.  You
-may also want to set the 'backspace' option to 2 and set the 'insertmode'
-option.  You can use CTRL-O if you want to map a function key to a command.
+may also want to set the 'backspace' option to "indent,eol,start" and set the
+'insertmode' option.  You can use CTRL-O if you want to map a function key to
+a command.
 
 The changes (inserted or deleted characters) before and after these keys can
 be undone separately.  Only the last change can be redone and always behaves
@@ -274,6 +295,10 @@ char		action	~
 <PageUp>	move window one page up			     *i_<PageUp>*
 <S-Down>	move window one page down		     *i_<S-Down>*
 <PageDown>	move window one page down		     *i_<PageDown>*
+<MouseDown>	scroll three lines down			     *i_<MouseDown>*
+<S-MouseDown>	scroll a full page down			     *i_<S-MouseDown>*
+<MouseUp>	scroll three lines up			     *i_<MouseUp>*
+<S-MouseUp>	scroll a full page up			     *i_<S-MouseUp>*
 CTRL-O		execute one command, return to Insert mode   *i_CTRL-O*
 -----------------------------------------------------------------------
 
@@ -366,7 +391,7 @@ extra spaces to get where you want to be.
 
 
 ==============================================================================
-5. Replace mode					*Replace-mode* *mode-replace*
+5. Replace mode				*Replace* *Replace-mode* *mode-replace*
 
 Enter Replace mode with the "R" command in normal mode.
 

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.4.  Last change: 1999 Jul 02
+*pattern.txt*   For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -22,11 +22,11 @@ Patterns and search commands				*pattern-searches*
 
 							*/<CR>*
 /<CR>			Search forward for the [count]'th latest used
-			pattern with latest used |{offset}|.
+			pattern |last-pattern| with latest used |{offset}|.
 
 //{offset}<CR>		Search forward for the [count]'th latest used
-			pattern with new |{offset}|.  If {offset} is empty no
-			offset is used.
+			pattern |last-pattern| with new |{offset}|.  If
+			{offset} is empty no offset is used.
 
 							*?*
 ?{pattern}[?]<CR>	Search backward for the [count]'th previous
@@ -38,19 +38,19 @@ Patterns and search commands				*pattern-searches*
 
 							*?<CR>*
 ?<CR>			Search backward for the [count]'th latest used
-			pattern with latest used |{offset}|.
+			pattern |last-pattern| with latest used |{offset}|.
 
 ??{offset}<CR>		Search backward for the [count]'th latest used
-			pattern with new |{offset}|.  If {offset} is empty no
-			offset is used.
+			pattern |last-pattern| with new |{offset}|.  If
+			{offset} is empty no offset is used.
 
 							*n*
-n			Repeat the latest "/" or "?" [count] times.  {Vi: no
-			count}
+n			Repeat the latest "/" or "?" [count] times.
+			|last-pattern| {Vi: no count}
 
 							*N*
 N			Repeat the latest "/" or "?" [count] times in
-			opposite direction.  {Vi: no count}
+			opposite direction. |last-pattern| {Vi: no count}
 
 							*star*
 *			Search forward for the [count]'th occurrence of the
@@ -113,6 +113,9 @@ CTRL-C			Interrupt current (search) command.  Use CTRL-Break on
 :noh[lsearch]		Stop the highlighting for the 'hlsearch' option.  It
 			is automatically turned back on when using a search
 			command, or setting the 'hlsearch' option.
+			This command doesn't work in an autocommand, because
+			the highlighting state is saved and restored when
+			executing autocommands |autocmd-searchpat|.
 
 While typing the search pattern the current match will be shown if the
 'incsearch' option is on.  Remember that you still have to finish the search
@@ -170,11 +173,17 @@ This is like executing two search commands after each other, except that:
   search command.
 - When an error occurs the cursor is not moved at all.
 
+							*last-pattern*
 The last used pattern and offset are remembered.  They can be used to repeat
 the search, possibly in another direction or with another count.  Note that
-two patterns are remembered: one for 'normal' search commands and one for the
+two patterns are remembered: One for 'normal' search commands and one for the
 substitute command ":s".  Each time an empty pattern is given, the previously
 used pattern is used.
+
+The 'magic' option sticks with the last used pattern.  If you change 'magic',
+this will not change how the last used pattern will be interpreted.
+The 'ignorecase' option does not do this.  When 'ignorecase' is changed, it
+will result in the pattern to match other text.
 
 All matches for the last used search pattern will be highlighted if you set
 the 'hlsearch' option.
@@ -220,10 +229,11 @@ the "*" is under your right hand middle finger (search to the right and down).
 
 ==============================================================================
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
-					*regular-expression* *regexp*
+					*regular-expression* *regexp* *Pattern*
 
 Patterns may contain special characters, depending on the setting of the
-'magic' option.
+'magic' option.  It is recommended to always use the default setting, which is
+'magic'.  This avoids portability problems.
 
 							*/bar* */\bar*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
@@ -238,10 +248,10 @@ Patterns may contain special characters, depending on the setting of the
      'magic' 'nomagic'	~
 							*/star* */\star*
 	*	\*	matches 0 or more of the preceding atom, as much as
-			possible
+			possible (maximum 32767)
 							*/\+*
 	\+	\+	matches 1 or more of the preceding atom, as much as
-			possible {not in Vi}
+			possible (maximum 32767) {not in Vi}
 							*/\=*
 	\=	\=	matches 0 or 1 of the preceding atom, as much as
 			possible {not in Vi}
@@ -266,7 +276,7 @@ Patterns may contain special characters, depending on the setting of the
 	\{-}     \{-}	matches 0 or more of the preceding atom, as few as
 			possible {not in Vi}
 
-		(n and m are decimal numbers between 0 and 32000)
+		(n and m are decimal numbers between 1 and 32767)
 
 		If a "-" appears immediately after the "{", then a shortest
 		match first algorithm is used (see example below).  In
@@ -400,7 +410,8 @@ Patterns may contain special characters, depending on the setting of the
 			  '_' or '~'.				*/\]*
 			- To include a literal ']', '^', '-' or '\' in the
 			  sequence, put a backslash before it: "[xyz\]]",
-			  "[\^xyz]", "[xy\-z]" and "[xyz\\]".
+			  "[\^xyz]", "[xy\-z]" and "[xyz\\]". (Note: POSIX
+			  does not support the use of a backslash this way).
 			  For ']' you can also make it the first character
 			  (following a possible "^"):  "[]xyz]" or "[^]xyz]"
 			  {not in Vi}.

@@ -1,18 +1,15 @@
 " Vim syntax file
 " Language:	Focus Executable
 " Maintainer:	Rob Brady <robb@datatone.com>
+" Last Change:	$Date: 1999/08/13 16:34:55 $
 " URL: http://www.datatone.com/~robb/vim/syntax/focexec.vim
-" $Date: 1999/06/30 00:31:35 $
-" $Revision: 1.4 $
+" $Revision: 1.8 $
 
 " this is a very simple syntax file - I will be improving it
 " one thing is how to do computes
 " I don't like that &vars and FUSE() functions highlight to the same color
 " I think some of these things should get different hilights -
 "  should MODIFY commands look different than TABLE?
-" how do I differentiate between a table named HOLD and the command HOLD?
-" how do I recognize JOE/A28 as the definition of a variable, and subsequent
-" JOE's as use of said variable?
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -20,31 +17,30 @@ syn clear
 syn case match
 
 " A bunch of useful keywords
-syn keyword   focexecTable   TABLE SUM BY ACROSS END PRINT HOLD LIST NOPRINT
-syn keyword   focexecTable   SUBFOOT SUBHEAD HEADING FOOTING PAGE-BREAK AS
-syn keyword   focexecTable   WHERE AND OR NOSPLIT
-syn keyword   focexecModify  MODIFY DATA ON FIXFORM PROMPT MATCH COMPUTE GOTO
-syn keyword   focexecModify  CASE ENDCASE TYPE NOMATCH REJECT INCLUDE CONTINUE
-syn keyword   focexecModify  FROM
-syn keyword   focexecNormal  CHECK FILE CREATE EX SET IF FILEDEF DEFINE REBUILD
-syn keyword   focexecNormal  IF RECORDLIMIT FI EQ JOIN
-syn keyword   focexecJoin    IN TO
-syn keyword   focexecFileDef DISK
-syn keyword   focexecSet     MSG ALL
-" these are -RUN -PROMPT -WINFORM, but I can't get the '-' recognized
-syn keyword   focexecDash    RUN PROMPT WINFORM
+syn keyword focexecTable	TABLE SUM BY ACROSS END PRINT HOLD LIST NOPRINT
+syn keyword focexecTable	SUBFOOT SUBHEAD HEADING FOOTING PAGE-BREAK AS
+syn keyword focexecTable	WHERE AND OR NOSPLIT FORMAT
+syn keyword focexecModify	MODIFY DATA ON FIXFORM PROMPT MATCH COMPUTE
+syn keyword focexecModify	GOTO CASE ENDCASE TYPE NOMATCH REJECT INCLUDE
+syn keyword focexecModify	CONTINUE FROM
+syn keyword focexecNormal	CHECK FILE CREATE EX SET IF FILEDEF DEFINE
+syn keyword focexecNormal	REBUILD IF RECORDLIMIT FI EQ JOIN
+syn keyword focexecJoin		IN TO
+syn keyword focexecFileDef	DISK
+syn keyword focexecSet		MSG ALL
+syn match   focexecDash		"-RUN"
+syn match   focexecDash		"-PROMPT"
+syn match   focexecDash		"-WINFORM"
 
 " String and Character constants
-syn region	focexecString1      start=+"+ end=+"+
-syn region      focexecString2      start=+'+ end=+'+
+syn region  focexecString1	start=+"+ end=+"+
+syn region  focexecString2	start=+'+ end=+'+
 
-"amper variables - TODO: This doesn't quite work, it highlights all of '&JOE='
-"                        I don't want to highlight '='
-syn region      focexecAmperVar     start=+&+ end=+[^A-Z_&]+
+"amper variables
+syn match   focexecAmperVar	"&&\=[A-Z_]\+"
 
 "fuse functions
 syn keyword focexecFuse GETUSER GETUSR WHOAMI FEXERR ASIS GETTOK UPCASE LOCASE
-
 syn keyword focexecFuse SUBSTR TODAY TODAYI POSIT HHMMSS BYTVAL EDAUT1 BITVAL
 syn keyword focexecFuse BITSON FGETENV FPUTENV HEXBYT SPAWN YM YMI JULDAT
 syn keyword focexecFuse JULDATI DOWK DOWKI DOWKLI CHGDAT CHGDATI FTOA ATODBL
@@ -62,26 +58,26 @@ syn keyword focexecFuse DATEADD DATEDIF DATEMOV DATECVT EURHLD EURXCH FINDFOC
 syn keyword focexecFuse FERRMES CNCTUSR CURRPATH USERPATH SYSTEM ASKYN
 syn keyword focexecFuse FUSEMENU POPEDIT POPFILE
 
-syn match	focexecNumber   "\<\d\+\>"
-syn match       focexecNumber   "\<\d\+\.\d*\>"
+syn match   focexecNumber	"\<\d\+\>"
+syn match   focexecNumber	"\<\d\+\.\d*\>"
 
-syn match	focexecComment	"-\*.*"
+syn match   focexecComment	"-\*.*"
 
 if !exists("did_focexec_syntax_inits")
   let did_focexec_syntax_inits = 1
-  hi link focexecString1 String
-  hi link focexecString2 String
-  hi link focexecNumber  Number
-  hi link focexecComment Comment
-  hi link focexecTable   Keyword
-  hi link focexecModify  Keyword
-  hi link focexecNormal  Keyword
-  hi link focexecSet     Keyword
-  hi link focexecDash    Keyword
-  hi link focexecFileDef Keyword
-  hi link focexecJoin    Keyword
-  hi link focexecAmperVar Identifier
-  hi link focexecFuse    Function
+  hi link focexecString1	String
+  hi link focexecString2	String
+  hi link focexecNumber		Number
+  hi link focexecComment	Comment
+  hi link focexecTable		Keyword
+  hi link focexecModify		Keyword
+  hi link focexecNormal		Keyword
+  hi link focexecSet		Keyword
+  hi link focexecDash		Keyword
+  hi link focexecFileDef	Keyword
+  hi link focexecJoin		Keyword
+  hi link focexecAmperVar	Identifier
+  hi link focexecFuse		Function
 endif
 
 let b:current_syntax = "focexec"

@@ -1,11 +1,11 @@
-*cmdline.txt*   For Vim version 5.4.  Last change: 1999 Jul 03
+*cmdline.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 					*Cmdline-mode* *Command-line-mode*
-Command-line mode					*mode-cmdline* *:*
+Command-line mode			*Cmdline* *Command-line* *mode-cmdline* *:*
 
 Command-line mode is used to enter Ex commands (":"), search patterns
 ("/" and "?"), and filter commands ("!").
@@ -115,7 +115,7 @@ CTRL-K {char1} {char2}					*c_CTRL-K*
 		enter digraph (see |digraphs|).  When {char1} is a special
 		key, the code for that key is inserted in <> form.  {not in Vi}
 
-CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R*
+CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 		Insert the contents of a numbered or named register.  Between
 		typing CTRL-R and the second character '"' will be displayed
 		to indicate that you are expected to enter the name of a

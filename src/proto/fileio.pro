@@ -3,7 +3,7 @@ void filemess __ARGS((BUF *buf, char_u *name, char_u *s, int attr));
 int readfile __ARGS((char_u *fname, char_u *sfname, linenr_t from, linenr_t lines_to_skip, linenr_t lines_to_read, int flags));
 int buf_write __ARGS((BUF *buf, char_u *fname, char_u *sfname, linenr_t start, linenr_t end, int append, int forceit, int reset_changed, int filtering));
 char_u *shorten_fname __ARGS((char_u *full_path, char_u *dir_name));
-void shorten_fnames __ARGS((void));
+void shorten_fnames __ARGS((int force));
 char_u *modname __ARGS((char_u *fname, char_u *ext, int prepend_dot));
 char_u *buf_modname __ARGS((int shortname, char_u *fname, char_u *ext, int prepend_dot));
 int vim_fgets __ARGS((char_u *buf, int size, FILE *fp));

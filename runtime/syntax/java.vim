@@ -2,7 +2,7 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last change:	1999 June 24
+" Last change:	1999 Sept 7
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -13,7 +13,7 @@ syn clear
 syn match javaError "[\\@`]"
 syn match javaError "<<<\|\.\.\|=>\|<>\|||=\|&&=\|[^-]->\|\*\/"
 
-" use separte name so that it can be deleted in javacc.vim
+" use separate name so that it can be deleted in javacc.vim
 syn match javaError2 "#\|=<"
 hi link javaError2 javaError
 
@@ -26,7 +26,7 @@ endif
 " keyword definitions
 syn keyword javaExternal        import native package
 syn keyword javaBranch          break continue
-syn keyword javaError           goto
+syn keyword javaError           goto const
 syn keyword javaConditional     if else switch
 syn keyword javaRepeat          while for do
 syn keyword javaBoolean         true false
@@ -36,7 +36,7 @@ syn keyword javaOperator        new instanceof
 syn keyword javaType            boolean char byte short int long float double
 syn keyword javaType            void
 syn keyword javaStatement       return
-syn keyword javaStorageClass    static synchronized transient volatile final
+syn keyword javaStorageClass    static synchronized transient volatile final strictfp
 syn keyword javaExceptions      throw try catch finally
 syn keyword javaMethodDecl      synchronized throws
 syn keyword javaClassDecl       extends implements interface
@@ -46,30 +46,81 @@ syn match   javaClassDecl       "^class\>"
 syn match   javaClassDecl       "[^.]\s*\<class\>"ms=s+1
 syn keyword javaScopeDecl       public protected private abstract
 
+if exists("java_highlight_java_lang_ids")
+  syn match javaLangClass "System"
+  syn keyword javaLangClass  Cloneable Comparable Runnable Boolean Byte Class
+  syn keyword javaLangClass  Character ClassLoader Compiler Double Float
+  syn keyword javaLangClass  Integer Long Math Number Object Package Process
+  syn keyword javaLangClass  Runtime RuntimePermission InheritableThreadLocal
+  syn keyword javaLangClass  SecurityManager Short String
+  syn keyword javaLangClass  StringBuffer Thread ThreadGroup
+  syn keyword javaLangClass  ThreadLocal Throwable Void ArithmeticException
+  syn keyword javaLangClass  ArrayIndexOutOfBoundsException
+  syn keyword javaLangClass  ArrayStoreException ClassCastException
+  syn keyword javaLangClass  ClassNotFoundException
+  syn keyword javaLangClass  CloneNotSupportedException Exception
+  syn keyword javaLangClass  IllegalAccessException
+  syn keyword javaLangClass  IllegalArgumentException
+  syn keyword javaLangClass  IllegalMonitorStateException
+  syn keyword javaLangClass  IllegalStateException
+  syn keyword javaLangClass  IllegalThreadStateException
+  syn keyword javaLangClass  IndexOutOfBoundsException
+  syn keyword javaLangClass  InstantiationException InterruptedException
+  syn keyword javaLangClass  NegativeArraySizeException NoSuchFieldException
+  syn keyword javaLangClass  NoSuchMethodException NullPointerException
+  syn keyword javaLangClass  NumberFormatException RuntimeException
+  syn keyword javaLangClass  SecurityException StringIndexOutOfBoundsException
+  syn keyword javaLangClass  UnsupportedOperationException
+  syn keyword javaLangClass  AbstractMethodError ClassCircularityError
+  syn keyword javaLangClass  ClassFormatError Error ExceptionInInitializerError
+  syn keyword javaLangClass  IllegalAccessError InstantiationError
+  syn keyword javaLangClass  IncompatibleClassChangeError InternalError
+  syn keyword javaLangClass  LinkageError NoClassDefFoundError
+  syn keyword javaLangClass  NoSuchFieldError NoSuchMethodError
+  syn keyword javaLangClass  OutOfMemoryError StackOverflowError
+  syn keyword javaLangClass  ThreadDeath UnknownError UnsatisfiedLinkError
+  syn keyword javaLangClass  UnsupportedClassVersionError VerifyError
+  syn keyword javaLangClass  VirtualMachineError
+  syn keyword javaLangObject clone equals finalize getClass hashCode
+  syn keyword javaLangObject notify notifyAll toString wait
+  hi link javaLangClass                   javaConstant
+  hi link javaLangObject                  javaConstant
+endif
+
+if exists("java_space_errors")
+  if !exists("java_no_trail_space_error")
+    syn match	javaSpaceError	"\s\+$"
+  endif
+  if !exists("java_no_tab_space_error")
+    syn match	javaSpaceError	" \+\t"me=e-1
+  endif
+endif
+
 syn region  javaLabelRegion     transparent matchgroup=javaLabel start="\<case\>" matchgroup=NONE end=":" contains=javaNumber
 syn match   javaUserLabel       "^\s*[_$a-zA-Z][_$a-zA-Z0-9_]*\s*:"he=e-1 contains=javaLabel
 syn keyword javaLabel           default
 
 if !exists("java_allow_cpp_keywords")
-  syn keyword javaError auto const delete enum extern friend inline redeclared
+  syn keyword javaError auto delete enum extern friend inline redeclared
   syn keyword javaError register signed sizeof struct template typedef union
   syn keyword javaError unsigned operator
 endif
 
 " The following cluster contains all java groups except the contained ones
-syn cluster javaTop contains=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel
+syn cluster javaTop contains=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel,javaLangClass,javaLangObject
+
 
 " Comments
 syn keyword javaTodo             contained TODO FIXME XXX
-syn region  javaCommentString    contained start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar
-syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar
+syn region  javaCommentString    contained start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
+syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar,@Spell
 syn match   javaCommentCharacter contained "'\\[^']\{1,6\}'" contains=javaSpecialChar
 syn match   javaCommentCharacter contained "'\\''" contains=javaSpecialChar
 syn match   javaCommentCharacter contained "'[^\\]'"
-syn region  javaComment          start="/\*"  end="\*/" contains=javaCommentString,javaCommentCharacter,javaNumber,javaTodo
+syn region  javaComment          start="/\*"  end="\*/" contains=javaCommentString,javaCommentCharacter,javaNumber,javaTodo,@Spell
 syn match   javaCommentStar      contained "^\s*\*[^/]"me=e-1
 syn match   javaCommentStar      contained "^\s*\*$"
-syn match   javaLineComment      "//.*" contains=javaComment2String,javaCommentCharacter,javaNumber,javaTodo
+syn match   javaLineComment      "//.*" contains=javaComment2String,javaCommentCharacter,javaNumber,javaTodo,@Spell
 hi link javaCommentString javaString
 hi link javaComment2String javaString
 hi link javaCommentCharacter javaCharacter
@@ -80,8 +131,8 @@ if !exists("java_ignore_javadoc")
   syntax case ignore
   " syntax coloring for javadoc comments (HTML)
   syntax include @javaHtml <sfile>:p:h/html.vim
-  syn region  javaDocComment    start="/\*\*"  end="\*/" keepend contains=javaCommentTitle,@javaHtml,javaDocTags,javaTodo
-  syn region  javaCommentTitle  contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="@"me=s-1,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo
+  syn region  javaDocComment    start="/\*\*"  end="\*/" keepend contains=javaCommentTitle,@javaHtml,javaDocTags,javaTodo,@Spell
+  syn region  javaCommentTitle  contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="@"me=s-1,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell
 
   syn region javaDocTags contained start="{@link" end="}"
   syn match javaDocTags contained "@\(see\|param\|exception\|throws\)\s\+\S\+" contains=javaDocParam
@@ -97,7 +148,7 @@ syn match   javaComment          "/\*\*/"
 syn match   javaSpecialError     contained "\\."
 syn match   javaSpecialCharError contained "[^']"
 syn match   javaSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
-syn region  javaString           start=+"+ end=+"+  contains=javaSpecialChar,javaSpecialError
+syn region  javaString           start=+"+ end=+"+  contains=javaSpecialChar,javaSpecialError,@Spell
 syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
 syn match   javaCharacter        "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
 syn match   javaCharacter        "'\\''" contains=javaSpecialChar
@@ -227,6 +278,8 @@ if !exists("did_java_syntax_inits")
 
   hi link htmlComment                       Special
   hi link htmlCommentPart                   Special
+  hi link javaSpaceError                    Error
+
 endif
 
 let b:current_syntax = "java"
@@ -234,5 +287,7 @@ let b:current_syntax = "java"
 if main_syntax == 'java'
   unlet main_syntax
 endif
+
+let b:spell_options="contained"
 
 " vim: ts=8

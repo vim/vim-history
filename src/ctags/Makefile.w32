@@ -1,7 +1,7 @@
 # The most simplistic Makefile for Win32 (Windows 95/NT)
 
-SOURCES	= eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
-	parse.c read.c sort.c vstring.c
+SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
+	options.c parse.c read.c sort.c strlist.c vstring.c
 
 ctags: ctags.exe
 

@@ -476,7 +476,7 @@ main
 		if (STRCMP(argv[0] + argv_idx, "version") == 0)
 		{
 		    Columns = 80;	/* need to init Columns */
-		    do_version((char_u *)"");
+		    list_version();
 		    mch_windexit(1);
 		}
 		if (argv[0][argv_idx])
@@ -798,7 +798,7 @@ main
 #else
 # ifdef USE_GUI_X11
     /*
-     * Check if the GUI can be started.  reset gui.starting if it not
+     * Check if the GUI can be started.  Reset gui.starting if not.
      * Can't do this with GTK, need to fork first.
      * Don't know about other systems, stay on the safe side and don't check.
      */
@@ -889,6 +889,7 @@ main
 	    mch_errmsg("Vim: Warning: Output is not to a terminal\n");
 	if (!input_isatty)
 	    mch_errmsg("Vim: Warning: Input is not from a terminal\n");
+	out_flush();
 	ui_delay(2000L, TRUE);
     }
 
@@ -910,7 +911,18 @@ main
     firstwin->w_height = Rows - 1;
     cmdline_row = Rows - 1;
 
-    if (full_screen)
+    /*
+     * Don't call msg_start() if the GUI is expected to start, it switches the
+     * cursor off.  Only need to avoid it when want_full_screen could not have
+     * been reset above.
+     * Also don't do it when reading from stdin (the program writing to the
+     * pipe might use the cursor).
+     */
+    if (full_screen && edit_type != EDIT_STDIN
+#if defined(USE_GUI) && !defined(ALWAYS_USE_GUI) && !defined(USE_GUI_X11)
+	    && !gui.starting
+#endif
+       )
 	msg_start();	    /* in case a mapping or error message is printed */
     msg_scroll = TRUE;
     no_wait_return = TRUE;
@@ -1148,6 +1160,39 @@ main
 #endif
 
     /*
+     * If "-" argument given: Read file from stdin.
+     * Do this before starting Raw mode, because it may change things that the
+     * writing end of the pipe doesn't like, e.g., in case stdin and stderr
+     * are the same terminal: "cat | vim -".
+     * Using autocommands here may cause trouble...
+     */
+    if (edit_type == EDIT_STDIN && !recoverymode)
+    {
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	/* When getting the ATTENTION prompt here, use a dialog */
+	swap_exists_action = SEA_DIALOG;
+#endif
+	no_wait_return = TRUE;
+	i = msg_didany;
+	(void)open_buffer(TRUE);	/* create memfile and read file */
+	no_wait_return = FALSE;
+	msg_didany = i;
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	check_swap_exists_action();
+	swap_exists_action = SEA_NONE;
+#endif
+#if !(defined(AMIGA) || defined(macintosh))
+	/*
+	 * Close stdin and dup it from stderr.  Required for GPM to work
+	 * properly, and for running external commands.
+	 * Is there any other system that cannot do this?
+	 */
+	close(0);
+	dup(2);
+#endif
+    }
+
+    /*
      * When done something that is not allowed or error message call
      * wait_return.  This must be done before starttermcap(), because it may
      * switch to another screen. It must be done after settmode(TMODE_RAW),
@@ -1219,38 +1264,6 @@ main
 	/* When getting the ATTENTION prompt here, use a dialog */
 	swap_exists_action = SEA_DIALOG;
 #endif
-	/*
-	 * If "-" argument given: read file from stdin.
-	 * Need to stop Raw mode for terminal in case stdin and stderr are the
-	 * same terminal: "cat | vim -".  Not needed for GUI-only versions.
-	 */
-	if (edit_type == EDIT_STDIN)
-	{
-#ifndef ALWAYS_USE_GUI
-	    stoptermcap();
-	    settmode(TMODE_COOK);	/* set to normal mode */
-#endif
-	    (void)open_buffer(TRUE);	/* create memfile and read file */
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	    check_swap_exists_action();
-#endif
-#ifndef ALWAYS_USE_GUI
-	    if (!termcap_active)	/* if readfile() didn't do it already */
-	    {
-		settmode(TMODE_RAW);	/* set to raw mode */
-		starttermcap();
-	    }
-#endif
-#if !(defined(AMIGA) || defined(macintosh))
-	    /*
-	     * Close stdin and dup it from stderr.  Required for GPM to work
-	     * properly, and for running external commands.
-	     * Is there any other system that cannot do this?
-	     */
-	    close(0);
-	    dup(2);
-#endif
-	}
 
 	/*
 	 * Open a buffer for windows that don't have one yet.
@@ -1367,9 +1380,9 @@ main
 	(void)buflist_add(arg_files[arg_idx++]);
 
     /*
-     * Now shorten any of the filenames if possible
+     * Shorten any of the filenames, but only when absolute.
      */
-    shorten_fnames();
+    shorten_fnames(FALSE);
 
     /*
      * Need to jump to the tag before executing the '-c command'.

@@ -885,6 +885,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	if (top_file_num < 0)		/* wrap around (may cause duplicates) */
 	{
 	    EMSG("Warning: List of file names overflow");
+	    out_flush();
 	    ui_delay(3000L, TRUE);	/* make sure it is noticed */
 	    top_file_num = 1;
 	}
@@ -1932,9 +1933,9 @@ static char_u *lasticon = NULL;
     void
 maketitle()
 {
-    char_u	*t_name = NULL;
+    char_u	*t_name;
     char_u	*t_str = NULL;
-    char_u	*i_name = NULL;
+    char_u	*i_name;
     char_u	*i_str = NULL;
     int		maxlen = 0;
     int		len;

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Jul 20
+" Last change:	1999 Sep 19
 
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
@@ -100,6 +100,11 @@ amenu 40.380 &Tools.&Previous\ Error		:cp<CR>
 amenu 40.390 &Tools.&Older\ List		:colder<CR>
 amenu 40.400 &Tools.N&ewer\ List		:cnewer<CR>
 
+
+" Can't delete a menu in Athena version
+if has("gui_athena")
+  let no_buffers_menu = 1
+endif
 
 if !exists("no_buffers_menu")
 
@@ -289,9 +294,11 @@ imenu      PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>ex
 cmenu      PopUp.&Paste		<C-R>*
 vmenu 1.50 PopUp.&Delete	x
 amenu 1.55 PopUp.-SEP2-		:
-amenu 1.60 PopUp.Select\ &Word	vaw
-amenu 1.70 PopUp.Select\ &Line	V
-amenu 1.80 PopUp.Select\ &All	ggVG
+vmenu 1.60 PopUp.Select\ Blockwise <C-V>
+amenu 1.70 PopUp.Select\ &Word	vaw
+amenu 1.80 PopUp.Select\ &Line	V
+amenu 1.90 PopUp.Select\ &Block	<C-V>
+amenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for Win32 or GTK)
 if has("win32") || has("gui_gtk")
@@ -339,7 +346,7 @@ if has("win32") || has("gui_gtk")
   amenu 1.130 ToolBar.Replace	:promptrepl<CR>
   vunmenu ToolBar.Replace
   vmenu ToolBar.Replace		y:promptrepl <C-R>"<CR>
-  tmenu ToolBar.Replace		Find && Replace...
+  tmenu ToolBar.Replace		Find & Replace...
 
 if 0	" disabled; These are in the Windows menu
   amenu 1.135 ToolBar.-sep4-	<nul>
@@ -465,11 +472,14 @@ endfun
 
 SynMenu &ABCD.ABC:abc
 SynMenu &ABCD.Ada:ada
+SynMenu &ABCD.Active\ Server\ Pages:aspvbs
 SynMenu &ABCD.AHDL:ahdl
 SynMenu &ABCD.Amiga\ DOS:amiga
 SynMenu &ABCD.Applix\ ELF:elf
 SynMenu &ABCD.Assembly\ (GNU):asm
 SynMenu &ABCD.Assembly\ (H8300):asmh8300
+SynMenu &ABCD.Assembly\ (Microsoft):masm
+SynMenu &ABCD.Assembly\ (Netwide):nasm
 SynMenu &ABCD.ASN\.1:asn
 SynMenu &ABCD.Atlas:atlas
 SynMenu &ABCD.Avenue:ave
@@ -480,11 +490,13 @@ SynMenu &ABCD.C:c
 SynMenu &ABCD.C++:cpp
 SynMenu &ABCD.Cascading\ Style\ Sheets:css
 SynMenu &ABCD.Century\ Term:cterm
+SynMenu &ABCD.Change:change
 SynMenu &ABCD.Clean:clean
 SynMenu &ABCD.Clipper:clipper
 SynMenu &ABCD.Configure\ script:config
 SynMenu &ABCD.Csh\ shell\ script:csh
 SynMenu &ABCD.Cobol:cobol
+SynMenu &ABCD.CWEB:cweb
 SynMenu &ABCD.Diff:diff
 SynMenu &ABCD.Digital\ Command\ Lang:dcl
 SynMenu &ABCD.Diva\ (with\ SKILL):diva
@@ -536,6 +548,7 @@ SynMenu &KLM.Maple:maple
 SynMenu &KLM.Matlab:matlab
 SynMenu &KLM.Metafont:mf
 SynMenu &KLM.MetaPost:mp
+SynMenu &KLM.MS\ Module\ Definition:def
 SynMenu &KLM.Model:model
 SynMenu &KLM.Modsim\ III:modsim3
 SynMenu &KLM.Modula\ 2:modula2
@@ -547,7 +560,6 @@ SynMenu &KLM.MS-DOS\ \.ini\ file:dosini
 SynMenu &KLM.MS\ Resource\ file:rc
 SynMenu &KLM.Muttrc:muttrc
 
-SynMenu &NOPQ.NASM:nasm
 SynMenu &NOPQ.Novell\ batch:ncf
 SynMenu &NOPQ.Nroff:nroff
 SynMenu &NOPQ.Objective\ C:objc
@@ -584,7 +596,8 @@ SynMenu &RS.Scheme:scheme
 SynMenu &RS.SDL:sdl
 SynMenu &RS.Sed:sed
 SynMenu &RS.Sendmail\.cf:sm
-SynMenu &RS.SGML:sgml
+SynMenu &RS.SGML\ DTD:sgml
+SynMenu &RS.SGML\ linuxdoc:sgmllnx
 SynMenu &RS.Sh\ shell\ script:sh
 SynMenu &RS.SiCAD:sicad
 SynMenu &RS.Simula:simula
@@ -595,6 +608,7 @@ SynMenu &RS.SmallTalk:st
 SynMenu &RS.SMIL:smil
 SynMenu &RS.SNMP\ MIB:mib
 SynMenu &RS.SPEC\ (Linux\ RPM):spec
+SynMenu &RS.Spice:spice
 SynMenu &RS.Speedup:spup
 SynMenu &RS.Squid:squid
 SynMenu &RS.SQL:sql
@@ -603,7 +617,7 @@ SynMenu &TU.Tags:tags
 SynMenu &TU.Tcl/Tk:tcl
 SynMenu &TU.Telix\ Salt:tsalt
 SynMenu &TU.Termcap:ptcap
-SynMenu &TU.Tex:tex
+SynMenu &TU.TeX:tex
 SynMenu &TU.TF\ mud\ client:tf
 SynMenu &TU.UIT/UIL:uil
 
@@ -615,7 +629,9 @@ SynMenu &VWXYZ.Vim\ script:vim
 SynMenu &VWXYZ.Viminfo\ file:viminfo
 SynMenu &VWXYZ.Visual\ Basic:vb
 SynMenu &VWXYZ.VRML:vrml
+SynMenu &VWXYZ.WEB:web
 SynMenu &VWXYZ.Whitespace\ (add):whitespace
+SynMenu &VWXYZ.WinBatch/Webbatch:winbatch
 SynMenu &VWXYZ.X\ Pixmap:xpm
 SynMenu &VWXYZ.X\ resources:xdefaults
 SynMenu &VWXYZ.Xmath:xmath

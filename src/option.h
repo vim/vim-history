@@ -238,6 +238,11 @@
 #define WIM_LONGEST	2
 #define WIM_LIST	4
 
+/* arguments for can_bs() */
+#define BS_INDENT	'i'	/* "Indent" */
+#define BS_EOL		'o'	/* "eOl" */
+#define BS_START	's'	/* "Start" */
+
 /*
  * The following are actual variabables for the options
  */
@@ -246,7 +251,7 @@
 EXTERN long	p_aleph;	/* 'aleph' */
 #endif
 EXTERN int	p_aw;		/* 'autowrite' */
-EXTERN long	p_bs;		/* 'backspace' */
+EXTERN char_u  *p_bs;		/* 'backspace' */
 EXTERN char_u  *p_bg;		/* 'background' */
 EXTERN int	p_bk;		/* 'backup' */
 EXTERN char_u  *p_bdir;		/* 'backupdir' */

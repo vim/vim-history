@@ -94,7 +94,7 @@ INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_unix.h \
 
 SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_docmd.c \
 	ex_getln.c fileio.c getchar.c \
-	main.c mark.c \
+	main.c mark.c menu.c\
 	memfile.c memline.c message.c misc1.c misc2.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
 	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
@@ -102,7 +102,7 @@ SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_docmd.c \
 
 OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj \
 	ex_docmd.obj ex_getln.obj fileio.obj getchar.obj \
-	main.obj mark.obj memfile.obj memline.obj message.obj misc1.obj \
+	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
 	misc2.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
 	regexp.obj search.obj syntax.obj tag.obj term.obj termlib.obj ui.obj \
 	undo.obj screen.obj window.obj os_vms.obj pathdef.obj \
@@ -148,6 +148,7 @@ pathdef.c : os_vms.mms
 	-@ write pd " * Change the file os_vms.mms only. */"
 	-@ write pd "#include ""vim.h"""
 	-@ write pd "char_u *default_vim_dir = (char_u *)""$(VIMLOC)"";"
+	-@ write pd "char_u *default_vimruntime_dir = (char_u *)"""";"
 	-@ write pd "char_u *all_cflags = (char_u *)""$(CC) /incl=[] $(ALL_CFLAGS)"";"
 	-@ write pd "char_u *all_lflags = (char_u *)""$(LD) $(LDFLAGS) /exe=$(TARGET) $+ $(ALL_LIBS)"";"
 	-@ close pd
@@ -225,6 +226,9 @@ main.obj : main.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h te
 	$(CC) $(ALL_CFLAGS) $<
 mark.obj : mark.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
   macros.h structs.h gui.h globals.h proto.h regexp.h option.h
+	$(CC) $(ALL_CFLAGS) $<
+menu.obj : menu.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+  term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC) $(ALL_CFLAGS) $<
 memfile.obj : memfile.c vim.h config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
   term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h

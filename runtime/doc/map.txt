@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.4.  Last change: 1999 Jul 20
+*map.txt*       For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,7 +11,7 @@ Key mapping and abbreviations.
 3. User-defined commands	|user-commands|
 
 ==============================================================================
-1. Key mapping						*key-mapping*
+1. Key mapping					*key-mapping* *mapping*
 
 There are commands to enter new mappings, remove mappings and list mappings.
 See |map-overview| for the various forms of "map" and their relationships with
@@ -103,6 +103,9 @@ There are five sets of mappings
   etc.).
 - For Insert mode. These are also used in Replace mode.
 - For Command-line mode: When entering a ":" or "/" command.
+
+There are no separate mappings for Select mode.  The same as for Visual mode
+are used |Select-mode-mapping|.
 
 						*map-overview* *map-modes*
 Overview of which map command works in which mode:
@@ -236,6 +239,8 @@ suggestions:
 - Meta-keys (with the ALT key pressed).
 - Use the "_" character and then any other character.  The "_" command does
   exist in Vim (see |_|), but you probably never use it.
+- Use a key that is a synonym for another command.  For example: CTRL-P and
+  CTRL-N.  Use an extra character to allow more mappings.
 
 							*map-examples*
 A few examples (given as you type them, for "<CR>" you type four characters;
@@ -362,9 +367,9 @@ written to the script file.  If it was recognized as a terminal code the
 internal code is written to the script file.
 
 ==============================================================================
-2. Abbreviations					*abbreviations*
+2. Abbreviations			*abbreviations* *Abbreviations*
 
-Abbreviations are used in insert mode, Replace mode and Command-line mode.
+Abbreviations are used in Insert mode, Replace mode and Command-line mode.
 If you enter a word that is an abbreviation, it is replaced with the word it
 stands for.  This can be used to save typing for often used long words.  And
 you can use it to automatically correct obvious spelling errors.
@@ -692,16 +697,22 @@ sequence is preceded by a backslash, the sequence is copied unchanged.
 
 The valid escape sequences are
 
+						*<line1>*
 	<line1>	The starting line of the command range.
+						*<line2>*
 	<line2>	The final line of the command range.
+						*<count>*
 	<count>	Any count supplied (as described for the '-range'
 		and '-count' attributes).
+						*<bang>*
 	<bang>	(See the '-bang' attribute) Expands to a ! if the
 		command was executed with a ! modifier, otherwise
 		expands to nothing.
+						*<reg>* *<register>*
 	<reg>	(See the '-register' attribute) The optional register,
 		if specified. Otherwise, expands to nothing. <register>
 		is a synonym for this.
+						*<args>*
 	<args>	The command arguments, exactly as supplied (but as
 		noted above, any count or register can consume some
 		of the arguments, which are then not part of <args>).

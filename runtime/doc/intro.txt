@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.4.  Last change: 1999 Jul 24
+*intro.txt*     For Vim version 5.5.  Last change: 1999 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -29,12 +29,13 @@ want it, there is mouse support and a GUI version with scrollbars and menus
 A summary of this manual can be found in the file "help.txt", |help.txt|.  It
 can be accessed from within Vim with the <Help> or <F1> key and with the
 |:help| command (just type ":help", without the bars or quotes).  The
-'helpfile' option can be set to the name of the help file, so you can put it
-in any place you like.  You can jump to subjects like with tags: Use CTRL-] to
-jump to a subject under the cursor, use CTRL-T to jump back.
+'helpfile' option can be set to the name of the help file, in case it is not
+located in the default place.  You can jump to subjects like with tags: Use
+CTRL-] to jump to a subject under the cursor, use CTRL-T to jump back.
 
 Throughout this manual the differences between Vi and Vim are mentioned in
-curly braces.  See |vi_diff.txt| for a summary of the differences.
+curly braces, like this: {Vi does not have on-line help}.  See |vi_diff.txt|
+for a summary of the differences between Vim and Vi.
 
 This manual refers to Vim on various machines.  There may be small differences
 between different computers and terminals.  Besides the remarks given in this
@@ -49,7 +50,7 @@ preferences and writing Vim scripts see |vimrc-intro|.
 There are many books on Vi that contain a section for beginners.  I can
 recommend "Learning the Vi editor" by Linda Lamb and Arnold Robbins, published
 by O'Reilly.  The sixth edition includes a chapter on Vim.  ISBN:
-1-56592-426-6.
+1-56592-426-6.  There is also a German translation.
 
 ==============================================================================
 2. Vim on the internet					*internet*
@@ -60,16 +61,17 @@ contain links to the most recent version of Vim.  The FAQ is a list of
 Frequently Asked Questions.  Read this if you have problems.
 
 	VIM home page:	http://www.vim.org/
+	Latest news:	http://www.vim.org/news.html
 	VIM FAQ:	http://www.vim.org/faq/
 	Downloading:	ftp://ftp.vim.org/pub/vim/MIRRORS
 
 
 Usenet News group where Vim is discussed:		*news* *usenet*
 	comp.editors
-See http://www.vim.org/news.html.
+See http://www.vim.org/usenet.html.
 
 						*mail-list* *maillist*
-There are three mailing lists for Vim:
+There are four mailing lists for Vim:
 <vim@vim.org>
 	For discussions about using existing versions of Vim: Useful mappings,
 	questions, answers, where to get a specific version, etc.
@@ -81,15 +83,14 @@ There are three mailing lists for Vim:
 	and ports to different systems.
 <vim-multibyte@vim.org>				*vim-multibyte*
 	For discussions about using and improving the multi-byte aspects of
-	Vim.  This list is new, it's not archived at egroups yet (but it might
-	be by the time you read this).
+	Vim.
 
 See http://www.vim.org/mail.html.
 
 NOTE:
 - You can only send messages to these lists if you have subscribed!
 - You need to send the messages from the same location as where you subscribed
-  from (to avoid spam mails).
+  from (to avoid spam mail).
 - Maximum message size is 40000 characters.
 
 						*subscribe-maillist*
@@ -105,6 +106,15 @@ Archives are kept at:
 http://www.egroups.com/group/vim
 http://www.egroups.com/group/vimdev
 http://www.egroups.com/group/vimannounce
+http://www.egroups.com/group/vim-multibyte
+
+
+Additional maillists:
+
+<vim-fr@club.voila.fr>				*french-maillist*
+	Vim list in the French language.  Subscribe by sending a message to
+		<vim-fr-subscribe@club.voila.fr>
+	Or go to http://www.egroups.com/group/vim-fr.
 
 
 Bug reports:				*bugs* *bug-reports* *bugreport.vim*
@@ -229,12 +239,37 @@ I wish to thank all the people that sent me bug reports and suggestions.  The
 list is too long to mention them all here.  Vim would not be the same without
 the ideas from all these people: They keep Vim alive!
 
+
+In this documentation there are several references to other versions of Vi:
+							*Vi*
+Vi	"the original".  Without further remarks this is the version
+	of Vi that appeared in Sun OS 4.x.  ":version" returns
+	"Version 3.7, 6/7/85".  Sometimes other versions are referred
+	to.  Only runs under Unix.  Source code only available with a
+	license.  More information on Vi can be found through:
+		http://www.vim.org
+							*Posix*
+Posix	From the IEEE standard 1003.2, Part 2: Shell and utilities.
+	Generally known as "Posix".  This is a textual description of
+	how Vi is supposed to work.  The version used is a draft from
+	beginning 1996, so all remarks are "expected to comply to"
+	this.  Anything can change though...
+							*Nvi*
+Nvi	The "New" Vi.  The version of Vi that comes with BSD 4.4 and
+	many free Unix versions.  The version used is 1.79.
+	":version" returns "Version 1.79 (10/23/96)".  Source code is
+	freely available.
+							*Elvis*
+Elvis	Another Vi clone, made by Steve Kirkendall.  The version used
+	is 2.1, the last official release.  Source code is freely
+	available.
+
 ==============================================================================
 4. Notation						*notation*
 
-When syntax highlighting is used, text that is not typed literally is often
-highlighted with the Special group.  These are items in [], {} and <>, and
-CTRL-X.
+When syntax highlighting is used to read this, text that is not typed
+literally is often highlighted with the Special group.  These are items in [],
+{} and <>, and CTRL-X.
 
 []		Characters in square brackets are optional.
 
@@ -283,14 +318,14 @@ CTRL-X.
 		can be used to map characters while an operator is pending.
 
 							*{Visual}*
-{Visual}	A piece of text that is started with the "v", "V", or CTRL-V
-		command and ended by the cursor position.  This is used
+{Visual}	A selected text area.  It is started with the "v", "V", or
+		CTRL-V command and ends at the cursor position.  This is used
 		before an operator command |operator| to highlight the text
 		that is to be operated upon.  See |Visual-mode|.
 
 							*<character>*
-<character>	A special character from the table below or a single ASCII
-		character with modifiers.
+<character>	A special character from the table below, optionally with
+		modifiers, or a single ASCII character with modifiers.
 
 							*'character'*
 'c'		A single ASCII character.
@@ -307,8 +342,8 @@ CTRL-{char}	{char} typed as a control character; that is, typing {char}
 		enclosed in single quotes.  See |options|.
 
 							*quotecommandquote*
-"command"	In examples, the commands you can type are enclosed in double
-		quotes.
+"command"	A reference to a command that you can type is enclosed in
+		double quotes.
 
 					*key-notation* *key-codes* *keycodes*
 These names for keys are used in the documentation.  They can also be used
@@ -318,7 +353,7 @@ notation	meaning		    equivalent	decimal value(s)	~
 -----------------------------------------------------------------------
 <Nul>		zero			CTRL-@	  0 (stored as 10) *<Nul>*
 <BS>		backspace		CTRL-H	  8	*backspace*
-<Tab>		tab			CTRL-I	  9	*tab*
+<Tab>		tab			CTRL-I	  9	*tab* *Tab*
 							*linefeed*
 <NL>		linefeed		CTRL-J	 10 (used for <Nul>)
 <FF>		formfeed		CTRL-L	 12	*formfeed*
@@ -390,7 +425,7 @@ Examples are often given in the <> notation.  Sometimes this is just to make
 clear what you need to type, but often it can be typed literally, e.g., with
 the ":map" command.  The rules are:
  1.  Any printable characters are typed directly, except backslash and '<'
- 2.  A backslash is represented with "\\", double backslash.
+ 2.  A backslash is represented with "\\", double backslash, or "<Bslash>".
  3.  A real '<' is represented with "\<" or "<lt>".  When there is no
      confusion possible, a '<' can be used directly.
  4.  "<key>" means the special key typed.  This is the notation explained in
@@ -424,37 +459,13 @@ examples and use them directly.  Or type them literally, including the '<' and
 '>' characters.  This does NOT work for other commands, like ":set" and
 ":autocmd"!
 
-
-There are several references to other versions of Vi:
-								*Vi*
-	Vi	"the original".  Without further remarks this is the version
-		of Vi that appeared in Sun OS 4.x.  ":version" returns
-		"Version 3.7, 6/7/85".  Sometimes other versions are referred
-		to.  Only runs under Unix.  Source code only available with a
-		license.  More information on Vi can be found through:
-			http://www.vim.org
-								*Posix*
-	Posix	From the IEEE standard 1003.2, Part 2: Shell and utilities.
-		Generally known as "Posix".  This is a textual description of
-		how Vi is supposed to work.  The version used is a draft from
-		beginning 1996, so all remarks are "expected to comply to"
-		this.  Anything can change though...
-								*Nvi*
-	Nvi	The "New" Vi.  The version of Vi that comes with BSD 4.4 and
-		many free Unix versions.  The version used is 1.79.
-		":version" returns "Version 1.79 (10/23/96)".  Source code is
-		freely available.
-								*Elvis*
-	Elvis	Another Vi clone, made by Steve Kirkendall.  The version used
-		is 2.1, the last official release.  Source code is freely
-		available.
-
 ==============================================================================
 5. Modes, introduction				*vim-modes-intro* *vim-modes*
 
 Vim has six BASIC modes:
 
-Normal mode		In Normal mode you can enter all the editor
+					*Normal* *Normal-mode* *command-mode*
+Normal mode		In Normal mode you can enter all the normal editor
 			commands.  If you start the editor you are in this
 			mode (unless you have set the 'insertmode' option,
 			see below).  This is also known as command mode.
@@ -462,19 +473,20 @@ Normal mode		In Normal mode you can enter all the editor
 Visual mode		This is like Normal mode, but the movement commands
 			extend a highlighted area.  When a non-movement
 			command is used, it is executed for the highlighted
-			area.  If the 'showmode' option is on "-- VISUAL --"
-			is shown at the bottom of the window.  See
-			|Visual-mode|.
+			area.  See |Visual-mode|.
+			If the 'showmode' option is on "-- VISUAL --" is shown
+			at the bottom of the window.
 
 Select mode		This looks most like the MS-Windows selection mode.
 			Typing a printable character deletes the selection
-			and starts Insert mode.  If the 'showmode' option is
-			on "-- SELECT --" is shown at the bottom of the
-			window.  See |Select-mode|.
+			and starts Insert mode.  See |Select-mode|.
+			If the 'showmode' option is on "-- SELECT --" is shown
+			at the bottom of the window.
 
 Insert mode		In Insert mode the text you type is inserted into the
-			buffer.  If the 'showmode' option is on "-- INSERT --"
-			is shown at the bottom of the window.  |Insert-mode|
+			buffer.  See |Insert-mode|.
+			If the 'showmode' option is on "-- INSERT --" is shown
+			at the bottom of the window.
 
 Command-line mode	In Command-line mode (also called Cmdline mode) you
 Cmdline mode		can enter one line of text at the bottom of the
@@ -484,28 +496,38 @@ Cmdline mode		can enter one line of text at the bottom of the
 
 Ex mode			Like Command-line mode, but after entering a command
 			you remain in Ex mode.  Very limited editing of the
-			command.  |Ex-mode|
+			command line.  |Ex-mode|
 
-There are four ADDITIONAL modes:
+There are five ADDITIONAL modes:
+
+				*Operator-pending* *Operator-pending-mode*
+Operator-pending mode	This is like Normal mode, but after an operator
+			command has started, and Vim is waiting for a {motion}
+			to specify the text that the operator will work on.
 
 Replace mode		Replace mode is a special case of Insert mode.  You
 			can do the same things as in Insert mode, but for
 			each character you enter, one character of the existing
-			text is deleted.  If the 'showmode' option is on,
-			(which is the default), the string "-- REPLACE --" is
-			shown at the bottom of the window.  |Replace-mode|
+			text is deleted.  See |Replace-mode|.
+			If the 'showmode' option is on "-- REPLACE --" is
+			shown at the bottom of the window.
 
-Insert command mode	Entered when CTRL-O given in Insert mode.  This is
+Insert Normal mode	Entered when CTRL-O given in Insert mode.  This is
 			like Normal mode, but after executing one command Vim
-			returns to Insert mode.  The string "-- (insert) --"
-			is shown at the bottom of the window.
+			returns to Insert mode.
+			If the 'showmode' option is on "-- (insert) --" is
+			shown at the bottom of the window.
 
 Insert Visual mode	Entered when starting a Visual selection from Insert
 			mode.  When the Visual selection ends, Vim returns to
 			Insert mode.
+			If the 'showmode' option is on "-- (insert) VISUAL --"
+			is shown at the bottom of the window.
 
 Insert Select mode	Entered when starting Select mode from Insert mode.
 			When the Select mode ends, Vim returns to Insert mode.
+			If the 'showmode' option is on "-- (insert) SELECT --"
+			is shown at the bottom of the window.
 
 ==============================================================================
 6. Switching from mode to mode				*mode-switching*
@@ -564,7 +586,7 @@ Normal mode from any other mode.  This can be used to make sure Vim is in
 Normal mode, without causing a beep like <Esc> would.
 
 
-						*Q* *mode-Ex* *Ex-mode*
+					*Q* *mode-Ex* *Ex-mode* *Ex* *EX*
 Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			commands one after another, except:
 			- You don't have to keep pressing ":".

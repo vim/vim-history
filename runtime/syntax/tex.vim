@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language   : TeX
-" Version    : 5.4-4
+" Version    : 5.4-5
 " Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
-" Last Change: July 23, 1999
+" Last Change: August 2, 1999
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -212,7 +212,7 @@ syn match texDefName contained	"\\[a-zA-Z]\+"		nextgroup=texCmdBody skipwhite sk
 syn match  texLength	"\d\+\(\.\d\+\)\=\(bp\|cc\|cm\|dd\|em\|ex\|in\|mm\|pc\|pt\|sp\)"
 
 " TeX String Delimiters
-syn match texString	"\(``\|''\)"
+syn match texString	"\(``\|''\|,,\)"
 
 " LaTeX synchronization
 syn sync maxlines=200

@@ -25,7 +25,7 @@
 mac_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags,
+    int			flags,		/* EW_* flags */
     short		start_at,
     short		as_full)
 {
@@ -257,7 +257,7 @@ mac_expandpath(
 mch_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags)
+    int			flags)		/* EW_* flags */
 {
 
     char_u first = *path;
@@ -878,9 +878,8 @@ mch_screenmode(arg)
 
     int
 mch_call_shell(cmd, options)
-    char_u  *cmd;
-    int	    options;	/* SHELL_FILTER if called by do_filter() */
-			/* SHELL_COOKED if term needs cooked mode */
+    char_u	*cmd;
+    int		options;	/* SHELL_*, see vim.h */
 {
     /*
      * TODO: find a shell or pseudo-shell to call

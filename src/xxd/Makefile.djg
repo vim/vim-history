@@ -1,6 +1,6 @@
 # The most simplistic Makefile, for DJGPP on MS-DOS
 
-CFLAGS = -O4 -Wall
+CFLAGS = -O2 -Wall
 
 xxd.exe: xxd.c
 	gcc $(CFLAGS) -s -o xxd.exe xxd.c -lpc

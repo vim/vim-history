@@ -1,10 +1,10 @@
-*if_tcl.txt*    For Vim version 5.4.  Last change: 1999 Jun 07
+*if_tcl.txt*    For Vim version 5.5.  Last change: 1999 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
 
 
-The Tcl Interface to Vim					*tcl*
+The Tcl Interface to Vim				*tcl* *Tcl* *TCL*
 
 1. Commands				|tcl-ex-commands|
 2. Tcl commands				|tcl-commands|

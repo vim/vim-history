@@ -323,15 +323,15 @@ shift_block(oap, amount)
 {
     int			left = (oap->op_type == OP_LSHIFT);
     int			oldstate = State;
-    int			total = 0, split = 0;
+    int			total, split;
     char_u		*newp, *oldp, *midp, *ptr;
     int			oldcol = curwin->w_cursor.col;
     int			p_sw = (int)curbuf->b_p_sw;
     int			p_ts = (int)curbuf->b_p_ts;
     struct block_def	bd;
     int			internal = 0;
-    int			incr = 0;
-    colnr_t		vcol = 0, col = 0, ws_vcol = 0;
+    int			incr;
+    colnr_t		vcol, col = 0, ws_vcol;
     int			i = 0, j = 0;
 
 #ifdef RIGHTLEFT
@@ -409,7 +409,8 @@ shift_block(oap, amount)
 	}
 	/* if 'expandtab' is not set, use TABs */
 
-	if ((split = bd.startspaces + internal) > 0)
+	split = bd.startspaces + internal;
+	if (split > 0)
 	{
 	    if (!curbuf->b_p_et)
 	    {
@@ -474,13 +475,11 @@ block_insert(oap, s, b_insert, bdp)
     int			b_insert;
     struct block_def	*bdp;
 {
-    /* int		p_ts = (int)curbuf->b_p_ts; */
-    /* incr = lbr_chartabsize(ptr, (colnr_t)vcol); */
-    int		p_ts = 0;
+    int		p_ts;
     int		count = 0;	/* extra spaces to replace a cut TAB */
     int		spaces = 0;	/* non-zero if cutting a TAB */
-    colnr_t	offset = 0;	/* pointer along new line */
-    int		s_len = 0;	/* STRLEN(s) */
+    colnr_t	offset;		/* pointer along new line */
+    int		s_len;		/* STRLEN(s) */
     char_u	*newp, *oldp;	/* new, old lines */
     linenr_t	lnum;		/* loop var */
     int		oldstate = State;
@@ -755,6 +754,7 @@ get_yank_register(regname, writing)
 	y_previous = y_current;
 }
 
+#if defined(USE_MOUSE) || defined(PROTO)
 /*
  * return TRUE if the current yank register has type MLINE
  */
@@ -769,6 +769,7 @@ yank_register_mline(regname)
     get_yank_register(regname, FALSE);
     return (y_current->y_type == MLINE);
 }
+#endif
 
 /*
  * start or stop recording into a yank register
@@ -1909,9 +1910,9 @@ op_change(oap)
     OPARG	*oap;
 {
     colnr_t		l;
-    int			retval=TRUE;
+    int			retval;
 #ifdef VISUALEXTRA
-    long		offset = 0;
+    long		offset;
     linenr_t		linenr;
     long		ins_len, pre_textlen = 0;
     char_u		*firstline;
@@ -2360,6 +2361,7 @@ do_put(regname, dir, count, flags)
     int		orig_indent = 0;	/* init for gcc */
     int		indent_diff = 0;	/* init for gcc */
     int		first_indent = TRUE;
+    int		lendiff = 0;
     FPOS	old_pos;
     struct block_def bd;
     char_u	*insert_string = NULL;
@@ -2747,6 +2749,8 @@ do_put(regname, dir, count, flags)
 			old_pos = curwin->w_cursor;
 			curwin->w_cursor.lnum = lnum;
 			ptr = ml_get(lnum);
+			if (count == 0 && i == y_size - 1)
+			    lendiff = STRLEN(ptr);
 #if defined(SMARTINDENT) || defined(CINDENT)
 			if (*ptr == '#'
 # ifdef SMARTINDENT
@@ -2771,6 +2775,9 @@ do_put(regname, dir, count, flags)
 			    indent = 0;
 			set_indent(indent, TRUE);
 			curwin->w_cursor = old_pos;
+			/* remember how many chars were removed */
+			if (count == 0 && i == y_size - 1)
+			    lendiff -= STRLEN(ml_get(lnum));
 		    }
 		    ++nr_lines;
 		}
@@ -2778,7 +2785,8 @@ do_put(regname, dir, count, flags)
 
 	    /* put '] mark at last inserted character */
 	    curbuf->b_op_end.lnum = lnum;
-	    col = STRLEN(y_array[y_size - 1]);
+	    /* correct length for change in indent */
+	    col = STRLEN(y_array[y_size - 1]) - lendiff;
 	    if (col > 1)
 		curbuf->b_op_end.col = col - 1;
 	    else
@@ -3938,7 +3946,8 @@ read_viminfo_register(line, fp, force)
 	else
 	    y_current->y_type = MLINE;
     }
-    while (!(eof = vim_fgets(line, LSIZE, fp)) && line[0] == TAB)
+    while (!(eof = vim_fgets(line, LSIZE, fp))
+					&& (line[0] == TAB || line[0] == '<'))
     {
 	if (do_it)
 	{
@@ -3952,8 +3961,7 @@ read_viminfo_register(line, fp, force)
 		limit *= 2;
 		array = y_current->y_array;
 	    }
-	    viminfo_readstring(line);
-	    str = vim_strsave(line + 1);
+	    str = viminfo_readstring(line + 1, fp);
 	    if (str != NULL)
 		array[size++] = str;
 	    else
@@ -4324,6 +4332,18 @@ write_reg_contents(name, str)
     str_to_reg(y_current,
 	    (len > 0 && (str[len - 1] == '\n' || str[len -1] == '\r'))
 	     ? MLINE : MCHAR, str, len);
+
+#ifdef USE_CLIPBOARD
+    /*
+     * If we are writing to the clipboard register, send result to clipboard.
+     */
+    if (y_current == &(y_regs[CLIPBOARD_REGISTER]) && clipboard.available)
+    {
+	clip_own_selection();
+	clip_gen_set_selection();
+    }
+#endif
+
     y_previous = old_y_previous;
     y_current = old_y_current;
 }

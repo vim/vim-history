@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 5.4.  Last change: 1999 Jun 17
+*index.txt*     For Vim version 5.5.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -62,6 +62,14 @@ tag		char		action	~
 |i_CTRL-Q|	CTRL-Q		same as CTRL-V (used for terminal control flow)
 |i_CTRL-R|	CTRL-R {0-9a-z"%#:=}
 				insert the contents of a register
+|i_CTRL-R_CTRL-R| CTRL-R CTRL-R {0-9a-z"%#:=}
+				insert the contents of a register literally
+|i_CTRL-R_CTRL-O| CTRL-R CTRL-O {0-9a-z"%#:=}
+				insert the contents of a register literally
+				and don't auto-indent
+|i_CTRL-R_CTRL-P| CTRL-R CTRL-P {0-9a-z"%#:=}
+				insert the contents of a register literally
+				and fix indent.
 		CTRL-S		(used for terminal control flow)
 |i_CTRL-T|	CTRL-T		insert one shiftwidth of indent in current
 				line
@@ -77,7 +85,8 @@ tag		char		action	~
 |i_<Esc>|	<Esc>		end insert mode (unless 'insertmode' set)
 |i_CTRL-[|	CTRL-[		same as <Esc>
 |i_CTRL-\_CTRL-N| CTRL-\ CTRL-N	 go to Normal mode
-		CTRL-\ not_CTRL-N	not used
+		CTRL-\ a - z	reserved for extensions
+		CTRL-\ others	not used
 |i_CTRL-]|	CTRL-]		trigger abbreviation
 		CTRL-^		not used
 |i_CTRL-_|	CTRL-_		When 'allowrevins' set: change language
@@ -116,6 +125,10 @@ tag		char		action	~
 |i_<Help>|	<Help>		stop insert mode and display help window
 |i_<Insert>|	<Insert>	toggle Insert/Replace mode
 |i_<LeftMouse>|	<LeftMouse>	cursor at mouse click
+|i_<MouseDown>|	<MouseDown>	scroll three lines downwards
+|i_<S-MouseDown>| <S-MouseDown>	scroll a full page downwards
+|i_<MouseUp>|	<MouseUp>	scroll three lines upwards
+|i_<S-MouseUp>|	<S-MouseUp>	scroll a full page upwards
 
 commands in CTRL-X submode
 
@@ -179,7 +192,8 @@ tag		char	      note action in Normal mode	~
 |CTRL-Z|	CTRL-Z		   suspend program (or start new shell)
 		CTRL-[ <Esc>	   not used
 |CTRL-\_CTRL-N| CTRL-\ CTRL-N	   go to Normal mode (no-op)
-		CTRL-\ not_CTRL-N  not used
+		CTRL-\ a - z	   reserved for extensions
+		CTRL-\ others      not used
 |CTRL-]|	CTRL-]		   :ta to ident under cursor
 |CTRL-^|	CTRL-^		   edit Nth alternate file (equivalent to
 				   ":e #N")
@@ -414,6 +428,10 @@ tag		char	      note action in Normal mode	~
 |<S-Up>|	<S-Up>		1  same as CTRL-B
 |<Undo>|	<Undo>		2  same as "u"
 |<Up>|		<Up>		1  same as "k"
+|<MouseDown>|	<MouseDown>	   scroll three lines downwards
+|<S-MouseDown>|	<S-MouseDown>	   scroll a full page downwards
+|<MouseUp>|	<MouseUp>	   scroll three lines upwards
+|<S-MouseUp>|	<S-MouseUp>	   scroll a full page upwards
 
 ==============================================================================
 2.1 Text objects						*objects*
@@ -816,13 +834,14 @@ file names, tags, commands etc. as appropriate.
 |c_CTRL-V|	CTRL-V		insert next non-digit literally, insert three
 				digit decimal number as a single byte.
 |c_CTRL-W|	CTRL-W		delete the word in front of the cursor
-		CTRL-X		not used
+		CTRL-X		not used (reserved for completion)
 		CTRL-Y		not used
-		CTRL-Z		not used
+		CTRL-Z		not used (reserved for suspend)
 |c_<Esc>|	<Esc>		abandon command-line without executing it
 |c_<Esc>|	CTRL-[		same as <Esc>
 |c_CTRL-\_CTRL-N| CTRL-\ CTRL-N	 go to Normal mode, abandon command-line
-		CTRL-\ not_CTRL-N  not used
+		CTRL-\ a - z	reserved for extensions
+		CTRL-\ others	not used
 		CTRL-]		not used
 		CTRL-^		not used
 |c_CTRL-_|	CTRL-_		when 'allowrevins' set: change language
@@ -900,8 +919,8 @@ The commands are sorted on the non-optional part of their name.
 |:bunload|	:bun[load]	unload a specific buffer
 |:change|	:c[hange]	replace a line or series of lines
 |:cNext|	:cN[ext]	go to previous error
-|:cabbrev|	:ca[bbrev]	like ":abbreviate" but for command-line mode
-|:cabclear|	:cabc[lear]	clear all abbreviations for command-line mode
+|:cabbrev|	:ca[bbrev]	like ":abbreviate" but for Command-line mode
+|:cabclear|	:cabc[lear]	clear all abbreviations for Command-line mode
 |:call|		:cal[l]		call a function
 |:cc|		:cc		go to specific error
 |:cd|		:cd		change directory
@@ -913,15 +932,15 @@ The commands are sorted on the non-optional part of their name.
 |:clist|	:cl[ist]	list all errors
 |:clast|	:cla[st]	go to the specified error, default last one
 |:close|	:clo[se]	close current window
-|:cmap|		:cm[ap]		like ":map" but for command-line mode
-|:cmapclear|	:cmapc[lear]	clear all mappings for command-line mode
-|:cmenu|	:cme[nu]	add menu for command-line mode
+|:cmap|		:cm[ap]		like ":map" but for Command-line mode
+|:cmapclear|	:cmapc[lear]	clear all mappings for Command-line mode
+|:cmenu|	:cme[nu]	add menu for Command-line mode
 |:cnext|	:cn[ext]	go to next error
 |:cnewer|	:cnew[er]	go to newer error list
 |:cnfile|	:cnf[ile]	go to first error in next file
-|:cnoremap|	:cno[remap]	like ":noremap" but for command-line mode
-|:cnoreabbrev|	:cnorea[bbrev]	like ":noreabbrev" but for command-line mode
-|:cnoremenu|	:cnoreme[nu]	like ":noremenu" but for command-line mode
+|:cnoremap|	:cno[remap]	like ":noremap" but for Command-line mode
+|:cnoreabbrev|	:cnorea[bbrev]	like ":noreabbrev" but for Command-line mode
+|:cnoremenu|	:cnoreme[nu]	like ":noremenu" but for Command-line mode
 |:copy|		:co[py]		copy lines
 |:colder|	:col[der]	go to older error list
 |:command|	:com[mand]	create user-defined command
@@ -933,9 +952,9 @@ The commands are sorted on the non-optional part of their name.
 |:crewind|	:cr[ewind]	go to the specified error, default first one
 |:cscope|	:cs[cope]       execute cscope command
 |:cstag|	:cst[ag]	use cscope to jump to a tag
-|:cunmap|	:cu[nmap]	like ":unmap" but for command-line mode
-|:cunabbrev|	:cuna[bbrev]	like ":unabbrev" but for command-line mode
-|:cunmenu|	:cunme[nu]	remove menu for command-line mode
+|:cunmap|	:cu[nmap]	like ":unmap" but for Command-line mode
+|:cunabbrev|	:cuna[bbrev]	like ":unabbrev" but for Command-line mode
+|:cunmenu|	:cunme[nu]	remove menu for Command-line mode
 |:delete|	:d[elete]	delete lines
 |:delcommand|	:delc[ommand]	delete user-defined command
 |:delfunction|	:delf[unction]	delete a user function

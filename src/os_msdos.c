@@ -990,6 +990,7 @@ catch_cbrk(void)
     ctrlc_pressed = TRUE;
 }
 
+#ifndef DJGPP
 /*
  * ctrl-break handler for DOS. Never called when a ctrl-break is typed, because
  * we catch interrupt 1b. If you type ctrl-C while Vim is waiting for a
@@ -1018,6 +1019,7 @@ catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
     if (_osmajor >= 3)
 	ax |= 3;	    /* set AL to 3 */
 }
+#endif
 
 /*
  * Set the interrupt vectors for use with Vim on or off.
@@ -1664,24 +1666,23 @@ mch_set_winsize(void)
 
 /*
  * call shell, return FAIL for failure, OK otherwise
- * options == SHELL_FILTER if called by do_filter()
- * options == SHELL_COOKED if term needs cooked mode
+ * options: SHELL_*, see vim.h.
  */
     int
 mch_call_shell(
     char_u	*cmd,
     int		options)
 {
-    int	    x;
+    int		x;
 #ifndef DJGPP
-    char_u  *newcmd;
+    char_u	*newcmd;
 #endif
 
     out_flush();
 
     if (options & SHELL_COOKED)
 	settmode(TMODE_COOK);	/* set to normal mode */
-    set_interrupts(FALSE);	    /* restore interrupts */
+    set_interrupts(FALSE);	/* restore interrupts */
 
 #ifdef DJGPP
     /* ignore signals while external command is running */
@@ -1722,7 +1723,7 @@ mch_call_shell(
     settmode(TMODE_RAW);	/* set to raw mode */
     set_interrupts(TRUE);	/* catch interrupts */
 
-    if (x && !expand_interactively)
+    if (x && !(options & SHELL_SILENT))
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
@@ -1793,7 +1794,7 @@ dos_expandpath(
     struct growarray	*gap,
     char_u		*path,
     char_u		*wildc,
-    int			flags)
+    int			flags)		/* EW_* flags */
 {
     char_u		*buf;
     char_u		*p, *s, *e;
@@ -1834,7 +1835,7 @@ dos_expandpath(
     *e = NUL;
     /* now we have one wildcard component between s and e */
 
-    /* if the file name ends in "*" and does not contain a ".", addd ".*" */
+    /* if the file name ends in "*" and does not contain a ".", add ".*" */
     if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
     {
 	*e++ = '.';
@@ -1890,7 +1891,7 @@ dos_expandpath(
 mch_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags)
+    int			flags)		/* EW_* flags */
 {
     return dos_expandpath(gap, path, path, flags);
 }

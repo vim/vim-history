@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: main.c,v 8.5 1999/06/22 02:29:38 darren Exp $
+*   $Id: main.c,v 8.20 1999/09/17 07:34:00 darren Exp $
 *
 *   Copyright (c) 1996-1999, Darren Hiebert
 *
@@ -188,15 +188,16 @@ static boolean isSymbolicLink __ARGS((const char *const name));
 static boolean isNormalFile __ARGS((const char *const name));
 static boolean isDirectory __ARGS((const char *const name));
 static boolean createTagsForFile __ARGS((const char *const filePath, const langType language, const unsigned int passCount));
-static vString *getNextListFile __ARGS((FILE *const fp));
 static vString *sourceFilePath __ARGS((const char *const file));
 static boolean createTagsWithFallback __ARGS((const char *const fileName, const langType language));
 static boolean createTagsForDirectory __ARGS((const char *const dirName));
 static boolean createTagsForEntry __ARGS((const char *const entryName));
-static boolean createTagsForList __ARGS((const char *const listFile));
-static boolean createTagsForArgs __ARGS((const char *const *const argList));
+static boolean createTagsFromFileInput __ARGS((FILE* const fp, const boolean filter));
+static boolean createTagsFromListFile __ARGS((const char* const fileName));
+static boolean createTagsForArgs __ARGS((cookedArgs* const args));
 static void printTotals __ARGS((const clock_t *const timeStamps));
-static void makeTags __ARGS((const char *const *const argList));
+static boolean areFilesAvailable __ARGS((cookedArgs* args));
+static void makeTags __ARGS((cookedArgs* arg));
 static void setExecutableName __ARGS((const char *const path));
 
 /*============================================================================
@@ -396,7 +397,8 @@ extern boolean isDestinationStdout()
 {
     boolean toStdout = FALSE;
 
-    if (Option.xref  ||  strcmp(Option.tagFileName, "-") == 0
+    if (Option.xref  ||  Option.filter  ||
+	(Option.tagFileName != NULL  &&  (strcmp(Option.tagFileName, "-") == 0
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 	/* nothing else special needed here */
 #else
@@ -406,7 +408,7 @@ extern boolean isDestinationStdout()
     || strcmp(Option.tagFileName, "/dev/stdout") == 0
 # endif
 #endif
-	)
+	)))
 	toStdout = TRUE;
 
     return toStdout;
@@ -555,29 +557,6 @@ static boolean createTagsForFile( filePath, language, passCount )
 	endEtagsFile(filePath);
 
     return retry;
-}
-
-static vString *getNextListFile( fp )
-    FILE *const fp;
-{
-    vString *fileName = NULL;
-    int c;
-
-    do
-    {
-	c = fgetc(fp);
-	while (c != '\n'  &&  c != EOF)
-	{
-	    if (fileName == NULL)
-		fileName = vStringNew();
-	    vStringPut(fileName, c);
-	    c = fgetc(fp);
-	}
-	if (fileName != NULL)
-	    vStringTerminate(fileName);
-    } while (fileName == NULL  &&  c != EOF);
-
-    return fileName;
 }
 
 static vString *sourceFilePath( file )
@@ -773,13 +752,13 @@ static boolean createTagsForEntry( entryName )
     boolean resize = FALSE;
     langType language;
 
-    if (! doesFileExist(entryName))
-	error(WARNING | PERROR, "cannot open \"%s\"", entryName);
-    else if (isSymbolicLink(entryName)  &&  ! Option.followLinks)
+    if (isSymbolicLink(entryName)  &&  ! Option.followLinks)
     {
 	if (Option.verbose)
-	    printf("  ignoring %s (symbolic link)\n", entryName);
+	    printf("ignoring %s (symbolic link)\n", entryName);
     }
+    else if (! doesFileExist(entryName))
+	error(WARNING | PERROR, "cannot access \"%s\"", entryName);
     else if (isDirectory(entryName))
     {
 	if (Option.recurse)
@@ -787,39 +766,40 @@ static boolean createTagsForEntry( entryName )
 	else
 	{
 	    if (Option.verbose)
-		printf("  no recurse into directory %s\n", entryName);
+		printf("ignoring %s (directory)\n", entryName);
 	    resize = FALSE;
 	}
     }
     else if (! isNormalFile(entryName))
     {
 	if (Option.verbose)
-	    printf("  ignoring %s (special file)\n", entryName);
+	    printf("ignoring %s (special file)\n", entryName);
     }
     else if ((language = getFileLanguage(entryName)) == LANG_IGNORE)
     {
 	if (Option.verbose)
-	    printf("  ignoring %s (unknown extension)\n", entryName);
+	    printf("ignoring %s (unknown extension)\n", entryName);
     }
     else
     {
+	if (Option.filter) openTagFile();
 	resize = createTagsWithFallback(entryName, language);
+	if (Option.filter) closeTagFile(resize);
 	addTotals(1, 0L, 0L);
     }
     return resize;
 }
 
-static boolean createTagsForArgs( argList )
-    const char *const *const argList;
+static boolean createTagsForArgs( args )
+    cookedArgs* const args;
 {
     boolean resize = FALSE;
-    const char *const *pArg;
 
     /*  Generate tags for each argument on the command line.
      */
-    for (pArg = argList  ;  *pArg != NULL  ;  ++pArg)
+    while (! cArgOff(args))
     {
-	const char *arg = *pArg;
+	const char *arg = cArgItem(args);
 
 #if defined(MSDOS) || defined(WIN32)
 	vString *const pattern = sourceFilePath(arg);
@@ -842,36 +822,59 @@ static boolean createTagsForArgs( argList )
 	resize |= createTagsForEntry(vStringValue(argPath));
 	vStringDelete(argPath);
 #endif
+	cArgForth(args);
+	parseOptions(args);
     }
-
     return resize;
 }
 
-/*  Create tags for the source files listed in the file specified by
- *  "listFile".
+/*  Read from an opened file a list of file names for which to generate tags.
  */
-static boolean createTagsForList( listFile )
-    const char *const listFile;
+static boolean createTagsFromFileInput( fp, filter )
+    FILE* const fp;
+    const boolean filter;
 {
     boolean resize = FALSE;
-    FILE *const fp = (strcmp(listFile,"-") == 0) ? stdin : fopen(listFile, "r");
+    if (fp != NULL)
+    {
+	cookedArgs* args = cArgNewFromFile(fp);
+	parseOptions(args);
+	while (! cArgOff(args))
+	{
+	    const char* const fileName = cArgItem(args);
+	    vString *const filePath = sourceFilePath(fileName);
+	    resize |= createTagsForEntry(vStringValue(filePath));
+	    if (filter)
+	    {
+		if (Option.filterTerminator != NULL)
+		    fputs(Option.filterTerminator, stdout);
+		fflush(stdout);
+	    }
+	    vStringDelete(filePath);
+	    cArgForth(args);
+	    parseOptions(args);
+	}
+	cArgDelete(args);
+    }
+    return resize;
+}
 
-    if (fp == NULL)
-	error(FATAL | PERROR, "cannot open \"%s\"", listFile);
+/*  Read from a named file a list of file names for which to generate tags.
+ */
+static boolean createTagsFromListFile( fileName )
+    const char* const fileName;
+{
+    boolean resize;
+    Assert (fileName != NULL);
+    if (strcmp(fileName, "-") == 0)
+	resize = createTagsFromFileInput(stdin, FALSE);
     else
     {
-	vString *fileName;
-
-	while ((fileName = getNextListFile(fp)) != NULL)
-	{
-	    vString *const filePath = sourceFilePath(vStringValue(fileName));
-
-	    resize |= createTagsForEntry(vStringValue(filePath));
-	    vStringDelete(fileName);
-	    vStringDelete(filePath);
-	}
-	if (fp != stdin)
-	    fclose(fp);
+	FILE* const fp = fopen(fileName, "r");
+	if (fp == NULL)
+	    error(FATAL | PERROR, "cannot open \"%s\"", fileName);
+	resize = createTagsFromFileInput(fp, FALSE);
+	fclose(fp);
     }
     return resize;
 }
@@ -943,26 +946,64 @@ static void printTotals( timeStamps )
 #endif
 }
 
-static void makeTags( argList )
-    const char *const *const argList;
+static boolean areFilesAvailable( args )
+    cookedArgs* args;
+{
+    return (boolean)(Option.filter || Option.fileList != NULL || !cArgOff(args));
+}
+
+static void makeTags( args )
+    cookedArgs* args;
 {
     boolean resize = FALSE;
     clock_t timeStamps[3];
+
+    if (! areFilesAvailable(args))
+    {
+	if (Option.recurse)
+	{
+	    Assert(cArgOff(args));
+	    cArgDelete(args);
+	    args = cArgNewFromString(".");
+	}
+	else
+	    error(FATAL, "No files specified. Try \"%s --help\".",
+		getExecutableName());
+    }
 #define timeStamp(n) timeStamps[(n)] = (Option.printTotals ? clock():(clock_t)0)
 
-    timeStamp(0);
+    if (! Option.filter)
+	openTagFile();
 
-    openTagFile();
+    /******/  timeStamp(0);
+
+    if (! cArgOff(args))
+    {
+	if (Option.verbose)
+	    printf("Reading command line arguments\n");
+	resize = createTagsForArgs(args);
+    }
 
     if (Option.fileList != NULL)
-	resize = createTagsForList(Option.fileList);
-    resize = (boolean)(createTagsForArgs(argList) || resize);
+    {
+	if (Option.verbose)
+	    printf("Reading list file\n");
+	resize = (boolean)(createTagsFromListFile(Option.fileList) || resize);
+    }
 
-    timeStamp(1);
+    if (Option.filter)
+    {
+	if (Option.verbose)
+	    printf("Reading filter input");
+	resize = (boolean)(createTagsFromFileInput(stdin, TRUE) || resize);
+    }
 
-    closeTagFile(resize);
+    /******/  timeStamp(1);
 
-    timeStamp(2);
+    if (! Option.filter)
+	closeTagFile(resize);
+
+    /******/  timeStamp(2);
 
     if (Option.printTotals)
 	printTotals(timeStamps);
@@ -988,42 +1029,34 @@ extern int main( argc, argv )
     int __unused__ argc;
     char **argv;
 {
-    char **envArgList;
-    const char *const *fileList;
+    cookedArgs *args;
+
+#ifdef AMIGA
+    /* This program doesn't work when started from the Workbench */
+    if (argc == 0)
+	exit(1);
+#endif
 
 #ifdef __EMX__
-    _wildcard(&argc, &argv);		/* expand wildcards in argument list */
+    _wildcard(&argc, &argv);	/* expand wildcards in argument list */
 #endif
 
     setExecutableName(*argv++);
     testEtagsInvocation();
 
-    /*  Parse options.
-     */
+    args = cArgNewFromArgv(argv);
+    previewFirstOption(args);
     initOptions();
-    envArgList = parseEnvironmentOptions();
-    fileList = (const char *const *)parseOptions(argv);
-    setOptionDefaults();
+    readOptionConfiguration();
+    if (Option.verbose)
+	printf("Reading options from command line\n");
+    parseOptions(args);
+    checkOptions();
+    makeTags(args);
 
-    /*	Generate tags if there is at least one source file or a file list.
+    /*  Clean up.
      */
-    if (*fileList == NULL  &&  Option.fileList == NULL)
-    {
-	if (! Option.recurse)
-	    error(FATAL, "No files specified. Try \"%s --help\".",
-		getExecutableName());
-	else
-	{
-	    static const char *defaultRecursionDir[] = { ".", NULL };
-	    fileList = defaultRecursionDir;
-	}
-    }
-    makeTags(fileList);
-
-    /*  Post tag generation clean-up.
-     */
-    if (envArgList != NULL)
-	free(envArgList);
+    cArgDelete(args);
     freeKeywordTable();
     freeSourceFileResources();
     freeTagFileResources();
