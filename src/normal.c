@@ -4545,7 +4545,7 @@ nv_down(cap)
 {
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     /* In a quickfix window a <CR> jumps to the error under the cursor. */
-    if (bt_quickfix(curbuf))
+    if (bt_quickfix(curbuf) && cap->cmdchar == '\r')
 	stuffReadbuff((char_u *)":.cc\n");
     else
 #endif

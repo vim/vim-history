@@ -55,14 +55,14 @@ esac
 AC_SUBST(OS_EXTRA_SRC)
 AC_SUBST(OS_EXTRA_OBJ)
 
-dnl Add /usr/local/lib to $LDFLAGS and /usr/local/include to CFLAGS.
+dnl Add /usr/local/lib to $LIBS and /usr/local/include to CFLAGS.
 dnl Only when the directory exists and add it only once.
 if test -d /usr/local/lib; then
-  LDFLAGS=`echo "$LDFLAGS" | sed 's+-L/usr/local/lib++'`
-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+  LIBS=`echo "$LIBS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
+  LIBS="$LIBS -L/usr/local/lib"
 fi
 if test -d /usr/local/include; then
-  CPPFLAGS=`echo "$CPPFLAGS" | sed 's+-I/usr/local/include++'`
+  CPPFLAGS=`echo "$CPPFLAGS" | sed -e 's+-I/usr/local/include ++g' -e 's+-I/usr/local/include$++g'`
   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 fi
 
@@ -1161,7 +1161,7 @@ if test "$enable_fontset" = "yes"; then
   AC_DEFINE(FEAT_XFONTSET)
 fi
 
-dnl Checks for libraries.
+dnl Checks for libraries and include files.
 
 AC_MSG_CHECKING(quality of toupper)
 AC_TRY_RUN([#include <ctype.h>
@@ -1780,4 +1780,4 @@ AC_CHECK_HEADERS(setjmp.h)
 dnl write output files
 AC_OUTPUT(auto/config.mk:config.mk.in)
 
-dnl vim: set sw=2 tw=78 :
+dnl vim: set sw=2 tw=78 fo+=l:

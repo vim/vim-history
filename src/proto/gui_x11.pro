@@ -56,7 +56,6 @@ int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));
 XButtonPressedEvent *gui_x11_get_last_mouse_event __ARGS((void));
-void gui_mch_clearsign __ARGS((int row));
 void gui_mch_drawsign __ARGS((int row, int sign_idx));
 XImage *gui_mch_register_sign __ARGS((char *signfile));
 void gui_mch_mousehide __ARGS((int hide));

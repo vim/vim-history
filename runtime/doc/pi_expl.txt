@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0m.  Last change: 2000 Nov 05
+*pi_expl.txt*    For Vim version 6.0n.  Last change: 2000 Nov 13
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -23,6 +23,10 @@ This plugin is to explore directories and files inside Vim. The file explorer
 is launched whenever the user tries to edit a directory. It can also be
 launched through the mapped key sequence <Leader>e. To open the file
 explorer in a new window use the key sequence <Leader>s. |<Leader>|
+You can redefine these by adding a couple of lines to your vimrc file: >
+	:nmap ,ee <Plug>ExplorerOpen
+	:nmap ,ss <Plug>ExplorerSplit
+This uses ,ee instead of <Leader>e and ,ss instead of <Leader>s.
 
 							*explorer-settings*
 If the explorer is launched using the command <Leader>e or <Leader>s, the

@@ -2091,7 +2091,11 @@ ro_find_sbar(id)
 
     if (gui.bottom_sbar.id == id)
 	return &gui.bottom_sbar;
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp->w_scrollbars[SBAR_LEFT].id == id)
 	    return &wp->w_scrollbars[SBAR_LEFT];
@@ -2279,7 +2283,11 @@ ro_open_main(block)
 	if (x_offset || y_offset || pos_wanted == -1 || pos_wanted == -2)
 	{
 	    /* If parent has moved, re-open all the child windows. */
+#ifndef FEAT_WINDOWS
+	    wp = curwin;
+#else
 	    for (wp = firstwin; wp != NULL; wp = wp -> w_next)
+#endif
 	    {
 		/* Reopen scrollbars for this window. */
 		if (left_bar)

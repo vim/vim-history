@@ -7,9 +7,9 @@
 #		Sandor Kopanyi,  <sandor.kopanyi@altavista.net>
 #
 #	Execute with:
-#		mms/descrip=makefile_vms.mms
+#		mms/descrip=Make_vms.mms
 #				or
-#		mmk/descrip=makefile_vms.mms
+#		mmk/descrip=Make_vms.mms
 #
 # NOTE: You can run this script just in X/Window environment. It will
 # create a new terminals, therefore you have to set up your DISPLAY

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
+*options.txt*   For Vim version 6.0n.  Last change: 2000 Nov 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5044,6 +5044,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	'	Maximum number of previously edited files for which the marks
 		are remembered.  This parameter must always be included when
 		'viminfo' is non-empty.
+		Including this item also means that the |jumplist| is stored
+		in the viminfo file.
 	f	Whether file marks need to be stored.  If zero, file marks ('0
 		to '9, 'A to 'Z) are not stored.  When not present or when
 		non-zero, they are all stored.  '0 is used for the current

@@ -1123,7 +1123,9 @@ qf_jump(dir, errornr, forceit)
 	     * Couldn't open file, so put index back where it was.  This could
 	     * happen if the file was readonly and we changed something.
 	     */
+#ifdef FEAT_WINDOWS
 failed:
+#endif
 	    qf_ptr = old_qf_ptr;
 	    qf_index = old_qf_index;
 	}

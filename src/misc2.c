@@ -4567,6 +4567,10 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	file_to_find = vim_strsave(NameBuff);
 	if (file_to_find == NULL)	/* out of memory */
 	    return NULL;
+#ifdef VMS
+	if (mch_isFullName(file_to_find) || !path_with_url(file_to_find))
+	    file_to_find = vms_fixfilename(file_to_find);
+#endif
     }
 
     if (mch_isFullName(file_to_find)
@@ -4577,8 +4581,8 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	     * on Win32 as reported by Michael Geddes. Before we ship around
 	     * this, we should first understand why this happens.
 	     */
-	    /* for '..' we don't need the path option */
-	    || 0 == strcmp("..", file_to_find)
+	    /* for '..' and './'  we don't need the path option */
+	    || (file_to_find[0] == '.' && (file_to_find[1] == PATHSEP || file_to_find[1] == '.'))
 #endif /* End of Exclusion   (rks++ 29Jul00) */
 #if defined(MSWIN) || defined(MSDOS) || defined(OS2)
 	    /* handle "\tmp" as absolute path */
@@ -4587,10 +4591,6 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	    || (file_to_find[0] != NUL && file_to_find[1] == ':')
 #endif
        )
-#if 0
-	||
-	    (file_to_find[0] == '.' && (file_to_find[1] == PATHSEP || file_to_find[1] == '.')))
-#endif
 	    {
 	/*
 	 * Absolute path, no need to use "path_option".

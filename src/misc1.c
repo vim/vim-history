@@ -2142,7 +2142,11 @@ changed_common(lnum, col, lnume, xtra)
     /* mark the buffer as modified */
     changed();
 
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
 	if (wp->w_buffer == curbuf)
 	{
 	    /* Mark this window to be redrawn later. */
@@ -2249,7 +2253,7 @@ unchanged(buf, ff)
     ++global_changedtick;
 }
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * check_status: called when the status bars for the buffer 'buf'
  *		 need to be updated
@@ -2284,12 +2288,16 @@ change_warning(col)
 {
     if (curbuf->b_did_warn == FALSE
 	    && curbufIsChanged() == 0
-	    && !p_im
 #ifdef FEAT_AUTOCMD
 	    && !autocmd_busy
 #endif
 	    && curbuf->b_p_ro)
     {
+#ifdef FEAT_AUTOCMD
+	apply_autocmds(EVENT_FILECHANGEDRO, NULL, NULL, FALSE, curbuf);
+	if (!curbuf->b_p_ro)
+	    return;
+#endif
 	/*
 	 * Do what msg() does, but with a column offset if the warning should
 	 * be after the mode message.
@@ -6368,22 +6376,22 @@ done:
  * functions.
  */
     void
-FreeWild(num, file)
-    int	    num;
-    char_u  **file;
+FreeWild(count, files)
+    int	    count;
+    char_u  **files;
 {
-    if (file == NULL || num <= 0)
+    if (files == NULL || count <= 0)
 	return;
 #if defined(__EMX__) && defined(__ALWAYS_HAS_TRAILING_NULL_POINTER) /* XXX */
     /*
      * Is this still OK for when other functions than expand_wildcards() have
      * been used???
      */
-    _fnexplodefree((char **)file);
+    _fnexplodefree((char **)files);
 #else
-    while (num--)
-	vim_free(file[num]);
-    vim_free(file);
+    while (count--)
+	vim_free(files[count]);
+    vim_free(files);
 #endif
 }
 

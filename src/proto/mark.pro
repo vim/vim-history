@@ -13,6 +13,8 @@ char_u *fm_getname __ARGS((fmark_t *fmark, int lead_len));
 void do_marks __ARGS((exarg_t *eap));
 void ex_jumps __ARGS((exarg_t *eap));
 void mark_adjust __ARGS((linenr_t line1, linenr_t line2, long amount, long amount_after));
+void copy_jumplist __ARGS((win_t *from, win_t *to));
+void free_jumplist __ARGS((win_t *wp));
 void set_last_cursor __ARGS((win_t *win));
 int read_viminfo_filemark __ARGS((char_u *line, FILE *fp, int force));
 void write_viminfo_filemarks __ARGS((FILE *fp));

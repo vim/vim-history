@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 05
+" Last Change:	2000 Nov 17
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -77,10 +77,10 @@ set cpo&vim
 " First remove all old syntax autocommands.
 au! Syntax
 
-" OFF
-au Syntax OFF		syn clear
+" :set syntax=OFF  and any syntax name that doesn't exist
+au Syntax *		syn clear
 
-" ON
+" :set syntax=ON
 au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl ErrorMsg | echo "filetype unknown" | echohl None | endif
 
 " Load the main syntax file when the Syntax option is set.  Only load the

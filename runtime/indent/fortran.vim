@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.30
-" Last Change:	2000 Nov 03
+" Version:	0.31
+" Last Change:	2000 Nov 14
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -10,16 +10,20 @@ setlocal indentkeys+==~end,=~case,=~if,=~else,=~do,=~where,=~elsewhere,=~select
 " Determine whether this is a fixed or free format source file
 " if this hasn't been done yet
 if !exists("b:fortran_fixed_source")
-  let b:fortran_fixed_source = 1
-  let s:ln=1
-  while s:ln < 25
-    let s:test = strpart(getline(s:ln),0,5)
-    if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
-      let b:fortran_fixed_source = 0
-      break
-    endif
-    let s:ln = s:ln + 1
-  endwhile
+  if exists("fortran_free_source")
+    let b:fortran_fixed_source = 0
+  else
+    let b:fortran_fixed_source = 1
+    let s:ln=1
+    while s:ln < 25
+      let s:test = strpart(getline(s:ln),0,5)
+      if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
+	let b:fortran_fixed_source = 0
+	break
+      endif
+      let s:ln = s:ln + 1
+    endwhile
+  endif
 endif
 
 " Define the appropriate indent function but only once
@@ -42,7 +46,7 @@ function FortranGetIndent(lnum)
   let prevstat=substitute(prevline, '!.*$', '', '')
 
   "Indent do loops only if they are all guaranteed to be of do/end do type
-  if exists("b:fortran_do_enddo")
+  if exists("b:fortran_do_enddo") || exists("fortran_do_enddo")
     if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*do\>'
       let ind = ind + &sw
     endif
@@ -51,7 +55,7 @@ function FortranGetIndent(lnum)
     endif
   endif
 
-  "Add a shiftwidth to statements following if, else, do, case,
+  "Add a shiftwidth to statements following if, else, case,
   "where and elsewhere statements
   if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>' ||
    \ prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
@@ -62,7 +66,7 @@ function FortranGetIndent(lnum)
     endif
   endif
 
-  "Subtract a shiftwidth from else, elsewhere, case, end if, end do,
+  "Subtract a shiftwidth from else, elsewhere, case, end if,
   " end where and end select statements
   if getline(v:lnum) =~? '^\s*\(\d\+\s\)\=\s*\(else\|elsewhere\|case\|end\s*\(if\|where\|select\)\)\>'
     let ind = ind - &sw
@@ -77,14 +81,7 @@ endfunction
 
 function FortranGetFreeIndent()
   "Find the previous non-blank line
-  let lnum = v:lnum - 1
-  while lnum > 0
-    let prevline=getline(lnum)
-    if prevline !~ '^\s*$'
-      break
-    endif
-    let lnum = lnum - 1
-  endwhile
+  let lnum = prevnonblank(v:lnum - 1)
 
   "Use zero indent at the top of the file
   if lnum == 0

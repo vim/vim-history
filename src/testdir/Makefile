@@ -39,7 +39,9 @@ clean:
 	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
 	/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
-		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \
+		else echo $* FAILED >>test.log; \
+			touch test.out; \
+			mv -f test.out $*.failed; \
 		fi"
 	-rm -f Xdotest
 

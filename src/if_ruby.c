@@ -394,11 +394,16 @@ static VALUE window_s_current()
 
 static VALUE window_s_count()
 {
+#ifdef FEAT_WINDOWS
     win_t	*w;
     int n = 0;
 
-    for (w = firstwin; w; w = w->w_next) n++;
+    for (w = firstwin; w; w = w->w_next)
+	n++;
     return INT2NUM(n);
+#else
+    return INT2NUM(1);
+#endif
 }
 
 static VALUE window_s_aref(VALUE self, VALUE num)
@@ -406,10 +411,9 @@ static VALUE window_s_aref(VALUE self, VALUE num)
     win_t *w;
     int n = NUM2INT(num);
 
-    for (w = firstwin; w != NULL; w = w->w_next, --n) {
+    for (w = firstwin; w != NULL; w = W_NEXT(w), --n)
 	if (n == 0)
 	    return window_new(w);
-    }
     return Qnil;
 }
 

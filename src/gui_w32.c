@@ -742,6 +742,7 @@ _OnDropFiles(
     HWND hwnd,
     HDROP hDrop)
 {
+#ifdef FEAT_WINDOWS
     char    szFile[_MAX_PATH];
     UINT    cFiles = DragQueryFile(hDrop, 0xFFFFFFFF, szFile, _MAX_PATH);
     UINT    i;
@@ -826,6 +827,7 @@ _OnDropFiles(
 
     /* SetActiveWindow() doesn't work here... */
     (void)SetForegroundWindow(s_hwnd);
+#endif
 }
 
     static void
@@ -1197,7 +1199,11 @@ gui_w32_find_scrollbar(HWND hwnd)
 
     if (gui.bottom_sbar.id == hwnd)
 	return &gui.bottom_sbar;
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
     {
 	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
 	    return &wp->w_scrollbars[SBAR_LEFT];

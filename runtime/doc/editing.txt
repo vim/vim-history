@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
+*editing.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -587,15 +587,21 @@ filename before the ":cd".
 ==============================================================================
 4. The argument list				*argument-list* *arglist*
 
-If you give more than one file name when starting Vim, this list is
-remembered as the argument list.  Do not confuse this with the file list,
-which you can see with the ":files" command |:files|.  The argument list was
-already present in Vi, the file list is new in Vim.  The file names in the
-argument list will also be present in the file list (unless they were
-deleted with ":bdel").
+If you give more than one file name when starting Vim, this list is remembered
+as the argument list.  You can jump to each file in this list.
+
+Do not confuse this with the buffer list, which you can see with the
+|:buffers| command.  The argument list was already present in Vi, the buffer
+list is new in Vim.  A file name in the argument list will also be present in
+the buffer list (unless it was deleted with ":bdel").
+
+There is one global argument list, which is used for all windows by default.
+It is possible to create a new argument list local to a window, see
+|:arglocal|.
 
 You can use the argument list with the following commands, and with the
-expression functions |argc()| and |argv()|.
+expression functions |argc()| and |argv()|.  These all work on the argument
+list of the current window.
 
 							*:ar* *:args*
 :ar[gs]			Print the argument list, with the current file in
@@ -612,20 +618,54 @@ expression functions |argc()| and |argv()|.
 			the first one.  Discard any changes to the current
 			buffer.  Also see |++opt| and |+cmd|. {Vi: no ++opt}
 
+:[count]arga[dd] {name} ..				*:arga* *:argadd*
+			Add the {name}s to the argument list.
+			If [count] is omitted, the {name}s are added just
+			after the current entry in the argument list.
+			Otherwise they are added after the [count]'th file.
+			If the argument list is "a b c", and "b" is the
+			current argument, then these commands result in:
+				command		new argument list ~
+				:argadd x	a b x c
+				:0argadd x	x a b c
+				:1argadd x	a x b c
+				:99argadd x	a b c x
+			This command keeps the currently edited file.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+			Note: you can also use this method: >
+				:args ## x
+<			This will add the "x" item and sort the new list.
+
+:argd[elete] {pattern} ..				*:argd* *:argdelete*
+			Delete files from the argument list that match the
+			{pattern}s.  {pattern} is used like a file pattern,
+			see |file-pattern|.  "%" can be used to delete the
+			current entry.
+			This command keeps the currently edited file, also
+			when it's deleted from the argument list.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+
 							*:argu* *:argument*
 :[count]argu[ment] [count] [++opt] [+cmd]
-			Edit file [count] in the argument list.  This fails
+			Edit file [count] in the argument list.  When [count]
+			is omitted the current entry is used.  This fails
 			when changes have been made and Vim does not want to
-			|abandon| the current buffer.  Also see |++opt| and
-			|+cmd|.  {Vi: no such command}
+			|abandon| the current buffer.
+			Also see |++opt| and |+cmd|.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
 
 :[count]argu[ment]! [count] [++opt] [+cmd]
 			Edit file [count] in the argument list, discard any
-			changes to the current buffer.  Also see |++opt| and
-			|+cmd|.  {Vi: no such command}
+			changes to the current buffer.  When [count] is
+			omitted the current entry is used.
+			Also see |++opt| and |+cmd|.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
 
-							*:n* *:ne* *:next*
-:[count]n[ext] [++opt] [+cmd]	
+:[count]n[ext] [++opt] [+cmd]				*:n* *:ne* *:next*
 			Edit [count] next file.  This fails when changes have
 			been made and Vim does not want to |abandon| the
 			current buffer.  Also see |++opt| and |+cmd|.  {Vi: no
@@ -743,6 +783,64 @@ list it will be
 	(file (4) of 11)
 This means that you are position 4 in the argument list, but not editing the
 fourth file in the argument list.  This happens when you do ":e file".
+
+
+LOCAL ARGUMENT LIST
+
+{not in Vi}
+{not available when compiled without the |+windows| or |+listcmds| feature}
+
+							*:arglocal*
+:argl[ocal]		Make a local copy of the global argument list.
+			Doesn't start editing another file.
+
+:argl[ocal][!] [++opt] [+cmd] {arglist}
+			Define a new argument list, which is local to the
+			current window.  Works like |:args_f| otherwise.
+
+							*:argglobal*
+:argg[lobal]		Use the global argument list for the current window.
+			Doesn't start editing another file.
+
+:argg[lobal][!] [++opt] [+cmd] {arglist}
+			Use the global argument list for the current window.
+			Define a new global argument list like |:args_f|.
+			All windows using the global argument list will see
+			this new list.
+
+There can be several argument lists.  They can be shared between windows.
+When they are shared, changing the argument list in one window will also
+change it in the other window.
+
+When a window is split the new window inherits the argument list from the
+current window.  The two windows then share this list, until one of them uses
+":argslocal" or ":argsglobal" to use another argument list.
+
+
+USING THE ARGUMENT LIST
+
+						*:argdo*
+:argdo[!] {cmd}		Execute {cmd} for each file in the argument list.
+			This works like using |:argument| to edit each file
+			and then executing {cmd}.
+			When the current file can't be |abandon|ed and the [!]
+			is not present, the command fails.
+			When an error is detected on one file, further files
+			in the argument list will not be visited.
+			The last file in the argument list (or where an error
+			occurred) becomes the current file.
+			Note: While this command is executing, the Syntax
+			autocommand event is disabled by adding it to
+			'eventignore'.  This considerably speeds up editing
+			each file.
+			{not in Vi} {not available when compiled without the
+			|+listcmds| feature}
+
+Example: >
+	:args *.c
+	:argdo set ff=unix | update
+This sets the 'fileformat' option to "unix" and writes the file if is now
+changed.  This is done for all *.c files.
 
 ==============================================================================
 5. Writing and quitting				*write-quit* *save-file*

@@ -27,8 +27,11 @@
 
 #include "vim.h"
 
+#if defined(FEAT_CMDL_COMPL) || defined(FEAT_LISTCMDS) || defined(FEAT_EVAL) || defined(FEAT_PERL)
 static char_u	*buflist_match __ARGS((regprog_t *prog, buf_t *buf));
-static char_u	*buflist_match_try __ARGS((regprog_t *prog, char_u *name));
+# define HAVE_BUFLIST_MATCH
+static char_u	*fname_match __ARGS((regprog_t *prog, char_u *name));
+#endif
 static void	buflist_setfpos __ARGS((buf_t *buf, linenr_t lnum, colnr_t col, int copy_options));
 static wininfo_t *find_wininfo __ARGS((buf_t *buf));
 #ifdef UNIX
@@ -390,6 +393,7 @@ clear_wininfo(buf)
     }
 }
 
+#if defined(FEAT_LISTCMDS) || defined(PROTO)
 /*
  * do_bufdel() - delete or unload buffer(s)
  *
@@ -504,6 +508,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 
     return errormsg;
 }
+#endif
 
 /*
  * Implementation of the command for the buffer list
@@ -530,8 +535,6 @@ do_buffer(action, start, dir, count, forceit)
 {
     buf_t	*buf;
     buf_t	*delbuf;
-    int		retval;
-    int		forward;
 
     switch (start)
     {
@@ -603,11 +606,15 @@ do_buffer(action, start, dir, count, forceit)
     need_mouse_correct = TRUE;
 #endif
 
+#ifdef FEAT_LISTCMDS
     /*
      * delete buffer buf from memory and/or the list
      */
     if (action == DOBUF_UNLOAD || action == DOBUF_DEL)
     {
+	int	forward;
+	int	retval;
+
 	if (!forceit && bufIsChanged(buf))
 	{
 	    EMSGN(_("No write since last change for buffer %ld (use ! to override)"),
@@ -694,7 +701,7 @@ do_buffer(action, start, dir, count, forceit)
 	    forward = jumpidx;
 	    while (jumpidx != curwin->w_jumplistidx)
 	    {
-		buf = buflist_findnr(curwin->w_jumplist[jumpidx].fnum);
+		buf = buflist_findnr(curwin->w_jumplist[jumpidx].fmark.fnum);
 		if (buf == curbuf || (buf != NULL && buf->b_ml.ml_mfp == NULL))
 		    buf = NULL;	/* Must be open and not current */
 		/* found a valid buffer: stop searching */
@@ -755,6 +762,7 @@ do_buffer(action, start, dir, count, forceit)
 #endif
 	    return FAIL;
     }
+#endif
 
     /* go to current buffer - nothing to do */
     if (buf == curbuf)
@@ -1240,9 +1248,11 @@ buflist_findname_stat(ffname, stp)
     return NULL;
 }
 
+#if defined(FEAT_LISTCMDS) || defined(FEAT_EVAL) || defined(FEAT_PERL) || defined(PROTO)
 /*
- * Find file in buffer list by a regexppattern.
- * Return fnum of the found buffer, < 0 for error.
+ * Find file in buffer list by a regexp pattern.
+ * Return fnum of the found buffer.
+ * Return < 0 for error.
  */
     int
 buflist_findpat(pattern, pattern_end)
@@ -1251,10 +1261,9 @@ buflist_findpat(pattern, pattern_end)
 {
     buf_t	*buf;
     regprog_t	*prog;
-    int		fnum = -1;
+    int		match = -1;
     char_u	*pat;
     char_u	*patend;
-    char_u	*match;
     int		attempt;
     char_u	*p;
     int		toggledollar;
@@ -1262,9 +1271,9 @@ buflist_findpat(pattern, pattern_end)
     if (pattern_end == pattern + 1 && (*pattern == '%' || *pattern == '#'))
     {
 	if (*pattern == '%')
-	    fnum = curbuf->b_fnum;
+	    match = curbuf->b_fnum;
 	else
-	    fnum = curwin->w_alt_fnum;
+	    match = curwin->w_alt_fnum;
     }
 
     /*
@@ -1298,33 +1307,32 @@ buflist_findpat(pattern, pattern_end)
 	    }
 
 	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-	    {
-		match = buflist_match(prog, buf);
-		if (match != NULL)
+		if (buflist_match(prog, buf) != NULL)
 		{
-		    if (fnum >= 0)		/* already found a match */
+		    if (match >= 0)		/* already found a match */
 		    {
-			fnum = -2;
+			match = -2;
 			break;
 		    }
-		    fnum = buf->b_fnum;	/* remember first match */
+		    match = buf->b_fnum;	/* remember first match */
 		}
-	    }
+
 	    vim_free(prog);
-	    if (fnum >= 0)			/* found one match */
+	    if (match >= 0)			/* found one match */
 		break;
 	}
 	vim_free(pat);
     }
 
-    if (fnum == -2)
+    if (match == -2)
 	EMSG2(_("More than one match for %s"), pattern);
-    else if (fnum < 1)
+    else if (match < 0)
 	EMSG2(_("No matching buffer for %s"), pattern);
-    return fnum;
+    return match;
 }
+#endif
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
 /*
  * Find all buffer names that match.
@@ -1411,6 +1419,7 @@ ExpandBufnames(pat, num_file, file, options)
 
 #endif /* FEAT_CMDL_COMPL */
 
+#ifdef HAVE_BUFLIST_MATCH
 /*
  * Check for a match on the file name for buffer "buf" with regprog "prog".
  */
@@ -1429,17 +1438,21 @@ buflist_match(prog, buf)
 #endif
 
     /* First try the short file name, then the long file name. */
-    match = buflist_match_try(prog, buf->b_sfname);
+    match = fname_match(prog, buf->b_sfname);
     if (match == NULL)
-	match = buflist_match_try(prog, buf->b_ffname);
+	match = fname_match(prog, buf->b_ffname);
 
     reg_ic = save_reg_ic;
 
     return match;
 }
 
+/*
+ * Try matching the regexp in "prog" with file name "name".
+ * Return "name" when there is a match, NULL when not.
+ */
     static char_u *
-buflist_match_try(prog, name)
+fname_match(prog, name)
     regprog_t	*prog;
     char_u	*name;
 {
@@ -1461,25 +1474,22 @@ buflist_match_try(prog, name)
 	    vim_free(p);
 	}
     }
+
     return match;
 }
+#endif
 
 /*
- * find file in buffer name list by number
+ * find file in buffer list by number
  */
     buf_t *
 buflist_findnr(nr)
     int		nr;
 {
     buf_t	*buf;
-    win_t	*wp;
 
     if (nr == 0)
 	nr = curwin->w_alt_fnum;
-    if (vim_strchr(p_swb, 'u'))		/* "useopen" if possible */
-	for (wp = firstwin; wp; wp = wp->w_next)
-	    if (wp->w_buffer->b_fnum == nr)
-		return wp->w_buffer;
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (buf->b_fnum == nr)
 	    return (buf);
@@ -1635,6 +1645,7 @@ buflist_findlnum(buf)
     return buflist_findfpos(buf)->lnum;
 }
 
+#if defined(FEAT_LISTCMDS) || defined(PROTO)
 /*
  * List all know file names (for :files and :buffers command).
  */
@@ -1684,7 +1695,7 @@ buflist_list(eap)
 	ui_breakcheck();
     }
 }
-
+#endif
 
 /*
  * Get file name and line number for file 'fnum'.
@@ -2337,7 +2348,7 @@ append_arg_number(wp, buf, add_file, maxlen)
 {
     char_u	*p;
 
-    if (arg_file_count <= 1)		/* nothing to do */
+    if (ARGCOUNT <= 1)		/* nothing to do */
 	return FALSE;
 
     p = buf + STRLEN(buf);		/* go to the end of the buffer */
@@ -2351,7 +2362,7 @@ append_arg_number(wp, buf, add_file, maxlen)
 	p += 5;
     }
     sprintf((char *)p, wp->w_arg_idx_invalid ? "(%d) of %d)"
-			    : "%d of %d)", wp->w_arg_idx + 1, arg_file_count);
+				  : "%d of %d)", wp->w_arg_idx + 1, ARGCOUNT);
     return TRUE;
 }
 
@@ -2422,8 +2433,9 @@ do_arg_all(count, forceit)
     int		split_ret = OK;
     int		p_sb_save;
     int		p_ea_save;
+    alist_t	*alist;		/* argument list to be used */
 
-    if (arg_file_count <= 0)
+    if (ARGCOUNT <= 0)
     {
 	/* Don't give an error message.  We don't want it when the ":all"
 	 * command is in the .vimrc. */
@@ -2431,7 +2443,7 @@ do_arg_all(count, forceit)
     }
     setpcmark();
 
-    opened_len = arg_file_count;
+    opened_len = ARGCOUNT;
     opened = alloc_clear((unsigned)opened_len);
     if (opened == NULL)
 	return;
@@ -2455,24 +2467,32 @@ do_arg_all(count, forceit)
 		|| wp->w_width != Columns
 #endif
 		)
-	    i = arg_file_count;
+	    i = ARGCOUNT;
 	else
 	{
 	    /* check if the buffer in this window is in the arglist */
-	    for (i = 0; i < arg_file_count; ++i)
+	    for (i = 0; i < ARGCOUNT; ++i)
 	    {
-		if (fullpathcmp(arg_files[i],
+		if (fullpathcmp(ARGLIST[i],
 				     wp->w_buffer->b_ffname, TRUE) & FPC_SAME)
 		{
 		    if (i < opened_len)
 			opened[i] = TRUE;
+		    if (wp->w_alist != curwin->w_alist)
+		    {
+			/* Use the current argument list for all windows
+			 * containing a file from it. */
+			alist_unlink(wp->w_alist);
+			wp->w_alist = curwin->w_alist;
+			++wp->w_alist->al_refcount;
+		    }
 		    break;
 		}
 	    }
 	}
 	wp->w_arg_idx = i;
 
-	if (i == arg_file_count)		/* close this window */
+	if (i == ARGCOUNT)		/* close this window */
 	{
 	    if (P_HID(wp->w_buffer) || forceit || wp->w_buffer->b_nwindows > 1
 						|| !bufIsChanged(wp->w_buffer))
@@ -2499,7 +2519,8 @@ do_arg_all(count, forceit)
 #ifdef FEAT_WINDOWS
 		else
 		{
-		    win_close(wp, !P_HID(wp->w_buffer) && !bufIsChanged(wp->w_buffer));
+		    win_close(wp, !P_HID(wp->w_buffer)
+					      && !bufIsChanged(wp->w_buffer));
 # ifdef FEAT_AUTOCMD
 		    /* check if autocommands removed the next window */
 		    if (!win_valid(wpnext))
@@ -2513,10 +2534,16 @@ do_arg_all(count, forceit)
 
     /*
      * Open a window for files in the argument list that don't have one.
-     * arg_file_count may change while doing this, because of autocommands.
+     * ARGCOUNT may change while doing this, because of autocommands.
      */
-    if (count > arg_file_count || count <= 0)
-	count = arg_file_count;
+    if (count > ARGCOUNT || count <= 0)
+	count = ARGCOUNT;
+
+    /* Autocommands may do anything to the argument list.  Make sure it's not
+     * freed while we are working here.  We still have to watch out for its
+     * size to be changed. */
+    alist = curwin->w_alist;
+    ++alist->al_refcount;
 
 #ifdef FEAT_AUTOCMD
     /* Don't execute Win/Buf Enter/Leave autocommands here. */
@@ -2524,9 +2551,9 @@ do_arg_all(count, forceit)
     ++autocmd_no_leave;
 #endif
     win_enter(lastwin, FALSE);
-    for (i = 0; i < count && i < arg_file_count && !got_int; ++i)
+    for (i = 0; i < count && i < alist->al_ga.ga_len && !got_int; ++i)
     {
-	if (i == arg_file_count - 1)
+	if (alist == &global_alist && i == global_alist.al_ga.ga_len - 1)
 	    arg_had_last = TRUE;
 	if (i < opened_len && opened[i])
 	{
@@ -2564,8 +2591,10 @@ do_arg_all(count, forceit)
 
 	    curwin->w_arg_idx = i;
 	    /* edit file i */
-	    (void)do_ecmd(0, arg_files[i], NULL, NULL, ECMD_ONE,
-		   ((P_HID(curwin->w_buffer) || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
+	    (void)do_ecmd(0, ((char_u **)alist->al_ga.ga_data)[i],
+							 NULL, NULL, ECMD_ONE,
+		   ((P_HID(curwin->w_buffer)
+		     || bufIsChanged(curwin->w_buffer)) ? ECMD_HIDE : 0)
 							       + ECMD_OLDBUF);
 #ifdef FEAT_AUTOCMD
 	    if (use_firstwin)
@@ -2575,6 +2604,10 @@ do_arg_all(count, forceit)
 	}
 	ui_breakcheck();
     }
+
+    /* Remove the "lock" on the argument list. */
+    alist_unlink(alist);
+
 #ifdef FEAT_AUTOCMD
     --autocmd_no_enter;
 #endif
@@ -2584,6 +2617,7 @@ do_arg_all(count, forceit)
 #endif
 }
 
+# if defined(FEAT_LISTCMDS) || defined(PROTO)
 /*
  * Open a window for a number of buffers.
  */
@@ -2752,6 +2786,7 @@ do_buffer_all(eap)
 	}
     }
 }
+# endif /* FEAT_LISTCMDS */
 
 #endif /* FEAT_WINDOWS */
 
@@ -2901,7 +2936,7 @@ read_viminfo_bufferlist(line, fp, writing)
     xline = viminfo_readstring(line + 1, fp);
 
     /* don't read in if there are files on the command-line or if writing: */
-    if (xline != NULL && !writing && arg_file_count == 0
+    if (xline != NULL && !writing && ARGCOUNT == 0
 				       && find_viminfo_parameter('%') != NULL)
     {
 	/* Format is: <fname> Tab <lnum> Tab <col>.
@@ -2947,7 +2982,9 @@ write_viminfo_bufferlist(fp)
     FILE    *fp;
 {
     buf_t	*buf;
+#ifdef FEAT_WINDOWS
     win_t	*win;
+#endif
     char_u	*line;
 
     if (find_viminfo_parameter('%') == NULL)
@@ -2958,8 +2995,12 @@ write_viminfo_bufferlist(fp)
     if (line == NULL)
 	return;
 
+#ifdef FEAT_WINDOWS
     for (win = firstwin; win != NULL; win = win->w_next)
 	set_last_cursor(win);
+#else
+    set_last_cursor(curwin);
+#endif
 
     fprintf(fp, _("\n# Buffer list:\n"));
     for (buf = firstbuf; buf != NULL ; buf = buf->b_next)
@@ -3017,6 +3058,8 @@ buf_spname(buf)
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
 
+static void insert_image __ARGS((buf_t *buf, signlist_t *prev, signlist_t *next, int id, linenr_t lineno, int type));
+
 /*
  * Insert the sign into the signlist.
  */
@@ -3026,12 +3069,12 @@ insert_image(buf, prev, next, id, lineno, type)
     signlist_t	*prev;		/* previous sign entry */
     signlist_t	*next;		/* next sign entry */
     int		id;		/* sign ID */
-    int		lineno;		/* line number which gets the mark */
+    linenr_t	lineno;		/* line number which gets the mark */
     int		type;		/* type of sign we are adding */
 {
     signlist_t	*newsign;
 
-    newsign = (signlist_t *)lalloc(sizeof(signlist_t), FALSE);
+    newsign = (signlist_t *)lalloc((long_u)sizeof(signlist_t), FALSE);
     if (newsign != NULL)
     {
 	newsign->id = id;
@@ -3064,7 +3107,7 @@ insert_image(buf, prev, next, id, lineno, type)
 buf_addsign(buf, id, lineno, type)
     buf_t	*buf;		/* buffer to store sign in */
     int		id;		/* sign ID */
-    int		lineno;		/* line number which gets the mark */
+    linenr_t	lineno;		/* line number which gets the mark */
     int		type;		/* type of sign we are adding */
 {
     signlist_t	*sign;		/* a sign in the signlist */
@@ -3113,7 +3156,7 @@ buf_change_sign_type(buf, markId, newType)
     int_u
 buf_getsigntype(buf, lnum)
     buf_t	*buf;
-    int_u	lnum;
+    linenr_t	lnum;
 {
     signlist_t	*sign;		/* a sign in a b_signlist */
 
@@ -3125,7 +3168,7 @@ buf_getsigntype(buf, lnum)
 }
 
 
-    int
+    linenr_t
 buf_delsign(buf, id)
     buf_t	*buf;		/* buffer sign is stored in */
     int		id;		/* sign id */
@@ -3133,7 +3176,7 @@ buf_delsign(buf, id)
     signlist_t	**lastp;	/* pointer to pointer to current sign */
     signlist_t	*sign;		/* a sign in a b_signlist */
     signlist_t	*next;		/* the next sign in a b_signlist */
-    int		lnum;		/* line number whose sign was deleted */
+    linenr_t	lnum;		/* line number whose sign was deleted */
 
     lastp = &buf->b_signlist;
     lnum = 0;
@@ -3182,7 +3225,7 @@ buf_findsign(buf, id)
     int
 buf_findsign_id(buf, lnum)
     buf_t	*buf;		/* buffer whose sign we are searching for */
-    int		lnum;		/* line number of sign */
+    linenr_t	lnum;		/* line number of sign */
 {
     signlist_t	*sign;		/* a sign in the signlist */
 

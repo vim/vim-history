@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0m.  Last change: 2000 Oct 31
+*filetype.txt*   For Vim version 6.0n.  Last change: 2000 Nov 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -247,7 +247,7 @@ define yourself.  There are a few ways to avoid this:
    is a backslash.  Also see |<LocalLeader>|.
 
 2. Define your own mapping.  Example: >
-	:map ,p \\MailQuote
+	:map ,p <Plug>MailQuote
 <  You need to check the description of the plugin file below for the
    functionality it offers and the string to map to.
    You need to define your own mapping before the plugin is loaded (before
@@ -264,6 +264,20 @@ define yourself.  There are a few ways to avoid this:
 
 
 Docs for the default filetype plugins.
+
+
+FORTRAN							*fortran-plugin*
+
+Options:
+'expandtab'	is switched on to avoid tabs as required by the Fortran
+		standards unless the user has set fortran_have_tabs in .vimrc.
+'textwidth'	is set to 72 for fixed source format as required by the
+		Fortran standards and to 80 for free source format.
+'formatoptions' is set to break code and comment lines and to preserve long
+		lines. You can format comments with |gq|.
+For further discussion of fortran_have_tabs and the method used for the
+detection of source format see |fortran-syntax|.
+
 
 MAIL							*mail-plugin*
 

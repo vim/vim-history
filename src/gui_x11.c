@@ -2044,7 +2044,7 @@ gui_mch_draw_string(row, col, s, len, flags)
 	    c = utf_ptr2char(p);
 	    if (c >= 0x10000)	/* show chars > 0xffff as ? */
 		c = 0xbf;
-	    buf[wlen].byte1 = c >> 8;
+	    buf[wlen].byte1 = (unsigned)c >> 8;
 	    buf[wlen].byte2 = c;
 	    ++wlen;
 	    p += utf_ptr2len_check(p);
@@ -2900,6 +2900,7 @@ gui_x11_get_last_mouse_event()
  * to provide room for the bitmap! */
 # define SIGN_WIDTH (gui.char_width * 2)
 
+#if 0	/* not used */
     void
 gui_mch_clearsign(row)
     int		row;
@@ -2908,6 +2909,8 @@ gui_mch_clearsign(row)
 	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - gui.char_height,
 		SIGN_WIDTH, gui.char_height, FALSE);
 }
+#endif
+
     void
 gui_mch_drawsign(row, sign_idx)
     int		row;
@@ -2920,7 +2923,7 @@ gui_mch_drawsign(row, sign_idx)
 	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - sign->height,
 		SIGN_WIDTH, gui.char_height, FALSE);
 	XPutImage(gui.dpy, gui.wid, gui.text_gc, sign, 0, 0,
-		(SIGN_WIDTH - sign->width) >> 1,
+		(SIGN_WIDTH - sign->width) / 2,
 		TEXT_Y(row) - sign->height,
 		sign->width, sign->height);
     }

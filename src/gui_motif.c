@@ -1444,7 +1444,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	}
 
 	XtAddCallback(dialogButton[butcount], XmNactivateCallback,
-						butproc, (XtPointer)butcount);
+			  (XtCallbackProc)butproc, (XtPointer)(long)butcount);
 	p = next;
     }
     vim_free(buts);

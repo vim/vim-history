@@ -144,11 +144,11 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
     char_u	*lbuf;
 
     top_off = Y_2_ROW(beval->y);
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
 	if (W_WINROW(wp) <= top_off && top_off < (W_WINROW(wp) + wp->w_height))
 	    break;
 
-    if (wp)
+    if (wp != NULL)
     {
 	row_off = top_off - W_WINROW(wp) + 1;
 	i = 0;

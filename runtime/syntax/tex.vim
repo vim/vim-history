@@ -2,7 +2,7 @@
 " Language:    TeX
 " Version:     6.0-4
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: October 18, 2000
+" Last Change: November 13, 2000
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -24,7 +24,7 @@ syn clear
 
 " (La)TeX keywords only use the letters a-zA-Z
 " but _ is the only one that causes problems.
-set isk-=_
+setlocal isk-=_
 
 " Clusters
 " --------

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0m.  Last change: 2000 Oct 15
+*cmdline.txt*   For Vim version 6.0n.  Last change: 2000 Nov 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -555,10 +555,13 @@ three lines: >
 In Ex commands, at places where a file name can be used, the following
 characters have a special meaning.  These can also be used in the expression
 function expand() |expand()|.
-	%	   is replaced with the current file name		*:_%*
-	#	   is replaced with the alternate file name		*:_#*
-	#n	   (where n is a number) is replaced with the file name of
-		   buffer n.  "#0" is the same as "#"
+	%	is replaced with the current file name			*:_%*
+	#	is replaced with the alternate file name		*:_#*
+	#n	(where n is a number) is replaced with the file name of
+		buffer n.  "#0" is the same as "#"
+	##	is replaced with all names in the argument list		*:_##*
+		concatenated, separated by spaces.  Each space in a name
+		is preceded with a backslash.
 Note that these give the file name as it was typed.  If an absolute path is
 needed (when using the file name from a different directory), you need to add
 ":p".  See |filename-modifiers|.

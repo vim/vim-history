@@ -1697,6 +1697,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    wb_flags = 0;	/* flags for buf_write_bytes() */
 #endif
 #ifdef FEAT_MBYTE
+    int		    converted = FALSE;
     char_u	    *fcc;		/* effective 'filecharcode' */
 #endif
 #ifdef HAVE_ACL
@@ -2098,7 +2099,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		&& (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
 	{
 	    int		bfd, buflen;
-	    char_u	copybuf[BUFSIZE + 1], *wp;
+	    char_u	*copybuf, *wp;
 	    int		some_error = FALSE;
 	    struct stat	st_new;
 	    char_u	*dirp;
@@ -2106,6 +2107,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifndef SHORT_FNAME
 	    int		did_set_shortname;
 #endif
+
+	    copybuf = alloc(BUFSIZE + 1);
+	    if (copybuf == NULL)
+	    {
+		some_error = TRUE;	    /* out of memory */
+		goto nobackup;
+	    }
 
 	    /*
 	     * Try to make the backup in each directory in the 'bdir' option.
@@ -2163,8 +2171,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 						 rootname, backup_ext, FALSE);
 		    if (backup == NULL)
 		    {
-			some_error = TRUE;		/* out of memory */
 			vim_free(rootname);
+			some_error = TRUE;		/* out of memory */
 			goto nobackup;
 		    }
 
@@ -2301,11 +2309,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    }
     nobackup:
 	    close(fd);		/* ignore errors for closing read file */
+	    vim_free(copybuf);
 
 	    if (backup == NULL && errmsg == NULL)
 		errmsg = (char_u *)_("Cannot create backup file (use ! to override)");
 	    /* ignore errors when forceit is TRUE */
-	    if ((some_error || errmsg) && !forceit)
+	    if ((some_error || errmsg != NULL) && !forceit)
 	    {
 		retval = FAIL;
 		goto fail;
@@ -2504,8 +2513,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		end = 0;
 	    conv_restlen = 0;
 	    iconv_first = TRUE;
+	    converted = TRUE;
 	}
+#   ifdef FEAT_EVAL
 	else
+#   endif
 #  endif
 
 #  ifdef FEAT_EVAL
@@ -2823,6 +2835,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		errmsg = (char_u *)_("Conversion failed");
 		end = 0;
 	    }
+	    else
+		converted = TRUE;
 	    set_vim_var_string(VV_CC_FROM, NULL, -1);
 	    set_vim_var_string(VV_CC_TO, NULL, -1);
 	    set_vim_var_string(VV_CC_IN, NULL, -1);
@@ -2850,8 +2864,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	{
 	    if (backup_copy)
 	    {
-		char_u	copybuf[BUFSIZE + 1];
-		int		bfd, buflen;
+		int	bfd, buflen;
 
 		if ((bfd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0))
 									 >= 0)
@@ -2860,9 +2873,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			  O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA, 0666)) >= 0)
 		    {
 			/* copy the file. */
-			while ((buflen = read(bfd, (char *)copybuf, BUFSIZE))
+			while ((buflen = read(bfd, (char *)smallbuf, SMBUFSIZE))
 									  > 0)
-			    if (buf_write_bytes(fd, copybuf, buflen
+			    if (buf_write_bytes(fd, smallbuf, buflen
 #ifdef WB_HAS_FLAGS
 					, 0
 #endif
@@ -2903,6 +2916,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (ucs_error)
 	{
 	    STRCAT(IObuff, _(" CONVERSION ERROR"));
+	    c = TRUE;
+	}
+	else if (converted)
+	{
+	    STRCAT(IObuff, _("[converted]"));
 	    c = TRUE;
 	}
 #endif
@@ -4380,7 +4398,7 @@ typedef struct AutoCmd
     char	    nested;		/* If autocommands nest here */
     char	    last;		/* last command in list */
 #ifdef FEAT_EVAL
-    long	    scriptID;		/* script ID where defined */
+    sid_t	    scriptID;		/* script ID where defined */
 #endif
     struct AutoCmd  *next;		/* Next AutoCmd in list */
 } AutoCmd;
@@ -4428,6 +4446,7 @@ static struct event_name
     {"FileAppendPre",	EVENT_FILEAPPENDPRE},
     {"FileAppendCmd",	EVENT_FILEAPPENDCMD},
     {"FileChangedShell",EVENT_FILECHANGEDSHELL},
+    {"FileChangedRO",	EVENT_FILECHANGEDRO},
     {"FileReadPost",	EVENT_FILEREADPOST},
     {"FileReadPre",	EVENT_FILEREADPRE},
     {"FileReadCmd",	EVENT_FILEREADCMD},
@@ -4459,16 +4478,11 @@ static struct event_name
 
 static AutoPat *first_autopat[NUM_EVENTS] =
 {
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /*
@@ -5310,9 +5324,13 @@ aucmd_prepbuf(aco, buf)
     if (buf == curbuf)		/* be quick when buf is curbuf */
 	win = curwin;
     else
+#ifdef FEAT_WINDOWS
 	for (win = firstwin; win != NULL; win = win->w_next)
 	    if (win->w_buffer == buf)
 		break;
+#else
+	win = NULL;
+#endif
 
     /*
      * Prefer to use an existing window for the buffer, it has the least side
@@ -5451,7 +5469,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     AutoPatCmd	patcmd;
     AutoPat	*ap;
 #ifdef FEAT_EVAL
-    long	save_current_SID;
+    sid_t	save_current_SID;
     void	*save_funccalp;
 #endif
 

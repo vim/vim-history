@@ -15,22 +15,22 @@ augroup gzip
   " set binary mode before reading the file
   " use "gzip -d", gunzip isn't always available
   autocmd BufReadPre,FileReadPre	*.gz,*.bz2,*.Z set bin
-  autocmd BufReadPost,FileReadPost	*.gz  call <SID>read("gzip -d")
-  autocmd BufReadPost,FileReadPost	*.bz2 call <SID>read("bzip2 -d")
-  autocmd BufReadPost,FileReadPost	*.Z   call <SID>read("uncompress")
-  autocmd BufWritePost,FileWritePost	*.gz  call <SID>write("gzip")
-  autocmd BufWritePost,FileWritePost	*.bz2 call <SID>write("bzip2")
-  autocmd BufWritePost,FileWritePost	*.Z   call <SID>write("compress -f")
-  autocmd FileAppendPre			*.gz  call <SID>appre("gzip -d")
-  autocmd FileAppendPre			*.bz2 call <SID>appre("bzip2 -d")
-  autocmd FileAppendPre			*.Z   call <SID>appre("uncompress")
-  autocmd FileAppendPost		*.gz  call <SID>write("gzip")
-  autocmd FileAppendPost		*.bz2 call <SID>write("bzip2")
-  autocmd FileAppendPost		*.Z   call <SID>write("compress -f")
+  autocmd BufReadPost,FileReadPost	*.gz  call s:read("gzip -d")
+  autocmd BufReadPost,FileReadPost	*.bz2 call s:read("bzip2 -d")
+  autocmd BufReadPost,FileReadPost	*.Z   call s:read("uncompress")
+  autocmd BufWritePost,FileWritePost	*.gz  call s:write("gzip")
+  autocmd BufWritePost,FileWritePost	*.bz2 call s:write("bzip2")
+  autocmd BufWritePost,FileWritePost	*.Z   call s:write("compress -f")
+  autocmd FileAppendPre			*.gz  call s:appre("gzip -d")
+  autocmd FileAppendPre			*.bz2 call s:appre("bzip2 -d")
+  autocmd FileAppendPre			*.Z   call s:appre("uncompress")
+  autocmd FileAppendPost		*.gz  call s:write("gzip")
+  autocmd FileAppendPost		*.bz2 call s:write("bzip2")
+  autocmd FileAppendPost		*.Z   call s:write("compress -f")
 
   " Function to check that executing "cmd" works.
   " The result is cached in s:have_"cmd" for speed.
-  fun <SID>check(cmd)
+  fun s:check(cmd)
     let name = substitute(a:cmd, '\(\S*\).*', '\1', '')
     if !exists("s:have_" . name)
       let r = system(a:cmd . " --version")
@@ -40,9 +40,9 @@ augroup gzip
   endfun
 
   " After reading compressed file: Uncompress text in buffer with "cmd"
-  fun <SID>read(cmd)
+  fun s:read(cmd)
     " don't do anything if the cmd is not supported
-    if !<SID>check(a:cmd)
+    if !s:check(a:cmd)
       return
     endif
     " set 'cmdheight' to two, to avoid the hit-return prompt
@@ -75,9 +75,9 @@ augroup gzip
   endfun
 
   " After writing compressed file: Compress written file with "cmd"
-  fun <SID>write(cmd)
+  fun s:write(cmd)
     " don't do anything if the cmd is not supported
-    if <SID>check(a:cmd)
+    if s:check(a:cmd)
       if rename(expand("<afile>"), expand("<afile>:r")) == 0
 	call system(a:cmd . " " . expand("<afile>:r"))
       endif
@@ -85,9 +85,9 @@ augroup gzip
   endfun
 
   " Before appending to compressed file: Uncompress file with "cmd"
-  fun <SID>appre(cmd)
+  fun s:appre(cmd)
     " don't do anything if the cmd is not supported
-    if <SID>check(a:cmd)
+    if s:check(a:cmd)
       call system(a:cmd . " " . expand("<afile>"))
       call rename(expand("<afile>:r"), expand("<afile>"))
     endif

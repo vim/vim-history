@@ -276,13 +276,13 @@ main
 #ifdef FEAT_WINDOWS
     int		    window_count = 1;	    /* number of windows to use */
 #endif
-    int		    arg_idx = 0;	    /* index for arg_files[] */
+    int		    arg_idx = 0;	    /* index in argument list */
     int		    had_minmin = FALSE;	    /* found "--" option */
     int		    argv_idx;		    /* index in argv[n][] */
     int		    want_full_screen = TRUE;
     int		    want_argument;	    /* option with argument */
 #define EDIT_NONE   0	    /* no edit type yet */
-#define EDIT_FILE   1	    /* file name argument[s] given, use arg_files[] */
+#define EDIT_FILE   1	    /* file name argument[s] given, use argument list */
 #define EDIT_STDIN  2	    /* read file from stdin */
 #define EDIT_TAG    3	    /* tag name argument given, use tagname */
 #define EDIT_QF	    4	    /* start in quickfix mode */
@@ -401,6 +401,9 @@ main
 
     init_yank();		/* init yank buffers */
 
+    /* Init the argument list to empty. */
+    ga_init2(&global_alist.al_ga, sizeof(char_u *), 5);
+
     /*
      * Set the default values for the options.
      * First find out the home directory, needed to expand "~" in options.
@@ -457,19 +460,6 @@ main
 
     ++argv;
     --argc;
-
-#ifndef macintosh
-    /*
-     * Allocate arg_files[], big enough to hold all potential file name
-     * arguments.
-     */
-    arg_files = (char_u **)alloc((unsigned)(sizeof(char_u *) * (argc + 1)));
-    if (arg_files == NULL)
-	mch_windexit(2);
-#else
-    arg_files = NULL;
-#endif
-    arg_file_count = 0;
 
     /*
      * Process the command line arguments.
@@ -848,9 +838,14 @@ main
 	    if (edit_type != EDIT_NONE && edit_type != EDIT_FILE)
 		mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 	    edit_type = EDIT_FILE;
-	    arg_files[arg_file_count] = vim_strsave((char_u *)argv[0]);
-	    if (arg_files[arg_file_count] != NULL)
-		++arg_file_count;
+	    if (ga_grow(&global_alist.al_ga, 1) == FAIL)
+		mch_windexit(2);
+	    GARGLIST[GARGCOUNT] = vim_strsave((char_u *)argv[0]);
+	    if (GARGLIST[GARGCOUNT] != NULL)
+	    {
+		--global_alist.al_ga.ga_room;
+		++GARGCOUNT;
+	    }
 	}
 
 	/*
@@ -887,7 +882,7 @@ main
     /*
      * May expand wildcards in file names.
      */
-    if (arg_file_count > 0)
+    if (GARGCOUNT > 0)
     {
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
 	char_u	    **new_arg_files;
@@ -898,22 +893,23 @@ main
 	 * expansion.  Also, the vimrc file isn't read yet, thus the user
 	 * can't set the options. */
 	p_su = empty_option;
-	if (expand_wildcards(arg_file_count, arg_files, &new_arg_file_count,
+	if (expand_wildcards(GARGCOUNT, GARGLIST, &new_arg_file_count,
 			&new_arg_files, EW_FILE|EW_NOTFOUND|EW_ADDSLASH) == OK
 		&& new_arg_file_count > 0)
 	{
-	    FreeWild(arg_file_count, arg_files);
-	    arg_file_count = new_arg_file_count;
-	    arg_files = new_arg_files;
+	    FreeWild(GARGCOUNT, GARGLIST);
+	    GARGCOUNT = new_arg_file_count;
+	    GARGLIST = new_arg_files;
+	    global_alist.al_ga.ga_room = 0;
 	}
 	p_su = save_p_su;
 #endif
-	fname = arg_files[0];
+	fname = GARGLIST[0];
     }
-    if (arg_file_count > 1)
-	printf(_("%d files to edit\n"), arg_file_count);
+    if (GARGCOUNT > 1)
+	printf(_("%d files to edit\n"), GARGCOUNT);
 #ifdef MSWIN
-    else if (arg_file_count == 1)
+    else if (GARGCOUNT == 1)
     {
 	/*
 	 * If there is one filename, fully qualified, we have very probably
@@ -1352,7 +1348,7 @@ main
      * Create the number of windows that was requested.
      */
     if (window_count == 0)
-	window_count = arg_file_count;
+	window_count = GARGCOUNT;
     if (window_count > 1)
     {
 	/* Don't change the windows if there was a command in .vimrc that
@@ -1389,7 +1385,9 @@ main
 	++autocmd_no_enter;
 	++autocmd_no_leave;
 #endif
-	for (curwin = firstwin; curwin != NULL; curwin = curwin->w_next)
+#ifdef FEAT_WINDOWS
+	for (curwin = firstwin; curwin != NULL; curwin = W_NEXT(curwin))
+#endif
 	{
 	    curbuf = curwin->w_buffer;
 	    if (curbuf->b_ml.ml_mfp == NULL)
@@ -1408,19 +1406,23 @@ main
 		curwin = firstwin;	    /* start again */
 #endif
 	    }
+#ifdef FEAT_WINDOWS
 	    ui_breakcheck();
 	    if (got_int)
 	    {
 		(void)vgetc();	/* only break the file loading, not the rest */
 		break;
 	    }
+#endif
 	}
 #ifdef FEAT_AUTOCMD
 	--autocmd_no_enter;
 	--autocmd_no_leave;
 #endif
+#ifdef FEAT_WINDOWS
 	curwin = firstwin;
 	curbuf = curwin->w_buffer;
+#endif
     }
 
     /* Ex starts at last line of the file */
@@ -1465,9 +1467,9 @@ main
 	    curwin->w_arg_idx = arg_idx;
 	    /* edit file from arg list, if there is one */
 	    (void)do_ecmd(0,
-			 arg_idx < arg_file_count ? arg_files[arg_idx] : NULL,
+			 arg_idx < GARGCOUNT ? GARGLIST[arg_idx] : NULL,
 					  NULL, NULL, ECMD_LASTL, ECMD_HIDE);
-	    if (arg_idx == arg_file_count - 1)
+	    if (arg_idx == GARGCOUNT - 1)
 		arg_had_last = TRUE;
 	    ++arg_idx;
 	}
@@ -1493,8 +1495,8 @@ main
      * If there are more file names in the argument list than windows,
      * put the rest of the names in the buffer list.
      */
-    while (arg_idx < arg_file_count)
-	(void)buflist_add(arg_files[arg_idx++]);
+    while (arg_idx < GARGCOUNT)
+	(void)buflist_add(GARGLIST[arg_idx++]);
 
     /*
      * Shorten any of the filenames, but only when absolute.

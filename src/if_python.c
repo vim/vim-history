@@ -1785,7 +1785,7 @@ WindowRepr(PyObject *self)
 	int	i = 0;
 	win_t	*w;
 
-	for (w = firstwin; w != NULL && w != this->win; w = w->w_next)
+	for (w = firstwin; w != NULL && w != this->win; w = W_NEXT(w))
 	    ++i;
 
 	if (w == NULL)
@@ -1851,7 +1851,7 @@ WinListLength(PyObject *self)
     while (w)
     {
 	++n;
-	w = w->w_next;
+	w = W_NEXT(w);
     }
 
     return n;
@@ -1863,11 +1863,9 @@ WinListItem(PyObject *self, int n)
 {
     win_t *w;
 
-    for (w = firstwin; w; w = w->w_next, --n)
-    {
+    for (w = firstwin; w; w = W_NEXT(w), --n)
 	if (n == 0)
 	    return WindowNew(w);
-    }
 
     PyErr_SetString(PyExc_IndexError, _("no such window"));
     return NULL;

@@ -2300,15 +2300,21 @@ set_options_default(opt_flags)
     int		opt_flags;		/* OPT_FREE and/or OPT_GLOBAL */
 {
     int		i;
+#ifdef FEAT_WINDOWS
     win_t	*wp;
+#endif
 
     for (i = 0; !istermoption(&options[i]); i++)
 	if (!(options[i].flags & P_NODEFAULT))
 	    set_option_default(i, opt_flags, p_cp);
 
+#ifdef FEAT_WINDOWS
     /* The 'scroll' option must be computed for all windows. */
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	win_comp_scroll(wp);
+#else
+	win_comp_scroll(curwin);
+#endif
 }
 
 /*
@@ -2516,9 +2522,9 @@ set_init_3()
     {
 	int i;
 
-	for (i = 0; i < arg_file_count; ++i)
-	    if (arg_files[i] != NULL)
-		slash_adjust(arg_files[i]);
+	for (i = 0; i < ARGCOUNT; ++i)
+	    if (ARGLIST[i] != NULL)
+		slash_adjust(ARGLIST[i]);
     }
 #endif
 }
@@ -4273,7 +4279,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
     }
 #endif
 
-#if defined(FEAT_QUICKFIX)
+#ifdef FEAT_QUICKFIX
     /* When 'buftype' is set, check for valid value. */
     else if (varp == &(curbuf->b_p_bt))
     {
@@ -4292,11 +4298,13 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 		/* reset swapfile to global default */
 		curbuf->b_p_swf = p_swf;
 	    }
+# ifdef FEAT_WINDOWS
 	    if (curwin->w_status_height)
 	    {
 		curwin->w_redr_status = TRUE;
 		redraw_later(VALID);
 	    }
+# endif
 	}
     }
 #endif
@@ -4574,7 +4582,9 @@ set_chars_option(varp)
 	{&fill_stl,	"stl"},
 	{&fill_stlnc,	"stlnc"},
 	{&fill_vert,	"vert"},
+# ifdef FEAT_FOLDING
 	{&fill_fold,	"fold"},
+# endif
     };
 #endif
     static struct charstab lcstab[] =

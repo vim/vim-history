@@ -78,7 +78,7 @@ struct ufunc
     int		calls;		/* nr of active calls */
     garray_t	args;		/* arguments */
     garray_t	lines;		/* function lines */
-    long	script_ID;	/* ID of script where function was defined,
+    sid_t	script_ID;	/* ID of script where function was defined,
 				   used for s: variables */
 };
 
@@ -2298,6 +2298,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 #define ERROR_OTHER	6
     int		error = ERROR_NONE;
     int		i;
+    int		llen;
     ufunc_t	*fp;
     int		cc;
 #define FLEN_FIXED 40
@@ -2305,42 +2306,43 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     char_u	*fname;
 
     /*
-     * In a script change <SID>name() to K_SNR 123_name().
+     * In a script change <SID>name() and s:name() to K_SNR 123_name().
      * Change <SNR>123_name() to K_SNR 123_name().
      * Use fname_buf[] when it fits, otherwise allocate memory (slow).
      */
     cc = name[len];
     name[len] = NUL;
-    if (eval_fname_script(name))
+    llen = eval_fname_script(name);
+    if (llen > 0)
     {
 	fname_buf[0] = K_SPECIAL;
 	fname_buf[1] = KS_EXTRA;
 	fname_buf[2] = (int)KE_SNR;
 	i = 3;
-	if (eval_fname_sid(name))	/* "<SID>" */
+	if (eval_fname_sid(name))	/* "<SID>" or "s:" */
 	{
 	    if (current_SID == 0)
 		error = ERROR_SCRIPT;
 	    else
 	    {
-		sprintf((char *)fname_buf + 3, "%ld_", current_SID);
+		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID);
 		i = STRLEN(fname_buf);
 	    }
 	}
-	if (i + STRLEN(name + 5) < FLEN_FIXED)
+	if (i + STRLEN(name + llen) < FLEN_FIXED)
 	{
-	    STRCPY(fname_buf + i, name + 5);
+	    STRCPY(fname_buf + i, name + llen);
 	    fname = fname_buf;
 	}
 	else
 	{
-	    fname = alloc(i + STRLEN(name + 5) + 1);
+	    fname = alloc(i + STRLEN(name + llen) + 1);
 	    if (fname == NULL)
 		error = ERROR_OTHER;
 	    else
 	    {
 		mch_memmove(fname, fname_buf, i);
-		STRCPY(fname + i, name + 5);
+		STRCPY(fname + i, name + llen);
 	    }
 	}
     }
@@ -2494,7 +2496,7 @@ f_argc(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    retvar->var_val.var_number = arg_file_count;
+    retvar->var_val.var_number = ARGCOUNT;
 }
 
 /*
@@ -2508,8 +2510,8 @@ f_argv(argvars, retvar)
     int		idx;
 
     idx = get_var_number(&argvars[0]);
-    if (idx >= 0 && idx < arg_file_count)
-	retvar->var_val.var_string = vim_strsave(arg_files[idx]);
+    if (idx >= 0 && idx < ARGCOUNT)
+	retvar->var_val.var_string = vim_strsave(ARGLIST[idx]);
     else
 	retvar->var_val.var_string = NULL;
     retvar->var_type = VAR_STRING;
@@ -2680,19 +2682,25 @@ f_bufwinnr(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_WINDOWS
     win_t	*wp;
     int		winnr = 0;
+#endif
     buf_t	*buf;
 
     ++emsg_off;
     buf = get_buf_var(&argvars[0]);
+#ifdef FEAT_WINDOWS
     for (wp = firstwin; wp; wp = wp->w_next)
     {
 	++winnr;
 	if (wp->w_buffer == buf)
 	    break;
     }
-    retvar->var_val.var_number = (wp ? winnr : -1);
+    retvar->var_val.var_number = (wp != NULL ? winnr : -1);
+#else
+    retvar->var_val.var_number = (curwin->w_buffer == buf ? 1 : -1);
+#endif
     --emsg_off;
 }
 
@@ -3526,6 +3534,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_LISP
 	"lispindent",
+#endif
+#ifdef FEAT_LISTCMDS
+	"listcmds",
 #endif
 #ifdef FEAT_LOCALMAP
 	"localmap",
@@ -5020,12 +5031,13 @@ f_winnr(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    int		nr;
+    int		nr = 1;
+#ifdef FEAT_WINDOWS
     win_t	*wp;
 
-    nr = 1;
     for (wp = firstwin; wp != curwin; wp = wp->w_next)
 	++nr;
+#endif
     retvar->var_val.var_number = nr;
 }
 
@@ -5054,20 +5066,26 @@ f_winwidth(argvars, retvar)
 find_win_by_nr(vp)
     VAR		vp;
 {
+#ifdef FEAT_WINDOWS
     win_t	*wp;
+#endif
     int		nr;
 
     nr = get_var_number(vp);
 
+#ifdef FEAT_WINDOWS
     if (nr == 0)
 	return curwin;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-    {
 	if (--nr <= 0)
 	    break;
-    }
     return wp;
+#else
+    if (nr == 0 || nr == 1)
+	return curwin;
+    return NULL;
+#endif
 }
 
 /*
@@ -5158,6 +5176,8 @@ get_id_len(arg)
 get_func_len(arg)
     char_u	**arg;
 {
+    int		len;
+
     if ((*arg)[0] == K_SPECIAL && (*arg)[1] == KS_EXTRA
 						  && (*arg)[2] == (int)KE_SNR)
     {
@@ -5165,11 +5185,12 @@ get_func_len(arg)
 	*arg += 3;
 	return get_id_len(arg) + 3;
     }
-    if (eval_fname_script(*arg))
+    len = eval_fname_script(*arg);
+    if (len > 0)
     {
-	/* literal "<SID>" or "<SNR>" */
-	*arg += 5;
-	return get_id_len(arg) + 5;
+	/* literal "<SID>", "s:" or "<SNR>" */
+	*arg += len;
+	return get_id_len(arg) + len;
     }
     return get_id_len(arg);
 }
@@ -5581,7 +5602,7 @@ get_var_value(name)
  */
     void
 new_script_vars(id)
-    long id;
+    sid_t id;
 {
     if (ga_grow(&ga_scripts, (int)(id - ga_scripts.ga_len)) == OK)
     {
@@ -5713,7 +5734,7 @@ set_var(name, varp)
 		vimvars[i].val = vim_strsave(get_var_string(varp));
 	    }
 	    else
-		vimvars[i].val = (char_u *)varp->var_val.var_number;
+		vimvars[i].val = (char_u *)(long)varp->var_val.var_number;
 	}
 	return;
     }
@@ -6124,8 +6145,7 @@ ex_function(eap)
 	if (STRNCMP(p, "fu", 2) == 0)
 	{
 	    p = skipwhite(skiptowhite(p));
-	    if (eval_fname_script(p))
-		p += 5;
+	    p += eval_fname_script(p);
 	    if (isalpha(*p))
 	    {
 		while (isalpha(*p) || isdigit(*p) || *p == '_')
@@ -6209,8 +6229,9 @@ trans_function_name(pp)
 
     /* A name starting with "<SID>" or "<SNR>" is local to a script. */
     start = *pp;
-    if (eval_fname_script(start))
-	start += 5;
+    j = eval_fname_script(start);
+    if (j > 0)
+	start += j;
     else if (!isupper(*start))
     {
 	EMSG2(_("Function name must start with a capital: %s"), start);
@@ -6239,7 +6260,7 @@ trans_function_name(pp)
 		EMSG(_("Using <SID> not in a script context"));
 		return NULL;
 	    }
-	    sprintf((char *)sid_buf, "%ld_", current_SID);
+	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
 	    j += STRLEN(sid_buf);
 	}
     }
@@ -6264,26 +6285,31 @@ trans_function_name(pp)
 }
 
 /*
- * Return TRUE if "p" starts with "<SID>" or "<SNR>" (ignoring case).
+ * Return 5 if "p" starts with "<SID>" or "<SNR>" (ignoring case).
+ * Return 2 if "p" starts with "s:".
+ * Return 0 otherwise.
  */
     static int
 eval_fname_script(p)
     char_u	*p;
 {
-    return (*p == '<'
-	    && (STRNICMP(p + 1, "SID>", 4) == 0
-		|| STRNICMP(p + 1, "SNR>", 4) == 0));
+    if (p[0] == '<' && (STRNICMP(p + 1, "SID>", 4) == 0
+					  || STRNICMP(p + 1, "SNR>", 4) == 0))
+	return 5;
+    if (p[0] == 's' && p[1] == ':')
+	return 2;
+    return 0;
 }
 
 /*
- * Return TRUE if "p" starts with "<SID>".  Only works if eval_fname_script()
- * returned TRUE for "p"!
+ * Return TRUE if "p" starts with "<SID>" or "s:".
+ * Only works if eval_fname_script() returned non-zero for "p"!
  */
     static int
 eval_fname_sid(p)
     char_u	*p;
 {
-    return (TO_UPPER(p[2]) == 'I');
+    return (*p == 's' || TO_UPPER(p[2]) == 'I');
 }
 
 /*
@@ -6436,7 +6462,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 {
     char_u		*save_sourcing_name;
     linenr_t		save_sourcing_lnum;
-    long		save_current_SID;
+    sid_t		save_current_SID;
     struct funccall	fc;
     struct funccall	*save_fcp = current_funccal;
     int			save_did_emsg;

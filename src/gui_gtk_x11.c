@@ -92,7 +92,9 @@ enum
 /*
  * Enable DND feature.  Disable this if it causes problems.
  */
-#define GTK_DND
+#ifdef FEAT_WINDOWS
+# define GTK_DND
+#endif
 
 #ifdef GTK_DND
 /* DND specification constants. */
@@ -2403,6 +2405,7 @@ get_styled_font_variants(char_u * font_name)
  * Initialize Vim to use the font or fontset with the given name.
  * Return FAIL if the font could not be loaded, OK otherwise.
  */
+/*ARGSUSED*/
     int
 gui_mch_init_font(char_u *font_name, int fontset)
 {
@@ -2421,7 +2424,6 @@ gui_mch_init_font(char_u *font_name, int fontset)
 	if (font_name == NULL)
 	    font_name = (char_u *)DFLT_FONT;
 	font = get_font(font_name);
-	fontset = FALSE;
     }
 
     if (font == NULL)
