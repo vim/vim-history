@@ -1264,9 +1264,15 @@ scripterror:
     {
 	curwin->w_cursor.lnum = 0; /* just in case.. */
 	sourcing_name = (char_u *)_("pre-vimrc command line");
+# ifdef FEAT_EVAL
+	current_SID = SID_CMDARG;
+# endif
 	for (i = 0; i < p_commands; ++i)
 	    do_cmdline_cmd(pre_commands[i]);
 	sourcing_name = NULL;
+# ifdef FEAT_EVAL
+	current_SID = 0;
+# endif
     }
 #endif
 
@@ -1876,9 +1882,15 @@ scripterror:
 	if (tagname == NULL)
 	    curwin->w_cursor.lnum = 0;
 	sourcing_name = (char_u *)"command line";
+#ifdef FEAT_EVAL
+	current_SID = SID_CARG;
+#endif
 	for (i = 0; i < n_commands; ++i)
 	    do_cmdline_cmd(commands[i]);
 	sourcing_name = NULL;
+#ifdef FEAT_EVAL
+	current_SID = 0;
+#endif
 	if (curwin->w_cursor.lnum == 0)
 	    curwin->w_cursor.lnum = 1;
 
@@ -2277,6 +2289,9 @@ process_env(env, is_viminit)
     char_u	*initstr;
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
+#ifdef FEAT_EVAL
+    scid_T	save_sid;
+#endif
 
     if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
     {
@@ -2286,9 +2301,16 @@ process_env(env, is_viminit)
 	save_sourcing_lnum = sourcing_lnum;
 	sourcing_name = env;
 	sourcing_lnum = 0;
+#ifdef FEAT_EVAL
+	save_sid = current_SID;
+	current_SID = SID_ENV;
+#endif
 	do_cmdline_cmd(initstr);
 	sourcing_name = save_sourcing_name;
 	sourcing_lnum = save_sourcing_lnum;
+#ifdef FEAT_EVAL
+	current_SID = save_sid;;
+#endif
 	return OK;
     }
     return FAIL;
