@@ -2615,7 +2615,8 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		ffname = free_fname;
 	    other_file = otherfile(ffname);
 #ifdef FEAT_SUN_WORKSHOP
-	    if (usingSunWorkShop && (cp = vim_strrchr(sfname, '/')) != NULL)
+	    if (usingSunWorkShop && p_acd
+				   && (cp = vim_strrchr(sfname, '/')) != NULL)
 		sfname = ++cp;
 #endif
 	}
@@ -3122,7 +3123,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	shorten_fnames(TRUE);
 
-    if (gui.in_use && curbuf->b_fname != NULL)
+    if (gui.in_use && curbuf->b_ffname != NULL)
     {
 # ifdef FEAT_SUN_WORKSHOP
 	if (usingSunWorkShop)
