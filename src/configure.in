@@ -332,7 +332,7 @@ eof
 	    if test "${vi_cv_var_python_version}" = "1.4"; then
 		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libModules.a ${PYTHON_CONFDIR}/libPython.a ${PYTHON_CONFDIR}/libObjects.a ${PYTHON_CONFDIR}/libParser.a"
 	    else
-		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libpython${vi_cv_var_python_version}.a"
+		vi_cv_path_python_plibs="-L${PYTHON_CONFDIR} -lpython${vi_cv_var_python_version}"
 	    fi
 	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS}"
 	    dnl remove -ltermcap, it can conflict with an earlier -lncurses
