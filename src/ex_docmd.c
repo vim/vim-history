@@ -6342,6 +6342,9 @@ ex_splitview(eap)
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_BROWSE)
     char_u	*fname = NULL;
 #endif
+#ifdef FEAT_BROWSE
+    int		browse_flag = cmdmod.browse;
+#endif
 
 #ifndef FEAT_VERTSPLIT
     if (eap->cmdidx == CMD_vsplit || eap->cmdidx == CMD_vnew)
@@ -6396,7 +6399,9 @@ ex_splitview(eap)
 	    goto theend;
 	eap->arg = fname;
     }
+    cmdmod.browse = FALSE;	/* Don't browse again in do_ecmd(). */
 #endif
+
     if (win_split(eap->addr_count > 0 ? (int)eap->line2 : 0,
 				     *eap->cmd == 'v' ? WSP_VERT : 0) != FAIL)
     {
@@ -6414,6 +6419,10 @@ ex_splitview(eap)
 #endif
 	do_exedit(eap, old_curwin);
     }
+
+#ifdef FEAT_BROWSE
+    cmdmod.browse = browse_flag;
+#endif
 
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_BROWSE)
 theend:
