@@ -42,6 +42,9 @@ static int cbrk_pressed = FALSE;    /* set by ctrl-break interrupt */
 static int ctrlc_pressed = FALSE;   /* set when ctrl-C or ctrl-break detected */
 static int delayed_redraw = FALSE;  /* set when ctrl-C detected */
 
+static int bioskey_read = _NKEYBRD_READ;   /* bioskey() argument: read key */
+static int bioskey_ready = _NKEYBRD_READY; /* bioskey() argument: key ready? */
+
 #ifdef USE_MOUSE
 static int mouse_avail = FALSE;		/* mouse present */
 static int mouse_active;		/* mouse enabled */
@@ -285,6 +288,7 @@ translate_altkeys(int rawkey)
     }
     return rawkey;
 }
+
 /*
  * Set normal fg/bg color, based on T_ME.  Called whem t_me has been set.
  */
@@ -595,7 +599,8 @@ WaitForChar(long msec)
 	}
 #endif
 
-	if ((p_consk ? cons_kbhit() : p_biosk ? bioskey(1) : kbhit())
+	if ((p_consk ? cons_kbhit()
+				 : p_biosk ? bioskey(bioskey_ready) : kbhit())
 		|| cbrk_pressed
 #ifdef USE_MOUSE
 						    || mouse_click >= 0
@@ -879,22 +884,27 @@ mch_inchar(
 #endif
 	if (p_biosk && !p_consk)
 	{
-	    while ((len == 0 || bioskey(1)) && len < maxlen)
+	    while ((len == 0 || bioskey(bioskey_ready)) && len < maxlen)
 	    {
-		c = translate_altkeys(bioskey(0));	/* get the key */
+		c = translate_altkeys(bioskey(bioskey_read)); /* get the key */
 		/*
 		 * translate a few things for inchar():
 		 * 0x0000 == CTRL-break		-> 3	(CTRL-C)
 		 * 0x0300 == CTRL-@		-> NUL
 		 * 0xnn00 == extended key code	-> K_NUL, nn
+		 * 0xnne0 == enhanced keyboard	-> K_NUL, nn
 		 * K_NUL			-> K_NUL, 3
 		 */
 		if (c == 0)
 		    c = 3;
 		else if (c == 0x0300)
 		    c = NUL;
-		else if ((c & 0xff) == 0 || c == K_NUL
-				 || c == 0x4e2b || c == 0x4a2d || c == 0x372a)
+		else if ((c & 0xff) == 0
+			|| c == K_NUL
+			|| c == 0x4e2b
+			|| c == 0x4a2d
+			|| c == 0x372a
+			|| ((c & 0xff) == 0xe0 && c != 0xe0))
 		{
 		    if (c == K_NUL)
 			c = 3;
@@ -1143,6 +1153,32 @@ mch_windinit(void)
     regs.h.bl = 0x00;
     regs.h.bh = 0x00;
     int86(0x10, &regs, &regs);
+
+    /*
+     * Test if we have an enhanced AT keyboard.  Write 0xFFFF to the keyboard
+     * buffer and try to read it back.  If we can't in 16 tries, it's an old
+     * type XT keyboard.
+     */
+    regs.h.ah = 0x05;
+    regs.x.cx = 0xffff;
+    int86(0x16, &regs, &regs);
+    if (regs.h.al != 1)	/* skip this when keyboard buffer is full */
+    {
+	int i;
+
+	for (i = 0; i < 16; ++i)
+	{
+	    regs.h.ah = 0x10;
+	    int86(0x16, &regs, &regs);
+	    if (regs.x.ax == 0xffff)
+		break;
+	}
+	if (i == 16)	/* 0xffff not read, must be old keyboard */
+	{
+	    bioskey_read = 0;
+	    bioskey_ready = 1;
+	}
+    }
 
 #ifdef MCH_CURSOR_SHAPE
     /* Save the old cursor shape */
