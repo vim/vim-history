@@ -608,7 +608,8 @@ getcmdline(firstc, count, indent)
 		    if (c == '=')
 		    {
 			p = get_expr_line();
-			if (p != NULL && realloc_cmdbuff(STRLEN(p) + 1) == OK)
+			if (p != NULL
+				 && realloc_cmdbuff((int)STRLEN(p) + 1) == OK)
 			{
 			    ccline.cmdlen = STRLEN(p);
 			    STRCPY(ccline.cmdbuff, p);
@@ -4809,8 +4810,13 @@ ex_history(eap)
 			&& hist[i].hisnum >= j && hist[i].hisnum <= k)
 		{
 		    msg_putchar('\n');
-		    sprintf((char *)IObuff, "%c%6d  %s", i == idx ? '>' : ' ',
-					    hist[i].hisnum, hist[i].hisstr);
+		    sprintf((char *)IObuff, "%c%6d  ", i == idx ? '>' : ' ',
+							      hist[i].hisnum);
+		    if (vim_strsize(hist[i].hisstr) > (int)Columns - 10)
+			trunc_string(hist[i].hisstr, IObuff + STRLEN(IObuff),
+							   (int)Columns - 10);
+		    else
+			STRCAT(IObuff, hist[i].hisstr);
 		    msg_outtrans(IObuff);
 		    out_flush();
 		}
