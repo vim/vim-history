@@ -263,7 +263,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #ifdef FEAT_MBYTE
     int		can_retry;
     int		conv_error = FALSE;	/* conversion error detected */
-    int		illegal_byte = FALSE;	/* illegal byte detected */
+    linenr_T	illegal_byte = 0;	/* line nr with illegal byte */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
     char_u	*fenc;			/* fileencoding to use */
@@ -1542,7 +1542,15 @@ rewind_retry:
 			conv_error = TRUE;
 		    else
 # endif
-			illegal_byte = TRUE;
+		    {
+			char_u		*s;
+
+			/* Estimate the line number. */
+			illegal_byte = curbuf->b_ml.ml_line_count - linecnt + 1;
+			for (s = ptr; s < p; ++s)
+			    if (*s == '\n')
+				++illegal_byte;
+		    }
 		}
 	    }
 #endif
@@ -1930,9 +1938,10 @@ failed:
 		STRCAT(IObuff, _("[CONVERSION ERROR]"));
 		c = TRUE;
 	    }
-	    else if (illegal_byte)
+	    else if (illegal_byte > 0)
 	    {
-		STRCAT(IObuff, _("[ILLEGAL BYTE]"));
+		sprintf((char *)IObuff + STRLEN(IObuff),
+			 _("[ILLEGAL BYTE in line %ld]"), (long)illegal_byte);
 		c = TRUE;
 	    }
 	    else
