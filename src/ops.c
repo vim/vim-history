@@ -5489,6 +5489,9 @@ cursor_pos_info()
 		min_pos = curwin->w_cursor;
 		max_pos = VIsual;
 	    }
+	    if (*p_sel == 'e' && max_pos.col > 0)
+		--max_pos.col;
+
 	    if (VIsual_mode == Ctrl_V)
 	    {
 		oparg.is_VIsual = 1;
