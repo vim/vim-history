@@ -1372,13 +1372,9 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 		State &= ~LANGMAP;
 		if (State & INSERT)
 		{
-		    long old_imi = curbuf->b_p_iminsert;
-
-		    curbuf->b_p_iminsert = B_IMODE_IM;
-
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 		    /* Unshown 'keymap' in status lines */
-		    if (old_imi == B_IMODE_LMAP)
+		    if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 		    {
 			/* Save cursor position */
 			int old_row = gui.row;

@@ -915,7 +915,8 @@ getcount:
 #ifdef USE_IM_CONTROL
 	    if (lang)
 	    {
-		im_save_status(&curbuf->b_p_iminsert);
+		if (curbuf->b_p_iminsert != B_IMODE_LMAP)
+		    im_save_status(&curbuf->b_p_iminsert);
 		im_set_active(FALSE);
 	    }
 	    p_smd = save_smd;
