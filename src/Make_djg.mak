@@ -58,13 +58,16 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe install.exe xxd/xxd.exe
+all: vim.exe install.exe uninstal.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
 
 install.exe: dosinst.c
 	$(CC) $(CFLAGS) -s -o install.exe dosinst.c -lpc
+
+uninstal.exe: uninstal.c
+	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c -lpc
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd

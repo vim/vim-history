@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0an.  Last change: 2001 Jul 07
+*various.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -432,10 +432,12 @@ K			Run a program to lookup the keyword under the
 
 [N]gs							*gs* *:sl* *:sleep*
 :[N]sl[eep] [N]	[m]	Do nothing for [N] seconds.  When [m] is included,
-			sleep for [N] milliseconds. >
+			sleep for [N] milliseconds. The count for "gs" always
+			uses seconds.  The default is one second. >
   :sleep	  "sleep for one second
   :5sleep	  "sleep for five seconds
   :sleep 100m     "sleep for a hundred milliseconds
+  500gs		  "slee for half a second
 <			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
 			"gs" stands for "goto sleep".  While sleeping the
 			cursor is positioned in the text (if visible).  {not
@@ -458,10 +460,10 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 
 			Progress is displayed during printing as a page number
 			and a percentage.  To abort printing use the interrupt
-			key (CTRL-C or, on MS-systems, CTRL-BREAK.)
+			key (CTRL-C or, on MS-systems, CTRL-Break.)
 			
 			Printer output is controlled by the 'printerfont' and
-			'printersettings' options.
+			'printeroptions' options.
 
 			The printed file is always line wrapped to the
 			selected margins irrespective of the current window's

@@ -5931,6 +5931,7 @@ do_highlight(line, forceit, init)
     int		is_menu_group = FALSE;		/* "Menu" group */
     int		is_scrollbar_group = FALSE;	/* "Scrollbar" group */
     int		is_tooltip_group = FALSE;	/* "Tooltip" group */
+    int		do_colors = FALSE;		/* need to update colors? */
 #else
 # define is_menu_group 0
 # define is_tooltip_group 0
@@ -6063,6 +6064,8 @@ do_highlight(line, forceit, init)
 	    /*
 	     * Clear all default highlight groups and load the defaults.
 	     */
+	    for (idx = 0; idx < highlight_ga.ga_len; ++idx)
+		highlight_clear(idx);
 	    init_highlight(TRUE, TRUE);
 #ifdef FEAT_GUI
 	    if (gui.in_use)
@@ -6288,7 +6291,9 @@ do_highlight(line, forceit, init)
 # ifdef FEAT_XFONTSET
 		if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
 		{
-		    /* New font was accepted, free the old one. */
+		    /* New fontset was accepted. Free the old one, if there was
+		     * one.
+		     */
 		    gui_mch_free_fontset(temp_sg_fontset);
 		    vim_free(HL_TABLE()[idx].sg_font_name);
 		    HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
@@ -6298,6 +6303,9 @@ do_highlight(line, forceit, init)
 # endif
 		if (HL_TABLE()[idx].sg_font != NOFONT)
 		{
+		    /* New font was accepted. Free the old one, if there was
+		     * one.
+		     */
 		    gui_mch_free_font(temp_sg_font);
 		    vim_free(HL_TABLE()[idx].sg_font_name);
 		    HL_TABLE()[idx].sg_font_name = vim_strsave(arg);
@@ -6477,7 +6485,9 @@ do_highlight(line, forceit, init)
 			i = (color == 0 || color == 4);
 		    else
 			i = (color < 7 || color == 8);
-		    set_option_value((char_u *)"bg", 0L,
+		    /* Set the 'background' option if it has a wrong value. */
+		    if (i != (*p_bg == 'd'))
+			set_option_value((char_u *)"bg", 0L,
 				 i ? (char_u *)"dark" : (char_u *)"light", 0);
 		}
 	    }
@@ -6510,6 +6520,7 @@ do_highlight(line, forceit, init)
 		if (is_tooltip_group)
 		    gui.balloonEval_fg_pixel = i - 1;
 #  endif
+		do_colors = TRUE;
 # endif
 	    }
 	  }
@@ -6542,6 +6553,7 @@ do_highlight(line, forceit, init)
 		if (is_tooltip_group)
 		    gui.balloonEval_bg_pixel = i - 1;
 #  endif
+		do_colors = TRUE;
 # endif
 	    }
 	  }
@@ -6672,17 +6684,20 @@ do_highlight(line, forceit, init)
 #ifdef FEAT_GUI_X11
 # ifdef FEAT_MENU
 	else if (is_menu_group)
-	    gui_mch_new_menu_colors();
+	{
+	    if (gui.in_use && do_colors)
+		gui_mch_new_menu_colors();
+	}
 # endif
 	else if (is_scrollbar_group)
 	{
-	    if (gui.in_use)
+	    if (gui.in_use && do_colors)
 		gui_new_scrollbar_colors();
 	}
 # ifdef FEAT_BEVAL
 	else if (is_tooltip_group)
 	{
-	    if (gui.in_use)
+	    if (gui.in_use && do_colors)
 		gui_mch_new_tooltip_colors();
 	}
 # endif
@@ -7052,17 +7067,17 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	    }
 #endif
 # if defined(FEAT_BEVAL) && !defined(FEAT_GUI_ATHENA)
-	/* The Athena widget set cannot currently handle switching between
-	 * displaying a single font and a fontset.
-	 */
-	if (do_tooltip)
-	{
+	    /* The Athena widget set cannot currently handle switching between
+	     * displaying a single font and a fontset.
+	     */
+	    if (do_tooltip)
+	    {
 #  ifdef FEAT_GUI_MOTIF
-	    gui.balloonEval_fontList = gui_motif_create_fontlist(
-				    (XFontStruct *)&HL_TABLE()[idx].sg_font);
+		gui.balloonEval_fontList = gui_motif_create_fontlist(
+			(XFontStruct *)&HL_TABLE()[idx].sg_font);
 #  endif
-	    gui_mch_new_tooltip_font();
-	}
+		gui_mch_new_tooltip_font();
+	    }
 # endif
 	}
     }

@@ -55,6 +55,9 @@ static int	diff_flags = DIFF_FILLER;
 
 #define LBUFLEN 50		/* length of line in diff file */
 
+static int diff_a_works = MAYBE; /* TRUE when "diff -a" works, FALSE when it
+				    doesn't work, MAYBE when not checked yet */
+
 static int diff_buf_idx __ARGS((buf_T *buf));
 static void diff_check_unchanged __ARGS((diff_T *dp));
 static void diff_redraw __ARGS((int dofold));
@@ -564,41 +567,57 @@ ex_diffupdate(eap)
      * Do a quick test if "diff" really works.  Otherwise it looks like there
      * are no differences.  Can't use the return value, it's non-zero when
      * there are differences.
+     * May try twice, first with "-a" and then without.
      */
-    fd = fopen((char *)tmp_orig, "w");
-    if (fd != NULL)
+    for (;;)
     {
-	fwrite("line1\n", (size_t)6, (size_t)1, fd);
-	fclose(fd);
-	fd = fopen((char *)tmp_new, "w");
+	fd = fopen((char *)tmp_orig, "w");
 	if (fd != NULL)
 	{
-	    fwrite("line2\n", (size_t)6, (size_t)1, fd);
+	    fwrite("line1\n", (size_t)6, (size_t)1, fd);
 	    fclose(fd);
-	    diff_file(tmp_orig, tmp_new, tmp_diff);
-	    fd = fopen((char *)tmp_diff, "r");
+	    fd = fopen((char *)tmp_new, "w");
 	    if (fd != NULL)
 	    {
-		char_u	linebuf[LBUFLEN];
-
-		for (;;)
-		{
-		    /* There must be a line that contains "1c1". */
-		    if (tag_fgets(linebuf, LBUFLEN, fd))
-			break;
-		    if (STRNCMP(linebuf, "1c1", 3) == 0)
-			ok = TRUE;
-		}
+		fwrite("line2\n", (size_t)6, (size_t)1, fd);
 		fclose(fd);
+		diff_file(tmp_orig, tmp_new, tmp_diff);
+		fd = fopen((char *)tmp_diff, "r");
+		if (fd != NULL)
+		{
+		    char_u	linebuf[LBUFLEN];
+
+		    for (;;)
+		    {
+			/* There must be a line that contains "1c1". */
+			if (tag_fgets(linebuf, LBUFLEN, fd))
+			    break;
+			if (STRNCMP(linebuf, "1c1", 3) == 0)
+			    ok = TRUE;
+		    }
+		    fclose(fd);
+		}
+		mch_remove(tmp_diff);
+		mch_remove(tmp_new);
 	    }
-	    mch_remove(tmp_diff);
-	    mch_remove(tmp_new);
+	    mch_remove(tmp_orig);
 	}
-	mch_remove(tmp_orig);
+
+	/* If we checked if "-a" works already, break here. */
+	if (diff_a_works != MAYBE
+#ifdef FEAT_EVAL
+		|| *p_dex != NUL
+#endif
+		)
+		break;
+	diff_a_works = ok;
+	if (ok)
+	    break;
     }
     if (!ok)
     {
 	EMSG(_("E97: Cannot create diffs"));
+	diff_a_works = MAYBE;
 	goto theend;
     }
 
@@ -653,12 +672,14 @@ diff_file(tmp_orig, tmp_new, tmp_diff)
 #endif
     {
 	cmd = alloc((unsigned)(STRLEN(tmp_orig) + STRLEN(tmp_new)
-				+ STRLEN(tmp_diff) + STRLEN(p_srr) + 14));
+				+ STRLEN(tmp_diff) + STRLEN(p_srr) + 17));
 	if (cmd != NULL)
 	{
-	    /* Build the diff command and execute it.  Ignore errors, diff
-	     * returns non-zero when differences have been found. */
-	    sprintf((char *)cmd, "diff %s%s%s %s",
+	    /* Build the diff command and execute it.  Always use -a, binary
+	     * differences are of no use.  Ignore errors, diff returns
+	     * non-zero when differences have been found. */
+	    sprintf((char *)cmd, "diff %s%s%s%s %s",
+		    diff_a_works == FALSE ? "" : "-a ",
 		    (diff_flags & DIFF_IWHITE) ? "-b " : "",
 		    (diff_flags & DIFF_ICASE) ? "-i " : "",
 		    tmp_orig, tmp_new);
@@ -1407,6 +1428,7 @@ diff_set_topline(fromwin, towin)
 	towin->w_topline = 1;
 	towin->w_topfill = 0;
     }
+    check_topfill(towin, FALSE);
 #ifdef FEAT_FOLDING
     (void)hasFoldingWin(towin, towin->w_topline, &towin->w_topline,
 							    NULL, TRUE, NULL);

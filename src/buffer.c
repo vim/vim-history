@@ -1382,6 +1382,7 @@ free_buf_options(buf, free_p_ff)
 #endif
     }
 #ifdef FEAT_FIND_ID
+    clear_string_option(&buf->b_p_def);
     clear_string_option(&buf->b_p_inc);
 # ifdef FEAT_EVAL
     clear_string_option(&buf->b_p_inex);
@@ -1438,9 +1439,6 @@ free_buf_options(buf, free_p_ff)
     clear_string_option(&buf->b_p_ep);
     clear_string_option(&buf->b_p_path);
     clear_string_option(&buf->b_p_tags);
-#ifdef FEAT_FIND_ID
-    clear_string_option(&buf->b_p_def);
-#endif
 #ifdef FEAT_INS_EXPAND
     clear_string_option(&buf->b_p_dict);
     clear_string_option(&buf->b_p_tsr);
@@ -3695,7 +3693,7 @@ do_arg_all(count, forceit)
  * Open a window for a number of buffers.
  */
     void
-do_buffer_all(eap)
+ex_buffer_all(eap)
     exarg_T	*eap;
 {
     buf_T	*buf;
@@ -3731,7 +3729,9 @@ do_buffer_all(eap)
 	wpnext = wp->w_next;
 	if (wp->w_buffer->b_nwindows > 1
 #ifdef FEAT_VERTSPLIT
-		|| wp->w_width != Columns
+		|| (cmdmod.split & WSP_VERT)
+			  ? wp->w_height + wp->w_status_height < Rows - p_ch
+			  : wp->w_width != Columns
 #endif
 		)
 	{
@@ -4457,23 +4457,11 @@ buf_contents_changed(buf)
 	return TRUE;
 
     /* Force the 'fileencoding' and 'fileformat' to be equal. */
-    ea.cmd = alloc((unsigned)(STRLEN(buf->b_p_ff)
-#ifdef FEAT_MBYTE
-		+ STRLEN(buf->b_p_fenc)
-#endif
-						 + 15));
-    if (ea.cmd == NULL)
+    if (prep_exarg(&ea, buf) == FAIL)
     {
 	close_buffer(NULL, newbuf, DOBUF_WIPE);
 	return TRUE;
     }
-#ifdef FEAT_MBYTE
-    sprintf((char *)ea.cmd, "e ++ff=%s ++enc=%s", buf->b_p_ff, buf->b_p_fenc);
-    ea.force_enc = 14 + (int)STRLEN(buf->b_p_ff);
-#else
-    sprintf((char *)ea.cmd, "e ++ff=%s", buf->b_p_ff);
-#endif
-    ea.force_ff = 7;
 
 #ifdef FEAT_AUTOCMD
     /* set curwin/curbuf to buf and save a few things */

@@ -4295,6 +4295,10 @@ f_has(argvars, retvar)
 	else if (STRICMP(name, "syntax_items") == 0)
 	    n = syntax_present(curbuf);
 #endif
+#if defined(WIN3264)
+	else if (STRICMP(name, "win95") == 0)
+	    n = mch_windows95();
+#endif
     }
 
     retvar->var_val.var_number = n;

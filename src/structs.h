@@ -899,6 +899,7 @@ struct file_buffer
     int		b_p_inf;	/* 'infercase' */
     char_u	*b_p_isk;	/* 'iskeyword' */
 #ifdef FEAT_FIND_ID
+    char_u	*b_p_def;	/* 'define' local value */
     char_u	*b_p_inc;	/* 'include' */
 # ifdef FEAT_EVAL
     char_u	*b_p_inex;	/* 'includeexpr' */
@@ -961,9 +962,6 @@ struct file_buffer
     char_u	*b_p_path;	/* 'path' local value */
     int		b_p_ar;		/* 'autoread' local value */
     char_u	*b_p_tags;	/* 'tags' local value */
-#ifdef FEAT_FIND_ID
-    char_u	*b_p_def;	/* 'define' local value */
-#endif
 #ifdef FEAT_INS_EXPAND
     char_u	*b_p_dict;	/* 'dictionary' local value */
     char_u	*b_p_tsr;	/* 'thesaurus' local value */

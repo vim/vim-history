@@ -369,10 +369,10 @@ static const struct nv_cmd
     {K_S_DOWN,	nv_page,	NV_SS,			FORWARD},
     {K_LEFT,	nv_left,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_LEFT,	nv_bck_word,	NV_SS|NV_RL,		0},
-    {K_C_LEFT,	nv_bck_word,	NV_SS|NV_RL,		1},
+    {K_C_LEFT,	nv_bck_word,	NV_SSS|NV_RL,		1},
     {K_RIGHT,	nv_right,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_RIGHT,	nv_wordcmd,	NV_SS|NV_RL,		FALSE},
-    {K_C_RIGHT,	nv_wordcmd,	NV_SS|NV_RL,		TRUE},
+    {K_C_RIGHT,	nv_wordcmd,	NV_SSS|NV_RL,		TRUE},
     {K_PAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_KPAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_PAGEDOWN, nv_page,	NV_SSS|NV_STS,		FORWARD},
@@ -381,12 +381,12 @@ static const struct nv_cmd
     {K_KEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
     {K_XEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
     {K_S_END,	nv_end,		NV_SS,			FALSE},
-    {K_C_END,	nv_end,		NV_SS,			TRUE},
+    {K_C_END,	nv_end,		NV_SSS,			TRUE},
     {K_HOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_KHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_XHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_S_HOME,	nv_home,	NV_SS,			0},
-    {K_C_HOME,	nv_goto,	NV_SS,			FALSE},
+    {K_C_HOME,	nv_goto,	NV_SSS,			FALSE},
     {K_DEL,	nv_abbrev,	0,			0},
     {K_KDEL,	nv_abbrev,	0,			0},
     {K_UNDO,	nv_kundo,	0,			0},
@@ -4338,10 +4338,9 @@ nv_colon(cap)
 	nv_operator(cap);
     else
 #endif
-	if (!checkclearop(cap->oap))
     {
 	/* translate "count:" into ":.,.+(count - 1)" */
-	if (cap->count0)
+	if (cap->count0 && cap->oap->op_type == OP_NOP)
 	{
 	    stuffcharReadbuff('.');
 	    if (cap->count0 > 1)
@@ -4368,6 +4367,14 @@ nv_colon(cap)
 	    else
 		restart_edit = 0;
 	}
+
+	/* The start of the operator may have become invalid by the Ex
+	 * command. */
+	if (cap->oap->op_type != OP_NOP
+		&& (cap->oap->start.lnum > curbuf->b_ml.ml_line_count
+		    || cap->oap->start.col >
+					 STRLEN(ml_get(cap->oap->start.lnum))))
+	    clearopbeep(cap->oap);
     }
 }
 
@@ -6845,7 +6852,7 @@ nv_g_cmd(cap)
      * "gs": Goto sleep.
      */
     case 's':
-	do_sleep(cap->count1);
+	do_sleep(cap->count1 * 1000L);
 	break;
 
     /*

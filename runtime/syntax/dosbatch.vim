@@ -1,9 +1,13 @@
 " Vim syntax file
 " Language:	MSDOS batch file (with NT command extensions)
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
-" Filenames:	*.bat
-" Last Change:	14th May 1999
-" Web Page:	N/A
+" Filenames:    *.bat
+" Last Change:	13th July 2001
+" Web Page:     N/A
+"
+" Options Flags:
+" dosbatch_cmdextversion        - 1 = Windows NT, 2 = Windows 2000 [default]
+"
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -11,6 +15,11 @@ if version < 600
   syntax clear
 elseif exists("b:current_syntax")
   finish
+endif
+
+" Set default highlighting to Win2k
+if !exists("dosbatch_cmdextversion")
+  let dosbatch_cmdextversion = 2
 endif
 
 " DOS bat files are case insensitive but case preserving!
@@ -21,7 +30,7 @@ syn keyword dosbatchTodo contained	TODO
 " Dosbat keywords
 syn keyword dosbatchStatement	goto call exit
 syn keyword dosbatchConditional	if else
-syn keyword dosbatchRepeat	for
+syn keyword dosbatchRepeat	for 
 
 " Some operators - first lot are case sensitive!
 syn case match
@@ -39,7 +48,7 @@ syn match dosbatchString        "\<echo[^)>|]*"lc=4 contains=dosbatchVariable,do
 syn match dosbatchEchoOperator  "\<echo\s\+\(on\|off\)\s*$"lc=4
 
 " For embedded commands
-syn match dosbatchCmd		"(\s*'[^']*'"lc=1 contains=dosbatchString,dosbatchVariable,dosBatchArgument,@dosbatchNumber,dosbatchImplicit,dosbatchStatement,dosbatchConditional,dosbatchRepeat,dosbatchOperator
+syn match dosbatchCmd   	"(\s*'[^']*'"lc=1 contains=dosbatchString,dosbatchVariable,dosBatchArgument,@dosbatchNumber,dosbatchImplicit,dosbatchStatement,dosbatchConditional,dosbatchRepeat,dosbatchOperator
 
 " Numbers - surround with ws to not include in dir and filenames
 syn match dosbatchInteger       "[[:space:]=(/:]\d\+"lc=1
@@ -66,9 +75,13 @@ syn match dosbatchSet           "\s\h\w*[+-]\==\{-1}" contains=dosbatchIdentifie
 " Args to bat files and for loops, etc
 syn match dosbatchArgument	"%\(\d\|\*\)"
 syn match dosbatchArgument	"%%[a-z]\>"
-syn match dosbatchArgument	"%\~[fdpnxs]\+\(\($PATH:\)\=[a-z]\|\d\)\>"
+if dosbatch_cmdextversion == 1
+  syn match dosbatchArgument	"%\~[fdpnxs]\+\(\($PATH:\)\=[a-z]\|\d\)\>"
+else
+  syn match dosbatchArgument	"%\~[fdpnxsatz]\+\(\($PATH:\)\=[a-z]\|\d\)\>"
+endif
 
-" Line labels
+" Line labels 
 syn match dosbatchLabel         "^\s*:\s*\h\w*\>"
 syn match dosbatchLabel         "\<\(goto\|call\)\s\+:\h\w*\>"lc=4
 syn match dosbatchLabel         "\<goto\s\+\h\w*\>"lc=4
@@ -83,13 +96,13 @@ syn match dosbatchComment	"\s*:\s*:.*$" contains=dosbatchTodo,@dosbatchNumber,do
 syn match dosbatchComment	"(rem[^)]*"lc=4 contains=dosbatchTodo,@dosbatchNumber,dosbatchVariable,dosbatchArgument
 
 syn keyword dosbatchImplicit    append assoc at attrib break cacls cd chcp chdir
-syn keyword dosbatchImplicit    chkdsk cls cmd color comp compact convert copy
-syn keyword dosbatchImplicit    date del dir diskcomp diskcopy doskey echo endlocal
-syn keyword dosbatchImplicit    erase fc find findstr format ftype
-syn keyword dosbatchImplicit    graftabl help keyb label md mkdir mode more move
+syn keyword dosbatchImplicit    chkdsk chkntfs cls cmd color comp compact convert copy     
+syn keyword dosbatchImplicit    date del dir diskcomp diskcopy doskey echo endlocal 
+syn keyword dosbatchImplicit    erase fc find findstr format ftype 
+syn keyword dosbatchImplicit    graftabl help keyb label md mkdir mode more move 
 syn keyword dosbatchImplicit    path pause popd print prompt pushd rd recover rem
-syn keyword dosbatchImplicit    ren rename replace restore rmdir set setlocal shift
-syn keyword dosbatchImplicit    sort start subst time title tree type ver verify
+syn keyword dosbatchImplicit    ren rename replace restore rmdir set setlocal shift 
+syn keyword dosbatchImplicit    sort start subst time title tree type ver verify 
 syn keyword dosbatchImplicit    vol xcopy
 
 " Define the default highlighting.

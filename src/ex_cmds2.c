@@ -610,7 +610,7 @@ dialog_changed(buf, checkall)
 
     dialog_msg(buff, _("Save changes to \"%.*s\"?"),
 			(buf->b_fname != NULL) ?
-			buf->b_fname : (char_u *)"Untitled");
+			buf->b_fname : (char_u *)_("Untitled"));
     if (checkall)
 	ret = vim_dialog_yesnoallcancel(VIM_QUESTION, NULL, buff, 1);
     else
@@ -2229,8 +2229,8 @@ static int		page_count;
 
 static unsigned long darken_rgb __ARGS((unsigned long rgb));
 static unsigned long prt_get_term_color __ARGS((int colorindex));
-static void ex_print_number __ARGS((int offset, int y_pos, linenr_T line_num, int format));
-static void ex_print_header __ARGS((int offset, int width, int pagenum, int format));
+static void ex_print_number __ARGS((int offset, int y_pos, linenr_T lnum, int format, int wrapped));
+static void ex_print_header __ARGS((int offset, int width, int pagenum, linenr_T lnum, int format));
 
 /*
  * If using a dark background, the colors will probably be too bright to show
@@ -2256,11 +2256,12 @@ prt_get_term_color(colorindex)
 }
 
     static void
-ex_print_number(offset, y_pos, line_num, format)
+ex_print_number(offset, y_pos, lnum, format, wrapped)
     int		offset;
     int		y_pos;
-    linenr_T	line_num;
+    linenr_T	lnum;
     int		format;
+    int		wrapped;
 {
     /*
      * A simple header for demos
@@ -2269,7 +2270,10 @@ ex_print_number(offset, y_pos, line_num, format)
     char_u tbuf[8];
     int needbreak;
 
-    sprintf((char *)tbuf, "%6ld", (long)line_num);
+    if (!wrapped)
+	sprintf((char *)tbuf, "%6ld", (long)lnum);
+    else
+	STRCPY(tbuf, "      ");
 
 #ifdef FEAT_SYN_HL
     if (format)
@@ -2303,10 +2307,11 @@ get_printer_page_num()
 
 /*ARGSUSED*/
     static void
-ex_print_header(offset, width, pagenum, format)
+ex_print_header(offset, width, pagenum, lnum, format)
     int		offset;
     int		width;
     int		pagenum;
+    linenr_T	lnum;
     int		format;
 {
     /*
@@ -2318,6 +2323,9 @@ ex_print_header(offset, width, pagenum, format)
 			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
     char_u	*tbuf;
     char_u	*p;
+#ifdef FEAT_STL_OPT
+    linenr_T	tmp_lnum, tmp_topline, tmp_botline;
+#endif
 #ifdef FEAT_MBYTE
     int		l;
 #endif
@@ -2328,7 +2336,25 @@ ex_print_header(offset, width, pagenum, format)
 	return;
 
 #ifdef FEAT_STL_OPT
+    /*
+     * Need to (temporarily) set current line number and first/last line
+     * number on the 'window'.  Since we don't know how long the page is, set
+     * the first and current line number to the top line, and guess that the
+     * page length is 64.
+     */
+    tmp_lnum = curwin->w_cursor.lnum;
+    tmp_topline = curwin->w_topline;
+    tmp_botline = curwin->w_botline;
+    curwin->w_cursor.lnum = lnum;
+    curwin->w_topline = lnum;
+    curwin->w_botline = lnum + 63;
+
     build_stl_str_hl(curwin, p, p_headerfmt, ' ', width, NULL);
+
+    /* Reset line numbers */
+    curwin->w_cursor.lnum = tmp_lnum;
+    curwin->w_topline = tmp_topline;
+    curwin->w_botline = tmp_botline;
 #else
     sprintf((char *)tbuf, "Page %d", pagenum);
 #endif
@@ -2385,7 +2411,7 @@ ex_print_header(offset, width, pagenum, format)
     vim_free(tbuf);
 }
 
-static colnr_T hardcopy_line __ARGS((colnr_T column, linenr_T file_line, int page_line, int mono, prt_settings_T *settingsp, int *lead_spaces));
+static colnr_T hardcopy_line __ARGS((colnr_T column, linenr_T file_line, int page_line, int mono, prt_settings_T *settingsp, int *lead_spaces, int wrapped));
 
     void
 ex_hardcopy(eap)
@@ -2396,6 +2422,7 @@ ex_hardcopy(eap)
     prt_settings_T	settings;
     unsigned long	bytes_to_print = 0;
     int			page_line;
+    int			wrapped = FALSE;
 #ifdef FEAT_SYN_HL
     int			mono = FALSE;
 #endif
@@ -2503,21 +2530,26 @@ ex_hardcopy(eap)
 		    ex_print_header(settings.line_height,
 					settings.chars_per_line,
 					page_count + 1,
+					file_line,
 					!mono);
 
 		for (page_line = 0 ; page_line < settings.lines_per_page;
 								  ++page_line)
 		{
 		    column = hardcopy_line(column, file_line, page_line,
-					       mono, &settings, &lead_spaces);
+					       mono, &settings, &lead_spaces,
+					       wrapped);
 		    if (column == 0)
 		    {
 			/* finished a file line */
+			wrapped = FALSE;
 			bytes_printed += STRLEN(ml_get(file_line));
 			++file_line;
 			if (file_line > eap->line2)
 			    break; /* reached the end */
 		    }
+		    else
+			wrapped = TRUE;
 		}
 
 		if (!mch_print_end_page())
@@ -2548,13 +2580,14 @@ print_fail_no_begin:
  * Return the next column to print, or zero if the line is finished.
  */
     static colnr_T
-hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces)
+hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrapped)
     colnr_T		column;
     linenr_T		file_line;
     int			page_line;
     int			mono;
     prt_settings_T	*settingsp;
     int			*lead_spaces;
+    int			wrapped;
 {
     char_u		*p;
     char_u		*start_line;
@@ -2595,7 +2628,8 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces)
 	ex_print_number(settingsp->number_width,
 			settingsp->line_height * page_line,
 			file_line,
-			!mono);
+			!mono,
+			wrapped);
 
     /*
      * Loop over the columns until the end of the file line or right margin.

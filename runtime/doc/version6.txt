@@ -1,33 +1,29 @@
-*version6.txt*  For Vim version 6.0an.  Last change: 2001 Jul 12
+*version6.txt*  For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Welcome to Vim Version 6.0!
+Welcome to Vim Version 6.0!  A large number of features has been added.  This
+file mentions all the new items that have been added, changes to existing
+features and bug fixes compared to Vim 5.x.
 
-	Vim 2001, a folding space odyssey
-	Where do you want to fold today?
-
-
-This document lists the differences between Vim 5.x and Vim 6.0.
-See |vi_diff.txt| for an overview of differences between Vi and Vim 5.0.
+See |vi_diff.txt| for an overview of differences between Vi and Vim 6.0.
 See |version4.txt| for differences between Vim 3.0 and Vim 4.0.
 See |version5.txt| for differences between Vim 4.0 and Vim 5.0.
 
 INCOMPATIBLE CHANGES			|incompatible-6|
 
 Cursor position in Visual mode		|curpos-visual|
-substitute command			|substitute-CR|
-'include' option local			|include-local|
-global option values used		|new-global-values|
+substitute command Vi compatible	|substitute-CR|
+global option values introduced		|new-global-values|
 'fileencoding' changed			|fileencoding-changed|
 Digraphs changed			|digraphs-changed|
 Filetype detection changed		|filetypedetect-changed|
 Unlisted buffers introduced		|new-unlisted-buffers|
-CTRL-U in Command-line mode		|CTRL-U-changed|
+CTRL-U in Command-line mode changed	|CTRL-U-changed|
 Ctags gone				|ctags-gone|
-Documentation				|documentation-6|
+Documentation reorganized		|documentation-6|
 Small incompatibilities			|incomp-small-6|
 
 NEW FEATURES
@@ -35,7 +31,7 @@ NEW FEATURES
 Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
 Diff mode				|new-diff-mode|
-evim: click-and-type			|new-evim|
+Easy Vim: click-and-type		|new-evim|
 User manual				|new-user-manual|
 Flexible indenting			|new-indent-flex|
 Extended search patterns		|new-searchpat|
@@ -43,19 +39,20 @@ UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
 Filetype plugins			|new-filetype-plugins|
+File browser				|new-file-browser|
+Editing files over a network		|new-network-files|
 Window for command-line editing		|new-cmdwin|
 Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
 Communication between Vims		|new-vim-server|
-Buffer types				|new-buftype|
+Buffer type options			|new-buftype|
 Printing				|new-printing|
 Ports					|ports-6|
 Quickfix extended			|quickfix-6|
 Operator modifiers			|new-operator-mod|
 Search Path				|new-search-path|
-Editing files over a network		|new-network-files|
-Writing files				|new-file-writing|
+Writing files improved			|new-file-writing|
 Argument list				|new-argument-list|
 Restore a View				|new-View|
 Color schemes				|new-color-schemes|
@@ -80,41 +77,34 @@ Cursor position in Visual mode			*curpos-visual*
 When going from one window to another window on the same buffer while in
 Visual mode, the cursor position of the other window is adjusted to keep the
 same Visual area.  This can be used to set the start of the Visual area in one
-window and the end in another.
+window and the end in another.  In vim 5.x the cursor position of the other
+window would be used, which could be anywhere.
 
 
-substitute command				*substitute-CR*
-------------------
+substitute command Vi compatible		*substitute-CR*
+--------------------------------
 
-The substitute string has been made Vi compatible.  Previously a CTRL-V had a
-special meaning and could be used to prevent a <CR> to insert a line break.
-This made it impossible to insert a CTRL-V before a line break.  Now a
-backslash is used to prevent a <CR> to cause a line break.  Since the number
-of backslashes is halved, it is still possible to insert a line break at the
-end of the line.  This now works just like Vi, but it's not compatible with
-Vim versions before 6.0.
+The substitute string (the "to" part of the substitute command) has been made
+Vi compatible.  Previously a CTRL-V had a special meaning and could be used to
+prevent a <CR> to insert a line break.  This made it impossible to insert a
+CTRL-V before a line break.  Now a backslash is used to prevent a <CR> to
+cause a line break.  Since the number of backslashes is halved, it is still
+possible to insert a line break at the end of the line.  This now works just
+like Vi, but it's not compatible with Vim versions before 6.0.
 
-When a ":s" command doesn't make any substitutions, it doesn't set the '[ and
-'] marks.
-
-
-'include' option local				*include-local*
-----------------------
-
-The 'include' option is now local to the buffer.  Each language may require
-another 'include' option value.  This only matters if you set the 'include'
-option and expect it to have the new value in other buffers too.
+When a ":s" command doesn't make any substitutions, it no longer sets the '[
+and '] marks.  This is not related to Vi, since it doesn't have these marks.
 
 
-Global option values used			*new-global-values*
--------------------------
+Global option values introduced			*new-global-values*
+-------------------------------
 
 There are now global values for options which are local to a buffer or window.
 Previously the local options were copied from one buffer to another.  When
-editing another file this could cause options set in a modeline to be used for
-the wrong file.  Now the global values are used when entering a buffer that
-has not been used before.  Also, when editing another buffer in a window, the
-local window options are reset to their global values.  The ":set" command
+editing another file this could cause option values from a modeline to be used
+for the wrong file.  Now the global values are used when entering a buffer
+that has not been used before.  Also, when editing another buffer in a window,
+the local window options are reset to their global values.  The ":set" command
 sets both the local and global values, this is still compatible.  But a
 modeline only sets the local value, this is not backwards compatible.
 
@@ -134,15 +124,15 @@ buffers.  It could never be different between buffers, because it changed the
 way text in all buffers was interpreted.
 It is now used for the encoding of the file related to the buffer.  If you
 still set 'fileencoding' it is likely to be overwritten by the detected
-encoding from 'fileencodings'.
-The FileEncoding autocommand now does the same as the new EncodingChanged
+encoding from 'fileencodings', thus it is "mostly harmless".
+The old FileEncoding autocommand now does the same as the new EncodingChanged
 event.
 
 
 Digraphs changed				*digraphs-changed*
 ----------------
 
-The default digraphs now correspond to RFC1345.  This is different from
+The default digraphs now correspond to RFC1345.  This is very different from
 what was used in Vim 5.x. |digraphs|
 
 
@@ -150,92 +140,94 @@ Filetype detection changed			*filetypedetect-changed*
 --------------------------
 
 The filetype detection previously was using the "filetype" autocommand group.
-This caused confusion with the FileType event name.  The group is now called
-"filetypedetect".  It still works, but if the "filetype" group is used the
-autocommands will not be removed by ":filetype off".
-The support for 'runtimepath' has made the "myfiletypefile" and "mysyntaxfile"
-mechanism obsolete.  They are still used for backwards compatibility.
+This caused confusion with the FileType event name (case is ignored).  The
+group is now called "filetypedetect".  It still works, but if the "filetype"
+group is used the autocommands will not be removed by ":filetype off".
+   The support for 'runtimepath' has made the "myfiletypefile" and
+"mysyntaxfile" mechanism obsolete.  They are still used for backwards
+compatibility.
 
 The connection between the FileType event and setting the 'syntax' option was
 previously in the "syntax" autocommand group.  That caused confusion with the
 Syntax event name.  The group is now called "syntaxset".
 
 The distributed syntax files no longer contain "syntax clear".  That makes it
-possible to include one in the other without tricks.
+possible to include one in the other without tricks.  The syntax is now
+cleared when the 'syntax' option is set (by an autocommand added from
+synload.vim).  This makes the syntax cleared when the value of 'syntax' does
+not correspond to a syntax file.  Previously the existing highlighting was
+kept.
 
 
 Unlisted buffers introduced			*new-unlisted-buffers*
 ---------------------------
 
-Introduction of unlisted buffers: Make a difference between buffers which
-don't appear in the buffer list and buffers which are really not in the buffer
-list.  Commands like ":ls", ":bnext", ":blast" and the Buffers menu will skip
-buffers not in the buffer list. |unlisted-buffer|
+There is now a difference between buffers which don't appear in the buffer
+list and buffers which are really not in the buffer list.  Commands like
+":ls", ":bnext", ":blast" and the Buffers menu will skip buffers not in the
+buffer list. |unlisted-buffer|
 The 'buflisted' option can be used to make a buffer appear in the buffer list
 or not.
+
 Several commands that previously added a buffer to the buffer list now create
-an unlisted buffer.  This means that a ":bnext" or ":ball" will not find these
+an unlisted buffer.  This means that a ":bnext" and ":ball" will not find these
 files until they have actually been edited.  For example, buffers used for the
-alternative file by ":w file" and ":r file".
-Other commands previously completely deleted a buffer and now only remove the
-buffer from the buffer list.  Commands relying on a buffer not to be present
-might fail.  For example A ":bdelete" command in an autocommand that relied on
-something following to fail (was used in the automatic tests).
+alternative file by ":write file" and ":read file".
+   Other commands previously completely deleted a buffer and now only remove
+the buffer from the buffer list.  Commands relying on a buffer not to be
+present might fail.  For example A ":bdelete" command in an autocommand that
+relied on something following to fail (was used in the automatic tests).
 |:bwipeout| can be used for the old meaning of ":bdelete".
+
 The BufDelete autocommand event is now triggered when a buffer is removed from
 the buffer list.  The BufCreate event is only triggered when a buffer is
 created that is added to the buffer list, or when an existing buffer is added
 to the buffer list.  BufAdd is a new name for BufCreate.
 The new BufNew event is for creating any buffer and BufWipeout for really
 deleting a buffer.
-When doing Insert mode completion only buffers in the buffer list are scanned.
-Added the 'U' flag to 'complete' to do completion from unlisted buffers.
+
+When doing Insert mode completion, only buffers in the buffer list are
+scanned.  Added the 'U' flag to 'complete' to do completion from unlisted
+buffers.
+
 Unlisted buffers are not stored in a viminfo file.
 
 
-CTRL-U in Command-line mode			*CTRL-U-changed*
----------------------------
+CTRL-U in Command-line mode changed		*CTRL-U-changed*
+-----------------------------------
 
-CTRL-U in the command line cleared the whole line.  Most shells only delete
-the characters before the cursor.  Made it like that. (Steve Wall)
+Using CTRL-U when editing the command line cleared the whole line.  Most
+shells only delete the characters before the cursor.  Made it work like that.
+(Steve Wall)
+
 You can get the old behavior with CTRL-E CTRL-U: >
 	:cnoremap <C-U> <C-E><C-U>
+
 
 Ctags gone					*ctags-gone*
 ----------
 
 Ctags is no longer part of the Vim distribution.  It's now a grown-up program
-by itself, it deserves to be distributed separately.  However, the binary
-archives do include the ctags program, since it's small and useful.
-Ctags can be found here: http://darren.hiebert.com/ctags/index.html.
+by itself, it deserves to be distributed separately.
+Ctags can be found here: http://ctags.sf.net/.
 
 
-Documentation					*documentation-6*
--------------
+Documentation reorganized			*documentation-6*
+-------------------------
 
 The documentation has been reorganized, an item may not be where you found it
 in Vim 5.x.
-- Split into a reference manual and a user manual.
-- Put the quick reference in a separate file (so that it can be printed).
+- The user manual was added, some items have been moved to it from the
+  reference manual.
+- The quick reference is now in a separate file (so that it can be printed).
 
 The examples in the documentation were previously marked with a ">" in the
 first column.  This made it difficult to copy/paste them.  There is now a
 single ">" before the example and it ends at a "<" or a non-blank in the first
 column.  This also looks better without highlighting.
 
-When syntax highlighting is not enabled, the characters in the help file which
-mark examples ('>' and '<') and header lines ('~') are replaced with a space.
-
-When closing the help window, restore the layout from before opening it, if
-the window layout didn't change since then.
-When opening the help window, put it at the top of the Vim window if the
-current window is less than 80 characters and not full width.
-
 'helpfile' is no longer used to find the help tags file.  This allows a user
 to add its own help files (e.g., for plugins).
-
-When doing ":help tag", don't open help.txt first, jump directly to the help
-tag.  It's faster and avoids an extra message.
 
 
 Small incompatibilities				*incomp-small-6*
@@ -248,7 +240,7 @@ security.
 
 Removed '_' from the 'breakat' default: It's commonly used in keywords.
 
-The default for 'mousehide' is on, because this works well form most people.
+The default for 'mousehide' is on, because this works well for most people.
 
 The Amiga binary is now always compiled with "big" features.  The "big" binary
 archive no longer exists.
@@ -278,9 +270,6 @@ A buffer for a directory is no longer added to the Buffers menu.
 Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
 Thus it's now the hit-enter prompt instead of the hit-return prompt.
 Can map <Enter> just like <CR> or <Return>.
-
-When setting 'syntax' to a name for which there is no syntax file, the syntax
-highlighting is cleared.  Previously the existing highlighting was kept.
 
 The default for the 'viminfo' option is now '50,"50,h when 'compatible' isn't
 set.  Most people will want to use it, including beginners, but it required
@@ -316,8 +305,6 @@ for text that doesn't really exist in the file.
 Motif now uses the system default colors for the menu and scrollbar.  Used to
 be grey.  It's still possible to set the colors with ":highlight" commands and
 resources.
-Added 'L' and 'R' flags in 'guioptions': Add a left or right scrollbar only
-when there is a vertically split window.
 
 Formatting text with "gq" breaks a paragraph at a non-empty blank line.
 Previously the line would be removed, which wasn't very useful.
@@ -327,13 +314,14 @@ Previously Vim would wait for more characters to be typed, without updating
 the screen.  Now it pretends an <Esc> was typed.
 
 Bitmaps for the toolbar are no longer searched for in "$VIM/bitmaps" but in
-the "bitmaps" directories in 'runtimepath.
+the "bitmaps" directories in 'runtimepath'.
 
 Now use the Cmdline-mode menus for the hit-enter prompt instead of the Normal
 mode menus.  This generally works better and allows using the "Copy" menu to
 produce CTRL-Y to copy the modeless selection.
 
-Moved the font selection to the Edit menu, together with the other settings.
+Moved the font selection from the Windows to the Edit menu, together with the
+other settings.
 
 The default values for 'isfname' include more characters to make "gf" work
 better.
@@ -343,14 +331,18 @@ This seemed fair, considering the inclusion of parts of the Vim book, which is
 also published under the OPL.  The downside is that we can't force someone who
 would sell copies of the manual to contribute to Uganda.
 
-After  "ayy  don't let  ""yy  or  :let @" = val overwrite the "a register.
+After  "ayy  don't let  ""yy  or  :let @" = val  overwrite the "a register.
 Use the unnamed register instead. 
 
 MSDOS: A pattern "*.*" previously also matched a file name without a dot.
 This was inconsistent with other versions.
 
-CTRL-\ CTRL-N in Normal mode avoids going back to Insert mode after using
-CTRL-O.
+In Insert mode, CTRL-O CTRL-\ CTRL-N {cmd} remains in Normal mode.  Previously
+it would go back to Insert mode, thus confusing the meaning of CTRL-\ CTRL-N,
+which is supposed to take us to Normal mode (especially in ":amenu").
+
+Allow using ":" commands after an operator.  Could be used to implement a new
+movement command.  Thus it no longer aborts a pending operator.
 
 ==============================================================================
 NEW FEATURES
@@ -370,8 +362,9 @@ Vertically split windows				*new-vertsplit*
 ------------------------
 
 Windows can also be split vertically.  This makes it possible to have windows
-side by side.  One nice use for this is to compare two similar files.  The
-'scrollbind' option can be used to synchronize scrolling.
+side by side.  One nice use for this is to compare two similar files (see
+|new-diff-mode|).  The 'scrollbind' option can be used to synchronize
+scrolling.
 
 A vertical split can be created with the commands:
 	:vsplit	  or  CTRL-W v  or CTRL-W CTRL-V	|:vsplit|
@@ -404,7 +397,8 @@ This can be combined with ":vertical" to force a vertical split: >
 	:vert bot dsplit DEBUG
 This will open a window at the far right, occupying the full height of the Vim
 window, with the cursor on the first definition of "DEBUG".
-The help window is always opened at the top, like ":topleft" was used.
+The help window is opened at the top, like ":topleft" was used, if the current
+window is less than 80 characters wide.
 
 A few options can be used to set the preferences for vertically split windows.
 They work similar to their existing horizontal equivalents:
@@ -412,7 +406,7 @@ They work similar to their existing horizontal equivalents:
 	'splitbelow'	'splitright'
 	'winheight'	'winwidth'
 	'winminheight'	'winminwidth'
-It's possible to set 'winminwidth' to zero, so that temporarliy unused windows
+It's possible to set 'winminwidth' to zero, so that temporarily unused windows
 hardly take up space without closing them.
 
 The new 'eadirection' option tells where 'equalalways' applies:
@@ -427,7 +421,8 @@ and right of the cursor.  The 'listchars' option has been extended with the
 "precedes" item, to show a "<" for example, when there is text left off the
 screen. (Utz-Uwe Haus)
 
-"-O" command line argument: open windows vertically. (Scott Urban)
+"-O" command line argument: like "-o" but split windows vertically. (Scott
+Urban)
 
 Added commands to move the current window to the very top (CTRL-W K), bottom
 (CTRL-W J), left (CTRL-W H) and right (CTRL-W L).  In the new position the
@@ -440,16 +435,23 @@ the ruler, use up to half the width for the ruler.  Useful for narrow windows.
 Diff mode						*new-diff-mode*
 ---------
 
-Added diff mode |diff-mode|
-- Added the vimdiff command to start diff mode on a few files.
-- Added the vimdiff manpage.
-- Added the ":diffsplit" command to start diff mode with the current file and
-  another file.
-- Added the ":diffpatch" command to start diff mode with the current file and
-  a patch file.
-- Added the ":diffthis" command to start diff mode for the current file.
+In diff mode Vim shows the differences between two, three or four files.
+Folding is used to hide the parts of the file that are equal.
+Highlighting is used to show deleted and changed lines.
+See |diff-mode|.
+
+An easy way to start in diff mode is to start Vim as "vimdiff file1 file2".
+Added the vimdiff manpage.
+
+In a running Vim the |:diffsplit| command starts diff mode for the current
+file and another file.  The |:diffpatch| command starts diff mode using the
+current file and a patch file.  The |:diffthis| command starts diff mode for
+the current window.
+
+Differences can be removed with the |:diffget| and |:diffput| commands.
+
 - The 'diff' option switches diff mode on in a window.
-- The ":diffupdate" refreshes the diffs.
+- The |:diffupdate| command refreshes the diffs.
 - The 'diffopt' option changes how diffs are displayed.
 - The 'diffexpr' option can be set how a diff is to be created.
 - The 'patchexpr' option can be set how patch is applied to a file.
@@ -458,23 +460,24 @@ Added diff mode |diff-mode|
 - Added the DiffAdd, DiffChange, DiffDelete and DiffText highlight groups to
   specify the highlighting for differences.  The defaults are ugly...
 - Unix: make a vimdiff symbolic link for "make install".
-- Added ":diffget" and ":diffput" to remove differences.
-- Removed the now obsolte "vimdiff.vim" script from the distribution.
+- Removed the now obsolete "vimdiff.vim" script from the distribution.
 
 
-evim: click-and-type					*new-evim*
---------------------
+Easy Vim: click-and-type				*new-evim*
+------------------------
 
 eVim stands for "Easy Vim".  This is a separate program, but can also be
 started as "vim -y".
 
-This starts Vim with 'insertmode' set to allow click-and-type editing.  This
-is only for people who can't stand two modes.
+This starts Vim with 'insertmode' set to allow click-and-type editing.  The
+$VIMRUNTIME/evim.vim script is used to add mappings and set options to be able
+to do most things like Notepad.  This is only for people who can't stand two
+modes.
 
 eView does the same but in readonly mode.
 
-In the GUI a CTRL-C only interrupts when busy with something, not when waiting
-for a character.  Allows using CTRL-C to copy text to the clipboard.
+In the GUI a CTRL-C now only interrupts when busy with something, not when
+waiting for a character.  Allows using CTRL-C to copy text to the clipboard.
 
 
 User manual						*new-user-manual*
@@ -489,12 +492,23 @@ It is much easier to read than the reference manual, but omits details.  See
 The user manual includes parts of the Vim book by Steve Oualline |frombook|.
 It is published under the OPL |manual-copyright|.
 
+When syntax highlighting is not enabled, the characters in the help file which
+mark examples ('>' and '<') and header lines ('~') are replaced with a space.
+
+When closing the help window, the window layout is restored from before
+opening it, if the window layout didn't change since then.
+When opening the help window, put it at the top of the Vim window if the
+current window is less than 80 characters and not full width.
+
 
 Flexible indenting					*new-indent-flex*
 ------------------
 
 Automatic indenting is now possible for any language.  It works with a Vim
 script, which makes it very flexible to compute the indent.
+
+The ":filetype indent on" command enables using the provided indent scripts.
+This is explained in the user manual:|30.3|.
 
 The 'indentexpr' option is evaluated to get the indent for a line.  The
 'indentkeys' option tells when to trigger re-indenting.  Normally these
@@ -505,7 +519,9 @@ be created and maintained by many people.
 Extended search patterns				*new-searchpat*
 ------------------------
 
-Multi-line patterns: (partly by Loic Grenie)
+Added the possibility to match more than one line with a pattern. (partly by
+Loic Grenie)
+New items in a search pattern for multi-line matches:
 \n		match end-of-line, also in []
 \_[]		match characters in range and end-of-line
 \_x		match character class and end-of-line
@@ -513,6 +529,7 @@ Multi-line patterns: (partly by Loic Grenie)
 \_^		match start-of-line, can be used anywhere in the regexp
 \_$		match end-of-line, can be used anywhere in the regexp
 
+Various other new items in search patterns:
 \c		ignore case for the whole pattern
 \C		match case for the whole pattern
 \m		magic on for the following
@@ -520,12 +537,12 @@ Multi-line patterns: (partly by Loic Grenie)
 \v		make following characters "very magic"
 \V		make following characters "very nomagic"
 
-\@!		don't match atom before it.
+\@!		don't match atom before this.
 		Example: "foo\(bar\)\@!" matches "foo " but not "foobar".
 \@=		match atom, resulting in  zero-width match
 		Example: "foo\(bar\)\@=" matches "foo" in "foobar".
 \@<!		don't match preceding atom before the current position
-\@<=		match preceding atom before current position
+\@<=		match preceding atom before the current position
 \@>		match preceding atom as a subexpression
 
 \&		match only when branch before and after it match
@@ -556,7 +573,8 @@ For syntax items:
 
 Removed limit of matching only up to 32767 times with *, \+, etc.
 
-Added some support for double-byte characters. (Muraoka)
+Added support to match multi-byte characters. (partly by Muraoka Taro)
+Made "\<" and "\>" work for UTF-8. (Muraoka Taro)
 
 
 UTF-8 support						*new-utf-8*
@@ -565,7 +583,7 @@ UTF-8 support						*new-utf-8*
 Vim can now edit files in UTF-8 encoding.  Up to 31 bit characters can be
 used, but only 16 bit characters are displayed.  Up to two combining
 characters are supported, they overprint the preceding character.
-Double-width characters are also supported.  See |UTF-8|.
+Double-wide characters are also supported.  See |UTF-8|.
 
 UCS-2, UCS-4 and UTF-16 encodings are supported too, they are converted to
 UTF-8 internally.  There is also support for editing Unicode files in a Latin1
@@ -573,35 +591,34 @@ environment.  Other encodings are converted with iconv() or an external
 converter specified with 'charconvert'.
 
 Many new items for Multi-byte support:
-- Added 'encoding' option: specifies character coding used inside Vim.  It can
-  be any 8-bit encoding, some double-byte encodings or Unicode.
+- Added 'encoding' option: specifies character encoding used inside Vim.  It
+  can be any 8-bit encoding, some double-byte encodings or Unicode.
   It is initialized from the environment when a supported value is found.
 - Added 'fileencoding' and 'fileencodings': specify character coding in a
   file, similar to 'fileformat' and 'fileformats'.
   When 'encoding' is "utf-8" and 'fileencodings' is "utf-8,latin1" this will
   automatically switch to latin1 if a file does not contain valid UTF-8.
-- Added 'guifontwide' for double-width font.
-- Added Korean support for character class detection.  Also fix cls() in
-  search.c. (Chong-Dae Park)
 - Added 'bomb' option and detection of a BOM at the start of a file.  Can be
   used with "ucs-bom" in 'fileencodings' to automatically detect a Unicode
   file if it starts with a BOM.  Especially useful on MS-Windows (NT and
   2000), which uses ucs-2le files with a BOM (e.g., when exporting the
   registry).
+- Added the 'termencoding' option: Specifies the encoding used for the
+  terminal.  Useful to put Vim in utf-8 mode while in a non-Unicode locale: >
+    :let &termencoding = &encoding
+    :set encoding=utf-8
+- When 'viminfo' contains the 'c' flag, the viminfo file is converted from the
+  'encoding' it was written with to the current 'encoding'.
+- Added ":scriptencoding" command: convert lines in a sourced script to
+  'encoding'.  Useful for menu files.
+- Added 'guifontwide' to specify a font for double-wide characters.
+- Added Korean support for character class detection.  Also fix cls() in
+  search.c. (Chong-Dae Park)
 - Win32: Typing multi-byte characters without IME. (Alexander Smishlajev)
 - Win32 with Mingw: compile with iconv library. (Ron Aaron)
 - Win32 with MSVC: dynamically load iconv.dll library. (Muraoka Taro)
 - Added 'delcombing' option: Delete combining character separately. (Ron
   Aaron)
-- When 'viminfo' contains the 'c' flag, the viminfo file is converted from the
-  'encoding' it was written with to the current 'encoding'.
-- Added the 'termencoding' option: Specifies the encoding used for the
-  terminal.  Useful to put Vim in utf-8 mode while in a non-Unicode locale: >
-    :let &termencoding = &encoding
-    :set encoding=utf-8
-- Added ":scriptencoding" command: convert lines in a sourced script to
-  'encoding'.  Useful for menu files.
-- Made "\<" and "\>" in regexp work for UTF-8. (Muraoka Taro)
 - The "xfontset" feature isn't required for "xim".  These are now two
   independent features.
 - XIM: enable XIM when typing a language character (Insert mode, Search
@@ -611,7 +628,6 @@ Many new items for Multi-byte support:
 - Support "CursorIM" for XIM.  (Nam SungHyun)
 - Added 'm' flag to 'formatoptions': When wrapping words, allow splitting at
   each multibyte character, not only at a space.
-- Patterns should now work properly with all kinds of multi-byte characters.
 - Made ":syntax keyword" work with multi-byte characters.
 - Added support for Unicode upper/lowercase flipping and comparing. (based on
   patch by Raphael Finkel)
@@ -647,9 +663,9 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
   characters.
 - Made the 'langmap' option recognize multi-byte characters.  But mapping only
   works for 8-bit characters.  Helps when using UTF-8.
-- Use a different mouse cursor for when ":lmap" mappings are active.  Can
-  specify two highlight groups for an item in 'guicursor'.  By default
-  "lCursor" and "Cursor" are equal, the user must set a color he likes.
+- Use a different cursor for when ":lmap" mappings are active.  Can specify
+  two highlight groups for an item in 'guicursor'.  By default "lCursor" and
+  "Cursor" are equal, the user must set a color he likes.
   Use the cursor color for hangul input as well. (Sung-Hyun Nam)
 - Show "(lang)" for 'showmode' when language mapping is enabled.
 - UTF-8: Made "r" work with a ":lmap" that includes a composing character.
@@ -659,45 +675,52 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
 Other multi-byte character additions:
 - Support double-byte single-width characters for euc-jp: Characters starting
   with 0x8E.  Added ScreenLines2[] to store the second byte.
-- Unix: Included support for the "SJIS" locale, with "shift-jis" and "cp932"
-  as aliases.
 
 
 Multi-language support					*new-multi-lang*
 ----------------------
 
-- Added +multi_lang feature.
-- Prepared for use of gettext() by putting translatable strings in _().
-  Added "po" directory with message translations. (Marcin Dalecki)
-  The src/po/README.txt file explains a few things about translation.
+The messages used in Vim can be translated.  Several translations are
+available.  This uses the gettext mechanism.  It allows adding a translation
+without recompiling Vim.  |multi-lang| (partly by Marcin Dalecki)
+
+The translation files are in the src/po directory.  The src/po/README.txt file
+explains a few things about doing a translation.
+
+Menu translations are available as well.  This uses the new |:menutranslate|
+command.  The translations are found in the runtime directory "lang".  This
+allows a user to add a translation.
+
+Added |:language| command to set the language (locale) for messages, time and
+character type.  This allows switching languages in Vim without changing the
+locale outside of Vim.
+
+Made it possible to have vimtutor use different languages.  (Eduardo Fernandez)
+Spanish (Eduardo Fernandez), Italian (Antonio Colombo), Japanese (Yasuhiro
+Matsumoto) and French (Adrien Beau) translations are included.
+Added "vimtutor.bat": script to start Vim on a copy of the tutor file for
+MS-Windows. (Dan Sharp)
+
 - Added v:lang variable to be able to get current language setting.
   (Marcin Dalecki)  Also v:lc_time and v:ctype
-- Added ":language" command to set the language (locale) for messages, time
-  and character type.
-- Added ":menutranslate" to be able to translate menu paths.
-- Added menu translations for various languages.
 - Make it possible to translate the dialogs used by the menus.  Uses global
   "menutrans_" variables.  ":menutrans clear" deletes them.
-- Added message translations for various languages.
 - removed "broken locale" (Marcin Dalecki).
 - Don't use color names in icons, use RGB values.  The names could be
   translated.
 - Win32: Added global IME support (Muraoka)
+- Win32: Added dynamic loading of IME support.
 - ":messages" prints a message about who maintains the messages or the
   translations.  Useful to find out where to make a remark about a wrong
   translation.
 - --disable-nls argument for configure: Disable use of gettext(). (Sung-Hyun
   Nam)
 - Added NLS support for Win32 with the MingW compiler. (Eduardo Fernandez)
-- Made it possible to have vimtutor use different languages.  Spanish and
-  Italian translations are included. (Eduardo Fernandez)
-  Added Japanese translation of the vimtutor. (Yasuhiro Matsumoto)
 - When available, call bind_textdomain_codeset() to have gettext() translate
-  messages to 'encoding'.  This requires GNU gettext 0.10.36.
+  messages to 'encoding'.  This requires GNU gettext 0.10.36 or later.
 - Added gettext support for Win32.  This means messages will be translated
   when the locale is set and libintl.dll can be found.  (Muraoka Taro)
   Also made it work with MingW compiler.  (Eduardo Fernandez)
-
 
 
 Plugin support					*new-plugins*
@@ -713,9 +736,9 @@ The |:runtime| command has been added to load one or more files in
 'runtimepath'.
 
 Standard plugins:
-netrw.vim - Edit files over a network
+netrw.vim - Edit files over a network |new-network-files|
 gzip.vim - Edit compressed files
-explorer.vim - Browse directories
+explorer.vim - Browse directories |new-file-browser|
 
 Added support for local help files. |add-local-help|.
 When searching for help tags, all "doc/tags" files in 'runtimepath' are used.
@@ -723,7 +746,8 @@ Added the ":helptags" command: Generate a tags file for a help directory.
 The first line of each help file is automagically added to the "LOCAL
 ADDITIONS" section in doc/help.txt.
 
-<unique> argument to ":map": only add a mapping when it wasn't defined before.
+Added the <unique> argument to ":map": only add a mapping when it wasn't
+defined before.
 
 When displaying an option value with 'verbose' set will give a message about
 where the option was last set.  Very useful to find out which script did set
@@ -760,9 +784,9 @@ To be able to make this work, several features were added:
   ":setglobal" sets or displays the global value for a local option.
   ":setlocal name<" sets a local option to its global value.
 - Added the buffer-local value for some global options: 'equalprg', 'makeprg',
-  'errorformat', 'grepprg', 'path', 'dictionary', 'thesaurus', 'tags' and
-  'define'.  This allows setting a local value for these global options,
-  without making it incompatible.
+  'errorformat', 'grepprg', 'path', 'dictionary', 'thesaurus', 'tags',
+  'include' and 'define'.  This allows setting a local value for these global
+  options, without making it incompatible.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
 - In a mapping "<Leader>" can be used to get the value of the "mapleader"
   variable.  This simplifies mappings that use "mapleader".  "<Leader>"
@@ -778,6 +802,37 @@ The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
 
 
+File browser						*new-file-browser*
+------------
+
+When editing a directory, the explorer plugin will list the files in the
+directory.  Pressing <Enter> on a file name edits that file.  Pressing <Enter>
+on a directory moves the browser to that directory.
+
+There are several other possibilities, such as opening a file in the preview
+window, renaming files and deleting files.
+
+See |file-explorer|.
+
+
+Editing files over a network				*new-network-files*
+----------------------------
+
+Files starting with scp://, rcp://, ftp:// and http:// are recognized as
+remote files.  An attempt is made to access these files with the indicated
+method.  For http:// only reading is possible, for the others writing is also
+supported.  Uses the netrw.vim script as a standard "plugin". |netrw|
+
+Made "gf" work on a URL.  It no longer assumes the file is local on the
+computer (mostly didn't work anyway, because the full path was required).
+Adjusted test2 for this.
+
+Allow using a URL in 'path'.  Makes ":find index.html" work.
+
+GTK: Allow dropping a http:// and ftp:// URL on Vim.  The netrw plugin takes
+care of downloading the file. (MiKael Berthe)
+
+
 Window for command-line editing				*new-cmdwin*
 -------------------------------
 
@@ -789,11 +844,10 @@ The command-line window can be opened from the command-line with the key
 specified by the 'cedit' option (like Nvi).  It can also be opened directly
 from Normal mode with "q:", "q/" and "q?".
 
-The 'cmdwinheight' is used to specify the initional height of the window.
+The 'cmdwinheight' is used to specify the initial height of the window.
 
 In Insert mode CTRL-X CTRL-V can be used to complete an Ex command line, like
 it's done on the command-line.  This is also useful for writing Vim scripts!
-
 
 
 Debugging mode						*new-debug-mode*
@@ -812,11 +866,11 @@ command executes.  The |-D| argument can be used to debug while starting up.
 Cursor in virtual position				*new-virtedit*
 --------------------------
 
-'virtualedit' option: Allow positioning the cursor where there is no actual
-character in Insert mode, Visual mode or allways. (Matthias Kramm)
+Added the 'virtualedit' option: Allow positioning the cursor where there is no
+actual character in Insert mode, Visual mode or allways. (Matthias Kramm)
 This is especially useful in Visual-block mode.  It allows positioning a
-corner of the area where there is no text character.
-(Many improvements by Chase Tingley)
+corner of the area where there is no text character.  (Many improvements by
+Chase Tingley)
 
 
 Debugger interface					*new-debug-itf*
@@ -827,6 +881,7 @@ See |debugger.txt|, |sign.txt| and |workshop.txt|.
 
 Added the ":sign" command to define and place signs.  They can be displayed
 with two ASCII characters or an icon.  The line after it can be highlighted.
+Useful to display breakpoints and the current PC position.
 
 Added the |:wsverb| command to execute debugger commands.
 
@@ -849,8 +904,8 @@ Use "--serversend" or ":serversend" to send commands from one Vim to another.
 (implemented by Flemming Madsen)
 
 
-Buffer types						*new-buftype*
-------------
+Buffer type options					*new-buftype*
+-------------------
 
 The 'buftype' and 'bufhidden' options have been added.  They can be set to
 have different kinds of buffers.  For example:
@@ -860,18 +915,21 @@ have different kinds of buffers.  For example:
 
 'bufhidden' can be used to overrule the 'hidden' option for one buffer.
 
+In combination with 'buflisted' and 'swapfile' this offers the possibility to
+use various kinds of special buffers.  See |special-buffers|.
+
 
 Printing						*new-printing*
 --------
 
 Included first implementation of the ":hardcopy" command for printing
-to paper.  Works for MS-Windows only. (Vince Negri, vipin aravind)
+to paper.  Works for MS-Windows only. (Vince Negri, Vipin Aravind)
 
 Made ":hardcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
 Matsumoto)
 
 Added options to tune he way printing works: (Vince Negri)
-- 'printersettings', defines various things.
+- 'printeroptions', defines various things.
 - 'printerheader', specifies the header.  Added "N" field to 'statusline'
   for the page number.
 - 'printername', defines the default printer for ":hardcopy!".
@@ -898,7 +956,7 @@ Win32: Dynamically load Perl and Python.  Allows compiling Vim with these
 interfaces and will try to find the DLLs at runtime. (Muraoka Taro)
 
 Compiling the Win32 GUI with Cygwin.  Also compile vimrun, dosinst and
-uninstall.  (gerfried)
+uninstall.  (Gerfried)
 
 Mac: Make Vim compile with the free MPW compiler supplied by Apple.  And
 updates for CodeWarrior. (Axel Kielhorn)
@@ -910,11 +968,16 @@ Reilly)
 Quickfix extended					*quickfix-6*
 -----------------
 
-- ":copen" opens a window to show list of quickfix errors.  Can be used to
-  scroll through the errors, and quickly jump to each of them.
-- ":cclose" closes the quickfix window.
-- ":cwindow" takes care that there is a quickfix window only when there are
+Added the "error window".  It contains all the errors of the current error
+list.  Pressing <Enter> in a line makes Vim jump to that line (in another
+window).  This makes it easy to navigate through the error list.
+|quickfix-window|.
+
+- |:copen| opens the quickfix window.
+- |:cclose| closes the quickfix window.
+- |:cwindow| takes care that there is a quickfix window only when there are
   recognized errors. (Dan Sharp)
+
 - Quickfix also knows "info", next to "warning" and "error" types. "%I" can be
   used for the start of a multi-line informational message. (Tony Leneis)
 - The "%p" argument can be used in 'errorformat' to get the column number from
@@ -933,43 +996,30 @@ the operator to work characterwise, linewise or blockwise. |o_v|
 Search Path						*new-search-path*
 -----------
 
-- Support upward search for 'path', 'cdpath' and 'tags' options.  Also use
-  "**" for 'tags' option. (Ralf Schandl)
-- Added 'includeexpr', can be used to modify file name found by 'include'
-  option.
-- Also use 'includeexpr' for "gf" and "<cfile>" when the file can't be found
-  without modification.  Useful for doing "gf" on the name after an include or
-  import statement.
-- 'cdpath' option: Locations to find a ":cd" argument. (Raf)
-- Added 'suffixesadd', suffixes to be added to a file name when searching for
-  a file for the "gf", "[I", etc. commands.
+Vim can search in a directory tree not only in downwards but also upwards.
+Works for the 'path', 'cdpath' and 'tags' options. (Ralf Schandl)
+
+Also use "**" for 'tags' option. (Ralf Schandl)
+
+Added 'includeexpr', can be used to modify file name found by 'include'
+option.
+Also use 'includeexpr' for "gf" and "<cfile>" when the file can't be found
+without modification.  Useful for doing "gf" on the name after an include or
+import statement.
+
+Added the 'cdpath' option: Locations to find a ":cd" argument. (Raf)
+
+Added the 'suffixesadd' option: Suffixes to be added to a file name when
+searching for a file for the "gf", "[I", etc. commands.
 
 
-Editing files over a network				*new-network-files*
-----------------------------
+Writing files improved					*new-file-writing*
+----------------------
 
-Files starting with scp://, rcp://, ftp:// and http:// are recognized as
-remote files.  An attempt is made to access these files with the indicated
-method.  For http:// only reading is possible, for the others writing is also
-supported.  Uses the netrw.vim script as a standard "plugin". |netrw|
-
-Made "gf" work on a URL.  It no longer assumes the file is local on the
-computer (mostly didn't work anyway, because the full path was required).
-Adjusted test2 for this.
-
-Allow using a URL in 'path'.  Makes ":find index.html" work.
-
-GTK: Allow dropping a http:// and ftp:// URL on Vim.  The netrw plugin takes
-care of downloading the file. (MiKael Berthe)
-
-
-Writing files						*new-file-writing*
--------------
-
-Added the 'backupcopy' option: Select whether a file is copied or renamed to
-make a backup file.  Useful on Unix to speed up writing an ordinary file.
-Useful on other systems to preserve file attributes and when editing a file on
-a Unix filesystem.
+Added the 'backupcopy' option: Select whether a file is to be copied or
+renamed to make a backup file.  Useful on Unix to speed up writing an ordinary
+file.  Useful on other systems to preserve file attributes and when editing a
+file on a Unix filesystem.
 
 Added the 'autowriteall' option.  Works like 'autowrite' but for more
 commands.
@@ -1049,10 +1099,6 @@ the color scheme to define the colors.
 Various new items					*new-items-6*
 -----------------
 
-Interface to Ruby. (Shugo Maeda)
-Support dynamic loading of the Ruby interface on MS-Windows. (Muraoka Taro)
-Support this for Mingw too. (Benoit Cerrina)
-
 Normal mode commands: ~
 
 "gi"		Jump to the ^ mark and start Insert mode.  Also works when the
@@ -1074,22 +1120,28 @@ Options: ~
 'autoread'	When detected that a file changed outside of Vim,
 		automatically read a buffer again when it's not changed.
 		It has a global and a local value.  Use ":setlocal autoread<"
-		to go back to using the global value for autoread'.
+		to go back to using the global value for 'autoread'.
+
 'debug'		When set to "msg" it will print error messages that would
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
+
 'lispwords'	List of words used for lisp indenting.  It was previously hard
 		coded.
+
 'fold...'	Many new options for folding.
+
 'modifiable'	When off, it is impossible to make changes to a buffer.
 		The %m and %M items in 'statusline' show a '-'.
 
 'previewwindow' Set in the preview window.  Used in a session file to mark a
 		window as the preview window.
+
 'printerfont'
 'printerheader'
 'printername'
-'printersettings'	for ":hardcopy".
+'printeroptions'	for ":hardcopy".
+
 'buflisted'	Makes a buffer appear in the buffer list or not.
 
 Use "vim{version}:" for modelines, only to be executed when the version is
@@ -1237,8 +1289,8 @@ winline()	window line of the cursor
 
 
 Added expansion of curly braces in variable and function names.  This can be
-used for variable names that include the value of an option.  Or a
-primitive form of arrays. (Vince Negri)
+used for variable names that include the value of an option.  Or a primitive
+form of arrays. (Vince Negri)
 
 
 New autocommand events: ~
@@ -1271,8 +1323,14 @@ New Syntax files: ~
 	specman (Or Freund)
 	PL/M (Philippe Coulonges)
 	BDF font (Nikolai Weibull)
+	Pal resource compiler (Brian Schau)
+	Indent profile (Nikolai Weibull)
 
 Updated many syntax files to work both with Vim 5.7 and 6.0.
+
+Interface to Ruby. (Shugo Maeda)
+Support dynamic loading of the Ruby interface on MS-Windows. (Muraoka Taro)
+Support this for Mingw too. (Benoit Cerrina)
 
 Win32: When editing a file that is a shortcut (*.lnk file), edit the file it
 links to.  Unless 'binary' is set, then edit the shortcut file itself.
@@ -1282,9 +1340,9 @@ The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
 
 The preview window is now also used by these commands:
-|:pedit| edits the specified file in the preview window
-|:psearch| searches for a word in included files, like |:ijump|, and
-displays the found text in the preview window.
+- |:pedit| edits the specified file in the preview window
+- |:psearch| searches for a word in included files, like |:ijump|, and
+  displays the found text in the preview window.
 Added the CTRL-W P command: go to preview window.
 
 MS-DOS and MS-Windows also read the system-wide vimrc file $VIM/vimrc.  Mostly
@@ -1317,19 +1375,18 @@ MS-Windows install program: (Jon Merz)
 - Possibly remove old "Edit with Vim" entries.
 - The Vim executable is never moved or $PATH changed.  A small batch file is
   created in a directory in $PATH.  Less choices to be made.
+- Detect already installed Vim versions and offer to uninstall them first.
 
 Improved the MS-Windows uninstal program.  It now also deletes the entries in
 the Start menu, icons from the desktop and the created batch files. (Jon Merz)
-Also made it possible to delete only some of these.
+Also made it possible to delete only some of these.  Also unregister gvim for
+OLE.
 
 Generate a self-installing Vim package for MS-Windows.  This uses NSIS. (Jon
-Merz)
+Merz et al.)
 
 Added ":filetype detect".  Try detecting the filetype again.  Helps when
 writing a new shell script, after adding "#!/bin/csh".
-
-Added "vimtutor.bat": script to start Vim on a copy of the tutor file. (Dan
-Sharp)
 
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
@@ -1414,6 +1471,8 @@ Performance:
   highlighting.
 - The Syntax menu is now pre-generated by a separate script.  Makes loading
   the menu 70% faster.  This can halve the startup time of gvim.
+- When doing ":help tag", don't open help.txt first, jump directly to the help
+  tag.  It's faster and avoids an extra message.
 
 Robustness:
 - Unix: Check for running out of stack space when executing a regexp.  Avoids
@@ -1509,6 +1568,8 @@ Expand expression in backticks: `={expr}`.  Can be used where backtick
 expansion is done. (Vince Negri)
 
 GUI:
+- Added 'L' and 'R' flags in 'guioptions': Add a left or right scrollbar only
+  when there is a vertically split window.
 - X11: When a color can't be allocated, use the nearest match from the
   colormap.  This avoids that black is used for many things. (Monish Shah)
   Also do this for the menu and scrollbar, to avoid that they become black.
@@ -1715,6 +1776,7 @@ match with words from 'cinkeys' or 'indentkeys'.
 Added "j1" argument in 'cinoptions': indent {} inside () for Java. (Johannes
 Zellner)
 Added the "l" flag in 'cinoptions'. (Anduin Withers)
+Added 'C', 'U', 'w' and 'm' flags to 'cinoptions'. (Sevvatius Brandt)
 
 When doing ":wall" or ":wqall" and a modified buffer doesn't have a name,
 mention its buffer number in the error message.
@@ -1880,6 +1942,11 @@ Unix install:
 - Install Icons for KDE when the directories exist and the icons do not exist
   yet.
 
+Updated the option window with new options.  Made it a bit easier to read.
+
+Added has("win95"), to be able to distinguish between MS-Windows 95/98/ME and
+NT/2000/XP in a Vim script.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -1920,6 +1987,9 @@ recent version of screen.
 
 Added configure options to install Vim, Ex and View under another name (e.g.,
 vim6, ex6 and view6).
+
+Added "--with-global-runtime" configure argument.  Allows specifying the
+global directory used in the 'runtimepath' default.
 
 Made enabling the SNiFF+ interface possible with a Configure argument.
 
@@ -1962,6 +2032,8 @@ Updated the Borland C version 5 Makefile: (Dan Sharp)
 
 Win32: Merged Make_gvc.mak and Make_ovc.mak into one file: Make_ivc.mak.  It's
 much smaller, many unecessary text has been removed. (Walter Briscoe)
+Added Make_dvc.mak to be able to debug exe generated with Make_mvc.mak in
+MS-Devstudio. (Walter Briscoe)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2864,5 +2936,21 @@ The "%B" item in the status line became zero in Insert mode (that's normal)
 for another than the current window.
 
 The menu entries to convert to xxd and back didn't work in Insert mode.
+
+When ":vglobal" didn't find a line where the pattern doesn't match, the error
+message would be the wrong way around.
+
+When ignoring a multi-line error message with "%-A", the continuation lines
+would be used anyway. (Servatius Brandt)
+
+"grx" on a double-wide character inserted "x", instead of replacing the
+character with "x ".  "gR" on <xx> ('display' set the "uhex") didn't replace
+at all.  When doing "gRxx" on a control character the first "x" would be
+inserted, breaking the alignment.
+
+Added "0)" to 'cinkeys', so that when typing a ) it is put in the same place
+as where "==" would put it.
+
+Win32: When maximized, adding/removing toolbar didn't resize the text area.
 
  vim:tw=78:

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0an
+MINOR = 0ao
 
 # CHECKLIST for creating a new version:
 #
@@ -112,11 +112,13 @@ MINOR = 0an
 # - "ren Make_bc3.mak Makefile", "make" (compiling xxd will fail)
 # - Set environment for compiling with Borland C++ 4.0 and "make xxd/xxd.exe".
 # - "make test" and check the output.
-# - Rename the executables to "vimd16.exe", "xxdd16.exe", and "installd16.exe".
+# - Rename the executables to "vimd16.exe", "xxdd16.exe", "installd16.exe" and
+#   "uninstald16.exe".
 # 32 bit DOS version:
 # - Set environment for compiling with DJGPP; "make -f Make_djg.mak".
 # - "rm testdir/*.out", "make -f Make_djg.mak test" and check the output.
-# - Rename the executables to "vimd32.exe", "xxdd32.exe", and "installd32.exe".
+# - Rename the executables to "vimd32.exe", "xxdd32.exe", "installd32.exe" and
+#   "uninstald32.exe".
 # Win32 console version:
 # - Set environment for Visual C++ 5.0: "vcvars32"
 # - "nmake -f Make_mvc.mak"
@@ -126,8 +128,8 @@ MINOR = 0an
 # Win32 GUI version:
 # - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
-# Win32 GUI with OLE version:
-# - "nmake -f Make_mvc.mak GUI=yes OLE=yes
+# Win32 GUI version with OLE and dynamic IME:
+# - "nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes
 # - Rename "gvim.exe" to "gvim_ole.exe".
 # Produce Gvimext.dll:
 # - "cd gvimext", "nmake -f Makefile"
@@ -138,7 +140,8 @@ MINOR = 0an
 # - "nmake -f Make_mvc.mak GUI=yes" (use the path for VC 4.1)
 # - Rename "gvim.exe" to "gvim_w32s.exe".
 # - Rename "install.exe" to "installw32.exe"
-# - The produced uninstall.exe and vimrun.exe are used.
+# - Rename "uninstal.exe" to "uninstalw32.exe"
+# - The produced uninstalw32.exe and vimrun.exe are used.
 # Create the archives:
 # - Copy all the "*.exe" files to where this Makefile is.
 # - "make dosbin".
@@ -148,6 +151,7 @@ MINOR = 0an
 #   doslang archive on the PC.
 # - rename gvim_ole.exe to gvim.exe
 # - rename installw32.exe to install.exe
+# - rename uninstalw32.exe to uninstal.exe
 # - rename xxdw32.exe to xxd/xxd.exe
 # - put gvimext.dll in GvimExt, VisVim.dll in VisVim, OpenWithVim.exe and
 #   SendToVim.exe in OleVim (get them from a binary archive or build them)
@@ -333,6 +337,7 @@ SRC_UNIX =	\
 		src/vim_icon.xbm \
 		src/vim_mask.xbm \
 		src/vimtutor \
+		src/which.sh \
 		src/workshop.c \
 		src/workshop.h \
 		src/wsdebug.c \
@@ -362,6 +367,7 @@ SRC_DOS =	\
 		src/Make_cyg.mak \
 		src/Make_djg.mak \
 		src/Make_ivc.mak \
+		src/Make_dvc.mak \
 		src/Make_ming.mak \
 		src/Make_mvc.mak \
 		src/Make_tcc.mak \
@@ -414,7 +420,6 @@ SRC_DOS =	\
 		src/xxd/Make_mvc.mak \
 		nsis/gvim.nsi \
 		nsis/README.txt \
-		nsis/icons \
 		uninstal.txt \
 
 # source files for DOS without CR/LF translation (also in the extra archive)
@@ -457,6 +462,7 @@ SRC_DOS_BIN = 	\
 		src/vim.tlb \
 		src/vimtbar.lib \
 		src/vimtbar.dll \
+		nsis/icons \
 
 # source files for Amiga, DOS, etc. (also in the extra archive)
 SRC_AMI_DOS =	\
@@ -582,6 +588,8 @@ RT_ALL =	\
 		runtime/macros/less.vim \
 		runtime/macros/life/click.me \
 		runtime/macros/life/life.vim \
+		runtime/macros/matchit.vim \
+		runtime/macros/matchit.txt \
 		runtime/macros/maze/README.txt \
 		runtime/macros/maze/[mM]akefile \
 		runtime/macros/maze/maze.c \
@@ -765,6 +773,7 @@ LANG_GEN = \
 		runtime/keymap/README.txt \
 		runtime/keymap/*.vim \
 		runtime/tutor/tutor.?? \
+		runtime/tutor/tutor.ja.* \
 
 # all files for lang archive
 LANG_SRC = \
@@ -773,6 +782,7 @@ LANG_SRC = \
 		src/po/cleanup.vim \
 		src/po/Makefile \
 		src/po/Make_ming.mak \
+		src/po/sjiscorr.c \
 		src/po/*.po \
 
 # the language files for the Win32 lang archive
@@ -919,6 +929,8 @@ lang: dist
 		$(LANG_GEN) \
 		$(LANG_SRC) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
+# make sure ja.sjis.po is newer than ja.po to avoid it being regenerated
+	touch dist/$(VIMRTDIR)/src/po/ja.sjis.po
 	cd dist && tar cvf $(VIMVER)-lang.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-lang.tar
 
@@ -1015,7 +1027,7 @@ dosbin_gvim: dist no_title.vim dist/$(COMMENT_GVIM)
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
-	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
+	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cp gvimext.dll dist/vim/$(VIMRTDIR)/gvimext.dll
 	cd dist && zip -9 -rD -z gvim$(VERSION).zip vim <$(COMMENT_GVIM)
 
@@ -1032,7 +1044,7 @@ dosbin_w32: dist no_title.vim dist/$(COMMENT_W32)
 	cp vimw32.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
-	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
+	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cd dist && zip -9 -rD -z vim$(VERSION)w32.zip vim <$(COMMENT_W32)
 
 # make 32bit DOS
@@ -1048,6 +1060,7 @@ dosbin_d32: dist no_title.vim dist/$(COMMENT_D32)
 	cp vimd32.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd32.exe dist/vim/$(VIMRTDIR)/install.exe
+	cp uninstald32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cp csdpmi4b.zip dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)d32.zip vim <$(COMMENT_D32)
 
@@ -1064,6 +1077,7 @@ dosbin_d16: dist no_title.vim dist/$(COMMENT_D16)
 	cp vimd16.exe dist/vim/$(VIMRTDIR)/vim.exe
 	cp xxdd16.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp installd16.exe dist/vim/$(VIMRTDIR)/install.exe
+	cp uninstald16.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cd dist && zip -9 -rD -z vim$(VERSION)d16.zip vim <$(COMMENT_D16)
 
 # make Win32 gvim with OLE
@@ -1080,7 +1094,7 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	cp xxdw32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp vimrun.exe dist/vim/$(VIMRTDIR)/vimrun.exe
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
-	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
+	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cp gvimext.dll dist/vim/$(VIMRTDIR)/gvimext.dll
 	cp README_ole.txt dist/vim/$(VIMRTDIR)
 	mkdir dist/vim/$(VIMRTDIR)/VisVim
@@ -1105,7 +1119,7 @@ dosbin_s: dist no_title.vim dist/$(COMMENT_W32S)
 	cp xxdd32.exe dist/vim/$(VIMRTDIR)/xxd.exe
 	cp README_w32s.txt dist/vim/$(VIMRTDIR)
 	cp installw32.exe dist/vim/$(VIMRTDIR)/install.exe
-	cp uninstal.exe dist/vim/$(VIMRTDIR)/uninstal.exe
+	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cd dist && zip -9 -rD -z gvim$(VERSION)_s.zip vim <$(COMMENT_W32S)
 
 # make Win32 lang archive
@@ -1119,12 +1133,16 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
-	for i in $(LANG_DOS); do\
-		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\).mo+\1+"`; \
+# Add the message translations.  Trick: skip ja.mo and use ja.sjis.mo instead.
+	for i in $(LANG_DOS); do \
+	      if test "$$i" != "src/po/ja.mo"; then \
+		n=`echo $$i | sed -e "s+src/po/\([a-zA-Z_]*\)\(.sjis\)*.mo+\1+"`; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
 		cp $$i dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES/vim.mo; \
+	      fi \
 	    done
+	cp libintl.dll dist/vim/$(VIMRTDIR)/
 	cd dist && zip -9 -rD -z vim$(VERSION)lang.zip vim <$(COMMENT_LANG)
 
 # MS-DOS sources

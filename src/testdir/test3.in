@@ -768,6 +768,136 @@ ENDTEST
    */
 
 STARTTEST
+:set cino=c0
+:set comments& comments-=s1:/* comments^=s0:/*
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+
+	/*********
+  A comment.
+*********/
+}
+
+STARTTEST
+:set cino=c0,C1
+:set comments& comments-=s1:/* comments^=s0:/*
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+
+	/*********
+  A comment.
+*********/
+}
+
+STARTTEST
+:set cino=
+]]=][
+ENDTEST
+
+void f()
+{
+	c = c1 &&
+	(
+	c2 ||
+	c3
+	) && c4;
+}
+
+STARTTEST
+:set cino=(s
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	c = c1 &&
+	(
+	c2 ||
+	c3
+	) && c4;
+}
+
+STARTTEST
+:set cino=(s,U1  
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	c = c1 &&
+	(
+	c2 ||
+	c3
+	) && c4;
+}
+
+STARTTEST
+:set cino=(0
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	if (   c1
+	&& (   c2
+	|| c3))
+	foo;
+}
+
+STARTTEST
+:set cino=(0,w1  
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	if (   c1
+	&& (   c2
+	|| c3))
+	foo;
+}
+
+STARTTEST
+:set cino=(s
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	c = c1 && (
+	c2 ||
+	c3
+	) && c4;
+	if (
+	c1 && c2
+	)
+	foo;
+}
+
+STARTTEST
+:set cino=(s,m1  
+2kdd]]=][
+ENDTEST
+
+void f()
+{
+	c = c1 && (
+	c2 ||
+	c3
+	) && c4;
+	if (
+	c1 && c2
+	)
+	foo;
+}
+
+STARTTEST
 :g/^STARTTEST/.,/^ENDTEST/d
 :1;/start of AUTO/,$wq! test.out
 ENDTEST

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0an.  Last change: 2001 Jun 27
+*syntax.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -570,6 +570,20 @@ Files matching "*.w" could be Progress or cweb.  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
 startup vimrc: >
    :let filetype_w = "cweb"
+
+
+DOSBATCH				*dosbatch.vim* *dosbatch-syntax*
+
+There is one option with highlighting DOS batch files.  This covers new
+extensions to the Command Interpreter introduced with Windows 2000 and
+is controlled by the variable dosbatch_cmdextversion.  For Windows NT
+this should have the value 1, and for Windows 2000 it should be 2.  
+Select the version you want with the following line: >
+
+  :let dosbatch_cmdextversion = 1
+
+If this variable is not defined it defaults to a value of 2 to support
+Windows 2000.
 
 
 DTD						*dtd.vim* *dtd-syntax*
@@ -2948,6 +2962,9 @@ ctermbg={color-nr}				*highlight-ctermbg*
 	highlight groups that depend on 'background' to change!  This means
 	you should set the colors for Normal first, before setting other
 	colors.
+	When a colorscheme is being used, changing 'background' causes it to
+	be reloaded, which may reset all colors (including Normal).  First
+	delete the "colors_name" variable when you don't want this.
 
 	When you have set "ctermfg" or "ctermbg" for the Normal group, Vim
 	needs to reset the color when exiting.  This is done with the "op"
@@ -3117,8 +3134,7 @@ Scrollbar	Current background and foreground of the main window's
 		Applicable highlight arguments: guibg, guifg.
 
 							*hl-Tooltip*
-Tooltip
-		Current font, background and foreground of the tooltips.
+Tooltip		Current font, background and foreground of the tooltips.
 		Applicable highlight arguments: font, guibg, guifg.
 
 		NOTE: For Athena, the font argument actually

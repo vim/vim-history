@@ -3378,9 +3378,10 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	if (regmatch.regprog == NULL)
 	    goto fpip_end;
     }
-    if (*curbuf->b_p_inc != NUL)
+    if (*curbuf->b_p_inc != NUL || *p_inc != NUL)
     {
-	incl_regmatch.regprog = vim_regcomp(curbuf->b_p_inc, (int)p_magic);
+	incl_regmatch.regprog = vim_regcomp(*curbuf->b_p_inc == NUL
+				     ? p_inc : curbuf->b_p_inc, (int)p_magic);
 	if (incl_regmatch.regprog == NULL)
 	    goto fpip_end;
 	incl_regmatch.rm_ic = FALSE;	/* don't ignore case in incl. pat. */

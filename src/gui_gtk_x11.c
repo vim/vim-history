@@ -2950,12 +2950,8 @@ gui_mch_haskey(char_u * name)
     int
 gui_get_x11_windis(Window * win, Display ** dis)
 {
-    /*
-     * This is currently only used by the code which is handling the
-     * window manager title of this program.
-     */
     *dis = GDK_DISPLAY();
-    if (gui.mainwin->window)
+    if (gui.mainwin != NULL && gui.mainwin->window)
     {
 	*win = GDK_WINDOW_XWINDOW(gui.mainwin->window);
 	return OK;

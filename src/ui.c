@@ -2353,6 +2353,9 @@ retnomove:
 #endif
 		}
 	    }
+#ifdef FEAT_DIFF
+	    check_topfill(curwin, FALSE);
+#endif
 	    curwin->w_valid &=
 		      ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
 	    redraw_later(VALID);
@@ -2390,6 +2393,9 @@ retnomove:
 #endif
 		}
 	    }
+#ifdef FEAT_DIFF
+	    check_topfill(curwin, FALSE);
+#endif
 	    redraw_later(VALID);
 	    curwin->w_valid &=
 		      ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);

@@ -654,7 +654,8 @@
 #endif
 
 /* There are two ways to use XPM. */
-#if defined(HAVE_XM_XPMP_H) || defined(HAVE_X11_XPM_H)
+#if (defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF)) \
+		|| defined(HAVE_X11_XPM_H)
 # define HAVE_XPM 1
 #endif
 
@@ -866,6 +867,14 @@
 #ifndef RUNTIME_DIRNAME
 # define RUNTIME_DIRNAME "runtime"
 #endif
+
+/*
+ * RUNTIME_GLOBAL	Directory name for global Vim runtime directory.
+ *			Don't define this if the preprocessor can't handle
+ *			string concatenation.
+ *			Also set by "--with-global-runtime" configure argument.
+ */
+/* #define RUNTIME_GLOBAL "/etc/vim" */
 
 /*
  * Machine dependent:

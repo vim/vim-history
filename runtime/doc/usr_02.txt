@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
+*usr_02.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -19,7 +19,7 @@ commands, they form the base for what follows.
 |02.8|  Finding help
 
      Next chapter: |usr_03.txt|  Moving around
- Previous chapter: |usr_01.txt|  About the manual
+ Previous chapter: |usr_01.txt|  About the manuals
 Table of contents: |usr_toc.txt|
 
 ==============================================================================

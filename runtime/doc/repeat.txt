@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0an.  Last change: 2001 Jul 07
+*repeat.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -132,9 +132,12 @@ q			Stops recording.  (Implementation note: The 'q' that
 For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 
 					*:so* *:source* *load-vim-script*
-:so[urce] {file}	Read Ex commands from {file}.
+:so[urce] {file}	Read Ex commands from {file}.  These are commands that
+			start with a ":".
 
-:so[urce]! {file}	Read Vim commands from {file}.  {not in Vi}
+:so[urce]! {file}	Read Vim commands from {file}.  These are commands
+			that are executed from Normal mode, like you type
+			them.  {not in Vi}
 
 							*:ru* *:runtime*
 :ru[ntime][!] {file} ..

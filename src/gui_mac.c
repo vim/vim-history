@@ -3765,7 +3765,7 @@ gui_mch_add_menu_item(menu, idx)
 
     /* Call InsertMenuItem followed by SetMenuItemText
      * to avoid special character recognition by InsertMenuItem
-     */ 
+     */
     InsertMenuItem(parent->submenu_handle, "\p ", idx); /* afterItem */
     SetMenuItemText(parent->submenu_handle, idx+1, name);
 

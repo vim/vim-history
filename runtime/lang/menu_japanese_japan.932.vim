@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		14-May-2001.
+" Last Change:		13-Jul-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -15,6 +15,7 @@ scriptencoding cp932
 " Help menu
 menutrans &Help			ヘルプ(&H)
 menutrans &Overview<Tab><F1>	概略(&O)<Tab><F1>
+menutrans &User\ Manual		ユーザマニュアル(&U)
 menutrans &How-to\ links	&How-toリンク
 menutrans &Credits		クレジット(&C)
 menutrans Co&pying		著作権情報(&P)
@@ -30,7 +31,7 @@ menutrans &Close<Tab>:q			閉じる(&C)<Tab>:q
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	名前を付けて保存(&A)\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	差分表示(&D)\.\.\.
-menutrans Split\ Patched\ &By\.\.\.	パッチ結果を表示(&P)\.\.\.
+menutrans Split\ Patched\ &By\.\.\.	パッチ結果を表示(&B)\.\.\.
 menutrans &Print			印刷(&P)
 menutrans Sa&ve-Exit<Tab>:wqa		保存して終了(&V)<Tab>:wqa
 menutrans E&xit<Tab>:qa			終了(&X)<Tab>:qa
@@ -39,7 +40,7 @@ menutrans E&xit<Tab>:qa			終了(&X)<Tab>:qa
 menutrans &Edit				編集(&E)
 menutrans &Undo<Tab>u			取り消す(&U)<Tab>u
 menutrans &Redo<Tab>^R			もう一度やる(&R)<Tab>^R
-menutrans Rep&eat<Tab>\.		繰り返す(&T)<Tab>\.
+menutrans Rep&eat<Tab>\.		繰り返す(&E)<Tab>\.
 menutrans Cu&t<Tab>"+x			切り取り(&T)<Tab>"+x
 menutrans &Copy<Tab>"+y			コピー(&C)<Tab>"+y
 menutrans &Paste<Tab>"+P		貼り付け(&P)<Tab>"+P
@@ -48,7 +49,7 @@ menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
 menutrans &Select\ all<Tab>ggVG		全て選択(&S)<Tab>ggvG
 menutrans &Find\.\.\.			検索(&F)\.\.\.
-menutrans Find\ and\ Rep&lace\.\.\.	置換(&E)\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.	置換(&L)\.\.\.
 "menutrans Options\.\.\.			オプション(&O)\.\.\.
 menutrans Settings\ &Window		設定ウィンドウ(&W)
 
@@ -86,7 +87,7 @@ menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!
 	\	行番号表示切替(&N)<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!
 	\ リストモード切替(&L)<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!
 	\	行折返し切替(&W)<Tab>:set\ wrap!
 menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!
 	\	単語折返し切替(&R)<Tab>:set\ lbr!
@@ -110,17 +111,21 @@ menutrans None				なし
 menutrans &Tools			ツール(&T)
 menutrans &Jump\ to\ this\ tag<Tab>g^]	タグジャンプ(&J)<Tab>g^]
 menutrans Jump\ &back<Tab>^T		戻る(&B)<Tab>^T
-menutrans Build\ &Tags\ File		タグファイル作成
+menutrans Build\ &Tags\ File		タグファイル作成(&T)
 menutrans &Make<Tab>:make		メイク(&M)<Tab>:make
-menutrans &List\ Errors<Tab>:cl		エラーリスト(&E)<Tab>:cl
+menutrans &List\ Errors<Tab>:cl		エラーリスト(&L)<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	メッセージリスト(&I)<Tab>:cl!
 menutrans &Next\ Error<Tab>:cn		次のエラーへ(&N)<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	前のエラーへ(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	古いリスト(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	新しいリスト(&E)<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	エラーウィンドウ表示(&W)<Tab>:cwin	
+menutrans Error\ &Window		エラーウィンドウ(&W)
+menutrans &Update<Tab>:cwin		更新(&U)<Tab>:cwin
+menutrans &Open<Tab>:copen		開く(&O)<Tab>:copen
+menutrans &Close<Tab>:cclose		閉じる(&C)<Tab>:cclose
 menutrans &Convert\ to\ HEX<Tab>:%!xxd	HEXへ変換(&C)<Tab>:%!xxd
 menutrans Conve&rt\ back<Tab>:%!xxd\ -r	HEXから逆変換(&R)<Tab>%!xxd\ -r
+menutrans &Set\ Compiler		コンパイラ設定(&S)
 
 " Tools.Fold Menu
 menutrans &Folding			折畳み(&F)
@@ -134,18 +139,18 @@ menutrans O&pen\ more\ folds<Tab>zr	折畳みを開く(&P)<Tab>zr
 menutrans &Open\ all\ folds<Tab>zR	全折畳みを開く(&O)<Tab>zR
 " fold method
 menutrans Fold\ Met&hod			折畳み方法(&H)
-menutrans M&anual			手動
-menutrans I&ndent			インデント
-menutrans E&xpression			式評価
-menutrans S&yntax			シンタックス
-menutrans &Diff				差分
-menutrans Ma&rker			マーカー
+menutrans M&anual			手動(&A)
+menutrans I&ndent			インデント(&N)
+menutrans E&xpression			式評価(&X)
+menutrans S&yntax			シンタックス(&Y)
+menutrans &Diff				差分(&D)
+menutrans Ma&rker			マーカー(&R)
 " create and delete folds
 menutrans Create\ &Fold<Tab>zf		折畳み作成(&F)<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		折畳み削除(&D)<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	全折畳み削除(&A)<Tab>zD
 " moving around in folds
-menutrans Fold\ column\ &width		折畳みカラム幅
+menutrans Fold\ column\ &width		折畳みカラム幅(&W)
 
 menutrans &Update		更新(&U)
 menutrans &Get\ Block		ブロック抽出(&G)
@@ -158,14 +163,15 @@ menutrans &Delete		削除(&D)
 menutrans &Alternate		裏へ切替(&A)
 menutrans &Next			次のバッファ(&N)
 menutrans &Previous		前のバッファ(&P)
-menutrans [No\ File]		[新規ファイル]
+menutrans [No\ File]		[無題]
+let g:menutrans_no_file = "[無題]"
 
 " Window menu
 menutrans &Window			ウィンドウ(&W)
 menutrans &New<Tab>^Wn			新規作成(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		分割(&P)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	裏バッファへ分割(&L)<Tab>^W^^
-menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&V)<Tab>^Wv
 menutrans Split\ File\ E&xplorer	ファイルエクスプローラ(&X)
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
 menutrans Move\ &To			移動(&T)
@@ -183,7 +189,7 @@ menutrans Max\ &Width<Tab>^W\|		最大幅に(&W)<Tab>^W\|
 menutrans Min\ Widt&h<Tab>^W1\|		最小幅に(&H)<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		上にローテーション(&U)<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		下にローテーション(&D)<Tab>^Wr
-menutrans Select\ Fo&nt\.\.\.		フォント設定(&F)\.\.\.
+menutrans Select\ Fo&nt\.\.\.		フォント設定(&N)\.\.\.
 
 " The popup menu
 menutrans &Undo			取り消す(&U)
@@ -194,8 +200,8 @@ menutrans &Delete		削除(&D)
 menutrans Select\ Blockwise 	矩形ブロック選択
 menutrans Select\ &Word		単語選択(&W)
 menutrans Select\ &Line		行選択(&L)
-menutrans Select\ &Block	ブロック選択
-menutrans Select\ &All		すべて選択
+menutrans Select\ &Block	ブロック選択(&B)
+menutrans Select\ &All		すべて選択(&A)
  
 " The GUI toolbar (for Win32 or GTK)
 if has("toolbar")

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0an.  Last change: 2001 Jul 06
+*quickfix.txt*  For Vim version 6.0ao.  Last change: 2001 Jul 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -368,7 +368,7 @@ ie. error strings that consume more than one line. Possible prefixes are:
 	%Q		single-line file message: pop the last file from stack
 The codes '+' or '-' can be combined with the uppercase codes above; in that
 case they have to precede the letter, eg. '%+A' or '%-G':
-	%-		do not include the matching line in any output
+	%-		do not include the matching multi-line in any output
 	%+		include the whole matching line in the %m error string
 
 The scanf()-like "%*[]" notation is supported for backward-compatibility

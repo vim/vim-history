@@ -15,6 +15,8 @@
 #	GUI interface: GUI=yes
 #	OLE interface: OLE=yes
 #	IME support: IME=yes	(requires GUI=yes)
+#	  DYNAMIC_IME=[yes or no]  (to load the imm32.dll dynamically, default
+#	  is yes)
 #	Global IME support: GIME=yes (requires GUI=yes)
 #	Perl interface:
 #	  PERL=[Path to Perl directory]
@@ -248,7 +250,14 @@ OLE_LIB = oleaut32.lib
 
 !if "$(IME)" == "yes"
 CFLAGS = $(CFLAGS) -DFEAT_MBYTE_IME
+!ifndef DYNAMIC_IME
+DYNAMIC_IME = yes
+!endif
+!if "$(DYNAMIC_IME)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_IME
+!else
 IME_LIB = imm32.lib
+!endif
 !endif
 
 !if "$(GIME)" == "yes"
@@ -484,7 +493,7 @@ test:
 
 # Create a default rule for transforming .c files to .obj files in $(OUTDIR)
 # Batch compilation is supported by nmake 1.62 (part of VS 5.0) and later)
-!IF $(_NMAKE_VER)0 < 1620
+!IF "$(_NMAKE_VER)" == ""
 .c{$(OUTDIR)/}.obj:
 !ELSE
 .c{$(OUTDIR)/}.obj::
@@ -493,7 +502,7 @@ test:
 
 # Create a default rule for transforming .cpp files to .obj files in $(OUTDIR)
 # Batch compilation is supported by nmake 1.62 (part of VS 5.0) and later)
-!IF $(_NMAKE_VER)0 < 1620
+!IF "$(_NMAKE_VER)" == ""
 .cpp{$(OUTDIR)/}.obj:
 !ELSE
 .cpp{$(OUTDIR)/}.obj::

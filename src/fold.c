@@ -1809,17 +1809,37 @@ foldDelMarker(lnum, marker, markerlen)
 foldtext_cleanup(str)
     char_u	*str;
 {
-    char_u	*cmtp;
-    int		cmtp_len = 0;
+    char_u	*cms_start;	/* first part or the whole comment */
+    int		cms_slen = 0;	/* length of cms_start */
+    char_u	*cms_end;	/* last part of the comment or NULL */
+    int		cms_elen = 0;	/* length of cms_end */
     char_u	*s;
     int		len;
     int		did1 = FALSE;
     int		did2 = FALSE;
 
+    /* Ignore leading and trailing white space in 'commentstring'. */
+    cms_start = skipwhite(curbuf->b_p_cms);
+    cms_slen = STRLEN(cms_start);
+    while (cms_slen > 0 && vim_iswhite(cms_start[cms_slen - 1]))
+	--cms_slen;
+
     /* locate "%s" in 'commentstring', use the part before and after it. */
-    cmtp = (char_u *)strstr((char *)curbuf->b_p_cms, "%s");
-    if (cmtp != NULL)
-	cmtp_len = (int)STRLEN(cmtp + 2);
+    cms_end = (char_u *)strstr((char *)cms_start, "%s");
+    if (cms_end != NULL)
+    {
+	cms_elen = cms_slen - (cms_end - cms_start);
+	cms_slen = cms_end - cms_start;
+
+	/* exclude white space before "%s" */
+	while (cms_slen > 0 && vim_iswhite(cms_start[cms_slen - 1]))
+	    --cms_slen;
+
+	/* skip "%s" and white space after it */
+	s = skipwhite(cms_end + 2);
+	cms_elen -= s - cms_end;
+	cms_end = s;
+    }
     parseMarker(curwin);
 
     for (s = str; *s != NUL; )
@@ -1837,17 +1857,16 @@ foldtext_cleanup(str)
 	    if (isdigit(s[len]))
 		++len;
 	}
-	else if (cmtp != NULL)
+	else if (cms_end != NULL)
 	{
-	    if (!did1
-		  && STRNCMP(s, curbuf->b_p_cms, cmtp - curbuf->b_p_cms) == 0)
+	    if (!did1 && STRNCMP(s, cms_start, cms_slen) == 0)
 	    {
-		len = (int)(cmtp - curbuf->b_p_cms);
+		len = cms_slen;
 		did1 = TRUE;
 	    }
-	    else if (!did2 && STRNCMP(s, cmtp + 2, cmtp_len) == 0)
+	    else if (!did2 && STRNCMP(s, cms_end, cms_elen) == 0)
 	    {
-		len = cmtp_len;
+		len = cms_elen;
 		did2 = TRUE;
 	    }
 	}

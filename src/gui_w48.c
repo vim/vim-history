@@ -112,7 +112,6 @@ typedef int LOGFONT[];
 # define FAR
 # define BYTE		int
 # define LPCSTR		int
-# define HIMC		int
 # undef MSG
 # define MSG		int
 #endif
@@ -2813,16 +2812,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
     norm_logfont = lf;
 #endif
 #ifdef FEAT_MBYTE_IME
-    {
-	HIMC    hImc;
-
-	/* Initialize font for IME */
-	if ((hImc = ImmGetContext(s_hwnd)))
-	{
-	    ImmSetCompositionFont(hImc, &norm_logfont);
-	    ImmReleaseContext(s_hwnd, hImc);
-	}
-    }
+    im_set_font(&lf);
 #endif
     gui_mch_free_font(gui.norm_font);
     gui.norm_font = font;

@@ -361,8 +361,8 @@ PlatformId(void)
 }
 
 /*
- * Return TRUE when running on Windows 95.  Only to be used after
- * mch_init().
+ * Return TRUE when running on Windows 95 (or 98 or ME).
+ * Only to be used after mch_init().
  */
     int
 mch_windows95(void)
@@ -1570,7 +1570,7 @@ SaveConsoleBuffer(
 	NumCells = cb->BufferSize.X * cb->BufferSize.Y;
 	if (cb->Buffer != NULL)
 	    vim_free(cb->Buffer);
-	cb->Buffer = (PCHAR_INFO) alloc(NumCells * sizeof(CHAR_INFO));
+	cb->Buffer = (PCHAR_INFO)alloc(NumCells * sizeof(CHAR_INFO));
 	if (cb->Buffer == NULL)
 	    return FALSE;
     }
@@ -3331,8 +3331,10 @@ visual_bell()
     WORD    attrFlash = ~g_attrCurrent & 0xff;
 
     DWORD   dwDummy;
-    LPWORD  oldattrs = (LPWORD) alloc(Rows * Columns * sizeof(WORD));
+    LPWORD  oldattrs = (LPWORD)alloc(Rows * Columns * sizeof(WORD));
 
+    if (oldattrs == NULL)
+	return;
     ReadConsoleOutputAttribute(g_hConOut, oldattrs, Rows * Columns,
 			       coordOrigin, &dwDummy);
     FillConsoleOutputAttribute(g_hConOut, attrFlash, Rows * Columns,

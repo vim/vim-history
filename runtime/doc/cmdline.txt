@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0an.  Last change: 2001 Jul 03
+*cmdline.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -130,11 +130,12 @@ CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 		to indicate that you are expected to enter the name of a
 		register.
 		The text is inserted as if you typed it, but mappings and
-		abbreviations are not used.  Characters that end the command
-		line are inserted literally (<Esc>, <CR>, <NL>, <C-C>).  A
-		<BS> or CTRL-W could still end the command line though, and
-		remaining characters will then be interpreted in another mode,
-		which might not be what you intended.
+		abbreviations are not used.  Command-line completion through
+		'wildchar' is not triggered though.  And characters that end
+		the command line are inserted literally (<Esc>, <CR>, <NL>,
+		<C-C>).  A <BS> or CTRL-W could still end the command line
+		though, and remaining characters will then be interpreted in
+		another mode, which might not be what you intended.
 		Special registers:
 			'"'	the unnamed register, containing the text of
 				the last delete or yank

@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0an.  Last change: 2001 Jun 28
+*usr_06.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 16
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -228,7 +228,7 @@ There are several options that change the way Vim prints:
 	'printername'
 	'printerheader'
 	'printerfont'
-	'printersettings'
+	'printeroptions'
 
 To print only a range of lines,  use Visual mode to select the lines and then
 type the command: >

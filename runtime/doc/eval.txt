@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0an.  Last change: 2001 Jul 04
+*eval.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2368,8 +2368,9 @@ wildignore		Compiled with 'wildignore' option.
 wildmenu		Compiled with 'wildmenu' option.
 windows			Compiled with support for more than one window.
 winaltkeys		Compiled with 'winaltkeys' option.
-win16			Win16 version of Vim (Windows 3.1).
-win32			Win32 version of Vim (Windows 95/NT).
+win16			Win16 version of Vim (MS-Windows 3.1).
+win32			Win32 version of Vim (MS-Windows 95/98/ME/NT/2000/XP).
+win95			Win32 version for MS-Windows 95/98/ME.
 writebackup		Compiled with 'writebackup' default on.
 xcmdsrv			Compiled with |x11-command-server| support.
 xfontset		Compiled with X fontset support |xfontset|.

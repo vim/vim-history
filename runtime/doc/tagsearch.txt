@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0an.  Last change: 2001 Jul 07
+*tagsearch.txt* For Vim version 6.0ao.  Last change: 2001 Jul 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -705,7 +705,7 @@ CTRL-W i		Open a new window, with the cursor on the first line
 			{not in Vi}
 
 							*:ds* *:dsearch*
-:[range]ds[earch][!] [count] [/]pattern[/]
+:[range]ds[earch][!] [count] [/]string[/]
 			Like "[d"  and "]d", but search in [range] lines
 			(default: whole file).
 			See |:search-args| for [/] and [!].  {not in Vi}
@@ -721,7 +721,7 @@ CTRL-W i		Open a new window, with the cursor on the first line
 			{not in Vi}
 
 							*:dl* *:dlist*
-:[range]dl[ist][!] [/]pattern[/]
+:[range]dl[ist][!] [/]string[/]
 			Like "[D"  and "]D", but search in [range] lines
 			(default: whole file).
 			See |:search-args| for [/] and [!].  {not in Vi}
@@ -737,7 +737,7 @@ CTRL-W i		Open a new window, with the cursor on the first line
 			position.  {not in Vi}
 
 							*:dj* *:djump*
-:[range]dj[ump][!] [count] [/]pattern[/]
+:[range]dj[ump][!] [count] [/]string[/]
 			Like "[ CTRL-D"  and "] CTRL-D", but search  in
 			[range] lines (default: whole file).
 			See |:search-args| for [/] and [!].  {not in Vi}
@@ -750,7 +750,7 @@ CTRL-W d		Open a new window, with the cursor on the first
 			count'th matching line is jumped to.  {not in Vi}
 
 							*:dsp* *:dsplit*
-:[range]dsp[lit][!] [count] [/]pattern[/]
+:[range]dsp[lit][!] [count] [/]string[/]
 			Like "CTRL-W d", but search in [range] lines
 			(default: whole file).
 			See |:search-args| for [/] and [!].  {not in Vi}
@@ -780,6 +780,8 @@ Common arguments for the commands above:
       matched, using the pattern "\<pattern\>".  Only after the second '/' a
       next command can be appended with '|'.  Example: >
 	:isearch /string/ | echo "the last one"
+<     For a ":djump", ":dsplit", ":dlist" and ":dsearch" command the pattern
+      is used as a literal string, not as a search pattern.
 
 ==============================================================================
 7. 'Grep' and 'Lid'					*grep* *lid*

@@ -2,7 +2,8 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	2001 Apr 26
+" Last Change:	2001 Jul 07
+" CSS2 by Nikolai Weibull
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -37,7 +38,7 @@ syn match cssURL contained "\<url\s*([^)]*)"ms=s+4,me=e-1
 
 syn match cssImportant contained "!\s*important\>"
 
-syn match cssFontProperties contained "\<font\>\(-\(family\|style\|variant\|weight\|size\)\)\="
+syn match cssFontProperties contained "\<font\>\(-\(family\|style\|variant\|weight\|size\(-adjust\)\=\|stretch\)\)\="
 syn keyword cssFontProperties contained xyz
 syn keyword cssFontAttr contained cursive fantasy monospace normal italic oblique
 syn keyword cssFontAttr contained bold bolder lighter medium larger smaller
@@ -47,11 +48,10 @@ syn match cssFontAttr contained "\<\(x\{1,2\}-\)\=\(\<small\>\|\<large\>\)\>"
 
 syn match cssColorProperties contained "\<color\>"
 syn match cssColorProperties contained "\<background\>\(-\(color\|image\|repeat\|attachment\|position\)\>\)\="
-syn keyword cssColorAttr contained transparent none top center bottom left right scroll fixed
+syn keyword cssColorAttr contained none top center bottom left right scroll fixed
 syn match cssColorAttr contained "\<\(repeat\|repeat-x\|repeat-y\|no-repeat\)\>"
 
-
-syn match cssTextProperties contained "\<\(word-spacing\|letter-spacing\|text-decoration\|vertical-align\|text-transform\|text-align\|text-indent\|line-height\)\>"
+syn match cssTextProperties contained "\<\(word-spacing\|letter-spacing\|text-decoration\|vertical-align\|text-transform\|text-align\|text-indent\|text-transform\|text-shadow\|unicode-bidi\|line-height\)\>"
 syn keyword cssTextAttr contained normal none underline overline blink sub super middle
 syn keyword cssTextAttr contained capitalize uppercase lowercase none left right center justify
 syn match cssTextAttr contained "\<line-through\>"
@@ -59,7 +59,7 @@ syn match cssTextAttr contained "\<\(text-\)\=\<\(top\|bottom\)\>"
 
 syn match cssBoxProperties contained "\<margin\>\(-\(top\|right\|bottom\|left\)\>\)\="
 syn match cssBoxProperties contained "\<padding\>\(-\(top\|right\|bottom\|left\)\>\)\="
-syn match cssBoxProperties contained "\<border\>\(-\(top\|right\|bottom\|left\)\>\)\=\(-width\>\)\="
+syn match cssBoxProperties contained "\<border\>\(-\(top\|right\|bottom\|left\)\>\)\=\(-width\|-style\>\)\="
 syn match cssBoxProperties contained "\<border-color\>"
 syn match cssBoxProperties contained "\<border-style\>"
 syn keyword cssBoxProperties contained width height float clear
@@ -73,6 +73,21 @@ syn keyword cssClassificationAttr contained block inline none normal pre nowrap
 syn keyword cssClassificationAttr contained disc circle square decimal none
 syn match cssClassificationAttr contained "\<list-item\>"
 syn match cssClassificationAttr contained "\<\(lower\|upper\)-\(roman\|alpha\)\>"
+
+syn match cssBoxProperties contained "\<\(min\|max\)-\(width\|height\)\>"
+syn match cssBoxProperties contained "\<outline\>\(-\(color\|style\|width\)\>\)\="
+syn match cssBoxProperties contained "\<border-collapse\|caption-side\>"
+syn match cssClassificationProperties contained "\<counter\>\(-\(increment\|reset\)\>\)\="
+syn match cssClassificationProperties contained "\<marker-offset\>"
+syn keyword cssClassificationProperties contained cursor direction marks quotes
+syn match cssAuralProperties contained "\<pitch-\(range\|during\)\>"
+syn match cssAuralProperties contained "\(cue\|pause\)-\(after\|-before\)\>"
+syn match cssAuralProperties contained "\<speak\>\(-\(header\|numeral\|punctuation\)\>\)\="
+syn match cssAuralProperties contained "\<speed-rate\|play-during\|voice-family\>"
+syn keyword cssAuralProperties contained stress azimuth elevation pitch richness volume
+syn match cssRenderProperties contained "\<page\>\(-\(break\|after\|inside\)\>\)\="
+syn match cssRenderProperties contained "\<empty-cells\|z-index\|table-layout\>"
+syn keyword cssRenderProperties contained clip content orphans overflow visibility
 
 syn region cssInclude start="@import" start="@include" end=";" contains=cssComment,cssURL
 syn match cssBraces contained "[{}]"
@@ -111,6 +126,8 @@ if version >= 508 || !exists("did_css_syn_inits")
   HiLink cssTextProperties StorageClass
   HiLink cssBoxProperties StorageClass
   HiLink cssClassificationProperties StorageClass
+  HiLink cssAuralProperties StorageClass
+  HiLink cssRenderProperties StorageClass
   HiLink cssFontAttr Type
   HiLink cssColorAttr Type
   HiLink cssTextAttr Type

@@ -102,7 +102,7 @@ HEADERS = -H -H=vim.csm -Hc
 #
 ### USEDLL: 0 for statically linked version of run-time, 1 for DLL runtime
 !if ("$(USEDLL)"=="")
-USEDLL = 1
+USEDLL = 0
 !endif
 #
 ### VIMDLL: 1 for a DLL version of VIM (NOT RECOMMENDED), 0 otherwise

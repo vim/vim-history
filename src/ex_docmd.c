@@ -102,7 +102,7 @@ static void	ex_blast __ARGS((exarg_T *eap));
 # define ex_checktime		ex_ni
 #endif
 #if !defined(FEAT_LISTCMDS) || !defined(FEAT_WINDOWS)
-# define do_buffer_all		ex_ni
+# define ex_buffer_all		ex_ni
 #endif
 static char_u	*getargcmd __ARGS((char_u **));
 static char_u	*skip_cmd_arg __ARGS((char_u *p));
@@ -2657,6 +2657,11 @@ set_one_cmd_context(xp, buff)
 
 	case CMD_colorscheme:
 	    xp->xp_context = EXPAND_COLORS;
+	    xp->xp_pattern = arg;
+	    break;
+
+	case CMD_compiler:
+	    xp->xp_context = EXPAND_COMPILER;
 	    xp->xp_pattern = arg;
 	    break;
 
@@ -8712,7 +8717,7 @@ dialog_msg(buff, format, fname)
     int		len;
 
     if (fname == NULL)
-	fname = (char_u *)"Untitled";
+	fname = (char_u *)_("Untitled");
     len = (int)STRLEN(format) + (int)STRLEN(fname);
     if (len >= IOSIZE)
 	sprintf((char *)buff, format, (int)(IOSIZE - STRLEN(format)), fname);

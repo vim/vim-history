@@ -4152,7 +4152,12 @@ ex_global(eap)
     if (got_int)
 	MSG(_(e_interr));
     else if (ndone == 0)
-	smsg((char_u *)_(e_patnotf2), pat);
+    {
+	if (type == 'v')
+	    smsg((char_u *)_("Pattern found in every line: %s"), pat);
+	else
+	    smsg((char_u *)_(e_patnotf2), pat);
+    }
     else
 	global_exe(cmd);
 

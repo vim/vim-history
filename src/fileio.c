@@ -1919,6 +1919,34 @@ failed:
     return OK;
 }
 
+/*
+ * Fill "*eap" to force the 'fileencoding' and 'fileformat' to be equal to the
+ * buffer "buf".  Used for calling readfile().
+ * Returns OK or FAIL.
+ */
+    int
+prep_exarg(eap, buf)
+    exarg_T	*eap;
+    buf_T	*buf;
+{
+    eap->cmd = alloc((unsigned)(STRLEN(buf->b_p_ff)
+#ifdef FEAT_MBYTE
+		+ STRLEN(buf->b_p_fenc)
+#endif
+						 + 15));
+    if (eap->cmd == NULL)
+	return FAIL;
+
+#ifdef FEAT_MBYTE
+    sprintf((char *)eap->cmd, "e ++ff=%s ++enc=%s", buf->b_p_ff, buf->b_p_fenc);
+    eap->force_enc = 14 + (int)STRLEN(buf->b_p_ff);
+#else
+    sprintf((char *)eap->cmd, "e ++ff=%s", buf->b_p_ff);
+#endif
+    eap->force_ff = 7;
+    return OK;
+}
+
 #ifdef FEAT_MBYTE
 /*
  * Find next fileencoding to use from 'fileencodings'.
@@ -5029,6 +5057,8 @@ buf_check_timestamp(buf, focus)
 
     if (reload)
     {
+	linenr_T	old_line_count = buf->b_ml.ml_line_count;
+	exarg_T		ea;
 #ifdef FEAT_AUTOCMD
 	aco_save_T	aco;
 
@@ -5041,7 +5071,22 @@ buf_check_timestamp(buf, focus)
 	curwin->w_buffer = buf;
 #endif
 
-	do_ecmd(0, buf->b_ffname, NULL, NULL, ECMD_LASTL, ECMD_FORCEIT);
+	/* We only want to read the text from the file, not reset the syntax
+	 * highlighting, clear marks, diff status, etc.  Force the fileformat
+	 * and encoding to be the same. */
+	if (prep_exarg(&ea, buf) == OK)
+	{
+	    if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0, (linenr_T)0,
+			(linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
+		EMSG2(_("E321: Could not reload \"\""), buf->b_fname);
+	    else
+	    {
+		/* Delete the old lines. */
+		while (old_line_count-- > 0)
+		    ml_delete(buf->b_ml.ml_line_count, FALSE);
+	    }
+	    vim_free(ea.cmd);
+	}
 
 #ifdef FEAT_AUTOCMD
 	/* restore curwin/curbuf and a few other things */

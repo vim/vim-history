@@ -1,6 +1,6 @@
 " Vim script for Evim key bindings
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 10
+" Last Change:	2001 Jul 18
 
 " Don't use Vi-compatible mode.
 set nocompatible
@@ -18,8 +18,8 @@ set hidden
 inoremap <Down> <C-O>gj
 inoremap <Up> <C-O>gk
 
-set bs=2		" allow backspacing over everything in insert mode
-set ai			" always set autoindenting on
+set backspace=2		" allow backspacing over everything in insert mode
+set autoindent		" always set autoindenting on
 if has("vms")
   set nobackup		" do not keep a backup file, use versions instead
 else

@@ -1,10 +1,8 @@
 # NSIS file to create a self-installing exe for Vim.
-# Last modification:	2001 Jul 9
+# Last modification:	2001 Jul 21
 
-# WARNING: if you make changes to this script I advise you to comment out line
-# 66:		RMDir /r $0    (it is extremely dangerous)
-# and to disable the uninstall feature until you are sure that all the things go
-# to the right place. (Eduardo)
+# WARNING: if you make changes to this script, look out for $0 to be valid,
+# because this line is very dangerous:		RMDir /r $0
 
 # comment next line if you don't have UPX.
 # Get it at http://upx.sourceforge.net
@@ -13,19 +11,19 @@
 # comment the next line if you do not want to add Native Language Support 
 !define HAVE_NLS
 
-Name "Vim 6.0an"
-OutFile gVim60an.exe
+Name "Vim 6.0ao"
+OutFile gVim60ao.exe
 CRCCheck on
-ComponentText "This will install Vim 6.0an on your computer."
+ComponentText "This will install Vim 6.0ao on your computer."
 DirText "Choose a directory to install Vim"
 SetDatablockOptimize on
 Icon icons\vim_16c.ico
-UninstallText "This will uninstall Vim 6.0an from your system."
-UninstallExeName uninst-vim60an.exe
+UninstallText "This will uninstall Vim 6.0ao from your system."
+UninstallExeName vim60ao\uninstall-gui.exe
 UninstallIcon icons\vim_uninst_16c.ico
-BGGradient 005000 008200 ffffff
+BGGradient 004000 008200 ffffff
 LicenseText "You should read the following before installing:"
-LicenseData ..\doc\uganda.txt
+LicenseData ..\doc\uganda.nsis.txt
 
 !ifdef HAVE_UPX
   !packhdr temp.dat "upx --best --compress-icons=1 temp.dat"
@@ -43,38 +41,44 @@ SilentInstall normal
 
 Function .onInit
   MessageBox MB_YESNO|MB_ICONQUESTION \
-	"This will install Vim 6.0an on your computer.$\n Continue?" IDYES NoAbort
+	"This will install Vim 6.0ao on your computer.$\n Continue?" IDYES NoAbort
   
   Abort ; causes installer to quit.
   NoAbort:
-  StrCpy $INSTDIR "C:\vim"
+
+  # run the install program to check for already installed versions
+  SetOutPath $TEMP
+  File ..\src\install.exe
+  ExecWait "$TEMP\install.exe -uninstall-check"
+  Delete $TEMP\install.exe
+
+  # We may have been put to the background when uninstall did something.
+  BringToFront
+
+  # Install will have created a file for us that contains the directory where
+  # we should install.  This is $VIM if it's set.  This appears to be the only
+  # way to get the value of $VIM here!?
+  ReadINIStr $INSTDIR $TEMP\vimini.ini vimini dir
+  Delete $TEMP\vimini.ini
+
+  # If ReadINIStr failed for some reason, use default dir.
+  StrCmp $INSTDIR "" 0 IniOK
+    StrCpy $INSTDIR "C:\vim"
+  IniOK:
+
+  # Should check for the value of $VIM and use it.  Unfortunately I don't know
+  # how to obtain the value of $VIM
+  # IfFileExists "$VIM" 0 No_Vim
+  #   StrCpy $INSTDIR "$VIM"
+  # No_Vim:
+
 # User variables:
 # $0 - holds the directory the executables are installed to
-# $1 - holds the parameters to be passed to install.exe.  Starts empty.
-  StrCpy $0 "$INSTDIR\vim60an"
+# $1 - holds the parameters to be passed to install.exe.  Starts with OLE
+#      registration (since a non-OLE gvim will not complain, and we want to
+#      always register an OLE gvim).
+  StrCpy $0 "$INSTDIR\vim60ao"
   StrCpy $1 "-register-OLE"
-
-FunctionEnd
-
-Function .onVerifyInstDir
-
-  StrCpy $0 "$INSTDIR\vim60an"
-
-  IfFileExists $0 0 RemoveOldVim
-  	MessageBox MB_YESNO|MB_ICONQUESTION \
-	"A previous installation of Vim exists: $0. \
-	$\nDo you want to remove it?" IDNO NoRemoveOldVim
-
-	RemoveOldVim:
-		RMDir /r $0
-		Goto Fin
-
-	NoRemoveOldVim:
-  		MessageBox MB_OK|MB_ICONEXCLAMATION \
-		"You must choose another directory to install Vim \
-		$\n if you want to keep the old installation."
-        
-	Fin:
 
 FunctionEnd
 
@@ -88,7 +92,7 @@ Function .onInstSuccess
 !ifdef HAVE_NLS
 IfFileExists $0\lang 0 NoNLS
   MessageBox MB_OK|MB_ICONINFORMATION \
-	"To complete the installation you must add the following line \
+	"To make the translated messages work you must add the following line \
 	$\n$\nset LANG=<your language>, e.g. es_es.iso_8859-1 \
 	$\n$\n to your autoexec.bat file and reboot the system."
   NoNLS:
@@ -105,7 +109,7 @@ Function .onInstFailed
 FunctionEnd
 
 Function un.onUnInstSuccess
-  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0an has been (partly) removed from your system"  
+  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0ao has been (partly) removed from your system"  
 FunctionEnd
 
 ##########################################################
@@ -113,7 +117,7 @@ Section "Vim executables and runtime files"
 SectionIn 1,2,3
 
 # we need also this here if the user changes the instdir
-StrCpy $0 "$INSTDIR\vim60an"
+StrCpy $0 "$INSTDIR\vim60ao"
 
 SetOutPath $0
 File ..\src\gvim.exe
@@ -124,9 +128,6 @@ File ..\src\xxd\xxd.exe
 File ..\vimtutor.bat
 File ..\README.txt
 File ..\uninstal.txt
-
-
-SetOutPath $0
 File ..\*.vim
 File ..\rgb.txt
 
@@ -165,32 +166,14 @@ SectionDivider
 Section "Create icons on the Desktop"
 SectionIn 1,3
 
-SetOutPath $0
-  CreateShortCut "$DESKTOP\gvim 6.0.lnk" "$0\gvim.exe"
-  CreateShortCut "$DESKTOP\gview 6.0.lnk" "$0\gvim.exe" "-R"
-  CreateShortCut "$DESKTOP\evim 6.0.lnk" "$0\gvim.exe" "-y"
+StrCpy $1 "$1 -install-icons"
 
 SectionEnd
 ##########################################################
 Section "Add Vim to the Start Menu"
 SectionIn 1,3
 
-SetOutPath $0
-  CreateDirectory "$SMPROGRAMS\Vim 6.0"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\Readme.lnk" \
-                 "$0\gvim.exe" '-R "$0\README.txt"' \
-                 "$0\gvim.exe" 
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\Vim tutor.lnk" \
-                 "$0\vimtutor.bat" "" "$0\gvim.exe" 
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\Help.lnk" "$0\gvim.exe" "-c h"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\gVim.lnk" "$0\gvim.exe"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\gView.lnk" "$0\gvim.exe" "-R"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\eVim.lnk" "$0\gvim.exe" "-y"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\GVimdiff.lnk" "$0\gvim.exe" "-d"
-  CreateShortCut "$SMPROGRAMS\Vim 6.0\Uninstall.lnk" \
-                 "$INSTDIR\uninst-vim60an.exe"
-
-  WriteINIStr "$SMPROGRAMS\Vim 6.0\Vim online.url" InternetShortcut URL http://vim.sf.net/
+StrCpy $1 "$1 -add-start-menu"
 
 SectionEnd
 ##########################################################
@@ -252,20 +235,22 @@ SectionIn 3
 
 SetOutPath $0\VisVim
 File ..\VisVim\VisVim.dll
-File ..\VisVim\VsReadMe.txt
 File ..\VisVim\README.txt
+ExecWait "regsvr32.exe /s $0\VisVim.dll"
 
 SectionEnd
 ##########################################################
 !ifdef HAVE_NLS
 Section "Native Language Support"
-SectionIn 3
+SectionIn 1,3
 
 SetOutPath $0\lang
 File /r ..\lang\*.*
 SetOutPath $0\keymap
 File ..\keymap\README.txt
 File ..\keymap\*.vim
+SetOutPath $0
+File ..\libintl.dll
 
 SectionEnd
 !endif
@@ -273,14 +258,16 @@ SectionEnd
 Section -call_install_exe
 
 SetOutPath $0
-  StrCmp $1 "" NoExecInstall
-	ExecWait "$0\install.exe $1"
-
-  NoExecInstall:
+  ExecWait "$0\install.exe $1"
 
 SectionEnd
 ##########################################################
 Section -post
+
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao" \
+                   "DisplayName" "Vim 6.0ao (self-installing)"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao" \
+                   "UninstallString" "$INSTDIR\vim60ao\uninstall-gui.exe"
 
   ExecShell open '$INSTDIR'
   Sleep 500
@@ -291,22 +278,24 @@ SectionEnd
 ##########################################################
 Section Uninstall
 
-StrCpy $0 "$INSTDIR\vim60an"
+# Apparently $INSTDIR is set to the directory where the uninstaller is created.
+# Thus the "vim60ao" directory is included in it.
+StrCpy $0 "$INSTDIR"
 
-; delete uninstaller
-Delete $INSTDIR\uninst-vim60an.exe
+; If VisVim was installed, unregister the DLL
+IfFileExists "$0\VisVim.dll" Has_VisVim No_VisVim
+Has_VisVim:
+   ExecWait "regsvr32.exe /u /s $0\VisVim.dll"
+
+No_VisVim:
 
 ; delete the context menu entry and batch files
 ExecWait "$0\uninstal.exe -nsis"
 
-; remove start menu entries
-Delete "$SMPROGRAMS\Vim 6.0\*.*"
-RMDir "$SMPROGRAMS\Vim 6.0"
+# We may have been put to the background when uninstall did something.
+BringToFront
 
-; remove icons on the desktop
-Delete "$DESKTOP\gvim 6.0.lnk"
-Delete "$DESKTOP\gview 6.0.lnk"
-Delete "$DESKTOP\evim 6.0.lnk"
+DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao"
 
 # ask the user if the Vim version dir must be removed
 MessageBox MB_YESNO|MB_ICONQUESTION \
@@ -330,11 +319,13 @@ IfFileExists $INSTDIR\vimfiles 0 NoRemove
     RMDir /r $INSTDIR\vimfiles
   NoRemove:
 
+GetParentDir $0 $INSTDIR
+
 # ask the user if the Vim root dir must be removed
 MessageBox MB_YESNO|MB_ICONQUESTION \
-  "Would you like to remove $INSTDIR?$\n \
+  "Would you like to remove $0?$\n \
    $\nIt contains your Vim configuration files!" IDNO NoDelete
-   RMDir /r $INSTDIR ; skipped if no
+   RMDir /r $0 ; skipped if no
 NoDelete:
 
 Fin:

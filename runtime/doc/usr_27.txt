@@ -1,4 +1,4 @@
-*usr_27.txt*	For Vim version 6.0an.  Last change: 2001 Jul 02
+*usr_27.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 13
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -94,7 +94,7 @@ not found the string by that time, it starts from the beginning and searches
 from the start of the file to the cursor location.
    Keep in mind that when repeating the "n" command to search for the next
 match, you eventually get back to the first match.  If you don't notice this
-you keep searching forever!  To give you a hint, Vim displayes this message:
+you keep searching forever!  To give you a hint, Vim displays this message:
 
 	search hit BOTTOM, continuing at TOP ~
 

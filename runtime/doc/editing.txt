@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0an.  Last change: 2001 Jul 04
+*editing.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1293,6 +1293,7 @@ compared for all buffers in a window.   Vim will run any associated
 |FileChangedShell| autocommands or display a warning for any files that have
 changed.  In the GUI this happens when Vim regains input focus.
 
+							*E321*
 If you want to automatically reload a file when it has been changed outside of
 Vim, set the 'autoread' option.  This doesn't work at the moment you write the
 file though, only when the file wasn't changed inside of Vim.

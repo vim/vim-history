@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0an.  Last change: 2001 Jul 12
+*todo.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,13 +29,18 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
--   Update $VIMRUNTIME/optwin for new options.
--   Update the overview of options in quickref.txt.
+Motif: Changing the Tooltip font causes a crash. (David Harrison)
+
+Docs for Make_dvc.mak. (Walter Briscoe)
+
+MS-DOS: Should find a way to delete the registry entry with uninstal.exe that
+install.exe creates for uninstalling.
+
+-   Clean up version6.txt (from "IMPROVEMENTS").
+-   Check the todo list for items that have already been implemented.
 -   Do profiling to check performance bottlenecks.
     check coladvance2() with/without 'virtualedit'.
--   Clean up version6.txt.
--   Check the todo list for items that have already been implemented.
-
+    horizontal scrolling with syntax highlighting.
 
 Vi incompatibility:
 8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
@@ -154,6 +159,8 @@ Win32 GUI known bugs:
     file name from short filename to long file name, skip it if it changes?
 8   Win32: cannot tearoff a menu with "nmap n /^M". (Pritesh Mistry)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
+8   When using two monitors, the code that checks/fixes the window size and
+    position (e.g. when a font changes) doesn't work properly. (George Reilly)
 -   Check libcall() and libcallnr() for Win32.  No crash when function returns
     1 or -1?
 8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
@@ -215,8 +222,6 @@ Win32 GUI known bugs:
     each page.  How do we get the actual file name there?
     Alternative: use the PrintFile utility (freeware).
     Alternative: use prfile32 (Aaron)
-8   install.exe, vimrun.exe and ctags are not build from Gvim_vc.mak.  When
-    added, check that this works from the command line and from the IDE.
 9   Replace SendToVim and OpenWithVim with C++ versions? (Rafal Dibrowa)
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
@@ -480,8 +485,8 @@ VMS:
 
 
 "Small" problems:
-8   "grx" on a double-wide character inserts "x", should replace the character
-    with "x ".  "gR" on <xx> ('display' set the "uhex") doesn't replace.
+8   Multi-byte with 'rightleft': when a double-wide character wraps to the
+    next line, character positioning is wrong. (Raphael Finkel)
 9   When XIM is being used, sometimes one character is lost.  Probably when
     XIM has just been enabled.
 9   Using "rx" with 'virtualedit' set on a double-wide UTF-8 character of
@@ -723,7 +728,9 @@ Problems that will (probably) not be solved:
 						    *extensions-improvements*
 
 Documentation:
+8   Extend usr_27.txt a bit. (Adam Seyfarth)
 9   Merge in ideas from ~/vim/patches/tutor.txt (Gabriel Zachmann)
+7   Add a section on debugging scripts in the user manual.
 9   Make the Reference Manual more precise.  For each command mention:
     - change to cursor position and curswant
     - if it can be undone (u/CTRL-R) and redone (.)
@@ -766,11 +773,10 @@ Help:
 
 
 User Friendlier:
-7   Windows install with NSIS: Detect and handle $VIM being set to another
-    directory, instead of leaving it up to install.exe to give a warning
-    message.
 8   Windows install with install.exe: Use .exe instead of .bat files for
-    links, so that command line arguments are passed on unmodified?
+    links, so that command line arguments are passed on unmodified? (Walter
+    Briscoe)
+8   Windows install: Be able to associate Vim with a selection of file types?
 
 
 Folding:
@@ -1185,8 +1191,8 @@ Performance:
 -   When only need to redraw the status lines in status_redraw_all(), need to
     update NOT_VALID to force the redraw.  Should detect that only the status
     lines need to be redrawn (add STATUSLN between VALID and NOT_VALID?).
--   After :set nowrap remove superflous redraw with wrong hor. offset if cursor
-    is right of the screen.
+-   After ":set nowrap" remove superflous redraw with wrong hor. offset if
+    cursor is right of the screen.
 
 
 Code size:
@@ -1345,6 +1351,8 @@ Win32 GUI:
 8   Make debug mode work while starting up (vim -D).  Open console window for
     the message and input?
 8   Add font argument to set the lfCharSet. (Bobcik)
+8   Somehow automatically detect the system language and set $LANG, so that
+    gettext and menus work.
 8   Could keep console open to run multiple commands, to avoid the need to hit
     return in every console.
     Also: Look at how Emacs does runs external commands:
@@ -1450,9 +1458,6 @@ GUI:
     simple enough). Terminal codes to/from shell should be translated.
 -   Would it be useful to be able to quit the GUI and go back to the terminal
     where it was started from?
-7   X11: Add a "Tooltip" highlight group that allows the user to set the
-    colors and font of the tooltip menus.  This should allow non-English
-    languages to be displayed.
 
 
 Autocommands:
@@ -2360,7 +2365,7 @@ Registers:
     line in the range.
 -   Add "P" command to insert contents of unnamed register, move selected text
 	to position of previous deleted (to swap foo and bar in " + foo")
-8   Make "/ register writable. (Maxi)
+8   Should be able to yank and delete into the "/ register.
     How to take care of the flags (offset, magic)?
 7   Add ! register, for shell commands. (patch from Grenie)
 8   Make clipboard work for Dos32 version. (Negri)
@@ -2770,8 +2775,7 @@ From xvi:
 
 
 From vile:
--   When horizontal scrolling, use '<' and '>' for lines continuing outside of
-    window.
+-   When horizontal scrolling, use '>' for lines continuing right of a window.
 -   Support putting .swp files in /tmp: Command in rc.local to move .swp files
     from /tmp to some directory before deleting files.
 

@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0an.  Last change: 2001 Jul 02
+*usr_03.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -114,7 +114,7 @@ will be positioned over the h:
 
 This also shows that the command "fy" moves to the end of the word really.
    You can specify a count; therefore, you can go to the "l" of "foul" with
-"3l":
+"3fl":
 
 	To err is human.  To really foul up you need a computer. ~
 		  --------------------->
@@ -135,7 +135,8 @@ command is "Tx".
 			Th		tn
 
 These four commands can be repeated with ";".  "," repeats in the other
-direction.
+direction.  The cursor is never moved to another line.  Not even when the
+sentence continues.
 
 Sometimes you will start a search, only to realize that you have typed the
 wrong command.  You type "f" to search backward, for example, only to realize
@@ -224,9 +225,10 @@ Hints: "H" stands for Home, "M" for Middle and "L" for Last.
 
 To see where you are in a file, there are three ways:
 
-1.  Use the CTRL-G command.  You get a message like this:
+1.  Use the CTRL-G command.  You get a message like this (assuming the 'ruler'
+    option is off):
 
-	"~/vim/vim6/runtime/doc/usr_03.txt" line 175 of 184 --95%-- col 55 ~
+	"usr_03.txt" line 233 of 650 --35%-- col 45-52~
 
     This shows the name of the file you are editing, the line number where the
     cursor is, the total number of lines, the percentage of the way through
@@ -412,7 +414,7 @@ word "the" only: >
 
 	/\<the\>
 
-This does not match "there" or "northe".  Notice that the "*" and "#" commands
+This does not match "there" or "soothe".  Notice that the "*" and "#" commands
 use these start-of-word and end-of-word markers to only find whole words (you
 can use "g*" and "g#" match partial words).
 
@@ -483,7 +485,7 @@ Vim.  Example: >
 
 	ZZ
 
-If you now start Vim again, the 'hlsearh' option will already be set.
+If you now start Vim again, the 'hlsearch' option will already be set.
 
 ==============================================================================
 *03.9*	Simple search patterns
@@ -571,20 +573,20 @@ jumps to older positions (Hint: O for older).  CTRL-I then jumps back to newer
 positions (Hint: I is just next to O on the keyboard).  Consider this sequence
 of commands: >
 
-	3G
+	33G
 	/^The
 	CTRL-O
 
 You first jump to line 33, then search for a line that starts with "The".
 Then with CTRL-O you jump back to line 33.  Another CTRL-O takes you back to
 where you started.  If you now use CTRL-I you jump to line 33 again.  And
-to the match for "The" with another CTRL-O.
+to the match for "The" with another CTRL-I.
 
 
 	     |	example text   ^	     |
-	 3G  |	example text   |  CTRL-O     | CTRL-I
+	33G  |	example text   |  CTRL-O     | CTRL-I
 	     |	example text   |	     |
-	     V	line 3 text    ^	     V
+	     V	line 33 text   ^	     V
 	     |	example text   |	     |
        /^The |	example text   |  CTRL-O     | CTRL-I
 	     V	There you are  |	     V

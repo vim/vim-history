@@ -284,6 +284,7 @@ CClink = $(CC)
 # examples:
 #CONF_ARGS = --exec-prefix=/usr
 #CONF_ARGS = --with-vim-name=vim6
+#CONF_ARGS = --with-global-runtime=/etc/vim
 
 # GUI - For creating Vim with GUI (gvim) (B)
 # Uncomment this line when you don't want to get the GUI version, although you
@@ -770,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60an
+VIMRTDIR = /vim60ao
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1370,7 +1371,7 @@ xxd/xxd$(SUFFIX): xxd/xxd.c
 
 # build the language specific files if they were unpacked
 languages:
-	if test -n "$(MAKEMO)"; then \
+	@if test -n "$(MAKEMO)"; then \
 		cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix); \
 	fi
 
@@ -1603,12 +1604,12 @@ installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
 	-chmod $(FILEMOD) $(DEST_TOOLS)/*
-	-chmod $(SCRIPTMOD) `grep -l "^#!" $(DEST_TOOLS)/*`
 # replace the path in some tools
-	perlpath=`which perl` && sed -e "s+/usr/bin/perl+$$perlpath+" $(TOOLSSOURCE)/efm_perl.pl >$(DEST_TOOLS)/efm_perl.pl
-	awkpath=`which nawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
-		awkpath=`which gawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
-		awkpath=`which awk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; fi; fi
+	perlpath=`./which.sh perl` && sed -e "s+/usr/bin/perl+$$perlpath+" $(TOOLSSOURCE)/efm_perl.pl >$(DEST_TOOLS)/efm_perl.pl
+	awkpath=`./which.sh nawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
+		awkpath=`./which.sh gawk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; if test -z "$$awkpath"; then \
+		awkpath=`./which.sh awk` && sed -e "s+/usr/bin/nawk+$$awkpath+" $(TOOLSSOURCE)/mve.awk >$(DEST_TOOLS)/mve.awk; fi; fi
+	-chmod $(SCRIPTMOD) `grep -l "^#!" $(DEST_TOOLS)/*`
 		
 
 # install the language specific files, if they were unpacked
@@ -1632,19 +1633,17 @@ ICON32PATH = $(DATADIR)/icons/locolor/32x32/apps
 ICON16PATH = $(DATADIR)/icons/locolor/16x16/apps
 KDEPATH = $(HOME)/.kde/share/icons
 install-icons:
-	if test -d $(ICON48PATH) -a ! -f $(ICON48PATH)/gvim.png; then \
+	if test -d $(ICON48PATH) -a -w $(ICON48PATH) \
+		-a ! -f $(ICON48PATH)/gvim.png; then \
 	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim48x48.png $(ICON48PATH)/gvim.png; \
 	fi
-	if test -d $(ICON32PATH) -a ! -f $(ICON32PATH)/gvim.png; then \
+	if test -d $(ICON32PATH) -a -w $(ICON32PATH) \
+		-a ! -f $(ICON32PATH)/gvim.png; then \
 	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim32x32.png $(ICON32PATH)/gvim.png; \
 	fi
-	if test -d $(ICON16PATH) -a ! -f $(ICON16PATH)/gvim.png; then \
+	if test -d $(ICON16PATH) -a -w $(ICON16PATH) \
+		-a ! -f $(ICON16PATH)/gvim.png; then \
 	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim16x16.png $(ICON16PATH)/gvim.png; \
-	fi
-# Let's assume that when the KDE directory is present, the user wants the Vim
-# icon there.  It's just a small file...
-	if test -d $(KDEPATH) -a ! -f $(KDEPATH)/gvim.xpm; then \
-	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim32x32.xpm $(KDEPATH)/gvim.xpm; \
 	fi
 
 

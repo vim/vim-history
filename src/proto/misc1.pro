@@ -16,7 +16,7 @@ int plines_m_win __ARGS((win_T *wp, linenr_T first, linenr_T last));
 void ins_bytes __ARGS((char_u *p));
 void ins_bytes_len __ARGS((char_u *p, int len));
 void ins_char __ARGS((int c));
-void ins_char_bytes __ARGS((char_u *buf, int newlen));
+void ins_char_bytes __ARGS((char_u *buf, int charlen));
 void ins_str __ARGS((char_u *s));
 int del_char __ARGS((int fixpos));
 int del_bytes __ARGS((long count, int fixpos));

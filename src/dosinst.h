@@ -16,8 +16,14 @@
 #define FAIL 0
 #define OK 1
 
-#define VIM_VERSION_STR   VIM_VERSION_MAJOR_STR "." VIM_VERSION_MINOR_STR
-#define VIM_STARTMENU "Programs\\Vim " VIM_VERSION_STR
+#ifndef FALSE
+# define FALSE 0
+#endif
+#ifndef TRUE
+# define TRUE 1
+#endif
+
+#define VIM_STARTMENU "Programs\\Vim " VIM_VERSION_SHORT
 
 /*
  * Call malloc() and exit when out of memory.
@@ -66,7 +72,10 @@ PlatformId(void)
     }
 }
 
-# ifndef __BORLANDC__
+# ifdef __BORLANDC__
+/* Borland defines its own searchpath() in dir.h */
+#  include <dir.h>
+# else
     static char *
 searchpath(char *name)
 {
@@ -120,7 +129,7 @@ searchpath_save(char *name)
 /*
  * Get the path to a requested Windows shell folder.
  *
- * Return 0 on error, non-zero on success
+ * Return FAIL on error, OK on success
  */
     int
 get_shell_folder_path(
@@ -206,21 +215,28 @@ struct
 } targets[TARGET_COUNT] =
 {
     {"all",	"batch files"},
-    {"vim",	"vim.bat",	"vim.lnk",	"vim.exe",    "vim.exe",  ""},
-    {"gvim",	"gvim.bat",	"gvim.lnk",	"gvim.exe",   "gvim.exe", ""},
-    {"evim",	"evim.bat",	"evim.lnk",	"evim.exe",   "gvim.exe", "-y"},
-    {"view",	"view.bat",	"view.lnk",	"view.exe",   "vim.exe",  "-R"},
-    {"gview",	"gview.bat",	"gview.lnk",	"gview.exe",  "gvim.exe", "-R"},
-    {"vimdiff", "vimdiff.bat",	"vimdiff.lnk",	"vimdiff.exe","vim.exe",  "-d"},
-    {"gvimdiff","gvimdiff.bat",	"gvimdiff.lnk","gvimdiff.exe","gvim.exe", "-d"},
+    {"vim",	"vim.bat",	"Vim.lnk",
+					"vim.exe",    "vim.exe",  ""},
+    {"gvim",	"gvim.bat",	"gVim.lnk",
+					"gvim.exe",   "gvim.exe", ""},
+    {"evim",	"evim.bat",	"gVim Easy.lnk",
+					"evim.exe",   "gvim.exe", "-y"},
+    {"view",	"view.bat",	"Vim Read-only.lnk",
+					"view.exe",   "vim.exe",  "-R"},
+    {"gview",	"gview.bat",	"gVim Read-only.lnk",
+					"gview.exe",  "gvim.exe", "-R"},
+    {"vimdiff", "vimdiff.bat",	"Vim Diff.lnk",
+					"vimdiff.exe","vim.exe",  "-d"},
+    {"gvimdiff","gvimdiff.bat",	"gVim Diff.lnk",
+					"gvimdiff.exe","gvim.exe", "-d"},
 };
 
 #define ICON_COUNT 3
 char *(icon_names[ICON_COUNT]) =
-	{"gvim " VIM_VERSION_STR,
-	 "evim " VIM_VERSION_STR,
-	 "gview " VIM_VERSION_STR};
+	{"gVim " VIM_VERSION_SHORT,
+	 "gVim Easy " VIM_VERSION_SHORT,
+	 "gVim Read only " VIM_VERSION_SHORT};
 char *(icon_link_names[ICON_COUNT]) =
-	{"gvim " VIM_VERSION_STR ".lnk",
-	 "evim " VIM_VERSION_STR ".lnk",
-	 "gview " VIM_VERSION_STR ".lnk"};
+	{"gVim " VIM_VERSION_SHORT ".lnk",
+	 "gVim Easy " VIM_VERSION_SHORT ".lnk",
+	 "gVim Read only " VIM_VERSION_SHORT ".lnk"};

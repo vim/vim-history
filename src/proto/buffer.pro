@@ -43,7 +43,7 @@ char_u *fix_fname __ARGS((char_u *fname));
 void fname_expand __ARGS((char_u **ffname, char_u **sfname));
 char_u *alist_name __ARGS((aentry_T *aep));
 void do_arg_all __ARGS((int count, int forceit));
-void do_buffer_all __ARGS((exarg_T *eap));
+void ex_buffer_all __ARGS((exarg_T *eap));
 void do_modelines __ARGS((void));
 int read_viminfo_bufferlist __ARGS((vir_T *virp, int writing));
 void write_viminfo_bufferlist __ARGS((FILE *fp));

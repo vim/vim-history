@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0an.  Last change: 2001 Jun 25
+*if_perl.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 20
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -26,6 +26,10 @@ is POD text if the filename has a .POD suffix.
 To use tags with Perl, you need a recent version of Exuberant ctags.  Look
 here:
 	http://ctags.sourceforge.net
+
+Alternatively, you can use the Perl script pltags.pl, which is shipped with
+Vim in the $VIMRUNTIME/tools directory.  This script has currently more
+features than Exuberant ctags' Perl support.
 
 ==============================================================================
 2. Compiling VIM with Perl interface			*perl-compiling*
