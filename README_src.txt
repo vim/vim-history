@@ -1,4 +1,4 @@
-README_src.txt for version 5.2 of Vim: Vi IMproved.
+README_src.txt for version 5.3 of Vim: Vi IMproved.
 
 This is the source archive for Vim.  It is packed for Unix systems.  It is
 also used for other systems in combination with the extra archive

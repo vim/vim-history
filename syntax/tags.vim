@@ -17,6 +17,7 @@ syn match	tagField	contained "[a-z]*:"
 if !exists("did_drchip_tags_inits")
   let did_drchip_tags_inits = 1
   hi link tagAddr	Number
+  hi link tagBaseFile	PreProc
   hi link tagComment	Comment
   hi link tagDelim	Delimiter
   hi link tagField	PreProc

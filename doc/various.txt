@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.2.  Last modification: 1998 Aug 17
+*various.txt*   For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -105,6 +105,10 @@ ga			Print the ascii value of the character under the
 			Mostly useful for autocommands.  This command cannot
 			be followed by another command, since any '|' is
 			considered part of the command.
+			This command can be used recursively, but the depth is
+			limited by 'maxmapdepth'.
+			When this command is called from a non-remappable
+			mapping |:noremap|, the argument can be mapped anyway.
 			An alternative is to use |:execute|, which uses an
 			expression as argument.  This allows the use of
 			printable characters.  Example:

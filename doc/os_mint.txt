@@ -1,4 +1,4 @@
-*os_mint.txt*   For Vim version 5.2.  Last modification: 1997 Apr 13
+*os_mint.txt*   For Vim version 5.3.  Last modification: 1997 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Jens M. Felderhoff

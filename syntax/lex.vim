@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Lex
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
-" Last change:	April 22, 1998
+" Last change:	Aug 27, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -30,11 +30,11 @@ syn region lexPatString	matchgroup=String start=+"+ skip=+\(\\\\\)*\\"+ matchgro
 syn match  lexPatTag	"^<\I\i*\(,\I\i*\)*>*"			contained nextgroup=lexPat,lexPatTag,lexMorePat,lexPatSep
 syn match  lexPatTag	+^<\I\i*\(,\I\i*\)*>*\(\\\\\)*\\"+		contained nextgroup=lexPat,lexPatTag,lexMorePat,lexPatSep
 syn region lexPatComment	start="^\s*/\*" end="\*/"		skipnl	contained contains=cTodo nextgroup=lexPatComment,lexPat,lexPatString,lexPatTag
-syn match  lexPatCodeLine	".*$"				oneline	contained contains=ALLBUT,@lexListGroup
+syn match  lexPatCodeLine	".*$"					contained contains=ALLBUT,@lexListGroup
 syn match  lexMorePat	"\s*|\s*$"			skipnl	contained nextgroup=lexPat,lexPatString,lexPatTag,lexPatComment
 syn match  lexPatSep	"\s\+"					contained nextgroup=lexMorePat,lexPatCode,lexPatCodeLine
 syn match  lexSlashQuote	+\(\\\\\)*\\"+				contained
-syn region lexPatCode matchgroup=Delimiter start="{" matchgroup=Delimiter end="}"	skipnl contained contains=ALLBUT,@lexListPatCodeGroup
+syn region lexPatCode matchgroup=Delimiter start="{" matchgroup=Delimiter end="}" 	skipnl contained contains=ALLBUT,@lexListPatCodeGroup
 
 syn keyword ClexFunctions	BEGIN	input	unput	woutput	yyleng	yylook	yytext
 syn keyword ClexFunctions	ECHO	output	winput	wunput	yyless	yymore	yywrap

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 5.2.  Last modification: 1998 Aug 03
+*editing.txt*   For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -152,6 +152,31 @@ Examples:
 	all".
 
 If you want to always use ":confirm", set the 'confirm' option.
+
+							*:browse* *:bro*
+:bro[wse] {command}	Open a file selection dialog for an argument to
+			{command}.  At present this works for ":e", ":w",
+			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
+			{only in Win32, Motif and Athena GUI}
+
+The syntax is best shown via some examples:
+>	:browse e $vim/foo
+		Open the browser in the $vim/foo directory, and edit the
+		file chosen.
+>	:browse e
+		Open the browser in the directory of the current buffer,
+		and edit the file chosen.
+>	:browse w
+		Open the browser in the directory of the current buffer,
+		with the current buffer filename as default, and save the
+		buffer under the filename chosen.
+>	:browse w C:/bar
+		Open the browser in the C:/bar directory, with the current
+		buffer filename as default, and save the buffer under the
+		filename chosen.
+Also see the |'browsedir'| option.
+For versions of Vim where browsing is not supported, the command is executed
+unmodified.
 
 ==============================================================================
 2. Editing a file					*edit-a-file*
@@ -477,6 +502,7 @@ changes in the current buffer this will fail.  You can exit anyway, and save
 any changes, with the ":wq!" command.  To lose any changes use the ":q!"
 command.
 
+							*arglist-position*
 When there is an argument list you can see which file you are editing in the
 title of the window (if there is one and 'title' is on) and with the file
 message you get with the "CTRL-G" command.  You will see something like

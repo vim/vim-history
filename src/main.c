@@ -255,7 +255,7 @@ main(argc, argv)
 
 	/* paste, copy and cut */
 	{(char_u *)"<S-Insert> \"*P", NORMAL},
-	{(char_u *)"<S-Insert> \"\"d\"*P", VISUAL},
+	{(char_u *)"<S-Insert> \"-d\"*P", VISUAL},
 	{(char_u *)"<S-Insert> <C-R>*", INSERT+CMDLINE},
 	{(char_u *)"<C-Insert> \"*y", VISUAL},
 	{(char_u *)"<S-Del> \"*d", VISUAL},
@@ -275,12 +275,12 @@ main(argc, argv)
 	/* paste, copy and cut */
 #  ifdef USE_CLIPBOARD
 	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
-	{(char_u *)"\316\324 \"\"d\"*P", VISUAL},   /* SHIFT-Insert is ""d"*P */
+	{(char_u *)"\316\324 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
 	{(char_u *)"\316\324 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
 	{(char_u *)"\316\325 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
 	{(char_u *)"\316\327 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
 	{(char_u *)"\316\330 \"*d", VISUAL},	    /* CTRL-Del is "*d */
-	{(char_u *)"\030 \"\"d", VISUAL},	    /* CTRL-X is ""d */
+	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
 #  else
 	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
 	{(char_u *)"\316\324 d\"0P", VISUAL},	    /* SHIFT-Insert is d"0P */
@@ -306,11 +306,11 @@ main(argc, argv)
     {
 	/* paste, copy and cut */
 	{(char_u *)"<D-v> \"*P", NORMAL},
-	{(char_u *)"<D-v> \"\"d\"*P", VISUAL},
+	{(char_u *)"<D-v> \"-d\"*P", VISUAL},
 	{(char_u *)"<D-v> <C-R>*", INSERT+CMDLINE},
 	{(char_u *)"<D-c> \"*y", VISUAL},
 	{(char_u *)"<D-x> \"*d", VISUAL},
-	{(char_u *)"<Backspace> \"\"d", VISUAL},
+	{(char_u *)"<Backspace> \"-d", VISUAL},
     };
 #endif
 
@@ -1439,11 +1439,10 @@ main(argc, argv)
 	{
 	    /*
 	     * Before redrawing, make sure w_topline is correct, and w_leftcol
-	     * if lines don't wrap.
+	     * if lines don't wrap, and w_skipcol if lines wrap.
 	     */
 	    update_topline();
-	    if (!curwin->w_p_wrap)
-		validate_cursor();
+	    validate_cursor();
 
 	    if (VIsual_active)
 		update_curbuf(INVERTED);/* update inverted part */

@@ -138,6 +138,9 @@ if has("syntax")
   " Dracula
   au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe so $VIM/syntax/dracula.vim
 
+  " DTD (Document Type Definition for XML)
+  au BufNewFile,BufRead *.dtd			so $VIM/syntax/dtd.vim
+
   " Eiffel
   au BufNewFile,BufRead *.e,*.E			so $VIM/syntax/eiffel.vim
 
@@ -239,13 +242,19 @@ if has("syntax")
   au BufNewFile,BufRead .muttrc			so $VIM/syntax/muttrc.vim
 
   " Nroff/Troff
-  au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr,*.[1-7] so $VIM/syntax/nroff.vim
+  au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr,*.[1-9] so $VIM/syntax/nroff.vim
+
+  " OCAML
+  au BufNewFile,BufRead *.ml			so $VIM/syntax/ocaml.vim
 
   " Pascal
   au BufNewFile,BufRead *.p,*.pas		so $VIM/syntax/pascal.vim
 
   " Perl
-  au BufNewFile,BufRead *.pl,*.pm		so $VIM/syntax/perl.vim
+  au BufNewFile,BufRead *.pl			so $VIM/syntax/perl.vim
+  
+  " Perl or XPM
+  au BufNewFile,BufRead *.pm			so $VIM/syntax/pmfile.vim
 
   " Perl POD
   au BufNewFile,BufRead *.pod			so $VIM/syntax/pod.vim
@@ -334,7 +343,7 @@ if has("syntax")
   au BufNewFile,BufRead tags			so $VIM/syntax/tags.vim
 
   " Tcl
-  au BufNewFile,BufRead *.tcl			so $VIM/syntax/tcl.vim
+  au BufNewFile,BufRead *.tcl,*.tk		so $VIM/syntax/tcl.vim
 
   " Telix Salt
   au BufNewFile,BufRead *.slt			so $VIM/syntax/tsalt.vim
@@ -374,7 +383,7 @@ if has("syntax")
   au BufNewFile,BufRead *.wrl			so $VIM/syntax/vrml.vim
 
   " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
-  au BufNewFile,BufRead,BufEnter *.xpm		so $VIM/syntax/xpm.vim
+  au BufEnter *.xpm				so $VIM/syntax/xpm.vim
 
   " X resources file
   au BufNewFile,BufRead *.Xdefaults,*/app-defaults/* so $VIM/syntax/xdefaults.vim
@@ -412,6 +421,7 @@ if has("syntax")
     amenu 50.10.250 &Syntax.&ABCD.Cobol			:so $VIM/syntax/cobol.vim<CR>
     amenu 50.10.260 &Syntax.&ABCD.Diff			:so $VIM/syntax/diff.vim<CR>
     amenu 50.10.270 &Syntax.&ABCD.Dracula		:so $VIM/syntax/dracula.vim<CR>
+    amenu 50.10.280 &Syntax.&ABCD.DTD			:so $VIM/syntax/dtd.vim<CR>
     amenu 50.20.100 &Syntax.&EFGHIJ.Eiffel		:so $VIM/syntax/eiffel.vim<CR>
     amenu 50.20.110 &Syntax.&EFGHIJ.Elm\ Filter		:so $VIM/syntax/elmfilt.vim<CR>
     amenu 50.20.120 &Syntax.&EFGHIJ.ESQL-C		:so $VIM/syntax/esqlc.vim<CR>
@@ -451,20 +461,21 @@ if has("syntax")
     amenu 50.40.100 &Syntax.&NOPQ.NASM			:so $VIM/syntax/nasm.vim<CR>
     amenu 50.40.110 &Syntax.&NOPQ.Nroff			:so $VIM/syntax/nroff.vim<CR>
     amenu 50.40.120 &Syntax.&NOPQ.Objective\ C		:so $VIM/syntax/objc.vim<CR>
-    amenu 50.40.130 &Syntax.&NOPQ.Pascal		:so $VIM/syntax/pascal.vim<CR>
-    amenu 50.40.140 &Syntax.&NOPQ.Perl			:so $VIM/syntax/perl.vim<CR>
-    amenu 50.40.150 &Syntax.&NOPQ.Perl\ POD		:so $VIM/syntax/pod.vim<CR>
-    amenu 50.40.160 &Syntax.&NOPQ.PHP\ 3		:so $VIM/syntax/php3.vim<CR>
-    amenu 50.40.170 &Syntax.&NOPQ.Phtml			:so $VIM/syntax/phtml.vim<CR>
-    amenu 50.40.180 &Syntax.&NOPQ.Pike			:so $VIM/syntax/pike.vim<CR>
-    amenu 50.40.190 &Syntax.&NOPQ.PO\ (GNU\ gettext)	:so $VIM/syntax/po.vim<CR>
-    amenu 50.40.200 &Syntax.&NOPQ.PostScript		:so $VIM/syntax/postscr.vim<CR>
-    amenu 50.40.210 &Syntax.&NOPQ.Povray		:so $VIM/syntax/pov.vim<CR>
-    amenu 50.40.220 &Syntax.&NOPQ.Printcap		:so $VIM/syntax/pcap.vim<CR>
-    amenu 50.40.230 &Syntax.&NOPQ.Procmail		:so $VIM/syntax/procmail.vim<CR>
-    amenu 50.40.240 &Syntax.&NOPQ.Prolog		:so $VIM/syntax/prolog.vim<CR>
-    amenu 50.40.250 &Syntax.&NOPQ.Purify\ log		:so $VIM/syntax/purifylog.vim<CR>
-    amenu 50.40.260 &Syntax.&NOPQ.Python		:so $VIM/syntax/python.vim<CR>
+    amenu 50.40.130 &Syntax.&NOPQ.OCAML			:so $VIM/syntax/ocaml.vim<CR>
+    amenu 50.40.140 &Syntax.&NOPQ.Pascal		:so $VIM/syntax/pascal.vim<CR>
+    amenu 50.40.150 &Syntax.&NOPQ.Perl			:so $VIM/syntax/perl.vim<CR>
+    amenu 50.40.160 &Syntax.&NOPQ.Perl\ POD		:so $VIM/syntax/pod.vim<CR>
+    amenu 50.40.170 &Syntax.&NOPQ.PHP\ 3		:so $VIM/syntax/php3.vim<CR>
+    amenu 50.40.180 &Syntax.&NOPQ.Phtml			:so $VIM/syntax/phtml.vim<CR>
+    amenu 50.40.190 &Syntax.&NOPQ.Pike			:so $VIM/syntax/pike.vim<CR>
+    amenu 50.40.200 &Syntax.&NOPQ.PO\ (GNU\ gettext)	:so $VIM/syntax/po.vim<CR>
+    amenu 50.40.210 &Syntax.&NOPQ.PostScript		:so $VIM/syntax/postscr.vim<CR>
+    amenu 50.40.220 &Syntax.&NOPQ.Povray		:so $VIM/syntax/pov.vim<CR>
+    amenu 50.40.230 &Syntax.&NOPQ.Printcap		:so $VIM/syntax/pcap.vim<CR>
+    amenu 50.40.240 &Syntax.&NOPQ.Procmail		:so $VIM/syntax/procmail.vim<CR>
+    amenu 50.40.250 &Syntax.&NOPQ.Prolog		:so $VIM/syntax/prolog.vim<CR>
+    amenu 50.40.260 &Syntax.&NOPQ.Purify\ log		:so $VIM/syntax/purifylog.vim<CR>
+    amenu 50.40.270 &Syntax.&NOPQ.Python		:so $VIM/syntax/python.vim<CR>
     amenu 50.50.100 &Syntax.&RS.Rexx			:so $VIM/syntax/rexx.vim<CR>
     amenu 50.50.110 &Syntax.&RS.S-lang			:so $VIM/syntax/slang.vim<CR>
     amenu 50.50.120 &Syntax.&RS.Sather			:so $VIM/syntax/sather.vim<CR>
@@ -483,7 +494,7 @@ if has("syntax")
     amenu 50.50.250 &Syntax.&RS.SPEC\ (Linux\ RPM)	:so $VIM/syntax/spec.vim<CR>
     amenu 50.50.260 &Syntax.&RS.SQL			:so $VIM/syntax/sql.vim<CR>
     amenu 50.60.100 &Syntax.&TU.Tags			:so $VIM/syntax/tags.vim<CR>
-    amenu 50.60.110 &Syntax.&TU.Tcl			:so $VIM/syntax/tcl.vim<CR>
+    amenu 50.60.110 &Syntax.&TU.Tcl/Tk			:so $VIM/syntax/tcl.vim<CR>
     amenu 50.60.120 &Syntax.&TU.Telix\ Salt		:so $VIM/syntax/tsalt.vim<CR>
     amenu 50.60.130 &Syntax.&TU.Tex			:so $VIM/syntax/tex.vim<CR>
     amenu 50.60.140 &Syntax.&TU.TF\ mud\ client		:so $VIM/syntax/tf.vim<CR>

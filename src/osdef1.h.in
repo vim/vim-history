@@ -61,7 +61,7 @@ extern void	memmove __ARGS((char *, char *, int));
 #  endif
 # endif
 #endif
-/* used inside of FDZERO macro: */
+/* used inside of FD_ZERO macro: */
 extern void	bzero __ARGS((char *, int));
 #ifdef HAVE_SETSID
 extern pid_t	setsid __ARGS((void));

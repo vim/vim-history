@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Maple V (based on release 4)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
-" Last change:	May 11, 1998
+" Last change:	Aug 27, 1998
 "
 " Because there are a lot of packages, and because of the potential for namespace
 " clashes, this version of <maple.vim> needs the user to select which, if any,
@@ -84,10 +84,10 @@ syn match mvOper	"\."
 
 " Number handling
 syn match mvNumber	"\<\d\+"		" integer
-syn match mvNumber	"[-+]\=\.\d\+"		" . integer
+ syn match mvNumber	"[-+]\=\.\d\+"		" . integer
 syn match mvNumber	"\<\d\+\.\d\+"		" integer . integer
 syn match mvNumber	"\<\d\+\."		" integer .
-syn match mvNumber	"\<\d\+\.\."	contains=mvRange	" integer ..
+syn match mvNumber	"\<\d\+\.\."	contains=mvRange 	" integer ..
 
 syn match mvNumber	"\<\d\+e[-+]\=\d\+"		" integer e [-+] integer
 syn match mvNumber	"[-+]\=\.\d\+e[-+]\=\d\+"	" . integer e [-+] integer
@@ -96,7 +96,7 @@ syn match mvNumber	"\<\d\+\.\d*e[-+]\=\d\+"	" integer . [integer] e [-+] integer
 syn match mvNumber	"[-+]\d\+"		" integer
 syn match mvNumber	"[-+]\d\+\.\d\+"		" integer . integer
 syn match mvNumber	"[-+]\d\+\."		" integer .
-syn match mvNumber	"[-+]\d\+\.\."	contains=mvRange	" integer ..
+syn match mvNumber	"[-+]\d\+\.\."	contains=mvRange 	" integer ..
 
 syn match mvNumber	"[-+]\d\+e[-+]\=\d\+"	" integer e [-+] integer
 syn match mvNumber	"[-+]\d\+\.\d*e[-+]\=\d\+"	" integer . [integer] e [-+] integer

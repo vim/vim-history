@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.2.  Last modification: 1998 Aug 23
+*gui_w32.txt*   For Vim version 5.3.  Last modification: 1998 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -101,23 +101,22 @@ The "* register reflects the contents of the clipboard.  |quotestar|
 The 'a' flag in 'guioptions' is not included by default.  This means that text
 is only put on the clipboard when an operation is performed on it.  Just
 Visually selecting text doesn't put it on the clipboard.  When the 'a' flag is
-included, the text is copied to the clipboard even when it is not operator
+included, the text is copied to the clipboard even when it is not operated
 upon.
 
-In Visual mode, the CTRL-X key can be used to delete the selected text.
-CTRL-C can't be used to copy the text to the clipboard, unfortunately, since
-Vim uses it for its more universal meaning of "stop/cancel".
+To use the standard MS-Windows way of CTRL-X, CTRL-C and CTRL-V, use the
+$VIM/mswin.vim script.  You could add this line to your _vimrc file:
+>	source $VIM/mswin.vim
 
-The standard Windows key CTRL-V already has a meaning in Vim.  To make it work
-the Windows way, you can use these mappings:
->  :vmap ^V ""x"*p
->  :nmap ^V "*p
->  :nmap ^K ^V
-[the ^V is a real CTRL-V, you have to type CTRL-V twice]
-The CTRL-K key can then be used for the Vim meaning of CTRL-V.
-Unfortunately, CTRL-C cannot be mapped.
+Since CTRL-C is used to copy the text to the clipboard, it can't be used to
+cancel an operation.  Use CTRL-Break for that.
 
-NOTE: The clipboard support still has a number of bugs.  See $VIM/todo.
+Since CTRL-V is used to paste, you can't use it to start a blockwise Visual
+selection.  You can use g<C-H><C-G> instead (g CTRL-H CTRL-G).  If that's too
+complicated for you, map CTRL-K to the old meaning of CTRL-V:
+>  :nnoremap <C-K> <C-V>
+
+NOTE: The clipboard support still has a number of bugs.  See |todo|.
 
 ==============================================================================
 4. Shell Commands					*gui-shell-win32*
@@ -226,27 +225,9 @@ console-based ones used by other versions.  There is no option to change this.
 
 
 6.2 File Browsers
-							*:browse* *:bro*
-:bro[wse] {command}	Open a file selection dialog for an argument to
-			{command}.  At present this works for ":e", ":w",
-			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
 
-The syntax is best shown via some examples:
->	:browse e $vim\foo
-		Open the browser in the $vim\foo directory, and edit the
-		file chosen.
->	:browse e
-		Open the browser in the directory of the current buffer,
-		and edit the file chosen.
->	:browse w
-		Open the browser in the directory of the current buffer,
-		with the current buffer filename as default, and save the
-		buffer under the filename chosen.
->	:browse w C:\bar
-		Open the browser in the C:\bar directory, with the current
-		buffer filename as default, and save the buffer under the
-		filename chosen.
-Also see the |'browsedir'| option.
+When prepending ":browse" before file editing commands, a file requester is
+used to allow you to select an existing file.  See |:browse|.
 
 
 6.3 Tearoff Menus

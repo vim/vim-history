@@ -569,18 +569,28 @@ edit(cmdchar, startln, count)
 		case K_S_DOWN:
 		case K_S_END:
 		case K_S_HOME:
-		    stuffcharReadbuff(Ctrl('O'));
-		    if (mod_mask)
-		    {
-			char_u	    buf[4];
+		    /* Start selection right away, the cursor can move with
+		     * CTRL-O when beyond the end of the line. */
+		    start_selection();
 
-			buf[0] = K_SPECIAL;
-			buf[1] = KS_MODIFIER;
-			buf[2] = mod_mask;
-			buf[3] = NUL;
-			stuffReadbuff(buf);
+		    /* Execute the key in (insert) Select mode, unless it's
+		     * shift-left and beyond the end of the line (the CTRL-O
+		     * will move the cursor left already). */
+		    stuffcharReadbuff(Ctrl('O'));
+		    if (c != K_S_LEFT || gchar_cursor() != NUL)
+		    {
+			if (mod_mask)
+			{
+			    char_u	    buf[4];
+
+			    buf[0] = K_SPECIAL;
+			    buf[1] = KS_MODIFIER;
+			    buf[2] = mod_mask;
+			    buf[3] = NUL;
+			    stuffReadbuff(buf);
+			}
+			stuffcharReadbuff(c);
 		    }
-		    stuffcharReadbuff(c);
 		    continue;
 	    }
 

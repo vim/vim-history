@@ -191,7 +191,7 @@ check_cursor_col()
 	curwin->w_cursor.col = 0;
     else if (curwin->w_cursor.col >= len)
     {
-	if (State & INSERT)
+	if (State & INSERT || restart_edit)
 	    curwin->w_cursor.col = len;
 	else
 	    curwin->w_cursor.col = len - 1;

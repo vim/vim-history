@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.2.  Last modification: 1998 Aug 22
+*options.txt*   For Vim version 5.3.  Last modification: 1998 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2845,7 +2845,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	suffixes from the list.  This avoids problems when a future version
 	uses another default.
 
-				*'swapfile'* *'swf'* *'noswapfile'* *'nowsf'*
+				*'swapfile'* *'swf'* *'noswapfile'* *'noswf'*
 'swapfile' 'swf'	boolean (default on)
 			local to buffer
 			{not in Vi}

@@ -331,6 +331,7 @@ static void check_keepend __ARGS((void));
 static void update_si_end __ARGS((struct state_item *sip, char_u *line, int startcol));
 static short *copy_id_list __ARGS((short *list));
 static int in_id_list __ARGS((short *cont_list, int id, int inclvl, int contained));
+static int syn_regexec __ARGS((vim_regexp *prog, char_u *string, int at_bol));
 static int push_current __ARGS((int idx));
 static void pop_current __ARGS((void));
 static char_u *find_endp __ARGS((int idx, char_u *sstart, int at_bol, char_u **hl_endp, int *flagsp, char_u **end_endp, int *end_idx));
@@ -828,7 +829,7 @@ syn_match_linecont(lnum)
     if (syn_buf->b_syn_linecont_prog != NULL)
     {
 	reg_ic = syn_buf->b_syn_linecont_ic;
-	return vim_regexec(syn_buf->b_syn_linecont_prog,
+	return syn_regexec(syn_buf->b_syn_linecont_prog,
 				      ml_get_buf(syn_buf, lnum, FALSE), TRUE);
     }
     return FALSE;
@@ -1365,7 +1366,7 @@ syn_current_attr(syncing, line)
 				lc_col = 0;
 
 			    reg_ic = spp->sp_ic;
-			    if (!vim_regexec(spp->sp_prog, line + lc_col,
+			    if (!syn_regexec(spp->sp_prog, line + lc_col,
 					     lc_col == 0))
 			    {
 				spp->sp_startcol = MAXCOL;
@@ -1950,7 +1951,7 @@ find_endp(idx, sstart, at_bol, hl_endp, flagsp, end_endp, end_idx)
 		break;
 
 	    reg_ic = spp->sp_ic;
-	    if (vim_regexec(spp->sp_prog, endp, (at_bol && endp == sstart)))
+	    if (syn_regexec(spp->sp_prog, endp, (at_bol && endp == sstart)))
 	    {
 		if (best_idx == -1 || spp->sp_prog->startp[0] < best_ptr)
 		{
@@ -1973,7 +1974,7 @@ find_endp(idx, sstart, at_bol, hl_endp, flagsp, end_endp, end_idx)
 	 */
 	if (	   spp_skip != NULL
 		&& (reg_ic = spp_skip->sp_ic,
-			vim_regexec(spp_skip->sp_prog, endp,
+			syn_regexec(spp_skip->sp_prog, endp,
 						  (at_bol && endp == sstart)))
 		&& spp_skip->sp_prog->startp[0] <= best_ptr)
 	{
@@ -4627,6 +4628,26 @@ syn_get_id(line, col, trans)
     return (trans ? current_trans_id : current_id);
 }
 #endif
+
+/*
+ * Call vim_regexec() with the current buffer set to syn_buf.  Makes
+ * vim_iswordc() work correctly.
+ */
+    static int
+syn_regexec(prog, string, at_bol)
+    vim_regexp	*prog;
+    char_u	*string;
+    int		at_bol;
+{
+    int		retval;
+    BUF		*save_curbuf;
+
+    save_curbuf = curbuf;
+    curbuf = syn_buf;
+    retval = vim_regexec(prog, string, at_bol);
+    curbuf = save_curbuf;
+    return retval;
+}
 
 #endif /* SYNTAX_HL */
 

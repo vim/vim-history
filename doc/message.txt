@@ -1,4 +1,4 @@
-*message.txt*     For Vim version 5.2.  Last modification: 1998 Aug 17
+*message.txt*     For Vim version 5.3.  Last modification: 1998 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -121,6 +121,15 @@ after the command you used.  Example
 >	:w
 changes to:
 >	:w!
+
+
+>  Recursive use of :normal too deep
+
+You are using a ":normal" command, whose argument again uses a ":normal"
+command in a recursive way.  This is restricted to 'maxmapdepth' levels.  This
+example illustrates how to get this message:
+>	:map gq :normal gq<CR>
+If you type "gq", it will execute this mapping, which will call "gq" again.
 
 
 >  Scripts nested too deep

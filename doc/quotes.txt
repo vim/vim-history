@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 5.2.  Last modification: 1998 Aug 23
+*quotes.txt*    For Vim version 5.3.  Last modification: 1998 Aug 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,9 +24,9 @@ I love and use VIM heavily too. (Larry Wall)
 
 Schon bei Nutzung eines Bruchteils der VIM-Funktionen wird der Benutzer recht
 schnell die Vorzuege dieses Editors kennen- und schaetzenlernen.
-Translated: Already by using a part of the VIM-functions will the user quickly
-learn and appreciate the advantages of this editor. (Garry Glendown,
-conclusion of an article on VIM in iX magazine 9/1998)
+Translated: Even when only using a fraction of VIM-functions, the user will
+quickly get used to and appreciate the advantages of this editor.  (Garry
+Glendown, conclusion of an article on VIM in iX magazine 9/1998)
 
 Boy, I thought I knew almost everything about VIM, but every time I browse the
 online documentation, I hit upon a minor but cool aspect of a VIM feature that

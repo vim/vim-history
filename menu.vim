@@ -79,20 +79,24 @@ if has("gui_win32")
 endif
 
 " Programming menu
-amenu 40.300 &IDE.&Make			:make<CR>
-amenu 40.310 &IDE.&List\ Errors		:cl<CR>
-amenu 40.320 &IDE.L&ist\ Messages	:cl!<CR>
-amenu 40.330 &IDE.&Next\ Error		:cn<CR>
-amenu 40.340 &IDE.&Previous\ Error	:cp<CR>
-amenu 40.350 &IDE.&Older\ List		:colder<CR>
-amenu 40.360 &IDE.N&ewer\ List		:cnewer<CR>
+amenu 40.300 &Tools.&Jump\ to\ this\ tag	g<C-]>
+vmenu 40.300 &Tools.&Jump\ to\ this\ tag	g<C-]>
+amenu 40.310 &Tools.Jump\ &back			<C-T>
+amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
+amenu 40.330 &Tools.&Make			:make<CR>
+amenu 40.340 &Tools.&List\ Errors		:cl<CR>
+amenu 40.350 &Tools.L&ist\ Messages		:cl!<CR>
+amenu 40.360 &Tools.&Next\ Error		:cn<CR>
+amenu 40.370 &Tools.&Previous\ Error		:cp<CR>
+amenu 40.380 &Tools.&Older\ List		:colder<CR>
+amenu 40.390 &Tools.N&ewer\ List		:cnewer<CR>
 
 " The popup menu
 amenu 1.10 PopUp.&Undo		u
 vmenu 1.20 PopUp.Cu&t		"*x
 vmenu 1.30 PopUp.&Copy		"*y
 nmenu 1.40 PopUp.&Paste		"*P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
-vmenu      PopUp.&Paste		""x"*P`]
+vmenu      PopUp.&Paste		"-x"*P`]
 imenu      PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>exe 'norm "*P'<Bar>endif<CR>`]a
 cmenu      PopUp.&Paste		<C-R>*
 vmenu 1.50 PopUp.&Delete	x
@@ -122,7 +126,7 @@ if has("win32")
   vmenu ToolBar.Copy		"*y
   tmenu ToolBar.Copy		Copy to clipboard
   nmenu ToolBar.Paste		i<C-R>*<Esc>
-  vmenu ToolBar.Paste		""xi<C-R>*<Esc>
+  vmenu ToolBar.Paste		"-xi<C-R>*<Esc>
   menu! ToolBar.Paste		<C-R>*
   tmenu ToolBar.Paste		Paste from Clipboard
 
