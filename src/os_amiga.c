@@ -56,7 +56,7 @@
 #undef	FALSE
 #define FALSE (0)
 
-#ifndef AZTEC_C
+#if !defined(AZTEC_C) && !defined(__AROS__)
 static long dos_packet __ARGS((struct MsgPort *, long, long));
 #endif
 static int lock2name __ARGS((BPTR lock, char_u *buf, long   len));
@@ -932,8 +932,12 @@ mch_exit(r)
 mch_settmode(tmode)
     int		tmode;
 {
+#ifdef __AROS__
+    if (!SetMode(raw_in, tmode == TMODE_RAW ? 1 : 0))
+#else
     if (dos_packet(MP(raw_in), (long)ACTION_SCREEN_MODE,
 					  tmode == TMODE_RAW ? -1L : 0L) == 0)
+#endif
 	mch_errmsg(_("cannot change console mode ?!\n"));
 }
 
@@ -988,8 +992,13 @@ mch_get_shellsize()
 	OUT_STR("\233t\233u");	/* CSI t CSI u */
     out_flush();
 
+#ifdef __AROS__
+    if (!Info(raw_out, id)
+		 || (wb_window = (struct Window *) id->id_VolumeNode) == NULL)
+#else
     if (dos_packet(MP(raw_out), (long)ACTION_DISK_INFO, ((ULONG) id) >> 2) == 0
 	    || (wb_window = (struct Window *)id->id_VolumeNode) == NULL)
+#endif
     {
 	/* it's not an amiga window, maybe aux device */
 	/* terminal type should be set */
@@ -1057,7 +1066,7 @@ out_num(n)
     OUT_STR_NF(tltoa((unsigned long)n));
 }
 
-#ifndef AZTEC_C
+#if !defined(AZTEC_C) && !defined(__AROS__)
 /*
  * Sendpacket.c
  *
@@ -1125,7 +1134,7 @@ dos_packet(pid, action, arg)
     return (res1);
 # endif
 }
-#endif
+#endif /* !defined(AZTEC_C) && !defined(__AROS__) */
 
 /*
  * Call shell.

@@ -494,8 +494,10 @@ SRC_AMI =	\
 		src.info \
 		src/INSTALLami.txt \
 		src/Make_agui.mak \
+		src/Make_aros.mak \
 		src/Make_dice.mak \
 		src/Make_manx.mak \
+		src/Make_morph.mak \
 		src/Make_sas.mak \
 		src/gui_amiga.c \
 		src/gui_amiga.h \
@@ -563,7 +565,6 @@ SRC_EXTRA =	\
 		$(SRC_VMS) \
 		README_os390.txt \
 		src/Make_mint.mak \
-		src/Make_morph.mak \
 		src/Make_ro.mak \
 		src/gui_beos.cc \
 		src/gui_beos.h \
