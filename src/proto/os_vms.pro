@@ -20,6 +20,7 @@ int mch_get_user_name __ARGS((char_u *s, int len));
 void mch_get_host_name __ARGS((char_u *s, int len));
 long mch_get_pid __ARGS((void));
 int mch_dirname __ARGS((char_u *buf, int len));
+int mch_dirname_vms __ARGS((char_u *buf, int len));
 int mch_FullName __ARGS((char_u *fname, char_u *buf, int len, int force));
 int mch_isFullName __ARGS((char_u *fname));
 long getperm __ARGS((char_u *name));

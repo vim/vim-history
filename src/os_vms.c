@@ -976,24 +976,39 @@ strerror(int err)
 #endif
 
 /*
- *	mch_dirname	Get name of current directory into buffer 'buf'
- *			of length 'len' bytes. Return OK for success,
- *			FAIL for failure.
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * Return OK for success, FAIL for failure.
  */
-
     int
 mch_dirname(char_u *buf, int len)
 {
     if (!getcwd((char *)buf, len))
     {
 	STRCPY(buf, strerror(errno));
-	return(FAIL);
+	return FAIL;
     }
     /* tranlate from VMS to UNIX format */
-    STRNCPY(buf,decc$translate_vms((char *)buf),len);
-    STRCAT(buf,"/");
-    return(OK);
+    STRNCPY(buf, decc$translate_vms((char *)buf), len);
+    STRCAT(buf, "/");
+    return OK;
 }
+
+/*
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * In VMS format
+ * Return OK for success, FAIL for failure.
+ */
+    int
+mch_dirname_vms(char_u *buf, int len)
+{
+    if (!getcwd((char *)buf, len))
+    {
+	STRCPY(buf, strerror(errno));
+	return FAIL;
+    }
+    return OK;
+}
+
 
 /*
  *	mch_FullName	get absolute filename into buffer 'buf' of

@@ -66,6 +66,17 @@ open_buffer(read_stdin)
 					&& (curbuf->b_flags & BF_NEVERLOADED))
 	curbuf->b_p_ro = TRUE;
 
+#ifdef VMS
+    if (curbuf->b_ffname != NULL)
+    {
+	char *ptr;
+
+	ptr = strrchr((char *)curbuf->b_ffname, ';');
+	if (ptr != NULL)
+	    *ptr = '\0';
+    }
+#endif
+
     if (ml_open() == FAIL)
     {
 	/*
