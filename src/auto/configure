@@ -4698,21 +4698,21 @@ for ac_hdr in stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
 	libgen.h util/debug.h util/msg18n.h frame.h \
-	sys/acl.h sys/access.h
+	sys/acl.h sys/access.h sys/sysctl.h sys/sysinfo.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:4682: checking for $ac_hdr" >&5
+echo "configure:4706: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4687 "configure"
+#line 4711 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4692: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4716: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -6249,9 +6249,97 @@ else
 fi
 rm -f conftest*
 
+echo $ac_n "checking for sysctl""... $ac_c" 1>&6
+echo "configure:6254: checking for sysctl" >&5
+cat > conftest.$ac_ext <<EOF
+#line 6256 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/sysctl.h>
+int main() {
+	int mib[2], r;
+	size_t len;
+
+	mib[0] = CTL_HW;
+	mib[1] = HW_USERMEM;
+	len = sizeof(r);
+	(void)sysctl(mib, 2, &r, &len, (void *)0, (size_t)0);
+	
+; return 0; }
+EOF
+if { (eval echo configure:6271: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define HAVE_SYSCTL 1
+EOF
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""not usable" 1>&6
+fi
+rm -f conftest*
+
+echo $ac_n "checking for sysinfo""... $ac_c" 1>&6
+echo "configure:6286: checking for sysinfo" >&5
+cat > conftest.$ac_ext <<EOF
+#line 6288 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/sysinfo.h>
+int main() {
+	struct sysinfo sinfo;
+	int t;
+
+	(void)sysinfo(&sinfo);
+	t = sinfo.totalram;
+	
+; return 0; }
+EOF
+if { (eval echo configure:6301: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define HAVE_SYSINFO 1
+EOF
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""not usable" 1>&6
+fi
+rm -f conftest*
+
+echo $ac_n "checking for sysconf""... $ac_c" 1>&6
+echo "configure:6316: checking for sysconf" >&5
+cat > conftest.$ac_ext <<EOF
+#line 6318 "configure"
+#include "confdefs.h"
+#include <unistd.h>
+int main() {
+	(void)sysconf(_SC_PAGESIZE);
+	(void)sysconf(_SC_PHYS_PAGES);
+	
+; return 0; }
+EOF
+if { (eval echo configure:6327: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; cat >> confdefs.h <<\EOF
+#define HAVE_SYSCONF 1
+EOF
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""not usable" 1>&6
+fi
+rm -f conftest*
+
 
 echo $ac_n "checking size of int""... $ac_c" 1>&6
-echo "configure:6195: checking size of int" >&5
+echo "configure:6343: checking size of int" >&5
 if eval "test \"`echo '$''{'ac_cv_sizeof_int'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
