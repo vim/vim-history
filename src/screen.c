@@ -67,6 +67,7 @@ static char_u *current_LinePointer;
 
 static void win_update __ARGS((WIN *wp));
 static int win_line __ARGS((WIN *, linenr_t, int, int));
+static int char_needs_redraw __ARGS((char_u *screenp_from, char_u *screenp_to, int len));
 #ifdef RIGHTLEFT
 static void screen_line __ARGS((int row, int endcol, int clear_rest, int rlflag));
 #define SCREEN_LINE(r, e, c, rl)    screen_line((r), (e), (c), (rl))
@@ -1875,6 +1876,33 @@ win_line(wp, lnum, startrow, endrow)
 }
 
 /*
+ * Check whether the given character needs redrawing:
+ * - the (first byte of the) character is different
+ * - the attributes are different
+ * - the character is multi-byte and the next byte is different
+ */
+    static int
+char_needs_redraw(screenp_from, screenp_to, len)
+    char_u *screenp_from;
+    char_u *screenp_to;
+    int len;
+{
+    if (len > 0
+	    && ((*screenp_from != *screenp_to
+		    || *(screenp_from + Columns) != *(screenp_to + Columns))
+
+#ifdef MULTI_BYTE
+		|| (is_dbcs
+		    && len > 1
+		    && *(screenp_from + 1) != *(screenp_to + 1)
+		    && IsLeadByte(*screenp_from))
+#endif
+	       ))
+	return TRUE;
+    return FALSE;
+}
+
+/*
  * Move one "cooked" screen line to the screen, but only the characters that
  * have actually changed.  Handle insert/delete character.
  * 'endcol' gives the columns where valid characters are.
@@ -1899,11 +1927,16 @@ screen_line(row, endcol, clear_rest
     char_u	    *screenp_from;
     char_u	    *screenp_to;
     int		    col = 0;
+    int		    hl;
     int		    force = FALSE;	/* force update rest of the line */
+    int		    redraw_this;	/* bool: does character need redraw? */
+    int		    redraw_next;	/* redraw_this for next character */
 #ifdef MULTI_BYTE
     int		    char_bytes;		/* 1 : if normal char */
 					/* 2 : if DBCS char */
-    int		    need_update;	/* bool variable */
+# define CHAR_BYTES char_bytes
+#else
+# define CHAR_BYTES 1
 #endif
 
     screenp_from = current_LinePointer;
@@ -1926,50 +1959,41 @@ screen_line(row, endcol, clear_rest
 	col = endcol + 1;
 	screenp_to = LinePointers[row] + col;
 	screenp_from += col;
-    }
 
-    while (rlflag ? (col < Columns) : (col < endcol))
-#else
+	endcol = Columns;
+    }
+#endif /* RIGHTLEFT */
+
+    redraw_next = char_needs_redraw(screenp_from, screenp_to, endcol - col);
+
     while (col < endcol)
-#endif
     {
 #ifdef MULTI_BYTE
-	if (is_dbcs && IsLeadByte(*screenp_from) && (col + 1 < endcol))
-	{
+	if (is_dbcs && (col + 1 < endcol) && IsLeadByte(*screenp_from))
 	    char_bytes = 2;
-	    if ( force
-		    || *screenp_from != *screenp_to
-		    || *(screenp_from + 1) != *(screenp_to + 1)
-		    || *(screenp_from + Columns) != *(screenp_to + Columns)
-		)
-		need_update = TRUE;
-	    else
-		need_update = FALSE;
-	}
 	else
-	{
 	    char_bytes = 1;
-	    if ( force
-		    || *screenp_from != *screenp_to
-		    || *(screenp_from + Columns) != *(screenp_to + Columns)
-		)
-		need_update = TRUE;
-	    else
-		need_update = FALSE;
+#endif
+
+	redraw_this = redraw_next;
+	redraw_next = force || char_needs_redraw(screenp_from + CHAR_BYTES,
+			  screenp_to + CHAR_BYTES, endcol - col - CHAR_BYTES);
+
+#ifdef USE_GUI
+	/* If the next character was bold, then redraw the current character to
+	 * remove any pixels that might have spilt over into us.  This only
+	 * happens in the GUI.
+	 */
+	if (redraw_next && gui.in_use)
+	{
+	    hl = *(screenp_to + CHAR_BYTES + Columns);
+	    if (hl > HL_ALL || (hl & HL_BOLD))
+		redraw_this = TRUE;
 	}
 #endif
 
-	if (
-#if defined(MULTI_BYTE)
-		need_update
-#else
-		   force
-		|| *screenp_from != *screenp_to
-		|| *(screenp_from + Columns) != *(screenp_to + Columns)
-#endif
-	   )
+	if (redraw_this)
 	{
-
 	    /*
 	     * Special handling when 'xs' termcap flag set (hpterm):
 	     * Attributes for characters are stored at the position where the
@@ -1997,6 +2021,7 @@ screen_line(row, endcol, clear_rest
 		out_str(T_CE);		/* clear rest of this screen line */
 		screen_start();		/* don't know where cursor is now */
 		force = TRUE;		/* force redraw of rest of the line */
+		redraw_next = TRUE;	/* or else next char would miss out */
 
 		/*
 		 * If the previous character was highlighted, need to stop
@@ -2014,14 +2039,21 @@ screen_line(row, endcol, clear_rest
 #ifdef MULTI_BYTE
 	    if (is_dbcs)
 	    {
-		/* The trick to make a force update */
-		if (!IsLeadByte(*screenp_from) && IsLeadByte(*screenp_to))
-		    *(screenp_to + 1) = 0;
-		else if ((char_bytes == 2)
-			&& mb_isbyte1(LinePointers[row], col + 1))
+		if (char_bytes == 1 && col + 1 < endcol
+			&& IsLeadByte(*screenp_to))
 		{
+		    /* When: !DBCS(*screenp_from) && DBCS(*screenp_to) */
 		    *(screenp_to + 1) = 0;
+		    redraw_next = TRUE;
+		}
+		else if (char_bytes == 2 && col + 2 < endcol
+			&& !IsLeadByte(*screenp_to)
+			&& IsLeadByte(*(screenp_to + 1)))
+		{
+		    /* When: DBCS(*screenp_from) && DBCS(*screenp_to+1) */
+		    /* *(screenp_to + 1) = 0; redundant code */
 		    *(screenp_to + 2) = 0;
+		    redraw_next = TRUE;
 		}
 	    }
 #endif
@@ -2049,21 +2081,15 @@ screen_line(row, endcol, clear_rest
 # endif
 		    )
 	    {
-		int		n;
-
-		n = *(screenp_to + Columns);
-# ifdef MULTI_BYTE
-		if (col + char_bytes < Columns && (n > HL_ALL || (n & HL_BOLD)))
-		    *(screenp_to + char_bytes) = 0;
-# else
-		if (col + 1 < Columns && (n > HL_ALL || (n & HL_BOLD)))
-		    *(screenp_to + 1) = 0;
-# endif
+		hl = *(screenp_to + Columns);
+		if (hl > HL_ALL || (hl & HL_BOLD))
+		    redraw_next = TRUE;
 	    }
 #endif
 	    *(screenp_to + Columns) = *(screenp_from + Columns);
 #ifdef MULTI_BYTE
-	    if (char_bytes == 2)    /* just a hack */
+	    /* just a hack: It makes two bytes of DBCS have same attributes */
+	    if (char_bytes == 2)
 		*(screenp_to + Columns + 1) = *(screenp_from + Columns);
 	    screen_char_n(screenp_to, char_bytes, row, col);
 #else
@@ -2090,15 +2116,9 @@ screen_line(row, endcol, clear_rest
 	    }
 	}
 
-#ifdef MULTI_BYTE
-	screenp_to += char_bytes;
-	screenp_from += char_bytes;
-	col += char_bytes;
-#else
-	++screenp_to;
-	++screenp_from;
-	++col;
-#endif
+	screenp_to += CHAR_BYTES;
+	screenp_from += CHAR_BYTES;
+	col += CHAR_BYTES;
     }
 
     if (clear_rest
