@@ -867,6 +867,7 @@ gui_mch_browse(int saving,
 {
     GtkFileSelection *fs;	/* shortcut */
     char_u dirbuf[MAXPATHL];
+    char_u *p;
 
     if (!gui.filedlg)
     {
@@ -918,7 +919,13 @@ gui_mch_browse(int saving,
 
     if (gui.browse_fname == NULL)
 	return NULL;
-    return vim_strsave(gui.browse_fname);
+
+    /* shorten the file name if possible */
+    mch_dirname(dirbuf, MAXPATHL);
+    p = shorten_fname(gui.browse_fname, dirbuf);
+    if (p == NULL)
+	p = gui.browse_fname;
+    return vim_strsave(p);
 }
 
 #endif	/* FEAT_BROWSE */
