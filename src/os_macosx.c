@@ -13,7 +13,7 @@
  */
 
 #ifdef MACOS_X_UNIX
-# include "os_unix.c"
+# include "vim.h"
 #else
 # include "os_mac.c"
 # include <TextEncodingConverter.h>

@@ -147,19 +147,21 @@
 #endif
 #define HAVE_AVAIL_MEM
 
+#ifndef HAVE_CONFIG_H
 /* #define SYNC_DUP_CLOSE	   sync() a file with dup() and close() */
-#define HAVE_STRING_H
-#define HAVE_STRCSPN
-#define HAVE_MEMSET
-#define USE_TMPNAM		/* use tmpnam() instead of mktemp() */
-#define HAVE_FCNTL_H
-#define HAVE_QSORT
-#define HAVE_ST_MODE		/* have stat.st_mode */
+# define HAVE_STRING_H
+# define HAVE_STRCSPN
+# define HAVE_MEMSET
+# define USE_TMPNAM		/* use tmpnam() instead of mktemp() */
+# define HAVE_FCNTL_H
+# define HAVE_QSORT
+# define HAVE_ST_MODE		/* have stat.st_mode */
 
-#if defined(__DATE__) && defined(__TIME__)
-# define HAVE_DATE_TIME
+# if defined(__DATE__) && defined(__TIME__)
+#  define HAVE_DATE_TIME
+# endif
+# define HAVE_STRFTIME
 #endif
-#define HAVE_STRFTIME
 
 
 /*
@@ -333,26 +335,30 @@
 /**************/
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_remove(x) unlink((char *)(x))
-#if defined(__MRC__) || defined(__SC__)
-# define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
-# define mch_setenv(name, val, x) setenv((name), (val))
-#elif defined(__APPLE_CC__)
-# define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
+#ifndef mch_getenv
+# if defined(__MRC__) || defined(__SC__)
+#  define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
+#  define mch_setenv(name, val, x) setenv((name), (val))
+# elif defined(__APPLE_CC__)
+#  define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
 /*# define mch_setenv(name, val, x) setenv((name), (val)) */ /* Obsoleted by Dany on Oct 30, 2001 */
-# define mch_setenv(name, val, x) setenv(name, val, x)
-#else
- /* vim_getenv() is in pty.c */
-# define USE_VIMPTY_GETENV
-# define mch_getenv(x) vimpty_getenv(x)
-# define mch_setenv(name, val, x) setenv(name, val, x)
+#  define mch_setenv(name, val, x) setenv(name, val, x)
+# else
+  /* vim_getenv() is in pty.c */
+#  define USE_VIMPTY_GETENV
+#  define mch_getenv(x) vimpty_getenv(x)
+#  define mch_setenv(name, val, x) setenv(name, val, x)
+# endif
 #endif
 
-#ifdef __APPLE_CC__
+#ifndef HAVE_CONFIG_H
+# ifdef __APPLE_CC__
 /* Assuming compiling for MacOS X */
 /* Trying to take advantage of the prebinding */
-# define HAVE_TGETENT
-# define OSPEED_EXTERN
-# define UP_BC_PC_EXTERN
+#  define HAVE_TGETENT
+#  define OSPEED_EXTERN
+#  define UP_BC_PC_EXTERN
+# endif
 #endif
 
 /* Some "prep work" definition to be able to compile the MacOS X
@@ -361,25 +367,27 @@
  */
 
 #ifdef MACOS_X_UNIX
-# define RETSIGTYPE void
-# define SIGRETURN  return
 # define SIGPROTOARG	(int)
 # define SIGDEFARG(s)	(s) int s;
 # define SIGDUMMYARG	0
-/*# define USE_SYSTEM */  /* Output ship do debugger :(, but ot compile */
-# define HAVE_SYS_WAIT_H 1 /* Attempt */
-# define HAVE_TERMIOS_H 1
-# define SYS_SELECT_WITH_SYS_TIME 1
-# define HAVE_SELECT 1
-# define HAVE_SYS_SELECT_H 1
 # undef  HAVE_AVAIL_MEM
-# define HAVE_PUTENV
-# define HAVE_SETENV
-# define HAVE_RENAME
+# ifndef HAVE_CONFIG_H
+#  define RETSIGTYPE void
+#  define SIGRETURN  return
+/*# define USE_SYSTEM */  /* Output ship do debugger :(, but ot compile */
+#  define HAVE_SYS_WAIT_H 1 /* Attempt */
+#  define HAVE_TERMIOS_H 1
+#  define SYS_SELECT_WITH_SYS_TIME 1
+#  define HAVE_SELECT 1
+#  define HAVE_SYS_SELECT_H 1
+#  define HAVE_PUTENV
+#  define HAVE_SETENV
+#  define HAVE_RENAME
+# endif
 # define mch_chdir(s) chdir(s)
 #endif
 
-#ifdef MACOS_X
+#if defined(MACOS_X) && !defined(HAVE_CONFIG_H)
 # define HAVE_PUTENV
 #endif
 

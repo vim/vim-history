@@ -63,8 +63,10 @@
 #  define MACOS_CLASSIC
 #endif
 #if defined(MACOS_X_UNIX)
-#  define MACOS_X
+# define MACOS_X
+# ifndef HAVE_CONFIG_H
 #  define UNIX
+# endif
 #endif
 #if defined(MACOS_X) || defined(MACOS_CLASSIC)
 #  define MACOS
@@ -187,7 +189,8 @@
 # define __ARGS(x)  x
 #endif
 
-#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) && !defined(MACOS_X)
+#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) \
+	&& (!defined(MACOS_X) || defined(HAVE_CONFIG_H))
 # include "os_unix.h"	    /* bring lots of system header files */
 #endif
 

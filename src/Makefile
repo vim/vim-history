@@ -1010,9 +1010,13 @@ LINKIT = @echo >/dev/null
 #GUI_LIBS_DIR	= $(NONE_LIBS_DIR)
 #GUI_LIBS1	= $(NONE_LIBS1)
 #GUI_LIBS2	= $(NONE_LIBS2)
+#GUI_INSTALL    = $(NONE_INSTALL)
 #GUI_TARGETS	= $(NONE_TARGETS)
 #GUI_MAN_TARGETS= $(NONE_MAN_TARGETS)
 #GUI_TESTTARGET = $(NONE_TESTTARGET)
+
+# Without a GUI install the normal way.
+NONE_INSTALL = install_normal
 
 ### GTK GUI
 GTK_SRC		= gui.c gui_gtk.c gui_gtk_x11.c pty.c gui_gtk_f.c \
@@ -1025,6 +1029,7 @@ GTK_IPATH	= $(GUI_INC_LOC)
 GTK_LIBS_DIR	= $(GUI_LIB_LOC)
 GTK_LIBS1	=
 GTK_LIBS2	= $(GTK_LIBNAME)
+GTK_INSTALL     = install_normal
 GTK_TARGETS	= installglinks
 GTK_MAN_TARGETS = installghelplinks
 GTK_TESTTARGET = gui
@@ -1038,6 +1043,7 @@ MOTIF_IPATH	= $(GUI_INC_LOC)
 MOTIF_LIBS_DIR	= $(GUI_LIB_LOC)
 MOTIF_LIBS1	=
 MOTIF_LIBS2	= $(MOTIF_LIBNAME) -lXt
+MOTIF_INSTALL   = install_normal
 MOTIF_TARGETS	= installglinks
 MOTIF_MAN_TARGETS = installghelplinks
 MOTIF_TESTTARGET = gui
@@ -1066,7 +1072,8 @@ ATHENA_IPATH	= $(GUI_INC_LOC)
 ATHENA_LIBS_DIR = $(GUI_LIB_LOC)
 ATHENA_LIBS1	= $(XAW_LIB)
 ATHENA_LIBS2	= -lXt
-ATHENA_TARGETS	=  installglinks
+ATHENA_INSTALL  = install_normal
+ATHENA_TARGETS	= installglinks
 ATHENA_MAN_TARGETS = installghelplinks
 ATHENA_TESTTARGET = gui
 
@@ -1082,6 +1089,7 @@ NEXTAW_IPATH	= $(GUI_INC_LOC)
 NEXTAW_LIBS_DIR = $(GUI_LIB_LOC)
 NEXTAW_LIBS1	= $(NEXTAW_LIB)
 NEXTAW_LIBS2	= -lXt
+NEXTAW_INSTALL  =  install_normal
 NEXTAW_TARGETS	=  installglinks
 NEXTAW_MAN_TARGETS = installghelplinks
 NEXTAW_TESTTARGET = gui
@@ -1105,6 +1113,7 @@ BEOSGUI_IPATH	=
 BEOSGUI_LIBS_DIR =
 BEOSGUI_LIBS1	= -lbe -lroot
 BEOSGUI_LIBS2	=
+BEOSGUI_INSTALL = install_normal
 BEOSGUI_TARGETS	= installglinks
 BEOSGUI_MAN_TARGETS = installghelplinks
 BEOSGUI_TESTTARGET = gui
@@ -1117,9 +1126,25 @@ PHOTONGUI_IPATH	=
 PHOTONGUI_LIBS_DIR =
 PHOTONGUI_LIBS1	= -lph -lphexlib
 PHOTONGUI_LIBS2	=
+PHOTONGUI_INSTALL = install_normal
 PHOTONGUI_TARGETS = installglinks
 PHOTONGUI_MAN_TARGETS = installghelplinks
 PHOTONGUI_TESTTARGET = gui
+
+# CARBON GUI
+CARBONGUI_SRC	=  gui.c gui_mac.c
+CARBONGUI_OBJ	=  objects/gui.o objects/gui_mac.o objects/pty.o
+CARBONGUI_DEFS	=  -arch ppc -fno-common -fpascal-strings \
+                  -Wall -Wno-unknown-pragmas \
+                  -mdynamic-no-pic -pipe
+CARBONGUI_IPATH	= -I. -Iproto -I/Developer/Headers/FlatCarbon
+CARBONGUI_LIBS_DIR =
+CARBONGUI_LIBS1	= -framework Carbon
+CARBONGUI_LIBS2	= -ltermcap
+CARBONGUI_INSTALL = gui_mac.rsrc install_macosx
+CARBONGUI_TARGETS =
+CARBONGUI_MAN_TARGETS =
+CARBONGUI_TESTTARGET =
 
 # All GUI files
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
@@ -1573,7 +1598,9 @@ testclean:
 # If you want to keep an older version, rename it before running "make
 # install".
 #
-install: installvim installtools install-languages install-icons
+install: $(GUI_INSTALL)
+
+install_normal: installvim installtools install-languages install-icons
 
 installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor
 
@@ -2135,6 +2162,9 @@ objects/gui_x11.o: gui_x11.c
 objects/gui_photon.o: gui_photon.c
 	$(CCC) -o $@ gui_photon.c
 
+objects/gui_mac.o: gui_mac.c
+	$(CCC) -o $@ gui_mac.c
+
 objects/hangulin.o: hangulin.c
 	$(CCC) -o $@ hangulin.c
 
@@ -2210,6 +2240,9 @@ objects/os_beos.o: os_beos.c
 objects/os_qnx.o: os_qnx.c
 	$(CCC) -o $@ os_qnx.c
 
+objects/os_macosx.o: os_macosx.c
+	$(CCC) -o $@ os_macosx.c
+
 objects/os_unix.o: os_unix.c
 	$(CCC) -o $@ os_unix.c
 
@@ -2269,6 +2302,92 @@ objects/netbeans.o: netbeans.c
 
 Makefile:
 	@echo The name of the makefile MUST be "Makefile" (with capital M)!!!!
+
+###############################################################################
+### MacOS X installation
+###
+### This creates a runnable Vim.app in the src directory
+###
+### TODO: install the runtime files in Vim.app instead of
+### requiring that they be in a seperate directory.
+
+REZ    = /Developer/Tools/Rez
+RESMRG = /Developer/Tools/ResMerger
+APPDIR = $(VIMNAME).app
+RESDIR = $(APPDIR)/Contents/Resources
+# FIXME: i'm sure someone else can do something clever with grep
+# sed and version.h here
+VERSION = 6.2
+
+### Common flags
+M4FLAGS += -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) -DAPP_VER=$(VERSION) \
+	   -DICON_APP=$(ICON_APP)
+
+### Icons
+# You can download Douglas Stebila's icons:
+#	http://homepage.mac.com/dstebila/code/vim/
+# TODO: Honestly, why don't we just go ahead and do this? OS 9?
+# If you place those *.icns at src directory, it will be detected by this
+# Makefile automatically, and used for Vim.
+ICON_APP = $(shell if [ -e app.icns ] ; then echo app.icns ; else echo gui_mac.icns ; fi)
+ICON_DOC = $(shell if [ -e doc.icns ] ; then echo doc.icns ; else echo ; fi)
+ICON_DOCTXT = $(shell if [ -e doc-txt.icns ] ; then echo doc-txt.icns ; else echo ; fi)
+ICONS = $(addprefix $(RESDIR)/, $(ICON_APP) $(ICON_DOC) $(ICON_DOCTXT))
+
+install_macosx: bundle-dir bundle-executable bundle-info bundle-resource \
+	bundle-language
+
+bundle-dir: $(APPDIR)/Contents
+	cp -R ../runtime $(APPDIR)
+
+bundle-executable: $(VIMTARGET)
+	cp $(VIMTARGET) $(APPDIR)/Contents/MacOS/$(VIMTARGET)
+
+bundle-info:  bundle-dir
+	@echo "Creating PkgInfo"
+	@echo -n "APPLVIM!" > $(APPDIR)/Contents/PkgInfo
+	@echo "Creating Info.plist"
+	m4 $(M4FLAGS) infplist.xml > $(APPDIR)/Contents/Info.plist
+
+bundle-resource: bundle-dir bundle-icons bundle-rsrc
+
+bundle-icons: $(ICONS)
+
+### Classic resources
+# Resource fork (in the form of a .rsrc file) for Classic Vim (Mac OS 9)
+# This file is also required for OS X Vim.
+bundle-rsrc: gui_mac.rsrc
+	@echo "Creating resource fork"
+	$(RESMRG) gui_mac.rsrc -dstIs DF -o $(RESDIR)/$(VIMNAME).rsrc
+
+gui_mac.rsrc:
+	open os_mac.rsr.hqx
+	sleep 1
+	@echo
+	@echo "--------------------"
+	@echo "If this fails, run make install again after StuffIt Expander quits."
+	@echo "--------------------"
+	@echo
+
+# po/Make_osx.pl says something about generating a Mac message file
+# for Ukrananian.  Would somebody using Mac OS X in Ukranian
+# *really* be upset that Carbon Vim was not localised in
+# Ukranian?
+#
+#bundle-language: bundle-dir po/Make_osx.pl
+#	cd po && perl Make_osx.pl --outdir ../$(RESDIR) $(MULTILANG)
+bundle-language: bundle-dir
+
+$(APPDIR)/Contents:
+	mkdir $(APPDIR)
+	mkdir $(APPDIR)/Contents
+	mkdir $(APPDIR)/Contents/MacOS
+	mkdir $(RESDIR)
+	mkdir $(RESDIR)/English.lproj
+
+$(RESDIR)/%.icns: %.icns
+	cp $< $@
+
 
 ###############################################################################
 ### (automatically generated by 'make depend')
