@@ -4737,6 +4737,15 @@ find_help_tags(arg, num_matches, matches)
 					       && *arg == '/' && s == arg + 1)
 		*d++ = '\\';
 
+	    /* "CTRL-\_" -> "CTRL-\\_" to avoid the special meaning of "\_" in
+	     * "CTRL-\_CTRL-N" */
+	    if (STRNICMP(s, "CTRL-\\_", 7) == 0)
+	    {
+		STRCPY(d, "CTRL-\\\\");
+		d += 7;
+		s += 6;
+	    }
+
 	    *d++ = *s;
 
 	    /*
