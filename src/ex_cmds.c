@@ -5248,12 +5248,13 @@ ex_sign(eap)
 		    arg = skipwhite(p);
 		    if (*arg == NUL)
 			break;
-		    p = skiptowhite(arg);
+		    p = skiptowhite_esc(arg);
 		    if (STRNCMP(arg, "icon=", 5) == 0)
 		    {
 			arg += 5;
 			vim_free(sp->sn_icon);
 			sp->sn_icon = vim_strnsave(arg, (int)(p - arg));
+			backslash_halve(sp->sn_icon);
 #ifdef FEAT_SIGN_ICONS
 			if (gui.in_use)
 			{
