@@ -222,7 +222,7 @@ do_window(nchar, Prenum, xchar)
 /* cursor to previous window with wrap around */
     case 'W':
 		CHECK_CMDWIN
-		if (lastwin == firstwin)	/* just one window */
+		if (lastwin == firstwin && Prenum != 1)	/* just one window */
 		    beep_flush();
 		else
 		{
