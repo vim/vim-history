@@ -4077,12 +4077,12 @@ msgid "cannot yank; delete anyway"
 msgstr "pomimo tego, ¿e nie mogê przekopiowaæ kasujê"
 
 #: ops.c:2018
-msgid "1 line ~ed"
+msgid "1 line changed"
 msgstr "1 wiersz ~ed"
 
 #: ops.c:2020
 #, c-format
-msgid "%ld lines ~ed"
+msgid "%ld lines changed"
 msgstr "%ld wierszy ~ed"
 
 #: ops.c:2366
@@ -6314,9 +6314,6 @@ msgstr "E81: Stosowanie <SID> poza kontekstem skryptu"
 
 #~ msgid "1 line to indent... "
 #~ msgstr "jeden wiersz do wciêcia... "
-
-#~ msgid "%ld line ~ed"
-#~ msgstr "%ld wiersz ~ed"
 
 #~ msgid "WARNING: Intel \"architecture\" detected!"
 #~ msgstr "OSTRZE¯ENIE: Wykryto \"architekturê\" Intel!"

@@ -12,8 +12,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: vim 6.0\n"
-"POT-Creation-Date: 2001-09-17 11:11+0200\n"
-"PO-Revision-Date:  2001-09-17 22:22+0200\n"
+"POT-Creation-Date: 2001-09-29 15:28+0200\n"
+"PO-Revision-Date:  2001-10-29 22:22+0200\n"
 "Last-Translator:   Antonio Colombo <antonio.colombo@jrc.it>\n"
 "Language-Team:     Italian <antonio.colombo@jrc.it>\n"
 "MIME-Version: 1.0\n"
@@ -220,17 +220,17 @@ msgstr ""
 msgid "Signs for %s:"
 msgstr "Segni per %s:"
 
-#: buffer.c:4401
+#: buffer.c:4409
 #, c-format
 msgid "    line=%ld  id=%d  name=%s"
-msgstr "    linea=%ld id=%d, nome=%d"
+msgstr "    linea=%ld id=%d, nome=%s"
 
 #: diff.c:133
 #, c-format
 msgid "E96: Can not diff more than %ld buffers"
-msgstr "E96: Non riesco a trovare differenze fra più di %ld buffer"
+msgstr "E96: Non supporto differenze fra più di %ld buffer"
 
-#: diff.c:641
+#: diff.c:648
 msgid "E97: Cannot create diffs"
 msgstr "E97: Non riesco a creare differenze "
 
@@ -2065,17 +2065,17 @@ msgstr ""
 "Vim: (ec1) Non riesco ad allocare elemento di colormap, possibili colori "
 "errati"
 
-#: gui_x11.c:1987
+#: gui_x11.c:1992
 #, c-format
 msgid "E250: Fonts for the following charsets are missing in fontset %s:"
-msgstr "E250: Mancano Font per i seguenti set di caratteri:"
+msgstr "E250: Mancano descrizioni per i seguenti caratteri nel font: %s"
 
-#: gui_x11.c:2030
+#: gui_x11.c:2035
 #, c-format
 msgid "E252: Fontset name: %s"
-msgstr "E252: Nome del fontset: %s"
+msgstr "E252: Nome fontset: %s"
 
-#: gui_x11.c:2031
+#: gui_x11.c:2036
 #, c-format
 msgid "Font '%s' is not fixed-width"
 msgstr "Il font '%s' non di larghezza fissa"
@@ -3114,12 +3114,11 @@ msgid "--help\t\tShow Gnome arguments"
 msgstr "--help\t\tVisualizza argomenti Gnome"
 
 #. Failed to send, abort.
-#: main.c:2561
-#, fuzzy
+#: main.c:2566
 msgid ""
 "\n"
 "Send failed.\n"
-msgstr  ""
+msgstr ""
 "\n"
 "Invio fallito.\n"
 
@@ -4095,12 +4094,12 @@ msgid "cannot yank; delete anyway"
 msgstr "non riesco a salvare in un registro; cancello comunque"
 
 #: ops.c:2018
-msgid "1 line ~ed"
+msgid "1 line changed"
 msgstr "1 linea ~a"
 
 #: ops.c:2020
 #, c-format
-msgid "%ld lines ~ed"
+msgid "%ld lines changed"
 msgstr "%ld linee ~e"
 
 #: ops.c:2381
@@ -4454,17 +4453,17 @@ msgstr "E364: Chiamata a libreria fallita per \"%s()\""
 msgid "E237: Printer selection failed"
 msgstr "E237: Scelta stampante non riuscita"
 
-#: os_mswin.c:1381
+#: os_mswin.c:1388
 #, c-format
 msgid "to %s on %s"
-msgstr "a %d su %s"
+msgstr "a %s su %s"
 
-#: os_mswin.c:1442 os_mswin.c:1452
+#: os_mswin.c:1449 os_mswin.c:1459
 #, c-format
 msgid "E238: Print error: %s"
-msgstr "E238: Errore in stampa: %s"
+msgstr "E238: Errore durante stampa: %s"
 
-#: os_mswin.c:1452
+#: os_mswin.c:1460
 msgid "Unknown"
 msgstr "Sconosciuto"
 
@@ -5242,7 +5241,7 @@ msgid "E437: terminal capability \"cm\" required"
 msgstr "E437: capacità \"cm\" del terminale necessaria"
 
 #. Highlight title
-#: term.c:4872
+#: term.c:4878
 msgid ""
 "\n"
 "--- Terminal keys ---"

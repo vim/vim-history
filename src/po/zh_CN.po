@@ -4053,12 +4053,12 @@ msgid "cannot yank; delete anyway"
 msgstr "不能复制; 直接删除"
 
 #: ops.c:2018
-msgid "1 line ~ed"
+msgid "1 line changed"
 msgstr " 1 行 ~ed"
 
 #: ops.c:2020
 #, c-format
-msgid "%ld lines ~ed"
+msgid "%ld lines changed"
 msgstr " %ld 行 ~ed"
 
 #: ops.c:2381

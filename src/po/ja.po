@@ -4,13 +4,13 @@
 # Do ":help credits" in Vim to see a list of people who contributed.
 #
 # Muraoka Taro <koron@tka.att.ne.jp>, 2001.
-# Last Change: 17-Sep-2001.
+# Last Change: 26-Oct-2001.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim 6.0\n"
 "POT-Creation-Date: 2001-09-17 09:41+0900\n"
-"PO-Revision-Date: 2001-09-17 10:00+0900\n"
+"PO-Revision-Date: 2001-10-26 19:00+0900\n"
 "Last-Translator: Muraoka Taro <koron@tka.att.ne.jp>\n"
 "Language-Team: Muraoka Taro <koron@tka.att.ne.jp>\n"
 "MIME-Version: 1.0\n"
@@ -628,7 +628,7 @@ msgstr "E136: viminfo: エラーが多いので, ファイルの残りをスキップします"
 #: ex_cmds.c:1282
 #, c-format
 msgid "Reading viminfo file \"%s\"%s%s%s"
-msgstr "viminfoファイル \"%s\"%s%s を読み込み中 "
+msgstr "viminfoファイル \"%s\"%s%s%s を読み込み中 "
 
 #: ex_cmds.c:1283
 msgid " info"
@@ -2051,7 +2051,7 @@ msgstr "Vim: (ec1) 色指定が正しくないのでエントリを割り当てられません"
 #: gui_x11.c:1987
 #, c-format
 msgid "E250: Fonts for the following charsets are missing in fontset %s:"
-msgstr "E250: 以下の文字セットのフォントがありません"
+msgstr "E250: 以下の文字セットのフォントがありません %s:"
 
 #: gui_x11.c:2030
 #, c-format
@@ -4068,12 +4068,12 @@ msgid "cannot yank; delete anyway"
 msgstr "ヤンクできません; とにかく消去"
 
 #: ops.c:2018
-msgid "1 line ~ed"
+msgid "1 line changed"
 msgstr "1 行を ~ で処理しました"
 
 #: ops.c:2020
 #, c-format
-msgid "%ld lines ~ed"
+msgid "%ld lines changed"
 msgstr "%ld 行を ~ で処理しました"
 
 #: ops.c:2381

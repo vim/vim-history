@@ -10,8 +10,9 @@ msgstr ""
 "Project-Id-Version: Vim(Français)\n"
 "POT-Creation-Date: 2001-05-21 17:00+0200\n"
 "PO-Revision-Date: Sun, 25 Mar 2001 05:22:44 +0200\n"
+"Language-Team: DindinX <odin@mandrakesoft.com>\n"
 "Last-Translator: DindinX <odin@mandrakesoft.com>\n"
-"Language-Team: MIME-Version: 1.0\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO_8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
 
@@ -846,7 +847,7 @@ msgstr "E158 : Nom de tampon d'édition invalide : %s"
 #: ex_cmds.c:5299
 #, c-format
 msgid "E157: Invalid sign ID: %ld"
-msgstr "E157 : ID de signature invalide : %s"
+msgstr "E157 : ID de signature invalide : %ld"
 
 #: ex_cmds.c:5470
 msgid "[Deleted]"
@@ -3904,12 +3905,12 @@ msgid "cannot yank; delete anyway"
 msgstr "impossible de copier ; efffacé tout de même"
 
 #: ops.c:1923
-msgid "1 line ~ed"
+msgid "1 line changed"
 msgstr "1 ligne ~"
 
 #: ops.c:1925
 #, c-format
-msgid "%ld lines ~ed"
+msgid "%ld lines changed"
 msgstr "%ld lignes ~"
 
 #: ops.c:2265
