@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0am.  Last change: 2001 Jul 01
+*version6.txt*  For Vim version 6.0an.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -349,6 +349,9 @@ Use the unnamed register instead.
 MSDOS: A pattern "*.*" previously also matched a file name without a dot.
 This was inconsistent with other versions.
 
+CTRL-\ CTRL-N in Normal mode avoids going back to Insert mode after using
+CTRL-O.
+
 ==============================================================================
 NEW FEATURES
 
@@ -455,7 +458,8 @@ Added diff mode |diff-mode|
 - Added the DiffAdd, DiffChange, DiffDelete and DiffText highlight groups to
   specify the highlighting for differences.  The defaults are ugly...
 - Unix: make a vimdiff symbolic link for "make install".
-- Added ":diffget" and "diffput" to remove differences.
+- Added ":diffget" and ":diffput" to remove differences.
+- Removed the now obsolte "vimdiff.vim" script from the distribution.
 
 
 evim: click-and-type					*new-evim*
@@ -637,6 +641,7 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
   Added 'imcmdline' option: When set the input method is always enabled when
   starting to edit a command line.  Useful for a XIM that uses dead keys to
   type accented characters.
+  Added 'imactivatekey' option to better control XIM.  (Muraoka Taro)
 - When typing a mapping that's not finished yet, display the last character
   under the cursor in Insert mode and Command-line mode.  Looks good for dead
   characters.
@@ -686,6 +691,7 @@ Multi-language support					*new-multi-lang*
 - Added NLS support for Win32 with the MingW compiler. (Eduardo Fernandez)
 - Made it possible to have vimtutor use different languages.  Spanish and
   Italian translations are included. (Eduardo Fernandez)
+  Added Japanese translation of the vimtutor. (Yasuhiro Matsumoto)
 - When available, call bind_textdomain_codeset() to have gettext() translate
   messages to 'encoding'.  This requires GNU gettext 0.10.36.
 - Added gettext support for Win32.  This means messages will be translated
@@ -859,8 +865,7 @@ Printing						*new-printing*
 --------
 
 Included first implementation of the ":hardcopy" command for printing
-to paper.  Works for Win32 and Win16. (Vince Negri, vipin aravind)
-Print on other systems by producing PostScript. (Vince Negri)
+to paper.  Works for MS-Windows only. (Vince Negri, vipin aravind)
 
 Made ":hardcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
 Matsumoto)
@@ -1165,6 +1170,8 @@ Ex commands: ~
 
 :compiler	Load a Vim script to do settings for a specific compiler.
 
+:z#		List numbered lines. (Bohdan Vlasyuk)
+
 
 New marks: ~
 
@@ -1261,6 +1268,9 @@ New Syntax files: ~
 	catalog.vim (Johannes Zellner)
 	DSSSL syntax (Johannes Zellner)
 	tidy (Doug Kearns)
+	specman (Or Freund)
+	PL/M (Philippe Coulonges)
+	BDF font (Nikolai Weibull)
 
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
@@ -1302,8 +1312,15 @@ Added runtime/macros/less.vim: Vim script to simulate less, but with syntax
 highlighting.
 
 MS-Windows install program: (Jon Merz)
-- The Win32 program can now create shortcuts.
+- The Win32 program can now create shortcuts on the desktop and install Vim in
+  the Start menu.
 - Possibly remove old "Edit with Vim" entries.
+- The Vim executable is never moved or $PATH changed.  A small batch file is
+  created in a directory in $PATH.  Less choices to be made.
+
+Improved the MS-Windows uninstal program.  It now also deletes the entries in
+the Start menu, icons from the desktop and the created batch files. (Jon Merz)
+Also made it possible to delete only some of these.
 
 Generate a self-installing Vim package for MS-Windows.  This uses NSIS. (Jon
 Merz)
@@ -1331,10 +1348,6 @@ matching one is used.  Especially useful for ":lmap" and 'keymap'.
 
 Encryption: Ask the key to be typed twice when crypting the first time.
 Otherwise a typo might cause the text to be lost forever. (Chase Tingley)
-
-The DOS/Windows install program has been enhanced.  The Vim executable is
-never moved or $PATH changed.  A small batch file is created in a directory in
-$PATH.  Less choices to be made.
 
 The window title now has "VIM" on the end.  The file name comes first, useful
 in the taskbar.  A "+" is added when the file is modified.  "=" is added for
@@ -1487,6 +1500,7 @@ Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
 
 Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
+Recognize a few more xterm keys: <C-Right>, <C-Left>, <C-End>, <C-Home>
 
 Also trigger the BufUnload event when Vim is going to exit.  Perhaps some
 cleaning up is required.
@@ -1594,6 +1608,8 @@ Cscope: (kahn)
 - cscope_connection() function.
 - ":cscope kill -1" kills all cscope connections.
 - Added the 'cscopepathcomp' option. (Scott Hauck)
+- Added ":scscope" command, split window and execute Cscope command. (Jason
+  Duell)
 
 exists() can also be used to check for Ex commands and defined autocommands.
 
@@ -1613,6 +1629,7 @@ Macintosh: (Dany St-Amant)
 - Runtime command now handle / in file name (MacOS 9 version)
 - Added winpos support.
 - Also accept tags files in DOS format. (Axel Kielhorn)
+- Support using "~" for home directory.
 
 Options:
 - When using set += or ^= , check for strings used twice.  Duplicates are
@@ -1697,6 +1714,7 @@ match with words from 'cinkeys' or 'indentkeys'.
 
 Added "j1" argument in 'cinoptions': indent {} inside () for Java. (Johannes
 Zellner)
+Added the "l" flag in 'cinoptions'. (Anduin Withers)
 
 When doing ":wall" or ":wqall" and a modified buffer doesn't have a name,
 mention its buffer number in the error message.
@@ -1835,7 +1853,8 @@ Motif: (Martin Dalecki)
 - Added find and find/replace dialogs.
 - For the menus, change "iso-8859" to "iso_8859", Linux appears to need this.
 - Added icon to dialogs, like for GTK.
-- Use XPM bitmaps for the icon when possible.
+- Use XPM bitmaps for the icon when possible.  Use the Solaris XpmP.h include
+  file when it's available.
 - Change the shadow of the toolbar items to get a visual feedback of it being
   pressed on non-LessTiff.
 - Use gadgets instead of windows for some items for speed.
@@ -1852,8 +1871,14 @@ key is used.
 used.
 
 ":ls" and ":buffers" output shows modified/readonly/modifiable flag.  When a
-buffer is loaded, show "l" instead of nothing.  When a buffer isn't loaded
+buffer is active show "a" instead of nothing.  When a buffer isn't loaded
 show nothing instead of "-".
+
+Unix install:
+- When installing the tools, set absolute paths in tools scripts efm_perl.pl
+  and mve.awk.  Avoids that the user has to edit these files.
+- Install Icons for KDE when the directories exist and the icons do not exist
+  yet.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1863,8 +1888,9 @@ easy to see which files are not edited by hand.  The files generated by
 configure are now in the "src/auto" directory.  For Unix, compiled object
 files go in the objects directory.
 
-The source archive was over the 1.4M floppy limit.  Now also provide bzip2
-compressed versions of the sources and runtime archives.
+The source archive was over the 1.4M floppy limit.  The archives are now split
+up into two runtime and two source archives.  Also provide a bzip2 compressed
+archive that contains all the sources and runtime files.
 
 Added "reconfig" as a target for make.  Useful when changing some of the
 arguments that require flushing the cache, such as switching from GTK to
@@ -1933,6 +1959,9 @@ Updated the Borland C version 5 Makefile: (Dan Sharp)
 - Added python and tcl builds
 - Added dynamic perl and dynamic python builds
 - Added uninstal.exe build
+
+Win32: Merged Make_gvc.mak and Make_ovc.mak into one file: Make_ivc.mak.  It's
+much smaller, many unecessary text has been removed. (Walter Briscoe)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2632,8 +2661,13 @@ Python interface: The definition of _DEBUG could cause trouble, undefine it.
 The error message for not being able to load the shared library wasn't
 translated.  (Muraoka Taro)
 
-A few fixes for the Mac port. (Axel Kielhorn)
-Mac: Vim was eating 80% of the CPU time. (Dany St-Amant)
+Mac: (Dany St-Amant and Axel Kielhorn)
+- Several fixes.
+- Vim was eating 80% of the CPU time.
+- The project os_mac.pbxproj didn't work,  Moved it to a subdirectory.
+- Made the menu priority work for the menubar.
+- Fixed a problem with dragging the scrollbar.
+- Cleaned up the various #ifdefs.
 
 Unix: When catching a deadly signal and we keep getting one use _exit() to
 exit in a quick and dirty way.
@@ -2794,5 +2828,41 @@ an offset for the highlighting.
 
 Syntax highlighting: When synchronizing on C-comments, //*/ was seen as the
 start of a comment.
+
+Win32: Without scrollbars present, the MS mouse scroll wheel didn't work.
+Also handle the scrollbars when they are not visible.
+
+Motif: When there is no right scrollbar, the bottom scrollbar would still
+leave room for it.  (Martin Dalecki)
+
+When changing 'guicursor' and the value is invalid, some of the effects would
+still take place.  Now first check for errors and only make the new value
+effective when it's OK.
+
+Using "A" In Visual block mode, appending to lines that don't extend into the
+block, padding was wrong.
+
+When pasting a block of text, a character that occupies more than one screen
+column could be deleted and spaces inserted instead.  Now only do that with a
+tab.
+
+Fixed conversion of documentation to HTML using Perl. (Dan Sharp)
+
+Give an error message when a menu name starts with a dot.
+
+Avoid a hang when executing a shell from the GUI on HP-UX by pushing "ptem"
+even when sys/ptem.h isn't present.
+
+When creating the temp directory, make sure umask is 077, otherwise the
+directory is not accessible when it was set to 0177.
+
+Unix: When resizing the window and a redraw is a bit slow, could get a window
+resize event while redrawing, resulting in a messed up window.  Any input
+(e.g., a mouse click) would redraw.
+
+The "%B" item in the status line became zero in Insert mode (that's normal)
+for another than the current window.
+
+The menu entries to convert to xxd and back didn't work in Insert mode.
 
  vim:tw=78:

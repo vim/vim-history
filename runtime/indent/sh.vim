@@ -1,7 +1,7 @@
-" Vim indent file
-" Language:	Shell script
-" Maintainer:	Nikolai Weibull <da.box@home.se>
-" Last Change:	2001 Jun 20
+"  File        : sh.vim
+"  Maintainer  : Nikolai 'pcp' Weibull <da.box@home.se>
+"  Revised on  : Mon, 02 Jul 2001 18:21:42 +0200
+"  Language    : Shell Script
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -10,7 +10,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetShIndent()
-setlocal indentkeys+==else,=elif,=esac,=fi,=done indentkeys-=0#
+setlocal indentkeys+==else,=elif,=esac,=fi,=fin,=done indentkeys-=0#
 
 " Only define the function once.
 if exists("*GetShIndent")
@@ -27,23 +27,26 @@ function GetShIndent()
   endif
 
   " Add a 'shiftwidth' after if, while, else, case, until, for, function()
+  " Skip if the line also contains the closure for the above
   let ind = indent(lnum)
   let line = getline(lnum)
   if line =~ '^\s*\(if\|else\|elif\|case\|while\|until\|for\)\>'
       \ || line =~ '^\s*\<\h\w*\>\s*()\s*{'
       \ || line =~ '^\s*{'
-    if line !~ '\(esac\|fi\|done\)\>\s*$' && line !~ '}\s*$'
-      let ind = ind + &sw
-    endif
+	if line !~ '\(esac\|fi\|done\)\>\s*$' && line !~ '}\s*$'
+	  let ind = ind + &sw
+	endif
   endif
 
   " Subtract a 'shiftwidth' on a else, esac, fi, done
+  " Retain the indentation level if line matches fin (for find)
   let line = getline(v:lnum)
-  if line =~ '^\s*\(else\|esac\|fi\|done\)\>' || line =~ '^\s*}'
+  if (line =~ '^\s*\(else\|esac\|fi\|done\)\>' || line =~ '^\s*}')
+		\ && line !~ '^\s*fin\>'
     let ind = ind - &sw
   endif
 
   return ind
 endfunction
 
-" vim: set sw=2 :
+"  vim: set sw=4 sts=4:

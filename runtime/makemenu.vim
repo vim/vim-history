@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 28
+" Last Change:	2001 Jul 11
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -80,6 +80,7 @@ SynMenu AB.Ayacc:ayacc
 SynMenu AB.B:b
 SynMenu AB.BASIC:basic
 SynMenu AB.BC\ calculator:bc
+SynMenu AB.BDF\ font:bdf
 SynMenu AB.BibFile:bib
 SynMenu AB.BIND\ configuration:named
 SynMenu AB.BIND\ zone:bindzone
@@ -232,6 +233,7 @@ SynMenu PQ.PHP\ 3-4:php
 SynMenu PQ.Phtml:phtml
 SynMenu PQ.Pike:pike
 SynMenu PQ.Pine\ RC:pine
+SynMenu PQ.PL/M:plm
 SynMenu PQ.PL/SQL:plsql
 SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
@@ -289,6 +291,7 @@ SynMenu Sh-S.SNNS.SNNS\ result:snnsres
 SynMenu Sh-S.Snobol4:snobol4
 SynMenu Sh-S.Snort\ Configuration:hog
 SynMenu Sh-S.SPEC\ (Linux\ RPM):spec
+SynMenu Sh-S.Specman:specman
 SynMenu Sh-S.Spice:spice
 SynMenu Sh-S.Speedup:spup
 SynMenu Sh-S.Squid:squid

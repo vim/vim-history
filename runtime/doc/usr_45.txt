@@ -1,4 +1,4 @@
-*usr_45.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
+*usr_45.txt*	For Vim version 6.0an.  Last change: 2001 Jul 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -80,7 +80,7 @@ programmer.  You must know both English and the language you are translating
 to, of course.
    When you are satisfied with the translation, consider making it available
 to others.  Upload it at vim-online (http://vim.sf.net) or e-mail it to
-Bram@vim.org.  Or both.
+the Vim maintainer <maintainer@vim.org>.  Or both.
 
 ==============================================================================
 *45.2*	Language for Menus

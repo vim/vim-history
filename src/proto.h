@@ -54,7 +54,7 @@
 # ifdef __BEOS__
 #  include "os_beos.pro"
 # endif
-# if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
+# ifdef MACOS
 #  include "os_mac.pro"
 # endif
 # ifdef RISCOS
@@ -66,7 +66,7 @@
 
 # include "buffer.pro"
 # include "charset.pro"
-# ifdef UNIX
+# ifdef FEAT_CSCOPE
 #  include "if_cscope.pro"
 # endif
 # include "diff.pro"

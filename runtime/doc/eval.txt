@@ -1,10 +1,12 @@
-*eval.txt*      For Vim version 6.0am.  Last change: 2001 Jun 27
+*eval.txt*      For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 Expression evaluation			*expression* *expr* *E15* *eval*
+
+Using expressions is introduced in chapter 41 of the user manual |usr_41.txt|.
 
 Note: Expression evaluation can be disabled at compile time.  If this has been
 done, the features in this document are not available.  See |+eval| and the

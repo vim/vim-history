@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2001 Jun 20
+" Last Change:	2001 Jul 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -26,8 +26,8 @@ syn match makePreCondit "!\s*\(cmdswitches\>\|error\>\|message\>\|include\>\|if\
 syn case match
 
 " identifiers
-syn region makeIdent	start="\$(" skip="\\)" end=")" contains=makeStatement,makeIdent
-syn region makeIdent	start="\${" skip="\\}" end="}" contains=makeStatement,makeIdent
+syn region makeIdent	start="\$(" skip="\\)\|\\\\" end=")" contains=makeStatement,makeIdent
+syn region makeIdent	start="\${" skip="\\}\|\\\\" end="}" contains=makeStatement,makeIdent
 syn match makeIdent	"\$\$\w*"
 syn match makeIdent	"\$[^({]"
 syn match makeIdent	"^\s*\a\w*\s*[:+?!*]="me=e-2

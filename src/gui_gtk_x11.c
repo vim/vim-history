@@ -10,18 +10,10 @@
 /*
  * Porting to GTK+ was done by:
  *
- * (C) 1998,1999 by Marcin Dalecki <dalecki@cs.net.pl>
- * with GREAT support and continuous encouragements by Andy Kahn and of
+ * (C) 1998,1999,2000 by Marcin Dalecki <dalecki@evision.ag>
+ *
+ * With GREAT support and continuous encouragements by Andy Kahn and of
  * course Bram Moolenaar!
- *
- *	"I'm a one-man software company. If you have anything UNIX, net or
- *	embedded systems related, which seems to cause some serious trouble for
- *	your's in-house developers, maybe we need to talk badly with each other
- *	:-) <dalecki@cs.net.pl> (My native language is polish and I speak
- *	native grade german too. I'm living in Göttingen.de.)
- *	--mdcki"
- *
- * This code requires GTK version 1.1.16 or later.
  */
 
 #include "vim.h"
@@ -2755,7 +2747,7 @@ gui_mch_get_color(char_u * name)
 	    char *current;
 
 	    current = setlocale(LC_ALL, NULL);
-	    if (current)
+	    if (current != NULL)
 	    {
 		char *saved;
 
@@ -2892,7 +2884,16 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
     {
 	text = (XChar2b *)s;
 	textlen = len;
-	width = len;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    width = 0;
+	    for (p = s; p < s + len; p += (*mb_ptr2len_check)(p))
+		width += (*mb_ptr2cells)(p);
+	}
+	else
+#endif
+	    width = len;
     }
 
     if (!(flags & DRAW_TRANSP))
@@ -2942,7 +2943,7 @@ gui_mch_haskey(char_u * name)
     return FAIL;
 }
 
-#if defined(FEAT_TITLE) || defined(PROTO)
+#if defined(FEAT_TITLE) || defined(FEAT_XIM) || defined(PROTO)
 /*
  * Return the text window-id and display.  Only required for X-based GUI's
  */

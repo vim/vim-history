@@ -58,19 +58,18 @@
 
 TARGETOS = BOTH
 
-# select one of four object code directories, depends on GUI and DEBUG
+# Select one of eight object code directories, depends on GUI, OLE and DEBUG.
+# If you change something else, do "make clean" first!
 !ifdef GUI
-!ifdef DEBUG
-OBJDIR = .\ObjGD
-!else
 OBJDIR = .\ObjG
-!endif
-!else
-!ifdef DEBUG
-OBJDIR = .\ObjCD
 !else
 OBJDIR = .\ObjC
 !endif
+!ifdef OLE
+OBJDIR = $(OBJDIR)O
+!endif
+!ifdef DEBUG
+OBJDIR = $(OBJDIR)d
 !endif
 
 # ntwin32.mak requires that CPU be set appropriately
@@ -438,7 +437,7 @@ install.exe: dosinst.c
 	ren dosinst.exe install.exe
 
 uninstal.exe: uninstal.c
-	$(CC) /nologo -DNDEBUG -DWIN32 uninstal.c advapi32.lib
+	$(CC) /nologo -DNDEBUG -DWIN32 uninstal.c shell32.lib advapi32.lib
 
 vimrun.exe: vimrun.c
 	$(CC) /nologo -DNDEBUG vimrun.c
@@ -483,50 +482,53 @@ test:
 
 ###########################################################################
 
+# Create a default rule for transforming .c files to .obj files in $(OUTDIR)
+# Batch compilation is supported by nmake 1.62 (part of VS 5.0) and later)
+!IF $(_NMAKE_VER)0 < 1620
+.c{$(OUTDIR)/}.obj:
+!ELSE
+.c{$(OUTDIR)/}.obj::
+!ENDIF
+	$(CC) $(CFLAGS) /Fo$(OUTDIR)/ $(PDB) $<
+
+# Create a default rule for transforming .cpp files to .obj files in $(OUTDIR)
+# Batch compilation is supported by nmake 1.62 (part of VS 5.0) and later)
+!IF $(_NMAKE_VER)0 < 1620
+.cpp{$(OUTDIR)/}.obj:
+!ELSE
+.cpp{$(OUTDIR)/}.obj::
+!ENDIF
+	$(CC) $(CFLAGS) /Fo$(OUTDIR)/ $(PDB) $<
+
 $(OUTDIR)/buffer.obj:	$(OUTDIR) buffer.c  $(INCL)
-	$(CC) $(CFLAGS) buffer.c /Fo$(OUTDIR)/buffer.obj $(PDB)
 
 $(OUTDIR)/charset.obj:	$(OUTDIR) charset.c  $(INCL)
-	$(CC) $(CFLAGS) charset.c /Fo$(OUTDIR)/charset.obj $(PDB)
 
 $(OUTDIR)/diff.obj:	$(OUTDIR) diff.c  $(INCL)
-	$(CC) $(CFLAGS) diff.c /Fo$(OUTDIR)/diff.obj $(PDB)
 
 $(OUTDIR)/digraph.obj:	$(OUTDIR) digraph.c  $(INCL)
-	$(CC) $(CFLAGS) digraph.c /Fo$(OUTDIR)/digraph.obj $(PDB)
 
 $(OUTDIR)/edit.obj:	$(OUTDIR) edit.c  $(INCL)
-	$(CC) $(CFLAGS) edit.c /Fo$(OUTDIR)/edit.obj $(PDB)
 
 $(OUTDIR)/eval.obj:	$(OUTDIR) eval.c  $(INCL)
-	$(CC) $(CFLAGS) eval.c /Fo$(OUTDIR)/eval.obj $(PDB)
 
 $(OUTDIR)/ex_cmds.obj:	$(OUTDIR) ex_cmds.c  $(INCL)
-	$(CC) $(CFLAGS) ex_cmds.c /Fo$(OUTDIR)/ex_cmds.obj $(PDB)
 
 $(OUTDIR)/ex_cmds2.obj:	$(OUTDIR) ex_cmds2.c  $(INCL)
-	$(CC) $(CFLAGS) ex_cmds2.c /Fo$(OUTDIR)/ex_cmds2.obj $(PDB)
 
 $(OUTDIR)/ex_docmd.obj:	$(OUTDIR) ex_docmd.c  $(INCL) ex_cmds.h
-	$(CC) $(CFLAGS) ex_docmd.c /Fo$(OUTDIR)/ex_docmd.obj $(PDB)
 
 $(OUTDIR)/ex_getln.obj:	$(OUTDIR) ex_getln.c  $(INCL)
-	$(CC) $(CFLAGS) ex_getln.c /Fo$(OUTDIR)/ex_getln.obj $(PDB)
 
 $(OUTDIR)/fileio.obj:	$(OUTDIR) fileio.c  $(INCL)
-	$(CC) $(CFLAGS) fileio.c /Fo$(OUTDIR)/fileio.obj $(PDB)
 
 $(OUTDIR)/fold.obj:	$(OUTDIR) fold.c  $(INCL)
-	$(CC) $(CFLAGS) fold.c /Fo$(OUTDIR)/fold.obj $(PDB)
 
 $(OUTDIR)/getchar.obj:	$(OUTDIR) getchar.c  $(INCL)
-	$(CC) $(CFLAGS) getchar.c /Fo$(OUTDIR)/getchar.obj $(PDB)
 
 $(OUTDIR)/gui.obj:	$(OUTDIR) gui.c  $(INCL) $(GUI_INCL)
-	$(CC) $(CFLAGS) gui.c /Fo$(OUTDIR)/gui.obj $(PDB)
 
 $(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c gui_w48.c $(INCL) $(GUI_INCL)
-	$(CC) $(CFLAGS) gui_w32.c /Fo$(OUTDIR)/gui_w32.obj $(PDB)
 
 if_perl.c : if_perl.xs typemap
 	$(PERL_EXE) $(XSUBPP) -prototypes -typemap $(XSUBPP_TYPEMAP) -typemap typemap if_perl.xs > if_perl.c
@@ -541,7 +543,6 @@ $(OUTDIR)/if_python.obj: $(OUTDIR) if_python.c  $(INCL)
 	$(CC) $(CFLAGS) $(PYTHON_INC) if_python.c /Fo$(OUTDIR)/if_python.obj $(PDB)
 
 $(OUTDIR)/if_ole.obj: $(OUTDIR) if_ole.cpp  $(INCL) if_ole.h
-	$(CC) $(CFLAGS) if_ole.cpp /Fo$(OUTDIR)/if_ole.obj $(PDB)
 
 $(OUTDIR)/if_ruby.obj: $(OUTDIR) if_ruby.c  $(INCL)
 	$(CC) $(CFLAGS) $(RUBY_INC) if_ruby.c /Fo$(OUTDIR)/if_ruby.obj $(PDB)
@@ -553,88 +554,61 @@ $(OUTDIR)/if_tcl.obj: $(OUTDIR) if_tcl.c  $(INCL)
 	$(CC) $(CFLAGS) $(TCL_INC) if_tcl.c /Fo$(OUTDIR)/if_tcl.obj $(PDB)
 
 $(OUTDIR)/main.obj:	$(OUTDIR) main.c  $(INCL)
-	$(CC) $(CFLAGS) main.c /Fo$(OUTDIR)/main.obj $(PDB)
 
 $(OUTDIR)/mark.obj:	$(OUTDIR) mark.c  $(INCL)
-	$(CC) $(CFLAGS) mark.c /Fo$(OUTDIR)/mark.obj $(PDB)
 
 $(OUTDIR)/memfile.obj:	$(OUTDIR) memfile.c  $(INCL)
-	$(CC) $(CFLAGS) memfile.c /Fo$(OUTDIR)/memfile.obj $(PDB)
 
 $(OUTDIR)/memline.obj:	$(OUTDIR) memline.c  $(INCL)
-	$(CC) $(CFLAGS) memline.c /Fo$(OUTDIR)/memline.obj $(PDB)
 
 $(OUTDIR)/menu.obj:	$(OUTDIR) menu.c  $(INCL)
-	$(CC) $(CFLAGS) menu.c /Fo$(OUTDIR)/menu.obj $(PDB)
 
 $(OUTDIR)/message.obj:	$(OUTDIR) message.c  $(INCL)
-	$(CC) $(CFLAGS) message.c /Fo$(OUTDIR)/message.obj $(PDB)
 
 $(OUTDIR)/misc1.obj:	$(OUTDIR) misc1.c  $(INCL)
-	$(CC) $(CFLAGS) misc1.c /Fo$(OUTDIR)/misc1.obj $(PDB)
 
 $(OUTDIR)/misc2.obj:	$(OUTDIR) misc2.c  $(INCL)
-	$(CC) $(CFLAGS) misc2.c /Fo$(OUTDIR)/misc2.obj $(PDB)
 
 $(OUTDIR)/move.obj:	$(OUTDIR) move.c  $(INCL)
-	$(CC) $(CFLAGS) move.c /Fo$(OUTDIR)/move.obj $(PDB)
 
 $(OUTDIR)/mbyte.obj: $(OUTDIR) mbyte.c  $(INCL)
-	$(CC) $(CFLAGS) mbyte.c /Fo$(OUTDIR)/mbyte.obj $(PDB)
 
 $(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL)
-	$(CC) $(CFLAGS) normal.c /Fo$(OUTDIR)/normal.obj $(PDB)
 
 $(OUTDIR)/option.obj:	$(OUTDIR) option.c  $(INCL)
-	$(CC) $(CFLAGS) option.c /Fo$(OUTDIR)/option.obj $(PDB)
 
 $(OUTDIR)/ops.obj:	$(OUTDIR) ops.c  $(INCL)
-	$(CC) $(CFLAGS) ops.c /Fo$(OUTDIR)/ops.obj $(PDB)
 
 $(OUTDIR)/os_mswin.obj:	$(OUTDIR) os_mswin.c  $(INCL)
-	$(CC) $(CFLAGS) os_mswin.c /Fo$(OUTDIR)/os_mswin.obj $(PDB)
 
 $(OUTDIR)/os_win32.obj:	$(OUTDIR) os_win32.c  $(INCL) os_win32.h
-	$(CC) $(CFLAGS) os_win32.c /Fo$(OUTDIR)/os_win32.obj $(PDB)
 
 $(OUTDIR)/os_w32exe.obj:	$(OUTDIR) os_w32exe.c  $(INCL)
-	$(CC) $(CFLAGS) os_w32exe.c /Fo$(OUTDIR)/os_w32exe.obj $(PDB)
 
 $(OUTDIR)/pathdef.obj:	$(OUTDIR) auto/pathdef.c  $(INCL)
 	$(CC) $(CFLAGS) auto/pathdef.c /Fo$(OUTDIR)/pathdef.obj $(PDB)
 
 $(OUTDIR)/quickfix.obj:	$(OUTDIR) quickfix.c  $(INCL)
-	$(CC) $(CFLAGS) quickfix.c /Fo$(OUTDIR)/quickfix.obj $(PDB)
 
 $(OUTDIR)/regexp.obj:	$(OUTDIR) regexp.c  $(INCL)
-	$(CC) $(CFLAGS) regexp.c /Fo$(OUTDIR)/regexp.obj $(PDB)
 
 $(OUTDIR)/screen.obj:	$(OUTDIR) screen.c  $(INCL)
-	$(CC) $(CFLAGS) screen.c /Fo$(OUTDIR)/screen.obj $(PDB)
 
 $(OUTDIR)/search.obj:	$(OUTDIR) search.c  $(INCL)
-	$(CC) $(CFLAGS) search.c /Fo$(OUTDIR)/search.obj $(PDB)
 
 $(OUTDIR)/syntax.obj:	$(OUTDIR) syntax.c  $(INCL)
-	$(CC) $(CFLAGS) syntax.c /Fo$(OUTDIR)/syntax.obj $(PDB)
 
 $(OUTDIR)/tag.obj:	$(OUTDIR) tag.c  $(INCL)
-	$(CC) $(CFLAGS) tag.c /Fo$(OUTDIR)/tag.obj $(PDB)
 
 $(OUTDIR)/term.obj:	$(OUTDIR) term.c  $(INCL)
-	$(CC) $(CFLAGS) term.c /Fo$(OUTDIR)/term.obj $(PDB)
 
 $(OUTDIR)/ui.obj:	$(OUTDIR) ui.c  $(INCL)
-	$(CC) $(CFLAGS) ui.c /Fo$(OUTDIR)/ui.obj $(PDB)
 
 $(OUTDIR)/undo.obj:	$(OUTDIR) undo.c  $(INCL)
-	$(CC) $(CFLAGS) undo.c /Fo$(OUTDIR)/undo.obj $(PDB)
 
 $(OUTDIR)/version.obj: $(OUTDIR) version.c version.h
-	$(CC) $(CFLAGS) version.c /Fo$(OUTDIR)/version.obj $(PDB)
 
 $(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
-	$(CC) $(CFLAGS) window.c /Fo$(OUTDIR)/window.obj $(PDB)
 
 $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
 	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
@@ -646,10 +620,8 @@ dimm.h dimm_i.c: dimm.idl
 	midl /nologo /proxy nul dimm.idl
 
 $(OUTDIR)/dimm_i.obj: $(OUTDIR) dimm_i.c $(INCL)
-	$(CC) $(CFLAGS) dimm_i.c /Fo$(OUTDIR)/dimm_i.obj $(PDB)
 
 $(OUTDIR)/glbl_ime.obj:	$(OUTDIR) glbl_ime.cpp  dimm.h $(INCL)
-	$(CC) $(CFLAGS) glbl_ime.cpp /Fo$(OUTDIR)/glbl_ime.obj $(PDB)
 
 auto/pathdef.c: auto
 	@echo creating auto/pathdef.c

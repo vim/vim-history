@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Gtk+ theme files `gtkrc'
 " Maintainer: David Ne\v{c}as (Yeti), <yeti@physics.muni.cz>
-" Last Change: 2001-05-13
+" Last Change: 2001 Jul 09
 " URI: http://physics.muni.cz/~yeti/download/gtkrc.vim
 
 " Notes: Highlights [some] Gnome classes too.
@@ -132,6 +132,8 @@ if version >= 508 || !exists("did_gtkrc_syntax_inits")
   HiLink gtkrcBraceError     gtkrcError
   HiLink gtkrcBracketError   gtkrcError
   HiLink gtkrcError          Error
+
+  delcommand HiLink
 endif
 " }}}
 let b:current_syntax = "gtkrc"

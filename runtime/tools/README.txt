@@ -10,9 +10,6 @@ efm_filter.*:	Perl script to filter compiler messages to QuickFix format.
 efm_perl.pl:	Perl script to filter error messages from the Perl interpreter
 		for use with Vim quickfix mode.
 
-gvimdiff:	Shell script for side-by-side comparing files with
-		highlighting.  Requires sdiff, gvim and a wide screen.
-
 mve.*		Awk script to filter error messages to QuickFix format.
 
 pltags.pl:	Perl script to create a tags file from Perl scripts.

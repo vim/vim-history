@@ -1,13 +1,14 @@
-*filetype.txt*   For Vim version 6.0am.  Last change: 2001 Jun 03
+*filetype.txt*   For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Filetypes					*filetype* *file-type*
+Filetypes						*filetype* *file-type*
 
-1. Filetypes			|filetypes|
-2. Filetype plugin		|filetype-plugin|
+1. Filetypes					|filetypes|
+2. Filetype plugin				|filetype-plugin|
+3. Docs for the default filetype plugins.	|ftplugin-docs|
 
 Also see |autocmd.txt|.
 
@@ -304,8 +305,8 @@ ways to change this:
 	vim ~/.vim/after/ftplugin/fortran.vim
 <  In this file you can change just those settings that you want to change.
 
-
-Docs for the default filetype plugins.			*ftplugin-docs*
+==============================================================================
+3.  Docs for the default filetype plugins.		*ftplugin-docs*
 
 
 FORTRAN							*fortran-plugin*

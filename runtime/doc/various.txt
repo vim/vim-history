@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0am.  Last change: 2001 Jul 01
+*various.txt*   For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -109,6 +109,10 @@ g8			Print the hex values of the bytes used in the
 			Specifying no mark at all is the same as "+".
 			If the mark is "=", a line of dashes is printed
 			around the current line.
+
+:{range}z#[+-^.=]{count}				*:z#*
+			Like ":z", but number the lines.
+			{not in all versions of Vi, not with these arguments}
 
 							*:=*
 :=			Print the cursor line number.
@@ -275,7 +279,7 @@ m  *+ole*		Win32 GUI only: |ole-interface|
 			checking in automatic commands.  |autocmd-osfiletypes|
 N  *+path_extra*	Up/downwards search in 'path' and 'tags'
 m  *+perl*		Perl interface |perl|
-N  *+printer*		|:hardcopy|
+N  *+printer*		Win32 GUI only for now: |:hardcopy|
 m  *+python*		Python interface |python|
 N  *+quickfix*		|:make| and |quickfix| commands
 B  *+rightleft*		Right to left typing |'rightleft'|

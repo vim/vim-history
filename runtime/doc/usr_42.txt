@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
+*usr_42.txt*	For Vim version 6.0an.  Last change: 2001 Jul 11
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -14,7 +14,7 @@ accessible.  This is for mouse-happy users only.
 |42.3|	Various
 |42.4|	Toolbar and popup menus
 
-     Next chapter: |usr_43.txt|  Automatic settings
+     Next chapter: |usr_43.txt|  Using filetypes
  Previous chapter: |usr_41.txt|  Write a Vim script
 Table of contents: |usr_toc.txt|
 
@@ -152,12 +152,18 @@ like the variations on the ":map" command:
 	:cmenu		Command-line mode
 	:amenu		All modes
 
+To avoid that the commands of a menu item are being mapped, use the command
+":noremap", ":nnoremap", "anoremap", etc.
+
+
+USING :AMENU
+
 The ":amenu" command is a bit different.  It assumes that the {keys} you
 give are to be executed in Normal mode.  When Vim is in Visual or Insert mode
 when the menu is used, Vim first has to go back to Normal mode.  ":amenu"
 inserts the a CTRL-C or CTRL-O for you.  For example, if you use this command:
 >
-	:amenu  90.100 Mine.Find\ Word *
+	:amenu  90.100 Mine.Find\ Word  *
 
 Then the resulting menu commands will be:
 
@@ -170,9 +176,41 @@ Then the resulting menu commands will be:
 When in Command-line mode the CTRL-C will abandon the command typed so far.
 In Visual and Operator-pending mode CTRL-C will stop the mode.  The CTRL-O in
 Insert mode will execute the command and then return to Insert mode.
+   CTRL-O only works for one command.  If you need to use two or more
+commands, put them in a function and call that function.  Example: >
 
-To avoid that the commands of a menu item are being mapped, use the command
-":noremap", ":nnoremap", "anoremap", etc.
+	:amenu  Mine.Next\ File  :call <SID>NextFile()<CR>
+	:function <SID>NextFile()
+	:  next
+	:  1/^Code
+	:endfunction
+
+This menu entry goes to the next file in the argument list with ":next".  Then
+it searches for the line that starts with "Code".
+   The <SID> before the function name is the script ID.  This makes the
+function local to the current Vim script file.  This avoids problems when a
+function with the same name is defined in another script file.  See |<SID>|.
+
+
+SILENT MENUS
+
+The menu executes the {keys} as if you typed them.  For a ":" command this
+means you will see the command being echoed on the command line.  If it's a
+long command, the hit-Enter prompt will appear.  That can be very annoying!
+   To avoid this, make the menu silent.  This is done with the <silent>
+argument.  For example, take the call to NextFile() in the previous example.
+When you use this menu, you will see this on the command line:
+
+	:call <SNR>34_NextFile() ~
+
+To avoid this text on the command line, insert "<silent>" as the first
+argument: >
+
+	:amenu <silent> Mine.Next\ File :call <SID>NextFile()<CR>
+
+Don't use "<silent>" too often.  It is not needed for short commands.  If you
+make a menu for someone else, being able the see the executed command will
+give him a hint about what he could have typed, instead of using the mouse.
 
 
 LISTING MENUS
@@ -317,6 +355,6 @@ items like in the normal menus.
 
 ==============================================================================
 
-Next chapter: |usr_43.txt|  Automatic settings
+Next chapter: |usr_43.txt|  Using filetypes
 
 Copyright: see |manual-copyright|  vim:tw=78:

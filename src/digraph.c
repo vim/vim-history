@@ -390,7 +390,7 @@ digr_T	digraphdefault[] =
 	};
 
 #   else
-#    ifdef macintosh
+#    ifdef MACOS
 
 	/*
 	 * Macintosh digraphs
@@ -519,7 +519,7 @@ digr_T	digraphdefault[] =
 	{NUL, NUL, NUL}
 	};
 
-#    else	/* !macintosh */
+#    else	/* !MACOS */
 
 #     ifdef OLD_DIGRAPHS
 

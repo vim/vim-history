@@ -64,17 +64,17 @@ static csinfo_T	    csinfo[CSCOPE_MAX_CONNECTIONS];
 static cscmd_T	    cs_cmds[] =
 {
     { "add",	cs_add,
-		N_("Add a new database"),     "add file|dir [pre-path] [flags]" },
+		N_("Add a new database"),     "add file|dir [pre-path] [flags]", 0 },
     { "find",	cs_find,
-		N_("Query for a pattern"),    FIND_USAGE },
+		N_("Query for a pattern"),    FIND_USAGE, 1 },
     { "help",	cs_help,
-		N_("Show this message"),      "help" },
+		N_("Show this message"),      "help", 0 },
     { "kill",	cs_kill,
-		N_("Kill a connection"),      "kill #" },
+		N_("Kill a connection"),      "kill #", 0 },
     { "reset",	cs_reset,
-		N_("Reinit all connections"), "reset" },
+		N_("Reinit all connections"), "reset", 0 },
     { "show",	cs_show,
-		N_("Show connections"),       "show" },
+		N_("Show connections"),       "show", 0 },
     { NULL }
 };
 
@@ -100,12 +100,31 @@ do_cscope(eap)
     if ((cmdp = cs_lookup_cmd(eap)) == NULL)
     {
 	cs_help(eap);
+	postponed_split = 0;
+	return;
+    }
+
+    if (postponed_split && !cmdp->cansplit) {
+	(void)MSG_PUTS(_("This cscope command does not support splitting the window.\n"));
+	postponed_split = 0;
 	return;
     }
 
     cmdp->func(eap);
 } /* do_cscope */
 
+/*
+ * PUBLIC: do_scscope
+ *
+ * same as do_cscope, but splits window, too.
+ */
+    void
+do_scscope(eap)
+    exarg_T *eap;
+{
+    postponed_split = -1;
+    do_cscope(eap);
+} /* do_scscope */
 
 /*
  * PUBLIC: do_cstag

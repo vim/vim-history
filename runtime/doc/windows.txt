@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0am.  Last change: 2001 Jun 26
+*windows.txt*   For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9,6 +9,9 @@ Editing with multiple windows and buffers.		*windows* *buffers*
 The commands which have been added to use multiple windows and buffers are
 explained here.  Additionally, there are explanations for commands that work
 differently when used in combination with more than one window.
+
+The basics are explained in chapter 7 and 8 of the user manual |usr_07.txt|
+|usr_08.txt|.
 
 1.  Introduction				|windows-intro|
 2.  Starting Vim				|windows-starting|
@@ -58,9 +61,9 @@ In a table:
 
 state		displayed	loaded		":buffers"  ~
 		in window			shows	    ~
-active		  yes		 yes		  ' '
+active		  yes		 yes		  'a'
 hidden		  no		 yes		  'h'
-inactive	  no		 no		  '-'
+inactive	  no		 no		  ' '
 
 Note: All CTRL-W commands can also be executed with |:wincmd|, for those
 places where a Normal mode command can't be used or is inconvenient.
@@ -871,7 +874,7 @@ list of buffers. |unlisted-buffer|
 			   |unlisted-buffer|
 		 %	the buffer in the current window
 		 #	the alternate buffer for ":e #" and CTRL-^
-		  l	a buffer that is loaded (contains text)
+		  a	an active buffer: it is loaded and visible
 		  h	a hidden buffer: It is loaded, but currently not
 			   displayed in a window |hidden-buffer|
 		   -	a buffer with 'modifiable' off (may also be readonly)

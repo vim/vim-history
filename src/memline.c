@@ -261,7 +261,7 @@ ml_open()
 #if defined(MSDOS) && !defined(DJGPP)
     /* for 16 bit MS-DOS create a swapfile now, because we run out of
      * memory very quickly */
-    if (p_uc)
+    if (p_uc != 0)
 	ml_open_file(curbuf);
 #endif
 
@@ -375,14 +375,14 @@ ml_setname()
 	 * When 'updatecount' is 0 and 'noswapfile' there is no swap file.
 	 * For help files we will make a swap file now.
 	 */
-	if (p_uc)
+	if (p_uc != 0)
 	    ml_open_file(curbuf);	/* create a swap file */
 	return;
     }
 
-/*
- * Try all directories in the 'directory' option.
- */
+    /*
+     * Try all directories in the 'directory' option.
+     */
     dirp = p_dir;
     for (;;)
     {
@@ -488,6 +488,9 @@ ml_open_file(buf)
     {
 	if (*dirp == NUL)
 	    break;
+	/* There is a small chance that between chosing the swap file name and
+	 * creating it, another Vim creates the file.  In that case the
+	 * creation will fail and we will use another directory. */
 	fname = findswapname(buf, &dirp, NULL);	/* allocates fname */
 	if (fname == NULL)
 	    continue;
@@ -798,7 +801,8 @@ ml_recover()
 /*
  * open the memfile from the old swap file
  */
-    p = vim_strsave(fname);		/* save fname for the message */
+    p = vim_strsave(fname);		/* save fname for the message
+					   (mf_open() may free fname) */
     mfp = mf_open(fname, O_RDONLY);	/* consumes fname! */
     if (mfp == NULL || mfp->mf_fd < 0)
     {

@@ -10,8 +10,12 @@
  * lets set the OPAQUE_TOOLBOX_STRUCTS to 0 so we
  * can access the internal structures.
  * (Until fully Carbon compliant)
+ * TODO: Can we remove this? (Dany)
  */
-/* #define OPAQUE_TOOLBOX_STRUCTS 0 */
+#if 0
+# define OPAQUE_TOOLBOX_STRUCTS 0
+#endif
+
 /*
  * Macintosh machine-dependent things.
  */
@@ -28,9 +32,14 @@
 #include <Script.h>
 #endif
 
+/*
+ * Unix interface
+ */
 #if defined(__MWERKS__)/* Only for metrowerks and MacOSX Compilers */
 # include <unistd.h>
 # include <utsname.h>
+# include <stat.h>
+# include <unix.h>
 #endif
 #if defined(__APPLE_CC__)
 # include <unistd.h>
@@ -44,6 +53,10 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#ifdef MACOS_X
+# include <dirent.h>
+#endif
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
 # ifdef powerc
 #  pragma options align=power
@@ -57,13 +70,11 @@
 # ifdef powerc
 #  pragma options align=reset
 # endif
-#else
-# if !defined (__APPLE_CC__)
-#  include <stat.h>
-#  include <unix.h>
-# endif
 #endif
 
+/*
+ * Allow use of MacOS memory allocation subroutine
+ */
 #if 0	    /* this doesn't work, because realloc() isn't redefined */
 /*
  * Use Macintosh subroutine to alloc the memory.
@@ -74,30 +85,55 @@
 # define realloc() something
 #endif
 
+/*
+ * Incompatibility checks
+ */
+
+/* Got problem trying to use shared library in 68k */
+#if defined (__POWERPC__) && defined(FEAT_PYTHON)
+# undef FEAT_PYTHON
+# warning Auto-disabling Python. Not yet supported in 68k.
+#endif
+
+#if !defined (__POWERPC__) &&  !defined(__ppc__)
+# if !defined(__fourbyteints__) || !__option(enumsalwaysint)
+   ERROR: you must compile the projecct with 4-byte ints and enums always int
+# endif
+#endif
+
+/*
+ * MacOS specific #define
+ */
+
 /* This will go away when CMD_KEY fully tested */
 #define USE_CMD_KEY
-#if defined (__POWERPC__) /* Got problem trying to use shared library in 68k */
-# undef FEAT_PYTHON
-#else
-# undef FEAT_PYTHON
-#endif
-#define FEAT_BROWSE
-#define FEAT_GUI_DIALOG
-#define HAVE_DROP_FILE
-#define FEAT_RIGHTLEFT
-#define DONT_ADD_PATHSEP_TO_DIR
-#define USE_EXE_NAME		    /* to find  $VIM */
-#define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
-#define SPACE_IN_FILENAME
-
 /* On MacOS X use the / not the : */
-#ifdef TARGET_API_MAC_OSX
+/* TODO: Should file such as ~/.vimrc reside instead in
+ *       ~/Library/Vim or ~/Library/Preferences/org.vim.vim/ ? (Dany)
+ */
+/* When compiled under MacOS X (including CARBON version)
+ * we use the Unix File path style */
+#if defined(TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
 # undef COLON_AS_PATHSEP
+# define USE_UNIXFILENAME
 #else
 # define COLON_AS_PATHSEP
 #endif
 
-/* #define USE_FNAME_CASE	     adjust case of file names */
+
+/*
+ * Generic Vim #define
+ */
+
+#define DONT_ADD_PATHSEP_TO_DIR
+#define USE_EXE_NAME		    /* to find  $VIM */
+#define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
+#define SPACE_IN_FILENAME
+#define BREAKCHECK_SKIP	   32	    /* call mch_breakcheck() each time, it's
+				       quite fast */
+
+
+#undef  USE_FNAME_CASE	    /* So that :e os_Mac.c, :w, save back the file as os_mac.c */
 #define BINARY_FILE_IO
 #define EOL_DEFAULT EOL_MAC
 #define USE_CR
@@ -111,20 +147,12 @@
 #define USE_TMPNAM		    /* use tmpnam() instead of mktemp() */
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
-/* MPW and CodeWarrior have time.h */
-#include <time.h>
+
 #if defined(__DATE__) && defined(__TIME__)
 # define HAVE_DATE_TIME
 #endif
-#define BREAKCHECK_SKIP	    1	    /* call mch_breakcheck() each time, it's
-				       quite fast */
 #define HAVE_STRFTIME
 
-#if !defined (__POWERPC__) &&  !defined(__ppc__)
-# if !defined(__fourbyteints__) || !__option(enumsalwaysint)
-   ERROR: you must compile the projecct with 4-byte ints and enums always int
-# endif
-#endif
 
 /*
  * Names for the EXRC, HELP and temporary files.
@@ -172,7 +200,7 @@
 #  ifdef COLON_AS_PATHSEP
 #   define USR_GVIMRC_FILE "$VIM:.gvimrc"
 #  else
-#   define USR_GVIMRC_FILE "$VIM/.gvimrc"
+#   define USR_GVIMRC_FILE "~/.gvimrc"
 #  endif
 # endif
 # ifndef GVIMRC_FILE
@@ -183,7 +211,7 @@
 # ifdef COLON_AS_PATHSEP
 #  define USR_VIMRC_FILE	"$VIM:.vimrc"
 # else
-#  define USR_VIMRC_FILE	"$VIM/.vimrc"
+#  define USR_VIMRC_FILE	"~/.vimrc"
 # endif
 #endif
 
@@ -191,7 +219,7 @@
 # ifdef COLON_AS_PATHSEP
 #  define USR_EXRC_FILE	"$VIM:.exrc"
 # else
-#  define USR_EXRC_FILE	"$VIM/.exrc"
+#  define USR_EXRC_FILE	"~/.exrc"
 # endif
 #endif
 
@@ -243,7 +271,7 @@
 #  ifdef COLON_AS_PATHSEP
 #   define VIMINFO_FILE	"$VIM:viminfo"
 #  else
-#   define VIMINFO_FILE	"$VIM/viminfo"
+#   define VIMINFO_FILE	"~/.viminfo"
 #  endif
 # endif
 #endif /* FEAT_VIMINFO */
@@ -269,7 +297,7 @@
 #ifdef COLON_AS_PATHSEP
 # define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
 #else
-# define DFLT_RUNTIMEPATH	"$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after"
+# define DFLT_RUNTIMEPATH	"~/vimfiles,$VIMRUNTIME,~/vimfiles/after"
 #endif
 
 /*
@@ -313,3 +341,27 @@
 # define OSPEED_EXTERN
 # define UP_BC_PC_EXTERN
 #endif
+
+/* Some "prep work" definition to be able to compile the MacOS X
+ * version with os_unix.x instead of os_mac.c. Based on the result
+ * of ./configure for console MacOS X.
+ */
+
+#ifdef MACOS_X_UNIX
+# define RETSIGTYPE void
+# define SIGRETURN  return
+# define SIGPROTOARG	(int)
+# define SIGDEFARG(s)	(s) int s;
+# define SIGDUMMYARG	0
+# define USE_SYSTEM  /* Output ship do debugger :(, but ot compile */
+# define HAVE_TERMIOS_H 1
+# define SYS_SELECT_WITH_SYS_TIME 1
+# define HAVE_SELECT 1
+# define HAVE_SYS_SELECT_H 1
+# undef  HAVE_AVAIL_MEM
+# define mch_chdir(s) chdir(s)
+#endif
+
+/* A Mac constat causing big problem to syntax highlighting */
+#define UNKNOWN_CREATOR '????'
+

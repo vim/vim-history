@@ -1384,7 +1384,7 @@ scripterror:
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	check_swap_exists_action();
 #endif
-#if !(defined(AMIGA) || defined(macintosh))
+#if !(defined(AMIGA) || defined(MACOS))
 	/*
 	 * Close stdin and dup it from stderr.  Required for GPM to work
 	 * properly, and for running external commands.

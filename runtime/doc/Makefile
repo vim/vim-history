@@ -37,6 +37,7 @@ DOCS = \
 	if_ruby.txt \
 	if_sniff.txt \
 	if_tcl.txt \
+	indent.txt \
 	index.txt \
 	insert.txt \
 	intro.txt \
@@ -147,6 +148,7 @@ HTMLS = \
 	if_ruby.html \
 	if_sniff.html \
 	if_tcl.html \
+	indent.html \
 	index.html \
 	insert.html \
 	intro.html \

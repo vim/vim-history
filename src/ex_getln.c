@@ -934,6 +934,7 @@ getcmdline(firstc, count, indent)
 
 	case K_RIGHT:
 	case K_S_RIGHT:
+	case K_C_RIGHT:
 		do
 		{
 		    if (ccline.cmdpos >= ccline.cmdlen)
@@ -950,7 +951,7 @@ getcmdline(firstc, count, indent)
 #endif
 			++ccline.cmdpos;
 		}
-		while ((c == K_S_RIGHT || (mod_mask & MOD_MASK_CTRL))
+		while ((c == K_S_RIGHT || c == K_C_RIGHT)
 			&& ccline.cmdbuff[ccline.cmdpos] != ' ');
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
@@ -960,6 +961,7 @@ getcmdline(firstc, count, indent)
 
 	case K_LEFT:
 	case K_S_LEFT:
+	case K_C_LEFT:
 		do
 		{
 		    if (ccline.cmdpos == 0)
@@ -972,7 +974,7 @@ getcmdline(firstc, count, indent)
 #endif
 		    ccline.cmdspos -= cmdline_charsize(ccline.cmdpos);
 		}
-		while ((c == K_S_LEFT || (mod_mask & MOD_MASK_CTRL))
+		while ((c == K_S_LEFT || c == K_C_LEFT)
 			&& ccline.cmdbuff[ccline.cmdpos - 1] != ' ');
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
@@ -1114,6 +1116,7 @@ getcmdline(firstc, count, indent)
 	case K_KHOME:
 	case K_XHOME:
 	case K_S_HOME:
+	case K_C_HOME:
 		ccline.cmdpos = 0;
 		set_cmdspos();
 		goto cmdline_not_changed;
@@ -1123,6 +1126,7 @@ getcmdline(firstc, count, indent)
 	case K_KEND:
 	case K_XEND:
 	case K_S_END:
+	case K_C_END:
 		ccline.cmdpos = ccline.cmdlen;
 		set_cmdspos_cursor();
 		goto cmdline_not_changed;

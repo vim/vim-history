@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0am.  Last change: 2001 Jun 03
+*visual.txt*    For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,6 +8,8 @@ Visual mode				*Visual* *Visual-mode* *visual-mode*
 
 Visual mode is a flexible and easy way to select a piece of text for an
 operator.  It is the only way to select a block of text.
+
+This is introduced in section |04.4| of the user manual.
 
 1. Using Visual mode			|visual-use|
 2. Starting and stopping Visual mode	|visual-start|
@@ -255,23 +257,22 @@ with {motion}, which is only ONE movement command.
 {not available when compiled without the |+visualextra| feature}
 
 Visual-block Insert						*v_b_I*
-With a blockwise selection, Istring<ESC> will insert string at the start of
-block on every line of the block, provided that the line extends into the
-block. TABs are split to retain visual columns.
+With a blockwise selection, I{string}<ESC> will insert {string} at the start
+of block on every line of the block, provided that the line extends into the
+block.  TABs are split to retain visual columns.
 See |v_b_I_example|.
 
 Visual-block Append						*v_b_A*
-With a blockwise selection, Astring<ESC> will append string to the end of
+With a blockwise selection, A{string}<ESC> will append {string} to the end of
 block on every line of the block. There is some differing behavior where the
-block RHS is not straight, due to different line lengths.
+block RHS is not straight, due to different line lengths:
 
-a. Block was created with <C-v>$
+1. Block was created with <C-v>$
     In this case the string is appended to the end of each line.
-b. Block was created with <C-v>{move-around}
+2. Block was created with <C-v>{move-around}
     In this case the string is appended to the end of the block on each
     line which extends into the block, and whitespace is inserted to pad to
     the end-of-block column.
-    Note: Padding is buggy (vim 5.4c).
 See |v_b_A_example|.
 
 Visual-block change						*v_b_c*

@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0am.  Last change: 2001 Jun 03
+*tips.txt*      For Vim version 6.0an.  Last change: 2001 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,10 +6,11 @@
 
 Tips and ideas for using Vim				*tips*
 
+Don't forget to browse the user manual, it also contains lots of useful tips
+|usr_toc.txt|.
+
 Editing C programs				|C-editing|
 Finding where identifiers are used		|ident-search|
-Editing local HTML files (WWW)			|html-editing|
-Editing paragraphs without a line break		|edit-no-break|
 Switching screens in an xterm			|xterm-screens|
 Scrolling in Insert mode			|scroll-insert|
 Smooth scrolling				|scroll-smooth|
@@ -30,6 +31,8 @@ Editing C programs					*C-editing*
 There are quite a few features in Vim to help you edit C program files.  Here
 is an overview with tags to jump to:
 
+|usr_29.txt|		Moving through programs chapter in the user manual.
+|usr_30.txt|		Editing programs chapter in the user manual.
 |C-indenting|		Automatically set the indent of a line while typing
 			text.
 |=|			Re-indent a few lines.
@@ -76,42 +79,15 @@ You probably already know that |tags| can be used to jump to the place where a
 function or variable is defined.  But sometimes you wish you could jump to all
 the places where a function or variable is being used.  This is possible in
 two ways:
-1. Using "grep" and quickfix commands.  This should work on most Unix systems,
+1. Using the |:grep| command.  This should work on most Unix systems,
    but can be slow (it reads all files) and only searches in one directory.
 2. Using ID utils.  This is fast and works in multiple directories.  It uses a
    database to store locations.  You will need some additional programs for
    this to work.  And you need to keep the database up to date.
 
-1. Using grep.
-
-Add one long line to your .vimrc: >
-   map _g :let efsave=&ef<Bar>let &ef=tempname()<Bar>exe ':!grep -n -w "<cword>" *.[cChH] *.cc *.cpp *.txt >'.&ef<CR>:cf<CR>:exe ":!rm ".&ef<CR>:let &ef=efsave<Bar>unlet efsave<CR><CR>:cc<CR>
-
-NOTE: This requires that the '<' flag is excluded from 'cpoptions'.
-
-That's all!  You can use this by placing the cursor on any identifier, and
-hitting "_g".  Then go to further matches with ":cn".  ":cc" and ":cp" can be
-used to move around in the list of matches.  Use ":cl" to see all matches.
-Also see |quickfix|.
-
-This depends on the format of what grep produces and 'errorformat'.  It should
-work with the default settings.
-
-Not all versions of "grep" accept the "-w" argument.  You can try if
-replacing >
-	-w "<cword>"
-with this >
-	"\<<cword>\>"
-works for you.  A drawback is often that the '_' character is treated like a
-non-word character.  Thus "msg" will also match "msg_row".
-
-
-2. With a combination of Vim and the GNU id-tools.
-
-This is still is a rather simple tool, but it works.
+Using the GNU id-tools:
 
 What you need:
-- Vim 5.0 or later.
 - The GNU id-tools installed (mkid is needed to create ID and lid is needed to
   use the macros).
 - An identifier database file called "ID" in the current directory.  You can
@@ -136,39 +112,6 @@ This has been tested with id-utils-3.2 (which is the name name of the id-tools
 archive file on your closest gnu-ftp-mirror).
 
 [the idea for this comes from Andreas Kutschera]
-
-==============================================================================
-Editing local HTML files (WWW)				*html-editing*
-
-Vim has some features which can help simplify the creation and maintenance of
-HTML files, provided that the files you are editing are available on the local
-file system.  The "]f", "gf" and "CTRL-W f" commands can be used to jump to
-the file whose name appears under the cursor, thus not only checking that the
-link is valid (at least the file name part of the URL) but also providing a
-quick and easy way to edit many related HTML pages at once.  |gf|
-A set of macros to help with editing html can be found on the Vim pages. |www|
-
-	Note:
-	If you are using the netrw plugin (which is loaded by default), "gf"
-	will try to load the file by the actual URL.
-
-If you want to view your HTML file, after writing a new version with Vim, have
-a look at the "atchange" program.  It can be used to automatically start a
-viewer when the last-changed date/time of a file changes.  You can find info
-at: http://www-lmmb.ncifcrf.gov/~toms/atchange.html
-
-==============================================================================
-Editing paragraphs without a line break			*edit-no-break*
-
-If you are typing text in Vim that will later go to a word processor, it is
-useful to keep a paragraph as a single line.  To make this more easy:
-- set 'wrap' on, to make lines wrap				|'wrap'|
-- set 'linebreak' on, to make wrapping happen at a blank	|'linebreak'|
-- set 'textwidth' to zero, to avoid linebreaks			|'tw'|
-- use "gk" and "gj" to move one screen line up or down		|gj|
-
-You might also want to set 'showbreak' to recognize a line that is wrapped: >
-	:set showbreak=>>>
 
 ==============================================================================
 Switching screens in an xterm		*xterm-screens* *xterm-save-screen*

@@ -1040,6 +1040,13 @@ static struct vimoption
     {"ignorecase",  "ic",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_ic, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"imactivatekey","imak",P_STRING|P_VI_DEF,
+#ifdef FEAT_XIM
+			    (char_u *)&p_imak, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)"", (char_u *)0L}},
     {"iminsert",    "imi",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_iminsert, PV_IMI,
 #ifdef B_IMODE_IM
@@ -1170,7 +1177,7 @@ static struct vimoption
     {"isprint",	    "isp",  P_STRING|P_VI_DEF|P_RALL|P_COMMA|P_NODUP,
 			    (char_u *)&p_isp, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(macintosh) \
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(MACOS) \
 		|| defined(VMS)
 			    (char_u *)"@,~-255",
 #else
@@ -1411,7 +1418,7 @@ static struct vimoption
 #if defined(MSDOS) || defined(MSWIN)
 				(char_u *)"popup",
 #else
-# if defined(macintosh)
+# if defined(MACOS)
 				(char_u *)"popup_setpos",
 # else
 				(char_u *)"extend",
@@ -4378,6 +4385,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 #endif
 
+#ifdef FEAT_XIM
+    else if (varp == &p_imak)
+    {
+	if (!im_xim_isvalid_imactivate())
+	    errmsg = e_invarg;
+    }
+#endif
+
 #ifdef FEAT_KEYMAP
     else if (varp == &curbuf->b_p_keymap)
     {
@@ -4683,7 +4698,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	gui_init_which_components(oldval);
 #endif
 
-#if defined(FEAT_MOUSE) && (defined(UNIX) || defined(VMS))
+#if defined(FEAT_MOUSE_TTY) && (defined(UNIX) || defined(VMS))
     /* 'ttymouse' */
     else if (varp == &p_ttym)
     {
@@ -5139,9 +5154,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #ifdef FEAT_MOUSE
     if (varp == &p_mouse)
     {
+# ifdef FEAT_MOUSE_TTY
 	if (*p_mouse == NUL)
 	    mch_setmouse(FALSE);    /* switch mouse off */
 	else
+# endif
 	    setmouse();		    /* in case 'mouse' changed */
     }
 #endif
@@ -5774,7 +5791,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 
 	/* Change window width NOW */
 	if (lastwin != firstwin && curwin->w_width < p_wiw)
-	    win_setheight((int)p_wiw);
+	    win_setwidth((int)p_wiw);
     }
 
     /* 'winminwidth' */
@@ -5864,6 +5881,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    errmsg = e_invarg;
 	    curbuf->b_p_iminsert = B_IMODE_NONE;
 	}
+	p_iminsert = curbuf->b_p_iminsert;
 	showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	/* Show/unshow value of 'keymap' in status lines. */
@@ -5878,6 +5896,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    errmsg = e_invarg;
 	    curbuf->b_p_imsearch = B_IMODE_NONE;
 	}
+	p_iminsert = curbuf->b_p_imsearch;
     }
 
 #ifdef FEAT_TITLE
@@ -6685,7 +6704,7 @@ clear_termoptions()
      * outputting a few things that the terminal doesn't understand, but the
      * screen will be cleared later, so this is OK.
      */
-#ifdef FEAT_MOUSE
+#ifdef FEAT_MOUSE_TTY
     mch_setmouse(FALSE);	    /* switch mouse off */
 #endif
 #ifdef FEAT_TITLE

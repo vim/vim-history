@@ -7,6 +7,10 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  * See README.txt for an overview of the Vim source code.
  */
+/*
+ * Common code for the Motif and Athena GUI.
+ * Not used for GTK.
+ */
 
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -17,8 +21,12 @@
 
 #include "vim.h"
 
-#ifdef HAVE_X11_XPM_H
-# include <X11/xpm.h>
+#ifdef HAVE_XM_XPMP_H
+# include <Xm/XpmP.h>
+#else
+# ifdef HAVE_X11_XPM_H
+#  include <X11/xpm.h>
+# endif
 #endif
 
 #ifdef FEAT_XFONTSET
@@ -1317,7 +1325,7 @@ gui_mch_init()
     */
     if (vim_strchr(p_go, GO_ICON) != NULL)
     {
-#ifndef HAVE_X11_XPM_H
+#ifndef HAVE_XPM
 # include "vim_icon.xbm"
 # include "vim_mask.xbm"
 
@@ -1494,7 +1502,7 @@ gui_mch_open()
      * Enable editres protocol (see "man editres").
      * Usually will need to add -lXmu to the linker line as well.
      */
-    XtAddEventHandler(vimShell, 0, True, _XEditResCheckMessages,
+    XtAddEventHandler(vimShell, (EventMask)0, True, _XEditResCheckMessages,
 	    (XtPointer)NULL);
 #endif
 
@@ -3190,11 +3198,11 @@ gui_mch_register_sign(signfile)
 	{
 	    XpmColorSymbol color[5] =
 	    {
-		{"background", NULL, 0},
-		{"foreground", NULL, 0},
-		{"bottomShadow", NULL, 0},
-		{"topShadow", NULL, 0},
-		{"highlight", NULL, 0}
+		{"none", "none", 0},
+		{"iconColor1", NULL, 0},
+		{"bottomShadowColor", NULL, 0},
+		{"topShadowColor", NULL, 0},
+		{"selectColor", NULL, 0}
 	    };
 	    attrs.valuemask = XpmColorSymbols;
 	    attrs.numsymbols = 2;
@@ -3436,7 +3444,12 @@ get_toolbar_pixmap(menu, sen, insen)
 	createXpmImages(buf, xpm, sen, insen);
 }
 
-#include <X11/xpm.h>
+/* Indices for named colors */
+#define BACKGROUND	0
+#define FOREGROUND	1
+#define BOTTOM_SHADOW	2
+#define TOP_SHADOW	3
+#define HIGHLIGHT	4
 
 /*
  * Read an Xpm file, doing color substitutions for the foreground and
@@ -3455,30 +3468,25 @@ createXpmImages(path, xpm, sen, insen)
     XpmAttributes attrs;
     XpmColorSymbol color[5] =
     {
-	{"background", NULL, 0},
-	{"foreground", NULL, 0},
-	{"bottomShadow", NULL, 0},
-	{"topShadow", NULL, 0},
-	{"highlight", NULL, 0}
+	{"none", "none", 0},
+	{"iconColor1", NULL, 0},
+	{"bottomShadowColor", NULL, 0},
+	{"topShadowColor", NULL, 0},
+	{"selectColor", NULL, 0}
     };
     int		screenNum;
     int		status;
-    GC		mask_gc;
-    GC		back_gc;
-    XGCValues	gcvalues;
     Pixmap	mask;
     Pixmap	map;
-    Pixel	bg_pixel;
-    Pixel	fg_pixel;
 
-    gui_mch_get_toolbar_colors(&bg_pixel, &fg_pixel,
-	    &color[2].pixel, 
-	    &color[3].pixel,
-	    &color[4].pixel);
+    gui_mch_get_toolbar_colors(
+	    &color[BACKGROUND].pixel,
+	    &color[FOREGROUND].pixel,
+	    &color[BOTTOM_SHADOW].pixel,
+	    &color[TOP_SHADOW].pixel,
+	    &color[HIGHLIGHT].pixel);
 
     /* Setup the color subsititution table */
-    color[0].pixel = bg_pixel;
-    color[1].pixel = fg_pixel;
     attrs.valuemask = XpmColorSymbols;
     attrs.colorsymbols = color;
     attrs.numsymbols = 5;
@@ -3493,19 +3501,24 @@ createXpmImages(path, xpm, sen, insen)
 	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path, &map, &mask, &attrs);
     if (status == XpmSuccess && map != 0)
     {
+	XGCValues   gcvalues;
+	GC	    back_gc;
+	GC	    mask_gc;
+
 	/* Need to create new Pixmaps with the mask applied. */
-	gcvalues.foreground = bg_pixel;
+	gcvalues.foreground = color[BACKGROUND].pixel;
 	back_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
 	mask_gc = XCreateGC(gui.dpy, map, GCForeground, &gcvalues);
 	XSetClipMask(gui.dpy, mask_gc, mask);
 
 	/* Create the "sensitive" pixmap. */
 	*sen = XCreatePixmap(gui.dpy, rootWindow,
-		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+		 attrs.width, attrs.height,
+		 DefaultDepth(gui.dpy, screenNum));
 	XFillRectangle(gui.dpy, *sen, back_gc, 0, 0,
-						   attrs.width, attrs.height);
+		attrs.width, attrs.height);
 	XCopyArea(gui.dpy, map, *sen, mask_gc, 0, 0,
-					     attrs.width, attrs.height, 0, 0);
+		attrs.width, attrs.height, 0, 0);
 
 #ifdef FEAT_GUI_MOTIF	/* not used for Athena */
 	if (insen != NULL)
@@ -3516,7 +3529,8 @@ createXpmImages(path, xpm, sen, insen)
 	    /* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
 	     * pixmap with half the pixels set to the background color. */
 	    *insen = XCreatePixmap(gui.dpy, rootWindow,
-		    attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+		    attrs.width, attrs.height,
+		    DefaultDepth(gui.dpy, screenNum));
 	    XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
 		    attrs.width, attrs.height, 0, 0);
 	    for (y = 0; y < attrs.height; y++)
@@ -3528,6 +3542,7 @@ createXpmImages(path, xpm, sen, insen)
 		for (x = startX; x < attrs.width; x += 2)
 		    XDrawPoint(gui.dpy, *insen, back_gc, x, y);
 	    }
+
 	}
 #endif
 	XFreeGC(gui.dpy, back_gc);

@@ -1,10 +1,13 @@
-*pattern.txt*   For Vim version 6.0am.  Last change: 2001 Jun 09
+*pattern.txt*   For Vim version 6.0an.  Last change: 2001 Jul 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 Patterns and search commands				*pattern-searches*
+
+The very basics can be found in section |03.9| of the user manual.  A few more
+explanations are in chapter 27 |usr_27.txt|.
 
 1. Search commands		|search-commands|
 2. The definition of a pattern	|search-pattern|
@@ -248,6 +251,9 @@ the "*" is under your right hand middle finger (search to the right and down).
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
 					*E76* *E361* *E363* *E383*
+
+For starters, read chapter 27 of the user manual |usr_27.txt|.
+
 						*/bar* */\bar* */pattern*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
    that matches one of the branches.  Example: "foo\|beep" matches "foo" and

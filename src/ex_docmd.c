@@ -213,6 +213,7 @@ static void	ex_popup __ARGS((exarg_T *eap));
 #endif
 #ifndef FEAT_CSCOPE
 # define do_cscope		ex_ni
+# define do_scscope		ex_ni
 # define do_cstag		ex_ni
 #endif
 #ifndef FEAT_SYN_HL
@@ -1808,8 +1809,8 @@ find_command(eap, full)
      * Exeptions:
      * - the 'k' command can directly be followed by any character.
      * - the 's' command can be followed directly by 'c', 'g', 'i', 'I' or 'r'
-     *	    but :sre[wind] is another command, as is :scrip[tnames],
-     *	    :sim[alt], :sig[ns] and :sil[ent].
+     *	    but :sre[wind] is another command, as are :scrip[tnames],
+     *	    :scs[cope], :sim[alt], :sig[ns] and :sil[ent].
      */
     p = eap->cmd;
     if (*p == 'k')
@@ -1818,7 +1819,7 @@ find_command(eap, full)
 	++p;
     }
     else if (p[0] == 's'
-	    && ((p[1] == 'c' && (p[2] != 'r' || p[3] != 'i' || p[4] != 'p'))
+	    && ((p[1] == 'c' && p[2] != 's' && p[2] != 'r' && p[3] != 'i' && p[4] != 'p')
 		|| p[1] == 'g'
 		|| (p[1] == 'i' && p[2] != 'm' && p[2] != 'l' && p[2] != 'g')
 		|| p[1] == 'I'
@@ -2907,7 +2908,7 @@ ex_ni(eap)
     exarg_T	*eap;
 {
     if (!eap->skip)
-	eap->errmsg = (char_u *)N_("Sorry, this command is not implemented");
+	eap->errmsg = (char_u *)N_("E319: Sorry, the command is not available in this version");
 }
 
 /*
@@ -3092,7 +3093,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 		if (!has_wildcards)
 #endif
 		    backslash_halve(eap->arg);
-#ifdef macintosh
+#ifdef MACOS_CLASSIC
 		/*
 		 * translate unix-like path components
 		 */
@@ -4665,6 +4666,8 @@ ex_colorscheme(eap)
 ex_highlight(eap)
     exarg_T	*eap;
 {
+    if (*eap->arg == NUL && eap->cmd[2] == '!')
+	MSG(_("Greetings, Vim user!"));
     do_highlight(eap->arg, eap->forceit, FALSE);
 }
 
@@ -8425,7 +8428,7 @@ get_view_file(c)
 	    else if (vim_ispathsep(*p))
 	    {
 		*s++ = '=';
-#ifdef macintosh
+#ifdef MACOS_CLASSIC /* TODO: Is it also needed for MACOS_X? (Dany) */
 		*s++ = '+';
 #else
 # if defined(BACKSLASH_IN_FILENAME) || defined(AMIGA) || defined(RISCOS) \

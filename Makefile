@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0am
+MINOR = 0an
 
 # CHECKLIST for creating a new version:
 #
@@ -114,24 +114,24 @@ MINOR = 0am
 # - "make test" and check the output.
 # - Rename the executables to "vimd16.exe", "xxdd16.exe", and "installd16.exe".
 # 32 bit DOS version:
-# - Set environment for compiling with DJGPP; "make -f makefile.djg".
-# - "rm testdir/*.out", "make -f makefile.djg test" and check the output.
+# - Set environment for compiling with DJGPP; "make -f Make_djg.mak".
+# - "rm testdir/*.out", "make -f Make_djg.mak test" and check the output.
 # - Rename the executables to "vimd32.exe", "xxdd32.exe", and "installd32.exe".
 # Win32 console version:
 # - Set environment for Visual C++ 5.0: "vcvars32"
-# - "nmake -f makefile.mvc"
-# - "rm testdir/*.out", "nmake -f makefile.mvc test" and check the output.
+# - "nmake -f Make_mvc.mak"
+# - "rm testdir/*.out", "nmake -f Make_mvc.mak test" and check the output.
 # - Rename the executables to "vimw32.exe", "xxdw32.exe".
 # - Delete vimrun.exe, install.exe and uninstall.exe.
 # Win32 GUI version:
-# - "nmake -f Make_gvc.mak".
+# - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
 # Win32 GUI with OLE version:
-# - "nmake -f Make_ovc.mak"
+# - "nmake -f Make_mvc.mak GUI=yes OLE=yes
 # - Rename "gvim.exe" to "gvim_ole.exe".
 # Produce Gvimext.dll:
 # - "cd gvimext", "nmake -f Makefile"
-# - Move "gvimext.dll" to here.
+# - Copy "gvimext.dll" to here.
 # Win32s GUI version:
 # - Set environment for Visual C++ 4.1 (requires a new console window)
 # - "vcvars32" (use the path for VC 4.1)
@@ -139,13 +139,23 @@ MINOR = 0am
 # - Rename "gvim.exe" to "gvim_w32s.exe".
 # - Rename "install.exe" to "installw32.exe"
 # - The produced uninstall.exe and vimrun.exe are used.
-# - Move all the "*.exe" files to here.
+# Create the archives:
+# - Copy all the "*.exe" files to where this Makefile is.
 # - "make dosbin".
 # - "make doslang".
+# NSIS self installing exe:
+# - Run make to update the ".mo" files, then "make doslang".  Unpack the
+#   doslang archive on the PC.
+# - rename gvim_ole.exe to gvim.exe
+# - rename installw32.exe to install.exe
+# - rename xxdw32.exe to xxd/xxd.exe
+# - put gvimext.dll in GvimExt, VisVim.dll in VisVim, OpenWithVim.exe and
+#   SendToVim.exe in OleVim (get them from a binary archive or build them)
+# - go to ../nsis and do "makensis gvim.nsi".
 #
 # OS/2:
 # - Unpack the Unix "src", "extra" and "rt" archives.
-# - "make -f makefile.os2".
+# - "make -f Make_os2.mak".
 # - Rename the executables to vimos2.exe, xxdos2.exe and teeos2.exe.
 # - "make os2bin".
 
@@ -345,13 +355,13 @@ SRC_DOS_UNIX =	\
 SRC_DOS =	\
 		GvimExt \
 		README_srcdos.txt \
-		src/Make_gvc.mak \
 		src/INSTALLole.txt \
 		src/INSTALLpc.txt \
 		src/Make_bc3.mak \
 		src/Make_bc5.mak \
 		src/Make_cyg.mak \
 		src/Make_djg.mak \
+		src/Make_ivc.mak \
 		src/Make_ming.mak \
 		src/Make_mvc.mak \
 		src/Make_tcc.mak \
@@ -359,6 +369,7 @@ SRC_DOS =	\
 		src/dimm.idl \
 		src/dlldata.c \
 		src/dosinst.c \
+		src/dosinst.h \
 		src/glbl_ime.cpp \
 		src/glbl_ime.h \
 		src/gui_w16.c \
@@ -369,7 +380,6 @@ SRC_DOS =	\
 		src/if_ole.cpp \
 		src/if_ole.h \
 		src/if_ole.idl \
-		src/Make_ovc.mak \
 		src/iid_ole.c \
 		src/os_dos.h \
 		src/os_msdos.c \
@@ -405,7 +415,7 @@ SRC_DOS =	\
 		nsis/gvim.nsi \
 		nsis/README.txt \
 		nsis/icons \
-
+		uninstal.txt \
 
 # source files for DOS without CR/LF translation (also in the extra archive)
 SRC_DOS_BIN = 	\
@@ -560,12 +570,9 @@ RT_ALL =	\
 		runtime/doc/vimdiff.1 \
 		runtime/doc/vimtutor.1 \
 		runtime/doc/xxd.1 \
-		runtime/filetype.vim \
 		runtime/ftoff.vim \
 		runtime/gvimrc_example.vim \
 		runtime/macros/README.txt \
-		runtime/macros/diffwin.vim \
-		runtime/macros/hdiffwin.vim \
 		runtime/macros/dvorak \
 		runtime/macros/hanoi/click.me \
 		runtime/macros/hanoi/hanoi.vim \
@@ -588,13 +595,10 @@ RT_ALL =	\
 		runtime/macros/urm/examples \
 		runtime/macros/urm/urm \
 		runtime/macros/urm/urm.vim \
-		runtime/menu.vim \
 		runtime/delmenu.vim \
-		runtime/makemenu.vim \
 		runtime/mswin.vim \
 		runtime/evim.vim \
 		runtime/optwin.vim \
-		runtime/scripts.vim \
 		runtime/ftplugin.vim \
 		runtime/ftplugof.vim \
 		runtime/indent.vim \
@@ -608,6 +612,10 @@ RT_ALL =	\
 
 # runtime script files
 RT_SCRIPTS =	\
+		runtime/filetype.vim \
+		runtime/scripts.vim \
+		runtime/menu.vim \
+		runtime/makemenu.vim \
 		runtime/colors/*.vim \
 		runtime/colors/README.txt \
 		runtime/compiler/*.vim \
@@ -624,8 +632,11 @@ RT_SCRIPTS =	\
 # Unix runtime
 RT_UNIX =	\
 		README_unix.txt \
+		runtime/vim16x16.png \
 		runtime/vim16x16.xpm \
+		runtime/vim32x32.png \
 		runtime/vim32x32.xpm \
+		runtime/vim48x48.png \
 		runtime/vim48x48.xpm \
 
 # Unix and DOS runtime without CR-LF translation
@@ -1103,7 +1114,6 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 	-rm -rf dist/vim
 	mkdir dist/vim
 	mkdir dist/vim/$(VIMRTDIR)
-	mkdir dist/vim/$(VIMRTDIR)/lang
 	tar cf - \
 		$(LANG_GEN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)

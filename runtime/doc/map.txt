@@ -1,10 +1,13 @@
-*map.txt*       For Vim version 6.0am.  Last change: 2001 Jul 01
+*map.txt*       For Vim version 6.0an.  Last change: 2001 Jul 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Key mapping and abbreviations.
+Key mapping, abbreviations and user-defined commands.
+
+This subject is introduced in sections |05.3|, |24.7| and |40.1| of the user
+manual.
 
 1. Key mapping			|key-mapping|
 2. Abbreviations		|abbreviations|
@@ -203,14 +206,16 @@ argument of the commands that accept a text character, when entering a search
 pattern and for the input() line.  Generally: Whenever a character is to be
 typed that is inserted in the text, not a Vim command character.  "Lang-Arg"
 isn't really another mode, it's just used here for this situation.
-In Insert mode and in Command-line mode the mappings can be disabled with the
-CTRL-^ command |i_CTRL-^| |c_CTRL-^|.  When starting to enter a normal command
-line (not a search pattern) the mappings are disabled until a CTRL-^ is typed.
-The state last used is remembered for Insert mode and Search patterns
-separately.  The state for Insert mode is also used when typing a character as
-an argument to command like "f" or "t".
-When adding a ":lmap" mapping the use of these mappings in Insert mode and for
-Search patterns will be switched on.
+   The simplest way to load a set of related language mappings is by using the
+'keymap' option.  See |45.5|.
+   In Insert mode and in Command-line mode the mappings can be disabled with
+the CTRL-^ command |i_CTRL-^| |c_CTRL-^|.  When starting to enter a normal
+command line (not a search pattern) the mappings are disabled until a CTRL-^
+is typed.  The state last used is remembered for Insert mode and Search
+patterns separately.  The state for Insert mode is also used when typing a
+character as an argument to command like "f" or "t".
+   When adding a ":lmap" mapping the use of these mappings in Insert mode and
+for Search patterns will be switched on.
 
 							*map-multibyte*
 It is possible to map multibyte characters, but only the whole character.  You
@@ -725,10 +730,10 @@ functions used in one script use the same name as in other scripts.  To avoid
 this, they can be made local to the script.
 
 						*<SID>* *<SNR>* *E81*
-The string "<SID>" can be used in a mapping.  This requires that the '<' flag
-is not present in 'cpoptions'.
-When executing the map command, Vim will replace "<SID>" with the special key
-code <SNR>, followed by a number that's unique for the script, and an
+The string "<SID>" can be used in a mapping or menu.  This requires that the
+'<' flag is not present in 'cpoptions'.
+   When executing the map command, Vim will replace "<SID>" with the special
+key code <SNR>, followed by a number that's unique for the script, and an
 underscore.  Example: >
 	:map <SID>Add
 could define a mapping "<SNR>23_Add".

@@ -89,7 +89,7 @@
 # include <sys/ptem.h>
 #endif
 
-#if !defined(sun) && !defined(VMS) && !defined(macintosh)
+#if !defined(sun) && !defined(VMS) && !defined(MACOS)
 # include <sys/ioctl.h>
 #endif
 
@@ -165,7 +165,7 @@ SetupSlavePTY(fd)
     if (fd < 0)
 	return 0;
 #if defined(I_PUSH) && defined(HAVE_SVR4_PTYS) && !defined(sgi) && !defined(linux) && !defined(__osf__) && !defined(M_UNIX)
-# if HAVE_SYS_PTEM_H
+# if defined(HAVE_SYS_PTEM_H) || defined(hpux)
     if (ioctl(fd, I_PUSH, "ptem") != 0)
 	return -1;
 # endif
@@ -385,15 +385,11 @@ OpenPTY(ttyn)
     {
 	for (d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
 	{
-#ifdef macintosh
-	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
-#else
 	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
-#endif
 		continue;
 	    q[0] = *l;
 	    q[1] = *d;
-#ifndef macintosh
+#ifndef MACOS
 	    if (geteuid() && mch_access(TtyName, R_OK | W_OK))
 	    {
 		close(f);
@@ -452,7 +448,7 @@ OpenPTY(ttyn)
 #define EXTRASIZE 5		/* increment to add to env. size */
 
 static int  envsize = -1;	/* current size of environment */
-#ifndef macintosh
+#ifndef MACOS
 extern
 #endif
        char **environ;		/* the global which is your env. */
@@ -529,7 +525,7 @@ newenv()
     char    **env, *elem;
     int	    i, esize;
 
-#ifdef macintosh
+#ifdef MACOS
     /* for Mac a new, empty environment is created */
     i = 0;
 #else
@@ -541,7 +537,7 @@ newenv()
     if (env == NULL)
 	return -1;
 
-#ifndef macintosh
+#ifndef MACOS
     for (i = 0; environ[i]; i++)
     {
 	elem = (char *)alloc((unsigned)(strlen(environ[i]) + 1));

@@ -147,7 +147,8 @@
 # endif
 #endif
 
-#ifdef macintosh
+#ifdef MACOS_CLASSIC
+/* MacOS classic doesn't support perm but MacOS X does. */
 # define mch_open(n, m, p)	open((n), (m))
 #else
 # ifdef VMS

@@ -6995,7 +6995,12 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 # ifdef FEAT_XFONTSET
     /* If 'guifontset' is not empty, first try using the name as a
      * fontset.  If that doesn't work, use it as a font name. */
-    if (*p_guifontset != NUL)
+    if (*p_guifontset != NUL
+#  if defined(FEAT_BEVAL) && defined(FEAT_GUI_ATHENA)
+	/* In Athena, the Tooltip highlight group is always a fontset */
+	|| do_tooltip
+#  endif
+	    )
 	HL_TABLE()[idx].sg_fontset = fontset_name2handle(arg);
     if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
     {
@@ -7012,6 +7017,12 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 # ifdef FEAT_BEVAL
 	if (do_tooltip)
 	{
+	    /* The Athena widget set cannot currently handle switching between
+	     * displaying a single font and a fontset.
+	     * If the XtNinternational resource is set to True at widget
+	     * creation, then a fontset is always used, othwise an
+	     * XFontStruct is used.
+	     */
 #  ifdef FEAT_GUI_MOTIF
 	    gui.balloonEval_fontList = gui_motif_fontset2fontlist(
 				    (XFontSet *)&HL_TABLE()[idx].sg_fontset);
@@ -7040,6 +7051,19 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 		gui_mch_new_menu_font();
 	    }
 #endif
+# if defined(FEAT_BEVAL) && !defined(FEAT_GUI_ATHENA)
+	/* The Athena widget set cannot currently handle switching between
+	 * displaying a single font and a fontset.
+	 */
+	if (do_tooltip)
+	{
+#  ifdef FEAT_GUI_MOTIF
+	    gui.balloonEval_fontList = gui_motif_create_fontlist(
+				    (XFontStruct *)&HL_TABLE()[idx].sg_font);
+#  endif
+	    gui_mch_new_tooltip_font();
+	}
+# endif
 	}
     }
 }

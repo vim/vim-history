@@ -224,6 +224,11 @@ enum key_extra
     , KE_PLUG		/* <Plug> */
     , KE_CMDWIN		/* open command-line window from Command-line Mode */
     , KE_SILENT		/* decrement msg_silent, used after a silent menu */
+
+    , KE_C_LEFT		/* control-left */
+    , KE_C_RIGHT	/* control-right */
+    , KE_C_HOME		/* control-home */
+    , KE_C_END		/* control-end */
 };
 
 /*
@@ -238,9 +243,13 @@ enum key_extra
 #define K_S_UP		TERMCAP2KEY(KS_EXTRA, KE_S_UP)
 #define K_S_DOWN	TERMCAP2KEY(KS_EXTRA, KE_S_DOWN)
 #define K_S_LEFT	TERMCAP2KEY('#', '4')
+#define K_C_LEFT	TERMCAP2KEY(KS_EXTRA, KE_C_LEFT)
 #define K_S_RIGHT	TERMCAP2KEY('%', 'i')
+#define K_C_RIGHT	TERMCAP2KEY(KS_EXTRA, KE_C_RIGHT)
 #define K_S_HOME	TERMCAP2KEY('#', '2')
+#define K_C_HOME	TERMCAP2KEY(KS_EXTRA, KE_C_HOME)
 #define K_S_END		TERMCAP2KEY('*', '7')
+#define K_C_END		TERMCAP2KEY(KS_EXTRA, KE_C_END)
 #define K_TAB		TERMCAP2KEY(KS_EXTRA, KE_TAB)
 #define K_S_TAB		TERMCAP2KEY(KS_EXTRA, KE_S_TAB)
 
@@ -433,7 +442,7 @@ enum key_extra
 #define MOD_MASK_2CLICK	    0x10	/* use MOD_MASK_MULTI_CLICK */
 #define MOD_MASK_3CLICK	    0x20	/* use MOD_MASK_MULTI_CLICK */
 #define MOD_MASK_4CLICK	    0x30	/* use MOD_MASK_MULTI_CLICK */
-#if defined(macintosh) || defined(TARGET_API_MAC_CARBON)
+#ifdef MACOS
 # define MOD_MASK_CMD	     0x80
 #endif
 

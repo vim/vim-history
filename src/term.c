@@ -967,7 +967,9 @@ struct builtin_term builtin_termcaps[] =
     {K_S_UP,		IF_EB("\033O2A", ESC_STR "O2A")},
     {K_S_DOWN,		IF_EB("\033O2B", ESC_STR "O2B")},
     {K_S_RIGHT,		IF_EB("\033O2C", ESC_STR "O2C")},
+    {K_C_RIGHT,		IF_EB("\033O5C", ESC_STR "O5C")},
     {K_S_LEFT,		IF_EB("\033O2D", ESC_STR "O2D")},
+    {K_C_LEFT,		IF_EB("\033O5D", ESC_STR "O5D")},
     /* An extra set of function keys for vt100 mode */
     {K_XF1,		IF_EB("\033OP", ESC_STR "OP")},
     {K_XF2,		IF_EB("\033OQ", ESC_STR "OQ")},
@@ -1006,10 +1008,12 @@ struct builtin_term builtin_termcaps[] =
     {K_INS,		IF_EB("\033[2~", ESC_STR "[2~")},
     {K_HOME,		IF_EB("\033[7~", ESC_STR "[7~")},
     {K_S_HOME,		IF_EB("\033O2H", ESC_STR "O2H")},
+    {K_C_HOME,		IF_EB("\033O5H", ESC_STR "O5H")},
     {K_KHOME,		IF_EB("\033[1~", ESC_STR "[1~")},
     {K_XHOME,		IF_EB("\033OH", ESC_STR "OH")},	/* alternate Home */
     {K_END,		IF_EB("\033[8~", ESC_STR "[8~")},
     {K_S_END,		IF_EB("\033O2F", ESC_STR "O2F")},
+    {K_C_END,		IF_EB("\033O5F", ESC_STR "O5F")},
     {K_KEND,		IF_EB("\033[4~", ESC_STR "[4~")},
     {K_XEND,		IF_EB("\033OF", ESC_STR "OF")},	/* alternate End */
     {K_PAGEUP,		IF_EB("\033[5~", ESC_STR "[5~")},
@@ -1232,7 +1236,9 @@ struct builtin_term builtin_termcaps[] =
     {K_S_UP,		"[S-KU]"},
     {K_S_DOWN,		"[S-KD]"},
     {K_S_LEFT,		"[S-KL]"},
+    {K_C_LEFT,		"[C-KL]"},
     {K_S_RIGHT,		"[S-KR]"},
+    {K_C_RIGHT,		"[C-KR]"},
     {K_F1,		"[F1]"},
     {K_XF1,		"[xF1]"},
     {K_F2,		"[F2]"},
@@ -1363,7 +1369,7 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"beos-ansi"
 #endif
 
-#if defined(macintosh) || defined(TARGET_API_MAC_CARBON)
+#if defined(MACOS)
 # define DEFAULT_TERM	(char_u *)"mac-ansi"
 #endif
 
@@ -1815,6 +1821,7 @@ set_termname(term)
 
 #ifdef FEAT_MOUSE
 # if defined(UNIX) || defined(VMS)
+#  ifdef FEAT_MOUSE_TTY
     /*
      * For Unix, set the 'ttymouse' option to the type of mouse to be used.
      * The termcode for the mouse is added as a side effect in option.c.
@@ -1841,12 +1848,13 @@ set_termname(term)
 	if (p != NULL)
 	    set_option_value((char_u *)"ttym", 0L, p, 0);
 	if (p == NULL
-#  ifdef FEAT_GUI
+#   ifdef FEAT_GUI
 		|| gui.in_use
-#  endif
+#   endif
 		)
 	    check_mouse_termcode();	/* set mouse termcode anyway */
     }
+#  endif
 # else
     set_mouse_termcode(KS_MOUSE, (char_u *)"\233M");
 # endif
@@ -1921,7 +1929,7 @@ set_termname(term)
 	/* termcap failed to report size */
 	/* set defaults, in case ui_get_shellsize() also fails */
 	width = 80;
-#if defined MSDOS  ||  defined WIN3264
+#if defined(MSDOS) || defined(WIN3264)
 	height = 25;	    /* console is often 25 lines */
 #else
 	height = 24;	    /* most terminals are 24 lines */
@@ -1963,12 +1971,15 @@ set_termname(term)
 }
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
-#define HMT_NORMAL	1
-#define HMT_NETTERM	2
-#define HMT_DEC		4
-#define HMT_JSBTERM	8
-#define HMT_PTERM	16
+
+# ifdef FEAT_MOUSE_TTY
+#  define HMT_NORMAL	1
+#  define HMT_NETTERM	2
+#  define HMT_DEC	4
+#  define HMT_JSBTERM	8
+#  define HMT_PTERM	16
 static int has_mouse_termcode = 0;
+# endif
 
 # if (!defined(UNIX) || defined(FEAT_MOUSE_XTERM) || defined(FEAT_MOUSE_NET) \
 	|| defined(FEAT_MOUSE_DEC)) || defined(FEAT_MOUSE_JSB) \
@@ -1983,27 +1994,29 @@ set_mouse_termcode(n, s)
     name[0] = n;
     name[1] = KE_FILLER;
     add_termcode(name, s, FALSE);
-#  ifdef FEAT_MOUSE_JSB
+#  ifdef FEAT_MOUSE_TTY
+#   ifdef FEAT_MOUSE_JSB
     if (n == KS_JSBTERM_MOUSE)
 	has_mouse_termcode |= HMT_JSBTERM;
     else
-#  endif
-#  ifdef FEAT_MOUSE_NET
+#   endif
+#   ifdef FEAT_MOUSE_NET
     if (n == KS_NETTERM_MOUSE)
 	has_mouse_termcode |= HMT_NETTERM;
     else
-#  endif
-#  ifdef FEAT_MOUSE_DEC
+#   endif
+#   ifdef FEAT_MOUSE_DEC
     if (n == KS_DEC_MOUSE)
 	has_mouse_termcode |= HMT_DEC;
     else
-#  endif
-#  ifdef FEAT_MOUSE_PTERM
+#   endif
+#   ifdef FEAT_MOUSE_PTERM
     if (n == KS_PTERM_MOUSE)
 	has_mouse_termcode |= HMT_PTERM;
     else
-#  endif
+#   endif
 	has_mouse_termcode |= HMT_NORMAL;
+#  endif
 }
 # endif
 
@@ -2020,27 +2033,29 @@ del_mouse_termcode(n)
     name[0] = n;
     name[1] = KE_FILLER;
     del_termcode(name);
-#  ifdef FEAT_MOUSE_JSB
+#  ifdef FEAT_MOUSE_TTY
+#   ifdef FEAT_MOUSE_JSB
     if (n == KS_JSBTERM_MOUSE)
 	has_mouse_termcode &= ~HMT_JSBTERM;
     else
-#  endif
-#  ifdef FEAT_MOUSE_NET
+#   endif
+#   ifdef FEAT_MOUSE_NET
     if (n == KS_NETTERM_MOUSE)
 	has_mouse_termcode &= ~HMT_NETTERM;
     else
-#  endif
-#  ifdef FEAT_MOUSE_DEC
+#   endif
+#   ifdef FEAT_MOUSE_DEC
     if (n == KS_DEC_MOUSE)
 	has_mouse_termcode &= ~HMT_DEC;
     else
-#  endif
-#  ifdef FEAT_MOUSE_PTERM
+#   endif
+#   ifdef FEAT_MOUSE_PTERM
     if (n == KS_PTERM_MOUSE)
 	has_mouse_termcode &= ~HMT_PTERM;
     else
-#  endif
+#   endif
 	has_mouse_termcode &= ~HMT_NORMAL;
+#  endif
 }
 # endif
 #endif
@@ -2095,7 +2110,7 @@ vim_tgetstr(s, pp)
 }
 #endif /* HAVE_TGETENT */
 
-#if defined(HAVE_TGETENT) && (defined(UNIX) || defined(__EMX__) || defined(VMS))
+#if defined(HAVE_TGETENT) && (defined(UNIX) || defined(__EMX__) || defined(VMS) || defined(MACOS_X))
 /*
  * Get Columns and Rows from the termcap. Used after a window signal if the
  * ioctl() fails. It doesn't make sense to call tgetent each time if the "co"
@@ -2674,7 +2689,7 @@ term_color(s, n)
 	OUT_STR(tgoto((char *)s, 0, n));
 }
 
-#if (defined(FEAT_TITLE) && (defined(UNIX) || defined(OS2) || defined(VMS))) || defined(PROTO)
+#if (defined(FEAT_TITLE) && (defined(UNIX) || defined(OS2) || defined(VMS) || defined(MACOS_X))) || defined(PROTO)
 /*
  * Generic function to set window title, using t_ts and t_fs.
  */
@@ -3069,7 +3084,7 @@ settmode(tmode)
 		(void)vpeekc_nomap();
 	    check_for_codes_from_term();
 #endif
-#ifdef FEAT_MOUSE
+#ifdef FEAT_MOUSE_TTY
 	    if (tmode != TMODE_RAW)
 		mch_setmouse(FALSE);		/* switch mouse off */
 #endif
@@ -3179,17 +3194,20 @@ swapping_screen()
     void
 setmouse()
 {
+# ifdef FEAT_MOUSE_TTY
     int	    checkfor;
+# endif
 
 # ifdef FEAT_MOUSESHAPE
     update_mouseshape(-1);
 # endif
 
-# ifdef FEAT_GUI
+# ifdef FEAT_MOUSE_TTY /* Should be outside proc, but may break MOUSESHAPE */
+#  ifdef FEAT_GUI
     /* In the GUI the mouse is always enabled. */
     if (gui.in_use)
 	return;
-# endif
+#  endif
     /* be quick when mouse is off */
     if (*p_mouse == NUL || has_mouse_termcode == 0)
 	return;
@@ -3201,11 +3219,11 @@ setmouse()
 	return;
     }
 
-#ifdef FEAT_VISUAL
+#  ifdef FEAT_VISUAL
     if (VIsual_active)
 	checkfor = MOUSE_VISUAL;
     else
-#endif
+#  endif
 	if (State == HITRETURN || State == ASKMORE || State == SETWSIZE)
 	checkfor = MOUSE_RETURN;
     else if (State & INSERT)
@@ -3221,6 +3239,7 @@ setmouse()
 	mch_setmouse(TRUE);
     else
 	mch_setmouse(FALSE);
+# endif
 }
 
 /*
@@ -3938,7 +3957,7 @@ check_termcode(max_offset, buf, buflen)
 		     * remember that it was a mouse wheel click. */
 		    wheel_code = mouse_code;
 		}
-#   ifdef UNIX
+#   if defined(UNIX) && defined(FEAT_MOUSE_TTY)
 		else if (use_xterm_mouse() > 1)
 		{
 		    if (mouse_code & MOUSE_DRAG_XTERM)

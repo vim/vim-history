@@ -1,8 +1,8 @@
-*pi_spec.txt*   For Vim version 6.0am.  Last change: 2000 Oct 29
+*pi_spec.txt*   For Vim version 6.0an.  Last change: 2001 Jul 06
 
 by Gustavo Niemeyer ~
 
-This is a vim plugin to work with rpm spec files.
+This is a filetype plugin to work with rpm spec files.
 
 Currently, this Vim plugin allows you to easily update the %changelog
 section in RPM spec files. It will even create a section for you if it

@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Mar 21
+" Last Change:	2001 Jul 10
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -18,7 +18,7 @@ else
     let s:ext = "." . $xx
   endif
 endif
-if s:ext =~ ".en"
+if s:ext =~? ".en"
   let s:ext = ""
 endif
 
@@ -33,7 +33,7 @@ else
   let $TUTOR = $VIMRUNTIME . s:tutorfile
   echo "The file " . s:tutorxx . " does not exist.\n"
   echo "Copying English version: " . $TUTOR
-  5sleep
+  4sleep
 endif
 
 " 4. Making the copy and exiting Vim: 

@@ -631,20 +631,16 @@ list_version()
     MSG_PUTS(_("\n16 bit MS-DOS version"));
 # endif
 #endif
-#ifdef macintosh
+#ifdef MACOS
+# ifdef MACOS_X
+#  ifdef MACOS_X_UNIX
+    MSG_PUTS(_("\nMacOS X (unix) version"));
+#  else
+    MSG_PUTS(_("\nMacOS X version"));
+#  endif
+#else
     MSG_PUTS(_("\nMacOS version"));
-#endif
-#ifdef TARGET_API_MAC_OSX 
-    if (TARGET_API_MAC_OSX)
-        MSG_PUTS(_("\nMacOS X version"));
-#endif
-#ifdef TARGET_API_MAC_CARBON
-    if (TARGET_API_MAC_CARBON)
-        MSG_PUTS(_("\nMacOS Carbon"));
-#endif
-#ifdef TARGET_API_MAC_OS8
-    if (TARGET_API_MAC_OS8)
-        MSG_PUTS(_("\nMacOS 8"));
+# endif
 #endif
 
 #ifdef RISCOS
@@ -738,8 +734,20 @@ list_version()
 #     ifdef FEAT_GUI_PHOTON
     MSG_PUTS(_("with Photon GUI."));
 #     else
-#      if defined(MSWIN) || defined(macintosh)
+#      if defined(MSWIN)
     MSG_PUTS(_("with GUI."));
+#      else
+#	if defined (TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
+    MSG_PUTS(_("with Carbon GUI."));
+#	else
+#	 if defined (TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
+    MSG_PUTS(_("with Cocoa GUI."));
+#	 else
+#	  if defined (MACOS)
+    MSG_PUTS(_("with (classic) GUI."));
+#	  endif
+#	 endif
+#	endif
 #      endif
 #     endif
 #    endif

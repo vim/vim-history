@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 6.0am.  Last change: 2001 Jun 03
+*if_cscope.txt* For Vim version 6.0an.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -90,9 +90,12 @@ suggested use.)
 ==============================================================================
 2. Cscope related commands				*cscope-commands*
 
-				*:cscope* *:cs* *E258* *E259* *E262*
+		*:cscope* *:cs* *:scs* *:scscope* *E258* *E259* *E262*
 All cscope commands are accessed through suboptions to the main cscope
-command, |:cscope|.  The available subcommands are:
+command ":cscope".  The shortest abbreviation is ":cs".  The ":scscope"
+command does the same and also splits the window (short: "scs").
+
+The available subcommands are:
 
     add   : Add a new cscope database/connection.
 
@@ -102,13 +105,11 @@ command, |:cscope|.  The available subcommands are:
 
 	    [flags] are any additional flags you want to pass to cscope.
 
-	EXAMPLES
-	    1. :cs add /usr/local/cdb/cscope.out
-
-	    2. :cs add /projects/vim/cscope.out /usr/local/vim
-
-	    3. :cs add cscope.out /usr/local/vim -C
-
+	EXAMPLES >
+	    :cscope add /usr/local/cdb/cscope.out
+	    :cscope add /projects/vim/cscope.out /usr/local/vim
+	    :cscope add cscope.out /usr/local/vim -C
+<
     find  : Query cscope.  All cscope query options are available
 	    except option #5 ("Change this grep pattern").
 
@@ -126,16 +127,15 @@ command, |:cscope|.  The available subcommands are:
 		7 or f: Find this file
 		8 or i: Find files #including this file
 
-	EXAMPLES
-	    1. :cs find c vim_free
+	EXAMPLES >
+	    :cscope find c vim_free
+	    :cscope find 3 vim_free
+<
+	    These two examples perform the same query. >
 
-	    2. :cs find 3 vim_free
-
-	    Examples #1 and #2 perform the same query.
-
-	    3. :cs find 0 DEFAULT_TERM
-
-	    Executing example #3 on the source code for Vim 5.1 produces the
+	    :cscope find 0 DEFAULT_TERM
+<
+	    Executing this example on the source code for Vim 5.1 produces the
 	    following output:
 
 	    Cscope tag: DEFAULT_TERM
@@ -329,14 +329,20 @@ Additionally, there are a couple of hard-coded limitations:
 6. Suggested usage					*cscope-suggestions*
 
 Put these entries in your .vimrc (adjust the pathname accordingly to your
-setup):
+setup): >
 
 	if has("cscope")
 		set csprg=/usr/local/bin/cscope
 		set csto=0
 		set cst
 		set nocsverb
-		cs add cscope.out
+		" add any database in current directory
+		if filereadable("cscope.out")
+		    cs add cscope.out
+		" else add database pointed to by environment
+		elseif $CSCOPE_DB != ""
+		    cs add $CSCOPE_DB
+		endif
 		set csverb
 	endif
 
@@ -347,14 +353,14 @@ files, but your cscope databases as well.
 
 Some users may want to keep the regular tag behavior and have a different
 shortcut to access :cstag.  For example, one could map Ctrl-_  (underscore)
-to :cstag with the following command:
+to :cstag with the following command: >
 
 	map <C-_> :cstag <C-R>=expand("<cword>")<CR><CR>
 
 A couple of very commonly used cscope queries (using ":cs find") is to
 find all functions calling a certain function and to find all occurrences
 of a particular C symbol.  To do this, you can use these mappings as an
-example:
+example: >
 
 	map g<C-]> :cs find 3 <C-R>=expand("<cword>")<CR><CR>
 	map g<C-\> :cs find 0 <C-R>=expand("<cword>")<CR><CR>

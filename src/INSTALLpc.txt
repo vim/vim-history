@@ -73,8 +73,10 @@ nmake -f Make_mvc.mak PYTHON=C:\Python
 			(combinations are possible with Make_mvc.mak)
 make  -f Make_bc5.mak		GUI	  Borland C++ 5.x
 make  -f Make_bc5.mak		console	  Borland C++ 5.x (change the file)
-nmake -f Make_gvc.mak		GUI	  Microsoft Visual C++ 4.x or later
-nmake -f Make_ovc.mak		OLE	  Microsoft Visual C++ 4.x or later
+nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim"	
+				GUI	  Microsoft Visual C++ 4.x or later
+nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim OLE"
+				OLE	  Microsoft Visual C++ 4.x or later
 make  -f Make_cyg.mak		console   Cygnus gcc
 
 See the specific files for comments and options.
@@ -85,7 +87,7 @@ With Cygnus gcc you can also use the Unix Makefile instead (you need to get
 the Unix archive then).
 
 You can also use the Visual C++ IDE: use File/Open workspace, select the
-Make_gvc.mak file, then select Build/Build all.  This builds the GUI version
+Make_ivc.mak file, then select Build/Build all.  This builds the GUI version
 by default.
 
 Vim for Win32 compiles with the Microsoft Visual C++ 2.0 compiler and later,

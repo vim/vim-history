@@ -1,21 +1,21 @@
 " Vim syntax file
 " Language:	none; used to see highlighting
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last Change:	2001 Apr 07
+" Last Change:	2001 Jul 11
 " Version:	5.4n.1
 
 " To see your current highlight settings, do
 "    :so $VIMRUNTIME/syntax/hitest.vim
 
 " save global options and registers
-let save_hidden      = &hidden
-let save_lazyredraw  = &lazyredraw
-let save_more        = &more
-let save_report      = &report
-let save_shortmess   = &shortmess
-let save_wrapscan    = &wrapscan
-let save_register_a  = @a
-let save_register_se = @/
+let s:hidden      = &hidden
+let s:lazyredraw  = &lazyredraw
+let s:more        = &more
+let s:report      = &report
+let s:shortmess   = &shortmess
+let s:wrapscan    = &wrapscan
+let s:register_a  = @a
+let s:register_se = @/
 
 " set global options
 set hidden lazyredraw nomore report=99999 shortmess=aoOstTW wrapscan
@@ -34,7 +34,7 @@ endif
 edit Highlight\ test
 
 " set local options
-set autoindent noexpandtab formatoptions=t shiftwidth=16 noswapfile tabstop=16
+setlocal autoindent noexpandtab formatoptions=t shiftwidth=16 noswapfile tabstop=16
 let &textwidth=&columns
 
 " insert highlight settings
@@ -130,20 +130,20 @@ set nomodified
 .
 
 " restore global options and registers
-let &hidden      = save_hidden
-let &lazyredraw  = save_lazyredraw
-let &more        = save_more
-let &report      = save_report
-let &shortmess   = save_shortmess
-let &wrapscan    = save_wrapscan
-let @a           = save_register_a
+let &hidden      = s:hidden
+let &lazyredraw  = s:lazyredraw
+let &more        = s:more
+let &report      = s:report
+let &shortmess   = s:shortmess
+let &wrapscan    = s:wrapscan
+let @a           = s:register_a
 
 " restore last search pattern
 call histdel("search", -1)
-let @/ = save_register_se
+let @/ = s:register_se
 
 " remove variables
-unlet save_hidden save_lazyredraw save_more save_report save_shortmess
-unlet save_wrapscan save_register_a save_register_se
+unlet s:hidden s:lazyredraw s:more s:report s:shortmess
+unlet s:wrapscan s:register_a s:register_se
 
 " vim: ts=8

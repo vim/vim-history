@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0am.  Last change: 2001 Jul 01
+*todo.txt*      For Vim version 6.0an.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,109 +29,13 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: merge Make_ovc.mak and Make_gvc.mak into Make_ivc.mak.  Should make it
-a lot shorter, but keep it working for VC 4.0 to VC 7, and with nmake.
-(Walter Briscoe)
-
-Win32: search for "expression" in doc/eval.txt.  When wrapping around all the
-text gets red? (Chan)  I can't reproduce it.  Fixed in 6.0al?
-
-Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
-
-Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
-marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
-
-
-Main items for 6.0:
-A.  Folding
-	Works.
-B.  UTF-8 support
-	Works.
-C.  Multi-line regexp patterns
-	Works.
-D.  Vertical window split
-	Works.
-E.  Virtual edit
-	Works.
-F.  Sun Visual workshop (debugger) interface
-	Works.
-G.  Edit command line with Vi commands
-	The command-line window works.
-H.  More automatic testing
-	Test have been added (could be a bit more though)
-I.  Multi-language support
-	Works.
-J.  User Friendlier
-	The user manual has been written.
-	Enhance Windows install program.
-
-
-J. User Friendlier
-9   Printing:
-    -	Add "page width" to wrap long lines.
-    -	Unix: make conversion to PostScript work better.
-	Use some dialog box to do the obvious settings (paper size, printer
-	name, portrait/landscape, etc).
-    -	Using the cterm_color[] table is wrong when t_colors is > 16.
-9   Windows install with NSIS:
-    - Don't use install.exe to make choices.
-    - install icon on desktop
-    - create entry in start/programs menu (also for uninstall)
-    - create .bat files in the windows directory
-    - detect and handle an existing Vim version
-    - install the vimtutor.bat script, so that it's easy to execute.
-9   Windows install with install.exe:
-    Check new dosinst.c features (Jon Merz)
-    -  also evim.bat, vimdiff.bat, gvimdiff.bat, view.bat, gview.bat
-       One directory for all batch files.
-       One item: install batch files in {path}
-		 overwrite batch files in {path}
-		 do not install batch files
-    -  also "shortcut" to evim, gvimdiff and gview
-9   Make Windows uninstall program better:
-    - Delete the vim.bat and gvim.bat files.
-    - Delete the whole tree of Vim files.
-8   make a vimtutor script for Amiga and other systems.
-
-
-Various recent:
-9   Virtual edit: blockwise selection, "$" then yank, includes an extra space.
--   xterm sends <Esc>O5F for <C-End>.  Similarly for other Control-keys, e.g.,
-    <C-Left> and <C-Right>.
--   Problem with cscope jumping to the wrong position? (Medley)
-    Selecting item 5 jumps to item 4. (Andrej Borsenkow)
-8   When changing 'guicursor' and the value is invalid, some of the effects
-    will still take place.  Should first check for errors and only make the
-    new value effective when it's OK.
-9   Should mapping <C-A> and <C-S-A> both work?
-9   When compiled with Python and threaded libraries, a signal can cause Vim
-    to loop forever.  Looks like a problem with threads and signals.
-8   In Visual block mode, "A" appends to lines that don't extend into the
-    block, but padding is wrong (always two spaces).  Fix the padding.
-9   With blockwise Visual mode, "A" works different than "I" when there are
-    short lines.  Make them work the same way.
-8   GUI: Make inputdialog() work for Photon, Amiga, Mac, RiscOS.
+-   Update $VIMRUNTIME/optwin for new options.
+-   Update the overview of options in quickref.txt.
 -   Do profiling to check performance bottlenecks.
     check coladvance2() with/without 'virtualedit'.
-9   Check if parts of the Reference Manual can be replaced with a link to the
-    user manual.
-8   Use configure to set absolute paths in tools scripts when installing.
-8   Windows (and others): When using the scrollbar to scroll, don't move the
-    cursor position.  When moving the cursor scroll to the cursor position.
-8   How to create the gvim.exe that is distributed?  Make_gvc.mak is standard,
-    but Make_mvc.mak supports gettext, iconv, perl, etc.
-9   It is possible to create the same swap file twice, when there is latency
-    in the system (and 'directory' is ~/tmp). (Soulier)
-    Create the swap file as soon as its name is chosen, when mf_fname is set.
-    Delete it before changing mf_fname/mf_ffname.
-9   Install vim32x32.xpm in /usr/local/share/icons/ or ~/.kde/share/icons/ for
-    using it with KDE.
--   For files found with 'include': handle "*" in included name, for Java.
-    (Jason)
--   update $VIMRUNTIME/optwin for new options.
--   Update the overview of options in quickref.txt.
+-   Clean up version6.txt.
+-   Check the todo list for items that have already been implemented.
 
----------------------- bugs ---------------------------
 
 Vi incompatibility:
 8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
@@ -147,7 +51,6 @@ Vi incompatibility:
     cursor, not on the first line.
 8   "zt" should scroll one screen forward and put the cursor in the first
     line.
-8   ":z#" should list lines with line numbers. (Bob Farmer)
 8   text is put in register 1 when using "c" and "d" with a motion character:
     <control-A>   %   (   ) `<character>   /   ?   N n	 {   }
     (from Nvi manual).
@@ -320,6 +223,9 @@ Win32 GUI known bugs:
 
 
 Athena GUI:
+8   Athena: using a fontset for menus doesn't work.  Check code for
+    menu_fontset marked with EXPERIMENTAL.  Perhaps use fontsets for
+    everything?
 9   When using ":unmenu" in menu item, the reversing of menu items is wrong.
     Happens with Syntax/manual.	Problem with not removing the reversed text
     when destroying the menu item?  For Rochholz Vim crashes.
@@ -355,6 +261,7 @@ Athena GUI:
 Motif GUI:
 8   Motif GUI: draws in right border of window, scrolling leaves pixels
     behind.  Scroll two more pixels?  Or make window two pixels wider?
+8   Setting the default button for a dialog doesn't work.
 9   When starting GUI with ":gui" while 'writedel' is non-zero, escape
     sequences are split up.  Motif version crashes.
 8   When changing the color of the toolbar with ":hi toolbar", the pixmaps are
@@ -573,6 +480,19 @@ VMS:
 
 
 "Small" problems:
+8   "grx" on a double-wide character inserts "x", should replace the character
+    with "x ".  "gR" on <xx> ('display' set the "uhex") doesn't replace.
+9   When XIM is being used, sometimes one character is lost.  Probably when
+    XIM has just been enabled.
+9   Using "rx" with 'virtualedit' set on a double-wide UTF-8 character of
+    three bytes, keeps the first two bytes and adds a space.  Should replace
+    the whole character if it's the same width, insert a space when it's
+    smaller.
+9   Using "grx" on a double-wide character doesn't replace the character with
+    a space.
+8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
+7   When 'virtualedit' is used, moving with "$" and the "rx" still replaces
+    the whole block instead of until the end of the line in each line.
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
     "lev1/lev2/bar.h".  Should pass current file name on from
@@ -804,9 +724,6 @@ Problems that will (probably) not be solved:
 
 Documentation:
 9   Merge in ideas from ~/vim/patches/tutor.txt (Gabriel Zachmann)
-9   Errors in doc to HTML conversion:
-    autocmd.txt "like \| in a |pattern|"
-9   Add 'fold' section to quick reference.
 9   Make the Reference Manual more precise.  For each command mention:
     - change to cursor position and curswant
     - if it can be undone (u/CTRL-R) and redone (.)
@@ -820,7 +737,6 @@ Documentation:
 7   Windows: When a wrong command is typed with an ALT key, give a hint to
     look at the help for 'winaltkeys'.
 -   Check text editor compendium for vi and Vim remarks.
--   Add some text for xxd.
 
 
 Help:
@@ -847,6 +763,14 @@ Help:
 "make test":
 -   Find a way to skip tests that can't be done.  For non-Unix systems, but
     also for e.g. the Perl interface.
+
+
+User Friendlier:
+7   Windows install with NSIS: Detect and handle $VIM being set to another
+    directory, instead of leaving it up to install.exe to give a warning
+    message.
+8   Windows install with install.exe: Use .exe instead of .bat files for
+    links, so that command line arguments are passed on unmodified?
 
 
 Folding:
@@ -916,6 +840,17 @@ Ease of use:
 8   Add file locking.  Lock a file when starting to edit it with flock() or
     fcntl().  This patch has advisory file locking while reading/writing the
     file: ~/vim/patches/kahn_file_locking .
+8   make a vimtutor script for Amiga and other systems.
+
+
+Printing:
+-   Add "page width" to wrap long lines.
+-   Unix: make conversion to PostScript work better.  Allow selecting a
+    different font size.
+-   Unix: Use some dialog box to do the obvious settings (paper size, printer
+    name, portrait/landscape, etc).
+-   Unix: allow selecting a printer program or a file (with the name of the
+    file).
 
 
 Syntax highlighting:
@@ -1436,10 +1371,13 @@ Win32 GUI:
 
 
 GUI:
--   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
-7   GUI: Implement ":popup" for other systems than Windows.
+8   Make inputdialog() work for Photon, Amiga, Mac, RiscOS.
+-   <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
+7   Implement ":popup" for other systems than Windows.
 8   Implement ":tearoff" for other systems than Win32 GUI.
+8   When using the scrollbar to scroll, don't move the cursor position.  When
+    moving the cursor: scroll to the cursor position.
 9   Make <S-Insert> paste from the clipboard by default. (Kunze)
 7   Menu local to a buffer, like mappings.  Or local to a filetype?
 8   Dragging the mouse pointer outside of a Vim Window should make the text
@@ -1621,6 +1559,8 @@ Insert mode completion/expansion:
 -   Make it possible to search include files in several places.  Use the
     'path' option?  Can this be done with the dictionary completion (use
     wildcards in the file name)?
+-   For files found with 'include': handle "*" in included name, for Java.
+    (Jason)
 -   Make CTRL-X CTRL-K do a binary search in the dictionary (if it's sorted).
 -   Speed up CTRL-X CTRL-K dictionary searching (don't use a regexp?).
 -   Set a mark at the position where the match was found (file mark, could
@@ -1927,12 +1867,6 @@ Visual mode:
 6   Add commands to move selected text, without deselecting.
 
 
-Quickfix:
-8   Quickfix mode: Column number should be interpreted with an 8-character
-    tabstop.  Add a "%v" item for this, so that the old "%c" remains working
-    as it did.
-
-
 More advanced repeating commands:
 -   Add "." command for visual mode: redo last visual command (e.g. ":fmt").
 -   Add "." command after operator: repeat last command of same operator. E.g.
@@ -1945,6 +1879,7 @@ More advanced repeating commands:
 
 
 Mappings and Abbreviations:
+8   Should mapping <C-A> and <C-S-A> both work?
 7   ":abbr b byte", append "b " to an existing word still expands to "byte".
     This is Vi compatible, but can we avoid it anyway?
 8   To make a mapping work with a prepended "x to select a register, store the
@@ -2432,6 +2367,10 @@ Registers:
 
 
 Various improvements:
+7   Xterm sends <Esc>O3F for <M-End>.  Similarly for other <M-Home>, <M-Left>,
+    etc.  Combinations of Alt, Ctrl and Shift are also possible.  Recognize
+    these to avoid inserting the raw byte sequence, handle like the key
+    without modifier (unless mapped).
 8   Add a watchpoint in the debug mode: An expression that breaks execution
     when evaluating to non-zero.
 7   Support ":browse edit" in console, using explorer.vim?

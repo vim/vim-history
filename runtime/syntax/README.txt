@@ -1,4 +1,6 @@
-This directory contains vim scripts for specific languages.
+This directory contains Vim scripts for syntax highlighting.
+
+These scripts are not for a language, but are used by Vim itself:
 
 syntax.vim	Used for the ":syntax on" command.  Uses synload.vim.
 
@@ -20,7 +22,7 @@ hitest.vim	View the current highlight settings.
 whitespace.vim  View Tabs and Spaces.
 
 
-If you want to write a syntax, read the docs at ":help usr_44.txt".
+If you want to write a syntax file, read the docs at ":help usr_44.txt".
 
 If you make a new syntax file which would be useful for others, please send it
 to Bram@vim.org.  Include instructions for detecting the file type for this

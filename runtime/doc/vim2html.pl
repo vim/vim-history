@@ -10,6 +10,8 @@ chop $date;
 
 %url = ();
 
+# Read the specified tag file.  For each tag, convert the filename into a 
+# hyperlink and save it in an associative array using the tag as the index.
 sub readTagFile
 {
 	my($tagfile) = @_;
@@ -21,6 +23,9 @@ sub readTagFile
 		s/</&lt;/g;
 		s/>/&gt;/g;
 
+		# For each line in the tag file, save the first two items
+		# into backreferences, the first holding the tag itself,
+		# and the second holding the file containing the tag.
 		/^(.*)\t(.*)\t/;
 
 		$tag = $1;
@@ -33,6 +38,9 @@ sub readTagFile
 	close( TAGS );
 }
 
+# Convert the specified text file into an html file.  For each line in the
+# file, convert any words between asterices into page anchors, and convert
+# any words between bar characters into hyperlinks.
 sub vim2html
 {
 	my( $infile ) = @_;
@@ -40,6 +48,8 @@ sub vim2html
 
 	open(IN, "$infile" ) || die "Couldn't read from $infile.\n";
 
+	# Strip off any path information from the supplied filename.
+	# TODO: will this work on DOS paths using a backslash?
 	($outfile = $infile) =~ s%.*/%%g;
 	$outfile =~ s/\.txt$//g;
 
@@ -59,8 +69,11 @@ EOF
 		s/</&lt;/g;
 		s/>/&gt;/g;
 
-		s/\*([^*]*)\*/\*<A NAME="$1"><\/A><B>$1<\/B>\*/g;
-		s/\|([^|]*)\|/\|$url{$1}\|/g;
+		# Convert tags between asterices into page targets
+		s/\*([^*\s]*)\*/\*<A NAME="$1"><B>$1<\/B><\/A>\*/g;
+
+		# Convert tags between bars into hyperlinks
+		s/\|([^|\s]*)\|/\|$url{$1}\|/g;
 
 		print OUT $_;
 	}
@@ -73,6 +86,7 @@ EOF
 
 }
 
+# Display the usage information for the script.
 sub usage
 {
 die<<EOF;
@@ -83,16 +97,20 @@ usage:
 EOF
 }
 
-# main
+# Main processing
 
-if ( $#ARGV < 2 ) {
+if ( scalar(@ARGV) < 2 ) {
 	usage();
 }
 
 print "Processing tags...\n";
 readTagFile( $ARGV[ 0 ] );
 
+# Individually process each file pattern supplied on the command line.
 foreach $file ( 1..$#ARGV ) {
-	print "Processing ".$ARGV[ $file ]."...\n";
-	vim2html( $ARGV[ $file ] );
+    # Process each pattern as if it contains wildcards.
+    while ($filename = <$ARGV[$file]>) {
+	print "Processing ".$filename."...\n";
+	vim2html( $filename );
+    }
 }

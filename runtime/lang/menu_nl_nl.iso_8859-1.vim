@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 May 18
+" Last Change:	2001 Jul 03
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -70,9 +70,13 @@ menutrans &Next\ Error<Tab>:cn		Volgende\ Fout<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	Vorige\ Fout<Tab>:cp
 menutrans &Older\ List<Tab>:cold	&Oudere\ Lijst<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	&Nieuwere\ Lijst<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	Fouten\ Venster<Tab>:cwin
+menutrans Error\ &Window		Fouten\ Venster
+menutrans &Update<Tab>:cwin		&Aanpassen<Tab>:cwin
+menutrans &Open<Tab>:copen		&Openen<Tab>:copen
+menutrans &Close<Tab>:cclose		&Sluiten<Tab>:cclose
 menutrans Convert\ to\ HEX<Tab>:%!xxd	Converteer\ naar\ HEX<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	Converteer\ terug<Tab>:%!xxd\ -r
+menutrans &Set\ Compiler		Kies\ Compiler
 
 " Names for buffer menu.
 menutrans &Buffers		&Buffer

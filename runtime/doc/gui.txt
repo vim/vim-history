@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0am.  Last change: 2001 Jul 01
+*gui.txt*       For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,7 +21,7 @@ Other GUI documentation:
 {Vi does not have any of these commands}
 
 ==============================================================================
-1. Starting the GUI					*gui-start* *E229* *E233*
+1. Starting the GUI				*gui-start* *E229* *E233*
 
 First you must make sure you actually have a version of Vim with the GUI code
 included.  You can check this with the ":version" command, it should include

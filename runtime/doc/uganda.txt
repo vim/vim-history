@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0am.  Last change: 2001 Jun 03
+*uganda.txt*    For Vim version 6.0an.  Last change: 2001 Jul 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -20,7 +20,8 @@ maintainer a copy, including the source code.  Or make it available to the
 maintainer through ftp; let him know where it can be found.  If the number of
 changes is small (e.g., a modified Makefile) e-mailing the diffs will do.
 When the maintainer asks for it (in any way) you must make your changes,
-including source code, available to him.
+including source code, available to him.  The e-mail address to be used is
+<maintainer@vim.org>
 
 The maintainer reserves the right to include any changes in the official
 version of Vim.  This is negotiable.  You are not allowed to distribute a
@@ -44,7 +45,6 @@ If you are happy with Vim, please express that by reading the rest of this
 file.  You can also have a look here (these are mirrors):
 
 		http://www.vim.org/iccf/
-		http://www.iccf.nl/
 		http://iccf-holland.org/
 
 							*kcc*

@@ -1,7 +1,7 @@
 "  File        : css.vim
-"  Owner       : Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on  : Sun, 01 Jul 2001 14:49:01 +0200
-"  Revision by : Nikolai 'pcp' Weibull <da.box@home.se>
+"  Maintainter : Nikolai 'pcp' Weibull <da.box@home.se>
+"  Revised on  : Mon, 02 Jul 2001 18:28:56 +0200
+"  Language    : Cascading Style Sheets (CSS)
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -24,22 +24,24 @@ function GetCSSIndent()
 
     " Hit the start of the file, use zero indent.
     if lnum == 0
-	return 0
+       return 0
     endif
 
     let line	= getline(lnum)
-    let ind		= indent(lnum)
+    let ind	= indent(lnum)
 
-    " Check for opening brace at end of previous line
+    " Check for opening brace on the previous line
+    " Skip if it also contains a closing brace...
+    " TODO: this isn't beautiful
     if line =~ '{' && line !~ '{.*}'
-	let ind	= ind + &sw
+       let ind	= ind + &sw
     endif
-
+    
     let line	= getline(v:lnum)
-
+    
     " Check for closing brace on current line
     if line =~ '^\s*}'
-	let ind	= ind - &sw
+        let ind	= ind - &sw
     endif
 
     return ind

@@ -1011,7 +1011,7 @@ gui_make_popup(char_u *path_name)
 {
     vimmenu_T	*menu = gui_find_menu(path_name);
 
-    if (menu!=NULL)
+    if (menu != NULL)
     {
 	/* Find the position of the current cursor */
 	DWORD	temp_p;

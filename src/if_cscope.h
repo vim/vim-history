@@ -50,6 +50,7 @@ typedef struct {
     int     (*func) __ARGS((exarg_T *eap));
     char *  help;
     char *  usage;
+    int	    cansplit;		/* if supports splitting window */
 } cscmd_T;
 
 typedef struct csi {

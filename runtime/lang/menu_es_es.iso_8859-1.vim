@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Jun 16
+" Last Change:		2001 Jul 4
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -30,6 +30,7 @@ menutrans &Close<Tab>:q			&Cerrar<Tab>:q
 menutrans &Save<Tab>:w			&Guardar<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Guardar\ &como\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	&Mostrar\ diferencias\ con\.\.\.
+menutrans Split\ Patched\ &By\.\.\.	Mostrar\ &parcheado\ por\.\.\.
 menutrans &Print			&Imprimir
 menutrans Sa&ve-Exit<Tab>:wqa		Gua&rdar\ y\ salir<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Salir<Tab>:qa
@@ -125,7 +126,8 @@ menutrans &Next\ Error<Tab>:cn		&Error\ siguiente<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	Error\ p&revio<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ de\ &viejos\ a\ nuevos<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ de\ &nuevos\ a\ viejos<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	Ven&tana\ de\ errores<Tab>:cwin
+menutrans Error\ &Window		Ven&tana\ de\ errores
+menutrans &Set\ Compiler		Fi&jar\ el\ compilador
 menutrans &Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
 menutrans Conve&rt\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
 
@@ -146,10 +148,16 @@ menutrans Delete\ &All\ Folds<Tab>zD		Suprimir\ &todos\ los\ pligues<Tab>zD
 " moving around in folds
 menutrans Fold\ column\ &width			A&nchura\ de\ columna\ del\ pliegue
 
+" Tools.Diff Menu
 menutrans &Update	&Actualizar
 menutrans &Get\ Block	&Obtener\ bloque
 menutrans &Put\ Block	&Poner\ bloque
 
+"Tools.Error Menu
+menutrans &Update<Tab>:cwin	&Actualizar
+menutrans &Open<Tab>:copen	A&brir
+menutrans &Close<Tab>:cclose	&Cerrar
+ 
 " Names for buffer menu.
 menutrans &Buffers		&Buffers
 menutrans &Refresh\ menu	&Refrescar\ menú
@@ -212,6 +220,14 @@ if has("toolbar")
     tmenu ToolBar.FindNext	Buscar siguiente 
     tmenu ToolBar.FindPrev	Buscar precedente
     tmenu ToolBar.Replace	Buscar y reemplazar
+    tmenu ToolBar.New		Ventana nueva
+    tmenu ToolBar.WinSplit	Dividir ventana
+    tmenu ToolBar.WinMax	Ventana máxima
+    tmenu ToolBar.WinMin	Ventana mínima
+    tmenu ToolBar.WinVSplit	Dividir verticalmente
+    tmenu ToolBar.WinMaxWidth	Anchura máxima
+    tmenu ToolBar.WinMinWidth	Anchura mínima
+    tmenu ToolBar.WinClose	Cerrar ventana
     tmenu ToolBar.LoadSesn	Cargar sesión
     tmenu ToolBar.SaveSesn	Guardar sesión
     tmenu ToolBar.RunScript	Ejecutar un «script»

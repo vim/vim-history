@@ -20,7 +20,7 @@
 # include <time.h>	/* for strftime() */
 #endif
 
-#ifdef macintosh
+#ifdef MACOS
 # include <time.h>       /* for time_t */
 #endif
 
@@ -3367,7 +3367,7 @@ f_filewritable(argvars, retvar)
 #endif
 
     p = get_var_string(&argvars[0]);
-#ifndef macintosh /* TODO: get either mch_writable or mch_access */
+#ifndef MACOS_CLASSIC /* TODO: get either mch_writable or mch_access */
 #ifdef WIN3264
     if (mch_writable(p))
 #else
@@ -3891,7 +3891,7 @@ f_has(argvars, retvar)
 	"dos16",
 # endif
 #endif
-#ifdef macintosh
+#ifdef MACOS /* TODO: Should we add MACOS_CLASSIC, MACOS_X? (Dany) */
 	"mac",
 #endif
 #ifdef OS2

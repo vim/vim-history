@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
+*usr_07.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -166,7 +166,7 @@ added) to abandon the changes.
 
 
 DID YOU EDIT THE LAST FILE?
-
+							*arglist-quit*
 When you use a list of files, Vim assumes you want to edit them all.  To
 protect you from exiting too early, you will get this error when you didn't
 edit the last file in the list yet: >
@@ -175,7 +175,6 @@ edit the last file in the list yet: >
 
 If you really want to exit, just do it again.  Then it will work (but not when
 you did other commands in between).
-
 
 ==============================================================================
 *07.3*	Jumping from file to file

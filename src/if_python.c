@@ -37,7 +37,7 @@
 #endif
 
 #include <Python.h>
-#ifdef macintosh
+#ifdef MACOS
 # include "macglue.h"
 # include <CodeFragments.h>
 #endif
@@ -382,7 +382,7 @@ Python_Init(void)
 	}
 #endif
 
-#ifndef macintosh
+#ifndef MACOS
 	Py_Initialize();
 #else
 	PyMac_Initialize();
@@ -421,7 +421,7 @@ fail:
     static void
 DoPythonCommand(exarg_T *eap, const char *cmd)
 {
-#ifdef macintosh
+#ifdef MACOS
     GrafPtr oldPort;
     GetPort (&oldPort);
     /* Check if the Python library is available */
@@ -439,7 +439,7 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     Python_SaveThread();	    /* leave python */
     Python_Lock_Vim();		    /* enter vim */
     PythonIO_Flush();
-#ifdef macintosh
+#ifdef MACOS
     SetPort (oldPort);
 #endif
 }

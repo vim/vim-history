@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0am.  Last change: 2001 Jun 30
+*help.txt*	For Vim version 6.0an.  Last change: 2001 Jul 12
 
 			VIM - main help file
 									 k
@@ -105,8 +105,9 @@ Basic editing ~
 |scroll.txt|	scrolling the text in the window
 |insert.txt|	Insert and Replace mode
 |change.txt|	deleting and replacing text
+|indent.txt|	automatic indenting for C and other languages
 |undo.txt|	Undo and Redo
-|repeat.txt|	repeating commands and debugging
+|repeat.txt|	repeating commands, Vim scripts and debugging
 |visual.txt|	using the Visual mode (selecting a text area)
 |various.txt|	various remaining commands
 |recover.txt|	recovering from a crash

@@ -50,11 +50,11 @@ fun! s:SynSet()
 
   if s != ""
     " Load the syntax file(s)
-    if has("mac")
-      exe "runtime! syntax:" . s . ".vim"
-    else
+"   if has("mac")
+"     exe "runtime! syntax:" . s . ".vim"
+"   else
       exe "runtime! syntax/" . s . ".vim"
-    endif
+"   endif
   endif
 endfun
 

@@ -3355,7 +3355,11 @@ regmatch(scan)
 #endif
 			    TO_LOWER(*opnd) != TO_LOWER(*reginput))))
 		    return FALSE;
-		if (opnd[1] == NUL)
+		if (opnd[1] == NUL
+#ifdef FEAT_MBYTE
+			    && !(enc_utf8 && ireg_ic)
+#endif
+			)
 		    ++reginput;		/* matched a single char */
 		else
 		{

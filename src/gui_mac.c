@@ -317,6 +317,9 @@ char_u *C2Pascal_save(char_u *Cstring)
     char_u  *PascalString;
     int	    len;
 
+    if (Cstring == NULL)
+	return NULL;
+
     len = STRLEN(Cstring);
     
     if (len > 255) /* Truncate if necessary */
@@ -326,6 +329,44 @@ char_u *C2Pascal_save(char_u *Cstring)
     if (PascalString != NULL)
     {
 	mch_memmove(PascalString + 1, Cstring, len);
+	PascalString[0] = len;
+    }
+
+    return PascalString;
+}
+
+/*
+ * C2Pascal_save_and_remove_backslash
+ *
+ * Allocate memory and convert the C-String passed in
+ * into a pascal string. Also remove the backslash at the same time
+ *
+ */
+
+char_u *C2Pascal_save_and_remove_backslash(char_u *Cstring)
+{
+    char_u  *PascalString;
+    int	    len;
+    char_u  *p, *c;
+
+    len = STRLEN(Cstring);
+    
+    if (len > 255) /* Truncate if necessary */
+	len = 255;
+
+    PascalString = alloc(len + 1);
+    if (PascalString != NULL)
+    {
+	for (c = Cstring, p = PascalString+1, len = 0; (*c != 0) && (len < 255); c++)
+	{
+	    if ((*c == '\\') && (c[1] != 0))
+	    {
+		c++;
+	    }
+	    *p = *c;
+            p++;
+	    len++;
+	}
 	PascalString[0] = len;
     }
 
@@ -1546,7 +1587,7 @@ gui_mac_doInContentClick (theEvent, whichWindow)
 
 	if (thePortion != kControlIndicatorPart)
 	{
-	    dragged_sb = NULL;
+	    dragged_sb = theControl;
 	    TrackControl(theControl, thePoint, gScrollAction);
 	    dragged_sb = NULL;
 	}
@@ -2270,17 +2311,27 @@ gui_mac_find_font (font_name)
     short	font_id;
     short	size=9;
     GuiFont	font;
+    char_u      *fontNamePtr;
 
     for (p = font_name; ((*p != 0) && (*p != ':')); p++)
 	;
 
     c = *p;
     *p = 0;
+
+#if 1
     STRCPY(&pFontName[1], font_name);
     pFontName[0] = STRLEN(font_name);
     *p = c;
-
+    
     GetFNum (pFontName, &font_id);
+#else
+    /* name = C2Pascal_save(menu->dname); */
+    fontNamePtr = C2Pascal_save_and_remove_backslash(font_name);
+    
+    GetFNum (fontNamePtr, &font_id);
+#endif
+
 
     if (font_id == 0)
     {
@@ -3180,6 +3231,14 @@ gui_mch_wait_for_chars(wtime)
     long	currentTick;
     long	sleeppyTick;
 
+    /* If we are providing life feedback with the scrollbar,
+     * we don't want to try to wait for an event, or else
+     * there won't be any life feedback.
+     */
+    if (dragged_sb != NULL)
+	return FAIL;
+        /* TODO: Check if FAIL is the proper return code */
+
     entryTick = TickCount();
 
     do
@@ -3575,26 +3634,39 @@ gui_mch_add_menu(menu, idx)
     int		idx;
 {
     /*
-     * TODO: Simplify handling of index, handle and id of menu and submenu
+     * TODO: Try to use only menu_id instead of both menu_id and menu_handle.
      * TODO: use menu->mnemonic and menu->actext
      * TODO: Try to reuse menu id
+     *       Carbon Help suggest to use only id between 1 and 235
      */
     static long	 next_avail_id = 128;
+    long	 menu_after_me = 0; /* Default to the end */
     char_u	*name;
     short	 index;
     vimmenu_T	*parent = menu->parent;
+    vimmenu_T	*brother = menu->next;
 
-    /* Can only add a menu to the menubar (parent == NULL)
-     * or if...
-     */
-    if (/* !menu_is_menubar(menu->name)
-	    || */ (parent != NULL && parent->submenu_id == 0))
+    /* Cannot add a menu if ... */
+    if ((parent != NULL && parent->submenu_id == 0))
 	return;
 
-    /* menu ID greater than 1024 reserved for ??? */
+    /* menu ID greater than 1024 are reserved for ??? */
     if (next_avail_id == 1024)
 	return;
 
+    /* My brother could be the PopUp, find my real brother */
+    while ((brother != NULL) && (!menu_is_menubar(brother->name)))
+	brother = brother->next;
+	    
+    /*  Find where to insert the menu (for MenuBar) */
+    if ((parent == NULL) && (brother != NULL))
+	menu_after_me = brother->submenu_id;
+
+    /* If the menu is not part of the menubar (and its submenus), add it 'nowhere' */
+    if (!menu_is_menubar(menu->name))
+	menu_after_me = hierMenu;
+
+    /* Convert the name */
     name = C2Pascal_save(menu->dname);
     if (name == NULL)
 	return;
@@ -3609,6 +3681,10 @@ gui_mch_add_menu(menu, idx)
     else
 #endif
     {
+	/* Carbon suggest use of
+         * OSStatus CreateNewMenu ( MenuID, MenuAttributes, MenuRef *);
+	 * OSStatus SetMenuTitle ( MenuRef, ConstStr255Param title );
+         */
 	menu->submenu_id = next_avail_id;
 	menu->submenu_handle = NewMenu (menu->submenu_id, name);
 	next_avail_id++;
@@ -3616,20 +3692,17 @@ gui_mch_add_menu(menu, idx)
 
     if (parent == NULL)
     {
-	/* Adding a menu to the menubar */
-	menu->menu_id = 0;
-	menu->menu_handle = NULL;
+	/* Adding a menu to the menubar, or in the no mans land (for PopUp) */
 
-	/* TODO: Should the menubat_menu if be before or after? */
+	/* TODO: Verify if we could only Insert Menu if really part of the menubar
+	 *       The Inserted menu are scanned or the Command-key combos
+         */
+
+	/* Insert the menu unless it's the Help menu */
 #ifdef USE_HELPMENU
-	if (menu->submenu_id == kHMHelpMenuID)
-	    menu->submenu_id = kHMHelpMenuID;
-	else
+	if (menu->submenu_id != kHMHelpMenuID)
 #endif
-	if (menu_is_menubar(menu->name))
-	    InsertMenu (menu->submenu_handle, idx); /* before */
-	else
-	    InsertMenu (menu->submenu_handle, hierMenu); /* before */
+	    InsertMenu (menu->submenu_handle, menu_after_me); /* insert before */
 #if 1
 	/* Vim should normally update it. TODO: verify */
 	DrawMenuBar();
@@ -3638,13 +3711,7 @@ gui_mch_add_menu(menu, idx)
     else
     {
 	/* Adding as a submenu */
-#if 0
-	menu->menu_id = parent->submenu_id;
-	menu->menu_handle = parent->submenu_handle;
-#else
-	menu->menu_id = 0;
-	menu->menu_handle = NULL;
-#endif
+
 	index = gui_mac_get_menu_item_index (menu);
 
         /* Call InsertMenuItem followed by SetMenuItemText
@@ -3681,27 +3748,17 @@ gui_mch_add_menu_item(menu, idx)
 	return;
 
     /* Could call SetMenuRefCon [CARBON] to associate with the Menu, 
-       for older call GetMenuItemData (menu, item, isCommandID?, data) */
-#if 0
-    /* Don't add menu separator */
-    if (menu_is_separator(menu->name))
-	return;
-#endif
+       for older OS call GetMenuItemData (menu, item, isCommandID?, data) */
 
+    /* Convert the name */
     name = C2Pascal_save(menu->dname);
 
-#if 0
-    menu->menu_id = parent->submenu_id;
-    menu->menu_handle = parent->submenu_handle;
-#else
-    menu->menu_id = 0;
-    menu->menu_handle = NULL;
-#endif
+    /* Where are just a menu item, so no handle, no id */
     menu->submenu_id = 0;
     menu->submenu_handle = NULL;
 
 #ifdef USE_HELPMENU
-    /* The index in th ehelp menu are offseted */
+    /* The index in the help menu are offseted */
     if (parent->submenu_id == kHMHelpMenuID)
 	idx += gui.MacOSHelpItems;
 #endif
@@ -3745,9 +3802,10 @@ gui_mch_destroy_menu(menu)
 	if (menu->parent->submenu_handle != nil) /*gui.MacOSHelpMenu)*/
 #endif
 	{
-	    /* For now just don't delete help menu items */
+	    /* For now just don't delete help menu items. (Huh? Dany) */
 	    DeleteMenuItem (menu->parent->submenu_handle, index);
 
+	    /* Delete the Menu if it was a hierarchical Menu */
 	    if (menu->submenu_id != 0)
 	    {
 		DeleteMenu (menu->submenu_id);
@@ -3755,19 +3813,24 @@ gui_mch_destroy_menu(menu)
 	    }
 	}
 #ifdef USE_HELPMENU
+# ifdef DEBUG_MAC_MENU
 	else
 	{
 	    printf ("gmdm 1\n");
 	}
+# endif
 #endif
       }
+#ifdef DEBUG_MAC_MENU
       else
       {
 	printf ("gmdm 2\n");
       }
+#endif
     }
     else
     {
+	/* Do not delete the Help Menu */
 #ifdef USE_HELPMENU
 	if (menu->submenu_id != kHMHelpMenuID)
 #endif
@@ -4453,3 +4516,266 @@ mch_post_buffer_write (buf_T *buf)
     Send_KAHL_MOD_AE (buf);
 #endif
 }
+
+#ifdef FEAT_TITLE
+/*
+ * Set the window title and icon.
+ * (The icon is not taken care of).
+ */
+    void
+gui_mch_settitle(title, icon)
+    char_u *title;
+    char_u *icon;
+{
+    /* TODO: Get vim to make sure maxlen (from p_titlelen) is smaller
+     *       that 256. Even better get it to fit nicely in the titlebar.
+     */
+    char_u   *pascalTitle;
+
+    if (title == NULL)		/* nothing to do */
+	return;
+
+    pascalTitle = C2Pascal_save(title);
+    if (pascalTitle != NULL)
+    {
+	SetWTitle(gui.VimWindow, pascalTitle);
+	vim_free(pascalTitle);
+    }
+}
+#endif
+
+/*
+ * Transfered from os_mac.c for MacOS X using os_unix.c prep work
+ */
+
+    int
+C2PascalString (CString, PascalString)
+    char_u  *CString;
+    Str255  *PascalString;
+{
+    char_u *PascalPtr = (char_u *) PascalString;
+    int    len;
+    int    i;
+
+    PascalPtr[0] = 0;
+    if (CString == NULL)
+	return 0;
+
+    len = STRLEN(CString);
+    if (len > 255)
+	len = 255;
+
+    for (i = 0; i < len; i++)
+	PascalPtr[i+1] = CString[i];
+
+    PascalPtr[0] = len;
+
+    return 0;
+}
+
+    int
+GetFSSpecFromPath (file, fileFSSpec)
+    char_u *file;
+    FSSpec *fileFSSpec;
+{
+    /* From FAQ 8-12 */
+    Str255      filePascal;
+    CInfoPBRec	myCPB;
+    OSErr	err;
+
+    (void) C2PascalString (file, &filePascal);
+
+    myCPB.dirInfo.ioNamePtr   = filePascal;
+    myCPB.dirInfo.ioVRefNum   = 0;
+    myCPB.dirInfo.ioFDirIndex = 0;
+    myCPB.dirInfo.ioDrDirID   = 0;
+
+    err= PBGetCatInfo (&myCPB, false);
+
+    /*    vRefNum, dirID, name */
+    FSMakeFSSpec (0, 0, filePascal, fileFSSpec);
+
+    /* TODO: Use an error code mechanism */
+    return 0;
+}
+
+/*
+ * Convert a FSSpec to a fuill path
+ */
+
+char_u *FullPathFromFSSpec_save (FSSpec file)
+{
+    /*
+     * TODO: Add protection for 256 char max.
+     */
+
+    CInfoPBRec  theCPB;
+    Str255      directoryName;
+    char_u      temporary[255];
+ /* char        filename[255]; */
+    char_u       fname[256];
+    char_u	*temporaryPtr = temporary;
+    char_u      *filenamePtr = fname;
+    OSErr       error;
+    int		folder = 1;
+    char        *p;
+#ifdef USE_UNIXFILENAME
+    SInt16	dfltVol_vRefNum;
+    SInt32      dfltVol_dirID;
+    FSRef	refFile;
+    OSStatus	status;
+    UInt32	pathSize = 256;
+    char_u	pathname[256];
+    char_u	*path = pathname;
+#endif
+
+#ifdef USE_UNIXFILENAME
+    /* Get the default volume */
+    /* TODO: Remove as this only work if Vim is on the Boot Volume*/
+    error=HGetVol ( NULL, &dfltVol_vRefNum, &dfltVol_dirID );
+
+    if (error)
+      return NULL;
+#endif
+
+    /* Start filling fname with file.name  */
+    STRNCPY(filenamePtr, &file.name[1], file.name[0]);
+    filenamePtr[file.name[0]] = 0; /* NULL terminate the string */
+
+    /* Get the info about the file specified in FSSpec */
+    theCPB.dirInfo.ioFDirIndex = 0;
+    theCPB.dirInfo.ioNamePtr   = file.name;
+    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+  /*theCPB.hFileInfo.ioDirID   = 0;*/
+    theCPB.dirInfo.ioDrDirID   = file.parID;
+     
+    /* As ioFDirIndex = 0, get the info of ioNamePtr,
+       which is relative to ioVrefNum, ioDirID */
+    error = PBGetCatInfo (&theCPB, false);
+
+    /* If we are called for a new file we expect fnfErr */
+    if ((error) && (error != fnfErr))
+      return NULL;
+
+    /* Check if it's a file or folder       */
+    /* default to file if file don't exist  */
+    if (((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0) || (error))
+      folder = 0; /* It's not a folder */
+    else
+      folder = 1;
+
+#ifdef USE_UNIXFILENAME
+    /*
+     * The function used here are available in Carbon, but
+     * do nothing une MacOS 8 and 9
+     */
+
+    error=FSpMakeFSRef (&file, &refFile);
+    if (error)
+	return NULL;
+
+    status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
+    if (status)
+	return NULL;
+    
+    /* Add the the slash at the end if needed */
+    if (folder)
+	STRCAT (path, "/");
+
+    return (vim_strsave (path));
+#else
+    /* TODO: Get rid of all USE_UNIXFILENAME below */
+    /* Set ioNamePtr, it's the same area which is always reused. */
+    theCPB.dirInfo.ioNamePtr = directoryName;
+    
+    /* Trick for first entry, set ioDrParID to the first value
+     * we want for ioDrDirID*/
+    theCPB.dirInfo.ioDrParID = file.parID;
+    theCPB.dirInfo.ioDrDirID = file.parID;
+
+    if ((TRUE) && (file.parID != fsRtDirID /*fsRtParID*/ ))
+    do
+    {
+	theCPB.dirInfo.ioFDirIndex = -1;
+     /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
+	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+     /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
+	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+
+        /* As ioFDirIndex = -1, get the info of ioDrDirID, */
+        /*  *ioNamePtr[0 TO 31] will be updated            */
+	error = PBGetCatInfo (&theCPB,false);
+
+        if (error)
+          return NULL;
+
+        /* Put the new directoryName in front of the current fname */
+        STRCPY(temporaryPtr, filenamePtr);
+        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, ":");
+        STRCAT(filenamePtr, temporaryPtr);
+    }
+#if 1 /* def USE_UNIXFILENAME */
+    while ((theCPB.dirInfo.ioDrParID != fsRtDirID) /* && */
+         /*  (theCPB.dirInfo.ioDrDirID != fsRtDirID)*/);
+#else
+    while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
+#endif
+
+    /* Get the information about the volume on which the file reside */
+    theCPB.dirInfo.ioFDirIndex = -1;
+ /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
+    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+ /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
+    theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+
+    /* As ioFDirIndex = -1, get the info of ioDrDirID, */
+    /*  *ioNamePtr[0 TO 31] will be updated            */
+    error = PBGetCatInfo (&theCPB,false);
+
+    if (error)
+      return NULL;
+
+    /* For MacOS Classic always add the volume name          */
+    /* For MacOS X add the volume name preceded by "Volumes" */
+    /*  when we are not refering to the boot volume          */
+#ifdef USE_UNIXFILENAME
+    if (file.vRefNum != dfltVol_vRefNum)
+#endif
+    {
+        /* Add the volume name */
+        STRCPY(temporaryPtr, filenamePtr);
+        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, ":");
+        STRCAT(filenamePtr, temporaryPtr);
+        
+#ifdef USE_UNIXFILENAME
+        STRCPY(temporaryPtr, filenamePtr);
+        filenamePtr[0] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, "Volumes:");
+        STRCAT(filenamePtr, temporaryPtr);
+#endif
+    }
+
+    /* Append final path separator if it's a folder */
+    if (folder)
+        STRCAT (fname, ":");
+        
+    /* As we use Unix File Name for MacOS X convert it */
+#ifdef USE_UNIXFILENAME
+    /* Need to insert leading / */
+    /* TODO: get the above code to use directly the / */
+    STRCPY(&temporaryPtr[1], filenamePtr);
+    temporaryPtr[0] = '/';
+    STRCPY(filenamePtr, temporaryPtr);
+    for (p = fname; *p; p++)
+      if (*p == ':')
+        *p = '/';
+#endif
+
+    return (vim_strsave (fname));
+#endif
+}
+
