@@ -6286,6 +6286,11 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	errmsg = e_scroll;
 	p_so = 0;
     }
+    if (p_siso < 0 && full_screen)
+    {
+	errmsg = e_positive;
+	p_siso = 0;
+    }
 #ifdef FEAT_CMDWIN
     if (p_cwh < 1)
     {

@@ -399,6 +399,8 @@ Python_Init(void)
 #else
 	PyMac_Initialize();
 #endif
+	/* initialise threads */
+	PyEval_InitThreads();
 
 #ifdef DYNAMIC_PYTHON
 	get_exceptions();

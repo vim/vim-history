@@ -4162,7 +4162,7 @@ dozet:
 		    else
 #endif
 		    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
-		    if (col > p_siso)
+		    if ((long)col > p_siso)
 			col -= p_siso;
 		    else
 			col = 0;
