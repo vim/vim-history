@@ -1473,7 +1473,7 @@ get_menu_cmd_modes(cmd, forceit, noremap, unmenu)
 				    | MENU_VISUAL_MODE | MENU_OP_PENDING_MODE;
 	    break;
 	case 'n':
-	    if (cmd[1] != 'o')		/* nmenu */
+	    if (*cmd != 'o')		/* nmenu, not noremenu */
 	    {
 		modes = MENU_NORMAL_MODE;
 		break;
