@@ -1160,6 +1160,7 @@ show_menus_recursive(menu, modes, depth)
  */
 static vimmenu_T	*expand_menu = NULL;
 static int		expand_modes = 0x0;
+static int		expand_emenu;	/* TRUE for ":emenu" command */
 
 /*
  * Work out what to complete when doing command line completion of menu names.
@@ -1211,8 +1212,11 @@ set_context_in_menu_cmd(xp, cmd, arg, forceit)
 	else if (*p == '.')
 	    after_dot = p + 1;
     }
-    expand_menus = !(*cmd == 't' || *cmd == 'p');
-    if (expand_menus  && vim_iswhite(*p))
+
+    /* ":tearoff" and ":popup" only use menus, not entries */
+    expand_menus = !((*cmd == 't' && cmd[1] == 'e') || *cmd == 'p');
+    expand_emenu = (*cmd == 'e');
+    if (expand_menus && vim_iswhite(*p))
 	return NULL;	/* TODO: check for next command? */
     if (*p == NUL)		/* Complete the menu name */
     {
@@ -1277,7 +1281,8 @@ set_context_in_menu_cmd(xp, cmd, arg, forceit)
 }
 
 /*
- * Function given to ExpandGeneric() to obtain the list of group names.
+ * Function given to ExpandGeneric() to obtain the list of (sub)menus (not
+ * entries).
  */
     char_u *
 get_menu_name(xp, idx)
@@ -1285,54 +1290,35 @@ get_menu_name(xp, idx)
     int		idx;
 {
     static vimmenu_T	*menu = NULL;
-    static int		get_dname = FALSE; /* return menu->dname next time */
     char_u		*str;
 
     if (idx == 0)	    /* first call: start at first item */
-    {
 	menu = expand_menu;
-	get_dname = FALSE;
-    }
 
     /* Skip PopUp[nvoci]. */
     while (menu != NULL && (menu_is_hidden(menu->dname)
-/*	    || menu_is_separator(menu->dname) */
+	    || menu_is_separator(menu->dname)
 	    || menu_is_tearoff(menu->dname)
-	    || (xp->xp_context == EXPAND_MENUS && menu->children == NULL)))
+	    || menu->children == NULL))
 	menu = menu->next;
 
     if (menu == NULL)	    /* at end of linked list */
 	return NULL;
 
     if (menu->modes & expand_modes)
-    {
-	if (get_dname)
-	{
-	    str = menu->dname;
-	    get_dname = FALSE;
-	}
-	else
-	{
-	    str = menu->name;
-	    if (STRCMP(menu->name, menu->dname))
-		get_dname = TRUE;
-	}
-    }
+	str = menu->dname;
     else
-    {
 	str = (char_u *)"";
-	get_dname = FALSE;
-    }
 
     /* Advance to next menu entry. */
-    if (!get_dname)
-	menu = menu->next;
+    menu = menu->next;
 
     return str;
 }
 
 /*
- * Function given to ExpandGeneric() to obtain the list of group names.
+ * Function given to ExpandGeneric() to obtain the list of menus and menu
+ * entries.
  */
     char_u *
 get_menu_names(xp, idx)
@@ -1348,10 +1334,9 @@ get_menu_names(xp, idx)
 
     /* Skip Browse-style entries, popup menus and separators. */
     while (menu != NULL
-	    && (  menu_is_hidden(menu->dname)
-/*		|| menu_is_separator(menu->dname) */
+	    && (   menu_is_hidden(menu->dname)
+		|| (expand_emenu && menu_is_separator(menu->dname))
 		|| menu_is_tearoff(menu->dname)
-		|| (xp->xp_context == EXPAND_MENUS && menu->children == NULL)
 #ifndef FEAT_BROWSE
 		|| menu->dname[STRLEN(menu->dname) - 1] == '.'
 #endif
