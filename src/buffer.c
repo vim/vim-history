@@ -4649,6 +4649,7 @@ buf_findsigntype_id(buf, lnum, typenr)
 }
 
 
+#  if defined(FEAT_SIGN_ICONS) || defined(PROTO)
 /* return the number of icons on the given line */
     int
 buf_signcount(buf, lnum)
@@ -4665,6 +4666,7 @@ buf_signcount(buf, lnum)
 
     return count;
 }
+#  endif /* FEAT_SIGN_ICONS */
 # endif /* FEAT_NETBEANS_INTG */
 
 
