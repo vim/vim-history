@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.1.  Last change: 2003 Mar 12
+*netbeans.txt*  For Vim version 6.1.  Last change: 2003 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -191,7 +191,7 @@ work with Agide (A-A-P GUI IDE, see http://www.a-a-p.org).  The extensions are
 marked with "version 2.1".
 
 The messages are currently sent over a socket.  Since the messages are in
-plain text this protocol could also be used with any other communication
+plain UTF-8 text this protocol could also be used with any other communication
 mechanism.
 
 10.1 Kinds of messages		|nb-messages|
@@ -296,7 +296,17 @@ balloonResult text
 close		Close the buffer.  This leaves us without current buffer, very
 		dangerous to use!
 
-create		Not implemented.
+create		Creates a buffer without a name.  Replaces the current buffer
+		(it's hidden when it was changed).
+		Netbeans uses this as the first command for a file that is
+		being opened.  The sequence of commands could be:
+			create
+			setCaretListener 	(ignored)
+			setModified		(no effect)
+			setContentType 		(ignored)
+			startDocumentListen
+			setTitle
+			setFullName
 
 defineAnnoType typeNum typeName tooltip glyphFile fg bg
 		Define a type of annotation for this buffer.
@@ -312,7 +322,7 @@ defineAnnoType typeNum typeName tooltip glyphFile fg bg
 		used (new in version 2.1).
 		When "glyphFile" is empty, no text sign is used (new in
 		version 2.1).
-		When "glyphFile" is two characters long, a text sign is
+		When "glyphFile" is one or two characters long, a text sign is
 		defined (new in version 2.1).
 		Note: the annotations will be defined in sequence, and the
 		sequence number is later used with addAnno.
