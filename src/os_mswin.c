@@ -921,14 +921,15 @@ enc_to_ucs2(char_u *str, int *len)
 	conv.vc_fd = (iconv_t)-1;
 #endif
 	/* We might be called before we have p_enc set up. */
-	convert_setup(&conv, p_enc ? p_enc : "latin1", "utf-8");
+	convert_setup(&conv, p_enc ? p_enc : (char_u *)"latin1",
+							   (char_u *)"utf-8");
 	if (conv.vc_type != CONV_NONE)
 	{
 	    str = allocbuf = string_convert(&conv, str, len);
 	    if (str == NULL)
 		return NULL;
 	}
-	convert_setup(&conv, "", "");
+	convert_setup(&conv, (char_u *)"", (char_u *)"");
 
 	length = utf8_to_ucs2((char_u **)&str, len, NULL);
 	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
@@ -984,7 +985,8 @@ ucs2_to_enc(WCHAR *str, int *len)
 	conv.vc_fd = (iconv_t)-1;
 #endif
 	/* We might be called before we have p_enc set up. */
-	convert_setup(&conv, "utf-8", p_enc? p_enc: "latin1");
+	convert_setup(&conv, (char_u *)"utf-8",
+					    p_enc? p_enc: (char_u *)"latin1");
 	if (conv.vc_type == CONV_NONE)
 	{
 	    /* p_enc is utf-8, so we're done. */
@@ -996,7 +998,7 @@ ucs2_to_enc(WCHAR *str, int *len)
 	    vim_free(utf8_str);
 	}
 
-	convert_setup(&conv, "", "");
+	convert_setup(&conv, (char_u *)"", (char_u *)"");
     }
 
     return enc_str;

@@ -297,19 +297,19 @@ dyn_libintl_end()
     dyn_libintl_bindtextdomain	= null_libintl_bindtextdomain;
 }
 
-    char*
+    static char *
 null_libintl_gettext(const char* msgid)
 {
     return (char*)msgid;
 }
 
-    char*
+    static char *
 null_libintl_bindtextdomain(const char* domainname, const char* dirname)
 {
     return NULL;
 }
 
-    char*
+    static char *
 null_libintl_textdomain(const char* domainname)
 {
     return NULL;
@@ -786,7 +786,7 @@ decode_mouse_event(
     static s_dwLastClickTime = 0;
     static BOOL s_fNextIsMiddle = FALSE;
 
-    static int cButtons = 0;	/* number of buttons supported */
+    static DWORD cButtons = 0;	/* number of buttons supported */
 
     const DWORD LEFT = FROM_LEFT_1ST_BUTTON_PRESSED;
     const DWORD MIDDLE = FROM_LEFT_2ND_BUTTON_PRESSED;

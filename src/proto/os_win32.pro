@@ -1,9 +1,6 @@
 /* os_win32.c */
 int dyn_libintl_init __ARGS((char *libname));
 void dyn_libintl_end __ARGS((void));
-char *null_libintl_gettext __ARGS((const char *msgid));
-char *null_libintl_bindtextdomain __ARGS((const char *domainname, const char *dirname));
-char *null_libintl_textdomain __ARGS((const char *domainname));
 void PlatformId __ARGS((void));
 int mch_windows95 __ARGS((void));
 void mch_setmouse __ARGS((int on));
