@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0aq.  Last change: 2001 Jul 28
+*starting.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -342,12 +342,14 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		feature}
 
 -d {device}	Only on the Amiga and when not compiled with the |+diff|
-		feature: The {device} is opened to be used for editing.
+		feature.  Works like "-dev".
+							*-dev*
+-dev {device}	Only on the Amiga: The {device} is opened to be used for
+		editing.
 		Normally you would use this to set the window position and
 		size: "-d con:x/y/width/height", e.g.,
 		"-d con:30/10/600/150".  But you can also use it to start
 		editing on another device, e.g., AUX:.  {not in Vi}
-
 							*-f*
 -f		Amiga: Do not restart Vim to open a new window.  This
 		option should be used when Vim is started by a program that
@@ -604,14 +606,16 @@ additional initialization when starting the GUI.
 At startup, Vim checks environment variables and files and sets values
 accordingly.  Vim proceeds in this order:
 
-1. Set the 'shell' option				*SHELL* *COMSPEC*
+1. Set the 'shell' and 'term' option		*SHELL* *COMSPEC* *TERM*
 	The environment variable SHELL, if it exists, is used to set the
 	'shell' option.  On MS-DOS and Win32, the COMPSPEC variable is used
 	if SHELL is not set.
-
-2. Set the 'term' option				*TERM*
 	The environment variable TERM, if it exists, is used to set the 'term'
 	option.
+
+2. Process the arguments
+	The options and file names from the command that start Vim are
+	inspected.  Buffers are created for all files (but not loaded yet).
 
 3. Execute Ex commands, from environment variables and/or files
 	An environment variable is read as one Ex command line, where multiple

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0aq.  Last change: 2001 Aug 05
+*change.txt*    For Vim version 6.0ar.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

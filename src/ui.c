@@ -684,7 +684,12 @@ clip_process_selection(button, col, row, repeated_click)
 	printf("Selection ended: (%u,%u) to (%u,%u)\n", cb->start.lnum,
 		cb->start.col, cb->end.lnum, cb->end.col);
 #endif
-	if (clip_isautosel())
+	if (clip_isautosel()
+		|| (
+#ifdef FEAT_GUI
+		    gui.in_use ? (vim_strchr(p_go, GO_ASELML) != NULL) :
+#endif
+		    clip_autoselectml))
 	    clip_copy_modeless_selection(FALSE);
 #ifdef FEAT_GUI
 	if (gui.in_use)

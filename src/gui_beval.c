@@ -463,8 +463,9 @@ drawBalloon(beval)
 	XtVaGetValues(beval->balloonLabel, XtNfontSet, &fset, NULL);
 	ext = XExtentsOfFontSet(fset);
 	h = ext->max_ink_extent.height;
-	w = XmbTextEscapement(fset, (char *)beval->msg,
-						     (int)STRLEN(beval->msg));
+	w = XmbTextEscapement(fset,
+			      (char *)beval->msg,
+			      (int)STRLEN(beval->msg));
 	XtVaSetValues(beval->balloonLabel, XtNlabel, beval->msg, NULL);
 #endif
 

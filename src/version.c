@@ -217,7 +217,11 @@ static char *(features[]) =
 	"-hangul_input",
 #endif
 #if defined(HAVE_ICONV_H) && defined(USE_ICONV)
+# ifdef DYNAMIC_ICONV
+	"+iconv/dyn",
+# else
 	"+iconv",
+# endif
 #else
 	"-iconv",
 #endif
@@ -362,17 +366,30 @@ static char *(features[]) =
 	"-path_extra",
 #endif
 #ifdef FEAT_PERL
+# ifdef DYNAMIC_PERL
+	"+perl/dyn",
+# else
 	"+perl",
+# endif
 #else
 	"-perl",
 #endif
 #ifdef FEAT_PRINTER
+# ifdef FEAT_POSTSCRIPT
+	"+postscript",
+# else
+	"-postscript",
+# endif
 	"+printer",
 #else
 	"-printer",
 #endif
 #ifdef FEAT_PYTHON
+# ifdef DYNAMIC_PYTHON
+	"+python/dyn",
+# else
 	"+python",
+# endif
 #else
 	"-python",
 #endif
@@ -387,7 +404,11 @@ static char *(features[]) =
 	"-rightleft",
 #endif
 #ifdef FEAT_RUBY
+# ifdef DYNAMIC_RUBY
+	"+ruby/dyn",
+# else
 	"+ruby",
+# endif
 #else
 	"-ruby",
 #endif
@@ -446,7 +467,11 @@ static char *(features[]) =
 	"-tag_any_white",
 #endif
 #ifdef FEAT_TCL
+# ifdef DYNAMIC_TCL
+	"+tcl/dyn",
+# else
 	"+tcl",
+# endif
 #else
 	"-tcl",
 #endif
@@ -958,10 +983,10 @@ intro_message(colon)
 #if defined(WIN3264) && !defined(FEAT_GUI_W32)
 	if (mch_windows95())
 	{
-	    do_intro_line(row + 1,
+	    do_intro_line(++row,
 		    (char_u *)_("WARNING: Windows 95/98/ME detected"),
 							FALSE, hl_attr(HLF_E));
-	    do_intro_line(row + 2,
+	    do_intro_line(++row,
 		(char_u *)_("type  :help windows95<Enter>  for info on this"),
 								    FALSE, 0);
 	}

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 31
+*gui_x11.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -526,10 +526,9 @@ When an X11 GUI Vim (gvim) is started, it will try to register a send-server
 name on the 'VimRegistry' property on the root window.  By default it will try
 to register the name under which it was invoked (gvim, egvim ...).  This can
 be overridden with the --servername argument.  If the specified name is not
-available, a 3 digit postfix is applied until a free name is encountered, ie.
-gvim-001 for the second invocation of gvim on a particular X-server.  The
-resulting name is available in the servername builtin variable
-|v:servername|.
+available, a postfix is applied until a free name is encountered, ie. "gvim1"
+for the second invocation of gvim on a particular X-server.  The resulting
+name is available in the servername builtin variable |v:servername|.
 
 A non GUI Vim with access to the X11 display (|xterm-clipboard| enabled), can
 also act as a command server if a server name is explicitly given with the

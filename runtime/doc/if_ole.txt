@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.0aq.  Last change: 2001 May 12
+*if_ole.txt*    For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -134,6 +134,12 @@ sessions open that should not react to OLE commands, use the non-OLE version,
 and put it in a different directory.  The OLE version should then be put in a
 directory that is not in your normal path, so that typing "gvim" will start
 the non-OLE version.
+
+							*-silent*
+To avoid the message box that pops up to report the result, prepend "-silent":
+>
+	gvim -silent -register
+	gvim -silent -unregister
 
 ==============================================================================
 5. MS Visual Studio integration			*MSVisualStudio* *VisVim*

@@ -1,8 +1,36 @@
-README_dos.txt for version 6.0aq of Vim: Vi IMproved.
+README_dos.txt for version 6.0ar of Vim: Vi IMproved.
 
 This file explains the installation of Vim on MS-DOS and MS-Windows systems.
 See "README.txt" for general information about Vim.
 
+There are two ways to install Vim:
+A. Use the self-installing .exe file.
+B. Unpack .zip files and run the install.exe program.
+
+
+A. Using the self-installing .exe
+---------------------------------
+
+This is mostly self-explaining.  Just follow the prompts and make the
+selections.  A few things to watch out for:
+
+- When an existing installation is detected, you are offered to first remove
+  this.  The uninstall program is then started while the install program waits
+  for it to complete.  Sometimes the windows overlap eachother, which can be
+  confusing.  Be sure the complete the uninstalling before continuing the
+  installation.  Watch the taskbar for uninstall windows.
+
+- When selecting a directory to install Vim, use the same place where other
+  versions are located.  This makes it easier to find your _vimrc file.  For
+  example "C:\Program Files\vim" or "D:\vim".  A name ending in "vim" is
+  preferred.
+
+- After selecting the directory where to install Vim, clicking on "Next" will
+  start the installation.
+
+
+B. Using .zip files
+-------------------
 
 These are the normal steps to install Vim:
 
@@ -43,29 +71,23 @@ These are the normal steps to install Vim:
 3. Change to the new directory:
 	cd vim\vim60
    Run the "install.exe" program.  It will ask you a number of questions about
-   how you would like to have your Vim setup.  You can have it append a few
-   lines to your autoexec.bat, and write a "_vimrc" file with your preferences
-   in the parent directory.  It can also install an "Edit with Vim" entry in
-   the Windows Explorer popup menu.
-
-   If you want to add Vim to the search path manually: The simplest is to add
-   a line to your autoexec.bat.  Examples:
+   how you would like to have your Vim setup.  Among these are:
+   - You can tell it to write a "_vimrc" file with your preferences in the
+     parent directory.
+   - It can also install an "Edit with Vim" entry in the Windows Explorer
+     popup menu.
+   - You can have it create batch files, so that you can run Vim from the
+     console or in a shell.  You can select one of the directories in your
+     $PATH.  If you skip this, you can add Vim to the search path manually:
+     The simplest is to add a line to your autoexec.bat.  Examples:
 	set path=%path%;C:\vim\vim60
 	set path=%path%;D:\editors\vim\vim60
+   - Create entries for Vim on the desktop and in the Start menu.
 
 That's it!
 
-NOTE: The install.exe program appends to your autoexec.bat file.  If yours
-contains sections, this will probably not work correctly.  You will have to
-adjust the autoexec.bat file by hand afterwards.
-
 
 Remarks:
-
-- Make sure the Vim executable is in your search path.  Either copy the Vim
-  executable to a directory that is in your search path, or (preferred) modify
-  the search path to include the directory where the Vim executable is.
-  Normally the install.exe program will do this for you.
 
 - If Vim can't find the runtime files, ":help" won't work and the GUI version
   won't show a menubar.  Then you need to set the $VIM environment variable to
@@ -80,6 +102,7 @@ Remarks:
   Your own files:
 	C:\vim\_vimrc			Your personal vimrc.
 	C:\vim\_viminfo			Dynamic info for 'viminfo'.
+	C:\vim\vimfiles\ftplugin\*.vim	Filetype plugins
 	C:\vim\...			Other files you made.
   Distributed files:
 	C:\vim\vim60\vim.exe		The Vim version 6.0 executable.

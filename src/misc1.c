@@ -3542,8 +3542,9 @@ fullpathcmp(s1, s2, checkname)
 	if (r1 != OK && r2 != OK)
 	{
 	    if (checkname && fnamecmp(exp1, s2) == 0)
-		return FPC_SAMEX;
-	    retval = FPC_NOTX;
+		retval = FPC_SAMEX;
+	    else
+		retval = FPC_NOTX;
 	}
 	else if (r1 != OK || r2 != OK)
 	    retval = FPC_DIFFX;
@@ -3551,8 +3552,8 @@ fullpathcmp(s1, s2, checkname)
 	    retval = FPC_DIFF;
 	else
 	    retval = FPC_SAME;
+	vim_free(exp1);
     }
-    vim_free(exp1);
     return retval;
 #endif
 }

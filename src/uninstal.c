@@ -353,9 +353,7 @@ main(int argc, char *argv[])
     {
 	fclose(fd);
         printf("gvim.exe detected.  Attempting to unregister gvim with OLE\n");
-	printf("If a message box appears telling you that Vim\n");
-	printf("unregistered successfully, click OK.\n");
-	system("gvim.exe -unregister");
+	system("gvim.exe -silent -unregister");
     }
 
     delete_uninstall_key();

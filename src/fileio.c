@@ -3143,6 +3143,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			: (O_CREAT | O_TRUNC))
 			, 0666)) < 0)
     {
+	struct stat st;
+
 	/*
 	 * A forced write will try to create a new file if the old one is
 	 * still readonly. This may also happen when the directory is
@@ -3190,8 +3192,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	{
 	    if (backup_copy)
 	    {
-		struct stat st;
-
 		/*
 		 * There is a small chance that we removed the original, try
 		 * to move the copy in its place.
@@ -3211,6 +3211,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		vim_rename(backup, fname);
 	    }
 	}
+
+	/* if original file no longer exists give an extra warning */
+	if (!newfile && mch_stat((char *)fname, &st) < 0)
+	    end = 0;
 
 #ifdef FEAT_MBYTE
 	if (wfname != fname)
@@ -5097,6 +5101,9 @@ buf_check_timestamp(buf, focus)
 	    if (bufempty())
 		old_line_count = 0;
 	    curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
+#ifdef FEAT_AUTOCMD
+	    keep_filetype = TRUE;		/* don't detect 'filetype' */
+#endif
 	    if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0, (linenr_T)0,
 			(linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
 		EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
@@ -5108,6 +5115,9 @@ buf_check_timestamp(buf, focus)
 	    }
 	    vim_free(ea.cmd);
 	    check_cursor();
+#ifdef FEAT_AUTOCMD
+	    keep_filetype = FALSE;
+#endif
 	}
 
 #ifdef FEAT_AUTOCMD
@@ -6713,7 +6723,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     {
 	save_search_patterns();
 	saveRedobuff();
-	did_filetype = FALSE;
+	did_filetype = keep_filetype;
     }
 
     /*
@@ -6801,7 +6811,13 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 		|| event == EVENT_FILEAPPENDPOST
 		|| event == EVENT_VIMLEAVE
 		|| event == EVENT_VIMLEAVEPRE))
+    {
+#ifdef FEAT_TITLE
+	if (curbuf->b_changed != save_changed)
+	    need_maketitle = TRUE;
+#endif
 	curbuf->b_changed = save_changed;
+    }
 
     au_cleanup();	/* may really delete removed patterns/commands now */
     return retval;

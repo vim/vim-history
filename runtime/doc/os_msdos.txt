@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 6.0aq.  Last change: 2000 Jul 07
+*os_msdos.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -42,9 +42,9 @@ Dos16 version	Can be used on any MS-DOS system, only uses up to 640 Kbyte of
 		etc.).  Recommended for use on pre-386 machines.
 							*dos32*
 Dos32 version	Requires 386 processor and a |DPMI| driver, uses all
-		available memory.  Supports long file names, but NOT on
-		Windows NT.  Recommended for MS-DOS, Windows 3.1 and Windows
-		95.
+		available memory.  Supports long file names and the Windows
+		clipboard, but NOT on Windows NT.  Recommended for MS-DOS,
+		Windows 3.1 and Windows 95.
 
 There are also two versions that run under Windows:
 Win32 version   Requires Windows 95 or Windows NT, uses all available
@@ -181,7 +181,23 @@ some memory.  Running the maze macros on a big maze is guaranteed to run out
 of memory, because each change is remembered for undo.  In this case set
 'undolevels' to a negative number.  This will switch off undo completely.
 
+						*msdos-clipboard-limits*
 In the Dos32 version, extended memory is used to avoid these problems.
+However, if you are using the clipboard, you can still run into memory 
+limitations because the Windows clipboard can only communicate with Vim using 
+Dos memory.  This means that the largest amount of text that can be sent to 
+or received from the Windows clipboard is limited by how much free Dos memory
+is available on your system.  
+
+You can usually maximize the amount of available Dos memory by adding the
+following lines to Dos's "config.sys" file: >
+
+	DOS=HIGH,UMB
+	DEVICE=C:\WINDOWS\himem.sys
+	DEVICE=C:\WINDOWS\emm386.exe RAM
+
+Modifying config.sys in this way will also help to make more memory available
+for the Dos16 version, if you are using that.
 
 In the Dos16 version the line length is limited to about 32000 characters.
 When reading a file the lines are automatically split.  But editing a line
@@ -205,6 +221,15 @@ only way to fix this in the current version is not making a backup file, by
 
 ==============================================================================
 9. Copy/paste in a dos box			*msdos-copy-paste*
+
+					*E450* *E451* *E452* *E453* *E454*
+The 32 bit version can copy/paste from/to the Windows clipboard directly.  Use
+the "* register.  Large amounts of text can be copied this way, but it must be
+possible to allocate memory for it, see |msdos-clipboard-limits|.  When moving
+text from one Vim to another, the type of the selection
+(characterwise/linewise/blockwise) is passed on.
+
+In other versions, the following can be used.
 
 (posted to comp.editors by John Velman <velman@igate1.hac.com>)
 

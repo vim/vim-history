@@ -32,6 +32,9 @@ PreLink_Cmds=@if exist .\oleDbg\gvimd.pdb del .\oleDbg\gvimd.pdb
 # 2001-07-06 W.Briscoe Original derived from Make_[go]vc.mak with less noise
 # 2001-07-08 W.Briscoe Further noise reduction; consistent .map and .pdb logic
 #                      Added install.exe rule, etc.; Removed unused libraries.
+# 2001-08-09 W.Briscoe Restored VC4.0-required trailing space in !MESSAGE afore
+#                      Enhanced if_ole.idl rule to use /out argument.
+#                      Default rules now relative to . to reduce IDE/nmake difs
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
@@ -60,7 +63,7 @@ CFG=Vim - Win32 Release gvim OLE
 !MESSAGE "Vim - Win32 Debug gvim"       (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Release vim"      (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Debug vim"        (based on "Win32 (x86) Console Application")
-!MESSAGE
+!MESSAGE 
 !ERROR An invalid configuration is specified.
 !ENDIF
 
@@ -71,7 +74,7 @@ DEL_TREE = rmdir /s /q
 NULL=nul
 DEL_TREE = deltree /y
 !ENDIF
-####################
+
 # Begin Project
 # PROP Target_Last_Scanned "Vim - Win32 Debug vim"
 # PROP Use_MFC 0
@@ -283,16 +286,15 @@ xxd/xxd.exe: xxd/xxd.c
 	$(MAKE) /NOLOGO -f Make_mvc.mak
 	cd ..
 
-.c{$(INTDIR)/}.obj:
+{.}.c{$(INTDIR)/}.obj:
 	$(CPP) $(CPP_PROJ) $<
 
-.cpp{$(INTDIR)/}.obj:
+{.}.cpp{$(INTDIR)/}.obj:
 	$(CPP) $(CPP_PROJ) /I $(INTDIR) $<
 
-.rc{$(INTDIR)/}.res:
+{.}.rc{$(INTDIR)/}.res:
 	$(RSC) $(RSC_PROJ) $<
 
-####################
 # Begin Target
 
 # Name "Vim - Win32 Release gvim OLE"
@@ -302,72 +304,58 @@ xxd/xxd.exe: xxd/xxd.c
 # Name "Vim - Win32 Release vim"
 # Name "Vim - Win32 Debug vim"
 
-####################
 # Begin Source File
 
 SOURCE=.\buffer.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\charset.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\diff.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\digraph.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\edit.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\eval.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ex_cmds.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ex_cmds2.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ex_docmd.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ex_getln.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\fileio.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\fold.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\getchar.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\gui.c
@@ -383,7 +371,6 @@ SOURCE=.\gui.c
 !ENDIF
 
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\gui_w32.c
@@ -399,7 +386,6 @@ SOURCE=.\gui_w32.c
 !ENDIF
 
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\if_ole.cpp
@@ -410,7 +396,7 @@ SOURCE=.\if_ole.cpp
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\if_ole.h"
- cl.exe /nologo /MT /W3 /GX /I ".\proto" /D "WIN32" /c /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/ /I "oleRel" .\if_ole.cpp
+ cl.exe /nologo /MT /W3 /GX /I ".\proto" /D "WIN32" /c /O2 /D "NDEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleRel/ /Fo.\oleRel/ /I ".\oleRel" .\if_ole.cpp
  @rem This is the default rule with /I "$(IntDir)" added
 
 # End Custom Build
@@ -421,7 +407,7 @@ SOURCE=.\if_ole.cpp
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\if_ole.h"
- cl.exe /nologo /MT /W3 /GX /I ".\proto" /D "WIN32" /c /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/ /I "oleDbg" .\if_ole.cpp
+ cl.exe /nologo /MT /W3 /GX /I ".\proto" /D "WIN32" /c /Zi /Od /D "_DEBUG" /D "FEAT_GUI_W32" /D "FEAT_OLE" /Fd.\oleDbg/ /Fo.\oleDbg/ /I ".\oleDbg" .\if_ole.cpp
  @rem This is the default rule with /I "$(IntDir)" added
 
 # End Custom Build
@@ -445,7 +431,6 @@ SOURCE=.\if_ole.cpp
 !ENDIF
 
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\if_ole.idl
@@ -456,16 +441,17 @@ SOURCE=.\if_ole.idl
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.h" : $(SOURCE) "$(INTDIR)"
-	midl /tlb .\oleRel\vim.tlb /iid .\oleRel\iid_ole.c /proxy nul /header .\oleRel\if_ole.h .\if_ole.idl
+	midl /out .\oleRel /iid iid_ole.c /tlb vim.tlb /proxy nul /header if_ole.h .\if_ole.idl
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug gvim OLE"
 
+# PROP Ignore_Default_Tool 1
 # Begin Custom Build
 
 "$(INTDIR)\if_ole.h" : $(SOURCE) "$(INTDIR)"
-	midl /tlb .\oleDbg\vim.tlb /iid .\oleDbg\iid_ole.c /proxy nul /header .\oleDbg\if_ole.h .\if_ole.idl
+	midl /out .\oleDbg /iid iid_ole.c /tlb vim.tlb /proxy nul /header if_ole.h .\if_ole.idl
 
 # End Custom Build
 
@@ -488,137 +474,110 @@ SOURCE=.\if_ole.idl
 !ENDIF
 
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\main.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\mark.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\mbyte.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\memfile.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\memline.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\menu.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\message.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\misc1.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\misc2.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\move.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\normal.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ops.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\option.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\os_mswin.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\os_w32exe.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\os_win32.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\quickfix.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\regexp.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\screen.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\search.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\syntax.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\tag.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\term.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\ui.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\undo.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\version.c
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\vim.rc
@@ -650,11 +609,9 @@ SOURCE=.\vim.rc
 !ENDIF
 
 # End Source File
-####################
 # Begin Source File
 
 SOURCE=.\window.c
 # End Source File
 # End Target
 # End Project
-####################

@@ -1175,42 +1175,50 @@ make_filter_cmd(cmd, itmp, otmp)
     }
 #endif
     if (otmp != NULL)
-	append_redir(buf, otmp);
+	append_redir(buf, p_srr, otmp);
 
     return buf;
 }
 
 /*
  * Append output redirection for file "fname" to the end of string buffer "buf"
- * Uses the 'shellredir' option.
+ * Works with the 'shellredir' and 'shellpipe' options.
  * The caller should make sure that there is enough room:
- *	STRLEN(p_srr) + STRLEN(fname) + 3
+ *	STRLEN(opt) + STRLEN(fname) + 3
  */
     void
-append_redir(buf, fname)
+append_redir(buf, opt, fname)
     char_u	*buf;
+    char_u	*opt;
     char_u	*fname;
 {
     char_u	*p;
 
     buf += STRLEN(buf);
     /* find "%s", skipping "%%" */
-    for (p = p_srr; (p = vim_strchr(p, '%')) != NULL; p = p + 1)
+    for (p = opt; (p = vim_strchr(p, '%')) != NULL; ++p)
 	if (p[1] == 's')
 	    break;
     if (p != NULL)
     {
 	*buf = ' '; /* not really needed? Not with sh, ksh or bash */
-	sprintf((char *)buf + 1, (char *)p_srr, (char *)fname);
+	sprintf((char *)buf + 1, (char *)opt, (char *)fname);
     }
     else
 	sprintf((char *)buf,
-#ifndef RISCOS
-		" %s%s",	/* " %s %s" causes problems on Amiga */
+#ifdef FEAT_QUICKFIX
+# ifndef RISCOS
+		opt != p_sp ? " %s%s" :
+# endif
+		" %s %s",
 #else
-		" %s %s",	/* But is needed for RISC OS */
+# ifndef RISCOS
+		" %s%s",	/* " > %s" causes problems on Amiga */
+# else
+		" %s %s",	/* But is needed for 'shellpipe' and RISC OS */
+# endif
 #endif
-		(char *)p_srr, (char *)fname);
+		(char *)opt, (char *)fname);
 }
 
 #ifdef FEAT_VIMINFO

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 04
+" Last Change:	2001 Aug 08
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -539,13 +539,13 @@ endif
 
 if has("printer")
   call <SID>Header("printing")
-  call append("$", "printername\tname of the printer to be used for :hardcopy")
-  call <SID>OptionG("pname", &pname)
-  call append("$", "printerfont\tname of the font to be used for :hardcopy")
+  call append("$", "printdevice\tname of the printer to be used for :hardcopy")
+  call <SID>OptionG("pdev", &pdev)
+  call append("$", "printfont\tname of the font to be used for :hardcopy")
   call <SID>OptionG("pfn", &pfn)
-  call append("$", "printerheader\tformat of the header used for :hardcopy")
+  call append("$", "printheader\tformat of the header used for :hardcopy")
   call <SID>OptionG("pheader", &pheader)
-  call append("$", "printeroptions\t")
+  call append("$", "printoptions\t")
   call append("$", "\tlist of items that control the format of :hardcopy output")
   call <SID>OptionG("popt", &popt)
 endif

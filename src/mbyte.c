@@ -700,6 +700,13 @@ dbcs_class(lead, trail)
 		/* exceptions */
 		switch (lb << 8 | tb)
 		{
+		    case 0x2121: /* ZENKAKU space */
+			return 0;
+		    case 0x2122: /* KU-TEN (Japanese comma) */
+		    case 0x2123: /* TOU-TEN (Japanese period) */
+		    case 0x2124: /* ZENKAKU comma */
+		    case 0x2125: /* ZENKAKU period */
+			return 1;
 		    case 0x213c: /* prolongedsound handled as KATAKANA */
 			return 13;
 		}

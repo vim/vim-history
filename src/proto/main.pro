@@ -6,6 +6,7 @@ void mainerr_arg_missing __ARGS((char_u *str));
 void time_push __ARGS((void *tv_rel, void *tv_start));
 void time_pop __ARGS((void *tp));
 void time_msg __ARGS((char *msg, void *tv_start));
+void server_to_input_buf __ARGS((char_u *str));
 int toF_TyA __ARGS((int c));
 int fkmap __ARGS((int c));
 void conv_to_pvim __ARGS((void));

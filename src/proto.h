@@ -162,9 +162,6 @@ extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */
 #  endif
 #  ifdef FEAT_GUI_W32
 #   include "gui_w32.pro"
-#   ifdef FEAT_OLE
-#    include "if_ole.pro"
-#   endif
 #  endif
 #  ifdef FEAT_GUI_GTK
 #   include "gui_gtk.pro"
@@ -202,6 +199,9 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
 #  endif
 # endif	/* FEAT_GUI */
 
+# ifdef FEAT_OLE
+#  include "if_ole.pro"
+# endif
 # ifdef FEAT_XCMDSRV
 #  include "if_xcmdsrv.pro"
 # endif

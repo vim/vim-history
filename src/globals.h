@@ -229,6 +229,9 @@ EXTERN int	autocmd_no_enter INIT(= FALSE); /* *Enter autocmds disabled */
 EXTERN int	autocmd_no_leave INIT(= FALSE); /* *Leave autocmds disabled */
 EXTERN int	modified_was_set;		/* did ":set modified" */
 EXTERN int	did_filetype INIT(= FALSE);	/* FileType event found */
+EXTERN int	keep_filetype INIT(= FALSE);	/* value for did_filetype when
+						   starting to execute
+						   autocommands */
 
 /* When deleting the current buffer, another one must be loaded.  If we know
  * which one is preferred, au_new_curbuf is set to it */
@@ -893,8 +896,39 @@ extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 #endif
 
 #ifdef FEAT_PRINTER
-/* the table is in misc2.c, because of initializations */
-extern option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS];
+# define OPT_PRINT_TOP		0
+# define OPT_PRINT_BOT		1
+# define OPT_PRINT_LEFT		2
+# define OPT_PRINT_RIGHT	3
+# define OPT_PRINT_HEADERHEIGHT	4
+# define OPT_PRINT_SYNTAX	5
+# define OPT_PRINT_NUMBER	6
+# define OPT_PRINT_WRAP		7
+# define OPT_PRINT_DUPLEX	8
+# define OPT_PRINT_PORTRAIT	9
+# define OPT_PRINT_PAPER	10
+
+# define OPT_PRINT_NUM_OPTIONS	11
+
+EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
+# ifdef DO_INIT
+ =
+{
+    {"top",	TRUE, 0, NULL, 0, FALSE},
+    {"bottom",	TRUE, 0, NULL, 0, FALSE},
+    {"left",	TRUE, 0, NULL, 0, FALSE},
+    {"right",	TRUE, 0, NULL, 0, FALSE},
+    {"header",	TRUE, 0, NULL, 0, FALSE},
+    {"syntax",	FALSE, 0, NULL, 0, FALSE},
+    {"number",	FALSE, 0, NULL, 0, FALSE},
+    {"wrap",	FALSE, 0, NULL, 0, FALSE},
+    {"duplex",	FALSE, 0, NULL, 0, FALSE},
+    {"portrait", FALSE, 0, NULL, 0, FALSE},
+    {"paper",	FALSE, 0, NULL, 0, FALSE},
+}
+# endif
+;
+
 #endif
 
 #ifdef FEAT_XCLIPBOARD
@@ -913,7 +947,7 @@ EXTERN guint32	gtk_socket_id INIT(= 0);
 EXTERN Window	commWindow INIT(= None);
 EXTERN Window	clientWindow INIT(= None);
 EXTERN Atom	commProperty INIT(= None);
-EXTERN char_u	*serverName INIT(= NULL);
+EXTERN char_u	*serverName INIT(= NULL);	/* name of the server */
 EXTERN char_u	*serverDelayedStartName INIT(= NULL);
 #endif
 

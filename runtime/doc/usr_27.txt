@@ -1,4 +1,4 @@
-*usr_27.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 01
+*usr_27.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -143,10 +143,10 @@ appending a slash (/) and the offset: >
 
 	/default/2
 
-This command searches for the pattern const and then moves to the beginning of
-the second line past the pattern.  Using this command on the paragraph above,
-Vim finds the word "default" in the first line.  Then the cursor is moved two
-lines down and lands on "an offset".
+This command searches for the pattern "default" and then moves to the
+beginning of the second line past the pattern.  Using this command on the
+paragraph above, Vim finds the word "default" in the first line.  Then the
+cursor is moved two lines down and lands on "an offset".
 
 If the offset is a simple number, the cursor will be placed at the beginning
 of the line that many lines from the match.  The offset number can be positive
@@ -213,7 +213,7 @@ the offset from the pattern, instead of "/": >
 
 	?const?e-2
 
-The "s" and "e" keep their meaning, they don't change direction with the use
+The "b" and "e" keep their meaning, they don't change direction with the use
 of "?".
 
 
@@ -224,13 +224,13 @@ specify a line offset, this can cause trouble.  For example: >
 
 	/const/-2
 
-This finds the next word "const" and then moves two lines up.  If you now
-use "n" to search again, Vim starts at the current position and finds the same
-"const" match.  Then using the offset again, you are back where you started.
-You got stuck!
-   It gets worse: Suppose there is another match with "const" in the next
-line.  Then repeating the forward search will find this match and move two
-lines up.  Thus you actually move the cursor back!
+This finds the next word "const" and then moves two lines up.  If you
+use "n" to search again, Vim could start at the current position and find the same
+"const" match.  Then using the offset again, you would be back where you started.
+You would be stuck!
+   It could be worse: Suppose there is another match with "const" in the next
+line.  Then repeating the forward search would find this match and move two
+lines up.  Thus you would actually move the cursor back!
 
 When you specify a character offset, Vim will compensate for this.  Thus the
 search starts a few characters forward or backward, so that the same match
@@ -279,7 +279,7 @@ Example: >
 
 matches "abbb", "abbbb" and "abbbbb".
   When "n" is omitted, it defaults to zero.  When "m" is omitted it defaults
-to a infinity.  When ",m" is omitted, it matches exactly "n" times.
+to infinity.  When ",m" is omitted, it matches exactly "n" times.
 Examples:
 
 	pattern		match count ~
@@ -324,7 +324,7 @@ The "or" operator in a pattern is "\|".  Example: >
 
 	/foo\|bar
 
-This matches "foo" and "bar".  More alternatives can be concatenated: >
+This matches "foo" or "bar".  More alternatives can be concatenated: >
 
 	/one\|two\|three
 
@@ -517,7 +517,7 @@ items mentioned above can be combined.
 FINDING A CALIFORNIA LICENSE PLATE
 
 A sample license place number is "1MGU103".  It has one digit, three uppercase
-letter and three digits.  Directly putting this into a search pattern: >
+letters and three digits.  Directly putting this into a search pattern: >
 
 	/\d\u\u\u\d\d\d
 
@@ -531,7 +531,7 @@ Using [] ranges instead: >
 	/[0-9][A-Z]\{3}[0-9]\{3}
 
 Which one of these you should use?  Whichever one you can remember.  The
-simple way you can remember is much faster then the fance way that you can't.
+simple way you can remember is much faster than the fancy way that you can't.
 If you can remember them all, then avoid the last one, because it's both more
 typing and slower to execute.
 

@@ -1,7 +1,7 @@
 " DTML syntax file
 " Language:	        Zope's Dynamic Template Markup Language
-" Maintainer:	    Jean Jordaan <jean@mosaicsoftware.com> (njj)
-" Last change:	    2001 May 10
+" Maintainer:	    Jean Jordaan <jean@upfrontsystems.co.za> (njj)
+" Last change:	    2001 Aug 12
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -180,11 +180,18 @@ syn keyword dtmlTODO    TODO FIXME          contained
 syn region dtmlComment start=+<dtml-comment>+ end=+</dtml-comment>+ contains=dtmlTODO
 
 " All dtmlTagNames are contained by dtmlIsTag.
-syn match dtmlIsTag	    "dtml-[^ >]\+"    contains=dtmlTagName
+syn match dtmlIsTag	    "dtml-[A-Za-z]\+"    contains=dtmlTagName
+
+" 'var' tag entity syntax: &dtml-variableName;
+"       - with attributes: &dtml.attribute1[.attribute2]...-variableName;
+syn match dtmlSpecialChar "&dtml[.0-9A-Za-z_]\{-}-[0-9A-Za-z_.]\+;"
 
 " Redefine to allow inclusion of DTML within HTML strings.
-syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,javaScriptExpression,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlPreproc
-" Redefine to allow inclusion of DTML within HTML tags.
+syn cluster htmlTop contains=@Spell,htmlTag,htmlEndTag,dtmlSpecialChar,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,@htmlPreproc
+syn region htmlLink start="<a\>[^>]*href\>" end="</a>"me=e-4 contains=@Spell,htmlTag,htmlEndTag,dtmlSpecialChar,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
+syn region htmlHead start="<head\>" end="</head>"me=e-7 end="<body\>"me=e-5 end="<h[1-6]\>"me=e-3 contains=htmlTag,htmlEndTag,dtmlSpecialChar,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,htmlTitle,javaScript,cssStyle,@htmlPreproc
+syn region htmlTitle start="<title\>" end="</title>"me=e-8 contains=htmlTag,htmlEndTag,dtmlSpecialChar,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
+syn region  htmlString   contained start=+"+ end=+"+ contains=dtmlSpecialChar,htmlSpecialChar,javaScriptExpression,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlPreproc
 syn match   htmlTagN     contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 syn match   htmlTagN     contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 
@@ -204,6 +211,7 @@ if version >= 508 || !exists("did_dtml_syntax_inits")
   HiLink dtmlMethod			Function
   HiLink dtmlComment		Comment
   HiLink dtmlTODO			Todo
+  HiLink dtmlSpecialChar    Special
 
   delcommand HiLink
 endif

@@ -168,7 +168,6 @@ static Window	LookupName __ARGS((Display *dpy, char_u *name,
 static int	SendInit __ARGS((Display *dpy));
 static int      DoRegisterName __ARGS((Display *dpy, char_u *name));
 static int      IsSerialName __ARGS((char_u *name));
-static void	InjectStr __ARGS((char_u *str));
 static void	DeleteAnyLingerer __ARGS((Display *dpy, Window w));
 static int	WaitForPend __ARGS((void *p));
 static int	WaitForReply __ARGS((void *p));
@@ -183,22 +182,13 @@ static Atom	registryProperty;
 static int	got_x_error = FALSE;
 
 /*
- * serverRegisterName --
- *	This procedure is called to associate an ASCII name
- *	with Vim.  We will try real hard to get a unique one
- *
- *  Result:
- *	 0: Ok
- *	-1: Name occupied
- *
+ * Associate an ASCII name with Vim.  Try real hard to get a unique one.
+ * Returns FAIL or OK.
  */
     int
 serverRegisterName(dpy, name)
-    Display	*dpy;		/* Display to register with */
-    char_u	*name;		/* The name that will be used to
-				 * refer to the vim instance in later
-				 * "server" commands.  Must be globally
-				 * unique. */
+    Display	*dpy;		/* display to register with */
+    char_u	*name;		/* the name that will be used as a base */
 {
     int		i;
     int		res;
@@ -210,11 +200,11 @@ serverRegisterName(dpy, name)
 	i = 1;
 	do
 	{
-	    if (res < -1 || i > 1000)
+	    if (res < -1 || i >= 1000)
 	    {
-		MSG_ATTR( _("Unable to register a command server name"),
+		MSG_ATTR(_("Unable to register a command server name"),
 			 hl_attr(HLF_W));
-		return -1;
+		return FAIL;
 	    }
 	    if (p == NULL)
 		p = alloc(STRLEN(name) + 10);
@@ -223,13 +213,14 @@ serverRegisterName(dpy, name)
 		res = -10;
 		continue;
 	    }
-	    sprintf((char *)p, "%s-%03d", name, i++);
+	    sprintf((char *)p, "%s%d", name, i++);
 	    res = DoRegisterName(dpy, p);
 	}
-	while (res < 0);
+	while (res < 0)
+	    ;
 	vim_free(p);
     }
-    return 0;
+    return OK;
 }
 
     static int
@@ -255,7 +246,7 @@ DoRegisterName(dpy, name)
      */
     XGrabServer(dpy);
     w = LookupName(dpy, name, 0, NULL);
-    if (w != (Window) 0)
+    if (w != (Window)0)
     {
 	Status		status;
 	int		dummyInt;
@@ -272,16 +263,16 @@ DoRegisterName(dpy, name)
 	old_handler = XSetErrorHandler(x_error_check);
 	status = XGetGeometry(dpy, w, &dummyWin, &dummyInt, &dummyInt,
 		              &dummyUns, &dummyUns, &dummyUns, &dummyUns);
-	(void) XSetErrorHandler(old_handler);
+	(void)XSetErrorHandler(old_handler);
 	if (status != Success && w != commWindow)
 	{
 	    XUngrabServer(dpy);
 	    XFlush(dpy);
 	    return -1;
 	}
-	(void) LookupName(dpy, name, /*delete=*/TRUE, NULL);
+	(void)LookupName(dpy, name, /*delete=*/TRUE, NULL);
     }
-    sprintf((char *)propInfo, "%x %.*s", (uint) commWindow,
+    sprintf((char *)propInfo, "%x %.*s", (uint)commWindow,
 						       MAX_NAME_LENGTH, name);
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
@@ -289,7 +280,7 @@ DoRegisterName(dpy, name)
 		    PropModeAppend, propInfo, STRLEN(propInfo) + 1);
     XUngrabServer(dpy);
     XSync(dpy, False);
-    (void) XSetErrorHandler(old_handler);
+    (void)XSetErrorHandler(old_handler);
 
     if (!got_x_error)
     {
@@ -388,7 +379,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
 		vim_free(ret);
 	}
 	else
-	    InjectStr(cmd);
+	    server_to_input_buf(cmd);
 	return 0;
     }
 
@@ -612,7 +603,7 @@ serverGetVimNames(dpy)
     int		    result, actualFormat;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
-    Window          w;
+    uint	    w;
     garray_T	    ga;
 
     if (registryProperty == None)
@@ -663,8 +654,8 @@ serverGetVimNames(dpy)
 	if (*p != 0)
 	{
 	    w = None;
-	    sscanf((char *)entry, "%x", (uint*) &w);
-	    if (WindowValid(dpy, w))
+	    sscanf((char *)entry, "%x", &w);
+	    if (WindowValid(dpy, (Window)w))
 	    {
 		ga_concat(&ga, p + 1);
 		ga_concat(&ga, (char_u *)"\n");
@@ -715,7 +706,7 @@ ServerReplyFind(w, op)
     else if (p != NULL && op == SROP_Delete)
     {
 	ga_clear(&p->strings);
-	memmove(p, p + 1, (serverReply.ga_len - i - 1) * sizeof(*p));
+	mch_memmove(p, p + 1, (serverReply.ga_len - i - 1) * sizeof(*p));
 	serverReply.ga_len--;
 	serverReply.ga_room++;
     }
@@ -793,14 +784,14 @@ WaitForReply(p)
  */
     int
 serverReadReply(dpy, win, str, localLoop)
-    Display *dpy;
-    Window  win;
-    char_u  **str;
-    int	    localLoop;
+    Display	*dpy;
+    Window	win;
+    char_u	**str;
+    int		localLoop;
 {
-    int	    len;
-    char_u  *s;
-    struct ServerReply *p;
+    int		len;
+    char_u	*s;
+    struct	ServerReply *p;
 
     ServerWait(dpy, win, WaitForReply, &win, localLoop, -1);
 
@@ -811,7 +802,7 @@ serverReadReply(dpy, win, str, localLoop)
 	if (len < p->strings.ga_len)
 	{
 	    s = (char_u *) p->strings.ga_data;
-	    memmove(s, s + len, p->strings.ga_len - len);
+	    mch_memmove(s, s + len, p->strings.ga_len - len);
 	    p->strings.ga_room += len;
 	    p->strings.ga_len -= len;
 	}
@@ -1006,7 +997,7 @@ LookupName(dpy, name, delete, loose)
 	    memcpy(entry, p, count);
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty, XA_STRING,
 		        8, PropModeReplace, regProp,
-		        (int) (numItems - (p-entry)));
+		        (int) (numItems - (p - entry)));
 	XSync(dpy, False);
     }
 
@@ -1183,8 +1174,14 @@ serverEventProc(dpy, eventPtr)
 		switch (p[1])
 		{
 		    case 'r':
-			resWindow = (Window)strtoul((char *)p + 2,
-							  (char **) &end, 16);
+			end = skipwhite(p + 2);
+			resWindow = 0;
+			while (isxdigit(*end))
+			{
+			    resWindow = 16 * resWindow
+						+ (unsigned long)hex2nr(*end);
+			    ++end;
+			}
 			if (end == p + 2 || *end != ' ')
 			    resWindow = None;
 			else
@@ -1226,7 +1223,7 @@ serverEventProc(dpy, eventPtr)
 	    if (serverName != NULL && STRCMP(name, serverName) == 0)
 	    {
 		if (asKeys)
-		    InjectStr(script);
+		    server_to_input_buf(script);
 		else
 		    res = eval_to_string(script, NULL);
 	    }
@@ -1406,20 +1403,6 @@ x_error_check(dpy, error_event)
 }
 
 /*
- * Replace termcodes such as <CR> and insert as key presses if there is room
- */
-    static void
-InjectStr(str)
-    char_u	*str;
-{
-    char_u      *ptr = NULL;
-
-    str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
-    add_to_input_buf(str, STRLEN(str));
-    vim_free((char_u *)(ptr));
-}
-
-/*
  * Check if name looks like it had a 3 digit serial number appended
  */
     static int
@@ -1440,190 +1423,4 @@ IsSerialName(str)
 
     return TRUE;
 }
-
-
-static char_u *build_drop_cmd __ARGS((int filec, char **filev, int sendReply));
-
-    void
-cmdsrv_main(argc, argv, cmdTarget, serverStr)
-    int		*argc;
-    char	**argv;
-    char_u	*cmdTarget;
-    char_u	**serverStr;
-{
-    char_u	*res, *s;
-    int		i;
-    int		ret;
-    int		didone = FALSE;
-    char	**newArgV = argv + 1;
-    int		newArgC = 1,
-		Argc = *argc;
-    Window	srv;
-
-    setup_term_clip();
-    s = cmdTarget != NULL ? cmdTarget : gettail((char_u *)argv[0]);
-    if (xterm_dpy != NULL)
-    {
-	/*
-	 * Execute the command server related arguments and remove them
-	 * from the argc/argv array; We may have to return into main()
-	 */
-	for (i = 1; i < Argc; i++)
-	{
-	    res = NULL;
-	    if (STRCMP(argv[i], "--") == 0)
-	    {
-		for (; i < *argc; i++)
-		{
-		    *newArgV++ = argv[i];
-		    newArgC++;
-		}
-		break;
-	    }
-	    else if (STRICMP(argv[i], "--remote") == 0
-		     || STRICMP(argv[i], "--remote-wait") == 0
-		     || STRICMP(argv[i], "--serversend") == 0)
-	    {
-		if (i == *argc - 1)
-		    mainerr_arg_missing((char_u *)argv[i]);
-		if (argv[i][2] == 'r')
-		{
-		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
-			                        argv[i][8] == '-');
-		    Argc = i;
-		}
-		else
-		{
-		    *serverStr = (char_u *)argv[i + 1];
-		    i++;
-		}
-		ret =
-		    serverSendToVim(xterm_dpy, s, *serverStr, NULL, &srv, 0, 0);
-		if (ret < 0)
-		{
-		    if (STRICMP(argv[i], "--remote-wait") == 0)
-		    {
-			fputs(_("\nSend failed. No command server present ?\n"),
-			      stderr);
-		    }
-		    else
-		    {
-			MSG_ATTR(_("Send failed. Trying to execute locally"),
-				  hl_attr(HLF_W));
-			break;      /* Break out to let vim start normally.  */
-		    }
-		}
-		if (ret >= 0 && STRICMP(argv[i], "--remote-wait") == 0)
-		{
-		    int	    numFiles = *argc - i - 1;
-		    int	    j;
-		    char_u  *done = alloc(numFiles);
-		    char_u  *p;
-
-		    /* Wait for all files to unload in remote */
-		    memset(done, 0, numFiles);
-		    while (memchr(done, 0, numFiles) != NULL)
-		    {
-			if (serverReadReply(xterm_dpy, srv, &p, TRUE) < 0)
-			    break;
-			j = atoi((char *)p);
-			if (j >= 0 && j < numFiles)
-			    done[j] = 1;
-		    }
-		}
-	    }
-	    else if (STRICMP(argv[i], "--serverexpr") == 0)
-	    {
-		if (i == *argc - 1)
-		    mainerr_arg_missing((char_u *)argv[i]);
-		if (serverSendToVim(xterm_dpy, s, (char_u *)argv[i + 1],
-							     &res, NULL, 1, 1)
-			< 0)
-		{
-		    fputs(_("Send expression failed.\n"), stderr);
-		}
-	    }
-	    else if (STRICMP(argv[i], "--serverlist") == 0)
-	    {
-		res = serverGetVimNames(xterm_dpy);
-	    }
-	    else if (STRICMP(argv[i], "--servername") == 0)
-	    {
-		/* Alredy processed. Take it out of the command line */
-		i++;
-		continue;
-	    }
-	    else
-	    {
-		*newArgV++ = argv[i];
-		newArgC++;
-		continue;
-	    }
-	    didone = TRUE;
-	    if (res != NULL && *res)
-	    {
-		mch_msg((char *)res);
-		if (res[STRLEN(res) - 1] != '\n')
-		    mch_msg("\n");
-	    }
-	    vim_free(res);
-	}
-
-	if (didone)
-	    exit(0);     /* Mission accomplished - get out */
-    }
-    /* Return back into main() */
-    *argc = newArgC;
-}
-
-    static char_u *
-build_drop_cmd(filec, filev, sendReply)
-    int		filec;
-    char	**filev;
-    int		sendReply;
-{
-    garray_T	ga;
-    int		i;
-    char_u	*inicmd = NULL;
-    char_u	*p;
-    char_u	cwd[MAXPATHL];
-
-    if (filec > 0 && filev[0][0] == '+')
-    {
-	inicmd = (char_u *)filev[0] + 1;
-	filev++;
-	filec--;
-    }
-    if (filec <= 0 || mch_dirname(cwd, MAXPATHL) != OK)
-	return NULL;
-    if ((p = vim_strsave_escaped(cwd, PATH_ESC_CHARS)) == NULL)
-	return NULL;
-    ga_init2(&ga, 1, 100);
-    ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd ");
-    ga_concat(&ga, p);
-    ga_concat(&ga, (char_u *)"<CR>:drop ");
-    for (i = 0; i < filec; i++)
-    {
-	vim_free(p);
-	p = vim_strsave_escaped((char_u *)filev[i], PATH_ESC_CHARS);
-	if (p == NULL)
-	{
-	    vim_free(ga.ga_data);
-	    return NULL;
-	}
-	ga_concat(&ga, p);
-	ga_concat(&ga, (char_u *)" ");
-    }
-    ga_concat(&ga, (char_u *)"<CR>:cd -");
-    if (sendReply)
-	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
-    if (inicmd != NULL)
-    {
-	ga_concat(&ga, (char_u *)"<CR>:");
-	ga_concat(&ga, inicmd);
-    }
-    ga_concat(&ga, (char_u *)"<CR>:<Esc>"); /* Execute & clear command line */
-    return ga.ga_data;
-}
-
 #endif	/* FEAT_XCMDSRV */

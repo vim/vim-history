@@ -207,7 +207,7 @@ gui_init_check()
     gui.ital_font = NOFONT;
     gui.boldital_font = NOFONT;
 #ifdef FEAT_XFONTSET
-    gui.fontset = NOFONT;
+    gui.fontset = NOFONTSET;
 #endif
 
 #ifdef FEAT_MENU

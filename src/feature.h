@@ -146,16 +146,6 @@
 #endif
 
 /*
- * +printer		":hardcopy" command (currently only for Win32)
- */
-#if defined(FEAT_NORMAL) && defined(MSWIN)
-# define FEAT_PRINTER
-#endif
-#if defined(FEAT_PRINTER) && !defined(MSWIN)
-# define FEAT_POSTSCRIPT
-#endif
-
-/*
  * +digraphs		Digraphs.
  *			In insert mode and on the command line you will be
  *			able to use digraphs. The CTRL-K command will work.
@@ -378,6 +368,18 @@
  */
 #ifdef FEAT_NORMAL
 # define FEAT_USR_CMDS
+#endif
+
+/*
+ * +printer		":hardcopy" command
+ * +postscript		Printing uses PostScript file output.
+ */
+#if defined(FEAT_NORMAL) && (defined(MSWIN) || defined(FEAT_EVAL)) \
+	&& !defined(AMIGA)
+# define FEAT_PRINTER
+#endif
+#if defined(FEAT_PRINTER) && !defined(MSWIN) && defined(FEAT_EVAL)
+# define FEAT_POSTSCRIPT
 #endif
 
 /*
@@ -614,9 +616,8 @@
 # endif
 #endif
 #if defined(FEAT_HANGULIN) || defined(FEAT_XIM)
-/* # define X_LOCALE */			/* for OS with the incomplete locale
-					 * support like linux
-					 */
+/* # define X_LOCALE */			/* for OS with incomplete locale
+					   support, like old linux versions. */
 /* # define SLOW_XSERVER */		/* for extremely slow X server */
 #endif
 

@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_28.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -80,7 +80,7 @@ mnemonic meaning to make it easier to remember the commands:
 	zc	C-lose a fold
 
 Folds can be nested: A region of text that contains folds can be folded
-again.  For example, you can fold each paragraph in this sectin, and then
+again.  For example, you can fold each paragraph in this section, and then
 fold all the sections in this chapter.  Try it out.  You will notice that
 opening the fold for the whole chapter will restore the nested folds as they
 were, some may be open and some may be closed.

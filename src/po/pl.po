@@ -2571,8 +2571,8 @@ msgid "E251: VIM instance registry property is badly formed.  Deleted!"
 msgstr "E251: wcielenia instacji rejestru VIM-a jest nieforemne.  Skasowano!"
 
 #: if_xcmdsrv.c:980
-msgid "E240: No connection to X server"
-msgstr "E240: Brak po³±czenia z serwerem X"
+msgid "E240: No connection to Vim server"
+msgstr "E240: Brak po³±czenia z serwerem Vim"
 
 #: if_xcmdsrv.c:1004
 #, c-format

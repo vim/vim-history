@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
+*usr_40.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -38,8 +38,8 @@ itself.  This makes the mappings better readable and you can copy and paste
 the text without problems.
    The ":" character takes Vim to the command line.  The ":read !date" command
 reads the output from the "date" command and appends it below the current
-line.  The <CR> is required to executed the ":read" command.
-   At this point of executing the mapping the text looks like this:
+line.  The <CR> is required to execute the ":read" command.
+   At this point of execution the text looks like this:
 
 	Date:  ~
 	Fri Jun 15 12:54:34 CEST 2001 ~
@@ -60,7 +60,7 @@ It looks a lot like the mapping for <F2> in Normal mode, only the start is
 different.  The <F2> mapping for Normal mode is still there.  Thus you can map
 the same key differently for each mode.
    Notice that, although this mapping starts in Insert mode, it ends in Normal
-mode.  If you would want it to start Insert mode, append a "a" to the mapping.
+mode.  If you want it to continue in Insert mode, append a "a" to the mapping.
 
 Here is an overview of map commands and in which mode they work:
 
@@ -114,7 +114,7 @@ When it has the same color as the other text, it is five characters.
 REMAPPING
 
 The result of a mapping is inspected for other mappings in it.  For example,
-the mappings for <F2> above could be shortened too: >
+the mappings for <F2> above could be shortened to: >
 
 	:map <F2> G<F3>
 	:imap <F2> <Esc><F3>
@@ -156,7 +156,7 @@ it.  There is a similar command for every mode:
 RECURSIVE MAPPING
 
 When a mapping triggers itself, it will run forever.  This can be used to
-repeat an action an unlimted number of times.
+repeat an action an unlimited number of times.
    For example, you have a list of files that contain a version number in the
 first line.  You edit these files with "vim *.txt".  You are now editing the
 first file.  Define this mapping: >
@@ -170,7 +170,7 @@ thus doing the substitution, etc.
    This continues until there is an error.  In this case it could be a file
 where the substitute command doesn't find a match for "5.1".  You can then
 make a change to insert "5.1" and continue by typing ",," again.  Or the
-":wnext" fails, becacause you are in the last file in the list.
+":wnext" fails, because you are in the last file in the list.
    When a mapping runs into an error halfway, the rest of the mapping is
 discarded.  CTRL-C interrupts the mapping (CTRL-Break on MS-Windows).
 
@@ -262,7 +262,7 @@ The <buffer> keyword can be used to make a mapping local to a specific buffer.
 See |:map-<buffer>|
 
 The <unique> keyword can be used to make defining a new mapping fail when it
-already exits.  Otherwise a new mapping simply overwrites the old one.  See
+already exists.  Otherwise a new mapping simply overwrites the old one.  See
 |:map-<unique>|.
 
 To make a key do nothing, map it to <Nop> (five characters).  This will make
@@ -292,14 +292,6 @@ deletes the first line.
 To list the user-defined commands, execute the following command: >
 
 	:command
-
-To remove the definition of a user-defined command, use: >
-
-	:delcommand DeleteFirst
-
-You can clear all user-defined commands with the following command: >
-
-	:comclear
 
 Just like with the builtin commands, the user defined commands can be
 abbreviated.  You need to type just enough to distinguish the command from
@@ -433,7 +425,7 @@ event, such as a file being read or written or a buffer change. Through the
 use of autocommands you can train Vim to edit compressed files, for example.
 That is used in the |gzip| plugin.
    Autocommands are very powerful.  Use them with care and they will help you
-avoid having to type commands.  Use them careless and they will cause a lot of
+avoid typing many commands.  Use them carelessly and they will cause a lot of
 trouble.
 
 Suppose you want to replace a date stamp on the end of a file every time it is
@@ -507,7 +499,7 @@ used ones:
 When the pattern includes a slash (/) Vim will compare directory names.
 Without the slash only the last part of a file name is used.  For example,
 "*.txt" matches "/home/biep/readme.txt".  The pattern "/home/biep/*" would
-also match it.  But "home/foo/*.txt" doesn't.
+also match it.  But "home/foo/*.txt" wouldn't.
    When including a slash, Vim matches the pattern against both the full path
 of the file ("/home/biep/readme.txt") and the relative path (e.g.,
 "biep/readme.txt").
@@ -554,7 +546,7 @@ for the cprograms group: >
 
 GROUPS
 
-The {group} item used when defining an autocommand groups related autocommands
+The {group} item, used when defining an autocommand, groups related autocommands
 together.  This can be used to delete all the autocommands in a certain group,
 for example.
    When defining several autocommands for a certain group, use the ":augroup"

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 28
+*editing.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1021,9 +1021,14 @@ written, no backup file is made.  The values of 'backup' and 'writebackup' are
 ignored then.
 
 When the 'backup' option is on, an old backup file (with the same name as the
-new backup file) will be deleted.  If 'backup' is not set, but 'writebackup' is
-set, an existing backup file will not be deleted.  The backup file that is made
-while the file is being written will have a different name.
+new backup file) will be deleted.  If 'backup' is not set, but 'writebackup'
+is set, an existing backup file will not be deleted.  The backup file that is
+made while the file is being written will have a different name.
+
+On some filesystems it's possible that in a crash you lose both the backup and
+the newly written file (it might be there but contain bogus data).  In that
+case try recovery, because the swap file is synced to disk and might still be
+there. |:recover|
 
 The directories given with the 'backupdir' option is used to put the backup
 file in.  (default: same directory as the written file).

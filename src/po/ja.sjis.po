@@ -2486,8 +2486,8 @@ msgid "E251: VIM instance registry property is badly formed.  Deleted!"
 msgstr "E251: VIM 実体の登録特性が不正です. 消去しました!"
 
 #: if_xcmdsrv.c:980
-msgid "E240: No connection to X server"
-msgstr "E240: X サーバへの接続がありません"
+msgid "E240: No connection to Vim server"
+msgstr "E240: Vim サーバへの接続がありません"
 
 #: if_xcmdsrv.c:1004
 msgid "E241: Unable to send to %s"

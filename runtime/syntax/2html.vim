@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001-05-19
+" Last Change: 2001 Aug 11
 "              (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -140,6 +140,7 @@ if expand("%") == ""
 else
   new %.html
 endif
+set modifiable
 %d
 let s:old_paste = &paste
 set paste

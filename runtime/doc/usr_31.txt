@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 30
+*usr_31.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -83,7 +83,7 @@ to select files like in a file browser.  However, this doesn't work for the
 
 Vim protects you from accidentally overwriting a file and other ways to lose
 changes.  If you do something that might be a bad thing to do, Vim produces an
-error message and suggest appending ! if you really want to do it.
+error message and suggests appending ! if you really want to do it.
    To avoid retyping the command with the !, you can make Vim give you a
 dialog.  You can then press "OK" or "Cancel" to tell Vim what you want.
    For example, you are editing a file and made changes to it.  You start
@@ -102,15 +102,15 @@ Vim will pop up a dialog that looks something like this:
 
 Now make your choice.  If you do want to save the changes, select "YES".  If
 you want to lose the changes for ever: "NO".  If you forgot what you were
-doing and look in the file what really changed use "CANCEL".  The window won't
-be split and you are back in the same file, with the changes still there.
+doing and want to check what really changed use "CANCEL".  You will be back in
+the same file, with the changes still there.
 
 Just like ":browse", the ":confirm" command can be prepended to most commands
 that edit another file.  They can also be combined: >
 
 	:confirm browse edit
 
-This will produce a dialog when the current buffer was changed.  The it will
+This will produce a dialog when the current buffer was changed.  Then it will
 pop up a file browser to select the file to edit.
 
 	Note:
@@ -134,7 +134,7 @@ You can now press the single key for the choice.  You don't have to press
 
 The keyboard is used for all Vim commands.  The menus provide a simple way to
 select commands, without knowing what they are called.  But you have to move
-your hand from to keyboard and grab the mouse.
+your hand from the keyboard and grab the mouse.
    Menus can often be selected with keys as well.  This depends on your
 system, but most often it works this way.  Use the <Alt> key in combination
 with the underlined letter of a menu.  For example, <A-w> (<Alt> and w) pops
@@ -167,7 +167,7 @@ This will only work in the GUI.  The output may look like this:
 
 	Window position: X 272, Y 103 ~
 
-The position is give in screen pixels.  Now you can use the numbers to move
+The position is given in screen pixels.  Now you can use the numbers to move
 Vim somewhere else.  For example, to move it to the left a hundred pixels: >
 
 	:winpos 172 103
@@ -208,18 +208,18 @@ pixels.  Example: >
 *31.5*	Various
 
 You can use gvim to edit an e-mail message.  In your e-mail program you must
-select gvim to be the editor for messages.  When you have tried that, you will
+select gvim to be the editor for messages.  When you try that, you will
 see that it doesn't work: The mail program thinks that editing is finished,
 while gvim is still running!
    What happens is that gvim disconnects from the shell it was started in.
-That is find when you start gvim in a terminal, so that you can do other work
+That is fine when you start gvim in a terminal, so that you can do other work
 in that terminal.  But when you really want to wait for gvim to finish, you
 must prevent it from disconnecting.  The "-f" argument does this: >
 
 	gvim -f file.txt
 
 The "-f" stands for foreground.  Now Vim will block the shell it was started
-in until you exit the program.
+in until you finish editing and exit.
 
 
 DELAYED START OF THE GUI

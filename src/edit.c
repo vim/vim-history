@@ -5447,7 +5447,17 @@ ins_reg()
      */
     ++no_u_sync;
     if (regname == '=')
+    {
+#ifdef USE_IM_CONTROL
+	int	im_on = im_get_status();
+#endif
 	regname = get_expr_register();
+#ifdef USE_IM_CONTROL
+	/* Restore the Input Method. */
+	if (im_on)
+	    im_set_active(TRUE);
+#endif
+    }
     if (regname == NUL)
 	need_redraw = TRUE;	/* remove the '"' */
     else

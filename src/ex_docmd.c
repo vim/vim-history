@@ -2275,7 +2275,7 @@ set_one_cmd_context(xp, buff)
 	 * being expanded.
 	 */
 	xp->xp_pattern = skipwhite(arg);
-	for (p = xp->xp_pattern; *p; ++p)
+	for (p = xp->xp_pattern; *p; )
 	{
 	    if (*p == '\\' && p[1])
 		++p;
@@ -2301,6 +2301,12 @@ set_one_cmd_context(xp, buff)
 		}
 		in_quote = !in_quote;
 	    }
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p);
+	    else
+#endif
+		++p;
 	}
 
 	/*

@@ -25,7 +25,9 @@
 #ifdef __BORLANDC__
 # include <winresrc.h>
 #else
-# include <winres.h>
+# ifndef __MINGW32__
+#  include <winres.h>
+# endif
 #endif
 
 //
@@ -89,7 +91,7 @@ BEGIN
 	VALUE "FileDescription",	"Vi Improved - A Text Editor\0"
 	VALUE "FileVersion",		VIM_VERSION_MAJOR_STR ", " VIM_VERSION_MINOR_STR ", " VIM_VERSION_BUILD_STR ", " VIM_VERSION_PATCHLEVEL_STR  "\0"
 	VALUE "InternalName",		"VIM\0"
-	VALUE "LegalCopyright",		"Copyright \251 1996-1999\0"
+	VALUE "LegalCopyright",		"Copyright \251 1996-2001\0"
 	VALUE "LegalTrademarks",	"Vim\0"
 	VALUE "OriginalFilename",	"VIM.EXE\0"
 	VALUE "ProductName",		"Vim\0"
@@ -110,5 +112,5 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,67,42,50,14
-    CTEXT           "Cancel Printing",IDC_STATIC,7,21,172,8
+    CTEXT           "Cancel Printing",-1,7,21,172,8
 END

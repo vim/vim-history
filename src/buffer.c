@@ -173,7 +173,7 @@ open_buffer(read_stdin, eap)
      */
     /* When reading stdin, the buffer contents always needs writing, so set
      * the changed flag.  Unless in readonly mode: "ls | gview -". */
-    if ((read_stdin && !readonlymode)
+    if ((read_stdin && !readonlymode && !bufempty())
 #ifdef FEAT_AUTOCMD
 		|| modified_was_set	/* ":set modified" used in autocmd */
 #endif
@@ -2648,7 +2648,15 @@ maketitle()
 
 	    append_arg_number(curwin, buf, FALSE, IOSIZE);
 
-	    STRCAT(buf, " - VIM");
+#ifdef FEAT_XCMDSRV
+	    if (serverName != NULL)
+	    {
+		STRCAT(buf, " - ");
+		STRCAT(buf, serverName);
+	    }
+	    else
+#endif
+		STRCAT(buf, " - VIM");
 
 	    if (maxlen > 0)
 	    {

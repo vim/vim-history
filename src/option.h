@@ -183,6 +183,7 @@
 
 /* characters for p_go: */
 #define GO_ASEL		'a'		/* autoselect */
+#define GO_ASELML	'A'		/* autoselect modeless selection */
 #define GO_BOT		'b'		/* use bottom scrollbar */
 #define GO_FORG		'f'		/* start GUI in foreground */
 #define GO_GREY		'g'		/* use grey menu items */
@@ -198,7 +199,7 @@
 #define GO_TOOLBAR	'T'		/* add toolbar */
 #define GO_FOOTER	'F'		/* add footer */
 #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
-#define GO_ALL		"abfFgilmMprtTv" /* all possible flags for 'go' */
+#define GO_ALL		"aAbfFgilmMprtTv" /* all possible flags for 'go' */
 
 /* flags for 'comments' option */
 #define COM_NEST	'n'		/* comments strings nest */
@@ -311,6 +312,7 @@ EXTERN long	p_cwh;		/* 'cmdwinheight' */
 EXTERN char_u	*p_cb;		/* 'clipboard' */
 EXTERN int	clip_unnamed INIT(= FALSE);
 EXTERN int	clip_autoselect INIT(= FALSE);
+EXTERN int	clip_autoselectml INIT(= FALSE);
 EXTERN regprog_T *clip_exclude_prog INIT(= NULL);
 #endif
 EXTERN long	p_ch;		/* 'cmdheight' */
@@ -398,10 +400,13 @@ static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
 EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef FEAT_PRINTER
-EXTERN char_u	*p_prtfont;	/* 'printerfont' */
-EXTERN char_u	*p_popt;	/* 'printeroptions' */
-EXTERN char_u	*p_prtname;	/* 'printername' */
-EXTERN char_u	*p_headerfmt;	/* 'printerheader' */
+EXTERN char_u	*p_pdev;	/* 'printdevice' */
+# ifdef FEAT_POSTSCRIPT
+EXTERN char_u	*p_pexpr;	/* 'printexpr' */
+# endif
+EXTERN char_u	*p_pfn;		/* 'printfont' */
+EXTERN char_u	*p_popt;	/* 'printoptions' */
+EXTERN char_u	*p_header;	/* 'printheader' */
 #endif
 #ifdef FEAT_GUI
 EXTERN char_u	*p_guifont;	/* 'guifont' */

@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Aug 04
+" Last Change:	2001 Aug 11
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -11,14 +11,12 @@
 
 " 1. Build the extension of the file, if any:
 let s:ext = ""
-if strlen($xx) == 0 && exists("v:lang") && v:lang != "C"
+if strlen($xx) > 1
+  let s:ext = "." . $xx
+elseif exists("v:lang") && v:lang != "C"
   let s:ext = "." . strpart(v:lang, 0, 2)
-elseif strlen($xx) == 0 && strlen($LANG) > 0
+elseif strlen($LANG) > 0 && $LANG != "C"
   let s:ext = "." . strpart($LANG, 0, 2)
-else
-  if strlen($xx) > 1
-    let s:ext = "." . $xx
-  endif
 endif
 
 " The japanese tutor is available in two encodings, guess which one to use

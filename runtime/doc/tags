@@ -557,18 +557,20 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'patchexpr'	options.txt	/*'patchexpr'*
 'patchmode'	options.txt	/*'patchmode'*
 'path'	options.txt	/*'path'*
+'pdev'	options.txt	/*'pdev'*
 'pex'	options.txt	/*'pex'*
+'pexpr'	options.txt	/*'pexpr'*
 'pfn'	options.txt	/*'pfn'*
 'pheader'	options.txt	/*'pheader'*
 'pm'	options.txt	/*'pm'*
-'pname'	options.txt	/*'pname'*
 'popt'	options.txt	/*'popt'*
 'previewheight'	options.txt	/*'previewheight'*
 'previewwindow'	options.txt	/*'previewwindow'*
-'printerfont'	options.txt	/*'printerfont'*
-'printerheader'	options.txt	/*'printerheader'*
-'printername'	options.txt	/*'printername'*
-'printeroptions'	options.txt	/*'printeroptions'*
+'printdevice'	options.txt	/*'printdevice'*
+'printexpr'	options.txt	/*'printexpr'*
+'printfont'	options.txt	/*'printfont'*
+'printheader'	options.txt	/*'printheader'*
+'printoptions'	options.txt	/*'printoptions'*
 'prompt'	vi_diff.txt	/*'prompt'*
 'pt'	options.txt	/*'pt'*
 'pvh'	options.txt	/*'pvh'*
@@ -971,6 +973,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +osfiletype	various.txt	/*+osfiletype*
 +path_extra	various.txt	/*+path_extra*
 +perl	various.txt	/*+perl*
++postscript	various.txt	/*+postscript*
 +printer	various.txt	/*+printer*
 +python	various.txt	/*+python*
 +quickfix	various.txt	/*+quickfix*
@@ -1055,6 +1058,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -bw	gui_x11.txt	/*-bw*
 -c	starting.txt	/*-c*
 -d	starting.txt	/*-d*
+-dev	starting.txt	/*-dev*
 -display	gui_x11.txt	/*-display*
 -e	starting.txt	/*-e*
 -f	starting.txt	/*-f*
@@ -1088,6 +1092,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -s	starting.txt	/*-s*
 -s-ex	starting.txt	/*-s-ex*
 -scrollbarwidth	gui_x11.txt	/*-scrollbarwidth*
+-silent	if_ole.txt	/*-silent*
 -sw	gui_x11.txt	/*-sw*
 -t	starting.txt	/*-t*
 -tag	starting.txt	/*-tag*
@@ -1211,6 +1216,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /branch	pattern.txt	/*\/branch*
 /collection	pattern.txt	/*\/collection*
 /concat	pattern.txt	/*\/concat*
+/dyn	various.txt	/*\/dyn*
 /ignorecase	pattern.txt	/*\/ignorecase*
 /magic	pattern.txt	/*\/magic*
 /multi	pattern.txt	/*\/multi*
@@ -1396,6 +1402,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 41.7	usr_41.txt	/*41.7*
 41.8	usr_41.txt	/*41.8*
 41.9	usr_41.txt	/*41.9*
+42	usr_42.txt	/*42*
 42.1	usr_42.txt	/*42.1*
 42.2	usr_42.txt	/*42.2*
 42.3	usr_42.txt	/*42.3*
@@ -2540,6 +2547,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 >cont	repeat.txt	/*>cont*
 >finish	repeat.txt	/*>finish*
 >next	repeat.txt	/*>next*
+>quit	repeat.txt	/*>quit*
 >step	repeat.txt	/*>step*
 ?	pattern.txt	/*?*
 ?<CR>	pattern.txt	/*?<CR>*
@@ -2992,6 +3000,7 @@ E361	pattern.txt	/*E361*
 E362	term.txt	/*E362*
 E363	pattern.txt	/*E363*
 E364	eval.txt	/*E364*
+E365	options.txt	/*E365*
 E366	options.txt	/*E366*
 E368	eval.txt	/*E368*
 E37	message.txt	/*E37*
@@ -3080,6 +3089,11 @@ E445	windows.txt	/*E445*
 E446	editing.txt	/*E446*
 E447	editing.txt	/*E447*
 E45	message.txt	/*E45*
+E450	os_msdos.txt	/*E450*
+E451	os_msdos.txt	/*E451*
+E452	os_msdos.txt	/*E452*
+E453	os_msdos.txt	/*E453*
+E454	os_msdos.txt	/*E454*
 E46	message.txt	/*E46*
 E47	message.txt	/*E47*
 E48	eval.txt	/*E48*
@@ -4327,6 +4341,7 @@ hl-WarningMsg	syntax.txt	/*hl-WarningMsg*
 hl-WildMenu	syntax.txt	/*hl-WildMenu*
 hlID()	eval.txt	/*hlID()*
 hlexists()	eval.txt	/*hlexists()*
+holy-grail	index.txt	/*holy-grail*
 home	intro.txt	/*home*
 home-replace	editing.txt	/*home-replace*
 hostname()	eval.txt	/*hostname()*
@@ -4660,6 +4675,7 @@ mode-cmdline	cmdline.txt	/*mode-cmdline*
 mode-ins-repl	insert.txt	/*mode-ins-repl*
 mode-replace	insert.txt	/*mode-replace*
 mode-switching	intro.txt	/*mode-switching*
+modeless-and-clipboard	version6.txt	/*modeless-and-clipboard*
 modeless-selection	gui.txt	/*modeless-selection*
 modeline	options.txt	/*modeline*
 modeline-local	options.txt	/*modeline-local*
@@ -4674,6 +4690,7 @@ mouse-using	term.txt	/*mouse-using*
 ms-dos	os_msdos.txt	/*ms-dos*
 msdos	os_msdos.txt	/*msdos*
 msdos-arrows	os_msdos.txt	/*msdos-arrows*
+msdos-clipboard-limits	os_msdos.txt	/*msdos-clipboard-limits*
 msdos-compiling	os_msdos.txt	/*msdos-compiling*
 msdos-copy-paste	os_msdos.txt	/*msdos-copy-paste*
 msdos-fname-extensions	os_msdos.txt	/*msdos-fname-extensions*
@@ -4889,6 +4906,7 @@ prevcount-variable	eval.txt	/*prevcount-variable*
 preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
 printcap-syntax	syntax.txt	/*printcap-syntax*
+printing	various.txt	/*printing*
 progname-variable	eval.txt	/*progname-variable*
 progress-syntax	syntax.txt	/*progress-syntax*
 progress.vim	syntax.txt	/*progress.vim*

@@ -1,4 +1,4 @@
-*usr_24.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 29
+*usr_24.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -409,7 +409,7 @@ The "i" in the first column indicates Insert mode.  These abbreviations are
 only active in Insert mode.  Other possible characters are:
 
 	c	Command-line mode			:cabbrev
-	!	both Normal and Command-line mode	:abbreviate
+	!	both Insert and Command-line mode	:abbreviate
 
 Since abbreviations are not often useful in Command-line mode, you will mostly
 use the ":iabbrev" command.  That avoids, for example, that "ad" gets expanded

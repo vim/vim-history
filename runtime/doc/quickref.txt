@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0aq.  Last change: 2001 Jul 28
+*quickref.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -760,10 +760,10 @@ Short explanation of each option:		*option-list*
 |'path'|	  |'pa'|     list of directories searched with "gf" et.al.
 |'previewheight'| |'pvh'|    height of the preview window
 |'previewwindow'| |'pvw'|    identifies the preview window
-|'printerfont'|   |'pfn'|    name of the font to be used for :hardcopy
-|'printerheader'| |'pheader'|format of the header used for :hardcopy
-|'printername'|   |'pname'|  name of the printer to be used for :hardcopy
-|'printeroptions'| |'popt'|  controls the format of :hardcopy output
+|'printdevice'|   |'pdev'|   name of the printer to be used for :hardcopy
+|'printfont'|	  |'pfn'|    name of the font to be used for :hardcopy
+|'printheader'|   |'pheader'| format of the header used for :hardcopy
+|'printoptions'|  |'popt'|   controls the format of :hardcopy output
 |'readonly'|	  |'ro'|     disallow writing the buffer
 |'remap'|		     allow mappings to work recursively
 |'report'|		     threshold for reporting nr. of lines changed

@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_10.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -244,7 +244,7 @@ The first line always has number one.  How about the last line?  The "$"
 character is used for this.  For example, to substitute in the lines from the
 cursor to the end: >
 
-	:.,$/yes/no/
+	:.,$s/yes/no/
 
 The "%" range that we used before, is actually a short way to say "1,$", from
 the first to the last line.
@@ -366,7 +366,7 @@ pattern we are looking for contains a slash, this uses the plus character to
 separate the pattern.  Next comes the substitute command that changes "foobar"
 into "barfoo".
    The default range for the global command is the whole file.  Thus no range
-was specified in this example.  This is different from ":subsitute", which
+was specified in this example.  This is different from ":substitute", which
 works on one line without a range.
    The command isn't perfect, since it also matches lines where "//" appears
 halfway a line, and the substitution will also take place before the "//".
@@ -596,8 +596,8 @@ you are doing and want to overwrite the file, append !: >
 	:.,$write! tempo
 
 CAREFUL: The ! must follow the ":write" command immediately, without white
-space.  Otherwise it becomes a filter command, which is explaned later in this
-chapter.
+space.  Otherwise it becomes a filter command, which is explained later in
+this chapter.
 
 
 APPENDING TO A FILE

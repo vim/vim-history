@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0aq.  Last change: 2001 Jul 25
+*repeat.txt*    For Vim version 6.0ar.  Last change: 2001 Aug 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -398,6 +398,10 @@ the function in another Vim, search for the start of the function and do
 Additionally, these commands can be used:
 							*>cont*
 	cont	Continue execution until the next breakpoint is hit.
+							*>quit*
+	quit	Abort execution.  This is like using CTRL-C, some things might
+		still be executed, doesn't abort everything.  Still stops at
+		the next breakpoint.
 							*>next*
 	next	Execute the command and come back to debug mode when it's
 		finished.  This steps over user function calls and sourced

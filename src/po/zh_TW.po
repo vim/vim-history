@@ -482,8 +482,8 @@ msgstr ""
 "取消(&C)"
 
 #: eval.c:5428
-msgid "E240: No connection to X server"
-msgstr "E240: 沒有與 X Server 建立連線"
+msgid "E240: No connection to Vim server"
+msgstr "E240: 沒有與 Vim Server 建立連線"
 
 #: eval.c:5496
 msgid "Unable to read a server reply"

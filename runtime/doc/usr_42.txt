@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
+*usr_42.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 08
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -153,7 +153,7 @@ like the variations on the ":map" command:
 	:amenu		All modes
 
 To avoid that the commands of a menu item are being mapped, use the command
-":noremap", ":nnoremap", "anoremap", etc.
+":noremenu", ":nnoremenu", "anoremenu", etc.
 
 
 USING :AMENU
@@ -161,7 +161,7 @@ USING :AMENU
 The ":amenu" command is a bit different.  It assumes that the {keys} you
 give are to be executed in Normal mode.  When Vim is in Visual or Insert mode
 when the menu is used, Vim first has to go back to Normal mode.  ":amenu"
-inserts the a CTRL-C or CTRL-O for you.  For example, if you use this command:
+inserts a CTRL-C or CTRL-O for you.  For example, if you use this command:
 >
 	:amenu  90.100 Mine.Find\ Word  *
 
@@ -352,6 +352,8 @@ selection, the selection will be used unmodified.  When there is a selection
 but you click outside of it, the selection is removed.
    There is a separate popup menu for each mode.  Thus there are never grey
 items like in the normal menus.
+
+What is the meaning of life, the universe and everything?  *42*
 
 ==============================================================================
 

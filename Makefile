@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0aq
+MINOR = 0ar
 
 # CHECKLIST for creating a new version:
 #
@@ -129,8 +129,8 @@ MINOR = 0aq
 # - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
 # - Delete vimrun.exe, install.exe and uninstall.exe.
-# Win32 GUI version with OLE and dynamic IME:
-# - "nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes
+# Win32 GUI version with OLE, PERL, TCL, PYTHON and dynamic IME:
+# - "nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes ...
 # - Rename "gvim.exe" to "gvim_ole.exe".
 # - Delete vimrun.exe, install.exe and uninstall.exe.
 # Produce Gvimext.dll:
@@ -156,9 +156,10 @@ MINOR = 0aq
 # - rename installw32.exe to install.exe
 # - rename uninstalw32.exe to uninstal.exe
 # - rename xxdw32.exe to xxd/xxd.exe
-# - put gvimext.dll in GvimExt, VisVim.dll in VisVim, OpenWithVim.exe and
-#   SendToVim.exe in OleVim (get them from a binary archive or build them)
+# - put gvimext.dll in GvimExt and VisVim.dll in VisVim (get them from a binary
+#   archive or build them)
 # - go to ../nsis and do "makensis gvim.nsi".
+# - Copy gvim##.exe to the dist directory.
 #
 # OS/2:
 # - Unpack the Unix "src", "extra" and "rt" archives.
@@ -428,19 +429,6 @@ SRC_DOS =	\
 
 # source files for DOS without CR/LF translation (also in the extra archive)
 SRC_DOS_BIN =	\
-		OleVim/OleVim.mak \
-		OleVim/OpenWithVim.bas \
-		OleVim/OpenWithVim.c \
-		OleVim/OpenWithVim.pyw \
-		OleVim/OpenWithVim.vbp \
-		OleVim/OpenWithVim.vbw \
-		OleVim/README.txt \
-		OleVim/SendToVim.bas \
-		OleVim/SendToVim.c \
-		OleVim/SendToVim.vbp \
-		OleVim/SendToVim.vbw \
-		OleVim/uvim.c \
-		OleVim/uvim.h \
 		VisVim/Commands.cpp \
 		VisVim/Commands.h \
 		VisVim/DSAddIn.cpp \
@@ -459,6 +447,7 @@ SRC_DOS_BIN =	\
 		VisVim/VisVim.cpp \
 		VisVim/VisVim.def \
 		VisVim/VisVim.dsp \
+		VisVim/VisVim.mak \
 		VisVim/VisVim.h \
 		VisVim/VisVim.odl \
 		VisVim/VisVim.rc \
@@ -760,7 +749,6 @@ EXTRA =		\
 		$(ROOT_EXTRA) \
 		$(RT_EXTRA) \
 		$(SRC_EXTRA) \
-		OleVim/*.exe \
 		README_extra.txt \
 		VisVim/VisVim.dll \
 		farsi \
@@ -1109,9 +1097,6 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	mkdir dist/vim/$(VIMRTDIR)/VisVim
 	cp VisVim/README.txt dist/vim/$(VIMRTDIR)/VisVim
 	cp VisVim/VisVim.dll dist/vim/$(VIMRTDIR)/VisVim
-	mkdir dist/vim/$(VIMRTDIR)/OleVim
-	cp OleVim/README.txt dist/vim/$(VIMRTDIR)/OleVim
-	cp OleVim/*.exe dist/vim/$(VIMRTDIR)/OleVim
 	cd dist && zip -9 -rD -z gvim$(VERSION)ole.zip vim <$(COMMENT_OLE)
 
 # make Win32s gvim

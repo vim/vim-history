@@ -36,6 +36,9 @@
 #endif
 
 #ifdef FEAT_GUI_MSWIN
+# ifndef COBJMACROS
+#  define COBJMACROS /* For OLE: Enable "friendlier" access to objects */
+# endif
 # include <windows.h>
 #endif
 
@@ -239,10 +242,17 @@ typedef long	    guicolor_T;	/* handle for a GUI color */
 #  define NOFONT	(GuiFont)NULL
 #  define NOFONTSET	(GuiFontset)NULL
 # else
+#  ifdef FEAT_GUI_X11
+  typedef XFontStruct	*GuiFont;	/* handle for a GUI font */
+  typedef XFontSet	GuiFontset;	/* handle for a GUI fontset */
+#   define NOFONT	(GuiFont)0
+#   define NOFONTSET	(GuiFontset)0
+#  else
   typedef long_u	GuiFont;	/* handle for a GUI font */
   typedef long_u	GuiFontset;	/* handle for a GUI fontset */
-#  define NOFONT	(GuiFont)0
-#  define NOFONTSET	(GuiFontset)0
+#   define NOFONT	(GuiFont)0
+#   define NOFONTSET	(GuiFontset)0
+#  endif
 # endif
 #endif
 

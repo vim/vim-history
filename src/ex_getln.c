@@ -3405,12 +3405,14 @@ globpath(path, file)
 		{
 		    ga.ga_data = p;
 		    ga.ga_room = 0;
-		    ga.ga_len = len;
+		    ga.ga_len = len + 1;
 		}
 		else
 		{
-		    /* Concatenate new results to previous ones. */
-		    if (ga_grow(&ga, len + 2) == OK)
+		    /* Concatenate new results to previous ones.  Insert a NL
+		     * and keep room for the trailing NUL. */
+		    ++len;
+		    if (ga_grow(&ga, len + 1) == OK)
 		    {
 			STRCAT(ga.ga_data, "\n");
 			STRCAT(ga.ga_data, p);

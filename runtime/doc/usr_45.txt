@@ -1,4 +1,4 @@
-*usr_45.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
+*usr_45.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -40,7 +40,7 @@ English.
 	another Vim.
 
 What if you would like your messages in a different language?  There are
-several ways.  Which one you should use depends the capabilities of your
+several ways.  Which one you should use depends on the capabilities of your
 system.
    The first way is to set the environment to the desired language before
 starting Vim.  Example for Unix: >
@@ -148,7 +148,7 @@ commonly used languages.  This is the "Super encoding that replaces all
 others".  But it isn't used that much yet.
    Fortunately, Vim supports these three kinds of encodings.  And, with some
 restrictions, you can use them even when your environment uses another
-language then the text.
+language than the text.
    Nevertheless, when you only edit files that are in the encoding of your
 language, the default should work fine and you don't need to do anything.  The
 following is only relevant when you want to edit different languages.
@@ -293,7 +293,7 @@ Thus the text is assumed to be encoded with 'encoding'.
 If the default 'fileencodings' value is not good for you, set it to the
 encodings you want Vim to try.  Only when a value is found to be invalid will
 the next one be used.  Putting "latin1" first doesn't work, because it is
-never illegal.  An example, to fall back to Japanese when the file doesn not
+never illegal.  An example, to fall back to Japanese when the file doesn't
 have a BOM and isn't utf-8: >
 
 	:set fileencodings=ucs-bom,utf-8,sjis
@@ -331,7 +331,7 @@ Computer keyboards don't have much more than a hundred keys.  Some languages
 have thousands of characters, Unicode has ten thousands.  So how do you type
 these characters?
    First of all, when you don't use too many of the special characters, you
-can use digraphs.  This was already explained in |24.8|.
+can use digraphs.  This was already explained in |24.9|.
    When you use a language that uses many more characters than keys on your
 keyboard, you will want to use an Input Method (IM).  This requires learning
 the translation from typed keys to resulting character.  When you need an IM
@@ -371,14 +371,14 @@ To see the list of mappings, use this command: >
 	:lmap
 
 To find out which keymap files are available, in the GUI you can use the
-Edit/keymap menu.  Otherwise you can use this command: >
+Edit/Keymap menu.  Otherwise you can use this command: >
 
 	:echo globpath(&rtp, "keymap/*.vim")
 
 
 DO-IT-YOURSELF KEYMAPS
 
-You can create your own keymap file.  It's not very difficult.  Start of with
+You can create your own keymap file.  It's not very difficult.  Start with
 a keymap file that is similar to the language you want to use.  Copy it to the
 "keymap" directory in your runtime directory.  For example, for Unix, you
 would use the directory "~/.vim/keymap".
