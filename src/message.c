@@ -2475,9 +2475,10 @@ vim_dialog_yesnoallcancel(type, title, message, dflt)
 do_browse(saving, title, dflt, ext, initdir, filter, buf)
     int		saving;		/* write action */
     char_u	*title;		/* title for the window */
-    char_u	*dflt;		/* default file name */
+    char_u	*dflt;		/* default file name (may include directory) */
     char_u	*ext;		/* extension added */
-    char_u	*initdir;	/* initial directory, NULL for current dir */
+    char_u	*initdir;	/* initial directory, NULL for current dir or
+				   when using path from "dflt" */
     char_u	*filter;	/* file name filter */
     buf_T	*buf;		/* buffer to read/write for */
 {
@@ -2498,8 +2499,27 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	    title = (char_u *)_("Open File dialog");
     }
 
-    /* When no directory specified, use default dir, buffer dir, last dir
-     * or current dir */
+    /* When no directory specified, use default file name, default dir, buffer
+     * dir, last dir or current dir */
+    if ((initdir == NULL || *initdir == NUL) && dflt != NULL && *dflt != NUL)
+    {
+	if (mch_isdir(dflt))		/* default file name is a directory */
+	{
+	    initdir = dflt;
+	    dflt = NULL;
+	}
+	else if (gettail(dflt) != dflt)	/* default file name includes a path */
+	{
+	    tofree = vim_strsave(dflt);
+	    if (tofree != NULL)
+	    {
+		initdir = tofree;
+		*gettail(initdir) = NUL;
+		dflt = gettail(dflt);
+	    }
+	}
+    }
+
     if (initdir == NULL || *initdir == NUL)
     {
 	/* When 'browsedir' is a directory, use it */
@@ -2509,7 +2529,8 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	else if ((saving || *p_bsdir == 'b')
 		&& buf != NULL && buf->b_ffname != NULL)
 	{
-	    dflt = gettail(curbuf->b_ffname);
+	    if (dflt == NULL || *dflt == NUL)
+		dflt = gettail(curbuf->b_ffname);
 	    tofree = vim_strsave(curbuf->b_ffname);
 	    if (tofree != NULL)
 	    {
@@ -2560,7 +2581,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	    *gettail(last_dir) = NUL;
 	    if (*last_dir == NUL)
 	    {
-		/* filename only returned, must be in current dir*/
+		/* filename only returned, must be in current dir */
 		vim_free(last_dir);
 		last_dir = alloc(MAXPATHL);
 		if (last_dir != NULL)

@@ -875,16 +875,21 @@ gui_mch_browse(int saving,
     /* if our pointer is currently hidden, then we should show it. */
     gui_mch_mousehide(FALSE);
 
-    if (dflt == NULL)
-	dflt = (char_u *)"";
+    /* Concatenate "initdir" and "dflt". */
     if (initdir == NULL || *initdir == NUL)
-    {
 	mch_dirname(dirbuf, MAXPATHL);
-	strcat((char *)dirbuf, "/");	/* make sure this is a directory */
-	initdir = dirbuf;
-    }
+    else if (STRLEN(initdir) + 2 < MAXPATHL)
+	STRCPY(dirbuf, initdir);
+    else
+	dirbuf[0] = NUL;
+    /* Always need a trailing slash for a directory. */
+    add_pathsep(dirbuf);
+    if (dflt != NULL && *dflt != NUL
+			      && STRLEN(dirbuf) + 2 + STRLEN(dflt) < MAXPATHL)
+	STRCAT(dirbuf, dflt);
+
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(gui.filedlg),
-						      (const gchar *)initdir);
+						      (const gchar *)dirbuf);
 
     gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
 				       GTK_WIDGET(gui.filedlg), VW_POS_MOUSE);
@@ -900,7 +905,7 @@ gui_mch_browse(int saving,
 
 #endif	/* FEAT_BROWSE */
 
-#ifdef FEAT_GUI_DIALOG
+#if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 
 static char_u *dialog_textfield = NULL;
 static GtkWidget *dialog_textentry;
