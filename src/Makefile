@@ -1657,7 +1657,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 # Generate the help tags with ":helptags" to handle all languages.
 	-@cd $(HELPSOURCE); VIMEXE=$(VIMTARGET) $(MAKE) vimtags
 	cd $(HELPSOURCE); \
-		files=`ls *.txt *.??x tags tags-??`; \
+		files=`ls *.txt tags`; \
+		files="$$files `ls *.??x tags-?? 2>/dev/null || true`"; \
 		$(INSTALL_DATA) $$files  $(DEST_HELP); \
 		cd $(DEST_HELP); \
 		chmod $(HELPMOD) $$files
