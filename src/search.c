@@ -2604,10 +2604,10 @@ back_in_line()
     {
 	if (curwin->w_cursor.col == 0)	    /* stop at start of line */
 	    break;
-	dec_cursor();
+	--curwin->w_cursor.col;
 	if (cls() != sclass)		    /* stop at start of word */
 	{
-	    inc_cursor();
+	    ++curwin->w_cursor.col;
 	    break;
 	}
     }
