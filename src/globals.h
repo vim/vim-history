@@ -611,6 +611,8 @@ EXTERN int* (*iconv_errno) (void);
 # ifdef FEAT_GUI_GTK
 EXTERN GdkICAttr	*xic_attr INIT(= NULL);
 EXTERN GdkIC		*xic INIT(= NULL);
+EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
+EXTERN char		*draw_feedback INIT(= NULL);
 # else
 EXTERN XIC		xic INIT(= NULL);
 # endif
