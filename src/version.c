@@ -607,6 +607,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    16,
+/**/
     15,
 /**/
     14,
@@ -1051,10 +1053,16 @@ do_intro_line(row, mesg, add_version, attr)
 	STRCPY(vers, mediumVersion);
 	if (highest_patch())
 	{
-	    /* Check for 9.9x, alpha/beta version */
+	    /* Check for 9.9x or 9.9xx, alpha/beta version */
 	    if (isalpha((int)mediumVersion[3]))
-		sprintf((char *)vers + 4, ".%d%s", highest_patch(),
+	    {
+		if (isalpha((int)mediumVersion[4]))
+		    sprintf((char *)vers + 5, ".%d%s", highest_patch(),
+							   mediumVersion + 5);
+		else
+		    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
 							   mediumVersion + 4);
+	    }
 	    else
 		sprintf((char *)vers + 3, ".%d", highest_patch());
 	}
