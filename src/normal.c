@@ -2706,7 +2706,7 @@ do_mouse(oap, c, dir, count, fixindent)
 		    oap->motion_type = MCHAR;
 		if (oap != NULL
 			&& VIsual_mode == 'v'
-			&& !vim_isIDc(gchar_pos(&end_visual))
+			&& !vim_iswordc(gchar_pos(&end_visual))
 			&& equal(curwin->w_cursor, VIsual)
 			&& (pos = findmatch(oap, NUL)) != NULL)
 		{
@@ -2848,8 +2848,8 @@ get_mouse_class(p)
     if (c == ' ' || c == '\t')
 	return 0;
 
-    if (vim_isIDc(c))
-	return 1;
+    if (vim_iswordc(c))
+	return 2;
 
     /*
      * There are a few special cases where we want certain combinations of
@@ -2858,7 +2858,7 @@ get_mouse_class(p)
      * character is in it's own class.
      */
     if (c != NUL && vim_strchr((char_u *)"-+*/%<>&|^!=", c) != NULL)
-	return 2;
+	return 1;
     return c;
 }
 #endif /* FEAT_VISUAL */
