@@ -130,7 +130,7 @@ diff_buf_add(buf)
 	    return;
 	}
 
-    EMSG2(_("E96: Can not diff more than %ld buffers"), DB_COUNT);
+    EMSGN(_("E96: Can not diff more than %ld buffers"), DB_COUNT);
 }
 
 /*

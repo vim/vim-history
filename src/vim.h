@@ -1242,6 +1242,14 @@ enum hlf_value
 #define MSG_PUTS_LONG(s)	    msg_puts_long((char_u *)(s))
 #define MSG_PUTS_LONG_ATTR(s, a)    msg_puts_long_attr((char_u *)(s), (a))
 
+/* Prefer using emsg3(), because perror() may send the output to the wrong
+ * destination and mess up the screen. */
+#ifdef HAVE_STRERROR
+# define PERROR(msg)		    (void)emsg3((char_u *)"%s: %s", (char_u *)msg, (char_u *)strerror(errno))
+#else
+# define PERROR(msg)		    perror(msg)
+#endif
+
 typedef long	    linenr_T;		/* line number type */
 typedef unsigned    colnr_T;		/* column number type */
 typedef unsigned short disptick_T;	/* display tick type */

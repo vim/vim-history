@@ -554,9 +554,22 @@ emsg(s)
     return msg_attr(s, attr);
 }
 
+/*
+ * Print an error message with one "%s" and one string argument.
+ */
     int
 emsg2(s, a1)
     char_u *s, *a1;
+{
+    return emsg3(s, a1, NULL);
+}
+
+/*
+ * Print an error message with one or two "%s" and one or two string arguments.
+ */
+    int
+emsg3(s, a1, a2)
+    char_u *s, *a1, *a2;
 {
     if ((emsg_off > 0 && *p_debug == NUL)
 #ifdef FEAT_EVAL
@@ -568,15 +581,20 @@ emsg2(s, a1)
     /* Check for NULL strings (just in case) */
     if (a1 == NULL)
 	a1 = (char_u *)"[NULL]";
-    /* Check for very long strings (can happen with ":help ^A<CR>").
-     * Careful, the argument could actually be a long. */
-    if (STRLEN(s) + (strstr((char *)s, "%s") != NULL ? STRLEN(a1) : 20)
-							    >= (size_t)IOSIZE)
-	a1 = (char_u *)_("[string too long]");
-    sprintf((char *)IObuff, (char *)s, (char *)a1);
+    if (a2 == NULL)
+	a2 = (char_u *)"[NULL]";
+
+    /* Check for very long strings (can happen with ":help ^A<CR>"). */
+    if (STRLEN(s) + STRLEN(a1) + STRLEN(a2) >= (size_t)IOSIZE)
+	a1 = a2 = (char_u *)_("[string too long]");
+
+    sprintf((char *)IObuff, (char *)s, (char *)a1, (char *)a2);
     return emsg(IObuff);
 }
 
+/*
+ * Print an error message with one "%ld" and one long int argument.
+ */
     int
 emsgn(s, n)
     char_u	*s;

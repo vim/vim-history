@@ -272,7 +272,7 @@ netbeans_connect(void)
 
     if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-	perror("socket() in netbeans_connect()");
+	PERROR("socket() in netbeans_connect()");
 	return;
     }
 
@@ -289,7 +289,7 @@ netbeans_connect(void)
 	    sd = open(hostname, O_RDONLY);
 	    return;
 	}
-	perror("gethostbyname() in netbeans_connect()");
+	PERROR("gethostbyname() in netbeans_connect()");
 	sd = -1;
 	return;
     }
@@ -297,7 +297,7 @@ netbeans_connect(void)
 #else
     if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
-	perror("socket()");
+	PERROR("socket()");
 	return;
     }
 
@@ -314,13 +314,13 @@ netbeans_connect(void)
 #ifdef INET_SOCKETS
 	    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	    {
-		perror("socket()#2 in netbeans_connect()");
+		PERROR("socket()#2 in netbeans_connect()");
 		return;
 	    }
 #else
 	    if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 	    {
-		perror("socket()#2 in netbeans_connect()");
+		PERROR("socket()#2 in netbeans_connect()");
 		return;
 	    }
 #endif
@@ -343,7 +343,7 @@ netbeans_connect(void)
 		if (!success)
 		{
 		    /* Get here when the server can't be found. */
-		    perror(_("Cannot connect to Netbeans #2"));
+		    PERROR(_("Cannot connect to Netbeans #2"));
 		    getout(1);
 		}
 	    }
@@ -351,7 +351,7 @@ netbeans_connect(void)
 	}
 	else
 	{
-	    perror(_("Cannot connect to Netbeans"));
+	    PERROR(_("Cannot connect to Netbeans"));
 	    getout(1);
 	}
     }
@@ -630,7 +630,7 @@ messageFromNetbeans(gpointer clientData, gint unused1,
 	netbeans_disconnect();
 	nbdebug(("messageFromNetbeans: Error in read() from socket\n"));
 	if (len < 0)
-	    perror(_("read from Netbeans socket"));
+	    PERROR(_("read from Netbeans socket"));
 	return; /* don't try to parse it */;
     }
 
