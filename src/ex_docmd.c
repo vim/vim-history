@@ -8915,18 +8915,19 @@ ex_match(eap)
 	p = skipwhite(p);
 	if (*p == NUL)
 	{
+	    /* There must be two arguments. */
 	    EMSG2(_(e_invarg2), eap->arg);
 	    return;
 	}
 	end = skip_regexp(p + 1, *p, TRUE, NULL);
-	if (*end != NUL && !ends_excmd(*skipwhite(end + 1)))
-	{
-	    eap->errmsg = e_trailing;
-	    return;
-	}
-
 	if (!eap->skip)
 	{
+	    if (*end != NUL && !ends_excmd(*skipwhite(end + 1)))
+	    {
+		eap->errmsg = e_trailing;
+		return;
+	    }
+
 	    c = *end;
 	    *end = NUL;
 	    curwin->w_match.regprog = vim_regcomp(p + 1, TRUE);
