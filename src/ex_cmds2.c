@@ -2632,23 +2632,23 @@ ex_checktime(eap)
 #ifdef FEAT_SYN_HL
 static const long_u  cterm_color_8[8] =
 {
-    (long_u)0x000000, (long_u)0xff0000, (long_u)0x00ff00, (long_u)0xffff00,
-    (long_u)0x0000ff, (long_u)0xff00ff, (long_u)0x00ffff, (long_u)0xffffff
+    (long_u)0x000000L, (long_u)0xff0000L, (long_u)0x00ff00L, (long_u)0xffff00L,
+    (long_u)0x0000ffL, (long_u)0xff00ffL, (long_u)0x00ffffL, (long_u)0xffffffL
 };
 
 static const long_u  cterm_color_16[16] =
 {
-    (long_u)0x000000, (long_u)0x0000c0, (long_u)0x008000, (long_u)0x004080,
-    (long_u)0xc00000, (long_u)0xc000c0, (long_u)0x808000, (long_u)0xc0c0c0,
-    (long_u)0x808080, (long_u)0x6060ff, (long_u)0x00ff00, (long_u)0x00ffff,
-    (long_u)0xff8080, (long_u)0xff40ff, (long_u)0xffff00, (long_u)0xffffff
+    (long_u)0x000000L, (long_u)0x0000c0L, (long_u)0x008000L, (long_u)0x004080L,
+    (long_u)0xc00000L, (long_u)0xc000c0L, (long_u)0x808000L, (long_u)0xc0c0c0L,
+    (long_u)0x808080L, (long_u)0x6060ffL, (long_u)0x00ff00L, (long_u)0x00ffffL,
+    (long_u)0xff8080L, (long_u)0xff40ffL, (long_u)0xffff00L, (long_u)0xffffffL
 };
 
 static int		current_syn_id;
 #endif
 
 #define COLOR_BLACK	(long_u)0
-#define COLOR_WHITE	(long_u)0xFFFFFF
+#define COLOR_WHITE	(long_u)0xFFFFFFL
 
 static int	curr_italic;
 static int	curr_bold;
@@ -2758,7 +2758,7 @@ prt_line_number(psettings, page_line, lnum)
     char_u	tbuf[20];
 
     if (psettings->has_color)
-	prt_set_fg((long_u)0x808080);
+	prt_set_fg((long_u)0x808080L);
     else
 	prt_set_fg(COLOR_BLACK);
     prt_set_bg(COLOR_WHITE);
@@ -3008,8 +3008,8 @@ ex_hardcopy(eap)
     }
 
     /* Set colors and font to normal. */
-    curr_bg = (long_u)0xffffffff;
-    curr_fg = (long_u)0xffffffff;
+    curr_bg = (long_u)0xffffffffL;
+    curr_fg = (long_u)0xffffffffL;
     curr_italic = MAYBE;
     curr_bold = MAYBE;
     curr_underline = MAYBE;

@@ -1038,7 +1038,7 @@ clip_mch_request_selection(VimClipboard *cbd)
     if (IsClipboardFormatAvailable(cbd->format))
     {
 	VimClipType_t	*meta_p;
-	HANDLE		*meta_h;
+	HGLOBAL		meta_h;
 
 	/* We have metadata on the clipboard; try to get it. */
 	if ((meta_h = GetClipboardData(cbd->format)) != NULL

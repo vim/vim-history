@@ -486,7 +486,7 @@ mch_system(char *cmd, int options)
     else
     {
 	/* Wait for the command to terminate before continuing */
-	while (GetModuleUsage(h_module) > 0 && again )
+	while (GetModuleUsage((HINSTANCE)h_module) > 0 && again )
 	{
 	    while( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) && again )
 	    {
