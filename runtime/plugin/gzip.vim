@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Apr 06
+" Last Change: 2003 Dec 22
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -19,13 +19,13 @@ augroup gzip
   " set binary mode before reading the file
   " use "gzip -d", gunzip isn't always available
   autocmd BufReadPre,FileReadPre	*.gz,*.bz2,*.Z setlocal bin
-  autocmd BufReadPost,FileReadPost	*.gz  call s:read("gzip -d")
+  autocmd BufReadPost,FileReadPost	*.gz  call s:read("gzip -dn")
   autocmd BufReadPost,FileReadPost	*.bz2 call s:read("bzip2 -d")
   autocmd BufReadPost,FileReadPost	*.Z   call s:read("uncompress")
   autocmd BufWritePost,FileWritePost	*.gz  call s:write("gzip")
   autocmd BufWritePost,FileWritePost	*.bz2 call s:write("bzip2")
   autocmd BufWritePost,FileWritePost	*.Z   call s:write("compress -f")
-  autocmd FileAppendPre			*.gz  call s:appre("gzip -d")
+  autocmd FileAppendPre			*.gz  call s:appre("gzip -dn")
   autocmd FileAppendPre			*.bz2 call s:appre("bzip2 -d")
   autocmd FileAppendPre			*.Z   call s:appre("uncompress")
   autocmd FileAppendPost		*.gz  call s:write("gzip")
@@ -69,7 +69,7 @@ fun s:read(cmd)
   let tmpe = tmp . "." . expand("<afile>:e")
   " write the just read lines to a temp file "'[,']w tmp.gz"
   execute "silent '[,']w " . tmpe
-  " uncompress the temp file: call system("gzip -d tmp.gz")
+  " uncompress the temp file: call system("gzip -dn tmp.gz")
   call system(a:cmd . " " . tmpe)
   " delete the compressed lines; remember the line number
   let l = line("'[") - 1
