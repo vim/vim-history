@@ -3887,8 +3887,13 @@ gui_update_horiz_scrollbar(force)
     {
 	value = curwin->w_leftcol;
 
-	/* Calculate maximum for horizontal scrollbar. */
-	if (vim_strchr(p_go, GO_HORSCROLL) == NULL)
+	/* Calculate maximum for horizontal scrollbar.  Check for reasonable
+	 * line numbers, topline and botline can be invalid when displaying is
+	 * postponed. */
+	if (vim_strchr(p_go, GO_HORSCROLL) == NULL
+		&& curwin->w_topline <= curwin->w_cursor.lnum
+		&& curwin->w_botline > curwin->w_cursor.lnum
+		&& curwin->w_botline <= curbuf->b_ml.ml_line_count + 1)
 	{
 	    linenr_T	lnum;
 	    colnr_T	n;
