@@ -4755,22 +4755,27 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	for (i = 0; i < num_pat; ++i)
 	{
 	    /* When using system() always add extra quotes, because the shell
-	     * is started twice.  Otherwise it's only needed when the pattern
-	     * includes spaces or single quotes. */
-#ifndef USE_SYSTEM
-	    if (vim_strpbrk(pat[i], " '") != NULL)
-#endif
-	    {
-		STRCAT(command, " \"");
-		STRCAT(command, pat[i]);
-		STRCAT(command, "\"");
-	    }
-#ifndef USE_SYSTEM
-	    else
-	    {
-		STRCAT(command, " ");
-		STRCAT(command, pat[i]);
-	    }
+	     * is started twice.  Otherwise only put quotes around spaces and
+	     * single quotes. */
+#ifdef USE_SYSTEM
+	    STRCAT(command, " \"");
+	    STRCAT(command, pat[i]);
+	    STRCAT(command, "\"");
+#else
+	    p = command + STRLEN(command);
+	    *p++ = ' ';
+	    for (j = 0; pat[i][j] != NUL; )
+		if (vim_strchr((char_u *)" '", pat[i][j]) != NULL)
+		{
+		    *p++ = '"';
+		    while (pat[i][j] != NUL
+			    && vim_strchr((char_u *)" '", pat[i][j]) != NULL)
+			*p++ = pat[i][j++];
+		    *p++ = '"';
+		}
+		else
+		    *p++ = pat[i][j++];
+	    *p = NUL;
 #endif
 	}
     if (flags & EW_SILENT)
