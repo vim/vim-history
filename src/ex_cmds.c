@@ -1600,9 +1600,6 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
     vir.vir_fd = fp_in;
 #ifdef FEAT_MBYTE
     vir.vir_conv.vc_type = CONV_NONE;
-# ifdef USE_ICONV
-    vir.vir_conv.vc_fd = (iconv_t)-1;
-# endif
 #endif
 
     if (fp_in != NULL)
@@ -1644,7 +1641,7 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
     vim_free(vir.vir_line);
 #ifdef FEAT_MBYTE
     if (vir.vir_conv.vc_type != CONV_NONE)
-	convert_setup(&vir.vir_conv, (char_u *)"", (char_u *)"");
+	convert_setup(&vir.vir_conv, NULL, NULL);
 #endif
 }
 

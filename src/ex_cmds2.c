@@ -2059,9 +2059,6 @@ do_source(fname, check_other, is_vimrc)
 #endif
 #ifdef FEAT_MBYTE
     cookie.conv.vc_type = CONV_NONE;		/* no conversion */
-# ifdef USE_ICONV
-    cookie.conv.vc_fd = (iconv_t)-1;
-# endif
 #endif
 
     /*

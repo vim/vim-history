@@ -361,10 +361,6 @@ mb_init()
 	input_conv.vc_type = CONV_NONE;
 	input_conv.vc_factor = 1;
 	output_conv.vc_type = CONV_NONE;
-#ifdef USE_ICONV
-	input_conv.vc_fd = (iconv_t)-1;
-	output_conv.vc_fd = (iconv_t)-1;
-#endif
 	return NULL;
     }
 
@@ -575,10 +571,8 @@ codepage_invalid:
 	set_string_option_direct((char_u *)"fencs", -1,
 				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
 #ifdef FEAT_MBYTE_IME
-# ifdef USE_ICONV
-    ime_conv.vc_fd = (iconv_t)-1;
-    ime_conv_cp.vc_fd = (iconv_t)-1;
-# endif
+    ime_conv.vc_type = CONV_NONE;
+    ime_conv_cp.vc_type = CONV_NONE;
     convert_setup(&ime_conv, (char_u *)"ucs-2", p_enc);
     ime_conv_cp.vc_type = CONV_DBCS_TO_UCS2;
     ime_conv_cp.vc_dbcs = GetACP();
@@ -2426,12 +2420,11 @@ enc_alias_search(name)
 #endif
 
 /*
- * Set the default value for 'encoding' (p_enc).
- * This must be called only once.
- * Returns OK when successful, FAIL when not.
+ * Get the canonicalized encoding of the current locale.
+ * Returns an allocated string when successful, NULL when not.
  */
-    int
-enc_default()
+    char_u *
+enc_locale()
 {
 #ifndef WIN3264
     char	*s;
@@ -2439,7 +2432,6 @@ enc_default()
     int		i;
 #endif
     char	buf[50];
-    char_u	*save_enc;
 #ifdef WIN3264
     long	acp = GetACP();
 
@@ -2498,18 +2490,7 @@ enc_default()
     buf[i] = NUL;
 #endif
 
-    /*
-     * Try setting 'encoding' and check if the value is valid.
-     * If not, go back to the default "latin1".
-     */
-    save_enc = p_enc;
-    p_enc = enc_canonize((char_u *)buf);
-    if (p_enc != NULL && mb_init() == NULL)
-	return OK;
-    vim_free(p_enc);
-    p_enc = save_enc;
-
-    return FAIL;
+    return enc_canonize((char_u *)buf);
 }
 
 # if defined(USE_ICONV) || defined(PROTO)
@@ -2709,9 +2690,9 @@ iconv_end()
 {
     /* Don't use iconv() when inputting or outputting characters. */
     if (input_conv.vc_type == CONV_ICONV)
-	convert_setup(&input_conv, (char_u *)"", (char_u *)"");
+	convert_setup(&input_conv, NULL, NULL);
     if (output_conv.vc_type == CONV_ICONV)
-	convert_setup(&output_conv, (char_u *)"", (char_u *)"");
+	convert_setup(&output_conv, NULL, NULL);
 
     if (hIconvDLL != 0)
 	FreeLibrary(hIconvDLL);
@@ -4062,6 +4043,7 @@ im_get_status()
 /*
  * Setup "vcp" for conversion from "from" to "to".
  * The names must have been made canonical with enc_canonize().
+ * vcp->vc_type must have been initialized to CONV_NONE.
  * Note: cannot be used for conversion from/to ucs-2 and ucs-4 (will use utf-8
  * instead).
  */
@@ -4075,18 +4057,16 @@ convert_setup(vcp, from, to)
     int		to_prop;
 
     /* Reset to no conversion. */
+# ifdef USE_ICONV
+    if (vcp->vc_type == CONV_ICONV && vcp->vc_fd != (iconv_t)-1)
+	iconv_close(vcp->vc_fd);
+# endif
     vcp->vc_type = CONV_NONE;
     vcp->vc_factor = 1;
-# ifdef USE_ICONV
-    if (vcp->vc_fd != (iconv_t)-1)
-    {
-	iconv_close(vcp->vc_fd);
-	vcp->vc_fd = (iconv_t)-1;
-    }
-# endif
 
     /* No conversion when one of the names is empty or they are equal. */
-    if (*from == NUL || *to == NUL || STRCMP(from, to) == 0)
+    if (from == NULL || *from == NUL || to == NULL || *to == NUL
+						     || STRCMP(from, to) == 0)
 	return;
 
     from_prop = enc_canon_props(from);
