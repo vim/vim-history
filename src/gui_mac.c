@@ -3205,7 +3205,7 @@ gui_mch_get_color(name)
 
 	    line[len-1] = '\0';
 
-	    i = sscanf(line, "%hd %hd %hd %n", &r, &g, &b, &pos);
+	    i = sscanf(line, "%d %d %d %n", &r, &g, &b, &pos);
 	    if (i != 3)
 		continue;
 
