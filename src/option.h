@@ -284,6 +284,9 @@ EXTERN long	p_aleph;	/* 'aleph' */
 #if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
 EXTERN int	p_acd;		/* 'autochdir' */
 #endif
+#ifdef FEAT_MBYTE
+EXTERN char_u	*p_ambw;	/* 'ambiwidth' */
+#endif
 EXTERN int	p_ar;		/* 'autoread' */
 EXTERN int	p_aw;		/* 'autowrite' */
 EXTERN int	p_awa;		/* 'autowriteall' */
