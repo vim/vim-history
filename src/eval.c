@@ -1234,7 +1234,12 @@ get_user_var_name(xp, idx)
 		&& gidx < variables.ga_len)
 	    /* skip */;
 	if (name != NULL)
-	    return name;
+	{
+	    if (STRNCMP("g:", xp->xp_pattern, 2) == 0)
+		return cat_prefix_varname('g', name);
+	    else
+		return name;
+	}
     }
     if (bidx < curbuf->b_vars.ga_len)		/* Current buffer variables */
     {
