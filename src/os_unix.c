@@ -1700,6 +1700,11 @@ mch_windexit(r)
 	    out_char('\n');
 	else
 	    msg_clr_eos();	/* clear the rest of the display */
+
+	/* Cursor may have been switched off without calling starttermcap()
+	 * when doing "vim -u vimrc" and vimrc contains ":q". */
+	if (full_screen)
+	    cursor_on();
     }
     out_flush();
     ml_close_all(TRUE);		/* remove all memfiles */
