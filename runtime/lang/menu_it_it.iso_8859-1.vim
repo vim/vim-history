@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Jul 16
+" Last Change:	2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -135,7 +135,7 @@ menut &Convert\ to\ HEX<Tab>:%!xxd	&Converti\ a\ Esadecimale<Tab>:%!xxd
 menut Conve&rt\ back<Tab>:%!xxd\ -r	Conve&rti\ da\ Esadecimale<Tab>:%!xxd\ -r
 menut &Set\ Compiler		Impo&sta\ Compilatore
 
-" open close folds 
+" open close folds
 menut &Enable/Disable\ folds<Tab>zi		Pi&egature\ Sì/No<Tab>zi
 menut &View\ Cursor\ Line<Tab>zv		&Vedi\ linea\ col\ Cursore<Tab>zv
 menut Vie&w\ Cursor\ Line\ only<Tab>zMzx	Vedi\ &solo\ linea\ col\ Cursore<Tab>zMzx
@@ -202,12 +202,12 @@ menut Cu&t			&Taglia
 menut &Copy			C&opia
 menut &Paste		I&ncolla
 menut &Delete		C&ancella
-menut Select\ Blockwise 	Seleziona\ in\ blocco
+menut Select\ Blockwise	Seleziona\ in\ blocco
 menut Select\ &Word		Seleziona\ &Parola
 menut Select\ &Line		Seleziona\ &Linea
 menut Select\ &Block	Seleziona\ &Blocco
 menut Select\ &All		Seleziona\ &Tutto
- 
+
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
 menut Open		Apri
@@ -226,7 +226,7 @@ menut Replace	Rimpiazza
 menut LoadSesn	CaricaSessione
 menut SaveSesn	SalvaSessione
 menut RunScript	EseguiScript
-menut Make		Make 
+menut Make		Make
 "menutrans Shell		Shell
 menut RunCtags	EseguiCtags
 menut TagJump	VaiATag
@@ -255,7 +255,7 @@ if has("toolbar")
     tmenu ToolBar.LoadSesn	CaricaSessione
     tmenu ToolBar.SaveSesn	SalvaSessione
     tmenu ToolBar.RunScript	EseguiScript
-    tmenu ToolBar.Make		Make 
+    tmenu ToolBar.Make		Make
     tmenu ToolBar.Shell		Shell
     tmenu ToolBar.RunCtags	EseguiCtags
     tmenu ToolBar.TagJump	VaiATag

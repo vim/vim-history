@@ -34,7 +34,10 @@
 #	    You must set RUBY_VER_LONG when change RUBY_VER.
 #	Tcl interface:
 #	  TCL=[Path to Tcl directory]
+#	  DYNAMIC_TCL=yes (to load the Tcl DLL dynamically)
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
+#	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
+#	    You must set TCL_VER_LONG when change TCL_VER.
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
 #	Iconv library support (always dynamically loaded):
@@ -50,6 +53,35 @@
 #
 # To build using Borland C++, use Make_bc3.mak or Make_bc5.mak.
 #
+# DEBUG with Make_mvc.mak and Make_dvc.mak:
+#	This makefile gives a fineness of control which is not supported in
+#	Visual C++ configuration files.  Therefore, debugging requires a bit of
+#	extra work.
+#	Make_dvc.mak is a Visual C++ project to access that support.
+#	To use Make_dvc.mak:
+#	1) Build Vim with Make_mvc.mak.
+#	     Use a "DEBUG=1" argument to build Vim with debug support.
+#	     E.g. the following builds gvimd.exe:
+#		nmake -f Make_mvc.mak debug=1 gui=yes
+#	2) Use MS Devstudio and set it up to allow that file to be debugged:
+#	    i) Pass Make_dvc.mak to the IDE.
+#	         Use the "open workspace" menu entry to load Make_dvc.mak.
+#	         Alternatively, from the command line:
+#			msdev /nologo Make_dvc.mak
+#		Note: Make_dvc.mak is in VC4.0 format. Later VC versions see
+#		this and offer to convert it to their own format. Accept that.
+#		It creates a file called Make_dvc.dsw which can then be used
+#		for further operations.  E.g.
+#		    msdev /nologo Make_dvc.dsw
+#	    ii) Set the built executable for debugging:
+#		a) Alt+F7/Debug takes you to the Debug dialog.
+#		b) Fill "Executable for debug session". e.g. gvimd.exe
+#		c) Fill "Program arguments". e.g. -R dosinst.c
+#		d) Complete the dialog
+#	3) You can now debug the executable you built with Make_mvc.mak
+#
+#	Note: Make_dvc.mak builds vimrun.exe, because it must build something
+#	to be a valid makefile..
 
 ### See feature.h for a list of optionals.
 # If you want to build some optional features without modifying the source,
@@ -185,11 +217,12 @@ LINK_PDB = /PDB:$(OUTDIR)/
 # LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
 CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
 RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
+# The /fixed:no is needed for Quantify.
 ! ifndef USE_MSVCRT
-LIBC = libcd.lib
+LIBC = /fixed:no libcd.lib
 ! else
 CFLAGS = $(CFLAGS) -MDd
-LIBC = msvcrtd.lib
+LIBC = /fixed:no msvcrtd.lib
 ! endif
 !endif # DEBUG
 
@@ -315,12 +348,22 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
 !ifdef TCL
 !ifndef TCL_VER
 TCL_VER = 83
+TCL_VER_LONG = 8.3
 !endif
-!message Tcl detected - root dir is "$(TCL)"
+!message Tcl detected (version $(TCL_VER)) - root dir is "$(TCL)"
+!if "$(DYNAMIC_TCL)" == "yes"
+!message Tcl DLL will be loaded dynamically
+TCL_DLL = tcl$(TCL_VER).dll
+CFLAGS  = $(CFLAGS) -DFEAT_TCL -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"$(TCL_DLL)\" -DDYNAMIC_TCL_VER=\"$(TCL_VER_LONG)\"
+TCL_OBJ	= $(OUTDIR)\if_tcl.obj
+TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
+TCL_LIB = $(TCL)\lib\tclstub$(TCL_VER).lib
+!else
 CFLAGS  = $(CFLAGS) -DFEAT_TCL
 TCL_OBJ	= $(OUTDIR)\if_tcl.obj
 TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
 TCL_LIB = $(TCL)\lib\tcl$(TCL_VER)vc.lib
+!endif
 !endif
 
 # PYTHON interface
@@ -410,6 +453,7 @@ RUBY_INC = /I "$(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM)"
 RUBY_LIB = $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
 # Do we want to load Ruby dynamically?
 !if "$(DYNAMIC_RUBY)" == "yes"
+!message Ruby DLL will be loaded dynamically
 CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
 !undef RUBY_LIB
 !endif
@@ -458,7 +502,7 @@ xxd/xxd.exe: xxd/xxd.c
 
 
 tags: notags
-	$(CTAGS) *.c *.h proto\*.pro
+	$(CTAGS) *.c *.h if_perl.xs proto\*.pro
 
 notags:
 	- if exist tags del tags

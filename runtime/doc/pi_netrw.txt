@@ -1,4 +1,4 @@
-*pi_netrw.txt*   For Vim version 6.0ao.  Last change: 2001 Jun 03
+*pi_netrw.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -25,7 +25,7 @@ Network-oriented file transfer under Vim is implemented by a VimL-based
 script (<netrw.vim>).  It currently supports both reading and writing
 across networks using rcp, scp, ftp, or ftp+<.netrc> as appropriate.
 http is supported read-only.
- 
+
     Reading				Writing			Uses ~
     --------------------------	---------------------------	----------
     * rcp://machine/path	* rcp://machine/path		rcp

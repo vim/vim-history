@@ -183,7 +183,13 @@
 #endif
 
 #ifdef STARTUPTIME
-# define TIME_MSG(s) time_msg(s)
+# define TIME_MSG(s) time_msg(s, NULL)
 #else
 # define TIME_MSG(s)
+#endif
+
+#ifdef FEAT_VREPLACE
+# define REPLACE_NORMAL(s) (((s) & REPLACE_FLAG) && !((s) & VREPLACE_FLAG))
+#else
+# define REPLACE_NORMAL(s) ((s) & REPLACE_FLAG)
 #endif

@@ -387,9 +387,9 @@ vms_wproc( char *name )
 	    vms_match_free = vms_match_alloced;
 	}
     }
-    
+
     strcpy(xname,vms_fixfilename(name));
-    vms_remove_version(xname); 
+    vms_remove_version(xname);
 
     /* if name already exists, don't add it */
     for (i = 0; i<vms_match_num; i++) {
@@ -505,7 +505,7 @@ mch_expandpath(garray_T *gap, char_u *path, int flags)
     int		i,cnt = 0;
     char	*cp;
     vms_match_num = 0;
-    
+
     cnt = decc$from_vms(vms_fixfilename(path), vms_wproc, 1 );
     if (cnt > 0)
 	cnt = vms_match_num;
@@ -517,8 +517,8 @@ mch_expandpath(garray_T *gap, char_u *path, int flags)
     return cnt;
 }
 
-/* 
- * attempt to translate a mixed unix-vms file specification to pure vms 
+/*
+ * attempt to translate a mixed unix-vms file specification to pure vms
  */
     static void
 vms_unix_mixed_filespec(char *in, char *out)
@@ -609,8 +609,8 @@ vms_unix_mixed_filespec(char *in, char *out)
 }
 
 
-/* 
- * for decc$to_vms in vms_fixfilename 
+/*
+ * for decc$to_vms in vms_fixfilename
  */
     static int
 vms_fspec_proc(char *fil, int val)

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 22
+*options.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -461,7 +461,7 @@ which one was opened last.
 If the modeline is only to be used for some versions of Vim, the version
 number can be specified where "vim:" is used:
 	vim{vers}:	version {vers} or later
-	vim<{vers}:	version before {vers} 
+	vim<{vers}:	version before {vers}
 	vim={vers}:	version {vers}
 	vim>{vers}:	version after {vers}
 {vers} is 600 for Vim 6.0 (hundred times the major version plus minor).
@@ -729,7 +729,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  has a resource fork, all this is preserved.
 	- When the file is a link the backup will have the name of the link,
 	  not of the real file.
-	
+
 	Renaming the file and writing a new one:
 	+ It's fast.
 	- Sometimes not all attributes of the file can be copied to the new
@@ -1146,7 +1146,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			details.  When the GUI is active, the 'a' flag in
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
-	
+
 	exclude:{pattern}
 			Defines a pattern that is matched against the name of
 			the terminal 'term'.  If there is a match, no
@@ -1624,7 +1624,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This is useful for Hebrew or other languages where one may have
 	combining characters overtop of base characters, and want to remove
 	only the combining ones.
-	
+
 						*'dictionary'* *'dict'*
 'dictionary' 'dict'	string	(default "")
 			global or local to buffer |global-local|
@@ -2298,8 +2298,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{not available when compiled without the |+folding|
 			feature}
-	Specifies for which type of commands folds will be opened to show the
-	line with the cursor.  It is a comma separated list of items.
+	Specifies for which type of commands folds will be opened, if the
+	command moves the cursor into a closed fold.  It is a comma separated
+	list of items.
 		item		commands ~
 		all		any
 		block		"(", "{", "[[", "[{", etc.
@@ -2316,7 +2317,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	the |zv| command to the mapping to get the same effect.
 	When a movement command is used for an operator (e.g., "dl" or "y%")
 	this option is not used.  This means the operator will include the
-	whole closed fold. 
+	whole closed fold.
 	Note that vertical movements are not here, because it would make it
 	very difficult to move onto a closed fold.
 	In insert mode the folds containing the cursor will always be open
@@ -3089,6 +3090,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	tricky, since Vi originally used the backslash to escape special
 	characters.  Vim on will not remove a backslash in front of a normal
 	file name character on these systems, but it will on Unix and alikes.
+	The '&' and '^' are not included by default, because these are special
+	for cmd.exe.
 
 	The format of this option is a list of parts, separated with commas.
 	Each part can be a single character number or a range.  A range is two
@@ -3204,7 +3207,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	"echo &key".  This is to avoid showing it to someone who shouldn't
 	know.  It also means you cannot see it yourself once you have set it,
 	be careful not to make a typing error!
-					
+
 					*'keymap'* *'kmp'*
 'keymap' 'kmp'		string	(default "")
 			local to buffer
@@ -3426,7 +3429,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	    :set lcs=tab:>-,trail:-
 	    :set lcs=tab:>-,eol:<
 	    :set lcs=extends:>,precedes:<
-<	The "NonText" highlighting will be used for these characters.
+<	The "NonText" highlighting will be used for "eol", "extends" and
+	"precedes".  "SpecialKey" for "tab" and "trail".
 
 			*'lpl'* *'nolpl'* *'loadplugins'* *'noloadplugins'*
 'loadplugins' 'lpl'	boolean	(default on)
@@ -3449,9 +3453,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'magic' is on.
 
 						*'makeef'* *'mef'*
-'makeef' 'mef'		string	(Amiga default: "t:vim##.Err",
-				 Unix and OS/2: "",
-					others: "vim##.err")
+'makeef' 'mef'		string	(default: "")
 			global
 			{not in Vi}
 			{not available when compiled without the |+quickfix|
@@ -3714,7 +3716,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		o	Operator-pending mode
 		i	Insert mode
 		r	Replace mode
-			
+
 			Others: ~
 		c	appending to the command-line
 		ci	inserting in the command-line
@@ -3726,7 +3728,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		vs	any mode, pointer on a vertical separator line
 		vd	any mode, while dragging a vertical separator line
 		a	everywhere
-		
+
 	The shape is one of the following:
 	avail	name		looks like ~
 	w x	arrow		Normal mouse pointer
@@ -3746,7 +3748,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  x	rightup-arrow	arrow pointing right-up
 	w x	up-arrow	arrow pointing up
 	  x	<number>	any X11 pointer number (see X11/cursorfont.h)
-	
+
 	The "avail" column contains a 'w' if the shape is available for Win32,
 	x for X11.
 	Any modes not specifed or shapes not available use the normal mouse

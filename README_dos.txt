@@ -1,4 +1,4 @@
-README_dos.txt for version 6.0ao of Vim: Vi IMproved.
+README_dos.txt for version 6.0ap of Vim: Vi IMproved.
 
 This file explains the installation of Vim on MS-DOS and MS-Windows systems.
 See "README.txt" for general information about Vim.
@@ -11,7 +11,7 @@ These are the normal steps to install Vim:
 	cd D:\editors
    If you already have a "vim" directory, go to the directory in which it is
    located.  Check the $VIM setting to see where it points to:
-   	set VIM
+	set VIM
    For example, if you have
 	C:\vim\vim54
    do

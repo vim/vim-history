@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2001 May 04
+" Last change: 2001 Jul 28
 " URL:         http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
@@ -86,7 +86,7 @@ if version >= 508 || !exists("did_mason_syn_inits")
 	else
 		com -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink masonDoc Comment
 
 	delc HiLink

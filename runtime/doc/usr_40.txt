@@ -1,7 +1,7 @@
-*usr_40.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 28
+*usr_40.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Make new commands
 
 
@@ -41,7 +41,7 @@ reads the output from the "date" command and appends it below the current
 line.  The <CR> is required to executed the ":read" command.
    At this point of executing the mapping the text looks like this:
 
-   	Date:  ~
+	Date:  ~
 	Fri Jun 15 12:54:34 CEST 2001 ~
 
 Now "kJ" moves the cursor up and joins the lines together.
@@ -139,7 +139,7 @@ good.  But then "Q" is mapped to "gq", thus typing "gQ" results in "gq", and
 you don't get to Ex mode at all.
    To avoid keys to be mapped again, use the ":noremap" command: >
 
-   	:noremap gQ Q
+	:noremap gQ Q
 
 Now Vim knows that the "Q" is not to be inspected for mappings that apply to
 it.  There is a similar command for every mode:
@@ -208,7 +208,7 @@ The ":map" command can be followed by another command.  A | character
 separates the two commands.  This also means that a | character can't be used
 inside a map command.  To include one, use <Bar> (five characters).  Example:
 >
-	:map <F8> :write <Bar> !checkin %<CR> 
+	:map <F8> :write <Bar> !checkin %<CR>
 
 The same problem applies to the ":unmap" command, with the addition that you
 have to watch out for trailing white space.  These two commands are different:
@@ -278,8 +278,8 @@ There must be no space after <Nop>.
 The Vim editor enables you to define your own commands.  You execute these
 commands just like any other Command-line mode command.
    To define a command, use the ":command" command, as follows: >
-   
-   	:command DeleteFirst 1delete
+
+	:command DeleteFirst 1delete
 
 Now when you execute the command ":DeleteFirst" Vim excutes ":1delete", which
 deletes the first line.
@@ -288,7 +288,7 @@ deletes the first line.
 	User-defined commands must start with a capital letter.  You cannot
 	use ":X", ":Next" and ":Print".  The underscore cannot be used!  You
 	can use digits, but this is discouraged.
-	
+
 To list the user-defined commands, execute the following command: >
 
 	:command
@@ -371,7 +371,7 @@ this option are as follows:
 	-range=%	Range is allowed; default is the whole file.
 	-range={count}	Range is allowed; the last number in it is used as a
 			single number whose default is {count}.
-		
+
 When a range is specified, the keywords <line1> and <line2> get the values of
 the first and last line in the range.  For example, the following command
 defines the SaveIt command, which writes out the specified range to the file

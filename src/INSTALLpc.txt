@@ -73,7 +73,7 @@ nmake -f Make_mvc.mak PYTHON=C:\Python
 			(combinations are possible with Make_mvc.mak)
 make  -f Make_bc5.mak		GUI	  Borland C++ 5.x
 make  -f Make_bc5.mak		console	  Borland C++ 5.x (change the file)
-nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim"	
+nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim"
 				GUI	  Microsoft Visual C++ 4.x or later
 nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim OLE"
 				OLE	  Microsoft Visual C++ 4.x or later
@@ -95,6 +95,10 @@ and with the Borland C++ 4.5 32-bit compiler and later.  It compiles on
 Windows 95 and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The
 NT/i386 and the Windows 95 binaries are identical.  Use Make_mvc.mak to
 compile with Visual C++ and Make_bc5.mak to compile with Borland C++.
+
+Make_mvc.mak allows a Vim to be built with various different features and
+debug support.  Debugging with MS Devstudio is provided by Make_dvc.mak.
+For a description of the use of Make_dvc.mak, look in Make_mvc.mak.
 
 For compiling Gvim with IME support on far-east Windows, uncomment the
 MULTI_BYTE_IME define in the src/feature.h file before compiling.
@@ -186,12 +190,12 @@ Test if gcc is on your path.  From a CMD (or COMMAND on '95/98):
 	GNU Make version 3.77 (...etc...)
 
 Now you are ready to rock 'n' roll.  Unpack the vim sources (look on
-www.vim.org for exactly which version of the vim files you need).  
+www.vim.org for exactly which version of the vim files you need).
 
 Change directory to 'vim\src':
 
 	C:\> cd vim\src
-	C:\VIM\SRC> 
+	C:\VIM\SRC>
 
 and you type:
 
@@ -207,7 +211,7 @@ the 'gvim.exe' to 'vim.exe' in the 'make' commands given above.
 
 If you are dismayed by how big the EXE is, I strongly recommend you get 'UPX'
 (also free!) and compress the file (typical compression is 50%). UPX can be
-found at 
+found at
 	http://upx.tsx.org/
 
 
@@ -222,7 +226,7 @@ You need to uncomment lines in Make_ming.mak to have NLS defined.
 6. Cross compiling for Win32 from a Linux machine
 =================================================
 
-(written by Ron Aaron: <ron@mossbayeng.com> with help from 
+(written by Ron Aaron: <ron@mossbayeng.com> with help from
 Martin Kahlert <martin.kahlert@infineon.com>)
 
 If you like, you can compile the 'mingw' Win32 version from the comfort of
@@ -261,8 +265,8 @@ your Linux (or other unix) box.  To do this, you need to follow a few steps:
 				--prefix=$PREFIX
 			make
 			make install
-		1f) Add $PREFIX/bin to your $PATH. 
-		
+		1f) Add $PREFIX/bin to your $PATH.
+
 	2) get the *unix* version of the vim sources
 	3) in 'Make_ming.mak', set 'CROSS' to '1' instead of '0'.
 	4) make -f Make_ming.mak gvim.exe
@@ -278,7 +282,7 @@ This has been tested with the mingw32 compiler, and the ActiveState
 ActivePython:
     http://www.ActiveState.com/Products/ActivePython/
 
-After installing the ActivePython, you will have to create a 'mingw32' 
+After installing the ActivePython, you will have to create a 'mingw32'
 'libpython20.a' to link with:
    cd $PYTHON/libs
    pexports python20.dll > python20.def

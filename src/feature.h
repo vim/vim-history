@@ -60,7 +60,7 @@
  */
 #if !defined(FEAT_TINY) && !defined(FEAT_SMALL) && !defined(FEAT_NORMAL) \
 	&& !defined(FEAT_BIG) && !defined(FEAT_HUGE)
-# if defined(MSWIN) || defined(DJGPP) || defined(OS2) || defined(VMS) || defined(MACOS)
+# if defined(MSWIN) || defined(DJGPP) || defined(OS2) || defined(VMS) || defined(MACOS) || defined(AMIGA)
 #  define FEAT_BIG
 # else
 #  ifdef MSDOS
@@ -238,6 +238,13 @@
  */
 #ifdef FEAT_NORMAL
 # define FEAT_VIRTUALEDIT
+#endif
+
+/*
+ * +vreplace		"gR" and "gr" commands.
+ */
+#ifdef FEAT_NORMAL
+# define FEAT_VREPLACE
 #endif
 
 /*

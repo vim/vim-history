@@ -18,7 +18,7 @@ endif
 syn match  hogComment	+\s\#[^\-:.%#=*].*$+lc=1	contains=hogTodo,hogCommentString
 syn region hogCommentString contained oneline start='\S\s\+\#+'ms=s+1 end='\#'
 
-syn match   hogJunk "\<\a\+|\s\+$" 
+syn match   hogJunk "\<\a\+|\s\+$"
 syn match   hogNumber contained	"\<\d\+\>"
 syn region  hogText contained oneline start='\S' end=',' skipwhite
 syn region  hogTexts contained oneline start='\S' end=';' skipwhite
@@ -81,15 +81,15 @@ syn match   hogAFragOpt contained "[DRMdrm]\+" skipwhite
 "
 " Output syslog options
 " Facilities
-syn keyword hogSysFac contained LOG_AUTH LOG_AUTHPRIV LOG_DAEMON LOG_LOCAL0 
-syn keyword hogSysFac contained LOG_LOCAL1 LOG_LOCAL2 LOG_LOCAL3 LOG_LOCAL4 
-syn keyword hogSysFac contained LOG_LOCAL5 LOG_LOCAL6 LOG_LOCAL7 LOG_USER 
+syn keyword hogSysFac contained LOG_AUTH LOG_AUTHPRIV LOG_DAEMON LOG_LOCAL0
+syn keyword hogSysFac contained LOG_LOCAL1 LOG_LOCAL2 LOG_LOCAL3 LOG_LOCAL4
+syn keyword hogSysFac contained LOG_LOCAL5 LOG_LOCAL6 LOG_LOCAL7 LOG_USER
 " Priorities
-syn keyword hogSysPri contained LOG_EMERG ALERT LOG_CRIT LOG_ERR 
-syn keyword hogSysPri contained LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG 
+syn keyword hogSysPri contained LOG_EMERG ALERT LOG_CRIT LOG_ERR
+syn keyword hogSysPri contained LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG
 " Options
-syn keyword hogSysOpt contained LOG_CONS LOG_NDELAY LOG_PERROR 
-syn keyword hogSysOpt contained LOG_PID 
+syn keyword hogSysOpt contained LOG_CONS LOG_NDELAY LOG_PERROR
+syn keyword hogSysOpt contained LOG_PID
 " RuleTypes
 syn keyword hogRuleType contained log pass alert activate dynamic
 
@@ -105,7 +105,7 @@ syn keyword hogDBType contained alert log
 syn keyword hogDBSRV contained mysql postgresql unixodbc
 " Parameters param=constant
 " are just various constants assigned to parameter names
-syn keyword hogDBParam contained dbname host port user password sensor_name 
+syn keyword hogDBParam contained dbname host port user password sensor_name
 
 " Output xml arguments and parameters
 " xml args
@@ -154,7 +154,7 @@ syn region  hogAOpt contained oneline start="ipopts" end=":"he=s-1 nextgroup=hog
 syn region  hogAOpt contained oneline start="session" end=":"he=s-1 nextgroup=hogSessionVal skipwhite
 
 syn match   nothing  "$"
-syn region  hogRules oneline  contains=nothing start='$' end="$" 
+syn region  hogRules oneline  contains=nothing start='$' end="$"
 syn region  hogRules oneline  contains=hogRule start='('ms=s+1 end=")\s*$" skipwhite
 syn region  hogRule  contained oneline start="." skip="\\;" end=";"he=s-1 contains=hogAOpts, skipwhite keepend
 "syn region  hogAOpts contained oneline start="." end="[;]"he=s-1 contains=hogAOpt skipwhite
@@ -162,7 +162,7 @@ syn region  hogAOpts contained oneline start="." end="[;]"me=e-1 contains=hogAOp
 
 
 " ruletype command
-syn keyword hogRTypeStart skipwhite ruletype nextgroup=hogRuleName skipwhite 
+syn keyword hogRTypeStart skipwhite ruletype nextgroup=hogRuleName skipwhite
 syn region  hogRuleName  contained  start="." end="\s" contains=hogFileName  nextgroup=hogRTypeRegion
 " type ruletype sub type
 syn region hogRtypeRegion contained start="{" end="}" nextgroup=hogRTypeStart
@@ -171,8 +171,8 @@ syn region  hogRuleTypes  contained  start="." end="\s" contains=hogRuleType nex
 
 
 " var command
-syn keyword hogVarStart skipwhite var nextgroup=hogVarIdent skipwhite 
-syn region  hogVarIdent contained  start="."hs=e+1 end="\s\+"he=s-1 contains=hogEnvvar nextgroup=hogVarRegion skipwhite 
+syn keyword hogVarStart skipwhite var nextgroup=hogVarIdent skipwhite
+syn region  hogVarIdent contained  start="."hs=e+1 end="\s\+"he=s-1 contains=hogEnvvar nextgroup=hogVarRegion skipwhite
 syn region  hogVarRegion  contained  oneline  start="." contains=hogIPaddr,hogEnvvar,hogNumber,hogString,hogFileName end="$"he=s-1 keepend skipwhite
 
 " config command
@@ -213,7 +213,7 @@ syn region hogStreamRegion contained oneline start=":" end="$" contains=hogStrea
 " output command
 syn keyword hogOutStart	output  nextgroup=hogOut skipwhite
 "
-" alert_syslog 
+" alert_syslog
 syn match hogOut   contained  "\<alert_syslog\>" nextgroup=hogSyslogRegion skipwhite
 syn region hogSyslogRegion  contained start=":" end="$" contains=hogSysFac,hogSysPri,hogSysOpt,hogEnvvar oneline skipwhite keepend
 "
@@ -223,11 +223,11 @@ syn region hogLogFileRegion  contained start=":" end="$" contains=hogFileName,ho
 "
 " database
 syn match hogOut  contained "\<database\>" nextgroup=hogDBTypes skipwhite
-syn region hogDBTypes contained start=":" end="," contains=hogDBType,hogEnvvar nextgroup=hogDBSRVs skipwhite 
-syn region hogDBSRVs contained start="\s\+" end="," contains=hogDBSRV nextgroup=hogDBParams skipwhite 
+syn region hogDBTypes contained start=":" end="," contains=hogDBType,hogEnvvar nextgroup=hogDBSRVs skipwhite
+syn region hogDBSRVs contained start="\s\+" end="," contains=hogDBSRV nextgroup=hogDBParams skipwhite
 syn region hogDBParams contained start="." end="="me=e-1 contains=hogDBParam  nextgroup=hogDBValues
 syn region hogDBValues contained start="." end="\>" contains=hogNumber,hogEnvvar,hogAscii nextgroup=hogDBParams oneline skipwhite
-syn match hogAscii contained "\<\a\+" 
+syn match hogAscii contained "\<\a\+"
 "
 " log_tcpdump
 syn match hogOut   contained  "\<log_tcpdump\>" nextgroup=hogLogRegion skipwhite
@@ -236,8 +236,8 @@ syn region  hogLogRegion  oneline	start=":" skipwhite end="$" contains=hogEnvvar
 " xml
 syn keyword hogXMLTrans contained http https tcp iap
 syn match hogOut     contained "\<xml\>" nextgroup=hogXMLRegion skipwhite
-syn region hogXMLRegion contained start=":" end="," contains=hogXMLArg,hogEnvvar nextgroup=hogXMLParams skipwhite 
-"syn region hogXMLParams contained start="." end="="me=e-1 contains=hogXMLProto nextgroup=hogXMLProtos 
+syn region hogXMLRegion contained start=":" end="," contains=hogXMLArg,hogEnvvar nextgroup=hogXMLParams skipwhite
+"syn region hogXMLParams contained start="." end="="me=e-1 contains=hogXMLProto nextgroup=hogXMLProtos
 "syn region hogXMLProtos contained start="." end="\>" contains=hogXMLTrans nextgroup=hogXMLParams
 syn region hogXMLParams contained start="." end="="me=e-1 contains=hogXMLParam  nextgroup=hogXMLValue
 syn region hogXMLValue contained start="." end="\>" contains=hogNumber,hogIPaddr,hogEnvvar,hogAscii,hogFileName nextgroup=hogXMLParams oneline skipwhite keepend
@@ -259,7 +259,7 @@ syn match   hogIPaddrAndPort contained "\<any\>" skipwhite nextgroup=hogPort
 syn match hogIPaddrAndPort contained     "\$\I\i*" nextgroup=hogPort skipwhite
 syn match hogIPaddrAndPort contained     "\${\I\i*}" nextgroup=hogPort skipwhite
 "syn match   hogPort contained "[\!]\=[\:]\=\d\+L\=\>" skipwhite
-syn match   hogPort contained "[\:]\=\d\+\>" 
+syn match   hogPort contained "[\:]\=\d\+\>"
 syn match   hogPort contained "[\!]\=\<any\>" skipwhite
 syn match   hogPort contained "[\!]\=\d\+L\=:\d\+L\=\>" skipwhite
 
@@ -282,7 +282,7 @@ if version >= 508 || !exists("did_hog_syn_inits")
     let did_hog_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
   else
-    command -nargs=+ HiLink hi def link <args> 
+    command -nargs=+ HiLink hi def link <args>
   endif
 " The default methods for highlighting.  Can be overridden later
   HiLink hogComment		Comment
@@ -342,7 +342,7 @@ if version >= 508 || !exists("did_hog_syn_inits")
   HiLink hogProto		Type
   HiLink hogXMLParam		Type
   HiLink resp			Todo
-  HiLink cLabel         Label   
+  HiLink cLabel         Label
   delcommand HiLink
 endif
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	PL/M
 " Maintainer:	Philippe Coulonges <cphil@cphil.net>
-" Last change:	2001 Jul 09
+" Last change:	2001 Jul 28
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -132,8 +132,8 @@ if version >= 508 || !exists("did_plm_syntax_inits")
   HiLink plm386Reserved			Statement
   HiLink plmPreProc			PreProc
   HiLink plmCommentError		plmError
-  HiLink plmCommentString 		plmString
-  HiLink plmComment2String 		plmString
+  HiLink plmCommentString		plmString
+  HiLink plmComment2String		plmString
   HiLink plmCommentSkip			plmComment
   HiLink plmString			String
   HiLink plmComment			Comment

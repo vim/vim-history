@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_toc.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -306,7 +306,7 @@ Make Vim work as you like it.
 		|44.8|	Clusters
 		|44.9|	Including another syntax file
 		|44.10|	Synchronizing
-		|44.11|	Installing a syntax file 
+		|44.11|	Installing a syntax file
 		|44.12|	Portable syntax file layout
 
 |usr_45.txt|  Select your language

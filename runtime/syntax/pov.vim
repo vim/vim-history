@@ -2,10 +2,9 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: POV-Ray(tm) 3.1 Screen Description Language
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-05-13
+" Last Change: 2001-07-25
 " URI: http://physics.muni.cz/~yeti/download/pov.vim
 " Required Vim Version: 6.0
-
 
 " Setup
 if version >= 600
@@ -32,7 +31,7 @@ syn keyword povTransform matrix rotate scale translate transform
 " Descriptors
 syn keyword povDescriptors finish normal pigment
 syn keyword povDescriptors color colour rgb rgbt rgbf rgbft red green blue
-syn keyword povDescriptors bump_map color_map colour_map image_map material_map pigment_map quick_color quick_colour texture_map
+syn keyword povDescriptors bump_map color_map colour_map image_map material_map pigment_map quick_color quick_colour normal_map texture_map
 syn keyword povDescriptors ambient brilliance crand diffuse irid metallic phong phong_size reflection reflection_exponent roughness specular
 syn keyword povDescriptors cylinder fisheye omnimax orthographic panoramic perspective ultra_wide_angle
 syn keyword povDescriptors agate average brick boxed bozo bumps checker crackle cylindrical dents gradient granite hexagon leopard mandel marble onion planar quilted radial ripples spherical spiral1 spiral2 spotted waves wood wrinkles
@@ -50,14 +49,14 @@ syn keyword povModifiers bezier_spline conic_sweep cubic_spline linear_spline li
 syn keyword povModifiers flatness type u_steps v_steps
 syn keyword povModifiers adaptive falloff jitter looks_like media_attenuation media_interaction point_at radius tightness
 syn keyword povModifiers angle aperture blur_samples confidence direction focal_point location look_at right sky up variance
-syn keyword povModifiers all bump_size filter interpolate map_type normal_map once slope_map transmit use_color use_colour use_index
+syn keyword povModifiers all bump_size filter interpolate map_type once slope_map transmit use_color use_colour use_index
 syn keyword povModifiers black_hole agate_turb brick_size control0 control1 cubic_wave density_map flip frequency interpolate inverse lambda mortar octaves offset omega phase poly_wave ramp_wave repeat scallop_wave sine_wave strength triangle_wave thickness turbulence type warp
 syn keyword povModifiers eccentricity extinction
 syn keyword povModifiers arc_angle falloff_angle width
 
 " Words not marked `reserved' in documentation, but...
-syn match povHFType "\(height_field\_s*{\_s*\)\@<=\(gif\|iff\|pgm\|png\|pot\|ppm\|sys\|tga\)\>" display
-syn match povFontType "\(text\_s*{\_s*\)\@<=ttf\>" display
+syn keyword povHFType gif iff pgm png pot ppm sys tga contained
+syn keyword povFontType ttf contained
 syn keyword povDensityType df3 contained
 syn cluster povPRIVATE add=povDensityType
 
@@ -76,6 +75,7 @@ syn region povComment start="/\*" end="\*/" contains=povTodo,povComment
 syn match povComment "//.*" contains=povTodo
 syn match povCommentError "\*/"
 syn sync ccomment povComment
+syn sync minlines=50
 syn keyword povTodo TODO FIXME XXX NOT contained
 syn cluster povPRIVATE add=povTodo
 
@@ -100,7 +100,7 @@ syn region povBrace start='{' end='}' contains=ALLBUT,povBraceError,@povPRIVATE 
 syn match povBraceError "}"
 
 " Numbers
-syn match povNumber "\(^\|\W\)\zs[+-]\=\(\d\+\)\=\.\=\d\+\([eE][+-]\=\d\+\)\="
+syn match povNumber "\(^\|\W\)\@<=[+-]\=\(\d\+\)\=\.\=\d\+\([eE][+-]\=\d\+\)\="
 
 " Define the default highlighting
 hi def link povComment        Comment

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2001 Jun 14
+" Last Change:	2001 Jul 24
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -54,6 +54,10 @@ syn match helpSpecial		"\[+num]"
 syn match helpSpecial		"\[-num]"
 syn match helpSpecial		"CTRL-."
 syn match helpSpecial		"CTRL-Break"
+syn match helpSpecial		"CTRL-PageUp"
+syn match helpSpecial		"CTRL-PageDown"
+syn match helpSpecial		"CTRL-Insert"
+syn match helpSpecial		"CTRL-Del"
 syn match helpSpecial		"CTRL-{char}"
 syn region helpNotVi		start="{Vi[: ]" start="{not" start="{only" end="}" contains=helpLeadBlank,helpHyperTextJump
 syn match helpLeadBlank		"^\s\+" contained

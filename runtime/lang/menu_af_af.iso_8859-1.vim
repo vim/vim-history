@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 May 18
+" Last Change:	        2001 Jul 28
 
 menutrans clear
 let did_menu_trans = 1
@@ -91,12 +91,12 @@ menutrans Cu&t			Knip
 menutrans &Copy			&Kopiëer
 menutrans &Paste		&Plak
 menutrans &Delete		&Verwyder
-menutrans Select\ Blockwise 	Kies\ per\ Blok
+menutrans Select\ Blockwise	Kies\ per\ Blok
 menutrans Select\ &Word		Kies\ een\ &Woord
 menutrans Select\ &Line		Kies\ een\ &Reël
 menutrans Select\ &Block	Kies\ een\ &Blok
 menutrans Select\ &All		Kies\ &Alles
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

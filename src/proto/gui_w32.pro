@@ -34,7 +34,7 @@ char_u *gui_mch_get_rgb __ARGS((guicolor_T pixel));
 unsigned long gui_mch_get_rgb_long __ARGS((guicolor_T pixel));
 void gui_mch_activate_window __ARGS((void));
 void gui_mch_show_toolbar __ARGS((int showit));
-void gui_simulate_alt_key __ARGS((exarg_T *eap));
+void ex_simalt __ARGS((exarg_T *eap));
 void gui_mch_find_dialog __ARGS((exarg_T *eap));
 void gui_mch_replace_dialog __ARGS((exarg_T *eap));
 void gui_mch_mousehide __ARGS((int hide));

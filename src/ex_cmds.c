@@ -3612,6 +3612,11 @@ do_sub(eap)
 #endif
 		    curwin->w_cursor.col = regmatch.startpos[0].col;
 
+		    /* When 'cpoptions' contains "u" don't sync undo when
+		     * asking for confirmation. */
+		    if (vim_strchr(p_cpo, CPO_UNDO) != NULL)
+			++no_u_sync;
+
 		    /*
 		     * Loop until 'y', 'n', 'q', CTRL-E or CTRL-Y typed.
 		     */
@@ -3706,6 +3711,9 @@ do_sub(eap)
 #ifdef FEAT_MOUSE
 		    setmouse();
 #endif
+		    if (vim_strchr(p_cpo, CPO_UNDO) != NULL)
+			--no_u_sync;
+
 		    if (i == 'n')
 		    {
 			/* For a multi-line match, put matchcol at the NUL at
@@ -3904,6 +3912,7 @@ skip:
 				deleted_lines(lnum, nmatch_tl);
 			    --lnum;
 			    line2 -= nmatch_tl; /* nr of lines decreases */
+			    nmatch_tl = 0;
 			}
 
 			/* When asking, undo is saved each time, must also set

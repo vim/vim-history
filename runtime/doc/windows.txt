@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 07
+*windows.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -977,7 +977,7 @@ list of buffers. |unlisted-buffer|
 							*:bn* *:bnext* *E87*
 :[N]bn[ext][!] [N]
 		Go to [N]th next buffer in buffer list.  [N] defaults to one.
-		Wraps around the end of the buffer list.  
+		Wraps around the end of the buffer list.
 		See |:buffer-!| for [!].
 		If you are in a help buffer, this takes you to the next help
 		buffer (if there is one).  Similarly, if you are in a normal

@@ -293,7 +293,6 @@
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
-#define DFLT_MAKEEF		"vim##.err"
 #ifdef COLON_AS_PATHSEP
 # define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
 #else

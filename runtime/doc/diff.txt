@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 13
+*diff.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -306,9 +306,9 @@ Example (this does the same as 'patchexpr' being empty): >
 Make sure that using the "patch" program doesn't have unwanted side effects.
 For example, watch out for additionally generated files, which should be
 deleted.  It should just patch the file and nothing else.
-Vim will change directory to "/tmp" or another temp directory before
+   Vim will change directory to "/tmp" or another temp directory before
 evaluating 'patchexpr'.  This hopefully avoids that files in the current
-directory are accidentally patched.  Vim will also deleted files starting with
-v:fname_in and ending in ".rej" and ".orig" 
+directory are accidentally patched.  Vim will also delete files starting with
+v:fname_in and ending in ".rej" and ".orig".
 
  vim:tw=78:

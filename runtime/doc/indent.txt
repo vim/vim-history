@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 19
+*indent.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -437,15 +437,14 @@ other extensions such as .for.
 
 VERILOG							*verilog-indent*
 
-General block statements such as if, for, case and begin, etc., are indented.
-Block statements such as module, function, task and specify are not indented
-by default.  you can turn on the indent with setting a variable in the .vimrc
-as follows: >
+General block statements such as if, for, case, always, initial, function,
+specify and begin, etc., are indented.  The module block statements (first
+level blocks) are not indented by default.  you can turn on the indent with
+setting a variable in the .vimrc as follows: >
 
   let b:verilog_indent_modules = 1
 
-then module/function/task/specify blocks will be indented.
-To stop this, remove the variable: >
+then the module blocks will be indented.  To stop this, remove the variable: >
 
   :unlet b:verilog_indent_modules
 
@@ -457,5 +456,12 @@ used: >
   au BufReadPost *     let b:verilog_indent_modules = 1
   au BufReadPost *   endif
   au BufReadPost * endif
+
+Furthermore, setting the variable b:verilog_indent_width to change the
+indenting width (default is 'shiftwidth'): >
+
+  let b:verilog_indent_width = 4
+  let b:verilog_indent_width = &sw * 2
+<
 
  vim:tw=78:

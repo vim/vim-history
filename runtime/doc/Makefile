@@ -239,7 +239,7 @@ HTMLS = \
 all: tags vim.man vimdiff.man vimtutor.man xxd.man uganda.nsis.txt
 
 # We should use Vim to generate the tags file:
-# 	vim -c "helptags ." -c quit
+#	vim -c "helptags ." -c quit
 #
 tags: doctags $(DOCS)
 	./doctags $(DOCS) | sort >tags

@@ -1,12 +1,12 @@
 " Vim script for testing colors
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
 " Contributors:	Rafael Garcia-Suarez, Charles Campbell
-" Last Change:	2001 Feb 06
+" Last Change:	2001 Jul 28
 
 " edit this file, then do ":source %", and check if the colors match
 
 " black		black_on_white				white_on_black
-"				black_on_black		black_on_black	
+"				black_on_black		black_on_black
 " darkred	darkred_on_white			white_on_darkred
 "				darkred_on_black	black_on_darkred
 " darkgreen	darkgreen_on_white			white_on_darkgreen
@@ -48,7 +48,7 @@
 " lightblue	lightblue_on_white			white_on_lightblue
 "				lightblue_on_black	black_on_lightblue
 " lightmagenta	lightmagenta_on_white			white_on_lightmagenta
-"				lightmagenta_on_black	black_on_lightmagenta	
+"				lightmagenta_on_black	black_on_lightmagenta
 " lightcyan	lightcyan_on_white			white_on_lightcyan
 "				lightcyan_on_black	black_on_lightcyan
 

@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_29.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -153,7 +153,7 @@ types.  Thus this doesn't work just for C and C++ programs, also for Eiffel
 and even Vim scripts.  See the ctags documentation to tune this.
    Now you only need to tell Vim where your big tags file is: >
 
-   	:set tags=~/proj/tags
+	:set tags=~/proj/tags
 
 
 MULTIPLE MATCHES
@@ -163,7 +163,7 @@ the ":tag" command will jump to the first one.  If there is a match in the
 current file, that one is used first.
    You can now jump to other matches for the same tag with: >
 
-   	:tnext
+	:tnext
 
 Repeat this to find further matches.  If there are many, you can select which
 one to jump to: >
@@ -234,7 +234,7 @@ you can use a list of identifier names as a table of contents.  Here is an
 example.
    First create a list of identifiers (this requires Exuberant ctags): >
 
-   	ctags --c-types=f -f functions *.c
+	ctags --c-types=f -f functions *.c
 
 Now start Vim without a file, and edit this file in Vim, in a vertically split
 window: >
@@ -280,7 +280,7 @@ definition is displayed in another window.  For this the preview window can be
 used.
    To open a preview window to display the function "write_char": >
 
-   	:ptag write_char
+	:ptag write_char
 
 Vim will open a window, and jumps to the tag "write_char".  Then it takes you
 back to the original position.  Thus you can continue typing without the need
@@ -324,11 +324,11 @@ Since a program is structured, Vim can recognize items in it.  Specific
 commands can be used to move around.
    C programs often contain constructs like this:
 
-   	#ifdef USE_POPEN ~
+	#ifdef USE_POPEN ~
 	    fd = popen("ls", "r") ~
 	#else ~
 	    fd = fopen("tmp", "w") ~
-    	#endif ~
+	#endif ~
 
 But then much longer, and possibly nested.  Position the cursor on the
 "#ifdef" and press %.  Vim will jump to the "#else".  Pressing % again takes
@@ -394,14 +394,14 @@ in the first column.
 				{
 					return 1;
 		  +---------->  }
-                  |         
+                  |
 	      []  |             int func2(void)
 		  |        +->  {
-		  |    [[  |    	if (flag)
-	start     +--      +--  		return flag;
-		  |    ][  |    	return 2;
+		  |    [[  |		if (flag)
+	start     +--      +--			return flag;
+		  |    ][  |		return 2;
 		  |        +->  }
-              ]]  |         
+              ]]  |
 	          |             int func3(void)
 		  +---------->  {
 					return 3;
@@ -445,7 +445,7 @@ You are editing a C program and wonder if a variable is declared as "int" or
 "unsigned".  A quick way to find this is with the "[I" command.
    Suppose the cursor is on the word "column".  Type: >
 
-   	[I
+	[I
 
 Vim will list the matching lines it can find.  Not only in the current file,
 but also in all included files (and files included in them, etc.).  The result

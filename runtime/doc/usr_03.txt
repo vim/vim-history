@@ -1,7 +1,7 @@
-*usr_03.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_03.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			     Moving around
 
 
@@ -53,12 +53,12 @@ which moves to the previous end of a word:
 
 If you are at the last word of a line, the "w" command will take you to the
 first word in the next line.  Thus you can use this to move through a
-paragraph, much faster then using "l".  "b" does the same in the other
+paragraph, much faster than using "l".  "b" does the same in the other
 direction.
 
 A word ends at a non-word character, such as a ".", "-" or ")".  To change
 what Vim considers to be a word, see the 'iskeyword' option.
-   It is also possible to move by white space separated WORDs.  This is not a
+   It is also possible to move by white-space separated WORDs.  This is not a
 word in the normal sense, that's why the uppercase is used.  The commands for
 moving by WORDs are also uppercase, as this figure shows:
 
@@ -92,7 +92,7 @@ does the same thing.  In a picture:
    The "$" command takes a count, like most movement commands.  But moving to
 the end of the line several times doesn't make sense.  Therefore it causes the
 editor to move to the end of another line.  For example, "1$" moves you to
-the end of the first line (the one you re on), "2$" to the end of the next
+the end of the first line (the one you're on), "2$" to the end of the next
 line, and so on.
    The "0" command doesn't take a count argument, because the "0" would be
 part of the count.  Unexpectedly, using a count with "^" doesn't have any
@@ -127,8 +127,8 @@ The "F" command searches to the left:
 			    Fh
 
 The "tx" command works like the "fx" command, except it stops one character
-before the searched character.  Hint: To x.  The backward version of this
-command is "Tx".
+before the searched character.  Hint: "t" stands for "To".  The backward
+version of this command is "Tx".
 
 	To err is human.  To really foul up you need a computer. ~
 		   <------------  ------------->
@@ -152,11 +152,11 @@ When writing a program you often end up with nested () constructs.  Then the
 on a "(" it will move to the matching ")".  If it's on a ")" it will move to
 the matching "(".
 
-			   % 
-			<----->
-		if (a = (b * c) / d) ~
-		   <---------------> 
-			   %
+			    %
+			 <----->
+		if (a == (b * c) / d) ~
+		   <---------------->
+			    %
 
 This also works for [] and {} pairs.  (This can be defined with the
 'matchpairs' option.)
@@ -165,9 +165,9 @@ When the cursor is not on a useful character, "%" will search forward to find
 one.  Thus if the cursor is at the start of the line of the previous example,
 "%" will search forward and find the first "(".  Then it moves to its match:
 
-		if (a = (b * c) / d) ~
-		---+--------------->
-			  %
+		if (a == (b * c) / d) ~
+		---+---------------->
+			   %
 
 ==============================================================================
 *03.5*	Moving to a specific line
@@ -416,7 +416,7 @@ word "the" only: >
 
 This does not match "there" or "soothe".  Notice that the "*" and "#" commands
 use these start-of-word and end-of-word markers to only find whole words (you
-can use "g*" and "g#" match partial words).
+can use "g*" and "g#" to match partial words).
 
 
 HIGHLIGHTING MATCHES

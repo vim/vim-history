@@ -1,7 +1,7 @@
-*usr_30.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 26
+*usr_30.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Editing programs
 
 
@@ -138,7 +138,7 @@ This is not too useful, so you will refine the command a little and use the :r
 (root) modifier: >
 
 	:set makeprg=make\ %:r.o
-	
+
 Now the command executed is as follows: >
 
 	make file.o
@@ -159,7 +159,7 @@ compiled again.  You can go back to the previous error list with: >
 Then use ":clist" and "cc {nr}" to jump to the place with the warning.
    To go forward to the next error list: >
 
-   	:cnewer
+	:cnewer
 
 Vim remembers ten error lists.
 
@@ -517,7 +517,7 @@ The other way around works just as well: >
 One of the great things about Vim is that it understands comments.  You can
 ask Vim to format a comment and it will do the right thing.
    Suppose, for example, that you have the following comment:
-   
+
 	/* ~
 	 * This is a test ~
 	 * of the text formatting. ~

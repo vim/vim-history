@@ -6,7 +6,7 @@
 # FIRST AUTHOR Marcin Dalecki <dalecki@cyber.cs.net.pl>, 2000
 #
 # thoughts (Gedanken)
-# 
+#
 # - mark    : Markierung oder Marke ?
 # - ambigous: Mehrdeutig, Nicht-eindeutig
 #

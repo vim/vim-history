@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 15
+" Last Change:  2001 Jul 28
 " Filenames:    *.tak
 " URL:          http://www.naglenet.org/vim/syntax/tak.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -55,7 +55,7 @@ syn keyword takControl  PLOT
 
 syn keyword takSolids   PLATE CYL
 syn keyword takSolidsArg   ID MATNAM NTYPE TEMP XL YL ZL ISTRN ISTRG NNX
-syn keyword takSolidsArg   NNY NNZ INCX INCY INCZ IAK IAC DIFF ARITH BOUN 
+syn keyword takSolidsArg   NNY NNZ INCX INCY INCZ IAK IAC DIFF ARITH BOUN
 syn keyword takSolidsArg   RMIN RMAX AXMAX NNR NNTHETA INCR INCTHETA END
 
 syn case ignore

@@ -2,7 +2,7 @@
 " vim: tw=0 ts=4 sw=4
 " Vim color file
 " Maintainer:	Ron Aaron <ron@mossbayeng.com>
-" Last Change:	2001 Jul 15
+" Last Change:	2001 Jul 28
 
 hi clear
 set background=dark
@@ -20,7 +20,7 @@ hi PreProc      term=underline ctermfg=LightBlue  guifg=Wheat
 hi Search       term=reverse                      guifg=white   guibg=Blue
 hi Special      term=bold      ctermfg=LightRed   guifg=magenta
 hi Statement    term=bold      ctermfg=Yellow     guifg=#ffff00 gui=NONE
-hi Type                        ctermfg=LightGreen guifg=grey    gui=none 
+hi Type                        ctermfg=LightGreen guifg=grey    gui=none
 hi Error        term=reverse   ctermbg=Red    ctermfg=White guibg=Red  guifg=White
 hi Todo         term=standout  ctermbg=Yellow ctermfg=Black guifg=Blue guibg=Yellow
 " From the source:

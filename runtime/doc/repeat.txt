@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 14
+*repeat.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -199,7 +199,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 
 						*:scrip* *:scriptnames*
 :scrip[tnames]		List all sourced script names, in the order they were
-			first sourced.  The number is used for script ID
+			first sourced.  The number is used for the script ID
 			|<SID>|.
 			{not in Vi} {not available when compiled without the
 			|+eval| feature}
@@ -425,6 +425,8 @@ DEFINING BREAKPOINTS
 :breaka[dd] func [lnum] {name}
 		Set a breakpoint in a function.  Example: >
 			:breakadd func Explore
+<		Doesn't check for a valid function name, thus the breakpoint
+		can be set before the function is defined.
 
 :breaka[dd] file [lnum] {name}
 		Set a breakpoint in a sourced file.  Example: >

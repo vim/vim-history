@@ -262,7 +262,7 @@ fun! s:InsertRefs(groupBR, prefix, group, suffix, matchline)
   if a:matchline !~ a:prefix .
     \ substitute(a:group, s:notslash . '\zs:', '\\|', 'g') . a:suffix
     return a:group
-  endif 
+  endif
   let i = matchend(a:groupBR, s:notslash . ':')
   let ini = strpart(a:groupBR, 0, i-1)
   let tailBR = strpart(a:groupBR, i)
@@ -310,9 +310,9 @@ fun! s:InsertRefs(groupBR, prefix, group, suffix, matchline)
       let b:match_table = ""
       let b:match_word = ""
     endif
-  endif 
+  endif
   return ini . ":" . tailBR
-endfun 
+endfun
 
 " Input a comma-separated list of groups with backrefs, such as
 "   a:groups = '\(foo\):end\1,\(bar\):end\1'
@@ -508,7 +508,7 @@ fun! s:Choose(patterns, string, comma, branch, prefix, suffix, ...)
   if a:0
     let alttail = (a:1 =~ a:comma."$" ? a:1 : a:1 . a:comma)
     let j = matchend(alttail, s:notslash . a:comma)
-  endif 
+  endif
   let current = strpart(tail, 0, i-1)
   if a:branch == ""
     let currpat = current
@@ -530,11 +530,11 @@ fun! s:Choose(patterns, string, comma, branch, prefix, suffix, ...)
     if a:0
       let alttail = strpart(alttail, j)
       let j = matchend(alttail, s:notslash . a:comma)
-    endif 
+    endif
   endwhile
   if a:0
     let current = current . a:comma . strpart(alttail, 0, j-1)
-  endif 
+  endif
   return current
 endfun
 
@@ -669,7 +669,7 @@ endfun
 "     return ""
 "   end
 "   let startpos = s:MultiMatch("bW")
-" 
+"
 "   if startpos == ""
 "     return ""
 "   endif
@@ -696,7 +696,7 @@ endfun
 "     let group = s:InsertRefs(groupBR, prefix, group, suffix, matchline)
 "   endif
 " " let g:group = group
-" 
+"
 "   " - TODO:  Construct the closing from group.
 "   let fake = "end" . expand("<cword>")
 "   execute startpos
@@ -851,7 +851,7 @@ aug Matchit
       \ | endif
   " RPM Spec:  thanks to Max Ischenko
   au FileType spec if !exists("b:match_words") |
-    \ let b:match_ignorecase = 0 | let b:match_words = 
+    \ let b:match_ignorecase = 0 | let b:match_words =
     \ '^Name:^%description:^%clean:^%setup:^%build:^%install:^%files:' .
     \ '^%package:^%preun:^%postun:^%changelog'
     \ | endif
@@ -860,7 +860,7 @@ aug Matchit
   " Verilog:  thanks to Mark Collett
   au FileType verilog if !exists("b:match_words") |
     \ let b:match_ignorecase = 0
-      \ | let b:match_words = 
+      \ | let b:match_words =
       \ '\<begin\>:\<end\>,'.
       \ '\<case\>\|\<casex\>\|\<casez\>:\<endcase\>,'.
       \ '\<module\>:\<endmodule\>,'.

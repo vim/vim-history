@@ -309,7 +309,10 @@ do_tag(tag, type, count, forceit, verbose)
 		    }
 		}
 		else
+		{
+		    setpcmark();
 		    curwin->w_cursor.lnum = saved_fmark.mark.lnum;
+		}
 		curwin->w_cursor.col = saved_fmark.mark.col;
 		curwin->w_set_curswant = TRUE;
 		check_cursor();

@@ -18,11 +18,6 @@
 # include <spawno.h>		/* special MSDOS swapping library */
 #endif
 
-#ifdef FEAT_TCL
-# undef EXTERN			/* redefined in tcl.h */
-# include <tcl.h>
-#endif
-
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -60,6 +55,8 @@ static char *(main_errors[]) =
 #define ME_GARBAGE		3
     N_("Too many \"+command\" or \"-c command\" arguments"),
 #define ME_EXTRA_CMD		4
+    N_("Invalid argument for"),
+#define ME_INVALID_ARG		5
 };
 
 /* Maximum number of commands from + or -c options */
@@ -141,7 +138,7 @@ main
     mch_early_init();
 
 #ifdef FEAT_TCL
-    Tcl_FindExecutable(argv[0]);
+    tcl_init(argv[0]);
 #endif
 
 #ifdef MEM_PROFILE
@@ -149,7 +146,7 @@ main
 #endif
 #ifdef STARTUPTIME
     time_fd = fopen(STARTUPTIME, "a");
-    time_msg("--- VIM STARTING ---");
+    TIME_MSG("--- VIM STARTING ---");
 #endif
 
 #ifdef __EMX__
@@ -238,7 +235,6 @@ main
 	    if (i == argc - 1)
 		mainerr_arg_missing((char_u *)argv[i]);
 	    xterm_display = argv[++i];
-	    break;
 	}
 # ifdef FEAT_XCMDSRV
 	else if (STRICMP(argv[i], "--servername") == 0)
@@ -249,8 +245,26 @@ main
 	}
 	else if (STRICMP(argv[i], "--serverlist") == 0
 	         || STRICMP(argv[i], "--serversend") == 0
+	         || STRICMP(argv[i], "--serverexpr") == 0
+	         || STRICMP(argv[i], "--remote-wait") == 0
 	         || STRICMP(argv[i], "--remote") == 0 )
 	    serverArg = TRUE;
+# endif
+# ifdef FEAT_GUI_GTK
+	else if (STRICMP(argv[i], "--socketid") == 0)
+	{
+            int count;
+
+	    if (i == argc - 1)
+		mainerr(ME_ARG_MISSING, (char_u *)argv[i]);
+            if (STRNICMP(argv[i+1], "0x", 2) == 0)
+                count = sscanf(&(argv[i + 1][2]), "%x", &gtk_socket_id);
+            else
+                count = sscanf(argv[i+1], "%d", &gtk_socket_id);
+            if (count != 1)
+		mainerr(ME_INVALID_ARG, (char_u *)argv[i]);
+            i++;
+	}
 # endif
     }
 
@@ -260,7 +274,7 @@ main
      * Vim when it was successful.
      */
     if (serverArg && !(cmdTarget != NULL && *cmdTarget == 0))
-	cmdsrv_main(argc, argv, cmdTarget);
+	cmdsrv_main(&argc, argv, cmdTarget, &serverStr);
 # endif
 #endif
 
@@ -479,6 +493,17 @@ main
 			++argv;
 		    }
 		}
+#endif
+#ifdef FEAT_GUI_GTK
+                else if (STRNICMP(argv[0] + argv_idx, "socketid", 8) == 0)
+                {
+                    /* already processed -- snatch the following arg */
+		    if (argc > 1)
+		    {
+			--argc;
+			++argv;
+		    }
+                }
 #endif
 		else
 		{
@@ -1030,6 +1055,7 @@ scripterror:
     set_init_2();
     TIME_MSG("inits 2");
 
+#if 0	/* disabled, don't know why it's needed */
     /*
      * Don't call msg_start() if the GUI is expected to start, it switches the
      * cursor off.  Only need to avoid it when want_full_screen could not have
@@ -1043,6 +1069,7 @@ scripterror:
 #endif
        )
 	msg_start();	    /* in case a mapping or error message is printed */
+#endif
     msg_scroll = TRUE;
     no_wait_return = TRUE;
 
@@ -1358,7 +1385,7 @@ scripterror:
      * (or else we would have exited above)
      */
     if (serverStr != NULL)
-	serverSendToVim(NULL, NULL, serverStr);
+	serverSendToVim(NULL, NULL, serverStr, NULL, NULL, 0, 0);
 #endif
 
     /*
@@ -1912,6 +1939,9 @@ getout(exitval)
 	windgoto((int)Rows - 1, 0);
 #endif
 
+#ifdef FEAT_TCL
+    tcl_end();
+#endif
 #ifdef FEAT_RUBY
     ruby_end();
 #endif
@@ -2161,8 +2191,13 @@ usage()
 # ifdef FEAT_XCMDSRV
     main_msg(_("--serverlist\t\tList available Vim server names and exit"));
     main_msg(_("--serversend <keys>\tSend <keys> to a Vim server and exit"));
+    main_msg(_("--serverexpr <expr>\tExecute <expr> in server and print result"));
     main_msg(_("--servername <name>\tSend to/become the Vim server <name>"));
-    main_msg(_("--remote\t\tEdit the files in a Vim server"));
+    main_msg(_("--remote <files>\tEdit <files> in a Vim server"));
+    main_msg(_("--remote-wait <files>\tAs --remote but wait for files to end edit"));
+# endif
+# ifdef FEAT_GUI_GTK
+    main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
 # endif
 #endif
 #ifdef FEAT_VIMINFO
@@ -2234,6 +2269,49 @@ check_swap_exists_action()
 #if defined(STARTUPTIME) || defined(PROTO)
 static void time_diff __ARGS((struct timeval *then, struct timeval *now));
 
+static struct timeval	prev_timeval;
+
+/*
+ * Save the previous time before doing something that could nest.
+ * set "*tv_rel" to the time elapsed so far.
+ */
+    void
+time_push(tv_rel, tv_start)
+    void	*tv_rel, *tv_start;
+{
+    *((struct timeval *)tv_rel) = prev_timeval;
+    gettimeofday(&prev_timeval, NULL);
+    ((struct timeval *)tv_rel)->tv_usec = prev_timeval.tv_usec
+					- ((struct timeval *)tv_rel)->tv_usec;
+    ((struct timeval *)tv_rel)->tv_sec = prev_timeval.tv_sec
+					 - ((struct timeval *)tv_rel)->tv_sec;
+    if (((struct timeval *)tv_rel)->tv_usec < 0)
+    {
+	((struct timeval *)tv_rel)->tv_usec += 1000000;
+	--((struct timeval *)tv_rel)->tv_sec;
+    }
+    *(struct timeval *)tv_start = prev_timeval;
+}
+
+/*
+ * Compute the previous time after doing something that could nest.
+ * Subtract "*tp" from prev_timeval;
+ * Note: The arguments are (void *) to avoid trouble with systems that don't
+ * have struct timeval.
+ */
+    void
+time_pop(tp)
+    void	*tp;	/* actually (struct timeval *) */
+{
+    prev_timeval.tv_usec -= ((struct timeval *)tp)->tv_usec;
+    prev_timeval.tv_sec -= ((struct timeval *)tp)->tv_sec;
+    if (prev_timeval.tv_usec < 0)
+    {
+	prev_timeval.tv_usec += 1000000;
+	--prev_timeval.tv_sec;
+    }
+}
+
     static void
 time_diff(then, now)
     struct timeval	*then;
@@ -2245,15 +2323,16 @@ time_diff(then, now)
     usec = now->tv_usec - then->tv_usec;
     msec = (now->tv_sec - then->tv_sec) * 1000L + usec / 1000L,
     usec = usec % 1000L;
-    fprintf(time_fd, "%03ld.%03ld", msec, usec > 0 ? usec : usec + 1000L);
+    fprintf(time_fd, "%03ld.%03ld", msec, usec >= 0 ? usec : usec + 1000L);
 }
 
     void
-time_msg(msg)
+time_msg(msg, tv_start)
     char	*msg;
+    void	*tv_start;  /* only for do_source: start time; actually
+			       (struct timeval *) */
 {
     static struct timeval	start;
-    static struct timeval	prev;
     struct timeval		now;
 
     if (time_fd != NULL)
@@ -2261,14 +2340,21 @@ time_msg(msg)
 	if (strstr(msg, "STARTING") != NULL)
 	{
 	    gettimeofday(&start, NULL);
-	    prev = start;
-	    fprintf(time_fd, "\n\nelapsed  diff (msec)  after:\n");
+	    prev_timeval = start;
+	    fprintf(time_fd, "\n\ntimes in msec\n");
+	    fprintf(time_fd, " clock   self+sourced   self:  sourced script\n");
+	    fprintf(time_fd, " clock   elapsed:              other lines\n\n");
 	}
 	gettimeofday(&now, NULL);
 	time_diff(&start, &now);
+	if (((struct timeval *)tv_start) != NULL)
+	{
+	    fprintf(time_fd, "  ");
+	    time_diff(((struct timeval *)tv_start), &now);
+	}
 	fprintf(time_fd, "  ");
-	time_diff(&prev, &now);
-	prev = now;
+	time_diff(&prev_timeval, &now);
+	prev_timeval = now;
 	fprintf(time_fd, ": %s\n", msg);
     }
 }

@@ -1,7 +1,7 @@
-*usr_05.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 04
+*usr_05.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Set your settings
 
 
@@ -105,7 +105,7 @@ new line.
 
 This tells Vim to keep a backup copy of a file when overwriting it.  But not
 on the VMS system, since that keeps old versions of files already.  The backup
-file will have the same name as the original file with "~" added. |07.4|
+file will have the same name as the original file with "~" added.  See |07.4|
 >
 
 	set history=50
@@ -155,8 +155,8 @@ will not need it.
 This is a complicated mapping.  It will not be explained how it works here.
 What it does is to make "p" in Visual mode overwrite the selected text with
 the previously yanked text.  You can see that mappings can be used to do quite
-complicated things.  Still, it is just a sequence of commands like you typed
-them.
+complicated things.  Still, it is just a sequence of commands that are
+executed like you typed them.
 
 >
 	if &t_Co > 2 || has("gui_running")
@@ -579,7 +579,7 @@ The "@" stands for all alphabetic letters.  "48-57" stands for ASCII
 characters 48 to 57, which are the numbers 0 to 9.  "192-255" are the
 printable latin characters.
    Sometimes you will want to include a dash in keywords, so that commands
-like "w" consider "upper-case" one word.  You can do it like this: >
+like "w" consider "upper-case" to be one word.  You can do it like this: >
 
 	:set iskeyword+=-
 	:set iskeyword

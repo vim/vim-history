@@ -36,7 +36,7 @@ function GetMatlabIndent(lnum)
     " This is the first non-empty line, use zero indent.
     return 0
   endif
-  
+
   let curind = indent(plnum)
 
   " If the current line is a stop-block statement...
@@ -65,8 +65,8 @@ function GetMatlabIndent(lnum)
     endif
   endif
 
- 
-  
+
+
   " If we got to here, it means that the user takes the standardversion, so we return it
   return curind
 endfunction

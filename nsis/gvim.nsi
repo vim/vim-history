@@ -8,18 +8,18 @@
 # Get it at http://upx.sourceforge.net
 !define HAVE_UPX
 
-# comment the next line if you do not want to add Native Language Support 
+# comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-Name "Vim 6.0ao"
-OutFile gVim60ao.exe
+Name "Vim 6.0ap"
+OutFile gVim60ap.exe
 CRCCheck on
-ComponentText "This will install Vim 6.0ao on your computer."
+ComponentText "This will install Vim 6.0ap on your computer."
 DirText "Choose a directory to install Vim"
 SetDatablockOptimize on
 Icon icons\vim_16c.ico
-UninstallText "This will uninstall Vim 6.0ao from your system."
-UninstallExeName vim60ao\uninstall-gui.exe
+UninstallText "This will uninstall Vim 6.0ap from your system."
+UninstallExeName vim60ap\uninstall-gui.exe
 UninstallIcon icons\vim_uninst_16c.ico
 BGGradient 004000 008200 ffffff
 LicenseText "You should read the following before installing:"
@@ -41,8 +41,8 @@ SilentInstall normal
 
 Function .onInit
   MessageBox MB_YESNO|MB_ICONQUESTION \
-	"This will install Vim 6.0ao on your computer.$\n Continue?" IDYES NoAbort
-  
+	"This will install Vim 6.0ap on your computer.$\n Continue?" IDYES NoAbort
+
   Abort ; causes installer to quit.
   NoAbort:
 
@@ -77,7 +77,7 @@ Function .onInit
 # $1 - holds the parameters to be passed to install.exe.  Starts with OLE
 #      registration (since a non-OLE gvim will not complain, and we want to
 #      always register an OLE gvim).
-  StrCpy $0 "$INSTDIR\vim60ao"
+  StrCpy $0 "$INSTDIR\vim60ap"
   StrCpy $1 "-register-OLE"
 
 FunctionEnd
@@ -88,13 +88,25 @@ Function .onUserAbort
   NoCancelAbort:
 FunctionEnd
 
+# Only enable the "Next" button if the install directory is OK.
+Function .onVerifyInstDir
+  StrCmp $INSTDIR $PROGRAMFILES PathBad 0
+  StrCmp $INSTDIR $WINDIR PathBad PathGood
+    PathBad:
+    Abort
+
+  PathGood:
+FunctionEnd
+
 Function .onInstSuccess
 !ifdef HAVE_NLS
 IfFileExists $0\lang 0 NoNLS
   MessageBox MB_OK|MB_ICONINFORMATION \
-	"To make the translated messages work you must add the following line \
-	$\n$\nset LANG=<your language>, e.g. es_es.iso_8859-1 \
-	$\n$\n to your autoexec.bat file and reboot the system."
+	"To make the translated messages work you must add the following$\n\
+line to your autoexec.bat file and reboot the system:$\n$\n\
+	set LANG=<your language>$\n$\n\
+For example, for Spanish:$\n$\n\
+	set LANG=es_ES.iso_8859-1"
   NoNLS:
 !endif
   MessageBox MB_YESNO|MB_ICONQUESTION \
@@ -105,11 +117,11 @@ IfFileExists $0\lang 0 NoNLS
 FunctionEnd
 
 Function .onInstFailed
-  MessageBox MB_OK|MB_ICONEXCLAMATION "Installation failed. Better luck next time."  
+  MessageBox MB_OK|MB_ICONEXCLAMATION "Installation failed. Better luck next time."
 FunctionEnd
 
 Function un.onUnInstSuccess
-  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0ao has been (partly) removed from your system"  
+  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0ap has been (partly) removed from your system"
 FunctionEnd
 
 ##########################################################
@@ -117,7 +129,7 @@ Section "Vim executables and runtime files"
 SectionIn 1,2,3
 
 # we need also this here if the user changes the instdir
-StrCpy $0 "$INSTDIR\vim60ao"
+StrCpy $0 "$INSTDIR\vim60ap"
 
 SetOutPath $0
 File ..\src\gvim.exe
@@ -264,13 +276,6 @@ SectionEnd
 ##########################################################
 Section -post
 
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao" \
-                   "DisplayName" "Vim 6.0ao (self-installing)"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao" \
-                   "UninstallString" "$INSTDIR\vim60ao\uninstall-gui.exe"
-
-  ExecShell open '$INSTDIR'
-  Sleep 500
   BringToFront
 
 SectionEnd
@@ -279,7 +284,7 @@ SectionEnd
 Section Uninstall
 
 # Apparently $INSTDIR is set to the directory where the uninstaller is created.
-# Thus the "vim60ao" directory is included in it.
+# Thus the "vim60ap" directory is included in it.
 StrCpy $0 "$INSTDIR"
 
 ; If VisVim was installed, unregister the DLL
@@ -295,7 +300,7 @@ ExecWait "$0\uninstal.exe -nsis"
 # We may have been put to the background when uninstall did something.
 BringToFront
 
-DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ao"
+DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim 6.0ap"
 
 # ask the user if the Vim version dir must be removed
 MessageBox MB_YESNO|MB_ICONQUESTION \
@@ -312,7 +317,7 @@ IfErrors ErrorMess NoErrorMess
   NoErrorMess:
 
 # if a plugin dir was created at installation ask the user to remove it
-IfFileExists $INSTDIR\vimfiles 0 NoRemove 
+IfFileExists $INSTDIR\vimfiles 0 NoRemove
     MessageBox MB_YESNO|MB_ICONQUESTION \
       "Remove all files in your $INSTDIR\vimfiles directory? \
       $\nIf you have created something there that you want to keep, click No" IDNO Fin

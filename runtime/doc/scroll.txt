@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 07
+*scroll.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -279,7 +279,7 @@ file where your X resources are kept): >
 		<Btn4Down>: string("0x9b") string("[62~") \n\
 		<Btn5Down>: string("0x9b") string("[63~") \n\
 		<Btn4Up>: \n\
-		<Btn5Up>: 
+		<Btn5Up>:
 
 Add these mappings to your vimrc file: >
 	:map <M-Esc>[62~ <MouseDown>

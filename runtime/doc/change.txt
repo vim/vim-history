@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 13
+*change.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,8 +24,11 @@ For inserting text see |insert.txt|.
 ["x]<Del>	or					*<Del>* *x* *dl*
 ["x]x			Delete [count] characters under and after the cursor
 			[into register x] (not linewise).  Does the same as
-			"dl".  See |:fixdel| if the <Del> key does not do what
-			you want.  See |'whichwrap'| for deleting the <EOL>
+			"dl".
+			The <Del> key does not take a [count].  Instead, it
+			deletes the last character of the count.
+			See |:fixdel| if the <Del> key does not do what you
+			want.  See |'whichwrap'| for deleting a line break
 			(join lines).  {Vi does not support <Del>}
 
 							*X* *dh*
@@ -45,8 +48,9 @@ For inserting text see |insert.txt|.
 			of the line and [count]-1 more lines [into register
 			x]; synonym for d$ (not linewise).
 
-{Visual}["x]x	or					*v_x* *v_d*
-{Visual}["x]d		Delete the highlighted text [into register x] (for
+{Visual}["x]x	or					*v_x* *v_d* *v_<Del>*
+{Visual}["x]d   or
+{Visual}["x]<Del>	Delete the highlighted text [into register x] (for
 			{Visual} see |Visual-mode|).  {not in Vi}
 
 {Visual}["x]CTRL-H   or					*v_CTRL-H* *v_<BS>*
@@ -142,6 +146,8 @@ gR			Enter Virtual replace mode: Each character you type
 			<Tab> may replace several characters at once.
 			Repeat the entered text [count]-1 times.  See
 			|Virtual-replace-mode| for more details.
+			{not available when compiled without the +vreplace
+			feature}
 
 							*c*
 ["x]c{motion}		Delete {motion} text [into register x] and start
@@ -250,6 +256,8 @@ gr{char}		Replace the virtual characters under the cursor with
 			space.  See |gR| and |Virtual-replace-mode| for more
 			details.  As with |r| a count may be given.
 			{char} can be entered like with |r|.
+			{not available when compiled without the +vreplace
+			feature}
 
 						*digraph-arg*
 The argument for Normal mode commands like |r| and |t| is a single character.

@@ -27,14 +27,14 @@ cpp_quote("//-------------------------------------------------------------------
 cpp_quote("// IActiveIMM Interfaces.")
 cpp_quote("")
 
-/* 
+/*
 Disable a warning about lack of polymorphic type support for the following reasons
-- the only reason to have library block in the file is to make midl accept coclass 
+- the only reason to have library block in the file is to make midl accept coclass
   statement and generate CLSID for CActiveIMM.
 - the generated dimm_i.c has the clsid and that file is used to have clsid available
 - the dimm.tlb is not used at all
 - on top of it, there is no plans to port the app using dimm.idl to 64b platform.
-*/ 
+*/
 midl_pragma warning( disable: 2395) // polymorphic types not supported in the TLB
 
 

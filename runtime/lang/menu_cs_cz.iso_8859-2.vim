@@ -1,6 +1,6 @@
 " Menu Translations:	Czech
-" Translated By: 	Jiøí Pavlovský <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 May 18
+" Translated By:	Jiøí Pavlovský <pavlovsk@ff.cuni.cz>
+" Last Change:		2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -96,12 +96,12 @@ menutrans Cu&t      &Vyøíznout
 menutrans &Copy			&Kopírovat
 menutrans &Paste		&Vlo¾it
 menutrans &Delete		&Smazat
-menutrans Select\ Blockwise 	Vybrat\ blokovì
+menutrans Select\ Blockwise	Vybrat\ blokovì
 menutrans Select\ &Word		Vybrat\ &s³ovo
 menutrans Select\ &Line		Vybrat\ &øádek
 menutrans Select\ &Block	Vybrat\ &blok
 menutrans Select\ &All		Vybrat\ &v¹e
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

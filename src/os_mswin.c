@@ -910,20 +910,21 @@ Trace(
  * Win32 printer stuff
  */
 
-static HFONT	    prt_font_handles[2][2][2];
-static PRINTDLG	    s_pd;
-static const int    boldface[2] = {  FW_REGULAR , FW_BOLD  };
-static TEXTMETRIC   s_tm;
-static int s_left_margin;
-static int s_right_margin;
-static int s_top_margin;
+static HFONT		prt_font_handles[2][2][2];
+static PRINTDLG		s_pd;
+static const int	boldface[2] = {  FW_REGULAR , FW_BOLD  };
+static TEXTMETRIC	s_tm;
+static int		s_left_margin;
+static int		s_right_margin;
+static int		s_top_margin;
 
 /*
  * Convert BGR to RGB for Windows GDI calls
  */
-static COLORREF swap_me(COLORREF colorref)
+    static COLORREF
+swap_me(COLORREF colorref)
 {
-    int temp;
+    int  temp;
     char *ptr = (char *)&colorref;
 
     temp = *(ptr);
@@ -939,13 +940,14 @@ static COLORREF swap_me(COLORREF colorref)
  * get the window parenting and Z-order to work properly.
  */
 
-HWND GetConsoleHwnd(void)
+    HWND
+GetConsoleHwnd(void)
 {
 #define MY_BUFSIZE 1024 // Buffer size for console window titles.
 
     char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated WindowTitle.
     char pszOldWindowTitle[MY_BUFSIZE]; // Contains original WindowTitle.
-    HANDLE hwndFound ;
+    HANDLE hwndFound;
 
     GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
 
@@ -966,16 +968,17 @@ HWND GetConsoleHwnd(void)
 }
 
 
-static UINT CALLBACK PrintHookProc(
+    static UINT CALLBACK
+PrintHookProc(
 	HWND hDlg,	// handle to dialog box
 	UINT uiMsg,	// message identifier
 	WPARAM wParam,	// message parameter
 	LPARAM lParam	// message parameter
 	)
 {
-    HWND hwndOwner;
-    RECT rc, rcDlg, rcOwner;
-    PRINTDLG  *pPD;
+    HWND	hwndOwner;
+    RECT	rc, rcDlg, rcOwner;
+    PRINTDLG	*pPD;
 
     if (uiMsg == WM_INITDIALOG)
     {
@@ -1025,9 +1028,10 @@ mch_print_cleanup(void)
     int pifItalic;
     int pifBold;
     int pifUnderline;
-    for(pifBold = 0 ; pifBold <= 1 ; pifBold++)
-	for(pifItalic = 0 ; pifItalic <= 1; pifItalic++)
-	    for(pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
+
+    for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
+	for (pifItalic = 0 ; pifItalic <= 1; pifItalic++)
+	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
 		DeleteObject(prt_font_handles[pifBold][pifItalic][pifUnderline]);
 
     if (s_pd.hDC != NULL)
@@ -1065,12 +1069,12 @@ mch_print_get_cpl(int *yChar_out, int *number_width_out)
     int dvoff;
     int rev_offset;
     int dpi;
-
 #ifdef WIN16
     POINT pagesize;
 #endif
-    GetTextMetrics (s_pd.hDC, &s_tm) ;
-    *yChar_out = s_tm.tmHeight + s_tm.tmExternalLeading ;
+
+    GetTextMetrics(s_pd.hDC, &s_tm);
+    *yChar_out = s_tm.tmHeight + s_tm.tmExternalLeading;
 
     hr	    = GetDeviceCaps(s_pd.hDC, HORZRES);
 #ifdef WIN16
@@ -1093,7 +1097,8 @@ mch_print_get_cpl(int *yChar_out, int *number_width_out)
 	s_left_margin += *number_width_out;
     }
 
-    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw, rev_offset);
+    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
+								  rev_offset);
 
     cpl	= (s_right_margin - s_left_margin) / s_tm.tmAveCharWidth ;
 
@@ -1109,10 +1114,10 @@ mch_print_get_lpp(int yCharsize)
     int rev_offset;
     int	bottom_margin;
     int	dpi;
-
 #ifdef WIN16
     POINT pagesize;
 #endif
+
     vr	    = GetDeviceCaps(s_pd.hDC, VERTRES);
 #ifdef WIN16
     Escape(s_pd.hDC, GETPHYSPAGESIZE, NULL, NULL, &pagesize);
@@ -1129,13 +1134,12 @@ mch_print_get_lpp(int yCharsize)
 
     s_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
 
-
     /* adjust top margin if there is a header */
     if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-	s_top_margin += (yCharsize * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+	s_top_margin += (yCharsize
+			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
 
     bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
-
 
     return (bottom_margin - s_top_margin) / yCharsize ;
 }
@@ -1143,26 +1147,26 @@ mch_print_get_lpp(int yCharsize)
     int
 mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 {
-    static HGLOBAL stored_dm	= NULL;
-    static HGLOBAL stored_devn	= NULL;
-    static int  stored_nCopies	= 1;
-    static int  stored_nFlags	= 0;
+    static HGLOBAL	stored_dm = NULL;
+    static HGLOBAL	stored_devn = NULL;
+    static int		stored_nCopies = 1;
+    static int		stored_nFlags = 0;
 
-    LOGFONT  fLogFont;
-    int pifItalic;
-    int pifBold;
-    int pifUnderline;
+    LOGFONT		fLogFont;
+    int			pifItalic;
+    int			pifBold;
+    int			pifUnderline;
 
-    LPVOID mem = NULL;
+    LPVOID		mem = NULL;
 
-    memset( &s_pd, 0, sizeof(PRINTDLG) );
-    s_pd.lStructSize	= sizeof (PRINTDLG) ;
+    memset(&s_pd, 0, sizeof(PRINTDLG));
+    s_pd.lStructSize = sizeof(PRINTDLG);
 #ifdef FEAT_GUI
-    s_pd.hwndOwner	= s_hwnd;
+    s_pd.hwndOwner = s_hwnd;
 #else
     s_pd.hwndOwner = GetConsoleHwnd();
 #endif
-    s_pd.Flags		=  PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
+    s_pd.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
     s_pd.hDevMode = stored_dm;
     s_pd.hDevNames = stored_devn;
     s_pd.lCustData = stored_nCopies; /* work around bug in print dialogue */
@@ -1170,8 +1174,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     /*
      * Use hook to prevent console window being sent to back
      */
-    s_pd.lpfnPrintHook	= PrintHookProc ;
-    s_pd.Flags		|= PD_ENABLEPRINTHOOK;
+    s_pd.lpfnPrintHook = PrintHookProc;
+    s_pd.Flags |= PD_ENABLEPRINTHOOK;
 #endif
     s_pd.Flags |= stored_nFlags;
     /*
@@ -1224,9 +1228,16 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * passed back correctly. It must be retrieved from the
      * hDevMode struct.
      */
+    psettings->duplex = FALSE;
     mem = GlobalLock(s_pd.hDevMode);
-    if(mem != NULL && (((DEVMODE *)mem)->dmCopies != 1))
-	stored_nCopies = ((DEVMODE *)mem)->dmCopies;
+    if (mem != NULL)
+    {
+	if (((DEVMODE *)mem)->dmCopies != 1)
+	    stored_nCopies = ((DEVMODE *)mem)->dmCopies;
+	if ((((DEVMODE *)mem)->dmFields & DM_DUPLEX)
+		&& (((DEVMODE *)mem)->dmDuplex & ~DMDUP_SIMPLEX))
+	    psettings->duplex = TRUE;
+    }
     GlobalUnlock(s_pd.hDevMode);
 #endif
 
@@ -1260,10 +1271,13 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     /*
      * Fill in the settings struct
      */
-    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height, &psettings->number_width);
+    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height,
+						    &psettings->number_width);
     psettings->lines_per_page = mch_print_get_lpp(psettings->line_height);
-    psettings->n_collated_copies =  (s_pd.Flags & PD_COLLATE) ? s_pd.nCopies : 1;
-    psettings->n_uncollated_copies =  (s_pd.Flags & PD_COLLATE) ? 1 : s_pd.nCopies;
+    psettings->n_collated_copies =  (s_pd.Flags & PD_COLLATE)
+							   ? s_pd.nCopies : 1;
+    psettings->n_uncollated_copies =  (s_pd.Flags & PD_COLLATE)
+							   ? 1 : s_pd.nCopies;
 
     if (psettings->n_collated_copies == 0)
 	    psettings->n_collated_copies = 1;
@@ -1282,16 +1296,20 @@ init_fail_dlg:
 	if (err)
 	{
 #ifdef WIN16
-	    char buf[8];
+	    char buf[20];
+
 	    sprintf(buf, "%ld", err);
-	    EMSG2(_("E238: Print error: "), buf);
+	    EMSG2(_("E238: Print error: %s"), buf);
 #else
 	    char_u *buf;
+
+	    /* I suspect FormatMessage() doesn't work for values returned by
+	     * CommDlgExtendedError().  What does? */
 	    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			  FORMAT_MESSAGE_FROM_SYSTEM |
 			  FORMAT_MESSAGE_IGNORE_INSERTS,
 			  NULL, err, 0, (LPTSTR)(&buf), 0, NULL);
-	    EMSG2(_("E238: Print error: "), buf);
+	    EMSG2(_("E238: Print error: %s"), buf == NULL ? _("Unknown") : buf);
 	    LocalFree((LPVOID)(buf));
 #endif
 	}
@@ -1307,8 +1325,9 @@ init_fail_dlg:
     int
 mch_print_begin(prt_settings_T *psettings)
 {
-    int ret;
-    static DOCINFO  di;
+    int			ret;
+    static DOCINFO	di;
+
     memset(&di, 0, sizeof (DOCINFO));
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = psettings->jobname;
@@ -1320,7 +1339,17 @@ mch_print_begin(prt_settings_T *psettings)
     void
 mch_print_end(void)
 {
-    EndDoc (s_pd.hDC) ;
+    EndDoc(s_pd.hDC) ;
+}
+
+    void
+mch_print_abort(void)
+{
+#ifdef WIN16
+    Escape(s_pd.hDC, ABORTDOC, NULL, NULL, NULL);
+#else
+    AbortDoc(s_pd.hDC);
+#endif
 }
 
     int
@@ -1336,10 +1365,17 @@ mch_print_begin_page(void)
 }
 
     int
+mch_print_blank_page(void)
+{
+    return (mch_print_begin_page() ? (mch_print_end_page()) : FALSE);
+}
+
+    int
 mch_print_text_out(int x, int y, char_u *p, int len, int *must_break)
 {
-    SIZE	    sz;
-    int		    step;
+    SIZE	sz;
+    int		step;
+
     TextOut (s_pd.hDC, x + s_left_margin, y + s_top_margin, p, len);
 #ifdef WIN16
     GetTextExtentPoint(s_pd.hDC, p, len , &sz);
@@ -1405,8 +1441,14 @@ mch_resolve_shortcut(char_u *fname)
     WIN32_FIND_DATA	ffd; // we get those free of charge
     TCHAR		buf[MAX_PATH]; // could have simply reused 'wsz'...
     char_u		*rfname = NULL;
+    int			len;
 
-    if (!fname || STRLEN(fname) == 0)
+    /* Check if the file name ends in ".lnk". Avoid calling
+     * CoCreateInstance(), it's quite slow. */
+    if (fname == NULL)
+	return rfname;
+    len = STRLEN(fname);
+    if (len <= 4 || STRNICMP(fname + len - 4, ".lnk", 4) != 0)
 	return rfname;
 
     CoInitialize(NULL);

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 15
+*syntax.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -577,7 +577,7 @@ DOSBATCH				*dosbatch.vim* *dosbatch-syntax*
 There is one option with highlighting DOS batch files.  This covers new
 extensions to the Command Interpreter introduced with Windows 2000 and
 is controlled by the variable dosbatch_cmdextversion.  For Windows NT
-this should have the value 1, and for Windows 2000 it should be 2.  
+this should have the value 1, and for Windows 2000 it should be 2.
 Select the version you want with the following line: >
 
   :let dosbatch_cmdextversion = 1
@@ -1197,7 +1197,7 @@ Files matching "*.p" could be Progress or Pascal.  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
 startup vimrc: >
 
-   :let filetype_p = "pascal"  
+   :let filetype_p = "pascal"
 
 The Pascal syntax file has been extended to take into account some extensions
 provided by Turbo Pascal, Free Pascal Compiler and GNU Pascal Compiler.
@@ -1338,7 +1338,7 @@ Disable short tags: >
   let php_noShortTags = 1
 
 
-PPWIZARD (preprocessor for HTML and OS/2 INF files) *ppwiz.vim* *ppwiz-syntax* 
+PPWIZARD (preprocessor for HTML and OS/2 INF files) *ppwiz.vim* *ppwiz-syntax*
 
 This syntax file has the options:
 
@@ -1614,7 +1614,7 @@ This covers the "normal" Unix (Borne) sh, bash and the korn shell.
 Vim attempts to determine which shell type is in use by specifying that
 various filenames are of specific types:
 
-    ksh : .kshrc* *.ksh 
+    ksh : .kshrc* *.ksh
 	bash: .bashrc* bashrc bash.bashrc .bash_profile* *.bash
 
 If neither of these cases pertain, then the first line of the file is examined
@@ -2999,7 +2999,7 @@ font={font-name}					*highlight-font*
 	When setting the font for the "Normal" group, this becomes the default
 	font (until the 'guifont' option is changed; the last one set is
 	used).
- 	The following only works with Motif and Athena, not with other GUIs:
+	The following only works with Motif and Athena, not with other GUIs:
 	When setting the font for the "Menu" group, the menus will be changed.
 	When setting the font for the "Tooltip" group, the tooltips will be
 	changed.
@@ -3125,7 +3125,8 @@ Win32 GUI.  Only three highlight arguments have any effect here: font, guibg,
 and guifg.
 
 							*hl-Menu*
-Menu		Current font, background and foreground colors of the menu bar.
+Menu		Current font, background and foreground colors of the menus.
+		Also used for the toolbar.
 		Applicable highlight arguments: font, guibg, guifg.
 
 							*hl-Scrollbar*
@@ -3281,7 +3282,7 @@ WARNING: The longer the tags file, the slower this will be, and the more
 memory Vim will consume.
 
 Only highlighting typedefs, unions and structs can be done too.  For this you
-must use Exuberant ctags (included with Vim).
+must use Exuberant ctags (found at http://ctags.sf.net).
 
 Put these lines in your Makefile:
 

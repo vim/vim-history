@@ -1,12 +1,12 @@
-*usr_04.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_04.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			     Making small changes
 
 
 This chapter shows you several ways of making corrections and moving text
-around.  It learns you the three basic ways to change text: operator-motion,
+around.  It teaches you the three basic ways to change text: operator-motion,
 Visual mode and text objects.
 
 |04.1|	Operators and motions
@@ -36,22 +36,22 @@ cursor winds up.
    The "4w" command, for example, moves the cursor over four words.  The d4w
 command deletes four words.
 
-	To err is human, To really foul up you need a computer. ~
+	To err is human. To really foul up you need a computer. ~
 			 ------------------>
 				 d4w
 
-	To err is human, you need a computer. ~
+	To err is human. you need a computer. ~
 
 Vim only deletes up to the position where the motion takes the cursor.  That's
 because Vim knows that you probably don't want to delete the first character
 of a word.  If you use the "e" command to move to the end of a word, Vim
 guesses that you do want to include that last character:
 
-	To err is human, you need a computer. ~
+	To err is human. you need a computer. ~
 			-------->
 			   d2e
 
-	To err is human, a computer. ~
+	To err is human. a computer. ~
 
 Whether the character under the cursor is included depends on the command you
 used to move to that character.  The reference manual calls this "exclusive"
@@ -61,7 +61,7 @@ The "$" command moves to the end of a line.  The "d$" command deletes from the
 cursor to the end of the line.  This is an inclusive motion, thus the last
 character of the line is included in the delete operation:
 
-	To err is human, a computer. ~
+	To err is human. a computer. ~
 		       ------------>
 			    d$
 
@@ -98,7 +98,7 @@ example used here for the "cw" command.  The c operator works just like the
 d operator, with one exception: "cw".  It actually works like "ce", change to
 end of word.  Thus the space after the word isn't included.  This is an
 exception that dates back to the old Vi.  Since many people are used to it
-now, the inconsistency has remained in vim.
+now, the inconsistency has remained in Vim.
 
 
 MORE CHANGES
@@ -170,7 +170,7 @@ cursor on the < and use the "." command.
 
 			      To <B>generate</B> a table of <B>contents ~
 	f<   find first <     --->
-	df>  delete til >	 -->
+	df>  delete to >	 -->
 	f<   find next <	   --------->
 	.    repeat df>			    --->
 	f<   find next <		       ------------->
@@ -199,14 +199,14 @@ it's not so easy to decide which command will move over the text you want to
 change.  Then you can use Visual mode.
 
 You start Visual mode by pressing "v".  You move the cursor over the text you
-want work on.  While you do this, the text is highlighted.  Finally type the
-operator command.
+want to work on.  While you do this, the text is highlighted.  Finally type
+the operator command.
    For example, to delete from halfway one word to halfway another word:
 
 		This is an examination sample of visual mode ~
 			       ---------->
 				 velllld
-		
+
 		This is an example of visual mode ~
 
 When doing this you don't really have to count how many times you have to
@@ -246,7 +246,7 @@ Visual mode.  This is very useful when working on tables.
 
 To delete the middle "Q2" column, move the cursor to the "Q" of "Q2".  Press
 CTRL-V to start blockwise Visual mode.  Now move the cursor three lines down
-with "3j" and to the next word with "w".  You an see the first character of
+with "3j" and to the next word with "w".  You can see the first character of
 the last column is included.  To exclude it, use "h".  Now press "d" and the
 middle column is gone.
 
@@ -282,8 +282,8 @@ command.  The line is inserted on the line below the cursor.
 	line 3			      line 2
 
 Because you deleted an entire line, the "p" command placed the text line below
-the cursor.  If you delete part of a line (a word with the "dw" command, for
-instance), the "p" command puts it just after the cursor.
+the cursor.  If you delete part of a line (a word, for instance), the "p"
+command puts it just after the cursor.
 
 	Some more boring try text to out commands. ~
 			 ---->
@@ -329,26 +329,28 @@ the deletion and then "p" to put it somewhere else.  There is an easier way:
 yanking.  The "y" operator copies text into a register.  Then a "p" command
 can be used to put it.
    Yanking is just a Vim name for copying.  The "c" letter was already used
-for for the change operator, and "y" was still available.  Calling this
+for the change operator, and "y" was still available.  Calling this
 operator "yank" made it easier to remember to use the "y" key.
 
-Since "y" is an operator, you use "yw" to yank a word.
+Since "y" is an operator, you use "yw" to yank a word.  A count is possible as
+usual.  To yank two workds use "y2w".  Example:
 
-	let a = LongVariable * ~
-	       -------------->
-		     yw
+	let sqr = LongVariable * ~
+	         -------------->
+		       y2w
 
-	let a = LongVariable * ~
-			     p
+	let sqr = LongVariable * ~
+			       p
 
-	let a = LongVariable *  LongVariable~
+	let sqr = LongVariable * LongVariable ~
 
 Notice that "yw" includes the white space after a word.  If you don't want
 this, use "ye".
 
 The "yy" command yanks a whole line, just like "dd" deletes a whole line.
-Unexpectedly, "Y" doesn't yank until the end of the line, instead it works
-like "yy", yanks the whole line.  Watch out for this inconsistency.
+Unexpectedly, while "D" deletes from the cursor to the end of the line, "Y"
+works like "yy", it yanks the whole line.  Watch out for this inconsistency!
+Use "y$" to yank to the end of the line.
 
 	a text line   yy	a text line	       a text line
 	line 2			line 2		p      line 2

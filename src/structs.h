@@ -1631,6 +1631,7 @@ typedef struct
 {
     int		n_collated_copies;
     int		n_uncollated_copies;
+    int		duplex;
     int		line_height;
     int		chars_per_line;
     int		lines_per_page;

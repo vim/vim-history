@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Jul 4
+" Last Change:		2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,6 +13,7 @@ scriptencoding iso-8859-1
 " Help menu
 menutrans &Help			Ay&uda
 menutrans &Overview<Tab><F1>	&Principal<Tab><F1>
+menutrans &User\ Manual		&Manual\ del\ usuario
 menutrans &How-to\ links	&Enlaces\ a\ ¿Cómo\.\.\.?
 menutrans &GUI			&Interfaz\ gráfica
 menutrans &Credits		&Reconocimientos
@@ -90,18 +91,18 @@ menutrans F&ile\ Settings		Opciones\ del\ &fichero
 " Boolean options
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Activar/Desactivar\ &numeración\ de\ líneas<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «&list»<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &doblado\ de\ líneas<Tab>:set\ wrap!	
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &doblado\ de\ líneas<Tab>:set\ wrap!
 menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Activar/Desactivar\ doblado\ en\ &palabra<Tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ tabs<Tab>:set\ et!	
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ tabs<Tab>:set\ et!
 menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Activar/Desactivar\ &auto-sangrado<Tab>:set\ ai!
 menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ &C<Tab>:set\ cin!
 
 " other options
-menutrans &Shiftwidth	 		Anchura\ del\ &sangrado
+menutrans &Shiftwidth			Anchura\ del\ &sangrado
 
 menutrans Soft\ &Tabstop		&Tabulado\ suave
 
-menutrans Te&xt\ Width\.\.\. 		Anchura\ del\ te&xto\.\.\.
+menutrans Te&xt\ Width\.\.\.		Anchura\ del\ te&xto\.\.\.
 let g:menutrans_textwidth_dialog = "Introduzca la nueva anchura del texto (0 para desactivar el formateo): "
 
 menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
@@ -157,14 +158,14 @@ menutrans &Put\ Block	&Poner\ bloque
 menutrans &Update<Tab>:cwin	&Actualizar
 menutrans &Open<Tab>:copen	A&brir
 menutrans &Close<Tab>:cclose	&Cerrar
- 
+
 " Names for buffer menu.
 menutrans &Buffers		&Buffers
 menutrans &Refresh\ menu	&Refrescar\ menú
 menutrans &Delete		&Suprimir
 menutrans &Alternate		&Alternar
 menutrans &Next			Si&guiente
-menutrans &Previous		&Previo 
+menutrans &Previous		&Previo
 let g:menutrans_no_file = "[Sin fichero]"
 
 " Window menu
@@ -177,10 +178,10 @@ menutrans Split\ File\ E&xplorer	&Abrir\ Explorador\ de\ ficheros
 menutrans &Close<Tab>^Wc		&Cerrar<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)<Tab>^Wo
 menutrans Move\ &To			Mov&er\ a
-menutrans &Top<Tab>^WK			&Arriba<Tab>^WK		
-menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ		
-menutrans &Left\ side<Tab>^WH		Lado\ &izquierdo<Tab>^WH		
-menutrans &Right\ side<Tab>^WL		Lado\ &derecho<Tab>^WL		
+menutrans &Top<Tab>^WK			&Arriba<Tab>^WK
+menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ
+menutrans &Left\ side<Tab>^WH		Lado\ &izquierdo<Tab>^WH
+menutrans &Right\ side<Tab>^WL		Lado\ &derecho<Tab>^WL
 menutrans Rotate\ &Up<Tab>^WR		&Rotar\ hacia\ arriba<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotar\ hacia\ a&bajo<Tab>^Wr
 menutrans &Equal\ Size<Tab>^W=		Mismo\ &tamaño<Tab>^W=
@@ -195,19 +196,19 @@ menutrans Cu&t			Cor&tar
 menutrans &Copy			&Copiar
 menutrans &Paste		&Pegar
 menutrans &Delete		&Borrar
-menutrans Select\ Blockwise 	Seleccionar\ por\ bloque
+menutrans Select\ Blockwise	Seleccionar\ por\ bloque
 menutrans Select\ &Word		Seleccionar\ &palabra
 menutrans Select\ &Line		Seleccionar\ una\ &línea
 menutrans Select\ &Block	Seleccionar\ un\ &bloque
 menutrans Select\ &All		Seleccionar\ &todo
- 
+
 " The GUI toolbar (for Win32, GTK, Motif or Athena)
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif
   fun Do_toolbar_tmenu()
-    tmenu ToolBar.Open		Abrir fichero 
+    tmenu ToolBar.Open		Abrir fichero
     tmenu ToolBar.Save		Guardar fichero
     tmenu ToolBar.SaveAll	Guardar todos los ficheros
     tmenu ToolBar.Print		Imprimir
@@ -217,7 +218,7 @@ if has("toolbar")
     tmenu ToolBar.Copy		Copiar
     tmenu ToolBar.Paste		Pegar
     tmenu ToolBar.Find		Buscar...
-    tmenu ToolBar.FindNext	Buscar siguiente 
+    tmenu ToolBar.FindNext	Buscar siguiente
     tmenu ToolBar.FindPrev	Buscar precedente
     tmenu ToolBar.Replace	Buscar y reemplazar
     tmenu ToolBar.New		Ventana nueva

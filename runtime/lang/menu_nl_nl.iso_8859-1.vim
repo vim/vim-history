@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Jul 03
+" Last Change:	2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -116,12 +116,12 @@ menutrans Cu&t			Knip
 menutrans &Copy			&Kopiëer
 menutrans &Paste		&Plak
 menutrans &Delete		&Wissen
-menutrans Select\ Blockwise 	Selecteer\ per\ Rechthoek
+menutrans Select\ Blockwise	Selecteer\ per\ Rechthoek
 menutrans Select\ &Word		Selecteer\ een\ &Woord
 menutrans Select\ &Line		Selecteer\ een\ &Regel
 menutrans Select\ &Block	Selecteer\ een\ Recht&hoek
 menutrans Select\ &All		Selecteer\ &Alles
- 
+
 " The GUI toolbar (for Win32 or GTK)
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

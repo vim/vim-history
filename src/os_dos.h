@@ -115,7 +115,6 @@
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
-#define DFLT_MAKEEF		"vim##.err"
 #define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/vimfiles/after"
 
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */

@@ -38,7 +38,7 @@ PreLink_Cmds=@if exist .\oleDbg\gvimd.pdb del .\oleDbg\gvimd.pdb
 !IF "$(CFG)" == ""
 CFG=Vim - Win32 Release gvim OLE
 !MESSAGE No configuration specified.  Defaulting to Vim - Win32 Release gvim OLE.
-!ENDIF 
+!ENDIF
 
 !IF "$(CFG)" != "Vim - Win32 Release gvim OLE"\
  && "$(CFG)" != "Vim - Win32 Debug gvim OLE"\
@@ -49,28 +49,28 @@ CFG=Vim - Win32 Release gvim OLE
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE on this makefile
 !MESSAGE by defining the macro CFG on the command line.  For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "Make_ivc.mak" CFG="Vim - Win32 Debug vim"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 !MESSAGE "Vim - Win32 Release gvim OLE" (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Debug gvim OLE"   (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Release gvim"     (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Debug gvim"       (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Release vim"      (based on "Win32 (x86) Console Application")
 !MESSAGE "Vim - Win32 Debug vim"        (based on "Win32 (x86) Console Application")
-!MESSAGE 
+!MESSAGE
 !ERROR An invalid configuration is specified.
-!ENDIF 
+!ENDIF
 
 !IF "$(OS)" == "Windows_NT"
 NULL=
 DEL_TREE = rmdir /s /q
-!ELSE 
+!ELSE
 NULL=nul
 DEL_TREE = deltree /y
-!ENDIF 
+!ENDIF
 ####################
 # Begin Project
 # PROP Target_Last_Scanned "Vim - Win32 Debug vim"
@@ -199,7 +199,7 @@ CPP_PROJ=$(CPP_PROJ) /Zi /Od /D "_DEBUG" /Fd.\Dbg/ /Fo.\Dbg/
 LINK32_FLAGS=$(LINK32_FLAGS) libcd.lib /subsystem:console /debug /profile /pdb:.\Dbg/vimd.pdb /map:.\Dbg/vimd.map /out:.\vimd.exe
 # ADD LINK32                 libcd.lib /subsystem:console /debug /profile /pdb:.\Dbg/vimd.pdb /map:.\Dbg/vimd.map /out:.\vimd.exe
 
-!ENDIF 
+!ENDIF
 
 ALL : .\$(VIM).exe vimrun.exe install.exe uninstal.exe xxd/xxd.exe
 
@@ -380,7 +380,7 @@ SOURCE=.\gui.c
 
 # PROP Exclude_From_Build 1
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 ####################
@@ -396,7 +396,7 @@ SOURCE=.\gui_w32.c
 
 # PROP Exclude_From_Build 1
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 ####################
@@ -442,7 +442,7 @@ SOURCE=.\if_ole.cpp
 
 # PROP Exclude_From_Build 1
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 ####################
@@ -485,7 +485,7 @@ SOURCE=.\if_ole.idl
 
 # PROP Exclude_From_Build 1
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 ####################
@@ -647,7 +647,7 @@ SOURCE=.\vim.rc
 
 # PROP Exclude_From_Build 1
 
-!ENDIF 
+!ENDIF
 
 # End Source File
 ####################

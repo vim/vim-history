@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 06
+*motion.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -679,7 +679,7 @@ They are only present when using a viminfo file |viminfo-file|.  Basically '0
 is the location of the cursor when you last exited Vim, '1 the last but one
 time, etc.  See |viminfo-file-marks|.
 
-							
+
 							*'[* *`[*
 '[  `[			To the first character of the previously changed
 			or yanked text.  {not in Vi}

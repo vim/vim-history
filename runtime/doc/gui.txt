@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ao.  Last change: 2001 Jul 04
+*gui.txt*       For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -313,7 +313,7 @@ button at the start, drag to the end and release.  To extend the selection,
 use the right mouse button when 'mousemodel' is "extend", or the left mouse
 button with the shift key pressed when 'mousemodel' is "popup".
 The middle mouse button pastes the text.
-The selection is removed when the selected text is scrolled or changed. 
+The selection is removed when the selected text is scrolled or changed.
 On the command line CTRL-Y can be used to copy the selection into the
 clipboard.
 

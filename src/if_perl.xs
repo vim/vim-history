@@ -574,6 +574,7 @@ ex_perl(eap)
 	vim_free(script);
     }
 
+#ifdef HAVE_SANDBOX
     if (sandbox)
     {
 	if ((safe = perl_get_sv( "VIM::safe", FALSE )) == NULL || !SvTRUE(safe))
@@ -588,6 +589,7 @@ ex_perl(eap)
 	}
     }
     else
+#endif
 	perl_eval_sv(sv, G_DISCARD | G_NOARGS);
 
     SvREFCNT_dec(sv);

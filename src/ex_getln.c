@@ -2025,9 +2025,12 @@ put_on_cmdline(str, len, redraw)
 #endif
 	    {
 		msg_no_more = TRUE;
+		i = cmdline_row;
 		msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
 					       ccline.cmdlen - ccline.cmdpos);
-		msg_clr_eos();
+		/* Avoid clearing the rest of the line too often. */
+		if (cmdline_row != i || ccline.overstrike)
+		    msg_clr_eos();
 		msg_no_more = FALSE;
 	    }
 	}

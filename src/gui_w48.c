@@ -1822,11 +1822,11 @@ process_message(void)
 	static char_u bytes[3] = {CSI, (char_u)KS_EXTRA, (char_u)KE_SNIFF};
 	add_to_input_buf(bytes,3); /* K_SNIFF */
 	sniff_request_waiting = 0;
-	want_sniff_request = 0;	
+	want_sniff_request = 0;
 	/* request is handled in normal.c */
     }
-    if(msg.message == WM_USER)
-    	return;
+    if (msg.message == WM_USER)
+	return;
 #endif
 
 #ifdef MSWIN_FIND_REPLACE
@@ -2330,8 +2330,11 @@ gui_mch_show_toolbar(int showit)
 
 #endif
 
+/*
+ * ":simalt" command.
+ */
     void
-gui_simulate_alt_key(exarg_T *eap)
+ex_simalt(exarg_T *eap)
 {
     char_u *keys = eap->arg;
 

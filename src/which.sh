@@ -4,7 +4,7 @@
 # "which" command is not supported everywhere.  Used by Makefile.
 
 IFS=":"
-for ac_dir in $PATH; do 
+for ac_dir in $PATH; do
 	if test -f "$ac_dir/$1"; then
 		echo "$ac_dir/$1"
 		break

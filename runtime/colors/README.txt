@@ -16,7 +16,7 @@ There are two basic ways to define a color scheme:
 
 2. Use the default Normal color and automatically adjust to the value of
    'background'.
-   	highlight clear Normal
+	highlight clear Normal
 	set background&
 	highlight clear
 	if &background == "light"

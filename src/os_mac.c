@@ -496,7 +496,7 @@ fname_case(name)
     UInt32	pathSize = STRLEN(name) + 1;
     char_u	*path;
     Boolean	isDirectory;
-    
+
     path = alloc(pathSize);
     if (path == NULL)
 	return;
@@ -931,7 +931,7 @@ mch_FullName(fname, buf, len, force)
 	    retval = FAIL;
 	    *newdir = NUL;
 	}
-	l = STRLEN(buf); 
+	l = STRLEN(buf);
 #ifdef USE_UNIXFILENAME
 	if (l > 0 && buf[l - 1] != '/' && *fname != NUL)
 	    STRCAT(buf, "/");
@@ -1396,7 +1396,7 @@ mch_new_shellsize(void)
     int
 mch_can_restore_title()
 {
-    return TRUE; 
+    return TRUE;
 }
 
     int

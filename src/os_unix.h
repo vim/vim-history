@@ -374,7 +374,6 @@ typedef struct dsc$descriptor   DESC;
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
-#define DFLT_MAKEEF		""
 
 #ifdef OS2
 # define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/vimfiles/after"

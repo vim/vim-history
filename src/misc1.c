@@ -24,7 +24,6 @@ static char_u *remove_tail __ARGS((char_u *p, char_u *pend, char_u *name));
 static char_u *remove_tail_with_ext __ARGS((char_u *p, char_u *pend, char_u *name));
 #endif
 static int get_indent_str __ARGS((char_u *ptr, int ts));
-static int temporary_nolist __ARGS((void));
 
 /*
  * Count the size (in window cells) of the indent in the current line.
@@ -279,7 +278,10 @@ open_line(dir, del_spaces, old_indent)
     char_u	*leader = NULL;		/* copy of comment leader */
 #endif
     char_u	*allocated = NULL;	/* allocated memory */
+#if defined(FEAT_SMARTINDENT) || defined(FEAT_VREPLACE) || defined(FEAT_LISP) \
+	|| defined(FEAT_CINDENT) || defined(FEAT_COMMENTS)
     char_u	*p;
+#endif
     int		saved_char = NUL;	/* init for GCC */
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_COMMENTS)
     pos_T	*pos;
@@ -293,7 +295,7 @@ open_line(dir, del_spaces, old_indent)
     int		no_si = FALSE;		/* reset did_si afterwards */
     int		first_char = NUL;	/* init for GCC */
 #endif
-#if defined(FEAT_LISP) || defined(FEAT_CINDENT)
+#if defined(FEAT_VREPLACE) && (defined(FEAT_LISP) || defined(FEAT_CINDENT))
     int		vreplace_mode;
 #endif
     int		did_append;		/* appended a new line */
@@ -305,6 +307,7 @@ open_line(dir, del_spaces, old_indent)
     if (saved_line == NULL)	    /* out of memory! */
 	return FALSE;
 
+#ifdef FEAT_VREPLACE
     if (State & VREPLACE_FLAG)
     {
 	/*
@@ -337,8 +340,13 @@ open_line(dir, del_spaces, old_indent)
 	    replace_push(*p++);
 	saved_line[curwin->w_cursor.col] = NUL;
     }
+#endif
 
-    if ((State & INSERT) && !(State & VREPLACE_FLAG))
+    if ((State & INSERT)
+#ifdef FEAT_VREPLACE
+	    && !(State & VREPLACE_FLAG)
+#endif
+	    )
     {
 	p_extra = saved_line + curwin->w_cursor.col;
 #ifdef FEAT_SMARTINDENT
@@ -402,12 +410,12 @@ open_line(dir, del_spaces, old_indent)
 
 	    old_cursor = curwin->w_cursor;
 	    ptr = saved_line;
-#ifdef FEAT_COMMENTS
+# ifdef FEAT_COMMENTS
 	    if (fo_do_comments)
 		lead_len = get_leader_len(ptr, NULL, FALSE);
 	    else
 		lead_len = 0;
-#endif
+# endif
 	    if (dir == FORWARD)
 	    {
 		/*
@@ -415,16 +423,16 @@ open_line(dir, del_spaces, old_indent)
 		 * recognised as comments.
 		 */
 		if (
-#ifdef FEAT_COMMENTS
+# ifdef FEAT_COMMENTS
 			lead_len == 0 &&
-#endif
+# endif
 			ptr[0] == '#')
 		{
 		    while (ptr[0] == '#' && curwin->w_cursor.lnum > 1)
 			ptr = ml_get(--curwin->w_cursor.lnum);
 		    newindent = get_indent();
 		}
-#ifdef FEAT_COMMENTS
+# ifdef FEAT_COMMENTS
 		if (fo_do_comments)
 		    lead_len = get_leader_len(ptr, NULL, FALSE);
 		else
@@ -464,7 +472,7 @@ open_line(dir, del_spaces, old_indent)
 		    }
 		}
 		else	/* Not a comment line */
-#endif
+# endif
 		{
 		    /* Find last non-blank in line */
 		    p = ptr + STRLEN(ptr) - 1;
@@ -526,9 +534,9 @@ open_line(dir, del_spaces, old_indent)
 		 * recognised as comments.
 		 */
 		if (
-#ifdef FEAT_COMMENTS
+# ifdef FEAT_COMMENTS
 			lead_len == 0 &&
-#endif
+# endif
 			ptr[0] == '#')
 		{
 		    int was_backslashed = FALSE;
@@ -918,13 +926,13 @@ open_line(dir, del_spaces, old_indent)
 	 * When in REPLACE mode, put the deleted blanks on the replace stack,
 	 * preceded by a NUL, so they can be put back when a BS is entered.
 	 */
-	if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+	if (REPLACE_NORMAL(State))
 	    replace_push(NUL);	    /* end of extra blanks */
 	if (curbuf->b_p_ai || del_spaces)
 	{
 	    while (*p_extra == ' ' || *p_extra == '\t')
 	    {
-		if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+		if (REPLACE_NORMAL(State))
 		    replace_push(*p_extra);
 		++p_extra;
 	    }
@@ -951,7 +959,9 @@ open_line(dir, del_spaces, old_indent)
     old_cursor = curwin->w_cursor;
     if (dir == BACKWARD)
 	--curwin->w_cursor.lnum;
+#ifdef FEAT_VREPLACE
     if (!(State & VREPLACE_FLAG) || old_cursor.lnum >= orig_line_count)
+#endif
     {
 	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_T)0, FALSE)
 								      == FAIL)
@@ -961,6 +971,7 @@ open_line(dir, del_spaces, old_indent)
 	mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L);
 	did_append = TRUE;
     }
+#ifdef FEAT_VREPLACE
     else
     {
 	/*
@@ -980,6 +991,7 @@ open_line(dir, del_spaces, old_indent)
 	curwin->w_cursor.lnum--;
 	did_append = FALSE;
     }
+#endif
 
     if (newindent
 #ifdef FEAT_SMARTINDENT
@@ -1003,7 +1015,7 @@ open_line(dir, del_spaces, old_indent)
 	 * In REPLACE mode, for each character in the new indent, there must
 	 * be a NUL on the replace stack, for when it is deleted with BS
 	 */
-	if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+	if (REPLACE_NORMAL(State))
 	    for (n = 0; n < (int)curwin->w_cursor.col; ++n)
 		replace_push(NUL);
 	newcol += curwin->w_cursor.col;
@@ -1018,7 +1030,7 @@ open_line(dir, del_spaces, old_indent)
      * In REPLACE mode, for each character in the extra leader, there must be
      * a NUL on the replace stack, for when it is deleted with BS.
      */
-    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+    if (REPLACE_NORMAL(State))
 	while (lead_len-- > 0)
 	    replace_push(NUL);
 #endif
@@ -1059,7 +1071,7 @@ open_line(dir, del_spaces, old_indent)
     curwin->w_cursor.coladd = 0;
 #endif
 
-#if defined(FEAT_LISP) || defined(FEAT_CINDENT)
+#if defined(FEAT_VREPLACE) && (defined(FEAT_LISP) || defined(FEAT_CINDENT))
     /*
      * In VREPLACE mode, we are handling the replace stack ourselves, so stop
      * fixthisline() from doing it (via change_indent()) by telling it we're in
@@ -1111,11 +1123,12 @@ open_line(dir, del_spaces, old_indent)
 	ai_col = (colnr_T)(skipwhite(p) - p);
     }
 #endif
-#if defined(FEAT_LISP) || defined(FEAT_CINDENT)
+#if defined(FEAT_VREPLACE) && (defined(FEAT_LISP) || defined(FEAT_CINDENT))
     if (vreplace_mode != 0)
 	State = vreplace_mode;
 #endif
 
+#ifdef FEAT_VREPLACE
     /*
      * Finally, VREPLACE gets the stuff on the new line, then puts back the
      * original line, and inserts the new stuff char by char, pushing old stuff
@@ -1139,6 +1152,7 @@ open_line(dir, del_spaces, old_indent)
 	ins_bytes(p_extra);	/* will call changed_bytes() */
 	next_line = NULL;
     }
+#endif
 
     retval = TRUE;		/* success! */
 theend:
@@ -1465,21 +1479,7 @@ plines_m_win(wp, first, last)
     return (count);
 }
 
-/*
- * Disable 'list' temporarily, unless 'cpo' contains the 'L' flag.
- * Returns the old value of list, so when finished, curwin->w_p_list should be
- * set back to this.
- */
-    static int
-temporary_nolist()
-{
-    int	    old_list = curwin->w_p_list;
-
-    if (old_list && vim_strchr(p_cpo, CPO_LISTWM) == NULL)
-	curwin->w_p_list = FALSE;
-    return old_list;
-}
-
+#if defined(FEAT_VREPLACE) || defined(FEAT_INS_EXPAND) || defined(PROTO)
 /*
  * Insert string "p" at the cursor position.  Stops at a NUL byte.
  * Handles Replace mode and multi-byte characters.
@@ -1490,7 +1490,10 @@ ins_bytes(p)
 {
     ins_bytes_len(p, (int)STRLEN(p));
 }
+#endif
 
+#if defined(FEAT_VREPLACE) || defined(FEAT_INS_EXPAND) \
+	|| defined(FEAT_COMMENTS) || defined(FEAT_MBYTE) || defined(PROTO)
 /*
  * Insert string "p" with length "len" at the cursor position.
  * Handles Replace mode and multi-byte characters.
@@ -1501,7 +1504,7 @@ ins_bytes_len(p, len)
     int		len;
 {
     int		i;
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
     int		n;
 
     for (i = 0; i < len; i += n)
@@ -1509,11 +1512,12 @@ ins_bytes_len(p, len)
 	n = (*mb_ptr2len_check)(p + i);
 	ins_char_bytes(p + i, n);
     }
-#else
+# else
     for (i = 0; i < len; ++i)
 	ins_char(p[i]);
-#endif
+# endif
 }
+#endif
 
 /*
  * Insert or replace a single character at the cursor position.
@@ -1577,6 +1581,7 @@ ins_char_bytes(buf, charlen)
 
     if (State & REPLACE_FLAG)
     {
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	{
 	    colnr_T	new_vcol = 0;   /* init for GCC */
@@ -1587,12 +1592,20 @@ ins_char_bytes(buf, charlen)
 #endif
 
 	    /*
+	     * Disable 'list' temporarily, unless 'cpo' contains the 'L' flag.
+	     * Returns the old value of list, so when finished,
+	     * curwin->w_p_list should be set back to this.
+	     */
+	    old_list = curwin->w_p_list;
+	    if (old_list && vim_strchr(p_cpo, CPO_LISTWM) == NULL)
+		curwin->w_p_list = FALSE;
+
+	    /*
 	     * In virtual replace mode each character may replace one or more
 	     * characters (zero if it's a TAB).  Count the number of bytes to
 	     * be deleted to make room for the new character, counting screen
 	     * cells.  May result in adding spaces to fill a gap.
 	     */
-	    old_list = temporary_nolist();
 	    getvcol(curwin, &curwin->w_cursor, NULL, &vcol, NULL);
 #ifndef FEAT_MBYTE
 	    buf[0] = c;
@@ -1617,7 +1630,9 @@ ins_char_bytes(buf, charlen)
 	    }
 	    curwin->w_p_list = old_list;
 	}
-	else if (oldp[col] != NUL)
+	else
+#endif
+	    if (oldp[col] != NUL)
 	{
 	    /* normal replace */
 #ifdef FEAT_MBYTE
@@ -4945,14 +4960,13 @@ get_c_indent()
 		{
 		    if (ind_unclosed_whiteok)
 			our_paren_pos.col++;
-		    else {
-			char_u	*look;
-
+		    else
+		    {
 			col = our_paren_pos.col + 1;
-			look = ml_get(our_paren_pos.lnum);
-			while (vim_iswhite(look[col]))
+			l = ml_get(our_paren_pos.lnum);
+			while (vim_iswhite(l[col]))
 			    col++;
-			if (look[col] != NUL)	/* In case of trailing space */
+			if (l[col] != NUL)	/* In case of trailing space */
 			    our_paren_pos.col = col;
 			else
 			    our_paren_pos.col++;

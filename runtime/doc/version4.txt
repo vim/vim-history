@@ -1,4 +1,4 @@
-*version4.txt*  For Vim version 6.0ao.  Last change: 2001 Mar 23
+*version4.txt*  For Vim version 6.0ap.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

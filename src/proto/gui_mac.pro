@@ -6,7 +6,7 @@
 
 pascal Boolean WaitNextEventWrp __PARMS((EventMask eventMask, EventRecord *theEvent, UInt32 sleep, RgnHandle mouseRgn));
 pascal void gui_mac_scroll_action __PARMS((ControlHandle theControl, short partCode));
-/*pascal void gui_mac_drag_thumb __PARMS((ControlHandle theControl));*/
+pascal void gui_mac_drag_thumb (ControlHandle theControl, short partCode);
 void gui_mac_handle_event __PARMS((EventRecord *event));
 void gui_mac_doMouseDown __PARMS((EventRecord *theEvent));
 void gui_mac_do_key __PARMS((EventRecord *theEvent));
@@ -39,6 +39,7 @@ void gui_mch_destroy_scrollbar __PARMS((scrollbar_T *sb));
 int gui_mch_adjust_charsize __ARGS((void));
 int gui_mch_init_font __PARMS((char_u *font_name, int fontset));
 GuiFont gui_mch_get_font __PARMS((char_u *name, int giveErrorIfMissing));
+GuiFont gui_mac_find_font __PARMS((char_u *font_name));
 void gui_mch_set_font __PARMS((GuiFont font));
 int gui_mch_same_font __PARMS((GuiFont f1, GuiFont f2));
 void gui_mch_free_font __PARMS((GuiFont font));
@@ -83,6 +84,10 @@ int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *but
 char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
 
 
+char_u *C2Pascal_save (char_u *Cstring);
+char_u *C2Pascal_save_and_remove_backslash(char_u *Cstring);
+int_u EventModifiers2VimMouseModifiers(EventModifiers macModifiers);
+char_u **new_fnames_from_AEDesc(AEDesc *theList, long *numFiles, OSErr *error);
 
 
 void gui_request_selection __PARMS((void));
@@ -102,4 +107,32 @@ void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
 void clip_mch_request_selection __ARGS((VimClipboard *cbd));
 void clip_mch_set_selection __ARGS((VimClipboard *cbd));
 int clip_mch_own_selection __ARGS((VimClipboard *cbd));
+
+pascal	OSErr	FindProcessBySignature( const OSType targetType,
+					const OSType targetCreator, ProcessSerialNumberPtr psnPtr );
+OSErr   InstallAEHandlers (void);
+pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_aevt_oapp_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_aevt_quit_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_aevt_pdoc_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_unknown_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+/* Shoulde we return MenuItemIndex? IMO yes, I did that for 5.7 ak*/
+short gui_mac_get_menu_item_index (vimmenu_T *pMenu);
+
+pascal OSErr Handle_KAHL_SRCH_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_KAHL_MOD_AE  (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+pascal OSErr Handle_KAHL_GTTX_AE (const AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
+void Send_KAHL_MOD_AE (buf_T *buf);
+
+void gui_mac_doInContentClick __PARMS((EventRecord *theEvent, WindowPtr	 whichWindow));
+void gui_mac_doInDragClick __PARMS((Point where, WindowPtr whichWindow));
+void gui_mac_doInGrowClick __PARMS((Point where, WindowPtr whichWindow));
+void gui_mac_doUpdateEvent __PARMS((EventRecord *event));
+void gui_mac_doActivateEvent __PARMS((EventRecord *event));
+void gui_mac_doSuspendEvent __PARMS((EventRecord *event));
+void gui_mac_doKeyEvent __PARMS((EventRecord *theEvent));
+void gui_mac_doMouseDownEvent __PARMS((EventRecord *theEvent));
+void gui_mac_doMouseMovedEvent __PARMS((EventRecord *event));
+void gui_mac_doMouseUpEvent __PARMS((EventRecord *theEvent));
+
 /* vim: set ft=c : */

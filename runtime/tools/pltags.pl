@@ -3,11 +3,11 @@
 # pltags - create a tags file for Perl code, for use by vi(m)
 #
 # Distributed with Vim <http://www.vim.org/>, latest version always available
-# at <http://www.mscha.com/cgi-bin/page/mscha.html?pltags#tools>
+# at <http://www.mscha.com/mscha.html?pltags#tools>
 #
-# Version 2.1, 24 June 2000
+# Version 2.21, 23 July 2001
 #
-# Written by Michael Schaap <mscha@mscha.com>.  Suggestions for improvement
+# Written by Michael Schaap <pltags@mscha.com>.  Suggestions for improvement
 # are very welcome!
 #
 # This script will not work with Perl 4 or below!
@@ -18,6 +18,10 @@
 #                 support for variables, packages, Exuberant Ctags extensions
 #  2.1  Jun 2000  Fixed critical bug (typo in comment) ;-)
 #                 Support multiple level packages (e.g. Archive::Zip::Member)
+#  2.2  Jul 2001  'Glob' wildcards - especially useful under Windows
+#                 (thanks to Serge Sivkov and Jason King)
+#                 Bug fix: reset package name for each file
+#  2.21 Jul 2001  Oops... bug in variable detection (/local../ -> /^local.../)
 
 # Complain about undeclared variables
 use strict;
@@ -33,7 +37,7 @@ my $do_exts = 1;    # --extensions, --noextensions
                     #                     include Exuberant Ctags extensions
 
 # Global variables
-my $VERSION = "2.1";    # pltags version
+my $VERSION = "2.21";   # pltags version
 my $status = 0;         # GetOptions return value
 my $file = "";          # File being processed
 my @tags = ();          # List of produced tags
@@ -173,8 +177,9 @@ unless ($status && @ARGV)
     exit;
 }
 
-# Loop through files on command line
-foreach $file (@ARGV)
+# Loop through files on command line - 'glob' any wildcards, since Windows
+# doesn't do this for us
+foreach $file (map { glob } @ARGV)
 {
     # Skip if this is not a file we can open.  Also skip tags files and backup
     # files
@@ -184,6 +189,7 @@ foreach $file (@ARGV)
     print "Tagging file $file...\n";
 
     $is_pkg = 0;
+    $package_name = "";
     $has_subs = 0;
     $var_continues = 0;
 
@@ -202,7 +208,7 @@ foreach $file (@ARGV)
 
         # This is a variable declaration if one was started on the previous
         # line, or if this line starts with my or local
-        if ($var_continues or ($stmt =~/^my\b/) or ($stmt =~/local\b/))
+        if ($var_continues or ($stmt =~/^my\b/) or ($stmt =~/^local\b/))
         {
             # The declaration continues if the line does not end with ;
             $var_continues = ($stmt !~ /;$/);

@@ -2898,6 +2898,8 @@ extend:
 	    if (include)	/* "as" gets twice as much as "is" */
 		count *= 2;
 	    findsent_forward(count, at_start_sent);
+	    if (*p_sel == 'e')
+		++curwin->w_cursor.col;
 	}
 	return OK;
     }
@@ -2948,6 +2950,8 @@ extend:
 	/* avoid getting stuck with "is" on a single space before a sent. */
 	if (equal(start_pos, curwin->w_cursor))
 	    goto extend;
+	if (*p_sel == 'e')
+	    ++curwin->w_cursor.col;
 	VIsual = start_pos;
 	VIsual_mode = 'v';
 	redraw_curbuf_later(INVERTED);	/* update the inversion */

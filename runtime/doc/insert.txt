@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0ao.  Last change: 2001 Jul 04
+*insert.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -477,6 +477,8 @@ last one).  {Vi does not have the 'expandtab' option}
 6. Virtual replace mode		*vreplace-mode* *Virtual-replace-mode*
 
 Enter Virtual replace mode with the "gR" command in normal mode.
+{not available when compiled without the +vreplace feature}
+{Vi does not have Virtual replace mode}
 
 Virtual replace mode is similar to Replace mode, but instead of replacing
 actual characters in the file, you are replacing screen real estate, so that
@@ -512,7 +514,6 @@ be inserted and the second will replace the CTRL character.
 
 This mode is very useful for editing <Tab> separated columns in tables, for
 entering new data while keeping all the columns aligned.
-{Vi does not have Virtual replace mode}
 
 ==============================================================================
 7. Insert mode completion				*ins-completion*
@@ -877,7 +878,7 @@ gi			Insert text in the same position as where Insert mode
 			was stopped last time in the current buffer.
 			This uses the |'^| mark.  It's different from "`^i"
 			when the mark is past the end of the line.
-			The position is corrected for inserted/deleted lines, 
+			The position is corrected for inserted/deleted lines,
 			but NOT for inserted/deleted characters.
 			{not in Vi}
 

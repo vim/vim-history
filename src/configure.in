@@ -1906,11 +1906,11 @@ if test "$enable_nls" = "yes"; then
       dnl _nl_msg_cat_cntr is required for GNU gettext
       AC_MSG_CHECKING([for _nl_msg_cat_cntr])
       AC_TRY_LINK(
-      		[#include <libintl.h>
+		[#include <libintl.h>
 		extern int _nl_msg_cat_cntr;],
-      		[++_nl_msg_cat_cntr;],
-      		AC_MSG_RESULT([yes]); AC_DEFINE(HAVE_NL_MSG_CAT_CNTR),
-      		AC_MSG_RESULT([no]))
+		[++_nl_msg_cat_cntr;],
+		AC_MSG_RESULT([yes]); AC_DEFINE(HAVE_NL_MSG_CAT_CNTR),
+		AC_MSG_RESULT([no]))
     fi
   else
     AC_MSG_RESULT([no "po" directory - disabled]);

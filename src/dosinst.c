@@ -13,84 +13,25 @@
  * Compile with Make_mvc.mak, Make_bc3.mak, Make_bc5.mak or Make_djg.mak.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#ifndef UNIX_LINT
-# include <io.h>
-# include <ctype.h>
-
-# ifndef __CYGWIN__
-#  include <direct.h>
-# endif
-
-# if defined(_WIN64) || defined(WIN32)
-#  define WIN3264
-#  include <windows.h>
-# else
-#  include <dir.h>
-#  include <bios.h>
-#  include <dos.h>
-# endif
-#endif
-
-#ifdef UNIX_LINT
-/* Running lint on Unix: Some things are missing. */
-char *searchpath(char *name);
-#endif
-
-#if defined(DJGPP) || defined(UNIX_LINT)
-# include <unistd.h>
-# include <errno.h>
-#endif
-
-/* shlobj.h is needed for shortcut creation */
-#ifdef WIN3264
-# include <shlobj.h>
-#endif
-
-#if defined(DJGPP) || defined(UNIX_LINT)
-# define vim_mkdir(x, y) mkdir((char *)(x), y)
-#else
-# ifdef WIN3264
-#  define vim_mkdir(x, y) _mkdir((char *)(x))
-# else
-#  define vim_mkdir(x, y) mkdir((char *)(x))
-# endif
-#endif
-/* ---------------------------------------- */
+/*
+ * Include common code for dosinst.c and uninstal.c.
+ */
+#define DOSINST
+#include "dosinst.h"
 
 /* Macro to do an error check I was typing over and over */
 #define CHECK_REG_ERROR(code) if (code != ERROR_SUCCESS) { printf("%d error number:  %d\n", __LINE__, code); return 1; }
 
-#include "version.h"
-
-/*
- * Include common code for dosinst.c and uninstal.c.
- */
-#include "dosinst.h"
-
-char	installdir[BUFSIZE];	/* top of the installation dir, where the
-				   install.exe is located, E.g.:
-				   "c:\vim\vim60" */
-int	runtimeidx;		/* index in installdir[] where "vim60" starts */
 int	has_vim = 0;		/* installable vim.exe exists */
 int	has_gvim = 0;		/* installable gvim.exe exists */
-
-char	*sysdrive;		/* system drive or "c:\" */
 
 char	oldvimrc[BUFSIZE];	/* name of existing vimrc file */
 char	vimrc[BUFSIZE];		/* name of vimrc file to create */
 
-int	interactive;		/* non-zero when running interactively */
-
-char	*default_bat_dir = NULL;    /* when not NULL, use this as the default
-				       directory to write .bat files in */
+char	*default_bat_dir = NULL;  /* when not NULL, use this as the default
+				     directory to write .bat files in */
 char	*default_vim_dir = NULL;  /* when not NULL, use this as the default
-				   install dir for NSIS */
+				     install dir for NSIS */
 
 /*
  * Structure used for each choice the user can make.
@@ -190,30 +131,6 @@ static char	*(vimfiles_subdirs[]) =
     "syntax",
 };
 
-    static void
-myexit(int n)
-{
-    if (!interactive)
-    {
-	/* Present a prompt, otherwise error messages can't be read. */
-	printf("Press Enter to continue\n");
-	rewind(stdin);
-	(void)getchar();
-    }
-    exit(n);
-}
-
-/*
- * The toupper() in Bcc 5.5 doesn't work, use our own implementation.
- */
-    static int
-mytoupper(int c)
-{
-    if (c >= 'a' && c <= 'z')
-	return c - 'a' + 'A';
-    return c;
-}
-
 /*
  * Copy a directory name from "dir" to "buf", doubling backslashes.
  * Also make sure it ends in a double backslash.
@@ -237,23 +154,6 @@ double_bs(char *dir, char *buf)
 	*d++ = '\\';
     }
     *d = NUL;
-}
-
-/*
- * Remove the tail from a file or directory name.
- * Puts a NUL on the last '/' or '\'.
- */
-    static void
-remove_tail(char *path)
-{
-    int		i;
-
-    for (i = strlen(path) - 1; i > 0; --i)
-	if (path[i] == '/' || path[i] == '\\')
-	{
-	    path[i] = NUL;
-	    break;
-	}
 }
 
 /*
@@ -286,259 +186,6 @@ get_choice(char **table, int entries)
     while (answer < 1 || answer >= entries);
 
     return answer;
-}
-
-/*
- * Append a backslash to "name" if there isn't one yet.
- */
-    static void
-add_pathsep(char *name)
-{
-    int		len = strlen(name);
-
-    if (len > 0 && name[len - 1] != '\\' && name[len - 1] != '/')
-	strcat(name, "\\");
-}
-
-#if 0
-/*
- * Return TRUE when we're on Windows 95/98/ME.
- */
-    static int
-win95(void)
-{
-    static int done = FALSE;
-    static DWORD PlatformId;
-
-    if (!done)
-    {
-	OSVERSIONINFO ovi;
-
-	ovi.dwOSVersionInfoSize = sizeof(ovi);
-	GetVersionEx(&ovi);
-	PlatformId = ovi.dwPlatformId;
-	done = TRUE;
-    }
-    /* Win NT/2000/XP is VER_PLATFORM_WIN32_NT */
-    return PlatformId == VER_PLATFORM_WIN32_WINDOWS;
-}
-#endif
-
-/*
- * The normal chdir() does not change the default drive.  This one does.
- */
-/*ARGSUSED*/
-    int
-change_drive(int drive)
-{
-#ifdef WIN3264
-    char temp[3] = "-:";
-    temp[0] = (char)(drive + 'A' - 1);
-    return !SetCurrentDirectory(temp);
-#else
-# ifndef UNIX_LINT
-    union REGS regs;
-
-    regs.h.ah = 0x0e;
-    regs.h.dl = drive - 1;
-    intdos(&regs, &regs);   /* set default drive */
-    regs.h.ah = 0x19;
-    intdos(&regs, &regs);   /* get default drive */
-    if (regs.h.al == drive - 1)
-	return 0;
-# endif
-    return -1;
-#endif
-}
-
-/*
- * Change directory to "path".
- * Return 0 for success, -1 for failure.
- */
-    int
-mch_chdir(char *path)
-{
-    if (path[0] == NUL)		/* just checking... */
-	return 0;
-    if (path[1] == ':')		/* has a drive name */
-    {
-	if (change_drive(mytoupper(path[0]) - 'A' + 1))
-	    return -1;		/* invalid drive name */
-	path += 2;
-    }
-    if (*path == NUL)		/* drive name only */
-	return 0;
-    return chdir(path);		/* let the normal chdir() do the rest */
-}
-
-/*
- * Expand the executable name into a full path name.
- */
-#if defined(__BORLANDC__) && !defined(WIN3264)
-
-/* Only Borland C++ has this. */
-# define my_fullpath(b, n, l) _fullpath(b, n, l)
-
-#else
-    static char *
-my_fullpath(char *buf, char *fname, int len)
-{
-# ifdef WIN3264
-    /* Only GetModuleFileName() will get the long file name path.
-     * GetFullPathName() may still use the short (FAT) name. */
-    DWORD len_read = GetModuleFileName(NULL, buf, (size_t)len);
-
-    return (len_read > 0 && len_read < (DWORD)len) ? buf : NULL;
-# else
-    char	olddir[BUFSIZE];
-    char	*p, *q;
-    int		c;
-    char	*retval = buf;
-
-    if (strchr(fname, ':') != NULL)	/* allready expanded */
-    {
-	strncpy(buf, fname, len);
-    }
-    else
-    {
-	*buf = NUL;
-	/*
-	 * change to the directory for a moment,
-	 * and then do the getwd() (and get back to where we were).
-	 * This will get the correct path name with "../" things.
-	 */
-	p = strrchr(fname, '/');
-	q = strrchr(fname, '\\');
-	if (q != NULL && (p == NULL || q > p))
-	    p = q;
-	q = strrchr(fname, ':');
-	if (q != NULL && (p == NULL || q > p))
-	    p = q;
-	if (p != NULL)
-	{
-	    if (getcwd(olddir, BUFSIZE) == NULL)
-	    {
-		p = NULL;		/* can't get current dir: don't chdir */
-		retval = NULL;
-	    }
-	    else
-	    {
-		if (p == fname)		/* /fname		*/
-		    q = p + 1;		/* -> /			*/
-		else if (q + 1 == p)	/* ... c:\foo		*/
-		    q = p + 1;		/* -> c:\		*/
-		else			/* but c:\foo\bar	*/
-		    q = p;		/* -> c:\foo		*/
-
-		c = *q;			/* truncate at start of fname */
-		*q = NUL;
-		if (mch_chdir(fname))	/* change to the directory */
-		    retval = NULL;
-		else
-		{
-		    fname = q;
-		    if (c == '\\')	/* if we cut the name at a */
-			fname++;	/* '\', don't add it again */
-		}
-		*q = c;
-	    }
-	}
-	if (getcwd(buf, len) == NULL)
-	{
-	    retval = NULL;
-	    *buf = NUL;
-	}
-	/*
-	 * Concatenate the file name to the path.
-	 */
-	if (strlen(buf) + strlen(fname) >= len - 1)
-	{
-	    printf("ERROR: File name too long!\n");
-	    myexit(1);
-	}
-	add_pathsep(buf);
-	strcat(buf, fname);
-	if (p)
-	    mch_chdir(olddir);
-    }
-
-    /* Replace forward slashes with backslashes, required for the path to a
-     * command. */
-    while ((p = strchr(buf, '/')) != NULL)
-	*p = '\\';
-
-    return retval;
-# endif
-}
-#endif
-
-/*
- * Run an external command and wait for it to finish.
- */
-    static void
-run_command(char *cmd)
-{
-    char	*cmd_path;
-    char	cmd_buf[BUFSIZE];
-    char	*p;
-
-    /* On WinNT, 'start' is a shell built-in for cmd.exe rather than an
-     * executable (start.exe) like in Win9x.  DJGPP, being a DOS program,
-     * is given the COMSPEC command.com by WinNT, so we have to find
-     * cmd.exe manually and use it. */
-    cmd_path = searchpath_save("cmd.exe");
-    if (cmd_path != NULL)
-    {
-	/* There is a cmd.exe, so this might be Windows NT.  If it is,
-	 * we need to call cmd.exe explicitly.  If it is a later OS,
-	 * calling cmd.exe won't hurt if it is present.
-	 */
-	/* Replace the slashes with backslashes. */
-	while ((p = strchr(cmd_path, '/')) != NULL)
-	    *p = '\\';
-	sprintf(cmd_buf, "%s /c start /w %s", cmd_path, cmd);
-	free(cmd_path);
-    }
-    else
-    {
-	/* No cmd.exe, just make the call and let the system handle it. */
-	sprintf(cmd_buf, "start /w %s", cmd);
-    }
-    system(cmd_buf);
-}
-
-/*
- * Setup for using this program.
- * Sets "installdir[]".
- */
-    static void
-do_inits(char **argv)
-{
-#ifdef DJGPP
-    /*
-     * Use Long File Names by default, if $LFN not set.
-     */
-    if (getenv("LFN") == NULL)
-	putenv("LFN=y");
-#endif
-
-    /* Find out the full path of our executable. */
-    if (my_fullpath(installdir, argv[0], BUFSIZE) == NULL)
-    {
-	printf("ERROR: Cannot get name of executable\n");
-	myexit(1);
-    }
-    /* remove the tail, the executable name "install.exe" */
-    remove_tail(installdir);
-
-    /* change to the installdir */
-    mch_chdir(installdir);
-
-    /* Find the system drive.  Only used for searching the Vim executable, not
-     * very important. */
-    sysdrive = getenv("SYSTEMDRIVE");
-    if (sysdrive == NULL || *sysdrive == NUL)
-	sysdrive = "C:\\";
 }
 
 /*
@@ -598,12 +245,18 @@ check_unpack(void)
 
 /*
  * Compare paths "p[plen]" to "q[qlen]".  Return 0 if they match.
+ * Ignores case and differences between '/' and '\'.
+ * "plen" and "qlen" can be negative, strlen() is used then.
  */
     static int
 pathcmp(char *p, int plen, char *q, int qlen)
 {
     int		i;
 
+    if (plen < 0)
+	plen = strlen(p);
+    if (qlen < 0)
+	qlen = strlen(q);
     for (i = 0; ; ++i)
     {
 	/* End of "p": check if "q" also ends or just has a slash. */
@@ -749,6 +402,7 @@ get_vim_env(void)
 	vim = getenv("VIM");
 	if (vim == NULL || *vim == 0)
 	{
+	    /* Use the directory from an old uninstall entry. */
 	    if (default_vim_dir != NULL)
 		vim = default_vim_dir;
 	    else
@@ -831,7 +485,7 @@ uninstall_check(void)
             printf("\n        \"%s\"\n\n", temp_string_buffer);
 
             printf("Installing the new version will disable part of the existing version.\n");
-            printf("(The batch files used for the console and the \"Edit with Vim\" entry in\n");
+            printf("(The batch files used in a console and the \"Edit with Vim\" entry in\n");
 	    printf("the popup menu will use the new version)\n");
 
             printf("\nDo you want to uninstall \"%s\" now?\n(y)es/(n)o)  ", temp_string_buffer);
@@ -843,8 +497,7 @@ uninstall_check(void)
 	    local_bufsize = BUFSIZE;
 	    CHECK_REG_ERROR(code);
 
-	    /* Remember the directory, it is used as the default
-	     * for NSIS. */
+	    /* Remember the directory, it is used as the default for NSIS. */
 	    default_vim_dir = alloc(strlen(temp_string_buffer) + 1);
 	    strcpy(default_vim_dir, temp_string_buffer);
 	    remove_tail(default_vim_dir);
@@ -876,7 +529,15 @@ uninstall_check(void)
 			/* Find existing .bat files before deleting them.  */
 			find_bat_exe(TRUE);
 
-			/* Execute the uninstall program. */
+			/* Execute the uninstall program.  Put it in double
+			 * quotes if there is an embedded space. */
+			if (strchr(temp_string_buffer, ' ') != NULL)
+			{
+			    char buf[BUFSIZE];
+
+			    strcpy(buf, temp_string_buffer);
+			    sprintf(temp_string_buffer, "\"%s\"", buf);
+			}
 			run_command(temp_string_buffer);
 
                         /* Check if an unistall reg key was deleted.
@@ -925,14 +586,14 @@ inspect_system(void)
     int		i;
     int		foundone;
 
+    /* This may take a little while, let the user know what we're doing. */
     printf("Inspecting system...\n");
 
     /*
      * If $VIM is set, check that it's pointing to our directory.
      */
     p = getenv("VIM");
-    if (p != NULL
-	       && pathcmp(p, (int)strlen(p), installdir, runtimeidx - 1) != 0)
+    if (p != NULL && pathcmp(p, -1, installdir, runtimeidx - 1) != 0)
     {
 	printf("------------------------------------------------------\n");
 	printf("$VIM is set to \"%s\".\n", p);
@@ -954,8 +615,7 @@ inspect_system(void)
      * If $VIMRUNTIME is set, check that it's pointing to our runtime directory.
      */
     p = getenv("VIMRUNTIME");
-    if (p != NULL
-	   && pathcmp(p, (int)strlen(p), installdir, strlen(installdir)) != 0)
+    if (p != NULL && pathcmp(p, -1, installdir, -1) != 0)
     {
 	printf("------------------------------------------------------\n");
 	printf("$VIMRUNTIME is set to \"%s\".\n", p);
@@ -1039,7 +699,7 @@ add_dummy_choice(void)
  */
 
 /*
- * Install the vim.bat or gvim.bat file.
+ * Install the vim.bat, gvim.bat, etc. files.
  */
     static void
 install_bat_choice(int idx)
@@ -1074,6 +734,12 @@ install_bat_choice(int idx)
 	    add_pathsep(buf);
 	    strcat(buf, exename);
 
+	    /* Give an error message when the executable could not be found. */
+	    fprintf(fd, "if exist \"%%VIM%%\\%s\" goto havevim\n", buf);
+	    fprintf(fd, "echo \"%%VIM%%\\%s\" not found\n", buf);
+	    fprintf(fd, "goto eof\n\n");
+	    fprintf(fd, ":havevim\n");
+
 	    fprintf(fd, "if .%%OS%%==.Windows_NT goto ntaction\n\n");
 
 	    fprintf(fd, "rem for Win95 collect the arguments in VIMARGS\n");
@@ -1092,9 +758,9 @@ install_bat_choice(int idx)
 
 	    /* Do use quotes here if the path includes a space. */
 	    if (strchr(installdir, ' ') != NULL)
-		fprintf(fd, "\"%%VIM%%\\%s\" %s%%VIMARGS%%\n", buf, vimarg);
+		fprintf(fd, "\"%%VIM%%\\%s\" %s %%VIMARGS%%\n", buf, vimarg);
 	    else
-		fprintf(fd, "%%VIM%%\\%s %s%%VIMARGS%%\n", buf, vimarg);
+		fprintf(fd, "%%VIM%%\\%s %s %%VIMARGS%%\n", buf, vimarg);
 	    fprintf(fd, "set VIMARGS=\n");
 	    fprintf(fd, "goto eof\n\n");
 
@@ -1104,13 +770,13 @@ install_bat_choice(int idx)
 	    /* For gvim.exe use "start /b" to avoid that the console window
 	     * stays open. */
 	    if (*exename == 'g')
-		fprintf(fd, "start /b ");
+		fprintf(fd, "start \"dummy\" /b ");
 
 	    /* Do use quotes here if the path includes a space. */
 	    if (strchr(installdir, ' ') != NULL)
-		fprintf(fd, "\"%%VIM%%\\%s\" %s%%*\n", buf, vimarg);
+		fprintf(fd, "\"%%VIM%%\\%s\" %s %%*\n", buf, vimarg);
 	    else
-		fprintf(fd, "%%VIM%%\\%s %s%%*\n", buf, vimarg);
+		fprintf(fd, "%%VIM%%\\%s %s %%*\n", buf, vimarg);
 
 	    fprintf(fd, "\n:eof\n");
 
@@ -1564,7 +1230,8 @@ install_registry(void)
 
 	    fprintf(fd, "HKEY_CLASSES_ROOT\\CLSID\\%s\n", vim_ext_clsid);
 	    fprintf(fd, "@=\"%s\"\n", vim_ext_name);
-	    fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\%s\\InProcServer32]\n", vim_ext_clsid);
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\%s\\InProcServer32]\n",
+							       vim_ext_clsid);
 	    fprintf(fd, "@=\"%sgvimext.dll\"\n", buf);
 	    fprintf(fd, "\"ThreadingModel\"=\"%s\"\n", vim_ext_ThreadingModel);
 	    fprintf(fd, "\n");
@@ -1584,12 +1251,17 @@ install_registry(void)
 	/* The registry entries for uninstalling the menu */
 	fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim " VIM_VERSION_SHORT "]\n");
 
-	fprintf(fd, "\"DisplayName\"=\"Vim " VIM_VERSION_SHORT "\"\n");
 	/* For the NSIS installer use the generated uninstaller. */
 	if (interactive)
+	{
+	    fprintf(fd, "\"DisplayName\"=\"Vim " VIM_VERSION_SHORT "\"\n");
 	    fprintf(fd, "\"UninstallString\"=\"%suninstal.exe\"\n", buf);
+	}
 	else
+	{
+	    fprintf(fd, "\"DisplayName\"=\"Vim " VIM_VERSION_SHORT " (self-installing)\"\n");
 	    fprintf(fd, "\"UninstallString\"=\"%suninstall-gui.exe\"\n", buf);
+	}
 
 	fclose(fd);
 
@@ -1648,8 +1320,7 @@ init_popup_choice(void)
  *
  * returns 0 on failure, non-zero on successful completion.
  *
- * NOTE:  Currently, this may not work in DJGPP, MINGW
- *	  Untested in BC3, VC < 5, ming, djgpp
+ * NOTE:  Currently untested with mingw.
  */
     int
 create_shortcut(
@@ -1661,69 +1332,70 @@ create_shortcut(
 	const char *workingdir
 	)
 {
-   IShellLink	    *shelllink_ptr;
-   HRESULT	    hres;
-   IPersistFile	    *persistfile_ptr;
+    IShellLink	    *shelllink_ptr;
+    HRESULT	    hres;
+    IPersistFile	    *persistfile_ptr;
 
-   /* Initialize COM library */
-   hres = CoInitialize(NULL);
-   if (!SUCCEEDED(hres))
-   {
-      printf("Error:  Could not open the COM library.  Not creating shortcut.\n");
-      return FAIL;
-   }
+    /* Initialize COM library */
+    hres = CoInitialize(NULL);
+    if (!SUCCEEDED(hres))
+    {
+	printf("Error:  Could not open the COM library.  Not creating shortcut.\n");
+	return FAIL;
+    }
 
-   /* Instantiate a COM object for the ShellLink, store a pointer to it
-    * in shelllink_ptr.  */
-   hres = CoCreateInstance(&CLSID_ShellLink,
+    /* Instantiate a COM object for the ShellLink, store a pointer to it
+     * in shelllink_ptr.  */
+    hres = CoCreateInstance(&CLSID_ShellLink,
 			   NULL,
 			   CLSCTX_INPROC_SERVER,
 			   &IID_IShellLink,
 			   (void **) &shelllink_ptr);
 
-   if (SUCCEEDED(hres)) /* If the instantiation was successful... */
-   {
-      /* ...Then build a PersistFile interface for the ShellLink so we can
-       * save it as a file after we build it.  */
-      hres = shelllink_ptr->lpVtbl->QueryInterface(shelllink_ptr,
-			       &IID_IPersistFile, (void **) &persistfile_ptr);
+    if (SUCCEEDED(hres)) /* If the instantiation was successful... */
+    {
+	/* ...Then build a PersistFile interface for the ShellLink so we can
+	 * save it as a file after we build it.  */
+	hres = shelllink_ptr->lpVtbl->QueryInterface(shelllink_ptr,
+		&IID_IPersistFile, (void **) &persistfile_ptr);
 
-      if (SUCCEEDED(hres))
-      {
-	 wchar_t wsz[BUFSIZE];
+	if (SUCCEEDED(hres))
+	{
+	    wchar_t wsz[BUFSIZE];
 
-	 /* translate the (possibly) multibyte shortcut filename to windows
-	  * Unicode so it can be used as a file name.
-	  */
-	 MultiByteToWideChar(CP_ACP, 0, shortcut_name, -1, wsz, BUFSIZE);
+	    /* translate the (possibly) multibyte shortcut filename to windows
+	     * Unicode so it can be used as a file name.
+	     */
+	    MultiByteToWideChar(CP_ACP, 0, shortcut_name, -1, wsz, BUFSIZE);
 
-	 /* set the attributes */
-	 shelllink_ptr->lpVtbl->SetPath(shelllink_ptr, shortcut_target);
-	 shelllink_ptr->lpVtbl->SetWorkingDirectory(shelllink_ptr, workingdir);
-	 shelllink_ptr->lpVtbl->SetIconLocation(shelllink_ptr, iconfile_path,
-								   iconindex);
-	 shelllink_ptr->lpVtbl->SetArguments(shelllink_ptr, shortcut_args);
+	    /* set the attributes */
+	    shelllink_ptr->lpVtbl->SetPath(shelllink_ptr, shortcut_target);
+	    shelllink_ptr->lpVtbl->SetWorkingDirectory(shelllink_ptr,
+								  workingdir);
+	    shelllink_ptr->lpVtbl->SetIconLocation(shelllink_ptr,
+						    iconfile_path, iconindex);
+	    shelllink_ptr->lpVtbl->SetArguments(shelllink_ptr, shortcut_args);
 
-	 /* save the shortcut to a file and return the PersistFile object*/
-	 persistfile_ptr->lpVtbl->Save(persistfile_ptr, wsz, 1);
-	 persistfile_ptr->lpVtbl->Release(persistfile_ptr);
-      }
-      else
-      {
-	 printf("QueryInterface Error\n");
-	 return FAIL;
-      }
+	    /* save the shortcut to a file and return the PersistFile object*/
+	    persistfile_ptr->lpVtbl->Save(persistfile_ptr, wsz, 1);
+	    persistfile_ptr->lpVtbl->Release(persistfile_ptr);
+	}
+	else
+	{
+	    printf("QueryInterface Error\n");
+	    return FAIL;
+	}
 
-      /* Return the ShellLink object */
-      shelllink_ptr->lpVtbl->Release(shelllink_ptr);
-   }
-   else
-   {
-      printf("CoCreateInstance Error - hres = %08x\n", hres);
-      return FAIL;
-   }
+	/* Return the ShellLink object */
+	shelllink_ptr->lpVtbl->Release(shelllink_ptr);
+    }
+    else
+    {
+	printf("CoCreateInstance Error - hres = %08x\n", hres);
+	return FAIL;
+    }
 
-   return OK;
+    return OK;
 }
 
 /*
@@ -1756,12 +1428,13 @@ build_link_name(
     return OK;
 }
 
-    int
+    static int
 build_shortcut(
 	const char *name,	/* Name of the shortcut */
 	const char *exename,	/* Name of the executable (e.g., vim.exe) */
 	const char *args,
-	const char *shell_folder)
+	const char *shell_folder,
+	const char *workingdir)
 {
     char	executable_path[BUFSIZE];
     char	link_name[BUFSIZE];
@@ -1778,7 +1451,7 @@ build_shortcut(
 
     /* Create the shortcut: */
     return create_shortcut(link_name, executable_path, 0,
-						   executable_path, args, "");
+					   executable_path, args, workingdir);
 }
 
 /*
@@ -1791,35 +1464,40 @@ install_start_menu(int idx)
     printf("Creating start menu\n");
     if (has_vim)
     {
-	if (build_shortcut("Vim", "vim.exe", "", VIM_STARTMENU) == FAIL)
+	if (build_shortcut("Vim", "vim.exe", "", VIM_STARTMENU, "") == FAIL)
 	    return;
-	if (build_shortcut("Vim Read-only", "vim.exe", "-R", VIM_STARTMENU) == FAIL)
+	if (build_shortcut("Vim Read-only", "vim.exe", "-R", VIM_STARTMENU, "")
+								      == FAIL)
 	    return;
-	if (build_shortcut("Vim Diff", "vim.exe", "-d", VIM_STARTMENU) == FAIL)
+	if (build_shortcut("Vim Diff", "vim.exe", "-d", VIM_STARTMENU, "")
+								      == FAIL)
 	    return;
     }
     if (has_gvim)
     {
-	if (build_shortcut("gVim", "gvim.exe", "", VIM_STARTMENU) == FAIL)
+	if (build_shortcut("gVim", "gvim.exe", "", VIM_STARTMENU, "") == FAIL)
 	    return;
 	if (build_shortcut("gVim Easy", "gvim.exe", "-y",
-						       VIM_STARTMENU) == FAIL)
+						   VIM_STARTMENU, "") == FAIL)
 	    return;
 	if (build_shortcut("gVim Read-only", "gvim.exe", "-R",
-						       VIM_STARTMENU) == FAIL)
+						   VIM_STARTMENU, "") == FAIL)
 	    return;
 	if (build_shortcut("gVim Diff", "gvim.exe", "-d",
-						       VIM_STARTMENU) == FAIL)
+						   VIM_STARTMENU, "") == FAIL)
 	    return;
     }
     if (build_shortcut("Uninstall",
 		interactive ? "uninstal.exe" : "uninstall-gui.exe",
-						   "", VIM_STARTMENU) == FAIL)
+					       "", VIM_STARTMENU, "") == FAIL)
 	return;
-    if (build_shortcut("Vim tutor", "vimtutor.bat", "", VIM_STARTMENU) == FAIL)
+    /* For Windows NT the working dir of the vimtutor.bat must be right,
+     * otherwise gvim.exe won't be found and using gvimbat doesn't work. */
+    if (build_shortcut("Vim tutor", "vimtutor.bat", "", VIM_STARTMENU,
+							  installdir) == FAIL)
 	return;
     if (build_shortcut("Help", has_gvim ? "gvim.exe" : "vim.exe", "-c h",
-						       VIM_STARTMENU) == FAIL)
+						   VIM_STARTMENU, "") == FAIL)
 	return;
     {
 	char	shell_folder_path[BUFSIZE];
@@ -1871,7 +1549,7 @@ install_shortcut_gvim(int idx)
     /* Create shortcut(s) on the desktop */
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[0], "gvim.exe", "", "desktop");
+	(void)build_shortcut(icon_names[0], "gvim.exe", "", "desktop", "");
 	need_uninstall_entry = 1;
     }
 }
@@ -1881,7 +1559,7 @@ install_shortcut_evim(int idx)
 {
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[1], "gvim.exe", "-y", "desktop");
+	(void)build_shortcut(icon_names[1], "gvim.exe", "-y", "desktop", "");
 	need_uninstall_entry = 1;
     }
 }
@@ -1891,7 +1569,7 @@ install_shortcut_gview(int idx)
 {
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[2], "gvim.exe", "-R", "desktop");
+	(void)build_shortcut(icon_names[2], "gvim.exe", "-R", "desktop", "");
 	need_uninstall_entry = 1;
     }
 }
@@ -2001,10 +1679,11 @@ install_OLE_register(void)
 #endif /* WIN3264 */
 
 /*
- * Remove the last part of a directory path to get its parent.
+ * Remove the last part of directory "path[]" to get its parent, and put the
+ * result in "to[]".
  */
     static void
-dir_remove_last(const char *path, char buffer[BUFSIZE])
+dir_remove_last(const char *path, char to[BUFSIZE])
 {
     char c;
     long last_char_to_copy;
@@ -2020,8 +1699,8 @@ dir_remove_last(const char *path, char buffer[BUFSIZE])
 	c = path[last_char_to_copy];
     }
 
-    strncpy(buffer, path, (size_t)last_char_to_copy);
-    buffer[last_char_to_copy] = NUL;
+    strncpy(to, path, (size_t)last_char_to_copy);
+    to[last_char_to_copy] = NUL;
 }
 
     static void
@@ -2433,7 +2112,7 @@ install(void)
 	    (choices[i].installfunc)(i);
 
     /* Add some entries to the registry, if needed. */
-    if (install_popup || (need_uninstall_entry && interactive))
+    if (install_popup || (need_uninstall_entry && interactive) || !interactive)
 	install_registry();
 
 #ifdef WIN3264

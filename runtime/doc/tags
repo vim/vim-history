@@ -999,6 +999,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +virtualedit	various.txt	/*+virtualedit*
 +visual	various.txt	/*+visual*
 +visualextra	various.txt	/*+visualextra*
++vreplace	various.txt	/*+vreplace*
 +wildignore	various.txt	/*+wildignore*
 +wildmenu	various.txt	/*+wildmenu*
 +windows	various.txt	/*+windows*
@@ -1021,9 +1022,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 --help	starting.txt	/*--help*
 --noplugin	starting.txt	/*--noplugin*
 --remote	gui_x11.txt	/*--remote*
---sendlist	gui_x11.txt	/*--sendlist*
+--remote-wait	gui_x11.txt	/*--remote-wait*
+--serverexpr	gui_x11.txt	/*--serverexpr*
+--serverlist	gui_x11.txt	/*--serverlist*
 --servername	gui_x11.txt	/*--servername*
 --serversend	gui_x11.txt	/*--serversend*
+--socketid	starting.txt	/*--socketid*
 --version	starting.txt	/*--version*
 -C	starting.txt	/*-C*
 -D	starting.txt	/*-D*
@@ -2110,10 +2114,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :scscope	if_cscope.txt	/*:scscope*
 :se	options.txt	/*:se*
 :search-args	tagsearch.txt	/*:search-args*
-:ser	gui_x11.txt	/*:ser*
-:serverlist	gui_x11.txt	/*:serverlist*
-:servers	gui_x11.txt	/*:servers*
-:serversend	gui_x11.txt	/*:serversend*
 :set	options.txt	/*:set*
 :set+=	options.txt	/*:set+=*
 :set-&	options.txt	/*:set-&*
@@ -2856,8 +2856,6 @@ E237	various.txt	/*E237*
 E238	various.txt	/*E238*
 E239	sign.txt	/*E239*
 E24	message.txt	/*E24*
-E240	gui_x11.txt	/*E240*
-E241	gui_x11.txt	/*E241*
 E242	syntax.txt	/*E242*
 E243	if_ole.txt	/*E243*
 E244	options.txt	/*E244*
@@ -2875,7 +2873,6 @@ E254	message.txt	/*E254*
 E255	sign.txt	/*E255*
 E256	message.txt	/*E256*
 E257	if_cscope.txt	/*E257*
-E258	if_cscope.txt	/*E258*
 E259	if_cscope.txt	/*E259*
 E26	rightleft.txt	/*E26*
 E260	if_cscope.txt	/*E260*
@@ -2896,7 +2893,6 @@ E273	if_ruby.txt	/*E273*
 E274	if_sniff.txt	/*E274*
 E275	if_sniff.txt	/*E275*
 E276	if_sniff.txt	/*E276*
-E277	if_sniff.txt	/*E277*
 E278	if_sniff.txt	/*E278*
 E279	if_sniff.txt	/*E279*
 E28	syntax.txt	/*E28*
@@ -2948,6 +2944,7 @@ E320	message.txt	/*E320*
 E321	editing.txt	/*E321*
 E322	message.txt	/*E322*
 E323	message.txt	/*E323*
+E324	various.txt	/*E324*
 E325	usr_11.txt	/*E325*
 E326	recover.txt	/*E326*
 E327	gui.txt	/*E327*
@@ -3286,6 +3283,7 @@ SHELL	starting.txt	/*SHELL*
 Select	visual.txt	/*Select*
 Select-mode	visual.txt	/*Select-mode*
 Select-mode-mapping	visual.txt	/*Select-mode-mapping*
+ServerReplyRecv	autocmd.txt	/*ServerReplyRecv*
 Session	starting.txt	/*Session*
 StdinReadPost	autocmd.txt	/*StdinReadPost*
 StdinReadPre	autocmd.txt	/*StdinReadPre*
@@ -4193,6 +4191,7 @@ gui-footer	debugger.txt	/*gui-footer*
 gui-fork	gui_x11.txt	/*gui-fork*
 gui-gnome	gui_x11.txt	/*gui-gnome*
 gui-gtk	gui_x11.txt	/*gui-gtk*
+gui-gtk-socketid	gui_x11.txt	/*gui-gtk-socketid*
 gui-horiz-scroll	gui.txt	/*gui-horiz-scroll*
 gui-init	gui.txt	/*gui-init*
 gui-mouse	gui.txt	/*gui-mouse*
@@ -4927,6 +4926,7 @@ quickref.txt	quickref.txt	/*quickref.txt*
 quote	change.txt	/*quote*
 quote#	change.txt	/*quote#*
 quote%	change.txt	/*quote%*
+quote+	gui_x11.txt	/*quote+*
 quote-	change.txt	/*quote-*
 quote.	change.txt	/*quote.*
 quote/	change.txt	/*quote\/*
@@ -5055,6 +5055,11 @@ send-to-menu	gui_w32.txt	/*send-to-menu*
 sendto	gui_w32.txt	/*sendto*
 sentence	motion.txt	/*sentence*
 servername-variable	eval.txt	/*servername-variable*
+servernames()	eval.txt	/*servernames()*
+serverreply_peek()	eval.txt	/*serverreply_peek()*
+serverreply_read()	eval.txt	/*serverreply_read()*
+serverreply_send()	eval.txt	/*serverreply_send()*
+serversend()	eval.txt	/*serversend()*
 session-file	starting.txt	/*session-file*
 set-option	options.txt	/*set-option*
 setbufvar()	eval.txt	/*setbufvar()*
@@ -5502,6 +5507,7 @@ v_$	visual.txt	/*v_$*
 v_:	cmdline.txt	/*v_:*
 v_<	change.txt	/*v_<*
 v_<BS>	change.txt	/*v_<BS>*
+v_<Del>	change.txt	/*v_<Del>*
 v_=	change.txt	/*v_=*
 v_>	change.txt	/*v_>*
 v_C	change.txt	/*v_C*
@@ -5557,7 +5563,9 @@ v_d	change.txt	/*v_d*
 v_g?	change.txt	/*v_g?*
 v_gJ	change.txt	/*v_gJ*
 v_gV	visual.txt	/*v_gV*
+v_g]	tagsearch.txt	/*v_g]*
 v_g_CTRL-G	editing.txt	/*v_g_CTRL-G*
+v_g_CTRL-]	tagsearch.txt	/*v_g_CTRL-]*
 v_gf	editing.txt	/*v_gf*
 v_gq	change.txt	/*v_gq*
 v_gv	visual.txt	/*v_gv*

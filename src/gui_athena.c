@@ -807,6 +807,7 @@ gui_mch_new_menu_font()
 }
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
+# if defined(FEAT_XFONTSET) || defined(PROTO)
     void
 gui_mch_new_tooltip_font()
 {
@@ -821,6 +822,7 @@ gui_mch_new_tooltip_font()
 	    gui_mch_submenu_change(toolbar, FALSE);
     }
 }
+# endif
 
     void
 gui_mch_new_tooltip_colors()

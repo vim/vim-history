@@ -2496,8 +2496,8 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	if (mch_isdir(p_bsdir))
 	    initdir = p_bsdir;
 	/* When saving or 'browsedir' is "buffer", use buffer fname */
-	else if ((saving || *p_bsdir == 'b') && 
-		 buf != NULL && buf->b_ffname != NULL)
+	else if ((saving || *p_bsdir == 'b')
+		&& buf != NULL && buf->b_ffname != NULL)
 	{
 	    dflt = gettail(curbuf->b_ffname);
 	    tofree = vim_strsave(curbuf->b_ffname);

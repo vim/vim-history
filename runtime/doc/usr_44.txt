@@ -1,7 +1,7 @@
-*usr_44.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 11
+*usr_44.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			 Your own syntax highlighted
 
 
@@ -20,7 +20,7 @@ manual.
 |44.8|	Clusters
 |44.9|	Including another syntax file
 |44.10|	Synchronizing
-|44.11|	Installing a syntax file 
+|44.11|	Installing a syntax file
 |44.12|	Portable syntax file layout
 
      Next chapter: |usr_45.txt|  Select your language
@@ -59,7 +59,7 @@ useful when you are experimenting with a new syntax file.  It also shows the
 colors used for each item, which helps to find out what is what.
    To list the items in a specific syntax group use: >
 
-   	:syntax list {group-name}
+	:syntax list {group-name}
 
 This also can be used to list clusters (explained in |44.8|).  Just include
 the @ in the name.
@@ -242,8 +242,8 @@ Then at the last } the first xBlock region ends.
 KEEPING THE END
 
 Consider the following two syntax items: >
- 
- 	:syntax region xComment start=/%/ end=/$/ contained
+
+	:syntax region xComment start=/%/ end=/$/ contained
 	:syntax region xPreProc start=/#/ end=/$/ contains=xComment
 
 You define a comment as anything from % to the end of the line.  A
@@ -340,7 +340,7 @@ The "matchgroup" argument applies to the start or end match that comes after
 it.  In the previous example both start and end are highlighted with xParen.
 To highlight the end with xParenEnd: > >
 
-	:syntax region xInside matchgroup=xParen start=/(/ 
+	:syntax region xInside matchgroup=xParen start=/(/
 		\ matchgroup=xParenEnd end=/)/
 
 A side effect of using "matchgroup" is that contained items will not match in
@@ -606,7 +606,7 @@ even if would normally match another synchronization method: >
 More about synchronizing in the reference manual: |:syn-sync|.
 
 ==============================================================================
-*44.11*	Installing a syntax file 
+*44.11*	Installing a syntax file
 
 When your new syntax file is ready to be used, drop it in a "syntax" directory
 in 'runtimepath'.  For Unix that would be "~/.vim/syntax".
@@ -651,7 +651,7 @@ Start with a header that explains what the syntax file is for, who maintains
 it and when it was last updated.  Don't include too much information about
 changes history, not many people will read it.  Example: >
 
-  	" Vim syntax file
+	" Vim syntax file
 	" Language:	C
 	" Maintainer:	Bram Moolenaar <Bram@vim.org>
 	" Last Change:	2001 Jun 18

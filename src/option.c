@@ -766,7 +766,7 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"fileencodings","fencs", P_STRING|P_VI_DEF,
+    {"fileencodings","fencs", P_STRING|P_VI_DEF|P_COMMA,
 #ifdef FEAT_MBYTE
 			    (char_u *)&p_fencs, PV_NONE,
 			    {(char_u *)"ucs-bom", (char_u *)0L}
@@ -1320,7 +1320,7 @@ static struct vimoption
     {"makeef",	    "mef",   P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_mef, PV_NONE,
-			    {(char_u *)DFLT_MAKEEF, (char_u *)0L}
+			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -3459,18 +3459,24 @@ do_set(arg, opt_flags)
 
 			    /*
 			     * Expand environment variables and ~.
+			     * Don't do it when adding without inserting a
+			     * comma.
 			     */
-			    s = option_expand(opt_idx, newval);
-			    if (s != NULL)
+			    if (!(adding || prepending || removing)
+							 || (flags & P_COMMA))
 			    {
-				vim_free(newval);
-				newlen = (unsigned)STRLEN(s) + 1;
-				if (adding || prepending || removing)
-				    newlen += (unsigned)STRLEN(origval) + 1;
-				newval = alloc(newlen);
-				if (newval == NULL)
-				    break;
-				STRCPY(newval, s);
+				s = option_expand(opt_idx, newval);
+				if (s != NULL)
+				{
+				    vim_free(newval);
+				    newlen = (unsigned)STRLEN(s) + 1;
+				    if (adding || prepending || removing)
+					newlen += (unsigned)STRLEN(origval) + 1;
+				    newval = alloc(newlen);
+				    if (newval == NULL)
+					break;
+				    STRCPY(newval, s);
+				}
 			    }
 
 			    /* locate newval[] in origval[] when removing it

@@ -1,6 +1,6 @@
 " Menu Translations:	Hungarian
-" Translated By: 	Zoltan Arpadffy <arpadffy@altavista.net>
-" Last Change:		2001 May 18
+" Translated By:	Zoltan Arpadffy <arpadffy@altavista.net>
+" Last Change:		2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -87,12 +87,12 @@ menutrans Cu&t			&Kivág
 menutrans &Copy			&Másol
 menutrans &Paste		&Bemásol
 menutrans &Delete		&Töröl
-menutrans Select\ Blockwise 	Jelöl\ Blo&kként
+menutrans Select\ Blockwise	Jelöl\ Blo&kként
 menutrans Select\ &Word		Jelöl\ &Szó
 menutrans Select\ &Line		Jelöl\ So&r
 menutrans Select\ &Block	Jelöl\ B&lok
 menutrans Select\ &All		Jelöl\ &Egészet
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
@@ -132,7 +132,7 @@ if has("toolbar")
 endif
 
 " Syntax menu
-menutrans &Syntax 		&Syntaxis
+menutrans &Syntax		&Syntaxis
 menutrans Set\ 'syntax'\ only	Csak\ 'syntax'
 menutrans Set\ 'filetype'\ too	'filetype'\ is
 menutrans &Off			&Ki

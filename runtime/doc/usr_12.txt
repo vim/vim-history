@@ -1,11 +1,11 @@
-*usr_12.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_12.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 				Clever tricks
 
 
-By combining several commands you can make Vim to nearly everything.  In this
+By combining several commands you can make Vim do nearly everything.  In this
 chapter a number of useful combinations will be presented.  This uses the
 commands introduced in the previous chapters and a few more.
 
@@ -52,7 +52,7 @@ substitute command prompt you for each replacement: >
 
 REPLACING IN SEVERAL FILES
 
-Suppose you want to replace a word in more than one file?  You could edit each
+Suppose you want to replace a word in more than one file.  You could edit each
 file and type the command manually.  It's a lot faster to use record and
 playback.
    Let's assume you have a directory with C++ files, all ending in ".cpp".
@@ -110,7 +110,7 @@ the substitution is done in every line in the file.
 separate the "from" pattern and the "to" string.  This is what the "from"
 pattern contains:
 							\([^,]*\), \(.*\) ~
-                                                
+
 	The first part between \( \) matches "Last"	\(     \)
 	    match anything but a comma			  [^,]
 	    any number of times				      *
@@ -121,8 +121,8 @@ pattern contains:
 
 In the "to" part we have "\2" and "\1".  These are called backreferences.  The
 refer to the text matched by the \( \) parts in the pattern.  "\2" refers to
-the text matched by the first "\( \)", which is the "First" name.  "\1" refers
-to the first \( \), which is the "Last" name.
+the text matched by the second "\( \)", which is the "First" name.  "\1"
+refers to the first \( \), which is the "Last" name.
    You can use up to nine backreferences in the "to" part of a substitute
 command.  "\0" stands for the whole matched pattern.  There are a few more
 special items in a substitute command, see |sub-replace-special|.
@@ -143,7 +143,7 @@ In a Makefile you often have a list of files.  For example:
 		backup.o ~
 
 To sort this list, filter the text through the external sort command: >
-	
+
 	/^OBJS
 	j
 	:.,/^$/-1!sort
@@ -199,7 +199,7 @@ exercise, but there is an easier way.  With Visual mode, select the text you
 want to count words in.  Then type g CTRL-G.  The result:
 
 	Selected 5 of 293 Lines; 70 of 1884 Words; 359 of 10928 Bytes ~
- 
+
 For other ways to count words, lines and other items, see |count-items|.
 
 ==============================================================================
@@ -294,7 +294,7 @@ the word "frame_counter".  To do this you use the command: >
 
 Let's look at this command in detail.  The grep command searches through a set
 of files for a given word.  Because the -l argument is specified, the command
-will only list the files containing the word and not print the line itself.
+will only list the files containing the word and not print the matching lines.
 The word it is searching for is "frame_counter".  Actually, this can be any
 regular expression.  (Note: What grep uses for regular expressions is not
 exactly the same as what Vim uses.)

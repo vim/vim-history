@@ -1112,7 +1112,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
 # ifdef FEAT_GUI_GNOME
     /* If Gnome is available, use it for the simple button dialog. */
-    if (textfield == NULL)
+    if (gtk_socket_id == 0 || textfield == NULL)
 	return gui_gnome_dialog(type, title, message, buttons, def_but);
 # endif
 

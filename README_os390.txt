@@ -1,4 +1,4 @@
-README_os_390.txt for version 6.0ao of Vim: Vi IMproved.
+README_os_390.txt for version 6.0ap of Vim: Vi IMproved.
 
 Welcome to the OS/390 Unix port of VIM.
 
@@ -30,9 +30,9 @@ there. Here is a what to do:
     # Make additional symbols visible.
     # Allow intermixing of compiler options and files.
 
-    $ export CC=cc                           
-    $ export CFLAGS=-D_ALL_SOURCE           
-    $ export _CC_CCMODE=1                   
+    $ export CC=cc
+    $ export CFLAGS=-D_ALL_SOURCE
+    $ export _CC_CCMODE=1
     $./configure --enable-max-features --without-x --enable-gui=no
     $ cd src
     $ make
@@ -56,7 +56,7 @@ you want Motif.
     $ export CC=cc
     $ export CFLAGS="-D_ALL_SOURCE -W c,dll"
     $ export LDFLAGS="-W l,dll"
-    $ export _CC_CCMODE=1                   
+    $ export _CC_CCMODE=1
     $ ./configure --enable-max-features --enable-gui=motif
     $ cd src
     $ make
@@ -114,7 +114,7 @@ Known weaknesses:
   See ":help digraphs".
 
 - Using 'ga' to show the code of the character under the cursor shows the
-  correct dec/hex/oct values, but the other informations might be missing or 
+  correct dec/hex/oct values, but the other informations might be missing or
   wrong.
 
 - The sed syntax file doesn't work, it is ASCII dependent.
@@ -123,7 +123,7 @@ Bugs:
 -----
 If you find a bug please inform me (schandl@de.ibm.com), don't disturb Bram
 Moolenaar. It's most likely a bug I introduced during porting or some ASCII
-dependency I didn't notice. 
+dependency I didn't notice.
 
 Feedback:
 ---------

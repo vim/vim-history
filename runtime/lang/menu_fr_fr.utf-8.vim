@@ -1,6 +1,6 @@
 " Menu Translations:	Françaisè
 " Maintainer:	François Thunus (thunus@systran.fr)
-" Last Change:	2001 May 18
+" Last Change:	2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -96,12 +96,12 @@ menutrans Cu&t			&Couper
 menutrans &Copy			C&opier
 menutrans &Paste		Co&ller
 menutrans &Delete		&Effacer
-menutrans Select\ Blockwise 	Choisir\ par\ Bloc
+menutrans Select\ Blockwise	Choisir\ par\ Bloc
 menutrans Select\ &Word		Choisir\ un\ &mot
 menutrans Select\ &Line		Choisir\ une\ &line
 menutrans Select\ &Block	Choisir\ un\ &bloc
 menutrans Select\ &All		Choisir\ &tout
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
@@ -124,7 +124,7 @@ if has("toolbar")
     tmenu ToolBar.LoadSesn	Charger session
     tmenu ToolBar.SaveSesn	Sauver session
     tmenu ToolBar.RunScript	lancer un script
-    tmenu ToolBar.Make		lancer Make 
+    tmenu ToolBar.Make		lancer Make
     tmenu ToolBar.Shell		lancer un Shell
     tmenu ToolBar.RunCtags	générer un fichier Tags
     tmenu ToolBar.TagJump	Aller a un tag

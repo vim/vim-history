@@ -148,7 +148,7 @@ void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(con
 
 # ifdef FEAT_GUI
 #  include "gui.pro"
-#  ifdef UNIX
+#  if defined(UNIX) || defined(MACOS)
 #   include "pty.pro"
 #  endif
 #  if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV) && !defined(VMS)

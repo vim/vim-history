@@ -1,5 +1,5 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
-" Translated By: 	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
+" Translated By:	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
 " Last Change:		Tue Apr 24 19:40:17 2001
 
 " Quit when menu translations have already been done.
@@ -65,8 +65,8 @@ menutrans Toggle\ Left\ Scrollbar	切換使用左端捲動軸
 menutrans Toggle\ Right\ Scrolbar	切換使用右端捲動軸
 
 " Build variable options
-menutrans Text\ Width\.\.\. 		文字頁面寬度\.\.\.
-menutrans Shiftwidth	 		縮排寬度(Shiftwidth)
+menutrans Text\ Width\.\.\.		文字頁面寬度\.\.\.
+menutrans Shiftwidth			縮排寬度(Shiftwidth)
 
 " Programming menu
 menutrans &Tools			工具(&T)
@@ -81,7 +81,7 @@ menutrans &Next\ Error<Tab>:cn		下一個編譯錯誤處(&N)<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	上一個編譯錯誤處(&P)<Tab>:cp
 menutrans &Older\ List<Tab>:cold	檢視舊錯誤列表(&O)<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	檢視新錯誤列表(&E)<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	錯誤訊息視窗(&W)<Tab>:cwin	
+menutrans Error\ &Window<Tab>:cwin	錯誤訊息視窗(&W)<Tab>:cwin
 menutrans Convert\ to\ HEX<Tab>:%!xxd	轉換成16進位碼<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	從16進位碼轉換回文字<Tab>:%!xxd\ -r
 
@@ -120,10 +120,10 @@ menutrans Split\ File\ E&xplorer	檔案總管式分割(&X)
 menutrans &Close<Tab>^Wc		關閉視窗(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	關閉其它視窗(&O)<Tab>^Wo
 menutrans Move\ &To			移至(&T)
-menutrans &Top<Tab>^WK			頂端(&T)<Tab>^WK		
-menutrans &Bottom<Tab>^WJ		底端(&B)<Tab>^WJ		
-menutrans &Left\ side<Tab>^WH		左邊(&L)<Tab>^WH		
-menutrans &Right\ side<Tab>^WL		右邊(&R)<Tab>^WL		
+menutrans &Top<Tab>^WK			頂端(&T)<Tab>^WK
+menutrans &Bottom<Tab>^WJ		底端(&B)<Tab>^WJ
+menutrans &Left\ side<Tab>^WH		左邊(&L)<Tab>^WH
+menutrans &Right\ side<Tab>^WL		右邊(&R)<Tab>^WL
 " menutrans Ne&xt<Tab>^Ww		下一個(&X)<Tab>^Ww
 " menutrans P&revious<Tab>^WW		上一個(&R)<Tab>^WW
 menutrans Rotate\ &Up<Tab>^WR		上移視窗(&U)<Tab>^WR
@@ -141,12 +141,12 @@ menutrans Cu&t			剪下(&T)
 menutrans &Copy			複製(&C)
 menutrans &Paste		貼上(&P)
 menutrans &Delete		刪除(&D)
-menutrans Select\ Blockwise 	Blockwise式選擇
+menutrans Select\ Blockwise	Blockwise式選擇
 menutrans Select\ &Word		選擇單字(&W)
 menutrans Select\ &Line		選擇行(&L)
 menutrans Select\ &Block	選擇區塊(&B)
 menutrans Select\ &All		全選(&A)
-" 
+"
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

@@ -22,7 +22,7 @@
  *          As the desired minimum requirement are circa System 7
  *          (I want to run it on my Mac Classic) (Dany)
  */
- 
+
 /*
  * TODO: Change still to merge from the macvim's iDisk
  *
@@ -32,13 +32,13 @@
  * Comments about function remaining to Carbonize.
  *
  */
- 
+
 /* TODO: find the best place for this (Dany) */
 #if 0
 #  if ! TARGET_API_MAC_CARBON
 /* Enable the new API functions even when not compiling for Carbon */
 /* Apple recomends Universal Interface 3.3.2 or later */
-#  define OPAQUE_TOOLBOX_STRUCTS 		1
+#  define OPAQUE_TOOLBOX_STRUCTS		1
 #  define ACCESSOR_CALLS_ARE_FUNCTIONS	1
 /* Help Menu not supported by Carbon */
 #  define USE_HELPMENU
@@ -321,7 +321,7 @@ char_u *C2Pascal_save(char_u *Cstring)
 	return NULL;
 
     len = STRLEN(Cstring);
-    
+
     if (len > 255) /* Truncate if necessary */
 	len = 255;
 
@@ -350,7 +350,7 @@ char_u *C2Pascal_save_and_remove_backslash(char_u *Cstring)
     char_u  *p, *c;
 
     len = STRLEN(Cstring);
-    
+
     if (len > 255) /* Truncate if necessary */
 	len = 255;
 
@@ -474,7 +474,7 @@ char_u **new_fnames_from_AEDesc(AEDesc *theList, long *numFiles, OSErr *error)
     for (fileCount = 1; fileCount <= *numFiles; fileCount++)
     {
 	/* Get the alias for the nth file, convert to an FSSpec */
-	newError = AEGetNthPtr(theList, fileCount, typeFSS, 
+	newError = AEGetNthPtr(theList, fileCount, typeFSS,
 				&dummyKeyword, &dummyType,
 				(Ptr) &fileToOpen, sizeof(FSSpec), &actualSize);
 	if (newError)
@@ -486,7 +486,7 @@ char_u **new_fnames_from_AEDesc(AEDesc *theList, long *numFiles, OSErr *error)
 #endif
 	    return(fnames);
 	}
-	
+
 	/* Convert the FSSpec to a pathname */
         fnames[fileCount - 1] = FullPathFromFSSpec_save (fileToOpen);
     }
@@ -1103,7 +1103,7 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
 #ifdef FEAT_VISUAL
     reset_VIsual();
 #endif
-    
+
     fnames = new_fnames_from_AEDesc(&theList, &numFiles, &error);
 
     if (error)
@@ -1464,7 +1464,7 @@ gui_mac_drag_thumb (ControlHandle theControl, short partCode)
     theControlToUse = dragged_sb;
 
     sb = gui_find_scrollbar((long) GetControlReference (theControlToUse));
-    
+
     if (sb == NULL)
 	return;
 
@@ -1530,7 +1530,7 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 
     out_flush();
     gui_mch_set_scrollbar_thumb(sb, value, sb_info->size, sb_info->max);
-    
+
 /*  if (sb_info->wp != NULL)
     {
 	win_T	*wp;
@@ -1667,9 +1667,9 @@ gui_mac_doInDragClick (where, whichWindow)
     Rect	movingLimits;
     Rect	*movingLimitsPtr = &movingLimits;
 
-    /* TODO: may try to prevent move outside screen? */ 
+    /* TODO: may try to prevent move outside screen? */
 #ifdef USE_CARBONIZED
-    movingLimitsPtr = GetRegionBounds ( GetGrayRgn(), &movingLimits ); 
+    movingLimitsPtr = GetRegionBounds ( GetGrayRgn(), &movingLimits );
 #else
     movingLimitsPtr = &(*GetGrayRgn())->rgnBBox;
 #endif
@@ -1692,11 +1692,11 @@ gui_mac_doInGrowClick (where, whichWindow)
     Rect	    *resizeLimitsPtr = &resizeLimits;
 
 #ifdef USE_CARBONIZED
-    resizeLimitsPtr = GetRegionBounds ( GetGrayRgn(), &resizeLimits ); 
+    resizeLimitsPtr = GetRegionBounds ( GetGrayRgn(), &resizeLimits );
 #else
     resizeLimits = qd.screenBits.bounds;
 #endif
-    
+
     /* Set the minimun size */
     /* TODO: Should this come from Vim? */
     resizeLimits.top = 100;
@@ -1707,12 +1707,12 @@ gui_mac_doInGrowClick (where, whichWindow)
     {
 	newWidth  = newSize & 0x0000FFFF;
 	newHeight = (newSize >> 16) & 0x0000FFFF;
- 
+
 	gui_mch_set_bg_color(gui.back_pixel);
 
 	gui_resize_shell(newWidth, newHeight);
 
-	/* 
+	/*
          * We need to call gui_set_shellsize as the size
          * used by Vim may be smaller than the size selected
 	 * by the user. This cause some overhead
@@ -1759,7 +1759,7 @@ gui_mac_doUpdateEvent(event)
     Rect	growRect;
     RgnHandle	saveRgn;
 
-    
+
 #ifdef USE_CARBONIZED
     updateRgn = NewRgn();
     if (updateRgn == NULL)
@@ -1800,7 +1800,7 @@ gui_mac_doUpdateEvent(event)
 	/* Use the HLock useless in Carbon? Is it harmful?*/
 	HLock ((Handle) updateRgn);
 #ifdef USE_CARBONIZED
-          updateRectPtr = GetRegionBounds ( updateRgn, &updateRect ); 
+          updateRectPtr = GetRegionBounds ( updateRgn, &updateRect );
 # if 0
 	  /* Code from original Carbon Port (using GetWindowRegion.
            * I believe the UpdateRgn is already in local (Dany)
@@ -2247,7 +2247,7 @@ gui_mac_handle_event (event)
 	case (autoKey):
 	    gui_mac_doKeyEvent (event);
 	    break;
-	
+
 	case (keyUp):
 	    /* We don't care about when the key get release */
 	    break;
@@ -2323,12 +2323,12 @@ gui_mac_find_font (font_name)
     STRCPY(&pFontName[1], font_name);
     pFontName[0] = STRLEN(font_name);
     *p = c;
-    
+
     GetFNum (pFontName, &font_id);
 #else
     /* name = C2Pascal_save(menu->dname); */
     fontNamePtr = C2Pascal_save_and_remove_backslash(font_name);
-    
+
     GetFNum (fontNamePtr, &font_id);
 #endif
 
@@ -2402,7 +2402,7 @@ gui_mch_prepare(argc, argv)
 #ifndef USE_CARBONIZED
     MaxApplZone();          /* What could replace thos */
     /* In Carbon, all shared library are automatically load in
-     * there's no need to init them 
+     * there's no need to init them
      */
     InitGraf(&qd.thePort);
     InitFonts();
@@ -2469,7 +2469,7 @@ gui_mch_prepare(argc, argv)
     gui.VimWindow = NewCWindow(nil, &windRect, "\pgVim on Macintosh", true, documentProc,
 			(WindowPtr) -1L, false, 0);
 #ifdef USE_CARBONIZED
-    SetPortWindowPort ( gui.VimWindow ); 
+    SetPortWindowPort ( gui.VimWindow );
 #else
     SetPort(gui.VimWindow);
 #endif
@@ -3427,8 +3427,8 @@ clip_mch_request_selection(cbd)
     int		type;
     char	*searchCR;
     char	*tempclip;
-   
- 
+
+
 #ifdef USE_CARBONIZED
     error = GetCurrentScrap (&scrap);
     if (error != noErr)
@@ -3441,7 +3441,7 @@ clip_mch_request_selection(cbd)
     error = GetScrapFlavorSize (scrap, kScrapFlavorTypeText, &scrapSize);
     if (error != noErr)
 	return;
-    
+
     ReserveMem (scrapSize);
 #else
     /* Call to LoadScrap seem to avoid problem with crash on first paste */
@@ -3657,7 +3657,7 @@ gui_mch_add_menu(menu, idx)
     /* My brother could be the PopUp, find my real brother */
     while ((brother != NULL) && (!menu_is_menubar(brother->name)))
 	brother = brother->next;
-	    
+
     /*  Find where to insert the menu (for MenuBar) */
     if ((parent == NULL) && (brother != NULL))
 	menu_after_me = brother->submenu_id;
@@ -3716,7 +3716,7 @@ gui_mch_add_menu(menu, idx)
 
         /* Call InsertMenuItem followed by SetMenuItemText
 	 * to avoid special character recognition by InsertMenuItem
-         */ 
+         */
 	InsertMenuItem(parent->submenu_handle, "\p ", idx); /* afterItem */
 	SetMenuItemText(parent->submenu_handle, idx+1, name);
 	SetItemCmd(parent->submenu_handle, idx+1, 0x1B);
@@ -3747,7 +3747,7 @@ gui_mch_add_menu_item(menu, idx)
     if (parent->submenu_id == 0)
 	return;
 
-    /* Could call SetMenuRefCon [CARBON] to associate with the Menu, 
+    /* Could call SetMenuRefCon [CARBON] to associate with the Menu,
        for older OS call GetMenuItemData (menu, item, isCommandID?, data) */
 
     /* Convert the name */
@@ -4135,7 +4135,7 @@ gui_mch_browse(
     /* Get Navigation Service Defaults value */
     NavGetDefaultDialogOptions (&navOptions);
 
-    
+
     /* TODO: If we get a :browse args, set the Multiple bit. */
     navOptions.dialogOptionFlags =  kNavAllowInvisibleFiles
 				 |  kNavDontAutoTranslate
@@ -4165,11 +4165,11 @@ gui_mch_browse(
     }
 
     fnames = new_fnames_from_AEDesc(&reply.selection, &numFiles, &error);
-  
+
     NavDisposeReply (&reply);
-   
+
     if (fnames)
-    { 
+    {
 	fname = fnames[0];
 	vim_free(fnames);
     }
@@ -4496,7 +4496,7 @@ gui_mch_show_popupmenu(menu)
 	{
 	    /* Should come up with the help */
 	}
-    
+
     /* Restore original Port */
     SetPort (savePort); /*OSX*/
 #endif
@@ -4648,7 +4648,7 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     theCPB.dirInfo.ioVRefNum   = file.vRefNum;
   /*theCPB.hFileInfo.ioDirID   = 0;*/
     theCPB.dirInfo.ioDrDirID   = file.parID;
-     
+
     /* As ioFDirIndex = 0, get the info of ioNamePtr,
        which is relative to ioVrefNum, ioDirID */
     error = PBGetCatInfo (&theCPB, false);
@@ -4677,7 +4677,7 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
     if (status)
 	return NULL;
-    
+
     /* Add the the slash at the end if needed */
     if (folder)
 	STRCAT (path, "/");
@@ -4687,7 +4687,7 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     /* TODO: Get rid of all USE_UNIXFILENAME below */
     /* Set ioNamePtr, it's the same area which is always reused. */
     theCPB.dirInfo.ioNamePtr = directoryName;
-    
+
     /* Trick for first entry, set ioDrParID to the first value
      * we want for ioDrDirID*/
     theCPB.dirInfo.ioDrParID = file.parID;
@@ -4750,7 +4750,7 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
         filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
         STRCAT(filenamePtr, ":");
         STRCAT(filenamePtr, temporaryPtr);
-        
+
 #ifdef USE_UNIXFILENAME
         STRCPY(temporaryPtr, filenamePtr);
         filenamePtr[0] = 0; /* NULL terminate the string */
@@ -4762,7 +4762,7 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     /* Append final path separator if it's a folder */
     if (folder)
         STRCAT (fname, ":");
-        
+
     /* As we use Unix File Name for MacOS X convert it */
 #ifdef USE_UNIXFILENAME
     /* Need to insert leading / */

@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0ao.  Last change: 2001 Jun 03
+*pi_expl.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -135,7 +135,7 @@ be shown. For example, >
 
 will not show files that begin with "." and those that end in .gz, .exe or
 .zip. However, all directory names will always be shown. If while exploring,
-you'd like to see the hidden files as well, use the command "a".  
+you'd like to see the hidden files as well, use the command "a".
 The explorer header will indicate if filtering is being done.
 
 							*g:explDetailedHelp*

@@ -933,7 +933,7 @@ diff_read(idx_orig, idx_new, fname)
     long	off;
     int		i;
     linenr_T	lnum_orig, lnum_new;
-    int		count_orig, count_new;
+    long	count_orig, count_new;
     int		notset = TRUE;	    /* block "*dp" not set yet */
 
     fd = fopen((char *)fname, "r");
@@ -999,7 +999,8 @@ diff_read(idx_orig, idx_new, fname)
 	    count_new = l2 - f2 + 1;
 	}
 
-	/* Go over blocks before the change, for which orig and new are equal */
+	/* Go over blocks before the change, for which orig and new are equal.
+	 * Copy blocks from orig to new. */
 	while (dp != NULL
 		&& lnum_orig > dp->df_lnum[idx_orig] + dp->df_count[idx_orig])
 	{
@@ -1084,7 +1085,8 @@ diff_read(idx_orig, idx_new, fname)
 	     * original buffer, otherwise there would have been a change
 	     * already. */
 	    for (i = idx_orig + 1; i < idx_new; ++i)
-		diff_copy_entry(dprev, dp, idx_orig, i);
+		if (diffbuf[i] != NULL)
+		    diff_copy_entry(dprev, dp, idx_orig, i);
 	}
 	notset = FALSE;		/* "*dp" has been set */
     }
@@ -1110,7 +1112,7 @@ diff_copy_entry(dprev, dp, idx_orig, idx_new)
     int		idx_orig;
     int		idx_new;
 {
-    int		off;
+    long	off;
 
     if (dprev == NULL)
 	off = 0;

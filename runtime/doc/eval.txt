@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 17
+*eval.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -402,7 +402,7 @@ variable		internal variable
 See below |internal-variables|.
 
 
-function call		*expr-function* *E116* *E117* *E118* *E119* *E120* 
+function call		*expr-function* *E116* *E117* *E118* *E119* *E120*
 -------------
 function(expr1, ...)	function call
 See below |functions|.
@@ -800,6 +800,14 @@ resolve( {filename})		String  get filename a shortcut points to
 search( {pattern} [, {flags}])	Number  search for {pattern}
 searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
 				Number  search for other end of start/end pair
+serversend( {server}, {string} [, {type} [, {idvar}]])
+				String	send key sequence or expression
+servernames()			String	get a list of available servers
+serverreply_peek( {serverid} [, {retvar}])
+				Number	check for reply string
+serverreply_read( {serverid})	String	read reply string
+serverreply_send( {serverid}, {string})
+				Number	send reply string
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -1162,6 +1170,7 @@ expand({expr} [, {flag}])				*expand()*
 			<sfile>		sourced script file name
 			<cword>		word under the cursor
 			<cWORD>		WORD under the cursor
+			<client>	The {serverid} of the las
 		Modifiers:
 			:p		expand to full path
 			:h		head (last path component removed)
@@ -1796,7 +1805,7 @@ mode()		Return a string that indicates the current mode:
 			c	Command-line
 			r	Hit-enter prompt
 		This is useful in the 'statusline' option.  In most other
-		places it always returns "c".
+		places it always returns "c" or "n".
 
 nextnonblank({lnum})					*nextnonblank()*
 		Return the line number of the first line at or below {lnum}
@@ -1936,6 +1945,65 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 	:echo searchpair('{', '', '}', 'bW',
 	     \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"')
 
+serversend({server}, {string} [, {eval} [, {idvar}]])  *serversend()*
+		Send the {string} to {server}.
+		If {eval} is present and non-zero, the string is sent as an
+		expression and the result is returned after evaluation.
+		Otherwise the string is sent as input keys and the function
+		returns immediately.
+		If {idvar} is present, it is taken as the name of a variable
+		and a {serverid} for later use with serverreply_read() is
+		stored there.
+		See also |x11-command-server| |ServerReplyRecv|.
+		Note: Any errors will be reported in the server and may mess
+		up the display.
+		Examples: >
+		:echo serversend("gvim", "2+2", 1)
+		:echo serversend("gvim-001", "b:current_syntax", 1)
+
+		:echo serversend("gvim", ":DropAndReply ".file, 0, "serverid").
+		 \ serverreply_read(serverid)
+
+		:autocmd NONE ServerReplyRecv *
+		 \ echo serverreply_read(expand("<amatch>"))
+		:echo serversend("gvim", ":sleep 10 | echo ".
+		 \ 'serverreply_send(expand("<client>"), "HELLO")<CR>')
+
+
+servernames()						*servernames()*
+		Return a list of available servernames. One per line.
+		See also |x11-command-server|.
+		Examples: >
+		:echo servernames()
+
+serverreply_peek({serverid} [, {retvar}])		*serverreply_peek()*
+		Returns a positive number if there are available strings
+		from {serverid}.  Copies any reply string into the variable
+		{retvar} if specified.  {retvar} must be a string with the
+		name of a variable.
+		Returns zero if none are available.
+		See also |x11-command-server|.
+		Examples: >
+		:let repl = ""
+		:echo "PEEK: ".serverreply_peek(id, "repl").": ".repl
+
+serverreply_read({serverid})				*serverreply_read()*
+		Return the oldest available reply from {serverid} and consume
+		it.
+		See also |x11-command-server|.
+		Examples: >
+		:echo serverreply_read(id)
+
+serverreply_send( {clientid}, {string})			*serverreply_send()*
+		Send a reply string to {clientid}. The most recent {clientid}
+		that sent a string can be retrieved with expand("<client>").
+		Note:
+		This id has to be stored before the next command can be
+		received. Ie. before returning from the received command and
+		before calling any commands that waits for input.
+		See also |x11-command-server|.
+		Examples: >
+		:echo serverreply_send(expand("<client>"), "HELLO")
 
 setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Set option or local variable {varname} in buffer {expr} to
@@ -2139,13 +2207,13 @@ tempname()					*tempname()* *temp-file-name*
 		When Vim exits the directory and all files in it are deleted.
 
 tolower({expr})						*tolower()*
-		The result is a copy of the String given, with all lowercase
-		characters turned into uppercase (just like applying |gu| to
+		The result is a copy of the String given, with all uppercase
+		characters turned into lowercase (just like applying |gu| to
 		the string).
 
 toupper({expr})						*toupper()*
-		The result is a copy of the String given, with all uppercase
-		characters turned into lowercase (just like applying |gU| to
+		The result is a copy of the String given, with all lowercase
+		characters turned into uppercase (just like applying |gU| to
 		the string).
 
 type({expr})						*type()*
@@ -2364,6 +2432,7 @@ visual			Compiled with Visual mode.
 visualextra		Compiled with extra Visual mode commands.
 			|blockwise-operators|.
 vms			VMS version of Vim.
+vreplace		Compiled with |gR| and |gr| commands.
 wildignore		Compiled with 'wildignore' option.
 wildmenu		Compiled with 'wildmenu' option.
 windows			Compiled with support for more than one window.
@@ -2609,7 +2678,7 @@ variable name. e.g. this is invalid: >
 	:let foo='a + b'
 	:echo c{foo}d
 .. since the result of expansion is "ca + bd", which is not a variable name.
-	
+
 						*curly-braces-function-names*
 You can call and define functions by an evaluated name in a similar way.
 Example: >
@@ -2656,7 +2725,7 @@ This would call the function "my_func_whizz(parameter)"
 :let &l:{option-name} = {expr1}
 			Like above, but only set the local value of an option
 			(if there is one).  Works like |:setlocal|.
-			
+
 :let &g:{option-name} = {expr1}
 			Like above, but only set the global value of an option
 			(if there is one).  Works like |:setglobal|.
