@@ -327,7 +327,7 @@ dbg_parsearg(arg)
 	EMSG2(_(e_invarg2), arg);
 	return FAIL;
     }
-    if ((bp->dbg_name = vim_strsave(p)) == NULL)
+    if ((bp->dbg_name = FullName_save(p, FALSE)) == NULL)
 	return FAIL;
     return OK;
 }
