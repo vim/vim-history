@@ -17,6 +17,8 @@
 static void	cmd_source __ARGS((char_u *fname, exarg_T *eap));
 
 #if defined(FEAT_EVAL) || defined(PROTO)
+static int debug_greedy = FALSE;	/* batch mode debugging: don't save
+					   and restore typeahead. */
 
 /*
  * do_debug(): Debug mode.
@@ -102,11 +104,13 @@ do_debug(cmd)
 	save_ex_normal_busy = ex_normal_busy;
 	ex_normal_busy = 0;
 # endif
-	save_typeahead(&typeaheadbuf);
+	if (!debug_greedy)
+	    save_typeahead(&typeaheadbuf);
 
 	cmdline = getcmdline_prompt('>', NULL, 0);
 
-	restore_typeahead(&typeaheadbuf);
+	if (!debug_greedy)
+	    restore_typeahead(&typeaheadbuf);
 # ifdef FEAT_EX_EXTRA
 	ex_normal_busy = save_ex_normal_busy;
 # endif
@@ -394,6 +398,19 @@ ex_breakadd(eap)
 	    ++debug_tick;
 	}
     }
+}
+
+/*
+ * ":debuggreedy".
+ */
+    void
+ex_debuggreedy(eap)
+    exarg_T	*eap;
+{
+    if (eap->addr_count == 0 || eap->line2 != 0)
+	debug_greedy = TRUE;
+    else
+	debug_greedy = FALSE;
 }
 
 /*

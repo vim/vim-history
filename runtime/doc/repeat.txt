@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.1.  Last change: 2001 Dec 11
+*repeat.txt*    For Vim version 6.1.  Last change: 2003 Mar 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -486,5 +486,19 @@ LISTING BREAKPOINTS
 							*:breakl* *:breaklist*
 :breakl[ist]
 		List all breakpoints.
+
+
+OBSCURE
+
+						*:debugg* *:debuggreedy*
+:debugg[reedy]
+		Read debug mode commands from the normal input stream, instead
+		of getting them directly from the user.  Only useful for test
+		scripts.  Example: >
+		  echo 'q^Mq' | vim -e -s -c debuggreedy -c 'breakadd file script.vim' -S script.vim
+	
+:0debugg[reedy]
+		Undo ":debuggreedy": get debug mode commands directly from the
+		user, don't use typeahead for debug commands.
 
  vim:tw=78:ts=8:ft=help:norl:
