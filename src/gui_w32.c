@@ -621,7 +621,7 @@ _OnActivateApp(
 }
 
 /*
- * Get a message when the the window is being destroyed.
+ * Get a message when the window is being destroyed.
  */
     static void
 _OnDestroy(
@@ -629,6 +629,18 @@ _OnDestroy(
 {
     if (!destroying)
 	_OnClose(hwnd);
+}
+
+/*
+ * Got a message when the system will go down.
+ */
+    static void
+_OnEndSession(void)
+{
+    ml_close_notmod();		    /* close all not-modified buffers */
+    ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
+    ml_close_all(FALSE);	    /* close all memfiles, without deleting */
+    getout(1);			    /* exit Vim properly */
 }
 
     static void
@@ -1649,6 +1661,15 @@ _WndProc(
 	HANDLE_MSG(hwnd, WM_VSCROLL,	_OnScroll);
 	HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGING,	_OnWindowPosChanging);
 	HANDLE_MSG(hwnd, WM_ACTIVATEAPP, _OnActivateApp);
+
+    case WM_QUERYENDSESSION:	/* System wants to go down. */
+	gui_window_closed();    /* Will exit when no changed buffers. */
+	return FALSE;		/* Do NOT allow system to go down. */
+
+    case WM_ENDSESSION:
+	if (wParam)	/* system only really goes down when wParam is TRUE */
+	    _OnEndSession();
+	break;
 
     case WM_SYSCHAR:
 	/*
