@@ -2942,6 +2942,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	argp = skipwhite(argp + 1);	    /* skip the '(' or ',' */
 	if (*argp == ')' || *argp == ',' || *argp == NUL)
 	    break;
+	argvars[argcount].var_name = NULL;  /* the name is not stored */
 	if (eval1(&argp, &argvars[argcount], evaluate) == FAIL)
 	{
 	    ret = FAIL;
