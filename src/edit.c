@@ -3669,6 +3669,12 @@ insert_special(c, allow_modmask, ctrlv)
 # define ISSPECIAL(c)	((c) < ' ' || (c) >= DEL || (c) == '0' || (c) == '^')
 #endif
 
+#ifdef FEAT_MBYTE
+# define WHITECHAR(cc) (vim_iswhite(cc) && (!enc_utf8 || !utf_iscomposing(utf_ptr2char(ml_get_cursor() + 1))))
+#else
+# define WHITECHAR(cc) vim_iswhite(cc)
+#endif
+
     void
 insertchar(c, flags, second_indent)
     int		c;			/* character to insert or NUL */
@@ -3814,18 +3820,18 @@ insertchar(c, flags, second_indent)
 			|| curwin->w_cursor.col >= Insstart.col)
 	    {
 		cc = gchar_cursor();
-		if (vim_iswhite(cc))
+		if (WHITECHAR(cc))
 		{
 		    /* remember position of blank just before text */
 		    end_foundcol = curwin->w_cursor.col;
 
 		    /* find start of sequence of blanks */
-		    while (curwin->w_cursor.col > 0 && vim_iswhite(cc))
+		    while (curwin->w_cursor.col > 0 && WHITECHAR(cc))
 		    {
 			dec_cursor();
 			cc = gchar_cursor();
 		    }
-		    if (curwin->w_cursor.col == 0 && vim_iswhite(cc))
+		    if (curwin->w_cursor.col == 0 && WHITECHAR(cc))
 			break;		/* only spaces in front of text */
 #ifdef FEAT_COMMENTS
 		    /* Don't break until after the comment leader */
@@ -3842,7 +3848,7 @@ insertchar(c, flags, second_indent)
 			dec_cursor();
 			cc = gchar_cursor();
 
-			if (vim_iswhite(cc))
+			if (WHITECHAR(cc))
 			    continue;	/* one-letter, continue */
 			curwin->w_cursor.col = col;
 		    }
@@ -3899,7 +3905,7 @@ insertchar(c, flags, second_indent)
 	     * characters that will remain on top line
 	     */
 	    curwin->w_cursor.col = foundcol;
-	    while (cc = gchar_cursor(), vim_iswhite(cc))
+	    while (cc = gchar_cursor(), WHITECHAR(cc))
 		inc_cursor();
 	    startcol -= curwin->w_cursor.col;
 	    if (startcol < 0)
