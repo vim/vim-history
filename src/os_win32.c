@@ -488,6 +488,12 @@ decode_key_event(
 	    *pch = NUL;
 	    return TRUE;
 	}
+	/* Ctrl-- is Ctrl-_ */
+	else if (pker->wVirtualKeyCode == 0xBD)
+	{
+	    *pch = Ctrl('_');
+	    return TRUE;
+	}
     }
 
     /* Shift-TAB */
