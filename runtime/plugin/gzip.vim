@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2000 Dec 10
+" Last Change: 2000 Dec 17
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -38,8 +38,12 @@ augroup END
 fun s:check(cmd)
   let name = substitute(a:cmd, '\(\S*\).*', '\1', '')
   if !exists("s:have_" . name)
-    let r = system(a:cmd . " --version")
-    exe "let s:have_" . name . "=" . (r !~ "not found" && r != "")
+    let e = executable(name)
+    if e < 0
+      let r = system(name . " --version")
+      let e = (r !~ "not found" && r != "")
+    endif
+    exe "let s:have_" . name . "=" . e
   endif
   exe "return s:have_" . name
 endfun

@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0p
+MINOR = 0q
 
 # CHECKLIST for creating a new version:
 #
@@ -79,7 +79,7 @@ MINOR = 0p
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
 # - With these features: "make proto" (requires cproto; ignore warnings for
-#   missing include files, but fix problems for syntax errors).
+#   missing include files, fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
 # - Enable the efence library and run "make test".
@@ -254,6 +254,7 @@ SRC_UNIX =	\
 		src/auto/configure \
 		src/config.h.in \
 		src/config.mk.in \
+		src/config.mk.dist \
 		src/configure \
 		src/configure.in \
 		src/gui_at_fs.c \

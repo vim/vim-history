@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Dec 17
 "
 " Options	php_sql_query = 1  for SQL syntax highligthing inside strings
 "		php_minlines = x  to sync at least x lines backwards
@@ -19,7 +19,7 @@ if !exists("main_syntax")
   let main_syntax = 'php'
 endif
 
-so <sfile>:p:h/html.vim
+runtime syntax/html.vim
 syn cluster htmlPreproc add=phpRegion
 
 if exists( "php_sql_query")

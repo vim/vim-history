@@ -8,7 +8,7 @@ syn clear
 syn region cParen	transparent start='(' end=')' contains=ALLBUT,cParenError,cIncluded,cSpecial,cTodo,cUserLabel,kwtViewName
 
 " Read the C++ syntax to start with
-source <sfile>:p:h/cpp.vim
+runtime syntax/cpp.vim
 
 " kimwitu++ extentions
 

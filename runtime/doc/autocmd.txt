@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0p.  Last change: 2000 Dec 05
+*autocmd.txt*   For Vim version 6.0q.  Last change: 2000 Dec 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,7 +14,7 @@ Automatic commands					*autocommand*
 6.  Patterns			|autocmd-patterns|
 7.  Groups			|autocmd-groups|
 8.  Executing autocommands	|autocmd-execute|
-9. Using autocommands		|autocmd-use|
+9.  Using autocommands		|autocmd-use|
 
 {Vi does not have any of these commands}
 

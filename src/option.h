@@ -44,7 +44,7 @@
 # endif
 #endif
 
-#define DFLT_GREPFORMAT	"%f:%l%m,%f  %l%m"
+#define DFLT_GREPFORMAT	"%f:%l:%m,%f:%l%m,%f  %l%m"
 
 /* default values for b_p_ff 'fileformat' and p_ffs 'fileformats' */
 #define FF_DOS		"dos"
@@ -383,13 +383,12 @@ EXTERN char_u	*p_hf;		/* 'helpfile' */
 EXTERN long	p_hh;		/* 'helpheight' */
 #endif
 EXTERN int	p_hid;		/* 'hidden' */
-/* Use P_HID to take care of ":hide".
- * If FEAT_QUICKFIX is set, a buffer that is of buftype "nofile" can always be
- * hidden. */
+/* Use P_HID to check if a buffer is to be hidden when it is no longer
+ * visible in a window. */
 #ifndef FEAT_QUICKFIX
 # define P_HID(dummy) (p_hid || cmdmod.hide)
 #else
-# define P_HID(buf) (p_hid || cmdmod.hide || bt_nofile(buf))
+# define P_HID(buf) (buf_hide(buf))
 #endif
 EXTERN char_u	*p_hl;		/* 'highlight' */
 EXTERN int	p_hls;		/* 'hlsearch' */
@@ -571,7 +570,7 @@ EXTERN char_u	*p_ttym;	/* 'ttymouse' */
 EXTERN long	p_ul;		/* 'undolevels' */
 EXTERN long	p_uc;		/* 'updatecount' */
 EXTERN long	p_ut;		/* 'updatetime' */
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
 EXTERN char_u	*p_fcs;		/* 'fillchar' */
 #endif
 #ifdef FEAT_VIMINFO

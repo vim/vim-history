@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Dec 10
+" Last change:	2000 Dec 11
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -908,8 +908,8 @@ augroup END
 
 
 " If the GUI is already running, may still need to install the Syntax menu.
-" Don't do it when the 'M' flag is included in 'guioptions'
-if has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "M"
+" Don't do it when the 'M' flag is included in 'guioptions'.
+if has("menu") && has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "M"
   source <sfile>:p:h/menu.vim
 endif
 

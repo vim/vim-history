@@ -11,7 +11,7 @@
 let s:wsh_cpo_save = &cpo
 set cpo&vim
 
-source <sfile>:p:h/xml.vim
+runtime syntax/xml.vim
 
 syn case ignore
 syn include @wshVBScript <sfile>:p:h/vb.vim

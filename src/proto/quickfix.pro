@@ -7,4 +7,6 @@ void qf_mark_adjust __ARGS((linenr_t line1, linenr_t line2, long amount, long am
 void ex_cwindow __ARGS((exarg_t *eap));
 int bt_quickfix __ARGS((buf_t *buf));
 int bt_nofile __ARGS((buf_t *buf));
-int bt_scratch __ARGS((buf_t *buf));
+int bt_dontwrite __ARGS((buf_t *buf));
+int bt_dontwrite_msg __ARGS((buf_t *buf));
+int buf_hide __ARGS((buf_t *buf));

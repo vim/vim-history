@@ -241,11 +241,7 @@ ml_open()
 /*
  * When 'updatecount' is non-zero, flag that a swap file may be opened later.
  */
-    if (p_uc && curbuf->b_p_swf
-#ifdef FEAT_QUICKFIX
-	    && !bt_nofile(curbuf) && !bt_scratch(curbuf)
-#endif
-       )
+    if (p_uc && curbuf->b_p_swf)
 	curbuf->b_may_swap = TRUE;
     else
 	curbuf->b_may_swap = FALSE;
@@ -480,11 +476,7 @@ ml_open_file(buf)
     char_u	*dirp;
 
     mfp = buf->b_ml.ml_mfp;
-    if (mfp == NULL || mfp->mf_fd >= 0 || !buf->b_p_swf
-#ifdef FEAT_QUICKFIX
-	    || bt_nofile(buf) || bt_scratch(buf)
-#endif
-	)
+    if (mfp == NULL || mfp->mf_fd >= 0 || !buf->b_p_swf)
 	return;		/* nothing to do */
 
     /*

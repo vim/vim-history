@@ -3700,7 +3700,19 @@ gui_mch_draw_string(
 	 */
 	rc.left = FILL_X(col);
 	rc.top = FILL_Y(row);
-	rc.right = FILL_X(col + len);	    /* Add +1 to erase fake bold? */
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    int cell_len = 0;
+
+	    /* Compute the length in display cells. */
+	    for (n = 0; n < len; n += MB_BYTE2LEN(text[n]))
+		cell_len += mb_ptr2cells(text + n);
+	    rc.right = FILL_X(col + cell_len);
+	}
+	else
+#endif
+	    rc.right = FILL_X(col + len);
 	rc.bottom = FILL_Y(row + 1);
 	hbr = CreateSolidBrush(gui.currBgColor);
 	FillRect(s_hdc, &rc, hbr);
@@ -4020,20 +4032,36 @@ LCTranslateMessage(CONST MSG *lpMsg)
     int		len;
     char_u	string[MB_MAXBYTES];
 
-    charMsg.hwnd = lpMsg->hwnd;
-    charMsg.lParam = lpMsg->lParam;
+    /* This only works on NT. */
+    if (os_version.dwPlatformId != VER_PLATFORM_WIN32_NT)
+	return TranslateMessage(lpMsg);
+
     GetKeyboardState(lpKeyState);
-    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF, lpKeyState,
-			pwszBuff, 4, 0);
+
+    /*
+     * If Ctrl or Left Alt key is depressed, call base processing.
+     * NB: Right Alt key is used in some keyboard layouts
+     * (it also sets the Ctrl key flag), so it is disregarded here.
+     */
+    if (!(lpKeyState[VK_RMENU] & 128)
+	&& ((lpKeyState[VK_CONTROL] & 128) || (lpKeyState[VK_MENU] & 128)))
+	return TranslateMessage(lpMsg);
+
+    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF,
+						  lpKeyState, pwszBuff, 4, 0);
     switch (ccount)
     {
 	case -1:	/* dead key */
+	    charMsg.hwnd = lpMsg->hwnd;
+	    charMsg.lParam = lpMsg->lParam;
 	    charMsg.message = WM_DEADCHAR;
 	    charMsg.wParam = pwszBuff[0];
 	    DispatchMessage(&charMsg);
 	    break;
+
 	case 0:		/* key does not have translation in current keymap */
 	    return TranslateMessage(lpMsg);
+
 	default:	/* one or more unicode chars returned */
 	    for (i = 0; i < ccount; i++)
 	    {

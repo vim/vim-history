@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2000 Nov 04
+" Last change: 2000 Dec 17
 " URL:         http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
@@ -19,7 +19,7 @@ if !exists("main_syntax")
   let main_syntax = 'mason'
 endif
 
-so <sfile>:p:h/html.vim
+runtime syntax/html.vim
 syn cluster htmlPreproc add=@masonTop
 
 syn include @perlTop <sfile>:p:h/perl.vim

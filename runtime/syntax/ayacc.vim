@@ -11,7 +11,7 @@
 syn clear
 
 " Read the Ada syntax to start with
-source <sfile>:p:h/ada.vim
+runtime syntax/ada.vim
 
 " Clusters
 syn cluster	ayaccActionGroup	contains=ayaccDelim,cInParen,cTodo,cIncluded,ayaccDelim,ayaccCurlyError,ayaccUnionCurly,ayaccUnion,cUserLabel,cOctalZero,cCppOut2,cCppSkip,cErrInBracket,cErrInParen,cOctalError

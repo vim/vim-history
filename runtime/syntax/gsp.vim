@@ -23,7 +23,7 @@ if !exists("main_syntax")
 endif
 
 " Source HTML syntax
-source <sfile>:p:h/html.vim
+runtime syntax/html.vim
 
 " Next syntax items are case-sensitive
 syn case match

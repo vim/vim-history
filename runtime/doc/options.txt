@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0p.  Last change: 2000 Dec 10
+*options.txt*   For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -480,6 +480,13 @@ This sets the 'dir' option to "c:\tmp".  Only a single backslash before the
 No other commands than "set" are supported, for security reasons (somebody
 might create a Trojan horse text file with modelines).
 
+Hint: If you would like to do something else than setting an option, you could
+define an autocommand that checks the file for a specific string.  For
+example: >
+	au BufReadPost * if getline(1) =~ "VAR" | call SetVar() | endif
+And define a function SetVar() that does something with the line containing
+"VAR".
+
 ==============================================================================
 3. Saving settings					*save-settings*
 
@@ -550,6 +557,9 @@ You can use session files to quickly switch between different projects,
 automatically loading the files you were last working on in that project.
 Session files are a nice addition to viminfo-files, which are used to remember
 information for all sessions together |viminfo-file|.
+
+You can quickly start editing with a session file with the |-S| argument: >
+	vim -S session.vim
 
 The output of ":mksession" is like ":mkvimrc", but additional commands are
 added to the file.  Which ones depends on the 'sessionoptions' option.  The
@@ -975,40 +985,58 @@ A jump table for the options with a short description can be found at |X_op|.
 	   buffer	Use the directory of the related buffer.
 	   current	Use the current directory.
 
+						*'bufhidden'* *'bh'*
+'bufhidden' 'bh'	string (default: "")
+			local to buffer
+			{not in Vi}
+			{not available when compiled without the |+quickfix|
+			feature}
+	This option specifies what happens when a buffer is no longer
+	displayed in a window:
+	  <empty>	follow the global 'hidden' option
+	  hide		hide the buffer (don't unload it), also when 'hidden'
+			is not set
+	  unload	unload the buffer, also when 'hidden' is set or using
+			|:hide|
+	  delete	delete the buffer, also when 'hidden' is set or using
+			|:hide|
+
+	This option is used together with 'buftype' and 'swapfile' to specify
+	special kinds of buffers.   See |special-buffers|.
+
 						*'buftype'* *'bt'*
 'buftype' 'bt'		string (default: "")
 			local to buffer
 			{not in Vi}
 			{not available when compiled without the |+quickfix|
 			feature}
-	When this option is set, the buffer is handled in a special way.
-	These values are allowed:
-	  ""		normal buffer
-	  "nofile"  	buffer without file contact.
-	  "scratch"	buffer without file that gets deleted whenever the
-			window it is in is closed or hidden.
-	  "quickfix"	quickfix buffer, contains list of errors. |:cwindow|
+	The value of this option specifies the type of a buffer:
+	  <empty>	normal buffer
+	  nofile  	buffer which is not related to a file and will not be
+			written
+	  nowrite	buffer which will not be written
+	  quickfix	quickfix buffer, contains list of errors |:cwindow|
+
+	This option is used together with 'bufhidden' and 'swapfile' to
+	specify special kinds of buffers.   See |special-buffers|.
+
 	Be careful with changing this option, it can have many side effects!
 
-	"scratch" and "nofile" buffers are similar:
-	both:		They will never be written to disk (Vim knows no
-			assiciated file).
-	both:		The buffer name shown in the status line is no longer
-			modified in response to a :cd (see |:cd|) command (it
-			freezes like it was before setting the buftype
-			option).
-	both:		The swapfile option is set to off (see |'swapfile'|)
-			and cannot be enabled.
-	both:		Both buffer types are never considered to be
-			|'modified'|.  Be careful, you can do a ':bdelete' on
-			such a buffer and lose its contents without the
-			slightest warning!
-	"nofile" only:	Buffers always behave as though |'hidden'| were
-			enabled.  Closing a window makes the buffer hidden,
-			the contents is kept.
-	"scratch" only: The buffer is deleted as soon as there is no window
-			displaying it.
+	A "quickfix" buffer is only used for the error list.  This value is
+	set by the |:cwindow| command and you are not supposed to change it.
 
+	"nofile" and "nowrite" buffers are similar:
+	both:		The buffer is not to be written to disk, ":w" doesn't
+			work (":w filename" does work though).
+	both:		The buffer is never considered to be |'modified'|.
+			There is no warning when the changes will be lost, for
+			example when you quit Vim.
+	both:		A swap file is only created when using too much memory
+			(when 'swapfile' has been reset there is never a swap
+			file).
+	nofile only:	The buffer name is fixed, it is not handled like a
+			file name.  It is not modified in response to a |:cd|
+			command.
 
 						*'cdpath'* *'cd'*
 'cdpath' 'cd'		string	(default: equivalent to $CDPATH or ",,")
@@ -1095,6 +1123,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	    ucs-4le	11 22 33 44	44332211
 	    ucs-4bl	11 22 33 44	22114433
 	    ucs-4lb	11 22 33 44	33441122
+
+	 When 'charcode' is set to a Unicode encoding, and 'filecharcodes' was
+	 not set yet, the default for 'filecharcodes' is changed.
 
 					*'charconvert'* *'ccv'*
 'charconvert' 'ccv'	string (default "")
@@ -1877,8 +1908,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	option is set, because the file would be different when written.
 
 					*'filecharcodes'* *'fccs'*
-'filecharcodes' 'fccs'	string (default: "", "ucs-bom,utf-8,latin-1" when
-					 'charcode' is set to a Unicode value)
+'filecharcodes' 'fccs'	string (default: "ucs-bom", "ucs-bom,utf-8,latin-1"
+				    when 'charcode' is set to a Unicode value)
 			global
 			{only available when compiled with the |+multi_byte|
 			feature}
@@ -2021,8 +2052,8 @@ A jump table for the options with a short description can be found at |X_op|.
 'fillchars' 'fcs'	string	(default "vert:|,fold:-")
 			global
 			{not in Vi}
-			{not available when compiled without the +windows
-			feature}
+			{not available when compiled without the |+windows|
+			and |+folding| features}
 	Characters to fill the statuslines and vertical separators.
 	It is a comma separated list of string settings.
 	  stl:c		Used for filling the statusline of the current window
@@ -2422,9 +2453,10 @@ A jump table for the options with a short description can be found at |X_op|.
 
 	  'm'	Menu bar is present.
 	  'M'	The system menu "$VIMRUNTIME/menu.vim" is not sourced.  Note
-		that this flag must be added in the .vimrc file.  When the
-		.gvimrc file is sourced the system menu has already been
-		loaded.
+		that this flag must be added in the .vimrc file, before
+		switching on syntax or filetype recognition (when the .gvimrc
+		file is sourced the system menu has already been loaded; the
+		":syntax on" and ":filetype on" commands load the menu too).
 	  'g'	Grey menu items: Make menu items that are not active grey.  If
 		'g' is not included inactive menu items are not shown at all.
 		Exception: Athena will always use grey menu items.
@@ -3113,8 +3145,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on the plugin scripts are loaded when starting up |load-plugins|.
 	This option can be reset in your |vimrc| file to disable the loading
 	of plugins.
-	Note that using the "-u NONE" and "--noplugins" command line arguments
-	reset this option. |-u| |--noplugins|
+	Note that using the "-u NONE" and "--noplugin" command line arguments
+	reset this option. |-u| |--noplugin|
 
 						*'magic'* *'nomagic'*
 'magic'			boolean	(default on)
@@ -3244,13 +3276,20 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOTE: 'modeline' is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
+				 *'modifiable'* *'ma'* *'nomodifiable'* *'noma'*
+'modifiable' 'ma'	boolean	(default on)
+			local to buffer
+			{not in Vi}
+	When off the buffer contents cannot be changed.
+
 				 *'modified'* *'mod'* *'nomodified'* *'nomod'*
 'modified' 'mod'	boolean	(default off)
 			local to buffer
 			{not in Vi}
 	When on the buffer is considered to be modified.  This option is set
-	by every command that makes a change to the buffer.  Only the undo
-	command may reset it, when all changes have been undone.
+	by every command that makes a change to the buffer.  The undo command
+	will reset it when all changes have been undone.  When 'buftype' is
+	"nowrite" or "nofile" this option will be set, but will be ignored.
 
 						*'more'* *'nomore'*
 'more'			boolean	(Vim default: on, Vi default: off)
@@ -4025,6 +4064,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	or "zsh" during initializations, the default becomes ">&".  If the
 	'shell' option is "sh", "ksh" or "bash" the default becomes
 	">%s 2>&1".  This means that stderr is also included.
+	For Win32, the Unix checks are done and additionally "cmd" is checked
+	for, which makes the default ">%s 2>&1".  Also, the same names with
+	".exe" appended are checked for.
 	The initialization of this option is done after reading the ".vimrc"
 	and the other initializations, so that when the 'shell' option is set
 	there, the 'shellredir' option changes automatically unless it was
@@ -4508,14 +4550,18 @@ A jump table for the options with a short description can be found at |X_op|.
 	Use a swapfile for the buffer.  This option can be reset when a
 	swapfile is not wanted for a specific buffer.  For example, with
 	confidential information that even root must not be able to access.
-	Careful: All text will be in memory.  Don't use this for big files.
-	Recovery will be impossible!
+	Careful: All text will be in memory:
+		- Don't use this for big files.
+		- Recovery will be impossible!
 	A swapfile will only be present when |'updatecount'| is non-zero and
 	'swapfile' is set.
 	When 'swapfile' is reset, the swap file for the current buffer is
 	immediately deleted.  When 'swapfile' is set, and 'updatecount' is
 	non-zero, a swap file is immediately created.
 	Also see |swap-file| and |'swapsync'|.
+
+	This option is used together with 'bufhidden' and 'buftype' to
+	specify special kinds of buffers.   See |special-buffers|.
 
 						*'swapsync'* *'sws'*
 'swapsync' 'sws'	string	(default "fsync")

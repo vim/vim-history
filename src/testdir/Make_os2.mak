@@ -37,7 +37,7 @@ clean:
 	$(VIMPROG) -u NONE -s todos.vim $*.in
 	$(VIMPROG) -u NONE -s todos.vim $*.ok
 	copy $*.ok test.ok
-	$(VIMPROG) -u os2.vim --noplugins -s dotest.in $*.in
+	$(VIMPROG) -u os2.vim --noplugin -s dotest.in $*.in
 	$(VIMPROG) -u NONE -s todos.vim test.out
 	diff test.out $*.ok
 	rename test.out $*.out

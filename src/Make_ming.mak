@@ -31,10 +31,12 @@ CPU=i686
 ARCH=i386
 # set to '1' to cross-compile from unix; 0=native Windows
 CROSS=0
+# set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
+#ICONV="."
 
 # uncomment 'PERL' if you want a perl-enabled version
 #PERL=perl
-ACTIVEPERL=perl56.dll
+DYNAMIC_PERL=perl56.dll
 # on Linux, for cross-compile, it's here:
 #PERLLIB=/home/ron/ActivePerl/lib/
 # on NT, it's here:
@@ -99,8 +101,8 @@ CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
 
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
-ifdef ACTIVEPERL
-CFLAGS += -DACTIVE_PERL 
+ifdef DYNAMIC_PERL
+CFLAGS += -DDYNAMIC_PERL 
 endif
 endif
 
@@ -149,11 +151,19 @@ endif
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
 LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
+
 ifdef PERL
-ifndef ACTIVEPERL
+ifndef DYNAMIC_PERL
 LIB += -lperl
 endif
 endif
+
+ifdef ICONV
+LIB += -L$(ICONV) -liconv
+DEFINES+=-DHAVE_ICONV_H
+CFLAGS += -I$(ICONV)
+endif
+
 all: $(TARGET) vimrun.exe xxd/xxd.exe
 
 vimrun.exe: vimrun.c
@@ -199,11 +209,11 @@ ifeq ($(CROSS),1)
 else
 	@echo /* created by make */ > dyn-ming.h
 endif
-ifdef ACTIVEPERL
+ifdef DYNAMIC_PERL
 ifeq ($(CROSS),1)
-	@echo \#define ACTIVE_PERL_W32 \"$(ACTIVEPERL)\" >> dyn-ming.h
+	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
 else
-	@echo #define ACTIVE_PERL_W32 "$(ACTIVEPERL)" >> dyn-ming.h
+	@echo #define DYNAMIC_PERL_DLL "$(DYNAMIC_PERL)" >> dyn-ming.h
 endif
 endif
 

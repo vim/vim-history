@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.76
-" Last Change:	2000 Dec 10
+" Version:	0.77
+" Last Change:	2000 Dec 14
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
@@ -76,7 +76,7 @@ if !exists("b:fortran_fixed_source")
     " the very top of each file and you have a fast computer
     while s:ln < 25
       let s:test = strpart(getline(s:ln),0,5)
-      if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
+      if s:test[0] !~ '[Cc*#]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
 	let b:fortran_fixed_source = 0
 	break
       endif

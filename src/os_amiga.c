@@ -790,6 +790,20 @@ mch_isdir(name)
     return retval;
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return 1 if "name" can be executed, 0 if not.
+ * Return -1 if unknown.
+ */
+    int
+mch_can_exe(name)
+    char_u	*name;
+{
+    /* TODO */
+    return -1;
+}
+#endif
+
 /*
  * Check what "name" is:
  * NODE_NORMAL: file or directory (or doesn't exist)

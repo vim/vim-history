@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.31
-" Last Change:	2000 Nov 14
+" Version:	0.32
+" Last Change:	2000 Dec 14
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -17,7 +17,7 @@ if !exists("b:fortran_fixed_source")
     let s:ln=1
     while s:ln < 25
       let s:test = strpart(getline(s:ln),0,5)
-      if s:test[0] !~ '[Cc*]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
+      if s:test[0] !~ '[Cc*#]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
 	let b:fortran_fixed_source = 0
 	break
       endif

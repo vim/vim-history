@@ -45,7 +45,7 @@ clean:
 
 .in.out:
 	copy $*.ok test.ok
-	$(VIMPROG) -u dos.vim -U NONE --noplugins -s dotest.in $*.in
+	$(VIMPROG) -u dos.vim -U NONE --noplugin -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
 	-deltree /y X*

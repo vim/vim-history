@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	Objective C
 " Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Dec 17
 
 " Read the C syntax to start with
-source <sfile>:p:h/c.vim
+runtime syntax/c.vim
 
 " Objective C extentions follow below
 "

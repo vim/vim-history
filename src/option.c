@@ -42,6 +42,7 @@ typedef enum
     , PV_AI
     , PV_BIN
     , PV_BOMB
+    , PV_BH
     , PV_BT
     , PV_CIN
     , PV_CINK
@@ -74,6 +75,7 @@ typedef enum
     , PV_LISP
     , PV_LIST
     , PV_ML
+    , PV_MA
     , PV_MOD
     , PV_MPS
     , PV_NF
@@ -114,6 +116,7 @@ static int	p_bin;
 static int	p_bomb;
 #endif
 #if defined(FEAT_QUICKFIX)
+static char_u	*p_bh;
 static char_u	*p_bt;
 #endif
 #ifdef FEAT_CINDENT
@@ -159,6 +162,7 @@ static char_u	*p_key;
 static int	p_lisp;
 #endif
 static int	p_ml;
+static int	p_ma;
 static int	p_mod;
 static char_u	*p_mps;
 static char_u	*p_nf;
@@ -379,6 +383,15 @@ static struct vimoption options[] =
 #ifdef FEAT_BROWSE
 			    (char_u *)&p_bsdir, PV_NONE,
 			    {(char_u *)"last", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
+    {"bufhidden",   "bh",   P_STRING|P_ALLOCED|P_VI_DEF,
+#if defined(FEAT_QUICKFIX)
+			    (char_u *)&p_bh, PV_BH,
+			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -636,7 +649,7 @@ static struct vimoption options[] =
     {"filecharcodes","fccs", P_STRING|P_VI_DEF,
 #ifdef FEAT_MBYTE
 			    (char_u *)&p_fccs, PV_NONE,
-			    {(char_u *)"", (char_u *)0L}
+			    {(char_u *)"ucs-bom", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -667,7 +680,7 @@ static struct vimoption options[] =
 #endif
 			    },
     {"fillchars",   "fcs",  P_STRING|P_VI_DEF|P_RALL|P_COMMA|P_NODUP,
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
 			    (char_u *)&p_fcs, PV_NONE,
 			    {(char_u *)"vert:|,fold:-", (char_u *)0L}
 #else
@@ -1184,6 +1197,9 @@ static struct vimoption options[] =
     {"modelines",   "mls",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_mls, PV_NONE,
 			    {(char_u *)5L, (char_u *)0L}},
+    {"modifiable",  "ma",   P_BOOL|P_VI_DEF,
+			    (char_u *)&p_ma, PV_MA,
+			    {(char_u *)TRUE, (char_u *)0L}},
     {"modified",    "mod",  P_BOOL|P_NO_MKRC|P_VI_DEF|P_RSTAT,
 			    (char_u *)&p_mod, PV_MOD,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -1993,6 +2009,7 @@ static char *(p_bsdir_values[]) = {"current", "last", "buffer", NULL};
 static char *(p_scbopt_values[]) = {"ver", "hor", "jump", NULL};
 #endif
 static char *(p_swb_values[]) = {"useopen", "split", NULL};
+static char *(p_debug_values[]) = {"msg", NULL};
 static char *(p_dy_values[]) = {"lastline", NULL};
 #ifdef FEAT_VERTSPLIT
 static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
@@ -2001,7 +2018,8 @@ static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 static char *(p_cb_values[]) = {"unnamed", "autoselect", NULL};
 #endif
 #if defined(FEAT_QUICKFIX)
-static char *(p_buftype_values[]) = {"nofile", "scratch", "quickfix", NULL};
+static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", NULL};
+static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
@@ -2018,6 +2036,7 @@ static char_u *illegal_char __ARGS((char_u *, int));
 static void did_set_title __ARGS((int icon));
 #endif
 static char_u *option_expand __ARGS((int opt_idx, char_u *val));
+static void check_string_option __ARGS((char_u **pp));
 static void set_string_option_global __ARGS((int opt_idx, char_u **varp));
 static void set_string_option __ARGS((int opt_idx, char_u *value, int local));
 static char_u *did_set_string_option __ARGS((int opt_idx, char_u **varp, int new_value_alloced, char_u *oldval, char_u *errbuf, int local));
@@ -2218,7 +2237,7 @@ set_init_1()
     /* Parse default for 'wildmode'  */
     check_opt_wim();
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     /* Parse default for 'fillchars'. */
     (void)set_chars_option(&p_fcs);
 #endif
@@ -2418,7 +2437,7 @@ set_init_2()
     void
 set_init_3()
 {
-#if defined(UNIX) || defined(OS2)
+#if defined(UNIX) || defined(OS2) || defined(WIN32)
 /*
  * Set 'shellpipe' and 'shellredir', depending on the 'shell' option.
  * This is done after other initializations, where 'shell' might have been
@@ -2454,13 +2473,13 @@ set_init_3()
 	 */
 	if (	   fnamecmp(p, "csh") == 0
 		|| fnamecmp(p, "tcsh") == 0
-# ifdef OS2	    /* also check with .exe extension */
+# if defined(OS2) || defined(WIN32)	/* also check with .exe extension */
 		|| fnamecmp(p, "csh.exe") == 0
 		|| fnamecmp(p, "tcsh.exe") == 0
 # endif
 	   )
 	{
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX) && !defined(WIN32)
 	    if (do_sp)
 	    {
 		p_sp = (char_u *)"|& tee";
@@ -2475,13 +2494,22 @@ set_init_3()
 	}
 	else
 # ifndef OS2	/* Always use bourne shell style redirection if we reach this */
-	    if (       STRCMP(p, "sh") == 0
-		    || STRCMP(p, "ksh") == 0
-		    || STRCMP(p, "zsh") == 0
-		    || STRCMP(p, "bash") == 0)
+	    if (       fnamecmp(p, "sh") == 0
+		    || fnamecmp(p, "ksh") == 0
+		    || fnamecmp(p, "zsh") == 0
+		    || fnamecmp(p, "bash") == 0
+#  ifdef WIN32
+		    || fnamecmp(p, "cmd") == 0
+		    || fnamecmp(p, "sh.exe") == 0
+		    || fnamecmp(p, "ksh.exe") == 0
+		    || fnamecmp(p, "zsh.exe") == 0
+		    || fnamecmp(p, "bash.exe") == 0
+		    || fnamecmp(p, "cmd.exe") == 0
+#  endif
+		    )
 # endif
 	    {
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX) && !defined(WIN32)
 		if (do_sp)
 		{
 		    p_sp = (char_u *)"2>&1| tee";
@@ -3514,15 +3542,10 @@ option_expand(opt_idx, val)
 check_options()
 {
     int		opt_idx;
-    char_u	**p;
 
     for (opt_idx = 0; options[opt_idx].fullname != NULL; opt_idx++)
 	if ((options[opt_idx].flags & P_STRING) && options[opt_idx].var != NULL)
-	{
-	    p = (char_u **)get_varp(&(options[opt_idx]));
-	    if (*p == NULL)
-		*p = empty_option;
-	}
+	    check_string_option((char_u **)get_varp(&(options[opt_idx])));
 }
 
 /*
@@ -3533,78 +3556,57 @@ check_buf_options(buf)
     buf_t	*buf;
 {
 #if defined(FEAT_QUICKFIX)
-    if (buf->b_p_bt == NULL)
-	buf->b_p_bt = empty_option;
+    check_string_option(&buf->b_p_bh);
+    check_string_option(&buf->b_p_bt);
 #endif
 #ifdef FEAT_MBYTE
-    if (buf->b_p_fcc == NULL)
-	buf->b_p_fcc = empty_option;
+    check_string_option(&buf->b_p_fcc);
 #endif
-    if (buf->b_p_ff == NULL)
-	buf->b_p_ff = empty_option;
+    check_string_option(&buf->b_p_ff);
 #ifdef FEAT_FIND_ID
-    if (buf->b_p_inc == NULL)
-	buf->b_p_inc = empty_option;
+    check_string_option(&buf->b_p_inc);
 # ifdef FEAT_EVAL
-    if (buf->b_p_inex == NULL)
-	buf->b_p_inex = empty_option;
+    check_string_option(&buf->b_p_inex);
 # endif
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
-    if (buf->b_p_inde == NULL)
-	buf->b_p_inde = empty_option;
-    if (buf->b_p_indk == NULL)
-	buf->b_p_indk = empty_option;
+    check_string_option(&buf->b_p_inde);
+    check_string_option(&buf->b_p_indk);
 #endif
 #ifdef FEAT_CRYPT
-    if (buf->b_p_key == NULL)
-	buf->b_p_key = empty_option;
+    check_string_option(&buf->b_p_key);
 #endif
-    if (buf->b_p_mps == NULL)
-	buf->b_p_mps = empty_option;
-    if (buf->b_p_fo == NULL)
-	buf->b_p_fo = empty_option;
-    if (buf->b_p_isk == NULL)
-	buf->b_p_isk = empty_option;
+    check_string_option(&buf->b_p_mps);
+    check_string_option(&buf->b_p_fo);
+    check_string_option(&buf->b_p_isk);
 #ifdef FEAT_COMMENTS
-    if (buf->b_p_com == NULL)
-	buf->b_p_com = empty_option;
+    check_string_option(&buf->b_p_com);
 #endif
-    if (buf->b_p_nf == NULL)
-	buf->b_p_nf = empty_option;
+    check_string_option(&buf->b_p_nf);
 #ifdef FEAT_SYN_HL
-    if (buf->b_p_syn == NULL)
-	buf->b_p_syn = empty_option;
+    check_string_option(&buf->b_p_syn);
 #endif
 #ifdef FEAT_SEARCHPATH
-    if (buf->b_p_sua == NULL)
-	buf->b_p_sua = empty_option;
+    check_string_option(&buf->b_p_sua);
 #endif
 #ifdef FEAT_CINDENT
-    if (buf->b_p_cink == NULL)
-	buf->b_p_cink = empty_option;
-    if (buf->b_p_cino == NULL)
-	buf->b_p_cino = empty_option;
+    check_string_option(&buf->b_p_cink);
+    check_string_option(&buf->b_p_cino);
 #endif
 #ifdef FEAT_AUTOCMD
-    if (buf->b_p_ft == NULL)
-	buf->b_p_ft = empty_option;
+    check_string_option(&buf->b_p_ft);
 #endif
 #ifdef FEAT_OSFILETYPE
-    if (buf->b_p_oft == NULL)
-	buf->b_p_oft = empty_option;
+    check_string_option(&buf->b_p_oft);
 #endif
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT)
-    if (buf->b_p_cinw == NULL)
-	buf->b_p_cinw = empty_option;
+    check_string_option(&buf->b_p_cinw);
 #endif
 #ifdef FEAT_INS_EXPAND
-    if (buf->b_p_cpt == NULL)
-	buf->b_p_cpt = empty_option;
+    check_string_option(&buf->b_p_cpt);
 #endif
 #ifdef FEAT_KEYMAP
-    if (buf->b_p_keymap == NULL)
-	buf->b_p_keymap = empty_option;
+    check_string_option(&buf->b_p_keymap);
 #endif
 }
 
@@ -3621,6 +3623,23 @@ free_string_option(p)
 {
     if (p != empty_option)
 	vim_free(p);
+}
+
+    void
+clear_string_option(pp)
+    char_u	**pp;
+{
+    if (*pp != empty_option)
+	vim_free(*pp);
+    *pp = empty_option;
+}
+
+    static void
+check_string_option(pp)
+    char_u	**pp;
+{
+    if (*pp == NULL)
+	*pp = empty_option;
 }
 
 /*
@@ -4016,7 +4035,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	errmsg = set_chars_option(varp);
     }
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     /* 'fillchars' */
     else if (varp == &p_fcs)
     {
@@ -4267,7 +4286,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	    errmsg = e_invarg;
     }
 
-    /* 'lastline' */
+    /* 'debug' */
+    else if (varp == &p_debug)
+    {
+	if (check_opt_strings(p_debug, p_debug_values, FALSE) != OK)
+	    errmsg = e_invarg;
+    }
+
+    /* 'display' */
     else if (varp == &p_dy)
     {
 	if (check_opt_strings(p_dy, p_dy_values, TRUE) != OK)
@@ -4312,6 +4338,13 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 #endif
 
 #ifdef FEAT_QUICKFIX
+    /* When 'bufhidden' is set, check for valid value. */
+    else if (varp == &(curbuf->b_p_bh))
+    {
+	if (check_opt_strings(curbuf->b_p_bh, p_bufhidden_values, FALSE) != OK)
+	    errmsg = e_invarg;
+    }
+
     /* When 'buftype' is set, check for valid value. */
     else if (varp == &(curbuf->b_p_bt))
     {
@@ -4319,17 +4352,6 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	    errmsg = e_invarg;
 	else
 	{
-	    if (bt_nofile(curbuf) || bt_scratch(curbuf))
-	    {
-		/* also close and forbid swapfile */
-		mf_close_file(curbuf, TRUE);	/* remove the swap file */
-		curbuf->b_p_swf = FALSE;	/* set noswapfile option */
-	    }
-	    else
-	    {
-		/* reset swapfile to global default */
-		curbuf->b_p_swf = p_swf;
-	    }
 # ifdef FEAT_WINDOWS
 	    if (curwin->w_status_height)
 	    {
@@ -4608,15 +4630,13 @@ set_chars_option(varp)
 	int	*cp;
 	char	*name;
     };
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     static struct charstab filltab[] =
     {
 	{&fill_stl,	"stl"},
 	{&fill_stlnc,	"stlnc"},
 	{&fill_vert,	"vert"},
-# ifdef FEAT_FOLDING
 	{&fill_fold,	"fold"},
-# endif
     };
 #endif
     static struct charstab lcstab[] =
@@ -4629,14 +4649,14 @@ set_chars_option(varp)
     };
     struct charstab *tab;
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     if (varp == &p_lcs)
 #endif
     {
 	tab = lcstab;
 	entries = sizeof(lcstab) / sizeof(struct charstab);
     }
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     else
     {
 	tab = filltab;
@@ -4834,18 +4854,9 @@ set_bool_option(opt_idx, varp, value, local)
 	set_options_bin(old_p_bin, curbuf->b_p_bin, !local);
     }
 
-    /* when 'swf' is set create swapfile, when reset remove swapfile */
+    /* when 'swf' is set, create swapfile, when reset remove swapfile */
     else if ((int *)varp == &curbuf->b_p_swf)
     {
-#ifdef FEAT_QUICKFIX
-	/* disallow swapfile in "nofile" and "scratch" buffers */
-	if (bt_nofile(curbuf) || bt_scratch(curbuf))
-	{
-	    curbuf->b_p_swf = FALSE;
-	    return (char_u *)"You cannot :set swapfile if 'buftype' is \"nofile\" or \"scratch\"";
-	}
-#endif
-
 	if (curbuf->b_p_swf && p_uc)
 	    ml_open_file(curbuf);		/* create the swap file */
 	else
@@ -4932,6 +4943,9 @@ set_bool_option(opt_idx, varp, value, local)
     {
 	if (!value)
 	    save_file_ff(curbuf);	/* Buffer is unchanged */
+#ifdef FEAT_TITLE
+	maketitle();
+#endif
 #ifdef FEAT_AUTOCMD
 	modified_was_set = value;
 #endif
@@ -5977,6 +5991,7 @@ get_varp(p)
 	case PV_BOMB:	return (char_u *)&(curbuf->b_p_bomb);
 #endif
 #if defined(FEAT_QUICKFIX)
+	case PV_BH:	return (char_u *)&(curbuf->b_p_bh);
 	case PV_BT:	return (char_u *)&(curbuf->b_p_bt);
 #endif
 #ifdef FEAT_CINDENT
@@ -6023,6 +6038,7 @@ get_varp(p)
 #endif
 	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
 	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
+	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
 	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
 	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
 #ifdef FEAT_OSFILETYPE
@@ -6133,16 +6149,11 @@ check_winopt(wop)
     winopt_t	*wop;
 {
 #ifdef FEAT_FOLDING
-    if (wop->wo_fde == NULL)
-	wop->wo_fde = empty_option;
-    if (wop->wo_fdi == NULL)
-	wop->wo_fdi = empty_option;
-    if (wop->wo_fdm == NULL)
-	wop->wo_fdm = empty_option;
-    if (wop->wo_fdt == NULL)
-	wop->wo_fdt = empty_option;
-    if (wop->wo_fmr == NULL)
-	wop->wo_fmr = empty_option;
+    check_string_option(&wop->wo_fde);
+    check_string_option(&wop->wo_fdi);
+    check_string_option(&wop->wo_fdm);
+    check_string_option(&wop->wo_fdt);
+    check_string_option(&wop->wo_fmr);
 #endif
 }
 
@@ -6155,16 +6166,11 @@ clear_winopt(wop)
     winopt_t	*wop;
 {
 #ifdef FEAT_FOLDING
-    free_string_option(wop->wo_fde);
-    wop->wo_fde = empty_option;
-    free_string_option(wop->wo_fdi);
-    wop->wo_fdi = empty_option;
-    free_string_option(wop->wo_fdm);
-    wop->wo_fdm = empty_option;
-    free_string_option(wop->wo_fdt);
-    wop->wo_fdt = empty_option;
-    free_string_option(wop->wo_fmr);
-    wop->wo_fmr = empty_option;
+    clear_string_option(&wop->wo_fde);
+    clear_string_option(&wop->wo_fdi);
+    clear_string_option(&wop->wo_fdm);
+    clear_string_option(&wop->wo_fdt);
+    clear_string_option(&wop->wo_fmr);
 #endif
 }
 
@@ -6239,6 +6245,7 @@ buf_copy_options(buf, flags)
 #endif
 		buf->b_p_ff = vim_strsave(p_ff);
 #if defined(FEAT_QUICKFIX)
+		buf->b_p_bh = empty_option;
 		buf->b_p_bt = empty_option;
 #endif
 	    }
@@ -6334,6 +6341,7 @@ buf_copy_options(buf, flags)
 		did_isk = TRUE;
 		buf->b_p_ts = p_ts;
 		buf->b_help = FALSE;
+		buf->b_p_ma = p_ma;
 	    }
 	}
 
@@ -7142,6 +7150,7 @@ fill_breakat_flags()
  * Check an option that can be a range of string values.
  *
  * Return OK for correct value, FAIL otherwise.
+ * Empty is always OK.
  */
     static int
 check_opt_strings(val, values, list)

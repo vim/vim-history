@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 16
+" Last change:	2000 Dec 12
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -43,21 +43,19 @@ endif
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
 
- " Enable file type detection.
- " Use the default filetype settings, so that mail gets 'tw' set to 72,
- " 'cindent' is on in C files, etc.
- " Also load indent files, to automatically do language-dependent indenting.
- filetype plugin indent on
+  " Enable file type detection.
+  " Use the default filetype settings, so that mail gets 'tw' set to 72,
+  " 'cindent' is on in C files, etc.
+  " Also load indent files, to automatically do language-dependent indenting.
+  filetype plugin indent on
 
- " For all text files set 'textwidth' to 78 characters.
- au FileType text setlocal tw=78
+  " For all text files set 'textwidth' to 78 characters.
+  au FileType text setlocal tw=78
 
- " This is disabled, because it changes the jumplist.  Can't use CTRL-O to go
- " back to positions in previous files more than once.
- if 0
-  " When editing a file, always jump to the last cursor position.
-  " This must be after the uncompress commands.
-   autocmd BufReadPost * if line("'\"") && line("'\"") <= line("$") | exe "normal `\"" | endif
- endif
+  " When editing a file, always jump to the last known cursor position.
+  autocmd BufReadPost *
+    \ if line("'\"") > 0 && line("'\"") <= line("$") |
+    \   exe "normal g`\"" |
+    \ endif
 
-endif " has("autocmd")
+  endif " has("autocmd")

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Hitachi H-8300h specific syntax for GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Dec 17
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -47,7 +47,7 @@ syn case match
 
 
 " Read the general asm syntax
-source <sfile>:p:h/asm.vim
+runtime syntax/asm.vim
 
 
 " The default highlighting.

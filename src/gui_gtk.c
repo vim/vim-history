@@ -499,7 +499,7 @@ pixmap_create_by_name(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
 
     /* lookup if we have a corresponding build-in pixmap */
     for (tmp = built_in_pixmaps; tmp->name; tmp++)
-	if (!STRCMP(tmp->name, name))
+	if (STRCMP(tmp->name, name) == 0)
 	    break;
 
     *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
@@ -830,14 +830,12 @@ gui_mch_create_scrollbar(scrollbar_t * sb, int orient)
     {
 	sb->id = gtk_hscrollbar_new(NULL);
 	GTK_WIDGET_UNSET_FLAGS(sb->id, GTK_CAN_FOCUS);
-	gtk_widget_show(sb->id);
 	gtk_form_put(GTK_FORM(gui.formwin), sb->id, 0, 0);
     }
     if (orient == SBAR_VERT)
     {
 	sb->id = gtk_vscrollbar_new(NULL);
 	GTK_WIDGET_UNSET_FLAGS(sb->id, GTK_CAN_FOCUS);
-	gtk_widget_show(sb->id);
 	gtk_form_put(GTK_FORM(gui.formwin), sb->id, 0, 0);
     }
     if (sb->id != NULL)

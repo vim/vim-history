@@ -1964,7 +1964,13 @@ changed()
     if (!curbuf->b_changed)
     {
 	change_warning(0);
-	if (curbuf->b_may_swap)	    /* still need to create a swap file */
+	/* Create a swap file if that is wanted.
+	 * Don't do this for "nofile" and "nowrite" buffer types. */
+	if (curbuf->b_may_swap
+#ifdef FEAT_QUICKFIX
+		&& !bt_dontwrite(curbuf)
+#endif
+		)
 	{
 	    ml_open_file(curbuf);
 

@@ -1,24 +1,21 @@
 "=============================================================================
 " File : explorer.vim
 " Author : M A Aziz Ahmed (aziz@123india.com)
-"          Mark Waggoner (waggoner@aracnet.com)
-" Last update : Tue Dec 05 2000
-" Version : 3.0
+" Last update : Thu Dec 07 2000
+" Version : 2.0
 "-----------------------------------------------------------------------------
 " This file implements a file explorer. Latest version available at:
-" http://www.aracnet.com/~waggoner/vim/
-"
 " http://www.freespeech.org/aziz/vim/
-"
 "-----------------------------------------------------------------------------
-" Just edit a directory (e.g. :new .) to start the file explorer
-" Also can use :Explore or :Sexplore to start
+" Just edit a directory or type :Explore to launch the file explorer (this
+" file should have been sourced) in a separate window. Type :Sexplore to split
+" the current window and launch explorer there. If the current buffer is
+" modified, the window is anyway split (irrespective of <Leader>e or
+" <Leader>s).
 " It is also possible to delete files and rename files within explorer.
-"
+" The directory which explorer uses by default is determined by the 'browsedir'
+" option.
 "-----------------------------------------------------------------------------
-"
-" Updated November 2000 by Mark Waggoner to allow multiple explorer windows 
-"
 " Updates from last version (1.1) :
 " 1. No corruption of registers (either named or unnamed)
 " 2. Possible to edit a file in a new window.
@@ -63,37 +60,11 @@ if (!exists("g:explHideFiles"))
 endif
 
 if !exists(':Explore')
-  command Explore :call <SID>StartExplorer(0)
+  command Explore :call s:StartExplorer(0)
 endif
 if !exists(':Sexplore')
-  command Sexplore :call <SID>StartExplorer(1)
+  command Sexplore :call s:StartExplorer(1)
 endif
-
-" Add the header with help information.  I put this function first so
-" that the help information is easy to find.
-"
-function! s:AddHeader(detailed)
-    let save_f=@f
-    exe '1'
-    if (a:detailed==1)
-      " Give a very brief help
-      let @f="\" <enter> : open file or directory\n"
-      let @f=@f."\" - : go up one level      c : change directory\n"
-      let @f=@f."\" r : rename file          d : delete file\n"
-      let @f=@f."\" s : cd to this dir       o : open a new window for file\n"
-      let @f=@f."\" i : increase verbosity   e : edit file in this window\n"
-      let @f=@f."\" a : show all files\n"
-    else
-      let @f="\"Press h for detailed help\n"
-    endif
-    let @f=@f."\"---------------------------------------------------\n"
-    let @f=@f.". ".b:completePath."\n"
-    let @f=@f."\"---------------------------------------------------\n"
-    " Add parent directory
-    let @f=@f."../\n"
-    put! f
-    let @f=save_f
-endfunction
 
 " Start the explorer using the preferences from the global variables
 "
@@ -121,25 +92,33 @@ function! s:EditDir()
     return
   endif
 
+  " If directory is already loaded, don't open it again!
+  if (line('$') > 1)
+    return
+  endif
   " Get the complete path to the directory to look at with a slash at
   " the end
-  let b:completePath = expand("%:p")
-  let origdir = getcwd()
-  if (b:completePath != ".")
-    exe "chdir" escape(b:completePath,' ')
-  endif
-  let b:completePath = getcwd()
+  let b:completePath = substitute(expand("%:p"), '\\', '/', 'g')
+  "let origdir = getcwd()
+  "exe "chdir" escape(b:completePath,' \')
+  "let b:completePath = getcwd()
   if (b:completePath !~ '/$')
     let b:completePath = b:completePath . '/'
   endif
-  exe "chdir" escape(origdir,' ')
+  let b:completePath = substitute(b:completePath, '/[^/]*/\.\./', '/', 'g')
+  "exe "chdir" escape(origdir,' \')
 
   " escape special characters for exec commands
-  let b:completePathEsc=escape(b:completePath,' ')
+  let b:completePathEsc=escape(b:completePath,' \')
+  let b:parentDirEsc=substitute(b:completePathEsc, '/[^/]*/$', '/', 'g')
 
   " 
-  let b:tempShowFileSize=0
-  let b:tempShowFileDate=0
+  if (!exists("s:tempShowFileSize"))
+    let s:tempShowFileSize=0
+  endif
+  if (!exists("s:tempShowFileDate"))
+    let s:tempShowFileDate=0
+  endif
   call s:SyntaxFile()
   let g:filterFormula=substitute(g:explHideFiles, '\([^\\]\),', '\1\\|', 'g')
   call s:ShowDirectory()
@@ -150,24 +129,34 @@ function! s:EditDir()
   let b:oldCpo=&cpo | set cpo=
   let &cpo=b:oldCpo
 
+  let b:splitMode=""
+  if (g:explVertical==1)
+    let b:splitMode="vertical"
+  endif
   " Set up mappings for this buffer
-  nm <buffer> <cr> :exec ("silent e "  . <SID>GetFileNameEsc())<cr>
-  nm <buffer> -    :exec ("silent e "  . b:completePathEsc . '..')<cr>
-  nm <buffer> o    :exec ("silent sp " . <SID>GetFileNameEsc())<cr>
-  nm <buffer> e    :exec ("silent e "  . <SID>GetFileNameEsc())<cr>
-  nm <buffer> h    :call <SID>ExpandHelp()<Bar>nunmap <buffer> h<cr>
-  nm <buffer> c    :ChangeDirectory to: 
+  nm <buffer> <cr> :exec ("silent e "  . <SID>GetFileNameEsc())<cr>:call <SID>DelPrevBuffer()<cr>
+  nm <buffer> e :exec ("silent e "  . <SID>GetFileNameEsc())<cr>:call <SID>DelPrevBuffer()<cr>
+  nm <buffer> -    :exec ("silent e "  . b:parentDirEsc)<cr>:call <SID>DelPrevBuffer()<cr>
+  nm <buffer> o    :exec ("silent ".b:splitMode." sp " .
+                           \<SID>GetFileNameEsc())<cr><c-w>x
+                           \:exec("silent ".b:splitMode." resize ".g:explWinSize)<cr><c-w>p
+  nm <buffer> h    :call <SID>ExpandHelp()<cr>
+  "nm <buffer> c    :ChangeDirectory to: 
   nnoremap <buffer> a :call <SID>ShowAllFiles()<cr>
   nm <buffer> r    :call <SID>RenameFile()<cr>
   nm <buffer> d    :. call <SID>DeleteFile()<cr>
   vm <buffer> d    :call <SID>DeleteFile()<cr>
   nm <buffer> i    :call <SID>IncrVerbosity()<cr>
   nm <buffer> s    :exec ("cd ".b:completePathEsc)<cr>
-  command! -buffer -nargs=+ -complete=dir ChangeDirectory call <SID>GotoDir(<f-args>)
+  "command! -buffer -nargs=+ -complete=dir ChangeDirectory call s:GotoDir(<f-args>)
 
 endfunction
 
-
+function! s:DelPrevBuffer()
+  if (isdirectory(@#))
+    silent bd!#
+  endif
+endfunction
 " Show the header and contents of the directory
 "
 function! s:ShowDirectory()
@@ -187,7 +176,9 @@ endfunction
 " Extract the file name from the line the cursor is currently on
 "
 function! s:GetFileNameEsc()
-    let n=escape(s:GetFileName(),' ')
+    let n=escape(s:GetFileName(),' \%#')
+    let n=substitute(n, '/[^/]*/\.\./', '/', 'g')
+    "call message(n)
     return n
 endfunction
 
@@ -200,8 +191,31 @@ function! s:GetFileName()
   endif
 endfunction
 
+" Add the header with help information
+"
+function! s:AddHeader(detailed)
+    let save_f=@f
+    exe '1'
+    if (a:detailed==1)
+      " Give a very brief help
+      let @f="\" <enter> : open file or directory\n"
+      let @f=@f."\" - : go up one level      a : show all files\n"
+      let @f=@f."\" r : rename file          d : delete file\n"
+      let @f=@f."\" s : cd to this dir       o : edit file in a new window\n"
+      let @f=@f."\" i : increase verbosity   e : edit file in this window\n"
+    else
+      let @f="\"Press h for detailed help\n"
+    endif
+    let @f=@f."\"---------------------------------------------------\n"
+    let @f=@f.". ".b:completePath."\n"
+    let @f=@f."\"---------------------------------------------------\n"
+    " Add parent directory
+    let @f=@f."../\n"
+    put! f
+    let @f=save_f
+endfunction
 
-" Show all the files
+"
 "
 function! s:DisplayFiles(dir)
  
@@ -230,8 +244,8 @@ function! s:DisplayFiles(dir)
     0
     /^\.\.\//,$g/^/call s:MarkDirs()
     normal `t
-    call s:ShowFileSizes((g:explShowFileSize) || (b:tempShowFileSize))
-    call s:ShowFileDates((g:explShowFileDate) || (b:tempShowFileDate))
+    call s:ShowFileSizes((g:explShowFileSize) || (s:tempShowFileSize))
+    call s:ShowFileDates((g:explShowFileDate) || (s:tempShowFileDate))
   endif
 
   " restore f register
@@ -239,7 +253,7 @@ function! s:DisplayFiles(dir)
 
 endfunction
 
-" Add slashes to the end of the directory names
+"
 "
 function! s:MarkDirs()
   let oldRep=&report
@@ -305,9 +319,9 @@ function! s:ShowFileDates(enable)
       /^\.\.\//,$g/^/exec 's/$/ '.escape(s:FileModDate(s:GetFileName()), '/').'/'
     else
       0
-      /^\.\.\//,$g/^/let fileTime=FileModDate(s:GetFileName()) |
+      /^\.\.\//,$g/^/let fn=s:GetFileName() |
                      \exec "norm $".(b:maxFileLen-strlen(getline("."))+2)."a \<esc>" |
-                     \exec 's/$/ '.escape(fileTime, '/').'/'
+                     \exec 's/$/ '.escape(s:FileModDate(s:(fn)), '/').'/'
 
     endif
     let b:fileDatesShown=1
@@ -384,7 +398,7 @@ function! s:RenameFile()
   elseif (filereadable(fileName))
     let altName=input("Rename ".fileName." to : ")
     echo " "
-    if altName == ""
+    if (altName=="")
       return
     endif
     let success=rename(fileName, b:completePath.altName)
@@ -401,22 +415,23 @@ function! s:RenameFile()
   let &modified=0
 endfunction
 
-" Change to a different directory
 "
-function! s:GotoDir(dummy, dirName)
-  if (isdirectory(expand(a:dirName)))
-    " Guess the complete path
-    if (isdirectory(expand(getcwd()."/".a:dirName)))
-      let dirpath=getcwd()."/".a:dirName
-    else
-      let dirpath=expand(a:dirName)
-    endif
-    call s:InitializeDirName(dirpath)
-    call s:ShowDirectory()
-  else
-    echo a:dirName." : No such directory"
-  endif
-endfunction
+"
+"function! s:GotoDir(dummy, dirName)
+"  if (isdirectory(expand(a:dirName)))
+"    " Guess the complete path
+"    "if (isdirectory(expand(getcwd()."/".a:dirName)))
+"    "  let dirpath=getcwd()."/".a:dirName
+"    "else
+"    "  let dirpath=expand(a:dirName)
+"    "endif
+"    "let b:completePath=dirpath
+"    "call s:ShowDirectory()
+"    exec("e ".a:dirName)
+"  else
+"    echo a:dirName." : No such directory"
+"  endif
+"endfunction
 
 " Set up the syntax highlighting for directory explorer
 "
@@ -449,15 +464,15 @@ function! s:ExpandHelp()
   let &modified=0
 endfunction
 
-" Show more information
+"
 "
 function! s:IncrVerbosity()
   if (b:fileSizesShown==0)
     call s:ShowFileSizes(1)
-    let b:tempShowFileSize=1
+    let s:tempShowFileSize=1
   elseif (b:fileDatesShown==0)
     call s:ShowFileDates(1)
-    let b:tempShowFileDate=1
+    let s:tempShowFileDate=1
   endif
 endfunction
 

@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0p.  Last change: 2000 Nov 13
+*pi_expl.txt*    For Vim version 6.0q.  Last change: 2000 Dec 11
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -20,18 +20,11 @@ You can avoid loading this plugin by setting the "loaded_explorer" variable: >
 1. Starting the file explorer				*expl-starting*
 
 This plugin is to explore directories and files inside Vim. The file explorer
-is launched whenever the user tries to edit a directory. It can also be
-launched through the mapped key sequence <Leader>e. To open the file
-explorer in a new window use the key sequence <Leader>s. |<Leader>|
-You can redefine these by adding a couple of lines to your vimrc file: >
-	:nmap ,ee <Plug>ExplorerOpen
-	:nmap ,ss <Plug>ExplorerSplit
-This uses ,ee instead of <Leader>e and ,ss instead of <Leader>s.
-
-							*explorer-settings*
-If the explorer is launched using the command <Leader>e or <Leader>s, the
-directory which will be opened will depend on the 'browsedir' option.
-|'browsedir'|
+is launched whenever the user tries to edit a directory.
+To launch the explorer in the directory of the file currently edited: >
+	:Explore
+If the file has changes the window is split.  To always split the window: >
+	:Sexplore
 
 							*g:explVertical*
 The file explorer by splitting the current window horizontally or vertically.
@@ -40,7 +33,7 @@ To split the window vertically, inside explorer.vim, set the following: >
 Setting it to zero will cause the window to split horizontally.
 
 From inside the explorer, pressing <enter> on a filename will close the
-explorer and open the file chosen. To open the file in a new window, press e.
+explorer and open the file chosen. To open the file in a new window, press o.
 The new window will be split horizontally or vertically based on the value of
 the variable g:explVertical.
 
@@ -71,7 +64,7 @@ the date information. |strftime()|
 							*g:explHideFiles*
 You can hide some files by filling the variable g:explHidFiles with regular
 expressions. A filename that matches any of these regular expressions will not
-be shown. For example,
+be shown. For example, >
 
   let g:explHideFiles='^\.,\.gz$,\.exe$,\.zip$'
 

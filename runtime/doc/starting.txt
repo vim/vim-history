@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0p.  Last change: 2000 Dec 10
+*starting.txt*  For Vim version 6.0q.  Last change: 2000 Dec 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -121,15 +121,15 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 --version	Print version information and exit.  Same output as for
 		|:version| command.  {not in Vi}
 
-							*--noplugins*
---noplugins	Skip loading plugins.  Resets the 'loadplugins' option.
+							*--noplugin*
+--noplugin	Skip loading plugins.  Resets the 'loadplugins' option.
 		{not in Vi}
 		Note that the |-u| argument may also disable loading plugins:
 			argument	load vimrc files	load plugins ~
 			(nothing)		yes		    yes
 			-u NONE			no		    no
 			-u NORC			no		    yes
-			--noplugins		yes		    no
+			--noplugin		yes		    no
 
 							*-+*
 +[num]		The cursor will be positioned on line "num" for the first
@@ -142,7 +142,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		available search patterns).
 
 +{command}						*-+c* *-c*
--c {command}	"command" will be executed after the first file has been
+-c {command}	{command} will be executed after the first file has been
 		read (and after autocommands and modelines for that file have
 		been processed).  "command" is interpreted as an Ex command.
 		If the "command" contains spaces, it must be enclosed in
@@ -154,6 +154,13 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Note: You can use up to 10 "+" or "-c" arguments in a Vim
 		command.  They are executed in the order given. {Vi only
 		allows one command}
+
+							*-S*
+-S {file}	The {file} will be sourced after the first file has been read.
+		This is an easy way to do the equivalent of: >
+			-c "source {file}"
+<		It can be mixed with "-c" arguments and repeated like "-c".
+		{not in Vi}
 
 							*-r*
 -r		Recovery mode.  Without a file name argument, a list of
@@ -578,7 +585,7 @@ accordingly.  Vim proceeds in this order:
 	will be sourced (in alphabetial order per directory).
 	Loading plugins won't be done when:
 	- The 'loadplugins' option was reset in a vimrc file.
-	- The |--noplugins| command line argument is used.
+	- The |--noplugin| command line argument is used.
 	- The "-u NONE" command line argument is used |-u|.
 	- When Vim was compiled without the |+eval| feature.
 	Note that using "-c set noloadplugins" doesn't work, because the
@@ -601,9 +608,8 @@ accordingly.  Vim proceeds in this order:
 	|gui-init|.
 
 9. Read the viminfo file
-	If the 'viminfo' option is not empty, the viminfo file is read.  The
-	default is empty, so 'viminfo' must have been set by one of the
-	previous initializations.  See |viminfo-file|.
+	If the 'viminfo' option is not empty, the viminfo file is read.  See
+	|viminfo-file|.
 
 10. Read the quickfix file
 	If the "-q" flag was given to Vim, the quickfix file is read.  If this

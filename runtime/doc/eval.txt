@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
+*eval.txt*      For Vim version 6.0q.  Last change: 2000 Dec 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -656,6 +656,7 @@ cscope_connection( [{num} , {dbpath} [, {prepend}]])
 delete( {fname})		Number	delete file {fname}
 did_filetype()			Number	TRUE if FileType autocommand event used
 escape( {string}, {chars})	String	escape {chars} in {string} with '\'
+executable( {expr})		Number	1 if executable {expr} exists
 exists( {var})			Number	TRUE if {var} exists
 expand( {expr})			String	expand special keywords in {expr}
 filereadable( {file})		Number	TRUE if {file} is a readable file
@@ -965,6 +966,16 @@ escape({string}, {chars})				*escape()*
 <		results in: >
 			c:\\program\ files\\vim
 <
+							*executable()*
+executable({expr})
+		This function checks if an executable with the name {expr}
+		exists.  {expr} must be the name of the program without any
+		arguments.  executable() uses the normal $PATH.
+		The result is a Number:
+			1	exists
+			0	does not exist
+			-1	not implemented on this system
+
 							*exists()*
 exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 		otherwise.  The {expr} argument is a string, which contains
@@ -1589,10 +1600,10 @@ search({pattern} [, {flags}])
 		    :  " start at the last char in the file and wrap for the
 		    :  " first search to find match at start of file
 		    :  normal G$
-		    :  let i = 1
-		    :  while search("foo", i) == 0
+		    :  let flags = "w"
+		    :  while search("foo", flags) == 0
 		    :    s/foo/bar/g
-		    :	let i = 0
+		    :	 let flags = "W"
 		    :  endwhile
 		    :  update		    " write the file if modified
 		    :  let n = n + 1
@@ -1956,6 +1967,7 @@ gui_win32		Compiled with MS Windows Win32 GUI.
 gui_win32s		idem, and Win32s system being used (Windows 3.1)
 gui_running		Vim is running in the GUI, or it will start soon.
 hangul_input		Compiled with Hangul input support. |hangul|
+iconv			Can use iconv() for coversion.
 insert_expand		Compiled with support for CTRL-X expansion commands in
 			Insert mode.
 langmap			Compiled with 'langmap' support.

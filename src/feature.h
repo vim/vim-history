@@ -533,6 +533,11 @@
 	Error: Can only handle multi-byte feature with 32 bit int or larger
 #endif
 
+/* Use iconv() when it's available. */
+#if defined(FEAT_MBYTE) && (defined(HAVE_ICONV_H) || defined(DYNAMIC_ICONV))
+# define USE_ICONV
+#endif
+
 /*
  * +xim			X Input Method.  For entering special languages like
  *			chinese and Japanese.

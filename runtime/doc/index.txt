@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0p.  Last change: 2000 Dec 10
+*index.txt*     For Vim version 6.0q.  Last change: 2000 Dec 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -660,6 +660,8 @@ tag		char	      note action in Normal mode	~
 				   when 'wrap' on go to the rightmost character
 				   of the current screen line
 |g&|		g&		2  repeat last ":s" on all lines
+|g'|		g'{mark}	1  like |'| but without changing the jumplist
+|g`|		g`{mark}	1  like |`| but without changing the jumplist
 |gstar|		g*		1  like "*", but without using "\<" and "\>"
 |g0|		g0		1  when 'wrap' off go to leftmost character of
 				   the current line that is on the screen;

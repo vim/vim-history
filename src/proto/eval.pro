@@ -34,6 +34,6 @@ int func_has_abort __ARGS((void *cookie));
 int read_viminfo_varlist __ARGS((char_u *line, FILE *fp, int writing));
 void write_viminfo_varlist __ARGS((FILE *fp));
 int store_session_globals __ARGS((FILE *fd));
+int eval_charconvert __ARGS((char_u *cc_from, char_u *cc_to, char_u *fname_from, char_u *fname_to));
 int modify_fname __ARGS((char_u *src, int *usedlen, char_u **fnamep, char_u **bufp, int *fnamelen));
 char_u *do_string_sub __ARGS((char_u *str, char_u *pat, char_u *sub, char_u *flags));
-char_u *eval_charconvert __ARGS((char_u *fname, char_u *fcc, int *fdp));

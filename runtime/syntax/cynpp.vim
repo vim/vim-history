@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Cyn++
 " Maintainer:	Phil Derrick <phild@cynapps.com>
-" Last change:	2000 Dec 10
+" Last change:	2000 Dec 17
 " URL http://www.derrickp.freeserve.co.uk/vim/syntax/cynpp.vim
 "
 " Language Information
@@ -23,7 +23,7 @@
 syn clear
 
 " Read the Cynlib syntax to start with - this includes the C++ syntax
-source <sfile>:p:h/cynlib.vim
+runtime syntax/cynlib.vim
 
 " Cyn++ extensions
 

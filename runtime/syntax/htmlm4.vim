@@ -2,7 +2,7 @@
 " Language:	HTML and M4
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/htmlm4.vim
-" Last Change:	1999 May 20
+" Last Change:	2000 Dec 17
 
 " Remove any old syntax stuff hanging around
 
@@ -12,10 +12,10 @@ if !exists("main_syntax")
   let main_syntax='htmlm4'
 endif
 
-so <sfile>:p:h/html.vim
+runtime syntax/html.vim
 syn case match
 
-so <sfile>:p:h/m4.vim
+runtime syntax/m4.vim
 syn cluster htmlPreproc add=@m4Top
 syn cluster m4StringContents add=htmlTag,htmlEndTag
 

@@ -729,6 +729,7 @@ struct file_buffer
     int		b_p_bomb;	/* 'bomb' */
 #endif
 #if defined(FEAT_QUICKFIX)
+    char_u	*b_p_bh;	/* 'bufhidden' */
     char_u	*b_p_bt;	/* 'buftype' */
 #endif
 #ifdef FEAT_CINDENT
@@ -777,6 +778,7 @@ struct file_buffer
     char_u	*b_p_mps;	/* 'matchpairs' */
     int		b_p_ml;		/* 'modeline' */
     int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
+    int		b_p_ma;		/* 'modifiable' */
     char_u	*b_p_nf;	/* 'nrformats' */
 #ifdef FEAT_OSFILETYPE
     char_u	*b_p_oft;	/* 'osfiletype' */
@@ -1136,7 +1138,9 @@ struct window
     long	w_scbind_pos;
 #endif
 
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     int		w_preview;	/* Flag to indicate a preview window */
+#endif
 
 #ifdef FEAT_EVAL
     garray_t	w_vars;		/* internal variables, local to window */

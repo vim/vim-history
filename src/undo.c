@@ -147,14 +147,24 @@ u_savedel(lnum, nlines)
 
     static int
 u_savecommon(top, bot, newbot)
-    linenr_t top, bot;
-    linenr_t newbot;
+    linenr_t	top, bot;
+    linenr_t	newbot;
 {
     linenr_t		lnum;
     long		i;
     struct u_header	*uhp;
     u_entry_t		*uep;
     long		size;
+
+    /*
+     * Don't allow changes when 'modifiable' is off.  Letting the
+     * undo fail is a crude way to make all change commands fail.
+     */
+    if (!curbuf->b_p_ma)
+    {
+	EMSG(_("Cannot make changes, 'modifiable' is off"));
+	return FAIL;
+    }
 
 #ifdef HAVE_SANDBOX
     /*
@@ -1218,7 +1228,7 @@ bufIsChanged(buf)
 {
     return
 #ifdef FEAT_QUICKFIX
-	    !bt_nofile(buf) && !bt_scratch(buf) &&
+	    !bt_dontwrite(buf) &&
 #endif
 	    (buf->b_changed || file_ff_differs(buf));
 }
@@ -1228,7 +1238,7 @@ curbufIsChanged()
 {
     return
 #ifdef FEAT_QUICKFIX
-	!bt_nofile(curbuf) && !bt_scratch(curbuf) &&
+	!bt_dontwrite(curbuf) &&
 #endif
 	(curbuf->b_changed || file_ff_differs(curbuf));
 }
