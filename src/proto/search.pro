@@ -14,7 +14,7 @@ int search_for_exact_line __ARGS((buf_T *buf, pos_T *pos, int dir, char_u *pat))
 int searchc __ARGS((cmdarg_T *cap, int t_cmd));
 pos_T *findmatch __ARGS((oparg_T *oap, int initc));
 pos_T *findmatchlimit __ARGS((oparg_T *oap, int initc, int flags, int maxtravel));
-void showmatch __ARGS((void));
+void showmatch __ARGS((int c));
 int findsent __ARGS((int dir, long count));
 int findpar __ARGS((oparg_T *oap, int dir, long count, int what, int both));
 int startPS __ARGS((linenr_T lnum, int para, int both));

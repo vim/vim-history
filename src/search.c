@@ -1580,6 +1580,8 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		backwards = FALSE;
 		break;
 	    }
+	    if (ptr[1] != ',')
+		break;
 	}
 	if (!findc)		/* invalid initc! */
 	    return NULL;
@@ -2143,17 +2145,40 @@ check_linecomment(line)
  * If there isn't a match, then beep.
  */
     void
-showmatch()
+showmatch(c)
+    int		c;	    /* char to show match for */
 {
-    pos_T	   *lpos, save_cursor;
-    pos_T	    mpos;
-    colnr_T	    vcol;
-    long	    save_so;
-    long	    save_siso;
+    pos_T	*lpos, save_cursor;
+    pos_T	mpos;
+    colnr_T	vcol;
+    long	save_so;
+    long	save_siso;
 #ifdef CURSOR_SHAPE
-    int		    save_state;
+    int		save_state;
 #endif
-    colnr_T	    save_dollar_vcol;
+    colnr_T	save_dollar_vcol;
+    char_u	*p;
+
+    /*
+     * Only show match for chars in the 'matchpairs' option.
+     */
+    /* 'matchpairs' is "x:y,x:y" */
+    for (p = curbuf->b_p_mps; *p != NUL; p += 2)
+    {
+#ifdef FEAT_RIGHTLEFT
+	if (*p == c && (curwin->w_p_rl ^ p_ri))
+	    break;
+#endif
+	p += 2;
+	if (*p == c
+#ifdef FEAT_RIGHTLEFT
+		&& !(curwin->w_p_rl ^ p_ri)
+#endif
+	   )
+	    break;
+	if (p[1] != ',')
+	    return;
+    }
 
     if ((lpos = findmatch(NULL, NUL)) == NULL)	    /* no match, so beep */
 	vim_beep();

@@ -1943,16 +1943,8 @@ ins_char_bytes(buf, charlen)
 #ifdef FEAT_MBYTE
 	    && charlen == 1
 #endif
-#ifdef FEAT_RIGHTLEFT
-	    && ((!(curwin->w_p_rl ^ p_ri)
-		    && (c == ')' || c == '}' || c == ']'))
-		|| ((curwin->w_p_rl ^ p_ri)
-		    && (c == '(' || c == '{' || c == '[')))
-#else
-	    && (c == ')' || c == '}' || c == ']')
-#endif
-	    )
-	showmatch();
+       )
+	showmatch(c);
 
 #ifdef FEAT_RIGHTLEFT
     if (!p_ri || (State & REPLACE_FLAG))
