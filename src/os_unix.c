@@ -2980,6 +2980,7 @@ mch_call_shell(cmd, options)
     char	*ifn = NULL;
     char	*ofn = NULL;
 #endif
+    int		tmode = cur_tmode;
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
     int	    x;
 #ifndef __EMX__
@@ -3074,7 +3075,8 @@ mch_call_shell(cmd, options)
 	msg_putchar('\n');
     }
 
-    settmode(TMODE_RAW);		/* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);	/* set to raw mode */
 #ifdef FEAT_TITLE
     resettitle();
 #endif
@@ -3667,7 +3669,8 @@ finished:
 	     * Set to raw mode right now, otherwise a CTRL-C after
 	     * catch_signals() will kill Vim.
 	     */
-	    settmode(TMODE_RAW);
+	    if (tmode == TMODE_RAW)
+		settmode(TMODE_RAW);
 	    did_settmode = TRUE;
 	    set_signals();
 
@@ -3698,7 +3701,8 @@ finished:
 
 error:
     if (!did_settmode)
-	settmode(TMODE_RAW);		    /* set to raw mode */
+	if (tmode == TMODE_RAW)
+	    settmode(TMODE_RAW);	/* set to raw mode */
 #ifdef FEAT_TITLE
     resettitle();
 #endif

@@ -510,7 +510,8 @@ mch_call_shell(
     char_u *cmd,
     int options)	    /* SHELL_, see vim.h */
 {
-    int	    x;
+    int		x;
+    int		tmode = cur_tmode;
 
     out_flush();
 
@@ -571,7 +572,8 @@ mch_call_shell(
 	}
     }
 
-    settmode(TMODE_RAW);	    /* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);	/* set to raw mode */
 
     if (x && !(options & SHELL_SILENT) && !emsg_silent)
     {

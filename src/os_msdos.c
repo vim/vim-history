@@ -2103,6 +2103,7 @@ mch_call_shell(
     int		options)
 {
     int		x;
+    int		tmode = cur_tmode;
 #ifndef DJGPP
     char_u	*newcmd;
 #endif
@@ -2152,7 +2153,8 @@ mch_call_shell(
     signal(SIGQUIT, SIG_DFL);
     signal(SIGTERM, SIG_DFL);
 #endif
-    settmode(TMODE_RAW);	/* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);	/* set to raw mode */
     set_interrupts(TRUE);	/* catch interrupts */
 
     if (x && !(options & SHELL_SILENT) && !emsg_silent)

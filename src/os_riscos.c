@@ -796,6 +796,7 @@ mch_call_shell(cmd, options)
     int		options;	/* SHELL_*, see vim.h */
 {
     int		retval;
+    int		tmode = cur_tmode;
 
     if (cmd == NULL)
 	cmd = (char_u *) "GOS";
@@ -816,7 +817,8 @@ mch_call_shell(cmd, options)
 	EMSG(strerror(EOPSYS));		/* Doesn't seem to set errno? */
 
     swi(OS_Byte, 229, 1, 0);		/* Re-disable escape */
-    settmode(TMODE_RAW);		/* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);		/* set to raw mode */
     return retval ? FAIL : OK;
 }
 

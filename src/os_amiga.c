@@ -1129,6 +1129,7 @@ mch_call_shell(cmd, options)
 {
     BPTR	mydir;
     int		x;
+    int		tmode = cur_tmode;
 #ifdef AZTEC_C
     int		use_execute;
     char_u	*shellcmd = NULL;
@@ -1315,7 +1316,8 @@ mch_call_shell(cmd, options)
 
     if (mydir = CurrentDir(mydir))	/* make sure we stay in the same directory */
 	UnLock(mydir);
-    settmode(TMODE_RAW);		/* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);		/* set to raw mode */
 #ifdef FEAT_TITLE
     resettitle();
 #endif

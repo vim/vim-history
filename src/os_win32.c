@@ -2865,7 +2865,8 @@ mch_call_shell(
     char_u *cmd,
     int options)	/* SHELL_*, see vim.h */
 {
-    int	    x = 0;
+    int		x = 0;
+    int		tmode = cur_tmode;
 #ifdef FEAT_TITLE
     char szShellTitle[512];
 
@@ -3026,7 +3027,8 @@ mch_call_shell(
 	}
     }
 
-    settmode(TMODE_RAW);	    /* set to raw mode */
+    if (tmode == TMODE_RAW)
+	settmode(TMODE_RAW);	/* set to raw mode */
 
     /* Print the return value, unless "vimrun" was used. */
     if (x != 0 && !(options & SHELL_SILENT) && !emsg_silent
