@@ -64,7 +64,7 @@
 
 #define DLG_NONBUTTON_CONTROL	5000	/* First ID of non-button controls */
 
-#ifndef WM_XBUTTONDOWN // For Win2K / winME ONLY
+#ifndef WM_XBUTTONDOWN /* For Win2K / winME ONLY */
 # define WM_XBUTTONDOWN		0x020B
 # define WM_XBUTTONUP		0x020C
 # define WM_XBUTTONDBLCLK	0x020D
@@ -612,7 +612,7 @@ _OnMouseButtonDown(
 	button = MOUSE_MIDDLE;
     else if (s_uMsg == WM_RBUTTONDOWN || s_uMsg == WM_RBUTTONDBLCLK)
 	button = MOUSE_RIGHT;
-#ifndef WIN16 //<VN>
+#ifndef WIN16 /*<VN>*/
     else if (s_uMsg == WM_XBUTTONDOWN || s_uMsg == WM_XBUTTONDBLCLK)
     {
 #ifndef GET_XBUTTON_WPARAM
@@ -911,9 +911,11 @@ _TextAreaWndProc(
 	HANDLE_MSG(hwnd, WM_RBUTTONDBLCLK,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_RBUTTONDOWN,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_RBUTTONUP,	_OnMouseMoveOrRelease);
+#ifndef WIN16 /*<VN>*/
 	HANDLE_MSG(hwnd, WM_XBUTTONDBLCLK,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_XBUTTONDOWN,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_XBUTTONUP,	_OnMouseMoveOrRelease);
+#endif
 
     default:
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
