@@ -279,7 +279,10 @@ u_savecommon(top, bot, newbot)
 		     * entry now.  Following deleted/inserted lines go to the
 		     * re-used entry. */
 		    if (i > 0)
+		    {
 			u_getbot();
+			curbuf->b_u_synced = FALSE;
+		    }
 
 		    /* The line count might change afterwards. */
 		    if (newbot != 0)
