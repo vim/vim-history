@@ -2317,8 +2317,8 @@ enc_alias_search(name)
 #endif
 
 /*
- * Return the default value for 'encoding' in an allocated string.
- * Returns NULL when out of memory or no usable default could be found.
+ * Set the default value for 'encoding' (p_enc).
+ * Returns OK when successful, FAIL when not.
  */
     int
 enc_default()
@@ -2349,6 +2349,9 @@ enc_default()
 	    if ((s = getenv("LC_ALL")) == NULL || *s == NUL)
 		if ((s = getenv("LC_CTYPE")) == NULL || *s == NUL)
 		    s = getenv("LANG");
+
+    if (s == NULL || *s == NUL)
+	return FAIL;
 
     /* The most generic locale format is:
      * language[_territory][.codeset][@modifier][+special][,[sponsor][_revision]]
