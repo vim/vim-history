@@ -390,6 +390,8 @@ emsg(s)
     int		other_sourcing_name;
     char	*p;
 
+    called_emsg = TRUE;
+
     /*
      * If "emsg_off" is set: no error messages at the moment.
      * If 'debug' is set: do error message anyway, but without side effects.

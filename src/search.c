@@ -409,6 +409,7 @@ last_pat_prog(regmatch)
  * if (options & SEARCH_START) accept match at pos itself
  * if (options & SEARCH_KEEP) keep previous search pattern
  * if (options & SEARCH_FOLD) match only once in a closed fold
+ * if (options & SEARCH_PEEK) check for typed char, cancel search
  *
  * Return FAIL (zero) for failure, non-zero for success.
  * When FEAT_EVAL is defined, returns the index of the first matching
@@ -441,6 +442,11 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
     long	nmatched;
     int		submatch = 0;
     linenr_T	first_lnum;
+#ifdef FEAT_SEARCH_EXTRA
+    int		break_loop = FALSE;
+#else
+# define break_loop FALSE
+#endif
 
     if (search_regcomp(str, RE_SEARCH, pat_use,
 		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
@@ -465,6 +471,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 /*
  * find the string
  */
+    called_emsg = FALSE;
     do	/* loop for count */
     {
 	start_pos = *pos;	/* remember start pos for detecting no match */
@@ -500,6 +507,9 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 		first_lnum = lnum;
 		nmatched = vim_regexec_multi(&regmatch, win, buf,
 							    lnum, (colnr_T)0);
+		/* Abort searching on an error (e.g., out of stack). */
+		if (called_emsg)
+		    break;
 		if (nmatched > 0)
 		{
 		    /* match may actually be in another line when using \zs */
@@ -708,6 +718,19 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 		if (got_int)
 		    break;
 
+#ifdef FEAT_SEARCH_EXTRA
+		/* Cancel searching if a character was typed.  Used for
+		 * 'incsearch'.  Don't check too often, that would slowdown
+		 * searching too much. */
+		if ((options & SEARCH_PEEK)
+			&& ((lnum - pos->lnum) & 0x3f) == 0
+			&& char_avail())
+		{
+		    break_loop = TRUE;
+		    break;
+		}
+#endif
+
 		if (loop && lnum == start_pos.lnum)
 		    break;	    /* if second loop, stop where started */
 	    }
@@ -717,7 +740,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 	     * stop the search if wrapscan isn't set, after an interrupt and
 	     * after a match
 	     */
-	    if (!p_ws || got_int || found)
+	    if (!p_ws || got_int || called_emsg || break_loop || found)
 		break;
 
 	    /*
@@ -740,7 +763,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 		    give_warning((char_u *)_(bot_top_msg), TRUE);
 	    }
 	}
-	if (got_int)
+	if (got_int || called_emsg || break_loop)
 	    break;
     }
     while (--count > 0 && found);   /* stop after count matches or no match */
@@ -804,6 +827,7 @@ first_submatch(rp)
  *    If 'options & SEARCH_MARK': set previous context mark
  *    If 'options & SEARCH_KEEP': keep previous search pattern
  *    If 'options & SEARCH_START': accept match at curpos itself
+ *    If 'options & SEARCH_PEEK': check for typed char, cancel search
  *
  * Careful: If spats[0].off.line == TRUE and spats[0].off.off == 0 this
  * makes the movement linewise without moving the match position.
@@ -1046,8 +1070,9 @@ do_search(oap, dirc, str, count, options)
 
 	c = searchit(curwin, curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
 		searchstr, count, spats[0].off.end + (options &
-		       (SEARCH_KEEP + SEARCH_HIS + SEARCH_MSG + SEARCH_START +
-			   ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
+		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
+			+ SEARCH_MSG + SEARCH_START
+			+ ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
 		RE_LAST);
 	if (dircp != NULL)
 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */

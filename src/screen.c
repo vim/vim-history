@@ -3006,7 +3006,7 @@ win_line(wp, lnum, startrow, endrow)
 		shl = &search_hl;
 		for (;;)
 		{
-		    for (;;)
+		    while (shl->rm.regprog != NULL)
 		    {
 			if (shl->startp != NULL
 				&& ptr >= shl->startp
@@ -5295,7 +5295,7 @@ prepare_search_hl(wp, lnum)
 # endif
 	    }
 	    n = 0;
-	    while (shl->first_lnum < lnum)
+	    while (shl->first_lnum < lnum && shl->rm.regprog != NULL)
 	    {
 		next_search_hl(wp, shl, shl->first_lnum, (colnr_T)n);
 		if (shl->lnum != 0)
@@ -5355,6 +5355,7 @@ next_search_hl(win, shl, lnum, mincol)
      * Repeat searching for a match until one is found that includes "mincol"
      * or none is found in this line.
      */
+    called_emsg = FALSE;
     for (;;)
     {
 	/* Three situations:
@@ -5381,6 +5382,14 @@ next_search_hl(win, shl, lnum, mincol)
 
 	shl->lnum = lnum;
 	nmatched = vim_regexec_multi(&shl->rm, win, shl->buf, lnum, matchcol);
+	if (called_emsg)
+	{
+	    /* Error while handling regexp: stop using this regexp. */
+	    vim_free(shl->rm.regprog);
+	    shl->rm.regprog = NULL;
+	    no_hlsearch = TRUE;
+	    break;
+	}
 	if (nmatched == 0)
 	{
 	    shl->lnum = 0;		/* no match found */
