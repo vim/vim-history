@@ -1395,35 +1395,39 @@ echo "configure:1395: checking --disable-xsmp argument" >&5
 # Check whether --enable-xsmp or --disable-xsmp was given.
 if test "${enable_xsmp+set}" = set; then
   enableval="$enable_xsmp"
-  disable_xsmp="yes"
+  :
 else
-  disable_xsmp="no"
+  enable_xsmp="yes"
 fi
 
-echo "$ac_t""$disable_xsmp" 1>&6
 
-if test "x$disable_xsmp" = "xno"; then
+if test "$enable_xsmp" = "yes"; then
+  echo "$ac_t""no" 1>&6
   echo $ac_n "checking --disable-xsmp-interact argument""... $ac_c" 1>&6
 echo "configure:1408: checking --disable-xsmp-interact argument" >&5
   # Check whether --enable-xsmp-interact or --disable-xsmp-interact was given.
 if test "${enable_xsmp_interact+set}" = set; then
   enableval="$enable_xsmp_interact"
-  disable_xsmp_interact="yes"
+  :
 else
-  disable_xsmp_interact="no"
+  enable_xsmp_interact="yes"
 fi
 
-  echo "$ac_t""$disable_xsmp_interact" 1>&6
-  if test "$disable_xsmp_interact" = "no"; then
+  if test "$enable_xsmp_interact" = "yes"; then
+    echo "$ac_t""no" 1>&6
     cat >> confdefs.h <<\EOF
 #define USE_XSMP_INTERACT 1
 EOF
 
+  else
+    echo "$ac_t""yes" 1>&6
   fi
+else
+  echo "$ac_t""yes" 1>&6
 fi
 
 echo $ac_n "checking --enable-perlinterp argument""... $ac_c" 1>&6
-echo "configure:1427: checking --enable-perlinterp argument" >&5
+echo "configure:1431: checking --enable-perlinterp argument" >&5
 # Check whether --enable-perlinterp or --disable-perlinterp was given.
 if test "${enable_perlinterp+set}" = set; then
   enableval="$enable_perlinterp"
@@ -2103,21 +2107,21 @@ EOF
 fi
 
 echo $ac_n "checking --disable-netbeans argument""... $ac_c" 1>&6
-echo "configure:2107: checking --disable-netbeans argument" >&5
+echo "configure:2111: checking --disable-netbeans argument" >&5
 # Check whether --enable-netbeans or --disable-netbeans was given.
 if test "${enable_netbeans+set}" = set; then
   enableval="$enable_netbeans"
-  disable_netbeans="yes"
+  :
 else
-  disable_netbeans="no"
+  enable_netbeans="yes"
 fi
 
-echo "$ac_t""$disable_netbeans" 1>&6
-if test "$disable_netbeans" = "no"; then
+if test "$enable_netbeans" = "yes"; then
+  echo "$ac_t""no" 1>&6
   echo $ac_n "checking whether compiling netbeans integration is possible""... $ac_c" 1>&6
-echo "configure:2119: checking whether compiling netbeans integration is possible" >&5
+echo "configure:2123: checking whether compiling netbeans integration is possible" >&5
   cat > conftest.$ac_ext <<EOF
-#line 2121 "configure"
+#line 2125 "configure"
 #include "confdefs.h"
 
 #include <stdio.h>
@@ -2156,18 +2160,20 @@ int main() {
 	    
 ; return 0; }
 EOF
-if { (eval echo configure:2160: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2164: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  echo "$ac_t""no" 1>&6; disable_netbeans="yes"
+  echo "$ac_t""no" 1>&6; enable_netbeans="no"
 fi
 rm -f conftest*
+else
+  echo "$ac_t""yes" 1>&6
 fi
-if test "$disable_netbeans" = "no"; then
+if test "$enable_netbeans" = "yes"; then
   cat >> confdefs.h <<\EOF
 #define FEAT_NETBEANS_INTG 1
 EOF
@@ -4494,24 +4500,24 @@ EOF
   
 fi
 
-if test "x$disable_xsmp" = "xno"; then
+if test "$enable_xsmp" = "yes"; then
   cppflags_save=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
   for ac_hdr in X11/SM/SMlib.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:4505: checking for $ac_hdr" >&5
+echo "configure:4511: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4510 "configure"
+#line 4516 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4515: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4521: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -6595,19 +6601,19 @@ fi
 rm -f conftest*
 
 echo $ac_n "checking --disable-acl argument""... $ac_c" 1>&6
-echo "configure:6599: checking --disable-acl argument" >&5
+echo "configure:6605: checking --disable-acl argument" >&5
 # Check whether --enable-acl or --disable-acl was given.
 if test "${enable_acl+set}" = set; then
   enableval="$enable_acl"
-  echo "$ac_t""yes" 1>&6
+  :
 else
-  enable_acl="yes"; echo "$ac_t""no" 1>&6
+  enable_acl="yes"
 fi
 
 if test "$enable_acl" = "yes"; then
-
+echo "$ac_t""no" 1>&6
 echo $ac_n "checking for acl_get_file in -lposix1e""... $ac_c" 1>&6
-echo "configure:6611: checking for acl_get_file in -lposix1e" >&5
+echo "configure:6617: checking for acl_get_file in -lposix1e" >&5
 ac_lib_var=`echo posix1e'_'acl_get_file | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -6824,10 +6830,12 @@ else
   echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
+else
+  echo "$ac_t""yes" 1>&6
 fi
 
 echo $ac_n "checking --disable-gpm argument""... $ac_c" 1>&6
-echo "configure:6831: checking --disable-gpm argument" >&5
+echo "configure:6839: checking --disable-gpm argument" >&5
 # Check whether --enable-gpm or --disable-gpm was given.
 if test "${enable_gpm+set}" = set; then
   enableval="$enable_gpm"
