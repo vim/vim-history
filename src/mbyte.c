@@ -2677,6 +2677,7 @@ static int	status_area_enabled = TRUE;
 #endif
 
 #if defined(FEAT_GUI_GTK) || defined(PROTO)
+static int	preedit_buf_len = 0;
 static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 static int	xim_input_style;
 #ifndef FEAT_GUI_GTK
@@ -2877,6 +2878,11 @@ im_set_active(active)
 		xim_preediting = TRUE;
 	    }
 	}
+    }
+    if (xim_input_style & XIMPreeditCallbacks)
+    {
+	preedit_buf_len = 0;
+	getvcol(curwin, &(curwin->w_cursor), &preedit_start_col, NULL, NULL);
     }
 #else
 # if 0
@@ -3593,6 +3599,7 @@ xim_decide_input_style()
     static void
 preedit_start_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+    draw_feedback = NULL;
     xim_preediting = TRUE;
     gui_update_cursor(TRUE, FALSE);
     if (showmode() > 0)
@@ -3615,7 +3622,6 @@ xim_back_delete(int n)
 }
 
 static GSList *key_press_event_queue = NULL;
-static int preedit_buf_len = 0;
 static gboolean processing_queued_event = FALSE;
 
 /*ARGSUSED*/
@@ -3630,6 +3636,13 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     draw_data = (XIMPreeditDrawCallbackStruct *) call_data;
     text = (XIMText *) draw_data->text;
 
+    if ((text == NULL && draw_data->chg_length == preedit_buf_len)
+	    || preedit_buf_len == 0)
+    {
+	getvcol(curwin, &(curwin->w_cursor), &preedit_start_col, NULL, NULL);
+	vim_free(draw_feedback);
+	draw_feedback = NULL;
+    }
     if (draw_data->chg_length > 0)
     {
 	int bs_cnt;
@@ -3641,46 +3654,85 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 	xim_back_delete(bs_cnt);
 	preedit_buf_len -= bs_cnt;
     }
-    if (text != NULL && (src = text->string.multi_byte) != NULL)
+    if (text != NULL)
     {
-	int		len = strlen(src);
+	int		len;
 #ifdef FEAT_MBYTE
-	char_u		*buf;
+	char_u		*buf = NULL;
 #endif
-	GdkWChar	*wstr = NULL;
+	char_u		*ptr;
+	unsigned int	nfeedback = 0;
 
-	wstr = g_new(GdkWChar, len);
-	preedit_buf_len += gdk_mbstowcs(wstr, src, len);
-	g_free(wstr);
-#ifdef FEAT_MBYTE
-	if (input_conv.vc_type != CONV_NONE
-		&& (buf = string_convert(&input_conv,
-						 (char_u *)src, &len)) != NULL)
+	src = text->string.multi_byte;
+	if (src != NULL && !text->encoding_is_wchar)
 	{
-	    /* Converted from 'termencoding' to 'encoding'. */
-	    add_to_input_buf_csi(buf, len);
+	    len = strlen(src);
+	    ptr = (char_u *)src;
+	    /* Avoid the enter for decision */
+	    if (*ptr == '\n')
+		return;
+
+#ifdef FEAT_MBYTE
+	    if (input_conv.vc_type != CONV_NONE
+		    && (buf = string_convert(&input_conv,
+						 (char_u *)src, &len)) != NULL)
+	    {
+		/* Converted from 'termencoding' to 'encoding'. */
+		add_to_input_buf_csi(buf, len);
+		ptr = buf;
+	    }
+	    else
+#endif
+		add_to_input_buf_csi((char_u *)src, len);
+	    /* Add count of character to preedit_buf_len  */
+	    while (*ptr != NUL)
+	    {
+#ifdef FEAT_MBYTE
+		if (draw_data->text->feedback != NULL)
+		{
+		    if (draw_feedback == NULL)
+			draw_feedback = (char *)alloc(draw_data->chg_first
+							      + text->length);
+		    else
+			draw_feedback = realloc(draw_feedback,
+					 draw_data->chg_first + text->length);
+		    if (draw_feedback != NULL)
+		    {
+			draw_feedback[nfeedback + draw_data->chg_first]
+				       = draw_data->text->feedback[nfeedback];
+			nfeedback++;
+		    }
+		}
+		if (has_mbyte)
+		    ptr += mb_ptr2len_check(ptr);
+		else
+#endif
+		    ptr++;
+		preedit_buf_len++;
+	    }
 	    vim_free(buf);
 	}
-	else
-#endif
-	    add_to_input_buf_csi((char_u *)src, len);
     }
-    event_queue = key_press_event_queue;
-    processing_queued_event = TRUE;
-    while (event_queue)
+    if (text != NULL || draw_data->chg_length > 0)
     {
-	GdkEvent *ev = event_queue->data;
-	gboolean *ret;
-	gtk_signal_emit_by_name((GtkObject*)gui.mainwin, "key_press_event",
-				ev, &ret);
-	gdk_event_free(ev);
-	event_queue = event_queue->next;
-    }
-    processing_queued_event = FALSE;
-    if (key_press_event_queue)
-    {
-	g_slist_free(key_press_event_queue);
-	key_press_event_queue = NULL;
+	event_queue = key_press_event_queue;
+	processing_queued_event = TRUE;
+	while (event_queue != NULL)
+	{
+	    GdkEvent *ev = event_queue->data;
+
+	    gboolean *ret;
+	    gtk_signal_emit_by_name((GtkObject*)gui.mainwin, "key_press_event",
+								    ev, &ret);
+	    gdk_event_free(ev);
+	    event_queue = event_queue->next;
+	}
+	processing_queued_event = FALSE;
+	if (key_press_event_queue)
+	{
+	    g_slist_free(key_press_event_queue);
+	    key_press_event_queue = NULL;
+	}
     }
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -3696,6 +3748,8 @@ preedit_caret_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     static void
 preedit_done_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+    vim_free(draw_feedback);
+    draw_feedback = NULL;
     xim_preediting = FALSE;
     gui_update_cursor(TRUE, FALSE);
     if (showmode() > 0)
@@ -4105,9 +4159,9 @@ string_convert(vcp, ptr, lenp)
 	{
 	    int retlen;
 
-            if (!lenp)
-                len /= sizeof(unsigned short);
-            retlen = WideCharToMultiByte(vcp->vc_dbcs, 0,
+	    if (!lenp)
+		len /= sizeof(unsigned short);
+	    retlen = WideCharToMultiByte(vcp->vc_dbcs, 0,
 				(const unsigned short *)ptr, len, 0, 0, 0, 0);
 	    retval = alloc(retlen + 1);
 	    if (retval == NULL)
@@ -4116,7 +4170,7 @@ string_convert(vcp, ptr, lenp)
 		     (const unsigned short *) ptr, len, retval, retlen, 0, 0);
 	    retval[retlen] = NUL;
 	    if (lenp != NULL)
-	        *lenp = retlen;
+		*lenp = retlen;
 	    break;
 	}
 	case CONV_CODEPAGE:	/* current codepage -> ucs-2 */
@@ -4130,7 +4184,7 @@ string_convert(vcp, ptr, lenp)
 	    MultiByteToWideChar(GetACP(), 0, ptr, len,
 					   (unsigned short *) retval, retlen);
 	    if (lenp != NULL)
-	        *lenp = retlen * sizeof(unsigned short); /* number of shorts -> buffer size */
+		*lenp = retlen * sizeof(unsigned short); /* number of shorts -> buffer size */
 	}
 # endif
     }

@@ -3494,6 +3494,50 @@ win_line(wp, lnum, startrow, endrow)
 		&& (search_attr == 0 || char_attr != search_attr))
 	    char_attr = extra_attr;
 
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+	if (xic != NULL
+		&& lnum == curwin->w_cursor.lnum
+		&& State == INSERT
+		&& im_get_status()
+		&& !p_imdisable
+		&& preedit_start_col != MAXCOL)
+	{
+	    colnr_T tcol;
+	    static int  bcol = 0;
+	    static int	old_attr = -1;
+
+	    getvcol(curwin, &(curwin->w_cursor), &tcol, NULL, NULL);
+	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
+	    {
+		if (old_attr == -1)
+		{
+		    bcol = 0;
+		    old_attr = char_attr;
+		}
+		if (draw_feedback != NULL)
+		{
+		    if (draw_feedback[bcol] & XIMReverse)
+			char_attr = HL_INVERSE;
+		    else if (draw_feedback[bcol] & XIMUnderline)
+			char_attr = HL_UNDERLINE;
+		    else
+			char_attr = hl_attr(HLF_V);
+		}
+		else
+		    char_attr = old_attr;
+		bcol++;
+	    }
+	    else
+	    {
+		if (old_attr >= 0)
+		{
+		    char_attr = old_attr;
+		    old_attr = -1;
+		    bcol = 0;
+		}
+	    }
+	}
+#endif
 	/*
 	 * Handle the case where we are in column 0 but not on the first
 	 * character of the line and the user wants us to show us a
