@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0ah.  Last change: 2001 May 19
+*cmdline.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -349,7 +349,7 @@ This will find the longest match and then list all matching files.
 
 If you like tcsh's autolist completion, you can use the 'wildmode' option to
 emulate it.  For example, this mimics autolist=ambiguous:
-        :set wildmode=longest,list
+	:set wildmode=longest,list
 This will find the longest match with the first 'wildchar', then list all
 matching files with the next.
 
@@ -499,7 +499,7 @@ When separated with ';' the cursor position will be set to that line
 before interpreting the next line specifier.  This doesn't happen for ','.
 Examples: >
    4,/this line/
-<   	from line 4 till match with "this line" after the cursor line. >
+<	from line 4 till match with "this line" after the cursor line. >
    5;/that line/
 <	from line 5 till match with "that line" after line 5.
 

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 25
+" Last Change:	2001 May 31
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -635,7 +635,6 @@ if has("vertsplit")
       else
 	exe "20vsp " . expand("%:p:h")
       endif
-      set go+=lr
     endfun
   endif
 endif

@@ -70,7 +70,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ah
+MINOR = 0ai
 
 # CHECKLIST for creating a new version:
 #
@@ -480,7 +480,6 @@ SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
 		src/os_vms.c \
-		src/os_vms.h \
 		src/os_vms.opt \
 		src/os_vms_conf.h \
 		src/os_vms_mms.c \

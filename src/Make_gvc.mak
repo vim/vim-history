@@ -120,7 +120,7 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib /out:"gvim.exe"
+# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib /out:"gvim.exe"
 # SUBTRACT LINK32 /pdb:none
 LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
  winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows\
@@ -350,7 +350,7 @@ BSC32_SBRS= \
 
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
-# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe"
+# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimd.exe"
 LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
  winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows\
  /profile /map:"$(INTDIR)\gvimd.map" /debug /machine:I386 /nodefaultlib /out:"gvimd.exe" 
@@ -490,7 +490,7 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"vim.exe"
-# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
+# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
 LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
  winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib uuid.lib /nologo /subsystem:windows\
  /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe" 

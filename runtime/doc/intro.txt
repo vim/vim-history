@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0ah.  Last change: 2001 May 23
+*intro.txt*     For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -824,7 +824,7 @@ A difference is made between four types of lines:
 			can only be as long as the width of the window allows,
 			longer lines are wrapped or truncated.
   screen lines		The lines of the screen that Vim uses.  Consists of
-  			the window lines of all windows, with status lines
+			the window lines of all windows, with status lines
 			and the command line added.  They can only be as long
 			as the width of the screen allows.  When the command
 			line gets longer it wraps and lines are scrolled to
@@ -833,17 +833,17 @@ A difference is made between four types of lines:
 buffer lines	logical lines	window lines	screen lines ~
 
 1. one		1. one		1. +-- folded   1.  +-- folded
-2. two		2. +-- folded   2. five         2.  five
-3. three	3. five         3. six          3.  six
-4. four		4. six          4. seven        4.  seven
-5. five		5. seven        		5.  === status line ===
+2. two		2. +-- folded	2. five		2.  five
+3. three	3. five		3. six		3.  six
+4. four		4. six		4. seven	4.  seven
+5. five		5. seven			5.  === status line ===
 6. six						6.  aaa
 7. seven					7.  bbb
-                                                8.  ccc ccc c
-1. aaa		1. aaa		1. aaa          9.  cc
-2. bbb		2. bbb          2. bbb          10. ddd
-3. ccc ccc ccc  3. ccc ccc ccc  3. ccc ccc c    11. ~ 
-4. ddd          4. ddd          4. cc		12. === status line ===
+						8.  ccc ccc c
+1. aaa		1. aaa		1. aaa		9.  cc
+2. bbb		2. bbb		2. bbb		10. ddd
+3. ccc ccc ccc	3. ccc ccc ccc	3. ccc ccc c	11. ~ 
+4. ddd		4. ddd		4. cc		12. === status line ===
 				5. ddd		13. (command line)
 				6. ~ 
 

@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0ah.  Last change: 2001 Mar 16
+*tips.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -147,6 +147,10 @@ the file whose name appears under the cursor, thus not only checking that the
 link is valid (at least the file name part of the URL) but also providing a
 quick and easy way to edit many related HTML pages at once.  |gf|
 A set of macros to help with editing html can be found on the Vim pages. |www|
+
+	Note:
+	If you are using the netrw plugin (which is loaded by default), "gf"
+	will try to load the file by the actual URL.
 
 If you want to view your HTML file, after writing a new version with Vim, have
 a look at the "atchange" program.  It can be used to automatically start a
@@ -446,12 +450,7 @@ www.uni-erlangen.de, which supports a stack of windows.
 ==============================================================================
 Hex editing					*hex-editing* *using-xxd*
 
-When you need to edit binary data, and prefer to do that on a hexadecimal
-listing, you can use the xxd program.  Use this to convert from binary to
-hexadecimal: >
-	:%!xxd
-and use this to convert it back: >
-	:%!xxd -r
+See section |23.4| of the user manual.
 
 If one has a particular extension that one uses for binary files (such as exe,
 bin, etc), you may find it helpful to automate the process with the following

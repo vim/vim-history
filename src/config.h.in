@@ -42,7 +42,8 @@
 /* Define when __DATE__ " " __TIME__ can be used */
 #undef HAVE_DATE_TIME
 
-#undef UNIX	/* defined always when using configure */
+/* defined always when using configure */
+#undef UNIX
 
 /* Defined to the size of an int */
 #undef SIZEOF_INT

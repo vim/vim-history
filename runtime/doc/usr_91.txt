@@ -1,9 +1,11 @@
-*usr_91.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_91.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 				Compiling Vim
 
+
+Introduction.
 
 |91.1|	Replace a word
 |91.2|  Using configure

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ah.  Last change: 2001 May 27
+*version6.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -57,6 +57,7 @@ Editing files over a network		|new-network-files|
 Writing files				|new-file-writing|
 Argument list				|new-argument-list|
 Restore a View				|new-View|
+Color schemes				|new-color-schemes|
 Various new items			|new-items-6|
 
 IMPROVEMENTS				|improvements-6|
@@ -313,6 +314,8 @@ for text that doesn't really exist in the file.
 Motif now uses the system default colors for the menu and scrollbar.  Used to
 be grey.  It's still possible to set the colors with ":highlight" commands and
 resources.
+Added 'L' and 'R' flags in 'guioptions': Add a left or right scrollbar only
+when there is a vertically split window.
 
 Formatting text with "gq" breaks a paragraph at a non-empty blank line.
 Previously the line would be removed, which wasn't very useful.
@@ -830,14 +833,14 @@ Included first implementation of the ":hardcopy" command for printing
 to paper.  Works for Win32 and Win16. (Vince Negri, vipin aravind)
 Print on other systems by producing PostScript. (Vince Negri)
 
-Made ":harcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
+Made ":hardcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
 Matsumoto)
 
 Added options to tune he way printing works: (Vince Negri)
 - 'printersettings', defines various things.
 - 'printerheader', specifies the header.  Added "N" field to 'statusline'
   for the page number.
-- 'printername', defines the default printer for ":harcopy!".
+- 'printername', defines the default printer for ":hardcopy!".
 
 
 Ports							*ports-6*
@@ -984,6 +987,20 @@ Added "curdir" and "sesdir" to 'sessionoptions'.  Allows selection of what
 the current directory will be restored to.
 
 The session file now also contains the argument list(s).
+
+
+Color schemes						*new-color-schemes*
+-------------
+
+Support for loading a color scheme.  Added the ":colorscheme" command.
+Automatically add menu entries for available schemes.
+Should now properly reset the colors when 'background' or 't_Co' is changed.
+":highlight clear" sets the default colors again.
+":syntax reset" sets the syntax highlight colors back to the defaults.
+For ":set bg&" guess the value.  This allows a color scheme to switch back to
+the default colors.
+When syntax highlighting is switched on and a color scheme was defined, reload
+the color scheme to define the colors.
 
 
 Various new items					*new-items-6*
@@ -1138,9 +1155,10 @@ hasmapto()	Detect if a mapping to a string is already present.
 iconv()		Convert a string from one encoding to another.
 indent()	gets the indent of a line (Ron Aaron)
 inputdialog()	Like input() but use a GUI dialog when possible.  Currently
-		only works for Motif, Athena and GTK.
+		only works for Win32, Motif, Athena and GTK.
 		Use inputdialog() for the Edit/Settings/Text Width menu.  Also
 		for the Help/Find.. and Toolbar FindHelp items.
+		(Win32 support by Thore B. Karlsen)
 inputsecret()	Ask the user to type a string without showing the typed keys.
 		(Charles Campbell)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
@@ -1196,15 +1214,9 @@ New Syntax files: ~
 	DSSSL syntax (Johannes Zellner)
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
-Support for loading a color scheme.  Added the ":colorscheme" command.
-Automatically add menu entries for available schemes.
-Should now properly reset the colors when 'background' or 't_Co' is changed.
-":highlight clear" sets the default colors again.
-":syntax reset" sets the syntax highlight colors back to the defaults.
-For ":set bg&" guess the value.  This allows a color scheme to switch back to
-the default colors.
-When syntax highlighting is switched on and a color scheme was defined, reload
-the color scheme to define the colors.
+Win32: When editing a file that is a shortcut (*.lnk file), edit the file it
+links to.  Unless 'binary' is set, then edit the shortcut file itself.
+(Yasuhiro Matsumoto)
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
 command to be followed by "| command".
@@ -1238,7 +1250,11 @@ highlighting.
 
 The Win32 install program can now create shortcuts. (Jon Merz)
 
-Generate a self-installing Vim package for MS-Windows. (Jon Merz)
+Generate a self-installing Vim package for MS-Windows.  This uses NSIS. (Jon
+Merz)
+
+Added ":filetype detect".  Try detecting the filetype again.  Helps when
+writing a new shell script, after adding "#!/bin/csh".
 
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
@@ -1558,6 +1574,8 @@ Internal changes:
 - Renamed multibyte.c to mbyte.c to avoid a problem with 8.3 filesystems.
 - Removed the GTK implementation of ":findhelp", it now uses the
   ToolBar.FindHelp  menu entry.
+- Renamed mch_windexit() to mch_exit(), mch_init() to mch_early_init() and
+  mch_shellinit() to mch_init().
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -2570,6 +2588,8 @@ someone types <Esc> } in Insert mode.
 
 Made slash_adjust() work correctly for multi-byte characters. (Yasuhiro
 Matsumoto)
+Using a filename in Big5 encoding for autocommands didn't work (backslash in
+trailbyte).  (Yasuhiro Matsumoto)
 
 DOS and Windows: Expanding *.vim also matched file.vimfoo.  Expand path like
 Unix to avoid problems with Windows dir functions.  Merged the DOS and Win32
@@ -2582,5 +2602,24 @@ argument was fixed.
 raw mode when needed.  Use dup() to copy the stderr file descriptor to stdin
 to make shell commands work.  No longer requires an external program to do
 this.
+
+When using ":filetype off", ftplugin and indent usage would be switched off at
+the same time.  Don't do this, setting 'filetype' manually can still use them.
+
+GUI: When writing a double-byte character, it could be split up in two calls
+to gui_write(), which doesn't work.  Now flush before the output buffer
+becomes full. 
+
+When 'laststatus' is set and 'cmdheight' is two or bigger, the intro message
+would be written over the status line.
+The ":intro" command didn't work when there wasn't enough room.
+
+Configuring for Ruby failed with a recent version of Ruby. (Akinori Musha)
+
+Athena: When deleting the directory in which Vim was started, using the file
+browser made Vim exit.  Removed the use of XtAppError().
+
+When using autoconf 2.50, UNIX was not defined.  Moved the comment for "#undef
+UNIX" to a separate line.
 
  vim:tw=78:

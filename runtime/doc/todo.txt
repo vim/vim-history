@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ah.  Last change: 2001 May 27
+*todo.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,15 +29,16 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Done: When dropping a shortcut on gvim (.lnk file) should edit the target, not
-the shortcut itself.  (Matsumoto)  Does it cause any problems?
-How to edit a shortcut when starting Vim?
+Win32: Disable _OnWindowPosChanging() to make maximize work better?
+(Einspanjer)
+
+Line with ====| in usr_20.txt is recognized as a link when converting to HTML.
+
+Toolbar icons from Steve Wall?
 
 Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
 
-Try out autoconf 2.50 (after releasing 5.8).
-
-GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
+GUI: Make inputdialog() work for Win16, Photon, Amiga, Mac, RiscOS.
 
 Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
 marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
@@ -72,12 +73,8 @@ E. Virtual edit:
 -   When doing Visual selection and including space after the end-of-line it
     is not included in the operation.  Should this be changed to include the
     space after the end-of-line?
--   With blockwise Visual selection, "O" doesn't move to the other corner when
-    both corners are in virtual space.
--   'c' behaves incorrectly sometimes when breaking tabs.
 -   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
     to a valid character.
--   In Visual-block mode highlighting part of a tab is wrong.
 -   Add more documentation.
 -   Use vpos_T instead of fpos_T for positions that can have a coladd?
 -   coladvance2() can be a bit slow.  Check with profiling.
@@ -93,10 +90,11 @@ J. User Friendlier
 9   Printing:
     -	Add "page width" to wrap long lines.
     -	Unix: make conversion to PostScript work better.
-     	Use some dialog box to do the obvious settings (paper size, printer
+	Use some dialog box to do the obvious settings (paper size, printer
 	name, portrait/landscape, etc).
+    -	Using the cterm_color[] table is wrong when t_colors is > 16.
 9   Windows install with NSIS:
-    - Don't use install.exe, do everything in NSIS.
+    - Don't use install.exe to make choices.
     - install icon on desktop
     - create entry in start/programs menu (also for uninstall)
     - create .bat files in the windows directory
@@ -166,6 +164,10 @@ Various recent:
 9   Should mapping <C-A> and <C-S-A> both work?
 9   When compiled with Python and threaded libraries, a signal can cause Vim
     to loop forever.  Looks like a problem with threads and signals.
+8   In Visual block mode, "A" appends to lines that don't extend into the
+    block, but padding is wrong (always two spaces).  Fix the padding.
+9   With blockwise Visual mode, "A" works different than "I" when there are
+    short lines.  Make them work the same way.
 
 
 Considered for release 6.0:
@@ -540,6 +542,8 @@ MSDOS/DJGPP:
 7   DJGPP version doesn't work with graphics display mode.  Switch to a mode
     that is supported?
 8   DJGPP: ":mode" doesn't work for many modes.  Disable them.
+8   DJGPP: When starting in Ex mode, shouldn't clear the screen. (Walter
+    Briscoe)
 
 
 MSDOS, OS/2 and Win32:
@@ -1923,11 +1927,9 @@ Visual mode:
 -   When dragging the Visual selection with the mouse and 'scrolloff' is zero,
     behave like 'scrolloff' is one, so that the text scrolls when the pointer
     is in the top line.
-8   In Visual block mode, "A" appends to lines that don't extend into the
-    block, but padding is wrong (always two spaces).  Fix the padding.
-9   With blockwise Visual mode, "A" works different than "I" when there are
-    short lines.  Make them work the same way.  Also make it possible to add
-    the text to short lines too, with padding where needed.
+8   When using "I" or "A" in Visual block mode, short lines do not get the new
+    text.  make it possible to add the text to short lines too, with padding
+    where needed.
 8   What is "R" supposed to do in Visual mode?
 8   Make Visual mode local to the buffer.  Allow changing to another buffer.
     When starting a new Visual selection, remove the Visual selection in any
@@ -2944,64 +2946,64 @@ portion of the total which were negative points.
 155  (-8)   add Perl compatible search pattern
 125  (-1)   search patterns that cross line boundaries
 125  (-1)   improve syntax highlighting speed
-116         improve syntax highlighting functionality
-101         add a menu that lists all buffers
+116	    improve syntax highlighting functionality
+101	    add a menu that lists all buffers
 93   (-1)   improve the overall performance
 93   (-6)   multiple top-level windows for one running Vim
 90   (-4)   be able to edit the command line with Vi commands
 90   (-36)  add a shell window (to type and execute shell commands in)
-83          add patterns to define sections/paragraphs for "{", "[[", "%", etc.
-81          improve Visual block mode: more commands that work on blocks
+83	    add patterns to define sections/paragraphs for "{", "[[", "%", etc.
+81	    improve Visual block mode: more commands that work on blocks
 71   (-13)  reduce the size of the executable and the runtime memory use
 70   (-5)   improve the on-line help
-68          improve "gq" formatting of text (left&right justified, 'comments')
+68	    improve "gq" formatting of text (left&right justified, 'comments')
 68   (-2)   improve multi-byte character support
 59   (-8)   improve the Visual Studio interface (VisVim)
 59   (-12)  make it possible to run Vim inside a window of another program
 58   (-11)  add an undo tree (be able to go back to any previous situation)
 57   (-9)   add support for loading a shared library that defines new commands
 54   (-1)   add a way to execute a command in multiple buffers/windows
-52          improve the Perl interface
+52	    improve the Perl interface
 51   (-10)  improve printing from gvim (File.Print menu entry)
 50   (-20)  make a "Vim lite" version, which is small and low on features
-47          add a method to repeat a prev. executed change ("c.", "d.", etc.)
+47	    add a method to repeat a prev. executed change ("c.", "d.", etc.)
 44   (-8)   add more features to the internal scripting language
-37          add a command to repeat a whole mapping (not only its last change)
+37	    add a command to repeat a whole mapping (not only its last change)
 37   (-2)   add better support for editing files in projects (with ID utils)
 33   (-3)   add handling for buffer-changed outside of Vim (when reg. focus)
-28          improve Insert mode completion
+28	    improve Insert mode completion
 28   (-14)  add persistent undo (undo to before the file was saved/loaded)
-25          improve command line completion
+25	    improve command line completion
 23   (-30)  be able to run a program in a Vim window, with an interface to it
-22          improve the quickfix commands
+22	    improve the quickfix commands
 21   (-1)   add mappings and abbreviations local to a buffer
 21   (-6)   add a special window for editing option values, with short docs
 19   (-4)   add file locking
 18   (-1)   add a way to disable (error) messages for a moment
 17   (-5)   add encryption for loading/storing files and for the swapfile
-10          improve the port for MacOS X Server aka Rhapsody
-10          add Qt interface
+10	    improve the port for MacOS X Server aka Rhapsody
+10	    add Qt interface
 10   (-1)   add scope arguments to the ":tag" command (like Elvis)
 9    (-3)   improve the tutor (course for beginners)
-8           improve the port for OS/2
+8	    improve the port for OS/2
 8    (-1)   add a stack for saving/restoring options
 8    (-3)   improve 'viminfo' (keeping information when quitting Vim)
 8    (-6)   improve the performance of Vim scripts (pre-parse them)
 7    (-2)   add more autocommand events (for ":cd", start Insert mode, etc.)
 6    (-4)   improve the TCL interface
 6    (-4)   add option to move the cursor where there is no text in Visual mode
-5           improve the port for MacOS
-4           improve the port for GTK
-4           add Diff, Merge capability with CVS like in emacs.
+5	    improve the port for MacOS
+4	    improve the port for GTK
+4	    add Diff, Merge capability with CVS like in emacs.
 4    (-5)   add option not to move the cursor when using a scrollbar
 4    (-8)   add POSIX compatible search patterns
-3           improve the port for X Window (use GTK, or Athena)
+3	    improve the port for X Window (use GTK, or Athena)
 3    (-2)   improve the Cscope interface
 3    (-14)  add option to move the cursor where there is no text in any mode
-2           add support for Borland Delphi (to replace borland's def. editor)
-2           add on-the-fly paragraph formatting / word wraps
-1           improve the port for "EPOC 32"
-1           add GUI to record/stop/play a keystroke macro
+2	    add support for Borland Delphi (to replace borland's def. editor)
+2	    add on-the-fly paragraph formatting / word wraps
+1	    improve the port for "EPOC 32"
+1	    add GUI to record/stop/play a keystroke macro
 0    (-2)   improve ":mksession" support (switch to a previously saved state)
 -1   (-1)   improve the port for * (fill in a system name at the *. E.g. VMS")
 -4   (-77)  add more GUI functions (requesters, menus, dialogs)

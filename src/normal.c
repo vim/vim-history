@@ -3111,12 +3111,13 @@ unshift_special(cap)
  * Routines for displaying a partly typed command
  */
 
-static char_u	showcmd_buf[SHOWCMD_COLS + 1
-#ifdef FEAT_VISUAL
-				+ 30	/* need room for size of Visual area */
+#ifdef FEAT_VISUAL	/* need room for size of Visual area */
+# define SHOWCMD_BUFLEN SHOWCMD_COLS + 1 + 30
+#else
+# define SHOWCMD_BUFLEN SHOWCMD_COLS + 1
 #endif
-				];
-static char_u	old_showcmd_buf[SHOWCMD_COLS + 1];  /* For push_showcmd() */
+static char_u	showcmd_buf[SHOWCMD_BUFLEN];
+static char_u	old_showcmd_buf[SHOWCMD_BUFLEN];  /* For push_showcmd() */
 static int	showcmd_is_clear = TRUE;
 static int	showcmd_visual = FALSE;
 
@@ -5880,7 +5881,12 @@ v_swap_corners(cmdchar)
 	if (old_cursor.lnum >= VIsual.lnum && *p_sel == 'e')
 	    ++curwin->w_curswant;
 	coladvance(curwin->w_curswant);
-	if (curwin->w_cursor.col == old_cursor.col)
+	if (curwin->w_cursor.col == old_cursor.col
+#ifdef FEAT_VIRTUALEDIT
+		&& (!virtual_active()
+		    || curwin->w_cursor.coladd == old_cursor.coladd)
+#endif
+		)
 	{
 	    curwin->w_cursor.lnum = VIsual.lnum;
 	    if (old_cursor.lnum <= VIsual.lnum && *p_sel == 'e')
@@ -6346,9 +6352,6 @@ nv_visual(cap)
 	    {
 		validate_virtcol();
 		curwin->w_curswant = curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-		    + curwin->w_cursor.coladd
-#endif
 		    + resel_VIsual_col * cap->count0 - 1;
 		coladvance(curwin->w_curswant);
 	    }
@@ -6396,10 +6399,17 @@ may_start_select(c)
 n_start_visual_mode(c)
     int		c;
 {
-    VIsual = curwin->w_cursor;
     VIsual_mode = c;
     VIsual_active = TRUE;
     VIsual_reselect = TRUE;
+#ifdef FEAT_VIRTUALEDIT
+    /* Corner case: the 0 position in a tab may change when going into
+     * virtualedit.  Recalculate curwin->w_cursor to avoid bad hilighting.
+     */
+    if (c == Ctrl_V && ve_flags & VE_BLOCK && gchar_cursor() == TAB)
+	coladvance(curwin->w_virtcol);
+#endif
+    VIsual = curwin->w_cursor;
 
 #ifdef FEAT_FOLDING
     foldAdjustVisual();

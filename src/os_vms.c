@@ -17,10 +17,6 @@
 #define TIM_1	        2
 #define EXPL_ALLOC_INC 16
 
-#ifdef PROTO
- typedef int DESC;
-#endif
-
 typedef struct
 {
     char	class;
@@ -650,7 +646,6 @@ vms_fixfilename(void *instring)
     static char		*buf = NULL;
     static size_t	buflen = 0;
     size_t		len;
-    char                *tmpbuf = NULL;
 
     /* get a big-enough buffer */
     len = strlen(instring) + 1;
@@ -663,8 +658,12 @@ vms_fixfilename(void *instring)
 	    buf = (char *)calloc(buflen, sizeof(char));
     }
 
+#ifdef DEBUG
+     char                *tmpbuf = NULL;
      tmpbuf = (char *)calloc(buflen, sizeof(char));
      strcpy(tmpbuf, instring);
+#endif
+
     /* if this already is a vms file specification, copy it
      * else if VMS understands how to translate the file spec, let it do so
      * else translate mixed unix-vms file specs to pure vms

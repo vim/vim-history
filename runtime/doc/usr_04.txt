@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
+*usr_04.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -37,8 +37,8 @@ cursor winds up.
 command deletes four words.
 
 	To err is human, To really foul up you need a computer. ~
-                         ------------------>
-			         d4w
+			 ------------------>
+				 d4w
 
 	To err is human, you need a computer. ~
 
@@ -48,7 +48,7 @@ of a word.  If you use the "e" command to move to the end of a word, Vim
 guesses that you do want to include that last character:
 
 	To err is human, you need a computer. ~
-	                -------->
+			-------->
 			   d2e
 
 	To err is human, a computer. ~
@@ -62,8 +62,8 @@ cursor to the end of the line.  This is an inclusive motion, thus the last
 character of the line is included in the delete operation:
 
 	To err is human, a computer. ~
-	               ------------>
-		            d$
+		       ------------>
+			    d$
 
 	To err is human ~
 
@@ -140,7 +140,7 @@ will replace the character under the cursor with it.  You could do the same
 with "cl" or with the "s" command, but with "r" you don't have to press <Esc>
 
 	there is somerhing grong here ~
-	rT           rt    rw
+	rT	     rt    rw
 
 	There is something wrong here ~
 
@@ -157,11 +157,11 @@ cursor on the < and use the "." command.
 
 			      To <B>generate</B> a table of <B>contents ~
 	f<   find first <     --->
-	df>  delete til >        -->
-	f<   find next <           --------->
-	.    repeat df>                     --->
-	f<   find next <                       ------------->
-	.    repeat df>                                     -->
+	df>  delete til >	 -->
+	f<   find next <	   --------->
+	.    repeat df>			    --->
+	f<   find next <		       ------------->
+	.    repeat df>					    -->
 
 The "." command works for all changes you make, except for the "u" (undo) and
 CTRL-R (redo) commands.
@@ -190,11 +190,11 @@ want work on.  While you do this, the text is highlighted.  Finally type the
 operator command.
    For example, to delete from halfway one word to halfway another word:
 
-   		This is an examination sample of visual mode ~
-		               ---------->
-			         velllld
+		This is an examination sample of visual mode ~
+			       ---------->
+				 velllld
 		
-   		This is an example of visual mode ~
+		This is an example of visual mode ~
 
 When doing this you don't really have to count how many times you have to
 press "l" to end up in the right position.  You can immediately see what text
@@ -249,20 +249,20 @@ putting the cursor on the line you want to delete and typing "dd".  Now you
 move the cursor to where you want to put the line and use the "p" (put)
 command.  The line is inserted on the line below the cursor.
 
-	a line          a line        a line
-	line 2    dd    line 3    p   line 3
-	line 3                        line 2
+	a line		a line	      a line
+	line 2	  dd	line 3	  p   line 3
+	line 3			      line 2
 
 Because you deleted an entire line, the "p" command placed the text line below
 the cursor.  If you delete part of a line (a word with the "dw" command, for
 instance), the "p" command puts it just after the cursor.
 
 	Some more boring try text to out commands. ~
-                         ---->
+			 ---->
 			  dw
 
 	Some more boring text to out commands. ~
-	                 -------->
+			 -------->
 			    welp
 
 	Some more boring text to try out commands. ~
@@ -308,10 +308,10 @@ Since "y" is an operator, you use "yw" to yank a word.
 
 	let a = LongVariable * ~
 	       -------------->
-	             yw
+		     yw
 
 	let a = LongVariable * ~
-	                     p
+			     p
 
 	let a = LongVariable *  LongVariable~
 
@@ -322,9 +322,9 @@ The "yy" command yanks a whole line, just like "dd" deletes a whole line.
 Unexpectedly, "Y" doesn't yank until the end of the line, instead it works
 like "yy", yanks the whole line.  Watch out for this inconsistency.
 
-	a text line   yy	a text line            a text line
-	line 2			line 2          p      line 2
-	last line		last line              a text line
+	a text line   yy	a text line	       a text line
+	line 2			line 2		p      line 2
+	last line		last line	       a text line
 						       last line
 
 ==============================================================================
@@ -346,7 +346,7 @@ also find these items there.
 
 If you are not using the GUI, or if you don't like using a menu, you have to
 use another way.  You use the normal "y" (yank) and "p" (put) commands, but
-prepend "* before it.  To copy a line to the clipboard: >
+prepend "* (double-quote star) before it.  To copy a line to the clipboard: >
 
 	"*yy
 
@@ -355,7 +355,7 @@ To put text from the clipboard back into the text: >
 	"*p
 
 This only works on versions of Vim that include clipboard support.  More about
-the clipboard here: |clipboard|.
+the clipboard in section |09.3| and here: |clipboard|.
 
 ==============================================================================
 *04.8*	Text objects
@@ -365,7 +365,7 @@ to its start before you can do "dw".  There is a simpler way to do this:
 "daw".
 
 	this is some example text. ~
-	               daw
+		       daw
 
 	this is some text. ~
 
@@ -414,7 +414,7 @@ you type <Esc>.
    In this example you start Replace mode on the first "t" of "text":
 
 	This is text. ~
-	        Rinteresting.<Esc>
+		Rinteresting.<Esc>
 
 	This is interesting. ~
 

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ah.  Last change: 2001 May 14
+*pattern.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -293,7 +293,7 @@ the "*" is under your right hand middle finger (search to the right and down).
    for syntax highlighting.
 
    atom    ::=	    ordinary-atom		|/ordinary-atom|
-   		or  \( pattern \)		|/\(|
+		or  \( pattern \)		|/\(|
 		or  \%( pattern \)		|/\%(|
 		or  \z( pattern \)		|/\z(|
 
@@ -316,7 +316,7 @@ More explanation and examples below, follow the links.			*E64*
 
 |/\{-|	\{-n,m}	\{-n,m}	n to m		as few as possible (*)
 	\{-n}	\{-n}	n		exactly (*)
-	\{-n,}	\{-n,}	at least n 	as few as possible (*)
+	\{-n,}	\{-n,}	at least n	as few as possible (*)
 	\{-,m}	\{-,m}	0 to m		as few as possible (*)
 	\{-}	\{-}	0 or more	as few as possible (*)
 
@@ -478,7 +478,7 @@ overview.
 It is not possible to use a multi that can match more than one time after an
 atom that can match an empty string.  That's because this could result in an
 endless loop.  If you try it, you will get this error message: >
- 	*, \+ or \{ operand could be empty
+	*, \+ or \{ operand could be empty
 <
 						*/star* */\star* *E56*
 *	(use \* with 'nomagic')

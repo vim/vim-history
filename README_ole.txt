@@ -1,4 +1,4 @@
-README_ole.txt for version 6.0ah of Vim: Vi IMproved.
+README_ole.txt for version 6.0ai of Vim: Vi IMproved.
 
 This archive contains gvim.exe with OLE interface and VisVim.
 It is only for MS-Windows 95/98 and MS-Windows NT.

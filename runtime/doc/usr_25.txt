@@ -1,18 +1,20 @@
-*usr_25.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_25.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			     Editing formatted text
 
 
-|25.1|	Replace a word
+Introduction.
+
+|25.1|	First section
 
      Next chapter: |usr_26.txt|  Repeating
  Previous chapter: |usr_24.txt|  Inserting quickly
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*25.1*	Replace a word
+*25.1*	First section
 
 
 ==============================================================================

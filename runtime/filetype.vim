@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 May 26
+" Last change:	2001 Jun 02
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -19,7 +19,14 @@ augroup filetypedetect
 au BufNewFile,BufRead *.orig,*.bak,*.old,*.new,*.rpmsave,*.rpmnew
 	\ exe "doau filetypedetect BufRead " . expand("<afile>:r")
 au BufNewFile,BufRead *~
-	\ exe "doau filetypedetect BufRead " . substitute(expand("<afile>"), '\~$', '', '')
+	\ let s:name = expand("<afile>") |
+	\ let s:short = substitute(s:name, '\~$', '', '') |
+	\ if s:name != s:short && s:short != "" |
+	\   echo s:name s:short |
+	\   exe "doau filetypedetect BufRead " . s:short |
+	\ endif |
+	\ unlet s:name |
+	\ unlet s:short
 au BufNewFile,BufRead *.in
 	\ if expand("<afile>:t") != "configure.in" |
 	\   exe "doau filetypedetect BufRead " . expand("<afile>:r") |
@@ -164,7 +171,7 @@ endfun
 au BufNewFile,BufRead *.vbs			setf vb
 
 " Batch file for MSDOS (*.cmd is close enough)
-au BufNewFile,BufRead *.bat,*.cmd		setf dosbatch
+au BufNewFile,BufRead *.bat,*.cmd,*.sys		setf dosbatch
 
 " Batch file for 4DOS
 au BufNewFile,BufRead *.btm			setf btm
@@ -286,7 +293,7 @@ au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	setf cobol
 au BufNewFile,BufRead *.cfm,*.cfi		setf cf
 
 " Configure scripts
-au BufNewFile,BufRead configure.in		setf config
+au BufNewFile,BufRead configure.in,configure.ac setf config
 
 " Configure files
 au BufNewFile,BufRead *.cfg			setf cfg

@@ -1295,7 +1295,7 @@ extern int _fmode;
  * Prepare window for use by Vim.
  */
     void
-mch_shellinit(void)
+mch_init(void)
 {
     union REGS regs;
 
@@ -1789,15 +1789,15 @@ mch_nodetype(char_u *name)
 }
 
     void
-mch_init(void)
+mch_early_init(void)
 {
 }
 
 /*
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_exit() may be called before mch_init()!
  */
     void
-mch_windexit(int r)
+mch_exit(int r)
 {
     settmode(TMODE_COOK);
     stoptermcap();

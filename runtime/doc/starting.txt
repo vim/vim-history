@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ah.  Last change: 2001 May 27
+*starting.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -585,8 +585,8 @@ accordingly.  Vim proceeds in this order:
 	interpreted.
 							*evim.vim*
      a. If vim was started as |evim| or |eview| or with the |-y| argument, the
-        script $VIMRUNTIME/evim.vim will be loaded.
-     							*system-vimrc*
+	script $VIMRUNTIME/evim.vim will be loaded.
+							*system-vimrc*
      b. For Unix, MS-DOS, MS-Windows, OS/2, VMS, Macintosh, RISC-OS and Amiga
 	the system vimrc file is read for initializations.  The path of this
 	file is shown with the ":version" command.  Mostly it's "$VIM/vimrc".
@@ -793,8 +793,9 @@ If Vim takes a long time to start up, there may be a few causes:
 							*:intro*
 When Vim starts without a file name, an introductory message is displayed (for
 those who don't know what Vim is).  It is removed as soon as the display is
-redrawn in any way.  To see the message again, use the ":intro" command.
-To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
+redrawn in any way.  To see the message again, use the ":intro" command (if
+there is not enough room, you will see only part of it).
+   To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
 
 ==============================================================================
 5. $VIM and $VIMRUNTIME

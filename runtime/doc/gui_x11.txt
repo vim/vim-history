@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ah.  Last change: 2001 Mar 24
+*gui_x11.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -116,7 +116,7 @@ The first three of these are standard resources on Silicon Graphics machines
 which make Motif applications look even better, highly recommended!
 
 The "Vim*fontList" is to set the menu font for Motif.  Example: >
-	Vim*menuBar*fontList:        -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+	Vim*menuBar*fontList:	     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 With Athena: >
 	Vim*menuBar*SmeBSB*font:     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 	Vim*menuBar*MenuButton*font: -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
@@ -319,7 +319,7 @@ Example, which sets the tooltip colors to black on light-yellow: >
 		fg[NORMAL] = "#000000"
 	}
 
-	widget "gtk-tooltips*"          style "tooltips"
+	widget "gtk-tooltips*"		style "tooltips"
 
 Write this in the file ~/.gtkrc and it will be used by GTK.  Don't forget to
 remove the ">" characters from the first column.

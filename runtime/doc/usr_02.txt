@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
+*usr_02.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -90,7 +90,7 @@ now have two lines of text in your Vim window:
 	|Found programming UNIX a hurdle	|
 	|~					|
 	|~					|
-	|                       		|
+	|					|
 	+---------------------------------------+
 
 
@@ -105,8 +105,17 @@ line of the window.  That's where you type colon commands (commands that start
 with a colon).  Finish this command by pressing the <Enter> key (all commands
 that start with a colon are finished this way).
    Now, if you type the "i" command Vim will display --INSERT-- at the bottom
-of the window.  This indicates you are in Insert mode.  If you press <Esc> to
-go back to Normal mode the last line will be made blank.
+of the window.  This indicates you are in Insert mode.
+
+	+---------------------------------------+
+	|A very intelligent turtle		|
+	|Found programming UNIX a hurdle	|
+	|~					|
+	|~					|
+	|-- INSERT --				|
+	+---------------------------------------+
+
+If you press <Esc> to go back to Normal mode the last line will be made blank.
 
 
 GETTING OUT OF TROUBLE
@@ -169,7 +178,7 @@ look like this:
 	|Found programming UNIX a hurdle	|
 	|~					|
 	|~					|
-	|                       		|
+	|					|
 	+---------------------------------------+
 
 Now you can insert new text, for example by typing: >
@@ -177,14 +186,14 @@ Now you can insert new text, for example by typing: >
 	iA young <Esc>
 
 This begins an insert (the i), inserts the words "A young", and then exits
-insert mode (the final <Esc>).  The result:
+insert mode (the final <Esc>).	The result:
 
 	+---------------------------------------+
 	|A young intelligent turtle		|
 	|Found programming UNIX a hurdle	|
 	|~					|
 	|~					|
-	|                       		|
+	|					|
 	+---------------------------------------+
 
 
@@ -198,7 +207,7 @@ then move up to fill the gap:
 	|~					|
 	|~					|
 	|~					|
-	|                       		|
+	|					|
 	+---------------------------------------+
 
 
@@ -298,7 +307,7 @@ line?  For that you need to insert text after the cursor.  This is done with
 the "a" (append) command.
    For example, to change the line
    
-   	and that 's not saying much for the turtle. ~
+	and that 's not saying much for the turtle. ~
 to
 	and that 's not saying much for the turtle!!! ~
 
@@ -319,7 +328,7 @@ The "o" command creates a new, empty line below the cursor and puts Vim in
 Insert mode.  Then you can type the text for the new line.
    Suppose the cursor is somewhere in the first of these two lines:
 
-   	A very intelligent turtle ~
+	A very intelligent turtle ~
 	Found programming UNIX a hurdle ~
 
 If you now use the "o" command and type new text: >
@@ -328,7 +337,7 @@ If you now use the "o" command and type new text: >
 
 The result is:
 
-   	A very intelligent turtle ~
+	A very intelligent turtle ~
 	That liked using Vim
 	Found programming UNIX a hurdle ~
 
@@ -389,7 +398,7 @@ Everything you always wanted to know can be found in the Vim help files.
 Don't be afraid to ask!
    To get generic help use this command: >
 
-   	:help
+	:help
 
 You could also use the first function key <F1>.  If your keyboard has a <Help>
 key it might work as well.

@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0ah.  Last change: 2001 May 25
+*uganda.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -166,12 +166,12 @@ Credit Card:	You can use PayPal to send money with a Credit card.  This is
 
 Others:		Transfer to one of these accounts if possible:
 		    Postbank, account 4548774
-		    		Swift code: INGB NL 2A
+				Swift code: INGB NL 2A
 				IBAN: NL47 PSTB 0004 5487 74
 			under the name "stichting ICCF Holland", Venlo
 		    If that doesn't work:
 		    Rabobank Venlo, account 3765.05.117
-		    		Swift code: RABO NL 2U
+				Swift code: RABO NL 2U
 			under the name "Bram Moolenaar", Venlo
 		Otherwise, send a cheque in US dollars to the above address.
 		Minimal amount: $70 (my bank does not accept smaller amounts

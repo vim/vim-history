@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.0ah.  Last change: 2001 Apr 18
+*os_390.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,7 +11,7 @@ This file contains the particularities for the OS/390 Unix version of Vim.
 2) Building VIM for OS/390 Unix		|OS390-building|
 3) Xterm Problems			|OS390-xterm|
 4) Motif Problems			|OS390-Motif|
-5) Ctags         			|OS390-ctags|
+5) Ctags				|OS390-ctags|
 6) Known weaknesses			|OS390-weaknesses|
 7) Changes				|OS390-changes|
 8) Porting VIM to OS/390 Unix		|OS390-porting|
@@ -62,7 +62,7 @@ during the installation, but in fact it just does nothing.
 If you want to build Vim without debugging code, export the environment
 variable CFLAGS set to an empty string, before you call configure.
 >
-        export CFLAGS=""
+	export CFLAGS=""
 <
 
 
@@ -77,10 +77,10 @@ configure and make.
     $ make
     $ make test
 <
-        NOTE: Test 11 will fail, if you don't have gzip installed.
-        Test 42 will fail, as VIM on OS/390 Unix doesn't support the multibyte
-        feature.
-        >
+	NOTE: Test 11 will fail, if you don't have gzip installed.
+	Test 42 will fail, as VIM on OS/390 Unix doesn't support the multibyte
+	feature.
+	>
 
     $ make install
 <
@@ -97,13 +97,13 @@ One of the configure test for a library needed for X11 fails, and the SM and
 ICE libraries are not included. This results in unresolved symbols during the
 link. Fortunally configure is easy to convince, just do this: >
 
-        export X_PRE_LIBS="-lSM -lICE"
+	export X_PRE_LIBS="-lSM -lICE"
 <
 
 Here is what you do, if you want Motif:
 
   a) Static link >
-        $ export X_PRE_LIBS="-lSM -lICE"
+	$ export X_PRE_LIBS="-lSM -lICE"
 	$ export LDFLAGS="-W l,dll"
 	$ export _CC_CCMODE=1
 	$ configure --with-features=big --enable-gui=motif
@@ -398,10 +398,10 @@ Eval
 For the internal script language we added the feature "ebcdic". With you can
 fix ASCII dependent scripts like this:
 
-    if(has("ebcdic"))
-        let space = 64
+    if has("ebcdic")
+	let space = 64
     else
-        let space = 32
+	let space = 32
     endif
 
 Tag search

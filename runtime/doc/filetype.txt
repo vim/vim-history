@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0ah.  Last change: 2001 Apr 27
+*filetype.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -78,6 +78,13 @@ The filetype detection is not switched off then.  But if you do switch off
 filetype detection, the indent files will not be loaded either.
 This actually loads the file "indoff.vim" in 'runtimepath'.
 
+						*:filetype-off*
+To disable file type detection, use this command: >
+	:filetype off
+This will keep the flags for "plugin" and "indent", but since no file types
+are being detected, they won't work until the next ":filetype on".
+
+
 Overview:					*:filetype-overview*
 
 command				detection	plugin		indent ~
@@ -99,11 +106,17 @@ The file types are also used for syntax highlighting.  If the ":syntax on"
 command is used, the file type detection is installed too.  There is no need
 to do ":filetype on" after ":syntax on".
 
-To disable file type detection, use this command: >
-	:filetype off
-
 To disable one of the file types, add a line in the your filetype file, see
 |remove-filetype|.
+
+							*filetype-detect*
+To detect the file type again: >
+	:filetype detect
+Use this if you started with an empty file and typed text that makes it
+possible to detect the file type.  For example, when you entered this in a
+shell script: "#!/bin/csh".
+   When filetype detection was off, it will be enabled first, like the "on"
+argument was used.
 
 							*new-filetype*
 If a file type that you want to use is not detected yet, there are two ways to
@@ -152,7 +165,7 @@ B. If your filetype can only be detected by inspecting the contents of the
 <     See $VIMRUNTIME/scripts.vim for more examples.
       Write this file as "scripts.vim" in your user runtime directory.  For
       example, for Unix: >
-      	:w ~/.vim/scripts.vim
+	:w ~/.vim/scripts.vim
 <
    3. The detection will work right away, no need to restart Vim.
 
@@ -242,7 +255,7 @@ Defining mappings for a filetype may get in the way of the mappings you
 define yourself.  There are a few ways to avoid this:
 1. Set the "maplocalleader" variable to the key sequence you want the mappings
    to start with.  Example: >
-   	:let maplocalleader = ","
+	:let maplocalleader = ","
 <  All mappings will then start with a comma instead of the default, which
    is a backslash.  Also see |<LocalLeader>|.
 
@@ -257,7 +270,7 @@ define yourself.  There are a few ways to avoid this:
 3. Disable defining mappings for a specific filetype by setting a variable,
    which contains the name of the filetype.  For the "mail" filetype this
    would be: >
-   	:let no_mail_maps = 1
+	:let no_mail_maps = 1
 
 4. Disable defining mappings for all filetypes by setting a variable: >
 	:let no_plugin_maps = 1
@@ -270,7 +283,7 @@ ways to change this:
 1. Add a few settings.
    You must create a new filetype plugin in a directory early in
    'runtimepath'.  For Unix, for example you could use this file: >
-   	vim ~/.vim/ftplugin/fortran.vim
+	vim ~/.vim/ftplugin/fortran.vim
 <  You can set those settings and mappings that you would like to add.  Note
    that the global plugin will be loaded after this, it may overrule the
    settings that you do here.  If this is the case, you need to use one of the
@@ -279,7 +292,7 @@ ways to change this:
 2. Make a copy of the plugin and change it.
    You must put the copy in a directory early in 'runtimepath'.  For Unix, for
    example, you could do this: >
-   	cp $VIMRUNTIME/ftplugin/fortran.vim ~/.vim/ftplugin/fortran.vim
+	cp $VIMRUNTIME/ftplugin/fortran.vim ~/.vim/ftplugin/fortran.vim
 <  Then you can edit the copied file to your liking.  Since the b:did_ftplugin
    variable will be set, the global plugin will not be loaded.
    A disadvantage of this method is that when the distributed plugin gets
@@ -288,7 +301,7 @@ ways to change this:
 3. Overrule the settings after loading the global plugin.
    You must create a new filetype plugin in a directory from the end of
    'runtimepath'.  For Unix, for example, you could use this file: >
-   	vim ~/.vim/after/ftplugin/fortran.vim
+	vim ~/.vim/after/ftplugin/fortran.vim
 <  In this file you can change just those settings that you want to change.
 
 
@@ -340,6 +353,9 @@ Options:
 
 Commands:
 Man {name}	Display the manual page for {name} in a window.
+
+Global mapping:
+<Leader>K	Displays the manual page for the word under the cursor.
 
 Local mappings:
 CTRL-]		Jump to the manual page for the word under the cursor.

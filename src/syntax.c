@@ -5866,7 +5866,7 @@ load_colors(p)
 	return OK;
 
     recursive = TRUE;
-    buf = alloc(STRLEN(p) + 12);
+    buf = alloc((unsigned)(STRLEN(p) + 12));
     if (buf != NULL)
     {
 	sprintf((char *)buf, "colors/%s.vim", p);
@@ -6036,16 +6036,7 @@ do_highlight(line, forceit, init)
 #ifdef FEAT_EVAL
 	    do_unlet((char_u *)"colors_name");
 #endif
-#if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
-	    /* Since t_me has been set, this probably means that the user
-	     * wants to use this as default colors.  Need to reset default
-	     * background/foreground colors. */
-	    mch_set_normal_colors();
-#else
-	    cterm_normal_fg_color = 0;
-	    cterm_normal_fg_bold = 0;
-	    cterm_normal_bg_color = 0;
-#endif
+	    restore_cterm_colors();
 
 	    /*
 	     * Clear all default highlight groups and load the defaults.
@@ -6444,7 +6435,8 @@ do_highlight(line, forceit, init)
 		    cterm_normal_fg_color = color + 1;
 		    cterm_normal_fg_bold = (HL_TABLE()[idx].sg_cterm & HL_BOLD);
 		    must_redraw = CLEAR;
-		    term_fg_color(color);
+		    if (termcap_active)
+			term_fg_color(color);
 		}
 	    }
 	    else
@@ -6454,7 +6446,8 @@ do_highlight(line, forceit, init)
 		{
 		    cterm_normal_bg_color = color + 1;
 		    must_redraw = CLEAR;
-		    term_bg_color(color);
+		    if (termcap_active)
+			term_bg_color(color);
 		    if (t_colors < 16)
 			i = (color == 0 || color == 4);
 		    else
@@ -6663,6 +6656,25 @@ do_highlight(line, forceit, init)
 
     /* Only call highlight_changed() once, after sourcing a syntax file */
     need_highlight_changed = TRUE;
+}
+
+/*
+ * Reset the cterm colors to what they were before Vim was started, if
+ * possible.  Otherwise reset them to zero.
+ */
+    void
+restore_cterm_colors()
+{
+#if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
+    /* Since t_me has been set, this probably means that the user
+     * wants to use this as default colors.  Need to reset default
+     * background/foreground colors. */
+    mch_set_normal_colors();
+#else
+    cterm_normal_fg_color = 0;
+    cterm_normal_fg_bold = 0;
+    cterm_normal_bg_color = 0;
+#endif
 }
 
 /*

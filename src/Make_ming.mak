@@ -243,7 +243,7 @@ DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 
-GUI_LIB = $(LIB)
+GUI_LIB = $(LIB) -lole32 -luuid
 
 
 all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe
@@ -252,7 +252,7 @@ vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB)
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB) -lole32 -luuid
 
 uninstall.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c $(LIB)
@@ -304,7 +304,7 @@ dyn-ming.h:
 ifneq (sh.exe, $(SHELL))
 	@echo \/\* created by make \*\/ > dyn-ming.h
 else
-	@echo "/* created by make */" > dyn-ming.h
+	@echo /* created by make */ > dyn-ming.h
 endif
 ifdef DYNAMIC_PERL
 ifneq (sh.exe, $(SHELL))

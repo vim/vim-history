@@ -1,9 +1,11 @@
-*usr_40.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_40.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			      Write a Vim script
 
+
+Introduction.
 
 |40.1|	Introduction
 |40.2|	Expressions

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0ah.  Last change: 2001 May 12
+*tagsearch.txt* For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -159,7 +159,7 @@ commands explained above the tag stack will look like this:
    1 main	       1  harddisk2:text/vim/test
    2 FuncB	      59  harddisk2:text/vim/src/main.c
 
- 							*E73*
+							*E73*
 When you try to use the tag stack while it doesn't contain anything you will
 get an error message.
 

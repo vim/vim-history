@@ -1018,6 +1018,12 @@ win_split_ins(size, flags, newwin, dir)
 	i = p_wiw;
 	if (size != 0)
 	    p_wiw = size;
+
+# ifdef FEAT_GUI
+	/* When 'guioptions' includes 'L' or 'R' may have to add scrollbars. */
+	if (gui.in_use)
+	    gui_init_which_components(NULL);
+# endif
     }
     else
 #endif
@@ -1261,6 +1267,25 @@ win_exchange(Prenum)
     temp = curwin->w_vsep_width;
     curwin->w_vsep_width = wp->w_vsep_width;
     wp->w_vsep_width = temp;
+
+    /* If the windows are not in the same frame, exchange the sizes to avoid
+     * messing up the window layout.  Otherwise fix the frame sizes. */
+    if (curwin->w_frame->fr_parent != wp->w_frame->fr_parent)
+    {
+	temp = curwin->w_height;
+	curwin->w_height = wp->w_height;
+	wp->w_height = temp;
+	temp = curwin->w_width;
+	curwin->w_width = wp->w_width;
+	wp->w_width = temp;
+    }
+    else
+    {
+	frame_fix_height(curwin);
+	frame_fix_height(wp);
+	frame_fix_width(curwin);
+	frame_fix_width(wp);
+    }
 #endif
 
     (void)win_comp_pos();		/* recompute window positions */
@@ -1382,6 +1407,14 @@ win_totop(size, flags)
 
     /* Split a window on the right side and put the window there. */
     (void)win_split_ins(size, flags, curwin, dir);
+
+#if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
+    /* When 'guioptions' includes 'L' or 'R' may have to remove or add
+     * scrollbars. */
+    if (gui.in_use)
+	gui_init_which_components(NULL);
+#endif
+
 }
 
 /*
@@ -1881,6 +1914,12 @@ win_close(win, free_buf)
     if (help_window)
 	restore_snapshot();
 
+#if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
+    /* When 'guioptions' includes 'L' or 'R' may have to remove scrollbars. */
+    if (gui.in_use && !win_hasvertsplit())
+	gui_init_which_components(NULL);
+#endif
+
     redraw_all_later(NOT_VALID);
 }
 
@@ -1962,7 +2001,32 @@ winframe_remove(win, dirp)
 	frp2->fr_parent->fr_win = frp2->fr_win;
 	if (frp2->fr_win != NULL)
 	    frp2->fr_win->w_frame = frp2->fr_parent;
+	frp = frp2->fr_parent;
 	vim_free(frp2);
+
+	frp2 = frp->fr_parent;
+	if (frp2 != NULL && frp2->fr_layout == frp->fr_layout)
+	{
+	    /* The frame above the parent has the same layout, have to merge
+	     * the frames into this list. */
+	    if (frp2->fr_child == frp)
+		frp2->fr_child = frp->fr_child;
+	    frp->fr_child->fr_prev = frp->fr_prev;
+	    if (frp->fr_prev != NULL)
+		frp->fr_prev->fr_next = frp->fr_child;
+	    for (frp2 = frp->fr_child; ; frp2 = frp2->fr_next)
+	    {
+		frp2->fr_parent = frp2;
+		if (frp2->fr_next == NULL)
+		{
+		    frp2->fr_next = frp->fr_next;
+		    if (frp->fr_next != NULL)
+			frp->fr_next->fr_prev = frp2;
+		    break;
+		}
+	    }
+	    vim_free(frp);
+	}
     }
 
     return wp;
@@ -2493,7 +2557,7 @@ win_alloc_first()
     curwin = win_alloc(NULL);
     curbuf = buflist_new(NULL, NULL, 1L, BLN_LISTED);
     if (curwin == NULL || curbuf == NULL)
-	mch_windexit(0);
+	mch_exit(0);
     curwin->w_buffer = curbuf;
     curbuf->b_nwindows = 1;	/* there is one window */
 #ifdef FEAT_WINDOWS
@@ -2503,7 +2567,7 @@ win_alloc_first()
 
     topframe = (frame_T *)alloc_clear((unsigned)sizeof(frame_T));
     if (topframe == NULL)
-	mch_windexit(0);
+	mch_exit(0);
     topframe->fr_layout = FR_LEAF;
 #ifdef FEAT_VERTSPLIT
     topframe->fr_width = Columns;
@@ -4689,5 +4753,27 @@ restore_snapshot_rec(sn, fr)
 	    wp = wp2;
     }
     return wp;
+}
+
+#endif
+
+#if (defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)) || defined(PROTO)
+/*
+ * Return TRUE if there is any vertically split window.
+ */
+    int
+win_hasvertsplit()
+{
+    frame_T	*fr;
+
+    if (topframe->fr_layout == FR_ROW)
+	return TRUE;
+
+    if (topframe->fr_layout == FR_COL)
+	for (fr = topframe->fr_child; fr != NULL; fr = fr->fr_next)
+	    if (fr->fr_layout == FR_ROW)
+		return TRUE;
+
+    return FALSE;
 }
 #endif

@@ -381,7 +381,7 @@ mch_suspend()
 }
 
     void
-mch_shellinit()
+mch_init()
 {
     /*
      * Read window size first. Calls to mch_get_shellsize() will
@@ -650,14 +650,14 @@ mch_nodetype(name)
 }
 
     void
-mch_init()
+mch_early_init()
 {
     /* Turn off all the horrible filename munging in UnixLib. */
     __uname_control = __UNAME_NO_PROCESS;
 }
 
     void
-mch_windexit(r)
+mch_exit(r)
     int r;
 {
     settmode(TMODE_COOK);
@@ -732,7 +732,7 @@ mch_screenmode(arg)
 /*
  * Try to get the current window size.
  * Return OK when size could be determined, FAIL otherwise.
- * Simply return results stored by mch_shellinit() if we are the
+ * Simply return results stored by mch_init() if we are the
  * machine's console. If not, we don't know how big the screen is.
  */
     int

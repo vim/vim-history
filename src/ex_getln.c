@@ -3253,7 +3253,7 @@ ExpandColors(pat, num_file, file)
     if (all == NULL)
 	return FAIL;
 
-    ga_init2(&ga, sizeof(char *), 3);
+    ga_init2(&ga, (int)sizeof(char *), 3);
     for (s = all; *s != NUL; s = e)
     {
 	e = vim_strchr(s, '\n');
@@ -3267,7 +3267,8 @@ ExpandColors(pat, num_file, file)
 		if (*s == '\n' || vim_ispathsep(*s))
 		    break;
 	    ++s;
-	    ((char_u **)ga.ga_data)[ga.ga_len] = vim_strnsave(s, e - s - 4);
+	    ((char_u **)ga.ga_data)[ga.ga_len] =
+					    vim_strnsave(s, (int)(e - s - 4));
 	    ++ga.ga_len;
 	    --ga.ga_room;
 	}

@@ -43,6 +43,17 @@ $4lDi<-- 'D' should be intact
 :set ve=all
 /^"r"
 $5lrxa<-- should be 'x'
+:"
+:"   Test to make sure 'x' can delete control characters
+:set display=uhex
+^xxxxxxi[This line should contain only the text between the brackets.]
+:set display=
+:"
+:"   Test for ^Y/^E due to bad w_virtcol value, reported by
+:"   Roy <royl@netropolis.net>.
+^O3li4li4li   <-- should show the name of a noted text editor
+^o4li4li4li   <-- and its version number-dd
+:"
 :wq! test.out
 ENDTEST
 keyword keyw
@@ -57,5 +68,7 @@ this is a test
 this is a test
 this is a test
 "r"
+absd
+abcv6efi.him0kl
 
 

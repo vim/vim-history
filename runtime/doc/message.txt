@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ah.  Last change: 2001 May 22
+*message.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -536,14 +536,14 @@ The file which you have started editing has disappeared, or is no longer
 accessible.  Make sure you write the buffer somewhere to avoid loosing
 changes.  This message is not given when 'buftype' is not empty.
 
-	    						*W14*  >
+							*W14*  >
   Warning: List of file names overflow
 
 You must be using an awful lot of buffers.  It's now possible that two buffers
 have the same number, which causes various problems.  You might want to exit
 Vim and restart it.
 
-  							*E296* *E297*  >
+							*E296* *E297*  >
   Seek error in swap file write
   Write error in swap file
 
@@ -618,9 +618,9 @@ Type					effect ~
      :					stop the listing and enter a
 					     command-line
     <C-Y>				yank (copy) a modeless selection to
-    					the clipboard ("* and "+ registers)
+					the clipboard ("* and "+ registers)
     {menu-entry}			what the menu is defined to in
-    					Cmdline-mode.
+					Cmdline-mode.
 
 Any other key causes the meaning of the keys to be displayed.
 

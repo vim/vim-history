@@ -268,6 +268,7 @@ static void f_prevnonblank __ARGS((VAR argvars, VAR retvar));
 static void f_setbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_rename __ARGS((VAR argvars, VAR retvar));
+static void f_resolve __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_searchpair __ARGS((VAR argvars, VAR retvar));
 static int get_search_arg __ARGS((VAR varp, int *flagsp));
@@ -2160,7 +2161,7 @@ get_string_var(arg, retvar, evaluate)
 			  break;
 
 			    /* Special key, e.g.: "\<C-W>" */
-		case '<': extra = trans_special(&p, name + i, FALSE);
+		case '<': extra = trans_special(&p, name + i, TRUE);
 			  if (extra != 0)
 			  {
 			      i += extra;
@@ -2366,6 +2367,7 @@ static struct fst
     {"nr2char",		1, 1, f_nr2char},
     {"prevnonblank",	1, 1, f_prevnonblank},
     {"rename",		2, 2, f_rename},
+    {"resolve",         1, 1, f_resolve},
     {"search",		1, 2, f_search},
     {"searchpair",	3, 5, f_searchpair},
     {"setbufvar",	3, 3, f_setbufvar},
@@ -3545,18 +3547,54 @@ f_getchar(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    varnumber_T		n;
+
+    ++no_mapping;
+    ++allow_keys;
     if (argvars[0].var_type == VAR_UNKNOWN)
 	/* getchar(): blocking wait. */
-	retvar->var_val.var_number = safe_vgetc();
+	n = safe_vgetc();
     else if (get_var_number(&argvars[0]) == 1)
 	/* getchar(1): only check if char avail */
-	retvar->var_val.var_number = vpeekc();
+	n = vpeekc();
     else if (vpeekc() == NUL)
 	/* getchar(0) and no char avail: return zero */
-	retvar->var_val.var_number = 0;
+	n = 0;
     else
 	/* getchar(0) and char avail: return char */
-	retvar->var_val.var_number = safe_vgetc();
+	n = safe_vgetc();
+    --no_mapping;
+    --allow_keys;
+
+    retvar->var_val.var_number = n;
+    if (IS_SPECIAL(n) || mod_mask != 0)
+    {
+	char_u		temp[10];   /* modifier: 3, mbyte-char: 6, NUL: 1 */
+	int		i = 0;
+
+	/* Turn a special key into three bytes, plus modifier. */
+	if (mod_mask != 0)
+	{
+	    temp[i++] = K_SPECIAL;
+	    temp[i++] = KS_MODIFIER;
+	    temp[i++] = mod_mask;
+	}
+	if (IS_SPECIAL(n))
+	{
+	    temp[i++] = K_SPECIAL;
+	    temp[i++] = K_SECOND(n);
+	    temp[i++] = K_THIRD(n);
+	}
+#ifdef FEAT_MBYTE
+	else if (has_mbyte)
+	    i += (*mb_char2bytes)(n, temp + i);
+#endif
+	else
+	    temp[i++] = n;
+	temp[i++] = NUL;
+	retvar->var_type = VAR_STRING;
+	retvar->var_val.var_string = vim_strsave(temp);
+    }
 }
 
 /*
@@ -4894,6 +4932,32 @@ f_rename(argvars, retvar)
 
     retvar->var_val.var_number = vim_rename(get_var_string(&argvars[0]),
 					get_var_string_buf(&argvars[1], buf));
+}
+
+/*
+ * "resolve()" function
+ */
+    static void
+f_resolve(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*p;
+#ifdef FEAT_SHORTCUT
+    char_u	*v = NULL;
+#endif
+
+    p = get_var_string(&argvars[0]);
+#ifdef FEAT_SHORTCUT
+# ifdef WIN32
+    v = mch_resolve_shortcut(p);
+# endif
+    if (v != NULL)
+	retvar->var_val.var_string = v;
+    else
+#endif
+	retvar->var_val.var_string = vim_strsave(p);
+    retvar->var_type = VAR_STRING;
 }
 
 /*

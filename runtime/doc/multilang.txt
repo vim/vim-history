@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0ah.  Last change: 2001 May 12
+*multilang.txt* For Vim version 6.0ai.  Last change: 2001 Jun 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,7 +19,15 @@ multi-byte text see |multibyte|.
 ==============================================================================
 1. Messages						*multilang-messages*
 
-Set the locale in your shell and Vim picks it up.
+Vim picks up the locale from the environment.  In most cases this means Vim
+will use the language that you prefer, unless it's not available.
+
+To see a list of supported locale names on your system, look in one of these
+directories:
+	/usr/lib/locale ~
+	/usr/share/locale ~
+Unfortunately, upper/lower case differences matter.  Also watch out for the
+user of "-" and "_".
 
 					    *:lan* *:lang* *:language* *E197*
 :lan[guage]
@@ -74,7 +82,7 @@ Set the locale in your shell and Vim picks it up.
 				:lang mes en
 <
 
-WINDOWS MESSAGE TRANSLATIONS				*win32-gettext*
+MS-WINDOWS MESSAGE TRANSLATIONS				*win32-gettext*
 
 Get the libintl.dll file if you don't have it yet:
 
@@ -92,7 +100,7 @@ Method of generate message file is same with UNIX.  Ex: >
 And set LANG environment on vim. >
   :let $LANG = 'ja'
 
-(text by Muraoka Taro)
+(text for Windows by Muraoka Taro)
 
 ==============================================================================
 2. Menus						*multilang-menus*

@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 6.0ah.  Last change: 2001 May 12
+*if_cscope.txt* For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -183,7 +183,7 @@ command, |:cscope|.  The available subcommands are:
 
 	    USAGE   :cs help
 
-    						*E260* *E261*
+						*E260* *E261*
     kill  : Kill a cscope connection (or kill all cscope connections).
 
 	    USAGE   :cs kill {num|partial_name}
@@ -259,7 +259,7 @@ to be added.  Examples: >
 	:set csverb
 	:set nocsverb
 <
-                                                      *cscopepathcomp* *cspc*
+						      *cscopepathcomp* *cspc*
 The value of 'cspc' determines how many components of a file's path to
 display.  With the default value of zero the entire path will be displayed.
 The value one will display only the filename with no path.  Other values

@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0ah.  Last change: 2001 Mar 10
+*visual.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -45,7 +45,7 @@ also highlighted.  On terminals where this is not possible the cursor is
 displayed normally.  If your cursor cannot be made invisible and you want Vim
 to highlight the character under the cursor anyway, you could set the 't_cv'
 and 't_ci' options to something harmless, for example: >
- 	:set t_cv=^[^[ t_ci=^[^[
+	:set t_cv=^[^[ t_ci=^[^[
 
 With "v" the text before the start position and after the end position will
 not be highlighted.  However, All uppercase and non-alpha operators, except
@@ -351,7 +351,7 @@ need to remove the 'B' and '<' flags from 'cpoptions')
 
 Note that special characters (like '.' and '*') will cause problems.
 
-Visual-block Examples                                   *blockwise-examples*
+Visual-block Examples					*blockwise-examples*
 With the following text, I will indicate the commands to produce the block and
 the results below. In all cases, the cursor begins on the 'a' in the first
 line if the test text.

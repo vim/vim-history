@@ -1,18 +1,20 @@
-*usr_29.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_29.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			       Editing program
 
 
-|29.1|	Replace a word
+Introduction.
+
+|29.1|	First section
 
      Next chapter: |usr_30.txt|  Compiling programs
  Previous chapter: |usr_28.txt|  Search commands and patterns
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*29.1*	Replace a word
+*29.1*	First section
 
 
 ==============================================================================

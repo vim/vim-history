@@ -9,6 +9,7 @@ int term_is_gui __ARGS((char_u *name));
 char_u *tltoa __ARGS((unsigned long i));
 void termcapinit __ARGS((char_u *name));
 void out_flush __ARGS((void));
+void out_flush_check __ARGS((void));
 void out_trash __ARGS((void));
 void out_char __ARGS((unsigned c));
 void out_str_nf __ARGS((char_u *s));

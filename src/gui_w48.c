@@ -67,6 +67,8 @@
 #define DLG_FONT_POINT_SIZE	8
 #define DLG_MIN_MAX_WIDTH	400
 
+#define DLG_NONBUTTON_CONTROL	5000	/* First ID of non-button controls */
+
 #ifdef PROTO
 /*
  * Define a few things for generating prototypes.  This is just to avoid
@@ -160,6 +162,7 @@ static LPARAM		s_lParam = 0;
 static HWND		s_textArea = NULL;
 static UINT		s_uMsg = 0;
 
+static char_u		*s_textfield; /* Used by dialogs to pass back strings */
 
 static int		s_need_activate = FALSE;
 
@@ -3065,6 +3068,10 @@ gui_mch_browse(
      * Don't use OFN_OVERWRITEPROMPT, Vim has its own ":confirm" dialog.
      */
     fileStruct.Flags = (OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY);
+#ifdef FEAT_SHORTCUT
+    if (curbuf->b_p_bin)
+	fileStruct.Flags |= OFN_NODEREFERENCELINKS;
+#endif
     if (saving)
     {
 	if (!GetSaveFileName(&fileStruct))

@@ -138,12 +138,8 @@
 # define __ARGS(x)  x
 #endif
 
-#if defined(UNIX) || defined(__EMX__)
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
 # include "os_unix.h"	    /* bring lots of system header files */
-#endif
-
-#ifdef VMS
-# include "os_vms.h"
 #endif
 
 #if defined(macintosh) && (defined(__MRC__) || defined(__SC__))

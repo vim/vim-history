@@ -2439,6 +2439,19 @@ out_flush()
     }
 }
 
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Sometimes a byte out of a multi-byte character is written with out_char().
+ * To avoid flushing half of the character, call this function first.
+ */
+    void
+out_flush_check()
+{
+    if (enc_dbcs != 0 && out_pos >= OUT_SIZE - MB_MAXBYTES)
+	out_flush();
+}
+#endif
+
 #ifdef FEAT_GUI
 /*
  * out_trash(): Throw away the contents of the output buffer

@@ -3441,6 +3441,22 @@ fname_expand(ffname, sfname)
     if (*sfname == NULL)	/* if no short file name given, use ffname */
 	*sfname = *ffname;
     *ffname = fix_fname(*ffname);   /* expand to full path */
+
+#ifdef FEAT_SHORTCUT
+    if (!curbuf->b_p_bin)
+    {
+	char_u  *rfname = NULL;
+
+	/* If the file name is a shortcut file, use the file it links to. */
+	rfname = mch_resolve_shortcut(*ffname);
+	if (rfname)
+	{
+	    vim_free(*ffname);
+	    *ffname = rfname;
+	    *sfname = rfname;
+	}
+    }
+#endif
 }
 
 /*

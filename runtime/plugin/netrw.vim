@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-"  Last Change: March 23, 2001
+"  Last Change: May 30, 2001
 "  Maintainer:  Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  Version:     2.10
+"  Version:     2.11
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
@@ -242,8 +242,18 @@ function! s:NetRead(...)
 
   elseif     s:netrw_method  == 5	" read with http (wget)
 "   Decho "DBG: read via http (method #5)"
-   exe "!wget http://" . s:netrw_machine . "/" . s:netrw_fname . " -O " . tmpfile
-   let result = s:NetGetFile(readcmd, tmpfile)
+   if match(s:netrw_fname,"#") == -1
+     exe "!wget http://" . s:netrw_machine . "/" . s:netrw_fname . " -O " . tmpfile
+     let result = s:NetGetFile(readcmd, tmpfile)
+   else
+	 let netrw_html= substitute(s:netrw_fname,"#.*$","","")
+	 let netrw_tag = substitute(s:netrw_fname,"^.*#","","")
+     exe "!wget http://" . s:netrw_machine . "/" . netrw_html . " -O " . tmpfile
+     let result = s:NetGetFile(readcmd, tmpfile)
+	 exe 'norm 1G/<\s*a\s*name=\s*"'.netrw_tag.'"'
+   endif
+   set ft=html
+   redraw!
    let b:netrw_lastfile = choice
 
   else " Complain

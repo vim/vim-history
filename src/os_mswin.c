@@ -195,13 +195,12 @@ int _stricoll(char *a, char *b)
 
 #if defined(FEAT_GUI_MSWIN) || defined(PROTO)
 /*
- * GUI version of mch_windexit().
+ * GUI version of mch_exit().
  * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_exit() may be called before mch_init()!
  */
     void
-mch_windexit(
-    int r)
+mch_exit(int r)
 {
     display_errors();
 
@@ -210,6 +209,9 @@ mch_windexit(
 # ifdef FEAT_OLE
     UninitOLE();
 # endif
+#ifdef DYNAMIC_GETTEXT
+    dyn_libintl_end();
+#endif
 
     if (gui.in_use)
 	gui_exit(r);
@@ -223,7 +225,7 @@ mch_windexit(
  * Init the tables for toupper() and tolower().
  */
     void
-mch_init(void)
+mch_early_init(void)
 {
     int		i;
 
@@ -870,7 +872,7 @@ clip_mch_set_selection(VimClipboard *cbd)
  */
     void
 DumpPutS(
-    const char* psz)
+    const char *psz)
 {
 # ifdef MCH_WRITE_DUMP
     if (fdDump)
@@ -918,15 +920,15 @@ static int s_top_margin;
 /*
  * Convert BGR to RGB for Windows GDI calls
  */
-static COLORREF swap_me(COLORREF *colorref)
+static COLORREF swap_me(COLORREF colorref)
 {
     int temp;
-    char *ptr = (char *)colorref;
+    char *ptr = (char *)&colorref;
 
     temp = *(ptr);
     *(ptr ) = *(ptr + 2);
     *(ptr + 2) = temp;
-    return *colorref;
+    return colorref;
 }
 
 #ifndef FEAT_GUI
@@ -1148,7 +1150,11 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * If bang present, return default printer setup with no dialogue
      * never show dialogue if we are running over telnet
      */
-    if (forceit || !term_console)
+    if (forceit
+#ifndef FEAT_GUI
+	    || !term_console
+#endif
+	    )
     {
 	s_pd.Flags |= PD_RETURNDEFAULT;
 #ifdef WIN32
@@ -1261,6 +1267,8 @@ init_fail_dlg:
 	    LocalFree((LPVOID)(buf));
 #endif
 	}
+	else
+	    msg_clr_eos(); /* Maybe canceled */
 
 	mch_print_cleanup();
 	return FALSE;
@@ -1341,15 +1349,79 @@ mch_print_setfont(int iBold, int iItalic, int iUnderline)
     void
 mch_print_set_bg(unsigned long bgcol)
 {
-    swap_me(&bgcol);
-    SetBkColor(s_pd.hDC, bgcol);
+    SetBkColor(s_pd.hDC, swap_me(bgcol));
 }
     void
 mch_print_set_fg(unsigned long fgcol)
 {
-    swap_me(&fgcol);
-    SetTextColor(s_pd.hDC, GetNearestColor(s_pd.hDC , fgcol));
+    SetTextColor(s_pd.hDC, GetNearestColor(s_pd.hDC, swap_me(fgcol)));
 }
 
-
 #endif /*FEAT_PRINTER*/
+
+#if defined(FEAT_SHORTCUT) || defined(PROTO)
+# include <shlobj.h>
+
+/*
+ * When "fname" is the name of a shortcut (*.lnk) resolve the file it points
+ * to and return that name in allocated memory.
+ * Otherwise NULL is returned.
+ */
+    char_u *
+mch_resolve_shortcut(char_u *fname)
+{
+    HRESULT		hr;
+    IShellLink		*psl = NULL;
+    IPersistFile	*ppf = NULL;
+    OLECHAR		wsz[MAX_PATH];
+    WIN32_FIND_DATA	ffd; // we get those free of charge
+    TCHAR		buf[MAX_PATH]; // could have simply reused 'wsz'...
+    char_u		*rfname = NULL;
+
+    if (!fname || STRLEN(fname) == 0)
+	return rfname;
+
+    CoInitialize(NULL);
+
+    // create a link manager object and request its interface
+    hr = CoCreateInstance(
+	    &CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+	    &IID_IShellLink, (void**)&psl);
+    if (hr != S_OK)
+	goto shortcut_error;
+
+    // Get a pointer to the IPersistFile interface.
+    hr = psl->lpVtbl->QueryInterface(
+	    psl, &IID_IPersistFile, (void**)&ppf);
+    if (hr != S_OK)
+	goto shortcut_error;
+
+    // full path string must be in Unicode.
+    MultiByteToWideChar(CP_ACP, 0, fname, -1, wsz, MAX_PATH);
+
+    // "load" the name and resove the link
+    hr = ppf->lpVtbl->Load(ppf, wsz, STGM_READ);
+    if (hr != S_OK)
+	goto shortcut_error;
+    hr = psl->lpVtbl->Resolve(psl, NULL, SLR_UPDATE);
+    if (hr != S_OK)
+	goto shortcut_error;
+
+    // Get the path to the link target.
+    hr = psl->lpVtbl->GetPath(psl, buf, MAX_PATH, &ffd, 0);
+    if (hr != S_OK)
+	goto shortcut_error;
+    rfname = vim_strsave( buf );
+
+shortcut_error:
+    // Release all interface pointers (both belong to the same object)
+    if (ppf != NULL)
+	ppf->lpVtbl->Release(ppf);
+    if (psl != NULL)
+	psl->lpVtbl->Release(psl);
+
+    CoUninitialize();
+    return rfname;
+}
+#endif
+

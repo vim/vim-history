@@ -1,11 +1,11 @@
-*usr_toc.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
+*usr_toc.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
 			      Table Of Contents			*user-manual*
 
 
-NOTE: The construction of the User Manual has only just started.  Most of it
+NOTE: The construction of the User Manual has only just started.  Much of it
 is still empty.  Over time bits from the reference manual will be moved to the
 user manual.  Parts from the Vim book and new text will be added.
 
@@ -99,7 +99,7 @@ Read this from start to end to learn the essential commands.
 
 |usr_05.txt|  Set your settings
 		|05.1|  The vimrc file
-		|05.2|  The default vimrc file explained
+		|05.2|  The example vimrc file explained
 		|05.3|  Simple mappings
 		|05.4|  Adding a plugin
 		|05.5|  Adding a help file
@@ -112,69 +112,52 @@ Read this from start to end to learn the essential commands.
 		|06.3|  Different colors
 		|06.4|  With colors or without colors
 		|06.5|  Printing with colors
-		(chap 23)
 
 |usr_07.txt|  Editing more than one file
-		":edit file" (chap 4)
-		argument list, :next, ":rewind" (chap 4)
-		CTRL-^ (chap 4)
-		file marks (chap 20)
-		backup files (chap 14)
-		copy/paste between files (chap 16)
-		registers (chap 20)
-		:w >>file (short)
+		|07.1|	Edit another file
+		|07.2|	A list of files
+		|07.3|	Jumping from file to file
+		|07.4|	Backup files
+		|07.5|	Copy text between files
 
 |usr_08.txt|  Splitting windows
-		:split and :split file (chap 5)
-		CTRL-W w, link to window movement commands |Q_wi|
-		:q :close :wall :qall
-		:new
-		:only
-		moving windows, CTRL-W K, CTRL-W H
-		window size
-		link to 'laststatus'
-		The help window
-		Vertical splits (example: edit tags file, map <Enter>
-			to show match in other window)
-		vimdiff, scrollbind
+		|08.1|	Split a window
+		|08.2|	Split a window on another file
+		|08.3|	Window size
+		|08.4|	Vertical splits
+		|08.5|	Moving windows
+		|08.6|	Commands for all windows
+		|08.7|	Viewing differences with vimdiff
 
 |usr_09.txt|  Using the GUI
-		(chap 10)
-		the parts of the GUI, link to 'guioptions'
-		mouse usage (chap 26)
-		tear-off menus
-		toolbar
-		the clipboard, "* and "+
-		select mode (chap 26)
+		|09.1|	Parts of the GUI
+		|09.2|	Using the mouse
+		|09.3|	The clipboard
+		|09.4|	Select mode
 
 |usr_10.txt|  Making big changes
-		":s" (chap 9)
-		command line ranges (chap 9)
-		Visual mode and ":", '<,'> (chap 9)
-		Visual block mode "r", "I", "A", "J", "~", "u" (chap 6)
-			switching modes
-		":g"
-		":r file"
-		":{range}w file"
-		external filter (chap 4) "!"
-		CTRL-L to redraw
-		formatting text "gq"
-		recording and executing registers (chap 2)
+		|10.1|  Record and playback commands
+		|10.2|	Substitution
+		|10.3|  Command ranges
+		|10.4|  The global command
+		|10.5|  Visual block mode
+		|10.6|  Reading and writing part of a file
+		|10.7|  Formatting text
+		|10.8|  Using an external program
 
 |usr_11.txt|  Recovering from a crash
-		(chap 14)
-		basic recovery
-		swap file management
-		":preserve"
+		|11.1|	Basic recovery
+		|11.2|	Where is the swap file?
+		|11.3|	Crashed or not?
+		|11.4|	Further reading
 
 |usr_12.txt|  Clever tricks
-		(chap 16)
-		replace a word with another
-		sorting a list
-		counting words
-		reading a manpage (with the man.vim plugin)
-		trimming blanks
-		finding all places an ID is used with ":grep"
+		|12.1|	Replace a word
+		|12.2|	Sort a list
+		|12.3|	Count words
+		|12.4|	Find a man page
+		|12.5|	Trim blanks
+		|12.6|	Find where a word is used
 
 ==============================================================================
 Editing Effictively ~
@@ -182,41 +165,32 @@ Editing Effictively ~
 Subjects that can be read independently.
 
 |usr_20.txt|  Typing commands quickly
-		command line editing
-		command completion
-		":" command abbreviations
-		cmdline histories
-		cmdline window
+		|20.1|	Command line editing
+		|20.2|	Command line abbreviations
+		|20.3|	Command line completion
+		|20.4|	Command line history
+		|20.5|	Command line window
 
 |usr_21.txt|  Go away and come back
-		CTRL-Z :suspend
-		viminfo, '0, '1 (chap 20)
-		sessions (chap 21)
-			session example: gvim with vertical split window,
-			explorer on the left, double click on name to change
-			dir or view file.
-		modelines
-		:sh and ":!cmd" to stay in Vim.
-		:set go+=l ssop+=resize
+		|21.1|	Suspend and resume
+		|21.2|	Executing shell commands
+		|21.3|	Remembering information; viminfo
+		|21.4|	Sessions
+		|21.5|	Views
+		|21.6|	Modelines
 
 |usr_22.txt|  Finding the file to edit
-		file explorer
-		file name completion, 'wildmenu'
-		":cd", ":lcd"
-		:find, "gf", link to 'path'
-		tags (chap 7) link to 'tagbsearch' and 'taglength'
-		the buffer list (chap 5)
-		(hidden) buffers (chap 5)
+		|22.1|	The file explorer
+		|22.2|	The current directory
+		|22.3|	Finding a file
+		|22.4|	The buffer list
 
 |usr_23.txt|  Editing other files
-		'fileformat' (chap 11)
-		using ftp and http with Vim
-		encryption (chap 14)
-		binary files |hex-editing|
-		"ga"
-		'list'
-		compressed files
-		dealing with long lines (chap 20)
+		|23.1|	DOS, Mac and Unix files
+		|23.2|	Files on the internet
+		|23.3|	Encryption
+		|23.4|	Binary files
+		|23.5|	Compressed files
 
 |usr_24.txt|  Inserting quickly
 		(chap 20)
@@ -237,15 +211,14 @@ Subjects that can be read independently.
 		reference to 'formatoptions'
 		:center (chap 11)
 		'autoindent'
+		dealing with long lines (chap 20)
 		'linebreak' |edit-no-break|
+		modelines
 		tables
 		'virtualedit'
 		tabs, 'sts', :retab (chap 23)
 
 |usr_26.txt|  Repeating
-		recording
-		executing registers
-		put register, edit, yank
 		"gv"
 		":bufdo"
 		":windo"
@@ -267,6 +240,9 @@ Subjects that can be read independently.
 		|28.10| Which fold method to use?
 
 |usr_29.txt|  Editing programs
+		tags (chap 7) link to 'tagbsearch' and 'taglength'
+		example: edit tags file, map <Enter> to show match in other
+		window)
 		(chap 7)
 		">>", "<<", ">%"
 		'ts', 'sts', 'sw'
@@ -274,7 +250,6 @@ Subjects that can be read independently.
 		"="
 		indent files
 		formatting comments, link to 'comments'
-		'patchmode'
 		"[I", ]D
 		:checkpath (chap 23) link to 'include' and 'define'
 		"gd", "gD"
@@ -324,6 +299,7 @@ Make Vim work as you like it.
 |usr_42.txt|  Add new menus (chap 26)
 		add a toolbar item
 		tooltips (chap 26)
+		:browse and :confirm
 
 |usr_43.txt|  Using filetypes
 		|43.1|  Settings for a filetype

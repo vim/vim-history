@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0ah.  Last change: 2001 Apr 12
+*pi_expl.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -137,11 +137,11 @@ cursor.
 The display in the file explorer can be sorted in forward or reverse order by
 name, size, or modification date.  You can set the default sorting direction
 with the option >
-  let g:explSortBy='name'               " alphabetically
-  let g:explSortBy='reverse name'       " reverse alphabetically
-  let g:explSortBy='date'               " newest first
-  let g:explSortBy='reverse date'       " oldest first
-  let g:explSortBy='size'               " largest first
+  let g:explSortBy='name'		" alphabetically
+  let g:explSortBy='reverse name'	" reverse alphabetically
+  let g:explSortBy='date'		" newest first
+  let g:explSortBy='reverse date'	" oldest first
+  let g:explSortBy='size'		" largest first
   let g:explSortBy='reverse size'       " smallest first
 While in the explorer, you can rotate through the sort fields by pressing the
 's' key and you can reverse the current sort order by pressing the 'r' key.
@@ -159,10 +159,10 @@ To control the segregation of directories and files, you can set this option >
 To control the segregation of files matching the suffixes option, you can set
 this option >
   let g:explSuffixesLast=1     " Files matching suffixes sorted at the bottom
-                               " of the list (default)
+			       " of the list (default)
   let g:explSuffixesLast=0     " Files matching suffixes sorted normally
   let g:explSuffixesLast=-1    " Files matching suffixes sorted at the top of
-                               " the list
+			       " the list
 The heading will indicate if suffixes have been moved to the end (or start) of
 the list.
 

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
+*options.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -108,7 +108,7 @@ When 'verbose' is non-zero, displaying an option value will also tell where it
 was last set.  Example: >
 	:verbose set shiftwidth cindent?
 	  shiftwidth=4
-	          Last set from modeline
+		  Last set from modeline
 	  cindent
 		  Last set from /usr/local/share/vim/vim60/ftplugin/c.vim
 This is only done when specific option values are requested, not for ":set
@@ -270,9 +270,9 @@ For buffer-local and window-local options:
       :set option=value	     set		set
  :setlocal option=value	      -			set
 :setglobal option=value	     set		 -
-      :set option             -                display
- :setlocal option             -                display
-:setglobal option           display              -
+      :set option	      -		       display
+ :setlocal option	      -		       display
+:setglobal option	    display		 -
 
 
 Global options with a local value			*global-local*
@@ -1191,7 +1191,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			area extended, Vim tries to become the owner of the
 			windowing system's global selection or put the
 			selected text on the clipboard used by the selection
-                        register "*.  See |guioptions_a| and |quotestar| for
+			register "*.  See |guioptions_a| and |quotestar| for
 			details.  When the GUI is active, the 'a' flag in
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
@@ -2130,7 +2130,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	It is a comma separated list of items:
 
 	  item		default		Used for ~
-	  stl:c		' ' or '^' 	statusline of the current window
+	  stl:c		' ' or '^'	statusline of the current window
 	  stlnc:c	' ' or '-'	statusline of the non-current windows
 	  vert:c	'|'		vertical separators |:vsplit|
 	  fold:c	'-'		filling 'foldtext'
@@ -2584,9 +2584,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	screen.
 
 						*'guioptions'* *'go'*
-'guioptions' 'go'	string	(default "gmrtT"   (MS-Windows),
-					 "gmrt"	   (MS-Windows no toolbar)
-					 "agimrtT" (Unix GTK, Motif, and Athena)
+'guioptions' 'go'	string	(default "gmrLtT"   (MS-Windows),
+					 "agimrLtT" (GTK, Motif and Athena)
 			global
 			{not in Vi}
 			{only available when compiled with GUI enabled}
@@ -2639,9 +2638,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  'T'	Include Toolbar.  Currently only in Win32, GTK+, Motif, and
 		Athena GUIs.
 
-	  'r'	Right-hand scrollbar is present when 'r' is included.
-	  'l'	Left-hand scrollbar is present when 'l' is included.
-	  'b'	Bottom (horizontal) scrollbar is present when 'b' is included.
+	  'r'	Right-hand scrollbar is always present.
+	  'R'	Right-hand scrollbar is present when there is a vertically
+		split window.
+	  'l'	Left-hand scrollbar is always present.
+	  'L'	Left-hand scrollbar is present when there is a vertically
+		split window.
+	  'b'	Bottom (horizontal) scrollbar is present.
 
 	And yes, you may even have scrollbars on the left AND the right if
 	you really want to :-).  See |gui-scrollbars| for more information.
@@ -3943,7 +3946,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	If Vim has not been compiled with the |+statusline| feature, this
 	option has no effect and a simple default header is used.
 
-						*'printername* *'pname'*
+						*'printername'* *'pname'*
 'printername' 'pname'	string	(default empty)
 			global
 			{not in Vi}
@@ -4514,7 +4517,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  n	use "[New]" instead of "[New File]"
 	  r	use "[RO]" instead of "[readonly]"
 	  w	use "[w]" instead of "written" for file write message
-	        and "[a]" instead of "appended" for ':w >> file' command
+		and "[a]" instead of "appended" for ':w >> file' command
 	  x	use "[dos]" instead of "[dos format]", "[unix]" instead of
 		"[unix format]" and "[mac]" instead of "[mac format]".
 	  a	all of the above abbreviations
@@ -5204,7 +5207,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	non-keyword characters (white space is preferred).  Maximum line
 	length is 510 bytes.
 	To obtain a file to be used here, check out the wordlist FAQ at
-        http://www.hyphenologist.co.uk .
+	http://www.hyphenologist.co.uk .
 	To include a comma in a file name precede it with a backslash.  Spaces
 	after a comma are ignored, otherwise spaces are included in the file
 	name.  See |option-backslash| about using backslashes.
@@ -5328,8 +5331,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	values from 1 to 30000 percent can be used.
 	'titlelen' is also used for the 'titlestring' option.
 
-                                                *'titleold'*
-'titleold'              string	(default "Thanks for flying Vim")
+						*'titleold'*
+'titleold'		string	(default "Thanks for flying Vim")
 			global
 			{not in Vi}
 			{only available when compiled with the |+title|
@@ -5596,7 +5599,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	CHAR	VALUE	~
 	!	When included, save and restore global variables that start
 		with an uppercase letter, and don't contain a lowercase
-		letter.
+		letter.  Thus "KEEPTHIS and "K_L_M" are stored, but "KeepThis"
+		and "_K_L_M" are not.
 	"	Maximum number of lines saved for each register.  If zero then
 		registers are not saved.  When not included, all lines are
 		saved.  Dont forget to put a backslash before the ", otherwise

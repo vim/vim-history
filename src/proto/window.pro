@@ -38,4 +38,5 @@ int vim_FullName __ARGS((char_u *fname, char_u *buf, int len, int force));
 int min_rows __ARGS((void));
 int only_one_window __ARGS((void));
 void check_lnums __ARGS((int do_curwin));
+int win_hasvertsplit __ARGS((void));
 /* vim: set ft=c : */

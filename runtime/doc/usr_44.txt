@@ -1,18 +1,20 @@
-*usr_44.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+*usr_44.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 			 Your own syntax highlighted
 
 
-|44.1|	Replace a word
+Introduction.
+
+|44.1|	First section
 
      Next chapter: |usr_45.txt|  Select your language
  Previous chapter: |usr_43.txt|  Using filetypes
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*44.1*	Replace a word
+*44.1*	First section
 
 
 ==============================================================================

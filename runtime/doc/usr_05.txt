@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0ah.  Last change: 2001 May 26
+*usr_05.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -10,7 +10,7 @@ make Vim start with options set to different values.  Add plugins to extend
 Vims capabilities.  Or define your own macros.
 
 |05.1|  The vimrc file
-|05.2|  The default vimrc file explained
+|05.2|  The example vimrc file explained
 |05.3|  Simple mappings
 |05.4|  Adding a plugin
 |05.5|  Adding a help file
@@ -40,7 +40,7 @@ create a vimrc file.  Also, the ":version" command mentions the name of the
 
 For Unix this file is always used: >
 
-   	~/.vimrc
+	~/.vimrc
 
 For MS-DOS and MS-Windows it is mostly one of these: >
 
@@ -61,7 +61,7 @@ This chapter only explains the most basic items.  For more information on how
 to write a Vim script file: |usr_40.txt|.
 
 ==============================================================================
-*05.2*  The default vimrc file explained
+*05.2*  The example vimrc file explained
 
 In the first chapter was explained how the example vimrc (included in the
 Vim distribution) file can be used to make Vim startup in not-compatible mode
@@ -463,26 +463,35 @@ from the window border where scrolling starts.
 *05.7*  Often used options
 
 There are an awful lot of options.  Most of them you will hardly ever use.
-Some of the more useful ones will be mentioned here.
+Some of the more useful ones will be mentioned here.  Don't forget you can
+find more help on these options with the ":help" command, with single quotes
+before and after the option name.  For example: >
+
+	:help 'wrap'
+
+
+NOT WRAPPING LINES
 
 Vim normally wraps long lines, so that you can see all of the text.  Sometimes
 it's better to let the text continue right of the window.  Then you need to
 scroll the text left-right to see all of a long line.  Switch wrapping of with
 this command: >
 
-	set nowrap
+	:set nowrap
 
 Vim will automatically scroll the text when you move to text that is not
 displayed.  To see a context of ten characters, do this: >
 
-	set sidescroll=10
+	:set sidescroll=10
 
+
+WRAPPING MOVEMENT COMMANDS
 
 Most commands for moving around will stop moving at the start and end of a
 line.  You can change that with the 'whichwrap' option.  This sets it to the
 default value: >
 
-	set whichwrap=b,s
+	:set whichwrap=b,s
 
 This allows the <BS> key, when used in the first position of a line, to move
 the cursor to the end of the previous line.  And the <Space> key moves from
@@ -490,14 +499,33 @@ the end of a line to the start of the next one.
 
 To allow the cursor keys <Left> and <Right> to also wrap, use this command: >
 
-	set whichwrap=b,s,<,>
+	:set whichwrap=b,s,<,>
 
 This is still only for Normal mode.  To let <Left> and <Right> do this in
 Insert mode as well: >
 
-	set whichwrap=b,s,<,>,[,]
+	:set whichwrap=b,s,<,>,[,]
 
 There are a few other flags that can be added, see 'whichwrap'.
+
+
+VIEWING TABS
+
+When there are tabs in a file, you cannot see where they are.  To make them
+visible: >
+
+	:set list
+
+Now every Tab is displayed as ^I.  And a $ is displayed at the end of each
+line, so that you can spot trailing spaces that would otherwise go unnoticed.
+   A disadvantage is that this looks ugly when there are many Tabs in a file.
+If you have a color terminal, or are using the GUI, Vim can show the spaces
+and tabs as highlighted characters.  Use the 'listchars' option: >
+
+	:set listchars=tab:>-,trail:-
+
+Now every tab will be displayed as ">---" and trailing white space as "-".
+Looks a lot better, doesn't it?
 
 ==============================================================================
 

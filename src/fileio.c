@@ -1648,6 +1648,15 @@ failed:
 	close(fd);				/* errors are ignored */
     vim_free(buffer);
 
+#ifdef HAVE_DUP
+    if (read_stdin)
+    {
+	/* Use stderr for stdin, makes shell commands work. */
+	close(0);
+	dup(2);
+    }
+#endif
+
 #ifdef FEAT_MBYTE
     if (tmpname != NULL)
     {
@@ -6528,6 +6537,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     /*
      * Replace all backslashes with forward slashes.  This makes the
      * autocommand patterns portable between Unix and MS-DOS.
+     * Watch out for the Big5 encoding, it has '\' in the trail byte.
      */
     {
 	char_u	    *p;
@@ -6535,10 +6545,20 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 	if (sfname != NULL)
 	{
 	    for (p = sfname; *p; ++p)
+# ifdef  FEAT_MBYTE
+		if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+		    ++p;
+		else
+# endif
 		if (*p == '\\')
 		    *p = '/';
 	}
 	for (p = fname; *p; ++p)
+# ifdef  FEAT_MBYTE
+	    if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+		++p;
+	    else
+# endif
 	    if (*p == '\\')
 		*p = '/';
     }
@@ -7147,6 +7167,13 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
 #endif
 	    default:
 		size++;
+# ifdef  FEAT_MBYTE
+		if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+		{
+		    ++p;
+		    ++size;
+		}
+# endif
 		break;
 	}
     }
@@ -7275,6 +7302,11 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
 		    reg_pat[i++] = ',';
 		break;
 	    default:
+# ifdef  FEAT_MBYTE
+		if (enc_dbcs != 0 && (*mb_ptr2len_check)(p) > 1)
+		    reg_pat[i++] = *p++;
+		else
+# endif
 		if (allow_dirs != NULL && vim_ispathsep(*p))
 		    *allow_dirs = TRUE;
 		reg_pat[i++] = *p;

@@ -5056,6 +5056,31 @@ cstrncmp(s1, s2, n)
 {
     if (!ireg_ic)
 	return STRNCMP(s1, s2, n);
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	int	i, l;
+
+	for (i = 0; i < n; i += l)
+	{
+	    l = (*mb_ptr2len_check)(s1 + i);
+	    if (l == 1)
+	    {
+		/* single byte: ignore case. */
+		if (s1[i] != s2[i] && TO_LOWER(s1[i]) != TO_LOWER(s2[i]))
+		    return 1;
+	    }
+	    else
+	    {
+		/* For multi-byte don't ignore case. */
+		if (l > n - i)
+		    l = n - i;
+		if (STRNCMP(s1 + i, s2 + i, l) != 0)
+		    return 1;
+	    }
+	}
+    }
+#endif
     return STRNICMP(s1, s2, n);
 }
 

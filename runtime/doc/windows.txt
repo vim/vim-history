@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
+*windows.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -272,7 +272,7 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 		'hidden' is restored after {cmd} has been executed.
 		Example: >
 		    :hide edit Makefile
-< 		This will edit "Makefile", and hide the current buffer if it
+<		This will edit "Makefile", and hide the current buffer if it
 		has any changes.
 
 CTRL-W o						*CTRL-W_o* *E445*

@@ -236,7 +236,7 @@ mch_suspend()
 #define DOS_LIBRARY	((UBYTE *) "dos.library")
 
     void
-mch_shellinit()
+mch_init()
 {
     static char	    intlibname[] = "intuition.library";
 
@@ -273,7 +273,7 @@ mch_shellinit()
 	mch_errmsg(_("cannot open "));
 	mch_errmsg(intlibname);
 	mch_errmsg("!?\n");
-	mch_windexit(3);
+	mch_exit(3);
     }
 }
 
@@ -845,15 +845,15 @@ mch_nodetype(name)
 }
 
     void
-mch_init()
+mch_early_init()
 {
 }
 
 /*
- * Careful: mch_windexit() may be called before mch_shellinit()!
+ * Careful: mch_exit() may be called before mch_init()!
  */
     void
-mch_windexit(r)
+mch_exit(r)
     int		    r;
 {
     if (raw_in)			    /* put terminal in 'normal' mode */

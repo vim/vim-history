@@ -1276,7 +1276,6 @@ msg_prt_line(s)
 {
     int		c;
     int		col = 0;
-
     int		n_extra = 0;
     int		c_extra = 0;
     char_u	*p_extra = NULL;	    /* init to make SASC shut up */
@@ -1285,6 +1284,7 @@ msg_prt_line(s)
     char_u	*trail = NULL;
 #ifdef FEAT_MBYTE
     int		l;
+    char_u	buf[MB_MAXBYTES + 1];
 #endif
 
     /* find start of trailing whitespace */
@@ -1314,7 +1314,10 @@ msg_prt_line(s)
 	else if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
 	{
 	    col += (*mb_ptr2cells)(s);
-	    s = screen_puts_mbyte(s, l, attr);
+	    mch_memmove(buf, s, (size_t)l);
+	    buf[l] = NUL;
+	    msg_puts_attr(buf, attr);
+	    s += l;
 	    continue;
 	}
 #endif
@@ -1384,6 +1387,7 @@ screen_puts_mbyte(s, l, attr)
     int		cw;
     char_u	buf[MB_MAXBYTES + 1];
 
+    msg_didout = TRUE;		/* remember that line is not empty */
     cw = (*mb_ptr2cells)(s);
     if (cw > 1 && msg_col == Columns - 1)
     {
@@ -1909,7 +1913,7 @@ msg_screen_putchar(c, attr)
     int	    c;
     int	    attr;
 {
-    msg_didout = TRUE;	    /* remember that line is not empty */
+    msg_didout = TRUE;		/* remember that line is not empty */
     screen_putchar(c, msg_row, msg_col, attr);
     if (++msg_col >= Columns)
     {

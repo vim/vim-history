@@ -233,10 +233,10 @@ mch_setmouse(
 
 
 /*
- * GUI version of mch_shellinit().
+ * GUI version of mch_init().
  */
     void
-mch_shellinit()
+mch_init()
 {
     extern int _fmode;
 
