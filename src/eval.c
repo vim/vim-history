@@ -210,6 +210,7 @@ static void f_cindent __ARGS((VAR argvars, VAR retvar));
 static void f_col __ARGS((VAR argvars, VAR retvar));
 static void f_confirm __ARGS((VAR argvars, VAR retvar));
 static void f_cscope_connection __ARGS((VAR argvars, VAR retvar));
+static void f_cursor __ARGS((VAR argsvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
 static void f_inputdialog __ARGS((VAR argvars, VAR retvar));
 static void f_did_filetype __ARGS((VAR argvars, VAR retvar));
@@ -2350,6 +2351,7 @@ static struct fst
     {"col",		1, 1, f_col},
     {"confirm",		1, 4, f_confirm},
     {"cscope_connection",0,3, f_cscope_connection},
+    {"cursor",		2, 2, f_cursor},
     {"delete",		1, 1, f_delete},
     {"did_filetype",	0, 0, f_did_filetype},
     {"escape",		2, 2, f_escape},
@@ -3195,6 +3197,35 @@ f_cscope_connection(argvars, retvar)
     retvar->var_val.var_number = cs_connection(num, dbpath, prepend);
 #else
     retvar->var_val.var_number = 0;
+#endif
+}
+
+/*
+ * "cursor(lnum, col)" function
+ *
+ * Moves the cursor to the specified line and column
+ */
+/*ARGSUSED*/
+    static void
+f_cursor(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    long	line, col;
+
+    line = get_var_lnum(argvars);
+    if (line > 0)
+	curwin->w_cursor.lnum = line;
+    col = get_var_number(&argvars[1]);
+    if (col > 0)
+	curwin->w_cursor.col = col - 1;
+
+    /* Make sure the cursor is in a valid position. */
+    check_cursor();
+#ifdef FEAT_MBYTE
+    /* Correct cursor for multi-byte character. */
+    if (has_mbyte)
+	mb_adjust_cursor();
 #endif
 }
 
