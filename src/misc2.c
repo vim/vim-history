@@ -25,6 +25,11 @@ static int coladvance2 __ARGS((pos_T *pos, int addspaces, int finetune, colnr_T 
     int
 virtual_active()
 {
+    /* While an operator is being executed we return "virtual_op", because
+     * VIsual_active has already been reset, thus we can't check for "block"
+     * being used. */
+    if (virtual_op != MAYBE)
+	return virtual_op;
     return (ve_flags == VE_ALL
 # ifdef FEAT_VISUAL
 	    || ((ve_flags & VE_BLOCK) && VIsual_active && VIsual_mode == Ctrl_V)

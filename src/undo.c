@@ -667,7 +667,7 @@ u_undoredo()
     {
 	curwin->w_cursor.col = curbuf->b_u_curhead->uh_cursor.col;
 #ifdef FEAT_VIRTUALEDIT
-	if (curbuf->b_u_curhead->uh_cursor_vcol >= 0)
+	if (virtual_active() && curbuf->b_u_curhead->uh_cursor_vcol >= 0)
 	    coladvance((colnr_T)curbuf->b_u_curhead->uh_cursor_vcol);
 	else
 	    curwin->w_cursor.coladd = 0;
