@@ -6232,11 +6232,16 @@ ex_winsize(eap)
 {
     int		w, h;
     char_u	*arg = eap->arg;
+    char_u	*p;
 
     w = getdigits(&arg);
     arg = skipwhite(arg);
+    p = arg;
     h = getdigits(&arg);
-    set_shellsize(w, h, TRUE);
+    if (*p != NUL && *arg == NUL)
+	set_shellsize(w, h, TRUE);
+    else
+	EMSG(_("E465: :winsize requires two number arguments"));
 }
 
 #ifdef FEAT_WINDOWS
@@ -6280,6 +6285,7 @@ ex_winpos(eap)
 {
     int		x, y;
     char_u	*arg = eap->arg;
+    char_u	*p;
 
     if (*arg == NUL)
     {
@@ -6297,7 +6303,13 @@ ex_winpos(eap)
     {
 	x = getdigits(&arg);
 	arg = skipwhite(arg);
+	p = arg;
 	y = getdigits(&arg);
+	if (*p == NUL || *arg != NUL)
+	{
+	    EMSG(_("E466: :winpos requires two number arguments"));
+	    return;
+	}
 # ifdef FEAT_GUI
 	if (gui.in_use)
 	    gui_mch_set_winpos(x, y);
