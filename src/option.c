@@ -3393,6 +3393,15 @@ do_set(arg, opt_flags)
 		goto skip;
 	    }
 
+#ifdef HAVE_SANDBOX
+	    /* Disallow changing some options in the sandbox */
+	    if (sandbox > 0 && (flags & P_SECURE))
+	    {
+		errmsg = (char_u *)_(e_sandbox);
+		goto skip;
+	    }
+#endif
+
 	    if (vim_strchr((char_u *)"?=:!&<", nextchar) != NULL)
 	    {
 		arg += len;
@@ -6950,21 +6959,32 @@ set_option_value(name, number, string, opt_flags)
 {
     int		opt_idx;
     char_u	*varp;
+    int		flags;
 
     opt_idx = findoption(name);
     if (opt_idx == -1)
 	EMSG2(_("E355: Unknown option: %s"), name);
-    else if (options[opt_idx].flags & P_STRING)
-	set_string_option(opt_idx, string, opt_flags);
     else
     {
-	varp = get_varp(&options[opt_idx]);
-	if (varp != NULL)	/* hidden option is not changed */
+	flags = options[opt_idx].flags;
+#ifdef HAVE_SANDBOX
+	/* Disallow changing some options in the sandbox */
+	if (sandbox > 0 && (flags & P_SECURE))
+	    EMSG(_(e_sandbox));
+	else
+#endif
+	  if (flags & P_STRING)
+	    set_string_option(opt_idx, string, opt_flags);
+	else
 	{
-	    if (options[opt_idx].flags & P_NUM)
-		(void)set_num_option(opt_idx, varp, number, NULL, opt_flags);
-	    else
-		(void)set_bool_option(opt_idx, varp, (int)number, opt_flags);
+	    varp = get_varp(&options[opt_idx]);
+	    if (varp != NULL)	/* hidden option is not changed */
+	    {
+		if (flags & P_NUM)
+		    (void)set_num_option(opt_idx, varp, number, NULL, opt_flags);
+		else
+		    (void)set_bool_option(opt_idx, varp, (int)number, opt_flags);
+	    }
 	}
     }
 }
