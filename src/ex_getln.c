@@ -2137,15 +2137,16 @@ ExpandOne(str, orig, options, mode)
 	    if (options & WILD_HOME_REPLACE)
 		tilde_replace(str, cmd_numfiles, cmd_files);
 
-	    /*
-	     * Insert backslashes into a file name before a space, \, %, # and
-	     * wildmatch characters, except '~'.
-	     */
-	    if ((options & WILD_ESCAPE)
-		    && (expand_context == EXPAND_FILES
-			|| expand_context == EXPAND_BUFFERS
-			|| expand_context == EXPAND_DIRECTORIES))
+	    if (options & WILD_ESCAPE)
 	    {
+	      if (expand_context == EXPAND_FILES
+			|| expand_context == EXPAND_BUFFERS
+			|| expand_context == EXPAND_DIRECTORIES)
+	      {
+		/*
+		 * Insert a backslash into a file name before a space, \, %, #
+		 * and wildmatch characters, except '~'.
+		 */
 		for (i = 0; i < cmd_numfiles; ++i)
 		{
 		    /* for ":set path=" we need to escape spaces twice */
@@ -2200,6 +2201,23 @@ ExpandOne(str, orig, options, mode)
 		    }
 		}
 		expand_set_path = FALSE;
+	      }
+	      else if (expand_context == EXPAND_TAGS)
+	      {
+		/*
+		 * Insert a backslash before characters in a tag name that
+		 * would terminate the ":tag" command.
+		 */
+		for (i = 0; i < cmd_numfiles; ++i)
+		{
+		    p = vim_strsave_escaped(cmd_files[i], (char_u *)"\\|\"");
+		    if (p != NULL)
+		    {
+			vim_free(cmd_files[i]);
+			cmd_files[i] = p;
+		    }
+		}
+	      }
 	    }
 
 	    /*

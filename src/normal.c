@@ -3756,8 +3756,8 @@ nv_ident(cap, searchp)
     else if (cmdchar == 'K' && *p_kp != NUL)
 	aux_ptr = escape_chars;
     else
-	/* Don't escape chars in tag with a backslash */
-	aux_ptr = (char_u *)"";
+	/* Don't escape spaces and Tabs in a tag with a backslash */
+	aux_ptr = (char_u *)"\\|\"";
     while (n--)
     {
 	/* put a backslash before \ and some others */
