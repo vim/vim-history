@@ -948,7 +948,7 @@ gui_update_cursor(force, clear_selection)
 	}
 	else
 	{
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) && defined(FEAT_RIGHTLEFT)
 	    int	    col_off = FALSE;
 #endif
 	    /*
@@ -973,6 +973,7 @@ gui_update_cursor(force, clear_selection)
 		/* Double wide character. */
 		if (shape_table[idx].shape != SHAPE_VER)
 		    cur_width += gui.char_width;
+# ifdef FEAT_RIGHTLEFT
 		if (!(State & CMDLINE) && curwin->w_p_rl)
 		{
 		    /* gui.col points to the left halve of the character but
@@ -982,10 +983,11 @@ gui_update_cursor(force, clear_selection)
 		    col_off = TRUE;
 		    ++gui.col;
 		}
+# endif
 	    }
 #endif
 	    gui_mch_draw_part_cursor(cur_width, cur_height, cbg);
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE) && defined(FEAT_RIGHTLEFT)
 	    if (col_off)
 		--gui.col;
 #endif
