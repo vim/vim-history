@@ -1432,6 +1432,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    p = skipwhite(skipdigits(ea.cmd));
 	switch (*p)
 	{
+	    /* When adding an entry, also modify cmd_exists(). */
 	    case 'a':	if (!checkforcmd(&ea.cmd, "aboveleft", 3))
 			    break;
 #ifdef FEAT_WINDOWS
@@ -1467,6 +1468,11 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 			continue;
 
+	    case 'k':	if (!checkforcmd(&ea.cmd, "keepmarks", 3))
+			    break;
+			cmdmod.keepmarks = TRUE;
+			continue;
+
 			/* ":hide" and ":hide | cmd" are not modifiers */
 	    case 'h':	if (p != ea.cmd || !checkforcmd(&p, "hide", 3)
 					       || *p == NUL || ends_excmd(*p))
@@ -1475,7 +1481,13 @@ do_one_cmd(cmdlinep, sourcing,
 			cmdmod.hide = TRUE;
 			continue;
 
-	    case 'l':	if (!checkforcmd(&ea.cmd, "leftabove", 5))
+	    case 'l':	if (checkforcmd(&ea.cmd, "lockmarks", 3))
+			{
+			    cmdmod.lockmarks = TRUE;
+			    continue;
+			}
+
+			if (!checkforcmd(&ea.cmd, "leftabove", 5))
 			    break;
 #ifdef FEAT_WINDOWS
 			cmdmod.split |= WSP_ABOVE;
@@ -2530,7 +2542,40 @@ cmd_exists(name)
 {
     exarg_T	ea;
     int		full = FALSE;
+    int		i;
+    int		j;
+    static struct cmdmod
+    {
+	char	*name;
+	int	minlen;
+    } cmdmods[] = {
+	{"aboveleft", 3},
+	{"belowright", 3},
+	{"botright", 2},
+	{"browse", 3},
+	{"confirm", 4},
+	{"hide", 3},
+	{"keepmarks", 3},
+	{"leftabove", 5},
+	{"lockmarks", 3},
+	{"rightbelow", 6},
+	{"silent", 3},
+	{"topleft", 2},
+	{"verbose", 4},
+	{"vertical", 4},
+    };
 
+    /* Check command modifiers. */
+    for (i = 0; i < sizeof(cmdmods) / sizeof(struct cmdmod); ++i)
+    {
+	for (j = 0; name[j] != NUL; ++j)
+	    if (name[j] != cmdmods[i].name[j])
+		break;
+	if (name[j] == NUL && j >= cmdmods[i].minlen)
+	    return (cmdmods[i].name[j] == NUL ? 2 : 1);
+    }
+
+    /* Check built-in commands and user defined commands. */
     ea.cmd = name;
     ea.cmdidx = (cmdidx_T)0;
     if (find_command(&ea, &full) == NULL)

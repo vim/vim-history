@@ -403,6 +403,8 @@ typedef struct
 # if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     int		confirm;		/* TRUE to invoke yes/no dialog */
 # endif
+    int		keepmarks;		/* TRUE when ":keepmarks" was used */
+    int		lockmarks;		/* TRUE when ":lockmarks" was used */
 } cmdmod_T;
 
 /*

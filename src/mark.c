@@ -800,16 +800,40 @@ mark_adjust(line1, line2, amount, amount_after)
 	return;
 
     /* named marks, lower case and upper case */
-    for (i = 0; i < NMARKS; i++)
+    if (!cmdmod.lockmarks)
     {
-	one_adjust(&(curbuf->b_namedm[i].lnum));
-	if (namedfm[i].fmark.fnum == fnum)
-	    one_adjust(&(namedfm[i].fmark.mark.lnum));
-    }
-    for (i = NMARKS; i < NMARKS + EXTRA_MARKS; i++)
-    {
-	if (namedfm[i].fmark.fnum == fnum)
-	    one_adjust(&(namedfm[i].fmark.mark.lnum));
+	for (i = 0; i < NMARKS; i++)
+	{
+	    one_adjust(&(curbuf->b_namedm[i].lnum));
+	    if (namedfm[i].fmark.fnum == fnum)
+		one_adjust_nodel(&(namedfm[i].fmark.mark.lnum));
+	}
+	for (i = NMARKS; i < NMARKS + EXTRA_MARKS; i++)
+	{
+	    if (namedfm[i].fmark.fnum == fnum)
+		one_adjust_nodel(&(namedfm[i].fmark.mark.lnum));
+	}
+
+	/* last Insert position */
+	one_adjust(&(curbuf->b_last_insert.lnum));
+
+	/* last change position */
+	one_adjust(&(curbuf->b_last_change.lnum));
+
+#ifdef FEAT_VISUAL
+	/* Visual area */
+	one_adjust_nodel(&(curbuf->b_visual_start.lnum));
+	one_adjust_nodel(&(curbuf->b_visual_end.lnum));
+#endif
+
+#ifdef FEAT_QUICKFIX
+	/* quickfix marks */
+	qf_mark_adjust(line1, line2, amount, amount_after);
+#endif
+
+#ifdef FEAT_SIGNS
+	sign_mark_adjust(line1, line2, amount, amount_after);
+#endif
     }
 
     /* previous context mark */
@@ -818,42 +842,27 @@ mark_adjust(line1, line2, amount, amount_after)
     /* previous pcmark */
     one_adjust(&(curwin->w_prev_pcmark.lnum));
 
-    /* last Insert position */
-    one_adjust(&(curbuf->b_last_insert.lnum));
-
-    /* last change position */
-    one_adjust(&(curbuf->b_last_change.lnum));
-
-#ifdef FEAT_VISUAL
-    /* Visual area */
-    one_adjust_nodel(&(curbuf->b_visual_start.lnum));
-    one_adjust_nodel(&(curbuf->b_visual_end.lnum));
-#endif
-
-#ifdef FEAT_QUICKFIX
-    /* quickfix marks */
-    qf_mark_adjust(line1, line2, amount, amount_after);
-#endif
-
     /*
      * Adjust items in all windows related to the current buffer.
      */
     FOR_ALL_WINDOWS(win)
     {
 #ifdef FEAT_JUMPLIST
-	/* Marks in the jumplist.  When deleting lines, this may create
-	 * duplicate marks in the jumplist, they will be removed later. */
-	for (i = 0; i < win->w_jumplistlen; ++i)
-	    if (win->w_jumplist[i].fmark.fnum == fnum)
-		one_adjust_nodel(&(win->w_jumplist[i].fmark.mark.lnum));
+	if (!cmdmod.lockmarks)
+	    /* Marks in the jumplist.  When deleting lines, this may create
+	     * duplicate marks in the jumplist, they will be removed later. */
+	    for (i = 0; i < win->w_jumplistlen; ++i)
+		if (win->w_jumplist[i].fmark.fnum == fnum)
+		    one_adjust_nodel(&(win->w_jumplist[i].fmark.mark.lnum));
 #endif
 
 	if (win->w_buffer == curbuf)
 	{
-	    /* marks in the tag stack */
-	    for (i = 0; i < win->w_tagstacklen; i++)
-		if (win->w_tagstack[i].fmark.fnum == fnum)
-		    one_adjust_nodel(&(win->w_tagstack[i].fmark.mark.lnum));
+	    if (!cmdmod.lockmarks)
+		/* marks in the tag stack */
+		for (i = 0; i < win->w_tagstacklen; i++)
+		    if (win->w_tagstack[i].fmark.fnum == fnum)
+			one_adjust_nodel(&(win->w_tagstack[i].fmark.mark.lnum));
 
 #ifdef FEAT_VISUAL
 	    /* the displayed Visual area */
@@ -917,10 +926,6 @@ mark_adjust(line1, line2, amount, amount_after)
 #ifdef FEAT_DIFF
     /* adjust diffs */
     diff_mark_adjust(line1, line2, amount, amount_after);
-#endif
-
-#ifdef FEAT_SIGNS
-    sign_mark_adjust(line1, line2, amount, amount_after);
 #endif
 }
 
