@@ -3671,12 +3671,17 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 		slash_adjust(p);
 		if (dir)
 		{
-		    len = strlen(p);
+		    /* For a directory we add a '/', unless it's already
+		     * there. */
+		    len = STRLEN(p);
 		    if (((*file)[*num_file] = alloc(len + 2)) != NULL)
 		    {
-			strcpy((*file)[*num_file], p);
-			(*file)[*num_file][len] = psepc;
-			(*file)[*num_file][len+1] = 0;
+			STRCPY((*file)[*num_file], p);
+			if (!vim_ispathsep((*file)[*num_file][len - 1]))
+			{
+			    (*file)[*num_file][len] = psepc;
+			    (*file)[*num_file][len + 1] = 0;
+			}
 		    }
 		}
 		else
@@ -3722,6 +3727,15 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
      */
     if (!have_wildcard(num_pat, pat))
 	return save_patterns(num_pat, pat, num_file, file);
+
+    /*
+     * Don't allow the use of backticks in secure and restricted mode.
+     */
+    if (secure || restricted)
+	for (i = 0; i < num_pat; ++i)
+	    if (vim_strchr(pat[i], '`') != NULL
+		    && (check_restricted() || check_secure()))
+		return FAIL;
 
     /*
      * get a name for the temp file

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0o.  Last change: 2000 Nov 19
+*motion.txt*    For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -663,12 +663,12 @@ time, etc.  See |viminfo-file-marks|.
 
 							
 							*'[* *`[*
-'[  `[			To the first character of the previously operated,
-			inserted or putted text.  {not in Vi}
+'[  `[			To the first character of the previously changed
+			or yanked text.  {not in Vi}
 
 							*']* *`]*
-']  `]			To the last character of the previously operated,
-			inserted or putted text. {not in Vi}
+']  `]			To the last character of the previously changed or
+			yanked text.  {not in Vi}
 
 After executing an operator the Cursor is put at the beginning of the text
 that was operated upon.  After a put command ("p" or "P") the cursor is
@@ -679,8 +679,8 @@ inserting several lines with the "p" command you want to jump to the lowest
 inserted line: "p']".  This also works for text that has been inserted.
 
 Note: After deleting text, the start and end positions are the same, except
-when using blockwise Visual mode.  These commands do not work when no
-operator, file-read or put command has been used yet in the current file.
+when using blockwise Visual mode.  These commands do not work when no change
+was made yet in the current file.
 
 							*'<* *`<*
 '<  `<			To the first character of the last selected Visual
@@ -700,6 +700,20 @@ operator, file-read or put command has been used yet in the current file.
 			buffer.  Defaults to the first character of the first
 			line.  See |last-position-jump| for how to use this
 			for each opened file.  {not in Vi}.
+
+							*'^* *`^*
+'^  `^			To the position where the cursor was the last time
+			when Insert mode was stopped  This is used by the |gi|
+			command.  {not in Vi}
+
+							*'.* *`.*
+'.  `.			To the position where the last change was made.  The
+			position is at or near where the change started.
+			Sometimes a command is executed as several changes,
+			then the position can be near the end of what the
+			command changed.  For example when inserting a word,
+			the position will be on the last character.
+			{not in Vi}
 
 							*'(* *`(*
 '(  `(			To the start of the current paragraph, like the |(|

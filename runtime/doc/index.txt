@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0o.  Last change: 2000 Dec 03
+*index.txt*     For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -700,6 +700,7 @@ tag		char	      note action in Normal mode	~
 				   the cursor
 |gg|		gg		1  cursor to line N, default first line
 |gh|		gh		   start Select mode
+|gi|		gi		2  like "i", but first move to the |'^| mark
 |gj|		gj		1  like "j", but when 'wrap' on go N screen
 				   lines down
 |gk|		gk		1  like "k", but when 'wrap' on go N screen

@@ -4738,14 +4738,14 @@ static void show_signs __ARGS((void));
 /*
  * The following formats of the :sign command are supported:
  *
- *	:sign id lnum idx file
- *	:sign id idx file
+ *	:sign id lnum type file
+ *	:sign id type file
  *	:sign id file
  *
  * Where:
  *	id is a sign identifier
  *	lnum is the (optional) line number
- *	idx is the sign index passed in the sign= part of the highlight cmd
+ *	type is the sign index passed in the sign= part of the highlight cmd
  *	file is the file the sign refers to
  *
  * The first case sets a sign and the second case moves the cursor to a sign.
@@ -4760,7 +4760,7 @@ ex_sign(eap)
     char_u	*arg3;			/* the third argument */
     int		markId;			/* unique mark identifier */
     linenr_t	lnum = 0;		/* line number mark displayed on */
-    int		idx;			/* which mark to use */
+    int		type;			/* which mark to use */
     char_u	*filename;		/* filename which gets the mark */
     buf_t	*buf;			/* buffer to set mark in */
     char_u	cmd[MAXPATHL];		/* build :edit command here */
@@ -4773,7 +4773,7 @@ ex_sign(eap)
 
     filename = NULL;
     arg = eap->arg;
-    idx = -1;
+    type = -1;
     if (vim_iswhite(*arg))
 	arg = skipwhite(arg);
 
@@ -4807,12 +4807,12 @@ ex_sign(eap)
 	{				/* arg2 and arg3 are both numbers */
 	    arg = skipwhite(arg);
 	    lnum = atol((char *)arg2);
-	    idx = atoi((char *)arg3);
+	    type = atoi((char *)arg3);
 	    filename = arg;
 	}
 	else
 	{
-	    idx = atoi((char *)arg2);
+	    type = atoi((char *)arg2);
 	    filename = arg3;
 	}
     }
@@ -4828,14 +4828,14 @@ ex_sign(eap)
     buf = buflist_findname((char_u *)filename);
     if (buf != NULL)
     {
-	if (idx > 0 && lnum > 0)	/* create a new sign */
+	if (type > 0 && lnum > 0)	/* create a new sign */
 	{
-	    buf_addsign(buf, markId, lnum, idx);
+	    buf_addsign(buf, markId, lnum, type);
 	    update_debug_sign(buf, lnum);
 	}
-	else if (idx > 0 && lnum == 0)	/* change the sign type */
+	else if (type > 0 && lnum == 0)	/* change the sign type */
 	{
-	    lnum = buf_change_sign_type(buf, markId, idx);
+	    lnum = buf_change_sign_type(buf, markId, type);
 	    update_debug_sign(buf, lnum);
 	}
 	else if ((lnum = buf_findsign(buf, markId)) > 0)

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0o.  Last change: 2000 Dec 01
+*eval.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -519,83 +519,6 @@ variables for each buffer.  Use local buffer variables instead |b:var|.
 
 Predefined Vim variables:			*vim-variable* *v:var*
 
-					*v:count* *count-variable*
-v:count		The count given for the last Normal mode command.  Can be used
-		to get the count before a mapping.  Read-only.  Example: >
-	:map _x :<C-U>echo "the count is " . count<CR>
-<		Note: The <C-U> is required to remove the line range that you
-		get when typing ':' after a count.
-		"count" also works, for backwards compatibility.
-
-					*v:count1* *count1-variable*
-v:count1	Just like "v:count", but defaults to one when no count is
-		used.
-
-					*v:errmsg* *errmsg-variable*
-v:errmsg	Last given error message.  It's allowed to set this variable.
-		Example: >
-	:let v:errmsg = ""
-	:silent! next
-	:if v:errmsg != ""
-	:  ... handle error
-<		"errmsg" also works, for backwards compatibility.
-
-					*v:warningmsg* *warningmsg-variable*
-v:warningmsg	Last given warning message.  It's allowed to set this variable.
-
-					*v:statusmsg* *statusmsg-variable*
-v:statusmsg	Last given status message.  It's allowed to set this variable.
-
-					*v:shell_error* *shell_error-variable*
-v:shell_error	Result of the last shell command.  When non-zero, the last
-		shell command had an error.  When zero, there was no problem.
-		This only works when the shell returns the error code to Vim.
-		The value -1 is often used when the command could not be
-		executed.  Read-only.
-		Example: >
-	:!mv foo bar
-	:if v:shell_error
-	:  echo 'could not rename "foo" to "bar"!'
-	:endif
-<		"shell_error" also works, for backwards compatibility.
-
-				*v:this_session* *this_session-variable*
-v:this_session	Full filename of the last loaded or saved session file.  See
-		|:mksession|.  It is allowed to set this variable.  When no
-		session file has been saved, this variable is empty.
-		"this_session" also works, for backwards compatibility.
-
-					*v:version* *version-variable*
-v:version	Version number of Vim: Major version number times 100 plus
-		minor version number.  Version 5.0 is 500.  Version 5.1 (5.01)
-		is 501.  Read-only.  "version" also works, for backwards
-		compatibility.
-
-						*v:lang* *lang-variable*
-v:lang		The current locale setting of the applications runtime
-		environment.  This facilitates making Vim scripts aware of it.
-		This variable can be set with the |:language| command.
-		See |multi-lang|.
-
-						*v:lnum* *lnum-variable*
-v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
-		Only valid while onf of these expressions is being evaluated.
-		Read-only. |fold-expr| 'indentexpr'
-
-				*v:termresponse* *termresponse-variable*
-v:termresponse	The escape sequence returned by the terminal for the |t_RV|
-		termcap entry.  It is set when Vim receives an escape sequence
-		that starts with ESC [ or CSI and ends in a 'c', with only
-		digits, ';' and '.' in between.
-		When this option is set, the TermResponse autocommand event is
-		fired, so that you can react to the response from the
-		terminal.
-		The response from a new xterm is: "<Esc>[ Pp ; Pv ; Pc c".  Pp
-		is the terminal type: 0 for vt100 and 1 for vt220.  Pv is the
-		patch level (since this was introduced in patch 95, it's
-		always 95 or bigger).  Pc is always zero.
-		{only when compiled with |+termresponse| feature}
-
 			*v:charconvert_from* *charconvert_from-variable*
 v:charconvert_from
 		The name of the character encoding of a file to be converted.
@@ -619,6 +542,92 @@ v:charconvert_out
 		v:charconvert_in.  When doing conversion for a read command
 		(e.g., ":e file") it will be a temporary file and different
 		from v:charconvert_in.
+
+					*v:cmdarg* *cmdarg-variable*
+v:cmdarg	The extra arguments given to a file read/write command.
+		Currently these are "++cc=" and "++ff=".  This variable is set
+		before an autocommand event for a file read/write command is
+		triggered.  There is a leading space to make it possible to
+		append this variable directly after the read/write command.
+		Note: The "+cmd" argument isn't included here, because it will
+		be executed anyway.
+
+					*v:count* *count-variable*
+v:count		The count given for the last Normal mode command.  Can be used
+		to get the count before a mapping.  Read-only.  Example: >
+	:map _x :<C-U>echo "the count is " . count<CR>
+<		Note: The <C-U> is required to remove the line range that you
+		get when typing ':' after a count.
+		"count" also works, for backwards compatibility.
+
+					*v:count1* *count1-variable*
+v:count1	Just like "v:count", but defaults to one when no count is
+		used.
+
+						*v:lang* *lang-variable*
+v:lang		The current locale setting of the applications runtime
+		environment.  This facilitates making Vim scripts aware of it.
+		This variable can be set with the |:language| command.
+		See |multi-lang|.
+
+					*v:errmsg* *errmsg-variable*
+v:errmsg	Last given error message.  It's allowed to set this variable.
+		Example: >
+	:let v:errmsg = ""
+	:silent! next
+	:if v:errmsg != ""
+	:  ... handle error
+<		"errmsg" also works, for backwards compatibility.
+
+						*v:lnum* *lnum-variable*
+v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
+		Only valid while onf of these expressions is being evaluated.
+		Read-only. |fold-expr| 'indentexpr'
+
+					*v:shell_error* *shell_error-variable*
+v:shell_error	Result of the last shell command.  When non-zero, the last
+		shell command had an error.  When zero, there was no problem.
+		This only works when the shell returns the error code to Vim.
+		The value -1 is often used when the command could not be
+		executed.  Read-only.
+		Example: >
+	:!mv foo bar
+	:if v:shell_error
+	:  echo 'could not rename "foo" to "bar"!'
+	:endif
+<		"shell_error" also works, for backwards compatibility.
+
+					*v:statusmsg* *statusmsg-variable*
+v:statusmsg	Last given status message.  It's allowed to set this variable.
+
+				*v:termresponse* *termresponse-variable*
+v:termresponse	The escape sequence returned by the terminal for the |t_RV|
+		termcap entry.  It is set when Vim receives an escape sequence
+		that starts with ESC [ or CSI and ends in a 'c', with only
+		digits, ';' and '.' in between.
+		When this option is set, the TermResponse autocommand event is
+		fired, so that you can react to the response from the
+		terminal.
+		The response from a new xterm is: "<Esc>[ Pp ; Pv ; Pc c".  Pp
+		is the terminal type: 0 for vt100 and 1 for vt220.  Pv is the
+		patch level (since this was introduced in patch 95, it's
+		always 95 or bigger).  Pc is always zero.
+		{only when compiled with |+termresponse| feature}
+
+				*v:this_session* *this_session-variable*
+v:this_session	Full filename of the last loaded or saved session file.  See
+		|:mksession|.  It is allowed to set this variable.  When no
+		session file has been saved, this variable is empty.
+		"this_session" also works, for backwards compatibility.
+
+					*v:version* *version-variable*
+v:version	Version number of Vim: Major version number times 100 plus
+		minor version number.  Version 5.0 is 500.  Version 5.1 (5.01)
+		is 501.  Read-only.  "version" also works, for backwards
+		compatibility.
+
+					*v:warningmsg* *warningmsg-variable*
+v:warningmsg	Last given warning message.  It's allowed to set this variable.
 
 ==============================================================================
 4. Builtin Functions					*functions*
@@ -971,6 +980,12 @@ exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 					|internal-variables|).
 			:cmdname	Ex command, both built-in and user
 					commands |:command|
+			#event		autocommand defined for this event
+			#event#pattern	autocommand defined for this event and
+					pattern (the pattern is taken
+					literally and compared to the
+					autocommand patterns character by
+					character)
 
 		Examples: >
 			exists("&shortname")
@@ -978,13 +993,17 @@ exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 			exists("*strftime")
 			exists("bufcount")
 			exists(":Make")
-<		There must be no space between the symbol &/$/* and the name.
+			exists("#CursorHold");
+			exists("#BufReadPre#*.gz")
+<		There must be no space between the symbol (&/$/*/#) and the
+		name.
 		Note that the argument must be a string, not the name of the
-		variable itself!  This example doesn't check for existence of
-		the "bufcount" variable, but gets the contents of "bufcount",
-		and checks if that exists: >
+		variable itself!  For example: >
 			exists(bufcount)
-<
+<		This doesn't check for existence of the "bufcount" variable,
+		but gets the contents of "bufcount", and checks if that
+		exists.
+
 							*expand()*
 expand({expr} [, {flag}])
 		Expand wildcards and the following special keywords in {expr}.
@@ -1549,15 +1568,20 @@ rename({from}, {to})					*rename()*
 		successfully, and non-zero when the renaming failed.
 
 							*search()*
-search({pattern} [, {wrap}])
+search({pattern} [, {flags}])
 		Search for regexp pattern {pattern}.  The search starts at the
-		cursor position and goes in forward direction.  When {wrap} is
-		given and is non-zero, the search wraps around at the end of
-		the file.  If it is zero the search ends at the end of the
-		file.  If {wrap} is omitted the 'wrapscan' option is used.
+		cursor position.
+		{flags} is a String, which can contain these character flags:
+		'b'	search backward instead of forward
+		'w'	wrap around the end of the file
+		'W'	don't wrap around the end of the file
+		If neither 'w' or 'W' is given, the 'wrapscan' option applies.
+
 		A zero value is returned when a match has been found, and the
 		cursor will be positioned at the match.  If there is no match
-		a 1 is returned.  No error message is given.
+		a 1 is returned and the cursor doesn't move.  No error message
+		is given.
+
 		Example (goes over all files in the argument list): >
 		    :let n = 1
 		    :while n <= argc()	    " loop over all files in arglist
@@ -1593,7 +1617,8 @@ setline({lnum}, {line})
 		succeeds, 0 is returned.  If this fails (most likely because
 		{lnum} is invalid) 1 is returned.  Example: >
 			:call setline(5, strftime("%c"))
-<
+<		Note: The '[ and '] marks are not set.
+
 							*setwinvar()*
 setwinvar({nr}, {varname}, {val})
 		Set option or local variable {varname} in window {nr} to
@@ -1771,6 +1796,7 @@ system({expr})	Get the output of the shell command {expr}.  Note: newlines
 		">" and stdout plus stderr with ">&" (csh) or use "2>" to
 		capture stderr (sh).
 		The resulting error code can be found in |v:shell_error|.
+		This function will fail in |restricted-mode|.
 
 						*tempname()* *temp-file-name*
 tempname()
@@ -2140,8 +2166,9 @@ the caller to set the names.
 		are as specified with |:function|.  Up to 20 arguments can be
 		used.
 		Without a range and for functions that accept a range, the
-		function is called once, with the cursor at the current
-		position.
+		function is called once.  When a range is given the cursor is
+		positioned at the start of the first line before executing the
+		function.
 		When a range is given and the function doesn't handle it
 		itself, the function is executed for each line in the range,
 		with the cursor in the first column of that line.  The cursor
@@ -2501,6 +2528,7 @@ secure though!
 These items are not allowed in the sandbox:
 	- changing the buffer text
 	- defining or changing mapping, autocommands, functions, user commands
+	- setting an option with ":set"
 	- executing a shell command
 	- reading or writing a file
 	- jumping to another buffer or edit another file

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.76
-" Last Change:	2000 Nov 15
+" Last Change:	2000 Dec 10
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
@@ -362,7 +362,7 @@ hi def link fortranConstructName	Special
 hi def link fortranConditional		Conditional
 hi def link fortranRepeat		Repeat
 hi def link fortranTodo			Todo
-hi def fortranLeftMargin		NONE
+"hi def fortranLeftMargin		NONE
 hi def link fortranContinueMark		Todo
 hi def link fortranString		String
 hi def link fortranNumber		Number

@@ -637,8 +637,8 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #ifdef FEAT_XIM
     if (xic)
     {
-	len = XmbLookupString(xic, ev_press, (char *)string, sizeof(string_shortbuf),
-		&key_sym, &status);
+	len = XmbLookupString(xic, ev_press, (char *)string,
+				  sizeof(string_shortbuf), &key_sym, &status);
 	if (status == XBufferOverflow)
 	{
 	    string = (char_u *)XtMalloc(len + 1);

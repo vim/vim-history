@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0o.  Last change: 2000 Nov 01
+*term.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -149,7 +149,7 @@ An xterm can send function keys F1 to F4 in two modes: vt100 compatible or
 not.  Because Vim cannot know what the xterm is sending, both types of keys
 are recognized.  The same happens for the <Home> and <End> keys.
 			normal			vt100 ~
-	<F1>>	t_k1	<Esc>[11~	<xF1>	<Esc>OP	    *<xF1>-xterm*
+	<F1>	t_k1	<Esc>[11~	<xF1>	<Esc>OP	    *<xF1>-xterm*
 	<F2>	t_k2	<Esc>[12~	<xF2>	<Esc>OQ	    *<xF2>-xterm*
 	<F3>	t_k3	<Esc>[13~	<xF3>	<Esc>OR	    *<xF3>-xterm*
 	<F4>	t_k4	<Esc>[14~	<xF4>	<Esc>OS	    *<xF4>-xterm*

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Oct 25
+" Last Change:	2000 Dec 08
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -118,6 +118,7 @@ func <SID>GetPage(...)
   exec "edit $HOME/".page
 
   exec "norm 1GdG"
+  let $MANWIDTH = winwidth(0)
   exec "r!/usr/bin/man ".s:man_sect_arg." ".sect." ".page." | col -b"
   " Is it OK?  It's for remove blank or message line.
   if getline(1) =~ "^\s*$"

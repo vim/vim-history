@@ -320,7 +320,10 @@ EXTERN int	p_cst;		/* 'cscopetag' */
 EXTERN long	p_csto;		/* 'cscopetagorder' */
 EXTERN int	p_csverbose;	/* 'cscopeverbose' */
 #endif
+EXTERN char_u	*p_debug;	/* 'debug' */
+#ifdef FEAT_FIND_ID
 EXTERN char_u	*p_def;		/* 'define' */
+#endif
 #ifdef FEAT_INS_EXPAND
 EXTERN char_u	*p_dict;	/* 'dictionary' */
 #endif

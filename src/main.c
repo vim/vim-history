@@ -1042,6 +1042,14 @@ main
     }
     else if (!silent_mode)
     {
+#ifdef AMIGA
+	struct Process	*proc = (struct Process *)FindTask(0L);
+	APTR		save_winptr = proc->pr_WindowPtr;
+
+	/* Avoid a requester here for a volume that doesn't exist. */
+	proc->pr_WindowPtr = (APTR)-1L;
+#endif
+
 	/*
 	 * Get system wide defaults, if the file name is defined.
 	 */
@@ -1155,6 +1163,9 @@ main
 	if (secure == 2)
 	    need_wait_return = TRUE;
 	secure = 0;
+#ifdef AMIGA
+	proc->pr_WindowPtr = save_winptr;
+#endif
     }
 
 #ifdef FEAT_EVAL

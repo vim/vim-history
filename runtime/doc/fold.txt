@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0o.  Last change: 2000 Aug 21
+*fold.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -95,6 +95,8 @@ cursor position, the search patterns, options etc. must not be changed.
 
 If there is some error in the expression, or the resulting value isn't
 recognized, there is no error message and the fold level will be zero.
+For debugging the 'debug' option can be set to "msg", the error messages will
+be visible then.
 
 Note: Since the expression has to be evaluated for every line, this fold
 method can be very slow!

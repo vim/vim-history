@@ -10,7 +10,6 @@
 # - mark    : Markierung oder Marke ?
 # - ambigous: Mehrdeutig, Nicht-eindeutig
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim(deutsch)\n"

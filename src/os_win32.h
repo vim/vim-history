@@ -78,7 +78,9 @@
  * thus use a larger number. */
 #define MAXPATHL	1024
 
-#define BASENAMELEN	(_MAX_PATH - 5)	/* length of base of file name */
+#ifndef BASENAMELEN
+# define BASENAMELEN	(_MAX_PATH - 5)	/* length of base of file name */
+#endif
 
 #define TEMPNAMELEN	_MAX_PATH	/* length of temp file name path */
 

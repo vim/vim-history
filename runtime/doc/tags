@@ -15,12 +15,14 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 ''	motion.txt	/*''*
 '(	motion.txt	/*'(*
 ')	motion.txt	/*')*
+'.	motion.txt	/*'.*
 '0	motion.txt	/*'0*
 '<	motion.txt	/*'<*
 '>	motion.txt	/*'>*
 'A	motion.txt	/*'A*
 '[	motion.txt	/*'[*
 ']	motion.txt	/*']*
+'^	motion.txt	/*'^*
 'a	motion.txt	/*'a*
 'ai'	options.txt	/*'ai'*
 'akm'	options.txt	/*'akm'*
@@ -112,6 +114,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'cst'	options.txt	/*'cst'*
 'csto'	options.txt	/*'csto'*
 'csverb'	options.txt	/*'csverb'*
+'debug'	options.txt	/*'debug'*
 'def'	options.txt	/*'def'*
 'define'	options.txt	/*'define'*
 'dg'	options.txt	/*'dg'*
@@ -1748,6 +1751,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :set-args	options.txt	/*:set-args*
 :set-browse	options.txt	/*:set-browse*
 :set-default	options.txt	/*:set-default*
+:set-termcap	options.txt	/*:set-termcap*
 :set@	options.txt	/*:set@*
 :set^=	options.txt	/*:set^=*
 :set^@	options.txt	/*:set^@*
@@ -2571,12 +2575,14 @@ _vimrc	starting.txt	/*_vimrc*
 `	motion.txt	/*`*
 `(	motion.txt	/*`(*
 `)	motion.txt	/*`)*
+`.	motion.txt	/*`.*
 `0	motion.txt	/*`0*
 `<	motion.txt	/*`<*
 `>	motion.txt	/*`>*
 `A	motion.txt	/*`A*
 `[	motion.txt	/*`[*
 `]	motion.txt	/*`]*
+`^	motion.txt	/*`^*
 ``	motion.txt	/*``*
 `a	motion.txt	/*`a*
 `quote	motion.txt	/*`quote*
@@ -2801,6 +2807,7 @@ charset	multibyte.txt	/*charset*
 charset-conversion	multibyte.txt	/*charset-conversion*
 cinkeys-format	change.txt	/*cinkeys-format*
 cinoptions-values	change.txt	/*cinoptions-values*
+cmdarg-variable	eval.txt	/*cmdarg-variable*
 cmdline-arguments	vi_diff.txt	/*cmdline-arguments*
 cmdline-changed	version5.txt	/*cmdline-changed*
 cmdline-completion	cmdline.txt	/*cmdline-completion*
@@ -2890,6 +2897,8 @@ cursor_left	intro.txt	/*cursor_left*
 cursor_right	intro.txt	/*cursor_right*
 cursor_up	intro.txt	/*cursor_up*
 cw	change.txt	/*cw*
+cynlib-syntax	syntax.txt	/*cynlib-syntax*
+cynlib.vim	syntax.txt	/*cynlib.vim*
 d	change.txt	/*d*
 daB	motion.txt	/*daB*
 daW	motion.txt	/*daW*
@@ -3206,6 +3215,7 @@ gex	starting.txt	/*gex*
 gf	editing.txt	/*gf*
 gg	motion.txt	/*gg*
 gh	visual.txt	/*gh*
+gi	insert.txt	/*gi*
 gj	motion.txt	/*gj*
 gk	motion.txt	/*gk*
 glob()	eval.txt	/*glob()*
@@ -3858,6 +3868,8 @@ ports-5.2	version5.txt	/*ports-5.2*
 ports-6	version6.txt	/*ports-6*
 postscr-syntax	syntax.txt	/*postscr-syntax*
 postscr.vim	syntax.txt	/*postscr.vim*
+ppwiz-syntax	syntax.txt	/*ppwiz-syntax*
+ppwiz.vim	syntax.txt	/*ppwiz.vim*
 preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
 printcap-syntax	syntax.txt	/*printcap-syntax*
@@ -4102,6 +4114,7 @@ syntax-highlighting	syntax.txt	/*syntax-highlighting*
 syntax-loading	syntax.txt	/*syntax-loading*
 syntax-printing	usr_07.txt	/*syntax-printing*
 syntax.txt	syntax.txt	/*syntax.txt*
+syntax2	syntax.txt	/*syntax2*
 sys-file-list	help.txt	/*sys-file-list*
 system()	eval.txt	/*system()*
 system-vimrc	starting.txt	/*system-vimrc*
@@ -4394,6 +4407,7 @@ v:charconvert_from	eval.txt	/*v:charconvert_from*
 v:charconvert_in	eval.txt	/*v:charconvert_in*
 v:charconvert_out	eval.txt	/*v:charconvert_out*
 v:charconvert_to	eval.txt	/*v:charconvert_to*
+v:cmdarg	eval.txt	/*v:cmdarg*
 v:count	eval.txt	/*v:count*
 v:count1	eval.txt	/*v:count1*
 v:errmsg	eval.txt	/*v:errmsg*

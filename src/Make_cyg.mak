@@ -45,6 +45,7 @@ OBJ = \
 	obj/ops.o \
 	obj/option.o \
 	obj/os_win32.o \
+	obj/os_mswin.o \
 	obj/quickfix.o \
 	obj/regexp.o \
 	obj/screen.o \
@@ -153,6 +154,9 @@ obj/option.o:	option.c $(INCL)
 
 obj/os_win32.o:	os_win32.c $(INCL)
 	$(CC) -c $(CFLAGS) os_win32.c -o obj/os_win32.o
+
+obj/os_mswin.o:	os_mswin.c $(INCL)
+	$(CC) -c $(CFLAGS) os_mswin.c -o obj/os_mswin.o
 
 obj/quickfix.o:	quickfix.c $(INCL)
 	$(CC) -c $(CFLAGS) quickfix.c -o obj/quickfix.o

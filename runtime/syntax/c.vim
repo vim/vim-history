@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Dec 10
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -170,6 +170,9 @@ if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   syn keyword cConstant LC_NUMERIC LC_TIME
   syn keyword cConstant SIG_DFL SIG_ERR SIG_IGN
   syn keyword cConstant SIGABRT SIGFPE SIGILL SIGHUP SIGINT SIGSEGV SIGTERM
+  " Add POSIX signals as well...
+  syn keyword cConstant SIGQUIT SIGTRAP SIGKILL SIGUSR1 SIGUSR2 SIGPIPE
+  syn keyword cConstant SIGALRM SIGCHLD SIGCONT SIGSTOP SIGTSTP SIGTTIN SIGTTOU
   syn keyword cConstant _IOFBF _IOLBF _IONBF BUFSIZ EOF
   syn keyword cConstant FOPEN_MAX FILENAME_MAX L_tmpnam
   syn keyword cConstant SEEK_CUR SEEK_END SEEK_SET

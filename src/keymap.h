@@ -92,6 +92,9 @@
 /* used for JSB term mouse */
 #define KS_JSBTERM_MOUSE	243
 
+/* used a termcap entry that produces a normal character */
+#define KS_KEY			242
+
 /*
  * Filler used after KS_SPECIAL and others
  */

@@ -216,7 +216,7 @@ function! s:NetGetFile(readcmd, fname)
   if line("$") == 1 && getline(1) == ""
     let dodel = 1
   endif
-  exe a:readcmd . " " . a:fname
+  exe a:readcmd . v:cmdarg . " " . a:fname
   if a:readcmd[0] == '0' && dodel && getline("$") == ""
     $d
     1
@@ -241,7 +241,7 @@ function! s:NetWrite(...) range
  endif
 
  " write (selected portion of) file to temporary
- exe a:firstline . "," . a:lastline . "w! " . tmpfile
+ exe a:firstline . "," . a:lastline . "w!" . v:cmdarg . " " . tmpfile
 
  while ichoice <= a:0
 

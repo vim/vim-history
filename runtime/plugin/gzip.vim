@@ -1,8 +1,12 @@
-" autocommands to edit compressed files.
+" Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
+" Last Change: 2000 Dec 10
 
-" Exit quickly when already loaded or when 'compatible' is set.
-if exists("loaded_gzip") || &cp
+" Exit quickly when:
+" - this plugin was already loaded
+" - when 'compatible' is set
+" - some autocommands are already taking care of compressed files
+if exists("loaded_gzip") || &cp || exists("#BufReadPre#*.gz")
   finish
 endif
 let loaded_gzip = 1

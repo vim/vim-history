@@ -1186,11 +1186,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 			eof = tag_fgets(lbuf, LSIZE, fp);
 		} while (!eof && vim_isblankline(lbuf));
 
-		if (eof
-#ifdef FEAT_CSCOPE
-			&& !use_cscope
-#endif
-				       )
+		if (eof)
 		{
 #ifdef FEAT_EMACS_TAGS
 		    if (incstack_idx)	/* this was an included file */

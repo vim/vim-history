@@ -77,7 +77,7 @@ syn match	liloEqAnythingComment	"#.*$" contained nextgroup=liloEqAnything,liloEq
 
 " equal sign followed by ...
 syn match	liloEqPath	"=" contained nextgroup=liloPath,liloPathComment,liloError skipwhite skipempty
-syn match	liloEqVga	"=" contained nextgroup=liloVgaKeyword,liloHexNumber,liloVgaComment,liloError skipwhite skipempty
+syn match	liloEqVga	"=" contained nextgroup=liloVgaKeyword,liloHexNumber,liloDecNumber,liloVgaComment,liloError skipwhite skipempty
 syn match	liloEqDecNumber	"=" contained nextgroup=liloDecNumber,liloDecNumberComment,liloError skipwhite skipempty
 syn match	liloEqHexNumber	"=" contained nextgroup=liloHexNumber,liloHexNumberComment,liloError skipwhite skipempty
 syn match	liloEqString	"=" contained nextgroup=liloString,liloStringComment,liloError skipwhite skipempty
@@ -140,5 +140,4 @@ hi def link liloChRules			Preproc
 hi def link liloDisk			Preproc
 
 let b:current_syntax = "lilo"
-
-" vim: ts=8
+" vim: ts=2

@@ -195,6 +195,7 @@ OBJ = \
 	$(OUTDIR)\option.obj \
 	$(OUTDIR)\ops.obj \
 	$(OUTDIR)\os_win32.obj \
+	$(OUTDIR)\os_mswin.obj \
 	$(OUTDIR)\pathdef.obj \
 	$(OUTDIR)\quickfix.obj \
 	$(OUTDIR)\regexp.obj \
@@ -485,6 +486,9 @@ $(OUTDIR)/option.obj:	$(OUTDIR) option.c  $(INCL)
 $(OUTDIR)/ops.obj:	$(OUTDIR) ops.c  $(INCL)
 	$(CC) $(CFLAGS) ops.c /Fo$(OUTDIR)/ops.obj $(PDB)
 
+$(OUTDIR)/os_mswin.obj:	$(OUTDIR) os_mswin.c  $(INCL)
+	$(CC) $(CFLAGS) os_mswin.c /Fo$(OUTDIR)/os_mswin.obj $(PDB)
+
 $(OUTDIR)/os_win32.obj:	$(OUTDIR) os_win32.c  $(INCL) os_win32.h
 	$(CC) $(CFLAGS) os_win32.c /Fo$(OUTDIR)/os_win32.obj $(PDB)
 
@@ -580,6 +584,7 @@ proto.h: \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \
+	proto/os_mswin.pro \
 	proto/os_win32.pro \
 	proto/quickfix.pro \
 	proto/regexp.pro \

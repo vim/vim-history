@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0o
+MINOR = 0p
 
 # CHECKLIST for creating a new version:
 #
@@ -356,6 +356,7 @@ SRC_DOS =	\
 		src/os_w32exe.c \
 		src/os_win16.c \
 		src/os_win32.c \
+		src/os_mswin.c \
 		src/os_win16.h \
 		src/os_win32.h \
 		src/proto/gui_w16.pro \
@@ -364,6 +365,7 @@ SRC_DOS =	\
 		src/proto/os_msdos.pro \
 		src/proto/os_win16.pro \
 		src/proto/os_win32.pro \
+		src/proto/os_mswin.pro \
 		src/testdir/Make_dos.mak \
 		src/testdir/dos.vim \
 		src/uninstal.c \
@@ -696,7 +698,7 @@ EXTRA =		\
 LANGUAGE = \
 		README_lang.txt \
 		src/po/README.txt \
-		src/po/cleaup.vim \
+		src/po/cleanup.vim \
 		src/po/Makefile \
 		src/po/*.po \
 		runtime/lang/README.txt \

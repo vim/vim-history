@@ -6164,11 +6164,9 @@ handle_drop(filec, filev, split)
      */
     if (!P_HID(curbuf) && !split)
     {
-	int old_emsg = emsg_off;
-
-	emsg_off = TRUE;
+	++emsg_off;
 	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
-	emsg_off = old_emsg;
+	--emsg_off;
     }
     if (split && win_split(0, 0) == FAIL)
 	return;
@@ -6281,11 +6279,9 @@ ex_drop(eap)
      */
     if (!P_HID(curbuf))
     {
-	int old_emsg = emsg_off;
-
-	emsg_off = TRUE;
+	++emsg_off;
 	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
-	emsg_off = old_emsg;
+	--emsg_off;
     }
 
     /* Fake a ":split" or ":snext" command. */
@@ -7841,6 +7837,7 @@ ex_normal(eap)
     int		save_restart_edit = restart_edit;
     int		save_msg_didout = msg_didout;
     static int	depth = 0;
+    int		save_State = State;
 
     if (depth >= p_mmd)
     {
@@ -7899,6 +7896,10 @@ ex_normal(eap)
     msg_scroll = save_msg_scroll;
     restart_edit = save_restart_edit;
     msg_didout |= save_msg_didout;	/* don't reset msg_didout now */
+
+    /* Restore the state (needed when called from a function executed for
+     * 'indentexpr'). */
+    State = save_State;
 }
 
 /*
@@ -9152,6 +9153,13 @@ cmd_runtime(name, all)
     char_u	**files;
     int		i;
     int		did_one = FALSE;
+#ifdef AMIGA
+    struct Process	*proc = (struct Process *)FindTask(0L);
+    APTR		save_winptr = proc->pr_WindowPtr;
+
+    /* Avoid a requester here for a volume that doesn't exist. */
+    proc->pr_WindowPtr = (APTR)-1L;
+#endif
 
     buf = alloc(MAXPATHL);
     if (buf != NULL)
@@ -9190,6 +9198,10 @@ cmd_runtime(name, all)
     }
     if (p_verbose > 0 && !did_one)
 	smsg((char_u *)_("not found in 'runtimepath': \"%s\""), name);
+
+#ifdef AMIGA
+    proc->pr_WindowPtr = save_winptr;
+#endif
 }
 
 /*

@@ -36,8 +36,6 @@
 #endif
 #include <windows.h>
 
-#define SHORT_FNAME		/* always 8.3 file name */
-
 #undef chdir
 #include <direct.h>
 #include <shellapi.h>	/* required for FindExecutable() */
@@ -210,28 +208,6 @@ WinMain(
 
 
 
-#ifdef __BORLANDC__
-/* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll: */
-int _stricoll(char *a, char *b)
-{
-#if 1
-    // this is fast but not correct:
-    return stricmp(a, b);
-#else
-    // the ANSI-ish correct way is to use strxfrm():
-    char a_buff[512], b_buff[512];  // file names, so this is enough on Win32
-    strxfrm(a_buff, a, 512);
-    strxfrm(b_buff, b, 512);
-    return strcoll(a_buff, b_buff);
-#endif
-}
-#endif
-
-garray_t error_ga = {0, 0, 0, 0, NULL};
-
-
-static DWORD g_PlatformId;
-
 
 
 #ifdef FEAT_MOUSE
@@ -281,23 +257,6 @@ mch_shellinit()
 #endif
 }
 
-/*
- * GUI version of mch_windexit().
- * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_windinit()!
- */
-    void
-mch_windexit(
-    int r)
-{
-    mch_display_error();
-
-    ml_close_all(TRUE);		/* remove all memfiles */
-
-    if (gui.in_use)
-	gui_exit(r);
-    exit(r);
-}
 
 
 /*
@@ -310,30 +269,6 @@ mch_check_win(
 {
     int		i;
 
-    return OK;	    /* GUI always has a tty */
-}
-
-/*
- * Init the tables for toupper() and tolower().
- */
-    void
-mch_init(void)
-{
-    int		i;
-
-    /* Init the tables for toupper() and tolower() */
-    for (i = 0; i < 256; ++i)
-	toupper_tab[i] = tolower_tab[i] = i;
-    AnsiUpperBuff(toupper_tab, 256);
-    AnsiLowerBuff(tolower_tab, 256);
-}
-
-/*
- * Return TRUE if the input comes from a terminal, FALSE otherwise.
- */
-    int
-mch_input_isatty()
-{
     return OK;	    /* GUI always has a tty */
 }
 
@@ -359,55 +294,6 @@ canonicalize_filename(
     }
 }
 
-
-
-#ifdef FEAT_TITLE
-/*
- * mch_settitle(): set titlebar of our window
- * Can the icon also be set?
- */
-    void
-mch_settitle(
-    char_u *title,
-    char_u *icon)
-{
-    gui_mch_settitle(title, icon);
-}
-
-
-/*
- * Restore the window/icon title.
- * which is one of:
- *  1: Just restore title
- *  2: Just restore icon (which we don't have)
- *  3: Restore title and icon (which we don't have)
- */
-    void
-mch_restore_title(
-    int which)
-{
-}
-
-
-/*
- * Return TRUE if we can restore the title (we can)
- */
-    int
-mch_can_restore_title()
-{
-    return TRUE;
-}
-
-
-/*
- * Return TRUE if we can restore the icon (we can't)
- */
-    int
-mch_can_restore_icon()
-{
-    return FALSE;
-}
-#endif /* FEAT_TITLE */
 
 
 /*
@@ -454,76 +340,6 @@ mch_dirname(
     int		len)
 {
     return (getcwd(buf, len) != NULL ? OK : FAIL);
-}
-
-
-/*
- * Get absolute file name into buffer 'buf' of length 'len' bytes,
- * turning all '/'s into '\\'s and getting the correct case of each
- * component of the file name.	Return OK or FAIL.
- */
-    int
-mch_FullName(
-    char_u *fname,
-    char_u *buf,
-    int len,
-    int force)
-{
-    int		nResult = FAIL;
-
-    if (fname == NULL)		/* always fail */
-	return FAIL;
-
-    if (_fullpath(buf, fname, len - 1) == NULL)
-	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
-    else
-    {
-	if (mch_isdir(fname))
-	    STRCAT(buf, "\\");
-	nResult = OK;
-    }
-
-    return nResult;
-}
-
-
-/*
- * Return TRUE if "fname" does not depend on the current directory.
- */
-    int
-mch_isFullName(
-    char_u *fname)
-{
-    char szName[MAXPATHL+1];
-
-    /* A name like "d:/foo" and "//server/share" is absolute */
-    if ((fname[0] && fname[1] == ':' && (fname[2] == '/' || fname[2] == '\\'))
-	    || (fname[0] == fname[1] && fname[0] == '/' || fname[0] == '\\'))
-	return TRUE;
-
-    mch_FullName(fname, szName, MAXPATHL, FALSE);
-
-    return strcoll(fname, szName) == 0;
-}
-
-/*
- * Replace all slashes by backslashes.
- * This used to be the other way around, but MS-DOS sometimes has problems
- * with slashes (e.g. in a command name).  We can't have mixed slashes and
- * backslashes, because comparing file names will not work correctly.  The
- * commands that use a file name should try to avoid the need to type a
- * backslash twice.
- */
-    void
-slash_adjust(p)
-    char_u  *p;
-{
-    while (*p)
-    {
-	if (*p == '/')
-	    *p = '\\';
-	++p;
-    }
 }
 
 
@@ -614,90 +430,6 @@ mch_nodetype(char_u *name)
 	return NODE_WRITABLE;
     /* TODO: NODE_OTHER? */
     return NODE_NORMAL;
-}
-
-    void
-mch_settmode(int tmode)
-{
-    /* nothing to do */
-}
-
-    int
-mch_get_shellsize(void)
-{
-    /* never used */
-    return OK;
-}
-
-    void
-mch_set_shellsize(void)
-{
-    /* never used */
-}
-    void
-mch_new_shellsize(void)
-{
-    /* never used */
-}
-
-
-/*
- * We have no job control, so fake it by starting a new shell.
- */
-    void
-mch_suspend()
-{
-    suspend_shell();
-}
-
-
-#ifdef mch_errmsg
-# undef mch_errmsg
-# undef mch_display_error
-#endif
-
-/*
- * Record an error message for later display.
- */
-    void
-mch_errmsg(char *str)
-{
-    int		len = STRLEN(str) + 1;
-
-    if (error_ga.ga_growsize == 0)
-    {
-	error_ga.ga_growsize = 80;
-	error_ga.ga_itemsize = 1;
-    }
-    if (ga_grow(&error_ga, len) == OK)
-    {
-	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
-							  (char_u *)str, len);
-	--len;			/* don't count the NUL at the end */
-	error_ga.ga_len += len;
-	error_ga.ga_room -= len;
-    }
-}
-
-/*
- * Display the saved error message(s).
- */
-    void
-mch_display_error()
-{
-    char *p;
-
-    if (error_ga.ga_data != NULL)
-    {
-	/* avoid putting up a message box with blanks only */
-	for (p = (char *)error_ga.ga_data; *p; ++p)
-	    if (!isspace(*p))
-	    {
-		MessageBox(0, p, "Vim", MB_TASKMODAL);
-		break;
-	    }
-	ga_clear(&error_ga);
-    }
 }
 
 /*
@@ -848,21 +580,6 @@ mch_call_shell(
 
 
 /*
- * Does `s' contain a wildcard?
- */
-    int
-mch_has_wildcard(
-    char_u *s)
-{
-#ifdef VIM_BACKTICK
-    return (vim_strpbrk(s, (char_u *)"?*$`~") != NULL);
-#else
-    return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
-#endif
-}
-
-
-/*
  * comparison function for qsort in expandpath
  */
     static int
@@ -875,6 +592,7 @@ pstrcmp(
 {
     return (_stricoll(* (char **)a, * (char **)b));
 }
+
 
     static void
 namelowcpy(
@@ -1000,43 +718,6 @@ mch_expandpath(
     return dos_expandpath(gap, path, path, flags);
 }
 
-/*
- * The normal _chdir() does not change the default drive.  This one does.
- * Returning 0 implies success; -1 implies failure.
- */
-    int
-mch_chdir(char *path)
-{
-    if (path[0] == NUL)		/* just checking... */
-	return -1;
-
-    if (isalpha(path[0]) && path[1] == ':')	/* has a drive name */
-    {
-	if (_chdrive(TO_LOWER(path[0]) - 'a' + 1) != 0)
-	    return -1;		/* invalid drive name */
-	path += 2;
-    }
-
-    if (*path == NUL)		/* drive name only */
-	return 0;
-
-    return chdir(path);	       /* let the normal chdir() do the rest */
-}
-
-
-
-/*
- * Switching off termcap mode is only allowed when Columns is 80, otherwise a
- * crash may result.  It's always allowed on NT or when running the GUI.
- */
-    int
-can_end_termcap_mode(
-    int give_msg)
-{
-    return TRUE;	/* GUI starts a new console anyway */
-}
-
-
 
 /*
  * Delay for half a second.
@@ -1084,27 +765,6 @@ mch_avail_mem(
 }
 
 
-/*
- * return non-zero if a character is available
- */
-    int
-mch_char_avail()
-{
-    /* never used */
-    return TRUE;
-}
-
-
-/*
- * set screen mode, always fails.
- */
-    int
-mch_screenmode(
-    char_u *arg)
-{
-    EMSG(_("Screen mode setting not supported"));
-    return FAIL;
-}
 
 #ifdef FEAT_EVAL
 /*
@@ -1339,27 +999,6 @@ clip_mch_request_selection()
     }
 }
 
-/*
- * Make vim the owner of the current selection.
- */
-    void
-clip_mch_lose_selection()
-{
-    /* Nothing needs to be done here */
-}
-
-/*
- * Make vim the owner of the current selection.  Return OK upon success.
- */
-    int
-clip_mch_own_selection()
-{
-    /*
-     * Never actually own the clipboard.  If another application sets the
-     * clipboard, we don't want to think that we still own it.
-     */
-    return FAIL;
-}
 
 /*
  * Send the current selection to the clipboard.
@@ -1431,39 +1070,3 @@ clip_mch_set_selection()
 #endif /* FEAT_CLIPBOARD */
 
 
-/*
- * Debugging helper: expose the MCH_WRITE_DUMP stuff to other modules
- */
-    void
-DumpPutS(
-    const char* psz)
-{
-# ifdef MCH_WRITE_DUMP
-    if (fdDump)
-    {
-	fputs(psz, fdDump);
-	if (psz[strlen(psz) - 1] != '\n')
-	    fputc('\n', fdDump);
-	fflush(fdDump);
-    }
-# endif
-}
-
-#ifdef _DEBUG
-
-void __cdecl
-Trace(
-    char *pszFormat,
-    ...)
-{
-    CHAR szBuff[2048];
-    va_list args;
-
-    va_start(args, pszFormat);
-    vsprintf(szBuff, pszFormat, args);
-    va_end(args);
-
-    OutputDebugString(szBuff);
-}
-
-#endif //_DEBUG

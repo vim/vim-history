@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0o.  Last change: 2000 Nov 18
+*autocmd.txt*   For Vim version 6.0p.  Last change: 2000 Dec 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -268,7 +268,10 @@ FileChangedRO			Before making the first change to a read-only
 				file.  Can be used to check-out the file from
 				a source control system.  Not triggered when
 				the change was caused by an autocommand.
-
+				WARNING: This event is triggered when making a
+				change, just before the change is applied to
+				the text.  If the autocommand moves the cursor
+				the effect of the change is undefined.
 							*FocusGained*
 FocusGained			When Vim got input focus.  Only for the GUI
 				version and a few console versions where this
@@ -755,6 +758,10 @@ CAREFUL: If you use these events in a wrong way, it may have the effect of
 making it impossible to read or write the matching files!  Make sure you test
 your autocommands properly.  Best is to use a pattern that will never match a
 normal file name, for example "ftp://*".
+
+The |v:cmdarg| variable holds the "++cc=" and "++ff=" argument that are
+effective.  These should be used for the command that reads/writes the file.
+
 See the $VIMRUNTIME/netrw.vim for examples.
 
  vim:tw=78:

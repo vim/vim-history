@@ -4323,8 +4323,8 @@ check_termcode(max_offset, buf, buflen)
 	}
 #endif /* FEAT_GUI */
 	/* Finally, add the special key code to our string */
-	if (key_name[1] == NUL)
-	    string[new_slen++] = key_name[0];	/* from ":set <M-b>=xx" */
+	if (key_name[0] == KS_KEY)
+	    string[new_slen++] = key_name[1];	/* from ":set <M-b>=xx" */
 	else
 	{
 	    string[new_slen++] = K_SPECIAL;

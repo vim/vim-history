@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0o.  Last change: 2000 Dec 03
+*todo.txt*      For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,40 +29,8 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Syntax: Add "!item" to "contains=" to include an item after an ALLBUT?
-Otherwise items with "contained" can't be matched. (Campbell)
-
-":cd ." gives an error message. (Lewis)
-
-Fold bug: Creating a higher level fold deletes a lower level fold. (Weiguang
-Shi)
-
-Amiga:
-- Tries to open a file on the "home:" volume.
-- Creating a swap file doesn't work?
-
-Win32: Edit a file like d:\path\file.c, open a cwindow with an entry for
-\path\file.c, hit <CR> creates a new buffer instead of using the existing one.
-(Scott Graham)
-
-FileChangedRO event:  When triggered by "dd", the autocommands are executed
-but the "dd" is lost.  With 'insertmode' set FileChangedRO is never triggered.
-(Michael S. Tsirkin)
-
 Syntax syncing: sometimes a wrong state used from lines below a change which
 is not redisplayed?
-
-Add "gi" command: Start Insert mode in the same position where typed <Esc>
-(left Insert mode) last time.  Works with an empty line and past the end of a
-line.  Useful for Insert mode mappings that don't want to move the cursor.
-Also use this for CTRL-O?
-
-Add exists() argument to check if an autocommand exists for a certain
-event/pattern.  Use this to give a warning in the gzip.vim plugin if an
-autocommand exists for the BufRead event with pattern *.gz.
-
-":set <M-b>=^[b" works, but mapping <M-b> doesn't. (Bernd Eggink)  ":set
-termcap" shows a strange code for <M-b>.  It worked fine in Vim 5.7.
 
 
 Main items for 6.0:
@@ -226,14 +194,13 @@ A. Folding:
 
 
 B. UTF-8 support:
--   Do UTF-8 to latin-1 conversion internally (replace errors with ¿).
-    Only when iconv() can't do it.
+-   Do latin-1 to UTF-8 conversion internally.
+-   Support ++cc=name for ":w".
 -   Big change: Support editing UTF-8 text while the terminal only supports
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
     wide characters).  Use 'displaycode' option?
 -   GUI: Cursor is sometimes not removed.
 -   show other non-printable as <xx>.
--   Support ++cc=name for ":w".
 -   Check mbyte with 'fontset'.
 -   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
     byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
@@ -241,7 +208,7 @@ B. UTF-8 support:
     stuffcharReadbuff().
 -   Use function pointers for some mb_ functions to speed it up?
 -   Check callers of get_literal() to handle char > 255 as multi-byte.
--   prep_redo() should handle mbyte (at least for last arg
+-   prep_redo() should handle mbyte (at least for last arg)
 -   set_last_insert() should handle mbyte.
 -   Visual-block delete doesn't work properly (Marinichev)
 -   Add mnemonics from RFC1345 longer than two characters.
@@ -252,14 +219,6 @@ B. UTF-8 support:
     modification from Markus.
 -   Handle mbyte in win_line().  When double-cell char doesn't fit at end of
     line, move it to next line, fill gap with '>' with HLF_AT attributes.
--   Automatic detection of 'filecharcode' when reading a file.
-    'filecharcodes' = "utf8,iso8859-1", 'charcode' = "utf-8"
-	-> if UTF-8 detected, nothing happens
-	-> assume iso8859-1, convert to UTF-8 with 'charconvert'.
-    mined has code for this.
--   Use iconv() when it's available.  When it isn't present or doesn't work
-    use 'charconvert'.
-    Add configure check for iconv(), also in libiconv (libutf8?).
 -   Also support UTF-16 and convert it to UTF-8? (like mined)
 -   Init 'charcode' from $LANG for non-UTF-8?
 -   readfile(): When reading UCS-2 or UCS-4 and the number of bytes returned
@@ -268,10 +227,6 @@ B. UTF-8 support:
     characters to the terminal?  Is there any terminal for ucs?  Otherwise
     this is just used as the default for 'filecharcode'.
 -   Handle mbyte in clip_yank_non_visual_selection().
--   When opening an UTF-8 or Unicode file, check for BOM at start of file and
-    remove it.  Put it back when writing the file.
-    Detect FF FE: UCS-2 little endian, FE FF: UCS-2 big endian, FF FE 00 00:
-    UCS-4 little endian, 00 00 FE FF: UCS-4 big endian, EF BB BF: UTF-8.
 -   Check MBYTE code in regexp.c to add UTF-8 support.  Make "/\w" and "/\<"
     work.
 -   Check replace stack for mbyte.
@@ -361,7 +316,8 @@ F. Sun Visual Workshop patch from Gordon Prieur:
     window for the sign column: it is set as soon as a sign is drawn and reset
     when editing another file.  When drawing the first sign the display isn't
     updated properly.  Force a redisplay when setting the new flag.  When not
-    in the GUI or no motif, only use line highlighting (later add ASCII sign).
+    in the GUI or no motif, only use line highlighting (later add ASCII sign,
+    like ">>" for an arrow, "!!" for a breakpoint).
 -   sign mixed in with highlighting, is that what we want?
 -   Check that rename from "glyph" to "sign" is correct.
 -   remove ":signs", use ":sign" without arguments to show signs
@@ -772,6 +728,7 @@ Win32 GUI known bugs:
     the shortcut itself.
 9   OleVim doesn't send <C-\><C-N>, which causes trouble if Vim is in Insert
     mode. (Thakkar)
+9   Replace SendToVim and OpenWithVim with C++ versions? (Rafal Dibrowa)
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
 
@@ -1821,6 +1778,8 @@ GUI:
 8   Support a background bitmap.  Useful for marking a column.  Patch from
     Heather Downs (GTK) and Vince Negri (Win32).
 7   X11: Support cursorColor resource and "-cr" argument.
+8   X11 (and others): CTRL-; is not different from ';'.  Set the modifier mask
+    to include CTRL for keys where CTRL produces the same ASCII code.
 8   Visual highlighting should keep the same font (bold, italic, etc.).
 8   Make the "Save As.." menu item work like other GUI programs: ":w file",
     ":e file".
@@ -2627,7 +2586,6 @@ Multiple Windows:
 
 Marks:
 8   Add a command to jump to a mark and make the motion inclusive. g'm and g`m?
-8   Add mark at the last change.  Per buffer.  Could use "'.".
 8   When deleting lines, don't delete uppercase marks in them.  Move the mark
     to the nearest line.
 8   The '" mark is set to the first line, even when doing ":next" a few times.

@@ -264,7 +264,7 @@ getmark2(c, changefile, fcoladd)
 #ifdef FEAT_VISUAL
     pos_t		*startp, *endp;
 #endif
-    static  pos_t	pos_copy;
+    static pos_t	pos_copy;
 
     posp = NULL;
 
@@ -284,6 +284,10 @@ getmark2(c, changefile, fcoladd)
     }
     else if (c == '"')			/* to pos when leaving buffer */
 	posp = &(curbuf->b_last_cursor);
+    else if (c == '^')			/* to where Insert mode stopped */
+	posp = &(curbuf->b_last_insert);
+    else if (c == '.')			/* to where last change was made */
+	posp = &(curbuf->b_last_change);
     else if (c == '[')			/* to start of previous operator */
 	posp = &(curbuf->b_op_start);
     else if (c == ']')			/* to end of previous operator */
@@ -582,6 +586,8 @@ clrallmarks(buf)
     buf->b_op_end.lnum = 0;
     buf->b_last_cursor.lnum = 1;	/* '" mark cleared */
     buf->b_last_cursor.col = 0;
+    buf->b_last_insert.lnum = 0;	/* '^ mark cleared */
+    buf->b_last_change.lnum = 0;	/* '. mark cleared */
 }
 
 /*
@@ -667,6 +673,8 @@ do_marks(eap)
     show_one_mark('"', arg, &curbuf->b_last_cursor, NULL, TRUE);
     show_one_mark('[', arg, &curbuf->b_op_start, NULL, TRUE);
     show_one_mark(']', arg, &curbuf->b_op_end, NULL, TRUE);
+    show_one_mark('^', arg, &curbuf->b_last_insert, NULL, TRUE);
+    show_one_mark('.', arg, &curbuf->b_last_change, NULL, TRUE);
 #ifdef FEAT_VISUAL
     show_one_mark('<', arg, &curbuf->b_visual_start, NULL, TRUE);
     show_one_mark('>', arg, &curbuf->b_visual_end, NULL, TRUE);
@@ -844,6 +852,12 @@ mark_adjust(line1, line2, amount, amount_after)
 
     /* previous pcmark */
     one_adjust(&(curwin->w_prev_pcmark.lnum));
+
+    /* last Insert position */
+    one_adjust(&(curbuf->b_last_insert.lnum));
+
+    /* last change position */
+    one_adjust(&(curbuf->b_last_change.lnum));
 
 #ifdef FEAT_VISUAL
     /* Visual area */
@@ -1167,13 +1181,15 @@ removable(name)
     return retval;
 }
 
+static void write_one_mark __ARGS((FILE *fp_out, int c, pos_t *pos));
+
 /*
  * Write all the named marks for all buffers.
  * Return the number of buffers for which marks have been written.
  */
     int
 write_viminfo_marks(fp_out)
-    FILE    *fp_out;
+    FILE	*fp_out;
 {
     int		count;
     buf_t	*buf;
@@ -1213,25 +1229,33 @@ write_viminfo_marks(fp_out)
 			break;
 		    }
 	    }
-	    if (is_mark_set && buf->b_ffname != NULL &&
-		 buf->b_ffname[0] != NUL && !removable(buf->b_ffname))
+	    if (is_mark_set && buf->b_ffname != NULL
+		      && buf->b_ffname[0] != NUL && !removable(buf->b_ffname))
 	    {
 		home_replace(NULL, buf->b_ffname, IObuff, IOSIZE, TRUE);
 		fprintf(fp_out, "\n> ");
 		viminfo_writestring(fp_out, IObuff);
-		if (buf->b_last_cursor.lnum != 0)
-		    fprintf(fp_out, "\t\"\t%ld\t%d\n",
-			    buf->b_last_cursor.lnum, buf->b_last_cursor.col);
+		write_one_mark(fp_out, '"', &buf->b_last_cursor);
+		write_one_mark(fp_out, '^', &buf->b_last_insert);
+		write_one_mark(fp_out, '.', &buf->b_last_change);
 		for (i = 0; i < NMARKS; i++)
-		    if (buf->b_namedm[i].lnum != 0)
-			fprintf(fp_out, "\t%c\t%ld\t%d\n", 'a' + i,
-				buf->b_namedm[i].lnum, buf->b_namedm[i].col);
+		    write_one_mark(fp_out, 'a' + i, &buf->b_namedm[i]);
 		count++;
 	    }
 	}
     }
 
     return count;
+}
+
+    static void
+write_one_mark(fp_out, c, pos)
+    FILE	*fp_out;
+    int		c;
+    pos_t	*pos;
+{
+    if (pos->lnum != 0)
+	fprintf(fp_out, "\t%c\t%ld\t%d\n", c, (long)pos->lnum, (int)pos->col);
 }
 
 /*
@@ -1255,8 +1279,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
     int		i;
     char_u	*p;
     char_u	*name_buf;
-    long	lnum;
-    int		col;
+    pos_t	pos;
 
     if ((name_buf = alloc(LSIZE)) == NULL)
 	return;
@@ -1333,16 +1356,14 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	    if (load_marks)
 	    {
 		if (line[1] != NUL)
-		    sscanf((char *)line + 2, "%ld %d", &lnum, &col);
-		if (line[1] == '"')
+		    sscanf((char *)line + 2, "%ld %d", &pos.lnum, &pos.col);
+		switch (line[1])
 		{
-		    curbuf->b_last_cursor.lnum = lnum;
-		    curbuf->b_last_cursor.col = col;
-		}
-		else if ((i = line[1] - 'a') >= 0 && i < NMARKS)
-		{
-		    curbuf->b_namedm[i].lnum = lnum;
-		    curbuf->b_namedm[i].col = col;
+		    case '"': curbuf->b_last_cursor = pos; break;
+		    case '^': curbuf->b_last_insert = pos; break;
+		    case '.': curbuf->b_last_change = pos; break;
+		    default:  if ((i = line[1] - 'a') >= 0 && i < NMARKS)
+				  curbuf->b_namedm[i] = pos;
 		}
 	    }
 	    else if (copy_marks_out)

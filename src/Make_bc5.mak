@@ -348,7 +348,7 @@ vimobj = $(vimobj) \
 
 !if ($(OSTYPE)==WIN32)
 vimobj = $(vimobj) \
-	$(OBJDIR)\os_win32.obj
+	$(OBJDIR)\os_win32.obj $(OBJDIR)\os_mswin.obj
 !elif ($(OSTYPE)==DOS16)
 vimobj = $(vimobj) \
 	$(OBJDIR)\os_msdos.obj
@@ -562,6 +562,8 @@ $(OBJDIR)\undo.obj:  undo.c
 $(OBJDIR)\version.obj:	version.c
 
 $(OBJDIR)\os_win32.obj:  os_win32.c
+
+$(OBJDIR)\os_mswin.obj:  os_mswin.c
 
 $(OBJDIR)\os_msdos.obj:  os_msdos.c
 

@@ -534,9 +534,18 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)0L, (char_u *)0L}},
+    {"debug",	    NULL,   P_STRING|P_VI_DEF,
+			    (char_u *)&p_debug, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}},
     {"define",	    "def",  P_STRING|P_VI_DEF,
+#ifdef FEAT_FIND_ID
 			    (char_u *)&p_def, PV_NONE,
-			    {(char_u *)"^#\\s*define", (char_u *)0L}},
+			    {(char_u *)"^#\\s*define", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
     {"dictionary",  "dict", P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_INS_EXPAND
 			    (char_u *)&p_dict, PV_NONE,
@@ -2649,6 +2658,7 @@ do_set(arg, opt_flags)
     int		global = (opt_flags & OPT_GLOBAL); /* ":setglobal" */
     int		local = (opt_flags & OPT_LOCAL);   /* ":setlocal" or modeline */
     int		cp_val = 0;
+    char_u	key_name[2];
 
     if (*arg == NUL)
     {
@@ -2762,7 +2772,19 @@ do_set(arg, opt_flags)
 		varp = get_varp(&(options[opt_idx]));
 	    }
 	    else
+	    {
 		flags = P_STRING;
+		if (key < 0)
+		{
+		    key_name[0] = KEY2TERMCAP0(key);
+		    key_name[1] = KEY2TERMCAP1(key);
+		}
+		else
+		{
+		    key_name[0] = KS_KEY;
+		    key_name[1] = (key & 0xff);
+		}
+	    }
 
 	    /* Disallow changing some options from modelines */
 	    if ((opt_flags & OPT_MODELINE) && (flags & P_NOMLINE))
@@ -2856,19 +2878,16 @@ do_set(arg, opt_flags)
 		    showoneopt(&options[opt_idx], global);
 		else
 		{
-		    char_u	    name[2];
 		    char_u	    *p;
 
-		    name[0] = KEY2TERMCAP0(key);
-		    name[1] = KEY2TERMCAP1(key);
-		    p = find_termcode(name);
+		    p = find_termcode(key_name);
 		    if (p == NULL)
 		    {
 			errmsg = (char_u *)N_("Unknown option");
 			goto skip;
 		    }
 		    else
-			(void)show_one_termcode(name, p, TRUE);
+			(void)show_one_termcode(key_name, p, TRUE);
 		}
 		if (nextchar != '?'
 			&& nextchar != NUL && !vim_iswhite(afterchar))
@@ -3251,14 +3270,11 @@ do_set(arg, opt_flags)
 		    }
 		    else	    /* key code option */
 		    {
-			char_u	    name[2];
 			char_u	    *p;
 
-			name[0] = KEY2TERMCAP0(key);
-			name[1] = KEY2TERMCAP1(key);
 			if (nextchar == '&')
 			{
-			    if (add_termcap_entry(name, TRUE) == FAIL)
+			    if (add_termcap_entry(key_name, TRUE) == FAIL)
 				errmsg = (char_u *)N_("Not found in termcap");
 			}
 			else
@@ -3269,7 +3285,7 @@ do_set(arg, opt_flags)
 				    ++p;
 			    nextchar = *p;
 			    *p = NUL;
-			    add_termcode(name, arg, FALSE);
+			    add_termcode(key_name, arg, FALSE);
 			    *p = nextchar;
 			}
 			if (full_screen)

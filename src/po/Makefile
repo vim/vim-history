@@ -14,7 +14,7 @@ MSGMERGE = msgmerge
 
 .SUFFIXES:
 .SUFFIXES: .po .mo .pot
-.PHONY: all install install-data clean distclean mostlyclean update-po check
+.PHONY: all install uninstall check clean distclean $(LANGUAGES)
 
 .po.mo:
 	$(MSGFMT) -o $@ $<
@@ -64,13 +64,13 @@ $(PACKAGE).pot: ../*.c ../globals.h
 		--add-comments --keyword=_ --keyword=N_ *.c globals.h 
 	mv -f ../$(PACKAGE).po $(PACKAGE).pot
 
-# Don't add dependency here, we only want to update the .po files manually
-$(POFILES):
+# Don't add a dependency here, we only want to update the .po files manually
+$(LANGUAGES):
 	@$(MAKE) $(PACKAGE).pot
-	if test ! -f $@.orig; then cp $@ $@.orig; fi
-	mv $@ $@.old
-	if $(MSGMERGE) $@.old $(PACKAGE).pot -o $@; then \
-	    rm -f $@.old; \
+	if test ! -f $@.po.orig; then cp $@.po $@.po.orig; fi
+	mv $@.po $@.po.old
+	if $(MSGMERGE) $@.po.old $(PACKAGE).pot -o $@.po; then \
+	    rm -f $@.po.old; \
 	else \
-	    echo "msgmerge for $@ failed!"; mv $@.old $@; \
+	    echo "msgmerge for $@.po failed!"; mv $@.po.old $@.po; \
 	fi

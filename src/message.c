@@ -334,50 +334,63 @@ reset_last_sourcing()
  */
     int
 emsg(s)
-    char_u	   *s;
+    char_u	*s;
 {
-    char_u	    *Buf;
-    int		    attr;
-    int		    other_sourcing_name;
-    char	    *p;
-
-    if (emsg_off)		/* no error messages at the moment */
-	return TRUE;
-
-#ifdef FEAT_EVAL
-    /* set "v:errmsg", also when using ":silent! cmd" */
-    set_vim_var_string(VV_ERRMSG, s, -1);
-#endif
+    char_u	*Buf;
+    int		attr;
+    int		other_sourcing_name;
+    char	*p;
 
     /*
-     * When using ":silent! cmd" ignore error messsages.
-     * But do write it to the redirection file.
+     * If "emsg_off" is set: no error messages at the moment.
+     * If 'debug' is set: do error message anyway, but without side effects.
+     * If "emsg_skip" is set: never do error messages.
      */
-    if (emsg_silent)
-    {
-	redir_write(s);
+    if ((emsg_off > 0 && *p_debug == NUL)
+#ifdef FEAT_EVAL
+	    || emsg_skip > 0
+#endif
+	    )
 	return TRUE;
-    }
 
-    /* Reset msg_silent, an error causes messages to be switched back on. */
-    msg_silent = 0;
+    if (!emsg_off)
+    {
+#ifdef FEAT_EVAL
+	/* set "v:errmsg", also when using ":silent! cmd" */
+	set_vim_var_string(VV_ERRMSG, s, -1);
+#endif
 
-    if (global_busy)		/* break :global command */
-	++global_busy;
+	/*
+	 * When using ":silent! cmd" ignore error messsages.
+	 * But do write it to the redirection file.
+	 */
+	if (emsg_silent)
+	{
+	    redir_write(s);
+	    return TRUE;
+	}
 
-    if (p_eb)
-	beep_flush();		/* also includes flush_buffers() */
-    else
-	flush_buffers(FALSE);	/* flush internal buffers */
-    did_emsg = TRUE;		/* flag for DoOneCmd() */
+	/* Reset msg_silent, an error causes messages to be switched back on. */
+	msg_silent = 0;
+
+	if (global_busy)		/* break :global command */
+	    ++global_busy;
+
+	if (p_eb)
+	    beep_flush();		/* also includes flush_buffers() */
+	else
+	    flush_buffers(FALSE);	/* flush internal buffers */
+	did_emsg = TRUE;		/* flag for DoOneCmd() */
 
 #ifdef VIMBUDDY
-    if (sourcing_name == NULL)
-    {
-	VimBuddyText(s, 2);
-	return TRUE;
-    }
+	if (sourcing_name == NULL)
+	{
+	    VimBuddyText(s, 2);
+	    return TRUE;
+	}
 #endif
+    }
+
     emsg_on_display = TRUE;	/* remember there is an error message */
     ++msg_scroll;		/* don't overwrite a previous message */
     attr = hl_attr(HLF_E);	/* set highlight mode for error messages */
@@ -442,8 +455,12 @@ emsg(s)
 emsg2(s, a1)
     char_u *s, *a1;
 {
-    if (emsg_off)		/* no error messages at the moment */
-	return TRUE;
+    if ((emsg_off > 0 && *p_debug == NUL)
+#ifdef FEAT_EVAL
+	    || emsg_skip > 0
+#endif
+	    )
+	return TRUE;		/* no error messages at the moment */
 
     /* Check for NULL strings (just in case) */
     if (a1 == NULL)
@@ -460,8 +477,12 @@ emsgn(s, n)
     char_u	*s;
     long	n;
 {
-    if (emsg_off)		/* no error messages at the moment */
-	return TRUE;
+    if ((emsg_off > 0 && *p_debug == NUL)
+#ifdef FEAT_EVAL
+	    || emsg_skip > 0
+#endif
+	    )
+	return TRUE;		/* no error messages at the moment */
     sprintf((char *)IObuff, (char *)s, n);
     return emsg(IObuff);
 }

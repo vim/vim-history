@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0o.  Last change: 2000 Dec 02
+*options.txt*   For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -116,10 +116,16 @@ The {option} arguments to ":set" may be repeated.  For example: >
 If you make an error in one of the arguments, an error message will be given
 and the following arguments will be ignored.
 
+							*:set-termcap*
 For {option} the form "t_xx" may be used to set a termcap option.  This will
 override the value from the termcap.  You can then use it in a mapping.  If
-the "xx" part contains special characters, use the <t_xx> form:
+the "xx" part contains special characters, use the <t_xx> form: >
 	:set <t_#4>=^[Ot
+This can also be used to translate a special code for a normal key.  For
+example, if Alt-b produces <Esc>b, use this: >
+	:set <M-b>=^[b
+(the ^[ is a real <Esc> here, use CTRL-V <Esc> to enter it)
+The advantage over a mapping is that it works in all situations.
 
 The listing from ":set" looks different from Vi.  Long string options are put
 at the end of the list.  The number of options is quite large.  The output of
@@ -1012,7 +1018,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			|+file_in_path| feature}
 	This is a list of directories which will be searched when using the
 	|:cd| and |:lcd| commands, provided that the directory being searched
-	for has a relative path (not starting with '/').
+	for has a relative path (not starting with "/", "./" or "../").
 	The 'cdpath' option's value has the same form and semantics as
 	|'path'|.  Also see |file-searching|.
 	The default value is taken from $CDPATH, with a "," prepended to look
@@ -1601,6 +1607,14 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	Give messages when adding a cscope database.  See |cscopeverbose|.
 	NOTE: This option is reset when 'compatible' is set.
+
+						*'debug'*
+'debug'			string	(default "")
+			global
+			{not in Vi}
+	When set to "msg", error messages that would otherwise be omitted will
+	be given anyway.  This is useful when debugging 'foldexpr' or
+	'indentexpr'.
 
 						*'define'* *'def'*
 'define' 'def'		string	(default "^#\s*define")
@@ -2696,7 +2710,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	cursor position is always restored, thus the cursor may be moved.
 	Normally this option would be set to call a function: >
 		:set indentexpr=GetMyIndent()
-<	See |indent-expression|.  Also see |eval-sandbox|.
+<	Error messages will be surpressed, unless the 'debug' option contains
+	"msg".
+	See |indent-expression|.  Also see |eval-sandbox|.
 	NOTE: This option is made empty when 'compatible' is set.
 
 						*'indentkeys'* *'indk'*
@@ -4566,17 +4582,17 @@ A jump table for the options with a short description can be found at |X_op|.
 
 	There are four main ways to use tabs in Vim:
 	1. Always keep 'tabstop' at 8, set 'softtabstop' and 'shiftwidth' to 4
-	   (or 3 or whatever you prefer) and use 'noexpandtabs'.  Then Vim
+	   (or 3 or whatever you prefer) and use 'noexpandtab'.  Then Vim
 	   will use a mix of tabs and spaces, but typing Tab and BS will
 	   behave like a tab appears every 4 (or 3) characters.
 	2. Set 'tabstop' and 'shiftwidth' to whatever you prefer and use
-	   'expandtabs'.  This way you will always insert spaces.  The
+	   'expandtab'.  This way you will always insert spaces.  The
 	   formatting will never be messed up when 'tabstop' is changed.
 	3. Set 'tabstop' and 'shiftwidth' to whatever you prefer and use a
 	   |modeline| to set these values when editing the file again.  Only
 	   works when using Vim to edit the file.
 	4. Always set 'tabstop' and 'shiftwidth' to the same value, and
-	   'noexpandtabs'.  This should then work (for initial indents only)
+	   'noexpandtab'.  This should then work (for initial indents only)
 	   for any tabstop setting that people use.  It might be nice to have
 	   tabs after the first non-blank inserted as spaces if you do this
 	   though.  Otherwise aligned comments will be wrong when 'tabstop' is
@@ -5228,7 +5244,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	Character you have to type to start wildcard expansion in the
-	command-line.
+	command-line, as specified with 'wildmode'.
 	The character is not recognized when used inside a macro.  See
 	'wildcharm' for that.
 	Although 'wc' is a number option, you can set it to a special key: >

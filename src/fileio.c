@@ -63,6 +63,9 @@ static void msg_add_lines __ARGS((int, long, long));
 static void msg_add_eol __ARGS((void));
 static int check_mtime __ARGS((buf_t *buf, struct stat *s));
 static int time_differs __ARGS((long t1, long t2));
+#ifdef FEAT_AUTOCMD
+static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, buf_t *buf, exarg_t *eap));
+#endif
 
 #if defined(FEAT_CRYPT) || defined(FEAT_MBYTE)
 # define HAS_BW_FLAGS
@@ -105,7 +108,7 @@ struct bw_info
     int		bw_first;	/* first write call */
     char_u	*bw_conv_buf;	/* buffer for writing converted chars */
     int		bw_conv_buflen; /* size of bw_conv_buf */
-    int		bw_ucs_error;	/* set for conversion error */
+    int		bw_conv_error;	/* set for conversion error */
 # ifdef HAVE_ICONV_H
     iconv_t	bw_iconv_fd;	/* descriptor for iconv() or -1 */
 # endif
@@ -289,8 +292,8 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 
 #ifdef FEAT_AUTOCMD
     /*
-     * BUFREADCMD and FILEREADCMD intercept the reading process by executing
-     * the associated commands instead.
+     * The BufReadCmd and FileReadCmd events intercept the reading process by
+     * executing the associated commands instead.
      */
     if (!filtering && !read_stdin)
     {
@@ -302,10 +305,12 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 
 	if (newfile)
 	{
-	    if (apply_autocmds(EVENT_BUFREADCMD, NULL, sfname, FALSE, curbuf))
+	    if (apply_autocmds_exarg(EVENT_BUFREADCMD, NULL, sfname,
+							  FALSE, curbuf, eap))
 		return OK;
 	}
-	else if (apply_autocmds(EVENT_FILEREADCMD, sfname, sfname, FALSE, NULL))
+	else if (apply_autocmds_exarg(EVENT_FILEREADCMD, sfname, sfname,
+							    FALSE, NULL, eap))
 	    return OK;
 
 	curbuf->b_op_start = pos;
@@ -485,8 +490,8 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		    check_marks_read();
 #endif
 #ifdef FEAT_AUTOCMD
-		    apply_autocmds(EVENT_BUFNEWFILE, sfname, sfname, FALSE,
-								      curbuf);
+		    apply_autocmds_exarg(EVENT_BUFNEWFILE, sfname, sfname,
+							  FALSE, curbuf, eap);
 #endif
 		    /* remember the current fileformat */
 		    save_file_ff(curbuf);
@@ -555,13 +560,17 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	 */
 	msg_scroll = TRUE;
 	if (filtering)
-	    apply_autocmds(EVENT_FILTERREADPRE, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILTERREADPRE, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else if (read_stdin)
-	    apply_autocmds(EVENT_STDINREADPRE, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_STDINREADPRE, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else if (newfile)
-	    apply_autocmds(EVENT_BUFREADPRE, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_BUFREADPRE, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else
-	    apply_autocmds(EVENT_FILEREADPRE, sfname, sfname, FALSE, NULL);
+	    apply_autocmds_exarg(EVENT_FILEREADPRE, sfname, sfname,
+							    FALSE, NULL, eap);
 	if (msg_scrolled == n)
 	    msg_scroll = m;
 
@@ -772,30 +781,24 @@ retry:
 	 * Check if UCS-2/4 or Latin-1 to UTF-8 conversion needs to be
 	 * done.  This is handled below after read().  Prepare the
 	 * fio_flags to avoid having to parse the string each time.
+	 * Also check for Unicode to Latin-1 conversion, because iconv()
+	 * appears not to handle this correctly.  This works just like
+	 * conversion to UTF-8 except how the resulting character is put in
+	 * the buffer.
 	 */
-	else if (cc_utf8)
+	else if (cc_utf8 || !has_mbyte)
 	    fio_flags = get_fio_flags(fcc);
 
 # ifdef HAVE_ICONV_H
 	/*
-	 * Use iconv() to do the conversion when conversion is required
-	 * and we can't do it internally.
+	 * Try using iconv() if we can't convert internally.
 	 */
 	if (fio_flags == 0
 #  ifdef FEAT_EVAL
 		&& !did_iconv
 #  endif
 		)
-	    iconv_fd = my_iconv_open(cc_utf8
-					 ? (char_u *)"utf-8" : p_cc, fcc);
-# else
-	/*
-	 * When iconv() is not available, we do our own Unicode to Latin-1
-	 * conversion.  This works just like conversion to UTF-8 except how
-	 * the resulting character is put in the buffer.
-	 */
-	if (fio_flags == 0 && !has_mbyte)
-	    fio_flags = get_fio_flags(fcc);
+	    iconv_fd = my_iconv_open(cc_utf8 ? (char_u *)"utf-8" : p_cc, fcc);
 # endif
 
 # ifdef FEAT_EVAL
@@ -814,7 +817,7 @@ retry:
 # endif
 	    /* Skip conversion when it's already done (retry for wrong
 	     * "fileformat"). */
-	    if (tmpname != NULL)
+	    if (tmpname == NULL)
 	    {
 		tmpname = eval_charconvert(fname, fcc, &fd);
 		if (tmpname == NULL)
@@ -1061,12 +1064,14 @@ retry:
 		ptr += size;
 		top = (char *)ptr;
 		to_size = real_size - size;
+
+		/*
+		 * If there is conversion error or not enough room try using
+		 * another conversion.
+		 */
 		if ((iconv(iconv_fd, &fromp, &from_size, &top, &to_size)
-								 == (size_t)-1
-			    && errno != EINVAL)
-			|| from_size > CONV_RESTLEN)
-		    /* Conversion error or not enough room.  Try using another
-		     * conversion. */
+			    == (size_t)-1 && errno != EINVAL)
+						  || from_size > CONV_RESTLEN)
 		    goto rewind_retry;
 
 		if (from_size > 0)
@@ -1708,13 +1713,17 @@ failed:
 	 */
 	msg_scroll = TRUE;
 	if (filtering)
-	    apply_autocmds(EVENT_FILTERREADPOST, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILTERREADPOST, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else if (read_stdin)
-	    apply_autocmds(EVENT_STDINREADPOST, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_STDINREADPOST, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else if (newfile)
-	    apply_autocmds(EVENT_BUFREADPOST, NULL, sfname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_BUFREADPOST, NULL, sfname,
+							  FALSE, curbuf, eap);
 	else
-	    apply_autocmds(EVENT_FILEREADPOST, sfname, sfname, FALSE, NULL);
+	    apply_autocmds_exarg(EVENT_FILEREADPOST, sfname, sfname,
+							    FALSE, NULL, eap);
 	if (msg_scrolled == n)
 	    msg_scroll = m;
     }
@@ -1968,7 +1977,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef FEAT_MBYTE
     /* must init bw_conv_buf and bw_iconv_fd before jumping to "fail" */
     write_info.bw_conv_buf = NULL;
-    write_info.bw_ucs_error = FALSE;
+    write_info.bw_conv_error = FALSE;
     write_info.bw_restlen = 0;
 # ifdef HAVE_ICONV_H
     write_info.bw_iconv_fd = (iconv_t)-1;
@@ -2069,26 +2078,29 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
 	if (append)
 	{
-	    if (!(did_cmd = apply_autocmds(EVENT_FILEAPPENDCMD,
-						fname, fname, FALSE, curbuf)))
-		apply_autocmds(EVENT_FILEAPPENDPRE,
-						 fname, fname, FALSE, curbuf);
+	    if (!(did_cmd = apply_autocmds_exarg(EVENT_FILEAPPENDCMD,
+					   fname, fname, FALSE, curbuf, eap)))
+		apply_autocmds_exarg(EVENT_FILEAPPENDPRE,
+					    fname, fname, FALSE, curbuf, eap);
 	}
 	else if (filtering)
 	{
-	    apply_autocmds(EVENT_FILTERWRITEPRE, NULL, fname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILTERWRITEPRE,
+					     NULL, fname, FALSE, curbuf, eap);
 	}
 	else if (reset_changed && whole)
 	{
-	    if (!(did_cmd = apply_autocmds(EVENT_BUFWRITECMD,
-						fname, fname, FALSE, curbuf)))
-		apply_autocmds(EVENT_BUFWRITEPRE, fname, fname, FALSE, curbuf);
+	    if (!(did_cmd = apply_autocmds_exarg(EVENT_BUFWRITECMD,
+					   fname, fname, FALSE, curbuf, eap)))
+		apply_autocmds_exarg(EVENT_BUFWRITEPRE,
+					    fname, fname, FALSE, curbuf, eap);
 	}
 	else
 	{
-	    if (!(did_cmd = apply_autocmds(EVENT_FILEWRITECMD,
-						fname, fname, FALSE, curbuf)))
-		apply_autocmds(EVENT_FILEWRITEPRE, fname, fname, FALSE, curbuf);
+	    if (!(did_cmd = apply_autocmds_exarg(EVENT_FILEWRITECMD,
+					   fname, fname, FALSE, curbuf, eap)))
+		apply_autocmds_exarg(EVENT_FILEWRITEPRE,
+					    fname, fname, FALSE, curbuf, eap);
 	}
 
 	/* restore curwin/curbuf and a few other things */
@@ -2730,21 +2742,25 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	fcc = buf->b_p_fcc;
 
     /*
+     * The file needs to be converted when 'filecharcode' is set and
+     * 'filecharcode' differs from 'charcode'.
+     */
+    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
+
+    /*
      * Check if UTF-8 to UCS-2/4 or Latin-1 conversion needs to be done.  Or
      * Latin-1 to Unicode conversion.  This is handled in buf_write_bytes().
      * Prepare the flags for it and allocate bw_conv_buf when needed.
      */
-    converted = (*fcc != NUL && !same_charcode(p_cc, fcc));
     if (converted && (cc_utf8 || !has_mbyte))
     {
 	wb_flags = get_fio_flags(fcc);
-
-	if (wb_flags & (FIO_UCS2 | FIO_UCS4))
+	if (wb_flags & (FIO_UCS2 | FIO_UCS4 | FIO_UTF8))
 	{
 	    /* Need to allocate a buffer to translate into. */
-	    if (wb_flags & FIO_UCS2)
+	    if (wb_flags & (FIO_UCS2 | FIO_UTF8))
 		write_info.bw_conv_buflen = bufsize * 2;
-	    else
+	    else /* FIO_UCS4 */
 		write_info.bw_conv_buflen = bufsize * 4;
 	    write_info.bw_conv_buf
 			   = lalloc((long_u)write_info.bw_conv_buflen, TRUE);
@@ -2756,12 +2772,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 # if defined(FEAT_EVAL) || defined(HAVE_ICONV_H)
     if (converted && wb_flags == 0)
     {
-	/*
-	 * The file needs to be converted.  This happens when 'filecharcode'
-	 * is set, no internal conversion done and 'filecharcode' differs from
-	 * 'charcode'.
-	 */
 #  ifdef HAVE_ICONV_H
+	/*
+	 * Use iconv() conversion when conversion is needed and it's not done
+	 * internally.
+	 */
 	write_info.bw_iconv_fd = my_iconv_open(fcc,
 					  cc_utf8 ? (char_u *)"utf-8" : p_cc);
 	if (write_info.bw_iconv_fd != (iconv_t)-1)
@@ -3035,13 +3050,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * writing blocks at a time.  Fix it by writing a line at a time.
 	 * This is much slower!
 	 */
-	file_info.bw_len = len;
+	write_info.bw_len = len;
 	if (buf_write_bytes(&write_info) == FAIL)
 	{
 	    end = 0;		/* write error: break loop */
 	    break;
 	}
-	file_info.bw_len = bufsize;
+	write_info.bw_len = bufsize;
 	nchars += len;
 	s = buffer;
 	len = 0;
@@ -3121,7 +3136,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     if (end == 0)
     {
 	if (errmsg == NULL)
-	    errmsg = (char_u *)_("write error (file system full?)");
+	{
+#ifdef FEAT_MBYTE
+	    if (write_info.bw_conv_error)
+		errmsg = (char_u *)_("write error, conversion failed");
+	    else
+#endif
+		errmsg = (char_u *)_("write error (file system full?)");
+	}
+
 	/*
 	 * If we have a backup file, try to put it in place of the new file,
 	 * because the new file is probably corrupt.  This avoids loosing the
@@ -3183,7 +3206,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	msg_add_fname(buf, fname);	/* put fname in IObuff with quotes */
 	c = FALSE;
 #ifdef FEAT_MBYTE
-	if (write_info.bw_ucs_error)
+	if (write_info.bw_conv_error)
 	{
 	    STRCAT(IObuff, _(" CONVERSION ERROR"));
 	    c = TRUE;
@@ -3234,7 +3257,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
     if (reset_changed && whole
 #ifdef FEAT_MBYTE
-	    && !write_info.bw_ucs_error
+	    && !write_info.bw_conv_error
 #endif
 	    )		/* when written everything correctly */
     {
@@ -3383,13 +3406,17 @@ nofail:
 	aucmd_prepbuf(&aco, buf);
 
 	if (append)
-	    apply_autocmds(EVENT_FILEAPPENDPOST, fname, fname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILEAPPENDPOST, fname, fname,
+							  FALSE, curbuf, eap);
 	else if (filtering)
-	    apply_autocmds(EVENT_FILTERWRITEPOST, NULL, fname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILTERWRITEPOST, NULL, fname,
+							  FALSE, curbuf, eap);
 	else if (reset_changed && whole)
-	    apply_autocmds(EVENT_BUFWRITEPOST, fname, fname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_BUFWRITEPOST, fname, fname,
+							  FALSE, curbuf, eap);
 	else
-	    apply_autocmds(EVENT_FILEWRITEPOST, fname, fname, FALSE, curbuf);
+	    apply_autocmds_exarg(EVENT_FILEWRITEPOST, fname, fname,
+							  FALSE, curbuf, eap);
 
 	/* restore curwin/curbuf and a few other things */
 	aucmd_restbuf(&aco);
@@ -3553,10 +3580,23 @@ buf_write_bytes(ip)
 	unsigned	c;
 	int		n;
 
-	if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
+	if (flags & FIO_UTF8)
 	{
-	    /* Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin-1
-	     * chars in the file. */
+	    /*
+	     * Convert latin-1 in the buffer to UTF-8 in the file.
+	     */
+	    p = ip->bw_conv_buf;	/* translate to buffer */
+	    for (wlen = 0; wlen < len; ++wlen)
+		p += utf_char2bytes(buf[wlen], p);
+	    buf = ip->bw_conv_buf;
+	    len = p - ip->bw_conv_buf;
+	}
+	else if (flags & (FIO_UCS4 | FIO_UCS2 | FIO_LATIN1))
+	{
+	    /*
+	     * Convert UTF-8 bytes in the buffer to UCS-2, UCS-4 or Latin-1
+	     * chars in the file.
+	     */
 	    if (flags & FIO_LATIN1)
 		p = buf;	/* translate in-place (can only get shorter) */
 	    else
@@ -3622,7 +3662,7 @@ buf_write_bytes(ip)
 			c = buf[wlen];
 		}
 
-		ip->bw_ucs_error |= ucs2bytes(c, &p, flags);
+		ip->bw_conv_error |= ucs2bytes(c, &p, flags);
 	    }
 	    if (flags & FIO_LATIN1)
 		len = p - buf;
@@ -3667,10 +3707,18 @@ buf_write_bytes(ip)
 		(void)iconv(ip->bw_iconv_fd, NULL, NULL, &to, &tolen);
 		ip->bw_first = FALSE;
 	    }
-	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen) == (size_t)-1
-			&& errno != EINVAL)
-		    || fromlen > CONV_RESTLEN)
+
+	    /*
+	     * If iconv() has an error or there is not enough room, fail.
+	     */
+	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen)
+			== (size_t)-1 && errno != EINVAL)
+						    || fromlen > CONV_RESTLEN)
+	    {
+		ip->bw_conv_error = TRUE;
 		return FAIL;
+	    }
+
 	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
 	    if (fromlen > 0)
 		mch_memmove(ip->bw_rest, from, fromlen);
@@ -4935,7 +4983,7 @@ static int event_ignored __ARGS((EVENT_T event));
 static int au_get_grouparg __ARGS((char_u **argp));
 static int do_autocmd_event __ARGS((EVENT_T event, char_u *pat, int nested, char_u *cmd, int forceit, int group));
 static char_u *getnextac __ARGS((int c, void *cookie, int indent));
-static int apply_autocmds_group __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, int group, buf_t *buf));
+static int apply_autocmds_group __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, int group, buf_t *buf, exarg_t *eap));
 static void auto_next_pat __ARGS((AutoPatCmd *apc, int stop_at_last));
 
 static EVENT_T	last_event;
@@ -5662,7 +5710,7 @@ do_doautocmd(arg, do_msg)
      */
     while (*arg && !vim_iswhite(*arg))
 	if (apply_autocmds_group(event_name2nr(arg, &arg),
-					    fname, NULL, TRUE, group, curbuf))
+				      fname, NULL, TRUE, group, curbuf, NULL))
 	    nothing_done = FALSE;
 
     if (nothing_done && do_msg)
@@ -5839,7 +5887,24 @@ apply_autocmds(event, fname, fname_io, force, buf)
     buf_t	*buf;	    /* buffer for <abuf> */
 {
     return apply_autocmds_group(event, fname, fname_io, force,
-							    AUGROUP_ALL, buf);
+						      AUGROUP_ALL, buf, NULL);
+}
+
+/*
+ * Like apply_autocmds(), but with extra "eap" argument.  This takes care of
+ * setting v:filearg.
+ */
+    static int
+apply_autocmds_exarg(event, fname, fname_io, force, buf, eap)
+    EVENT_T	event;
+    char_u	*fname;
+    char_u	*fname_io;
+    int		force;
+    buf_t	*buf;
+    exarg_t	*eap;
+{
+    return apply_autocmds_group(event, fname, fname_io, force,
+						       AUGROUP_ALL, buf, eap);
 }
 
 #if defined(FEAT_AUTOCMD) || defined(PROTO)
@@ -5851,7 +5916,7 @@ has_cursorhold()
 #endif
 
     static int
-apply_autocmds_group(event, fname, fname_io, force, group, buf)
+apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     EVENT_T	event;
     char_u	*fname;	    /* NULL or empty means use actual file name */
     char_u	*fname_io;  /* fname to use for <afile> on cmdline, NULL means
@@ -5859,6 +5924,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     int		force;	    /* when TRUE, ignore autocmd_busy */
     int		group;	    /* group ID, or AUGROUP_ALL */
     buf_t	*buf;	    /* buffer for <abuf> */
+    exarg_t	*eap;	    /* command arguments */
 {
     char_u	*sfname = NULL;	/* short file name */
     char_u	*tail;
@@ -5878,6 +5944,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 #ifdef FEAT_EVAL
     scid_t	save_current_SID;
     void	*save_funccalp;
+    char_u	*save_cmdarg;
 #endif
 
     /*
@@ -6079,6 +6146,13 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
     /* found one, start executing the autocommands */
     if (patcmd.curpat != NULL)
     {
+#ifdef FEAT_EVAL
+	/* set v:cmdarg (only when there is a matching pattern) */
+	if (eap != NULL)
+	    save_cmdarg = set_cmdarg(eap, NULL);
+	else
+	    save_cmdarg = NULL;	/* avoid gcc warning */
+#endif
 	retval = TRUE;
 	/* mark the last pattern, to avoid an endless loop when more patterns
 	 * are added when executing autocommands */
@@ -6088,6 +6162,10 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 	check_lnums(TRUE);	/* make sure cursor and topline are valid */
 	do_cmdline(NULL, getnextac, (void *)&patcmd,
 				     DOCMD_NOWAIT|DOCMD_VERBOSE|DOCMD_REPEAT);
+#ifdef FEAT_EVAL
+	if (eap != NULL)
+	    (void)set_cmdarg(NULL, save_cmdarg);
+#endif
     }
 
     --RedrawingDisabled;
@@ -6346,6 +6424,50 @@ get_event_name(xp, idx)
 
 #endif	/* FEAT_CMDL_COMPL */
 
+/*
+ * Return TRUE if an autocommand is defined for "event" and "pattern".
+ * "pattern" can be NULL to accept any pattern.
+ */
+    int
+au_exists(name, name_end, pattern)
+    char_u	*name;
+    char_u	*name_end;
+    char_u	*pattern;
+{
+    char_u	*event_name;
+    char_u	*p;
+    EVENT_T	event;
+    AutoPat	*ap;
+
+    /* find the index (enum) for the event name */
+    event_name = vim_strnsave(name, (int)(name_end - name));
+    if (event_name == NULL)
+	return FALSE;
+    event = event_name2nr(event_name, &p);
+    vim_free(event_name);
+
+    /* return FALSE if the event name is not recognized */
+    if (event == NUM_EVENTS)	    /* unknown event name */
+	return FALSE;
+
+    /* Find the first autocommand for this event.
+     * If there isn't any, return FALSE;
+     * If there is one and no pattern given, return TRUE; */
+    ap = first_autopat[(int)event];
+    if (ap == NULL)
+	return FALSE;
+    if (pattern == NULL)
+	return TRUE;
+
+    /* Check if there is an autocommand with the given pattern. */
+    for ( ; ap != NULL; ap = ap->next)
+	/* only use a pattern when it has not been removed and has commands */
+	if (ap->pat != NULL && ap->cmds != NULL
+					   && fnamecmp(ap->pat, pattern) == 0)
+	    return TRUE;
+
+    return FALSE;
+}
 #endif	/* FEAT_AUTOCMD */
 
 #if defined(FEAT_AUTOCMD) || defined(FEAT_WILDIGN)

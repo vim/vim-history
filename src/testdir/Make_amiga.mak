@@ -32,7 +32,7 @@ clean:
 
 .in.out:
 	copy $*.ok test.ok
-	$(VIMPROG) -u amiga.vim -U NONE -s dotest.in $*.in
+	$(VIMPROG) -u amiga.vim -U NONE --noplugins -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
 	-delete X#? ALL QUIET

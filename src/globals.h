@@ -141,7 +141,12 @@ EXTERN int	msg_scroll INIT(= FALSE);   /* msg_start() will scroll */
 EXTERN int	msg_didout INIT(= FALSE);   /* msg_outstr() was used in line */
 EXTERN int	msg_didany INIT(= FALSE);   /* msg_outstr() was used at all */
 EXTERN int	msg_nowait INIT(= FALSE);   /* don't wait for this msg */
-EXTERN int	emsg_off INIT(= FALSE);	    /* don't display errors for now */
+EXTERN int	emsg_off INIT(= 0);	    /* don't display errors for now,
+					       unless 'debug' is set. */
+#ifdef FEAT_EVAL
+EXTERN int	emsg_skip INIT(= 0);	    /* don't display errors for
+					       expression that is skipped */
+#endif
 EXTERN int	did_emsg;		    /* set by emsg() for DoOneCmd() */
 EXTERN int	emsg_on_display INIT(= FALSE);	/* there is an error message */
 EXTERN int	rc_did_emsg INIT(= FALSE);  /* vim_regcomp() called emsg() */

@@ -58,7 +58,9 @@
 
 #define FNAME_ILLEGAL "\"*?><|" /* illegal characters in a file name */
 
-#define SIZEOF_INT 2
+#ifndef SIZEOF_INT
+# define SIZEOF_INT 2
+#endif
 
 typedef long off_t;
 

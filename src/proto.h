@@ -42,9 +42,11 @@
 # endif
 # ifdef WIN16
 #  include "os_win16.pro"
+#  include "os_mswin.pro"
 # endif
 # ifdef WIN32
 #  include "os_win32.pro"
+#  include "os_mswin.pro"
 # endif
 # ifdef VMS
 #  include "os_vms.pro"

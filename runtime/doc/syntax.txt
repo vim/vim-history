@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0o.  Last change: 2000 Dec 01
+*syntax.txt*    For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -144,7 +144,7 @@ If you are setting up a system with many users, and you don't want each user
 to add the same syntax file, you can use another directory from 'runtimepath'.
 
 
-ADDING TO AN EXISTING SYNTAX FILE			*mysyntaxfile-add*
+ADDING TO AN EXISTING SYNTAX FILE		*mysyntaxfile-add* *syntax2*
 
 If you are mostly satisfied with an existing syntax file, but would like to
 add a few items or change the highlighting, follow these steps:
@@ -488,6 +488,26 @@ comment highlighting, add the following line to your startup file: >
 The ColdFusion syntax file is based on the html syntax file.
 
 
+CYNLIB						*cynlib.vim* *cynlib-syntax*
+
+Cynlib files are C++ files that use the Cynlib class library to enable
+hardware modelling and simulation using C++. Typically Cynlib files have a .cc
+or a .cpp extension, which makes it very difficult to distinguish them from a
+normal C++ file. Thus, to enable Cynlib highlighting for .cc files, add this
+line to your .vimrc file: >
+
+	:let cynlib_cyntax_for_cc=1
+
+Similarly for cpp files (this extension is only usually used in Windows) >
+
+	:let cynlib_cyntax_for_cpp=1
+
+To disable these again, use this: >
+
+	:unlet cynlib_cyntax_for_cc
+	:unlet cynlib_cyntax_for_cpp
+<
+
 DTD						*dtd.vim* *dtd-syntax*
 
 The DTD syntax highlighting is case sensitive by default. To disable
@@ -650,7 +670,7 @@ If the dialect is f95 or f90, the Fortran code can be in either free or
 fixed source form. If you always use the free source form for Fortran 90
 and Fortran 95, then >
 
-  let fortran_free_source=1
+  :let fortran_free_source=1
 
 in your .vimrc prior to the :syntax on command. If fortran_free_source has not
 been set then the syntax file attempts to determine which form your file uses
@@ -671,7 +691,7 @@ Therefore, tabs are marked as errors. Nevertheless, some programmers like
 using tabs. If your Fortran files contain tabs, then you should set the
 variable fortran_have_tabs in your .vimrc with a command such as >
 
-  let fortran_have_tabs=1
+  :let fortran_have_tabs=1
 
 placed prior to the :syntax on command. Note that use of tabs will mean that
 the syntax file will not be able to detect incorrect margins.
@@ -977,11 +997,43 @@ http://papp.plan9.de.
 PASCAL						*pascal.vim* *pascal-syntax*
 
 The Pascal syntax file has been extended to take into account some extensions
-provided by Turbo Pascal, Free Pascal Compiler or GNU Pascal Compiler.  If you
-prefer to stick with the standard Pascal keywords, add the following line to
-your startup file: >
+provided by Turbo Pascal, Free Pascal Compiler, GNU Pascal Compiler.  Delphi
+keywords are also supported.  By default, Turbo Pascal 7.0 features are
+enabled.  If you prefer to stick with the standard Pascal keywords, add the
+following line to your startup file: >
 
-	:let pascal_traditional=1
+   :let pascal_traditional=1
+
+To switch on Delphi specific constructions (such as one-line comments,
+keywords, etc): >
+
+   :let pascal_delphi=1
+
+
+The option pascal_symbol_operator controls whether symbol operators such as +,
+*, .., etc. are displayed using the Operator color or not.  To colorize symbol
+operators, add the following line to your startup file: >
+
+   :let pascal_symbol_operator=1
+
+Some functions are highlighted by default.  To switch it off: >
+
+   :let pascal_no_functions=1
+
+Furthermore, there are specific variable for some compiler.  Besides
+pascal_delphi, there are pascal_gpc and pascal_fpc.  Default extensions try to
+match Turbo Pascal. >
+
+   :let pascal_gpc=1
+
+or >
+
+   :let pascal_fpc=1
+
+If you dislike <Tab> chars, you can set the pascal_no_tabs variable.  Tabs
+will be highlighted as Error. >
+
+   :let pascal_no_tabs=1
 
 
 PERL						*perl.vim* *perl-syntax*
@@ -1059,6 +1111,26 @@ Using the old colorstyle: >
 Enable parent error highlighting: >
 
   let_parentError = 1
+
+
+PPWIZARD (preprocessor for HTML and OS/2 INF files) *ppwiz.vim* *ppwiz-syntax* 
+
+This syntax file has the options:
+
+- ppwiz_highlight_defs : determines highlighting mode for PPWizard's
+  definitions. Possible values are
+
+  ppwiz_highlight_defs = 1 : PPWizard #define statements retain the
+    colors of their contents (e. g. PPWizard macros and variables)
+
+  ppwiz_highlight_defs = 2 : preprocessor #define and #evaluate
+    statements are shown in a single color with the exception of line
+    continuation symbols
+
+  The default setting for ppwiz_highlight_defs is 1.
+
+- ppwiz_with_html : If the value is 1 (the default), highlight literal
+  HTML code; if 0, treat HTML code like ordinary text.
 
 
 PHTML						*phtml.vim* *phtml-syntax*
@@ -1328,10 +1400,13 @@ The Speedup syntax file has some options:
 
 - oneline_comments : this value ranges from 1 to 3 and determines the
   highlighting of # style comments.
+
   oneline_comments = 1 : allow normal Speedup code after an even
   number of #s.
+
   oneline_comments = 2 : show code starting with the second # as
   error. This is the default setting.
+
   oneline_comments = 3 : show the whole line as error if it contains
   more than one #.
 
@@ -1819,7 +1894,7 @@ contains=ALL
 contains=ALLBUT,{group-name},..
 		If the first item in the contains list is "ALLBUT", then all
 		groups will be accepted inside the item, except the ones that
-		are listed, and the "contained" items.  Example: >
+		are listed.  Example: >
   :syntax region Block start="{" end="}" ... contains=ALLBUT,Function
 
 The {group-name} in the "contains" list can be a pattern.  All group names
@@ -1828,7 +1903,7 @@ The pattern cannot contain white space or a ','.  Example: >
    ... contains=Comment.*,Keyw[0-3]
 The matching will be done at moment the syntax command is executed.  Groups
 that are defined later will not be matched.  Also, if the current syntax
-command defines a new group, this is not matched.  Be careful: When putting
+command defines a new group, it is not matched.  Be careful: When putting
 syntax commands in a file you can't rely on groups NOT being defined, because
 the file may have been sourced before, and "syn clear" doesn't remove the
 group names.
@@ -2798,9 +2873,9 @@ colors, when 't_Co' is 8.
 
 							*xfree-xterm*
 To get 16 colors, get the newest xterm version (which should be included with
-Xfree86 3.3 and later).  You can also find the latest version at:
+Xfree86 3.3 and later).  You can also find the latest version at: >
 	http://www.clark.net/pub/dickey/xterm
-You probably have to enable 16 colors when running configure:
+You probably have to enable 16 colors when running configure: >
 	./configure --disable-bold-color --enable-tcap-query
 If you only get 8 colors, check the xterm compilation settings.
 (Also see |UTF8-xterm| for using this xterm with UTF-8 character encoding).

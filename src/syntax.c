@@ -49,7 +49,7 @@ struct hl_group
 #ifdef FEAT_SIGNS
     XImage	*sg_sign;	/* store an sign for an extra highlight */
     char_u	*sg_sign_name;	/* store the sign's name */
-    int		sg_sign_idx;	/* index of sign */
+    int		sg_sign_type;	/* index of sign */
 #endif
     int		sg_link;	/* link to this highlight group ID */
     int		sg_set;		/* combination of SG_* */
@@ -216,12 +216,6 @@ struct syn_cluster
 };
 
 /*
- * Syntax group IDs greater than or equal to this are actually cluster IDs.  I
- * was gonna use SHRT_MAX/2, but apparently not everyone has <limits.h>...
- */
-#define CLUSTER_ID_MIN	15000
-
-/*
  * Methods of combining two clusters
  */
 #define CLUSTER_REPLACE	    1	/* replace first list with second */
@@ -229,6 +223,15 @@ struct syn_cluster
 #define CLUSTER_SUBTRACT    3	/* subtract second list from first */
 
 #define SYN_CLSTR(buf)	((struct syn_cluster *)((buf)->b_syn_clusters.ga_data))
+
+/*
+ * Syntax group IDs have different types:
+ * 0 - 9999	  normal syntax groups
+ * 10000 - 14999  ALLBUT indicator (current_syn_inc_tag added)
+ * >= 15000	  cluster IDs (subtract SYNID_CLUSTER for the cluster ID)
+ */
+#define SYNID_CLUSTER	15000	    /* first syntax group ID for clusters */
+#define SYNID_ALLBUT	10000	    /* syntax group ID for contains ALLBUT */
 
 /*
  * Annoying Hack(TM):  ":syn include" needs this pointer to pass to
@@ -280,7 +283,6 @@ typedef struct state_item
 } stateitem_t;
 
 #define KEYWORD_IDX	-1	    /* value of si_idx for keywords */
-#define CONTAINS_ALLBUT	9999	    /* value of id for contains ALLBUT */
 #define ID_LIST_ALL	(short *)-1 /* valid of si_cont_list for containing all
 				       but contained groups */
 
@@ -3090,7 +3092,7 @@ syn_cmd_clear(eap, syncing)
 		     * the IDs of other clusters, so we do the next best thing
 		     * and make it empty.
 		     */
-		    short scl_id = id - CLUSTER_ID_MIN;
+		    short scl_id = id - SYNID_CLUSTER;
 
 		    vim_free(SYN_CLSTR(curbuf)[scl_id].scl_list);
 		    SYN_CLSTR(curbuf)[scl_id].scl_list = NULL;
@@ -3270,7 +3272,7 @@ syn_cmd_list(eap, syncing)
 		if (id == 0)
 		    EMSG2(_("No such syntax cluster: %s"), arg);
 		else
-		    syn_list_cluster(id - CLUSTER_ID_MIN);
+		    syn_list_cluster(id - SYNID_CLUSTER);
 	    }
 	    else
 	    {
@@ -3480,16 +3482,16 @@ put_id_list(name, list, attr)
     msg_putchar('=');
     for (p = list; *p; ++p)
     {
-	if (*p >= CONTAINS_ALLBUT && *p < CLUSTER_ID_MIN)
+	if (*p >= SYNID_ALLBUT && *p < SYNID_CLUSTER)
 	{
 	    if (p[1])
 		MSG_PUTS("ALLBUT");
 	    else
 		MSG_PUTS("ALL");
 	}
-	else if (*p >= CLUSTER_ID_MIN)
+	else if (*p >= SYNID_CLUSTER)
 	{
-	    short scl_id = *p - CLUSTER_ID_MIN;
+	    short scl_id = *p - SYNID_CLUSTER;
 
 	    msg_putchar('@');
 	    msg_outtrans(SYN_CLSTR(curbuf)[scl_id].scl_name);
@@ -3971,11 +3973,11 @@ syn_incl_toplevel(id, flagsp)
     if ((*flagsp & HL_CONTAINED) || curbuf->b_syn_topgrp == 0)
 	return;
     *flagsp |= HL_CONTAINED;
-    if (curbuf->b_syn_topgrp >= CLUSTER_ID_MIN)
+    if (curbuf->b_syn_topgrp >= SYNID_CLUSTER)
     {
 	/* We have to alloc this, because syn_combine_list() will free it. */
 	short	    *grp_list = (short *)alloc((unsigned)(2 * sizeof(short)));
-	int	    tlg_id = curbuf->b_syn_topgrp - CLUSTER_ID_MIN;
+	int	    tlg_id = curbuf->b_syn_topgrp - SYNID_CLUSTER;
 
 	if (grp_list != NULL)
 	{
@@ -4645,7 +4647,7 @@ syn_scl_name2id(name)
 		&& STRCMP(name_u, SYN_CLSTR(curbuf)[i].scl_name_u) == 0)
 	    break;
     vim_free(name_u);
-    return (i < 0 ? 0 : i + CLUSTER_ID_MIN);
+    return (i < 0 ? 0 : i + SYNID_CLUSTER);
 }
 
 /*
@@ -4731,7 +4733,7 @@ syn_add_cluster(name)
     ++curbuf->b_syn_clusters.ga_len;
     --curbuf->b_syn_clusters.ga_room;
 
-    return len + CLUSTER_ID_MIN;
+    return len + SYNID_CLUSTER;
 }
 
 /*
@@ -4762,7 +4764,7 @@ syn_cmd_cluster(eap, syncing)
     if (rest != NULL)
     {
 	scl_id = syn_check_cluster(arg, (int)(group_name_end - arg))
-		    - CLUSTER_ID_MIN;
+		    - SYNID_CLUSTER;
 
 	for (;;)
 	{
@@ -5150,7 +5152,7 @@ get_id_list(arg, keylen, list)
 		    vim_free(name);
 		    break;
 		}
-		id = CONTAINS_ALLBUT + current_syn_inc_tag;
+		id = SYNID_ALLBUT + current_syn_inc_tag;
 	    }
 	    else if (name[1] == '@')
 	    {
@@ -5285,7 +5287,9 @@ copy_id_list(list)
 }
 
 /*
- * Check if "id" is in the "contains" or "nextgroup" list of pattern "idx".
+ * Check if syntax group "ssp" is in the ID list "list".
+ * Used to check if a syntax item is in the "contains" or "nextgroup" list of
+ * the current item.
  * This function is called very often, keep it fast!!
  */
     static int
@@ -5307,14 +5311,14 @@ in_id_list(list, ssp, contained)
 	return !contained;
 
     /*
-     * If the first item is "ALLBUT", return TRUE if id is NOT in the contains
-     * list.  We also require that id is at the same ":syn include" level
-     * as the list.
+     * If the first item is "ALLBUT", return TRUE if "id" is NOT in the
+     * contains list.  We also require that "id" is at the same ":syn include"
+     * level as the list.
      */
     item = *list;
-    if (item >= CONTAINS_ALLBUT && item < CLUSTER_ID_MIN)
+    if (item >= SYNID_ALLBUT && item < SYNID_CLUSTER)
     {
-	if (item - CONTAINS_ALLBUT != ssp->inc_tag)
+	if (item - SYNID_ALLBUT != ssp->inc_tag)
 	    return FALSE;
 	item = *++list;
 	retval = FALSE;
@@ -5329,9 +5333,9 @@ in_id_list(list, ssp, contained)
     {
 	if (item == id)
 	    return retval;
-	if (item >= CLUSTER_ID_MIN)
+	if (item >= SYNID_CLUSTER)
 	{
-	    scl_list = SYN_CLSTR(syn_buf)[item - CLUSTER_ID_MIN].scl_list;
+	    scl_list = SYN_CLSTR(syn_buf)[item - SYNID_CLUSTER].scl_list;
 	    if (scl_list != NULL && in_id_list(scl_list, ssp, contained))
 		return retval;
 	}
@@ -5387,7 +5391,7 @@ ex_syntax(eap)
     if (subcmd_name != NULL)
     {
 	if (eap->skip)		/* skip error messages for all subcommands */
-	    ++emsg_off;
+	    ++emsg_skip;
 	for (i = 0; ; ++i)
 	{
 	    if (subcommands[i].name == NULL)
@@ -5404,7 +5408,7 @@ ex_syntax(eap)
 	}
 	vim_free(subcmd_name);
 	if (eap->skip)
-	    --emsg_off;
+	    --emsg_skip;
     }
 }
 
@@ -6279,7 +6283,7 @@ do_highlight(line, forceit, init)
 	    if (p != NULL)
 	    {
 		*p++ = NUL;
-		 HL_TABLE()[idx].sg_sign_idx = atoi((char *)p);
+		 HL_TABLE()[idx].sg_sign_type = atoi((char *)p);
 	    }
 	    HL_TABLE()[idx].sg_sign = gui_mch_register_sign((char *)arg);
 #endif
@@ -6608,13 +6612,13 @@ hl_do_font(idx, arg, do_normal)
  * Search all highlights for one with sg_sign_type == type
  */
     int
-get_debug_highlight(idx)
-    int	    idx;
+get_debug_highlight(type)
+    int	    type;
 {
     int	    i;
 
     for (i = 1; i <= highlight_ga.ga_len; i++)
-	if (HL_TABLE()[i].sg_sign_idx == idx)
+	if (HL_TABLE()[i].sg_sign_type == type)
 	    return HL_TABLE()[i].sg_gui_attr;
 
     return 0;
@@ -6623,8 +6627,8 @@ get_debug_highlight(idx)
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
     XImage *
-get_debug_sign(idx)
-    int	    idx;		    /* the attribute which may have a sign */
+get_debug_sign(type)
+    int	    type;		    /* the attribute which may have a sign */
 {
     int	    i;
     struct hl_group *hp;
@@ -6632,7 +6636,7 @@ get_debug_sign(idx)
     for (i = 0; i < highlight_ga.ga_len; i++)
     {
 	hp = &HL_TABLE()[i];
-	if (hp->sg_sign_idx == idx && hp->sg_sign != NULL)
+	if (hp->sg_sign_type == type && hp->sg_sign != NULL)
 	    return hp->sg_sign;
     }
     return NULL;
@@ -7096,7 +7100,7 @@ set_hl_attr(idx)
 	at_en.ae_u.gui.fontset = HL_TABLE()[idx].sg_fontset;
 # endif
 #ifdef FEAT_SIGNS
-	at_en.ae_u.gui.sign = HL_TABLE()[idx].sg_sign_idx;
+	at_en.ae_u.gui.sign = HL_TABLE()[idx].sg_sign_type;
 #endif
 	HL_TABLE()[idx].sg_gui_attr = get_attr_entry(&gui_attr_table, &at_en);
     }

@@ -350,7 +350,7 @@ edit(cmdchar, startln, count)
 
     /*
      * Handle restarting Insert mode.
-     * Don't do this for CTRL-O . (repeat an insert): we get here with
+     * Don't do this for "CTRL-O ." (repeat an insert): we get here with
      * restart_edit non-zero, and something in the stuff buffer.
      */
     if (restart_edit && stuff_empty())
@@ -376,7 +376,7 @@ edit(cmdchar, startln, count)
 	 */
 	validate_virtcol();
 	update_curswant();
-	if (	   ((o_eol && curwin->w_cursor.lnum == o_lnum)
+	if (((o_eol && curwin->w_cursor.lnum == o_lnum)
 		    || curwin->w_curswant > curwin->w_virtcol)
 		&& *(ptr = ml_get_curline() + curwin->w_cursor.col) != NUL)
 	{
@@ -5213,6 +5213,9 @@ ins_esc(count, cmdchar)
      * indent */
     if (!restart_edit && (colnr_t)temp == curwin->w_cursor.col)
 	curwin->w_set_curswant = TRUE;
+
+    /* Remember the last Insert position in the '^ mark. */
+    curbuf->b_last_insert = curwin->w_cursor;
 
     /*
      * The cursor should end up on the last inserted character.
