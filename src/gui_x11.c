@@ -580,6 +580,13 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (key_sym == XK_space)
 	string[0] = ' ';	/* Otherwise Ctrl-Space doesn't work */
 
+    /*
+     * Only on some machines ^_ requires Ctrl+Shift+minus.  For consistency,
+     * allow just Ctrl+minus too.
+     */
+    if (key_sym == XK_minus && (ev_press->state & ControlMask))
+	string[0] = Ctrl('_');
+
 #ifdef XK_ISO_Left_Tab
     /* why do we get XK_ISO_Left_Tab instead of XK_Tab for shift-tab? */
     if (key_sym == XK_ISO_Left_Tab)
