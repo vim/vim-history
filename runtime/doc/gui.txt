@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.1.  Last change: 2002 Feb 24
+*gui.txt*       For Vim version 6.1.  Last change: 2002 May 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -424,6 +424,9 @@ this line to your .vimrc file (NOT your .gvimrc file!): >
 	:let did_install_default_menus = 1
 If you also want to avoid the Syntax menu: >
 	:let did_install_syntax_menu = 1
+If you do want the Syntax menu but not all the entries for each available
+syntax file (which take quite a bit of time to load): >
+	:let skip_syntax_sel_menu = 1
 <
 							*bufmenu_maxlen*
 The contents of the buffer menu can be controlled by setting the variables
