@@ -316,9 +316,6 @@ main
 #ifdef FEAT_SUN_WORKSHOP
     findYourself(argv[0]);
 #endif
-#ifdef FEAT_NETBEANS_INTG
-    netbeans_setRunDir(argv[0]);
-#endif
 #if defined(FEAT_GUI) && !defined(MAC_OS_CLASSIC)
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
     TIME_MSG("GUI prepared");
