@@ -5300,6 +5300,7 @@ helptags_one(dir, ext, tagfname)
     int		utf8 = MAYBE;
     int		this_utf8;
     int		firstline;
+    int		mix = FALSE;	/* detected mixed encodings */
 # endif
 
     /*
@@ -5313,7 +5314,8 @@ helptags_one(dir, ext, tagfname)
 						    EW_FILE|EW_SILENT) == FAIL
 	    || filecount == 0)
     {
-	EMSG2("E151: No match: %s", NameBuff);
+	if (!got_int)
+	    EMSG2("E151: No match: %s", NameBuff);
 	return;
     }
 
@@ -5377,15 +5379,30 @@ helptags_one(dir, ext, tagfname)
 	    if (firstline)
 	    {
 		/* Detect utf-8 file by a non-ASCII char in the first line. */
-		this_utf8 = FALSE;
+		this_utf8 = MAYBE;
 		for (s = IObuff; *s != NUL; ++s)
 		    if (*s >= 0x80)
+		    {
+			int l;
+
 			this_utf8 = TRUE;
-		if (utf8 == MAYBE)
+			l = utf_ptr2len_check(s);
+			if (l == 1)
+			{
+			    /* Illegal UTF-8 byte sequence. */
+			    this_utf8 = FALSE;
+			    break;
+			}
+			s += l - 1;
+		    }
+		if (this_utf8 == MAYBE)	    /* only ASCII characters found */
+		    this_utf8 = FALSE;
+		if (utf8 == MAYBE)	    /* first file */
 		    utf8 = this_utf8;
 		else if (utf8 != this_utf8)
 		{
 		    EMSG2(_("E670: Mix of help file encodings within a language: %s"), files[fi]);
+		    mix = !got_int;
 		    got_int = TRUE;
 		}
 		firstline = FALSE;
@@ -5463,8 +5480,8 @@ helptags_one(dir, ext, tagfname)
 		{
 		    *p2 = NUL;
 		    sprintf((char *)NameBuff,
-			    _("E154: Duplicate tag \"%s\" in file %s"),
-			    ((char_u **)ga.ga_data)[i], p2 + 1);
+			    _("E154: Duplicate tag \"%s\" in file %s/%s"),
+				     ((char_u **)ga.ga_data)[i], dir, p2 + 1);
 		    EMSG(NameBuff);
 		    *p2 = '\t';
 		    break;
@@ -5502,6 +5519,10 @@ helptags_one(dir, ext, tagfname)
 	    }
 	}
     }
+#ifdef FEAT_MBYTE
+    if (mix)
+	got_int = FALSE;    /* continue with other languages */
+#endif
 
     for (i = 0; i < ga.ga_len; ++i)
 	vim_free(((char_u **)ga.ga_data)[i]);
