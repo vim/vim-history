@@ -607,6 +607,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    76,
+/**/
     75,
 /**/
     74,
@@ -1079,7 +1081,7 @@ intro_message(colon)
     int		i;
     int		row;
     int		blanklines;
-    char_u	*p;
+    char	*p;
     static char	*(lines[]) =
     {
 	N_("VIM - Vi IMproved"),
