@@ -4657,7 +4657,7 @@ stop_insert(end_insert_pos, esc)
 	     * formatting will move it to the following word.  Avoid that by
 	     * moving the cursor onto the space. */
 	    cc = 'x';
-	    if (curwin->w_cursor.col > 0 == NUL && gchar_cursor())
+	    if (curwin->w_cursor.col > 0 && gchar_cursor() == NUL)
 	    {
 		dec_cursor();
 		cc = gchar_cursor();
