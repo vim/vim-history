@@ -1355,6 +1355,21 @@ do_pending_operator(cap, old_col, gui_yank)
 		    AppendToRedobuffLit(cap->searchbuf);
 		AppendToRedobuff(NL_STR);
 	    }
+	    else if (cap->cmdchar == ':')
+	    {
+		/* do_cmdline() has stored the first typed line in
+		 * "repeat_cmdline".  When several lines are typed repeating
+		 * won't be possible. */
+		if (repeat_cmdline == NULL)
+		    ResetRedobuff();
+		else
+		{
+		    AppendToRedobuffLit(repeat_cmdline);
+		    AppendToRedobuff(NL_STR);
+		    vim_free(repeat_cmdline);
+		    repeat_cmdline = NULL;
+		}
+	    }
 	}
 
 #ifdef FEAT_VISUAL
@@ -4559,7 +4574,8 @@ nv_colon(cap)
 	old_p_im = p_im;
 
 	/* get a command line and execute it */
-	do_cmdline(NULL, getexline, NULL, 0);
+	do_cmdline(NULL, getexline, NULL,
+			    cap->oap->op_type != OP_NOP ? DOCMD_KEEPLINE : 0);
 
 	/* If 'insertmode' changed, enter or exit Insert mode */
 	if (p_im != old_p_im)
