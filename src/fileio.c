@@ -5041,6 +5041,9 @@ buf_check_timestamp(buf, focus)
 #endif
     size_t	orig_size = buf->b_orig_size;
     int		orig_mode = buf->b_orig_mode;
+#ifdef FEAT_GUI
+    int		save_mouse_correct = need_mouse_correct;
+#endif
 
     /* If there is no file name, the buffer is not loaded, or 'buftype' is
      * set: ignore this buffer. */
@@ -5277,9 +5280,9 @@ buf_check_timestamp(buf, focus)
     }
 
 #ifdef FEAT_GUI
-    /* reset this in case an autocommand has set it; it would break
+    /* restore this in case an autocommand has set it; it would break
      * 'mousefocus' */
-    need_mouse_correct = FALSE;
+    need_mouse_correct = save_mouse_correct;
 #endif
 
     return retval;
