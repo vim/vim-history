@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 19
+" Last Change:	2001 Sep 21
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -87,7 +87,7 @@ amenu <silent> 10.330 &File.&Close<Tab>:close
 	\   confirm close <Bar>
 	\ endif<CR>
 amenu 10.335 &File.-SEP1-			:
-amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
+amenu <silent> 10.340 &File.&Save<Tab>:w	:if expand("%") == ""<Bar>browse confirm w<Bar>else<Bar>confirm w<Bar>endif<CR>
 amenu 10.350 &File.Save\ &As\.\.\.<Tab>:sav	:browse confirm saveas<CR>
 
 if has("diff")
@@ -718,9 +718,9 @@ anoremenu 1.100 PopUp.Select\ &All	ggVG
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
-  amenu 1.10 ToolBar.Open	:browse confirm e<CR>
-  amenu 1.20 ToolBar.Save	:w<CR>
-  amenu 1.30 ToolBar.SaveAll	:wa<CR>
+  amenu 1.10 ToolBar.Open		:browse confirm e<CR>
+  amenu <silent> 1.20 ToolBar.Save	:if expand("%") == ""<Bar>browse confirm w<Bar>else<Bar>confirm w<Bar>endif<CR>
+  amenu 1.30 ToolBar.SaveAll		:wa<CR>
 
   if has("printer")
     amenu 1.40 ToolBar.Print	:hardcopy<CR>
@@ -752,6 +752,8 @@ if has("toolbar")
   if !has("gui_athena")
     amenu 1.95 ToolBar.-sep3-		<nul>
     amenu 1.100 ToolBar.Find		:promptfind<CR>
+    vunmenu ToolBar.Find
+    vmenu ToolBar.Find			y:promptfind <C-R>"<CR>
     amenu 1.110 ToolBar.FindNext	n
     amenu 1.120 ToolBar.FindPrev	N
     amenu 1.130 ToolBar.Replace		:promptrepl<CR>
