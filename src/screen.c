@@ -140,9 +140,6 @@ static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width
 static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width));
 # define SCREEN_LINE(r, o, e, c, rl)    screen_line((r), (o), (e), (c))
 #endif
-#if defined(FEAT_WILDMENU) && defined(FEAT_VERTSPLIT)
-static void win_redraw_last_status __ARGS((frame_T *frp));
-#endif
 #ifdef FEAT_VERTSPLIT
 static void draw_vsep_win __ARGS((win_T *wp, int row));
 #endif
@@ -4274,11 +4271,11 @@ redraw_statuslines()
 }
 #endif
 
-#if defined(FEAT_WILDMENU) && defined(FEAT_VERTSPLIT)
+#if (defined(FEAT_WILDMENU) && defined(FEAT_VERTSPLIT)) || defined(PROTO)
 /*
  * Redraw all status lines at the bottom of frame "frp".
  */
-    static void
+    void
 win_redraw_last_status(frp)
     frame_T	*frp;
 {
