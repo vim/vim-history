@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.3.  Last change: 2004 Oct 20
+*options.txt*	For Vim version 6.3.  Last change: 2004 Dec 09
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -138,6 +138,9 @@ example, if Alt-b produces <Esc>b, use this: >
 	:set <M-b>=^[b
 (the ^[ is a real <Esc> here, use CTRL-V <Esc> to enter it)
 The advantage over a mapping is that it works in all situations.
+
+The t_xx options cannot be set from a |modeline| or in the |sandbox|, for
+security reasons.
 
 The listing from ":set" looks different from Vi.  Long string options are put
 at the end of the list.  The number of options is quite large.	The output of
@@ -945,6 +948,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	accidentally overwriting existing files with a backup file.  You might
 	prefer using ".bak", but make sure that you don't have files with
 	".bak" that you want to keep.
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 
 						*'backupskip'* *'bsk'*
 'backupskip' 'bsk'	string	(default: "/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*")
@@ -2407,6 +2411,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	type that is actually stored with the file.
 	This option is not copied to another buffer, independent of the 's' or
 	'S' flag in 'cpoptions'.
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 
 						*'fillchars'* *'fcs'*
 'fillchars' 'fcs'	string	(default "vert:|,fold:-")
@@ -3599,6 +3604,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Setting this option to a valid keymap name has the side effect of
 	setting 'iminsert' to one, so that the keymap becomes effective.
 	'imsearch' is also set to one, unless it was -1
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 
 					*'keymodel'* *'km'*
 'keymodel' 'km'		string	(default "")
@@ -3690,6 +3696,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	matter what $LANG is set to: >
 		:set langmenu=nl_NL.ISO_8859-1
 <	When 'langmenu' is empty, |v:lang| is used.
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 	If your $LANG is set to a non-English language but you do want to use
 	the English menus: >
 		:set langmenu=none
@@ -4310,6 +4317,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Using 'patchmode' for compressed files appends the extension at the
 	end (e.g., "file.gz.orig"), thus the resulting name isn't always
 	recognized as a compressed file.
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 
 					*'path'* *'pa'* *E343* *E345* *E347*
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
@@ -4424,6 +4432,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	in the standard printer dialog.
 	If the option is empty, then vim will use the system default printer
 	for ":hardcopy!"
+	This option cannot be set from a |modeline| or in the |sandbox|, for
+	security reasons.
 
 					*'printencoding'* *'penc'* *E620*
 'printencoding' 'penc'	String	(default empty, except for:
@@ -5711,6 +5721,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Syntax autocommand event is triggered with the value as argument.
 	This option is not copied to another buffer, independent of the 's' or
 	'S' flag in 'cpoptions'.
+	Only normal file name characters can be used, "/\*?[|<>" are illegal.
 
 					*'tabstop'* *'ts'*
 'tabstop' 'ts'		number	(default 8)
@@ -6089,6 +6100,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This option will be used for the window title when exiting Vim if the
 	original title cannot be restored.  Only happens if 'title' is on or
 	'titlestring' is not empty.
+	This option cannot be set from a |modeline| or in the |sandbox|, for
+	security reasons.
 						*'titlestring'*
 'titlestring'		string	(default "")
 			global

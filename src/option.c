@@ -293,6 +293,7 @@ struct vimoption
 #define P_SECURE	0x40000L/* cannot change in modeline or secure mode */
 #define P_GETTEXT	0x80000L/* expand default value with _() */
 #define P_NOGLOB       0x100000L/* do not use local value for global vimrc */
+#define P_NFNAME       0x200000L/* only normal file name chars allowed */
 
 /*
  * options[] is initialized here.
@@ -413,7 +414,7 @@ static struct vimoption
     {"backupdir",   "bdir", P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP|P_SECURE,
 			    (char_u *)&p_bdir, PV_NONE,
 			    {(char_u *)DFLT_BDIR, (char_u *)0L}},
-    {"backupext",   "bex",  P_STRING|P_VI_DEF,
+    {"backupext",   "bex",  P_STRING|P_VI_DEF|P_NFNAME,
 			    (char_u *)&p_bex, PV_NONE,
 			    {
 #ifdef VMS
@@ -846,7 +847,7 @@ static struct vimoption
     {"fileformats", "ffs",  P_STRING|P_VIM|P_COMMA|P_NODUP,
 			    (char_u *)&p_ffs, PV_NONE,
 			    {(char_u *)DFLT_FFS_VI, (char_u *)DFLT_FFS_VIM}},
-    {"filetype",    "ft",   P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
+    {"filetype",    "ft",   P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB|P_NFNAME,
 #ifdef FEAT_AUTOCMD
 			    (char_u *)&p_ft, PV_FT,
 			    {(char_u *)"", (char_u *)0L}
@@ -1284,7 +1285,7 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"keymap",	    "kmp",  P_STRING|P_ALLOCED|P_VI_DEF|P_RBUF|P_RSTAT,
+    {"keymap",	    "kmp",  P_STRING|P_ALLOCED|P_VI_DEF|P_RBUF|P_RSTAT|P_NFNAME,
 #ifdef FEAT_KEYMAP
 			    (char_u *)&p_keymap, PV_KMAP,
 			    {(char_u *)"", (char_u *)0L}
@@ -1330,7 +1331,7 @@ static struct vimoption
 			    {(char_u *)NULL,
 #endif
 				(char_u *)0L}},
-    {"langmenu",    "lm",   P_STRING|P_VI_DEF,
+    {"langmenu",    "lm",   P_STRING|P_VI_DEF|P_NFNAME,
 #if defined(FEAT_MENU) && defined(FEAT_MULTI_LANG)
 			    (char_u *)&p_lm, PV_NONE,
 #else
@@ -1562,7 +1563,7 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"patchmode",   "pm",   P_STRING|P_VI_DEF,
+    {"patchmode",   "pm",   P_STRING|P_VI_DEF|P_NFNAME,
 			    (char_u *)&p_pm, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
     {"path",	    "pa",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
@@ -1595,7 +1596,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"printdevice", "pdev", P_STRING|P_VI_DEF,
+    {"printdevice", "pdev", P_STRING|P_VI_DEF|P_SECURE,
 #ifdef FEAT_PRINTER
 			    (char_u *)&p_pdev, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}
@@ -1981,7 +1982,7 @@ static struct vimoption
     {"switchbuf",   "swb",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_swb, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
-    {"syntax",	    "syn",  P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
+    {"syntax",	    "syn",  P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB|P_NFNAME,
 #ifdef FEAT_SYN_HL
 			    (char_u *)&p_syn, PV_SYN,
 			    {(char_u *)"", (char_u *)0L}
@@ -2086,7 +2087,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)85L, (char_u *)0L}},
-    {"titleold",    NULL,   P_STRING|P_VI_DEF|P_GETTEXT,
+    {"titleold",    NULL,   P_STRING|P_VI_DEF|P_GETTEXT|P_SECURE,
 #ifdef FEAT_TITLE
 			    (char_u *)&p_titleold, PV_NONE,
 			    {(char_u *)N_("Thanks for flying Vim"),
@@ -2321,7 +2322,7 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}},
 
 /* terminal output codes */
-#define p_term(sss, vvv)   {sss, NULL, P_STRING|P_VI_DEF|P_RALL, \
+#define p_term(sss, vvv)   {sss, NULL, P_STRING|P_VI_DEF|P_RALL|P_SECURE, \
 			    (char_u *)&vvv, PV_NONE, \
 			    {(char_u *)"", (char_u *)0L}},
 
@@ -3310,7 +3311,8 @@ do_set(arg, opt_flags)
 	errmsg = NULL;
 	startarg = arg;		/* remember for error message */
 
-	if (STRNCMP(arg, "all", 3) == 0 && !isalpha(arg[3]))
+	if (STRNCMP(arg, "all", 3) == 0 && !isalpha(arg[3])
+						&& !(opt_flags & OPT_MODELINE))
 	{
 	    /*
 	     * ":set all"  show all options.
@@ -3326,7 +3328,7 @@ do_set(arg, opt_flags)
 	    else
 		showoptions(1, opt_flags);
 	}
-	else if (STRNCMP(arg, "termcap", 7) == 0)
+	else if (STRNCMP(arg, "termcap", 7) == 0 && !(opt_flags & OPT_MODELINE))
 	{
 	    showoptions(2, opt_flags);
 	    show_termcodes();
@@ -4611,6 +4613,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		) && (options[opt_idx].flags & P_SECURE))
     {
 	errmsg = e_secure;
+    }
+
+    /* Check for a "normal" file name in some options.  Disallow a path
+     * separator (slash and/or backslash), wildcards and characters that are
+     * often illegal in a file name. */
+    else if ((options[opt_idx].flags & P_NFNAME)
+				   && vim_strpbrk(*varp, "/\\*?[|<>") != NULL)
+    {
+	errmsg = e_invarg;
     }
 
     /* 'term' */
