@@ -339,7 +339,7 @@ static void list_one_var_a __ARGS((char_u *prefix, char_u *name, int type, char_
 static void set_var __ARGS((char_u *name, VAR varp));
 static void copy_var __ARGS((VAR from, VAR to));
 static char_u *find_option_end __ARGS((char_u **arg, int *opt_flags));
-static char_u *trans_function_name __ARGS((char_u **pp, int skip));
+static char_u *trans_function_name __ARGS((char_u **pp, int skip, int internal));
 static int eval_fname_script __ARGS((char_u *p));
 static int eval_fname_sid __ARGS((char_u *p));
 static void list_func_head __ARGS((ufunc_T *fp));
@@ -3469,7 +3469,7 @@ f_exists(argvars, retvar)
     else if (*p == '*')			/* internal or user defined function */
     {
 	++p;
-	p = trans_function_name(&p, FALSE);
+	p = trans_function_name(&p, FALSE, TRUE);
 	if (p != NULL)
 	{
 	    if (ASCII_ISUPPER(*p) || p[0] == K_SPECIAL)
@@ -7719,7 +7719,7 @@ ex_function(eap)
     }
 
     p = eap->arg;
-    name = trans_function_name(&p, eap->skip);
+    name = trans_function_name(&p, eap->skip, FALSE);
     if (name == NULL && !eap->skip)
 	return;
 
@@ -8004,9 +8004,10 @@ erret_name:
  * Advances "pp" to just after the function name (if no error).
  */
     static char_u *
-trans_function_name(pp, skip)
+trans_function_name(pp, skip, internal)
     char_u	**pp;
     int		skip;		/* only find the end, don't evaluate */
+    int		internal;	/* TRUE if internal function name OK */
 {
     char_u	*name;
     char_u	*start;
@@ -8069,7 +8070,7 @@ trans_function_name(pp, skip)
     }
     else
     {
-	if (!ASCII_ISUPPER(*start))
+	if (!internal && !ASCII_ISUPPER(*start))
 	{
 	    EMSG2(_("E128: Function name must start with a capital: %s"),
 								       start);
@@ -8241,7 +8242,7 @@ ex_delfunction(eap)
     char_u	*name;
 
     p = eap->arg;
-    name = trans_function_name(&p, eap->skip);
+    name = trans_function_name(&p, eap->skip, FALSE);
     if (name == NULL)
 	return;
     if (!ends_excmd(*skipwhite(p)))
