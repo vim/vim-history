@@ -592,7 +592,7 @@ struct keyentry
 typedef struct buf_state
 {
     int		    bs_idx;	 /* index of pattern */
-    int		    bs_flags;	 /* flags for pattern */
+    long	    bs_flags;	 /* flags for pattern */
     reg_extmatch_T *bs_extmatch; /* external matches from start pattern */
 } bufstate_T;
 
