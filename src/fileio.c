@@ -6149,7 +6149,7 @@ static void au_del_group __ARGS((char_u *name));
 static int au_find_group __ARGS((char_u *name));
 static EVENT_T event_name2nr __ARGS((char_u *start, char_u **end));
 static char_u *event_nr2name __ARGS((EVENT_T event));
-static char_u *find_end_event __ARGS((char_u *arg));
+static char_u *find_end_event __ARGS((char_u *arg, int have_group));
 static int event_ignored __ARGS((EVENT_T event));
 static int au_get_grouparg __ARGS((char_u **argp));
 static int do_autocmd_event __ARGS((EVENT_T event, char_u *pat, int nested, char_u *cmd, int forceit, int group));
@@ -6484,8 +6484,9 @@ event_nr2name(event)
  * Scan over the events.  "*" stands for all events.
  */
     static char_u *
-find_end_event(arg)
+find_end_event(arg, have_group)
     char_u  *arg;
+    int	    have_group;	    /* TRUE when group name was found */
 {
     char_u  *pat;
     char_u  *p;
@@ -6505,7 +6506,10 @@ find_end_event(arg)
 	{
 	    if ((int)event_name2nr(pat, &p) >= (int)NUM_EVENTS)
 	    {
-		EMSG2(_("E216: No such event: %s"), pat);
+		if (have_group)
+		    EMSG2(_("E216: No such event: %s"), pat);
+		else
+		    EMSG2(_("E216: No such group or event: %s"), pat);
 		return NULL;
 	    }
 	}
@@ -6604,7 +6608,7 @@ do_autocmd(arg, forceit)
      * Scan over the events.
      * If we find an illegal name, return here, don't do anything.
      */
-    pat = find_end_event(arg);
+    pat = find_end_event(arg, group != AUGROUP_ALL);
     if (pat == NULL)
 	return;
 
@@ -6933,7 +6937,7 @@ do_doautocmd(arg, do_msg)
      * Scan over the events.
      * If we find an illegal name, return here, don't do anything.
      */
-    fname = find_end_event(arg);
+    fname = find_end_event(arg, group != AUGROUP_ALL);
     if (fname == NULL)
 	return FAIL;
 
