@@ -2502,7 +2502,11 @@ win_line(wp, lnum, startrow, endrow)
 	    }
 	    if (VIsual_mode != 'V' && lnum == bot->lnum)
 	    {
-		if (*p_sel == 'e' && bot->col == 0)
+		if (*p_sel == 'e' && bot->col == 0
+#ifdef FEAT_VIRTUALEDIT
+			&& bot->coladd == 0
+#endif
+		   )
 		{
 		    fromcol = -10;
 		    tocol = MAXCOL;
@@ -2511,18 +2515,12 @@ win_line(wp, lnum, startrow, endrow)
 		{
 		    pos = *bot;
 		    if (*p_sel == 'e')
+			getvvcol(wp, &pos, (colnr_T *)&tocol, NULL, NULL);
+		    else
 		    {
-			--pos.col;
-#ifdef FEAT_MBYTE
-			if (has_mbyte)
-			{
-			    line = ml_get_buf(wp->w_buffer, lnum, FALSE);
-			    pos.col -= (*mb_head_off)(line, line + pos.col);
-			}
-#endif
+			getvvcol(wp, &pos, NULL, NULL, (colnr_T *)&tocol);
+			++tocol;
 		    }
-		    getvvcol(wp, &pos, NULL, NULL, (colnr_T *)&tocol);
-		    ++tocol;
 		}
 	    }
 	}
