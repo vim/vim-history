@@ -1126,9 +1126,10 @@ win_update(wp)
 		    for (;;)
 		    {
 			wp->w_lines[idx] = wp->w_lines[j];
-			/* stop at line that didn't fit */
-			if (bot_start + row + (int)wp->w_lines[j].wl_size
-							       > wp->w_height)
+			/* stop at line that didn't fit, unless it is still
+			 * valid (no lines deleted) */
+			if (row > 0 && bot_start + row
+				 + (int)wp->w_lines[j].wl_size > wp->w_height)
 			{
 			    wp->w_lines_valid = idx + 1;
 			    break;
@@ -1633,12 +1634,24 @@ win_update(wp)
 		--fold_count;
 		wp->w_lines[idx].wl_folded = TRUE;
 		wp->w_lines[idx].wl_lastlnum = lnum + fold_count;
-#ifdef FEAT_SYN_HL
+# ifdef FEAT_SYN_HL
 		did_update = DID_FOLD;
-#endif
+# endif
 	    }
 	    else
 #endif
+	    if (idx < wp->w_lines_valid
+		    && wp->w_lines[idx].wl_valid
+		    && wp->w_lines[idx].wl_lnum == lnum
+		    && lnum > wp->w_topline
+		    && !(dy_flags & DY_LASTLINE)
+		    && srow + wp->w_lines[idx].wl_size > wp->w_height)
+	    {
+		/* This line is not going to fit.  Don't draw anything here,
+		 * will draw "@  " lines below. */
+		row = wp->w_height + 1;
+	    }
+	    else
 	    {
 #ifdef FEAT_SEARCH_EXTRA
 		prepare_search_hl(wp, lnum);
