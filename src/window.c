@@ -526,8 +526,20 @@ do_window(nchar, Prenum)
 			    postponed_split = Prenum;
 			else
 			    postponed_split = -1;
-			stuffcharReadbuff('g');
-			stuffcharReadbuff(xchar);
+
+			/* Execute the command right here, required when
+			 * "wincmd g}" was used in a function. */
+			{
+			    oparg_T	oa;
+			    cmdarg_T	ca;
+
+			    clear_oparg(&oa);
+			    vim_memset(&ca, 0, sizeof(ca));
+			    ca.oap = &oa;
+			    ca.cmdchar = 'g';
+			    ca.nchar = xchar;
+			    nv_ident(&ca);
+			}
 			break;
 
 		    default:

@@ -80,7 +80,6 @@ static void	nv_clear __ARGS((cmdarg_T *cap));
 static void	nv_ctrlo __ARGS((cmdarg_T *cap));
 static void	nv_hat __ARGS((cmdarg_T *cap));
 static void	nv_Zet __ARGS((cmdarg_T *cap));
-static void	nv_ident __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
 static int	get_visual_text __ARGS((cmdarg_T *cap, char_u **pp, int *lenp));
 #endif
@@ -4546,7 +4545,7 @@ nv_Zet(cap)
  * [g] '#'	? to current identifier or string
  *  g  ']'	:tselect for current identifier
  */
-    static void
+    void
 nv_ident(cap)
     cmdarg_T	*cap;
 {
