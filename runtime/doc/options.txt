@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 07
+*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3048,6 +3048,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	useful when a Unix-like shell is used instead of command.com or
 	cmd.exe.  Backward slashes can still be typed, but they are changed to
 	forward slashes by Vim.
+	Note that setting or resetting this option has no effect for existing
+	file names, thus this option needs to be set before opening any file
+	for best results.  This might change in the future.
 
 						*'shelltype'* *'st'*
 'shelltype' 'st'	number	(default 0)
