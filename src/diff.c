@@ -150,13 +150,16 @@ diff_buf_idx(buf)
 }
 
 /*
- * Mark the diff info as invalid, update it when info is requested.
+ * Mark the diff info as invalid, it will be updated when info is requested.
  */
     void
 diff_invalidate()
 {
     if (curwin->w_p_diff)
+    {
 	diff_invalid = TRUE;
+	diff_redraw(TRUE);
+    }
 }
 
 /*
