@@ -3665,6 +3665,9 @@ check_termcode(max_offset, buf, buflen)
 # endif
 #endif
     int		cpo_koffset;
+#ifdef FEAT_MOUSE_GPM
+    extern int	gpm_flag; /* gpm library variable */
+#endif
 
     cpo_koffset = (vim_strchr(p_cpo, CPO_KOFFSET) != NULL);
 
@@ -3960,12 +3963,16 @@ check_termcode(max_offset, buf, buflen)
 #  if !defined(MSWIN) && !defined(MSDOS)
 		/*
 		 * Handle mouse events.
-		 * Recognize the xterm mouse wheel, but not in the GUI
-		 * and the MS-DOS or Win32 console (multi-clicks use >= 0x60).
+		 * Recognize the xterm mouse wheel, but not in the GUI, the
+		 * Linux console with GPM and the MS-DOS or Win32 console
+		 * (multi-clicks use >= 0x60).
 		 */
 		if (mouse_code >= MOUSEWHEEL_LOW
 #   ifdef FEAT_GUI
 			&& !gui.in_use
+#   endif
+#   ifdef FEAT_MOUSE_GPM
+			&& gpm_flag == 0
 #   endif
 			)
 		{
@@ -4355,7 +4362,6 @@ check_termcode(max_offset, buf, buflen)
 	    {
 # ifdef CHECK_DOUBLE_CLICK
 #  ifdef FEAT_MOUSE_GPM
-		extern int gpm_flag; /* gpm library variable */
 #   ifdef FEAT_GUI
 		/*
 		 * Only for Unix, when GUI or gpm is not active, we handle
