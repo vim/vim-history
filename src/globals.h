@@ -1253,7 +1253,7 @@ EXTERN char_u e_notread[]	INIT(=N_("E485: Can't read file %s"));
 EXTERN char_u e_nowrtmsg[]	INIT(=N_("E37: No write since last change (add ! to override)"));
 EXTERN char_u e_null[]		INIT(=N_("E38: Null argument"));
 #ifdef FEAT_DIGRAPHS
-EXTERN char_u e_number[]	INIT(=N_("E39: Number expected"));
+EXTERN char_u e_number_exp[]	INIT(=N_("E39: Number expected"));
 #endif
 #ifdef FEAT_QUICKFIX
 EXTERN char_u e_openerrf[]	INIT(=N_("E40: Can't open errorfile %s"));
