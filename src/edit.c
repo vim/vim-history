@@ -516,6 +516,14 @@ edit(cmdchar, startln, count)
 	 */
 	msg_scroll = FALSE;
 
+#ifdef FEAT_GUI
+	/* When 'mousefocus' is set a mouse movement may have taken us to
+	 * another window.  "need_mouse_correct" may then be set because of an
+	 * autocommand. */
+	if (need_mouse_correct)
+	    gui_mouse_correct();
+#endif
+
 #ifdef FEAT_FOLDING
 	/* Open fold at the cursor line, according to 'foldopen'. */
 	if (fdo_flags & FDO_INSERT)
