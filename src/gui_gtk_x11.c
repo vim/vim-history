@@ -4905,10 +4905,10 @@ apply_wide_font_attr(char_u *s, int len, PangoAttrList *attr_list)
 
 	if (start == NULL)
 	{
-	    if (uc >= 0x100 && utf_char2cells(uc) == 2)
+	    if (uc >= 0x80 && utf_char2cells(uc) == 2)
 		start = p;
 	}
-	else if (uc < 0x100 /* optimization shortcut */
+	else if (uc < 0x80 /* optimization shortcut */
 		 || (utf_char2cells(uc) != 2 && !utf_iscomposing(uc)))
 	{
 	    INSERT_PANGO_ATTR(pango_attr_font_desc_new(gui.wide_font),
@@ -4952,7 +4952,7 @@ count_cluster_cells(char_u *s, PangoItem *item,
     for (p = s + start; p < s + end; p += utf_byte2len(*p))
     {
 	uc = utf_ptr2char(p);
-	if (uc < 0x100)
+	if (uc < 0x80)
 	    ++cellcount;
 	else if (!utf_iscomposing(uc))
 	    cellcount += utf_char2cells(uc);

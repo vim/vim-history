@@ -8124,9 +8124,12 @@ nv_put(cap)
 	    if (VIsual_mode == Ctrl_V && dir == FORWARD)
 		flags |= PUT_LINE_FORWARD;
 	    dir = BACKWARD;
-	    if (VIsual_mode != 'V'
-			     && curwin->w_cursor.col < curbuf->b_op_start.col)
-		/* cursor is at the end of the line, put forward. */
+	    if ((VIsual_mode != 'V'
+			&& curwin->w_cursor.col < curbuf->b_op_start.col)
+		    || (VIsual_mode == 'V'
+			&& curwin->w_cursor.lnum < curbuf->b_op_start.lnum))
+		/* cursor is at the end of the line or end of file, put
+		 * forward. */
 		dir = FORWARD;
 	}
 #endif
