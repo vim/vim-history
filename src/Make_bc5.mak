@@ -824,16 +824,22 @@ $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
 
 $(OBJDIR)\pathdef.obj:	auto\pathdef.c
 
+# Note:  the silly /*"*/ below are there to trick make into accepting
+# the # character as something other than a comment without messing up
+# the preprocessor directive.
 auto\pathdef.c::
 	@echo creating auto/pathdef.c
-	@echo "/* pathdef.c */" > auto\pathdef.c
-	@echo "#include \"vim.h\" " >> auto\pathdef.c
-	@echo "char_u *default_vim_dir = (char_u *)\"$(VIMRCLOC:\=\\)\" "; >> auto\pathdef.c
-	@echo "char_u *default_vimruntime_dir = (char_u *)\"$(VIMRUNTIMEDIR:\=\\)\" "; >> auto\pathdef.c
-	@echo "char_u *all_cflags = (char_u *)\"$(CC:\=\\\\) $(CFLAGS:\=\\\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:"=\\") $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)\" "; >> auto\pathdef.c
-	@echo "char_u *all_lflags = (char_u *)\"$(LINK:\=\\\\) $(LFLAGS:\=\\\\)\" "; >> auto\pathdef.c
-	@echo "char_u *compiled_user = (char_u *)\"$(USERNAME)\" "; >> auto\pathdef.c
-	@echo "char_u *compiled_sys = (char_u *)\"$(USERDOMAIN)\" "; >> auto\pathdef.c
+        @copy &&|
+/* pathdef.c */
+/*"*/#include "vim.h"/*"*/
+
+char_u *default_vim_dir = (char_u *)"$(VIMRCLOC:\=\\)";
+char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR:\=\\)";
+char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS:\=\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:"=\\") $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)";
+char_u *all_lflags = (char_u *)"$(LINK:\=\\) $(LFLAGS:\=\\)";
+char_u *compiled_user = (char_u *)"$(USERNAME)";
+char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";
+| auto\pathdef.c
 
 perl.lib: $(PERL)\lib\CORE\perl$(PERL_VER).lib
 	coff2omf $(PERL)\lib\CORE\perl$(PERL_VER).lib $@
