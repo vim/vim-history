@@ -3896,9 +3896,9 @@ do_sub(eap)
 			break;
 		}
 
-		/* Move the cursor to the start of the line, to avoid that it
-		 * is beyond the end of the line after the substitution. */
-		curwin->w_cursor.col = 0;
+		/* Move the cursor to the start of the match, so that we can
+		 * use "\=col("."). */
+		curwin->w_cursor.col = regmatch.startpos[0].col;
 
 		/*
 		 * 3. substitute the string.
@@ -3970,6 +3970,10 @@ do_sub(eap)
 					   sub, new_end, TRUE, p_magic, TRUE);
 		sub_nsubs++;
 		did_sub = TRUE;
+
+		/* Move the cursor to the start of the line, to avoid that it
+		 * is beyond the end of the line after the substitution. */
+		curwin->w_cursor.col = 0;
 
 		/* For a multi-line match, make a copy of the last matched
 		 * line and continue in that one. */
