@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.6.  Last change: 1999 Aug 09
+*tagsearch.txt* For Vim version 5.6.  Last change: 2000 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -744,7 +744,17 @@ CTRL-W d		Open a new window, with the cursor on the first
 
 								*:search-args*
 Common arguments for the commands above:
-[!]   When included, lines that are recognized as comments are skipped.
+[!]   When included, find matches in lines that are recognized as comments.
+      When excluded, a match is ignored when the line is recognized as a
+      comment (according to 'comments'), or the match is in a C comment (after
+      "//" or inside /* */).  Note that a match may be missed if a line is
+      recognized as a comment, but the comment ends halfway the line.
+      And  if the line is a comment, but it is not recognized (according to
+      'comments') a match may be found in it anyway.  Example:
+>		/* comment
+>		   foobar */
+      A match for "foobar" is found, because this line is not recognized as a
+      comment (even though syntax highlighting does recognize it).
 [/]   A pattern can be surrounded by '/'.  Without '/' only whole words are
       matched, using the pattern "\<pattern\>".  Only after the second '/' a
       next command can be appended with '|'.  Examples:
