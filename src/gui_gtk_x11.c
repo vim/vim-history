@@ -115,10 +115,10 @@ static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 #define DFLT_FONT	"-adobe-courier-medium-r-normal-*-14-*-*-*-m-*-*-*"
 
 /*
- * Atom used to communicate save yourself from the X11 session manager. There
- * is no need to move this into the GUI struct, since this should be always
- * constant.
+ * Atoms used to communicate save-yourself from the X11 session manager. There
+ * is no need to move them into the GUI struct, since they should be constant.
  */
+static GdkAtom wm_protocols_atom = GDK_NONE;
 static GdkAtom save_yourself_atom = GDK_NONE;
 
 /*
@@ -491,7 +491,8 @@ property_event(GtkWidget * widget, GdkEventProperty * e)
 {
     if (e->type == GDK_PROPERTY_NOTIFY
 	    && GDK_WINDOW_XWINDOW(e->window) == commWindow
-	    && e->atom == commProperty &&  e->state == GDK_PROPERTY_NEW_VALUE)
+	    && e->atom == commProperty
+	    && e->state == (guint)GDK_PROPERTY_NEW_VALUE)
     {
 	XEvent	    xev;
 
@@ -1561,14 +1562,11 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 }
 #endif /* GTK_DND */
 
-#if 0
-/* Not used yet, because I don't know how to catch the WM_SAVE_YOURSELF event.
- */
 /*
  * Setup the WM_PROTOCOLS to indicate we want the WM_SAVE_YOURSELF event.
  * This is an ugly use of X functions.  GTK doesn't offer an alternative.
  */
-static void
+    static void
 setup_save_yourself(void)
 {
     Atom	*existing;
@@ -1601,7 +1599,48 @@ setup_save_yourself(void)
 	XFree(existing);
     }
 }
-#endif
+
+/*
+ * GDK handler for X ClientMessage events.
+ */
+/*ARGSUSED*/
+    static GdkFilterReturn
+gdk_wm_protocols_filter(GdkXEvent *xev, GdkEvent *event, gpointer data)
+{
+    /* From example in gdkevents.c/gdk_wm_protocols_filter */
+    XEvent *xevent = (XEvent *)xev;
+
+    if (xevent != NULL)
+    {
+	if ((Atom)(xevent->xclient.data.l[0]) == save_yourself_atom)
+	{
+	    out_flush();
+	    ml_sync_all(FALSE, FALSE);      /* preserve all swap files */
+
+	    /* Set the window's WM_COMMAND property, to let the window manager
+	     * know we are done saving ourselves.  We don't want to be
+	     * restarted, thus set argv to NULL. */
+	    XSetCommand(gui.dpy, GDK_WINDOW_XWINDOW(gui.mainwin->window),
+								     NULL, 0);
+	}
+
+	/*
+	 * Functionality from gdkevents.c/gdk_wm_protocols_filter;
+	 * Registering this filter apparently overrides the default GDK one,
+	 * so we need to perform its functionality.  There seems no way to
+	 * register for WM_PROTOCOLS, and only process the WM_SAVE_YOURSELF
+	 * bit;  it's all or nothing.
+	 */
+	else if ((Atom)(xevent->xclient.data.l[0]) == gdk_wm_delete_window)
+	{
+	    event->any.type = GDK_DELETE;
+	    return GDK_FILTER_TRANSLATE;
+	}
+    }
+
+    return GDK_FILTER_REMOVE;
+}
+
 
 /*
  * Setup the window icon & xcmdsrv comm after the main window has been realized.
@@ -1668,11 +1707,13 @@ mainwin_realize(GtkWidget *widget)
 	gdk_window_set_icon(gui.mainwin->window, NULL, icon, icon_mask);
     }
 
-#if 0
+    /* Register a handler for WM_SAVE_YOURSELF with GDK's low-level X I/F */
+    gdk_add_client_message_filter(wm_protocols_atom,
+					       gdk_wm_protocols_filter, NULL);
+
     /* Setup to indicate to the window manager that we want to catch the
      * WM_SAVE_YOURSELF event. */
     setup_save_yourself();
-#endif
 
 #ifdef FEAT_CLIENTSERVER
     if (serverName == NULL && serverDelayedStartName != NULL)
@@ -1933,6 +1974,7 @@ gui_mch_init()
 		       GTK_SIGNAL_FUNC(drawarea_realize_cb), NULL);
 
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
+    wm_protocols_atom = gdk_atom_intern("WM_PROTOCOLS", FALSE);
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
     reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
 
@@ -2088,7 +2130,7 @@ client_event_cb(GtkWidget *widget, GdkEventClient *event)
 {
     if (event->message_type == save_yourself_atom)
     {
-	/* NOTE: this is never reached! */
+	/* NOTE: this is never reached!  See gdk_wm_protocols_filter(). */
 	out_flush();
 	ml_sync_all(FALSE, FALSE);      /* preserve all swap files */
 	return TRUE;
