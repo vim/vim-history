@@ -3742,16 +3742,20 @@ check_abbr(c, ptr, col, mincol)
     int		mincol;
 {
     int		len;
+    int		scol;		/* starting column of the abbr. */
     int		j;
     char_u	tb[4];
     mapblock_T	*mp;
 #ifdef FEAT_LOCALMAP
     mapblock_T	*mp2;
 #endif
+#ifdef FEAT_MBYTE
+    int		clen = 0;	/* length in characters */
+#endif
     int		is_id = TRUE;
     int		vim_abbr;
 
-    if (typebuf.tb_no_abbr_cnt)	    /* abbrev. are not recursive */
+    if (typebuf.tb_no_abbr_cnt)	/* abbrev. are not recursive */
 	return FALSE;
 
     /*
@@ -3777,6 +3781,7 @@ check_abbr(c, ptr, col, mincol)
 	    if (p > ptr)
 		is_id = vim_iswordp(mb_prevptr(ptr, p));
 	}
+	clen = 1;
 	while (p > ptr)
 	{
 	    p = mb_prevptr(ptr, p);
@@ -3785,8 +3790,9 @@ check_abbr(c, ptr, col, mincol)
 		p += (*mb_ptr2len_check)(p);
 		break;
 	    }
+	    ++clen;
 	}
-	len = (int)(p - ptr);
+	scol = (int)(p - ptr);
     }
     else
 #endif
@@ -3799,17 +3805,17 @@ check_abbr(c, ptr, col, mincol)
 	    if (col > 1)
 		is_id = vim_iswordc(ptr[col - 2]);
 	}
-	for (len = col - 1; len > 0 && !vim_isspace(ptr[len - 1]) &&
-		(vim_abbr || is_id == vim_iswordc(ptr[len - 1])); --len)
+	for (scol = col - 1; scol > 0 && !vim_isspace(ptr[scol - 1])
+		&& (vim_abbr || is_id == vim_iswordc(ptr[scol - 1])); --scol)
 	    ;
     }
 
-    if (len < mincol)
-	len = mincol;
-    if (len < col)		/* there is a word in front of the cursor */
+    if (scol < mincol)
+	scol = mincol;
+    if (scol < col)		/* there is a word in front of the cursor */
     {
-	ptr += len;
-	len = col - len;
+	ptr += scol;
+	len = col - scol;
 #ifdef FEAT_LOCALMAP
 	mp = curbuf->b_first_abbr;
 	mp2 = first_abbr;
@@ -3849,7 +3855,7 @@ check_abbr(c, ptr, col, mincol)
 	     * abbreviation, but is not inserted into the input stream.
 	     */
 	    j = 0;
-					    /* special key code, split up */
+					/* special key code, split up */
 	    if (c != Ctrl_RSB)
 	    {
 		if (IS_SPECIAL(c) || c == K_SPECIAL)
@@ -3859,20 +3865,24 @@ check_abbr(c, ptr, col, mincol)
 		    c = K_THIRD(c);
 		}
 		else if (c < ABBR_OFF && (c < ' ' || c > '~'))
-		    tb[j++] = Ctrl_V;    /* special char needs CTRL-V */
+		    tb[j++] = Ctrl_V;	/* special char needs CTRL-V */
 		tb[j++] = c;
 		tb[j] = NUL;
-					    /* insert the last typed char */
+					/* insert the last typed char */
 		(void)ins_typebuf(tb, 1, 0, TRUE, mp->m_silent);
 	    }
-					    /* insert the to string */
+					/* insert the to string */
 	    (void)ins_typebuf(mp->m_str, mp->m_noremap, 0, TRUE, mp->m_silent);
-					    /* no abbrev. for these chars */
+					/* no abbrev. for these chars */
 	    typebuf.tb_no_abbr_cnt += (int)STRLEN(mp->m_str) + j + 1;
 
 	    tb[0] = Ctrl_H;
 	    tb[1] = NUL;
-	    while (len--)		    /* delete the from string */
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		len = clen;	/* Delete characters instead of bytes */
+#endif
+	    while (len-- > 0)		/* delete the from string */
 		(void)ins_typebuf(tb, 1, 0, TRUE, mp->m_silent);
 	    return TRUE;
 	}
