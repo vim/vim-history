@@ -2305,11 +2305,16 @@ SetBufferLineList(buf_T *buf, int lo, int hi, PyObject *list, int *len_change)
 	char	**array;
 	buf_T	*savebuf;
 
-	array = (char **)alloc((unsigned)(new_len * sizeof(char *)));
-	if (array == NULL)
+	if (new_len == 0)	/* avoid allocating zero bytes */
+	    array = NULL;
+	else
 	{
-	    PyErr_NoMemory();
-	    return FAIL;
+	    array = (char **)alloc((unsigned)(new_len * sizeof(char *)));
+	    if (array == NULL)
+	    {
+		PyErr_NoMemory();
+		return FAIL;
+	    }
 	}
 
 	for (i = 0; i < new_len; ++i)
