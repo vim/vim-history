@@ -275,6 +275,9 @@
 # ifndef CMDLINE_INFO
 #  define CMDLINE_INFO	/* 'ruler' is required for 'statusline' */
 # endif
+#endif
+
+#ifndef MIN_FEAT
 # define BYTE_OFFSET
 #endif
 

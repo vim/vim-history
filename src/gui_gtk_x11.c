@@ -774,6 +774,7 @@ gui_mch_init_check(void)
 /*
  * Setup the window icon after the main window has bee realized.
  */
+/*ARGSUSED*/
 static void
 mainwin_realize(GtkWidget *widget)
 {
@@ -1119,6 +1120,7 @@ form_configure_event(GtkWidget * widget, GdkEventConfigure * event)
     return TRUE;
 }
 
+/*ARGSUSED*/
 static gint
 client_event_cb(GtkWidget *widget, GdkEventClient *event)
 {
@@ -2890,6 +2892,7 @@ font_sel_ok(GtkWidget *wgt, gpointer cbdata)
 	gtk_main_quit();
 }
 
+/*ARGSUSED*/
 static void
 font_sel_cancel(GtkWidget *wgt, gpointer cbdata)
 {

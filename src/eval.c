@@ -238,6 +238,7 @@ static struct ufunc *find_func __ARGS((char_u *name));
 static void call_func __ARGS((struct ufunc *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
 
 
+#if defined(STATUSLINE) || defined(PROTO)
 /*
  * Set an internal variable to a string value. Creates the variable if it does
  * not already exist.
@@ -261,6 +262,7 @@ set_internal_string_var(name, value)
 	}
     }
 }
+#endif
 
 /*
  * Top level evaluation function, returning a boolean.
@@ -2388,6 +2390,7 @@ f_bufwinnr(argvars, retvar)
 /*
  * "byte2line(byte)" function
  */
+/*ARGSUSED*/
     static void
 f_byte2line(argvars, retvar)
     VAR		argvars;
@@ -2439,6 +2442,7 @@ f_col(argvars, retvar)
 /*
  * "confirm(message, buttons[, default [, type]])" function
  */
+/*ARGSUSED*/
     static void
 f_confirm(argvars, retvar)
     VAR		argvars;
@@ -3375,6 +3379,7 @@ f_line(argvars, retvar)
 /*
  * "line2byte(lnum)" function
  */
+/*ARGSUSED*/
     static void
 f_line2byte(argvars, retvar)
     VAR		argvars;
@@ -3705,6 +3710,7 @@ f_strtrans(argvars, retvar)
 /*
  * "synID(line, col, trans)" function
  */
+/*ARGSUSED*/
     static void
 f_synID(argvars, retvar)
     VAR		argvars;
@@ -3731,6 +3737,7 @@ f_synID(argvars, retvar)
 /*
  * "synIDattr(id, what [, mode])" function
  */
+/*ARGSUSED*/
     static void
 f_synIDattr(argvars, retvar)
     VAR		argvars;
@@ -3818,6 +3825,7 @@ f_synIDattr(argvars, retvar)
 /*
  * "synIDtrans(id)" function
  */
+/*ARGSUSED*/
     static void
 f_synIDtrans(argvars, retvar)
     VAR		argvars;
@@ -4502,7 +4510,8 @@ list_vim_var(i)
 	p = (char_u *)"";
     else
 	p = vimvars[i].val;
-    list_one_var_a((char_u *)"v:", vimvars[i].name, vimvars[i].type, p);
+    list_one_var_a((char_u *)"v:", (char_u *)vimvars[i].name,
+							  vimvars[i].type, p);
 }
 
     static void
@@ -5362,6 +5371,34 @@ func_has_abort(cookie)
     return ((struct funccall *)cookie)->func->flags & FC_ABORT;
 }
 
+#if defined(VIMINFO) || defined(MKSESSION)
+typedef enum
+{
+    VAR_FLAVOUR_DEFAULT,
+    VAR_FLAVOUR_SESSION,
+    VAR_FLAVOUR_VIMINFO
+} VAR_FLAVOUR;
+
+static VAR_FLAVOUR var_flavour __ARGS((char_u *varname));
+
+    static VAR_FLAVOUR
+var_flavour(varname)
+    char_u *varname;
+{
+    char_u *p = varname;
+
+    if (isupper(*p))
+    {
+	while (*(++p))
+	    if (islower(*p))
+		return VAR_FLAVOUR_SESSION;
+	return VAR_FLAVOUR_VIMINFO;
+    }
+    else
+	return VAR_FLAVOUR_DEFAULT;
+}
+#endif
+
 #ifdef VIMINFO
 /*
  * Restore global vars that start with a capital from the viminfo file
@@ -5416,32 +5453,6 @@ read_viminfo_varlist(line, fp, writing)
     }
 
     return vim_fgets(line, LSIZE, fp);
-}
-
-typedef enum
-{
-    VAR_FLAVOUR_DEFAULT,
-    VAR_FLAVOUR_SESSION,
-    VAR_FLAVOUR_VIMINFO
-} VAR_FLAVOUR;
-
-static VAR_FLAVOUR var_flavour __ARGS((char_u *varname));
-
-    static VAR_FLAVOUR
-var_flavour(varname)
-    char_u *varname;
-{
-    char_u *p = varname;
-
-    if (isupper(*p))
-    {
-	while (*(++p))
-	    if (islower(*p))
-		return VAR_FLAVOUR_SESSION;
-	return VAR_FLAVOUR_VIMINFO;
-    }
-    else
-	return VAR_FLAVOUR_DEFAULT;
 }
 
 /*

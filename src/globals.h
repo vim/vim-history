@@ -651,10 +651,10 @@ EXTERN char_u no_lines_msg[]	INIT(="--No lines in buffer--");
 /* table to store parsed 'wildmode' */
 EXTERN char_u	wim_flags[4];
 
-#ifdef STATUSLINE
+#if defined(WANT_TITLE) && defined(STATUSLINE)
 /* whether titlestring and iconstring contains statusline syntax */
-#define STL_IN_ICON	1
-#define STL_IN_TITLE	2
+# define STL_IN_ICON	1
+# define STL_IN_TITLE	2
 EXTERN int      stl_syntax INIT(= 0);
 #endif
 

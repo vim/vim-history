@@ -31,11 +31,13 @@ static int check_readonly __ARGS((int *forceit, BUF *buf));
 static void delbuf_msg __ARGS((char_u *name));
 #endif
 static int do_sub_msg __ARGS((void));
+#ifdef HAVE_QSORT
 static int
-#ifdef __BORLANDC__
-_RTLENTRYF
+# ifdef __BORLANDC__
+    _RTLENTRYF
+# endif
+	help_compare __ARGS((const void *s1, const void *s2));
 #endif
-help_compare __ARGS((const void *s1, const void *s2));
 
     void
 do_ascii()
@@ -2277,11 +2279,11 @@ do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
 #ifdef AUTOCMD
     int		auto_buf = FALSE;	/* TRUE if autocommands brought us
 					   into the buffer unexpectedly */
+    char_u	*new_name = NULL;
 #endif
     BUF		*buf;
 #if defined(AUTOCMD) || defined(GUI_DIALOG) || defined(CON_DIALOG)
     BUF		*old_curbuf = curbuf;
-    char_u	*new_name = NULL;
 #endif
     char_u	*free_fname = NULL;
 #ifdef USE_BROWSE
@@ -3938,6 +3940,7 @@ help_heuristic(matched_string, offset, wrong_case)
     return (int)(100 * num_letters + STRLEN(matched_string) + offset);
 }
 
+#ifdef HAVE_QSORT
 /*
  * Compare functions for qsort() below, that checks the help heuristics number
  * that has been put after the tagname by find_tags().
@@ -3957,6 +3960,7 @@ help_compare(s1, s2)
     p2 = *(char **)s2 + strlen(*(char **)s2) + 1;
     return strcmp(p1, p2);
 }
+#endif
 
 /*
  * Find all help tags matching "arg", sort them and return in matches[], with

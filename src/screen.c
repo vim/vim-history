@@ -2536,6 +2536,7 @@ win_redr_custom(wp, Ruler)
     screen_puts(p, row, col, curattr);
 }
 
+# if defined(WANT_TITLE) || defined(PROTO)
     int
 build_stl_str(wp, out, fmt, fillchar, maxlen)
     WIN		*wp;
@@ -2546,6 +2547,7 @@ build_stl_str(wp, out, fmt, fillchar, maxlen)
 {
     return build_stl_str_hl(wp, out, fmt, fillchar, maxlen, NULL);
 }
+# endif
 
 /*
  * Build a string from the status line items in fmt, return length of string.
