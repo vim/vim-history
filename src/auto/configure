@@ -1571,7 +1571,7 @@ EOF
     fi
   fi
 
-  if test "x$MACOSX" == "xyes"; then 
+  if test "x$MACOSX" = "xyes"; then 
         dir=/System/Library/Perl
     darwindir=$dir/darwin
     if test -d $darwindir; then 

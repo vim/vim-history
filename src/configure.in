@@ -321,7 +321,7 @@ if test "$enable_perlinterp" = "yes"; then
     fi
   fi
 
-  if test "x$MACOSX" == "xyes"; then 
+  if test "x$MACOSX" = "xyes"; then 
     dnl Mac OS X 10.2 or 10.3
     dir=/System/Library/Perl
     darwindir=$dir/darwin
