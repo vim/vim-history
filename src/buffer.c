@@ -2091,6 +2091,7 @@ buflist_list(eap)
 
 	len = (int)STRLEN(IObuff);
 	STRNCPY(IObuff + len, NameBuff, IOSIZE - 20 - len);
+	IObuff[IOSIZE - 20 - len] = NUL;    /* make sure it's terminated */
 
 	len = (int)STRLEN(IObuff);
 	IObuff[len++] = '"';
