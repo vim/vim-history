@@ -5159,6 +5159,7 @@ buf_check_timestamp(buf, focus)
 	linenr_T	old_line_count = buf->b_ml.ml_line_count;
 	exarg_T		ea;
 	pos_T		old_cursor;
+	int		old_ro = curbuf->b_p_ro;
 #ifdef FEAT_AUTOCMD
 	aco_save_T	aco;
 
@@ -5205,6 +5206,11 @@ buf_check_timestamp(buf, focus)
 #ifdef FEAT_AUTOCMD
 	    keep_filetype = FALSE;
 #endif
+	    /* If the mode didn't change and 'readonly' was set, keep the old
+	     * value; the user probably used the ":view" command.  But don't
+	     * reset it, might have had a read error. */
+	    if (orig_mode == curbuf->b_orig_mode)
+		curbuf->b_p_ro |= old_ro;
 	}
 
 #ifdef FEAT_AUTOCMD
