@@ -5489,6 +5489,39 @@ get_mess_lang()
 }
 #endif
 
+#if !defined(LC_MESSAGES) \
+    && (((defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+		&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))) \
+	    || defined(FEAT_EVAL))
+static char_u *get_mess_env __ARGS((void));
+
+/*
+ * Get the language used for messages from the environment.
+ */
+    static char_u *
+get_mess_env()
+{
+    char_u	*p;
+
+    p = mch_getenv((char_u *)"LC_ALL");
+    if (p == NULL || *p == NUL)
+    {
+	p = mch_getenv((char_u *)"LC_MESSAGES");
+	if (p == NULL || *p == NUL)
+	{
+	    p = mch_getenv((char_u *)"LANG");
+	    if (VIM_ISDIGIT(*p))	/* ignore something like "1043" */
+		p = NULL;
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+	    if (p == NULL || *p == NUL)
+		p = (char_u *)get_locale_val(LC_CTYPE);
+# endif
+	}
+    }
+    return p;
+}
+#endif
+
 #if defined(FEAT_EVAL) || defined(PROTO)
 
 /*
@@ -5508,9 +5541,12 @@ set_lang_var()
 # endif
     set_vim_var_string(VV_CTYPE, loc, -1);
 
-    /* When LC_MESSAGES isn't defined use the value from LC_CTYPE. */
+    /* When LC_MESSAGES isn't defined use the value from $LC_MESSAGES, fall
+     * back to LC_CTYPE if it's empty. */
 # if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) && defined(LC_MESSAGES)
     loc = (char_u *)get_locale_val(LC_MESSAGES);
+# else
+    loc = get_mess_env();
 # endif
     set_vim_var_string(VV_LANG, loc, -1);
 
@@ -5573,15 +5609,7 @@ ex_language(eap)
     {
 #ifndef LC_MESSAGES
 	if (what == VIM_LC_MESSAGES)
-	{
-	    p = mch_getenv((char_u *)"LC_ALL");
-	    if (p == NULL || *p == NUL)
-	    {
-		p = mch_getenv((char_u *)"LC_MESSAGES");
-		if (p == NULL || *p == NUL)
-		    p = mch_getenv((char_u *)"LANG");
-	    }
-	}
+	    p = get_mess_env();
 	else
 #endif
 	    p = (char_u *)setlocale(what, NULL);
