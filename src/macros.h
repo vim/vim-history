@@ -136,7 +136,9 @@
 	/* VMS does not have lstat() */
 # define mch_stat(n, p)		stat(vms_fixfilename(n), (p))
 #else
-# define mch_access(n, p)	access((n), (p))
+# ifndef WIN32
+#   define mch_access(n, p)	access((n), (p))
+# endif
 # define mch_fopen(n, p)	fopen((n), (p))
 # define mch_fstat(n, p)	fstat((n), (p))
 # define mch_lstat(n, p)	lstat((n), (p))

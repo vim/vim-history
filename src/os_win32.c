@@ -90,14 +90,20 @@ FILE* fdDump = NULL;
  */
 #ifdef PROTO
 # define HANDLE int
+# define PHANDLE int
 # define SMALL_RECT int
 # define COORD int
 # define SHORT int
 # define WORD int
 # define DWORD int
+# define PDWORD int
 # define BOOL int
+# define LPBOOL int
 # define LPSTR int
 # define LPTSTR int
+# define LPCTSTR int
+# define LPDWORD int
+# define LPVOID int
 # define KEY_EVENT_RECORD int
 # define MOUSE_EVENT_RECORD int
 # define WINAPI
@@ -119,6 +125,9 @@ FILE* fdDump = NULL;
 # define COLORREF int
 # define HDC int
 # define LOGFONT int
+# define TOKEN_INFORMATION_CLASS int
+# define TRUSTEE int
+# define ACCESS_MASK int
 #endif
 
 #ifndef FEAT_GUI_W32
@@ -317,6 +326,7 @@ null_libintl_textdomain(const char* domainname)
 DWORD g_PlatformId;
 
 #ifdef HAVE_ACL
+# include <aclapi.h>
 /*
  * These are needed to dynamically load the ADVAPI DLL, which is not
  * implemented under Windows 95 (and causes VIM to crash)
@@ -326,9 +336,23 @@ typedef DWORD (WINAPI *PSNSECINFO) (LPTSTR, enum SE_OBJECT_TYPE,
 typedef DWORD (WINAPI *PGNSECINFO) (LPSTR, enum SE_OBJECT_TYPE,
 	SECURITY_INFORMATION, PSID *, PSID *, PACL *, PACL *,
 	PSECURITY_DESCRIPTOR *);
+typedef BOOL (WINAPI *PGFILESEC) (LPCTSTR, SECURITY_INFORMATION,
+        PSECURITY_DESCRIPTOR, DWORD, LPDWORD);
+typedef BOOL (WINAPI *PGSECDESCDACL) (PSECURITY_DESCRIPTOR,
+        LPBOOL, PACL *, LPBOOL);
+typedef BOOL (WINAPI *POPENPROCTOK) (HANDLE, DWORD, PHANDLE);
+typedef BOOL (WINAPI *PGTOKINFO) (HANDLE, TOKEN_INFORMATION_CLASS,
+        LPVOID, DWORD, PDWORD);
+typedef DWORD (WINAPI *PGEFFRIGHTACL) (PACL, TRUSTEE *, ACCESS_MASK *);
+
 static HANDLE advapi_lib = NULL;	/* Handle for ADVAPI library */
 static PSNSECINFO pSetNamedSecurityInfo;
 static PGNSECINFO pGetNamedSecurityInfo;
+static PGFILESEC pGetFileSecurity;
+static PGSECDESCDACL pGetSecurityDescriptorDacl;
+static POPENPROCTOK pOpenProcessToken;
+static PGTOKINFO pGetTokenInformation;
+static PGEFFRIGHTACL pGetEffectiveRightsFromAcl;
 #endif
 
 /*
@@ -370,8 +394,22 @@ PlatformId(void)
 						      "SetNamedSecurityInfoA");
 		pGetNamedSecurityInfo = (PGNSECINFO)GetProcAddress(advapi_lib,
 						      "GetNamedSecurityInfoA");
+		pGetFileSecurity = (PGFILESEC)GetProcAddress(advapi_lib,
+						      "GetFileSecurityA");
+		pGetSecurityDescriptorDacl = (PGSECDESCDACL)GetProcAddress(advapi_lib,
+						      "GetSecurityDescriptorDacl");
+		pOpenProcessToken = (POPENPROCTOK)GetProcAddress(advapi_lib,
+						      "OpenProcessToken");
+		pGetTokenInformation = (PGTOKINFO)GetProcAddress(advapi_lib,
+						      "GetTokenInformation");
+		pGetEffectiveRightsFromAcl = (PGEFFRIGHTACL)GetProcAddress(advapi_lib,
+						      "GetEffectiveRightsFromAclA");
 		if (pSetNamedSecurityInfo == NULL
-			|| pGetNamedSecurityInfo == NULL)
+			|| pGetNamedSecurityInfo == NULL
+			|| pGetFileSecurity == NULL
+			|| pGetSecurityDescriptorDacl == NULL
+			|| pOpenProcessToken == NULL
+			|| pGetTokenInformation == NULL)
 		{
 		    /* If we can't get the function addresses, set advapi_lib
 		     * to NULL so that we don't use them. */
@@ -2368,8 +2406,6 @@ mch_nodetype(char_u *name)
 }
 
 #ifdef HAVE_ACL
-# include <aclapi.h>
-
 struct my_acl
 {
     PSECURITY_DESCRIPTOR    pSecurityDescriptor;
@@ -4000,4 +4036,99 @@ default_shell()
 	psz = "command.com";
 
     return psz;
+}
+
+/* NB: Not SACL_SECURITY_INFORMATION since we don't have enough privilege */
+#define MCH_ACCESS_SEC  (OWNER_SECURITY_INFORMATION \
+			 |GROUP_SECURITY_INFORMATION \
+			 |DACL_SECURITY_INFORMATION)
+
+/*
+ * mch_access() extends access() to support ACLs under Windows NT/2K/XP(?)
+ * Does not support ACLs on NT 3.1/5 since the key function
+ * GetEffectiveRightsFromAcl() does not exist and implementing its
+ * functionality is a pain.
+ * Written by Mike Williams.
+ * Returns 0 if file "n" has access rights according to "p", -1 otherwise.
+ */
+    int
+mch_access(char *n, int p)
+{
+    BOOL			aclpresent;
+    BOOL			aclDefault;
+    HANDLE			hToken;
+    DWORD			bytes;
+    TRUSTEE			t;
+    ACCESS_MASK			am;
+    ACCESS_MASK			cm;
+    PACL			pacl;
+    static DWORD		sd_bytes = 0;
+    static SECURITY_DESCRIPTOR* psd = NULL;
+    static DWORD		tu_bytes = 0;
+    static TOKEN_USER*		ptu = NULL;
+
+#ifdef HAVE_ACL
+    /* Only check ACLs if on WinNT 4.0 or later - GetEffectiveRightsFromAcl()
+     * does not exist on NT before 4.0 */
+    if (!mch_windows95()
+	    && advapi_lib != NULL
+	    && pGetEffectiveRightsFromAcl != NULL)
+    {
+	/* Get file ACL info */
+	if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
+	{
+	    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		return -1;
+	    vim_free(psd);
+	    psd = (SECURITY_DESCRIPTOR *)alloc(bytes);
+	    if (psd == NULL)
+	    {
+		sd_bytes = 0;
+		return -1;
+	    }
+	    sd_bytes = bytes;
+	    if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
+		return -1;
+	}
+	if (!pGetSecurityDescriptorDacl(psd, &aclpresent, &pacl, &aclDefault))
+	    return -1;
+
+	/* Get user security info */
+	if (!pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+	    return -1;
+	if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
+	{
+	    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		return -1;
+	    vim_free(ptu);
+	    ptu = (TOKEN_USER *)alloc(bytes);
+	    if (ptu == NULL)
+	    {
+		tu_bytes = 0;
+		return -1;
+	    }
+	    tu_bytes = bytes;
+	    if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
+		return -1;
+	}
+
+	/* Lets see what user can do based on ACL */
+	t.pMultipleTrustee = NULL;
+	t.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+	t.TrusteeForm = TRUSTEE_IS_SID;
+	t.TrusteeType = TRUSTEE_IS_USER;
+	t.ptstrName = ptu->User.Sid;
+	if (pGetEffectiveRightsFromAcl(pacl, &t, &am) != ERROR_SUCCESS)
+	    return -1;
+
+	cm = 0;
+	cm |= (p & W_OK) ? FILE_WRITE_DATA : 0;
+	cm |= (p & R_OK) ? FILE_READ_DATA : 0;
+
+	/* Check access mask against modes requested */
+	if ((am & cm) != cm)
+	    return -1;
+    }
+#endif /* HAVE_ACL */
+    return access(n, p);
 }
