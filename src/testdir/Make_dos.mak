@@ -20,7 +20,7 @@ SCRIPTS =	test3.out test4.out test5.out test6.out test7.out \
 		test8.out test9.out test11.out test13.out test14.out \
 		test15.out test17.out test18.out test21.out test26.out \
 		test30.out test32.out test33.out test34.out test37.out \
-		test38.out test39.out test40.out
+		test38.out test39.out test40.out test41.out test42.out
 
 SCRIPTS_GUI = test16.out
 
@@ -37,13 +37,19 @@ gui:	/tmp $(SCRIPTS16) $(SCRIPTS) $(SCRIPTS_GUI)
 
 clean:
 	-del *.out
-	-deltree /tmp/*
+	-del test.ok
+	-del small.vim
+	-del tiny.vim
+	-del mbyte.vim
+	-deltree /y X*
 
 .in.out:
+	copy $*.ok test.ok
 	$(VIMPROG) -u dos.vim -U NONE -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
-#	rm Xdotest
+	-deltree /y X*
+	-del test.ok
 
 
 # Create a directory for temp files

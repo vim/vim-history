@@ -206,7 +206,9 @@ static void win_redr_ruler __ARGS((win_t *wp, int always));
 #if defined(FEAT_STL_OPT) || defined(FEAT_CMDL_INFO)
 static void get_rel_pos __ARGS((win_t *wp, char_u	*str));
 #endif
+#ifdef FEAT_MOUSE
 static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_t *lnump));
+#endif
 static int get_scroll_overlap __ARGS((linenr_t lnum, int dir));
 static void intro_message __ARGS((void));
 
@@ -223,6 +225,17 @@ redraw_later(type)
 	curwin->w_redr_type = type;
     if (must_redraw < type)	/* must_redraw is the maximum of all windows */
 	must_redraw = type;
+}
+
+/*
+ * Force a complete redraw later.  Also resets the highlighting.  To be used
+ * after executing a shell command that messes up the screen.
+ */
+    void
+redraw_later_clear()
+{
+    must_redraw = CLEAR;
+    screen_attr = HL_BOLD | HL_UNDERLINE;
 }
 
 /*
@@ -2713,8 +2726,12 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		}
 #ifdef FEAT_VIRTUALEDIT
-		else if (VIsual_active && VIsual_mode == Ctrl_V
-			 && ve_block && vcol < tocol && col < W_WIDTH(wp))
+		else if (VIsual_active
+			 && VIsual_mode == Ctrl_V
+			 && ve_block
+			 && tocol != MAXCOL
+			 && vcol < tocol
+			 && col < W_WIDTH(wp))
 		{
 		    c = ' ';
 		    --ptr;	    /* put it back at the NUL */
@@ -3312,7 +3329,7 @@ screen_line(row, coloff, endcol, clear_width
 		 */
 		screen_attr = 0;
 	    }
-	    else if (screen_attr)
+	    else if (screen_attr != 0)
 		screen_stop_highlight();
 	}
 
@@ -5002,7 +5019,7 @@ screen_stop_highlight()
 {
     int	    do_ME = FALSE;	    /* output T_ME code */
 
-    if (screen_attr
+    if (screen_attr != 0
 #ifdef WIN32
 			&& termcap_active
 #endif
@@ -5013,7 +5030,8 @@ screen_stop_highlight()
 	{
 	    char	buf[20];
 
-	    sprintf(buf, IF_EB("\033|%dH", ESC_STR "|%dH"), screen_attr);	/* internal GUI code */
+	    /* use internal GUI code */
+	    sprintf(buf, IF_EB("\033|%dH", ESC_STR "|%dH"), screen_attr);
 	    OUT_STR(buf);
 	}
 	else
@@ -5029,8 +5047,8 @@ screen_stop_highlight()
 		     * Assume that t_me restores the original colors!
 		     */
 		    aep = syn_cterm_attr2entry(screen_attr);
-		    if (aep != NULL && (aep->ae_u.cterm.fg_color ||
-						    aep->ae_u.cterm.bg_color))
+		    if (aep != NULL && (aep->ae_u.cterm.fg_color
+						 || aep->ae_u.cterm.bg_color))
 			do_ME = TRUE;
 		}
 		else
@@ -5390,6 +5408,38 @@ comp_botline(wp)
 	wp->w_empty_rows = 0;	/* single line that doesn't fit */
     else
 	wp->w_empty_rows = wp->w_height - done;
+}
+
+/*
+ * Check if there should be a delay.  Used before clearing or redrawing the
+ * screen or the command line.
+ */
+    void
+check_for_delay(check_msg_scroll)
+    int	    check_msg_scroll;
+{
+    if (emsg_on_display || (check_msg_scroll && msg_scroll))
+    {
+	out_flush();
+	ui_delay(1000L, TRUE);
+	emsg_on_display = FALSE;
+	if (check_msg_scroll)
+	    msg_scroll = FALSE;
+    }
+}
+
+/*
+ * screen_valid -  allocate screen buffers if size changed
+ *   If "clear" is TRUE: clear screen if it has been resized.
+ *	Returns TRUE if there is a valid screen to write to.
+ *	Returns FALSE when starting up and screen not initialized yet.
+ */
+    int
+screen_valid(clear)
+    int	    clear;
+{
+    screenalloc(clear);	    /* allocate screen buffers if size changed */
+    return (ScreenLines != NULL);
 }
 
 /*
@@ -6731,6 +6781,315 @@ cursor_correct()
 	}
     }
     curwin->w_valid |= VALID_TOPLINE;
+}
+
+/*
+ * move screen 'count' pages up or down and update screen
+ *
+ * return FAIL for failure, OK otherwise
+ */
+    int
+onepage(dir, count)
+    int	    dir;
+    long    count;
+{
+    linenr_t	    lp;
+    long	    n;
+    int		    off;
+    int		    retval = OK;
+
+    if (curbuf->b_ml.ml_line_count == 1)    /* nothing to do */
+    {
+	beep_flush();
+	return FAIL;
+    }
+
+    for ( ; count > 0; --count)
+    {
+	validate_botline();
+	/*
+	 * It's an error to move a page up when the first line is already on
+	 * the screen.	It's an error to move a page down when the last line
+	 * is on the screen and the topline is 'scrolloff' lines from the
+	 * last line.
+	 */
+	if (dir == FORWARD
+		? ((curwin->w_topline >= curbuf->b_ml.ml_line_count - p_so)
+		    && curwin->w_botline > curbuf->b_ml.ml_line_count)
+		: (curwin->w_topline == 1))
+	{
+	    beep_flush();
+	    retval = FAIL;
+	    break;
+	}
+
+	if (dir == FORWARD)
+	{
+					/* at end of file */
+	    if (curwin->w_botline > curbuf->b_ml.ml_line_count)
+	    {
+		curwin->w_topline = curbuf->b_ml.ml_line_count;
+		curwin->w_valid &= ~(VALID_WROW|VALID_CROW);
+	    }
+	    else
+	    {
+		lp = curwin->w_botline;
+		off = get_scroll_overlap(lp, -1);
+		curwin->w_topline = curwin->w_botline - off;
+		curwin->w_cursor.lnum = curwin->w_topline;
+		curwin->w_valid &= ~(VALID_WCOL|VALID_CHEIGHT|VALID_WROW|
+				   VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
+	    }
+	}
+	else	/* dir == BACKWARDS */
+	{
+	    lp = curwin->w_topline - 1;
+	    off = get_scroll_overlap(lp, 1);
+	    lp += off;
+	    if (lp > curbuf->b_ml.ml_line_count)
+		lp = curbuf->b_ml.ml_line_count;
+	    curwin->w_cursor.lnum = lp;
+	    n = 0;
+	    while (n <= curwin->w_height && lp >= 1)
+	    {
+		n += plines(lp);
+		--lp;
+#ifdef FEAT_FOLDING
+		(void)hasFolding(lp, &lp, NULL);
+#endif
+	    }
+	    if (n <= curwin->w_height)		    /* at begin of file */
+	    {
+		curwin->w_topline = 1;
+		curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
+	    }
+	    else if (lp >= curwin->w_topline - 2)   /* very long lines */
+	    {
+		--curwin->w_topline;
+		comp_botline(curwin);
+		curwin->w_cursor.lnum = curwin->w_botline - 1;
+		curwin->w_valid &= ~(VALID_WCOL|VALID_CHEIGHT|
+						       VALID_WROW|VALID_CROW);
+	    }
+	    else
+	    {
+		curwin->w_topline = lp + 2;
+		curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
+	    }
+	}
+    }
+    cursor_correct();
+    beginline(BL_SOL | BL_FIX);
+    curwin->w_valid &= ~(VALID_WCOL|VALID_WROW|VALID_VIRTCOL);
+
+    /*
+     * Avoid the screen jumping up and down when 'scrolloff' is non-zero.
+     */
+    if (dir == FORWARD && curwin->w_cursor.lnum < curwin->w_topline + p_so)
+	scroll_cursor_top(1, FALSE);
+
+    redraw_later(VALID);
+    return retval;
+}
+
+/*
+ * Decide how much overlap to use for page-up or page-down scrolling.
+ * This is symmetric, so that doing both keeps the same lines displayed.
+ */
+    static int
+get_scroll_overlap(lnum, dir)
+    linenr_t	lnum;
+    int		dir;
+{
+    int		h1, h2, h3, h4;
+    int		min_height = curwin->w_height - 2;
+    linenr_t	l;
+
+    h1 = plines_check(lnum);
+    if (h1 > min_height)
+	return 0;
+    else
+    {
+	l = lnum;
+#ifdef FEAT_FOLDING
+	if (dir > 0)
+	    (void)hasFolding(l, NULL, &l);
+	else
+	    (void)hasFolding(l, &l, NULL);
+#endif
+	l += dir;
+	h2 = plines_check(l);
+	if (h2 + h1 > min_height)
+	    return 0;
+	else
+	{
+#ifdef FEAT_FOLDING
+	    if (dir > 0)
+		(void)hasFolding(l, NULL, &l);
+	    else
+		(void)hasFolding(l, &l, NULL);
+#endif
+	    l += dir;
+	    h3 = plines_check(l);
+	    if (h3 + h2 > min_height)
+		return 0;
+	    else
+	    {
+#ifdef FEAT_FOLDING
+		if (dir > 0)
+		    (void)hasFolding(l, NULL, &l);
+		else
+		    (void)hasFolding(l, &l, NULL);
+#endif
+		l += dir;
+		h4 = plines_check(l);
+		if (h4 + h3 + h2 > min_height || h3 + h2 + h1 > min_height)
+		    return 1;
+		else
+		    return 2;
+	    }
+	}
+    }
+}
+
+/* #define KEEP_SCREEN_LINE */
+
+    void
+halfpage(flag, Prenum)
+    int		flag;
+    linenr_t	Prenum;
+{
+    long	scrolled = 0;
+    int		i;
+    int		n;
+    int		room;
+
+    if (Prenum)
+	curwin->w_p_scr = (Prenum > curwin->w_height) ?
+						curwin->w_height : Prenum;
+    n = (curwin->w_p_scr <= curwin->w_height) ?
+				    curwin->w_p_scr : curwin->w_height;
+
+    validate_botline();
+    room = curwin->w_empty_rows;
+    if (flag)	    /* scroll down */
+    {
+	while (n > 0 && curwin->w_botline <= curbuf->b_ml.ml_line_count)
+	{
+	    i = plines(curwin->w_topline);
+	    n -= i;
+	    if (n < 0 && scrolled)
+		break;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(curwin->w_topline, NULL, &curwin->w_topline);
+#endif
+	    ++curwin->w_topline;
+	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW);
+	    scrolled += i;
+
+	    /*
+	     * Correct w_botline for changed w_topline.
+	     */
+	    room += i;
+	    do
+	    {
+		i = plines(curwin->w_botline);
+		if (i > room)
+		    break;
+#ifdef FEAT_FOLDING
+		(void)hasFolding(curwin->w_botline, NULL, &curwin->w_botline);
+#endif
+		++curwin->w_botline;
+		room -= i;
+	    } while (curwin->w_botline <= curbuf->b_ml.ml_line_count);
+
+#ifndef KEEP_SCREEN_LINE
+	    if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+	    {
+		++curwin->w_cursor.lnum;
+		curwin->w_valid &= ~(VALID_VIRTCOL|VALID_CHEIGHT|VALID_WCOL);
+	    }
+#endif
+	}
+
+#ifndef KEEP_SCREEN_LINE
+	/*
+	 * When hit bottom of the file: move cursor down.
+	 */
+	if (n > 0)
+	{
+	    curwin->w_cursor.lnum += n;
+	    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	}
+#else
+	    /* try to put the cursor in the same screen line */
+	while ((curwin->w_cursor.lnum < curwin->w_topline || scrolled > 0)
+			     && curwin->w_cursor.lnum < curwin->w_botline - 1)
+	{
+	    scrolled -= plines(curwin->w_cursor.lnum);
+	    if (scrolled < 0 && curwin->w_cursor.lnum >= curwin->w_topline)
+		break;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
+#endif
+	    ++curwin->w_cursor.lnum;
+	}
+#endif
+    }
+    else	    /* scroll up */
+    {
+	while (n > 0 && curwin->w_topline > 1)
+	{
+	    i = plines(curwin->w_topline - 1);
+	    n -= i;
+	    if (n < 0 && scrolled)
+		break;
+	    scrolled += i;
+	    --curwin->w_topline;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
+#endif
+	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW|
+					      VALID_BOTLINE|VALID_BOTLINE_AP);
+#ifndef KEEP_SCREEN_LINE
+	    if (curwin->w_cursor.lnum > 1)
+	    {
+		--curwin->w_cursor.lnum;
+		curwin->w_valid &= ~(VALID_VIRTCOL|VALID_CHEIGHT|VALID_WCOL);
+	    }
+#endif
+	}
+#ifndef KEEP_SCREEN_LINE
+	/*
+	 * When hit top of the file: move cursor up.
+	 */
+	if (n > 0)
+	{
+	    if (curwin->w_cursor.lnum > (linenr_t)n)
+		curwin->w_cursor.lnum -= n;
+	    else
+		curwin->w_cursor.lnum = 1;
+	}
+#else
+	    /* try to put the cursor in the same screen line */
+	scrolled += n;	    /* move cursor when topline is 1 */
+	while (curwin->w_cursor.lnum > curwin->w_topline &&
+		 (scrolled > 0 || curwin->w_cursor.lnum >= curwin->w_botline))
+	{
+	    scrolled -= plines(curwin->w_cursor.lnum - 1);
+	    if (scrolled < 0 && curwin->w_cursor.lnum < curwin->w_botline)
+		break;
+	    --curwin->w_cursor.lnum;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(curwin->w_cursor.lnum, &curwin->w_cursor.lnum, NULL);
+#endif
+	}
+#endif
+    }
+    cursor_correct();
+    beginline(BL_SOL | BL_FIX);
+    redraw_later(VALID);
 }
 
 
@@ -8524,6 +8883,24 @@ fillchar_vsep(attr)
 #endif
 
 /*
+ * Return TRUE if redrawing should currently be done.
+ */
+    int
+redrawing()
+{
+    return (!RedrawingDisabled && !(p_lz && char_avail() && !KeyTyped));
+}
+
+/*
+ * Return TRUE if printing messages should currently be done.
+ */
+    int
+messaging()
+{
+    return (!(p_lz && char_avail() && !KeyTyped));
+}
+
+/*
  * Show current status info in ruler and various other places
  * If always is FALSE, only show ruler if position has changed.
  */
@@ -8735,38 +9112,6 @@ get_rel_pos(wp, str)
 		(int)(above * 100 / (above + below)));
 }
 #endif
-
-/*
- * Check if there should be a delay.  Used before clearing or redrawing the
- * screen or the command line.
- */
-    void
-check_for_delay(check_msg_scroll)
-    int	    check_msg_scroll;
-{
-    if (emsg_on_display || (check_msg_scroll && msg_scroll))
-    {
-	out_flush();
-	ui_delay(1000L, TRUE);
-	emsg_on_display = FALSE;
-	if (check_msg_scroll)
-	    msg_scroll = FALSE;
-    }
-}
-
-/*
- * screen_valid -  allocate screen buffers if size changed
- *   If "clear" is TRUE: clear screen if it has been resized.
- *	Returns TRUE if there is a valid screen to write to.
- *	Returns FALSE when starting up and screen not initialized yet.
- */
-    int
-screen_valid(clear)
-    int	    clear;
-{
-    screenalloc(clear);	    /* allocate screen buffers if size changed */
-    return (ScreenLines != NULL);
-}
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
 
@@ -9243,333 +9588,6 @@ get_fpos_of_mouse(mpos)
 #endif /* FEAT_MOUSE */
 
 /*
- * Return TRUE if redrawing should currently be done.
- */
-    int
-redrawing()
-{
-    return (!RedrawingDisabled && !(p_lz && char_avail() && !KeyTyped));
-}
-
-/*
- * Return TRUE if printing messages should currently be done.
- */
-    int
-messaging()
-{
-    return (!(p_lz && char_avail() && !KeyTyped));
-}
-
-/*
- * move screen 'count' pages up or down and update screen
- *
- * return FAIL for failure, OK otherwise
- */
-    int
-onepage(dir, count)
-    int	    dir;
-    long    count;
-{
-    linenr_t	    lp;
-    long	    n;
-    int		    off;
-    int		    retval = OK;
-
-    if (curbuf->b_ml.ml_line_count == 1)    /* nothing to do */
-    {
-	beep_flush();
-	return FAIL;
-    }
-
-    for ( ; count > 0; --count)
-    {
-	validate_botline();
-	/*
-	 * It's an error to move a page up when the first line is already on
-	 * the screen.	It's an error to move a page down when the last line
-	 * is on the screen and the topline is 'scrolloff' lines from the
-	 * last line.
-	 */
-	if (dir == FORWARD
-		? ((curwin->w_topline >= curbuf->b_ml.ml_line_count - p_so)
-		    && curwin->w_botline > curbuf->b_ml.ml_line_count)
-		: (curwin->w_topline == 1))
-	{
-	    beep_flush();
-	    retval = FAIL;
-	    break;
-	}
-
-	if (dir == FORWARD)
-	{
-					/* at end of file */
-	    if (curwin->w_botline > curbuf->b_ml.ml_line_count)
-	    {
-		curwin->w_topline = curbuf->b_ml.ml_line_count;
-		curwin->w_valid &= ~(VALID_WROW|VALID_CROW);
-	    }
-	    else
-	    {
-		lp = curwin->w_botline;
-		off = get_scroll_overlap(lp, -1);
-		curwin->w_topline = curwin->w_botline - off;
-		curwin->w_cursor.lnum = curwin->w_topline;
-		curwin->w_valid &= ~(VALID_WCOL|VALID_CHEIGHT|VALID_WROW|
-				   VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
-	    }
-	}
-	else	/* dir == BACKWARDS */
-	{
-	    lp = curwin->w_topline - 1;
-	    off = get_scroll_overlap(lp, 1);
-	    lp += off;
-	    if (lp > curbuf->b_ml.ml_line_count)
-		lp = curbuf->b_ml.ml_line_count;
-	    curwin->w_cursor.lnum = lp;
-	    n = 0;
-	    while (n <= curwin->w_height && lp >= 1)
-	    {
-		n += plines(lp);
-		--lp;
-#ifdef FEAT_FOLDING
-		(void)hasFolding(lp, &lp, NULL);
-#endif
-	    }
-	    if (n <= curwin->w_height)		    /* at begin of file */
-	    {
-		curwin->w_topline = 1;
-		curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
-	    }
-	    else if (lp >= curwin->w_topline - 2)   /* very long lines */
-	    {
-		--curwin->w_topline;
-		comp_botline(curwin);
-		curwin->w_cursor.lnum = curwin->w_botline - 1;
-		curwin->w_valid &= ~(VALID_WCOL|VALID_CHEIGHT|
-						       VALID_WROW|VALID_CROW);
-	    }
-	    else
-	    {
-		curwin->w_topline = lp + 2;
-		curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
-	    }
-	}
-    }
-    cursor_correct();
-    beginline(BL_SOL | BL_FIX);
-    curwin->w_valid &= ~(VALID_WCOL|VALID_WROW|VALID_VIRTCOL);
-
-    /*
-     * Avoid the screen jumping up and down when 'scrolloff' is non-zero.
-     */
-    if (dir == FORWARD && curwin->w_cursor.lnum < curwin->w_topline + p_so)
-	scroll_cursor_top(1, FALSE);
-
-    redraw_later(VALID);
-    return retval;
-}
-
-/*
- * Decide how much overlap to use for page-up or page-down scrolling.
- * This is symmetric, so that doing both keeps the same lines displayed.
- */
-    static int
-get_scroll_overlap(lnum, dir)
-    linenr_t	lnum;
-    int		dir;
-{
-    int		h1, h2, h3, h4;
-    int		min_height = curwin->w_height - 2;
-    linenr_t	l;
-
-    h1 = plines_check(lnum);
-    if (h1 > min_height)
-	return 0;
-    else
-    {
-	l = lnum;
-#ifdef FEAT_FOLDING
-	if (dir > 0)
-	    (void)hasFolding(l, NULL, &l);
-	else
-	    (void)hasFolding(l, &l, NULL);
-#endif
-	l += dir;
-	h2 = plines_check(l);
-	if (h2 + h1 > min_height)
-	    return 0;
-	else
-	{
-#ifdef FEAT_FOLDING
-	    if (dir > 0)
-		(void)hasFolding(l, NULL, &l);
-	    else
-		(void)hasFolding(l, &l, NULL);
-#endif
-	    l += dir;
-	    h3 = plines_check(l);
-	    if (h3 + h2 > min_height)
-		return 0;
-	    else
-	    {
-#ifdef FEAT_FOLDING
-		if (dir > 0)
-		    (void)hasFolding(l, NULL, &l);
-		else
-		    (void)hasFolding(l, &l, NULL);
-#endif
-		l += dir;
-		h4 = plines_check(l);
-		if (h4 + h3 + h2 > min_height || h3 + h2 + h1 > min_height)
-		    return 1;
-		else
-		    return 2;
-	    }
-	}
-    }
-}
-
-/* #define KEEP_SCREEN_LINE */
-
-    void
-halfpage(flag, Prenum)
-    int		flag;
-    linenr_t	Prenum;
-{
-    long	scrolled = 0;
-    int		i;
-    int		n;
-    int		room;
-
-    if (Prenum)
-	curwin->w_p_scr = (Prenum > curwin->w_height) ?
-						curwin->w_height : Prenum;
-    n = (curwin->w_p_scr <= curwin->w_height) ?
-				    curwin->w_p_scr : curwin->w_height;
-
-    validate_botline();
-    room = curwin->w_empty_rows;
-    if (flag)	    /* scroll down */
-    {
-	while (n > 0 && curwin->w_botline <= curbuf->b_ml.ml_line_count)
-	{
-	    i = plines(curwin->w_topline);
-	    n -= i;
-	    if (n < 0 && scrolled)
-		break;
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(curwin->w_topline, NULL, &curwin->w_topline);
-#endif
-	    ++curwin->w_topline;
-	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW);
-	    scrolled += i;
-
-	    /*
-	     * Correct w_botline for changed w_topline.
-	     */
-	    room += i;
-	    do
-	    {
-		i = plines(curwin->w_botline);
-		if (i > room)
-		    break;
-#ifdef FEAT_FOLDING
-		(void)hasFolding(curwin->w_botline, NULL, &curwin->w_botline);
-#endif
-		++curwin->w_botline;
-		room -= i;
-	    } while (curwin->w_botline <= curbuf->b_ml.ml_line_count);
-
-#ifndef KEEP_SCREEN_LINE
-	    if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
-	    {
-		++curwin->w_cursor.lnum;
-		curwin->w_valid &= ~(VALID_VIRTCOL|VALID_CHEIGHT|VALID_WCOL);
-	    }
-#endif
-	}
-
-#ifndef KEEP_SCREEN_LINE
-	/*
-	 * When hit bottom of the file: move cursor down.
-	 */
-	if (n > 0)
-	{
-	    curwin->w_cursor.lnum += n;
-	    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-	}
-#else
-	    /* try to put the cursor in the same screen line */
-	while ((curwin->w_cursor.lnum < curwin->w_topline || scrolled > 0)
-			     && curwin->w_cursor.lnum < curwin->w_botline - 1)
-	{
-	    scrolled -= plines(curwin->w_cursor.lnum);
-	    if (scrolled < 0 && curwin->w_cursor.lnum >= curwin->w_topline)
-		break;
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
-#endif
-	    ++curwin->w_cursor.lnum;
-	}
-#endif
-    }
-    else	    /* scroll up */
-    {
-	while (n > 0 && curwin->w_topline > 1)
-	{
-	    i = plines(curwin->w_topline - 1);
-	    n -= i;
-	    if (n < 0 && scrolled)
-		break;
-	    scrolled += i;
-	    --curwin->w_topline;
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
-#endif
-	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW|
-					      VALID_BOTLINE|VALID_BOTLINE_AP);
-#ifndef KEEP_SCREEN_LINE
-	    if (curwin->w_cursor.lnum > 1)
-	    {
-		--curwin->w_cursor.lnum;
-		curwin->w_valid &= ~(VALID_VIRTCOL|VALID_CHEIGHT|VALID_WCOL);
-	    }
-#endif
-	}
-#ifndef KEEP_SCREEN_LINE
-	/*
-	 * When hit top of the file: move cursor up.
-	 */
-	if (n > 0)
-	{
-	    if (curwin->w_cursor.lnum > (linenr_t)n)
-		curwin->w_cursor.lnum -= n;
-	    else
-		curwin->w_cursor.lnum = 1;
-	}
-#else
-	    /* try to put the cursor in the same screen line */
-	scrolled += n;	    /* move cursor when topline is 1 */
-	while (curwin->w_cursor.lnum > curwin->w_topline &&
-		 (scrolled > 0 || curwin->w_cursor.lnum >= curwin->w_botline))
-	{
-	    scrolled -= plines(curwin->w_cursor.lnum - 1);
-	    if (scrolled < 0 && curwin->w_cursor.lnum < curwin->w_botline)
-		break;
-	    --curwin->w_cursor.lnum;
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(curwin->w_cursor.lnum, &curwin->w_cursor.lnum, NULL);
-#endif
-	}
-#endif
-    }
-    cursor_correct();
-    beginline(BL_SOL | BL_FIX);
-    redraw_later(VALID);
-}
-
-/*
  * Give an introductory message about Vim.
  * Only used when starting Vim on an empty file, without a file name.
  * Or with the ":intro" command (for Sven :-).
@@ -9630,7 +9648,7 @@ intro_message()
 		    if (highest_patch())
 		    {
 			/* Check for 9.9x, alpha/beta version */
-			if (isalpha(mediumVersion[3]))
+			if (isalpha((int)mediumVersion[3]))
 			    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
 							   mediumVersion + 4);
 			else

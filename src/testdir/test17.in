@@ -1,6 +1,7 @@
 Tests for "gf" on ${VAR}
 
 STARTTEST
+:so small.vim
 :if has("ebcdic")
 : set isfname=@,240-249,/,.,-,_,+,,,$,:,~,{,}
 :else

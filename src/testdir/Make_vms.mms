@@ -1,8 +1,6 @@
 #
 # Makefile to run all tests for Vim on VMS
 #
-#
-#
 # Authors:	Zoltan Arpadffy, <arpadffy@altavista.net>
 #		Sandor Kopanyi,  <sandor.kopanyi@altavista.net>
 #
@@ -47,7 +45,7 @@ SCRIPT = test1.out test2.out test3.out test4.out test5.out \
 	 test23.out test24.out test26.out \
 	 test28.out test29.out test31.out test32.out \
 	 test33.out test34.out test35.out test36.out test37.out \
-	 test38.out test39.out test40.out
+	 test38.out test39.out test40.out test41.out test42.out
 
 .IFDEF WANT_GUI
 SCRIPT_GUI = test16.out
@@ -68,18 +66,18 @@ SCRIPT_GZIP = test11.out
 	-@ write sys$output "                "$*" "
 	-@ write sys$output "-----------------------------------------------"
 	-@ $(VIMPROG) $(GUI_OPTION) -u vms.vim -s dotest.in $*.in
-	-@ diff test.out $*.ok;
-	-@ ren test.out $*.out
-	-@ del Xdotest.*.*
+	-@ differences test.out $*.ok;
+	-@ rename test.out $*.out
+	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
 
 all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP)
 	-@ write sys$output " "
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                All done"
 	-@ write sys$output "-----------------------------------------------"
-	-@ deass sys$output
-	-@ del x*.*.*
-	-@ ty test.log
+	-@ deassign sys$output
+	-@ delete/noconfirm/nolog x*.*.*
+	-@ type test.log
 
 nolog :
 	-@ define sys$output test.log
@@ -93,10 +91,10 @@ nolog :
 	-@ write sys$output "   HAVE_GZIP = ""$(HAVE_GZIP)"" "
 	-@ write sys$output "Default vimrc file is VMS.VIM:
 	-@ write sys$output "-----------------------------------------------"
-	-@ ty VMS.VIM
+	-@ type VMS.VIM
 
 clean :
-	-@ if "''F$SEARCH("*.out")'" .NES. ""  then del *.out.*
-	-@ if "''F$SEARCH("test.log")'" .NES. "" then del test.log.*
-	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then del Xdotest.*.*
-	-@ if "''F$SEARCH("*.*_sw*")'" .NES. "" then del *.*_sw*.*
+	-@ if "''F$SEARCH("*.out")'" .NES. ""  then delete/noconfirm/nolog *.out.*
+	-@ if "''F$SEARCH("test.log")'" .NES. "" then delete/noconfirm/nolog test.log.*
+	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*
+	-@ if "''F$SEARCH("*.*_sw*")'" .NES. "" then delete/noconfirm/nolog *.*_sw*.*

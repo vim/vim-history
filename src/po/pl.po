@@ -1,7 +1,8 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Free Software Foundation, Inc.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Polish Translation for Vim
 #
+# FIRST AUTHOR Marcin Dalecki <dalecki@cyber.cs.net.pl>, 2000
+#
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: vim 5.6.11\n"
@@ -640,8 +641,8 @@ msgstr "Nie mogê znale¼æ wiersza %ld"
 
 #: ex_cmds.c:4578
 #, c-format
-msgid "    line %d, id %d, type %d"
-msgstr ""
+#~ msgid "    line %d, id %d, type %d"
+#~ msgstr ""
 
 #: ex_cmds.c:4592
 #, fuzzy
@@ -654,8 +655,8 @@ msgstr ""
 
 #: ex_cmds.c:4598
 #, c-format
-msgid "Signs for %s:"
-msgstr ""
+#~ msgid "Signs for %s:"
+#~ msgstr ""
 
 #: ex_docmd.c:400
 msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
@@ -699,8 +700,8 @@ msgid "Use w or w>>"
 msgstr "Stosuj w lub w>>"
 
 #: ex_docmd.c:1602
-msgid ":finish used outsided of a sourced file"
-msgstr ""
+#~ msgid ":finish used outsided of a sourced file"
+#~ msgstr ""
 
 #: ex_docmd.c:1626
 msgid ":endfunction not inside a function"
@@ -987,8 +988,8 @@ msgstr "Brak dwugrafów w tej wersji"
 
 #: ex_docmd.c:8574
 #, c-format
-msgid "Current language: %s"
-msgstr ""
+#~ msgid "Current language: %s"
+#~ msgstr ""
 
 #: ex_docmd.c:8580
 #, fuzzy, c-format
@@ -1077,8 +1078,8 @@ msgid "Conversion failed"
 msgstr "Nieudane zamkniêcie"
 
 #: fileio.c:571
-msgid "can't read output of 'charconvert'"
-msgstr ""
+#~ msgid "can't read output of 'charconvert'"
+#~ msgstr ""
 
 #: fileio.c:603
 msgid "Vim: Reading from stdin...\n"
@@ -1359,8 +1360,8 @@ msgid "Fold must be at least two lines"
 msgstr "Potrzebujê przynajmniej %d wierszy"
 
 #: fold.c:548 fold.c:863
-msgid "No fold at this line"
-msgstr ""
+#~ msgid "No fold at this line"
+#~ msgstr ""
 
 #: getchar.c:237
 msgid "Add to read buffer"
@@ -1430,8 +1431,8 @@ msgid "Vim dialog"
 msgstr "VIM - Dialog..."
 
 #: gui_beval.c:64
-msgid "Cannot create BalloonEval with both message and callback"
-msgstr ""
+#~ msgid "Cannot create BalloonEval with both message and callback"
+#~ msgstr ""
 
 #: gui_gtk.c:1160
 #, fuzzy
@@ -1575,8 +1576,8 @@ msgid "Menu not found - check menu names"
 msgstr "Nie znaleziono menu - sprawd¼ nazwy menu"
 
 #: gui_x11.c:1196
-msgid "Vim: Cannot allocate colormap entry, some colors may be incorrect"
-msgstr ""
+#~ msgid "Vim: Cannot allocate colormap entry, some colors may be incorrect"
+#~ msgstr ""
 
 #: gui_x11.c:1657
 #, c-format
@@ -1588,12 +1589,12 @@ msgid "Font(s) for the following character sets are missing:"
 msgstr "Brak czcionek dla nastêpuj±cych zestawów znaczków:"
 
 #: gui_x11.c:1701
-msgid "locale is not set correctly"
-msgstr ""
+#~ msgid "locale is not set correctly"
+#~ msgstr ""
 
 #: gui_x11.c:1702
-msgid "Set LANG environment variable to your locale"
-msgstr ""
+#~ msgid "Set LANG environment variable to your locale"
+#~ msgstr ""
 
 #: gui_x11.c:1703
 #, fuzzy
@@ -1601,12 +1602,12 @@ msgid "For korean:"
 msgstr " lub wiêcej"
 
 #: gui_x11.c:1704
-msgid "   csh: setenv LANG ko"
-msgstr ""
+#~ msgid "   csh: setenv LANG ko"
+#~ msgstr ""
 
 #: gui_x11.c:1705
-msgid "   sh : export LANG=ko"
-msgstr ""
+#~ msgid "   sh : export LANG=ko"
+#~ msgstr ""
 
 #: gui_x11.c:1707
 #, fuzzy, c-format
@@ -1680,8 +1681,8 @@ msgid "Cannot allocate memory for debugger sign"
 msgstr "Nie mogê zarezerwowaæ bufora; zakoñczenie..."
 
 #: gui_x11.c:2910
-msgid "Error -- couldn't read in sign data!\n"
-msgstr ""
+#~ msgid "Error -- couldn't read in sign data!\n"
+#~ msgstr ""
 
 #: hangulin.c:603
 msgid "automata ERROR: internal"
@@ -3236,8 +3237,8 @@ msgstr "Dialog otworzenia pliku"
 
 #. TODO: non-GUI file selector here
 #: message.c:2238
-msgid "Sorry, no file browser in console mode"
-msgstr ""
+#~ msgid "Sorry, no file browser in console mode"
+#~ msgstr ""
 
 #: misc1.c:2221
 msgid "Warning: Changing a readonly file"
@@ -3326,10 +3327,10 @@ msgstr "Wprowad¼ klucz do odkodowania: "
 
 #: misc2.c:3296
 #, c-format
-msgid ""
-"Invalid path: '**[number]' must be at the end of the path or be followed by "
-"'%s'. See :help path."
-msgstr ""
+#~ msgid ""
+#~ "Invalid path: '**[number]' must be at the end of the path or be followed by "
+#~ "'%s'. See :help path."
+#~ msgstr ""
 
 #: misc2.c:4258
 #, fuzzy, c-format
@@ -3343,8 +3344,8 @@ msgstr "Nie mogê znale¼æ pliku \"%s\" w tropie"
 
 #: misc2.c:4265
 #, c-format
-msgid "No more directory \"%s\" found in cdpath"
-msgstr ""
+#~ msgid "No more directory \"%s\" found in cdpath"
+#~ msgstr ""
 
 #: misc2.c:4267
 #, fuzzy, c-format
@@ -3412,12 +3413,12 @@ msgid "No identifier under cursor"
 msgstr "Brak identyfikatora pod kursorem"
 
 #: normal.c:3605
-msgid "Cannot create fold with current 'foldmethod'"
-msgstr ""
+#~ msgid "Cannot create fold with current 'foldmethod'"
+#~ msgstr ""
 
 #: normal.c:3617 normal.c:3624
-msgid "Cannot delete fold with current 'foldmethod'"
-msgstr ""
+#~ msgid "Cannot delete fold with current 'foldmethod'"
+#~ msgstr ""
 
 #: ops.c:261
 #, fuzzy
@@ -3430,8 +3431,8 @@ msgid "%ld lines "
 msgstr "%ld wierszy ~ed"
 
 #: ops.c:266
-msgid "ed 1 time"
-msgstr ""
+#~ msgid "ed 1 time"
+#~ msgstr ""
 
 #: ops.c:268
 #, fuzzy, c-format
@@ -3581,8 +3582,8 @@ msgid "contains unprintable character"
 msgstr "zawierz niewy¶wietlalny znaczek"
 
 #: option.c:3982
-msgid "Invalid font(s)"
-msgstr ""
+#~ msgid "Invalid font(s)"
+#~ msgstr ""
 
 #: option.c:3988
 #, fuzzy
@@ -3868,11 +3869,11 @@ msgid "Could not fix up function pointers to the DLL!"
 msgstr "Nie zdo³a³em poprawiæ wska¼ników w DLL!"
 
 #: os_win32.c:1289
-msgid ""
-"VIMRUN.EXE not found in your $PATH.\n"
-"External commands will not pause after completion.\n"
-"See  :help win32-vimrun  for more information."
-msgstr ""
+#~ msgid ""
+#~ "VIMRUN.EXE not found in your $PATH.\n"
+#~ "External commands will not pause after completion.\n"
+#~ "See  :help win32-vimrun  for more information."
+#~ msgstr ""
 
 #: os_win32.c:1292
 msgid "Vim Warning"
@@ -3931,13 +3932,13 @@ msgid "Library call failed for \"%s\"()"
 msgstr "Wywo³anie biblioteki nie powiod³o siê"
 
 #: pty.c:339
-msgid "OpenPTY: Using BSD style ptys.\n"
-msgstr ""
+#~ msgid "OpenPTY: Using BSD style ptys.\n"
+#~ msgstr ""
 
 #: pty.c:350
 #, c-format
-msgid "OpenPTY tries '%s'\n"
-msgstr ""
+#~ msgid "OpenPTY tries '%s'\n"
+#~ msgstr ""
 
 #: quickfix.c:247
 msgid "Too many %%%c in format string"
@@ -4041,8 +4042,8 @@ msgid "Nested *, \\=, \\+, \\! or \\{"
 msgstr "Zagnie¿d¿enie *, \\=, \\+, lub \\{"
 
 #: regexp.c:1301
-msgid "invalid use of \\_"
-msgstr ""
+#~ msgid "invalid use of \\_"
+#~ msgstr ""
 
 #: regexp.c:1326
 msgid "\\= follows nothing"
@@ -4084,8 +4085,8 @@ msgid "\\z1 et al. not allowed here"
 msgstr "niedozwolone w tym miejscu"
 
 #: regexp.c:1433
-msgid "unattached \\z"
-msgstr ""
+#~ msgid "unattached \\z"
+#~ msgstr ""
 
 #: regexp.c:1650
 msgid "Unexpected magic character; check META."
@@ -4097,18 +4098,18 @@ msgid "Syntax error in \\%c...%c"
 msgstr "B³±d w sk³adni \\%c...%c"
 
 #: regexp.c:2597
-msgid "External submatches:\n"
-msgstr ""
+#~ msgid "External submatches:\n"
+#~ msgstr ""
 
 #: screen.c:543
 #, c-format
-msgid "update_debug_sign[1]: file \"%s\", row %d, cols [0 - %d]\n"
-msgstr ""
+#~ msgid "update_debug_sign[1]: file \"%s\", row %d, cols [0 - %d]\n"
+#~ msgstr ""
 
 #. delete all marks
 #: screen.c:553
-msgid "update_debug_signs[2]: Delete all marks!\n"
-msgstr ""
+#~ msgid "update_debug_signs[2]: Delete all marks!\n"
+#~ msgstr ""
 
 #: screen.c:3499 screen.c:4035
 msgid "[help]"
@@ -4604,12 +4605,12 @@ msgstr ""
 "  # DO tag         OD wiersza      w pliku"
 
 #: tag.c:1030
-msgid "Linear tag search"
-msgstr ""
+#~ msgid "Linear tag search"
+#~ msgstr ""
 
 #: tag.c:1032
-msgid "Binary tag search"
-msgstr ""
+#~ msgid "Binary tag search"
+#~ msgstr ""
 
 #: tag.c:1242
 #, fuzzy, c-format
@@ -4801,8 +4802,8 @@ msgstr ""
 "Skompilowany przez "
 
 #: version.c:627
-msgid "by "
-msgstr ""
+#~ msgid "by "
+#~ msgstr ""
 
 #: version.c:639
 #, fuzzy
@@ -4814,28 +4815,28 @@ msgstr ""
 "zastosowanie:"
 
 #: version.c:642
-msgid ""
-"\n"
-"Big"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "Big"
+#~ msgstr ""
 
 #: version.c:645
-msgid ""
-"\n"
-"Normal"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "Normal"
+#~ msgstr ""
 
 #: version.c:648
-msgid ""
-"\n"
-"Small"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "Small"
+#~ msgstr ""
 
 #: version.c:650
-msgid ""
-"\n"
-"Tiny"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "Tiny"
+#~ msgstr ""
 
 #: version.c:655
 #, fuzzy
@@ -4843,36 +4844,36 @@ msgid " version "
 msgstr "wersja "
 
 #: version.c:657
-msgid "without"
-msgstr ""
+#~ msgid "without"
+#~ msgstr ""
 
 #: version.c:661
-msgid "with GTK-GNOME"
-msgstr ""
+#~ msgid "with GTK-GNOME"
+#~ msgstr ""
 
 #: version.c:663
-msgid "with GTK"
-msgstr ""
+#~ msgid "with GTK"
+#~ msgstr ""
 
 #: version.c:667
-msgid "with X11-Motif"
-msgstr ""
+#~ msgid "with X11-Motif"
+#~ msgstr ""
 
 #: version.c:670
-msgid "with X11-Athena"
-msgstr ""
+#~ msgid "with X11-Athena"
+#~ msgstr ""
 
 #: version.c:673
-msgid "with BeOS"
-msgstr ""
+#~ msgid "with BeOS"
+#~ msgstr ""
 
 #: version.c:676
-msgid "with"
-msgstr ""
+#~ msgid "with"
+#~ msgstr ""
 
 #: version.c:683
-msgid " GUI.  Features included (+) or not (-):\n"
-msgstr ""
+#~ msgid " GUI.  Features included (+) or not (-):\n"
+#~ msgstr ""
 
 #: version.c:695
 msgid "   system vimrc file: \""
@@ -4949,12 +4950,12 @@ msgid "  DEBUG BUILD"
 msgstr "  KOMPILACJA DEBUG"
 
 #: window.c:510
-msgid "Can't split topleft and botright at the same time"
-msgstr ""
+#~ msgid "Can't split topleft and botright at the same time"
+#~ msgstr ""
 
 #: window.c:1127
-msgid "Cannot rotate when another window is split"
-msgstr ""
+#~ msgid "Cannot rotate when another window is split"
+#~ msgstr ""
 
 #: window.c:1503
 msgid "Cannot close last window"
@@ -4973,8 +4974,8 @@ msgid "No file name under cursor"
 msgstr "Brak nazwy pliku pod kursorem"
 
 #: globals.h:739
-msgid "--No lines in buffer--"
-msgstr ""
+#~ msgid "--No lines in buffer--"
+#~ msgstr ""
 
 #.
 #. * The error messages that can be shared are included here.
@@ -4991,12 +4992,12 @@ msgid "Argument required"
 msgstr "argument wymagany przez uzupe³nianie"
 
 #: globals.h:803
-msgid "\\ should be followed by /, ? or &"
-msgstr ""
+#~ msgid "\\ should be followed by /, ? or &"
+#~ msgstr ""
 
 #: globals.h:804
-msgid "Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr ""
+#~ msgid "Command not allowed from exrc/vimrc in current dir or tag search"
+#~ msgstr ""
 
 #: globals.h:805
 #, fuzzy
@@ -5104,8 +5105,8 @@ msgid "Farsi cannot be used: Not enabled at compile time\n"
 msgstr " nie mo¿e byæ stosowany na tym komputerze.\n"
 
 #: globals.h:838
-msgid "No inserted text yet"
-msgstr ""
+#~ msgid "No inserted text yet"
+#~ msgstr ""
 
 #: globals.h:839
 #, fuzzy
@@ -5133,8 +5134,8 @@ msgid "No file name"
 msgstr "Niedopuszczalna nazwa pliku"
 
 #: globals.h:844
-msgid "No previous substitute regular expression"
-msgstr ""
+#~ msgid "No previous substitute regular expression"
+#~ msgstr ""
 
 #: globals.h:845
 #, fuzzy
@@ -5142,16 +5143,16 @@ msgid "No previous command"
 msgstr "Nie jest komend± edytora"
 
 #: globals.h:846
-msgid "No previous regular expression"
-msgstr ""
+#~ msgid "No previous regular expression"
+#~ msgstr ""
 
 #: globals.h:847
-msgid "No range allowed"
-msgstr ""
+#~ msgid "No range allowed"
+#~ msgstr ""
 
 #: globals.h:848
-msgid "Not enough room"
-msgstr ""
+#~ msgid "Not enough room"
+#~ msgstr ""
 
 #: globals.h:849
 #, fuzzy, c-format
@@ -5221,8 +5222,8 @@ msgid "Damaged match string"
 msgstr "Ci±g Szukany"
 
 #: globals.h:871
-msgid "Corrupted regexp program"
-msgstr ""
+#~ msgid "Corrupted regexp program"
+#~ msgstr ""
 
 #: globals.h:872
 #, fuzzy
@@ -5235,8 +5236,8 @@ msgid "Cannot set read-only variable \"%s\""
 msgstr "Nie mogê czytaæ z \"%s\""
 
 #: globals.h:877
-msgid "Error while reading errorfile"
-msgstr ""
+#~ msgid "Error while reading errorfile"
+#~ msgstr ""
 
 #: globals.h:879
 #, fuzzy
@@ -5249,8 +5250,8 @@ msgid "Format error in tags file \"%s\""
 msgstr "B³±d w zapisie do pliku wydzielania"
 
 #: globals.h:881
-msgid "tag stack empty"
-msgstr ""
+#~ msgid "tag stack empty"
+#~ msgstr ""
 
 #: globals.h:882
 #, fuzzy
@@ -5278,8 +5279,8 @@ msgid "Too many ["
 msgstr "zbyt wiele cz³onków"
 
 #: globals.h:888
-msgid "Too many \\z\\("
-msgstr ""
+#~ msgid "Too many \\z\\("
+#~ msgstr ""
 
 #: globals.h:891
 #, fuzzy
@@ -5302,12 +5303,12 @@ msgid "Unknown"
 msgstr "Nieznana opcja"
 
 #: globals.h:897
-msgid "Error while writing"
-msgstr ""
+#~ msgid "Error while writing"
+#~ msgstr ""
 
 #: globals.h:898
-msgid "Zero count"
-msgstr ""
+#~ msgid "Zero count"
+#~ msgstr ""
 
 #~ msgid ""
 #~ "\n"

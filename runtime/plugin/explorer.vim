@@ -7,9 +7,9 @@
 " This file implements a file explorer. Latest version available at:
 " http://www.freespeech.org/aziz/vim/
 "-----------------------------------------------------------------------------
-" Just type <Leader>e to launch the file explorer (this file should have been
-" sourced) in a separate window. Type <Leader>s to split the current window and
-" launch explorer there. If the current buffer is modified, the window is
+" Just type ":Explore" to launch the file explorer (this file should have been
+" sourced) in a separate window. Type ":Sexplore" to split the current window
+" and launch explorer there. If the current buffer is modified, the window is
 " anyway split (irrespective of <Leader>e or <Leader>s).
 " It is also possible to delete files and rename files within explorer.
 " The directory which explorer uses by default is determined by the 'browsedir'

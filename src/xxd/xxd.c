@@ -642,7 +642,7 @@ char *argv[];
     {
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned char %s", isdigit(argv[1][0]) ? "__" : "");
+	  fprintf(fpo, "unsigned char %s", isdigit((int)argv[1][0]) ? "__" : "");
 	  for (e = 0; (c = argv[1][e]) != 0; e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fputs("[] = {\n", fpo);
@@ -661,7 +661,7 @@ char *argv[];
 
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned int %s", isdigit(argv[1][0]) ? "__" : "");
+	  fprintf(fpo, "unsigned int %s", isdigit((int)argv[1][0]) ? "__" : "");
 	  for (e = 0; (c = argv[1][e]) != 0; e++)
 	    putc(isalnum(c) ? c : '_', fpo);
 	  fprintf(fpo, "_len = %d;\n", p);

@@ -2,6 +2,7 @@ Test for autocommand that changes current buffer on BufEnter event.
 Check if modelines are interpreted for the correct buffer.
 
 STARTTEST
+:so small.vim
 :set nocompatible
 :au BufEnter Xxx brew
 /start of
@@ -17,7 +18,6 @@ G?this is a
 othis should be in column 1:wq " append hello without autoindent to Xxx
 G:r Xxx             " include Xxx in the current file
 :?startstart?,$w! test.out
-:!rm Xxx
 :qa!
 ENDTEST
 

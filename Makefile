@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0n
+MINOR = 0o
 
 # CHECKLIST for creating a new version:
 #
@@ -82,8 +82,7 @@ MINOR = 0n
 #   missing include files, but fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
-# - Enable the efence library and run "make test".  May require Perl or Python
-#   to be disabled.
+# - Enable the efence library and run "make test".
 # - Add remarks for changes to runtime/doc/version6.txt.
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
@@ -529,7 +528,6 @@ RT_ALL =	\
 		runtime/macros/diffwin.vim \
 		runtime/macros/hdiffwin.vim \
 		runtime/macros/dvorak \
-		runtime/macros/explorer.vim \
 		runtime/macros/hanoi/click.me \
 		runtime/macros/hanoi/hanoi.vim \
 		runtime/macros/hanoi/poster \
@@ -697,6 +695,8 @@ EXTRA =		\
 # all files for lang archive
 LANGUAGE = \
 		README_lang.txt \
+		src/po/README.txt \
+		src/po/cleaup.vim \
 		src/po/Makefile \
 		src/po/*.po \
 		runtime/lang/README.txt \
@@ -860,7 +860,7 @@ amisrc: dist
 	mv dist/vim$(VERSION)src.tar.gz dist/vim$(VERSION)src.tgz
 
 no_title.vim: Makefile
-	echo "set notitle noicon nocp" >no_title.vim
+	echo "set notitle noicon nocp nomodeline" >no_title.vim
 
 dosrt: dist no_title.vim dist/$(COMMENT_RT)
 	-rm -rf dist/vim$(VERSION)rt.zip

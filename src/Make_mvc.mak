@@ -19,9 +19,10 @@
 #	Perl interface: PERL=[Path to Perl directory]
 #	Active Perl (dynamic link) interface:
 #	  ACTIVEPERL=[Path to Active Perl directory]
-#	Python interface: PYTHON=[Path to Python directory]
-#	Python (dynamic link) interface:
-#	  DYNAMICPYTHON=[Path to Python directory]
+#	Python interface:
+#	  PYTHON=[Path to Python directory]          -- statically loaded
+#	  DYNAMIC_PYTHON=[Path to Python directory]  -- dynamically loaded
+#	  PYTHON_VER=[Python version, eg 15, 20]
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
 #
@@ -269,21 +270,27 @@ TCL_LIB = $(TCL)\lib\tcl83vc.lib
 !endif
 
 # PYTHON interface
-# Adjust the version number in "python14", if needed.
 !ifdef PYTHON
-!message Python detected - root dir is "$(PYTHON)"
+!ifndef PYTHON_VER
+PYTHON_VER = 15
+!endif
+!message Python detected (version $(PYTHON_VER)) - root dir is "$(PYTHON)"
 CFLAGS    = $(CFLAGS) -DFEAT_PYTHON
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
 PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
-PYTHON_LIB = $(PYTHON)\libs\python15.lib
+PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
 # Dynamic (linked) PYTHON interface
-!elseifdef DYNAMICPYTHON
-!message Dynamic Python detected - root dir is "$(DYNAMICPYTHON)"
+!elseifdef DYNAMIC_PYTHON
+!ifndef PYTHON_VER
+PYTHON_VER = 15
+!endif
+!message Dynamic Python detected (version $(PYTHON_VER)) - root dir is "$(DYNAMIC_PYTHON)"
 CFLAGS    = $(CFLAGS) -DFEAT_PYTHON \
-	-DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_W32=\"python15.dll\"
+	-DDYNAMIC_PYTHON -DDYNAMIC_PYTHON_DLL=\"python$(PYTHON_VER).dll\"
 PYTHON_OBJ = $(OUTDIR)\if_python.obj
-PYTHON_INC = /I "$(DYNAMICPYTHON)\Include" /I "$(DYNAMICPYTHON)\PC"
-PYTHON_LIB =
+PYTHON_INC = /I "$(DYNAMIC_PYTHON)\Include" /I "$(DYNAMIC_PYTHON)\PC"
+# Disable default loading of pythonXX.lib (forced by the Python headers)
+PYTHON_LIB = /nodefaultlib:python$(PYTHON_VER).lib
 !endif
 
 # Perl interface

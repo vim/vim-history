@@ -403,8 +403,8 @@ emsg(s)
     p = _("Error detected while processing %s:");
     if (sourcing_name != NULL
 	    && (other_sourcing_name || sourcing_lnum != last_sourcing_lnum)
-	    && (Buf = alloc((unsigned)STRLEN(sourcing_name)
-							+ STRLEN(p))) != NULL)
+	    && (Buf = alloc((unsigned)(STRLEN(sourcing_name)
+						       + STRLEN(p)))) != NULL)
     {
 	++no_wait_return;
 	if (other_sourcing_name)
@@ -571,11 +571,20 @@ ex_messages(eap)
     exarg_t	*eap;
 {
     struct msg_hist *p;
+    char_u	    *s;
 
     msg_hist_off = TRUE;
+
+    s = mch_getenv((char_u *)"LANG");
+    if (s != NULL && *s != NUL)
+	msg_attr((char_u *)
+		_("Messages maintainer: Bram Moolenaar <Bram@vim.org>"),
+		hl_attr(HLF_T));
+
     for (p = first_msg_hist; p != NULL; p = p->next)
 	if (p->msg != NULL)
 	    msg_attr(p->msg, p->attr);
+
     msg_hist_off = FALSE;
 }
 

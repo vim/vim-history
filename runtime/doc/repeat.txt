@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0n.  Last change: 2000 Nov 05
+*repeat.txt*    For Vim version 6.0o.  Last change: 2000 Nov 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -142,6 +142,10 @@ q			Stops recording.  (Implementation note: The 'q' that
 <			will source the first file only.
 			Only one file name can be given, spaces are considered
 			to be part of the name, except at the start and end.
+			When 'verbose' is one or higher, there is a message
+			when no file could be found.
+			When 'verbose' is two or higher, there is a message
+			about each searched file.
 			{not in Vi}
 
 						*:scrip* *:scriptnames*

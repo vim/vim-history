@@ -2,6 +2,7 @@ Test for 'lisp'
 If the lisp feature is not enabled, this will fail!
 
 STARTTEST
+:so small.vim
 :set lisp
 /^(defun
 =G:/^(defun/,$w! test.out

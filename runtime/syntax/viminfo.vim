@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim .viminfo file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 19
+" Last Change:	2000 Nov 29
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -14,6 +14,7 @@ syn match viminfoStatement "^[/&$@:?=%!<]"
 
 " The two-character one-liners that are recognized
 syn match viminfoStatement "^['->"]."
+syn match viminfoStatement +^"".+
 syn match viminfoStatement "^\~[/&]"
 syn match viminfoStatement "^\~[hH]"
 syn match viminfoStatement "^\~[mM][sS][lL][eE]\d\+\~\=[/&]"

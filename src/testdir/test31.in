@@ -10,6 +10,7 @@ Test for commands that close windows and/or buffers:
 :edit
 
 STARTTEST
+:so tiny.vim
 GA 1:$w! Xtest1
 $r2:$w! Xtest2
 $r3:$w! Xtest3
@@ -61,7 +62,6 @@ A 3:close
 :" write "testtext 1"
 A 3:close!
 :w >>test.out
-:!rm Xtest1 Xtest2 Xtest3
 :qa!
 ENDTEST
 

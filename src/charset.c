@@ -1060,6 +1060,22 @@ getvcol(wp, pos, start, cursor, end)
     }
 }
 
+/*
+ * Get virtual cursor column in the current window, pretending 'list' is off.
+ */
+    colnr_t
+getvcol_nolist(posp)
+    pos_t	*posp;
+{
+    int		list_save = curwin->w_p_list;
+    colnr_t	vcol;
+
+    curwin->w_p_list = FALSE;
+    getvcol(curwin, posp, NULL, &vcol, NULL);
+    curwin->w_p_list = list_save;
+    return vcol;
+}
+
 #if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
 /*
  * Get virtual column in virtual mode.
@@ -1330,6 +1346,21 @@ hex2nr(c)
 	return c - 'A' + 10;
     return c - '0';
 }
+
+#if defined(FEAT_TERMRESPONSE) || defined(PROTO)
+/*
+ * Convert two hex characters to a byte.
+ * Return -1 if one of the characters is not hex.
+ */
+    int
+hexhex2nr(p)
+    char_u	*p;
+{
+    if (!isxdigit(p[0]) || !isxdigit(p[1]))
+	return -1;
+    return (hex2nr(p[0]) << 4) + hex2nr(p[1]);
+}
+#endif
 
 #if defined(FEAT_MBYTE)
 /*

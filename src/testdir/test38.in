@@ -2,6 +2,7 @@
 Test Virtual replace mode.
 
 STARTTEST
+:so small.vim
 ggdGa
 abcdefghi
 jk	lmn

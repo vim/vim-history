@@ -43,6 +43,7 @@ static struct yankreg
     char_u	**y_array;	/* pointer to array of line pointers */
     linenr_t	y_size;		/* number of lines in y_array */
     char_u	y_type;		/* MLINE, MCHAR or MBLOCK */
+    colnr_t	y_width;	/* only set if y_type == MBLOCK */
 } y_regs[NUM_REGISTERS];
 
 static struct yankreg	*y_current;	    /* ptr to current yankreg */
@@ -256,7 +257,7 @@ op_shift(oap, curs_top, amount)
 	    if (amount == 1)
 		sprintf((char *)IObuff, _("1 line %sed 1 time"), s);
 	    else
-		sprintf((char *)IObuff, _("l line %sed %d times"), s, amount);
+		sprintf((char *)IObuff, _("1 line %sed %d times"), s, amount);
 	}
 	else
 	{
@@ -1305,7 +1306,7 @@ op_delete(oap)
 #ifdef FEAT_CLIPBOARD
     /* If no register specified, and "unnamed" in 'clipboard', use * register */
     if (oap->regname == 0 && vim_strchr(p_cb, 'd') != NULL)
-        oap->regname = '*';
+	oap->regname = '*';
     if (!clipboard.available && oap->regname == '*')
 	oap->regname = 0;
 #endif
@@ -1624,7 +1625,13 @@ op_replace(oap, c)
 	    /* insert pre-spaces */
 	    copy_spaces(newp + bd.textcol, (size_t)bd.startspaces);
 	    /* insert replacement chars CHECK FOR ALLOCATED SPACE */
-	    copy_chars(newp + STRLEN(newp), (size_t)bd.textlen, c);
+	    {
+		colnr_t len = oap->end_vcol - oap->start_vcol + 1;
+
+		if (bd.is_short)
+		    len -= (oap->end_vcol - bd.end_vcol) + 1;
+		copy_chars(newp + STRLEN(newp), (size_t)len, c);
+	    }
 	    if (!bd.is_short)
 	    {
 		/* insert post-spaces */
@@ -2156,7 +2163,7 @@ op_yank(oap, deleting, mess)
 #ifdef FEAT_CLIPBOARD
     /* If no register specified, and "unnamed" in 'clipboard', use * register */
     if (!deleting && oap->regname == 0 && vim_strchr(p_cb, 'd') != NULL)
-        oap->regname = '*';
+	oap->regname = '*';
     if (!clipboard.available && oap->regname == '*')
 	oap->regname = 0;
 #endif
@@ -2191,6 +2198,7 @@ op_yank(oap, deleting, mess)
 
     y_current->y_size = yanklines;
     y_current->y_type = yanktype;   /* set the yank register type */
+    y_current->y_width = 0;
     y_current->y_array = (char_u **)lalloc_clear((long_u)(sizeof(char_u *) *
 							    yanklines), TRUE);
 
@@ -2203,12 +2211,17 @@ op_yank(oap, deleting, mess)
     y_idx = 0;
     lnum = oap->start.lnum;
 
-/*
- * Visual block mode
- */
+    /*
+     * Visual block mode
+     */
     if (oap->block_mode)
     {
 	y_current->y_type = MBLOCK;	    /* set the yank register type */
+	y_current->y_width = oap->end_vcol - oap->start_vcol;
+
+	if (curwin->w_curswant == MAXCOL && y_current->y_width > 0)
+	    y_current->y_width--;
+
 	for ( ; lnum <= yankendlnum; ++lnum)
 	{
 	    block_prep(oap, &bd, lnum, FALSE);
@@ -2380,6 +2393,7 @@ do_put(regname, dir, count, flags)
     long	i;			/* index in y_array[] */
     int		y_type;
     long	y_size;
+    long	y_width = 0;
     char_u	**y_array = NULL;
     long	nr_lines = 0;
     colnr_t	vcol;
@@ -2404,7 +2418,7 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_CLIPBOARD
     /* If no register specified, and "unnamed" in 'clipboard', use * register */
     if (regname == 0 && vim_strchr(p_cb, 'd') != NULL)
-        regname = '*';
+	regname = '*';
     if (regname == '*')
     {
 	if (!clipboard.available)
@@ -2463,6 +2477,7 @@ do_put(regname, dir, count, flags)
     if (insert_string != NULL)
     {
 	y_type = MCHAR;
+#ifdef FEAT_EVAL
 	if (regname == '=')
 	{
 	    /* For the = register we need to split the string at NL
@@ -2500,6 +2515,7 @@ do_put(regname, dir, count, flags)
 	    }
 	}
 	else
+#endif
 	{
 	    y_size = 1;		/* use fake one-line yank register */
 	    y_array = &insert_string;
@@ -2510,6 +2526,7 @@ do_put(regname, dir, count, flags)
 	get_yank_register(regname, FALSE);
 
 	y_type = y_current->y_type;
+	y_width = y_current->y_width;
 	y_size = y_current->y_size;
 	y_array = y_current->y_array;
     }
@@ -2590,8 +2607,12 @@ do_put(regname, dir, count, flags)
 	}
 	else
 	    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
+
 	for (i = 0; i < y_size; ++i)
 	{
+	    int spaces;
+	    char shortline;
+
 	    bd.startspaces = 0;
 	    bd.endspaces = 0;
 	    bd.textcol = 0;
@@ -2616,10 +2637,11 @@ do_put(regname, dir, count, flags)
 		vcol += incr;
 	    }
 	    bd.textcol = ptr - oldp;
+
+	    shortline = (vcol < col) || (vcol == col && !*ptr) ;
+
 	    if (vcol < col) /* line too short, padd with spaces */
-	    {
 		bd.startspaces = col - vcol;
-	    }
 	    else if (vcol > col)
 	    {
 		bd.endspaces = vcol - col;
@@ -2628,9 +2650,17 @@ do_put(regname, dir, count, flags)
 		delcount = 1;
 	    }
 
-	    /* insert the new text */
 	    yanklen = STRLEN(y_array[i]);
-	    totlen = count * yanklen + bd.startspaces + bd.endspaces;
+
+	    /* calculate number of spaces required to fill right side of block*/
+	    spaces = y_width + 1;
+	    for (j = 0; j < yanklen; j++)
+		spaces -= lbr_chartabsize(&y_array[i][j], 0);
+	    if (spaces < 0)
+		spaces = 0;
+
+	    /* insert the new text */
+	    totlen = count * (yanklen + spaces) + bd.startspaces + bd.endspaces;
 	    newp = alloc_check((unsigned)totlen + oldlen + 1);
 	    if (newp == NULL)
 		break;
@@ -2646,6 +2676,13 @@ do_put(regname, dir, count, flags)
 	    {
 		mch_memmove(ptr, y_array[i], (size_t)yanklen);
 		ptr += yanklen;
+
+		/* insert block's trailing spaces only if there's text behind */
+		if (((j < count-1) || !shortline) && spaces)
+		{
+		    copy_spaces(ptr, (size_t)spaces);
+		    ptr += spaces;
+		}
 	    }
 	    /* may insert some spaces after the new text */
 	    copy_spaces(ptr, (size_t)bd.endspaces);
@@ -3647,6 +3684,8 @@ block_prep(oap, bdp, lnum, is_del)
     }
     else
     {
+	/* notice: this converts partly selected Multibyte characters to
+	 * spaces, too. */
 	bdp->startspaces = bdp->start_vcol - oap->start_vcol;
 	if (is_del && bdp->startspaces)
 	    bdp->startspaces = bdp->start_char_vcols - bdp->startspaces;
@@ -3668,7 +3707,14 @@ block_prep(oap, bdp, lnum, is_del)
 	    {
 		bdp->startspaces = oap->end_vcol - oap->start_vcol + 1;
 		if (is_del && oap->op_type != OP_LSHIFT)
-		    bdp->startspaces = bdp->start_char_vcols - bdp->startspaces;
+		{
+		    /* just putting the sum of those two into
+		     * bdp->startspaces doesn't work for Visual replace,
+		     * so we have to split the tab in two */
+		    bdp->startspaces = bdp->start_char_vcols
+					- (bdp->start_vcol - oap->start_vcol);
+		    bdp->endspaces = bdp->end_vcol - oap->end_vcol - 1;
+		}
 	    }
 	}
 	else
@@ -3687,10 +3733,14 @@ block_prep(oap, bdp, lnum, is_del)
 #ifdef FEAT_VISUALEXTRA
 		bdp->is_short = TRUE;
 #endif
+		/* Alternative: include spaces to fill up the block.
+		 * Disadvantage: can lead to trailing spaces when the line is
+		 * short where the text is put */
+		/* if (!is_del || oap->op_type == OP_APPEND) */
 		if (oap->op_type == OP_APPEND)
 		    bdp->endspaces = oap->end_vcol - bdp->end_vcol + 1;
 		else
-		    bdp->endspaces = 0;
+		    bdp->endspaces = 0; /* replace doesn't add characters */
 	    }
 	    else if (bdp->end_vcol > oap->end_vcol)
 	    {
@@ -3978,7 +4028,7 @@ do_addsub(command, Prenum1)
 		*ptr++ = '0';
 	*ptr = NUL;
 	STRCAT(buf1, buf2);
-	ins_str(buf1);		    /* insert the new number */
+	ins_str(buf1);		/* insert the new number */
     }
     --curwin->w_cursor.col;
     curwin->w_set_curswant = TRUE;
@@ -3992,18 +4042,18 @@ do_addsub(command, Prenum1)
 #ifdef FEAT_VIMINFO
     int
 read_viminfo_register(line, fp, force)
-    char_u  *line;
-    FILE    *fp;
-    int	    force;
+    char_u	*line;
+    FILE	*fp;
+    int		force;
 {
-    int	    eof;
-    int	    do_it = TRUE;
-    int	    size;
-    int	    limit;
-    int	    i;
-    int	    set_prev = FALSE;
-    char_u  *str;
-    char_u  **array = NULL;
+    int		eof;
+    int		do_it = TRUE;
+    int		size;
+    int		limit;
+    int		i;
+    int		set_prev = FALSE;
+    char_u	*str;
+    char_u	**array = NULL;
 
     /* We only get here (hopefully) if line[0] == '"' */
     str = line + 1;
@@ -4037,7 +4087,11 @@ read_viminfo_register(line, fp, force)
 	    y_current->y_type = MBLOCK;
 	else
 	    y_current->y_type = MLINE;
+	/* get the block width; if it's missing we get a zero, which is OK */
+	str = skipwhite(skiptowhite(str));
+	y_current->y_width = getdigits(&str);
     }
+
     while (!(eof = vim_fgets(line, LSIZE, fp))
 					&& (line[0] == TAB || line[0] == '<'))
     {
@@ -4125,7 +4179,7 @@ write_viminfo_registers(fp)
 	if (y_previous == &y_regs[i])
 	    fprintf(fp, "\"");
 	c = get_register_name(i);
-	fprintf(fp, "\"%c\t%s\n", c, type);
+	fprintf(fp, "\"%c\t%s\t%d\n", c, type, y_regs[i].y_width);
 	num_lines = y_regs[i].y_size;
 
 	/* If max_num_lines < 0, then we save ALL the lines in the register */
@@ -4459,15 +4513,15 @@ str_to_reg(y_ptr, type, str, len)
     char_u		*str;		/* string to put in register */
     long		len;		/* lenght of string */
 {
-    int	    lnum;
-    long    start;
-    long    i;
-    int	    extra;
-    int	    newlines;			/* number of lines added */
-    int	    extraline = 0;		/* extra line at the end */
-    int	    append = FALSE;		/* append to last line in register */
-    char_u  *s;
-    char_u  **pp;
+    int		lnum;
+    long	start;
+    long	i;
+    int		extra;
+    int		newlines;		/* number of lines added */
+    int		extraline = 0;		/* extra line at the end */
+    int		append = FALSE;		/* append to last line in register */
+    char_u	*s;
+    char_u	**pp;
 
     if (y_ptr->y_array == NULL)		/* NULL means emtpy register */
 	y_ptr->y_size = 0;
@@ -4542,6 +4596,7 @@ str_to_reg(y_ptr, type, str, len)
     }
     y_ptr->y_type = type;
     y_ptr->y_size = lnum;
+    y_ptr->y_width = 0;
 }
 #endif /* FEAT_CLIPBOARD || FEAT_EVAL || PROTO */
 

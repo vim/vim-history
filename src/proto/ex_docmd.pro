@@ -12,7 +12,7 @@ void dialog_changed __ARGS((buf_t *buf, int checkall));
 int can_abandon __ARGS((buf_t *buf, int forceit));
 int check_changed_any __ARGS((int hidden));
 int check_fname __ARGS((void));
-int buf_write_all __ARGS((buf_t *buf));
+int buf_write_all __ARGS((buf_t *buf, int forceit));
 int rem_backslash __ARGS((char_u *str));
 void backslash_halve __ARGS((char_u *p));
 char_u *backslash_halve_save __ARGS((char_u *p));

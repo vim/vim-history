@@ -156,7 +156,7 @@ set_indent(size, flags)
 	*s++ = ' ';
 	--todo;
     }
-    mch_memmove(s, p, line_len);
+    mch_memmove(s, p, (size_t)line_len);
 
     /* Replace the line. */
     if (flags & SIN_UNDO)
@@ -1986,7 +1986,7 @@ changed()
 	check_status(curbuf);
 #endif
 #ifdef FEAT_TITLE
-	need_maketitle = TRUE;	    /* set window title */
+	need_maketitle = TRUE;	    /* set window title later */
 #endif
     }
     ++curbuf->b_changedtick;
@@ -2246,7 +2246,7 @@ unchanged(buf, ff)
 	check_status(buf);
 #endif
 #ifdef FEAT_TITLE
-	need_maketitle = TRUE;	    /* set window title */
+	need_maketitle = TRUE;	    /* set window title later */
 #endif
     }
     ++buf->b_changedtick;
@@ -2391,37 +2391,32 @@ get_keystroke()
     {
 	cursor_on();
 	out_flush();
+
 	/* First time: blocking wait.  Second time: wait up to 100ms for a
 	 * terminal code to complete.  Leave some room for check_termcode() to
 	 * insert a key code into (max 5 chars plus NUL). */
 	n = ui_inchar(buf + len, CBUFLEN - 6 - len, len == 0 ? -1L : 100L);
 	if (n > 0)
-	{
 	    len += n;
-	    if ((n = check_termcode(1, buf, len)) < 0)
-		continue;
-	    if (n)
-		len = n;
-	}
+
+	/* incomplete termcode: get more characters */
+	if ((n = check_termcode(1, buf, len)) < 0)
+	    continue;
+	/* found a termcode: adjust length */
+	if (n)
+	    len = n;
 	if (len == 0)	    /* nothing typed yet */
 	    continue;
 
 	/* Handle modifier and/or special key code. */
-	if (buf[0] == K_SPECIAL && buf[1] == KS_MODIFIER)
-	{
-	    mod_mask = buf[2];
-	    len -= 3;
-	    if (len == 0)
-		continue;
-	    mch_memmove(buf, buf + 3, (size_t)len);
-	}
 	n = buf[0];
 	if (n == K_SPECIAL)
 	{
 	    n = TO_SPECIAL(buf[1], buf[2]);
-
+	    if (buf[1] == KS_MODIFIER
+		    || n == K_IGNORE
 #ifdef FEAT_MOUSE
-	    if (n == K_LEFTMOUSE
+		    || n == K_LEFTMOUSE
 		    || n == K_LEFTMOUSE_NM
 		    || n == K_LEFTDRAG
 		    || n ==  K_LEFTRELEASE
@@ -2438,12 +2433,16 @@ get_keystroke()
 		    || n == K_VER_SCROLLBAR
 		    || n == K_HOR_SCROLLBAR
 # endif
+#endif
 	       )
 	    {
-		len = 0;
+		if (buf[1] == KS_MODIFIER)
+		    mod_mask = buf[2];
+		len -= 3;
+		if (len > 0)
+		    mch_memmove(buf, buf + 3, (size_t)len);
 		continue;
 	    }
-#endif
 	}
 #ifdef UNIX
 	if (n == intr_char)

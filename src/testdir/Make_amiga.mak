@@ -20,7 +20,7 @@ SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test23.out test24.out test26.out \
 		test28.out test29.out test30.out test31.out test32.out \
 		test33.out test34.out test35.out test36.out test37.out \
-		test38.out test39.out test40.out
+		test38.out test39.out test40.out test41.out test42.out
 
 .SUFFIXES: .in .out
 
@@ -28,13 +28,15 @@ nongui:	/tmp $(SCRIPTS)
 	csh -c echo ALL DONE
 
 clean:
-	csh -c \rm -rf *.out /tmp/*
+	csh -c \rm -rf *.out /tmp/* Xdotest small.vim tiny.vim mbyte.vim test.ok
 
 .in.out:
+	copy $*.ok test.ok
 	$(VIMPROG) -u amiga.vim -U NONE -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
-	delete Xdotest
+	-delete X#? ALL QUIET
+	-delete test.ok
 
 # Create a directory for temp files
 /tmp:

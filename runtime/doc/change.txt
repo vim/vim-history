@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0n.  Last change: 2000 Nov 19
+*change.txt*    For Vim version 6.0o.  Last change: 2000 Dec 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1067,6 +1067,8 @@ type of comment string.  A part consists of:
 
   r	Right adjust middle with start or end.  Only recognized when used
 	together with 's' or 'e'.
+
+  O	Don't use this one for the "O" command.
 
   x	Allows three-piece comments to be ended by just typing the last
 	character of the end-comment string as the first character on a new

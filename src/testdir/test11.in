@@ -12,6 +12,7 @@ Note: This test will fail if "gzip" is not available.
 $GZIP is made empty, "-v" would cause trouble.
 
 STARTTEST
+:so small.vim
 :let $GZIP = ""
 :set bin
 :au FileWritePre    *.gz   '[,']!gzip
@@ -46,7 +47,6 @@ gg/^end of testfile
 :au! FileReadPost   *.gz   '[,']s/l/L/
 :$r Xtestfile.gz             " Read compressed file
 :w                           " write it, after filtering
-:!rm Xtestfile.gz Xtest.c
 :qa!
 ENDTEST
 

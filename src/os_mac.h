@@ -50,6 +50,7 @@
 #endif
 #define FEAT_BROWSE
 #define GUI_DIALOGUE
+#define HAVE_DROP_FILE
 #define FEAT_RIGHTLEFT
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */

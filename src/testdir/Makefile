@@ -2,8 +2,6 @@
 # Makefile to run al tests for Vim
 #
 
-# Note: If tests 2, 15 and 26 fail, you probably have 'nocompatible' set.
-
 VIMPROG = ../vim
 
 SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
@@ -13,7 +11,7 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
 		test23.out test24.out test25.out test26.out test27.out \
 		test28.out test29.out test30.out test31.out test32.out \
 		test33.out test34.out test35.out test36.out test37.out \
-		test38.out test39.out test40.out
+		test38.out test39.out test40.out test41.out test42.out
 
 SCRIPTS_GUI = test16.out
 
@@ -32,18 +30,27 @@ gui:	nolog $(SCRIPTS) $(SCRIPTS_GUI)
 $(SCRIPTS) $(SCRIPTS_GUI): $(VIMPROG)
 
 clean:
-	-rm -rf *.out test.log
+	-rm -rf *.out test.log tiny.vim small.vim mbyte.vim test.ok X*
+
+test1.out: test1.in
+	-rm -f $*.failed tiny.vim small.vim mbyte.vim
+	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
+	@/bin/sh -c "if diff test.out $*.ok; \
+		then mv -f test.out $*.out; \
+		else echo; \
+		echo test1 FAILED - Something basic is wrong; \
+		echo; exit 1; fi"
+	-rm -rf X*
 
 .in.out:
 	-rm -f $*.failed
+	cp -f $*.ok test.ok
 	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
-	/bin/sh -c "if diff test.out $*.ok; \
+	@/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
-		else echo $* FAILED >>test.log; \
-			touch test.out; \
-			mv -f test.out $*.failed; \
+		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \
 		fi"
-	-rm -f Xdotest
+	-rm -rf X* test.ok
 
 nolog:
 	-echo Test results: >test.log

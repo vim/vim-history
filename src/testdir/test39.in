@@ -2,6 +2,7 @@
 Test Visual block mode commands
 
 STARTTEST
+:so small.vim
 /^abcde
 :" Test shift-right of a block
 jlllljj>wlljlll>

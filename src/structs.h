@@ -37,7 +37,7 @@ typedef struct
 typedef struct window	win_t;
 typedef struct wininfo	wininfo_t;
 typedef struct frame	frame_t;
-typedef int		sid_t;		/* script ID */
+typedef int		scid_t;		/* script ID */
 
 /*
  * This is here because gui.h needs the pos_t and win_t, and win_t needs gui.h
@@ -571,7 +571,7 @@ struct mapblock
     char_u	*m_str;		/* mapped to */
     int		m_mode;		/* valid mode */
     int		m_noremap;	/* if non-zero no re-mapping for m_str */
-    sid_t	m_script_ID;	/* ID of script where map was defined,
+    scid_t	m_script_ID;	/* ID of script where map was defined,
 				   used for s: variables and functions */
 };
 
@@ -723,6 +723,9 @@ struct file_buffer
     int		b_p_ai;		/* 'autoindent' */
     int		b_p_ai_nopaste;	/* b_p_ai saved for paste mode */
     int		b_p_bin;	/* 'binary' */
+#ifdef FEAT_MBYTE
+    int		b_p_bomb;	/* 'bomb' */
+#endif
 #if defined(FEAT_QUICKFIX)
     char_u	*b_p_bt;	/* 'buftype' */
 #endif

@@ -125,10 +125,11 @@ coladvance2(addspaces, finetune, wcol)
 	 * Commands like <End> give us a very big value to indicate they want
 	 * to be as much on right side as possible.  Then stay in the column
 	 * when moving up/down.
+	 * Don't do this in Visual mode, each line must select until the EOL.
 	 */
 	idx = STRLEN(line) - 1;
 #ifdef FEAT_VIRTUALEDIT
-	if (addspaces || finetune)
+	if ((addspaces || finetune) && !VIsual_active)
 	{
 	    curwin->w_curswant = linetabsize(line) + one_more;
 	    if (curwin->w_curswant > 0)
@@ -2367,7 +2368,7 @@ set_fileformat(t, local)
     check_status(curbuf);
 #endif
 #ifdef FEAT_TITLE
-    need_maketitle = TRUE;	    /* set window title */
+    need_maketitle = TRUE;	    /* set window title later */
 #endif
 }
 
@@ -3309,7 +3310,8 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 	ff_search_ctx = search_ctx;
     else
     {
-	ff_search_ctx = (ff_search_ctx_t*)alloc(sizeof(ff_search_ctx_t));
+	ff_search_ctx = (ff_search_ctx_t*)alloc(
+					   (unsigned)sizeof(ff_search_ctx_t));
 	if (NULL == ff_search_ctx)
 	    goto error_return;
 	memset(ff_search_ctx, 0, sizeof(ff_search_ctx_t));
@@ -4123,7 +4125,7 @@ ff_get_visited_list(filename)
     /*
      * if we reach this we didn't find a list and we have to allocate new list
      */
-    retptr = (ff_visited_list_hdr_t*)alloc(sizeof(*retptr));
+    retptr = (ff_visited_list_hdr_t*)alloc((unsigned)sizeof(*retptr));
     if (retptr == NULL)
 	return NULL;
 
@@ -4568,7 +4570,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	if (file_to_find == NULL)	/* out of memory */
 	    return NULL;
 #ifdef VMS
-	if (mch_isFullName(file_to_find) || !path_with_url(file_to_find))
+	if (mch_isFullName(file_to_find))   
 	    file_to_find = vms_fixfilename(file_to_find);
 #endif
     }

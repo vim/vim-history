@@ -296,6 +296,9 @@ buf_clear(buf)
     buf->b_shortname = FALSE;
 #endif
     buf->b_p_eol = TRUE;
+#ifdef FEAT_MBYTE
+    buf->b_p_bomb = FALSE;
+#endif
     buf->b_ml.ml_mfp = NULL;
     buf->b_ml.ml_flags = ML_EMPTY;		/* empty buffer */
 }
@@ -2123,6 +2126,7 @@ cursor_pos_info()
 		last_check = char_count + 100000L;
 	    }
 	}
+	/* Correction for when last line doesn't have an EOL. */
 	if (!curbuf->b_p_eol && curbuf->b_p_bin)
 	    char_count -= eol_size;
 
@@ -2136,6 +2140,12 @@ cursor_pos_info()
 		(char *)buf1, (char *)buf2,
 		(long)curwin->w_cursor.lnum, (long)curbuf->b_ml.ml_line_count,
 		char_count_cursor, char_count);
+#ifdef FEAT_MBYTE
+	char_count = bomb_size();
+	if (char_count > 0)
+	    sprintf((char *)IObuff + STRLEN(IObuff), "(+%ld for BOM)",
+								  char_count);
+#endif
 	msg(IObuff);
     }
 }

@@ -554,6 +554,11 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 	    {
 		MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
 	    }
+            else
+            {
+                CloseHandle( pi.hProcess );
+                CloseHandle( pi.hThread );
+            }
 	}
 	else
 	{
@@ -617,6 +622,11 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
        )
     {
 	MessageBox(hParent, "Error creating process: Check if gvim.exe is in your path!", "gvimext.dll error", MB_OK);
+    }
+    else
+    {
+        CloseHandle( pi.hProcess );
+        CloseHandle( pi.hThread );
     }
 
     return NOERROR;

@@ -5,19 +5,17 @@
 #
 # FIRST AUTHOR DindinX <David.Odin@bigfoot.com>, 2000
 #
-# must be fuzzy, otherwise vim will translate
-# empty strings with this message.
 #, fuzzy
-# msgid ""
-# msgstr ""
-# "Project-Id-Version: Vim(Français)\n"
-# "POT-Creation-Date: 2000-07-23 22:16+0200\n"
-# "PO-Revision-Date: Mon, 21 Aug 2000 01:00:44 +0200\n"
-# "Last-Translator: DindinX <David.Odin@bigfoot.com>\n"
-# "Language-Team: "
-# "MIME-Version: 1.0\n"
-# "Content-Type: text/plain; charset=ISO_8859-1\n"
-# "Content-Transfer-Encoding: 8-bit\n"
+msgid ""
+msgstr ""
+"Project-Id-Version: Vim(Français)\n"
+"POT-Creation-Date: 2000-07-23 22:16+0200\n"
+"PO-Revision-Date: Mon, 21 Aug 2000 01:00:44 +0200\n"
+"Last-Translator: DindinX <David.Odin@bigfoot.com>\n"
+"Language-Team: "
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO_8859-1\n"
+"Content-Transfer-Encoding: 8-bit\n"
 
 # {{{1 buffer.c
 #: buffer.c:86
@@ -1004,12 +1002,12 @@ msgid "no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "pas de numéro de tampon d'édition de commandes automatiques pour la substitution avec « <abuf> »"
 
 #: ex_docmd.c:7892
-msgid "no autocommand match name to substitute for \"<amatch>\""
-msgstr ""
+#~ msgid "no autocommand match name to substitute for \"<amatch>\""
+#~ msgstr ""
 
 #: ex_docmd.c:7902
-msgid "no :source file name to substitute for \"<sfile>\""
-msgstr ""
+#~ msgid "no :source file name to substitute for \"<sfile>\""
+#~ msgstr ""
 
 #: ex_docmd.c:7936
 #, c-format
@@ -1178,8 +1176,8 @@ msgid "[READ ERRORS]"
 msgstr "[ERREURS DE LECTURE]"
 
 #: fileio.c:1547
-msgid "Autocommands deleted or unloaded buffer to be written"
-msgstr ""
+#~ msgid "Autocommands deleted or unloaded buffer to be written"
+#~ msgstr ""
 
 #: fileio.c:1570
 msgid "Autocommand changed number of lines in unexpected way"
@@ -1651,12 +1649,12 @@ msgid "For korean:"
 msgstr "Pour le Coréen :"
 
 #: gui_x11.c:1752
-msgid "   csh: setenv LANG ko"
-msgstr ""
+#~ msgid "   csh: setenv LANG ko"
+#~ msgstr ""
 
 #: gui_x11.c:1753
-msgid "   sh : export LANG=ko"
-msgstr ""
+#~ msgid "   sh : export LANG=ko"
+#~ msgstr ""
 
 #: gui_x11.c:1755
 #, c-format
@@ -4513,27 +4511,27 @@ msgstr "Délimiteur de motif non trouvé : %s"
 
 #: syntax.c:4834
 #, c-format
-msgid "Garbage after pattern: %s"
-msgstr ""
+#~ msgid "Garbage after pattern: %s"
+#~ msgstr ""
 
 #: syntax.c:4916
-msgid "syntax sync: line continuations pattern specified twice"
-msgstr ""
+#~ msgid "syntax sync: line continuations pattern specified twice"
+#~ msgstr ""
 
 #: syntax.c:4973
 #, c-format
-msgid "Illegal arguments: %s"
-msgstr ""
+#~ msgid "Illegal arguments: %s"
+#~ msgstr ""
 
 #: syntax.c:5023
 #, c-format
-msgid "Missing equal sign: %s"
-msgstr ""
+#~ msgid "Missing equal sign: %s"
+#~ msgstr ""
 
 #: syntax.c:5029
 #, c-format
-msgid "Empty argument: %s"
-msgstr ""
+#~ msgid "Empty argument: %s"
+#~ msgstr ""
 
 #: syntax.c:5054
 #, c-format
@@ -4542,8 +4540,8 @@ msgstr "%s n'est pas autorisé ici"
 
 #: syntax.c:5061
 #, c-format
-msgid "%s must be first in contains list"
-msgstr ""
+#~ msgid "%s must be first in contains list"
+#~ msgstr ""
 
 #: syntax.c:5125
 #, c-format
@@ -4552,13 +4550,13 @@ msgstr "Nom de groupe inconnu : %s"
 
 #: syntax.c:5306
 #, c-format
-msgid "Invalid :syntax subcommand: %s"
-msgstr ""
+#~ msgid "Invalid :syntax subcommand: %s"
+#~ msgstr ""
 
 #: syntax.c:5594
 #, c-format
-msgid "highlight group not found: %s"
-msgstr ""
+#~ msgid "highlight group not found: %s"
+#~ msgstr ""
 
 #: syntax.c:5618
 #, c-format
@@ -4571,12 +4569,12 @@ msgid "Too many arguments: \":highlight link %s\""
 msgstr "Trop d'arguments : « :highlight link %s »"
 
 #: syntax.c:5649
-msgid "group has settings, highlight link ignored"
-msgstr ""
+#~ msgid "group has settings, highlight link ignored"
+#~ msgstr ""
 
 #: syntax.c:5671
-msgid "Cannot clear all highlight groups"
-msgstr ""
+#~ msgid "Cannot clear all highlight groups"
+#~ msgstr ""
 
 #: syntax.c:5702
 #, c-format
@@ -4617,31 +4615,31 @@ msgid "terminal code too long: %s"
 msgstr "Code de terminal trop long : %s"
 
 #: syntax.c:6609
-msgid "Too many different highlighting attributes in use"
-msgstr ""
+#~ msgid "Too many different highlighting attributes in use"
+#~ msgstr ""
 
 # }}}
 # {{{1 tag.c
 #: tag.c:89
-msgid "at bottom of tag stack"
-msgstr ""
+#~ msgid "at bottom of tag stack"
+#~ msgstr ""
 
 #: tag.c:90
-msgid "at top of tag stack"
-msgstr ""
+#~ msgid "at top of tag stack"
+#~ msgstr ""
 
 #: tag.c:323
-msgid "Cannot go before first matching tag"
-msgstr ""
+#~ msgid "Cannot go before first matching tag"
+#~ msgstr ""
 
 #: tag.c:429
 #, c-format
-msgid "tag not found: %s"
-msgstr ""
+#~ msgid "tag not found: %s"
+#~ msgstr ""
 
 #: tag.c:459
-msgid "  # pri kind tag"
-msgstr ""
+#~ msgid "  # pri kind tag"
+#~ msgstr ""
 
 #: tag.c:462
 msgid "file\n"
@@ -4651,16 +4649,16 @@ msgstr "fichier\n"
 #. * Ask to select a tag from the list.
 #.
 #: tag.c:614
-msgid "Enter nr of choice (<CR> to abort): "
-msgstr ""
+#~ msgid "Enter nr of choice (<CR> to abort): "
+#~ msgstr ""
 
 #: tag.c:650
-msgid "There is only one matching tag"
-msgstr ""
+#~ msgid "There is only one matching tag"
+#~ msgstr ""
 
 #: tag.c:652
-msgid "Cannot go beyond last matching tag"
-msgstr ""
+#~ msgid "Cannot go beyond last matching tag"
+#~ msgstr ""
 
 #: tag.c:668 tag.c:728
 #, c-format
@@ -4670,95 +4668,95 @@ msgstr "Le fichier « %s » n'existe pas"
 #. Give an indication of the number of matching tags
 #: tag.c:680
 #, c-format
-msgid "tag %d of %d%s"
-msgstr ""
+#~ msgid "tag %d of %d%s"
+#~ msgstr ""
 
 #: tag.c:683
 msgid " or more"
 msgstr " ou plus"
 
 #: tag.c:685
-msgid "  Using tag with different case!"
-msgstr ""
+#~ msgid "  Using tag with different case!"
+#~ msgstr ""
 
 #. Highlight title
 #: tag.c:797
-msgid ""
-"\n"
-"  # TO tag         FROM line  in file/text"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "  # TO tag         FROM line  in file/text"
+#~ msgstr ""
 
 #: tag.c:1035
-msgid "Linear tag search"
-msgstr ""
+#~ msgid "Linear tag search"
+#~ msgstr ""
 
 #: tag.c:1037
-msgid "Binary tag search"
-msgstr ""
+#~ msgid "Binary tag search"
+#~ msgstr ""
 
 #: tag.c:1063
 #, c-format
-msgid "Searching tags file %s"
-msgstr ""
+#~ msgid "Searching tags file %s"
+#~ msgstr ""
 
 #: tag.c:1251
 #, c-format
-msgid "Tag file path trucated for %s\n"
-msgstr ""
+#~ msgid "Tag file path trucated for %s\n"
+#~ msgstr ""
 
 #: tag.c:1736
 #, c-format
-msgid "Format error in tags file \"%s\""
-msgstr ""
+#~ msgid "Format error in tags file \"%s\""
+#~ msgstr ""
 
 #: tag.c:1740
 #, c-format
-msgid "Before byte %ld"
-msgstr ""
+#~ msgid "Before byte %ld"
+#~ msgstr ""
 
 #: tag.c:1761
 #, c-format
-msgid "Tags file not sorted: %s"
-msgstr ""
+#~ msgid "Tags file not sorted: %s"
+#~ msgstr ""
 
 #. never opened any tags file
 #: tag.c:1800
-msgid "No tags file"
-msgstr ""
+#~ msgid "No tags file"
+#~ msgstr ""
 
 #: tag.c:2467
-msgid "Can't find tag pattern"
-msgstr ""
+#~ msgid "Can't find tag pattern"
+#~ msgstr ""
 
 #: tag.c:2478
-msgid "Couldn't find tag, just guessing!"
-msgstr ""
+#~ msgid "Couldn't find tag, just guessing!"
+#~ msgstr ""
 
 #: tag.c:2510
-msgid "WARNING: tag command changed a buffer!!!"
-msgstr ""
+#~ msgid "WARNING: tag command changed a buffer!!!"
+#~ msgstr ""
 
 # }}}
 # {{{1 term.c
 #: term.c:1640
-msgid "' not known. Available builtin terminals are:"
-msgstr ""
+#~ msgid "' not known. Available builtin terminals are:"
+#~ msgstr ""
 
 #: term.c:1664
-msgid "defaulting to '"
-msgstr ""
+#~ msgid "defaulting to '"
+#~ msgstr ""
 
 #: term.c:1996
 msgid "Cannot open termcap file"
 msgstr "Impossible d'ouvrir le fichier termcap"
 
 #: term.c:1999
-msgid "Terminal entry not found in terminfo"
-msgstr ""
+#~ msgid "Terminal entry not found in terminfo"
+#~ msgstr ""
 
 #: term.c:2001
-msgid "Terminal entry not found in termcap"
-msgstr ""
+#~ msgid "Terminal entry not found in termcap"
+#~ msgstr ""
 
 #: term.c:2160
 #, c-format
@@ -4767,19 +4765,19 @@ msgstr "Pas d'entrée « %s » dans termcap"
 
 #: term.c:2634
 #, c-format
-msgid "terminal capability %s required"
-msgstr ""
+#~ msgid "terminal capability %s required"
+#~ msgstr ""
 
 #. Highlight title
 #: term.c:4573
-msgid ""
-"\n"
-"--- Terminal keys ---"
-msgstr ""
+#~ msgid ""
+#~ "\n"
+#~ "--- Terminal keys ---"
+#~ msgstr ""
 
 #: term.c:4738
-msgid "xterm sent more codes than Vim asked for"
-msgstr ""
+#~ msgid "xterm sent more codes than Vim asked for"
+#~ msgstr ""
 
 # }}}
 # {{{1 ui.c
@@ -4795,8 +4793,8 @@ msgstr "Vim : Erreur en lisant l'entrée, sortie...\n"
 # {{{1 undo.c
 # TODO: need more work!
 #: undo.c:262
-msgid "No undo possible; continue anyway"
-msgstr ""
+#~ msgid "No undo possible; continue anyway"
+#~ msgstr ""
 
 #: undo.c:401
 msgid "u_undo: line numbers wrong"
@@ -4816,8 +4814,8 @@ msgid "undo list corrupt"
 msgstr "liste d'undo corrompue"
 
 #: undo.c:618
-msgid "undo line missing"
-msgstr ""
+#~ msgid "undo line missing"
+#~ msgstr ""
 
 # }}}
 # {{{1 version.c
@@ -5034,39 +5032,39 @@ msgid "    system menu file: \""
 msgstr "    fichier menu du système : \""
 
 #: version.c:759
-msgid "  fall-back for $VIM: \""
-msgstr ""
+#~ msgid "  fall-back for $VIM: \""
+#~ msgstr ""
 
 #: version.c:765
-msgid " f-b for $VIMRUNTIME: \""
-msgstr ""
+#~ msgid " f-b for $VIMRUNTIME: \""
+#~ msgstr ""
 
 #: version.c:769
 msgid "Compilation: "
 msgstr "Compilation : "
 
 #: version.c:775
-msgid "Compiler: "
-msgstr ""
+#~ msgid "Compiler: "
+#~ msgstr ""
 
 #: version.c:780
-msgid "Linking: "
-msgstr ""
+#~ msgid "Linking: "
+#~ msgstr ""
 
 #: version.c:785
-msgid "  DEBUG BUILD"
-msgstr ""
+#~ msgid "  DEBUG BUILD"
+#~ msgstr ""
 
 # }}}
 # {{{1 window.c
 # should read: topleft / botright
 #: window.c:510
-msgid "Can't split topleft and botright at the same time"
-msgstr ""
+#~ msgid "Can't split topleft and botright at the same time"
+#~ msgstr ""
 
 #: window.c:1126
-msgid "Cannot rotate when another window is split"
-msgstr ""
+#~ msgid "Cannot rotate when another window is split"
+#~ msgstr ""
 
 #: window.c:1515
 msgid "Cannot close last window"
@@ -5077,8 +5075,8 @@ msgid "Already only one window"
 msgstr "Déjà une seule fenêtre"
 
 #: window.c:2065
-msgid "Other window contains changes"
-msgstr ""
+#~ msgid "Other window contains changes"
+#~ msgstr ""
 
 # Cursor: Schreibmarke Positionsmarke
 #: window.c:3708
@@ -5094,8 +5092,8 @@ msgstr "-- Aucune ligne dans le tampon d'édition --"
 #. * Excluded are errors that are only used once and debugging messages.
 #.
 #: globals.h:823
-msgid "Command aborted"
-msgstr ""
+#~ msgid "Command aborted"
+#~ msgstr ""
 
 #: globals.h:824
 msgid "Argument required"
@@ -5106,8 +5104,8 @@ msgid "\\ should be followed by /, ? or &"
 msgstr "\\ doit être suivit par /, ? ou &"
 
 #: globals.h:826
-msgid "Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr ""
+#~ msgid "Command not allowed from exrc/vimrc in current dir or tag search"
+#~ msgstr ""
 
 #: globals.h:827
 msgid "File exists (use ! to override)"
@@ -5164,48 +5162,48 @@ msgid "Mark not set"
 msgstr "Marque non positionnée"
 
 #: globals.h:845
-msgid "GUI is not running"
-msgstr ""
+#~ msgid "GUI is not running"
+#~ msgstr ""
 
 #: globals.h:847
 msgid "Scripts nested too deep"
 msgstr "Scripts imbriqués trop profondémment"
 
 #: globals.h:848
-msgid "No alternate file"
-msgstr ""
+#~ msgid "No alternate file"
+#~ msgstr ""
 
 #: globals.h:849
 msgid "No such abbreviation"
 msgstr "Pas de telle abbréviation"
 
 #: globals.h:850
-msgid "No ! allowed"
-msgstr ""
+#~ msgid "No ! allowed"
+#~ msgstr ""
 
 #: globals.h:852
-msgid "GUI cannot be used: Not enabled at compile time"
-msgstr ""
+#~ msgid "GUI cannot be used: Not enabled at compile time"
+#~ msgstr ""
 
 #: globals.h:855
-msgid "Hebrew cannot be used: Not enabled at compile time\n"
-msgstr ""
+#~ msgid "Hebrew cannot be used: Not enabled at compile time\n"
+#~ msgstr ""
 
 #: globals.h:858
-msgid "Farsi cannot be used: Not enabled at compile time\n"
-msgstr ""
+#~ msgid "Farsi cannot be used: Not enabled at compile time\n"
+#~ msgstr ""
 
 #: globals.h:860
-msgid "No inserted text yet"
-msgstr ""
+#~ msgid "No inserted text yet"
+#~ msgstr ""
 
 #: globals.h:861
-msgid "No previous command line"
-msgstr ""
+#~ msgid "No previous command line"
+#~ msgstr ""
 
 #: globals.h:862
-msgid "No such mapping"
-msgstr ""
+#~ msgid "No such mapping"
+#~ msgstr ""
 
 #: globals.h:863
 msgid "No match"
@@ -5223,20 +5221,20 @@ msgid "No file name"
 msgstr "Pas de nom de fichier"
 
 #: globals.h:866
-msgid "No previous substitute regular expression"
-msgstr ""
+#~ msgid "No previous substitute regular expression"
+#~ msgstr ""
 
 #: globals.h:867
 msgid "No previous command"
 msgstr "Pas de commande précédente"
 
 #: globals.h:868
-msgid "No previous regular expression"
-msgstr ""
+#~ msgid "No previous regular expression"
+#~ msgstr ""
 
 #: globals.h:869
-msgid "No range allowed"
-msgstr ""
+#~ msgid "No range allowed"
+#~ msgstr ""
 
 #: globals.h:871
 msgid "Not enough room"
@@ -5248,8 +5246,8 @@ msgid "Can't create file %s"
 msgstr "Impossible de créer le fichier %s"
 
 #: globals.h:874
-msgid "Can't get temp file name"
-msgstr ""
+#~ msgid "Can't get temp file name"
+#~ msgstr ""
 
 #: globals.h:875
 #, c-format
@@ -5296,33 +5294,33 @@ msgid "No Errors"
 msgstr "Pas d'erreur"
 
 #: globals.h:894
-msgid "Damaged match string"
-msgstr ""
+#~ msgid "Damaged match string"
+#~ msgstr ""
 
 #: globals.h:895
-msgid "Corrupted regexp program"
-msgstr ""
+#~ msgid "Corrupted regexp program"
+#~ msgstr ""
 
 #: globals.h:896
-msgid "'readonly' option is set (use ! to override)"
-msgstr ""
+#~ msgid "'readonly' option is set (use ! to override)"
+#~ msgstr ""
 
 #: globals.h:898
 #, c-format
-msgid "Cannot set read-only variable \"%s\""
-msgstr ""
+#~ msgid "Cannot set read-only variable \"%s\""
+#~ msgstr ""
 
 #: globals.h:901
 msgid "Error while reading errorfile"
 msgstr "Erreur pendant la lecture du fichier d'erreurs"
 
 #: globals.h:903
-msgid "Invalid scroll size"
-msgstr ""
+#~ msgid "Invalid scroll size"
+#~ msgstr ""
 
 #: globals.h:904
-msgid "tag stack empty"
-msgstr ""
+#~ msgid "tag stack empty"
+#~ msgstr ""
 
 #: globals.h:905
 msgid "Command too complex"
@@ -5371,7 +5369,7 @@ msgid "Error while writing"
 msgstr "Erreur pendant l'écriture"
 
 #: globals.h:921
-msgid "Zero count"
-msgstr ""
+#~ msgid "Zero count"
+#~ msgstr ""
 
 # }}}

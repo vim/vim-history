@@ -129,9 +129,9 @@
 #endif
 
 /* encode byte c, using temp t.  Warning: c must not have side effects. */
-# define zencode(c, t)  (t = decrypt_byte(), update_keys(c), t^(c))
+# define ZENCODE(c, t)  (t = decrypt_byte(), update_keys(c), t^(c))
 
 /* decode byte c in place */
-# define zdecode(c)   update_keys(c ^= decrypt_byte())
+# define ZDECODE(c)   update_keys(c ^= decrypt_byte())
 
 #endif

@@ -519,7 +519,7 @@ gtk_form_remove(GtkContainer * container, GtkWidget * widget)
 {
     GList *tmp_list;
     GtkForm *form;
-    GtkFormChild *child;
+    GtkFormChild *child = NULL;	    /* init for gcc */
 
     g_return_if_fail(container != NULL);
     g_return_if_fail(GTK_IS_FORM(container));

@@ -1381,7 +1381,7 @@ change_indent(type, amount, round, replaced)
     /* for the following tricks we don't want list mode */
     save_p_list = curwin->w_p_list;
     curwin->w_p_list = FALSE;
-    getvcol(curwin, &curwin->w_cursor, NULL, &vc, NULL);
+    vc = getvcol_nolist(&curwin->w_cursor);
     vcol = vc;
 
     /*
@@ -4191,17 +4191,22 @@ cursor_up(n, upd_topline)
 #ifdef FEAT_FOLDING
 	    if (hasAnyFolding(curwin))
 	{
-	    linenr_t	first;
+	    /*
+	     * The cursor could be inside a closed fold.
+	     * Count each sequence of folded lines as one logical line.
+	     */
 
-	    /* count each sequence of folded lines as one logical line */
+	    /* go to the the start of the current fold */
+	    (void)hasFolding(lnum, &lnum, NULL);
+
 	    while (n--)
 	    {
-		if (hasFolding(lnum, &first, NULL))
-		    lnum = first - 1;
-		else
-		    --lnum;
+		/* move up one line */
+		--lnum;
 		if (lnum <= 1)
 		    break;
+		/* if we entered a fold, move to the beginning */
+		(void)hasFolding(lnum, &lnum, NULL);
 	    }
 	    if (lnum < 1)
 		lnum = 1;
@@ -5117,11 +5122,13 @@ ins_ctrl_g()
     {
 	/* CTRL-G k and CTRL-G <Up>: cursor up to Insstart.col */
 	case K_UP:
+	case Ctrl_K:
 	case 'k': ins_up(TRUE);
 		  break;
 
 	/* CTRL-G j and CTRL-G <Down>: cursor down to Insstart.col */
 	case K_DOWN:
+	case Ctrl_J:
 	case 'j': ins_down(TRUE);
 		  break;
 
@@ -5961,7 +5968,7 @@ ins_up(startcol)
     if (cursor_up(1L, TRUE) == OK)
     {
 	if (startcol)
-	    coladvance(Insstart.col);
+	    coladvance(getvcol_nolist(&Insstart));
 	if (old_topline != curwin->w_topline)
 	    redraw_later(VALID);
 #ifdef FEAT_FOLDING
@@ -6009,7 +6016,7 @@ ins_down(startcol)
     if (cursor_down(1L, TRUE) == OK)
     {
 	if (startcol)
-	    coladvance(Insstart.col);
+	    coladvance(getvcol_nolist(&Insstart));
 #ifdef FEAT_FOLDING
 	check_start_insert();
 #endif
@@ -6486,15 +6493,8 @@ ins_try_si(c)
     static colnr_t
 get_nolist_virtcol()
 {
-    colnr_t	virtcol;
-
     if (curwin->w_p_list && vim_strchr(p_cpo, CPO_LISTWM) == NULL)
-    {
-	curwin->w_p_list = FALSE;
-	getvcol(curwin, &curwin->w_cursor, NULL, &virtcol, NULL);
-	curwin->w_p_list = TRUE;
-	return virtcol;
-    }
+	return getvcol_nolist(&curwin->w_cursor);
     validate_virtcol();
     return curwin->w_virtcol;
 }

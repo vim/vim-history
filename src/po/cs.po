@@ -1,6 +1,8 @@
 # Czech translation of vim
-# Jiøí Pavlovský <pavlovsk@ff.cuni.cz>, 2000.
 #
+# FIRST AUTHOR Jiøí Pavlovský <pavlovsk@ff.cuni.cz>, 2000.
+#
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: vim-6.0g\n"
@@ -4273,8 +4275,8 @@ msgstr "Prohledávám soubor tagù %s"
 
 #: tag.c:1251
 #, c-format
-msgid "Tag file path trucated for %s\n"
-msgstr ""
+#~ msgid "Tag file path trucated for %s\n"
+#~ msgstr ""
 
 #: tag.c:1736
 #, c-format
@@ -4617,8 +4619,8 @@ msgid "Linking: "
 msgstr "Linkuji: "
 
 #: version.c:785
-msgid "  DEBUG BUILD"
-msgstr ""
+#~ msgid "  DEBUG BUILD"
+#~ msgstr ""
 
 #: window.c:510
 msgid "Can't split topleft and botright at the same time"
@@ -4781,8 +4783,8 @@ msgid "No file name"
 msgstr "®ádný název souboru"
 
 #: globals.h:866
-msgid "No previous substitute regular expression"
-msgstr ""
+#~ msgid "No previous substitute regular expression"
+#~ msgstr ""
 
 #: globals.h:867
 msgid "No previous command"
@@ -4854,8 +4856,8 @@ msgid "No Errors"
 msgstr "®ádné chyby"
 
 #: globals.h:894
-msgid "Damaged match string"
-msgstr ""
+#~ msgid "Damaged match string"
+#~ msgstr ""
 
 #: globals.h:895
 msgid "Corrupted regexp program"
@@ -4875,8 +4877,8 @@ msgid "Error while reading errorfile"
 msgstr "Chyba pøi ètení chybového souboru"
 
 #: globals.h:903
-msgid "Invalid scroll size"
-msgstr ""
+#~ msgid "Invalid scroll size"
+#~ msgstr ""
 
 #: globals.h:904
 msgid "tag stack empty"

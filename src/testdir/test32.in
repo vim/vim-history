@@ -20,6 +20,7 @@ Test for insert expansion
 * t-expansion
 
 STARTTEST
+:so small.vim
 :se nocp cpt=.,w|$-2,$w!Xtestfile
 nO#include "Xtestfile"
 ru
@@ -39,7 +40,6 @@ unl
 :se cpt=t,d def=^\\k* tags=Xtestfile notagbsearch
 O
 a
-:"!rm Xtestfile
 :wq! test.out
 ENDTEST
 

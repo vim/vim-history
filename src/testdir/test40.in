@@ -1,6 +1,7 @@
 Test for "*Cmd" autocommands
 
 STARTTEST
+:so small.vim
 :/^start/,$w! Xxx		" write lines below to Xxx
 :au BufReadCmd testA 0r Xxx|$del
 :e testA			" will read text of Xxd instead
@@ -40,7 +41,7 @@ STARTTEST
 :$w >>test.out			" append "end of Xxx" to test.out
 :au BufReadCmd testE 0r test.out|$del
 :sp testE			" split window with test.out
-5Goasdf
+5Goasdf:"
 :au BufWriteCmd testE w! test.out
 :wall				" will write other window to test.out
 :				" 1	start of Xxx
@@ -54,7 +55,6 @@ STARTTEST
 :				" 9		test401
 :				" 10	end of Xxx
 :				" 11	end of Xxx
-:!rm Xxx
 :qa!
 ENDTEST
 

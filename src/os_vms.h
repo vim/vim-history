@@ -151,14 +151,6 @@
 # undef __ARGS
 #endif /* __COHERENT__ */
 
-#ifndef W_OK
-# define W_OK 2		/* for systems that don't have W_OK in unistd.h */
-#endif
-
-#ifndef R_OK
-# define R_OK 4		/* for systems that don't have R_OK in unistd.h */
-#endif
-
 
 /*
  * System definitions

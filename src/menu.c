@@ -1362,6 +1362,7 @@ popup_mode_name(name, idx)
     return p;
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Return the index into the menu->strings or menu->noremap arrays for the
  * current state.  Returns MENU_INDEX_INVALID if there is no mapping for the
@@ -1394,6 +1395,7 @@ get_menu_index(menu, state)
 	idx = MENU_INDEX_INVALID;
     return idx;
 }
+#endif
 
 /*
  * Duplicate the menu item text and then process to see if a mnemonic key
@@ -1505,6 +1507,7 @@ menu_is_hidden(name)
 /*
  * Return TRUE if the menu is the tearoff menu.
  */
+/*ARGSUSED*/
     static int
 menu_is_tearoff(name)
     char_u *name;

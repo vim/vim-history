@@ -1,5 +1,6 @@
 /* multibyte.c */
 char_u *mb_init __ARGS((void));
+int bomb_size __ARGS((void));
 int mb_get_class __ARGS((char_u *p));
 int mb_class __ARGS((unsigned lead, unsigned trail));
 int mb_char2len __ARGS((int c));
@@ -14,6 +15,7 @@ int utf_ptr2char __ARGS((char_u *p));
 int utfc_ptr2char __ARGS((char_u *p, int *p1, int *p2));
 int utfc_char2bytes __ARGS((int off, char_u *buf));
 int utf_ptr2len_check __ARGS((char_u *p));
+int utf_byte2len __ARGS((int b));
 int utf_ptr2len_check_len __ARGS((char_u *p, int size));
 int utfc_ptr2len_check __ARGS((char_u *p));
 int utf_char2len __ARGS((int c));
@@ -21,6 +23,7 @@ int utf_char2bytes __ARGS((int c, char_u *buf));
 int utf_iscomposing __ARGS((int c));
 void show_utf8 __ARGS((void));
 int mb_head_off __ARGS((char_u *base, char_u *p));
+int utf_head_off __ARGS((char_u *base, char_u *p));
 int mb_off_next __ARGS((char_u *base, char_u *p));
 int mb_tail_off __ARGS((char_u *base, char_u *p));
 void mb_adjust_cursor __ARGS((void));

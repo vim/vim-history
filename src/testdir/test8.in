@@ -1,6 +1,7 @@
 Test for BufWritePre autocommand that deletes or unloads the buffer.
 
 STARTTEST
+:so small.vim
 :au BufWritePre Xxx1 bunload
 :au BufWritePre Xxx2 bdel
 /start of
@@ -13,7 +14,6 @@ $r2:.,/end of/w! Xxx2   " write test file Xxx2
 :bdel test.out          " remove test.out from the buffer list
 :w                      " write it, will delete the buffer and give an error msg
 :w >>test.out           " Append contents of this file
-:!rm Xxx1 Xxx2
 :qa!
 ENDTEST
 

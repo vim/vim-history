@@ -1581,7 +1581,8 @@ qf_fill_buffer()
 
 	    qf_fmt_text(qfp->qf_text, IObuff + len, IOSIZE - len);
 
-	    if (ml_append(lnum, IObuff, STRLEN(IObuff) + 1, FALSE) == FAIL)
+	    if (ml_append(lnum, IObuff, (colnr_t)STRLEN(IObuff) + 1, FALSE)
+								      == FAIL)
 		break;
 	    qfp = qfp->qf_next;
 	}

@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2000 Jul 20
+# Last change:  20-NOV-2000
 #
 # This has been tested on VMS 6.2 to 7.1 on DEC Alpha and VAX.
 # The following will be built:
@@ -166,7 +166,7 @@ LDFLAGS	=
 .ENDIF
 
 ########################################################################
-# These go into [.auto]pathdef.c
+# These go into pathdef.c
 ########################################################################
 VIMLOC  = ""
 VIMRUN  = ""
@@ -190,7 +190,7 @@ SRC =	buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c ex_docmd.c \
 	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c multibyte.c \
 	memfile.c memline.c message.c misc1.c misc2.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
-	ui.c undo.c version.c screen.c window.c os_vms.c [.auto]pathdef.c \
+	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
 	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
 
 OBJ =	buffer.obj charset.obj digraph.obj edit.obj eval.obj ex_cmds.obj \
@@ -221,10 +221,12 @@ osdef.h : os_vms_osdef.h
 myself :
 	mms /descrip=Make_vms.mms all
 
-clean :
-	del *.obj;*
-	del [.auto]config.h;*
-	del [.auto]pathdef.c;*
+clean : 
+        -@ if "''F$SEARCH("*.exe")'" .NES. "" then delete/noconfirm/nolog *.exe;*
+	-@ if "''F$SEARCH("*.obj")'" .NES. "" then delete/noconfirm/nolog *.obj;*
+	-@ if "''F$SEARCH("[.auto]config.h")'" .NES. "" then delete/noconfirm/nolog [.auto]config.h;*
+	-@ if "''F$SEARCH("pathdef.c")'" .NES. "" then delete/noconfirm/nolog pathdef.c;*
+        -@ if "''F$SEARCH("osdef.h")'" .NES. "" then delete/noconfirm/nolog osdef.h;*
 
 # Link the target
 $(TARGET) : $(OBJ) version.obj
@@ -239,9 +241,9 @@ FILES = *.c *.h make_vms.mms *.in makefile.* *.sh cmdtab.tab tags [.auto]configu
 .c.obj :
 	$(CC_DEF) $(ALL_CFLAGS) $<
 
-[.auto]pathdef.c : check_ccver $(CONFIG_H)
-	-@ write sys$output "creating [.auto]pathdef.c"
-	-@ open/write pd [.auto]pathdef.c
+pathdef.c : check_ccver $(CONFIG_H)
+	-@ write sys$output "creating pathdef.c"
+	-@ open/write pd pathdef.c
 	-@ write pd "/* pathdef.c -- DO NOT EDIT! */"
 	-@ write pd "/* This file is automatically created by Make_vms.mms"
 	-@ write pd " * Change the file Make_vms.mms only. */"
@@ -354,7 +356,7 @@ ops.obj : ops.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap
 option.obj : option.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
 	macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
-[.auto]pathdef.obj : [.auto]pathdef.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
+pathdef.obj : pathdef.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h \
 	term.h macros.h structs.h gui.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
 eval.obj : eval.c vim.h
@@ -442,11 +444,11 @@ mms_vim.obj :	os_vms_mms.c
 check_ccver :
 	-@ define sys$output cc_ver.tmp
 	-@ $(CC)/version
-	-@ deass sys$output
+	-@ deassign sys$output
 	-@ open/read file cc_ver.tmp
 	-@ read file CC_VER
 	-@ close file
-	-@ del cc_ver.tmp.*
+	-@ delete/noconfirm/nolog cc_ver.tmp.*
 .ELSE
 check_ccver :
 	-@ !

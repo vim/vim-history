@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0n.  Last change: 2000 Nov 18
+*various.txt*   For Vim version 6.0o.  Last change: 2000 Nov 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -326,7 +326,7 @@ N  *+X11*		Unix only: can restore window title |X11|
 			be given.
 			When [!] is added, error messages will also be
 			skipped, and commands will not be aborted when an
-			error is detected.  |v:errmsg| is still set
+			error is detected.  |v:errmsg| is still set.
 			Redirection, started with |:redir|, will continue as
 			usual.  This will allow redirecting the output of a
 			command without seeing it on the screen.  Example: >
@@ -344,6 +344,19 @@ N  *+X11*		Unix only: can restore window title |X11|
 			screen to be messed up.  Use |CTRL-L| to clean it up
 			then.
 
+						*:verb* *:verbose*
+:[count]verb[ose] {command}
+			Execute {command} with 'verbose' set to [count].  If
+			[count] is omitted one is used.
+			The combination of ":silent" and ":verbose" can be
+			used to generate messages and check them with
+			|v:statusmsg| and friends.  For example: >
+				:let v:statusmsg = ""
+				:silent verbose runtime foobar.vim
+				:if v:statusmsg != ""
+				:  " foobar.vim could not be found
+				:endif
+<
 							*K*
 K			Run a program to lookup the keyword under the
 			cursor.  The name of the program is given with the

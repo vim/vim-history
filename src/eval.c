@@ -9,11 +9,18 @@
 /*
  * eval.c: Expression evaluation.
  */
+#if defined(MSDOS) || defined(WIN32) || defined(WIN16)
+# include <io.h>	/* for mch_open(), must be before vim.h */
+#endif
 
 #include "vim.h"
 
 #ifdef AMIGA
 # include <time.h>	/* for strftime() */
+#endif
+
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
 #endif
 
 #if defined(FEAT_EVAL) || defined(PROTO)
@@ -78,7 +85,7 @@ struct ufunc
     int		calls;		/* nr of active calls */
     garray_t	args;		/* arguments */
     garray_t	lines;		/* function lines */
-    sid_t	script_ID;	/* ID of script where function was defined,
+    scid_t	script_ID;	/* ID of script where function was defined,
 				   used for s: variables */
 };
 
@@ -687,7 +694,7 @@ ex_let(eap)
     }
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
     void
 set_context_for_expression(xp, arg, cmdidx)
@@ -887,7 +894,7 @@ do_unlet(name)
     return FAIL;
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
 /*
  * Local string buffer for the next two functions to store a variable name
@@ -2175,7 +2182,7 @@ static struct fst
     {"winwidth",	1, 1, f_winwidth},
 };
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
 /*
  * Function given to ExpandGeneric() to obtain the list of internal
@@ -2336,12 +2343,12 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	}
 	else
 	{
-	    fname = alloc(i + STRLEN(name + llen) + 1);
+	    fname = alloc((unsigned)(i + STRLEN(name + llen) + 1));
 	    if (fname == NULL)
 		error = ERROR_OTHER;
 	    else
 	    {
-		mch_memmove(fname, fname_buf, i);
+		mch_memmove(fname, fname_buf, (size_t)i);
 		STRCPY(fname + i, name + llen);
 	    }
 	}
@@ -2805,6 +2812,7 @@ f_confirm(argvars, retvar)
  *
  * Checks the existence of a cscope connection.
  */
+/*ARGSUSED*/
     static void
 f_cscope_connection(argvars, retvar)
     VAR		argvars;
@@ -5602,7 +5610,7 @@ get_var_value(name)
  */
     void
 new_script_vars(id)
-    sid_t id;
+    scid_t id;
 {
     if (ga_grow(&ga_scripts, (int)(id - ga_scripts.ga_len)) == OK)
     {
@@ -5879,6 +5887,10 @@ ex_echohl(eap)
 
 /*
  * ":execute expr1 ..."	execute the result of an expression.
+ * ":echomsg expr1 ..."	Print a message
+ * ":echoerr expr1 ..."	Print an error
+ * Each gets spaces around each argument and a newline at the end for
+ * echo commands
  */
     void
 ex_execute(eap)
@@ -5930,8 +5942,15 @@ ex_execute(eap)
     }
 
     if (ret != FAIL && ga.ga_data != NULL)
-	do_cmdline((char_u *)ga.ga_data,
+    {
+	if (eap->cmdidx == CMD_echomsg)
+	    MSG((char_u *)ga.ga_data);
+	else if (eap->cmdidx == CMD_echoerr)
+	    EMSG((char_u *)ga.ga_data);
+	else if (eap->cmdidx == CMD_execute)
+	    do_cmdline((char_u *)ga.ga_data,
 		       eap->getline, eap->cookie, DOCMD_NOWAIT|DOCMD_VERBOSE);
+    }
 
     ga_clear(&ga);
 
@@ -6266,7 +6285,7 @@ trans_function_name(pp)
     }
     else
 	j = 0;
-    name = alloc(end - start + j + 1);
+    name = alloc((unsigned)(end - start + j + 1));
     if (name == NULL)
 	return NULL;
     if (start > *pp)
@@ -6361,7 +6380,7 @@ find_func(name)
     return fp;
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
 /*
  * Function given to ExpandGeneric() to obtain the list of user defined
@@ -6462,7 +6481,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 {
     char_u		*save_sourcing_name;
     linenr_t		save_sourcing_lnum;
-    sid_t		save_current_SID;
+    scid_t		save_current_SID;
     struct funccall	fc;
     struct funccall	*save_fcp = current_funccal;
     int			save_did_emsg;
@@ -7158,3 +7177,72 @@ do_string_sub(str, pat, sub, flags)
 }
 
 #endif /* defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) */
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Convert a file with the 'charconvert' expression.
+ * Returns name of the resulting converted file.
+ * Returns NULL if the conversion failed ("*fdp" is not set) .
+ */
+    char_u *
+eval_charconvert(fname, fcc, fdp)
+    char_u	*fname;		/* name of input file */
+    char_u	*fcc;		/* converted from */
+    int		*fdp;		/* in/out: file descriptor of file */
+{
+    char_u	*tmpname;
+    char_u	*errmsg = NULL;
+    int		err;
+
+    tmpname = vim_tempname('r');
+    if (tmpname == NULL)
+	errmsg = (char_u *)_("Can't find temp file for reading");
+    else
+    {
+	close(*fdp);		/* close the input file, ignore errors */
+	*fdp = -1;
+	set_vim_var_string(VV_CC_FROM, fcc, -1);
+	set_vim_var_string(VV_CC_TO,
+			      cc_utf8 ? (char_u *)"utf-8" : p_cc, -1);
+	set_vim_var_string(VV_CC_IN, fname, -1);
+	set_vim_var_string(VV_CC_OUT, tmpname, -1);
+	if (eval_to_bool(p_ccv, &err, NULL, FALSE) || err)
+	    errmsg = (char_u *)_("Conversion failed");
+	set_vim_var_string(VV_CC_FROM, NULL, -1);
+	set_vim_var_string(VV_CC_TO, NULL, -1);
+	set_vim_var_string(VV_CC_IN, NULL, -1);
+	set_vim_var_string(VV_CC_OUT, NULL, -1);
+
+	if (errmsg == NULL && (*fdp = mch_open((char *)tmpname,
+						  O_RDONLY | O_EXTRA, 0)) < 0)
+	    errmsg = (char_u *)_("can't read output of 'charconvert'");
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+	/* Security check: We don't want to read from a symlink.  This could
+	 * be a symlink attack to try to replace the converted text with
+	 * something else. */
+	if (errmsg == NULL && symlink_check(tmpname))
+	    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
+#endif
+    }
+
+    if (errmsg != NULL)
+    {
+	/* Don't use emsg(), it breaks mappings, the retry with
+	 * another type of conversion might still work. */
+	MSG(errmsg);
+	if (tmpname != NULL)
+	{
+	    mch_remove(tmpname);	/* delete converted file */
+	    vim_free(tmpname);
+	    tmpname = NULL;
+	}
+    }
+
+    /* If the input file is closed, open it (caller should check for error). */
+    if (*fdp < 0)
+	*fdp = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0);
+
+    return tmpname;
+}
+#endif

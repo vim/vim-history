@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0n.  Last change: 2000 Nov 18
+*eval.txt*      For Vim version 6.0o.  Last change: 2000 Dec 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -573,8 +573,8 @@ v:version	Version number of Vim: Major version number times 100 plus
 
 						*v:lang* *lang-variable*
 v:lang		The current locale setting of the applications runtime
-                environment.  This facilitates making Vim scripts aware of it.
-                This variable can be set with the |:language| command.
+		environment.  This facilitates making Vim scripts aware of it.
+		This variable can be set with the |:language| command.
 		See |multi-lang|.
 
 						*v:lnum* *lnum-variable*
@@ -1988,7 +1988,7 @@ toolbar			Compiled with support for |gui-toolbar|.
 unix			Unix version of Vim.
 user_commands		User-defined commands.
 viminfo			Compiled with viminfo support.
-vim_starting            True while initial source'ing takes place.
+vim_starting		True while initial source'ing takes place.
 vertsplit		Compiled with vertically split windows |:vsplit|.
 virtualedit		Compiled with 'virtualedit' option.
 visual			Compiled with Visual mode.
@@ -2303,6 +2303,22 @@ The file "~/vim/bufnetfuncs.vim" should then define functions that start with
 <			Don't forget to set the group back to "None",
 			otherwise all following echo's will be highlighted.
 
+							*:echom* *:echomsg*
+:echom[sg] {expr1} ..	Echo the expression(s) as a true message, saving the 
+			message in the |message-history|.
+			Spaces are placed between the arguments as with the
+			:echo command.
+			Example: >
+		:echomsg "It's a Zizzer Zazzer Zuzz, as you can plainly see."
+<
+							*:echoe* *:echoerr*
+:echoe[rr] {expr1} ..	Echo the expression(s) as an error message, saving the
+			message in the |message-history|.
+			Spaces are placed between the arguments as with the
+			:echo command.
+			Example: >
+		:echoerr "This script just failed!"
+<
 							*:exe* *:execute*
 :exe[cute] {expr1} ..	Executes the string that results from the evaluation
 			of {expr1} as an Ex command.  Multiple arguments are
@@ -2457,18 +2473,21 @@ The input is in the variable "line", the results in the variables "file",
 ==============================================================================
 8. No +eval feature				*no-eval-feature*
 
-When the |+eval| feature was disabled at compile time, all the expression
-evaluation commands are not available.  To avoid that a Vim script generates
-all kinds of errors, the ":if" and ":endif" commands are recognized.
-Everything between the ":if" and the matching ":endif" is ignored.  It does
-not matter what argument is used after the ":if".  Nesting of these commands
-is recognized, but only if the commands are at the start of the line.  The
-":else" command is not recognized.
+When the |+eval| feature was disabled at compile time, none of the expression
+evaluation commands are available.  To prevent this from causing Vim scripts
+to generate all kinds of errors, the ":if" and ":endif" commands are still
+recognized, though the argument of the ":if" and everything between the ":if" 
+and the matching ":endif" is ignored.  Nesting of ":if" blocks is allowed, but 
+only if the commands are at the start of the line.  The ":else" command is not
+recognized.
 
-Example of how to avoid commands to be executed when the |+eval| feature is
+Example of how to avoid executing commands when the |+eval| feature is
 missing: >
+
 	:if 1
 	:  echo "Expression evaluation is compiled in"
+	:else
+	:  echo "You will _never_ see this message"
 	:endif
 <
 ==============================================================================

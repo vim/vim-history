@@ -3,6 +3,7 @@
 # TODO make this configurable
 LANGUAGES = cs de fr ko pl
 MOFILES = cs.mo de.mo fr.mo ko.mo pl.mo
+POFILES = cs.po de.po fr.po ko.po pl.po
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -20,7 +21,7 @@ MSGMERGE = msgmerge
 
 all: $(MOFILES)
 
-install:
+install: $(MOFILES)
 	@$(MAKE) check
 	for lang in $(LANGUAGES); do \
 	  dir=$(LOCALEDIR)/$$lang/; \
@@ -63,16 +64,13 @@ $(PACKAGE).pot: ../*.c ../globals.h
 		--add-comments --keyword=_ --keyword=N_ *.c globals.h 
 	mv -f ../$(PACKAGE).po $(PACKAGE).pot
 
-update-po:
-	$(MAKE) $(PACKAGE).pot
-	for lang in $(LANGUAGES); do \
-	  mv $$lang.po $$lang.old.po; \
-	  echo "$$lang:"; \
-	  if $(MSGMERGE) $$lang.old.po $(PACKAGE).pot -o $$lang.po; then \
-	    rm -f $$lang.old.po; \
-	  else \
-	    echo "msgmerge for $$lang failed!"; \
-	    rm -f $$lang.po; \
-	    mv $$lang.old.po $$lang.po; \
-	  fi; \
-	done
+# Don't add dependency here, we only want to update the .po files manually
+$(POFILES):
+	@$(MAKE) $(PACKAGE).pot
+	if test ! -f $@.orig; then cp $@ $@.orig; fi
+	mv $@ $@.old
+	if $(MSGMERGE) $@.old $(PACKAGE).pot -o $@; then \
+	    rm -f $@.old; \
+	else \
+	    echo "msgmerge for $@ failed!"; mv $@.old $@; \
+	fi

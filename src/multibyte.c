@@ -110,16 +110,16 @@ mb_init()
 	cc_dbcs_new = DBCS_CHS;
     else if (STRCMP(p_cc, CC_UNICODE) == 0
 	    || STRCMP(p_cc, CC_UCS2) == 0
-	    || STRCMP(p_cc, CC_UCS2B) == 0
-	    || STRCMP(p_cc, CC_UCS2L) == 0)
+	    || STRCMP(p_cc, CC_UCS2BE) == 0
+	    || STRCMP(p_cc, CC_UCS2LE) == 0)
     {
 	/* 16 bit Unicode is stored internally as UTF-8 */
 	cc_unicode = 2;
 	cc_utf8 = TRUE;
     }
     else if (STRCMP(p_cc, CC_UCS4) == 0
-	    || STRCMP(p_cc, CC_UCS4B) == 0
-	    || STRCMP(p_cc, CC_UCS4L) == 0
+	    || STRCMP(p_cc, CC_UCS4BE) == 0
+	    || STRCMP(p_cc, CC_UCS4LE) == 0
 	    || STRCMP(p_cc, CC_UCS4BL) == 0
 	    || STRCMP(p_cc, CC_UCS4LB) == 0)
     {
@@ -224,6 +224,11 @@ mb_init()
     /* When cc_utf8 is set or reset, (de)allocate ScreenLinesUC[] */
     screenalloc(FALSE);
 
+    /* When using Unicode, set default for 'filecharcodes'. */
+    if (cc_utf8 && !option_was_set((char_u *)"fccs"))
+	set_string_option_direct((char_u *)"fccs", -1,
+				 (char_u *)"ucs-bom,utf-8,latin-1", OPT_FREE);
+
 #ifdef FEAT_AUTOCMD
     /* Fire an autocommand to let people do custom font setup. This must be
      * after Vim has been setup for the new charcode. */
@@ -231,6 +236,40 @@ mb_init()
 #endif
 
     return NULL;
+}
+
+/*
+ * Return the size of the BOM for the current buffer:
+ * 0 - no BOM
+ * 2 - UCS-2 BOM
+ * 4 - UCS-4 BOM
+ * 3 - UTF-8 BOM
+ */
+    int
+bomb_size()
+{
+    int n = 0;
+
+    if (curbuf->b_p_bomb && !curbuf->b_p_bin)
+    {
+	if (*curbuf->b_p_fcc == NUL)
+	{
+	    if (cc_utf8)
+	    {
+		if (cc_unicode != 0)
+		    n = cc_unicode;
+		else
+		    n = 3;
+	    }
+	}
+	else if (STRCMP(curbuf->b_p_fcc, "utf-8") == 0)
+	    n = 3;
+	else if (STRNCMP(curbuf->b_p_fcc, "ucs-2", 5) == 0)
+	    n = 2;
+	else if (STRNCMP(curbuf->b_p_fcc, "ucs-4", 5) == 0)
+	    n = 4;
+    }
+    return n;
 }
 
 /*
@@ -710,6 +749,17 @@ utf_ptr2len_check(p)
 }
 
 /*
+ * Return length of UTF-8 character, obtained from the first byte.
+ * "b" must be between 0 and 255!
+ */
+    int
+utf_byte2len(b)
+    int		b;
+{
+    return utf8len_tab[b];
+}
+
+/*
  * Get the length of UTF-8 byte sequence "p[size]".  Ignores any following
  * composing characters.
  * Returns 1 for "".
@@ -959,32 +1009,9 @@ mb_head_off(base, p)
     char_u	*p;
 {
     char_u	*q;
-    char_u	*s;
 
     if (cc_utf8)
-    {
-	if (*p < 0x80)		/* be quick for ASCII */
-	    return 0;
-
-	/* Skip backwards over trailing bytes: 10xx.xxxx
-	 * Skip backwards again if on a composing char. */
-	for (q = p; ; --q)
-	{
-	    /* Move s to the last byte of this char. */
-	    for (s = q; (s[1] & 0xc0) == 0x80; ++s)
-		;
-	    /* Move q to the first byte of this char. */
-	    while (q > base && (*q & 0xc0) == 0x80)
-		--q;
-	    /* Check for illegal sequence. */
-	    if (utf8len_tab[*q] != (int)(s - q + 1))
-		return 0;
-	    if (q <= base || !utf_iscomposing(utf_ptr2char(q)))
-		break;
-	}
-
-	return (int)(p - q);
-    }
+	return utf_head_off(base, p);
 
     /* It can't be a trailing byte when not using DBCS, at the start of the
      * string or the previous byte can't start a double-byte. */
@@ -997,6 +1024,37 @@ mb_head_off(base, p)
     while (q < p)
 	q += mb_ptr2len_check(q);
     return (q == p) ? 0 : 1;
+}
+
+    int
+utf_head_off(base, p)
+    char_u	*base;
+    char_u	*p;
+{
+    char_u	*q;
+    char_u	*s;
+
+    if (*p < 0x80)		/* be quick for ASCII */
+	return 0;
+
+    /* Skip backwards over trailing bytes: 10xx.xxxx
+     * Skip backwards again if on a composing char. */
+    for (q = p; ; --q)
+    {
+	/* Move s to the last byte of this char. */
+	for (s = q; (s[1] & 0xc0) == 0x80; ++s)
+	    ;
+	/* Move q to the first byte of this char. */
+	while (q > base && (*q & 0xc0) == 0x80)
+	    --q;
+	/* Check for illegal sequence. */
+	if (utf8len_tab[*q] != (int)(s - q + 1))
+	    return 0;
+	if (q <= base || !utf_iscomposing(utf_ptr2char(q)))
+	    break;
+    }
+
+    return (int)(p - q);
 }
 
 /*
@@ -1843,7 +1901,7 @@ xim_decide_input_style()
  * for GTK. */
 # define GSList int
 # define gboolean int
-# define GdkEvent int
+  typedef int GdkEvent;
 # define GdkIC int
 #endif
 

@@ -2297,14 +2297,25 @@ vim_regexec_multi(rmp, getline, col, maxline)
  * Match a regexp against a string ("line" points to the string) or multiple
  * lines ("line" is NULL, use reg_getline()).
  */
+#ifdef HAVE_SETJMP_H
+    static long
+vim_regexec_both(line_arg, col_arg)
+    char_u	*line_arg;
+    colnr_t	col_arg;	/* column to start looking for match */
+#else
     static long
 vim_regexec_both(line, col)
     char_u	*line;
     colnr_t	col;		/* column to start looking for match */
+#endif
 {
     regprog_t	*prog;
     char_u	*s;
-    long	retval = 0L;
+    long	retval;
+#ifdef HAVE_SETJMP_H
+    char_u	*line;
+    colnr_t	col;
+#endif
 
     reg_tofree = NULL;
 #ifdef HAVE_SETJMP_H
@@ -2321,7 +2332,12 @@ vim_regexec_both(line, col)
 	retval = 0L;
 	goto theend;
     }
+
+    /* Trick to avoid "might be clobbered by `longjmp'" warning from gcc. */
+    line = line_arg;
+    col = col_arg;
 #endif
+    retval = 0L;
 
     if (REG_MULTI)
     {

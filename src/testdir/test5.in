@@ -2,6 +2,7 @@ Test for autocommand that deletes the current buffer on BufLeave event.
 Also test deleting the last buffer, should give a new, empty buffer.
 
 STARTTEST
+:so small.vim
 :au BufLeave Xxx bdel
 /start of
 :.,/end of/w! Xxx               " write test file Xxx
@@ -16,7 +17,6 @@ othis is some more text
 :bdel!                          " delete current buffer, get an empty one
 ithis is another test line:w >>test.out
 :                               " append an extra line to the output file
-:!rm Xxx
 :qa!
 ENDTEST
 
