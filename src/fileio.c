@@ -966,10 +966,13 @@ retry:
 #endif
 		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (read_stdin)
+	    if (read_stdin || restart_edit != 0)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
+		 * When restart_edit is set, keep the message to show it after
+		 * redrawing (otherwise there will be a delay before
+		 * redrawing).
 		 * Copy the message (truncated) to msg_buf, because IObuff
 		 * could be overwritten any time. */
 		STRNCPY(msg_buf, keep_msg, MSG_BUF_LEN);
