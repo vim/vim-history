@@ -1305,7 +1305,7 @@ regpiece(flagp)
 		reginsert_limits(BRACE_LIMITS, minval, maxval, ret);
 		++num_complex_braces;
 	    }
-	    if (minval > 0)
+	    if (minval > 0 && maxval > 0)
 		*flagp = (HASWIDTH | (flags & HASNL));
 	    break;
     }
@@ -3083,7 +3083,7 @@ regmatch(scan)
 #endif
     while (scan != NULL)
     {
-	if (got_int)
+	if (got_int || out_of_stack)
 	    return FALSE;
 #ifdef DEBUG
 	if (regnarrate)
@@ -3676,7 +3676,7 @@ regmatch(scan)
 				reg_nextline();
 				++clnum;
 				ccol = 0;
-				if (got_int)
+				if (got_int || out_of_stack)
 				    return FALSE;
 			    }
 
@@ -3906,7 +3906,7 @@ regmatch(scan)
 			    regline = reg_getline(reglnum);
 			    reginput = regline + STRLEN(regline);
 			    fast_breakcheck();
-			    if (got_int)
+			    if (got_int || out_of_stack)
 				return FALSE;
 			}
 			else
@@ -3941,7 +3941,7 @@ regmatch(scan)
 					 || regrepeat(OPERAND(scan), 1L) == 0)
 			    break;
 			++count;
-			if (got_int)
+			if (got_int || out_of_stack)
 			    return FALSE;
 		    }
 		}
