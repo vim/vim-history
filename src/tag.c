@@ -1291,6 +1291,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount, buf_ffname)
 		 * language. */
 		if ((flags & TAG_KEEP_LANG)
 			&& help_lang_find == NULL
+			&& curbuf->b_fname != NULL
 			&& (i = STRLEN(curbuf->b_fname)) > 4
 			&& curbuf->b_fname[i - 1] == 'x'
 			&& curbuf->b_fname[i - 4] == '.'
