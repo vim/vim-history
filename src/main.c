@@ -2303,10 +2303,10 @@ usage()
     main_msg(_("-dev <device>\t\tUse <device> for I/O"));
 #endif
 #ifdef FEAT_RIGHTLEFT
-    main_msg(_("-H\t\t\tstart in Hebrew mode"));
+    main_msg(_("-H\t\t\tStart in Hebrew mode"));
 #endif
 #ifdef FEAT_FKMAP
-    main_msg(_("-F\t\t\tstart in Farsi mode"));
+    main_msg(_("-F\t\t\tStart in Farsi mode"));
 #endif
     main_msg(_("-T <terminal>\tSet terminal type to <terminal>"));
     main_msg(_("-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"));
@@ -2315,7 +2315,7 @@ usage()
 #endif
     main_msg(_("--noplugin\t\tDon't load plugin scripts"));
     main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
-    main_msg(_("-O[N]\t\tlike -o but split vertically"));
+    main_msg(_("-O[N]\t\tLike -o but split vertically"));
     main_msg(_("+\t\t\tStart at end of file"));
     main_msg(_("+<lnum>\t\tStart at line <lnum>"));
 #ifdef FEAT_PRECOMMANDS
@@ -2349,8 +2349,8 @@ usage()
 #ifdef FEAT_VIMINFO
     main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
 #endif
-    main_msg(_("-h\t\t\tprint Help (this message) and exit"));
-    main_msg(_("--version\t\tprint version information and exit"));
+    main_msg(_("-h\t\t\tPrint Help (this message) and exit"));
+    main_msg(_("--version\t\tPrint version information and exit"));
 
 #ifdef FEAT_GUI_X11
 # ifdef FEAT_GUI_MOTIF
