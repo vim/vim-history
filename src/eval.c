@@ -5784,6 +5784,8 @@ do_string_sub(str, pat, sub, flags)
 	    /* avoid getting stuck on a match with an empty string */
 	    if (tail == prog->endp[0])
 	    {
+		if (*tail == NUL)
+		    break;
 		*((char_u *)ga.ga_data + ga.ga_len) = *tail++;
 		++ga.ga_len;
 		--ga.ga_room;

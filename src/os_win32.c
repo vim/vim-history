@@ -1474,18 +1474,11 @@ mch_check_win(
     char **argv)
 {
     char	temp[256];
-    int		i;
 
     /* store the name of the executable, may be used for $VIM */
     GetModuleFileName(NULL, temp, 255);
     if (*temp != NUL)
 	exe_name = FullName_save((char_u *)temp, FALSE);
-
-    /* Init the tables for toupper() and tolower() */
-    for (i = 0; i < 256; ++i)
-	toupper_tab[i] = tolower_tab[i] = i;
-    CharUpperBuff(toupper_tab, 256);
-    CharLowerBuff(tolower_tab, 256);
 
 #ifdef USE_GUI_WIN32
     return OK;	    /* GUI always has a tty */
@@ -1496,6 +1489,20 @@ mch_check_win(
 #endif
 }
 
+/*
+ * Init the tables for toupper() and tolower().
+ */
+    void
+win32_init(void)
+{
+    int		i;
+
+    /* Init the tables for toupper() and tolower() */
+    for (i = 0; i < 256; ++i)
+	toupper_tab[i] = tolower_tab[i] = i;
+    CharUpperBuff(toupper_tab, 256);
+    CharLowerBuff(tolower_tab, 256);
+}
 
 /*
  * Return TRUE if the input comes from a terminal, FALSE otherwise.
