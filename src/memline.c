@@ -3380,7 +3380,8 @@ findswapname(buf, dirp, old_fname)
  * file names. If this is the first try and the swap file name does not fit in
  * 8.3, detect if this is the case, set shortname and try again.
  */
-	if (fname[n - 1] == 'p' && !(buf->b_p_sn || buf->b_shortname))
+	if (fname[n - 2] == 'w' && fname[n - 1] == 'p'
+					&& !(buf->b_p_sn || buf->b_shortname))
 	{
 	    char_u	    *tail;
 	    char_u	    *fname2;
@@ -3525,7 +3526,7 @@ findswapname(buf, dirp, old_fname)
 	/*
 	 * get here when file already exists
 	 */
-	if (fname[n - 1] == 'p')	/* first try */
+	if (fname[n - 2] == 'w' && fname[n - 1] == 'p')	/* first try */
 	{
 #ifndef SHORT_FNAME
 	    /*
@@ -3688,13 +3689,24 @@ findswapname(buf, dirp, old_fname)
 	    }
 	}
 
-	if (fname[n - 1] == 'a')    /* tried enough names, give up */
+	/*
+	 * Change the ".swp" extension to find another file that can be used.
+	 * First decrement the last char: ".swo", ".swn", etc.
+	 * If that still isn't enough decrement the last but one char: ".svz"
+	 * Can happen when editing many "No File" buffers.
+	 */
+	if (fname[n - 1] == 'a')	/* ".s?a" */
 	{
-	    vim_free(fname);
-	    fname = NULL;
-	    break;
+	    if (fname[n - 2] == 'a')    /* ".saa": tried enough, give up */
+	    {
+		vim_free(fname);
+		fname = NULL;
+		break;
+	    }
+	    --fname[n - 2];		/* ".svz", ".suz", etc. */
+	    fname[n - 1] = 'z' + 1;
 	}
-	--fname[n - 1];		    /* change last char of the name */
+	--fname[n - 1];			/* ".swo", ".swn", etc. */
     }
 
     vim_free(dir_name);
