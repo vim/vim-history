@@ -347,7 +347,13 @@ transstr(s)
 		p += l;
 	    }
 	    else
-		len += byte2cells(*p++);
+	    {
+		l = byte2cells(*p++);
+		if (l > 0)
+		    len += l;
+		else
+		    ++len;	/* illegal byte sequence */
+	    }
 	}
 	res = alloc((unsigned)(len + 1));
     }
