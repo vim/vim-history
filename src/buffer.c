@@ -2705,7 +2705,8 @@ maketitle()
 	{
 #ifdef FEAT_STL_OPT
 	    if (stl_syntax & STL_IN_TITLE)
-		build_stl_str_hl(curwin, t_str, p_titlestring, 0, maxlen, NULL);
+		build_stl_str_hl(curwin, t_str, sizeof(buf),
+					      p_titlestring, 0, maxlen, NULL);
 	    else
 #endif
 		t_str = p_titlestring;
@@ -2805,7 +2806,8 @@ maketitle()
 	{
 #ifdef FEAT_STL_OPT
 	    if (stl_syntax & STL_IN_ICON)
-		build_stl_str_hl(curwin, i_str, p_iconstring, 0, 0, NULL);
+		build_stl_str_hl(curwin, i_str, sizeof(buf),
+						    p_iconstring, 0, 0, NULL);
 	    else
 #endif
 		i_str = p_iconstring;
@@ -2874,22 +2876,24 @@ resettitle()
 
 #if defined(FEAT_STL_OPT) || defined(PROTO)
 /*
- * Build a string from the status line items in fmt, return length of string.
+ * Build a string from the status line items in fmt.
+ * Return length of string in screen cells.
  *
  * Items are drawn interspersed with the text that surrounds it
  * Specials: %-<wid>(xxx%) => group, %= => middle marker, %< => truncation
  * Item: %-<minwid>.<maxwid><itemch> All but <itemch> are optional
  *
- * if maxlen is not zero, the string will be filled at any middle marker
- * or truncated if too long, fillchar is used for all whitespace
+ * If maxwidth is not zero, the string will be filled at any middle marker
+ * or truncated if too long, fillchar is used for all whitespace.
  */
     int
-build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
+build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
     win_T	*wp;
-    char_u	*out;
+    char_u	*out;		/* buffer to write into */
+    size_t	outlen;		/* length of out[] */
     char_u	*fmt;
     int		fillchar;
-    int		maxlen;
+    int		maxwidth;
     struct stl_hlrec *hl;
 {
     char_u	*p;
@@ -2909,6 +2913,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     int		itemisflag;
     char_u	*str;
     long	num;
+    int		width;
     int		itemcnt;
     int		curitem;
     int		groupitem[STL_MAX_ITEM];
@@ -2936,7 +2941,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 #define TMPLEN 70
     char_u	tmp[TMPLEN];
 
-    if (!fillchar)
+    if (fillchar == 0)
 	fillchar = ' ';
     /*
      * Get line & check if empty (cursorpos will show "0-1").
@@ -2952,15 +2957,25 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
     prevchar_isitem = FALSE;
     for (s = fmt; *s;)
     {
-	if (*s && *s != '%')
+	if (*s != NUL && *s != '%')
 	    prevchar_isflag = prevchar_isitem = FALSE;
-	while (*s && *s != '%')
+
+	/*
+	 * Handle up to the next '%' or the end.
+	 */
+	while (*s != NUL && *s != '%' && p + 1 < out + outlen)
 	    *p++ = *s++;
-	if (!*s)
+	if (*s == NUL || p + 1 >= out + outlen)
 	    break;
+
+	/*
+	 * Handle one '%' item.
+	 */
 	s++;
 	if (*s == '%')
 	{
+	    if (p + 1 >= out + outlen)
+		break;
 	    *p++ = *s++;
 	    prevchar_isflag = prevchar_isitem = FALSE;
 	    continue;
@@ -2987,52 +3002,80 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    if (groupdepth < 1)
 		continue;
 	    groupdepth--;
-	    l = (long)(p - item[groupitem[groupdepth]].start);
+
+	    t = item[groupitem[groupdepth]].start;
+	    *p = NUL;
+	    l = vim_strsize(t);
 	    if (curitem > groupitem[groupdepth] + 1
 		    && item[groupitem[groupdepth]].minwid == 0)
-	    {			    /* remove group if all items are empty */
+	    {
+		/* remove group if all items are empty */
 		for (n = groupitem[groupdepth] + 1; n < curitem; n++)
 		    if (item[n].type == Normal)
 			break;
 		if (n == curitem)
-		    p = item[groupitem[groupdepth]].start;
-	    }
-	    if (item[groupitem[groupdepth]].maxwid < l)
-	    {					    /* truncate */
-		n = item[groupitem[groupdepth]].maxwid;
-		mch_memmove(item[groupitem[groupdepth]].start,
-			    item[groupitem[groupdepth]].start + l - n,
-			    (size_t)n);
-		t = item[groupitem[groupdepth]].start;
-		*t = '<';
-		l -= n;
-		p -= l;
-		for (n = groupitem[groupdepth] + 1; n < curitem; n++)
 		{
-		    item[n].start -= l;
-		    if (item[n].start < t)
-			item[n].start = t;
+		    p = t;
+		    l = 0;
+		}
+	    }
+	    if (l > item[groupitem[groupdepth]].maxwid)
+	    {
+		/* truncate, remove n bytes of text at the start */
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		{
+		    /* Find the first character that should be included. */
+		    n = 0;
+		    while (l >= item[groupitem[groupdepth]].maxwid)
+		    {
+			l -= ptr2cells(t + n);
+			n += (*mb_ptr2len_check)(t + n);
+		    }
+		}
+		else
+#endif
+		    n = (p - t) - item[groupitem[groupdepth]].maxwid + 1;
+
+		*t = '<';
+		mch_memmove(t + 1, t + n, p - (t + n));
+		p = p - n + 1;
+#ifdef FEAT_MBYTE
+		/* Fill up space left over by half a double-wide char. */
+		while (++l < item[groupitem[groupdepth]].minwid)
+		    *p++ = fillchar;
+#endif
+
+		/* correct the start of the items for the truncation */
+		for (l = groupitem[groupdepth] + 1; l < curitem; l++)
+		{
+		    item[l].start -= n;
+		    if (item[l].start < t)
+			item[l].start = t;
 		}
 	    }
 	    else if (abs(item[groupitem[groupdepth]].minwid) > l)
-	    {					    /* fill */
+	    {
+		/* fill */
 		n = item[groupitem[groupdepth]].minwid;
 		if (n < 0)
 		{
+		    /* fill by appending characters */
 		    n = 0 - n;
-		    while (l++ < n)
+		    while (l++ < n && p + 1 < out + outlen)
 			*p++ = fillchar;
 		}
 		else
 		{
-		    mch_memmove(item[groupitem[groupdepth]].start + n - l,
-				item[groupitem[groupdepth]].start,
-				(size_t)l);
+		    /* fill by inserting characters */
+		    mch_memmove(t + n - l, t, p - t);
 		    l = n - l;
+		    if (p + l >= out + outlen)
+			l = (out + outlen) - p - 1;
 		    p += l;
 		    for (n = groupitem[groupdepth] + 1; n < curitem; n++)
 			item[n].start += l;
-		    for (t = item[groupitem[groupdepth]].start; l > 0; l--)
+		    for ( ; l > 0; l--)
 			*t++ = fillchar;
 		}
 	    }
@@ -3124,9 +3167,9 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	case STL_VIM_EXPR: /* '{' */
 	    itemisflag = TRUE;
 	    t = p;
-	    while (*s != '}' && *s != NUL)
+	    while (*s != '}' && *s != NUL && p + 1 < out + outlen)
 		*p++ = *s++;
-	    if (*s == NUL)	/* missing '}' */
+	    if (*s != '}')	/* missing '}' or out of space */
 		break;
 	    s++;
 	    *p = 0;
@@ -3333,7 +3376,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    t++;
 		prevchar_isflag = TRUE;
 	    }
-	    l = (long)vim_strsize(t);
+	    l = vim_strsize(t);
 	    if (l > 0)
 		prevchar_isitem = TRUE;
 	    if (l > maxwid)
@@ -3348,23 +3391,25 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    else
 #endif
 			l -= byte2cells(*t++);
+		if (p + 1 >= out + outlen)
+		    break;
 		*p++ = '<';
 	    }
 	    if (minwid > 0)
 	    {
-		for (; l < minwid; l++)
+		for (; l < minwid && p + 1 < out + outlen; l++)
 		    *p++ = fillchar;
 		minwid = 0;
 	    }
 	    else
 		minwid *= -1;
-	    while (*t)
+	    while (*t && p + 1 < out + outlen)
 	    {
 		*p++ = *t++;
 		if (p[-1] == ' ')
 		    p[-1] = fillchar;
 	    }
-	    for (; l < minwid; l++)
+	    for (; l < minwid && p + 1 < out + outlen; l++)
 		*p++ = fillchar;
 	}
 	else if (num >= 0)
@@ -3372,6 +3417,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    int nbase = (base == 'D' ? 10 : (base == 'O' ? 8 : 16));
 	    char_u nstr[20];
 
+	    if (p + 20 >= out + outlen)
+		break;		/* not sufficient space */
 	    prevchar_isitem = TRUE;
 	    t = nstr;
 	    if (opt == STL_VIRTCOL_ALT)
@@ -3400,10 +3447,10 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		*t++ = '%';
 		*t = t[-3];
 		*++t = 0;
-		sprintf((char *) p, (char *) nstr, 0, num, n);
+		sprintf((char *)p, (char *)nstr, 0, num, n);
 	    }
 	    else
-		sprintf((char *) p, (char *) nstr, minwid, num);
+		sprintf((char *)p, (char *)nstr, minwid, num);
 	    p += STRLEN(p);
 	}
 	else
@@ -3416,63 +3463,109 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    prevchar_isflag = FALSE;	    /* Item not NULL, but not a flag */
 	curitem++;
     }
-    *p = 0;
+    *p = NUL;
     itemcnt = curitem;
-    num = (long)STRLEN(out);
 
-    if (maxlen && num > maxlen)
-    {					    /* Apply STL_TRUNC */
-	for (l = 0; l < itemcnt; l++)
-	    if (item[l].type == Trunc)
-		break;
+    width = vim_strsize(out);
+    if (maxwidth > 0 && width > maxwidth)
+    {
+	/* Result is too long, must trunctate somewhere. */
+	l = 0;
 	if (itemcnt == 0)
 	    s = out;
 	else
 	{
-	    l = l == itemcnt ? 0 : l;
-	    s = item[l].start;
+	    s = item[0].start;
+	    for ( ; l < itemcnt; l++)
+		if (item[l].type == Trunc)
+		{
+		    /* Truncate at %< item. */
+		    s = item[l].start;
+		    break;
+		}
 	}
-	if ((int) (s - out) > maxlen)
-	{   /* Truncation mark is beyond max length */
-	    s = out + maxlen - 1;
+
+	if (width - vim_strsize(s) > maxwidth)
+	{
+	    /* Truncation mark is beyond max length */
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		s = out;
+		width = 0;
+		for (;;)
+		{
+		    width += ptr2cells(s);
+		    if (width >= maxwidth)
+			break;
+		    s += (*mb_ptr2len_check)(s);
+		}
+		/* Fill up for half a double-wide character. */
+		while (++width < maxwidth)
+		    *s++ = fillchar;
+	    }
+#endif
+	    else
+		s = out + maxwidth - 1;
 	    for (l = 0; l < itemcnt; l++)
 		if (item[l].start > s)
 		    break;
+	    itemcnt = l;
 	    *s++ = '>';
 	    *s = 0;
-	    itemcnt = l;
 	}
 	else
 	{
-	    int		shift = num - maxlen;
-
-	    p = s + shift;
-	    mch_memmove(s, p, STRLEN(p) + 1);
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		n = 0;
+		while (width >= maxwidth)
+		{
+		    width -= ptr2cells(s + n);
+		    n += (*mb_ptr2len_check)(s + n);
+		}
+	    }
+	    else
+#endif
+		n = width - maxwidth + 1;
+	    p = s + n;
+	    mch_memmove(s + 1, p, STRLEN(p) + 1);
 	    *s = '<';
+
+	    /* Fill up for half a double-wide character. */
+	    while (++width < maxwidth)
+	    {
+		s = s + STRLEN(s);
+		*s++ = fillchar;
+		*s = NUL;
+	    }
+
 	    for (; l < itemcnt; l++)
 	    {
-		if (item[l].start - shift >= out)
-		    item[l].start -= shift;
+		if (item[l].start - n >= out)
+		    item[l].start -= n;
 		else
 		    item[l].start = out;
 	    }
 	}
-	num = maxlen;
+	width = maxwidth;
     }
-    else if (num < maxlen)
-    {					    /* Apply STL_MIDDLE if any */
+    else if (width < maxwidth && STRLEN(out) + maxwidth - width + 1 < outlen)
+    {
+	/* Apply STL_MIDDLE if any */
 	for (l = 0; l < itemcnt; l++)
 	    if (item[l].type == Middle)
 		break;
 	if (l < itemcnt)
 	{
-	    p = item[l].start + maxlen - num;
+	    p = item[l].start + maxwidth - width;
 	    mch_memmove(p, item[l].start, STRLEN(item[l].start) + 1);
 	    for (s = item[l].start; s < p; s++)
 		*s = fillchar;
 	    for (l++; l < itemcnt; l++)
-		item[l].start += maxlen - num;
-	    num = maxlen;
+		item[l].start += maxwidth - width;
+	    width = maxwidth;
 	}
     }
 
@@ -3491,7 +3584,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	hl->userhl = 0;
     }
 
-    return (int)num;
+    return width;
 }
 #endif /* FEAT_STL_OPT */
 

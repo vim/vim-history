@@ -5020,7 +5020,8 @@ win_redr_custom(wp, Ruler)
     int		curattr;
     int		row;
     int		col = 0;
-    int		maxlen;
+    int		maxwidth;
+    int		width;
     int		n;
     int		len;
     int		fillchar;
@@ -5032,7 +5033,7 @@ win_redr_custom(wp, Ruler)
     /* setup environment for the task at hand */
     row = W_WINROW(wp) + wp->w_height;
     fillchar = fillchar_status(&attr, wp == curwin);
-    maxlen = W_WIDTH(wp);
+    maxwidth = W_WIDTH(wp);
     p = p_stl;
     if (Ruler)
     {
@@ -5057,30 +5058,32 @@ win_redr_custom(wp, Ruler)
 	if (col > (Columns + 1) / 2)
 	    col = (Columns + 1) / 2;
 #endif
-	maxlen = W_WIDTH(wp) - col;
+	maxwidth = W_WIDTH(wp) - col;
 #ifdef FEAT_WINDOWS
 	if (!wp->w_status_height)
 #endif
 	{
 	    row = Rows - 1;
-	    --maxlen;	/* writing in last column may cause scrolling */
+	    --maxwidth;	/* writing in last column may cause scrolling */
 	    fillchar = ' ';
 	    attr = 0;
 	}
     }
-    if (maxlen >= sizeof(buf))
-	maxlen = sizeof(buf) - 1;
-    if (maxlen <= 0)
+    if (maxwidth <= 0)
 	return;
 #ifdef FEAT_VERTSPLIT
     col += W_WINCOL(wp);
 #endif
 
-    len = build_stl_str_hl(wp, buf, p, fillchar, maxlen, hl);
+    width = build_stl_str_hl(wp, buf, sizeof(buf), p, fillchar, maxwidth, hl);
+    len = STRLEN(buf);
 
-    for (p = buf + len; p < buf + maxlen; p++)
-	*p = fillchar;
-    buf[maxlen] = NUL;
+    while (width < maxwidth && len < sizeof(buf) - 1)
+    {
+	buf[len++] = fillchar;
+	++width;
+    }
+    buf[len] = NUL;
 
     curattr = attr;
     p = buf;
