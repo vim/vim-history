@@ -1581,7 +1581,7 @@ ex_listdo(eap)
     buf_T	*buf;
     int		next_fnum = 0;
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
-    char_u	*save_ei = vim_strsave(p_ei);
+    char_u	*save_ei = NULL;
     char_u	*new_ei;
 #endif
 
@@ -1594,12 +1594,22 @@ ex_listdo(eap)
 #endif
 
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
-    new_ei = vim_strnsave(p_ei, (int)STRLEN(p_ei) + 8);
-    if (new_ei != NULL)
+    if (eap->cmdidx != CMD_windo)
     {
-	STRCAT(new_ei, ",Syntax");
-	set_string_option_direct((char_u *)"ei", -1, new_ei, OPT_FREE);
-	vim_free(new_ei);
+	/* Add "Syntax" to 'eventignore' to skip loading syntax highlighting
+	 * for every buffer loaded into the window.  A considerable speed
+	 * improvement. */
+	save_ei = vim_strsave(p_ei);
+	if (save_ei != NULL)
+	{
+	    new_ei = vim_strnsave(p_ei, (int)STRLEN(p_ei) + 8);
+	    if (new_ei != NULL)
+	    {
+		STRCAT(new_ei, ",Syntax");
+		set_string_option_direct((char_u *)"ei", -1, new_ei, OPT_FREE);
+		vim_free(new_ei);
+	    }
+	}
     }
 #endif
 
@@ -1692,13 +1702,13 @@ ex_listdo(eap)
     }
 
 #if defined(FEAT_AUTOCMD) && defined(FEAT_SYN_HL)
-    if (new_ei != NULL)
+    if (save_ei != NULL)
     {
 	set_string_option_direct((char_u *)"ei", -1, save_ei, OPT_FREE);
 	apply_autocmds(EVENT_SYNTAX, curbuf->b_p_syn,
-					     curbuf->b_fname, TRUE, curbuf);
+					       curbuf->b_fname, TRUE, curbuf);
+	vim_free(save_ei);
     }
-    vim_free(save_ei);
 #endif
 }
 
