@@ -914,16 +914,18 @@ dbcs_ptr2len_check(p)
 
 /*
  * For UTF-8 character "c" return 2 for a double-width character, 1 for others.
+ * Returns 4 or 6 for an unprintable character.
+ * Is only correct for characters >= 0x80.
  */
     int
 utf_char2cells(c)
     int		c;
 {
-    if (c <= 0x9f && c >= 0x80)	    /* unprintable, displays <xx> */
-	return 4;
-    if (c >= 0x100 && !utf_printable(c))
-	return 6;		    /* unprintable, displays <xxxx> */
-    if (c >= 0x1100
+    if (c >= 0x100)
+    {
+	if (!utf_printable(c))
+	    return 6;		/* unprintable, displays <xxxx> */
+	if (c >= 0x1100
 	    && (c <= 0x115f			/* Hangul Jamo */
 		|| (c >= 0x2e80 && c <= 0xa4cf && (c & ~0x0011) != 0x300a
 		    && c != 0x303f)		/* CJK ... Yi */
@@ -934,7 +936,13 @@ utf_char2cells(c)
 		|| (c >= 0xff00 && c <= 0xff5f)	/* Fullwidth Forms */
 		|| (c >= 0xffe0 && c <= 0xffe6)
 		|| (c >= 0x20000 && c <= 0x2ffff)))
-	return 2;
+	    return 2;
+    }
+
+    /* Characters below 0x100 are influenced by 'isprint' option */
+    else if (!vim_isprintc(c))
+	return 4;		/* unprintable, displays <xx> */
+
     return 1;
 }
 
