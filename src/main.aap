@@ -13,7 +13,7 @@
 
 # Skip the configure stuff when "link.sh" is executing this recipe recursively
 # to build pathdef.c.
-@if _no.targetarg != "pathdef" and has_build_target():
+@if _no.TARGETARG != "pathdef" and has_build_target():
 
     #
     # A U T O C O N F
@@ -64,10 +64,10 @@
 	:touch {exist} config.arg
 
     # "auto/config.aap" contains a lot of settings, such as the name of the
-    # executable "TARGET".
+    # executable "Target".
     # First update it, forcefully if the "reconfig" target was used.
-    @if _no.targetarg != "comment" and _no.targetarg != "make":
-	@if "reconfig" in var2list(_no.targetarg):
+    @if _no.TARGETARG != "comment" and _no.TARGETARG != "make":
+	@if "reconfig" in var2list(_no.TARGETARG):
 	    :del {force} auto/config.cache auto/config.status
 	    :update {force} auto/config.aap
 	@else:
@@ -189,10 +189,10 @@ ALL_LIB_DIRS = $GUI_LIBS_DIR $X_LIBS_DIR
 LDFLAGS = $ALL_LIB_DIRS $CONF_LDFLAGS
 LIBS = $GUI_LIBS1 $GUI_X_LIBS $GUI_LIBS2 $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS $CONF_LIBS $?(EXTRA_LIBS) $PERL_LIBS $PYTHON_LIBS $TCL_LIBS $RUBY_LIBS $?(PROFILE_LIBS)
 
-TARGET = $VIMNAME
+Target = $VIMNAME
 
 # reconfig target also builds Vim (reconfiguration is handled above).
-reconfig {virtual}: $TARGET
+reconfig {virtual}: $Target
 
 
 # Execute the test scripts.  Run these after compiling Vim, before installing.
@@ -204,7 +204,7 @@ reconfig {virtual}: $TARGET
 # If everything is allright, the final message will be "ALL DONE".
 #
 test check:
-    VIMPROG = ../$TARGET
+    VIMPROG = ../$Target
     :execute testdir/main.aap $GUI_TESTTARGET
 
 testclean {virtual}:
@@ -223,7 +223,7 @@ testclean {virtual}:
 # All the source files that need to be compiled.
 # Some are optional and depend on configure.
 # "version.c" is missing, it's always compiled (see below).
-SOURCE =
+Source =
 	buffer.c
 	charset.c
 	diff.c
@@ -279,21 +279,23 @@ SOURCE =
 # TODO: make is still used for subdirectories, need to write a recipe.
 MAKE ?= make
 
-all: $TARGET
+all: $Target
 
 # This dependency is required to build auto/osdef.h before automatic
 # dependencies are generated.
-$SOURCE version.c : auto/osdef.h
+$Source version.c : auto/osdef.h
 
 # Need to mention that the target also depends on version.c, since it's not
-# inluded in $SOURCE
-$TARGET : version.c
+# inluded in $Source
+$Target : version.c
 
 # Some sources are to be found in the "auto" directory.
 SRCPATH += auto
 
 # When building Vim always compile version.c to get the timestamp.
-:attr {filetype = my_prog} $TARGET
+:attr {filetype = my_prog} $Target
+
+:program $Target : $Source
 
 :action build my_prog object
 	version_obj = `src2obj("version.c")`
@@ -600,7 +602,7 @@ install: installvim installtools install-languages install-icons
 installvim {virtual}: installvimbin installruntime installlinks \
 			installhelplinks installmacros installtutor
 
-installvimbin {virtual}{force}: $TARGET $DEST_BIN
+installvimbin {virtual}{force}: $Target $DEST_BIN
 	exe = $DEST_BIN/$VIMTARGET
 	@if os.path.exists(exe):
 	    # Move the old executable aside and delete it.  Any other method
