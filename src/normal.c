@@ -7570,7 +7570,9 @@ nv_goto(cap)
 nv_normal(cap)
     cmdarg_T	*cap;
 {
-    if (safe_vgetc() == Ctrl_N)
+    int c = safe_vgetc();
+
+    if (c == Ctrl_N || c == Ctrl_G)
     {
 	clearop(cap->oap);
 	if (restart_edit != 0 && p_smd)
@@ -7587,6 +7589,9 @@ nv_normal(cap)
 	    redraw_curbuf_later(INVERTED);
 	}
 #endif
+	/* CTRL-\ CTRL-G restarts Insert mode when 'insertmode' is set. */
+	if (c == Ctrl_G && p_im)
+	    restart_edit = 'a';
     }
     else
 	clearopbeep(cap->oap);
