@@ -1999,7 +1999,7 @@ mch_FullName(fname, buf, len, force)
 		fd < 0 &&
 #endif
 			(mch_dirname(olddir, MAXPATHL) == FAIL
-						   || mch_chdir(olddir) != 0))
+					   || mch_chdir((char *)olddir) != 0))
 	    {
 		p = NULL;	/* can't get current dir: don't chdir */
 		retval = FAIL;
