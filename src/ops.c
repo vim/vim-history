@@ -2696,7 +2696,7 @@ op_yank(oap, deleting, mess)
 #ifdef FEAT_VIRTUALEDIT
 			if (virtual_op)
 			{
-			    getvcol(curwin, &oap->start, &cs, NUL, &ce);
+			    getvcol(curwin, &oap->start, &cs, NULL, &ce);
 			    if (ce != cs && oap->start.coladd > 0)
 			    {
 				/* Part of a tab selected -- but don't
@@ -2715,7 +2715,7 @@ op_yank(oap, deleting, mess)
 #ifdef FEAT_VIRTUALEDIT
 			if (virtual_op)
 			{
-			    getvcol(curwin, &oap->end, &cs, NUL, &ce);
+			    getvcol(curwin, &oap->end, &cs, NULL, &ce);
 			    if (p[endcol] == NUL || (cs + oap->end.coladd < ce
 # ifdef FEAT_MBYTE
 					/* Don't add space for double-wide

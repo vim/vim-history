@@ -3655,17 +3655,10 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	    goto fpip_end;
 	def_regmatch.rm_ic = FALSE;	/* don't ignore case in define pat. */
     }
-    files = (SearchedFile *)lalloc((long_u)
+    files = (SearchedFile *)lalloc_clear((long_u)
 			       (max_path_depth * sizeof(SearchedFile)), TRUE);
     if (files == NULL)
 	goto fpip_end;
-    for (i = 0; i < max_path_depth; i++)
-    {
-	files[i].fp = NULL;
-	files[i].name = NULL;
-	files[i].lnum = 0;
-	files[i].matched = FALSE;
-    }
     old_files = max_path_depth;
     depth = depth_displayed = -1;
 
