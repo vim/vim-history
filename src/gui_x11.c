@@ -780,7 +780,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	    {
 		char_u	*p = (char_u *)XtMalloc(len + 3);
 
-		mch_memmove(p, string, i);
+		mch_memmove(p, string, i + 1);
 		p[i + 1] = KS_EXTRA;
 		p[i + 2] = (int)KE_CSI;
 		mch_memmove(p + i + 3, string + i + 1, len - i);
@@ -789,6 +789,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 		string = p;
 		string_alloced = True;
 		i += 2;
+		len += 2;
 	    }
     }
     else
