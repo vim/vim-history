@@ -4,8 +4,6 @@ addcr <alloc.c >tmp
 cp tmp alloc.c 
 addcr <ascii.h >tmp
 cp tmp ascii.h 
-addcr <buffers.c >tmp
-cp tmp buffers.c 
 addcr <charset.c >tmp
 cp tmp charset.c 
 addcr <cmdline.c >tmp
@@ -26,6 +24,8 @@ addcr <env.h >tmp
 cp tmp env.h 
 addcr <fileio.c >tmp
 cp tmp fileio.c 
+addcr <getchar.c >tmp
+cp tmp getchar.c 
 addcr <globals.h >tmp
 cp tmp globals.h 
 addcr <help.c >tmp
@@ -42,8 +42,10 @@ addcr <makefile >tmp
 cp tmp makefile 
 addcr <mark.c >tmp
 cp tmp mark.c 
-addcr <mark.h >tmp
-cp tmp mark.h 
+addcr <memfile.c >tmp
+cp tmp memfile.c 
+addcr <memline.c >tmp
+cp tmp memline.c 
 addcr <message.c >tmp
 cp tmp message.c 
 addcr <misccmds.c >tmp
@@ -78,8 +80,6 @@ addcr <regsub.c >tmp
 cp tmp regsub.c 
 addcr <screen.c >tmp
 cp tmp screen.c 
-addcr <script.c >tmp
-cp tmp script.c 
 addcr <search.c >tmp
 cp tmp search.c 
 addcr <storage.c >tmp

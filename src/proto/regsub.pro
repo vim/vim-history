@@ -1,3 +1,3 @@
 /* regsub.c */
-char *regtilde __PARMS((char *source, int magic));
-int regsub __PARMS((struct regexp *prog, char *source, char *dest, int copy, int magic));
+unsigned char *regtilde __PARMS((unsigned char *source, int magic));
+int regsub __PARMS((struct regexp *prog, unsigned char *source, unsigned char *dest, int copy, int magic));

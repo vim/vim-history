@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -28,10 +26,10 @@ coladvance(wcol)
 	colnr_t 		wcol;
 {
 	int 				index;
-	register u_char		*ptr;
+	register char_u		*ptr;
 	register colnr_t	col;
 
-	ptr = (u_char *)nr2ptr(Curpos.lnum);
+	ptr = ml_get(curwin->w_cursor.lnum);
 
 	/* try to advance to the specified column */
 	index = -1;
@@ -40,45 +38,50 @@ coladvance(wcol)
 	{
 		++index;
 		/* Count a tab for what it's worth (if list mode not on) */
-		col += chartabsize(*ptr, col);
+		col += chartabsize(*ptr, (long)col);
 		++ptr;
 	}
+	/*
+	 * in insert mode it is allowed to be one char beyond the end of the line
+	 */
+	if ((State & INSERT) && col <= wcol)
+		++index;
 	if (index < 0)
-		Curpos.col = 0;
+		curwin->w_cursor.col = 0;
 	else
-		Curpos.col = index;
+		curwin->w_cursor.col = index;
 }
 
 /*
  * inc(p)
  *
- * Increment the line pointer 'p' crossing line boundaries as necessary. Return
- * 1 when crossing a line, -1 when at end of file, 0 otherwise.
+ * Increment the line pointer 'p' crossing line boundaries as necessary.
+ * Return 1 when crossing a line, -1 when at end of file, 0 otherwise.
  */
+	int
+inc_cursor()
+{
+	return inc(&curwin->w_cursor);
+}
+
 	int
 inc(lp)
 	register FPOS  *lp;
 {
-	register char  *p = pos2ptr(lp);
+	register char_u  *p = ml_get_pos(lp);
 
 	if (*p != NUL)
 	{			/* still within line */
 		lp->col++;
 		return ((p[1] != NUL) ? 0 : 1);
 	}
-	if (lp->lnum != line_count)
+	if (lp->lnum != curbuf->b_ml.ml_line_count)
 	{			/* there is a next line */
 		lp->col = 0;
 		lp->lnum++;
 		return 1;
 	}
 	return -1;
-}
-
-	int
-incCurpos()
-{
-	return inc(&Curpos);
 }
 
 /*
@@ -98,9 +101,15 @@ incl(lp)
 /*
  * dec(p)
  *
- * Decrement the line pointer 'p' crossing line boundaries as necessary. Return
- * 1 when crossing a line, -1 when at start of file, 0 otherwise.
+ * Decrement the line pointer 'p' crossing line boundaries as necessary.
+ * Return 1 when crossing a line, -1 when at start of file, 0 otherwise.
  */
+	int
+dec_cursor()
+{
+	return dec(&curwin->w_cursor);
+}
+
 	int
 dec(lp)
 	register FPOS  *lp;
@@ -113,16 +122,10 @@ dec(lp)
 	if (lp->lnum > 1)
 	{			/* there is a prior line */
 		lp->lnum--;
-		lp->col = strlen(nr2ptr(lp->lnum));
+		lp->col = STRLEN(ml_get(lp->lnum));
 		return 1;
 	}
 	return -1;					/* at start of file */
-}
-
-	int
-decCurpos()
-{
-	return dec(&Curpos);
 }
 
 /*
@@ -140,21 +143,21 @@ decl(lp)
 }
 
 /*
- * make sure Curpos in on a valid character
+ * make sure curwin->w_cursor in on a valid character
  */
 	void
-adjustCurpos()
+adjust_cursor()
 {
 	int len;
 
-	if (Curpos.lnum == 0)
-		Curpos.lnum = 1;
-	if (Curpos.lnum > line_count)
-		Curpos.lnum = line_count;
+	if (curwin->w_cursor.lnum == 0)
+		curwin->w_cursor.lnum = 1;
+	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 
-	len = strlen(nr2ptr(Curpos.lnum));
+	len = STRLEN(ml_get(curwin->w_cursor.lnum));
 	if (len == 0)
-		Curpos.col = 0;
-	else if (Curpos.col >= len)
-		Curpos.col = len - 1;
+		curwin->w_cursor.col = 0;
+	else if (curwin->w_cursor.col >= len)
+		curwin->w_cursor.col = len - 1;
 }

@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 #if defined(SYSV_UNIX) || defined(BSD_UNIX)
@@ -14,17 +12,26 @@
 # endif
 #endif
 
-#include "debug.h"
+/*
+ * Shorhand for unsinged variables. Many systems, but not all, have u_char
+ * already defined, so we use char_u to avoid trouble.
+ */
+typedef unsigned char	char_u;
+typedef unsigned short	short_u;
+typedef unsigned int	int_u;
+typedef unsigned long	long_u;
 
 #include <stdio.h>
-
 #include <ctype.h>
-#ifndef DOMAIN
-#include <limits.h>		/* For MAX_INT, remove this if it does not exist */
+
+#if !defined(DOMAIN) && !defined(NOLIMITS)
+# include <limits.h>		/* For INT_MAX, remove this if it does not exist */
 #endif
 
 #ifdef BSD_UNIX
-# include <strings.h>
+# ifndef apollo
+#  include <strings.h>
+# endif
 # ifdef __STDC__
 #  include <string.h>
 # endif
@@ -36,6 +43,7 @@
 #include "keymap.h"
 #include "term.h"
 #include "macros.h"
+
 #ifdef LATTICE
 # include <sys/types.h>
 # include <sys/stat.h>
@@ -60,7 +68,7 @@
 # endif
 #endif
 
-#ifndef DOMAIN
+#if !defined(DOMAIN) && !defined(NOSTDLIB)
 # include <stdlib.h>
 #endif
 
@@ -74,14 +82,14 @@
  * This won't be needed if you have a version of Lattice 4.01 without broken
  * break signal handling.
  */
-#include <signal.h>
+# include <signal.h>
 #endif
 
 #ifndef AMIGA
 /*
  * For the Amiga we use a version of getenv that does local variables under 2.0
  */
-#define vimgetenv(x) getenv(x)
+# define vimgetenv(x) (char_u *)getenv((char *)x)
 #endif
 
 #ifdef AZTEC_C
@@ -106,17 +114,17 @@
 # define __ARGS(x) x
 #endif
 
-#ifdef MSDOS
+#if defined(MSDOS) && !defined(NT)
 # include <dos.h>
 # include <dir.h>
 #endif
 
 #ifdef SOLARIS
 # include <stdlib.h>
-# include <unistd.h>
 #endif
 
 #ifdef UNIX
+# include <unistd.h>		/* any unix that doesn't have it? */
 # ifdef SCO
 #  undef M_XENIX
 #  include <sys/ndir.h>		/* for MAXNAMLEN */
@@ -155,9 +163,6 @@
 # if defined(sun) && !defined(SOLARIS)
 #  include "sun_stdlib.h"
 # endif
-# if defined(linux) || defined(SCO) || defined(M_UNIX)
-#  include <unistd.h>  /* may make sense for others too. jw. */
-# endif
 #else /*__STDC__*/
 # if defined(_SEQUENT_) && !defined(_STDLIB_H_)
   extern char *getenv();
@@ -186,18 +191,21 @@
  * (this does not account for maximum name lengths, thus it is not 100% accurate!)
  */
 #if defined(AMIGA) || defined(MSDOS)
-# define fnamecmp(x, y) stricmp((x), (y))
+# define fnamecmp(x, y) stricmp((char *)(x), (char *)(y))
 #else
-# define fnamecmp(x, y) strcmp((x), (y))
+# define fnamecmp(x, y) strcmp((char *)(x), (char *)(y))
 #endif
 
-/* flags for updateScreen() */
-#define VALID					90	/* buffer not changed */
-#define NOT_VALID				91	/* buffer changed */
-#define VALID_TO_CURSCHAR		92	/* buffer before cursor not changed */
-#define INVERTED				93	/* redisplay inverted part */
-#define CLEAR					94	/* first clear screen */
-#define CURSUPD					95	/* update cursor first */
+/*
+ * flags for updateScreen()
+ * The higher the value, the higher the priority
+ */
+#define VALID					10	/* buffer not changed */
+#define INVERTED				20	/* redisplay inverted part */
+#define VALID_TO_CURSCHAR		30	/* buffer at/below cursor changed */
+#define NOT_VALID				40	/* buffer changed */
+#define CURSUPD					50	/* buffer changed, update cursor first */
+#define CLEAR					60	/* screen messed up, clear it */
 
 /* values for State */
 /*
@@ -219,35 +227,16 @@
 #define FORWARD 				 1
 #define BACKWARD				 -1
 
+/* return values for functions */
+#define OK						1
+#define FAIL					0
+
 /* for GetChars */
 #define T_PEEK					1	/* do not wait at all */
 #define T_WAIT					2	/* wait for a short time */
 #define T_BLOCK					3	/* wait forever */
 
 #define VISUALLINE			MAXCOL	/* Visual is linewise */
-
-/*
- * Names for the EXRC, HELP and temporary files.
- * Some of these may have been defined in the makefile.
- */
-#ifndef SYSVIMRC_FILE
-# define SYSVIMRC_FILE	"s:.vimrc"
-#endif
-#ifndef SYSEXRC_FILE
-# define SYSEXRC_FILE	"s:.exrc"
-#endif
-#ifndef VIMRC_FILE
-# define VIMRC_FILE		".vimrc"
-#endif
-#ifndef EXRC_FILE
-# define EXRC_FILE		".exrc"
-#endif
-#ifndef VIM_HLP
-# define VIM_HLP		"vim:vim.hlp"
-#endif
-#define TMPNAME1		"t:viXXXXXX"
-#define TMPNAME2		"t:voXXXXXX"
-#define TMPNAMELEN		12
 
 /*
  * Boolean constants
@@ -258,9 +247,16 @@
 #endif
 
 /*
- * Maximum screen width
+ * Maximum and minimum screen size (height is unlimited)
  */
-#define MAX_COLUMNS 255L
+#ifdef UNIX
+# define MAX_COLUMNS 	1024L
+#else
+# define MAX_COLUMNS 	255L
+#endif
+#define MIN_COLUMNS		5
+#define MIN_ROWS		1
+#define STATUS_HEIGHT	1		/* height of a status line under a window */
 
 /*
  * Buffer sizes
@@ -293,62 +289,48 @@
 #endif
 
 #ifdef MSDOS
-# define BASENAMELEN	8		/* length of base of file name */
-#else
-# ifdef UNIX
-#  define BASENAMELEN	(MAXNAMLEN - 5)
-# else
-#  define BASENAMELEN	26		/* Amiga */
-# endif
-#endif
-
-#ifdef MSDOS
 # define WRITEBIN	"wb"		/* no CR-LF translation */
 # define READBIN	"rb"
+# define APPENDBIN	"ab"
 #else
 # define WRITEBIN	"w"
 # define READBIN	"r"
+# define APPENDBIN	"a"
 #endif
 
 #define CHANGED   set_Changed()
-#define UNCHANGED Changed = 0
+#define UNCHANGED curbuf->b_changed = 0
 
-#if !defined(BSD_UNIX) && !defined(linux) && !defined(SASC) && !defined(__sgi) && !defined(SCO) && !defined(hpux) && !defined(SOLARIS) && !defined(M_UNIX) && !defined(AIX) && !defined(_UTS) && !defined(USL)
-typedef unsigned char	u_char;		/* shorthand */
-typedef unsigned short	u_short;	/* shorthand */
-typedef unsigned int	u_int;		/* shorthand */
-typedef unsigned long	u_long;		/* shorthand */
-#endif
+/*
+ * defines to avoid typecasts from (char_u *) to (char *) and back
+ */
+#define STRCHR(s, c)		(char_u *)strchr((char *)(s), c)
+#define STRRCHR(s, c)		(char_u *)strrchr((char *)(s), c)
+#define STRLEN(s)			strlen((char *)(s))
+#define STRCPY(d, s)		strcpy((char *)(d), (char *)(s))
+#define STRNCPY(d, s, n)	strncpy((char *)(d), (char *)(s), n)
+#define STRCMP(d, s)		strcmp((char *)(d), (char *)(s))
+#define STRNCMP(d, s, n)	strncmp((char *)(d), (char *)(s), n)
+#define STRCAT(d, s)		strcat((char *)(d), (char *)(s))
 
-#if defined(BSD_UNIX) && !defined(__STDC__)
-# define strchr(ptr, c)			index((ptr), (c))
-# define strrchr(ptr, c)		rindex((ptr), (c))
-#endif
-
-#ifdef BSD_UNIX
-# define memset(ptr, c, size)	bsdmemset((ptr), (c), (size))
-char *bsdmemset __ARGS((char *, int, long));
-#endif
+#define MSG(s)				msg((char_u *)s)
+#define EMSG(s)				emsg((char_u *)s)
+#define EMSG2(s, p)			emsg2((char_u *)s, (char_u *)p)
+#define OUTSTR(s)			outstr((char_u *)s)
+#define OUTSTRN(s)			outstrn((char_u *)s)
 
 typedef long			linenr_t;	/* line number type */
 typedef unsigned		colnr_t;	/* column number type */
-typedef struct fpos		FPOS;		/* file position type */
 
-#define INVLNUM (0x7fffffff)		/* invalid line number */
-#ifdef MAX_INT
-# define MAXCOL	MAX_INT				/* maximum column number */
+#define MAXLNUM (0x7fffffff)		/* maximum (invalid) line number */
+#ifdef INT_MAX
+# define MAXCOL	INT_MAX				/* maximum column number */
 #else
-# define MAXCOL	32767				/* maximum column number */
+# define MAXCOL	32767				/* maximum column number, 15 bits */
 #endif
 
-struct fpos
-{
-		linenr_t		lnum;	/* line number */
-		colnr_t 		col;	/* column number */
-};
-
 /*
- * Some versions of isspace() handle Meta character like a space!
+ * Some versions of isspace() handle Meta characters like a space!
  * This define fixes that.
  */
 #ifdef VIM_ISSPACE
@@ -357,3 +339,22 @@ struct fpos
 # endif /* isspace */
 # define isspace(x)  (((x) >= 9 && (x) <= 13) || ((x) == 32))
 #endif /* VIM_ISSPACE */
+
+/*
+ * iswhite() is used for "^" and the like
+ */
+#define iswhite(x)	((x) == ' ' || (x) == '\t')
+
+#include "structs.h"		/* file that defines many structures */
+
+#ifdef AMIGA
+# include "amiga.h"
+#endif
+
+#ifdef MSDOS
+# include "msdos.h"
+#endif
+
+#ifdef UNIX
+# include "unix.h"
+#endif

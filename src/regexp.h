@@ -21,26 +21,26 @@
 
 #define NSUBEXP  10
 typedef struct regexp {
-	char		   *startp[NSUBEXP];
-	char		   *endp[NSUBEXP];
-	char			regstart;	/* Internal use only. */
-	char			reganch;	/* Internal use only. */
-	char		   *regmust;	/* Internal use only. */
+	char_u		   *startp[NSUBEXP];
+	char_u		   *endp[NSUBEXP];
+	char_u			regstart;	/* Internal use only. */
+	char_u			reganch;	/* Internal use only. */
+	char_u		   *regmust;	/* Internal use only. */
 	int 			regmlen;	/* Internal use only. */
-	char			program[1]; /* Unwarranted chumminess with compiler. */
+	char_u			program[1]; /* Unwarranted chumminess with compiler. */
 }				regexp;
 
 /* regexp.c */
-regexp *regcomp __ARGS((char *));
-int regexec __ARGS((regexp *, char *, int));
-/* int cstrncmp __ARGS((char *, char *, int)); */
-char *cstrchr __ARGS((char *, int));
+regexp *regcomp __ARGS((char_u *));
+int regexec __ARGS((regexp *, char_u *, int));
+/* int cstrncmp __ARGS((char_u *, char_u *, int)); */
+char_u *cstrchr __ARGS((char_u *, int));
 
 /* regsub.c */
-int regsub __ARGS((regexp *, char *, char *, int, int));
+int regsub __ARGS((regexp *, char_u *, char_u *, int, int));
 
 /* search.c */
-extern void 	regerror __ARGS((char *));
+extern void 	regerror __ARGS((char_u *));
 
 #ifndef ORIGINAL
 extern int		reg_ic; 		/* set non-zero to ignore case in searches */

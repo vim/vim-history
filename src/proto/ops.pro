@@ -1,6 +1,7 @@
 /* ops.c */
-void doshift __PARMS((int op));
-void shift_line __PARMS((int left, int round));
+void doshift __PARMS((int op, int curs_top, int amount));
+void shift_line __PARMS((int left, int round, int amount));
+int is_yank_buffer __PARMS((int c, int write));
 int dorecord __PARMS((int c));
 int doexecbuf __PARMS((int c));
 int insertbuf __PARMS((int c));
@@ -12,9 +13,9 @@ void init_yank __PARMS((void));
 int doyank __PARMS((int deleting));
 void doput __PARMS((int dir, long count));
 void dodis __PARMS((void));
+void dis_msg __PARMS((unsigned char *p, int skip_esc));
 void dodojoin __PARMS((long count, int insert_space, int redraw));
 int dojoin __PARMS((int insert_space, int redraw));
 void doformat __PARMS((void));
 void startinsert __PARMS((int initstr, int startln, long count));
-int doaddsub __PARMS((int c, long Prenum1));
-int startinmargin __PARMS((void));
+int doaddsub __PARMS((int command, long Prenum1));

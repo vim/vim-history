@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 #ifdef DIGRAPHS
@@ -18,13 +16,13 @@
 #include "proto.h"
 #include "param.h"
 
-static void printdigraph __ARGS((u_char *));
+static void printdigraph __ARGS((char_u *));
 
-u_char	(*digraphnew)[3];			/* pointer to added digraphs */
+char_u	(*digraphnew)[3];			/* pointer to added digraphs */
 int		digraphcount = 0;			/* number of added digraphs */
 
 #ifdef MSDOS
-u_char	digraphdefault[][3] = 		/* standard MSDOS digraphs */
+char_u	digraphdefault[][3] = 		/* standard MSDOS digraphs */
 	   {{'C', ',', 128},	/* Ä */
 		{'u', '"', 129},	/* Å */
 		{'e', '\'', 130},	/* Ç */
@@ -89,7 +87,7 @@ u_char	digraphdefault[][3] = 		/* standard MSDOS digraphs */
 
 #else	/* MSDOS */
 
-u_char	digraphdefault[][3] = 		/* standard ISO digraphs */
+char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
 	   {{'~', '!', 161},	/* ° */
 	    {'c', '|', 162},	/* ¢ */
 	    {'$', '$', 163},	/* £ */
@@ -247,8 +245,12 @@ getdigraph(char1, char2)
 		}
 	}
 
-	if (retval == 0)	/* digraph deleted or not found */
+	if (retval == 0)			/* digraph deleted or not found */
+	{
+		if (char1 == ' ')		/* <space> <char> --> meta-char */
+			return (char2 | 0x80);
 		return char2;
+	}
 	return retval;
 }
 
@@ -258,10 +260,10 @@ getdigraph(char1, char2)
  */
 	void
 putdigraph(str)
-	char *str;
+	char_u *str;
 {
 	int		char1, char2, n;
-	u_char	(*newtab)[3];
+	char_u	(*newtab)[3];
 	int		i;
 
 	while (*str)
@@ -289,7 +291,7 @@ putdigraph(str)
 			if (i < digraphcount)
 				continue;
 		}
-		newtab = (u_char (*)[3])alloc(digraphcount * 3 + 3);
+		newtab = (char_u (*)[3])alloc(digraphcount * 3 + 3);
 		if (newtab)
 		{
 			memmove((char *)newtab, (char *)digraphnew, (size_t)(digraphcount * 3));
@@ -314,15 +316,16 @@ listdigraphs()
 			printdigraph(digraphdefault[i]);
 	for (i = 0; i < digraphcount; ++i)
 		printdigraph(digraphnew[i]);
-	outchar('\n');
-	wait_return(TRUE);
+	msg_outchar('\n');
+	wait_return(TRUE);		/* clear screen, because some digraphs may be wrong,
+							 * in which case we messed up NextScreen */
 }
 
 	static void
 printdigraph(p)
-	u_char *p;
+	char_u *p;
 {
-	char		buf[9];
+	char_u		buf[9];
 	static int	len;
 
 	if (p == NULL)
@@ -331,13 +334,13 @@ printdigraph(p)
 	{
 		if (len > Columns - 11)
 		{
-			outchar('\n');
+			msg_outchar('\n');
 			len = 0;
 		}
 		if (len)
-			outstrn("   ");
-		sprintf(buf, "%c%c %c %3d", p[0], p[1], p[2], p[2]);
-		outstrn(buf);
+			msg_outstr((char_u *)"   ");
+		sprintf((char *)buf, "%c%c %c %3d", p[0], p[1], p[2], p[2]);
+		msg_outstr(buf);
 		len += 11;
 	}
 }

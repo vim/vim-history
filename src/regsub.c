@@ -65,12 +65,12 @@
 #endif
 
 #ifndef CHARBITS
-#define UCHARAT(p)      ((int)*(unsigned char *)(p))
+#define UCHARAT(p)      ((int)*(char_u *)(p))
 #else
 #define UCHARAT(p)      ((int)*(p)&CHARBITS)
 #endif
 
-extern char 	   *reg_prev_sub;
+extern char_u 	   *reg_prev_sub;
 
 #ifdef CASECONVERT
 	/*
@@ -79,38 +79,38 @@ extern char 	   *reg_prev_sub;
 	 * This is impossible, so we declare a pointer to a function returning a
 	 * pointer to a function returning void. This should work for all compilers.
 	 */
-typedef void (*(*fptr) __ARGS((char *, int)))();
-static fptr strnfcpy __ARGS((fptr, char *, char *, int));
+typedef void (*(*fptr) __ARGS((char_u *, int)))();
+static fptr strnfcpy __ARGS((fptr, char_u *, char_u *, int));
 
-static fptr do_copy __ARGS((char *, int));
-static fptr do_upper __ARGS((char *, int));
-static fptr do_Upper __ARGS((char *, int));
-static fptr do_lower __ARGS((char *, int));
-static fptr do_Lower __ARGS((char *, int));
+static fptr do_Copy __ARGS((char_u *, int));
+static fptr do_upper __ARGS((char_u *, int));
+static fptr do_Upper __ARGS((char_u *, int));
+static fptr do_lower __ARGS((char_u *, int));
+static fptr do_Lower __ARGS((char_u *, int));
 
 	static fptr
-do_copy(d, c)
-	char *d;
+do_Copy(d, c)
+	char_u *d;
 	int c;
 {
 	*d = c;
 
-	return (fptr)do_copy;
+	return (fptr)do_Copy;
 }
 
 	static fptr
 do_upper(d, c)
-	char *d;
+	char_u *d;
 	int c;
 {
 	*d = TO_UPPER(c);
 
-	return (fptr)do_copy;
+	return (fptr)do_Copy;
 }
 
 	static fptr
 do_Upper(d, c)
-	char *d;
+	char_u *d;
 	int c;
 {
 	*d = TO_UPPER(c);
@@ -120,17 +120,17 @@ do_Upper(d, c)
 
 	static fptr
 do_lower(d, c)
-	char *d;
+	char_u *d;
 	int c;
 {
 	*d = TO_LOWER(c);
 
-	return (fptr)do_copy;
+	return (fptr)do_Copy;
 }
 
 	static fptr
 do_Lower(d, c)
-	char *d;
+	char_u *d;
 	int c;
 {
 	*d = TO_LOWER(c);
@@ -141,8 +141,8 @@ do_Lower(d, c)
 	static fptr
 strnfcpy(f, d, s, n)
 	fptr f;
-	char *d;
-	char *s;
+	char_u *d;
+	char_u *s;
 	int n;
 {
 	while (n-- > 0) {
@@ -169,14 +169,14 @@ strnfcpy(f, d, s, n)
  * In the old solution (tilde handled in regsub()) is was possible to get an
  * endless loop.
  */
-	char *
+	char_u *
 regtilde(source, magic)
-	char	*source;
+	char_u	*source;
 	int		magic;
 {
-	char	*newsub = NULL;
-	char	*tmpsub;
-	char	*p;
+	char_u	*newsub = NULL;
+	char_u	*tmpsub;
+	char_u	*p;
 	int		len;
 	int		prevlen;
 
@@ -187,19 +187,19 @@ regtilde(source, magic)
 			if (reg_prev_sub)
 			{
 					/* length = len(current) - 1 + len(previous) + 1 */
-				prevlen = strlen(reg_prev_sub);
-				tmpsub = alloc((unsigned)(strlen(source) + prevlen));
+				prevlen = STRLEN(reg_prev_sub);
+				tmpsub = alloc((unsigned)(STRLEN(source) + prevlen));
 				if (tmpsub)
 				{
 						/* copy prefix */
 					len = (int)(p - source);	/* not including ~ */
-					strncpy(tmpsub, source, (size_t)len);
+					STRNCPY(tmpsub, source, (size_t)len);
 						/* interpretate tilde */
-					strcpy(tmpsub + len, reg_prev_sub);
+					STRCPY(tmpsub + len, reg_prev_sub);
 						/* copy postfix */
 					if (!magic)
 						++p;					/* back off \ */
-					strcat(tmpsub + len, p + 1);
+					STRCAT(tmpsub + len, p + 1);
 
 					free(newsub);
 					newsub = tmpsub;
@@ -207,9 +207,9 @@ regtilde(source, magic)
 				}
 			}
 			else if (magic)
-				strcpy(p, p + 1);				/* remove '~' */
+				STRCPY(p, p + 1);				/* remove '~' */
 			else
-				strcpy(p, p + 2);				/* remove '\~' */
+				STRCPY(p, p + 2);				/* remove '\~' */
 		}
 		else if (*p == '\\' && p[1])			/* skip escaped characters */
 			++p;
@@ -234,18 +234,18 @@ regtilde(source, magic)
 	int
 regsub(prog, source, dest, copy, magic)
 	regexp		   *prog;
-	char		   *source;
-	char		   *dest;
+	char_u		   *source;
+	char_u		   *dest;
 	int 			copy;
 	int 			magic;
 {
-	register char  *src;
-	register char  *dst;
-	register char	c;
+	register char_u  *src;
+	register char_u  *dst;
+	register int	c;
 	register int	no;
 	register int	len;
 #ifdef CASECONVERT
-	fptr			func = (fptr)do_copy;
+	fptr			func = (fptr)do_Copy;
 #endif
 
 	if (prog == NULL || source == NULL || dest == NULL)
@@ -266,7 +266,7 @@ regsub(prog, source, dest, copy, magic)
 		no = -1;
 		if (c == '&' && magic)
 			no = 0;
-		else if (c == '\\')
+		else if (c == '\\' && *src != NUL)
 		{
 			if (*src == '&' && !magic)
 			{
@@ -291,7 +291,7 @@ regsub(prog, source, dest, copy, magic)
 				case 'L':	func = (fptr)do_Lower;
 							continue;
 				case 'e':
-				case 'E':	func = (fptr)do_copy;
+				case 'E':	func = (fptr)do_Copy;
 							continue;
 				}
 			}
@@ -299,7 +299,7 @@ regsub(prog, source, dest, copy, magic)
 		}
 		if (no < 0)           /* Ordinary character. */
 		{
-			if (c == '\\')
+			if (c == '\\' && *src != NUL)
 				c = *src++;
 			if (copy)
 			{
@@ -320,7 +320,7 @@ regsub(prog, source, dest, copy, magic)
 #ifdef CASECONVERT
 				func = strnfcpy(func, dst, prog->startp[no], len);
 #else
-				(void) strncpy(dst, prog->startp[no], len);
+				(void) STRNCPY(dst, prog->startp[no], len);
 #endif
 			}
 			dst += len;

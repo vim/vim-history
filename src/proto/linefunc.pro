@@ -1,9 +1,9 @@
 /* linefunc.c */
 void coladvance __PARMS((unsigned int wcol));
+int inc_cursor __PARMS((void));
 int inc __PARMS((struct fpos *lp));
-int incCurpos __PARMS((void));
 int incl __PARMS((struct fpos *lp));
+int dec_cursor __PARMS((void));
 int dec __PARMS((struct fpos *lp));
-int decCurpos __PARMS((void));
 int decl __PARMS((struct fpos *lp));
-void adjustCurpos __PARMS((void));
+void adjust_cursor __PARMS((void));

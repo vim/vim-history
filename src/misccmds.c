@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -17,7 +15,7 @@
 #include "proto.h"
 #include "param.h"
 
-static char *(si_tab[]) = {"if", "else", "while", "for", "do"};
+static char_u *(si_tab[]) = {(char_u *)"if", (char_u *)"else", (char_u *)"while", (char_u *)"for", (char_u *)"do"};
 
 /*
  * count the size of the indent in the current line
@@ -25,13 +23,13 @@ static char *(si_tab[]) = {"if", "else", "while", "for", "do"};
 	int
 get_indent()
 {
-	register char *ptr;
+	register char_u *ptr;
 	register int count = 0;
 
-	for (ptr = nr2ptr(Curpos.lnum); *ptr; ++ptr)
+	for (ptr = ml_get(curwin->w_cursor.lnum); *ptr; ++ptr)
 	{
 		if (*ptr == TAB)	/* count a tab for what it is worth */
-			count += (int)p_ts - (count % (int)p_ts);
+			count += (int)curbuf->b_p_ts - (count % (int)curbuf->b_p_ts);
 		else if (*ptr == ' ')
 			++count;			/* count a space for one */
 		else
@@ -52,17 +50,17 @@ set_indent(size, delete)
 	int		oldstate = State;
 
 	State = INSERT;		/* don't want REPLACE for State */
-	Curpos.col = 0;
+	curwin->w_cursor.col = 0;
 	if (delete)
 	{
-		while (isspace(gcharCurpos()))	/* delete old indent */
-			delchar(FALSE);
+		while (iswhite(gchar_cursor()))	/* delete old indent */
+			(void)delchar(FALSE);
 	}
-	if (!p_et)			/* if 'expandtab' is set, don't use TABs */
-		while (size >= (int)p_ts)
+	if (!curbuf->b_p_et)			/* if 'expandtab' is set, don't use TABs */
+		while (size >= (int)curbuf->b_p_ts)
 		{
 			inschar(TAB);
-			size -= (int)p_ts;
+			size -= (int)curbuf->b_p_ts;
 		}
 	while (size)
 	{
@@ -70,13 +68,14 @@ set_indent(size, delete)
 		--size;
 	}
 	State = oldstate;
-	script_winsize_pp();
 }
 
 /*
  * Opencmd
  *
  * Add a blank line below or above the current line.
+ *
+ * Return TRUE for success, FALSE for failure
  */
 
 	int
@@ -85,20 +84,22 @@ Opencmd(dir, redraw, delspaces)
 	int			redraw;
 	int			delspaces;
 {
-	char   *l;
-	char   *ptr, *pp;
-	FPOS	oldCurpos; 			/* old cursor position */
+	char_u   *ptr, *p_extra;
+	FPOS	old_cursor; 			/* old cursor position */
 	int		newcol = 0;			/* new cursor column */
 	int 	newindent = 0;		/* auto-indent of the new line */
-	int 	extra = 0;			/* number of bytes to be copied from current line */
 	int		n;
 	int		truncate = FALSE;	/* truncate current line afterwards */
 	int		no_si = FALSE;		/* reset did_si afterwards */
+	int		retval = FALSE;		/* return value, default is FAIL */
 
-	ptr = nr2ptr(Curpos.lnum);
-	u_clearline();		/* cannot do "U" command when adding lines */
+	ptr = strsave(ml_get(curwin->w_cursor.lnum));
+	if (ptr == NULL)			/* out of memory! */
+		return FALSE;
+
+	u_clearline();				/* cannot do "U" command when adding lines */
 	did_si = FALSE;
-	if (p_ai || p_si)
+	if (curbuf->b_p_ai || curbuf->b_p_si)
 	{
 		/*
 		 * count white space on current line
@@ -114,15 +115,15 @@ Opencmd(dir, redraw, delspaces)
 			 */
 		if (dir == FORWARD && did_ai)
 			truncate = TRUE;
-		else if (p_si && *ptr != NUL)
+		else if (curbuf->b_p_si && *ptr != NUL)
 		{
-			char	*p;
-			char	*pp;
+			char_u	*p;
+			char_u	*pp;
 			int		i, save;
 
 			if (dir == FORWARD)
 			{
-				p = ptr + strlen(ptr) - 1;
+				p = ptr + STRLEN(ptr) - 1;
 				while (p > ptr && isspace(*p))	/* find last non-blank in line */
 					--p;
 				if (*p == '{')					/* line ends in '{': do indent */
@@ -140,8 +141,8 @@ Opencmd(dir, redraw, delspaces)
 					{
 						save = *pp;
 						*pp = NUL;
-						for (i = sizeof(si_tab)/sizeof(char *); --i >= 0; )
-							if (strcmp(p, si_tab[i]) == 0)
+						for (i = sizeof(si_tab)/sizeof(char_u *); --i >= 0; )
+							if (STRCMP(p, si_tab[i]) == 0)
 							{
 								did_si = TRUE;
 								break;
@@ -159,44 +160,41 @@ Opencmd(dir, redraw, delspaces)
 			}
 		}
 		did_ai = TRUE;
-		if (p_si)
+		if (curbuf->b_p_si)
 			can_si = TRUE;
 	}
 	if (State == INSERT || State == REPLACE)	/* only when dir == FORWARD */
 	{
-		pp = ptr + Curpos.col;
-		if (p_ai && delspaces)
-			skipspace(&pp);
-		extra = strlen(pp);
+		p_extra = ptr + curwin->w_cursor.col;
+		if (curbuf->b_p_ai && delspaces)
+			skipspace(&p_extra);
+		if (*p_extra != NUL)
+			did_ai = FALSE; 		/* append some text, don't trucate now */
 	}
-	if ((l = alloc_line(extra)) == NULL)
-		return (FALSE);
-	if (extra)
-	{
-		strcpy(l, pp);
-		did_ai = FALSE; 		/* don't trucate now */
-	}
+	else
+		p_extra = (char_u *)"";				/* append empty line */
 
-	oldCurpos = Curpos;
+	old_cursor = curwin->w_cursor;
 	if (dir == BACKWARD)
-		--Curpos.lnum;
-	if (appendline(Curpos.lnum, l) == FALSE)
-		return FALSE;
+		--curwin->w_cursor.lnum;
+	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_t)0, FALSE) == FAIL)
+		goto theend;
+	mark_adjust(curwin->w_cursor.lnum + 1, MAXLNUM, 1L);
 	if (newindent || did_si)
 	{
-		++Curpos.lnum;
+		++curwin->w_cursor.lnum;
 		if (did_si)
 		{
 			if (p_sr)
-				newindent -= newindent % (int)p_sw;
-			newindent += (int)p_sw;
+				newindent -= newindent % (int)curbuf->b_p_sw;
+			newindent += (int)curbuf->b_p_sw;
 		}
 		set_indent(newindent, FALSE);
-		newcol = Curpos.col;
+		newcol = curwin->w_cursor.col;
 		if (no_si)
 			did_si = FALSE;
 	}
-	Curpos = oldCurpos;
+	curwin->w_cursor = old_cursor;
 
 	if (dir == FORWARD)
 	{
@@ -205,16 +203,17 @@ Opencmd(dir, redraw, delspaces)
 			if (truncate)
 				*ptr = NUL;
 			else
-				*(ptr + Curpos.col) = NUL;	/* truncate current line at cursor */
-			canincrease(0);
+				*(ptr + curwin->w_cursor.col) = NUL;	/* truncate current line at cursor */
+			ml_replace(curwin->w_cursor.lnum, ptr, FALSE);
+			ptr = NULL;
 		}
 
 		/*
-		 * Get the cursor to the start of the line, so that 'Cursrow' gets
+		 * Get the cursor to the start of the line, so that 'curwin->w_row' gets
 		 * set to the right physical line number for the stuff that
 		 * follows...
 		 */
-		Curpos.col = 0;
+		curwin->w_cursor.col = 0;
 
 		if (redraw)
 		{
@@ -226,26 +225,29 @@ Opencmd(dir, redraw, delspaces)
 			 * right place. We use calls to plines() in case the cursor is
 			 * resting on a long line.
 			 */
-			n = Cursrow + plines(Curpos.lnum);
-			if (n == (Rows - 1))
+			n = curwin->w_row + plines(curwin->w_cursor.lnum);
+			if (n == curwin->w_height)
 				scrollup(1L);
 			else
-				s_ins(n, 1, TRUE);
+				win_ins_lines(curwin, n, 1, TRUE, TRUE);
 		}
-		++Curpos.lnum;	/* cursor moves down */
+		++curwin->w_cursor.lnum;	/* cursor moves down */
 	}
-	else if (redraw)
-		s_ins(Cursrow, 1, TRUE); /* insert physical line */
+	else if (redraw) 				/* insert physical line above current line */
+		win_ins_lines(curwin, curwin->w_row, 1, TRUE, TRUE);
 
-	Curpos.col = newcol;
+	curwin->w_cursor.col = newcol;
 	if (redraw)
 	{
 		updateScreen(VALID_TO_CURSCHAR);
-		cursupdate();			/* update Cursrow */
+		cursupdate();			/* update curwin->w_row */
 	}
 	CHANGED;
 
-	return (TRUE);
+	retval = TRUE;				/* success! */
+theend:
+	free(ptr);
+	return retval;
 }
 
 /*
@@ -253,15 +255,24 @@ Opencmd(dir, redraw, delspaces)
  */
 	int
 plines(p)
-	linenr_t p;
+	linenr_t	p;
 {
-	register int		col = 0;
-	register u_char		*s;
+	return plines_win(curwin, p);
+}
+	
+	int
+plines_win(wp, p)
+	WIN			*wp;
+	linenr_t	p;
+{
+	register long		col = 0;
+	register char_u		*s;
+	register int		lines;
 
-	if (!p_wrap)
+	if (!wp->w_p_wrap)
 		return 1;
 
-	s = (u_char *)nr2ptr(p);
+	s = ml_get_buf(wp->w_buffer, p, FALSE);
 	if (*s == NUL)				/* empty line */
 		return 1;
 
@@ -272,19 +283,19 @@ plines(p)
 	 * If list mode is on, then the '$' at the end of the line takes up one
 	 * extra column.
 	 */
-	if (p_list)
+	if (wp->w_p_list)
 		col += 1;
 
 	/*
 	 * If 'number' mode is on, add another 8.
 	 */
-	if (p_nu)
+	if (wp->w_p_nu)
 		col += 8;
 
-	col = (col + ((int)Columns - 1)) / (int)Columns;
-	if (col < Rows)
-		return col;
-	return (int)(Rows - 1);		/* maximum length */
+	lines = (col + (Columns - 1)) / Columns;
+	if (lines <= wp->w_height)
+		return lines;
+	return (int)(wp->w_height);		/* maximum length */
 }
 
 /*
@@ -294,123 +305,52 @@ plines(p)
 plines_m(first, last)
 	linenr_t		first, last;
 {
-		int count = 0;
-
-		while (first <= last)
-				count += plines(first++);
-		return (count);
+	return plines_m_win(curwin, first, last);
 }
 
-	void
-fileinfo(fullname)
-	int fullname;
-{
-	if (bufempty())
-	{
-		msg("Buffer Empty");
-		return;
-	}
-	sprintf(IObuff, "\"%s\"%s%s%s line %ld of %ld -- %d %% --",
-			(!fullname && sFilename != NULL) ? sFilename :
-				((Filename != NULL) ? Filename : "No File"),
-			Changed ? " [Modified]" : "",
-			NotEdited ? " [Not edited]" : "",
-			p_ro ? " [readonly]" : "",
-			(long)Curpos.lnum,
-			(long)line_count,
-			(int)(((long)Curpos.lnum * 100L) / (long)line_count));
-
-	if (numfiles > 1)
-		sprintf(IObuff + strlen(IObuff), " (file %d of %d)", curfile + 1, numfiles);
-	msg(IObuff);
-}
-
-/*
- * Set the current file name to 's'.
- * The file name with the full path is also remembered, for when :cd is used.
- */
-	void
-setfname(s, ss)
-	char *s, *ss;
-{
-	free(Filename);
-	free(sFilename);
-	if (s == NULL || *s == NUL)
-	{
-		Filename = NULL;
-		sFilename = NULL;
-	}
-	else
-	{
-		if (ss == NULL)
-			ss = s;
-		sFilename = (char *)strsave(ss);
-		FullName(s, IObuff, IOSIZE);
-		Filename = (char *)strsave(IObuff);
-	}
-	if (did_cd)
-		xFilename = Filename;
-	else
-		xFilename = sFilename;
-
-#ifndef MSDOS
-	thisfile_sn = FALSE;
-#endif
-}
-
-/*
- * return nonzero if "s" is not the same file as current file
- */
 	int
-otherfile(s)
-	char *s;
+plines_m_win(wp, first, last)
+	WIN				*wp;
+	linenr_t		first, last;
 {
-	if (s == NULL || *s == NUL || Filename == NULL)		/* no name is different */
-		return TRUE;
-	FullName(s, IObuff, IOSIZE);
-	return fnamecmp(IObuff, Filename);
-}
-	
-/*
- * put filename in title bar of window
- */
-	void
-maketitle()
-{
-#ifdef AMIGA
-	if (Filename == NULL)
-		settitle("");
-	else
-	{
-		if (numfiles <= 1)
-			settitle(Filename);
-		else
-		{
-			sprintf(IObuff, "%s (%d of %d)", Filename, curfile + 1, numfiles);
-			settitle(IObuff);
-		}
-	}
-#endif
+	int count = 0;
+
+	while (first <= last)
+		count += plines_win(wp, first++);
+	return (count);
 }
 
+/*
+ * insert or replace a single character at the cursor position
+ */
 	void
 inschar(c)
 	int			c;
 {
-	register char  *p;
+	register char_u  *p;
 	int				rir0;		/* reverse replace in column 0 */
+	char_u			*new;
+	char_u			*old;
+	int				oldlen;
+	int				extra;
+	colnr_t			col = curwin->w_cursor.col;
+	linenr_t		lnum = curwin->w_cursor.lnum;
 
-	p = Curpos2ptr();
-	rir0 = (State == REPLACE && p_ri && Curpos.col == 0);
-	if (rir0 || State != REPLACE || *p == NUL)
-	{
-			/* make room for the new char. */
-		if (!canincrease(1))	/* make room for the new char */
-			return;
+	old = ml_get(lnum);
+	oldlen = STRLEN(old) + 1;
 
-		p = Curpos2ptr();		/* get p again, canincrease() may have changed it */
-		memmove(p + 1, p, strlen(p) + 1);	/* move following text and NUL */
-	}
+	rir0 = (State == REPLACE && p_ri && col == 0);
+	if (rir0 || State != REPLACE || *(old + col) == NUL)
+		extra = 1;
+	else
+		extra = 0;
+
+	new = alloc((unsigned)(oldlen + extra));
+	if (new == NULL)
+		return;
+	memmove((char *)new, (char *)old, (size_t)col);
+	p = new + col;
+	memmove((char *)p + extra, (char *)old + col, (size_t)(oldlen - col));
 	if (rir0)					/* reverse replace in column 0 */
 	{
 		*(p + 1) = c;			/* replace the char that was in column 0 */
@@ -418,6 +358,7 @@ inschar(c)
 		extraspace = TRUE;
 	}
 	*p = c;
+	ml_replace(lnum, new, FALSE);
 
 	/*
 	 * If we're in insert mode and showmatch mode is set, then check for
@@ -431,97 +372,129 @@ inschar(c)
 
 		if ((lpos = showmatch()) == NULL)		/* no match, so beep */
 			beep();
-		else if (lpos->lnum >= Topline)
+		else if (lpos->lnum >= curwin->w_topline)
 		{
 			updateScreen(VALID_TO_CURSCHAR); /* show the new char first */
-			csave = Curpos;
-			Curpos = *lpos; 	/* move to matching char */
+			csave = curwin->w_cursor;
+			curwin->w_cursor = *lpos; 	/* move to matching char */
 			cursupdate();
 			showruler(0);
 			setcursor();
 			flushbuf();
 			vim_delay();		/* brief pause */
-			Curpos = csave; 	/* restore cursor position */
+			curwin->w_cursor = csave; 	/* restore cursor position */
 			cursupdate();
 		}
 	}
 	if (!p_ri)							/* normal insert: cursor right */
-		++Curpos.col;
+		++curwin->w_cursor.col;
 	else if (State == REPLACE && !rir0)	/* reverse replace mode: cursor left */
-		--Curpos.col;
+		--curwin->w_cursor.col;
 	CHANGED;
 }
 
+/*
+ * insert a string at the cursor position
+ */
 	void
 insstr(s)
-	register char  *s;
+	register char_u  *s;
 {
-	register char  *p;
-	register int	n = strlen(s);
+	register char_u		*old, *new;
+	register int		newlen = STRLEN(s);
+	int					oldlen;
+	colnr_t				col = curwin->w_cursor.col;
+	linenr_t			lnum = curwin->w_cursor.lnum;
 
-	if (!canincrease(n))	/* make room for the new string */
+	old = ml_get(lnum);
+	oldlen = STRLEN(old);
+	new = alloc((unsigned)(oldlen + newlen + 1));
+	if (new == NULL)
 		return;
-
-	p = Curpos2ptr();
-	memmove(p + n, p, strlen(p) + 1);
-	memmove(p, s, (size_t)n);
-	Curpos.col += n;
+	memmove((char *)new, (char *)old, (size_t)col);
+	memmove((char *)new + col, (char *)s, (size_t)newlen);
+	memmove((char *)new + col + newlen, (char *)old + col, (size_t)(oldlen - col + 1));
+	ml_replace(lnum, new, FALSE);
+	curwin->w_cursor.col += newlen;
 	CHANGED;
 }
 
+/*
+ * delete one character under the cursor
+ *
+ * return FAIL for failure, OK otherwise
+ */
 	int
 delchar(fixpos)
 	int			fixpos; 	/* if TRUE fix the cursor position when done */
 {
-	char		*ptr;
-	int			lastchar;
+	char_u		*old, *new;
+	int			oldlen;
+	linenr_t	lnum = curwin->w_cursor.lnum;
+	colnr_t		col = curwin->w_cursor.col;
+	int			was_alloced;
 
-	ptr = Curpos2ptr();
+	old = ml_get(lnum);
+	oldlen = STRLEN(old);
 
-	if (*ptr == NUL)	/* can't do anything (happens with replace mode) */
-		return FALSE;
+	if (col >= oldlen)	/* can't do anything (happens with replace mode) */
+		return FAIL;
 
-	lastchar = (*++ptr == NUL);
-	/* Delete the char. at Curpos by shifting everything in the line down. */
-	do
-		*(ptr - 1) = *ptr;
-	while (*ptr++);
+/*
+ * If the old line has been allocated the deleteion can be done in the
+ * existing line. Otherwise a new line has to be allocated
+ */
+	was_alloced = ml_line_alloced();		/* check if old was allocated */
+	if (was_alloced)
+		new = old;							/* use same allocated memory */
+	else
+	{
+		new = alloc((unsigned)oldlen);		/* need to allocated a new line */
+		if (new == NULL)
+			return FAIL;
+		memmove((char *)new, (char *)old, (size_t)col);
+	}
+	memmove((char *)new + col, (char *)old + col + 1, (size_t)(oldlen - col));
+	if (!was_alloced)
+		ml_replace(lnum, new, FALSE);
 
 	/*
 	 * If we just took off the last character of a non-blank line, we don't
 	 * want to end up positioned at the newline.
 	 */
-	if (fixpos && Curpos.col > 0 && lastchar)
-		--Curpos.col;
+	if (fixpos && curwin->w_cursor.col > 0 && col == oldlen - 1)
+		--curwin->w_cursor.col;
 
-	(void)canincrease(0);
 	CHANGED;
-	return TRUE;
+	return OK;
 }
 
 	void
-dellines(nlines, doscreen, undo)
+dellines(nlines, dowindow, undo)
 	long 			nlines;			/* number of lines to delete */
-	int 			doscreen;		/* if true, update the screen */
+	int 			dowindow;		/* if true, update the window */
 	int				undo;			/* if true, prepare for undo */
 {
 	int 			num_plines = 0;
-	char			*ptr;
 
 	if (nlines <= 0)
 		return;
 	/*
-	 * There's no point in keeping the screen updated if we're deleting more
-	 * than a screen's worth of lines.
+	 * There's no point in keeping the window updated if we're deleting more
+	 * than a window's worth of lines.
 	 */
-	if (nlines > (Rows - 1 - Cursrow) && doscreen)
+	if (nlines > (curwin->w_height - curwin->w_row) && dowindow)
 	{
-		doscreen = FALSE;
-		/* flaky way to clear rest of screen */
-		s_del(Cursrow, (int)Rows - 1, TRUE);
+		dowindow = FALSE;
+		/* flaky way to clear rest of window */
+		win_del_lines(curwin, curwin->w_row, curwin->w_height, TRUE, TRUE);
 	}
-	if (undo && !u_savedel(Curpos.lnum, nlines))
+	if (undo && !u_savedel(curwin->w_cursor.lnum, nlines))
 		return;
+
+	mark_adjust(curwin->w_cursor.lnum, curwin->w_cursor.lnum + nlines - 1, MAXLNUM);
+	mark_adjust(curwin->w_cursor.lnum + nlines, MAXLNUM, -nlines);
+
 	while (nlines-- > 0)
 	{
 		if (bufempty()) 		/* nothing to delete */
@@ -529,50 +502,52 @@ dellines(nlines, doscreen, undo)
 
 		/*
 		 * Set up to delete the correct number of physical lines on the
-		 * screen
+		 * window
 		 */
-		if (doscreen)
-			num_plines += plines(Curpos.lnum);
+		if (dowindow)
+			num_plines += plines(curwin->w_cursor.lnum);
 
-		ptr = delsline(Curpos.lnum, TRUE);
-		if (!undo)
-			free_line(ptr);
+		ml_delete(curwin->w_cursor.lnum);
 
 		CHANGED;
 
 		/* If we delete the last line in the file, stop */
-		if (Curpos.lnum > line_count)
+		if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 		{
-			Curpos.lnum = line_count;
+			curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 			break;
 		}
 	}
-	Curpos.col = 0;
+	curwin->w_cursor.col = 0;
 	/*
-	 * Delete the correct number of physical lines on the screen
+	 * Delete the correct number of physical lines on the window
 	 */
-	if (doscreen && num_plines > 0)
-		s_del(Cursrow, num_plines, TRUE);
+	if (dowindow && num_plines > 0)
+		win_del_lines(curwin, curwin->w_row, num_plines, TRUE, TRUE);
 }
 
 	int
 gchar(pos)
 	FPOS *pos;
 {
-	return (int)(*(pos2ptr(pos)));
+	return (int)(*(ml_get_pos(pos)));
 }
 
 	int
-gcharCurpos()
+gchar_cursor()
 {
-	return (int)(*(Curpos2ptr()));
+	return (int)(*(ml_get_cursor()));
 }
 
+/*
+ * Write a character at the current cursor position.
+ * It is directly written into the block.
+ */
 	void
-pcharCurpos(c)
+pchar_cursor(c)
 	int c;
 {
-	*(Curpos2ptr()) = c;
+	*(ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE) + curwin->w_cursor.col) = c;
 }
 
 /*
@@ -581,12 +556,12 @@ pcharCurpos(c)
 	int
 inindent()
 {
-	register char *ptr;
+	register char_u *ptr;
 	register int col;
 
-	for (col = 0, ptr = nr2ptr(Curpos.lnum); isspace(*ptr++); ++col)
-		;
-	if (col >= Curpos.col)
+	for (col = 0, ptr = ml_get(curwin->w_cursor.lnum); iswhite(*ptr); ++col)
+		++ptr;
+	if (col >= curwin->w_cursor.col)
 		return TRUE;
 	else
 		return FALSE;
@@ -595,13 +570,13 @@ inindent()
 /*
  * skipspace: skip over ' ' and '\t'.
  *
- * note: you must give a pointer to a char pointer!
+ * note: you must give a pointer to a char_u pointer!
  */
 	void
 skipspace(pp)
-	char **pp;
+	char_u **pp;
 {
-    register char *p;
+    register char_u *p;
     
     for (p = *pp; *p == ' ' || *p == '\t'; ++p)	/* skip to next non-white */
     	;
@@ -611,13 +586,13 @@ skipspace(pp)
 /*
  * skiptospace: skip over text until ' ' or '\t'.
  *
- * note: you must give a pointer to a char pointer!
+ * note: you must give a pointer to a char_u pointer!
  */
 	void
 skiptospace(pp)
-	char **pp;
+	char_u **pp;
 {
-	register char *p;
+	register char_u *p;
 
 	for (p = *pp; *p != ' ' && *p != '\t' && *p != NUL; ++p)
 		;
@@ -627,13 +602,13 @@ skiptospace(pp)
 /*
  * skiptodigit: skip over text until digit found
  *
- * note: you must give a pointer to a char pointer!
+ * note: you must give a pointer to a char_u pointer!
  */
 	void
 skiptodigit(pp)
-	char **pp;
+	char_u **pp;
 {
-	register char *p;
+	register char_u *p;
 
 	for (p = *pp; !isdigit(*p) && *p != NUL; ++p)
 		;
@@ -643,29 +618,29 @@ skiptodigit(pp)
 /*
  * getdigits: get a number from a string and skip over it
  *
- * note: you must give a pointer to a char pointer!
+ * note: you must give a pointer to a char_u pointer!
  */
 
 	long
 getdigits(pp)
-	char **pp;
+	char_u **pp;
 {
-    register char *p;
+    register char_u *p;
 	long retval;
     
 	p = *pp;
-	retval = atol(p);
+	retval = atol((char *)p);
     while (isdigit(*p))	/* skip to next non-digit */
     	++p;
     *pp = p;
 	return retval;
 }
 
-	char *
+	char_u *
 plural(n)
 	long n;
 {
-	static char buf[2] = "s";
+	static char_u buf[2] = "s";
 
 	if (n == 1)
 		return &(buf[1]);
@@ -674,40 +649,51 @@ plural(n)
 
 /*
  * set_Changed is called whenever something in the file is changed
- * If the file is readonly, give a warning message with the first change.
- * Don't use emsg(), because it flushes the macro buffer.
  */
 	void
 set_Changed()
 {
 	change_warning();
-	Changed = 1;
-	Updated = 1;
+	curbuf->b_changed = TRUE;
 }
 
+/*
+ * If the file is readonly, give a warning message with the first change.
+ * Don't use emsg(), because it flushes the macro buffer.
+ * If we have undone all changes b_changed will be FALSE, but b_did_warn
+ * will be TRUE.
+ */
 	void
 change_warning()
 {
-	if (Changed == 0 && p_ro)
+	if (curbuf->b_did_warn == FALSE && curbuf->b_changed == 0 && curbuf->b_p_ro)
 	{
-		msg("Warning: Changing a readonly file");
+		curbuf->b_did_warn = TRUE;
+		MSG("Warning: Changing a readonly file");
 		sleep(1);			/* give him some time to think about it */
 	}
 }
 
+/*
+ * ask for a reply from the user, a 'y' or a 'n'.
+ * No other characters are accepted, the message is repeated until a valid
+ * reply is entered or CTRL-C is hit.
+ *
+ * return the 'y' or 'n'
+ */
 	int
 ask_yesno(str)
-	char *str;
+	char_u *str;
 {
 	int r = ' ';
 
 	while (r != 'y' && r != 'n')
 	{
-		smsg("%s (y/n)? ", str);
+		smsg((char_u *)"%s (y/n)? ", str);
 		r = vgetc();
 		if (r == Ctrl('C'))
 			r = 'n';
-		outchar(r);		/* show what you typed */
+		msg_outchar(r);		/* show what you typed */
 		flushbuf();
 	}
 	return r;
@@ -725,7 +711,7 @@ msgmore(n)
 		pn = -n;
 
 	if (pn > p_report)
-		smsg("%ld %s line%s %s", pn, n > 0 ? "more" : "fewer", plural(pn),
+		smsg((char_u *)"%ld %s line%s %s", pn, n > 0 ? "more" : "fewer", plural(pn),
 											got_int ? "(Interrupted)" : "");
 }
 
@@ -742,11 +728,11 @@ beep()
 		    outstr(T_VB);
 		else
 		{						/* very primitive visual bell */
-	        msg("    ^G");
-	        msg("     ^G");
-	        msg("    ^G ");
-	        msg("     ^G");
-	        msg("       ");
+	        MSG("    ^G");
+	        MSG("     ^G");
+	        MSG("    ^G ");
+	        MSG("     ^G");
+	        MSG("       ");
 			showmode();			/* may have deleted the mode message */
 		}
 	}
@@ -760,13 +746,13 @@ beep()
  */
 	void
 expand_env(src, dst, dstlen)
-	char	*src;			/* input string e.g. "$HOME/vim.hlp" */
-	char	*dst;			/* where to put the result */
+	char_u	*src;			/* input string e.g. "$HOME/vim.hlp" */
+	char_u	*dst;			/* where to put the result */
 	int		dstlen;			/* maximum length of the result */
 {
-	char	*tail;
+	char_u	*tail;
 	int		c;
-	char	*var;
+	char_u	*var;
 
 	if (*src == '$')
 	{
@@ -785,15 +771,15 @@ expand_env(src, dst, dstlen)
  * 'dst' is also IObuff. This works, as long as 'var' is the first to be copied
  * to 'dst'!
  */
-		var = (char *)vimgetenv(dst);
-		if (var && (strlen(var) + strlen(tail) + 1 < (unsigned)dstlen))
+		var = vimgetenv(dst);
+		if (var && (STRLEN(var) + STRLEN(tail) + 1 < (unsigned)dstlen))
 		{
-			strcpy(dst, var);
-			strcat(dst, tail);
+			STRCPY(dst, var);
+			STRCAT(dst, tail);
 			return;
 		}
 	}
-	strncpy(dst, src, (size_t)dstlen);
+	STRNCPY(dst, src, (size_t)dstlen);
 }
 
 /*
@@ -802,24 +788,24 @@ expand_env(src, dst, dstlen)
  */
 	int
 fullpathcmp(s1, s2)
-	char *s1, *s2;
+	char_u *s1, *s2;
 {
 #ifdef UNIX
 	struct stat st1, st2;
-	char buf1[MAXPATHL];
+	char_u buf1[MAXPATHL];
 
 	expand_env(s1, buf1, MAXPATHL);
-	if (stat(buf1, &st1) == 0 && stat(s2, &st2) == 0 &&
+	if (stat((char *)buf1, &st1) == 0 && stat((char *)s2, &st2) == 0 &&
 				st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino)
 		return FALSE;
 	return TRUE;
 #else
-	char buf1[MAXPATHL];
-	char buf2[MAXPATHL];
+	char_u buf1[MAXPATHL];
+	char_u buf2[MAXPATHL];
 
 	expand_env(s1, buf2, MAXPATHL);
-	if (FullName(buf2, buf1, MAXPATHL) && FullName(s2, buf2, MAXPATHL))
-		return strcmp(buf1, buf2);
+	if (FullName(buf2, buf1, MAXPATHL) == OK && FullName(s2, buf2, MAXPATHL) == OK)
+		return STRCMP(buf1, buf2);
 	/*
 	 * one of the FullNames() failed, file probably doesn't exist.
 	 */
@@ -830,11 +816,11 @@ fullpathcmp(s1, s2)
 /*
  * get the tail of a path: the file name.
  */
-	char *
+	char_u *
 gettail(fname)
-	char *fname;
+	char_u *fname;
 {
-	register char *p1, *p2;
+	register char_u *p1, *p2;
 
 	for (p1 = p2 = fname; *p2; ++p2)	/* find last part of path */
 	{

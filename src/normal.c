@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -70,24 +68,28 @@ extern int		restart_edit;	/* this is in edit.c */
  *	 10. Buffer setting (")
  *	 11. Visual (v, V, ^V)
  *   12. Suspend (^Z)
+ *   13. Window commands (^W)
  */
 
 	void
 normal()
 {
-	register u_char	c;
+	register int	c;
 	long 			n;
 	int				flag = FALSE;
+	int				flag2 = FALSE;
 	int 			type = 0;		/* used in some operations to modify type */
 	int 			dir = FORWARD;	/* search direction */
-	u_char			nchar = NUL;
+	int				nchar = NUL;
 	int				finish_op;
 	linenr_t		Prenum1;
-	char			searchbuff[CMDBUFFSIZE];		/* buffer for search string */
+	char_u			searchbuff[CMDBUFFSIZE];		/* buffer for search string */
 	FPOS			*pos;
-	register char	*ptr;
+	register char_u	*ptr;
 	int				command_busy = FALSE;
 	static int		didwarn = FALSE;		/* warned for broken inversion */
+	int				modified = FALSE;		/* changed current buffer */
+	int				ctrl_w = FALSE;		/* got CTRL-W command */
 
 		/* the visual area is remembered for reselection */
 	static linenr_t	resel_Visual_nlines;		/* number of lines */
@@ -96,7 +98,8 @@ normal()
 		/* the visual area is remembered for redo */
 	static linenr_t	redo_Visual_nlines;		/* number of lines */
 	static int		redo_Visual_type = 0;	/* type 'v', 'V' or CTRL-V */
-	static colnr_t	redo_Visual_col;			/* number of columns or end column */
+	static colnr_t	redo_Visual_col;		/* number of columns or end column */
+	static long		redo_Visual_Prenum;		/* Prenum for operator */
 
 	Prenum = 0;
 	/*
@@ -114,6 +117,7 @@ normal()
 	State = NORMAL_BUSY;
 	c = vgetc();
 
+getcount:
 	/* Pick up any leading digits and compute 'Prenum' */
 	while ((c >= '1' && c <= '9') || (Prenum != 0 && (c == DEL || c == '0')))
 	{
@@ -123,8 +127,22 @@ normal()
 				Prenum = Prenum * 10 + (c - '0');
 		if (Prenum < 0)			/* got too large! */
 			Prenum = 999999999;
-		premsg(' ', NUL);
+		premsg(ctrl_w ? Ctrl('W') : ' ', NUL);
 		c = vgetc();
+	}
+
+/*
+ * If we got CTRL-W there may be a/another count
+ */
+	if (c == Ctrl('W') && !ctrl_w)
+	{
+		ctrl_w = TRUE;
+		opnum = Prenum;						/* remember first count */
+		Prenum = 0;
+		State = NOMAPPING;					/* no mapping for nchar */
+		premsg(c, NUL);
+		c = vgetc();						/* get next character */
+		goto getcount;						/* jump back */
 	}
 
 	/*
@@ -149,9 +167,16 @@ normal()
 
 	/*
 	 * get an additional character if we need one
+	 * for CTRL-W we already got it when looking for a count
 	 */
-	if (strchr("@zZtTfF[]m'`\"", c) || (c == 'q' && !Recording && !Exec_reg) ||
-										(c == 'r' && !Visual.lnum))
+	if (ctrl_w)
+	{
+		nchar = c;
+		c = Ctrl('W');
+		premsg(c, nchar);
+	}
+	else if (strchr("@zZtTfF[]m'`\"", c) || (c == 'q' && !Recording && !Exec_reg) ||
+										(c == 'r' && !VIsual.lnum))
 	{
 		State = NOMAPPING;
 		nchar = vgetc();		/* no macro mapping for this char */
@@ -161,11 +186,12 @@ normal()
 		flushbuf();		/* flush the premsg() characters onto the screen so we can
 							see them while the command is being executed */
 
-	if (c != 'z')	/* the 'z' command gets another character */
-	{
+/*
+ * For commands that don't get another character we can put the State back to
+ * NORMAL and check for a window size change.
+ */
+	if (STRCHR("z:/?", c) == NULL)
 		State = NORMAL;
-		script_winsize_pp();
-	}
 	if (nchar == ESC)
 	{
 		CLEAROP;
@@ -180,18 +206,20 @@ normal()
 	  case 'q': 		/* (stop) recording into a named register */
 		CHECKCLEAROP;
 						/* command is ignored while executing a register */
-		if (!Exec_reg && !dorecord(nchar))
+		if (!Exec_reg && dorecord(nchar) == FAIL)
 			CLEAROPBEEP;
 		break;
 
 	 case '@':			/* execute a named buffer */
 		CHECKCLEAROP;
 		while (Prenum1--)
-			if (!doexecbuf(nchar))
+		{
+			if (doexecbuf(nchar) == FAIL)
 			{
 				CLEAROPBEEP;
 				break;
 			}
+		}
 		break;
 
 /*
@@ -203,24 +231,24 @@ normal()
 	  case Ctrl('U'):
 		CHECKCLEAROP;
 		if (Prenum)
-			p_scroll = (Prenum > Rows - 1) ? Rows - 1 : Prenum;
-		n = (p_scroll < Rows) ? p_scroll : Rows - 1;
+			curwin->w_p_scroll = (Prenum > curwin->w_height) ? curwin->w_height : Prenum;
+		n = (curwin->w_p_scroll <= curwin->w_height) ? curwin->w_p_scroll : curwin->w_height;
 		if (flag)
 		{
-				Topline += n;
-				if (Topline > line_count)
-					Topline = line_count;
-				comp_Botline();		/* compute Botline */
-				onedown(n);
+				curwin->w_topline += n;
+				if (curwin->w_topline > curbuf->b_ml.ml_line_count)
+					curwin->w_topline = curbuf->b_ml.ml_line_count;
+				comp_Botline(curwin);		/* compute curwin->w_botline */
+				(void)onedown(n);
 		}
 		else
 		{
-				if (n >= Curpos.lnum)
-					n = Curpos.lnum - 1;
-				Prenum1 = Curpos.lnum - n;
+				if (n >= curwin->w_cursor.lnum)
+					n = curwin->w_cursor.lnum - 1;
+				Prenum1 = curwin->w_cursor.lnum - n;
 				scrolldown(n);
-				if (Prenum1 < Curpos.lnum)
-					Curpos.lnum = Prenum1;
+				if (Prenum1 < curwin->w_cursor.lnum)
+					curwin->w_cursor.lnum = Prenum1;
 		}
 		beginline(TRUE);
 		updateScreen(VALID);
@@ -233,7 +261,7 @@ normal()
 	  case Ctrl('F'):
 	  case K_SDARROW:
 		CHECKCLEAROP;
-		onepage(dir, Prenum1);
+		(void)onepage(dir, Prenum1);
 		break;
 
 	  case Ctrl('E'):
@@ -263,14 +291,13 @@ normal()
 				premsg(' ', NUL);
 				nchar = vgetc();
 				State = NORMAL;
-				script_winsize_pp();
 				if (nchar == DEL)
 					Prenum /= 10;
 				else if (isdigit(nchar))
 					Prenum = Prenum * 10 + (nchar - '0');
 				else if (nchar == CR)
 				{
-					set_winheight((int)Prenum);
+					win_setheight((int)Prenum);
 					break;
 				}
 				else
@@ -283,62 +310,70 @@ normal()
 			break;
 		}
 
-		if (Prenum)		/* line number given */
+		if (Prenum && Prenum != curwin->w_cursor.lnum)	/* line number given */
 		{
 			setpcmark();
-			if (Prenum > line_count)
-				Curpos.lnum = line_count;
+			if (Prenum > curbuf->b_ml.ml_line_count)
+				curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 			else
-				Curpos.lnum = Prenum;
+				curwin->w_cursor.lnum = Prenum;
 		}
-		State = NORMAL;
-		script_winsize_pp();
+		State = NORMAL;			/* for updateScreen() */
 		switch (nchar)
 		{
-		  case NL:				/* put Curpos at top of screen */
+		  case NL:				/* put curwin->w_cursor at top of screen */
 		  case CR:
-			Topline = Curpos.lnum;
-			updateScreen(VALID);
+			beginline(TRUE);
+		  case 't':
+			curwin->w_topline = curwin->w_cursor.lnum;
 			break;
 
-		  case '.': 			/* put Curpos in middle of screen */
-			n = (Rows + plines(Curpos.lnum)) / 2;
+		  case '.': 			/* put curwin->w_cursor in middle of screen */
+		  case 'z':
+			n = (curwin->w_height + plines(curwin->w_cursor.lnum)) / 2;
 			goto dozcmd;
 
-		  case '-': 			/* put Curpos at bottom of screen */
-			n = Rows - 1;
+		  case '-': 			/* put curwin->w_cursor at bottom of screen */
+		  case 'b':
+			n = curwin->w_height;
 			/* FALLTHROUGH */
 
 	dozcmd:
 			{
-				register linenr_t	lp = Curpos.lnum;
+				register linenr_t	lp = curwin->w_cursor.lnum;
 				register long		l = plines(lp);
 
 				do
 				{
-					Topline = lp;
+					curwin->w_topline = lp;
 					if (--lp == 0)
 						break;
 					l += plines(lp);
 				} while (l <= n);
 			}
-			updateScreen(VALID);
-			beginline(TRUE);
+			if (nchar != 'z' && nchar != 'b')
+				beginline(TRUE);
 			break;
+
+		  case Ctrl('S'):	/* ignore CTRL-S and CTRL-Q to avoid problems */
+		  case Ctrl('Q'):	/* with terminals that use xon/xoff */
+		  	break;
 
 		  default:
 			CLEAROPBEEP;
 		}
+		updateScreen(VALID);
 		break;
 
 /*
  *	  2: Control commands
  */
 	  case ':':
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 			goto dooperator;
 		CHECKCLEAROP;
 		docmdline(NULL);
+		modified = TRUE;
 		break;
 
 	  case K_HELP:
@@ -356,9 +391,9 @@ normal()
 		fileinfo(did_cd || Prenum);	/* print full name if count given or :cd used */
 		break;
 
-	  case K_CCIRCM:			/* shorthand command */
+	  case K_CCIRCM:			/* CTRL-^, short for ":e #" */
 		CHECKCLEAROPQ;
-		getaltfile((int)Prenum, (linenr_t)0, TRUE);
+		(void)filelist_getfile((int)Prenum, (linenr_t)0, TRUE);
 		break;
 
 	  case 'Z': 		/* write, if changed, and exit */
@@ -368,7 +403,7 @@ normal()
 			CLEAROPBEEP;
 			break;
 		}
-		stuffReadbuff(":x\n");
+		stuffReadbuff((char_u *)":x\n");
 		break;
 
 	  case Ctrl(']'):			/* :ta to current identifier */
@@ -379,8 +414,8 @@ normal()
 		{
 			register int 	col;
 
-			ptr = nr2ptr(Curpos.lnum);
-			col = Curpos.col;
+			ptr = ml_get(curwin->w_cursor.lnum);
+			col = curwin->w_cursor.col;
 
 			/*
 			 * skip to start of identifier.
@@ -407,18 +442,18 @@ normal()
 			switch (c)
 			{
 				case '*':
-					stuffReadbuff("/");
+					stuffReadbuff((char_u *)"/");
 					break;
 				case '#':
-					stuffReadbuff("?");
+					stuffReadbuff((char_u *)"?");
 					break;
 				case 'K':
-					stuffReadbuff(":! ");
+					stuffReadbuff((char_u *)":! ");
 					stuffReadbuff(p_kp);
-					stuffReadbuff(" ");
+					stuffReadbuff((char_u *)" ");
 					break;
 				default:
-					stuffReadbuff(":ta ");
+					stuffReadbuff((char_u *)":ta ");
 			}
 
 			/*
@@ -429,13 +464,13 @@ normal()
 				stuffcharReadbuff(ptr[col]);
 				++col;
 			}
-			stuffReadbuff("\n");
+			stuffReadbuff((char_u *)"\n");
 		}
 		break;
 
 	  case Ctrl('T'):		/* backwards in tag stack */
 			CHECKCLEAROPQ;
-	  		dotag("", 2, (int)Prenum1);
+	  		dotag((char_u *)"", 2, (int)Prenum1);
 			break;
 
 /*
@@ -444,23 +479,23 @@ normal()
 	  case 'G':
 		mtype = MLINE;
 		setpcmark();
-		if (Prenum == 0 || Prenum > line_count)
-				Curpos.lnum = line_count;
+		if (Prenum == 0 || Prenum > curbuf->b_ml.ml_line_count)
+				curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 		else
-				Curpos.lnum = Prenum;
+				curwin->w_cursor.lnum = Prenum;
 		beginline(TRUE);
 		break;
 
 	  case 'H':
 	  case 'M':
 		if (c == 'M')
-				n = (Rows - emptyrows - 1) / 2;
+				n = (curwin->w_height - curwin->w_empty_rows) / 2;
 		else
 				n = Prenum;
 		mtype = MLINE;
 		setpcmark();
-		Curpos.lnum = Topline;
-		while (n && onedown((long)1))
+		curwin->w_cursor.lnum = curwin->w_topline;
+		while (n && onedown((long)1) == OK)
 				--n;
 		beginline(TRUE);
 		break;
@@ -468,8 +503,8 @@ normal()
 	  case 'L':
 		mtype = MLINE;
 		setpcmark();
-		Curpos.lnum = Botline - 1;
-		for (n = Prenum; n && oneup((long)1); n--)
+		curwin->w_cursor.lnum = curwin->w_botline - 1;
+		for (n = Prenum; n && oneup((long)1) == OK; n--)
 				;
 		beginline(TRUE);
 		break;
@@ -482,13 +517,20 @@ normal()
 		n = Prenum1;
 		while (n--)
 		{
-			if (!oneright())
+			if (oneright() == FAIL)
 			{
+					/* space wraps to next line if 'bswrap' set */
+				if (c == ' ' && p_bw && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+				{
+					++curwin->w_cursor.lnum;
+					curwin->w_cursor.col = 0;
+					continue;
+				}
 				if (operator == NOP)
 					beep();
 				else
 				{
-					if (lineempty(Curpos.lnum))
+					if (lineempty(curwin->w_cursor.lnum))
 						CLEAROPBEEP;
 					else
 					{
@@ -500,28 +542,40 @@ normal()
 				break;
 			}
 		}
-		set_want_col = TRUE;
+		/*
+		 * If the cursor was sticking at the end of line, keep it that way.
+		 * Otherwise stick at the new position.
+		 */
+		if (curwin->w_curswant != MAXCOL)
+			curwin->w_set_curswant = TRUE;
 		break;
 
+	  case Ctrl('H'):
 	  case 'h':
 	  case K_LARROW:
-	  case Ctrl('H'):
 	  case DEL:
 		mtype = MCHAR;
 		mincl = FALSE;
 		n = Prenum1;
 		while (n--)
 		{
-			if (!oneleft())
+			if (oneleft() == FAIL)
 			{
-				if (operator != DELETE && operator != CHANGE)
+					/* backspace wraps to previous line if 'bswrap' set */
+				if (c == Ctrl('H') && p_bw && curwin->w_cursor.lnum > 1)
+				{
+					--(curwin->w_cursor.lnum);
+					coladvance(MAXCOL);
+					continue;
+				}
+				else if (operator != DELETE && operator != CHANGE)
 					beep();
 				else if (Prenum1 == 1)
 					CLEAROPBEEP;
 				break;
 			}
 		}
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		break;
 
 	  case '-':
@@ -532,7 +586,7 @@ normal()
 	  case K_UARROW:
 	  case Ctrl('P'):
 		mtype = MLINE;
-		if (!oneup(Prenum1))
+		if (oneup(Prenum1) == FAIL)
 			CLEAROPBEEP;
 		else if (flag)
 			beginline(TRUE);
@@ -548,7 +602,7 @@ normal()
 	  case Ctrl('N'):
 	  case NL:
 		mtype = MLINE;
-		if (!onedown(Prenum1))
+		if (onedown(Prenum1) == FAIL)
 			CLEAROPBEEP;
 		else if (flag)
 			beginline(TRUE);
@@ -564,21 +618,22 @@ normal()
 		 */
 	  case '_':
 lineop:
-		if (operator == CHANGE && p_ai)		/* do not delete the indent */
+		if (operator == CHANGE && curbuf->b_p_ai)		/* do not delete the indent */
 		{
 			beginline(TRUE);
-			startop = Curpos;
+			curbuf->b_startop = curwin->w_cursor;
 			mtype = MCHAR;
 			mincl = TRUE;
+			did_ai = TRUE;					/* delete indent if ESC hit */
 		}
 		else
 			mtype = MLINE;
-		if (!onedown((long)(Prenum1 - 1)))
+		if (onedown((long)(Prenum1 - 1)) == FAIL)
 			CLEAROPBEEP;
 		else if (mtype == MCHAR)	/* 'c' with autoindent */
 		{
-			Curpos.col = MAXCOL;	/* put cursor on last char in line */
-			adjustCurpos();
+			curwin->w_cursor.col = MAXCOL;	/* put cursor on last char in line */
+			adjust_cursor();
 		}
 		else if (operator != YANK)	/* 'Y' does not move cursor */
 			beginline(TRUE);
@@ -590,7 +645,7 @@ lineop:
 		beginline(FALSE);
 		if (Prenum > 0)
 			coladvance((colnr_t)(Prenum - 1));
-		Curswant = (colnr_t)(Prenum - 1);
+		curwin->w_curswant = (colnr_t)(Prenum - 1);
 		break;
 
 		/*
@@ -605,7 +660,7 @@ lineop:
 	  case K_SLARROW:
 		mtype = MCHAR;
 		mincl = FALSE;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		if (bck_word(Prenum1, type))
 			CLEAROPBEEP;
 		break;
@@ -632,21 +687,25 @@ lineop:
 		 * not on a space or a TAB. This seems
 		 * impolite at first, but it's really more what we mean when we say
 		 * 'cw'.
+		 * Another strangeness: When standing on the end of a word "ce" will
+		 * change until the end of the next wordt, but "cw" will change only
+		 * one character! This is done by setting type to 2.
 		 */
-		if (operator == CHANGE && (n = gcharCurpos()) != ' ' && n != TAB &&
+		if (operator == CHANGE && (n = gchar_cursor()) != ' ' && n != TAB &&
 																n != NUL)
 		{
 			mincl = TRUE;
 			flag = FALSE;
+			flag2 = TRUE;
 		}
 
 dowrdcmd:
 		mtype = MCHAR;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		if (flag)
 			n = fwd_word(Prenum1, type, operator != NOP);
 		else
-			n = end_word(Prenum1, type, operator == CHANGE);
+			n = end_word(Prenum1, type, flag2);
 		if (n)
 		{
 			CLEAROPBEEP;
@@ -657,11 +716,11 @@ dowrdcmd:
 		 * If we do a 'dw' for the last word in a line, we only delete the rest
 		 * of the line, not joining the two lines, unless the current line is empty.
 		 */
-		if (operator == DELETE && Prenum1 == 1 && startop.lnum != Curpos.lnum &&
-			!lineempty(startop.lnum))
+		if (operator == DELETE && Prenum1 == 1 &&
+				curbuf->b_startop.lnum != curwin->w_cursor.lnum && !lineempty(startop.lnum))
 		{
-				Curpos = startop;
-				while (oneright())
+				curwin->w_cursor = curbuf->b_startop;
+				while (oneright() == OK)
 					;
 				mincl = TRUE;
 		}
@@ -671,8 +730,8 @@ dowrdcmd:
 	  case '$':
 		mtype = MCHAR;
 		mincl = TRUE;
-		Curswant = MAXCOL;				/* so we stay at the end */
-		if (!onedown((long)(Prenum1 - 1)))
+		curwin->w_curswant = MAXCOL;				/* so we stay at the end */
+		if (onedown((long)(Prenum1 - 1)) == FAIL)
 		{
 			CLEAROPBEEP;
 			break;
@@ -694,14 +753,14 @@ dowrdcmd:
  */
 	  case '?':
 	  case '/':
-		if (!getcmdline(c, (u_char *)searchbuff))
+		if (!getcmdline(c, searchbuff))
 		{
 			CLEAROP;
 			break;
 		}
 		mtype = MCHAR;
 		mincl = FALSE;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 
 		n = dosearch(c, searchbuff, FALSE, Prenum1, TRUE);
 		if (n == 0)
@@ -716,7 +775,7 @@ dowrdcmd:
 	  case 'n':
 		mtype = MCHAR;
 		mincl = FALSE;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		if (!dosearch(0, NULL, flag, Prenum1, TRUE))
 			CLEAROP;
 		break;
@@ -739,8 +798,11 @@ dowrdcmd:
 	  case 'f':
 docsearch:
 		mtype = MCHAR;
-		mincl = TRUE;
-		set_want_col = TRUE;
+		if (dir == BACKWARD)
+			mincl = FALSE;
+		else
+			mincl = TRUE;
+		curwin->w_set_curswant = TRUE;
 		if (!searchc(nchar, dir, type, Prenum1))
 			CLEAROPBEEP;
 		break;
@@ -762,8 +824,9 @@ docsearch:
 		/* FALLTHROUGH */
 
 	  case ']':
-		mtype = MLINE;
-		set_want_col = TRUE;
+		mtype = MCHAR;
+		mincl = FALSE;
+		curwin->w_set_curswant = TRUE;
 		flag = '{';
 		if (nchar != c)
 		{
@@ -775,12 +838,13 @@ docsearch:
 				break;
 			}
 		}
-		if (dir == FORWARD && operator != NOP)	/* e.g. y]] searches for '}' */
-			flag = '}';
-		if (!findpar(dir, Prenum1, flag))
-		{
+		/*
+		 * Imitate strange vi behaviour: When using "]]" with an operator we
+		 * also stop at '}'.
+		 */
+		if (!findpar(dir, Prenum1, flag,
+						(operator != NOP && dir == FORWARD && flag == '{')))
 			CLEAROPBEEP;
-		}
 		break;
 
 	  case '%':
@@ -794,8 +858,8 @@ docsearch:
 				mtype = MLINE;
 				setpcmark();
 						/* round up, so CTRL-G will give same value */
-				Curpos.lnum = (line_count * Prenum + 99) / 100;
-				Curpos.col = 0;
+				curwin->w_cursor.lnum = (curbuf->b_ml.ml_line_count * Prenum + 99) / 100;
+				beginline(TRUE);
 			}
 		}
 		else			/* % : go to matching paren */
@@ -806,8 +870,8 @@ docsearch:
 			else
 			{
 				setpcmark();
-				Curpos = *pos;
-				set_want_col = TRUE;
+				curwin->w_cursor = *pos;
+				curwin->w_set_curswant = TRUE;
 			}
 		}
 		break;
@@ -822,7 +886,7 @@ docsearch:
 			mincl = FALSE;
 		else
 			mincl = TRUE;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 
 		if (!findsent(dir, Prenum1))
 			CLEAROPBEEP;
@@ -835,8 +899,8 @@ docsearch:
 	  case '}':
 		mtype = MCHAR;
 		mincl = FALSE;
-		set_want_col = TRUE;
-		if (!findpar(dir, Prenum1, NUL))
+		curwin->w_set_curswant = TRUE;
+		if (!findpar(dir, Prenum1, NUL, FALSE))
 			CLEAROPBEEP;
 		break;
 
@@ -845,42 +909,46 @@ docsearch:
  */
 	  case '.':
 		CHECKCLEAROPQ;
-		if (!start_redo(Prenum))
+		if (start_redo(Prenum) == FAIL)
 			CLEAROPBEEP;
+		modified = TRUE;
 		break;
 
 	  case 'u':
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 			goto dooperator;
 	  case K_UNDO:
 		CHECKCLEAROPQ;
 		u_undo((int)Prenum1);
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
+		modified = TRUE;
 		break;
 
 	  case Ctrl('R'):
 		CHECKCLEAROPQ;
 	  	u_redo((int)Prenum1);
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
+		modified = TRUE;
 		break;
 
 	  case 'U':
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 			goto dooperator;
 		CHECKCLEAROPQ;
 		u_undoline();
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
+		modified = TRUE;
 		break;
 
 	  case 'r':
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 		{
 			c = 'c';
 			goto dooperator;
 		}
 		CHECKCLEAROPQ;
-		ptr = nr2ptr(Curpos.lnum) + Curpos.col;
-		if (strlen(ptr) < (unsigned)Prenum1)	/* not enough characters to replace */
+		ptr = ml_get_cursor();
+		if (STRLEN(ptr) < (unsigned)Prenum1)	/* not enough characters to replace */
 		{
 			CLEAROPBEEP;
 			break;
@@ -911,32 +979,38 @@ docsearch:
 		else
 			c = NUL;
 		prep_redo(Prenum1, 'r', c, nchar);
-		if (!u_saveCurpos())				/* save line for undo */
+		if (!u_save_cursor())				/* save line for undo */
 			break;
-		Curpos.col += Prenum1 - 1;
+			/*
+			 * Get ptr again, because u_save will have released the line.
+			 * At the same time we let know that the line will be changed.
+			 */
+		ptr = ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE) + curwin->w_cursor.col;
+		curwin->w_cursor.col += Prenum1 - 1;
 		while (Prenum1--)					/* replace the characters */
 			*ptr++ = nchar;
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		CHANGED;
 		updateline();
+		modified = TRUE;
 		break;
 
 	  case 'J':
-	    if (Visual.lnum)		/* join the visual lines */
+	    if (VIsual.lnum)		/* join the visual lines */
 		{
-			if (Curpos.lnum > Visual.lnum)
+			if (curwin->w_cursor.lnum > VIsual.lnum)
 			{
-				Prenum = Curpos.lnum - Visual.lnum + 1;
-				Curpos.lnum = Visual.lnum;
+				Prenum = curwin->w_cursor.lnum - VIsual.lnum + 1;
+				curwin->w_cursor.lnum = VIsual.lnum;
 			}
 			else
-				Prenum = Visual.lnum - Curpos.lnum + 1;
-			Visual.lnum = 0;
+				Prenum = VIsual.lnum - curwin->w_cursor.lnum + 1;
+			VIsual.lnum = 0;
 		}
 		CHECKCLEAROP;
 		if (Prenum <= 1)
 			Prenum = 2; 			/* default for join is two lines! */
-		if (Curpos.lnum + Prenum - 1 > line_count)	/* beyond last line */
+		if (curwin->w_cursor.lnum + Prenum - 1 > curbuf->b_ml.ml_line_count)	/* beyond last line */
 		{
 			CLEAROPBEEP;
 			break;
@@ -944,6 +1018,7 @@ docsearch:
 
 		prep_redo(Prenum, 'J', NUL, NUL);
 		dodojoin(Prenum, TRUE, TRUE);
+		modified = TRUE;
 		break;
 
 	  case 'P':
@@ -952,34 +1027,36 @@ docsearch:
 
 	  case 'p':
 		CHECKCLEAROPQ;
-		prep_redo(Prenum, c, NUL, NUL);
 		doput(dir, Prenum1);
+		modified = TRUE;
 		break;
 
 	  case Ctrl('A'):			/* add to number */
-	  case Ctrl('S'):			/* subtract from number */
+	  case Ctrl('X'):			/* subtract from number */
 		CHECKCLEAROPQ;
-		if (doaddsub((int)c, Prenum1))
+		if (doaddsub((int)c, Prenum1) == OK)
 			prep_redo(Prenum1, c, NUL, NUL);
+		modified = TRUE;
 		break;
 
 /*
  * 6: Inserts
  */
 	  case 'A':
-		set_want_col = TRUE;
-		while (oneright())
+		curwin->w_set_curswant = TRUE;
+		while (oneright() == OK)
 				;
 		/* FALLTHROUGH */
 
 	  case 'a':
 		CHECKCLEAROPQ;
 		/* Works just like an 'i'nsert on the next character. */
-		if (u_saveCurpos())
+		if (u_save_cursor())
 		{
-			if (!lineempty(Curpos.lnum))
-				incCurpos();
+			if (!lineempty(curwin->w_cursor.lnum))
+				inc_cursor();
 			startinsert(c, FALSE, Prenum1);
+			modified = TRUE;
 			command_busy = TRUE;
 		}
 		break;
@@ -990,56 +1067,60 @@ docsearch:
 
 	  case 'i':
 		CHECKCLEAROPQ;
-		if (u_saveCurpos())
+		if (u_save_cursor())
 		{
 			startinsert(c, FALSE, Prenum1);
+			modified = TRUE;
 			command_busy = TRUE;
 		}
 		break;
 
 	  case 'o':
-	  	if (Visual.lnum)	/* switch start and end of visual */
+	  	if (VIsual.lnum)	/* switch start and end of visual */
 		{
-			Prenum = Visual.lnum;
-			Visual.lnum = Curpos.lnum;
-			Curpos.lnum = Prenum;
-			if (Visual.col != VISUALLINE)
+			Prenum = VIsual.lnum;
+			VIsual.lnum = curwin->w_cursor.lnum;
+			curwin->w_cursor.lnum = Prenum;
+			if (VIsual.col != VISUALLINE)
 			{
-				n = Visual.col;
-				Visual.col = Curpos.col;
-				Curpos.col = (int)n;
-				set_want_col = TRUE;
+				n = VIsual.col;
+				VIsual.col = curwin->w_cursor.col;
+				curwin->w_cursor.col = (int)n;
+				curwin->w_set_curswant = TRUE;
 			}
 			break;
 		}
 		CHECKCLEAROP;
-		if (u_save(Curpos.lnum, (linenr_t)(Curpos.lnum + 1)) && Opencmd(FORWARD, TRUE, TRUE))
+		if (u_save(curwin->w_cursor.lnum, (linenr_t)(curwin->w_cursor.lnum + 1)) && Opencmd(FORWARD, TRUE, TRUE))
 		{
 			startinsert('o', TRUE, Prenum1);
+			modified = TRUE;
 			command_busy = TRUE;
 		}
 		break;
 
 	  case 'O':
 		CHECKCLEAROPQ;
-		if (u_save((linenr_t)(Curpos.lnum - 1), Curpos.lnum) && Opencmd(BACKWARD, TRUE, TRUE))
+		if (u_save((linenr_t)(curwin->w_cursor.lnum - 1), curwin->w_cursor.lnum) && Opencmd(BACKWARD, TRUE, TRUE))
 		{
 			startinsert('O', TRUE, Prenum1);
+			modified = TRUE;
 			command_busy = TRUE;
 		}
 		break;
 
 	  case 'R':
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 		{
 			c = 'c';
-			Visual.col = VISUALLINE;
+			VIsual.col = VISUALLINE;
 			goto dooperator;
 		}
 		CHECKCLEAROPQ;
-		if (u_saveCurpos())
+		if (u_save_cursor())
 		{
 			startinsert('R', FALSE, Prenum1);
+			modified = TRUE;
 			command_busy = TRUE;
 		}
 		break;
@@ -1052,30 +1133,31 @@ docsearch:
 	   * if tilde is not an operator and Visual is off: swap case
 	   * of a single character
 	   */
-		if (!p_to && !Visual.lnum)
+		if (!p_to && !VIsual.lnum)
 		{
 			CHECKCLEAROPQ;
-			if (lineempty(Curpos.lnum))
+			if (lineempty(curwin->w_cursor.lnum))
 			{
 				CLEAROPBEEP;
 				break;
 			}
 			prep_redo(Prenum, '~', NUL, NUL);
 
-			if (!u_saveCurpos())
+			if (!u_save_cursor())
 				break;
 
 			for (; Prenum1 > 0; --Prenum1)
 			{
-				if (gcharCurpos() == NUL)
+				if (gchar_cursor() == NUL)
 					break;
-				swapchar(&Curpos);
-				incCurpos();
+				swapchar(&curwin->w_cursor);
+				inc_cursor();
 			}
 
-			set_want_col = TRUE;
+			curwin->w_set_curswant = TRUE;
 			CHANGED;
 			updateline();
+			modified = TRUE;
 			break;
 		}
 		/*FALLTHROUGH*/
@@ -1089,13 +1171,13 @@ docsearch:
 	  case '=':
 	  case 'Q':
 dooperator:
-		n = strchr(opchars, c) - opchars + 1;
+		n = STRCHR(opchars, c) - opchars + 1;
 		if (n == operator)		/* double operator works on lines */
 			goto lineop;
 		CHECKCLEAROP;
 		if (Prenum != 0)
 			opnum = Prenum;
-		startop = Curpos;
+		curbuf->b_startop = curwin->w_cursor;
 		operator = (int)n;
 		break;
 
@@ -1111,13 +1193,13 @@ dooperator:
 	  case 'x':
 	  case 'X':
 	  case 's':
-	  	if (Visual.lnum)
+	  	if (VIsual.lnum)
 		{
-			static char trans[] = "ScYyDdCcxdXdsc";
+			static char_u trans[] = "ScYyDdCcxdXdsc";
 
 			if (isupper(c) && !Visual_block)		/* uppercase means linewise */
-				Visual.col = VISUALLINE;
-			c = *(strchr(trans, c) + 1);
+				VIsual.col = VISUALLINE;
+			c = *(STRCHR(trans, c) + 1);
 			goto dooperator;
 		}
 
@@ -1129,10 +1211,10 @@ dooperator:
 		if (c == 'Y' && p_ye)
 			c = 'Z';
 		{
-				static char *(ar[9]) = {"dl", "dh", "d$", "c$", "cl", "cc", "yy", "y$", ":s\r"};
-				static char *str = "xXDCsSYZ&";
+				static char_u *(ar[9]) = {(char_u *)"dl", (char_u *)"dh", (char_u *)"d$", (char_u *)"c$", (char_u *)"cl", (char_u *)"cc", (char_u *)"yy", (char_u *)"y$", (char_u *)":s\r"};
+				static char_u *str = (char_u *)"xXDCsSYZ&";
 
-				stuffReadbuff(ar[(int)(strchr(str, c) - str)]);
+				stuffReadbuff(ar[(int)(STRCHR(str, c) - str)]);
 		}
 		break;
 
@@ -1142,7 +1224,7 @@ dooperator:
 
 	  case 'm':
 		CHECKCLEAROP;
-		if (!setmark(nchar))
+		if (setmark(nchar) == FAIL)
 			CLEAROPBEEP;
 		break;
 
@@ -1163,17 +1245,17 @@ dooperator:
 			setpcmark();
 
 cursormark:
-		if (pos == NULL)
+		if (pos == NULL || pos->lnum == 0)
 			CLEAROPBEEP;
 		else
 		{
-			Curpos = *pos;
+			curwin->w_cursor = *pos;
 			if (flag)
 				beginline(TRUE);
 		}
 		mtype = flag ? MLINE : MCHAR;
 		mincl = FALSE;		/* ignored if not MCHAR */
-		set_want_col = TRUE;
+		curwin->w_set_curswant = TRUE;
 		break;
 
 	case Ctrl('O'):			/* goto older pcmark */
@@ -1185,7 +1267,7 @@ cursormark:
 		pos = movemark((int)Prenum1);
 		if (pos == (FPOS *)-1)	/* jump to other file */
 		{
-			set_want_col = TRUE;
+			curwin->w_set_curswant = TRUE;
 			break;
 		}
 		goto cursormark;
@@ -1195,7 +1277,7 @@ cursormark:
  */
 	  case '"':
 		CHECKCLEAROP;
-		if (isalnum(nchar) || nchar == '.' || nchar == '%' || nchar == '"')
+		if (nchar != NUL && is_yank_buffer(nchar, FALSE))
 		{
 			yankbuffer = nchar;
 			opnum = Prenum;		/* remember count before '"' */
@@ -1214,9 +1296,9 @@ cursormark:
 		Visual_block = FALSE;
 
 			/* stop Visual */
-		if (Visual.lnum)
+		if (VIsual.lnum)
 		{
-			Visual.lnum = 0;
+			VIsual.lnum = 0;
 			updateScreen(NOT_VALID);		/* delete the inversion */
 		}
 			/* start Visual */
@@ -1224,7 +1306,7 @@ cursormark:
 		{
 			if (!didwarn && (T_TI == NULL || *T_TI == NUL))	/* cannot invert */
 			{
-				emsg("Warning: terminal cannot invert");
+				EMSG("Warning: terminal cannot invert");
 				didwarn = TRUE;
 			}
 			if (Prenum)						/* use previously selected part */
@@ -1234,12 +1316,12 @@ cursormark:
 					beep();
 					break;
 				}
-				Visual = Curpos;
+				VIsual = curwin->w_cursor;
 				if (resel_Visual_nlines > 1)
-					Curpos.lnum += resel_Visual_nlines * Prenum - 1;
+					curwin->w_cursor.lnum += resel_Visual_nlines * Prenum - 1;
 				switch (resel_Visual_type)
 				{
-				case 'V':	Visual.col = VISUALLINE;
+				case 'V':	VIsual.col = VISUALLINE;
 							break;
 
 				case Ctrl('V'):
@@ -1248,25 +1330,26 @@ cursormark:
 
 				case 'v':		
 							if (resel_Visual_nlines <= 1)
-								Curpos.col += resel_Visual_col * Prenum - 1;
+								curwin->w_cursor.col += resel_Visual_col * Prenum - 1;
 							else
-								Curpos.col = resel_Visual_col;
+								curwin->w_cursor.col = resel_Visual_col;
 							break;
 				}
 				if (resel_Visual_col == MAXCOL)
 				{
-					Curswant = MAXCOL;
+					curwin->w_curswant = MAXCOL;
 					coladvance(MAXCOL);
 				}
 				else if (Visual_block)
-					coladvance((colnr_t)(Cursvcol + resel_Visual_col * Prenum - 1));
+					coladvance((colnr_t)(curwin->w_virtcol + resel_Visual_col * Prenum - 1));
+				curs_columns(TRUE);			/* recompute w_virtcol */
 				updateScreen(NOT_VALID);	/* show the inversion */
 			}
 			else
 			{
-				Visual = Curpos;
+				VIsual = curwin->w_cursor;
 				if (c == 'V')				/* linewise */
-					Visual.col = VISUALLINE;
+					VIsual.col = VISUALLINE;
 				else if (c == Ctrl('V'))	/* blockwise */
 					Visual_block = TRUE;
 				updateline();				/* start the inversion */
@@ -1280,17 +1363,26 @@ cursormark:
 
  	case Ctrl('Z'):
 		CLEAROP;
-		Visual.lnum = 0;					/* stop Visual */
-		stuffReadbuff(":st\r");				/* with autowrite */
+		VIsual.lnum = 0;					/* stop Visual */
+		stuffReadbuff((char_u *)":st\r");	/* with autowrite */
+		break;
+
+/*
+ * 13. Window commands
+ */
+
+ 	case Ctrl('W'):
+		CHECKCLEAROP;
+		do_window(nchar, Prenum);			/* everything is in window.c */
 		break;
 
 /*
  * The end
  */
 	  case ESC:
-	    if (Visual.lnum)
+	    if (VIsual.lnum)
 		{
-			Visual.lnum = 0;			/* stop Visual */
+			VIsual.lnum = 0;			/* stop Visual */
 			updateScreen(NOT_VALID);
 		}
 
@@ -1304,31 +1396,31 @@ cursormark:
  * if we didn't start or finish an operator, reset yankbuffer, unless we
  * need it later.
  */
-	if (!finish_op && !operator && strchr("\"DCYSsXx", c) == NULL)
+	if (!finish_op && !operator && strchr("\"DCYSsXx.", c) == NULL)
 		yankbuffer = 0;
 
 	/*
 	 * If an operation is pending, handle it...
 	 */
-	if ((Visual.lnum || finish_op) && operator != NOP)
+	if ((VIsual.lnum || finish_op) && operator != NOP)
 	{
-		if (operator != YANK && !Visual.lnum)		/* can't redo yank */
+		if (operator != YANK && !VIsual.lnum)		/* can't redo yank */
 		{
-				prep_redo(Prenum, opchars[operator - 1], c, nchar);
-				if (c == '/' || c == '?')		/* was a search */
-				{
-						AppendToRedobuff(searchbuff);
-						AppendToRedobuff(NL_STR);
-				}
+			prep_redo(Prenum, opchars[operator - 1], c, nchar);
+			if (c == '/' || c == '?')				/* was a search */
+			{
+				AppendToRedobuff(searchbuff);
+				AppendToRedobuff(NL_STR);
+			}
 		}
 
 		if (redo_Visual_busy)
 		{
-			startop = Curpos;
-			Curpos.lnum += redo_Visual_nlines - 1;
+			curbuf->b_startop = curwin->w_cursor;
+			curwin->w_cursor.lnum += redo_Visual_nlines - 1;
 			switch (redo_Visual_type)
 			{
-			case 'V':	Visual.col = VISUALLINE;
+			case 'V':	VIsual.col = VISUALLINE;
 						break;
 
 			case Ctrl('V'):
@@ -1337,57 +1429,62 @@ cursormark:
 
 			case 'v':		
 						if (redo_Visual_nlines <= 1)
-							Curpos.col += redo_Visual_col - 1;
+							curwin->w_cursor.col += redo_Visual_col - 1;
 						else
-							Curpos.col = redo_Visual_col;
+							curwin->w_cursor.col = redo_Visual_col;
 						break;
 			}
 			if (redo_Visual_col == MAXCOL)
 			{
-				Curswant = MAXCOL;
+				curwin->w_curswant = MAXCOL;
 				coladvance(MAXCOL);
 			}
+			Prenum = redo_Visual_Prenum;
+			if (Prenum == 0)
+				Prenum1 = 1L;
+			else
+				Prenum1 = Prenum;
 		}
-		else if (Visual.lnum)
-			startop = Visual;
+		else if (VIsual.lnum)
+			curbuf->b_startop = VIsual;
 
-		if (lt(startop, Curpos))
+		if (lt(curbuf->b_startop, curwin->w_cursor))
 		{
-			endop = Curpos;
-			Curpos = startop;
+			curbuf->b_endop = curwin->w_cursor;
+			curwin->w_cursor = curbuf->b_startop;
 		}
 		else
 		{
-			endop = startop;
-			startop = Curpos;
+			curbuf->b_endop = curbuf->b_startop;
+			curbuf->b_startop = curwin->w_cursor;
 		}
-		nlines = endop.lnum - startop.lnum + 1;
+		nlines = curbuf->b_endop.lnum - curbuf->b_startop.lnum + 1;
 
-		if (Visual.lnum || redo_Visual_busy)
+		if (VIsual.lnum || redo_Visual_busy)
 		{
 			if (Visual_block)				/* block mode */
 			{
-				startvcol = getvcol(&startop, 2);
-				n = getvcol(&endop, 2);
+				startvcol = getvcol(curwin, &(curbuf->b_startop), 2);
+				n = getvcol(curwin, &(curbuf->b_endop), 2);
 				if (n < startvcol)
 					startvcol = (colnr_t)n;
 
 			/* if '$' was used, get endvcol from longest line */
-				if (Curswant == MAXCOL)
+				if (curwin->w_curswant == MAXCOL)
 				{
-					Curpos.col = MAXCOL;
+					curwin->w_cursor.col = MAXCOL;
 					endvcol = 0;
-					for (Curpos.lnum = startop.lnum; Curpos.lnum <= endop.lnum; ++Curpos.lnum)
-						if ((n = getvcol(&Curpos, 3)) > endvcol)
+					for (curwin->w_cursor.lnum = curbuf->b_startop.lnum; curwin->w_cursor.lnum <= curbuf->b_endop.lnum; ++curwin->w_cursor.lnum)
+						if ((n = getvcol(curwin, &curwin->w_cursor, 3)) > endvcol)
 							endvcol = (colnr_t)n;
-					Curpos = startop;
+					curwin->w_cursor = curbuf->b_startop;
 				}
 				else if (redo_Visual_busy)
 					endvcol = startvcol + redo_Visual_col - 1;
 				else
 				{
-					endvcol = getvcol(&startop, 3);
-					n = getvcol(&endop, 3);
+					endvcol = getvcol(curwin, &(curbuf->b_startop), 3);
+					n = getvcol(curwin, &(curbuf->b_endop), 3);
 					if (n > endvcol)
 						endvcol = (colnr_t)n;
 				}
@@ -1400,18 +1497,18 @@ cursormark:
 	 */
 			if (Visual_block)
 				resel_Visual_type = Ctrl('V');
-			else if (Visual.col == VISUALLINE)
+			else if (VIsual.col == VISUALLINE)
 				resel_Visual_type = 'V';
 			else
 				resel_Visual_type = 'v';
-			if (Curswant == MAXCOL)
+			if (curwin->w_curswant == MAXCOL)
 				resel_Visual_col = MAXCOL;
 			else if (Visual_block)
 				resel_Visual_col = endvcol - startvcol + 1;
 			else if (nlines > 1)
-				resel_Visual_col = endop.col;
+				resel_Visual_col = curbuf->b_endop.col;
 			else
-				resel_Visual_col = endop.col - startop.col + 1;
+				resel_Visual_col = curbuf->b_endop.col - curbuf->b_startop.col + 1;
 			resel_Visual_nlines = nlines;
 			if (operator != YANK && operator != COLON)	/* can't redo yank and : */
 			{
@@ -1419,13 +1516,23 @@ cursormark:
 				redo_Visual_type = resel_Visual_type;
 				redo_Visual_col = resel_Visual_col;
 				redo_Visual_nlines = resel_Visual_nlines;
+				redo_Visual_Prenum = Prenum;
 			}
 
+			/*
+			 * Mincl defaults to TRUE.
+			 * If endop is on a NUL (empty line) mincl becomes FALSE
+			 * This makes "d}P" and "v}dP" work the same.
+			 */
 			mincl = TRUE;
-			if (Visual.col == VISUALLINE)
+			if (VIsual.col == VISUALLINE)
 				mtype = MLINE;
 			else
+			{
 				mtype = MCHAR;
+				if (*ml_get_pos(&(curbuf->b_endop)) == NUL)
+					mincl = FALSE;
+			}
 
 			redo_Visual_busy = FALSE;
 			/*
@@ -1434,15 +1541,17 @@ cursormark:
 			 * With YANK and sometimes with COLON and FILTER there is no screen
 			 * redraw, so it is done here to remove the inverted part.
 			 */
-			Visual.lnum = 0;
+			VIsual.lnum = 0;
 			if (operator == YANK || operator == COLON || operator == FILTER)
 				updateScreen(NOT_VALID);
 		}
+		else if (operator == LSHIFT || operator == RSHIFT)
+			Prenum1 = 1L;		/* if not visual mode: shift one indent */
 
-		set_want_col = 1;
+		curwin->w_set_curswant = 1;
 
 			/* no_op is set when start and end are the same */
-		no_op = (mtype == MCHAR && !mincl && equal(startop, endop));
+		no_op = (mtype == MCHAR && !mincl && equal(curbuf->b_startop, curbuf->b_endop));
 
 	/*
 	 * If the end of an operator is in column one while mtype is MCHAR and mincl
@@ -1450,18 +1559,18 @@ cursormark:
 	 * If startop is on or before the first non-blank in the line, the operator
 	 * becomes linewise (strange, but that's the way vi does it).
 	 */
-		if (mtype == MCHAR && mincl == FALSE && endop.col == 0 && nlines > 1)
+		if (mtype == MCHAR && mincl == FALSE && curbuf->b_endop.col == 0 && nlines > 1)
 		{
 			--nlines;
-			--endop.lnum;
-			if (startinmargin())
+			--curbuf->b_endop.lnum;
+			if (inindent())
 				mtype = MLINE;
 			else
 			{
-				endop.col = strlen(nr2ptr(endop.lnum));
-				if (endop.col)
+				curbuf->b_endop.col = STRLEN(ml_get(curbuf->b_endop.lnum));
+				if (curbuf->b_endop.col)
 				{
-					--endop.col;
+					--curbuf->b_endop.col;
 					mincl = TRUE;
 				}
 			}
@@ -1470,21 +1579,26 @@ cursormark:
 		{
 		  case LSHIFT:
 		  case RSHIFT:
-			doshift(operator);
+			doshift(operator, TRUE, (int)Prenum1);
+			modified = TRUE;
 			break;
 
 		  case DELETE:
 			if (!no_op)
+			{
 				dodelete();
+				modified = TRUE;
+			}
 			break;
 
 		  case YANK:
 			if (!no_op)
-				doyank(FALSE);
+				(void)doyank(FALSE);
 			break;
 
 		  case CHANGE:
 			dochange();
+			modified = TRUE;
 			command_busy = TRUE;
 			break;
 
@@ -1494,19 +1608,19 @@ cursormark:
 		  case INDENT:
 		  case COLON:
 dofilter:
-			sprintf(IObuff, ":%ld,%ld", (long)startop.lnum, (long)endop.lnum);
+			sprintf((char *)IObuff, ":%ld,%ld", (long)curbuf->b_startop.lnum, (long)curbuf->b_endop.lnum);
 			stuffReadbuff(IObuff);
 			if (operator != COLON)
-				stuffReadbuff("!");
+				stuffReadbuff((char_u *)"!");
 			if (operator == INDENT)
 			{
 				stuffReadbuff(p_ep);
-				stuffReadbuff("\n");
+				stuffReadbuff((char_u *)"\n");
 			}
 			else if (operator == FORMAT)
 			{
 				stuffReadbuff(p_fp);
-				stuffReadbuff("\n");
+				stuffReadbuff((char_u *)"\n");
 			}
 				/*	docmdline() does the rest */
 			break;
@@ -1515,13 +1629,17 @@ dofilter:
 		  case UPPER:
 		  case LOWER:
 			if (!no_op)
+			{
 				dotilde();
+				modified = TRUE;
+			}
 			break;
 
 		  case FORMAT:
 			if (*p_fp != NUL)
 				goto dofilter;		/* use external command */
 			doformat();				/* use internal function */
+			modified = TRUE;
 			break;
 
 		  default:
@@ -1534,8 +1652,28 @@ dofilter:
 
 normal_end:
 	premsg(-1, NUL);
-	if (restart_edit && operator == NOP && Visual.lnum == 0 && !command_busy && stuff_empty() && yankbuffer == 0)
+
+	if (restart_edit && operator == NOP && VIsual.lnum == 0 && !command_busy && stuff_empty() && yankbuffer == 0)
+	{
 		startinsert(restart_edit, FALSE, 1L);
+		modified = TRUE;
+	}
+
+/*
+ * TEMPORARY: update the other windows for the current buffer if modified
+ */
+	if (modified)
+	{
+		WIN		*wp;
+
+        for (wp = firstwin; wp; wp = wp->w_next)
+			if (wp != curwin && wp->w_buffer == curbuf)
+			{
+				cursor_off();
+				wp->w_redr_type = NOT_VALID;
+				win_update(wp);
+			}
+	}
 }
 
 	static void
@@ -1562,6 +1700,8 @@ prep_redo(num, cmd, c, nchar)
 
 /*
  * check for operator active
+ *
+ * return TRUE if operator was active
  */
 	static int
 checkclearop()
@@ -1574,11 +1714,13 @@ checkclearop()
 
 /*
  * check for operator or Visual active
+ *
+ * return TRUE if operator was active
  */
 	static int
 checkclearopq()
 {
-	if (operator == NOP && Visual.lnum == 0)
+	if (operator == NOP && VIsual.lnum == 0)
 		return (FALSE);
 	clearopbeep();
 	return (TRUE);
@@ -1599,46 +1741,52 @@ clearopbeep()
 premsg(c1, c2)
 	int c1, c2;
 {
-	char	buf[40];
-	char	*p;
+	char_u	buf[40];
+	char_u	*p;
 
 	if (!p_sc || !(KeyTyped || c1 == -1 || c1 == ' '))
 		return;
 
 	cursor_off();
-	windgoto((int)Rows - 1, sc_col);
+	msg_pos((int)Rows - 1, sc_col);
 	if (c1 == -1)
-		outstrn("          ");	/* look in comp_col() for the number of spaces */
+		msg_outstr((char_u *)"          ");	/* look in comp_col() for the number of spaces */
 	else
 	{
 		p = buf;
 		if (opnum)
 		{
-			sprintf(p, "%ld", (long)opnum);
-			p = p + strlen(buf);
+			sprintf((char *)p, "%ld", (long)opnum);
+			p = p + STRLEN(buf);
 		}
 		if (yankbuffer)
 		{
 			*p++ = '"';
 			*p++ = yankbuffer;
 		}
-		if (operator == 'z')
+		if (c1 == Ctrl('W'))		/* ^W is in between counts */
+		{
+			*p++ = '^';
+			*p++ = 'W';
+			c1 = NUL;
+		}
+		else if (operator == 'z')
 			*p++ = 'z';
 		else if (operator)
 			*p++ = opchars[operator - 1];
 		if (Prenum)
 		{
-			sprintf(p, "%ld", (long)Prenum);
-			p = p + strlen(p);
+			sprintf((char *)p, "%ld", (long)Prenum);
+			p = p + STRLEN(p);
 		}
 		*p = NUL;
 		if (c1)
-			strcpy(p, transchar(c1));
+			STRCPY(p, transchar(c1));
 		if (c2)
-			strcat(p, transchar(c2));
+			STRCAT(p, transchar(c2));
 		buf[10] = NUL;			/* truncate at maximal length */
-		outstrn(buf);
+		msg_outstr(buf);
 	}
 	setcursor();
-	cursor_on();
+	/* cursor_on(); */
 }

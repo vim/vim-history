@@ -1,7 +1,6 @@
 /* charset.c */
-char *transchar __PARMS((unsigned int c));
-int outtrans __PARMS((char *str, int len));
+unsigned char *transchar __PARMS((int c));
 int charsize __PARMS((int c));
-int strsize __PARMS((char *s));
-int chartabsize __PARMS((int c, int col));
+int strsize __PARMS((unsigned char *s));
+int chartabsize __PARMS((int c, long col));
 int isidchar __PARMS((int c));

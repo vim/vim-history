@@ -3,7 +3,8 @@
    the Mad Australian, in the public domain. It may
    be re-distributed for any purpose with the inclusion
    of this notice. */
-/* modified by Bram Moolenaar */
+
+/* modified by Bram Moolenaar for use with VIM - Vi Improved */
 
 /* TERMLIB: Terminal independant database. */
 

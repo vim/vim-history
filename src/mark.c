@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -15,81 +13,38 @@
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "mark.h"
-#include "ops.h"		/* for endop and startop */
 
 /*
  * This file contains routines to maintain and manipulate marks.
  */
 
-#define NMARKS			26			/* max. # of named marks */
-#define JUMPLISTSIZE	50			/* max. # of marks in jump list */
-
-static struct mark pcmark;					/* previous context mark */
-static struct mark namedm[NMARKS];			/* original vi marks */
 static struct filemark namedfm[NMARKS];		/* new marks with file nr */
-static struct filemark jumplist[JUMPLISTSIZE];	/* list of old pcmarks */
-
-static int jumplistlen = 0;
-static int jumplistidx = 0;
-
-static FPOS *mark2pos __ARGS((struct mark *));
-
-#ifdef NEW
-struct markptr
-{
-	int					mp_ident;		/* 'a' - 'z', 'A' - 'Z' or jumplist */
-	struct	filemark	mp_fm;
-} marklist[NMARKS + NMARKS + JUMPLISTSIZE];
-int marklistlen = 0;
-
-adjustmark(old, new)
-{
-	max = marklistlen - 1;
-	min = 0;
-	while (max > min)
-	{
-		i = (max + min) / 2;
-		t = marklist[i].mp_fm.ptr;
-		if (t > old)
-			max = i - 1;
-		else if (t < old)
-			min = i + 1;
-	}
-	if (max == min && marklist[i].mp_fm.ptr == old)
-	{
-	}
-}
-#endif
 
 /*
  * setmark(c) - set named mark 'c' at current cursor position
  *
- * Returns TRUE on success, FALSE if no room for mark or bad name given.
+ * Returns OK on success, FAIL if no room for mark or bad name given.
  */
 	int
 setmark(c)
 	int			c;
 {
-	int 			i;
+	int 		i;
 
 	if (islower(c))
 	{
 		i = c - 'a';
-		namedm[i].ptr = nr2ptr(Curpos.lnum);
-		namedm[i].col = Curpos.col;
-		return TRUE;
+		curbuf->b_namedm[i] = curwin->w_cursor;
+		return OK;
 	}
 	if (isupper(c))
 	{
 		i = c - 'A';
-		namedfm[i].mark.ptr = nr2ptr(Curpos.lnum);
-		namedfm[i].mark.col = Curpos.col;
-		namedfm[i].lnum = Curpos.lnum;
-		namedfm[i].fnum = 0;
-		return TRUE;
+		namedfm[i].mark = curwin->w_cursor;
+		namedfm[i].fnum = curbuf->b_fnum;
+		return OK;
 	}
-	return FALSE;
+	return FAIL;
 }
 
 /*
@@ -104,48 +59,50 @@ setpcmark()
 	struct filemark tempmark;
 #endif
 
-	pcmark.ptr = nr2ptr(Curpos.lnum);
-	pcmark.col = Curpos.col;
+	curbuf->b_pcmark = curwin->w_cursor;
 
 #ifndef ROTATE
 	/*
 	 * simply add the new entry at the end of the list
 	 */
-	jumplistidx = jumplistlen;
+	curwin->w_jumplistidx = curwin->w_jumplistlen;
 #else
 	/*
 	 * If last used entry is not at the top, put it at the top by rotating
 	 * the stack until it is (the newer entries will be at the bottom).
 	 * Keep one entry (the last used one) at the top.
 	 */
-	if (jumplistidx < jumplistlen)
-		++jumplistidx;
-	while (jumplistidx < jumplistlen)
+	if (curwin->w_jumplistidx < curwin->w_jumplistlen)
+		++curwin->w_jumplistidx;
+	while (curwin->w_jumplistidx < curwin->w_jumplistlen)
 	{
-		tempmark = jumplist[jumplistlen - 1];
-		for (i = jumplistlen - 1; i > 0; --i)
-			jumplist[i] = jumplist[i - 1];
-		jumplist[0] = tempmark;
-		++jumplistidx;
+		tempmark = curwin->w_jumplist[curwin->w_jumplistlen - 1];
+		for (i = curwin->w_jumplistlen - 1; i > 0; --i)
+			curwin->w_jumplist[i] = curwin->w_jumplist[i - 1];
+		curwin->w_jumplist[0] = tempmark;
+		++curwin->w_jumplistidx;
 	}
 #endif
 
 		/* only add new entry if it differs from the last one */
-	if (jumplistlen == 0 || jumplist[jumplistidx - 1].mark.ptr != pcmark.ptr)
+	if (curwin->w_jumplistlen == 0 ||
+				curwin->w_jumplist[curwin->w_jumplistidx - 1].mark.lnum !=
+														curbuf->b_pcmark.lnum ||
+				curwin->w_jumplist[curwin->w_jumplistidx - 1].fnum !=
+														curbuf->b_fnum)
 	{
 			/* if jumplist is full: remove oldest entry */
-		if (++jumplistlen > JUMPLISTSIZE)
+		if (++curwin->w_jumplistlen > JUMPLISTSIZE)
 		{
-			jumplistlen = JUMPLISTSIZE;
-			for (i = 1; i < jumplistlen; ++i)
-				jumplist[i - 1] = jumplist[i];
-			--jumplistidx;
+			curwin->w_jumplistlen = JUMPLISTSIZE;
+			for (i = 1; i < curwin->w_jumplistlen; ++i)
+				curwin->w_jumplist[i - 1] = curwin->w_jumplist[i];
+			--curwin->w_jumplistidx;
 		}
 
-		jumplist[jumplistidx].mark = pcmark;
-		jumplist[jumplistidx].lnum = Curpos.lnum;
-		jumplist[jumplistidx].fnum = 0;
-		++jumplistidx;
+		curwin->w_jumplist[curwin->w_jumplistidx].mark = curbuf->b_pcmark;
+		curwin->w_jumplist[curwin->w_jumplistidx].fnum = curbuf->b_fnum;
+		++curwin->w_jumplistidx;
 	}
 }
 
@@ -158,33 +115,34 @@ movemark(count)
 {
 	FPOS		*pos;
 
-	if (jumplistlen == 0)			/* nothing to jump to */
+	if (curwin->w_jumplistlen == 0)			/* nothing to jump to */
 		return (FPOS *)NULL;
 
-	if (jumplistidx + count < 0 || jumplistidx + count >= jumplistlen)
+	if (curwin->w_jumplistidx + count < 0 ||
+						curwin->w_jumplistidx + count >= curwin->w_jumplistlen)
 		return (FPOS *)NULL;
 
 	/*
 	 * if first CTRL-O or CTRL-I command after a jump, add cursor position to list
 	 */
-	if (jumplistidx == jumplistlen)
+	if (curwin->w_jumplistidx == curwin->w_jumplistlen)
 	{
 		setpcmark();
-		--jumplistidx;		/* skip the new entry */
+		--curwin->w_jumplistidx;		/* skip the new entry */
 	}
 
-	jumplistidx += count;
-	if (jumplist[jumplistidx].mark.ptr == NULL)	/* jump to other file */
+	curwin->w_jumplistidx += count;
+												/* jump to other file */
+	if (curwin->w_jumplist[curwin->w_jumplistidx].fnum != curbuf->b_fnum)
 	{
-		if (getaltfile(jumplist[jumplistidx].fnum - 1, jumplist[jumplistidx].lnum, FALSE))
+		if (filelist_getfile(curwin->w_jumplist[curwin->w_jumplistidx].fnum,
+					curwin->w_jumplist[curwin->w_jumplistidx].mark.lnum, FALSE) == FAIL)
 			return (FPOS *)NULL;
-		Curpos.col = jumplist[jumplistidx].mark.col;
-		jumplist[jumplistidx].fnum = 0;
-		jumplist[jumplistidx].mark.ptr = nr2ptr(Curpos.lnum);
+		curwin->w_cursor.col = curwin->w_jumplist[curwin->w_jumplistidx].mark.col;
 		pos = (FPOS *)-1;
 	}
 	else
-		pos = mark2pos(&jumplist[jumplistidx].mark);
+		pos = &(curwin->w_jumplist[curwin->w_jumplistidx].mark);
 	return pos;
 }
 
@@ -201,33 +159,38 @@ getmark(c, changefile)
 	int			changefile;
 {
 	FPOS	*posp;
+	static	FPOS	pos_copy;
 
 	posp = NULL;
 	if (c == '\'' || c == '`')			/* previous context mark */
-		posp = mark2pos(&pcmark);
+	{
+		pos_copy = curbuf->b_pcmark;	/* need to make a copy because b_pcmark */
+		posp = &pos_copy;				/*   may be changed soon */
+	}
 	else if (c == '[')					/* to start of previous operator */
 	{
-		if (startop.lnum > 0 && startop.lnum <= line_count)
-			posp = &startop;
+		if (curbuf->b_startop.lnum > 0 &&
+						curbuf->b_startop.lnum <= curbuf->b_ml.ml_line_count)
+			posp = &(curbuf->b_startop);
 	}
 	else if (c == ']')					/* to end of previous operator */
 	{
-		if (endop.lnum > 0 && endop.lnum <= line_count)
-			posp = &endop;
+		if (curbuf->b_endop.lnum > 0 &&
+						curbuf->b_endop.lnum <= curbuf->b_ml.ml_line_count)
+			posp = &(curbuf->b_endop);
 	}
 	else if (islower(c))				/* normal named mark */
-		posp = mark2pos(&(namedm[c - 'a']));
+		posp = &(curbuf->b_namedm[c - 'a']);
 	else if (isupper(c))				/* named file mark */
 	{
 		c -= 'A';
-		posp = mark2pos(&(namedfm[c].mark));
-		if (posp == NULL && namedfm[c].lnum != 0 && (changefile || samealtfile(namedfm[c].fnum - 1)))
+		posp = &(namedfm[c].mark);
+		if (namedfm[c].fnum != curbuf->b_fnum &&
+									namedfm[c].mark.lnum != 0 && changefile)
 		{
-			if (!getaltfile(namedfm[c].fnum - 1, namedfm[c].lnum, TRUE))
+			if (filelist_getfile(namedfm[c].fnum, namedfm[c].mark.lnum, TRUE) == OK)
 			{
-				Curpos.col = namedfm[c].mark.col;
-				namedfm[c].fnum = 0;
-				namedfm[c].mark.ptr = nr2ptr(Curpos.lnum);
+				curwin->w_cursor.col = namedfm[c].mark.col;
 				posp = (FPOS *)-1;
 			}
 		}
@@ -235,157 +198,46 @@ getmark(c, changefile)
 	return posp;
 }
 
-	static FPOS *
-mark2pos(markp)
-	struct mark *markp;
-{
-	static FPOS pos;
-
-	if (markp->ptr != NULL && (pos.lnum = ptr2nr(markp->ptr, (linenr_t)1)) != 0)
-	{
-		pos.col = markp->col;
-		return (&pos);
-	}
-	return (FPOS *)NULL;
-}
-
 /*
- * clrallmarks() - clear all marks
+ * clrallmarks() - clear all marks in the buffer 'buf'
  *
  * Used mainly when trashing the entire buffer during ":e" type commands
  */
 	void
-clrallmarks()
+clrallmarks(buf)
+	BUF		*buf;
 {
 	static int 			i = -1;
 
 	if (i == -1)		/* first call ever: initialize */
 		for (i = 0; i < NMARKS; i++)
-			namedfm[i].lnum = 0;
+			namedfm[i].mark.lnum = 0;
 
 	for (i = 0; i < NMARKS; i++)
-	{
-		namedm[i].ptr = NULL;
-		namedfm[i].mark.ptr = NULL;
-	}
-	pcmark.ptr = NULL;
-	qf_clrallmarks();
-	for (i = 0; i < jumplistlen; ++i)
-		jumplist[i].mark.ptr = NULL;
+		buf->b_namedm[i].lnum = 0;
+	buf->b_pcmark.lnum = 1;		/* pcmark not cleared but set to line 1 */
+	buf->b_pcmark.col = 0;
+	buf->b_startop.lnum = 0;		/* start/end op mark cleared */
+	buf->b_endop.lnum = 0;
 }
 
 /*
- * increment the file number for all filemarks
- * called when adding a file to the file stack
+ * get name of file from a filemark
  */
-	void
-incrmarks()
-{
-	int			i;
-
-	for (i = 0; i < NMARKS; i++)
-		++namedfm[i].fnum;
-
-	for (i = 0; i < jumplistlen; ++i)
-	{
-#if 0		/* this would take too much time */
-		if (jumplist[i].fnum == 0)	/* current file */
-			jumplist[i].lnum = ptr2nr(jumplist[i].mark.ptr, 1);
-#endif
-		++jumplist[i].fnum;
-	}
-}
-
-/*
- * decrement the file number for the filemarks of the current file
- * called when not adding the current file name to the file stack
- */
-	void
-decrmarks()
-{
-	int			i;
-
-	for (i = 0; i < NMARKS; i++)
-		if (namedfm[i].fnum == 1)
-			namedfm[i].fnum = 0;
-
-	for (i = 0; i < jumplistlen; ++i)
-		if (jumplist[i].fnum == 1)
-			jumplist[i].fnum = 0;
-}
-
-/*
- * adjustmark: set new ptr for a mark
- * if new == NULL the mark is effectively deleted
- * (this is slow: we have to check about 100 pointers!)
- */
-   void
-adjustmark(old, new)
-		char *old, *new;
-{
-	register int i, j;
-
-	for (i = 0; i < NMARKS; ++i)
-	{
-		if (namedm[i].ptr == old)
-			namedm[i].ptr = new;
-		if (namedfm[i].mark.ptr == old)
-		{
-			namedfm[i].mark.ptr = new;
-			if (new == NULL)
-				namedfm[i].lnum = 0;		/* delete this mark */
-		}
-	}
-	if (pcmark.ptr == old)
-		pcmark.ptr = new;
-	for (i = 0; i < jumplistlen; ++i)
-		if (jumplist[i].mark.ptr == old)
-		{
-			if (new == NULL)				/* delete this mark */
-			{
-				--jumplistlen;
-				if (jumplistidx > jumplistlen)
-					--jumplistidx;
-				for (j = i; j < jumplistlen; ++j)
-					jumplist[j] = jumplist[j + 1];
-			}
-			else
-				jumplist[i].mark.ptr = new;
-		}
-	qf_adjustmark(old, new);
-}
-
-/*
- * get name of file from a filemark (use the occasion to update the lnum)
- */
-	char *
+	char_u *
 fm_getname(fmark)
 	struct filemark *fmark;
 {
-	linenr_t	nr;
-	char		*name;
+	char_u		*name;
 
-	if (fmark->fnum != 0)						/* maybe not current file */
+	if (fmark->fnum != curbuf->b_fnum)				/* not current file */
 	{
-		name = getaltfname(fmark->fnum - 1);
+		name = filelist_nr2name(fmark->fnum);
 		if (name == NULL)
-			return "-none-";
-		if (Filename == NULL || fnamecmp(name, Filename) != 0)	/* not current file */
-			return name;
-		fmark->fnum = 0;
+			return (char_u *)"-unknown-";
+		return name;
 	}
-	if (fmark->mark.ptr == NULL)
-	{
-		if (fmark->lnum <= line_count)				/* safety check */
-			fmark->mark.ptr = nr2ptr(fmark->lnum);	/* update ptr */
-	}
-	else
-	{
-		nr = ptr2nr(fmark->mark.ptr, (linenr_t)1);
-		if (nr != 0)
-			fmark->lnum = nr;					/* update lnum */
-	}
-	return "-current-";
+	return (char_u *)"-current-";
 }
 
 /*
@@ -395,79 +247,166 @@ fm_getname(fmark)
 domarks()
 {
 	int			i;
-	char		*name;
+	char_u		*name;
 
-#ifdef AMIGA
-	settmode(0);		/* set cooked mode, so output can be halted */
-#endif
-	outstrn("\nmark line  file\n");
+	mch_start_listing();	/* may set cooked mode, so output can be halted */
+	gotocmdline(TRUE, NUL);
+	msg_outstr((char_u *)"\nmark line  file\n");
 	for (i = 0; i < NMARKS; ++i)
 	{
-		if (namedm[i].ptr != NULL)
+		if (curbuf->b_namedm[i].lnum != 0)
 		{
-			sprintf(IObuff, " %c %5ld\n",
-				i + 'a',
-				ptr2nr(namedm[i].ptr, (linenr_t)1));
-			outstrn(IObuff);
+			sprintf((char *)IObuff, " %c %5ld\n", i + 'a',
+												curbuf->b_namedm[i].lnum);
+			msg_outstr(IObuff);
 		}
 		flushbuf();
 	}
 	for (i = 0; i < NMARKS; ++i)
 	{
-		if (namedfm[i].lnum != 0)
+		if (namedfm[i].mark.lnum != 0)
 		{
 			name = fm_getname(&namedfm[i]);
 			if (name == NULL)		/* file name not available */
 				continue;
 
-			sprintf(IObuff, " %c %5ld  %s\n",
+			sprintf((char *)IObuff, " %c %5ld  %s\n",
 				i + 'A',
-				namedfm[i].lnum,
+				namedfm[i].mark.lnum,
 				name);
-			outstrn(IObuff);
+			msg_outstr(IObuff);
 		}
-		flushbuf();
+		flushbuf();				/* show one line at a time */
 	}
-#ifdef AMIGA
-	settmode(1);
-#endif
-	wait_return(TRUE);
+	mch_stop_listing();
+	msg_end();
 }
 
 /*
- * print the jumplist (use the occasion to update the line numbers)
+ * print the jumplist
  */
 	void
 dojumps()
 {
 	int			i;
-	char		*name;
+	char_u		*name;
 
-#ifdef AMIGA
-	settmode(0);		/* set cooked mode, so output can be halted */
-#endif
-	outstrn("\n jump line  file\n");
-	for (i = 0; i < jumplistlen; ++i)
+	mch_start_listing();	/* may set cooked mode, so output can be halted */
+	gotocmdline(TRUE, NUL);
+	msg_outstr((char_u *)"\n jump line  file\n");
+	for (i = 0; i < curwin->w_jumplistlen; ++i)
 	{
-		if (jumplist[i].lnum != 0)
+		if (curwin->w_jumplist[i].mark.lnum != 0)
 		{
-			name = fm_getname(&jumplist[i]);
+			name = fm_getname(&curwin->w_jumplist[i]);
 			if (name == NULL)		/* file name not available */
 				continue;
 
-			sprintf(IObuff, "%c %2d %5ld  %s\n",
-				i == jumplistidx ? '>' : ' ',
+			sprintf((char *)IObuff, "%c %2d %5ld  %s\n",
+				i == curwin->w_jumplistidx ? '>' : ' ',
 				i + 1,
-				jumplist[i].lnum,
+				curwin->w_jumplist[i].mark.lnum,
 				name);
-			outstrn(IObuff);
+			msg_outstr(IObuff);
 		}
 		flushbuf();
 	}
-	if (jumplistidx == jumplistlen)
-		outstrn(">\n");
-#ifdef AMIGA
-	settmode(1);
-#endif
-	wait_return(TRUE);
+	if (curwin->w_jumplistidx == curwin->w_jumplistlen)
+		msg_outstr((char_u *)">\n");
+	mch_stop_listing();
+	msg_end();
+}
+
+/*
+ * adjust marks between line1 and line2 (inclusive) to move 'inc' lines
+ * If 'inc' is MAXLNUM the mark is made invalid.
+ */
+	void
+mark_adjust(line1, line2, inc)
+	linenr_t	line1;
+	linenr_t	line2;
+	long		inc;
+{
+	int			i;
+	int			fnum = curbuf->b_fnum;
+	linenr_t	*lp;
+	WIN			*win;
+
+/* named marks, lower case and upper case */
+	for (i = 0; i < NMARKS; i++)
+	{
+		lp = &(curbuf->b_namedm[i].lnum);
+		if (*lp >= line1 && *lp <= line2)
+		{
+			if (inc == MAXLNUM)
+				*lp = 0;
+			else
+				*lp += inc;
+		}
+		if (namedfm[i].fnum == fnum)
+		{
+			lp = &(namedfm[i].mark.lnum);
+			if (*lp >= line1 && *lp <= line2)
+			{
+				if (inc == MAXLNUM)
+					*lp = 0;
+				else
+					*lp += inc;
+			}
+		}
+	}
+
+/* previous context mark */
+	lp = &(curbuf->b_pcmark.lnum);
+	if (*lp >= line1 && *lp <= line2)
+	{
+		if (inc == MAXLNUM)
+			*lp = 0;
+		else
+			*lp += inc;
+	}
+
+/* quickfix marks */
+	qf_mark_adjust(line1, line2, inc);
+
+/* jumplist marks */
+	for (win = firstwin; win != NULL; win = win->w_next)
+	{
+		for (i = 0; i < win->w_jumplistlen; ++i)
+			if (win->w_jumplist[i].fnum == fnum)
+			{
+				lp = &(win->w_jumplist[i].mark.lnum);
+				if (*lp >= line1 && *lp <= line2)
+				{
+					if (inc == MAXLNUM)
+						*lp = 0;
+					else
+						*lp += inc;
+				}
+			}
+		/*
+		 * also adjust the line at the top of the window and the cursor position
+		 * for windows with the same buffer.
+		 */
+		if (win != curwin && win->w_buffer == curbuf)
+		{
+			if (win->w_topline >= line1 && win->w_topline <= line2)
+			{
+				if (inc == MAXLNUM)		/* topline is deleted */
+					win->w_topline = line1;
+				else					/* keep topline on the same line */
+					win->w_topline += inc;
+			}
+			if (win->w_cursor.lnum >= line1 && win->w_cursor.lnum <= line2)
+			{
+				if (inc == MAXLNUM)		/* line with cursor is deleted */
+				{
+					win->w_cursor.lnum = line1;
+					win->w_cursor.col = 0;
+				}
+				else					/* keep cursor on the same line */
+					win->w_cursor.lnum += inc;
+			}
+		}
+	}
 }

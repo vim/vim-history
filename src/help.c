@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -31,27 +29,27 @@ help()
 	int		i;
 	long	filepos[MAXSCREENS];	/* seek position for each screen */
 	int		screennr;			/* screen number; index == 0, 'c' == 1, 'd' == 2, etc */
-#ifdef MSDOS
-	char	*fnamep;
+#if defined(MSDOS) && !defined(NT)
+	char_u	*fnamep;
 #endif
 
 /*
  * try to open the file specified by the "helpfile" option
  */
-	if ((helpfd = fopen(p_hf, READBIN)) == NULL)
+	if ((helpfd = fopen((char *)p_hf, READBIN)) == NULL)
 	{
-#ifdef MSDOS
+#if defined(MSDOS) && !defined(NT)
 	/*
 	 * for MSDOS: try the DOS search path
      */
 		fnamep = searchpath("vim.hlp");
-		if (fnamep == NULL || (helpfd = fopen(fnamep, READBIN)) == NULL)
+		if (fnamep == NULL || (helpfd = fopen((char *)fnamep, READBIN)) == NULL)
 		{
-			smsg("Sorry, help file \"%s\" and \"vim.hlp\" not found", p_hf);
+			smsg((char_u *)"Sorry, help file \"%s\" and \"vim.hlp\" not found", p_hf);
 			return;
 		}
 #else
-		smsg("Sorry, help file \"%s\" not found", p_hf);
+		smsg((char_u *)"Sorry, help file \"%s\" not found", p_hf);
 		return;
 #endif
 	}
@@ -116,11 +114,15 @@ help()
 		helpfilepos = filepos[screennr];
 	}
 	State = NORMAL;
-	script_winsize_pp();
 	fclose(helpfd);
 	updateScreen(CLEAR);
 }
 
+/*
+ * redraw the help info for the current position in the help file
+ *
+ * return the number of screens displayed, or -1 if end of file reached
+ */
 	int
 redrawhelp()
 {
@@ -146,17 +148,17 @@ redrawhelp()
 		}
 		else
 		{
-			outchar((char)nextc);
+			outchar(nextc);
 			if (nextc == '\n')
 				++line;
 		}
 	}
-	windgoto(0, (int)(Columns - strlen(Version) - 1));
+	windgoto(0, (int)(Columns - STRLEN(Version) - 1));
 	outstrn(Version);
 	col = (int)Columns - 52;
 	if (col < 0)
 		col = 0;
 	windgoto((int)Rows - 1, col);
-	outstrn("<space = next; return = quit; a = index; b = back>");
+	OUTSTRN("<space = next; return = quit; a = index; b = back>");
 	return (nextc == -1 ? -1 : screens);
 }

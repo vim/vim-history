@@ -1,13 +1,18 @@
-/* vi:sw=4:ts=4:
+/* vi:ts=4:sw=4
  *
- * term.c -- VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * primitive termcap support added
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
+ */
+/*
+ *
+ * term.c: functions for controlling the terminal
+ *
+ * primitive termcap support for Amiga and MSDOS included
  *
  * NOTE: padding and variable substitution is not performed,
  * when compiling without TERMCAP, we use tputs() and tgoto() dummies.
- *
- * 14.6.92
  */
 
 #include "vim.h"
@@ -17,6 +22,9 @@
 #ifdef TERMCAP
 # ifdef linux
 #  include <termcap.h>
+#  if 0		/* only required for old versions, it's now in termcap.h */
+    typedef int (*outfuntype) (int);
+#  endif
 #  define TPUTSFUNCAST (outfuntype)
 # else
 #  define TPUTSFUNCAST
@@ -26,11 +34,7 @@
 # endif
 #endif
 
-#ifdef DEBUG
-# define TTEST(a) debug1("%s: ", "a"); if (a) {debug2("%02x %s\n", *a, a + 1);} else debug("NULL\n");
-#endif
-
-static void parse_builtin_tcap __ARGS((Tcarr *tc, char *s));
+static void parse_builtin_tcap __ARGS((Tcarr *tc, char_u *s));
 
 /*
  * Builtin_tcaps must always contain DFLT_TCAP as the first entry!
@@ -40,36 +44,36 @@ static void parse_builtin_tcap __ARGS((Tcarr *tc, char *s));
  * When TERMCAP is defined, the builtin entries can be accessed with
  * "builtin_amiga", "builtin_ansi", "builtin_debug", etc.
  */
-static char *builtin_tcaps[] =
+static char_u *builtin_tcaps[] =
 {
 #ifndef NO_BUILTIN_TCAPS
-  DFLT_TCAP,		/* almost allways included */
+  (char_u *)DFLT_TCAP,		/* almost allways included */
 # if !defined(UNIX) && (defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS))
-  ANSI_TCAP,		/* default for unix */
+  (char_u *)ANSI_TCAP,		/* default for unix */
 # endif
 # if !defined(AMIGA) && (defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS))
-  AMIGA_TCAP,		/* default for amiga */
+  (char_u *)AMIGA_TCAP,		/* default for amiga */
 # endif
 # if !defined(MSDOS) && (defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS))
-  PCTERM_TCAP,		/* default for MSdos */
+  (char_u *)PCTERM_TCAP,		/* default for MSdos */
 # endif
 # if defined(MSDOS) || defined(ALL_BUILTIN_TCAPS)
-  PCANSI_TCAP,
+  (char_u *)PCANSI_TCAP,
 # endif
 # if !defined(ATARI) && defined(ALL_BUILTIN_TCAPS)
-  ATARI_TCAP,		/* default for Atari */
+  (char_u *)ATARI_TCAP,		/* default for Atari */
 # endif
 # if defined(UNIX) || defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS)
-  XTERM_TCAP,		/* always included on unix */
+  (char_u *)XTERM_TCAP,		/* always included on unix */
 # endif
 # ifdef ALL_BUILTIN_TCAPS
-  VT52_TCAP,
+  (char_u *)VT52_TCAP,
 # endif
 # if defined(DEBUG) || defined(ALL_BUILTIN_TCAPS)
-  DEBUG_TCAP,		/* always included when debugging */
+  (char_u *)DEBUG_TCAP,		/* always included when debugging */
 # endif
 #else /* NO_BUILTIN_TCAPS */
-  DUMB_TCAP,		/* minimal termcap, used when everything else fails */
+  (char_u *)DUMB_TCAP,		/* minimal termcap, used when everything else fails */
 #endif /* NO_BUILTIN_TCAPS */
   NULL,
 };
@@ -93,9 +97,9 @@ Tcarr term_strings;
 	static void
 parse_builtin_tcap(tc, s)
 	Tcarr *tc;
-	char *s;
+	char_u *s;
 {
-	char **p = &tc->t_name;
+	char_u **p = &tc->t_name;
 
 	p++;
 	for (;;)
@@ -126,17 +130,23 @@ char		*UP, *BC, PC;		/* should be extern, but some don't have them */
 # endif
 #endif /* TERMCAP */
 
+#ifdef linux
+# define TGETSTR(s, p)	(char_u *)tgetstr((s), (char **)(p))
+#else
+# define TGETSTR(s, p)	(char_u *)tgetstr((s), (char *)(p))
+#endif
+
 	void
 set_term(term)
-	char *term;
+	char_u *term;
 {
-	char **p = builtin_tcaps;
+	char_u **p = builtin_tcaps;
 #ifdef TERMCAP
 	int builtin = 0;
 #endif
 	int width = 0, height = 0;
 
-	if (!strncmp(term, "builtin_", (size_t)8))
+	if (!STRNCMP(term, "builtin_", (size_t)8))
 	{
 		term += 8;
 #ifdef TERMCAP
@@ -146,96 +156,93 @@ set_term(term)
 #ifdef TERMCAP
 	else
 	{
-		char			*p;
-		static char		tstrbuf[TBUFSZ];
-		char			tbuf[TBUFSZ];
-		char			*tp = tstrbuf;
+		char_u			*p;
+		static char_u	tstrbuf[TBUFSZ];
+		char_u			tbuf[TBUFSZ];
+		char_u			*tp = tstrbuf;
 		int				i;
 
 		i = tgetent(tbuf, term);
 		if (i == -1)
 		{
-			emsg("Cannot open termcap file");
+			EMSG("Cannot open termcap file");
 			builtin = 1;
 		}
 		else if (i == 0)
 		{
-			emsg("terminal entry not found");
+			EMSG("terminal entry not found");
 			builtin = 1;
 		}
 		else
 		{
 			clear_termparam();		/* clear old parameters */
 		/* output strings */
-			T_EL = tgetstr("ce", &tp);
-			T_IL = tgetstr("al", &tp);
-			T_CIL = tgetstr("AL", &tp);
-			T_DL = tgetstr("dl", &tp);
-			T_CDL = tgetstr("DL", &tp);
-			T_ED = tgetstr("cl", &tp);
-			T_CI = tgetstr("vi", &tp);
-			T_CV = tgetstr("ve", &tp);
-			T_TP = tgetstr("me", &tp);
-			T_TI = tgetstr("mr", &tp);
-				/* if 'mr' or 'me' is not defined use 'so' and 'se' */
-			if (T_TP == NULL || *T_TP == NUL || T_TI == NULL || *T_TI == NUL)
-			{
-				T_TP = tgetstr("se", &tp);
-				T_TI = tgetstr("so", &tp);
-			}
-			T_CM = tgetstr("cm", &tp);
-			T_SR = tgetstr("sr", &tp);
-			T_CRI = tgetstr("RI", &tp);
-			T_VB = tgetstr("vb", &tp);
-			T_KS = tgetstr("ks", &tp);
-			T_KE = tgetstr("ke", &tp);
-			T_TS = tgetstr("ti", &tp);
-			T_TE = tgetstr("te", &tp);
+			T_EL = TGETSTR("ce", &tp);
+			T_IL = TGETSTR("al", &tp);
+			T_CIL = TGETSTR("AL", &tp);
+			T_DL = TGETSTR("dl", &tp);
+			T_CDL = TGETSTR("DL", &tp);
+			T_ED = TGETSTR("cl", &tp);
+			T_CI = TGETSTR("vi", &tp);
+			T_CV = TGETSTR("ve", &tp);
+			T_TP = TGETSTR("me", &tp);
+			T_TI = TGETSTR("mr", &tp);
+			T_SE = TGETSTR("se", &tp);
+			T_SO = TGETSTR("so", &tp);
+			T_MS = TGETSTR("ms", &tp);
+			T_CM = TGETSTR("cm", &tp);
+			T_SR = TGETSTR("sr", &tp);
+			T_CRI = TGETSTR("RI", &tp);
+			T_VB = TGETSTR("vb", &tp);
+			T_KS = TGETSTR("ks", &tp);
+			T_KE = TGETSTR("ke", &tp);
+			T_TS = TGETSTR("ti", &tp);
+			T_TE = TGETSTR("te", &tp);
 
 		/* key codes */
-			term_strings.t_ku = tgetstr("ku", &tp);
-			term_strings.t_kd = tgetstr("kd", &tp);
-			term_strings.t_kl = tgetstr("kl", &tp);
+			term_strings.t_ku = TGETSTR("ku", &tp);
+			term_strings.t_kd = TGETSTR("kd", &tp);
+			term_strings.t_kl = TGETSTR("kl", &tp);
 				/* if cursor-left == backspace, ignore it (televideo 925) */
 			if (term_strings.t_kl != NULL && *term_strings.t_kl == Ctrl('H'))
 				term_strings.t_kl = NULL;
-			term_strings.t_kr = tgetstr("kr", &tp);
-			/* term_strings.t_sku = tgetstr("", &tp); termcap code unknown */
-			/* term_strings.t_skd = tgetstr("", &tp); termcap code unknown */
+			term_strings.t_kr = TGETSTR("kr", &tp);
+			/* term_strings.t_sku = TGETSTR("", &tp); termcap code unknown */
+			/* term_strings.t_skd = TGETSTR("", &tp); termcap code unknown */
 			term_strings.t_sku = NULL;
 			term_strings.t_skd = NULL;
-			term_strings.t_skl = tgetstr("#4", &tp);
-			term_strings.t_skr = tgetstr("%i", &tp);
-			term_strings.t_f1 = tgetstr("k1", &tp);
-			term_strings.t_f2 = tgetstr("k2", &tp);
-			term_strings.t_f3 = tgetstr("k3", &tp);
-			term_strings.t_f4 = tgetstr("k4", &tp);
-			term_strings.t_f5 = tgetstr("k5", &tp);
-			term_strings.t_f6 = tgetstr("k6", &tp);
-			term_strings.t_f7 = tgetstr("k7", &tp);
-			term_strings.t_f8 = tgetstr("k8", &tp);
-			term_strings.t_f9 = tgetstr("k9", &tp);
-			term_strings.t_f10 = tgetstr("k;", &tp);
-			term_strings.t_sf1 = tgetstr("F1", &tp);	/* really function keys 11-20 */
-			term_strings.t_sf2 = tgetstr("F2", &tp);
-			term_strings.t_sf3 = tgetstr("F3", &tp);
-			term_strings.t_sf4 = tgetstr("F4", &tp);
-			term_strings.t_sf5 = tgetstr("F5", &tp);
-			term_strings.t_sf6 = tgetstr("F6", &tp);
-			term_strings.t_sf7 = tgetstr("F7", &tp);
-			term_strings.t_sf8 = tgetstr("F8", &tp);
-			term_strings.t_sf9 = tgetstr("F9", &tp);
-			term_strings.t_sf10 = tgetstr("FA", &tp);
-			term_strings.t_help = tgetstr("%1", &tp);
-			term_strings.t_undo = tgetstr("&8", &tp);
+			term_strings.t_skl = TGETSTR("#4", &tp);
+			term_strings.t_skr = TGETSTR("%i", &tp);
+			term_strings.t_f1 = TGETSTR("k1", &tp);
+			term_strings.t_f2 = TGETSTR("k2", &tp);
+			term_strings.t_f3 = TGETSTR("k3", &tp);
+			term_strings.t_f4 = TGETSTR("k4", &tp);
+			term_strings.t_f5 = TGETSTR("k5", &tp);
+			term_strings.t_f6 = TGETSTR("k6", &tp);
+			term_strings.t_f7 = TGETSTR("k7", &tp);
+			term_strings.t_f8 = TGETSTR("k8", &tp);
+			term_strings.t_f9 = TGETSTR("k9", &tp);
+			term_strings.t_f10 = TGETSTR("k;", &tp);
+			term_strings.t_sf1 = TGETSTR("F1", &tp);	/* really function keys 11-20 */
+			term_strings.t_sf2 = TGETSTR("F2", &tp);
+			term_strings.t_sf3 = TGETSTR("F3", &tp);
+			term_strings.t_sf4 = TGETSTR("F4", &tp);
+			term_strings.t_sf5 = TGETSTR("F5", &tp);
+			term_strings.t_sf6 = TGETSTR("F6", &tp);
+			term_strings.t_sf7 = TGETSTR("F7", &tp);
+			term_strings.t_sf8 = TGETSTR("F8", &tp);
+			term_strings.t_sf9 = TGETSTR("F9", &tp);
+			term_strings.t_sf10 = TGETSTR("FA", &tp);
+			term_strings.t_help = TGETSTR("%1", &tp);
+			term_strings.t_undo = TGETSTR("&8", &tp);
 
 			height = tgetnum("li");
 			width = tgetnum("co");
 
 # ifndef hpux
-			BC = tgetstr("bc", &tp);
-			UP = tgetstr("up", &tp);
-			p = tgetstr("pc", &tp);
+			BC = (char *)TGETSTR("bc", &tp);
+			UP = (char *)TGETSTR("up", &tp);
+			p = TGETSTR("pc", &tp);
 			if (p)
 				PC = *p;
 			ospeed = 0;
@@ -245,7 +252,7 @@ set_term(term)
 	if (builtin)
 #endif
 	{
-		while (*p && strcmp(term, *p))
+		while (*p && STRCMP(term, *p))
 			p++;
 		if (!*p)
 		{
@@ -273,7 +280,7 @@ set_term(term)
 	}
 #if defined(AMIGA) || defined(MSDOS)
 		/* DFLT_TCAP indicates that it is the machine console. */
-	if (strcmp(term, *builtin_tcaps))
+	if (STRCMP(term, *builtin_tcaps))
 		term_console = FALSE;
 	else
 	{
@@ -296,8 +303,7 @@ set_term(term)
 		height = 24;		/* most terminals are 24 lines */
 #endif
 	}
-	Rows_max = Rows;		/* remember max. physical nr. of Rows */
-	set_winsize(width, height, FALSE);	/* may change Rows_max */
+	set_winsize(width, height, FALSE);	/* may change Rows */
 }
 
 #if defined(TERMCAP) && defined(UNIX)
@@ -309,9 +315,9 @@ set_term(term)
 	void
 getlinecol()
 {
-	char			tbuf[TBUFSZ];
+	char_u			tbuf[TBUFSZ];
 
-	if (term_strings.t_name && tgetent(tbuf, term_strings.t_name) > 0)
+	if (term_strings.t_name != NULL && tgetent(tbuf, term_strings.t_name) > 0)
 	{
 		if (Columns == 0)
 			Columns = tgetnum("co");
@@ -321,14 +327,14 @@ getlinecol()
 }
 #endif
 
-static char *tltoa __PARMS((unsigned long));
+static char_u *tltoa __PARMS((unsigned long));
 
-	static char *
+	static char_u *
 tltoa(i)
 	unsigned long i;
 {
-	static char buf[16];
-	char		*p;
+	static char_u buf[16];
+	char_u		*p;
 
 	p = buf + 15;
 	*p = '\0';
@@ -370,7 +376,7 @@ tgoto(cm, x, y)
 		switch (*++cm)
         {
 		case 'd':
-			p = tltoa((unsigned long)y);
+			p = (char *)tltoa((unsigned long)y);
 			y = x;
 			while (*p)
 				*s++ = *p++;
@@ -402,10 +408,10 @@ tgoto(cm, x, y)
  */
 	void
 termcapinit(term)
-	char *term;
+	char_u *term;
 {
 	if (!term)
-		term = (char *)vimgetenv("TERM");
+		term = vimgetenv((char_u *)"TERM");
 	if (!term || !*term)
 		term = *builtin_tcaps;
 	term_strings.t_name = strsave(term);
@@ -417,7 +423,7 @@ termcapinit(term)
  */
 #undef BSIZE			/* hpux has BSIZE in sys/param.h */
 #define BSIZE	2048
-static u_char			outbuf[BSIZE];
+static char_u			outbuf[BSIZE];
 static int				bpos = 0;		/* number of chars in outbuf */
 
 /*
@@ -428,7 +434,7 @@ flushbuf()
 {
 	if (bpos != 0)
 	{
-		mch_write((char *)outbuf, bpos);
+		mch_write(outbuf, bpos);
 		bpos = 0;
 	}
 }
@@ -445,14 +451,16 @@ outchar(c)
 	if (c == '\n')		/* turn LF into CR-LF (CRMOD does not seem to do this) */
 		outchar('\r');
 #endif
+
 	outbuf[bpos] = c;
-	++bpos;
+
+	if (p_nb)			/* for testing: unbuffered screen output (not for MSDOS) */
+		mch_write(outbuf, 1);
+	else
+		++bpos;
+
 	if (bpos >= BSIZE)
 		flushbuf();
-	if (c == '\n')
-		char_count += Columns;
-	else
-		++char_count;
 }
 
 /*
@@ -464,7 +472,7 @@ outchar(c)
  */
 	void
 outstrn(s)
-	char *s;
+	char_u *s;
 {
 	if (bpos > BSIZE - 20)		/* avoid terminal strings being split up */
 		flushbuf();
@@ -478,7 +486,7 @@ outstrn(s)
  */
 	void
 outstr(s)
-	register char			 *s;
+	register char_u			 *s;
 {
 	if (bpos > BSIZE - 20)		/* avoid terminal strings being split up */
 		flushbuf();
@@ -499,7 +507,7 @@ windgoto(row, col)
 	int		row;
 	int		col;
 {
-	outstr(tgoto(T_CM, col, row));
+	OUTSTR(tgoto((char *)T_CM, col, row));
 }
 
 /*
@@ -511,7 +519,7 @@ windgoto(row, col)
 setcursor()
 {
 	if (!RedrawingDisabled)
-		windgoto(Cursrow, Curscol);
+		windgoto(curwin->w_winpos + curwin->w_row, curwin->w_col);
 }
 
 	void
@@ -522,22 +530,6 @@ ttest(pairs)
 	char *s = "terminal capability %s required.\n";
 	char *t = NULL;
 
-#ifdef TTEST
-  TTEST(T_EL);
-  TTEST(T_IL);
-  TTEST(T_CIL);
-  TTEST(T_DL);
-  TTEST(T_CDL);
-  TTEST(T_ED);
-  TTEST(T_CI);
-  TTEST(T_CV);
-  TTEST(T_TP);
-  TTEST(T_TI);
-  TTEST(T_CM);
-  TTEST(T_SR);
-  TTEST(T_CRI);
-#endif /* TTEST */
-
   /* hard requirements */
 	if (!T_ED || !*T_ED)	/* erase display */
 		t = "cl";
@@ -547,21 +539,29 @@ ttest(pairs)
 	if (t)
     {
     	sprintf(buf, s, t);
-    	emsg(buf);
+    	EMSG(buf);
     }
 
 	if (pairs)
 	{
 	  /* optional pairs */
 		if ((!T_TP || !*T_TP) ^ (!T_TI || !*T_TI))
-		{
-			debug2("cap :me=%s:mr=%s: ignored\n", T_TP, T_TI);
 			T_TP = T_TI = NULL;
-		}
+		if ((!T_SO || !*T_SO) ^ (!T_SE || !*T_SE))
+			T_SO = T_SE = NULL;
 		if ((!T_CI || !*T_CI) ^ (!T_CV || !*T_CV))
-		{
-			debug2("cap :vi=%s:ve=%s: ignored\n", T_CI, T_CV);
 			T_CI = T_CV = NULL;
+			/* if 'mr' or 'me' is not defined use 'so' and 'se' */
+		if (T_TP == NULL || *T_TP == NUL)
+		{
+			T_TP = T_SE;
+			T_TI = T_SO;
+		}
+			/* if 'so' or 'se' is not defined use 'mr' and 'me' */
+		if (T_SO == NULL || *T_SO == NUL)
+		{
+			T_SE = T_TP;
+			T_SO = T_TI;
 		}
 	}
 }
@@ -585,7 +585,7 @@ ttest(pairs)
 
 	int
 inchar(buf, maxlen, time)
-	char	*buf;
+	char_u	*buf;
 	int		maxlen;
 	int		time;						/* milli seconds */
 {
@@ -594,8 +594,11 @@ inchar(buf, maxlen, time)
 	register int 	c;
 	register int	i;
 
-	if (time == -1)				/* flush output before blocking */
+	if (time == -1 || time > 100)	/* flush output before waiting */
+	{
+		cursor_on();
 		flushbuf();
+	}
 	did_outofmem_msg = FALSE;	/* display out of memory message (again) */
 
 /*
@@ -615,9 +618,6 @@ retry:
 			scriptin[curscript] = NULL;
 			if (curscript > 0)
 				--curscript;
-				/* recovery may be delayed till after reading a script file */
-			if (recoverymode)
-				openrecover();
 			goto retry;		/* may read other script if this one was nested */
 		}
 		if (c == 0)
@@ -641,7 +641,7 @@ retry:
 
 	for (i = len; --i >= 0; ++buf)
 		if (*buf == 0)
-			*(u_char *)buf = K_ZERO;		/* replace ^@ with special code */
+			*(char_u *)buf = K_ZERO;		/* replace ^@ with special code */
 	*buf = NUL;								/* add trailing NUL */
 	return len;
 }
@@ -651,28 +651,31 @@ retry:
  * Return 0 for no match, -1 for partial match, > 0 for full match.
  * With a match the replacement code is put in buf[0], the match is
  * removed and the number characters in buf is returned.
+ *
+ * Note: should always be called with buf == typestr!
  */
 	int
 check_termcode(buf)
-	char	*buf;
+	char_u	*buf;
 {
-	char 	**p;
+	char_u 	**p;
 	int		slen;
 	int		len;
 
-	len = strlen(buf);
-	for (p = (char **)&term_strings.t_ku; p != (char **)&term_strings.t_undo + 1; ++p)
+	len = STRLEN(buf);
+	for (p = (char_u **)&term_strings.t_ku; p != (char_u **)&term_strings.t_undo + 1; ++p)
 	{
-		if (*p == NULL || (slen = strlen(*p)) == 0)		/* empty entry */
+		if (*p == NULL || (slen = STRLEN(*p)) == 0)		/* empty entry */
 			continue;
-		if (strncmp(*p, buf, (size_t)(slen > len ? len : slen)) == 0)
+		if (STRNCMP(*p, buf, (size_t)(slen > len ? len : slen)) == 0)
 		{
 			if (len >= slen)		/* got the complete sequence */
 			{
 				len -= slen;
-				memmove(buf + 1, buf + slen, (size_t)(len + 1));
+					/* remove matched chars, taking care of noremap */
+				del_typestr(slen - 1);
 					/* this relies on the Key numbers to be consecutive! */
-				buf[0] = K_UARROW + (p - (char **)&term_strings.t_ku);
+				buf[0] = K_UARROW + (p - (char_u **)&term_strings.t_ku);
 				return (len + 1);
 			}
 			return -1;				/* got a partial sequence */
@@ -688,39 +691,25 @@ check_termcode(buf)
 outnum(n)
 	register long n;
 {
-	outstrn(tltoa((unsigned long)n));
-}
- 
-/*
- * outnuml - output a (big) number fast and return the number of characters
- */
-	int
-outnuml(n)
-	register long n;
-{
-	char *s;
-
-	s = tltoa((unsigned long)n);
-	outstrn(s);
-	return (int)strlen(s);
+	OUTSTRN(tltoa((unsigned long)n));
 }
  
 	void
 check_winsize()
 {
-	if (Columns < 5)
-		Columns = 5;
+	if (Columns < MIN_COLUMNS)
+		Columns = MIN_COLUMNS;
 	else if (Columns > MAX_COLUMNS)
 		Columns = MAX_COLUMNS;
-	if (Rows < 2)
-		Rows = 2;
-	p_scroll = Rows >> 1;
+	if (Rows < MIN_ROWS + 1)	/* need room for one window and command line */
+		Rows = MIN_ROWS + 1;
+	screen_new_rows();			/* may need to update window sizes */
 }
 
 /*
  * set window size
  * If 'mustset' is TRUE, we must set Rows and Columns, do not get real
- * window size (this is used for the :win command during recovery).
+ * window size (this is used for the :win command).
  * If 'mustset' is FALSE, we may try to get the real window size and if
  * it fails use 'width' and 'height'.
  */
@@ -743,21 +732,22 @@ set_winsize(width, height, mustset)
 #ifdef AMIGA
 	flushbuf(); 		/* must do this before mch_get_winsize for some obscure reason */
 #endif /* AMIGA */
-	if (mustset || mch_get_winsize())
+	if (mustset || mch_get_winsize() == FAIL)
 	{
-		debug("mch_get_win failed\n");
 		Rows = height;
 		Columns = width;
+		check_winsize();		/* always check, to get p_scroll right */
 		mch_set_winsize();
 	}
-	check_winsize();		/* always check, to get p_scroll right */
+	else
+		check_winsize();		/* always check, to get p_scroll right */
 	if (State == HELP)
-		redrawhelp();
+		(void)redrawhelp();
 	else if (!starting)
 	{
 		tmp = RedrawingDisabled;
 		RedrawingDisabled = FALSE;
-		comp_Botline();
+		comp_Botline_all();
 		updateScreen(CURSUPD);
 		RedrawingDisabled = tmp;
 		if (State == CMDLINE)
@@ -766,20 +756,6 @@ set_winsize(width, height, mustset)
 			setcursor();
 	}
 	flushbuf();
-}
-
-/*
- * set active window height (for "z<number><CR>" command)
- */
-	void
-set_winheight(height)
-	int		height;
-{
-	if (height > Rows_max)			/* can't make it larger */
-		height = Rows_max;
-	Rows = height;
-	check_winsize();
-	updateScreen(CLEAR);
 }
 
 	void
@@ -811,20 +787,28 @@ stoptermcap()
 	outstr(T_TE);	/* stop termcap mode */
 	flushbuf();
 	termcap_active = FALSE;
+	cursor_on();	/* just in case it is still off */
 }
 
 /*
  * enable cursor, unless in Visual mode or no inversion possible
  */
+static int cursor_is_off = FALSE;
+
 	void
 cursor_on()
 {
-	if (!Visual.lnum || T_TI == NULL || *T_TI == NUL)
+	if (cursor_is_off && (!VIsual.lnum || T_TI == NULL || *T_TI == NUL))
+	{
 		outstr(T_CV);
+		cursor_is_off = FALSE;
+	}
 }
 
 	void
 cursor_off()
 {
-	outstr(T_CI);			/* disable cursor */
+	if (!cursor_is_off)
+		outstr(T_CI);			/* disable cursor */
+	cursor_is_off = TRUE;
 }

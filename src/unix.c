@@ -1,13 +1,11 @@
 /* vi:ts=4:sw=4
  *
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * VIM - Vi IMproved
- *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
+
 /*
  * unix.c -- BSD and SYSV code
  *
@@ -32,25 +30,26 @@
 
 #ifndef USE_SYSTEM		/* use fork/exec to start the shell */
 # include <sys/wait.h>
-# if !defined(SCO) && !defined(SOLARIS)			/* SCO returns pid_t */
+# if !defined(SCO) && !defined(SOLARIS) && !defined(hpux) && !defined(__NetBSD__) &&!defined(_SEQUENT_)	/* SCO returns pid_t */
 extern int fork();
 # endif
-# if !defined(linux) && !defined(SOLARIS) && !defined(USL)
+# if !defined(linux) && !defined(SOLARIS) && !defined(USL) && !defined(sun) && !(defined(hpux) && defined(__STDC__)) && !defined(__NetBSD__) && !defined(USL)
 extern int execvp __ARGS((const char *, const char **));
 # endif
 #endif
 
-#ifdef SYSV_UNIX
-# if defined(__sgi) || defined(UTS2) || defined(UTS4)
+#if defined(SYSV_UNIX) || defined(USL)
+# if defined(__sgi) || defined(UTS2) || defined(UTS4) || defined(MIPS)
 #  include <sys/time.h>
 # endif
+# if defined(M_XENIX) || defined(SCO)
+#  include <stropts.h>
+# endif
 # if defined(M_XENIX) || defined(SCO) || defined(UNICOS)
-#  ifndef UNICOS
-#   include <stropts.h>
-#  endif
 #  include <sys/select.h>
 #  define bzero(a, b)	memset((a), 0, (b))
-# else
+# endif
+# if !defined(M_XENIX) && !defined(UNICOS)
 #  include <poll.h>
 # endif
 # if defined(SCO) || defined(ISC)
@@ -80,7 +79,7 @@ extern int execvp __ARGS((const char *, const char **));
 # undef FD_ZERO
 #endif
 
-#if defined(ESIX) || defined(M_UNIX)
+#if defined(ESIX) || defined(M_UNIX) && !defined(SCO)
 # ifdef SIGWINCH
 #  undef SIGWINCH
 # endif
@@ -89,7 +88,9 @@ extern int execvp __ARGS((const char *, const char **));
 # endif
 #endif
 
-static int	Read __ARGS((char *, long));
+static void get_xterm_title __ARGS((void));
+static void get_xterm_icon __ARGS((void));
+static int	Read __ARGS((char_u *, long));
 static int	WaitForChar __ARGS((int));
 static int	RealWaitForChar __ARGS((int));
 static void fill_inbuf __ARGS((void));
@@ -102,6 +103,8 @@ static void sig_winch __ARGS((int, int, struct sigcontext *));
 #endif
 
 static int do_resize = FALSE;
+static char_u *oldtitle = NULL;
+static char_u *oldicon = NULL;
 
 /*
  * At this point TRUE and FALSE are defined as 1L and 0L, but we want 1 and 0.
@@ -113,35 +116,33 @@ static int do_resize = FALSE;
 
 	void
 mch_write(s, len)
-	char	*s;
+	char_u	*s;
 	int		len;
 {
-	write(1, s, len);
+	write(1, (char *)s, len);
 }
 
 /*
  * GetChars(): low level input funcion.
  * Get a characters from the keyboard.
- * If time == 0 do not wait for characters.
- * If time == n wait a short time for characters.
- * If time == -1 wait forever for characters.
+ * If wtime == 0 do not wait for characters.
+ * If wtime == n wait a short time for characters.
+ * If wtime == -1 wait forever for characters.
  */
 	int
-GetChars(buf, maxlen, time)
-	char	*buf;
+GetChars(buf, maxlen, wtime)
+	char_u	*buf;
 	int		maxlen;
-	int		time;
+	int		wtime;			/* don't use "time", MIPS cannot handle it */
 {
 	int		len;
 
-	if (time >= 0)
+	if (wtime >= 0)
 	{
-		if (time < 20)		/* don't know if this is necessary */
-			time = 20;
-		if (WaitForChar(time) == 0)		/* no character available */
+		if (WaitForChar(wtime) == 0)		/* no character available */
 			return 0;
 	}
-	else		/* time == -1 */
+	else		/* wtime == -1 */
 	{
 	/*
 	 * If there is no character available within 2 seconds (default)
@@ -159,7 +160,6 @@ GetChars(buf, maxlen, time)
 		WaitForChar(-1);
 		if (do_resize)
 		{
-			debug("do_resize!\n");
 			set_winsize(0, 0, FALSE);
 			do_resize = FALSE;
 			continue;
@@ -170,14 +170,32 @@ GetChars(buf, maxlen, time)
 	}
 }
 
-#if defined(SYSV_UNIX) && !defined(M_XENIX) && !defined(UNICOS)
+/*
+ * return non-zero if a character is available
+ */
+	int
+mch_char_avail()
+{
+	return WaitForChar(0);
+}
+
+	long
+mch_avail_mem(special)
+	int special;
+{
+	return 0x7fffffff;		/* virual memory eh */
+}
+
+#ifndef FD_ZERO
 	void
 vim_delay()
 {
 	poll(0, 0, 500);
 }
 #else
+# if defined(__STDC__) && !defined(hpux)
 extern int select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
+# endif
 
 	void
 vim_delay()
@@ -191,7 +209,7 @@ vim_delay()
 #endif
 
 	static void
-#if defined(__alpha) || defined(mips)
+#if defined(__alpha) || (defined(mips) && !defined(USL))
 sig_winch()
 #else
 # if defined(_SEQUENT_) || defined(SCO) || defined(ISC)
@@ -229,8 +247,8 @@ mch_suspend()
 	kill(0, SIGTSTP);		/* send ourselves a STOP signal */
 	settmode(1);
 #else
-	outstr("new shell started\n");
-	call_shell(NULL, 0, TRUE);
+	OUTSTR("new shell started\n");
+	(void)call_shell(NULL, 0, TRUE);
 #endif
 }
 
@@ -242,7 +260,7 @@ mch_windinit()
 
 	flushbuf();
 
-	mch_get_winsize();
+	(void)mch_get_winsize();
 #if defined(SIGWINCH)
 	signal(SIGWINCH, (void (*)())sig_winch);
 #endif
@@ -262,8 +280,8 @@ mch_windinit()
 
 	void
 check_win(argc, argv)
-	int argc;
-	char **argv;
+	int		argc;
+	char	**argv;
 {
 	if (!isatty(0) || !isatty(1))
     {
@@ -278,108 +296,220 @@ check_win(argc, argv)
  */
 	void
 fname_case(name)
-	char *name;
+	char_u *name;
 {
 }
 
-	void
-settitle(str)
-	char *str;
+#ifdef USE_X11
+
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+
+/*
+ * Determine original xterm Window Title
+ */
+
+	static void
+get_xterm_title()
 {
+	Window		window;
+	Display		*display;
+	XTextProperty text_prop;
+	char		*winid;
+
+	if ((winid = getenv("WINDOWID")) != NULL) 
+	{
+		window = (Window)atol(winid);
+
+		/* Determine DISPLAY */
+		display = XOpenDisplay(NULL);
+
+			/* Get window name if any */
+		if (XGetWMName(display, window, &text_prop))
+		{
+			if (text_prop.value != NULL)
+				oldtitle = strsave((char_u *)text_prop.value);
+			XFree(text_prop);
+		}
+	}
+	if (oldtitle == NULL)		/* could not get old title */
+		oldtitle = (char_u *)"Thanks for flying Vim";
 }
 
-	void
-resettitle()
+/*
+ * Determine original xterm Window icon
+ */
+
+	static void
+get_xterm_icon()
 {
+	Window		window;
+	Display		*display;
+	XTextProperty text_prop;
+	char		*winid;
+
+	if ((winid = getenv("WINDOWID")) != NULL) 
+	{
+		window = (Window)atol(winid);
+
+		/* Determine DISPLAY */
+		display = XOpenDisplay(NULL);
+
+			/* Get icon name if any */
+		if (XGetWMIconName(display, window, &text_prop))
+		{
+			if (text_prop.value != NULL)
+				oldicon = strsave((char_u *)text_prop.value);
+			XFree(text_prop);
+		}
+	}
+	if (oldicon == NULL)		/* could not get old icon */
+		oldicon = (char_u *)"xterm";
+}
+
+#else	/* USE_X11 */
+
+	static void
+get_xterm_title()
+{
+	oldtitle = (char_u *)"Thanks for flying Vim";
+}
+
+	static void
+get_xterm_icon()
+{
+	oldicon = (char_u *)"xterm";
+}
+
+#endif	/* USE_X11 */
+
+
+/*
+ * set the window title and icon
+ * Currently only works for xterm.
+ */
+	void
+mch_settitle(title, icon)
+	char_u *title;
+	char_u *icon;
+{
+	if (term_strings.t_name != NULL &&
+			(STRCMP(term_strings.t_name, "xterm") == 0 ||
+			(STRCMP(term_strings.t_name, "builtin_xterm") == 0)))
+	{
+		if (title != NULL)
+		{
+			if (oldtitle == NULL)				/* first call, save title */
+				get_xterm_title();
+
+			outstrn((char_u *)"\033]2;");		/* set window title */
+			outstrn(title);
+			outchar(Ctrl('G'));
+		}
+
+		if (icon != NULL)
+		{
+			if (oldicon == NULL)
+				get_xterm_icon();
+			outstrn((char_u *)"\033]1;");	/* set icon title */
+			outstrn(icon);
+			outchar(Ctrl('G'));
+		}
+	}
 }
 
 /*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
- * Return non-zero for success.
+ * Return OK for success, FAIL for failure.
  */
 	int 
 dirname(buf, len)
-	char *buf;
+	char_u *buf;
 	int len;
 {
-#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
+#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
 	extern int		errno;
 	extern char		*sys_errlist[];
 
-	if (getcwd(buf,len) == NULL)
+	if (getcwd((char *)buf, len) == NULL)
 	{
-	    strcpy(buf, sys_errlist[errno]);
-	    return 0;
+	    STRCPY(buf, sys_errlist[errno]);
+	    return FAIL;
 	}
-    return 1;
+    return OK;
 #else
-	return (getwd(buf) != NULL);
+	return (getwd((char *)buf) != NULL ? OK : FAIL);
 #endif
 }
 
 /*
  * get absolute filename into buffer 'buf' of length 'len' bytes
+ *
+ * return FAIL for failure, OK for success
  */
 	int 
 FullName(fname, buf, len)
-	char *fname, *buf;
+	char_u *fname, *buf;
 	int len;
 {
 	int		l;
-	char	olddir[MAXPATHL];
-	char	*p;
+	char_u	olddir[MAXPATHL];
+	char_u	*p;
 	int		c;
-	int		retval = 1;
+	int		retval = OK;
 
 	if (fname == NULL)	/* always fail */
-		return 0;
+	{
+		*buf = NUL;
+		return FAIL;
+	}
 
 	*buf = 0;
-	if (*fname != '/')
+	if (*fname != '/')			/* if not an absolute path */
 	{
 		/*
 		 * If the file name has a path, change to that directory for a moment,
 		 * and then do the getwd() (and get back to where we were).
 		 * This will get the correct path name with "../" things.
 		 */
-		if ((p = strrchr(fname, '/')) != NULL)
+		if ((p = STRRCHR(fname, '/')) != NULL)
 		{
-#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
-			if (getcwd(olddir, MAXPATHL) == NULL)
+#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
+			if (getcwd((char *)olddir, MAXPATHL) == NULL)
 #else
-			if (getwd(olddir) == NULL)
+			if (getwd((char *)olddir) == NULL)
 #endif
 			{
 				p = NULL;		/* can't get current dir: don't chdir */
-				retval = 0;
+				retval = FAIL;
 			}
 			else
 			{
 				c = *p;
 				*p = NUL;
-				if (chdir(fname))
-					retval = 0;
+				if (chdir((char *)fname))
+					retval = FAIL;
 				else
 					fname = p + 1;
 				*p = c;
 			}
 		}
-#if defined(SYSV_UNIX) || defined(hpux) || defined(linux)
-		if (getcwd(buf, len) == NULL)
+#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
+		if (getcwd((char *)buf, len) == NULL)
 #else
-		if (getwd(buf) == NULL)
+		if (getwd((char *)buf) == NULL)
 #endif
 		{
-			retval = 0;
+			retval = FAIL;
 			*buf = NUL;
 		}
-		l = strlen(buf);
+		l = STRLEN(buf);
 		if (l && buf[l - 1] != '/')
-			strcat(buf, "/");
+			STRCAT(buf, "/");
 		if (p)
-			chdir(olddir);
+			chdir((char *)olddir);
 	}
-	strcat(buf, fname);
+	STRCAT(buf, fname);
 	return retval;
 }
 
@@ -388,46 +518,63 @@ FullName(fname, buf, len)
  */
 	long 
 getperm(name)
-	char *name;
+	char_u *name;
 {
 	struct stat statb;
 
-	if (stat(name, &statb))
+	if (stat((char *)name, &statb))
 		return -1;
 	return statb.st_mode;
 }
 
 /*
  * set file permission for 'name' to 'perm'
+ *
+ * return FAIL for failure, OK otherwise
  */
 	int
 setperm(name, perm)
-	char *name;
+	char_u *name;
 	int perm;
 {
 #ifdef SCO
-	return chmod(name, (mode_t)perm);
+	return (chmod((char *)name, (mode_t)perm) == 0 ? OK : FAIL);
 #else
-	return chmod(name, perm);
+	return (chmod((char *)name, perm) == 0 ? OK : FAIL);
 #endif
 }
 
 /*
- * check if "name" is a directory
+ * return TRUE if "name" is a directory
+ * return FALSE if "name" is not a directory
+ * return -1 for error
  */
 	int 
 isdir(name)
-	char *name;
+	char_u *name;
 {
 	struct stat statb;
 
-	if (stat(name, &statb))
+	if (stat((char *)name, &statb))
 		return -1;
 #ifdef _POSIX_SOURCE
-	return S_ISDIR(statb.st_mode);
+	return (S_ISDIR(statb.st_mode) ? TRUE : FALSE);
 #else
-	return (statb.st_mode & S_IFMT) == S_IFDIR;
+	return ((statb.st_mode & S_IFMT) == S_IFDIR ? TRUE : FALSE);
 #endif
+}
+
+/*
+ * start listing: does nothing for unix
+ */
+	void
+mch_start_listing()
+{
+}
+
+	void
+mch_stop_listing()
+{
 }
 
 	void
@@ -435,9 +582,11 @@ mch_windexit(r)
 	int r;
 {
 	settmode(0);
+	exiting = TRUE;
+	mch_settitle(oldtitle, oldicon);	/* restore xterm title */
 	stoptermcap();
 	flushbuf();
-	stopscript();					/* remove autoscript file */
+	ml_close_all(); 				/* remove all memfiles */
 	exit(r);
 }
 
@@ -465,8 +614,10 @@ mch_settmode(raw)
 #endif
 		ioctl(0, TCGETA, &told);
 		tnew = told;
-		tnew.c_iflag &= ~(ICRNL | IXON);		/* ICRNL enables typing ^V^M */
-												/* IXON enables typing ^S/^Q */
+		/*
+		 * ICRNL enables typing ^V^M
+		 */
+		tnew.c_iflag &= ~ICRNL;
 		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE
 #ifdef IEXTEN
 					| IEXTEN		/* IEXTEN enables typing ^V on SOLARIS */
@@ -505,6 +656,17 @@ mch_settmode(raw)
 }
 
 /*
+ * set screen mode, always fails.
+ */
+	int
+mch_screenmode(arg)
+	char_u	 *arg;
+{
+	EMSG("Screen mode setting not supported");
+	return FAIL;
+}
+
+/*
  * Try to get the current window size:
  * 1. with an ioctl(), most accurate method
  * 2. from the environment variables LINES and COLUMNS
@@ -516,7 +678,7 @@ mch_get_winsize()
 {
 	int			old_Rows = Rows;
 	int			old_Columns = Columns;
-	char		*p;
+	char_u		*p;
 
 	Columns = 0;
 	Rows = 0;
@@ -553,10 +715,10 @@ mch_get_winsize()
  */
 	if (Columns == 0 || Rows == 0)
 	{
-	    if ((p = (char *)getenv("LINES")))
-			Rows = atoi(p);
-	    if ((p = (char *)getenv("COLUMNS")))
-			Columns = atoi(p);
+	    if ((p = (char_u *)getenv("LINES")))
+			Rows = atoi((char *)p);
+	    if ((p = (char_u *)getenv("COLUMNS")))
+			Columns = atoi((char *)p);
 	}
 
 #ifdef TERMCAP
@@ -578,17 +740,13 @@ mch_get_winsize()
 	{
 		Columns = old_Columns;
 		Rows = old_Rows;
-		return 1;
+		return FAIL;
 	}
-	debug2("mch_get_winsize: %dx%d\n", (int)Columns, (int)Rows);
-
-	Rows_max = Rows;				/* remember physical max height */
 
 	check_winsize();
-	script_winsize();
 
 /* if size changed: screenalloc will allocate new screen buffers */
-	return (0);
+	return OK;
 }
 
 	void
@@ -599,14 +757,14 @@ mch_set_winsize()
 
 	int 
 call_shell(cmd, dummy, cooked)
-	char	*cmd;
+	char_u	*cmd;
 	int		dummy;
 	int		cooked;
 {
 #ifdef USE_SYSTEM		/* use system() to start the shell: simple but slow */
 
 	int		x;
-	char	newcmd[1024];
+	char_u	newcmd[1024];
 
 	flushbuf();
 
@@ -622,28 +780,29 @@ call_shell(cmd, dummy, cooked)
 	}
 	if (x == 127)
 	{
-		emsg("Cannot execute shell sh");
-		outchar('\n');
+		outstrn((char_u *)"\nCannot execute shell sh\n");
 	}
 	else if (x)
 	{
-		smsg("%d returned", x);
 		outchar('\n');
+		outnum((long)x);
+		outstrn((char_u *)" returned\n");
 	}
 
 	if (cooked)
 		settmode(1); 						/* set to raw mode */
-	return x;
+	resettitle();
+	return (x ? FAIL : OK);
 
 #else /* USE_SYSTEM */		/* first attempt at not using system() */
 
-	char	newcmd[1024];
+	char_u	newcmd[1024];
 	int		pid;
 	int		status = -1;
 	char	**argv = NULL;
 	int		argc;
 	int		i;
-	char	*p;
+	char_u	*p;
 	int		inquote;
 
 	flushbuf();
@@ -655,7 +814,7 @@ call_shell(cmd, dummy, cooked)
 	 * 1: find number of arguments
 	 * 2: separate them and built argv[]
 	 */
-	strcpy(newcmd, p_sh);
+	STRCPY(newcmd, p_sh);
 	for (i = 0; i < 2; ++i)	
 	{
 		p = newcmd;
@@ -664,7 +823,7 @@ call_shell(cmd, dummy, cooked)
 		for (;;)
 		{
 			if (i == 1)
-				argv[argc] = p;
+				argv[argc] = (char *)p;
 			++argc;
 			while (*p && (inquote || (*p != ' ' && *p != TAB)))
 			{
@@ -688,16 +847,18 @@ call_shell(cmd, dummy, cooked)
 	if (cmd != NULL)
 	{
 		argv[argc++] = "-c";
-		argv[argc++] = cmd;
+		argv[argc++] = (char *)cmd;
 	}
 	argv[argc] = NULL;
 
 	if ((pid = fork()) == -1)		/* maybe we should use vfork() */
-		emsg("Cannot fork");
+	{
+		outstrn((char_u *)"\nCannot fork\n");
+	}
 	else if (pid == 0)		/* child */
 	{
 		signal(SIGINT, SIG_DFL);
-		execvp(argv[0], argv);
+		execvp(argv[0], (char **)argv);
 		exit(127);			/* exec failed, return failure code */
 	}
 	else					/* parent */
@@ -706,10 +867,17 @@ call_shell(cmd, dummy, cooked)
 		status = (status >> 8) & 255;
 		if (status)
 		{
+			outchar('\n');
 			if (status == 127)
-				emsg2("Cannot execute shell %s", p_sh);
+			{
+				outstrn((char_u *)"Cannot execute shell ");
+				outstrn(p_sh);
+			}
 			else
-				smsg("%d returned", status);
+			{
+				outnum((long)status);
+				outstrn((char_u *)" returned");
+			}
 			outchar('\n');
 		}
 	}
@@ -718,8 +886,9 @@ call_shell(cmd, dummy, cooked)
 error:
 	if (cooked)
 		settmode(1); 						/* set to raw mode */
+	resettitle();
 	signal(SIGINT, SIG_DFL);
-	return status;
+	return (status ? FAIL : OK);
 
 #endif /* USE_SYSTEM */
 }
@@ -730,23 +899,23 @@ error:
  * a portable way for a tty in RAW mode.
  */
 
-#define INBUFLEN 50
-static char		inbuf[INBUFLEN];	/* internal typeahead buffer */
+#define INBUFLEN 250
+static char_u		inbuf[INBUFLEN];	/* internal typeahead buffer */
 static int		inbufcount = 0;		/* number of chars in inbuf[] */
 
 	static int
 Read(buf, maxlen)
-	char	*buf;
+	char_u	*buf;
 	long	maxlen;
 {
 	if (inbufcount == 0)		/* if the buffer is empty, fill it */
 		fill_inbuf();
 	if (maxlen > inbufcount)
 		maxlen = inbufcount;
-	memmove(buf, inbuf, maxlen);
+	memmove((char *)buf, (char *)inbuf, maxlen);
 	inbufcount -= maxlen;
 	if (inbufcount)
-		memmove(inbuf, inbuf + maxlen, inbufcount);
+		memmove((char *)inbuf, (char *)inbuf + maxlen, inbufcount);
 	return (int)maxlen;
 }
 
@@ -781,7 +950,7 @@ fill_inbuf()
 		if (inbuf[inbufcount] == 3)
 		{
 			/* remove everything typed before the CTRL-C */
-			memmove(inbuf, inbuf + inbufcount, len + 1);
+			memmove((char *)inbuf, (char *)inbuf + inbufcount, len + 1);
 			inbufcount = 0;
 			got_int = TRUE;
 		}
@@ -870,24 +1039,24 @@ extern char *mktemp __ARGS((char *));
 	int
 ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int 			num_pat;
-	char		  **pat;
+	char_u		  **pat;
 	int 		   *num_file;
-	char		 ***file;
+	char_u		 ***file;
 	int				files_only;
 	int				list_notfound;
 {
-	char	tmpname[TMPNAMELEN];
-	char	*command;
+	char_u	tmpname[TMPNAMELEN];
+	char_u	*command;
 	int		i;
 	int		dir;
 	size_t	len;
 	FILE	*fd;
-	char	*buffer;
-	char	*p;
+	char_u	*buffer;
+	char_u	*p;
 	int		use_glob = FALSE;
 
 	*num_file = 0;		/* default: no files found */
-	*file = (char **)"";
+	*file = (char_u **)"";
 
 	/*
 	 * If there are no wildcards, just copy the names to allocated memory.
@@ -895,94 +1064,95 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	 */
 	if (!have_wildcard(num_pat, pat))
 	{
-		*file = (char **)alloc(num_pat * sizeof(char *));
+		*file = (char_u **)alloc(num_pat * sizeof(char_u *));
 		if (*file == NULL)
 		{
-			*file = (char **)"";
-			return 1;
+			*file = (char_u **)"";
+			return FAIL;
 		}
 		for (i = 0; i < num_pat; i++)
 			(*file)[i] = strsave(pat[i]);
 		*num_file = num_pat;
-		return 0;
+		return OK;
 	}
 
 /*
  * get a name for the temp file
  */
-	strcpy(tmpname, TMPNAME2);
-	if (*mktemp(tmpname) == NUL)
+	STRCPY(tmpname, TMPNAME2);
+	if (*mktemp((char *)tmpname) == NUL)
 	{
 		emsg(e_notmp);
-	    return 1;
+	    return FAIL;
 	}
 
 /*
  * let the shell expand the patterns and write the result into the temp file
  * If we use csh, glob will work better than echo.
  */
-	if ((len = strlen(p_sh)) >= 3 && strcmp(p_sh + len - 3, "csh") == 0)
+	if ((len = STRLEN(p_sh)) >= 3 && STRCMP(p_sh + len - 3, "csh") == 0)
 		use_glob = TRUE;
 
 	len = TMPNAMELEN + 10;
 	for (i = 0; i < num_pat; ++i)		/* count the length of the patterns */
-		len += strlen(pat[i]) + 3;
-	command = (char *)alloc(len);
+		len += STRLEN(pat[i]) + 3;
+	command = alloc(len);
 	if (command == NULL)
-		return 1;
+		return FAIL;
 	if (use_glob)
-		strcpy(command, "glob >");			/* built the shell command */
+		STRCPY(command, "glob >");			/* built the shell command */
 	else
-		strcpy(command, "echo >");			/* built the shell command */
-	strcat(command, tmpname);
+		STRCPY(command, "echo >");			/* built the shell command */
+	STRCAT(command, tmpname);
 	for (i = 0; i < num_pat; ++i)
 	{
 #ifdef USE_SYSTEM
-		strcat(command, " \"");				/* need extra quotes because we */
-		strcat(command, pat[i]);			/*   start the shell twice */
-		strcat(command, "\"");
+		STRCAT(command, " \"");				/* need extra quotes because we */
+		STRCAT(command, pat[i]);			/*   start the shell twice */
+		STRCAT(command, "\"");
 #else
-		strcat(command, " ");
-		strcat(command, pat[i]);
+		STRCAT(command, " ");
+		STRCAT(command, pat[i]);
 #endif
 	}
 	i = call_shell(command, 0, FALSE);		/* execute it */
 	free(command);
-	if (i)									/* call_shell failed */
+	if (i == FAIL)							/* call_shell failed */
 	{
-		remove(tmpname);
-		sleep(1);			/* give the user a chance to read error messages */
+		remove((char *)tmpname);
 		must_redraw = CLEAR;				/* probably messed up screen */
-		return 1;
+		msg_outchar('\n');					/* clear bottom line quickly */
+		cmdline_row = Rows - 1;				/* continue on last line */
+		return FAIL;
 	}
 
 /*
  * read the names from the file into memory
  */
- 	fd = fopen(tmpname, "r");
+ 	fd = fopen((char *)tmpname, "r");
 	if (fd == NULL)
 	{
-		emsg(e_notopen);
-		return 1;
+		emsg2(e_notopen, tmpname);
+		return FAIL;
 	}
 	fseek(fd, 0L, SEEK_END);
 	len = ftell(fd);				/* get size of temp file */
 	fseek(fd, 0L, SEEK_SET);
-	buffer = (char *)alloc(len + 1);
+	buffer = alloc(len + 1);
 	if (buffer == NULL)
 	{
-		remove(tmpname);
+		remove((char *)tmpname);
 		fclose(fd);
-		return 1;
+		return FAIL;
 	}
-	i = fread(buffer, 1, len, fd);
+	i = fread((char *)buffer, 1, len, fd);
 	fclose(fd);
-	remove(tmpname);
+	remove((char *)tmpname);
 	if (i != len)
 	{
-		emsg(e_notread);
+		emsg2(e_notread, tmpname);
 		free(buffer);
-		return 1;
+		return FAIL;
 	}
 
 	if (use_glob)		/* file names are separated with NUL */
@@ -1007,12 +1177,12 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		}
 	}
 	*num_file = i;
-	*file = (char **)alloc(sizeof(char *) * i);
+	*file = (char_u **)alloc(sizeof(char_u *) * i);
 	if (*file == NULL)
 	{
 		free(buffer);
-		*file = (char **)"";
-		return 1;
+		*file = (char_u **)"";
+		return FAIL;
 	}
 	p = buffer;
 	for (i = 0; i < *num_file; ++i)
@@ -1039,26 +1209,26 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	}
 	for (i = 0; i < *num_file; ++i)
 	{
-		dir = (isdir((*file)[i]) > 0);
+		dir = (isdir((*file)[i]) == TRUE);
 		if (dir < 0)			/* if file doesn't exist don't add '/' */
 			dir = 0;
-		p = alloc((unsigned)(strlen((*file)[i]) + 1 + dir));
+		p = alloc((unsigned)(STRLEN((*file)[i]) + 1 + dir));
 		if (p)
 		{
-			strcpy(p, (*file)[i]);
+			STRCPY(p, (*file)[i]);
 			if (dir)
-				strcat(p, "/");
+				STRCAT(p, "/");
 		}
 		(*file)[i] = p;
 	}
 	free(buffer);
-	return 0;
+	return OK;
 }
 
 	void
 FreeWild(num, file)
 	int		num;
-	char	**file;
+	char_u	**file;
 {
 	if (file == NULL || num == 0)
 		return;
@@ -1069,13 +1239,13 @@ FreeWild(num, file)
 
 	int
 has_wildcard(p)
-	char *p;
+	char_u *p;
 {
 #ifdef __STDC__
-	return strpbrk(p, "*?[{`~$") != NULL;
+	return strpbrk((char *)p, "*?[{`~$") != NULL;
 #else
 	for ( ; *p; ++p)
-		if (strchr("*?[{`~$", *p) != NULL)
+		if (STRCHR("*?[{`~$", *p) != NULL)
 			return 1;
 	return 0;
 #endif
@@ -1084,7 +1254,7 @@ has_wildcard(p)
 	int
 have_wildcard(num, file)
 	int		num;
-	char	**file;
+	char_u	**file;
 {
 	register int i;
 
@@ -1102,7 +1272,7 @@ have_wildcard(num, file)
  */
 	int
 rename(src, dest)
-	char *src, *dest;
+	char_u *src, *dest;
 {
 	struct stat		st;
 

@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -14,13 +12,13 @@
 
 #define NUL 					'\000'
 #define BS						'\010'
-#define BS_STR					"\010"
+#define BS_STR					(char_u *)"\010"
 #define TAB 					'\011'
 #define NL						'\012'
-#define NL_STR					"\012"
+#define NL_STR					(char_u *)"\012"
 #define CR						'\015'
 #define ESC 					'\033'
-#define ESC_STR 				"\033"
+#define ESC_STR 				(char_u *)"\033"
 #define DEL 					0x7f
 #define CSI 					0x9b
 

@@ -30,14 +30,15 @@ LIB = c:\turboc\lib
 #>>>>> end of choices
 ###########################################################################
 
-INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h msdos.h
+INCL = vim.h globals.h param.h keymap.h macros.h ascii.h term.h msdos.h structs.h
 CFLAGS = -c -ml -DMSDOS $(DEFINES)
 
-OBJ =	alloc.obj msdos.obj buffers.obj charset.obj cmdline.obj csearch.obj \
-	digraph.obj edit.obj fileio.obj help.obj linefunc.obj main.obj mark.obj \
-	message.obj misccmds.obj normal.obj ops.obj param.obj quickfix.obj \
-	regexp.obj regsub.obj screen.obj script.obj search.obj storage.obj \
-	tag.obj term.obj undo.obj
+OBJ =	obj/alloc.obj obj/msdos.obj obj/buffer.obj obj/charset.obj obj/cmdcmds.obj obj/cmdline.obj \
+	obj/csearch.obj obj/digraph.obj obj/edit.obj obj/fileio.obj obj/filelist.obj obj/getchar.obj obj/help.obj \
+	obj/linefunc.obj obj/main.obj obj/mark.obj obj/memfile.obj obj/memline.obj obj/message.obj obj/misccmds.obj \
+	obj/normal.obj obj/ops.obj obj/param.obj obj/quickfix.obj obj/regexp.obj \
+	obj/regsub.obj obj/screen.obj obj/search.obj \
+	obj/tag.obj obj/term.obj obj/undo.obj obj/window.obj $(TERMLIB)
 
 ..\vim: $(OBJ) version.c
 	$(CC) $(CFLAGS) version.c
@@ -47,7 +48,7 @@ ctags:
 	command /c ctags *.c *.h
 
 clean:
-	del $(OBJ) version.obj mkcmdtab.obj ..\vim mkcmdtab
+	del $(OBJ) version.obj mkcmdtab.obj ..\vim mkcmdtab cmdtab.h
 
 addcr:	addcr.c
 	$(CC) addcr.c
@@ -55,95 +56,107 @@ addcr:	addcr.c
 
 ###########################################################################
 
-alloc.obj:	alloc.c  $(INCL)
-	$(CC) $(CFLAGS) alloc.c
+obj/alloc.obj:	alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c -o obj/alloc.obj
 
-msdos.obj:	msdos.c  $(INCL) msdos.h
-	$(CC) $(CFLAGS) msdos.c
+obj/msdos.obj:	msdos.c  $(INCL) msdos.h
+	$(CC) $(CFLAGS) msdos.c -o obj/msdos.obj
 
-buffers.obj:	buffers.c  $(INCL)
-	$(CC) $(CFLAGS) buffers.c
+obj/buffer.obj:	buffer.c  $(INCL)
+	$(CC) $(CFLAGS) buffer.c -o obj/buffer.obj
 
-charset.obj:	charset.c  $(INCL)
-	$(CC) $(CFLAGS) charset.c
+obj/charset.obj:	charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c -o obj/charset.obj
 
-cmdline.obj:	cmdline.c  $(INCL) cmdtab.h
-	$(CC) $(CFLAGS) cmdline.c
+obj/cmdcmds.obj:	cmdcmds.c  $(INCL)
+	$(CC) $(CFLAGS) cmdcmds.c -o obj/cmdcmds.obj
 
-csearch.obj:	csearch.c  $(INCL)
-	$(CC) $(CFLAGS) csearch.c
+obj/cmdline.obj:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c -o obj/cmdline.obj
 
-digraph.obj:	digraph.c  $(INCL)
-	$(CC) $(CFLAGS) digraph.c
+obj/csearch.obj:	csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c -o obj/csearch.obj
 
-edit.obj:	edit.c  $(INCL)
-	$(CC) $(CFLAGS) edit.c
+obj/digraph.obj:	digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c -o obj/digraph.obj
 
-fileio.obj:	fileio.c  $(INCL)
-	$(CC) $(CFLAGS) fileio.c
+obj/edit.obj:	edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c -o obj/edit.obj
 
-help.obj:	help.c  $(INCL)
-	$(CC) $(CFLAGS) help.c
+obj/fileio.obj:	fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c -o obj/fileio.obj
 
-linefunc.obj:	linefunc.c  $(INCL)
-	$(CC) $(CFLAGS) linefunc.c
+obj/filelist.obj:	filelist.c  $(INCL)
+	$(CC) $(CFLAGS) filelist.c -o obj/filelist.obj
 
-main.obj:	main.c  $(INCL)
-	$(CC) $(CFLAGS) main.c
+obj/getchar.obj:	getchar.c  $(INCL)
+	$(CC) $(CFLAGS) getchar.c -o obj/getchar.obj
 
-mark.obj:	mark.c  $(INCL)
-	$(CC) $(CFLAGS) mark.c
+obj/help.obj:	help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c -o obj/help.obj
 
-message.obj:	message.c  $(INCL)
-	$(CC) $(CFLAGS) message.c
+obj/linefunc.obj:	linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c -o obj/linefunc.obj
 
-misccmds.obj:	misccmds.c  $(INCL)
-	$(CC) $(CFLAGS) misccmds.c
+obj/main.obj:	main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c -o obj/main.obj
 
-normal.obj:	normal.c  $(INCL) ops.h
-	$(CC) $(CFLAGS) normal.c
+obj/mark.obj:	mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c -o obj/mark.obj
 
-ops.obj:	ops.c  $(INCL) ops.h
-	$(CC) $(CFLAGS) ops.c
+obj/memfile.obj:	memfile.c  $(INCL)
+	$(CC) $(CFLAGS) memfile.c -o obj/memfile.obj
 
-param.obj:	param.c  $(INCL)
-	$(CC) $(CFLAGS) param.c
+obj/memline.obj:	memline.c  $(INCL)
+	$(CC) $(CFLAGS) memline.c -o obj/memline.obj
 
-quickfix.obj:	quickfix.c  $(INCL)
-	$(CC) $(CFLAGS) quickfix.c
+obj/message.obj:	message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c -o obj/message.obj
 
-regexp.obj:	regexp.c  $(INCL)
-	$(CC) $(CFLAGS) regexp.c
+obj/misccmds.obj:	misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c -o obj/misccmds.obj
 
-regsub.obj:	regsub.c  $(INCL)
-	$(CC) $(CFLAGS) regsub.c
+obj/normal.obj:	normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c -o obj/normal.obj
 
-screen.obj:	screen.c  $(INCL)
-	$(CC) $(CFLAGS) screen.c
+obj/ops.obj:	ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c -o obj/ops.obj
 
-script.obj:	script.c  $(INCL)
-	$(CC) $(CFLAGS) script.c
+obj/param.obj:	param.c  $(INCL)
+	$(CC) $(CFLAGS) param.c -o obj/param.obj
 
-search.obj:	search.c  $(INCL)
-	$(CC) $(CFLAGS) search.c
+obj/quickfix.obj:	quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c -o obj/quickfix.obj
 
-storage.obj:	storage.c  $(INCL)
-	$(CC) $(CFLAGS) storage.c
+obj/regexp.obj:	regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c -o obj/regexp.obj
 
-tag.obj:	tag.c  $(INCL)
-	$(CC) $(CFLAGS) tag.c
+obj/regsub.obj:	regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c -o obj/regsub.obj
 
-term.obj:	term.c  $(INCL)
-	$(CC) $(CFLAGS) term.c
+obj/screen.obj:	screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c -o obj/screen.obj
 
-undo.obj:	undo.c  $(INCL)
-	$(CC) $(CFLAGS) undo.c
+obj/search.obj:	search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c -o obj/search.obj
+
+obj/tag.obj:	tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c -o obj/tag.obj
+
+obj/term.obj:	term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c -o obj/term.obj
+
+obj/undo.obj:	undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c -o obj/undo.obj
+
+obj/window.obj:	window.c  $(INCL)
+	$(CC) $(CFLAGS) window.c -o obj/window.obj
 
 cmdtab.h: cmdtab.tab mkcmdtab.exe
 	mkcmdtab cmdtab.tab cmdtab.h
 
-mkcmdtab.exe: mkcmdtab.obj
-	$(CC) -ml -omkcmdtab mkcmdtab.obj
+mkcmdtab.exe: obj/mkcmdtab.obj
+	$(CC) -ml -o mkcmdtab obj/mkcmdtab.obj
 
-mkcmdtab.obj: mkcmdtab.c
-	$(CC) $(CFLAGS) mkcmdtab.c
+obj/mkcmdtab.obj: mkcmdtab.c
+	$(CC) $(CFLAGS) mkcmdtab.c -o obj/mkcmdtab.obj

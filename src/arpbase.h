@@ -1076,8 +1076,13 @@ struct	MsgPort			*DeviceProc		ARGs(	(char *)						);
  */
 	/* LONG		C_Args	Printf			ARGs(	(char *,...)						); */
 	/* LONG		C_Args	FPrintf			ARGs(	(BPTR, char *,...)					); */
+#ifdef SASC
+	LONG		C_Args	Printf			ARGs(	(UBYTE *,...)						);
+	LONG		C_Args	FPrintf			ARGs(	(BPTR, UBYTE *,...)					);
+#else
 	LONG		C_Args	Printf			ARGs(	(UBYTE *, long, ...)						);
 	LONG		C_Args	FPrintf			ARGs(	(BPTR, UBYTE *, long, ...)					);
+#endif
 	LONG			Puts 			ARGs(	(char *)						);
 	LONG			ReadLine		ARGs(	(char *)						);
 	LONG			GADS		 	ARGs(	(char *, LONG, char *, char **, char *)			);

@@ -1,87 +1,125 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
  * Unix system-dependent filenames
  */
-#define BACKUPDIR "$HOME"
 
-#ifdef TMPNAME1
-# undef TMPNAME1
-# undef TMPNAME2
-# undef TMPNAMELEN
-#endif /* TMPNAME1 */
-#define TMPNAME1 "/tmp/viXXXXXX"
-#define TMPNAME2 "/tmp/voXXXXXX"
-#define TMPNAMELEN	15
+#ifndef SYSEXRC_FILE
+# define SYSEXRC_FILE	"$HOME/.exrc"
+#endif
 
-#ifdef MAX_COLUMNS
-# undef MAX_COLUMNS
-#endif /* MAX_COLUMNS */
-#define MAX_COLUMNS 1024
+#ifndef SYSVIMRC_FILE
+# define SYSVIMRC_FILE	"$HOME/.vimrc"
+#endif
+
+#ifndef EXRC_FILE
+# define EXRC_FILE		".exrc"
+#endif
+
+#ifndef VIMRC_FILE
+# define VIMRC_FILE		".vimrc"
+#endif
+
+#ifndef DEFVIMRC_FILE
+# define DEFVIMRC_FILE	"/etc/vimrc"
+#endif
+
+#ifndef VIM_HLP
+# define VIM_HLP		"/usr/local/lib/vim.hlp"
+#endif
+
+#ifndef BACKUPDIR
+# define BACKUPDIR		"$HOME"
+#endif
+
+#ifndef DEF_DIR
+# define DEF_DIR		"/tmp"
+#endif
+
+#define TMPNAME1		"/tmp/viXXXXXX"
+#define TMPNAME2		"/tmp/voXXXXXX"
+#define TMPNAMELEN		15
+
+#ifndef MAXMEM
+# define MAXMEM			512			/* use up to 512Kbyte for buffer */
+#endif
+#ifndef MAXMEMTOT
+# define MAXMEMTOT		2048		/* use up to 2048Kbyte for Vim */
+#endif
+
+#define BASENAMELEN		(MAXNAMLEN - 5)
 
 #define stricmp vim_stricmp
 
-void	flushbuf __ARGS((void));
-void	outchar __ARGS((unsigned));
-void	outstr __ARGS((char *));
-void	mch_write __ARGS((char *, int));
-int 	GetChars __ARGS((char *, int, int));
-void	vim_delay __ARGS((void));
-void	mch_suspend __ARGS((void));
-void	mch_windinit __ARGS((void));
-void	check_win __ARGS((int, char **));
-void	fname_case __ARGS((char *));
-void	settitle __ARGS((char *));
-void	resettitle __ARGS((void));
-void	mch_settmode __ARGS((int));
-int 	dirname __ARGS((char *, int));
-int		FullName __ARGS((char *, char *, int));
-long	getperm __ARGS((char *));
-int		setperm __ARGS((char *, int));
-int		isdir __ARGS((char *));
-void	mch_windexit __ARGS((int));
-int		mch_get_winsize __ARGS((void));
-void	mch_set_winsize __ARGS((void));
-int		call_shell __ARGS((char *, int, int));
-void	breakcheck __ARGS((void));
+/*
+ * prototypes for functions not in unix.c
+ */
 #ifdef SCO
 int		chmod __ARGS((const char *, mode_t));
 #endif
-#if !defined(linux) && !defined(__NeXT) && !defined(M_UNIX) && !defined(ISC) && !defined(USL)
+#if !defined(linux) && !defined(__NeXT) && !defined(M_UNIX) && !defined(ISC) && !defined(USL) && !defined(SOLARIS)
 int		remove __ARGS((const char *));
 /*
  * If you get an error message on "const" in the lines above, try
  * adding "-Dconst=" to the options in the makefile.
  */
 
-/* generic functions, not in unix.c */
-# if !defined(SCO) && !defined(SOLARIS)
+# if 0		/* should be in unistd.h */
 void	sleep __ARGS((int));
 # endif
+
 int		rename __ARGS((const char *, const char *));
 #endif
 
 int		stricmp __ARGS((char *, char *));
 
-int		has_wildcard __ARGS((char *));
-int		have_wildcard __ARGS((int, char **));
-int		ExpandWildCards __ARGS((int, char **, int *, char ***, int, int));
-void	FreeWild __ARGS((int, char **));
-
 /* memmove is not present on all systems, use our own version or bcopy */
-#if !defined(SCO) && !defined(SOLARIS) && !defined(AIX) && !defined(UTS4) && !defined(USL)
+#if !defined(SCO) && !defined(SOLARIS) && !defined(AIX) && !defined(UTS4) && !defined(USL) && !defined(MIPS) && !defined(__NetBSD__) && !defined(linux)
 # ifdef SYSV_UNIX
 #   define MEMMOVE
 void *memmove __ARGS((void *, void *, int));
 # else
 #  define memmove(to, from, len) bcopy(from, to, len)
+#  if !(defined(hpux) && defined(__STDC__))
+#   ifdef linux
+extern void bcopy __ARGS((const void *, void *, int));
+#   else
+extern void bcopy __ARGS((char *, char *, int));
+#   endif
+#  endif
 # endif
 #endif
+
+#if defined(BSD_UNIX) && !defined(__STDC__)
+# define strchr(ptr, c)			index((ptr), (c))
+# define strrchr(ptr, c)		rindex((ptr), (c))
+#endif
+
+#ifdef BSD_UNIX
+# define memset(ptr, c, size)	bsdmemset((ptr), (c), (size))
+char *bsdmemset __ARGS((char *, int, long));
+#endif
+
+/*
+ * Most unixes don't have these in include files.
+ * If you get a "redefined" error, delete the offending line.
+ */
+#if !defined(__NetBSD__)
+  extern int	ioctl __ARGS((int, int, ...));
+#endif
+extern int	fsync __ARGS((int));
+extern char *getwd __ARGS((char *));
+#if !defined(__NetBSD__)
+# ifdef linux
+   extern void bzero __ARGS((void *, int));
+# else
+   extern void bzero __ARGS((char *, int));
+# endif
+#endif
+extern int access __ARGS((char *, int));

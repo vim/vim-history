@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -15,7 +13,7 @@
 /*
  * pchar(lp, c) - put character 'c' at position 'lp'
  */
-#define pchar(lp, c) (*(nr2ptr((lp).lnum) + (lp).col) = (c))
+#define pchar(lp, c) (*(ml_get_buf(curbuf, (lp).lnum, TRUE) + (lp).col) = (c))
 
 /*
  * Position comparisons
@@ -29,19 +27,14 @@
 #define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
 
 /*
- * buf1line() - return TRUE if there is only one line in file buffer
- */
-#define buf1line() (line_count == 1)
-
-/*
  * lineempty() - return TRUE if the line is empty
  */
-#define lineempty(p) (*nr2ptr(p) == NUL)
+#define lineempty(p) (*ml_get(p) == NUL)
 
 /*
  * bufempty() - return TRUE if the file buffer is empty
  */
-#define bufempty() (buf1line() && lineempty((linenr_t)1))
+#define bufempty() (curbuf->b_ml.ml_flags & ML_EMPTY)
 
 /*
  * On some systems toupper()/tolower() only work on lower/uppercase characters

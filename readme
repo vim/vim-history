@@ -1,4 +1,4 @@
-README for version 2.0 of Vim: Vi IMproved.
+README for version 2.4 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor vi. Only the 'Q'
 command is missing (you don't need it). Many new features have been added:
@@ -21,6 +21,7 @@ Documentation:
 	     amiga.doc - remarks for Amiga
 	      unix.doc - remarks for unix
 	     msdos.doc - remarks for MSDOS
+	     winnt.doc - remarks for Windows NT
 
 Vim is Charityware. You can copy it as much as you like. Please read
 uganda.txt for details.
@@ -34,7 +35,11 @@ TERMCAP option. See the makefiles for further options.
 
 Please send comments, bug reports and suggestions to:
 
-	Bram Moolenaar		UUCP E-mail:	mool@oce.nl
-	Clematisstraat 30		FAX:    +31-77-595473
-	5925 BE  Venlo
-	The Netherlands
+stable address:	Bram Moolenaar		UUCP E-mail:	mool@oce.nl
+		molenstraaat 2
+		2162 HP  Lisse		Fax: +31 2521 16381
+		The Netherlands		Tel: +31 2521 13037
+
+September 1994 - August 1995:
+Kibaale Children's Centre			Tel: +256 481 21033
+p.o. box 1658, Masaka, Uganda, East Africa   	Fax: +256 481 20514

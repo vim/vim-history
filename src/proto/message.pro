@@ -1,8 +1,15 @@
 /* message.c */
-void msg __PARMS((char *s));
-void emsg __PARMS((char *s));
-void emsg2 __PARMS((char *s, char *a1));
+int msg __PARMS((unsigned char *s));
+int emsg __PARMS((unsigned char *s));
+int emsg2 __PARMS((unsigned char *s, unsigned char *a1));
 void wait_return __PARMS((int redraw));
-void start_msg __PARMS((void));
-void end_msg __PARMS((void));
-void check_msg __PARMS((void));
+void msg_start __PARMS((void));
+void msg_pos __PARMS((int row, int col));
+void msg_outchar __PARMS((int c));
+void msg_outnum __PARMS((long n));
+int msg_outtrans __PARMS((unsigned char *str, int len));
+void msg_prt_line __PARMS((unsigned char *s));
+void msg_outstr __PARMS((unsigned char *s));
+void msg_ceol __PARMS((void));
+int msg_end __PARMS((void));
+int msg_check __PARMS((void));

@@ -4,6 +4,7 @@
 # Do NOT use the peephole optimizer! It messes up all kinds of things.
 # For 6.0 and 6.1, expand_env() will not work correctly.
 # For 6.2 and 6.3 the call to free_line in u_freeentry is wrong.
+# Don't know about 6.50, might work...
 # You should use Manx Aztec C whenever possible.
 #
 # The prototypes from Manx and SAS are incompatible. If the prototypes
@@ -28,8 +29,8 @@
 ###				(use only without -DNO_BUILTIN_TCAPS)
 DEFINES = DEF=DIGRAPHS DEF=SOME_BUILTIN_TCAPS
 
-#>>>>> if TERMCAP is defined termlib.o has to be used
-#TERMLIB = termlib.o
+#>>>>> if TERMCAP is defined obj/termlib.o has to be used
+#TERMLIB = obj/termlib.o
 TERMLIB = 
 
 #>>>>> choose NODEBUG for normal compiling, the other for debugging and profiling
@@ -54,27 +55,29 @@ CFLAGS = NOLINK $(OPTIMIZE) $(COPTS) DEF=AMIGA DEF=SASC $(DBG) $(DEFINES) GST=$(
 
 PROPT = DEF=PROTO GPROTO GPPARM
 
-OBJ =	alloc.o amiga.o buffers.o charset.o cmdline.o csearch.o digraph.o \
-	edit.o fileio.o help.o linefunc.o main.o mark.o message.o misccmds.o \
-	normal.o ops.o param.o quickfix.o regexp.o regsub.o screen.o \
-	script.o search.o storage.o tag.o term.o undo.o $(TERMLIB)
+OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
+	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/filelist.o obj/getchar.o obj/help.o \
+	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
+	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
+	obj/regsub.o obj/screen.o obj/search.o \
+	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
 
-PRO =	proto/alloc.pro proto/buffers.pro proto/charset.pro proto/cmdline.pro \
-	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro \
-	proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
-	proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
+PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro proto/cmdline.pro \
+	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro proto/filelist.pro \
+	proto/getchar.pro proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
+	proto/memfile.pro proto/memline.pro proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
 	proto/param.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
-	proto/screen.pro proto/script.pro proto/search.pro proto/storage.pro \
+	proto/screen.pro proto/search.pro \
 	proto/tag.pro proto/term.pro proto/termlib.pro \
-	proto/undo.pro proto/amiga.pro
+	proto/undo.pro proto/window.pro proto/amiga.pro
 
 /Vim: $(OBJ) version.c
-	$(CC) $(CFLAGS) version.c
-	$(CC) LINK $(COPTS) $(OBJ) version.o $(DBG) PNAME=/Vim
+	$(CC) $(CFLAGS) version.c OBJNAME=obj/
+	$(CC) LINK $(COPTS) $(OBJ) obj/version.o $(DBG) PNAME=/Vim
 
 debug: $(OBJ) version.c
-	$(CC) $(CFLAGS) version.c
-	$(CC) LINK $(COPTS) $(OBJ) version.o $(DBG) PNAME=/Vim
+	$(CC) $(CFLAGS) version.c OBJNAME=obj/
+	$(CC) LINK $(COPTS) $(OBJ) obj/version.o $(DBG) PNAME=/Vim
 
 proto: $(GST) $(PRO)
 
@@ -83,192 +86,216 @@ ctags:
 
 # can't use delete here, too many file names
 clean:
-	csh -c rm -f $(OBJ) version.o mkcmdtab.o /Vim $(GST) mkcmdtab
+	csh -c rm -f $(OBJ) obj/version.o mkcmdtab.o /Vim $(GST) mkcmdtab cmdtab.h
 
-$(GST)  : vim.h keymap.h macros.h ascii.h term.h
+$(GST)  : vim.h keymap.h macros.h ascii.h term.h structs.h
 	$(CC) $(CFLAGS) MGST=$(GST) vim.h
 
 ###########################################################################
 
-alloc.o:	alloc.c  $(GST)
-	$(CC) $(CFLAGS) alloc.c
+obj/alloc.o:	alloc.c  $(GST)
+	$(CC) $(CFLAGS) alloc.c OBJNAME=obj/
 
 proto/alloc.pro:	alloc.c  $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/alloc.pro $(PROPT) alloc.c
 
-amiga.o:	amiga.c  $(GST)
-	$(CC) $(CFLAGS) amiga.c
+obj/amiga.o:	amiga.c  $(GST)
+	$(CC) $(CFLAGS) amiga.c OBJNAME=obj/
 
 proto/amiga.pro:	amiga.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/amiga.pro $(PROPT) amiga.c
 
-buffers.o:	buffers.c  $(GST)
-	$(CC) $(CFLAGS) buffers.c
+obj/buffer.o:	buffer.c  $(GST)
+	$(CC) $(CFLAGS) buffer.c OBJNAME=obj/
 
-proto/buffers.pro:	buffers.c $(GST)
-	$(CC) $(CFLAGS) GPFILE=proto/buffers.pro $(PROPT) buffers.c
+proto/buffer.pro:	buffer.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/buffer.pro $(PROPT) buffer.c
 
-charset.o:	charset.c  $(GST)
-	$(CC) $(CFLAGS) charset.c
+obj/charset.o:	charset.c  $(GST)
+	$(CC) $(CFLAGS) charset.c OBJNAME=obj/
 
 proto/charset.pro:	charset.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/charset.pro $(PROPT) charset.c
 
-cmdline.o:	cmdline.c  $(GST) cmdtab.h
-	$(CC) $(CFLAGS) cmdline.c
+obj/cmdcmds.o:	cmdcmds.c  $(GST)
+	$(CC) $(CFLAGS) cmdcmds.c OBJNAME=obj/
 
-proto/cmdline.pro:	cmdline.c $(GST)
+proto/cmdcmds.pro:	cmdcmds.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/cmdcmds.pro $(PROPT) cmdcmds.c
+
+obj/cmdline.o:	cmdline.c  $(GST) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c OBJNAME=obj/
+
+proto/cmdline.pro:	cmdline.c $(GST) cmdtab.h
 	$(CC) $(CFLAGS) GPFILE=proto/cmdline.pro $(PROPT) cmdline.c
 
-csearch.o:	csearch.c  $(GST)
-	$(CC) $(CFLAGS) csearch.c
+obj/csearch.o:	csearch.c  $(GST)
+	$(CC) $(CFLAGS) csearch.c OBJNAME=obj/
 
 proto/csearch.pro:	csearch.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/csearch.pro $(PROPT) csearch.c
 
-digraph.o:	digraph.c  $(GST)
-	$(CC) $(CFLAGS) digraph.c
+obj/digraph.o:	digraph.c  $(GST)
+	$(CC) $(CFLAGS) digraph.c OBJNAME=obj/
 
 proto/digraph.pro:	digraph.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/digraph.pro $(PROPT) digraph.c
 
-edit.o:	edit.c  $(GST)
-	$(CC) $(CFLAGS) edit.c
+obj/edit.o:	edit.c  $(GST)
+	$(CC) $(CFLAGS) edit.c OBJNAME=obj/
 
 proto/edit.pro:	edit.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/edit.pro $(PROPT) edit.c
 
-fileio.o:	fileio.c  $(GST)
-	$(CC) $(CFLAGS) fileio.c
+obj/fileio.o:	fileio.c  $(GST)
+	$(CC) $(CFLAGS) fileio.c OBJNAME=obj/
 
 proto/fileio.pro:	fileio.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/fileio.pro $(PROPT) fileio.c
 
-help.o:	help.c  $(GST)
-	$(CC) $(CFLAGS) help.c
+obj/filelist.o:	filelist.c  $(GST)
+	$(CC) $(CFLAGS) filelist.c OBJNAME=obj/
+
+proto/filelist.pro:	filelist.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/filelist.pro $(PROPT) filelist.c
+
+obj/getchar.o:	getchar.c  $(GST)
+	$(CC) $(CFLAGS) getchar.c OBJNAME=obj/
+
+proto/getchar.pro:	getchar.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/getchar.pro $(PROPT) getchar.c
+
+obj/help.o:	help.c  $(GST)
+	$(CC) $(CFLAGS) help.c OBJNAME=obj/
 
 proto/help.pro:	help.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/help.pro $(PROPT) help.c
 
-linefunc.o:	linefunc.c  $(GST)
-	$(CC) $(CFLAGS) linefunc.c
+obj/linefunc.o:	linefunc.c  $(GST)
+	$(CC) $(CFLAGS) linefunc.c OBJNAME=obj/
 
 proto/linefunc.pro:	linefunc.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/linefunc.pro $(PROPT) linefunc.c
 
-main.o:	main.c  $(GST)
-	$(CC) $(CFLAGS) main.c
+obj/main.o:	main.c  $(GST)
+	$(CC) $(CFLAGS) main.c OBJNAME=obj/
 
 proto/main.pro:	main.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/main.pro $(PROPT) main.c
 
-mark.o:	mark.c  $(GST) mark.h
-	$(CC) $(CFLAGS) mark.c
+obj/mark.o:	mark.c  $(GST)
+	$(CC) $(CFLAGS) mark.c OBJNAME=obj/
 
 proto/mark.pro:	mark.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/mark.pro $(PROPT) mark.c
 
-message.o:	message.c  $(GST)
-	$(CC) $(CFLAGS) message.c
+obj/memfile.o:	memfile.c  $(GST)
+	$(CC) $(CFLAGS) memfile.c OBJNAME=obj/
+
+proto/memfile.pro:	memfile.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/memfile.pro $(PROPT) memfile.c
+
+obj/memline.o:	memline.c  $(GST)
+	$(CC) $(CFLAGS) memline.c OBJNAME=obj/
+
+proto/memline.pro:	memline.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/memline.pro $(PROPT) memline.c
+
+obj/message.o:	message.c  $(GST)
+	$(CC) $(CFLAGS) message.c OBJNAME=obj/
 
 proto/message.pro:	message.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/message.pro $(PROPT) message.c
 
-misccmds.o:	misccmds.c  $(GST)
-	$(CC) $(CFLAGS) misccmds.c
+obj/misccmds.o:	misccmds.c  $(GST)
+	$(CC) $(CFLAGS) misccmds.c OBJNAME=obj/
 
 proto/misccmds.pro:	misccmds.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/misccmds.pro $(PROPT) misccmds.c
 
-normal.o:	normal.c  $(GST) ops.h
-	$(CC) $(CFLAGS) normal.c
+obj/normal.o:	normal.c  $(GST) ops.h
+	$(CC) $(CFLAGS) normal.c OBJNAME=obj/
 
 proto/normal.pro:	normal.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/normal.pro $(PROPT) normal.c
 
-ops.o:	ops.c  $(GST) ops.h
-	$(CC) $(CFLAGS) ops.c
+obj/ops.o:	ops.c  $(GST) ops.h
+	$(CC) $(CFLAGS) ops.c OBJNAME=obj/
 
 proto/ops.pro:	ops.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/ops.pro $(PROPT) ops.c
 
-param.o:	param.c  $(GST)
-	$(CC) $(CFLAGS) param.c
+obj/param.o:	param.c  $(GST)
+	$(CC) $(CFLAGS) param.c OBJNAME=obj/
 
 proto/param.pro:	param.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/param.pro $(PROPT) param.c
 
-quickfix.o:	quickfix.c  $(GST)
-	$(CC) $(CFLAGS) quickfix.c
+obj/quickfix.o:	quickfix.c  $(GST)
+	$(CC) $(CFLAGS) quickfix.c OBJNAME=obj/
 
 proto/quickfix.pro:	quickfix.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/quickfix.pro $(PROPT) quickfix.c
 
-regexp.o:	regexp.c  $(GST)
-	$(CC) $(CFLAGS) regexp.c
+obj/regexp.o:	regexp.c  $(GST)
+	$(CC) $(CFLAGS) regexp.c OBJNAME=obj/
 
 proto/regexp.pro:	regexp.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/regexp.pro $(PROPT) regexp.c
 
-regsub.o:	regsub.c  $(GST)
-	$(CC) $(CFLAGS) regsub.c
+obj/regsub.o:	regsub.c  $(GST)
+	$(CC) $(CFLAGS) regsub.c OBJNAME=obj/
 
 proto/regsub.pro:	regsub.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/regsub.pro $(PROPT) regsub.c
 
-screen.o:	screen.c  $(GST)
-	$(CC) $(CFLAGS) screen.c
+obj/screen.o:	screen.c  $(GST)
+	$(CC) $(CFLAGS) screen.c OBJNAME=obj/
 
 proto/screen.pro:	screen.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/screen.pro $(PROPT) screen.c
 
-script.o:	script.c  $(GST)
-	$(CC) $(CFLAGS) script.c
-
-proto/script.pro:	script.c $(GST)
-	$(CC) $(CFLAGS) GPFILE=proto/script.pro $(PROPT) script.c
-
-search.o:	search.c  $(GST)
-	$(CC) $(CFLAGS) search.c
+obj/search.o:	search.c  $(GST)
+	$(CC) $(CFLAGS) search.c OBJNAME=obj/
 
 proto/search.pro:	search.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/search.pro $(PROPT) search.c
 
-storage.o:	storage.c  $(GST)
-	$(CC) $(CFLAGS) storage.c
-
-proto/storage.pro:	storage.c $(GST)
-	$(CC) $(CFLAGS) GPFILE=proto/storage.pro $(PROPT) storage.c
-
-tag.o:	tag.c  $(GST) mark.h
-	$(CC) $(CFLAGS) tag.c
+obj/tag.o:	tag.c  $(GST)
+	$(CC) $(CFLAGS) tag.c OBJNAME=obj/
 
 proto/tag.pro:	tag.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/tag.pro $(PROPT) tag.c
 
-term.o:	term.c  $(GST)
-	$(CC) $(CFLAGS) term.c
+obj/term.o:	term.c  $(GST)
+	$(CC) $(CFLAGS) term.c OBJNAME=obj/
 
 proto/term.pro:	term.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/term.pro $(PROPT) term.c
 
-termlib.o:	termlib.c  $(GST)
-	$(CC) $(CFLAGS) termlib.c
+obj/termlib.o:	termlib.c  $(GST)
+	$(CC) $(CFLAGS) termlib.c OBJNAME=obj/
 
 proto/termlib.pro:	termlib.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/termlib.pro $(PROPT) termlib.c
 
-undo.o:	undo.c  $(GST)
-	$(CC) $(CFLAGS) undo.c
+obj/undo.o:	undo.c  $(GST)
+	$(CC) $(CFLAGS) undo.c OBJNAME=obj/
 
 proto/undo.pro:	undo.c $(GST)
 	$(CC) $(CFLAGS) GPFILE=proto/undo.pro $(PROPT) undo.c
 
+obj/window.o:	window.c  $(GST)
+	$(CC) $(CFLAGS) window.c OBJNAME=obj/
+
+proto/window.pro:	window.c $(GST)
+	$(CC) $(CFLAGS) GPFILE=proto/window.pro $(PROPT) window.c
+
 cmdtab.h: cmdtab.tab mkcmdtab
 	mkcmdtab cmdtab.tab cmdtab.h
 
-mkcmdtab.o:	mkcmdtab.c
-	$(CC) $(CFLAGS) mkcmdtab.c
+obj/mkcmdtab.o:	mkcmdtab.c
+	$(CC) $(CFLAGS) mkcmdtab.c OBJNAME=obj/
 
-mkcmdtab: mkcmdtab.o
-	$(CC) LINK $(COPTS) mkcmdtab.o PNAME=mkcmdtab
+mkcmdtab: obj/mkcmdtab.o
+	$(CC) LINK $(COPTS) obj/mkcmdtab.o PNAME=mkcmdtab

@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -16,7 +14,6 @@
 #include "globals.h"
 #include "proto.h"
 #include "param.h"
-#include "mark.h"
 
 #define TAGSTACKSIZE 20
 
@@ -26,7 +23,7 @@
  */
 struct taggy
 {
-	char			*tagname;			/* tag name */
+	char_u			*tagname;			/* tag name */
 	struct filemark fmark;				/* cursor position */
 };
 
@@ -40,10 +37,10 @@ static struct taggy tagstack[TAGSTACKSIZE];	/* the tag stack */
 static int tagstackidx = 0;				/* index just below active entry */
 static int tagstacklen = 0;				/* number of tags on the stack */
 
-static int findtag __ARGS((char *));
+static int findtag __ARGS((char_u *));
 
-static char bottommsg[] = "at bottom of tag stack";
-static char topmsg[] = "at top of tag stack";
+static char_u *bottommsg = (char_u *)"at bottom of tag stack";
+static char_u *topmsg = (char_u *)"at top of tag stack";
 
 /*
  * Jump to tag; handling of tag stack
@@ -54,7 +51,7 @@ static char topmsg[] = "at top of tag stack";
  */
 	void
 dotag(tag, type, count)
-	char	*tag;
+	char_u	*tag;
 	int		type;
 	int		count;
 {
@@ -88,14 +85,12 @@ dotag(tag, type, count)
 	 * remember the tag and the position before the jump
 	 */
 		tagstack[tagstackidx].tagname = strsave(tag);
-		tagstack[tagstackidx].fmark.lnum = Curpos.lnum;
-		tagstack[tagstackidx].fmark.mark.col = Curpos.col;
-		tagstack[tagstackidx].fmark.mark.ptr = nr2ptr(Curpos.lnum);
-		tagstack[tagstackidx].fmark.fnum = 0;
+		tagstack[tagstackidx].fmark.mark = curwin->w_cursor;
+		tagstack[tagstackidx].fmark.fnum = curbuf->b_fnum;
 	}
 	else if (tagstacklen == 0)					/* empty stack */
 	{
-		emsg("tag stack empty");
+		EMSG("tag stack empty");
 		return;
 	}
 	else if (type)								/* go to older position */
@@ -110,20 +105,17 @@ dotag(tag, type, count)
 			emsg(topmsg);
 			return;
 		}
-		if (tagstack[tagstackidx].fmark.mark.ptr == NULL)	/* jump to other file */
+		if (tagstack[tagstackidx].fmark.fnum != curbuf->b_fnum)	/* jump to other file */
 		{
-			if (getaltfile(tagstack[tagstackidx].fmark.fnum - 1, tagstack[tagstackidx].fmark.lnum, TRUE))
+			if (filelist_getfile(tagstack[tagstackidx].fmark.fnum, tagstack[tagstackidx].fmark.mark.lnum, TRUE) == FAIL)
 			{
 				/* emsg(e_notopen); */
 				return;
 			}
-			/* "refresh" this position, so we will not fall off the altfile array */
-			tagstack[tagstackidx].fmark.fnum = 0;
-			tagstack[tagstackidx].fmark.mark.ptr = nr2ptr(Curpos.lnum);
 		}
 		else
-			Curpos.lnum = ptr2nr(tagstack[tagstackidx].fmark.mark.ptr, (linenr_t)1);
-		Curpos.col = tagstack[tagstackidx].fmark.mark.col;
+			curwin->w_cursor.lnum = tagstack[tagstackidx].fmark.mark.lnum;
+		curwin->w_cursor.col = tagstack[tagstackidx].fmark.mark.col;
 		return;
 	}
 	else									/* go to newer pattern */
@@ -142,69 +134,20 @@ dotag(tag, type, count)
 	}
 	if (findtag(tagstack[tagstackidx].tagname) > 0)
 		++tagstackidx;
-	else if (bufempty())		/* "vim -t tag" failed, start script now */
-		startscript();
 }
 
 /*
- * invalidate the line pointer for all tags
- * called when abandoning the current file
- */
-	void
-clrtags()
-{
-	int			i;
-
-	for (i = 0; i < tagstacklen; ++i)
-		tagstack[i].fmark.mark.ptr = NULL;
-}
-
-/*
- * increment the file number for all tags
- * called when adding a file to the file stack
- */
-	void
-incrtags()
-{
-	int			i;
-
-	for (i = 0; i < tagstacklen; ++i)
-	{
-#if 0		/* this would take too much time */
-		if (tagstack[i].fmark.fnum == 0)	/* current file */
-			tagstack[i].fmark.lnum = ptr2nr(tagstack[i].fmark.mark.ptr, 1);
-#endif
-		++tagstack[i].fmark.fnum;
-	}
-}
-
-/*
- * decrement the file number for the tags of the current file
- * called when not adding the current file name to the file stack
- */
-	void
-decrtags()
-{
-	int			i;
-
-	for (i = 0; i < tagstacklen; ++i)
-		if (tagstack[i].fmark.fnum == 1)
-			tagstack[i].fmark.fnum = 0;
-}
-
-/*
- * Print the tag stack (use the occasion to update the line numbers)
+ * Print the tag stack
  */
 	void
 dotags()
 {
 	int			i;
-	char		*name;
+	char_u		*name;
 
-#ifdef AMIGA
-	settmode(0);		/* set cooked mode so output can be halted */
-#endif
-	outstrn("\n  # TO tag      FROM line in file\n");
+	gotocmdline(TRUE, NUL);
+	mch_start_listing();	/* may set cooked mode, so output can be halted */
+	msg_outstr((char_u *)"\n  # TO tag      FROM line in file\n");
 	for (i = 0; i < tagstacklen; ++i)
 	{
 		if (tagstack[i].tagname != NULL)
@@ -213,22 +156,20 @@ dotags()
 			if (name == NULL)		/* file name not available */
 				continue;
 
-			sprintf(IObuff, "%c%2d %-15s %4ld  %s\n",
+			sprintf((char *)IObuff, "%c%2d %-15s %4ld  %s\n",
 				i == tagstackidx ? '>' : ' ',
 				i + 1,
 				tagstack[i].tagname,
-				tagstack[i].fmark.lnum,
+				tagstack[i].fmark.mark.lnum,
 				name);
-			outstrn(IObuff);
+			msg_outstr(IObuff);
 		}
-		flushbuf();
+		flushbuf();					/* show one line at a time */
 	}
 	if (tagstackidx == tagstacklen)		/* idx at top of stack */
-		outstrn(">\n");
-#ifdef AMIGA
-	settmode(1);
-#endif
-	wait_return(TRUE);
+		msg_outstr((char_u *)">\n");
+	mch_stop_listing();
+	wait_return(FALSE);
 }
 
 /*
@@ -237,17 +178,18 @@ dotags()
  */
 	static int
 findtag(tag)
-	char		   *tag;
+	char_u		   *tag;
 {
-	FILE	   *tp, *fopen();
-	char		lbuf[LSIZE];
-	char		pbuf[LSIZE];			/* search pattern buffer */
-	char	   *fname, *str;
+	FILE	   *tp;
+	char_u		lbuf[LSIZE];
+	char_u		pbuf[LSIZE];			/* search pattern buffer */
+	char_u	   *fname, *str;
 	int			cmplen;
-	char		*m = "No tags file";
-	register char	*p;
-	char		*np;					/* pointer into file name string */
-	char		sbuf[CMDBUFFSIZE + 1];	/* tag file name */
+	char_u		*m = (char_u *)"No tags file";
+	char_u		*marg = NULL;
+	register char_u	*p;
+	char_u		*np;					/* pointer into file name string */
+	char_u		sbuf[CMDBUFFSIZE + 1];	/* tag file name */
 	int			i;
 	int			save_secure;
 
@@ -270,11 +212,13 @@ findtag(tag)
 			sbuf[i] = *np++;
 		}
 		sbuf[i] = 0;
-		if ((tp = fopen(sbuf, "r")) == NULL)
+		if ((tp = fopen((char *)sbuf, "r")) == NULL)
 			continue;
-		while (fgets(lbuf, LSIZE, tp) != NULL)
+		reg_ic = p_ic;										/* for cstrncmp() */
+		while (fgets((char *)lbuf, LSIZE, tp) != NULL)
 		{
-			m = "Format error in tags file %s";	/* default error message */
+			m = (char_u *)"Format error in tags file %s";	/* default error message */
+			marg = sbuf;
 
 		/* find start of file name, after first white space */
 			fname = lbuf;
@@ -283,7 +227,7 @@ findtag(tag)
 				goto erret;
 			*fname++ = '\0';
 
-			if (strncmp(lbuf, tag, (size_t)cmplen) == 0)	/* Tag found */
+			if (cstrncmp(lbuf, tag, cmplen) == 0)	/* Tag found */
 			{
 				fclose(tp);
 				skipspace(&fname);
@@ -320,8 +264,7 @@ findtag(tag)
 									break;
 
 						case '\r':
-						case '\n':	*p++ = pbuf[0];	/* copy '/' or '?' */
-									*str = 'n';		/* no setpcmark() for search */
+						case '\n':	*str = pbuf[0];	/* copy '/' or '?' */
 									str[1] = NUL;	/* delete NL after CR */
 									break;
 
@@ -354,33 +297,57 @@ findtag(tag)
 						*p++ = *str++;
 				*p = NUL;
 
-				RedrawingDisabled = TRUE;
 				/* expand filename (for environment variables) */
-				if ((p = ExpandOne((u_char *)fname, 1, -1)) != NULL)
+				if ((p = ExpandOne((char_u *)fname, 1, -1)) != NULL)
 					fname = p;
+				/*
+				 * check if file for tag exists before abandoning current file
+				 */
+				if (getperm(fname) < 0)
+				{
+					m = (char_u *)"File \"%s\" does not exist";
+					marg = fname;
+					goto erret;
+				}
+
+				RedrawingDisabled = TRUE;
+				/*
+				 * if it was a CTRL-W CTRL-] command split window now
+				 */
+				if (postponed_split)
+					win_split(0L, FALSE);
 				i = getfile(fname, NULL, TRUE);
 				if (p)
 					free(p);
 				if (i <= 0)
 				{
-					set_want_col = TRUE;
+					curwin->w_set_curswant = TRUE;
+					postponed_split = FALSE;
 
 					RedrawingDisabled = FALSE;
 					save_secure = secure;
 					secure = 1;
-					docmdline((u_char *)pbuf);
-					if (secure == 2)		/* done something that is not allowed */
+					tag_busy = TRUE;			/* don't set marks for this search */
+					curwin->w_cursor.lnum = 1;	/* start search in line 1 */
+					docmdline(pbuf);
+					tag_busy = FALSE;
+					if (secure == 2)			/* done something that is not allowed */
 						wait_return(TRUE);
 					secure = save_secure;
 
 						/* print the file message after redraw */
 					if (p_im && i == -1)
-						stuffReadbuff("\033\007i");	/* ESC CTRL-G i */
+						stuffReadbuff((char_u *)"\033\007i");	/* ESC CTRL-G i */
 					else
 						stuffcharReadbuff('\007');		/* CTRL-G */
 					return 1;
 				}
 				RedrawingDisabled = FALSE;
+				if (postponed_split)			/* close the window */
+				{
+					close_window(FALSE);
+					postponed_split = FALSE;
+				}
 				return 0;
 			}
 		}
@@ -389,14 +356,11 @@ findtag(tag)
 erret:
 		fclose(tp);
 		if (m)
-		{
-			emsg2(m, sbuf);
-			sleep(1);
-		}
+			emsg2(m, marg);
 	}
 	if (m == NULL)
-		emsg("tag not found");
-	else if (*np == NUL)
+		EMSG("tag not found");
+	else if (marg == NULL)
 		emsg(m);
 	return 0;
 }

@@ -1,0 +1,141 @@
+#
+# Makefile for VIM, using DICE 2.06.40 and 2.06.21
+#
+# LAST CHANGES NOT TESTED
+#
+
+#>>>>> choose options:
+### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
+### -DNO_ARP		do not use arp.library, DOS 2.0 required
+### -DCOMPATIBLE	start in vi-compatible mode
+### -DNOBACKUP		default is no backup file
+### -DDEBUG		output a lot of debugging garbage
+### -DTERMCAP		include termcap file support
+### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
+###				(use only with -DTERMCAP)
+### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
+###				(use only without -DNO_BUILTIN_TCAPS)
+DEFINES = -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS
+
+#>>>>> if TERMCAP is defined obj/termlib.o has to be used
+TERMLIB = obj/termlib.o
+#TERMLIB = 
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c -DAMIGA $(DEFINES)
+
+INCL = vim.syms
+PRE = -H${INCL}=vim.h
+LIBS = -lmanx -la
+CC = dcc
+LD = dcc
+
+.c.o:
+	${CC} ${PRE} ${CFLAGS} $*.c -o $@
+
+OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
+	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/filelist.o obj/getchar.o obj/help.o \
+	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
+	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
+	obj/regsub.o obj/screen.o obj/search.o \
+	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
+
+/Vim: $(OBJ) version.c
+	${CC} $(CFLAGS) version.c -o obj/version.o
+	${LD} -o /Vim $(OBJ) obj/version.o $(LIBS)
+
+debug: $(OBJ) version.c
+	${CC} $(CFLAGS) version.c -o obj/version.o
+	${LD} -s -o /Vim $(OBJ) obj/version.o $(LIBS)
+
+ctags:
+	csh -c ctags *.c *.h
+
+# can't use delete here, too many file names
+clean:
+	csh -c rm -f $(OBJ) obj/version.o obj/mkcmdtab.o /Vim $(INCL) mkcmdtab cmdtab.h
+
+$(INCL)  : vim.h globals.h keymap.h macros.h ascii.h term.h amiga.h structs.h
+	delete $(INCL)
+
+###########################################################################
+
+obj/alloc.o:	alloc.c  $(INCL)
+
+obj/amiga.o:	amiga.c  $(INCL) amiga.h
+
+obj/buffer.o:	buffer.c  $(INCL)
+
+obj/charset.o:	charset.c  $(INCL)
+
+obj/cmdcmds.o:	cmdcmds.c  $(INCL)
+
+obj/cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+
+obj/csearch.o:	csearch.c  $(INCL) regexp.h
+
+obj/digraph.o: digraph.c	$(INCL)
+
+obj/edit.o: edit.c	$(INCL)
+
+obj/fileio.o:	fileio.c  $(INCL)
+
+obj/filelist.o:	filelist.c  $(INCL)
+
+obj/getchar.o: getchar.c	$(INCL)
+
+obj/help.o: help.c	$(INCL)
+
+obj/linefunc.o:	linefunc.c  $(INCL)
+
+obj/main.o: main.c
+	${CC} ${CFLAGS} main.c -o main.o
+
+obj/mark.o: mark.c	$(INCL)
+
+obj/memfile.o:	memfile.c  $(INCL)
+
+obj/memline.o:	memline.c  $(INCL)
+
+obj/message.o:	message.c  $(INCL)
+
+obj/misccmds.o:	misccmds.c  $(INCL)
+
+obj/normal.o:	normal.c  $(INCL) ops.h
+
+obj/ops.o:	ops.c  $(INCL) ops.h
+
+obj/param.o:	param.c  $(INCL)
+# Because of a bug in DC1 2.06.40, initialisation of unions does not
+# work correctly. dc1-21 is DC1 2.06.21 which does work.
+	rename dc1-21 dc1
+	${CC} ${CFLAGS} param.c -o param.o
+	rename dc1 dc1-21
+
+obj/quickfix.o:	quickfix.c  $(INCL)
+
+obj/regexp.o:	regexp.c  $(INCL) regexp.h
+
+obj/regsub.o:	regsub.c  $(INCL) regexp.h
+
+obj/screen.o:	screen.c  $(INCL)
+
+obj/search.o:	search.c  $(INCL) regexp.h
+
+obj/tag.o:	tags.c  $(INCL)
+
+obj/termlib.o:	termlib.c $(INCL)
+
+obj/undo.o: undo.c	$(INCL)
+
+obj/window.o: window.c	$(INCL)
+
+cmdtab.h: cmdtab.tab mkcmdtab
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab: obj/mkcmdtab.o
+	${LD} -o mkcmdtab obj/mkcmdtab.o

@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 #include "vim.h"
@@ -14,58 +12,32 @@
 #include "param.h"
 
 
-	char *
+	char_u *
 transchar(c)
-	unsigned c;
+	int	 c;
 {
-		static char buf[3];
+	static char_u buf[3];
 
-		if (c < ' ')
-		{
-				if (c == NL)
-						c = NUL;		/* we use newline in place of a NUL */
-				buf[0] = '^';
-				buf[1] = '@' + c;
-				buf[2] = NUL;
-		}
-		else if (c <= '~' || c > 0xa0 || p_gr)
-		{
-				buf[0] = c;
-				buf[1] = NUL;
-		}
-		else
-		{
-				if (c == 0x7f)		/* DEL displayed as ^?, not ~? */
-					buf[0] = '^';
-				else
-					buf[0] = '~';
-				buf[1] = c - 0x80 + '@';
-				buf[2] = NUL;
-		}
-		return buf;
-}
-
-/*
- * output 'len' characters in 'str' (including NULs) with translation
- * if 'len' is -1, output upto a NUL character
- * return the number of characters it takes on the screen
- */
-	int
-outtrans(str, len)
-	register char *str;
-	register int   len;
-{
-	int retval = 0;
-
-	if (len == -1)
-		len = strlen(str);
-	while (--len >= 0)
+	if (c < ' ' || c == DEL)
 	{
-		outstrn(transchar(*(u_char *)str));
-		retval += charsize(*(u_char *)str);
-		++str;
+		if (c == NL)
+			c = NUL;			/* we use newline in place of a NUL */
+		buf[0] = '^';
+		buf[1] = c ^ 0x40;		/* DEL displayed as ^? */
+		buf[2] = NUL;
 	}
-	return retval;
+	else if (c <= '~' || c > 0xa0 || p_gr)
+	{
+		buf[0] = c;
+		buf[1] = NUL;
+	}
+	else
+	{
+		buf[0] = '~';
+		buf[1] = c - 0x80 + '@';
+		buf[2] = NUL;
+	}
+	return buf;
 }
 
 /*
@@ -83,7 +55,7 @@ charsize(c)
  */
 	int
 strsize(s)
-	char *s;
+	char_u *s;
 {
 	int	len = 0;
 
@@ -99,12 +71,12 @@ strsize(s)
 	int
 chartabsize(c, col)
 	register int	c;
-	int				col;
+	long			col;
 {
 	if ((c >= ' ' && (c <= '~' || p_gr)) || c > 0xa0)
    		return 1;
-   	else if (c == TAB && !p_list)
-   		return (int)(p_ts - (col % p_ts));
+   	else if (c == TAB && !curwin->w_p_list)
+   		return (int)(curbuf->b_p_ts - (col % curbuf->b_p_ts));
    	else
 		return 2;
 }
@@ -116,9 +88,20 @@ chartabsize(c, col)
 isidchar(c)
 	int c;
 {
+		return (
 #ifdef __STDC__
-		return (isalnum(c) || c == '_');
+				isalnum(c)
 #else
-		return (isalpha(c) || isdigit(c) || c == '_');
+				isalpha(c) || isdigit(c)
 #endif
+				|| c == '_'
+	/*
+	 * we also accept alhpa's with accents
+	 */
+#ifdef MSDOS
+				|| (c >= 0x80 && c <= 0xa7) || (c >= 0xe0 && c <= 0xeb)
+#else
+				|| (c >= 0xc0 && c <= 0xff)
+#endif
+				);
 }

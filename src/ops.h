@@ -1,11 +1,9 @@
 /* vi:ts=4:sw=4
  *
- * VIM - Vi IMproved
+ * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Code Contributions By:	Bram Moolenaar			mool@oce.nl
- *							Tim Thompson			twitch!tjt
- *							Tony Andrews			onecom!wldrdg!tony 
- *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ * Read the file "credits.txt" for a list of people who contributed.
+ * Read the file "uganda.txt" for copying and usage conditions.
  */
 
 /*
@@ -32,7 +30,7 @@
 /*
  * operator characters; the order must correspond to the defines above
  */
-EXTERN char *opchars INIT(= "dyc<>!~=Q:Uu");
+EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:Uu");
 
 /*
  * When a cursor motion command is made, it is marked as being a character or
@@ -57,8 +55,6 @@ EXTERN char *opchars INIT(= "dyc<>!~=Q:Uu");
 EXTERN int		operator INIT(= NOP);	/* current pending operator */
 EXTERN int		mtype;					/* type of the current cursor motion */
 EXTERN int		mincl;					/* true if char motion is inclusive */
-EXTERN FPOS 	startop;				/* cursor pos. at start of operator */
-EXTERN FPOS		endop;					/* cursor pos. at end of operator */
 EXTERN colnr_t	startvcol;				/* start col for block mode operator */
 EXTERN colnr_t	endvcol;				/* end col for block mode operator */
 EXTERN long		nlines;					/* lines between startop and endop + 1 */

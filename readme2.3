@@ -1,0 +1,341 @@
+This file contains an overview of changes from Vim version 2.0 to 2.3
+
+Big improvements
+================
+
+Added multiple windows and multiple buffers! See doc/windows.doc for an
+overview of the new and changed commands.
+
+When all changes have been undone the buffer is not considered to be changed.
+Vim can be exit with ":q" instead of ":q!".
+
+Added simple "more" facility to listings. Can be switched on/off with the
+'more' option.
+
+
+Incompatible
+============
+
+Command lines starting with '#' are no longer considered to be comments. '#'
+is a synonym for :number.
+
+Embedded newline characters in command lines are considered to be the end of a
+command line. To use newline characters in a command, precede it with CTRL-V
+(you have to type CTRL-V two times to get one).
+
+
+Small improvements
+==================
+
+Cursor up/down in insert mode keep the same column. Also for "CTRL-O j" and
+the like.
+
+Added column number to :file.
+
+Improved listing of ":set" command. The columns are now sorted top to bottom.
+Long string options are listed at the end (idea comes from nvi).
+
+"ref" program added for "K" command. Does simple spelling check.
+
+Renamed directory "macros" to "tools". Moved doc/vim132 to tools/vim132.
+
+Vim arguments "-c command" and "+command" are now options that can be given
+anywhere on the command line. Makes it possible to do "Vim "+set ic" -t
+FuncTion".
+
+Improved Usage message.
+
+Added window title for xterm.
+
+Added check for negative line numbers in colon commands.
+
+Removed 'n' offset to search patterns. Avoiding pcmark set is now down with
+tag_busy flag.
+
+Improved error messages for file access.
+
+":args" does not call wait_return() when message is short.
+
+When doing :paste twice the option values are saved only once.
+
+Accept '\n' to separate Ex commands, just like '|'.
+
+With search also accept 'b' for begin, like 's' for start.
+When 'e' used the operator is inclusive. 
+
+":>>" shifts two indents, ":>>>" three, etc.
+
+Visual shift accepts a count for number of indents.
+
+No "hit return to continue" while filtering and only once when reading/writing
+files.
+
+For Amiga and MSDOS lines longer than 32000 characters are split when reading.
+Used to give problems (out of memory errors).
+
+When ':' entered after "hit return to continue" don't redraw the screen.
+
+In regexp: made '$' in front of '\|' also end-of-line.
+
+Added "+command" argument to ":next", ":prev", ":rewind" and ":Next".
+
+Give better error message when "/" did not found pattern and 'wrapscan' off.
+
+Added message "search hit BOTTOM, continuing at TOP" when search wraps. Don't
+display this message when 'terse' option is on.
+
+Made ":&" work like ":s//~/".
+
+Consider mapped characters for terminal codes, makes "map <key-code1>
+<key-code2>" work.
+
+Added termcap options 't_so' (standout) and 't_se' (standout end). Use 't_so'
+and 't_se' if inversion is not possible and for highlighting directories.
+Added termcap option 't_ms' (save to move cursor in reverse mode). Makes
+inversion work on some terminals.
+
+Added ":screenmode" command. Under Amiga and Unix this only re-sets the screen
+size. With MSDOS it is possible to switch screen mode.
+
+Remember two search patterns: One for substitute and one for the rest. This is
+how vi works. ":global" command sets both patterns.
+
+Global command aborts after first line with error message.
+
+Don't redisplay the "INSERT" message when getting out of insert mode.
+
+Now also "%<", "#31<", alternate file name without extension.
+
+With escape in insert mode and auto-indent the cursor is put in the correct
+column right away instead of after one second.
+
+Added "Permission denied" message to readfile().
+
+Added preserve command. Writes all text into the swap file.
+
+Added ':' register. Contains last command line. "@:" repeats last command
+line.
+
+Named marks are saved for undo, restored for redo.
+
+Reduced terminal I/O by using screen_char() instead of outchar() for messages.
+
+Added count to quickfix commands :cn and :cp. :cl and :cf can be interrupted
+by CTRL-C.
+
+For MSDOS ignore CTRL-Z at end of file in textmode.
+
+Added ":exit" as synonym for ":xit". More logical, isn't it?
+
+Added ":swapname". Show swap file name for current buffer.
+
+No mapping for CR when waiting for "hit return to continue".
+
+Use 'ignorecase' option when searching for tag in tag file.
+
+When termcap option 'ix' set, do not switch off xon/xoff flow control.
+
+When count given for undo or redo, redraw screen only once.
+
+
+Bug fixes
+=========
+
+Fixed problem in memmove for __sgi.
+
+Fixed ":cd" not working for unix.
+
+Made incrementing hex numbers with CTRL-A work on systems that don't accept 0x
+in scanf for "%x".
+
+Reset p_ro in readfile() when starting to edit a new file.
+
+inchar() also calls flushbuf when waiting for a second, fixes screen not
+updated while waiting for a mapping to be completed.
+
+Fixed ":/pat/s/x/X/"; 's' was seen as option to search command.
+
+Fixed search patterns where delimiter is inside of a range, e.g. "/[/]".
+
+Fixed ignoring 'ignorecase' option for "/[a-z]". Fixed mixing upper/lower case
+when 'ignorecase' option not set (just slowed down the searching).
+
+":>", ":<" and ":yank" leave cursor on the last line.
+
+Use iswhite() instead of isspace() for "^" and set_indent().
+
+Allow pipe in ":r !cmd" and ":w !cmd".
+Adjusted check for '|' in ":e +cmd".
+
+Fixed insertchar() lookahead for digraph not working when using mapped
+characters.
+
+Fixed :unab and :unmap for rhs with spaces.
+
+Fixed not accepting ambiguous abbreviations.
+
+Added check for valid abbreviations.
+
+Abbreviations recognized like vi, fixes abbreviation of "#i" to "#include".
+
+"dTx" and "dFx" do not include cursor position.
+
+"d]]" also stops at '{'.
+
+']' and '[' are not linewise.
+
+"z." and "z-" move cursor to start of line. "zz" does the same as "z.".
+
+Fixed crash for AmigaDOS 1.3 when giving more than one file on the command
+line.
+
+Updated isidchar for meta chars.
+
+Put commands cannot be redone with '.'.
+
+"\?" in expressions (match exactly one time) replaced by "\=", makes "?\?\?"
+work.
+
+Added setting of Changed flag to :move and :copy.
+
+Number after search pattern (e.g. "/pattern/3") is line offset.
+
+"cc<ESC>" when 'ai' is set, deletes the indent.
+
+":r" without a file name specified reads current file.
+
+Fixed ":s/1/1^M/gc" on "111" and ":s/O/oO/gc" looping.
+
+Fixed trailing "\" in substitute string (produced garbage).
+
+Fixed yanking control characters (like "^B") with block visual mode.
+
+"ce" when on the end of a word changes until the end of the next word
+(but "cw" not).
+
+Fixed cursor left of line with "i<ESC>" when 'number' set.
+
+Abbreviations are never recursive, makes ":ab f f-o" work.
+
+MSDOS: isdir() adjusted for trailing backslash, fixes CTRL-D listing.
+
+MSDOS: Fixed call to lalloc() in addfile() in msdos.c, could only do 32 files.
+
+MSDOS: Fixed setting archive bit in setperm() in msdos.c.
+
+MSDOS: Do not eat backslashes in ":next" command.
+
+Fixed bug in makescriptname: alloc 1 byte extra.
+
+Fixed bug in doaddsub(): Line truncated 30 chars after number.
+
+'#' is not the start of an ex comment but an abbreviation for ":number".
+
+Fixed CTRL-O in insert mode moving cursor when it is after end of line.
+
+Vertical movement in insert mode can put cursor one char after the line.
+
+Fixed not inverting 0xa0 in visual mode when scrolling. This caused gaps in
+the inverted region.
+
+Fixed hangup for "?$" command.
+
+Fixed keyword macros: ^B must be ^R.
+
+":set all" and ":set termcap" do not look for other arguments.
+
+[count]% puts cursor on first non-blank.
+
+When ":ta" to tag in same file, start search in line 1. Fixes problem when
+'wrapscan' is not set.
+
+Fixed setting of pcmark for "(" and ")".
+
+Fixed setting pcmark with :e command.
+
+After "dd" put cursor on first non-blank in line.
+
+
+Internals
+=========
+
+Renamed u_char to char_u, u_short to short_u. Avoids problems with systems
+where these are already defined.
+
+Replaced almost all char by char_u, solves some problems with characters above
+127.
+
+Removed ptr2nr(). This means that line numbers are adjusted when
+inserting/deleting lines. Marks remember line number instead of pointer; undo
+uses line count to compute ue_bot.
+
+Moved all objects files into "obj" directory.
+
+Added window.c for multiple window code.
+
+Added memfile.c and memline.c for swap file code.
+
+Moved what was remaining of storage.c to undo.c.
+
+Deleted autoscript file stuff.
+
+Renamed buffers.c to getchar.c.
+
+Created buffer.c. Deleted script.c.
+
+Moved a few functions from cmdline.c to cmdcmds.c to reduce the size of cmdline.c.
+
+
+Portability
+===========
+
+Added a few changes for USL in unix.c.
+
+Made makefile for unix more easy to change for a specific system.
+
+
+New and changed options
+=======================
+
+Default 'updatetime' is 10000, 10sec. Default 'updatecount' is 1000. This
+feels more comfortable. But if you keep on typing, more will be lost when
+crashing.
+
+Added 'cmdheight' option ('ch'), number of lines for command line. Set it to 2
+or 3 if you are annoyed by "hit return to continue" questions for long
+messages.
+
+Added 'winheight' option ('wh'), number of lines for active window. Set it to
+999 to make the current window always fill the screen.
+
+Added 'laststatus' option ('ls'). When set last window has a status line.
+Useful if you have several windows, but takes another screen line.
+
+Added optional '>' to 'directory' and 'backupdir' option, e.g. ">/tmp". When
+used, 'directory' option is always used for swap file. When not used
+'directory' is only used when swap file cannot be created in current
+directory. The default is that the swap file will be in the current directory
+when possible, in 'directory' otherwise. 'directory' defaults to "/tmp" for
+unix, "t:" for Amiga and "c:\tmp" for MSDOS. The 'backupdir' option works in
+the same way, but is currently only available for Unix.
+
+Added 'nobuf' option ('nb'). When set one character is send to the terminal
+at a time (does not work for MSDOS). For debugging purposes.
+
+Added 'shellpipe' option ('sp'). String to use for the make command to store
+the error messages. For Amiga and MSDOS it defaults to ">". For Unix it
+defaults to "| tee". For "csh", "tcsh" and "zsh" it is changed into "|& tee".
+For "sh", "ksh" and "bash" it is changed into "2>&1| tee". Fixes problem with
+:make when not using csh. 
+
+Added 'maxmem' option ('mm'), maximal Kbyte to use for one buffer.
+
+Added 'smarttab' option ('sta'). When set a TAB in front of a line inserts
+'shiftwidth' positions, 'tabstop' in other places. When not set a TAB always
+inserts 'tabstop' positions, 'shiftwidth' is only used for ">>" and the like.
+
+Added 'maxmemtot' option ('mmt'), maximal Kbyte to use for all buffers.
+
+Added 'ttyfast' option ('tf'). When set the terminal is assumed to be fast,
+scrolling windows is done by redrawing. When not set windows are scrolled with
+insert/delete line commands, causing the windows below it to jump up and down.
