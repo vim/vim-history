@@ -1607,6 +1607,15 @@ nb_do_cmd(
 	    out_flush();
 	    gui_update_cursor(TRUE, FALSE);
 	    gui_mch_flush();
+	    /* Quit a hit-return or more prompt. */
+	    if (State == HITRETURN || State == ASKMORE)
+	    {
+		add_to_input_buf((char_u *)"\003", 1);
+#ifdef FEAT_GUI_GTK
+		if (gtk_main_level() > 0)
+		    gtk_main_quit();
+#endif
+	    }
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "close"))
@@ -1893,6 +1902,15 @@ nb_do_cmd(
 	out_flush();
 	gui_update_cursor(TRUE, FALSE);
 	gui_mch_flush();
+	/* Quit a hit-return or more prompt. */
+	if (State == HITRETURN || State == ASKMORE)
+	{
+	    add_to_input_buf((char_u *)"\003", 1);
+#ifdef FEAT_GUI_GTK
+	    if (gtk_main_level() > 0)
+		gtk_main_quit();
+#endif
+	}
     }
 
     return retval;
