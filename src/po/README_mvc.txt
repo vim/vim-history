@@ -55,7 +55,7 @@ If there are new or changed messages in Vim that need translating, then the
 first thing to do is merge them into the existing translations.  This is done
 with the following command:
 
-	make xx.po
+	nmake -f Make_mvc.mak xx.po
 
 where xx is the langauge code for the language needing translations.  The
 original .po file is copied to xx.po.orig.

@@ -4,9 +4,9 @@
 # Note: ja.sjis, *.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
 # not installed on Unix
 
-LANGUAGES =	af cs de en_gb es fr it ja ko no pl sk uk zh_TW \
+LANGUAGES =	af cs de en_GB es fr it ja ko no pl sk uk zh_TW \
 		zh_TW.UTF-8 zh_CN zh_CN.UTF-8
-MOFILES =	af.mo cs.mo de.mo en_gb.mo es.mo fr.mo it.mo ja.mo \
+MOFILES =	af.mo cs.mo de.mo en_GB.mo es.mo fr.mo it.mo ja.mo \
 		ko.mo no.mo pl.mo sk.mo uk.mo zh_TW.mo zh_TW.UTF-8.mo \
 		zh_CN.mo zh_CN.UTF-8.mo
 
