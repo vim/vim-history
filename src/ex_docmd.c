@@ -6690,7 +6690,7 @@ ex_mkrc(eap)
 		 * Change to session file's dir.
 		 */
 		if (mch_dirname(dirnow, MAXPATHL) == FAIL
-						    || mch_chdir(dirnow) != 0)
+					    || mch_chdir((char *)dirnow) != 0)
 		    *dirnow = NUL;
 		if (*dirnow != NUL && (ssop_flags & SSOP_SESDIR))
 		{

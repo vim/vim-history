@@ -2825,7 +2825,8 @@ init_homedir()
 	 * Change to the directory and get the actual path.  This resolves
 	 * links.  Don't do it when we can't return.
 	 */
-	if (mch_dirname(NameBuff, MAXPATHL) == OK && mch_chdir(NameBuff) == 0)
+	if (mch_dirname(NameBuff, MAXPATHL) == OK
+					  && mch_chdir((char *)NameBuff) == 0)
 	{
 	    if (!mch_chdir((char *)var) && mch_dirname(IObuff, IOSIZE) == OK)
 		var = IObuff;
