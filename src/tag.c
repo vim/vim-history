@@ -2036,13 +2036,17 @@ get_tagfname(first, buf)
     static void		*search_ctx = NULL;
     static char_u	*np = NULL;
     static int		did_filefind_init;
+    static int		did_use_hf = FALSE;
     char_u		*fname = NULL;
     char_u		*r_ptr;
 
     if (first)
     {
 	if (curbuf->b_help)
+	{
 	    np = p_rtp;
+	    did_use_hf = FALSE;
+	}
 	else if (*curbuf->b_p_tags != NUL)
 	    np = curbuf->b_p_tags;
 	else
@@ -2062,7 +2066,17 @@ get_tagfname(first, buf)
 	 * 'runtimepath'.
 	 */
 	if (*np == NUL || copy_option_part(&np, buf, MAXPATHL, ",") == 0)
-	    return FAIL;
+	{
+	    if (did_use_hf || *p_hf == NUL)
+		return FAIL;
+
+	    /* Not found in 'runtimepath', use 'helpfile', replacing
+	     * "help.txt" with "tags". */
+	    did_use_hf = TRUE;
+	    STRCPY(buf, p_hf);
+	    STRCPY(gettail(buf), "tags");
+	    return OK;
+	}
 	add_pathsep(buf);
 #ifndef COLON_AS_PATHSEP
 	STRCAT(buf, "doc/tags");
