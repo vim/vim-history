@@ -5712,9 +5712,9 @@ sign_list_defined(sp)
 	msg_outtrans(sp->sn_icon);
 #ifdef FEAT_SIGN_ICONS
 	if (sp->sn_image == NULL)
-	    MSG_PUTS(" (NOT FOUND)");
+	    MSG_PUTS(_(" (NOT FOUND)"));
 #else
-	MSG_PUTS(" (not supported)");
+	MSG_PUTS(_(" (not supported)"));
 #endif
     }
     if (sp->sn_text != NULL)
