@@ -8325,7 +8325,8 @@ ex_execute(eap)
 	    /* We don't want to abort following commands, restore did_emsg. */
 	    save_did_emsg = did_emsg;
 	    EMSG((char_u *)ga.ga_data);
-	    did_emsg = save_did_emsg;
+	    if (!force_abort)
+		did_emsg = save_did_emsg;
 	}
 	else if (eap->cmdidx == CMD_execute)
 	    do_cmdline((char_u *)ga.ga_data,
