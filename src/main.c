@@ -3014,14 +3014,18 @@ build_drop_cmd(filec, filev, sendReply)
     ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd -");
     if (sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
+    ga_concat(&ga, (char_u *)"<CR>:");
     if (inicmd != NULL)
     {
-	ga_concat(&ga, (char_u *)"<CR>:");
+	/* Can't use <CR> after "inicmd", because an "startinsert" would cause
+	 * the following commands to be inserted as text.  Use a "|",
+	 * hopefully "inicmd" does allow this... */
 	ga_concat(&ga, inicmd);
+	ga_concat(&ga, (char_u *)"|");
     }
     /* Bring the window to the foreground, goto Insert mode when 'im' set and
-     * clear command line */
-    ga_concat(&ga, (char_u *)"<CR>:call foreground()<CR>:if &im|starti|endif|echo<CR>");
+     * clear command line. */
+    ga_concat(&ga, (char_u *)"cal foreground()|if &im|star|en|ec<CR>");
     ga_append(&ga, NUL);
     return ga.ga_data;
 }
