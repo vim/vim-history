@@ -876,10 +876,8 @@ check_changed_any(hidden)
     win_T	*wp;
 #endif
 
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     for (;;)
     {
-#endif
 	/* check curbuf first: if it was changed we can't abandon it */
 	if (!hidden && curbufIsChanged())
 	    buf = curbuf;
@@ -892,16 +890,9 @@ check_changed_any(hidden)
 	if (buf == NULL)    /* No buffers changed */
 	    return FALSE;
 
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-	if (p_confirm || cmdmod.confirm)
-	{
-	    if (check_changed(buf, p_awa, TRUE, FALSE, TRUE) && buf_valid(buf))
-		break;	    /* didn't save - still changes */
-	}
-	else
-	    break;	    /* confirm not active - has changes */
+	if (check_changed(buf, p_awa, TRUE, FALSE, TRUE) && buf_valid(buf))
+	    break;	    /* didn't save - still changes */
     }
-#endif
 
     exiting = FALSE;
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
