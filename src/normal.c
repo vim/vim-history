@@ -4669,7 +4669,7 @@ nv_ident(cap)
     if (cmdchar == '*' || cmdchar == '#')
 	aux_ptr = (char_u *)(p_magic ? "/?.*~[^$\\" : "/?^$\\");
     else if (cmdchar == 'K' && *p_kp != NUL)
-	aux_ptr = escape_chars;
+	aux_ptr = (char_u *)" \t\\\"|!";
     else
 	/* Don't escape spaces and Tabs in a tag with a backslash */
 	aux_ptr = (char_u *)"\\|\"";
