@@ -4300,7 +4300,10 @@ ml_find_line_or_offset(buf, line, offp)
 	    else
 		*offp = offset - size + len
 		     - (text_end - ((dp->db_index[idx - 1]) & DB_INDEX_MASK));
-	    return curline + idx - start_idx + extra;
+	    curline += idx - start_idx + extra;
+	    if (curline > buf->b_ml.ml_line_count)
+		return -1;	/* exactly one byte beyond the end */
+	    return curline;
 	}
 	curline = buf->b_ml.ml_locked_high + 1;
     }
