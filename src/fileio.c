@@ -5174,6 +5174,7 @@ buf_check_timestamp(buf, focus)
 	linenr_T	old_line_count = buf->b_ml.ml_line_count;
 	exarg_T		ea;
 	pos_T		old_cursor;
+	linenr_T	old_topline;
 	int		old_ro = curbuf->b_p_ro;
 #ifdef FEAT_AUTOCMD
 	aco_save_T	aco;
@@ -5193,6 +5194,7 @@ buf_check_timestamp(buf, focus)
 	if (prep_exarg(&ea, buf) == OK)
 	{
 	    old_cursor = curwin->w_cursor;
+	    old_topline = curwin->w_topline;
 	    if (bufempty())
 		old_line_count = 0;
 	    curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
@@ -5214,10 +5216,15 @@ buf_check_timestamp(buf, focus)
 	    }
 	    vim_free(ea.cmd);
 
-	    /* Restore the cursor position and check it (lines may have been
-	     * removed). */
+	    /* Restore the topline and cursor position and check it (lines may
+	     * have been removed). */
+	    if (old_topline > curbuf->b_ml.ml_line_count)
+		curwin->w_topline = curbuf->b_ml.ml_line_count;
+	    else
+		curwin->w_topline = old_topline;
 	    curwin->w_cursor = old_cursor;
 	    check_cursor();
+	    update_topline();
 #ifdef FEAT_AUTOCMD
 	    keep_filetype = FALSE;
 #endif
