@@ -2954,6 +2954,29 @@ regtilde(source, magic)
 }
 
 /*
+ * Adjust the pointers in "prog" for moving the matches text from "old_ptr" to
+ * "new_ptr".  Used when saving a copy of the matched text and want to use
+ * vim_regsub().
+ */
+    void
+vim_regnewptr(prog, old_ptr, new_ptr)
+    vim_regexp	*prog;
+    char_u	*old_ptr;
+    char_u	*new_ptr;
+{
+    int		j;
+    long	off = new_ptr - old_ptr;
+
+    for (j = 0; j < NSUBEXP; ++j)
+    {
+	if (prog->startp[j] != NULL)
+	    prog->startp[j] += off;
+	if (prog->endp[j] != NULL)
+	    prog->endp[j] += off;
+    }
+}
+
+/*
  * vim_regsub() - perform substitutions after a regexp match
  *
  * If copy is TRUE really copy into dest.
