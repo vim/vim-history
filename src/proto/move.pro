@@ -4,6 +4,7 @@ void update_topline __ARGS((void));
 void update_curswant __ARGS((void));
 void check_cursor_moved __ARGS((win_T *wp));
 void changed_window_setting __ARGS((void));
+void changed_window_setting_win __ARGS((win_T *wp));
 void set_topline __ARGS((win_T *wp, linenr_T lnum));
 void changed_cline_bef_curs __ARGS((void));
 void changed_cline_bef_curs_win __ARGS((win_T *wp));

@@ -19,4 +19,5 @@ void nv_diffgetput __ARGS((int put));
 void ex_diffgetput __ARGS((exarg_T *eap));
 int diff_mode_buf __ARGS((buf_T *buf));
 int diff_move_to __ARGS((int dir, long count));
+linenr_T diff_lnum_win __ARGS((linenr_T lnum, win_T *wp));
 /* vim: set ft=c : */

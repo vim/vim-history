@@ -2102,4 +2102,45 @@ diff_move_to(dir, count)
 
     return OK;
 }
+
+#if defined(FEAT_FOLDING) || defined(PROTO)
+/*
+ * For line "lnum" in the current window find the equivalent lnum in window
+ * "wp", compensating for inserted/deleted lines.
+ */
+    linenr_T
+diff_lnum_win(lnum, wp)
+    linenr_T	lnum;
+    win_T	*wp;
+{
+    diff_T	*dp;
+    int		idx;
+    int		i;
+
+    idx = diff_buf_idx(curbuf);
+    if (idx == DB_COUNT)		/* safety check */
+	return (linenr_T)0;
+
+    if (diff_invalid)
+	ex_diffupdate(NULL);		/* update after a big change */
+
+    /* search for a change that includes "lnum" in the list of diffblocks. */
+    for (dp = first_diff; dp != NULL; dp = dp->df_next)
+	if (lnum <= dp->df_lnum[idx] + dp->df_count[idx])
+	    break;
+
+    /* When after the last change, compute relative to the last line number. */
+    if (dp == NULL)
+	return wp->w_buffer->b_ml.ml_line_count
+					- (curbuf->b_ml.ml_line_count - lnum);
+
+    /* Find index for "wp". */
+    i = diff_buf_idx(wp->w_buffer);
+    if (i == DB_COUNT)			/* safety check */
+	return (linenr_T)0;
+
+    return lnum + (dp->df_lnum[i] - dp->df_lnum[idx]);
+}
+#endif
+
 #endif	/* FEAT_DIFF */
