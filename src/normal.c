@@ -8048,7 +8048,12 @@ nv_put(cap)
 # ifdef FEAT_CLIPBOARD
 	    adjust_clip_reg(&regname);
 # endif
-	    if (regname == 0 || isdigit(regname))
+	    if (regname == 0 || isdigit(regname)
+# ifdef FEAT_CLIPBOARD
+		    || (clip_unnamed && (regname == '*' || regname == '+'))
+# endif
+
+		    )
 	    {
 		/* the delete is going to overwrite the register we want to
 		 * put, save it first. */

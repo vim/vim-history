@@ -104,6 +104,9 @@ static void	free_yank_all __ARGS((void));
 static int	yank_copy_line __ARGS((struct block_def *bd, long y_idx));
 #ifdef FEAT_CLIPBOARD
 static void	copy_yank_reg __ARGS((struct yankreg *reg));
+# if defined(FEAT_VISUAL) || defined(FEAT_EVAL)
+static void	may_set_selection __ARGS((void));
+# endif
 #endif
 static void	dis_msg __ARGS((char_u *p, int skip_esc));
 #ifdef FEAT_VISUAL
@@ -894,6 +897,11 @@ put_register(name, reg)
     get_yank_register(name, 0);
     free_yank_all();
     *y_current = *(struct yankreg *)reg;
+
+# ifdef FEAT_CLIPBOARD
+    /* Send text written to clipboard register to the clipboard. */
+    may_set_selection();
+# endif
 }
 #endif
 
@@ -5225,10 +5233,30 @@ clip_convert_selection(str, len, cbd)
     return y_ptr->y_type;
 }
 
+
+# if defined(FEAT_VISUAL) || defined(FEAT_EVAL)
+/*
+ * If we have written to a clipboard register, send the text to the clipboard.
+ */
+    static void
+may_set_selection()
+{
+    if (y_current == &(y_regs[STAR_REGISTER]) && clip_star.available)
+    {
+	clip_own_selection(&clip_star);
+	clip_gen_set_selection(&clip_star);
+    }
+    else if (y_current == &(y_regs[PLUS_REGISTER]) && clip_plus.available)
+    {
+	clip_own_selection(&clip_plus);
+	clip_gen_set_selection(&clip_plus);
+    }
+}
+# endif
+
 #endif /* FEAT_CLIPBOARD || PROTO */
 
-
-#ifdef FEAT_EVAL
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return the contents of a register as a single allocated string.
  * Used for "@r" in expressions.
@@ -5369,24 +5397,10 @@ write_reg_contents(name, str, must_append)
 	    (len > 0 && (str[len - 1] == '\n' || str[len -1] == '\r'))
 	     ? MLINE : MCHAR, str, len);
 
-#ifdef FEAT_CLIPBOARD
-    /*
-     * If we are writing to the selection register, send result to selection.
-     */
-    if (y_current == &(y_regs[STAR_REGISTER]) && clip_star.available)
-    {
-	clip_own_selection(&clip_star);
-	clip_gen_set_selection(&clip_star);
-    }
-    /*
-     * If we are writing to the clipboard register, send result to clipboard.
-     */
-    else if (y_current == &(y_regs[PLUS_REGISTER]) && clip_plus.available)
-    {
-	clip_own_selection(&clip_plus);
-	clip_gen_set_selection(&clip_plus);
-    }
-#endif
+# ifdef FEAT_CLIPBOARD
+    /* Send text of clipboard register to the clipboard. */
+    may_set_selection();
+# endif
 
     /* ':let @" = "val"' should change the meaning of the "" register */
     if (name != '"')
