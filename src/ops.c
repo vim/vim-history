@@ -2134,7 +2134,11 @@ op_insert(oap, count1)
 
     if (oap->op_type == OP_APPEND)
     {
-	if (oap->block_mode && curwin->w_cursor.coladd == 0)
+	if (oap->block_mode
+#ifdef FEAT_VIRTUALEDIT
+		&& curwin->w_cursor.coladd == 0
+#endif
+	   )
 	{
 	    /* this lil bit if code adapted from nv_append() */
 	    curwin->w_set_curswant = TRUE;
