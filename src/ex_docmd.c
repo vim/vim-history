@@ -1348,7 +1348,7 @@ do_one_cmd(cmdlinep, sourcing,
     if (p == NULL)
     {
 	if (!ea.skip)
-	    errormsg = (char_u *)_("Ambiguous use of user-defined command");
+	    errormsg = (char_u *)_("E464: Ambiguous use of user-defined command");
 	goto doend;
     }
     /* Check for wrong commands. */
@@ -2041,6 +2041,9 @@ find_command(eap, full)
 	    int		found = FALSE, possible = FALSE;
 	    char_u	*cp, *np;	/* Point into typed cmd and test name */
 	    garray_T	*gap;
+	    int		amb_local = FALSE; /* Found ambiguous buffer-local
+					      command, only full match global
+					      is accepted. */
 
 	    /* User defined commands may contain numbers */
 	    while (ASCII_ISALNUM(*p))
@@ -2069,7 +2072,11 @@ find_command(eap, full)
 			 * wasn't a full match and a global command is a full
 			 * match. */
 			if (k == len && found && *np != NUL)
-			    return NULL;
+			{
+			    if (gap == &ucmds)
+				return NULL;
+			    amb_local = TRUE;
+			}
 
 			if (!found || (k == len && *np == NUL))
 			{
@@ -2090,13 +2097,13 @@ find_command(eap, full)
 			    eap->useridx = j;
 
 			    /* Do not search for further abbreviations
-			     * if this is an exact match
-			     */
+			     * if this is an exact match. */
 			    matchlen = k;
 			    if (k == len && *np == NUL)
 			    {
 				if (full != NULL)
 				    *full = TRUE;
+				amb_local = FALSE;
 				break;
 			    }
 			}
@@ -2108,6 +2115,10 @@ find_command(eap, full)
 		    break;
 		gap = &ucmds;
 	    }
+
+	    /* Only found ambiguous matches. */
+	    if (amb_local)
+		return NULL;
 
 	    /* The match we found may be followed immediately by a
 	     * number.  Move *p back to point to it.
