@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 05
+" Last change:	2000 Aug 12
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -12,16 +12,6 @@ let did_load_filetypes = 1
 " Line continuation is used here, remove 'C' from 'cpoptions'
 let ft_cpo_save = &cpo
 set cpo-=C
-
-" Command to set the filetype only when it wasn't set yet.
-command -nargs=1 SetFT if !did_filetype() | setlocal ft=<args> | endif
-
-" Function that does the same; a bit longer, but can be followed by a <Bar>
-fun! SetFT(name)
-  if !did_filetype()
-    exe "setlocal ft=" . a:name
-  endif
-endfun
 
 augroup filetypedetect
 
@@ -37,43 +27,50 @@ au BufNewFile,BufRead *.in
 
 
 " Abaqus
-au BufNewFile,BufRead *.inp			if getline(1) =~ '^\*'|call SetFT("abaqus")|endif
+au BufNewFile,BufRead *.inp
+	\ if getline(1) =~ '^\*' | setf abaqus | endif
 
 " ABC music notation
-au BufNewFile,BufRead *.abc			SetFT abc
+au BufNewFile,BufRead *.abc			setf abc
 
 " ABEL
-au BufNewFile,BufRead *.abl			SetFT abel
+au BufNewFile,BufRead *.abl			setf abel
 
 " ABEL
-au BufNewFile,BufRead *.abl			SetFT abel
+au BufNewFile,BufRead *.abl			setf abel
 
 " Ada (83, 9X, 95)
-au BufNewFile,BufRead *.adb,*.ads		SetFT ada
+au BufNewFile,BufRead *.adb,*.ads		setf ada
 
 " AHDL
-au BufNewFile,BufRead *.tdf			SetFT ahdl
+au BufNewFile,BufRead *.tdf			setf ahdl
 
 " Apache style config file
-au BufNewFile,BufRead proftpd.conf*		SetFT apachestyle
+au BufNewFile,BufRead proftpd.conf*		setf apachestyle
 
 " Apache config file
-au BufNewFile,BufRead httpd.conf*,srm.conf*,access.conf*,.htaccess,apache.conf* SetFT apache
+au BufNewFile,BufRead httpd.conf*,srm.conf*,access.conf*,.htaccess,apache.conf* setf apache
 
 " Applix ELF
-au BufNewFile,BufRead *.am			SetFT elf
+au BufNewFile,BufRead *.am
+	\ if expand("<afile>") !~? 'Makefile.am\>' | setf elf | endif
 
 " Arc Macro Language
-au BufNewFile,BufRead *.aml			SetFT aml
+au BufNewFile,BufRead *.aml			setf aml
 
 " ASN.1
-au BufNewFile,BufRead *.asn,*.asn1		SetFT asn
+au BufNewFile,BufRead *.asn,*.asn1		setf asn
 
 " Active Server Pages (with Visual Basic Script)
-au BufNewFile,BufRead *.asa			SetFT aspvbs
+au BufNewFile,BufRead *.asa			setf aspvbs
 
 " Active Server Pages (with Perl or Visual Basic Script)
-au BufNewFile,BufRead *.asp			if getline(1) . getline(2) .  getline(3) =~? "perlscript" | call SetFT("aspperl") | else | call SetFT("aspvbs") | endif
+au BufNewFile,BufRead *.asp
+	\ if getline(1) . getline(2) .  getline(3) =~? "perlscript" |
+	\   setf aspperl |
+	\ else |
+	\   setf aspvbs |
+	\ endif
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
@@ -106,23 +103,23 @@ fun! FTCheck_asm()
     endif
   endif
 
-  exe "SetFT " . b:asmsyntax
+  exe "setf " . b:asmsyntax
 endfun
 
 " Atlas
-au BufNewFile,BufRead *.atl,*.as		SetFT atlas
+au BufNewFile,BufRead *.atl,*.as		setf atlas
 
 " Automake
-au BufNewFile,BufRead [mM]akefile.am		SetFT automake
+au BufNewFile,BufRead [mM]akefile.am		setf automake
 
 " Avenue
-au BufNewFile,BufRead *.ave			SetFT ave
+au BufNewFile,BufRead *.ave			setf ave
 
 " Awk
-au BufNewFile,BufRead *.awk			SetFT awk
+au BufNewFile,BufRead *.awk			setf awk
 
 " B
-au BufNewFile,BufRead *.mch,*.ref,*.imp		SetFT b
+au BufNewFile,BufRead *.mch,*.ref,*.imp		setf b
 
 " BASIC or Visual Basic
 au BufNewFile,BufRead *.bas			call FTCheck_VB("basic")
@@ -131,48 +128,49 @@ au BufNewFile,BufRead *.bas			call FTCheck_VB("basic")
 " probably a Visual Basic file.  Otherwise it's assumed to be "alt" filetype.
 fun! FTCheck_VB(alt)
   if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name'
-    SetFT vb
+    setf vb
   else
-    exe "SetFT " . a:alt
+    exe "setf " . a:alt
   endif
 endfun
 
 " Batch file for MSDOS
-au BufNewFile,BufRead *.bat,*.sys		SetFT dosbatch
+au BufNewFile,BufRead *.bat,*.sys		setf dosbatch
 
 " Batch file for 4DOS
-au BufNewFile,BufRead *.btm			SetFT btm
+au BufNewFile,BufRead *.btm			setf btm
 
 " BC calculator
-au BufNewFile,BufRead *.bc			SetFT bc
+au BufNewFile,BufRead *.bc			setf bc
 
 " BibTeX bibliography database file
-au BufNewFile,BufRead *.bib			SetFT bib
+au BufNewFile,BufRead *.bib			setf bib
 
 " Blank
-au BufNewFile,BufRead *.bl			SetFT blank
+au BufNewFile,BufRead *.bl			setf blank
 
 " C
-au BufNewFile,BufRead *.c			SetFT c
+au BufNewFile,BufRead *.c			setf c
 
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf SetFT cpp
+  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
 else
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf SetFT cpp
+  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
 endif
 
 " .h files can be C or C++, set c_syntax_for_h if you want C
-au BufNewFile,BufRead *.h			if exists("c_syntax_for_h")|call SetFT("c")|else|call SetFT("cpp")|endif
+au BufNewFile,BufRead *.h
+	\ if exists("c_syntax_for_h") | setf c | else | setf cpp | endif
 
 " Cascading Style Sheets
-au BufNewFile,BufRead *.css			SetFT css
+au BufNewFile,BufRead *.css			setf css
 
 " Century Term Command Scripts
-au BufNewFile,BufRead *.cmd,*.con		SetFT cterm
+au BufNewFile,BufRead *.cmd,*.con		setf cterm
 
 " CHILL
-au BufNewFile,BufReadPost *..ch			SetFT ch
+au BufNewFile,BufReadPost *..ch			setf ch
 
 " Changes for WEB and CWEB or CHILL
 au BufNewFile,BufRead *.ch			call FTCheck_change()
@@ -183,394 +181,411 @@ fun! FTCheck_change()
   let lnum = 1
   while lnum <= 10
     if getline(lnum)[0] == '@'
-      SetFT change
+      setf change
       return
     endif
     let lnum = lnum + 1
   endwhile
-  SetFT ch
+  setf ch
 endfun
 
 " Clean
-au BufNewFile,BufReadPost *.dcl,*.icl		SetFT clean
+au BufNewFile,BufReadPost *.dcl,*.icl		setf clean
 
 " Clipper
-au BufNewFile,BufRead *.prg			SetFT clipper
+au BufNewFile,BufRead *.prg			setf clipper
 
 " Cobol
-au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	SetFT cobol
+au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	setf cobol
 
 " Cold Fusion
-au BufNewFile,BufRead *.cfm,*.cfi		SetFT cf
+au BufNewFile,BufRead *.cfm,*.cfi		setf cf
 
 " Configure scripts
-au BufNewFile,BufRead configure.in		SetFT config
+au BufNewFile,BufRead configure.in		setf config
 
 " Communicating Sequential Processes
-au BufNewFile,BufRead *.csp,*.fdr		SetFT csp
+au BufNewFile,BufRead *.csp,*.fdr		setf csp
 
 " CUPL logic description and simulation
-au BufNewFile,BufRead *.pld			SetFT cupl
-au BufNewFile,BufRead *.si			SetFT cuplsim
+au BufNewFile,BufRead *.pld			setf cupl
+au BufNewFile,BufRead *.si			setf cuplsim
 
 " Diff files
-au BufNewFile,BufRead *.diff,*.rej		SetFT diff
+au BufNewFile,BufRead *.diff,*.rej		setf diff
 
 " Diva (with Skill) or InstallShield
-au BufNewFile,BufRead *.rul			if getline(1).getline(2).getline(3).getline(4).getline(5).getline(6) =~? 'InstallShield'|call SetFT("ishd")|else|call SetFT("diva")|endif
+au BufNewFile,BufRead *.rul
+	\ if getline(1).getline(2).getline(3).getline(4).getline(5).getline(6) =~? 'InstallShield' |
+	\   setf ishd |
+	\ else |
+	\   setf diva |
+	\ endif
 
 " DCL (Digital Command Language - vms)
-au BufNewFile,BufRead *.com			SetFT dcl
+au BufNewFile,BufRead *.com			setf dcl
 
 " Microsoft Module Definition
-au BufNewFile,BufRead *.def			SetFT def
+au BufNewFile,BufRead *.def			setf def
 
 " Dracula
-au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe SetFT dracula
+au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe setf dracula
 
 " DTD (Document Type Definition for XML)
-au BufNewFile,BufRead *.dtd			SetFT dtd
+au BufNewFile,BufRead *.dtd			setf dtd
 
 " Eiffel
-au BufNewFile,BufRead *.e,*.E			SetFT eiffel
+au BufNewFile,BufRead *.e,*.E			setf eiffel
 
 " ERicsson LANGuage
-au BufNewFile,BufRead *.erl			SetFT erlang
+au BufNewFile,BufRead *.erl			setf erlang
 
 " Elm Filter Rules file
-au BufNewFile,BufReadPost filter-rules		SetFT elmfilt
+au BufNewFile,BufReadPost filter-rules		setf elmfilt
 
 " ESQL-C
-au BufNewFile,BufRead *.ec,*.EC			SetFT esqlc
+au BufNewFile,BufRead *.ec,*.EC			setf esqlc
 
 " Expect
-au BufNewFile,BufRead *.exp			SetFT expect
+au BufNewFile,BufRead *.exp			setf expect
 
 " Exports
-au BufNewFile,BufRead exports			SetFT exports
+au BufNewFile,BufRead exports			setf exports
 
 " Focus Executable
-au BufNewFile,BufRead *.fex,*.focexec		SetFT focexec
+au BufNewFile,BufRead *.fex,*.focexec		setf focexec
 
 " Focus Master file
-au BufNewFile,BufRead *.mas,*.master		SetFT master
+au BufNewFile,BufRead *.mas,*.master		setf master
 
 " Forth
-au BufNewFile,BufRead *.fs,*.ft			SetFT forth
+au BufNewFile,BufRead *.fs,*.ft			setf forth
 
 " Fortran
-au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.f90,*.f95	SetFT fortran
+au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.f90,*.f95	setf fortran
 
 " Fvwm
 au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
-	\ let b:fvwm_version = 1 | SetFT fvwm
+	\ let b:fvwm_version = 1 | setf fvwm
 au BufNewFile,BufRead *fvwm2rc*
-	\ let b:fvwm_version = 2 | SetFT fvwm
+	\ let b:fvwm_version = 2 | setf fvwm
 
 " GDB command files
-au BufNewFile,BufRead .gdbinit			SetFT gdb
+au BufNewFile,BufRead .gdbinit			setf gdb
 
 " GDMO
-au BufNewFile,BufRead *.mo,*.gdmo		SetFT gdmo
+au BufNewFile,BufRead *.mo,*.gdmo		setf gdmo
 
 " Gedcom
-au BufNewFile,BufRead *.ged			SetFT gedcom
+au BufNewFile,BufRead *.ged			setf gedcom
 
 " GP scripts (2.0 and onward)
-au BufNewFile,BufRead *.gp			SetFT gp
+au BufNewFile,BufRead *.gp			setf gp
 
 " Gnuplot scripts
-au BufNewFile,BufRead *.gpi			SetFT gnuplot
+au BufNewFile,BufRead *.gpi			setf gnuplot
 
 " Haskell
-au BufNewFile,BufRead *.hs			SetFT haskell
-au BufNewFile,BufRead *.lhs			SetFT lhaskell
+au BufNewFile,BufRead *.hs			setf haskell
+au BufNewFile,BufRead *.lhs			setf lhaskell
 
 " HTML (.shtml for server side)
-au BufNewFile,BufRead *.html,*.htm,*.shtml	SetFT html
+au BufNewFile,BufRead *.html,*.htm,*.shtml	setf html
 
 " HTML with M4
-au BufNewFile,BufRead *.html.m4			SetFT htmlm4
+au BufNewFile,BufRead *.html.m4			setf htmlm4
 
 " Hyper Builder
-au BufNewFile,BufRead *.hb			SetFT hb
+au BufNewFile,BufRead *.hb			setf hb
 
 " Icon
-au BufNewFile,BufRead *.icn			SetFT icon
+au BufNewFile,BufRead *.icn			setf icon
 
 " IDL (Interface Description Language)
-au BufNewFile,BufRead *.idl			SetFT idl
+au BufNewFile,BufRead *.idl			setf idl
 
 " IDL (Interactive Data Language)
-au BufNewFile,BufRead *.pro			SetFT idlang
+au BufNewFile,BufRead *.pro			setf idlang
 
 " Inform
-au BufNewFile,BufRead *.inf,*.INF		SetFT inform
+au BufNewFile,BufRead *.inf,*.INF		setf inform
 
 " Informix 4GL (source - canonical, include file, I4GL+M4 preproc.)
-au BufNewFile,BufRead *.4gl,*.4gh,*.m4gl	SetFT fgl
+au BufNewFile,BufRead *.4gl,*.4gh,*.m4gl	setf fgl
 
 " .INI file for MSDOS
-au BufNewFile,BufRead *.ini			SetFT dosini
+au BufNewFile,BufRead *.ini			setf dosini
 
 " Inno Setup
-au BufNewFile,BufRead *.iss			SetFT iss
+au BufNewFile,BufRead *.iss			setf iss
 
 " Java
-au BufNewFile,BufRead *.java,*.jav		SetFT java
+au BufNewFile,BufRead *.java,*.jav		setf java
 
 " JavaCC
-au BufNewFile,BufRead *.jj,*.jjt		SetFT javacc
+au BufNewFile,BufRead *.jj,*.jjt		setf javacc
 
 " JavaScript
-au BufNewFile,BufRead *.js,*.javascript		SetFT javascript
+au BufNewFile,BufRead *.js,*.javascript		setf javascript
 
 " Java Server Pages
-au BufNewFile,BufRead *.jsp			SetFT jsp
+au BufNewFile,BufRead *.jsp			setf jsp
 
 " Java Properties resource file (note: doesn't catch font.properties.pl)
-au BufNewFile,BufRead *.properties,*.properties_??,*.properties_??_??,*.properties_??_??_*		SetFT jproperties
+au BufNewFile,BufRead *.properties,*.properties_??,*.properties_??_??,*.properties_??_??_*	setf jproperties
 
 " Jgraph
-au BufNewFile,BufRead *.jgr			SetFT jgraph
+au BufNewFile,BufRead *.jgr			setf jgraph
 
 " Kimwitu[++]
-au BufNewFile,BufRead *.k			SetFT kwt
+au BufNewFile,BufRead *.k			setf kwt
 
 " KDE script
-au BufNewFile,BufRead *.ks			SetFT kscript
+au BufNewFile,BufRead *.ks			setf kscript
 
 " Lace (ISE)
-au BufNewFile,BufRead *.ace,*.ACE		SetFT lace
+au BufNewFile,BufRead *.ace,*.ACE		setf lace
 
 " Latte
-au BufNewFile,BufRead *.latte,*.lte		SetFT latte
+au BufNewFile,BufRead *.latte,*.lte		setf latte
 
 " Lex
-au BufNewFile,BufRead *.lex,*.l			SetFT lex
+au BufNewFile,BufRead *.lex,*.l			setf lex
 
 " Lilo: Linux loader
-au BufNewFile,BufRead lilo.conf*		SetFT lilo
+au BufNewFile,BufRead lilo.conf*		setf lilo
 
 " Lisp (*.el = ELisp, *.cl = Common Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.L	SetFT lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.L	setf lisp
 else
-  au BufNewFile,BufRead *.lsp,*.el,*.cl		SetFT lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.cl		setf lisp
 endif
 
 " Lite
-au BufNewFile,BufRead *.lite,*.lt		SetFT lite
+au BufNewFile,BufRead *.lite,*.lt		setf lite
 
 " LOTOS
-au BufNewFile,BufRead *.lot,*.lotos		SetFT lotos
+au BufNewFile,BufRead *.lot,*.lotos		setf lotos
 
 " Lout (also: *.lt)
-au BufNewFile,BufRead *.lou,*.lout		SetFT lout
+au BufNewFile,BufRead *.lou,*.lout		setf lout
 
 " Lua
-au BufNewFile,BufRead *.lua			SetFT lua
+au BufNewFile,BufRead *.lua			setf lua
 
 " Lynx style file
-au BufNewFile,BufRead *.lss			SetFT lss
+au BufNewFile,BufRead *.lss			setf lss
 
 " M4
 au BufNewFile,BufRead *.m4
-	\ if expand("<afile>") !~? 'html.m4$' | call SetFT("m4") | endif
+	\ if expand("<afile>") !~? 'html.m4$' | setf m4 | endif
 
 " Mail (for Elm, trn, mutt and rn)
-au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt SetFT mail
+au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt setf mail
 
 " Makefile (but not Automake)
 au BufNewFile,BufRead [mM]akefile*
-	\ if expand("<afile>") !~? 'Makefile.am\>' | call SetFT("make") | endif
-au BufNewFile,BufRead GNUmakefile,*.mk,*.mak,*.dsp SetFT make
+	\ if expand("<afile>") !~? 'Makefile.am\>' | setf make | endif
+au BufNewFile,BufRead GNUmakefile,*.mk,*.mak,*.dsp setf make
 
 " MakeIndex
-au BufNewFile,BufRead *.ist,*.mst		SetFT ist
+au BufNewFile,BufRead *.ist,*.mst		setf ist
 
 " Manpage
-au BufNewFile,BufRead *.man			SetFT man
+au BufNewFile,BufRead *.man			setf man
 
 " Maple V
-au BufNewFile,BufRead *.mv,*.mpl,*.mws		SetFT maple
+au BufNewFile,BufRead *.mv,*.mpl,*.mws		setf maple
 
 " Mason
-au BufNewFile,BufRead *.mason			SetFT mason
+au BufNewFile,BufRead *.mason			setf mason
 
 " Matlab
-au BufNewFile,BufRead *.m			SetFT matlab
+au BufNewFile,BufRead *.m			setf matlab
 
 " Maya Extension Language
-au BufNewFile,BufRead *.mel			SetFT mel
+au BufNewFile,BufRead *.mel			setf mel
 
 " Metafont
-au BufNewFile,BufRead *.mf			SetFT mf
+au BufNewFile,BufRead *.mf			setf mf
 
 " MetaPost
-au BufNewFile,BufRead *.mp			SetFT mp
+au BufNewFile,BufRead *.mp			setf mp
 
 " Modsim III
-au BufNewFile,BufRead *.mod			SetFT modsim3
+au BufNewFile,BufRead *.mod			setf modsim3
 
 " Modula 2
-au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi SetFT modula2
+au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
 
 " Modula 3 (.m3, .i3, .mg, .ig)
-au BufNewFile,BufRead *.[mi][3g]		SetFT modula3
+au BufNewFile,BufRead *.[mi][3g]		setf modula3
 
 " Msql
-au BufNewFile,BufRead *.msql			SetFT msql
+au BufNewFile,BufRead *.msql			setf msql
 
 " M$ Resource files
-au BufNewFile,BufRead *.rc			SetFT rc
+au BufNewFile,BufRead *.rc			setf rc
 
 " Mutt setup file
-au BufNewFile,BufRead .muttrc*,Muttrc		SetFT muttrc
+au BufNewFile,BufRead .muttrc*,Muttrc		setf muttrc
 
 " Nastran input/DMAP
-"au BufNewFile,BufRead *.dat			SetFT nastran
+"au BufNewFile,BufRead *.dat			setf nastran
 
 " Novell netware batch files
-au BufNewFile,BufRead *.ncf			SetFT ncf
+au BufNewFile,BufRead *.ncf			setf ncf
 
 " Nroff/Troff (*.ms is checked below)
-au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr	SetFT nroff
+au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr	setf nroff
 au BufNewFile,BufRead *.[1-9]			call FTCheck_nroff()
 
 " This function checks if one of the first five lines start with a dot.  In
 " that case it is probably an nroff file: 'filetype' is set and 1 is returned.
 fun! FTCheck_nroff()
   if getline(1)[0] . getline(2)[0] . getline(3)[0] . getline(4)[0] . getline(5)[0] =~ '\.'
-    SetFT nroff
+    setf nroff
     return 1
   endif
   return 0
 endfun
 
 " OCAML
-au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	SetFT ocaml
+au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	setf ocaml
 
 " OPL
-au BufNewFile,BufRead *.[Oo][Pp][Ll]		SetFT opl
+au BufNewFile,BufRead *.[Oo][Pp][Ll]		setf opl
 
 " Oracle config file
-au BufNewFile,BufRead *.ora			SetFT ora
+au BufNewFile,BufRead *.ora			setf ora
 
 " Pascal
-au BufNewFile,BufRead *.p,*.pas			SetFT pascal
+au BufNewFile,BufRead *.p,*.pas			setf pascal
 
 " Delphi project file
-au BufNewFile,BufRead *.dpr			SetFT pascal
+au BufNewFile,BufRead *.dpr			setf pascal
 
 " Perl
 if has("fname_case")
-  au BufNewFile,BufRead *.pl,*.PL		SetFT perl
+  au BufNewFile,BufRead *.pl,*.PL		setf perl
 else
-  au BufNewFile,BufRead *.pl			SetFT perl
+  au BufNewFile,BufRead *.pl			setf perl
 endif
 
 " Perl, XPM or XPM2
-au BufNewFile,BufRead *.pm	if getline(1) =~ "XPM2"|call SetFT("xpm2")|elseif getline(1) =~ "XPM"|call SetFT("xpm")|else|call SetFT("perl")|endif
+au BufNewFile,BufRead *.pm
+	\ if getline(1) =~ "XPM2" |
+	\   setf xpm2 |
+	\ elseif getline(1) =~ "XPM" |
+	\   setf xpm |
+	\ else |
+	\   setf perl |
+	\ endif
 
 " Perl POD
-au BufNewFile,BufRead *.pod			SetFT pod
+au BufNewFile,BufRead *.pod			setf pod
 
 " Php3
-au BufNewFile,BufRead *.php,*.php3		SetFT php3
+au BufNewFile,BufRead *.php,*.php3		setf php3
 
 " Phtml
-au BufNewFile,BufRead *.phtml			SetFT phtml
+au BufNewFile,BufRead *.phtml			setf phtml
 
 " Pike
-au BufNewFile,BufRead *.pike,*.lpc,*.ulpc,*.pmod SetFT pike
+au BufNewFile,BufRead *.pike,*.lpc,*.ulpc,*.pmod setf pike
 
 " Pine config
-au BufNewFile,BufRead .pinerc,pinerc		SetFT pine
+au BufNewFile,BufRead .pinerc,pinerc		setf pine
 
 " PL/SQL
-au BufNewFile,BufRead *.pls,*.plsql		SetFT plsql
+au BufNewFile,BufRead *.pls,*.plsql		setf plsql
 
 " PO (GNU gettext)
-au BufNewFile,BufRead *.po			SetFT po
+au BufNewFile,BufRead *.po			setf po
 
 " PostScript
-au BufNewFile,BufRead *.ps,*.eps		SetFT postscr
+au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
 " Povray
-au BufNewFile,BufRead *.pov,*.inc		SetFT pov
+au BufNewFile,BufRead *.pov,*.inc		setf pov
 
 " Printcap and Termcap
-au BufNewFile,BufRead *printcap			let b:ptcap_type = "print"|SetFT ptcap
-au BufNewFile,BufRead *termcap			let b:ptcap_type = "term"|SetFT ptcap
+au BufNewFile,BufRead *printcap
+	\ let b:ptcap_type = "print" | setf ptcap
+au BufNewFile,BufRead *termcap
+	\ let b:ptcap_type = "term" | setf ptcap
 
 " PCCTS
-au BufNewFile,BufRead *.g			SetFT pccts
+au BufNewFile,BufRead *.g			setf pccts
 
 " Procmail
-au BufNewFile,BufRead .procmail,.procmailrc	SetFT procmail
+au BufNewFile,BufRead .procmail,.procmailrc	setf procmail
 
 " Prolog
-au BufNewFile,BufRead *.pdb			SetFT prolog
+au BufNewFile,BufRead *.pdb			setf prolog
 
 " Python
-au BufNewFile,BufRead *.py			SetFT python
+au BufNewFile,BufRead *.py			setf python
 
 " Radiance
-au BufNewFile,BufRead *.rad,*.mat		SetFT radiance
+au BufNewFile,BufRead *.rad,*.mat		setf radiance
 
 " Registry for MS-Windows
 au BufNewFile,BufRead *.reg
-	\ if getline(1) =~? '^REGEDIT[0-9]*\s*$'|call SetFT("registry")|endif
+	\ if getline(1) =~? '^REGEDIT[0-9]*\s*$' | setf registry | endif
 
 " Rexx
-au BufNewFile,BufRead *.rexx,*.rex		SetFT rexx
+au BufNewFile,BufRead *.rexx,*.rex		setf rexx
 
 " Rexx or Rebol
 au BufNewFile,BufRead *.r
-	\ if getline(1) =~ '^REBOL'|call SetFT("rebol")|else|call SetFT("rexx")|endif
+	\ if getline(1) =~ '^REBOL' | setf rebol | else | setf rexx | endif
 
 " Remind
-au BufNewFile,BufRead .reminders*		SetFT remind
+au BufNewFile,BufRead .reminders*		setf remind
 
 " Rpcgen
-au BufNewFile,BufRead *.x			SetFT rpcgen
+au BufNewFile,BufRead *.x			setf rpcgen
 
 " Ruby
-au BufNewFile,BufRead *.rb			SetFT ruby
+au BufNewFile,BufRead *.rb			setf ruby
 
 " S-lang (or shader language!)
-au BufNewFile,BufRead *.sl			SetFT slang
+au BufNewFile,BufRead *.sl			setf slang
 
 " Samba config
-au BufNewFile,BufRead smb.conf			SetFT samba
+au BufNewFile,BufRead smb.conf			setf samba
 
 " SAS script
-au BufNewFile,BufRead *.sas			SetFT sas
+au BufNewFile,BufRead *.sas			setf sas
 
 " Sather
-au BufNewFile,BufRead *.sa			SetFT sather
+au BufNewFile,BufRead *.sa			setf sather
 
 " SDL
-au BufNewFile,BufRead *.sdl,*.pr		SetFT sdl
+au BufNewFile,BufRead *.sdl,*.pr		setf sdl
 
 " sed
-au BufNewFile,BufRead *.sed			SetFT sed
+au BufNewFile,BufRead *.sed			setf sed
 
 " Sendmail
-au BufNewFile,BufRead sendmail.cf		SetFT sm
+au BufNewFile,BufRead sendmail.cf		setf sm
 
 " SGML
-au BufNewFile,BufRead *.sgm,*.sgml		if getline(1).getline(2).
-	\getline(3).getline(4).getline(5) =~? 'linuxdoc'|call SetFT("sgmllnx")|
-	\else|call SetFT("sgml")|endif
-au BufNewFile,BufRead *.ent			SetFT sgml
+au BufNewFile,BufRead *.sgm,*.sgml
+	\ if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'linuxdoc' |
+	\   setf sgmllnx |
+	\ else |
+	\   setf sgml |
+	\ endif
+au BufNewFile,BufRead *.ent			setf sgml
 
 " Shell scripts (sh, ksh, bash, csh); Allow .profile_foo etc.
 au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash call SetFileTypeSH("bash")
 au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
 au BufNewFile,BufRead /etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
-au BufNewFile,BufRead .login*,.cshrc*,csh.cshrc,csh.login,csh.logout,.tcshrc*,*.csh,*.tcsh,.alias SetFT csh
+au BufNewFile,BufRead .login*,.cshrc*,csh.cshrc,csh.login,csh.logout,.tcshrc*,*.csh,*.tcsh,.alias setf csh
 
 fun SetFileTypeSH(name)
   if a:name =~ '\<ksh\>'
@@ -584,185 +599,185 @@ fun SetFileTypeSH(name)
       unlet b:is_kornshell
     endif
   endif
-  SetFT sh
+  setf sh
 endfun
 
 " Z-Shell script
-au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*,zsh*,zlog*  SetFT zsh
+au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*,zsh*,zlog*  setf zsh
 
 " Scheme
-au BufNewFile,BufRead *.scm			SetFT scheme
+au BufNewFile,BufRead *.scm			setf scheme
 
 " Simula
-au BufNewFile,BufRead *.sim			SetFT simula
+au BufNewFile,BufRead *.sim			setf simula
 
 " SKILL
-au BufNewFile,BufRead *.il			SetFT skill
+au BufNewFile,BufRead *.il			setf skill
 
 " SLRN
-au BufNewFile,BufRead .slrnrc			SetFT slrnrc
-au BufNewFile,BufRead *.score			SetFT slrnsc
+au BufNewFile,BufRead .slrnrc			setf slrnrc
+au BufNewFile,BufRead *.score			setf slrnsc
 
 " Smalltalk
-au BufNewFile,BufRead *.st,*.cls		SetFT st
+au BufNewFile,BufRead *.st,*.cls		setf st
 
 " SMIL or XML
 au BufNewFile,BufReadPost *.smil
-	\ if getline(1) =~ '<?\s*xml.*?>'|
-	\   call SetFT("xml")|
-	\ else|
-	\   call SetFT("smil")|
+	\ if getline(1) =~ '<?\s*xml.*?>' |
+	\   setf xml |
+	\ else |
+	\   setf smil |
 	\ endif
 
 " SMIL or SNMP MIB file
 au BufNewFile,BufRead *.smi
-	\ if getline(1) =~ '\<smil\>'|
-	\   call SetFT("smil")|
-	\ else|
-	\   call SetFT("mib")|
+	\ if getline(1) =~ '\<smil\>' |
+	\   setf smil |
+	\ else |
+	\   setf mib |
 	\ endif
 
 " SMITH
-au BufNewFile,BufRead *.smt,*.smith		SetFT smith
+au BufNewFile,BufRead *.smt,*.smith		setf smith
 
 " Snobol4
-au BufNewFile,BufRead *.sno			SetFT snobol4
+au BufNewFile,BufRead *.sno			setf snobol4
 
 " SNMP MIB files
-au BufNewFile,BufReadPost *.mib			SetFT mib
+au BufNewFile,BufReadPost *.mib			setf mib
 
 " Spec (Linux RPM)
-au BufNewFile,BufRead *.spec			SetFT spec
+au BufNewFile,BufRead *.spec			setf spec
 
 " Speedup (AspenTech plant simulator)
-au BufNewFile,BufRead *.speedup,*.spdata,*.spd	SetFT spup
+au BufNewFile,BufRead *.speedup,*.spdata,*.spd	setf spup
 
 " Spice
-au BufNewFile,BufRead *.sp,*.spice		SetFT spice
+au BufNewFile,BufRead *.sp,*.spice		setf spice
 
 " Squid
-au BufNewFile,BufRead squid.conf		SetFT squid
+au BufNewFile,BufRead squid.conf		setf squid
 
 " SQL (all but the first one for Oracle Designer)
-au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	SetFT sql
+au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	setf sql
 
 " SQR
-au BufNewFile,BufRead *.sqr,*.sqi		SetFT sqr
+au BufNewFile,BufRead *.sqr,*.sqi		setf sqr
 
 " Stored Procedures
-au BufNewFile,BufRead *.stp			SetFT stp
+au BufNewFile,BufRead *.stp			setf stp
 
 " Standard ML
-au BufNewFile,BufRead *.sml			SetFT sml
+au BufNewFile,BufRead *.sml			setf sml
 
 " Tads
-au BufNewFile,BufRead *.t			SetFT tads
+au BufNewFile,BufRead *.t			setf tads
 
 " Tags
-au BufNewFile,BufRead tags			SetFT tags
+au BufNewFile,BufRead tags			setf tags
 
 " Tcl
-au BufNewFile,BufRead *.tcl,*.tk,*.itcl,*.itk	SetFT tcl
+au BufNewFile,BufRead *.tcl,*.tk,*.itcl,*.itk	setf tcl
 
 " TealInfo
-au BufNewFile,BufRead *.tli			SetFT tli
+au BufNewFile,BufRead *.tli			setf tli
 
 " Telix Salt
-au BufNewFile,BufRead *.slt			SetFT tsalt
+au BufNewFile,BufRead *.slt			setf tsalt
 
 " TeX
-au BufNewFile,BufRead *.tex,*.sty,*.dtx,*.ltx	SetFT tex
+au BufNewFile,BufRead *.tex,*.sty,*.dtx,*.ltx	setf tex
 
 " Texinfo
-au BufNewFile,BufRead *.texinfo,*.texi,*.txi	SetFT texinfo
+au BufNewFile,BufRead *.texinfo,*.texi,*.txi	setf texinfo
 
 " TF mud client
-au BufNewFile,BufRead *.tf			SetFT tf
+au BufNewFile,BufRead *.tf			setf tf
 
 " Motif UIT/UIL files
-au BufNewFile,BufRead *.uit,*.uil		SetFT uil
+au BufNewFile,BufRead *.uit,*.uil		setf uil
 
 " Verilog HDL
-au BufNewFile,BufRead *.v			SetFT verilog
+au BufNewFile,BufRead *.v			setf verilog
 
 " VHDL
-au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  SetFT vhdl
+au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  setf vhdl
 
 " Vim Help file
 if has("mac")
-  au BufNewFile,BufRead *[/:]vim*[/:]doc[/:]*.txt,*[/:]runtime[/:]doc[/:]*.txt SetFT help
+  au BufNewFile,BufRead *[/:]vim*[/:]doc[/:]*.txt,*[/:]runtime[/:]doc[/:]*.txt setf help
 else
-  au BufNewFile,BufRead */vim*/doc/*.txt,*/runtime/doc/*.txt	SetFT help
+  au BufNewFile,BufRead */vim*/doc/*.txt,*/runtime/doc/*.txt	setf help
 endif
 
 " Vim script
-au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc SetFT vim
+au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc setf vim
 
 " Viminfo file
-au BufNewFile,BufRead .viminfo,_viminfo		SetFT viminfo
+au BufNewFile,BufRead .viminfo,_viminfo		setf viminfo
 
 " Visual Basic (also uses *.bas) or FORM
 au BufNewFile,BufRead *.frm			call FTCheck_VB("form")
 
 " Vgrindefs file
-au BufNewFile,BufRead vgrindefs			SetFT vgrindefs
+au BufNewFile,BufRead vgrindefs			setf vgrindefs
 
 " VRML V1.0c
-au BufNewFile,BufRead *.wrl			SetFT vrml
+au BufNewFile,BufRead *.wrl			setf vrml
 
 " Webmacro
-au BufNewFile,BufRead *.wm			SetFT webmacro
+au BufNewFile,BufRead *.wm			setf webmacro
 
 " Website MetaLanguage
-au BufNewFile,BufRead *.wml			SetFT wml
+au BufNewFile,BufRead *.wml			setf wml
 
 " Winbatch
-au BufNewFile,BufRead *.wbt			SetFT winbatch
+au BufNewFile,BufRead *.wbt			setf winbatch
 
 " CVS commit file
-au BufNewFile,BufRead cvs\d\+			SetFT cvs
+au BufNewFile,BufRead cvs\d\+			setf cvs
 
 " CWEB
-au BufNewFile,BufRead *.w			SetFT cweb
+au BufNewFile,BufRead *.w			setf cweb
 
 " WEB (*.web is also used for Winbatch: Guess, based on expecting "%" comment
 " lines in a WEB file).
 au BufNewFile,BufRead *.web
 	\ if getline(1)[0].getline(2)[0].getline(3)[0].getline(4)[0].getline(5)[0] =~ "%" |
-	\   call SetFT("web") |
+	\   setf web |
 	\ else |
-	\   call SetFT("winbatch") |
+	\   setf winbatch |
 	\ endif
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
 au BufEnter *.xpm
-	\ if getline(1) =~ "XPM2"|
-	\   call SetFT("xpm2")|
-	\ else|
-	\   call SetFT("xpm")|
+	\ if getline(1) =~ "XPM2" |
+	\   setf xpm2 |
+	\ else |
+	\   setf xpm |
 	\ endif
-au BufEnter *.xpm2				SetFT xpm2
+au BufEnter *.xpm2				setf xpm2
 
 " XS Perl extension interface language
-au BufEnter *.xs				SetFT xs
+au BufEnter *.xs				setf xs
 
 " X resources file
-au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xresources/*,xdm-config SetFT xdefaults
+au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xresources/*,xdm-config setf xdefaults
 
 " Xmath
-au BufNewFile,BufRead *.msc,*.msf		SetFT xmath
+au BufNewFile,BufRead *.msc,*.msf		setf xmath
 au BufNewFile,BufRead *.ms
-	\ if !FTCheck_nroff() | call SetFT("xmath") | endif
+	\ if !FTCheck_nroff() | setf xmath | endif
 
 " vim: ts=8
 " XML
-au BufNewFile,BufRead *.xml,*.xsl		SetFT xml
+au BufNewFile,BufRead *.xml,*.xsl		setf xml
 
 " Yacc
-au BufNewFile,BufRead *.y			SetFT yacc
+au BufNewFile,BufRead *.y			setf yacc
 
 " Z80 assembler asz80
-au BufNewFile,BufRead *.z8a			SetFT z8a
+au BufNewFile,BufRead *.z8a			setf z8a
 
 augroup END
 
@@ -777,13 +792,16 @@ endif
 " Check for "*" after loading myfiletypefile, so that scripts.vim is only used
 " when there are no matching file name extensions.
 augroup filetypedetect
-au BufNewFile,BufRead,StdinReadPost *		if !did_filetype()|so <sfile>:p:h/scripts.vim|endif
+au BufNewFile,BufRead,StdinReadPost *
+	\ if !did_filetype() | runtime! scripts.vim | endif
 
 " Extra checks for when no filetype has been detected now
 
 " Printcap and Termcap
-au BufNewFile,BufRead *printcap*		if !did_filetype()|let b:ptcap_type = "print"|set ft=ptcap|endif
-au BufNewFile,BufRead *termcap*			if !did_filetype()|let b:ptcap_type = "term"|set ft=ptcap|endif
+au BufNewFile,BufRead *printcap*
+	\ if !did_filetype() | let b:ptcap_type = "print" | setf ptcap | endif
+au BufNewFile,BufRead *termcap*
+	\ if !did_filetype() | let b:ptcap_type = "term" | setf ptcap | endif
 
 augroup END
 

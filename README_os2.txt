@@ -1,4 +1,4 @@
-README_os2.txt for version 6.0e of Vim: Vi IMproved.
+README_os2.txt for version 6.0f of Vim: Vi IMproved.
 
 This file explains the installation of Vim on OS/2 systems.
 See "README.txt" for general information about Vim.

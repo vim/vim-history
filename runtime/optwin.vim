@@ -1,11 +1,25 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jul 05
+" Last Change:	2000 Aug 12
+
+" If there already is an option window, jump to that one.
+if bufwinnr("option-window") > 0
+  let s:OW_thiswin = winnr()
+  while 1
+    if @% == "option-window"
+      finish
+    endif
+    exe "norm! \<C-W>w"
+    if s:OW_thiswin == winnr()
+      break
+    endif
+  endwhile
+endif
 
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
-let optwin_cpo_save = &cpo
+let s:optwin_cpo_save = &cpo
 let &cpo = ""
 
 " function to be called when <CR> is hit in the option-window
@@ -111,35 +125,34 @@ fun! OW_Update(lnum, line, local, thiswin)
 endfun
 
 " Reset 'title' and 'icon' to make it work faster.
-let old_title = &title
-let old_icon = &icon
-let old_sc = &sc
-let old_ru = &ru
+let s:old_title = &title
+let s:old_icon = &icon
+let s:old_sc = &sc
+let s:old_ru = &ru
 set notitle noicon nosc noru
 
 " If the current window is a help window, try finding a non-help window.
 " Relies on syntax highlighting to be switched on.
-let OW_thiswin = winnr()
+let s:OW_thiswin = winnr()
 while exists("b:current_syntax") && b:current_syntax == "help"
   exe "norm! \<C-W>w"
-  if OW_thiswin == winnr()
+  if s:OW_thiswin == winnr()
     break
   endif
 endwhile
-unlet OW_thiswin
 
 " Open the window
 new option-window
 set ts=15 tw=0
 
 " Insert help and a "set" command for each option.
-call append(0, 'Each "set" line shows the current value of an option (on the left).')
-call append(1, 'Hit <CR> on a "set" line to execute it.')
-call append(2, '           A boolean option will be toggled.')
-call append(3, '           For other options you can edit the value.')
-call append(4, 'Hit <CR> on a help line to open a help window on this option.')
-call append(5, 'Hit <CR> on an index line to jump there.')
-call append(6, 'Hit <Space> on a "set" line to refresh it.')
+call append(0, '" Each "set" line shows the current value of an option (on the left).')
+call append(1, '" Hit <CR> on a "set" line to execute it.')
+call append(2, '"            A boolean option will be toggled.')
+call append(3, '"            For other options you can edit the value.')
+call append(4, '" Hit <CR> on a help line to open a help window on this option.')
+call append(5, '" Hit <CR> on an index line to jump there.')
+call append(6, '" Hit <Space> on a "set" line to refresh it.')
 
 " These functions are called often below.  Keep them fast!
 fun! OW_BinOption(name)
@@ -185,7 +198,7 @@ fun! OW_Header(text)
 endfun
 
 " Restore the previous value of 'cpoptions' here, it's used below.
-let &cpo = optwin_cpo_save
+let &cpo = s:optwin_cpo_save
 
 " List of all options, organized by function.
 " The text should be sufficient to know what the option is used for.
@@ -371,7 +384,7 @@ if has("gui") || has("msdos") || has("win32")
   call OW_OptionL("gcr", &gcr)
 endif
 if has("title")
-  let &title = old_title
+  let &title = s:old_title
   call append("$", "title\tshow info in the window title")
   call OW_BinOptionL("title", &title)
   set notitle
@@ -381,7 +394,7 @@ if has("title")
   call OW_OptionL("titlestring", &titlestring)
   call append("$", "titleold\tstring to restore the title to when exiting Vim")
   call OW_OptionL("titleold", &titleold)
-  let &icon = old_icon
+  let &icon = s:old_icon
   call append("$", "icon\tset the text of the icon for this window")
   call OW_BinOptionL("icon", &icon)
   set noicon
@@ -447,13 +460,13 @@ call OW_BinOptionL("terse", &terse)
 call append("$", "shortmess\tlist of flags to make messages shorter")
 call OW_OptionL("shm", &shm)
 call append("$", "showcmd\tshow (partial) command keys in the status line")
-let &sc = old_sc
+let &sc = s:old_sc
 call OW_BinOptionL("sc", &sc)
 set nosc
 call append("$", "showmode\tdisplay the current mode in the status line")
 call OW_BinOptionL("smd", &smd)
 call append("$", "ruler\tshow cursor position below each window")
-let &ru = old_ru
+let &ru = s:old_ru
 call OW_BinOptionL("ru", &ru)
 set noru
 if has("statusline")
@@ -839,53 +852,15 @@ if has("syntax")
 endif
 
 " Install autocommands to enable mappings in option-window
+noremap <buffer> <CR> :call OW_CR()<CR><C-\><C-N>:echo<CR>
+inoremap <buffer> <CR> <Esc>:call OW_CR()<CR>:echo<CR>
+noremap <buffer> <Space> :call OW_Space()<CR>:echo<CR>
+inoremap <buffer> <Space> <Esc>:call OW_Space()<CR>:echo<CR>
+
 augroup optwin
-  au!
-  au BufEnter option-window call OW_enter()
-  au BufLeave option-window call OW_leave()
-  au BufUnload,BufHidden option-window nested call OW_unload() |
-	\ delfun OW_unload
+  au! BufUnload,BufHidden option-window nested
+  	\ call OW_unload() | delfun OW_unload
 augroup END
-
-fun! OW_enter()
-  let cpo_save = &cpo
-  let &cpo = ""
-  " save existing mappings
-  let g:OW_mappings = ""
-  call OW_mapsave("<CR>", "n")
-  call OW_mapsave("<CR>", "i")
-  call OW_mapsave("<Space>", "n")
-  call OW_mapsave("<Space>", "i")
-  noremap <CR> :call OW_CR()<CR><C-\><C-N>:echo<CR>
-  inoremap <CR> <Esc>:call OW_CR()<CR>:echo<CR>
-  noremap <Space> :call OW_Space()<CR>:echo<CR>
-  inoremap <Space> <Esc>:call OW_Space()<CR>:echo<CR>
-  let &cpo = cpo_save
-endfun
-
-fun! OW_mapsave(map, mode)
-  let m = maparg(a:map, a:mode)
-  if m != ""
-    let m = escape(m, '\|')
-    let g:OW_mappings = g:OW_mappings . ":".a:mode."map ".a:map." ".m."|"
-  endif
-endfun
-
-fun! OW_leave()
-  let cpo_save = &cpo
-  let &cpo = ""
-  if mapcheck("<CR>") != ""
-    unmap <CR>
-    iunmap <CR>
-    unmap <Space>
-    iunmap <Space>
-  endif
-  if exists("g:OW_mappings")
-    exe g:OW_mappings
-    unlet g:OW_mappings
-  endif
-  let &cpo = cpo_save
-endfun
 
 fun! OW_unload()
   delfun OW_CR
@@ -899,18 +874,12 @@ fun! OW_unload()
   delfun OW_Header
   au! optwin
   bdel! option-window
-  delfun OW_enter
-  delfun OW_leave
-  delfun OW_mapsave
 endfun
 
-" Execute the enter autocommands now, to enable the mappings
-doau optwin BufEnter
-
 " Restore the previous value of 'title' and 'icon'.
-let &title = old_title
-let &icon = old_icon
-let &ru = old_ru
-let &sc = old_sc
-let &cpo = optwin_cpo_save
-unlet optwin_cpo_save OW_idx OW_lnum old_title old_icon old_ru old_sc
+let &title = s:old_title
+let &icon = s:old_icon
+let &ru = s:old_ru
+let &sc = s:old_sc
+let &cpo = s:optwin_cpo_save
+unlet OW_idx OW_lnum
