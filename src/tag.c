@@ -986,10 +986,11 @@ tag_strnicmp(s1, s2, len)
  * Tags in an emacs-style tags file are always global.
  *
  * flags:
- * TAG_HELP	only search for help tags
- * TAG_NAMES	only return name of tag
- * TAG_REGEXP	use "pat" as a regexp
- * TAG_NOIC	don't always ignore case
+ * TAG_HELP	  only search for help tags
+ * TAG_NAMES	  only return name of tag
+ * TAG_REGEXP	  use "pat" as a regexp
+ * TAG_NOIC	  don't always ignore case
+ * TAG_KEEP_LANG  keep language
  */
     int
 find_tags(pat, num_matches, matchesp, flags, mincount)
@@ -1078,6 +1079,12 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     int		mtt;
     int		len;
     int		help_save;
+#ifdef FEAT_MULTI_LANG
+    int		help_pri = 0;
+    char_u	*help_lang_find = NULL;		/* lang to be found */
+    char_u	help_lang[3];			/* lang of current tags file */
+    char_u	*saved_pat = NULL;		/* copy of pat[] */
+#endif
 
     int		patlen;				/* length of pat[] */
     char_u	*pathead;			/* start of pattern head */
@@ -1101,11 +1108,6 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     int		verbose = (flags & TAG_VERBOSE);
 
     help_save = curbuf->b_help;
-
-    if (has_re)
-	regmatch.regprog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
-    else
-	regmatch.regprog = NULL;
 
 /*
  * Allocate memory for the buffers that are used
@@ -1137,6 +1139,24 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	curbuf->b_help = TRUE;			/* will be restored later */
 
     patlen = (int)STRLEN(pat);
+#ifdef FEAT_MULTI_LANG
+    if (curbuf->b_help)
+    {
+	/* When "@ab" is specified use only the "ab" language, otherwise
+	 * search all languages. */
+	if (patlen > 3 && pat[patlen - 3] == '@')
+	{
+	    saved_pat = vim_strnsave(pat, patlen - 3);
+	    if (saved_pat != NULL)
+	    {
+		help_lang_find = &pat[patlen - 2];
+		pat = saved_pat;
+		patlen -= 3;
+	    }
+	}
+    }
+#endif
+
     if (p_tl != 0 && patlen > p_tl)		/* adjust for 'taglength' */
 	patlen = p_tl;
 
@@ -1160,6 +1180,11 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	if (p_tl != 0 && patheadlen > p_tl)	/* adjust for 'taglength' */
 	    patheadlen = p_tl;
     }
+
+    if (has_re)
+	regmatch.regprog = vim_regcomp(pat, p_magic ? RE_MAGIC : 0);
+    else
+	regmatch.regprog = NULL;
 
 #ifdef FEAT_TAG_BINS
     /* This is only to avoid a compiler warning for using search_info
@@ -1205,8 +1230,58 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	else
 #endif
 	{
+#ifdef FEAT_MULTI_LANG
+	    if (curbuf->b_help)
+	    {
+		/* Prefer help tags according to 'helplang'.  Put the
+		 * two-letter language name in help_lang[]. */
+		i = STRLEN(tag_fname);
+		if (i > 3 && tag_fname[i - 3] == '-')
+		    STRCPY(help_lang, tag_fname + i - 2);
+		else
+		    STRCPY(help_lang, "en");
+
+		/* When searching for a specific language skip tags files
+		 * for other languages. */
+		if (help_lang_find != NULL
+				   && STRICMP(help_lang, help_lang_find) != 0)
+		    continue;
+
+		/* For CTRL-] in a help file prefer a match with the same
+		 * language. */
+		if ((flags & TAG_KEEP_LANG)
+			&& help_lang_find == NULL
+			&& (i = STRLEN(curbuf->b_fname)) > 4
+			&& curbuf->b_fname[i - 1] == 'x'
+			&& curbuf->b_fname[i - 4] == '.'
+			&& STRNICMP(curbuf->b_fname + i - 3, help_lang, 2) == 0)
+		    help_pri = 0;
+		else
+		{
+		    help_pri = 1;
+		    for (s = p_hlg; *s != NUL; ++s)
+		    {
+			if (STRNICMP(s, help_lang, 2) == 0)
+			    break;
+			++help_pri;
+			if ((s = vim_strchr(s, ',')) == NULL)
+			    break;
+		    }
+		    if (s == NULL || *s == NUL)
+		    {
+			/* Language not in 'helplang': use last, prefer English,
+			 * unless found already. */
+			++help_pri;
+			if (STRICMP(help_lang, "en") != 0)
+			    ++help_pri;
+		    }
+		}
+	    }
+#endif
+
 	    if ((fp = mch_fopen((char *)tag_fname, "r")) == NULL)
 		continue;
+
 	    if (p_verbose >= 5)
 		msg_str((char_u *)_("Searching tags file %s"), tag_fname);
 	}
@@ -1216,6 +1291,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 #ifdef FEAT_EMACS_TAGS
 	is_etag = 0;	    /* default is: not emacs style */
 #endif
+
 	/*
 	 * Read and parse the lines in the file one by one
 	 */
@@ -1811,6 +1887,11 @@ line_read_in:
 		{
 		    if (help_only)
 		    {
+#ifdef FEAT_MULTI_LANG
+# define ML_EXTRA 3
+#else
+# define ML_EXTRA 0
+#endif
 			/*
 			 * Append the help-heuristic number after the
 			 * tagname, for sorting it later.
@@ -1818,15 +1899,27 @@ line_read_in:
 			*tagp.tagname_end = NUL;
 			len = (int)(tagp.tagname_end - tagp.tagname);
 			mfp = (struct match_found *)
-				 alloc(sizeof(struct match_found) + len + 10);
+				 alloc(sizeof(struct match_found) + len
+							     + 10 + ML_EXTRA);
 			if (mfp != NULL)
 			{
-			    mfp->len = len + 1;	/* also compare the NUL */
+			    /* "len" includes the language and the NUL, but
+			     * not the priority. */
+			    mfp->len = len + ML_EXTRA + 1;
+#define ML_HELP_LEN 6
 			    p = mfp->match;
 			    STRCPY(p, tagp.tagname);
-			    sprintf((char *)p + len + 1, "%06d",
+#ifdef FEAT_MULTI_LANG
+			    p[len] = '@';
+			    STRCPY(p + len + 1, help_lang);
+#endif
+			    sprintf((char *)p + len + 1 + ML_EXTRA, "%06d",
 				    help_heuristic(tagp.tagname,
-				    match_re ? matchoff : 0, !match_no_ic));
+					match_re ? matchoff : 0, !match_no_ic)
+#ifdef FEAT_MULTI_LANG
+				    + help_pri
+#endif
+				    );
 			}
 			*tagp.tagname_end = TAB;
 		    }
@@ -2070,7 +2163,7 @@ findtag_end:
 		 * match_found into a string.  For help the priority was not
 		 * included in the length. */
 		mch_memmove(mfp, mfp->match,
-				   (size_t)(mfp->len + (help_only ? 9 : 0)));
+			 (size_t)(mfp->len + (help_only ? ML_HELP_LEN : 0)));
 		matches[match_count++] = (char_u *)mfp;
 	    }
 	}
@@ -2081,8 +2174,30 @@ findtag_end:
     *num_matches = match_count;
 
     curbuf->b_help = help_save;
+#ifdef FEAT_MULTI_LANG
+    vim_free(saved_pat);
+#endif
 
     return retval;
+}
+
+static garray_T tag_fnames = GA_EMPTY;
+static void found_tagfile_cb __ARGS((char_u *fname));
+
+/*
+ * Callback function for finding all "tags" and "tags-??" files in
+ * 'runtimepath' doc directories.
+ */
+    static void
+found_tagfile_cb(fname)
+    char_u	*fname;
+{
+    if (ga_grow(&tag_fnames, 1) == OK)
+    {
+	((char_u **)(tag_fnames.ga_data))[tag_fnames.ga_len++] =
+							   vim_strsave(fname);
+	--tag_fnames.ga_room;
+    }
 }
 
 /*
@@ -2099,7 +2214,7 @@ get_tagfname(first, buf)
     static void		*search_ctx = NULL;
     static char_u	*np = NULL;
     static int		did_filefind_init;
-    static int		did_use_hf = FALSE;
+    static int		hf_idx = 0;
     char_u		*fname = NULL;
     char_u		*r_ptr;
 
@@ -2107,8 +2222,20 @@ get_tagfname(first, buf)
     {
 	if (curbuf->b_help)
 	{
-	    np = p_rtp;
-	    did_use_hf = FALSE;
+	    /*
+	     * For a help window find "doc/tags" and "doc/tags-??" in all
+	     * directories in 'runtimepath'.
+	     */
+	    ga_clear(&tag_fnames);
+	    ga_init2(&tag_fnames, sizeof(char_u *), 10);
+	    do_in_runtimepath((char_u *)
+#ifdef FEAT_MULTI_LANG
+		    "doc/tags doc/tags-??"
+#else
+		    "doc/tags"
+#endif
+						    , TRUE, found_tagfile_cb);
+	    hf_idx = 0;
 	}
 	else if (*curbuf->b_p_tags != NUL)
 	    np = curbuf->b_p_tags;
@@ -2118,37 +2245,30 @@ get_tagfname(first, buf)
 	did_filefind_init = FALSE;
     }
 
-    /* tried already (or bogus call) */
-    if (np == NULL)
-	return FAIL;
-
     if (curbuf->b_help)
     {
-	/*
-	 * For a help window find "doc/tags" in all directories in
-	 * 'runtimepath'.
-	 */
-	if (*np == NUL || copy_option_part(&np, buf, MAXPATHL, ",") == 0)
+	if (hf_idx >= tag_fnames.ga_len)
 	{
-	    if (did_use_hf || *p_hf == NUL)
+	    /* Not found in 'runtimepath', use 'helpfile', if it exists and
+	     * wasn't used yet, replacing "help.txt" with "tags". */
+	    if (hf_idx > tag_fnames.ga_len || *p_hf == NUL)
 		return FAIL;
-
-	    /* Not found in 'runtimepath', use 'helpfile', replacing
-	     * "help.txt" with "tags". */
-	    did_use_hf = TRUE;
+	    ++hf_idx;
 	    STRCPY(buf, p_hf);
 	    STRCPY(gettail(buf), "tags");
-	    return OK;
 	}
-	add_pathsep(buf);
-#ifndef COLON_AS_PATHSEP
-	STRCAT(buf, "doc/tags");
-#else
-	STRCAT(buf, "doc:tags");
-#endif
+	else
+	{
+	    STRNCPY(buf, ((char_u **)(tag_fnames.ga_data))[hf_idx++], MAXPATHL);
+	    buf[MAXPATHL - 1] = NUL;
+	}
     }
     else
     {
+	/* tried already (or bogus call) */
+	if (np == NULL)
+	    return FAIL;
+
 	/*
 	 * Loop until we have found a file name that can be used.
 	 * There are two states:
@@ -2637,8 +2757,8 @@ jumpto_tag(lbuf, forceit, keep_help)
 
     if (keep_help)
     {
-	/* A :ta from a help file will keep the b_help flag set.  For ":ptag" we
-	 * need to use the flag from the window where we came from. */
+	/* A :ta from a help file will keep the b_help flag set.  For ":ptag"
+	 * we need to use the flag from the window where we came from. */
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	if (g_do_tagpreview)
 	    keep_help_flag = curwin_save->w_buffer->b_help;

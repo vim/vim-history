@@ -471,6 +471,9 @@ EXTERN char_u	*p_hf;		/* 'helpfile' */
 #ifdef FEAT_WINDOWS
 EXTERN long	p_hh;		/* 'helpheight' */
 #endif
+#ifdef FEAT_MULTI_LANG
+EXTERN char_u	*p_hlg;		/* 'helplang' */
+#endif
 EXTERN int	p_hid;		/* 'hidden' */
 /* Use P_HID to check if a buffer is to be hidden when it is no longer
  * visible in a window. */

@@ -55,6 +55,8 @@ typedef struct growarray
     void    *ga_data;		    /* pointer to the first item */
 } garray_T;
 
+#define GA_EMPTY    {0, 0, 0, 0, NULL}
+
 /*
  * This is here because regexp.h needs pos_T and below regprog_T is used.
  */

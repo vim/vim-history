@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Jan 22
+*options.txt*	For Vim version 6.2.  Last change: 2004 Feb 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -2990,6 +2990,25 @@ A jump table for the options with a short description can be found at |Q_op|.
 	current window, or (when the 'ea' option is on) the same as other
 	windows.  When the height is less than 'helpheight', the height is
 	set to 'helpheight'.  Set to zero to disable.
+
+						*'helplang'* *'hlg'*
+'helplang' 'hlg'	string	(default: messages language or emtpy)
+			global
+			{only available when compiled with the |+multi_lang|
+			feature}
+			{not in Vi}
+	Comma separated list of languages.  Vim will use the first language
+	for which the desired help can be found.  The English help will always
+	be used as a last resort.  You can add "en" to prefer English over
+	another language, but that will only find tags that exist in that
+	language and not in the English help.
+	Example: >
+		:set helplang=de,it
+<	This will first search German, then Italian and finally English help
+	files.
+	When using |CTRL-]| and ":help!" in a non-English help file Vim will
+	try to find the tag in the current language before using this option.
+	See |help-translated|.
 
 				     *'hidden'* *'hid'* *'nohidden'* *'nohid'*
 'hidden' 'hid'		boolean	(default off)

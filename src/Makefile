@@ -1654,9 +1654,13 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 		$(HELPSOURCE)/evim.1 > $(DEST_MAN)/$(EVIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(EVIMNAME).1
 	@echo generating help tags
-	-@cd $(HELPSOURCE); $(MAKE) tags
-	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(DEST_HELP)
-	cd $(DEST_HELP); chmod $(HELPMOD) *.txt tags
+# Generate the help tags with ":helptags" to handle all languages.
+	-@cd $(HELPSOURCE); VIMEXE=$(VIMTARGET) $(MAKE) vimtags
+	cd $(HELPSOURCE); \
+		files=`ls *.txt *.??x tags tags-??`; \
+		$(INSTALL_DATA) $$files  $(DEST_HELP); \
+		cd $(DEST_HELP); \
+		chmod $(HELPMOD) $$files
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(DEST_HELP)
 	chmod $(SCRIPTMOD) $(DEST_HELP)/*.pl
 # install the menu files
@@ -1932,6 +1936,7 @@ uninstall: uninstall_runtime
 # Note: the "rmdir" will fail if any files were added after "make install"
 uninstall_runtime:
 	-rm -f $(DEST_HELP)/*.txt $(DEST_HELP)/tags $(DEST_HELP)/*.pl
+	-rm -f $(DEST_HELP)/*.??x $(DEST_HELP)/tags-??
 	-rm -f $(SYS_MENU_FILE) $(SYS_SYNMENU_FILE) $(SYS_DELMENU_FILE)
 	-rm -f $(SYS_BUGR_FILE) $(EVIM_FILE) $(MSWIN_FILE)
 	-rm -f $(DEST_SCRIPT)/gvimrc_example.vim $(DEST_SCRIPT)/vimrc_example.vim

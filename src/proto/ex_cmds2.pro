@@ -68,6 +68,7 @@ int mch_print_text_out __ARGS((char_u *p, int len));
 void mch_print_set_font __ARGS((int iBold, int iItalic, int iUnderline));
 void mch_print_set_bg __ARGS((long_u bgcol));
 void mch_print_set_fg __ARGS((long_u fgcol));
+char_u *get_mess_lang __ARGS((void));
 void set_lang_var __ARGS((void));
 void ex_language __ARGS((exarg_T *eap));
 char_u *get_lang_arg __ARGS((expand_T *xp, int idx));
