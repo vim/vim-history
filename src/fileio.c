@@ -5270,6 +5270,17 @@ buf_check_timestamp(buf, focus)
 #ifdef FEAT_AUTOCMD
 	    keep_filetype = FALSE;
 #endif
+#ifdef FEAT_FOLDING
+	    {
+		win_T *wp;
+
+		/* Update folds unless they are defined manually. */
+		FOR_ALL_WINDOWS(wp)
+		    if (wp->w_buffer == curwin->w_buffer
+			    && !foldmethodIsManual(wp))
+			foldUpdateAll(wp);
+	    }
+#endif
 	    /* If the mode didn't change and 'readonly' was set, keep the old
 	     * value; the user probably used the ":view" command.  But don't
 	     * reset it, might have had a read error. */
