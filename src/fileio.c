@@ -936,11 +936,20 @@ retry:
 	    if (msg_add_fileformat(fileformat))
 		c = TRUE;
 	    msg_add_lines(c, (long)linecnt, filesize);
-	    /* When reading from stdin, the screen will be cleared next; keep
-	     * the message to repeat it later. */
+
 	    keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (!read_stdin)
+	    if (read_stdin)
+	    {
+		/* When reading from stdin, the screen will be cleared next;
+		 * keep the message to repeat it later.
+		 * Copy the message (truncated) to msg_buf, because IObuff
+		 * could be overwritten any time. */
+		STRNCPY(msg_buf, keep_msg, MSG_BUF_LEN);
+		msg_buf[MSG_BUF_LEN - 1] = NUL;
+		keep_msg = msg_buf;
+	    }
+	    else
 		keep_msg = NULL;
 	}
 
@@ -2676,8 +2685,6 @@ buf_modname(shortname, fname, ext, prepend_dot)
  *
  * Like fgets(), but if the file line is too long, it is truncated and the
  * rest of the line is thrown away.  Returns TRUE for end-of-file.
- * Note: do not pass IObuff as the buffer since this is used to read and
- * discard the extra part of any long lines.
  */
     int
 vim_fgets(buf, size, fp)
@@ -2685,7 +2692,9 @@ vim_fgets(buf, size, fp)
     int		size;
     FILE	*fp;
 {
-    char *eof;
+    char	*eof;
+#define FGETS_SIZE 200
+    char	tbuf[FGETS_SIZE];
 
     buf[size - 2] = NUL;
     eof = fgets((char *)buf, size, fp);
@@ -2696,9 +2705,9 @@ vim_fgets(buf, size, fp)
 	/* Now throw away the rest of the line: */
 	do
 	{
-	    IObuff[IOSIZE - 2] = NUL;
-	    fgets((char *)IObuff, IOSIZE, fp);
-	} while (IObuff[IOSIZE - 2] != NUL && IObuff[IOSIZE - 2] != '\n');
+	    tbuf[FGETS_SIZE - 2] = NUL;
+	    fgets((char *)tbuf, FGETS_SIZE, fp);
+	} while (tbuf[FGETS_SIZE - 2] != NUL && tbuf[FGETS_SIZE - 2] != '\n');
     }
     return (eof == NULL);
 }
