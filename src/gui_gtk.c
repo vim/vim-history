@@ -805,7 +805,9 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 	    return;
 
 	/* make place for the possible tearoff handle item */
-	++idx;
+	/* ++idx; Don't understand why this was here; makes adding an item to
+	 * the popup menu appear after instead of before an existing item. */
+
 	if (menu_is_separator(menu->name))
 	{
 	    /* Separator: Just add it */
