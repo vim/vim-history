@@ -664,6 +664,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 	/* When converting to an exception, we do not include the command name
 	 * since this is not an error of the specific command. */
 	do_errthrow((struct condstack *)NULL, (char_u *)NULL);
+	msg_list = saved_msg_list;
 #endif
 	return FAIL;
     }
