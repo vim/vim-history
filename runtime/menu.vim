@@ -121,7 +121,7 @@ an 10.620 &File.E&xit<Tab>:qa			:confirm qa<CR>
 " Visual mode without the +virtualedit feature.  They are pasted as if they
 " were characterwise instead.
 if has("virtualedit")
-  nnoremap <silent> <SID>Paste :call <SID>Paste()<CR>
+  nnoremap <silent> <script> <SID>Paste :call <SID>Paste()<CR>
   func! <SID>Paste()
     let ove = &ve
     set ve=all
@@ -129,7 +129,7 @@ if has("virtualedit")
     let &ve = ove
   endfunc
 else
-  nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
+  nnoremap <silent> <script> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
 endif
 
 " Edit menu
@@ -144,11 +144,11 @@ cnoremenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
 nnoremenu 20.360 &Edit.&Paste<Tab>"+P		"+gP
 cnoremenu	 &Edit.&Paste<Tab>"+P		<C-R>+
 if has("virtualedit")
-  vnoremenu	 &Edit.&Paste<Tab>"+P		"-c<Esc><SID>Paste
-  inoremenu	 &Edit.&Paste<Tab>"+P		<Esc><SID>Pastegi
+  vnoremenu <script>	 &Edit.&Paste<Tab>"+P	"-c<Esc><SID>Paste
+  inoremenu <script>	 &Edit.&Paste<Tab>"+P	<Esc><SID>Pastegi
 else
-  vnoremenu	 &Edit.&Paste<Tab>"+P		"-c<Esc>gix<Esc><SID>Paste"_x
-  inoremenu	 &Edit.&Paste<Tab>"+P		x<Esc><SID>Paste"_s
+  vnoremenu <script>	 &Edit.&Paste<Tab>"+P	"-c<Esc>gix<Esc><SID>Paste"_x
+  inoremenu <script>	 &Edit.&Paste<Tab>"+P	x<Esc><SID>Paste"_s
 endif
 nnoremenu 20.370 &Edit.Put\ &Before<Tab>[p	[p
 inoremenu	 &Edit.Put\ &Before<Tab>[p	<C-O>[p
@@ -732,11 +732,11 @@ cnoremenu 1.30 PopUp.&Copy		<C-Y>
 nnoremenu 1.40 PopUp.&Paste		"+gP
 cnoremenu 1.40 PopUp.&Paste		<C-R>+
 if has("virtualedit")
-  vnoremenu 1.40 PopUp.&Paste		"-c<Esc><SID>Paste
-  inoremenu 1.40 PopUp.&Paste		<Esc><SID>Pastegi
+  vnoremenu <script> 1.40 PopUp.&Paste	"-c<Esc><SID>Paste
+  inoremenu <script> 1.40 PopUp.&Paste	<Esc><SID>Pastegi
 else
-  vnoremenu 1.40 PopUp.&Paste		"-c<Esc>gix<Esc><SID>Paste"_x
-  inoremenu 1.40 PopUp.&Paste		x<Esc><SID>Paste"_s
+  vnoremenu <script> 1.40 PopUp.&Paste	"-c<Esc>gix<Esc><SID>Paste"_x
+  inoremenu <script> 1.40 PopUp.&Paste	x<Esc><SID>Paste"_s
 endif
 vnoremenu 1.50 PopUp.&Delete		x
 an 1.55 PopUp.-SEP2-			<Nop>
@@ -773,11 +773,11 @@ if has("toolbar")
   nnoremenu 1.90 ToolBar.Paste		"+gP
   cnoremenu	 ToolBar.Paste		<C-R>+
   if has("virtualedit")
-    vnoremenu	 ToolBar.Paste		"-c<Esc><SID>Paste
-    inoremenu	 ToolBar.Paste		<Esc><SID>Pastegi
+    vnoremenu <script>	 ToolBar.Paste	"-c<Esc><SID>Paste
+    inoremenu <script>	 ToolBar.Paste	<Esc><SID>Pastegi
   else
-    vnoremenu	 ToolBar.Paste		"-c<Esc>gix<Esc><SID>Paste"_x
-    inoremenu	 ToolBar.Paste		x<Esc><SID>Paste"_s
+    vnoremenu <script>	 ToolBar.Paste	"-c<Esc>gix<Esc><SID>Paste"_x
+    inoremenu <script>	 ToolBar.Paste	x<Esc><SID>Paste"_s
   endif
 
   if !has("gui_athena")
