@@ -29,6 +29,7 @@ void alist_slash_adjust __ARGS((void));
 void do_exedit __ARGS((exarg_T *eap, win_T *old_curwin));
 void do_sleep __ARGS((long msec));
 FILE *open_exfile __ARGS((char_u *fname, int forceit, char *mode));
+void update_topline_cursor __ARGS((void));
 char_u *eval_vars __ARGS((char_u *src, int *usedlen, linenr_T *lnump, char_u **errormsg, char_u *srcstart));
 char_u *expand_sfile __ARGS((char_u *arg));
 int put_eol __ARGS((FILE *fd));

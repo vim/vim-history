@@ -14,7 +14,7 @@
 #include "vim.h"
 #include "version.h"
 
-static void	cmd_source __ARGS((char_u *fname, int forceit));
+static void	cmd_source __ARGS((char_u *fname, exarg_T *eap));
 
 #if defined(FEAT_EVAL) || defined(PROTO)
 
@@ -1454,8 +1454,10 @@ ex_listdo(eap)
 #endif
 
 	    /* execute the command */
+	    listcmd_busy = TRUE;
 	    do_cmdline(eap->arg, eap->getline, eap->cookie,
 						DOCMD_VERBOSE + DOCMD_NOWAIT);
+	    listcmd_busy = FALSE;
 
 	    if (eap->cmdidx == CMD_bufdo)
 	    {
@@ -1693,7 +1695,7 @@ do_in_runtimepath(name, all, callback)
 ex_options(eap)
     exarg_T	*eap;
 {
-    cmd_source((char_u *)SYS_OPTWIN_FILE, FALSE);
+    cmd_source((char_u *)SYS_OPTWIN_FILE, NULL);
 }
 #endif
 
@@ -1713,25 +1715,38 @@ ex_source(eap)
 		NULL, NULL, eap->arg, BROWSE_FILTER_MACROS, curbuf);
 	if (fname != NULL)
 	{
-	    cmd_source(fname, eap->forceit);
+	    cmd_source(fname, eap);
 	    vim_free(fname);
 	}
     }
     else
 #endif
-	cmd_source(eap->arg, eap->forceit);
+	cmd_source(eap->arg, eap);
 }
 
     static void
-cmd_source(fname, forceit)
+cmd_source(fname, eap)
     char_u	*fname;
-    int		forceit;
+    exarg_T	*eap;
 {
     if (*fname == NUL)
 	EMSG(_(e_argreq));
-    else if (forceit)		/* :so! read vi commands */
-	(void)openscript(fname);
-				/* :so read ex commands */
+
+    /* ":source!" read vi commands */
+    else if (eap != NULL && eap->forceit)
+	/* Need to execute the commands directly when:
+	 * - ":g" command busy
+	 * - after ":argdo", ":windo" or ":bufdo"
+	 * - another command follows
+	 * - inside a loop
+	 */
+	openscript(fname, global_busy || listcmd_busy || eap->nextcmd != NULL
+#ifdef FEAT_EVAL
+						 || eap->cstack->cs_idx >= 0
+#endif
+						 );
+
+    /* ":source" read ex commands */
     else if (do_source(fname, FALSE, FALSE) == FAIL)
 	EMSG2(_(e_notopen), fname);
 }

@@ -752,6 +752,8 @@ EXTERN int	did_swapwrite_msg INIT(= FALSE);
 					    /* set after swap write error msg */
 EXTERN int	undo_off INIT(= FALSE);	    /* undo switched off for now */
 EXTERN int	global_busy INIT(= 0);	    /* set when :global is executing */
+EXTERN int	listcmd_busy INIT(= FALSE); /* set when :argdo, :windo or
+					       :bufdo is executing */
 EXTERN int	need_start_insertmode INIT(= FALSE);
 					    /* start insert mode soon */
 EXTERN char_u	*last_cmdline INIT(= NULL); /* last command line (for ":) */
