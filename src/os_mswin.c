@@ -1127,7 +1127,7 @@ clip_mch_request_selection(VimClipboard *cbd)
 	    /* The text is in the active codepage.  Convert to 'encoding',
 	     * going through UCS-2. */
 	    MultiByteToWideChar_alloc(GetACP(), 0, str, str_size,
-						   &(LPWSTR)to_free, &maxlen);
+						 (LPWSTR *)&to_free, &maxlen);
 	    if (to_free != NULL)
 	    {
 		str_size = maxlen;
