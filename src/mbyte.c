@@ -2881,7 +2881,9 @@ iconv_string(fd, str, slen)
 
 	to = (char *)result + done;
 	tolen = len - done - 2;
-	if (iconv(fd, &from, &fromlen, &to, &tolen) != (size_t)-1)
+	/* Avoid a warning for systems with a wrong iconv() prototype by
+	 * casting the second argument to void *. */
+	if (iconv(fd, (void *)&from, &fromlen, &to, &tolen) != (size_t)-1)
 	{
 	    /* Finished, append a NUL. */
 	    *to = NUL;

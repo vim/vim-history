@@ -1255,7 +1255,7 @@ retry:
 		 * If there is conversion error or not enough room try using
 		 * another conversion.
 		 */
-		if ((iconv(iconv_fd, &fromp, &from_size, &top, &to_size)
+		if ((iconv(iconv_fd, (void *)&fromp, &from_size, &top, &to_size)
 			    == (size_t)-1 && ICONV_ERRNO != ICONV_EINVAL)
 						  || from_size > CONV_RESTLEN)
 		    goto rewind_retry;
@@ -4447,7 +4447,7 @@ buf_write_bytes(ip)
 	    /*
 	     * If iconv() has an error or there is not enough room, fail.
 	     */
-	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen)
+	    if ((iconv(ip->bw_iconv_fd, (void *)&from, &fromlen, &to, &tolen)
 			== (size_t)-1 && ICONV_ERRNO != ICONV_EINVAL)
 						    || fromlen > CONV_RESTLEN)
 	    {
