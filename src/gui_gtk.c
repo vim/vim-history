@@ -945,37 +945,40 @@ gui_mch_dialog(int type,		/* type of dialog */
 	       char_u * buttons,	/* names of buttons */
 	       int def_but)		/* default button */
 {
-    char_u *names;
-    char_u *p;
-    int i;
-    int butcount;
-    int dialog_status = -1;
+    char_u		*names;
+    char_u		*p;
+    int			i;
+    int			butcount;
+    int			dialog_status = -1;
+    int			vertical;
 
-    GtkWidget *dialog;
-    GtkWidget *frame;
-    GtkWidget *vbox;
-    GtkWidget *table;
-    GtkWidget *pixmap;
-    GtkWidget *dialogmessage;
-    GtkWidget *action_area;
-    GtkWidget *sub_area;
-    GtkWidget *separator;
-    GtkAccelGroup *accel_group;
+    GtkWidget		*dialog;
+    GtkWidget		*frame;
+    GtkWidget		*vbox;
+    GtkWidget		*table;
+    GtkWidget		*pixmap;
+    GtkWidget		*dialogmessage;
+    GtkWidget		*action_area;
+    GtkWidget		*sub_area;
+    GtkWidget		*separator;
+    GtkAccelGroup	*accel_group;
 
-    GdkPixmap *icon = NULL;
-    GdkBitmap *mask = NULL;
-    char **icon_data = NULL;
+    GdkPixmap		*icon = NULL;
+    GdkBitmap		*mask = NULL;
+    char		**icon_data = NULL;
 
-#define MAXBUT 10
-    GtkWidget *button[MAXBUT];
-    ButtonData data[MAXBUT];
-    CancelData cancel_data;
+    GtkWidget		**button;
+    ButtonData		*data;
+    CancelData		cancel_data;
 
     if (title == NULL)
 	title = (char_u *) "Vim dialog...";
 
     if ((type < 0) || (type > VIM_LAST_TYPE))
 	type = VIM_GENERIC;
+
+    /* Check 'v' flag in 'guioptions': vertical button placement. */
+    vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
 
     /* if our pointer is currently hidden, then we should show it. */
     gui_mch_mousehide(FALSE);
@@ -1054,9 +1057,13 @@ gui_mch_dialog(int type,		/* type of dialog */
     gtk_box_pack_end(GTK_BOX(vbox), action_area, FALSE, TRUE, 0);
     gtk_widget_show(action_area);
 
-    sub_area = gtk_hbox_new(TRUE, 0);
+    /* Add a [vh]box in the hbox to center the buttons in the dialog. */
+    if (vertical)
+	sub_area = gtk_vbox_new(FALSE, 0);
+    else
+	sub_area = gtk_hbox_new(FALSE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(sub_area), 0);
-    gtk_box_pack_start(GTK_BOX(action_area), sub_area, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(action_area), sub_area, TRUE, FALSE, 0);
     gtk_widget_show(sub_area);
 
     /*
@@ -1092,15 +1099,30 @@ gui_mch_dialog(int type,		/* type of dialog */
     }
     *p = NUL;
 
+    /* Count the number of buttons and allocate button[] and data[]. */
+    butcount = 1;
+    for (p = names; *p; ++p)
+	if (*p == DLG_BUTTON_SEP)
+	    ++butcount;
+    button = (GtkWidget **)alloc((unsigned)(butcount * sizeof(GtkWidget *)));
+    data = (ButtonData *)alloc((unsigned)(butcount * sizeof(ButtonData)));
+    if (button == NULL || data == NULL)
+    {
+	vim_free(names);
+	vim_free(button);
+	vim_free(data);
+	return -1;
+    }
+
     /* Attach the new accelerator group to the window. */
     accel_group = gtk_accel_group_new();
     gtk_accel_group_attach(accel_group, GTK_OBJECT(dialog));
 
     p = names;
-    for (butcount = 0; butcount < MAXBUT; ++butcount) {
-	char_u *next;
-	GtkWidget *label;
-	guint accel_key;
+    for (butcount = 0; *p; ++butcount) {
+	char_u		*next;
+	GtkWidget	*label;
+	guint		accel_key;
 
 	/* Chunk out this single button. */
 	for (next = p; *next; ++next) {
@@ -1139,19 +1161,14 @@ gui_mch_dialog(int type,		/* type of dialog */
 			   GTK_SIGNAL_FUNC(dlg_button_clicked),
 			   (gpointer) &data[butcount]);
 
-	if (*next == NUL) {
-	    gtk_box_pack_end(GTK_BOX(action_area), button[butcount],
-			     FALSE, TRUE, 0);
-	    break;
-	} else {
-	    gtk_box_pack_start(GTK_BOX(sub_area), button[butcount],
-			       TRUE, TRUE, 0);
-	}
+	gtk_box_pack_start(GTK_BOX(sub_area), button[butcount],
+			   TRUE, FALSE, 0);
 	p = next;
     }
 
     vim_free(names);
 
+    --butcount;
     --def_but;	    /* 1 is first button */
     if (def_but < 0)
 	def_but = 0;
@@ -1177,6 +1194,9 @@ gui_mch_dialog(int type,		/* type of dialog */
 
     /* let the garbage collector know that we don't need it anylonger */
     gtk_accel_group_unref(accel_group);
+
+    vim_free(button);
+    vim_free(data);
 
     return dialog_status;
 }

@@ -922,9 +922,10 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     Widget		dialog;
     Widget		dialogshell;
     Widget		dialogmessage;
-#define MAXBUT 10
-    Widget		dialogButton[MAXBUT];
+    Widget		dialogButton;
+    Widget		prev_dialogButton = NULL;
     int			butcount;
+    int			vertical;
 
     if (title == NULL)
 	title = (char_u *)"Vim dialog";
@@ -932,6 +933,9 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 
     /* if our pointer is currently hidden, then we should show it. */
     gui_mch_mousehide(FALSE);
+
+    /* Check 'v' flag in 'guioptions': vertical button placement. */
+    vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
 
     /* The shell is created each time, to make sure it is resized properly */
     dialogshell = XtVaCreatePopupShell("dialogShell",
@@ -942,7 +946,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	goto error;
     dialog = XtVaCreateManagedWidget("dialog",
 	    formWidgetClass, dialogshell,
-	    XtNdefaultDistance, 30,
+	    XtNdefaultDistance, 20,
 	    XtNforeground, gui.menu_fg_pixel,
 	    XtNbackground, gui.menu_bg_pixel,
 	    NULL);
@@ -967,7 +971,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	return -1;
 
     p = buts;
-    for (butcount = 0; butcount < MAXBUT; ++butcount)
+    for (butcount = 0; *p; ++butcount)
     {
 	for (next = p; *next; ++next)
 	{
@@ -979,7 +983,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		break;
 	    }
 	}
-	dialogButton[butcount] = XtVaCreateManagedWidget("button",
+	dialogButton = XtVaCreateManagedWidget("button",
 		commandWidgetClass, dialog,
 		XtNlabel, p,
 		XtNtop, XtChainBottom,
@@ -987,22 +991,20 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		XtNleft, XtChainLeft,
 		XtNright, XtChainLeft,
 		XtNfromVert, dialogmessage,
+		XtNvertDistance, vertical ? 4 : 20,
 		XtNforeground, gui.menu_fg_pixel,
 		XtNbackground, gui.menu_bg_pixel,
 		XtNresizable, False,
 		NULL);
 	if (butcount > 0)
-	    XtVaSetValues(dialogButton[butcount],
-		    XtNfromHoriz, dialogButton[butcount - 1],
+	    XtVaSetValues(dialogButton,
+		    vertical ? XtNfromVert : XtNfromHoriz, prev_dialogButton,
 		    NULL);
 
-	XtAddCallback(dialogButton[butcount], XtNcallback,
-						butproc, (XtPointer)butcount);
-	if (*next == NUL)
-	    break;
+	XtAddCallback(dialogButton, XtNcallback, butproc, (XtPointer)butcount);
 	p = next;
+	prev_dialogButton = dialogButton;
     }
-    ++butcount;
     vim_free(buts);
 
     XtRealizeWidget(dialogshell);
@@ -1019,6 +1021,10 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    (Position)((wv - wd) / 2),
 	    (Position)((hv - hd) / 2),
 	    &x, &y);
+    if (x < 0)
+	x = 0;
+    if (y < 0)
+	y = 0;
     XtVaSetValues(dialogshell, XtNx, x, XtNy, y, NULL);
 
     app = XtWidgetToApplicationContext(dialogshell);
