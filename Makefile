@@ -62,7 +62,7 @@ first all install uninstall tools config configure proto depend lint tags types 
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0e
+MINOR = 0f
 
 # CHECKLIST for creating a new version:
 #
@@ -485,7 +485,8 @@ SRC_AMI =	\
 		src/Make_dice.mak \
 		src/Make_manx.mak \
 		src/Make_sas.mak \
-		src/ctags/Makefile.amiga \
+		src/ctags/Makefile.manx \
+		src/ctags/Makefile.sas \
 		src/gui_amiga.c \
 		src/gui_amiga.h \
 		src/os_amiga.c \
@@ -509,7 +510,7 @@ SRC_MAC =	\
 SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
-		src/ctags/os_vms.mms \
+		src/ctags/descrip.mms \
 		src/gui_vms_conf.h \
 		src/os_vms.c \
 		src/os_vms.h \
@@ -585,6 +586,7 @@ RT_ALL =	\
 		runtime/macros/README.txt \
 		runtime/macros/diffwin.vim \
 		runtime/macros/dvorak \
+		runtime/macros/explorer.vim \
 		runtime/macros/hanoi/click.me \
 		runtime/macros/hanoi/hanoi.vim \
 		runtime/macros/hanoi/poster \
