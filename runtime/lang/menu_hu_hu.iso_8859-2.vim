@@ -1,7 +1,7 @@
 " Menu Translations:	Hungarian (Magyar)
-" Original Translation:	Zoltán Aradffy
+" Original Translation:	Zoltán Árpádffy
 " Maintained By:	Kontra Gergely <kgergely@mcl.hu>
-" Last Change:		2001 Feb 19
+" Last Change:		2002 Mar 06
 " I'm working on defining (unaccented) hotkeys for everything.
 " I want to remove y and z hotkeys, because on the hungarian keymap they're at
 " a differrent place.

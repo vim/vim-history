@@ -1,2 +1,4 @@
 " Menu Translations:	German for Windows
-source <sfile>:p:h/menu_de_de.iso_8859-1.vim
+
+scriptencoding cp1252
+source <sfile>:p:h/menu_de_de.latin1.vim

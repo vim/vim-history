@@ -1,2 +1,4 @@
 " Menu Translations:	French for Windows
-source <sfile>:p:h/menu_fr_fr.iso_8859-1.vim
+
+scriptencoding cp1252
+source <sfile>:p:h/menu_fr_fr.latin1.vim

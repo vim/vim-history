@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (for Windows)
 " Translated By:	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		05-Sep-2001.
+" Last Change:		25-Feb-2002.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -19,6 +19,7 @@ menutrans &User\ Manual		ユーザマニュアル(&U)
 menutrans &How-to\ links	&How-toリンク
 menutrans &Credits		クレジット(&C)
 menutrans Co&pying		著作権情報(&P)
+menutrans O&rphans		孤児(&R)
 menutrans &Version		バージョン情報(&V)
 menutrans &About		Vimについて(&A)
 
@@ -72,6 +73,8 @@ menutrans Block\ and\ Insert		ブロック/挿入モード時
 menutrans Always			常時
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!
 	\	挿入(初心者)モード切替(&M)<Tab>:set\ im!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!
+	\	Vi互換モード切替(&O)<Tab>:set\ cp!
 menutrans Search\ &Path\.\.\.		検索パス(&P)\.\.\.
 menutrans Ta&g\ Files\.\.\.		タグファイル(&G)\.\.\.
 "
@@ -192,7 +195,7 @@ menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww
 menutrans P&revious<Tab>^WW		前へ(&R)<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=	同じ高さに(&E)<Tab>^W=
-menutrans &Max\ Height<Tab>^W_		最大高に(&M)<Tab>^W
+menutrans &Max\ Height<Tab>^W_		最大高に(&M)<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		最小高に(&i)<Tab>^W1_
 menutrans Max\ &Width<Tab>^W\|		最大幅に(&W)<Tab>^W\|
 menutrans Min\ Widt&h<Tab>^W1\|		最小幅に(&H)<Tab>^W1\|
