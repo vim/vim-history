@@ -3297,7 +3297,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 		    if (vim_strchr(eap->arg, '$') != NULL
 			    || vim_strchr(eap->arg, '~') != NULL)
 		    {
-			expand_env(eap->arg, NameBuff, MAXPATHL);
+			expand_env_esc(eap->arg, NameBuff, MAXPATHL, TRUE);
 			has_wildcards = mch_has_wildcard(NameBuff);
 			p = NameBuff;
 		    }

@@ -4277,13 +4277,23 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     if (shell_style != STYLE_BT)
 	for (i = 0; i < num_pat; ++i)
 	{
-#ifdef USE_SYSTEM
-	    STRCAT(command, " \"");	/* need extra quotes because we */
-	    STRCAT(command, pat[i]);	/*	 start the shell twice */
-	    STRCAT(command, "\"");
-#else
-	    STRCAT(command, " ");
-	    STRCAT(command, pat[i]);
+	    /* When using system() always add extra quotes, because the shell
+	     * is started twice.  Otherwise it's only needed when the pattern
+	     * includes spaces or single quotes. */
+#ifndef USE_SYSTEM
+	    if (vim_strpbrk(pat[i], " '") != NULL)
+#endif
+	    {
+		STRCAT(command, " \"");
+		STRCAT(command, pat[i]);
+		STRCAT(command, "\"");
+	    }
+#ifndef USE_SYSTEM
+	    else
+	    {
+		STRCAT(command, " ");
+		STRCAT(command, pat[i]);
+	    }
 #endif
 	}
     if (flags & EW_SILENT)
