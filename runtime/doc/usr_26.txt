@@ -1,13 +1,13 @@
-*usr_26.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_26.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 				  Repeating
 
 
 An editing task is hardly ever unstructured.  A change often needs to be made
-seveal times.  In this chapter a number of useful ways to repeat a change will
-be explained.
+several times.  In this chapter a number of useful ways to repeat a change
+will be explained.
 
 |26.1|	Repeating with Visual mode
 |26.2|	Add and subtract
@@ -52,7 +52,7 @@ a substitute command for each year that appears, the CTRL-A command can be
 used.
    Using the same text as above, search for a year: >
 
-   	/19[0-9][0-9]\|20[0-9][0-9]
+	/19[0-9][0-9]\|20[0-9][0-9]
 
 Now press CTRL-A.  The year will be increased by one:
 
@@ -146,8 +146,8 @@ instead.  This mode gives you a nice command-line interface that makes it easy
 to put into a batch file.  ("Ex command" is just another name for a
 command-line (:) command.)
    The Ex mode commands you need are as follows: >
-   
-   	%s/-person-/Jones/g
+
+	%s/-person-/Jones/g
 	write tempfile
 	quit
 
@@ -158,7 +158,7 @@ batch mode, use this shell script: >
 	  vim -e -s $file < change.vim
 	  lpr -r tempfile
 	done
-	  
+
 The for-done loop is a shell construct to repeat the two lines in between,
 while the $file variable is set to a different file name each time.
    The second line runs the Vim editor in Ex mode (-e argument) on the file

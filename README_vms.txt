@@ -1,4 +1,4 @@
-README_vms.txt for version 6.0ao of Vim: Vi IMproved.
+README_vms.txt for version 6.0ap of Vim: Vi IMproved.
 
 This file explains the installation of Vim on VMS systems.
 See "README.txt" in the runtime archive for information about Vim.
@@ -30,9 +30,9 @@ and of course
 The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files,
 but there are also prepared "deploy ready" archives:
 
-vim-60-alpha.zip		GUI and console executables with runtime and 
+vim-60-alpha.zip		GUI and console executables with runtime and
 				help files for Alpha systems
-vim-60-vax.zip			GUI and console executables with runtime and 
+vim-60-vax.zip			GUI and console executables with runtime and
 				help files for VAX systems
 
 These executables and up to date patches for OpenVMS system are downloadable

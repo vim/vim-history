@@ -1,8 +1,8 @@
-# Afrikaans translation for Vim   
+# Afrikaans translation for Vim
 # Do ":help uganda"  in Vim to read copying and usage conditions.
 # Do ":help credits" in Vim to see a list of people who contributed.
 # Danie Roux <droux@tuks.co.za>, 2001
-# Edited: Jean Jordaan (njj) <jean@mosaicsoftware.com>, 2001/03/09 
+# Edited: Jean Jordaan (njj) <jean@mosaicsoftware.com>, 2001/03/09
 # njj: Save == Stoor. Write == Skryf.
 # njj: "deleted" == "geskrap"; "remove" == "verwyder"
 # njj: "source" == "uitvoer", want "sourced" lêers word uitgevoer

@@ -1,7 +1,7 @@
-*usr_07.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 04
+*usr_07.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			  Editing more than one file
 
 
@@ -67,7 +67,7 @@ You can start Vim to edit a sequence of files.  For example: >
 
 	vim one.c two.c three.c
 
-This command starts Vim and tells it that you will be editing three files.  
+This command starts Vim and tells it that you will be editing three files.
 Vim displays just the first file.  After you have done your thing in this
 file, to edit the next file you use this command: >
 
@@ -185,7 +185,7 @@ is above the 6 key).  Example: >
 	:args one.c two.c three.c
 
 You are now in one.c. >
-	
+
 	:next
 
 Now you are in two.c.  Now use CTRL-^ to go back to one.c.  Another CTRL-^ and
@@ -436,7 +436,7 @@ for example.  If you try to make a change you get this error message:
 	E21: Cannot make changes, 'modifiable' is off ~
 
 You could use the -M argument to setup Vim to work in a viewer mode.  This is
-only a voluntary though, since these commands will remove the protection: >
+only voluntary though, since these commands will remove the protection: >
 
 	:set nomodifiable
 	:set write

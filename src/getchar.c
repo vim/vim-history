@@ -1777,9 +1777,12 @@ vgetorpeek(advance)
 			    /*
 			     * Only consider an entry if the first character
 			     * matches and it is for the current state.
+			     * Skip ":lmap" mappings if keys were mapped.
 			     */
 			    if (mp->m_keys[0] == c1
-						&& (mp->m_mode & local_State))
+				    && (mp->m_mode & local_State)
+				    && ((mp->m_mode & LANGMAP) == 0
+					|| typebuf.tb_maplen == 0))
 			    {
 #ifdef FEAT_LANGMAP
 				int	nomap = nolmaplen;
@@ -2475,7 +2478,13 @@ inchar(buf, maxlen, wait_time)
 	out_flush();
 #ifdef FEAT_GUI
 	if (gui.in_use)
+	{
 	    gui_update_cursor(FALSE, FALSE);
+# ifdef FEAT_MOUSESHAPE
+	    if (postponed_mouseshape)
+		update_mouseshape(-1);
+# endif
+	}
 #endif
     }
 

@@ -148,7 +148,7 @@ fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
 	let ic = &ic
 	set ic " ignore the case of the tags
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
 	    let open = <SID>HtmlIndentOpen(a:lnum)
 	    let close = <SID>HtmlIndentClose(a:lnum)
 	    if 0 != open || 0 != close

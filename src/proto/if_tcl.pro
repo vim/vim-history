@@ -1,4 +1,7 @@
 /* if_tcl.c */
+void tcl_init __ARGS((char *arg));
+int tcl_enabled __ARGS((void));
+void tcl_end __ARGS((void));
 void ex_tcl __ARGS((exarg_T *eap));
 void ex_tclfile __ARGS((exarg_T *eap));
 void ex_tcldo __ARGS((exarg_T *eap));

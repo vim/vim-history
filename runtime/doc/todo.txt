@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 22
+*todo.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,18 +29,10 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Motif: Changing the Tooltip font causes a crash. (David Harrison)
+Amiga: test 47 fails.  Fails to read diff or does this in a wrong way,
+resulting in a ml_get error.
 
-Docs for Make_dvc.mak. (Walter Briscoe)
-
-MS-DOS: Should find a way to delete the registry entry with uninstal.exe that
-install.exe creates for uninstalling.
-
--   Clean up version6.txt (from "IMPROVEMENTS").
--   Check the todo list for items that have already been implemented.
--   Do profiling to check performance bottlenecks.
-    check coladvance2() with/without 'virtualedit'.
-    horizontal scrolling with syntax highlighting.
+Test printing with duplex and uncollated copies, odd nr of pages.
 
 Vi incompatibility:
 8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
@@ -69,10 +61,10 @@ Vi incompatibility:
 8   In Insert mode, when using <BS> or <Del>, don't wipe out the text, but
     only move back the cursor.	Behaves like '$' in 'cpoptions'.  Use a flag
     in 'cpoptions' to switch this on/off.
-8   When editing a file which is a symbolic link, Vim opens another symbolic
-    link on the same file under the name of the first one.  Adjust the file
-    name in the buffer to the last one used?  Use several file names in one
-    buffer???
+8   When editing a file which is a symbolic link, and then opening another
+    symbolic link on the same file, Vim uses the name of the first one.
+    Adjust the file name in the buffer to the last one used?  Use several file
+    names in one buffer???
     Also: When first editing file "test", which is symlink to "test2", and
     then editing "test2", you end up editing buffer "test" again.  Change the
     name of the buffer to the actual file, instead of using the name of the
@@ -122,13 +114,8 @@ GTK+ GUI known bugs:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
--   GTK with Gnome gives error message:
-	Gdk-WARNING **: locale not supported by C library
-    Looks like this can't be avoided.
 9   When logging out from KDE, vim is not told to save its files.  Catching
     the WM_SAVE_YOURSELF event doesn't work.
-8   For some fonts characters are drawn in the line above.  Include fix
-    ~/vim/patches/dalecki-5.6 . (Marcin Dalecki)
 9   When selecting a font from the font selector with an embedded space it
     cannot be found. (Tsirkin)
 8   When a font is not fixed width, the message "not fixed-width" disappears
@@ -136,11 +123,9 @@ GTK+ GUI known bugs:
     Add some code to handle proportional fonts?  Need to draw each character
     separately (like xterm).  Also for when a double-width font is not exactly
     double-width. (Maeda)
-8   Move gtk_main_quit() calls from call to add_to_input_buf() to inside the
-    function?
 9   Can't paste a Visual selection from GTK-gvim to vim in xterm when it is
     longer than 4000 characters.  Works OK from gvim to gvim and vim to vim.
-    This is a GTK problem.
+    Pasting through xterm (using the shift key) also works.
 9   With the guifont "-*-clean-medium-r-*-*-8-*-*-*-*-80-*" bold characters
     are drawn wrong.  Try on C source code.  The bold font is wider than the
     medium font.  Check bold font cellsize and use bold font trick if it's
@@ -154,15 +139,9 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
--   glob() matches "foo.vimarg" when looking for "foo.vim".  (Ron Aaron)  It's
-    probably matching the short filename of a long filename.  Try expanding a
-    file name from short filename to long file name, skip it if it changes?
-8   Win32: cannot tearoff a menu with "nmap n /^M". (Pritesh Mistry)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
 8   When using two monitors, the code that checks/fixes the window size and
     position (e.g. when a font changes) doesn't work properly. (George Reilly)
--   Check libcall() and libcallnr() for Win32.  No crash when function returns
-    1 or -1?
 8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
     comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
@@ -172,34 +151,33 @@ Win32 GUI known bugs:
 8   When Vim is minimized and when maximizing it a file-changed dialog pops
     up, Vim isn't maximized.  It should be done before the dialog, so that it
     appears in the right position. (Webb)
-9   Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
-    the short filename instead and does the path compare work?
 8   When activating window with mouse click, don't move cursor to mouse click.
     Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
-9   Clipboard doesn't always work as it should:
-    - Selecting text while editing a command-line has an implied copy to the
-      clipboard.  Remove this, and add a command character to copy/cut/delete
-      the selected text (used in the popup menu).
-    - When selecting at the more-prompt or hit-enter-prompt right mouse
-      button doesn't give popup menu.  Also has an implied copy to the
-      clipboard.  Use the popup menu "Copy" entry for that.
+9   When selecting at the more-prompt or hit-enter-prompt, the right mouse
+    button doesn't give popup menu.
+    At the hit-enter prompt CTRL-Y doesn't work to copy the modeless
+    selection.
 9   When there are more than 32767 lines, the scrollbar has a roundoff error.
     Clicking the up or down error scrolls two lines or more.  Looks like there
     is an extra event that reports the new position of the scrollbar.
 9   When file modified outside of Vim and Vim gets focus, redraw is wrong.
     Put focus event in input buffer and let generic Vim code handle it.
-8   Make new version of VisVim.dll which includes the patch from Cordell.
+    Try this: ":set sw ts", get enter-prompt, then change the file and clock
+    "reload" in the dialog for the changed file: Window moves with the cursor!
 8   When 'grepprg' doesn't execute, the error only flashes by, the
     user can hardly see what is wrong. (Moore)
     Could use vimrun with an "-nowait" argument to only wait when an error
     occurs, but "command.com" doesn't return an error code.
 8   When the 'shell' cannot be executed, should give an appropriate error msg.
+    Esp. for a filter command, currently it only complains the file could not
+    be read.
 8   MessageBox used for error messages can be too big.	There is no way to
     scroll it, or even hit the OK button (but you can hit return).
+    Use a scrollable window.
 7   Add an option to add one pixel column to the character width?  Lucida
     Console italic is wider than the normal font ("d" overlaps with next char).
 7   At the hit-enter prompt scrolling now no longer works.  Need to use the
-    keyboard to get around this.  Pretend <CR> was hit when the users tries to
+    keyboard to get around this.  Pretend <CR> was hit when the user tries to
     scroll?
 7   'mousefocus' is disabled until the next mouse click, when trying to exit
     by hitting the X in the title bar. (Webb)
@@ -213,15 +191,9 @@ Win32 GUI known bugs:
 8   CTRL-@ doesn't work.  Don't even get a message for it?
 8   CTRL-- doesn't work for AZERTY, because it's CTRL-[ for QWERTY.  How do we
     know which keyboard is being used?
-8   When using ":se guifont=Courier_New" bold chars leave pixels behind, in
-    front of a character, after a TAB.  (McRae)
 7   When scrolling, and a background color is dithered, the dither pattern
     doesn't always join correctly between the scolled area and the new drawn
     area (Koloseike).
-7   File/Print uses notepad, which puts the name of the temp file on top of
-    each page.  How do we get the actual file name there?
-    Alternative: use the PrintFile utility (freeware).
-    Alternative: use prfile32 (Aaron)
 9   Replace SendToVim and OpenWithVim with C++ versions? (Rafal Dibrowa)
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
@@ -231,16 +203,9 @@ Athena GUI:
 8   Athena: using a fontset for menus doesn't work.  Check code for
     menu_fontset marked with EXPERIMENTAL.  Perhaps use fontsets for
     everything?
-9   When using ":unmenu" in menu item, the reversing of menu items is wrong.
-    Happens with Syntax/manual.	Problem with not removing the reversed text
-    when destroying the menu item?  For Rochholz Vim crashes.
-9   When using "menu a.b.c.d lll", the "b" submenu does not disappear.
 9   When dragging the scrollbar thumb very fast, focus is only obtained in
-    the scrollbar itself.
-8   When "j" or "k" repeated quickly, display is messed up (Lauther).
-8   Has extra stripes here and there. (Zeitlin).
-    When dragging last status line with the mouse, small black lines appear in
-    the command line pseudo-scrollbar (only when status line moved quickly).
+    the scrollbar itself.  And the thumb is no longer updated when moving
+    through files.
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
 7   The file selector's scrollbar colors are not set after doing a
@@ -264,16 +229,8 @@ Athena GUI:
 
 
 Motif GUI:
-8   Motif GUI: draws in right border of window, scrolling leaves pixels
-    behind.  Scroll two more pixels?  Or make window two pixels wider?
-8   Setting the default button for a dialog doesn't work.
-9   When starting GUI with ":gui" while 'writedel' is non-zero, escape
-    sequences are split up.  Motif version crashes.
-8   When changing the color of the toolbar with ":hi toolbar", the pixmaps are
-    not updated.  Need to destroy them and allocate with the new colors.
 8   Popup menu ordering is wrong.
-8   Dialog: Pointer should be moved to the default button.  Accelerators don't
-    work yet.
+8   Dialog: Accelerators don't work yet.
 8   Lesstif 0.89.4: Tearing-off a menu sometimes gives a "Restoring focus to
     NULL widget!" error.  Probably a Lesstif problem.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
@@ -318,8 +275,6 @@ GUI:
 8   X11: When the window size is reduced to fit on screen, there are blank
     lines below the text and bottom scrollbar.  "gvim -geometry 80x78+0+0".
     When the "+0+0" is omitted it works.
-8   When the character cell of some fonts is different (ascent/descent), the
-    cursor leaves an underline behind (Hiebert).
 8   When starting an external command, and 'guipty' set, BS and DEL are mixed
     up.  Set erase character somehow?
 8   A dead circumflex followed by a space should give the '^' character
@@ -327,13 +282,8 @@ GUI:
     Also: Bednar has some code for dead key handling.
     Also: Nedit 5.0.2 with USE_XMIM does it right. (Gaya)
 8   The compose key doesn't work properly (Cepas).  Both for Win32 and X11.
-7   The compiled-in highlight defaults allocate colors, which will never be
-    freed.  Move them to a startup script?  Only use bold and underline for
-    the compiled-in defaults.
 7   The cursor in an inactive window should be hollow.  Currently it's not
     visible.
-8   With wrapping lines, clicking below the scrollbar thumb moves more than a
-    screenfull of lines.  Adjust the thumb size when lines wrap.
 7   GUI on Solaris 2.5.1, using /usr/dt/..: When gvim starts, cursor is
     hollow, after window lowered/raised it's OK. (Godfrey)
 7   When starting GUI with ":gui", and window is made smaller because it
@@ -351,10 +301,10 @@ GUI:
 
 
 MSDOS/DJGPP:
-8   Win32: Opening a file dir\&file doesn't work.  Also \^.  Do we care?
 8   DJGPP: "cd c:" doesn't work.  Works OK in 16-bit version.  mch_getperm()
     returns -1 for "c:".
-9   The 16 bit version runs out of memory in test 31.
+9   The 16 bit version runs out of memory very quickly.  Should find unused
+    code and reduce static data.
 9   DOS: Make CTRL-Fx and ALT-Fx work.
     CTRL-F1 = CE-5E, CTRL-F2 = CE-5F, .., CTRL-F10 = CE-67
     ALT-F1 = CE-68, ALT-F2 = CE-69, .., ALT-F10 = CE-71
@@ -376,10 +326,6 @@ MSDOS/DJGPP:
 7   MSDOS 16 bit version can't work with COMSPEC that has an argument, e.g.:
     COMSPEC=C:\WINDOWS\COMMAND.COM /E:4096    (Bradley)
     Caused by BCC system() function (Borland "make" has the same problem).
-8   Makefile.bor can't compile xxd and ctags without editing the makefiles.
-    Create a Makefile.bor for xxd and ctags.
-8   Check if with DJGPP 2.01 the problem of a path starting with a backslash is
-    still present.
 8   Mouse: handle left&right button pressed as middle button pressed.  Add
     modifier keys shift, ctrl and alt.
 7   When too many files are open (depends on FILES), strange things happen.
@@ -414,9 +360,7 @@ MSDOS, OS/2 and Win32:
 
 Windows 95:
 8   Editing a file by it's short file name and writing it, makes the long file
-    name disappear.  Use Unix method for making a backup file?	Better: make
-    the way the backup file is made (copy or rename) an option, not a #define
-    (also needed for OS/2, the icon goes to the backup file).
+    name disappear.  Setting 'backupcopy' helps.
     Use FindFirstFile()->cAlternateFileName in fname_case() (George).
 8   Doing wildcard expansion, will match the short filename, but result in the
     long filename (both DJGPP and Win32).
@@ -445,8 +389,8 @@ Win32 console:
 8   In os_win32.h, HAVE_STRICMP and HAVE_STRNICMP are defined only if __GNUC__
     is not defined.  Shouldn't that be the other way around?
 9   When using libcall() for a function that returns an invalid pointer, Vim
-    crashes.  Check for a bad pointer with isBadReadPtr(). (Zeitlin)
-    Doesn't appear to work really, at least check for "1".
+    crashes.  Check for a bad pointer with isBadReadPtr() doesn't appear to
+    work well.
 
 
 Amiga:
@@ -485,19 +429,25 @@ VMS:
 
 
 "Small" problems:
-8   Multi-byte with 'rightleft': when a double-wide character wraps to the
-    next line, character positioning is wrong. (Raphael Finkel)
+8   ":hardcopy": When printing collated copies with duplex and there is an odd
+    number of pages, the first page of the second copy goes on the back of the
+    last page of the first copy. (Mike Williams)
+9   dosinst.c: The DJGPP version can't uninstall the Uninstall registry key on
+    Windows NT.  How to install a .inf file on Windows NT and how to detect
+    that Windows NT is being used?
+8   When opening the same file on Unix and on MS-Windows, there is no
+    ATTENTION message, because the path in the swap file is different.  Using
+    a relative path name will cause no ATTENTION for Vim 5.8.
+    Somehow add a flag that the swap file is in the same dir as the file?
 9   When XIM is being used, sometimes one character is lost.  Probably when
     XIM has just been enabled.
 9   Using "rx" with 'virtualedit' set on a double-wide UTF-8 character of
     three bytes, keeps the first two bytes and adds a space.  Should replace
     the whole character if it's the same width, insert a space when it's
     smaller.
-9   Using "grx" on a double-wide character doesn't replace the character with
-    a space.
-8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
 7   When 'virtualedit' is used, moving with "$" and the "rx" still replaces
     the whole block instead of until the end of the line in each line.
+8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
     "lev1/lev2/bar.h".  Should pass current file name on from
@@ -525,23 +475,12 @@ VMS:
     ":w!!" for that.
     Or ask for permission to overwrite it (if file can be made writable) and
     restore file to readonly afterwards.
-8   Buffers menu, when torn-off, disappears when being refreshed.
-8   Buffers menu looks bad with very long file names.  Make long names shorter
-    by putting "..." in the middle. (Ron Aaron)
-8   Is calling msg_start() in main() really needed?  Any printed message
-    should include it already.
-8   When in Insert mode with 'scrolloff' set, inserting text at the end of the
-    file, "!" lines will stay there while they could be used. (Park)
 7   When compiled with "xterm_clipboard", startup can be slower and might get
     error message for invalid $DISPLAY.  Try connecting to the X server in the
     background (forked), so that Vim starts up quicker?
 8   For xterm need to open a connection to the X server to get the window
     title, which can be slow.  Can also get the title with "<Esc>[21t", no
     need to use X11 calls.  This returns "<Esc>]l{title}<Esc>\".
-8   Add term entries for function keys on xterm with alt and ctrl (new in pl
-    94).  E.g., Control adds ";5" in "<Esc>[20;5~".  Find a generic way to
-    prepend a modifier in console mode, to avoid having to specify each
-    individual modified key.
 8   When the builtin xterm termcap contains codes that are not wanted, need a
     way to avoid using the builtin termcap.
 8   '[ and '] should be set to start/end of line when using a linewise operator
@@ -560,15 +499,6 @@ VMS:
     filesystem, an illegal file name may be created: ".vim".
 8   For each buffer that is opened, the viminfo file is opened and read to
     check for file marks.  This can be slow.
-7   "dd" on the last line of the file, causes the last but one line to be
-    redrawn.  Should not be necessary.
-7   Using "gqj" near the last line of the window, makes the window scroll up,
-    even though this isn't necessary.
-8   Should be able to compile Vim in another directory, with $(srcdir) set to
-    where the sources are. Add $(srcdir) in the Makefile in a lot of places.
-    (Netherton)
-8   Perl adds arguments to the compiler.  Check that compiling a program still
-    works after that, otherwise following configure checks will fail.
 7   In xterm, recognize both vt100 and vt220 cursor keys.  Change
     add_termcode() to not remove an existing entry for a name, when it's
     needed.
@@ -580,39 +510,20 @@ VMS:
 7   When using search history, the trailing '/' or '?' needs to be changed
     depending on the search command.  When there was no '/' or '?', add one, so
     flags can be added easily?
-7   CTRL-F at the end of the file, when 'so' is set, redraws twice.  When the
-    window is small (< 2 * 'so') it behaves differently.
 9   CTRL-E and CTRL-Y don't work in small window when 'so' is 4 and lines are
     wrapping (Acevedo/in.226).  E.g., when using CTRL-E, window height 7,
     window might actually scroll down when last line of buffer is displayed.
     --> Remember if the previous command was "cursor follows screen" or
     "screen follow cursor" and use this in cursupdate().
-9   Text is scrolled up and down: (acevedo)
-     - set scrolloff to something >1 (i always use "set so=4")
-     - set the win. hegiht to scrolloff + 1  (i'd do ^W5_)
-     - load a file with scrolloff + 2 lines
-     - put the cursor in line scrolloff +1  (5G)
-     - if you move the cursor along the line (h, l, insert text, etc)
-     the text is crolled with each keystroke (once up, once down,...)
-     sometimes with <Esc> the text is scrolled up and down without stop!!!!
 7   tilde_replace() can only handle "~/", should also do "~user/".
     Get the list of home directories (from /etc/passwd?  Use getpwent()) and
     use some clever algorithm to match a path with that.  Find common strings
     in the list?
-8   Add 'o' flag to 'mouse'?
 8   When dragging status line with mouse, sometimes a jump when first clicking
     on the status line (caused by 'winheight').  Select window on button up,
     instead of on button down.
-7   There are often a few <CR> on a row sent to the screen, should not be
-    necessary.
 8   When performing incremental search, should abort searching as soon as a
     character is typed.
-8   Make CTRL-C on Unix generate a signal, avoid using select() to check for a
-    CTRL-C (it's slow).  Allow using CTRL-C for "*y, like in MS-Windows.
-8   When writing viminfo file, handle CTRL-J in filename (needs to be escaped
-    with CTRL-V). (Acevedo)
-8   When starting Vim, switch terminal to RAW mode asap, so typeahead is
-    handled correctly (without the need for a <CR>).
 8   When the value of $MAKE contains a path, configure can't handle this.
     It's an autoconf bug.  Remove the path from $MAKE to work around it.
 8   How to set VIMRC_FILE to \"something\" for configure?  Why does this not
@@ -623,13 +534,13 @@ VMS:
     Also: Win32 version uses Windows temp directory, which might not work for
     cygwin bash.
 7   Get error "*, \+ or \( operand could be empty" for pattern "\(.\)\1\{3}".
-    Don't check when compiling, check while matching?
+    Remember flags for backreferences.
 7   When switching to Daylight Saving Time, Vim complains that a file has been
     changed since last read.  Can we use a function that uses GMT?
 7   When completing an environment variable after a '$', check for file names
     that contain a '$' after all have been found.
 8   When "cm" termcap entry is missing, starting gvim shouldn't complain about
-    it. (Lohner)  Try out with "vt100" entry (cm replaced with cX).
+    it. (Lohner)  Try out with "vt100" entry, cm replaced with cX.
 8   When running in a console and $DISPLAY is set a connection to the X server
     is made (unless 'clipboard' tells not to).  Quitting the X server then
     kills Vim.  How to detect a broken connection to the X server when running
@@ -670,6 +581,9 @@ Problems that will (probably) not be solved:
     XtOpenDisplay() prints this directly, there is no way to avoid it.
 -   X windows: Setting 'guifontset' to an illegal value sometimes crashes Vim.
     This is caused by a fault in a X library function, can't be solved in Vim.
+-   Motif: When adding a menu item "Find this &Symbol", the "s" in "this" will
+    be underlined, instead of in "Symbol".  Motif doesn't let us specify which
+    character gets the highlighting.
 -   Moving the cursor removes color in color-xterm.  This is a color-xterm
     problem!  color-xterm ver. 6.1 beta 3 and later work properly.
 -   The Dos32 version (DJGPP) can't use long file names on Windows NT.
@@ -1113,10 +1027,13 @@ Robustness:
 
 
 Performance:
-7   When displaying a space with only foreground highlighting, it's the same
+9   Loading menu.vim still takes quite a bit of time.  How to make it faster?
+8   in_id_list() takes much time for syntax highlighting.  Cache the result?
+7   setpcmark() shifts the jumplist, this takes quite a bit of time when
+    jumping around.  Instead use an index for the start?
+8   When displaying a space with only foreground highlighting, it's the same
     as a space without attributes.  Avoid displaying spaces for the "~" lines
     when starting up in a color terminal.
-9   Loading menu.vim takes quite a bit of time.
 8   Avoid alloc() for scratch buffer use, esp. in syntax.c.  It's very slow on
     Win16.
 9   Setting GUI options in the console (e.g., 'guifont') should not cause a
@@ -1193,6 +1110,8 @@ Performance:
     lines need to be redrawn (add STATUSLN between VALID and NOT_VALID?).
 -   After ":set nowrap" remove superflous redraw with wrong hor. offset if
     cursor is right of the screen.
+8   Make CTRL-C on Unix generate a signal, avoid using select() to check for a
+    CTRL-C (it's slow).
 
 
 Code size:
@@ -1348,6 +1267,8 @@ Security:
 
 
 Win32 GUI:
+8   Should make --remote work with OLE, just like it works for Unix.  Also
+    the other --server arguments and server...() functions.
 8   Make debug mode work while starting up (vim -D).  Open console window for
     the message and input?
 8   Add font argument to set the lfCharSet. (Bobcik)
@@ -1403,9 +1324,7 @@ GUI:
 8   X11 (and others): CTRL-; is not different from ';'.  Set the modifier mask
     to include CTRL for keys where CTRL produces the same ASCII code.
 8   Visual highlighting should keep the same font (bold, italic, etc.).
-8   Make the "Save As.." menu item work like other GUI programs: ":w file",
-    ":e file".
-8   Add 'c' flag in 'guioptios' to use console dialogs instead of GUI dialogs.
+8   Add 'c' flag in 'guioptions' to use console dialogs instead of GUI dialogs.
     Esp. for the ATTENTION prompt.
 8   Add flag to 'guioptions' to not put anything in the clipboard at all?
 8   Should take font from xterm where gvim was started (if no other default).
@@ -1425,7 +1344,6 @@ GUI:
     the commandline, "-install" is mostly used for X11 programs.
 7   Add command line argument for "gvim" not to start the GUI.  Sort of the
     inverse of "vim -g". (Vikas)
-6   Local buffer menus. (Zachmann)
 7   Should support multi-column menus.
 -   Should add option for where to put the "Help" menu: like Motif at the far
     right, or with the other menus (but still at the right).
@@ -2194,14 +2112,6 @@ Options:
     "curdir" (cd to current directory when session file was generated)
     "sessiondir" (cd to directory of session file)
     "nodir" (don't cd at all)
-8   Add Edit.Settings menu with most often used options:
-	line numbering on/off
-	wrap on/off
-	hlsearch on/off
-	toolbar on/off
-	scrollbars left, right, bottom on/off
-	shiftwidth 2, 3, 4, 5, 6, 8
-	expandtab on/off
 8   Make "old" number options that really give a number of effects into string
     options that are a comma separated list.  The old number values should
     also be supported.
@@ -2332,6 +2242,7 @@ Substitute:
 
 
 Mouse support:
+8   Add 'o' flag to 'mouse'?
 8   Add 'mouse' flag, which sets a behavior like Visual mode, but automatic
     yanking at the button-up event.  Or like Select mode, but typing gets you
     out of Select mode, instead of replacing the text. (Bhaskar)
@@ -2372,6 +2283,10 @@ Registers:
 
 
 Various improvements:
+8   Add term entries for function keys on xterm with alt and ctrl (new in pl
+    94).  E.g., Control adds ";5" in "<Esc>[20;5~".  Find a generic way to
+    prepend a modifier in console mode, to avoid having to specify each
+    individual modified key.
 7   Xterm sends <Esc>O3F for <M-End>.  Similarly for other <M-Home>, <M-Left>,
     etc.  Combinations of Alt, Ctrl and Shift are also possible.  Recognize
     these to avoid inserting the raw byte sequence, handle like the key
@@ -2401,13 +2316,12 @@ Various improvements:
     Insert comma's between pairs and allow a range, make it look like
     'isfname'.  E.g. ":set flipcase=a-zA-Z,xX,23-33:143-153".  The colon to
     separate the from and to part is optional.
-7   Support setting 'euqalprg' to a user function name.
+7   Support setting 'equalprg' to a user function name.
 8   Add cursor-column highlighting.  Enable it with 'cursorcolumn' option, set
     highlighting with "CursorColumn" group.  Useful for aligning text.
     Also cursor-row highlighting.
 7   Highlight the characters after the end-of-line differently.
 7   When 'whichwrap' contains "l", "$dl" should join lines?
-6   Include the ruby interface?
 7   Open a server socket (with an option for IP/port nr) to allow remote
     control.  Optionally with a password to restrict access.
     Use the Simple Sockets Library? (Campbell)
@@ -2492,7 +2406,6 @@ Various improvements:
 -   Be able to redefine where a sentence stops.  Use a regexp pattern?
 -   Be able to redefine where a paragraph starts.  For "[[" where the '{' is
     not in column 1.
-8   ":cd": echo the new current directory.
 6   Add ":cdprev": go back to the previous directory.  Need to remember a
     stack of previous directories.  We also need ":cdnext".
 7   Should ":cd" for MS-DOS go to $HOME, when it's defined?
@@ -2730,6 +2643,9 @@ Various improvements:
 -   Support mapping for replace mode and "r" command (Vi doesn't do this)?
 5   Add 'ignorefilecase' option: Ignore case when expanding file names.
     ":e ma<Tab>" would also find "Makefile" on Unix.
+8   Should be able to compile Vim in another directory, with $(srcdir) set to
+    where the sources are. Add $(srcdir) in the Makefile in a lot of places.
+    (Netherton)
 
 
 From Elvis:

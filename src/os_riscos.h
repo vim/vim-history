@@ -125,7 +125,6 @@
 #endif
 
 #define DFLT_ERRORFILE		"errors/vim"
-#define DFLT_MAKEEF		"<Wimp$ScrapDir>.vim##/err"
 #define DFLT_RUNTIMEPATH	"Choices:vimfiles,$VIMRUNTIME,Choices:vimfiles/after"
 
 /*

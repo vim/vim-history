@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 07
+*vi_diff.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -731,9 +731,23 @@ Only Vim is able to accept options in between and after the file names.
 
 --help		Vim: show help message and exit.
 
---version	Vim: show version message and exit.
-
 --noplugin[s]	Vim: Skip loading plugins.
+
+--remote	Vim: edit the files in another Vim server
+
+--remote-wait	Vim: edit the files in another Vim server and wait for it
+
+--serverexpr {expr}	Vim: evaluate {expr} in another Vim server
+
+--serverlist	Vim: Output a list of Vim servers and exit
+
+--servername {name}	Vim: Specify Vim server name
+
+--serversend {keys}	Vim: send {keys} to a Vim server and exit
+
+--socketid {id}		Vim: GTK window socket to run Vim in
+
+--version	Vim: show version message and exit.
 
 -?		Vile: print usage summary and exit.
 

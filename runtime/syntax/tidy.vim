@@ -1,9 +1,9 @@
 " Vim syntax file
-" Filename:     tidy.vim 
+" Filename:     tidy.vim
 " Language:     HMTL Tidy configuration file (~/.tidyrc)
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
 " URL:          http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/tidy.vim
-" Last Change:  2001 Jul 10
+" Last Change:  2001 Jul 28
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -120,7 +120,7 @@ if version >= 508 || !exists("did_tidy_syn_inits")
 
   HiLink tidyNewTagOption    Identifier
   HiLink tidyNewTagValue     Constant
-  HiLink tidyNewTagDelimiter Special      
+  HiLink tidyNewTagDelimiter Special
 
   delcommand HiLink
 endif

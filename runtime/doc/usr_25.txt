@@ -1,7 +1,7 @@
-*usr_25.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_25.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			     Editing formatted text
 
 
@@ -105,7 +105,7 @@ moves to the end of a paragraph.  Thus "gq}" formats from the cursor to the
 end of the current paragraph.
    A very useful text object to use with "gq" is the paragraph.  Try this: >
 
-   	gqap
+	gqap
 
 "ap" stands for "a-paragraph".  This formats the text of one paragraph
 (separated by empty lines).  Also the part before the cursor.
@@ -132,7 +132,7 @@ if your text can't be properly formatted with Vim's builtin command.  See the
 To center a range of lines, use the following command: >
 
 	:{range}center [width]
-	
+
 {range} is the usual command-line range.  [width] is an optional line width to
 use for centering.  If [width] is not specified, it defaults to the value of
 'textwidth'.  (If 'textwidth' is 0, the default is 80.)
@@ -168,7 +168,7 @@ LEFT ALIGNMENT
 Finally there is this command: >
 
 	:{range}left [margin]
-	
+
 Unlike ":center" and ":right", however, the argument to ":left" is not the
 length of the line.  Instead it is the left margin.  If it is omitted, the
 text will be put against the left side of the screen (using a zero margin
@@ -216,11 +216,11 @@ text:
 
 This is entered by typing a tab, some text, <Enter>, tab and more text.
    The 'autoindent' option inserts indents automatically: >
-   
-   	:set autoindent
+
+	:set autoindent
 
 When a new line is started it gets the same indent as the previous line.  In
-the above example, the tab after the <Enter> is left out.
+the above example, the tab after the <Enter> is not needed anymore.
 
 
 INCREASING INDENT
@@ -233,7 +233,7 @@ example, type this: >
 
 	:set shiftwidth=4
 
-When used on the second line of he example text, this is what you get:
+When used on the second line of the example text, this is what you get:
 
 	the first line ~
 	    the second line ~
@@ -244,14 +244,14 @@ When used on the second line of he example text, this is what you get:
 TABSTOP
 
 If you want to make indents a multiple of 4, you set 'shiftwidth' to 4.  But
-when pressing a Tab you still get 8 spaces wordth of indent.  To change this,
+when pressing a Tab you still get 8 spaces worth of indent.  To change this,
 set the 'softtabstop' option: >
 
 	:set softtabstop=4
 
 This will make the <Tab> key insert 4 spaces worth of indent.  If there are
 already four spaces, a <Tab> character is used (saving seven characters in the
-file).  (if you always want spaces and no tab characters, set the 'expandtab'
+file).  (If you always want spaces and no tab characters, set the 'expandtab'
 option.)
 
 	Note:
@@ -278,7 +278,8 @@ that it looks the same.  It changes spans of white space into tabs and spaces
 for this.  You can now write the file.  Next time you edit it the indents will
 be right without setting an option.
    Warning: When using ":retab" on a program, it may change white space inside
-a string constat.
+a string constant.  Therefore it's a good habit to use "\t" instead of a
+real tab
 
 ==============================================================================
 *25.4*	Dealing with long lines
@@ -313,7 +314,9 @@ into the visible text if necessary.
 	zs		scroll left to put the cursor at the start
 
 Let's attempt to show this with one line of text.  The cursor is on the "w" of
-"which".
+"which".  The "current window" above the line indicates the text that is
+currently visible.  The "window"s below the text indicate the text that is
+visible after the command left of it.
 
 		              |<-- current window -->|
 		some long text, part of which is visible in the window~
@@ -414,7 +417,7 @@ Now you can move the cursor to positions where there isn't any text.  This is
 called "virtual space".  Editing a table is a lot easier this way.
    Move the cursor by searching for the header of the last column: >
 
-   	/test 3
+	/test 3
 
 Now press "j" and you are right where you can enter the value for "input A".
 Typing "0.693" results in:

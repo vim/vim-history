@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ao.  Last change: 2001 Jul 09
+*starting.txt*  For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -161,7 +161,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		command.  They are executed in the order given. {Vi only
 		allows one command}
 
---cmd {command}						*--cmd* 
+--cmd {command}						*--cmd*
 		{command} will be executed before processing any vimrc file.
 		Otherwise it acts like -c {command}.  You can use up to 10 of
 		these commands, independently from "-c" commands.
@@ -441,6 +441,38 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 							*-w_nr*
 -w{number}	Does nothing.  This was included for Vi-compatibility.  In Vi
 		it sets the 'window' option, which is not implemented in Vim.
+
+--remote [+{cmd}] {file} ...
+		Open the {file} in another Vim that functions as a server.
+		Any non-file arguments must come before this.
+		See |--remote|. {not in Vi}
+
+--remote-wait [+{cmd}] {file} ...
+		Like --remote, but wait for the server to finish editing the
+		file(s).
+		See |--remote-wait|. {not in Vi}
+
+--servername {name}
+		Specify the name of the Vim server to send to or to become.
+		See |--servername|. {not in Vi}
+
+--serversend {keys}
+		Send {keys} to a Vim server and exit.
+		See |--serversend|. {not in Vi}
+
+--serverexpr {expr}
+		Evaluate {expr} in another Vim that functions as a server.
+		The result is printed on stdout.
+		See |--serverexpr|. {not in Vi}
+
+--serverlist	Output a list of Vim server names and exit.  See
+		|--serverlist|. {not in Vi}
+
+--socketid {id}						*--socketid*
+		GTK+ GUI Vim only.  Make gvim try to use GtkPlug mechanism, so
+		that it runs inside another window.  See |gui-gtk-socketid|
+		for details. {not in Vi}
+
 
 Example for using a script file to change a name in several files:
 	Create a file "subs.vi" containing substitute commands and a :wq

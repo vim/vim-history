@@ -1142,9 +1142,7 @@ qf_jump(dir, errornr, forceit)
 	    beginline(BL_WHITE | BL_FIX);
 
 #ifdef FEAT_FOLDING
-	if ((fdo_flags & FDO_QUICKFIX)
-		&& old_KeyTyped
-		&& (old_curbuf != curbuf || old_lnum != curwin->w_cursor.lnum))
+	if ((fdo_flags & FDO_QUICKFIX) && old_KeyTyped)
 	    foldOpenCursor();
 #endif
 	if (print_message)
@@ -1728,6 +1726,7 @@ qf_fill_buffer()
     struct qf_line	*qfp;
     buf_T		*errbuf;
     int			len;
+    int			old_KeyTyped = KeyTyped;
 
     /* delete all existing lines */
     while ((curbuf->b_ml.ml_flags & ML_EMPTY) == 0)
@@ -1797,6 +1796,9 @@ qf_fill_buffer()
 
     /* make sure it will be redrawn */
     redraw_curbuf_later(NOT_VALID);
+
+    /* Restore KeyTyped, setting 'filetype' may reset it. */
+    KeyTyped = old_KeyTyped;
 }
 
 #endif /* FEAT_WINDOWS */

@@ -286,6 +286,7 @@ edit(cmdchar, startln, count)
     {
 	ResetRedobuff();
 	AppendNumberToRedobuff(count);
+#ifdef FEAT_VREPLACE
 	if (cmdchar == 'V' || cmdchar == 'v')
 	{
 	    /* "gR" or "gr" command */
@@ -293,6 +294,7 @@ edit(cmdchar, startln, count)
 	    AppendCharToRedobuff((cmdchar == 'v') ? 'r' : 'R');
 	}
 	else
+#endif
 	{
 	    AppendCharToRedobuff(cmdchar);
 	    if (cmdchar == 'g')		    /* "gI" command */
@@ -315,6 +317,7 @@ edit(cmdchar, startln, count)
 #endif
 	State = REPLACE;
     }
+#ifdef FEAT_VREPLACE
     else if (cmdchar == 'V' || cmdchar == 'v')
     {
 	State = VREPLACE;
@@ -322,6 +325,7 @@ edit(cmdchar, startln, count)
 	orig_line_count = curbuf->b_ml.ml_line_count;
 	vr_lines_changed = 1;
     }
+#endif
     else
 	State = INSERT;
 
@@ -728,9 +732,12 @@ edit(cmdchar, startln, count)
 	    if (echeck_abbr(Ctrl_O + ABBR_OFF))
 		break;
 	    count = 0;
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 		restart_edit = 'V';
-	    else if (State & REPLACE_FLAG)
+	    else
+#endif
+		if (State & REPLACE_FLAG)
 		restart_edit = 'R';
 	    else
 		restart_edit = 'I';
@@ -1404,6 +1411,7 @@ change_indent(type, amount, round, replaced)
     int		save_p_list;
     int		start_col;
     colnr_T	vc;
+#ifdef FEAT_VREPLACE
     colnr_T	orig_col = 0;		/* init for GCC */
     char_u	*new_line, *orig_line = NULL;	/* init for GCC */
 
@@ -1413,6 +1421,7 @@ change_indent(type, amount, round, replaced)
 	orig_line = vim_strsave(ml_get_curline());  /* Deal with NULL below */
 	orig_col = curwin->w_cursor.col;
     }
+#endif
 
     /* for the following tricks we don't want list mode */
     save_p_list = curwin->w_p_list;
@@ -1562,7 +1571,7 @@ change_indent(type, amount, round, replaced)
      * If the number of characters before the cursor increased, need to push a
      * few NULs onto the replace stack.
      */
-    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG) && start_col >= 0)
+    if (REPLACE_NORMAL(State) && start_col >= 0)
     {
 	while (start_col > (int)curwin->w_cursor.col)
 	{
@@ -1581,6 +1590,7 @@ change_indent(type, amount, round, replaced)
 	}
     }
 
+#ifdef FEAT_VREPLACE
     /*
      * For VREPLACE mode, we also have to fix the replace stack.  In this case
      * it is always possible because we backspace over the whole line and then
@@ -1614,6 +1624,7 @@ change_indent(type, amount, round, replaced)
 
 	vim_free(new_line);
     }
+#endif
 }
 
 /*
@@ -1636,6 +1647,8 @@ truncate_spaces(line)
     line[i + 1] = NUL;
 }
 
+#if defined(FEAT_VREPLACE) || defined(FEAT_INS_EXPAND) \
+	|| defined(FEAT_COMMENTS) || defined(PROTO)
 /*
  * Backspace the cursor until the given column.  Handles REPLACE and VREPLACE
  * modes correctly.  May also be used when not in insert mode at all.
@@ -1653,6 +1666,7 @@ backspace_until_column(col)
 	    (void)del_char(FALSE);
     }
 }
+#endif
 
 #if defined(FEAT_INS_EXPAND) || defined(PROTO)
 /*
@@ -3673,8 +3687,11 @@ insertchar(c, force_formatting, second_indent, ctrlv)
     if (textwidth
 	    && (force_formatting
 		|| (!vim_iswhite(c)
-		    && !((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG)
-						   && *ml_get_cursor() != NUL)
+		    && !((State & REPLACE_FLAG)
+#ifdef FEAT_VREPLACE
+			&& !(State & VREPLACE_FLAG)
+#endif
+			&& *ml_get_cursor() != NUL)
 		    && (curwin->w_cursor.lnum != Insstart.lnum
 			|| ((!has_format_option(FO_INS_LONG)
 				|| Insstart_textlen <= (colnr_T)textwidth)
@@ -3705,10 +3722,12 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    int		wantcol;		/* column at textwidth border */
 	    int		foundcol;		/* column for start of spaces */
 	    int		end_foundcol = 0;	/* column for start of word */
-	    int		orig_col = 0;
 	    colnr_T	len;
 	    colnr_T	virtcol;
+#ifdef FEAT_VREPLACE
+	    int		orig_col = 0;
 	    char_u	*saved_text = NULL;
+#endif
 	    colnr_T	col;
 
 	    virtcol = get_nolist_virtcol();
@@ -3838,9 +3857,11 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	     * stack functions.  VREPLACE does not use this, and backspaces
 	     * over the text instead.
 	     */
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 		orig_col = startcol;	/* Will start backspacing from here */
 	    else
+#endif
 		replace_offset = startcol - end_foundcol - 1;
 
 	    /*
@@ -3854,6 +3875,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    if (startcol < 0)
 		startcol = 0;
 
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 	    {
 		/*
@@ -3870,6 +3892,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		backspace_until_column(foundcol);
 	    }
 	    else
+#endif
 	    {
 		/* put cursor after pos. to break line */
 		curwin->w_cursor.col = foundcol;
@@ -3889,14 +3912,17 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		    second_indent = get_number_indent(curwin->w_cursor.lnum -1);
 		if (second_indent >= 0)
 		{
+#ifdef FEAT_VREPLACE
 		    if (State & VREPLACE_FLAG)
 			change_indent(INDENT_SET, second_indent, FALSE, NUL);
 		    else
+#endif
 			(void)set_indent(second_indent, SIN_CHANGED);
 		}
 		first_line = FALSE;
 	    }
 
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 	    {
 		/*
@@ -3907,6 +3933,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		vim_free(saved_text);
 	    }
 	    else
+#endif
 	    {
 		/*
 		 * Check if cursor is not past the NUL off the line, cindent
@@ -4198,11 +4225,13 @@ stop_arrow()
 	Insstart = curwin->w_cursor;	/* new insertion starts here */
 	Insstart_textlen = linetabsize(ml_get_curline());
 	ai_col = 0;
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	{
 	    orig_line_count = curbuf->b_ml.ml_line_count;
 	    vr_lines_changed = 1;
 	}
+#endif
 	ResetRedobuff();
 	AppendToRedobuff((char_u *)"1i");   /* pretend we start an insertion */
     }
@@ -4889,6 +4918,7 @@ replace_flush()
 replace_do_bs()
 {
     int		cc;
+#ifdef FEAT_VREPLACE
     int		orig_len = 0;
     int		ins_len;
     int		orig_vcols = 0;
@@ -4896,10 +4926,12 @@ replace_do_bs()
     char_u	*p;
     int		i;
     int		vcol;
+#endif
 
     cc = replace_pop();
     if (cc > 0)
     {
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	{
 	    /* Get the number of screen cells used by the character we are
@@ -4907,23 +4939,29 @@ replace_do_bs()
 	    getvcol(curwin, &curwin->w_cursor, NULL, &start_vcol, NULL);
 	    orig_vcols = chartabsize(ml_get_cursor(), start_vcol);
 	}
+#endif
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
 	    del_char(FALSE);
+# ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 		orig_len = STRLEN(ml_get_cursor());
+# endif
 	    replace_push(cc);
 	}
 	else
 #endif
 	{
 	    pchar_cursor(cc);
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 		orig_len = STRLEN(ml_get_cursor()) - 1;
+#endif
 	}
 	replace_pop_ins();
 
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	{
 	    /* Get the number of screen cells used by the inserted characters */
@@ -4949,6 +4987,7 @@ replace_do_bs()
 	    }
 	    curwin->w_cursor.col -= ins_len;
 	}
+#endif
 
 	/* mark the buffer as changed and prepare for displaying */
 	changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
@@ -5901,8 +5940,10 @@ ins_bs(c, mode, inserted_space_p)
 	}
 	else
 	{
+#ifdef FEAT_VREPLACE
 	    if (!(State & VREPLACE_FLAG)
-		    || curwin->w_cursor.lnum > orig_line_count)
+				   || curwin->w_cursor.lnum > orig_line_count)
+#endif
 	    {
 		temp = gchar_cursor();	/* remember current char */
 		--curwin->w_cursor.lnum;
@@ -5910,8 +5951,10 @@ ins_bs(c, mode, inserted_space_p)
 		if (temp == NUL && gchar_cursor() != NUL)
 		    inc_cursor();
 	    }
+#ifdef FEAT_VREPLACE
 	    else
 		dec_cursor();
+#endif
 
 	    /*
 	     * In REPLACE mode we have to put back the text that was replaced
@@ -6034,9 +6077,11 @@ ins_bs(c, mode, inserted_space_p)
 				   && curwin->w_cursor.col < Insstart.col)
 		    Insstart.col = curwin->w_cursor.col;
 
+#ifdef FEAT_VREPLACE
 		if (State & VREPLACE_FLAG)
 		    ins_char(' ');
 		else
+#endif
 		{
 		    ins_str((char_u *)" ");
 		    if ((State & REPLACE_FLAG) && extra <= 1)
@@ -6550,9 +6595,11 @@ ins_tab()
     ins_char(' ');
     while (--temp > 0)
     {
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	    ins_char(' ');
 	else
+#endif
 	{
 	    ins_str((char_u *)" ");
 	    if (State & REPLACE_FLAG)	    /* no char replaced */
@@ -6565,8 +6612,12 @@ ins_tab()
      */
     if (!curbuf->b_p_et && (curbuf->b_p_sts || (p_sta && ind)))
     {
-	char_u		*ptr, *saved_line = NULL;	/* init for GCC */
-	pos_T		fpos, pos;
+	char_u		*ptr;
+#ifdef FEAT_VREPLACE
+	char_u		*saved_line = NULL;	/* init for GCC */
+	pos_T		pos;
+#endif
+	pos_T		fpos;
 	pos_T		*cursor;
 	colnr_T		want_vcol, vcol, tab_vcol;
 	int		change_col = -1;
@@ -6576,6 +6627,7 @@ ins_tab()
 	 * Get the current line.  For VREPLACE mode, don't make real changes
 	 * yet, just work on a copy of the line.
 	 */
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	{
 	    pos = curwin->w_cursor;
@@ -6586,6 +6638,7 @@ ins_tab()
 	    ptr = saved_line + pos.col;
 	}
 	else
+#endif
 	{
 	    ptr = ml_get_cursor();
 	    cursor = &curwin->w_cursor;
@@ -6643,12 +6696,17 @@ ins_tab()
 	    {
 		mch_memmove(ptr, ptr + i, STRLEN(ptr + i) + 1);
 		/* correct replace stack. */
-		if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+		if ((State & REPLACE_FLAG)
+#ifdef FEAT_VREPLACE
+			&& !(State & VREPLACE_FLAG)
+#endif
+			)
 		    for (temp = i; --temp >= 0; )
 			replace_join(want_vcol - vcol);
 	    }
 	    cursor->col -= i;
 
+#ifdef FEAT_VREPLACE
 	    /*
 	     * In VREPLACE mode, we haven't changed anything yet.  Do it now by
 	     * backspacing over the changed spacing and then inserting the new
@@ -6664,10 +6722,13 @@ ins_tab()
 		ins_bytes_len(saved_line + change_col,
 						    cursor->col - change_col);
 	    }
+#endif
 	}
 
+#ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
 	    vim_free(saved_line);
+#endif
     }
 
     return FALSE;
@@ -6694,7 +6755,11 @@ ins_eol(c)
      * character under the cursor.  Only push a NUL on the replace stack,
      * nothing to put back when the NL is deleted.
      */
-    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+    if ((State & REPLACE_FLAG)
+#ifdef FEAT_VREPLACE
+	    && !(State & VREPLACE_FLAG)
+#endif
+	    )
 	replace_push(NUL);
 
     /*
@@ -6894,9 +6959,11 @@ ins_try_si(c)
 		curwin->w_cursor = *pos;
 	    i = get_indent();
 	    curwin->w_cursor = old_pos;
+#ifdef FEAT_VREPLACE
 	    if (State & VREPLACE_FLAG)
 		change_indent(INDENT_SET, i, FALSE, NUL);
 	    else
+#endif
 		(void)set_indent(i, SIN_CHANGED);
 	}
 	else if (curwin->w_cursor.col > 0)

@@ -634,7 +634,27 @@ static int	reg_magic;	/* magicness of the pattern: */
  * META contains all characters that may be magic, except '^' and '$'.
  */
 
+#ifdef EBCDIC
 static char_u META[] = "%&()*+.123456789<=>?@ACDFHIKLMOPSUVWX[_acdfhiklmnopsuvwxz{|~";
+#else
+/* META[] is used often enough to justify turning it into a table. */
+static char_u META_flags[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/*                 %  &     (  )  *  +        .    */
+    0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0,
+/*     1  2  3  4  5  6  7  8  9        <  =  >  ? */
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
+/*  @  A     C  D     F     H  I     K  L  M     O */
+    1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1,
+/*  P        S     U  V  W  X        [           _ */
+    1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1,
+/*     a     c  d     f     h  i     k  l  m  n  o */
+    0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1,
+/*  p        s     u  v  w  x     z  {  |     ~    */
+    1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1
+};
+#endif
 
 static int	curchr;
 
@@ -2270,7 +2290,11 @@ peekchr()
 	case '\\':
 	    if (regparse[1] == NUL)
 		curchr = '\\';	/* trailing '\' */
+#ifdef EBCDIC
 	    else if (vim_strchr(META, regparse[1]))
+#else
+	    else if (regparse[1] <= '~' && META_flags[regparse[1]])
+#endif
 	    {
 		/*
 		 * META contains everything that may be magic sometimes,

@@ -1,7 +1,7 @@
-*usr_23.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_23.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			     Editing other files
 
 
@@ -9,8 +9,6 @@ This chapter is about editing files that are not ordinary files.  With Vim you
 can edit files that are compressed or encrypted.  Some files need to be
 accessed over the internet.  With some restrictions, binary files can be
 edited as well.
-
-because of the contents or they way
 
 |23.1|	DOS, Mac and Unix files
 |23.2|	Files on the internet
@@ -44,8 +42,8 @@ try UNIX format first and MS-DOS format second: >
 
 You will notice the format in the message you get when editing a file.  You
 don't see anything if you edit a native file format.  Thus editing a Unix file
-on Unix won't result in a remark.  But when you edit a dos file, will notify
-you of this:
+on Unix won't result in a remark.  But when you edit a dos file, Vim will
+notify you of this:
 
 	"/tmp/test" [dos] 3L, 71C ~
 
@@ -83,10 +81,10 @@ Vim guesses wrong.
 
 OVERRULING THE FORMAT
 
-If you use the good old Vi and try to edit an MS-DOS format file, you would
-have found that each line ended with a ^M character. (^M is <CR>).  The
-automatic detection avoids this.  Suppose you do want to edit the file that
-way?  Then you need to overrule the format: >
+If you use the good old Vi and try to edit an MS-DOS format file, you will
+find that each line ends with a ^M character. (^M is <CR>).  The automatic
+detection avoids this.  Suppose you do want to edit the file that way?  Then
+you need to overrule the format: >
 
 	:edit ++ff=unix file.txt
 
@@ -167,7 +165,7 @@ Vim.  Example: >
 
 	vim -x exam.txt
 
-Vim now prompts you for a key used for encrypting and decrypting the file:
+Vim prompts you for a key used for encrypting and decrypting the file:
 
 	Enter encryption key: ~
 
@@ -198,7 +196,7 @@ To disable the encryption of a file, set the 'key' option to an empty string:
 
 The next time you write the file this will be done without encryption.
    Setting the 'key' option to enable encryption is not a good idea, because
-the password appears in the clear.  Anyone shoulder surfing can read your
+the password appears in the clear.  Anyone shoulder-surfing can read your
 password.
    To avoid this problem, the ":X" command was created.  It asks you for an
 encryption key, just like the "-x" argument did: >
@@ -211,8 +209,8 @@ encryption key, just like the "-x" argument did: >
 LIMITS ON ENCRYPTION
 
 The encryption algorithm used by Vim is weak.  It is good enough to keep out
-the casual prowler, but not good enough keep out a cryptology expert with lots
-of time on his hands.  Also you should be aware that the swap file is not
+the casual prowler, but not good enough to keep out a cryptology expert with
+lots of time on his hands.  Also you should be aware that the swap file is not
 encrypted; so while you are editing, people with superuser privileges can read
 the unencrypted text from this file.
    One way to avoid letting people read your swap file is to avoid using one.
@@ -224,7 +222,7 @@ file "file.txt" without a swap file use the following command: >
 
 When already editing a file, the swapfile can be disabled with: >
 
-	:setlocal nowswapfile
+	:setlocal noswapfile
 
 Since there is no swapfile, recovery will be impossible.  Save the file a bit
 more often to avoid the risk of losing your changes.
@@ -234,7 +232,7 @@ look in the editor's memory and discover the contents of the file.
    If you use a viminfo file, be aware that the contents of text registers are
 written out in the clear as well.
    If you really want to secure the contents of a file, edit it only on a
-portable com-puter not connected to a network, use good encryption tools, and
+portable computer not connected to a network, use good encryption tools, and
 keep the computer locked up in a big safe when not in use.
 
 ==============================================================================
@@ -242,7 +240,7 @@ keep the computer locked up in a big safe when not in use.
 
 You can edit binary files with Vim.  Vim wasn't really made for this, thus
 there are a few restrictions.  But you can read a file, change a character and
-write it back.  With the result that only that one character was changed and
+write it back, with the result that only that one character was changed and
 the file is identical otherwise.
    To make sure that Vim does not use its clever tricks in the wrong way, add
 the "-b" argument when starting Vim: >
@@ -339,7 +337,7 @@ Vim uses the mentioned programs to do the actual compression and
 decompression.  You might need to install the programs first.
 
 ==============================================================================
-   
+
 Next chapter: |usr_24.txt|  Inserting quickly
 
 Copyright: see |manual-copyright|  vim:tw=78:

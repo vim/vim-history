@@ -502,7 +502,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 	COleAutomationControl VimOle;
 
 	// :cd D:/Src2/VisVim/
-	// 
+	//
 	// Get a dispatch id for the SendKeys method of Vim;
 	// enables connection to Vim if necessary
 	DISPID DispatchId;
@@ -532,7 +532,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 
 	// Make Vim open the file
 	sprintf (VimCmd, ":e %S\n", (char*) FileName);
-	// Convert all \ to / 
+	// Convert all \ to /
 	for (s = VimCmd; *s; ++s)
 		if (*s == '\\')
 			*s = '/';

@@ -1682,6 +1682,8 @@ scroll_cursor_top(min_scroll, always)
      */
     validate_cheight();
     used = curwin->w_cline_height;
+    if (curwin->w_cursor.lnum < curwin->w_topline)
+	scrolled = used;
 
 #ifdef FEAT_FOLDING
     if (hasFolding(curwin->w_cursor.lnum, &top, &bot))

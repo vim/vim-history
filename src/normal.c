@@ -108,7 +108,9 @@ static void	nv_findpar __ARGS((cmdarg_T *cap));
 static void	nv_undo __ARGS((cmdarg_T *cap));
 static void	nv_kundo __ARGS((cmdarg_T *cap));
 static void	nv_Replace __ARGS((cmdarg_T *cap));
+#ifdef FEAT_VREPLACE
 static void	nv_vreplace __ARGS((cmdarg_T *cap));
+#endif
 #ifdef FEAT_VISUAL
 static void	v_swap_corners __ARGS((int cmdchar));
 #endif
@@ -560,7 +562,12 @@ normal_cmd(oap, toplevel)
     finish_op = (oap->op_type != OP_NOP);
 #ifdef CURSOR_SHAPE
     if (finish_op != c)
+    {
 	ui_cursor_shape();		/* may show different cursor shape */
+# ifdef FEAT_MOUSESHAPE
+	update_mouseshape(-1);
+# endif
+    }
 #endif
 
     if (!finish_op && !oap->regname)
@@ -1124,7 +1131,12 @@ normal_end:
     /* Redraw the cursor with another shape, if we were in Operator-pending
      * mode or did a replace command. */
     if (c || ca.cmdchar == 'r')
+    {
 	ui_cursor_shape();		/* may show different cursor shape */
+# ifdef FEAT_MOUSESHAPE
+	update_mouseshape(-1);
+# endif
+    }
 #endif
 
 #ifdef FEAT_CMDL_INFO
@@ -2052,6 +2064,8 @@ do_mouse(oap, c, dir, count, fixindent)
     {
 	if (State & INSERT)
 	    stuffcharReadbuff(Ctrl_O);
+	if (count > 1)
+	    stuffnumReadbuff(count);
 	stuffcharReadbuff(Ctrl_T);
 	got_click = FALSE;		/* ignore drag&release now */
 	return FALSE;
@@ -5939,6 +5953,7 @@ nv_Replace(cap)
     }
 }
 
+#ifdef FEAT_VREPLACE
 /*
  * "gr".
  */
@@ -5948,7 +5963,7 @@ nv_vreplace(cap)
 {
     int		restart_edit_save;
 
-#ifdef FEAT_VISUAL
+# ifdef FEAT_VISUAL
     if (VIsual_active)
     {
 	cap->cmdchar = 'r';
@@ -5956,7 +5971,7 @@ nv_vreplace(cap)
 	nv_replace(cap);	/* Do same as "r" in Visual mode for now */
     }
     else
-#endif
+# endif
 	if (!checkclearopq(cap->oap))
     {
 	if (!curbuf->b_p_ma)
@@ -5967,10 +5982,10 @@ nv_vreplace(cap)
 		cap->extra_char = get_literal();
 	    stuffcharReadbuff(cap->extra_char);
 	    stuffcharReadbuff(ESC);
-#ifdef FEAT_VIRTUALEDIT
+# ifdef FEAT_VIRTUALEDIT
 	    if (virtual_active())
 		coladvance(getviscol());
-#endif
+# endif
 	    /* This is a new edit command, not a restart.  Do allow using
 	     * CTRL-O rx from Insert mode. */
 	    restart_edit_save = restart_edit;
@@ -5982,6 +5997,7 @@ nv_vreplace(cap)
 	}
     }
 }
+#endif
 
 /*
  * Swap case for "~" command, when it does not work like an operator.
@@ -6490,6 +6506,7 @@ nv_g_cmd(cap)
 	break;
 #endif
 
+#ifdef FEAT_VREPLACE
     /*
      * "gR": Enter virtual replace mode.
      */
@@ -6501,6 +6518,7 @@ nv_g_cmd(cap)
     case 'r':
 	nv_vreplace(cap);
 	break;
+#endif
 
     case '&':
 	do_cmdline_cmd((char_u *)"%s//~/&");

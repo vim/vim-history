@@ -99,12 +99,12 @@ menutrans Cu&t			Aus&schneiden
 menutrans &Copy			&Kopieren
 menutrans &Paste		&Einfügen
 menutrans &Delete		&Löschen
-menutrans Select\ Blockwise 	Auswahl\ Blockartig
+menutrans Select\ Blockwise	Auswahl\ Blockartig
 menutrans Select\ &Word		Auswahl\ des\ &Wortes
 menutrans Select\ &Line		Auswahl\ der\ &Zeile
 menutrans Select\ &Block	Auswahl\ des\ &Blocks
 menutrans Select\ &All		&Alles\ Auswählen
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

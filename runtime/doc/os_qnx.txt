@@ -1,4 +1,4 @@
-*os_qnx.txt*  For Vim version 6.0ao.  Last change: 2001 Apr 18
+*os_qnx.txt*  For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid
@@ -92,7 +92,7 @@ various styles.
 The options are,
     s{size}	Set the size of the font to {size}
     b		Bold style
-    a		Use antialiasing 
+    a		Use antialiasing
     i		Italic style
 
 Examples:

@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
-" Maintainer:  		Rafal M. Sulejman <rms@poczta.onet.pl>
-" Initial Translation: 	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:      	2001 May 18
+" Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
+" Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
+" Last Change:		2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -67,14 +67,14 @@ menutrans &Context\ lines	Wiersze\ kontekstowe
 menutrans &Virtual\ Edit	Wirtualna\ Obróbka
 
 menutrans Never			Nigdy
-menutrans Block\ Selection 	Zaznaczanie\ zakresu
-menutrans Insert\ mode 		Tryb\ wprowadzania
+menutrans Block\ Selection	Zaznaczanie\ zakresu
+menutrans Insert\ mode		Tryb\ wprowadzania
 menutrans Block\ and\ Insert	Zakres\ i\ Wprowadzanie
 menutrans Always		Zawsze
 
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Prze³±cz\ tryb\ wprowadzania<Tab>:set\ im!
-menutrans Search\ &Path\.\.\.  	Trop\ poszukiwania\.\.\.
-menutrans Ta&g\ Files\.\.\. 	Pilki\ Szyldów\.\.\.
+menutrans Search\ &Path\.\.\.	Trop\ poszukiwania\.\.\.
+menutrans Ta&g\ Files\.\.\.	Pilki\ Szyldów\.\.\.
 
 "
 " GUI options
@@ -141,12 +141,12 @@ menutrans Cu&t			W&ytnij
 menutrans &Copy			&Kopiuj
 menutrans &Paste		&Wklej
 menutrans &Delete		&Skasuj
-menutrans Select\ Blockwise 	Zaznacz\ &Blok
+menutrans Select\ Blockwise	Zaznacz\ &Blok
 menutrans Select\ &Word		Zaznacz\ &S³owo
 menutrans Select\ &Line		Zaznacz\ W&iersz
 menutrans Select\ &Block	Zaznacz\ &Blok
 menutrans Select\ &All		Zaznacz\ C&a³o¶æ
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

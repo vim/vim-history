@@ -13,6 +13,8 @@
 
 #include "vim.h"
 
+static void	cmd_source __ARGS((char_u *fname, int forceit));
+
 #if defined(FEAT_EVAL) || defined(PROTO)
 
 /*
@@ -1505,6 +1507,208 @@ alist_add_list(count, files, after)
 
 #endif /* FEAT_LISTCMDS */
 
+#ifdef FEAT_EVAL
+/*
+ * ":compiler {name}"
+ */
+    void
+ex_compiler(eap)
+    exarg_T	*eap;
+{
+    char_u	*buf;
+
+    if (*eap->arg == NUL)
+    {
+	/* List all compiler scripts. */
+	do_cmdline_cmd((char_u *)"echo globpath(&rtp, 'compiler/*.vim')");
+    }
+    else
+    {
+	buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
+	if (buf != NULL)
+	{
+	    do_unlet((char_u *)"current_compiler");
+	    sprintf((char *)buf, "compiler/%s.vim", eap->arg);
+	    (void)cmd_runtime(buf, TRUE);
+	    vim_free(buf);
+	}
+    }
+}
+#endif
+
+/*
+ * ":runtime {name}"
+ */
+    void
+ex_runtime(eap)
+    exarg_T	*eap;
+{
+    cmd_runtime(eap->arg, eap->forceit);
+}
+
+static void source_callback __ARGS((char_u *fname));
+
+    static void
+source_callback(fname)
+    char_u	*fname;
+{
+    (void)do_source(fname, FALSE, FALSE);
+}
+
+/*
+ * Source the file "name" from all directories in 'runtimepath'.
+ * "name" can contain wildcards.
+ * When "all" is TRUE, source all files, otherwise only the first one.
+ * return FAIL when no file could be sourced, OK otherwise.
+ */
+    int
+cmd_runtime(name, all)
+    char_u	*name;
+    int		all;
+{
+    return do_in_runtimepath(name, all, source_callback);
+}
+
+/*
+ * Find "name" in 'runtimepath'.  When found, call the "callback" function for
+ * it.
+ * When "all" is TRUE repeat for all matches, otherwise only the first one is
+ * used.
+ * Returns OK when at least one match found, FAIL otherwise.
+ */
+    int
+do_in_runtimepath(name, all, callback)
+    char_u	*name;
+    int		all;
+    void	(*callback)__ARGS((char_u *fname));
+{
+    char_u	*rtp;
+    char_u	*np;
+    char_u	*buf;
+    char_u	*tail;
+    int		num_files;
+    char_u	**files;
+    int		i;
+    int		did_one = FALSE;
+#ifdef AMIGA
+    struct Process	*proc = (struct Process *)FindTask(0L);
+    APTR		save_winptr = proc->pr_WindowPtr;
+
+    /* Avoid a requester here for a volume that doesn't exist. */
+    proc->pr_WindowPtr = (APTR)-1L;
+#endif
+
+    buf = alloc(MAXPATHL);
+    if (buf != NULL)
+    {
+	if (p_verbose > 1)
+	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
+						 (char *)name, (char *)p_rtp);
+	/* Loop over all entries in 'runtimepath'. */
+	rtp = p_rtp;
+	while (*rtp != NUL && (all || !did_one))
+	{
+	    /* Copy the path from 'runtimepath' to buf[]. */
+	    copy_option_part(&rtp, buf, MAXPATHL, ",");
+	    if (STRLEN(buf) + STRLEN(name) + 2 < MAXPATHL)
+	    {
+		add_pathsep(buf);
+		tail = buf + STRLEN(buf);
+
+		/* Loop over all patterns in "name" */
+		np = name;
+		while (*np != NUL && (all || !did_one))
+		{
+		    /* Append the pattern from "name" to buf[]. */
+		    copy_option_part(&np, tail, (int)(MAXPATHL - (tail - buf)),
+								       "\t ");
+
+		    if (p_verbose > 2)
+			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
+		    /* Expand wildcards and source each match. */
+#ifdef VMS
+                    strcpy((char *)buf,vms_fixfilename(buf));
+#endif
+
+		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
+							       EW_FILE) == OK)
+		    {
+			for (i = 0; i < num_files; ++i)
+			{
+			    (*callback)(files[i]);
+			    did_one = TRUE;
+			    if (!all)
+				break;
+			}
+			FreeWild(num_files, files);
+		    }
+		}
+	    }
+	}
+	vim_free(buf);
+    }
+    if (p_verbose > 0 && !did_one)
+	smsg((char_u *)_("not found in 'runtimepath': \"%s\""), name);
+
+#ifdef AMIGA
+    proc->pr_WindowPtr = save_winptr;
+#endif
+
+    return did_one ? OK : FAIL;
+}
+
+#if defined(FEAT_EVAL) && defined(FEAT_AUTOCMD)
+/*
+ * ":options"
+ */
+/*ARGSUSED*/
+    void
+ex_options(eap)
+    exarg_T	*eap;
+{
+    cmd_source((char_u *)SYS_OPTWIN_FILE, FALSE);
+}
+#endif
+
+/*
+ * ":source {fname}"
+ */
+    void
+ex_source(eap)
+    exarg_T	*eap;
+{
+#ifdef FEAT_BROWSE
+    if (cmdmod.browse)
+    {
+	char_u *fname = NULL;
+
+	fname = do_browse(FALSE, (char_u *)_("Run Macro"),
+		NULL, NULL, eap->arg, BROWSE_FILTER_MACROS, curbuf);
+	if (fname != NULL)
+	{
+	    cmd_source(fname, eap->forceit);
+	    vim_free(fname);
+	}
+    }
+    else
+#endif
+	cmd_source(eap->arg, eap->forceit);
+}
+
+    static void
+cmd_source(fname, forceit)
+    char_u	*fname;
+    int		forceit;
+{
+    if (*fname == NUL)
+	EMSG(_(e_argreq));
+    else if (forceit)		/* :so! read vi commands */
+	(void)openscript(fname);
+				/* :so read ex commands */
+    else if (do_source(fname, FALSE, FALSE) == FAIL)
+	EMSG2(_(e_notopen), fname);
+}
+
 /*
  * ":source" and associated commands.
  */
@@ -1565,6 +1769,10 @@ do_source(fname, check_other, is_vimrc)
     static scid_T	    last_current_SID = 0;
     void		    *save_funccalp;
     int			    save_debug_break_level = debug_break_level;
+#endif
+#ifdef STARTUPTIME
+    struct timeval	    tv_rel;
+    struct timeval	    tv_start;
 #endif
 
 #ifdef RISCOS
@@ -1677,6 +1885,10 @@ do_source(fname, check_other, is_vimrc)
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;
 
+#ifdef STARTUPTIME
+    time_push(&tv_rel, &tv_start);
+#endif
+
 #ifdef FEAT_EVAL
     /*
      * Check if this script was sourced before to finds its SID.
@@ -1735,7 +1947,8 @@ do_source(fname, check_other, is_vimrc)
     }
 #ifdef STARTUPTIME
     sprintf(IObuff, "sourcing %s", fname);
-    TIME_MSG(IObuff);
+    time_msg(IObuff, &tv_start);
+    time_pop(&tv_rel);
 #endif
 
 #ifdef FEAT_EVAL
@@ -2171,8 +2384,15 @@ ex_checktime(eap)
  * Called at the end of each page. Do a footer here!
  * Return FALSE to abort.
  *
+ * int mch_print_blank_page()
+ * Called to generate a blank page for collated,duplex, multiple copy
+ * document.  Return FALSE to abort.
+ *
  * void mch_print_end()
  * Called at end of print job
+ *
+ * mch_print_abort(void)
+ * Called to abort the doc on user interrupt.
  *
  * void mch_print_cleanup()
  * Called if print job is abandoned. Free any memory, close devices and
@@ -2452,6 +2672,11 @@ ex_hardcopy(eap)
      */
     for (lnum = eap->line1; lnum <= eap->line2; lnum++)
 	bytes_to_print += (unsigned long)STRLEN(ml_get(lnum));
+    if (bytes_to_print == 0)
+    {
+	MSG(_("No text to be printed"));
+	return;
+    }
 
 #ifdef FEAT_SYN_HL
 # ifdef FEAT_GUI
@@ -2470,6 +2695,7 @@ ex_hardcopy(eap)
     /*
      * Loop over collated copies: 1 2 3, 1 2 3, ...
      */
+    page_count = 0;
     for (collated_copies = 0;
 	    collated_copies < settings.n_collated_copies;
 	    collated_copies++)
@@ -2482,6 +2708,7 @@ ex_hardcopy(eap)
 	linenr_T	prev_file_line = eap->line1;
 	unsigned long	bytes_printed;
 	unsigned long	prev_bytes_printed = 0;
+	int		side;
 
 	bytes_printed = 0;
 
@@ -2492,69 +2719,93 @@ ex_hardcopy(eap)
 	{
 	    /*
 	     * Loop over uncollated copies: 1 1 1, 2 2 2, 3 3 3, ...
+	     * For duplex: 12 12 12 34 34 34, ...
 	     */
 	    for (uncollated_copies = 0;
 		    uncollated_copies < settings.n_uncollated_copies;
 		    uncollated_copies++)
 	    {
-		/*
-		 * Print one page.
-		 */
 		lead_spaces = prev_lead_spaces;
 		column = prev_column;
 		file_line = prev_file_line;
 		bytes_printed = prev_bytes_printed;
 
-		/* Check for interrupt character every page. */
-		ui_breakcheck();
-		if (got_int || !mch_print_begin_page())
-		    goto print_fail;
-
-		sprintf((char *)IObuff, _("Printing page %d (%d%%)"),
-			page_count + 1,
-			(int)((bytes_printed * 100) / bytes_to_print));
-		if (settings.n_collated_copies > 1)
-		    sprintf((char *)IObuff + STRLEN(IObuff),
-			    _(" Copy %d of %d"),
-			    collated_copies + 1,
-			    settings.n_collated_copies);
-		screen_fill((int)Rows - 1, (int)Rows, 0, (int)Columns,
-								 ' ', ' ', 0);
-		screen_puts(IObuff, (int)Rows - 1, 0, hl_attr(HLF_R));
-		out_flush();
-
 		/*
-		 * Output header if required
+		 * Do front and rear side of a page.
 		 */
-		if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-		    ex_print_header(settings.line_height,
-					settings.chars_per_line,
-					page_count + 1,
-					file_line,
-					!mono);
-
-		for (page_line = 0 ; page_line < settings.lines_per_page;
-								  ++page_line)
+		for (side = 0; side <= settings.duplex; ++side)
 		{
-		    column = hardcopy_line(column, file_line, page_line,
-					       mono, &settings, &lead_spaces,
-					       wrapped);
-		    if (column == 0)
+		    /*
+		     * Print one page.
+		     */
+
+		    /* Check for interrupt character every page. */
+		    ui_breakcheck();
+		    if (got_int)
 		    {
-			/* finished a file line */
-			wrapped = FALSE;
-			bytes_printed += STRLEN(ml_get(file_line));
-			++file_line;
-			if (file_line > eap->line2)
-			    break; /* reached the end */
+			mch_print_abort();
+			return;
 		    }
-		    else
-			wrapped = TRUE;
+		    if (!mch_print_begin_page())
+			goto print_fail;
+
+		    sprintf((char *)IObuff, _("Printing page %d (%d%%)"),
+			    page_count + 1 + side,
+			    (int)((bytes_printed * 100) / bytes_to_print));
+		    if (settings.n_collated_copies > 1)
+			sprintf((char *)IObuff + STRLEN(IObuff),
+				_(" Copy %d of %d"),
+				collated_copies + 1,
+				settings.n_collated_copies);
+		    screen_fill((int)Rows - 1, (int)Rows, 0, (int)Columns,
+			    ' ', ' ', 0);
+		    screen_puts(IObuff, (int)Rows - 1, 0, hl_attr(HLF_R));
+		    out_flush();
+
+		    /*
+		     * Output header if required
+		     */
+		    if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
+			ex_print_header(settings.line_height,
+				settings.chars_per_line,
+				page_count + 1 + side,
+				file_line,
+				!mono);
+
+		    for (page_line = 0 ; page_line < settings.lines_per_page;
+								  ++page_line)
+		    {
+			column = hardcopy_line(column, file_line, page_line,
+				mono, &settings, &lead_spaces,
+				wrapped);
+			if (column == 0)
+			{
+			    /* finished a file line */
+			    wrapped = FALSE;
+			    bytes_printed += STRLEN(ml_get(file_line));
+			    ++file_line;
+			    if (file_line > eap->line2)
+				break; /* reached the end */
+			}
+			else
+			    wrapped = TRUE;
+		    }
+
+		    if (!mch_print_end_page())
+			goto print_fail;
 		}
 
-		if (!mch_print_end_page())
-		    goto print_fail;
+		/*
+		 * Extra blank page for duplexing with odd number of pages.
+		 */
+		if (file_line > eap->line2 && settings.duplex && side == 0)
+		{
+		    if (!mch_print_blank_page())
+			goto print_fail;
+		}
 	    }
+	    if (settings.duplex && file_line <= eap->line2)
+		++page_count;
 
 	    prev_lead_spaces = lead_spaces;
 	    prev_column = column;
@@ -2793,6 +3044,12 @@ mch_print_cleanup()
 	fclose(s_ps_file);
 }
 
+    void
+mch_print_abort(void)
+{
+    mch_print_end();
+}
+
 static int to_device_units __ARGS((int idx, int dpi, int physsize, int offset));
 static int mch_print_get_cpl __ARGS((int *yChar_out, int *number_width_out));
 static int mch_print_get_lpp __ARGS((int yCharsize));
@@ -2901,7 +3158,7 @@ mch_print_init(psettings, jobname, forceit)
     s_ps_file = open_exfile((char_u *)"test.ps", forceit, WRITEBIN);
     if (s_ps_file == NULL)
     {
-	EMSG(_("E999: Can't open PostScript output file"));
+	EMSG(_("E324: Can't open PostScript output file"));
 	mch_print_cleanup();
 	return FALSE;
     }
@@ -2950,6 +3207,12 @@ mch_print_end_page()
 mch_print_begin_page()
 {
     return TRUE;
+}
+
+    int
+mch_print_blank_page()
+{
+    return (mch_print_begin_page() ? (mch_print_end_page()) : FALSE);
 }
 
 /*ARGSUSED*/

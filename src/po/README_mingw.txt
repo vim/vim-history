@@ -31,7 +31,7 @@ You also must remove the '..\' that prepends the name of the source files.
 (I don't no why, but make is unable to change the directory from po to src and
 back to po, so all the work must be done from the po dir, hence the '..\')
 
-Then you must go step (2) below. 
+Then you must go step (2) below.
 
 If you are updating a po file you must follow the next steps (they are nearly
 the same as in the Unix case, only the commands change):
@@ -49,7 +49,7 @@ This will extract all the strings from Vim and merge them in with the
     See the gettext documentation on how to do this.  You can also find
     examples in the other po files.
     Search the po file for items that require translation:
-    	/\#\~   and also the fuzzy translations, /\#, fuzzy
+	/\#\~   and also the fuzzy translations, /\#, fuzzy
     Remove "#~" and "#, fuzzy" after adding the translation.
 
     There is one special message:
@@ -63,8 +63,8 @@ This will extract all the strings from Vim and merge them in with the
     - items marked with "#, fuzzy"
     - items with an empty msgstr
     You can do this with the cleanup.vim script:
-    	:source cleanup.vim
- 
+	:source cleanup.vim
+
 (4) Check:
 
 	make -f Make_ming.mak xx.mo
@@ -73,9 +73,9 @@ This will extract all the strings from Vim and merge them in with the
 
 (5) This is an extra step, ;-). If you want the vim.mo file installed in your
     system you must run:
-    
+
 	make -f Make_ming.mak install
-    
+
     This will create the xx\LC_MESSAGES directory (if it does not exist) and
     will copy vim.po to it.
 

@@ -1,7 +1,7 @@
-*usr_22.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 28
+*usr_22.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			   Finding the file to edit
 
 
@@ -42,7 +42,7 @@ with the contents of the directory.  It looks like this:
 	help.txt.info ~
 
 You can see these items:
-1.  A comment about using ? to get help you for the functionality of the file
+1.  A comment about using ? to get help for the functionality of the file
     explorer.
 2.  The second line mentions how the items in the directory are listed.  They
     can be sorted in several ways.
@@ -62,7 +62,7 @@ move to a file and press <Enter>.  Now you are editing that file.  To go back
 to the explorer use ":edit ." again.  CTRL-O also works.
    Try using <Enter> while the cursor is on a directory name.  The result is
 that the explorer moves into that directory and displays the items found
-there.  Pressing <Enter> on the first directory "../" moves you to one level
+there.  Pressing <Enter> on the first directory "../" moves you one level
 higher.  Pressing "-" does the same thing, without the need to move to the
 "../" item first.
 
@@ -99,7 +99,7 @@ The following commands are used to display other information:
 			is on a date and the items will be sorted on date.
 	r		reverse the sorting order (either size or date)
 
-Then there are a few extra commands:
+There are a few extra commands:
 
 	c		Change the current directory to the displayed
 			directory.  You can then type an ":edit" command for
@@ -202,11 +202,11 @@ file is?  Then you can specify a relative path name.  This starts with a dot:
 	:set path+=./proto
 
 This tells Vim to look in the directory "proto", below the directory where the
-file is which you use "gf" in.  Thus using "gf" on "inits.h" will make Vim
+file in which you use "gf" is.  Thus using "gf" on "inits.h" will make Vim
 look for "proto/inits.h", starting in the directory of the file.
    Without the "./", thus "proto", Vim would look in the "proto" directory
 below the current directory.  And the current directory might not be where the
-file is located that you are editing.
+file that you are editing is located.
 
 The 'path' option allows specifying the directories where to search for files
 in many more ways.  See the help on the 'path' option.
@@ -284,11 +284,11 @@ The output could look like this:
 
   1 #h	"help.txt"			line 62 ~
   2 %l+	"usr_21.txt"			line 1 ~
-  3   	"usr_toc.txt"			line 1 ~
+  3	"usr_toc.txt"			line 1 ~
 
 The first column contains the buffer number.  You can use this to edit the
 buffer without having to type the name, see below.
-   After the buffer number number come the flags.  Then the name of the file
+   After the buffer number come the flags.  Then the name of the file
 and the line number where the cursor was the last time.
    The flags that can appear are these (from left to right):
 

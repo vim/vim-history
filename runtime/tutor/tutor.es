@@ -1,5 +1,5 @@
 ===============================================================================
-=     B i e n v e n i d o   a l   t u t o r   d e   V I M  -  Versión 1.4     = 
+=     B i e n v e n i d o   a l   t u t o r   d e   V I M  -  Versión 1.4     =
 ===============================================================================
 
      Vim es un editor muy potente que dispone de muchos mandatos, demasiados
@@ -22,13 +22,13 @@
      activada y pulse la tecla	j  lo suficiente para mover el cursor
      de forma que la Lección 1.1 ocupe completamente la pantalla.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		     Lección 1.1: MOVIMIENTOS DEL CURSOR  
+		     Lección 1.1: MOVIMIENTOS DEL CURSOR
 
  ** Para mover el cursor, pulse las teclas h,j,k,l de la forma que se indica. **
       ^
       k       Indicación: La tecla h está a la izquierda y mueve a la izquierda.
  < h	 l >		  La tecla l está a la derecha y mueve a la derecha.
-      j			  La tecla j parece una flecha que apunta hacia abajo. 
+      j			  La tecla j parece una flecha que apunta hacia abajo.
       v
 
   1. Mueva el cursor por la pantalla hasta que se sienta cómodo con ello.
@@ -56,7 +56,7 @@ Nota: Las teclas de movimiento del cursor también funcionan. Pero usando
 
 ---> Esto provoca la salida del editor SIN guardar ningún cambio que se haya
      hecho. Si quiere guardar los cambios y salir escriba:
-				:wq <INTRO>  
+				:wq <INTRO>
 
   3. Cuando vea el símbolo del sistema, escriba el mandato que le trajo a este
      tutor. Éste puede haber sido:   vimtutor <INTRO>
@@ -118,7 +118,7 @@ NOTA: A medida que vaya avanzando en este tutor no intente memorizar,
 
 
   1. El cursor se mueve utilizamdo las teclas de las flechas o las teclas hjkl.
-	 h (izquierda)	   j (abajo)	  k (arriba)	  l (derecha)	       
+	 h (izquierda)	   j (abajo)	  k (arriba)	  l (derecha)
 
   2. Para acceder a Vim (desde el símbolo del sistema %) escriba:
      vin FILENAME <INTRO>
@@ -219,7 +219,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   4. Escriba   2dd   (recuerde	número-mandato-objeto) para borrar las dos
      líneas.
 
-      1) Las rosas son rojas, 
+      1) Las rosas son rojas,
       2) El barro es divertido,
       3) El cielo es azul,
       4) Yo tengo un coche,
@@ -295,7 +295,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		       Lección 3.2: EL MANDATO «REPLACE» (remplazar)
- 
+
 
   ** Pulse  r  y un carácter para sustituir el carácter sobre el cursor. **
 
@@ -326,7 +326,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   1. Mueva el cursor a la primera línea de abajo señalada con --->.
 
   2. Sitúe el cursor en la u de lubrs.
-  
+
   3. Escriba  cw  y corrija la palabra (en este caso, escriba 'ínea').
 
   4. Pulse <ESC> y mueva el cursor al error siguiente (el primer carácter
@@ -334,7 +334,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
   5. Repita los pasos 3 y 4 hasta que la primera frase sea igual a la segunda.
 
----> Esta lubrs tiene unas pocas pskavtad que corregir usem el mandato change. 
+---> Esta lubrs tiene unas pocas pskavtad que corregir usem el mandato change.
 ---> Esta línea tiene unas pocas palabras que corregir usando el mandato change.
 
 
@@ -368,7 +368,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
      borrado DESPUÉS del cursor (si lo que se ha borrado es una línea se
      situará sobre la línea que está sobre el cursor).
 
-  2. Para sustituir el carácter bajo el cursor, pulse	r   y luego el 
+  2. Para sustituir el carácter bajo el cursor, pulse	r   y luego el
      carácter que sustituirá al original.
 
   3. El mandato change le permite cambiar el objeto especificado desde la
@@ -410,7 +410,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
      ** Escriba  /  seguido de una frase para buscar la frase. **
 
-  1. En modo Normal pulse el carácter  / . Fíjese que tanto el carácter  /  
+  1. En modo Normal pulse el carácter  / . Fíjese que tanto el carácter  /
      como el cursor aparecen en la última línea de la pantalla, lo mismo
      que el mandato  : .
 
@@ -487,7 +487,7 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
 
   3. Pulsando  %  cuando el cursor esta sobre (,), [,], { o } localiza
      la pareja correspondiente.
-  
+
   4. Para cambiar viejo por nuevo en una línea pulse	      :s/viejo/nuevo
      Para cambiar todos los viejo por nuevo en una línea pulse :s/viejo/nuevo/g
      Para cambiar frases entre dos números de líneas pulse  :#,#s/viejo/nuevo/g
@@ -554,7 +554,7 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
   3. Ahora mueva el cursor a la última línea de la pantalla y pulse Ctrl-g
      de nuevo. ¡RECUERDE TAMBIÉN ESTE NÚMERO!
 
-  4. Para guardar SOLAMENTE una parte de un fichero, escriba  :#,# w TEST  
+  4. Para guardar SOLAMENTE una parte de un fichero, escriba  :#,# w TEST
      donde #,# son los números que usted ha recordado (primera línea,
      última línea) y TEST es su nombre de dichero.
 
@@ -623,7 +623,7 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 
 ---> Luego de pulsar  o  el cursor se sitúa en la línea abierta en modo Insert.
 
-  4. Para abrir una línea por encima del cursor, simplemente pulse una O 
+  4. Para abrir una línea por encima del cursor, simplemente pulse una O
      mayúscula, en lugar de una o minúscula. Pruebe este en la línea siguiente.
 Abra una línea sobre ésta pulsando Mayu-O cuando el curso está en esta línea.
 
@@ -670,7 +670,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   4. Nótese que cuando pulse <ESC> para salir, el texto no alterado permanece.
 
 
- 
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			 Lección 6.4: FIJAR OPCIONES
 
@@ -738,7 +738,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   :help c_<T <INTRO>
   :help insert-index <INTRO>
 
- 
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Aquí concluye el tutor de Vim. Está pensado para dar una visión breve del

@@ -16,7 +16,7 @@
 "
 " To use it, just edit a directory (vi dirname) or type :Explore to
 " launch the file explorer in the current window, or :Sexplore to split
-" the current window and launch explorer there. 
+" the current window and launch explorer there.
 "
 " If the current buffer is modified, the window is always split.
 "
@@ -207,7 +207,7 @@ function! s:StartExplorer(split, start_dir)
   let savesplitbelow = &splitbelow
   let savesplitright = &splitright
 
-  if a:split || &modified 
+  if a:split || &modified
     let startcmd = splitMode . " " . g:explWinSize . "new " . fname
     let &splitbelow = g:explStartBelow
     let &splitright = g:explStartRight
@@ -415,7 +415,7 @@ endfunction
 function! s:OpenEntry()
   " Are we on a line with a file name?
   let l = getline(".")
-  if l =~ '^"' 
+  if l =~ '^"'
     return
   endif
 
@@ -471,7 +471,7 @@ function! s:OpenEntry()
     endif
   endif
 
-  " Get the file name 
+  " Get the file name
   let fn=s:GetFullFileName()
 
   " Attempt to go to adjacent window
@@ -535,7 +535,7 @@ endfun
 function! s:EditEntry(movefirst,editcmd)
   " Are we on a line with a file name?
   let l = getline(".")
-  if l =~ '^"' 
+  if l =~ '^"'
     return
   endif
 
@@ -544,7 +544,7 @@ function! s:EditEntry(movefirst,editcmd)
   let s:longhelp = w:longhelp
   let s:longlist = w:longlist
 
-  " Get the file name 
+  " Get the file name
   let fn=s:GetFullFileName()
   if isdirectory(fn)
     let origdir= s:Path(getcwd())
@@ -659,7 +659,7 @@ function! s:MarkDirs()
   let oldRep=&report
   set report=1000
   "Remove slashes if added
-  s;/$;;e  
+  s;/$;;e
   "Removes all the leading slashes and adds slashes at the end of directories
   s;^.*\\\([^\\]*\)$;\1;e
   s;^.*/\([^/]*\)$;\1;e
@@ -1022,10 +1022,10 @@ function! s:AddSeparators()
   let lastsec=s:GetSection()
   +1
   .,$g/^/let sec=s:GetSection() |
-               \if g:explDirsFirst != 0 && sec != lastsec && 
+               \if g:explDirsFirst != 0 && sec != lastsec &&
                \   (lastsec == "directory" || sec == "directory") |
                \  exec "normal! I" . s:separator . "\n\<esc>" |
-               \elseif g:explSuffixesLast != 0 && sec != lastsec && 
+               \elseif g:explSuffixesLast != 0 && sec != lastsec &&
                \   (lastsec == "suffixes" || sec == "suffixes") |
                \  exec "normal! I" . s:separator . "\n\<esc>" |
                \endif |

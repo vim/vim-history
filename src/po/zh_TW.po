@@ -15,7 +15,7 @@
 # EG: '¥\', .....
 # you can replace these characters with alternative words.
 # THIS WILL CAUSE INCOMPATIBLE ON gettext 0.10.36+
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim(Traditional Chinese)\n"

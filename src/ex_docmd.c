@@ -202,7 +202,7 @@ static void	ex_popup __ARGS((exarg_T *eap));
 # define ex_popup		ex_ni
 #endif
 #ifndef FEAT_GUI_MSWIN
-# define gui_simulate_alt_key	ex_ni
+# define ex_simalt		ex_ni
 #endif
 #if !defined(FEAT_GUI_MSWIN) && !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MOTIF)
 # define gui_mch_find_dialog	ex_ni
@@ -345,19 +345,14 @@ static char_u	*get_view_file __ARGS((int c));
 #else
 # define ex_loadview		ex_ni
 #endif
-#ifdef FEAT_EVAL
-static void	ex_compiler __ARGS((exarg_T *eap));
-#else
+#ifndef FEAT_EVAL
 # define ex_compiler		ex_ni
 #endif
-static void	ex_runtime __ARGS((exarg_T *eap));
 #ifdef FEAT_VIMINFO
 static void	ex_viminfo __ARGS((exarg_T *eap));
 #else
 # define ex_viminfo		ex_ni
 #endif
-static void	ex_source __ARGS((exarg_T *eap));
-static void	cmd_source __ARGS((char_u *fname, int forceit));
 static void	ex_behave __ARGS((exarg_T *eap));
 #ifdef FEAT_AUTOCMD
 static void	ex_filetype __ARGS((exarg_T *eap));
@@ -375,9 +370,7 @@ static void	ex_setfiletype  __ARGS((exarg_T *eap));
 #endif
 static void	ex_digraphs __ARGS((exarg_T *eap));
 static void	ex_set __ARGS((exarg_T *eap));
-#if defined(FEAT_EVAL) && defined(FEAT_AUTOCMD)
-static void	ex_options __ARGS((exarg_T *eap));
-#else
+#if !defined(FEAT_EVAL) || !defined(FEAT_AUTOCMD)
 # define ex_options		ex_ni
 #endif
 #ifdef FEAT_SEARCH_EXTRA
@@ -3093,11 +3086,18 @@ expand_filename(eap, cmdlinep, errormsgp)
 		 * Halve the number of backslashes (this is Vi compatible).
 		 * For Unix and OS/2, when wildcards are expanded, this is
 		 * done by ExpandOne() below.
+		 * For MS-DOS and MS-Windows, "\\server\path" should keep the
+		 * double backslash at the start.
 		 */
 #if defined(UNIX) || defined(OS2)
 		if (!has_wildcards)
 #endif
+#ifdef BACKSLASH_IN_FILENAME
+		    if (*eap->arg != NUL)
+			backslash_halve(eap->arg + 1);
+#else
 		    backslash_halve(eap->arg);
+#endif
 #ifdef MACOS_CLASSIC
 		/*
 		 * translate unix-like path components
@@ -5977,6 +5977,10 @@ ex_cd(eap)
 	    }
 
 	    shorten_fnames(TRUE);
+
+	    /* Echo the new current directory if the command was typed. */
+	    if (KeyTyped)
+		ex_pwd(eap);
 	}
 	vim_free(tofree);
     }
@@ -7408,14 +7412,18 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 # define SPEC_AFILE 6
 		    "<abuf>",		/* autocommand buffer number */
 # define SPEC_ABUF  7
-		    "<amatch>"		/* autocommand match name */
+		    "<amatch>",		/* autocommand match name */
 # define SPEC_AMATCH 8
+#endif
+#ifdef FEAT_XCMDSRV
+		    "<client>"
+# define SPEC_CLIENT 9
 #endif
 		};
 #define SPEC_COUNT  (sizeof(spec_str) / sizeof(char *))
 
-#ifdef FEAT_AUTOCMD
-    char_u	abuf_nr[30];
+#if defined(FEAT_AUTOCMD) || defined(FEAT_XCMDSRV)
+    char_u	strbuf[30];
 #endif
 
     *errormsg = NULL;
@@ -7548,8 +7556,8 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		    *errormsg = (char_u *)_("no autocommand buffer number to substitute for \"<abuf>\"");
 		    return NULL;
 		}
-		sprintf((char *)abuf_nr, "%d", autocmd_bufnr);
-		result = abuf_nr;
+		sprintf((char *)strbuf, "%d", autocmd_bufnr);
+		result = strbuf;
 		break;
 
 	case SPEC_AMATCH:	/* match name for autocommand */
@@ -7570,6 +7578,12 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		    return NULL;
 		}
 		break;
+#ifdef FEAT_XCMDSRV
+	case SPEC_CLIENT:	/* Source of last submitted input */
+		sprintf((char *)strbuf, "0x%x", (unsigned int)clientWindow);
+		result = strbuf;
+		break;
+#endif
 	}
 
 	resultlen = (int)STRLEN(result);	/* length of new string */
@@ -8518,195 +8532,6 @@ ex_viminfo(eap)
 }
 #endif
 
-#ifdef FEAT_EVAL
-/*
- * ":compiler {name}"
- */
-    static void
-ex_compiler(eap)
-    exarg_T	*eap;
-{
-    char_u	*buf;
-
-    if (*eap->arg == NUL)
-    {
-	/* List all compiler scripts. */
-	do_cmdline_cmd((char_u *)"echo globpath(&rtp, 'compiler/*.vim')");
-    }
-    else
-    {
-	buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
-	if (buf != NULL)
-	{
-	    do_unlet((char_u *)"current_compiler");
-	    sprintf((char *)buf, "compiler/%s.vim", eap->arg);
-	    (void)cmd_runtime(buf, TRUE);
-	    vim_free(buf);
-	}
-    }
-}
-#endif
-
-/*
- * ":runtime {name}"
- */
-    static void
-ex_runtime(eap)
-    exarg_T	*eap;
-{
-    cmd_runtime(eap->arg, eap->forceit);
-}
-
-static void source_callback __ARGS((char_u *fname));
-
-    static void
-source_callback(fname)
-    char_u	*fname;
-{
-    (void)do_source(fname, FALSE, FALSE);
-}
-
-/*
- * Source the file "name" from all directories in 'runtimepath'.
- * "name" can contain wildcards.
- * When "all" is TRUE, source all files, otherwise only the first one.
- * return FAIL when no file could be sourced, OK otherwise.
- */
-    int
-cmd_runtime(name, all)
-    char_u	*name;
-    int		all;
-{
-    return do_in_runtimepath(name, all, source_callback);
-}
-
-/*
- * Find "name" in 'runtimepath'.  When found, call the "callback" function for
- * it.
- * When "all" is TRUE repeat for all matches, otherwise only the first one is
- * used.
- * Returns OK when at least one match found, FAIL otherwise.
- */
-    int
-do_in_runtimepath(name, all, callback)
-    char_u	*name;
-    int		all;
-    void	(*callback)__ARGS((char_u *fname));
-{
-    char_u	*rtp;
-    char_u	*np;
-    char_u	*buf;
-    char_u	*tail;
-    int		num_files;
-    char_u	**files;
-    int		i;
-    int		did_one = FALSE;
-#ifdef AMIGA
-    struct Process	*proc = (struct Process *)FindTask(0L);
-    APTR		save_winptr = proc->pr_WindowPtr;
-
-    /* Avoid a requester here for a volume that doesn't exist. */
-    proc->pr_WindowPtr = (APTR)-1L;
-#endif
-
-    buf = alloc(MAXPATHL);
-    if (buf != NULL)
-    {
-	if (p_verbose > 1)
-	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
-						 (char *)name, (char *)p_rtp);
-	/* Loop over all entries in 'runtimepath'. */
-	rtp = p_rtp;
-	while (*rtp != NUL && (all || !did_one))
-	{
-	    /* Copy the path from 'runtimepath' to buf[]. */
-	    copy_option_part(&rtp, buf, MAXPATHL, ",");
-	    if (STRLEN(buf) + STRLEN(name) + 2 < MAXPATHL)
-	    {
-		add_pathsep(buf);
-		tail = buf + STRLEN(buf);
-
-		/* Loop over all patterns in "name" */
-		np = name;
-		while (*np != NUL && (all || !did_one))
-		{
-		    /* Append the pattern from "name" to buf[]. */
-		    copy_option_part(&np, tail, (int)(MAXPATHL - (tail - buf)),
-								       "\t ");
-
-		    if (p_verbose > 2)
-			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
-		    /* Expand wildcards and source each match. */
-#ifdef VMS
-                    strcpy((char *)buf,vms_fixfilename(buf));
-#endif
-
-		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
-							       EW_FILE) == OK)
-		    {
-			for (i = 0; i < num_files; ++i)
-			{
-			    (*callback)(files[i]);
-			    did_one = TRUE;
-			    if (!all)
-				break;
-			}
-			FreeWild(num_files, files);
-		    }
-		}
-	    }
-	}
-	vim_free(buf);
-    }
-    if (p_verbose > 0 && !did_one)
-	smsg((char_u *)_("not found in 'runtimepath': \"%s\""), name);
-
-#ifdef AMIGA
-    proc->pr_WindowPtr = save_winptr;
-#endif
-
-    return did_one ? OK : FAIL;
-}
-
-/*
- * ":source {fname}"
- */
-    static void
-ex_source(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_BROWSE
-    if (cmdmod.browse)
-    {
-	char_u *fname = NULL;
-
-	fname = do_browse(FALSE, (char_u *)_("Run Macro"),
-		NULL, NULL, eap->arg, BROWSE_FILTER_MACROS, curbuf);
-	if (fname != NULL)
-	{
-	    cmd_source(fname, eap->forceit);
-	    vim_free(fname);
-	}
-    }
-    else
-#endif
-	cmd_source(eap->arg, eap->forceit);
-}
-
-    static void
-cmd_source(fname, forceit)
-    char_u	*fname;
-    int		forceit;
-{
-    if (*fname == NUL)
-	EMSG(_(e_argreq));
-    else if (forceit)		/* :so! read vi commands */
-	(void)openscript(fname);
-				/* :so read ex commands */
-    else if (do_source(fname, FALSE, FALSE) == FAIL)
-	EMSG2(_(e_notopen), fname);
-}
-
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
     void
 dialog_msg(buff, format, fname)
@@ -8893,19 +8718,6 @@ ex_set(eap)
 #endif
 	(void)do_set(eap->arg, flags);
 }
-
-#if defined(FEAT_EVAL) && defined(FEAT_AUTOCMD)
-/*
- * ":options"
- */
-/*ARGSUSED*/
-    static void
-ex_options(eap)
-    exarg_T	*eap;
-{
-    cmd_source((char_u *)SYS_OPTWIN_FILE, FALSE);
-}
-#endif
 
 #ifdef FEAT_SEARCH_EXTRA
 /*

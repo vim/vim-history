@@ -1,7 +1,7 @@
-*usr_20.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_20.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 		     Typing command-line commands quickly
 
 
@@ -40,7 +40,7 @@ and "w" to correct: >
 
 	:s/cow/pig/
 
-Now you can press <Enter> directly.  You con't have to move the cursor to the
+Now you can press <Enter> directly.  You don't have to move the cursor to the
 end of the line before executing the command.
 
 The most often used keys to move around in the command line:
@@ -365,7 +365,7 @@ will close.
 matter whether Vim is in Insert mode or in Normal mode.
    Changes in the command line window are lost.  They do not result in the
 history to be changed.  Except that the command you execute will be added to
-the end of the history, like with all exectued.commands.
+the end of the history, like with all executed commands.
 
 The command line window is very useful when you want to have overview of the
 history, lookup a similar command, change it a bit and execute it.  A search

@@ -1,7 +1,7 @@
-*usr_41.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 04
+*usr_41.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Write a Vim script
 
 
@@ -42,7 +42,7 @@ Let's start with a simple example: >
 	:while i < 5
 	:  echo "count is" i
 	:  let i = i + 1
-  	:endwhile
+	:endwhile
 <
 	Note:
 	The ":" characters are not really needed here.  You only need to use
@@ -57,8 +57,8 @@ The ":let" command assigns a value to a variable.  The generic form is: >
 In this case the variable name is "i" and the expression is a simple value,
 the number one.
    The ":while" command starts a loop.  The generic form is: >
-   
-   	:while {condition}
+
+	:while {condition}
 	:  {statements}
 	:endwhile
 
@@ -75,10 +75,10 @@ Then there is another ":let i =" command.  The value used is the expression "i
 variable.
    The output of the example code is:
 
-   	count is 1 ~
-   	count is 2 ~
-   	count is 3 ~
-   	count is 4 ~
+	count is 1 ~
+	count is 2 ~
+	count is 3 ~
+	count is 4 ~
 
 	Note:
 	If you happen to write a while loop that keeps on running, you can
@@ -93,14 +93,14 @@ zero.  "017" is 15.  Careful: don't put a zero before a decimal number, it
 will be intepreted as an octal number!
    The ":echo" command always prints decimal numbers.  Example: >
 
-   	:echo 0x7f 036
+	:echo 0x7f 036
 <	127 30 ~
 
 A number is made negative with a minus sign.  This also works for hexadecimal
 and octal numbers.   A minus sign is also for substraction.  Compare this with
 the previous example: >
 
-   	:echo 0x7f -036
+	:echo 0x7f -036
 <	97 ~
 
 White space in an expression is ignored.  However, it's recommended to use it
@@ -108,7 +108,7 @@ for separating items, to make the expression easier to read.  For example, to
 avoid the confusion with a negative number, put a space between the minus sign
 and the following number: >
 
-   	:echo 0x7f - 036
+	:echo 0x7f - 036
 
 ==============================================================================
 *41.2*	Variables
@@ -251,7 +251,7 @@ string or variable.  Other basic items in an expression are:
 	$NAME		environment variable
 	&name		option
 	@r		register
- 
+
 Examples: >
 
 	:echo "The value of 'tabstop' is" &ts
@@ -457,7 +457,7 @@ So far the commands in the script were executed by Vim directly.  The
 very powerful way to build commands and execute them.
    An example is to jump to a tag, which is contained in a variable: >
 
-   	:execute "tag " . tag_name
+	:execute "tag " . tag_name
 
 The "." is used to concatenate the string "tag " with the value of variable
 "tag_name".  Suppose "tag_name" has the value "get_cmd", then the command that
@@ -535,20 +535,20 @@ There are many functions.  We will mention them here, grouped by what they are
 used for.  You can find an alphabetical list here: |functions|.  Use CTRL-] on
 the function name to jump to detailed help on it.
 
-String manipulation: 
-   	char2nr()		get ASCII value of a character
-   	nr2char()		get a character by its ASCII value
-   	escape()		Escape characters in a string with a '\'
+String manipulation:
+	char2nr()		get ASCII value of a character
+	nr2char()		get a character by its ASCII value
+	escape()		Escape characters in a string with a '\'
 	strtrans()		translate a string to make it printable
-   	tolower()		turn a string to lowercase
-   	toupper()		turn a string to uppercase
-   	match()			position where a pattern matches in a string
-   	matchend()		position where a pattern match ends in a string
-   	matchstr()		match of a pattern in a string
-   	stridx() 		first index of a short string in a long string
+	tolower()		turn a string to lowercase
+	toupper()		turn a string to uppercase
+	match()			position where a pattern matches in a string
+	matchend()		position where a pattern match ends in a string
+	matchstr()		match of a pattern in a string
+	stridx()		first index of a short string in a long string
 	strridx()		last index of a short string in a long string
 	strlen()		length of a string
-   	substitute()   		substitute a pattern match with a string
+	substitute()		substitute a pattern match with a string
 	submatch()		get a specific match in a ":substitute"
 	strpart()		get part of a string
 	expand()		expand special keywords
@@ -634,7 +634,7 @@ Interactive:
 	inputsecret()		get a line from the user without showing it
 	inputdialog()		get a line from the user in a dialog
 
-Various:	
+Various:
 	mode()			get current editing mode
 	visualmode()		last visual mode used
 	hasmapto()		check if a mapping exists
@@ -675,7 +675,7 @@ This tells Vim that the function is named "Min" and it takes two arguments:
    The first thing you need to do is to check to see which number is smaller:
    >
 	:  if a:num1 < a:num2
-	  
+
 The special prefix "a:" tells Vim that the variable is a function argument.
 Let's assign the variable smaller the value of the smallest number: >
 
@@ -781,7 +781,7 @@ The variable "a:1" contains the first optional argument, "a:2" the second, and
 so on.  The variable "a:0" contains the number of extra arguments.
    For example: >
 
-   	:function Show(start, ...)
+	:function Show(start, ...)
 	:  echohl Title
 	:  echo "Show is " . a:start
 	:  echohl None
@@ -1066,7 +1066,7 @@ make the script work for most people.  It is done like this: >
 
  10	let s:save_cpo = &cpo
  11	set cpo&vim
- .. 
+ ..
  41	let &cpo = s:save_cpo
 
 We first store the old value of 'cpoptions' in the s:save_cpo variable.  At
@@ -1213,7 +1213,7 @@ difference between using <SID> and <Plug>:
 	you use the ":function" command to get a list of functions.  The
 	translation of <SID> in mappings is exactly the same, that's how you
 	can call a script-local function from a mapping.
- 
+
 
 USER COMMAND
 
@@ -1392,7 +1392,7 @@ chance to disable loading it.  Put this at the top of the plugin: >
 	let b:did_ftplugin = 1
 
 This also needs to be used to avoid that the same plugin is executed twice for
-the same buffer (happens when using an ":edit" command without arguments).  
+the same buffer (happens when using an ":edit" command without arguments).
 
 Now you can disable loading the default plugin completely by making a filetype
 plugin with only this line: >

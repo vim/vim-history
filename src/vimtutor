@@ -3,7 +3,7 @@
 # Start Vim on a copy of the tutor file.
 
 # Usage: vimtutor [xx], where xx is a language code like "es" or "nl".
-# When an argument is given, it tries loading that tutor. 
+# When an argument is given, it tries loading that tutor.
 # When this fails or no argument was given, it tries using 'v:lang'
 # When that also fails, it uses the English version.
 

@@ -409,7 +409,8 @@ gui_motif_create_fontlist(font)
     return font_list;
 }
 
-# if ((XmVersion > 1001) && defined(FEAT_BEVAL)) || defined(PROTO)
+# if ((XmVersion > 1001) && defined(FEAT_BEVAL) && defined(FEAT_XFONTSET)) \
+	|| defined(PROTO)
     XmFontList
 gui_motif_fontset2fontlist(fontset)
     XFontSet	*fontset;
@@ -1920,6 +1921,8 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 		XmNlabelString, label,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNbottomOffset, 4,
+		XmNshowAsDefault, butcount == dfltbutton - 1,
+		XmNdefaultButtonShadowThickness, 1,
 		NULL);
 	XmStringFree(label);
 
@@ -2130,6 +2133,9 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
 	    XmNdefaultButton, buttons[dfltbutton - 1], NULL);
     if (textfield != NULL)
 	XtVaSetValues(dialogform, XmNinitialFocus, dialogtextfield, NULL);
+    else
+	XtVaSetValues(dialogform, XmNinitialFocus, buttons[dfltbutton - 1],
+									NULL);
 
     manage_centered(dialogform);
 

@@ -1,7 +1,7 @@
-*usr_09.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 29
+*usr_09.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 				Using the GUI
 
 
@@ -55,12 +55,12 @@ same way as in a terminal.  With some different colors and another font
 perhaps.
 
 
-THE WINDOW TITLE.
+THE WINDOW TITLE
 
 At the very top is the window title.  This is drawn by your window system.
-Vim will set the title to show the name of current file.  First comes the name
-of the file.  Then some special characters and the directory of the file in
-parens.  These special character can be present:
+Vim will set the title to show the name of the current file.  First comes the
+name of the file.  Then some special characters and the directory of the file
+in parens.  These special character can be present:
 
 	-	The file cannot be modifed (e.g., a help file)
 	+	The file contains changes
@@ -137,14 +137,11 @@ command makes the mouse behave like an X Window mouse: >
 The following command makes the mouse work like a Microsoft Windows mouse: >
 
 	:behave mswin
-	
+
 The default behavior of the mouse on UNIX systems is xterm.  The default
 behavior on a Microsoft Windows system is selected during the installation
-process.  In addition to controlling the behavior of the mouse, the ":behave"
-command affects the following options:
-
-For details about what the two behaviors are, see |:behave|.  Here follows a
-summary.
+process.  For details about what the two behaviors are, see |:behave|.  Here
+follows a summary.
 
 
 XTERM MOUSE BEHAVIOR
@@ -219,9 +216,9 @@ USING BOTH
 This use of both the "current selection" and the "real clipboard" might sound
 a bit confusing.  But it is very useful.  Let's show this with an example.
 Use one gVim with a text file and perform these actions:
-   
+
 -  Select two words in Visual mode.
--  Use the Edit/Copy menu to get these words onto the clipboard.  
+-  Use the Edit/Copy menu to get these words onto the clipboard.
 -  Select one other word in Visual mode.
 -  Use the Edit/Paste menu item.  What will happen is that the single selected
    word is replaced with the two words from the clipboard.

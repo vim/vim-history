@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Essbase script
 " Maintainer:	Raul Segura Acevedo <raul@turing.iquimica.unam.mx>
-" Last change:	2001 May 21
+" Last change:	2001 Jul 28
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -176,13 +176,13 @@ if version >= 508 || !exists("did_csc_syntax_inits")
 	HiLink	cscError	Error
 	HiLink	cscString	String
 	HiLink	cscComment	Comment
-	HiLink	cscTodo 	Todo
+	HiLink	cscTodo		Todo
 	HiLink	cscStatement	Statement
 	HiLink	cscIfError	Error
 	HiLink	cscEqError	Error
 	HiLink	cscFunction	Statement
 	HiLink	cscCondition	Statement
-	HiLink	cscWarn 	WarningMsg
+	HiLink	cscWarn		WarningMsg
 
 	HiLink	cscComE	Error
 	HiLink	cscCom	Statement

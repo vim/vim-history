@@ -42,6 +42,7 @@
 #   DYNAMIC_PYTHON  no or yes: use yes to load the Python DLL dynamically (no)
 # TCL		define to path to TCL dir to get TCL support (not defined)
 #   TCL_VER	define to version oc TCL being used (83)
+#   DYNAMIC_TCL no or yes: use yes to load the TCL DLL dynamically (no)
 # OLE		0 or 1: set to 1 to make OLE gvim (0)
 # OSTYPE	DOS16 or WIN32 (WIN32)
 # DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
@@ -216,8 +217,12 @@ INCLUDE = $(TCL)\include;$(INCLUDE)
 !ifndef TCL_VER
 TCL_VER = 83
 !endif
+!if "$(DYNAMIC_TCL)" == "yes"
+DEFINES = $(DEFINES) -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
+TCL_LIB_FLAG = /nodefaultlib:
 !endif
-# 
+!endif
+#
 # DO NOT change below:
 #
 CPU = -$(CPU)
@@ -452,6 +457,9 @@ MSG = $(MSG)(dynamic)
 !endif
 !ifdef TCL
 MSG = $(MSG) TCL
+! ifdef DYNAMIC_TCL
+MSG = $(MSG)(dynamic)
+! endif
 !endif
 MSG = $(MSG) cpu=$(CPU)
 MSG = $(MSG) Align=$(ALIGN)
@@ -535,7 +543,7 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 	$(PYTHON_LIB_FLAG)python.lib+
 !endif
 !ifdef TCL
-	tcl.lib+
+	$(TCL_LIB_FLAG)tcl.lib+
 !endif
 !if ($(USEDLL)==1)
 	cw32i.lib
@@ -577,7 +585,7 @@ $(TARGET): $(OBJDIR) $(vimobj) $(RESFILE)
 	$(PYTHON_LIB_FLAG)python.lib+
 !endif
 !ifdef TCL
-	tcl.lib+
+	$(TCL_LIB_FLAG)tcl.lib+
 !endif
 !if ($(USEDLL)==1)
 	cw32i.lib

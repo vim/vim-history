@@ -1,7 +1,6 @@
 "  vim: set sw=4 sts=4:
-"  File		: indent.vim
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Sat, 21 Jul 2001 19:27:50 +0200
+"  Revised on	: Tue, 24 Jul 2001 18:56:15 CEST
 "  TODO		: is the deny-all (a la lilo.vim nice or no?)...
 "		: irritating to be wrong to the last char...
 "		: would be sweet if right until one char fails
@@ -24,39 +23,36 @@ SetIsk 48-57,65-90,97-122,-,_
 delcommand SetIsk
 
 " errors
-syn match indentError "\S\+"
+syn match   indentError "\S\+"
 
 " comments
-syn region indentComment matchgroup=indentComment start="/\*" end="\*/" contains=indentTodo
+syn region  indentComment matchgroup=indentComment start="/\*" end="\*/" contains=indentTodo
 
 " todo
 syn keyword indentTodo contained TODO
 
-" numbers
-syn match indentNumber display "\<\d+\>"
-
 " keywords (command-line switches)
 " this one is not 100% right. there is no --no-blank-after-sizeof. however,
 " this is the gnu indent fellas fault, not mine; there should be such a switch
-syn match indentOptions "\<--\(no-\)\=blank-\(after-sizeof\|lines-\(after-\(commas\|declarations\|procedures\)\|before-block-comments\)\)\>"
-syn match indentOptions "\<--brace-indent\s*\d\+\>"
-syn match indentOptions "\<--braces-\(after\|on\)-\(if\|struct-decl\)-line\>"
-syn match indentOptions "\<--break-\(\(after\|before\)-boolean-operator\|function-decl-args\)\>"
-syn match indentOptions "\<--\(case\(-brace\)\=\|comment\|continuation\|declaration\|line-comments\|parameter\|paren\|struct-brace\)-indentation\s*\d\+\>"
-syn match indentOptions "\<--\(no-\)\=comment-delimiters-on-blank-lines\>"
-syn match indentOptions "\<--\(dont-\)\=cuddle-\(do-while\|else\)\>"
-syn match indentOptions "\<--\(declaration-comment\|else-endif\)-column\s*\d\+\>"
-syn match indentOptions "\<--dont-break-\(function-decl-args\|procedure-type\)\>"
-syn match indentOptions "\<--\(dont-\)\=\(format\(-first-column\)\=\|star\)-comments\>"
-syn match indentOptions "\<--\(honour\|ignore\)-newlines\>"
-syn match indentOptions "\<--\(indent-level\|\(comment-\)\=line-length\)\s*\d\+\>"
-syn match indentOptions "\<--\(leave\|remove\)-preprocessor-space\>"
+syn match   indentOptions "\<--\(no-\)\=blank-\(after-sizeof\|lines-\(after-\(commas\|declarations\|procedures\)\|before-block-comments\)\)\>"
+syn match   indentOptions "\<--brace-indent\s*\d\+\>"
+syn match   indentOptions "\<--braces-\(after\|on\)-\(if\|struct-decl\)-line\>"
+syn match   indentOptions "\<--break-\(\(after\|before\)-boolean-operator\|function-decl-args\)\>"
+syn match   indentOptions "\<--\(case\(-brace\)\=\|comment\|continuation\|declaration\|line-comments\|parameter\|paren\|struct-brace\)-indentation\s*\d\+\>"
+syn match   indentOptions "\<--\(no-\)\=comment-delimiters-on-blank-lines\>"
+syn match   indentOptions "\<--\(dont-\)\=cuddle-\(do-while\|else\)\>"
+syn match   indentOptions "\<--\(declaration-comment\|else-endif\)-column\s*\d\+\>"
+syn match   indentOptions "\<--dont-break-\(function-decl-args\|procedure-type\)\>"
+syn match   indentOptions "\<--\(dont-\)\=\(format\(-first-column\)\=\|star\)-comments\>"
+syn match   indentOptions "\<--\(honour\|ignore\)-newlines\>"
+syn match   indentOptions "\<--\(indent-level\|\(comment-\)\=line-length\)\s*\d\+\>"
+syn match   indentOptions "\<--\(leave\|remove\)-preprocessor-space\>"
 "not 100%, since casts\= should always be cast if no- isn't given
-syn match indentOptions "\<--\(no-\)\=space-after-\(parentheses\|casts\=\|for\|if\|while\)\>"
-syn match indentOptions "\<--\(dont-\)\=space-special-semicolon\>"
-syn match indentOptions "\<--\(leave\|swallow\)-optional-blank-lines\>"
-syn match indentOptions "\<--tab-size\s*\d\+\>"
-syn match indentOptions "\<--\(no\|use\)-tabs\>"
+syn match   indentOptions "\<--\(no-\)\=space-after-\(parentheses\|casts\=\|for\|if\|while\)\>"
+syn match   indentOptions "\<--\(dont-\)\=space-special-semicolon\>"
+syn match   indentOptions "\<--\(leave\|swallow\)-optional-blank-lines\>"
+syn match   indentOptions "\<--tab-size\s*\d\+\>"
+syn match   indentOptions "\<--\(no\|use\)-tabs\>"
 syn keyword indentOptions --gnu-style --ignore-profile --k-and-r-style --original
 syn keyword indentOptions --preserve-mtime --no-verbosity --verbose --output-file
 syn keyword indentOptions --no-parameter-indentation --procnames-start-lines
@@ -64,6 +60,8 @@ syn keyword indentOptions --standard-output --start-left-side-of-comments
 syn keyword indentOptions --space-after-procedure-calls
 " this also here since the gnu indent fellas aren't consistent. (ever read
 " the code to `indent'? you'll know what i mean if you have)
+syn match   indentOptions "\<-\(bli\|cbi\|cd\|ci\|cli\|c\|cp\|di\|d\|i\|ip\|l\|lc\|pi\|sbi\|ts\)\s*\d\+\>"
+syn match   indentOptions "\<-T\s\+\w\+\>"
 syn keyword indentOptions --format-all-comments --continue-at-parentheses --dont-line-up-parentheses
 syn keyword indentOptions --no-space-after-function-call-names
 syn keyword indentOptions -bad -bap -bbb -bbo -bc -bfda -bl -br -bs -cdb -cdw -ce -cs -dce -fc1 -fca
@@ -71,8 +69,6 @@ syn keyword indentOptions -gnu -hnl -kr -lp -lps -nbad -nbap -nbbb -nbbo -nbc -n
 syn keyword indentOptions -nce -ncs -nfc1 -nfca -nhnl -nip -nlp -nlps -npcs -npmt -npro -npsl -nsaf -nsai
 syn keyword indentOptions -nsaw -nsc -nsob -nss -nv -o -orig -pcs -pmt -prs -psl -saf -sai -saw -sc
 syn keyword indentOptions -sob -ss -st -v -version -bls -brs -ut -nut
-syn match indentOptions "\<-\(bli\|cbi\|cd\|ci\|cli\|c\|cp\|di\|d\|i\|ip\|l\|lc\|pi\|sbi\|ts\)\s*\d\+\>"
-syn match indentOptions "\<-T\s\+\w\+\>"
 
 if exists("indent_minlines")
     let b:indent_minlines = indent_minlines
@@ -95,7 +91,6 @@ if version >= 508 || !exists("did_indent_syn_inits")
     HiLink indentError	    Error
     HiLink indentComment    Comment
     HiLink indentTodo	    Todo
-    HiLink indentNumber	    Number
     HiLink indentOptions    Keyword
     delcommand HiLink
 endif

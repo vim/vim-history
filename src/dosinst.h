@@ -9,6 +9,54 @@
 /*
  * dosinst.h: Common code for dosinst.c and uninstal.c
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#ifndef UNIX_LINT
+# include <io.h>
+# include <ctype.h>
+
+# ifndef __CYGWIN__
+#  include <direct.h>
+# endif
+
+# if defined(_WIN64) || defined(WIN32)
+#  define WIN3264
+#  include <windows.h>
+#  include <shlobj.h>
+# else
+#  include <dir.h>
+#  include <bios.h>
+#  include <dos.h>
+# endif
+#endif
+
+#ifdef UNIX_LINT
+/* Running lint on Unix: Some things are missing. */
+char *searchpath(char *name);
+#endif
+
+#if defined(DJGPP) || defined(UNIX_LINT)
+# include <unistd.h>
+# include <errno.h>
+#endif
+
+#include "version.h"
+
+#if defined(DJGPP) || defined(UNIX_LINT)
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
+#else
+# ifdef WIN3264
+#  define vim_mkdir(x, y) _mkdir((char *)(x))
+# else
+#  define vim_mkdir(x, y) mkdir((char *)(x))
+# endif
+#endif
+/* ---------------------------------------- */
+
 
 #define BUFSIZE 512		/* long enough to hold a file name path */
 #define NUL 0
@@ -25,6 +73,8 @@
 
 #define VIM_STARTMENU "Programs\\Vim " VIM_VERSION_SHORT
 
+int	interactive;		/* non-zero when running interactively */
+
 /*
  * Call malloc() and exit when out of memory.
  */
@@ -40,6 +90,30 @@ alloc(int len)
 	exit(1);
     }
     return (void *)s;
+}
+
+/*
+ * The toupper() in Bcc 5.5 doesn't work, use our own implementation.
+ */
+    static int
+mytoupper(int c)
+{
+    if (c >= 'a' && c <= 'z')
+	return c - 'a' + 'A';
+    return c;
+}
+
+    static void
+myexit(int n)
+{
+    if (!interactive)
+    {
+	/* Present a prompt, otherwise error messages can't be read. */
+	printf("Press Enter to continue\n");
+	rewind(stdin);
+	(void)getchar();
+    }
+    exit(n);
 }
 
 #ifdef WIN3264
@@ -240,3 +314,260 @@ char *(icon_link_names[ICON_COUNT]) =
 	{"gVim " VIM_VERSION_SHORT ".lnk",
 	 "gVim Easy " VIM_VERSION_SHORT ".lnk",
 	 "gVim Read only " VIM_VERSION_SHORT ".lnk"};
+
+/* This is only used for dosinst.c and for uninstal.c when not being able to
+ * directly access registry entries. */
+#if !defined(WIN3264) || defined(DOSINST)
+/*
+ * Run an external command and wait for it to finish.
+ */
+    static void
+run_command(char *cmd)
+{
+    char	*cmd_path;
+    char	cmd_buf[BUFSIZE];
+    char	*p;
+
+    /* On WinNT, 'start' is a shell built-in for cmd.exe rather than an
+     * executable (start.exe) like in Win9x.  DJGPP, being a DOS program,
+     * is given the COMSPEC command.com by WinNT, so we have to find
+     * cmd.exe manually and use it. */
+    cmd_path = searchpath_save("cmd.exe");
+    if (cmd_path != NULL)
+    {
+	/* There is a cmd.exe, so this might be Windows NT.  If it is,
+	 * we need to call cmd.exe explicitly.  If it is a later OS,
+	 * calling cmd.exe won't hurt if it is present.
+	 */
+	/* Replace the slashes with backslashes. */
+	while ((p = strchr(cmd_path, '/')) != NULL)
+	    *p = '\\';
+	sprintf(cmd_buf, "%s /c start /w %s", cmd_path, cmd);
+	free(cmd_path);
+    }
+    else
+    {
+	/* No cmd.exe, just make the call and let the system handle it. */
+	sprintf(cmd_buf, "start /w %s", cmd);
+    }
+    system(cmd_buf);
+}
+#endif
+
+/*
+ * Append a backslash to "name" if there isn't one yet.
+ */
+    static void
+add_pathsep(char *name)
+{
+    int		len = strlen(name);
+
+    if (len > 0 && name[len - 1] != '\\' && name[len - 1] != '/')
+	strcat(name, "\\");
+}
+
+/*
+ * The normal chdir() does not change the default drive.  This one does.
+ */
+/*ARGSUSED*/
+    int
+change_drive(int drive)
+{
+#ifdef WIN3264
+    char temp[3] = "-:";
+    temp[0] = (char)(drive + 'A' - 1);
+    return !SetCurrentDirectory(temp);
+#else
+# ifndef UNIX_LINT
+    union REGS regs;
+
+    regs.h.ah = 0x0e;
+    regs.h.dl = drive - 1;
+    intdos(&regs, &regs);   /* set default drive */
+    regs.h.ah = 0x19;
+    intdos(&regs, &regs);   /* get default drive */
+    if (regs.h.al == drive - 1)
+	return 0;
+# endif
+    return -1;
+#endif
+}
+
+/*
+ * Change directory to "path".
+ * Return 0 for success, -1 for failure.
+ */
+    int
+mch_chdir(char *path)
+{
+    if (path[0] == NUL)		/* just checking... */
+	return 0;
+    if (path[1] == ':')		/* has a drive name */
+    {
+	if (change_drive(mytoupper(path[0]) - 'A' + 1))
+	    return -1;		/* invalid drive name */
+	path += 2;
+    }
+    if (*path == NUL)		/* drive name only */
+	return 0;
+    return chdir(path);		/* let the normal chdir() do the rest */
+}
+
+/*
+ * Expand the executable name into a full path name.
+ */
+#if defined(__BORLANDC__) && !defined(WIN3264)
+
+/* Only Borland C++ has this. */
+# define my_fullpath(b, n, l) _fullpath(b, n, l)
+
+#else
+    static char *
+my_fullpath(char *buf, char *fname, int len)
+{
+# ifdef WIN3264
+    /* Only GetModuleFileName() will get the long file name path.
+     * GetFullPathName() may still use the short (FAT) name. */
+    DWORD len_read = GetModuleFileName(NULL, buf, (size_t)len);
+
+    return (len_read > 0 && len_read < (DWORD)len) ? buf : NULL;
+# else
+    char	olddir[BUFSIZE];
+    char	*p, *q;
+    int		c;
+    char	*retval = buf;
+
+    if (strchr(fname, ':') != NULL)	/* allready expanded */
+    {
+	strncpy(buf, fname, len);
+    }
+    else
+    {
+	*buf = NUL;
+	/*
+	 * change to the directory for a moment,
+	 * and then do the getwd() (and get back to where we were).
+	 * This will get the correct path name with "../" things.
+	 */
+	p = strrchr(fname, '/');
+	q = strrchr(fname, '\\');
+	if (q != NULL && (p == NULL || q > p))
+	    p = q;
+	q = strrchr(fname, ':');
+	if (q != NULL && (p == NULL || q > p))
+	    p = q;
+	if (p != NULL)
+	{
+	    if (getcwd(olddir, BUFSIZE) == NULL)
+	    {
+		p = NULL;		/* can't get current dir: don't chdir */
+		retval = NULL;
+	    }
+	    else
+	    {
+		if (p == fname)		/* /fname		*/
+		    q = p + 1;		/* -> /			*/
+		else if (q + 1 == p)	/* ... c:\foo		*/
+		    q = p + 1;		/* -> c:\		*/
+		else			/* but c:\foo\bar	*/
+		    q = p;		/* -> c:\foo		*/
+
+		c = *q;			/* truncate at start of fname */
+		*q = NUL;
+		if (mch_chdir(fname))	/* change to the directory */
+		    retval = NULL;
+		else
+		{
+		    fname = q;
+		    if (c == '\\')	/* if we cut the name at a */
+			fname++;	/* '\', don't add it again */
+		}
+		*q = c;
+	    }
+	}
+	if (getcwd(buf, len) == NULL)
+	{
+	    retval = NULL;
+	    *buf = NUL;
+	}
+	/*
+	 * Concatenate the file name to the path.
+	 */
+	if (strlen(buf) + strlen(fname) >= len - 1)
+	{
+	    printf("ERROR: File name too long!\n");
+	    myexit(1);
+	}
+	add_pathsep(buf);
+	strcat(buf, fname);
+	if (p)
+	    mch_chdir(olddir);
+    }
+
+    /* Replace forward slashes with backslashes, required for the path to a
+     * command. */
+    while ((p = strchr(buf, '/')) != NULL)
+	*p = '\\';
+
+    return retval;
+# endif
+}
+#endif
+
+/*
+ * Remove the tail from a file or directory name.
+ * Puts a NUL on the last '/' or '\'.
+ */
+    static void
+remove_tail(char *path)
+{
+    int		i;
+
+    for (i = strlen(path) - 1; i > 0; --i)
+	if (path[i] == '/' || path[i] == '\\')
+	{
+	    path[i] = NUL;
+	    break;
+	}
+}
+
+
+char	installdir[BUFSIZE];	/* top of the installation dir, where the
+				   install.exe is located, E.g.:
+				   "c:\vim\vim60" */
+int	runtimeidx;		/* index in installdir[] where "vim60" starts */
+char	*sysdrive;		/* system drive or "c:\" */
+
+/*
+ * Setup for using this program.
+ * Sets "installdir[]".
+ */
+    static void
+do_inits(char **argv)
+{
+#ifdef DJGPP
+    /*
+     * Use Long File Names by default, if $LFN not set.
+     */
+    if (getenv("LFN") == NULL)
+	putenv("LFN=y");
+#endif
+
+    /* Find out the full path of our executable. */
+    if (my_fullpath(installdir, argv[0], BUFSIZE) == NULL)
+    {
+	printf("ERROR: Cannot get name of executable\n");
+	myexit(1);
+    }
+    /* remove the tail, the executable name "install.exe" */
+    remove_tail(installdir);
+
+    /* change to the installdir */
+    mch_chdir(installdir);
+
+    /* Find the system drive.  Only used for searching the Vim executable, not
+     * very important. */
+    sysdrive = getenv("SYSTEMDRIVE");
+    if (sysdrive == NULL || *sysdrive == NUL)
+	sysdrive = "C:\\";
+}

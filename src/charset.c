@@ -646,6 +646,8 @@ vim_strsize(s)
     else \
 	return ptr2cells(p);
 
+#if defined(FEAT_VREPLACE) || defined(FEAT_EX_EXTRA) || defined(FEAT_GUI) \
+	|| defined(FEAT_VIRTUALEDIT) || defined(PROTO)
     int
 chartabsize(p, col)
     char_u	*p;
@@ -653,6 +655,7 @@ chartabsize(p, col)
 {
     RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, p, col)
 }
+#endif
 
 #ifdef FEAT_LINEBREAK
     static int

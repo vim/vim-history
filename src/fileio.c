@@ -5076,6 +5076,8 @@ buf_check_timestamp(buf, focus)
 	 * and encoding to be the same. */
 	if (prep_exarg(&ea, buf) == OK)
 	{
+	    if (bufempty())
+		old_line_count = 0;
 	    if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0, (linenr_T)0,
 			(linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
 		EMSG2(_("E321: Could not reload \"\""), buf->b_fname);
@@ -5086,6 +5088,7 @@ buf_check_timestamp(buf, focus)
 		    ml_delete(buf->b_ml.ml_line_count, FALSE);
 	    }
 	    vim_free(ea.cmd);
+	    check_cursor();
 	}
 
 #ifdef FEAT_AUTOCMD
@@ -5456,6 +5459,7 @@ static struct event_name
     {"FocusLost",	EVENT_FOCUSLOST},
     {"FuncUndefined",	EVENT_FUNCUNDEFINED},
     {"GUIEnter",	EVENT_GUIENTER},
+    {"ServerReplyRecv", EVENT_SERVERREPLYRECV},
     {"StdinReadPost",	EVENT_STDINREADPOST},
     {"StdinReadPre",	EVENT_STDINREADPRE},
     {"Syntax",		EVENT_SYNTAX},
@@ -6048,6 +6052,15 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
     AutoCmd	**prev_ac;
     int		brace_level;
     char_u	*endpat;
+    int		findgroup;
+    int		allgroups;
+    int		patlen;
+
+    if (group == AUGROUP_ALL)
+	findgroup = current_augroup;
+    else
+	findgroup = group;
+    allgroups = (group == AUGROUP_ALL && !forceit && *cmd == NUL);
 
     /*
      * Show or delete all patterns for an event.
@@ -6058,8 +6071,7 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 	{
 	    if (forceit)  /* delete the AutoPat, if it's in the current group */
 	    {
-		if (ap->group == (group == AUGROUP_ALL ? current_augroup
-						       : group))
+		if (ap->group == findgroup)
 		    au_remove_pat(ap);
 	    }
 	    else if (group == AUGROUP_ALL || ap->group == group)
@@ -6087,6 +6099,7 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 	}
 	if (pat == endpat)		/* ignore single comma */
 	    continue;
+	patlen = (int)(endpat - pat);
 
 	/*
 	 * Find AutoPat entries with this pattern.
@@ -6103,11 +6116,9 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 		 * - the length of the pattern matches
 		 * - the pattern matches
 		 */
-		if ((ap->group == (group == AUGROUP_ALL ? current_augroup
-							: group)
-			   || (group == AUGROUP_ALL && !forceit && *cmd == NUL))
-			&& ap->patlen == endpat - pat
-			&& STRNCMP(pat, ap->pat, ap->patlen) == 0)
+		if ((allgroups || ap->group == findgroup)
+			&& ap->patlen == patlen
+			&& STRNCMP(pat, ap->pat, patlen) == 0)
 		{
 		    /*
 		     * Remove existing autocommands.
@@ -6156,8 +6167,8 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 		ap = (AutoPat *)alloc((unsigned)sizeof(AutoPat));
 		if (ap == NULL)
 		    return FAIL;
-		ap->pat = vim_strnsave(pat, (int)(endpat - pat));
-		ap->patlen = (int)(endpat - pat);
+		ap->pat = vim_strnsave(pat, patlen);
+		ap->patlen = patlen;
 		if (ap->pat == NULL)
 		{
 		    vim_free(ap);
@@ -6605,8 +6616,9 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     else
     {
 	sfname = vim_strsave(fname);
-	/* Don't try expanding FileType or Syntax. */
-	if (event == EVENT_FILETYPE || event == EVENT_SYNTAX)
+	/* Don't try expanding FileType, Syntax or WindowID. */
+	if (event == EVENT_FILETYPE || event == EVENT_SYNTAX
+		|| event == EVENT_SERVERREPLYRECV)
 	    fname = vim_strsave(fname);
 	else
 	    fname = FullName_save(fname, FALSE);

@@ -1,7 +1,7 @@
-*usr_02.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_02.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			    The first steps in Vim
 
 
@@ -125,7 +125,7 @@ One of the problems for Vim novices is mode confusion, which is caused by
 forgetting which mode you are in or by accidentally typing a command that
 switches modes.  To get back to Normal mode, no matter what mode you are in,
 press the <Esc> key.  Sometimes you have to press it twice.  If Vim beeps back
-at you, you are already in Normal mode.
+at you, you already are in Normal mode.
 
 ==============================================================================
 *02.3*  Moving around
@@ -141,7 +141,8 @@ At first, it may appear that these commands were chosen at random.  After all,
 who ever heard of using l for right?  But actually, there is a very good
 reason for these choices: Moving the cursor is the most common thing you do in
 an editor, and these keys are on the home row of your right hand.  In other
-words, these commands are placed where you can type them the fastest.
+words, these commands are placed where you can type them the fastest
+(especially when you type with ten fingers).
 
 	Note:
 	You can also move the cursor by using the arrow keys.  If you do,
@@ -200,7 +201,7 @@ insert mode (the final <Esc>).	The result:
 
 DELETING A LINE
 
-To delete a whole first line use the "dd" command.  The following line will
+To delete a whole line use the "dd" command.  The following line will
 then move up to fill the gap:
 
 	+---------------------------------------+
@@ -272,17 +273,17 @@ preceding command.  In other words, it undoes the undo.  To see this in
 action, press CTRL-R twice.  The character A and the space after it disappear:
 
 	young intelligent turtle ~
-	
+
 There's a special version of the undo command, the "U" (undo line) command.
 The undo line command undoes all the changes made on the last line that was
 edited.  Typing this command twice cancels the preceding "U".
 
 	A very intelligent turtle ~
 	  xxxx				Delete very
-	  
+
 	A intelligent turtle ~
 		      xxxxxx		Delete turtle
-		      
+
 	A intelligent ~
 					Restore line with "U"
 	A very intelligent turtle ~
@@ -307,10 +308,10 @@ That works fine; but what happens if you want to add stuff to the end of the
 line?  For that you need to insert text after the cursor.  This is done with
 the "a" (append) command.
    For example, to change the line
-   
-	and that 's not saying much for the turtle. ~
+
+	and that's not saying much for the turtle. ~
 to
-	and that 's not saying much for the turtle!!! ~
+	and that's not saying much for the turtle!!! ~
 
 move the cursor over to the dot at the end of the line. Then type "x" to
 delete the period.  The cursor is now positioned at the end of the line on the
@@ -320,7 +321,7 @@ e in turtle.  Now type >
 
 to append three exclamation points after the e in turtle:
 
-	and that 's not saying much for the turtle!!! ~
+	and that's not saying much for the turtle!!! ~
 
 
 OPENING UP A NEW LINE
@@ -451,7 +452,7 @@ the normal-mode commands.  For example, the following command displays help
 for the normal-mode CTRL-H command: >
 
 	:help CTRL-H
-	
+
 To identify other modes, use a mode prefix.  If you want the help for the
 insert-mode version of a command, use "i_".  For CTRL-H this gives you the
 following command: >
@@ -477,7 +478,6 @@ Special keys are enclosed in angle brackets. To find help on the up-arrow key
 in Insert mode, for instance, use this command: >
 
 	:help i_<Up>
-
 
 If you see an error message that you don't understand, for example:
 

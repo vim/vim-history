@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Apr 17
+" Last change:	2001 Jul 23
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -49,15 +49,13 @@ if !has("unix")
   set guioptions-=a
 endif
 
-" CTRL-Z is Undo
+" CTRL-Z is Undo; not in cmdline though
 noremap <C-Z> u
 inoremap <C-Z> <C-O>u
-cnoremap <C-Z> <C-C>u
 
-" CTRL-Y is Redo (although not repeat)
+" CTRL-Y is Redo (although not repeat); not in cmdline though
 noremap <C-Y> <C-R>
 inoremap <C-Y> <C-O><C-R>
-cnoremap <C-Y> <C-C><C-R>
 
 " Alt-Space is System menu
 if has("gui")

@@ -274,6 +274,11 @@ static void f_resolve __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_searchpair __ARGS((VAR argvars, VAR retvar));
 static int get_search_arg __ARGS((VAR varp, int *flagsp));
+static void f_servernames __ARGS((VAR argvars, VAR retvar));
+static void f_serverreplypeek __ARGS((VAR argvars, VAR retvar));
+static void f_serverreplyread __ARGS((VAR argvars, VAR retvar));
+static void f_serverreplysend __ARGS((VAR argvars, VAR retvar));
+static void f_serversend __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
@@ -2372,6 +2377,11 @@ static struct fst
     {"resolve",         1, 1, f_resolve},
     {"search",		1, 2, f_search},
     {"searchpair",	3, 5, f_searchpair},
+    {"servernames",	0, 0, f_servernames},
+    {"serverreply_peek",1, 2, f_serverreplypeek},
+    {"serverreply_read",1, 1, f_serverreplyread},
+    {"serverreply_send",2, 2, f_serverreplysend},
+    {"serversend",	2, 4, f_serversend},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
     {"setwinvar",	3, 3, f_setwinvar},
@@ -4176,7 +4186,9 @@ f_has(argvars, retvar)
 	"tag_any_white",
 #endif
 #ifdef FEAT_TCL
+# ifndef DYNAMIC_TCL
 	"tcl",
+# endif
 #endif
 #ifdef TERMINFO
 	"terminfo",
@@ -4214,6 +4226,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_VISUALEXTRA
 	"visualextra",
+#endif
+#ifdef FEAT_VREPLACE
+	"vreplace",
 #endif
 #ifdef FEAT_WILDIGN
 	"wildignore",
@@ -4263,6 +4278,10 @@ f_has(argvars, retvar)
     {
 	if (STRICMP(name, "vim_starting") == 0)
 	    n = (starting != 0);
+#ifdef DYNAMIC_TCL
+	else if (STRICMP(name, "tcl") == 0)
+	    n = tcl_enabled() ? TRUE : FALSE;
+#endif
 #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
 	else if (STRICMP(name, "iconv") == 0)
 	    n = iconv_enabled();
@@ -5397,6 +5416,154 @@ f_prevnonblank(argvars, retvar)
 	    --lnum;
     retvar->var_val.var_number = lnum;
 }
+
+#ifdef FEAT_XCMDSRV
+static int check_connection __ARGS((void));
+
+    static int
+check_connection()
+{
+    if (X_DISPLAY == NULL)
+    {
+	EMSG(_("E240: No connection to X server"));
+	return FAIL;
+    }
+    return OK;
+}
+#endif
+
+/*ARGSUSED*/
+    static void
+f_servernames(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_XCMDSRV
+    char_u	*r;
+
+    retvar->var_val.var_number = 0;
+    if (!check_connection())
+	return;
+
+    r = serverGetVimNames(X_DISPLAY);
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = r;
+#endif
+}
+
+/*ARGSUSED*/
+    static void
+f_serverreplypeek(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_XCMDSRV
+    var		v;
+    char_u	*s;
+
+    retvar->var_val.var_number = 0;
+    if (!check_connection())
+	return;
+
+    retvar->var_val.var_number =
+	serverPeekReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
+		        &s);
+    if (argvars[1].var_type != VAR_UNKNOWN && retvar->var_val.var_number > 0)
+    {
+	v.var_type = VAR_STRING;
+	v.var_val.var_string = vim_strsave(s);
+	set_var(get_var_string(&argvars[1]), &v);
+    }
+#endif
+}
+
+/*ARGSUSED*/
+    static void
+f_serverreplyread(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_XCMDSRV
+    char_u	*r = NULL;
+
+    retvar->var_val.var_number = -1;
+    if (!check_connection())
+	return;
+
+    if (serverReadReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
+		        &r, FALSE) < 0)
+    {
+	EMSG(_("Unable to  read a server reply"));
+	return;
+    }
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = r;
+#endif
+}
+
+/*ARGSUSED*/
+    static void
+f_serverreplysend(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_XCMDSRV
+    retvar->var_val.var_number = -1;
+    if (!check_connection())
+	return;
+
+    if (serverSendReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
+		                   get_var_string(&argvars[1])) < 0)
+    {
+	EMSG(_("Unable to send reply"));
+	return;
+    }
+    retvar->var_val.var_number = 0;
+#endif
+}
+
+/*ARGSUSED*/
+    static void
+f_serversend(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_XCMDSRV
+    char_u	*s;
+    char_u	*p;
+    char_u	*r = NULL;
+    char_u	str[30];
+    var         v;
+    Window	w;
+    int		asExpr = 0;
+
+    retvar->var_val.var_number = -1;
+    if (!check_connection())
+	return;
+
+    s = get_var_string(&argvars[0]);
+    p = get_var_string(&argvars[1]);
+    if (argvars[2].var_type != VAR_UNKNOWN && get_var_number(&argvars[2]) != 0)
+	asExpr = 1;
+    if (serverSendToVim(X_DISPLAY, s, p, &r, &w, asExpr, 0) < 0)
+    {
+	EMSG2(_("E241: Unable to send to %s"), s);
+	return;
+    }
+
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = r;
+    if (argvars[2].var_type != VAR_UNKNOWN
+	    && argvars[3].var_type != VAR_UNKNOWN)
+    {
+	sprintf((char *)str, "0x%x", (unsigned int)w);
+	v.var_type = VAR_STRING;
+	v.var_val.var_string = vim_strsave(str);
+	set_var(get_var_string(&argvars[3]), &v);
+    }
+#endif
+}
+
 
 #ifdef HAVE_STRFTIME
 /*

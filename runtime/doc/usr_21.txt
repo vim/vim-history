@@ -1,7 +1,7 @@
-*usr_21.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_21.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			   Go away and come back
 
 
@@ -57,7 +57,7 @@ The first one is for Unix, the second one for MS-Windows.
    Vim will execute the program.  When it ends you will get a prompt to hit
 <Enter>.  This allows you to have a look at the output from the command before
 returning to the text you were editing.
-   The "!" was also used for other places where a program was run.  Let's take
+   The "!" is also used in other places where a program is run.  Let's take
 a look at an overview:
 
 	:!{program}		execute {program}
@@ -112,7 +112,7 @@ the following command: >
 The string specifies what to save.  The syntax of this string is an option
 character followed by an argument.  The option/argument pairs are separated by
 commas.
-   Take a look at how you can build up your own viminfo string.  First, the
+   Take a look at how you can build up your own viminfo string.  First, the '
 option is used to specify how many files for which you save marks (a-z).  Pick
 a nice even number for this option (1000, for instance).  Your command now
 looks like this: >
@@ -128,7 +128,7 @@ the marks are stored.  You want this feature, so now you have this: >
 The " option controls how many lines are saved for each of the registers.  By
 default, all the lines are saved.  If 0, nothing is saved.  To avoid adding
 thousands of lines to your viminfo file (which might never get used and makes
-starting Vim slower) use a maximum of 500 lines: >
+starting Vim slower) you use a maximum of 500 lines: >
 
 	:set viminfo='1000,f1,\"500
 <
@@ -189,7 +189,7 @@ Obviously, the "w" stands for "write" and the "r" for "read".
 file.  When it is omitted, and the file exists, the information is merged into
 the file.
    The ! character used for ":rviminfo" means that all the information is
-used, it may overwrites existing information.  Without the ! only information
+used, this may overwrite existing information.  Without the ! only information
 that wasn't set is used.
    These commands can also be used to store info and use it again later.  You
 could make a directory full of viminfo files, each containing info for a
@@ -206,7 +206,7 @@ This includes things such as the file list, window layout, global variables,
 options and other information. (Exactly what is remembered is controlled by
 the 'sessionoptions' option, described below.)
    The following command creates a session file: >
-   
+
 	:mksession vimbook.vim
 
 Later if you want to restore this session, you can use this command: >
@@ -300,13 +300,13 @@ You can resize the windows a bit to your liking.  Then save the session with:
 >
 	:mksession ~/.vim/mine.vim
 
-Now you can start Vim with with this layout: >
+Now you can start Vim with this layout: >
 
 	vim -S ~/.vim/mine.vim
 
 Hint: To open a file you see listed in the explorer window in the empty
-window, move the cursor to it and press "O".  Double clicking with the mouse
-will also do this.
+window, move the cursor to the filename and press "O".  Double clicking with
+the mouse will also do this.
 
 
 UNIX AND MS-WINDOWS
@@ -393,7 +393,7 @@ them.
 
 	:mkview ~/.vim/main.vim
 
-And restore it with: >
+You can restore it with: >
 
 	:source ~/.vim/main.vim
 

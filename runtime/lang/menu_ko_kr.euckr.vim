@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Nam SungHyun <namsh@kldp.org>
-" Last Change:		2001 May 18
+" Last Change:		2001 Jul 28
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -129,7 +129,7 @@ menutrans Fold\ column\ &width		폴드\ 열\ 너비(&w)
 "menutrans &Diff				&Diff
 menutrans &Update			갱신(&U)
 menutrans &Get\ Block			블럭\ 가져오기(&G)
-menutrans &Put\ Block		    	블럭\ 집어넣기(&P)
+menutrans &Put\ Block			블럭\ 집어넣기(&P)
 
 menutrans &Make<Tab>:make		Make(&M)<Tab>:make
 menutrans &List\ Errors<Tab>:cl		에러\ 목록\ 보기(&L)<Tab>:cl
@@ -183,12 +183,12 @@ menutrans Cu&t			자르기(&t)
 menutrans &Copy			복사(&C)
 menutrans &Paste		붙이기(&P)
 menutrans &Delete		삭제(&D)
-menutrans Select\ Blockwise 	사각형\ 선택
+menutrans Select\ Blockwise	사각형\ 선택
 menutrans Select\ &Word		단어\ 선택(&W)
 menutrans Select\ &Line		라인\ 선택(&L)
 menutrans Select\ &Block	구획\ 선택(&B)
 menutrans Select\ &All		모두\ 선택(&A)
- 
+
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

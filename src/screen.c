@@ -469,12 +469,6 @@ update_screen(type)
      * Go from top to bottom through the windows, redrawing the ones that need
      * it.
      */
-#ifdef FEAT_GUI
-    /* Remove the cursor before starting to do anything, because scrolling may
-     * make it difficult to redraw the text under it. */
-    if (gui.in_use)
-	gui_undraw_cursor();
-#endif
 #if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_CLIPBOARD)
     did_one = FALSE;
 #endif
@@ -498,13 +492,20 @@ update_screen(type)
 		if (clip_star.available && clip_isautosel())
 		    clip_update_selection();
 # endif
+#ifdef FEAT_GUI
+		/* Remove the cursor before starting to do anything, because
+		 * scrolling may make it difficult to redraw the text under
+		 * it. */
+		if (gui.in_use)
+		    gui_undraw_cursor();
+#endif
 	    }
 #endif
 	    win_update(wp);
 	}
 
 #ifdef FEAT_WINDOWS
-	/* redraw status line after each window to minimize cursor movement */
+	/* redraw status line after the window to minimize cursor movement */
 	if (wp->w_redr_status)
 	{
 	    cursor_off();
@@ -549,7 +550,8 @@ update_screen(type)
     if (gui.in_use)
     {
 	out_flush();	/* required before updating the cursor */
-	gui_update_cursor(FALSE, FALSE);
+	if (did_one)
+	    gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
 #endif
@@ -2312,6 +2314,8 @@ win_line(wp, lnum, startrow, endrow)
 
     int		n_attr = 0;		/* chars with special attr */
     int		saved_attr2 = 0;	/* char_attr saved for n_attr */
+    int		n_attr3 = 0;		/* chars with overruling special attr */
+    int		saved_attr3 = 0;	/* char_attr saved for n_attr3 */
 
     int		n_skip = 0;		/* nr of chars to skip for 'nowrap' */
 
@@ -3429,6 +3433,11 @@ win_line(wp, lnum, startrow, endrow)
 	    }
 	}
 
+	/* Don't override visual selection highlighting. */
+	if (n_attr > 0
+		&& (area_attr == 0 || char_attr != area_attr)
+		&& (search_attr == 0 || char_attr != search_attr))
+	    char_attr = extra_attr;
 
 	/*
 	 * Handle the case where we are in column 0 but not on the first
@@ -3448,19 +3457,17 @@ win_line(wp, lnum, startrow, endrow)
 		&& c != NUL)
 	{
 	    c = lcs_prec;
-	    extra_attr = hl_attr(HLF_AT); /* later copied to char_attr */
-	    n_attr = 1;
-	    saved_attr2 = char_attr; /* save current attr */
 #ifdef FEAT_MBYTE
 	    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
+	    if ((area_attr == 0 || char_attr != area_attr)
+		    && (search_attr == 0 || char_attr != search_attr))
+	    {
+		saved_attr3 = char_attr; /* save current attr */
+		char_attr = hl_attr(HLF_AT); /* later copied to char_attr */
+		n_attr3 = 1;
+	    }
 	}
-
-	/* Don't override visual selection highlighting */
-	if (n_attr > 0
-		&& (area_attr == 0 || char_attr != area_attr)
-		&& (search_attr == 0 || char_attr != search_attr))
-	    char_attr = extra_attr;
 
 	/*
 	 * At end of the text line.
@@ -3565,6 +3572,14 @@ win_line(wp, lnum, startrow, endrow)
 	    /*
 	     * Store the character.
 	     */
+#if defined(FEAT_RIGHTLEFT) && defined(FEAT_MBYTE)
+	    if (has_mbyte && wp->w_p_rl && (*mb_char2cells)(mb_c) > 1)
+	    {
+		/* A double-wide character is: put first halve in left cell. */
+		--off;
+		--col;
+	    }
+#endif
 	    ScreenLines[off] = c;
 #ifdef FEAT_MBYTE
 	    if (enc_dbcs == DBCS_JPNU)
@@ -3592,19 +3607,9 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte && (*mb_char2cells)(mb_c) > 1)
 	    {
-		/* Need to advance two screen columns. */
-#ifdef FEAT_RIGHTLEFT
-		if (wp->w_p_rl)
-		{
-		    --off;
-		    --col;
-		}
-		else
-#endif
-		{
-		    ++off;
-		    ++col;
-		}
+		/* Need to fill two screen columns. */
+		++off;
+		++col;
 		if (enc_utf8)
 		    /* UTF-8: Put a 0 in the second screen char. */
 		    ScreenLines[off] = 0;
@@ -3616,6 +3621,14 @@ win_line(wp, lnum, startrow, endrow)
 		 * the character, otherwise highlighting won't stop. */
 		if (tocol == vcol)
 		    ++tocol;
+#ifdef FEAT_RIGHTLEFT
+		if (wp->w_p_rl)
+		{
+		    /* now it's time to backup one cell */
+		    --off;
+		    --col;
+		}
+#endif
 	    }
 #endif
 #ifdef FEAT_RIGHTLEFT
@@ -3642,6 +3655,10 @@ win_line(wp, lnum, startrow, endrow)
 		)
 	    ++vcol;
 
+	/* restore attributes after "predeces" in 'listchars' */
+	if (n_attr3 && --n_attr3 == 0)
+	    char_attr = saved_attr3;
+
 	/* restore attributes after last 'listchars' or 'number' char */
 	if (n_attr && --n_attr == 0)
 	    char_attr = saved_attr2;
@@ -3650,11 +3667,11 @@ win_line(wp, lnum, startrow, endrow)
 	 * At end of screen line and there is more to come: Display the line
 	 * so far.  If there is no more to display it is catched above.
 	 */
-	if (
+	if ((
 #ifdef FEAT_RIGHTLEFT
 	    wp->w_p_rl ? (col < 0) :
 #endif
-				    (col >= W_WIDTH(wp))
+				    (col >= W_WIDTH(wp)))
 		&& (*ptr != NUL
 #ifdef FEAT_DIFF
 		    || filler_todo > 0
@@ -5600,6 +5617,7 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
     int		    row;
     int		    col;
     int		    off;
+    int		    end_off;
     int		    did_delete;
     int		    c;
     int		    norm_term;
@@ -5646,16 +5664,15 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 		++col;
 
 	    off = LineOffset[row] + col;
+	    end_off = LineOffset[row] + end_col;
 
 	    /* skip blanks (used often, keep it fast!) */
-	    while (col < end_col && ScreenLines[off] == ' '
+	    while (off < end_off && ScreenLines[off] == ' '
 						     && ScreenAttrs[off] == 0)
-	    {
-		++col;
 		++off;
-	    }
-	    if (col < end_col)		/* something to be cleared */
+	    if (off < end_off)		/* something to be cleared */
 	    {
+		col = off - LineOffset[row];
 		screen_stop_highlight();
 		term_windgoto(row, col);/* clear rest of this screen line */
 		out_str(T_CE);
@@ -6467,7 +6484,11 @@ setcursor()
 	windgoto(W_WINROW(curwin) + curwin->w_wrow,
 		W_WINCOL(curwin) + (
 #ifdef FEAT_RIGHTLEFT
-		curwin->w_p_rl ? ((int)W_WIDTH(curwin) - 1 - curwin->w_wcol) :
+		curwin->w_p_rl ? ((int)W_WIDTH(curwin) - curwin->w_wcol - (
+# ifdef FEAT_MBYTE
+			has_mbyte ? (*mb_ptr2cells)(ml_get_cursor()) :
+# endif
+			1)) :
 #endif
 							    curwin->w_wcol));
     }
@@ -7293,9 +7314,12 @@ showmode()
 	    else
 #endif
 	    {
+#ifdef FEAT_VREPLACE
 		if (State & VREPLACE_FLAG)
 		    MSG_PUTS_ATTR(_(" VREPLACE"), attr);
-		else if (State & REPLACE_FLAG)
+		else
+#endif
+		    if (State & REPLACE_FLAG)
 		    MSG_PUTS_ATTR(_(" REPLACE"), attr);
 		else if (State & INSERT)
 		{

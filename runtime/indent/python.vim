@@ -1,7 +1,7 @@
 " Python indent file
 " Language:	Python
 " Maintainer:	David Bustos <bustos@caltech.edu>
-" Last Change:	October 10, 2000
+" Last Change:	July 22, 2001
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -10,11 +10,10 @@ endif
 let b:did_indent = 1
 
 " Some preliminary settings
-setlocal cinkeys+=<:>,=elif	" Reindent when : is inserted
 setlocal nolisp		" Make sure lisp indenting doesn't supersede us
-setlocal nosmartindent	" Smart indent will move remove all comment indentation
 
 setlocal indentexpr=GetPythonIndent(v:lnum)
+setlocal indentkeys+=<:>,=elif
 
 " Only define the function once.
 if exists("*GetPythonIndent")
@@ -28,10 +27,7 @@ function GetPythonIndent(lnum)
   endif
 
   " Search backwards for the frist non-empty line.
-  let plnum = a:lnum - 1
-  while plnum > 0 && getline(plnum) =~ '^\s*$'
-    let plnum = plnum - 1
-  endwhile
+  let plnum = prevnonblank(v:lnum - 1)
 
   if plnum == 0
     " This is the first non-empty line, use zero indent.

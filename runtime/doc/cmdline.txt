@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 15
+*cmdline.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -429,6 +429,7 @@ followed by another command:
     :vglobal
     :write !
     :[range]!
+    a user defined command without the "-bar" argument |:command|
 
 Note that this is confusing (inherited from Vi): With ":g" the '|' is included
 in the command, with ":s" it is not.

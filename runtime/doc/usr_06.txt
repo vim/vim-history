@@ -1,7 +1,7 @@
-*usr_06.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 16
+*usr_06.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			  Using syntax highlighting
 
 
@@ -70,7 +70,7 @@ There can be a number of reasons why you don't see colors:
 
 - The file type is not recognized.
 	Vim doesn't know all file types, and sometimes it's near to impossible
-	what language a file uses.  Try this command: >
+	to tell what language a file uses.  Try this command: >
 
 		:set filetype
 <
@@ -78,7 +78,7 @@ There can be a number of reasons why you don't see colors:
 	doesn't know what type of file this is.  You can set the type
 	manually: >
 
-		:set syntax=fortran
+		:set filetype=fortran
 
 <	To see which types are available, look in the directory
 	$VIMRUNTIME/syntax.  For the GUI you can use the Syntax menu.
@@ -95,9 +95,9 @@ There can be a number of reasons why you don't see colors:
 
 - There is no highlighting for your file type.
 	You could try using a similar file type by manually setting it as
-	mentioned above.  If that isn't good enouh, you can write your own
+	mentioned above.  If that isn't good enough, you can write your own
 	syntax file, see |mysyntaxfile|.
-	
+
 
 Or the colors could be wrong:
 
@@ -139,8 +139,8 @@ the GUI use the Edit/Color Scheme menu.  You can also type the command: >
 "evening" is the name of the color scheme.  There are several others you might
 want to try out.  Look in the directory $VIMRUNTIME/colors.
 
-When you found the color scheme that you like, add the ":colors" command to
-your |vimrc| file.
+When you found the color scheme that you like, add the ":colorscheme" command
+to your |vimrc| file.
 
 You could also write your own color scheme.  This is how you do it:
 
@@ -222,7 +222,7 @@ In the MS-Windows version you can print the current file with this command: >
 You will get the usual printer dialog, where you can select the printer and a
 few settings.  If you have a color printer, the paper output should look the
 same as what you see inside Vim.  But when you use a dark background the
-colors will be adjusted.
+colors will be adjusted to look good on white paper.
 
 There are several options that change the way Vim prints:
 	'printername'
@@ -249,7 +249,7 @@ Convert the current file to HTML with this command: >
 
 You will see it crunching away, this can take quite a while for a large file.
 Some time later another window shows the HTML code.  Now write this somewhere
-(doesn't matter where, you throw it a way later):
+(doesn't matter where, you throw it away later):
 >
 	:write main.c.html
 

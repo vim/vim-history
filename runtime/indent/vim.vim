@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 20
+" Last Change:	2001 Jul 28
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -28,7 +28,7 @@ function GetVimIndent()
       let lnum = lnum - 1
     endwhile
   endif
- 
+
   " At the start of the file use zero indent.
   if lnum == 0
     return 0

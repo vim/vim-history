@@ -60,6 +60,13 @@
 "   Elvis 2.1 xterm	7 min 50 sec
 "   Elvis 2.1 X11	6 min 31 sec
 "
+" Time to run 30 generations on my 850 AMD Duron (FreeBSD 4.2):
+"   vim   5.8   xterm    21 sec
+"   vim   6.0   xterm    24 sec
+"   vim   6.0   Motif    32 sec
+"   nvi   1.79  xterm	 29 sec
+"   vi    3.7   xterm    32 sec
+"   elvis 2.1.4 xterm    34 sec
 "
 " And now the macros, more or less in top-down order.
 "

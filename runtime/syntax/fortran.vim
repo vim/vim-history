@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran95 (and Fortran90, Fortran77, F and elf90)
-" Version:	0.80
-" Last Change:	2001 May 10
+" Version:	0.81
+" Last Change:	2001 July 26
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " For instructions on use, do :help fortran from vim
@@ -9,7 +9,7 @@
 "  Some items based on the fortran syntax file by Mario Eusebio and
 "   Preben Guldberg, and some on suggestions by Andrej Panjkov,
 "   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile,
-"   Walter Dieudonné and Alexander Wagner.
+"   Walter Dieudonné, Alexander Wagner and Roman Bertle.
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit if a syntax file is already loaded
@@ -204,11 +204,11 @@ syn match fortranFormatSpec	display	"\d\+x\>"
 " syn match fortranFormatSpec	display	"\<\(a\|i\)\d\+"
 
 " Numbers as labels
-syn match fortranLabelNumber	display	"^\d\{1,5}\>"
-syn match fortranLabelNumber	display	"^ \d\{1,4}\>"ms=s+1
-syn match fortranLabelNumber	display	"^  \d\{1,3}\>"ms=s+2
-syn match fortranLabelNumber	display	"^   \d\d\=\>"ms=s+3
-syn match fortranLabelNumber	display	"^    \d\>"ms=s+4
+syn match fortranLabelNumber	display	"^\d\{1,5}\s"me=e-1
+syn match fortranLabelNumber	display	"^ \d\{1,4}\s"ms=s+1,me=e-1
+syn match fortranLabelNumber	display	"^  \d\{1,3}\s"ms=s+2,me=e-1
+syn match fortranLabelNumber	display	"^   \d\d\=\s"ms=s+3,me=e-1
+syn match fortranLabelNumber	display	"^    \d\s"ms=s+4,me=e-1
 
 if version >= 600 && exists("fortran_more_precise")
   " Numbers as targets
@@ -335,7 +335,7 @@ endif
 syn match	cPreProc		"^\s*#\s*\(define\|ifdef\)\>.*"
 syn match	cPreProc		"^\s*#\s*\(elif\|if\)\>.*"
 syn match	cPreProc		"^\s*#\s*\(ifndef\|undef\)\>.*"
-syn match	cPreCondit		"^\s*#\s*\(else\|endif\)\>"
+syn match	cPreCondit		"^\s*#\s*\(else\|endif\)\>.*"
 syn region	cIncluded	contained start=+"[^(]+ skip=+\\\\\|\\"+ end=+"+ contains=fortranLeftMargin,fortranContinueMark,fortranSerialNumber
 syn match	cIncluded		contained "<[^>]*>"
 syn match	cInclude		"^\s*#\s*include\>\s*["<]" contains=cIncluded
@@ -358,7 +358,7 @@ if version >= 600 && exists("fortran_fold")
   if exists("fortran_fold_conditionals")
     syn region fortran77Loop transparent fold keepend start="\<do\s\+\z(\d\+\)" end="^\s*\z1\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
     syn region fortran90Loop transparent fold keepend extend start="\(\<end\s\+\)\@<!\<do\(\s\+\a\|\s*$\)" excludenl end="\<end\s*do\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
-    syn region fortranIfBlock transparent fold keepend extend start="\(\<e\(nd\|lse\)\s\+\)\@<!\<if\s*(.\+)\s*then\>" end="\<end\s*if\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
+    syn region fortranIfBlock transparent fold keepend extend start="\(\<e\(nd\|lse\)\s\+\)\@<!\<if\s*(.\+)\s*then\>" end="\(^\s*#\s*\)\@<!\<end\s*if\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
     syn region fortranCase transparent fold keepend extend start="\<select\s*case\>" end="\<end\s*select\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
   endif
 endif

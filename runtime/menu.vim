@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 18
+" Last Change:	2001 Jul 28
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -88,7 +88,7 @@ if has("win32")
   amenu 10.500 &File.-SEP3-			:
   amenu 10.510 &File.&Print			:hardcopy<CR>
   vunmenu &File.&Print
-  vmenu &File.&Print 				:hardcopy<CR>
+  vmenu &File.&Print				:hardcopy<CR>
 elseif has("unix")
   amenu 10.500 &File.-SEP3-			:
   amenu 10.510 &File.&Print			:w !lpr<CR>
@@ -338,7 +338,7 @@ endif
 " Tools.Fold Menu
 if has("folding")
   amenu 40.330 &Tools.-SEP1-			:
-  " open close folds 
+  " open close folds
   amenu 40.340.110 &Tools.&Folding.&Enable/Disable\ folds<Tab>zi	zi
   amenu 40.340.120 &Tools.&Folding.&View\ Cursor\ Line<Tab>zv	zv
   amenu 40.340.120 &Tools.&Folding.Vie&w\ Cursor\ Line\ only<Tab>zMzx	zMzx
@@ -372,12 +372,12 @@ endif  " has folding
 
 if has("diff")
   amenu 40.350.100 &Tools.&Diff.&Update		:diffupdate<CR>
-  amenu 40.350.110 &Tools.&Diff.&Get\ Block 	:diffget<CR>
+  amenu 40.350.110 &Tools.&Diff.&Get\ Block	:diffget<CR>
   vunmenu &Tools.&Diff.&Get\ Block
-  vmenu &Tools.&Diff.&Get\ Block 		:diffget<CR>
-  amenu 40.350.120 &Tools.&Diff.&Put\ Block 	:diffput<CR>
+  vmenu &Tools.&Diff.&Get\ Block		:diffget<CR>
+  amenu 40.350.120 &Tools.&Diff.&Put\ Block	:diffput<CR>
   vunmenu &Tools.&Diff.&Put\ Block
-  vmenu &Tools.&Diff.&Put\ Block 		:diffput<CR>
+  vmenu &Tools.&Diff.&Put\ Block		:diffput<CR>
 endif
 
 amenu 40.358 &Tools.-SEP2-				:
@@ -393,9 +393,9 @@ amenu 40.430.60 &Tools.Error\ &Window.&Open<Tab>:copen	:copen<CR>
 amenu 40.430.70 &Tools.Error\ &Window.&Close<Tab>:cclose :cclose<CR>
 amenu 40.520 &Tools.-SEP3-                      :
 amenu <silent> 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!xxd
-  	\ :call <SID>XxdConv()<CR>
+	\ :call <SID>XxdConv()<CR>
 amenu <silent> 40.540 &Tools.Conve&rt\ back<Tab>:%!xxd\ -r
-  	\ :call <SID>XxdBack()<CR>
+	\ :call <SID>XxdBack()<CR>
 
 " Use a function to do the conversion, so that it also works with 'insertmode'
 " set.
@@ -456,7 +456,13 @@ endif
 
 func! s:BMAdd()
   if s:bmenu_wait == 0
-    call <SID>BMFilename(expand("<afile>"), expand("<abuf>"))
+    " when adding too many buffers, redraw in short format
+    if s:bmenu_count == &menuitems && s:bmenu_short == 0
+      call s:BMShow()
+    else
+      call <SID>BMFilename(expand("<afile>"), expand("<abuf>"))
+      let s:bmenu_count = s:bmenu_count + 1
+    endif
   endif
 endfunc
 
@@ -477,25 +483,22 @@ func! s:BMRemove()
   endif
 endfunc
 
-" buffer menu stuff
+" Create the buffer menu (delete an existing one first).
 func! s:BMShow(...)
   let s:bmenu_wait = 1
   let s:bmenu_short = 1
   let s:bmenu_count = 0
-  if version >= 600
-    let bmenu_cutoff = &menuitems
-  elseif exists('g:bmenu_cutoff')
-    let bmenu_cutoff = g:bmenu_cutoff
-  else
-    let bmenu_cutoff = &lines / 2
-  endif
-  " remove old menu, if exists
-  silent! aunmenu &Buffers
-
+  "
   " get new priority, if exists
   if a:0 == 1
     let g:bmenu_priority = a:1
   endif
+
+  " remove old menu, if exists; keep one entry to avoid a torn off menu to
+  " disappear.
+  silent! unmenu &Buffers
+  exe 'menu ' . g:bmenu_priority . ".1 &Buffers.Dummy l"
+  silent! unmenu! &Buffers
 
   " create new menu; set 'cpo' to include the <CR>
   let cpo_save = &cpo
@@ -507,6 +510,7 @@ func! s:BMShow(...)
   exe 'am ' . g:bmenu_priority . ".8 &Buffers.&Previous :bprev<CR>"
   exe 'am ' . g:bmenu_priority . ".9 &Buffers.-SEP- :"
   let &cpo = cpo_save
+  unmenu &Buffers.Dummy
 
   " figure out how many buffers there are
   let buf = 1
@@ -517,7 +521,7 @@ func! s:BMShow(...)
     endif
     let buf = buf + 1
   endwhile
-  if s:bmenu_count < bmenu_cutoff
+  if s:bmenu_count <= &menuitems
     let s:bmenu_short = 0
   endif
 
@@ -555,20 +559,21 @@ endfunc
 
 func! s:BMHash2(name)
   let nm = substitute(a:name, ".", '\L\0', "")
-  if nm[0] >= 'a' && nm[0] <= 'd'
-    return '&abcd.'
-  elseif nm[0] >= 'e' && nm[0] <= 'h'
-    return '&efgh.'
-  elseif nm[0] >= 'i' && nm[0] <= 'l'
-    return '&ijkl.'
-  elseif nm[0] >= 'm' && nm[0] <= 'p'
-    return '&mnop.'
-  elseif nm[0] >= 'q' && nm[0] <= 't'
-    return '&qrst.'
-  elseif nm[0] >= 'u' && nm[0] <= 'z'
-    return '&u-z.'
-  else
+  " Not exactly right for EBCDIC...
+  if nm[0] < 'a' || nm[0] > 'z'
     return '&others.'
+  elseif nm[0] <= 'd'
+    return '&abcd.'
+  elseif nm[0] <= 'h'
+    return '&efgh.'
+  elseif nm[0] <= 'l'
+    return '&ijkl.'
+  elseif nm[0] <= 'p'
+    return '&mnop.'
+  elseif nm[0] <= 't'
+    return '&qrst.'
+  else
+    return '&u-z.'
   endif
 endfunc
 
@@ -614,10 +619,10 @@ endfunc
 
 func! s:BMMunge(fname, bnum)
   let name = a:fname
-  if !exists("g:menutrans_no_file")
-    let g:menutrans_no_file = "[No file]"
-  endif
   if name == ''
+    if !exists("g:menutrans_no_file")
+      let g:menutrans_no_file = "[No file]"
+    endif
     let name = g:menutrans_no_file
   else
     let name = fnamemodify(name, ':p:~')
@@ -691,7 +696,7 @@ imenu 1.40 PopUp.&Paste			x<Esc><SID>Paste"_s
 cmenu 1.40 PopUp.&Paste			<C-R>+
 vmenu 1.50 PopUp.&Delete		x
 amenu 1.55 PopUp.-SEP2-			:
-vmenu 1.60 PopUp.Select\ Blockwise 	<C-Q>
+vmenu 1.60 PopUp.Select\ Blockwise	<C-Q>
 amenu 1.70 PopUp.Select\ &Word		vaw
 amenu 1.80 PopUp.Select\ &Line		V
 amenu 1.90 PopUp.Select\ &Block		<C-Q>
@@ -957,23 +962,24 @@ am 50.30.110 &Syntax.EFG.Elm\ Filter :cal SetSyn("elmfilt")<CR>
 am 50.30.120 &Syntax.EFG.Embedix\ Component\ Description :cal SetSyn("ecd")<CR>
 am 50.30.130 &Syntax.EFG.ERicsson\ LANGuage :cal SetSyn("erlang")<CR>
 am 50.30.140 &Syntax.EFG.ESQL-C :cal SetSyn("esqlc")<CR>
-am 50.30.150 &Syntax.EFG.Expect :cal SetSyn("expect")<CR>
-am 50.30.160 &Syntax.EFG.Exports :cal SetSyn("exports")<CR>
-am 50.30.180 &Syntax.EFG.Focus\ Executable :cal SetSyn("focexec")<CR>
-am 50.30.190 &Syntax.EFG.Focus\ Master :cal SetSyn("master")<CR>
-am 50.30.200 &Syntax.EFG.FORM :cal SetSyn("form")<CR>
-am 50.30.210 &Syntax.EFG.Forth :cal SetSyn("forth")<CR>
-am 50.30.220 &Syntax.EFG.Fortran :cal SetSyn("fortran")<CR>
-am 50.30.230 &Syntax.EFG.FoxPro :cal SetSyn("foxpro")<CR>
-am 50.30.240 &Syntax.EFG.Fvwm\ configuration :cal SetSyn("fvwm1")<CR>
-am 50.30.250 &Syntax.EFG.Fvwm2\ configuration :cal SetSyn("fvwm2")<CR>
-am 50.30.270 &Syntax.EFG.GDB\ command\ file :cal SetSyn("gdb")<CR>
-am 50.30.280 &Syntax.EFG.GDMO :cal SetSyn("gdmo")<CR>
-am 50.30.290 &Syntax.EFG.Gedcom :cal SetSyn("gedcom")<CR>
-am 50.30.300 &Syntax.EFG.GP :cal SetSyn("gp")<CR>
-am 50.30.310 &Syntax.EFG.GNU\ Server\ Pages :cal SetSyn("gsp")<CR>
-am 50.30.320 &Syntax.EFG.GNUplot :cal SetSyn("gnuplot")<CR>
-am 50.30.330 &Syntax.EFG.GTKrc :cal SetSyn("gtkrc")<CR>
+am 50.30.150 &Syntax.EFG.Eterm\ config :cal SetSyn("eterm")<CR>
+am 50.30.160 &Syntax.EFG.Expect :cal SetSyn("expect")<CR>
+am 50.30.170 &Syntax.EFG.Exports :cal SetSyn("exports")<CR>
+am 50.30.190 &Syntax.EFG.Focus\ Executable :cal SetSyn("focexec")<CR>
+am 50.30.200 &Syntax.EFG.Focus\ Master :cal SetSyn("master")<CR>
+am 50.30.210 &Syntax.EFG.FORM :cal SetSyn("form")<CR>
+am 50.30.220 &Syntax.EFG.Forth :cal SetSyn("forth")<CR>
+am 50.30.230 &Syntax.EFG.Fortran :cal SetSyn("fortran")<CR>
+am 50.30.240 &Syntax.EFG.FoxPro :cal SetSyn("foxpro")<CR>
+am 50.30.250 &Syntax.EFG.Fvwm\ configuration :cal SetSyn("fvwm1")<CR>
+am 50.30.260 &Syntax.EFG.Fvwm2\ configuration :cal SetSyn("fvwm2")<CR>
+am 50.30.280 &Syntax.EFG.GDB\ command\ file :cal SetSyn("gdb")<CR>
+am 50.30.290 &Syntax.EFG.GDMO :cal SetSyn("gdmo")<CR>
+am 50.30.300 &Syntax.EFG.Gedcom :cal SetSyn("gedcom")<CR>
+am 50.30.310 &Syntax.EFG.GP :cal SetSyn("gp")<CR>
+am 50.30.320 &Syntax.EFG.GNU\ Server\ Pages :cal SetSyn("gsp")<CR>
+am 50.30.330 &Syntax.EFG.GNUplot :cal SetSyn("gnuplot")<CR>
+am 50.30.340 &Syntax.EFG.GTKrc :cal SetSyn("gtkrc")<CR>
 am 50.40.100 &Syntax.HIJK.Haskell :cal SetSyn("haskell")<CR>
 am 50.40.110 &Syntax.HIJK.Haskell-literal :cal SetSyn("lhaskell")<CR>
 am 50.40.120 &Syntax.HIJK.Hercules :cal SetSyn("hercules")<CR>
@@ -1038,15 +1044,16 @@ am 50.60.210 &Syntax.Me-NO.MS-DOS.MS-DOS\ \.ini\ file :cal SetSyn("dosini")<CR>
 am 50.60.220 &Syntax.Me-NO.MS\ Resource\ file :cal SetSyn("rc")<CR>
 am 50.60.230 &Syntax.Me-NO.Muttrc :cal SetSyn("muttrc")<CR>
 am 50.60.250 &Syntax.Me-NO.Nastran\ input/DMAP :cal SetSyn("nastran")<CR>
-am 50.60.260 &Syntax.Me-NO.Novell\ batch :cal SetSyn("ncf")<CR>
-am 50.60.270 &Syntax.Me-NO.Not\ Quite\ C :cal SetSyn("nqc")<CR>
-am 50.60.280 &Syntax.Me-NO.Nroff :cal SetSyn("nroff")<CR>
-am 50.60.300 &Syntax.Me-NO.Objective\ C :cal SetSyn("objc")<CR>
-am 50.60.310 &Syntax.Me-NO.OCAML :cal SetSyn("ocaml")<CR>
-am 50.60.320 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
-am 50.60.330 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
-am 50.60.340 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
-am 50.60.350 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
+am 50.60.260 &Syntax.Me-NO.Natural :cal SetSyn("natural")<CR>
+am 50.60.270 &Syntax.Me-NO.Novell\ batch :cal SetSyn("ncf")<CR>
+am 50.60.280 &Syntax.Me-NO.Not\ Quite\ C :cal SetSyn("nqc")<CR>
+am 50.60.290 &Syntax.Me-NO.Nroff :cal SetSyn("nroff")<CR>
+am 50.60.310 &Syntax.Me-NO.Objective\ C :cal SetSyn("objc")<CR>
+am 50.60.320 &Syntax.Me-NO.OCAML :cal SetSyn("ocaml")<CR>
+am 50.60.330 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
+am 50.60.340 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
+am 50.60.350 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
+am 50.60.360 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
 am 50.70.100 &Syntax.PQ.Palm\ resource\ compiler :cal SetSyn("pilrc")<CR>
 am 50.70.110 &Syntax.PQ.PApp :cal SetSyn("papp")<CR>
 am 50.70.120 &Syntax.PQ.Pascal :cal SetSyn("pascal")<CR>

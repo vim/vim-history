@@ -1,7 +1,7 @@
-*usr_08.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 29
+*usr_08.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Splitting windows
 
 
@@ -56,7 +56,7 @@ bottom window it will jump to the first window. (CTRL-W CTRL-W does the same
 thing, in case you let go of the CTRL key a bit later).
 
 
-CLOSE THE WINDOW 
+CLOSE THE WINDOW
 
 To close a window, use the command: >
 
@@ -84,7 +84,7 @@ closed.
 The following command opens a second window and starts editing the given file:
 >
 	:split two.c
-	
+
 If you were editing one.c, then the result looks like this:
 
 	+----------------------------------+
@@ -145,12 +145,12 @@ In Vim you can do many things very quickly from the keyboard.  Unfortunately,
 the window resizing commands require quite a bit of typing.  In this case,
 using the mouse is faster.  Position the mouse pointer on a status line.  Now
 press the left mouse button and drag.  The status line will move, thus making
-the window on on side higher and the other smaller.
+the window on one side higher and the other smaller.
 
 
 OPTIONS
 
-The 'winheight' option can be set to a minimal desired height of a window.
+The 'winheight' option can be set to a minimal desired height of a window and
 'winminheight' to a hard minimum height.
    Likewise, there is 'winwidth' for the minimal desired width and
 'winminwidth' for the hard minimum width.
@@ -317,10 +317,10 @@ To make Vim open a window for each file, start it with the "-o" argument: >
 This results in:
 
 	+-------------------------------+
-	|file one.txt		   	|
+	|file one.txt			|
 	|~				|
 	|one.txt========================|
-	|file two.txt   		|
+	|file two.txt			|
 	|~				|
 	|two.txt========================|
 	|file three.txt			|
@@ -374,8 +374,8 @@ is called a closed fold.  The are indicated in the picture with "<- fold".
 Thus the single fold line at the top stands for 123 text lines.  These lines
 are equal in both files.
    The line marked with "<- changed line" is highlighed, and the inserted text
-with another color.  This clearly shows what the difference is between the two
-files.
+is displayed with another color.  This clearly shows what the difference is
+between the two files.
    The line that was deleted is displayed with "---" in the main.c window.
 See the "<- deleted line" marker in the picture.  These characters are not
 really there.  They just fill up main.c, so that it displays the same number
@@ -413,21 +413,21 @@ of the patch file: >
 	:edit main.c
 	:vertical diffpatch main.c.diff
 
-Warning: The patch file must contain only one patch, for the file you are
+WARNING: The patch file must contain only one patch, for the file you are
 editing.  Otherwise you will get a lot of error messages, and some files might
 be patched unexpectedly.
    The patching will only be done to the copy of the file in Vim.  The file on
 your harddisk will remain unmodified (until you decide to write the file).
 
 
-SCROLL BINDING 
+SCROLL BINDING
 
 When the files have more changes, you can scroll in the usual way.  Vim will
 try to keep both the windows start at the same position, so you can easily see
 the differences side by side.
    When you don't want this for a moment, use this command: >
 
-   	:set noscrollbind
+	:set noscrollbind
 
 
 REMOVING CHANGES

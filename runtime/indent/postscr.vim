@@ -14,8 +14,8 @@ setlocal indentexpr=PostscrIndentGet(v:lnum)
 setlocal indentkeys+=0],0=>>,0=%%,0=end,0=restore,0=grestore indentkeys-=:,0#,e
 
 " Catch multiple instantiations
-if exists("*PostscrIndentGet") 
-  finish 
+if exists("*PostscrIndentGet")
+  finish
 endif
 
 function! PostscrIndentGet(lnum)

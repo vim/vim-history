@@ -1,7 +1,7 @@
-*usr_27.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 13
+*usr_27.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			 Search commands and patterns
 
 
@@ -28,17 +28,17 @@ Table of contents: |usr_toc.txt|
 
 By default, Vim's searches are case sensitive.  Therefore, "include",
 "INCLUDE", and "Include" are three different words and a search will match
-only one of them. 
+only one of them.
    Now switch on the 'ignorecase' option: >
 
-  	:set ignorecase
+	:set ignorecase
 
 Search for "include" again, and now it will match "Include", "INCLUDE" and
 "InClUDe".  (set the 'hlsearch' option to quickly see where a pattern
 matches.)
    You can switch this off again with: >
 
-   	:set noignorecase
+	:set noignorecase
 
 But lets keep it set, and search for "INCLUDE".  It will match exactly the
 same text as "include" did.  Now set the 'smartcase' option: >
@@ -51,7 +51,7 @@ uppercase character, so you must have done it because you wanted case to
 match.  That's smart!
     With this options set you find the following matches:
 
-    	pattern			matches	~
+	pattern			matches	~
 	word			word, Word, WORD, WoRd, etc.
 	Word			Word
 	WORD			WORD
@@ -65,7 +65,7 @@ prepending the "\c" string.  Using "\C" will make the pattern to match case.
 This overrules the 'ignorecase' and 'smartcase' options, when "\c" or "\C" is
 used their value doesn't matter.
 
-    	pattern			matches	~
+	pattern			matches	~
 	\Cword			word
 	\CWord			Word
 	\cword			word, Word, WORD, WoRd, etc.
@@ -170,7 +170,7 @@ This command moves to the character just after the match: >
 A positive number moves the cursor to the right, a negative number moves it to
 the left.  For example: >
 
-   	/const/e-1
+	/const/e-1
 
 moves the cursor to the "s" of "const".
 
@@ -298,7 +298,7 @@ as possible, use "\{-n,m}".  It works the same as "\{n,m}", except that the
 minimal amount possible is used.
    For example, use: >
 
-   	/ab\{-1,3}
+	/ab\{-1,3}
 
 Will match "ab" in "abbb".  Actually, it will never match more than one b,
 because there is no reason to match more.  It requires something else to force
@@ -336,7 +336,7 @@ Matches "one", "two" and "three".
 This matches "foo", "foobar", "foofoo", "barfoobar", etc.
    Another example: >
 
-   	/end\(if\|while\|for\)
+	/end\(if\|while\|for\)
 
 This matches "endif", "endwhile" and "endfor".
 
@@ -374,7 +374,7 @@ These special characters are accepted to make it easier to use them inside a
 	\t	<Tab>
 	\r	<CR>
 	\b	<BS>
-	
+
 There are a few more special cases for [] ranges, see |/[]| for the whole
 story.
 
@@ -432,7 +432,7 @@ similar, but with an essential difference: The set of characters can be
 redefined without changing the search pattern.
    For example, search for this pattern: >
 
-   	/\f\+
+	/\f\+
 
 The "\f" items stands for file name characters.  Thus this matches a sequence
 of characters that can be a file name.
@@ -474,7 +474,7 @@ the line break happens, because all items mentioned so far don't match a line
 break.
    To check for a line break in a specific place, use the "\n" item: >
 
-   	/the\nword
+	/the\nword
 
 This will match at a line that ends in "the" and the next line starts with
 "word".  To match "the word" as well, you need to match a space or a line
@@ -552,7 +552,7 @@ and "\w" for [0-9A-Za-z_]".
 	for example, then "ident-" is not matched.  In this situation use: >
 
 		/\w\@<!\h\w*\w\@!
-<	
+<
 	This checks if "\w" does not match before or after the identifier.
 	See |/\@<!| and |/\@!|.
 

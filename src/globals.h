@@ -268,6 +268,8 @@ EXTERN int	gui_prev_topfill INIT(= 0);
 
 # ifdef FEAT_MOUSESHAPE
 EXTERN int	drag_status_line INIT(= FALSE);	/* dragging the status line */
+EXTERN int	postponed_mouseshape INIT(= FALSE); /* postponed updating the
+						       mouse pointer shape */
 #  ifdef FEAT_VERTSPLIT
 EXTERN int	drag_sep_line INIT(= FALSE);	/* dragging vert separator */
 #  endif
@@ -404,7 +406,8 @@ EXTERN int	secure INIT(= FALSE);
 				 * allowed, e.g. when sourcing .exrc or .vimrc
 				 * in current directory */
 
-#if defined(FEAT_EVAL) && (defined(FEAT_CINDENT) || defined(FEAT_FOLDING))
+#if defined(FEAT_EVAL) && (defined(FEAT_CINDENT) || defined(FEAT_FOLDING) \
+	|| defined(FEAT_PERL))
 # define HAVE_SANDBOX
 EXTERN int	sandbox INIT(= 0);
 				/* non-zero when evaluating an expression in a
@@ -500,12 +503,13 @@ EXTERN int	can_si_back INIT(= FALSE);
  */
 EXTERN pos_T	Insstart;		/* This is where the latest
 					 * insert/append mode started. */
-
+#ifdef FEAT_VREPLACE
 /*
  * Stuff for VREPLACE mode.
  */
 EXTERN int	orig_line_count INIT(= 0);  /* Line count when "gR" started */
 EXTERN int	vr_lines_changed INIT(= 0); /* #Lines changed by "gR" so far */
+#endif
 
 #if defined(HAVE_SETJMP_H)
 /*
@@ -897,8 +901,13 @@ EXTERN Display	*xterm_dpy INIT(= NULL);	/* xterm display pointer */
 EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 #endif
 
+#ifdef FEAT_GUI_GTK
+EXTERN guint32	gtk_socket_id INIT(= 0);
+#endif
+
 #ifdef FEAT_XCMDSRV
 EXTERN Window	commWindow INIT(= None);
+EXTERN Window	clientWindow INIT(= None);
 EXTERN Atom	commProperty INIT(= None);
 EXTERN char_u	*serverName INIT(= NULL);
 EXTERN char_u	*serverDelayedStartName INIT(= NULL);
@@ -1018,7 +1027,9 @@ EXTERN char_u e_number[]	INIT(=N_("E39: Number expected"));
 #ifdef FEAT_QUICKFIX
 EXTERN char_u e_openerrf[]	INIT(=N_("E40: Can't open errorfile %s"));
 #endif
+#if defined(FEAT_KEYMAP) || defined(__EMX__)
 EXTERN char_u e_outofmem[]	INIT(=N_("E41: Out of memory!"));
+#endif
 #ifdef FEAT_INS_EXPAND
 EXTERN char_u e_patnotf[]	INIT(=N_("Pattern not found"));
 #endif

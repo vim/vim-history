@@ -44,7 +44,7 @@ language.
     See the gettext documentation on how to do this.  You can also find
     examples in the other po files.
     Search the po file for items that require translation:
-    	/fuzzy\|^msgstr ""\(\n"\)\@!
+	/fuzzy\|^msgstr ""\(\n"\)\@!
     Remove the "#, fuzzy" line after adding the translation.
 
     There is one special message:
@@ -58,10 +58,10 @@ language.
     - items marked with "#, fuzzy"
     - items with an empty msgstr
     You can do this with the cleanup.vim script:
-    	:source cleanup.vim
+	:source cleanup.vim
     Background: on Solaris an empty msgstr results in an empty message; GNU
     gettext ignores empty strings and items marked with "#, fuzzy".
- 
+
 (4) Check:
 	make xx.mo
     This checks for syntax errors.

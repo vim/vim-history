@@ -32,13 +32,13 @@
 /*#define HAVE_OUTFUNTYPE */
 
 /* Define when __DATE__ " " __TIME__ can be used */
-#define HAVE_DATE_TIME 
+#define HAVE_DATE_TIME
 
 /* Defined to the size of an int */
 #define SIZEOF_INT 4
 
 /* #undef USEBCOPY */
-#define USEMEMMOVE 
+#define USEMEMMOVE
 /* #undef USEMEMCPY */
 
 /* Define when "man -s 2" is to be used */
@@ -72,7 +72,7 @@
 /* #undef HAVE_NANOSLEEP */
 
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
-#define TIME_WITH_SYS_TIME 
+#define TIME_WITH_SYS_TIME
 
 /* Define if you can safely include both <sys/time.h> and <sys/select.h>.  */
 /* #undef SYS_SELECT_WITH_SYS_TIME */
@@ -84,7 +84,7 @@
 #define SIGRETURN return
 
 /* Define if struct sigcontext is present */
-#define HAVE_SIGCONTEXT 
+#define HAVE_SIGCONTEXT
 
 /* Define if touuper/tolower only work on lower/upercase characters */
 /* #undef BROKEN_TOUPPER */
@@ -104,27 +104,27 @@
 /* Define if you have the sigset() function.  */
 /* #undef HAVE_SIGSET */
 
-#define HAVE_GETCWD 
-#define HAVE_SELECT 
-#define HAVE_STRCSPN 
-#define HAVE_STRTOL 
-#define HAVE_TGETENT 
-#define HAVE_MEMSET 
-#define HAVE_MEMCMP 
-#define HAVE_STRERROR 
-#define HAVE_FCHOWN 
-#define HAVE_RENAME 
-#define HAVE_QSORT 
-#define HAVE_FSYNC 
-#define HAVE_GETPWUID 
-#define HAVE_GETPWNAM 
+#define HAVE_GETCWD
 #define HAVE_SELECT
-#define	HAVE_STDLIB_H		
-#define	HAVE_STRING_H		
-#define	HAVE_ERRNO_H		
+#define HAVE_STRCSPN
+#define HAVE_STRTOL
+#define HAVE_TGETENT
+#define HAVE_MEMSET
+#define HAVE_MEMCMP
+#define HAVE_STRERROR
+#define HAVE_FCHOWN
+#define HAVE_RENAME
+#define HAVE_QSORT
+#define HAVE_FSYNC
+#define HAVE_GETPWUID
+#define HAVE_GETPWNAM
+#define HAVE_SELECT
+#define	HAVE_STDLIB_H
+#define	HAVE_STRING_H
+#define	HAVE_ERRNO_H
 #define HAVE_OPENDIR
-#define HAVE_PUTENV     
-#define HAVE_SETENV    
+#define HAVE_PUTENV
+#define HAVE_SETENV
 
 #undef	HAVE_DIRENT_H
 #undef	HAVE_SYS_NDIR_H
@@ -155,8 +155,8 @@
 #undef  HAVE_USLEEP
 #undef  HAVE_STRCASECMP
 #else
-#define HAVE_GETTIMEOFDAY 
-#define HAVE_USLEEP 
+#define HAVE_GETTIMEOFDAY
+#define HAVE_USLEEP
 #undef  HAVE_STRCASECMP
 #endif
 
@@ -167,18 +167,18 @@
 #undef  HAVE_LOCALE_H
 #define BROKEN_LOCALE
 #else
-#define HAVE_FCNTL_H		
-#define HAVE_UNISTD_H 1	
-#define HAVE_SYS_TIME_H         
-#define HAVE_LOCALE_H           
+#define HAVE_FCNTL_H
+#define HAVE_UNISTD_H 1
+#define HAVE_SYS_TIME_H
+#define HAVE_LOCALE_H
 #endif
 
 #ifdef FEAT_GUI_MOTIF
 /* Define unless no X support found */
-#define HAVE_X11 
+#define HAVE_X11
 
 /* Define if you want to include fontset support. */
-#define USE_FONTSET 
+#define USE_FONTSET
 
 /* Define if your X has own locale library */
 /* #undef X_LOCALE */

@@ -1,7 +1,7 @@
-*usr_90.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 27
+*usr_90.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 				Installing Vim
 
 
@@ -107,7 +107,7 @@ TESTING
 
 Now you can check if compiling worked OK: >
 
-   	make test
+	make test
 
 This will run a sequence of test scripts to verify that Vim works as expected.
 Vim will be started many times and all kinds of text and messages flash by.
@@ -177,8 +177,8 @@ enabled from the Makefile.
 
 	--with-features=tiny		Compile with many features disabled.
 	--with-features=small		Compile with some features disabled.
-	--with-features=big		Compile with more features enabled.  
-	--with-features=huge		Compile with most features enabled.  
+	--with-features=big		Compile with more features enabled.
+	--with-features=huge		Compile with most features enabled.
 					See |+feature-list| for which feature
 					is enabled in which case.
 
@@ -221,7 +221,7 @@ embedded in the file name.  You will want to get the most recent version.
 We will use "60" here, which is version 6.0.
    For the PC you can chose one of the binary archives.  These are available:
 
-   	gvim60.zip		The normal MS-Windows GUI version.
+	gvim60.zip		The normal MS-Windows GUI version.
 	gvim60ole.zip		The MS-Windows GUI version with OLE support.
 				Uses more memory, supports interfacing with
 				other OLE applications.
@@ -248,7 +248,7 @@ have a "vim" directory somewhere, you will want to move to the directory just
 above it.
    Now change to the "vim\vim60" directory and run the install program: >
 
-   	install
+	install
 
 Carefully look through the messages and select the options you want to use.
 If you finally select "do it" the install program will carry out the actions

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ao
+MINOR = 0ap
 
 # CHECKLIST for creating a new version:
 #
@@ -128,15 +128,18 @@ MINOR = 0ao
 # Win32 GUI version:
 # - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
+# - Delete vimrun.exe, install.exe and uninstall.exe.
 # Win32 GUI version with OLE and dynamic IME:
 # - "nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes
 # - Rename "gvim.exe" to "gvim_ole.exe".
+# - Delete vimrun.exe, install.exe and uninstall.exe.
 # Produce Gvimext.dll:
-# - "cd gvimext", "nmake -f Makefile"
+# - "cd ../gvimext", "nmake -f Makefile"
 # - Copy "gvimext.dll" to here.
 # Win32s GUI version:
 # - Set environment for Visual C++ 4.1 (requires a new console window)
 # - "vcvars32" (use the path for VC 4.1)
+# - "nmake -f Make_mvc.mak GUI=yes clean" (use the path for VC 4.1)
 # - "nmake -f Make_mvc.mak GUI=yes" (use the path for VC 4.1)
 # - Rename "gvim.exe" to "gvim_w32s.exe".
 # - Rename "install.exe" to "installw32.exe"
@@ -145,10 +148,10 @@ MINOR = 0ao
 # Create the archives:
 # - Copy all the "*.exe" files to where this Makefile is.
 # - "make dosbin".
+# - Run make to update the ".mo" files, then "make doslang".
 # - "make doslang".
 # NSIS self installing exe:
-# - Run make to update the ".mo" files, then "make doslang".  Unpack the
-#   doslang archive on the PC.
+# - Unpack the doslang archive on the PC.
 # - rename gvim_ole.exe to gvim.exe
 # - rename installw32.exe to install.exe
 # - rename uninstalw32.exe to uninstal.exe
@@ -160,7 +163,8 @@ MINOR = 0ao
 # OS/2:
 # - Unpack the Unix "src", "extra" and "rt" archives.
 # - "make -f Make_os2.mak".
-# - Rename the executables to vimos2.exe, xxdos2.exe and teeos2.exe.
+# - Rename the executables to vimos2.exe, xxdos2.exe and teeos2.exe and copy
+#   them to here.
 # - "make os2bin".
 
 VIMVER	= vim-$(MAJOR).$(MINOR)
@@ -423,7 +427,7 @@ SRC_DOS =	\
 		uninstal.txt \
 
 # source files for DOS without CR/LF translation (also in the extra archive)
-SRC_DOS_BIN = 	\
+SRC_DOS_BIN =	\
 		OleVim/OpenWithVim.bas \
 		OleVim/OpenWithVim.pyw \
 		OleVim/OpenWithVim.vbp \

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 12
+*message.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

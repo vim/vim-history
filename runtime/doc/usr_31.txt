@@ -1,7 +1,7 @@
-*usr_31.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
+*usr_31.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Exploiting the GUI
 
 
@@ -254,10 +254,10 @@ specify another one with the "-U" argument: >
 	gvim -U thisrc ...
 
 That allows starting gvim for different kinds of editing.  You could set
-another font size, for example. 
+another font size, for example.
    To completely skip reading a gvimrc file: >
 
-   	gvim -U NONE ...
+	gvim -U NONE ...
 
 ==============================================================================
 

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0ao.  Last change: 2001 Jul 15
+*tagsearch.txt* For Vim version 6.0ap.  Last change: 2001 Jul 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -214,6 +214,10 @@ the same entry.
 g]			Like CTRL-], but use ":tselect" instead of ":tag".
 			{not in Vi}
 
+							*v_g]*
+{Visual}g]		Same as "g]", but use the highlighted text as the
+			identifier.  {not in Vi}
+
 							*:tj* *:tjump*
 :tj[ump][!] [ident]	Like ":tselect", but jump to the tag directly when
 			there is only one match.  {not in Vi}
@@ -225,6 +229,10 @@ g]			Like CTRL-], but use ":tselect" instead of ":tag".
 							*g_CTRL-]*
 g CTRL-]		Like CTRL-], but use ":tjump" instead of ":tag".
 			{not in Vi}
+
+							*v_g_CTRL-]*
+{Visual}g CTRL-]	Same as "g CTRL-]", but use the highlighted text as
+			the identifier.  {not in Vi}
 
 							*:tn* *:tnext*
 :[count]tn[ext][!]	Jump to [count] next matching tag (default 1).  See

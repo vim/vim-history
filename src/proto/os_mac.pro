@@ -62,5 +62,6 @@ int mch_can_restore_title __ARGS((void));
 int mch_can_restore_icon __ARGS((void));
 
 void slash_to_colon __ARGS((char_u *p));
+char_u *slash_to_colon_save __ARGS((char_u *p));
 
 /* vim: set ft=c : */

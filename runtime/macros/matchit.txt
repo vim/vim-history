@@ -4,7 +4,7 @@ For instructions on installing this file, type
 	:help add-local-help
 inside Vim.
 
-For Vim version 6.0.  Last change:  2001 July 04
+For Vim version 6.0.  Last change:  2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Benji Fisher
@@ -195,7 +195,7 @@ are equivalent.  If you >
 	:let b:match_ignorecase = 0
 <
 then matchit.vim treats "end" and "END" differently.  (There will be no
-b:match_infercase unless someone requests it.) 
+b:match_infercase unless someone requests it.)
 
 						*b:match_debug*
 Define b:match_debug if you want debugging information to be saved.  See
@@ -277,7 +277,7 @@ are not enough.  Instead, define a regular expression notend that will match
 anything but "end" and use it as follows: >
 	:let s:notend = '\%(\<end\s\+\)\@<!'
 	:let b:match_words = notend . '\<if\>,\<end\s\+if\>'
-< 							*matchit-s:sol*
+<							*matchit-s:sol*
 This is a simplified version of what is done for Ada.  The s:notend is a
 |script-variable|.  Similarly, you may want to define a start-of-line regular
 expression >

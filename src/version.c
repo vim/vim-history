@@ -504,6 +504,11 @@ static char *(features[]) =
 #else
 	"-viminfo",
 #endif
+#ifdef FEAT_VREPLACE
+	"+vreplace",
+#else
+	"-vreplace",
+#endif
 #ifdef FEAT_WILDIGN
 	"+wildignore",
 #else

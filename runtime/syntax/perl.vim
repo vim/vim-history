@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2001 Jun 14
+" Last Change:	2001 Jul 28
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -429,7 +429,7 @@ if version >= 508 || !exists("did_perl_syn_inits")
   HiLink perlSubstitutionSlash	perlString
   HiLink perlSubstitutionHash	perlString
   HiLink perlSubstitutionBracket perlString
-  HiLink perlSubstitutionCurly 	perlString
+  HiLink perlSubstitutionCurly	perlString
   HiLink perlSubstitutionPling	perlString
   HiLink perlTranslationSlash	perlString
   HiLink perlTranslationHash	perlString

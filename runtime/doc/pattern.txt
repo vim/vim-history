@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 02
+*pattern.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -458,7 +458,7 @@ after:	  \v	   \m	    \M	     \V		matches ~
 		'magic' 'nomagic'
 	  $	   $	    $	     \$		matches end-of-line
 	  .	   .	    \.	     \.		matches any character
-	  *	   *	    \*	     \*		any number of the previous atom 
+	  *	   *	    \*	     \*		any number of the previous atom
 	  ()	   \(\)     \(\)     \(\)	grouping into an atom
 	  |	   \|	    \|	     \|		separating alternatives
 	  \a	   \a	    \a	     \a		alphabetic character
@@ -959,7 +959,7 @@ Examples:
 	foo	  off		-		foo
 	foo	  on		-		foo Foo FOO
 	Foo	  on		off		foo Foo FOO
-	Foo	  on		on		    Foo		
+	Foo	  on		on		    Foo
 	\cfoo	  -		-		foo Foo FOO
 	foo\C	  -		-		foo
 

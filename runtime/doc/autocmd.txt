@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 03
+*autocmd.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -100,6 +100,11 @@ When defining an autocommand in a script, it will be able to call functions
 local to the script and use mappings local to the script.  When the event is
 triggered and the command executed, it will run in the context of the script
 it was defined in.  This matters if |<SID>| is used in a command.
+
+When executing the commands, the messages from one command overwrites a
+previous message.  This is different from when executing the commands
+manually.  Mostly the screen will not scroll up, thus there is no hit-enter
+prompt.  When one command outputs two messages this can happen anyway.
 
 ==============================================================================
 3. Removing autocommands				*autocmd-remove*
@@ -307,7 +312,8 @@ CursorHold			When the user doesn't press a key for the time
 				make some coffee. :)  See |CursorHold-example|
 				for previewing tags.
 				Note: Interactive commands cannot be used for
-				this event.
+				this event.  There is no hit-enter prompt,
+				the screen is updated directly (when needed).
 				Note: In the future there will probably be
 				another option to set the time.
 				Hint: to force an update of the status lines
@@ -452,6 +458,15 @@ EncodingChanged			Fires off when the 'encoding' option is
 							*FileEncoding*
 FileEncoding			Obsolete.  It still works and is equivalent
 				to |EncodingChanged|.
+							*ServerReplyRecv*
+ServerReplyRecv			When a reply from a Vim that functions as
+				server was received |serverreply_send()|.
+				<amatch> is equal to the {serverid} from which
+				the reply was sent, and <afile> is the actual
+				reply string.
+				Note that even if an auto command is defined,
+				the reply should be read with
+				|serverreply_read()| to consume it.
 							*TermChanged*
 TermChanged			After the value of 'term' has changed.  Useful
 				for re-loading the syntax file to update the

@@ -10,7 +10,7 @@ chop $date;
 
 %url = ();
 
-# Read the specified tag file.  For each tag, convert the filename into a 
+# Read the specified tag file.  For each tag, convert the filename into a
 # hyperlink and save it in an associative array using the tag as the index.
 sub readTagFile
 {

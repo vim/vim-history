@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 04
+*fold.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -29,7 +29,7 @@ and then change them manually.
 
 There are six methods to select folds:
 	manual		manually define folds
-	indent		more indent means a higher fold level 
+	indent		more indent means a higher fold level
 	expr		specify an expression to define folds
 	syntax		folds defined by syntax highlighting
 	diff		folds for unchanged text

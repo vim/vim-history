@@ -1,7 +1,7 @@
 " vi:set ts=8 sts=8 sw=8 tw=0:
 "
 " Menu Translations:	Japanese (UTF-8)
-" Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
+" Translated By:	Muraoka Taro  <koron@tka.att.ne.jp>
 " Last Change:		13-Jul-2001.
 
 " Quit when menu translations have already been done.
@@ -129,7 +129,7 @@ menutrans &Set\ Compiler		コンパイラ設定(&S)
 
 " Tools.Fold Menu
 menutrans &Folding			折畳み(&F)
-" open close folds 
+" open close folds
 menutrans &Enable/Disable\ folds<Tab>zi	有効/無効切替(&E)<Tab>zi
 menutrans &View\ Cursor\ Line<Tab>zv	カーソル行を表示(&V)<Tab>zv
 menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	カーソル行だけを表示(&W)<Tab>zMzx
@@ -197,12 +197,12 @@ menutrans Cu&t			切り取り(&T)
 menutrans &Copy			コピー(&C)
 menutrans &Paste		貼り付け(&P)
 menutrans &Delete		削除(&D)
-menutrans Select\ Blockwise 	矩形ブロック選択
+menutrans Select\ Blockwise	矩形ブロック選択
 menutrans Select\ &Word		単語選択(&W)
 menutrans Select\ &Line		行選択(&L)
 menutrans Select\ &Block	ブロック選択(&B)
 menutrans Select\ &All		すべて選択(&A)
- 
+
 " The GUI toolbar (for Win32 or GTK)
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0ao.  Last change: 2001 Jun 27
+*version5.txt*  For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6795,7 +6795,7 @@ Solution:   Initialize IME font.  When cursor is moved, set IME composition
 Files:	    src/gui.c, src/gui_w32.c, src/proto/gui_w32.pro
 
 Patch 5.6.008 (extra)
-Problem:    Win32: When two files exist with the same name but different case 
+Problem:    Win32: When two files exist with the same name but different case
 	    (through NFS or Samba), fixing the file name case could cause the
 	    wrong one to be edited.
 Solution:   Prefer a perfect match above a match while ignoring case in
@@ -7560,7 +7560,7 @@ Renamed php3 to php, it now also supports php4 (Lutz Eymers)
 Patch 5.7.015
 Problem:    Syntax files for Vim 6.0 can't be used with 5.x.
 Solution:   Add the "default" argument to the ":highlight" command: Ignore the
-	    command if highlighting was already specified.  
+	    command if highlighting was already specified.
 Files:	    src/syntax.c
 
 Generate the Syntax menu with makemenu.vim, so that it doesn't have to be done

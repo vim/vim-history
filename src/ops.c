@@ -340,9 +340,11 @@ shift_line(left, round, amount)
     }
 
     /* Set new indent */
+#ifdef FEAT_VREPLACE
     if (State & VREPLACE_FLAG)
 	change_indent(INDENT_SET, count, FALSE, NUL);
     else
+#endif
 	(void)set_indent(count, SIN_CHANGED);
 }
 

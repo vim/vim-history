@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 21
+" Last Change:	2001 Jul 26
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -129,6 +129,7 @@ SynMenu EFG.Elm\ Filter:elmfilt
 SynMenu EFG.Embedix\ Component\ Description:ecd
 SynMenu EFG.ERicsson\ LANGuage:erlang
 SynMenu EFG.ESQL-C:esqlc
+SynMenu EFG.Eterm\ config:eterm
 SynMenu EFG.Expect:expect
 SynMenu EFG.Exports:exports
 SynMenu EFG.Focus\ Executable:focexec
@@ -213,6 +214,7 @@ SynMenu Me-NO.MS-DOS.MS-DOS\ \.ini\ file:dosini
 SynMenu Me-NO.MS\ Resource\ file:rc
 SynMenu Me-NO.Muttrc:muttrc
 SynMenu Me-NO.Nastran\ input/DMAP:nastran
+SynMenu Me-NO.Natural:natural
 SynMenu Me-NO.Novell\ batch:ncf
 SynMenu Me-NO.Not\ Quite\ C:nqc
 SynMenu Me-NO.Nroff:nroff

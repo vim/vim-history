@@ -1,7 +1,7 @@
-*usr_42.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 11
+*usr_42.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      Add new menus
 
 
@@ -167,7 +167,7 @@ inserts the a CTRL-C or CTRL-O for you.  For example, if you use this command:
 
 Then the resulting menu commands will be:
 
-	Normal mode:   		*
+	Normal mode:		*
 	Visual mode:		CTRL-C *
 	Operator-pending mode:	CTRL-C *
 	Insert mode:		CTRL-O *
@@ -267,7 +267,7 @@ like: >
 	g		When removed the inactive menu items are not made grey
 			but are completely removed.  (Does not work on all
 			systems.)
-	
+
 	t		When removed the tearoff feature is not enabled.
 
 The dotted line at the top of a menu is not a separator line.  When you select

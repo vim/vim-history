@@ -16,24 +16,6 @@
  *		- the Vim entry in the Start Menu
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/stat.h>
-
-#if defined(WIN32) || defined(_WIN64)
-# define WIN3264
-# include <windows.h>
-# include <shlobj.h>
-#else
-#  include <dir.h>
-#  include <bios.h>
-#  include <dos.h>
-#endif
-
-#include "version.h"
-
 /* Include common code for dosinst.c and uninstal.c. */
 #include "dosinst.h"
 
@@ -120,6 +102,7 @@ batfile_thisversion(char *path)
     FILE	*fd;
     char	line[BUFSIZE];
     char	*p;
+    int		ver_len = strlen(VIM_VERSION_NODOT);
     int		found = FALSE;
 
     fd = fopen(path, "r");
@@ -128,19 +111,16 @@ batfile_thisversion(char *path)
 	while (fgets(line, BUFSIZE, fd) != NULL)
 	{
 	    for (p = line; *p != 0; ++p)
-		if (strnicmp(p, VIM_VERSION_NODOT, strlen(VIM_VERSION_NODOT))
-									 == 0)
-		    break;
-	    if (*p != 0)
-	    {
 		/* don't accept "vim60an" when looking for "vim60". */
-		p += strlen(VIM_VERSION_NODOT);
-		if (!isdigit(*p) && !isalpha(*p))
+		if (strnicmp(p, VIM_VERSION_NODOT, ver_len) == 0
+			&& !isdigit(p[ver_len])
+			&& !isalpha(p[ver_len]))
 		{
 		    found = TRUE;
 		    break;
 		}
-	    }
+	    if (found)
+		break;
 	}
 	fclose(fd);
     }
@@ -194,9 +174,8 @@ remove_if_exists(char *path, char *filename)
     static void
 remove_icons()
 {
-    char path[BUFSIZE];
-    int	 i;
-    struct stat st;
+    char	path[BUFSIZE];
+    int		i;
 
     if (get_shell_folder_path(path, "desktop"))
 	for (i = 0; i < ICON_COUNT; ++i)
@@ -206,13 +185,9 @@ remove_icons()
     static void
 remove_start_menu()
 {
-    char path[BUFSIZE];
-    int	 i;
+    char	path[BUFSIZE];
+    int		i;
     struct stat st;
-
-    if (get_shell_folder_path(path, "desktop"))
-	for (i = 0; i < ICON_COUNT; ++i)
-	    remove_if_exists(path, icon_link_names[i]);
 
     if (get_shell_folder_path(path, VIM_STARTMENU))
     {
@@ -220,7 +195,9 @@ remove_start_menu()
 	    remove_if_exists(path, targets[i].lnkname);
 	remove_if_exists(path, "uninstall.lnk");
 	remove_if_exists(path, "Help.lnk");
+	/* Win95 uses .pif, WinNT uses .lnk */
 	remove_if_exists(path, "Vim tutor.pif");
+	remove_if_exists(path, "Vim tutor.lnk");
 	remove_if_exists(path, "Vim online.url");
 	if (stat(path, &st) == 0)
 	{
@@ -230,6 +207,70 @@ remove_start_menu()
     }
 }
 #endif
+
+#if 0  /* currently not used */
+/*
+ * Return TRUE when we're on Windows 95/98/ME.
+ */
+    static int
+win95(void)
+{
+    static int done = FALSE;
+    static DWORD PlatformId;
+
+    if (!done)
+    {
+	OSVERSIONINFO ovi;
+
+	ovi.dwOSVersionInfoSize = sizeof(ovi);
+	GetVersionEx(&ovi);
+	PlatformId = ovi.dwPlatformId;
+	done = TRUE;
+    }
+    /* Win NT/2000/XP is VER_PLATFORM_WIN32_NT */
+    return PlatformId == VER_PLATFORM_WIN32_WINDOWS;
+}
+#endif
+
+    static void
+delete_uninstall_key(void)
+{
+#ifdef WIN3264
+    RegDeleteKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim " VIM_VERSION_SHORT);
+#else
+    FILE	*fd;
+    char	buf[BUFSIZE];
+
+    /*
+     * On DJGPP we delete registry entries by creating a .inf file and
+     * installing it.
+     */
+    fd = fopen("vim.inf", "w");
+    if (fd != NULL)
+    {
+	fprintf(fd, "[version]\n");
+	fprintf(fd, "signature=\"$CHICAGO$\"\n\n");
+	fprintf(fd, "[DefaultInstall]\n");
+	fprintf(fd, "DelReg=DeleteMe\n\n");
+	fprintf(fd, "[DeleteMe]\n");
+	fprintf(fd, "HKLM,\"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim " VIM_VERSION_SHORT "\"\n");
+	fclose(fd);
+
+	/* Don't know how to detect Win NT with DJGPP.  Hack: Just try the Win
+	 * 95/98/ME method, since the DJGPP version can't use long filenames
+	 * on Win NT anyway. */
+	sprintf(buf, "rundll setupx.dll,InstallHinfSection DefaultInstall 132 %s\\vim.inf", installdir);
+	run_command(buf);
+#if 0
+	/* Windows NT method (untested). */
+	sprintf(buf, "rundll32 syssetup,SetupInfObjectInstallAction DefaultInstall 128 %s\\vim.inf", installdir);
+	run_command(buf);
+#endif
+
+        remove("vim.inf");
+    }
+#endif
+}
 
     int
 main(int argc, char *argv[])
@@ -242,12 +283,16 @@ main(int argc, char *argv[])
     char	icon[BUFSIZE];
     char	path[BUFSIZE];
     char	popup_path[BUFSIZE];
-    int		nsis = 0;
 
     /* The nsis uninstaller calls us with a "-nsis" argument. */
     if (argc == 2 && stricmp(argv[1], "-nsis") == 0)
-	nsis = 1;
+	interactive = FALSE;
+    else
 #endif
+	interactive = TRUE;
+
+    /* Initialize this program. */
+    do_inits(argv);
 
     printf("This program will remove the following items:\n");
 
@@ -275,9 +320,9 @@ main(int argc, char *argv[])
 	}
 	if (found > 0)
 	{
-	    if (!nsis)
+	    if (interactive)
 		printf("\nRemove %s (y/n)? ", found > 1 ? "them" : "it");
-	    if (nsis || confirm())
+	    if (!interactive || confirm())
 		remove_icons();
 	}
     }
@@ -286,9 +331,9 @@ main(int argc, char *argv[])
 	    && stat(path, &st) == 0)
     {
 	printf("\n - the \"%s\" entry in the Start Menu\n", VIM_STARTMENU);
-	if (!nsis)
+	if (interactive)
 	    printf("\nRemove it (y/n)? ");
-	if (nsis || confirm())
+	if (!interactive || confirm())
 	    remove_start_menu();
     }
 #endif
@@ -297,8 +342,9 @@ main(int argc, char *argv[])
     found = remove_batfiles(0);
     if (found > 0)
     {
-	printf("\nRemove %s (y/n)? ", found > 1 ? "them" : "it");
-	if (confirm())
+	if (interactive)
+	    printf("\nRemove %s (y/n)? ", found > 1 ? "them" : "it");
+	if (!interactive || confirm())
 	    remove_batfiles(1);
     }
 
@@ -312,15 +358,12 @@ main(int argc, char *argv[])
 	system("gvim.exe -unregister");
     }
 
-#ifdef WIN3264
-    if (!nsis)
+    if (interactive)
     {
-	RegDeleteKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim " VIM_VERSION_SHORT) != ERROR_SUCCESS;
-
+	delete_uninstall_key();
 	printf("\nYou may now want to delete the Vim executables and runtime files.\n");
 	printf("(They are still where you unpacked them.)\n");
     }
-#endif
 
     rewind(stdin);
     printf("\nPress Enter to exit...");

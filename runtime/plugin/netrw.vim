@@ -57,7 +57,7 @@
 "   :call NetUserPass("uid","password") -- sets global userid and password
 
 " Variables:
-"    b:netrw_lastfile : last file Network-read/written retained on 
+"    b:netrw_lastfile : last file Network-read/written retained on
 "                       a per-buffer basis (supports bare :Nw )
 "    b:netrw_line     : during Nw/NetWrite, holds current line   number
 "    b:netrw_col      : during Nw/NetWrite, holds current column number
@@ -161,10 +161,10 @@ function! s:NetRead(...)
 "    Decho "DBG: reconstructing choice"
     if match(choice,"\"$") != -1
      " case "..."
- 	 let choice=strpart(choice,1,strlen(choice)-2)
+	 let choice=strpart(choice,1,strlen(choice)-2)
     else
     "  case "... ... ..."
- 	 let choice      = strpart(choice,1,strlen(choice)-1)
+	 let choice      = strpart(choice,1,strlen(choice)-1)
      let wholechoice = ""
 
      while match(choice,"\"$") == -1
@@ -172,7 +172,7 @@ function! s:NetRead(...)
       let ichoice     = ichoice + 1
       exe "let choice= a:" . ichoice
      endwhile
- 	 let choice= strpart(wholechoice,1,strlen(wholechoice)-1) . " " . strpart(choice,0,strlen(choice)-1)
+	 let choice= strpart(wholechoice,1,strlen(wholechoice)-1) . " " . strpart(choice,0,strlen(choice)-1)
     endif
    endif
   endif
@@ -330,7 +330,7 @@ function! s:NetWrite(...) range
 
   " attempt to repeat with previous host-file-etc
   if exists("b:netrw_lastfile") && a:0 == 0
-"    	 Decho "DBG: using b:netrw_lastfile<" . b:netrw_lastfile . ">"
+"	 Decho "DBG: using b:netrw_lastfile<" . b:netrw_lastfile . ">"
    let choice = b:netrw_lastfile
    let ichoice= ichoice + 1
   else
@@ -349,10 +349,10 @@ function! s:NetWrite(...) range
    elseif match(choice,"^\"") != -1
     if match(choice,"\"$") != -1
      " case "..."
- 	 let choice=strpart(choice,1,strlen(choice)-2)
+	 let choice=strpart(choice,1,strlen(choice)-2)
     else
     "  case "... ... ..."
- 	 let choice      = strpart(choice,1,strlen(choice)-1)
+	 let choice      = strpart(choice,1,strlen(choice)-1)
      let wholechoice = ""
 
      while match(choice,"\"$") == -1
@@ -360,7 +360,7 @@ function! s:NetWrite(...) range
       let ichoice= ichoice + 1
       exe "let choice= a:" . ichoice
      endwhile
- 	let choice= strpart(wholechoice,1,strlen(wholechoice)-1) . " " . strpart(choice,0,strlen(choice)-1)
+	let choice= strpart(wholechoice,1,strlen(wholechoice)-1) . " " . strpart(choice,0,strlen(choice)-1)
     endif
    endif
   endif

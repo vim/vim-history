@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Jun 18
+# Last change:  2001 Jul 28
 #
 # This has script been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX
 # with MMS and MMK
@@ -52,7 +52,7 @@ CCVER = YES
 # If you don't need it really, leave it behind the comment.
 # VIM_XIM = YES
 
-# Internal Hangul input method. GUI only. 
+# Internal Hangul input method. GUI only.
 # If you don't need it really, leave it behind the comment.
 # VIM_HANGULIN = YES
 
@@ -131,7 +131,7 @@ RUBY_LIB =
 
 .IFDEF VIM_XIM
 # XIM related setup.
-.IFDEF GUI 
+.IFDEF GUI
 XIM_DEF = ,"FEAT_XIM"
 .ENDIF
 .ENDIF
@@ -178,12 +178,12 @@ LDFLAGS	  =
 VIMUSER = "''f$extract(f$locate(",",f$user())+1,f$length(f$user())-f$locate(",",f$user())-2,f$user())'"
 VIMHOST = "''f$extract(0,f$length(f$trnlnm("sys$node"))-2,f$trnlnm("sys$node"))' (''f$trnlnm("ucx$inet_host")'.''f$trnlnm("ucx$inet_domain")')"
 
-.SUFFIXES : .obj .c 
+.SUFFIXES : .obj .c
 
 ALL_CFLAGS = /def=($(DEFS) $(DEBUG_DEF) $(PERL_DEF) $(PYTHON_DEF) $(TCL_DEF) $(SNIFF_DEF) $(RUBY_DEF) $(XIM_DEF) $(HANGULIN_DEF)) $(CFLAGS)
 
 ALL_LIBS = $(LIBS) $(GUI_LIB_DIR) $(X_LIB_DIR) $(GUI_LIB) $(X_LIB) $(EXTRA_LIB)\
-	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB) $(RUBY_LIB) 
+	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB) $(RUBY_LIB)
 
 SRC =	buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
 	ex_getln.c if_xcmdsrv.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
@@ -207,7 +207,7 @@ all : [.auto]config.h $(TARGET)
 [.auto]config.h : $(CONFIG_H)
 	copy/nolog $(CONFIG_H) [.auto]config.h
 
-clean : 
+clean :
         -@ if "''F$SEARCH("*.exe")'" .NES. "" then delete/noconfirm/nolog *.exe;*
 	-@ if "''F$SEARCH("*.obj")'" .NES. "" then delete/noconfirm/nolog *.obj;*
 	-@ if "''F$SEARCH("[.auto]config.h")'" .NES. "" then delete/noconfirm/nolog [.auto]config.h;*
@@ -217,7 +217,7 @@ clean :
 $(TARGET) : $(OBJ)
 	$(LD_DEF) $(LDFLAGS) /exe=$(TARGET) $+ $(ALL_LIBS)
 
-.c.obj :  
+.c.obj :
 	$(CC_DEF) $(ALL_CFLAGS) $<
 
 pathdef.c : check_ccver $(CONFIG_H)

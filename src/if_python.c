@@ -64,53 +64,53 @@ struct PyMethodDef { int a; };
 
 #if defined(DYNAMIC_PYTHON) || defined(PROTO)
 /* Console Vim doesn't include this, but we need it for dynamic loading */
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 
-#ifndef DYNAMIC_PYTHON
-# define HINSTANCE int		/* for generating prototypes */
-#endif
+# ifndef DYNAMIC_PYTHON
+#  define HINSTANCE int		/* for generating prototypes */
+# endif
 
 /*
  * Wrapper defines
  */
-#define PyArg_Parse dll_PyArg_Parse
-#define PyArg_ParseTuple dll_PyArg_ParseTuple
-#define PyDict_SetItemString dll_PyDict_SetItemString
-#define PyErr_BadArgument dll_PyErr_BadArgument
-#define PyErr_Clear dll_PyErr_Clear
-#define PyErr_NoMemory dll_PyErr_NoMemory
-#define PyErr_Occurred dll_PyErr_Occurred
-#define PyErr_SetNone dll_PyErr_SetNone
-#define PyErr_SetString dll_PyErr_SetString
-#define PyEval_RestoreThread dll_PyEval_RestoreThread
-#define PyEval_SaveThread dll_PyEval_SaveThread
-#define PyInt_AsLong dll_PyInt_AsLong
-#define PyInt_FromLong dll_PyInt_FromLong
-#define PyInt_Type (*dll_PyInt_Type)
-#define PyList_GetItem dll_PyList_GetItem
-#define PyList_New dll_PyList_New
-#define PyList_SetItem dll_PyList_SetItem
-#define PyList_Size dll_PyList_Size
-#define PyList_Type (*dll_PyList_Type)
-#define PyImport_ImportModule dll_PyImport_ImportModule
-#define PyDict_GetItemString dll_PyDict_GetItemString
-#define PyModule_GetDict dll_PyModule_GetDict
-#define PyRun_SimpleString dll_PyRun_SimpleString
-#define PyString_AsString dll_PyString_AsString
-#define PyString_FromString dll_PyString_FromString
-#define PyString_FromStringAndSize dll_PyString_FromStringAndSize
-#define PyString_Size dll_PyString_Size
-#define PyString_Type (*dll_PyString_Type)
-#define PySys_SetObject dll_PySys_SetObject
-#define PyType_Type (*dll_PyType_Type)
-#define Py_BuildValue dll_Py_BuildValue
-#define Py_FindMethod dll_Py_FindMethod
-#define Py_InitModule4 dll_Py_InitModule4
-#define Py_Initialize dll_Py_Initialize
-#define _PyObject_New dll__PyObject_New
-#define _Py_NoneStruct (*dll__Py_NoneStruct)
-#define PyObject_Init dll__PyObject_Init
+# define PyArg_Parse dll_PyArg_Parse
+# define PyArg_ParseTuple dll_PyArg_ParseTuple
+# define PyDict_SetItemString dll_PyDict_SetItemString
+# define PyErr_BadArgument dll_PyErr_BadArgument
+# define PyErr_Clear dll_PyErr_Clear
+# define PyErr_NoMemory dll_PyErr_NoMemory
+# define PyErr_Occurred dll_PyErr_Occurred
+# define PyErr_SetNone dll_PyErr_SetNone
+# define PyErr_SetString dll_PyErr_SetString
+# define PyEval_RestoreThread dll_PyEval_RestoreThread
+# define PyEval_SaveThread dll_PyEval_SaveThread
+# define PyInt_AsLong dll_PyInt_AsLong
+# define PyInt_FromLong dll_PyInt_FromLong
+# define PyInt_Type (*dll_PyInt_Type)
+# define PyList_GetItem dll_PyList_GetItem
+# define PyList_New dll_PyList_New
+# define PyList_SetItem dll_PyList_SetItem
+# define PyList_Size dll_PyList_Size
+# define PyList_Type (*dll_PyList_Type)
+# define PyImport_ImportModule dll_PyImport_ImportModule
+# define PyDict_GetItemString dll_PyDict_GetItemString
+# define PyModule_GetDict dll_PyModule_GetDict
+# define PyRun_SimpleString dll_PyRun_SimpleString
+# define PyString_AsString dll_PyString_AsString
+# define PyString_FromString dll_PyString_FromString
+# define PyString_FromStringAndSize dll_PyString_FromStringAndSize
+# define PyString_Size dll_PyString_Size
+# define PyString_Type (*dll_PyString_Type)
+# define PySys_SetObject dll_PySys_SetObject
+# define PyType_Type (*dll_PyType_Type)
+# define Py_BuildValue dll_Py_BuildValue
+# define Py_FindMethod dll_Py_FindMethod
+# define Py_InitModule4 dll_Py_InitModule4
+# define Py_Initialize dll_Py_Initialize
+# define _PyObject_New dll__PyObject_New
+# define _Py_NoneStruct (*dll__Py_NoneStruct)
+# define PyObject_Init dll__PyObject_Init
 
 /*
  * Pointers for dynamic link
@@ -162,16 +162,16 @@ static PyObject *imp_PyExc_KeyboardInterrupt;
 static PyObject *imp_PyExc_TypeError;
 static PyObject *imp_PyExc_ValueError;
 
-#define PyExc_AttributeError imp_PyExc_AttributeError
-#define PyExc_IndexError imp_PyExc_IndexError
-#define PyExc_KeyboardInterrupt imp_PyExc_KeyboardInterrupt
-#define PyExc_TypeError imp_PyExc_TypeError
-#define PyExc_ValueError imp_PyExc_ValueError
+# define PyExc_AttributeError imp_PyExc_AttributeError
+# define PyExc_IndexError imp_PyExc_IndexError
+# define PyExc_KeyboardInterrupt imp_PyExc_KeyboardInterrupt
+# define PyExc_TypeError imp_PyExc_TypeError
+# define PyExc_ValueError imp_PyExc_ValueError
 
 /*
  * Table of name to function pointer of python.
  */
-#define PYTHON_PROC FARPROC
+# define PYTHON_PROC FARPROC
 static struct
 {
     char *name;

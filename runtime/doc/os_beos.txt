@@ -1,4 +1,4 @@
-*os_beos.txt*	For Vim version 6.0ao.  Last change: 2001 Feb 07
+*os_beos.txt*	For Vim version 6.0ap.  Last change: 2001 Feb 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

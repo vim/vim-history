@@ -1,61 +1,52 @@
 "  vim: set sw=4 sts=4:
-"  File        : bdf.vim
-"  Language    : BDF Font
-"  Maintainer  : Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on  : Thu, 19 Jul 2001 22:10:33 +0200
-"  TODO	       : Floating point values aren't displayed right (not a major
-"	       : issue though)
-"	       : add variable list (perhaps to documentation as well)
+"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
+"  Revised on	: Tue, 24 Jul 2001 18:54:16 CEST
+"  Language	: BDF Font definition
 
-" For version 5.x: Clear all syntax items
-" For version 6.x: Quit when a syntax file was already loaded
-if !exists("main_syntax")
-    if version < 600
-	syntax clear
-    elseif exists("b:current_syntax")
-	finish
-endif
-     let main_syntax = 'bdf'
+if version < 600
+    syntax clear
+elseif exists("b:current_syntax")
+    finish
 endif
 
 " comments
-syn region bdfComment start="^COMMENT\>" end="$" contains=bdfTodo
+syn region  bdfComment	    start="^COMMENT\>" end="$" contains=bdfTodo
 
 " todo
-syn keyword bdfTodo contained TODO
+syn keyword bdfTodo	    contained TODO
 
 " numbers
-syn match bdfNumber display "\<\(\x\+\|\d\+\.\d\+\)\>"
+syn match   bdfNumber	    display "\<\(\x\+\|\d\+\.\d\+\)"
 
 " strings
-syn region bdfString start=+"+ skip=+""+ end=+"+
+syn region  bdfString	    start=+"+ skip=+""+ end=+"+
 
 " properties
-syn keyword bdfProperties contained FONT SIZE FONTBOUNDINGBOX CHARS
+syn keyword bdfProperties   contained FONT SIZE FONTBOUNDINGBOX CHARS
 
 " X11 properties
-syn keyword bdfXProperties contained FONT_ASCENT FONT_DESCENT DEFAULT_CHAR
-syn keyword bdfXProperties contained FONTNAME_REGISTRY FOUNDRY FAMILY_NAME
-syn keyword bdfXProperties contained WEIGHT_NAME SLANT SETWIDTH_NAME PIXEL_SIZE
-syn keyword bdfXProperties contained POINT_SIZE RESOLUTION_X RESOLUTION_Y SPACING
-syn keyword bdfXProperties contained CHARSET_REGISTRY CHARSET_ENCODING COPYRIGHT
-syn keyword bdfXProperties contained ADD_STYLE_NAME WEIGHT RESOLUTION X_HEIGHT
-syn keyword bdfXProperties contained QUAD_WIDTH FONT AVERAGE_WIDTH
+syn keyword bdfXProperties  contained FONT_ASCENT FONT_DESCENT DEFAULT_CHAR
+syn keyword bdfXProperties  contained FONTNAME_REGISTRY FOUNDRY FAMILY_NAME
+syn keyword bdfXProperties  contained WEIGHT_NAME SLANT SETWIDTH_NAME PIXEL_SIZE
+syn keyword bdfXProperties  contained POINT_SIZE RESOLUTION_X RESOLUTION_Y SPACING
+syn keyword bdfXProperties  contained CHARSET_REGISTRY CHARSET_ENCODING COPYRIGHT
+syn keyword bdfXProperties  contained ADD_STYLE_NAME WEIGHT RESOLUTION X_HEIGHT
+syn keyword bdfXProperties  contained QUAD_WIDTH FONT AVERAGE_WIDTH
 
-syn region bdfDefinition transparent matchgroup=bdfDelim start="\<STARTPROPERTIES\>" end="\<ENDPROPERTIES\>" contains=bdfXProperties,bdfNumber,bdfString
+syn region  bdfDefinition   transparent matchgroup=bdfDelim start="^STARTPROPERTIES\>" end="^ENDPROPERTIES\>" contains=bdfXProperties,bdfNumber,bdfString
 
 " characters
 syn keyword bdfCharProperties contained ENCODING SWIDTH DWIDTH BBX ATTRIBUTES BITMAP
 
-syn match bdfCharName contained display "\<[0-9a-zA-Z]\{1,14}\>"
-syn match bdfCharNameError contained display "\<[0-9a-zA-Z]\{15,}\>"
+syn match   bdfCharName	    contained display "\<[0-9a-zA-Z]\{1,14}\>"
+syn match   bdfCharNameError contained display "\<[0-9a-zA-Z]\{15,}\>"
 
-syn region bdfStartChar transparent matchgroup=bdfDelim start="\<STARTCHAR\>" end="$" contains=bdfCharName,bdfCharNameError
+syn region  bdfStartChar    transparent matchgroup=bdfDelim start="\<STARTCHAR\>" end="$" contains=bdfCharName,bdfCharNameError
 
-syn region bdfCharDefinition transparent start="\<STARTCHAR\>" matchgroup=bdfDelim end="\<ENDCHAR\>" contains=bdfCharProperties,bdfNumber,bdfStartChar
+syn region  bdfCharDefinition transparent start="^STARTCHAR\>" matchgroup=bdfDelim end="^ENDCHAR\>" contains=bdfCharProperties,bdfNumber,bdfStartChar
 
 " font
-syn region bdfFontDefinition transparent matchgroup=bdfDelim start="\<STARTFONT\>" end="\<ENDFONT\>" contains=bdfProperties,bdfDefinition,bdfCharDefinition,bdfNumber,bdfComment
+syn region  bdfFontDefinition transparent matchgroup=bdfDelim start="^STARTFONT\>" end="^ENDFONT\>" contains=bdfProperties,bdfDefinition,bdfCharDefinition,bdfNumber,bdfComment
 
 if exists("bdf_minlines")
     let b:bdf_minlines = bdf_minlines
@@ -89,7 +80,3 @@ if version >= 508 || !exists("did_bdf_syn_inits")
 endif
 
 let b:current_syntax = "bdf"
-
-if main_syntax == 'bdf'
-    unlet main_syntax
-endif

@@ -11,7 +11,7 @@ BCC = bcc32
 xxd: xxd.exe
 
 xxd.exe: xxd.c
-	$(BCC) -I$(BOR)\include -DWIN32 xxd.c $(BOR)\lib\wildargs.obj
+	$(BCC) -I$(BOR)\include -L$(BOR)\lib -DWIN32 xxd.c $(BOR)\lib\wildargs.obj
 
 clean:
 	- del xxd.obj

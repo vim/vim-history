@@ -1,7 +1,7 @@
 # Turkish translation of vim.
 # Copyright (C) 2001 Free Software Foundation, Inc.
 # Fatih Demir <kabalak@gtranslator.org>, 2001.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: vim 6.0z\n"
@@ -4516,7 +4516,7 @@ msgstr ""
 msgid "file\n"
 msgstr "dosya\n"
 
-#. 
+#.
 #. * Ask to select a tag from the list.
 #: tag.c:701
 msgid "Enter nr of choice (<CR> to abort): "
@@ -4963,7 +4963,7 @@ msgstr ""
 msgid "--No lines in buffer--"
 msgstr ""
 
-#. 
+#.
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #: globals.h:908

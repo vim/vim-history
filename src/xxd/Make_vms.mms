@@ -7,7 +7,7 @@
 #
 # To build: use the following command line:
 #
-#	mms/descrip=Make_vms.mms 
+#	mms/descrip=Make_vms.mms
 #	  or if you use mmk
 #	mmk/descrip=Make_vms.mms
 #
@@ -61,7 +61,7 @@ OBJ     = xxd.obj
 .obj.c :
 	$(CC_DEF) $(CFLAGS) $<
 
-$(TARGET) : $(OBJ)        
+$(TARGET) : $(OBJ)
 	$(LD_DEF) $(LDFLAGS) /exe=$(TARGET) $+
 
 clean :

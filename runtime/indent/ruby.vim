@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Ruby
 " Maintainer:	Matt Armstrong <matt@lickey.com>
-" Last Change:	2001/03/24
+" Last Change:	2001 Jul 28
 " URL: http://www.lickey.com/env/vim/indent/ruby.vim
 
 " Only load this indent file when no other was loaded.
@@ -40,7 +40,7 @@ function GetRubyIndent()
   let ind = indent(lnum)
   let flag = 0
   if getline(lnum) =~ '^\s*\(module\>\|class\>\|def\>\|if\>\|for\>\|while\>\|until\>\|else\>\|elsif\>\|case\>\|when\>\|unless\|begin\|ensure\>\|rescue\>\)' || getline(lnum) =~ '{\s*$' || getline(lnum) =~ '\({\|\<do\>\).*|.*|\s*$' || getline(lnum) =~ '\<do\>\(\s*#.*\)\=$'
-    let ind = ind + &sw 
+    let ind = ind + &sw
     let flag = 1
   endif
 

@@ -51,11 +51,11 @@ Note: The cursor keys should also work.  But using hjkl you will be able to
 
   1. Press the <ESC> key (to make sure you are in Normal mode).
 
-  2. Type:     			:q! <ENTER>.
+  2. Type:			:q! <ENTER>.
 
 ---> This exits the editor WITHOUT saving any changes you have made.
      If you want to save the changes and exit type:
-     				:wq  <ENTER>
+				:wq  <ENTER>
 
   3. When you see the shell prompt, type the command that got you into this
      tutor.  That could be:	vimtutor <ENTER>
@@ -763,7 +763,7 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   It is far from complete as Vim has many many more commands.
 
   For further reading and studying, this book is recommended:
-  	Vim - Vi Improved - by Steve Oualline
+	Vim - Vi Improved - by Steve Oualline
 	Publisher: New Riders
   The first book completely dedicated to Vim.  Especially useful for beginners.
   There are many examples and pictures.

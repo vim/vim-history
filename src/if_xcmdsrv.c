@@ -50,6 +50,31 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+
+/*
+ * When a result is being awaited from a sent command, one of
+ * the following structures is present on a list of all outstanding
+ * sent commands.  The information in the structure is used to
+ * process the result when it arrives.  You're probably wondering
+ * how there could ever be multiple outstanding sent commands.
+ * This could happen if Vim instances invoke each other recursively.
+ * It's unlikely, but possible.
+ */
+
+typedef struct PendingCommand
+{
+    int	    serial;	/* Serial number expected in result. */
+    char_u  *result;	/* String result for command (malloc'ed).
+			 * NULL means command still pending. */
+    struct PendingCommand *nextPtr;
+			/* Next in list of all outstanding commands.
+			 * NULL means end of list. */
+} PendingCommand;
+
+static PendingCommand *pendingCommands = NULL;
+				/* List of all commands currently
+				 * being waited for. */
+
 /*
  * The information below is used for communication between processes
  * during "send" commands.  Each process keeps a private window, never
@@ -121,6 +146,16 @@
 
 #define MAX_PROP_WORDS 100000
 
+struct ServerReply
+{
+    Window  id;
+    garray_T strings;
+};
+static garray_T serverReply = { 0, 0, 0, 0, 0 };
+enum ServerReplyOp { SROP_Find, SROP_Add, SROP_Delete };
+
+typedef int (*EndCond) __ARGS((void *));
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -135,6 +170,13 @@ static int      DoRegisterName __ARGS((Display *dpy, char_u *name));
 static int      IsSerialName __ARGS((char_u *name));
 static void	InjectStr __ARGS((char_u *str));
 static void	DeleteAnyLingerer __ARGS((Display *dpy, Window w));
+static int	WaitForPend __ARGS((void *p));
+static int	WaitForReply __ARGS((void *p));
+static int	WindowValid __ARGS((Display *dpy, Window w));
+static void	ServerWait __ARGS((Display *dpy, Window w, EndCond endCond,
+		    void *endData, int localLoop, int seconds));
+static struct ServerReply *
+		ServerReplyFind __ARGS((Window w, enum ServerReplyOp op));
 
 /* Private variables for the "server" functionality */
 static Atom	registryProperty;
@@ -231,7 +273,7 @@ DoRegisterName(dpy, name)
 	status = XGetGeometry(dpy, w, &dummyWin, &dummyInt, &dummyInt,
 		              &dummyUns, &dummyUns, &dummyUns, &dummyUns);
 	(void) XSetErrorHandler(old_handler);
-	if ((status != Success) && (w != commWindow))
+	if (status != Success && w != commWindow)
 	{
 	    XUngrabServer(dpy);
 	    XFlush(dpy);
@@ -303,19 +345,29 @@ serverChangeRegisteredWindow(dpy, newwin)
  *	An interger return code. 0 is OK. Negative is error.
  */
     int
-serverSendToVim(dpy, name, cmd)
+serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     Display	*dpy;			/* Where to send. */
     char_u	*name;			/* Where to send. */
     char_u	*cmd;			/* What to send. */
+    char_u	**result;		/* Result of eval'ed expression */
+    Window	*server;		/* Actual ID of receiving app */
+    Bool	asExpr;                 /* Interpret as keystrokes or expr ? */
+    Bool	localLoop;              /* Throw away everything but result */
 {
     Window	    w;
-    Atom	    *plist;
-    XErrorHandler   old_handler;
-#define STATIC_SPACE 500
-    char_u	    *property, staticSpace[STATIC_SPACE];
+    char_u	    *property;
     int		    length;
     int		    res;
+    static int	    serial = 0;	/* Running count of sent commands.
+				 * Used to give each command a
+				 * different serial number. */
+    PendingCommand  pending;
     char_u	    *loosename = NULL;
+
+    if (result != NULL)
+	*result = NULL;
+    if (name == NULL || *name == NUL)
+	name = (char_u *)"gvim";    /* use a default name */
 
     if (commProperty == None && dpy != NULL)
     {
@@ -326,7 +378,17 @@ serverSendToVim(dpy, name, cmd)
     /* Execute locally if no display or target is ourselves */
     if (dpy == NULL || (serverName != NULL && STRCMP(name, serverName) == 0))
     {
-	InjectStr(cmd);
+	if (asExpr)
+	{
+	    char_u *ret =  eval_to_string(cmd, NULL);
+
+	    if (result != NULL)
+		*result = ret;
+	    else
+		vim_free(ret);
+	}
+	else
+	    InjectStr(cmd);
 	return 0;
     }
 
@@ -338,19 +400,13 @@ serverSendToVim(dpy, name, cmd)
      *
      * Delete any lingering names from dead editors.
      */
-    old_handler = XSetErrorHandler(x_error_check);
     while (TRUE)
     {
-	got_x_error = FALSE;
 	w = LookupName(dpy, name, 0, &loosename);
 	/* Check that the window is hot */
 	if (w != None)
 	{
-	    plist = XListProperties(dpy, w, &res);
-	    XSync(dpy, False);
-	    if (plist != NULL)
-		XFree(plist);
-	    if (got_x_error)
+	    if (!WindowValid(dpy, w))
 	    {
 		LookupName(dpy, loosename ? loosename : name,
 			   /*DELETE=*/TRUE, NULL);
@@ -359,40 +415,183 @@ serverSendToVim(dpy, name, cmd)
 	}
 	break;
     }
-    XSetErrorHandler(old_handler);
     if (w == None)
     {
-	EMSG2(_("E247: no registered server named %s"), name);
+	EMSG2(_("E247: no registered server named \"%s\""), name);
 	return -1;
     }
     else if (loosename != NULL)
 	name = loosename;
+    if (server != NULL)
+	*server = w;
 
     /*
      * Send the command to target interpreter by appending it to the
      * comm window in the communication window.
      */
     length = STRLEN(name) + STRLEN(cmd) + 10;
-    if (length <= STATIC_SPACE)
-	property = staticSpace;
-    else
-	property = (char_u *)alloc((unsigned) length);
+    property = (char_u *)alloc((unsigned) length + 30);
 
     sprintf((char *)property, "%c%c%c-n %s%c-s %s",
-	              0, 'k', 0, name, 0, cmd);
+	              0, asExpr ? 'c' : 'k', 0, name, 0, cmd);
     if (name == loosename)
 	vim_free(loosename);
+    /* Add a back reference to our comm window */
+    serial++;
+    sprintf((char *)property + length, "%c-r %x %d",
+						0, (uint)commWindow, serial);
+    length += STRLEN(property + length + 1) + 1;
 
     res = AppendPropCarefully(dpy, w, commProperty, property, length + 1);
-    if (length > STATIC_SPACE)
-	vim_free(property);
+    vim_free(property);
     if (res < 0)
     {
 	EMSG(_("E248: Failed to send command to the destination program"));
 	return -1;
     }
 
+    if (!asExpr) /* There is no answer for this - Keys are sent async */
+	return 0;
+
+    /*
+     * Register the fact that we're waiting for a command to
+     * complete (this is needed by SendEventProc and by
+     * AppendErrorProc to pass back the command's results).
+     */
+
+    pending.serial = serial;
+    pending.result = NULL;
+    pending.nextPtr = pendingCommands;
+    pendingCommands = &pending;
+
+    ServerWait(dpy, w, WaitForPend, &pending, localLoop, 600);
+
+    /*
+     * Unregister the information about the pending command
+     * and return the result.
+     */
+
+    if (pendingCommands == &pending)
+    {
+	pendingCommands = pending.nextPtr;
+    }
+    else
+    {
+	PendingCommand *pcPtr;
+
+	for (pcPtr = pendingCommands; pcPtr != NULL;
+		pcPtr = pcPtr->nextPtr)
+	{
+	    if (pcPtr->nextPtr == &pending)
+	    {
+		pcPtr->nextPtr = pending.nextPtr;
+		break;
+	    }
+	}
+    }
+    if (result != NULL)
+	*result = pending.result;
+    else
+	vim_free(pending.result);
+
     return 0;
+}
+
+    static int
+WaitForPend(p)
+    void    *p;
+{
+    PendingCommand *pending = (PendingCommand *) p;
+    return pending->result != NULL;
+}
+
+    static int
+WindowValid(dpy, w)
+    Display     *dpy;
+    Window	w;
+{
+    XErrorHandler   old_handler;
+    Atom	    *plist;
+    int		    result;
+
+    old_handler = XSetErrorHandler(x_error_check);
+    got_x_error = 0;
+    plist = XListProperties(dpy, w, &result);
+    XSync(dpy, False);
+    if (plist != NULL)
+	XFree(plist);
+    XSetErrorHandler(old_handler);
+    return got_x_error ? FALSE : TRUE;
+}
+
+/*
+ * ServerWait --
+ *	Enter a loop processing X events & pooling chars until we see a result
+ */
+    static void
+ServerWait(dpy, w, endCond, endData, localLoop, seconds)
+    Display	*dpy;
+    Window	w;
+    EndCond	endCond;
+    void	*endData;
+    int		localLoop;
+    int		seconds;
+{
+    time_t          start;
+    time_t          now;
+    time_t          lastChk = 0;
+    XEvent	    event;
+    XPropertyEvent *e = (XPropertyEvent *)&event;
+#   define SEND_MSEC_POLL 50
+
+    time(&start);
+    while (endCond(endData) == 0)
+    {
+	time(&now);
+	if (seconds >= 0 && (now - start) >= seconds)
+	    break;
+	if (now != lastChk)
+	{
+	    lastChk = now;
+	    if (!WindowValid(dpy, w))
+		break;
+	}
+	if (localLoop)
+	{
+	    /* Just look out for the answer without calling back into Vim */
+#ifndef HAVE_SELECT
+	    struct pollfd   fds;
+
+	    fds.fd = ConnectionNumber(dpy);
+	    fds.events = POLLIN;
+	    if (poll(&fds, 1, SEND_MSEC_POLL) < 0)
+		break;
+#else
+	    fd_set	    fds;
+	    struct timeval  tv;
+
+	    tv.tv_sec = 0;
+	    tv.tv_usec =  SEND_MSEC_POLL * 1000;
+	    FD_ZERO(&fds);
+	    FD_SET(ConnectionNumber(dpy), &fds);
+	    if (select(ConnectionNumber(dpy) + 1, &fds, NULL, NULL, &tv) < 0)
+		break;
+#endif
+	    while (XEventsQueued(dpy, QueuedAfterReading) > 0)
+	    {
+		XNextEvent(dpy, &event);
+		if (event.type == PropertyNotify && e->window == commWindow)
+		    serverEventProc(dpy, &event);
+	    }
+	}
+	else
+	{
+	    if(got_int)
+		break;
+	    ui_delay((long)SEND_MSEC_POLL, TRUE);
+	    ui_breakcheck();
+	}
+    }
 }
 
 
@@ -413,10 +612,8 @@ serverGetVimNames(dpy)
     int		    result, actualFormat;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
-    Atom	    *plist;
     Window          w;
     garray_T	    ga;
-    XErrorHandler   old_handler;
 
     if (registryProperty == None)
     {
@@ -444,8 +641,7 @@ serverGetVimNames(dpy)
     /*
      * If the property is improperly formed, then delete it.
      */
-    if ((result != Success) || (actualFormat != 8)
-	    || (actualType != XA_STRING))
+    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
     {
 	if (regProp != NULL)
 	{
@@ -458,35 +654,203 @@ serverGetVimNames(dpy)
     /*
      * Scan all of the names out of the property.
      */
-    old_handler = XSetErrorHandler(x_error_check);
     ga_init2(&ga, 1, 100);
     for (p = regProp; (p-regProp) < numItems; p++)
     {
 	entry = p;
-	while ((*p != 0) && (!isspace(*p)))
+	while (*p != 0 && !isspace(*p))
 	    p++;
 	if (*p != 0)
 	{
-	    got_x_error = FALSE;
 	    w = None;
 	    sscanf((char *)entry, "%x", (uint*) &w);
-	    plist = XListProperties(dpy, w, &result);
-	    XSync(dpy, False);
-	    if (!got_x_error)
+	    if (WindowValid(dpy, w))
 	    {
 		ga_concat(&ga, p + 1);
 		ga_concat(&ga, (char_u *)"\n");
 	    }
-	    if (plist != NULL)
-		XFree(plist);
 	    while (*p != 0)
 		p++;
 	}
     }
-    (void) XSetErrorHandler(old_handler);
     XFree(regProp);
     return ga.ga_data;
 }
+
+/* ----------------------------------------------------------
+ * Reply stuff
+ */
+
+    static struct ServerReply *
+ServerReplyFind(w, op)
+    Window  w;
+    enum ServerReplyOp op;
+{
+    struct ServerReply *p;
+    struct ServerReply e;
+    int		i;
+
+    p = (struct ServerReply *) serverReply.ga_data;
+    for (i = 0; i < serverReply.ga_len; i++, p++)
+	if (p->id == w)
+	    break;
+    if (i >= serverReply.ga_len)
+	p = NULL;
+
+    if (p == NULL && op == SROP_Add)
+    {
+	if (serverReply.ga_growsize == 0)
+	    ga_init2(&serverReply, sizeof(struct ServerReply), 1);
+	if (ga_grow(&serverReply, 1) == OK)
+	{
+	    p = ((struct ServerReply *) serverReply.ga_data)
+		+ serverReply.ga_len;
+	    e.id = w;
+	    ga_init2(&e.strings, 1, 100);
+	    memcpy(p, &e, sizeof(e));
+	    serverReply.ga_len++;
+	    serverReply.ga_room--;
+	}
+    }
+    else if (p != NULL && op == SROP_Delete)
+    {
+	ga_clear(&p->strings);
+	memmove(p, p + 1, (serverReply.ga_len - i - 1) * sizeof(*p));
+	serverReply.ga_len--;
+	serverReply.ga_room++;
+    }
+
+    return p;
+}
+
+/*
+ * serverStrToWin --
+ *	Convert string to windowid.
+ *	Issue an error if the id is invalid.
+ */
+    Window
+serverStrToWin(str)
+    char_u  *str;
+{
+    unsigned  id = None;
+
+    sscanf((char *)str, "0x%x", &id);
+    if (id == None)
+	EMSG2(_("Invalid server id used: %s"), str);
+
+    return (Window)id;
+}
+
+/*
+ * serverSendReply --
+ *	Send a reply string to id (win)
+ *	Return -1 if the window is invalid.
+ */
+    int
+serverSendReply(dpy, win, str)
+    Display *dpy;
+    Window win;
+    char_u *str;
+{
+    char_u	    *property;
+    int		    length;
+    int             res;
+
+    if (commProperty == None)
+    {
+	if (SendInit(dpy) < 0)
+	    return -2;
+    }
+    if (!WindowValid(dpy, win))
+	return -1;
+
+    length = STRLEN(str) + 7;
+    if ((property = (char_u *)alloc((unsigned) length + 30)) != NULL)
+    {
+	sprintf((char *)property, "%c%c%c-n %s%c-w %x",
+			  0, 'n', 0, str, 0, (unsigned int)commWindow);
+	length += STRLEN(property + length);
+	res = AppendPropCarefully(dpy, win, commProperty, property, length + 1);
+	vim_free(property);
+	return res;
+    }
+    return -1;
+}
+
+    static int
+WaitForReply(p)
+    void    *p;
+{
+    Window  *w = (Window *) p;
+    return ServerReplyFind(*w, SROP_Find) != NULL;
+}
+
+/*
+ * serverReadReply --
+ *	Wait for replies from id (win)
+ *	Return 0 and the malloc'ed string when a reply is available.
+ *	Return -1 if the window becomes invalid while waiting.
+ */
+    int
+serverReadReply(dpy, win, str, localLoop)
+    Display *dpy;
+    Window  win;
+    char_u  **str;
+    int	    localLoop;
+{
+    int	    len;
+    char_u  *s;
+    struct ServerReply *p;
+
+    ServerWait(dpy, win, WaitForReply, &win, localLoop, -1);
+
+    if ((p = ServerReplyFind(win, SROP_Find)) != NULL && p->strings.ga_len > 0)
+    {
+	*str = vim_strsave(p->strings.ga_data);
+	len = STRLEN(*str) + 1;
+	if (len < p->strings.ga_len)
+	{
+	    s = (char_u *) p->strings.ga_data;
+	    memmove(s, s + len, p->strings.ga_len - len);
+	    p->strings.ga_room += len;
+	    p->strings.ga_len -= len;
+	}
+	else
+	{
+	    /* Last string read.  Remove from list */
+	    ga_clear(&p->strings);
+	    ServerReplyFind(win, SROP_Delete);
+	}
+	return 0;
+    }
+    return -1;
+}
+
+/*
+ * serverPeekReply --
+ *	Check for replies from id (win)
+ *	Return TRUE and a non-malloc'ed string if there is.
+ *	Else rtyurn FALSE.
+ */
+    int
+serverPeekReply(dpy, win, str)
+    Display *dpy;
+    Window win;
+    char_u **str;
+{
+    struct ServerReply *p;
+
+    if ((p = ServerReplyFind(win, SROP_Find)) != NULL && p->strings.ga_len > 0)
+    {
+	if (str != NULL)
+	    *str = p->strings.ga_data;
+	return 1;
+    }
+    if (!WindowValid(dpy, win))
+	return -1;
+    return 0;
+}
+
 
 /*
  * SendInit --
@@ -577,7 +941,7 @@ LookupName(dpy, name, delete, loose)
     /*
      * If the property is improperly formed, then delete it.
      */
-    if ((result != Success) || (actualFormat != 8) || (actualType != XA_STRING))
+    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
     {
 	if (regProp != NULL)
 	    XFree(regProp);
@@ -593,9 +957,9 @@ LookupName(dpy, name, delete, loose)
     for (p = regProp; (p - regProp) < numItems; )
     {
 	entry = p;
-	while ((*p != 0) && (!isspace(*p)))
+	while (*p != 0 && !isspace(*p))
 	    p++;
-	if ((*p != 0) && (STRCMP(name, p + 1) == 0))
+	if (*p != 0 && STRCMP(name, p + 1) == 0)
 	{
 	    sscanf((char *)entry, "%x", (uint*) &returnValue);
 	    break;
@@ -610,10 +974,10 @@ LookupName(dpy, name, delete, loose)
 	for (p = regProp; (p - regProp) < numItems; )
 	{
 	    entry = p;
-	    while ((*p != 0) && (!isspace(*p)))
+	    while (*p != 0 && !isspace(*p))
 		p++;
-	    if ((*p != 0) && IsSerialName(p + 1)
-		    && (STRNCMP(name, p + 1, STRLEN(name)) == 0))
+	    if (*p != 0 && IsSerialName(p + 1)
+		    && STRNCMP(name, p + 1, STRLEN(name)) == 0)
 	    {
 		sscanf((char *)entry, "%x", (uint*) &returnValue);
 		*loose = vim_strsave(p + 1);
@@ -630,7 +994,7 @@ LookupName(dpy, name, delete, loose)
      * remainder of the registry property to overlay the deleted
      * info, then rewrite the property).
      */
-    if ((delete) && (returnValue != None))
+    if (delete && returnValue != None)
     {
 	int count;
 
@@ -683,7 +1047,7 @@ DeleteAnyLingerer(dpy, win)
 	return;
 
     /* If the property is improperly formed, then delete it.  */
-    if ((result != Success) || (actualFormat != 8) || (actualType != XA_STRING))
+    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
     {
 	if (regProp != NULL)
 	    XFree(regProp);
@@ -694,7 +1058,7 @@ DeleteAnyLingerer(dpy, win)
     /* Scan the property for the window id.  */
     for (p = regProp; (p - regProp) < numItems; )
     {
-	if ((*p != 0))
+	if (*p != 0)
 	{
 	    sscanf((char *)p, "%x", (uint *)&wwin);
 	    if (wwin == win)
@@ -752,8 +1116,8 @@ serverEventProc(dpy, eventPtr)
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
 
-    if ((eventPtr->xproperty.atom != commProperty)
-	    || (eventPtr->xproperty.state != PropertyNewValue))
+    if (eventPtr->xproperty.atom != commProperty
+	    || eventPtr->xproperty.state != PropertyNewValue)
 	return;
 
     /*
@@ -770,8 +1134,7 @@ serverEventProc(dpy, eventPtr)
      * If the property doesn't exist or is improperly formed
      * then ignore it.
      */
-    if ((result != Success) || (actualType != XA_STRING)
-	    || (actualFormat != 8))
+    if (result != Success || actualType != XA_STRING || actualFormat != 8)
     {
 	if (propInfo != NULL)
 	    XFree(propInfo);
@@ -815,17 +1178,20 @@ serverEventProc(dpy, eventPtr)
 	    resWindow = None;
 	    serial = (char_u *)"";
 	    script = NULL;
-	    while (((p - propInfo) < numItems) && (*p == '-'))
+	    while (p - propInfo < numItems && *p == '-')
 	    {
 		switch (p[1])
 		{
 		    case 'r':
 			resWindow = (Window)strtoul((char *)p + 2,
 							  (char **) &end, 16);
-			if ((end == p + 2) || (*end != ' '))
+			if (end == p + 2 || *end != ' ')
 			    resWindow = None;
 			else
+			{
 			    p = serial = end + 1;
+			    clientWindow = resWindow; /* Remember in global */
+			}
 			break;
 		    case 'n':
 			if (p[2] == ' ')
@@ -841,7 +1207,7 @@ serverEventProc(dpy, eventPtr)
 		p++;
 	    }
 
-	    if ((script == NULL) || (name == NULL))
+	    if (script == NULL || name == NULL)
 		continue;
 
 	    /*
@@ -873,6 +1239,111 @@ serverEventProc(dpy, eventPtr)
 					   reply.ga_data, reply.ga_len);
 	    }
 	    vim_free(res);
+	}
+	else if (*p == 'r' && p[1] == 0)
+	{
+	    int	    serial, gotSerial;
+	    char_u  *res;
+	    PendingCommand *pcPtr;
+
+	    /*
+	     *----------------------------------------------------------
+	     * This is a reply to some command that we sent out.  Iterate
+	     * over all of its options.  Stop when we reach the end of the
+	     * property or something that doesn't look like an option.
+	     *----------------------------------------------------------
+	     */
+
+	    p += 2;
+	    gotSerial = 0;
+	    res = (char_u *)"";
+	    while ((p-propInfo) < numItems && *p == '-')
+	    {
+		switch (p[1])
+		{
+		    case 'r':
+			if (p[2] == ' ')
+			    res = p + 3;
+			break;
+		    case 's':
+			if (sscanf((char *)p + 2, " %d", &serial) == 1)
+			    gotSerial = 1;
+			break;
+		}
+		while (*p != 0)
+		    p++;
+		p++;
+	    }
+
+	    if (!gotSerial)
+		continue;
+
+	    /*
+	     * Give the result information to anyone who's
+	     * waiting for it.
+	     */
+
+	    for (pcPtr = pendingCommands; pcPtr != NULL; pcPtr = pcPtr->nextPtr)
+	    {
+		if (serial != pcPtr->serial || pcPtr->result != NULL)
+		    continue;
+
+		if (res != NULL)
+		    pcPtr->result = vim_strsave(res);
+		else
+		    pcPtr->result = vim_strsave((char_u *)"");
+		break;
+	    }
+	}
+	else if (*p == 'n' && p[1] == 0)
+	{
+	    Window	win = 0;
+	    unsigned int u;
+	    int		gotWindow;
+	    char_u	*str;
+	    char_u	winstr[30];
+	    struct	ServerReply *r;
+	    /*
+	     * This is a (n)otification.  Sent with serverreply_send in VimL.
+	     * Execute any autocommand and save it for later retrieval
+	     */
+
+	    p += 2;
+	    gotWindow = 0;
+	    str = (char_u *)"";
+	    while ((p-propInfo) < numItems && *p == '-')
+	    {
+		switch (p[1])
+		{
+		    case 'n':
+			if (p[2] == ' ')
+			    str = p + 3;
+			break;
+		    case 'w':
+			if (sscanf((char *)p + 2, " %x", &u) == 1)
+			{
+			    win = u;
+			    gotWindow = 1;
+			}
+			break;
+		}
+		while (*p != 0)
+		    p++;
+		p++;
+	    }
+
+	    if (!gotWindow)
+		continue;
+	    if ((r = ServerReplyFind(win, SROP_Add)) != NULL)
+	    {
+		ga_concat(&(r->strings), str);
+		ga_append(&(r->strings), 0);
+	    }
+#ifdef FEAT_AUTOCMD
+	    sprintf((char *)winstr, "0x%x", (unsigned int)win);
+	    apply_autocmds(EVENT_SERVERREPLYRECV, winstr, str, TRUE, curbuf);
+#endif
+
 	}
 	else
 	{
@@ -970,147 +1441,146 @@ IsSerialName(str)
     return TRUE;
 }
 
-static int check_connection __ARGS((void));
 
-    static int
-check_connection()
-{
-    if (X_DISPLAY == NULL)
-    {
-	EMSG(_("E240: No connection to X server"));
-	return FAIL;
-    }
-    return OK;
-}
-
-/*
- * Implements ":serversend {server} {string}"
- */
-    void
-ex_serversend(eap)
-    exarg_T	*eap;
-{
-    char_u	*p;
-    char_u	*s;
-
-    if (check_connection() == FAIL)
-	return;
-    p = skiptowhite(eap->arg);
-    if ((s = vim_strnsave(eap->arg, p - eap->arg)) == NULL)
-	return;
-    p = skipwhite(p);
-
-    if (serverSendToVim(X_DISPLAY, s, p) < 0)
-	EMSG2(_("E241: Unable to send to %s"), s);
-    vim_free(s);
-}
-
-/*
- * Implements ":serverlist"
- */
-/*ARGSUSED*/
-    void
-ex_serverlist(eap)
-    exarg_T	*eap;
-{
-    char_u	*p, *cur, *next;
-
-    if (check_connection() == FAIL)
-	return;
-    p = serverGetVimNames(X_DISPLAY);
-    if (p == NULL)
-	MSG(_("No servers found for this display"));
-    else
-    {
-	next = cur = p;
-	while (*next)
-	{
-	    cur = next;
-	    if ((next = vim_strchr(cur, '\n')) == NULL)
-		next = cur + STRLEN(cur);
-	    if (next > cur)
-	    {
-		msg_putchar('\n');
-		if (serverName != NULL
-			&& STRNCMP(serverName, cur, next - cur) == 0
-			&& (next - cur) == STRLEN(serverName))
-		    msg_outtrans((char_u *)"> ");
-		else
-		    msg_outtrans((char_u *)"  ");
-		msg_outtrans_len(cur, next - cur);
-	    }
-	    if (*next == '\n')
-		next++;
-	    out_flush();
-	}
-	vim_free(p);
-    }
-}
-
-static char_u *build_drop_cmd __ARGS((int filec, char **filev));
+static char_u *build_drop_cmd __ARGS((int filec, char **filev, int sendReply));
 
     void
-cmdsrv_main(argc, argv, cmdTarget)
-    int		argc;
+cmdsrv_main(argc, argv, cmdTarget, serverStr)
+    int		*argc;
     char	**argv;
     char_u	*cmdTarget;
+    char_u	**serverStr;
 {
     char_u	*res, *s;
     int		i;
-    char_u	*serverStr;
+    int		ret;
     int		didone = FALSE;
+    char	**newArgV = argv + 1;
+    int		newArgC = 1,
+		Argc = *argc;
+    Window	srv;
 
     setup_term_clip();
+    s = cmdTarget != NULL ? cmdTarget : gettail((char_u *)argv[0]);
     if (xterm_dpy != NULL)
     {
-	for (i = 1; i < argc; i++)
+	/*
+	 * Execute the command server related arguments and remove them
+	 * from the argc/argv array; We may have to return into main()
+	 */
+	for (i = 1; i < Argc; i++)
 	{
+	    res = NULL;
 	    if (STRCMP(argv[i], "--") == 0)
+	    {
+		for (; i < *argc; i++)
+		{
+		    *newArgV++ = argv[i];
+		    newArgC++;
+		}
 		break;
+	    }
 	    else if (STRICMP(argv[i], "--remote") == 0
+		     || STRICMP(argv[i], "--remote-wait") == 0
 		     || STRICMP(argv[i], "--serversend") == 0)
 	    {
-		if (i == argc - 1)
+		if (i == *argc - 1)
 		    mainerr_arg_missing((char_u *)argv[i]);
 		if (argv[i][2] == 'r')
 		{
-		    serverStr = build_drop_cmd(argc - i - 1, argv + i + 1);
-		    argc = i;
+		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
+			                        argv[i][8] == '-');
+		    Argc = i;
 		}
 		else
 		{
-		    serverStr = (char_u *)argv[i + 1];
+		    *serverStr = (char_u *)argv[i + 1];
 		    i++;
 		}
-		s = cmdTarget != NULL ? cmdTarget : gettail((char_u *)argv[0]);
-		if (serverSendToVim(xterm_dpy, s, serverStr) < 0)
+		ret =
+		    serverSendToVim(xterm_dpy, s, *serverStr, NULL, &srv, 0, 0);
+		if (ret < 0)
 		{
-		    MSG_ATTR(_("Send failed. Trying to execute locally"),
-							      hl_attr(HLF_W));
-		    break;      /* Break out to let vim start normally.  */
+		    if (STRICMP(argv[i], "--remote-wait") == 0)
+		    {
+			fputs(_("\nSend failed. No command server present ?\n"),
+			      stderr);
+		    }
+		    else
+		    {
+			MSG_ATTR(_("Send failed. Trying to execute locally"),
+				  hl_attr(HLF_W));
+			break;      /* Break out to let vim start normally.  */
+		    }
+		}
+		if (ret >= 0 && STRICMP(argv[i], "--remote-wait") == 0)
+		{
+		    int	    numFiles = *argc - i - 1;
+		    int	    j;
+		    char_u  *done = alloc(numFiles);
+		    char_u  *p;
+
+		    /* Wait for all files to unload in remote */
+		    memset(done, 0, numFiles);
+		    while (memchr(done, 0, numFiles) != NULL)
+		    {
+			if (serverReadReply(xterm_dpy, srv, &p, TRUE) < 0)
+			    break;
+			j = atoi((char *)p);
+			if (j >= 0 && j < numFiles)
+			    done[j] = 1;
+		    }
+		}
+	    }
+	    else if (STRICMP(argv[i], "--serverexpr") == 0)
+	    {
+		if (i == *argc - 1)
+		    mainerr_arg_missing((char_u *)argv[i]);
+		if (serverSendToVim(xterm_dpy, s, (char_u *)argv[i + 1],
+							     &res, NULL, 1, 1)
+			< 0)
+		{
+		    fputs(_("Send expression failed.\n"), stderr);
 		}
 	    }
 	    else if (STRICMP(argv[i], "--serverlist") == 0)
 	    {
 		res = serverGetVimNames(xterm_dpy);
-		if (res != NULL && *res)
-		    mch_msg((char *)res);
-		vim_free(res);
+	    }
+	    else if (STRICMP(argv[i], "--servername") == 0)
+	    {
+		/* Alredy processed. Take it out of the command line */
+		i++;
+		continue;
 	    }
 	    else
+	    {
+		*newArgV++ = argv[i];
+		newArgC++;
 		continue;
+	    }
 	    didone = TRUE;
+	    if (res != NULL && *res)
+	    {
+		mch_msg((char *)res);
+		if (res[STRLEN(res) - 1] != '\n')
+		    mch_msg("\n");
+	    }
+	    vim_free(res);
 	}
 
 	if (didone)
 	    exit(0);     /* Mission accomplished - get out */
     }
+    /* Return back into main() */
+    *argc = newArgC;
 }
 
     static char_u *
-build_drop_cmd(filec, filev)
+build_drop_cmd(filec, filev, sendReply)
     int		filec;
     char	**filev;
+    int		sendReply;
 {
     garray_T	ga;
     int		i;
@@ -1145,6 +1615,8 @@ build_drop_cmd(filec, filev)
 	ga_concat(&ga, (char_u *)" ");
     }
     ga_concat(&ga, (char_u *)"<CR>:cd -");
+    if (sendReply)
+	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
     if (inicmd != NULL)
     {
 	ga_concat(&ga, (char_u *)"<CR>:");

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 15
+" Last Change:	2001 Jul 28
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -1119,7 +1119,7 @@ set buftype=nofile bufhidden=delete noswapfile
 
 augroup optwin
   au! BufUnload,BufHidden option-window nested
-  	\ call <SID>unload() | delfun <SID>unload
+	\ call <SID>unload() | delfun <SID>unload
 augroup END
 
 fun! <SID>unload()

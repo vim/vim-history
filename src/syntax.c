@@ -3972,6 +3972,9 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 		    {"display",	    7,	HL_DISPLAY},
 		    {"fold",	    4,	HL_FOLD},
 		};
+#define MLEN 12
+    char	lowname[MLEN];
+    int		llen;
 
     if (arg == NULL)		/* already detected error */
 	return NULL;
@@ -3979,10 +3982,20 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
     flags = *flagsp;
     for (;;)
     {
+	/* STRNICMP() is a bit slow, change arg to lowercase first and use
+	 * STRNCMP() */
+	for (llen = 0; llen < MLEN; ++llen)
+	{
+	    if (!isalpha(arg[llen]))
+		break;
+	    lowname[llen] = TO_LOWER(arg[llen]);
+	}
+
 	for (fidx = sizeof(flagtab) / sizeof(struct flag); --fidx >= 0; )
 	{
 	    len = flagtab[fidx].len;
-	    if (STRNICMP(arg, flagtab[fidx].name, len) == 0
+	    if (len == llen
+		    && STRNCMP(lowname, flagtab[fidx].name, len) == 0
 		    && (ends_excmd(arg[len]) || vim_iswhite(arg[len])))
 	    {
 		if (keyword
@@ -4050,7 +4063,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	if (fidx >= 0)
 	    continue;
 
-	if (STRNICMP(arg, "contains", 8) == 0
+	if (llen == 8 && STRNCMP(lowname, "contains", 8) == 0
 		&& (vim_iswhite(arg[8]) || arg[8] == '='))
 	{
 	    if (cont_list == NULL)
@@ -4061,7 +4074,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	    if (get_id_list(&arg, 8, cont_list) == FAIL)
 		return NULL;
 	}
-	else if (STRNICMP(arg, "containedin", 11) == 0
+	else if (llen == 11 && STRNCMP(lowname, "containedin", 11) == 0
 		&& (vim_iswhite(arg[11]) || arg[11] == '='))
 	{
 	    if (cont_in_list == NULL)
@@ -4072,7 +4085,7 @@ get_syn_options(arg, flagsp, keyword, sync_idx, cont_list,
 	    if (get_id_list(&arg, 11, cont_in_list) == FAIL)
 		return NULL;
 	}
-	else if (STRNICMP(arg, "nextgroup", 9) == 0
+	else if (llen == 9 && STRNCMP(lowname, "nextgroup", 9) == 0
 		&& (vim_iswhite(arg[9]) || arg[9] == '='))
 	{
 	    if (get_id_list(&arg, 9, next_list) == FAIL)
@@ -6787,7 +6800,7 @@ highlight_clear(idx)
 #endif
 }
 
-#ifdef FEAT_GUI
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Set the normal foreground and background colors according to the "Normal"
  * highlighighting group.  For X11 also set "Menu", "Scrollbar", and
@@ -7023,13 +7036,13 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	 * normal fontset.  Same for the Menu group. */
 	if (do_normal)
 	    gui_init_font(arg, TRUE);
-#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
+#   if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) && defined(FEAT_MENU)
 	if (do_menu)
 	{
 	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
 	    gui_mch_new_menu_font();
 	}
-# ifdef FEAT_BEVAL
+#    ifdef FEAT_BEVAL
 	if (do_tooltip)
 	{
 	    /* The Athena widget set cannot currently handle switching between
@@ -7038,16 +7051,16 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	     * creation, then a fontset is always used, othwise an
 	     * XFontStruct is used.
 	     */
-#  ifdef FEAT_GUI_MOTIF
+#     ifdef FEAT_GUI_MOTIF
 	    gui.balloonEval_fontList = gui_motif_fontset2fontlist(
 				    (XFontSet *)&HL_TABLE()[idx].sg_fontset);
-#  else
+#     else
 	    gui.balloonEval_fontList = (XFontSet)HL_TABLE()[idx].sg_fontset;
-#  endif
+#     endif
 	    gui_mch_new_tooltip_font();
 	}
-# endif
-#endif
+#    endif
+#   endif
     }
     else
 # endif
@@ -7074,7 +7087,7 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	    {
 #  ifdef FEAT_GUI_MOTIF
 		gui.balloonEval_fontList = gui_motif_create_fontlist(
-			(XFontStruct *)&HL_TABLE()[idx].sg_font);
+			(XFontStruct *)HL_TABLE()[idx].sg_font);
 #  endif
 		gui_mch_new_tooltip_font();
 	    }
@@ -7596,17 +7609,18 @@ syn_name2id(name)
     char_u	*name;
 {
     int		i;
-    char_u	*name_u;
+    char_u	name_u[200];
 
     /* Avoid using stricmp() too much, it's slow on some systems */
-    name_u = vim_strsave_up(name);
-    if (name_u == NULL)
-	return 0;
+    /* Avoid alloc()/free(), these are slow too.  ID names over 200 chars
+     * don't deserve to be found! */
+    STRNCPY(name_u, name, 199);
+    name_u[199] = NUL;
+    vim_strup(name_u);
     for (i = highlight_ga.ga_len; --i >= 0; )
 	if (HL_TABLE()[i].sg_name_u != NULL
 		&& STRCMP(name_u, HL_TABLE()[i].sg_name_u) == 0)
 	    break;
-    vim_free(name_u);
     return i + 1;
 }
 

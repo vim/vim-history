@@ -1484,9 +1484,9 @@ vim_used_in_input_buf()
 }
 #endif
 
-#if defined(FEAT_GUI) || defined(FEAT_SIGNS) || defined(FEAT_MOUSE_GPM) \
-	|| defined(PROTO) || defined(FEAT_XCLIPBOARD) || defined(VMS) \
-	|| defined(FEAT_SNIFF)
+#if defined(FEAT_GUI) || defined(FEAT_MOUSE_GPM) \
+	|| defined(FEAT_XCLIPBOARD) || defined(VMS) \
+	|| defined(FEAT_SNIFF) || defined(PROTO)
 /*
  * Add the given bytes to the input buffer
  * Special keys start with CSI.  A real CSI must have been translated to

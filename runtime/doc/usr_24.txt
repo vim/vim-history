@@ -1,12 +1,12 @@
-*usr_24.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 04
+*usr_24.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			     Inserting quickly
 
 
-When entering text, Vim offers various way to reduce the number of keystrokes
-and avoid typing mistakes.  Use Insert mode completion to repeat previosly
+When entering text, Vim offers various ways to reduce the number of keystrokes
+and avoid typing mistakes.  Use Insert mode completion to repeat previously
 typed words.  Abbreviate long words to short ones.  Type characters that
 aren't on your keyboard.
 
@@ -33,18 +33,18 @@ cursor.  The <Del> key does the same for the character under (after) the
 cursor).
    When you typed a whole word wrong, use CTRL-W:
 
-   	The horse had fallen to the sky ~
+	The horse had fallen to the sky ~
 				       CTRL-W
-   	The horse had fallen to the ~
+	The horse had fallen to the ~
 
 If you really messed up a line and want to start over, use CTRL-U to delete
 it.  This keeps the text after the cursor and the indent.  Only the text from
 the first non-blank to the cursor is deleted.  With the cursor on the "f" of
 "fallen" in the next line pressing CTRL-U does this:
 
-   	The horse had fallen to the ~
+	The horse had fallen to the ~
 		      CTRL-U
-   	fallen to the ~
+	fallen to the ~
 
 When you spot a mistake a few words back, you need to move the cursor there to
 correct it.  For example, you typed this:
@@ -65,7 +65,7 @@ would type this to correct it: >
 Another way to do this: >
 
 		<C-Left><C-Left><C-Left><C-Left><Right><Del>a<End>
-	
+
 <	four words back		     <C-Left><C-Left><C-Left><C-Left>
 	move on top of the "o"			<Right>
 	delete the "o"				       <Del>
@@ -120,11 +120,11 @@ The time is specified in tenths of a second.
 *24.3*	Completion
 
 Vim can automatically complete words on insertion.  You type the first part of
-a word, press CTRL-P , and Vim guesses the rest.
+a word, press CTRL-P, and Vim guesses the rest.
    Suppose, for example, that you are creating a C program and want to type in
 the following:
 
-	total = ch_array[0] + ch_array [1] + ch_array[2]; ~
+	total = ch_array[0] + ch_array[1] + ch_array[2]; ~
 
 You start by entering the following:
 
@@ -241,7 +241,7 @@ were in insert mode.
 
 	"file.h" ~
 	/* Main program begins */ ~
-	
+
 You edit this file by inserting "#include " at the beginning of the first
 line:
 
@@ -259,7 +259,7 @@ The result is as follows:
 	#include /* Main program begins */ ~
 
 The "#include " was inserted because CTRL-A inserts the text of the previous
-insert.  Now you type ""main.h"<Enter>" to finish the line:
+insert.  Now you type  "main.h"<Enter>  to finish the line:
 
 
 	#include "file.h" ~
@@ -431,10 +431,10 @@ You can remove it with this command: >
 
 While you type this, you will notice that @f is expanded to "fresh".  Don't
 worry about this, Vim understands it anyway (except when you have an
-abbreviations for "fresh", but that's very unlikely).
+abbreviation for "fresh", but that's very unlikely).
    To remove all the abbreviations: >
 
-   	:abclear
+	:abclear
 
 ":unabbreviate" and ":abclear" also come in the variants for Insert mode
 ("iunabbeviate and ":iabclear") and Command-line mode (":cunabbreviate" and
@@ -480,7 +480,7 @@ character (but not necessarily the <Del> key!).  To insert <Del> type: >
 
 	CTRL-V 127
 
-You can enter characters up to 255 this way.  When you type less then two
+You can enter characters up to 255 this way.  When you type less than two
 digits, a non-digit will terminate the command.  To avoid the need of typing a
 non-digit, prepend one or two zeros to make three digits.
    All the next commands insert a <Tab> and then a dot:
@@ -495,7 +495,7 @@ To enter a character in hexadecimal, use an "x" after the CTRL-V: >
 
 This also goes up to character 255 (CTRL-V xff).  You can use "o" to type a
 character as an octal number and two more methods allow you to type up to
-a 16 bit and a 32 bit number: >
+a 16 bit and a 32 bit number (e.g., for a Unicode character): >
 
 	CTRL-V o123
 	CTRL-V u1234
@@ -551,7 +551,7 @@ here: |45.5|
 *24.10*	Normal mode commands
 
 Insert mode offers a limited number of commands.  In Normal mode you have many
-more.  When you want to use one, you would leave Insert mode with <Esc>,
+more.  When you want to use one, you usually leave Insert mode with <Esc>,
 execute the Normal mode command, and re-enter Insert mode with "i" or "a".
    There is a quicker way.  With CTRL-O {command} you can execute any Normal
 mode command from Insert mode.  For example, to delete from the cursor to the

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jul 21
+" Last change:	2001 Jul 28
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -389,6 +389,9 @@ au BufNewFile,BufRead *.ec,*.EC			setf esqlc
 " Essbase script
 au BufNewFile,BufRead *.csc			setf csc
 
+" Eterm
+au BufNewFile,BufRead *Eterm/*.cfg		setf eterm
+
 " Expect
 au BufNewFile,BufRead *.exp			setf expect
 
@@ -630,6 +633,9 @@ au BufNewFile,BufRead .muttrc*,Muttrc		setf muttrc
 " Nastran input/DMAP
 "au BufNewFile,BufRead *.dat			setf nastran
 
+" Natural
+au BufNewFile,BufRead *.NS[CLMNPS]		setf natural
+
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			setf ncf
 
@@ -821,7 +827,7 @@ function! <SID>FTprogress_pascal()
   while lnum <= 10
     let line = getline(lnum)
     if line =~ '^\s*\(program\|procedure\|function\|const\|type\|var\)\>'
-    	\ || line =~ '^\s*{'
+	\ || line =~ '^\s*{'
       setf pascal
       return
     elseif line !~ '^\s*$' || line =~ '^/\*'
@@ -1083,7 +1089,7 @@ au BufNewFile,BufRead *.v			setf verilog
 au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  setf vhdl
 
 " Vim script
-au BufNewFile,BufRead *.vim,.exrc,_exrc 	setf vim
+au BufNewFile,BufRead *.vim,.exrc,_exrc		setf vim
 
 " Viminfo file
 au BufNewFile,BufRead .viminfo,_viminfo		setf viminfo

@@ -2,7 +2,7 @@
 " Language:     DNS/BIND Zone File
 " Maintainer:   jehsom@jehsom.com
 " URL:          http://scripts.jehsom.com
-" Last Change:  2001 May 17
+" Last Change:  2001 Jul 28
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

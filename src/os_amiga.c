@@ -1142,7 +1142,7 @@ mch_call_shell(cmd, options)
 
     if (options & SHELL_COOKED)
 	settmode(TMODE_COOK);	    /* set to normal mode */
-    mydir = Lock((UBYTE *)"", (long)ACCESS_READ);   /* remember current directory */
+    mydir = Lock((UBYTE *)"", (long)ACCESS_READ);   /* remember current dir */
 
 #if !defined(AZTEC_C)		    /* not tested very much */
     if (cmd == NULL)

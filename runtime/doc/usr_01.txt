@@ -1,7 +1,7 @@
-*usr_01.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 03
+*usr_01.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			      About the manuals
 
 
@@ -42,7 +42,7 @@ the commands and options used for it.  Use these two commands:
 
 Many links are in vertical bars, like this: |bars|.  An option name, like
 'number', a command in double quotes like ":write" and any other word can also
-be used as a link.  Try it out: Move the cursor to  CTRL-]  and Press CTRL-]
+be used as a link.  Try it out: Move the cursor to  CTRL-]  and press CTRL-]
 on it.
 
 Other subjects can be found with the ":help" command, see |help.txt|.
@@ -122,8 +122,12 @@ On non-Unix systems, you have to do a little work:
 >
 	vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor' -c 'w! TUTORCOPY' -c 'q'
 <
-   This will write the file "TUTORCOPY" in the current directory.
-
+   This will write the file "TUTORCOPY" in the current directory.  To use a
+translated version of the tutor, append the two-letter language code to the
+filename.  For French:
+>
+	vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor.fr' -c 'w! TUTORCOPY' -c 'q'
+<
 2. Edit the copied file with Vim:
 >
 	vim -u NONE -c "set nocp" TUTORCOPY
@@ -146,7 +150,7 @@ latest version is presently available at:
 People who contribute to the manuals must agree with the above copyright
 notice.
 							*frombook*
-Parts of the user manual come from the Book "Vi IMproved - Vim" by Steve
+Parts of the user manual come from the book "Vi IMproved - Vim" by Steve
 Oualline (published by New Riders Publishing, ISBN: 0735710015).  The Open
 Publication License applies to this book.  Only selected parts are included
 and these have been modified (e.g., by removing the pictures, updating the
@@ -165,4 +169,4 @@ donate part of the profit to help AIDS victims in Uganda.  See |iccf|.
 
 Next chapter: |usr_02.txt|  The first steps in Vim
 
- vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:

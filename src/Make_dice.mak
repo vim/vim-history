@@ -127,9 +127,9 @@ o/buffer.o:	buffer.c  $(SYMS)
 
 o/charset.o:	charset.c  $(SYMS)
 
-o/diff.o: 	diff.c	$(SYMS)
+o/diff.o:	diff.c	$(SYMS)
 
-o/digraph.o: 	digraph.c  $(SYMS)
+o/digraph.o:	digraph.c  $(SYMS)
 
 o/edit.o:	edit.c	$(SYMS)
 

@@ -69,6 +69,12 @@ TODO:
 #include "vim.h"
 #undef EXTERN			/* tcl.h defines it too */
 
+#ifdef DYNAMIC_TCL
+# define USE_TCL_STUBS /* use tcl's stubs mechanism */
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+#endif
+
 #include <tcl.h>
 #include <errno.h>
 #include <string.h>
@@ -133,6 +139,126 @@ static void tclerrmsg _ANSI_ARGS_((char *text));
 static void tclupdatevars _ANSI_ARGS_((void));
 
 static struct ref refsdeleted;	/* dummy object for deleted ref list */
+
+/*****************************************************************************
+ * TCL interface manager
+ ****************************************************************************/
+
+#if defined(DYNAMIC_TCL) || defined(PROTO)
+# ifndef DYNAMIC_TCL_DLL
+#  define DYNAMIC_TCL_DLL "tcl83.dll"
+# endif
+# ifndef DYNAMIC_TCL_VER
+#  define DYNAMIC_TCL_VER "8.3"
+# endif
+
+# ifndef  DYNAMIC_TCL /* Just generating prototypes */
+#  define HANDLE int
+# endif
+
+/*
+ * Declare HANDLE for perl.dll and function pointers.
+ */
+static HANDLE hTclLib = NULL;
+Tcl_Interp* (*dll_Tcl_CreateInterp)();
+
+/*
+ * Table of name to function pointer of tcl.
+ */
+#define TCL_PROC FARPROC
+static struct {
+    char* name;
+    TCL_PROC* ptr;
+} tcl_funcname_table[] = {
+    {"Tcl_CreateInterp", (TCL_PROC*)&dll_Tcl_CreateInterp},
+    {NULL, NULL},
+};
+
+/*
+ * Make all runtime-links of tcl.
+ *
+ * 1. Get module handle using LoadLibraryEx.
+ * 2. Get pointer to perl function by GetProcAddress.
+ * 3. Repeat 2, until get all functions will be used.
+ *
+ * Parameter 'libname' provides name of DLL.
+ * Succeeded in load, return 1.  Failed, return zero.
+ */
+    static int
+tcl_runtime_link_init(char *libname)
+{
+    int i;
+
+    if (hTclLib)
+	return 1;
+    if (!(hTclLib = LoadLibraryEx(libname, NULL, 0)))
+	return 0;
+    for (i = 0; tcl_funcname_table[i].ptr; ++i)
+    {
+	if (!(*tcl_funcname_table[i].ptr = GetProcAddress(hTclLib,
+			tcl_funcname_table[i].name)))
+	{
+	    FreeLibrary(hTclLib);
+	    hTclLib = NULL;
+	    return 0;
+	}
+    }
+    return 1;
+}
+#endif /* defined(DYNAMIC_TCL) || defined(PROTO) */
+
+#ifdef DYNAMIC_TCL
+static char *find_executable_arg = NULL;
+#endif
+
+    void
+tcl_init(arg)
+    char	*arg;
+{
+#ifndef DYNAMIC_TCL
+    Tcl_FindExecutable(arg);
+#else
+    find_executable_arg = arg;
+#endif
+}
+
+#if defined(DYNAMIC_TCL) || defined(PROTO)
+    int
+tcl_enabled()
+{
+    static int stubs_initialized = 0;
+
+    if (!stubs_initialized && find_executable_arg
+	    && tcl_runtime_link_init(DYNAMIC_TCL_DLL))
+    {
+	Tcl_Interp *interp;
+
+	if (interp = dll_Tcl_CreateInterp())
+	{
+	    if (Tcl_InitStubs(interp, DYNAMIC_TCL_VER, 0))
+	    {
+		Tcl_FindExecutable(find_executable_arg);
+		Tcl_DeleteInterp(interp);
+		stubs_initialized = 1;
+	    }
+	    /* FIXME: When Tcl_InitStubs() was failed, how delete interp? */
+	}
+    }
+    return stubs_initialized;
+}
+#endif
+
+    void
+tcl_end()
+{
+#ifdef DYNAMIC_TCL
+    if (hTclLib)
+    {
+	FreeLibrary(hTclLib);
+	hTclLib = NULL;
+    }
+#endif
+}
 
 /****************************************************************************
   Tcl commands
@@ -1583,6 +1709,14 @@ tclinit(eap)
     char varname[VARNAME_SIZE];	/* Tcl_LinkVar requires writeable varname */
     char *name;
 
+#ifdef DYNAMIC_TCL
+    if (!tcl_enabled())
+    {
+	EMSG(_("Sorry, this command is disabled: the Tcl library could not be loaded."));
+	return FAIL;
+    }
+#endif
+
     if (!tclinfo.interp)
     {
 	Tcl_Interp *interp;
@@ -1935,6 +2069,11 @@ tcl_buffer_free(buf)
 {
     struct ref *reflist;
 
+#ifdef DYNAMIC_TCL
+    if (!tcl_enabled())
+	return;
+#endif
+
     reflist = (struct ref*)(buf->tcl_ref);
     if (reflist != &refsdeleted)
     {
@@ -1950,6 +2089,11 @@ tcl_window_free(win)
     win_T *win;
 {
     struct ref *reflist;
+
+#ifdef DYNAMIC_TCL
+    if (!tcl_enabled())
+	return;
+#endif
 
     reflist = (struct ref*)(win->tcl_ref);
     if (reflist != &refsdeleted)

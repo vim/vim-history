@@ -1678,6 +1678,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     int		back;	    /* backup this many chars when using bold trick */
 {
     long_u	highlight_mask;
+    long_u	hl_mask_todo;
     guicolor_T	fg_color;
     guicolor_T	bg_color;
 #ifndef MSWIN16_FASTTEXT
@@ -1721,6 +1722,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     }
     else
 	highlight_mask = gui.highlight_mask;
+    hl_mask_todo = highlight_mask;
 
 #ifndef MSWIN16_FASTTEXT
     /* Set the font */
@@ -1737,16 +1739,26 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	    fontset = gui.fontset;
 	else
 # endif
-	    if ((highlight_mask & (HL_BOLD | HL_STANDOUT))
-						   && gui.bold_font != NOFONT)
+	    if (hl_mask_todo & (HL_BOLD | HL_STANDOUT))
 	{
-	    if ((highlight_mask & HL_ITALIC) && gui.boldital_font != NOFONT)
+	    if ((hl_mask_todo & HL_ITALIC) && gui.boldital_font != NOFONT)
+	    {
 		font = gui.boldital_font;
-	    else
+		hl_mask_todo &= ~(HL_BOLD | HL_STANDOUT | HL_ITALIC);
+	    }
+	    else if (gui.bold_font != NOFONT)
+	    {
 		font = gui.bold_font;
+		hl_mask_todo &= ~(HL_BOLD | HL_STANDOUT);
+	    }
+	    else
+		font = gui.norm_font;
 	}
-	else if ((highlight_mask & HL_ITALIC) && gui.ital_font != NOFONT)
+	else if ((hl_mask_todo & HL_ITALIC) && gui.ital_font != NOFONT)
+	{
 	    font = gui.ital_font;
+	    hl_mask_todo &= ~HL_ITALIC;
+	}
 	else
 	    font = gui.norm_font;
     }
@@ -1810,8 +1822,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
 #ifndef MSWIN16_FASTTEXT
     /* If there's no bold font, then fake it */
-    if ((highlight_mask & (HL_BOLD | HL_STANDOUT))
-	    && (gui.bold_font == NOFONT || font != gui.bold_font))
+    if (hl_mask_todo & (HL_BOLD | HL_STANDOUT))
 	draw_flags |= DRAW_BOLD;
 #endif
 
@@ -1829,26 +1840,24 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
 #ifdef RISCOS
     /* If there's no italic font, then fake it */
-    if ((highlight_mask & HL_ITALIC)
-	    && (gui.ital_font == NOFONT || font != gui.ital_font))
+    if (hl_mask_todo & HL_ITALIC)
 	draw_flags |= DRAW_ITALIC;
 
     /* Do we underline the text? */
-    if (highlight_mask & HL_UNDERLINE)
+    if (hl_mask_todo & HL_UNDERLINE)
 	draw_flags |= DRAW_UNDERL;
 #else
     /* Do we underline the text? */
-    if ((highlight_mask & HL_UNDERLINE)
+    if ((hl_mask_todo & HL_UNDERLINE)
 # ifndef MSWIN16_FASTTEXT
-	    || ((highlight_mask & HL_ITALIC)
-		&& (gui.ital_font == NOFONT || font != gui.ital_font))
+	    || (hl_mask_todo & HL_ITALIC)
 # endif
-	)
+       )
 	draw_flags |= DRAW_UNDERL;
 #endif
 
     /* Do we draw transparantly? */
-    if ((flags & GUI_MON_TRS_CURSOR))
+    if (flags & GUI_MON_TRS_CURSOR)
 	draw_flags |= DRAW_TRANSP;
 
     /*
@@ -2443,8 +2452,10 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	case VISUAL:		checkfor = MOUSE_VISUAL;	break;
 	case REPLACE:
 	case REPLACE+LANGMAP:
+#ifdef FEAT_VREPLACE
 	case VREPLACE:
 	case VREPLACE+LANGMAP:
+#endif
 	case INSERT:
 	case INSERT+LANGMAP:	checkfor = MOUSE_INSERT;	break;
 	case HITRETURN:		checkfor = MOUSE_RETURN;	break;
@@ -2573,7 +2584,8 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	{
 	    if (!mouse_has(checkfor) || button == MOUSE_RELEASE)
 		return;
-	    button = MOUSE_LEFT;
+	    if (checkfor != MOUSE_COMMAND)
+		button = MOUSE_LEFT;
 	}
 	repeated_click = FALSE;
     }
@@ -3763,7 +3775,7 @@ xy2win(x, y)
 # ifdef FEAT_MOUSESHAPE
     if (State == HITRETURN || State == ASKMORE)
 	update_mouseshape(SHAPE_IDX_MORE);
-    else if (wp == NULL)
+    else if (row > wp->w_height)	/* below status line */
 	update_mouseshape(SHAPE_IDX_CLINE);
 #  ifdef FEAT_VERTSPLIT
     else if (!(State & CMDLINE) && W_VSEP_WIDTH(wp) > 0 && col == wp->w_width

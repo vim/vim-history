@@ -1,7 +1,7 @@
-*usr_11.txt*	For Vim version 6.0ao.  Last change: 2001 Jun 03
+*usr_11.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
-		
+
 			   Recovering from a crash
 
 
@@ -103,7 +103,7 @@ which one you want to use.
 the resulting files if they are what you expected.
 
 
-USING A SPECIFIC SWAP FILE 
+USING A SPECIFIC SWAP FILE
 
 If you know which swap file needs to be used, you can recover by giving the
 swap file name.  Vim will then finds out the name of the original file from
@@ -163,7 +163,7 @@ something wrong.  It may be one of these two situations.
    line with "process ID".  It might look like this:
 
 		process ID: 12559 (still running) ~
-   
+
    The text "(still running)" indicates that the process editing this file
    runs on the same computer.  When working on a non-Unix system you will not
    get this extra hint.  When editing a file over a network, you may not see
@@ -187,7 +187,6 @@ something wrong.  It may be one of these two situations.
    line:
 
       NEWER than swap file! ~
-
 
 
 WHAT TO DO?

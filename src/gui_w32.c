@@ -1020,24 +1020,25 @@ gui_mch_init(void)
 
     s_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
-    if (GetClassInfo(s_hinst, szVimWndClass, &wndclass) == 0) {
-    wndclass.style = 0;
-    wndclass.lpfnWndProc = _WndProc;
-    wndclass.cbClsExtra = 0;
-    wndclass.cbWndExtra = 0;
-    wndclass.hInstance = s_hinst;
-    wndclass.hIcon = LoadIcon(wndclass.hInstance, "IDR_VIM");
-    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wndclass.hbrBackground = s_brush;
-    wndclass.lpszMenuName = NULL;
-    wndclass.lpszClassName = szVimWndClass;
+    if (GetClassInfo(s_hinst, szVimWndClass, &wndclass) == 0)
+    {
+	wndclass.style = 0;
+	wndclass.lpfnWndProc = _WndProc;
+	wndclass.cbClsExtra = 0;
+	wndclass.cbWndExtra = 0;
+	wndclass.hInstance = s_hinst;
+	wndclass.hIcon = LoadIcon(wndclass.hInstance, "IDR_VIM");
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndclass.hbrBackground = s_brush;
+	wndclass.lpszMenuName = NULL;
+	wndclass.lpszClassName = szVimWndClass;
 
-    if ((
+	if ((
 #ifdef GLOBAL_IME
-	atom =
+		    atom =
 #endif
-		RegisterClass(&wndclass)) == 0)
-	return FAIL;
+		    RegisterClass(&wndclass)) == 0)
+	    return FAIL;
     }
 
     s_hwnd = CreateWindow(
@@ -1734,10 +1735,13 @@ gui_mch_draw_string(
      * pixels.	We still need this code because otherwise the top row of pixels
      * becomes a problem. - webb.
      */
-    HBRUSH	hbr;
-    RECT	rc;
+    static HBRUSH	hbr_cache[2] = {NULL, NULL};
+    static guicolor_T	brush_color[2] = {-1, -1};
+    static int		brush_lru = 0;
+    HBRUSH		hbr;
+    RECT		rc;
 #ifdef FEAT_MBYTE_IME
-    char	*szComp;
+    char		*szComp;
 #endif
 
     if (!(flags & DRAW_TRANSP))
@@ -1762,9 +1766,29 @@ gui_mch_draw_string(
 #endif
 	    rc.right = FILL_X(col + len);
 	rc.bottom = FILL_Y(row + 1);
-	hbr = CreateSolidBrush(gui.currBgColor);
+
+	/* Cache the created brush, that saves a lot of time.  We need two:
+	 * one for cursor background and one for the normal background. */
+	if (gui.currBgColor == brush_color[0])
+	{
+	    hbr = hbr_cache[0];
+	    brush_lru = 1;
+	}
+	else if (gui.currBgColor == brush_color[1])
+	{
+	    hbr = hbr_cache[1];
+	    brush_lru = 0;
+	}
+	else
+	{
+	    if (hbr_cache[brush_lru] != NULL)
+		DeleteBrush(hbr_cache[brush_lru]);
+	    hbr_cache[brush_lru] = CreateSolidBrush(gui.currBgColor);
+	    brush_color[brush_lru] = gui.currBgColor;
+	    hbr = hbr_cache[brush_lru];
+	    brush_lru = !brush_lru;
+	}
 	FillRect(s_hdc, &rc, hbr);
-	DeleteBrush(hbr);
 
 	SetBkMode(s_hdc, TRANSPARENT);
 
@@ -2616,25 +2640,23 @@ gui_mch_dialog(
 	    *pend = '\0';
 
 	/*
-	 * NOTE:
+	 * old NOTE:
 	 * setting the BS_DEFPUSHBUTTON style doesn't work because Windows sets
 	 * the focus to the first tab-able button and in so doing makes that
 	 * the default!! Grrr.  Workaround: Make the default button the only
 	 * one with WS_TABSTOP style. Means user can't tab between buttons, but
 	 * he/she can use arrow keys.
 	 *
-	 * NOTE (Thore): Setting BS_DEFPUSHBUTTON works fine when it's the
-	 * first one, so I changed the correct button to be this style. This
-	 * is necessary because when an edit box is added, we need a button to
-	 * be default.  The edit box will be the default control, and when the
-	 * user presses enter from the edit box we want the default button to
-	 * be pressed.
+	 * new NOTE: BS_DEFPUSHBUTTON is required to be able to select the
+	 * right buttun when hitting <Enter>.  E.g., for the ":confirm quit"
+	 * dialog.  Also needed for when the textfield is the default control.
+	 * It appears to work now (perhaps not on Win95?).
 	 */
 	if (vertical)
 	{
 	    p = add_dialog_element(p,
-		    ((i == dfltbutton || dfltbutton < 0) && textfield != NULL
-			    ?  BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
+		    ((i == dfltbutton || dfltbutton < 0)
+			    ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(DLG_VERT_PADDING_X),
 		    PixelToDialogY(buttonYpos /* TBK */
 				   + 2 * fontHeight * i),
@@ -2645,8 +2667,8 @@ gui_mch_dialog(
 	else
 	{
 	    p = add_dialog_element(p,
-		    ((i == dfltbutton || dfltbutton < 0) && textfield != NULL
-			    ?  BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
+		    ((i == dfltbutton || dfltbutton < 0)
+			    ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(horizWidth + buttonPositions[i]),
 		    PixelToDialogY(buttonYpos), /* TBK */
 		    PixelToDialogX(buttonWidths[i]),

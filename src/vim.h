@@ -11,7 +11,11 @@
 
 /* use fastcall for Borland, when compiling for Win32 (not for DOS16) */
 #if defined(__BORLANDC__) && defined(WIN32) && !defined(DEBUG)
-# pragma option -pr
+# if defined(FEAT_PERL) || defined(FEAT_PYTHON) || defined(FEAT_RUBY) || defined(FEAT_TCL)
+#  pragma option -pc
+# else
+#  pragma option -pr
+# endif
 #endif
 
 /* ============ the header file puzzle (ca. 50-100 pieces) ========= */
@@ -474,9 +478,11 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 				   INSERT and CMDLINE */
 
 #define REPLACE_FLAG	0x40	/* Replace mode flag */
-#define VREPLACE_FLAG	0x80	/* Virtual-replace mode flag */
 #define REPLACE		(REPLACE_FLAG + INSERT)
-#define VREPLACE	(REPLACE_FLAG + VREPLACE_FLAG + INSERT)
+#ifdef FEAT_VREPLACE
+# define VREPLACE_FLAG	0x80	/* Virtual-replace mode flag */
+# define VREPLACE	(REPLACE_FLAG + VREPLACE_FLAG + INSERT)
+#endif
 #define LREPLACE	(REPLACE_FLAG + LANGMAP)
 
 #define NORMAL_BUSY	(0x100 + NORMAL) /* Normal mode, busy with a command */
@@ -961,6 +967,7 @@ enum auto_event
     EVENT_ENCODINGCHANGED,	/* after changing the 'encoding' option */
     EVENT_CURSORHOLD,		/* cursor in same position for a while */
     EVENT_FUNCUNDEFINED,	/* if calling a function which doesn't exist */
+    EVENT_SERVERREPLYRECV,	/* upon string reception from a remote vim */
     NUM_EVENTS			/* MUST be the last one */
 };
 

@@ -33,7 +33,5 @@ char_u *eval_vars __ARGS((char_u *src, int *usedlen, linenr_T *lnump, char_u **e
 char_u *expand_sfile __ARGS((char_u *arg));
 int put_eol __ARGS((FILE *fd));
 int put_line __ARGS((FILE *fd, char *s));
-int cmd_runtime __ARGS((char_u *name, int all));
-int do_in_runtimepath __ARGS((char_u *name, int all, void (*callback)(char_u *fname)));
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
 /* vim: set ft=c : */

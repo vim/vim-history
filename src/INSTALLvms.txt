@@ -1,5 +1,5 @@
 INSTALLvms.txt - Installation of Vim on OpenVMS
-Last change: 2001 Jun 4 
+Last change: 2001 Jul 28
 
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
@@ -160,7 +160,7 @@ Contents:
 
      to get vim.exe to find its document, filetype, and syntax files.
 
-     Now, if you are lucky you should have one own built, customised and
+     Now, if you are lucky you should have one own built, customized and
      working Vim.
 
 7.   Notes
@@ -175,9 +175,9 @@ Contents:
      done with '<=' to 0. However, the code is correct and will behave as
      expected.
      ( Jerome Lauret <JLAURET@mail.chem.sunysb.edu> Vim 6.0n )
-	NOTE: from version 6.0ad Vim code has been reviewed and these warnings have 
-      been corrected.
+	NOTE: from version 6.0ad Vim code has been reviewed and these warnings
+	have been corrected.
 
 8.   Authors
 
-     Initial version, 2000 Jul 19, Zoltan Arpadffy <arpadffy@altavista.net>   
+     Initial version, 2000 Jul 19, Zoltan Arpadffy <arpadffy@altavista.net>

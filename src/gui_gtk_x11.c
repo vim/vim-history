@@ -305,6 +305,15 @@ static char *gtk_cmdline_options[] =
 static int gui_argc = 0;
 static char **gui_argv = NULL;
 
+#ifdef FEAT_GUI_GNOME
+/*
+ * Can't use Gnome if --socketid given
+ */
+static int using_gnome = 0;
+#else
+# define using_gnome 0
+#endif
+
 /*
  * Parse the GUI related command-line arguments.  Any arguments used are
  * deleted from argv, and *argc is decremented accordingly.  This is called
@@ -1038,11 +1047,18 @@ gui_mch_init_check(void)
     gtk_set_locale();
 
 #ifdef FEAT_GUI_GNOME
-    if (gnome_init("vim", VIM_VERSION_SHORT, gui_argc, gui_argv))
-#else
-    /* Don't use gtk_init(), it exits on failure. */
-    if (!gtk_init_check(&gui_argc, &gui_argv))
+    if (gtk_socket_id == 0)
+        using_gnome = 1;
 #endif
+
+    if ((
+#ifdef FEAT_GUI_GNOME
+	    using_gnome
+		&& gnome_init("vim", VIM_VERSION_SHORT, gui_argc, gui_argv))
+	    || (!using_gnome &&
+#endif
+		!gtk_init_check(&gui_argc, &gui_argv)))
+        /* Don't use gtk_init(), it exits on failure. */
     {
 	gui.dying = TRUE;
 	EMSG(_("E233: cannot open display"));
@@ -1745,11 +1761,20 @@ gui_mch_init()
     gui.norm_pixel = gui.def_norm_pixel;
     gui.back_pixel = gui.def_back_pixel;
 
+    if (gtk_socket_id != 0)
+    {
+        /* Use GtkSocket from another app. */
+        gui.mainwin = gtk_plug_new(gtk_socket_id);
+    }
+    else
+    {
 #ifdef FEAT_GUI_GNOME
-    gui.mainwin = gnome_app_new("vim", "vim");
-#else
-    gui.mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        if (using_gnome)
+            gui.mainwin = gnome_app_new("vim", "vim");
+        else
 #endif
+            gui.mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    }
     gtk_window_set_policy(GTK_WINDOW(gui.mainwin), TRUE, TRUE, TRUE);
     gtk_container_border_width(GTK_CONTAINER(gui.mainwin), 0);
     gtk_widget_set_events(gui.mainwin, GDK_VISIBILITY_NOTIFY_MASK);
@@ -1767,32 +1792,38 @@ gui_mch_init()
 
     vbox = gtk_vbox_new(FALSE, 0);
 #ifdef FEAT_GUI_GNOME
-    gnome_app_set_contents(GNOME_APP(gui.mainwin), vbox);
-#else
-    gtk_container_add(GTK_CONTAINER(gui.mainwin), vbox);
-    gtk_widget_show(vbox);
+    if (using_gnome)
+        gnome_app_set_contents(GNOME_APP(gui.mainwin), vbox);
+    else
 #endif
+    {
+        gtk_container_add(GTK_CONTAINER(gui.mainwin), vbox);
+        gtk_widget_show(vbox);
+    }
 
 #ifdef FEAT_MENU
     /* create the menubar and handle */
     gui.menubar = gtk_menu_bar_new();
     gtk_widget_show(gui.menubar);
 # ifdef FEAT_GUI_GNOME
-    gui.menubar_h = gnome_dock_item_new("VimMainMenu",
-					GNOME_DOCK_ITEM_BEH_EXCLUSIVE |
-					GNOME_DOCK_ITEM_BEH_NEVER_VERTICAL);
-    gtk_widget_show(gui.menubar_h);
-    gtk_container_add(GTK_CONTAINER(gui.menubar_h), gui.menubar);
-    gnome_dock_add_item(GNOME_DOCK(GNOME_APP(gui.mainwin)->dock),
-			GNOME_DOCK_ITEM(gui.menubar_h),
-			GNOME_DOCK_TOP, /* placement */
-			1,  /* band_num */
-			0,  /* band_position */
-			0,  /* offset */
-			TRUE);
-# else
-    gtk_box_pack_start(GTK_BOX(vbox), gui.menubar, FALSE, TRUE, 0);
+    if (using_gnome)
+    {
+        gui.menubar_h = gnome_dock_item_new("VimMainMenu",
+                                            GNOME_DOCK_ITEM_BEH_EXCLUSIVE |
+                                            GNOME_DOCK_ITEM_BEH_NEVER_VERTICAL);
+        gtk_widget_show(gui.menubar_h);
+        gtk_container_add(GTK_CONTAINER(gui.menubar_h), gui.menubar);
+        gnome_dock_add_item(GNOME_DOCK(GNOME_APP(gui.mainwin)->dock),
+                            GNOME_DOCK_ITEM(gui.menubar_h),
+                            GNOME_DOCK_TOP, /* placement */
+                            1,  /* band_num */
+                            0,  /* band_position */
+                            0,  /* offset */
+                            TRUE);
+    }
+    else
 # endif	/* FEAT_GUI_GNOME */
+        gtk_box_pack_start(GTK_BOX(vbox), gui.menubar, FALSE, TRUE, 0);
 #endif	/* FEAT_MENU */
 
 #ifdef FEAT_TOOLBAR
@@ -1813,7 +1844,7 @@ gui_mch_init()
     gtk_toolbar_set_button_relief(GTK_TOOLBAR(gui.toolbar), GTK_RELIEF_NONE);
 
 # ifdef FEAT_GUI_GNOME
-    if (gui.toolbar)
+    if (using_gnome && gui.toolbar)
     {
 	GtkWidget *dockitem;
 	dockitem = gnome_dock_item_new("VimToolBar",
@@ -1830,14 +1861,12 @@ gui_mch_init()
 			    TRUE);
 	gtk_container_border_width(GTK_CONTAINER(gui.toolbar), 2);
     }
-    else
-    {
+    else if (!using_gnome)
 # endif	/* FEAT_GUI_GNOME */
+    {
 	gtk_container_border_width(GTK_CONTAINER(gui.toolbar), 1);
 	gtk_box_pack_start(GTK_BOX(vbox), gui.toolbar, FALSE, TRUE, 0);
-# ifdef FEAT_GUI_GNOME
     }
-# endif
 #endif	/* USE_TOOLBARS */
 
     gui.formwin = gtk_form_new();
@@ -2250,11 +2279,6 @@ gui_mch_enable_menu(int flag)
 
 #if defined(FEAT_TOOLBAR) || defined(PROTO)
 
-# ifdef FEAT_GUI_GNOME
-#  define TOOLBAR toolbar_h
-# else
-#  define TOOLBAR toolbar
-# endif
     void
 gui_mch_show_toolbar(int showit)
 {
@@ -2263,9 +2287,17 @@ gui_mch_show_toolbar(int showit)
 
     if (!showit)
     {
-	if (GTK_WIDGET_VISIBLE(gui.TOOLBAR))
+# ifdef FEAT_GUI_GNOME
+	if (using_gnome && GTK_WIDGET_VISIBLE(gui.toolbar_h))
 	{
-	    gtk_widget_hide(gui.TOOLBAR);
+	    gtk_widget_hide(gui.toolbar_h);
+	    /* wait util this gets done on the server side. */
+	    update_window_manager_hints();
+	}
+# endif
+	if (!using_gnome && GTK_WIDGET_VISIBLE(gui.toolbar))
+	{
+	    gtk_widget_hide(gui.toolbar);
 	    /* wait util this gets done on the server side. */
 	    update_window_manager_hints();
 	}
@@ -2280,9 +2312,17 @@ gui_mch_show_toolbar(int showit)
 	else if (strstr((const char *)p_toolbar, "icons"))
 	    gtk_toolbar_set_style(GTK_TOOLBAR(gui.toolbar), GTK_TOOLBAR_ICONS);
 
-	if (!GTK_WIDGET_VISIBLE(gui.TOOLBAR))
+# ifdef FEAT_GUI_GNOME
+	if (using_gnome && !GTK_WIDGET_VISIBLE(gui.toolbar_h))
 	{
-	    gtk_widget_show(gui.TOOLBAR);
+	    gtk_widget_show(gui.toolbar_h);
+	    update_window_manager_hints();
+	}
+        else
+# endif
+	if (!using_gnome && !GTK_WIDGET_VISIBLE(gui.toolbar))
+	{
+	    gtk_widget_show(gui.toolbar);
 	    update_window_manager_hints();
 	}
 

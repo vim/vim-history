@@ -43,7 +43,7 @@ clean:
 	$(VIMPROG) -u NONE -s todos.vim test.out
 	diff test.out $*.ok
 	rename test.out $*.out
-	-deltree X*
+	-rm -rf X*
 	-del test.ok
 
 # Create a directory for temp files

@@ -679,8 +679,6 @@ vim_mem_profile_dump()
 # define KEEP_ROOM (2 * 8192L)
 #endif
 
-static void vim_strup __ARGS((char_u *p));
-
 /*
  * Note: if unsinged is 16 bits we can only allocate up to 64K with alloc().
  * Use lalloc for larger blocks.
@@ -1027,7 +1025,7 @@ vim_strnsave_up(string, len)
 /*
  * ASCII lower-to-upper case translation, language independent.
  */
-    static void
+    void
 vim_strup(p)
     char_u	*p;
 {
@@ -1435,7 +1433,12 @@ vim_strpbrk(s, charset)
     {
 	if (vim_strchr(charset, *s) != NULL)
 	    return s;
-	++s;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    s += (*mb_ptr2len_check)(s);
+	else
+#endif
+	    ++s;
     }
     return NULL;
 }
@@ -1555,7 +1558,7 @@ ga_concat(gap, s)
 
     if (ga_grow(gap, len) == OK)
     {
-	mch_memmove((char *)gap->ga_data + gap->ga_len, s, len);
+	mch_memmove((char *)gap->ga_data + gap->ga_len, s, (size_t)len);
 	gap->ga_len += len;
 	gap->ga_room -= len;
     }
@@ -2917,8 +2920,10 @@ get_shape_idx(mouse)
 #endif
     if (!mouse && State == SHOWMATCH)
 	return SHAPE_IDX_SM;
+#ifdef FEAT_VREPLACE
     if (State & VREPLACE_FLAG)
 	return SHAPE_IDX_R;
+#endif
     if (State & REPLACE_FLAG)
 	return SHAPE_IDX_R;
     if (State & INSERT)
@@ -2964,6 +2969,15 @@ update_mouseshape(shape_idx)
     /* Only works in GUI mode. */
     if (!gui.in_use)
 	return;
+
+    /* Postpone the updating when more is to come.  Speeds up executing of
+     * mappings. */
+    if (shape_idx == -1 && char_avail())
+    {
+	postponed_mouseshape = TRUE;
+	return;
+    }
+
     if (shape_idx == -2
 	    && old_mouse_shape != shape_table[SHAPE_IDX_CLINE].mshape
 	    && old_mouse_shape != shape_table[SHAPE_IDX_STATUS].mshape
@@ -2978,6 +2992,7 @@ update_mouseshape(shape_idx)
 	mch_set_mouse_shape(new_mouse_shape);
 	old_mouse_shape = new_mouse_shape;
     }
+    postponed_mouseshape = FALSE;
 }
 # endif
 

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ao.  Last change: 2001 Jun 21
+*gui_x11.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -329,6 +329,24 @@ Example, which sets the tooltip colors to black on light-yellow: >
 Write this in the file ~/.gtkrc and it will be used by GTK.  Don't forget to
 remove the ">" characters from the first column.
 
+
+Using Vim as a GTK+ plugin				*gui-gtk-socketid*
+
+When the GTK+ version of Vim starts up normally, it creates its own top level
+window (technically, a 'GtkWindow').  GTK+ provides an embedding facility with
+its GtkSocket and GtkPlug widgets.  If one GTK+ application creates a
+GtkSocket widget in one of its windows, an entirely different GTK+ application
+may embed itself into the first application by creating a top-level GtkPlug
+widget using the socket's ID.
+
+If you pass Vim the command-line option '--socketid' with a decimal or
+hexadecimal value, Vim will create a GtkPlug widget using that value instead
+of the normal GtkWindow.  This enables Vim to act as a GTK+ plugin.
+
+This really is a programmer's interface, and is of no use without a supporting
+application to spawn the Vim correctly.  For more details on GTK+ sockets, see
+http://www.gtk.org/api/
+
 ==============================================================================
 6. GNOME version				*gui-gnome* *Gnome* *GNOME*
 
@@ -417,7 +435,7 @@ The contents of cut-buffers are immediately written to, and are then
 accessible directly from the X-server, without contacting the originating
 application.
 
-							*quoteplus*
+							*quoteplus* *quote+*
 There are three documented X selections: PRIMARY (which is expected to
 represent the current visual selection - as in Vim's Visual mode), SECONDARY
 (which is ill-defined) and CLIPBOARD (which is expected to be used for
@@ -486,13 +504,20 @@ The following command line arguments are available:
 
     argument			meaning	~
 
-   --remote [+{cmd}] {file} ...	Open the file list in a remote  *--remote*
+   --remote [+{cmd}] {file} ...					*--remote*
+   				Open the file list in a remote
 				Vim. The rest of the command line
-				is taken as the file list.
+				is taken as the file list.  Thus any
+				non-file arguments must come before this.
+   --remote-wait [+{cmd}] {file} ...				*--remote-wait*
+   				As above, but wait for files to
+				complete (unload) in remote Vim.
    --servername {name}		Send to or become the server	*--servername*
 				{name}
    --serversend {keys}		Send {keys} to server and exit.	*--serversend*
-   --serverlist			Output a list of server names.	*--sendlist*
+   --serverexpr {expr}		Evaluate {expr} in server and	*--serverexpr*
+				print the result on stdout.
+   --serverlist			Output a list of server names.	*--serverlist*
 
 When an X11 GUI Vim (gvim) is started, it will try to register a send-server
 name on the 'VimRegistry' property on the root window.  By default it will try
@@ -500,7 +525,7 @@ to register the name under which it was invoked (gvim, egvim ...).  This can
 be overridden with the --servername argument.  If the specified name is not
 available, a 3 digit postfix is applied until a free name is encountered, ie.
 gvim-001 for the second invocation of gvim on a particular X-server.  The
-resulting name is available in the send_server builtin variable
+resulting name is available in the servername builtin variable
 |v:servername|.
 
 A non GUI Vim with access to the X11 display (|xterm-clipboard| enabled), can
@@ -520,28 +545,32 @@ the --servername argument, it must match exactly.
 
 The --remote argument will cause a |:drop| command to be constructed from the
 rest of the command line and sent as described above.
+The --remote-wait argument does the same thing and additionally sets up to
+wait for earch of the files to have been edited.  This uses the BufUnload
+event, thus as soon as a file has been unloaded, Vim assumes you are done
+editing it.
+Note that the --remote and --remote-wait arguments will consume the rest of
+the command line.  Ie. all remaining arguments will be regarded as filenames.
+You can not put options there!
 
 The --serverlist argument will cause Vim to print a list of registered command
 servers on the standard output (stdout) and exit.
 
-Commands
---------
-							*:ser* *:serverlist*
-:ser[verlist]		    	Print a list of command servers. The local
-				name (if any) is marked with a '>' in the
-				first column.
+Functions
+---------
+There are a number of VimL functions for scripting the command server.  See
+the description in |eval.txt| or use CTRL-] on the function name to jump to
+the full explanation.
 
-					*:servers* *:serversend* *E240* *E241*
-:servers[end] {name} {keys}	Send {keys} to the Vim instance named {name}
-				That may be ourselves (not very useful though).
-				Example: >
-
-				    :serversend gvim :drop version.c^M
-<
-				This edits the file "version.c" in the server
-				"gvim".  The ^M is typed as CTRL-V <CR>.
+    synopsis				     explanation ~
+    serversend(server, string, type, idvar)  send key sequence or expression
+    servernames()			     get a list of available servers
+    serverreply_peek(serverid, retvar)	     check for reply string
+    serverreply_read(serverid)		     read reply string
+    serverreply_send(serverid, string)	     send reply string
 
 See also the explanation of |CTRL-\_CTRL-N|.  Very useful as a leading key
 sequence.
+The {serverid} for serverreply_send() can be obtained with expand("<client>")
 
  vim:tw=78:sw=4

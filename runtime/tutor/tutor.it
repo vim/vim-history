@@ -55,11 +55,11 @@ NOTA: I tasti con le frecce fanno lo stesso servizio. Ma usando hjkl riesci
 
 ---> Così esci dall'Editor SENZA SALVARE alcuna modifica fatta.
      Se vuoi uscire SALVANDO le modifiche batti:
-     				:wq <INVIO>
+				:wq <INVIO>
 
   3. Quando vedi il PROMPT dello Shell, batti il comando con cui sei arrivato
      qui.  Potrebbe essere:	vimtutor <INVIO>
-     Normalmente  useresti: 	vim tutor <INVIO>
+     Normalmente  useresti:	vim tutor <INVIO>
 
 ---> 'vim' indica l'Editor vim, 'tutor' è il nome del file che tu vuoi editare.
 
@@ -230,8 +230,8 @@ NOTA: Per amanti dell'avventura: premendo solo il tasto che indica l'oggetto
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			 Lezione 2.5: IL COMANDO UNDO [DISFA]
 
-    ** Premi  u 	per disfare gli ultimi comandi eseguiti.  **
-    ** Premi  U 	per disfare modifiche all'ultima linea.   **
+    ** Premi  u		per disfare gli ultimi comandi eseguiti.  **
+    ** Premi  U		per disfare modifiche all'ultima linea.   **
 
   1. Muovi il cursore fino alla linea qui sotto, indicata da --->
      e posizionati sul primo errore.
@@ -399,7 +399,7 @@ Ora vai alla prossima Lezione.
   NOTA: Leggi l'intera Lezione prima di eseguire un qualunque comando!!
 
   1. Tieni premuto il tasto CTRL e batti  g  .  Una linea di situazione
-     sarà visibile in fondo alla pagina con il NOME FILE e la linea 
+     sarà visibile in fondo alla pagina con il NOME FILE e la linea
      in cui sei posizionato.  Ricordati il numero della linea per il Passo 3.
 
   2. Premi  G  [G Maiuscolo] per posizionarti alla fine del file.
@@ -485,7 +485,7 @@ NOTA: Questo è molto utile nel "debug" di un programma con parentesi errate!
 
 
 1. CTRL-g  visualizza a che punto sei nel file e la situazione del file.
-   G       [G Maiuscolo] ti porta alla fine del file. Un numero di linea  
+   G       [G Maiuscolo] ti porta alla fine del file. Un numero di linea
    seguito da  G  [G Maiuscolo] ti porta a quel numero di linea nel file.
 
 2. Battendo  /  seguito da una frase ricerca IN AVANTI quella frase.
@@ -564,11 +564,11 @@ NOTA: Questo è molto utile nel "debug" di un programma con parentesi errate!
   3. Ora spostati in fondo alla pagina e batti  CTRL-g again.
      RICORDATI ANCHE QUESTO NUMERO!
 
-  4. Per salvare SOLO una parte in un file, batti   :#,# w TEST   
+  4. Per salvare SOLO una parte in un file, batti   :#,# w TEST
      dove  #,#  sono i due numeri che hai memorizzato (cima,fondo) e TEST
      è il tuo NOMEFILE.
 
-  5. Ancora una volta, controlla che il file esista con il comando :!dir 
+  5. Ancora una volta, controlla che il file esista con il comando :!dir
      ma NON CANCELLARLO.
 
 
@@ -630,7 +630,7 @@ NOTA: Il file che tu richiedi è inserito a partire da dove si trova il cursore.
   2. Batti   o   (minuscolo) per aprire una linea sotto il cursore e per
      passara in Modalità Inserimento.
 
-  3. Adesso ricopia la linea indicata da ---> 
+  3. Adesso ricopia la linea indicata da --->
      e premi <ESC> per uscire dalla Modalità Inserimento.
 
 ---> Dopo battuto  o  il cursore è sulla linea aperta (in Modalità Inserimento)
@@ -647,7 +647,7 @@ Apri una linea SOPRA questa battendo  O  quando il cursore è su questa linea.
 
 	     ** Batti   a   per inserire testo DOPO il cursore. **
 
-  1. Muovi il cursore alla fine della prima linea qui sotto, indicata da ---> 
+  1. Muovi il cursore alla fine della prima linea qui sotto, indicata da --->
      battendo  $  mentre sei in Modalità Normale.
 
   2. Batti una  a  (minuscola) per aggiungere testo DOPO il carattere sotto
@@ -690,7 +690,7 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	          Lezione 6.4: SET [IMPOSTA] UNA OPZIONE
 
-      ** Imposta una option per ignorare maiuscole/minuscole 
+      ** Imposta una option per ignorare maiuscole/minuscole
          durante la ricerca/sostituzione **
 
  1. Ricerca 'ignora' battendo:
@@ -746,7 +746,7 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 
   Batti   :q <INVIO>   per chiudere la finestra di help.
 
-  Puoi trovare aiuto su quasi tutto, dando un argomento al comando ":help" 
+  Puoi trovare aiuto su quasi tutto, dando un argomento al comando ":help"
   Prova questi:
 
   :help w <INVIO>
@@ -759,14 +759,14 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Qui finisce la Guida a Vim.  Il suo intento è di fornire una breve panoramica
-  dell'Editor Vim, che ti consenta di usare l'Editor abbastanza facilmente.  
+  dell'Editor Vim, che ti consenta di usare l'Editor abbastanza facilmente.
   Questa guida è largamente incompleta poiché Vim ha moltissimi altri comandi.
 
   Per ulteriore lettura e studio, raccomandiamo:
 	Learning the Vi Editor - di Linda Lamb e Arnold Robbins
 	Editore: O'Reilly & Associates Inc.
   E' un buon libro per imparare quasi tutto ciò che puoi voler fare con Vi.
-  La sesta edizione inglese ha anche un capitolo dedicato al Vim.          
+  La sesta edizione inglese ha anche un capitolo dedicato al Vim.
   Ne esiste una traduzione italiana, basata su una vecchia edizione.
 
   Questa guida è stata scritta da Michael C. Pierce e Robert K. Ware,
