@@ -2116,6 +2116,33 @@ GetBufferLineList(buf_T *buf, int lo, int hi)
     return list;
 }
 
+/*
+ * Check if deleting lines made the cursor position invalid.
+ * Changed the lines from "lo" to "hi" and added "extra" lines (negative if
+ * deleted).
+ */
+    static void
+py_fix_cursor(int lo, int hi, int extra)
+{
+    if (curwin->w_cursor.lnum >= lo)
+    {
+	/* Adjust the cursor position if it's in/after the changed
+	 * lines. */
+	if (curwin->w_cursor.lnum >= hi)
+	{
+	    curwin->w_cursor.lnum += extra;
+	    check_cursor_col();
+	}
+	else if (extra < 0)
+	{
+	    curwin->w_cursor.lnum = lo;
+	    check_cursor();
+	}
+	changed_cline_bef_curs();
+    }
+    invalidate_botline();
+}
+
 /* Replace a line in the specified buffer. The line number is
  * in Vim format (1-based). The replacement line is given as
  * a Python string object. The object is checked for validity
@@ -2145,7 +2172,11 @@ SetBufferLine(buf_T *buf, int n, PyObject *line, int *len_change)
 	else if (ml_delete((linenr_T)n, FALSE) == FAIL)
 	    PyErr_SetVim(_("cannot delete line"));
 	else
+	{
 	    deleted_lines_mark((linenr_T)n, 1L);
+	    if (buf == curwin->w_buffer)
+		py_fix_cursor(n, n + 1, -1);
+	}
 
 	curbuf = savebuf;
 
@@ -2234,6 +2265,9 @@ SetBufferLineList(buf_T *buf, int lo, int hi, PyObject *list, int *len_change)
 		}
 	    }
 	    deleted_lines_mark((linenr_T)lo, (long)i);
+
+	    if (buf == curwin->w_buffer)
+		py_fix_cursor(lo, hi, -n);
 	}
 
 	curbuf = savebuf;
@@ -2353,6 +2387,9 @@ SetBufferLineList(buf_T *buf, int lo, int hi, PyObject *list, int *len_change)
 	mark_adjust((linenr_T)lo, (linenr_T)(hi - 1),
 						  (long)MAXLNUM, (long)extra);
 	changed_lines((linenr_T)lo, 0, (linenr_T)hi, (long)extra);
+
+	if (buf == curwin->w_buffer)
+	    py_fix_cursor(lo, hi, extra);
 
 	curbuf = savebuf;
 
