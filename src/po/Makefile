@@ -4,9 +4,9 @@
 # Note: ja.sjis, cs.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
 # not installed on Unix
 
-LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW zh_CN zh_CN.UTF-8
+LANGUAGES = af cs de es fr it ja ko pl sk uk zh_TW zh_CN zh_CN.UTF-8
 MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
+		ko.mo pl.mo sk.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -15,7 +15,7 @@ SHELL = /bin/sh
 # tools 0.10.37, which use a slightly different .po file format that is not
 # compatible with Solaris (and old gettext implementations) unless these are
 # set.  gettext 0.10.36 will not work!
-MSGFMT = OLD_PO_FILE_INPUT=yes msgfmt
+MSGFMT = OLD_PO_FILE_INPUT=yes msgfmt -v
 XGETTEXT = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes xgettext
 MSGMERGE = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes msgmerge
 

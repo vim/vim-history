@@ -9,8 +9,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim 6.0 (Español)\n"
-"POT-Creation-Date: 2001-09-18 20:27+0200\n"
-"PO-Revision-Date: 2001-09-18 20:34:11+CEST\n"
+"POT-Creation-Date: 2001-11-04 17:17+0100\n"
+"PO-Revision-Date: 2001-11-04 17:33:55+CEST\n"
 "Last-Translator: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -137,11 +137,11 @@ msgstr "[Sin editar]"
 msgid "[New file]"
 msgstr "[Fichero nuevo]"
 
-#: buffer.c:2484
+#: buffer.c:2492
 msgid "[Read errors]"
-msgstr "[Error de lectura]"
+msgstr "[Errores de lectura]"
 
-#: buffer.c:2486 fileio.c:1754
+#: buffer.c:2494 fileio.c:1754
 msgid "[readonly]"
 msgstr "[Sólo lectura]"
 
@@ -160,12 +160,12 @@ msgstr "%ld líneas --%d%%--"
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "línea %ld de %ld --%d%%-- col "
 
-#: buffer.c:2598
+#: buffer.c:2606
 msgid "[No file]"
-msgstr "[Sin título]"
+msgstr "[Sin fichero]"
 
 #. must be a help buffer
-#: buffer.c:2638
+#: buffer.c:2646
 msgid "help"
 msgstr "ayuda"
 
@@ -201,11 +201,15 @@ msgstr ""
 msgid "[Error List]"
 msgstr "[Lista de errores]"
 
-#: buffer.c:4165 memline.c:1513
-msgid "[No File]"
-msgstr "[Sin título]"
+#: buffer.c:4169
+msgid "[Scratch]"
+msgstr "[Borrador]"
 
-#: buffer.c:4385
+#: buffer.c:4173 memline.c:1513
+msgid "[No File]"
+msgstr "[Sin fichero]"
+
+#: buffer.c:4393
 msgid ""
 "\n"
 "--- Signs ---"
@@ -271,8 +275,8 @@ msgid "Keymap file not found"
 msgstr "No se ha encontrado el fichero de asociaciones de teclas"
 
 #: digraph.c:2367
-#~ msgid "E105: Using :loadkeymap not in a sourced file"
-#~ msgstr ""
+msgid "E105: Using :loadkeymap not in a sourced file"
+msgstr "E105: Usando :loadkeymap en un fichero que no es «source»"
 
 #: edit.c:40
 msgid " Keyword completion (^N/^P)"
@@ -510,12 +514,12 @@ msgstr "E122: La función %s ya existe, use ! para reemplazarla"
 msgid "E123: Undefined function: %s"
 msgstr "E123: Función sin definir: %s"
 
-#: eval.c:7519
+#: eval.c:7524
 #, c-format
 msgid "E124: Missing '(': %s"
-msgstr "E124: Falta «(»: %S"
+msgstr "E124: Falta «(»: %s"
 
-#: eval.c:7551
+#: eval.c:7556
 #, c-format
 msgid "E125: Illegal argument: %s"
 msgstr "E125: Argumento ilegal: %s"
@@ -2133,9 +2137,9 @@ msgstr ""
 msgid "E254: Cannot allocate color %s"
 msgstr "E254: No se puede asignar el color %s"
 
-#: gui_x11.c:3250
+#: gui_x11.c:3256
 msgid "E255: Couldn't read in sign data!"
-msgstr "E255: ¡no se pudo leer el signo de los datos!" 
+msgstr "E255: ¡no se pudo leer el signo de los datos!"
 
 #: hangulin.c:610
 msgid "E256: Hangul automata ERROR"
@@ -2398,8 +2402,8 @@ msgstr "<ventana %d>"
 msgid "no such window"
 msgstr "no existe tal ventana"
 
-#: if_python.c:2144 if_python.c:2175 if_python.c:2225 if_python.c:2285
-#: if_python.c:2402 if_python.c:2454 if_tcl.c:673 if_tcl.c:718 if_tcl.c:792
+#: if_python.c:2171 if_python.c:2206 if_python.c:2256 if_python.c:2319
+#: if_python.c:2439 if_python.c:2491 if_tcl.c:673 if_tcl.c:718 if_tcl.c:792
 #: if_tcl.c:862 if_tcl.c:1987
 msgid "cannot save undo information"
 msgstr "No se puede guardar la información para deshacer"
@@ -2694,9 +2698,9 @@ msgid "Attempt to open script file again: \""
 msgstr "Intento de abrir de nuevo el fichero «script»: «"
 
 #: main.c:862 main.c:869 main.c:913 memline.c:3673 memline.c:3677
-#: version.c:816 version.c:821 version.c:826 version.c:831 version.c:836
-#: version.c:841 version.c:847 version.c:851 version.c:855 version.c:860
-#: version.c:867 version.c:875 version.c:881
+#: version.c:922 version.c:927 version.c:932 version.c:937 version.c:942
+#: version.c:947 version.c:953 version.c:957 version.c:961 version.c:966
+#: version.c:973 version.c:981 version.c:987
 msgid "\"\n"
 msgstr "»\n"
 
@@ -2723,7 +2727,6 @@ msgstr "Vim: Aviso: la entrada no es desde un terminal\n"
 
 #. just in case..
 #: main.c:1171
-#, fuzzy
 #~ msgid "pre-vimrc command line"
 #~ msgstr ""
 
@@ -4405,7 +4408,7 @@ msgstr "Se necesita la versión 2.04 o posterior de Amigados\n"
 #: os_amiga.c:335
 #, c-format
 msgid "Need %s version %ld\n"
-msgstr "Se necesita la versión %ld\n"
+msgstr "Se necesita %s versión %ld\n"
 
 #: os_amiga.c:407
 msgid "Cannot open NIL:\n"
@@ -4712,7 +4715,7 @@ msgstr "E381: En el principio de la pila de correción rápida"
 #: quickfix.c:1381
 #, c-format
 msgid "error list %d of %d; %d errors"
-msgstr "lista de errores %d de %d: % errores"
+msgstr "lista de errores %d de %d: %d errores"
 
 #: quickfix.c:1842
 msgid "E382: Cannot write, 'buftype' option is set"
@@ -4896,12 +4899,12 @@ msgstr "E388: No se pudo encontrar la definición"
 msgid "E389: Couldn't find pattern"
 msgstr "E389: No se pudo encontrar el patrón"
 
-#: syntax.c:2986
+#: syntax.c:2998
 #, c-format
 msgid "E390: Illegal argument: %s"
-msgstr "E390: Argumento ilegal"
+msgstr "E390: Argumento ilegal: %s"
 
-#: syntax.c:3163
+#: syntax.c:3176
 #, c-format
 msgid "E391: No such syntax cluster: %s"
 msgstr "E391: No existe tal agrupamiento sintáctico: %s"
@@ -5100,12 +5103,12 @@ msgstr "E421: Nombre o número de color desconocido: %s"
 msgid "E422: terminal code too long: %s"
 msgstr "E422: código de terminal demasiado largo: %s"
 
-#: syntax.c:6728
+#: syntax.c:6766
 #, c-format
 msgid "E423: Illegal argument: %s"
-msgstr "E423: Argumento ilegal"
+msgstr "E423: Argumento ilegal: %s"
 
-#: syntax.c:7257
+#: syntax.c:7295
 msgid "E424: Too many different highlighting attributes in use"
 msgstr "E424: Hay demasiados atributos de realzado en uso"
 
@@ -5124,7 +5127,7 @@ msgstr "E425: No se puede ir antes del primer «tag» coincidente"
 #: tag.c:512
 #, c-format
 msgid "E426: tag not found: %s"
-msgstr "E426: «tag» no encontrado"
+msgstr "E426: «tag» no encontrado: %s"
 
 #: tag.c:545
 #~ msgid "  # pri kind tag"
@@ -5229,11 +5232,11 @@ msgstr "E434: No se puede encontrar el patrón de «tag»"
 msgid "E435: Couldn't find tag, just guessing!"
 msgstr "E435: No se pudo encontrar el «tag», ¡sólo adivinando!"
 
-#: term.c:1723
+#: term.c:1725
 msgid "' not known. Available builtin terminals are:"
-msgstr "' desconocido. Los terminales incorporadas disponibles son:"
+msgstr "' desconocido. Los terminales incorporados disponibles son:"
 
-#: term.c:1747
+#: term.c:1749
 #~ msgid "defaulting to '"
 #~ msgstr ""
 
@@ -5396,9 +5399,9 @@ msgid ""
 "Included patches: "
 msgstr ""
 "\n"
-"Remiendos incluidos: "
+"Parches incluidos: "
 
-#: version.c:728
+#: version.c:834
 msgid ""
 "\n"
 "Compiled "
@@ -5614,7 +5617,33 @@ msgstr "escriba  :set nocp<Intro>    para los valores predefinidos de Vim"
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "escriba  :help cp-default<Intro>             para info sobre esto"
 
-#: version.c:990
+#: version.c:1069
+msgid "menu  Help->Orphans           for information    "
+msgstr "menú  Ayuda->Huérfanos      para más información "
+
+#: version.c:1071
+msgid "Running modeless, typed text is inserted"
+msgstr "Ejecutándose sin modo, el texto escrito se inserta"
+
+#: version.c:1072
+msgid "menu  Edit->Global Settings->Toggle Insert Mode  "
+msgstr "menu Editar->Opciones globales->Activar/Desactivar modo de inserción"
+
+#: version.c:1073
+msgid "                              for two modes      "
+msgstr "                                                 para dos modos     "
+
+#: version.c:1077
+msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
+msgstr ""
+"menu Editar->Opciones globales->Activar/Desactivar compatibilidad con Vi"
+
+#: version.c:1078
+msgid "                              for Vim defaults   "
+msgstr ""
+"                                 para los valores predeterminados de Vim"
+
+#: version.c:1124
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "AVISO: se ha detectado Windows 95/98/ME"
 
@@ -5997,6 +6026,6 @@ msgstr "E80: Error al escribir"
 msgid "Zero count"
 msgstr "Recuento cero"
 
-#: globals.h:1125
+#: globals.h:1129
 msgid "E81: Using <SID> not in a script context"
 msgstr "E81: Usando <SID> en un contexto que no es de «script»"
