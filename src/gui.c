@@ -2112,7 +2112,7 @@ gui_redraw(x, y, w, h)
      * not reflect Vims internal ideas if these operations are clipped away.
      */
     if (gui.row == gui.cursor_row)
-	gui_update_cursor(FALSE, TRUE);
+	gui_update_cursor(TRUE, TRUE);
 }
 
 /*
