@@ -1950,7 +1950,9 @@ syn_current_attr(syncing, displaying)
 			    if (spp->sp_type == SPTYPE_START
 					      && (spp->sp_flags & HL_ONELINE))
 			    {
-				find_endpos(idx, &endpos, &endpos, &hl_endpos,
+				lpos_T	startpos = endpos;
+
+				find_endpos(idx, &startpos, &endpos, &hl_endpos,
 				    &flags, &eoe_pos, &end_idx, cur_extmatch);
 				if (endpos.lnum == 0)
 				    continue;	    /* not found */
@@ -2012,17 +2014,17 @@ syn_current_attr(syncing, displaying)
 		 */
 		if (next_match_idx >= 0 && next_match_col == (int)current_col)
 		{
-		    synpat_T	*spp;
+		    synpat_T	*lspp;
 
 		    /* When a zero-width item matched which has a nextgroup,
 		     * don't push the item but set nextgroup. */
-		    spp = &(SYN_ITEMS(syn_buf)[next_match_idx]);
+		    lspp = &(SYN_ITEMS(syn_buf)[next_match_idx]);
 		    if (next_match_m_endpos.lnum == current_lnum
 			    && next_match_m_endpos.col == current_col
-			    && spp->sp_next_list != NULL)
+			    && lspp->sp_next_list != NULL)
 		    {
-			current_next_list = spp->sp_next_list;
-			current_next_flags = spp->sp_flags;
+			current_next_list = lspp->sp_next_list;
+			current_next_flags = lspp->sp_flags;
 			keep_next_list = TRUE;
 			zero_width_next_list = TRUE;
 			next_match_idx = -1;
@@ -5825,8 +5827,8 @@ init_highlight(both, reset)
     char_u	*p;
 
     /*
-     * Try finding the color file.  Used when a color file was loaded and
-     * 'background' or 't_Co' is changed.
+     * Try finding the color scheme file.  Used when a color file was loaded
+     * and 'background' or 't_Co' is changed.
      */
     p = get_var_value((char_u *)"colors_name");
     if (p != NULL && load_colors(p) == OK)
@@ -5861,7 +5863,7 @@ init_highlight(both, reset)
      * If syntax highlighting is enabled load the highlighting for it.
      */
     if (get_var_value((char_u *)"syntax_on") != NULL)
-	(void)cmd_runtime((char_u *)"syntax/syncolor.vim", FALSE);
+	(void)cmd_runtime((char_u *)"syntax/syncolor.vim", TRUE);
 #endif
 }
 
@@ -6677,7 +6679,7 @@ do_highlight(line, forceit, init)
 	    if (gui.in_use)
 		gui_new_scrollbar_colors();
 	}
-# ifdef FEAT_MENU
+# ifdef FEAT_BEVAL
 	else if (is_tooltip_group)
 	{
 	    if (gui.in_use)
@@ -7007,16 +7009,18 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
 	    gui_mch_new_menu_font();
 	}
+# ifdef FEAT_BEVAL
 	if (do_tooltip)
 	{
-# ifdef FEAT_GUI_MOTIF
-	    gui.balloonEval_fontList = gui_motif_create_fontlist_from_fontset(
+#  ifdef FEAT_GUI_MOTIF
+	    gui.balloonEval_fontList = gui_motif_fontset2fontlist(
 				    (XFontSet *)&HL_TABLE()[idx].sg_fontset);
-# else
+#  else
 	    gui.balloonEval_fontList = (XFontSet)HL_TABLE()[idx].sg_fontset;
-# endif
+#  endif
 	    gui_mch_new_tooltip_font();
 	}
+# endif
 #endif
     }
     else

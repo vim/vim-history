@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0al.  Last change: 2001 Jun 20
+*change.txt*    For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -290,8 +290,8 @@ gU{motion}		Make {motion} text uppercase. {not in Vi}
 			Example: >
 				:map! <C-F> <Esc>gUiw`]a
 <			This works in Insert mode: press CTRL-F to make the
-			word before the cursor upper case.  Handy to type
-			words in lower case and then make them uppercase.
+			word before the cursor uppercase.  Handy to type
+			words in lowercase and then make them uppercase.
 
 
 gUgU							*gUgU* *gUU*
@@ -620,7 +620,7 @@ Some characters in {string} have a special meaning:
 magic	nomagic	  action    ~
   &	  \&	  replaced with the whole matched pattern
  \&	   &	  replaced with &
-      \0	  replaced with the whole matched pattern
+      \0	  replaced with the whole matched pattern  *\0*
       \1	  replaced with the matched pattern in the first pair of ()
       \2	  replaced with the matched pattern in the second pair of ()
       ..	  ..

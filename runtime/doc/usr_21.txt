@@ -1,4 +1,4 @@
-*usr_21.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_21.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -18,7 +18,7 @@ it later.
 |21.6|	Modelines
 
      Next chapter: |usr_22.txt|  Finding the file to edit
- Previous chapter: |usr_20.txt|  Typing commands quickly
+ Previous chapter: |usr_20.txt|  Typing command-line commands quickly
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
@@ -142,8 +142,8 @@ Other options you might want to use:
 	/	number of lines to save from the search history
 	r	removable media, for which no marks will be stored (can be
 		used several times)
-	!	global variables that start with an upper case letter and
-		don't contain lower case letters
+	!	global variables that start with an uppercase letter and
+		don't contain lowercase letters
 	h	disable 'hlsearch' highlighting when starting
 	%	the buffer list (only restored when starting Vim without file
 		arguments)

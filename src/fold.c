@@ -1162,7 +1162,10 @@ checkupdate(wp)
     win_T	*wp;
 {
     if (wp->w_foldinvalid)
+    {
 	foldUpdate(wp, (linenr_T)1, (linenr_T)MAXLNUM); /* will update all */
+	wp->w_foldinvalid = FALSE;
+    }
 }
 
 /* setFoldRepeat() {{{2 */

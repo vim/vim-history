@@ -1377,6 +1377,7 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     char	*stop;
     char	*copy;
     int		nfiles;
+    int		url = FALSE;
     GdkModifierType current_modifiers;
 
     /* Get the current modifier state for proper distinguishment between
@@ -1421,7 +1422,12 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	if (strlen(start) == 0)
 	    continue;
 
-	if (strncmp(start, "file:", 5) != 0)
+	if (strncmp(start, "http://", 7) == 0
+		|| strncmp(start, "ftp://", 6) == 0)
+	{
+	    url = TRUE;
+	}
+	else if (strncmp(start, "file:", 5) != 0)
 	{
 	    int j;
 
@@ -1440,9 +1446,12 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	}
 	else
 	{
-	    start += 5;
-	    while (start[0] == '/' && start[1] == '/')
-		++start;
+	    if (url == FALSE)
+	    {
+		start += 5;
+		while (start[0] == '/' && start[1] == '/')
+		    ++start;
+	    }
 	    fnames[nfiles] = (char_u *)strdup(start);
 	    ++nfiles;
 	}
@@ -1453,55 +1462,59 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     /* accept */
     gtk_drag_finish(context, TRUE, FALSE, time);
 
-    if (nfiles == 1)
+    /* Real files (i.e. not http and not ftp) */
+    if (url == FALSE)
     {
-	if (mch_isdir(fnames[0]))
+	if (nfiles == 1)
 	{
-	    /* Handle dropping a directory on Vim. */
-	    if (mch_chdir((char *)fnames[0]) == 0)
+	    if (mch_isdir(fnames[0]))
 	    {
-		free(fnames[0]);
-		fnames[0] = NULL;
-		redo_dirs = TRUE;
-	    }
-	}
-    }
-    else
-    {
-	/* Ignore any directories */
-	for (i = 0; i < nfiles; ++i)
-	{
-	    if (mch_isdir(fnames[i]))
-	    {
-		vim_free(fnames[i]);
-		fnames[i] = NULL;
-	    }
-	}
-    }
-
-    if (current_modifiers & GDK_SHIFT_MASK)
-    {
-	/* Shift held down, change to first file's directory */
-	if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == 0)
-	    redo_dirs = TRUE;
-    }
-    else
-    {
-	char_u	dirname[MAXPATHL];
-	char_u	*s;
-
-	/* Shorten dropped file names. */
-	if (mch_dirname(dirname, MAXPATHL) == OK)
-	    for (i = 0; i < nfiles; ++i)
-		if (fnames[i] != NULL)
+		/* Handle dropping a directory on Vim. */
+		if (mch_chdir((char *)fnames[0]) == 0)
 		{
-		    s = shorten_fname(fnames[i], dirname);
-		    if (s != NULL && (s = vim_strsave(s)) != NULL)
-		    {
-			vim_free(fnames[i]);
-			fnames[i] = s;
-		    }
+		    free(fnames[0]);
+		    fnames[0] = NULL;
+		    redo_dirs = TRUE;
 		}
+	    }
+	}
+	else
+	{
+	    /* Ignore any directories */
+	    for (i = 0; i < nfiles; ++i)
+	    {
+		if (mch_isdir(fnames[i]))
+		{
+		    vim_free(fnames[i]);
+		    fnames[i] = NULL;
+		}
+	    }
+	}
+
+	if (current_modifiers & GDK_SHIFT_MASK)
+	{
+	    /* Shift held down, change to first file's directory */
+	    if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == 0)
+		redo_dirs = TRUE;
+	}
+	else
+	{
+	    char_u	dirname[MAXPATHL];
+	    char_u	*s;
+
+	    /* Shorten dropped file names. */
+	    if (mch_dirname(dirname, MAXPATHL) == OK)
+		for (i = 0; i < nfiles; ++i)
+		    if (fnames[i] != NULL)
+		    {
+			s = shorten_fname(fnames[i], dirname);
+			if (s != NULL && (s = vim_strsave(s)) != NULL)
+			{
+			    vim_free(fnames[i]);
+			    fnames[i] = s;
+			}
+		    }
+	}
     }
 
     /* Handle the drop, :edit or :split to get to the file */
@@ -1512,8 +1525,13 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 
     /* Update the screen display */
     update_screen(NOT_VALID);
+#ifdef FEAT_MENU
+    gui_update_menus(0);
+#endif
     setcursor();
     out_flush();
+    gui_update_cursor(FALSE, FALSE);
+    gui_mch_flush();
 }
 #endif /* GTK_DND */
 

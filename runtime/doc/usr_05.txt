@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0al.  Last change: 2001 Jun 15
+*usr_05.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -103,7 +103,7 @@ new line.
 
 This tells Vim to keep a backup copy of a file when overwriting it.  But not
 on the VMS system, since that keeps old versions of files already.  The backup
-file will have the same name as the original file with "~" added.
+file will have the same name as the original file with "~" added. |07.4|
 >
 
 	set history=50
@@ -116,6 +116,23 @@ you want to remember less or more lines.
 
 Always display the current cursor position in the lower right corner of the
 Vim window.
+
+>
+	set showcmd
+
+Display an incomplete command in the lower right corner of the Vim window,
+left of the ruler.  For example, when you type "2f", Vim is waiting for you to
+type the character to find and "2f" is displayed.  When you press "w" next,
+the "2fw" command is executed and the displayed "2f" is removed.
+
+	+-------------------------------------------------+
+	|text in the Vim window                           |
+	|~                                                |
+	|~                                                |
+	|-- VISUAL --                   2f     43,8   17% |
+	+-------------------------------------------------+
+	 ^^^^^^^^^^^                  ^^^^^^^^ ^^^^^^^^^^
+	  'showmode'                 'showcmd'  'ruler'
 
 >
 	set incsearch
@@ -240,7 +257,8 @@ example: >
 You need to type the \ and the p quickly after another, so that Vim knows they
 belong together.
 
-The ":map" command (with no arguments) lists out all your current mappings.
+The ":map" command (with no arguments) lists out your current mappings.  At
+least the ones for Normal mode.  More about mappings in section |40.1|.
 
 ==============================================================================
 *05.4*  Adding a plugin						*add-plugin*
@@ -469,6 +487,11 @@ before and after the option name.  For example: >
 
 	:help 'wrap'
 
+In case you have messed up an option value, you can set it back to the
+default by putting a ampersand (&) after the option name.  Example: >
+
+	:set iskeyword&
+
 
 NOT WRAPPING LINES
 
@@ -528,6 +551,46 @@ and tabs as highlighted characters.  Use the 'listchars' option: >
 
 Now every tab will be displayed as ">---" and trailing white space as "-".
 Looks a lot better, doesn't it?
+
+
+KEYWORDS
+
+The 'iskeyword' option specifies which characters can appear in a word: >
+
+	:set iskeyword
+<	  iskeyword=@,48-57,_,192-255 >
+
+The "@" stands for all alphabetic letters.  "48-57" stands for ASCII
+characters 48 to 57, which are the numbers 0 to 9.  "192-255" are the
+printable latin characters.
+   Sometimes you will want to include a dash in keywords, so that commands
+like "w" consider "upper-case" one word.  You can do it like this: >
+
+	:set iskeyword+=-
+	:set iskeyword
+<	  iskeyword=@,48-57,_,192-255,-
+
+If you look at the new value, you will see that Vim has added a comma for you.
+   To remove a character use "-=".  For example, to remove the underscore: >
+
+	:set iskeyword-=_
+	:set iskeyword
+<	  iskeyword=@,48-57,192-255,-
+
+This time a comma is automatically deleted.
+
+
+ROOM FOR MESSAGES
+
+When Vim starts there is one line at the bottom that is used for messages.
+When a message is long, it is either truncated, thus you can only see part of
+it, or the text scrolls and you have to press <Enter> to continue.
+   You can set the 'cmdheight' option to the number of lines used for
+messages.  Example: >
+
+	:set cmdheight=3
+
+This does mean there is less room to edit text, thus it's a compromize.
 
 ==============================================================================
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Mail file
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
-" Last Change:	2001 May 09
+" Last Change:	2001 Jun 28
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -26,7 +26,7 @@ syn match	mailHeaderKey	contained "^Date"
 
 syn match	mailSubject	contained "^Subject.*"
 
-syn match	mailEmail	contained "[_=a-z\.+A-Z0-9-]\+@[a-zA-Z0-9\./\-]\+"
+syn match	mailEmail	contained "[_=a-z\./+A-Z0-9-]\+@[a-zA-Z0-9\./\-]\+"
 syn match	mailEmail	contained "<.\{-}>"
 
 syn region	mailSignature	start="^-- *$" end="^$"

@@ -5335,7 +5335,7 @@ cursor_pos_info()
 		buf1[0] = NUL;
 
 	    sprintf((char *)IObuff,
-	    _("Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Chars"),
+	    _("Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Bytes"),
 			buf1, line_count_selected,
 			(long)curbuf->b_ml.ml_line_count,
 			word_count_cursor, word_count,
@@ -5351,7 +5351,7 @@ cursor_pos_info()
 	    col_print(buf2, (int)STRLEN(p), linetabsize(p));
 
 	    sprintf((char *)IObuff,
-		_("Col %s of %s; Line %ld of %ld; Word %ld of %ld; Char %ld of %ld"),
+		_("Col %s of %s; Line %ld of %ld; Word %ld of %ld; Byte %ld of %ld"),
 		    (char *)buf1, (char *)buf2,
 		    (long)curwin->w_cursor.lnum,
 		    (long)curbuf->b_ml.ml_line_count,

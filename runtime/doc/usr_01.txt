@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0al.  Last change: 2001 Jun 02
+*usr_01.txt*	For Vim version 6.0am.  Last change: 2001 Jun 26
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -69,7 +69,7 @@ MS-DOS, MS-Windows, OS/2: >
 Amiga: >
 	:!copy $VIMRUNTIME/vimrc_example.vim $VIM/.vimrc
 
-If the file already existed you probably want to keep it.
+If the file already exists you probably want to keep it.
 
 If you start Vim now, the 'compatible' option should be off.  You can check it
 with this command: >
@@ -89,14 +89,13 @@ back on.
 
 For more info see |vimrc| and |compatible-default|.
 
-
 	Note:
 	This manual is about using Vim in the normal way.  There is an
 	alternative called "evim" (easy Vim).  This is still Vim, but used in
 	a way that resembles a click-and-type editor like Notepad.  It always
 	stays in Insert mode, thus it feels very different.  It is not
-	explained here, since it should be mostly self explanatory.  See
-	|evim-keys| for details.
+	explained in the user manual, since it should be mostly self
+	explanatory.  See |evim-keys| for details.
 
 ==============================================================================
 *01.3*  Using the Vim tutor				*tutor* *vimtutor*
@@ -105,7 +104,8 @@ Instead of reading the text (boring!) you can use the vimtutor to learn your
 first Vim commands.  This is a 30 minute tutorial that teaches the most basic
 Vim functionality hands-on.
 
-On Unix, if Vim has been properly installed, you can start it from the shell:
+On Unix and MS-Windows, if Vim has been properly installed, you can start it
+from the shell:
 >
 	vimtutor
 
@@ -126,7 +126,7 @@ On non-Unix systems, you have to do a little work:
 <
    The extra arguments make sure Vim is started in a good mood.
 
-3. Delete the copied file:
+3. Delete the copied file when you are finished with it:
 >
 	del TUTORCOPY
 <

@@ -56,6 +56,7 @@ static void	del_from_showcmd __ARGS((int));
  * v_*(): functions called to handle Visual mode commands.
  */
 static void	nv_ignore __ARGS((cmdarg_T *cap));
+static void	nv_silent __ARGS((cmdarg_T *cap));
 static void	nv_error __ARGS((cmdarg_T *cap));
 static void	nv_help __ARGS((cmdarg_T *cap));
 static void	nv_addsub __ARGS((cmdarg_T *cap));
@@ -360,6 +361,7 @@ static const struct nv_cmd
     {K_RIGHTRELEASE, nv_mouse,	0,			0},
 #endif
     {K_IGNORE,	nv_ignore,	0,			0},
+    {K_SILENT,	nv_silent,	0,			0},
     {K_INS,	nv_edit,	0,			0},
     {K_KINS,	nv_edit,	0,			0},
     {K_BS,	nv_ctrlh,	0,			0},
@@ -1554,11 +1556,11 @@ do_pending_operator(cap, old_col, gui_yank)
 	/* Include the trailing byte of a multi-byte char.  Don't do it when
 	 * VIsual_active is TRUE and 'sel' is "exclusive", the position has
 	 * already been moved to the trailing byte by adjust_for_sel() then. */
-	if (has_mbyte && ((oap->inclusive
+	if (has_mbyte && oap->inclusive
 # ifdef FEAT_VISUAL
-		    && !oap->is_VIsual) || ((oap->is_VIsual && *p_sel != 'e')
+		    && (!oap->is_VIsual || *p_sel != 'e')
 # endif
-		    )))
+		    )
 	{
 	    int		l;
 
@@ -1938,12 +1940,12 @@ op_colon(oap)
  * Return TRUE if start_arrow() should be called for edit mode.
  */
     int
-do_mouse(oap, c, dir, count, fix_indent)
+do_mouse(oap, c, dir, count, fixindent)
     oparg_T	*oap;		/* operator argument, can be NULL */
     int		c;		/* K_LEFTMOUSE, etc */
     int		dir;		/* Direction to 'put' if necessary */
     long	count;
-    int		fix_indent;	/* PUT_FIXINDENT if fixing indent necessary */
+    int		fixindent;	/* PUT_FIXINDENT if fixing indent necessary */
 {
     static int	do_always = FALSE;	/* ignore 'mouse' setting next time */
     static int	got_click = FALSE;	/* got a click some time back */
@@ -2137,11 +2139,11 @@ do_mouse(oap, c, dir, count, fix_indent)
 		    insert_reg(regname, TRUE);
 		else
 		{
-		    do_put(regname, BACKWARD, 1L, fix_indent | PUT_CURSEND);
+		    do_put(regname, BACKWARD, 1L, fixindent | PUT_CURSEND);
 
 		    /* Repeat it with CTRL-R CTRL-O r or CTRL-R CTRL-P r */
 		    AppendCharToRedobuff(Ctrl_R);
-		    AppendCharToRedobuff(fix_indent ? Ctrl_P : Ctrl_O);
+		    AppendCharToRedobuff(fixindent ? Ctrl_P : Ctrl_O);
 		    AppendCharToRedobuff(regname == 0 ? '"' : regname);
 		}
 	    }
@@ -2464,7 +2466,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	else if (mouse_past_eol)
 	    dir = FORWARD;
 
-	if (fix_indent)
+	if (fixindent)
 	{
 	    c1 = (dir == BACKWARD) ? '[' : ']';
 	    c2 = 'p';
@@ -2482,7 +2484,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	 */
 	if (restart_edit)
 	    where_paste_started = curwin->w_cursor;
-	do_put(regname, dir, count, fix_indent | PUT_CURSEND);
+	do_put(regname, dir, count, fixindent | PUT_CURSEND);
     }
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
@@ -3194,7 +3196,7 @@ add_to_showcmd(c)
 	K_VER_SCROLLBAR, K_HOR_SCROLLBAR,
 	K_LEFTMOUSE_NM, K_LEFTRELEASE_NM,
 #endif
-	K_IGNORE,
+	K_IGNORE, K_SILENT,
 	K_LEFTMOUSE, K_LEFTDRAG, K_LEFTRELEASE,
 	K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
 	K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
@@ -3490,6 +3492,18 @@ check_scrollbind(topline_diff, leftcol_diff)
 nv_ignore(cap)
     cmdarg_T	*cap;
 {
+}
+
+/*
+ * End of a silent menu.
+ */
+/*ARGSUSED */
+    static void
+nv_silent(cap)
+    cmdarg_T	*cap;
+{
+    if (cmd_silent > 0)
+	--cmd_silent;
 }
 
 /*
@@ -6925,10 +6939,15 @@ nv_g_cmd(cap)
 	mod_mask = MOD_MASK_CTRL;
 	(void)do_mouse(oap, cap->nchar, BACKWARD, cap->count1, 0);
 	break;
+#endif
 
     case K_IGNORE:
 	break;
-#endif
+
+    case K_SILENT:
+	if (cmd_silent > 0)
+	    --cmd_silent;
+	break;
 
     /*
      * "gP" and "gp": same as "P" and "p" but leave cursor just after new text

@@ -515,6 +515,9 @@ if test "$enable_workshop" = "yes"; then
   AC_SUBST(WORKSHOP_SRC)
   WORKSHOP_OBJ="objects/workshop.o objects/integration.o"
   AC_SUBST(WORKSHOP_OBJ)
+  if test "${enable_gui-xxx}" = xxx; then
+    enable_gui=motif
+  fi
 fi
 
 AC_MSG_CHECKING(--enable-sniff argument)
@@ -1241,6 +1244,10 @@ AC_SUBST(GUI_INC_LOC)
 AC_SUBST(GUI_LIB_LOC)
 AC_SUBST(GUITYPE)
 AC_SUBST(GUI_X_LIBS)
+
+if test "$enable_workshop" = "yes" -a -n "$SKIP_MOTIF"; then
+  AC_MSG_ERROR([cannot use workshop without Motif])
+fi
 
 dnl defining FEAT_XIM and FEAT_XFONTSET is delayed, so that they can be disabled
 if test "$enable_xim" = "yes"; then

@@ -1480,10 +1480,62 @@ qf_types(c, nr)
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
- * ":cwindow": open a window that shows the list of errors.
+ * ":cwindow": open the quickfix window if we have errors to display,
+ *	       close it if not.
  */
     void
 ex_cwindow(eap)
+    exarg_T	*eap;
+{
+    win_T	*win;
+
+    /*
+     * Look for an existing quickfix window.
+     */
+    for (win = firstwin; win != NULL; win = win->w_next)
+	if (bt_quickfix(win->w_buffer))
+	    break;
+
+    /*
+     * If a quickfix window is open but we have no errors to display,
+     * close the window.  If a quickfix window is not open, then open
+     * it if we have errors; otherwise, leave it closed.
+     */
+    if (qf_lists[qf_curlist].qf_nonevalid || qf_curlist >= qf_listcount)
+    {
+	if (win != NULL)
+	    ex_cclose(eap);
+    }
+    else if (win == NULL)
+	ex_copen(eap);
+}
+
+/*
+ * ":cclose": close the window showing the list of errors.
+ */
+/*ARGSUSED*/
+    void
+ex_cclose(eap)
+    exarg_T	*eap;
+{
+    win_T	*win;
+
+    /*
+     * Find existing quickfix window and close it.
+     */
+    for (win = firstwin; win != NULL; win = win->w_next)
+	if (bt_quickfix(win->w_buffer))
+	    break;
+
+    if (win != NULL)
+	win_close(win, FALSE);
+}
+
+/*
+ * ":copen": open a window that shows the list of errors.
+ */
+    void
+ex_copen(eap)
     exarg_T	*eap;
 {
     int		height;

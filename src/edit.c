@@ -817,20 +817,40 @@ doESCkey:
 	    break;
 
 	case Ctrl_HAT:
-	    /* Toggle use of ":lmap" mappings. */
-	    if (curbuf->b_p_iminsert == B_IMODE_LMAP)
+	    if (map_to_exists_mode((char_u *)"", LANGMAP))
 	    {
-		curbuf->b_p_iminsert = B_IMODE_NONE;
-		State &= ~LANGMAP;
+		/* ":lmap" mappings exists, Toggle use of ":lmap" mappings. */
+		if (curbuf->b_p_iminsert == B_IMODE_LMAP)
+		{
+		    curbuf->b_p_iminsert = B_IMODE_NONE;
+		    State &= ~LANGMAP;
+		}
+		else
+		{
+		    curbuf->b_p_iminsert = B_IMODE_LMAP;
+		    State |= LANGMAP;
+#ifdef USE_IM_CONTROL
+		    im_set_active(FALSE);
+#endif
+		}
 	    }
+#ifdef USE_IM_CONTROL
 	    else
 	    {
-		curbuf->b_p_iminsert = B_IMODE_LMAP;
-		State |= LANGMAP;
-#ifdef USE_IM_CONTROL
-		im_set_active(FALSE);
-#endif
+		/* There are no ":lmap" mappings, toggle IM */
+		if (curbuf->b_p_iminsert == B_IMODE_IM)
+		{
+		    curbuf->b_p_iminsert = B_IMODE_NONE;
+		    im_set_active(FALSE);
+		}
+		else
+		{
+		    curbuf->b_p_iminsert = B_IMODE_IM;
+		    State &= ~LANGMAP;
+		    im_set_active(TRUE);
+		}
 	    }
+#endif
 	    set_iminsert_global();
 	    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
@@ -919,9 +939,6 @@ doESCkey:
 	    ins_mouse(c);
 	    break;
 
-	case K_IGNORE:
-	    break;
-
 	/* Default action for scroll wheel up: scroll up */
 	case K_MOUSEDOWN:
 	    ins_mousescroll(FALSE);
@@ -932,6 +949,15 @@ doESCkey:
 	    ins_mousescroll(TRUE);
 	    break;
 #endif
+
+	case K_IGNORE:
+	    break;
+
+	/* end of silent menu entry */
+	case K_SILENT:
+	    if (cmd_silent > 0)
+		--cmd_silent;
+	    break;
 
 #ifdef FEAT_GUI
 	case K_VER_SCROLLBAR:
@@ -1976,12 +2002,12 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 			    /*
 			     * Add the other matches on the line
 			     */
-			    for (;;)
+			    while (!got_int)
 			    {
 				/* Find start of the next word.  Skip white
 				 * space and punctuation. */
 				ptr = find_word_start(ptr);
-				if (*ptr == NUL)
+				if (*ptr == NUL || *ptr == NL)
 				    break;
 				wstart = ptr;
 
@@ -1998,7 +2024,7 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 			    break;
 			/* avoid expensive call to vim_regexec() when at end
 			 * of line */
-			if (*ptr == '\n')
+			if (*ptr == '\n' || got_int)
 			    break;
 		    }
 		    line_breakcheck();
@@ -3452,7 +3478,7 @@ get_literal()
     {
 	do
 	    nc = safe_vgetc();
-	while (nc == K_IGNORE || nc == K_VER_SCROLLBAR
+	while (nc == K_IGNORE || nc == K_SILENT || nc == K_VER_SCROLLBAR
 						    || nc == K_HOR_SCROLLBAR);
 #ifdef FEAT_CMDL_INFO
 	if (!(State & CMDLINE)
@@ -3686,9 +3712,6 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    colnr_T	virtcol;
 	    char_u	*saved_text = NULL;
 	    colnr_T	col;
-#ifdef FEAT_MBYTE
-	    char_u	*line = NULL;
-#endif
 
 	    virtcol = get_nolist_virtcol();
 	    if (virtcol < (colnr_T)textwidth)
@@ -3796,7 +3819,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
 			foundcol = curwin->w_cursor.col
-			   + (*mb_ptr2len_check)(line + curwin->w_cursor.col);
+				       + (*mb_ptr2len_check)(ml_get_cursor());
 		    else
 #endif
 			foundcol = curwin->w_cursor.col + 1;

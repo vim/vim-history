@@ -5,7 +5,7 @@ void checkpcmark __ARGS((void));
 pos_T *movemark __ARGS((int count));
 pos_T *getmark_coladd __ARGS((int c, int changefile));
 pos_T *getmark __ARGS((int c, int changefile));
-pos_T *getnextmark __ARGS((pos_T *startpos, int dir, int beginline));
+pos_T *getnextmark __ARGS((pos_T *startpos, int dir, int begin_line));
 void fmarks_check_names __ARGS((buf_T *buf));
 int check_mark __ARGS((pos_T *pos));
 void clrallmarks __ARGS((buf_T *buf));

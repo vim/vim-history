@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_06.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -39,6 +39,7 @@ in your |vimrc| file.
 
 If you want syntax highlighting only when the terminal supports colors, you
 can put this in your |vimrc| file: >
+
 	if &t_Co > 1
 	   syntax enable
 	endif
@@ -131,7 +132,7 @@ Or the colors could be wrong:
 *06.3*  Different colors				*:syn-default-override*
 
 If you don't like the default colors, you can select another color scheme.  In
-the GUI use the Edit/Color Scheme menu.  But you can also type the command: >
+the GUI use the Edit/Color Scheme menu.  You can also type the command: >
 
 	:colorscheme evening
 
@@ -153,6 +154,7 @@ You could also write your own color scheme.  This is how you do it:
 
 2. Edit the color scheme file.  These entries are useful:
 
+	term		attributes in a B&W terminal
 	cterm		attributes in a color terminal
 	ctermfg		foreground color in a color terminal
 	ctermbg		background color in a color terminal
@@ -171,6 +173,15 @@ You could also write your own color scheme.  This is how you do it:
 3. Tell Vim to always use your color scheme.  Put this line in your |vimrc|: >
 
 	colorscheme mine
+
+If you want to see what the most often used color combinations look like, use
+these commands: >
+
+	:edit $VIMRUNTIME/syntax/colortest.vim
+	:source %
+
+You will see text in various color combinations.  You can check which ones are
+readable and look nice.
 
 ==============================================================================
 *06.4*  With colors or without colors

@@ -36,8 +36,9 @@ all install uninstall tools config configure proto depend lint tags types test t
 # 2. Create the various distributions:
 #
 # TARGET	PRODUCES		CONTAINS
-# unixrt	vim-#.#-rt.tar.gz	Runtime files for Unix
-# unixsrc	vim-#.#-src.tar.gz	Sources for Unix
+# unixall	vim-#.#.tar.bz2		All files for Unix
+# unixrt	vim-#.#-rt[12].tar.gz	Runtime files for Unix
+# unixsrc	vim-#.#-src[12].tar.gz	Sources for Unix
 #
 # extra		vim-#.#-extra.tar.gz	Extra source and runtime files
 # lang		vim-#.#-lang.tar.gz	multi-language files
@@ -70,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0al
+MINOR = 0am
 
 # CHECKLIST for creating a new version:
 #
@@ -95,7 +96,7 @@ MINOR = 0al
 # - Check file protections to be "644" for text and "755" for executables.
 # - Check compiling on Amiga, MS-DOS and MS-Windows.
 # - Delete all *~, *.sw?, *.orig, *.rej files
-# - "make unixsrc", "make unixrt", "make extra", "make lang", "make html"
+# - "make unixall", "make extra", "make lang", "make html"
 #
 # Amiga:
 # - "make amisrc", move the archive to the Amiga and compile the Amiga version
@@ -162,7 +163,6 @@ SRC_ALL =	\
 		src/ascii.h \
 		src/buffer.c \
 		src/charset.c \
-		src/diff.c \
 		src/digraph.c \
 		src/edit.c \
 		src/eval.c \
@@ -171,15 +171,10 @@ SRC_ALL =	\
 		src/ex_cmds2.c \
 		src/ex_docmd.c \
 		src/ex_getln.c \
-		src/farsi.c \
-		src/farsi.h \
 		src/feature.h \
 		src/fileio.c \
-		src/fold.c \
 		src/getchar.c \
 		src/globals.h \
-		src/gui.c \
-		src/gui.h \
 		src/keymap.h \
 		src/macros.h \
 		src/main.c \
@@ -191,7 +186,6 @@ SRC_ALL =	\
 		src/misc1.c \
 		src/misc2.c \
 		src/move.c \
-		src/mbyte.c \
 		src/normal.c \
 		src/ops.c \
 		src/option.c \
@@ -257,7 +251,17 @@ SRC_ALL =	\
 		src/window.c \
 		src/xxd/xxd.c \
 
-# source files for Unix
+# more source files
+SRC_MORE =	\
+		src/diff.c \
+		src/farsi.c \
+		src/farsi.h \
+		src/fold.c \
+		src/gui.c \
+		src/gui.h \
+		src/mbyte.c \
+
+# source files for Unix only
 SRC_UNIX =	\
 		Makefile \
 		README_src.txt \
@@ -472,6 +476,7 @@ SRC_MAC =	\
 		src/INSTALLmac.txt \
 		src/Make_mpw.mak \
 		src/gui_mac.c \
+		src/gui_mac.icns \
 		src/gui_mac.r \
 		src/os_mac* \
 		src/proto/gui_mac.pro \
@@ -589,29 +594,32 @@ RT_ALL =	\
 		runtime/mswin.vim \
 		runtime/evim.vim \
 		runtime/optwin.vim \
-		runtime/plugin/*.vim \
-		runtime/plugin/README.txt \
 		runtime/scripts.vim \
 		runtime/ftplugin.vim \
 		runtime/ftplugof.vim \
-		runtime/colors/README.txt \
-		runtime/colors/*.vim \
 		runtime/indent.vim \
 		runtime/indoff.vim \
-		runtime/indent/*.vim \
-		runtime/indent/README.txt \
-		runtime/compiler/*.vim \
-		runtime/compiler/README.txt \
-		runtime/ftplugin/*.vim \
-		runtime/ftplugin/README.txt \
-		runtime/syntax/*.vim \
-		runtime/syntax/README.txt \
 		runtime/termcap \
 		runtime/tools \
 		runtime/tutor/README.txt \
 		runtime/tutor/tutor \
 		runtime/tutor/tutor.vim \
 		runtime/vimrc_example.vim \
+
+# runtime script files
+RT_SCRIPTS =	\
+		runtime/colors/*.vim \
+		runtime/colors/README.txt \
+		runtime/compiler/*.vim \
+		runtime/compiler/README.txt \
+		runtime/indent/*.vim \
+		runtime/indent/README.txt \
+		runtime/ftplugin/*.vim \
+		runtime/ftplugin/README.txt \
+		runtime/plugin/*.vim \
+		runtime/plugin/README.txt \
+		runtime/syntax/*.vim \
+		runtime/syntax/README.txt \
 
 # Unix runtime
 RT_UNIX =	\
@@ -818,42 +826,69 @@ dist/$(COMMENT_LANG): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) MS-Windows language files" > dist/$(COMMENT_LANG)
 
 unixrt: dist
-	rm -f dist/$(VIMVER)-rt.tar.gz
-	rm -f dist/$(VIMVER)-rt.tar.bz2
-	rm -rf dist/$(VIMRTDIR)
+	-rm -f dist/$(VIMVER)-rt1.tar.gz
+	-rm -f dist/$(VIMVER)-rt2.tar.gz
+# first runtime file
+	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
 		$(RT_ALL) \
 		$(RT_UNIX) \
 		$(RT_UNIX_DOS_BIN) \
-		| (cd dist/$(VIMRTDIR); tar xvf -)
-	cd dist && tar cvf $(VIMVER)-rt.tar $(VIMRTDIR)
-	cp -f dist/$(VIMVER)-rt.tar dist/tt
-	gzip -9 dist/$(VIMVER)-rt.tar
-	mv -f dist/tt dist/$(VIMVER)-rt.tar
-	bzip2 dist/$(VIMVER)-rt.tar
+		| (cd dist/$(VIMRTDIR); tar xf -)
+	cd dist && tar cf $(VIMVER)-rt1.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-rt1.tar
+# second runtime file (script files)
+	-rm -rf dist/$(VIMRTDIR)
+	mkdir dist/$(VIMRTDIR)
+	tar cf - \
+		$(RT_SCRIPTS) \
+		| (cd dist/$(VIMRTDIR); tar xf -)
+	cd dist && tar cf $(VIMVER)-rt2.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-rt2.tar
 
 unixsrc: dist
-	-rm -f dist/$(VIMVER)-src.tar.gz
-	-rm -f dist/$(VIMVER)-src.tar.bz2
+	-rm -f dist/$(VIMVER)-src1.tar.gz
+	-rm -f dist/$(VIMVER)-src2.tar.gz
+# first source file
 	-rm -rf dist/$(VIMRTDIR)
 	mkdir dist/$(VIMRTDIR)
 	tar cf - \
 		$(SRC_ALL) \
+		$(SRC_MORE) \
+		| (cd dist/$(VIMRTDIR); tar xf -)
+	cd dist && tar cf $(VIMVER)-src1.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-src1.tar
+# second source file
+	-rm -rf dist/$(VIMRTDIR)
+	mkdir dist/$(VIMRTDIR)
+	tar cf - \
 		$(SRC_UNIX) \
 		$(SRC_DOS_UNIX) \
-		| (cd dist/$(VIMRTDIR); tar xvf -)
+		| (cd dist/$(VIMRTDIR); tar xf -)
 # Need to use a "distclean" config.mk file
 	cp -f src/config.mk.dist dist/$(VIMRTDIR)/src/auto/config.mk
 # Create an empty config.h file, make dependencies require it
 	touch dist/$(VIMRTDIR)/src/auto/config.h
 # Make sure configure is newer than config.mk to force it to be generated
 	touch dist/$(VIMRTDIR)/src/configure
-	cd dist && tar cvf $(VIMVER)-src.tar $(VIMRTDIR)
-	cp -f dist/$(VIMVER)-src.tar dist/tt
-	gzip -9 dist/$(VIMVER)-src.tar
-	mv -f dist/tt dist/$(VIMVER)-src.tar
-	bzip2 dist/$(VIMVER)-src.tar
+	cd dist && tar cf $(VIMVER)-src2.tar $(VIMRTDIR)
+	gzip -9 dist/$(VIMVER)-src2.tar
+
+unixall: dist unixsrc unixrt
+	-rm -f dist/$(VIMVER).tar.bz2
+	-rm -rf dist/$(VIMRTDIR)
+	mkdir dist/$(VIMRTDIR)
+	cd dist && tar xfz $(VIMVER)-src1.tar.gz
+	cd dist && tar xfz $(VIMVER)-src2.tar.gz
+	cd dist && tar xfz $(VIMVER)-rt1.tar.gz
+	cd dist && tar xfz $(VIMVER)-rt2.tar.gz
+# Create an empty config.h file, make dependencies require it
+	touch dist/$(VIMRTDIR)/src/auto/config.h
+# Make sure configure is newer than config.mk to force it to be generated
+	touch dist/$(VIMRTDIR)/src/configure
+	cd dist && tar cf $(VIMVER).tar $(VIMRTDIR)
+	bzip2 dist/$(VIMVER).tar
 
 extra: dist
 	-rm -f dist/$(VIMVER)-extra.tar.gz
@@ -884,6 +919,7 @@ amirt: dist
 	tar cf - \
 		$(ROOT_AMI) \
 		$(RT_ALL) \
+		$(RT_SCRIPTS) \
 		$(RT_AMI) \
 		$(RT_NO_UNIX) \
 		$(RT_AMI_DOS) \
@@ -921,6 +957,7 @@ amisrc: dist
 	tar cf - \
 		$(ROOT_AMI) \
 		$(SRC_ALL) \
+		$(SRC_MORE) \
 		$(SRC_AMI) \
 		$(SRC_AMI_DOS) \
 		| (cd dist/Vim/$(VIMRTDIR); tar xvf -)
@@ -940,6 +977,7 @@ dosrt: dist no_title.vim dist/$(COMMENT_RT)
 	mkdir dist/vim/$(VIMRTDIR)
 	tar cf - \
 		$(RT_ALL) \
+		$(RT_SCRIPTS) \
 		$(RT_DOS) \
 		$(RT_NO_UNIX) \
 		$(RT_AMI_DOS) \
@@ -1087,6 +1125,7 @@ dossrc: dist no_title.vim dist/$(COMMENT_SRC)
 	mkdir dist/vim/$(VIMRTDIR)
 	tar cf - \
 		$(SRC_ALL) \
+		$(SRC_MORE) \
 		$(SRC_DOS) \
 		$(SRC_AMI_DOS) \
 		$(SRC_DOS_UNIX) \

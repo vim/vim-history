@@ -34,8 +34,8 @@
 # include "os_os2_cfg.h"
 #endif
 
-#ifdef macintosh
-# define FEAT_GUI_MAC	    /* mandatory */
+#if defined (macintosh)
+# define FEAT_GUI_MAC
 #endif
 #if defined(FEAT_GUI_MOTIF) \
     || defined(FEAT_GUI_GTK) \
@@ -87,6 +87,9 @@
 # ifndef FEAT_GUI_GTK	/* avoid problems when generating prototypes */
 #  define SIZEOF_INT	2
 # endif
+#endif
+#ifdef __APPLE__ /* MacOS X (GUI and shell) */
+#  define SIZEOF_INT 4
 #endif
 #ifdef macintosh
 # if defined(__POWERPC__) || defined (__fourbyteints__) \
@@ -191,7 +194,7 @@
 # include "os_mint.h"
 #endif
 
-#ifdef macintosh
+#if defined (macintosh) || (defined (__APPLE__) && defined(FEAT_GUI))
 # if defined(__MRC__) || defined (__SC__) /* MPW Compilers */
 #  define HAVE_SETENV
 # endif
@@ -472,7 +475,11 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define FORWARD_FILE		3
 
 /* return values for functions */
-#define OK			1
+#if !(defined(OK) && (OK == 1))
+/* OK already defined to 1 in MacOS X curses */
+/* (still protect against any other OK) */
+# define OK			1
+#endif
 #define FAIL			0
 
 /* flags for b_flags */

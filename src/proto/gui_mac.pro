@@ -6,7 +6,7 @@
 
 pascal Boolean WaitNextEventWrp __PARMS((EventMask eventMask, EventRecord *theEvent, UInt32 sleep, RgnHandle mouseRgn));
 pascal void gui_mac_scroll_action __PARMS((ControlHandle theControl, short partCode));
-pascal void gui_mac_drag_thumb __PARMS((ControlHandle theControl));
+/*pascal void gui_mac_drag_thumb __PARMS((ControlHandle theControl));*/
 void gui_mac_handle_event __PARMS((EventRecord *event));
 void gui_mac_doMouseDown __PARMS((EventRecord *theEvent));
 void gui_mac_do_key __PARMS((EventRecord *theEvent));
@@ -74,11 +74,12 @@ void gui_mch_menu_hidden __PARMS((vimmenu_T *menu, int hidden));
 void gui_mch_draw_menubar __PARMS((void));
 int gui_mch_get_lightness __ARGS((guicolor_T pixel));
 char_u *gui_mch_get_rgb __ARGS((guicolor_T pixel));
+unsigned long gui_mch_get_rgb_long __ARGS((guicolor_T pixel));
 int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));
 void gui_mch_show_popupmenu __ARGS((vimmenu_T *menu));
-int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton));
+int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton, char_u *textfield));
 char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
 
 
@@ -101,3 +102,4 @@ void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
 void clip_mch_request_selection __ARGS((VimClipboard *cbd));
 void clip_mch_set_selection __ARGS((VimClipboard *cbd));
 int clip_mch_own_selection __ARGS((VimClipboard *cbd));
+/* vim: set ft=c : */

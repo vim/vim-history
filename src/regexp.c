@@ -1230,24 +1230,24 @@ regpiece(flagp)
 
 	case Magic('@'):
 	    {
-		int	op = END;
+		int	lop = END;
 
 		switch (no_Magic(getchr()))
 		{
-		    case '=': op = MATCH; break;		  /* \@= */
-		    case '!': op = NOMATCH; break;		  /* \@! */
-		    case '>': op = SUBPAT; break;		  /* \@> */
+		    case '=': lop = MATCH; break;		  /* \@= */
+		    case '!': lop = NOMATCH; break;		  /* \@! */
+		    case '>': lop = SUBPAT; break;		  /* \@> */
 		    case '<': switch (no_Magic(getchr()))
 			      {
-				  case '=': op = BEHIND; break;	  /* \@<= */
-				  case '!': op = NOBEHIND; break; /* \@<! */
+				  case '=': lop = BEHIND; break;   /* \@<= */
+				  case '!': lop = NOBEHIND; break; /* \@<! */
 			      }
 		}
-		if (op == END)
+		if (lop == END)
 		    EMSG_M_RET_NULL("E59: invalid character after %s@",
 						      reg_magic == MAGIC_ALL);
 		regtail(ret, regnode(END)); /* operand ends */
-		reginsert(op, ret);
+		reginsert(lop, ret);
 		break;
 	    }
 
@@ -1449,17 +1449,17 @@ regatom(flagp)
       case Magic('~'):		/* previous substitute pattern */
 	    if (reg_prev_sub)
 	    {
-		char_u	    *p;
+		char_u	    *lp;
 
 		ret = regnode(EXACTLY);
-		p = reg_prev_sub;
-		while (*p != NUL)
-		    regc(*p++);
+		lp = reg_prev_sub;
+		while (*lp != NUL)
+		    regc(*lp++);
 		regc(NUL);
 		if (*reg_prev_sub != NUL)
 		{
 		    *flagp |= HASWIDTH;
-		    if ((p - reg_prev_sub) == 1)
+		    if ((lp - reg_prev_sub) == 1)
 			*flagp |= SIMPLE;
 		}
 	    }
@@ -1659,14 +1659,14 @@ regatom(flagp)
       case Magic('['):
 collection:
 	{
-	    char_u	*p;
+	    char_u	*lp;
 
 	    /*
 	     * If there is no matching ']', we assume the '[' is a normal
 	     * character.  This makes 'incsearch' and ":help [" work.
 	     */
-	    p = skip_anyof(regparse);
-	    if (*p == ']')	/* there is a matching ']' */
+	    lp = skip_anyof(regparse);
+	    if (*lp == ']')	/* there is a matching ']' */
 	    {
 		int	startc = -1;	/* > 0 when next '-' is a range */
 		int	endc;
@@ -2480,7 +2480,7 @@ typedef struct
     union
     {
 	char_u	*ptr;	/* reginput pointer, for single-line regexp */
-	pos_T	pos;	/* reginput pos, for multi-line regexp */
+	lpos_T	pos;	/* reginput pos, for multi-line regexp */
     } rs_u;
 } regsave_T;
 
@@ -2490,7 +2490,7 @@ typedef struct
     union
     {
 	char_u	*ptr;
-	pos_T	pos;
+	lpos_T	pos;
     } se_u;
 } save_se_T;
 
@@ -2505,8 +2505,8 @@ static void	reg_nextline __ARGS((void));
 static void	reg_save __ARGS((regsave_T *save));
 static void	reg_restore __ARGS((regsave_T *save));
 static int	reg_save_equal __ARGS((regsave_T *save));
-static void	save_se __ARGS((save_se_T *savep, pos_T *posp, char_u **pp));
-static void	restore_se __ARGS((save_se_T *savep, pos_T *posp, char_u **pp));
+static void	save_se __ARGS((save_se_T *savep, lpos_T *posp, char_u **pp));
+static void	restore_se __ARGS((save_se_T *savep, lpos_T *posp, char_u **pp));
 static int	re_num_cmp __ARGS((long_u val, char_u *scan));
 static int	regmatch __ARGS((char_u *prog));
 static int	regrepeat __ARGS((char_u *p, long maxcount));
@@ -2550,8 +2550,8 @@ static regmatch_T	*reg_match;
 static regmmatch_T	*reg_mmatch;
 static char_u		**reg_startp;
 static char_u		**reg_endp;
-static pos_T		*reg_startpos;
-static pos_T		*reg_endpos;
+static lpos_T		*reg_startpos;
+static lpos_T		*reg_endpos;
 static win_T		*reg_win;
 static buf_T		*reg_buf;
 static linenr_T		reg_firstlnum;
@@ -2574,8 +2574,8 @@ reg_getline(lnum)
 #ifdef FEAT_SYN_HL
 static char_u	*reg_startzp[NSUBEXP];	/* Workspace to mark beginning */
 static char_u	*reg_endzp[NSUBEXP];	/*   and end of \z(...\) matches */
-static pos_T	reg_startzpos[NSUBEXP];	/* idem, beginning pos */
-static pos_T	reg_endzpos[NSUBEXP];	/* idem, end pos */
+static lpos_T	reg_startzpos[NSUBEXP];	/* idem, beginning pos */
+static lpos_T	reg_endzpos[NSUBEXP];	/* idem, end pos */
 #endif
 
 /* TRUE if using multi-line regexp. */
@@ -2901,17 +2901,6 @@ regtry(prog, col)
 		reg_endpos[0].lnum = reglnum;
 		reg_endpos[0].col = (int)(reginput - regline);
 	    }
-#ifdef FEAT_VIRTUALEDIT
-	    {
-		int i;
-
-		for (i = 0; i < NSUBEXP; ++i)
-		{
-		    reg_startpos[i].coladd = 0;
-		    reg_endpos[i].coladd = 0;
-		}
-	    }
-#endif
 	}
 	else
 	{
@@ -4468,8 +4457,8 @@ cleanup_subexpr()
 	if (REG_MULTI)
 	{
 	    /* Use 0xff to set lnum to -1 */
-	    vim_memset(reg_startpos, 0xff, sizeof(pos_T) * NSUBEXP);
-	    vim_memset(reg_endpos, 0xff, sizeof(pos_T) * NSUBEXP);
+	    vim_memset(reg_startpos, 0xff, sizeof(lpos_T) * NSUBEXP);
+	    vim_memset(reg_endpos, 0xff, sizeof(lpos_T) * NSUBEXP);
 	}
 	else
 	{
@@ -4489,8 +4478,8 @@ cleanup_zsubexpr()
 	if (REG_MULTI)
 	{
 	    /* Use 0xff to set lnum to -1 */
-	    vim_memset(reg_startzpos, 0xff, sizeof(pos_T) * NSUBEXP);
-	    vim_memset(reg_endzpos, 0xff, sizeof(pos_T) * NSUBEXP);
+	    vim_memset(reg_startzpos, 0xff, sizeof(lpos_T) * NSUBEXP);
+	    vim_memset(reg_endzpos, 0xff, sizeof(lpos_T) * NSUBEXP);
 	}
 	else
 	{
@@ -4573,7 +4562,7 @@ reg_save_equal(save)
     static void
 save_se(savep, posp, pp)
     save_se_T	*savep;
-    pos_T	*posp;
+    lpos_T	*posp;
     char_u	**pp;
 {
     if (REG_MULTI)
@@ -4595,7 +4584,7 @@ save_se(savep, posp, pp)
     static void
 restore_se(savep, posp, pp)
     save_se_T	*savep;
-    pos_T	*posp;
+    lpos_T	*posp;
     char_u	**pp;
 {
     if (REG_MULTI)
@@ -5423,7 +5412,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	if (no < 0)	      /* Ordinary character. */
 	{
 #ifdef FEAT_MBYTE
-	    int len;
+	    int l;
 #endif
 
 	    if (c == '\\' && *src != NUL)
@@ -5452,13 +5441,13 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 
 	    /* Write to buffer, if copy is set. */
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && (len = (*mb_ptr2len_check)(src - 1)) > 1)
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(src - 1)) > 1)
 	    {
 		/* TODO: should use "func" here. */
 		if (copy)
-		    mch_memmove(dst, src - 1, len);
-		dst += len - 1;
-		src += len - 1;
+		    mch_memmove(dst, src - 1, l);
+		dst += l - 1;
+		src += l - 1;
 	    }
 	    else
 	    {

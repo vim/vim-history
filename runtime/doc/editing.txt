@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0al.  Last change: 2001 Jun 16
+*editing.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -53,7 +53,7 @@ CTRL-G		or				*CTRL-G* *:f* *:fi* *:file*
 
 							*g_CTRL-G*
 g CTRL-G		Prints the current position of the cursor in four
-			ways: Column, Line, Word and Character.  If there are
+			ways: Column, Line, Word and Byte.  If there are
 			characters in the line that take more than one
 			position on the screen (<Tab> or special character),
 			both the "real" column and the screen column are
@@ -61,10 +61,10 @@ g CTRL-G		Prints the current position of the cursor in four
 			option.  {not in Vi}
 
 							*v_g_CTRL-G*
-{Visual}g CTRL-G	Similar to "g CTRL-G", but Word, Line, and
-			Character counts for the visually selected region
-			are displayed.  In Blockwise mode, Column count is
-			also shown.  (For {Visual} see |Visual-mode|.)
+{Visual}g CTRL-G	Similar to "g CTRL-G", but Word, Line, and Byte counts
+			for the visually selected region are displayed.  In
+			Blockwise mode, Column count is also shown.  (For
+			{Visual} see |Visual-mode|.)
 			{not in VI}
 
 							*:file_f*
@@ -1082,7 +1082,7 @@ For MS-DOS and MS-Windows the device is detected by its name:
 	PRN
 	COMn	n=1,2,3... etc
 	LPTn	n=1,2,3... etc
-The names can be in upper or lower case.
+The names can be in upper- or lowercase.
 
 ==============================================================================
 6. Writing and quitting					*write-quit* 

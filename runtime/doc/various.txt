@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0al.  Last change: 2001 Jun 03
+*various.txt*   For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,8 +6,9 @@
 
 Various commands					*various*
 
-1. Various commands	|various-cmds|
-2. Online help		|online-help|
+1. Various commands		|various-cmds|
+2. Online help			|online-help|
+3. Using Vim like less or more	|less|
 
 ==============================================================================
 1. Various commands					*various-cmds*
@@ -326,7 +327,11 @@ N  *+X11*		Unix only: can restore window title |X11|
 			until redirection ends.  The messages are also still
 			shown on the screen.  When [!] is included, an
 			existing file is overwritten.  When [!] is omitted,
-			and {file} exists, this command fails.  {not in Vi}
+			and {file} exists, this command fails.
+			To stop the messages and commands from being echoed to
+			the screen, put the commands in a function and call it
+			with ":silent call Function()".
+			{not in Vi}
 
 :redi[r] >> {file}	Redirect messages to file {file}.  Append if {file}
 			already exists.  {not in Vi}
@@ -347,12 +352,19 @@ N  *+X11*		Unix only: can restore window title |X11|
 			When [!] is added, error messages will also be
 			skipped, and commands and mappings will not be aborted
 			when an error is detected.  |v:errmsg| is still set.
+			When [!] is not used, an error message will cause
+			further messages to be displayed normally.
 			Redirection, started with |:redir|, will continue as
-			usual.  This will allow redirecting the output of a
-			command without seeing it on the screen.  Example: >
+			usual, although there might be small differences.
+			This will allow redirecting the output of a command
+			without seeing it on the screen.  Example: >
 			    :redir >/tmp/foobar
 			    :silent g/Aap/p
 			    :redir END
+<			To execute a Normal mode command silently, use the
+			|:normal| command.  For example, to search for a
+			string without messages: >
+			    :silent exe "normal /path\<CR>"
 <			":silent!" is useful to execute a command that may
 			fail, but the failure is to be ignored.  Example: >
 			    :let v:errmsg = ""
@@ -363,6 +375,10 @@ N  *+X11*		Unix only: can restore window title |X11|
 			using this for an external command, this may cause the
 			screen to be messed up.  Use |CTRL-L| to clean it up
 			then.
+			":silent menu ..." defines a menu that will not echo a
+			Command-line command.  The command will still produce
+			messages though.  Use ":silent" in the command itself
+			to avoid that: ":silent menu .... :silent command".
 
 						*:verb* *:verbose*
 :[count]verb[ose] {command}
@@ -572,5 +588,22 @@ command:
 			file is sorted.  When there are duplicates an error
 			message is given.  An existing tags file is silently
 			overwritten.
+
+==============================================================================
+3. Using Vim like less or more					*less*
+
+If you use the less or more program to view a file, you don't get syntax
+highlighting.  Thus you would like to use Vim instead.  You can do this by
+using the shell script "$VIMRUNTIME/macros/less.sh".
+
+This shell script uses the Vim script "$VIMRUNTIME/macros/less.vim".  It sets
+up mappings to simulate the commands that less supports.  Otherwise, you can
+still use the Vim commands.
+
+This isn't perfect.  For example, when viewing a short file Vim will still use
+the whole screen.  But it works good enough for most uses, and you get syntax
+highlighting.
+
+The "h" key will give you a short overview of the available comands.
 
  vim:tw=78:

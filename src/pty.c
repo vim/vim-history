@@ -576,7 +576,7 @@ moreenv()
 # ifdef USE_VIMPTY_GETENV
     char_u *
 vimpty_getenv(string)
-    const char *string;
+    const char_u *string;
 {
     int i;
     char_u *p;

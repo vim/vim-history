@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_07.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -14,6 +14,8 @@ from one file and put it in another one.
 |07.3|	Jumping from file to file
 |07.4|	Backup files
 |07.5|	Copy text between files
+|07.6|	Viewing a file
+|07.7|	Changing the file name
 
      Next chapter: |usr_08.txt|  Splitting windows
  Previous chapter: |usr_06.txt|  Using syntax highlighting
@@ -29,10 +31,10 @@ simpler way.  To start editing another file, use this command: >
 
 You can use any file name instead of "foo.txt".  Vim will close the current
 file and open the new one.  If the current file has unsaved changes, however,
-Vim displays an error message and does not open the new file: >
+Vim displays an error message and does not open the new file:
 
-	E37: No write since last change (use ! to override)
-<
+	E37: No write since last change (use ! to override) ~
+
 	Note:
 	Vim puts an error ID at the start of each error message.  If you do
 	not understand the message or what caused it, look in the help system
@@ -49,6 +51,14 @@ Or you can force Vim to discard your changes and edit the new file, using the
 force (!) character: >
 
 	:edit! foo.txt
+
+If you want to edit another file, but not write the changes in the current
+file yet, you can make it hidden: >
+
+	:hide edit foo.txt
+
+The text with changes is still there, but you can't see it.  This is further
+explained in section |22.4|: The buffer list.
 
 ==============================================================================
 *07.2*	A list of files
@@ -124,6 +134,21 @@ You can use a count for ":next" and ":previous".  To skip two files forward: >
 	:2next
 
 
+AUTOMATIC WRITING
+
+When moving around the files and making changes, you have to remember to use
+":write".  Otherwise you will get an error message.  If you are sure you
+always want to write modified files, you can tell Vim to automatically write
+them: >
+
+	:set autowrite
+
+When you are editing a file which you may not want to write, switch it off
+again: >
+
+	:set noautowrite
+
+
 EDITING ANOTHER LIST OF FILES
 
 You can redefine the list of files without the need to exit Vim and start it
@@ -178,14 +203,37 @@ The file you were previously editing is called the "alternate" file.  When you
 just started Vim CTRL-^ will not work, since there isn't a previous file.
 
 
+PREDEFINED MARKS
+
+After jumping to another file, you can use two predefined marks which are very
+useful: >
+
+	`"
+
+This takes you to the position where the cursor was when you left the file.
+Another mark that is remembered is the position where you made the last
+change: >
+
+	`.
+
+Suppose you are editing the file "one.txt".  Somewhere halfway the file you
+use "x" to delete a character.  Then you go to the last line with "G" and
+write the file with ":w".  You edit several other files, and then use ":edit
+one.txt" to come back to "one.txt".  If you now use `" Vim jumps to the last
+line of the file.  Using `. takes you to the position where deleted the
+character.  Even when move around in the file `" and `. will take you to the
+remembered position.  At least until you make another change or leave the
+file.
+
+
 FILE MARKS
 
 In chapter 4 was explained how you can place a mark in a file with "mx" and
 jump to that position with "`x".  That works within one file.  If you edit
 another file and place marks there, these are specific for that file.  Thus
 each file has its own set of marks, they are local to the file.
-   So far we were using marks with a lower case letter.  There are also marks
-with an upper case letter.  These are global, they can be used from any file.
+   So far we were using marks with a lowercase letter.  There are also marks
+with an uppercase letter.  These are global, they can be used from any file.
 For example suppose that we are editing the file "foo.txt".  Go to halfway the
 file ("50%") and place the F mark there (F for foo): >
 
@@ -236,6 +284,14 @@ This will use data.txt.bak instead of data.txt~.
    Another option that matters here is 'backupdir'.  It specifies where the
 backup file is written.  The default, to write the backup in the same
 directory as the original file, will mostly be the right thing.
+
+	Note:
+	When the 'backup' option isn't set but the 'writebackup' is, Vim will
+	still create a backup file.  However, it is deleted as soon as writing
+	the file was completed successfully.  This functions as a safety
+	against losing your original file when writing fails in some way (disk
+	full is the most common cause; being hit by lightning might be
+	another, although less common).
 
 
 KEEPING THE ORIGINAL FILE
@@ -345,6 +401,77 @@ and put them there.  Thus you save two steps.  But you can only append to the
 end of a file.
    To append only a few lines, select them in Visual mode before typing
 ":write".  In chapter 10 you will learn other ways to select a range of lines.
+
+==============================================================================
+*07.6*	Viewing a file
+
+Sometimes you only want to see what a file contains, without the intention to
+ever write it back.  There is the risk that you type ":w" without thinking and
+overwrite the original file anyway.  To avoid this, edit the file read-only.
+   To start Vim in readonly mode, use this command: >
+
+	vim -R file
+
+On Unix this command should do the same thing: >
+
+	view file
+
+You are now editing "file" in read-only mode.  When you try using ":w" you
+will get an error message and the file won't be written.
+   When you try to make a change to the file Vim will give you a warning:
+
+	W10: Warning: Changing a readonly file ~
+
+The change will be done though.  This allows for formatting the file, for
+example, to be able to read it easily.
+   If you make changes to a file and forgot that it was read-only, you can
+still write it.  Add the ! to the write command to force writing.
+
+If you really want to forbid making changes in a file, do this: >
+
+	vim -M file
+
+Now every attempt to change the text will fail.  The help files are like this,
+for example.  If you try to make a change you get this error message:
+
+	E21: Cannot make changes, 'modifiable' is off ~
+
+You could use the -M argument to setup Vim to work in a viewer mode.  This is
+only a voluntary though, since these commands will remove the protection: >
+
+	:set nomodifiable
+	:set write
+
+==============================================================================
+*07.7*	Changing the file name
+
+A clever way to start editing a new file is by using an existing file that
+contains most of what you need.  For example, you start writing a new program
+to move a file.  You know that you already have a program that copies a file,
+thus you start with: >
+
+	:edit copy.c
+
+You can delete the stuff you don't need.  Now you need to save the file under
+a new name.  The ":saveas" command can be used for this: >
+
+	:saveas move.c
+
+Vim will write the file under the given name, and edit that file.  Thus the
+next time you do ":write", it will write "move.c".  "copy.c" remains
+unmodified.
+   When you want to change the name of the file you are editing, but don't
+want to write the file, you can use this command: >
+
+	:file move.c
+
+Vim will mark the file as "not edited".  This means that Vim knows this is not
+the file you started editing.  When you try to write the file, you might get
+this message:
+
+	E13: File exists (use ! to override) ~
+
+This protects you from accidentally overwriting another file.
 
 ==============================================================================
 

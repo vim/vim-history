@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0al.  Last change: 2001 Jun 24
+*help.txt*	For Vim version 6.0am.  Last change: 2001 Jun 30
 
 			VIM - main help file
 									 k
@@ -6,10 +6,12 @@
 		    "j" to go down, "k" to go up, "l" to go right.	 j
 Close this window:  Use ":q<Enter>".
    Get out of Vim:  Use ":qa!<Enter>" (careful, all changes are lost!).
+
 Jump to a subject:  Position the cursor on a tag between |bars| and hit CTRL-].
    With the mouse:  ":set mouse=a" to enable the mouse (in xterm or GUI).
 		    Double-click the left mouse button on a tag between |bars|.
-	jump back:  Type CTRL-T or CTRL-O (can be repeated).
+	jump back:  Type CTRL-T or CTRL-O (repeat to go further back).
+
 Get specific help:  It is possible to go directly to whatever you want help
 		    on, by giving an argument to the ":help" command |:help|.
 		    It is possible to further specify the context:
@@ -46,17 +48,17 @@ Getting Started ~
 |usr_02.txt|  The first steps in Vim
 |usr_03.txt|  Moving around
 |usr_04.txt|  Making small changes
-|usr_05.txt|  Making big changes
-|usr_06.txt|  Set your settings
-|usr_07.txt|  Using syntax highlighting
-|usr_08.txt|  Editing more than one file
-|usr_09.txt|  Splitting windows
-|usr_10.txt|  Using the GUI
+|usr_05.txt|  Set your settings
+|usr_06.txt|  Using syntax highlighting
+|usr_07.txt|  Editing more than one file
+|usr_08.txt|  Splitting windows
+|usr_09.txt|  Using the GUI
+|usr_10.txt|  Making big changes
 |usr_11.txt|  Recovering from a crash
 |usr_12.txt|  Clever tricks
 
 Editing Effectively ~
-|usr_20.txt|  Typing commands quickly
+|usr_20.txt|  Typing command-line commands quickly
 |usr_21.txt|  Go away and come back
 |usr_22.txt|  Finding the file to edit
 |usr_23.txt|  Editing other files
@@ -79,7 +81,6 @@ Tuning Vim ~
 
 Making Vim Run ~
 |usr_90.txt|  Installing Vim
-|usr_91.txt|  Compiling Vim
 
 
 REFERENCE MANUAL: These files explain every detail of Vim.
@@ -105,7 +106,7 @@ Basic editing ~
 |insert.txt|	Insert and Replace mode
 |change.txt|	deleting and replacing text
 |undo.txt|	Undo and Redo
-|repeat.txt|	repeating commands
+|repeat.txt|	repeating commands and debugging
 |visual.txt|	using the Visual mode (selecting a text area)
 |various.txt|	various remaining commands
 |recover.txt|	recovering from a crash

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0al.  Last change: 2001 Jun 24
+*syntax.txt*    For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -395,7 +395,7 @@ Unix shell: >
 <
 
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
-Assembly	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
+ASSEMBLY	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
 		*asm68k-syntax*
 
 Files matching "*.i" could be Progress or Assembly  If the automatic detection
@@ -449,7 +449,20 @@ nasm_ctx_outside_macro	contexts outside macro not as Error
 nasm_no_warn		potentially risky syntax not as ToDo
 
 
+ASPPERL and ASPVBS			*aspperl-syntax* *aspvbs-syntax*
+
+*.asp and *.asa files could be either Perl or Visual Basic script.  Since it's
+hard to detect this you can set two global variables to tell Vim what you are
+using.  For Perl script use: >
+	:let g:filetype_asa = "aspperl"
+	:let g:filetype_asp = "aspperl"
+For Visual Basic use: >
+	:let g:filetype_asa = "aspvbs"
+	:let g:filetype_asp = "aspvbs"
+
+
 BASIC				*basic.vim* *vb.vim* *basic-syntax* *vb-syntax*
+
 Both Visual Basic and "normal" basic use the extension ".bas".  To detect
 which one should be used, Vim checks for the string "VB_Name" in the first
 five lines of the file.  If it is not found, filetype will be "basic",
@@ -999,7 +1012,7 @@ If you write function declarations that are always indented by either
 a tab, 8 spaces or 2 spaces you may want to set >
 	:let java_highlight_functions="indent"
 However, if you follow the java guidlines about how functions and classes are
-supposed to be named (with respect to upper and lower cases), use >
+supposed to be named (with respect to upper and lowercase), use >
 	:let java_highlight_functions="style"
 If both options do not work for you, but you would still want function
 declarations to be highlighted create your own definitions by changing the

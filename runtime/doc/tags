@@ -256,6 +256,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'iconstring'	options.txt	/*'iconstring'*
 'ignorecase'	options.txt	/*'ignorecase'*
 'im'	options.txt	/*'im'*
+'imc'	options.txt	/*'imc'*
+'imcmdline'	options.txt	/*'imcmdline'*
 'imi'	options.txt	/*'imi'*
 'iminsert'	options.txt	/*'iminsert'*
 'ims'	options.txt	/*'ims'*
@@ -423,6 +425,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'noicon'	options.txt	/*'noicon'*
 'noignorecase'	options.txt	/*'noignorecase'*
 'noim'	options.txt	/*'noim'*
+'noimc'	options.txt	/*'noimc'*
+'noimcmdline'	options.txt	/*'noimcmdline'*
 'noincsearch'	options.txt	/*'noincsearch'*
 'noinf'	options.txt	/*'noinf'*
 'noinfercase'	options.txt	/*'noinfercase'*
@@ -1025,6 +1029,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -F	starting.txt	/*-F*
 -H	starting.txt	/*-H*
 -L	starting.txt	/*-L*
+-M	starting.txt	/*-M*
 -N	starting.txt	/*-N*
 -O	starting.txt	/*-O*
 -R	starting.txt	/*-R*
@@ -1260,6 +1265,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 07.3	usr_07.txt	/*07.3*
 07.4	usr_07.txt	/*07.4*
 07.5	usr_07.txt	/*07.5*
+07.6	usr_07.txt	/*07.6*
+07.7	usr_07.txt	/*07.7*
 08.1	usr_08.txt	/*08.1*
 08.2	usr_08.txt	/*08.2*
 08.3	usr_08.txt	/*08.3*
@@ -1267,6 +1274,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 08.5	usr_08.txt	/*08.5*
 08.6	usr_08.txt	/*08.6*
 08.7	usr_08.txt	/*08.7*
+08.8	usr_08.txt	/*08.8*
 09.1	usr_09.txt	/*09.1*
 09.2	usr_09.txt	/*09.2*
 09.3	usr_09.txt	/*09.3*
@@ -1279,6 +1287,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 10.6	usr_10.txt	/*10.6*
 10.7	usr_10.txt	/*10.7*
 10.8	usr_10.txt	/*10.8*
+10.9	usr_10.txt	/*10.9*
 11.1	usr_11.txt	/*11.1*
 11.2	usr_11.txt	/*11.2*
 11.3	usr_11.txt	/*11.3*
@@ -1289,6 +1298,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 12.4	usr_12.txt	/*12.4*
 12.5	usr_12.txt	/*12.5*
 12.6	usr_12.txt	/*12.6*
+12.7	usr_12.txt	/*12.7*
 2/sys/	editing.txt	/*2\/sys\/*
 20.1	usr_20.txt	/*20.1*
 20.2	usr_20.txt	/*20.2*
@@ -1311,6 +1321,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 23.4	usr_23.txt	/*23.4*
 23.5	usr_23.txt	/*23.5*
 24.1	usr_24.txt	/*24.1*
+24.10	usr_24.txt	/*24.10*
 24.2	usr_24.txt	/*24.2*
 24.3	usr_24.txt	/*24.3*
 24.4	usr_24.txt	/*24.4*
@@ -1327,6 +1338,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 26.1	usr_26.txt	/*26.1*
 26.2	usr_26.txt	/*26.2*
 26.3	usr_26.txt	/*26.3*
+26.4	usr_26.txt	/*26.4*
 27.1	usr_27.txt	/*27.1*
 27.2	usr_27.txt	/*27.2*
 27.3	usr_27.txt	/*27.3*
@@ -1362,6 +1374,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 31.2	usr_31.txt	/*31.2*
 31.3	usr_31.txt	/*31.3*
 31.4	usr_31.txt	/*31.4*
+31.5	usr_31.txt	/*31.5*
 40.1	usr_40.txt	/*40.1*
 40.2	usr_40.txt	/*40.2*
 40.3	usr_40.txt	/*40.3*
@@ -1394,11 +1407,15 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 44.8	usr_44.txt	/*44.8*
 44.9	usr_44.txt	/*44.9*
 45.1	usr_45.txt	/*45.1*
+45.2	usr_45.txt	/*45.2*
+45.3	usr_45.txt	/*45.3*
+45.4	usr_45.txt	/*45.4*
+45.5	usr_45.txt	/*45.5*
 90.1	usr_90.txt	/*90.1*
 90.2	usr_90.txt	/*90.2*
-91.1	usr_91.txt	/*91.1*
-91.2	usr_91.txt	/*91.2*
-91.3	usr_91.txt	/*91.3*
+90.3	usr_90.txt	/*90.3*
+90.4	usr_90.txt	/*90.4*
+90.5	usr_90.txt	/*90.5*
 :	cmdline.txt	/*:*
 :!	various.txt	/*:!*
 :!!	various.txt	/*:!!*
@@ -1548,6 +1565,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :cal	eval.txt	/*:cal*
 :call	eval.txt	/*:call*
 :cc	quickfix.txt	/*:cc*
+:ccl	quickfix.txt	/*:ccl*
+:cclose	quickfix.txt	/*:cclose*
 :cd	editing.txt	/*:cd*
 :cd-	editing.txt	/*:cd-*
 :ce	change.txt	/*:ce*
@@ -1606,6 +1625,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :conf	editing.txt	/*:conf*
 :confirm	editing.txt	/*:confirm*
 :continue	eval.txt	/*:continue*
+:cope	quickfix.txt	/*:cope*
+:copen	quickfix.txt	/*:copen*
 :copy	change.txt	/*:copy*
 :cp	quickfix.txt	/*:cp*
 :cprevious	quickfix.txt	/*:cprevious*
@@ -1851,8 +1872,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :map!	map.txt	/*:map!*
 :map-<buffer>	map.txt	/*:map-<buffer>*
 :map-<script>	map.txt	/*:map-<script>*
+:map-<silent>	map.txt	/*:map-<silent>*
 :map-<unique>	map.txt	/*:map-<unique>*
 :map-local	map.txt	/*:map-local*
+:map-script	map.txt	/*:map-script*
+:map-silent	map.txt	/*:map-silent*
 :map-special-keys	map.txt	/*:map-special-keys*
 :map-undo	map.txt	/*:map-undo*
 :map_l	map.txt	/*:map_l*
@@ -1868,8 +1892,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :me	gui.txt	/*:me*
 :menu	gui.txt	/*:menu*
 :menu-<script>	gui.txt	/*:menu-<script>*
+:menu-<silent>	gui.txt	/*:menu-<silent>*
 :menu-disable	gui.txt	/*:menu-disable*
 :menu-enable	gui.txt	/*:menu-enable*
+:menu-script	gui.txt	/*:menu-script*
+:menu-silent	gui.txt	/*:menu-silent*
 :menut	multilang.txt	/*:menut*
 :menutrans	multilang.txt	/*:menutrans*
 :menutranslate	multilang.txt	/*:menutranslate*
@@ -2887,7 +2914,9 @@ E295	message.txt	/*E295*
 E296	message.txt	/*E296*
 E297	message.txt	/*E297*
 E298	message.txt	/*E298*
+E299	if_perl.txt	/*E299*
 E30	change.txt	/*E30*
+E300	message.txt	/*E300*
 E301	message.txt	/*E301*
 E302	message.txt	/*E302*
 E303	message.txt	/*E303*
@@ -3349,6 +3378,7 @@ ZZ	editing.txt	/*ZZ*
 [z	fold.txt	/*[z*
 [{	motion.txt	/*[{*
 \%#\k	pattern.txt	/*\\%#\\k*
+\0	change.txt	/*\\0*
 \z9	syntax.txt	/*\\z9*
 ]	index.txt	/*]*
 ]#	motion.txt	/*]#*
@@ -3451,6 +3481,8 @@ asm68k	syntax.txt	/*asm68k*
 asm68k-syntax	syntax.txt	/*asm68k-syntax*
 asmh8300-syntax	syntax.txt	/*asmh8300-syntax*
 asmh8300.vim	syntax.txt	/*asmh8300.vim*
+aspperl-syntax	syntax.txt	/*aspperl-syntax*
+aspvbs-syntax	syntax.txt	/*aspvbs-syntax*
 athena-intellimouse	gui.txt	/*athena-intellimouse*
 attr-list	syntax.txt	/*attr-list*
 author	intro.txt	/*author*
@@ -4447,6 +4479,7 @@ insert_expand	insert.txt	/*insert_expand*
 inserting	insert.txt	/*inserting*
 inserting-ex	insert.txt	/*inserting-ex*
 inserting-file	insert.txt	/*inserting-file*
+install-home	usr_90.txt	/*install-home*
 install-registry	gui_w32.txt	/*install-registry*
 intel-itanium	syntax.txt	/*intel-itanium*
 intellimouse-wheel-problems	gui_w32.txt	/*intellimouse-wheel-problems*
@@ -4502,6 +4535,7 @@ last_buffer_nr()	eval.txt	/*last_buffer_nr()*
 lc_time-variable	eval.txt	/*lc_time-variable*
 left-right-motions	motion.txt	/*left-right-motions*
 leftabove	windows.txt	/*leftabove*
+less	various.txt	/*less*
 lex-syntax	syntax.txt	/*lex-syntax*
 lex.vim	syntax.txt	/*lex.vim*
 libcall()	eval.txt	/*libcall()*
@@ -4715,6 +4749,7 @@ new-searchpat	version6.txt	/*new-searchpat*
 new-session-files	version5.txt	/*new-session-files*
 new-unlisted-buffers	version6.txt	/*new-unlisted-buffers*
 new-user-defined	version5.txt	/*new-user-defined*
+new-user-manual	version6.txt	/*new-user-manual*
 new-user-manual	version6.txt	/*new-user-manual*
 new-utf-8	version6.txt	/*new-utf-8*
 new-vertsplit	version6.txt	/*new-vertsplit*
@@ -5414,13 +5449,9 @@ usr_43.txt	usr_43.txt	/*usr_43.txt*
 usr_44.txt	usr_44.txt	/*usr_44.txt*
 usr_45.txt	usr_45.txt	/*usr_45.txt*
 usr_90.txt	usr_90.txt	/*usr_90.txt*
-usr_91.txt	usr_91.txt	/*usr_91.txt*
 usr_toc.txt	usr_toc.txt	/*usr_toc.txt*
 utf-8	multibyte.txt	/*utf-8*
 utf-8-char-arg	multibyte.txt	/*utf-8-char-arg*
-utf-8-in-mswindows	multibyte.txt	/*utf-8-in-mswindows*
-utf-8-in-others	multibyte.txt	/*utf-8-in-others*
-utf-8-in-xterm	multibyte.txt	/*utf-8-in-xterm*
 utf-8-in-xwindows	multibyte.txt	/*utf-8-in-xwindows*
 utf-8-typing	multibyte.txt	/*utf-8-typing*
 utf8	multibyte.txt	/*utf8*

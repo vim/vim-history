@@ -35,9 +35,6 @@ static void main_msg __ARGS((char *s));
 static void usage __ARGS((void));
 static int get_number_arg __ARGS((char_u *p, int *idx, int def));
 static void main_start_gui __ARGS((void));
-#ifdef FEAT_XCMDSRV
-static char_u *build_drop_cmd __ARGS((int filec, char **filev));
-#endif
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 static void check_swap_exists_action __ARGS((void));
 #endif
@@ -134,7 +131,7 @@ main
 #ifdef FEAT_XCMDSRV
     char_u	*serverStr = NULL;
     char_u	*cmdTarget = NULL;
-    int         serverArg = 0;
+    int         serverArg = FALSE;
 #endif
 
     /*
@@ -239,79 +236,32 @@ main
 		)
 	{
 	    if (i == argc - 1)
-		mainerr(ME_ARG_MISSING, (char_u *)argv[i]);
+		mainerr_arg_missing((char_u *)argv[i]);
 	    xterm_display = argv[++i];
 	    break;
 	}
-#ifdef FEAT_XCMDSRV
+# ifdef FEAT_XCMDSRV
 	else if (STRICMP(argv[i], "--servername") == 0)
 	{
 	    if (i == argc - 1)
-		mainerr(ME_ARG_MISSING, (char_u *)argv[i]);
+		mainerr_arg_missing((char_u *)argv[i]);
 	    cmdTarget = (char_u *)argv[++i];
 	}
 	else if (STRICMP(argv[i], "--serverlist") == 0
 	         || STRICMP(argv[i], "--serversend") == 0
 	         || STRICMP(argv[i], "--remote") == 0 )
-	{
-	    serverArg = 1;
-	}
-#endif
+	    serverArg = TRUE;
+# endif
     }
-#ifdef FEAT_XCMDSRV
-    if (serverArg && !(cmdTarget != NULL && *cmdTarget == 0))
-    {
-	setup_term_clip();
-	if (xterm_dpy != NULL)
-	{
-	    char_u  *res, *s;
 
-	    for (i = 1; i < argc; i++)
-	    {
-		if (STRCMP(argv[i], "--") == 0)
-		    break;
-		else if (STRICMP(argv[i], "--remote") == 0
-			 || STRICMP(argv[i], "--serversend") == 0)
-		{
-		    if (i == argc - 1)
-			mainerr(ME_ARG_MISSING, (char_u *)argv[i]);
-		    if (argv[i][2] == 'r')
-		    {
-			serverStr = build_drop_cmd(argc - i - 1, argv + i + 1);
-			argc = i;
-		    }
-		    else
-		    {
-			serverStr = (char_u *)argv[i + 1];
-			i++;
-		    }
-		    s = cmdTarget != NULL ? cmdTarget
-			: gettail((char_u *)argv[0]);
-		    if (serverSendToVim(xterm_dpy, s, serverStr) < 0)
-		    {
-			MSG_ATTR(_("Send failed. Trying to execute locally"),
-				 hl_attr(HLF_W));
-			break;      /* Break out to let vim start normally.  */
-		    }
-		}
-		else if (STRICMP(argv[i], "--serverlist") == 0)
-		{
-		    res = serverGetVimNames(xterm_dpy);
-		    if (res != NULL && *res)
-			mch_msg((char *)res);
-		    vim_free(res);
-		}
-		else
-		{
-		    continue;
-		}
-		serverArg++;
-	    }
-	    if (serverArg > 1)
-		exit(0);     /* Mission accomplished - get out */
-	}
-    }
-#endif
+# ifdef FEAT_XCMDSRV
+    /*
+     * When a command server argument was found, execute it.  This may exit
+     * Vim when it was successful.
+     */
+    if (serverArg && !(cmdTarget != NULL && *cmdTarget == 0))
+	cmdsrv_main(argc, argv, cmdTarget);
+# endif
 #endif
 
 #ifdef FEAT_SUN_WORKSHOP
@@ -374,6 +324,9 @@ main
 #ifdef FEAT_EVAL
     set_vim_var_string(VV_PROGNAME, initstr, -1);
 #endif
+
+    /* TODO: On MacOS X default to gui if argv[0] ends in:
+     *       /vim.app/Contents/MacOS/Vim */
 
     if (TO_LOWER(initstr[0]) == 'r')
     {
@@ -593,6 +546,21 @@ main
 #endif
 		break;
 
+#ifdef TARGET_API_MAC_OSX
+            /* For some reason on MacOS X, an argument like:
+               -psn_0_10223617 is passed in wjen invoke from Finder
+               or with the 'open' command */
+            case 'p':
+                mch_errmsg("What does this mean: ");
+                mch_errmsg(argv[0]);
+                mch_errmsg("\n");
+                argv_idx = -1; /* bypass full -psn */
+                break;
+#endif
+	    case 'M':		/* "-M"  no changes or writing of files */
+		reset_modifiable();
+		/* FALLTRHOUGH */
+
 	    case 'm':		/* "-m"  no writing of files */
 		p_write = FALSE;
 		break;
@@ -752,7 +720,7 @@ main
 
 		--argc;
 		if (argc < 1)
-		    mainerr(ME_ARG_MISSING, (char_u *)argv[0]);
+		    mainerr_arg_missing((char_u *)argv[0]);
 		++argv;
 		argv_idx = -1;
 
@@ -2073,6 +2041,13 @@ mainerr(n, str)
     mch_exit(1);
 }
 
+    void
+mainerr_arg_missing(str)
+    char_u	*str;
+{
+    mainerr(ME_ARG_MISSING, str);
+}
+
 /*
  * print a message with three spaces prepended and '\n' appended.
  */
@@ -2296,55 +2271,6 @@ time_msg(msg)
 	prev = now;
 	fprintf(time_fd, ": %s\n", msg);
     }
-}
-#endif
-
-#ifdef FEAT_XCMDSRV
-    static char_u *
-build_drop_cmd(filec, filev)
-    int	    filec;
-    char    **filev;
-{
-    garray_T	    ga;
-    int		    i;
-    char_u	    *inicmd = NULL;
-    char_u	    *p;
-    char_u	    cwd[MAXPATHL];
-
-    if (filec > 0 && filev[0][0] == '+')
-    {
-	inicmd = (char_u *)filev[0] + 1;
-	filev++;
-	filec--;
-    }
-    if (filec <= 0 || mch_dirname(cwd, MAXPATHL) != OK)
-	return NULL;
-    if ((p = vim_strsave_escaped(cwd, PATH_ESC_CHARS)) == NULL)
-	return NULL;
-    ga_init2(&ga, 1, 100);
-    ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd ");
-    ga_concat(&ga, p);
-    ga_concat(&ga, (char_u *)"<CR>:drop ");
-    for (i = 0; i < filec; i++)
-    {
-	vim_free(p);
-	p = vim_strsave_escaped((char_u *)filev[i], PATH_ESC_CHARS);
-	if (p == NULL)
-	{
-	    vim_free(ga.ga_data);
-	    return NULL;
-	}
-	ga_concat(&ga, p);
-	ga_concat(&ga, (char_u *)" ");
-    }
-    ga_concat(&ga, (char_u *)"<CR>:cd -");
-    if (inicmd != NULL)
-    {
-	ga_concat(&ga, (char_u *)"<CR>:");
-	ga_concat(&ga, inicmd);
-    }
-    ga_concat(&ga, (char_u *)"<CR>:<Esc>"); /* Execute & clear command line */
-    return ga.ga_data;
 }
 #endif
 

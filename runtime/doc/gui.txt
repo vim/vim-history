@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0al.  Last change: 2001 Jun 24
+*gui.txt*       For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -537,11 +537,20 @@ included they make the <> form and raw key codes not being recognized).
 Note that <Esc> in Cmdline mode executes the command, like in a mapping.  This
 is Vi compatible.  Use CTRL-C to quit Cmdline mode.
 
-							*:menu-<script>*
+						*:menu-<silent>* *:menu-silent*
+To define a menu which will not be echoed on the command line, add
+"<silent>" as the first argument.  Example: >
+	:menu <silent> Settings.Ignore\ case  :set ic<CR>
+The ":set ic" will not be echoed when using this menu.  Messages from the
+executed command are still given though.  To shut them up too, add a ":silent"
+in the executed command: >
+	:menu <silent> Search.Header :exe ":silent normal /Header\r"<CR>
+<
+						*:menu-<script>* *:menu-script*
 The "to" part of the menu will be inspected for mappings.  If you don't want
 this, use the ":noremenu" command (or the similar one for a specific mode).
 If you do want to use script-local mappings, add "<script>" as the very first
-argument to the ":menu" command.
+argument to the ":menu" command or after "<silent>".
 
 							*menu-priority*
 You can give a priority to a menu.  Menus with a higher priority go more to

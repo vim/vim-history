@@ -72,10 +72,6 @@
 # define NOCATGETS(x) x
 #endif
 
-/* Somehow, this is not defined even though I'm including string.h */
-extern char *strdup(const char *s1);
-
-
 /* Functions private to this file */
 static void workshop_connection_closed(void);
 static void messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2);
@@ -118,7 +114,7 @@ workshop_connection_closed(void)
 	 * socket closed on other end
 	 */
 	XtRemoveInput(inputHandler);
-	inputHandler = NULL;
+	inputHandler = 0;
 	sd = -1;
 }
 
@@ -143,7 +139,7 @@ getCommand(void)
 			}
 		}
 		if (cbsize >= len && (len = read(sd, cmdbuf, len)) > 0) {
-			cmdbuf[len] = NULL;
+			cmdbuf[len] = 0;
 			return cmdbuf;
 		} else {
 			return NULL;
@@ -184,11 +180,11 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 			write(sd, buf, strlen(buf));
 		} else if (strncmp(cmd,
 		    NOCATGETS("addMarkType "), 12) == 0) {
-			int index;
+			int idx;
 			char *color;
 			char *sign;
 
-			index = atoi(strtok(&cmd[12], " "));
+			idx = atoi(strtok(&cmd[12], " "));
 			color  = strtok(NULL, NOCATGETS("\001"));
 			sign  = strtok(NULL, NOCATGETS("\001"));
 			/* Skip space that separates names */
@@ -200,7 +196,7 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 			}
 			/* Change sign name to accomodate a different size? */
 			adjust_sign_name(sign);
-			workshop_add_mark_type(index, color, sign);
+			workshop_add_mark_type(idx, color, sign);
 		}
 		HANDLE_ERRORS(cmd);
 		break;
@@ -734,7 +730,7 @@ void	workshop_disconnect()
 	 */
 	XtRemoveInput(inputHandler);
 	close(sd);
-	inputHandler = NULL;
+	inputHandler = 0;
 	sd = -1;
 
 }

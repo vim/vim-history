@@ -420,10 +420,10 @@ getmark2(c, changefile, fcoladd)
  * Returns pointer to pos_T of the next mark or NULL if no mark is found.
  */
     pos_T *
-getnextmark(startpos, dir, beginline)
+getnextmark(startpos, dir, begin_line)
     pos_T	*startpos;	/* where to start */
     int		dir;	/* direction for search */
-    int		beginline;
+    int		begin_line;
 {
     int		i;
     pos_T	*result = NULL;
@@ -433,9 +433,9 @@ getnextmark(startpos, dir, beginline)
      * position must be in a previous line.
      * When searching forward and leaving the cursor on the first non-blank,
      * position must be in a next line. */
-    if (dir == BACKWARD && beginline)
+    if (dir == BACKWARD && begin_line)
 	pos.col = 0;
-    else if (dir == FORWARD && beginline)
+    else if (dir == FORWARD && begin_line)
 	pos.col = MAXCOL;
 
     for (i = 0; i < NMARKS; i++)

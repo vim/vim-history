@@ -740,7 +740,7 @@ ml_recover()
 		== 0)
     {
 	directly = TRUE;
-	fname = vim_strsave(fname); /* make a copy for mf_open */
+	fname = vim_strsave(fname); /* make a copy for mf_open() */
     }
     else
     {
@@ -1461,27 +1461,27 @@ swapfile_info(fname)
     int		    fd;
     struct block0   b0;
     time_t	    x = (time_t)0;
+#ifdef UNIX
+    char_u	    uname[B0_UNAME_SIZE];
+#endif
 
     /* print the swap file date */
     if (mch_stat((char *)fname, &st) != -1)
     {
-	MSG_PUTS(_("             dated: "));
+#ifdef UNIX
+	/* print name of owner of the file */
+	if (mch_get_uname(st.st_uid, uname, B0_UNAME_SIZE) == OK)
+	{
+	    MSG_PUTS(_("          owned by: "));
+	    msg_outtrans(uname);
+	    MSG_PUTS(_("   dated: "));
+	}
+	else
+#endif
+	    MSG_PUTS(_("             dated: "));
 	x = st.st_mtime;		    /* Manx C can't do &st.st_mtime */
 	MSG_PUTS(ctime(&x));		    /* includes '\n' */
 
-#ifdef UNIX
-	/* print name of owner of the file */
-	{
-	    char_u uname[B0_UNAME_SIZE];
-
-	    if (mch_get_uname(st.st_uid, uname, B0_UNAME_SIZE) == OK)
-	    {
-		MSG_PUTS(_("          owned by: "));
-		msg_outtrans(uname);
-		msg_putchar('\n');
-	    }
-	}
-#endif
     }
 
     /*
@@ -1517,16 +1517,19 @@ swapfile_info(fname)
 		MSG_PUTS(_("\n          modified: "));
 		MSG_PUTS(b0.b0_dirty ? _("YES") : _("no"));
 
-		if (*(b0.b0_hname) != NUL)
-		{
-		    MSG_PUTS(_("\n         host name: "));
-		    msg_outtrans(b0.b0_hname);
-		}
-
 		if (*(b0.b0_uname) != NUL)
 		{
 		    MSG_PUTS(_("\n         user name: "));
 		    msg_outtrans(b0.b0_uname);
+		}
+
+		if (*(b0.b0_hname) != NUL)
+		{
+		    if (*(b0.b0_uname) != NUL)
+			MSG_PUTS(_("   host name: "));
+		    else
+			MSG_PUTS(_("\n         host name: "));
+		    msg_outtrans(b0.b0_hname);
 		}
 
 		if (char_to_long(b0.b0_pid) != 0L)
@@ -3506,7 +3509,16 @@ findswapname(buf, dirp, old_fname)
 	 */
 	if (mch_getperm(fname) < 0)	/* it does not exist */
 	{
-#ifdef AMIGA
+#ifdef HAVE_LSTAT
+	    struct stat sb;
+
+	    /*
+	     * Extra security check: When a swap file is a symbolic link, this
+	     * is most likely a symlink attack.
+	     */
+	    if (mch_lstat((char *)fname, &sb) < 0)
+#else
+# ifdef AMIGA
 	    fh = Open((UBYTE *)fname, (long)MODE_NEWFILE);
 	    /*
 	     * on the Amiga mch_getperm() will return -1 when the file exists
@@ -3521,9 +3533,11 @@ findswapname(buf, dirp, old_fname)
 	    }
 	    if (IoErr() != ERROR_OBJECT_IN_USE
 					    && IoErr() != ERROR_OBJECT_EXISTS)
+# endif
 #endif
 		break;
 	}
+
 	/*
 	 * A file name equal to old_fname is OK to use.
 	 */
@@ -3641,7 +3655,7 @@ findswapname(buf, dirp, old_fname)
 		    MSG_PUTS(_("\"\n    to recover the changes (see \":help recovery\").\n"));
 		    MSG_PUTS(_("    If you did this already, delete the swap file \""));
 		    msg_outtrans(fname);
-		    MSG_PUTS(_("\"\n    to avoid this message.\n\n"));
+		    MSG_PUTS(_("\"\n    to avoid this message.\n"));
 		    cmdline_row = msg_row;
 		    --no_wait_return;
 
@@ -3702,7 +3716,10 @@ findswapname(buf, dirp, old_fname)
 		    }
 		    else
 #endif
+		    {
+			MSG_PUTS("\n");
 			need_wait_return = TRUE; /* call wait_return later */
+		    }
 		}
 	    }
 	}

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0al.  Last change: 2001 May 18
+*motion.txt*    For Vim version 6.0am.  Last change: 2001 Jun 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -32,6 +32,9 @@ their fingers.  Beginners often prefer the arrow keys, because they do not
 know what the hjkl keys do.  The mnemonic value of hjkl is clear from looking
 at the keyboard.  Think of j as an arrow pointing downwards.
 
+The 'virtualedit' option can be set to make it possible to move the cursor to
+positions where there is no character or halfway a character.
+
 ==============================================================================
 1. motions and operators				*operator*
 
@@ -45,8 +48,8 @@ or change text.  The following operators are available:
 	|y|	y	yank into register (does not change the text)
 	|~|	~	swap case (only if 'tildeop' is set)
 	|g~|	g~	swap case
-	|gu|	gu	make lower case
-	|gU|	gU	make upper case
+	|gu|	gu	make lowercase
+	|gU|	gU	make uppercase
 	|!|	!	filter through an external program
 	|=|	=	filter through 'equalprg' or C-indenting if empty
 	|gq|	gq	text formatting
@@ -168,7 +171,9 @@ l		or					*l*
 
 							*$* *<End>* *<kEnd>*
 $  or <End>		To the end of the line and [count - 1] lines downward
-			(inclusive).
+			(inclusive).  When 'virtualedit' is active, "$" may
+			move the cursor back from past the end of the line to
+			the last character in the line.
 
 							*g_*
 g_			To the last non-blank character of the line and

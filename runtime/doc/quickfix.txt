@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0al.  Last change: 2001 Jun 18
+*quickfix.txt*  For Vim version 6.0am.  Last change: 2001 Jun 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -141,8 +141,8 @@ The following commands can be used if you are in QuickFix mode:
 			allowed with |:bufdo|.
 
 							*quickfix-window*
-							*:cw* *:cwindow*
-:cw[indow] [height]	Open a window to show the current list of errors.
+							*:cope* *:copen*
+:cope[n] [height]	Open a window to show the current list of errors.
 			When [height] is given, the window becomes that high
 			(if there is room).  Otherwise the window is made ten
 			lines high.
@@ -151,6 +151,15 @@ The following commands can be used if you are in QuickFix mode:
 			If there already is a quickfix window, it will be made
 			the current window.  It is not possible to open a
 			second quickfix window.
+
+							*:ccl* *:cclose*
+:ccl[ose]		Close the quickfix window.
+
+							*:cw* *:cwindow*
+:cw[indow] [height]	Open the quickfix window when there are recognized
+			errors.  If the window is already open and there are
+			no recorgnized errors, close the window.
+
 
 Normally the quickfix window is at the bottom of the screen.  If there are
 vertical splits, it's at the bottom of the column of windows that contains the
@@ -273,7 +282,7 @@ notation. Example: "%\\d%\\+" ("\d\+", "any number") is equivalent to "%*\\d".
 Important note: The \(...\) grouping of sub-matches can not be used in format
 specifications because it is reserved for internal conversions.
 
-note: By default the difference between upper and lower case is ignored.  If
+note: By default the difference between upper and lowercase is ignored.  If
 you want to match case, add "\C" to the pattern |/\C|.
 
 Some examples for C compilers that produce single-line error outputs:

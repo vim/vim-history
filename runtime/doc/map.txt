@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0al.  Last change: 2001 Jun 15
+*map.txt*       For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -121,7 +121,16 @@ Then you can map ",w" to something else in another buffer: >
 	:map <buffer>  ,w  /[#&!]<CR>
 The local buffer mappings are used before the global ones.
 
-							*:map-<script>*
+						*:map-<silent>* *:map-silent*
+To define a mapping which will not be echoed on the command line, add
+"<silent>" as the first argument.  Example: >
+	:map <silent> ,h /Header<CR>
+The search string will not be echoed when using this mapping  Messages from
+the executed command are still given though.  To shut them up too, add a
+":silent" in the executed command: >
+	:map <silent> ,h :exe ":silent normal /Header\r"<CR>
+<
+						*:map-<script>* *:map-script*
 If the first argument to one of these commands is "<script>" and it is used to
 define a new mapping or abbreviation, the mapping will only remap mappings
 that were defined local to a script, starting with "<SID>".  This can be used
@@ -142,8 +151,8 @@ Example of what will fail: >
 	:map ,w  /[#&!]<CR>
 	:map <buffer> <unique> ,w  /[.,;]<CR>
 
-"<buffer>", "<script>" and "<unique>" can be used in any order.  They must
-appear right after the command, before any other arguments.
+"<buffer>", "<silent>", "<script>" and "<unique>" can be used in any order.
+They must appear right after the command, before any other arguments.
 
 
 MAPPING AND MODES
@@ -332,7 +341,7 @@ construct can be used:
 	<Char-033>	character 27
 	<Char-0x7f>	character 127
 This is useful to specify a (multi-byte) character in a 'keymap' file.
-Upper and lower case differences are ignored.
+Upper and lowercase differences are ignored.
 
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'

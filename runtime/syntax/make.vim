@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2001 Apr 26
+" Last Change:	2001 Jun 20
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -52,7 +52,7 @@ syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:[^=]"me=e-2 c
 syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:$"me=e-1 contains=makeIdent,makeSpecTarget
 
 " Statements / Functions (GNU make)
-syn match makeStatement contained "(\(subst\|addprefix\|addsuffix\|basename\|call\|dir\|error\|filter\|filter-out\|findstring\|firstword\|foreach\|if\|join\|notdir\|origin\|patsubst\|shell\|sort\|strip\|suffix\|warning\|wildcard\|word\|wordlist\|words\)\>"ms=s+1
+syn match makeStatement contained "(\(subst\|addprefix\|addsuffix\|basename\|call\|dir\|error\|filter-out\|filter\|findstring\|firstword\|foreach\|if\|join\|notdir\|origin\|patsubst\|shell\|sort\|strip\|suffix\|warning\|wildcard\|word\|wordlist\|words\)\>"ms=s+1
 
 " some special characters
 syn match makeSpecial	"^\s*[@-]\+"

@@ -198,12 +198,15 @@ getcmdline(firstc, count, indent)
     ccline.cmdbuff[0] = NUL;
 
     redir_off = TRUE;		/* don't redirect the typed command */
-    i = msg_scrolled;
-    msg_scrolled = 0;		/* avoid wait_return message */
-    gotocmdline(TRUE);
-    msg_scrolled += i;
-    redrawcmdprompt();		/* draw prompt or indent */
-    set_cmdspos();
+    if (cmd_silent == 0)
+    {
+	i = msg_scrolled;
+	msg_scrolled = 0;		/* avoid wait_return message */
+	gotocmdline(TRUE);
+	msg_scrolled += i;
+	redrawcmdprompt();		/* draw prompt or indent */
+	set_cmdspos();
+    }
     xpc.xp_context = EXPAND_NOTHING;
 
     /*
@@ -227,6 +230,10 @@ getcmdline(firstc, count, indent)
 	im_set_active(*b_im_ptr == B_IMODE_IM);
 #endif
     }
+#ifdef USE_IM_CONTROL
+    else if (p_imcmdline)
+	im_set_active(TRUE);
+#endif
 
 #ifdef FEAT_MOUSE
     setmouse();
@@ -559,8 +566,11 @@ getcmdline(firstc, count, indent)
 				   truncate the cmdline now. */
 	    if (ccheck_abbr(c + ABBR_OFF))
 		goto cmdline_changed;
-	    windgoto(msg_row, 0);
-	    out_flush();
+	    if (cmd_silent == 0)
+	    {
+		windgoto(msg_row, 0);
+		out_flush();
+	    }
 	    break;
 	}
 
@@ -769,8 +779,11 @@ getcmdline(firstc, count, indent)
 
 		    vim_free(ccline.cmdbuff);	/* no commandline to return */
 		    ccline.cmdbuff = NULL;
-		    msg_col = 0;
-		    msg_putchar(' ');		/* delete ':' */
+		    if (cmd_silent == 0)
+		    {
+			msg_col = 0;
+			msg_putchar(' ');		/* delete ':' */
+		    }
 		    redraw_cmdline = TRUE;
 		    goto returncmd;		/* back to cmd mode */
 		}
@@ -792,25 +805,49 @@ getcmdline(firstc, count, indent)
 		goto cmdline_not_changed;
 
 	case Ctrl_HAT:
-		/* Switch using ":lmap"s on/off. */
-		State ^= LANGMAP;
+		if (map_to_exists_mode((char_u *)"", LANGMAP))
+		{
+		    /* ":lmap" mappings exists, toggle use of mappings. */
+		    State ^= LANGMAP;
 #ifdef USE_IM_CONTROL
-		im_set_active(FALSE);	/* Disable input method */
+		    im_set_active(FALSE);	/* Disable input method */
 #endif
-#ifdef CURSOR_SHAPE
-		ui_cursor_shape();	/* may show different cursor shape */
+		    if (b_im_ptr != NULL)
+		    {
+			if (State & LANGMAP)
+			    *b_im_ptr = B_IMODE_LMAP;
+			else
+			    *b_im_ptr = B_IMODE_NONE;
+		    }
+		}
+#ifdef USE_IM_CONTROL
+		else
+		{
+		    /* There are no ":lmap" mappings, toggle IM */
+		    if (im_get_status())
+		    {
+			im_set_active(FALSE);	/* Disable input method */
+			if (b_im_ptr != NULL)
+			    *b_im_ptr = B_IMODE_NONE;
+		    }
+		    else
+		    {
+			im_set_active(TRUE);	/* Enable input method */
+			if (b_im_ptr != NULL)
+			    *b_im_ptr = B_IMODE_IM;
+		    }
+		}
 #endif
 		if (b_im_ptr != NULL)
 		{
-		    if (State & LANGMAP)
-			*b_im_ptr = B_IMODE_LMAP;
-		    else
-			*b_im_ptr = B_IMODE_NONE;
 		    if (b_im_ptr == &curbuf->b_p_iminsert)
 			set_iminsert_global();
 		    else
 			set_imsearch_global();
 		}
+#ifdef CURSOR_SHAPE
+		ui_cursor_shape();	/* may show different cursor shape */
+#endif
 		goto cmdline_not_changed;
 
 /*	case '@':   only in very old vi */
@@ -943,13 +980,21 @@ getcmdline(firstc, count, indent)
 #endif
 		goto cmdline_not_changed;
 
+	case K_SILENT:				/* end of silent menu entry */
+		if (cmd_silent > 0)
+		{
+		    if (--cmd_silent == 0)
+			redrawcmd();
+		}
+		goto cmdline_not_changed;
+
 	case K_IGNORE:
-		goto cmdline_not_changed;   /* Ignore mouse */
+		goto cmdline_not_changed;	/* Ignore mouse */
 
 #ifdef FEAT_MOUSE
 	case K_MIDDLEDRAG:
 	case K_MIDDLERELEASE:
-		goto cmdline_not_changed;   /* Ignore mouse */
+		goto cmdline_not_changed;	/* Ignore mouse */
 
 	case K_MIDDLEMOUSE:
 # ifdef FEAT_GUI
@@ -1305,7 +1350,7 @@ cmdline_changed:
 	/*
 	 * 'incsearch' highlighting.
 	 */
-	if (p_is && (firstc == '/' || firstc == '?'))
+	if (p_is && cmd_silent == 0 && (firstc == '/' || firstc == '?'))
 	{
 	    /* if there is a character waiting, search and redraw later */
 	    if (char_avail())
@@ -1840,6 +1885,8 @@ putcmdline(c, shift)
     int		c;
     int		shift;
 {
+    if (cmd_silent > 0)
+	return;
     msg_no_more = TRUE;
     msg_putchar(c);
     if (shift)
@@ -1855,6 +1902,8 @@ putcmdline(c, shift)
     void
 unputcmdline()
 {
+    if (cmd_silent > 0)
+	return;
     msg_no_more = TRUE;
     if (ccline.cmdlen == ccline.cmdpos)
 	msg_putchar(' ');
@@ -1957,7 +2006,7 @@ put_on_cmdline(str, len, redraw)
 	}
 #endif
 
-	if (redraw)
+	if (redraw && cmd_silent == 0)
 	{
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
 	    if (cmdline_star)		/* only write '*' characters */
@@ -2041,6 +2090,8 @@ cmdline_del(from)
     void
 redrawcmdline()
 {
+    if (cmd_silent > 0)
+	return;
     need_wait_return = FALSE;
     compute_cmdrow();
     redrawcmd();
@@ -2052,6 +2103,8 @@ redrawcmdprompt()
 {
     int		i;
 
+    if (cmd_silent > 0)
+	return;
     if (ccline.cmdfirstc)
 	msg_putchar(ccline.cmdfirstc);
     if (ccline.cmdprompt != NULL)
@@ -2073,6 +2126,9 @@ redrawcmd()
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
     int		i;
 #endif
+
+    if (cmd_silent > 0)
+	return;
 
     msg_start();
     redrawcmdprompt();
@@ -2119,6 +2175,8 @@ compute_cmdrow()
     static void
 cursorcmd()
 {
+    if (cmd_silent > 0)
+	return;
     msg_row = cmdline_row + (ccline.cmdspos / (int)Columns);
     msg_col = ccline.cmdspos % (int)Columns;
     if (msg_row >= Rows)
@@ -2505,11 +2563,11 @@ ExpandOne(xp, str, orig, options, mode)
 }
 
     void
-ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
+ExpandEscape(xp, str, numfiles, files, options)
     expand_T	*xp;
     char_u	*str;
-    int		cmd_numfiles;
-    char_u	**cmd_files;
+    int		numfiles;
+    char_u	**files;
     int		options;
 {
     int		i;
@@ -2519,7 +2577,7 @@ ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
      * May change home directory back to "~"
      */
     if (options & WILD_HOME_REPLACE)
-	tilde_replace(str, cmd_numfiles, cmd_files);
+	tilde_replace(str, numfiles, files);
 
     if (options & WILD_ESCAPE)
     {
@@ -2531,44 +2589,44 @@ ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
 	     * Insert a backslash into a file name before a space, \, %, #
 	     * and wildmatch characters, except '~'.
 	     */
-	    for (i = 0; i < cmd_numfiles; ++i)
+	    for (i = 0; i < numfiles; ++i)
 	    {
 		/* for ":set path=" we need to escape spaces twice */
 		if (xp->xp_set_path)
 		{
-		    p = vim_strsave_escaped(cmd_files[i], (char_u *)" ");
+		    p = vim_strsave_escaped(files[i], (char_u *)" ");
 		    if (p != NULL)
 		    {
-			vim_free(cmd_files[i]);
-			cmd_files[i] = p;
+			vim_free(files[i]);
+			files[i] = p;
 #if defined(BACKSLASH_IN_FILENAME) || defined(COLON_AS_PATHSEP)
-			p = vim_strsave_escaped(cmd_files[i], (char_u *)" ");
+			p = vim_strsave_escaped(files[i], (char_u *)" ");
 			if (p != NULL)
 			{
-			    vim_free(cmd_files[i]);
-			    cmd_files[i] = p;
+			    vim_free(files[i]);
+			    files[i] = p;
 			}
 #endif
 		    }
 		}
-		p = vim_strsave_escaped(cmd_files[i], PATH_ESC_CHARS);
+		p = vim_strsave_escaped(files[i], PATH_ESC_CHARS);
 		if (p != NULL)
 		{
-		    vim_free(cmd_files[i]);
-		    cmd_files[i] = p;
+		    vim_free(files[i]);
+		    files[i] = p;
 		}
 
 		/* If 'str' starts with "\~", replace "~" at start of
-		 * cmd_files[i] with "\~". */
-		if (str[0] == '\\' && str[1] == '~' && cmd_files[i][0] == '~')
+		 * files[i] with "\~". */
+		if (str[0] == '\\' && str[1] == '~' && files[i][0] == '~')
 		{
-		    p = alloc((unsigned)(STRLEN(cmd_files[i]) + 2));
+		    p = alloc((unsigned)(STRLEN(files[i]) + 2));
 		    if (p != NULL)
 		    {
 			p[0] = '\\';
-			STRCPY(p + 1, cmd_files[i]);
-			vim_free(cmd_files[i]);
-			cmd_files[i] = p;
+			STRCPY(p + 1, files[i]);
+			vim_free(files[i]);
+			files[i] = p;
 		    }
 		}
 	    }
@@ -2580,13 +2638,13 @@ ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
 	     * Insert a backslash before characters in a tag name that
 	     * would terminate the ":tag" command.
 	     */
-	    for (i = 0; i < cmd_numfiles; ++i)
+	    for (i = 0; i < numfiles; ++i)
 	    {
-		p = vim_strsave_escaped(cmd_files[i], (char_u *)"\\|\"");
+		p = vim_strsave_escaped(files[i], (char_u *)"\\|\"");
 		if (p != NULL)
 		{
-		    vim_free(cmd_files[i]);
-		    cmd_files[i] = p;
+		    vim_free(files[i]);
+		    files[i] = p;
 		}
 	    }
 	}

@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.0al.  Last change: 2001 Jun 12
+*usr_25.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -122,6 +122,9 @@ blank line, but not an empty line.
 Vim is able format more than just plain text.  See |fo-table| for how to
 change this.  See the 'joinspaces' option to change the number of spaces used
 after a full stop.
+   It is possible to use an external program for formatting.  This is useful
+if your text can't be properly formatted with Vim's builtin command.  See the
+'formatprg' option.
 
 ==============================================================================
 *25.2*	Aligning text
@@ -458,6 +461,60 @@ the "test 3" column didn't have text.
 Go back to non-virtual cursor movements with: >
 
 	:set virtualedit=
+
+
+VIRTUAL REPLACE MODE
+
+The disadvantage of using 'virtualedit' is that it "feels" different.  You
+can't recognize tabs or spaces beyond the end of line when moving the cursor
+around.  Another method can be used: Virtual replace mode.
+   Suppose you have a line in a table that contains both tabs and other
+characters.  Use "rx" on the first tab:
+
+	inp	0.693   0.534	0.693 ~
+
+	       |
+	   rx  |
+	       V
+
+	inpx0.693   0.534	0.693 ~
+
+The layout is messed up.  To avoid that, use the "gr" command:
+
+	inp	0.693   0.534	0.693 ~
+
+	       |
+	  grx  |
+	       V
+
+	inpx	0.693   0.534	0.693 ~
+
+What happens is that the "gr" command makes sure the new character takes the
+right amount of screen space.  Extra spaces or tabs are inserted to fill the
+gap.  Thus what actually happens is that a tab is replaced by "x" and then
+blanks added to make the text after it keep it's place.  In this case a
+tab is inserted.
+   When you need to replace more than one character, you use the "R" command
+to go to replace mode (see |04.9|).  This messes up the layout and replaces
+the wrong characters:
+
+	inp	0	0.534	0.693 ~
+
+	        |
+	 R0.786 |
+	        V
+
+	inp	0.78634	0.693 ~
+
+The "gR" command uses virtual replace mode.  This preserves the layout:
+
+	inp	0	0.534	0.693 ~
+
+	        |
+	gR0.786 |
+	        V
+
+	inp	0.786	0.534	0.693 ~
 
 ==============================================================================
 

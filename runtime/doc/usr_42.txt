@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.0al.  Last change: 2001 Jun 24
+*usr_42.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -35,7 +35,8 @@ The {menu-item} describes where on the menu to put the item.  A typical
 
 	:menu File.Save  :update<CR>
 
-You can add another level: "Edit.Settings.Shiftwidth" defines a submenu
+The ":update" command writes the file when it was modified.
+   You can add another level: "Edit.Settings.Shiftwidth" defines a submenu
 "Settings" under the "Edit" menu, with an item "Shiftwidth".  You could use
 even deeper levels.  Don't use this too much, you need to move the mouse quite
 a bit to use such an item.

@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0al.  Last change: 2001 Jun 05
+*usr_04.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -93,7 +93,7 @@ This "c2wbe<Esc>" contains these bits:
 
 If you have paid attention, you will have noticed something strange: The space
 before "human" isn't deleted.  There is a saying that for every problem there
-is an answer that s simple, clear, and wrong.  That is the case with the
+is an answer that is simple, clear, and wrong.  That is the case with the
 example used here for the "cw" command.  The c operator works just like the
 d operator, with one exception: "cw".  It actually works like "ce", change to
 end of word.  Thus the space after the word isn't included.  This is an
@@ -133,7 +133,7 @@ distinction.  You can actually put in two counts, however.  For example,
 "3d2w" deletes two words, repeated three times, for a total of six words.
 
 
-REPLACING ONE CHARACTER
+REPLACING WITH ONE CHARACTER
 
 The "r" command is not an operator.  It waits for you to type a character, and
 will replace the character under the cursor with it.  You could do the same
@@ -143,6 +143,19 @@ with "cl" or with the "s" command, but with "r" you don't have to press <Esc>
 	rT	     rt    rw
 
 	There is something wrong here ~
+
+Using a count with "r" causes that many characters to be replaced with the
+same character.  Example:
+
+	There is something wrong here ~
+	                   5rx
+
+	There is something xxxxx here ~
+
+To replace a character with a line break use "r<Enter>".  This deletes one
+character and inserts a line break.  Using a count here only applies to the
+number of characters deleted: "4r<Enter>" replaces four characters with one
+line break.
 
 ==============================================================================
 *04.3*	Repeating a change
@@ -163,8 +176,8 @@ cursor on the < and use the "." command.
 	f<   find next <		       ------------->
 	.    repeat df>					    -->
 
-The "." command works for all changes you make, except for the "u" (undo) and
-CTRL-R (redo) commands.
+The "." command works for all changes you make, except for the "u" (undo),
+CTRL-R (redo) and commands that start with a colon (:).
 
 Another example: You want to change the word "four" to "five".  It appears
 several times in your text.  You can do this quickly with this sequence of
@@ -203,10 +216,25 @@ will be deleted when you press "d".
 If at any time you decide you don't want to do anything with the highlighted
 text, just press <Esc> and Visual mode will stop without doing anything.
 
-If you want to work on while lines, use "V" to start Visual mode.
+
+SELECTING LINES
+
+If you want to work on whole lines, use "V" to start Visual mode.  You will
+see right away that the whole line is highlighted, without moving around.
+When you move left or right nothing changes.  When you move up or down the
+selection is extended whole lines at a time.
+   For example, select three lines with "Vjj":
+
+			  +------------------------+
+			  | text more text         |
+		       >> | more text more text    | |
+	selected lines >> | text text text         | | Vjj
+		       >> | text more              | V
+			  | more text more         |
+			  +------------------------+
 
 
-SELECTING LINES AND BLOCKS
+SELECTING BLOCKS
 
 If you want to work on a rectangular block of characters, use CTRL-V to start
 Visual mode.  This is very useful when working on tables.
@@ -403,6 +431,12 @@ doesn't.  If you would delete a sentence, you want to delete the white space
 at the same time, thus use "das".  If you want to type new text the white
 space can remain, thus you use "cis".
 
+You can also use text objects in Visual mode.  It will include the text object
+in the Visual selection.  Visual mode continues, thus you can do this several
+times.  For example, start Visual mode with "v" and select a sentence with
+"as".  Now you can repeat "as" to include more sentences.  Finally you use an
+operator to do something with the selected sentences.
+
 You can find a long list of text objects here: |text-objects|.
 
 ==============================================================================
@@ -458,8 +492,10 @@ There are a few often used commands to make changes that didn't fit somewhere
 else:
 
 	~	change case of the character under the cursor, and move the
-		cursor to the next character.  Also works in Visual mode, but
-		it is not an operator (unless 'tildeop' is set).
+		cursor to the next character.  This is not an operator (unless
+		'tildeop' is set), thus you can't use it with a motion
+		command.  It does works in Visual mode and changes case for
+		all the selected text then.
 
 	I	Start Insert mode after moving the cursor to the first
 		non-blank in the line.

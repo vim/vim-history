@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0al.  Last change: 2001 Jun 10
+*usr_02.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -363,7 +363,7 @@ To exit, use the "ZZ" command.  This command writes the file and exits.
 	Unlike many other editors, Vim does not automatically make a backup
 	file.  If you type "ZZ", your changes are committed and there's no
 	turning back.  You can configure the Vim editor to produce backup
-	files, see |05.2|.
+	files, see |07.4|.
 
 
 DISCARDING CHANGES
@@ -383,7 +383,7 @@ editor to quit; and the override command modifier (!).
 away changes.  If you were to just type ":q", Vim would display an error
 message and refuse to exit:
 
-	E37: No write since last change (use !to override)
+	E37: No write since last change (use !to override) ~
 
 By specifying the override, you are in effect telling Vim, "I know that what
 I'm doing looks stupid, but I m a big boy and really want to do this."

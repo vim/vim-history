@@ -6,6 +6,8 @@ int mch_check_win __PARMS((int argc, char **argv));
 int mch_input_isatty __PARMS((void));
 
 void fname_case __PARMS((char_u *name));
+void mch_early_init __ARGS((void));
+void mch_exit __ARGS((int r));
 void mch_settitle __PARMS((char_u *title, char_u *icon));
 void mch_restore_title __PARMS((int which));
 #define mch_can_restore_title() TRUE
@@ -31,8 +33,8 @@ void mch_settmode __PARMS((int raw));
 #define mch_get_winsize()		gui_get_winsize()
 #define mch_set_winsize()		gui_set_winsize(FALSE)
 #define mch_suspend			gui_mch_iconify
-#if defined(__MRC__) || defined(__SC__)
 int mch_chdir __ARGS((char *p_name));
+#if defined(__MRC__) || defined(__SC__)
 int stat __ARGS((char *p, struct stat *p_st));
 #endif
 
@@ -49,7 +51,7 @@ int mch_screenmode __PARMS((char_u *arg));
 #define mch_break_check			gui_mch_update
 
 void slash_n_colon_adjust __PARMS((char_u *buf));
-void GetFullPathFromFSSpec (char_u *fname, FSSpec file);
+char_u *FullPathFromFSSpec_save (FSSpec file);
 int mch_copy_file(char_u *from, char_u *to);
 
 int C2PascalString (char_u *CString, Str255 *PascalString);
@@ -61,5 +63,7 @@ void mch_shellinit __ARGS((void));
 int mch_get_shellsize __ARGS((void));
 void mch_set_shellsize __ARGS((void));
 void mch_new_shellsize __ARGS((void));
+
+void slash_to_colon __ARGS((char_u *p));
 
 /* vim: set ft=c : */

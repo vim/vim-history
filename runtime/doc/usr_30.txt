@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.0al.  Last change: 2001 Jun 12
+*usr_30.txt*	For Vim version 6.0am.  Last change: 2001 Jun 26
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -395,8 +395,16 @@ specify the lines you want to indent.  A useful combination is: >
 	>i{
 
 This adds one indent to the current block of lines, inside {}.  The { and }
-lines themselves are left unmodified.  ">a{" includes them.
+lines themselves are left unmodified.  ">a{" includes them.  In this example
+the cursor is on "printf":
 
+	original text		after ">i{"		after ">a{"
+
+	if (flag)               if (flag)               if (flag) ~
+	{                       {                           { ~
+	printf("yes");              printf("yes");          printf("yes"); ~
+	flag = 0;                   flag = 0;               flag = 0;  ~
+	}                       }                           } ~
 
 ==============================================================================
 *30.5*	Tabs and spaces

@@ -634,6 +634,19 @@ list_version()
 #ifdef macintosh
     MSG_PUTS(_("\nMacOS version"));
 #endif
+#ifdef TARGET_API_MAC_OSX 
+    if (TARGET_API_MAC_OSX)
+        MSG_PUTS(_("\nMacOS X version"));
+#endif
+#ifdef TARGET_API_MAC_CARBON
+    if (TARGET_API_MAC_CARBON)
+        MSG_PUTS(_("\nMacOS Carbon"));
+#endif
+#ifdef TARGET_API_MAC_OS8
+    if (TARGET_API_MAC_OS8)
+        MSG_PUTS(_("\nMacOS 8"));
+#endif
+
 #ifdef RISCOS
     MSG_PUTS(_("\nRISC OS version"));
 #endif
@@ -850,7 +863,7 @@ version_msg(s)
     MSG_PUTS(s);
 }
 
-static void do_intro_line __ARGS((int row, char_u *msg, int add_version, int attr));
+static void do_intro_line __ARGS((int row, char_u *mesg, int add_version, int attr));
 
 /*
  * Give an introductory message about Vim.
@@ -934,9 +947,9 @@ intro_message(colon)
 }
 
     static void
-do_intro_line(row, msg, add_version, attr)
+do_intro_line(row, mesg, add_version, attr)
     int		row;
-    char_u	*msg;
+    char_u	*mesg;
     int		add_version;
     int		attr;
 {
@@ -947,7 +960,7 @@ do_intro_line(row, msg, add_version, attr)
     char_u	buf[100];
 
     /* Center the message horizontally. */
-    col = vim_strsize(msg);
+    col = vim_strsize(mesg);
     if (add_version)
     {
 	STRCPY(vers, mediumVersion);
@@ -967,7 +980,7 @@ do_intro_line(row, msg, add_version, attr)
 	col = 0;
 
     /* Split up in parts to highlight <> items differently. */
-    for (p = msg; *p != NUL; p += l)
+    for (p = mesg; *p != NUL; p += l)
     {
 	buf[0] = *p;
 	for (l = 1; p[l] != NUL && p[l] != '<' && p[l - 1] != '>'; ++l)

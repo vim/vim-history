@@ -454,6 +454,7 @@ flush_buffers(typeahead)
     }
     typebuf.tb_maplen = 0;
     typebuf.tb_no_abbr_cnt = 0;
+    cmd_silent = 0;	    /* may have flushed a K_SILENT */
 }
 
 /*
@@ -2016,6 +2017,9 @@ vgetorpeek(advance)
 				    }
 # endif
 
+				    if (current_menu->silent[idx])
+					start_silent_cmd();
+
 				    ins_typebuf(current_menu->strings[idx],
 					 current_menu->noremap[idx], 0, TRUE);
 				}
@@ -2073,6 +2077,12 @@ vgetorpeek(advance)
 								     0, TRUE);
 			}
 #endif
+
+			/*
+			 * Silent mapping, set cmd_silent.
+			 */
+			if (mp->m_silent)
+			    start_silent_cmd();
 
 			/*
 			 * Insert the 'to' part in the typebuf.tb_buf.
@@ -2400,6 +2410,22 @@ vgetorpeek(advance)
 }
 
 /*
+ * Switch cmd_silent on now, it will be switched off with K_SILENT.
+ */
+    void
+start_silent_cmd()
+{
+    char_u	temp[4];
+
+    ++cmd_silent;
+    temp[0] = K_SPECIAL;
+    temp[1] = K_SECOND(K_SILENT);
+    temp[2] = K_THIRD(K_SILENT);
+    temp[3] = NUL;
+    (void)ins_typebuf(temp, REMAP_NONE, 0, TRUE);
+}
+
+/*
  * inchar() - get one character from
  *	1. a scriptfile
  *	2. the keyboard
@@ -2637,6 +2663,7 @@ do_map(maptype, arg, mode, abbrev)
     mapblock_T	**abbr_table;
     mapblock_T	**map_table;
     int		unique = FALSE;
+    int		silent = FALSE;
     int		noremap;
 
     keys = arg;
@@ -2649,11 +2676,9 @@ do_map(maptype, arg, mode, abbrev)
     else
 	noremap = REMAP_YES;
 
-#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
     /* Accept <buffer>, <script> and <unique> in any order. */
     for (;;)
     {
-#endif
 #ifdef FEAT_LOCALMAP
 	/*
 	 * Check for "<buffer>": mapping local to buffer.
@@ -2666,6 +2691,16 @@ do_map(maptype, arg, mode, abbrev)
 	    continue;
 	}
 #endif
+
+	/*
+	 * Check for "<silent>": don't echo commands.
+	 */
+	if (STRNCMP(keys, "<silent>", 8) == 0)
+	{
+	    keys = skipwhite(keys + 8);
+	    silent = TRUE;
+	    continue;
+	}
 
 #ifdef FEAT_EVAL
 	/*
@@ -2685,14 +2720,10 @@ do_map(maptype, arg, mode, abbrev)
 	{
 	    keys = skipwhite(keys + 8);
 	    unique = TRUE;
-#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
 	    continue;
-#endif
 	}
-#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
 	break;
     }
-#endif
 
     validate_maphash();
 
@@ -2774,7 +2805,6 @@ do_map(maptype, arg, mode, abbrev)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 	    {
-		char_u	*p;
 		int	first, last;
 		int	same = -1;
 
@@ -3012,6 +3042,7 @@ do_map(maptype, arg, mode, abbrev)
 				vim_free(mp->m_str);
 				mp->m_str = newstr;
 				mp->m_noremap = noremap;
+				mp->m_silent = silent;
 				mp->m_mode = mode;
 				did_it = TRUE;
 			    }
@@ -3093,6 +3124,7 @@ do_map(maptype, arg, mode, abbrev)
     }
     mp->m_keylen = (int)STRLEN(mp->m_keys);
     mp->m_noremap = noremap;
+    mp->m_silent = silent;
     mp->m_mode = mode;
 
     /* add the new entry in front of the abbrlist or maphash[] list */
@@ -3349,6 +3381,7 @@ showmap(mp, local)
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return TRUE if a map exists that has "str" in the rhs for mode "modechars".
+ * Recognize termcap codes in "str".
  * Also checks mappings local to the current buffer.
  */
     int
@@ -3357,17 +3390,11 @@ map_to_exists(str, modechars)
     char_u	*modechars;
 {
     int		mode = 0;
-#ifdef FEAT_LOCALMAP
-    int		expand_buffer = FALSE;
-#endif
-    mapblock_T	*mp;
-    int		hash;
     char_u	*rhs;
     char_u	*buf;
+    int		retval;
 
     rhs = replace_termcodes(str, &buf, FALSE, TRUE);
-
-    validate_maphash();
 
     if (vim_strchr(modechars, 'n') != NULL)
 	mode |= NORMAL;
@@ -3382,40 +3409,57 @@ map_to_exists(str, modechars)
     if (vim_strchr(modechars, 'c') != NULL)
 	mode |= CMDLINE;
 
-#ifdef FEAT_LOCALMAP
+    retval = map_to_exists_mode(rhs, mode);
+    vim_free(buf);
+
+    return retval;
+}
+#endif
+
+/*
+ * Return TRUE if a map exists that has "str" in the rhs for mode "mode".
+ * Also checks mappings local to the current buffer.
+ */
+    int
+map_to_exists_mode(rhs, mode)
+    char_u	*rhs;
+    int		mode;
+{
+    mapblock_T	*mp;
+    int		hash;
+# ifdef FEAT_LOCALMAP
+    int		expand_buffer = FALSE;
+
+    validate_maphash();
+
     /* Do it twice: once for global maps and once for local maps. */
     for (;;)
     {
-#endif
+# endif
 	for (hash = 0; hash < 256; ++hash)
 	{
-#ifdef FEAT_LOCALMAP
+# ifdef FEAT_LOCALMAP
 	    if (expand_buffer)
 		mp = curbuf->b_maphash[hash];
 	    else
-#endif
+# endif
 		mp = maphash[hash];
 	    for (; mp; mp = mp->m_next)
 	    {
 		if ((mp->m_mode & mode)
 			&& strstr((char *)mp->m_str, (char *)rhs) != NULL)
-		{
-		    vim_free(buf);
 		    return TRUE;
-		}
 	    }
 	}
-#ifdef FEAT_LOCALMAP
+# ifdef FEAT_LOCALMAP
 	if (expand_buffer)
 	    break;
 	expand_buffer = TRUE;
     }
-#endif
+# endif
 
-    vim_free(buf);
     return FALSE;
 }
-#endif
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 /*
@@ -4139,12 +4183,12 @@ check_map_keycodes()
     char_u *
 check_map(keys, mode, exact)
     char_u	*keys;
-    int		 mode;
+    int		mode;
     int		exact;		/* require exact match */
 {
     int		hash;
     int		len, minlen;
-    mapblock_T	*mp, **mpp;
+    mapblock_T	*mp;
 #ifdef FEAT_LOCALMAP
     int		local;
 #endif
@@ -4160,11 +4204,11 @@ check_map(keys, mode, exact)
 	{
 #ifdef FEAT_LOCALMAP
 	    if (local)
-		mpp = &(curbuf->b_maphash[hash]);
+		mp = curbuf->b_maphash[hash];
 	    else
 #endif
-		mpp = &(maphash[hash]);
-	    for (mp = *mpp; mp != NULL; mp = *mpp)
+		mp = maphash[hash];
+	    for ( ; mp != NULL; mp = mp->m_next)
 	    {
 		/* skip entries with wrong mode, wrong length and not matching
 		 * ones */
@@ -4176,7 +4220,6 @@ check_map(keys, mode, exact)
 			&& (!exact || mp->m_keylen == len)
 			&& STRNCMP(mp->m_keys, keys, minlen) == 0)
 		    return mp->m_str;
-		mpp = &(mp->m_next);
 	    }
 	}
 

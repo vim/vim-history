@@ -39,7 +39,7 @@ static XtIntervalId timer = 0;	    /* 0 = expired, otherwise active */
 static vimmenu_T *a_cur_menu = NULL;
 static Cardinal	athena_calculate_ins_pos __ARGS((Widget));
 
-static Pixmap gui_athena_create_pullright_pixmap __ARGS((void));
+static Pixmap gui_athena_create_pullright_pixmap __ARGS((Widget));
 static void gui_athena_menu_timeout __ARGS((XtPointer, XtIntervalId *));
 static void gui_athena_popup_callback __ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_delayed_arm_action __ARGS((Widget, XEvent *, String *,
@@ -269,8 +269,6 @@ gui_x11_create_widgets()
 
     XtAppAddActions(XtWidgetToApplicationContext(vimForm), pullAction,
 		    XtNumber(pullAction));
-
-    pullerBitmap = gui_athena_create_pullright_pixmap();
 #endif
 
     /* Pretend we don't have input focus, we will get an event if we do. */
@@ -282,20 +280,34 @@ gui_x11_create_widgets()
  * Calculates the Pixmap based on the size of the current menu font.
  */
     static Pixmap
-gui_athena_create_pullright_pixmap()
+gui_athena_create_pullright_pixmap(w)
+    Widget  w;
 {
     Pixmap  retval;
-    XFontStruct	*font;
+    XFontStruct	*font = NULL;
 
     if (gui.menu_font == NOFONT)
     {
 	XrmValue from, to;
+	WidgetList  children;
+	Cardinal    num_children;
 
 	from.size = strlen(from.addr = XtDefaultFont);
-	if (XtConvertAndStore(menuBar, XtRString, &from, XtRFontStruct, &to)
+	to.addr = (XtPointer)&font;
+	to.size = sizeof(XFontStruct *);
+	/* Assumption: The menuBar children will use the same font as the
+	 *             pulldown menu items AND they will all be of type
+	 *             XtNfont.
+	 */
+	XtVaGetValues(menuBar, XtNchildren, &children,
+			       XtNnumChildren, &num_children,
+			       NULL);
+	if (XtConvertAndStore(w ? w :
+				(num_children > 0) ? children[0] : menuBar,
+			      XtRString, &from, XtRFontStruct, &to)
 		== False)
 	    return None;
-	font = *(XFontStruct **)to.addr;
+	/* "font" should now contain data */
     }
     else
 	font = (XFontStruct *)gui.menu_font;
@@ -597,10 +609,13 @@ gui_mch_add_menu(menu, idx)
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
 	    XtNrightMargin, puller_width,
-	    XtNrightBitmap, pullerBitmap,
 	    NULL);
 	if (menu->id == (Widget)0)
 	    return;
+	if (pullerBitmap == None)
+	    pullerBitmap = gui_athena_create_pullright_pixmap(menu->id);
+
+	XtVaSetValues(menu->id, XtNrightBitmap, pullerBitmap, NULL);
 	gui_athena_menu_colors(menu->id);
 	gui_athena_menu_font(menu->id);
 
@@ -681,7 +696,7 @@ gui_mch_new_menu_font()
     if (pullerBitmap != None)
     {
 	oldpuller = pullerBitmap;
-	pullerBitmap = gui_athena_create_pullright_pixmap();
+	pullerBitmap = gui_athena_create_pullright_pixmap(NULL);
     }
     gui_mch_submenu_change(root_menu, FALSE);
 
@@ -746,7 +761,7 @@ gui_mch_new_menu_font()
 	XFreePixmap(gui.dpy, oldpuller);
 }
 
-
+#if defined(FEAT_BEVAL) || defined(PROTO)
     void
 gui_mch_new_tooltip_font()
 {
@@ -756,7 +771,6 @@ gui_mch_new_tooltip_font()
     gui_mch_submenu_change(root_menu, FALSE);
 }
 
-
     void
 gui_mch_new_tooltip_colors()
 {
@@ -765,7 +779,7 @@ gui_mch_new_tooltip_colors()
 
     gui_mch_submenu_change(root_menu, TRUE);
 }
-
+#endif
 
     static void
 gui_mch_submenu_change(menu, colors)

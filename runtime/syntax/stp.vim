@@ -1,8 +1,8 @@
 " Vim syntax file
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-"         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
-" Last Change: April 30, 2001
+"         URL: http://lanzarotta.tripod.com/vim/syntax/stp.vim.zip
+" Last Change: June 27, 2001
 
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.
@@ -20,8 +20,9 @@ syn keyword stpSpecial    null
 
 syn keyword stpKeyword    begin break call case create deallocate dynamic else
 syn keyword stpKeyword    elseif end execute for from function go grant if
-syn keyword stpKeyword    index insert into max min on output procedure public
-syn keyword stpKeyword    result return returns scroll table then to when while
+syn keyword stpKeyword    index insert into leave max min on output procedure
+syn keyword stpKeyword    public result return returns scroll table then to
+syn keyword stpKeyword    when while
 
 syn keyword stpOperator   asc not and or desc group having in is any some all
 syn keyword stpOperator   between exists like escape with union intersect minus
@@ -30,8 +31,8 @@ syn keyword stpOperator   out prior distinct sysdate
 syn keyword stpStatement  alter analyze as audit avg by close clustered comment
 syn keyword stpStatement  commit continue count create cursor declare delete
 syn keyword stpStatement  drop exec execute explain fetch from index insert
-syn keyword stpStatement  into lock max min next noaudit nonclustered open order
-syn keyword stpStatement  output print raiserror recompile rename revoke
+syn keyword stpStatement  into lock loop max min next noaudit nonclustered open
+syn keyword stpStatement  order output print raiserror recompile rename revoke
 syn keyword stpStatement  rollback savepoint select set sum transaction
 syn keyword stpStatement  truncate unique update values where
 
@@ -83,9 +84,6 @@ syn match   stpParenError ")"
 
 " Syntax Synchronizing
 syn sync    minlines=10	maxlines=100
-
-" Syntax Synchronizing
-syn sync minlines=10 maxlines=100
 
 " Define the default highlighting.
 " For version 5.x and earlier, only when not done already.

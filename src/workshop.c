@@ -351,7 +351,7 @@ workshop_maximize()
 
     void
 workshop_add_mark_type(
-	int		 index,
+	int		 idx,
 	char		*colorspec,
 	char		*sign)
 {
@@ -370,7 +370,7 @@ workshop_add_mark_type(
 	    cp = sign;
 	else
 	    cp++;		/* skip '/' character */
-	wstrace("workshop_add_mark_type(%d, \"%s\", \"%s\")\n", index,
+	wstrace("workshop_add_mark_type(%d, \"%s\", \"%s\")\n", idx,
 		colorspec && *colorspec ? colorspec : "<None>", cp);
     }
 #endif
@@ -395,7 +395,7 @@ workshop_add_mark_type(
 	else
 	    cibuf[0] = NULL;
 
-	sprintf(cbuf, "sign define %d %s icon=%s", index, cibuf, sign);
+	sprintf(cbuf, "sign define %d %s icon=%s", idx, cibuf, sign);
 	coloncmd(cbuf, TRUE);
     }
 }
@@ -1568,7 +1568,7 @@ bevalCB(
     int		 type;
     int		 line;
     int		 col;
-    int		 index;
+    int		 idx;
     char	 buf[MAXPATHLEN * 2];
     static int	 serialNo = -1;
 
@@ -1595,7 +1595,7 @@ bevalCB(
 	     * a column number. Compute the index from col. Also set
 	     * line to 0 because thats what dbx expects.
 	     */
-	    index = computeIndex(col, text, beval->ts);
+	    idx = computeIndex(col, text, beval->ts);
 	    line = 0;
 
 	    /*
@@ -1614,10 +1614,10 @@ bevalCB(
 	    /* Send request to dbx */
 	    sprintf(buf, "toolVerb debug.balloonEval "
 		    "%s %d,0 %d,0 %d,%d %d %s\n", (char *) filename,
-		    line, index, type, serialNo++,
+		    line, idx, type, serialNo++,
 		    strlen((char *) text), (char *) text);
 	    balloonEval = beval;
-	    if (index > 0)
+	    if (idx > 0)
 		workshop_send_message(buf);
 	}
     }
@@ -1669,8 +1669,7 @@ addMenu(
     if (menuMapSize < menuMapMax)
     {
 	menuMap[menuMapSize].name = strdup(menu);
-	menuMap[menuMapSize].accel = accel && *accel ?
-	    strdup(accel) : NULL;
+	menuMap[menuMapSize].accel = accel && *accel ? strdup(accel) : NULL;
 	menuMap[menuMapSize++].verb = strdup(verb);
 	if (accel && workshopHotKeysEnabled)
 	{

@@ -1006,19 +1006,18 @@ do_shell(cmd, flags)
 		break;
 	    }
 
-/* This windgoto is required for when the '\n' resulted in a "delete line 1"
- * command to the terminal. */
-
+    /* This windgoto is required for when the '\n' resulted in a "delete line
+     * 1" command to the terminal. */
     if (!swapping_screen())
 	windgoto(msg_row, msg_col);
     cursor_on();
     (void)call_shell(cmd, SHELL_COOKED | flags);
     need_check_timestamps = TRUE;
 
-/*
- * put the message cursor at the end of the screen, avoids wait_return() to
- * overwrite the text that the external command showed
- */
+    /*
+     * put the message cursor at the end of the screen, avoids wait_return()
+     * to overwrite the text that the external command showed
+     */
     if (!swapping_screen())
     {
 	msg_row = Rows - 1;
@@ -1027,7 +1026,10 @@ do_shell(cmd, flags)
 
 #ifdef FEAT_AUTOCMD
     if (autocmd_busy)
-	redraw_later_clear();
+    {
+	if (!msg_silent)
+	    redraw_later_clear();
+    }
     else
 #endif
     {
@@ -1044,7 +1046,8 @@ do_shell(cmd, flags)
 # endif
 	   )
 	{
-	    redraw_later_clear();
+	    if (!msg_silent)
+		redraw_later_clear();
 	    need_wait_return = FALSE;
 	}
 	else
@@ -1057,9 +1060,9 @@ do_shell(cmd, flags)
 	    if (swapping_screen())
 		no_wait_return = FALSE;
 # ifdef AMIGA
-	    wait_return(term_console ? -1 : TRUE);	/* see below */
+	    wait_return(term_console ? -1 : !msg_silent);	/* see below */
 # else
-	    wait_return(TRUE);
+	    wait_return(!msg_silent);
 # endif
 	    no_wait_return = save_nwr;
 	}
@@ -1079,11 +1082,14 @@ do_shell(cmd, flags)
 	 */
 #ifdef AMIGA
 	if (skip_redraw)		/* ':' hit in wait_return() */
-	    redraw_later_clear();
+	{
+	    if (!msg_silent)
+		redraw_later_clear();
+	}
 	else if (term_console)
 	{
 	    OUT_STR(IF_EB("\033[0 q", ESC_STR "[0 q"));	/* get window size */
-	    if (got_int)
+	    if (got_int && !msg_silent)
 		redraw_later_clear();	/* if got_int is TRUE, redraw needed */
 	    else
 		must_redraw = 0;	/* no extra redraw needed */

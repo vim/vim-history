@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0al.  Last change: 2001 Jun 16
+*usr_41.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -144,7 +144,13 @@ Since "s:count" is local to this script, you can be sure that sourcing the
 "s:count" variable, it will be a different copy, local to that script.  More
 about script-local variables here: |script-variable|.
 
-There are more kinds of variables, see |internal-variables|.
+There are more kinds of variables, see |internal-variables|.  The most often
+used ones are:
+
+	b:name		variable local to a buffer
+	w:name		variable local to a window
+	g:name		global variable (also in a function)
+	v:name		variable predefined by Vim
 
 
 DELETING VARIABLES
@@ -187,7 +193,7 @@ Thus "if !exists()" can be read as "if not exists()".
 STRING VARIABLES AND CONSTANTS
 
 So far only numbers were used for the variable value.  Strings can be used as
-well.  Numbers and strings are the only two types of varaibles that Vim
+well.  Numbers and strings are the only two types of variables that Vim
 supports.  The type is dynamic, it is set each time when assigning a value to
 the variable with ":let".
    To assign a string value to a variable, you need to use a string constant.
@@ -495,7 +501,8 @@ between braces, separated by commas.  Example: >
 
 This calls the search() function, with arguments "Date: " and "W".  The
 search() function uses its first argument as a search pattern and the second
-one as flags.  The "W" means it doesn't wrap around the end of the file.
+one as flags.  The "W" flag means the search doesn't wrap around the end of
+the file.
 
 A function can be called in an expression.  Example: >
 
@@ -532,8 +539,8 @@ String manipulation:
    	nr2char()		get a character by its ASCII value
    	escape()		Escape characters in a string with a '\'
 	strtrans()		translate a string to make it printable
-   	tolower()		turn a string to lower case
-   	toupper()		turn a string to upper case
+   	tolower()		turn a string to lowercase
+   	toupper()		turn a string to uppercase
    	match()			position where a pattern matches in a string
    	matchend()		position where a pattern match ends in a string
    	matchstr()		match of a pattern in a string
@@ -650,7 +657,7 @@ Various:
 Vim enables you to define your own functions.  The basic function declaration
 begins as follows: >
 
-	:function {name}({var1 },{var2 },...)
+	:function {name}({var1}, {var2}, ...)
 	:  {body}
 	:endfunction
 <
@@ -774,13 +781,20 @@ so on.  The variable "a:0" contains the number of extra arguments.
    For example: >
 
    	:function Show(start, ...)
+	:  echohl Title
 	:  echo "Show is " . a:start
+	:  echohl None
 	:  let index = 1
 	:  while index <= a:0
-	:    execute 'echo "Arg " . index . " is " . a:' . index
+	:    execute 'echon "  Arg " . index . " is " . a:' . index
 	:    let index = index + 1
 	:  endwhile
+	:  echo ""
 	:endfunction
+
+This uses the ":echohl" command to specify the highlighting used for the
+following ":echo" command.  ":echohl None" stops it again.  The ":echon"
+command works like ":echo", but doesn't output a line break.
 
 
 LISTING FUNCTIONS
@@ -804,8 +818,13 @@ To see what a function does, use its name as an argument for ":function": >
 	6          :  endwhile ~
 	   endfunction ~
 
+
+DEBUGGING
+
 The line number is useful for when you get an error message or when debugging.
 See |debug-scripts| about debugging mode.
+   You can also set the 'verbose' option to 12 or higher to see all function
+calls.  Set it to 15 or higher to see every executed line.
 
 
 DELETING A FUNCTION
@@ -1025,7 +1044,7 @@ difference between using <SID> and <Plug>:
 	characters, use this structure: <Plug> scriptname mapname
 	In our example the scriptname is "Typecorr" and the mapname is "Add".
 	This results in "<Plug>TypecorrAdd".  Only the first character of
-	scriptname and mapname is upper case, so that we can see where mapname
+	scriptname and mapname is uppercase, so that we can see where mapname
 	starts.
 
 <SID>	is the script ID, a unique identifier for a script.

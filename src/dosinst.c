@@ -57,7 +57,7 @@
 /* ---------------------------------------- */
 
 /* Macro to do an error check I was typing over and over */
-#define CHECK_REG_ERROR(code, func_name) if( code != ERROR_SUCCESS ) { printf("%s error number:  %d\n", func_name, code); return; }
+#define CHECK_REG_ERROR(code) if( code != ERROR_SUCCESS ) { printf("%d error number:  %d\n", __LINE__, code); return; }
 
 #include "version.h"
 
@@ -1505,7 +1505,7 @@ init_vimrc_choices(void)
  * If there are old "Edit with Vim" entries in the registry, uninstall them.
  */
     static void
-uninstall_old_popups()
+uninstall_old_popups( char *current_uninstall_name )
 {
     HKEY key_handle;
     HKEY uninstall_key_handle;
@@ -1514,7 +1514,7 @@ uninstall_old_popups()
     char temp_string_buffer[BUFSIZE];
     char uninstall_string[BUFSIZE];
     long local_bufsize = BUFSIZE;
-    PFILETIME temp_pfiletime;
+    FILETIME temp_pfiletime;
     DWORD key_index;
     char input;
     long code;
@@ -1523,10 +1523,10 @@ uninstall_old_popups()
     long new_num_keys;
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, uninstall_key, 0, KEY_READ, &key_handle);
-    CHECK_REG_ERROR(code, "RegOpenKeyEx");
+    CHECK_REG_ERROR(code);
 
     for(key_index = 0;
-        RegEnumKeyEx(key_handle, key_index, subkey_name_buff, &local_bufsize, NULL, NULL, NULL, temp_pfiletime) != ERROR_NO_MORE_ITEMS;
+        RegEnumKeyEx(key_handle, key_index, subkey_name_buff, &local_bufsize, NULL, NULL, NULL, &temp_pfiletime) != ERROR_NO_MORE_ITEMS;
         key_index++)
     {
         local_bufsize = BUFSIZE;
@@ -1534,12 +1534,18 @@ uninstall_old_popups()
         {
             /* Open the key named Vim* */
             code = RegOpenKeyEx(key_handle, subkey_name_buff, 0, KEY_READ, &uninstall_key_handle);
-            CHECK_REG_ERROR(code, "RegOpenKeyEx");
+            CHECK_REG_ERROR(code);
 
             /* get the DisplayName out of it to show the user */
             code = RegQueryValueEx(uninstall_key_handle, "displayname", 0, &value_type, temp_string_buffer, &local_bufsize);
             local_bufsize = BUFSIZE;
-            CHECK_REG_ERROR(code, "RegQueryValueEx");
+            CHECK_REG_ERROR(code);
+
+            /* If this is the popup we just installed.  We don't want to
+             * uninstall it now.
+             */
+            if(strcmp(current_uninstall_name, temp_string_buffer) == 0)
+                continue;
 
             printf("\n*********************************************************\n");
             printf("Vim Install found what may be a previous version of the\n");
@@ -1568,34 +1574,13 @@ uninstall_old_popups()
                     case 'y':
                     case 'Y':
                     {
-                        /* Uninstall the old entry */
-
-                        code = RegQueryValueEx(uninstall_key_handle, "uninstallstring", 0, &value_type, temp_string_buffer, &local_bufsize);
-                        CHECK_REG_ERROR(code, "RegQueryInfoKey");
-
-                        if (value_type == REG_EXPAND_SZ)
-                        {
-			    /* There are environment variables (%WINDIR% for
-			     * example) in the path */
-                            ExpandEnvironmentStrings(temp_string_buffer, uninstall_string, BUFSIZE);
-                        }
-                        else
-                        {
-			    /* no environment variables, just copy the result
-			     * to the pointer we got */
-                            strcpy(uninstall_string, temp_string_buffer);
-                        }
-
-                        printf("Vim install is about to Execute uninstaller: \"%s\"\n", temp_string_buffer);
-                        printf("Please answer the questions when prompted by the uninstaller.\n");
-                        printf("When the uninstall is complete, you will return to this install program.\n");
-                        printf("\n------------ Executing external uninstall -----------\n\n");
-
                         /* save the number of uninstall keys so we can know if it changed */
                         RegQueryInfoKey(key_handle, NULL, NULL, NULL, &orig_num_keys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-                        /* Execute the uninstallstring */
-                        system(temp_string_buffer);
+                        /* Delete the uninstall key.  It has no subkeys, so
+                         * this is easy.
+                         */
+                        RegDeleteKey(key_handle, subkey_name_buff);
 
                         /* Check if an unistall reg key was deleted.
                          * if it was, we want to decrement key_index.
@@ -1609,7 +1594,6 @@ uninstall_old_popups()
                         }
                         key_index--;
 
-                        printf("\n--------- Done Executing external uninstall ---------\n\n");
                         break;
                     }
                     case 'n':
@@ -1621,8 +1605,10 @@ uninstall_old_popups()
                 }
 
             } while ((input != 'n') && (input != 'y'));
+            RegCloseKey(uninstall_key_handle);
         }
     }
+    RegCloseKey(key_handle);
 }
 #endif /* WIN3264 */
 
@@ -1633,36 +1619,69 @@ uninstall_old_popups()
     static void
 install_popup(int idx)
 {
-    FILE	*fd;
+#ifdef DJGPP
+    FILE *fd;
+    char *cmd_path;
+    char *p;
+#else
+# ifdef WIN3264
+    HKEY temp_key;
+    HKEY InProcServer32_key;
 
-#ifdef WIN3264
-    uninstall_old_popups();
+    long disposition = 0;
+    long code = 0;
+# endif
 #endif
+
+#if defined(DJGPP) || defined(WIN3264)
+    const char *vim_ext_ThreadingModel = "Apartment";
+    const char *vim_ext_name = "Vim Shell Extension";
+    const char *vim_ext_clsid = "{51EEE242-AD87-11d3-9C1E-0090278BBD99}";
+#endif
+
+    char	buf[BUFSIZE];
+    char	uninstall_DisplayName[BUFSIZE];
+
+    sprintf(uninstall_DisplayName, "Vim %s: Edit with Vim popup menu entry", VIM_VERSION_SHORT);
+
+#ifdef DJGPP
+    /* DJGPP cannot uninstall old versions of the popup because we have no way
+     * to access the registry.  Any uninstall must be done manually.
+     * Tell the user:
+     */
+
+    printf("\nThis version of install.exe was compiled using the DJGPP.\n");
+    printf("install.exe then is unable to uninstall old versions of the \"Edit\n");
+    printf("with Vim\" popup menu automatically.  If you want to uninstall any\n");
+    printf("old versions, you may do so now.  If you choose to do so at a later\n");
+    printf("time, you will have to reinstall this version if you still want the\n");
+    printf("menu.\n");
+    printf("\nPress Enter when you are ready to install the current popup menu.\n");
+    while(getchar() != '\n');
+    getchar();
 
     fd = fopen("vim.reg", "w");
     if (fd == NULL)
 	printf("ERROR: Could not open vim.reg for writing\n");
     else
     {
-	char	buf[BUFSIZE];
-
 	/*
 	 * Write the registry entries for the "Edit with Vim" menu.
 	 */
 	fprintf(fd, "REGEDIT4\n");
 	fprintf(fd, "\n");
-	fprintf(fd, "HKEY_CLASSES_ROOT\\CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\n");
-	fprintf(fd, "@=\"Vim Shell Extension\"\n");
-	fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\\InProcServer32]\n");
+	fprintf(fd, "HKEY_CLASSES_ROOT\\CLSID\\%s\n", vim_ext_clsid);
+	fprintf(fd, "@=\"%s\"\n", vim_ext_name);
+	fprintf(fd, "[HKEY_CLASSES_ROOT\\CLSID\\%s\\InProcServer32]\n", vim_ext_clsid);
 	double_bs(installdir, buf); /* double the backslashes */
 	fprintf(fd, "@=\"%sgvimext.dll\"\n", buf);
-	fprintf(fd, "\"ThreadingModel\"=\"Apartment\"\n");
+	fprintf(fd, "\"ThreadingModel\"=\"%s\"\n", vim_ext_ThreadingModel);
 	fprintf(fd, "\n");
 	fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\shellex\\ContextMenuHandlers\\gvim]\n");
-	fprintf(fd, "@=\"{51EEE242-AD87-11d3-9C1E-0090278BBD99}\"\n");
+	fprintf(fd, "@=\"%s\"\n", vim_ext_clsid);
 	fprintf(fd, "\n");
 	fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved]\n");
-	fprintf(fd, "\"{51EEE242-AD87-11d3-9C1E-0090278BBD99}\"=\"Vim Shell Extension\"\n");
+	fprintf(fd, "\"%s\"=\"%s\"\n", vim_ext_clsid, vim_ext_name);
 	fprintf(fd, "\n");
 	fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Vim\\Gvim]\n");
 	fprintf(fd, "\"path\"=\"%sgvim.exe\"\n", buf);
@@ -1670,18 +1689,198 @@ install_popup(int idx)
 
 	/* The registry entries for uninstalling the menu */
 	fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim %s]\n", VIM_VERSION_SHORT);
-	fprintf(fd, "\"DisplayName\"=\"Vim %s: Edit with Vim popup menu entry\"\n", VIM_VERSION_SHORT);
+
+	fprintf(fd, "\"DisplayName\"=\"%s\"\n", uninstall_DisplayName);
 	fprintf(fd, "\"UninstallString\"=\"%suninstal.exe\"\n", buf);
 
 	fclose(fd);
-	system("regedit /s vim.reg");
-	/* Can't delete the file, because regedit detaches itself,
-	 * thus we don't know when it is finished. */
+        /* On WinNT, 'start' is a shell built-in for cmd.exe rather than an executable
+         * (start.exe) like in Win9x.  DJGPP, being a DOS program, is given the COMSPEC
+         * command.com by WinNT, so we have to find cmd.exe manually and use it.
+         */
+         if( (cmd_path = searchpath_save("cmd.exe") ) )
+         {
+             /* There is a cmd.exe, so this might be Windows NT.  If it is,
+              * we need to call cmd.exe explicitly.  If it is a later OS,
+              * calling cmd.exe won't hurt if it is present.
+              */
+             /* Replace the slashes with backslashes. */
+             while( (p = strchr(cmd_path, '/')) != NULL )
+             {
+                 *p = '\\';
+             }
+             sprintf(buf, "%s /c start /w regedit /s vim.reg", cmd_path);
+             system(buf);
+         }
+         else
+         {
+             /* No cmd.exe, just make the call and let the system handle it. */
+             system("start /w regedit /s vim.reg");
+         }
+
+        remove("vim.reg");
+    }
+
+#else /* #ifdef DJGPP */
+# ifdef WIN3264
+    /*
+     * Write the registry entries for the "Edit with Vim" menu.
+     */
+
+    /*	HKEY_CLASSES_ROOT\CLSID\{51EEE242-AD87-11d3-9C1E-0090278BBD99}
+     *      @ = "Vim Shell Extension"
+     */
+    sprintf(buf, "CLSID\\%s", vim_ext_clsid);
+    code = RegCreateKeyEx(HKEY_CLASSES_ROOT,
+                          buf,
+                          0,
+                          "",
+                          REG_OPTION_NON_VOLATILE,
+                          KEY_WRITE,
+                          NULL,
+                          &temp_key,
+                          &disposition);
+    CHECK_REG_ERROR(code);
+
+    code = RegSetValueEx(temp_key, "", 0, REG_SZ, vim_ext_name, strlen(vim_ext_name));
+
+    /*  HKEY_CLASSES_ROOT\CLSID\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\InProcServer32]
+     *      @ = "<Vim Path>\gvimext.dll"
+     *      ThreadingModel = "Apartment"
+     */
+    sprintf(buf, "%s\\gvimext.dll", installdir);
+    code = RegCreateKeyEx(temp_key,
+                          "InProcServer32",
+                          0,
+                          "",
+                          REG_OPTION_NON_VOLATILE,
+                          KEY_WRITE,
+                          NULL,
+                          &InProcServer32_key,
+                          &disposition);
+    CHECK_REG_ERROR(code);
+
+    code = RegSetValueEx(InProcServer32_key, "", 0, REG_SZ, buf, strlen(buf));
+    CHECK_REG_ERROR(code);
+    code = RegSetValueEx(InProcServer32_key,
+                         "ThreadingModel",
+                         0,
+                         REG_SZ,
+                         vim_ext_ThreadingModel,
+                         strlen(vim_ext_ThreadingModel));
+    CHECK_REG_ERROR(code);
+
+    RegCloseKey(InProcServer32_key);
+    RegCloseKey(temp_key);
+
+    /*	HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\gvim]
+     *	    @ = "{51EEE242-AD87-11d3-9C1E-0090278BBD99}"
+     */
+    code = RegCreateKeyEx(HKEY_CLASSES_ROOT,
+                   "*\\shellex\\ContextMenuHandlers\\gvim",
+                   0,
+                   "",
+                   REG_OPTION_NON_VOLATILE,
+                   KEY_WRITE,
+                   NULL,
+                   &temp_key,
+                   &disposition);
+    CHECK_REG_ERROR(code);
+
+    code = RegSetValueEx(temp_key, "", 0, REG_SZ, vim_ext_clsid, strlen(vim_ext_clsid));
+    CHECK_REG_ERROR(code);
+
+    RegCloseKey(temp_key);
+
+    /*	HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved
+     *	    {51EEE242-AD87-11d3-9C1E-0090278BBD99} = "Vim Shell Extension\"
+     */
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                 "Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                 0,
+                 KEY_WRITE,
+                 &temp_key);
+    CHECK_REG_ERROR(code);
+
+    code = RegSetValueEx(temp_key, vim_ext_clsid, 0, REG_SZ, vim_ext_name, strlen(vim_ext_name));
+    CHECK_REG_ERROR(code);
+
+    RegCloseKey(temp_key);
+
+    /*	HKEY_LOCAL_MACHINE\Software\Vim\Gvim
+     *	    path = "<Vim Path>\gvim.exe"
+     */
+    code = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                   "Software\\Vim\\Gvim",
+                   0,
+                   "",
+                   REG_OPTION_NON_VOLATILE,
+                   KEY_WRITE,
+                   NULL,
+                   &temp_key,
+                   &disposition);
+    CHECK_REG_ERROR(code);
+
+    sprintf(buf, "%s\\gvim.exe", installdir);
+    code = RegSetValueEx(temp_key, "path", 0, REG_SZ, buf, strlen(buf));
+    CHECK_REG_ERROR(code);
+
+    RegCloseKey(temp_key);
+
+	/* The registry entries for uninstalling the menu */
+    /* Changes on 6/18/2001:
+     *   Removed VIM_VERSION_SHORT from the immediately following line so that all versions of the
+     *   Vim popup will be installed under the same uninstall key.  This is done so to prevent
+     *   artifact uninstall keys if multiple popups are installed and then one is uninstalled.
+     *
+     *   The VIM_VERSION_SHORT is left in the DisplayName line so that the Windows uninstall menu
+     *   will show the most recently installed version number.
+     */
+
+    /*	HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\Vim
+     *	    DisplayName = "Vim <Vim Version>: Edit with Vim popup menu entry"
+     *	    UninstallString = "<Vim Path>\uninstal.exe"
+     */
+    code = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                   "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vim",
+                   0,
+                   "",
+                   REG_OPTION_NON_VOLATILE,
+                   KEY_WRITE,
+                   NULL,
+                   &temp_key,
+                   &disposition);
+    CHECK_REG_ERROR(code);
+
+    sprintf(uninstall_DisplayName,
+            "Vim %s: Edit with Vim popup menu entry",
+            VIM_VERSION_SHORT);
+    code = RegSetValueEx(temp_key,
+                  "DisplayName",
+                  0,
+                  REG_SZ,
+                  uninstall_DisplayName,
+                  strlen(uninstall_DisplayName));
+    CHECK_REG_ERROR(code);
+
+    sprintf(buf, "%s\\uninstal.exe", installdir);
+    code = RegSetValueEx(temp_key, "UninstallString", 0, REG_SZ, buf, strlen(buf));
+    CHECK_REG_ERROR(code);
+
+    RegCloseKey(temp_key);
 
 	printf("Vim has been installed in the popup menu.\n");
 	printf("Use uninstal.exe if you want to remove it again.\n");
 	printf("Also see \":help win32-popup-menu\" in Vim.\n");
-    }
+
+    /* Call uninstall_old_popups() to give the user the option to remove the
+     * uninstall keys for old popup entries from the registry.
+     */
+    uninstall_old_popups(uninstall_DisplayName);
+
+# endif /* ifdef WIN3264 */
+#endif /* ifdef DJGPP - else... */
+
 }
 
     static void
@@ -2781,6 +2980,22 @@ install(void)
 	    (choices[i].installfunc)(i);
 }
 
+/*
+ * request_choice
+ */
+    static void
+request_choice(void)
+{
+    int               i;
+
+    printf("\n\nInstall will do for you:\n");
+    for (i = 0; i < choice_count; ++i)
+      if (choices[i].active)
+          printf("%2d  %s\n", i + 1, choices[i].text);
+    printf("To change an item, enter its number\n\n");
+    printf("Enter item number, h (help), d (do it) or q (quit): ");
+}
+
     int
 main(int argc, char **argv)
 {
@@ -2805,12 +3020,7 @@ main(int argc, char **argv)
     /* Let the user change choices and finally install (or quit). */
     for (;;)
     {
-	printf("\n\nInstall will do for you:\n");
-	for (i = 0; i < choice_count; ++i)
-	    if (choices[i].active)
-		printf("%2d  %s\n", i + 1, choices[i].text);
-	printf("To change an item, enter its number\n\n");
-	printf("Enter item number, h (help), d (do it) or q (quit): ");
+        request_choice();
 	if (scanf("%99s", buf) == 1)
 	{
 	    if (isdigit(buf[0]))

@@ -1204,20 +1204,25 @@ getvvcol(wp, pos, start, cursor, end)
     colnr_T	*end;
 {
     colnr_T	col;
+    char_u	*ptr;
 
     if (virtual_active())
     {
-	char_u	*ptr;
-
 	/* For virtual mode, only want one value */
 	getvcol(wp, pos, &col, NULL, NULL);
 
-	/* Adjust for multiwide char */
-	ptr = ml_get_cursor();
-	if (*ptr != TAB && *ptr != NUL && ptr2cells(ptr) > 1)
-	    pos->coladd = 0;
-
-	col += pos->coladd;
+	if (pos->coladd > 0)
+	{
+	    /* Adjust for multiwide char */
+	    ptr = ml_get(pos->lnum);
+	    if (pos->col <= STRLEN(ptr))
+	    {
+		ptr += pos->col;
+		if (*ptr != TAB && *ptr != NUL && ptr2cells(ptr) > 1)
+		    pos->coladd = 0;
+	    }
+	    col += pos->coladd;
+	}
 	if (start != NULL)
 	    *start = col;
 	if (cursor != NULL)

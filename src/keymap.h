@@ -223,6 +223,7 @@ enum key_extra
     , KE_SNR		/* <SNR> */
     , KE_PLUG		/* <Plug> */
     , KE_CMDWIN		/* open command-line window from Command-line Mode */
+    , KE_SILENT		/* decrement msg_silent, used after a silent menu */
 };
 
 /*
@@ -412,6 +413,7 @@ enum key_extra
 #define K_RIGHTRELEASE	TERMCAP2KEY(KS_EXTRA, KE_RIGHTRELEASE)
 
 #define K_IGNORE	TERMCAP2KEY(KS_EXTRA, KE_IGNORE)
+#define K_SILENT	TERMCAP2KEY(KS_EXTRA, KE_SILENT)
 
 #define K_SNIFF		TERMCAP2KEY(KS_EXTRA, KE_SNIFF)
 
@@ -431,7 +433,7 @@ enum key_extra
 #define MOD_MASK_2CLICK	    0x10	/* use MOD_MASK_MULTI_CLICK */
 #define MOD_MASK_3CLICK	    0x20	/* use MOD_MASK_MULTI_CLICK */
 #define MOD_MASK_4CLICK	    0x30	/* use MOD_MASK_MULTI_CLICK */
-#ifdef macintosh
+#if defined(macintosh) || defined(TARGET_API_MAC_CARBON)
 # define MOD_MASK_CMD	     0x80
 #endif
 

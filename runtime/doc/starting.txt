@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0al.  Last change: 2001 Jun 03
+*starting.txt*  For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -116,7 +116,7 @@ The option arguments may be given in any order.  Single-letter options can be
 combined after one dash.  There can be no option arguments after the "--"
 argument.
 
-On VMS all option arguments are assumed to be lower case, unless preceded with
+On VMS all option arguments are assumed to be lowercase, unless preceded with
 a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 --help							*-h* *--help*
@@ -164,6 +164,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		{command} will be executed before processing any vimrc file.
 		Otherwise it acts like -c {command}.  You can use up to 10 of
 		these commands, independently from "-c" commands.
+		{not in Vi}
 
 							*-S*
 -S {file}	The {file} will be sourced after the first file has been read.
@@ -196,18 +197,28 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		the swap file will not be updated automatically very often.
 
 							*-m*
--m		Modifications not allowed.  The 'write' option will be reset,
-		so that writing files is disabled.  The 'write' option can be
-		set to enable writing again.
+-m		Modifications not allowed to be written.  The 'write' option
+		will be reset, so that writing files is disabled.  However,
+		the 'write' option can be set to enable writing again.
+		{not in Vi}
+
+							*-M*
+-M		Modifications not allowed.  The 'modifiable' option will be
+		reset, so that changes are not allowed.  The 'write' option
+		will be reset, so that writing files is disabled.  However,
+		the 'modifiable' and 'write' options can be set to enable
+		changes and writing.
+		{not in Vi}
 
 						*-Z* *restricted-mode* *E145*
 -Z		Restricted mode.  All commands that make use of an external
 		shell are disabled.  This includes suspending with CTRL-Z,
 		":sh", filtering, the system() function, backtick expansion,
 		etc.
+		{not in Vi}
 
 							*-g*
--g		Start Vim in GUI mode.  See |gui|.
+-g		Start Vim in GUI mode.  See |gui|.  {not in Vi}
 
 							*-v*
 -v		Start Ex in Vi mode.  Only makes a difference when the
@@ -221,6 +232,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 							*-E*
 -E		Start Vim in improved Ex mode |gQ|.  Only makes a difference
 		when the executable is not called "exim".
+		{not in Vi}
 
 							*-s-ex*
 -s		Silent or batch mode.  Only when Vim was started as "ex" or
@@ -264,6 +276,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 -D		Debugging.  Go to debugging mode when executing the first
 		command from a script. |debug-mode|
 		{not available when compiled without the |+eval| feature}
+		{not in Vi}
 
 							*-C*
 -C		Compatible mode.  Sets the 'compatible' option.  You can use
@@ -294,12 +307,13 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		'updatecount' is set to 0 AFTER executing commands from a
 		vimrc file, but before the GUI initializations.  Thus it
 		overrides a setting for 'updatecount' in a vimrc file, but not
-		in a gvimrc file.  See |startup|.  {not in Vi}
+		in a gvimrc file.  See |startup|.
 		When you want to reduce accesses to the disk (e.g., for a
 		laptop), don't use "-n", but set 'updatetime' and
 		'updatecount' to very big numbers, and type ":preserve" when
 		you want to save your work.  This way you keep the possibility
 		for crash recovery.
+		{not in Vi}
 
 							*-o*
 -o[N]		Open N windows, split horizontally.  If [N] is not given,
@@ -337,7 +351,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 -f		Amiga: Do not restart Vim to open a new window.  This
 		option should be used when Vim is started by a program that
 		will wait for the edit session to finish (e.g., mail or
-		readnews).  See |amiga-window|.  {not in Vi}
+		readnews).  See |amiga-window|.
 
 		GUI: Do not disconnect from the program that started Vim.
 		'f' stands for "foreground".  If omitted, the GUI forks a new
@@ -346,8 +360,8 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		session to finish (e.g., mail or readnews).  If you want gvim
 		never to fork, include 'f' in 'guioptions' in your .gvimrc.
 		Careful: You can use "-gf" to start the GUI in the foreground,
-		but "-fg" is used to specify the foreground color.  {not in
-		Vi} |gui-fork|
+		but "-fg" is used to specify the foreground color.  |gui-fork|
+		{not in Vi}
 
 							*-u* *E282*
 -u {vimrc}	The file {vimrc} is read for initializations.  Other
@@ -374,12 +388,14 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		is equal to "NONE", no file is read for initializations at
 		all.
 		Exception: Reading the system-wide menu file is always done.
+		{not in Vi}
 
 							*-i*
 -i {viminfo}	The file "viminfo" is used instead of the default viminfo
 		file.  If the name "NONE" is used (all uppercase), no viminfo
 		file is read or written, even if 'viminfo' is set or when
-		":rv" or ":wv" are used.  See also |viminfo-file|.  {not in Vi}
+		":rv" or ":wv" are used.  See also |viminfo-file|.
+		{not in Vi}
 
 							*-x*
 -x		Use encryption to read/write files.  Will prompt for a key,
@@ -398,6 +414,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		|+X11| feature.  Otherwise it's ignored.
 		To disable the connection only for specific terminals, see the
 		'clipboard' option.
+		{not in Vi}
 
 							*-s*
 -s {scriptin}	The script file "scriptin" is read.  The characters in the
@@ -413,12 +430,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		"scriptout", until you exit Vim.  This is useful if you want
 		to create a script file to be used with "vim -s" or
 		":source!".  When the "scriptout" file already exists, new
-		characters are appended.  See also |complex-repeat|.  {not in
-		Vi}
+		characters are appended.  See also |complex-repeat|.
+		{not in Vi}
 
 							*-W*
--W {scriptout}	Like -w, but do not append, overwrite an existing file.  {not
-		in Vi}
+-W {scriptout}	Like -w, but do not append, overwrite an existing file.
+		{not in Vi}
 
 							*-w_nr*
 -w{number}	Does nothing.  This was included for Vi-compatibility.  In Vi

@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Jun 05
+" Last Change: 2001 Jun 29
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -80,8 +80,8 @@ fun s:read(cmd)
   endif
   " delete the temp file and the used buffers
   call delete(tmp)
-  silent exe "bwipe " . tmp
-  silent exe "bwipe " . tmpe
+  silent! exe "bwipe " . tmp
+  silent! exe "bwipe " . tmpe
   let &pm = pm_save
   let &ma = ma_save
   " When uncompressed the whole buffer, do autocommands

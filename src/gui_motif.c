@@ -324,27 +324,27 @@ gui_motif_create_fontlist(font)
 {
     XmFontList font_list;
 
-#if (XmVersion <= 1001)
+# if (XmVersion <= 1001)
     /* Motif 1.1 method */
     font_list = XmFontListCreate(font, STRING_TAG);
-#else
+# else
     /* Motif 1.2 method */
     XmFontListEntry font_list_entry;
 
     font_list_entry = XmFontListEntryCreate(STRING_TAG,
-# ifdef FEAT_XFONTSET
+#  ifdef FEAT_XFONTSET
 	    gui.fontset != NOFONTSET ? XmFONT_IS_FONTSET :
-# endif
+#  endif
 	    XmFONT_IS_FONT, (XtPointer)font);
     font_list = XmFontListAppendEntry(NULL, font_list_entry);
     XmFontListEntryFree(&font_list_entry);
-#endif
+# endif
     return font_list;
 }
 
-#if (XmVersion > 1001)
+# if ((XmVersion > 1001) && defined(FEAT_BEVAL)) || defined(PROTO)
     XmFontList
-gui_motif_create_fontlist_from_fontset(fontset)
+gui_motif_fontset2fontlist(fontset)
     XFontSet	*fontset;
 {
     XmFontList font_list;
@@ -359,7 +359,7 @@ gui_motif_create_fontlist_from_fontset(fontset)
     XmFontListEntryFree(&font_list_entry);
     return font_list;
 }
-#endif
+# endif
 
 #endif
 
@@ -994,6 +994,7 @@ gui_mch_new_menu_font()
     ui_new_shellsize();
 }
 
+#if defined(FEAT_BEVAL) || defined(PROTO)
     void
 gui_mch_new_tooltip_font()
 {
@@ -1011,6 +1012,7 @@ gui_mch_new_tooltip_colors()
 
     gui_mch_submenu_change(root_menu, TRUE);
 }
+#endif
 
     static void
 gui_mch_submenu_change(menu, colors)
@@ -1730,10 +1732,10 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
     Widget		sep_form = NULL;
     Boolean		vertical;
     Widget		separator = NULL;
-    char		**icon_data = NULL;
     int			n;
     Arg			args[6];
 #ifdef HAVE_X11_XPM_H
+    char		**icon_data = NULL;
     Widget		dialogpixmap = NULL;
 #endif
 
@@ -2114,11 +2116,12 @@ gui_mch_enable_footer(showit)
 }
 
     void
-gui_mch_set_footer(char_u *msg)
+gui_mch_set_footer(s)
+    char_u	*s;
 {
     XmString	xms;
 
-    xms = XmStringCreate((char *)msg, STRING_TAG);
+    xms = XmStringCreate((char *)s, STRING_TAG);
     XtVaSetValues(footer, XmNlabelString, xms, NULL);
     XmStringFree(xms);
 }

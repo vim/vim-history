@@ -806,15 +806,15 @@ gui_update_cursor(force, clear_selection)
 	    cattr = syn_id2colors(id, &cfg, &cbg);
 #if defined(USE_IM_CONTROL) || defined(FEAT_HANGULIN)
 	    {
-		static int id;
+		static int iid;
 		guicolor_T fg, bg;
 
 		if (im_get_status())
 		{
-		    id = syn_name2id((char_u *)"CursorIM");
-		    if (id > 0)
+		    iid = syn_name2id((char_u *)"CursorIM");
+		    if (iid > 0)
 		    {
-			syn_id2colors(id, &fg, &bg);
+			syn_id2colors(iid, &fg, &bg);
 			if (bg > 0)
 			    cbg = bg;
 		    }
@@ -2924,7 +2924,8 @@ gui_find_scrollbar(ident)
 }
 
 /*
- * For most systems: Put a code in the input buffer for a dragged scrollbar. *
+ * For most systems: Put a code in the input buffer for a dragged scrollbar.
+ *
  * For Win32 and Macintosh:
  * Scrollbars seem to grab focus and vim doesn't read the input queue until
  * you stop dragging the scrollbar.  We get here each time the scrollbar is

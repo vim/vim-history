@@ -1,4 +1,4 @@
-*usr_26.txt*	For Vim version 6.0al.  Last change: 2001 Jun 08
+*usr_26.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -12,6 +12,7 @@ be explained.
 |26.1|	Repeating with Visual mode
 |26.2|	Add and subtract
 |26.3|	Making a change in many files
+|26.4|	Using Vim from shell script
 
      Next chapter: |usr_27.txt|  Search commands and patterns
  Previous chapter: |usr_25.txt|  Editing formatted text
@@ -30,7 +31,7 @@ same text.
 
 	The financial results for 2001 are better ~
 	than for 2000.  The income increased by 50%, ~
-	even though 2001 had more rain than 200. ~
+	even though 2001 had more rain than 2000. ~
 			2000		2001 ~
 	income		45,403		66,234 ~
 
@@ -57,7 +58,7 @@ Now press CTRL-A.  The year will be increased by one:
 
 	The financial results for 2002 are better ~
 	than for 2000.  The income increased by 50%, ~
-	even though 2001 had more rain than 200. ~
+	even though 2001 had more rain than 2000. ~
 			2000		2001 ~
 	income		45,403		66,234 ~
 
@@ -131,6 +132,87 @@ There is also the ":windo" command, which executes its argument in all
 windows.  And ":bufdo" executes its argument on all buffers.  Be careful with
 this, because you might have more files in the buffer list than you think.
 Check this with the ":buffers" command (or ":ls").
+
+==============================================================================
+*26.4*	Using Vim from a shell script
+
+Suppose you have a lot of files in which you need to change the string
+"-person-" to "Jones" and then print it.  How do you do that?  One way is to
+do a lot of typing.  The other is to write a shell script to do the work.
+   The Vim editor does a superb job as a screen-oriented editor when using
+Normal mode commands.  For batch processing, however, Normal mode commands do
+not result in clear, commented command files; so here you will use Ex mode
+instead.  This mode gives you a nice command-line interface that makes it easy
+to put into a batch file.  ("Ex command" is just another name for a
+command-line (:) command.)
+   The Ex mode commands you need are as follows: >
+   
+   	%s/-person-/Jones/g
+	write tempfile
+	quit
+
+You put these commands in the file "change.vim".  Now to run the editor in
+batch mode, use this shell script: >
+
+	for file in *.txt; do
+	  vim -e -s $file < change.vim
+	  lpr -r tempfile
+	done
+	  
+The for-done loop is a shell construct to repeat the two lines in between,
+while the $file variable is set to a different file name each time.
+   The second line runs the Vim editor in Ex mode (-e argument) on the file
+$file and reads commands from the file "change.vim".  The -s argument tells
+Vim to operate in silent mode.  In other words, do not keep outputting the
+:prompt, or any other prompt for that matter.
+   The "lpr -r tempfile" command prints the resulting "tempfile" and deletes
+it (that's what the -r argument does).
+
+
+READING FROM STDIN
+
+Vim can read text on standard input.  Since the normal way is to read commands
+there, you must tell Vim to read text instead.  This is done by passing the
+"-" argument in place of a file.  Example: >
+
+	ls | vim -
+
+This allows you to edit the output of the "ls" command, without first saving
+the text in a file.
+   If you use the standard input to read text from, you can use the "-S"
+argument to read a script: >
+
+	producer | vim -S change.vim -
+
+
+NORMAL MODE SCRIPTS
+
+If you really want to use Normal mode commands in a script, you can use it
+like this: >
+
+	vim -s script file.txt ...
+<
+	Note:
+	"-s" has a different meaning when it is used without "-e".  Here it
+	means to source the "script" as Normal mode commands.  When used with
+	"-e" it means to be silent, and doesn't use the next argument as a
+	file name.
+
+The commands in "script" are executed like you typed them.  Don't forget that
+a line break is interpreted as pressing <Enter>.  In Normal mode that moves
+the cursor to the next line.
+   To create the script you can edit the script file and type the commands.
+You need to imagine what the result would be, which can be a bit difficult.
+Another way is to record the commands while you perform them manually.  This
+is how you do that: >
+
+	vim -w script file.txt ...
+
+All typed keys will be written to "script".  If you make a small mistake you
+can just continue and remember to edit the script later.
+   The "-w" argument appends to an existing script.  That is good when you
+want to record the script bit by bit.  If you want to start from scratch and
+start all over, use the "-W" argument.  It overwrites any existing file.
 
 ==============================================================================
 

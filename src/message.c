@@ -140,7 +140,8 @@ msg_attr_keep(s, attr, keep)
 
     msg_start();
     msg_outtrans_attr(s, attr);
-    msg_clr_eos();
+    if (!msg_silent)
+	msg_clr_eos();
     retval = msg_end();
 
     if (keep && retval && vim_strsize(s) < (int)(Rows - cmdline_row - 1)
@@ -417,6 +418,7 @@ emsg(s)
 
 	/* Reset msg_silent, an error causes messages to be switched back on. */
 	msg_silent = 0;
+	cmd_silent = 0;
 
 	if (global_busy)		/* break :global command */
 	    ++global_busy;
@@ -773,7 +775,7 @@ wait_return(redraw)
 		c = K_IGNORE;
 	    }
 #endif
-	} while (c == Ctrl_C || c == K_IGNORE
+	} while (c == Ctrl_C || c == K_IGNORE || c == K_SILENT
 #ifdef FEAT_GUI
 				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
 #endif
@@ -782,11 +784,10 @@ wait_return(redraw)
 				|| c == K_MIDDLEDRAG || c == K_MIDDLERELEASE
 				|| c == K_RIGHTDRAG  || c == K_RIGHTRELEASE
 				|| c == K_MOUSEDOWN  || c == K_MOUSEUP
-				|| c == K_IGNORE     ||
-				(!mouse_has(MOUSE_RETURN) &&
-				     (c == K_LEFTMOUSE ||
-				      c == K_MIDDLEMOUSE ||
-				      c == K_RIGHTMOUSE))
+				|| (!mouse_has(MOUSE_RETURN)
+				    && (c == K_LEFTMOUSE
+					|| c == K_MIDDLEMOUSE
+					|| c == K_RIGHTMOUSE))
 #endif
 				);
 	ui_breakcheck();
@@ -892,7 +893,7 @@ set_keep_msg(s)
     char_u	*s;
 {
     vim_free(keep_msg);
-    if (s != NULL)
+    if (s != NULL && !msg_silent)
 	keep_msg = vim_strsave(s);
     else
 	keep_msg = NULL;
@@ -2150,7 +2151,10 @@ msg_advance(col)
     int	    col;
 {
     if (msg_silent)		/* nothing to advance to */
+    {
+	msg_putchar(' ');	/* insert something for redirection */
 	return;
+    }
     if (col >= Columns)		/* not enough room */
 	col = Columns - 1;
     while (msg_col < col)

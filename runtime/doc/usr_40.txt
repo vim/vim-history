@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0al.  Last change: 2001 Jun 20
+*usr_40.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -89,6 +89,28 @@ like you typed it.  This mapping is useful if typing a { on your keyboard is a
 bit difficult.
 
 
+LISTING MAPPINGS
+
+To see the currently defined mappings, use ":map" without arguments.  Or one
+of the variants that include the mode in which they work.  The output could
+look like this:
+
+	   _g            :call MyGrep(1)<CR> ~
+	v  <F2>          :s/^/> /<CR>:noh<CR>`` ~
+	n  <F2>          :.,$s/^/> /<CR>:noh<CR>`` ~
+	   <xHome>       <Home>
+	   <xEnd>        <End>
+
+
+The first column of the list shows in which mode the mapping is effective.
+This is "n" for Normal mode, "i" for Insert mode, etc.  A blank is used for a
+mapping defined with ":map", thus effective in both Normal and Visual mode.
+   One useful purpose of listing the mapping is to check if special keys in <>
+form have been recognized (this only works when color is supported).  For
+example, when <Esc> is displayed in color, it stands for the escape character.
+When it has the same color as the other text, it is five characters.
+
+
 REMAPPING
 
 The result of a mapping is inspected for other mappings in it.  For example,
@@ -175,7 +197,7 @@ delete it for Visual mode: >
 
 Notice that the five characters "<C-A>" stand for the single key CTRL-A.
 
-To remove all mappings use the ":mapclear" command.  You can guess the
+To remove all mappings use the |:mapclear| command.  You can guess the
 variations for different modes by now.  Be careful with this command, it can't
 be undone.
 

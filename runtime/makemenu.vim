@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 07
+" Last Change:	2001 Jun 28
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -311,6 +311,7 @@ SynMenu TUV.TeX:tex
 SynMenu TUV.TeX\ configuration:texmf
 SynMenu TUV.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
+SynMenu TUV.Tidy\ configuration:tidy
 SynMenu TUV.Trasys\ input:trasys
 SynMenu TUV.TSS.Command\ Line:tsscl
 SynMenu TUV.TSS.Geometry:tssgm

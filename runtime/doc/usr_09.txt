@@ -1,4 +1,4 @@
-*usr_09.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_09.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -21,12 +21,15 @@ Table of contents: |usr_toc.txt|
 ==============================================================================
 *09.1*	Parts of the GUI
 
-You might have an icon on your desktop that starts gVim.  Otherwise, this
-command should do it: >
+You might have an icon on your desktop that starts gVim.  Otherwise, one of
+these commands should do it: >
 
 	gvim file.txt
+	vim -g file.txt
 
-Vim will open a window and display "file.txt" in it.  What the window looks
+If this doesn't work you don't have a version of Vim with GUI support.  You
+will have to install one first.
+   Vim will open a window and display "file.txt" in it.  What the window looks
 like depends on the version of Vim.  It should resemble the following picture
 (for as far as this can be shown in ASCII!).
 
@@ -79,8 +82,8 @@ is Edit/Global Settings.  You will find these entries:
 	Toggle Right Scrollbar	make a scrollbar appear/disappear at the right
 
 On most systems you can tear-off the menus.  Select the top item of the menu,
-that looks like a dashed line.  You will get a separate window with the items
-of the menu.
+the one that looks like a dashed line.  You will get a separate window with
+the items of the menu.  It will hang around until you close the window.
 
 
 THE TOOLBAR
@@ -89,8 +92,8 @@ This contains icons for the most often used actions.  Hopefully the icons are
 self-explanatory.  There are tooltips to get an extra hint (move the mouse
 pointer to the icon without clicking and don't move it for a second).
 
-The  Edit/Global Settings/Toggle Toolbar  menu item can be used to make the
-toolbar disappear.  if you never want a toolbar, use this command in your
+The "Edit/Global Settings/Toggle Toolbar" menu item can be used to make the
+toolbar disappear.  If you never want a toolbar, use this command in your
 vimrc file: >
 
 	:set guioptions-=T
@@ -166,7 +169,7 @@ Right mouse click		display a pop-up menu
 The mouse can be further tuned.  Check out these options if you want to change
 the way how the mouse works:
 
-	'mouse'			in which mode the mouse use used by Vim
+	'mouse'			in which mode the mouse is used by Vim
 	'mousemodel'		what effect a mouse click has
 	'mousetime'		time between clicks for a double-click
 	'mousehide'		hide the mouse while typing
@@ -241,7 +244,7 @@ to select a whole line just press "V".
 
 	"*P
 
-Notice the upper case "P".  The lower case "p" puts the text after the cursor.
+Notice the uppercase "P".  The lowercase "p" puts the text after the cursor.
 
 The "+ register is used for the real clipboard.  For example, to copy the text
 from the cursor position until the end of the line to the clipboard: >

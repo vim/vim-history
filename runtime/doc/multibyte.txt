@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0al.  Last change: 2001 Jun 24
+*multibyte.txt* For Vim version 6.0am.  Last change: 2001 Jun 30
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -10,6 +10,8 @@ This is about editing text in languages which have many characters that can
 not be represented using one byte (one octet).  Examples are Chinese, Japanese
 and Korean.  Unicode is also covered here.
 
+For an introduction to the most common features, see |usr_45.txt| in the user
+manual.
 For changing the language of messages and menus see |multilang.txt|.
 
 {not available when compiled without the +multi_byte feature}
@@ -127,6 +129,9 @@ There are several ways to enter multi-byte characters:
 - For MS-Windows IME can be used.  See |IME|.
 - For all systems keymaps can be used.  See |mbyte-keymap|.
 
+The options 'iminsert', 'imsearch' and 'imcmdline' can be used to chose
+the different input medhods or disable them temporarily.
+
 ==============================================================================
 2.  Locale						*mbyte-locale*
 
@@ -154,7 +159,7 @@ For example, "/usr/share/locale" or "/usr/lib/locale".  See your system's
 setlocale() man page.
 
 Looking in these directories will show you the exact name of each locale.
-Mostly upper/lower case matters, thus "ja_JP.EUC" and "ja_jp.euc" are
+Mostly upper/lowercase matters, thus "ja_JP.EUC" and "ja_jp.euc" are
 different.  Some systems have a locale.alias file, which allows translation
 from a short name like "nl" to the full name "nl_NL.ISO_8859-1".
 
@@ -482,7 +487,7 @@ and you will have a working UTF-8 terminal emulator. Try both >
 with the demo text that comes with ucs-fonts.tar.gz in order to see
 whether there are any problems with UTF-8 in your xterm.
 
-For Vim you may need to set 'encoding' to "utf-8", see |utf-8-in-xterm|.
+For Vim you may need to set 'encoding' to "utf-8".
 
 ==============================================================================
 5.  Fonts on X11					*mbyte-fonts-X11*
@@ -666,7 +671,7 @@ it.  Example: >
 6.  Fonts on MS-Windows				*mbyte-fonts-MSwin*
 
 The simplest is to use the font dialog to select fonts and try them out.  You
-can find this at the "Window/Select Font..." menu.  Once you find a font name
+can find this at the "Edit/Select Font..." menu.  Once you find a font name
 that works well you can use this command to see its name: >
 
 	:set guifont
@@ -916,15 +921,18 @@ Here {keymap} is the value of the 'keymap' option and {encoding} of the
 
 'runtimepath' is used to find these files.  To see an overview of all
 available keymap files, use this: >
-	echo globpath(&rtp, "keymap/*.vim")
+	:echo globpath(&rtp, "keymap/*.vim")
 
 In Insert and Command-line mode you can use CTRL-^ to toggle between using the
 keyboard map or not. |i_CTRL-^| |c_CTRL-^|
-This flag is remembered for Insert mode.  When leaving and entering Insert
-mode the previous value is used.  The same value is also used for commands
-that take a single character argument, like |f| and |r|.
+This flag is remembered for Insert mode with the 'iminsert' option.  When
+leaving and entering Insert mode the previous value is used.  The same value
+is also used for commands that take a single character argument, like |f| and
+|r|.
 For Command-line mode the flag is NOT remembered.  You are expected to type an
 Ex command first, which is ASCII.
+For typing search patterns the 'imsearch' option is used.  It can be set to
+use the same value as for 'iminsert'.
 
 It is possible to give the GUI cursor another color when the language mappings
 are being used.  This is disabled by default, to avoid that the cursor becomes
@@ -1064,17 +1072,6 @@ You might also want to select the font used for the menus.  Unfortunately this
 doesn't always work.  See the system specific remarks below, and 'langmenu'.
 
 
-USING UTF-8 IN AN XTERM					*utf-8-in-xterm*
-
-When using Vim in an xterm, the xterm must have been compiled with utf-8
-support.  See |UTF8-xterm|.
-
-Start the xterm with the "-u8" argument.  You might also need so specify a
-font.  Example: >
-
-   xterm -u8 -fn -misc-fixed-medium-r-normal--18-120-100-100-c-90-iso10646-1
-
-
 USING UTF-8 IN X-Windows				*utf-8-in-xwindows*
 
 You need to specify a font to be used.  For double-wide characters another
@@ -1091,38 +1088,6 @@ See the documentation for each option for details.  Example: >
 
 You might also want to set the font used for the menus.  This only works for
 Motif.  Use the ":hi Menu font={fontname}" command for this. |:highlight|
-
-
-USING UTF-8 IN MS-WINDOWS				*utf-8-in-mswindows*
-
-Sorry, I don't know how to select Unicode fonts for MS-Windows.  It probably
-works a lot better on MS-Windows NT and 2000, compared to 95/98/ME.
-
-You can find the "Courier New" font, which is supposed to be usable for
-Unicode, here:
-
-	http://www.microsoft.com/typography/fontpack/default.htm
-
-
-USING UTF-8 IN A NON-UNICODE TERMINAL			*utf-8-in-others*
-
-You can also edit utf-8 files in a normal terminal or in an environment that
-uses a different encoding.  Do this: >
-
-	let &termencoding = &encoding
-	set encoding=utf-8
-
-This makes it possible to edit utf-8 files while your locale is, for example,
-in a Japanese encoding or latin1.
-
-The first line causes Vim to translate characters from/to utf-8 when
-communicating with the terminal.  This only works when the conversion is
-possible (for "latin1" it's done internally, other conversions require the
-|+iconv| feature).
-
-Characters which can't be converted will be displayed with a '?', '_' or other
-character.  Use the "ga" or "g8" command to find out which character it really
-is.
 
 
 TYPING UTF-8						*utf-8-typing*
