@@ -203,11 +203,17 @@
 #ifndef SETTINGS_FILE
 # define SETTINGS_FILE	"settings.vim"
 #endif
+#ifndef INDENT_FILE
+# define INDENT_FILE	"indent.vim"
+#endif
 #ifndef FTOFF_FILE
 # define FTOFF_FILE	"ftoff.vim"
 #endif
 #ifndef SETSOFF_FILE
 # define SETSOFF_FILE	"setsoff.vim"
+#endif
+#ifndef INDOFF_FILE
+# define INDOFF_FILE	"indoff.vim"
 #endif
 #ifndef SYS_MENU_FILE
 # define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
@@ -377,6 +383,6 @@ int mch_rename __ARGS((const char *src, const char *dest));
 # include <strings.h>
 #endif
 
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
+#if defined(HAVE_SETJMP_H) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))
 # include <setjmp.h>
 #endif

@@ -72,6 +72,7 @@ FILE* fdDump = NULL;
 # define LPCSTR char_u *
 # define WINBASEAPI
 # define INPUT_RECORD int
+# define _cdecl
 #endif
 
 
@@ -592,6 +593,28 @@ mch_isdir(char_u *name)
     return TRUE;
 }
 
+/*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(char_u *name)
+{
+    if (STRICMP(name, "AUX") == 0
+	    || STRICMP(name, "CON") == 0
+	    || STRICMP(name, "CLOCK$") == 0
+	    || STRICMP(name, "NUL") == 0
+	    || STRICMP(name, "PRN") == 0
+	    || ((STRNICMP(name, "COM", 3) == 0
+		    || STRNICMP(name, "LPT", 3) == 0)
+		&& isdigit(name[3])
+		&& name[4] == NUL))
+	return NODE_WRITABLE;
+    /* TODO: NODE_OTHER? */
+    return NODE_NORMAL;
+}
 
     void
 mch_settmode(int tmode)
@@ -1121,7 +1144,7 @@ mch_libcall(
 	{
 	    /* Call with string argument */
 	    ProcAdd = (MYSTRPROCSTR) GetProcAddress(hinstLib, funcname);
-	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)))
+	    if ((fRunTimeLinkSuccess = (ProcAdd != NULL)) != 0)
 	    {
 		if (string_result == NULL)
 		    retval_int = ((MYSTRPROCINT)ProcAdd)(argstring);
@@ -1133,7 +1156,7 @@ mch_libcall(
 	{
 	    /* Call with number argument */
 	    ProcAddI = (MYINTPROCSTR) GetProcAddress(hinstLib, funcname);
-	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)))
+	    if ((fRunTimeLinkSuccess = (ProcAddI != NULL)) != 0)
 	    {
 		if (string_result == NULL)
 		    retval_int = ((MYINTPROCINT)ProcAddI)(argint);

@@ -354,8 +354,9 @@ transchar(c)
 #ifdef FEAT_FKMAP
 			|| F_ischar(c)
 #endif
-		)) || (chartab[c] & CHAR_IP))	    /* printable character */
+		)) || (c < 256 && (chartab[c] & CHAR_IP)))
     {
+	/* printable character */
 	buf[i] = c;
 	buf[i + 1] = NUL;
     }

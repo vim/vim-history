@@ -233,6 +233,15 @@ edit(cmdchar, startln, count)
      * error message */
     check_for_delay(TRUE);
 
+#ifdef HAVE_SANDBOX
+    /* Don't allow inserting in the sandbox. */
+    if (sandbox != 0)
+    {
+	EMSG(_(e_sandbox));
+	return FALSE;
+    }
+#endif
+
 #ifdef FEAT_INS_EXPAND
     ins_compl_clear();	    /* clear stuff for ctrl-x mode */
 #endif
@@ -574,11 +583,16 @@ edit(cmdchar, startln, count)
 	}
 
 #ifdef FEAT_CINDENT
-	if (curbuf->b_p_cin
-# ifdef FEAT_INS_EXPAND
-			    && !ctrl_x_mode
+	if (!p_paste
+		&& (curbuf->b_p_cin
+# ifdef FEAT_EVAL
+		    || *curbuf->b_p_inde != NUL
 # endif
-					       )
+		    )
+# ifdef FEAT_INS_EXPAND
+		&& !ctrl_x_mode
+# endif
+	   )
 	{
 	    line_is_white = inindent(0);
 
@@ -599,7 +613,7 @@ edit(cmdchar, startln, count)
 		stop_arrow();
 
 		/* re-indent the current line */
-		fixthisline(get_c_indent);
+		do_c_expr_indent();
 	    }
 	}
 #endif /* FEAT_CINDENT */
@@ -1138,11 +1152,17 @@ normalchar:
 	    inserted_space = FALSE;
 
 #ifdef FEAT_CINDENT
-	if (curbuf->b_p_cin && can_cindent
-# ifdef FEAT_INS_EXPAND
-					    && !ctrl_x_mode
+	if (!p_paste
+		&& can_cindent
+		&& (curbuf->b_p_cin
+# ifdef FEAT_EVAL
+		    || *curbuf->b_p_inde != NUL
 # endif
-							       )
+		    )
+# ifdef FEAT_INS_EXPAND
+		&& !ctrl_x_mode
+# endif
+	   )
 	{
 force_cindent:
 	    /*
@@ -1153,7 +1173,7 @@ force_cindent:
 		stop_arrow();
 
 		/* re-indent the current line */
-		fixthisline(get_c_indent);
+		do_c_expr_indent();
 	    }
 	}
 #endif /* FEAT_CINDENT */
@@ -2184,8 +2204,14 @@ ins_compl_prep(c)
 	    {
 #ifdef FEAT_CINDENT
 		/* re-indent the current line */
-		if (can_cindent && curbuf->b_p_cin)
-		    fixthisline(get_c_indent);
+		if (!p_paste
+			&& can_cindent
+			&& (curbuf->b_p_cin
+# ifdef FEAT_EVAL
+			    || *curbuf->b_p_inde != NUL
+# endif
+			    ))
+		    do_c_expr_indent();
 #endif
 	    }
 	    else
@@ -2333,7 +2359,7 @@ ins_compl_get_exp(ini, dir)
 		    dict = ins_buf->b_fname;
 		    dict_f = DICT_EXACT;
 		}
-		sprintf((char*)IObuff, _("Scanning: %s"),
+		sprintf((char *)IObuff, _("Scanning: %s"),
 			ins_buf->b_sfname == NULL ? buf_spname(ins_buf)
 						  : (char *)ins_buf->b_sfname);
 		msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
@@ -3673,8 +3699,9 @@ insertchar(c, force_formatting, second_indent, ctrlv)
     /*
      * If there's any pending input, grab up to INPUT_BUFLEN at once.
      * This speeds up normal text input considerably.
-     * Don't do this when 'cindent' is set, because we might need to re-indent
-     * at a ':', or any other character.
+     * Don't do this when 'cindent' or 'indentexpr' is set, because we might
+     * need to re-indent at a ':', or any other character (but not what
+     * 'paste' is set)..
      */
 #ifdef USE_ON_FLY_SCROLL
     dont_scroll = FALSE;		/* allow scrolling here */
@@ -3688,7 +3715,11 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    && State != REPLACE
 	    && State != VREPLACE
 #ifdef FEAT_CINDENT
-	    && !curbuf->b_p_cin
+	    && !(!p_paste && (curbuf->b_p_cin
+# ifdef FEAT_EVAL
+		    || *curbuf->b_p_inde != NUL
+# endif
+		))
 #endif
 #ifdef FEAT_RIGHTLEFT
 	    && !p_ri
@@ -4466,6 +4497,8 @@ replace_do_bs()
     {
 	pchar_cursor(cc);
 	replace_pop_ins();
+	/* mark the buffer as changed and prepare for displaying */
+	changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
     }
     else if (cc == 0)
 	(void)del_char(FALSE);
@@ -4514,7 +4547,7 @@ get_replace_stack_virtcol()
  * Re-indent the current line, based on the current contents of it and the
  * surrounding lines. Fixing the cursor position seems really easy -- I'm very
  * confused what all the part that handles Control-T is doing that I'm not.
- * "get_the_indent" should be get_c_indent or get_lisp_indent.
+ * "get_the_indent" should be get_c_indent, get_expr_indent or get_lisp_indent.
  */
 
     void
@@ -4529,6 +4562,8 @@ fixthisline(get_the_indent)
     void
 fix_indent()
 {
+    if (p_paste)
+	return;
 # ifdef FEAT_LISP
     if (curbuf->b_p_lisp && curbuf->b_p_ai)
 	fixthisline(get_lisp_indent);
@@ -4537,8 +4572,12 @@ fix_indent()
     else
 # endif
 # ifdef FEAT_CINDENT
-	if (curbuf->b_p_cin)
-	    fixthisline(get_c_indent);
+	if (curbuf->b_p_cin
+#  ifdef FEAT_EVAL
+		    || *curbuf->b_p_inde != NUL
+#  endif
+		   )
+	    do_c_expr_indent();
 # endif
 }
 
@@ -4559,10 +4598,11 @@ in_cinkeys(keytyped, when, line_is_empty)
     int		when;
     int		line_is_empty;
 {
-    char_u  *look;
-    int	    try_match;
-    char_u  *p;
-    int	    i;
+    char_u	*look;
+    int		try_match;
+    char_u	*p;
+    char_u	*line;
+    int		i;
 
     for (look = curbuf->b_p_cink; *look; )
     {
@@ -4689,6 +4729,27 @@ in_cinkeys(keytyped, when, line_is_empty)
 		look++;
 	    while (*look == '>')
 		look++;
+	}
+
+	/*
+	 * Is it a word: "=word"?
+	 */
+	else if (*look == '=' && look[1] != ',' && look[1] != NUL)
+	{
+	    ++look;
+	    p = vim_strchr(look, ',');
+	    if (p == NULL)
+		p = look + STRLEN(look);
+	    if (try_match && keytyped == (int)p[-1]
+		    && curwin->w_cursor.col >= (colnr_t)(p - look))
+	    {
+		line = ml_get_cursor();
+		if ((curwin->w_cursor.col == (colnr_t)(p - look)
+			    || !vim_iswordc(line[-(p - look) - 1]))
+			&& STRNCMP(line - (p - look), look, p - look) == 0)
+		    return TRUE;
+	    }
+	    look = p;
 	}
 
 	/*

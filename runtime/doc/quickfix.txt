@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0g.  Last change: 2000 Aug 08
+*quickfix.txt*  For Vim version 6.0h.  Last change: 2000 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -416,11 +416,7 @@ additionally to the default. >
 	\%+C%*[^:]%trror:%m,
 	\%C%*\\s%tarning:%m,
 	\%C%m
-
-Note: when copying the command from this help text, please do not forget to
-remove the leading '>' characters that mark examples.
-
-
+<
 						*errorformat-LaTeX*
 The following is an example how an 'errorformat' string can be specified
 for the (La)TeX type setting system which displays error messages over
@@ -433,8 +429,8 @@ The commands can be placed in a |vimrc| file or some other Vim script file,
 eg. a script containing LaTeX related stuff which is loaded only when editing
 LaTeX sources.
 Make sure to copy all lines of the example (in the given order), afterwards
-remove the comment lines and also leading '>' characters.  For the '\' notation
-at the start of some lines see |line-continuation|.
+remove the comment lines.  For the '\' notation at the start of some lines see
+|line-continuation|.
 
 		First prepare 'makeprg' such that LaTeX will report multiple
 		errors; do not stop when the first error has occurred: >
@@ -508,7 +504,7 @@ by Vim.
 
 						*errorformat-javac*
 This 'errorformat' has been reported to work well for javac, which outputs a
-line with "^" to indicated the column of the error: >
+line with "^" to indicate the column of the error: >
   :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
 <
 

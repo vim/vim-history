@@ -1,4 +1,4 @@
-*workshop.txt*  For Vim version 6.0g.  Last change: 2000 Aug 20
+*workshop.txt*  For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -32,6 +32,7 @@ workshop release tree.
 ==============================================================================
 2. Commands						*workshop-commands*
 
+						*:ws* *:wsverb*
 :ws[verb] verb			Pass the verb to the verb executor
 
 Pass the verb to a workshop function which gathers some arguments and

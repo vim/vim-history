@@ -22,6 +22,7 @@ long mch_getperm __ARGS((char_u *name));
 int mch_setperm __ARGS((char_u *name, long perm));
 void mch_hide __ARGS((char_u *name));
 int mch_isdir __ARGS((char_u *name));
+int mch_nodetype __ARGS((char_u *name));
 void mch_windexit __ARGS((int r));
 void mch_settmode __ARGS((int tmode));
 void mch_setmouse __ARGS((int on));

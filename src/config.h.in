@@ -317,6 +317,9 @@
 /* Define if you have the <frame.h> header file. */
 #undef HAVE_FRAME_H
 
+/* Define if you have the <sys/acl.h> header file. */
+#undef HAVE_SYS_ACL_H
+
 /* Define if you have the <X11/xpm.h> header file. */
 #undef HAVE_X11_XPM_H
 
@@ -389,6 +392,9 @@
 /* Define if you want to include the Tcl interpreter. */
 #undef FEAT_TCL
 
+/* Define if you want to add support for ACL */
+#undef HAVE_ACL
+
 /* Define if you want to add support of GPM (Linux console mouse daemon) */
 #undef HAVE_GPM
 
@@ -421,6 +427,9 @@
 
 /* Define if we have dlopen() */
 #undef HAVE_DLOPEN
+
+/* Define if we have dlsym() */
+#undef HAVE_DLSYM
 
 /* Define if we have dl.h. */
 #undef HAVE_DL_H

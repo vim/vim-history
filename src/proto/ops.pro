@@ -23,6 +23,7 @@ int op_change __ARGS((oparg_t *oap));
 void init_yank __ARGS((void));
 int op_yank __ARGS((oparg_t *oap, int deleting, int mess));
 void do_put __ARGS((int regname, int dir, long count, int flags));
+int preprocs_left __ARGS((void));
 int get_register_name __ARGS((int num));
 void ex_display __ARGS((exarg_t *eap));
 void dis_msg __ARGS((char_u *p, int skip_esc));

@@ -1719,6 +1719,29 @@ mch_isdir(char_u *name)
 }
 
 /*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(char_u *name)
+{
+    if (STRICMP(name, "AUX") == 0
+	    || STRICMP(name, "CON") == 0
+	    || STRICMP(name, "CLOCK$") == 0
+	    || STRICMP(name, "NUL") == 0
+	    || STRICMP(name, "PRN") == 0
+	    || ((STRNICMP(name, "COM", 3) == 0
+		    || STRNICMP(name, "LPT", 3) == 0)
+		&& isdigit(name[3])
+		&& name[4] == NUL))
+	return NODE_WRITABLE;
+    /* TODO: NODE_OTHER? */
+    return NODE_NORMAL;
+}
+
+/*
  * Careful: mch_windexit() may be called before mch_shellinit()!
  */
     void

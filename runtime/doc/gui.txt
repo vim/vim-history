@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0g.  Last change: 2000 aug 19
+*gui.txt*       For Vim version 6.0h.  Last change: 2000 Aug 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -555,8 +555,8 @@ on its own, or neither.
 The toolbar is defined as a special menu called ToolBar, which only has one
 level. Vim interprets the items in this menu as follows:
 1)  An item called 'BuiltIn##', where ## is a number, is taken as number ## of
-    the built-in bitmaps available in Vim. Currently there are 28, numbered
-    from 0 to 27, which cover most common editing operations |builtin-tools|.
+    the built-in bitmaps available in Vim. Currently there are 31 numbered
+    from 0 to 30 which cover most common editing operations |builtin-tools|.
 2)  An item with another name is first searched for in the directory
     $VIM/bitmaps.  If found, the bitmap file is used as the toolbar button
     image. Note that the exact filename is OS-specific: For example, under
@@ -635,8 +635,8 @@ be used to complete the name of the menu item.
 
 5.4 Executing Menus					*execute-menus*
 
-							*:eme*  *:emenu*
-:[range]eme[enu] {menu}		Execute {menu} from the command line.
+							*:em*  *:emenu*
+:[range]em[eenu] {menu}		Execute {menu} from the command line.
 				The default is to exectue the normal mode menu.
 				If a range is specified, it execute the visual
 				mode menu.
@@ -648,6 +648,9 @@ If the console-mode vim has been compiled with WANT_MENU defined, you can
 use :emenu to access useful menu items you may have got used to from GUI
 mode.  See 'wildmenu' for an option that works well with this.  See
 |console-menus| for an example.
+
+When using a range, if the lines match with '<,'>, then the menu is executed
+using the last visual selection.
 
 
 5.5 Deleting Menus					*delete-menus*

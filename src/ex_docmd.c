@@ -1272,6 +1272,15 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 	ea.argt = cmdnames[(int)ea.cmdidx].cmd_argt;
 
+#ifdef HAVE_SANDBOX
+    if (sandbox != 0 && !(ea.argt & SBOXOK))
+    {
+	/* Command not allowed in sandbox. */
+	errormsg = (char_u *)_(e_sandbox);
+	goto doend;
+    }
+#endif
+
     if (!(ea.argt & RANGE) && ea.addr_count)	/* no range allowed */
     {
 	errormsg = (char_u *)_(e_norange);
@@ -1871,33 +1880,49 @@ goto_buffer(eap, start, dir, count)
     (void)do_buffer(*eap->cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
 					     start, dir, count, eap->forceit);
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+    if (swap_exists_action == SEA_QUIT && *eap->cmd == 's')
+    {
+	/* Quitting means closing the split window, nothing else. */
+	win_close(curwin, TRUE);
+	swap_exists_action = SEA_NONE;
+    }
+    else
+	handle_swap_exists(old_curbuf);
+#endif
+}
+
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
+/*
+ * Handle the situation of swap_exists_action being set.
+ * It is allowed for "old_curbuf" to be NULL or invalid.
+ */
+    void
+handle_swap_exists(old_curbuf)
+    buf_t	*old_curbuf;
+{
     if (swap_exists_action == SEA_QUIT)
     {
-	/* User selected Quit at ATTENTION prompt.  Go back to
-	 * previous buffer.  If that buffer is gone or the same as the
-	 * current one, open a new, empty buffer. */
-	if (*eap->cmd == 's')
-	    win_close(curwin, TRUE);
-	else
-	{
-	    swap_exists_action = SEA_NONE;	/* don't want it again */
-	    close_buffer(curwin, curbuf, TRUE, FALSE);
-	    if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
-		old_curbuf = buflist_new(NULL, NULL, 1L, TRUE);
-	    enter_buffer(old_curbuf);
-	}
+	/* User selected Quit at ATTENTION prompt.  Go back to previous
+	 * buffer.  If that buffer is gone or the same as the current one,
+	 * open a new, empty buffer. */
+	swap_exists_action = SEA_NONE;	/* don't want it again */
+	close_buffer(curwin, curbuf, TRUE, FALSE);
+	if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
+	    old_curbuf = buflist_new(NULL, NULL, 1L, TRUE);
+	enter_buffer(old_curbuf);
     }
     else if (swap_exists_action == SEA_RECOVER)
     {
 	/* User selected Recover at ATTENTION prompt. */
+	msg_scroll = TRUE;
 	ml_recover();
 	MSG_PUTS("\n");	/* don't overwrite the last message */
 	cmdline_row = msg_row;
 	do_modelines();
     }
     swap_exists_action = SEA_NONE;
-#endif
 }
+#endif
 
 /*
  * :[N]bunload[!] [N] [bufname] unload buffer
@@ -8084,7 +8109,7 @@ makeopens(fd)
 
 	if (buf->b_fname != NULL && buf != curbuf)
 	{
-	    if (ses_fname_line(fd, "badd", buf->b_winfpos->wl_fpos.lnum, buf)
+	    if (ses_fname_line(fd, "badd", buf->b_wininfo->wi_fpos.lnum, buf)
 								      == FAIL)
 		return FAIL;
 	}
@@ -8522,12 +8547,18 @@ ex_behave(eap)
 }
 
 #ifdef FEAT_AUTOCMD
+static int filetype_detect = FALSE;
+static int filetype_settings = FALSE;
+static int filetype_indent = FALSE;
+
 /*
  * ":filetype [settings] {on,off}"
  * on: Load the filetype.vim file to install autocommands for file types.
  * off: Remove all "filetype" group autocommands.
  * settings on: load filetype.vim and settings.vim
- * settings off: remove connection between filetype and loading settings
+ * settings off: load setsoff.vim
+ * indent on: load filetype.vim and indent.vim
+ * indent off: load indoff.vim
  */
     static void
 ex_filetype(eap)
@@ -8535,24 +8566,70 @@ ex_filetype(eap)
 {
     char_u	*arg = eap->arg;
     int		settings = FALSE;
+    int		indent = FALSE;
 
-    if (STRNCMP(arg, "settings", 8) == 0)
+    if (*eap->arg == NUL)
     {
-	settings = TRUE;
-	arg = skipwhite(arg + 8);
+	/* Print current status. */
+	smsg((char_u *)"filetype detection:%s  settings:%s  indent:%s",
+		filetype_detect ? "ON" : "OFF",
+		filetype_settings ? (filetype_detect ? "ON" : "(on)") : "OFF",
+		filetype_indent ? (filetype_detect ? "ON" : "(on)") : "OFF");
+	return;
+    }
+
+    /* Accept "settings" and "indent" in any order. */
+    for (;;)
+    {
+	if (STRNCMP(arg, "settings", 8) == 0)
+	{
+	    settings = TRUE;
+	    arg = skipwhite(arg + 8);
+	    continue;
+	}
+	if (STRNCMP(arg, "indent", 6) == 0)
+	{
+	    indent = TRUE;
+	    arg = skipwhite(arg + 6);
+	    continue;
+	}
+	break;
     }
     if (STRCMP(arg, "on") == 0)
     {
 	cmd_runtime((char_u *)FILETYPE_FILE, TRUE);
+	filetype_detect = TRUE;
 	if (settings)
+	{
 	    cmd_runtime((char_u *)SETTINGS_FILE, TRUE);
+	    filetype_settings = TRUE;
+	}
+	if (indent)
+	{
+	    cmd_runtime((char_u *)INDENT_FILE, TRUE);
+	    filetype_indent = TRUE;
+	}
     }
     else if (STRCMP(arg, "off") == 0)
     {
-	if (settings)
-	    cmd_runtime((char_u *)SETSOFF_FILE, TRUE);
+	if (settings || indent)
+	{
+	    if (settings)
+	    {
+		cmd_runtime((char_u *)SETSOFF_FILE, TRUE);
+		filetype_settings = FALSE;
+	    }
+	    if (indent)
+	    {
+		cmd_runtime((char_u *)INDOFF_FILE, TRUE);
+		filetype_indent = FALSE;
+	    }
+	}
 	else
+	{
 	    cmd_runtime((char_u *)FTOFF_FILE, TRUE);
+	    filetype_detect = FALSE;
+	}
     }
     else
 	EMSG2(_(e_invarg2), arg);
@@ -8678,6 +8755,36 @@ ex_foldopen(eap)
 }
 #endif
 
+#ifdef FEAT_EVAL
+/*
+ * Set the "lang" variable according to the current locale setting.
+ */
+    void
+set_lang_var()
+{
+    char_u	*loc;
+
+# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    loc = (char_u *)setlocale(LC_CTYPE, NULL);
+#  if defined(__BORLANDC__)
+    if (loc != NULL)
+    {
+	char_u	*p;
+
+	/* Borland returns something like "LC_CTYPE=<name>"
+	 * Let's try to fix that bug here... */
+	p = vim_strchr(loc, '=');
+	if (p != NULL)
+	    loc = p + 1;
+    }
+#  endif
+# else
+    loc = (char_u *)"C";
+# endif
+    set_vim_var_string(VV_LANG, loc, -1);
+}
+#endif
+
 #if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
 /*
  * ":language":  Set the language (locale).
@@ -8700,7 +8807,7 @@ ex_language(eap)
 	else
 	{
 # ifdef FEAT_EVAL
-	    set_vim_var_string(VV_LANG, (char_u *)loc, -1);
+	    set_lang_var();
 # endif
 # ifdef FEAT_GUI_GTK
 	    if (gui.in_use)

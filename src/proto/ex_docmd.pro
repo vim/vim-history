@@ -1,6 +1,7 @@
 /* ex_docmd.c */
 void do_exmode __ARGS((int improved));
 int do_cmdline __ARGS((char_u *cmdline, char_u *(*getline)(int, void *, int), void *cookie, int flags));
+void handle_swap_exists __ARGS((buf_t *old_curbuf));
 char_u *set_one_cmd_context __ARGS((char_u *buff));
 int expand_filename __ARGS((exarg_t *eap, char_u **cmdlinep, char_u **errormsgp));
 void separate_nextcmd __ARGS((exarg_t *eap));
@@ -35,3 +36,4 @@ char_u *expand_sfile __ARGS((char_u *arg));
 int put_eol __ARGS((FILE *fd));
 void cmd_runtime __ARGS((char_u *name, int all));
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
+void set_lang_var __ARGS((void));

@@ -52,7 +52,13 @@
 #endif /* !USE_SYSTEM */
 
 #ifdef HAVE_STROPTS_H
+#ifdef sinix
+#define buf_t __system_buf_t__
+#endif
 # include <stropts.h>
+#ifdef sinix
+#undef buf_t
+#endif
 #endif
 
 #ifdef HAVE_STRING_H
@@ -115,7 +121,7 @@
 #endif
 
 /* shared library access */
-#if defined(HAVE_DLFCN_H) && defined(HAVE_DLOPEN)
+#if defined(HAVE_DLFCN_H) && defined(USE_DLOPEN)
 #  include <dlfcn.h>
 #elif defined(HAVE_DL_H) && defined(HAVE_SHL_LOAD)
 #  include <dl.h>

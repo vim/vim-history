@@ -354,17 +354,25 @@ EXTERN int	starting INIT(= NO_SCREEN);
 				/* first NO_SCREEN, then NO_BUFFERS and then
 				 * set to 0 when starting up finished */
 EXTERN int	exiting INIT(= FALSE);
-				/* set to TRUE when abandoning Vim */
+				/* TRUE when abandoning Vim */
 EXTERN int	full_screen INIT(= FALSE);
-				/* set to TRUE when doing full-screen output
+				/* TRUE when doing full-screen output
 				 * otherwise only writing some messages */
 
 EXTERN int	restricted INIT(= FALSE);
-				/* set to TRUE when started as "rvim" */
+				/* TRUE when started as "rvim" */
 EXTERN int	secure INIT(= FALSE);
-				/* set to TRUE when only "safe" commands are
+				/* non-zero when only "safe" commands are
 				 * allowed, e.g. when sourcing .exrc or .vimrc
 				 * in current directory */
+
+#if defined(FEAT_EVAL) && (defined(FEAT_CINDENT) || defined(FEAT_FOLDING))
+# define HAVE_SANDBOX
+EXTERN int	sandbox INIT(= 0);
+				/* non-zero when evaluating an expression in a
+				 * "sandbox".  Not allowed to change the
+				 * buffer. */
+#endif
 
 EXTERN int	silent_mode INIT(= FALSE);
 				/* set to TRUE when "-s" commandline argument
@@ -899,6 +907,9 @@ EXTERN char_u e_readonlyvar[]	INIT(=N_("Cannot set read-only variable \"%s\""));
 #endif
 #ifdef FEAT_QUICKFIX
 EXTERN char_u e_readerrf[]	INIT(=N_("Error while reading errorfile"));
+#endif
+#ifdef HAVE_SANDBOX
+EXTERN char_u e_sandbox[]	INIT(=N_("Not allowed in sandbox"));
 #endif
 EXTERN char_u e_scroll[]	INIT(=N_("Invalid scroll size"));
 EXTERN char_u e_tagstack[]	INIT(=N_("tag stack empty"));

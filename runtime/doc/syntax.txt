@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0g.  Last change: 2000 Aug 17
+*syntax.txt*    For Vim version 6.0h.  Last change: 2000 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -419,6 +419,7 @@ To disable them use ":unlet".  Example: >
 	:unlet c_comment_strings
 
 variable		Highlight ~
+c_gnu			GNU gcc specific items
 c_comment_strings	strings and numbers inside a comment
 c_space_errors		trailing white space and spaces before a <Tab>
 c_no_trail_space_error	 ... but no trailing spaces
@@ -457,6 +458,9 @@ ANSI constants will be highlighted with the "cConstant" group.  This includes
 not in the ANSI standard.  If you find this confusing, remove the cConstant
 highlighting: >
 	:hi link cConstant NONE
+
+If you see '{' and '}' highlighted as an error where they are OK, reset the
+highlighting for cErrInParen and cErrInBracket.
 
 
 COBOL							*cobol.vim*
@@ -1641,6 +1645,7 @@ fold							*:syn-fold*
 The "fold" argument makes the fold level increased by one for this item.
 Example: >
    :syn region myFold start="{" end="}" transparent fold
+   :syn sync fromstart
    :set foldmethod=syntax
 This will make each {} block form one fold.
 

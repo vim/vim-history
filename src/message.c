@@ -1056,6 +1056,35 @@ str2special(sp, from)
     int			modifiers = 0;
     int			special = FALSE;
 
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	int	n, m = 0;
+
+	/* Must translate K_SPECIAL KS_SPECIAL KE_FILLER to K_SPECIAL. */
+	for (n = 0; str[n] != NUL && m <= MB_MAXBYTES; ++n)
+	{
+	    if (str[n] == K_SPECIAL
+		    && str[n + 1] == KS_SPECIAL
+		    && str[n + 2] == KE_FILLER)
+	    {
+		buf[m++] = K_SPECIAL;
+		n += 2;
+	    }
+	    else
+		buf[m++] = str[n];
+	    buf[m] = NUL;
+
+	    /* Return a multi-byte character. */
+	    if (mb_ptr2len_check(buf) > 1)
+	    {
+		*sp = str + n + 1;
+		return buf;
+	    }
+	}
+    }
+#endif
+
     c = *str;
     if (c == K_SPECIAL && str[1] != NUL && str[2] != NUL)
     {
@@ -1075,22 +1104,6 @@ str2special(sp, from)
 	if (IS_SPECIAL(c) || modifiers)	/* special key */
 	    special = TRUE;
     }
-#ifdef FEAT_MBYTE
-    else if (has_mbyte)
-    {
-	int	n;
-
-	/* Return a multi-byte character unmodified. */
-	n = mb_ptr2len_check(str);
-	if (n > 1)
-	{
-	    mch_memmove(buf, str, n);
-	    buf[n] = NUL;
-	    *sp = str + n;
-	    return buf;
-	}
-    }
-#endif
     *sp = str + 1;
 
     /* Make unprintable characters in <> form, also <M-Space> and <Tab>.

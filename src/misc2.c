@@ -2285,7 +2285,7 @@ get_fileformat(buf)
     int
 get_fileformat_force(buf, eap)
     buf_t	*buf;
-    exarg_t	*eap;
+    exarg_t	*eap;	    /* can be NULL! */
 {
     int		c;
 

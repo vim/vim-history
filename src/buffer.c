@@ -29,7 +29,8 @@
 
 static char_u	*buflist_match __ARGS((regprog_t *prog, buf_t *buf));
 static char_u	*buflist_match_try __ARGS((regprog_t *prog, char_u *name));
-static void	buflist_setfpos __ARGS((buf_t *, linenr_t, colnr_t));
+static void	buflist_setfpos __ARGS((buf_t *buf, linenr_t lnum, colnr_t col, int copy_options));
+static wininfo_t *find_wininfo __ARGS((buf_t *buf));
 #ifdef UNIX
 static buf_t	*buflist_findname_stat __ARGS((char_u *ffname, struct stat *st));
 static int	otherfile_buf __ARGS((buf_t *buf, char_u *ffname, struct stat *stp));
@@ -42,6 +43,7 @@ static int	otherfile_buf __ARGS((buf_t *buf, char_u *ffname));
 static int	ti_change __ARGS((char_u *str, char_u **last));
 #endif
 static void	free_buffer __ARGS((buf_t *));
+static void	clear_wininfo __ARGS((buf_t *buf));
 
 /*
  * Open current buffer, that is: open the memfile and read the file into memory
@@ -200,12 +202,12 @@ close_buffer(win, buf, free_buf, del_buf)
     if (buf->b_nwindows > 0)
 	--buf->b_nwindows;
     if (buf->b_nwindows == 0 && win != NULL)
-    {
 	set_last_cursor(win);	/* may set b_last_cursor */
-	if (win == curwin && curwin->w_cursor.lnum != 1)
-				/* and remember last cursor position */
-	    buflist_setfpos(buf, curwin->w_cursor.lnum, curwin->w_cursor.col);
-    }
+    if (win == curwin)		/* remember last cursor pos and options */
+	buflist_setfpos(buf,
+		curwin->w_cursor.lnum == 1 ? 0 : curwin->w_cursor.lnum,
+		curwin->w_cursor.col, TRUE);
+
 #ifdef FEAT_AUTOCMD
     /* When the buffer becomes hidden, but is not unloaded, trigger BufHidden */
     if (buf->b_nwindows == 0 && !free_buf)
@@ -346,16 +348,7 @@ buf_freeall(buf, del_buf)
 free_buffer(buf)
     buf_t	*buf;
 {
-    winpos_t	*wlp;
-
-    /* Free the b_winfpos list for buffer "buf". */
-    while (buf->b_winfpos != NULL)
-    {
-	wlp = buf->b_winfpos;
-	buf->b_winfpos = wlp->wl_next;
-	vim_free(wlp);
-    }
-
+    clear_wininfo(buf);
 #ifdef FEAT_PERL
     perl_buf_free(buf);
 #endif
@@ -367,6 +360,25 @@ free_buffer(buf)
 #endif
     free_buf_options(buf, TRUE);
     vim_free(buf);
+}
+
+/*
+ * Free the b_wininfo list for buffer "buf".
+ */
+    static void
+clear_wininfo(buf)
+    buf_t	*buf;
+{
+    wininfo_t	*wip;
+
+    while (buf->b_wininfo != NULL)
+    {
+	wip = buf->b_wininfo;
+	buf->b_wininfo = wip->wi_next;
+	if (wip->wi_optset)
+	    clear_winopt(&wip->wi_opt);
+	vim_free(wip);
+    }
 }
 
 /*
@@ -764,17 +776,16 @@ do_buffer(action, start, dir, count, forceit)
 }
 
 /*
- * enter a new current buffer.
- * (old curbuf must have been freed already)
+ * Enter a new current buffer.
+ * Old curbuf must have been abandoned already!
  */
     void
 enter_buffer(buf)
     buf_t	*buf;
 {
+    /* copy buffer and window local option values */
     buf_copy_options(buf, BCO_ENTER | BCO_NOHELP);
-
-    /* Reset the local window options to the global values. */
-    copy_global_options();
+    get_winopts(buf);
 
     curwin->w_buffer = buf;
     curbuf = buf;
@@ -855,7 +866,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     {
 	vim_free(ffname);
 	if (lnum != 0)
-	    buflist_setfpos(buf, lnum, (colnr_t)0);
+	    buflist_setfpos(buf, lnum, (colnr_t)0, FALSE);
 	/* copy the options now, if 'cpo' doesn't have 's' and not done
 	 * already */
 	buf_copy_options(buf, 0);
@@ -900,10 +911,12 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	buf->b_ffname = ffname;
 	buf->b_sfname = vim_strsave(sfname);
     }
-    if (buf->b_winfpos == NULL)
-	buf->b_winfpos = (winpos_t *)alloc((unsigned)sizeof(winpos_t));
+
+    clear_wininfo(buf);
+    buf->b_wininfo = (wininfo_t *)alloc_clear((unsigned)sizeof(wininfo_t));
+
     if ((ffname != NULL && (buf->b_ffname == NULL || buf->b_sfname == NULL))
-	    || buf->b_winfpos == NULL)
+	    || buf->b_wininfo == NULL)
     {
 	vim_free(buf->b_ffname);
 	buf->b_ffname = NULL;
@@ -920,6 +933,9 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
 	buf->b_nwindows = 0;
+#ifdef FEAT_EVAL
+	var_clear(&buf->b_vars);	/* delete internal variables */
+#endif
     }
     else
     {
@@ -948,20 +964,22 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	    top_file_num = 1;
 	}
 
-	buf->b_winfpos->wl_fpos.lnum = lnum;
-	buf->b_winfpos->wl_fpos.col = 0;
-	buf->b_winfpos->wl_next = NULL;
-	buf->b_winfpos->wl_prev = NULL;
-	buf->b_winfpos->wl_win = curwin;
-
-#ifdef FEAT_EVAL
-	var_init(&buf->b_vars);	    /* init internal variables */
-#endif
 	/*
 	 * Always copy the options from the current buffer.
 	 */
 	buf_copy_options(buf, BCO_ALWAYS);
     }
+
+    buf->b_wininfo->wi_fpos.lnum = lnum;
+    buf->b_wininfo->wi_fpos.col = 0;
+    buf->b_wininfo->wi_next = NULL;
+    buf->b_wininfo->wi_prev = NULL;
+    buf->b_wininfo->wi_win = curwin;
+    buf->b_wininfo->wi_optset = FALSE;
+
+#ifdef FEAT_EVAL
+    var_init(&buf->b_vars);		/* init internal variables */
+#endif
 
     buf->b_fname = buf->b_sfname;
 #ifdef UNIX
@@ -976,8 +994,8 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     buf->b_u_synced = TRUE;
     buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
     buf_clear(buf);
-    clrallmarks(buf);		    /* clear marks */
-    fmarks_check_names(buf);	    /* check file marks for this file */
+    clrallmarks(buf);			/* clear marks */
+    fmarks_check_names(buf);		/* check file marks for this file */
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, buf);
 #endif
@@ -1022,6 +1040,9 @@ free_buf_options(buf, free_p_ff)
 # ifdef FEAT_EVAL
     free_string_option(buf->b_p_inex);
 # endif
+#endif
+#if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
+    free_string_option(buf->b_p_inde);
 #endif
 #ifdef FEAT_CRYPT
     free_string_option(buf->b_p_key);
@@ -1465,46 +1486,103 @@ buflist_nr2name(n, fullname, helptail)
 }
 
 /*
- * Set the lnum and col for the buffer 'buf' and the current window.
+ * Set the "lnum" and "col" for the buffer "buf" and the current window.
+ * When "copy_options" is TRUE save the local window option values.
+ * When "lnum" is 0 only do the options.
  */
     static void
-buflist_setfpos(buf, lnum, col)
+buflist_setfpos(buf, lnum, col, copy_options)
     buf_t	*buf;
     linenr_t	lnum;
     colnr_t	col;
+    int		copy_options;
 {
-    winpos_t	*wlp;
+    wininfo_t	*wip;
 
-    for (wlp = buf->b_winfpos; wlp != NULL; wlp = wlp->wl_next)
-	if (wlp->wl_win == curwin)
+    for (wip = buf->b_wininfo; wip != NULL; wip = wip->wi_next)
+	if (wip->wi_win == curwin)
 	    break;
-    if (wlp == NULL)		/* make new entry */
+    if (wip == NULL)
     {
-	wlp = (winpos_t *)alloc((unsigned)sizeof(winpos_t));
-	if (wlp == NULL)
+	/* allocate a new entry */
+	wip = (wininfo_t *)alloc_clear((unsigned)sizeof(wininfo_t));
+	if (wip == NULL)
 	    return;
-	wlp->wl_win = curwin;
+	wip->wi_win = curwin;
+	if (lnum == 0)		/* set lnum even when it's 0 */
+	    lnum = 1;
     }
-    else			/* remove entry from list */
+    else
     {
-	if (wlp->wl_prev)
-	    wlp->wl_prev->wl_next = wlp->wl_next;
+	/* remove the entry from the list */
+	if (wip->wi_prev)
+	    wip->wi_prev->wi_next = wip->wi_next;
 	else
-	    buf->b_winfpos = wlp->wl_next;
-	if (wlp->wl_next)
-	    wlp->wl_next->wl_prev = wlp->wl_prev;
+	    buf->b_wininfo = wip->wi_next;
+	if (wip->wi_next)
+	    wip->wi_next->wi_prev = wip->wi_prev;
+	if (copy_options && wip->wi_optset)
+	    clear_winopt(&wip->wi_opt);
     }
-    wlp->wl_fpos.lnum = lnum;
-    wlp->wl_fpos.col = col;
+    if (lnum != 0)
+    {
+	wip->wi_fpos.lnum = lnum;
+	wip->wi_fpos.col = col;
+    }
+    if (copy_options)
+    {
+	/* Save the window-specific option values. */
+	copy_winopt(&curwin->w_onebuf_opt, &wip->wi_opt);
+	wip->wi_optset = TRUE;
+    }
 
-    /* insert entry in front of the list */
-    wlp->wl_next = buf->b_winfpos;
-    buf->b_winfpos = wlp;
-    wlp->wl_prev = NULL;
-    if (wlp->wl_next)
-	wlp->wl_next->wl_prev = wlp;
+    /* insert the entry in front of the list */
+    wip->wi_next = buf->b_wininfo;
+    buf->b_wininfo = wip;
+    wip->wi_prev = NULL;
+    if (wip->wi_next)
+	wip->wi_next->wi_prev = wip;
 
     return;
+}
+
+/*
+ * Find info for the current window in buffer "buf".
+ * If not found, return the info for the most recently used window.
+ * Returns NULL when there isn't any info.
+ */
+    static wininfo_t *
+find_wininfo(buf)
+    buf_t	*buf;
+{
+    wininfo_t	*wip;
+
+    for (wip = buf->b_wininfo; wip != NULL; wip = wip->wi_next)
+	if (wip->wi_win == curwin)
+	    break;
+    if (wip == NULL)	/* if no fpos for curwin, use the first in the list */
+	wip = buf->b_wininfo;
+    return wip;
+}
+
+/*
+ * Reset the local window options to the values last used in this window.
+ * If the buffer wasn't used in this window before, use the values from
+ * the most recently used window.  If the values were never set, use the
+ * global values for the window.
+ */
+    void
+get_winopts(buf)
+    buf_t	*buf;
+{
+    wininfo_t	*wip;
+
+    clear_winopt(&curwin->w_onebuf_opt);
+    wip = find_wininfo(buf);
+    if (wip != NULL && wip->wi_optset)
+	copy_winopt(&wip->wi_opt, &curwin->w_onebuf_opt);
+    else
+	copy_winopt(&curwin->w_allbuf_opt, &curwin->w_onebuf_opt);
 }
 
 /*
@@ -1516,18 +1594,12 @@ buflist_setfpos(buf, lnum, col)
 buflist_findfpos(buf)
     buf_t	*buf;
 {
-    winpos_t	*wlp;
+    wininfo_t	*wip;
     static pos_t no_position = {1, 0};
 
-    for (wlp = buf->b_winfpos; wlp != NULL; wlp = wlp->wl_next)
-	if (wlp->wl_win == curwin)
-	    break;
-
-    if (wlp == NULL)	/* if no fpos for curwin, use the first in the list */
-	wlp = buf->b_winfpos;
-
-    if (wlp != NULL)
-	return &(wlp->wl_fpos);
+    wip = find_wininfo(buf);
+    if (wip != NULL)
+	return &(wip->wi_fpos);
     else
 	return &no_position;
 }
@@ -1778,12 +1850,13 @@ buflist_add(fname)
 }
 
 /*
- * set alternate cursor position for current window
+ * Set alternate cursor position for current window.
+ * Also save the local window option values.
  */
     void
 buflist_altfpos()
 {
-    buflist_setfpos(curbuf, curwin->w_cursor.lnum, curwin->w_cursor.col);
+    buflist_setfpos(curbuf, curwin->w_cursor.lnum, curwin->w_cursor.col, TRUE);
 }
 
 /*
@@ -2600,16 +2673,10 @@ do_buffer_all(eap)
 		/* User selected Quit at ATTENTION prompt; close this window. */
 		win_close(curwin, TRUE);
 		--open_wins;
+		swap_exists_action = SEA_NONE;
 	    }
-	    else if (swap_exists_action == SEA_RECOVER)
-	    {
-		/* User selected Recover at ATTENTION prompt. */
-		ml_recover();
-		MSG_PUTS("\n");	/* don't overwrite the last message */
-		cmdline_row = msg_row;
-		do_modelines();
-	    }
-	    swap_exists_action = SEA_NONE;
+	    else
+		handle_swap_exists(NULL);
 #endif
 	}
 
@@ -2839,7 +2906,7 @@ read_viminfo_bufferlist(line, fp, writing)
 	{
 	    buf->b_last_cursor.lnum = lnum;
 	    buf->b_last_cursor.col = col;
-	    buflist_setfpos(buf, lnum, col);
+	    buflist_setfpos(buf, lnum, col, FALSE);
 	}
     }
     vim_free(xline);
@@ -2897,8 +2964,8 @@ buf_spname(buf)
 	return _("[Error List]");
 #endif
 #ifdef FEAT_QUICKFIX
-    /* There is no _file_ for a "nofile" and "scratch" buffers, b_sfname contains the name as
-     * specified by the user */
+    /* There is no _file_ for a "nofile" and "scratch" buffers, b_sfname
+     * contains the name as specified by the user */
     if (bt_nofile(buf))
     {
 	if (buf->b_sfname != NULL)
@@ -2911,7 +2978,7 @@ buf_spname(buf)
 	if (buf->b_sfname != NULL)
 	      return (char *)buf->b_sfname;
 	else
-	      return "[scratch]";
+	      return _("[scratch]");
     }
 #endif
     if (buf->b_fname == NULL)

@@ -2573,10 +2573,10 @@ advance_reginput()
 regmatch(prog)
     char_u	*prog;
 {
-    char_u	*scan;	/* Current node. */
-    char_u	*next;	/* Next node. */
-    long	minval = -1;
-    long	maxval = -1;
+    char_u	*scan;		/* Current node. */
+    char_u	*next;		/* Next node. */
+    long	minval = -1;	/* init for GCC */
+    long	maxval = -1;	/* init for GCC */
     static int	break_count = 0;
     int		op;
     int		testval = FALSE;
@@ -3488,6 +3488,7 @@ regmatch(prog)
 	}
 
 	scan = next;
+	testval = FALSE;
     }
 
     /*

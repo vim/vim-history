@@ -29,7 +29,7 @@
  * The screen_*() functions write to the screen and handle updating
  * ScreenLines[].
  *
- * screen_update() is the function that updates all windows and status lines.
+ * update_screen() is the function that updates all windows and status lines.
  * It is called form the main loop when must_redraw is non-zero.  It may be
  * called from other places when an immediated screen update is needed.
  *
@@ -1244,7 +1244,12 @@ win_update(wp)
 		    if (wp->w_lines[i].wl_valid
 			    && wp->w_lines[i].wl_lastlnum + 1 == mod_bot)
 		    {
+			/* Must have found the last valid entry above mod_bot.
+			 * Add following invalid entries. */
 			++i;
+			while (i < wp->w_lines_valid
+						  && !wp->w_lines[i].wl_valid)
+			    old_rows += wp->w_lines[i++].wl_size;
 			break;
 		    }
 #endif
@@ -1447,11 +1452,13 @@ win_update(wp)
 	    {
 		/* we may need the size of that too long line later on */
 		if (dollar_vcol == 0)
-		    wp->w_lines[idx++].wl_size = plines_win(wp, lnum);
+		    wp->w_lines[idx].wl_size = plines_win(wp, lnum);
+		++idx;
 		break;
 	    }
 	    if (dollar_vcol == 0)
-		wp->w_lines[idx++].wl_size = row - srow;
+		wp->w_lines[idx].wl_size = row - srow;
+	    ++idx;
 #ifdef FEAT_FOLDING
 	    lnum += fold_count + 1;
 #else
@@ -2626,7 +2633,7 @@ win_line(wp, lnum, startrow, endrow)
 	/*
 	 * Handle the case where we are in column 0 but not on the first
 	 * character of the line and the user wants us to show us a
-	 * special character (via 'listchars' option "preceeds:<char>".
+	 * special character (via 'listchars' option "precedes:<char>".
 	 */
 	if (lcs_prec != NUL
 		&& (wp->w_p_wrap ? wp->w_skipcol > 0 : wp->w_leftcol > 0)

@@ -1619,7 +1619,11 @@ do_pending_operator(cap, old_col, gui_yank)
 		}
 # endif
 # ifdef FEAT_CINDENT
-		op_reindent(oap, get_c_indent);
+		op_reindent(oap,
+#  ifdef FEAT_EVAL
+			*curbuf->b_p_inde != NUL ? get_expr_indent :
+#  endif
+			    get_c_indent);
 		break;
 # endif
 	    }
@@ -2207,6 +2211,13 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    mouse_dragging = 2;
 	else
 	    mouse_dragging = 1;
+    }
+
+    /* When draggint the mouse above the window, scroll down. */
+    if (is_drag && mouse_row < 0)
+    {
+	scroll_redraw(FALSE, 1L);
+	mouse_row = 0;
     }
 
     if (start_visual.lnum)		/* right click in visual mode */

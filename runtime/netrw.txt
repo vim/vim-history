@@ -1,0 +1,143 @@
+*netrw.txt*    For Vim version 6.0h.  Last change: 2000 Aug 23
+
+
+		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
+
+
+Network-Oriented File Transfers with Vim		*netrw* *network*
+1. Network-Oriented File Transfer			|netrw-xfer|
+2. Activation						|netrw-activate|
+3. Ex Commands						|netrw-ex|
+4. Variables						|netrw-var|
+
+{Vi does not have any of these commands}
+
+Netrw is only available if nocompatible mode is set.
+
+
+==============================================================================
+1. Network-Oriented File Transfer			*netrw-xfer*
+
+Network-oriented file transfer under Vim is implemented by a VimL-based
+script (<netrw.vim>).  It currently supports both reading and writing
+across networks using rcp, ftp, or ftp+<.netrc> as appropriate.
+ >
+    Reading				Writing			Uses
+    --------------------------	---------------------------	----------
+    * rcp://machine/path	* rcp://machine/path		rcp
+    :Nr "rcp://machine/path"	:Nw "rcp://machine/path		rcp
+
+    * ftp://machine/path	* ftp://machine/path		ftp
+    :Nr "ftp://machine/path"	:Nw "ftp://machine/path		ftp+(**)
+    :Nr "machine path"		:Nw "machine path"		ftp+.netrc
+    :Nr "machine uid pass path"	:Nw "machine uid pass path"	ftp
+
+	(*) transparent file transfer: i.e. vim rcp://machine/path
+	                                    :r  ftp://machine/path
+	                                    :w  ftp://machine/path
+
+	(**) if <.netrc> is present, it is assumed that it will
+	     work with your ftp client.  Otherwise the script will
+	     prompt for user-id and pasword.
+
+Both the :Nr and the :Nw command can accept multiple filenames:
+ >
+	:Nr rcp://machine/path1 rcp://machine/path2
+
+
+NETRC							*netrw-netrc*
+
+The ftp transfers can make use of the optional <.netrc> file.  The typical
+syntax for lines in a <.netrc> file is given as shown below.
+ >
+	machine {full machine name} login {user-id} password "{password}"
+	default                     login {user-id} password "{password}"
+
+Your ftp client must handle the use of <.netrc> on its own, but if the
+<.netrc> file exists, an ftp transfer will not ask for the user-id or
+password.
+
+
+PASSWORD						*netrw-passwd*
+
+The script attempts to get passwords for ftp invisibly.  If the user has
+explicitly specified both foreground and background colors for Normal
+highlighting (see following example)
+ >
+  hi Normal      term=NONE cterm=NONE gui=NONE  start=<Esc>[m<Esc>[1;32;m
+  \              stop=t_me   guifg=green      guibg=navyblue  ctermfg=2
+
+then the script can use those colors to keep the password request
+"invisible".  See |netrw-uidpass| for how to change the password after
+one has set it.
+
+
+==============================================================================
+2. Activation						*netrw-activation*
+
+Network-oriented file transfers are available by default whenever
+|'nocompatible'| mode is enabled.
+
+
+TRANSPARENT FILE TRANSFER				*netrw-transparent*
+
+Transparent file transfers occur whenever a regular file read or write
+(invoked via an |autocmd| for |BufReadCmd| or |BufWriteCmd| events) is
+made.  Thus one may use files across networks as if they were local.
+ >
+	vim ftp://machine/path
+	...
+	:wq
+
+
+==============================================================================
+3. Ex Commands						*netrw-ex*
+
+The usual read/write commands are supported.  There are also a couple of
+additional commands available.
+
+:[range]Nw			Write the specified lines to the current
+				file as specified in b:netrw_lastfile.
+
+:[range]Nw {netfile} [{netfile}]...
+				Write the specified lines to the {netfile}.
+
+:Nr				Read the specified lines into the current
+				buffer from the file specified in
+				b:netrw_lastfile.
+
+:Nr {netfile} {netfile}...	Read the {netfile} after the current line.
+
+							*netrw-uidpass*
+:call NetUserPass()		If b:netrw_uid and b:netrw_passwd don't exist,
+				this function query the user for them.
+
+:call NetUserPass("userid")	This call will set the b:netrw_uid and, if
+				the password doesn't exist, will query the
+				user for it.
+
+:call NetUserPass("userid","passwd")
+				This call will set both the b:netrw_uid and
+				b:netrw_passwd.  The user-id and password
+				are used by ftp transfers.  One may
+				effectively remove the user-id and password
+				by using "" strings.
+
+
+==============================================================================
+4. Variables						*netrw-var*
+
+The script <netrw.vim> uses several variables.
+
+	b:netrw_uid		Holds current user-id for ftp.
+	b:netrw_passwd		Holds current password for ftp.
+	b:netrw_lastfile	Holds latest method/machine/path.
+
+The script will also make use of the following variables internally,
+albeit temporarily.
+
+	b:netrw_method		Index indicating rcp/ftp+.netrc/ftp
+	b:netrw_machine		Holds machine name parsed from input
+
+==============================================================================
+ vim:tw=78:

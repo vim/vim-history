@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0g.  Last change: 2000 Aug 15
+*editing.txt*   For Vim version 6.0h.  Last change: 2000 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -912,6 +912,25 @@ If the 'fileformat' is "mac", <CR> is used for <EOL>.  On non-Mac systems the
 message "[mac format]" is shown.
 
 See also |file-formats| and the 'fileformat' and 'fileformats' options.
+
+						*write-device*
+When the file name is actually a device name, Vim will not make a backup (that
+would be impossible).  You need to use "!", since the device already exists.
+Example for Unix: >
+	:w! /dev/lpt0
+and for MS-DOS or MS-Windows: >
+	:w! lpt0
+For Unix a device is detected when the name doesn't refer to a normal file or
+a directory.  A fifo or named pipe also looks like a device to Vim.
+For MS-DOS and MS-Windows the device is detected by its name:
+	AUX
+	CON
+	CLOCK$
+	NUL
+	PRN
+	COMn	n=1,2,3... etc
+	LPTn	n=1,2,3... etc
+The names can be in upper or lower case.
 
 ==============================================================================
 6. Editing binary files					*edit-binary*

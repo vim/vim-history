@@ -136,7 +136,8 @@
 #endif
 
 /*
- * +keymap		'keymap' option. Allow you to fake having unusual language support. 
+ * +keymap		'keymap' option. Allow you to fake having unusual
+ *			language support.
  */
 #ifdef FEAT_BIG
 # define FEAT_KEYMAP
@@ -571,8 +572,12 @@
 /*
  * +libcall		libcall() function
  */
+/* Using dlopen() also requires dlsym() to be available. */
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
+# define USE_DLOPEN
+#endif
 #if defined(FEAT_EVAL) && (defined(WIN32) || (defined(UNIX) \
-	&& (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))))
+	&& (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))))
 # define FEAT_LIBCALL
 #endif
 
@@ -726,15 +731,20 @@
 /* # define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt.gz" */
 
 /*
- * FILETYPE_FILE	Name of the file type detection file.
- * SETTINGS_FILE	Name of the file type settings file.
- * FTOFF_FILE		Name of the file to switch off file type detection.
- * SETSOFF_FILE		Name of the file to switch off file type settings.
+ * File names for:
+ * FILETYPE_FILE	switch on file type detection
+ * SETTINGS_FILE	switch on loading settings files
+ * INDENT_FILE		switch on loading indent files
+ * FTOFF_FILE		switch off file type detection
+ * SETSOFF_FILE		switch off loading settings files
+ * INDOFF_FILE		switch off loading indent files
  */
 /* # define FILETYPE_FILE	"filetype.vim" */
 /* # define SETTINGS_FILE	"settings.vim" */
+/* # define INDENT_FILE		"indent.vim" */
 /* # define FTOFF_FILE		"ftoff.vim" */
 /* # define SETSOFF_FILE	"setsoff.vim" */
+/* # define INDOFF_FILE		"indoff.vim" */
 
 /*
  * SYS_MENU_FILE	Name of the default menu.vim file.

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0g.  Last change: 2000 Aug 20
+*fold.txt*      For Vim version 6.0h.  Last change: 2000 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,7 +183,7 @@ zf{motion}  or
 {Visual}zf	Operator to create a fold.
 		This only works when 'foldmethod' is "manual".
 		The new fold will be closed.
-		'folddisable' will be reset.
+		'foldenable' will be set.
 
 							*:fold* *:fo*
 :{range}fo[ld]
@@ -200,11 +200,11 @@ zD		Delete all folds in the window.
 
 							*zo*
 zo		Open one fold under the cursor.
-		'folddisable' will be reset.
+		'foldenable' will be set.
 
 							*zO*
 zO		Open all folds under the cursor recursively.
-		'folddisable' will be reset.
+		'foldenable' will be set.
 
 							*zc*
 zc		Close one fold under the cursor.
@@ -231,11 +231,11 @@ zM		Close all folds: set 'foldlevel' to 0.
 
 							*zr*
 zr		Reduce folding: Add one to 'foldlevel'.
-		'folddisable' will be reset.
+		'foldenable' will be set.
 
 							*zR*
 zR		Open all folds.  This sets 'foldlevel' to highest fold level.
-		'folddisable' will be reset.
+		'foldenable' will be set.
 
 							*:foldo* *:foldopen*
 :{range}foldo[pen]
@@ -243,14 +243,14 @@ zR		Open all folds.  This sets 'foldlevel' to highest fold level.
 		{range}.
 
 							*zn*
-zn		Fold none: set 'folddisable'.  All folds will be open.
+zn		Fold none: reset 'foldenable'.  All folds will be open.
 
 							*zN*
-zN		Fold normal: reset 'folddisable'.  All folds will be as they
+zN		Fold normal: set 'foldenable'.  All folds will be as they
 		were before.
 
 							*zi*
-zi		Invert 'folddisable'.
+zi		Invert 'foldenable'.
 
 ==============================================================================
 3. Fold options					*fold-options*
@@ -299,13 +299,13 @@ handles differently: Space, backslash and double-quote. |option-backslash|
 
 
 Other options for folding:
-'foldcolumn' 'fdc': 	When set, show a small column on the left of the
+'foldcolumn' 'fdc':	When set, show a small column on the left of the
 			window to indicate folds.
-'folddisable' 'fdd': 	Open all folds while set.
-'foldexpr' 'fde':	Expression used for "expr" folding.
-'foldignore' 'fdi': 	Characters used for "indent" folding.
-'foldmarker' 'fmr': 	Defined markers used for "marker" folding.
-'foldmethod' 'fdm': 	Name of the current folding method.
+'foldenable' 'fen':	Open all folds while set.
+'foldexpr'   'fde':	Expression used for "expr" folding.
+'foldignore' 'fdi':	Characters used for "indent" folding.
+'foldmarker' 'fmr':	Defined markers used for "marker" folding.
+'foldmethod' 'fdm':	Name of the current folding method.
 
 ==============================================================================
 4. Behavior of folds					*fold-behavior*

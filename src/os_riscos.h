@@ -105,11 +105,17 @@
 #ifndef SETSOFF_FILE
 # define SETSOFF_FILE	    "Settings"
 #endif
+#ifndef INDENT_FILE
+# define INDENT_FILE	    "Indent"
+#endif
 #ifndef FTOFF_FILE
 # define FTOFF_FILE	    "Ftoff"
 #endif
 #ifndef SETSOFF_FILE
 # define SETSOFF_FILE	    "Setsoff"
+#endif
+#ifndef INDOFF_FILE
+# define INDOFF_FILE	    "Indoff"
 #endif
 
 #define DFLT_ERRORFILE		"errors/vim"

@@ -2,6 +2,7 @@
 void set_internal_string_var __ARGS((char_u *name, char_u *value));
 int eval_to_bool __ARGS((char_u *arg, int *error, char_u **nextcmd, int skip));
 char_u *eval_to_string __ARGS((char_u *arg, char_u **nextcmd));
+int eval_to_number __ARGS((char_u *expr));
 int eval_foldexpr __ARGS((char_u *arg, int *cp));
 void ex_let __ARGS((exarg_t *eap));
 void set_context_for_expression __ARGS((char_u *arg, cmdidx_t cmdidx));
@@ -13,6 +14,7 @@ char_u *get_function_name __ARGS((int idx));
 char_u *get_expr_name __ARGS((int idx));
 void set_vim_var_nr __ARGS((int idx, long val));
 void set_vim_var_string __ARGS((int idx, char_u *val, int len));
+char_u *get_var_value __ARGS((char_u *name));
 garray_t *set_script_vars __ARGS((garray_t *gap));
 void var_init __ARGS((garray_t *gap));
 void var_clear __ARGS((garray_t *gap));

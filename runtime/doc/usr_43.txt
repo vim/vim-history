@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0g.  Last change: 2000 Aug 07
+*usr_43.txt*	For Vim version 6.0h.  Last change: 2000 Aug 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -33,6 +33,7 @@ happens for other filetypes.  You can look in the directory
 $VIMRUNTIME/settings to see which filetypes have settings.  For most files
 there is also a section in the help file |filetype.txt|.
 
+							*localmapchar*
 Some of the settings files define mappings.  But since you can also define
 mappings yourself, these default mappings need to know which key sequence they
 can use.  You need to define this with the variable "localmapchar".  For
@@ -41,7 +42,7 @@ hardly ever used.  Thus it's probaly OK to let the default mappings start with
 it. >
 	:let localmapchar = ','
 If you now edit a mail message, you will notice the mapping ",q" has been
-defined, which quotes lines.
+defined, which quotes lines.  Also see |filetype-settings|.
 
 
 But you probably are not satisfied with the default settings, because they
@@ -62,7 +63,7 @@ You do this with only two steps:			*your-runtime-dir*
 
 2. Create the file "~/.vim/settings/c.vim", with the contents: >
 	setlocal softtabstop=4
-	map <buffer> ,c o/**************<CR><CR>/<Esc>
+	map <buffer> <Map>c o/**************<CR><CR>/<Esc>
 
 Try editing a C file.  You should notice that the 'softtabstop' option is set
 to 4.  But when you edit another file it's reset to the default zero.  That is
@@ -73,7 +74,8 @@ set for that buffer.  For a new buffer it will get the value last set with a
 
 The mapping for ",c" will also disappear when editing another buffer.  The
 ":map <buffer>" command creates a mapping that is local to the current buffer.
-This works with any mapping command: ":map!", ":vmap", etc.
+This works with any mapping command: ":map!", ":vmap", etc.  The |<Map>| in
+the mapping is replaced with the value of "localmapchar".
 
 
 Suppose you do want to use most of the default filetype settings, but not for

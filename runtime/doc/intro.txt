@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0g.  Last change: 2000 Aug 20
+*intro.txt*     For Vim version 6.0h.  Last change: 2000 Aug 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -150,7 +150,7 @@ compilation, here is what you can do to find out exactly where Vim crashes:
 2. Execute these commands (replace "11" with the test that fails): >
 	cd testdir
 	gdb ../vim
-	run -u vimrc.unix -U NONE -s dotest.in test11.in
+	run -u unix.vim -U NONE -s dotest.in test11.in
 
 3. Check where Vim crashes, gdb should give a message for this.
 

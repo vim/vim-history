@@ -2094,7 +2094,7 @@ findpar(oap, dir, count, what, both)
     if (both && *ml_get(curr) == '}')	/* include line with '}' */
 	++curr;
     curwin->w_cursor.lnum = curr;
-    if (curr == curbuf->b_ml.ml_line_count)
+    if (curr == curbuf->b_ml.ml_line_count && what != '}')
     {
 	if ((curwin->w_cursor.col = STRLEN(ml_get(curr))) != 0)
 	{

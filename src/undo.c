@@ -155,6 +155,18 @@ u_savecommon(top, bot, newbot)
     u_entry_t  *uep;
     long	    size;
 
+#ifdef HAVE_SANDBOX
+    /*
+     * In the sandbox it's not allowed to change the text.  Letting the
+     * undo fail is a crude way to make all change commands fail.
+     */
+    if (sandbox != 0)
+    {
+	EMSG(_(e_sandbox));
+	return FAIL;
+    }
+#endif
+
     /*
      * if curbuf->b_u_synced == TRUE make a new header
      */
@@ -314,6 +326,15 @@ u_redo(count)
 u_doit(count)
     int count;
 {
+#ifdef HAVE_SANDBOX
+    /* In the sandbox it's not allowed to change the text. */
+    if (sandbox != 0)
+    {
+	EMSG(_(e_sandbox));
+	return;
+    }
+#endif
+
     u_newcount = 0;
     u_oldcount = 0;
     while (count--)

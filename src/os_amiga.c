@@ -791,6 +791,20 @@ mch_isdir(name)
 }
 
 /*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(name)
+    char_u	*name;
+{
+    /* TODO */
+    return NODE_NORMAL;
+}
+
+/*
  * Careful: mch_windexit() may be called before mch_shellinit()!
  */
     void

@@ -175,7 +175,7 @@ static int	deadly_signal = 0;	    /* The signal we caught */
 
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
 
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
+#if defined(HAVE_SETJMP_H) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))
 # ifdef HAVE_SIGSETJMP
 static sigjmp_buf lc_jump_env;
 #  define SETJMP(x) sigsetjmp(x, 1)
@@ -558,7 +558,7 @@ deathtrap SIGDEFARG(sigarg)
     int	    i;
 #endif
 
-#if defined(HAVE_SETJMP_H) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))
+#if defined(HAVE_SETJMP_H) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))
     if (lc_active)
     {
 # ifdef FEAT_EVAL
@@ -606,7 +606,6 @@ deathtrap SIGDEFARG(sigarg)
 		    _("some"), _("deadly signal")
 #endif
 			    );
-
     preserve_exit();		    /* preserve files and exit */
 
     SIGRETURN;
@@ -1522,27 +1521,28 @@ slash_adjust(p)
  */
     int
 mch_FullName(fname, buf, len, force)
-    char_u *fname, *buf;
-    int len;
-    int	force;		/* also expand when already absolute path name */
+    char_u	*fname, *buf;
+    int		len;
+    int		force;		/* also expand when already absolute path */
 {
-    int	    l;
+    int		l;
 #ifdef OS2
-    int	    only_drive;	/* only a drive letter is specified in file name */
+    int		only_drive;	/* file name is only a drive letter */
 #endif
 #ifdef HAVE_FCHDIR
-    int	    fd = -1;
+    int		fd = -1;
     static int	dont_fchdir = FALSE;	/* TRUE when fchdir() doesn't work */
 #endif
-    char_u  olddir[MAXPATHL];
-    char_u  *p;
-    int	    retval = OK;
+    char_u	olddir[MAXPATHL];
+    char_u	*p;
+    int		retval = OK;
 
     *buf = NUL;
     if (fname == NULL)	/* always fail */
 	return FAIL;
 
-    if (force || !mch_isFullName(fname)) /* if forced or not an absolute path */
+    /* expand it if forced or not an absolute path */
+    if (force || !mch_isFullName(fname))
     {
 	/*
 	 * If the file name has a path, change to that directory for a moment,
@@ -1551,9 +1551,9 @@ mch_FullName(fname, buf, len, force)
 	 */
 #ifdef OS2
 	only_drive = 0;
-	if (((p = vim_strrchr(fname, '/')) != NULL) ||
-	    ((p = vim_strrchr(fname, '\\')) != NULL) ||
-	    (((p = vim_strchr(fname,  ':')) != NULL) && ++only_drive))
+	if (((p = vim_strrchr(fname, '/')) != NULL)
+		|| ((p = vim_strrchr(fname, '\\')) != NULL)
+		|| (((p = vim_strchr(fname,  ':')) != NULL) && ++only_drive))
 #else
 	if ((p = vim_strrchr(fname, '/')) != NULL)
 #endif
@@ -1699,6 +1699,43 @@ mch_setperm(name, perm)
     return (chmod((char *)name, (mode_t)perm) == 0 ? OK : FAIL);
 }
 
+#if defined(HAVE_ACL) || defined(PROTO)
+# ifdef HAVE_SYS_ACL_H
+#  include <sys/acl.h>
+# endif
+
+/*
+ * Return a pointer to the ACL of file "fname" in allocated memory.
+ * Return NULL if the ACL is not available for whatever reason.
+ */
+    vim_acl_t
+mch_get_acl(fname)
+    char_u	*fname;
+{
+    return (vim_acl_t)acl_get_file((char *)fname, ACL_TYPE_DEFAULT);
+}
+
+/*
+ * Set the ACL of file "fname" to "acl" (unless it's NULL).
+ */
+    void
+mch_set_acl(fname, acl)
+    char_u	*fname;
+    vim_acl_t	acl;
+{
+    if (acl != NULL)
+	acl_set_file((char *)fname, ACL_TYPE_DEFAULT, (acl_t)acl);
+}
+
+    void
+mch_free_acl(acl)
+    vim_acl_t	acl;
+{
+    if (acl != NULL)
+	acl_free((acl_t)acl);
+}
+#endif
+
 /*
  * Set hidden flag for "name".
  */
@@ -1730,6 +1767,28 @@ mch_isdir(name)
 #else
     return ((statb.st_mode & S_IFMT) == S_IFDIR ? TRUE : FALSE);
 #endif
+}
+
+/*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(name)
+    char_u	*name;
+{
+    struct stat	st;
+
+    if (stat((char *)name, &st))
+	return NODE_NORMAL;
+    if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))
+	return NODE_NORMAL;
+    if (S_ISBLK(st.st_mode))	/* block device isn't writable */
+	return NODE_OTHER;
+    /* Everything else is writable? */
+    return NODE_WRITABLE;
 }
 
     void
@@ -3467,7 +3526,9 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
  * If we use csh, glob will work better than echo.
  * If we use zsh, print -N will work better than glob.
  */
-    if (num_pat == 1 && *pat[0] == '`' && *(pat[0] + STRLEN(pat[0]) - 1) == '`')
+    if (num_pat == 1 && *pat[0] == '`'
+	    && (len = STRLEN(pat[0])) > 2
+	    && *(pat[0] + len - 1) == '`')
 	shell_style = STYLE_BT;
     else if ((len = STRLEN(p_sh)) >= 3)
     {
@@ -4003,7 +4064,7 @@ mch_gpm_process()
 }
 #endif /* FEAT_MOUSE_GPM */
 
-#if (defined(FEAT_EVAL) && (defined(HAVE_DLOPEN) || defined(HAVE_SHL_LOAD))) \
+#if (defined(FEAT_EVAL) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))) \
 	|| defined(PROTO)
 typedef char_u * (*STRPROCSTR)__ARGS((char_u *));
 typedef char_u * (*INTPROCSTR)__ARGS((int));
@@ -4023,7 +4084,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
     char_u	**string_result;/* NULL when using number_result */
     int		*number_result;
 {
-# if defined(HAVE_DLOPEN)
+# if defined(USE_DLOPEN)
     void	*hinstLib;
 # else
     shl_t	hinstLib;
@@ -4035,7 +4096,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
     int		success = FALSE;
 
     /* Get a handle to the DLL module. */
-# if defined(HAVE_DLOPEN)
+# if defined(USE_DLOPEN)
     hinstLib = dlopen((char *)libname, RTLD_LAZY
 #  ifdef RTLD_LOCAL
 	    | RTLD_LOCAL
@@ -4059,7 +4120,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 
 	    if (argstring != NULL)
 	    {
-# if defined(HAVE_DLOPEN)
+# if defined(USE_DLOPEN)
 		ProcAdd = (STRPROCSTR)dlsym(hinstLib, (const char *)funcname);
 # else
 		if (shl_findsym(&hinstLib, (const char *)funcname,
@@ -4076,7 +4137,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 	    }
 	    else
 	    {
-# if defined(HAVE_DLOPEN)
+# if defined(USE_DLOPEN)
 		ProcAddI = (INTPROCSTR)dlsym(hinstLib, (const char *)funcname);
 # else
 		if (shl_findsym(&hinstLib, (const char *)funcname,
@@ -4122,7 +4183,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 # endif
 
 	/* Free the DLL module. */
-# if defined(HAVE_DLOPEN)
+# if defined(USE_DLOPEN)
 	(void)dlclose(hinstLib);
 # else
 	(void)shl_unload(hinstLib);

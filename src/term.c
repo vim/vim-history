@@ -3667,6 +3667,12 @@ check_termcode(max_offset, buf, buflen)
 		    if (tp[0] == CSI)
 			switch_to_8bit();
 
+		    /* rxvt sends its version number: "20703" is 2.7.3.
+		     * Ignore it for when the user has set 'term' to xterm,
+		     * even though it's an rxvt. */
+		    if (extra > 20000)
+			extra = 0;
+
 		    if (tp[1 + (tp[0] != CSI)] == '>' && j == 2)
 		    {
 			/* if xterm version >= 95 use mouse dragging */
@@ -4411,7 +4417,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	 * If 'cpoptions' does not contain '<', check for special key codes,
 	 * like "<C-S-MouseLeft>"
 	 */
-	if (do_special && (do_lt || STRNCMP(src, "<lt>", 4)))
+	if (do_special && (do_lt || STRNCMP(src, "<lt>", 4) != 0))
 	{
 	    slen = trans_special(&src, result + dlen, TRUE);
 	    if (slen)
@@ -4454,6 +4460,28 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	    continue;
 	}
 
+#ifdef FEAT_EVAL
+	/*
+	 * Replace <Map> by the value of "localmapchar".
+	 * If "localmapchar" isn't set use the default ",".
+	 */
+	if (STRNICMP(src, "<Map>", 5) == 0)
+	{
+	    char_u	*p, *s;
+
+	    p = get_var_value((char_u *)"localmapchar");
+	    if (p == NULL || *p == NUL || STRLEN(p) > 30)
+		s = (char_u *)",";
+	    else
+		s = p;
+	    while (*s != NUL)
+		result[dlen++] = *s++;
+	    vim_free(p);
+	    src += 5;
+	    continue;
+	}
+#endif
+
 	/*
 	 * Remove CTRL-V and ignore the next character.
 	 * For "from" side the CTRL-V at the end is included, for the "to"
@@ -4476,7 +4504,17 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	/* skip multibyte char correctly */
 	if (has_mbyte)
 	    for (i = mb_ptr2len_check(src); i > 0; --i)
-		result[dlen++] = *src++;
+	    {
+		if (*src == K_SPECIAL)
+		{
+		    result[dlen++] = K_SPECIAL;
+		    result[dlen++] = (int)KS_SPECIAL;
+		    result[dlen++] = KE_FILLER;
+		}
+		else
+		    result[dlen++] = *src;
+		++src;
+	    }
 	else
 #endif
 	    result[dlen++] = *src++;

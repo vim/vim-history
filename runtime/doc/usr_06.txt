@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0g.  Last change: 2000 Aug 20
+*usr_06.txt*	For Vim version 6.0h.  Last change: 2000 Aug 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -18,8 +18,64 @@ Table of contents: |usr_toc.txt|
 ==============================================================================
 *06.1*  The vimrc file
 
+You probably got tired of typing commands that you use very often.  To start
+with all your favirite option settings and mappings, you write them in what is
+called the vimrc file.
+
+--todo--
+
+If you look in the "runtime" directory of the distributed Vim files, you will
+find the "vimrc_example.vim" file.  If you don't know where it is, you can
+edit it with this command: >
+	:e $VIMRUNTIME/vimrc_example.vim
+Then use "CTRL-G" to see the full name of the file.
+
+This file contains a number of useful items when running Vim.  You can use it
+as the start for your own vimrc file.  To do this, make a copy, so that you
+can modify it.  When you do this from Vim the $VIMRUNTIME will be expanded
+automatically.  Example for Unix: >
+
+	:!cp -i $VIMRUNTIME/vimrc_example.vim ~/.vimrc
+
+Note the use of the "-i" argument, which is just to avoid overwriting an
+existing .vimrc file.
+
+--todo--
+
+For more information on how to write a Vim script file: |usr_40.txt|.
+
 ==============================================================================
 *06.2*  The default vimrc file explained
+
+--todo--
+
+This line: >
+	filetype settings indent on
+
+switches on three very clever mechanisms:
+1. Filetype detection.
+   Whenever you start editing a file, Vim will try to figure out what kind of
+   file this is.  When you edit "main.c", Vim will see the ".c" extension and
+   recognize this as a "c" filetype.  When you edit a file that starts with
+   "#!/bin/sh", Vim will recognize it as a "sh" filetype.
+   The filetype detection is used for syntax highlighting and the other two
+   items below.
+   See |filetypes|.
+
+2. Using settings files
+   Many different filetypes are edited with different options.  For example,
+   when you edit a "c" file, it's very useful to set the 'cindent' option to
+   automatically indent the lines.  These commonly useful option settings are
+   placed in settings files.  You can also add your own, see
+   |filetype-settings|.
+
+3. Using indent files
+   Vim can automatically figure out the indent for you.  How this needs to be
+   done depends on the filetype.  Other people have done this already, and you
+   can use their indenting rules.
+   See |:filetype-settings-on| and 'indentexpr'.
+
+--todo--
 
 ==============================================================================
 *06.3*  Adding a plugin						*add-plugin*
@@ -109,8 +165,8 @@ Now you can use the >
 
 	:help myhelp
 
-command to find "myhelp" in your own help file.  You can see an entry for the
-local help file when you do >
+command to find "myhelp" in the help file you just added.  You can see an
+entry for the local help file when you do >
 
 	:help
 
