@@ -3883,8 +3883,9 @@ set_options_bin(oldval, newval, opt_flags)
 	{
 	    p_tw = 0;
 	    p_wm = 0;
-	    p_ml = 0;
-	    p_et = 0;
+	    p_ml = FALSE;
+	    p_et = FALSE;
+	    p_bin = TRUE;	/* needed when called for the "-b" argument */
 	}
     }
     else if (oldval)		/* switched off */
