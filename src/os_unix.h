@@ -486,6 +486,9 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #if !defined(S_ISREG) && defined(S_IFREG)
 # define	S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #endif
+#if !defined(S_ISBLK) && defined(S_IFBLK)
+# define	S_ISBLK(m) (((m) & S_IFMT) == S_IFBLK)
+#endif
 #if !defined(S_ISSOCK) && defined(S_IFSOCK)
 # define	S_ISSOCK(m) (((m) & S_IFMT) == S_IFSOCK)
 #endif
