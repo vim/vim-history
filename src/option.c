@@ -4240,8 +4240,11 @@ option_expand(opt_idx, val)
 
     /*
      * Expanding this with NameBuff, expand_env() must not be passed IObuff.
+     * Escape spaces when expanding 'tags', they are used to separate file
+     * names.
      */
-    expand_env(val, NameBuff, MAXPATHL);
+    expand_env_esc(val, NameBuff, MAXPATHL,
+				  (char_u **)options[opt_idx].var == &p_tags);
     if (STRCMP(NameBuff, val) == 0)   /* they are the same */
 	return NULL;
 
