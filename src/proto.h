@@ -42,15 +42,19 @@
 #  include "os_msdos.pro"
 # endif
 # ifdef WIN16
-#  typedef LPSTR LPWSTR;
-#  typedef LPCSTR LPCWSTR;
-#  typedef int LPBOOL;
+   typedef LPSTR LPWSTR;
+   typedef LPCSTR LPCWSTR;
+   typedef int LPBOOL;
 #  include "os_win16.pro"
 #  include "os_mswin.pro"
 # endif
 # ifdef WIN3264
 #  include "os_win32.pro"
 #  include "os_mswin.pro"
+#  if (defined(__GNUC__) && !defined(__MINGW32__)) \
+	|| (defined(__BORLANDC__) && __BORLANDC__ < 0x502)
+extern int _stricoll __ARGS((char *a, char *b));
+#  endif
 # endif
 # ifdef VMS
 #  include "os_vms.pro"
@@ -120,7 +124,8 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void *, const void *)));
 #endif
 # include "move.pro"
-# if defined(FEAT_MBYTE) || defined(FEAT_XIM) || defined(FEAT_KEYMAP)
+# if defined(FEAT_MBYTE) || defined(FEAT_XIM) || defined(FEAT_KEYMAP) \
+	|| defined(FEAT_POSTSCRIPT)
 #  include "mbyte.pro"
 # endif
 # include "normal.pro"

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	A-A-P recipe
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 17
+" Last Change:	2003 May 05
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -21,6 +21,8 @@ syn match	aapString +"[^"]\{-}"+
 syn match	aapCommand '^\s*:action\>'
 syn match	aapCommand '^\s*:add\>'
 syn match	aapCommand '^\s*:addall\>'
+syn match	aapCommand '^\s*:asroot\>'
+syn match	aapCommand '^\s*:assertpkg\>'
 syn match	aapCommand '^\s*:attr\>'
 syn match	aapCommand '^\s*:attribute\>'
 syn match	aapCommand '^\s*:autodepend\>'
@@ -80,6 +82,7 @@ syn match	aapCommand '^\s*:touch\>'
 syn match	aapCommand '^\s*:tree\>'
 syn match	aapCommand '^\s*:unlock\>'
 syn match	aapCommand '^\s*:update\>'
+syn match	aapCommand '^\s*:usetool\>'
 syn match	aapCommand '^\s*:variant\>'
 syn match	aapCommand '^\s*:verscont\>'
 

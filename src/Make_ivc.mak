@@ -33,10 +33,10 @@ PreLink_Cmds=@if exist .\oleDbg\gvimd.pdb del .\oleDbg\gvimd.pdb
 # When       Who       What
 # 2001-07-06 W.Briscoe Original derived from Make_[go]vc.mak with less noise
 # 2001-07-08 W.Briscoe Further noise reduction; consistent .map and .pdb logic
-#                      Added install.exe rule, etc.; Removed unused libraries.
+#		       Added install.exe rule, etc.; Removed unused libraries.
 # 2001-08-09 W.Briscoe Restored VC4.0-required trailing space in !MESSAGE afore
-#                      Enhanced if_ole.idl rule to use /out argument.
-#                      Default rules now relative to . to reduce IDE/nmake difs
+#		       Enhanced if_ole.idl rule to use /out argument.
+#		       Default rules now relative to . to reduce IDE/nmake difs
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 

@@ -65,7 +65,7 @@ static char *(main_errors[]) =
 #define ME_ARG_MISSING		2
     N_("Garbage after option"),
 #define ME_GARBAGE		3
-    N_("Too many \"+command\" or \"-c command\" arguments"),
+    N_("Too many \"+command\", \"-c command\" or \"--cmd command\" arguments"),
 #define ME_EXTRA_CMD		4
     N_("Invalid argument for"),
 #define ME_INVALID_ARG		5
@@ -677,7 +677,7 @@ main
 
 	    case 'l':		/* "-l" lisp mode, 'lisp' and 'showmatch' on */
 #ifdef FEAT_LISP
-		curbuf->b_p_lisp = TRUE;
+		set_option_value((char_u *)"lisp", 1L, NULL, 0);
 		p_sm = TRUE;
 #endif
 		break;
@@ -900,7 +900,7 @@ main
 
 #ifdef FEAT_PRECOMMANDS
 		case '-':	/* "--cmd {command}" execute command */
-		    if (n_commands >= MAX_ARG_CMDS)
+		    if (p_commands >= MAX_ARG_CMDS)
 			mainerr(ME_EXTRA_CMD, NULL);
 		    pre_commands[p_commands++] = (char_u *)argv[0];
 		    break;
@@ -1024,22 +1024,22 @@ scripterror:
 	    }
 #endif
 #if defined(__CYGWIN32__) && !defined(WIN32)
-            /*
-             * If vim is invoked by non-Cygwin tools, convert away any
-             * DOS paths, so things like .swp files are created correctly.
-             * Look for evidence of non-Cygwin paths before we bother.
+	    /*
+	     * If vim is invoked by non-Cygwin tools, convert away any
+	     * DOS paths, so things like .swp files are created correctly.
+	     * Look for evidence of non-Cygwin paths before we bother.
 	     * This is only for when using the Unix files.
-             */
-            if (strpbrk(p, "\\:") != NULL)
+	     */
+	    if (strpbrk(p, "\\:") != NULL)
 	    {
-                char posix_path[PATH_MAX];
+		char posix_path[PATH_MAX];
 
-                cygwin_conv_to_posix_path(p, posix_path);
-                vim_free(p);
-                p = vim_strsave(posix_path);
-                if (p == NULL)
-                    mch_exit(2);
-            }
+		cygwin_conv_to_posix_path(p, posix_path);
+		vim_free(p);
+		p = vim_strsave(posix_path);
+		if (p == NULL)
+		    mch_exit(2);
+	    }
 #endif
 	    alist_add(&global_alist, p,
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)

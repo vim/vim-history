@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Aug 28
+" Last change:	2003 May 04
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -13,7 +13,7 @@ set cpo&vim
 behave mswin
 
 " backspace and cursor keys wrap to previous/next line
-set backspace=2 whichwrap+=<,>,[,]
+set backspace=indent,eol,start whichwrap+=<,>,[,]
 
 " backspace in Visual mode deletes selection
 vnoremap <BS> d
@@ -51,8 +51,8 @@ else
   imap <C-V>		x<Esc><SID>Paste"_s
   vmap <C-V>		"-c<Esc>gix<Esc><SID>Paste"_x
 endif
-imap <S-Insert>      	<C-V>
-vmap <S-Insert>      	<C-V>
+imap <S-Insert>		<C-V>
+vmap <S-Insert>		<C-V>
 
 " Use CTRL-Q to do what CTRL-V used to do
 noremap <C-Q>		<C-V>

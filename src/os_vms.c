@@ -122,7 +122,7 @@ mch_settmode(int tmode)
     static void
 set_tty(int row, int col)
 {
-    int	            status;
+    int		    status;
     TT_MODE	    newmode;		/* New TTY mode bits		*/
     static short    first_time = TRUE;
 
@@ -155,7 +155,7 @@ get_tty(void)
     TT_MODE	tt_mode;
 
     if (!iochan)
-        status = sys$assign(&odsc,&iochan,0,0);
+	status = sys$assign(&odsc,&iochan,0,0);
 
     status = sys$qiow(0, iochan, IO$_SENSEMODE, iosb, 0, 0,
 		      &tt_mode, sizeof(tt_mode), 0, 0, 0, 0);
@@ -313,13 +313,13 @@ vms_read(char *inbuf, size_t nbytes)
 
     while (1)
     {
-        status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes,0,0,0,0);
-        len = strlen(ibuf);
-        if (len > 0)
+	status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes,0,0,0,0);
+	len = strlen(ibuf);
+	if (len > 0)
 	{
-            mch_memmove(inbuf, ibuf, len);
-            break;
-        }
+	    mch_memmove(inbuf, ibuf, len);
+	    break;
+	}
 	lib$wait(&wait);
     }
     return len;

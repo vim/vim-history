@@ -587,6 +587,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define EXPAND_LANGUAGE		27
 #define EXPAND_COLORS		28
 #define EXPAND_COMPILER		29
+#define EXPAND_USER_DEFINED	30
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1
@@ -1113,6 +1114,8 @@ enum hlf_value
 #define MLINE	1		/* line-wise movement/register */
 #define MBLOCK	2		/* block-wise register */
 
+#define MAUTO	0xff		/* Decide between MLINE/MCHAR */
+
 /*
  * Minimum screen size
  */
@@ -1437,7 +1440,8 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_DYING	28
 #define VV_EXCEPTION	29
 #define VV_THROWPOINT	30
-#define VV_LEN		31	/* number of v: vars */
+#define VV_REG		31
+#define VV_LEN		32	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 
@@ -1611,7 +1615,9 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
  */
 # define MB_BYTE2LEN(b)		mb_bytelen_tab[b]
 # define MB_BYTE2LEN_CHECK(b)	(((b) < 0 || (b) > 255) ? 1 : mb_bytelen_tab[b])
+#endif
 
+#if defined(FEAT_MBYTE) || defined(FEAT_POSTSCRIPT)
 /* properties used in enc_canon_table[] (first three mutually exclusive) */
 # define ENC_8BIT	0x01
 # define ENC_DBCS	0x02
@@ -1625,7 +1631,9 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 # define ENC_2WORD	0x100	    /* Unicode: UTF-16 */
 
 # define ENC_LATIN1	0x200	    /* Latin1 */
+#endif
 
+#ifdef FEAT_MBYTE
 # ifdef USE_ICONV
 #  ifndef EILSEQ
 #   define EILSEQ 123

@@ -38,6 +38,8 @@ static struct cmdline_info ccline;	/* current cmdline_info */
 static int	cmd_numfiles = -1;	/* number of files found by
 						    file name completion */
 static char_u	**cmd_files = NULL;	/* list of files */
+static int	cmd_showtail;		/* Only show path tail in lists ? */
+
 
 #ifdef FEAT_CMDHIST
 typedef struct hist_entry
@@ -91,8 +93,10 @@ static int	nextwild __ARGS((expand_T *xp, int type, int options));
 static int	showmatches __ARGS((expand_T *xp, int wildmenu));
 static void	set_expand_context __ARGS((expand_T *xp));
 static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, int));
+static int	glob_in_path_prefix __ARGS((expand_T *xp));
 #ifdef FEAT_CMDL_COMPL
 static int	ExpandRTDir __ARGS((char_u *pat, int *num_file, char_u ***file, char *dirname));
+static int	ExpandUserDefined __ARGS((expand_T *xp, regmatch_T *regmatch, int *num_file, char_u ***file));
 #endif
 
 #ifdef FEAT_CMDWIN
@@ -289,6 +293,21 @@ getcmdline(firstc, count, indent)
 	    if (cmd_fkmap)
 		c = cmdl_fkmap(c);
 # endif
+	    if (cmdmsg_rl && !KeyStuffed)
+	    {
+		/* Invert horizontal movements and operations.  Only when
+		 * typed by the user directly, not when the result of a
+		 * mapping. */
+		switch (c)
+		{
+		    case K_RIGHT:   c = K_LEFT; break;
+		    case K_S_RIGHT: c = K_S_LEFT; break;
+		    case K_C_RIGHT: c = K_C_LEFT; break;
+		    case K_LEFT:    c = K_RIGHT; break;
+		    case K_S_LEFT:  c = K_S_RIGHT; break;
+		    case K_C_LEFT:  c = K_C_RIGHT; break;
+		}
+	    }
 #endif
 	}
 
@@ -1259,8 +1278,8 @@ getcmdline(firstc, count, indent)
 			hiscnt = i;
 			break;
 		    }
-		    if ((c != K_UP && c != K_DOWN) || hiscnt == i ||
-			    STRNCMP(history[histype][hiscnt].hisstr,
+		    if ((c != K_UP && c != K_DOWN) || hiscnt == i
+			    || STRNCMP(history[histype][hiscnt].hisstr,
 						    lookfor, (size_t)j) == 0)
 			break;
 		}
@@ -2494,7 +2513,10 @@ nextwild(xp, type, options)
     int		v;
 
     if (cmd_numfiles == -1)
+    {
 	set_expand_context(xp);
+	cmd_showtail = !glob_in_path_prefix(xp);
+    }
 
     if (xp->xp_context == EXPAND_UNSUCCESSFUL)
     {
@@ -2665,7 +2687,8 @@ ExpandOne(xp, str, orig, options, mode)
 	    }
 #ifdef FEAT_WILDMENU
 	    if (p_wmnu)
-		win_redr_status_matches(xp, cmd_numfiles, cmd_files, findex);
+		win_redr_status_matches(xp, cmd_numfiles, cmd_files, findex,
+					cmd_showtail);
 #endif
 	    if (findex == -1)
 		return vim_strsave(orig_save);
@@ -2965,6 +2988,7 @@ showmatches(xp, wildmenu)
     expand_T	*xp;
     int		wildmenu;
 {
+#define L_SHOWFILE(m) (showtail ? sm_gettail(files_found[m]) : files_found[m])
     int		num_files;
     char_u	**files_found;
     int		i, j, k;
@@ -2974,12 +2998,14 @@ showmatches(xp, wildmenu)
     char_u	*p;
     int		lastlen;
     int		attr;
+    int		showtail;
 
     if (cmd_numfiles == -1)
     {
 	set_expand_context(xp);
 	i = expand_cmdline(xp, ccline.cmdbuff, ccline.cmdpos,
 						    &num_files, &files_found);
+	showtail = !glob_in_path_prefix(xp);
 	if (i != EXPAND_OK)
 	    return i;
 
@@ -2988,6 +3014,7 @@ showmatches(xp, wildmenu)
     {
 	num_files = cmd_numfiles;
 	files_found = cmd_files;
+	showtail = cmd_showtail;
     }
 
 #ifdef FEAT_WILDMENU
@@ -3009,7 +3036,7 @@ showmatches(xp, wildmenu)
 	got_int = FALSE;	/* only int. the completion, not the cmd line */
 #ifdef FEAT_WILDMENU
     else if (wildmenu)
-	win_redr_status_matches(xp, num_files, files_found, 0);
+	win_redr_status_matches(xp, num_files, files_found, 0, showtail);
 #endif
     else
     {
@@ -3017,14 +3044,14 @@ showmatches(xp, wildmenu)
 	maxlen = 0;
 	for (i = 0; i < num_files; ++i)
 	{
-	    if (xp->xp_context == EXPAND_FILES
-					  || xp->xp_context == EXPAND_BUFFERS)
+	    if (!showtail && (xp->xp_context == EXPAND_FILES
+			  || xp->xp_context == EXPAND_BUFFERS))
 	    {
 		home_replace(NULL, files_found[i], NameBuff, MAXPATHL, TRUE);
 		j = vim_strsize(NameBuff);
 	    }
 	    else
-		j = vim_strsize(files_found[i]);
+		j = vim_strsize(L_SHOWFILE(i));
 	    if (j > maxlen)
 		maxlen = j;
 	}
@@ -3074,14 +3101,19 @@ showmatches(xp, wildmenu)
 		{
 			    /* highlight directories */
 		    j = (mch_isdir(files_found[k]));
-		    home_replace(NULL, files_found[k], NameBuff, MAXPATHL,
+		    if (showtail)
+			p = L_SHOWFILE(k);
+		    else
+		    {
+			home_replace(NULL, files_found[k], NameBuff, MAXPATHL,
 									TRUE);
-		    p = NameBuff;
+			p = NameBuff;
+		    }
 		}
 		else
 		{
 		    j = FALSE;
-		    p = files_found[k];
+		    p = L_SHOWFILE(k);
 		}
 		lastlen = msg_outtrans_attr(p, j ? attr : 0);
 	    }
@@ -3109,6 +3141,71 @@ showmatches(xp, wildmenu)
 	FreeWild(num_files, files_found);
 
     return EXPAND_OK;
+}
+
+/*
+ * Private gettail for showmatches() (and win_redr_status_matches()):
+ * Find tail of file name path, but ignore trailing "/".
+ */
+    char_u *
+sm_gettail(s)
+    char_u	*s;
+{
+    char_u	*p;
+    char_u	*t = s;
+    int		had_sep = FALSE;
+
+    for (p = s; *p != NUL; )
+    {
+	if (vim_ispathsep(*p)
+#ifdef BACKSLASH_IN_FILENAME
+		&& !rem_backslash(p)
+#endif
+	   )
+	    had_sep = TRUE;
+	else if (had_sep)
+	{
+	    t = p;
+	    had_sep = FALSE;
+	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p);
+	else
+#endif
+	    ++p;
+    }
+    return t;
+}
+
+
+    static int
+glob_in_path_prefix(xp)
+    expand_T	*xp;
+{
+    char_u	*s;
+    char_u	*end;
+
+    if (xp->xp_context != EXPAND_FILES && xp->xp_context != EXPAND_DIRECTORIES)
+	return FALSE;
+
+    end = gettail(xp->xp_pattern);
+    if (end == xp->xp_pattern)
+	return FALSE;
+
+    for (s = xp->xp_pattern; s < end; s++)
+    {
+	if (*s == '\\')	/* skip backslash */
+	    if (*++s == 0)
+		break;
+
+	switch (*s)
+	{
+	    case '*': case '?': case '[':
+		return TRUE;
+	}
+    }
+    return FALSE;
 }
 
 /*
@@ -3438,6 +3535,8 @@ ExpandFromContext(xp, pat, num_file, file, options)
 	ret = ExpandSettings(xp, &regmatch, num_file, file);
     else if (xp->xp_context == EXPAND_MAPPINGS)
 	ret = ExpandMappings(&regmatch, num_file, file);
+    else if (xp->xp_context == EXPAND_USER_DEFINED)
+	ret = ExpandUserDefined(xp, &regmatch, num_file, file);
     else
     {
 	static struct expgen
@@ -3573,6 +3672,79 @@ ExpandGeneric(xp, regmatch, num_file, file, func)
 	}
     }
     return OK;
+}
+
+/*
+ * Expand names with a function defined by the user.
+ */
+    static int
+ExpandUserDefined(xp, regmatch, num_file, file)
+    expand_T	*xp;
+    regmatch_T	*regmatch;
+    int		*num_file;
+    char_u	***file;
+{
+#ifdef FEAT_EVAL
+    char_u	*args[3];
+    char_u	*all;
+    char_u	*s;
+    char_u	*e;
+    char_u      keep;
+    char_u      num[50];
+    garray_T	ga;
+
+    if (xp->xp_arg == NULL || xp->xp_arg[0] == '\0')
+	return FAIL;
+    *num_file = 0;
+    *file = NULL;
+
+    keep = ccline.cmdbuff[ccline.cmdlen];
+    ccline.cmdbuff[ccline.cmdlen] = 0;
+    sprintf((char *)num, "%d", ccline.cmdpos);
+    args[0] = xp->xp_pattern;
+    args[1] = ccline.cmdbuff;
+    args[2] = num;
+
+    all = call_vim_function(xp->xp_arg, 3, args, FALSE);
+    ccline.cmdbuff[ccline.cmdlen] = keep;
+    if (all == NULL)
+	return FAIL;
+
+    ga_init2(&ga, (int)sizeof(char *), 3);
+    for (s = all; *s != NUL; s = e)
+    {
+	e = vim_strchr(s, '\n');
+	if (e == NULL)
+	    e = s + STRLEN(s);
+	keep = *e;
+	*e = 0;
+
+	if (xp->xp_pattern[0] && vim_regexec(regmatch, s, (colnr_T)0) == 0)
+	{
+	    *e = keep;
+	    if (*e != NUL)
+		++e;
+	    continue;
+	}
+
+	if (ga_grow(&ga, 1) == FAIL)
+	    break;
+
+	((char_u **)ga.ga_data)[ga.ga_len] = vim_strnsave(s, (int)(e - s));
+	++ga.ga_len;
+	--ga.ga_room;
+
+	*e = keep;
+	if (*e != NUL)
+	    ++e;
+    }
+    vim_free(all);
+    *file = ga.ga_data;
+    *num_file = ga.ga_len;
+    return OK;
+#else
+    return FAIL;
+#endif
 }
 
 /*

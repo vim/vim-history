@@ -748,7 +748,7 @@ qf_get_fnum(directory, fname)
 	int	    fnum;
 
 # ifdef VMS
-        vms_remove_version(fname);
+	vms_remove_version(fname);
 # endif
 	if (directory != NULL && !vim_isAbsName(fname)
 	    && (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
@@ -1514,7 +1514,7 @@ qf_mark_adjust(line1, line2, amount, amount_after)
  *  i or I    n		" info n"
  *  0	      n		" error n"
  *  other     n		" c n"
- *  1         x		""	:helpgrep
+ *  1	      x		""	:helpgrep
  */
     static char_u *
 qf_types(c, nr)

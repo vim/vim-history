@@ -33,7 +33,7 @@
 
 #define INET_SOCKETS
 
-#define GUARDED         10000 /* typenr for "guarded" annotation */
+#define GUARDED		10000 /* typenr for "guarded" annotation */
 #define GUARDEDOFFSET 1000000 /* base for "guarded" sign id's */
 
 /* The first implementation (working only with Netbeans) returned "1.1".  The
@@ -142,7 +142,7 @@ netbeans_gtk_connect(void)
 	 * Tell gdk we are interested in being called when there
 	 * is input on the editor connection socket
 	 */
-        inputHandler = gdk_input_add(sd, (GdkInputCondition)
+	inputHandler = gdk_input_add(sd, (GdkInputCondition)
 		((int)GDK_INPUT_READ + (int)GDK_INPUT_EXCEPTION),
 						   messageFromNetbeans, NULL);
     }
@@ -370,7 +370,7 @@ handle_key_queue(void)
 
 struct cmdqueue
 {
-    char_u          *buffer;
+    char_u	    *buffer;
     struct cmdqueue *next;
     struct cmdqueue *prev;
 };
@@ -622,9 +622,9 @@ die(char *fmt, ...)
  *    bufno
  *     colon
  *      cmd
- *              !
- *               cmdno
- *                  args
+ *		!
+ *		 cmdno
+ *		    args
  *
  * for function calls, the ! is replaced by a /
  */
@@ -699,7 +699,7 @@ nb_parse_cmd(char_u *cmd)
 
 struct nbbuf_struct
 {
-    buf_T	        *bufp;
+    buf_T		*bufp;
 #if 0 /* never used */
     unsigned int	 netbeansOwns:1;
     unsigned int	 fireCaret:1;
@@ -1211,7 +1211,7 @@ nb_do_cmd(
 		curwin->w_cursor = first;
 		doupdate = 1;
 
-	        /* keep part of first line */
+		/* keep part of first line */
 		if (first.lnum == last.lnum && first.col != last.col)
 		{
 		    /* deletion is within one line */
@@ -2307,7 +2307,7 @@ netbeans_file_opened(char *filename)
 
     nb_send(buffer, "netbeans_file_opened");
     if (p_acd && vim_chdirfile((char_u *)filename) == OK)
-        shorten_fnames(TRUE);
+	shorten_fnames(TRUE);
 }
 
 /*

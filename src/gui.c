@@ -167,8 +167,8 @@ gui_start()
 	}
 
 # if defined(FEAT_GUI_GNOME) && defined(FEAT_SESSION)
-        /* Tell the session manager our new PID */
-        gui_mch_forked();
+	/* Tell the session manager our new PID */
+	gui_mch_forked();
 # endif
     }
 #else
@@ -1015,7 +1015,7 @@ gui_update_cursor(force, clear_selection)
 		if (shape_table[idx].shape != SHAPE_VER)
 		    cur_width += gui.char_width;
 # ifdef FEAT_RIGHTLEFT
-		if (!(State & CMDLINE) && curwin->w_p_rl)
+		if (CURSOR_BAR_RIGHT)
 		{
 		    /* gui.col points to the left halve of the character but
 		     * the vertical line needs to be on the right halve.

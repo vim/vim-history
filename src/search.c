@@ -1057,6 +1057,10 @@ do_search(oap, dirc, str, count, options)
 	    msgbuf = alloc((unsigned)(STRLEN(p) + 40));
 	    if (msgbuf != NULL)
 	    {
+#ifdef FEAT_RIGHTLEFT
+		int	nwr_save = need_wait_return;
+#endif
+
 		msgbuf[0] = dirc;
 		STRCPY(msgbuf + 1, p);
 		if (spats[0].off.line || spats[0].off.end || spats[0].off.off)
@@ -1093,7 +1097,7 @@ do_search(oap, dirc, str, count, options)
 			msg_start();
 #endif
 		    msg_outtrans(msgbuf);
-#ifdef FEAT_ARABIC
+#ifdef FEAT_RIGHTLEFT
 		    if (cmdmsg_rl)
 			redraw_msg(msgbuf + 1, STRLEN(msgbuf) - 1);
 #endif
@@ -1106,6 +1110,8 @@ do_search(oap, dirc, str, count, options)
 		{
 		    cmdmsg_rl = FALSE;
 		    msg_start();
+		    /* Don't let this message cause a hit-return prompt. */
+		    need_wait_return = nwr_save;
 		}
 #endif
 

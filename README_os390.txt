@@ -1,4 +1,4 @@
-README_os_390.txt for version 6.2b of Vim: Vi IMproved.
+README_os_390.txt for version 6.2c of Vim: Vi IMproved.
 
 Welcome to the OS/390 Unix port of VIM.
 
@@ -39,8 +39,8 @@ there. Here is a what to do:
     $ make test
 
       Note: Test 28 will be reported as failed. This is because diff can't
-            compare files containing '\0' characters. Test 11 will fail if you
-            don't have gzip.
+	    compare files containing '\0' characters. Test 11 will fail if you
+	    don't have gzip.
 
     $ make install
 
@@ -67,13 +67,13 @@ you want Motif.
     Make VIM as described above. Then create a file named 'link.sed' with the
     following contense:
 
-        s/-lXext  *//g
-        s/-lXmu  *//g
-        s/-lXm  */\/usr\/lib\/Xm.x /g
-        s/-lX11  */\/usr\/lib\/X11.x /g
-        s/-lXt  *//g
-        s/-lSM  */\/usr\/lib\/SM.x /g
-        s/-lICE  */\/usr\/lib\/ICE.x /g
+	s/-lXext  *//g
+	s/-lXmu  *//g
+	s/-lXm	*/\/usr\/lib\/Xm.x /g
+	s/-lX11  */\/usr\/lib\/X11.x /g
+	s/-lXt	*//g
+	s/-lSM	*/\/usr\/lib\/SM.x /g
+	s/-lICE  */\/usr\/lib\/ICE.x /g
 
     Then do:
     $ rm vim

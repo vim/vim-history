@@ -4,7 +4,7 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@polarfox.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2003 Apr 25
+# Last change:  2003 May 04
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
@@ -97,14 +97,14 @@ all : clean nolog $(SCRIPT) $(SCRIPT_GUI) $(SCRIPT_UNIX) $(SCRIPT_GZIP) $(SCRIPT
 
 nolog :
 	-@ define sys$output test.log
-        -@ write sys$output "-----------------------------------------------"
-        -@ write sys$output "           Standard VIM test cases"
-        -@ write sys$output "-----------------------------------------------"
-        -@ write sys$output " OpenVMS version: ''F$GETSYI("VERSION")'"
-        -@ write sys$output " Vim version:"
-        -@ mcr $(VIMPROG) --version
-        -@ write sys$output " Test date:"
-        -@ show time
+	-@ write sys$output "-----------------------------------------------"
+	-@ write sys$output "           Standard VIM test cases"
+	-@ write sys$output "-----------------------------------------------"
+	-@ write sys$output " OpenVMS version: ''F$GETSYI("VERSION")'"
+	-@ write sys$output " Vim version:"
+	-@ mcr $(VIMPROG) --version
+	-@ write sys$output " Test date:"
+	-@ show time
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                Test results:"
 	-@ write sys$output "-----------------------------------------------"
@@ -112,7 +112,7 @@ nolog :
 	-@ write sys$output "   WANT_GUI  = ""$(WANT_GUI)"" "
 	-@ write sys$output "   WANT_UNIX = ""$(WANT_UNIX)"" "
 	-@ write sys$output "   HAVE_GZIP = ""$(HAVE_GZIP)"" "
-        -@ write sys$output "   HAVE_GDIFF= ""$(HAVE_GDIFF)"" "
+	-@ write sys$output "   HAVE_GDIFF= ""$(HAVE_GDIFF)"" "
 	-@ write sys$output "Default vimrc file is VMS.VIM:
 	-@ write sys$output "-----------------------------------------------"
 	-@ type VMS.VIM

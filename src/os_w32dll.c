@@ -10,7 +10,7 @@
 /*
  * Windows GUI: main program (DLL) entry point:
  *
- * Ron Aaron <ron@mossbayeng.com> wrote this and  the DLL support code.
+ * Ron Aaron <ronaharon@yahoo.com> wrote this and  the DLL support code.
  */
 #ifndef WIN32_LEAN_AND_MEAN
 # define WIN32_LEAN_AND_MEAN

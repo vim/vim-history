@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	jgraph (graph plotting utility)
 " Maintainer:	Jonas Munsin jmunsin@iki.fi
-" Last Change:	2001 May 09
+" Last Change:	2003 May 04
 " this syntax file is not yet complete
 
 
@@ -28,11 +28,11 @@ syn keyword	jgraphType	solid dotted dashed longdash dotdash dodotdash
 syn keyword	jgraphType	dotdotdashdash pts
 
 "integer number, or floating point number without a dot. - or no -
-syn match  jgraphNumber          "\<-\=\d\+\>"
+syn match  jgraphNumber		 "\<-\=\d\+\>"
 "floating point number, with dot - or no -
-syn match  jgraphNumber          "\<-\=\d\+\.\d*\>"
+syn match  jgraphNumber		 "\<-\=\d\+\.\d*\>"
 "floating point number, starting with a dot - or no -
-syn match  jgraphNumber          "\-\=\.\d\+\>"
+syn match  jgraphNumber		 "\-\=\.\d\+\>"
 
 
 " Define the default highlighting.

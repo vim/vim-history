@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	2001 Sep 02
+" Last Change:	2003 May 04
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
@@ -84,7 +84,7 @@ endif
 " Comments
 syn match   hsLineComment      "--.*"
 syn region  hsBlockComment     start="{-"  end="-}" contains=hsBlockComment
-syn region  hsPragma           start="{-#" end="#-}"
+syn region  hsPragma	       start="{-#" end="#-}"
 
 " Literate comments--any line not starting with '>' is a comment.
 if exists("b:hs_literate_comments")

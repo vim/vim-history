@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
+*os_390.txt*    For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL	  by Ralf Schandl
@@ -116,7 +116,7 @@ configure and make.
     $ make test
 <
 	Test notes:
-        Test 11 will fail if you do not have gzip installed.
+	Test 11 will fail if you do not have gzip installed.
 	Test 42 will fail, as VIM on z/OS UNIX doesn't support the multibyte
 	feature. (David Moore: "Doesn't work _yet_!  :-)  I'll see what I
 	can do.")
@@ -180,7 +180,7 @@ it didn't work with VIM syntax highlighting and command line cursor movement.
 If the highlighting is messed up while you type, but is okay after you refreshed
 the screen with <C-L> or if you can't move to the left with the cursor key on
 the command line, try adding >
-        :set t_le=^H
+	:set t_le=^H
 <
 to your .vimrc. Note: '^H' is one character, hit <C-V><C-H> to get it.
 

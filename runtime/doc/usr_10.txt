@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.2b.  Last change: 2002 Oct 29
+*usr_10.txt*	For Vim version 6.2c.  Last change: 2003 May 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -724,7 +724,7 @@ of the program replaces these lines.
 
 	line 55			      line 11
 	line 33			      line 22
-	line 11        -->	      line 33
+	line 11		-->	      line 33
 	line 22			      line 44
 	line 44			      line 55
 	last line		      last line

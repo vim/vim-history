@@ -19,58 +19,58 @@
 
 /*
  *************************************************************************
- *                                                                       *
- * Copyright 2000 Compaq Computer Corporation                            *
- *                                                                       *
- * COMPAQ Registered in U.S. Patent and Trademark Office.                *
- *                                                                       *
+ *									 *
+ * Copyright 2000 Compaq Computer Corporation				 *
+ *									 *
+ * COMPAQ Registered in U.S. Patent and Trademark Office.		 *
+ *									 *
  *************************************************************************
- * IMPORTANT: Carefully read the License Terms below before              *
- * proceeding.  By use of these materials you agree to these terms.      *
+ * IMPORTANT: Carefully read the License Terms below before		 *
+ * proceeding.	By use of these materials you agree to these terms.	 *
  * If you do not agree to these terms, you may not use this software or  *
- * the accompanying documentation.                                       *
+ * the accompanying documentation.					 *
  *************************************************************************
- * LICENSE TERMS                                                         *
- * 1. GRANT                                                              *
- * Compaq Computer Corporation ("COMPAQ") grants you the right to use,   *
- * modify, and distribute the following source code (the "Software")     *
- * on any number of computers. You may use the Software as part of       *
- * creating a software program or product intended for commercial or     *
+ * LICENSE TERMS							 *
+ * 1. GRANT								 *
+ * Compaq Computer Corporation ("COMPAQ") grants you the right to use,	 *
+ * modify, and distribute the following source code (the "Software")	 *
+ * on any number of computers. You may use the Software as part of	 *
+ * creating a software program or product intended for commercial or	 *
  * non-commercial distribution in machine-readable source code, binary,  *
- * or executable formats. You may distribute the Software as             *
- * machine-readable source code provided this license is not removed     *
+ * or executable formats. You may distribute the Software as		 *
+ * machine-readable source code provided this license is not removed	 *
  * from the Software and any modifications are conspicuously indicated.  *
- * 2. COPYRIGHT                                                          *
+ * 2. COPYRIGHT								 *
  * The Software is owned by COMPAQ and its suppliers and is protected by *
  * copyright laws and international treaties.  Your use of the Software  *
- * and associated documentation is subject to the applicable copyright   *
- * laws and the express rights and restrictions of these terms.          *
- * 3. RESTRICTIONS                                                       *
- * You may not remove any copyright, trademark, or other proprietary     *
- * notices from the Software or the associated  documentation.           *
- * You are responsible for compliance with all applicable export or      *
- * re-export control laws and regulations if you export the Software.    *
- * This license is governed by and is to be construed under the laws     *
- * of the State of Texas.                                                *
- *                                                                       *
- * DISCLAIMER OF WARRANTY AND LIABILITY                                  *
- * Compaq shall not be liable for technical or editorial errors or       *
- * omissions contained herein. The information contained herein is       *
- * subject to change without notice.                                     *
- *                                                                       *
- * THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.       *
+ * and associated documentation is subject to the applicable copyright	 *
+ * laws and the express rights and restrictions of these terms.		 *
+ * 3. RESTRICTIONS							 *
+ * You may not remove any copyright, trademark, or other proprietary	 *
+ * notices from the Software or the associated	documentation.		 *
+ * You are responsible for compliance with all applicable export or	 *
+ * re-export control laws and regulations if you export the Software.	 *
+ * This license is governed by and is to be construed under the laws	 *
+ * of the State of Texas.						 *
+ *									 *
+ * DISCLAIMER OF WARRANTY AND LIABILITY					 *
+ * Compaq shall not be liable for technical or editorial errors or	 *
+ * omissions contained herein. The information contained herein is	 *
+ * subject to change without notice.					 *
+ *									 *
+ * THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.	 *
  * THE ENTIRE RISK ARISING OUT OF THE USE OF THIS SOFTWARE REMAINS WITH  *
- * RECIPIENT.  IN NO EVENT SHALL COMPAQ BE LIABLE FOR ANY DIRECT,        *
- * CONSEQUENTIAL, INCIDENTAL, SPECIAL, PUNITIVE OR OTHER DAMAGES         *
+ * RECIPIENT.  IN NO EVENT SHALL COMPAQ BE LIABLE FOR ANY DIRECT,	 *
+ * CONSEQUENTIAL, INCIDENTAL, SPECIAL, PUNITIVE OR OTHER DAMAGES	 *
  * WHATSOEVER (INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF BUSINESS *
- * PROFITS, BUSINESS INTERRUPTION, OR LOSS OF BUSINESS INFORMATION),     *
- * EVEN IF COMPAQ HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES    *
- * AND WHETHER IN AN ACTION OF CONTRACT OR TORT INCLUDING NEGLIGENCE.    *
- *                                                                       *
- * If you have any questions concerning this license, please contact:    *
+ * PROFITS, BUSINESS INTERRUPTION, OR LOSS OF BUSINESS INFORMATION),	 *
+ * EVEN IF COMPAQ HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES	 *
+ * AND WHETHER IN AN ACTION OF CONTRACT OR TORT INCLUDING NEGLIGENCE.	 *
+ *									 *
+ * If you have any questions concerning this license, please contact:	 *
  * Compaq Computer Corporation, Software Business Practices, ZKO1-2/D22, *
- * 110 Spit Brook Road, Nashua, NH. 03062-2698.                          *
- *                                                                       *
+ * 110 Spit Brook Road, Nashua, NH. 03062-2698.				 *
+ *									 *
  *************************************************************************
  */
 

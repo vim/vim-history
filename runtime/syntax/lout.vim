@@ -3,7 +3,7 @@
 " Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
 " Last Change: Son 22 Sep 2002 00:13:37 CEST
 " Filenames:   *.lout,*.lt
-" URL:         http://www.cvjb.de/comp/vim/lout.vim
+" URL:			http://www.cvjb.de/comp/vim/lout.vim
 " $Id$
 "
 " Lout: Basser Lout document formatting system.

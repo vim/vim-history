@@ -889,11 +889,11 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 		    _("gvimext.dll error"),
 		    MB_OK);
 	    }
-            else
-            {
-                CloseHandle( pi.hProcess );
-                CloseHandle( pi.hThread );
-            }
+	    else
+	    {
+		CloseHandle( pi.hProcess );
+		CloseHandle( pi.hThread );
+	    }
 	}
 	else
 	{
@@ -972,8 +972,8 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
     }
     else
     {
-        CloseHandle( pi.hProcess );
-        CloseHandle( pi.hThread );
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
     }
 
     free(cmdStr);

@@ -74,7 +74,7 @@ void COleAutomationControl::DeleteObject ()
 // obtains it's IDispatch interface.
 //
 // Parameters:
-// ProgId         ProgID of Automation object
+// ProgId	  ProgID of Automation object
 //
 bool COleAutomationControl::CreateObject (char* ProgId)
 {
@@ -135,25 +135,25 @@ DISPID COleAutomationControl::GetDispatchId (char* Name)
 //  Name      Name of property or method.
 //
 //  Format    Format string that describes the variable list of parameters that
-//            follows. The format string can contain the follwoing characters.
-//            & = mark the following format character as VT_BYREF
-//            B = VT_BOOL
-//            i = VT_I2
-//            I = VT_I4
-//            r = VT_R2
-//            R = VT_R4
-//            c = VT_CY
-//            s = VT_BSTR (string pointer can be passed,
+//	      follows. The format string can contain the follwoing characters.
+//	      & = mark the following format character as VT_BYREF
+//	      B = VT_BOOL
+//	      i = VT_I2
+//	      I = VT_I4
+//	      r = VT_R2
+//	      R = VT_R4
+//	      c = VT_CY
+//	      s = VT_BSTR (string pointer can be passed,
 //			BSTR will be allocated by this function).
-//            e = VT_ERROR
-//            d = VT_DATE
-//            v = VT_VARIANT. Use this to pass data types that are not described
+//	      e = VT_ERROR
+//	      d = VT_DATE
+//	      v = VT_VARIANT. Use this to pass data types that are not described
 //			in the format string. (For example SafeArrays).
-//            D = VT_DISPATCH
-//            U = VT_UNKNOWN
+//	      D = VT_DISPATCH
+//	      U = VT_UNKNOWN
 //
 //  ...       Arguments of the property or method.
-//            Arguments are described by Format.
+//	      Arguments are described by Format.
 //
 
 bool COleAutomationControl::GetProperty (char* Name)

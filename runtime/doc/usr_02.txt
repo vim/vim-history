@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.2b.  Last change: 2003 Mar 03
+*usr_02.txt*	For Vim version 6.2c.  Last change: 2003 May 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -171,9 +171,9 @@ For Japanse users, Hiroshi Iwatani suggested using this:
 			Komsomolsk
 			    ^
 			    |
-           Huan Ho      <--- --->  Los Angeles
-        (Yellow river)      |
-	                    v
+	   Huan Ho	<--- --->  Los Angeles
+	(Yellow river)	    |
+			    v
 			  Java (the island, not the programming language)
 
 ==============================================================================

@@ -18,7 +18,7 @@
 # excellent UPX compressor:
 #     http://upx.sourceforge.net/
 #
-# Maintained by Ron Aaron <ron@mossbayeng.com>
+# Maintained by Ron Aaron <ronaharon@yahoo.com>
 # updated 2003 Jan 20
 
 #>>>>> choose options:
@@ -39,15 +39,26 @@ ARCH=i386
 CROSS=no
 # set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
 #ICONV="."
+ICONV=yes
+GETTEXT=yes
+# set to yes to include multibyte support
+MBYTE=yes
 # set to yes to include IME support
-IME=no
+IME=yes
+DYNAMIC_IME=yes
 # set to yes to enable writing a postscript file with :hardcopy
 POSTSCRIPT=no
 # set to yes to enable OLE support
 OLE=no
-#set to yes to enable Cscope support 
+# Set the default $(WINVER) to make it work with pre-Win2k
+WINVER = 0x0400
+#set to yes to enable Cscope support
 CSCOPE=yes
 
+# If the user doesn't want gettext, undefine it.
+ifeq (no, $(GETTEXT))
+GETTEXT=
+endif
 # Added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
 # Uncomment the first line and one of the following three if you want Native Language
 # Support.  You'll need gnu_gettext.win32, a MINGW32 Windows PORT of gettext by
@@ -114,7 +125,7 @@ DYNAMIC_PYTHON=yes
 endif
 
 ifndef PYTHON_VER
-PYTHON_VER=20
+PYTHON_VER=22
 endif
 
 ifeq (no,$(DYNAMIC_PYTHON))
@@ -179,7 +190,7 @@ endif # RUBY
 # Any other defines can be included here.
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
-DEFINES=-DWIN32 -DPC
+DEFINES=-DWIN32 -DPC -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 ifeq ($(CROSS),yes)
 # cross-compiler:
 CC = i586-pc-mingw32msvc-gcc
@@ -206,10 +217,14 @@ ifdef GETTEXT
 DEFINES +=-DHAVE_GETTEXT -DHAVE_LOCALE_H
 GETTEXTINCLUDE = $(GETTEXT)/include
 GETTEXTLIB = $(INTLPATH)
+ifeq (yes, $(GETTEXT))
+DEFINES +=-DDYNAMIC_GETTEXT
+else
 ifdef DYNAMIC_GETTEXT
 DEFINES +=-D$(DYNAMIC_GETTEXT)
 ifdef GETTEXT_DYNAMIC
 DEFINES += -DGETTEXT_DYNAMIC -DGETTEXT_DLL=\"$(GETTEXT_DYNAMIC)\"
+endif
 endif
 endif
 endif
@@ -247,7 +262,7 @@ CFLAGS += -DMSWINPS
 endif
 
 ifeq (yes, $(OLE))
-CFLAGS += -DFEAT_OLE
+DEFINES += -DFEAT_OLE
 endif
 
 ifeq ($(CSCOPE),yes)
@@ -304,6 +319,7 @@ OBJ    = $(SRC:.c=.o)
 LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32 -lole32 -luuid
 
 ifdef GETTEXT
+ifneq (yes, $(GETTEXT))
 CFLAGS += -I$(GETTEXTINCLUDE)
 ifndef STATIC_GETTEXT
 LIB += -L$(GETTEXTLIB) -l$(INTLLIB)
@@ -312,6 +328,7 @@ OBJ+=$(SAFE_GETTEXT_DLL_OBJ)
 endif
 else
 LIB += -L$(GETTEXTLIB) -lintl
+endif
 endif
 endif
 
@@ -335,15 +352,25 @@ LIB += -loleaut32 -lstdc++
 OBJ += if_ole.o
 endif
 
+ifeq (yes, $(MBYTE))
+DEFINES += -DFEAT_MBYTE
+endif
+
 ifeq (yes, $(IME))
-DEFINES += -DFEAT_MBYTE_IME -DDYNAMIC_IME
+DEFINES += -DFEAT_MBYTE_IME
+ifeq (yes, $(DYNAMIC_IME))
+DEFINES += -DDYNAMIC_IME
+else
 LIB += -limm32
+endif
 endif
 
 ifdef ICONV
+ifneq (yes, $(ICONV))
 LIB += -L$(ICONV)
-DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
+endif
+DEFINES+=-DDYNAMIC_ICONV
 endif
 
 all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
@@ -379,7 +406,7 @@ xxd/xxd.exe: xxd/xxd.c
 	$(CC) $(CFLAGS) -o xxd/xxd.exe -s -DWIN32 xxd/xxd.c $(LIB)
 
 GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
-	cd GvimExt; $(MAKE) -f Make_ming.mak; cd ..
+	$(MAKE) -C GvimExt -f Make_ming.mak
 
 clean:
 	-$(DEL) *.o
@@ -393,10 +420,11 @@ endif
 ifdef PERL
 	-$(DEL) if_perl.c
 endif
+	$(MAKE) -C GvimExt -f Make_ming.mak clean
 
 ###########################################################################
 vimres.res: vim.rc
-	$(WINDRES) --define MING --define FEAT_GUI_W32 vim.rc vimres.res
+	$(WINDRES) $(DEFINES) --define MING vim.rc vimres.res
 
 vimres.o: vimres.res
 	$(WINDRES) vimres.res vimres.o

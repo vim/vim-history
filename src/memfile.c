@@ -1274,8 +1274,9 @@ mf_do_open(mfp, fname, flags)
 #endif
 	    flags | O_EXTRA
 #ifdef WIN32
-	/* Prevent handle inheritance that cause problems with Cscope 
-	 * (swap file may not be deleted if cscope connection was open after the file)
+	/* Prevent handle inheritance that cause problems with Cscope
+	 * (swap file may not be deleted if cscope connection was open after
+	 * the file)
 	 */
 	    |O_NOINHERIT
 #endif

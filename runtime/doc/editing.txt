@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.2b.  Last change: 2003 Apr 19
+*editing.txt*   For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -374,7 +374,7 @@ file, or execute any other command:
 			{command} is any Ex command.
 To include a white space in the {pat} or {command}, precede it with a
 backslash.  Double the number of backslashes. >
-	:edit  +/The\ book           file
+	:edit  +/The\ book	     file
 	:edit  +/dir\ dirname\\      file
 	:edit  +set\ dir=c:\\\\temp  file
 Note that in the last example the number of backslashes is halved twice: Once

@@ -170,4 +170,8 @@ Trace(char *pszFormat, ...);
 
 #define mch_setenv(name, val, x) setenv(name, val, x)
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
-#define vim_mkdir(x, y) _mkdir(x)
+#ifndef __BORLANDC__
+# define vim_mkdir(x, y) mkdir(x)
+#else
+# define vim_mkdir(x, y) _mkdir(x)
+#endif

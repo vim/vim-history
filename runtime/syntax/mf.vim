@@ -82,7 +82,7 @@ syn keyword mfPrimitive kern ligtable quote scantokens skipto
 " Keywords defined by plain.mf (defined on pp.262-278)
 if !exists("plain_mf_macros")
   let plain_mf_macros = 1 " Set this to '0' if your source gets too colourful
-                          " metapost.vim does so to turn off Metafont macros
+			  " metapost.vim does so to turn off Metafont macros
 endif
 if plain_mf_macros
   syn keyword mfMacro abs addto_currentpicture aspect_ratio base_name
@@ -126,7 +126,7 @@ endif
 " Some other basic macro names, e.g., from cmbase, logo, etc.
 if !exists("other_mf_macros")
   let other_mf_macros = 1 " Set this to '0' if your code gets too colourful
-                          " metapost.vim does so to turn off Metafont macros
+			  " metapost.vim does so to turn off Metafont macros
 endif
 if other_mf_macros
   syn keyword mfMacro beginlogochar

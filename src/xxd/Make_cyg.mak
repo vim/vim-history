@@ -4,15 +4,15 @@ ifndef USEDLL
 USEDLL = no
 endif
 
-ifeq (no, $(USEDLL))
-DEFINES = -mno-cygwin
-LIBS    =
-else
+ifeq (yes, $(USEDLL))
 DEFINES =
 LIBS    = -lc
+else
+DEFINES = -mno-cygwin
+LIBS    =
 endif
 
-CFLAGS = -O2 -Wall $(DEFINES)
+CFLAGS = -O2 -Wall -DWIN32 $(DEFINES)
 
 ifneq (sh.exe, $(SHELL))
 DEL = rm

@@ -2413,7 +2413,7 @@ gui_mch_set_font(
 	vf->GetHeight(&fh);
 	gui.char_height = (int)(fh.ascent + 0.9999)
 		    + (int)(fh.descent + 0.9999) + (int)(fh.leading + 0.9999);
-        gui.char_ascent = (int)(fh.ascent + 0.9999);
+	gui.char_ascent = (int)(fh.ascent + 0.9999);
 
 	gui.vimWindow->Unlock();
     }
@@ -2514,7 +2514,7 @@ gui_mch_get_color(
 	{"Orange",	    RGB(0xFF, 0xA5, 0x00)},
 	{"Purple",	    RGB(0xA0, 0x20, 0xF0)},
 	{"SlateBlue",	    RGB(0x6A, 0x5A, 0xCD)},
-	{"Violet",          RGB(0xEE, 0x82, 0xEE)},
+	{"Violet",	    RGB(0xEE, 0x82, 0xEE)},
     };
 
     static int endColour = NSTATIC_COLOURS;
@@ -2789,7 +2789,7 @@ gui_mch_draw_part_cursor(
     r.left =
 #ifdef FEAT_RIGHTLEFT
 	/* vertical line should be on the right of current point */
-	!(State & CMDLINE) && curwin->w_p_rl ? FILL_X(gui.col + 1) - w :
+	CURSOR_BAR_RIGHT ? FILL_X(gui.col + 1) - w :
 #endif
 	    FILL_X(gui.col);
     r.right = r.left + w - PEN_WIDTH;

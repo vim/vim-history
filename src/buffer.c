@@ -4574,9 +4574,9 @@ buf_addsign(buf, id, lnum, typenr)
 	}
 	else if (
 #ifndef FEAT_NETBEANS_INTG  /* keep signs sorted by lnum */
-	           id < 0 &&
+		   id < 0 &&
 #endif
-	                     lnum < sign->lnum)
+			     lnum < sign->lnum)
 	{
 #ifdef FEAT_NETBEANS_INTG /* insert new sign at head of list for this lnum */
 	    /* XXX - GRP: Is this because of sign slide problem? Or is it

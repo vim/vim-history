@@ -145,6 +145,7 @@
 #define CPO_BUFOPTGLOB	'S'
 #define CPO_TAGPAT	't'
 #define CPO_UNDO	'u'	/* "u" undoes itself */
+#define CPO_BACKSPACE	'v'	/* "v" keep deleted text */
 #define CPO_CW		'w'	/* "cw" only changes one blank */
 #define CPO_FWRITE	'W'	/* "w!" doesn't overwrite readonly files */
 #define CPO_ESC		'x'
@@ -155,7 +156,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmnoOprsStuwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmnoOprsStuvwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"
@@ -427,6 +428,7 @@ EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef FEAT_PRINTER
 EXTERN char_u	*p_pdev;	/* 'printdevice' */
 # ifdef FEAT_POSTSCRIPT
+EXTERN char_u	*p_penc;	/* 'printencoding' */
 EXTERN char_u	*p_pexpr;	/* 'printexpr' */
 # endif
 EXTERN char_u	*p_pfn;		/* 'printfont' */

@@ -239,7 +239,7 @@ enum key_extra
     , KE_X2DRAG
     , KE_X2RELEASE
 
-    , KE_DROP           /* DnD data is available */
+    , KE_DROP		/* DnD data is available */
 };
 
 /*

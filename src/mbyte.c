@@ -113,7 +113,6 @@ static int dbcs_char2bytes __ARGS((int c, char_u *buf));
 static int dbcs_ptr2len_check __ARGS((char_u *p));
 static int dbcs_char2cells __ARGS((int c));
 static int dbcs_ptr2char __ARGS((char_u *p));
-static int enc_alias_search __ARGS((char_u *name));
 
 /* Lookup table to quickly get the length in bytes of a UTF-8 character from
  * the first byte of a UTF-8 string.  Bytes which are illegal when used as the
@@ -130,6 +129,9 @@ static char utf8len_tab[256] =
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1,
 };
 
+#endif
+
+#if defined(FEAT_MBYTE) || defined(FEAT_POSTSCRIPT) || defined(PROTO)
 /*
  * Canonical encoding names and their properties.
  * "iso-8859-n" is handled by enc_canonize() directly.
@@ -304,6 +306,10 @@ enc_canon_search(name)
 	    return i;
     return -1;
 }
+
+#endif
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
 
 /*
  * Find canonical encoding "name" in the list and return its properties.
@@ -958,10 +964,11 @@ utf_char2cells(c)
     int		c;
 {
     /* sorted list of non-overlapping intervals of East Asian Ambiguous
-     * characters, generated with "uniset +WIDTH-A -cat=Me -cat=Mn -cat=Cf c" */
+     * characters, generated with:
+     * "uniset +WIDTH-A -cat=Me -cat=Mn -cat=Cf c" */
     static struct interval ambiguous[] = {
 	{0x00A1, 0x00A1}, {0x00A4, 0x00A4}, {0x00A7, 0x00A8},
-	{0x00AA, 0x00AA}, {0x00AD, 0x00AE}, {0x00B0, 0x00B4},
+	{0x00AA, 0x00AA}, {0x00AE, 0x00AE}, {0x00B0, 0x00B4},
 	{0x00B6, 0x00BA}, {0x00BC, 0x00BF}, {0x00C6, 0x00C6},
 	{0x00D0, 0x00D0}, {0x00D7, 0x00D8}, {0x00DE, 0x00E1},
 	{0x00E6, 0x00E6}, {0x00E8, 0x00EA}, {0x00EC, 0x00ED},
@@ -1000,17 +1007,18 @@ utf_char2cells(c)
 	{0x2264, 0x2267}, {0x226A, 0x226B}, {0x226E, 0x226F},
 	{0x2282, 0x2283}, {0x2286, 0x2287}, {0x2295, 0x2295},
 	{0x2299, 0x2299}, {0x22A5, 0x22A5}, {0x22BF, 0x22BF},
-	{0x2312, 0x2312}, {0x2460, 0x24E9}, {0x24EB, 0x24FE},
-	{0x2500, 0x254B}, {0x2550, 0x2573}, {0x2580, 0x258F},
-	{0x2592, 0x2595}, {0x25A0, 0x25A1}, {0x25A3, 0x25A9},
-	{0x25B2, 0x25B3}, {0x25B6, 0x25B7}, {0x25BC, 0x25BD},
-	{0x25C0, 0x25C1}, {0x25C6, 0x25C8}, {0x25CB, 0x25CB},
-	{0x25CE, 0x25D1}, {0x25E2, 0x25E5}, {0x25EF, 0x25EF},
-	{0x2605, 0x2606}, {0x2609, 0x2609}, {0x260E, 0x260F},
+	{0x2312, 0x2312}, {0x2460, 0x24E9}, {0x24EB, 0x254B},
+	{0x2550, 0x2573}, {0x2580, 0x258F}, {0x2592, 0x2595},
+	{0x25A0, 0x25A1}, {0x25A3, 0x25A9}, {0x25B2, 0x25B3},
+	{0x25B6, 0x25B7}, {0x25BC, 0x25BD}, {0x25C0, 0x25C1},
+	{0x25C6, 0x25C8}, {0x25CB, 0x25CB}, {0x25CE, 0x25D1},
+	{0x25E2, 0x25E5}, {0x25EF, 0x25EF}, {0x2605, 0x2606},
+	{0x2609, 0x2609}, {0x260E, 0x260F}, {0x2614, 0x2615},
 	{0x261C, 0x261C}, {0x261E, 0x261E}, {0x2640, 0x2640},
 	{0x2642, 0x2642}, {0x2660, 0x2661}, {0x2663, 0x2665},
 	{0x2667, 0x266A}, {0x266C, 0x266D}, {0x266F, 0x266F},
-	{0x273D, 0x273D}, {0x2776, 0x277F}, {0xFFFD, 0xFFFD}
+	{0x273D, 0x273D}, {0x2776, 0x277F}, {0xE000, 0xF8FF},
+	{0xFFFD, 0xFFFD}
     };
 
     if (c >= 0x100)
@@ -1297,7 +1305,7 @@ utfc_ptr2char(p, p1, p2)
     len = utf_ptr2len_check(p);
     /* Only accept a composing char when the first char isn't illegal. */
     if ((len > 1 || *p < 0x80)
-            && p[len] >= 0x80
+	    && p[len] >= 0x80
 	    && UTF_COMPOSINGLIKE(p, p + len))
     {
 	*p1 = utf_ptr2char(p + len);
@@ -2480,7 +2488,7 @@ mb_lefthalve(row, col)
     return FALSE;
 }
 
-#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(FEAT_RIGHTLEFT) \
+# if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(FEAT_RIGHTLEFT) \
 	|| defined(PROTO)
 /*
  * Correct a position on the screen, if it's the right halve of a double-wide
@@ -2502,7 +2510,11 @@ mb_fix_col(col, row)
 	--col;
     return col;
 }
+# endif
 #endif
+
+#if defined(FEAT_MBYTE) || defined(FEAT_POSTSCRIPT) || defined(PROTO)
+static int enc_alias_search __ARGS((char_u *name));
 
 /*
  * Skip the Vim specific head of a 'encoding' name.
@@ -2599,6 +2611,9 @@ enc_alias_search(name)
 	    return enc_alias_table[i].canon;
     return -1;
 }
+#endif
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
 
 #ifdef HAVE_LANGINFO_H
 # include <langinfo.h>
@@ -2922,7 +2937,7 @@ iconv_end()
 
 # if defined(HAVE_GTK2) && !defined(PROTO)
 
-static int im_is_active        = FALSE;	/* IM is enabled for current mode    */
+static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int im_preedit_cursor   = 0;	/* cursor offset in characters       */
 static int im_preedit_trailing = 0;	/* number of characters after cursor */
 
@@ -3465,7 +3480,7 @@ xim_queue_key_press_event(GdkEventKey *event)
 	 * the activation key for modules that don't support one.
 	 */
 	if (event->keyval == im_activatekey_keyval
-	    && (event->state & im_activatekey_state) == im_activatekey_state)
+	     && (event->state & im_activatekey_state) == im_activatekey_state)
 	{
 	    unsigned int state_mask;
 
@@ -3489,7 +3504,7 @@ xim_queue_key_press_event(GdkEventKey *event)
 		if (gtk_main_level() > 0)
 		    gtk_main_quit();
 	    }
-	    return FALSE;
+	    return TRUE;
 	}
 
 	/* Don't filter events through the IM context if IM isn't active

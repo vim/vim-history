@@ -108,10 +108,10 @@ distclean: clean
 # NOTE: If you get an error for gvimext.cpp not found, you need to unpack the
 # extra archive.
 #
-$(PACKAGE).pot: ../*.c ../../GvimExt/gvimext.cpp ../globals.h
+$(PACKAGE).pot: ../*.c ../if_perl.xs ../GvimExt/gvimext.cpp ../globals.h
 	cd ..; $(XGETTEXT) --default-domain=$(PACKAGE) \
 		--add-comments --keyword=_ --keyword=N_ \
-		*.c ../GvimExt/gvimext.cpp globals.h
+		*.c ../if_perl.xs GvimExt/gvimext.cpp globals.h
 	mv -f ../$(PACKAGE).po $(PACKAGE).pot
 
 # Don't add a dependency here, we only want to update the .po files manually

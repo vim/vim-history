@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-" Last Change:	Apr 24, 2003
+" Last Change:	May 02, 2003
 " Maintainer:	Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:	30
+" Version:	31
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
@@ -560,12 +560,13 @@ function! s:NetGetFile(readcmd, fname, method)
    " Now being asked to 0r a file into an empty file.  Safe to :e it instead
    let curfilename= expand("%")
    exe "e!".v:cmdarg." ".fname
+   exe "bwipe ".curfilename
    exe "f ".curfilename
   else
-  let oldul= &ul
-  set ul=-1
-  exe a:readcmd.v:cmdarg . " " . fname
-  let &ul= oldul
+   let oldul= &ul
+   set ul=-1
+   exe a:readcmd.v:cmdarg . " " . fname
+   let &ul= oldul
   endif
  else
   exe a:readcmd.v:cmdarg . " " . fname

@@ -43,7 +43,7 @@ syn region  sgmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=sgm
 syn region  sgmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=sgmlEntity,sgmlUnicodeNumberAttr display
 
 " punctuation (within attributes) e.g. <tag sgml:foo.attribute ...>
-"                                               ^   ^
+"						^   ^
 syn match   sgmlAttribPunct +[:.]+ contained display
 
 
@@ -74,7 +74,7 @@ syn match   sgmlAttrib
 " EXAMPLE:
 "
 " <tag foo.attribute = value>
-"                      ^^^^^
+"		       ^^^^^
 "
 syn match   sgmlValue
     \ +[^"' =/!?<>][^ =/!?<>]*+
@@ -90,9 +90,9 @@ syn match   sgmlValue
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"                      ^^^^^^^
+"		       ^^^^^^^
 " <tag foo.attribute = 'value'>
-"                      ^^^^^^^
+"		       ^^^^^^^
 "
 syn region  sgmlValue contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 	    \ contains=sgmlEntity,sgmlUnicodeNumberAttr,@sgmlValueHook
@@ -106,9 +106,9 @@ syn region  sgmlValue contained start=+'+ skip=+\\\\\|\\'+ end=+'+
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"                    ^^^^^^^^^
+"		     ^^^^^^^^^
 " <tag foo.attribute = value>
-"                    ^^^^^^^
+"		     ^^^^^^^
 "
 syn match   sgmlEqualValue
     \ +=\s*[^ =/!?<>]\++
@@ -240,16 +240,16 @@ syn cluster sgmlRegionCluster contains=sgmlRegion,sgmlEmptyRegion,sgmlAbbrRegion
 
 
 " &entities; compare with dtd
-syn match   sgmlEntity                 "&[^; \t]*;" contains=sgmlEntityPunct
+syn match   sgmlEntity		       "&[^; \t]*;" contains=sgmlEntityPunct
 syn match   sgmlEntityPunct  contained "[&.;]"
 
 
 " The real comments (this implements the comments as defined by sgml,
 " but not all sgml pages actually conform to it. Errors are flagged.
-syn region  sgmlComment                start=+<!+        end=+>+ contains=sgmlCommentPart,sgmlString,sgmlCommentError,sgmlTodo
-syn keyword sgmlTodo         contained TODO FIXME XXX display
+syn region  sgmlComment		       start=+<!+	 end=+>+ contains=sgmlCommentPart,sgmlString,sgmlCommentError,sgmlTodo
+syn keyword sgmlTodo	     contained TODO FIXME XXX display
 syn match   sgmlCommentError contained "[^><!]"
-syn region  sgmlCommentPart  contained start=+--+        end=+--+
+syn region  sgmlCommentPart  contained start=+--+	 end=+--+
 
 
 " CData sections
@@ -265,8 +265,8 @@ syn region    sgmlCdata
 " using the following line instead leads to corrupt folding at CDATA regions
 " syn match    sgmlCdata      +<!\[CDATA\[\_.\{-}]]>+  contains=sgmlCdataStart,sgmlCdataEnd,@sgmlCdataHook
 syn match    sgmlCdataStart +<!\[CDATA\[+  contained contains=sgmlCdataCdata
-syn keyword  sgmlCdataCdata CDATA          contained
-syn match    sgmlCdataEnd   +]]>+          contained
+syn keyword  sgmlCdataCdata CDATA	   contained
+syn match    sgmlCdataEnd   +]]>+	   contained
 
 
 " Processing instructions

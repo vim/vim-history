@@ -2085,7 +2085,7 @@ getexactdigraph(char1, char2, meta)
     dp = (digr_T *)user_digraphs.ga_data;
     for (i = 0; i < user_digraphs.ga_len; ++i)
     {
-	if (dp->char1 == (unsigned)char1 && dp->char2 == (unsigned)char2)
+	if ((int)dp->char1 == char1 && (int)dp->char2 == char2)
 	{
 	    retval = dp->result;
 	    break;
@@ -2101,7 +2101,7 @@ getexactdigraph(char1, char2, meta)
 	dp = digraphdefault;
 	for (i = 0; dp->char1 != 0; ++i)
 	{
-	    if (dp->char1 == (unsigned)char1 && dp->char2 == (unsigned)char2)
+	    if ((int)dp->char1 == char1 && (int)dp->char2 == char2)
 	    {
 		retval = dp->result;
 		break;
@@ -2184,7 +2184,7 @@ putdigraph(str)
 	dp = (digr_T *)user_digraphs.ga_data;
 	for (i = 0; i < user_digraphs.ga_len; ++i)
 	{
-	    if (dp->char1 == (unsigned)char1 && dp->char2 == (unsigned)char2)
+	    if ((int)dp->char1 == char1 && (int)dp->char2 == char2)
 	    {
 		dp->result = n;
 		break;

@@ -67,8 +67,8 @@ Installation
 
 4) Start Visual Studio and go to:
       Tools
-         Customize...
-            Add-Ins and Macro Files
+	 Customize...
+	    Add-Ins and Macro Files
 
 5) Click on Browse, and point Visual Studio to your VisVim.dll file.
 
@@ -132,8 +132,8 @@ shortcuts:
 
 1) Choose
       Tools
-         Customize...
-            Keyboard
+	 Customize...
+	    Keyboard
 2) Choose Category:AddIns and Commands:VisVim.
 3) Choose 'Main' as editor, enter each hotkey and press the Assign button.
    I suggest:
@@ -161,20 +161,20 @@ Troubleshooting
 1. When opening a file in DevStudio the file is opened in the DevStudio
    editor and immediately vanishes. No Vim shows up.
    Cause:       Probably you don't have the OLE-enabled Vim or you didn't
-                register it.
+		register it.
    Explanation: VisVim is notified by DevStudio if an 'open document' event
-                occurs. It then closes the document in the internal editor
+		occurs. It then closes the document in the internal editor
 		and tries to start Vim. If Vim isn't properly OLE-registered,
 		this won't work.
    Workaround:  Download and install the OLE-enable version of Vim and
-                execute "gvim -register".
+		execute "gvim -register".
 
 2. Sometimes when clicking on a file, the file won't be opened by Vim but
    instead the Visual Studio editor comes up.
    Cause:       The file was already loaded by the DevStudio editor.
    Explanation: VisVim works by hooks exposed by Visual Studio.
-                Most of the functionality works from the OpenDocument hook.
-                If a document is already loaded in the Visual Studio editor,
+		Most of the functionality works from the OpenDocument hook.
+		If a document is already loaded in the Visual Studio editor,
 		no 'open document' event will be generated when clicking the
 		file in the file list.
    Workaround:  Close the document in Visual Studio first.
@@ -184,33 +184,33 @@ Troubleshooting
    Cause:       The Visual Studio installation is messed up.
    Explanation: I can't give you one. Ask M$.
    Workaround:  Reinstall DevStudio (I know this is brute, but in some cases
-                it helped). There was one case where the service pack 1 had
+		it helped). There was one case where the service pack 1 had
 		to be installed, too.
 
 4. If an instance of Vim is already running, VisVim will use that instance
    and not start a new one.
-   Cause:        This is proper OLE behaviour
+   Cause:	 This is proper OLE behaviour
    Explanation:  Some call it a bug, some a feature. That's just the way OLE
-                 works.
+		 works.
 
 5. When being in insert mode in Vim and selecting a file in Visual Studio,
    the Vim command :e ... is inserted as text instead of being executed.
-   Cause:        You probably know...
+   Cause:	 You probably know...
    Explanation:  The Vim OLE automation interface interpretes the VisVim
-                 commands as if they were typed in by the user.
+		 commands as if they were typed in by the user.
 		 So if you're in insert mode Vim considers it to be text.
-                 I decided against sending an ESC before the command because
+		 I decided against sending an ESC before the command because
 		 it may cause a beep or at least a screen flash when noeb is
 		 set.
-   Workaround:   Get used to press ESC before switching to DevStudio.
+   Workaround:	 Get used to press ESC before switching to DevStudio.
 
 6. I'm tired of VisVim but I can't get rid of it. I can't delete it in
    Tools-Customize-Add-Ins.
-   Cause:        You can't delete an item you once added to the add-ins
-                 list box.
+   Cause:	 You can't delete an item you once added to the add-ins
+		 list box.
    Explanation:  M$ just didn't put a 'delete' button in the dialog box.
-                 Unfortunately there is no DEL key accellerator as well...
-   Workaround:   You can't kill it, but you can knock it out:
+		 Unfortunately there is no DEL key accellerator as well...
+   Workaround:	 You can't kill it, but you can knock it out:
 		 1. Uncheck the check box in front of 'Vim Developer Studio
 		    Add-in'.
 		 2. Close Visual Studio.

@@ -27,7 +27,7 @@ extern HWND s_hwnd;
 /* Supply function prototype to work around bug in Mingw oleauto.h header */
 #ifdef __MINGW32__
 WINOLEAUTAPI UnRegisterTypeLib(REFGUID libID, WORD wVerMajor,
-            WORD wVerMinor, LCID lcid, SYSKIND syskind);
+	    WORD wVerMinor, LCID lcid, SYSKIND syskind);
 #endif
 
 /*****************************************************************************
@@ -673,7 +673,7 @@ static void SetKeyAndValue(const char* key, const char* subkey, const char* valu
     // Set the value
     if (value)
 	RegSetValueEx(hKey, NULL, 0, REG_SZ, (BYTE *)value,
-                      (DWORD)STRLEN(value)+1);
+		      (DWORD)STRLEN(value)+1);
 
     RegCloseKey(hKey);
 }

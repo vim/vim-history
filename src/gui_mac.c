@@ -1746,9 +1746,9 @@ gui_mac_doInGrowClick(where, whichWindow)
     unsigned short  newHeight;
     Rect	    resizeLimits;
     Rect	    *resizeLimitsPtr = &resizeLimits;
+#ifdef USE_CARBONIZED
     Rect	    NewContentRect;
 
-#ifdef USE_CARBONIZED
     resizeLimitsPtr = GetRegionBounds ( GetGrayRgn(), &resizeLimits );
 #else
     resizeLimits = qd.screenBits.bounds;
@@ -3415,7 +3415,7 @@ gui_mch_draw_part_cursor(w, h, color)
 
 #ifdef FEAT_RIGHTLEFT
     /* vertical line should be on the right of current point */
-    if (!(State & CMDLINE) && curwin->w_p_rl)
+    if (CURSOR_BAR_RIGHT)
 	rc.left = FILL_X(gui.col + 1) - w;
     else
 #endif
@@ -4669,15 +4669,12 @@ gui_mch_dialog(
     GrafPtr	oldPort;
     short	itemHit;
     char_u	*buttonChar;
-    char_u	*messageChar;
     Rect	box;
     short	button;
     short	lastButton;
     short	itemType;
     short	useIcon;
-    short	lenght;
     short	width;
-    short	height;
     short	totalButtonWidth = 0;   /* the width of all button together incuding spacing */
     short	widestButton = 0;
     short	dfltButtonEdge     = 20;  /* gut feeling */

@@ -2123,11 +2123,11 @@ syn_current_attr(syncing, displaying)
 	    sip = &CUR_STATE(idx);
 	    if ((current_lnum > sip->si_h_startpos.lnum
 			|| (current_lnum == sip->si_h_startpos.lnum
-			    && (int)current_col >= sip->si_h_startpos.col))
+			    && current_col >= sip->si_h_startpos.col))
 		    && (sip->si_h_endpos.lnum == 0
 			|| current_lnum < sip->si_h_endpos.lnum
 			|| (current_lnum == sip->si_h_endpos.lnum
-			    && (int)current_col < sip->si_h_endpos.col)))
+			    && current_col < sip->si_h_endpos.col)))
 	    {
 		current_attr = sip->si_attr;
 #ifdef FEAT_EVAL
@@ -2282,7 +2282,7 @@ check_state_ends()
 	if (cur_si->si_ends
 		&& (cur_si->si_m_endpos.lnum < current_lnum
 		    || (cur_si->si_m_endpos.lnum == current_lnum
-			&& cur_si->si_m_endpos.col <= (int)current_col)))
+			&& cur_si->si_m_endpos.col <= current_col)))
 	{
 	    /*
 	     * If there is an end pattern group ID, highlight the end pattern
@@ -2293,7 +2293,7 @@ check_state_ends()
 	    if (cur_si->si_end_idx
 		    && (cur_si->si_eoe_pos.lnum > current_lnum
 			|| (cur_si->si_eoe_pos.lnum == current_lnum
-			    && cur_si->si_eoe_pos.col > (int)current_col)))
+			    && cur_si->si_eoe_pos.col > current_col)))
 	    {
 		cur_si->si_idx = cur_si->si_end_idx;
 		cur_si->si_end_idx = 0;

@@ -1,15 +1,16 @@
 " Vim filetype plugin file
 " Language:	Perl
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Change: 2003 Mar 04
+" Last Change:  2003 May 02
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
 
-setlocal fo+=crq
+setlocal formatoptions+=crq
 
-setlocal com=:#
+setlocal comments=:#
+setlocal commentstring=#%s
 
 " Make sure the continuation lines below do not cause problems in
 " compatibility mode.

@@ -29,8 +29,8 @@ static int  chg_c_i2m __ARGS((int cur_c));
 static int  chg_c_f2m __ARGS((int cur_c));
 static int  chg_c_laa2i __ARGS((int hid_c));
 static int  chg_c_laa2f __ARGS((int hid_c));
-static void A_redo_shape __ARGS((int loc, int cur_c));
-static int  A_firstc_laa __ARGS((int offset, int c));
+static int  half_shape __ARGS((int c));
+static int  A_firstc_laa __ARGS((int c1, int c));
 static int  A_is_harakat __ARGS((int c));
 static int  A_is_iso __ARGS((int c));
 static int  A_is_formb __ARGS((int c));
@@ -987,44 +987,43 @@ chg_c_laa2f(hid_c)
     return tempc;
 }
 
-
 /*
- * Redo the contents of what's displayed
+ * Do "half-shaping" on character "c".  Return zero if no shaping.
  */
-    static void
-A_redo_shape(loc, cur_c)
-    int loc;
-    int cur_c;
+    static int
+half_shape(c)
+    int		c;
 {
-    char_u	buf[MB_MAXBYTES + 1];
-
-    /* Store actual unicode encoding */
-    ScreenLinesUC[loc] = cur_c;
-
-    /* Specify first byte of a multi-byte char */
-    (*mb_char2bytes)(cur_c, buf);
-
-    ScreenLines[loc] = buf[0];
+    if (A_is_a(c))
+	return chg_c_a2i(c);
+    if (A_is_valid(c) && A_is_f(c))
+	return chg_c_f2m(c);
+    return 0;
 }
 
-
 /*
- * All the calls for the shaping functions go here.
+ * Do Arabic shaping on character "c".  Returns the shaped character.
+ * out:    "ccp" points to the first byte of the character to be shaped.
+ * in/out: "c1p" points to the first composing char for "c".
+ * in:     "prev_c" is the previous character (not shaped)
+ * in:     "prev_c1" is the first composing char for the previous char (not
+ *			shaped)
+ * in:     "next_c" is the next character (not shaped).
+ * in:	   "ri" is the 'rightleft' option of the window being redrawn.
  */
     int
-arabic_shape(offset, c)
-    int offset;
-    int c;
-{
-    int		off_prev;
-    int		off_next;
-    int		curr_c;
+arabic_shape(c, ccp, c1p, prev_c, prev_c1, next_c, rl)
+    int		c;
+    int		*ccp;
+    int		*c1p;
     int		prev_c;
+    int		prev_c1;
     int		next_c;
+    int		rl;
+{
+    int		curr_c;
+    int		hs_c;
     int		shape_c;
-    int		c1 = 0;
-    int		c2 = 0;
-    char_u	fub[MB_MAXBYTES + 1];
     int		curr_laa;
     int		prev_laa;
 
@@ -1032,44 +1031,23 @@ arabic_shape(offset, c)
     if (!A_is_ok(c))
 	return c;
 
-    /* Save away current character */
-    curr_c = c;
-
-    /* Deal with ":set rightleft" orientation
-     * - Obtain the previous and next offsets */
-    if (p_ri)
+    /* half-shape current and previous character */
+    shape_c = half_shape(prev_c);
+    if (!rl)
     {
-	off_prev = offset - 1;
-	off_next = offset + 1;
+	/* It is not clear to me why this is needed... */
+	hs_c = half_shape(c);
+	if (!A_is_formb(hs_c))
+	    hs_c = c;
     }
     else
-    {
-	off_prev = offset + 1;
-	off_next = offset - 1;
-    }
+	hs_c = c;
 
-    /* Get 'char' at previous offset */
-    fub[utfc_char2bytes(off_prev, fub)] = NUL;
-    prev_c = utfc_ptr2char(fub, &c1, &c2);
+    /* Save away current character */
+    curr_c = hs_c;
 
-    /* Get 'char' at next     offset */
-    fub[utfc_char2bytes(off_next, fub)] = NUL;
-    next_c = utfc_ptr2char(fub, &c1, &c2);
-
-    /* >>- Shape PREVIOUS character -<< */
-    shape_c = 0;
-    if (A_is_a(prev_c))
-	shape_c = chg_c_a2i(prev_c);
-    else if (A_is_valid(prev_c) && A_is_f(prev_c))
-	shape_c = chg_c_f2m(prev_c);
-
-    /* Do the actual re-shaping on previous character */
-    if (A_is_formb(shape_c))
-	A_redo_shape(off_prev, shape_c);
-
-    /* >>- Shape CURRENT  character -<< */
-    curr_laa = A_firstc_laa(offset, c);
-    prev_laa = A_firstc_laa(off_prev, prev_c);
+    curr_laa = A_firstc_laa(c, *c1p);
+    prev_laa = A_firstc_laa(prev_c, prev_c1);
 
     if (curr_laa)
     {
@@ -1079,29 +1057,35 @@ arabic_shape(offset, c)
 	else
 	    curr_c = chg_c_laa2i(curr_laa);
 
-	/* Nullify the hidden char */
-	ScreenLinesC1[offset] = 0;
+	/* Remove the composing character */
+	*c1p = 0;
     }
     else if (!A_is_valid(prev_c) && A_is_valid(next_c))
-	curr_c = chg_c_a2i(c);
+	curr_c = chg_c_a2i(hs_c);
     else if (!shape_c || A_is_f(shape_c) || A_is_s(shape_c) || prev_laa)
-	curr_c = A_is_valid(next_c) ? chg_c_a2i(c) : chg_c_a2s(c);
+	curr_c = A_is_valid(next_c) ? chg_c_a2i(hs_c) : chg_c_a2s(hs_c);
     else if (A_is_valid(next_c))
-	curr_c = A_is_iso(c)        ? chg_c_a2m(c) : chg_c_i2m(c);
+	curr_c = A_is_iso(hs_c) ? chg_c_a2m(hs_c) : chg_c_i2m(hs_c);
     else if (A_is_valid(prev_c))
-	curr_c = chg_c_a2f(c);
+	curr_c = chg_c_a2f(hs_c);
     else
-	curr_c = chg_c_a2s(c);
+	curr_c = chg_c_a2s(hs_c);
 
     /* Sanity check -- curr_c should, in the future, never be 0.
      * We should, in the future, insert a fatal error here. */
-    if (!curr_c)
-	curr_c = c;
+    if (curr_c == NUL)
+	curr_c = hs_c;
 
-    /* Do the actual re-shaping on current character */
-    if (A_is_formb(curr_c))
-	A_redo_shape(offset, curr_c);
+    if (curr_c != c)
+    {
+	char_u buf[MB_MAXBYTES];
 
+	/* Update the first byte of the character. */
+	(*mb_char2bytes)(curr_c, buf);
+	*ccp = buf[0];
+    }
+
+    /* Return the shaped character */
     return curr_c;
 }
 
@@ -1110,21 +1094,12 @@ arabic_shape(offset, c)
  * A_firstc_laa returns first character of LAA combination if it exists
  */
     static int
-A_firstc_laa(offset, c)
-    int offset;
-    int c;
+A_firstc_laa(c, c1)
+    int c;	/* base character */
+    int c1;	/* first composing character */
 {
-    char_u	fub[MB_MAXBYTES + 1];
-    int		temp_c;
-    int		c1 = 0;
-    int		c2 = 0;
-
-    fub[utf_char2bytes(ScreenLinesC1[offset], fub)] = NUL;
-    temp_c = utfc_ptr2char(fub, &c1, &c2);
-
-    if (temp_c && !A_is_harakat(temp_c) && c == a_LAM)
-	return temp_c;
-
+    if (c1 != NUL && c == a_LAM && !A_is_harakat(c1))
+	return c1;
     return 0;
 }
 

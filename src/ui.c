@@ -1699,7 +1699,7 @@ fill_input_buf(exit_on_error)
     for (try = 0; try < 100; ++try)
     {
 #  ifdef VMS
-        len = vms_read(
+	len = vms_read(
 #  else
 	len = read(read_cmd_fd,
 #  endif
@@ -2408,7 +2408,7 @@ retnomove:
     {
 #ifdef FEAT_WINDOWS
 	if (dragwin != NULL)
-        {
+	{
 	    /* Drag the status line */
 	    count = row - dragwin->w_winrow - dragwin->w_height + 1
 							     - on_status_line;

@@ -32,6 +32,7 @@ typedef struct ucmd
     long	uc_def;		/* The default value for a range/count */
     scid_T	uc_scriptID;	/* SID where the command was defined */
     int		uc_compl;	/* completion type */
+    char_u	*uc_compl_arg;	/* completion argument if any */
 } ucmd_T;
 
 #define UC_BUFFER	1	/* -buffer: local to current buffer */
@@ -1311,6 +1312,7 @@ do_one_cmd(cmdlinep, sourcing,
     int			did_silent = 0;
     int			did_esilent = 0;
     cmdmod_T		save_cmdmod;
+    int			ni;			/* set when Not Implemented */
 
     vim_memset(&ea, 0, sizeof(ea));
     ea.line1 = 1;
@@ -1650,6 +1652,8 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 
+    ni = (cmdnames[ea.cmdidx].cmd_func == ex_ni);
+
 #ifndef FEAT_EVAL
     /*
      * When the expression evaluation is disabled, recognize the ":if" and
@@ -1711,14 +1715,15 @@ do_one_cmd(cmdlinep, sourcing,
 	}
 #endif
 
-	if (!(ea.argt & RANGE) && ea.addr_count > 0)	/* no range allowed */
+	if (!ni && !(ea.argt & RANGE) && ea.addr_count > 0)
 	{
+	    /* no range allowed */
 	    errormsg = (char_u *)_(e_norange);
 	    goto doend;
 	}
     }
 
-    if (!(ea.argt & BANG) && ea.forceit)	/* no <!> allowed */
+    if (!ni && !(ea.argt & BANG) && ea.forceit)	/* no <!> allowed */
     {
 	errormsg = (char_u *)_(e_nobang);
 	if (ea.cmdidx == CMD_help)
@@ -1730,7 +1735,7 @@ do_one_cmd(cmdlinep, sourcing,
      * Don't complain about the range if it is not used
      * (could happen if line_count is accidentally set to 0).
      */
-    if (!ea.skip)
+    if (!ea.skip && !ni)
     {
 	/*
 	 * If the range is backwards, ask for confirmation and, if given, swap
@@ -1904,7 +1909,7 @@ do_one_cmd(cmdlinep, sourcing,
      */
     if (ea.argt & ARGOPT)
 	while (ea.arg[0] == '+' && ea.arg[1] == '+')
-	    if (getargopt(&ea) == FAIL)
+	    if (getargopt(&ea) == FAIL && !ni)
 	    {
 		errormsg = (char_u *)_(e_invarg);
 		goto doend;
@@ -1990,7 +1995,7 @@ do_one_cmd(cmdlinep, sourcing,
     {
 	n = getdigits(&ea.arg);
 	ea.arg = skipwhite(ea.arg);
-	if (n <= 0)
+	if (n <= 0 && !ni)
 	{
 	    errormsg = (char_u *)_(e_zerocount);
 	    goto doend;
@@ -2014,14 +2019,14 @@ do_one_cmd(cmdlinep, sourcing,
 	}
     }
 						/* no arguments allowed */
-    if (!(ea.argt & EXTRA) && *ea.arg != NUL &&
+    if (!ni && !(ea.argt & EXTRA) && *ea.arg != NUL &&
 				 vim_strchr((char_u *)"|\"", *ea.arg) == NULL)
     {
 	errormsg = (char_u *)_(e_trailing);
 	goto doend;
     }
 
-    if ((ea.argt & NEEDARG) && *ea.arg == NUL)
+    if (!ni && (ea.argt & NEEDARG) && *ea.arg == NUL)
     {
 	errormsg = (char_u *)_(e_argreq);
 	goto doend;
@@ -2492,6 +2497,7 @@ set_one_cmd_context(xp, buff)
     xp->xp_pattern = buff;
     xp->xp_context = EXPAND_COMMANDS;	/* Default until we get past command */
     xp->xp_backslash = XP_BS_NONE;
+    xp->xp_arg = NULL;
 
 /*
  * 2. skip comment lines and leading space, colons or bars
@@ -2632,6 +2638,7 @@ set_one_cmd_context(xp, buff)
 			    argt = uc->uc_argt;
 #ifdef FEAT_CMDL_COMPL
 			    compl = uc->uc_compl;
+			    xp->xp_arg = uc->uc_compl_arg;
 #endif
 			    /* Do not search for further abbreviations
 			     * if this is an exact match
@@ -4224,14 +4231,14 @@ get_command_name(xp, idx)
 #endif
 
 #if defined(FEAT_USR_CMDS) || defined(PROTO)
-static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int flags, int compl, int force));
+static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int flags, int compl, char_u *compl_arg, int force));
 static void	uc_list __ARGS((char_u *name, size_t name_len));
-static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *flags, int *compl));
+static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *flags, int *compl, char_u **compl_arg));
 static char_u	*uc_split_args __ARGS((char_u *arg, size_t *lenp));
 static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, ucmd_T *cmd, exarg_T *eap, char_u **split_buf, size_t *split_len));
 
     static int
-uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
+uc_add_command(name, name_len, rep, argt, def, flags, compl, compl_arg, force)
     char_u	*name;
     size_t	name_len;
     char_u	*rep;
@@ -4239,6 +4246,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     long	def;
     int		flags;
     int		compl;
+    char_u	*compl_arg;
     int		force;
 {
     ucmd_T	*cmd;
@@ -4327,6 +4335,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     cmd->uc_argt = argt;
     cmd->uc_def = def;
     cmd->uc_compl = compl;
+    cmd->uc_compl_arg = compl_arg;
 #ifdef FEAT_EVAL
     cmd->uc_scriptID = current_SID;
 #endif
@@ -4335,6 +4344,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
 
 fail:
     vim_free(rep_buf);
+    vim_free(compl_arg);
     return FAIL;
 }
 
@@ -4351,6 +4361,9 @@ static struct
     {EXPAND_AUGROUP, "augroup"},
     {EXPAND_BUFFERS, "buffer"},
     {EXPAND_COMMANDS, "command"},
+#ifdef FEAT_EVAL
+    {EXPAND_USER_DEFINED, "custom"},
+#endif
     {EXPAND_DIRECTORIES, "dir"},
     {EXPAND_ENV_VARS, "environment"},
     {EXPAND_EVENTS, "event"},
@@ -4502,13 +4515,14 @@ uc_fun_cmd()
 }
 
     static int
-uc_scan_attr(attr, len, argt, def, flags, compl)
+uc_scan_attr(attr, len, argt, def, flags, compl, compl_arg)
     char_u	*attr;
     size_t	len;
     long	*argt;
     long	*def;
     int		*flags;
     int		*compl;
+    char_u	**compl_arg;
 {
     char_u	*p;
 
@@ -4617,13 +4631,28 @@ invalid_count:
 	}
 	else if (STRNICMP(attr, "complete", attrlen) == 0)
 	{
+	    char_u	*arg = NULL;
+	    size_t	arglen = 0;
+
 	    if (val == NULL)
 	    {
 		EMSG(_("E179: argument required for complete"));
 		return FAIL;
 	    }
+	    /* Look for any argument part - which is the part after any ',' */
+	    for (i = 0; i < (int)vallen; ++i)
+	    {
+		if (val[i] == ',')
+		{
+		    arg = &val[i + 1];
+		    arglen = vallen - i - 1;
+		    vallen = i;
+		    break;
+		}
+	    }
 
 	    for (i = 0; command_complete[i].expand != 0; ++i)
+	    {
 		if (STRLEN(command_complete[i].name) == vallen
 			&& STRNCMP(val, command_complete[i].name, vallen) == 0)
 		{
@@ -4635,12 +4664,25 @@ invalid_count:
 			*argt |= XFILE;
 		    break;
 		}
+	    }
 
 	    if (command_complete[i].expand == 0)
 	    {
 		EMSG2(_("E180: Invalid complete value: %s"), val);
 		return FAIL;
 	    }
+	    if (*compl == EXPAND_USER_DEFINED && arg == NULL)
+	    {
+		EMSG(_("E467: Custom completion requires a function argument"));
+		return FAIL;
+	    }
+	    if (*compl != EXPAND_USER_DEFINED && arg != NULL)
+	    {
+		EMSG(_("E468: Completion argument only allowed for custom completion"));
+		return FAIL;
+	    }
+	    if (arg != NULL)
+		*compl_arg = vim_strnsave(arg, arglen);
 	}
 	else
 	{
@@ -4666,6 +4708,7 @@ ex_command(eap)
     long    def = -1;
     int	    flags = 0;
     int	    compl = EXPAND_NOTHING;
+    char_u  *compl_arg = NULL;
     int	    has_attr = (eap->arg[0] == '-');
 
     p = eap->arg;
@@ -4675,7 +4718,8 @@ ex_command(eap)
     {
 	++p;
 	end = skiptowhite(p);
-	if (uc_scan_attr(p, end - p, &argt, &def, &flags, &compl) == FAIL)
+	if (uc_scan_attr(p, end - p, &argt, &def, &flags, &compl, &compl_arg)
+		== FAIL)
 	    return;
 	p = skipwhite(end);
     }
@@ -4706,7 +4750,7 @@ ex_command(eap)
 	return;
     }
     else
-	uc_add_command(name, end - name, p, argt, def, flags, compl,
+	uc_add_command(name, end - name, p, argt, def, flags, compl, compl_arg,
 								eap->forceit);
 }
 
@@ -4740,6 +4784,7 @@ uc_clear(gap)
 	cmd = USER_CMD_GA(gap, i);
 	vim_free(cmd->uc_name);
 	vim_free(cmd->uc_rep);
+	vim_free(cmd->uc_compl_arg);
     }
     ga_clear(gap);
 }
@@ -4777,6 +4822,7 @@ ex_delcommand(eap)
 
     vim_free(cmd->uc_name);
     vim_free(cmd->uc_rep);
+    vim_free(cmd->uc_compl_arg);
 
     --gap->ga_len;
     ++gap->ga_room;
@@ -6958,7 +7004,11 @@ ex_redraw(eap)
 
     RedrawingDisabled = 0;
     p_lz = FALSE;
-    update_screen(eap->forceit ? CLEAR : 0);
+    update_screen(eap->forceit ? CLEAR :
+#ifdef FEAT_VISUAL
+	    VIsual_active ? INVERTED :
+#endif
+	    0);
     RedrawingDisabled = r;
     p_lz = p;
     out_flush();

@@ -1,4 +1,4 @@
-*tagsrch.txt*   For Vim version 6.2b.  Last change: 2003 Mar 03
+*tagsrch.txt*   For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -81,7 +81,8 @@ The ignore-case matches are not found for a ":tag" command when the
 'ignorecase' option is off.  They are found when a pattern is used (starting
 with a "/") and for ":tselect", also when 'ignorecase' is off.  Note that
 using ignore-case tag searching disables binary searching in the tags file,
-which causes a slowdown.
+which causes a slowdown.  This can be avoided by fold-case sorting the tag
+file.  See the 'tagbsearch' option for an explanation.
 
 ==============================================================================
 2. Tag stack				*tag-stack* *tagstack* *E425*
@@ -333,7 +334,8 @@ reset the 'tagbsearch' option.  Or better: Sort the tags file!
 Note that the binary searching is disabled when not looking for a tag with a
 specific name.  This happens when ignoring case and when a regular expression
 is used that doesn't start with a fixed string.  Tag searching can be a lot
-slower then.
+slower then.  The former can be avoided by case-fold sorting the tags file.
+See 'tagbsearch' for details.
 
 							*tag-regexp*
 The ":tag" and "tselect" commands accept a regular expression argument.  See
@@ -548,6 +550,10 @@ sort to before them.  Vim only recognizes the line that indicates if the file
 was sorted.  When this line is found, Vim uses binary searching for the tags
 file: >
 	!_TAG_FILE_SORTED<Tab>1
+<
+A tag file may be case-fold sorted to avoid a linear search when 'ignorecase'
+is on.  See 'tagbsearch' for details.  The value '2' should be used then: >
+	!_TAG_FILE_SORTED<Tab>2
 <
 							*tag-search*
 The command can be any Ex command, but often it is a search command.

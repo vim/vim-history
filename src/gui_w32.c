@@ -699,8 +699,8 @@ _WndProc(
     case WM_NCHITTEST:
 	{
 	    LRESULT	result;
-	    int x, y;
-	    int xPos = GET_X_LPARAM(lParam);
+	    int		x, y;
+	    int		xPos = GET_X_LPARAM(lParam);
 
 	    result = DefWindowProc(hwnd, uMsg, wParam, lParam);
 	    if (result == HTCLIENT)
@@ -708,15 +708,15 @@ _WndProc(
 		gui_mch_get_winpos(&x, &y);
 		xPos -= x;
 
-		if (xPos < 48) /*<VN> TODO should use system metric?*/
+		if (xPos < 48) /* <VN> TODO should use system metric? */
 		    return HTBOTTOMLEFT;
 		else
 		    return HTBOTTOMRIGHT;
-		}
+	    }
 	    else
 		return result;
 	}
-	break;
+	/* break; notreached */
 
 #ifdef FEAT_MBYTE_IME
     case WM_IME_NOTIFY:
@@ -846,13 +846,13 @@ gui_mch_prepare(int *argc, char **argv)
      * multi-monitor-support. */
     if ((user32_lib = LoadLibrary("User32.dll")) != NULL)
     {
-        pMonitorFromWindow = (TMonitorFromWindow)GetProcAddress(user32_lib,
+	pMonitorFromWindow = (TMonitorFromWindow)GetProcAddress(user32_lib,
 							 "MonitorFromWindow");
 
-        /* there are ...A and ...W version of GetMonitorInfo - looking at
-         * winuser.h, they have exactly the same declaration. */
-        pGetMonitorInfo = (TGetMonitorInfo)GetProcAddress(user32_lib,
-                                                          "GetMonitorInfoA");
+	/* there are ...A and ...W version of GetMonitorInfo - looking at
+	 * winuser.h, they have exactly the same declaration. */
+	pGetMonitorInfo = (TGetMonitorInfo)GetProcAddress(user32_lib,
+							  "GetMonitorInfoA");
     }
 }
 
@@ -1273,14 +1273,14 @@ _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
     if ((param & GCS_RESULTSTR) == 0) /* Composition unfinished. */
 	return 0;
 
-    if (ret = GetResultStr(hwnd, GCS_RESULTSTR, &len))
+    ret = GetResultStr(hwnd, GCS_RESULTSTR, &len);
+    if (ret != NULL)
     {
 	add_to_input_buf_csi(ret, len);
 	vim_free(ret);
 	return 1;
     }
-    else
-	return 0;
+    return 0;
 }
 
 /*
@@ -1372,7 +1372,7 @@ im_set_font(LOGFONT *lf)
 {
     HIMC hImc;
 
-    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
+    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
     {
 	pImmSetCompositionFont(hImc, lf);
 	pImmReleaseContext(s_hwnd, hImc);
@@ -1387,7 +1387,7 @@ im_set_position(int row, int col)
 {
     HIMC hImc;
 
-    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
+    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
     {
 	COMPOSITIONFORM	cfs;
 
@@ -1428,7 +1428,8 @@ im_set_active(int active)
 	    hImcOld = (HIMC)0;
 	}
 
-	if (hImc = pImmGetContext(s_hwnd))
+	hImc = pImmGetContext(s_hwnd);
+	if (hImc)
 	{
 	    pImmSetOpenStatus(hImc, active);
 	    pImmReleaseContext(s_hwnd, hImc);
@@ -1445,7 +1446,7 @@ im_get_status()
     int		status = 0;
     HIMC	hImc;
 
-    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
+    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
     {
 	status = pImmGetOpenStatus(hImc) ? 1 : 0;
 	pImmReleaseContext(s_hwnd, hImc);
@@ -1739,10 +1740,11 @@ gui_mch_draw_string(
 	 * one, we need to go via Unicode. */
 	if (unicodebuf != NULL)
 	{
-	    if ((len = MultiByteToWideChar(enc_codepage,
+	    len = MultiByteToWideChar(enc_codepage,
 			MB_PRECOMPOSED,
 			(char *)text, len,
-			(LPWSTR)unicodebuf, unibuflen)))
+			(LPWSTR)unicodebuf, unibuflen);
+	    if (len != 0)
 		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
 			      foptions, pcliprect, unicodebuf, len, NULL);
 	}
@@ -1790,6 +1792,15 @@ gui_mch_draw_string(
     void
 gui_mch_flush(void)
 {
+#   if defined(__BORLANDC__) && __BORLANDC__ <= 0x0500
+    /*
+     * The GdiFlush declaration (in Borland C 5.01 <wingdi.h>) is not a
+     * prototype declaration.
+     * The compiler complains if __stdcall is not used in both declarations.
+     */
+    BOOL  __stdcall GdiFlush(void);
+#   endif
+
     GdiFlush();
 }
 
@@ -3268,46 +3279,44 @@ gui_mch_set_foreground(void)
     static void
 dyn_imm_load(void)
 {
-    int	nImmFunc = 0;
-
     hLibImm = LoadLibrary("imm32.dll");
     if (hLibImm == NULL)
 	return;
-    if ((*((FARPROC*)&pImmGetCompositionStringA)
-	    = GetProcAddress(hLibImm, "ImmGetCompositionStringA")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmGetCompositionStringW)
-	    = GetProcAddress(hLibImm, "ImmGetCompositionStringW")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmGetContext)
-	    = GetProcAddress(hLibImm, "ImmGetContext")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmAssociateContext)
-	    = GetProcAddress(hLibImm, "ImmAssociateContext")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmReleaseContext)
-	    = GetProcAddress(hLibImm, "ImmReleaseContext")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmGetOpenStatus)
-	    = GetProcAddress(hLibImm, "ImmGetOpenStatus")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmSetOpenStatus)
-	    = GetProcAddress(hLibImm, "ImmSetOpenStatus")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmGetCompositionFont)
-	    = GetProcAddress(hLibImm, "ImmGetCompositionFontA")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmSetCompositionFont)
-	    = GetProcAddress(hLibImm, "ImmSetCompositionFontA")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmSetCompositionWindow)
-	    = GetProcAddress(hLibImm, "ImmSetCompositionWindow")))
-	nImmFunc++;
-    if ((*((FARPROC*)&pImmGetConversionStatus)
-	    = GetProcAddress(hLibImm, "ImmGetConversionStatus")))
-	nImmFunc++;
 
-    if (nImmFunc != 11)
+    pImmGetCompositionStringA
+	    = (void *)GetProcAddress(hLibImm, "ImmGetCompositionStringA");
+    pImmGetCompositionStringW
+	    = (void *)GetProcAddress(hLibImm, "ImmGetCompositionStringW");
+    pImmGetContext
+	    = (void *)GetProcAddress(hLibImm, "ImmGetContext");
+    pImmAssociateContext
+	    = (void *)GetProcAddress(hLibImm, "ImmAssociateContext");
+    pImmReleaseContext
+	    = (void *)GetProcAddress(hLibImm, "ImmReleaseContext");
+    pImmGetOpenStatus
+	    = (void *)GetProcAddress(hLibImm, "ImmGetOpenStatus");
+    pImmSetOpenStatus
+	    = (void *)GetProcAddress(hLibImm, "ImmSetOpenStatus");
+    pImmGetCompositionFont
+	    = (void *)GetProcAddress(hLibImm, "ImmGetCompositionFontA");
+    pImmSetCompositionFont
+	    = (void *)GetProcAddress(hLibImm, "ImmSetCompositionFontA");
+    pImmSetCompositionWindow
+	    = (void *)GetProcAddress(hLibImm, "ImmSetCompositionWindow");
+    pImmGetConversionStatus
+	    = (void *)GetProcAddress(hLibImm, "ImmGetConversionStatus");
+
+    if (       pImmGetCompositionStringA == NULL
+	    || pImmGetCompositionStringW == NULL
+	    || pImmGetContext == NULL
+	    || pImmAssociateContext == NULL
+	    || pImmReleaseContext == NULL
+	    || pImmGetOpenStatus == NULL
+	    || pImmSetOpenStatus == NULL
+	    || pImmGetCompositionFont == NULL
+	    || pImmSetCompositionFont == NULL
+	    || pImmSetCompositionWindow == NULL
+	    || pImmGetConversionStatus == NULL)
     {
 	FreeLibrary(hLibImm);
 	hLibImm = NULL;
@@ -3429,7 +3438,7 @@ gui_mch_register_sign(signfile)
     }
 
     psign = NULL;
-    if (sign.hImage && (psign = (signicon_t *)alloc(sizeof(signicon_t))))
+    if (sign.hImage && ((psign = (signicon_t *)alloc(sizeof(signicon_t)))))
 	*psign = sign;
 
     if (!psign)

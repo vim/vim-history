@@ -1205,6 +1205,7 @@ x_IOerror_check(dpy)
     /* This function should not return, it causes exit().  Longjump instead. */
     LONGJMP(lc_jump_env, 1);
     /*NOTREACHED*/
+    return 0;
 }
 # endif
 
@@ -1226,6 +1227,7 @@ x_IOerror_handler(dpy)
     /* This function should not return, it causes exit().  Longjump instead. */
     LONGJMP(x_jump_env, 1);
     /*NOTREACHED*/
+    return 0;
 }
 #endif
 
@@ -5191,8 +5193,7 @@ mch_gpm_process()
 }
 #endif /* FEAT_MOUSE_GPM */
 
-#if (defined(FEAT_EVAL) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))) \
-	|| defined(PROTO)
+#if defined(FEAT_LIBCALL) || defined(PROTO)
 typedef char_u * (*STRPROCSTR)__ARGS((char_u *));
 typedef char_u * (*INTPROCSTR)__ARGS((int));
 typedef int (*STRPROCINT)__ARGS((char_u *));

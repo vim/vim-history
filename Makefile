@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 2b
+MINOR = 2c
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -127,18 +127,19 @@ MINOR = 2b
 # - "nmake -f Make_mvc.mak"
 # - "rm testdir/*.out", "nmake -f Make_mvc.mak test" and check the output.
 # - Rename the executables to "vimw32.exe", "xxdw32.exe".
-# - Delete vimrun.exe, install.exe and uninstal.exe.
+# - When building the Win32s version later, delete vimrun.exe, install.exe and
+#   uninstal.exe.  Otherwise rename executables to installw32.exe and
+#   uninstalw32.exe.
 # Win32 GUI version:
 # - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
 # - Delete vimrun.exe, install.exe and uninstall.exe.
+# - Copy "GvimExt/gvimext.dll" to here.
 # Win32 GUI version with OLE, PERL, TCL, PYTHON and dynamic IME:
 # - Run src/bigvim.bat ("nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes ...)
 # - Rename "gvim.exe" to "gvim_ole.exe".
-# - Delete vimrun.exe, install.exe and uninstall.exe.
-# Produce Gvimext.dll:
-# - "cd ../gvimext", "nmake -f Makefile"
-# - Copy "gvimext.dll" to here.
+# - Delete install.exe and uninstall.exe.
+# - If building the Win32s version delete vimrun.exe.
 # Win32s GUI version:
 # - Set environment for Visual C++ 4.1 (requires a new console window)
 # - "vcvars32" (use the path for VC 4.1)
@@ -182,6 +183,7 @@ VIM	= vim
 
 # source files for all source archives
 SRC_ALL =	\
+		main.aap \
 		src/README.txt \
 		src/ascii.h \
 		src/buffer.c \
@@ -201,6 +203,7 @@ SRC_ALL =	\
 		src/globals.h \
 		src/keymap.h \
 		src/macros.h \
+		src/main.aap \
 		src/main.c \
 		src/mark.c \
 		src/memfile.c \
@@ -210,6 +213,7 @@ SRC_ALL =	\
 		src/misc1.c \
 		src/misc2.c \
 		src/move.c \
+		src/mysign \
 		src/nbdebug.c \
 		src/nbdebug.h \
 		src/netbeans.c \
@@ -271,7 +275,9 @@ SRC_ALL =	\
 		src/term.h \
 		src/termlib.c \
 		src/testdir/*.in \
+		src/testdir/main.aap \
 		src/testdir/*.ok \
+		src/testdir/test49.vim \
 		src/ui.c \
 		src/undo.c \
 		src/version.c \
@@ -303,6 +309,7 @@ SRC_UNIX =	\
 		src/INSTALL \
 		src/Makefile \
 		src/auto/configure \
+		src/config.aap.in \
 		src/config.h.in \
 		src/config.mk.dist \
 		src/config.mk.in \
@@ -321,8 +328,6 @@ SRC_UNIX =	\
 		src/gui_motif.c \
 		src/gui_x11.c \
 		src/hangulin.c \
-		src/if_cscope.c \
-		src/if_cscope.h \
 		src/if_xcmdsrv.c \
 		src/integration.c \
 		src/integration.h \
@@ -342,7 +347,6 @@ SRC_UNIX =	\
 		src/proto/gui_motif.pro \
 		src/proto/gui_x11.pro \
 		src/proto/hangulin.pro \
-		src/proto/if_cscope.pro \
 		src/proto/if_xcmdsrv.pro \
 		src/proto/os_unix.pro \
 		src/proto/pty.pro \
@@ -363,11 +367,14 @@ SRC_UNIX =	\
 
 # source files for both DOS and Unix
 SRC_DOS_UNIX =	\
+		src/if_cscope.c \
+		src/if_cscope.h \
 		src/if_perl.xs \
 		src/if_perlsfio.c \
 		src/if_python.c \
 		src/if_ruby.c \
 		src/if_tcl.c \
+		src/proto/if_cscope.pro \
 		src/proto/if_perl.pro \
 		src/proto/if_perlsfio.pro \
 		src/proto/if_python.pro \
@@ -631,7 +638,7 @@ RT_ALL =	\
 
 # runtime files for all distributions without CR-NL translation
 RT_ALL_BIN =	\
-		runtime/procset.ps \
+		runtime/print/*.ps \
 
 # runtime script files
 RT_SCRIPTS =	\
@@ -663,11 +670,9 @@ RT_UNIX =	\
 		runtime/vim32x32.xpm \
 		runtime/vim48x48.png \
 		runtime/vim48x48.xpm \
-		runtime/evebcdic.ps \
 
 # Unix and DOS runtime without CR-LF translation
 RT_UNIX_DOS_BIN =	\
-		runtime/eviso.ps \
 		runtime/vim16x16.gif \
 		runtime/vim32x32.gif \
 		runtime/vim48x48.gif \
@@ -690,7 +695,6 @@ RT_DOS =	\
 
 # DOS runtime without CR-LF translation (also in the extra archive)
 RT_DOS_BIN =	\
-		runtime/evwin.ps \
 
 # Amiga runtime (also in the extra archive)
 RT_AMI =	\
@@ -718,8 +722,6 @@ RT_EXTRA =	\
 		$(RT_AMI_DOS) \
 		$(RT_DOS) \
 		$(RT_DOS_BIN) \
-		runtime/evmac.ps \
-		runtime/evvms.ps \
 		README_mac.txt \
 		runtime/macros/file_select.vim \
 
@@ -808,9 +810,11 @@ LANG_GEN = \
 LANG_SRC = \
 		src/po/README.txt \
 		src/po/README_mingw.txt \
+		src/po/README_mvc.txt \
 		src/po/cleanup.vim \
 		src/po/Makefile \
 		src/po/Make_ming.mak \
+		src/po/Make_mvc.mak \
 		src/po/sjiscorr.c \
 		src/po/*.po \
 
@@ -1058,7 +1062,7 @@ dosrt: dist prepare no_title.vim dist/$(COMMENT_RT)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp $(RT_UNIX_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cp $(RT_ALL_BIN) dist/vim/$(VIMRTDIR)
-	cp $(RT_DOS_BIN) dist/vim/$(VIMRTDIR)
+#	cp $(RT_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)rt.zip vim <$(COMMENT_RT)
 
 dosbin: prepare dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole $(DOSBIN_S)

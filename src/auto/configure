@@ -3777,7 +3777,7 @@ if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
 if ((gtk_major_version > major) ||
     ((gtk_major_version == major) && (gtk_minor_version > minor)) ||
     ((gtk_major_version == major) && (gtk_minor_version == minor) &&
-                                     (gtk_micro_version >= micro)))
+				     (gtk_micro_version >= micro)))
 {
     return 0;
 }
@@ -3833,7 +3833,7 @@ fi
   fi
     if test "x$GUITYPE" = "xGTK"; then
     if test "$gtk_major_version" = 1 -a "0$gtk_minor_version" -lt 2 \
-         -o "$gtk_major_version" = 1 -a "$gtk_minor_version" = 2 -a "0$gtk_micro_version" -lt 3; then
+	 -o "$gtk_major_version" = 1 -a "$gtk_minor_version" = 2 -a "0$gtk_micro_version" -lt 3; then
       echo "$ac_t""this GTK version is old; version 1.2.3 or later is recommended" 1>&6
     else
     {

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.2b.  Last change: 2003 Apr 25
+*various.txt*   For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -628,8 +628,9 @@ PostScript printer.  For other printers a program like ghostscript needs to be
 used.
 
 3.1 PostScript Printing			|postscript-printing|
-3.2 PostScript Printing Troubleshooting |postscript-print-trouble|
-3.3 PostScript Utilities		|postscript-print-util|
+3.2 PostScript Printing Encoding	|postscript-print-encoding|
+3.3 PostScript Printing Troubleshooting |postscript-print-trouble|
+3.4 PostScript Utilities		|postscript-print-util|
 
 {not in Vi}
 {only available when compiled with |+printer| feature}
@@ -654,8 +655,9 @@ used.
 
 :[range]ha[rdcopy][!] >{filename}
 			As above, but write the resulting PostScript in file
-			{filename}.  Careful: An existing file is silently
-			overwritten.
+			{filename}.
+			Things like "%" are expanded |cmdline-special|
+			Careful: An existing file is silently overwritten.
 			{only available when compiled with the |+postscript|
 			feature}
 			On MS-Windows use the "print to file" feature of the
@@ -697,21 +699,67 @@ There are currently a number of limitations with PostScript printing:
   printer does not support duplex printing then it should be silently ignored.
   Some printers, however, don't print at all.
 
-- 8-bit and Multi-byte support - There is limited support for 8-bit character
-  set encodings.  It is based on the Latin-1 encoding, modified for the host
-  platform so that what is printed should match what VIM displays on screen.
-  There is no support for multi-byte character sets - the characters are
-  replaced with spaces.
+- 8-bit support - While a number of 8-bit print character encodings are
+  supported it is possible that some characters will not print.  Whether a
+  character will print depends on the font in the printer knowing the
+  character.  Missing characters will be replaced with an upside down question
+  mark, or a space if that character is also not known by the font.  It may be
+  possible to get all the characters in an encoding to print by installing a
+  new version of the Courier font family.
+
+- Multi-byte support - Currently VIM will try to convert multi-byte characters
+  to the 8-bit encoding specified by 'printencoding' (or latin1 if it is
+  empty).  Any characters that are not successfully converted are shown as
+  unknown characters.  Printing will fail if VIM cannot convert the multi-byte
+  to the 8-bit encoding.
 
 
-3.2 PostScript Printing Troubleshooting		*postscript-print-trouble*
+3.2 Custom 8-bit Print Character Encodings	*postscript-print-encoding*
+								*E618* *E619*
+To use your own print character encoding when printing 8-bit character data
+you need to define your own PostScript font encoding vector.  Details on how
+to to define a font encoding vector is beyond the scope of this help file, but
+you can find details in the PostScript Language Reference Manual, 3rd Edition,
+published by Addison-Wesley and available in PDF form at
+http://www.adobe.com/.  The following describes what you need to do for VIM to
+locate and use your print character encoding.
 
+i.   Decide on a unique name for your encoding vector, one that does not clash
+     with any of the recognized or standard encoding names that VIM uses (see
+     |encoding-names| for a list), and that no one else is likely to use.
+ii.  Copy $VIMRUNTIME/print/latin1.ps to the print subdirectory in your
+     'runtimepath' and rename it with your unique name.
+iii. Edit your renamed copy of latin1.ps, replacing all occurences of latin1
+     with your unique name (don't forget the line starting %%Title:), and
+     modify the array of glyph names to define your new encoding vector.  The
+     array must have exactly 256 entries or you will not be able to print!
+iv.  Within VIM, set 'printencoding' to your unique encoding name and then
+     print your file.  VIM will now use your custom print character encoding.
+
+VIM will report an error with the resource file if you change the order or
+content of the first 3 lines, other than the name of the encoding on the line
+starting %%Title: or the version number on the line starting %%Version:.
+
+[Technical explanation for those that know PostScript - VIM looks for a file
+with the same name as the encoding it will use when printing.  The file
+defines a new PostScript Encoding resource called /VIM-name, where name is the
+print character encoding VIM will use.]
+
+
+3.3 PostScript Printing Troubleshooting		*postscript-print-trouble*
+									*E621*
 Usually the only sign of a problem when printing with PostScript is that your
 printout does not appear.  If you are lucky you may get a printed page that
 tells you the PostScript operator that generated the error that prevented the
 print job completing.
 
 There are a number of possible causes as to why the printing may have failed:
+
+- Wrong version of the prolog resource file.  The prolog resource file
+  contains some PostScript that VIM needs to be able to print.  Each version
+  of VIM needs one particular version.  Make sure you have correctly installed
+  the runtime files, and don't have any old versions of a file called prolog
+  in the print directory in your 'runtimepath' directory.
 
 - Paper size.  Some PostScript printers will abort printing a file if they do
   not support the requested paper size.  By default VIM uses A4 paper.  Find
@@ -744,9 +792,9 @@ A safe printoptions setting to try is: >
 Replace "A4" with the paper size that best matches your printer paper.
 
 
-3.3 PostScript Utilities			*postscript-print-util*
+3.4 PostScript Utilities			*postscript-print-util*
 
-3.3.1 Ghostscript
+3.4.1 Ghostscript
 
 Ghostscript is a PostScript and PDF interpreter that can be used to display
 and print on non-PostScript printers PostScript and PDF files.  It can also
@@ -777,7 +825,7 @@ distribution as standard, but if you cannot find support for your printer
 check the Ghostscript site for other printers not included by default.
 
 
-3.3.2 Ghostscript Previewers.
+3.4.2 Ghostscript Previewers.
 
 The interface to Ghostscript is very primitive so a number of graphical front
 ends have been created.  These allow easier PostScript file selection,
@@ -831,7 +879,7 @@ Linux
     ftp://sunsite.unc.edu/pub/Linux/apps/graphics/viewers/svga/bmv-1.2.tgz
 
 
-3.3.3 PSUtils
+3.4.3 PSUtils
 
 PSUtils is a collection of utility programs for manipulating PostScript
 documents.  Binary distributions are available for many platforms, as well as

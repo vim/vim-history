@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.2b.  Last change: 2001 Sep 03
+*recover.txt*   For Vim version 6.2c.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.2b.  Last change: 2003 Apr 18
+*pattern.txt*   For Vim version 6.2c.  Last change: 2003 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -428,6 +428,8 @@ Character classes {not in Vi}:
 |/\M|	\M	\M	'magic' off for the following chars in the pattern
 |/\v|	\v	\v	the following chars in the pattern are "very magic"
 |/\V|	\V	\V	the following chars in the pattern are "very nomagic"
+|/\Z|	\Z	\Z	ignore differences in Unicode "combining characters".
+			Useful when searching voweled Hebrew or Arabic text.
 
 
 Example			matches ~
@@ -440,6 +442,10 @@ Example			matches ~
 
 [.!?][])"']*\($\|[ ]\)	A search pattern that finds the end of a sentence,
 			with almost the same definition as the ")" command.
+
+cat\Z			Both "cat" and "càt" ("a" followed by 0x0300)
+			Does not match "càt" (character 0x00e0), even
+			though it may look the same.
 
 
 Magic							*/magic*
@@ -1000,6 +1006,11 @@ Examples:
 	\cfoo	  -		-		foo Foo FOO
 	foo\C	  -		-		foo
 
+							*/\Z*
+When "\Z" appears anywhere in the pattern, composing characters are ignored.
+Thus only the base characters need to match, the composing characters may be
+different and the number of composing characters may differ.  Only relevant
+when 'encoding' is "utf-8".
 
 Technical detail:				*NL-used-for-Nul*
 <Nul> characters in the file are stored as <NL> in memory.  In the display

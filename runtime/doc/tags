@@ -582,6 +582,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'patchmode'	options.txt	/*'patchmode'*
 'path'	options.txt	/*'path'*
 'pdev'	options.txt	/*'pdev'*
+'penc'	options.txt	/*'penc'*
 'pex'	options.txt	/*'pex'*
 'pexpr'	options.txt	/*'pexpr'*
 'pfn'	options.txt	/*'pfn'*
@@ -591,6 +592,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'previewheight'	options.txt	/*'previewheight'*
 'previewwindow'	options.txt	/*'previewwindow'*
 'printdevice'	options.txt	/*'printdevice'*
+'printencoding'	options.txt	/*'printencoding'*
 'printexpr'	options.txt	/*'printexpr'*
 'printfont'	options.txt	/*'printfont'*
 'printheader'	options.txt	/*'printheader'*
@@ -1216,6 +1218,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\V	pattern.txt	/*\/\\V*
 /\W	pattern.txt	/*\/\\W*
 /\X	pattern.txt	/*\/\\X*
+/\Z	pattern.txt	/*\/\\Z*
 /\[]	pattern.txt	/*\/\\[]*
 /\\	pattern.txt	/*\/\\\\*
 /\]	pattern.txt	/*\/\\]*
@@ -1689,6 +1692,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :comclear	map.txt	/*:comclear*
 :command	map.txt	/*:command*
 :command-completion	map.txt	/*:command-completion*
+:command-completion-custom	map.txt	/*:command-completion-custom*
 :comment	eval.txt	/*:comment*
 :comp	quickfix.txt	/*:comp*
 :compiler	quickfix.txt	/*:compiler*
@@ -3193,6 +3197,8 @@ E463	netbeans.txt	/*E463*
 E464	message.txt	/*E464*
 E465	gui.txt	/*E465*
 E466	gui.txt	/*E466*
+E467	map.txt	/*E467*
+E468	map.txt	/*E468*
 E47	message.txt	/*E47*
 E470	change.txt	/*E470*
 E471	message.txt	/*E471*
@@ -3351,7 +3357,13 @@ E614	editing.txt	/*E614*
 E615	editing.txt	/*E615*
 E616	editing.txt	/*E616*
 E617	options.txt	/*E617*
+E618	various.txt	/*E618*
+E619	various.txt	/*E619*
 E62	pattern.txt	/*E62*
+E620	options.txt	/*E620*
+E621	various.txt	/*E621*
+E622	if_cscop.txt	/*E622*
+E623	if_cscop.txt	/*E623*
 E63	pattern.txt	/*E63*
 E64	pattern.txt	/*E64*
 E65	pattern.txt	/*E65*
@@ -4475,6 +4487,8 @@ getcwd()	eval.txt	/*getcwd()*
 getfsize()	eval.txt	/*getfsize()*
 getftime()	eval.txt	/*getftime()*
 getline()	eval.txt	/*getline()*
+getreg()	eval.txt	/*getreg()*
+getregtype()	eval.txt	/*getregtype()*
 getwinposx()	eval.txt	/*getwinposx()*
 getwinposy()	eval.txt	/*getwinposy()*
 getwinvar()	eval.txt	/*getwinvar()*
@@ -5259,6 +5273,7 @@ ports-5.2	version5.txt	/*ports-5.2*
 ports-6	version6.txt	/*ports-6*
 postscr-syntax	syntax.txt	/*postscr-syntax*
 postscr.vim	syntax.txt	/*postscr.vim*
+postscript-print-encoding	various.txt	/*postscript-print-encoding*
 postscript-print-trouble	various.txt	/*postscript-print-trouble*
 postscript-print-util	various.txt	/*postscript-print-util*
 postscript-printing	various.txt	/*postscript-printing*
@@ -5369,6 +5384,7 @@ ref	intro.txt	/*ref*
 reference	intro.txt	/*reference*
 regexp	pattern.txt	/*regexp*
 regexp-changes-5.4	version5.txt	/*regexp-changes-5.4*
+register-variable	eval.txt	/*register-variable*
 registers	change.txt	/*registers*
 regular-expression	pattern.txt	/*regular-expression*
 remote.txt	remote.txt	/*remote.txt*
@@ -5487,6 +5503,7 @@ session-file	starting.txt	/*session-file*
 set-option	options.txt	/*set-option*
 setbufvar()	eval.txt	/*setbufvar()*
 setline()	eval.txt	/*setline()*
+setreg()	eval.txt	/*setreg()*
 setwinvar()	eval.txt	/*setwinvar()*
 sgml-syntax	syntax.txt	/*sgml-syntax*
 sgml.vim	syntax.txt	/*sgml.vim*
@@ -5842,6 +5859,7 @@ toolbar-icon	gui.txt	/*toolbar-icon*
 toupper()	eval.txt	/*toupper()*
 trojan-horse	starting.txt	/*trojan-horse*
 tutor	usr_01.txt	/*tutor*
+twice	if_cscop.txt	/*twice*
 type()	eval.txt	/*type()*
 type-mistakes	tips.txt	/*type-mistakes*
 typecorr-settings	usr_41.txt	/*typecorr-settings*
@@ -5859,6 +5877,7 @@ unix	os_unix.txt	/*unix*
 unlisted-buffer	windows.txt	/*unlisted-buffer*
 up-down-motions	motion.txt	/*up-down-motions*
 uppercase	change.txt	/*uppercase*
+use-cpo-save	usr_41.txt	/*use-cpo-save*
 use-visual-cmds	version4.txt	/*use-visual-cmds*
 useful-mappings	tips.txt	/*useful-mappings*
 usenet	intro.txt	/*usenet*
@@ -5931,6 +5950,7 @@ v:lc_time	eval.txt	/*v:lc_time*
 v:lnum	eval.txt	/*v:lnum*
 v:prevcount	eval.txt	/*v:prevcount*
 v:progname	eval.txt	/*v:progname*
+v:register	eval.txt	/*v:register*
 v:servername	eval.txt	/*v:servername*
 v:shell_error	eval.txt	/*v:shell_error*
 v:statusmsg	eval.txt	/*v:statusmsg*

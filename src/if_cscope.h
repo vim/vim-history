@@ -70,10 +70,10 @@ typedef struct csi {
     dev_t	    st_dev;	/* ID of dev containing cscope db */
     ino_t	    st_ino;	/* inode number of cscope db */
 #elif defined(WIN32)
-    int	    pid;        /* Can't get pid so set it to 0 ;) */
+    int	    pid;	/* Can't get pid so set it to 0 ;) */
     DWORD	    nVolume;	/* Volume serial number, instead of st_dev */
     DWORD	    nIndexHigh;	/* st_ino has no meaning in the Windows */
-    DWORD	    nIndexLow;	
+    DWORD	    nIndexLow;
 #endif
 
     FILE *	    fr_fp;	/* from cscope: FILE. */

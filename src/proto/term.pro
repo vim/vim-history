@@ -25,7 +25,6 @@ void term_bg_color __ARGS((int n));
 void term_settitle __ARGS((char_u *title));
 void ttest __ARGS((int pairs));
 void add_long_to_buf __ARGS((long_u val, char_u *dst));
-int get_long_from_buf __ARGS((char_u *buf, long_u *val));
 void check_shellsize __ARGS((void));
 void win_new_shellsize __ARGS((void));
 void shell_resized __ARGS((void));

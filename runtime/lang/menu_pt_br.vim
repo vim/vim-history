@@ -76,7 +76,8 @@ menutrans Insert\ mode			Modo\ de\ inserção
 menutrans Block\ and\ Insert		Bloco\ e\ inserção
 menutrans Always			Sempre
 
-menutrans Toggle\ Insert\ &Mode<Tab>:set\ im! Ativar/Desativar Modo de In&serção<Tab>:set\ im!
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im! Ativar/Desativar\ Modo\ de\
+In&serção<Tab>:set\ im!
 menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp! Ativar/Desativar\ Co&mpatibilidade\ com\ Vi<Tab>:set\ cp!
 menutrans Search\ &Path\.\.\.		Camin&ho\ de\ Busca\.\.\.
 menutrans Ta&g\ Files\.\.\.		Arquivos\ de\ Tags\.\.\.
@@ -113,20 +114,12 @@ menutrans &File\ Format\.\.\.		&Formato\ do\ arquivo\.\.\.
 let g:menutrans_fileformat_dialog = "Selecione o formato para gravar o arquivo"
 
 menutrans C&olor\ Scheme		Esquema\ de\ c&ores
-menutrans blue		azul
 menutrans default	padrão
-menutrans evening	noite
-menutrans morning	manhã
-menutrans peachpuff	pêssego
-menutrans shine		brilhante
 
 menutrans Select\ Fo&nt\.\.\.		Selecionar\ fo&nte\.\.\.
 
 menutrans &Keymap	Mapa\ de\ teclado
 menutrans None		Nenhum
-menutrans accents	acentos
-menutrans greek		grego
-menutrans hebrew	hebraico
 
 " Programming menu
 menutrans &Tools			&Ferramentas
@@ -160,7 +153,7 @@ menutrans Create\ &Fold<Tab>zf			Criar\ &dobras<Tab>zf
 menutrans &Delete\ Fold<Tab>zd			Remover\ d&obras<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD		Remover\ &todas\ as\ dobras<Tab>zD
 " moving around in folds
-menutrans Fold\ column\ &width			&Largura\ da\ coluna\ da\ dobra
+menutrans Fold\ col&umn\ width			&Largura\ da\ coluna\ da\ dobra
 
 " Tools.Diff Menu
 menutrans &Update	&Atualizar
@@ -257,7 +250,8 @@ endif
 
 " Syntax menu
 menutrans &Syntax			&Sintaxe
-menutrans &Show\ individual\ choices	E&xibir\ escolhas\ individuais
+"menutrans &Show\ individual\ choices	E&xibir\ escolhas\ individuais
+menutrans &Show\ filetypes\ in\ menu	E&xibir\ tipos\ de\ arquivos\ no\ menu
 menutrans Set\ '&syntax'\ only		Ativar\ somente\ s&intaxe
 menutrans Set\ '&filetype'\ too		Ativar\ também\ &tipo\ de\ arquivo
 menutrans &Off				&Desativar

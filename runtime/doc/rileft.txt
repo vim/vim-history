@@ -1,4 +1,4 @@
-*rileft.txt*    For Vim version 6.2b.  Last change: 2002 Oct 29
+*rileft.txt*    For Vim version 6.2c.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem

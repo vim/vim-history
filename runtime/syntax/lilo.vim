@@ -2,22 +2,22 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: lilo configuration (lilo.conf)
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2003 Apr 25
-" URL: http://physics.muni.cz/~yeti/download/syntax/lilo.vim
+" Last Change: 2003 May 04
+" URL: http://trific.ath.cx/Ftp/vim/syntax/lilo.vim
 
 " Setup
 if version >= 600
-  if exists("b:current_syntax")
-    finish
-  endif
+	if exists("b:current_syntax")
+		finish
+	endif
 else
-  syntax clear
+	syntax clear
 endif
 
 if version >= 600
-  command -nargs=1 SetIsk setlocal iskeyword=<args>
+	command -nargs=1 SetIsk setlocal iskeyword=<args>
 else
-  command -nargs=1 SetIsk set iskeyword=<args>
+	command -nargs=1 SetIsk set iskeyword=<args>
 endif
 SetIsk @,48-57,.,-,_
 delcommand SetIsk
@@ -128,67 +128,67 @@ syn match liloAnythingComment "#.*$" contained nextgroup=liloAnything,liloAnythi
 
 " Define the default highlighting
 if version >= 508 || !exists("did_lilo_syntax_inits")
-  if version < 508
-    let did_lilo_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
+	if version < 508
+		let did_lilo_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-  HiLink liloEqPath liloEquals
-  HiLink liloEqWord liloEquals
-  HiLink liloEqVga liloEquals
-  HiLink liloEqDecNumber liloEquals
-  HiLink liloEqHexNumber liloEquals
-  HiLink liloEqNumber liloEquals
-  HiLink liloEqString liloEquals
-  HiLink liloEqLabel liloEquals
-  HiLink liloEqAnything liloEquals
-  HiLink liloEquals Special
+	HiLink liloEqPath liloEquals
+	HiLink liloEqWord liloEquals
+	HiLink liloEqVga liloEquals
+	HiLink liloEqDecNumber liloEquals
+	HiLink liloEqHexNumber liloEquals
+	HiLink liloEqNumber liloEquals
+	HiLink liloEqString liloEquals
+	HiLink liloEqLabel liloEquals
+	HiLink liloEqAnything liloEquals
+	HiLink liloEquals Special
 
-  HiLink liloError Error
+	HiLink liloError Error
 
-  HiLink liloEqPathComment liloComment
-  HiLink liloEqVgaComment liloComment
-  HiLink liloEqDecNumberComment liloComment
-  HiLink liloEqHexNumberComment liloComment
-  HiLink liloEqStringComment liloComment
-  HiLink liloEqLabelComment liloComment
-  HiLink liloEqAnythingComment liloComment
-  HiLink liloPathComment liloComment
-  HiLink liloVgaComment liloComment
-  HiLink liloDecNumberComment liloComment
-  HiLink liloHexNumberComment liloComment
-  HiLink liloNumberComment liloComment
-  HiLink liloStringComment liloComment
-  HiLink liloLabelComment liloComment
-  HiLink liloAnythingComment liloComment
-  HiLink liloComment Comment
+	HiLink liloEqPathComment liloComment
+	HiLink liloEqVgaComment liloComment
+	HiLink liloEqDecNumberComment liloComment
+	HiLink liloEqHexNumberComment liloComment
+	HiLink liloEqStringComment liloComment
+	HiLink liloEqLabelComment liloComment
+	HiLink liloEqAnythingComment liloComment
+	HiLink liloPathComment liloComment
+	HiLink liloVgaComment liloComment
+	HiLink liloDecNumberComment liloComment
+	HiLink liloHexNumberComment liloComment
+	HiLink liloNumberComment liloComment
+	HiLink liloStringComment liloComment
+	HiLink liloLabelComment liloComment
+	HiLink liloAnythingComment liloComment
+	HiLink liloComment Comment
 
-  HiLink liloDiskOpt liloOption
-  HiLink liloKernelOpt liloOption
-  HiLink liloImageOpt liloOption
-  HiLink liloOption Keyword
+	HiLink liloDiskOpt liloOption
+	HiLink liloKernelOpt liloOption
+	HiLink liloImageOpt liloOption
+	HiLink liloOption Keyword
 
-  HiLink liloDecNumber liloNumber
-  HiLink liloHexNumber liloNumber
-  HiLink liloDecNumberP liloNumber
-  HiLink liloNumber Number
-  HiLink liloString String
-  HiLink liloPath Constant
+	HiLink liloDecNumber liloNumber
+	HiLink liloHexNumber liloNumber
+	HiLink liloDecNumberP liloNumber
+	HiLink liloNumber Number
+	HiLink liloString String
+	HiLink liloPath Constant
 
-  HiLink liloSpecial Special
-  HiLink liloLabel Title
-  HiLink liloDecNumberList Special
-  HiLink liloDecNumberPList Special
-  HiLink liloAnything Normal
-  HiLink liloEnviron Identifier
-  HiLink liloVgaKeyword Identifier
-  HiLink liloImage Type
-  HiLink liloChRules Preproc
-  HiLink liloDisk Preproc
+	HiLink liloSpecial Special
+	HiLink liloLabel Title
+	HiLink liloDecNumberList Special
+	HiLink liloDecNumberPList Special
+	HiLink liloAnything Normal
+	HiLink liloEnviron Identifier
+	HiLink liloVgaKeyword Identifier
+	HiLink liloImage Type
+	HiLink liloChRules Preproc
+	HiLink liloDisk Preproc
 
-  delcommand HiLink
+	delcommand HiLink
 endif
 
 let b:current_syntax = "lilo"

@@ -3,7 +3,7 @@
 " Maintainer:	Mike Williams <mrw@eandem.co.uk>
 " Filenames:    *.bat
 " Last Change:	27th June 2002
-" URL:          http://www.eandem.co.uk/mrw/vim
+" URL:		http://www.eandem.co.uk/mrw/vim
 "
 " Options Flags:
 " dosbatch_cmdextversion	- 1 = Windows NT, 2 = Windows 2000 [default]

@@ -374,6 +374,7 @@ typedef struct expand
 {
     int		xp_context;		/* type of expansion */
     char_u	*xp_pattern;		/* start of item to expand */
+    char_u	*xp_arg;		/* generic expansion argument */
     int		xp_backslash;		/* one of the XP_BS_ values */
 } expand_T;
 

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 27
+" Last Change:	2003 Apr 28
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -100,7 +100,7 @@ au BufNewFile,BufRead *.am
 " Arc Macro Language
 au BufNewFile,BufRead *.aml			setf aml
 
-" ART*Enteprise (formerly ART-IM)
+" ART*Enterprise (formerly ART-IM)
 au BufNewFile,BufRead *.art			setf art
 
 " ASN.1

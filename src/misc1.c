@@ -3989,6 +3989,7 @@ static int	get_indent_nolabel __ARGS((linenr_T lnum));
 static int	skip_label __ARGS((linenr_T, char_u **pp, int ind_maxcomment));
 static int	cin_ispreproc __ARGS((char_u *));
 static int	cin_iscomment __ARGS((char_u *));
+static int	cin_islinecomment __ARGS((char_u *));
 static int	cin_isterminated __ARGS((char_u *, int));
 static int	cin_isfuncdecl __ARGS((char_u *));
 static int	cin_isif __ARGS((char_u *));
@@ -4041,6 +4042,30 @@ cin_nocode(s)
     char_u	*s;
 {
     return *cin_skipcomment(s) == NUL;
+}
+
+/*
+ * Check previous lines for a "//" line comment.
+ */
+    static pos_T *
+find_line_comment() /* XXX */
+{
+    static pos_T pos;
+    char_u	 *line;
+    char_u	 *p;
+
+    pos = curwin->w_cursor;
+    while (--pos.lnum > 0)
+    {
+	line = ml_get(pos.lnum);
+	p = skipwhite(line);
+	if (cin_islinecomment(p))
+	{
+	    pos.col = (int)(p - line);
+	    return &pos;
+	}
+    }
+    return NULL;
 }
 
 /*
@@ -4306,6 +4331,16 @@ cin_iscomment(p)
     char_u  *p;
 {
     return (p[0] == '/' && (p[1] == '*' || p[1] == '/'));
+}
+
+/*
+ * Recognize the start of a "//" comment.
+ */
+    static int
+cin_islinecomment(p)
+    char_u *p;
+{
+    return (p[0] == '/' && p[1] == '/');
 }
 
 /*
@@ -4685,6 +4720,11 @@ get_c_indent()
     int ind_matching_paren = 0;
 
     /*
+     * Extra indent for comments.
+     */
+    int ind_comment = 0;
+
+    /*
      * spaces from the comment opener when there is nothing after it.
      */
     int ind_in_comment = 3;
@@ -4797,6 +4837,7 @@ get_c_indent()
 	    case '=': ind_case_code = n; break;
 	    case 'p': ind_param = n; break;
 	    case 't': ind_func_type = n; break;
+	    case '/': ind_comment = n; break;
 	    case 'c': ind_in_comment = n; break;
 	    case 'C': ind_in_comment2 = n; break;
 	    case '+': ind_continuation = n; break;
@@ -4854,6 +4895,18 @@ get_c_indent()
     else if (cin_islabel(ind_maxcomment))	    /* XXX */
     {
 	amount = 0;
+    }
+
+    /*
+     * If we're inside a "//" comment and there is a "//" comment in a
+     * previous line, lineup with that one.
+     */
+    else if (cin_islinecomment(theline)
+	    && (trypos = find_line_comment()) != NULL) /* XXX */
+    {
+	/* find how indented the line beginning the comment is */
+	getvcol(curwin, trypos, &col, NULL, NULL);
+	amount = col;
     }
 
     /*
@@ -5156,6 +5209,10 @@ get_c_indent()
 		    amount = cur_amount;
 	    }
 	}
+
+	/* add extra indent for a comment */
+	if (cin_iscomment(theline))
+	    amount += ind_comment;
       }
 
       /*
@@ -5793,6 +5850,10 @@ term_again:
 	    }
 	}
       }
+
+      /* add extra indent for a comment */
+      if (cin_iscomment(theline))
+	  amount += ind_comment;
     }
 
     /*
@@ -5866,7 +5927,7 @@ term_again:
 		if (*skipwhite(l) == '}')
 		    break;
 
-		/*
+		/*			    (matching {)
 		 * If the previous line ends on '};' (maybe followed by
 		 * comments) align at column 0.  For example:
 		 * char *string_array[] = { "foo",
@@ -5941,6 +6002,10 @@ term_again:
 		amount = get_indent();	    /* XXX */
 		break;
 	    }
+
+	    /* add extra indent for a comment */
+	    if (cin_iscomment(theline))
+		amount += ind_comment;
 	}
     }
 
@@ -6452,7 +6517,7 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
 	    if (ffname == NULL)		/* out of memory */
 		break;
 # ifdef VMS
-            vms_remove_version(ffname);
+	    vms_remove_version(ffname);
 # endif
 	    if (match_file_list(p_wig, (*file)[i], ffname))
 	    {

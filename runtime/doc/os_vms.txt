@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
+*os_vms.txt*    For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL
@@ -43,7 +43,7 @@ For using Vim's full power you will need the runtime files as well.
 
 You can download precompiled executables from:
 	http://www.polarfox.com/vim/
-        ftp://ftp.polarfox.com/pub/vim/
+	ftp://ftp.polarfox.com/pub/vim/
 
 Official mirror for polarfox.com can be found at polarhome com.
 
@@ -115,9 +115,9 @@ Vim uses a special directory structure to hold the document and runtime files:
 
 Use: >
 
-	define/nolog VIM        device:[path.vim]
+	define/nolog VIM	device:[path.vim]
 	define/nolog VIMRUNTIME device:[path.vim.vim60]
-	define/nolog TMP        device:[path.tmp]
+	define/nolog TMP	device:[path.tmp]
 
 to get vim.exe to find its document, filetype, and syntax files, and to
 specify a directory where temporary files will be located. Copy the "runtime"
@@ -563,20 +563,19 @@ program to the new diff on VMS. Add this to your .vimrc file: >
 
      " Set up vimdiff options
        if v:version >= 600
-        " Use GNU diff on VMS
-        set diffexpr=MyDiff()
-        function MyDiff()
-           let opt = ""
-           if &diffopt =~ "icase"
-             let opt = opt . "-i "
-           endif
-           if &diffopt =~ "iwhite"
-             let opt = opt . "-b "
-           endif
-           silent execute "!mc GNU:diff.exe -a " . opt . v:fname_in . " " .
-v:fname_new .
-                \  " > " . v:fname_out
-        endfunction
+	" Use GNU diff on VMS
+	set diffexpr=MyDiff()
+	function MyDiff()
+	   let opt = ""
+	   if &diffopt =~ "icase"
+	     let opt = opt . "-i "
+	   endif
+	   if &diffopt =~ "iwhite"
+	     let opt = opt . "-b "
+	   endif
+	   silent execute "!mc GNU:diff.exe -a " . opt . v:fname_in . " " .  v:fname_new .
+		\  " > " . v:fname_out
+	endfunction
       endif
 
 You can now use vim in diff-mode, e.g. to compare two files in read-only
@@ -648,10 +647,10 @@ Version 6.1 (2002 Mar 25)
 
 Version 6.0 (2001 Sep 28)
 - Unix and VMS code has been merged
-        - separated "really" VMS related code
-        - included all possible Unix functionality
-        - simplified or deleted the configuration files
-        - makefile MAKE_VMS.MMS reviewed
+	- separated "really" VMS related code
+	- included all possible Unix functionality
+	- simplified or deleted the configuration files
+	- makefile MAKE_VMS.MMS reviewed
 - menu changes (fixed printing, CTAGS and XXD usage)
 - fixed variable RMS record format handling anomaly
 - corrected syntax, ftplugin etc files load
@@ -660,8 +659,8 @@ Version 6.0 (2001 Sep 28)
   script.
 - Improved code's VAXC and new DECC compilers compatibility
 - changed quickfix parameters:
-        - errormessage format to suite DECC
-        - search, make and other commands to suite VMS system
+	- errormessage format to suite DECC
+	- search, make and other commands to suite VMS system
 - updated and renamed MMS make files for Vim and CTAGS.
 - CTAGS has been removed from source distribution of Vim but it will remain
   in OpenVMS binary distributions.

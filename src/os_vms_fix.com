@@ -9,7 +9,7 @@ $!
 $! Yes, this is honkin' ugly code, but I deliberately avoided
 $!     if ...
 $!     then
-$!         ....
+$!	   ....
 $!     endif
 $! and call/subroutine/endsubroutine constructs, because I can still
 $! remember when DCL didn't have them, and I wanted this to be as
@@ -38,12 +38,12 @@ $!   file takes quite a bit of time...
 $! - Error handling isn't great.  Come up with something better....
 $!
 $! E-mail addresses:
-$! Steve Wall           hitched97@velnet.com
+$! Steve Wall		hitched97@velnet.com
 $! Zoltan Arpadffy      arpadffy@altavista.net
 $! John W. Hamill       jhamill3@ford.com
 $!
 $! Modification History:
-$! 13Jul00 SWall        Initial Version
+$! 13Jul00 SWall	Initial Version
 $! 14Jul00 ZArpadffy    Display usage
 $! 06Mar01 JHamill      Ctrl-M problem fix
 $!

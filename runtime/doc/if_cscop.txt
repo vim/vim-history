@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
+*if_cscop.txt*  For Vim version 6.2c.  Last change: 2003 May 04
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -20,7 +20,7 @@ functions as you normally would with |tags|.
 6. Suggested usage		|cscope-suggestions|
 7. Availability & Information	|cscope-info|
 
-This is currently for Unix only.
+This is currently for Unix and Win32 only.
 {Vi does not have any of these commands}
 
 ==============================================================================
@@ -97,7 +97,7 @@ command does the same and also splits the window (short: "scs").
 
 The available subcommands are:
 
-					*E563* *E564* *E566* *E568* *E569*
+			*E563* *E564* *E566* *E568* *E569* *E622* *E623*
     add   : Add a new cscope database/connection.
 
 	USAGE	:cs add {file|dir} [pre-path] [flags]
@@ -290,6 +290,10 @@ produce output which looks like this:
  # pid	  database name			      prepend path
  0 28806  cscope.out			      <none>
 
+Note:
+Because of the Microsoft RTL limitations, Win32 version shows -1 instead
+of the real pid.
+
 Once a cscope connection is established, you can make queries to cscope and
 the results will be printed to you.  Queries are made using the command
 ":cs find".  For example:
@@ -317,7 +321,7 @@ Additionally Cscope support works for Win32.  For more information and a
 cscope version for Win32 see:
 
 	http://iamphet.nm.ru/cscope/index.html
-	
+
 There are a couple of hard-coded limitations:
 
     1. The maximum number of cscope connections allowed is 8.  Do you
@@ -370,6 +374,49 @@ These mappings for Ctrl-] (right bracket) and Ctrl-\ (backslash) allow you to
 place your cursor over the function name or C symbol and quickly query cscope
 for any matches.
 
+Or you may use the following scheme, inspired by Vim/Cscope tutorial from
+Cscope Home Page (http://cscope.sourceforge.net/): >
+
+	nmap <C-_>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-_>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-_>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-_>t :cs find t <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-_>e :cs find e <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-_>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
+	nmap <C-_>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+	nmap <C-_>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+
+	" Using 'CTRL-spacebar' then a search type makes the vim window
+	" split horizontally, with search result displayed in
+	" the new window.
+
+	nmap <C-Space>s :scs find s <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space>g :scs find g <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space>c :scs find c <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space>t :scs find t <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space>e :scs find e <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space>f :scs find f <C-R>=expand("<cfile>")<CR><CR>
+	nmap <C-Space>i :scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+	nmap <C-Space>d :scs find d <C-R>=expand("<cword>")<CR><CR>
+
+	" Hitting CTRL-space *twice* before the search type does a vertical
+	" split instead of a horizontal one
+
+	nmap <C-Space><C-Space>s
+		\:vert scs find s <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space><C-Space>g
+		\:vert scs find g <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space><C-Space>c
+		\:vert scs find c <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space><C-Space>t
+		\:vert scs find t <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space><C-Space>e
+		\:vert scs find e <C-R>=expand("<cword>")<CR><CR>
+	nmap <C-Space><C-Space>i
+		\:vert scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+	nmap <C-Space><C-Space>d
+		\:vert scs find d <C-R>=expand("<cword>")<CR><CR>
+
 ==============================================================================
 7. Cscope availability and information			*cscope-info*
 
@@ -384,6 +431,11 @@ According to the (old) nvi documentation:
 	You can buy version 13.3 source with an unrestricted license
 	for $400 from AT&T Software Solutions by calling +1-800-462-8146.
 
+Also you can download cscope 13.x and mlcscope 14.x (multi-lingual cscope
+which supports C, C++, Java, lex, yacc, breakpoint listing, Ingres, and SDL)
+from World-Wide Exptools Open Source packages page:
+	http://www.bell-labs.com/project/wwexptools/packages.html
+
 In Solaris 2.x, if you have the C compiler license, you will also have
 cscope.  Both are usually located under /opt/SUNWspro/bin
 
@@ -391,9 +443,6 @@ SGI developers can also get it.  Currently a tardist file can be found at:
 	ftp://ftp.openage.com/pub/Sgi/Binaries/Cscope-13_3_tardist.gz
 	https://toolbox.sgi.com/toolbox/utilities/cscope/
 The second one is for those who have a password for the SGI toolbox.
-
-							*cscope-win32*
-For a cscope version for Win32 see: http://iamphet.nm.ru/cscope/index.html
 
 There is source to an older version of a cscope clone (called "cs") available
 on the net.  Due to various reasons, this is not supported with Vim.
@@ -403,5 +452,10 @@ Andy Kahn <ackahn@netapp.com>.  The original structure (as well as a tiny
 bit of code) was adapted from the cscope interface in nvi.  Please report
 any problems, suggestions, patches, et al., you have for the usage of
 cscope within Vim to him.
+							*cscope-win32*
+For a cscope version for Win32 see: http://iamphet.nm.ru/cscope/index.html
+
+Win32 support was added by Sergey Khorev <khorev@softlab.ru>. Contact him
+if you have Win32-specific issues.
 
  vim:tw=78:ts=8:ft=help:norl:
