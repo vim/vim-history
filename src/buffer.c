@@ -2719,7 +2719,13 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	    (curbufIsChanged() || (curbuf->b_flags & BF_WRITE_MASK)
 							  || curbuf->b_p_ro) ?
 								    " " : "");
-    n = (int)(((long)curwin->w_cursor.lnum * 100L) /
+    /* With 32 bit longs and more than 21,474,836 lines multiplying by 100
+     * causes an overflow, thus for large numbers divide instead. */
+    if (curwin->w_cursor.lnum > 1000000L)
+	n = (int)(((long)curwin->w_cursor.lnum) /
+				   ((long)curbuf->b_ml.ml_line_count / 100L));
+    else
+	n = (int)(((long)curwin->w_cursor.lnum * 100L) /
 					    (long)curbuf->b_ml.ml_line_count);
     if (curbuf->b_ml.ml_flags & ML_EMPTY)
     {
@@ -3755,8 +3761,9 @@ get_rel_pos(wp, str)
     else if (above <= 0)
 	STRCPY(str, _("Top"));
     else
-	sprintf((char *)str, "%2d%%",
-		(int)(above * 100 / (above + below)));
+	sprintf((char *)str, "%2d%%", above > 1000000L
+				    ? (int)(above / ((above + below) / 100L))
+				    : (int)(above * 100L / (above + below)));
 }
 #endif
 
