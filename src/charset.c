@@ -327,25 +327,48 @@ transstr(s)
     char_u	*s;
 {
     char_u	*res;
+    char_u	*p;
 #ifdef FEAT_MBYTE
-    int		l;
+    int		l, len;
 #endif
 
-    res = alloc((unsigned)(vim_strsize(s) + 1));
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	/* Compute the length of the result, taking into account that
+	 * multi-byte characters are copied unchanged. */
+	len = 0;
+	p = s;
+	while (*p != NUL)
+	{
+	    if ((l = (*mb_ptr2len_check)(p)) > 1)
+	    {
+		len += l;
+		p += l;
+	    }
+	    else
+		len += byte2cells(*p++);
+	}
+	res = alloc((unsigned)(len + 1));
+    }
+    else
+#endif
+	res = alloc((unsigned)(vim_strsize(s) + 1));
     if (res != NULL)
     {
 	*res = NUL;
-	while (*s != NUL)
+	p = s;
+	while (*p != NUL)
 	{
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && (l = (*mb_ptr2len_check)(s)) > 1)
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	    {
-		STRNCAT(res, s, l);
-		s += l;
+		STRNCAT(res, p, l);
+		p += l;
 	    }
 	    else
 #endif
-		STRCAT(res, transchar(*s++));
+		STRCAT(res, transchar(*p++));
 	}
     }
     return res;
