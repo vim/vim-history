@@ -3,13 +3,25 @@ Language files for Vim
 Translated menus
 ----------------
 
+The contents of each menu file is a sequence of lines with "menutrans"
+commands.  Read one of the existing files to get an idea of how this works.
+
+In the on-line help:
+
+	:help multilang-menus
+	:help :menutrans
+	:help 'langmenu'
+	:help :language
+
 The "$VIMRUNTIME/menu.vim" file will search for a menu translation file.  This
-depends on the value of $LANG:
+depends on the value of the "v:lang" variable.
 
-	menu_ $LANG .vim
+	"menu_" . v:lang . ".vim"
 
-(without the spaces)
-The file name must be lower case.
+When the 'menutrans' option is set, its value will be used instead of v:lang.
+
+The file name is always lower case.  It is the full name as the ":language"
+command shows (the LC_MESSAGES value).
 
 For example, to use the Big5 (Taiwan) menus on MS-Windows the $LANG will be
 
@@ -17,7 +29,7 @@ For example, to use the Big5 (Taiwan) menus on MS-Windows the $LANG will be
 
 and use the menu translation file:
 
-	$VIMRUNTIME/lang/menu_Chinese(Taiwan)_Taiwan.950.vim
+	$VIMRUNTIME/lang/menu_chinese(taiwan)_taiwan.950.vim
 
 On Unix you should set $LANG, depending on your shell:
 
@@ -29,12 +41,12 @@ and the menu translation file is:
 	$VIMRUNTIME/lang/menu_zh_tw.big5.vim
 
 The menu translation file should set the "did_menu_trans" variable so that Vim
-will stop searching for another file.
+will not load another file.
 
 
 Translated messages
 -------------------
 
-This requires doing "make install".  It will compile the portable files
-"src/po/*.po" into system-dependend ".mo" files and place them in the right
-place.
+This requires doing "make install" in the "src" directory.  It will compile
+the portable files "src/po/*.po" into binary ".mo" files and place them in the
+right place.

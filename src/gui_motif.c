@@ -11,6 +11,8 @@
 #include <Xm/Form.h>
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
+#include <Xm/Text.h>
+#include <Xm/TextF.h>
 #include <Xm/Separator.h>
 #include <Xm/Label.h>
 #include <Xm/CascadeB.h>
@@ -132,6 +134,7 @@ gui_x11_create_widgets()
     XtInitializeWidgetClass(xmMenuShellWidgetClass);
     XtInitializeWidgetClass(xmPushButtonWidgetClass);
     XtInitializeWidgetClass(xmScrollBarWidgetClass);
+    XtInitializeWidgetClass(xmTextFieldWidgetClass);
 #endif
 
     /* Make sure the "Quit" menu entry of the window manager is ignored */
@@ -1287,6 +1290,7 @@ gui_x11_get_wid()
     return(XtWindow(textArea));
 }
 
+
 #if defined(FEAT_BROWSE) || defined(PROTO)
 
 /*
@@ -1322,9 +1326,11 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     char_u	*dflt;		/* default name */
     char_u	*ext;		/* not used (extension added) */
     char_u	*initdir;	/* initial directory, NULL for current dir */
-    char_u	*filter;	/* not used (file name filter) */
+    char_u	*filter;	/* file name filter */
 {
     char_u	dirbuf[MAXPATHL];
+    char_u	*pattern;
+    char_u	*tofree = NULL;
 
     dialog_wgt = XmCreateFileSelectionDialog(vimShell, (char *)title, NULL, 0);
 
@@ -1335,18 +1341,38 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	mch_dirname(dirbuf, MAXPATHL);
 	initdir = dirbuf;
     }
+
+    /* Can only use one pattern for a file name.  Get the first pattern out of
+     * the filter.  An empty pattern means everything matches. */
     if (filter == NULL)
-	filter = (char_u *)"";	/* An empty pattern matches all files */
+	pattern = (char_u *)"";
+    else
+    {
+	char_u	*s, *p;
+
+	s = filter;
+	for (p = filter; *p != NUL; ++p)
+	{
+	    if (*p == '\t')	/* end of description, start of pattern */
+		s = p + 1;
+	    if (*p == ';' || *p == '\n')	/* end of (first) pattern */
+		break;
+	}
+	pattern = vim_strnsave(s, p - s);
+	tofree = pattern;
+	if (pattern == NULL)
+	    pattern = (char_u *)"";
+    }
 
     XtVaSetValues(dialog_wgt,
 	XtVaTypedArg,
-	    XmNdirectory,   XmRString,	(char *)initdir, STRLEN(initdir) + 1,
+	    XmNdirectory, XmRString, (char *)initdir, STRLEN(initdir) + 1,
 	XtVaTypedArg,
-	    XmNdirSpec,	    XmRString,  (char *)dflt,	STRLEN(dflt) + 1,
+	    XmNdirSpec,	XmRString, (char *)dflt, STRLEN(dflt) + 1,
 	XtVaTypedArg,
-	    XmNpattern,	    XmRString,  (char *)filter,	STRLEN(filter) + 1,
+	    XmNpattern,	XmRString, (char *)pattern, STRLEN(pattern) + 1,
 	XtVaTypedArg,
-	    XmNdialogTitle, XmRString,  (char *)title,	STRLEN(title) + 1,
+	    XmNdialogTitle, XmRString, (char *)title, STRLEN(title) + 1,
 /*
     currently, the background color of the input and selection
     fields are "motif blue".  i'm sure there must be a resource
@@ -1378,6 +1404,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     } while (XtIsManaged(dialog_wgt));
 
     XtDestroyWidget(dialog_wgt);
+    vim_free(tofree);
 
     if (browse_fname == NULL)
 	return NULL;
@@ -1440,7 +1467,31 @@ DialogAcceptCB(w, client_data, call_data)
 
 static int	dialogStatus;
 
+static void keyhit_callback __ARGS((Widget w, XtPointer client_data, XEvent *event, Boolean *cont));
 static void butproc __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+
+/*
+ * Callback function for the textfield.  When CR is hit this works like
+ * hitting the "OK" button, ESC like "Cancel".
+ */
+/* ARGSUSED */
+    static void
+keyhit_callback(w, client_data, event, cont)
+    Widget		w;
+    XtPointer		client_data;
+    XEvent		*event;
+    Boolean		*cont;
+{
+    char	buf[2];
+
+    if (XLookupString(&(event->xkey), buf, 2, NULL, NULL) == 1)
+    {
+	if (*buf == CR)
+	    dialogStatus = 1;
+	else if (*buf == ESC)
+	    dialogStatus = 2;
+    }
+}
 
 /* ARGSUSED */
     static void
@@ -1452,14 +1503,38 @@ butproc(w, client_data, call_data)
     dialogStatus = (int)(long)client_data + 1;
 }
 
+static void gui_motif_set_fontlist __ARGS((Widget wg));
+
+/*
+ * Use the 'guifont' or 'guifontset' as a fontlist for a dialog widget.
+ */
+    static void
+gui_motif_set_fontlist(wg)
+    Widget wg;
+{
+    XmFontList fl;
+
+    fl = gui_motif_create_fontlist((XFontStruct *)(
+#ifdef FEAT_XFONTSET
+		gui.fontset != NOFONTSET ? gui.fontset :
+#endif
+		gui.norm_font));
+    if (fl != NULL)
+    {
+	XtVaSetValues(wg, XmNfontList, fl, NULL);
+	XmFontListFree(fl);
+    }
+}
+
 /* ARGSUSED */
     int
-gui_mch_dialog(type, title, message, buttons, dfltbutton)
+gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     int		type;
     char_u	*title;
     char_u	*message;
     char_u	*buttons;
     int		dfltbutton;
+    char_u	*textfield;		/* buffer of size IOSIZE */
 {
     char_u		*buts;
     char_u		*p, *next;
@@ -1468,6 +1543,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     int			butcount;
     static Widget	dialogbb = NULL;
     static Widget	dialogmessage = NULL;
+    Widget		dialogtextfield = NULL;
     Widget		*dialogButton;
     int			vertical;
 
@@ -1514,6 +1590,22 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    NULL);
     XmStringFree(label);
 
+    if (textfield != NULL)
+    {
+	dialogtextfield = XtVaCreateWidget("textfield",
+		xmTextFieldWidgetClass, dialogbb,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, dialogmessage,
+		NULL);
+	gui_motif_set_fontlist(dialogtextfield);
+	XmTextFieldSetString(dialogtextfield, (char *)textfield);
+	XtManageChild(dialogtextfield);
+	XtAddEventHandler(dialogtextfield, KeyPressMask, False,
+			    (XtEventHandler)keyhit_callback, (XtPointer)NULL);
+    }
+
     /* make a copy, so that we can insert NULs */
     buts = vim_strsave(buttons);
     if (buts == NULL)
@@ -1555,10 +1647,11 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		xmPushButtonWidgetClass, dialogbb,
 		XmNlabelString, label,
 		XmNtopAttachment, XmATTACH_WIDGET,
-		XmNtopWidget, dialogmessage,
+		XmNtopWidget, dialogtextfield != NULL
+					    ? dialogtextfield : dialogmessage,
 		NULL);
 	XmStringFree(label);
-	if (butcount)
+	if (butcount > 0)
 	{
 	    if (vertical)
 		XtVaSetValues(dialogButton[butcount],
@@ -1570,6 +1663,11 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 			XmNleftWidget, dialogButton[butcount - 1],
 			NULL);
 	}
+	else if (!vertical)
+	    XtVaSetValues(dialogButton[0],
+		    XmNleftAttachment, XmATTACH_FORM,
+		    XmNleftOffset, 20,
+		    NULL);
 
 	XtAddCallback(dialogButton[butcount], XmNactivateCallback,
 			  (XtCallbackProc)butproc, (XtPointer)(long)butcount);
@@ -1583,13 +1681,34 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	dfltbutton = butcount;
     XtVaSetValues(dialogbb,
 	    XmNdefaultButton, dialogButton[dfltbutton - 1], NULL);
+    if (textfield != NULL)
+	XtVaSetValues(dialogbb, XmNinitialFocus, dialogtextfield, NULL);
     XtManageChild(dialogbb);
+
+    /* Need to make the dialog appear before we can move the pointer to it.
+     * The short delay is somehow needed (wait for window manager?). */
+    XtRealizeWidget(dialogbb);
+    XSync(gui.dpy, False);
+    ui_delay(10L, FALSE);
+
+    /* Position the mouse pointer in the dialog, required for when focus
+     * follows mouse. */
+    XWarpPointer(gui.dpy, (Window)0, XtWindow(dialogbb), 0, 0, 0, 0, 20, 40);
+
+    if (textfield != NULL && *textfield != NUL)
+    {
+	/* This only works after the textfield has been realised. */
+	XmTextFieldSetSelection(dialogtextfield,
+			 (XmTextPosition)0, (XmTextPosition)STRLEN(textfield),
+					   XtLastTimestampProcessed(gui.dpy));
+	XmTextFieldSetCursorPosition(dialogtextfield,
+					   (XmTextPosition)STRLEN(textfield));
+    }
 
     app = XtWidgetToApplicationContext(dialogbb);
 
-    dialogStatus = -1;
-
     /* Loop until a button is pressed or the dialog is killed somehow. */
+    dialogStatus = -1;
     while (1)
     {
 	XtAppProcessEvent(app, (XtInputMask)XtIMAll);
@@ -1607,6 +1726,20 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     }
 
     vim_free(dialogButton);
+
+    if (textfield != NULL)
+    {
+	p = (char_u *)XmTextGetString(dialogtextfield);
+	if (p == NULL || dialogStatus < 0)
+	    *textfield = NUL;
+	else
+	{
+	    STRNCPY(textfield, p, IOSIZE);
+	    textfield[IOSIZE - 1] = NUL;
+	}
+	XtUnmanageChild(dialogtextfield);
+	XtDestroyWidget(dialogtextfield);
+    }
 
     return dialogStatus;
 }

@@ -16,7 +16,7 @@ endif
 
 syn case ignore
 
-set lisp
+setlocal lisp
 
 " Highlight special characters (those that have backslashes) differently
 syn match	dylanSpecial		display contained "\\\(x\x\+\|\o\{1,3}\|.\|$\)"

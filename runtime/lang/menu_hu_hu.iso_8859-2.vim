@@ -1,6 +1,6 @@
 " Menu Translations:	Hungarian
 " Translated By: 	Zoltan Arpadffy <arpadffy@altavista.net>
-" Last Change:		2001 Apr 01
+" Last Change:		2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -74,7 +74,7 @@ menutrans &Close<Tab>^Wc		&Bezár<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Bezár\ m&ásikat<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			&Következô<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Elôzô<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	Egyenlô\ &magasság<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		Egyenlô\ &magasság<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Egyenlô\ &szélesség<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Alap\ szé&lesség<Tab>^W1_
 menutrans Rotate\ &Up<Tab>^WR		Gördít\ &felfelé<Tab>^WR

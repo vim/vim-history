@@ -732,6 +732,8 @@ win_update(wp)
 				   updating.  0 when no mid area updating. */
     int		bot_start = 999;/* first row of the bot area that needs
 				   updating.  999 when no bot area updating */
+    int		scrolled_down = FALSE;	/* TRUE when scrolled down when
+					   w_topline got smaller a bit */
 #ifdef FEAT_SEARCH_EXTRA
     int		top_to_mod = FALSE;    /* redraw above mod_top */
 #endif
@@ -1002,6 +1004,7 @@ win_update(wp)
 			    /* Need to update rows that are new, stop at the
 			     * first one that scrolled down. */
 			    top_end = i;
+			    scrolled_down = TRUE;
 
 			    /* Move the entries that were scrolled, disable
 			     * the entries for the lines to be redrawn. */
@@ -1268,7 +1271,10 @@ win_update(wp)
 	{
 	    lnum = wp->w_topline;
 	    idx = 0;
-	    mid_start = top_end;
+	    if (scrolled_down)
+		mid_start = top_end;
+	    else
+		mid_start = 0;
 	    while (lnum < from && idx < wp->w_lines_valid)	/* find start */
 	    {
 		if (wp->w_lines[idx].wl_valid)
@@ -7136,6 +7142,10 @@ showmode()
 	if (do_mode)
 	{
 	    MSG_PUTS_ATTR("--", attr);
+#if defined(FEAT_XIM)
+	    if (xim_preediting)
+		MSG_PUTS_ATTR(" XIM", attr);
+#endif
 #if defined(FEAT_HANGULIN) && defined(FEAT_GUI)
 	    if (gui.in_use)
 	    {

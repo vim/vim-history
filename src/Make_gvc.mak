@@ -14,7 +14,7 @@ CFG=Vim - Win32 Release
 !MESSAGE You can specify a configuration when running NMAKE on this makefile
 !MESSAGE by defining the macro CFG on the command line.  For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "Gvim_vc.mak" CFG="Vim - Win32 Debug"
+!MESSAGE NMAKE /f "Make_gvc.mak" CFG="Vim - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 

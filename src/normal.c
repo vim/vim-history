@@ -7387,8 +7387,6 @@ unadjust_for_sel()
 nv_select(cap)
     cmdarg_T	*cap;
 {
-    pos_T	*pp;
-
     if (VIsual_active)
 	VIsual_select = TRUE;
     else if (VIsual_reselect)
@@ -7396,23 +7394,6 @@ nv_select(cap)
 	cap->nchar = 'v';	    /* fake "gv" command */
 	cap->arg = TRUE;
 	nv_g_cmd(cap);
-	if (*p_sel == 'e' && VIsual_mode == 'v')
-	{
-	    /* exclusive mode: advance the end one character */
-	    if (lt(VIsual, curwin->w_cursor))
-		pp = &curwin->w_cursor;
-	    else
-		pp = &VIsual;
-	    if (*ml_get_pos(pp) != NUL)
-		++pp->col;
-	    else if (pp->lnum < curbuf->b_ml.ml_line_count)
-	    {
-		++pp->lnum;
-		pp->col = 0;
-	    }
-	    curwin->w_set_curswant = TRUE;
-	    redraw_curbuf_later(INVERTED);
-	}
     }
 }
 

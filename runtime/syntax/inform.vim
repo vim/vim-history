@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inform
 " Maintainer:	Stephen Thomas (stephent@insignia.com)
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -26,37 +26,6 @@ syn keyword informPreProc Message Release Serial Statusline Stub Switches
 syn keyword informPreProc Trace Zcharacter
 
 syn keyword informGramPreProc contained Verb Extend
-
-" Now the case sensitive stuff.
-
-syntax case match
-
-syn keyword informSysFunc child children elder indirect parent random
-syn keyword informSysFunc sibling younger youngest metaclass
-
-syn keyword informSysConst adjectives_table actions_table classes_table
-syn keyword informSysConst identifiers_table preactions_table version_number
-syn keyword informSysConst largest_object strings_offset code_offset
-syn keyword informSysConst dict_par1 dict_par2 dict_par3
-
-syn keyword informConditional default else if switch
-
-syn keyword informRepeat break continue do for objectloop until while
-
-syn keyword informStatement box font give inversion jump move new_line
-syn keyword informStatement print print_ret quit read remove restore return
-syn keyword informStatement rfalse rtrue save spaces string style
-
-syn keyword informOperator roman reverse bold underline fixed on off to
-syn keyword informOperator near from
-
-syn keyword informKeyword dictionary symbols objects verbs assembly
-syn keyword informKeyword expressions lines tokens linker on off alias long
-syn keyword informKeyword additive score time string table data initial
-syn keyword informKeyword initstr with private has class error fatalerror
-syn keyword informKeyword warning self
-
-syn keyword informMetaAttrib remaining create destroy recreate copy call
 
 if !exists("inform_highlight_simple")
   syn keyword informLibAttrib absent animate clothing concealed container
@@ -162,6 +131,56 @@ if !exists("inform_highlight_simple")
   syn keyword informLibConst JUNKAFTER_PE TOOFEW_PE NOTHING_PE ASKSCOPE_PE
 endif
 
+" Now the case sensitive stuff.
+
+syntax case match
+
+syn keyword informSysFunc child children elder indirect parent random
+syn keyword informSysFunc sibling younger youngest metaclass
+
+syn keyword informSysConst adjectives_table actions_table classes_table
+syn keyword informSysConst identifiers_table preactions_table version_number
+syn keyword informSysConst largest_object strings_offset code_offset
+syn keyword informSysConst dict_par1 dict_par2 dict_par3
+syn keyword informSysConst actual_largest_object static_memory_offset
+syn keyword informSysConst array_names_offset readable_memory_offset
+syn keyword informSysConst cpv__start cpv__end ipv__start ipv__end
+syn keyword informSysConst array__start array__end lowest_attribute_number
+syn keyword informSysConst highest_attribute_number attribute_names_array
+syn keyword informSysConst lowest_property_number highest_property_number
+syn keyword informSysConst property_names_array lowest_action_number
+syn keyword informSysConst highest_action_number action_names_array
+syn keyword informSysConst lowest_fake_action_number highest_fake_action_number
+syn keyword informSysConst fake_action_names_array lowest_routine_number
+syn keyword informSysConst highest_routine_number routines_array
+syn keyword informSysConst routine_names_array routine_flags_array
+syn keyword informSysConst lowest_global_number highest_global_number globals_array
+syn keyword informSysConst global_names_array global_flags_array
+syn keyword informSysConst lowest_array_number highest_array_number arrays_array
+syn keyword informSysConst array_names_array array_flags_array lowest_constant_number
+syn keyword informSysConst highest_constant_number constants_array constant_names_array
+syn keyword informSysConst lowest_class_number highest_class_number class_objects_array
+syn keyword informSysConst lowest_object_number highest_object_number
+
+syn keyword informConditional default else if switch
+
+syn keyword informRepeat break continue do for objectloop until while
+
+syn keyword informStatement box font give inversion jump move new_line
+syn keyword informStatement print print_ret quit read remove restore return
+syn keyword informStatement rfalse rtrue save spaces string style
+
+syn keyword informOperator roman reverse bold underline fixed on off to
+syn keyword informOperator near from
+
+syn keyword informKeyword dictionary symbols objects verbs assembly
+syn keyword informKeyword expressions lines tokens linker on off alias long
+syn keyword informKeyword additive score time string table data initial
+syn keyword informKeyword initstr with private has class error fatalerror
+syn keyword informKeyword warning self
+
+syn keyword informMetaAttrib remaining create destroy recreate copy call
+
 syn keyword informPredicate contained has hasnt in notin ofclass or
 syn keyword informPredicate contained provides
 
@@ -210,37 +229,32 @@ syn region informGrammarSection matchgroup=informGramPreProc start="\<Verb\|Exte
 
 " Special character forms.
 
-syn match informBadAccent contained "@[^{[:digit:]]\D"
-syn match informBadAccent contained "@{[^}]*}"
-syn match informAccent contained "@:[aouAOUeiyEI]"
-syn match informAccent contained "@'[aeiouyAEIOUY]"
-syn match informAccent contained "@`[aeiouAEIOU]"
-syn match informAccent contained "@\^[aeiouAEIOU]"
-syn match informAccent contained "@\~[anoANO]"
-syn match informAccent contained "@/[oO]"
-syn match informAccent contained "@ss\|@<<\|@>>\|@oa\|@oA\|@ae\|@AE\|@cc\|@cC"
-syn match informAccent contained "@th\|@et\|@Th\|@Et\|@LL\|@oe\|@OE\|@!!\|@\?\?"
-syn match informAccent contained "@{\x\{1,4}}"
-syn match informBadStrUnicode contained "@@\D"
-syn match informStringUnicode contained "@@\d\+"
-syn match informStringCode contained "@\d\d"
+syn match informBadAccent display contained "@[^{[:digit:]]\D"
+syn match informBadAccent display contained "@{[^}]*}"
+syn match informAccent display contained "@:[aouAOUeiyEI]"
+syn match informAccent display contained "@'[aeiouyAEIOUY]"
+syn match informAccent display contained "@`[aeiouAEIOU]"
+syn match informAccent display contained "@\^[aeiouAEIOU]"
+syn match informAccent display contained "@\~[anoANO]"
+syn match informAccent display contained "@/[oO]"
+syn match informAccent display contained "@ss\|@<<\|@>>\|@oa\|@oA\|@ae\|@AE\|@cc\|@cC"
+syn match informAccent display contained "@th\|@et\|@Th\|@Et\|@LL\|@oe\|@OE\|@!!\|@\?\?"
+syn match informAccent display contained "@{\x\{1,4}}"
+syn match informBadStrUnicode display contained "@@\D"
+syn match informStringUnicode display contained "@@\d\+"
+syn match informStringCode display contained "@\d\d"
 
 " String and Character constants.  Ordering is important here.
 syn region informString start=+"+ skip=+\\\\+ end=+"+ contains=informAccent,informStringUnicode,informStringCode,informBadAccent,informBadStrUnicode
 syn region informDictString start="'" end="'" contains=informAccent,informBadAccent
-syn match informBadDictString "''"
-syn match informDictString "'''"
-
-" Catch errors caused by wrong parenthesis
-syn region informParen transparent start='(' end=')' contains=ALLBUT,informParenError,informTodo,informGrammar
-syn match informParenError ")"
-syn match informInParen contained "[{}]"
+syn match informBadDictString display "''"
+syn match informDictString display "'''"
 
 " Integer numbers: decimal, hexadecimal and binary.
-set iskeyword+=$
-syn match informNumber "\<\d\+\>"
-syn match informNumber "\<\$\x\+\>"
-syn match informNumber "\<\$\$[01]\+\>"
+setlocal iskeyword+=$
+syn match informNumber display "\<\d\+\>"
+syn match informNumber display "\<\$\x\+\>"
+syn match informNumber display "\<\$\$[01]\+\>"
 
 " Comments
 syn match informComment "!.*" contains=informTodo
@@ -285,8 +299,6 @@ if !exists("inform_highlight_simple")
   hi def link informLibConst	Identifier
   hi def link informLibAction	Statement
 endif
-hi def link informParenError	informError
-hi def link informInParen	informError
 hi def link informBadDictString	informError
 hi def link informBadAccent	informError
 hi def link informBadStrUnicode	informError

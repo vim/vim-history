@@ -35,4 +35,5 @@ char_u *getsourceline __ARGS((int c, void *cookie, int indent));
 void ex_scriptencoding __ARGS((exarg_T *eap));
 void ex_finish __ARGS((exarg_T *eap));
 int source_finished __ARGS((void *cookie));
+void ex_checktime __ARGS((exarg_T *eap));
 /* vim: set ft=c : */

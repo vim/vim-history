@@ -49,9 +49,9 @@ CROSS=0
 #PERL=perl
 DYNAMIC_PERL=perl56.dll
 # on Linux, for cross-compile, it's here:
-#PERLLIB=/home/ron/ActivePerl/lib/
+#PERLLIB=/home/ron/ActivePerl/lib
 # on NT, it's here:
-PERLLIB=c:/perl/lib/
+PERLLIB=c:/perl/lib
 PERLLIBS=$(PERLLIB)/Core
 
 # Python support -- works with the ActiveState python 2.0 release (and others
@@ -94,7 +94,7 @@ endif
 #	  RUBY_VER=[Ruby version, eg 16, 17] (default is 16)
 #	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
 #	    You must set RUBY_VER_LONG when change RUBY_VER.
-RUBY=c:/ruby
+#RUBY=c:/ruby
 DYNAMIC_RUBY=yes
 #
 # Support Ruby interface
@@ -156,7 +156,8 @@ endif
 ifdef RUBY
 CFLAGS += -DFEAT_RUBY $(RUBYINC)
 ifdef DYNAMIC_RUBY 
-CFLAGS += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+CFLAGS += -DDYNAMIC_RUBY
+DYNAMIC_RUBY_DLL = "$(RUBY_INSTALL_NAME).dll"
 endif
 endif
 
@@ -298,15 +299,15 @@ ifdef DYNAMIC_PERL
 ifeq ($(CROSS),1)
 	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
 else
-	@echo #define DYNAMIC_PERL_DLL "$(DYNAMIC_PERL)" >> dyn-ming.h
+	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
 endif
 endif
 
 ifdef DYNAMIC_RUBY
 ifeq ($(CROSS),1)
-	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY)\" >> dyn-ming.h
+	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY_DLL)\" >> dyn-ming.h
 else
-	@echo #define DYNAMIC_RUBY_DLL "$(DYNAMIC_RUBY)" >> dyn-ming.h
+	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY_DLL)\" >> dyn-ming.h
 endif
 endif
 
@@ -314,6 +315,6 @@ ifdef DYNAMIC_PYTHON
 ifeq ($(CROSS),1)
 	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
 else
-	@echo #define DYNAMIC_PYTHON_DLL "$(DYNAMIC_PYTHON)" >> dyn-ming.h
+	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
 endif
 endif

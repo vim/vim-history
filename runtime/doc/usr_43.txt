@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0ab.  Last change: 2000 Oct 20
+*usr_43.txt*	For Vim version 6.0ac.  Last change: 2000 Oct 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -20,7 +20,7 @@ When you are editing a certain kind of file you tend to use the same option
 values and mappings, but different from when editing other files.  And you
 don't want to set these manually each time.  Vim has support for this.
 
-How to start using filetype plugins has alread been discussed here:
+How to start using filetype plugins has already been discussed here:
 |add-filetype-plugin|.
 
 But you probably are not satisfied with the default settings, because they

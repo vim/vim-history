@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Web2C TeX texmf.cnf configuration file
 " Maintainer: David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Feb 04
+" Last Change: 2001 Apr 20
 " URL: http://physics.muni.cz/~yeti/download/texmf.vim
 "
 " Remove any old syntax stuff hanging around
@@ -11,7 +11,7 @@ if exists("b:current_syntax")
 endif
 
 syn case match
-set iskeyword=a-z,A-Z,48-57,-,_
+setlocal iskeyword=a-z,A-Z,48-57,-,_
 
 syn match texmfComment "%..\+$" contains=texmfTodo
 syn match texmfComment "%\s*$" contains=texmfTodo

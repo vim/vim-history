@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ab.  Last change: 2001 Feb 08
+*message.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -302,9 +302,12 @@ and the screen is about to be redrawn:
 - Something is displayed on the status line that is longer than the width of
   the window, or runs into the 'showcmd' or 'ruler' output.
 
-Hit <Enter> or <Space> to redraw the screen and continue, without that key
-being used otherwise.  Or hit ":" or any other Normal mode command character
-to start that command.  {Vi: only ":" commands are interpreted}
+-> Hit <Enter> or <Space> to redraw the screen and continue, without that key
+   being used otherwise.
+-> Hit ":" or any other Normal mode command character to start that command.
+-> Hit <C-Y> to copy (yank) a modeless selection to the clipboard register.
+-> Use a menu.  The characters defined for Cmdline-mode are used.
+{Vi: only ":" commands are interpreted}
 
 To reduce the number of hit-enter prompts:
 - Set 'cmdheight' to 2 or higher.
@@ -333,6 +336,11 @@ Type					effect ~
      q, <Esc> or CTRL-C			stop the listing
      :					stop the listing and enter a
 					     command-line
+    <C-Y>				yank (copy) a modeless selection to
+    					the clipboard ("* and "+ registers)
+    {menu-entry}			what the menu is defined to in
+    					Cmdline-mode.
+
 Any other key causes the meaning of the keys to be displayed.
 
 (*) backwards scrolling is only supported for these commands: >

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Apr 12
+" Last Change:	2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -85,7 +85,7 @@ menutrans &Close<Tab>^Wc		&Sluiten<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ Andere<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Volgende<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Vorige<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Gelijke\ hoogte<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		&Gelijke\ afmetingen<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maximale\ hoogte<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ hoogte<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Maximale\ breedte<Tab>^W\|

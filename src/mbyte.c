@@ -1548,6 +1548,7 @@ dbcs_head_off(base, p)
     return (q == p) ? 0 : 1;
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Special version of dbcs_head_off() that works for ScreenLines[], where
  * single-width DBCS_JPNU characters are stored separately.
@@ -1582,6 +1583,7 @@ dbcs_screen_head_off(base, p)
     }
     return (q == p) ? 0 : 1;
 }
+#endif
 
     int
 utf_head_off(base, p)
@@ -1690,6 +1692,7 @@ mb_tail_off(base, p)
     return 1 - dbcs_head_off(base, p);
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Special version of mb_tail_off() for use in ScreenLines[].
  */
@@ -1710,6 +1713,7 @@ dbcs_screen_tail_off(base, p)
     /* Return 1 when on the lead byte, 0 when on the tail byte. */
     return 1 - dbcs_screen_head_off(base, p);
 }
+#endif
 
 /*
  * If the cursor moves on an trail byte, set the cursor on the lead byte.
@@ -2200,11 +2204,7 @@ HINSTANCE hMsvcrtDLL = 0;
 #   define DYNAMIC_ICONV_DLL "iconv.dll"
 #  endif
 #  ifndef DYNAMIC_MSVCRT_DLL
-#   ifndef DEBUG
-#    define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
-#   else
-#    define DYNAMIC_MSVCRT_DLL "msvcrtd.dll"
-#   endif
+#   define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
 #  endif
 
 /*
@@ -2925,6 +2925,12 @@ xim_decide_input_style()
     static void
 preedit_start_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+    xim_preediting = TRUE;
+    if (showmode() > 0)
+    {
+	setcursor();
+	out_flush();
+    }
 }
 
     static void
@@ -3043,6 +3049,12 @@ preedit_caret_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     static void
 preedit_done_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+    xim_preediting = FALSE;
+    if (showmode() > 0)
+    {
+	setcursor();
+	out_flush();
+    }
 }
 
     void

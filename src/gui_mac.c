@@ -2615,7 +2615,8 @@ gui_mch_dialog(
     char_u	*title,
     char_u	*message,
     char_u	*buttons,
-    int		dfltbutton)
+    int		dfltbutton,
+    char_u	*textfield)
 {
     Handle	buttonDITL;
     Handle	iconDITL;

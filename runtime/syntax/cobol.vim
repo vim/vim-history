@@ -3,7 +3,7 @@
 " Maintainers:  Davyd Ondrejko <vondraco@columbus.rr.com>
 "     (formerly Sitaram Chamarty <sitaram@diac.com> and
 "               James Mitchell <james_mitchell@acm.org>)
-" Last change:  2001 Jan 15
+" Last change:  2001 Apr 20
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -11,7 +11,7 @@ if exists("b:current_syntax")
 endif
 
 " MOST important - else most of the keywords wont work!
-set isk=@,48-57,-
+setlocal isk=@,48-57,-
 
 " set up other basic parameters
 syn case ignore

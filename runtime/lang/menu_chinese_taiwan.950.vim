@@ -1,6 +1,6 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
 " Translated By: 	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
-" Last Change:		2001 Apr 01
+" Last Change:		2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -81,7 +81,7 @@ menutrans &Close<Tab>^Wc		關閉視窗(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	關閉其它視窗(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			下一個(&X)<Tab>^Ww
 menutrans P&revious<Tab>^WW		上一個(&R)<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	所有視窗等高(&E)<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		所有視窗等高(&E)<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		最大高度(&M)<Tab>^W
 menutrans M&in\ Height<Tab>^W1_		最小高度(&i)<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		最大寬度<Tab>^W\|

@@ -15,7 +15,7 @@ if exists("b:current_syntax")
 endif
 
 " Set the keyword characters
-set isk=@,48-57,_,-
+setlocal isk=@,48-57,_,-
 
 syn match muttrcComment		"^#.*$"
 syn match muttrcComment		"[^\\]#.*$"lc=1

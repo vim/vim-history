@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 15
+*options.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -250,6 +250,9 @@ You will not get back the 'list' value as it was the last time you edited
 			When displaying a specific local option, show the
 			local value.  For a global option the global value is
 			shown.
+			{not in Vi}
+
+:setl[ocal] {option}<	Set the local value of {option} to its global value.
 			{not in Vi}
 
 							*:setg* *:setglobal*
@@ -620,7 +623,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Vim tries to set the default value according to the terminal used.
 	This will not always be correct.
 	Setting this option does not change the background color, it tells Vim
-	what the backround color looks like.  For changing the background
+	what the background color looks like.  For changing the background
 	color, see |:hi-normal|.
 	When starting the GUI, the default value for 'background' will be
 	"light".  When the value is not set in the .gvimrc, and Vim detects
@@ -3172,11 +3175,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 			|+multi_lang| features}
 	Language to use for menu translation.  Tells which file is loaded
 	from the "lang" directory in 'runtimepath': >
-		lang/menu_ 'langmenu' .vim
+		"lang/menu_" . &langmenu . ".vim"
 <	(without the spaces).  For example, to always use the Dutch menus, no
 	matter what $LANG is set to: >
 		:set langmenu=nl_NL.ISO_8859-1
-<	When 'langmenu' is empty, $LANG is used.
+<	When 'langmenu' is empty, |v:lang| is used.
 	If your $LANG is set to a non-English language but you do want to use
 	the English menus: >
 		:set langmenu=none

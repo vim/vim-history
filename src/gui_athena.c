@@ -18,6 +18,8 @@
 #include <X11/Xaw/SmeLine.h>
 #include <X11/Xaw/Box.h>
 #include <X11/Xaw/Dialog.h>
+#include <X11/Xaw/Text.h>
+#include <X11/Xaw/AsciiText.h>
 
 #include "vim.h"
 #include "gui_at_sb.h"
@@ -1286,9 +1288,35 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 
 #if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 
-int	dialogStatus;
+static int	dialogStatus;
+static Atom	dialogatom;
 
+static void keyhit_callback __ARGS((Widget w, XtPointer client_data, XEvent *event, Boolean *cont));
 static void butproc __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
+static void dialog_wm_handler __ARGS((Widget w, XtPointer client_data, XEvent *event, Boolean *dum));
+
+/*
+ * Callback function for the textfield.  When CR is hit this works like
+ * hitting the "OK" button, ESC like "Cancel".
+ */
+/* ARGSUSED */
+    static void
+keyhit_callback(w, client_data, event, cont)
+    Widget		w;
+    XtPointer		client_data;
+    XEvent		*event;
+    Boolean		*cont;
+{
+    char	buf[2];
+
+    if (XLookupString(&(event->xkey), buf, 2, NULL, NULL) == 1)
+    {
+	if (*buf == CR)
+	    dialogStatus = 1;
+	else if (*buf == ESC)
+	    dialogStatus = 2;
+    }
+}
 
 /* ARGSUSED */
     static void
@@ -1300,14 +1328,31 @@ butproc(w, client_data, call_data)
     dialogStatus = (int)(long)client_data + 1;
 }
 
+/*
+ * Function called when dialog window closed.
+ */
+/*ARGSUSED*/
+    static void
+dialog_wm_handler(w, client_data, event, dum)
+    Widget	w;
+    XtPointer	client_data;
+    XEvent	*event;
+    Boolean	*dum;
+{
+    if (event->type == ClientMessage
+	    && ((XClientMessageEvent *)event)->data.l[0] == dialogatom)
+	dialogStatus = 2;
+}
+
 /* ARGSUSED */
     int
-gui_mch_dialog(type, title, message, buttons, dfltbutton)
+gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     int		type;
     char_u	*title;
     char_u	*message;
     char_u	*buttons;
     int		dfltbutton;
+    char_u	*textfield;
 {
     char_u		*buts;
     char_u		*p, *next;
@@ -1319,6 +1364,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     Widget		dialog;
     Widget		dialogshell;
     Widget		dialogmessage;
+    Widget		dialogtextfield = 0;
     Widget		dialogButton;
     Widget		prev_dialogButton = NULL;
     int			butcount;
@@ -1341,6 +1387,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    NULL);
     if (dialogshell == (Widget)0)
 	goto error;
+
     dialog = XtVaCreateManagedWidget("dialog",
 	    formWidgetClass, dialogshell,
 	    XtNdefaultDistance, 20,
@@ -1359,6 +1406,31 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    XtNborderWidth, 0,
 	    NULL);
     gui_athena_menu_colors(dialogmessage);
+
+    if (textfield != NULL)
+    {
+	dialogtextfield = XtVaCreateManagedWidget("textfield",
+		asciiTextWidgetClass, dialog,
+		XtNwidth, 400,
+		XtNtop, XtChainTop,
+		XtNbottom, XtChainTop,
+		XtNleft, XtChainLeft,
+		XtNright, XtChainRight,
+		XtNfromVert, dialogmessage,
+		XtNresizable, True,
+		XtNstring, textfield,
+		XtNlength, IOSIZE,
+		XtNuseStringInPlace, True,
+		XtNeditType, XawtextEdit,
+		XtNwrap, XawtextWrapNever,
+		XtNresize, XawtextResizeHeight,
+		NULL);
+	XtManageChild(dialogtextfield);
+	XtAddEventHandler(dialogtextfield, KeyPressMask, False,
+			    (XtEventHandler)keyhit_callback, (XtPointer)NULL);
+	XawTextSetInsertionPoint(dialogtextfield, STRLEN(textfield));
+	XtSetKeyboardFocus(dialog, dialogtextfield);
+    }
 
     /* make a copy, so that we can insert NULs */
     buts = vim_strsave(buttons);
@@ -1385,7 +1457,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		XtNbottom, XtChainBottom,
 		XtNleft, XtChainLeft,
 		XtNright, XtChainLeft,
-		XtNfromVert, dialogmessage,
+		XtNfromVert, textfield == NULL ? dialogmessage : dialogtextfield,
 		XtNvertDistance, vertical ? 4 : 20,
 		XtNresizable, False,
 		NULL);
@@ -1402,6 +1474,11 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     vim_free(buts);
 
     XtRealizeWidget(dialogshell);
+
+    /* Setup for catching the close-window event, don't let it close Vim! */
+    dialogatom = XInternAtom(gui.dpy, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(gui.dpy, XtWindow(dialogshell), &dialogatom, 1);
+    XtAddEventHandler(dialogshell, NoEventMask, True, dialog_wm_handler, NULL);
 
     XtVaGetValues(dialogshell,
 	    XtNwidth, &wd,
@@ -1421,6 +1498,11 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	y = 0;
     XtVaSetValues(dialogshell, XtNx, x, XtNy, y, NULL);
 
+    /* Position the mouse pointer in the dialog, required for when focus
+     * follows mouse. */
+    XWarpPointer(gui.dpy, (Window)0, XtWindow(dialogshell), 0, 0, 0, 0, 20, 40);
+
+
     app = XtWidgetToApplicationContext(dialogshell);
 
     XtPopup(dialogshell, XtGrabNonexclusive);
@@ -1434,6 +1516,9 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     }
 
     XtPopdown(dialogshell);
+
+    if (textfield != NULL && dialogStatus < 0)
+	*textfield = NUL;
 
 error:
     XtDestroyWidget(dialogshell);

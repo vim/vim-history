@@ -1,6 +1,6 @@
-This file explains how to create and maintain po files using gnu-gettext.win32,
-a MINGW32 Windows PORT of gettext by Franco Bez <franco.bez@gmx.de>; you can
-find it at
+This file explains how to create and maintain po files using
+gnu-gettext.win32, a MINGW32 Windows port of gettext by Franco Bez
+<franco.bez@gmx.de>.  You can find it at:
 
 	http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
 
@@ -33,7 +33,7 @@ back to po, so all the work must be done from the po dir, hence the '..\')
 
 Then you must go step (2) below. 
 
-If you are updatin a po file you must follow the next steps (they are nearly
+If you are updating a po file you must follow the next steps (they are nearly
 the same as in the Unix case, only the commands change):
 
 (1) Add new and changed messages from the Vim sources:

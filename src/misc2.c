@@ -1928,7 +1928,7 @@ get_special_key_name(c, modifiers)
     idx = 1;
 
     /* Key that stands for a normal character. */
-    if (KEY2TERMCAP0(c) == KS_KEY)
+    if (IS_SPECIAL(c) && KEY2TERMCAP0(c) == KS_KEY)
 	c = KEY2TERMCAP1(c);
 
     /*

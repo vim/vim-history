@@ -482,6 +482,20 @@ label2:
 	foo();	// was wrong
 }
 
+int x;	    // no extra indent because of the ;
+void func()
+{
+}
+
+char *tab[] = {"aaa",
+	"};", /* }; */ NULL}
+	int indented;
+{}
+
+char *tab[] = {"aaa",
+	"xx", /* xx */};    /* asdf */
+int not_indented;
+
 /* end of AUTO */
 
 

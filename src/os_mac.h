@@ -88,6 +88,8 @@ struct stat
 #define USE_TMPNAM		    /* use tmpnam() instead of mktemp() */
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
+/* MPW and CodeWarrior have time.h */
+#include <time.h>
 #if defined(__DATE__) && defined(__TIME__)
 # define HAVE_DATE_TIME
 #endif

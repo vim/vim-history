@@ -8,7 +8,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=@,48-57,_,128-167,224-235,-
+setlocal iskeyword=@,48-57,_,128-167,224-235,-
 
 syn keyword omnimarkKeywords	ACTIVATE AGAIN
 syn keyword omnimarkKeywords	CATCH CLEAR CLOSE COPY COPY-CLEAR CROSS-TRANSLATE

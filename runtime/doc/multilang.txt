@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0ab.  Last change: 2001 Apr 03
+*multilang.txt* For Vim version 6.0ac.  Last change: 2001 Apr 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,27 +21,46 @@ environment variable has been set and translations for the specified language
 are available.  You don't need to do anything extra for this.
 
 If you want to overrule the language used for the menus, set the 'langmenu'
-option to the name of the language you want to use.
+option to the name of the language you want to use.  See |'langmenu'|.
 
 Note that if changes have been made to the menus after the translation was
 done, some of the menus may be shown in English.  Please try contacting the
 maintainer of the translation and ask him to update it.  You can find the
-name and e-mail address of the translator in "$VIMRUNTIME/menu_<lang>.vim".
+name and e-mail address of the translator in
+"$VIMRUNTIME/lang/menu_<lang>.vim".
+
+
+ALIAS LOCALE NAMES
+
+Unfortunately, the locale names are different on various systems, even though
+they are for the same language and encoding.  If you do not get the menu
+translations you expected, check the output of this command: >
+	echo v:lang
+Now check the "$VIMRUNTIME/lang" directory for menu translation files that use
+a similar language.  A difference in a "-" being a "_" already causes a file
+not to be found!  Another common difference to watch out for is "iso8859-1"
+versus "iso_8859-1".  Fortunately Vim makes all names lower case, thus you
+don't have to worry about case differences.
+
+If you find a menu translation file for your language with a different name,
+create a file in your own runtime directory to load that one.  The name of
+that file could be: >
+
+	~/.vim/lang/menu_<v:lang>.vim
+
+Check the 'runtimepath' option for directories which are searched.  In that
+file put a command to load the menu file with the other name: >
+
+	runtime lang/menu_<other_lang>.vim
+
+
+TRANSLATING MENUS
 
 If you want to do your own translations, you can use the |:menutrans| command,
-explained below.  For a language that has no translation yet, please consider
+explained below.  It is recommended to put the translations for one language
+in a Vim script.  For a language that has no translation yet, please consider
 becoming the maintainer and make your translations available to all Vim users.
 Send an e-mail to Bram Moolenaar <Bram@vim.org>.
-
-To add or override the menu translations, first source your translations and
-then the "menu.vim" script (this may be skipped, since they are automatically
-loaded when the GUI starts).  To avoid that a default translation is used, set
-the "did_menutrans" variable to any value.  Example: >
-
-	:source ~/vim/menu_xx_XX.ISO_8859-1.vim
-	:let did_menutrans = 1
-	:source $VIMRUNTIME/menu.vim
-<
 
 							*:menut* *:menutrans*
 :menut[rans] clear	Clear all menu translations.
@@ -52,32 +71,16 @@ the "did_menutrans" variable to any value.  Example: >
 			included.  Spaces and dots need to be escaped with a
 			backslash, just like in other |:menu| commands.
 
+See the $VIMRUNTIME/lang directory for examples.
 
-It is recommended to put the translations for one language in a Vim script.
-Here is the start of "menu_de_de.iso_8859-1.vim": >
-
-	" Menu Translations:	German
-	" Translated By: 	Marcin Dalecki <dalecki@cs.net.pl>
-	" Last Change:		2000 Jun 01
-
-	" Quit when menu translations have already been done.
-	if exists("did_menu_trans")
-	  finish
-	endif
-	let did_menu_trans = 1
-
-	" Help menu
-	menutrans &Help			&Hilfe
-	menutrans &Overview<Tab><F1>	&Überblick<Tab><F1>
-	menutrans &How-to\ links	&How-to\ Index
+To try out your translations you first have to remove all menus.  This is how
+you can do it without restarting Vim: >
+	:source $VIMRUNTIME/delmenu.vim
+	:source <your-new-menu-file>
+	:source $VIMRUNTIME/menu.vim
 
 Each part of a menu path is translated separately.  The result is that
 "Help.Overview" will be translated to "Hilfe.Überblick".
-
-To load this file automatically, give it the name "menu_$LANG.vim" and place
-it in a "lang" directory in 'runtimepath'.  The first one found will be loaded
-and the others ignore.  See "$VIMRUNTIME/lang" for examples.
-You can select another language to be used by setting the 'langmenu' option.
 
 ==============================================================================
 2. Scripts						*multilang-scripts*
@@ -113,6 +116,10 @@ a message adapt to language preferences of the user, >
 :lan[guage] mes[sages] {name}
 :lan[guage] cty[pe] {name}
 			Set the current language (aka locale) to {name}.
+			The locale {name} must be a valid locale on your
+			system.  Some systems accept aliases like "en" or
+			"en_US", but some only accept the full specification
+			like "en_US.ISO_8859-1".
 			With the "messages" argument the language used for
 			messages is set.  This can be different when you want,
 			for example, English messages while editing Japanese

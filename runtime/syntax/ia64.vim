@@ -1,30 +1,38 @@
 " Vim syntax file
-" Language:	IA-64 (Itanium) assembly language
-" Maintainer:	Parth Malwankar <parth.malwankar@usa.net>
-" URL:		http://www.geocities.com/pmalwankar (click on 'my vim page')
-"		http://www.geocities.com/pmalwankar/vim.htm (for VIM)
-" Last Change:	2001 Apr 16
+" Language:     IA-64 (Itanium) assembly language
+" Maintainer:   Parth Malwankar <parth.malwankar@usa.net>
+" URL:          http://www.geocities.com/pmalwankar (click on 'my vim page')
+"               http://www.geocities.com/pmalwankar/vim.htm (for VIM)
+" File Version: 0.3
+" Last Change:  2001 April 6
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
-endif
+" Remove any old syntax stuff hanging around
+syn clear
+
+"ignore case for assembly
+syn case ignore
 
 "  Identifier Keyword characters (defines \k)
-set iskeyword=@,48-57,#,$,.,:,?,@-@,_,~
+setl iskeyword=@,48-57,#,$,.,:,?,@-@,_,~
 
 syn sync minlines=5
 
-syn region  ia64Comment	start="//" end="$"
-syn match ia64Identifier	"[a-zA-Z_$][a-zA-Z0-9_$]*"
-syn match ia64Label		"\<[a-zA-Z_$][a-zA-Z0-9_$]*\s\=::\=\>"
-syn match ia64Octal		"0[0-7]*\>"
-syn match ia64Binary		"0[bB][01]*\>"
-syn match ia64Hex		"0[xX][0-9a-fA-F]*\>"
-syn match ia64Decimal		"[1-9][0-9]*\>"
-syn match ia64Float		"[0-9]*\.[0-9]*\([eE][+-]\=[0-9]*\)\=\>"
-syn match ia64Directive		"\<\.[a-z][a-z]\+"
-syn region ia64string		start=+L\="+ skip=+\\\\\|\\"+ end=+"+
+" Read the MASM syntax to start with
+" This is needed as both IA-64 as well as IA-32 instructions are supported
+source <sfile>:p:h/masm.vim
+
+syn region  ia64Comment start="//" end="$" contains=ia64Todo
+syn match ia64Identifier        "[a-zA-Z_$][a-zA-Z0-9_$]*"
+syn match ia64Directive         "\.[a-z][a-z]\+"
+syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=:\>"he=e-1
+syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=::\>"he=e-2
+syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=#\>"he=e-1
+syn region ia64string           start=+L\="+ skip=+\\\\\|\\"+ end=+"+
+syn match ia64Octal             "0[0-7]*\>"
+syn match ia64Binary            "0[bB][01]*\>"
+syn match ia64Hex               "0[xX][0-9a-fA-F]*\>"
+syn match ia64Decimal           "[1-9][0-9]*\>"
+syn match ia64Float             "[0-9]*\.[0-9]*\([eE][+-]\=[0-9]*\)\=\>"
 
 "simple instructions
 syn keyword ia64opcode add adds addl addp4 alloc and andcm cover epc
@@ -36,15 +44,40 @@ syn keyword ia64opcode pshradd2 psub4 rfi rsm rum shl shladd shladdp4
 syn keyword ia64opcode shrp ssm sub sum sync.i tak thash
 syn keyword ia64opcode tpa ttag xor
 
+"put to override these being recognized as floats. They are orignally from masm.vim
+"put here to avoid confusion with float
+syn match   ia64Directive       "\.186"
+syn match   ia64Directive       "\.286"
+syn match   ia64Directive       "\.286c"
+syn match   ia64Directive       "\.286p"
+syn match   ia64Directive       "\.287"
+syn match   ia64Directive       "\.386"
+syn match   ia64Directive       "\.386c"
+syn match   ia64Directive       "\.386p"
+syn match   ia64Directive       "\.387"
+syn match   ia64Directive       "\.486"
+syn match   ia64Directive       "\.486c"
+syn match   ia64Directive       "\.486p"
+syn match   ia64Directive       "\.8086"
+syn match   ia64Directive       "\.8087"
 
-"instruction bundle delimiter
-syn match ia64opcode ";;"
+
+
+"delimiters
+syn match ia64delimiter ";;"
+
+"operators
+syn match ia64operators "[\[\]()#,]"
+syn match ia64operators "\(+\|-\|=\)"
+
+"TODO
+syn match ia64Todo      "\(TODO\|XXX\|FIXME\|NOTE\)"
 
 "What follows is a long list of regular expressions for parsing the
 "ia64 instructions that use many completers
 
 "br
-syn match ia64opcode "br\(\.\(cond\|call\|ret\|ia\|cloop\|ctop\|cexit\|wtop\|wexit\)\)\=\(\.\(spnt\|dpnt\|sptk\|dptk\)\)\(\.few\|\.many\)\=\(\.clr\)\=\>"
+syn match ia64opcode "br\(\(\.\(cond\|call\|ret\|ia\|cloop\|ctop\|cexit\|wtop\|wexit\)\)\=\(\.\(spnt\|dpnt\|sptk\|dptk\)\)\=\(\.few\|\.many\)\=\(\.clr\)\=\)\=\>"
 "break
 syn match ia64opcode "break\(\.[ibmfx]\)\=\>"
 "brp
@@ -148,13 +181,16 @@ syn match ia64opcode "pmpy2\.[rl]\>"
 "pmpyshr
 syn match ia64opcode "pmpyshr2\(\.u\)\=\>"
 "probe
-syn match ia64opcode "probe\(\.\([rw]\|rw\)\(\.fault\)\=\)\>"
+syn match ia64opcode "probe\.[rw]\>"
+syn match ia64opcode "probe\.\(\(r\|w\|rw\)\.fault\)\>"
 "pshr
 syn match ia64opcode "pshr[24]\(\.u\)\=\>"
 "psub
 syn match ia64opcode "psub[12]\(\.\(sss\|uu[su]\)\)\=\>"
 "ptc
 syn match ia64opcode "ptc\.\(l\|e\|ga\=\)\>"
+"ptr
+syn match ia64opcode "ptr\.\(d\|i\)\>"
 "setf
 syn match ia64opcode "setf\.\(s\|d\|exp\|sig\)\>"
 "shr
@@ -190,9 +226,11 @@ syn match ia64registers "b[0-7]\>"
 "predicate ia64registers
 syn match ia64registers "p\([0-9]\|[1-5][0-9]\|6[0-3]\)\>"
 "application ia64registers
-syn match ia64registers "ar\.\(fpsr\|mat\|unat\|pfs\|bsp\|bspstore\|rsc\|lc\|ec\|ccv\|itc\|k[0-7]\)\>"
+syn match ia64registers "ar\.\(fpsr\|mat\|unat\|rnat\|pfs\|bsp\|bspstore\|rsc\|lc\|ec\|ccv\|itc\|k[0-7]\)\>"
+"ia32 AR's
+syn match ia64registers "ar\.\(eflag\|fcr\|csd\|ssd\|cflg\|fsr\|fir\|fdr\)\>"
 "sp/gp/pr/pr.rot/rp
-syn keyword ia64registers sp gp pr pr.rot rp ip
+syn keyword ia64registers sp gp pr pr.rot rp ip tp
 "in/out/local
 syn match ia64registers "\(in\|out\|loc\)\([0-9]\|[1-8][0-9]\|9[0-5]\)\>"
 "argument ia64registers
@@ -202,8 +240,15 @@ syn match ia64registers "fret[0-7]\>"
 "psr
 syn match ia64registers "psr\(\.\(l\|um\)\)\=\>"
 "cr
-syn match ia64registers "cr\.\(dcr\|itm\|iva\|pta\|ipsr\|isr\|ida\|iip\|idtr\|iitr\|iipa\|ifs\|iim\|iha\|lid\|ivr\|tpr\|eoi\|irr[0-3]\|itv\|pmv\|lrr[01]\|cmcva\)\>"
-
+syn match ia64registers "cr\.\(dcr\|itm\|iva\|pta\|ipsr\|isr\|ifa\|iip\|itir\|iipa\|ifs\|iim\|iha\|lid\|ivr\|tpr\|eoi\|irr[0-3]\|itv\|pmv\|lrr[01]\|cmcv\)\>"
+"Indirect registers
+syn match ia64registers "\(cpuid\|dbr\|ibr\|pkr\|pmc\|pmd\|rr\|itr\|dtr\)\>"
+"MUX permutations for 8-bit elements
+syn match ia64registers "\(@rev\|@mix\|@shuf\|@alt\|@brcst\)\>"
+"floating point classes
+syn match ia64registers "\(@nat\|@qnan\|@snan\|@pos\|@neg\|@zero\|@unorm\|@norm\|@inf\)\>"
+"link relocation operators
+syn match ia64registers "\(@\(\(gp\|sec\|seg\|image\)rel\)\|ltoff\|fptr\|ptloff\|ltv\|section\)\>"
 
 "Data allocation syntax
 syn match ia64data "data[1248]\>"
@@ -212,20 +257,33 @@ syn match ia64data "stringz\=\>"
 
 
 " The default highlighting.
-hi def link ia64Label		Label
-hi def link ia64Comment		Comment
-hi def link ia64Directive	PreProc
-hi def link ia64opcode		Statement
-hi def link ia64registers	Statement
-hi def link ia64string		String
-hi def link ia64Hex		Number
-hi def link ia64Binary		Number
-hi def link ia64Octal		Number
-hi def link ia64Float		Number
-hi def link ia64Decimal		Number
-hi def link ia64Identifier	Identifier
-hi def link ia64data		Type
+
+"put masm groups with our groups
+hi def link masmOperator    ia64operator
+hi def link masmDirective   ia64Directive
+hi def link masmOpcode      ia64Opcode
+hi def link masmIdentifier  ia64Identifier
+hi def link masmFloat       ia64Float
+
+"ia64 specific stuff
+hi def link ia64Label       Define
+hi def link ia64Comment     Comment
+hi def link ia64Directive   Type
+hi def link ia64opcode      Statement
+hi def link ia64registers   Operator
+hi def link ia64string      String
+hi def link ia64Hex         Number
+hi def link ia64Binary      Number
+hi def link ia64Octal       Number
+hi def link ia64Float       Float
+hi def link ia64Decimal     Number
+hi def link ia64Identifier  Identifier
+hi def link ia64data        Type
+hi def link ia64delimiter   Delimiter
+hi def link ia64operator    Operator
+hi def link ia64Todo        Todo
 
 let b:current_syntax = "ia64"
 
 " vim: ts=8
+

@@ -96,6 +96,7 @@ static void	ex_blast __ARGS((exarg_T *eap));
 # define ex_brewind		ex_ni
 # define ex_blast		ex_ni
 # define buflist_list		ex_ni
+# define ex_checktime		ex_ni
 #endif
 #if !defined(FEAT_LISTCMDS) || !defined(FEAT_WINDOWS)
 # define do_buffer_all		ex_ni
@@ -2549,6 +2550,7 @@ set_one_cmd_context(xp, buff)
 	    /*FALLTHROUGH*/
 	case CMD_buffer:
 	case CMD_sbuffer:
+	case CMD_checktime:
 	    xp->xp_context = EXPAND_BUFFERS;
 	    xp->xp_pattern = arg;
 	    break;
@@ -2609,6 +2611,19 @@ set_one_cmd_context(xp, buff)
 	case CMD_tmenu:				    case CMD_tunmenu:
 	case CMD_popup:	    case CMD_tearoff:	    case CMD_emenu:
 	    return set_context_in_menu_cmd(xp, cmd, arg, forceit);
+#endif
+
+#if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+	&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))
+	case CMD_language:
+	    if (*skiptowhite(arg) == NUL)
+	    {
+		xp->xp_context = EXPAND_LANGUAGE;
+		xp->xp_pattern = arg;
+	    }
+	    else
+		xp->xp_context = EXPAND_NOTHING;
+	    break;
 #endif
 
 #endif /* FEAT_CMDL_COMPL */
@@ -8992,4 +9007,24 @@ ex_language(eap)
 	}
     }
 }
+
+# if defined(FEAT_CMDL_COMPL) || defined(PROTO)
+/*
+ * Function given to ExpandGeneric() to obtain the possible arguments of the
+ * ":language" command.
+ */
+/*ARGSUSED*/
+    char_u *
+get_lang_arg(xp, idx)
+    expand_T	*xp;
+    int		idx;
+{
+    if (idx == 0)
+	return (char_u *)"messages";
+    if (idx == 1)
+	return (char_u *)"ctype";
+    return NULL;
+}
+# endif
+
 #endif

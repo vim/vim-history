@@ -30,7 +30,9 @@
 # define HAVE_STRFTIME		/* guessed */
 #endif
 #define HAVE_MEMSET
-#define HAVE_LOCALE_H 1
+#ifndef HAVE_LOCALE_H
+# define HAVE_LOCALE_H 1
+#endif
 #ifndef HAVE_FCNTL_H
 # define HAVE_FCNTL_H
 #endif

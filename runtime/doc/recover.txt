@@ -1,4 +1,4 @@
-*recover.txt*   For Vim version 6.0ab.  Last change: 2000 Jul 07
+*recover.txt*   For Vim version 6.0ac.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -208,7 +208,7 @@ put the swap file.
 Note: Vim tries to find the swap file by searching the directories in the
 'dir' option, looking for files that match "filename.sw?".  If wildcard
 expansion doesn't work (e.g., when the 'shell' option is invalid), Vim does a
-desparate try to find the file "filename.swp".  If that fails too, you will
+desperate try to find the file "filename.swp".  If that fails too, you will
 have to give the name of the swapfile itself to be able to recover the file.
 
 Another way to do recovery is to start Vim and use the ":recover" command.

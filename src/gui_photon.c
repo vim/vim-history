@@ -1445,7 +1445,8 @@ gui_mch_dialog(
 	char_u	*title,
 	char_u	*message,
 	char_u	*buttons,
-	int	default_button )
+	int	default_button,
+	char_u	*textfield)
 {
     char_u	*str;
     char_u	**button_array;

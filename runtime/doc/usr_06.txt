@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0ab.  Last change: 2001 Feb 18
+*usr_06.txt*	For Vim version 6.0ac.  Last change: 2001 Feb 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -19,7 +19,7 @@ Table of contents: |usr_toc.txt|
 *06.1*  The vimrc file
 
 You probably got tired of typing commands that you use very often.  To start
-with all your favirite option settings and mappings, you write them in what is
+with all your favorite option settings and mappings, you write them in what is
 called the vimrc file.
 
 --todo--

@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0ab.  Last change: 2001 Mar 29
+*term.txt*      For Vim version 6.0ac.  Last change: 2001 Mar 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -412,7 +412,7 @@ builtin_xterm or define t_cs yourself.  For example: >
 	:set t_cs=^V^[[%i%d;%dr
 
 The vertical scroll region t_CV is not a standard termcap code.  Vim uses it
-internall in the GUI.  But it can also be defined for a terminal, if you can
+internally in the GUI.  But it can also be defined for a terminal, if you can
 find one that supports it.  The two arguments are the left and right column of
 the region which to restrict the scrolling to.  Just like t_cs defines the top
 and bottom lines.  Defining t_CV will make scrolling in vertically split

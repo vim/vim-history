@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 14
+*editing.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,6 +13,7 @@ Editing files						*edit-files*
 5. Writing and quitting		|write-quit|
 6. Editing binary files		|edit-binary|
 7. Encryption			|encryption|
+8. Timestamps			|timestamps|
 
 ==============================================================================
 1. Introduction						*edit-intro*
@@ -198,6 +199,29 @@ The syntax is best shown via some examples: >
 Also see the |'browsedir'| option.
 For versions of Vim where browsing is not supported, the command is executed
 unmodified.
+
+							*browsefilter*
+For MS Windows, you can modify the filters that are used in the browse dialog.
+By setting the g:browsefilter or b:browsefilter variables, you can change the
+filters globally or locally to the buffer.  The variable is set to a string in
+the format "{filter label}\t{patter};{pattern}>\n" where {filter label} is the
+text that appears in the "Files of Type" comboBox, and {pattern} is the
+pattern which filters the filenames.  Several patterns can be given, separated
+by ';'.
+
+For Motif the same format is used, but only the very first pattern is actually
+used (Motif only offers one pattern, but you can edit it).
+
+For example, to have only Vim files in the dialog, you could use the following
+command: >
+
+     let g:browsefilter="Vim Scripts\t*.vim\nVim Startup Files\t*vimrc\n"
+
+You can override the filter setting on a per-buffer basis by setting the
+b:browsefilter variable.  You would most likely set b:browsefilter in a
+filetype plugin, so that the browse dialog would contain entries related to
+the type of file you are currently editing.  Disadvantage: This makes it
+difficult to start editing a file of a different type.
 
 ==============================================================================
 2. Editing a file					*edit-a-file*
@@ -537,7 +561,7 @@ options.  There are three different types of searching:
 	/u/user_x/work/**
 	/u/user_x/**
 <
-   BE CAREFULL! This might consume a lot of time, as the search of
+   BE CAREFUL! This might consume a lot of time, as the search of
    '/u/user_x/**' includes '/u/user_x/work/**' and
    '/u/user_x/work/release/**'.  So '/u/user_x/work/release/**' is searched
    three and '/u/user_x/work/**' is searched two times.
@@ -1008,34 +1032,8 @@ ZZ			Write current file, if modified, and quit (same as
 ZQ			Quit without checking for changes (same as ":q!").
 			{not in Vi}
 
-							*timestamp*
-Vim remembers the modification timestamp of a file when you begin editing it.
-Before writing a file the timestamp is checked.  If it has changed, Vim will
-ask if you really want to overwrite the file:
-
-	WARNING: The file has been changed since reading it!!!
-	Do you really want to write to it (y/n)?
-
-If you hit 'y' Vim will continue writing the file.  If you hit 'n' the write is
-aborted.  If you used ":wq" or "ZZ" Vim will not exit, you will get another
-chance to write the file.
-
-If you want to automatically reload a file when it has been changed outside of
-Vim, set the 'autoread' option.  This doesn't work at the moment you write the
-file though, only when the file wasn't changed inside of Vim.
-
-Alternatively, after a shell command is run (|:!cmd| |suspend| |:read!| |K|)
-ALL timestamps are compared.   Vim will run any associated |FileChangedShell|
-autocommands or display the above WARNING for any files that have changed.
-
-The message would normally mean that somebody has written to the file after
-the edit session started.  This could be another person, in which case you
-probably want to check if your changes to the file and the changes from the
-other person should be merged.  Write the file under another name and check for
-differences (the "diff" program can be used for this).
-It is also possible that you modified the file yourself, from another edit
-session or with another command (e.g., a filter command).  Then you will know
-which version of the file you want to keep.
+Vim will warn you if you try to overwrite a file that has been changed
+elsewhere.  See |timestamp|.
 
 							*backup*
 If you write to an existing file (but do not append) while the 'backup',
@@ -1066,7 +1064,7 @@ file in.  (default: same directory as the written file).
 
 Whether the backup is a new file, which is a copy of the original file, or the
 original file renamed depends on the 'backupcopy' option.  See there for an
-explantion ofwhen the copy is made and when the file is renamed.
+explanation of when the copy is made and when the file is renamed.
 
 If the creation of a backup file fails, the write is not done.  If you want
 to write anyway add a '!' to the command.
@@ -1226,5 +1224,76 @@ Notes:
   Pkzip's public file APPNOTE.TXT describes this algorithm in detail.
 - Vim originates from the Netherlands.  That is where the sources come from.
   Thus the encryption code is not exported from the USA.
+
+==============================================================================
+8. Timestamps					*timestamp* *timestamps*
+
+Vim remembers the modification timestamp of a file when you begin editing it.
+This is used to avoid that you have two different versions of the same file
+(without you knowing this).
+
+After a shell command is run (|:!cmd| |suspend| |:read!| |K|) timestamps are
+compared for all buffers in a window.   Vim will run any associated
+|FileChangedShell| autocommands or display a warning for any files that have
+changed.
+
+If you want to automatically reload a file when it has been changed outside of
+Vim, set the 'autoread' option.  This doesn't work at the moment you write the
+file though, only when the file wasn't changed inside of Vim.
+
+Note that if a FileChangedShell autocommand is defined you will not get a
+warning message or prompt.  The autocommand is expected to handle this.
+
+There is no warning for a directory (e.g., in the |file-explorer|).  But you
+do get warned if you started editing a new file and it was created as a
+directory later.
+
+If you don't get warned often enough you can use the following command.
+
+							*:checkt* *:checktime*
+:checkt[ime]		Check if any buffers were changed outside of Vim.
+			This checks and warns you if you would end up with two
+			versions of a file.
+			If this is called from an autocommand, a ":global"
+			command or is not typed the actual check is postponed
+			until a moment the side effects (reloading the file)
+			would be harmless.
+			Each loaded buffer is checked for its associated file
+			being changed.  If the file was changed Vim will take
+			action.  If there are no changes in the buffer and
+			'autoread' is set, the buffer is reloaded.  Otherwise,
+			you are offered the choice of reloading the file.  If
+			the file was deleted you get an error message.
+			If the file previously didn't exist you get a warning
+			if it exists now.
+			Once a file has been checked the timestamp is reset,
+			you will not be warned again.
+
+:[N]checkt[ime] {filename}
+:[N]checkt[ime] [N]
+			Check the timestamp of a specific buffer.  The buffer
+			may be specified by name, number or with a pattern.
+
+
+Before writing a file the timestamp is checked.  If it has changed, Vim will
+ask if you really want to overwrite the file:
+
+	WARNING: The file has been changed since reading it!!!
+	Do you really want to write to it (y/n)?
+
+If you hit 'y' Vim will continue writing the file.  If you hit 'n' the write is
+aborted.  If you used ":wq" or "ZZ" Vim will not exit, you will get another
+chance to write the file.
+
+The message would normally mean that somebody has written to the file after
+the edit session started.  This could be another person, in which case you
+probably want to check if your changes to the file and the changes from the
+other person should be merged.  Write the file under another name and check for
+differences (the "diff" program can be used for this).
+
+It is also possible that you modified the file yourself, from another edit
+session or with another command (e.g., a filter command).  Then you will know
+which version of the file you want to keep.
+
 
  vim:tw=78:

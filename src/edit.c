@@ -3446,7 +3446,8 @@ get_literal()
 #endif
 		    )
 	    {
-		if (!vim_isdigit(nc) && !isxdigit(nc))
+		/* Careful: isxdigit() on Win32 can handle only 0-255 */
+		if (nc < 0 || nc > 255 || (!vim_isdigit(nc) && !isxdigit(nc)))
 		    break;
 		cc = cc * 16 + hex2nr(nc);
 	    }

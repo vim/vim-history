@@ -204,6 +204,7 @@ static void f_col __ARGS((VAR argvars, VAR retvar));
 static void f_confirm __ARGS((VAR argvars, VAR retvar));
 static void f_cscope_connection __ARGS((VAR argvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
+static void f_inputdialog __ARGS((VAR argvars, VAR retvar));
 static void f_did_filetype __ARGS((VAR argvars, VAR retvar));
 static void f_escape __ARGS((VAR argvars, VAR retvar));
 static void f_eventhandler __ARGS((VAR argvars, VAR retvar));
@@ -2317,6 +2318,7 @@ static struct fst
     {"iconv",		3, 3, f_iconv},
     {"indent",		1, 1, f_indent},
     {"input",		1, 2, f_input},
+    {"inputdialog",	1, 2, f_inputdialog},
     {"inputsecret",	1, 2, f_inputsecret},
     {"isdirectory",	1, 1, f_isdirectory},
     {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
@@ -2999,7 +3001,8 @@ f_confirm(argvars, retvar)
 	}
     }
 
-    retvar->var_val.var_number = do_dialog(type, NULL, message, buttons, def);
+    retvar->var_val.var_number = do_dialog(type, NULL, message, buttons,
+								   def, NULL);
 #else
     retvar->var_val.var_number = 0;
 #endif
@@ -4518,6 +4521,40 @@ f_input(argvars, retvar)
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
     msg_didout = FALSE;
+}
+
+/*
+ * "inputdialog()" function
+ */
+    static void
+f_inputdialog(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#if defined(FEAT_GUI_TEXTDIALOG)
+    if (gui.in_use)
+    {
+	char_u	*message;
+	char_u	buf[NUMBUFLEN];
+
+	message = get_var_string(&argvars[0]);
+	if (argvars[1].var_type != VAR_UNKNOWN)
+	{
+	    STRNCPY(IObuff, get_var_string_buf(&argvars[1], buf), IOSIZE);
+	    IObuff[IOSIZE - 1] = NUL;
+	}
+	else
+	    IObuff[0] = NUL;
+	if (do_dialog(VIM_QUESTION, NULL, message, (char_u *)_("&OK\n&Cancel"),
+							      1, IObuff) == 1)
+	    retvar->var_val.var_string = vim_strsave(IObuff);
+	else
+	    retvar->var_val.var_string = NULL;
+	retvar->var_type = VAR_STRING;
+    }
+    else
+#endif
+	f_input(argvars, retvar);
 }
 
 /*

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 13
+*eval.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -750,6 +750,7 @@ hlID( {name})			Number	syntax ID of highlight group {name}
 hostname()			String	name of the machine vim is running on
 indent( {lnum})			Number  indent of line {lnum}
 input( {prompt} [, {text}])	String	get input from the user
+inputdialog( {prompt} [, {text}]) String  like input() but in a GUI dialog
 inputsecret( {prompt} [, {text}]) String  like input() but hiding the text
 isdirectory( {directory})	Number	TRUE if {directory} is a directory
 libcall( {lib}, {func}, {arg})	String  call {func} in library {lib} with {arg}
@@ -1521,6 +1522,17 @@ input({prompt} [, {text}])				*input()*
 			:endif
 <		Example with default text: >
 			:let color = input("Color? ", "white")
+
+inputdialog({prompt} [, {text})				*inputdialog()*
+		Like input(), but when the GUI is running and text dialogs are
+		supported, a dialog window pops up to input the text.
+		Example: >
+			:let n = inputdialog("value for shiftwidth", &sw)
+			:if n != ""
+			:  let &sw = n
+			:endif
+<		Hitting <Enter> works like pressing the OK button.  Hitting
+		<Esc> works like pressing the Cancel button.
 
 inputsecret({prompt} [, {text}])			*inputsecret()*
 		This function acts much like the |input()| function with but

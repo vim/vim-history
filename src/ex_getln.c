@@ -808,6 +808,14 @@ getcmdline(firstc, count, indent)
 		redrawcmd();
 		goto cmdline_changed;
 
+#ifdef FEAT_CLIPBOARD
+	case Ctrl_Y:
+		/* Copy the modeless selection, if there is one. */
+		if (clip_star.state == SELECT_DONE)
+		    clip_copy_modeless_selection(TRUE);
+		goto cmdline_not_changed;
+#endif
+
 	case ESC:	/* get here if p_wc != ESC or when ESC typed twice */
 	case Ctrl_C:
 		/* In exmode it doesn't make sense to return. */
@@ -3115,6 +3123,10 @@ ExpandFromContext(xp, pat, num_file, file, options)
 #ifdef FEAT_AUTOCMD
 	    {EXPAND_EVENTS, get_event_name, TRUE},
 	    {EXPAND_AUGROUP, get_augroup_name, TRUE},
+#endif
+#if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+	&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))
+	    {EXPAND_LANGUAGE, get_lang_arg, TRUE},
 #endif
 	    {EXPAND_ENV_VARS, get_env_name, TRUE},
 	};

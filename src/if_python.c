@@ -32,6 +32,10 @@
 # undef HAVE_FCNTL_H
 #endif
 
+#ifdef _DEBUG
+# undef _DEBUG
+#endif
+
 #include <Python.h>
 #ifdef macintosh
 # include "macglue.h"
@@ -364,7 +368,7 @@ Python_Init(void)
 #ifdef DYNAMIC_PYTHON
 	if (!python_enabled())
 	{
-	    emsg("Sorry, this command is disabled, the Python library could not be loaded.");
+	    EMSG(_("Sorry, this command is disabled, the Python library could not be loaded."));
 	    goto fail;
 	}
 #endif

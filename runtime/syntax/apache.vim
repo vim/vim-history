@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Apache httpd.conf, srm.conf, access.conf, .htaccess
 " Maintainer: David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Feb 04
+" Last Change: 2001 Apr 20
 "              (synchronized with Apache 1.3.14 documentation)
 " URL: http://physics.muni.cz/~yeti/download/apache.vim
 " TODO: see particular FIXME's scattered thorough the file
@@ -13,7 +13,7 @@ endif
 
 " SECTION: basic setup
 syn case ignore
-set iskeyword=a-z,A-Z,48-57,-,+,_
+setlocal iskeyword=a-z,A-Z,48-57,-,+,_
 syn match   apacheComment       "^\s*#.*$"
 syn match apacheAnything "\s[^>]*" contained
 syn match apacheError "\w\+" contained

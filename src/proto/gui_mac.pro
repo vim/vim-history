@@ -95,3 +95,9 @@ void gui_win_free __PARMS((win_T *wp));
 void gui_win_alloc __PARMS((win_T *wp));
 void mch_post_buffer_write (buf_T *buf);
 
+void mch_errmsg __ARGS((char *str));
+void mch_display_error __ARGS((void));
+void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
+void clip_mch_request_selection __ARGS((VimClipboard *cbd));
+void clip_mch_set_selection __ARGS((VimClipboard *cbd));
+int clip_mch_own_selection __ARGS((VimClipboard *cbd));

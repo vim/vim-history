@@ -2394,7 +2394,6 @@ inchar(buf, maxlen, wait_time)
     int		len = 0;	    /* init for GCC */
     int		retesc = FALSE;	    /* return ESC with gotint */
     int		script_char;
-    int		i;
 
     if (wait_time == -1L || wait_time > 100L)  /* flush output before waiting */
     {
@@ -2479,6 +2478,23 @@ inchar(buf, maxlen, wait_time)
 	len = ui_inchar(buf, maxlen / 3, wait_time);
     }
 
+    return fix_input_buffer(buf, len, script_char >= 0);
+}
+
+/*
+ * Fix typed characters for use by vgetc() and check_termcode().
+ * buf[] must have room to triple the number of bytes!
+ * Returns the new length.
+ */
+    int
+fix_input_buffer(buf, len, script)
+    char_u	*buf;
+    int		len;
+    int		script;		/* TRUE when reading from a script */
+{
+    int		i;
+    char_u	*p = buf;
+
     /*
      * Two characters are special: NUL and K_SPECIAL.
      * When compiled With the GUI CSI is also special.
@@ -2487,38 +2503,38 @@ inchar(buf, maxlen, wait_time)
      * Replace       CSI by K_SPECIAL KS_EXTRA   KE_CSI
      * Don't replace K_SPECIAL when reading a script file.
      */
-    for (i = len; --i >= 0; ++buf)
+    for (i = len; --i >= 0; ++p)
     {
 #ifdef FEAT_GUI
 	/* When the GUI is used any character can come after a CSI, don't
 	 * escape it. */
-	if (gui.in_use && buf[0] == CSI && i >= 2)
+	if (gui.in_use && p[0] == CSI && i >= 2)
 	{
-	    buf += 2;
+	    p += 2;
 	    i -= 2;
 	}
 	/* When the GUI is not used CSI needs to be escaped. */
-	else if (!gui.in_use && buf[0] == CSI)
+	else if (!gui.in_use && p[0] == CSI)
 	{
-	    mch_memmove(buf + 3, buf + 1, (size_t)i);
-	    *buf++ = K_SPECIAL;
-	    *buf++ = KS_EXTRA;
-	    *buf = (int)KE_CSI;
+	    mch_memmove(p + 3, p + 1, (size_t)i);
+	    *p++ = K_SPECIAL;
+	    *p++ = KS_EXTRA;
+	    *p = (int)KE_CSI;
 	    len += 2;
 	}
 	else
 #endif
-	if (buf[0] == NUL || (buf[0] == K_SPECIAL && script_char < 0))
+	if (p[0] == NUL || (p[0] == K_SPECIAL && !script))
 	{
-	    mch_memmove(buf + 3, buf + 1, (size_t)i);
-	    buf[2] = K_THIRD(buf[0]);
-	    buf[1] = K_SECOND(buf[0]);
-	    buf[0] = K_SPECIAL;
-	    buf += 2;
+	    mch_memmove(p + 3, p + 1, (size_t)i);
+	    p[2] = K_THIRD(p[0]);
+	    p[1] = K_SECOND(p[0]);
+	    p[0] = K_SPECIAL;
+	    p += 2;
 	    len += 2;
 	}
     }
-    *buf = NUL;				    /* add trailing NUL */
+    *p = NUL;		/* add trailing NUL */
     return len;
 }
 

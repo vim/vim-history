@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0ab.  Last change: 2001 Mar 07
+*debugger.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -41,7 +41,7 @@ The purpose of the input connection is to let the external debugger send
 commands to Vim. The commands sent by the debugger should give the debugger
 enough control to display the current debug environment and state.
 
-The current implementation is based on the X Toolkit displatch loop and the
+The current implementation is based on the X Toolkit dispatch loop and the
 XtAddInput() function call.
 
 1.2 Debug Signs						*debug-signs*

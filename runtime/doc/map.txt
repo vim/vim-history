@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ab.  Last change: 2001 Apr 14
+*map.txt*       For Vim version 6.0ac.  Last change: 2001 Apr 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -17,13 +17,16 @@ Key mapping and abbreviations.
 Key mapping is used to change the meaning of typed keys.  The most common use
 is to define a sequence commands for a function key.  Example: >
 
-	:map <F2> a<C-R>=strftime("%c")<CR><Es>
+	:map <F2> a<C-R>=strftime("%c")<CR><Esc>
 
 This appends the current date and time after the cursor. (in <> notation |<>|)
 
 There are commands to enter new mappings, remove mappings and list mappings.
 See |map-overview| for the various forms of "map" and their relationships with
 modes.
+
+{lhs}	means left-hand-side	*{lhs}*
+{rhs}	means right-hand-side	*{rhs}*
 
 :map	{lhs} {rhs}					*:map*
 :nm[ap]	{lhs} {rhs}					*:nm* *:nmap*
@@ -111,7 +114,7 @@ translate one key into another, etc.  See |:mkexrc| for how to save and
 restore the current mappings.
 
 						*:map-local* *:map-<buffer>*
-If the first argument to one of these commands is "<buffer>" it will aply to
+If the first argument to one of these commands is "<buffer>" it will apply to
 mappings locally to the current buffer only.  Example: >
 	:map <buffer>  ,w  /[.,;]<CR>
 Then you can map ",w" to something else in another buffer: >

@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ab
+MINOR = 0ac
 
 # CHECKLIST for creating a new version:
 #
@@ -543,6 +543,7 @@ RT_ALL =	\
 		runtime/doc/doctags.c \
 		runtime/doc/tags \
 		runtime/doc/vim.1 \
+		runtime/doc/evim.1 \
 		runtime/doc/vimdiff.1 \
 		runtime/doc/vimtutor.1 \
 		runtime/doc/xxd.1 \

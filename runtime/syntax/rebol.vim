@@ -2,7 +2,7 @@
 " Language:	Rebol
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
 " Filenames:	*.r
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 " URL:		N/A
 "
 " Change history
@@ -16,7 +16,7 @@ endif
 syn case ignore
 
 " As per current users documentation
-set isk=@,48-57,?,!,.,',+,-,*,&,\|,=,_,~
+setlocal isk=@,48-57,?,!,.,',+,-,*,&,\|,=,_,~
 
 " Yer TODO highlighter
 syn keyword	rebolTodo	contained TODO

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Maple V (based on release 4)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	October 16, 1998
+" Last Change:	April 20, 2001
 "
 " Because there are a lot of packages, and because of the potential for namespace
 " clashes, this version of <maple.vim> needs the user to select which, if any,
@@ -20,7 +20,11 @@ if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=$,48-57,_,a-z,@-Z
+if version >= 600
+  setlocal iskeyword=$,48-57,_,a-z,@-Z
+else
+  set iskeyword=$,48-57,_,a-z,@-Z
+endif
 
 " allow user to simply select all packages for highlighting
 if exists("mvpkg_all")

@@ -8,7 +8,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=$,@,48-57,_
+setlocal iskeyword=$,@,48-57,_
 
 syn case ignore
 syn keyword IstInpSpec  actual  arg_close arg_open encap       escape 

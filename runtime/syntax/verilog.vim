@@ -8,7 +8,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=@,48-57,_,192-255,+,-,?
+setlocal iskeyword=@,48-57,_,192-255,+,-,?
 
 
 " A bunch of useful Verilog keywords

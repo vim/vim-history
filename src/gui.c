@@ -3454,15 +3454,18 @@ gui_update_horiz_scrollbar(force)
 	p = ml_get_curline();
 	max = 0;
 	if (p != NULL && p[0] != NUL)
-	    while (p[1] != NUL)		    /* Don't count last character */
+	    for (;;)
 	    {
-		max += chartabsize(p, (colnr_T)max);
+		int w = chartabsize(p, (colnr_T)max);
 #ifdef FEAT_MBYTE
 		if (has_mbyte)
 		    p += (*mb_ptr2len_check)(p);
 		else
 #endif
 		    ++p;
+		if (*p == NUL)		/* Don't count last character */
+		    break;
+		max += w;
 	    }
 #ifndef SCROLL_PAST_END
 	max += W_WIDTH(curwin) - 1;

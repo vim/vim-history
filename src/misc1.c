@@ -2508,7 +2508,7 @@ ask_yesno(str, direct)
     int
 get_keystroke()
 {
-#define CBUFLEN 51
+#define CBUFLEN 151
     char_u	buf[CBUFLEN];
     int		len = 0;
     int		n;
@@ -2520,10 +2520,16 @@ get_keystroke()
 
 	/* First time: blocking wait.  Second time: wait up to 100ms for a
 	 * terminal code to complete.  Leave some room for check_termcode() to
-	 * insert a key code into (max 5 chars plus NUL). */
-	n = ui_inchar(buf + len, CBUFLEN - 6 - len, len == 0 ? -1L : 100L);
+	 * insert a key code into (max 5 chars plus NUL).  And
+	 * fix_input_buffer() can triple the number of bytes. */
+	n = ui_inchar(buf + len, (CBUFLEN - 6 - len) / 3,
+						       len == 0 ? -1L : 100L);
 	if (n > 0)
+	{
+	    /* Replace zero and CSI by a special key code. */
+	    n = fix_input_buffer(buf + len, n, FALSE);
 	    len += n;
+	}
 
 	/* incomplete termcode: get more characters */
 	if ((n = check_termcode(1, buf, len)) < 0)
@@ -3849,6 +3855,7 @@ static int	cin_isif __ARGS((char_u *));
 static int	cin_iselse __ARGS((char_u *));
 static int	cin_isdo __ARGS((char_u *));
 static int	cin_iswhileofdo __ARGS((char_u *, linenr_T, int));
+static int	cin_ends_in __ARGS((char_u *, char_u *));
 static int	cin_skip2pos __ARGS((pos_T *trypos));
 static pos_T	*find_start_brace __ARGS((int));
 static pos_T	*find_match_paren __ARGS((int, int));
@@ -4279,6 +4286,34 @@ cin_iswhileofdo(p, lnum, ind_maxparen)	    /* XXX */
 	curwin->w_cursor = cursor_save;
     }
     return retval;
+}
+
+/*
+ * Return TRUE if string "s" ends with the string "find", possibly followed by
+ * white space and comments.  Skip strings and comments.
+ */
+    static int
+cin_ends_in(s, find)
+    char_u	*s;
+    char_u	*find;
+{
+    char_u	*p = s;
+    char_u	*r;
+    int		len = STRLEN(find);
+
+    while (*p != NUL)
+    {
+	p = skip_string(cin_skipcomment(p));
+	if (STRNCMP(p, find, len) == 0)
+	{
+	    r = skipwhite(p + len);
+	    if (*r == NUL || cin_iscomment(r))
+		return TRUE;
+	}
+	if (*p != NUL)
+	    ++p;
+    }
+    return FALSE;
 }
 
 /*
@@ -5556,11 +5591,13 @@ term_again:
 	/*
 	 * If the NEXT line is a function declaration, the current
 	 * line needs to be indented as a function type spec.
-	 * Don't do this if the current line looks like a comment.
+	 * Don't do this if the current line looks like a comment
+	 * or if the current line is terminated, ie. ends in ';'.
 	 */
 	else if (cur_curpos.lnum < curbuf->b_ml.ml_line_count
 		&& !cin_nocode(theline)
-		&& cin_isfuncdecl(ml_get(cur_curpos.lnum + 1)))
+		&& cin_isfuncdecl(ml_get(cur_curpos.lnum + 1))
+		&& !cin_isterminated(theline, FALSE))
 	{
 	    amount = ind_func_type;
 	}
@@ -5599,6 +5636,15 @@ term_again:
 		 * current line at the left margin.  For when 'cino' has "fs".
 		 */
 		if (*skipwhite(l) == '}')
+		    break;
+
+		/*
+		 * If the previous line ends on '};' (maybe followed by
+		 * comments) align at column 0.  For example:
+		 * char *string_array[] = { "foo",
+		 *     / * x * / "b};ar" }; / * foobar * /
+		 */
+		if (cin_ends_in(l, (char_u *)"};"))
 		    break;
 
 		/*

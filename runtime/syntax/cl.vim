@@ -9,7 +9,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-set isk=@,48-57,_,-,
+setlocal isk=@,48-57,_,-,
 syn case ignore
 
 syn sync lines=300

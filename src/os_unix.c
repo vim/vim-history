@@ -2135,7 +2135,10 @@ mch_windexit(r)
 	if (newline_on_exit || (msg_didout && !swapping_screen()))
 	    out_char('\n');
 	else
+	{
 	    msg_clr_eos();	/* clear the rest of the display */
+	    windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
+	}
 
 	/* Cursor may have been switched off without calling starttermcap()
 	 * when doing "vim -u vimrc" and vimrc contains ":q". */

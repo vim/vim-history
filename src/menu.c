@@ -1391,7 +1391,7 @@ get_menu_index(menu, state)
 #endif
 	if ((state & INSERT))
 	idx = MENU_INDEX_INSERT;
-    else if ((state & CMDLINE))
+    else if ((state & CMDLINE) || state == HITRETURN || state == ASKMORE)
 	idx = MENU_INDEX_CMDLINE;
     else if (finish_op)
 	idx = MENU_INDEX_OP_PENDING;
@@ -1554,7 +1554,7 @@ get_menu_mode()
 #endif
     if (State & INSERT)
 	return MENU_INDEX_INSERT;
-    if (State & CMDLINE)
+    if ((State & CMDLINE) || State == ASKMORE || State == HITRETURN)
 	return MENU_INDEX_CMDLINE;
     if (finish_op)
 	return MENU_INDEX_OP_PENDING;

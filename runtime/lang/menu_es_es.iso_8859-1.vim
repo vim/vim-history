@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Apr 07
+" Last Change:	2001 Apr 17
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -28,7 +28,8 @@ menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&brir\ en\ otra\ ventana\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nuevo<Tab>:enew
 menutrans &Close<Tab>:q			&Cerrar<Tab>:q
 menutrans &Save<Tab>:w			&Guardar<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:w	Guardar\ &como\.\.\.<Tab>:w
+menutrans Save\ &As\.\.\.<Tab>:sav	Guardar\ &como\.\.\.<Tab>:sav
+menutrans Show\ &Diff\ with\.\.\.	&Mostrar\ diferencias\ con\.\.\.
 menutrans &Print			&Imprimir
 menutrans Sa&ve-Exit<Tab>:wqa		Gua&rdar\ y\ salir<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Salir<Tab>:qa
@@ -54,8 +55,8 @@ menutrans Se&ttings			&Opciones
 
 " Build boolean options
 menutrans Toggle\ Line\ Numbering<TAB>:set\ number!	Activar/Desactivar\ numeración\ de\ líneas<TAB>:set\ number!
-menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!	Activar/Desactivar\ doblado\ de\ líneas<TAB>:set\ wrap!	
-menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!	Activar/Desactivar\ búsqueda\ realzada<TAB>:set\ hlsearch!	
+menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!		Activar/Desactivar\ doblado\ de\ líneas<TAB>:set\ wrap!	
+menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!		Activar/Desactivar\ búsqueda\ realzada<TAB>:set\ hlsearch!	
 menutrans Toggle\ expandtab<TAB>:set\ expandtab!	Activar/Desactivar\ expansión\ de\ tabs<TAB>:set\ expandtab!	
 
 " Build GUI options
@@ -72,23 +73,43 @@ menutrans &Tools			&Herramientas
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Saltar\ a\ este\ «tag»<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Saltar\ &atrás<Tab>^T
 menutrans Build\ &Tags\ File		&Generar\ fichero\ de\ «tags»\
+menutrans &Folding			&Plegado
 menutrans &Make<Tab>:make		Ejecutar\ «&Make»<Tab>:make
 menutrans &List\ Errors<Tab>:cl		&Lista\ de\ errores<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	L&ista\ de\ mensajes<Tab>:cl!
 menutrans &Next\ Error<Tab>:cn		&Error\ siguiente<Tab>:cn
-menutrans &Previous\ Error<Tab>:cp	Error\ &previo<Tab>:cp
+menutrans &Previous\ Error<Tab>:cp	Error\ p&revio<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ de\ &viejos\ a\ nuevos<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ de\ &nuevos\ a\ viejos<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	Ven&tana\ de\ errores<Tab>:cwin
 menutrans Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
 
+" Tools.Fold Menu
+menutrans &Enable/Disable\ folds<TAB>zi		&Activar/Desactivar\ pliegues<TAB>zi
+menutrans &View\ Cursor\ Line<TAB>zv		&Ver\ línea\ del\ cursor<TAB>zv
+menutrans Vie&w\ Cursor\ Line\ only<TAB>zMzx	Ve&r\ sólo\ la\ línea\ del\ cursor<TAB>zMzx
+menutrans C&lose\ more\ folds<Tab>zm		C&errar\ más\ pliegues<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM		&Cerrar\ todos\ los\ pliegues<Tab>zM
+menutrans O&pen\ more\ folds<Tab>zr		Abrir\ &más\ pliegues<Tab>zr
+menutrans &Open\ all\ folds<Tab>zR		&Abrir\ todos\ los\ pliegues<Tab>zR
+" fold method
+menutrans Fold\ Met&hod				&Método\ de\ plegado
+" create and delete folds
+menutrans Create\ &Fold<TAB>zf			Crear\ &pliegue<TAB>zf
+menutrans &Delete\ Fold<TAB>zd			&Suprimir\ pliegue<TAB>zd
+menutrans Delete\ &All\ Folds<TAB>zD		Suprimir\ &todos\ los\ pligues<TAB>zD
+" moving around in folds
+menutrans Fold\ column\ &width			A&nchura\ de\ columna\ del\ pliegue
+
 " Names for buffer menu.
-menutrans &Buffers	&Buffers
-menutrans Refresh	Refrescar
-menutrans Delete	Suprimir
-menutrans Alternate	Alternar
-menutrans [No\ File]    [Sin\ fichero]
+menutrans &Buffers		&Buffers
+menutrans &Refresh\ menu	&Refrescar\ menú
+menutrans &Delete		&Suprimir
+menutrans A&lternate		&Alternar
+menutrans &Next			Si&guiente
+menutrans &Previous		&Previo 
+menutrans [No File]    		[Sin fichero]
 
 " Window menu
 menutrans &Window			&Ventana
@@ -104,7 +125,7 @@ menutrans &Top<Tab>^WK			&Arriba<Tab>^WK
 menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ		
 menutrans &Left\ side<Tab>^WH		Lado\ &izquierdo<Tab>^WH		
 menutrans &Right\ side<Tab>^WL		Lado\ &derecho<Tab>^WL		
-" menutrans Ne&xt<Tab>^Ww			&Siguiente<Tab>^Ww
+" menutrans Ne&xt<Tab>^Ww		&Siguiente<Tab>^Ww
 " menutrans P&revious<Tab>^WW		&Previa<Tab>^WW
 menutrans &Equal\ Height<Tab>^W=	&Misma\ altura<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_

@@ -184,6 +184,7 @@ trunc_string(s, buf, room)
 {
     int		half;
     int		len;
+    int		e;
     int		i;
     int		n;
 
@@ -192,27 +193,25 @@ trunc_string(s, buf, room)
     len = 0;
 
     /* First part: Start of the string. */
-    for (i = 0; len < half; ++i)
+    for (e = 0; len < half; ++e)
     {
-	n = ptr2cells(s + i);
+	n = ptr2cells(s + e);
 	if (len + n >= half)
 	    break;
 	len += n;
-	buf[i] = s[i];
+	buf[e] = s[e];
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    for (n = (*mb_ptr2len_check)(s + i); --n > 0; )
+	    for (n = (*mb_ptr2len_check)(s + e); --n > 0; )
 	    {
-		++i;
-		buf[i] = s[i];
+		++e;
+		buf[e] = s[e];
 	    }
 #endif
     }
 
-    /* Middle: "..." */
-    STRCPY(buf + i, "...");
-
     /* Last part: End of the string. */
+    i = e;
 #ifdef FEAT_MBYTE
     if (enc_dbcs != 0)
     {
@@ -246,7 +245,10 @@ trunc_string(s, buf, room)
 	for (i = STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room; --i)
 	    len += n;
     }
-    STRCAT(buf, s + i);
+
+    /* Set the middle and copy the last part. */
+    mch_memmove(buf + e, "...", (size_t)3);
+    mch_memmove(buf + e + 3, s + i, STRLEN(s + i) + 1);
 }
 
 /*
@@ -740,6 +742,16 @@ wait_return(redraw)
 	    c = safe_vgetc();
 	    if (!global_busy)
 		got_int = FALSE;
+#ifdef FEAT_CLIPBOARD
+	    /* Strange way to allow copying (yanking) a modeless selection at
+	     * the hit-enter prompt.  Use CTRL-Y, because the same is used in
+	     * Cmdline-mode and it's harmless when there is no selection. */
+	    if (c == Ctrl_Y && clip_star.state == SELECT_DONE)
+	    {
+		clip_copy_modeless_selection(TRUE);
+		c = K_IGNORE;
+	    }
+#endif
 	} while (c == Ctrl_C || c == K_IGNORE
 #ifdef FEAT_GUI
 				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
@@ -1428,6 +1440,7 @@ msg_puts_attr(s, attr)
 #ifdef FEAT_MBYTE
     int		l;
 #endif
+    int		c;
 
     /*
      * If redirection is on, also write to the redirection file.
@@ -1579,7 +1592,26 @@ msg_puts_attr(s, attr)
 		    /*
 		     * Get a typed character directly from the user.
 		     */
-		    switch (get_keystroke())
+		    c = get_keystroke();
+
+#if defined(FEAT_MENU) && defined(FEAT_GUI)
+		    if (c == K_MENU)
+		    {
+			int idx = get_menu_index(current_menu, ASKMORE);
+
+			/* Used a menu.  If it starts with CTRL-Y, it must
+			 * be a "Copy" for the clipboard.  Otherwise
+			 * assume that we end */
+			if (idx == MENU_INDEX_INVALID)
+			    continue;
+			c = *current_menu->strings[idx];
+			if (c != NUL && current_menu->strings[idx][1] != NUL)
+			    ins_typebuf(current_menu->strings[idx] + 1,
+				    current_menu->noremap[idx], 0, TRUE);
+		    }
+#endif
+
+		    switch (c)
 		    {
 		    case BS:
 		    case 'k':
@@ -1645,12 +1677,25 @@ msg_puts_attr(s, attr)
 		    case K_PAGEDOWN:
 			lines_left = Rows - 1;
 			break;
+
+#ifdef FEAT_CLIPBOARD
+		    case Ctrl_Y:
+			/* Strange way to allow copying (yanking) a modeless
+			 * selection at the more prompt.  Use CTRL-Y,
+			 * because the same is used in Cmdline-mode and at the
+			 * hit-enter prompt.  However, scrolling one line up
+			 * might be expected... */
+			if (clip_star.state == SELECT_DONE)
+			    clip_copy_modeless_selection(TRUE);
+			continue;
+#endif
 		    default:		/* no valid response */
 			msg_moremsg(TRUE);
 			continue;
 		    }
 		    break;
 		}
+
 		/* clear the --more-- message */
 		screen_fill((int)Rows - 1, (int)Rows,
 						0, (int)Columns, ' ', ' ', 0);
@@ -1988,12 +2033,13 @@ msg_advance(col)
  */
 /* ARGSUSED */
     int
-do_dialog(type, title, message, buttons, dfltbutton)
+do_dialog(type, title, message, buttons, dfltbutton, textfield)
     int		type;
     char_u	*title;
     char_u	*message;
     char_u	*buttons;
     int		dfltbutton;
+    char_u	*textfield;
 {
     int		oldState;
     int		retval = 0;
@@ -2010,7 +2056,8 @@ do_dialog(type, title, message, buttons, dfltbutton)
     /* When GUI is running, use the GUI dialog */
     if (gui.in_use)
     {
-	c = gui_mch_dialog(type, title, message, buttons, dfltbutton);
+	c = gui_mch_dialog(type, title, message, buttons, dfltbutton,
+								   textfield);
 	msg_end_prompt();
 	return c;
     }
@@ -2214,7 +2261,7 @@ vim_dialog_yesno(type, title, message, dflt)
     if (do_dialog(type,
 		title == NULL ? (char_u *)_("Question") : title,
 		message,
-		(char_u *)_("&Yes\n&No"), dflt) == 1)
+		(char_u *)_("&Yes\n&No"), dflt, NULL) == 1)
 	return VIM_YES;
     return VIM_NO;
 }
@@ -2229,7 +2276,7 @@ vim_dialog_yesnocancel(type, title, message, dflt)
     switch (do_dialog(type,
 		title == NULL ? (char_u *)_("Question") : title,
 		message,
-		(char_u *)_("&Yes\n&No\n&Cancel"), dflt))
+		(char_u *)_("&Yes\n&No\n&Cancel"), dflt, NULL))
     {
 	case 1: return VIM_YES;
 	case 2: return VIM_NO;
@@ -2247,7 +2294,8 @@ vim_dialog_yesnoallcancel(type, title, message, dflt)
     switch (do_dialog(type,
 		title == NULL ? (char_u *)"Question" : title,
 		message,
-		(char_u *)_("&Yes\n&No\nSave &All\n&Discard All\n&Cancel"), dflt))
+		(char_u *)_("&Yes\n&No\nSave &All\n&Discard All\n&Cancel"),
+								  dflt, NULL))
     {
 	case 1: return VIM_YES;
 	case 2: return VIM_NO;
@@ -2315,7 +2363,12 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 # ifdef FEAT_GUI
     if (gui.in_use)		/* when this changes, also adjust f_has()! */
     {
+	if (filter == NULL
+		&& (filter = get_var_value((char_u *)"b:browsefilter")) == NULL
+		&& (filter = get_var_value((char_u *)"g:browsefilter")) == NULL)
+	    filter = BROWSE_FILTER_DEFAULT;
 	fname = gui_mch_browse(saving, title, dflt, ext, initdir, filter);
+
 	/* We hang around in the dialog for a while, the user might do some
 	 * things to our files.  The Win32 dialog allows deleting or renaming
 	 * a file, check timestamps. */

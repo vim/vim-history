@@ -686,6 +686,11 @@
 #  endif
 # endif
 #endif
+#if defined(FEAT_GUI_DIALOG) && \
+	(defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
+	 || defined(FEAT_GUI_GTK))
+# define FEAT_GUI_TEXTDIALOG
+#endif
 
 /*
  * Preferences:

@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0ab.  Last change: 2000 Nov 05
+*version5.txt*  For Vim version 6.0ac.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1473,7 +1473,7 @@ After starting the GUI, searched the termcap for a "gui" term.
 When 'hls' used, search for "^$" caused a hang.
 When 'hls' was set, an error in the last regexp caused trouble.
 
-Unix: Only output an extra <EOL> on exit when outputted something in the
+Unix: Only output an extra <EOL> on exit when outputed something in the
 alternate screen, or when there is a message that needs to be cleared.
 
 "/a\{" did strange things, depending on previous search.
@@ -3778,7 +3778,7 @@ Macintosh: (St-Amant)
 - If an error is encountered when sourcing the users .vimrc, the alert box now
   shows right away with the OK button defaulted. There's no more "Delete"-key
   sign at the start of each line
-- Better management of environement variables.  Now $VIM is calculated only
+- Better management of environment variables.  Now $VIM is calculated only
   once, not regenerated every time it is used.
 - No more CPU hog when in background.
 - In a sourced Vim script the Mac file format can be recognized, just like DOS
@@ -4184,7 +4184,7 @@ position. (Madsen)
 
 On a Sun the xterm screen was not restored properly when suspending. (Madsen)
 
-When $VIMINIT is processed, 'nocompatible' was only set after procesing it.
+When $VIMINIT is processed, 'nocompatible' was only set after processing it.
 
 Unix: Polling for a character wasn't done for GPM, Sniff and Xterm clipboard
 all together.  Cleaned up the code for using select() too.
@@ -5012,8 +5012,8 @@ Solution:   Add 'K' flag to 'cpoptions' to wait for the whole key code, even
 Files:	    src/option.h, src/term.c
 
 Patch 5.4m.27
-Problem:    When making test33 without the lisp feature it hangs.  Interupting
-	    the executing of the script then might cause a crash.
+Problem:    When making test33 without the lisp feature it hangs. Interrupting
+	    the execution of the script then might cause a crash.
 Solution:   In inchar(), after closing a script, don't use buf[] anymore.
 	    closescript() has freed typebuf[] and buf[] might be pointing
 	    inside typebuf[].
@@ -5304,7 +5304,7 @@ line2byte() can be used to get the size of the buffer.  See patch 5.4.35.
 The CTRL-R CTRL-O r and CTRL-R CTRL-P r commands in Insert mode are used to
 insert a register literally.  See patch 5.4.48.
 
-Uninstal program for MS-Windows.  To be able to remove the registry entries
+Uninstall program for MS-Windows.  To be able to remove the registry entries
 for "Edit with Vim".  It is registered to be run from the "Add/Remove
 programs" application.  See patch 5.4.x7.
 
@@ -5703,7 +5703,7 @@ Files:	    src/os_win32.c
 
 Patch 5.4.x7
 Problem:    Win32 GUI: Removing "Edit with Vim" from registry is difficult.
-Solution:   Add uninstal program to remove the registry keys.  It is installed
+Solution:   Add uninstall program to remove the registry keys. It is installed
 	    in the "Add/Remove programs" list for ease of use.
 	    Also: don't set $VIM when the executable is with the runtime files.
 	    Also: Add a text file with a step-by-step description of how to

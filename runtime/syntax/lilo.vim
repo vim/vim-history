@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	lilo
 " Maintainer:	David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 " URL:		http://physics.muni.cz/~yeti/download/lilo.vim
 "
 " slightly overengineered now. 
@@ -14,7 +14,7 @@ if exists("b:current_syntax")
 endif
 
 syn case ignore
-set iskeyword=a-z,A-Z,48-57,.,-,_
+setlocal iskeyword=a-z,A-Z,48-57,.,-,_
 
 " base constructs
 syn match	liloError	"\S\+"

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 16
+*todo.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,10 +29,10 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-modeless selection without auto-copy: how to get the text?
+GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
 
-Add a GUI dialog that allows entering one value.  Use it for the menu that
-sets 'textwidth'.
+Should find a simple way to make the same syntax file usable for Vim 5.7.25
+and Vim 6.0.  Recommend this format to all syntax file maintainers.
 
 Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
 marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
@@ -114,14 +114,10 @@ H. More automatic testing:
 
 
 I. Multi-language support:
--   Should handle aliases for different locale settings.  "de" is "de_DE" is
-    "de_DE.ISO8859-1".  Perhaps use some code from gettext()?
--   Cmdline completion of ":language" for "messages" and "lctype".
--   The call to bind_textdomain_codeset() doesn't work yet.  Requires new
-    version of gettext library.
+-   Check: The call to bind_textdomain_codeset() doesn't work yet.  It should
+    work with new version of gettext library.
 -   Make an archive with the .mo files for Windows, unzipping them in the
-    right directory.
--   Add generating the .mo files for Windows in a Makefile.
+    right directory.  Can the files generated on Unix be used?
 8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
     disabled for now.  What is the right solution?
 -   Improve multibyte.txt using patch
@@ -129,15 +125,19 @@ I. Multi-language support:
 
 
 J. User Friendlier
--   ":setlocal option<": reset local option to global value.
-9   Add a menu (or sub-menu) with most often used options: 'wrap',
-    'textwidth', etc.
+9   Add more options to the Edit.Settings menu?
+9   Add a way to load a color scheme.  Add a menu entry for it.  Also set good
+    colors for diff mode.
 -   Add a way to save local settings and mappings into a new plugin file.
     ":mkplugin <file>"?
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
     Alternative: use BufEnter and BufLeave autocommands.
+9   Buffer-local autocommands?
+	:au BufEnter <current> menu enable ...
+	:au BufLeave <current> menu disable ...
+-   Add mappings local to a window: ":map <window> ..."?
 9   Printing:
     -	On Win32, use conversion to HTML and "rundll" (Dan Sharp)  At least
 	mention this in the text.  Or use ShellExecute("print").
@@ -147,9 +147,6 @@ J. User Friendlier
     -	On Unix convert to PostScript.
     -	Use some dialog box to do the obvious settings (paper size, printer
 	name, portrait/landscane, etc).
-9   Buffer-local autocommands?
-	:au BufEnter <current> menu enable ...
-	:au BufLeave <current> menu disable ...
 9   Make Windows install program better:
     - Add an icon on the Desktop, if the user wants this.
     - Add Vim to the Start/Programs menu if the user wants this.
@@ -158,12 +155,8 @@ J. User Friendlier
     - Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
       can really be dropped-in.
     - Delete the vim.bat and gvim.bat files.
+    - Also create an evim.bat and vimdiff.bat file.  How about view.bat?
     - Delete a whole tree of Vim files.
--   Add mappings local to a window: ":map <window> ..."?
-8   Add better control for protecting the user for editing a file twice, file
-    changed outside of Vim, file protection changed outside of Vim, etc.
-9   Add a way to load a color scheme.  Add a menu entry for it.  Also set good
-    colors for diff mode.
 
 
 Messages:
@@ -257,7 +250,7 @@ Various recent:
     -> ":silent /pattern" doesn't complain when it's not found
     -> ":silent :s/pat//" doesn't complain when it's not found and doesn't
 		report number of substitutions.
-    -> ":silent map": add flag to mapping, increment "silence" when exeucuting
+    -> ":silent map": add flag to mapping, increment "silence" when executing
        it, append a command to decrement "silence"; reset silence when
        aborting a mapping).
        Or use ":map <silent>"?
@@ -287,7 +280,7 @@ Various recent:
 -   ":abbr b byte", append "b " to an existing word still expands to "byte".
     This is Vi compatible, but can we avoid it anyway?
 -   Add a watchpoint in the debug mode: An expression that breaks execution
-    when evauating to non-zero.
+    when evaluating to non-zero.
 8   When running in a console and $DISPLAY is set a connection to the X server
     is made (unless 'clipboard' tells not to).  Quitting the X server then
     kills Vim.  How to detect a broken connection to the X server when running
@@ -305,6 +298,8 @@ Considered for release 6.0:
     Give a warning that CFLAGS from the environment is being used.
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
+8   How to create the gvim.exe that is distributed?  Make_gvc.mak is standard,
+    but Make_mvc.mak supports gettext, iconv, perl, etc.
 9   It is possible to create the same swap file twice, when there is latency
     in the system (and 'directory' is ~/tmp). (Soulier)
     Create the swap file as soon as its name is chosen, when mf_fname is set.
@@ -435,7 +430,7 @@ Win32 GUI known bugs:
     doesn't work properly.
 9   Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
     the short filename instead and does the path compare work?
-8   When ativating window with mouse click, don't move cursor to mouse click.
+8   When activating window with mouse click, don't move cursor to mouse click.
     Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
 9   Clipboard doesn't always work as it should:
     - Selecting text while editing a command-line has an implied copy to the
@@ -1037,6 +1032,8 @@ Folding:
 
 
 Multi-byte characters:
+8   UTF-8: When there is a precomposed character in the font, use it instead
+    of a character and a composing character.  See xterm for an example.
 -   GTK and Win32: Allow selecting fonts for 'guifontset' with the
     fontselector somehow.
 -   GTK and Win32: make it possible to set the font for the menu to make it
@@ -1062,7 +1059,7 @@ Multi-byte characters:
 Syntax highlighting:
 8   Allow the user to add items to the Syntax menu sorted, without having to
     change this for each release.
-8   Add a "matchcontains" for regions: items containd in the start or end
+8   Add a "matchcontains" for regions: items contained in the start or end
     pattern, but not in the body.
 8   Add a "keepend-contained" argument: Don't change the end of an item this
     one is contained in.  Like "keepend" but specified on the contained item,
@@ -1537,7 +1534,6 @@ Win32 GUI:
 	http://www.cs.washington.edu/homes/voelker/ntemacs.html.
 8   When dropping a file onto gvim while at the ":" prompt, insert the file
     name.  Allows using the name with different commands. (Krishna)
-7   Add a way to change the filter menu in the file selection dialog.
 8   Need a separate PopUp menu for modeless selection.  Need two new commands:
     Copy selection to clipboard, Paste selection (as typed text).
 8   Dropping a file on a gvim that edits a modified buffer splits the window.
@@ -1737,7 +1733,7 @@ Insert mode completion/expansion:
     wildcards in the file name)?
 -   Make CTRL-X CTRL-K do a binary search in the dictionary (if it's sorted).
 -   Speed up CTRL-X CTRL-K dictionary searching (don't use a regexp?).
--   Set a mark at the positition where the match was found (file mark, could
+-   Set a mark at the position where the match was found (file mark, could
     be in another file).
 -   Add CTRL-A command in CTRL-X mode: show all matches.
 -   Make CTRL-X CTRL-L use the 'complete' option?
@@ -1855,14 +1851,6 @@ Insert mode:
 
 
 'cindent', 'smartindent':
-8   'cindent' problem: (FooLman)
-		int x;	    <- extra indent, ";" ignored.
-	    void func()
-	    {
-9   closing } not recognized?  (Francois-Xavier Menard)
-    (char *tab[] = {"aaa",
-	NULL};
-	char *name;
 9   When using 'cino' "f1s" the indent after a function is set to the indent
     of the "}", should be zero.
 9   Formatting comments should use 'comments' setting.  E.g. when lining out
@@ -2104,7 +2092,7 @@ Mappings and Abbreviations:
     example, for a mouse escape sequence:
 	:mapexp  <Esc>{\([0-9]*\),\([0-9]*\);	H\1j\2l
 -   Add the possibility to enter mappings which are used whenever normal text
-    could be enetered.  E.g., for "f" command.  But not in Normal mode.  Sort
+    could be entered.  E.g., for "f" command.  But not in Normal mode.  Sort
     of opposite of 'langmap'.  Use ":tmap" command?
 -   Make it possible to include a <Nul> in the lhs and rhs of a mapping.
 -   Add command to repeat a whole mapping ("." only repeats the last change in

@@ -44,7 +44,7 @@ syn region schemeUnquote matchgroup=Delimiter start=",@#(" end=")" contains=ALLB
 
 " R5RS Scheme Functions and Syntax:
 
-set iskeyword=33,35-39,42-58,60-90,94,95,97-122,126,_
+setlocal iskeyword=33,35-39,42-58,60-90,94,95,97-122,126,_
 
 syn keyword schemeSyntax lambda and or if cond case define let let* letrec
 syn keyword schemeSyntax begin do delay set! else =>

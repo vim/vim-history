@@ -2013,7 +2013,7 @@ scroll_cursor_bot(min_scroll, set_topbot)
 #ifdef FEAT_DIFF
 	boff.fill = curwin->w_topfill;
 #endif
-	boff.lnum = curwin->w_topline;
+	boff.lnum = curwin->w_topline - 1;
 	for (i = 0; i < scrolled && boff.lnum < curwin->w_botline; )
 	{
 	    botline_forw(&boff);

@@ -4756,15 +4756,21 @@ check_timestamps(focus)
 #endif
 	for (buf = firstbuf; buf != NULL; )
 	{
-	    n = buf_check_timestamp(buf, focus);
-	    if (didit < n)
-		didit = n;
-	    if (n > 0)
-		/* Autocommands may have removed the buffer, start at the
-		 * first one again. */
-		buf = firstbuf;
-	    else
-		buf = buf->b_next;
+	    /* Only check buffers in a window. */
+	    if (buf->b_nwindows > 0)
+	    {
+		n = buf_check_timestamp(buf, focus);
+		if (didit < n)
+		    didit = n;
+		if (n > 0)
+		{
+		    /* Autocommands may have removed the buffer, start at the
+		     * first one again. */
+		    buf = firstbuf;
+		    continue;
+		}
+	    }
+	    buf = buf->b_next;
 	}
 	--no_wait_return;
 	need_check_timestamps = FALSE;
@@ -4819,11 +4825,15 @@ buf_check_timestamp(buf, focus)
 	else
 	    buf->b_mtime = st.st_mtime;
 
+	/* Don't do anything for a directory. */
+	if (mch_isdir(buf->b_fname))
+	    ;
+
 	/*
 	 * If 'autoread' is set, the buffer has no changes and the file still
 	 * exists, reload the buffer.
 	 */
-	if (p_ar && !bufIsChanged(buf) && stat_res >= 0)
+	else if (p_ar && !bufIsChanged(buf) && stat_res >= 0)
 	    reload = TRUE;
 	else
 	{
@@ -4872,7 +4882,7 @@ buf_check_timestamp(buf, focus)
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 	    if (do_dialog(VIM_WARNING, (char_u *)_("Warning"), tbuf,
 			    can_reload ? (char_u *)_("&OK\n&Load File")
-				    : (char_u *)_("&OK"), 1) == 2)
+				    : (char_u *)_("&OK"), 1, NULL) == 2)
 		reload = TRUE;
 #else
 	    if (State > NORMAL_BUSY || (State & CMDLINE) || already_warned)

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 03
+*pattern.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -427,7 +427,7 @@ Example			matches ~
 Magic							*/magic*
 
 Some characters in the pattern are taken literally.  They match with the same
-character in the text.  When prededed with a backslash however, these
+character in the text.  When preceded with a backslash however, these
 characters get a special meaning.
 
 Other characters have a special meaning without a backslash.  They need to be
@@ -834,7 +834,7 @@ match ASCII characters, as indicated by the range.
 	first.
 
 \%(\)	A pattern enclosed by escaped parentheses.	*/\%(\)* */\%(*
-	Just like \(\), but without counting it as a sub-expresion
+	Just like \(\), but without counting it as a sub-expression
 	{not in Vi}
 
 x	A single character, with no special meaning, matches itself

@@ -516,7 +516,6 @@ clip_isautosel()
 static int clip_compare_pos __ARGS((int row1, int col1, int row2, int col2));
 static void clip_invert_area __ARGS((int, int, int, int, int how));
 static void clip_invert_rectangle __ARGS((int row, int col, int height, int width, int invert));
-static void clip_yank_modeless_selection __ARGS((int, int, int, int));
 static void clip_get_word_boundaries __ARGS((VimClipboard *, int, int));
 static int  clip_get_line_end __ARGS((int));
 static void clip_update_modeless_selection __ARGS((VimClipboard *, int, int,
@@ -674,11 +673,8 @@ clip_process_selection(button, col, row, repeated_click)
 	printf("Selection ended: (%u,%u) to (%u,%u)\n", cb->start.lnum,
 		cb->start.col, cb->end.lnum, cb->end.col);
 #endif
-	clip_free_selection(&clip_star);
-	clip_own_selection(&clip_star);
-	clip_yank_modeless_selection((int)cb->start.lnum, cb->start.col,
-					      (int)cb->end.lnum, cb->end.col);
-	clip_gen_set_selection(&clip_star);
+	if (clip_isautosel())
+	    clip_copy_modeless_selection(FALSE);
 #ifdef FEAT_GUI
 	if (gui.in_use)
 	    gui_update_cursor(FALSE, FALSE);
@@ -1039,15 +1035,13 @@ clip_invert_rectangle(row, col, height, width, invert)
 }
 
 /*
- * Yank the currently selected area into the special selection buffer so it
- * will be available for pasting.
+ * Copy the currently selected area into the '*' register so it will be
+ * available for pasting.
+ * When "both" is TRUE also copy to the '+' register.
  */
-    static void
-clip_yank_modeless_selection(row1, col1, row2, col2)
-    int		row1;
-    int		col1;
-    int		row2;
-    int		col2;
+    void
+clip_copy_modeless_selection(both)
+    int		both;
 {
     char_u	*buffer;
     char_u	*bufp;
@@ -1061,6 +1055,10 @@ clip_yank_modeless_selection(row1, col1, row2, col2)
     char_u	*p;
     int		i;
 #endif
+    int		row1 = clip_star.start.lnum;
+    int		col1 = clip_star.start.col;
+    int		row2 = clip_star.end.lnum;
+    int		col2 = clip_star.end.col;
 
     /*
      * Make sure row1 <= row2, and if row1 == row2 that col1 <= col2.
@@ -1190,7 +1188,26 @@ clip_yank_modeless_selection(row1, col1, row2, col2)
     if (add_newline_flag)
 	*bufp++ = NL;
 
+    /* First cleanup any old selection and become the owner. */
+    clip_free_selection(&clip_star);
+    clip_own_selection(&clip_star);
+
+    /* Yank the text into the '*' register. */
     clip_yank_selection(MCHAR, buffer, (long)(bufp - buffer), &clip_star);
+
+    /* Make the register contents available to the outside world. */
+    clip_gen_set_selection(&clip_star);
+
+#ifdef FEAT_X11
+    if (both)
+    {
+	/* Do the same for the '+' register. */
+	clip_free_selection(&clip_plus);
+	clip_own_selection(&clip_plus);
+	clip_yank_selection(MCHAR, buffer, (long)(bufp - buffer), &clip_plus);
+	clip_gen_set_selection(&clip_plus);
+    }
+#endif
     vim_free(buffer);
 }
 
