@@ -1194,7 +1194,7 @@ retry:
 		if (ret == (size_t)-1)
 		    /* need to reset the state after an error */
 		    (void)iconv(iconv_fd, NULL, NULL, NULL, NULL);
-		if ((ret == (size_t)-1 && ICONV_ERRNO != EINVAL)
+		if ((ret == (size_t)-1 && ICONV_ERRNO != ICONV_EINVAL)
 						  || from_size > CONV_RESTLEN)
 		    goto rewind_retry;
 
@@ -4176,7 +4176,7 @@ buf_write_bytes(ip)
 	     * If iconv() has an error or there is not enough room, fail.
 	     */
 	    if ((iconv(ip->bw_iconv_fd, &from, &fromlen, &to, &tolen)
-			== (size_t)-1 && ICONV_ERRNO != EINVAL)
+			== (size_t)-1 && ICONV_ERRNO != ICONV_EINVAL)
 						    || fromlen > CONV_RESTLEN)
 	    {
 		ip->bw_conv_error = TRUE;
