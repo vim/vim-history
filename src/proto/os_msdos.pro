@@ -4,7 +4,7 @@ void mch_update_cursor __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 void mch_delay __ARGS((long msec, int ignoreinput));
 void mch_write __ARGS((char_u *s, int len));
-int mch_inchar __ARGS((char_u *buf, int maxlen, long time));
+int mch_inchar __ARGS((char_u *buf, int maxlen, long time, int tb_change_cnt));
 int mch_char_avail __ARGS((void));
 void mch_suspend __ARGS((void));
 void mch_init __ARGS((void));

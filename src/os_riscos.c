@@ -217,10 +217,11 @@ mch_write(s, len)
  * TODO: call convert_input() for 'fileencoding' to 'encoding' conversion.
  */
     int
-mch_inchar(buf, maxlen, wtime)
+mch_inchar(buf, maxlen, wtime, tb_change_cnt)
     char_u  *buf;
     int	    maxlen;
     long    wtime;
+    int	    tb_change_cnt;
 {
     int got=0;
     unsigned int start_time = clock();

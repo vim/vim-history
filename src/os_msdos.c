@@ -982,7 +982,8 @@ got3:			    s += 3;
 mch_inchar(
     char_u	*buf,
     int		maxlen,
-    long	time)
+    long	time,
+    int		tb_change_cnt)
 {
     int		len = 0;
     int		c;
