@@ -2345,6 +2345,12 @@ get_scriptname(id)
 {
     if (id == SID_MODELINE)
 	return (char_u *)"modeline";
+    if (id == SID_CMDARG)
+	return (char_u *)"--cmd argument";
+    if (id == SID_CARG)
+	return (char_u *)"-c argument";
+    if (id == SID_ENV)
+	return (char_u *)"environment variable";
     return SCRIPT_NAME(id);
 }
 #endif

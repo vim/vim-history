@@ -954,7 +954,11 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define MIN_SWAP_PAGE_SIZE 1048
 #define MAX_SWAP_PAGE_SIZE 50000
 
-#define SID_MODELINE	-1	/* script ID when using a modeline */
+/* Special values for current_SID. */
+#define SID_MODELINE	-1	/* when using a modeline */
+#define SID_CMDARG	-2	/* for "--cmd" argument */
+#define SID_CARG	-3	/* for "-c" argument */
+#define SID_ENV		-4	/* for sourcing environment variable */
 
 /*
  * Events for autocommands.
