@@ -1138,9 +1138,6 @@ getcount:
 normal_end:
 
     msg_nowait = FALSE;
-#ifdef FEAT_VISUAL
-    did_visual_put = FALSE;
-#endif
 
     /* Reset finish_op, in case it was set */
 #ifdef CURSOR_SHAPE
@@ -7928,8 +7925,8 @@ nv_put(cap)
     cmdarg_T  *cap;
 {
 #ifdef FEAT_VISUAL
-    pos_T	curpos;
-    colnr_T	left, right;
+    int		regname;
+    void	*reg1 = NULL, *reg2 = NULL;
 #endif
     int		dir;
     int		flags = 0;
@@ -7952,76 +7949,69 @@ nv_put(cap)
 	dir = (cap->cmdchar == 'P'
 		|| (cap->cmdchar == 'g' && cap->nchar == 'P'))
 							 ? BACKWARD : FORWARD;
+	prep_redo_cmd(cap);
+	if (cap->cmdchar == 'g')
+	    flags |= PUT_CURSEND;
+
 #ifdef FEAT_VISUAL
 	if (VIsual_active)
 	{
 	    /* Putting in Visual mode: The put text replaces the selected
-	     * text.  First put the register at the end of the Visual
-	     * selection, then delete the selected text.  In some cases the
-	     * register is put before the Visual selection. */
-	    if (lt(VIsual, curwin->w_cursor))
+	     * text.  First delete the selected text, then put the new text.
+	     * Need to save and restore the registers that the delete
+	     * overwrites if the old contents is being put.
+	     */
+	    regname = cap->oap->regname;
+# ifdef FEAT_CLIPBOARD
+	    adjust_clip_reg(&regname);
+# endif
+	    if (regname == 0 || isdigit(regname))
 	    {
-		curbuf->b_visual_start = VIsual;
-		curbuf->b_visual_end = curwin->w_cursor;
-	    }
-	    else
-	    {
-		curbuf->b_visual_start = curwin->w_cursor;
-		curbuf->b_visual_end = VIsual;
-	    }
-	    curpos = curwin->w_cursor;
-	    if (VIsual_mode == Ctrl_V)
-	    {
-		getvcols(curwin, &curwin->w_cursor, &VIsual, &left, &right);
-		curwin->w_cursor = curbuf->b_visual_start;
-		coladvance(right);
-	    }
-	    else
-		curwin->w_cursor = curbuf->b_visual_end;
-	    if (VIsual_mode == 'v' && *p_sel == 'e')
-		dir = BACKWARD;
-	    else
-	    {
-		/* Put linewise text above a characterwise or blockwise
-		 * selected Visual area; handled in do_put(). */
-		if (dir == BACKWARD && VIsual_mode != 'V')
-		    flags |= PUT_LINE_BACKWARD;
-		dir = FORWARD;
-	    }
-	    /* When deleting a linewise Visual area, must put the register as
-	     * lines to avoid it being deleted. */
-	    if (VIsual_mode == 'V')
-		flags |= PUT_LINE;
-	}
-#endif
-	prep_redo_cmd(cap);
-	if (cap->cmdchar == 'g')
-	    flags |= PUT_CURSEND;
-	do_put(cap->oap->regname, dir, cap->count1, flags);
-
-#ifdef FEAT_VISUAL
-	if (VIsual_active)
-	{
-	    /* If linewise text was put above the Visual area, need to correct
-	     * the line numbers to shift the Visual area down. */
-	    if ((flags & PUT_LINE_BACKWARD)
-		    && curbuf->b_visual_start.lnum > curbuf->b_op_end.lnum)
-	    {
-		linenr_T l;
-
-		l = curbuf->b_op_end.lnum - curbuf->b_op_start.lnum + 1;
-		curpos.lnum += l;
-		VIsual.lnum += l;
+		/* the delete is going to overwrite the register we want to
+		 * put, save it first. */
+		reg1 = get_register(regname, TRUE);
 	    }
 
 	    /* Now delete the selected text. */
 	    cap->cmdchar = 'd';
 	    cap->nchar = NUL;
 	    cap->oap->regname = NUL;
-	    curwin->w_cursor = curpos;
 	    nv_operator(cap);
-	    did_visual_put = TRUE;  /* tell op_delete() to correct '] mark */
+	    do_pending_operator(cap, 0, FALSE);
+
+	    /* delete PUT_LINE_BACKWARD; */
+	    cap->oap->regname = regname;
+
+	    if (reg1 != NULL)
+	    {
+		/* Delete probably changed the register we want to put, save
+		 * it first. Then put back what was there before the delete. */
+		reg2 = get_register(regname, FALSE);
+		put_register(regname, reg1);
+	    }
+
+	    /* When deleted a linewise Visual area, put the register as
+	     * lines to avoid it joined with the next line.  When deletion was
+	     * characterwise, split a line when putting lines. */
+	    if (VIsual_mode == 'V')
+		flags |= PUT_LINE;
+	    else if (VIsual_mode == 'v')
+		flags |= PUT_LINE_SPLIT;
+	    if (VIsual_mode == Ctrl_V && dir == FORWARD)
+		flags |= PUT_LINE_FORWARD;
+	    dir = BACKWARD;
+	    if (VIsual_mode != 'V'
+			     && curwin->w_cursor.col < curbuf->b_op_start.col)
+		/* cursor is at the end of the line, put forward. */
+		dir = FORWARD;
 	}
+#endif
+	do_put(cap->oap->regname, dir, cap->count1, flags);
+
+#ifdef FEAT_VISUAL
+	/* If a register was saved, put it back now. */
+	if (reg2 != NULL)
+	    put_register(regname, reg2);
 #endif
 	auto_format();
     }
