@@ -4862,7 +4862,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     /* Translate <CR><NL> into <NL>.  Caution, buffer may contain NUL. */
     p = buffer;
     for (i = 0; i < len; ++i)
-	if (!(buffer[i] == CR && buffer[i + 1] == NL))
+	if (!(buffer[i] == CAR && buffer[i + 1] == NL))
 	    *p++ = buffer[i];
     len = p - buffer;
 # endif

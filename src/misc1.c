@@ -2884,7 +2884,7 @@ get_number(colon)
 	    do_redraw = FALSE;
 	    break;
 	}
-	else if (c == CR || c == NL || c == Ctrl_C || c == ESC)
+	else if (c == CAR || c == NL || c == Ctrl_C || c == ESC)
 	    break;
     }
     --no_mapping;

@@ -864,7 +864,7 @@ keyval_to_string(unsigned int keyval, unsigned int state, char_u *string)
 		string[0] = NL;
 		break;
 	    case GDK_Return: case GDK_ISO_Enter: case GDK_3270_Enter:
-		string[0] = CR;
+		string[0] = CAR;
 		break;
 	    case GDK_Escape:
 		string[0] = ESC;

@@ -4993,12 +4993,12 @@ ex_window()
 	if (cmdwin_result == K_XF1)		/* :qa! typed */
 	{
 	    ccline.cmdbuff = vim_strsave((char_u *)"qa!");
-	    cmdwin_result = CR;
+	    cmdwin_result = CAR;
 	}
 	else if (cmdwin_result == K_XF2)	/* :qa typed */
 	{
 	    ccline.cmdbuff = vim_strsave((char_u *)"qa");
-	    cmdwin_result = CR;
+	    cmdwin_result = CAR;
 	}
 	else
 	    ccline.cmdbuff = vim_strsave(ml_get_curline());

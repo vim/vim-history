@@ -2886,7 +2886,7 @@ current_word(oap, count, include, bigword)
      * When Visual mode is not active, or when the VIsual area is only one
      * character, select the word and/or white space under the cursor.
      */
-    if (!VIsual_active || equal(curwin->w_cursor, VIsual))
+    if (!VIsual_active || equalpos(curwin->w_cursor, VIsual))
 #endif
     {
 	/*
@@ -3055,7 +3055,7 @@ current_sent(oap, count, include)
     /*
      * When visual area is bigger than one character: Extend it.
      */
-    if (VIsual_active && !equal(start_pos, VIsual))
+    if (VIsual_active && !equalpos(start_pos, VIsual))
     {
 extend:
 	if (lt(start_pos, VIsual))
@@ -3082,7 +3082,7 @@ extend:
 	    if (!at_start_sent)
 	    {
 		findsent(BACKWARD, 1L);
-		if (equal(curwin->w_cursor, start_pos))
+		if (equalpos(curwin->w_cursor, start_pos))
 		    at_start_sent = TRUE;  /* exactly at start of sentence */
 		else
 		    /* inside a sentence, go to its end (start of next) */
@@ -3111,7 +3111,7 @@ extend:
 	     */
 	    incl(&pos);
 	    at_start_sent = TRUE;
-	    if (!equal(pos, curwin->w_cursor))	/* not just before a sentence */
+	    if (!equalpos(pos, curwin->w_cursor)) /* not just before a sentence */
 	    {
 		at_start_sent = FALSE;
 		while (lt(pos, curwin->w_cursor))
@@ -3146,7 +3146,7 @@ extend:
      */
     while (c = gchar_pos(&pos), vim_iswhite(c))	/* vim_iswhite() is a macro */
 	incl(&pos);
-    if (equal(pos, curwin->w_cursor))
+    if (equalpos(pos, curwin->w_cursor))
     {
 	start_blank = TRUE;
 	find_first_blank(&start_pos);	/* go back to first blank */
@@ -3192,7 +3192,7 @@ extend:
     if (VIsual_active)
     {
 	/* avoid getting stuck with "is" on a single space before a sent. */
-	if (equal(start_pos, curwin->w_cursor))
+	if (equalpos(start_pos, curwin->w_cursor))
 	    goto extend;
 	if (*p_sel == 'e')
 	    ++curwin->w_cursor.col;
@@ -3238,7 +3238,7 @@ current_block(oap, count, include, what, other)
      * If we start on '(', '{', ')', '}', etc., use the whole block inclusive.
      */
 #ifdef FEAT_VISUAL
-    if (!VIsual_active || equal(VIsual, curwin->w_cursor))
+    if (!VIsual_active || equalpos(VIsual, curwin->w_cursor))
 #endif
     {
 	setpcmark();

@@ -29,16 +29,16 @@
 		   : (a)->col != (b)->col \
 		       ? (a)->col < (b)->col \
 		       : (a)->coladd < (b)->coladd)
-# define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col) && ((a).coladd == (b).coladd))
+# define equalpos(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col) && ((a).coladd == (b).coladd))
 #else
 # define lt(a, b) (((a).lnum != (b).lnum) \
 		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
 # define ltp(a, b) (((a)->lnum != (b)->lnum) \
 		   ? ((a)->lnum < (b)->lnum) : ((a)->col < (b)->col))
-# define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
+# define equalpos(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
 #endif
 
-#define ltoreq(a, b) (lt(a, b) || equal(a, b))
+#define ltoreq(a, b) (lt(a, b) || equalpos(a, b))
 
 /*
  * lineempty() - return TRUE if the line is empty

@@ -1759,9 +1759,9 @@ static struct key_name_entry
     {NL,		(char_u *)"NewLine"},	/* Alternative name */
     {NL,		(char_u *)"LineFeed"},	/* Alternative name */
     {NL,		(char_u *)"LF"},	/* Alternative name */
-    {CR,		(char_u *)"CR"},
-    {CR,		(char_u *)"Return"},	/* Alternative name */
-    {CR,		(char_u *)"Enter"},	/* Alternative name */
+    {CAR,		(char_u *)"CR"},
+    {CAR,		(char_u *)"Return"},	/* Alternative name */
+    {CAR,		(char_u *)"Enter"},	/* Alternative name */
     {K_BS,		(char_u *)"BS"},
     {K_BS,		(char_u *)"BackSpace"},	/* Alternative name */
     {ESC,		(char_u *)"Esc"},

@@ -550,7 +550,7 @@ transchar_nonprint(buf, c)
 {
     if (c == NL)
 	c = NUL;		/* we use newline in place of a NUL */
-    else if (c == CR && get_fileformat(curbuf) == EOL_MAC)
+    else if (c == CAR && get_fileformat(curbuf) == EOL_MAC)
 	c = NL;			/* we use CR in place of  NL in this case */
 
     if (dy_flags & DY_UHEX)		/* 'display' has "uhex" */

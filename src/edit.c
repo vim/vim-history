@@ -1117,14 +1117,14 @@ doESCkey:
 	    break;
 
 	case K_KENTER:
-	    c = CR;
+	    c = CAR;
 	    /* FALLTHROUGH */
-	case CR:
+	case CAR:
 	case NL:
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	    /* In a quickfix window a <CR> jumps to the error under the
 	     * cursor. */
-	    if (bt_quickfix(curbuf) && c == CR)
+	    if (bt_quickfix(curbuf) && c == CAR)
 	    {
 		do_cmdline_cmd((char_u *)".cc");
 		break;
@@ -1134,7 +1134,7 @@ doESCkey:
 	    if (cmdwin_type != 0)
 	    {
 		/* Execute the command in the cmdline window. */
-		cmdwin_result = CR;
+		cmdwin_result = CAR;
 		goto doESCkey;
 	    }
 #endif
@@ -6680,7 +6680,7 @@ ins_mousescroll(up)
     curbuf = curwin->w_buffer;
 # endif
 
-    if (!equal(curwin->w_cursor, tpos))
+    if (!equalpos(curwin->w_cursor, tpos))
     {
 	start_arrow(&tpos);
 # ifdef FEAT_CINDENT

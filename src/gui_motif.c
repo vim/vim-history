@@ -1726,7 +1726,7 @@ keyhit_callback(w, client_data, event, cont)
 
     if (XLookupString(&(event->xkey), buf, 2, &key_sym, NULL) == 1)
     {
-	if (*buf == CR)
+	if (*buf == CAR)
 	    dialogStatus = 1;
 	else if (*buf == ESC)
 	    dialogStatus = 2;

@@ -5193,7 +5193,7 @@ mch_print_text_out(p, len)
 	    case TAB:  ga_append(&prt_ps_buffer, IF_EB('t', 0164)); break;
 	    case NL:   ga_append(&prt_ps_buffer, IF_EB('n', 0156)); break;
 	    case FF:   ga_append(&prt_ps_buffer, IF_EB('f', 0146)); break;
-	    case CR:   ga_append(&prt_ps_buffer, IF_EB('r', 0162)); break;
+	    case CAR:  ga_append(&prt_ps_buffer, IF_EB('r', 0162)); break;
 	    case '(':  ga_append(&prt_ps_buffer, IF_EB('(', 0050)); break;
 	    case ')':  ga_append(&prt_ps_buffer, IF_EB(')', 0051)); break;
 	    case '\\': ga_append(&prt_ps_buffer, IF_EB('\\', 0134)); break;
