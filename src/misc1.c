@@ -7544,6 +7544,13 @@ get_lisp_indent()
     void
 prepare_to_exit()
 {
+#if defined(SIGHUP) && defined(SIG_IGN)
+    /* Ignore SIGHUP, because a dropped connection causes a read error, which
+     * makes Vim exit and then handling SIGHUP causes various reentrance
+     * problems. */
+    signal(SIGHUP, SIG_IGN);
+#endif
+
 #ifdef FEAT_GUI
     if (gui.in_use)
     {

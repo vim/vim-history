@@ -2193,6 +2193,13 @@ main_loop(cmdwin)
 getout_preserve_modified(exitval)
     int		exitval;
 {
+# if defined(SIGHUP) && defined(SIG_IGN)
+    /* Ignore SIGHUP, because a dropped connection causes a read error, which
+     * makes Vim exit and then handling SIGHUP causes various reentrance
+     * problems. */
+    signal(SIGHUP, SIG_IGN);
+# endif
+
     ml_close_notmod();		    /* close all not-modified buffers */
     ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
     ml_close_all(FALSE);	    /* close all memfiles, without deleting */
