@@ -81,7 +81,7 @@ static void check_cursor_moved __ARGS((WIN *wp));
 static void curs_rows __ARGS((int do_botline));
 static void validate_virtcol_win __ARGS((WIN *wp));
 static int screen_ins_lines __ARGS((int, int, int, int));
-static int highlight_status __ARGS((int *attr));
+static int highlight_status __ARGS((int *attr, int is_curwin));
 static void win_redr_ruler __ARGS((WIN *wp, int always));
 static void intro_message __ARGS((void));
 
@@ -1685,7 +1685,7 @@ win_redr_status(wp)
 
     if (wp->w_status_height)			/* if there is a status line */
     {
-	fillchar = highlight_status(&attr);
+	fillchar = highlight_status(&attr, wp == curwin);
 
 	p = wp->w_buffer->b_fname;
 	if (p == NULL)
@@ -2327,7 +2327,7 @@ screenalloc(clear)
 #ifdef USE_GUI
     else if (gui.in_use && NextScreen != NULL && Rows != screen_Rows)
     {
-	(void)gui_redraw_block(0, 0, (int)Rows - 1, (int)Columns - 1);
+	(void)gui_redraw_block(0, 0, (int)Rows - 1, (int)Columns - 1, 0);
 	/*
 	 * Adjust the position of the cursor, for when executing an external
 	 * command.
@@ -4330,12 +4330,21 @@ unshowmode(force)
 }
 
     static int
-highlight_status(attr)
-    int	    *attr;
+highlight_status(attr, is_curwin)
+    int		*attr;
+    int		is_curwin;
 {
-    *attr = highlight_attr[HLF_S];
-    if (*attr)				/* can use highlighting */
+    if (is_curwin)
+	*attr = highlight_attr[HLF_S];
+    else
+	*attr = highlight_attr[HLF_SNC];
+    /* Use a space when there is highlighting, and highlighting of current
+     * window differs, or this is not the current window */
+    if (*attr && (highlight_attr[HLF_S] != highlight_attr[HLF_SNC]
+							       || !is_curwin))
 	return ' ';
+    if (is_curwin)
+	return '^';
     return '=';
 }
 
@@ -4394,7 +4403,7 @@ win_redr_ruler(wp, always)
 	if (wp->w_status_height)
 	{
 	    row = wp->w_winpos + wp->w_height;
-	    fillchar = highlight_status(&attr);
+	    fillchar = highlight_status(&attr, wp == curwin);
 	}
 	else
 	{
@@ -4481,6 +4490,9 @@ screen_valid(clear)
  * CURSOR_MOVED bit, this function returns one of IN_UNKNOWN, IN_BUFFER, or
  * IN_STATUS_LINE depending on where the cursor was clicked.
  *
+ * If flags has MOUSE_MAY_STOP_VIS, then Visual mode will be stopped, unless
+ * the mouse is on the status line of the same window.
+ *
  * If flags has MOUSE_DID_MOVE, nothing is done if the mouse didn't move since
  * the last call.
  *
@@ -4506,22 +4518,34 @@ jump_to_mouse(flags, inclusive)
     mouse_past_bottom = FALSE;
     mouse_past_eol = FALSE;
 
-    if ((flags & MOUSE_DID_MOVE) && prev_row == mouse_row &&
-							prev_col == mouse_col)
-	return IN_BUFFER;		/* mouse pointer didn't move */
+    if ((flags & MOUSE_DID_MOVE) && prev_row == mouse_row
+						     && prev_col == mouse_col)
+    {
+retnomove:
+	/* before moving the cursor for a left click wich is NOT in a status
+	 * line, stop Visual mode */
+	if (on_status_line)
+	    return IN_STATUS_LINE;
+	if (flags & MOUSE_MAY_STOP_VIS)
+	{
+	    end_visual_mode();
+	    update_curbuf(NOT_VALID);	/* delete the inversion */
+	}
+	return IN_BUFFER;
+    }
 
     prev_row = mouse_row;
     prev_col = mouse_col;
 
     if ((flags & MOUSE_SETPOS))
-	return IN_BUFFER;		/* mouse pointer didn't move */
+	goto retnomove;			/* ugly goto... */
 
     old_curwin = curwin;
     old_cursor = curwin->w_cursor;
 
     if (!(flags & MOUSE_FOCUS))
     {
-	if (row < 0 || col < 0)	    /* check if it makes sense */
+	if (row < 0 || col < 0)		/* check if it makes sense */
 	    return IN_UNKNOWN;
 
 	/* find the window where the row is in */
@@ -4536,6 +4560,16 @@ jump_to_mouse(flags, inclusive)
 	    on_status_line = row - wp->w_height + 1;
 	else
 	    on_status_line = 0;
+
+	/* Before jumping to another buffer, or moving the cursor for a left
+	 * click, stop Visual mode. */
+	if (VIsual_active
+		&& (wp->w_buffer != curwin->w_buffer
+		    || (!on_status_line && (flags & MOUSE_MAY_STOP_VIS))))
+	{
+	    end_visual_mode();
+	    update_curbuf(NOT_VALID);	/* delete the inversion */
+	}
 	win_enter(wp, TRUE);	    /* can make wp invalid! */
 	if (on_status_line)	    /* In (or below) status line */
 	{
@@ -4557,6 +4591,13 @@ jump_to_mouse(flags, inclusive)
     }
     else /* keep_window_focus must be TRUE */
     {
+	/* before moving the cursor for a left click, stop Visual mode */
+	if (flags & MOUSE_MAY_STOP_VIS)
+	{
+	    end_visual_mode();
+	    update_curbuf(NOT_VALID);	/* delete the inversion */
+	}
+
 	row -= curwin->w_winpos;
 
 	/*
@@ -4971,6 +5012,9 @@ intro_message()
     if (mch_windows95())
 	row -= 2;
 #endif
+#if defined(__BEOS__) && defined(__INTEL__)
+    row -= 2;
+#endif
     if (row > 2 && Columns >= 50)
     {
 	for (i = 0; i < (int)(sizeof(lines) / sizeof(char *)); ++i)
@@ -4998,6 +5042,10 @@ intro_message()
 	    screen_puts((char_u *)"WARNING: Windows 95 detected", row + 1, col + 8, highlight_attr[HLF_E]);
 	    screen_puts((char_u *)"type  :help windows95<Enter>  for info on this", row + 2, col, 0);
 	}
+#endif
+#if defined(__BEOS__) && defined(__INTEL__)
+	screen_puts((char_u *)"     WARNING: Intel CPU detected.    ", row + 1, col + 4, highlight_attr[HLF_E]);
+	screen_puts((char_u *)" PPC has a much better architecture. ", row + 2, col + 4, highlight_attr[HLF_E]);
 #endif
     }
 }

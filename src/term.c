@@ -738,6 +738,11 @@ struct builtin_term builtin_termcaps[] =
     {K_S_DOWN,		"\033Or"},
     {K_S_LEFT,		"\033Ot"},
     {K_S_RIGHT,		"\033Ov"},
+    /* An extra set of function keys for vt100 mode */
+    {K_XF1,		"\033OP"},
+    {K_XF2,		"\033OQ"},
+    {K_XF3,		"\033OR"},
+    {K_XF4,		"\033OS"},
     {K_F1,		"\033[11~"},
     {K_F2,		"\033[12~"},
     {K_F3,		"\033[13~"},
@@ -1427,8 +1432,11 @@ set_termname(term)
 	add_termcode(name, (char_u *)"\033}");
 #  endif
 #  ifdef DEC_MOUSE
-	name[0] = (int)KS_DEC_MOUSE;
-	add_termcode(name, (char_u *)"\033[");
+	if (!vim_is_xterm(term))    /* conflicts with xterm mouse: "\033[" and "\033[M" */
+	{
+	    name[0] = (int)KS_DEC_MOUSE;
+	    add_termcode(name, (char_u *)"\033[");
+	}
 #  endif
 # else	/* UNIX */
 	add_termcode(name, (char_u *)"\233M");
@@ -2465,7 +2473,7 @@ setmouse()
     else
 	checkfor = MOUSE_NORMAL;		/* assume normal mode */
 
-    if (mouse_has(checkfor))
+    if (mouse_has(checkfor) || mouse_has(TO_UPPER(checkfor)))
 	mch_setmouse(TRUE);
     else
 	mch_setmouse(FALSE);
@@ -2475,6 +2483,7 @@ setmouse()
  * Return TRUE if
  * - "c" is in 'mouse', or
  * - 'a' is in 'mouse' and "c" is in MOUSE_A, or
+ * - 'A' is in 'mouse' and "c" is in MOUSE_A_NV, or
  * - the current buffer is a help file and 'h' is in 'mouse' and we are in a
  *   normal editing mode (not at hit-return message).
  */
@@ -2482,11 +2491,13 @@ setmouse()
 mouse_has(c)
     int	    c;
 {
-    return (vim_strchr(p_mouse, c) != NULL ||
-		    (vim_strchr(p_mouse, 'a') != NULL &&
-				  vim_strchr((char_u *)MOUSE_A, c) != NULL) ||
-		    (c != MOUSE_RETURN && curbuf->b_help &&
-					    vim_strchr(p_mouse, MOUSE_HELP)));
+    return (vim_strchr(p_mouse, c) != NULL
+		|| (vim_strchr(p_mouse, 'a') != NULL
+		    && vim_strchr((char_u *)MOUSE_A, c) != NULL)
+		|| (vim_strchr(p_mouse, 'A') != NULL
+		    && vim_strchr((char_u *)MOUSE_A_NV, c) != NULL)
+		|| (c != MOUSE_RETURN && curbuf->b_help
+		    && vim_strchr(p_mouse, MOUSE_HELP)));
 }
 #endif
 
@@ -2867,6 +2878,24 @@ check_termcode(max_offset)
 				break;
 			    }
 		    }
+
+		    /* replace K_XF1 by K_F1, K_XF1 by K_F2, etc. */
+		    if (termcodes[i].name[0] == KS_EXTRA)
+			switch (termcodes[i].name[1])
+			{
+			    case KE_XF1: termcodes[i].name[0] = 'k';
+					 termcodes[i].name[1] = '1';
+					 break;
+			    case KE_XF2: termcodes[i].name[0] = 'k';
+					 termcodes[i].name[1] = '2';
+					 break;
+			    case KE_XF3: termcodes[i].name[0] = 'k';
+					 termcodes[i].name[1] = '3';
+					 break;
+			    case KE_XF4: termcodes[i].name[0] = 'k';
+					 termcodes[i].name[1] = '4';
+					 break;
+			}
 
 		    key_name[0] = termcodes[i].name[0];
 		    key_name[1] = termcodes[i].name[1];
@@ -3361,13 +3390,16 @@ replace_termcodes(from, bufp, from_part)
 	/*
 	 * If 'cpoptions' does not contain 'k', see if it's an actual key-code.
 	 * Note that this is also checked after replacing the <> form.
+	 * Single character codes are NOT replaced (e.g. ^H or DEL), because
+	 * it could be a character in the file.
 	 */
 	if (do_key_code)
 	{
 	    for (i = 0; i < tc_len; ++i)
 	    {
 		slen = termcodes[i].len;
-		if (STRNCMP(termcodes[i].code, src, (size_t)slen) == 0)
+		if (slen > 1
+			&& STRNCMP(termcodes[i].code, src, (size_t)slen) == 0)
 		{
 		    result[dlen++] = K_SPECIAL;
 		    result[dlen++] = termcodes[i].name[0];
@@ -3377,15 +3409,15 @@ replace_termcodes(from, bufp, from_part)
 		}
 	    }
 
-	    /*
-	     * If terminal code matched, continue after it.
-	     * If no terminal code matched and the character is K_SPECIAL,
-	     * replace it with K_SPECIAL KS_SPECIAL K_FILLER
-	     */
+	    /* If terminal code matched, continue after it. */
 	    if (i != tc_len)
 		continue;
 	}
 
+	/*
+	 * If the character is K_SPECIAL, replace it with K_SPECIAL KS_SPECIAL
+	 * K_FILLER.
+	 */
 	if (*src == K_SPECIAL)
 	{
 	    result[dlen++] = K_SPECIAL;
@@ -3585,3 +3617,35 @@ show_one_termcode(name, code, printit)
     }
     return len;
 }
+
+#if (defined(WIN32) && !defined(USE_GUI)) || defined(PROTO)
+static char ksme_str[20];
+static char ksmr_str[20];
+static char ksmd_str[20];
+
+/*
+ * For Win32 console: update termcap codes for existing console attributes.
+ */
+    void
+update_tcap(attr)
+    int attr;
+{
+    struct builtin_term *p;
+
+    p = find_builtin_term(DEFAULT_TERM);
+    sprintf(ksme_str, "\033|%dm", attr);
+    sprintf(ksmd_str, "\033|%dm", attr | 0x08);  /* FOREGROUND_INTENSITY */
+    sprintf(ksmr_str, "\033|%dm", ((attr & 0x0F) << 4) | ((attr & 0xF0) >> 4));
+
+    while (p->bt_string != NULL)
+    {
+      if (p->bt_entry == (int)KS_ME)
+          p->bt_string = &ksme_str[0];
+      else if (p->bt_entry == (int)KS_MR)
+          p->bt_string = &ksmr_str[0];
+      else if (p->bt_entry == (int)KS_MD)
+          p->bt_string = &ksmd_str[0];
+      ++p;
+    }
+}
+#endif

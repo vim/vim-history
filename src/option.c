@@ -352,7 +352,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"highlight",   "hl",   P_STRING|P_VI_DEF|P_RALL,
 			    (char_u *)&p_hl,
-			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,t:Title,v:Visual,w:WarningMsg",
+			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,t:Title,v:Visual,w:WarningMsg",
 				(char_u *)0L}},
     {"hlsearch",    "hls",  P_BOOL|P_VI_DEF|P_VIM|P_RALL,
 			    (char_u *)&p_hls,
@@ -1050,6 +1050,13 @@ set_init_1()
 	    options[opt_idx].def_val[VI_DEFAULT] = (char_u *)n;
     }
 
+#ifdef USE_GUI_WIN32
+    /* force 'shortname' for Win32s */
+    if (gui_is_win32s())
+	options[findoption((char_u *)"shortname")].def_val[VI_DEFAULT] =
+							       (char_u *)TRUE;
+#endif
+
     /*
      * set all the options (except the terminal options) to their default value
      */
@@ -1186,7 +1193,7 @@ set_string_default(name, val)
 
 /*
  * Set the Vi-default value of a number option.
- * Used for 'liens' and 'columns'.
+ * Used for 'lines' and 'columns'.
  */
     void
 set_number_default(name, val)
@@ -1203,10 +1210,10 @@ set_number_default(name, val)
     void
 set_init_2()
 {
-/*
- * 'scroll' defaults to half the window height. Note that this default is
- * wrong when the window height changes.
- */
+    /*
+     * 'scroll' defaults to half the window height. Note that this default is
+     * wrong when the window height changes.
+     */
     options[findoption((char_u *)"scroll")].def_val[VI_DEFAULT]
 					      = (char_u *)((long_u)Rows >> 1);
     comp_col();
@@ -1360,13 +1367,22 @@ set_init_3()
 init_gui_options()
 {
     int	    idx;
+    int	    tt;
 
     /* Set the 'background' option according to the lightness of the
      * background color. */
     idx = findoption((char_u *)"bg");
     if (!(options[idx].flags & P_WAS_SET)
 			       && gui_mch_get_lightness(gui.back_pixel) < 127)
-	set_string_option_direct(NULL, idx, (char_u *)"dark", TRUE);
+    {
+	/* Full_screen must be TRUE to get the side effect of changing the
+	 * defaults for the highlighting.  Restore it just in case. */
+	tt = full_screen;
+	full_screen = TRUE;
+	set_option_value((char_u *)"bg", 0L, (char_u *)"dark");
+	highlight_changed();
+	full_screen = tt;
+    }
 }
 #endif
 
@@ -2364,6 +2380,13 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
     /* terminal options */
     else if (istermoption(&options[opt_idx]) && full_screen)
     {
+	/* ":set t_Co=0" does ":set t_Co=" */
+	if (varp == &T_CCO && atoi((char *)T_CCO) == 0)
+	{
+	    if (new_value_alloced)
+		vim_free(T_CCO);
+	    T_CCO = empty_option;
+	}
 	ttest(FALSE);
 	if (varp == &T_ME)
 	{
@@ -2561,6 +2584,11 @@ set_bool_option(opt_idx, varp, value)
     else if ((int *)varp == &p_paste)
     {
 	paste_option_changed();
+    }
+    /* when 'ignorecase' is set or reset and 'hlsearch' is set, redraw */
+    else if ((int *)varp == &p_ic && p_hls)
+    {
+	redraw_all_later(NOT_VALID);
     }
     /* when 'textmode' is set or reset also change 'fileformat' */
     else if ((int *)varp == &curbuf->b_p_tx)
@@ -3617,6 +3645,7 @@ set_context_in_set_cmd(arg)
     int		flags = 0;	/* init for GCC */
     int		opt_idx = 0;	/* init for GCC */
     char_u	*p;
+    char_u	*s;
     char_u	*after_blank = NULL;
     int		is_term_option = FALSE;
     int		key;
@@ -3633,16 +3662,28 @@ set_context_in_set_cmd(arg)
 	expand_pattern = p + 1;
 	return;
     }
-    while (p != arg && (*p != ' ' || *(p - 1) == '\\'))
+    while (p > arg)
     {
+	s = p;
+	/* count number of backslashes before ' ' or ',' */
+	if (*p == ' ' || *p == ',')
+	{
+	    while (s > arg && *(s - 1) == '\\')
+		--s;
+	}
+	/* break at a space with an even number of backslashes */
+	if (*p == ' ' && ((p - s) & 1) == 0)
+	{
+	    ++p;
+	    break;
+	}
 	/* remember possible start of file name to expand */
-	if ((*p == ' ' || (*p == ',' && *(p - 1) != '\\')) &&
-							  after_blank == NULL)
+	if (after_blank == NULL
+		&& ((*p == ' ' && (p - s) < 2)
+		    || (*p == ',' && p == s)))
 	    after_blank = p + 1;
-	p--;
+	--p;
     }
-    if (p != arg)
-	p++;
     if (STRNCMP(p, "no", 2) == 0)
     {
 	expand_context = EXPAND_BOOL_SETTINGS;
@@ -3735,7 +3776,11 @@ set_context_in_set_cmd(arg)
 	p = options[opt_idx].var;
 	if (p == (char_u *)&p_bdir || p == (char_u *)&p_dir ||
 						       p == (char_u *)&p_path)
+	{
 	    expand_context = EXPAND_DIRECTORIES;
+	    if (p == (char_u *)&p_path)
+		expand_set_path = TRUE;
+	}
 	else
 	    expand_context = EXPAND_FILES;
     }

@@ -1,0 +1,35 @@
+Tests for autocommands on :close command
+
+Write three files and open them, each in a window.
+Then go to next window, with autocommand that deletes the previous one.
+Do this twice, writing the file.
+
+STARTTEST
+:/start of testfile/,/end of testfile/w! Xtestje1
+:/start of testfile/,/end of testfile/w! Xtestje2
+:/start of testfile/,/end of testfile/w! Xtestje3
+:e Xtestje1
+otestje1
+:w
+:sp Xtestje2
+otestje2
+:w
+:sp Xtestje3
+otestje3
+:w
+
+:au WinLeave testje bdel
+
+:w! test.out
+:au WinLeave testje bdel testje3
+:close
+:w >>test.out
+:!rm -rf Xtestje*
+:qa!
+ENDTEST
+
+start of testfile
+	contents
+	contents
+	contents
+end of testfile

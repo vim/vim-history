@@ -109,25 +109,29 @@
 #define CPO_CW		'w'	/* "cw" only changes one blank */
 #define CPO_FWRITE	'W'	/* "w!" doesn't overwrite readonly files */
 #define CPO_ESC		'x'
+#define CPO_YANK	'y'
 #define CPO_DOLLAR	'$'
 #define CPO_FILTER	'!'
 #define CPO_MATCH	'%'
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcdeEfFjklLmorsStuwWx$!%<"
+#define CPO_ALL		"aAbBcdeEfFjklLmorsStuwWxy$!%<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],"
 
 /* characters for p_mouse option: */
 #define MOUSE_NORMAL	'n'		/* use mouse in normal mode */
+#define MOUSE_NORMAL_NV	'N'		/* idem, but no Visual mode */
 #define MOUSE_VISUAL	'v'		/* use mouse in visual mode */
 #define MOUSE_INSERT	'i'		/* use mouse in insert mode */
+#define MOUSE_INSERT_NV	'I'		/* idem, but no Visual mode */
 #define MOUSE_COMMAND	'c'		/* use mouse in command line mode */
 #define MOUSE_HELP	'h'		/* use mouse in help buffers */
 #define MOUSE_RETURN	'r'		/* use mouse for hit-return message */
-#define MOUSE_A		"nvich"		/* used for 'a' flag */
-#define MOUSE_ALL	"anvicrh"	/* all possible characters */
+#define MOUSE_A		"nvichVCH"	/* used for 'a' flag */
+#define MOUSE_A_NV	"NvIchVCH"	/* used for 'A' flag */
+#define MOUSE_ALL	"aAnNviIcrh"	/* all possible characters */
 
 /* characters for p_shm option: */
 #define SHM_RO		'r'		/* readonly */

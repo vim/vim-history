@@ -294,6 +294,7 @@ typedef unsigned long	long_u;
 
 #define WILD_LIST_NOTFOUND	1
 #define WILD_HOME_REPLACE	2
+#define WILD_USE_NL		4	/* separate names with '\n' */
 
 /* Flags for expand_wildcards() */
 #define EW_DIR		1	/* include directory names */
@@ -450,13 +451,15 @@ typedef unsigned long	long_u;
 #define DT_LAST		6	/* jump to first match of same tag */
 #define DT_SELECT	7	/* jump to selection from list */
 #define DT_HELP		8	/* like DT_TAG, but no wildcards */
+#define DT_JUMP		9	/* jump to new tag or selection from list */
 
 /*
  * flags for find_tags().
  */
 #define TAG_HELP	1	/* only search for help tags */
 #define TAG_NAMES	2	/* only return name of tag */
-#define	TAG_WILD	4	/* tag pattern has wildcards */
+#define	TAG_REGEXP	4	/* use tag pattern as regexp */
+#define	TAG_NOIC	8	/* don't always ignore case */
 
 /*
  * Events for autocommands.
@@ -487,6 +490,7 @@ enum auto_event
     EVENT_STDINREADPRE,	    /* before reading from stdin */
     EVENT_TERMCHANGED,	    /* after changing 'term' */
     EVENT_USER,		    /* user defined autocommand */
+    EVENT_VIMENTER,	    /* after starting Vim */
     EVENT_VIMLEAVE,	    /* before exiting Vim */
     EVENT_WINENTER,	    /* after entering a window */
     EVENT_WINLEAVE,	    /* before leaving a window */
@@ -513,6 +517,7 @@ enum hlf_value
     HLF_N,	    /* line number for ":number" and ":#" commands */
     HLF_R,	    /* return to continue message and yes/no questions */
     HLF_S,	    /* status lines */
+    HLF_SNC,	    /* status lines of not-current windows */
     HLF_T,	    /* Titles for output from ":set all", ":autocmd" etc. */
     HLF_V,	    /* Visual mode */
     HLF_W,	    /* warning messages */
@@ -577,7 +582,7 @@ enum hlf_value
 #define IOSIZE	   (1024+1)	/* file i/o and sprintf buffer size */
 #define MSG_BUF_LEN 80		/* length of buffer for small messages */
 
-#if defined(AMIGA) || defined(__linux__) || defined(__QNX__) || defined(__CYGWIN32__)
+#if defined(AMIGA) || defined(__linux__) || defined(__QNX__) || defined(__CYGWIN32__) || defined(_AIX)
 # define TBUFSZ 2048		/* buffer size for termcap entry */
 #else
 # define TBUFSZ 1024		/* buffer size for termcap entry */
@@ -771,10 +776,11 @@ int vim_chdir __ARGS((char *));
 #define CURSOR_MOVED	0x100
 
 /* flags for jump_to_mouse() */
-#define MOUSE_FOCUS	0x1	/* if used, need to stay in this window */
-#define MOUSE_MAY_VIS	0x2	/* if used, may set visual mode */
-#define MOUSE_DID_MOVE	0x4	/* if used, only act when mouse has moved */
-#define MOUSE_SETPOS	0x8	/* if used, only set current mouse position */
+#define MOUSE_FOCUS		0x01	/* need to stay in this window */
+#define MOUSE_MAY_VIS		0x02	/* may start Visual mode */
+#define MOUSE_DID_MOVE		0x04	/* only act when mouse has moved */
+#define MOUSE_SETPOS		0x08	/* only set current mouse position */
+#define MOUSE_MAY_STOP_VIS	0x10	/* may stop Visual mode */
 
 #endif /* USE_MOUSE */
 
@@ -847,7 +853,7 @@ typedef struct VimClipboard
  * functions of these names. The declarations would break if the defines had
  * been seen at that stage.
  */
-#ifndef USE_GUI_WIN32
+#if !defined(USE_GUI_WIN32) && !defined(macintosh)
 # define mch_errmsg(str)	fprintf(stderr, (str))
 # define mch_display_error()	fflush(stderr)
 #endif

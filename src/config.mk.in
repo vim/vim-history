@@ -46,6 +46,8 @@ PYTHON_GETPATH_CFLAGS = @PYTHON_GETPATH_CFLAGS@
 
 AWK		= @AWK@
 
+STRIP		= @STRIP@
+
 ### Top directory for everything
 prefix		= @prefix@
 

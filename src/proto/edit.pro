@@ -5,6 +5,7 @@ int vim_is_ctrl_x_key __ARGS((int c));
 int add_completion_and_infercase __ARGS((char_u *str, int len, char_u *fname, int dir, int reuse));
 int get_literal __ARGS((void));
 void insertchar __ARGS((unsigned c, int force_formatting, int second_indent, int ctrlv));
+int comp_textwidth __ARGS((int ff));
 void stop_arrow __ARGS((void));
 void set_last_insert __ARGS((int c));
 void beginline __ARGS((int flags));

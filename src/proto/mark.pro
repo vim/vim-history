@@ -14,5 +14,6 @@ void mark_adjust __ARGS((linenr_t line1, linenr_t line2, long amount, long amoun
 void set_last_cursor __ARGS((WIN *win));
 int read_viminfo_filemark __ARGS((char_u *line, FILE *fp, int force));
 void write_viminfo_filemarks __ARGS((FILE *fp));
+int removable __ARGS((char_u *name));
 int write_viminfo_marks __ARGS((FILE *fp_out));
 void copy_viminfo_marks __ARGS((char_u *line, FILE *fp_in, FILE *fp_out, int count, int eof));

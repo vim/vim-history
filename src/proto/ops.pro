@@ -8,7 +8,7 @@ int valid_yank_reg __ARGS((int regname, int writing));
 int yank_register_mline __ARGS((int regname));
 int do_record __ARGS((int c));
 int do_execreg __ARGS((int regname, int colon, int addcr));
-int insert_reg __ARGS((int regname));
+int insert_reg __ARGS((int regname, int literally));
 int cmdline_paste __ARGS((int regname));
 int op_delete __ARGS((OPARG *oap));
 void op_tilde __ARGS((OPARG *oap));

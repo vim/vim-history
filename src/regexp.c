@@ -1155,7 +1155,8 @@ static int	nextchr;    /* used for ungetchr() */
  * eg in /[ ^I]^ the pattern was never found even if it existed, because ^ was
  * taken to be magic -- webb
  */
-static int	at_start;   /* True when we are on the first character */
+static int	at_start;	/* True when on the first character */
+static int	prev_at_start;  /* True when on the second character */
 
     static void
 initchr(str)
@@ -1164,6 +1165,7 @@ initchr(str)
     regparse = str;
     curchr = prevchr = nextchr = -1;
     at_start = TRUE;
+    prev_at_start = FALSE;
 }
 
     static int
@@ -1182,8 +1184,10 @@ peekchr()
 		curchr = Magic(curchr);
 	    break;
 	case '*':
-	    /* * is not magic as the very first character, eg "?*ptr" */
-	    if (reg_magic && !at_start)
+	    /* * is not magic as the very first character, eg "?*ptr" and when
+	     * after '^', eg "/^*ptr" */
+	    if (reg_magic && !at_start
+				 && !(prev_at_start && prevchr == Magic('^')))
 		curchr = Magic('*');
 	    break;
 	case '^':
@@ -1213,6 +1217,7 @@ peekchr()
 		 * Therefore, \ is so meta-magic that it is not in META.
 		 */
 		curchr = -1;
+		prev_at_start = at_start;
 		at_start = FALSE;	/* be able to say "/\*ptr" */
 		peekchr();
 		curchr ^= Magic(0);
@@ -1243,6 +1248,7 @@ peekchr()
 skipchr()
 {
     regparse++;
+    prev_at_start = at_start;
     at_start = FALSE;
     prevchr = curchr;
     curchr = nextchr;	    /* use previously unget char, or -1 */
@@ -1268,6 +1274,8 @@ ungetchr()
 {
     nextchr = curchr;
     curchr = prevchr;
+    at_start = prev_at_start;
+    prev_at_start = FALSE;
     /*
      * Backup regparse as well; not because we will use what it points at,
      * but because skipchr() will bump it again.
@@ -2389,51 +2397,50 @@ do_Lower(d, c)
 }
 
 /*
- * regtilde: replace tildes in the pattern by the old pattern
+ * regtilde(): Replace tildes in the pattern by the old pattern.
  *
- * Short explanation of the tilde: it stands for the previous replacement
- * pattern. If that previous pattern also contains a ~ we should go back
- * a step further... but we insert the previous pattern into the current one
+ * Short explanation of the tilde: It stands for the previous replacement
+ * pattern.  If that previous pattern also contains a ~ we should go back a
+ * step further...  But we insert the previous pattern into the current one
  * and remember that.
  * This still does not handle the case where "magic" changes. TODO?
  *
- * New solution: The tilde's are parsed once before the first call to
- * vim_regsub(). In the old solution (tilde handled in regsub()) is was
- * possible to get an endless loop.
+ * The tildes are parsed once before the first call to vim_regsub().
  */
     char_u *
 regtilde(source, magic)
     char_u  *source;
     int	    magic;
 {
-    char_u  *newsub = NULL;
+    char_u  *newsub = source;
     char_u  *tmpsub;
     char_u  *p;
     int	    len;
     int	    prevlen;
 
-    for (p = source; *p; ++p)
+    for (p = newsub; *p; ++p)
     {
 	if ((*p == '~' && magic) || (*p == '\\' && *(p + 1) == '~' && !magic))
 	{
-	    if (reg_prev_sub)
+	    if (reg_prev_sub != NULL)
 	    {
-		    /* length = len(current) - 1 + len(previous) + 1 */
+		/* length = len(newsub) - 1 + len(prev_sub) + 1 */
 		prevlen = STRLEN(reg_prev_sub);
-		tmpsub = alloc((unsigned)(STRLEN(source) + prevlen));
-		if (tmpsub)
+		tmpsub = alloc((unsigned)(STRLEN(newsub) + prevlen));
+		if (tmpsub != NULL)
 		{
-			/* copy prefix */
-		    len = (int)(p - source);	/* not including ~ */
-		    STRNCPY(tmpsub, source, len);
-			/* interpretate tilde */
-		    STRCPY(tmpsub + len, reg_prev_sub);
-			/* copy postfix */
+		    /* copy prefix */
+		    len = (int)(p - newsub);	/* not including ~ */
+		    vim_memmove(tmpsub, newsub, (size_t)len);
+		    /* interpretate tilde */
+		    vim_memmove(tmpsub + len, reg_prev_sub, (size_t)prevlen);
+		    /* copy postfix */
 		    if (!magic)
 			++p;			/* back off \ */
-		    STRCAT(tmpsub + len, p + 1);
+		    STRCPY(tmpsub + len + prevlen, p + 1);
 
-		    vim_free(newsub);
+		    if (newsub != source)	/* already allocated newsub */
+			vim_free(newsub);
 		    newsub = tmpsub;
 		    p = newsub + len + prevlen;
 		}
@@ -2442,20 +2449,18 @@ regtilde(source, magic)
 		STRCPY(p, p + 1);		/* remove '~' */
 	    else
 		STRCPY(p, p + 2);		/* remove '\~' */
+	    --p;
 	}
 	else if (*p == '\\' && p[1])		/* skip escaped characters */
 	    ++p;
     }
 
     vim_free(reg_prev_sub);
-    if (newsub)
-    {
-	source = newsub;
+    if (newsub != source)	/* newsub was allocated, just keep it */
 	reg_prev_sub = newsub;
-    }
-    else
-	reg_prev_sub = vim_strsave(source);
-    return source;
+    else			/* no ~ found, need to save newsub  */
+	reg_prev_sub = vim_strsave(newsub);
+    return newsub;
 }
 
 /*

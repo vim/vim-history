@@ -37,6 +37,7 @@ do_window(nchar, Prenum)
 {
     long    Prenum1;
     WIN	    *wp;
+    int	    xchar;
 #if defined(FILE_IN_PATH) || defined(FIND_IN_PATH)
     char_u  *ptr;
 #endif
@@ -261,6 +262,41 @@ do_window(nchar, Prenum)
 		curwin->w_set_curswant = TRUE;
 		break;
 #endif
+
+/* CTRL-W g  extended commands */
+    case 'g':
+#ifdef USE_GUI_WIN32
+		dont_scroll = TRUE;		/* disallow scrolling here */
+#endif
+		++no_mapping;
+		++allow_keys;   /* no mapping for xchar, but allow key codes */
+		xchar = vgetc();
+#ifdef HAVE_LANGMAP
+		LANGMAP_ADJUST(xchar, TRUE);
+#endif
+		--no_mapping;
+		--allow_keys;
+#ifdef SHOWCMD
+		(void)add_to_showcmd(xchar);
+#endif
+		switch (xchar)
+		{
+		    case ']':
+		    case Ctrl(']'):
+			reset_VIsual();			/* stop Visual mode */
+			if (Prenum)
+			    postponed_split = Prenum;
+			else
+			    postponed_split = -1;
+			stuffcharReadbuff('g');
+			stuffcharReadbuff(xchar);
+			break;
+
+		    default:
+			beep_flush();
+			break;
+		}
+		break;
 
     default:	beep_flush();
 		break;
@@ -1040,7 +1076,10 @@ win_enter(wp, undo_sync)
     if (wp->w_buffer != curbuf)
 	buf_copy_options(curbuf, wp->w_buffer, BCO_ENTER | BCO_NOHELP);
     if (curwin != NULL)
+    {
 	prevwin = curwin;	/* remember for CTRL-W p */
+	curwin->w_redr_status = TRUE;
+    }
     curwin = wp;
     curbuf = wp->w_buffer;
     changed_line_abv_curs();	/* assume cursor position needs updating */
@@ -1052,6 +1091,8 @@ win_enter(wp, undo_sync)
 #endif
 
     maketitle();
+    curwin->w_redr_status = TRUE;
+
 	    /* set window height to desired minimal value */
     if (p_wh && curwin->w_height < p_wh)
 	win_setheight((int)p_wh);
@@ -1069,18 +1110,22 @@ win_alloc(after)
 {
     WIN	    *newwin;
 
-/*
- * allocate window structure and linesizes arrays
- */
+    /*
+     * allocate window structure and linesizes arrays
+     */
     newwin = (WIN *)alloc_clear((unsigned)sizeof(WIN));
-    if (newwin)
+    if (newwin != NULL && win_alloc_lsize(newwin) == FAIL)
     {
-/*
- * link the window in the window list
- */
-	win_append(after, newwin);
+	vim_free(newwin);
+	newwin = NULL;
+    }
 
-	win_alloc_lsize(newwin);
+    if (newwin != NULL)
+    {
+	/*
+	 * link the window in the window list
+	 */
+	win_append(after, newwin);
 
 	/* position the display and the cursor at the top of the file. */
 	newwin->w_topline = 1;
@@ -1131,7 +1176,7 @@ win_free(wp)
     win_free_lsize(wp);
 
     for (i = 0; i < wp->w_tagstacklen; ++i)
-	free(wp->w_tagstack[i].tagname);
+	vim_free(wp->w_tagstack[i].tagname);
 
 #ifdef USE_GUI
     if (gui.in_use)
@@ -1194,8 +1239,8 @@ win_alloc_lsize(wp)
     WIN	    *wp;
 {
     wp->w_lsize_valid = 0;
-    wp->w_lsize_lnum = (linenr_t *)malloc((size_t)(Rows * sizeof(linenr_t)));
-    wp->w_lsize = (char_u *)malloc((size_t)Rows);
+    wp->w_lsize_lnum = (linenr_t *)alloc((unsigned)(Rows * sizeof(linenr_t)));
+    wp->w_lsize = alloc((unsigned)Rows);
     if (wp->w_lsize_lnum == NULL || wp->w_lsize == NULL)
     {
 	win_free_lsize(wp);	/* one of the two may have worked */
@@ -1538,23 +1583,39 @@ win_comp_scroll(wp)
 command_height(old_p_ch)
     long    old_p_ch;
 {
+    WIN	    *wp;
+    int	    h;
+
     if (!starting)
     {
 	cmdline_row = Rows - p_ch;
 	if (p_ch > old_p_ch)		    /* p_ch got bigger */
 	{
-	    if (lastwin->w_height - (p_ch - old_p_ch) < MIN_ROWS)
+	    for (wp = lastwin; p_ch > old_p_ch; wp = wp->w_prev)
 	    {
-		emsg(e_noroom);
-		p_ch = lastwin->w_height - MIN_ROWS + old_p_ch;
+		if (wp == NULL)
+		{
+		    emsg(e_noroom);
+		    p_ch = old_p_ch;
+		    break;
+		}
+		h = wp->w_height - (p_ch - old_p_ch);
+		if (h < MIN_ROWS)
+		    h = MIN_ROWS;
+		old_p_ch += wp->w_height - h;
+		win_new_height(wp, h);
 	    }
+	    win_comp_pos();
 	    /* clear the lines added to cmdline */
 	    if (full_screen)
 		screen_fill((int)(cmdline_row), (int)Rows, 0,
 						   (int)Columns, ' ', ' ', 0);
 	    msg_row = cmdline_row;
+	    redraw_cmdline = TRUE;
+	    return;
 	}
-	else if (msg_row < cmdline_row)
+
+	if (msg_row < cmdline_row)
 	    msg_row = cmdline_row;
 	redraw_cmdline = TRUE;
     }

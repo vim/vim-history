@@ -35,7 +35,7 @@
 # if defined(WIN32) || defined(DJGPP) || defined(OS2)
 #  define MAX_FEAT
 # else
-#  if defined(MSDOS)
+#  ifdef MSDOS
 #   define MIN_FEAT
 #  endif
 # endif
@@ -353,7 +353,7 @@
 /*
  * VIM_HLP		Name of the help file.
  */
-/* #define VIM_HLP	"/foo/doc/help.txt" */
+/* #define VIM_HLP	"$VIM/doc/help.txt.gz" */
 
 /*
  * SYS_MENU_FILE	Name of the default menu.vim file.
@@ -387,6 +387,8 @@
  *			xterm mouse handling.
  * +mouse_netterm	idem, NETTERM_MOUSE, for Netterm mouse handling.
  * +mouse_dec		idem, DEC_MOUSE, for Dec mouse handling.
+ * (none)		MS-DOS mouse support.
+ * +mouse		Any mouse support (any of the above enabled).
  */
 #ifndef MIN_FEAT
 # define XTERM_MOUSE
@@ -396,6 +398,9 @@
 #endif
 #ifdef MAX_FEAT
 # define DEC_MOUSE
+#endif
+#ifndef MIN_FEAT
+# define DOS_MOUSE
 #endif
 
 /*

@@ -2274,6 +2274,7 @@ vim_rename(from, to)
     int	    fd_out;
     int	    n;
     char    *errmsg = NULL;
+    char    *buffer;
 
     /*
      * First delete the "to" file, this is required on some systems to make
@@ -2304,12 +2305,23 @@ vim_rename(from, to)
 	close(fd_in);
 	return -1;
     }
-    while ((n = read(fd_in, (char *)IObuff, (size_t)IOSIZE)) > 0)
-	if (write(fd_out, (char *)IObuff, (size_t)n) != n)
+
+    buffer = (char *)alloc(BUFSIZE);
+    if (buffer == NULL)
+    {
+	close(fd_in);
+	close(fd_out);
+	return -1;
+    }
+
+    while ((n = read(fd_in, buffer, (size_t)BUFSIZE)) > 0)
+	if (write(fd_out, buffer, (size_t)n) != n)
 	{
 	    errmsg = "writing to";
 	    break;
 	}
+
+    vim_free(buffer);
     close(fd_in);
     if (close(fd_out) < 0)
 	errmsg = "closing";
@@ -2610,6 +2622,7 @@ static struct event_name
     {"StdinReadPre",	EVENT_STDINREADPRE},
     {"TermChanged",	EVENT_TERMCHANGED},
     {"User",		EVENT_USER},
+    {"VimEnter",	EVENT_VIMENTER},
     {"VimLeave",	EVENT_VIMLEAVE},
     {"WinEnter",	EVENT_WINENTER},
     {"WinLeave",	EVENT_WINLEAVE},
@@ -3415,10 +3428,16 @@ do_doautocmd(arg, do_msg)
 do_autoall(arg)
     char_u	*arg;
 {
-    BUF	    *save_win_buf = NULL;
-    WIN	    *win;
-    WIN	    *save_curwin = NULL;
-    int	    retval;
+    BUF		*save_buf = NULL;
+    WIN		*win;
+    WIN		*save_curwin = NULL;
+    int		retval;
+    FPOS	save_cursor;
+    linenr_t	save_topline = 0;
+    int		len;
+
+    save_cursor.lnum = 0;   /* init for gcc */
+    save_cursor.col = 0;
 
     /*
      * This is a bit tricky: For some commands curwin->w_buffer needs to be
@@ -3444,9 +3463,16 @@ do_autoall(arg)
 	    {
 		/* if there is no window for this buffer, use curwin */
 		--curwin->w_buffer->b_nwindows;
-		save_win_buf = curwin->w_buffer;
+		save_buf = curwin->w_buffer;
 		curwin->w_buffer = curbuf;
 		++curwin->w_buffer->b_nwindows;
+
+		/* set cursor and topline to safe values */
+		save_cursor = curwin->w_cursor;
+		curwin->w_cursor.lnum = 1;
+		curwin->w_cursor.col = 0;
+		save_topline = curwin->w_topline;
+		curwin->w_topline = 1;
 	    }
 	    retval = do_doautocmd(arg, FALSE);
 	    do_modelines();
@@ -3457,11 +3483,31 @@ do_autoall(arg)
 	    }
 	    else		    /* restore buffer for curwin */
 	    {
-		if (buf_valid(save_win_buf))
+		if (buf_valid(save_buf))
 		{
 		    --curwin->w_buffer->b_nwindows;
-		    curwin->w_buffer = save_win_buf;
-		    ++curwin->w_buffer->b_nwindows;
+		    curwin->w_buffer = save_buf;
+		    ++save_buf->b_nwindows;
+		    if (save_cursor.lnum <= save_buf->b_ml.ml_line_count)
+		    {
+			curwin->w_cursor = save_cursor;
+			len = STRLEN(ml_get_buf(save_buf,
+					       curwin->w_cursor.lnum, FALSE));
+			if (len == 0)
+			    curwin->w_cursor.col = 0;
+			else if ((int)curwin->w_cursor.col >= len)
+			    curwin->w_cursor.col = len - 1;
+		    }
+		    else
+		    {
+			curwin->w_cursor.lnum = save_buf->b_ml.ml_line_count;
+			curwin->w_cursor.col = 0;
+		    }
+		    /* check topline < line_count, in case lines got deleted */
+		    if (save_topline <= save_buf->b_ml.ml_line_count)
+			curwin->w_topline = save_topline;
+		    else
+			curwin->w_topline = save_buf->b_ml.ml_line_count;
 		}
 	    }
 	    if (retval == FAIL)
@@ -3470,6 +3516,7 @@ do_autoall(arg)
     }
 
     curbuf = curwin->w_buffer;
+    adjust_cursor();	    /* just in case lines got deleted */
 }
 
 static int	autocmd_nested = FALSE;
@@ -3482,7 +3529,7 @@ static int	autocmd_nested = FALSE;
 apply_autocmds(event, fname, fname_io, force)
     EVENT_T	event;
     char_u	*fname;	    /* NULL or empty means use actual file name */
-    char_u	*fname_io;  /* fname to use for "^Vf" on cmdline */
+    char_u	*fname_io;  /* fname to use for <afile> on cmdline */
     int		force;	    /* when TRUE, ignore autocmd_busy */
 {
     return apply_autocmds_group(event, fname, fname_io, force, AUGROUP_ALL);
@@ -3492,7 +3539,7 @@ apply_autocmds(event, fname, fname_io, force)
 apply_autocmds_group(event, fname, fname_io, force, group)
     EVENT_T	event;
     char_u	*fname;	    /* NULL or empty means use actual file name */
-    char_u	*fname_io;  /* fname to use for "^Vf" on cmdline */
+    char_u	*fname_io;  /* fname to use for <afile> on cmdline */
     int		force;	    /* when TRUE, ignore autocmd_busy */
     int		group;	    /* group ID, or AUGROUP_ALL */
 {
@@ -3501,10 +3548,11 @@ apply_autocmds_group(event, fname, fname_io, force, group)
     int		    temp;
     int		    save_changed = curbuf->b_changed;
     BUF		    *old_curbuf = curbuf;
-    char_u	    *save_name;
     int		    retval = FALSE;
-    int		    old_autocmd_busy = autocmd_busy;
-    int		    old_autocmd_nested = autocmd_nested;
+    char_u	    *save_sourcing_name = sourcing_name;
+    char_u	    *save_autocmd_fname = autocmd_fname;
+    int		    save_autocmd_busy = autocmd_busy;
+    int		    save_autocmd_nested = autocmd_nested;
     static int	    nesting = 0;
     AutoPatCmd	    patcmd;
     AutoPat	    *ap;
@@ -3541,6 +3589,19 @@ apply_autocmds_group(event, fname, fname_io, force, group)
 	    (autocmd_no_leave &&
 		(event == EVENT_WINLEAVE || event == EVENT_BUFLEAVE)))
 	return retval;
+
+    /*
+     * Set the file name to be used for <afile>.
+     */
+    if (fname_io == NULL)
+    {
+	if (fname == NULL || *fname == NUL)
+	    autocmd_fname = curbuf->b_fname;
+	else
+	    autocmd_fname = fname;
+    }
+    else
+	autocmd_fname = fname_io;
 
     /*
      * When the file name is NULL or empty, use the file name of the current
@@ -3587,9 +3648,7 @@ apply_autocmds_group(event, fname, fname_io, force, group)
     /* Don't redraw while doing auto commands. */
     temp = RedrawingDisabled;
     RedrawingDisabled = TRUE;
-    save_name = sourcing_name;	/* may be called from .vimrc */
     sourcing_name = NULL;	/* don't free this one */
-    autocmd_fname = fname_io;
 
     /*
      * When starting to execute autocommands, save the search patterns.
@@ -3633,10 +3692,10 @@ apply_autocmds_group(event, fname, fname_io, force, group)
     }
 
     RedrawingDisabled = temp;
-    autocmd_busy = old_autocmd_busy;
-    autocmd_nested = old_autocmd_nested;
-    sourcing_name = save_name;
-    autocmd_fname = NULL;
+    autocmd_busy = save_autocmd_busy;
+    autocmd_nested = save_autocmd_nested;
+    sourcing_name = save_sourcing_name;
+    autocmd_fname = save_autocmd_fname;
     vim_free(fname);
     vim_free(sfname);
     --nesting;

@@ -1,0 +1,23 @@
+/* ex_docmd.c */
+void do_exmode __ARGS((void));
+int do_cmdline __ARGS((char_u *cmdline, char_u *(*getline)(int, void *, int), void *cookie, int flags));
+char_u *set_one_cmd_context __ARGS((char_u *buff));
+int autowrite __ARGS((BUF *buf, int forceit));
+void autowrite_all __ARGS((void));
+int can_abandon __ARGS((BUF *buf, int forceit));
+int check_changed_any __ARGS((void));
+int check_fname __ARGS((void));
+void backslash_halve __ARGS((char_u *p, int has_wildcards));
+int getfile __ARGS((int fnum, char_u *ffname, char_u *sfname, int setpm, linenr_t lnum, int forceit));
+int do_ecmd __ARGS((int fnum, char_u *ffname, char_u *sfname, char_u *command, linenr_t newlnum, int flags));
+void check_arg_idx __ARGS((void));
+int ends_excmd __ARGS((int c));
+char_u *find_nextcmd __ARGS((char_u *p));
+char_u *check_nextcmd __ARGS((char_u *p));
+int do_source __ARGS((char_u *fname, int check_other, int is_vimrc));
+char_u *getsourceline __ARGS((int c, void *cookie, int indent));
+char_u *get_command_name __ARGS((int idx));
+void not_exiting __ARGS((void));
+void handle_drop __ARGS((int filec, char_u **filev));
+char_u *eval_vars __ARGS((char_u *src, int *usedlen, linenr_t *lnump, char_u **errormsg));
+char_u *expand_sfile __ARGS((char_u *arg));

@@ -189,7 +189,7 @@ static linenr_t	lowest_marked = 0;
 static void set_b0_fname __ARGS((ZERO_BL *, BUF *buf));
 static void swapfile_info __ARGS((char_u *));
 static int recov_file_names __ARGS((char_u **, char_u *, int prepend_dot));
-static int ml_append_int __ARGS((BUF *, linenr_t, char_u *, colnr_t, int));
+static int ml_append_int __ARGS((BUF *, linenr_t, char_u *, colnr_t, int, int));
 static int ml_delete_int __ARGS((BUF *, linenr_t, int));
 static char_u *findswapname __ARGS((BUF *, char_u **, char_u *));
 static void ml_flush_line __ARGS((BUF *));
@@ -1098,7 +1098,7 @@ theend:
 	ml_close(curbuf, TRUE);
 #ifdef AUTOCMD
     else
-	apply_autocmds(EVENT_BUFREADPOST, NULL, curbuf->b_ffname, FALSE);
+	apply_autocmds(EVENT_BUFREADPOST, NULL, curbuf->b_fname, FALSE);
 #endif
     return;
 }
@@ -1637,7 +1637,7 @@ ml_get_pos(pos)
 }
 
 /*
- * ml_get_pos: get pointer to cursor line.
+ * ml_get_curline: get pointer to cursor line.
  */
     char_u *
 ml_get_curline()
@@ -1646,7 +1646,7 @@ ml_get_curline()
 }
 
 /*
- * ml_get_pos: get pointer to cursor position
+ * ml_get_cursor: get pointer to cursor position
  */
     char_u *
 ml_get_cursor()
@@ -1754,16 +1754,17 @@ ml_append(lnum, line, len, newfile)
 
     if (curbuf->b_ml.ml_line_lnum != 0)
 	ml_flush_line(curbuf);
-    return ml_append_int(curbuf, lnum, line, len, newfile);
+    return ml_append_int(curbuf, lnum, line, len, newfile, FALSE);
 }
 
     static int
-ml_append_int(buf, lnum, line, len, newfile)
+ml_append_int(buf, lnum, line, len, newfile, mark)
     BUF		*buf;
     linenr_t	lnum;		/* append after this line (can be 0) */
     char_u	*line;		/* text of the new line */
     colnr_t	len;		/* length of line, including NUL, or 0 */
     int		newfile;	/* flag, see above */
+    int		mark;		/* mark the new line */
 {
     int		i;
     int		line_count;	/* number of indexes in current block */
@@ -1799,7 +1800,7 @@ ml_append_int(buf, lnum, line, len, newfile)
  * This also releases any locked block.
  */
     if ((hp = ml_find_line(buf, lnum == 0 ? (linenr_t)1 : lnum,
-						    ML_INSERT)) == NULL)
+							  ML_INSERT)) == NULL)
 	return FAIL;
 
     buf->b_ml.ml_flags &= ~ML_EMPTY;
@@ -1820,8 +1821,8 @@ ml_append_int(buf, lnum, line, len, newfile)
  * - not appending to the last line in the file
  * insert in front of the next block.
  */
-    if ((int)dp->db_free < space_needed && db_idx == line_count - 1 &&
-					    lnum < buf->b_ml.ml_line_count)
+    if ((int)dp->db_free < space_needed && db_idx == line_count - 1
+					    && lnum < buf->b_ml.ml_line_count)
     {
 	/*
 	 * Now that the line is not going to be inserted in the block that we
@@ -1880,6 +1881,8 @@ ml_append_int(buf, lnum, line, len, newfile)
 	 * copy the text into the block
 	 */
 	vim_memmove((char *)dp + dp->db_index[db_idx + 1], line, (size_t)len);
+	if (mark)
+	    dp->db_index[db_idx + 1] |= DB_MARKED;
 
 	/*
 	 * Mark the block dirty.
@@ -1991,6 +1994,9 @@ ml_append_int(buf, lnum, line, len, newfile)
 	    dp_right->db_txt_start -= len;
 	    dp_right->db_free -= len + INDEX_SIZE;
 	    dp_right->db_index[0] = dp_right->db_txt_start;
+	    if (mark)
+		dp_right->db_index[0] |= DB_MARKED;
+
 	    vim_memmove((char *)dp_right + dp_right->db_txt_start,
 							   line, (size_t)len);
 	    ++line_count_right;
@@ -2029,6 +2035,8 @@ ml_append_int(buf, lnum, line, len, newfile)
 	    dp_left->db_txt_start -= len;
 	    dp_left->db_free -= len + INDEX_SIZE;
 	    dp_left->db_index[line_count_left] = dp_left->db_txt_start;
+	    if (mark)
+		dp_left->db_index[line_count_left] |= DB_MARKED;
 	    vim_memmove((char *)dp_left + dp_left->db_txt_start,
 							   line, (size_t)len);
 	    ++line_count_left;
@@ -2074,7 +2082,8 @@ ml_append_int(buf, lnum, line, len, newfile)
 	/*
 	 * update pointer blocks for the new data block
 	 */
-	for (stack_idx = buf->b_ml.ml_stack_top - 1; stack_idx >= 0; --stack_idx)
+	for (stack_idx = buf->b_ml.ml_stack_top - 1; stack_idx >= 0;
+								  --stack_idx)
 	{
 	    ip = &(buf->b_ml.ml_stack[stack_idx]);
 	    pb_idx = ip->ip_index;
@@ -2528,8 +2537,8 @@ ml_clearmarked()
     {
 	/*
 	 * Find the data block containing the line.
-	 * This also fills the stack with the blocks from the root to the data block
-	 * This also releases any locked block.
+	 * This also fills the stack with the blocks from the root to the data
+	 * block and releases any locked block.
 	 */
 	if ((hp = ml_find_line(curbuf, lnum, ML_FIND)) == NULL)
 	    return;		/* give error message? */
@@ -2599,26 +2608,26 @@ ml_flush_line(buf)
 	     */
 	    if ((int)dp->db_free >= extra)
 	    {
-		    /* if the length changes and there are following lines */
+		/* if the length changes and there are following lines */
 		count = buf->b_ml.ml_locked_high - buf->b_ml.ml_locked_low + 1;
 		if (extra != 0 && idx < count - 1)
 		{
-			/* move text of following lines */
+		    /* move text of following lines */
 		    vim_memmove((char *)dp + dp->db_txt_start - extra,
 				(char *)dp + dp->db_txt_start,
 				(size_t)(start - dp->db_txt_start));
 
-			/* adjust pointers of this and following lines */
+		    /* adjust pointers of this and following lines */
 		    for (i = idx + 1; i < count; ++i)
 			dp->db_index[i] -= extra;
 		}
 		dp->db_index[idx] -= extra;
 
-		    /* adjust free space */
+		/* adjust free space */
 		dp->db_free -= extra;
 		dp->db_txt_start -= extra;
 
-		    /* copy new line into the data block */
+		/* copy new line into the data block */
 		vim_memmove(old_line - extra, new_line, (size_t)new_len);
 		buf->b_ml.ml_flags |= (ML_LOCKED_DIRTY | ML_LOCKED_POS);
 	    }
@@ -2629,9 +2638,11 @@ ml_flush_line(buf)
 		 * Append first, because ml_delete_int() cannot delete the
 		 * last line in a buffer, which causes trouble for a buffer
 		 * that has only one line.
+		 * Don't forget to copy the mark!
 		 */
 		/* How about handling errors??? */
-		(void)ml_append_int(buf, lnum, new_line, new_len, FALSE);
+		(void)ml_append_int(buf, lnum, new_line, new_len, FALSE,
+					     (dp->db_index[idx] & DB_MARKED));
 		(void)ml_delete_int(buf, lnum, FALSE);
 	    }
 	}

@@ -445,11 +445,17 @@ msg_start()
 	redir_write((char_u *)"\n");
 }
 
-/* msg_putchar_attr() doesn't exist, use msg_puts_attr() instead */
-
     void
 msg_putchar(c)
-    int	    c;
+    int		c;
+{
+    msg_putchar_attr(c, 0);
+}
+
+    void
+msg_putchar_attr(c, attr)
+    int		c;
+    int		attr;
 {
     char_u	buf[4];
 
@@ -465,7 +471,7 @@ msg_putchar(c)
 	buf[0] = c;
 	buf[1] = NUL;
     }
-    msg_puts(buf);
+    msg_puts_attr(buf, attr);
 }
 
     void

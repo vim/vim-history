@@ -1,0 +1,118 @@
+Subject: exuberant ctags rocks!
+
+...gnu ctags didn't know squat about variables, structures, enums... etc.
+
+After doing a search on the web for 'ctags' I found your
+extended ctags.  What a lifesaver.  This thing does almost
+everything a person could ask for.
+
+It rocks, it rocks, it rocks.
+
+---------------
+Wow!
+
+I've been a vi/vim/ctags user for about 12 years now. Most of
+those 12 years I've been frustrated by various tags generators and
+wished someone would combine all the different features into a single
+program. And have it work. I've never found the time/energy to tackle
+that one (I've tackled enough other extracurricular programming). But,
+now you've done it! And in a big way!
+
+Hats off, I bow to you and send many grateful thanks.
+
+---------------
+I've downloaded your ctags- it is great!!!  I have been pulling my hair
+out trying to figure out how to do some of this.  The macros and extern'ed
+functions are very, very helpful.  Also, I'd like to complement your on
+your coding style: very consistent and fairly easy to read.  It definitely
+shows when a software developer feels pride in their work.
+
+---------------
+Hello.  One of my users told me about your ctags package.  They tell me
+its great stuff.
+
+---------------
+I've just begun using your ctags program and it is indeed wonderful!
+
+---------------
+Thanks for your GREAT work on ctags.
+[Germany]
+
+---------------
+main() { int i; for(i=0;i<10;i++) printf("WOWWOW\n");}
+
+Your new ctags is very very excellent.  Usually if I want to
+insert the enum'ed variable into tags file, I always had to
+"grep/awk/grep/awk/grep/awk/", then ":%!sort" in vi...
+a lot of trouble to me.  Furthermore, it can give me all the global
+variables, how excellent your package is!  And another thing.. is
+If a source file is something like this,
+    typedef void (*func_t)(const char **b, int c);
+Then other ctags gives me a very very strange results to me, on the
+contrary your ctags gives me exact results.
+
+I only downloaded your package about 2 hours ago, so there must be a lot
+of new improvement that I didn't find out yet.
+
+Thank you
+[Korea]
+
+---------------
+Wow!  I've just tried this out, and despite being the very first beta
+release of this program, it already seems to be the best ctags program
+I've seen.  Up to now I have been using the ctags that came with elvis,
+and I've just compared the output "tags" files.
+
+The elvis ctags had lots of little tags for things that shouldn't have had
+tags (e.g. "if", "return", "TRUE",
+etc.), but this new ctags doesn't produce tags for those.  It does find
+several tags though that the elvis ctags could not (e.g.
+"insstr" in the vim code!).
+
+[And later...]
+
+Wow!  All the bugs I reported last time have been fixed :-)  It does
+indeed seem very robust now.  Well done!
+[Australia]
+
+---------------
+First let me thank you for the ctags program. It handles finding of tags
+better than every other ctags I've used so far.
+[Germany]
+
+---------------
+Your ctags and your advice have and will save me countless hours hunting
+down defines, functions, etc. Koodos for the effort and keep up the good
+work.
+
+---------------
+Glad to see a major improvement of the (already) best ctags.
+[Germany]
+
+---------------
+I want to thank and congratulate you for ctags. 
+[Germany]
+
+---------------
+People will want to get Vim just because it includes such a fine ctags
+program!
+[Netherlands]
+
+---------------
+My initial impression (after 5 minutes use) is that it works better than
+the solaris ctags. Excellent tool!
+[United Kingdom]
+
+---------------
+I'm using ctags-0.31 and I'm quite happy with it.
+[Finland]
+
+---------------
+I use `ctags' on ugly source codes thus your version is very helpful.
+Thank you!
+[Russia]
+
+---------------
+Been a long time ctags user. Love your improvements.
+
+---------------

@@ -417,15 +417,15 @@ putenv(string)
 	    if (moreenv() < 0)
 		return -1;
 	}
-	p = malloc(strlen(string) + 1);
-	if (p == 0)		/* not enough core */
+	p = (char *)alloc((unsigned)(strlen(string) + 1));
+	if (p == NULL)		/* not enough core */
 	    return -1;
 	environ[i + 1] = 0;	/* new end of env. */
     }
     else
     {				/* name already in env. */
 	p = realloc(environ[i], strlen(string) + 1);
-	if (p == 0)
+	if (p == NULL)
 	    return -1;
     }
     sprintf(p, "%s", string);	/* copy into env. */
@@ -465,14 +465,14 @@ newenv()
     for (i = 0; environ[i]; i++)
 	;
     esize = i + EXTRASIZE + 1;
-    env = (char **)malloc(esize * sizeof (elem));
-    if (env == 0)
+    env = (char **)alloc((unsigned)(esize * sizeof (elem)));
+    if (env == NULL)
 	return -1;
 
     for (i = 0; environ[i]; i++)
     {
-	elem = malloc(strlen(environ[i]) + 1);
-	if (elem == 0)
+	elem = (char *)alloc((unsigned)(strlen(environ[i]) + 1));
+	if (elem == NULL)
 	    return -1;
 	env[i] = elem;
 	strcpy(elem, environ[i]);

@@ -1,0 +1,44 @@
+All packages include these files:
+
+CHANGES		Package change history
+COPYING		Terms of distribution (GNU GPL)
+FAQ		Frequently Asked Questions
+MANIFEST	This file, itself
+INSTALL		Installation instructions
+INSTALL.DOS	Installation instructions for MSDOS, Windows, OS/2 and Amiga
+QUOTES		A collection of enthusiastic user feedback for Exuberant Ctags
+README		A basic description of Exuberant Ctags
+Makefile.amiga	Makefile for Amiga with Manx C
+Makefile.bcc	Makefile for Borland C/C++ on MSDOS
+Makefile.djg	Makefile for the Gnu GCC (DJGPP) compiler on MSDOS
+Makefile.os2	Makefile for OS/2
+Makefile.w32	Makefile for Win32 with Visual C++ or Borland C++
+ctags.lsm	A Linux Software Map entry for Exuberant Ctags
+ctags.1		The nroff source for the man page
+
+ctags.h		The source code for Exuberant Ctags
+debug.c
+entry.c
+get.c		
+main.c
+option.c
+parse.c
+read.c
+sort.c
+
+The UNIX distribution also includes these files:
+
+Makefile.in	Input file used by 'configure' script to create UNIX Makefile
+configure	GNU Autoconf script to create Makefile on UNIX platforms
+configure.in	Input file for GNU Autoconf used to create 'configure' script
+config.h.in	Input file used by 'configure' script to create config.h
+mkinstalldirs	A Bourne shell script for creating installation directories
+strstr.c	For old UNIX hosts which do not support this library function
+
+The packages distributed with pre-compiled executables (e.g. MS-DOS, Win95/NT,
+OS/2) also include these files:
+
+ctags.exe	The platform-dependant executable
+ctags.man	A preformatted man page in plain ASCII
+
+#vi:tabstop=8:

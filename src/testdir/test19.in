@@ -1,0 +1,16 @@
+Tests for "r<Tab>" with 'smarttab' and 'expandtab' set/not set.
+
+STARTTEST
+:set smarttab expandtab ts=8 sw=4
+/some
+r	:set noexpandtab
+/other
+r	:?start?,$w! test.out
+:qa!
+ENDTEST
+
+start text
+		some test text
+test text
+		other test text
+test text

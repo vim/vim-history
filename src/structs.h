@@ -85,6 +85,7 @@ struct winlnum
     WINLNUM	*wl_prev;	    /* previous entry or NULL for first entry */
     WIN		*wl_win;	    /* pointer to window that did set wl_lnum */
     linenr_t	 wl_lnum;	    /* last cursor line in the file */
+    colnr_t	 wl_col;	    /* idem, column */
 };
 
 /*

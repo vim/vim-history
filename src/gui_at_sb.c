@@ -977,10 +977,12 @@ MoveThumb(w, event, params, num_params)
     top = FractionLoc(sbw, x, y);
 
     if (old_mode != SMODE_CONT)		    /* start dragging: set offset */
+    {
 	if (event->xbutton.button == Button2)
 	    sbw->scrollbar.scroll_off = sbw->scrollbar.shown / 2.;
 	else
 	    sbw->scrollbar.scroll_off = top - sbw->scrollbar.top;
+    }
 
     top -= sbw->scrollbar.scroll_off;
     top = FloatInRange(top, 0.0, sbw->scrollbar.max);

@@ -1,0 +1,136 @@
+			       Vim coding style
+
+These are the rules to use when making changes to the Vim source code.  Please
+stick to these rules, to keep the sources readable and maintainable.
+
+This list is not complete.  Look in the source code for more examples.
+
+
+MAKING CHANGES
+
+The basic steps to make changes to the code:
+1. Adjust the documentation.  Doing this first gives you an impression of how
+   your changes affect the user.
+2. Make the source code changes.
+3. Check ../todo if the change affects any listed item.
+4. Add a note to version.c
+
+
+USE OF COMMON FUNCTIONS
+
+Some functions that are common to use, have a special Vim version.  Always
+consider using the Vim version, because they were introduced with a reason.
+
+NORMAL NAME	VIM NAME	DIFFERENCE OF VIM VERSION
+free()		vim_free()	Checks for freeing NULL
+malloc()	alloc()		Checks for out of memory situation
+malloc()	lalloc()	Like alloc(), but has long argument
+strcpy()	STRCPY()	Includes cast to (char *), for char_u * args
+strchr()	vim_strchr()	Accepts special characters
+strrchr()	vim_strrchr()	Accepts special characters
+isspace()	vim_isspace()	Can handle characters > 128
+iswhite()	vim_iswhite()	Only TRUE for Tab and space
+memcpy()	vim_memmove()	Handles overlapped copies
+bcopy()		vim_memmove()	Handles overlapped copies
+memset()	vim_memset()	Uniform for all systems
+
+
+NAMES
+
+Because of the requirement that Vim runs on as many systems as possible, we
+need to avoid using names that are already defined by the system.  This is a
+list of names that are known to cause trouble.  The name is given as a regexp
+pattern.
+
+is.*()		POSIX, ctype.h
+to.*()		POSIX, ctype.h
+
+d_.*		POSIX, dirent.h
+l_.*		POSIX, fcntl.h
+gr_.*		POSIX, grp.h
+pw_.*		POSIX, pwd.h
+sa_.*		POSIX, signal.h
+mem.*		POSIX, string.h
+str.*		POSIX, string.h
+wcs.*		POSIX, string.h
+st_.*		POSIX, stat.h
+tms_.*		POSIX, times.h
+tm_.*		POSIX, time.h
+c_.*		POSIX, termios.h
+MAX.*		POSIX, limits.h
+__.*		POSIX, system
+_[A-Z].*    	POSIX, system
+E[A-Z0-9]*	POSIX, errno.h
+
+wait		don't use as argument to a function, conflicts with types.h
+new		C++ reserved keyword
+try		Borland C++ doesn't like it to be used as a variable.
+
+basename()	GNU string function
+dirname()	GNU string function
+get_env_value()	Linux system function
+
+
+STYLE
+
+General rule: One statement per line.
+
+Wrong:	    if (cond) a = 1;
+
+OK:	    if (cond)
+		a = 1;
+
+Wrong:	    while (cond);
+
+OK:	    while (cond)
+		;
+
+Wrong:	    do a = 1; while (cond);
+
+OK:	    do
+		a = 1;
+	    while (cond);
+
+
+Functions start with:
+
+Wrong:	int function_name(int arg1, int arg2)
+
+OK:	/*
+	 * Explanation of what this function is used for.
+	 *
+	 * Return value explanation.
+	 */
+	    int
+	function_name(arg1, arg2)
+	    int	    arg1;	    /* short comment about arg1 */
+	    int	    arg2;	    /* short comment about arg2 */
+
+NOTE: Don't use ANSI style function declarations.  Some people still have to
+use compilers that don't support it.
+
+
+SPACES AND PUNCTUATION
+
+No space between a function name and the bracket:
+
+Wrong:  func (arg);
+OK:	func(arg);
+
+Do use a space after if, while, switch, etc.
+
+Wrong:	if(arg)		for(;;)
+OK	if (arg)	for (;;)
+
+Use a space after a comma and semicolon:
+
+Wrong:  func(arg1,arg2);	for (i = 0;i < 2;++i)
+OK:	func(arg1, arg2);	for (i = 0; i < 2; ++i)
+
+Use a space before and after '=', '+', '/', etc.
+
+Wrong:	var=a*5;
+OK:	var = a * 5;
+
+In general: Use empty lines to group lines of code together.  This makes it
+more easy to quickly see what is being done.

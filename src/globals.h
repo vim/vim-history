@@ -82,6 +82,7 @@ EXTERN colnr_t	dollar_vcol INIT(= 0);
 EXTERN int	expand_context INIT(= CONTEXT_UNKNOWN);
 EXTERN char_u	*expand_pattern INIT(= NULL);
 EXTERN int	expand_interactively INIT(= FALSE);
+EXTERN int	expand_set_path INIT(= FALSE);	/* ":set path=/dir/<Tab>" */
 
 #define CONT_ADDING	(1)	/* "normal" or "adding" expansion */
 #define CONT_INTRPT	(2 + 4)	/* a ^X interrupted the current expansion */
@@ -131,6 +132,7 @@ EXTERN int	newline_on_exit INIT(= FALSE);	/* did msg in altern. screen */
 EXTERN int	intr_char INIT(= 0);	    /* extra interrupt character */
 #endif
 EXTERN int	vgetc_busy INIT(= FALSE);   /* inside vgetc() now */
+EXTERN int	call_shell_retval;	    /* return value from call_shell() */
 
 /*
  * Lines left before a "more" message.	Ex mode needs to be able to reset this
@@ -435,90 +437,92 @@ EXTERN char_u	tolower_tab[256];	/* table for tolower() */
 
 EXTERN char	breakat_flags[256];	/* which characters are in 'breakat' */
 
-extern char *Version;		/* this is in version.c */
-extern char *mediumVersion;	/* this is in version.c */
-extern char *longVersion;	/* this is in version.c */
+extern char *Version;			/* this is in version.c */
+extern char *mediumVersion;		/* this is in version.c */
+extern char *longVersion;		/* this is in version.c */
 
 /*
  * Some file names for Unix are stored in pathdef.c, to make their value
  * depend on the Makefile.
  */
 #ifdef HAVE_PATHDEF
-extern char_u *default_vim_dir;	    /* this is in pathdef.c */
-extern char_u *all_cflags;	    /* this is in pathdef.c */
-extern char_u *all_lflags;	    /* this is in pathdef.c */
+extern char_u *default_vim_dir;		/* this is in pathdef.c */
+extern char_u *all_cflags;		/* this is in pathdef.c */
+extern char_u *all_lflags;		/* this is in pathdef.c */
 #endif
 
-EXTERN char_u no_lines_msg[]	    INIT(="--No lines in buffer--");
+EXTERN char_u no_lines_msg[]	INIT(="--No lines in buffer--");
 
 /*
  * The error messages that can be shared are included here.
- * Excluded are very specific errors and debugging messages.
+ * Excluded are errors that are only used once and debugging messages.
  */
-EXTERN char_u e_abort[]	    INIT(="Command aborted");
-EXTERN char_u e_ambmap[]    INIT(="Ambiguous mapping");
-EXTERN char_u e_argreq[]    INIT(="Argument required");
-EXTERN char_u e_backslash[] INIT(="\\ should be followed by /, ? or &");
-EXTERN char_u e_curdir[]    INIT(="Command not allowed from exrc/vimrc in current dir or tag search");
-EXTERN char_u e_exists[]    INIT(="File exists (use ! to override)");
-EXTERN char_u e_failed[]    INIT(="Command failed");
-EXTERN char_u e_internal[]  INIT(="Internal error");
-EXTERN char_u e_interr[]    INIT(="Interrupted");
-EXTERN char_u e_invaddr[]   INIT(="Invalid address");
-EXTERN char_u e_invarg[]    INIT(="Invalid argument");
-EXTERN char_u e_invarg2[]   INIT(="Invalid argument: %s");
-EXTERN char_u e_invexpr2[]  INIT(="Invalid expression: %s");
-EXTERN char_u e_invrange[]  INIT(="Invalid range");
-EXTERN char_u e_invcmd[]    INIT(="Invalid command");
-EXTERN char_u e_letunexp[]  INIT(="Unexpected characters before '='");
-EXTERN char_u e_markinval[] INIT(="Mark has invalid line number");
+EXTERN char_u e_abort[]		INIT(="Command aborted");
+EXTERN char_u e_ambmap[]	INIT(="Ambiguous mapping");
+EXTERN char_u e_argreq[]	INIT(="Argument required");
+EXTERN char_u e_backslash[]	INIT(="\\ should be followed by /, ? or &");
+EXTERN char_u e_curdir[]	INIT(="Command not allowed from exrc/vimrc in current dir or tag search");
+EXTERN char_u e_exists[]	INIT(="File exists (use ! to override)");
+EXTERN char_u e_failed[]	INIT(="Command failed");
+EXTERN char_u e_internal[]	INIT(="Internal error");
+EXTERN char_u e_interr[]	INIT(="Interrupted");
+EXTERN char_u e_invaddr[]	INIT(="Invalid address");
+EXTERN char_u e_invarg[]	INIT(="Invalid argument");
+EXTERN char_u e_invarg2[]	INIT(="Invalid argument: %s");
+EXTERN char_u e_invexpr2[]	INIT(="Invalid expression: %s");
+EXTERN char_u e_invrange[]	INIT(="Invalid range");
+EXTERN char_u e_invcmd[]	INIT(="Invalid command");
+EXTERN char_u e_letunexp[]	INIT(="Unexpected characters before '='");
+EXTERN char_u e_markinval[]	INIT(="Mark has invalid line number");
 EXTERN char_u e_marknotset[]	INIT(="Mark not set");
-EXTERN char_u e_nesting[]   INIT(="Scripts nested too deep");
-EXTERN char_u e_noalt[]	    INIT(="No alternate file");
-EXTERN char_u e_nobang[]    INIT(="No ! allowed");
-EXTERN char_u e_nogvim[]    INIT(="GUI cannot be used: Not enabled at compile time\n");
-EXTERN char_u e_nohebrew[]  INIT(="Hebrew cannot be used: Not enabled at compile time\n");
-EXTERN char_u e_nofarsi[]   INIT(="Farsi cannot be used: Not enabled at compile time\n");
-EXTERN char_u e_noinstext[] INIT(="No inserted text yet");
-EXTERN char_u e_nolastcmd[] INIT(="No previous command line");
-EXTERN char_u e_nomap[]	    INIT(="No such mapping");
-EXTERN char_u e_nomatch[]   INIT(="No match");
-EXTERN char_u e_noname[]    INIT(="No file name");
-EXTERN char_u e_nopresub[]  INIT(="No previous substitute regular expression");
-EXTERN char_u e_noprev[]    INIT(="No previous command");
-EXTERN char_u e_noprevre[]  INIT(="No previous regular expression");
-EXTERN char_u e_norange[]   INIT(="No range allowed");
-EXTERN char_u e_noroom[]    INIT(="Not enough room");
-EXTERN char_u e_notcreate[] INIT(="Can't create file %s");
-EXTERN char_u e_notmp[]	    INIT(="Can't get temp file name");
-EXTERN char_u e_notopen[]   INIT(="Can't open file %s");
-EXTERN char_u e_notread[]   INIT(="Can't read file %s");
-EXTERN char_u e_nowrtmsg[]  INIT(="No write since last change (use ! to override)");
-EXTERN char_u e_null[]	    INIT(="Null argument");
-EXTERN char_u e_number[]    INIT(="Number expected");
-EXTERN char_u e_openerrf[]  INIT(="Can't open errorfile %s");
-EXTERN char_u e_outofmem[]  INIT(="Out of memory!");
-EXTERN char_u e_patnotf[]   INIT(="Pattern not found");
-EXTERN char_u e_positive[]  INIT(="Argument must be positive");
-EXTERN char_u e_quickfix[]  INIT(="No Errors");
-EXTERN char_u e_re_damg[]   INIT(="Damaged match string");
-EXTERN char_u e_re_corr[]   INIT(="Corrupted regexp program");
-EXTERN char_u e_readonly[]  INIT(="'readonly' option is set (use ! to override)");
-EXTERN char_u e_readerrf[]  INIT(="Error while reading errorfile");
-EXTERN char_u e_scroll[]    INIT(="Invalid scroll size");
-EXTERN char_u e_tagformat[] INIT(="Format error in tags file \"%s\"");
-EXTERN char_u e_tagstack[]  INIT(="tag stack empty");
-EXTERN char_u e_toocompl[]  INIT(="Command too complex");
-EXTERN char_u e_toombra[]   INIT(="Too many \\(");
-EXTERN char_u e_toomket[]   INIT(="Too many \\)");
-EXTERN char_u e_toomsbra[]  INIT(="Too many [");
-EXTERN char_u e_toolong[]   INIT(="Command too long");
-EXTERN char_u e_toomany[]   INIT(="Too many file names");
-EXTERN char_u e_trailing[]  INIT(="Trailing characters");
-EXTERN char_u e_umark[]	    INIT(="Unknown mark");
-EXTERN char_u e_unknown[]   INIT(="Unknown");
-EXTERN char_u e_write[]	    INIT(="Error while writing");
-EXTERN char_u e_zerocount[] INIT(="Zero count");
+EXTERN char_u e_nesting[]	INIT(="Scripts nested too deep");
+EXTERN char_u e_noalt[]		INIT(="No alternate file");
+EXTERN char_u e_nobang[]	INIT(="No ! allowed");
+EXTERN char_u e_nogvim[]	INIT(="GUI cannot be used: Not enabled at compile time\n");
+EXTERN char_u e_nohebrew[]	INIT(="Hebrew cannot be used: Not enabled at compile time\n");
+EXTERN char_u e_nofarsi[]	INIT(="Farsi cannot be used: Not enabled at compile time\n");
+EXTERN char_u e_noinstext[]	INIT(="No inserted text yet");
+EXTERN char_u e_nolastcmd[]	INIT(="No previous command line");
+EXTERN char_u e_nomap[]		INIT(="No such mapping");
+EXTERN char_u e_nomatch[]	INIT(="No match");
+EXTERN char_u e_nomatch2[]	INIT(="No match: %s");
+EXTERN char_u e_noname[]	INIT(="No file name");
+EXTERN char_u e_nopresub[]	INIT(="No previous substitute regular expression");
+EXTERN char_u e_noprev[]	INIT(="No previous command");
+EXTERN char_u e_noprevre[]	INIT(="No previous regular expression");
+EXTERN char_u e_norange[]	INIT(="No range allowed");
+EXTERN char_u e_noroom[]	INIT(="Not enough room");
+EXTERN char_u e_notcreate[]	INIT(="Can't create file %s");
+EXTERN char_u e_notmp[]		INIT(="Can't get temp file name");
+EXTERN char_u e_notopen[]	INIT(="Can't open file %s");
+EXTERN char_u e_notread[]	INIT(="Can't read file %s");
+EXTERN char_u e_nowrtmsg[]	INIT(="No write since last change (use ! to override)");
+EXTERN char_u e_null[]		INIT(="Null argument");
+EXTERN char_u e_number[]	INIT(="Number expected");
+EXTERN char_u e_openerrf[]	INIT(="Can't open errorfile %s");
+EXTERN char_u e_outofmem[]	INIT(="Out of memory!");
+EXTERN char_u e_patnotf[]	INIT(="Pattern not found");
+EXTERN char_u e_patnotf2[]	INIT(="Pattern not found: %s");
+EXTERN char_u e_positive[]	INIT(="Argument must be positive");
+EXTERN char_u e_quickfix[]	INIT(="No Errors");
+EXTERN char_u e_re_damg[]	INIT(="Damaged match string");
+EXTERN char_u e_re_corr[]	INIT(="Corrupted regexp program");
+EXTERN char_u e_readonly[]	INIT(="'readonly' option is set (use ! to override)");
+EXTERN char_u e_readerrf[]	INIT(="Error while reading errorfile");
+EXTERN char_u e_scroll[]	INIT(="Invalid scroll size");
+EXTERN char_u e_tagformat[]	INIT(="Format error in tags file \"%s\"");
+EXTERN char_u e_tagstack[]	INIT(="tag stack empty");
+EXTERN char_u e_toocompl[]	INIT(="Command too complex");
+EXTERN char_u e_toombra[]	INIT(="Too many \\(");
+EXTERN char_u e_toomket[]	INIT(="Too many \\)");
+EXTERN char_u e_toomsbra[]	INIT(="Too many [");
+EXTERN char_u e_toolong[]	INIT(="Command too long");
+EXTERN char_u e_toomany[]	INIT(="Too many file names");
+EXTERN char_u e_trailing[]	INIT(="Trailing characters");
+EXTERN char_u e_umark[]		INIT(="Unknown mark");
+EXTERN char_u e_unknown[]	INIT(="Unknown");
+EXTERN char_u e_write[]		INIT(="Error while writing");
+EXTERN char_u e_zerocount[]	INIT(="Zero count");
 
 /*
  * Optional Farsi support.  Include it here, so EXTERN and INIT are defined.

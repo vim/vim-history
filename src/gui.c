@@ -174,131 +174,153 @@ gui_prepare(argc, argv)
     void
 gui_init()
 {
-    WIN	    *wp;
-
-    gui.window_created = FALSE;
-    gui.dying = FALSE;
-    gui.in_focus = FALSE;
-    gui.dragged_sb = SBAR_NONE;
-    gui.dragged_wp = NULL;
-    gui.pointer_hidden = FALSE;
-    gui.col = gui.num_cols = 0;
-    gui.row = gui.num_rows = 0;
-
-    gui.cursor_is_valid = FALSE;
-    gui.scroll_region_top = 0;
-    gui.scroll_region_bot = Rows - 1;
-    gui.highlight_mask = HL_NORMAL;
-    gui.char_width = 1;
-    gui.char_height = 1;
-    gui.char_ascent = 0;
-    gui.border_width = 0;
-
-    gui.norm_font = (GuiFont)NULL;
-    gui.bold_font = (GuiFont)NULL;
-    gui.ital_font = (GuiFont)NULL;
-    gui.boldital_font = (GuiFont)NULL;
-
-    clip_init(TRUE);
-
-    gui.menu_is_active = TRUE;	    /* default: include menu */
-
-    gui.scrollbar_width = gui.scrollbar_height = SB_DEFAULT_WIDTH;
-    gui.menu_height = MENU_DEFAULT_HEIGHT;
-    gui.menu_width = 0;
-
-    gui.prev_wrap = -1;
+    WIN		*wp;
+    static int	recursive = 0;
 
     /*
-     * Set up system-wide default menus.
+     * It's possible to use ":gui" in a .gvimrc file.  The first halve of this
+     * function will then be executed at the first call, the rest by the
+     * recursive call.  This allow the window to be opened halfway reading a
+     * gvimrc file.
      */
+    if (!recursive)
+    {
+	++recursive;
+
+	gui.window_created = FALSE;
+	gui.dying = FALSE;
+	gui.in_focus = FALSE;
+	gui.dragged_sb = SBAR_NONE;
+	gui.dragged_wp = NULL;
+	gui.pointer_hidden = FALSE;
+	gui.col = gui.num_cols = 0;
+	gui.row = gui.num_rows = 0;
+
+	gui.cursor_is_valid = FALSE;
+	gui.scroll_region_top = 0;
+	gui.scroll_region_bot = Rows - 1;
+	gui.highlight_mask = HL_NORMAL;
+	gui.char_width = 1;
+	gui.char_height = 1;
+	gui.char_ascent = 0;
+	gui.border_width = 0;
+
+	gui.norm_font = (GuiFont)NULL;
+	gui.bold_font = (GuiFont)NULL;
+	gui.ital_font = (GuiFont)NULL;
+	gui.boldital_font = (GuiFont)NULL;
+
+	clip_init(TRUE);
+
+	gui.menu_is_active = TRUE;	    /* default: include menu */
+
+	gui.scrollbar_width = gui.scrollbar_height = SB_DEFAULT_WIDTH;
+	gui.menu_height = MENU_DEFAULT_HEIGHT;
+	gui.menu_width = 0;
+
+	gui.prev_wrap = -1;
+
+	/*
+	 * Set up system-wide default menus.
+	 */
 #ifdef SYS_MENU_FILE
-    do_source((char_u *)SYS_MENU_FILE, FALSE, FALSE);
-#endif
-
-    /*
-     * Switch on the mouse by default.
-     * This can then be changed in the .gvimrc.
-     */
-    set_string_option_direct((char_u *)"mouse", -1, (char_u *)"a", TRUE);
-
-    /*
-     * If -U option given, use only the initializations from that file and
-     * nothing else.  Skip all initializations for "-U NONE".
-     */
-    if (use_gvimrc != NULL)
-    {
-	if (STRCMP(use_gvimrc, "NONE") != 0
-		&& do_source(use_gvimrc, FALSE, FALSE) != OK)
-	    EMSG2("Cannot read from \"%s\"", use_gvimrc);
-    }
-    else
-    {
-	/*
-	 * Get system wide defaults for gvim, only when file name defined.
-	 */
-#ifdef SYS_GVIMRC_FILE
-	do_source((char_u *)SYS_GVIMRC_FILE, FALSE, FALSE);
+	do_source((char_u *)SYS_MENU_FILE, FALSE, FALSE);
 #endif
 
 	/*
-	 * Try to read GUI initialization commands from the following places:
-	 * - environment variable GVIMINIT
-	 * - the user gvimrc file (~/.gvimrc)
-	 * - the second user gvimrc file ($VIM/.gvimrc for Dos)
-	 * The first that exists is used, the rest is ignored.
+	 * Switch on the mouse by default.
+	 * This can then be changed in the .gvimrc.
 	 */
-	if (process_env((char_u *)"GVIMINIT") == FAIL
-		&& do_source((char_u *)USR_GVIMRC_FILE, TRUE, FALSE) == FAIL)
-	    {
-#ifdef USR_GVIMRC_FILE2
-		(void)do_source((char_u *)USR_GVIMRC_FILE2, TRUE, FALSE);
-#endif
-	    }
+	set_string_option_direct((char_u *)"mouse", -1, (char_u *)"a", TRUE);
 
 	/*
-	 * Read initialization commands from ".gvimrc" in current directory.
-	 * This is only done if the 'exrc' option is set.  Because of security
-	 * reasons we disallow shell and write commands now, except for unix
-	 * if the file is owned by the user or 'secure' option has been reset
-	 * in environment of global ".gvimrc".	Only do this if GVIMRC_FILE is
-	 * not the same as USR_GVIMRC_FILE, USR_GVIMRC_FILE2 or SYS_GVIMRC_FILE.
+	 * If -U option given, use only the initializations from that file and
+	 * nothing else.  Skip all initializations for "-U NONE".
 	 */
-	if (p_exrc)
+	if (use_gvimrc != NULL)
 	{
-#ifdef UNIX
-	    {
-		struct stat s;
-
-		/* if ".gvimrc" file is not owned by user, set 'secure' mode */
-		if (stat(GVIMRC_FILE, &s) || s.st_uid != getuid())
-		    secure = p_secure;
-	    }
-#else
-	    secure = p_secure;
+	    if (STRCMP(use_gvimrc, "NONE") != 0
+		    && do_source(use_gvimrc, FALSE, FALSE) != OK)
+		EMSG2("Cannot read from \"%s\"", use_gvimrc);
+	}
+	else
+	{
+	    /*
+	     * Get system wide defaults for gvim, only when file name defined.
+	     */
+#ifdef SYS_GVIMRC_FILE
+	    do_source((char_u *)SYS_GVIMRC_FILE, FALSE, FALSE);
 #endif
 
-	    if (       fullpathcmp((char_u *)USR_GVIMRC_FILE,
+	    /*
+	     * Try to read GUI initialization commands from the following
+	     * places:
+	     * - environment variable GVIMINIT
+	     * - the user gvimrc file (~/.gvimrc)
+	     * - the second user gvimrc file ($VIM/.gvimrc for Dos)
+	     * The first that exists is used, the rest is ignored.
+	     */
+	    if (process_env((char_u *)"GVIMINIT") == FAIL
+		 && do_source((char_u *)USR_GVIMRC_FILE, TRUE, FALSE) == FAIL)
+		{
+#ifdef USR_GVIMRC_FILE2
+		    (void)do_source((char_u *)USR_GVIMRC_FILE2, TRUE, FALSE);
+#endif
+		}
+
+	    /*
+	     * Read initialization commands from ".gvimrc" in current
+	     * directory.  This is only done if the 'exrc' option is set.
+	     * Because of security reasons we disallow shell and write
+	     * commands now, except for unix if the file is owned by the user
+	     * or 'secure' option has been reset in environment of global
+	     * ".gvimrc".
+	     * Only do this if GVIMRC_FILE is not the same as USR_GVIMRC_FILE,
+	     * USR_GVIMRC_FILE2 or SYS_GVIMRC_FILE.
+	     */
+	    if (p_exrc)
+	    {
+#ifdef UNIX
+		{
+		    struct stat s;
+
+		    /* if ".gvimrc" file is not owned by user, set 'secure'
+		     * mode */
+		    if (stat(GVIMRC_FILE, &s) || s.st_uid != getuid())
+			secure = p_secure;
+		}
+#else
+		secure = p_secure;
+#endif
+
+		if (       fullpathcmp((char_u *)USR_GVIMRC_FILE,
 				     (char_u *)GVIMRC_FILE, FALSE) != FPC_SAME
 #ifdef SYS_GVIMRC_FILE
-		    && fullpathcmp((char_u *)SYS_GVIMRC_FILE,
+			&& fullpathcmp((char_u *)SYS_GVIMRC_FILE,
 				     (char_u *)GVIMRC_FILE, FALSE) != FPC_SAME
 #endif
 #ifdef USR_GVIMRC_FILE2
-		    && fullpathcmp((char_u *)USR_GVIMRC_FILE2,
+			&& fullpathcmp((char_u *)USR_GVIMRC_FILE2,
 				     (char_u *)GVIMRC_FILE, FALSE) != FPC_SAME
 #endif
-		    )
-		do_source((char_u *)GVIMRC_FILE, FALSE, FALSE);
+			)
+		    do_source((char_u *)GVIMRC_FILE, FALSE, FALSE);
 
-	    if (secure == 2)
-		need_wait_return = TRUE;
-	    secure = 0;
+		if (secure == 2)
+		    need_wait_return = TRUE;
+		secure = 0;
+	    }
 	}
+
+	if (need_wait_return || msg_didany)
+	    wait_return(TRUE);
+
+	--recursive;
     }
 
-    if (need_wait_return || msg_didany)
-	wait_return(TRUE);
+    /* If recursive call opened the window, return here from the first call */
+    if (gui.in_use)
+	return;
 
     /*
      * Create the GUI windows ready for opening.
@@ -440,8 +462,9 @@ gui_check_screen()
  * otherwise this goes wrong.  May need to call out_flush() first.
  */
     void
-gui_update_cursor(force)
-    int	    force;	    /* when TRUE, update even when not moved */
+gui_update_cursor(force, clear_selection)
+    int		force;		/* when TRUE, update even when not moved */
+    int		clear_selection;/* clear selection under cursor */
 {
     int		cur_width = 0;
     int		cur_height = 0;
@@ -467,11 +490,8 @@ gui_update_cursor(force)
 	    return;
 
 	/* Clear the selection if we are about to write over it */
-	if (clipboard.state == SELECT_DONE
-		&& gui.row >= clipboard.start.lnum
-		&& gui.row <= clipboard.end.lnum)
-	    clip_clear_selection();
-
+	if (clear_selection)
+	    clip_may_clear_selection(gui.row, gui.row);
 	/* Check that the cursor is inside the window (resizing may have made
 	 * it invalid) */
 	if (gui.row >= screen_Rows || gui.col >= screen_Columns)
@@ -565,7 +585,7 @@ gui_update_cursor(force)
 	     */
 	    gui.highlight_mask = (cattr | attr);
 	    gui_outstr_nowrap(LinePointers[gui.row] + gui.col, 1,
-					      GUI_MON_IS_CURSOR, cfg, cbg, 0);
+			    GUI_MON_IS_CURSOR | GUI_MON_NOCLEAR, cfg, cbg, 0);
 	}
 	else
 	{
@@ -591,7 +611,8 @@ gui_update_cursor(force)
 	    gui.highlight_mask = *(LinePointers[gui.row] + gui.col
 							    + screen_Columns);
 	    gui_outstr_nowrap(LinePointers[gui.row] + gui.col, 1,
-			     GUI_MON_TRS_CURSOR, (GuiColor)0, (GuiColor)0, 0);
+		    GUI_MON_TRS_CURSOR | GUI_MON_NOCLEAR,
+		    (GuiColor)0, (GuiColor)0, 0);
 #endif
 	}
 	gui.highlight_mask = old_hl_mask;
@@ -712,7 +733,7 @@ gui_resize_window(pixel_width, pixel_height)
 #endif
 
     gui_update_scrollbars(TRUE);
-    gui_update_cursor(FALSE);
+    gui_update_cursor(FALSE, TRUE);
 }
 
     int
@@ -821,10 +842,7 @@ gui_clear_block(row1, col1, row2, col2)
     int	    col2;
 {
     /* Clear the selection if we are about to write over it */
-    if (clipboard.state == SELECT_DONE
-	    && row2 >= clipboard.start.lnum
-	    && row1 <= clipboard.end.lnum)
-	clip_clear_selection();
+    clip_may_clear_selection(row1, row2);
 
     gui_mch_clear_block(row1, col1, row2, col2);
 
@@ -996,7 +1014,7 @@ gui_write(s, len)
 	    s = p;
 	}
     }
-    gui_update_cursor(force);
+    gui_update_cursor(force, TRUE);
     gui_update_scrollbars(FALSE);
 
     /*
@@ -1087,10 +1105,12 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     else
     {
 	if ((highlight_mask & (HL_BOLD | HL_STANDOUT)) && gui.bold_font != 0)
+	{
 	    if ((highlight_mask & HL_ITALIC) && gui.boldital_font != 0)
 		font = gui.boldital_font;
 	    else
 		font = gui.bold_font;
+	}
 	else if ((highlight_mask & HL_ITALIC) && gui.ital_font != 0)
 	    font = gui.ital_font;
 	else
@@ -1133,10 +1153,8 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     }
 
     /* Clear the selection if we are about to write over it */
-    if (clipboard.state == SELECT_DONE
-	    && gui.row >= clipboard.start.lnum
-	    && gui.row <= clipboard.end.lnum)
-	clip_clear_selection();
+    if (!(flags & GUI_MON_NOCLEAR))
+	clip_may_clear_selection(gui.row, gui.row);
 
     draw_flags = 0;
 
@@ -1161,6 +1179,10 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
     /* Draw the text */
     gui_mch_draw_string(gui.row, col, s, len, draw_flags);
+
+    /* May need to invert it when it's part of the selection (assumes len==1) */
+    if (flags & GUI_MON_NOCLEAR)
+	clip_may_redraw_selection(gui.row, col);
 
     if (!(flags & (GUI_MON_IS_CURSOR | GUI_MON_TRS_CURSOR)))
     {
@@ -1189,10 +1211,10 @@ gui_undraw_cursor()
     if (gui.cursor_is_valid)
     {
 	if (gui_redraw_block(gui.cursor_row, gui.cursor_col,
-					       gui.cursor_row, gui.cursor_col)
+			      gui.cursor_row, gui.cursor_col, GUI_MON_NOCLEAR)
 		&& gui.cursor_col > 0)
 	    (void)gui_redraw_block(gui.cursor_row, gui.cursor_col - 1,
-					  gui.cursor_row, gui.cursor_col - 1);
+			 gui.cursor_row, gui.cursor_col - 1, GUI_MON_NOCLEAR);
     }
 }
 
@@ -1210,7 +1232,7 @@ gui_redraw(x, y, w, h)
     row2 = Y_2_ROW(y + h - 1);
     col2 = X_2_COL(x + w - 1);
 
-    (void)gui_redraw_block(row1, col1, row2, col2);
+    (void)gui_redraw_block(row1, col1, row2, col2, 0);
 
     /*
      * We may need to redraw the cursor, but don't take it upon us to change
@@ -1220,7 +1242,7 @@ gui_redraw(x, y, w, h)
      * not reflect Vims internal ideas if these operations are clipped away.
      */
     if (gui.row == gui.cursor_row)
-	gui_update_cursor(FALSE);
+	gui_update_cursor(FALSE, TRUE);
 
     if (clipboard.state != SELECT_CLEARED)
 	clip_redraw_selection(x, y, w, h);
@@ -1233,11 +1255,12 @@ gui_redraw(x, y, w, h)
  * different attributes (may have to be redrawn too).
  */
     int
-gui_redraw_block(row1, col1, row2, col2)
+gui_redraw_block(row1, col1, row2, col2, flags)
     int	    row1;
     int	    col1;
     int	    row2;
     int	    col2;
+    int	    flags;	/* flags for gui_outstr_nowrap() */
 {
     int	    old_row, old_col;
     long_u  old_hl_mask;
@@ -1283,7 +1306,8 @@ gui_redraw_block(row1, col1, row2, col2)
 	    for (idx = 0; len > 0 && attrp[idx] == first_attr; idx++)
 		--len;
 	    gui.highlight_mask = first_attr;
-	    gui_outstr_nowrap(screenp, idx, 0, (GuiColor)0, (GuiColor)0, back);
+	    gui_outstr_nowrap(screenp, idx, flags,
+					      (GuiColor)0, (GuiColor)0, back);
 	    screenp += idx;
 	    attrp += idx;
 	    back = 0;
@@ -1433,17 +1457,11 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     int		    checkfor;
     int		    did_clip = FALSE;
 
-    /* If a non-Visual mode selection is in progress, finish it */
-    if (clipboard.state == SELECT_IN_PROGRESS)
-    {
-	clip_process_selection(button, x, y, repeated_click, modifiers);
-	return;
-    }
-
     /* Determine which mouse settings to look for based on the current mode */
-    switch (State)
+    switch (get_real_state())
     {
 	case NORMAL_BUSY:
+	case OP_PENDING:
 	case NORMAL:	    checkfor = MOUSE_NORMAL;	break;
 	case VISUAL:	    checkfor = MOUSE_VISUAL;	break;
 	case REPLACE:
@@ -1452,10 +1470,10 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 
 	    /*
 	     * On the command line, use the non-Visual mode selection on all
-	     * lines but the command line.
+	     * lines but the command line.  But not when pasting.
 	     */
 	case CMDLINE:
-	    if (Y_2_ROW(y) < cmdline_row)
+	    if (Y_2_ROW(y) < cmdline_row && button != MOUSE_MIDDLE)
 		checkfor = ' ';
 	    else
 		checkfor = MOUSE_COMMAND;
@@ -1468,40 +1486,87 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 
     /*
      * Allow selection of text in the command line in "normal" modes.
+     * Don't do this when dragging the status line, or extending a Visual
+     * selection.
      */
-    if ((State == NORMAL || State == NORMAL_BUSY ||
-				       State == INSERT || State == REPLACE) &&
-					    Y_2_ROW(y) >= gui.num_rows - p_ch)
+    if ((State == NORMAL || State == NORMAL_BUSY
+		|| State == INSERT || State == REPLACE)
+	    && Y_2_ROW(y) >= gui.num_rows - p_ch
+	    && (button != MOUSE_DRAG || clipboard.state == SELECT_IN_PROGRESS))
 	checkfor = ' ';
+
+    /* If a non-Visual mode selection is in progress, handle it */
+    if (clipboard.state == SELECT_IN_PROGRESS)
+    {
+	clip_process_selection(button, x, y, repeated_click, modifiers);
+	/* Return if not also want to position the cursor */
+	if (button == MOUSE_RELEASE || !mouse_has(TO_UPPER(checkfor)))
+	    return;
+	button = MOUSE_LEFT;
+	repeated_click = FALSE;
+	modifiers = 0;
+    }
 
     /*
      * If the mouse settings say to not use the mouse, use the non-Visual mode
      * selection.  But if Visual is active, assume that only the Visual area
      * will be selected.
-     * Exception: on the command line, both the selection is used and a mouse
-     * key is send.
+     * Exception: On the command line, and when 'mouse' contains 'N' or 'I',
+     * both the selection is used and a mouse key is send.
      */
-    if ((!mouse_has(checkfor) && !VIsual_active) || checkfor == MOUSE_COMMAND)
+    else
     {
-	/* If the selection is done, allow the right button to extend it */
-	if (clipboard.state == SELECT_DONE && button == MOUSE_RIGHT)
+	if (!mouse_has(checkfor) || checkfor == MOUSE_COMMAND)
 	{
-	    clip_process_selection(button, x, y, repeated_click, modifiers);
-	    did_clip = TRUE;
+	    /* Don't do non-visual selection in Visual mode. */
+	    if (VIsual_active)
+		return;
+
+	    /* If the selection is done, allow the right button to extend it.
+	     * If the selection is cleared, allow the right button to start it
+	     * from the cursor position. */
+	    if (button == MOUSE_RIGHT)
+	    {
+		if (clipboard.state == SELECT_CLEARED)
+		{
+		    if (State == CMDLINE)
+		    {
+			col = msg_col;
+			row = msg_row;
+		    }
+		    else
+		    {
+			col = curwin->w_wcol;
+			row = curwin->w_wrow + curwin->w_winpos;
+		    }
+		    clip_start_selection(MOUSE_LEFT, FILL_X(col), FILL_Y(row),
+								    FALSE, 0);
+		}
+		clip_process_selection(button, x, y, repeated_click, modifiers);
+		did_clip = TRUE;
+	    }
+	    /* Allow the left button to start the selection */
+	    else if (button == MOUSE_LEFT)
+	    {
+		clip_start_selection(button, x, y, repeated_click, modifiers);
+		did_clip = TRUE;
+	    }
+
+	    /* Always allow pasting */
+	    if (button != MOUSE_MIDDLE)
+	    {
+		if (button == MOUSE_RELEASE
+			|| (!mouse_has(checkfor)
+					   && !mouse_has(TO_UPPER(checkfor))))
+		    return;
+		button = MOUSE_LEFT;
+	    }
+	    repeated_click = FALSE;
 	}
 
-	/* Allow the left button to start the selection */
-	else if (button == MOUSE_LEFT)
-	{
-	    clip_start_selection(button, x, y, repeated_click, modifiers);
-	    did_clip = TRUE;
-	}
-	if (did_clip && checkfor != MOUSE_COMMAND)
-	    return;
+	if (clipboard.state != SELECT_CLEARED && !did_clip)
+	    clip_clear_selection();
     }
-
-    if (clipboard.state != SELECT_CLEARED && !did_clip)
-	clip_clear_selection();
 #endif
 
     /*
@@ -3140,6 +3205,6 @@ gui_focus_change(in_focus)
 {
     gui.in_focus = in_focus;
     out_flush();		/* make sure output has been written */
-    gui_update_cursor(TRUE);
+    gui_update_cursor(TRUE, FALSE);
 }
 
