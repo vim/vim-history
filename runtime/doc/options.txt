@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2002 Mar 06
+*options.txt*   For Vim version 6.1.  Last change: 2002 Apr 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -4095,7 +4095,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	On MS-Windows machines the default is to copy the file to the
 	currently specified printdevice: >
 
-	    system('copy' . ' ' . v:fname_in . ' ' &printdevice)
+	    system('copy' . ' ' . v:fname_in . ' "' . &printdevice . '"')
 			. delete(v:fname_in)
 <
 	On VMS machines the default is to send the file to either the default
