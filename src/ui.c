@@ -38,15 +38,15 @@ ui_write(s, len)
 #endif
 }
 
-#if defined(USE_GUI) || defined(PROTO)
+#if (defined(USE_GUI) && defined(UNIX)) || defined(PROTO)
 /*
  * When executing an external program, there may be some typed characters that
  * are not consumed by it.  Give them back to ui_inchar() and they are stored
  * here for the next call.
  */
 static char_u *ta_str = NULL;
-static int ta_off;	    /* offset for next char to use */
-static int ta_len;	    /* length of ta_str */
+static int ta_off;	/* offset for next char to use when ta_str != NULL */
+static int ta_len;	/* length of ta_str when it's not NULL*/
 
     void
 ui_inchar_undo(s, len)
@@ -62,9 +62,14 @@ ui_inchar_undo(s, len)
     new = alloc(newlen);
     if (new != NULL)
     {
-	mch_memmove(new, ta_str + ta_off, (size_t)(ta_len - ta_off));
-	mch_memmove(new + ta_len - ta_off, s, (size_t)len);
-	vim_free(ta_str);
+	if (ta_str != NULL)
+	{
+	    mch_memmove(new, ta_str + ta_off, (size_t)(ta_len - ta_off));
+	    mch_memmove(new + ta_len - ta_off, s, (size_t)len);
+	    vim_free(ta_str);
+	}
+	else
+	    mch_memmove(new, s, (size_t)len);
 	ta_str = new;
 	ta_len = newlen;
 	ta_off = 0;
@@ -86,7 +91,7 @@ ui_inchar(buf, maxlen, wtime)
     int	    maxlen;
     long    wtime;	    /* don't use "time", MIPS cannot handle it */
 {
-#ifdef USE_GUI
+#if defined(USE_GUI) && defined(UNIX)
     /*
      * Use the typeahead if there is any.
      */
