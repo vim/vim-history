@@ -3314,7 +3314,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    /* Open with O_EXCL to avoid the file being created while
 		     * we were sleeping (symlink hacker attack?) */
 		    bfd = mch_open((char *)backup,
-				       O_WRONLY|O_CREAT|O_EXTRA|O_EXCL, 0666);
+				O_WRONLY|O_CREAT|O_EXTRA|O_EXCL, perm & 0777);
 		    if (bfd < 0)
 		    {
 			vim_free(backup);
@@ -3698,7 +3698,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     while ((fd = mch_open((char *)wfname, O_WRONLY | O_EXTRA | (append
 			? (forceit ? (O_APPEND | O_CREAT) : O_APPEND)
 			: (O_CREAT | O_TRUNC))
-			, 0666)) < 0)
+			, perm & 0777)) < 0)
     {
 	/*
 	 * A forced write will try to create a new file if the old one is
@@ -4104,7 +4104,8 @@ restore_backup:
 		if ((fd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0)) >= 0)
 		{
 		    if ((write_info.bw_fd = mch_open((char *)fname,
-			  O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA, 0666)) >= 0)
+				    O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA,
+							   perm & 0777)) >= 0)
 		    {
 			/* copy the file. */
 			write_info.bw_buf = smallbuf;
@@ -4261,7 +4262,7 @@ restore_backup:
 
 	    if (org == NULL
 		    || (empty_fd = mch_open(org, O_CREAT | O_EXTRA | O_EXCL,
-								   0666)) < 0)
+							    perm & 0777)) < 0)
 	      EMSG(_("E206: patchmode: can't touch empty original file"));
 	    else
 	      close(empty_fd);
@@ -5693,6 +5694,10 @@ vim_rename(from, to)
     BPTR	flock;
 #endif
     struct stat	st;
+    long	perm;
+#ifdef HAVE_ACL
+    vim_acl_T	acl;		/* ACL from original file */
+#endif
 
     /*
      * When the names are identical, there is nothing to do.
@@ -5743,10 +5748,17 @@ vim_rename(from, to)
     /*
      * Rename() failed, try copying the file.
      */
+    perm = mch_getperm(from);
+#ifdef HAVE_ACL
+    /* For systems that support ACL: get the ACL from the original file. */
+    acl = mch_get_acl(from);
+#endif
     fd_in = mch_open((char *)from, O_RDONLY|O_EXTRA, 0);
     if (fd_in == -1)
 	return -1;
-    fd_out = mch_open((char *)to, O_CREAT|O_EXCL|O_WRONLY|O_EXTRA, 0666);
+
+    /* Create the new file with same permissions as the original. */
+    fd_out = mch_open((char *)to, O_CREAT|O_EXCL|O_WRONLY|O_EXTRA, (int)perm);
     if (fd_out == -1)
     {
 	close(fd_in);
@@ -5777,6 +5789,10 @@ vim_rename(from, to)
 	errmsg = _("E210: Error reading \"%s\"");
 	to = from;
     }
+    mch_setperm(to, perm);
+#ifdef HAVE_ACL
+    mch_set_acl(to, acl);
+#endif
     if (errmsg != NULL)
     {
 	EMSG2(errmsg, to);
