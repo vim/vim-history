@@ -2760,7 +2760,9 @@ get_keystroke()
     char_u	buf[CBUFLEN];
     int		len = 0;
     int		n;
+    int		save_mapped_ctrl_c = mapped_ctrl_c;
 
+    mapped_ctrl_c = FALSE;	/* mappings are not used here */
     for (;;)
     {
 	cursor_on();
@@ -2835,6 +2837,8 @@ get_keystroke()
 #endif
 	break;
     }
+
+    mapped_ctrl_c = save_mapped_ctrl_c;
     return n;
 }
 
