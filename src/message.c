@@ -1166,10 +1166,7 @@ msg_outtrans_len_attr(msgstr, len, attr)
     /* If the string starts with a composing character first draw a space on
      * which the composing char can be drawn. */
     if (enc_utf8 && utf_iscomposing(utf_ptr2char(msgstr)))
-    {
 	msg_puts_attr((char_u *)" ", attr);
-	retval += 1;
-    }
 #endif
 
     /*
@@ -2080,6 +2077,12 @@ t_puts(t_col, t_s, s, attr)
     msg_didout = TRUE;		/* remember that line is not empty */
     screen_puts_len(t_s, (int)(s - t_s), msg_row, msg_col, attr);
     msg_col += t_col;
+#ifdef FEAT_MBYTE
+    /* If the string starts with a composing character don't increment the
+     * column position for it. */
+    if (enc_utf8 && utf_iscomposing(utf_ptr2char(t_s)))
+	--msg_col;
+#endif
     if (msg_col >= Columns)
     {
 	msg_col = 0;
