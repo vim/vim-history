@@ -1975,8 +1975,8 @@ ex_file(eap)
 #endif
 	/*
 	 * The name of the current buffer will be changed.
-	 * A new buffer entry needs to be made to hold the old
-	 * file name, which will become the alternate file name.
+	 * A new (unlisted) buffer entry needs to be made to hold the old file
+	 * name, which will become the alternate file name.
 	 */
 	fname = curbuf->b_ffname;
 	sfname = curbuf->b_sfname;
@@ -1990,7 +1990,7 @@ ex_file(eap)
 	    return;
 	}
 	curbuf->b_flags |= BF_NOTEDITED;
-	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, BLN_LISTED);
+	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, 0);
 	if (buf != NULL)
 	    curwin->w_alt_fnum = buf->b_fnum;
 	vim_free(fname);
