@@ -7521,6 +7521,8 @@ nv_normal(cap)
     if (safe_vgetc() == Ctrl_N)
     {
 	clearop(cap->oap);
+	if (restart_edit != 0 && p_smd)
+	    clear_cmdline = TRUE;		/* unshow mode later */
 	restart_edit = 0;
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0)
