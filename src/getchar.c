@@ -1456,6 +1456,18 @@ vgetorpeek(advance)
 			{
 			    keylen = check_termcode(max_mlen + 1, NULL, 0);
 
+#ifdef MULTI_BYTE
+			    /*
+			     * When a CSI appears in a multi-byte character,
+			     * don't wait for another character.
+			     */
+			    if (keylen < 0 && is_dbcs && typeoff > 0)
+			    {
+				if (IsLeadByte(*(typebuf + typeoff - 1))
+					       && *(typebuf + typeoff) == CSI)
+				    keylen = 0;
+			    }
+#endif
 			    /*
 			     * When getting a partial match, but the last
 			     * characters were not typed, don't wait for a
