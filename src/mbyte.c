@@ -2909,6 +2909,14 @@ im_set_active(active)
     }
     else
     {
+# ifndef XIMPreeditUnKnown
+	/* X11R5 doesn't have these, it looks safe enough to define here. */
+	typedef unsigned long XIMPreeditState;
+#  define XIMPreeditUnKnown	0L
+#  define XIMPreeditEnable	1L
+#  define XIMPreeditDisable	(1L<<1)
+#  define XNPreeditState	"preeditState"
+# endif
 	XIMPreeditState preedit_state = XIMPreeditUnKnown;
 	XVaNestedList preedit_attr;
 	XIC pxic;
