@@ -1,4 +1,4 @@
-#!/usr/gnu/bin/perl
+#!/usr/bin/env perl
 #
 # This program works as a filter that reads from stdin, copies to
 # stdout *and* creates an error file that can be read by vim.
