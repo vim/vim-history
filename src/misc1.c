@@ -5064,13 +5064,11 @@ get_c_indent()
     }
 
     /* remember where the cursor was when we started */
-
     cur_curpos = curwin->w_cursor;
 
-    /* get the current contents of the line.
+    /* Get a copy of the current contents of the line.
      * This is required, because only the most recent line obtained with
      * ml_get is valid! */
-
     linecopy = vim_strsave(ml_get(cur_curpos.lnum));
     if (linecopy == NULL)
 	return 0;
@@ -5079,8 +5077,12 @@ get_c_indent()
      * In insert mode and the cursor is on a ')' truncate the line at the
      * cursor position.  We don't want to line up with the matching '(' when
      * inserting new stuff.
+     * For unknown reasons the cursor might be past the end of the line, thus
+     * check for that.
      */
-    if ((State & INSERT) && linecopy[curwin->w_cursor.col] == ')')
+    if ((State & INSERT)
+	    && curwin->w_cursor.col < STRLEN(linecopy)
+	    && linecopy[curwin->w_cursor.col] == ')')
 	linecopy[curwin->w_cursor.col] = NUL;
 
     theline = skipwhite(linecopy);
