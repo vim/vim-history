@@ -3741,11 +3741,28 @@ do_join(insert_space)
     curr = ml_get_curline();
     currsize = (int)STRLEN(curr);
     endcurr1 = endcurr2 = NUL;
-    if (currsize > 0)
+    if (insert_space && currsize > 0)
     {
-	endcurr1 = *(curr + currsize - 1);
-	if (currsize > 1)
-	    endcurr2 = *(curr + currsize - 2);
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    next = curr + currsize - 1;
+	    next -= (*mb_head_off)(curr, next);
+	    endcurr1 = (*mb_ptr2char)(next);
+	    if (next > curr)
+	    {
+		--next;
+		next -= (*mb_head_off)(curr, next);
+		endcurr2 = (*mb_ptr2char)(next);
+	    }
+	}
+	else
+#endif
+	{
+	    endcurr1 = *(curr + currsize - 1);
+	    if (currsize > 1)
+		endcurr2 = *(curr + currsize - 2);
+	}
     }
 
     next = ml_get((linenr_T)(curwin->w_cursor.lnum + 1));
@@ -3753,9 +3770,16 @@ do_join(insert_space)
     if (insert_space)
     {
 	next = skipwhite(next);
-	if (*next != ')' && currsize != 0 && endcurr1 != TAB)
+	if (*next != ')' && currsize != 0 && endcurr1 != TAB
+#ifdef FEAT_MBYTE
+		&& (!has_format_option(FO_MBYTE_JOIN)
+			|| (mb_ptr2char(next) < 0x100 && endcurr1 < 0x100))
+		&& (!has_format_option(FO_MBYTE_JOIN2)
+			|| mb_ptr2char(next) < 0x100 || endcurr1 < 0x100)
+#endif
+		)
 	{
-	    /* don't add a space if the line is inding in a space */
+	    /* don't add a space if the line is ending in a space */
 	    if (endcurr1 == ' ')
 		endcurr1 = endcurr2;
 	    else

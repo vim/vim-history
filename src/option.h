@@ -103,12 +103,14 @@
 #define FO_INS_VI	'v'
 #define FO_INS_LONG	'l'
 #define FO_INS_BLANK	'b'
-#define FO_MULTIBYTE	'm'
+#define FO_MBYTE_BREAK	'm'	/* break before/after multi-byte char */
+#define FO_MBYTE_JOIN	'M'	/* no space before/after multi-byte char */
+#define FO_MBYTE_JOIN2	'B'	/* no space between multi-byte chars */
 #define FO_ONE_LETTER	'1'
 
 #define DFLT_FO_VI	"vt"
 #define DFLT_FO_VIM	"tcq"
-#define FO_ALL		"tcroq2vlb1mn,"	/* for do_set() */
+#define FO_ALL		"tcroq2vlb1mMBn,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
 #define CPO_ALTREAD	'a'	/* ":read" sets alternate file name */
