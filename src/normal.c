@@ -1510,7 +1510,8 @@ do_pending_operator(cap, old_col, gui_yank)
 			oap->start_vcol = start;
 		    if (end > oap->end_vcol)
 		    {
-			if (*p_sel == 'e' && start - 1 >= oap->end_vcol)
+			if (*p_sel == 'e' && start >= 1
+						&& start - 1 >= oap->end_vcol)
 			    oap->end_vcol = start - 1;
 			else
 			    oap->end_vcol = end;
