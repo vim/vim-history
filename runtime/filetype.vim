@@ -714,10 +714,25 @@ au BufNewFile,BufRead *.dpr			setf pascal
 
 " Perl
 if has("fname_case")
-  au BufNewFile,BufRead *.pl,*.PL		setf perl
+  au BufNewFile,BufRead *.pl,*.PL		call FTCheck_pl()
 else
-  au BufNewFile,BufRead *.pl			setf perl
+  au BufNewFile,BufRead *.pl			call FTCheck_pl()
 endif
+
+fun! FTCheck_pl()
+  if exists("g:filetype_pl")
+    exe "setf " . g:filetype_pl
+  else
+    " recognize Prolog by specific text in the first non-empty line
+    " require a blank after the '%' because Perl uses "%list" and "%translate"
+    let l = getline(nextnonblank(1))
+    if l =~ '\<prolog\>' || l =~ '^\s*\(%\+\(\s\|$\)\|/\*\)' || l =~ ':-'
+      setf prolog
+    else
+      setf perl
+    endif
+  endif
+endfun
 
 " Perl, XPM or XPM2
 au BufNewFile,BufRead *.pm
