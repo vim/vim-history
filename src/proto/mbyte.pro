@@ -24,6 +24,7 @@ int utf_ptr2len_check __ARGS((char_u *p));
 int utf_byte2len __ARGS((int b));
 int utf_ptr2len_check_len __ARGS((char_u *p, int size));
 int utfc_ptr2len_check __ARGS((char_u *p));
+int utfc_ptr2len_check_len __ARGS((char_u *p, int size));
 int utf_char2len __ARGS((int c));
 int utf_char2bytes __ARGS((int c, char_u *buf));
 int utf_iscomposing __ARGS((int c));

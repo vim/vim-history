@@ -1807,7 +1807,7 @@ gui_mch_draw_string(
 	    {
 		unicodebuf[clen] = utf_ptr2char(text + i);
 		cells += utf_char2cells(unicodebuf[clen]);
-		i += utfc_ptr2len_check(text + i);
+		i += utfc_ptr2len_check_len(text + i, len - i);
 		++clen;
 	    }
 	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
