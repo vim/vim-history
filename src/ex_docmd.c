@@ -6400,7 +6400,14 @@ ex_at(eap)
 	exec_from_reg = TRUE;
 	/* execute from the mapbuf */
 	while (vpeekc() == ':')
+	{
 	    (void)do_cmdline(NULL, getexline, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	    /* In Ex mode need to quit when the typeahead is exhausted,
+	     * otherwise input unexpectedly goes to the typeahead buffer and
+	     * getexmodeline() can't get it with inchar(). */
+	    if (exmode_active && stuff_empty() && typebuf.tb_len == 0)
+		break;
+	}
 
 	exec_from_reg = save_efr;
     }
