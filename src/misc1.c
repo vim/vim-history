@@ -2774,7 +2774,7 @@ change_warning(col)
 						   hl_attr(HLF_W) | MSG_HIST);
 	msg_clr_eos();
 	(void)msg_end();
-	if (msg_silent == 0)
+	if (msg_silent == 0 && !silent_mode)
 	{
 	    out_flush();
 	    ui_delay(1000L, TRUE); /* give the user time to think about it */
