@@ -1887,8 +1887,12 @@ ex_diffgetput(eap)
 		if (nr > diffbuf[idx_from]->b_ml.ml_line_count)
 		    break;
 		p = vim_strsave(ml_get_buf(diffbuf[idx_from], nr, FALSE));
-		ml_append(lnum + i - 1, p, 0, FALSE);
-		++added;
+		if (p != NULL)
+		{
+		    ml_append(lnum + i - 1, p, 0, FALSE);
+		    vim_free(p);
+		    ++added;
+		}
 	    }
 	    new_count = dp->df_count[idx_to] + added;
 	    dp->df_count[idx_to] = new_count;
