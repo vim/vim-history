@@ -2081,7 +2081,7 @@ del_bytes(count, fixpos)
 #ifdef FEAT_MBYTE
     /* If 'delcombine' is set and deleting (less than) one character, only
      * delete the last combining character. */
-    if (p_deco && enc_utf8 && (*mb_ptr2len_check)(oldp + col) <= count)
+    if (p_deco && enc_utf8 && utfc_ptr2len_check(oldp + col) >= count)
     {
 	int	c1, c2;
 	int	n;
