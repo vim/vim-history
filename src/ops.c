@@ -1036,6 +1036,35 @@ stuff_yank(regname, p)
     return OK;
 }
 
+#ifdef FEAT_CLIPBOARD
+/*
+ * When "regname" is a clipboard register, obtain the selection.  If it's not
+ * available return zero, otherwise return "regname".
+ */
+static int may_get_selection __ARGS((int regname));
+
+    static int
+may_get_selection(regname)
+    int regname;
+{
+    if (regname == '*')
+    {
+	if (!clip_star.available)
+	    regname = 0;
+	else
+	    clip_get_selection(&clip_star);
+    }
+    else if (regname == '+')
+    {
+	if (!clip_plus.available)
+	    regname = 0;
+	else
+	    clip_get_selection(&clip_plus);
+    }
+    return regname;
+}
+#endif
+
 /*
  * execute a yank register: copy it into the stuff buffer
  *
@@ -1059,6 +1088,10 @@ do_execreg(regname, colon, addcr)
     if (regname == '%' || regname == '#' || !valid_yank_reg(regname, FALSE))
 	return FAIL;
     lastc = regname;
+
+#ifdef FEAT_CLIPBOARD
+    regname = may_get_selection(regname);
+#endif
 
     if (regname == '_')			/* black hole: don't stuff anything */
 	return OK;
@@ -1176,20 +1209,7 @@ insert_reg(regname, literally)
 	return FAIL;
 
 #ifdef FEAT_CLIPBOARD
-    if (regname == '*')
-    {
-	if (!clip_star.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_star);
-    }
-    else if (regname == '+')
-    {
-	if (!clip_plus.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_plus);
-    }
+    regname = may_get_selection(regname);
 #endif
 
     if (regname == '.')			/* insert last inserted text */
@@ -1380,20 +1400,7 @@ cmdline_paste(regname, literally)
 	return FAIL;
 
 #ifdef FEAT_CLIPBOARD
-    if (regname == '*')
-    {
-	if (!clip_star.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_star);
-    }
-    else if (regname == '+')
-    {
-	if (!clip_plus.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_plus);
-    }
+    regname = may_get_selection(regname);
 #endif
 
     if (get_spec_reg(regname, &arg, &allocated, TRUE))
@@ -2951,10 +2958,7 @@ do_put(regname, dir, count, flags)
 #ifdef FEAT_CLIPBOARD
     /* Adjust register name for "unnamed" in 'clipboard'. */
     adjust_clip_reg(&regname);
-    if (regname == '*')
-	clip_get_selection(&clip_star);
-    else if (regname == '+')
-	clip_get_selection(&clip_plus);
+    (void)may_get_selection(regname);
 #endif
 
     if (flags & PUT_FIXINDENT)
@@ -5283,20 +5287,7 @@ get_reg_contents(regname)
 	return NULL;
 
 #ifdef FEAT_CLIPBOARD
-    if (regname == '*')
-    {
-	if (!clip_star.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_star);	/* may fill * register */
-    }
-    else if (regname == '+')
-    {
-	if (!clip_plus.available)
-	    regname = 0;
-	else
-	    clip_get_selection(&clip_plus);	/* may fill + register */
-    }
+    regname = may_get_selection(regname);
 #endif
 
     if (get_spec_reg(regname, &retval, &allocated, FALSE))
