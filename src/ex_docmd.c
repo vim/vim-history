@@ -2392,6 +2392,7 @@ do_one_cmd(cmdlinep, sourcing,
 		{
 		    coladvance(MAXCOL);
 		    curwin->w_curswant = MAXCOL;
+		    curwin->w_set_curswant = FALSE;
 		}
 		restart_edit = 'i';
 		break;
