@@ -242,7 +242,7 @@ static struct
  * Free python.dll
  */
     static void
-end_dynamic_python()
+end_dynamic_python(void)
 {
     if (hinstPython)
     {
@@ -273,8 +273,8 @@ python_runtime_link_init(char *libname, int verbose)
 
     for (i = 0; python_funcname_table[i].ptr; ++i)
     {
-	if (!(*python_funcname_table[i].ptr = GetProcAddress(hinstPython,
-			python_funcname_table[i].name)))
+	if ((*python_funcname_table[i].ptr = GetProcAddress(hinstPython,
+			python_funcname_table[i].name)) == NULL)
 	{
 	    FreeLibrary(hinstPython);
 	    hinstPython = 0;
@@ -365,26 +365,30 @@ static PyThreadState* saved_python_thread = NULL;
 /* suspend a thread of the python interpreter
    - other threads are allowed to run */
 
-static void Python_SaveThread() {
-	saved_python_thread = PyEval_SaveThread();
+static void Python_SaveThread(void)
+{
+    saved_python_thread = PyEval_SaveThread();
 }
 
 /* restore a thread of the python interpreter
    - waits for other threads to block */
 
-static void Python_RestoreThread() {
-	PyEval_RestoreThread( saved_python_thread );
-	saved_python_thread = NULL;
+static void Python_RestoreThread(void)
+{
+    PyEval_RestoreThread( saved_python_thread );
+    saved_python_thread = NULL;
 }
 
 /* obtain a lock on the Vim data structures */
 
-static void Python_Lock_Vim() {
+static void Python_Lock_Vim(void)
+{
 }
 
 /* release a lock on the Vim data structures */
 
-static void Python_Release_Vim() {
+static void Python_Release_Vim(void)
+{
 }
 
     void
