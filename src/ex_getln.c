@@ -3454,19 +3454,15 @@ globpath(path, file)
     expand_T	xpc;
     char_u	*buf;
     garray_T	ga;
+    int		i;
     int		len;
-    char_u	*p;
-    char_u	**save_cmd_files = cmd_files;
-    int		save_cmd_numfiles = cmd_numfiles;
+    int		num_p;
+    char_u	**p;
+    char_u	*cur = NULL;
 
     buf = alloc(MAXPATHL);
     if (buf == NULL)
 	return NULL;
-
-    /* ExpandOne() uses cmd_files and cmd_numfiles, need to save and restore
-     * them. */
-    cmd_files = NULL;
-    cmd_numfiles = -1;
 
     xpc.xp_context = EXPAND_FILES;
     xpc.xp_backslash = XP_BS_NONE;
@@ -3481,40 +3477,34 @@ globpath(path, file)
 	{
 	    add_pathsep(buf);
 	    STRCAT(buf, file);
-	    p = ExpandOne(&xpc, buf, NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
-	    if (p != NULL)
+	    if (ExpandFromContext(&xpc, buf, &num_p, &p, WILD_SILENT) != FAIL
+								 && num_p > 0)
 	    {
-		len = (int)STRLEN(p);
-		if (ga.ga_data == NULL)
+		ExpandEscape(&xpc, buf, num_p, p, WILD_SILENT);
+		for (len = 0, i = 0; i < num_p; ++i)
+		    len += (long_u)STRLEN(p[i]) + 1;
+
+		/* Concatenate new results to previous ones. */
+		if (ga_grow(&ga, len) == OK)
 		{
-		    ga.ga_data = p;
-		    ga.ga_room = 0;
-		    ga.ga_len = len + 1;
-		}
-		else
-		{
-		    /* Concatenate new results to previous ones.  Insert a NL
-		     * and keep room for the trailing NUL. */
-		    ++len;
-		    if (ga_grow(&ga, len + 1) == OK)
+		    cur = (char_u *)ga.ga_data + ga.ga_len;
+		    for (i = 0; i < num_p; ++i)
 		    {
-			STRCAT(ga.ga_data, "\n");
-			STRCAT(ga.ga_data, p);
-			ga.ga_len += len;
-			ga.ga_room -= len;
+			STRCPY(cur, p[i]);
+			cur += STRLEN(p[i]);
+			*cur++ = '\n';
 		    }
-		    vim_free(p);
+		    ga.ga_len += len;
+		    ga.ga_room -= len;
 		}
 	    }
 	}
     }
+    if (cur != NULL)
+	*--cur = 0; /* Replace trailing newline with NUL */
+
     vim_free(buf);
-
-    FreeWild(cmd_numfiles, cmd_files);
-    cmd_files = save_cmd_files;
-    cmd_numfiles = save_cmd_numfiles;
-
-    return ga.ga_data;
+    return (char_u *)ga.ga_data;
 }
 
 #endif
