@@ -308,17 +308,13 @@ close_buffer(win, buf, action)
 	unload_buf = TRUE;
 #endif
 
-    /* decrease the link count from windows (unless not in any window) */
-    if (buf->b_nwindows > 0)
-	--buf->b_nwindows;
-
     if (win != NULL)
     {
 	/* Set b_last_cursor when closing the last window for the buffer.
 	 * Remember the last cursor position and window options of the buffer.
 	 * This used to be only for the current window, but then options like
 	 * 'foldmethod' may be lost with a ":only" command. */
-	if (buf->b_nwindows == 0)
+	if (buf->b_nwindows == 1)
 	    set_last_cursor(win);
 	buflist_setfpos(buf, win,
 		    win->w_cursor.lnum == 1 ? 0 : win->w_cursor.lnum,
@@ -327,7 +323,7 @@ close_buffer(win, buf, action)
 
 #ifdef FEAT_AUTOCMD
     /* When the buffer is no longer in a window, trigger BufWinLeave */
-    if (buf->b_nwindows == 0 && nwindows > 0)
+    if (buf->b_nwindows == 1)
     {
 	apply_autocmds(EVENT_BUFWINLEAVE, buf->b_fname, buf->b_fname,
 								  FALSE, buf);
@@ -344,7 +340,12 @@ close_buffer(win, buf, action)
 		return;
 	}
     }
+    nwindows = buf->b_nwindows;
 #endif
+
+    /* decrease the link count from windows (unless not in any window) */
+    if (buf->b_nwindows > 0)
+	--buf->b_nwindows;
 
     /* Return when a window is displaying the buffer or when it's not
      * unloaded. */
@@ -364,22 +365,32 @@ close_buffer(win, buf, action)
      * Also calls the "BufDelete" autocommands when del_buf is TRUE.
      */
 #ifdef FEAT_AUTOCMD
+    /* Remember if we are closing the current buffer.  Restore the number of
+     * windows, so that autocommands in buf_freeall() don't get confused. */
     is_curbuf = (buf == curbuf);
+    buf->b_nwindows = nwindows;
 #endif
-    buf_freeall(buf, del_buf);
+
+    buf_freeall(buf, del_buf, wipe_buf);
+
 #ifdef FEAT_AUTOCMD
-    if (wipe_buf && buf_valid(buf))
-	apply_autocmds(EVENT_BUFWIPEOUT, buf->b_fname, buf->b_fname,
-								  FALSE, buf);
+    /* Autocommands may have deleted the buffer. */
+    if (!buf_valid(buf))
+	return;
+
+    /* Autocommands may have opened or closed windows for this buffer.
+     * Decrement the count for the close we do here. */
+    if (buf->b_nwindows > 0)
+	--buf->b_nwindows;
+
     /*
-     * Autocommands may have deleted the buffer.
      * It's possible that autocommands change curbuf to the one being deleted.
      * This might cause the previous curbuf to be deleted unexpectedly.  But
      * in some cases it's OK to delete the curbuf, because a new one is
      * obtained anyway.  Therefore only return if curbuf changed to the
      * deleted buffer.
      */
-    if (!buf_valid(buf) || (buf == curbuf && !is_curbuf))
+    if (buf == curbuf && !is_curbuf)
 	return;
 #endif
 
@@ -467,9 +478,10 @@ buf_clear_file(buf)
  */
 /*ARGSUSED*/
     void
-buf_freeall(buf, del_buf)
+buf_freeall(buf, del_buf, wipe_buf)
     buf_T	*buf;
     int		del_buf;	/* buffer is going to be deleted */
+    int		wipe_buf;	/* buffer is going to be wiped out */
 {
 #ifdef FEAT_AUTOCMD
     int		is_curbuf = (buf == curbuf);
@@ -483,6 +495,14 @@ buf_freeall(buf, del_buf)
 	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	    return;
     }
+    if (wipe_buf)
+    {
+	apply_autocmds(EVENT_BUFWIPEOUT, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
+	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
+	    return;
+    }
+
     /*
      * It's possible that autocommands change curbuf to the one being deleted.
      * This might cause curbuf to be deleted unexpectedly.  But in some cases
@@ -1320,6 +1340,7 @@ buflist_new(ffname, sfname, lnum, flags)
      *
      * This is the ONLY place where a new buffer structure is allocated!
      */
+    buf = NULL;
     if ((flags & BLN_CURBUF)
 	    && curbuf != NULL
 	    && curbuf->b_ffname == NULL
@@ -1328,18 +1349,25 @@ buflist_new(ffname, sfname, lnum, flags)
     {
 	buf = curbuf;
 #ifdef FEAT_AUTOCMD
-	/* It's like this buffer is deleted. */
+	/* It's like this buffer is deleted.  Watch out for autocommands that
+	 * change curbuf!  If that happens, allocate a new buffer anyway. */
 	if (curbuf->b_p_bl)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
-	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
+	if (buf == curbuf)
+	    apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 #endif
 #ifdef FEAT_QUICKFIX
-	/* Make sure 'bufhidden' and 'buftype' are empty */
-	clear_string_option(&buf->b_p_bh);
-	clear_string_option(&buf->b_p_bt);
+# ifdef FEAT_AUTOCMD
+	if (buf == curbuf)
+# endif
+	{
+	    /* Make sure 'bufhidden' and 'buftype' are empty */
+	    clear_string_option(&buf->b_p_bh);
+	    clear_string_option(&buf->b_p_bt);
+	}
 #endif
     }
-    else
+    if (buf != curbuf || curbuf == NULL)
     {
 	buf = (buf_T *)alloc_clear((unsigned)sizeof(buf_T));
 	if (buf == NULL)
@@ -1372,7 +1400,8 @@ buflist_new(ffname, sfname, lnum, flags)
 
     if (buf == curbuf)
     {
-	buf_freeall(buf, FALSE); /* free all things allocated for this buffer */
+	/* free all things allocated for this buffer */
+	buf_freeall(buf, FALSE, FALSE);
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
 	/* buf->b_nwindows = 0; why was this here? */
