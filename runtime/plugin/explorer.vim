@@ -1,14 +1,11 @@
 "=============================================================================
 " File: explorer.vim
-" Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2003 May 16
+" Author: M A Aziz Ahmed (aziz@acorn-networks.com - doesn't work)
+" Last Change:	2004 Jan 16
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
-" This file implements a file explorer. Latest version available at:
-" http://www.freespeech.org/aziz/vim/
-" Updated version available at:
-" http://www.aracnet.com/~waggoner
+" This file implements a file explorer.
 "-----------------------------------------------------------------------------
 " Normally, this file will reside in the plugins directory and be
 " automatically sourced.  If not, you must manually source this file
@@ -1302,14 +1299,16 @@ function! s:EditAll()
   if winbufnr(2) == -1
     return
   endif
-  let t = winnr()
+  let cmd = winrestcmd()
+  let curwin = winnr()
   while 1
     wincmd w
-    if winnr() == t
+    if winnr() == curwin
       break
     endif
     call s:EditDir()
   endwhile
+  exe cmd
 endfunction
 
 "---

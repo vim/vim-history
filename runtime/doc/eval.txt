@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2.  Last change: 2003 Aug 07
+*eval.txt*      For Vim version 6.2.  Last change: 2004 Jan 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -912,6 +912,7 @@ wincol()			Number	window column of the cursor
 winheight( {nr})		Number	height of window {nr}
 winline()			Number	window line of the cursor
 winnr()				Number	number of current window
+winrestcmd()			String  returns command to restore window sizes
 winwidth( {nr})			Number	width of window {nr}
 
 append({lnum}, {string})				*append()*
@@ -2594,7 +2595,17 @@ winline()	The result is a Number, which is the screen line of the cursor
 
 							*winnr()*
 winnr()		The result is a Number, which is the number of the current
-		window.  The top window has number 1.
+		window.  The top window has number 1.  The number can be used
+		with |CTRL-W_w| and ":wincmd w" |:wincmd|.
+
+							*winrestcmd()*
+winrestcmd()	Returns a sequence of |resize| commands that should restore
+		the current window sizes.  Only works properly when no windows
+		are opened or closed and the current window is unchanged.
+		Example: >
+			cmd = winrestcmd()
+			call MessWithWindowSizes()
+			exe cmd
 
 winwidth({nr})						*winwidth()*
 		The result is a Number, which is the width of window {nr}.
