@@ -1213,8 +1213,7 @@ regpiece(flagp)
 	if (op == Magic('+'))
 	    EMSG_M_RET_NULL("E57: %s+ operand could be empty",
 						       reg_magic == MAGIC_ALL);
-	EMSG_M_RET_NULL("E58: %s{ operand could be empty",
-						      reg_magic == MAGIC_ALL);
+	/* "\{}" is checked below, it's allowed when there is an upper limit */
     }
     *flagp = (WORST | SPSTART | (flags & HASNL));	/* default flags */
 
@@ -1279,9 +1278,9 @@ regpiece(flagp)
 	case Magic('?'):
 	case Magic('='):
 	    /* Emit x= as (x|) */
-	    reginsert(BRANCH, ret); /* Either x */
+	    reginsert(BRANCH, ret);		/* Either x */
 	    regtail(ret, regnode(BRANCH));	/* or */
-	    next = regnode(NOTHING);/* null. */
+	    next = regnode(NOTHING);		/* null. */
 	    regtail(ret, next);
 	    regoptail(ret, next);
 	    break;
@@ -1289,6 +1288,10 @@ regpiece(flagp)
 	case Magic('{'):
 	    if (!read_limits(&minval, &maxval))
 		return NULL;
+	    if (!(flags & HASWIDTH) && (maxval > minval
+				 ? maxval >= MAX_LIMIT : minval >= MAX_LIMIT))
+		EMSG_M_RET_NULL("E58: %s{ operand could be empty",
+						      reg_magic == MAGIC_ALL);
 	    if (flags & SIMPLE)
 	    {
 		reginsert(BRACE_SIMPLE, ret);
