@@ -543,7 +543,6 @@ codepage_invalid:
 # else
 	    char buf[MB_MAXBYTES];
 # ifdef X_LOCALE
-	    extern int _Xmblen __ARGS((char *, size_t));
 #  ifndef mblen
 #   define mblen _Xmblen
 #  endif
