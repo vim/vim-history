@@ -422,10 +422,10 @@ edit(cmdchar, startln, count)
 	    }
 #endif
 	}
+	o_eol = FALSE;
     }
     else
 	arrow_used = FALSE;
-    o_eol = FALSE;
 
     /* we are in insert mode now, don't need to start it anymore */
     need_start_insertmode = FALSE;
@@ -779,7 +779,6 @@ edit(cmdchar, startln, count)
 		restart_edit = 'R';
 	    else
 		restart_edit = 'I';
-	    o_lnum = curwin->w_cursor.lnum;
 #ifdef FEAT_VIRTUALEDIT
 	    if (virtual_active())
 		o_eol = FALSE;	    /* cursor always keeps its column */
@@ -849,6 +848,11 @@ doESCkey:
 	    /*
 	     * This is the ONLY return from edit()!
 	     */
+	    /* Always update o_lnum, so that a "CTRL-O ." that adds a line
+	     * still puts the cursor back after the inserted text. */
+	    if (o_eol && gchar_cursor() == NUL)
+		o_lnum = curwin->w_cursor.lnum;
+
 	    if (ins_esc(&count, cmdchar))
 		return (c == Ctrl_O);
 	    continue;

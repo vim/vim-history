@@ -153,6 +153,7 @@ static void	nv_goto __ARGS((cmdarg_T *cap));
 static void	nv_normal __ARGS((cmdarg_T *cap));
 static void	nv_esc __ARGS((cmdarg_T *oap));
 static void	nv_edit __ARGS((cmdarg_T *cap));
+static void	invoke_edit __ARGS((cmdarg_T *cap, int repl, int cmd, int startln));
 #ifdef FEAT_TEXTOBJ
 static void	nv_object __ARGS((cmdarg_T *cap));
 #endif
@@ -1149,7 +1150,7 @@ getcount:
 			)
 		    && (clear_cmdline
 			|| redraw_cmdline)
-		    && msg_didany
+		    && (msg_didout || (msg_didany && msg_scroll))
 		    && !msg_nowait
 		    && KeyTyped)
 		|| (restart_edit != 0
@@ -6114,11 +6115,9 @@ nv_replace(cap)
 #endif
 	stuffcharReadbuff('\r');
 	stuffcharReadbuff(ESC);
-	/*
-	 * Give 'r' to edit(), to get the redo command right.
-	 */
-	if (edit('r', FALSE, cap->count1))
-	    cap->retval |= CA_COMMAND_BUSY;
+
+	/* Give 'r' to edit(), to get the redo command right. */
+	invoke_edit(cap, TRUE, 'r', FALSE);
     }
     else
     {
@@ -6282,11 +6281,7 @@ nv_Replace(cap)
 	    if (virtual_active())
 		coladvance(getviscol());
 #endif
-	    /* This is a new edit command, not a restart.  We don't edit
-	     * recursively. */
-	    restart_edit = 0;
-	    if (edit(cap->arg ? 'V' : 'R', FALSE, cap->count1))
-		cap->retval |= CA_COMMAND_BUSY;
+	    invoke_edit(cap, FALSE, cap->arg ? 'V' : 'R', FALSE);
 	}
     }
 }
@@ -6299,8 +6294,6 @@ nv_Replace(cap)
 nv_vreplace(cap)
     cmdarg_T	*cap;
 {
-    int		restart_edit_save;
-
 # ifdef FEAT_VISUAL
     if (VIsual_active)
     {
@@ -6324,14 +6317,7 @@ nv_vreplace(cap)
 	    if (virtual_active())
 		coladvance(getviscol());
 # endif
-	    /* This is a new edit command, not a restart.  Do allow using
-	     * CTRL-O rx from Insert mode. */
-	    restart_edit_save = restart_edit;
-	    restart_edit = 0;
-	    if (edit('v', FALSE, cap->count1))
-		cap->retval |= CA_COMMAND_BUSY;
-	    if (restart_edit == 0)
-		restart_edit = restart_edit_save;
+	    invoke_edit(cap, TRUE, 'v', FALSE);
 	}
     }
 }
@@ -7205,13 +7191,7 @@ nv_g_cmd(cap)
     case 'I':
 	beginline(0);
 	if (!checkclearopq(oap))
-	{
-	    /* This is a new edit command, not a restart.  We don't edit
-	     * recursively. */
-	    restart_edit = 0;
-	    if (edit('g', FALSE, cap->count1))
-		cap->retval |= CA_COMMAND_BUSY;
-	}
+	    invoke_edit(cap, FALSE, 'g', FALSE);
 	break;
 
 #ifdef FEAT_SEARCHPATH
@@ -7394,11 +7374,7 @@ n_opencmd(cap)
 #endif
 		    0, 0))
 	{
-	    /* This is a new edit command, not a restart.  We don't edit
-	     * recursively. */
-	    restart_edit = 0;
-	    if (edit(cap->cmdchar, TRUE, cap->count1))
-		cap->retval |= CA_COMMAND_BUSY;
+	    invoke_edit(cap, FALSE, cap->cmdchar, TRUE);
 	}
     }
 }
@@ -7413,9 +7389,9 @@ nv_dot(cap)
     if (!checkclearopq(cap->oap))
     {
 	/*
-	 * if restart_edit is TRUE, the last but one command is repeated
+	 * If "restart_edit" is TRUE, the last but one command is repeated
 	 * instead of the last command (inserting text). This is used for
-	 * CTRL-O <.> in insert mode
+	 * CTRL-O <.> in insert mode.
 	 */
 	if (start_redo(cap->count0, restart_edit != 0 && !arrow_used) == FAIL)
 	    clearopbeep(cap->oap);
@@ -7979,12 +7955,38 @@ nv_edit(cap)
 	}
 #endif
 
-	/* This is a new edit command, not a restart.  We don't edit
-	 * recursively. */
-	restart_edit = 0;
-	if (edit(cap->cmdchar, FALSE, cap->count1))
-	    cap->retval |= CA_COMMAND_BUSY;
+	invoke_edit(cap, FALSE, cap->cmdchar, FALSE);
     }
+}
+
+/*
+ * Invoke edit() and take care of "restart_edit" and the return value.
+ */
+    static void
+invoke_edit(cap, repl, cmd, startln)
+    cmdarg_T	*cap;
+    int		repl;		/* "r" or "gr" command */
+    int		cmd;
+    int		startln;
+{
+    int		restart_edit_save = 0;
+
+    /* Complicated: When the user types "a<C-O>a" we don't want to do Insert
+     * mode recursively.  But when doing "a<C-O>." or "a<C-O>rx" we do allow
+     * it. */
+    if (repl || !stuff_empty())
+	restart_edit_save = restart_edit;
+    else
+	restart_edit_save = 0;
+
+    /* Always reset "restart_edit", this is not a restarted edit. */
+    restart_edit = 0;
+
+    if (edit(cmd, startln, cap->count1))
+	cap->retval |= CA_COMMAND_BUSY;
+
+    if (restart_edit == 0)
+	restart_edit = restart_edit_save;
 }
 
 #ifdef FEAT_TEXTOBJ
