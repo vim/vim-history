@@ -209,7 +209,7 @@ extern char* argItem( current )
     return current->item;
 }
 
-extern const boolean argOff( current )
+extern boolean argOff( current )
     const Arguments* const current;
 {
     Assert(current != NULL);
@@ -262,7 +262,7 @@ extern void argDelete( current )
     Arguments* const current;
 {
     Assert(current != NULL);
-    if (current->type ==  ARG_STRING)
+    if (current->type ==  ARG_STRING  &&  current->item != NULL)
 	free(current->item);
     memset(current, 0, sizeof(Arguments));
     free(current);

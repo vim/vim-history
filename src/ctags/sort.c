@@ -31,7 +31,7 @@
 =   Function prototypes
 ============================================================================*/
 #ifndef EXTERNAL_SORT
-static void failedSort __ARGS((FILE *const fp));
+static void failedSort __ARGS((FILE *const fp, const char* msg));
 static int compareTags __ARGS((const void *const one, const void *const two));
 static void writeSortedTags __ARGS((char **const table, const size_t numTags, const boolean toStdout));
 #endif
@@ -108,12 +108,17 @@ extern void externalSortTags( toStdout )
  *  so have lots of memory if you have large tag files.
  *--------------------------------------------------------------------------*/
 
-static void failedSort( fp )
+static void failedSort( fp, msg )
     FILE *const fp;
+    const char* msg;
 {
+    const char* const cannotSort = "cannot sort tag file";
     if (fp != NULL)
 	fclose(fp);
-    error(FATAL | PERROR, "cannot sort tag file");
+    if (msg == NULL)
+	error(FATAL | PERROR, cannotSort);
+    else
+	error(FATAL, "%s: %s", msg, cannotSort);
 }
 
 static int compareTags( one, two )
@@ -142,7 +147,7 @@ static void writeSortedTags( table, numTags, toStdout )
     {
 	fp = fopen(tagFileName(), "w");
 	if (fp == NULL)
-	    failedSort(fp);
+	    failedSort(fp, NULL);
     }
     for (i = 0 ; i < numTags ; ++i)
     {
@@ -151,7 +156,7 @@ static void writeSortedTags( table, numTags, toStdout )
 	 */
 	if (i == 0  ||  Option.xref  ||  strcmp(table[i], table[i-1]) != 0)
 	    if (fputs(table[i], fp) == EOF)
-		failedSort(fp);
+		failedSort(fp, NULL);
     }
     if (toStdout)
 	fflush(fp);
@@ -175,20 +180,20 @@ extern void internalSortTags( toStdout )
     DebugStatement( size_t mallocSize = tableSize; )	/* cumulative total */
 
     if (table == NULL)
-	failedSort(fp);
+	failedSort(fp, "out of memory");
 
     /*	Open the tag file and place its lines into allocated buffers.
      */
     fp = fopen(tagFileName(), "r");
     if (fp == NULL)
-	failedSort(fp);
+	failedSort(fp, NULL);
     for (i = 0  ;  i < numTags  &&  ! feof(fp)  ;  )
     {
 	line = readLine(vLine, fp);
 	if (line == NULL)
 	{
 	    if (! feof(fp))
-		failedSort(fp);
+		failedSort(fp, NULL);
 	    break;
 	}
 	else if (*line == '\0'  ||  strcmp(line, "\n") == 0)
@@ -199,7 +204,7 @@ extern void internalSortTags( toStdout )
 
 	    table[i] = (char *)malloc(stringSize);
 	    if (table[i] == NULL)
-		failedSort(fp);
+		failedSort(fp, "out of memory");
 	    DebugStatement( mallocSize += stringSize; )
 	    strcpy(table[i], line);
 	    ++i;

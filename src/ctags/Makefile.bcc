@@ -17,9 +17,9 @@ LIB	= -L$(BCCLOC)\lib
 #	replace -1- with -2 to produce code for a 80286 or higher
 #	replace -1- with -3 to produce code for a 80386 or higher
 #	add -v for source debugging
-OPTIMIZE= -1- -Ox
+OPTIMIZE= -1- -O1
 
-CFLAGS	= -DMSDOS -mc -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
+CFLAGS	= -DMSDOS -mc -d -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
 LFLAGS	= $(LIB) $(EXTRA)
 
 ctags.exe: $(SOURCES) respbcc

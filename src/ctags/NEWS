@@ -1,4 +1,16 @@
-Current Version: 3.3
+Current Version: 3.3.2
+
+ctags-3.3.2 (Fri Sep 24 1999)
+* Fixed compile problem on AIX 4.1.
+* Improved recovery from syntax error [Fortran].
+* Changed name of configure option (now --enable-custom-config).
+* Changed Makefile.bcc to optimize for space, since code size exceeded 64KB.
+
+
+ctags-3.3.1 (Mon Sep 20 1999)
+* Fixed segmentation violation occurring when directory recursion was selected.
+* Fixed misleading message when out of memory during internal sort.
+
 
 ctags-3.3 (Fri Sep 17 1999)
 * Fixed missing class-qualified tags [Java].

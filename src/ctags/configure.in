@@ -13,7 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
-echo 'Exuberant Ctags, version 3.3'
+echo 'Exuberant Ctags, version 3.3.2'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros
@@ -46,8 +46,8 @@ AC_ARG_ENABLE(external-sort,
 [  --disable-external-sort use internal sort algorithm instead of sort program],,
 	enable_external_sort=yes)
 
-AC_ARG_ENABLE(custom-conf,
-[  --enable-custom-conf=FILE
+AC_ARG_ENABLE(custom-config,
+[  --enable-custom-config=FILE
                           enable custom config file for site-wide defaults])
 
 AC_ARG_ENABLE(macro-patterns,
@@ -81,11 +81,11 @@ else
 fi
 AC_SUBST(install_targets)
 
-if test "$enable_custom_conf" = no -o "$enable_custom_conf" = yes ; then
+if test "$enable_custom_config" = no -o "$enable_custom_config" = yes ; then
 	AC_MSG_RESULT(no name supplied for custom configuration file)
-elif test -n "$enable_custom_conf" ; then
-	AC_DEFINE_UNQUOTED(CUSTOM_CONFIGURATION_FILE, "$enable_custom_conf")
-	AC_MSG_RESULT($enable_custom_conf will be used as custom configuration file)
+elif test -n "$enable_custom_config" ; then
+	AC_DEFINE_UNQUOTED(CUSTOM_CONFIGURATION_FILE, "$enable_custom_config")
+	AC_MSG_RESULT($enable_custom_config will be used as custom configuration file)
 fi
 
 if test "$enable_macro_patterns" = yes ; then

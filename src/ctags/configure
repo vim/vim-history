@@ -16,7 +16,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-external-sort use internal sort algorithm instead of sort program"
 ac_help="$ac_help
-  --enable-custom-conf=FILE
+  --enable-custom-config=FILE
                           enable custom config file for site-wide defaults"
 ac_help="$ac_help
   --enable-macro-patterns use patterns as default method to locate macros
@@ -540,7 +540,7 @@ fi
 
 
 
-echo 'Exuberant Ctags, version 3.3'
+echo 'Exuberant Ctags, version 3.3.2'
 uname -mrsv 2>/dev/null
 
 
@@ -564,9 +564,9 @@ else
 fi
 
 
-# Check whether --enable-custom-conf or --disable-custom-conf was given.
-if test "${enable_custom_conf+set}" = set; then
-  enableval="$enable_custom_conf"
+# Check whether --enable-custom-config or --disable-custom-config was given.
+if test "${enable_custom_config+set}" = set; then
+  enableval="$enable_custom_config"
   :
 fi
 
@@ -615,14 +615,14 @@ else
 fi
 
 
-if test "$enable_custom_conf" = no -o "$enable_custom_conf" = yes ; then
+if test "$enable_custom_config" = no -o "$enable_custom_config" = yes ; then
 	echo "$ac_t""no name supplied for custom configuration file" 1>&6
-elif test -n "$enable_custom_conf" ; then
+elif test -n "$enable_custom_config" ; then
 	cat >> confdefs.h <<EOF
-#define CUSTOM_CONFIGURATION_FILE "$enable_custom_conf"
+#define CUSTOM_CONFIGURATION_FILE "$enable_custom_config"
 EOF
 
-	echo "$ac_t""$enable_custom_conf will be used as custom configuration file" 1>&6
+	echo "$ac_t""$enable_custom_config will be used as custom configuration file" 1>&6
 fi
 
 if test "$enable_macro_patterns" = yes ; then
