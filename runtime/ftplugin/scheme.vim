@@ -4,4 +4,4 @@
 " URL:		 http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html
 " Last Change:   Apr 2, 2003
 
-run ftplugin/lisp.vim
+runtime! ftplugin/lisp.vim ftplugin/lisp_*.vim ftplugin/lisp/*.vim

@@ -4848,6 +4848,7 @@ hebrew	hebrew.txt	/*hebrew*
 hebrew.txt	hebrew.txt	/*hebrew.txt*
 help	various.txt	/*help*
 help-context	help.txt	/*help-context*
+help-tags	tags	1
 help-translated	various.txt	/*help-translated*
 help-xterm-window	various.txt	/*help-xterm-window*
 help.txt	help.txt	/*help.txt*
@@ -5020,6 +5021,7 @@ i_CTRL-X_CTRL-T	insert.txt	/*i_CTRL-X_CTRL-T*
 i_CTRL-X_CTRL-V	insert.txt	/*i_CTRL-X_CTRL-V*
 i_CTRL-X_CTRL-Y	insert.txt	/*i_CTRL-X_CTRL-Y*
 i_CTRL-X_CTRL-]	insert.txt	/*i_CTRL-X_CTRL-]*
+i_CTRL-X_index	index.txt	/*i_CTRL-X_index*
 i_CTRL-Y	insert.txt	/*i_CTRL-Y*
 i_CTRL-Z	options.txt	/*i_CTRL-Z*
 i_CTRL-[	insert.txt	/*i_CTRL-[*
