@@ -285,6 +285,25 @@ char *(array[100]) = {
 	"bar",
 }
 
+enum soppie
+{
+	yes = 0,
+	no,
+	maybe
+};
+
+typedef enum soppie
+{
+	yes = 0,
+	no,
+	maybe
+};
+
+{
+	int a,
+		b;
+}
+
 {
 	struct Type
 	{

@@ -4526,7 +4526,7 @@ cin_islabel(ind_maxcomment)		/* XXX */
 /*
  * Recognize structure initialization and enumerations.
  * Q&D-Implementation:
- * check for "=" at end or "enum" at beginning of line.
+ * check for "=" at end or "[typedef] enum" at beginning of line.
  */
     static int
 cin_isinit(void)
@@ -4534,6 +4534,9 @@ cin_isinit(void)
     char_u	*s;
 
     s = cin_skipcomment(ml_get_curline());
+
+    if (STRNCMP(s, "typedef", 7) == 0 && !vim_isIDc(s[7]))
+	s = cin_skipcomment(s + 7);
 
     if (STRNCMP(s, "enum", 4) == 0 && !vim_isIDc(s[4]))
 	return TRUE;
@@ -6209,6 +6212,8 @@ get_c_indent()
 			if (cin_nocode(l))
 			    continue;
 
+			terminated = cin_isterminated(l, FALSE, TRUE);
+
 			/*
 			 * If we are at top level and the line looks like a
 			 * function declaration, we are done
@@ -6217,8 +6222,6 @@ get_c_indent()
 			if (start_brace != BRACE_IN_COL0
 				|| !cin_isfuncdecl(&l, curwin->w_cursor.lnum))
 			{
-			    terminated = cin_isterminated(l, FALSE, TRUE);
-
 			    /* if the line is terminated with another ','
 			     * it is a continued variable initialization.
 			     * don't add extra indent.
@@ -6240,22 +6243,25 @@ get_c_indent()
 				continue;
 			}
 
-			/* Skip parens and braces. Position the cursor over
-			 * the rightmost paren, so that matching it will take
-			 * us back to the start of the line.
-			 */					/* XXX */
-			trypos = NULL;
-			if (find_last_paren(l, '(', ')'))
-			    trypos = find_match_paren(ind_maxparen,
-							      ind_maxcomment);
-
-			if (trypos == NULL && find_last_paren(l, '{', '}'))
-			    trypos = find_start_brace(ind_maxcomment);
-
-			if (trypos != NULL)
+			if (terminated != ';')
 			{
-			    curwin->w_cursor.lnum = trypos->lnum + 1;
-			    continue;
+			    /* Skip parens and braces. Position the cursor
+			     * over the rightmost paren, so that matching it
+			     * will take us back to the start of the line.
+			     */					/* XXX */
+			    trypos = NULL;
+			    if (find_last_paren(l, '(', ')'))
+				trypos = find_match_paren(ind_maxparen,
+					ind_maxcomment);
+
+			    if (trypos == NULL && find_last_paren(l, '{', '}'))
+				trypos = find_start_brace(ind_maxcomment);
+
+			    if (trypos != NULL)
+			    {
+				curwin->w_cursor.lnum = trypos->lnum + 1;
+				continue;
+			    }
 			}
 
 			/* it's a variable declaration, add indentation
