@@ -4072,6 +4072,13 @@ win_new_height(wp, height)
 	    {
 #ifdef FEAT_FOLDING
 		hasFoldingWin(wp, lnum, &lnum, NULL, TRUE, NULL);
+		if (lnum == 1)
+		{
+		    /* first line in buffer is folded */
+		    line_size = 1;
+		    --sline;
+		    break;
+		}
 #endif
 		--lnum;
 #ifdef FEAT_DIFF
