@@ -1911,7 +1911,7 @@ static struct vimoption
     {"tags",	    "tag",  P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_tags, OPT_BOTH(PV_TAGS),
 			    {
-#ifdef FEAT_EMACS_TAGS
+#if defined(FEAT_EMACS_TAGS) && !defined(CASE_INSENSITIVE_FILENAME)
 			    (char_u *)"./tags,./TAGS,tags,TAGS",
 #else
 			    (char_u *)"./tags,tags",
