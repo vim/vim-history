@@ -3442,15 +3442,31 @@ search_line:
 			 * Also check for a "/ *" or "/ /" before the match.
 			 * Skips lines like "int backwards;  / * normal index
 			 * * /" when looking for "normal".
+			 * Note: Doesn't skip "/ *" in comments.
 			 */
-			else
+			p = skipwhite(line);
+			if (matched
+				|| (p[0] == '/' && p[1] == '*') || p[0] == '*')
 #endif
 			    for (p = line; *p && p < startp; ++p)
-				if (p[0] == '/' && (p[1] == '*' || p[1] == '/'))
+			    {
+				if (matched
+					&& p[0] == '/'
+					&& (p[1] == '*' || p[1] == '/'))
 				{
 				    matched = FALSE;
-				    break;
+				    /* After "//" all text is comment */
+				    if (p[1] == '/')
+					break;
+				    ++p;
 				}
+				else if (!matched && p[0] == '*' && p[1] == '/')
+				{
+				    /* Can find match after "* /". */
+				    matched = TRUE;
+				    ++p;
+				}
+			    }
 #ifdef COMMENTS
 			fo_do_comments = FALSE;
 #endif
