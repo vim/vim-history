@@ -70,6 +70,13 @@ enum SpecialKey
     KS_CAB,	/* set background color (ANSI) */
     KS_LE,	/* cursor left (mostly backspace) */
     KS_ND,	/* cursor right */
+    KS_CIS,	/* set icon text start */
+    KS_CIE,	/* set icon text end */
+    KS_TS,	/* set window title start (to status line)*/
+    KS_FS,	/* set window title end (from status line) */
+    KS_CWP,	/* set window position in pixels */
+    KS_CWS,	/* set window size in characters */
+    KS_CRV,	/* request version string */
     KS_OP	/* original color pair */
 };
 
@@ -131,6 +138,13 @@ extern char_u *(term_strings[]);    /* current terminal strings */
 #define T_CAB	(term_str(KS_CAB))	/* set background color (ANSI) */
 #define T_LE	(term_str(KS_LE))	/* cursor left */
 #define T_ND	(term_str(KS_ND))	/* cursor right */
+#define T_CIS	(term_str(KS_CIS))	/* set icon text start */
+#define T_CIE	(term_str(KS_CIE))	/* set icon text end */
+#define T_TS	(term_str(KS_TS))	/* set window title start */
+#define T_FS	(term_str(KS_FS))	/* set window title end */
+#define T_CWP	(term_str(KS_CWP))	/* window position */
+#define T_CWS	(term_str(KS_CWS))	/* window size */
+#define T_CRV	(term_str(KS_CRV))	/* request version string */
 #define T_OP	(term_str(KS_OP))	/* original color pair */
 
 #define TMODE_COOK  0	    /* terminal mode for external cmds and Ex mode */

@@ -19,6 +19,7 @@
 #	Perl interface: PERL=[Path to Perl directory]
 #	Python interface: PYTHON=[Path to Python directory]
 #	Debug version: DEBUG=1
+#	SNiFF+ interface: SNIFF=yes
 #
 # You can combine any of these interfaces
 #
@@ -95,16 +96,26 @@ NODEBUG = 1
 CTAGS = ctags
 !endif
 
+!if "$(SNIFF)" == "yes"
+# SNIFF - Include support for SNiFF+.
+SNIFF_INCL  = if_sniff.h
+SNIFF_OBJ   = $(OBJDIR)/if_sniff.obj
+SNIFF_LIB    = shell32.lib
+SNIFF_DEFS  = -DUSE_SNIFF
+# The SNiFF integration needs multithreaded libraries!
+MULTITHREADED = yes
+!endif
+
 !ifdef MULTITHREADED
 CVARS = $(cvarsmt)
-CONLIBS = $(conlibsmt)
+CON_LIB = $(conlibsmt)
 !else
 CVARS = $(cvars)
-CONLIBS = $(conlibs)
+CON_LIB = $(conlibs)
 !endif
 
 
-CFLAGS = -c /W3 /nologo $(CVARS) -Iproto $(cflags) $(DEFINES)
+CFLAGS = -c /W3 /nologo $(CVARS) -Iproto $(cflags) $(SNIFF_DEFS) $(DEFINES)
 
 #>>>>> end of choices
 ###########################################################################
@@ -139,7 +150,7 @@ LIBC = libcd.lib
 !endif # DEBUG
 
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
-	proto.h option.h structs.h term.h
+	proto.h option.h structs.h term.h $(SNIFF_INCL)
 
 OBJ = \
 	$(OUTDIR)\buffer.obj \
@@ -156,6 +167,7 @@ OBJ = \
 	$(OUTDIR)\mark.obj \
 	$(OUTDIR)\memfile.obj \
 	$(OUTDIR)\memline.obj \
+	$(OUTDIR)\menu.obj \
 	$(OUTDIR)\message.obj \
 	$(OUTDIR)\misc1.obj \
 	$(OUTDIR)\misc2.obj \
@@ -183,11 +195,11 @@ CFLAGS = $(CFLAGS) -DHAVE_OLE
 RCFLAGS = $(RCFLAGS) -DHAVE_OLE
 OLE_OBJ = $(OUTDIR)\if_ole.obj
 OLE_IDL = if_ole.idl
-OLE_LIBS = ole32.lib oleaut32.lib uuid.lib 
+OLE_LIB = ole32.lib oleaut32.lib uuid.lib
 !endif
 
 !if "$(IME)" == "yes"
-IMELIB = imm32.lib
+IME_LIB = imm32.lib
 !endif
 
 !if "$(GUI)" == "yes"
@@ -203,7 +215,6 @@ GUI_INCL = \
 	farsi.h \
 	feature.h \
 	globals.h \
-	gui.h \
 	keymap.h \
 	macros.h \
 	option.h \
@@ -213,44 +224,54 @@ GUI_OBJ = \
 	$(OUTDIR)\gui.obj \
 	$(OUTDIR)\gui_w32.obj \
 	$(OUTDIR)\os_w32exe.obj
-GUI_LIBS = \
-	oldnames.lib kernel32.lib gdi32.lib $(IMELIB) \
+GUI_LIB = \
+	oldnames.lib kernel32.lib gdi32.lib $(IME_LIB) \
 	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
 	/machine:I386 /nodefaultlib
 !else
 SUBSYSTEM = console
 !endif
 
+# TCL interface
+!ifdef TCL
+!message Tcl detected - root dir is "$(TCL)"
+CFLAGS  = $(CFLAGS) -DHAVE_TCL
+TCL_OBJ	= $(OUTDIR)\if_tcl.obj
+TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
+TCL_LIB	= $(TCL)\lib\tcl80vc.lib
+!endif
+
 # PYTHON interface
+# Adjust the version number in "python14", if needed.
 !ifdef PYTHON
 !message Python detected - root dir is "$(PYTHON)"
 CFLAGS    = $(CFLAGS) -DHAVE_PYTHON
-PYTHONOBJ = $(OUTDIR)\if_python.obj
-PYTHONINC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
-PYTHONLIB = $(PYTHON)\vc40\python14.lib
+PYTHON_OBJ = $(OUTDIR)\if_python.obj
+PYTHON_INC = /I "$(PYTHON)\Include" /I "$(PYTHON)\PC"
+PYTHON_LIB = $(PYTHON)\vc40\python14.lib
 !endif
 
 # Perl interface
-!ifdef PERL 
+!ifdef PERL
 !message Perl detected - root dir is "$(PERL)"
 !message
-CFLAGS	= $(CFLAGS) -DHAVE_PERL_INTERP
-PERLEXE = $(PERL)\Bin\perl
-PERLOBJ	= $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
-PERLINC	= /I $(PERL)\Lib\Core
-PERLLIB	= $(PERL)\Lib\Core\perl.lib
-XSUBPP	= $(PERL)\lib\ExtUtils\xsubpp
+CFLAGS	 = $(CFLAGS) -DHAVE_PERL_INTERP
+PERL_EXE = $(PERL)\Bin\perl
+PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
+PERL_INC = /I $(PERL)\Lib\Core
+PERL_LIB = $(PERL)\Lib\Core\perl.lib
+XSUBPP	 = $(PERL)\lib\ExtUtils\xsubpp
 XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 !endif
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-all:	$(VIM) install.exe vimrun.exe ctags/ctags.exe xxd/xxd.exe
+all:	$(VIM) vimrun.exe ctags/ctags.exe xxd/xxd.exe
 
-$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERLOBJ) $(PYTHONOBJ) $(OUTDIR)\version.obj
-	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(PERLOBJ) $(PYTHONOBJ) \
-		$(OUTDIR)\version.obj $(CONLIBS) $(GUI_LIBS) $(OLE_LIBS) user32.lib $(PERLLIB) $(PYTHONLIB) $(LINK_PDB)
-        del $(OUTDIR)\version.obj
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
+		$(OUTDIR)\version.obj $(CON_LIB) $(GUI_LIB) $(OLE_LIB) user32.lib $(SNIFF_LIB) $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(LINK_PDB)
+	del $(OUTDIR)\version.obj
 
 $(VIM).exe: $(VIM)
 
@@ -258,7 +279,7 @@ $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
 
 install.exe: dosinst.c
-	$(CC) -DWIN32 dosinst.c kernel32.lib
+	$(CC) -DWIN32 dosinst.c kernel32.lib shell32.lib
 	ren dosinst.exe install.exe
 
 vimrun.exe: vimrun.c
@@ -334,19 +355,25 @@ $(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c  $(INCL) $(GUI_INCL)
 	$(CC) $(CFLAGS) gui_w32.c /Fo$(OUTDIR)/gui_w32.obj $(PDB)
 
 if_perl.c : if_perl.xs typemap
-	$(PERLEXE) $(XSUBPP) -prototypes -typemap $(XSUBPP_TYPEMAP) -typemap typemap if_perl.xs > if_perl.c
+	$(PERL_EXE) $(XSUBPP) -prototypes -typemap $(XSUBPP_TYPEMAP) -typemap typemap if_perl.xs > if_perl.c
 
 $(OUTDIR)/if_perl.obj: $(OUTDIR) if_perl.c  $(INCL)
-	$(CC) $(CFLAGS) $(PERLINC) if_perl.c /Fo$(OUTDIR)/if_perl.obj $(PDB)
+	$(CC) $(CFLAGS) $(PERL_INC) if_perl.c /Fo$(OUTDIR)/if_perl.obj $(PDB)
 
 $(OUTDIR)/if_perlsfio.obj: $(OUTDIR) if_perlsfio.c  $(INCL)
-	$(CC) $(CFLAGS) $(PERLINC) if_perlsfio.c /Fo$(OUTDIR)/if_perlsfio.obj $(PDB)
+	$(CC) $(CFLAGS) $(PERL_INC) if_perlsfio.c /Fo$(OUTDIR)/if_perlsfio.obj $(PDB)
 
 $(OUTDIR)/if_python.obj: $(OUTDIR) if_python.c  $(INCL)
-	$(CC) $(CFLAGS) $(PYTHONINC) if_python.c /Fo$(OUTDIR)/if_python.obj $(PDB)
+	$(CC) $(CFLAGS) $(PYTHON_INC) if_python.c /Fo$(OUTDIR)/if_python.obj $(PDB)
 
 $(OUTDIR)/if_ole.obj: $(OUTDIR) if_ole.cpp  $(INCL) if_ole.h
 	$(CC) $(CFLAGS) if_ole.cpp /Fo$(OUTDIR)/if_ole.obj $(PDB)
+
+$(OUTDIR)/if_sniff.obj:	$(OUTDIR) if_sniff.c  $(INCL)
+	$(CC) $(CFLAGS) if_sniff.c /Fo$(OUTDIR)/if_sniff.obj $(PDB)
+
+$(OUTDIR)/if_tcl.obj: $(OUTDIR) if_tcl.c  $(INCL)
+	$(CC) $(CFLAGS) $(TCL_INC) if_tcl.c /Fo$(OUTDIR)/if_tcl.obj $(PDB)
 
 $(OUTDIR)/main.obj:	$(OUTDIR) main.c  $(INCL)
 	$(CC) $(CFLAGS) main.c /Fo$(OUTDIR)/main.obj $(PDB)
@@ -359,6 +386,9 @@ $(OUTDIR)/memfile.obj:	$(OUTDIR) memfile.c  $(INCL)
 
 $(OUTDIR)/memline.obj:	$(OUTDIR) memline.c  $(INCL)
 	$(CC) $(CFLAGS) memline.c /Fo$(OUTDIR)/memline.obj $(PDB)
+
+$(OUTDIR)/menu.obj:	$(OUTDIR) menu.c  $(INCL)
+	$(CC) $(CFLAGS) menu.c /Fo$(OUTDIR)/menu.obj $(PDB)
 
 $(OUTDIR)/message.obj:	$(OUTDIR) message.c  $(INCL)
 	$(CC) $(CFLAGS) message.c /Fo$(OUTDIR)/message.obj $(PDB)
@@ -442,6 +472,7 @@ proto.h: \
 	proto/mark.pro \
 	proto/memfile.pro \
 	proto/memline.pro \
+	proto/menu.pro \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \

@@ -190,7 +190,17 @@ enum key_extra
     KE_XF1,		/* extra vt100 function keys for xterm */
     KE_XF2,
     KE_XF3,
-    KE_XF4
+    KE_XF4,
+    KE_XEND,		/* extra (vt100) end key for xterm */
+    KE_XHOME,		/* extra (vt100) home key for xterm */
+
+    KE_LEFTMOUSE_NM,	/* non-mappable Left mouse button click */
+    KE_LEFTRELEASE_NM,	/* non-mappable left mouse button release */
+
+    KE_S_XF1,		/* extra vt100 shifted function keys for xterm */
+    KE_S_XF2,
+    KE_S_XF3,
+    KE_S_XF4
 };
 
 /*
@@ -256,6 +266,12 @@ enum key_extra
 #define K_F34		TERMCAP2KEY('F', 'O')
 #define K_F35		TERMCAP2KEY('F', 'P')
 
+/* extra set of shifted function keys F1-F4, for vt100 compatible xterm */
+#define K_S_XF1		TERMCAP2KEY(KS_EXTRA, KE_S_XF1)
+#define K_S_XF2		TERMCAP2KEY(KS_EXTRA, KE_S_XF2)
+#define K_S_XF3		TERMCAP2KEY(KS_EXTRA, KE_S_XF3)
+#define K_S_XF4		TERMCAP2KEY(KS_EXTRA, KE_S_XF4)
+
 #define K_S_F1		TERMCAP2KEY(KS_EXTRA, KE_S_F1)	/* shifted func. keys */
 #define K_S_F2		TERMCAP2KEY(KS_EXTRA, KE_S_F2)
 #define K_S_F3		TERMCAP2KEY(KS_EXTRA, KE_S_F3)
@@ -303,12 +319,14 @@ enum key_extra
 #define K_INS		TERMCAP2KEY('k', 'I')
 #define K_DEL		TERMCAP2KEY('k', 'D')
 #define K_HOME		TERMCAP2KEY('k', 'h')
+#define K_KHOME		TERMCAP2KEY('K', '1')	/* keypad home (upper left) */
+#define K_XHOME		TERMCAP2KEY(KS_EXTRA, KE_XHOME)
 #define K_END		TERMCAP2KEY('@', '7')
+#define K_KEND		TERMCAP2KEY('K', '4')	/* keypad end (lower left) */
+#define K_XEND		TERMCAP2KEY(KS_EXTRA, KE_XEND)
 #define K_PAGEUP	TERMCAP2KEY('k', 'P')
 #define K_PAGEDOWN	TERMCAP2KEY('k', 'N')
-#define K_KHOME		TERMCAP2KEY('K', '1')	/* keypad home (upper left) */
 #define K_KPAGEUP	TERMCAP2KEY('K', '3')	/* keypad pageup (upper R.) */
-#define K_KEND		TERMCAP2KEY('K', '4')	/* keypad end (lower left) */
 #define K_KPAGEDOWN	TERMCAP2KEY('K', '5')	/* keypad pagedown (lower R.) */
 
 #define K_KPLUS		TERMCAP2KEY('K', '6')	/* keypad plus */
@@ -330,8 +348,10 @@ enum key_extra
  * above.
  */
 #define K_LEFTMOUSE	    TERMCAP2KEY(KS_EXTRA, KE_LEFTMOUSE)
+#define K_LEFTMOUSE_NM	    TERMCAP2KEY(KS_EXTRA, KE_LEFTMOUSE_NM)
 #define K_LEFTDRAG	    TERMCAP2KEY(KS_EXTRA, KE_LEFTDRAG)
 #define K_LEFTRELEASE	    TERMCAP2KEY(KS_EXTRA, KE_LEFTRELEASE)
+#define K_LEFTRELEASE_NM    TERMCAP2KEY(KS_EXTRA, KE_LEFTRELEASE_NM)
 #define K_MIDDLEMOUSE	    TERMCAP2KEY(KS_EXTRA, KE_MIDDLEMOUSE)
 #define K_MIDDLEDRAG	    TERMCAP2KEY(KS_EXTRA, KE_MIDDLEDRAG)
 #define K_MIDDLERELEASE	    TERMCAP2KEY(KS_EXTRA, KE_MIDDLERELEASE)

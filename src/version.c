@@ -1,5 +1,4 @@
 /* vi:set ts=8 sts=4 sw=4:
- * vi:set comments=sbl\:*\ -,mb\:*,el\:*\ -,sr\:/\*,mb\:*,el\:*\/,fb\:- :
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
@@ -13,7 +12,7 @@
  * Vim originated from Stevie version 3.6 (Fish disk 217) by GRWalter (Fred)
  * It has been changed beyond recognition since then.
  *
- * Differences between version 4.x and 5.0, and between 5.0 and 5.1 can be
+ * Differences between version 4.x and 5.0, 5.1, etc. can be
  * found with ":help version5".
  * Differences between version 3.0 and 4.x can be found with ":help version4".
  * All the remarks about older versions have been removed, they are not very
@@ -32,16 +31,397 @@ char	*longVersion = VIM_VERSION_LONG;
 
 static void version_msg __ARGS((char *s));
 
-    int
-get_version()
+static char *(features[]) =
 {
-    return (VIM_VERSION_MAJOR * 100 + VIM_VERSION_MINOR);
-}
+#ifdef AMIGA		/* only for Amiga systems */
+# ifdef NO_ARP
+	"-ARP",
+# else
+	"+ARP",
+# endif
+#endif
+#ifdef AUTOCMD
+	"+autocmd",
+#else
+	"-autocmd",
+#endif
+#ifdef USE_BROWSE
+	"+browse",
+#else
+	"-browse",
+#endif
+#ifdef NO_BUILTIN_TCAPS
+	"-builtin_terms",
+#endif
+#ifdef SOME_BUILTIN_TCAPS
+	"+builtin_terms",
+#endif
+#ifdef ALL_BUILTIN_TCAPS
+	"++builtin_terms",
+#endif
+#ifdef BYTE_OFFSET
+	"+byte_offset",
+#else
+	"-byte_offset",
+#endif
+#ifdef CINDENT
+	"+cindent",
+#else
+	"-cindent",
+#endif
+#ifdef CMDLINE_COMPL
+	"+cmdline_compl",
+#else
+	"-cmdline_compl",
+#endif
+#ifdef CMDLINE_INFO
+	"+cmdline_info",
+#else
+	"-cmdline_info",
+#endif
+#ifdef CRYPTV
+	"+comments",
+#else
+	"-comments",
+#endif
+#ifdef CRYPTV
+	"+cryptv",
+#else
+	"-cryptv",
+#endif
+#ifdef USE_CSCOPE
+	"+cscope",
+#else
+	"-cscope",
+#endif
+#if defined(CON_DIALOG) && defined(GUI_DIALOG)
+	"+dialog_con_gui",
+#else
+# if defined(CON_DIALOG)
+	"+dialog_con",
+# else
+#  if defined(GUI_DIALOG)
+	"+dialog_gui",
+#  else
+	"-dialog",
+#  endif
+# endif
+#endif
+#ifdef DIGRAPHS
+	"+digraphs",
+#else
+	"-digraphs",
+#endif
+#ifdef EMACS_TAGS
+	"+emacs_tags",
+#else
+	"-emacs_tags",
+#endif
+#ifdef WANT_EVAL
+	"+eval",
+#else
+	"-eval",
+#endif
+#ifdef EX_EXTRA
+	"+ex_extra",
+#else
+	"-ex_extra",
+#endif
+#ifdef EXTRA_SEARCH
+	"+extra_search",
+#else
+	"-extra_search",
+#endif
+#ifdef FKMAP
+	"+farsi",
+#else
+	"-farsi",
+#endif
+#ifdef FILE_IN_PATH
+	"+file_in_path",
+#else
+	"-file_in_path",
+#endif
+#ifdef WANT_OSFILETYPE
+	"+osfiletype",
+#else
+	"-osfiletype",
+#endif
+#ifdef FIND_IN_PATH
+	"+find_in_path",
+#else
+	"-find_in_path",
+#endif
+	    /* only interesting on Unix systems */
+#if !defined(USE_SYSTEM) && defined(UNIX)
+	"+fork()",
+#endif
+#ifdef UNIX
+# ifdef USE_GUI_GTK
+	"+GUI_GTK",
+# else
+#  ifdef USE_GUI_MOTIF
+	"+GUI_Motif",
+#  else
+#   ifdef USE_GUI_ATHENA
+	"+GUI_Athena",
+#   else
+#    ifdef USE_GUI_BEOS
+	"+GUI_BeOS",
+#     else
+	"-GUI",
+#    endif
+#   endif
+#  endif
+# endif
+#endif
+#ifdef HANGUL_INPUT
+	"+hangul_input",
+#else
+	"-hangul_input",
+#endif
+#ifdef INSERT_EXPAND
+	"+insert_expand",
+#else
+	"-insert_expand",
+#endif
+#ifdef HAVE_LANGMAP
+	"+langmap",
+#else
+	"-langmap",
+#endif
+#ifdef LINEBREAK
+	"+linebreak",
+#else
+	"-linebreak",
+#endif
+#ifdef LISPINDENT
+	"+lispindent",
+#else
+	"-lispindent",
+#endif
+#ifdef WANT_MENU
+	"+menu",
+#else
+	"-menu",
+#endif
+#ifdef MKSESSION
+	"+mksession",
+#else
+	"-mksession",
+#endif
+#ifdef WANT_MODIFY_FNAME
+	"+modify_fname",
+#else
+	"-modify_fname",
+#endif
+#ifdef USE_MOUSE
+	"+mouse",
+# else
+	"-mouse",
+#endif
+#ifdef UNIX
+# ifdef DEC_MOUSE
+	"+mouse_dec",
+# else
+	"-mouse_dec",
+# endif
+#ifdef GPM_MOUSE
+	"+mouse_gpm",
+#else
+	"-mouse_gpm",
+#endif
+# ifdef NETTERM_MOUSE
+	"+mouse_netterm",
+# else
+	"-mouse_netterm",
+# endif
+# ifdef XTERM_MOUSE
+	"+mouse_xterm",
+# else
+	"-mouse_xterm",
+# endif
+#endif
+#ifdef MULTI_BYTE_IME
+	"+multi_byte_ime",
+#else
+# ifdef MULTI_BYTE
+	"+multi_byte",
+# else
+	"-multi_byte",
+# endif
+#endif
+#ifdef USE_GUI_WIN32
+# ifdef HAVE_OLE
+	"+ole",
+# else
+	"-ole",
+# endif
+#endif
+#ifdef HAVE_PERL_INTERP
+	"+perl",
+#else
+	"-perl",
+#endif
+#ifdef QUICKFIX
+	"+quickfix",
+#else
+	"-quickfix",
+#endif
+#ifdef HAVE_PYTHON
+	"+python",
+#else
+	"-python",
+#endif
+#ifdef RIGHTLEFT
+	"+rightleft",
+#else
+	"-rightleft",
+#endif
+#ifdef SCROLLBIND
+	"+scrollbind",
+#else
+	"-scrollbind",
+#endif
+#ifdef SMARTINDENT
+	"+smartindent",
+#else
+	"-smartindent",
+#endif
+#ifdef USE_SNIFF
+	"+sniff",
+#else
+	"-sniff",
+#endif
+#ifdef STATUSLINE
+	"+statusline",
+#else
+	"-statusline",
+#endif
+#ifdef SYNTAX_HL
+	"+syntax",
+#else
+	"-syntax",
+#endif
+	    /* only interesting on Unix systems */
+#if defined(USE_SYSTEM) && (defined(UNIX) || defined(__EMX__))
+	"+system()",
+#endif
+#ifdef BINARY_TAGS
+	"+tag_binary",
+#else
+	"-tag_binary",
+#endif
+#ifdef OLD_STATIC_TAGS
+	"+tag_old_static",
+#else
+	"-tag_old_static",
+#endif
+#ifdef TAG_ANY_WHITE
+	"+tag_any_white",
+#else
+	"-tag_any_white",
+#endif
+#ifdef HAVE_TCL
+	"+tcl",
+#else
+	"-tcl",
+#endif
+#if defined(UNIX) || defined(__EMX__)
+/* only Unix (or OS/2 with EMX!) can have terminfo instead of termcap */
+# ifdef TERMINFO
+	"+terminfo",
+# else
+	"-terminfo",
+# endif
+#else		    /* unix always includes termcap support */
+# ifdef HAVE_TGETENT
+	"+tgetent",
+# else
+	"-tgetent",
+# endif
+#endif
+#ifdef TEXT_OBJECTS
+	"+textobjects",
+#else
+	"-textobjects",
+#endif
+#ifdef WANT_TITLE
+	"+title",
+#else
+	"-title",
+#endif
+#ifdef USER_COMMANDS
+	"+user-commands",
+#else
+	"-user-commands",
+#endif
+#ifdef VISUALEXTRA
+	"+visualextra",
+#else
+	"-visualextra",
+#endif
+#ifdef VIMINFO
+	"+viminfo",
+#else
+	"-viminfo",
+#endif
+#ifdef WILDIGNORE
+	"+wildignore",
+#else
+	"-wildignore",
+#endif
+#ifdef WILDMENU
+	"+wildmenu",
+#else
+	"-wildmenu",
+#endif
+#ifdef WRITEBACKUP
+	"+writebackup",
+#else
+	"-writebackup",
+#endif
+#ifdef UNIX
+# if defined(WANT_X11) && defined(HAVE_X11)
+	"+X11",
+# else
+	"-X11",
+# endif
+#endif
+#ifdef USE_FONTSET
+	"+xfontset",
+#else
+	"-xfontset",
+#endif
+#ifdef USE_XIM
+	"+xim",
+#else
+	"-xim",
+#endif
+#ifdef UNIX
+#ifdef BROKEN_LOCALE
+	"+brokenlocale",
+#endif
+# ifdef XTERM_CLIP
+	"+xterm_clipboard",
+# else
+	"-xterm_clipboard",
+# endif
+#endif
+#ifdef SAVE_XTERM_SCREEN
+	"+xterm_save",
+#else
+	"-xterm_save",
+#endif
+	NULL
+};
 
     void
 do_version(arg)
     char_u  *arg;
 {
+    int i;
+
     /*
      * Ignore a ":version 9.99" command.
      */
@@ -69,6 +449,9 @@ do_version(arg)
 	MSG_PUTS("\nMS-Windows 32 bit console version");
 # endif
 #endif
+#ifdef WIN16
+	MSG_PUTS("\nMS-Windows 16 bit version");
+#endif
 #ifdef MSDOS
 # ifdef DJGPP
 	MSG_PUTS("\n32 bit MS-DOS version");
@@ -82,293 +465,24 @@ do_version(arg)
 #ifdef RISCOS
 	MSG_PUTS("\nRISC OS version");
 #endif
+#ifdef UNIX
+	MSG_PUTS("\nCompiled by ");
+	MSG_PUTS(compiled_user);
+	MSG_PUTS("@");
+	MSG_PUTS(compiled_sys);
+	MSG_PUTS(", with (+) or without (-):\n");
+#else
 	MSG_PUTS("\nCompiled with (+) or without (-):\n");
-#ifdef AMIGA		/* only for Amiga systems */
-# ifdef NO_ARP
-	version_msg("-ARP ");
-# else
-	version_msg("+ARP ");
-# endif
 #endif
-#ifdef AUTOCMD
-	version_msg("+autocmd ");
-#else
-	version_msg("-autocmd ");
-#endif
-#ifdef USE_BROWSE
-	version_msg("+browse ");
-#else
-	version_msg("-browse ");
-#endif
-#ifdef NO_BUILTIN_TCAPS
-	version_msg("-builtin_terms ");
-#endif
-#ifdef SOME_BUILTIN_TCAPS
-	version_msg("+builtin_terms ");
-#endif
-#ifdef ALL_BUILTIN_TCAPS
-	version_msg("++builtin_terms ");
-#endif
-#ifdef CINDENT
-	version_msg("+cindent ");
-#else
-	version_msg("-cindent ");
-#endif
-#ifdef USE_CSCOPE
-	version_msg("+cscope ");
-#else
-	version_msg("-cscope ");
-#endif
-#if defined(CON_DIALOG) && defined(GUI_DIALOG)
-	version_msg("+dialog_con_gui ");
-#else
-# if defined(CON_DIALOG)
-	version_msg("+dialog_con ");
-# else
-#  if defined(GUI_DIALOG)
-	version_msg("+dialog_gui ");
-#  else
-	version_msg("-dialog ");
-#  endif
-# endif
-#endif
-#ifdef DIGRAPHS
-	version_msg("+digraphs ");
-#else
-	version_msg("-digraphs ");
-#endif
-#ifdef EMACS_TAGS
-	version_msg("+emacs_tags ");
-#else
-	version_msg("-emacs_tags ");
-#endif
-#ifdef WANT_EVAL
-	version_msg("+eval ");
-#else
-	version_msg("-eval ");
-#endif
-#ifdef EX_EXTRA
-	version_msg("+ex_extra ");
-#else
-	version_msg("-ex_extra ");
-#endif
-#ifdef EXTRA_SEARCH
-	version_msg("+extra_search ");
-#else
-	version_msg("-extra_search ");
-#endif
-#ifdef FKMAP
-	version_msg("+farsi ");
-#else
-	version_msg("-farsi ");
-#endif
-#ifdef FILE_IN_PATH
-	version_msg("+file_in_path ");
-#else
-	version_msg("-file_in_path ");
-#endif
-#ifdef WANT_FILETYPE
-	version_msg("+filetype ");
-#else
-	version_msg("-filetype ");
-#endif
-#ifdef FIND_IN_PATH
-	version_msg("+find_in_path ");
-#else
-	version_msg("-find_in_path ");
-#endif
-	    /* only interesting on Unix systems */
-#if !defined(USE_SYSTEM) && defined(UNIX)
-	version_msg("+fork() ");
-#endif
-#ifdef UNIX
-# ifdef USE_GUI_MOTIF
-	version_msg("+GUI_Motif ");
-# else
-#  ifdef USE_GUI_ATHENA
-	version_msg("+GUI_Athena ");
-#  else
-#   ifdef USE_GUI_BEOS
-	version_msg("+GUI_BeOS ");
-#    else
-	version_msg("-GUI ");
-#   endif
-#  endif
-# endif
-#endif
-#ifdef INSERT_EXPAND
-	version_msg("+insert_expand ");
-#else
-	version_msg("-insert_expand ");
-#endif
-#ifdef HAVE_LANGMAP
-	version_msg("+langmap ");
-#else
-	version_msg("-langmap ");
-#endif
-#ifdef LISPINDENT
-	version_msg("+lispindent ");
-#else
-	version_msg("-lispindent ");
-#endif
-#ifdef WANT_MODIFY_FNAME
-	version_msg("+modify_fname ");
-#else
-	version_msg("-modify_fname ");
-#endif
-#ifdef USE_MOUSE
-	version_msg("+mouse ");
-# else
-	version_msg("-mouse ");
-#endif
-#ifdef UNIX
-# ifdef DEC_MOUSE
-	version_msg("+mouse_dec ");
-# else
-	version_msg("-mouse_dec ");
-# endif
-# ifdef NETTERM_MOUSE
-	version_msg("+mouse_netterm ");
-# else
-	version_msg("-mouse_netterm ");
-# endif
-# ifdef XTERM_MOUSE
-	version_msg("+mouse_xterm ");
-# else
-	version_msg("-mouse_xterm ");
-# endif
-#endif
-#ifdef MULTI_BYTE_IME
-	version_msg("+multi_byte_ime ");
-#else
-# ifdef MULTI_BYTE
-	version_msg("+multi_byte ");
-# else
-	version_msg("-multi_byte ");
-# endif
-#endif
-#ifdef USE_GUI_WIN32
-# ifdef HAVE_OLE
-	version_msg("+ole ");
-# else
-	version_msg("-ole ");
-# endif
-#endif
-#ifdef HAVE_PERL_INTERP
-	version_msg("+perl ");
-#else
-	version_msg("-perl ");
-#endif
-#ifdef QUICKFIX
-	version_msg("+quickfix ");
-#else
-	version_msg("-quickfix ");
-#endif
-#ifdef HAVE_PYTHON
-	version_msg("+python ");
-#else
-	version_msg("-python ");
-#endif
-#ifdef RIGHTLEFT
-	version_msg("+rightleft ");
-#else
-	version_msg("-rightleft ");
-#endif
-#ifdef SHOWCMD
-	version_msg("+showcmd ");
-#else
-	version_msg("-showcmd ");
-#endif
-#ifdef SMARTINDENT
-	version_msg("+smartindent ");
-#else
-	version_msg("-smartindent ");
-#endif
-#ifdef USE_SNIFF
-	version_msg("+sniff ");
-#else
-	version_msg("-sniff ");
-#endif
-#ifdef SYNTAX_HL
-	version_msg("+syntax ");
-#else
-	version_msg("-syntax ");
-#endif
-	    /* only interesting on Unix systems */
-#if defined(USE_SYSTEM) && (defined(UNIX) || defined(__EMX__))
-	version_msg("+system() ");
-#endif
-#ifdef BINARY_TAGS
-	version_msg("+tag_binary ");
-#else
-	version_msg("-tag_binary ");
-#endif
-#ifdef OLD_STATIC_TAGS
-	version_msg("+tag_old_static ");
-#else
-	version_msg("-tag_old_static ");
-#endif
-#ifdef TAG_ANY_WHITE
-	version_msg("+tag_any_white ");
-#else
-	version_msg("-tag_any_white ");
-#endif
-#ifdef HAVE_TCL
-	version_msg("+tcl ");
-#else
-	version_msg("-tcl ");
-#endif
-#if defined(UNIX) || defined(__EMX__)
-/* only Unix (or OS/2 with EMX!) can have terminfo instead of termcap */
-# ifdef TERMINFO
-	version_msg("+terminfo ");
-# else
-	version_msg("-terminfo ");
-# endif
-#else		    /* unix always includes termcap support */
-# ifdef HAVE_TGETENT
-	version_msg("+tgetent ");
-# else
-	version_msg("-tgetent ");
-# endif
-#endif
-#ifdef TEXT_OBJECTS
-	version_msg("+textobjects ");
-#else
-	version_msg("-textobjects ");
-#endif
-#ifdef USER_COMMANDS
-	version_msg("+user-commands ");
-#else
-	version_msg("-user-commands ");
-#endif
-#ifdef VIMINFO
-	version_msg("+viminfo ");
-#else
-	version_msg("-viminfo ");
-#endif
-#ifdef WILDIGNORE
-	version_msg("+wildignore ");
-#else
-	version_msg("-wildignore ");
-#endif
-#ifdef WRITEBACKUP
-	version_msg("+writebackup ");
-#else
-	version_msg("-writebackup ");
-#endif
-#ifdef SAVE_XTERM_SCREEN
-	version_msg("+xterm_save ");
-#else
-	version_msg("-xterm_save ");
-#endif
-#ifdef UNIX
-# if defined(WANT_X11) && defined(HAVE_X11)
-	version_msg("+X11 ");
-# else
-	version_msg("-X11 ");
-# endif
-#endif
+
+	/* print all the features */
+	for (i = 0; features[i] != NULL; ++i)
+	{
+	    version_msg(features[i]);
+	    if (msg_col > 0)
+		msg_putchar(' ');
+	}
+
 	msg_putchar('\n');
 #ifdef SYS_VIMRC_FILE
 	version_msg("   system vimrc file: \"");
@@ -383,6 +497,11 @@ do_version(arg)
 #ifdef USR_VIMRC_FILE2
 	version_msg(" 2nd user vimrc file: \"");
 	version_msg(USR_VIMRC_FILE2);
+	version_msg("\"\n");
+#endif
+#ifdef USR_VIMRC_FILE3
+	version_msg(" 3d user vimrc file: \"");
+	version_msg(USR_VIMRC_FILE3);
 	version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE
@@ -409,6 +528,11 @@ do_version(arg)
 	version_msg(USR_GVIMRC_FILE2);
 	version_msg("\"\n");
 # endif
+# ifdef USR_GVIMRC_FILE3
+	version_msg("3d user gvimrc file: \"");
+	version_msg(USR_GVIMRC_FILE3);
+	version_msg("\"\n");
+# endif
 #endif
 #ifdef USE_GUI
 # ifdef SYS_MENU_FILE
@@ -418,9 +542,15 @@ do_version(arg)
 # endif
 #endif
 #ifdef HAVE_PATHDEF
-	version_msg("    default for $VIM: \"");
+	version_msg("  fall-back for $VIM: \"");
 	version_msg((char *)default_vim_dir);
 	MSG_PUTS("\"\n");
+	if (*default_vimruntime_dir != NUL)
+	{
+	    version_msg(" and for $VIMRUNTIME: \"");
+	    version_msg((char *)default_vimruntime_dir);
+	    MSG_PUTS("\"\n");
+	}
 	version_msg("Compilation: ");
 	version_msg((char *)all_cflags);
 	msg_putchar('\n');

@@ -94,7 +94,7 @@ BEGIN
             VALUE "FileDescription", "VisVim DLL\0"
             VALUE "FileVersion", "1, 1, 0, 1\0"
             VALUE "InternalName", "VisVim\0"
-            VALUE "LegalCopyright", "Copyright (C) 1996\0"
+            VALUE "LegalCopyright", "Copyright (C) 1998\0"
             VALUE "OriginalFilename", "VisVim.DLL\0"
             VALUE "ProductName", "VisVim Dynamic Link Library\0"
             VALUE "ProductVersion", "1, 1, 0, 1\0"
@@ -114,24 +114,24 @@ END
 // Dialog
 //
 
-IDD_ADDINMAIN DIALOG DISCARDABLE  0, 0, 172, 111
+IDD_ADDINMAIN DIALOG DISCARDABLE  0, 0, 178, 124
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vim Add-In 1.1b"
+CAPTION "Vim Add-In 1.3a"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "&Open file in DevStudio editor simultaneously",
                     IDC_DEVSTUDIO_EDITOR,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
-                    WS_TABSTOP,8,8,153,10
-    GROUPBOX        "Current directory",IDC_STATIC,7,24,156,58,WS_GROUP
+                    WS_TABSTOP,7,7,153,10
+    GROUPBOX        "Current directory",IDC_STATIC,7,35,164,58,WS_GROUP
     CONTROL         "Set to &source file path",IDC_CD_SOURCE_PATH,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,38,85,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,49,85,10
     CONTROL         "Set to &parent directory of source file path",
-                    IDC_CD_SOURCE_PARENT,"Button",BS_AUTORADIOBUTTON,17,52,
+                    IDC_CD_SOURCE_PARENT,"Button",BS_AUTORADIOBUTTON,17,63,
                     143,10
     CONTROL         "Do &not change",IDC_CD_NONE,"Button",BS_AUTORADIOBUTTON,
-                    17,66,63,10
-    DEFPUSHBUTTON   "&Ok",IDOK,7,90,74,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",IDCANCEL,91,90,74,14,WS_GROUP
+                    17,78,63,10
+    DEFPUSHBUTTON   "&Ok",IDOK,7,102,74,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,97,102,74,14,WS_GROUP
 END
 
 
@@ -146,9 +146,9 @@ BEGIN
     IDD_ADDINMAIN, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 165
+        RIGHTMARGIN, 171
         TOPMARGIN, 7
-        BOTTOMMARGIN, 104
+        BOTTOMMARGIN, 117
     END
 END
 #endif    // APSTUDIO_INVOKED

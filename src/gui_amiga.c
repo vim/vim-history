@@ -553,13 +553,17 @@ charEventHandler(int wtime)
  * add primary menu
  */
     void
-gui_mch_add_menu_item(GuiMenu *menu, GuiMenu *parent, int idx)
+gui_mch_add_menu_item(VimMenu *menu, VimMenu *parent, int idx)
 {
     union myMenuItemUnion *menuItemUnion = NULL;
     struct IntuiText *menutext = NULL;
 
     assert(menu != NULL);
     assert(parent != NULL);
+
+    /* Don't add menu separator */
+    if (is_menu_separator(menu->name))
+	return;
 
     if (parent->menuItemPtr == NULL)
 	return;
@@ -649,12 +653,12 @@ getMenu(struct RastPort *rast, int left, STRPTR name)
  * add  1st level submenu item
  */
     void
-gui_mch_add_menu(GuiMenu *menu, GuiMenu *parent, int idx)
+gui_mch_add_menu(VimMenu *menu, VimMenu *parent, int idx)
 {
     struct Menu	*newMenu;
     int		pos = 0;
 
-    if (!gui_menubar_menu(menu->name))
+    if (!menubar_menu(menu->name))
 	return;
 
     menu->menuPtr = newMenu = getMenu(gui.window->RPort, 0, menu->dname);
@@ -727,26 +731,35 @@ atexitDoThis(void)
     gui_mch_exit(-1);
 }
 
+/*
+ * Check if the GUI can be started.  Called before gvimrc is sourced.
+ * Return OK or FAIL.
+ */
+    int
+gui_mch_init_check(void)
+{
+    if (execBase && gfxBase && layersBase)
+	return OK;
+    return FAIL;
+}
+
     int
 gui_mch_init(void)
 {
     int returnCode = FAIL; /* assume failure*/
 
-    if (execBase && gfxBase && layersBase)
+    gui.window = OpenWindowTagList(&vimNewWindow, tags);
+    if (gui.window)
     {
-
-	gui.window = OpenWindowTagList(&vimNewWindow, tags);
-	if (gui.window)
-	{
-	    gui.in_use = TRUE;
-	    gui.in_focus=TRUE;
-	    SetDrMd(gui.window->RPort, JAM2);
-	    atexit(atexitDoThis);
-	    TextDimensions();
-	    returnCode = OK; /* we've had sucess */
-	}
-	gui.menu = NULL;
+	gui.in_use = TRUE;
+	gui.in_focus=TRUE;
+	SetDrMd(gui.window->RPort, JAM2);
+	atexit(atexitDoThis);
+	TextDimensions();
+	returnCode = OK; /* we've had sucess */
     }
+    gui.menu = NULL;
+
     return returnCode;
 }
 
@@ -778,6 +791,26 @@ gui_mch_exit(int returnCode)
 	gui.in_use = FALSE;
 	getout(1);
     }
+}
+
+/*
+ * Get the position of the top left corner of the window.
+ */
+    int
+gui_mch_get_winpos(int *x, int *y)
+{
+    /* TODO */
+    return FAIL;
+}
+
+/*
+ * Set the position of the top left corner of the window to the given
+ * coordinates.
+ */
+    void
+gui_mch_set_winpos(int x, int y)
+{
+    /* TODO */
 }
 
     void
@@ -855,11 +888,13 @@ gui_mch_set_font(GuiFont font)
     /*D("gui_mch_set_font");*/
 }
 
+#if 0 /* not used */
     int
 gui_mch_same_font(GuiFont f1, GuiFont f2)
 {
     D("gui_mch_same_font");
 }
+#endif
 
     void
 gui_mch_free_font(GuiFont font)
@@ -1170,20 +1205,20 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_destroy_menu(GuiMenu *menu)
+gui_mch_destroy_menu(VimMenu *menu)
 {
     D("gui_mch_destroy_menu");
     ClearMenuStrip(gui.window);
 }
 
     void
-gui_mch_menu_grey(GuiMenu *menu, int grey)
+gui_mch_menu_grey(VimMenu *menu, int grey)
 {
     D("gui_mch_menu_grey");
 }
 
     void
-gui_mch_menu_hidden(GuiMenu *menu, int hidden)
+gui_mch_menu_hidden(VimMenu *menu, int hidden)
 {
     D("gui_mch_menu_hidden");
     ClearMenuStrip(gui.window);
@@ -1253,7 +1288,7 @@ gui_mch_setmouse(x, y)
 }
 
     void
-gui_mch_show_popupmenu(GuiMenu *menu)
+gui_mch_show_popupmenu(VimMenu *menu)
 {
     /* TODO */
 }
@@ -1289,6 +1324,7 @@ gui_mch_get_lightness(GuiColor pixel)
     return (int)rc;
 }
 
+#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
     char_u *
 gui_mch_get_rgb(GuiColor pixel)
 {
@@ -1301,5 +1337,6 @@ gui_mch_get_rgb(GuiColor pixel)
 
     return retval;
 }
+#endif
 
 #endif /* USE_AMIGA_GUI*/

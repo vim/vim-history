@@ -19,7 +19,8 @@ SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test18.out test19.out test20.out test21.out test22.out \
 		test23.out test24.out test26.out \
 		test28.out test29.out test30.out test31.out test32.out \
-		test33.out test34.out test35.out test36.out
+		test33.out test34.out test35.out test36.out test37.out \
+		test38.out test39.out
 
 .SUFFIXES: .in .out
 
@@ -30,7 +31,7 @@ clean:
 	csh -c \rm -rf *.out /tmp/*
 
 .in.out:
-	$(VIMPROG) -u vimrc.amiga -s dotest.in $*.in
+	$(VIMPROG) -u vimrc.amiga -U NONE -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
 	delete Xdotest
@@ -76,3 +77,6 @@ test33.out: test33.in
 test34.out: test34.in
 test35.out: test35.in
 test36.out: test36.in
+test37.out: test37.in
+test38.out: test38.in
+test39.out: test39.in

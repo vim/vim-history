@@ -25,6 +25,10 @@
 
 #include	<socket.h>
 
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		/* internal backtick expansion */
+#endif
+
 /*
  * SVR4 may be defined for linux, but linux isn't SVR4
  */
@@ -46,10 +50,7 @@
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
  * have an argument??? */
-/* #if defined(SVR4) || (defined(SYSV) && defined(ISC)) || defined(_AIX) || defined(__linux__) || defined(ultrix) || defined(__386BSD__) || defined(__FreeBSD__) || defined(__bsdi__) || defined(POSIX) || defined(NeXT)  || defined(__alpha) || defined(apollo) */
-#if !defined(SOME_SYSTEM)
-# define SIGHASARG
-#endif
+#define SIGHASARG
 
 /* List 3 arg systems here. I guess __sgi, please test and correct me. jw. */
 #if defined(__sgi)
@@ -72,7 +73,7 @@
 # define SIGDUMMYARG
 #endif
 
-#if HAVE_DIRENT_H
+#ifdef HAVE_DIRENT_H
 # include <dirent.h>
 # define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
@@ -170,7 +171,7 @@
 #endif
 
 #ifndef SYS_VIMRC_FILE
-# define SYS_VIMRC_FILE	"$VIM/.vimrc"
+# define SYS_VIMRC_FILE	"$VIM/vimrc"
 #endif
 
 #ifdef USE_GUI
@@ -181,12 +182,19 @@
 
 #ifdef USE_GUI
 # ifndef SYS_GVIMRC_FILE
-#  define SYS_GVIMRC_FILE	"$VIM/.gvimrc"
+#  define SYS_GVIMRC_FILE	"$VIM/gvimrc"
 # endif
 #endif
 
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE "$VIM/menu.vim"
+# define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
+#endif
+
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	"$VIMRUNTIME:filetype.vim"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE		"$VIMRUNTIME:ftoff.vim"
 #endif
 
 #ifndef EXRC_FILE
@@ -205,11 +213,13 @@
 
 #ifndef VIM_HLP
 /* # define VIM_HLP		"vim_hlp:vim_help.txt" */
-# define VIM_HLP		"$VIM/doc/help.txt"
+/* next line changed SK 980904 */
+/* # define VIM_HLP		"$VIM_DOC:help.txt" */
+# define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
 #endif
 
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIM/syntax/%s.vim"
+# define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
 #endif
 
 #ifdef VIMINFO
@@ -226,8 +236,7 @@
 # define DEF_DIR		"sys$disk:[],tmp:,sys$login:"	/* default for 'directory' */
 #endif
 
-#define TEMPNAME		"tmp:viXXXXXX.txt"
-#define TMPNAME2		"tmp:voXXXXXX.log"
+#define TEMPNAME		"tmp:v?XXXXXX.txt"
 #define TEMPNAMELEN		28
 
 #define CMDBUFFSIZE	1024	/* size of the command processing buffer */
@@ -235,7 +244,6 @@
 
 /*#define CHECK_INODE		** used when checking if a swap file already
 							   exists for a file */
-#define USE_MOUSE			/* include mouse support */
 
 #ifndef MAXMEM
 # define MAXMEM			512			/* use up to 512Kbyte for buffer */
@@ -259,13 +267,13 @@
 #  ifdef USEMEMCPY
 #	define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
-#	define VIM_MEMMOVE		/* found in alloc.c */
+#	define VIM_MEMMOVE		/* found in misc2.c */
 #  endif
 # endif
 #endif
 
 #define mch_rename(src, dst) rename(src, dst)
-#define mch_chdir(s) chdir(s)
+#define mch_chdir(s) chdir(vms_fixfilename(s))
 
 /* modifications by C Campbell */
 typedef     struct dsc$descriptor   DESC;

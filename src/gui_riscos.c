@@ -28,9 +28,12 @@ int ro_return_early = FALSE;	/* Break out of gui_mch_wait_for_chars() */
 int leaf_ref = 0;		/* Wimp message number - send via Wimp$Scrap */
 char_u *leaf_name = NULL;	/* Leaf name from DataSave */
 
-#define DRAG_FALSE	   0
-#define DRAG_SELECTION     1
-#define DRAG_RESIZE_WINDOW 2
+int default_columns = 120;	/* These values are used if the --rows and --columns */
+int default_rows = 32;		/* options aren't used on startup. */
+
+#define DRAG_FALSE	    0
+#define DRAG_SELECTION	    1
+#define DRAG_RESIZE_WINDOW  2
 int ro_dragging = DRAG_FALSE;
 int drag_button;
 int drag_modifiers;
@@ -127,10 +130,12 @@ static int	zap_redraw_palette[16];
 #define ZAP_STYLES  4
 
 /* Zap font file format data */
-static char	*zap_file[ZAP_STYLES] = {NULL, NULL};
+static char	*zap_file[ZAP_STYLES] = {NULL, NULL, NULL, NULL};
 
 /* r_caddr format for current mode */
-static char	*zap_caddr[ZAP_STYLES] = {NULL, NULL};
+static char	*zap_caddr[ZAP_STYLES] = {NULL, NULL, NULL, NULL};
+
+static void ro_remove_menu(int *menu);
 
 /*
  * Initialise all the ZapRedraw stuff.
@@ -370,6 +375,31 @@ ro_zap_redraw_draw_string(x, y, string, length, flags, clip)
     void
 gui_mch_prepare(int *argc, char **argv)
 {
+    int	    arg = 1;
+
+    while (arg < *argc - 1)
+    {
+	if (strcmp(argv[arg], "--rows") == 0 || strcmp(argv[arg], "--columns") == 0)
+	{
+	    int	    value;
+
+	    value = atoi(argv[arg + 1]);
+
+	    if (argv[arg][2] == 'r')
+		default_rows = value;
+	    else
+		default_columns = value;
+
+	    /* Delete argument from argv[]. (hope this is read/write!) */
+
+	    *argc -= 2;
+	    if (*argc > arg)
+	    mch_memmove(&argv[arg], &argv[arg + 2], (*argc - arg)
+		    * sizeof(char *));
+	}
+	else
+	    arg++;
+    }
 }
 
 /* Fatal error on initialisation - report it and die. */
@@ -484,8 +514,18 @@ ro_load_template(str_name, title, title_size)
     if (title_size)
 	*title_size = window[20];
 
-    free(window);   /* Free temp block */
-    return r0;      /* Return the window handle */
+    free(window);	/* Free temp block */
+    return r0;		/* Return the window handle */
+}
+
+/*
+ * Check if the GUI can be started.  Called before gvimrc is sourced.
+ * Return OK or FAIL.
+ */
+    int
+gui_mch_init_check()
+{
+    return OK;		/* TODO: GUI can always be started? */
 }
 
 /*
@@ -503,6 +543,7 @@ gui_mch_init()
 	    0x10,	/* DataRequest (for clipboard) */
 	    0x400c1,	/* Mode change */
 	    0x400c3,	/* TaskCloseDown */
+	    0x400c9,	/* MenusDeleted */
 	    0x808c1,	/* TW_Output */
 	    0x808c2,    /* TW_Ego */
 	    0x808c3,	/* TW_Morio */
@@ -556,10 +597,10 @@ gui_mch_init()
 
     highlight_gui_started();		/* re-init colours and fonts */
 
-    /* [ set geometry ] */
+    /* Set geometry based on values read on initialisation. */
 
-    gui.num_cols = Columns = 120;
-    gui.num_rows = Rows    = 32;
+    gui.num_cols = Columns = default_columns;
+    gui.num_rows = Rows    = default_rows;
 
     /* Get some information about our environment. */
 
@@ -623,6 +664,26 @@ gui_mch_exit(int rc)
     }
 
     exit(rc);
+}
+
+/*
+ * Get the position of the top left corner of the window.
+ */
+    int
+gui_mch_get_winpos(int *x, int *y)
+{
+    /* TODO */
+    return FAIL;
+}
+
+/*
+ * Set the position of the top left corner of the window to the given
+ * coordinates.
+ */
+    void
+gui_mch_set_winpos(int x, int y)
+{
+    /* TODO */
 }
 
     void
@@ -995,6 +1056,7 @@ gui_mch_set_font(GuiFont font)
     }
 }
 
+#if 0 /* not used */
 /*
  * Return TRUE if the two fonts given are equivalent.
  */
@@ -1003,6 +1065,7 @@ gui_mch_same_font(GuiFont f1, GuiFont f2)
 {
     return f1 == f2;
 }
+#endif
 
 /*
  * If a font is not going to be used, free its structure.
@@ -1691,10 +1754,10 @@ ro_mouse(block)
 	modifiers ^= MOUSE_SHIFT;
 	if (modifiers && MOUSE_SHIFT)
 	{
-	    GuiMenu	main;
+	    VimMenu	main;
 	    /* Shift was NOT pressed - show menu */
 	    main.dname = (char_u *) "Vim";
-	    main.children = gui.root_menu;
+	    main.children = root_menu;
 	    gui_mch_show_popupmenu(&main);
 	    return;
 	}
@@ -1999,28 +2062,26 @@ ro_message(block)
     }
 }
 
-/* Converts a scrollbar's window handle into a a scrollbar number and window
- * pointer.
- * Returns -1 on failure.
+/*
+ * Converts a scrollbar's window handle into a scrollbar pointer.
+ * NULL on failure.
  */
-    int
-ro_find_sbar(window, wp)
-    int window;		/* Scrollbar window handle */
-    WIN **wp;
+    GuiScrollbar *
+ro_find_sbar(id)
+    int	    id;
 {
-    int i;		/* Number of scrollbar being checked. */
-    int left_bar   = gui.which_scrollbars[SBAR_LEFT];
-    int right_bar  = gui.which_scrollbars[SBAR_RIGHT];
+    WIN	    *wp;
 
-    for (*wp = firstwin, i = 0; *wp != NULL; i++)
+    if (gui.bottom_sbar.id == id)
+	return &gui.bottom_sbar;
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
     {
-	if (right_bar && (*wp)->w_scrollbars[SBAR_RIGHT].id == window)
-	    return i;
-	if (left_bar && (*wp)->w_scrollbars[SBAR_LEFT].id == window)
-	    return i;
-	*wp = (*wp)->w_next;
+	if (wp->w_scrollbars[SBAR_LEFT].id == id)
+	    return &wp->w_scrollbars[SBAR_LEFT];
+	if (wp->w_scrollbars[SBAR_RIGHT].id == id)
+	    return &wp->w_scrollbars[SBAR_RIGHT];
     }
-    return -1;		/* Failed */
+    return NULL;
 }
 
     void
@@ -2029,18 +2090,18 @@ scroll_to(line, sb)
     int line;
 {
     char_u code[8];
+
+    /* Don't put events in the input queue now. */
+    if (hold_gui_events)
+	return;
+
     /* Send a scroll event:
      *
      * A scrollbar event is CSI (NOT K_SPECIAL), KS_SCROLLBAR,
      * K_FILLER followed by:
      * one byte representing the scrollbar number, and then four bytes
      * representing a long_u which is the new value of the scrollbar.
-     *
-     * A horizontal scrollbar event is K_SPECIAL, KS_HORIZ_SCROLLBAR,
-     * K_FILLER followed by four bytes representing a long_u which is the
-     * new value of the scrollbar.
      */
-
     code[0] = CSI;
     code[1] = KS_SCROLLBAR;
     code[2] = K_FILLER;
@@ -2053,12 +2114,40 @@ scroll_to(line, sb)
 }
 
     void
+h_scroll_to(col)
+    int col;
+{
+    char_u code[8];
+
+    /* Don't put events in the input queue now. */
+    if (hold_gui_events)
+	return;
+
+    /* Send a scroll event:
+     *
+     * A scrollbar event is CSI (NOT K_SPECIAL)
+     *
+     * A horizontal scrollbar event is K_SPECIAL, KS_HORIZ_SCROLLBAR,
+     * K_FILLER followed by four bytes representing a long_u which is the
+     * new value of the scrollbar.
+     */
+    code[0] = CSI;
+    code[1] = KS_HORIZ_SCROLLBAR;
+    code[2] = K_FILLER;
+    code[4] = col >> 24;
+    code[5] = col >> 16;
+    code[6] = col >> 8;
+    code[7] = col;
+    add_to_input_buf(code, 8);
+}
+
+    void
 ro_scroll(block)
     int		*block;
 {
-    int sb;
-    int offset = -block[9];
-    WIN *wp;
+    GuiScrollbar    *sb;
+    int		    offset;
+    WIN		    *wp;
 
     /* Block is ready for Wimp_OpenWindow, and also contains:
      *
@@ -2066,16 +2155,40 @@ ro_scroll(block)
      * +36 = scroll Y direction (-2 .. +2)
      */
 
-    sb = ro_find_sbar(block[0], &wp);
-    if (sb == -1)
-	return;			/* Error */
+    sb = ro_find_sbar(block[0]);
+    if (!sb)
+	return;		/* Window not found (error). */
 
-    if (offset == -2)
-	offset = -(wp -> w_height - 1);
-    else if (offset == 2)
-	offset = wp -> w_height - 1;
+    wp = sb-> wp;
 
-    scroll_to(offset - (block[6] / gui.char_height), sb);
+    if (wp == NULL)
+    {
+	/* Horizontal bar. */
+	offset = block[8];
+	if (offset == -2)
+	    offset = (block[1] - block[3]) / gui.char_width;
+	else if (offset == 2)
+	    offset = (block[3] - block[1]) / gui.char_width;
+
+	block[5] += offset * gui.char_width;
+
+	gui_drag_scrollbar(sb, block[5] / gui.char_width, FALSE);
+
+	swi(Wimp_OpenWindow, 0, block);
+    }
+    else
+    {
+	offset = -block[9];
+	if (offset == -2)
+	    offset = -(wp -> w_height - 1);
+	else if (offset == 2)
+	    offset = wp -> w_height - 1;
+
+	/* Possibly we should reposition the scrollbar?
+	 * Vim seems to update the bar anyway...
+	 */
+	gui_drag_scrollbar(sb, offset - (block[6] / gui.char_height), FALSE);
+    }
 }
 
 /* Move a window by a given offset. Used to simulate the function of the
@@ -2181,11 +2294,11 @@ ro_open_main(block)
 }
 
     void
-ro_open_window(block, sb)
-    int		*block;
+ro_open_window(block)
+    int	    *block;
 {
     int	    pos;
-    WIN	    *wp;
+    GuiScrollbar *sb;
 
     if (block[0] == gui.window_handle)
 	ro_open_main(block);
@@ -2194,9 +2307,14 @@ ro_open_window(block, sb)
 	swi(Wimp_OpenWindow, 0, block);
 	if (block[0] != gui.window_handle)
 	{
-	    sb = ro_find_sbar(block[0], &wp);
-	    if (sb != -1)
-		scroll_to(-block[6] / gui.char_height, sb);
+	    sb = ro_find_sbar(block[0]);
+	    if (sb)
+	    {
+		if (sb-> wp != NULL)
+		    gui_drag_scrollbar(sb, -block[6] / gui.char_height, FALSE);
+		else
+		    gui_drag_scrollbar(sb, block[5] / gui.char_width, FALSE);
+	    }
 	}
     }
 }
@@ -2206,7 +2324,7 @@ ro_menu_selection(block)
     int	    *block;
 {
     int	    *item = wimp_menu + 7;
-    GuiMenu *menu;
+    VimMenu *menu;
     /* wimp_menu points to a wimp menu structure */
 
     for (;;)
@@ -2219,7 +2337,7 @@ ro_menu_selection(block)
 	block++;
     }
     /* item points to the wimp menu item structure chosen */
-    menu = (GuiMenu *) item[5];
+    menu = (VimMenu *) item[5];
 
     swi(Wimp_GetPointerInfo, 0, block);
     if (block[2] == 1)
@@ -2617,7 +2735,7 @@ clip_mch_set_selection(void)
  * Make a menu either grey or not grey.
  */
     void
-gui_mch_menu_grey(GuiMenu *menu, int grey)
+gui_mch_menu_grey(VimMenu *menu, int grey)
 {
     menu-> greyed_out = grey;
 }
@@ -2626,7 +2744,7 @@ gui_mch_menu_grey(GuiMenu *menu, int grey)
  * Make menu item hidden or not hidden
  */
     void
-gui_mch_menu_hidden(GuiMenu *menu, int hidden)
+gui_mch_menu_hidden(VimMenu *menu, int hidden)
 {
     menu-> hidden = hidden;
 }
@@ -2696,6 +2814,7 @@ gui_mch_get_lightness(GuiColor pixel)
     return ((red * 299) + (green * 587) + (blue * 114)) / 1000;
 }
 
+#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  */
@@ -2709,6 +2828,7 @@ gui_mch_get_rgb(GuiColor pixel)
 	    (unsigned) ((pixel >> 16) & 0xff));
     return retval;
 }
+#endif
 
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)
@@ -2726,12 +2846,12 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_add_menu(GuiMenu *menu, GuiMenu *parent)
+gui_mch_add_menu(VimMenu *menu, VimMenu *parent)
 {
 }
 
     void
-gui_mch_add_menu_item(GuiMenu *menu, GuiMenu *parent)
+gui_mch_add_menu_item(VimMenu *menu, VimMenu *parent)
 {
 }
 
@@ -2741,7 +2861,7 @@ gui_mch_new_menu_colors(void)
 }
 
     void
-gui_mch_destroy_menu(GuiMenu *menu)
+gui_mch_destroy_menu(VimMenu *menu)
 {
 }
 
@@ -2757,7 +2877,7 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 {
     int block[10], width, height;
 
-    width = max * gui.char_width;
+    width = (max + 1) * gui.char_width;
     height = (max + 1 + sb-> wp-> w_status_height) * gui.char_height;
 
     block[0] = block[3] = 0;
@@ -2774,8 +2894,8 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 			gui.window_handle,	/* Parent window handle. */
 			(CHILD_FIX_TO_RIGHT  << CHILD_LEFT  )   |
 			(CHILD_FIX_TO_RIGHT  << CHILD_RIGHT )   |
-			(CHILD_FIX_TO_TOP    << CHILD_TOP   )   |
-			(CHILD_FIX_TO_TOP    << CHILD_BOTTOM)   |
+			(CHILD_FIX_TO_BOTTOM << CHILD_TOP   )   |
+			(CHILD_FIX_TO_BOTTOM << CHILD_BOTTOM)   |
 			(CHILD_SELF_SCROLL   << CHILD_SCROLL_X) |
 			(CHILD_SELF_SCROLL   << CHILD_SCROLL_Y)
 			);
@@ -2821,9 +2941,20 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
     }
 
     /* This works better on the nested_wimp. */
-    block[1] = block[3] = px2 - gui.scrollbar_width + (1 << x_eigen_factor);
-    block[2] = 1 + py2 - (y + h) + (1 << y_eigen_factor);
-    block[4] = 1 + py2 - y;
+    if (sb-> wp)
+    {
+	/* This is a vertical scrollbar. */
+	block[1] = block[3] = px2 - gui.scrollbar_width + (1 << x_eigen_factor);
+	block[2] = 1 + py2 - (y + h) + (1 << y_eigen_factor);
+	block[4] = 1 + py2 - y;
+    }
+    else
+    {
+	/* This is a horizontal scrollbar. */
+	block[2] = block[4] = py1 + gui.scrollbar_height;
+	block[1] = px1;
+	block[3] = px2 - gui.scrollbar_width;
+    }
 
     block[5] = 0;
     block[6] = 0;
@@ -2833,8 +2964,8 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 	    gui.window_handle,	/* Parent window handle. */
 	    (CHILD_FIX_TO_RIGHT  << CHILD_LEFT  )   |
 	    (CHILD_FIX_TO_RIGHT  << CHILD_RIGHT )   |
-	    (CHILD_FIX_TO_TOP    << CHILD_TOP   )   |
-	    (CHILD_FIX_TO_TOP    << CHILD_BOTTOM)   |
+	    (CHILD_FIX_TO_BOTTOM << CHILD_TOP   )   |
+	    (CHILD_FIX_TO_BOTTOM << CHILD_BOTTOM)   |
 	    (CHILD_SELF_SCROLL   << CHILD_SCROLL_X) |
 	    (CHILD_SELF_SCROLL   << CHILD_SCROLL_Y)
        );
@@ -2847,9 +2978,7 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
     void
 gui_mch_create_scrollbar(sb, orient)
     GuiScrollbar    *sb;
-    int		    orient;	/* orient is SBAR_HORIZ, SBAR_VERT or
-				 * SBAR_BOTH
-				 */
+    int		    orient;	/* orient is SBAR_HORIZ or SBAR_VERT */
 {
     int bar[] =
 	{
@@ -2961,30 +3090,30 @@ ro_redraw_title(window)
 	miny = block[4];
 	swi(Wimp_GetWindowOutline, 0, block);
 	swi(Wimp_ForceRedraw, -1,
-			      block[1], miny,
-			      block[3], block[4]);
+			block[1], miny,
+			block[3], block[4]);
     }
 }
 
-/* Turn a GuiMenu structure into a wimp menu structure.
+/* Turn a VimMenu structure into a wimp menu structure.
  * -1 if resulting menu is empty.
  * Only the children and dname items in the root menu are used.
  */
     int *
 ro_build_menu(menu)
-    GuiMenu *menu;
+    VimMenu *menu;
 {
     int	    *wimp_menu;
     int	    width = 4;
     int	    w;
     int	    size = 28;
-    GuiMenu *item;
+    VimMenu *item;
     int	    *wimp_item;
 
     /* Find out how big the menu is so we can allocate memory for it */
     for (item = menu-> children; item; item = item-> next)
     {
-	if (item-> hidden == FALSE)
+	if (item-> hidden == FALSE && !is_menu_separator(item->name))
 	    size += 24;
     }
 
@@ -3004,7 +3133,16 @@ ro_build_menu(menu)
 
     for (item = menu-> children; item; item = item-> next)
     {
-	if (item-> hidden == FALSE)
+	if (is_menu_separator(item-> name))
+	{
+	    /* This menu entry is actually a separator. If it is not the first
+	     * menu entry then mark the previous menu item as needing a dotted
+	     * line after it.
+	     */
+	    if (wimp_item > wimp_menu + 7)
+		wimp_item[-6] |= 0x2;
+	}
+	else if (item-> hidden == FALSE)
 	{
 	    wimp_item[0] = 0;
 	    wimp_item[1] = item-> children ? (int) ro_build_menu(item) : -1;
@@ -3026,14 +3164,15 @@ ro_build_menu(menu)
     return wimp_menu;
 }
 
-    void
+    static void
 ro_remove_menu(menu)
     int	    *menu;
 {
     int	    *item = menu + 7;
 
-    if (menu == NULL)
+    if (menu == NULL || menu == (int *) -1)
 	return;
+
     for (;;)
     {
 	if (item[1] != -1)
@@ -3047,13 +3186,14 @@ ro_remove_menu(menu)
 
     void
 gui_mch_show_popupmenu(menu)
-    GuiMenu *menu;
+    VimMenu *menu;
 {
     int	    block[10];
 
     /* Remove the existing menu, if any */
     if (wimp_menu != (int *) -1)
     {
+	swi(Wimp_CreateMenu, 0, -1);
 	ro_remove_menu(wimp_menu);
 	wimp_menu = (int *) -1;
     }
@@ -3256,7 +3396,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	fname = ((char *) block[7]);
 	strncpy(fname, dflt, 255);
 
-	if (xswi(OS_FSControl, 31, curbuf-> b_p_ft) & v_flag)
+	if (xswi(OS_FSControl, 31, curbuf->b_p_oft) & v_flag)
 	{
 	    filetype = 0xfff;
 	    strcpy(sprname + 5, "xxx");
@@ -3269,9 +3409,8 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 
 	/* Open the save box */
 
-	swi(Wimp_GetWindowState, 0, block);
-	block[7] = -1;
-	swi(Wimp_OpenWindow, 0, block);
+	swi(Wimp_GetPointerInfo, 0, block);
+	swi(Wimp_CreateMenu, 0, save_window, block[0] - 64, block[1] + 64);
 	swi(Wimp_SetCaretPosition, save_window, 1, 0, 0, -1, -1);
 
 	while (!done_save)
@@ -3380,16 +3519,17 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 		    else
 			swi(Wimp_ProcessKey, block[6]);
 		    break;
-		case 11:	/* Lose caret */
-		    if (block[0] == save_window)
-			done_save = TRUE;
-		    break;
 		case 17:
 		case 18:
 		    if (block[4] == 2 && block[9] != -1)
 		    {
 			/* DataSaveAck from dragging icon. */
 			retval = wimp_strsave(((char_u *) block) + 44);
+			done_save = TRUE;
+		    }
+		    else if (block[4] == 0x400c9)
+		    {
+			/* MenusDeleted */
 			done_save = TRUE;
 		    }
 		    else
@@ -3421,3 +3561,4 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     }
     return NULL;
 }
+

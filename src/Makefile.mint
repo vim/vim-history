@@ -16,11 +16,11 @@
 ### Later code changes may cause small problems, otherwise Vim is supposed to
 ### compile and run without problems.
 
-#system:              configurations:    	     version (*) tested by:
-#-------------        ------------------------       -------  -  ----------
-#MiNT 1.12.5          gcc gcc-2.6.1                     3.29     Jens Felderhoff
-#MiNT 1.12.6          gcc gcc-2.6.1       -GUI          4.6b     Jens Felderhoff
-#MiNT 1.12.6          gcc gcc-2.6.1       -GUI          4.6      Jens Felderhoff
+#system:	      configurations:			version (*) tested by:
+#-------------	      ------------------------	     -------  -  ----------
+#MiNT 1.12.5	      gcc gcc-2.6.1			3.29	 Jens Felderhoff
+#MiNT 1.12.6	      gcc gcc-2.6.1	  -GUI		4.6b	 Jens Felderhoff
+#MiNT 1.12.6	      gcc gcc-2.6.1	  -GUI		4.6	 Jens Felderhoff
 
 # set this to the pathname prefix of your symbol link editor, i.e. if it is
 # /usr/local/bin/sym-ld set:

@@ -20,11 +20,13 @@
 /*
  * When adding a new feature:
  * - Add a #define below.
- * - Add a message in do_version().
+ * - Add a message in the table above do_version().
  * - Add a string to f_has().
  * - Add a feature to ":help feature-list" in doc/eval.txt.
  * - Add feature to ":help +feature-list" in doc/various.txt.
  * - Add comment for the documentation of commands that use the feature.
+ * - When the feature is not included when MIN_FEAT is defined, add it to the
+ *   list at ":help minimal-features".
  */
 
 /*
@@ -42,7 +44,7 @@
 #if !defined(MIN_FEAT) && !defined(MAX_FEAT)
 /* #define MIN_FEAT */
 /* #define MAX_FEAT */
-# if defined(WIN32) || defined(DJGPP) || defined(OS2)
+# if defined(MSWIN) || defined(DJGPP) || defined(OS2)
 #  define MAX_FEAT
 # else
 #  ifdef MSDOS
@@ -85,6 +87,15 @@
 #endif
 
 /*
+ * +cmdline_compl	When CMDLINE_COMPL defined: Support for
+ *			completion of mappings/abbreviations in cmdline mode.
+ *			Takes a few Kbyte of code.
+ */
+#ifndef MIN_FEAT
+# define CMDLINE_COMPL
+#endif
+
+/*
  * +textobjects		When TEXT_OBJECTS defined: Support for text objects:
  *			"vaw", "das", etc.
  */
@@ -93,10 +104,26 @@
 #endif
 
 /*
- * +showcmd		When SHOWCMD defined: Support for 'showcmd' option.
+ * +visualextra		Extra features for Visual mode (mostly block operators).
  */
 #ifndef MIN_FEAT
-# define SHOWCMD
+# define VISUALEXTRA
+#endif
+
+/*
+ * +cmdline_info	When CMDLINE_INFO defined: Support for 'showcmd' and
+ *			'ruler' options.
+ */
+#ifndef MIN_FEAT
+# define CMDLINE_INFO
+#endif
+
+/*
+ * +linebreak		When LINEBREAK defined: Support for 'showbreak',
+ *			'breakat'  and 'linebreak' options.
+ */
+#ifndef MIN_FEAT
+# define LINEBREAK
 #endif
 
 /*
@@ -232,6 +259,26 @@
 #endif
 
 /*
+ * +title		When defined: Include support for 'title' and 'icon'
+ * +statusline		When defined: Include support for 'statusline',
+ *			'rulerformat' and special format of 'titlestring' and
+ *			'iconstring'.
+ * +byte_offset		When defined: Include support for '%o' in 'statusline'
+ *                      and builtin functions line2byte() and byte2line().
+ */
+#if !defined(MIN_FEAT) && !defined(MSDOS)
+# define WANT_TITLE
+#endif
+
+#ifndef MIN_FEAT
+# define STATUSLINE
+# ifndef CMDLINE_INFO
+#  define CMDLINE_INFO	/* 'ruler' is required for 'statusline' */
+# endif
+# define BYTE_OFFSET
+#endif
+
+/*
  * +wildignore		When defined: Include support for 'wildignore'
  */
 #ifndef MIN_FEAT
@@ -239,14 +286,21 @@
 #endif
 
 /*
- * +filetype		When WANT_FILETYPE defined: Include support for
+ * +wildmenu		When defined: Include support for 'wildmenu'
+ */
+#ifndef MIN_FEAT
+# define WILDMENU
+#endif
+
+/*
+ * +osfiletype		When WANT_OSFILETYPE defined: Include support for
  *			filetype checking in autocommands. Eg:
  *			*.html,*.htm,<html>,*.shtml
  *			Only on systems that support filetypes (RISC OS).
  */
 #if 0
-# define WANT_FILETYPE
-# define FT_DFLT "Text"
+# define WANT_OSFILETYPE
+# define OFT_DFLT "Text"
 #endif
 
 /*
@@ -327,17 +381,37 @@
 #endif
 
 /*
+ * +comments		'comments' option.
+ */
+#ifndef MIN_FEAT
+# define COMMENTS
+#endif
+
+/*
+ * +cryptv		Optional encryption by Mohsin Ahmed <mosh@sasi.com>.
+ */
+#if !defined(MIN_FEAT) || defined(PROTO)
+# define CRYPTV
+#endif
+
+/*
  * +browse		Enable :browse command.
  */
-#if !defined(MIN_FEAT) && (defined(USE_GUI_WIN32) || defined(USE_GUI_MOTIF) || defined(USE_GUI_ATHENA))
+#if !defined(MIN_FEAT) && (defined(USE_GUI_MSWIN) || defined(USE_GUI_MOTIF) || defined(USE_GUI_ATHENA) || defined(USE_GUI_GTK))
 # define USE_BROWSE
 #endif
 
 /*
- * +multi_byte		Enable generic multi-byte character handling.
- *			Not tested much!
+ * +mksession		Enable :mksession command.
  */
-#ifdef MAX_FEAT
+#ifndef MIN_FEAT
+# define MKSESSION
+#endif
+
+/*
+ * +multi_byte		Enable generic multi-byte character handling.
+ */
+#if defined(MAX_FEAT) && !defined(MULTI_BYTE) && !defined(WIN16)
 # define MULTI_BYTE
 #endif
 
@@ -346,19 +420,51 @@
  *			Only for far-east Windows, so IME can be used to input
  *			chars.  Not tested much!
  */
-#if defined(MULTI_BYTE) && defined(USE_GUI_WIN32)
+#if defined(USE_GUI_WIN32) && !defined(MULTI_BYTE_IME)
 /* #  define MULTI_BYTE_IME */
 # endif
 
+#if defined(MULTI_BYTE_IME) && !defined(MULTI_BYTE)
+# define MULTI_BYTE
+#endif
+
 /*
- * BROWSE_CURRBUF	When defined: Open file browser in the directory of
- *			the current buffer, instead of the current directory.
- *
- * USE_GUI_WIN32_TOOLBAR  Include a toolbar in the Win32 GUI.
+ * +xim			X Input Method.  For entering special languages like
+ *			chinese and Japanese.
+ * +hangul_input	Internal Hangul input method.  Must be included
+ *			through configure: "--enable-hangulin"
+ * Both are for Unix only.
  */
-#if defined(USE_GUI_WIN32) && !defined(MIN_FEAT)
-# define BROWSE_CURRBUF
-# define USE_GUI_WIN32_TOOLBAR
+#ifndef USE_XIM
+/* #define USE_XIM */
+#endif
+
+#ifdef HANGUL_INPUT
+# define HANGUL_DEFAULT_KEYBOARD 2	/* 2 or 3 bulsik keyboard */
+# define ESC_CHG_TO_ENG_MODE		/* if defined, when ESC pressed,
+					 * turn to english mode
+					 */
+# if defined(USE_XIM) && !defined(LINT)
+   Error: You should select only ONE of XIM and HANGUL_INPUT
+# endif
+#endif
+#if defined(HANGUL_INPUT) || defined(USE_XIM)
+/* # define X_LOCALE */			/* for OS with the incomplete locale
+					 * support like linux
+					 */
+/* # define SLOW_XSERVER */		/* for extremely slow X server */
+#endif
+
+/*
+ * +xfontset		X fontset support.  For outputting special languages.
+ *			Required for XIM.
+ */
+#ifndef USE_FONTSET
+# ifdef USE_XIM
+#  define USE_FONTSET
+# else
+/* #  define USE_FONTSET */
+# endif
 #endif
 
 /*
@@ -369,15 +475,47 @@
 /* #define WINDOWS_ALT_KEYS */
 
 /*
+ * +menu		:menu.
+ */
+#ifndef MIN_FEAT
+# define WANT_MENU
+#endif
+
+/*
+ * BROWSE_CURRBUF	When defined: Open file browser in the directory of
+ *			the current buffer, instead of the current directory.
+ *
+ * USE_TOOLBAR		Include code for a toolbar (for the Win32 GUI, GTK
+ *			always has it).  But only if menus are enabled.
+ */
+#if defined(USE_GUI_MSWIN) && !defined(MIN_FEAT)
+# define BROWSE_CURRBUF
+#endif
+#if (defined(USE_GUI_GTK) || defined(USE_GUI_WIN32)) \
+	&& !defined(MIN_FEAT) && defined(WANT_MENU)
+# define USE_TOOLBAR
+#endif
+#if defined(USE_TOOLBAR) && !defined(WANT_MENU)
+# define WANT_MENU
+#endif
+
+/*
+ * +scrollbind		Enable synchronization of split windows
+ */
+#ifndef MIN_FEAT
+# define SCROLLBIND
+#endif
+
+/*
  * +dialog_gui		When GUI_DIALOG defined, use GUI dialog.
  * +dialog_con		When CON_DIALOG defined, may use Console dialog.
  *			When none of these defined, no dialog support.
  */
 #ifndef MIN_FEAT
-# if defined(USE_GUI_WIN32)
+# if defined(USE_GUI_MSWIN) || defined(macintosh)
 #  define GUI_DIALOG
 # else
-#  if defined(USE_GUI_ATHENA) || defined(USE_GUI_MOTIF)
+#  if defined(USE_GUI_ATHENA) || defined(USE_GUI_MOTIF) || defined(USE_GUI_GTK)
 #   define CON_DIALOG
 #   define GUI_DIALOG
 #  else
@@ -439,9 +577,11 @@
 /*
  * USR_VIMRC_FILE	Name of the user .vimrc file.
  * USR_VIMRC_FILE2	Name of alternate user .vimrc file.
+ * USR_VIMRC_FILE3	Name of alternate user .vimrc file.
  */
 /* #define USR_VIMRC_FILE	"~/foo/.vimrc" */
 /* #define USR_VIMRC_FILE2	"~/bar/.vimrc" */
+/* #define USR_VIMRC_FILE3	"$VIM/.vimrc" */
 
 /*
  * USR_EXRC_FILE	Name of the user .exrc file.
@@ -456,6 +596,7 @@
  */
 /* #define USR_GVIMRC_FILE	"~/foo/.gvimrc" */
 /* #define USR_GVIMRC_FILE2	"~/bar/.gvimrc" */
+/* #define USR_GVIMRC_FILE3	"$VIM/.gvimrc" */
 
 /*
  * SYS_VIMRC_FILE	Name of the system-wide .vimrc file.
@@ -470,18 +611,41 @@
 /*
  * VIM_HLP		Name of the help file.
  */
-/* #define VIM_HLP	"$VIM/doc/help.txt.gz" */
+/* # define VIM_HLP	"$VIMRUNTIME/doc/help.txt.gz" */
+
+/*
+ * FILETYPE_FILE	Name of the file type detection file.
+ */
+/* # define FILETYPE_FILE	"$VIMRUNTIME/filetype.vim" */
+
+/*
+ * FTOFF_FILE		Name of the file to switch off file type detection.
+ */
+/* # define FTOFF_FILE	"$VIMRUNTIME/ftoff.vim" */
 
 /*
  * SYS_MENU_FILE	Name of the default menu.vim file.
  */
-/* #define SYS_MENU_FILE	"/foo/menu.vim" */
+/* # define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim" */
+
+/*
+ * SYS_OPTWIN_FILE	Name of the default optwin.vim file.
+ */
+#ifndef SYS_OPTWIN_FILE
+# define SYS_OPTWIN_FILE	"$VIMRUNTIME/optwin.vim"
+#endif
 
 /*
  * SYNTAX_FNAME		Name of a syntax file, where %s is the syntax name.
  */
 /* #define SYNTAX_FNAME	"/foo/%s.vim" */
 
+/*
+ * RUNTIME_DIRNAME	Generic name for the directory of the runtime files.
+ */
+#ifndef RUNTIME_DIRNAME
+# define RUNTIME_DIRNAME "runtime"
+#endif
 
 /*
  * Machine dependent:
@@ -497,37 +661,80 @@
 
 /*
  * +X11			Unix only.  When WANT_X11 defined: Include code for
- *			xterm title saving. Only works if HAVE_X11 is also
+ *			xterm title saving.  Only works if HAVE_X11 is also
  *			defined.
  */
-#ifndef MIN_FEAT
+#if !defined(MIN_FEAT) || defined(USE_GUI_MOTIF) || defined(USE_GUI_ATHENA)
 # define WANT_X11
 #endif
 
 /*
  * +mouse_xterm		Unix only. When XTERM_MOUSE defined: Include code for
  *			xterm mouse handling.
+ * +xterm_clipboard	Unix only. When XTERM_CLIP defined: Include code for
+ *			handling the clipboard like in gui mode
  * +mouse_netterm	idem, NETTERM_MOUSE, for Netterm mouse handling.
  * +mouse_dec		idem, DEC_MOUSE, for Dec mouse handling.
  * (none)		MS-DOS mouse support.
+ * +mouse_gpm		Unix only: when GPM_MOUSE defined: Include code for
+ *			Linux console mouse handling.
  * +mouse		Any mouse support (any of the above enabled).
  */
-#ifndef MIN_FEAT
-# define XTERM_MOUSE
+#if !defined(AMIGA) || defined(USE_GUI_AMIGA)	/* Amiga console has no mouse */
+# ifndef MIN_FEAT
+#  define XTERM_MOUSE
+# endif
+# ifdef MAX_FEAT
+#  define NETTERM_MOUSE
+# endif
+# ifdef MAX_FEAT
+#  define DEC_MOUSE
+# endif
+# if (defined(MSDOS) || defined(WIN32)) && !defined(MIN_FEAT)
+#  define DOS_MOUSE
+# endif
 #endif
-#ifdef MAX_FEAT
-# define NETTERM_MOUSE
+
+#if !defined(MIN_FEAT) && defined(UNIX) && defined(WANT_X11) && defined(HAVE_X11)
+# define XTERM_CLIP
+# ifndef USE_CLIPBOARD
+#  define USE_CLIPBOARD
+# endif
 #endif
-#ifdef MAX_FEAT
-# define DEC_MOUSE
+#if defined(HAVE_GPM) && !defined(MIN_FEAT)
+# define GPM_MOUSE
 #endif
-#ifndef MIN_FEAT
-# define DOS_MOUSE
+/* Define USE_MOUSE when any of the above is defined */
+/* It's also defined in gui.h, the GUI always has a mouse. */
+#if !defined(USE_MOUSE) && (defined(XTERM_MOUSE) || defined(NETTERM_MOUSE) \
+	|| defined(DEC_MOUSE) || defined(DOS_MOUSE) || defined(GPM_MOUSE))
+# define USE_MOUSE		/* include mouse support */
 #endif
 
 /*
+ * cursor shape		Adjust the shape of the cursor to the mode.
+ */
+#ifndef MIN_FEAT
+/* MS-DOS console and Win32 console can change cursor shape */
+# if defined(MSDOS) || (defined(WIN32) && !defined(USE_GUI_WIN32))
+#  define MCH_CURSOR_SHAPE
+# endif
+#endif
+
+/* GUI and some consoles can change the shape of the cursor */
+#if defined(USE_GUI) || defined(MCH_CURSOR_SHAPE)
+# define CURSOR_SHAPE
+#endif
+
+/*
+ * +ARP			Amiga only. When defined: Do not use arp.library, DOS
+ *			2.0 required.
+ */
+/* #define NO_ARP */
+
+/*
  * +GUI_Athena		To compile Vim with or without the GUI (gvim) you have
- * +GUI_BeOS		to edit Makefile.
+ * +GUI_BeOS		to edit the Makefile.
  * +GUI_Motif
  */
 
@@ -536,23 +743,15 @@
  */
 
 /*
- * +perl		Perl interface: edit the Makefile.
+ * These features can only be included by using a configure argument.  See the
+ * Makefile for a line to uncomment.
+ * +perl		Perl interface: "--enable-perlinterp"
+ * +python		Python interface: "--enable-pythoninterp"
+ * +tcl			TCL interface: "--enable-tclinterp"
  */
 
 /*
- * +python		Python interface: edit the Makefile.
+ * These features are automatically detected:
+ * +terminfo
+ * +tgetent
  */
-
-/*
- * +terminfo		(Automatically) defined in the Makefile.
- */
-
-/*
- * +tgetent		(Automatically) defined in the Makefile.
- */
-
-/*
- * +ARP			Amiga only. When defined: Do not use arp.library, DOS
- *			2.0 required.
- */
-/* #define NO_ARP */

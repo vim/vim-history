@@ -23,6 +23,27 @@
 #define puller_width	19
 #define puller_height	19
 
+extern Widget vimShell;
+
+static Widget vimForm = (Widget)0;
+static Widget textArea = (Widget)0;
+#ifdef WANT_MENU
+static Widget menuBar = (Widget)0;
+static void gui_athena_pullright_action __ARGS((Widget, XEvent *, String *,
+						Cardinal *));
+static void gui_athena_pullleft_action __ARGS((Widget, XEvent *, String *,
+						Cardinal *));
+static XtActionsRec	pullAction[2] = {{ "menu-pullright",
+				(XtActionProc)gui_athena_pullright_action},
+					 { "menu-pullleft",
+				(XtActionProc)gui_athena_pullleft_action}};
+#endif
+
+static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
+static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
+#ifdef WANT_MENU
+static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
+static Pixmap		pullerBitmap;
 static char_u puller_bits[] =
 {
     0x00,0x00,0xf8,0x00,0x00,0xf8,0xf8,0x7f,0xf8,0x04,0x80,0xf8,0x04,0x80,0xf9,
@@ -30,30 +51,7 @@ static char_u puller_bits[] =
     0x84,0x87,0xf9,0x84,0x83,0xf9,0x84,0x81,0xf9,0x04,0x80,0xf9,0x04,0x80,0xf9,
     0xf8,0xff,0xf9,0xf0,0x7f,0xf8,0x00,0x00,0xf8,0x00,0x00,0xf8
 };
-
-extern Widget vimShell;
-
-static Widget vimForm = (Widget)0;
-static Widget textArea;
-static Widget menuBar;
-
-static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
-static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
-static char_u *make_pull_name __ARGS((char_u * name));
-static void gui_mch_submenu_colors __ARGS((GuiMenu *mp));
-static void gui_athena_reorder_menus	__ARGS((void));
-static void gui_athena_pullright_action __ARGS((Widget, XEvent *, String *,
-						Cardinal *));
-static void gui_athena_pullleft_action __ARGS((Widget, XEvent *, String *,
-						Cardinal *));
-static Widget get_popup_entry __ARGS((Widget w));
-
-static XtActionsRec	pullAction[2] = {{ "menu-pullright",
-				(XtActionProc)gui_athena_pullright_action},
-					 { "menu-pullleft",
-				(XtActionProc)gui_athena_pullleft_action}};
-static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
-static Pixmap		pullerBitmap;
+#endif
 
 /*
  * Scrollbar callback (XtNjumpProc) for when the scrollbar is dragged with the
@@ -110,7 +108,7 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 
     if (sb == NULL)
 	return;
-    else if (sb->wp != NULL)	    /* Left or right scrollbar */
+    if (sb->wp != NULL)		/* Left or right scrollbar */
     {
 	/*
 	 * Careful: need to get scrollbar info out of first (left) scrollbar
@@ -134,7 +132,7 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 			default: data = 0; break;
 	}
     }
-    else	    /* Bottom scrollbar */
+    else			/* Bottom scrollbar */
     {
 	sb_info = sb;
 	if (data < -1)
@@ -148,6 +146,10 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 	value = sb_info->max;
     else if (value < 0)
 	value = 0;
+
+    /* Update the bottom scrollbar an extra time (why is this needed?? */
+    if (sb->wp == NULL)		/* Bottom scrollbar */
+	gui_mch_set_scrollbar_thumb(sb, (int)value, sb->size, sb->max);
 
     gui_drag_scrollbar(sb, value, FALSE);
 }
@@ -167,7 +169,9 @@ gui_x11_create_widgets()
     XtInitializeWidgetClass(formWidgetClass);
     XtInitializeWidgetClass(boxWidgetClass);
     XtInitializeWidgetClass(coreWidgetClass);
+#ifdef WANT_MENU
     XtInitializeWidgetClass(menuButtonWidgetClass);
+#endif
     XtInitializeWidgetClass(simpleMenuWidgetClass);
     XtInitializeWidgetClass(vim_scrollbarWidgetClass);
 
@@ -179,6 +183,7 @@ gui_x11_create_widgets()
 	XtNbackground,		gui.menu_bg_pixel,
 	NULL);
 
+#ifdef WANT_MENU
     /* The top menu bar */
     menuBar = XtVaCreateManagedWidget("menuBar",
 	boxWidgetClass,		vimForm,
@@ -191,6 +196,7 @@ gui_x11_create_widgets()
 	XtNbackground,		gui.menu_bg_pixel,
 	XtNborderColor,		gui.menu_fg_pixel,
 	NULL);
+#endif
 
     /* The text area. */
     textArea = XtVaCreateManagedWidget("textArea",
@@ -209,6 +215,7 @@ gui_x11_create_widgets()
      */
     gui_x11_callbacks(textArea, vimForm);
 
+#ifdef WANT_MENU
     popupTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnDown>: notify() unhighlight() MenuPopdown()\n<Motion>: highlight() menu-pullright()");
     parentTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
     menuTrans = XtParseTranslationTable("<EnterWindow>: highlight()\n<LeaveWindow>: unhighlight() MenuPopdown()\n<BtnUp>: notify() unhighlight() MenuPopdown()\n<BtnMotion>: highlight() menu-pullright()");
@@ -218,6 +225,22 @@ gui_x11_create_widgets()
 
     pullerBitmap = XCreateBitmapFromData(gui.dpy, DefaultRootWindow(gui.dpy),
 			    (char *)puller_bits, puller_width, puller_height);
+#endif
+
+    /* Pretend we don't have input focus, we will get an event if we do. */
+    gui.in_focus = FALSE;
+}
+
+/*
+ * Called when the GUI is not going to start after all.
+ */
+    void
+gui_x11_destroy_widgets()
+{
+    textArea = NULL;
+#ifdef WANT_MENU
+    menuBar = NULL;
+#endif
 }
 
     void
@@ -246,9 +269,15 @@ gui_x11_set_back_color()
 		  NULL);
 }
 
+#if defined(WANT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
+
+static char_u *make_pull_name __ARGS((char_u * name));
+static void gui_mch_submenu_colors __ARGS((VimMenu *mp));
+static void gui_athena_reorder_menus	__ARGS((void));
+static Widget get_popup_entry __ARGS((Widget w));
 
     void
 gui_mch_enable_menu(flag)
@@ -290,8 +319,8 @@ gui_mch_set_menu_pos(x, y, w, h)
 /* ARGSUSED */
     void
 gui_mch_add_menu(menu, parent, idx)
-    GuiMenu	*menu;
-    GuiMenu	*parent;
+    VimMenu	*menu;
+    VimMenu	*parent;
     int		idx;
 {
     char_u	*pullright_name;
@@ -299,7 +328,7 @@ gui_mch_add_menu(menu, parent, idx)
 
     if (parent == NULL)
     {
-	if (gui_popup_menu(menu->dname))
+	if (popup_menu(menu->dname))
 	{
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, vimShell,
@@ -307,7 +336,7 @@ gui_mch_add_menu(menu, parent, idx)
 		XtNbackground, gui.menu_bg_pixel,
 		NULL);
 	}
-	else if (gui_menubar_menu(menu->dname))
+	else if (menubar_menu(menu->dname))
 	{
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		menuButtonWidgetClass, menuBar,
@@ -395,10 +424,14 @@ make_pull_name(name)
 /* ARGSUSED */
     void
 gui_mch_add_menu_item(menu, parent, idx)
-    GuiMenu	*menu;
-    GuiMenu	*parent;
+    VimMenu	*menu;
+    VimMenu	*parent;
     int		idx;
 {
+    /* Don't add menu separator */
+    if (is_menu_separator(menu->name))
+	return;
+
     if (parent != NULL && parent->submenu_id != (Widget)0)
     {
 	menu->submenu_id = (Widget)0;
@@ -433,12 +466,12 @@ gui_mch_new_menu_colors()
 	XtNborderColor,	gui.menu_fg_pixel,
 	NULL);
 
-    gui_mch_submenu_colors(gui.root_menu);
+    gui_mch_submenu_colors(root_menu);
 }
 
     static void
 gui_mch_submenu_colors(mp)
-    GuiMenu	*mp;
+    VimMenu	*mp;
 {
     while (mp != NULL)
     {
@@ -453,7 +486,7 @@ gui_mch_submenu_colors(mp)
 		    XtNbackground, gui.menu_bg_pixel,
 		    NULL);
 
-	    /* Set the colors for the children */
+	/* Set the colors for the children */
 	if (mp->children != NULL)
 	    gui_mch_submenu_colors(mp->children);
 	mp = mp->next;
@@ -461,11 +494,24 @@ gui_mch_submenu_colors(mp)
 }
 
 /*
+ * We can't always delete widgets, it would cause a crash.
+ * Keep a list of dead widgets, so that we can avoid re-managing them.  This
+ * means that they are still there but never shown.
+ */
+struct deadwid
+{
+    struct deadwid	*next;
+    Widget		id;
+};
+
+static struct deadwid *first_deadwid = NULL;
+
+/*
  * Destroy the machine specific menu widget.
  */
     void
 gui_mch_destroy_menu(menu)
-    GuiMenu *menu;
+    VimMenu *menu;
 {
     if (menu->submenu_id != (Widget)0)
     {
@@ -500,9 +546,18 @@ gui_mch_destroy_menu(menu)
 	 * The code above causes a crash.  Apparantly because the highlighting
 	 * is still there, and removing it later causes the crash.
 	 * This fix just unmanages the menu item, without destroying it.  The
-	 * problem now is that the highlighting will be wrong, and the item
-	 * will re-appear later...
+	 * problem now is that the highlighting will be wrong, and we need to
+	 * remember the ID to avoid that the item will be re-managed later...
 	 */
+	struct deadwid    *p;
+
+	p = (struct deadwid *)alloc((unsigned)sizeof(struct deadwid));
+	if (p != NULL)
+	{
+	    p->id = menu->id;
+	    p->next = first_deadwid;
+	    first_deadwid = p;
+	}
 	XtUnmanageChild(menu->id);
 #endif
 	menu->id = (Widget)0;
@@ -511,15 +566,17 @@ gui_mch_destroy_menu(menu)
 
 /*
  * Reorder the menus to make them appear in the right order.
+ * (This doesn't work for me...).
  */
     static void
 gui_athena_reorder_menus()
 {
-    Widget  *children;
-    Widget  swap_widget;
-    int	    num_children;
-    int	    to, from;
-    GuiMenu *menu;
+    Widget	*children;
+    Widget	swap_widget;
+    int		num_children;
+    int		to, from;
+    VimMenu	*menu;
+    struct deadwid *p;
 
     XtVaGetValues(menuBar,
 	    XtNchildren,    &children,
@@ -528,7 +585,7 @@ gui_athena_reorder_menus()
 
     XtUnmanageChildren(children, num_children);
 
-    menu = gui.root_menu;
+    menu = root_menu;
     for (to = 0; to < num_children - 1; ++to)
     {
 	for (from = to; from < num_children; ++from)
@@ -549,9 +606,145 @@ gui_athena_reorder_menus()
 	if (menu == NULL)	/* cannot happen */
 	    break;
     }
-
+#if 1
+    /* Only manage children that have not been destroyed */
+    for (to = 0; to < num_children; ++to)
+    {
+	for (p = first_deadwid; p != NULL; p = p->next)
+	    if (p->id == children[to])
+		break;
+	if (p == NULL)
+	    XtManageChild(children[to]);
+    }
+#else
     XtManageChildren(children, num_children);
+#endif
 }
+
+/* ARGSUSED */
+    static void
+gui_athena_pullright_action(w, event, args, nargs)
+    Widget	w;
+    XEvent	*event;
+    String	*args;
+    Cardinal	*nargs;
+{
+    Dimension	width, height;
+    Widget	popup;
+
+    if (event->type != MotionNotify)
+	return;
+
+    XtVaGetValues(w,
+	XtNwidth,   &width,
+	XtNheight,  &height,
+	NULL);
+
+    if (event->xmotion.x >= (int)width || event->xmotion.y >= (int)height)
+	return;
+
+    /* We do the pull-off when the pointer is in the rightmost 1/4th */
+    if (event->xmotion.x < (int)(width * 3) / 4)
+	return;
+
+    popup = get_popup_entry(w);
+    if (popup == (Widget)0)
+	return;
+
+    /* Don't Popdown the previous submenu now */
+    XtOverrideTranslations(w, supermenuTrans);
+
+    XtVaSetValues(popup,
+	XtNx, event->xmotion.x_root,
+	XtNy, event->xmotion.y_root - 7,
+	NULL);
+
+    XtOverrideTranslations(popup, menuTrans);
+
+    XtPopup(popup, XtGrabNonexclusive);
+}
+
+/*
+ * Called when a submenu with another submenu gets focus again.
+ */
+/* ARGSUSED */
+    static void
+gui_athena_pullleft_action(w, event, args, nargs)
+    Widget	w;
+    XEvent	*event;
+    String	*args;
+    Cardinal	*nargs;
+{
+    Widget	popup;
+    Widget	parent;
+
+    if (event->type != EnterNotify)
+	return;
+
+    /* Do Popdown the submenu now */
+    popup = get_popup_entry(w);
+    if (popup != (Widget)0)
+	XtPopdown(popup);
+
+    /* If this is the toplevel menu item, set parentTrans */
+    if ((parent = XtParent(w)) != (Widget)0 && XtParent(parent) == menuBar)
+	XtOverrideTranslations(w, parentTrans);
+    else
+	XtOverrideTranslations(w, menuTrans);
+}
+
+    static Widget
+get_popup_entry(w)
+    Widget  w;
+{
+    Widget	menuw;
+    char_u	*pullright_name;
+    Widget	popup;
+
+    /* Get the active entry for the current menu */
+    if ((menuw = XawSimpleMenuGetActiveEntry(w)) == (Widget)0)
+	return NULL;
+
+    pullright_name = make_pull_name((char_u *)XtName(menuw));
+    popup = XtNameToWidget(w, (char *)pullright_name);
+    vim_free(pullright_name);
+
+    return popup;
+}
+
+/* ARGSUSED */
+    void
+gui_mch_show_popupmenu(menu)
+    VimMenu *menu;
+{
+    int		rootx, rooty, winx, winy;
+    Window	root, child;
+    unsigned int mask;
+
+    if (menu->submenu_id == (Widget)0)
+	return;
+
+    /* Position the popup menu at the pointer */
+    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
+		&rootx, &rooty, &winx, &winy, &mask))
+    {
+	rootx -= 30;
+	if (rootx < 0)
+	    rootx = 0;
+	rooty -= 5;
+	if (rooty < 0)
+	    rooty = 0;
+	XtVaSetValues(menu->submenu_id,
+		XtNx, rootx,
+		XtNy, rooty,
+		NULL);
+    }
+
+    XtOverrideTranslations(menu->submenu_id, popupTrans);
+    XtPopupSpringLoaded(menu->submenu_id);
+}
+
+#endif /* WANT_MENU */
 
 
 /*
@@ -664,129 +857,6 @@ gui_x11_get_wid()
     return( XtWindow(textArea) );
 }
 
-/* ARGSUSED */
-    static void
-gui_athena_pullright_action(w, event, args, nargs)
-    Widget	w;
-    XEvent	*event;
-    String	*args;
-    Cardinal	*nargs;
-{
-    Dimension	width, height;
-    Widget	popup;
-
-    if (event->type != MotionNotify)
-	return;
-
-    XtVaGetValues(w,
-	XtNwidth,   &width,
-	XtNheight,  &height,
-	NULL);
-
-    if (event->xmotion.x >= (int)width || event->xmotion.y >= (int)height)
-	return;
-
-    /* We do the pull-off when the pointer is in the rightmost 1/4th */
-    if (event->xmotion.x < (int)(width * 3) / 4)
-	return;
-
-    popup = get_popup_entry(w);
-    if (popup == (Widget)0)
-	return;
-
-    /* Don't Popdown the previous submenu now */
-    XtOverrideTranslations(w, supermenuTrans);
-
-    XtVaSetValues(popup,
-	XtNx, event->xmotion.x_root,
-	XtNy, event->xmotion.y_root - 7,
-	NULL);
-
-    XtOverrideTranslations(popup, menuTrans);
-
-    XtPopup(popup, XtGrabNonexclusive);
-}
-
-/*
- * Called when a submenu with another submenu gets focus again.
- */
-/* ARGSUSED */
-    static void
-gui_athena_pullleft_action(w, event, args, nargs)
-    Widget	w;
-    XEvent	*event;
-    String	*args;
-    Cardinal	*nargs;
-{
-    Widget	popup;
-    Widget	parent;
-
-    if (event->type != EnterNotify)
-	return;
-
-    /* Do Popdown the submenu now */
-    popup = get_popup_entry(w);
-    if (popup != (Widget)0)
-	XtPopdown(popup);
-
-    /* If this is the toplevel menu item, set parentTrans */
-    if ((parent = XtParent(w)) != (Widget)0 && XtParent(parent) == menuBar)
-	XtOverrideTranslations(w, parentTrans);
-    else
-	XtOverrideTranslations(w, menuTrans);
-}
-
-    static Widget
-get_popup_entry(w)
-    Widget  w;
-{
-    Widget	menuw;
-    char_u	*pullright_name;
-    Widget	popup;
-
-    /* Get the active entry for the current menu */
-    if ((menuw = XawSimpleMenuGetActiveEntry(w)) == (Widget)0)
-	return NULL;
-
-    pullright_name = make_pull_name((char_u *)XtName(menuw));
-    popup = XtNameToWidget(w, (char *)pullright_name);
-    vim_free(pullright_name);
-
-    return popup;
-}
-
-/* ARGSUSED */
-    void
-gui_mch_show_popupmenu(menu)
-    GuiMenu *menu;
-{
-    int		rootx, rooty, winx, winy;
-    Window	root, child;
-    unsigned int mask;
-
-    if (menu->submenu_id == (Widget)0)
-	return;
-
-    /* Position the popup menu at the pointer */
-    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
-		&rootx, &rooty, &winx, &winy, &mask))
-    {
-	rootx -= 30;
-	if (rootx < 0)
-	    rootx = 0;
-	rooty -= 5;
-	if (rooty < 0)
-	    rooty = 0;
-	XtVaSetValues(menu->submenu_id,
-		XtNx, rootx,
-		XtNy, rooty,
-		NULL);
-    }
-
-    XtOverrideTranslations(menu->submenu_id, popupTrans);
-    XtPopupSpringLoaded(menu->submenu_id);
-}
-
 #if defined(USE_BROWSE) || defined(PROTO)
 /*
  * Put up a file requester.
@@ -805,7 +875,13 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     Position x, y;
 
     /* Position the file selector just below the menubar */
-    XtTranslateCoords(vimShell, (Position)0, (Position)gui.menu_height, &x, &y);
+    XtTranslateCoords(vimShell, (Position)0, (Position)
+#ifdef WANT_MENU
+	    gui.menu_height
+#else
+	    0
+#endif
+	    , &x, &y);
     return (char_u *)vim_SelFile(vimShell, (char *)title, (char *)initdir,
 		  NULL, (int)x, (int)y, gui.menu_fg_pixel, gui.menu_bg_pixel);
 }

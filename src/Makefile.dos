@@ -34,6 +34,7 @@ SRC =	buffer.c \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -68,6 +69,7 @@ OBJ =	objects/buffer.obj \
 	objects/mark.obj \
 	objects/memfile.obj \
 	objects/memline.obj \
+	objects/menu.obj \
 	objects/message.obj \
 	objects/misc1.obj \
 	objects/misc2.obj \
@@ -141,6 +143,9 @@ objects/memfile.obj:	memfile.c  $(INCL)
 
 objects/memline.obj:	memline.c  $(INCL)
 	$(CC) $(CFLAGS) memline.c -o objects/memline.obj
+
+objects/menu.obj:	menu.c  $(INCL)
+	$(CC) $(CFLAGS) menu.c -o objects/menu.obj
 
 objects/message.obj:	message.c  $(INCL)
 	$(CC) $(CFLAGS) message.c -o objects/message.obj

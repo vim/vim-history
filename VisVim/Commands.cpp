@@ -22,15 +22,11 @@ static BOOL g_bEnableVim = TRUE;	// Vim enabled
 static BOOL g_bDevStudioEditor = FALSE;	// Open file in Dev Studio editor simultaneously
 static int g_ChangeDir = CD_NONE;	// CD after file open?
 
-
-static COleAutomationControl VimOle;	// OLE automation object for com. with Vim
-
-
 static void VimSetEnableState (BOOL bEnableState);
 static BOOL VimOpenFile (BSTR& FileName, long LineNr);
-static DISPID VimGetDispatchId (char* Method);
-static void VimErrDiag ();
-static void VimChangeDir (BSTR& FileName, DISPID DispatchId);
+static DISPID VimGetDispatchId (COleAutomationControl& VimOle, char* Method);
+static void VimErrDiag (COleAutomationControl& VimOle);
+static void VimChangeDir (COleAutomationControl& VimOle, DISPID DispatchId, BSTR& FileName);
 static void DebugMsg (char* Msg, char* Arg = NULL);
 
 
@@ -39,7 +35,8 @@ static void DebugMsg (char* Msg, char* Arg = NULL);
 
 CCommands::CCommands ()
 {
-	m_pApplication == NULL;
+	// m_pApplication == NULL; M$ Code generation bug!!!
+	m_pApplication = NULL;
 	m_pApplicationEventsObj = NULL;
 	m_pDebuggerEventsObj = NULL;
 }
@@ -47,7 +44,11 @@ CCommands::CCommands ()
 CCommands::~CCommands ()
 {
 	ASSERT (m_pApplication != NULL);
-	m_pApplication->Release ();
+	if (m_pApplication)
+	{
+		m_pApplication->Release ();
+		m_pApplication = NULL;
+	}
 }
 
 void CCommands::SetApplicationObject (IApplication * pApplication)
@@ -56,9 +57,16 @@ void CCommands::SetApplicationObject (IApplication * pApplication)
 	// for us, which CDSAddIn did in its QueryInterface call
 	// just before it called us.
 	m_pApplication = pApplication;
+	if (! m_pApplication)
+		return;
 
 	// Create Application event handlers
 	XApplicationEventsObj::CreateInstance (&m_pApplicationEventsObj);
+	if (! m_pApplicationEventsObj)
+	{
+		ReportInternalError ("XApplicationEventsObj::CreateInstance");
+		return;
+	}
 	m_pApplicationEventsObj->AddRef ();
 	m_pApplicationEventsObj->Connect (m_pApplication);
 	m_pApplicationEventsObj->m_pCommands = this;
@@ -97,13 +105,13 @@ void CCommands::SetApplicationObject (IApplication * pApplication)
 
 void CCommands::UnadviseFromEvents ()
 {
-	// Destroy OLE connection
-	VimOle.DeleteObject ();
-
 	ASSERT (m_pApplicationEventsObj != NULL);
-	m_pApplicationEventsObj->Disconnect (m_pApplication);
-	m_pApplicationEventsObj->Release ();
-	m_pApplicationEventsObj = NULL;
+	if (m_pApplicationEventsObj)
+	{
+		m_pApplicationEventsObj->Disconnect (m_pApplication);
+		m_pApplicationEventsObj->Release ();
+		m_pApplicationEventsObj = NULL;
+	}
 
 #ifdef NEVER
 	if (m_pDebuggerEventsObj)
@@ -201,6 +209,7 @@ HRESULT CCommands::XApplicationEvents::DocumentOpen (IDispatch * theDocument)
 	}
 
 	// We're done here
+	SysFreeString (FileName);
 	return S_OK;
 }
 
@@ -250,6 +259,7 @@ HRESULT CCommands::XApplicationEvents::NewDocument (IDispatch * theDocument)
 		}
 	}
 
+	SysFreeString (FileName);
 	return S_OK;
 }
 
@@ -302,8 +312,8 @@ class CMainDialog : public CDialog
 
 	//{{AFX_DATA(CMainDialog)
 	enum { IDD = IDD_ADDINMAIN };
-	BOOL	m_bDevStudioEditor;
 	int	m_ChangeDir;
+	BOOL	m_bDevStudioEditor;
 	//}}AFX_DATA
 
 	//{{AFX_VIRTUAL(CMainDialog)
@@ -323,8 +333,8 @@ CMainDialog::CMainDialog (CWnd * pParent /* =NULL */ )
 	: CDialog (CMainDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CMainDialog)
-	m_bDevStudioEditor = FALSE;
 	m_ChangeDir = -1;
+	m_bDevStudioEditor = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -332,8 +342,8 @@ void CMainDialog::DoDataExchange (CDataExchange * pDX)
 {
 	CDialog::DoDataExchange (pDX);
 	//{{AFX_DATA_MAP(CMainDialog)
-	DDX_Check (pDX, IDC_DEVSTUDIO_EDITOR, m_bDevStudioEditor);
 	DDX_Radio(pDX, IDC_CD_SOURCE_PATH, m_ChangeDir);
+	DDX_Check (pDX, IDC_DEVSTUDIO_EDITOR, m_bDevStudioEditor);
 	//}}AFX_DATA_MAP
 }
 
@@ -414,8 +424,6 @@ STDMETHODIMP CCommands::VisVimLoad ()
 	// Use m_pApplication to access the Developer Studio Application object,
 	// and VERIFY_OK to see error strings in DEBUG builds of your add-in
 	// (see stdafx.h)
-	//
-	VERIFY_OK (m_pApplication->EnableModeless (VARIANT_FALSE));
 
 	CComBSTR bStr;
 	// Define dispatch pointers for document and selection objects
@@ -453,6 +461,7 @@ STDMETHODIMP CCommands::VisVimLoad ()
 	// Open the file in Vim
 	VimOpenFile (FileName, LineNr);
 
+	SysFreeString (FileName);
 	return S_OK;
 }
 
@@ -483,23 +492,45 @@ static void VimSetEnableState (BOOL bEnableState)
 //
 static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 {
+
+	// OLE automation object for com. with Vim
+	// When the object goes out of scope, it's desctructor destroys the OLE connection;
+	// This is imortant to avoid blocking the object
+	// (in this memory corruption would be likely when terminating Vim
+	// while still running DevStudio).
+	// So keep this object local!
+	COleAutomationControl VimOle;
+
+	// :cd D:/Src2/VisVim/
+	// 
 	// Get a dispatch id for the SendKeys method of Vim;
 	// enables connection to Vim if necessary
 	DISPID DispatchId;
-	DispatchId = VimGetDispatchId ("SendKeys");
+	DispatchId = VimGetDispatchId (VimOle, "SendKeys");
 	if (! DispatchId)
 		// OLE error, can't obtain dispatch id
 		goto OleError;
 
-	// Change Vim working directory to where the file is if desired
-	VimChangeDir (FileName, DispatchId);
-
-	// Make Vim open the file
 	OLECHAR Buf[MAX_OLE_STR];
 	char VimCmd[MAX_OLE_STR];
+	char* VimCmdStart;
 	char* s;
 
-	// Open file
+	// Prepend CTRL-\ CTRL-N to exit insert mode
+	VimCmd[0] = 0x1c;
+	VimCmd[1] = 0x0e;
+	VimCmdStart = VimCmd + 2;
+
+	// Update the current file in Vim if it has been modified
+	sprintf (VimCmdStart, ":up\n", (char*) FileName);
+	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
+		goto OleError;
+
+	// Change Vim working directory to where the file is if desired
+	if (g_ChangeDir != CD_NONE)
+		VimChangeDir (VimOle, DispatchId, FileName);
+
+	// Make Vim open the file
 	sprintf (VimCmd, ":e %S\n", (char*) FileName);
 	// Convert all \ to / 
 	for (s = VimCmd; *s; ++s)
@@ -526,7 +557,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
     OleError:
 	// There was an OLE error
 	// Check if it's the "unknown class string" error
-	VimErrDiag ();
+	VimErrDiag (VimOle);
 	return false;
 }
 
@@ -534,7 +565,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 // Create the Vim OLE object if necessary
 // Returns a valid dispatch id or null on error
 //
-static DISPID VimGetDispatchId (char* Method)
+static DISPID VimGetDispatchId (COleAutomationControl& VimOle, char* Method)
 {
 	// Initialize Vim OLE connection if not already done
 	if (! VimOle.IsCreated ())
@@ -552,6 +583,11 @@ static DISPID VimGetDispatchId (char* Method)
 		// This means that probably Vim has been terminated.
 		// Don't issue an error message here, instead
 		// destroy the OLE object and try to connect once more
+		//
+		// In fact, this should never happen, because the OLE aut. object
+		// should not be kept long enough to allow the user to terminate Vim
+		// to avoid memory corruption (why the heck is there no system garbage
+		// collection for those damned OLE memory chunks???).
 		VimOle.DeleteObject ();
 		if (! VimOle.CreateObject ("Vim.Application"))
 			// If this create fails, it's time for an error msg
@@ -568,7 +604,7 @@ static DISPID VimGetDispatchId (char* Method)
 // Output an error message for an OLE error
 // Check on the classstring error, which probably means Vim wasn't registered.
 //
-static void VimErrDiag ()
+static void VimErrDiag (COleAutomationControl& VimOle)
 {
 	SCODE sc = GetScode (VimOle.GetResult ());
 	if (sc == CO_E_CLASSSTRING)
@@ -592,30 +628,28 @@ static void VimErrDiag ()
 //	CD_SOURCE_PATH
 //	CD_SOURCE_PARENT
 //
-static void VimChangeDir (BSTR& FileName, DISPID DispatchId)
+static void VimChangeDir (COleAutomationControl& VimOle, DISPID DispatchId, BSTR& FileName)
 {
-	if (g_ChangeDir != CD_NONE)
-	{
-		// Do a :cd first
+	// Do a :cd first
 
-		// Get the path name of the file ("dir/")
-		CString StrFileName = FileName;
-		char Drive[_MAX_DRIVE];
-		char Dir[_MAX_DIR];
-		_splitpath (StrFileName, Drive, Dir, NULL, NULL);
-		// Convert to unix path name format
-		for (char* s = Dir; *s; ++s)
-			if (*s == '\\')
-				*s = '/';
+	// Get the path name of the file ("dir/")
+	CString StrFileName = FileName;
+	char Drive[_MAX_DRIVE];
+	char Dir[_MAX_DIR];
+	_splitpath (StrFileName, Drive, Dir, NULL, NULL);
+	// Convert to unix path name format
+	for (char* s = Dir; *s; ++s)
+		if (*s == '\\')
+			*s = '/';
 
-		// Construct the cd command; append /.. if cd to parent
-		// directory and not in root directory
-		OLECHAR Buf[MAX_OLE_STR];
-		char VimCmd[MAX_OLE_STR];
-		sprintf (VimCmd, ":cd %s%s%s\n", Drive, Dir,
-			 g_ChangeDir == CD_SOURCE_PARENT && Dir[1] ? ".." : "");
-		VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf));
-	}
+	// Construct the cd command; append /.. if cd to parent
+	// directory and not in root directory
+	OLECHAR Buf[MAX_OLE_STR];
+	char VimCmd[MAX_OLE_STR];
+
+	sprintf (VimCmd, ":cd %s%s%s\n", Drive, Dir,
+		 g_ChangeDir == CD_SOURCE_PARENT && Dir[1] ? ".." : "");
+	VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf));
 }
 
 #ifdef _DEBUG

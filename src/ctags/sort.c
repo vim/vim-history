@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: sort.c,v 6.2 1998/07/02 06:10:55 darren Exp $
+*   $Id: sort.c,v 8.2 1999/03/27 21:17:18 darren Exp $
 *
-*   Copyright (c) 1996-1998, Darren Hiebert
+*   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,19 +12,26 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "general.h"
+
+#if defined(HAVE_STDLIB_H)
+# include <stdlib.h>	/* to declare malloc() */
 #endif
-#include "ctags.h"
+#include <string.h>
+#include <stdio.h>
+
+#include "debug.h"
+#include "entry.h"
+#include "main.h"
+#include "options.h"
+#include "read.h"
+#include "sort.h"
 
 /*============================================================================
 =   Function prototypes
 ============================================================================*/
-
-/*  Tag sorting functions.
- */
 #ifndef EXTERNAL_SORT
-static void failedSort __ARGS((void));
+static void failedSort __ARGS((FILE *const fp));
 static int compareTags __ARGS((const void *const one, const void *const two));
 static void writeSortedTags __ARGS((char **const table, const size_t numTags, const boolean toStdout));
 #endif
@@ -44,6 +51,7 @@ extern void catFile( name )
 
 	while ((c = getc(fp)) != EOF)
 	    putchar(c);
+	fflush(stdout);
 	fclose(fp);
     }
 }
@@ -53,24 +61,25 @@ extern void catFile( name )
 extern void externalSortTags( toStdout )
     const boolean toStdout;
 {
-    const char *const sortTemplate = "%ssort -u -o %s %s";
+    const char *const sortTemplate = "%s sort -u -o %s %s";
 #ifndef NON_CONST_PUTENV_PROTOTYPE
     const
 #endif
-	  char *const sortOrder = "LC_COLLATE=C ";
+	  char *const sortOrder = "LC_COLLATE=C";
     const char *env = "";
     const size_t length	= strlen(sortOrder) + strlen(sortTemplate) +
-	    			2 * strlen(TagFile.name);
+	    			2 * strlen(tagFileName());
     char *const cmd = (char *)malloc(length);
+    int ret;
 
-    if (cmd != NULL)
+    if (cmd == NULL)
+	ret = -1;
+    else
     {
-	int ret;
-
 	/*  Ensure ASCII value sort order.
 	 */
 #ifdef HAVE_PUTENV
-	putenv(sortOrder);	
+	putenv(sortOrder);
 #else
 # ifdef HAVE_SETENV
 	setenv("LC_COLLATE", "C", 1);
@@ -78,15 +87,15 @@ extern void externalSortTags( toStdout )
 	env = sortOrder;
 # endif
 #endif
-	sprintf(cmd, sortTemplate, env, TagFile.name, TagFile.name);
+	sprintf(cmd, sortTemplate, env, tagFileName(), tagFileName());
 	ret = system(cmd);
 	free(cmd);
 
-	if (ret != 0)
-	    error(FATAL, "cannot sort tag file");
     }
-    if (toStdout)
-	catFile(TagFile.name);
+    if (ret != 0)
+	error(FATAL | PERROR, "cannot sort tag file");
+    else if (toStdout)
+	catFile(tagFileName());
 }
 
 #else
@@ -97,13 +106,11 @@ extern void externalSortTags( toStdout )
  *  so have lots of memory if you have large tag files.
  *--------------------------------------------------------------------------*/
 
-static void failedSort()
+static void failedSort( fp )
+    FILE *const fp;
 {
-    if (TagFile.fp != NULL)
-    {
-	fclose(TagFile.fp);
-	TagFile.fp = NULL;
-    }
+    if (fp != NULL)
+	fclose(fp);
     error(FATAL | PERROR, "cannot sort tag file");
 }
 
@@ -122,17 +129,18 @@ static void writeSortedTags( table, numTags, toStdout )
     const size_t numTags;
     const boolean toStdout;
 {
+    FILE *fp;
     size_t i;
 
     /*	Write the sorted lines back into the tag file.
      */
     if (toStdout)
-	TagFile.fp = stdout;
+	fp = stdout;
     else
     {
-	TagFile.fp = fopen(TagFile.name, "w");
-	if (TagFile.fp == NULL)
-	    failedSort();
+	fp = fopen(tagFileName(), "w");
+	if (fp == NULL)
+	    failedSort(fp);
     }
     for (i = 0 ; i < numTags ; ++i)
     {
@@ -140,18 +148,22 @@ static void writeSortedTags( table, numTags, toStdout )
 	 *  pattern) if this is not an xref file.
 	 */
 	if (i == 0  ||  Option.xref  ||  strcmp(table[i], table[i-1]) != 0)
-	    if (fputs(table[i], TagFile.fp) == EOF)
-		failedSort();
+	    if (fputs(table[i], fp) == EOF)
+		failedSort(fp);
     }
-    if (! toStdout)
-	fclose(TagFile.fp);
+    if (toStdout)
+	fflush(fp);
+    else
+	fclose(fp);
 }
 
 extern void internalSortTags( toStdout )
     const boolean toStdout;
 {
-    size_t i;
+    vString *vLine = vStringNew();
+    FILE *fp = NULL;
     const char *line;
+    size_t i;
 
     /*	Allocate a table of line pointers to be sorted.
      */
@@ -161,20 +173,20 @@ extern void internalSortTags( toStdout )
     DebugStatement( size_t mallocSize = tableSize; )	/* cumulative total */
 
     if (table == NULL)
-	failedSort();
+	failedSort(fp);
 
     /*	Open the tag file and place its lines into allocated buffers.
      */
-    TagFile.fp = fopen(TagFile.name, "r");
-    if (TagFile.fp == NULL)
-	failedSort();
-    for (i = 0  ;  i < numTags  &&  ! feof(TagFile.fp)  ;  )
+    fp = fopen(tagFileName(), "r");
+    if (fp == NULL)
+	failedSort(fp);
+    for (i = 0  ;  i < numTags  &&  ! feof(fp)  ;  )
     {
-	line = readLine(&TagFile.line, TagFile.fp);
+	line = readLine(vLine, fp);
 	if (line == NULL)
 	{
-	    if (! feof(TagFile.fp))
-		failedSort();
+	    if (! feof(fp))
+		failedSort(fp);
 	    break;
 	}
 	else if (*line == '\0'  ||  strcmp(line, "\n") == 0)
@@ -185,14 +197,15 @@ extern void internalSortTags( toStdout )
 
 	    table[i] = (char *)malloc(stringSize);
 	    if (table[i] == NULL)
-		failedSort();
+		failedSort(fp);
 	    DebugStatement( mallocSize += stringSize; )
 	    strcpy(table[i], line);
 	    ++i;
 	}
     }
     numTags = i;
-    fclose(TagFile.fp);
+    fclose(fp);
+    vStringDelete(vLine);
 
     /*	Sort the lines.
      */

@@ -38,7 +38,10 @@ struct fpos
 #ifdef USE_GUI
 # include "gui.h"
 #else
-# define GuiColor int	    /* avoid error message for undefined struct */
+# ifdef XTERM_CLIP
+#  include <X11/Intrinsic.h>
+# endif
+# define GuiColor int		    /* avoid error in prototypes */
 #endif
 
 /*
@@ -253,8 +256,8 @@ typedef struct info_pointer	IPTR;	    /* block/index pair */
 
 /*
  * When searching for a specific line, we remember what blocks in the tree
- * are the branches leading to that block. This is stored in ml_stack.
- * Each entry is a pointer to info in a block (may be data block or pointer block)
+ * are the branches leading to that block. This is stored in ml_stack.  Each
+ * entry is a pointer to info in a block (may be data block or pointer block)
  */
 struct info_pointer
 {
@@ -263,6 +266,20 @@ struct info_pointer
     linenr_t	ip_high;	/* highest lnum in this block */
     int		ip_index;	/* index for block with current lnum */
 };
+
+#ifdef BYTE_OFFSET
+typedef struct ml_chunksize
+{
+    int     mlcs_numlines;
+    int     mlcs_totalsize;
+} ML_CHUNKSIZE;
+
+ /* Flags when calling ml_updatechunk() */
+
+#define ML_CHNK_ADDLINE 1
+#define ML_CHNK_DELLINE 2
+#define ML_CHNK_UPDLINE 3
+#endif
 
 typedef struct memline MEMLINE;
 
@@ -292,6 +309,11 @@ struct memline
     linenr_t	ml_locked_low;	/* first line in ml_locked */
     linenr_t	ml_locked_high;	/* last line in ml_locked */
     int		ml_locked_lineadd;  /* number of lines inserted in ml_locked */
+#ifdef BYTE_OFFSET
+    ML_CHUNKSIZE *ml_chunksize;
+    int		ml_numchunks;
+    int		ml_usedchunks;
+#endif
 };
 
 #ifdef SYNTAX_HL
@@ -372,10 +394,6 @@ struct buffer
 					 * been changed and not written out.
 					 */
 
-    int		     b_notedited;	/* Set to TRUE when file name is
-					 * changed after starting to edit,
-					 * reset when file is written out. */
-
     int		     b_nwindows;	/* nr of windows open on this buffer */
 
     int		     b_flags;		/* various BF_ flags */
@@ -389,6 +407,11 @@ struct buffer
     char_u	    *b_ffname;		/* full path file name */
     char_u	    *b_sfname;		/* short file name */
     char_u	    *b_fname;		/* current file name */
+
+#ifdef UNIX
+    int		     b_dev;		/* device number (-1 if not set) */
+    ino_t	     b_ino;		/* inode number */
+#endif
 
 #ifdef USE_SNIFF
     int		     b_sniff;		/* file was loaded through Sniff */
@@ -424,7 +447,7 @@ struct buffer
 
 #ifdef VIMINFO
     int		     b_marks_read;	/* Have we read viminfo marks yet? */
-#endif /* VIMINFO */
+#endif
 
     /*
      * The following only used in undo.c.
@@ -471,9 +494,16 @@ struct buffer
 #endif
 
     long	     b_p_sw, b_p_sts, b_p_ts, b_p_tw, b_p_wm;
-    char_u	    *b_p_ff, *b_p_fo, *b_p_com, *b_p_isk;
+    char_u	    *b_p_ff, *b_p_fo;
+#ifdef COMMENTS
+    char_u	    *b_p_com;		/* 'comments' */
+#endif
+    char_u	    *b_p_isk;
 #ifdef MULTI_BYTE
     char_u	    *b_p_fe;
+#endif
+#ifdef CRYPTV
+    char_u	    *b_p_key;
 #endif
     char_u	    *b_p_nf;	    /* Number formats */
     char_u	    *b_p_mps;
@@ -501,8 +531,11 @@ struct buffer
 #ifdef SYNTAX_HL
     char_u	    *b_p_syn;	    /* 'syntax' */
 #endif
-#ifdef WANT_FILETYPE
-    char_u	    *b_p_ft;	    /* Value of 'filetype' option */
+#ifdef AUTOCMD
+    char_u	    *b_p_ft;	    /* 'filetype' */
+#endif
+#ifdef WANT_OSFILETYPE
+    char_u	    *b_p_oft;	    /* 'osfiletype' */
 #endif
     /* end of buffer options */
 
@@ -650,6 +683,7 @@ struct window
     /* remember what is shown in the ruler for this window (if 'ruler' set) */
     FPOS	w_ru_cursor;	    /* cursor position shown in ruler */
     colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
+    linenr_t	w_ru_topline;	    /* topline shown in ruler */
     char	w_ru_empty;	    /* TRUE if ruler shows 0-1 (empty line) */
 
     colnr_t	w_leftcol;	    /* starting column of the screen when
@@ -676,20 +710,28 @@ struct window
      * They are here because they influence the layout of the window or
      * depend on the window layout.
      */
-    int		w_p_list,
-		w_p_nu,
+    int		w_p_list,	/* 'list' */
+		w_p_nu,		/* 'number' */
 #ifdef RIGHTLEFT
-		w_p_rl,
+		w_p_rl,		/* 'rightleft' */
 #ifdef FKMAP
 		w_p_pers,	/* for the window dependent Farsi functions */
 #endif
 #endif
-		w_p_wrap,
-		w_p_lbr;
-    long	w_p_scroll;
+		w_p_wrap;	/* 'wrap' */
+#ifdef LINEBREAK
+    int		w_p_lbr;	/* 'linebreak' */
+#endif
+    long	w_p_scroll;	/* 'scroll' */
+
+#ifdef SCROLLBIND
+    int		w_p_scb;	/* 'scrollbind' */
+    long	w_scbind_pos;
+#endif
+    int		w_preview;	/* Flag to indicate a preview window */
 
 #ifdef WANT_EVAL
-    struct growarray w_vars;	    /* internal variables, local to window */
+    struct growarray w_vars;	/* internal variables, local to window */
 #endif
 
     /*
@@ -750,7 +792,6 @@ struct window
 typedef struct oparg
 {
     int	    op_type;		/* current pending operator type */
-    int	    op_prechar;		/* optional character before operator command */
     int	    regname;		/* register to use for the operator */
     int	    motion_type;	/* type of the current cursor motion */
     int	    inclusive;		/* TRUE if char motion is inclusive (only
@@ -774,42 +815,141 @@ typedef struct oparg
  */
 typedef struct cmdarg
 {
-    OPARG   *oap;	    /* Operator arguments */
-    int	    prechar;	    /* prefix character (optional, always 'g') */
-    int	    cmdchar;	    /* command character */
-    int	    nchar;	    /* next character (optional) */
-    long    count0;	    /* count, default 0 */
-    long    count1;	    /* count, default 1 */
+    OPARG   *oap;		/* Operator arguments */
+    int	    prechar;		/* prefix character (optional, always 'g') */
+    int	    cmdchar;		/* command character */
+    int	    nchar;		/* next character (optional) */
+    int	    extra_char;		/* yet another character (optional) */
+    long    count0;		/* count, default 0 */
+    long    count1;		/* count, default 1 */
 } CMDARG;
 
 #ifdef CURSOR_SHAPE
 /*
  * struct to store values from 'guicursor'
  */
-#define SHAPE_N		0   /* Normal mode */
-#define SHAPE_V		1   /* Visual mode */
-#define SHAPE_I		2   /* Insert mode */
-#define SHAPE_R		3   /* Replace mode */
-#define SHAPE_C		4   /* Command line Normal mode */
-#define SHAPE_CI	5   /* Command line Insert mode */
-#define SHAPE_CR	6   /* Command line Replace mode */
-#define SHAPE_SM	7   /* showing matching paren */
-#define SHAPE_O		8   /* Operator-pending mode */
-#define SHAPE_VE	9   /* Visual mode with 'seleciton' exclusive */
+#define SHAPE_N		0	/* Normal mode */
+#define SHAPE_V		1	/* Visual mode */
+#define SHAPE_I		2	/* Insert mode */
+#define SHAPE_R		3	/* Replace mode */
+#define SHAPE_C		4	/* Command line Normal mode */
+#define SHAPE_CI	5	/* Command line Insert mode */
+#define SHAPE_CR	6	/* Command line Replace mode */
+#define SHAPE_SM	7	/* showing matching paren */
+#define SHAPE_O		8	/* Operator-pending mode */
+#define SHAPE_VE	9	/* Visual mode with 'seleciton' exclusive */
 #define SHAPE_COUNT	10
 
-#define SHAPE_BLOCK	0   /* block cursor */
-#define SHAPE_HOR	1   /* horizontal bar cursor */
-#define SHAPE_VER	2   /* vertical bar cursor */
+#define SHAPE_BLOCK	0	/* block cursor */
+#define SHAPE_HOR	1	/* horizontal bar cursor */
+#define SHAPE_VER	2	/* vertical bar cursor */
 
 struct cursor_entry
 {
-    int	    shape;	    /* one of the SHAPE_ defines */
-    int	    percentage;	    /* percentage of cell for bar */
-    long    blinkwait;	    /* blinking, wait time before blinking starts */
-    long    blinkon;	    /* blinking, on time */
-    long    blinkoff;	    /* blinking, off time */
-    int	    id;		    /* highlight group ID */
-    char    *name;	    /* mode name (fixed) */
+    int	    shape;		/* one of the SHAPE_ defines */
+    int	    percentage;		/* percentage of cell for bar */
+    long    blinkwait;		/* blinking, wait time before blinking starts */
+    long    blinkon;		/* blinking, on time */
+    long    blinkoff;		/* blinking, off time */
+    int	    id;			/* highlight group ID */
+    char    *name;		/* mode name (fixed) */
 };
+#endif /* CURSOR_SHAPE */
+
+#ifdef WANT_MENU
+
+/* Indices into VimMenu->strings[] and VimMenu->noremap[] for each mode */
+#define MENU_INDEX_INVALID	-1
+#define MENU_INDEX_NORMAL	0
+#define MENU_INDEX_VISUAL	1
+#define MENU_INDEX_OP_PENDING	2
+#define MENU_INDEX_INSERT	3
+#define MENU_INDEX_CMDLINE	4
+#define MENU_INDEX_TIP		5
+#define MENU_MODES		6
+
+/* Menu modes */
+#define MENU_NORMAL_MODE	(1 << MENU_INDEX_NORMAL)
+#define MENU_VISUAL_MODE	(1 << MENU_INDEX_VISUAL)
+#define MENU_OP_PENDING_MODE	(1 << MENU_INDEX_OP_PENDING)
+#define MENU_INSERT_MODE	(1 << MENU_INDEX_INSERT)
+#define MENU_CMDLINE_MODE	(1 << MENU_INDEX_CMDLINE)
+#define MENU_TIP_MODE		(1 << MENU_INDEX_TIP)
+#define MENU_ALL_MODES		((1 << MENU_INDEX_TIP) - 1)
+/*note MENU_INDEX_TIP is not a 'real' mode*/
+
+/* The character for each menu mode */
+#define MENU_MODE_CHARS		"nvoict"
+
+/* Start a menu name with this to not include it on the main menu bar */
+#define MNU_HIDDEN_CHAR		']'
+
+typedef struct VimMenu
+{
+    int		modes;		    /* Which modes is this menu visible for? */
+    char_u	*name;		    /* Name of menu */
+    char_u	*dname;		    /* Displayed Name (without '&') */
+    int		mnemonic;	    /* mnemonic key (after '&') */
+    char_u	*actext;	    /* accelerator text (after TAB) */
+    int		priority;	    /* Menu order priority */
+#ifdef USE_GUI
+    void	(*cb)();	    /* Call-back routine */
 #endif
+    char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
+    int		noremap[MENU_MODES]; /* A noremap flag for each mode */
+    struct VimMenu *children;	    /* Children of sub-menu */
+    struct VimMenu *next;	    /* Next item in menu */
+#ifdef USE_GUI_X11
+    Widget	id;		    /* Manage this to enable item */
+    Widget	submenu_id;	    /* If this is submenu, add children here */
+#endif
+#ifdef USE_GUI_GTK
+    GtkWidget	*id;		    /* Manage this to enable item */
+    GtkWidget	*submenu_id;	    /* If this is submenu, add children here */
+    GtkWidget	*tearoff_handle;
+    struct VimMenu *parent;	    /* Parent of menu (needed for tearoffs) */
+#endif
+#ifdef USE_GUI_WIN16
+    UINT	id;		    /* Id of menu item */
+    HMENU	submenu_id;	    /* If this is submenu, add children here */
+#endif
+#ifdef USE_GUI_WIN32
+    UINT	id;		    /* Id of menu item */
+    HMENU	submenu_id;	    /* If this is submenu, add children here */
+    HWND	tearoff_handle;	    /* hWnd of tearoff if created */
+    struct VimMenu *parent;	    /* Parent of menu (needed for tearoffs) */
+#endif
+#if USE_GUI_BEOS
+    BMenuItem	*id;		    /* Id of menu item */
+    BMenu	*submenu_id;	    /* If this is submenu, add children here */
+#endif
+#ifdef macintosh
+    MenuHandle	id;
+    short	index;		    /* the item index within the father menu */
+    short	menu_id;	    /* the menu id to which this item belong */
+    short	submenu_id;	    /* the menu id of the children (could be
+				       get throught some tricks) */
+    MenuHandle	menu_handle;
+    MenuHandle	submenu_handle;
+#endif
+#if defined(USE_GUI_AMIGA)
+				    /* only one of these will ever be set, but
+				     * they are used to allow the menu routine
+				     * to easily get a hold of the parent menu
+				     * pointer which is needed by all items to
+				     * form the chain correctly */
+    int		    id;		    /* unused by the amiga, but used in the
+				     * code kept for compatibility */
+    struct Menu	    *menuPtr;
+    struct MenuItem *menuItemPtr;
+#endif
+#ifdef RISCOS
+    int		*id;		    /* Not used, but gui.c needs it */
+    int		greyed_out;	    /* Flag */
+    int		hidden;
+#endif
+} VimMenu;
+#else
+typedef int VimMenu;
+
+#endif /* WANT_MENU */

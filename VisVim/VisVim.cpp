@@ -82,51 +82,37 @@ STDAPI DllRegisterServer (void)
 {
 	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
 	HRESULT hRes;
-	OSVERSIONINFO osInfo;
-
-	osInfo.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-	GetVersionEx (&osInfo);
 
 	// Registers object, typelib and all interfaces in typelib
 	hRes = _Module.RegisterServer (TRUE);
+	if (FAILED (hRes))
+		return hRes;
 
-	if (!FAILED (hRes))
+	_ATL_OBJMAP_ENTRY *pEntry = _Module.m_pObjMap;
+	CRegKey key;
+	LONG lRes = key.Open (HKEY_CLASSES_ROOT, _T ("CLSID"));
+
+	if (lRes == ERROR_SUCCESS)
 	{
-		_ATL_OBJMAP_ENTRY *pEntry = _Module.m_pObjMap;
-		CRegKey key;
-		LONG lRes = key.Open (HKEY_CLASSES_ROOT, _T ("CLSID"));
+		USES_CONVERSION;
+		LPOLESTR lpOleStr;
 
+		StringFromCLSID (*pEntry->pclsid, &lpOleStr);
+		LPTSTR lpsz = OLE2T (lpOleStr);
+
+		lRes = key.Open (key, lpsz);
 		if (lRes == ERROR_SUCCESS)
 		{
-			USES_CONVERSION;
-			LPOLESTR lpOleStr;
+			CString strDescription;
 
-			StringFromCLSID (*pEntry->pclsid, &lpOleStr);
-			LPTSTR lpsz = OLE2T (lpOleStr);
-
-			lRes = key.Open (key, lpsz);
-			if (lRes == ERROR_SUCCESS)
-			{
-				CString strDescription;
-
-				strDescription.LoadString (IDS_VISVIM_DESCRIPTION);
-				key.SetKeyValue (_T ("Description"), strDescription);
-			}
-			CoTaskMemFree (lpOleStr);
+			strDescription.LoadString (IDS_VISVIM_DESCRIPTION);
+			key.SetKeyValue (_T ("Description"), strDescription);
 		}
-
-		if (lRes != ERROR_SUCCESS)
-			hRes = HRESULT_FROM_WIN32 (lRes);
+		CoTaskMemFree (lpOleStr);
 	}
 
-	// If you try to load the DLL from NT *WITHOUT* Admin priviledges
-	// it will fail.  Right now we just assume things are okay under
-	// NT but what it SHOULD do is check to make sure the registry
-	// is configured properly and return error if not.
-	if (FAILED (hRes) && (osInfo.dwPlatformId != VER_PLATFORM_WIN32_NT))
-		return hRes;
-	else
-		hRes = S_OK;
+	if (lRes != ERROR_SUCCESS)
+		hRes = HRESULT_FROM_WIN32 (lRes);
 
 	return hRes;
 
@@ -139,7 +125,6 @@ STDAPI DllUnregisterServer (void)
 	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
 
 	HRESULT hRes = S_OK;
-
 	_Module.UnregisterServer ();
 	return hRes;
 }

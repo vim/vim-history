@@ -32,17 +32,36 @@
 #include <limits.h>
 #include <process.h>
 
-#define STRICT
-#define WIN32_LEAN_AND_MEAN
+#ifndef STRICT
+# define STRICT
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 #undef chdir
 #ifdef __GNUC__
-#include <dirent.h>
+# ifndef __MINGW32__
+#  include <dirent.h>
+# endif
 #else
-#include <direct.h>
+# include <direct.h>
 #endif
 
+#ifdef __MINGW32__
+# define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
+# define RIGHTMOST_BUTTON_PRESSED        0x0002
+# define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
+# define FROM_LEFT_3RD_BUTTON_PRESSED    0x0008
+# define FROM_LEFT_4TH_BUTTON_PRESSED    0x0010
+
+/*
+ * EventFlags
+ */
+# define MOUSE_MOVED   0x0001
+# define DOUBLE_CLICK  0x0002
+#endif
 
 /* Record all output and all keyboard & mouse input */
 /* #define MCH_WRITE_DUMP */
@@ -65,12 +84,14 @@ FILE* fdDump = NULL;
 # define DWORD int
 # define BOOL int
 # define LPSTR int
+# define LPTSTR int
 # define KEY_EVENT_RECORD int
 # define MOUSE_EVENT_RECORD int
 # define WINAPI
 # define CONSOLE_CURSOR_INFO int
 # define LPCSTR char_u *
 # define WINBASEAPI
+# define INPUT_RECORD int
 #endif
 
 #ifndef USE_GUI_WIN32
@@ -82,8 +103,11 @@ FILE* fdDump = NULL;
  */
 
 /* WINBASEAPI BOOL WINAPI GetConsoleKeyboardLayoutNameA(LPSTR); */
-#if defined(__BORLANDC__) || defined(__GNUC__)
-typedef BOOL (*PFNGCKLN)(LPSTR);
+#ifndef WINBASEAPI
+# define WINBASEAPI __stdcall
+#endif
+#if defined(__BORLANDC__)
+typedef BOOL (__stdcall *PFNGCKLN)(LPSTR);
 #else
 typedef WINBASEAPI BOOL (WINAPI *PFNGCKLN)(LPSTR);
 #endif
@@ -91,6 +115,7 @@ PFNGCKLN    s_pfnGetConsoleKeyboardLayoutName = NULL;
 #endif
 
 #if defined(__GNUC__) && !defined(PROTO)
+# ifndef __MINGW32__
 int _stricoll(char *a, char *b)
 {
     // the ANSI-ish correct way is to use strxfrm():
@@ -104,8 +129,9 @@ char * _fullpath(char *buf, char *fname, int len)
 {
     LPTSTR toss;
 
-   return (char *) GetFullPathName(fname, len, buf, &toss);
+    return (char *)GetFullPathName(fname, len, buf, &toss);
 }
+# endif
 
 int _chdrive(int drive)
 {
@@ -137,7 +163,10 @@ int _stricoll(char *a, char *b)
 
 #ifndef USE_GUI_WIN32
 /* Win32 Console handles for input and output */
-static HANDLE g_hConIn	= INVALID_HANDLE_VALUE;
+# ifndef USE_SNIFF  /* used in if_sniff.c */
+static
+# endif
+       HANDLE g_hConIn	= INVALID_HANDLE_VALUE;
 static HANDLE g_hSavOut = INVALID_HANDLE_VALUE;
 static HANDLE g_hCurOut = INVALID_HANDLE_VALUE;
 static HANDLE g_hConOut = INVALID_HANDLE_VALUE;
@@ -177,7 +206,6 @@ static void cursor_visible(BOOL fVisible);
 static BOOL write_chars(LPCSTR pchBuf, DWORD cchToWrite, DWORD* pcchWritten);
 static char_u tgetch(void);
 static void create_conin(void);
-static void mch_set_cursor_shape(int thickness);
 static int s_cursor_visible = TRUE;
 static int did_create_conin = FALSE;
 #else
@@ -321,6 +349,11 @@ const static struct
     { VK_F18,	TRUE,	'\356',	'\357',	'\360',	    '\361', },
     { VK_F19,	TRUE,	'\362',	'\363',	'\364',	    '\365', },
     { VK_F20,	TRUE,	'\366',	'\367',	'\370',	    '\371', },
+    { VK_ADD,	TRUE,   'N',    'N',    'N',	'N',	}, /* keyp '+' */
+    { VK_SUBTRACT, TRUE,'J',	'J',    'J',	'J',	}, /* keyp '-' */
+ /* { VK_DIVIDE,   TRUE,'N',	'N',    'N',	'N',	},    keyp '/' */
+    { VK_MULTIPLY, TRUE,'7',	'7',    '7',	'7',	}, /* keyp '*' */
+
 };
 
 
@@ -329,33 +362,35 @@ const static struct
 
 #pragma optimize("", off)
 
+#if defined(__GNUC__) && !defined(__MINGW32__)
+#define AChar AsciiChar
+#else
+#define AChar uChar.AsciiChar
+#endif
 
 /* The return code indicates key code size. */
     static int
+#ifdef __BORLANDC__
+    __stdcall
+#endif
+
 win32_kbd_patch_key(
     KEY_EVENT_RECORD* pker)
 {
+    UINT uMods = pker->dwControlKeyState;
     static int s_iIsDead = 0;
     static WORD awAnsiCode[2];
-    UINT uMods = pker->dwControlKeyState;
-    BYTE abKeystate[256];
+    static BYTE abKeystate[256];
+
 
     if (s_iIsDead == 2)
     {
-#ifdef __GNUC__
-	pker->AsciiChar = (CHAR) awAnsiCode[1];
-#else
-	pker->uChar.AsciiChar = (CHAR) awAnsiCode[1];
-#endif
+	pker->AChar = (CHAR) awAnsiCode[1];
 	s_iIsDead = 0;
 	return 1;
     }
 
-#ifdef __GNUC__
-    if (pker->AsciiChar != 0)
-#else
-    if (pker->uChar.AsciiChar != 0)
-#endif
+    if (pker->AChar != 0)
 	return 1;
 
     memset(abKeystate, 0, sizeof (abKeystate));
@@ -365,7 +400,7 @@ win32_kbd_patch_key(
     {
 	CHAR szKLID[KL_NAMELENGTH];
 
-	if (s_pfnGetConsoleKeyboardLayoutName(szKLID))
+	if ((*s_pfnGetConsoleKeyboardLayoutName)(szKLID))
 	    (void)LoadKeyboardLayout(szKLID, KLF_ACTIVATE);
     }
 
@@ -387,11 +422,7 @@ win32_kbd_patch_key(
 			abKeystate, awAnsiCode, 0);
 
     if (s_iIsDead > 0)
-#ifdef __GNUC__
-	pker->AsciiChar = (CHAR) awAnsiCode[0];
-#else
-	pker->uChar.AsciiChar = (CHAR) awAnsiCode[0];
-#endif
+	pker->AChar = (CHAR) awAnsiCode[0];
 
     return s_iIsDead;
 }
@@ -443,12 +474,7 @@ decode_key_event(
     }
 
     /* special cases */
-    if ((nModifs & CTRL) != 0 && (nModifs & ~CTRL) == 0
-#ifdef __GNUC__
-	    && pker->AsciiChar == NUL)
-#else
-	    && pker->uChar.AsciiChar == NUL)
-#endif
+    if ((nModifs & CTRL) != 0 && (nModifs & ~CTRL) == 0 && pker->AChar == NUL)
     {
 	/* Ctrl-6 is Ctrl-^ */
 	if (pker->wVirtualKeyCode == '6')
@@ -503,11 +529,12 @@ decode_key_event(
     if (i < 0)
 	*pch = NUL;
     else
-#ifdef __GNUC__
-	*pch = (i > 0)	?  pker->AsciiChar  :  NUL;
-#else
-	*pch = (i > 0)	?  pker->uChar.AsciiChar  :  NUL;
-#endif
+    {
+	*pch = (i > 0)	? pker->AChar  :  NUL;
+	/* Interpret the ALT key as making the key META */
+	if ((nModifs & ALT) != 0)
+	    *pch |= 0x80;
+    }
 
     return (*pch != NUL);
 }
@@ -807,7 +834,7 @@ decode_mouse_event(
 #endif /* USE_MOUSE */
 
 
-#ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
+#ifdef MCH_CURSOR_SHAPE
 /*
  * Set the shape of the cursor.
  * 'thickness' can be from 1 (thin) to 99 (block)
@@ -838,6 +865,23 @@ mch_update_cursor(void)
     else
 	thickness = cursor_table[idx].percentage;
     mch_set_cursor_shape(thickness);
+}
+#endif
+
+#ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
+/*
+ * Handle FOCUS_EVENT.
+ */
+    static void
+handle_focus_event(INPUT_RECORD ir)
+{
+    g_fJustGotFocus = ir.Event.FocusEvent.bSetFocus;
+    if (g_fJustGotFocus)
+	check_timestamps(FALSE);
+#ifdef AUTOCMD
+    apply_autocmds(g_fJustGotFocus ? EVENT_FOCUSGAINED
+				: EVENT_FOCUSLOST, NULL, NULL, FALSE, curbuf);
+#endif
 }
 
 /*
@@ -904,10 +948,9 @@ WaitForChar(long msec)
 #endif
 
 	    ReadConsoleInput(g_hConIn, &ir, 1, &cRecords);
-#ifdef USE_CLIPBOARD
+
 	    if (ir.EventType == FOCUS_EVENT)
-		g_fJustGotFocus = ir.Event.FocusEvent.bSetFocus;
-#endif
+		handle_focus_event(ir);
 	    else if (ir.EventType == WINDOW_BUFFER_SIZE_EVENT)
 		set_winsize(Rows, Columns, FALSE);
 #ifdef USE_MOUSE
@@ -969,13 +1012,8 @@ tgetch(void)
 	    if (decode_key_event(&ir.Event.KeyEvent, &ch, &g_chPending, TRUE))
 		return ch;
 	}
-#ifdef USE_CLIPBOARD
 	else if (ir.EventType == FOCUS_EVENT)
-	{
-	    g_fJustGotFocus = ir.Event.FocusEvent.bSetFocus;
-	    /* TRACE("tgetch: Focus %d\n", g_fJustGotFocus); */
-	}
-#endif
+	    handle_focus_event(ir);
 	else if (ir.EventType == WINDOW_BUFFER_SIZE_EVENT)
 	{
 	    set_winsize(Rows, Columns, FALSE);
@@ -1007,20 +1045,71 @@ mch_inchar(
     long	time)
 {
 #ifndef USE_GUI_WIN32	    /* this isn't used for the GUI */
+
     int		len = 0;
     int		c;
+#ifdef AUTOCMD
+    static int	once_already = 0;
+#endif
+
+
+#ifdef USE_SNIFF
+    if (sniff_request_waiting)
+    {
+	/* return K_SNIFF */
+	*buf++ = '\233';
+	*buf++ = 's';
+	*buf++ = 'n';
+	*buf++ = 'i';
+	*buf++ = 'f';
+	*buf++ = 'f';
+	len += 6;
+	sniff_request_waiting = 0;
+	want_sniff_request = 0;
+	return len;
+    }
+#endif
 
     if (time >= 0)
     {
 	if (!WaitForChar(time))     /* no character available */
+	{
+#ifdef AUTOCMD
+	    once_already = 0;
+#endif
 	    return 0;
+	}
     }
     else    /* time == -1, wait forever */
     {
+#ifdef AUTOCMD
 	/* If there is no character available within 2 seconds (default),
 	 * write the autoscript file to disk */
-	if (!WaitForChar(p_ut))
+	if (once_already == 2)
 	    updatescript(0);
+	else if (once_already == 1)
+	{
+	    setcursor();
+	    once_already = 2;
+	    return 0;
+	}
+	else
+#endif
+	    if (!WaitForChar(p_ut))
+	{
+#ifdef AUTOCMD
+	    if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+	    {
+		apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+		update_screen(VALID);
+
+		once_already = 1;
+		return 0;
+	    }
+	    else
+#endif
+		updatescript(0);
+	}
     }
 
     /*
@@ -1084,6 +1173,9 @@ mch_inchar(
     }
 #endif
 
+#ifdef AUTOCMD
+    once_already = 0;
+#endif
     return len;
 #else /* USE_GUI_WIN32 */
     return 0;
@@ -1092,7 +1184,34 @@ mch_inchar(
 
 #ifdef USE_GUI_WIN32
 
-#include <shellapi.h>	/* required for FindExecutable() */
+#ifndef __MINGW32__
+# include <shellapi.h>	/* required for FindExecutable() */
+#endif
+
+    static int
+executable_exists(char *name)
+{
+    char vimrun_location[2 * _MAX_PATH + 2];
+    char widename[2 * _MAX_PATH];
+
+    /* There appears to be a bug in FindExecutableA() on Windows NT.
+     * Use FindExecutableW() instead... */
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+    {
+	MultiByteToWideChar(CP_ACP, 0, (LPCTSTR)name, -1,
+						 (LPWSTR)widename, _MAX_PATH);
+	if (FindExecutableW((LPCWSTR)widename, (LPCWSTR)"",
+				     (LPWSTR)vimrun_location) > (HINSTANCE)32)
+	    return TRUE;
+    }
+    else
+    {
+	if (FindExecutableA((LPCTSTR)name, (LPCTSTR)"",
+				     (LPTSTR)vimrun_location) > (HINSTANCE)32)
+	    return TRUE;
+    }
+    return FALSE;
+}
 
 /*
  * GUI version of mch_windinit().
@@ -1100,21 +1219,26 @@ mch_inchar(
     void
 mch_windinit()
 {
+#ifndef __MINGW32__
     extern int _fmode;
+#endif
 
     PlatformId();
+
+    /* Let critical errors result in a failure, not in a dialog box.  Required
+     * for the timestamp test to work on removed floppies. */
+    SetErrorMode(SEM_FAILCRITICALERRORS);
+
+    _fmode = O_BINARY;		/* we do our own CR-LF translation */
 
     /* Specify window size.  Is there a place to get the default from? */
     Rows = 25;
     Columns = 80;
 
-    _fmode = O_BINARY;		/* we do our own CR-LF translation */
-
     /* Look for 'vimrun' */
     if (!gui_is_win32s())
     {
-	char_u vimrun_location[2 * _MAX_PATH + 2];
-	char_u widename[40];
+	char_u vimrun_location[_MAX_PATH + 2];
 
 	/* First try in same directory as gvim.exe */
 	STRCPY(vimrun_location, exe_name);
@@ -1125,25 +1249,8 @@ mch_windinit()
 	    vimrun_path = (char *)vim_strsave(vimrun_location);
 	    s_dont_use_vimrun = FALSE;
 	}
-	else
-	{
-	    /* There appears to be a bug in FindExecutableA() on Windows NT.
-	     * Use FindExecutableW() instead... */
-	    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
-	    {
-		MultiByteToWideChar(CP_ACP, 0, (LPCTSTR)"vimrun.exe", -1,
-							(LPWSTR)widename, 20);
-		if (FindExecutableW((LPCWSTR)widename, (LPCWSTR)"",
-			    (LPWSTR)vimrun_location) > (HINSTANCE)32)
-		    s_dont_use_vimrun = FALSE;
-	    }
-	    else
-	    {
-		if (FindExecutableA((LPCTSTR)"vimrun.exe", (LPCTSTR)"",
-			    (LPTSTR)vimrun_location) > (HINSTANCE)32)
-		    s_dont_use_vimrun = FALSE;
-	    }
-	}
+	else if (executable_exists("vimrun.exe"))
+	    s_dont_use_vimrun = FALSE;
 
 	if (s_dont_use_vimrun)
 	    MessageBox(NULL,
@@ -1153,6 +1260,13 @@ mch_windinit()
 			"Vim Warning",
 			MB_ICONWARNING);
     }
+
+    /*
+     * If "finstr.exe" doesn't exist, use "grep -n" for 'grepprg'.
+     * Otherwise the default "findstr /n" is used.
+     */
+    if (!executable_exists("findstr.exe"))
+	set_option_value((char_u *)"grepprg", 0, (char_u *)"grep -n");
 
 #ifdef USE_CLIPBOARD
     clip_init(TRUE);
@@ -1209,9 +1323,15 @@ static int g_nOldColumns = 0;
 mch_windinit()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+#ifndef __MINGW32__
     extern int _fmode;
+#endif
 
     PlatformId();
+
+    /* Let critical errors result in a failure, not in a dialog box.  Required
+     * for the timestamp test to work on removed floppies. */
+    SetErrorMode(SEM_FAILCRITICALERRORS);
 
     _fmode = O_BINARY;		/* we do our own CR-LF translation */
     out_flush();
@@ -1227,6 +1347,10 @@ mch_windinit()
     /* Get current text attributes */
     GetConsoleScreenBufferInfo(g_hSavOut, &csbi);
     g_attrCurrent = g_attrDefault = csbi.wAttributes;
+    if (cterm_normal_fg_color == 0)
+	cterm_normal_fg_color = (g_attrCurrent & 0xf) + 1;
+    if (cterm_normal_bg_color == 0)
+	cterm_normal_bg_color = ((g_attrCurrent >> 4) & 0xf) + 1;
     GetConsoleCursorInfo(g_hSavOut, &g_cci);
 
     /* set termcap codes to current text attributes */
@@ -1283,7 +1407,6 @@ mch_windinit()
     SetConsoleActiveScreenBuffer(g_hCurOut);
 }
 
-
 /*
  * non-GUI version of mch_windexit().
  * Shut down and exit with status `r'
@@ -1294,9 +1417,12 @@ mch_windexit(
     int r)
 {
     stoptermcap();
-    out_char('\r');
-    out_char('\n');
-    out_flush();
+    if (full_screen)
+    {
+	out_char('\r');
+	out_char('\n');
+	out_flush();
+    }
 
     if (g_fWindInitCalled)
 	settmode(TMODE_COOK);
@@ -1316,7 +1442,9 @@ mch_windexit(
 
     if (g_fWindInitCalled)
     {
+#ifdef WANT_TITLE
 	mch_restore_title(3);
+#endif
 
 #ifdef MCH_WRITE_DUMP
 	if (fdDump)
@@ -1385,28 +1513,6 @@ mch_input_isatty()
 
 
 /*
- * Turn a file name into its canonical form.  Replace slashes with backslashes.
- * This used to replace backslashes with slashes, but that caused problems
- * when using the file name as a command.  We can't have a mix of slashes and
- * backslashes, because comparing file names will not work correctly.  The
- * commands that use file names should be prepared to handle the backslashes.
- */
-    static void
-canonicalize_filename(
-    char *pszName)
-{
-    if (pszName == NULL)
-	return;
-
-    for ( ; *pszName;  pszName++)
-    {
-	if (*pszName == '/')
-	    *pszName = '\\';
-    }
-}
-
-
-/*
  * fname_case(): Set the case of the file name, if it already exists.
  */
     void
@@ -1422,16 +1528,14 @@ fname_case(
 
     STRNCPY(szTrueName, name, _MAX_PATH);
     szTrueName[_MAX_PATH] = '\0';   /* ensure it's sealed off! */
-    STRCAT(szTrueName, "\\");	/* sentinel */
+    STRCAT(szTrueName, pseps);	/* sentinel */
 
-    for (psz = szTrueName;  *psz != NUL;  psz++)
-	if (*psz == '/')
-	    *psz = '\\';
+    slash_adjust(szTrueName);
 
     psz = pszPrev = szTrueName;
 
     /* Skip leading \\ in UNC name or drive letter */
-    if (len > 2 && ((psz[0] == '\\' && psz[1] == '\\')
+    if (len > 2 && ((psz[0] == psepc && psz[1] == psepc)
 				       || (isalpha(psz[0]) && psz[1] == ':')))
     {
 	psz = pszPrev = szTrueName + 2;
@@ -1442,7 +1546,7 @@ fname_case(
 	WIN32_FIND_DATA	fb;
 	HANDLE		hFind;
 
-	while (*psz != '\\')
+	while (*psz != psepc)
 	    psz++;
 	*psz = NUL;
 
@@ -1454,7 +1558,7 @@ fname_case(
 	    FindClose(hFind);
 	}
 
-	*psz++ = '\\';
+	*psz++ = psepc;
 	pszPrev = psz;
     }
 
@@ -1464,6 +1568,7 @@ fname_case(
 }
 
 
+#ifdef WANT_TITLE
 /*
  * mch_settitle(): set titlebar of our window
  * Can the icon also be set?
@@ -1517,6 +1622,7 @@ mch_can_restore_icon()
 {
     return FALSE;
 }
+#endif /* WANT_TITLE */
 
 
 /*
@@ -1593,7 +1699,9 @@ mch_dirname(
 /*
  * Get absolute file name into buffer 'buf' of length 'len' bytes,
  * turning all '/'s into '\\'s and getting the correct case of each
- * component of the file name.	Return OK or FAIL.
+ * component of the file name.  Append a backslash to a directory name.
+ * When 'shellslash' set do it the other way around.
+ * Return OK or FAIL.
  */
     int
 mch_FullName(
@@ -1602,7 +1710,7 @@ mch_FullName(
     int len,
     int force)
 {
-    int nResult = FAIL;
+    int		nResult = FAIL;
 
     if (fname == NULL)		/* always fail */
 	return FAIL;
@@ -1610,13 +1718,14 @@ mch_FullName(
     if (_fullpath(buf, fname, len - 1) == NULL)
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
     else
-    {
-	if (mch_isdir(fname))
-	    STRCAT(buf, "\\");
 	nResult = OK;
-    }
 
     fname_case(buf);
+
+    /* Append backslash to directory names; after fname_case() because it
+     * removes the backslash again. */
+    if (nResult == OK && mch_isdir(buf) && buf[STRLEN(buf) - 1] != psepc)
+	STRCAT(buf, pseps);
 
     return nResult;
 }
@@ -1631,6 +1740,10 @@ mch_isFullName(
 {
     char szName[_MAX_PATH+1];
 
+    /* A name like "d:/foo" is always absolute */
+    if (fname[0] && fname[1] == ':' && (fname[2] == '/' || fname[2] == '\\'))
+	return TRUE;
+
     mch_FullName(fname, szName, _MAX_PATH, FALSE);
 
     return strcoll(fname, szName) == 0;
@@ -1643,17 +1756,19 @@ mch_isFullName(
  * backslashes, because comparing file names will not work correctly.  The
  * commands that use a file name should try to avoid the need to type a
  * backslash twice.
+ * When 'shellslash' set do it the other way around.
  */
     void
 slash_adjust(p)
     char_u  *p;
 {
-    while (*p)
-    {
-	if (*p == '/')
-	    *p = '\\';
-	++p;
-    }
+    if (p != NULL)
+	while (*p)
+	{
+	    if (*p == psepcN)
+		*p = psepc;
+	    ++p;
+	}
 }
 
 
@@ -2169,9 +2284,10 @@ mch_system(char *cmd, int options)
     si.dwFlags = STARTF_USESHOWWINDOW;
     /*
      * It's nicer to run a filter command in a minimized window, but in
-     * Windows 95 this makes the command MUCH slower.
+     * Windows 95 this makes the command MUCH slower.  We can't do it under
+     * Win32s either as it stops the synchronous spawn workaround working.
      */
-    if ((options & SHELL_DOOUT) && !mch_windows95())
+    if ((options & SHELL_DOOUT) && !mch_windows95() && !gui_is_win32s())
 	si.wShowWindow = SW_SHOWMINIMIZED;
     else
 	si.wShowWindow = SW_SHOWNORMAL;
@@ -2293,10 +2409,11 @@ mch_call_shell(
 
 #ifndef USE_GUI_WIN32
     /*
-     * ALWAYS switch to non-termcap mode, otherwise ":r !ls" may crash.
+     * Switch to non-termcap mode, otherwise ":r !ls" may crash.
+     * The only exception is "!start".
      */
-    if (g_hCurOut == g_hConOut &&
-	    ((cmd == NULL) || STRNICMP(cmd, "start ", 6) != 0))
+    if (g_hCurOut == g_hConOut
+	    && (cmd == NULL || STRNICMP(cmd, "start ", 6) != 0))
     {
 	termcap_mode_end();
 	stopped_termcap_mode = TRUE;
@@ -2316,7 +2433,7 @@ mch_call_shell(
      * CTRL-C, Ctrl-Break or illegal instruction  might otherwise kill us.
      */
     signal(SIGINT, SIG_IGN);
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__MINGW32__)
     signal(SIGKILL, SIG_IGN);
 #else
     signal(SIGBREAK, SIG_IGN);
@@ -2346,7 +2463,7 @@ mch_call_shell(
 		STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
 	if (newcmd != NULL)
 	{
-	    if (STRNICMP(cmd, "start ", 6) == 0)
+	    if (STRNICMP(*cmd == '"' ? cmd + 1 : cmd, "start ", 6) == 0)
 	    {
 		STARTUPINFO		si;
 		PROCESS_INFORMATION	pi;
@@ -2359,6 +2476,8 @@ mch_call_shell(
 		si.cbReserved2 = 0;
 		si.lpReserved2 = NULL;
 		sprintf((char *)newcmd, "%s\0", cmd+6);
+		if (*cmd == '"')
+		    *newcmd = '"';
 		/*
 		 * Now, start the command as a process, so that it doesn't
 		 * inherit our handles which causes unpleasant dangling swap
@@ -2376,7 +2495,12 @@ mch_call_shell(
 			&pi))			// Process information
 		    x = 0;
 		else
+		{
 		    x = -1;
+#ifdef USE_GUI_WIN32
+		    EMSG("Command not found");
+#endif
+		}
 		/* Close the handles to the subprocess, so that it goes away */
 		CloseHandle(pi.hThread);
 		CloseHandle(pi.hProcess);
@@ -2413,10 +2537,12 @@ mch_call_shell(
 	smsg("%d returned", x);
 	msg_putchar('\n');
     }
+#ifdef WANT_TITLE
     resettitle();
+#endif
 
     signal(SIGINT, SIG_DFL);
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__MINGW32__)
     signal(SIGKILL, SIG_DFL);
 #else
     signal(SIGBREAK, SIG_DFL);
@@ -2443,7 +2569,11 @@ mch_call_shell(
 mch_has_wildcard(
     char_u *s)
 {
+#ifdef VIM_BACKTICK
+    return (vim_strpbrk(s, (char_u *)"?*$`~") != NULL);
+#else
     return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
+#endif
 }
 
 
@@ -2466,47 +2596,55 @@ pstrcmp(
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by expand_wildcards().
  */
-    int
-mch_expandpath(
+    static int
+win32_expandpath(
     struct growarray	*gap,
     char_u		*path,
+    char_u		*wildc,
     int			flags)
 {
-    char		buf[_MAX_PATH+1];
+    char		*buf;
     char		*p, *s, *e;
-    int			start_len, c = 1;
+    int			start_len;
+    int			c = 1;
     WIN32_FIND_DATA	fb;
     HANDLE		hFind;
     int			matches;
     int			start_dot_ok;
+    int			len;
 
     start_len = gap->ga_len;
+
+    /* allocate buffer with room for file name */
+    buf = (char *)alloc(STRLEN(path) + BASENAMELEN + 5);
+    if (buf == NULL)
+	return 0;
 
     /*
      * Find the first part in the path name that contains a wildcard.
      * Copy it into `buf', including the preceding characters.
      */
     p = buf;
-    s = NULL;
+    s = buf;
     e = NULL;
     while (*path)
     {
-	if (*path == '\\' || *path == ':' || *path == '/')
+	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
+	    ++path;
+	else if (*path == '\\' || *path == ':' || *path == '/')
 	{
 	    if (e)
 		break;
 	    else
-		s = p;
+		s = p + 1;
 	}
-	if (*path == '*' || *path == '?')
+	else if (*path == '*' || *path == '?')
 	    e = p;
 	*p++ = *path++;
     }
     e = p;
-    if (s)
-	s++;
-    else
-	s = buf;
+    *e = NUL;
+    /* now we have one wildcard component between `s' and `e' */
 
 #ifdef USE_GUI_WIN32
     if (gui_is_win32s())
@@ -2521,12 +2659,10 @@ mch_expandpath(
 	{
 	    *e++ = '.';
 	    *e++ = '*';
+	    *e = NUL;
 	}
     }
 #endif
-
-    /* now we have one wildcard component between `s' and `e' */
-    *e = NUL;
 
     start_dot_ok = (buf[0] == '.' || buf[0] == '*');
 
@@ -2548,16 +2684,29 @@ mch_expandpath(
 			    && (s[1] != '.' || s[2] != NUL)))
 		    && (*path == NUL || mch_isdir(buf)))
 	    {
-		STRCAT(buf, path);
+		len = STRLEN(buf);
+		STRCPY(buf + len, path);
 		if (mch_has_wildcard(path))	    /* handle more wildcards */
-		    (void)mch_expandpath(gap, buf, flags);
+		{
+		    /* need to expand another component of the path */
+		    /* remove backslashes for the remaining components only */
+		    (void)win32_expandpath(gap, buf, buf + len + 1, flags);
+		}
 		else if (mch_getperm(buf) >= 0)	    /* add existing file */
-		    addfile(gap, buf, flags);
+		{
+		    /* no more wildcards, check if there is a match */
+		    /* remove backslashes for the remaining components only */
+		    if (*path)
+			backslash_halve(buf + len + 1);
+		    if (mch_getperm(buf) >= 0)	/* add existing file */
+			addfile(gap, buf, flags);
+		}
 	    }
 
 	    c = FindNextFile(hFind, &fb);
 	}
     FindClose(hFind);
+    vim_free(buf);
 
     matches = gap->ga_len - start_len;
     if (matches)
@@ -2566,6 +2715,14 @@ mch_expandpath(
     return matches;
 }
 
+    int
+mch_expandpath(
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)
+{
+    return win32_expandpath(gap, path, path, flags);
+}
 
 /*
  * The normal _chdir() does not change the default drive.  This one does.
@@ -2684,6 +2841,7 @@ termcap_mode_start(void)
     g_coordOrig.Y = csbi.dwCursorPosition.Y;
 
     if (g_hConOut == INVALID_HANDLE_VALUE)
+    {
 	/* Create a new screen buffer in which we do all of our editing.
 	 * This means we can restore the original screen when we finish. */
 	g_hConOut = CreateConsoleScreenBuffer(GENERIC_WRITE | GENERIC_READ,
@@ -2691,11 +2849,14 @@ termcap_mode_start(void)
 					      CONSOLE_TEXTMODE_BUFFER,
 					      (LPVOID) NULL);
 
-    coord.X = coord.Y = 0;
-    FillConsoleOutputCharacter(g_hConOut, ' ', Rows * Columns, coord, &dwDummy);
-    FillConsoleOutputAttribute(g_hConOut, wAttr, Rows*Columns, coord, &dwDummy);
-
-    copy_screen_buffer_text(g_hSavOut, g_hConOut);
+	/* initialize the new screenbuffer with what is in the current one */
+	coord.X = coord.Y = 0;
+	FillConsoleOutputCharacter(g_hConOut, ' ',
+					     Rows * Columns, coord, &dwDummy);
+	FillConsoleOutputAttribute(g_hConOut, wAttr,
+					     Rows * Columns, coord, &dwDummy);
+	copy_screen_buffer_text(g_hSavOut, g_hConOut);
+    }
 
     g_hCurOut = g_hConOut;
     SetConsoleActiveScreenBuffer(g_hCurOut);
@@ -2704,7 +2865,9 @@ termcap_mode_start(void)
     set_scroll_region(0, 0, Columns - 1, Rows - 1);
     check_winsize();
 
+#ifdef WANT_TITLE
     resettitle();
+#endif
 
     textattr(wAttr);
 }
@@ -2714,7 +2877,7 @@ termcap_mode_start(void)
  * Turn off termcap mode by restoring the screen buffer we had upon startup
  */
     static void
-termcap_mode_end()
+termcap_mode_end(void)
 {
     g_attrSave = g_attrCurrent;
 
@@ -2744,7 +2907,9 @@ termcap_mode_end()
     clear_chars(g_coordOrig,
 		g_srOrigWindowRect.Right - g_srOrigWindowRect.Left + 1);
 
+#ifdef WANT_TITLE
     mch_restore_title(3);
+#endif
 
     SetConsoleMode(g_hConIn,  g_cmodein);
     SetConsoleMode(g_hSavOut, g_cmodeout);
@@ -3061,6 +3226,30 @@ standend()
 
 
 /*
+ * Set normal fg/bg color, based on T_ME.  Called whem t_me has been set.
+ */
+    void
+mch_set_normal_colors()
+{
+    char_u	*p;
+    int		n;
+
+    cterm_normal_fg_color = (g_attrDefault & 0xf) + 1;
+    cterm_normal_bg_color = ((g_attrDefault >> 4) & 0xf) + 1;
+    if (T_ME[0] == ESC && T_ME[1] == '|')
+    {
+	p = T_ME + 2;
+	n = getdigits(&p);
+	if (*p == 'm' && n > 0)
+	{
+	    cterm_normal_fg_color = (n & 0xf) + 1;
+	    cterm_normal_bg_color = ((n >> 4) & 0xf) + 1;
+	}
+    }
+}
+
+
+/*
  * visual bell: flash the screen
  */
     static void
@@ -3092,7 +3281,9 @@ cursor_visible(
     BOOL fVisible)
 {
     s_cursor_visible = fVisible;
+#ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
+#endif
 }
 
 
@@ -3151,7 +3342,7 @@ mch_write(
 
     if (!term_console)
     {
-	write(1, s, (unsigned) len);
+	write(1, s, (unsigned)len);
 	return;
     }
 
@@ -3478,12 +3669,17 @@ mch_breakcheck()
 
 /*
  * How much memory is available?
+ * Return sum of available physical and page file memory.
  */
     long_u
 mch_avail_mem(
     int special)
 {
-    return LONG_MAX;	    /* virtual memory, eh? */
+    MEMORYSTATUS	ms;
+
+    ms.dwLength = sizeof(MEMORYSTATUS);
+    GlobalMemoryStatus(&ms);
+    return(ms.dwAvailPhys + ms.dwAvailPageFile);
 }
 
 
@@ -3513,6 +3709,61 @@ mch_screenmode(
     return FAIL;
 }
 
+#ifdef WANT_EVAL
+/*
+ * Call a DLL routine which takes either a string or int param
+ * and returns an allocated string.
+ */
+typedef LPTSTR (*MYSTRPROC)(LPTSTR);
+typedef LPTSTR (*MYINTPROC)(int);
+
+    char_u *
+mch_libcall(
+    char_u  *libname,
+    char_u  *funcname,
+    char_u  *argstring,
+    int	    argint)
+{
+    HINSTANCE hinstLib;
+    MYSTRPROC ProcAdd;
+    MYINTPROC ProcAddI;
+    char_u  *retval = NULL;
+
+    BOOL fFreeResult, fRunTimeLinkSuccess = FALSE;
+
+    // Get a handle to the DLL module.
+    hinstLib = LoadLibrary(libname);
+
+    // If the handle is valid, try to get the function address.
+    if (hinstLib != NULL)
+    {
+	if (argstring != NULL)
+	{
+	    ProcAdd = (MYSTRPROC) GetProcAddress(hinstLib, funcname);
+	    if (fRunTimeLinkSuccess = (ProcAdd != NULL))
+		retval = (ProcAdd) (argstring);
+	}
+	else
+	{
+	    ProcAddI = (MYINTPROC) GetProcAddress(hinstLib, funcname);
+	    if (fRunTimeLinkSuccess = (ProcAddI != NULL))
+		retval = (ProcAddI) (argint);
+	}
+
+	// save the string before we free the library
+	if (retval != NULL)
+	    retval = vim_strsave(retval);
+
+	// Free the DLL module.
+	fFreeResult = FreeLibrary(hinstLib);
+    }
+
+    if (!fRunTimeLinkSuccess)
+	EMSG("Library call failed");
+
+    return retval;
+}
+#endif
 
 /*
  * mch_rename() works around a bug in rename (aka MoveFile) in
@@ -3593,30 +3844,6 @@ mch_rename(
 }
 
 /*
- * Special version of getenv(): use $HOME when $VIM not defined.
- */
-    char_u *
-mch_getenv(char_u *var)
-{
-    char_u  *retval;
-    retval = (char_u *)getenv((char *)var);
-
-    if (retval == NULL && STRCMP(var, "VIM") == 0)
-	retval = (char_u *)getenv("HOME");
-
-#ifdef MCH_WRITE_DUMP
-    if (fdDump)
-    {
-	fprintf(fdDump, "$%s = \"%s\"\n", var, retval);
-	fflush(fdDump);
-    }
-#endif
-
-    return retval;
-}
-
-
-/*
  * Get the default shell for the current hardware platform
  */
     char*
@@ -3689,20 +3916,31 @@ clip_mch_request_selection()
 
 	if (hMem != NULL && str != NULL)
 	{
-	    /*successful lock - must unlock when finished*/
+	    /* successful lock - must unlock when finished */
 	    if (*str != NUL)
 	    {
-		LPCSTR psz = (LPCSTR)str;
-		char_u *temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
-		char_u *pszTemp = temp_clipboard;
+		LPCSTR		psz = (LPCSTR)str;
+		char_u		*temp_clipboard;
+		char_u		*pszTemp;
+		const char	*pszNL;
+		int		len;
 
+		temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
 		if (temp_clipboard != NULL)
 		{
+		    /* Translate <CR><NL> into <NL>. */
+		    pszTemp = temp_clipboard;
 		    while (*psz != NUL)
 		    {
-			const char* pszNL = strchr(psz, '\r');
-			const int len = (pszNL != NULL) ?
-					    pszNL - psz : STRLEN(psz);
+			pszNL = psz;
+			for (;;)
+			{
+			    pszNL = strchr(pszNL, '\r');
+			    if (pszNL == NULL || pszNL[1] == '\n')
+				break;
+			    ++pszNL;
+			}
+			len = (pszNL != NULL) ?  pszNL - psz : STRLEN(psz);
 			STRNCPY(pszTemp, psz, len);
 			pszTemp += len;
 			if (pszNL != NULL)
@@ -3711,11 +3949,11 @@ clip_mch_request_selection()
 		    }
 		    *pszTemp = NUL;
 		    clip_yank_selection(type, temp_clipboard,
-					(long)(pszTemp - temp_clipboard));
+					    (long)(pszTemp - temp_clipboard));
 		    vim_free(temp_clipboard);
 		}
 	    }
-	    /*unlock the global object*/
+	    /* unlock the global object */
 	    (void)GlobalUnlock(hMem);
 	}
 	CloseClipboard();

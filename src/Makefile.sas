@@ -103,6 +103,7 @@ SRC = \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -138,6 +139,7 @@ OBJ = \
 	mark.o \
 	memfile.o \
 	memline.o \
+	menu.o \
 	message.o \
 	misc1.o \
 	misc2.o \
@@ -173,6 +175,7 @@ PRO = \
 	proto/mark.pro \
 	proto/memfile.pro \
 	proto/memline.pro \
+	proto/menu.pro \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
@@ -276,6 +279,8 @@ memfile.o:		memfile.c
 proto/memfile.pro:	memfile.c
 memline.o:		memline.c
 proto/memline.pro:	memline.c
+menu.o:			menu.c
+proto/menu.pro:		menu.c
 message.o:		message.c
 proto/message.pro:	message.c
 misc1.o:		misc1.c

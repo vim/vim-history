@@ -69,6 +69,7 @@ CLEAN :
 	-@erase "$(INTDIR)\mark.obj"
 	-@erase "$(INTDIR)\memfile.obj"
 	-@erase "$(INTDIR)\memline.obj"
+	-@erase "$(INTDIR)\menu.obj"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
@@ -137,6 +138,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -212,6 +214,8 @@ CLEAN :
 	-@erase "$(INTDIR)\memfile.sbr"
 	-@erase "$(INTDIR)\memline.obj"
 	-@erase "$(INTDIR)\memline.sbr"
+	-@erase "$(INTDIR)\menu.obj"
+	-@erase "$(INTDIR)\menu.sbr"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\message.sbr"
 	-@erase "$(INTDIR)\misc1.obj"
@@ -292,6 +296,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\mark.sbr" \
 	"$(INTDIR)\memfile.sbr" \
 	"$(INTDIR)\memline.sbr" \
+	"$(INTDIR)\menu.sbr" \
 	"$(INTDIR)\message.sbr" \
 	"$(INTDIR)\misc1.sbr" \
 	"$(INTDIR)\misc2.sbr" \
@@ -341,6 +346,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -400,6 +406,7 @@ CLEAN :
 	-@erase "$(INTDIR)\mark.obj"
 	-@erase "$(INTDIR)\memfile.obj"
 	-@erase "$(INTDIR)\memline.obj"
+	-@erase "$(INTDIR)\menu.obj"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
@@ -448,8 +455,8 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"vim.exe"
-# ADD LINK32 libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
-LINK32_FLAGS=libcd.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
+# ADD LINK32 libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe"
+LINK32_FLAGS=libc.lib oldnames.lib kernel32.lib user32.lib gdi32.lib imm32.lib\
  winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib /nologo /subsystem:windows\
  /profile /debug /machine:I386 /nodefaultlib /out:"gvimrwd.exe" 
 LINK32_OBJS= \
@@ -469,6 +476,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -814,6 +822,64 @@ BuildCmds= \
 # SUBTRACT CPP /Fr /YX
 
 "$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\menu.c
+DEP_CPP_MEMLI=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MEMLI=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /Iproto /Fo"$(INTDIR)/" /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE) \
+	
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\menu.sbr" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
    $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
  "USE_GUI_WIN32" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE)
 

@@ -14,6 +14,10 @@
 
 #include "vim.h"
 
+#ifdef Window
+# undef Window	/* Amiga has its own Window definition */
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -113,6 +117,9 @@ mch_inchar(buf, maxlen, time)
 {
     int	    len;
     long    utime;
+#ifdef AUTOCMD
+    static int	once_already = 0;
+#endif
 
     if (time >= 0)
     {
@@ -121,23 +128,56 @@ mch_inchar(buf, maxlen, time)
 	else
 	    utime = time * 1000L;   /* convert from milli to micro secs */
 	if (WaitForChar(raw_in, utime) == 0)	/* no character available */
+	{
+#ifdef AUTOCMD
+	    once_already = 0;
+#endif
 	    return 0;
+	}
     }
     else    /* time == -1 */
     {
-    /*
-     * If there is no character available within 2 seconds (default)
-     * write the autoscript file to disk
-     */
-	if (WaitForChar(raw_in, p_ut * 1000L) == 0)
+#ifdef AUTOCMD
+	if (once_already == 2)
 	    updatescript(0);
+	else if (once_already == 1)
+	{
+	    setcursor();
+	    once_already = 2;
+	    return 0;
+	}
+	else
+#endif
+	/*
+	 * If there is no character available within 2 seconds (default)
+	 * write the autoscript file to disk
+	 */
+	    if (WaitForChar(raw_in, p_ut * 1000L) == 0)
+	{
+#ifdef AUTOCMD
+            if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+            {
+                apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+                update_screen(VALID);
+		once_already = 1;
+                return 0;
+            }
+            else
+#endif
+		updatescript(0);
+	}
     }
 
     for (;;)	    /* repeat until we got a character */
     {
 	len = Read(raw_in, (char *)buf, (long)maxlen);
 	if (len > 0)
+	{
+#ifdef AUTOCMD
+            once_already = 0;
+#endif
 	    return len;
+	}
     }
 }
 
@@ -513,6 +553,7 @@ get_fib(fname)
     return fib;
 }
 
+#ifdef WANT_TITLE
 /*
  * set the title of our window
  * icon name is not set
@@ -552,6 +593,7 @@ mch_can_restore_icon()
 {
     return FALSE;
 }
+#endif
 
 /*
  * Insert user name in s[len].
@@ -682,6 +724,7 @@ lock2name(lock, buf, len)
 
 /*
  * get file permissions for 'name'
+ * Returns -1 when it doesn't exist.
  */
     long
 mch_getperm(name)
@@ -768,7 +811,9 @@ mch_windexit(r)
 	out_flush();
     }
 
+#ifdef WANT_TITLE
     mch_restore_title(3);	    /* restore window title */
+#endif
 
     ml_close_all(TRUE);		    /* remove all memfiles */
 
@@ -1195,7 +1240,9 @@ mch_call_shell(cmd, options)
     if (mydir = CurrentDir(mydir))	/* make sure we stay in the same directory */
 	UnLock(mydir);
     settmode(TMODE_RAW);		/* set to raw mode */
+#ifdef WANT_TITLE
     resettitle();
+#endif
     if (term_console)
 	win_resize_on();		/* window resize events activated */
     return retval;
@@ -1239,6 +1286,7 @@ Chk_Abort(void)
  * mch_expandpath() - this code does wild-card pattern matching using the arp
  *		      routines.
  *
+ * "pat" has backslashes before chars that are not to be expanded.
  * Returns the number of matches found.
  *
  * This is based on WildDemo2.c (found in arp1.1 distribution).
@@ -1256,11 +1304,11 @@ mch_expandpath(gap, pat, flags)
     char_u		*pat;
     int			flags;
 {
-    struct AnchorPath	    *Anchor;
-    LONG		    Result;
-    char_u		    *starbuf, *sp, *dp;
-    int			    start_len;
-    int			    matches;
+    struct AnchorPath	*Anchor;
+    LONG		Result;
+    char_u		*starbuf, *sp, *dp;
+    int			start_len;
+    int			matches;
 
     start_len = gap->ga_len;
 
@@ -1363,7 +1411,11 @@ sortcmp(a, b)
 mch_has_wildcard(p)
     char_u *p;
 {
+#ifdef VIM_BACKTICK
+    return (vim_strpbrk(p, (char_u *)"*?[(~#$`") != NULL);
+#else
     return (vim_strpbrk(p, (char_u *)"*?[(~#$") != NULL);
+#endif
 }
 
 /*

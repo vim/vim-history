@@ -57,7 +57,9 @@ static struct growarray highlight_ga;	    /* highlight groups for
 
 #define HL_TABLE() ((struct hl_group *)((highlight_ga.ga_data)))
 
+#ifdef CMDLINE_COMPL
 static int include_link = FALSE;	/* include "link" for expansion */
+#endif
 
 /*
  * The "term", "cterm" and "gui" arguments can be any combination of the
@@ -73,11 +75,9 @@ static int syn_namen2id __ARGS((char_u *linep, int len));
 static void syn_unadd_group __ARGS((void));
 static void set_hl_attr __ARGS((int idx));
 static void highlight_list_one __ARGS((int id));
-static void highlight_list_two __ARGS((int cnt, int attr));
 static int highlight_list_arg __ARGS((int id, int didh, int type, int iarg, char_u *sarg, char *name));
 static int syn_add_group __ARGS((char_u *name));
 static int syn_list_header __ARGS((int did_header, int outlen, int id));
-static void highlight_list __ARGS((void));
 static void highlight_clear __ARGS((int idx));
 
 #ifdef USE_GUI
@@ -92,7 +92,7 @@ static GuiFont font_name2handle __ARGS((char_u *name));
  */
 #define ATTR_OFF (HL_ALL + 1)
 
-#ifdef SYNTAX_HL
+#if defined(SYNTAX_HL) || defined(PROTO)
 
 #define SYN_NAMELEN	50		/* maximum length of a syntax name */
 
@@ -346,7 +346,9 @@ static void syn_clear_cluster __ARGS((BUF *buf, int i));
 static void syn_cmd_clear __ARGS((EXARG *eap, int syncing));
 static void syn_clear_one __ARGS((int id, int syncing));
 static void syn_cmd_on __ARGS((EXARG *eap, int syncing));
+static void syn_cmd_manual __ARGS((EXARG *eap, int syncing));
 static void syn_cmd_off __ARGS((EXARG *eap, int syncing));
+static void syn_cmd_onoff __ARGS((EXARG *eap, char *name));
 static void syn_cmd_list __ARGS((EXARG *eap, int syncing));
 static void syn_lines_msg __ARGS((void));
 static void syn_list_one __ARGS((int id, int syncing, int link_only));
@@ -539,8 +541,8 @@ syntax_start(wp, lnum)
 	diff = syn_buf->b_syn_sync_minlines;
 	if (diff < Rows * 2)
 	    diff = Rows * 2;	    /* parse less then two screenfulls extra */
-	if (lnum >= syn_buf->b_syn_states_lnum &&
-		lnum <= syn_buf->b_syn_states_lnum +
+	if (lnum >= syn_buf->b_syn_states_lnum
+		&& lnum <= syn_buf->b_syn_states_lnum +
 					     syn_buf->b_syn_states_len + diff)
 	{
 	    idx = lnum - syn_buf->b_syn_states_lnum;
@@ -972,6 +974,8 @@ copy_state_to_current(from)
 	    CUR_STATE(i).si_m_endcol = 0;
 	    CUR_STATE(i).si_m_startcol = 0;
 	    CUR_STATE(i).si_m_lnum = 0;
+	    CUR_STATE(i).si_next_list =
+		       (SYN_ITEMS(syn_buf)[CUR_STATE(i).si_idx]).sp_next_list;
 	    update_si_attr(i);
 	}
 	current_state.ga_len = ga->ga_len;
@@ -1484,7 +1488,7 @@ syn_current_attr(syncing, line)
 	/*
 	 * Handle searching for nextgroup match.
 	 */
-	if (current_next_list)
+	if (current_next_list != NULL)
 	{
 	    /*
 	     * If a nextgroup was not found, continue looking for one if:
@@ -1715,7 +1719,7 @@ check_state_ends(line)
 
 /*
  * Update an entry in the current_state stack for a match or region.  This
- * fills in si_attr and si_cont_list.
+ * fills in si_attr, si_next_list and si_cont_list.
  */
     static void
 update_si_attr(idx)
@@ -2100,7 +2104,7 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 
     /*
      * Must make a copy of the keyword, so we can add a NUL and make it
-     * uppercase.
+     * lowercase.
      */
     STRNCPY(keyword, p, len);
     keyword[len] = NUL;
@@ -2223,6 +2227,7 @@ syntax_clear(buf)
 
     /* free the stored states */
     syn_free_all_states(buf);
+    invalidate_current_state();
 }
 
 /*
@@ -2414,10 +2419,19 @@ syn_cmd_on(eap, syncing)
     EXARG	*eap;
     int		syncing;	/* not used */
 {
-    eap->nextcmd = check_nextcmd(eap->arg);
-    if (!eap->skip)
-	do_cmdline((char_u *)"so $VIM/syntax/syntax.vim",
-						   NULL, NULL, DOCMD_VERBOSE);
+    syn_cmd_onoff(eap, "syntax");
+}
+
+/*
+ * Handle ":syntax manual" command.
+ */
+/* ARGSUSED */
+    static void
+syn_cmd_manual(eap, syncing)
+    EXARG	*eap;
+    int		syncing;	/* not used */
+{
+    syn_cmd_onoff(eap, "manual");
 }
 
 /*
@@ -2429,10 +2443,23 @@ syn_cmd_off(eap, syncing)
     EXARG	*eap;
     int		syncing;	/* not used */
 {
+    syn_cmd_onoff(eap, "nosyntax");
+}
+
+    static void
+syn_cmd_onoff(eap, name)
+    EXARG	*eap;
+    char	*name;
+{
+    char_u	buf[100];
+
     eap->nextcmd = check_nextcmd(eap->arg);
     if (!eap->skip)
-	do_cmdline((char_u *)"so $VIM/syntax/nosyntax.vim",
-						   NULL, NULL, DOCMD_VERBOSE);
+    {
+	STRCPY(buf, "so ");
+	sprintf((char *)buf + 3, SYNTAX_FNAME, name);
+	do_cmdline(buf, NULL, NULL, DOCMD_VERBOSE);
+    }
 }
 
 /*
@@ -2940,6 +2967,7 @@ free_keywtab(ktabp)
 	    for (ktab = ktabp[i]; ktab != NULL; ktab = ktab_next)
 	    {
 		ktab_next = ktab->next;
+		vim_free(ktab->next_list);
 		vim_free(ktab);
 	    }
 	vim_free(ktabp);
@@ -4244,6 +4272,7 @@ get_id_list(arg, keylen, list)
     char_u	*end;
     int		round;
     int		count;
+    int		total_count = 0;
     short	*retval = NULL;
     char_u	*name;
     vim_regexp	*prog;
@@ -4255,6 +4284,8 @@ get_id_list(arg, keylen, list)
      * We parse the list twice:
      * round == 1: count the number of items, allocate the array.
      * round == 2: fill the array with the items.
+     * In round 1 new groups may be added, causing the number of items to
+     * grow when a regexp is used.  In that case round 1 is done once again.
      */
     for (round = 1; round <= 2; ++round)
     {
@@ -4342,7 +4373,19 @@ get_id_list(arg, keylen, list)
 			if (vim_regexec(prog, HL_TABLE()[i].sg_name, TRUE))
 			{
 			    if (round == 2)
-				retval[count] = i + 1;
+			    {
+				/* Got more items than expected; can happen
+				 * when adding items that match:
+				 * "contains=a.*b,axb".
+				 * Go back to first round */
+				if (count >= total_count)
+				{
+				    vim_free(retval);
+				    round = 1;
+				}
+				else
+				    retval[count] = i + 1;
+			    }
 			    ++count;
 			    id = -1;	    /* remember that we found one */
 			}
@@ -4360,7 +4403,16 @@ get_id_list(arg, keylen, list)
 	    if (id > 0)
 	    {
 		if (round == 2)
-		    retval[count] = id;
+		{
+		    /* Got more items than expected, go back to first round */
+		    if (count >= total_count)
+		    {
+			vim_free(retval);
+			round = 1;
+		    }
+		    else
+			retval[count] = id;
+		}
 		++count;
 	    }
 	    p = skipwhite(end);
@@ -4376,6 +4428,7 @@ get_id_list(arg, keylen, list)
 	    if (retval == NULL)
 		break;
 	    retval[count] = 0;	    /* zero means end of the list */
+	    total_count = count;
 	}
     }
 
@@ -4486,6 +4539,7 @@ static struct subcommand subcommands[] =
     {"include",		syn_cmd_include},
     {"keyword",		syn_cmd_keyword},
     {"list",		syn_cmd_list},
+    {"manual",		syn_cmd_manual},
     {"match",		syn_cmd_match},
     {"on",		syn_cmd_on},
     {"off",		syn_cmd_off},
@@ -4550,6 +4604,8 @@ syntax_present(buf)
 	    || curbuf->b_keywtab_ic != NULL);
 }
 
+#ifdef CMDLINE_COMPL
+
 static enum
 {
     EXP_SUBCMD,	    /* expand ":syn" sub-commands */
@@ -4609,6 +4665,8 @@ get_syntax_name(idx)
     return (char_u *)case_args[idx];
 }
 
+#endif /* CMDLINE_COMPL */
+
 #ifdef WANT_EVAL
 /*
  * Function called for expression evaluation: get syntax ID at file position.
@@ -4659,6 +4717,8 @@ syn_regexec(prog, string, at_bol)
 /*
  * The default highlight groups.  Used in the 'highlight' and 'guicursor'
  * options default.  Depends on 'background' option.
+ * These are compiled in, because they are needed even when no configuration
+ * file is used (e.g., for error messages).
  */
 static char *(highlight_init_both[]) =
     {
@@ -4672,6 +4732,7 @@ static char *(highlight_init_both[]) =
 	"StatusLine term=reverse,bold cterm=reverse,bold gui=reverse,bold",
 	"StatusLineNC term=reverse cterm=reverse gui=reverse",
 	"Visual term=reverse cterm=reverse gui=reverse guifg=Grey guibg=fg",
+	"VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold",
 	NULL
     };
 
@@ -4686,6 +4747,7 @@ static char *(highlight_init_light[]) =
 	"SpecialKey term=bold ctermfg=DarkBlue guifg=Blue",
 	"Title term=bold ctermfg=DarkMagenta gui=bold guifg=Magenta",
 	"WarningMsg term=standout ctermfg=DarkRed guifg=Red",
+	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	NULL
     };
 
@@ -4700,6 +4762,7 @@ static char *(highlight_init_dark[]) =
 	"SpecialKey term=bold ctermfg=LightBlue guifg=Cyan",
 	"Title term=bold ctermfg=LightMagenta gui=bold guifg=Magenta",
 	"WarningMsg term=standout ctermfg=LightRed guifg=Red",
+	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	NULL
     };
 
@@ -4740,7 +4803,7 @@ do_highlight(line, forceit, init)
     char_u	*key_start;
     char_u	*arg_start;
     char_u	*key = NULL, *arg = NULL;
-    int		i;
+    long	i;
     int		off;
     int		len;
     int		attr;
@@ -4763,7 +4826,7 @@ do_highlight(line, forceit, init)
     {
 	for (i = 1; i <= highlight_ga.ga_len && !got_int; ++i)
 	    /* TODO: only call when the group has attributes set */
-	    highlight_list_one(i);
+	    highlight_list_one((int)i);
 	return;
     }
 
@@ -5056,6 +5119,28 @@ do_highlight(line, forceit, init)
 
 	    if (isdigit(*arg))
 		color = atoi((char *)arg);
+	    else if (STRICMP(arg, "fg") == 0)
+	    {
+		if (cterm_normal_fg_color)
+		    color = cterm_normal_fg_color - 1;
+		else
+		{
+		    EMSG("FG color unknown");
+		    error = TRUE;
+		    break;
+		}
+	    }
+	    else if (STRICMP(arg, "bg") == 0)
+	    {
+		if (cterm_normal_bg_color)
+		    color = cterm_normal_bg_color - 1;
+		else
+		{
+		    EMSG("BG color unknown");
+		    error = TRUE;
+		    break;
+		}
+	    }
 	    else
 	    {
 		static char *(color_names[26]) = {
@@ -5336,8 +5421,10 @@ do_highlight(line, forceit, init)
 #endif
 	}
 #ifdef USE_GUI_X11
+# ifdef WANT_MENU
 	else if (is_menu_group)
 	    gui_mch_new_menu_colors();
+# endif
 	else if (is_scrollbar_group)
 	{
 	    if (gui.in_use)
@@ -5353,20 +5440,6 @@ do_highlight(line, forceit, init)
 
     /* Only call highlight_changed() once, after sourcing a syntax file */
     need_highlight_changed = TRUE;
-}
-
-/*
- * List highlighting matches in a nice way.
- */
-    static void
-highlight_list()
-{
-    int		i;
-
-    for (i = 10; --i >= 0; )
-	highlight_list_two(i, hl_attr(HLF_D));
-    for (i = 40; --i >= 0; )
-	highlight_list_two(55, 0);
 }
 
 /*
@@ -5421,7 +5494,9 @@ set_normal_colors()
     if (set_group_colors((char_u *)"Menu",
 				      &gui.menu_fg_pixel, &gui.menu_bg_pixel))
     {
+# ifdef WANT_MENU
 	gui_mch_new_menu_colors();
+# endif
 	must_redraw = CLEAR;
     }
     if (set_group_colors((char_u *)"Scrollbar",
@@ -5481,7 +5556,7 @@ hl_set_font_name(font_name)
 }
 
 /*
- * Set background color for "Normal" group.  Called by gui_mch_init()
+ * Set background color for "Normal" group.  Called by gui_set_bg_color()
  * when the color is known.
  */
     void
@@ -5502,7 +5577,7 @@ hl_set_bg_color_name(name)
 }
 
 /*
- * Set foreground color for "Normal" group.  Called by gui_mch_init()
+ * Set foreground color for "Normal" group.  Called by gui_set_fg_color()
  * when the color is known.
  */
     void
@@ -5776,17 +5851,6 @@ highlight_list_one(id)
     }
 }
 
-    static void
-highlight_list_two(cnt, attr)
-    int	    cnt;
-    int	    attr;
-{
-    msg_puts_attr((char_u *)("NI!  \b" + cnt/11), attr);
-    msg_clr_eos();
-    out_flush();
-    ui_delay(cnt == 55 ? 40L : (long)cnt*50L, FALSE);
-}
-
     static int
 highlight_list_arg(id, didh, type, iarg, sarg, name)
     int		id;
@@ -5833,6 +5897,7 @@ highlight_list_arg(id, didh, type, iarg, sarg, name)
     return didh;
 }
 
+#if (defined(WANT_EVAL) && defined(SYNTAX_HL)) || defined(PROTO)
 /*
  * Return "1" if highlight group "id" has attribute "flag".
  * Return NULL otherwise.
@@ -5862,7 +5927,9 @@ highlight_has_attr(id, flag, modec)
 	return (char_u *)"1";
     return NULL;
 }
+#endif
 
+#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
 /*
  * Return color name of highlight group "id".
  */
@@ -5916,6 +5983,7 @@ highlight_color(id, what, modec)
     /* term doesn't have color */
     return NULL;
 }
+#endif
 
 /*
  * Output the syntax list header.
@@ -6041,6 +6109,7 @@ syn_name2id(name)
     return i + 1;
 }
 
+#if defined(WANT_EVAL) || defined(PROTO)
 /*
  * Return TRUE if highlight group "name" exists.
  */
@@ -6050,6 +6119,7 @@ highlight_exists(name)
 {
     return (syn_name2id(name) > 0);
 }
+#endif
 
 /*
  * Like syn_name2id(), but take a pointer + length argument.
@@ -6275,9 +6345,12 @@ gui_do_one_color(idx)
 #endif
 
 /*
- * Translate the 'highlight' option into attributes in highlight_attr[].
- * Called only when the 'highlight' option has been changed.
- * Return FAIL when an invalid flag is found.  OK otherwise.
+ * Translate the 'highlight' option into attributes in highlight_attr[] and
+ * set up the user highlights User1..9.  If STATUSLINE is in use, a set of
+ * corresponding highlights to use on top of HLF_SNC is computed.
+ * Called only when the 'highlight' option has been changed and upon first
+ * screen redraw after any :highlight command.
+ * Return FAIL when an invalid flag is found in 'highlight'.  OK otherwise.
  */
     int
 highlight_changed()
@@ -6288,10 +6361,15 @@ highlight_changed()
     int		attr;
     char_u	*end;
     int		id;
-
-    /* Check the HLF_ enums, they must be in the same order! */
-    static int flags[HLF_COUNT] = {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M',
-				   'n', 'r', 's', 'S', 't', 'v', 'w'};
+#ifdef USER_HIGHLIGHT
+    char_u      userhl[10];
+# ifdef STATUSLINE
+    int		id_SNC = -1;
+    int		id_S = -1;
+    int		hlcnt;
+# endif
+#endif
+    static int	hl_flags[HLF_COUNT] = HL_FLAGS;
 
     need_highlight_changed = FALSE;
 
@@ -6317,14 +6395,14 @@ highlight_changed()
 	while (*p)
 	{
 	    for (hlf = 0; hlf < (int)HLF_COUNT; ++hlf)
-		if (flags[hlf] == *p)
+		if (hl_flags[hlf] == *p)
 		    break;
 	    ++p;
 	    if (hlf == (int)HLF_COUNT || *p == NUL)
 		return FAIL;
 
 	    /*
-	     * Allow several flags to be combined, like "bu" for
+	     * Allow several hl_flags to be combined, like "bu" for
 	     * bold-underlined.
 	     */
 	    attr = 0;
@@ -6362,6 +6440,12 @@ highlight_changed()
 				    return FAIL;
 				attr = syn_id2attr(id);
 				p = end - 1;
+#if defined(STATUSLINE) && defined(USER_HIGHLIGHT)
+				if (hlf == (int)HLF_SNC)
+				    id_SNC = syn_get_final_id(id);
+				else if (hlf == (int)HLF_S)
+				    id_S = syn_get_final_id(id);
+#endif
 				break;
 		    default:	return FAIL;
 		}
@@ -6372,8 +6456,99 @@ highlight_changed()
 	}
     }
 
+#ifdef USER_HIGHLIGHT
+    /* Setup the user highlights
+     *
+     * Temporarily  utilize 10 more hl entries.  Have to be in there
+     * simultaneously in case of table overflows in get_attr_entry()
+     */
+# ifdef STATUSLINE
+    if (ga_grow(&highlight_ga, 10) == FAIL)
+	return FAIL;
+    hlcnt = highlight_ga.ga_len;
+    if (id_S == 0)
+    {		    /* Make sure id_S is always valid to simplify code below */
+	memset(&HL_TABLE()[hlcnt + 9], 0, sizeof(struct hl_group));
+	HL_TABLE()[hlcnt + 9].sg_term = highlight_attr[HLF_S];
+	id_S = hlcnt + 10;
+    }
+# endif
+    for (i = 0; i < 9; i++)
+    {
+	sprintf((char *)userhl, "User%d", i + 1);
+	id = syn_name2id(userhl);
+	if (id == 0)
+	{
+	    highlight_user[i] = 0;
+# ifdef STATUSLINE
+	    highlight_stlnc[i] = 0;
+# endif
+	}
+	else
+	{
+# ifdef STATUSLINE
+	    struct hl_group *hlt = HL_TABLE();
+# endif
+
+	    highlight_user[i] = syn_id2attr(id);
+# ifdef STATUSLINE
+	    if (id_SNC == 0)
+	    {
+		memset(&hlt[hlcnt + i], 0, sizeof(struct hl_group));
+		hlt[hlcnt + i].sg_term = highlight_attr[HLF_SNC];
+		hlt[hlcnt + i].sg_cterm = highlight_attr[HLF_SNC];
+#  ifdef USE_GUI
+		hlt[hlcnt + i].sg_gui = highlight_attr[HLF_SNC];
+#  endif
+	    }
+	    else
+		mch_memmove(&hlt[hlcnt + i],
+			    &hlt[id_SNC - 1],
+			    sizeof(struct hl_group));
+	    hlt[hlcnt + i].sg_link = 0;
+
+	    /* Apply difference between UserX and HLF_S to HLF_SNC */
+	    hlt[hlcnt + i].sg_term ^=
+		hlt[id - 1].sg_term ^ hlt[id_S - 1].sg_term;
+	    if (hlt[id - 1].sg_start != hlt[id_S - 1].sg_start)
+		hlt[hlcnt + i].sg_start = hlt[id - 1].sg_start;
+	    if (hlt[id - 1].sg_stop != hlt[id_S - 1].sg_stop)
+		hlt[hlcnt + i].sg_stop = hlt[id - 1].sg_stop;
+	    hlt[hlcnt + i].sg_cterm ^=
+		hlt[id - 1].sg_cterm ^ hlt[id_S - 1].sg_cterm;
+	    if (hlt[id - 1].sg_cterm_fg != hlt[id_S - 1].sg_cterm_fg)
+		hlt[hlcnt + i].sg_cterm_fg = hlt[id - 1].sg_cterm_fg;
+	    if (hlt[id - 1].sg_cterm_bg != hlt[id_S - 1].sg_cterm_bg)
+		hlt[hlcnt + i].sg_cterm_bg = hlt[id - 1].sg_cterm_bg;
+#  ifdef USE_GUI
+	    hlt[hlcnt + i].sg_gui ^=
+		hlt[id - 1].sg_gui ^ hlt[id_S - 1].sg_gui;
+	    if (hlt[id - 1].sg_gui_fg != hlt[id_S - 1].sg_gui_fg)
+		hlt[hlcnt + i].sg_gui_fg = hlt[id - 1].sg_gui_fg;
+	    if (hlt[id - 1].sg_gui_bg != hlt[id_S - 1].sg_gui_bg)
+		hlt[hlcnt + i].sg_gui_bg = hlt[id - 1].sg_gui_bg;
+	    if (hlt[id - 1].sg_font != hlt[id_S - 1].sg_font)
+		hlt[hlcnt + i].sg_font = hlt[id - 1].sg_font;
+#  endif
+	    highlight_ga.ga_len = hlcnt + i + 1;
+	    set_hl_attr(hlcnt + i);	/* At long last we can apply */
+	    highlight_stlnc[i] = syn_id2attr(hlcnt + i + 1);
+# endif
+	}
+    }
+# ifdef STATUSLINE
+    highlight_ga.ga_len = hlcnt;
+# endif
+
+#endif /* USER_HIGHLIGHT */
+
     return OK;
 }
+
+#ifdef CMDLINE_COMPL
+
+static void highlight_list __ARGS((void));
+static void highlight_list_two __ARGS((int cnt, int attr));
 
 /*
  * Handle command line completion for :highlight command.
@@ -6416,6 +6591,35 @@ set_context_in_highlight_cmd(arg)
 }
 
 /*
+ * List highlighting matches in a nice way.
+ */
+    static void
+highlight_list()
+{
+    int		i;
+
+    for (i = 10; --i >= 0; )
+	highlight_list_two(i, hl_attr(HLF_D));
+    for (i = 40; --i >= 0; )
+	highlight_list_two(55, 0);
+}
+
+    static void
+highlight_list_two(cnt, attr)
+    int	    cnt;
+    int	    attr;
+{
+    msg_puts_attr((char_u *)("NI!  \b" + cnt / 11), attr);
+    msg_clr_eos();
+    out_flush();
+    ui_delay(cnt == 55 ? 40L : (long)cnt * 50L, FALSE);
+}
+
+#endif /* CMDLINE_COMPL */
+
+#if defined(CMDLINE_COMPL) || (defined(SYNTAX_HL) && defined(WANT_EVAL)) \
+    || defined(PROTO)
+/*
  * Function given to ExpandGeneric() to obtain the list of group names.
  * Also used for synIDattr() function.
  */
@@ -6423,14 +6627,23 @@ set_context_in_highlight_cmd(arg)
 get_highlight_name(idx)
     int	    idx;
 {
-    if (idx == highlight_ga.ga_len && include_link)
+    if (idx == highlight_ga.ga_len
+#ifdef CMDLINE_COMPL
+	    && include_link
+#endif
+	    )
 	return (char_u *)"link";
-    if (idx == highlight_ga.ga_len + 1 && include_link)
+    if (idx == highlight_ga.ga_len + 1
+#ifdef CMDLINE_COMPL
+	    && include_link
+#endif
+	    )
 	return (char_u *)"clear";
     if (idx < 0 || idx >= highlight_ga.ga_len)
 	return NULL;
     return HL_TABLE()[idx].sg_name;
 }
+#endif
 
 #ifdef USE_GUI
 /*

@@ -13,6 +13,8 @@
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
 #define USE_FNAME_CASE		    /* adjust case of file names */
+#define USE_TERM_CONSOLE
+#define HAVE_AVAIL_MEM
 
 #ifndef HAVE_CONFIG_H
 # ifndef _DCC
@@ -32,13 +34,19 @@
 #  define HAVE_DATE_TIME
 # endif
 
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		/* internal backtick expansion */
+#endif
+
 #define ERRORFILE	"AztecC.Err"
 #define MAKEEF		"t:vim##.Err"
 
 /*
  * Be conservative about sizeof(int). It could be 4 too.
  */
-#define SIZEOF_INT  2
+#ifndef USE_GUI_GTK	/* avoid problems when generating prototypes */
+# define SIZEOF_INT  2
+#endif
 
 #define BASENAMELEN	26	/* Amiga */
 
@@ -84,13 +92,19 @@ typedef long off_t;
 # define SYS_GVIMRC_FILE "$VIM/gvimrc"
 #endif
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE	"$VIM/menu.vim"
+# define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
 #endif
 #ifndef VIM_HLP
-# define VIM_HLP	"$VIM/doc/help.txt"
+# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
+#endif
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	"$VIMRUNTIME/filetype.vim"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE	"$VIMRUNTIME/ftoff.vim"
 #endif
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIM/syntax/%s.vim"
+# define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
 #endif
 
 #ifndef USR_EXRC_FILE
@@ -106,12 +120,18 @@ typedef long off_t;
 #ifndef USR_VIMRC_FILE2
 # define USR_VIMRC_FILE2 "home:.vimrc"
 #endif
+#ifndef USR_VIMRC_FILE3
+# define USR_VIMRC_FILE3 "$VIM/.vimrc"
+#endif
 
 #ifndef USR_GVIMRC_FILE
 # define USR_GVIMRC_FILE "s:.gvimrc"
 #endif
 #ifndef USR_GVIMRC_FILE2
 # define USR_GVIMRC_FILE2 "home:.gvimrc"
+#endif
+#ifndef USR_GVIMRC_FILE3
+# define USR_GVIMRC_FILE3 "$VIM/.gvimrc"
 #endif
 
 #ifdef VIMINFO

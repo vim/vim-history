@@ -15,6 +15,7 @@ extern int	gethostname __ARGS((char *, int));
 extern void	perror __ARGS((char *));
 
 extern int	sleep __ARGS((int));
+extern int	usleep __ARGS((unsigned int));
 extern unsigned int	alarm __ARGS((unsigned int));
 extern int	chdir __ARGS((char *));
 extern int	fchdir __ARGS((int));

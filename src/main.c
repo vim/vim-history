@@ -6,11 +6,19 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+#if defined(MSDOS) || defined(WIN32)
+# include <io.h>		/* for close() and dup() */
+#endif
+
 #define EXTERN
 #include "vim.h"
 
 #ifdef SPAWNO
 # include <spawno.h>		/* special MSDOS swapping library */
+#endif
+
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
 #endif
 
 static void mainerr __ARGS((int, char_u *));
@@ -78,7 +86,7 @@ usage()
     static char_u *(use[]) =
     {
 	(char_u *)"[file ..]       edit specified file(s)",
-	(char_u *)"-               read from stdin",
+	(char_u *)"-               read text from stdin",
 	(char_u *)"-t tag          edit file where tag is defined",
 #ifdef QUICKFIX
 	(char_u *)"-q [errorfile]  edit file with first error"
@@ -115,6 +123,7 @@ usage()
     main_msg("-s\t\t\tSilent (batch) mode (only for \"ex\")");
     main_msg("-R\t\t\tReadonly mode (like \"view\")");
     main_msg("-Z\t\t\tRestricted mode (like \"rvim\")");
+    main_msg("-m\t\t\tModifications (writing files) not allowed");
     main_msg("-b\t\t\tBinary mode");
 #ifdef LISPINDENT
     main_msg("-l\t\t\tLisp mode");
@@ -148,6 +157,9 @@ usage()
 #ifdef USE_GUI
     main_msg("-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc");
 #endif
+#ifdef CRYPTV
+    main_msg("-x\t\t\tEdit encrypted files");
+#endif
 #ifdef VIMINFO
     main_msg("-i <viminfo>\t\tUse <viminfo> instead of .viminfo");
 #endif
@@ -160,8 +172,8 @@ usage()
 # else
 #  ifdef USE_GUI_ATHENA
     mch_msg("\nOptions recognised by gvim (Athena version):\n");
-#  endif /* USE_GUI_ATHENA */
-# endif /* USE_GUI_MOTIF */
+#  endif
+# endif
     main_msg("-display <display>\tRun vim on <display>");
     main_msg("-iconic\t\tStart vim iconified");
 # if 0
@@ -181,12 +193,50 @@ usage()
     main_msg("+reverse\t\tDon't use reverse video (also: +rv)");
     main_msg("-xrm <resource>\tSet the specified resource");
 #endif /* USE_GUI_X11 */
-
+#if defined(USE_GUI) && defined(RISCOS)
+    mch_msg("\nOptions recognised by gvim (RISC OS version):\n");
+    main_msg("--columns <number>\tInitial width of window in columns");
+    main_msg("--rows <number>\tInitial height of window in rows");
+#endif
+#ifdef USE_GUI_GTK
+    mch_msg("\nOptions recognised by gvim (GTK+ version):\n");
+    main_msg("-font <font>\t\tUse <font> for normal text (also: -fn)");
+    main_msg("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)");
+    main_msg("-reverse\t\tUse reverse video (also: -rv)");
+#endif
     mch_windexit(1);
 }
 
-#ifdef HAVE_LOCALE_H
-# include <locale.h>
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+static void check_swap_exists_action __ARGS((void));
+
+/*
+ * Check the result of the ATTENTION dialog:
+ * When "Quit" selected, exit Vim.
+ * When "Recover" selected, recover the file.
+ */
+    static void
+check_swap_exists_action()
+{
+    if (swap_exists_action == SEA_QUIT)
+	getout(1);
+    if (swap_exists_action == SEA_RECOVER)
+    {
+	msg_scroll = TRUE;
+	ml_recover();
+	MSG_PUTS("\n");	/* don't overwrite the last message */
+	cmdline_row = msg_row;
+	do_modelines();
+    }
+}
+#endif
+
+#ifdef X_LOCALE
+# include <X11/Xlocale.h>
+#else
+# ifdef HAVE_LOCALE_H
+#  include <locale.h>
+# endif
 #endif
 
 /* Maximum number of commands from + or -c options */
@@ -194,10 +244,18 @@ usage()
 
 #ifndef PROTO	    /* don't want a prototype for main() */
     int
-#ifdef VIMDLL
+# ifdef VIMDLL
 _export
-#endif
-main(argc, argv)
+# endif
+# ifdef USE_GUI_MSWIN
+#  ifdef __BORLANDC__
+_cdecl
+#  endif
+VimMain
+# else
+main
+# endif
+(argc, argv)
     int		    argc;
     char	  **argv;
 {
@@ -208,6 +266,9 @@ main(argc, argv)
     char_u	   *use_vimrc = NULL;	    /* vimrc from -u option */
 #ifdef QUICKFIX
     char_u	   *use_ef = NULL;	    /* 'errorfile' from -q option */
+#endif
+#ifdef CRYPTV
+    int		    ask_for_key = FALSE;    /* -x argument */
 #endif
     int		    n_commands = 0;	    /* no. of commands from + or -c */
     char_u	   *commands[MAX_ARG_CMDS]; /* commands from + or -c option */
@@ -236,84 +297,6 @@ main(argc, argv)
     __uname_control = __UNAME_NO_PROCESS;
 #endif
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
-    /*
-     * Default mappings for some often used keys.
-     * Use the Windows (CUA) keybindings.
-     */
-    static struct initmap
-    {
-	char_u	    *arg;
-	int	    mode;
-    } initmappings[] =
-    {
-# ifdef USE_GUI
-	{(char_u *)"<C-PageUp> H", NORMAL+VISUAL},
-	{(char_u *)"<C-PageUp> <C-O>H",INSERT},
-	{(char_u *)"<C-PageDown> L$", NORMAL+VISUAL},
-	{(char_u *)"<C-PageDown> <C-O>L<C-O>$", INSERT},
-
-	/* paste, copy and cut */
-	{(char_u *)"<S-Insert> \"*P", NORMAL},
-	{(char_u *)"<S-Insert> \"-d\"*P", VISUAL},
-	{(char_u *)"<S-Insert> <C-R>*", INSERT+CMDLINE},
-	{(char_u *)"<C-Insert> \"*y", VISUAL},
-	{(char_u *)"<S-Del> \"*d", VISUAL},
-	{(char_u *)"<C-Del> \"*d", VISUAL},
-	{(char_u *)"<C-X> \"*d", VISUAL},
-	/* Missing: CTRL-C (can't be mapped) and CTRL-V (means something) */
-# else
-	{(char_u *)"\316\204 H", NORMAL+VISUAL},    /* CTRL-PageUp is "H" */
-	{(char_u *)"\316\204 \017H",INSERT},	    /* CTRL-PageUp is "^OH"*/
-	{(char_u *)"\316v L$", NORMAL+VISUAL},	    /* CTRL-PageDown is "L$" */
-	{(char_u *)"\316v \017L\017$", INSERT},	    /* CTRL-PageDown ="^OL^O$"*/
-	{(char_u *)"\316w <C-Home>", NORMAL+VISUAL},
-	{(char_u *)"\316w <C-Home>", INSERT+CMDLINE},
-	{(char_u *)"\316u <C-End>", NORMAL+VISUAL},
-	{(char_u *)"\316u <C-End>", INSERT+CMDLINE},
-
-	/* paste, copy and cut */
-#  ifdef USE_CLIPBOARD
-	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
-	{(char_u *)"\316\324 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
-	{(char_u *)"\316\324 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
-	{(char_u *)"\316\325 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
-	{(char_u *)"\316\327 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
-	{(char_u *)"\316\330 \"*d", VISUAL},	    /* CTRL-Del is "*d */
-	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
-#  else
-	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
-	{(char_u *)"\316\324 d\"0P", VISUAL},	    /* SHIFT-Insert is d"0P */
-	{(char_u *)"\316\324 \017P", INSERT},	    /* SHIFT-Insert is ^OP */
-	{(char_u *)"\316\325 y", VISUAL},	    /* CTRL-Insert is y */
-	{(char_u *)"\316\327 d", VISUAL},	    /* SHIFT-Del is d */
-	{(char_u *)"\316\330 d", VISUAL},	    /* CTRL-Del is d */
-#  endif
-# endif
-    };
-#endif
-
-#if defined(macintosh)
-    /*
-     * Default mappings for some often used keys.
-     * Use the Standard MacOS binding.
-     */
-    static struct initmap
-    {
-	char_u	    *arg;
-	int	    mode;
-    } initmappings[] =
-    {
-	/* paste, copy and cut */
-	{(char_u *)"<D-v> \"*P", NORMAL},
-	{(char_u *)"<D-v> \"-d\"*P", VISUAL},
-	{(char_u *)"<D-v> <C-R>*", INSERT+CMDLINE},
-	{(char_u *)"<D-c> \"*y", VISUAL},
-	{(char_u *)"<D-x> \"*d", VISUAL},
-	{(char_u *)"<Backspace> \"-d", VISUAL},
-    };
-#endif
-
 #ifdef MEM_PROFILE
     atexit(vim_mem_profile_dump);
 #endif
@@ -322,48 +305,39 @@ main(argc, argv)
     _wildcard(&argc, &argv);
 #endif
 
-#ifdef HAVE_LOCALE_H
+#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
     setlocale(LC_ALL, "");	/* for ctype() and the like */
 #endif
 
-#if defined(USE_GUI_WIN32) && defined(HAVE_OLE)
-    /* Check for special OLE command line parameters */
-    if (argc == 2 && (argv[1][0] == '-' || argv[1][0] == '/'))
+#ifdef USE_GUI_MAC
+    /* Macinthosh needs this before any memory is allocated. */
+    gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
+#endif
+
+    /*
+     * Allocate space for the generic buffers (needed for set_init_1() and
+     * EMSG2()).
+     */
+    if ((IObuff = alloc(IOSIZE)) == NULL
+	    || (NameBuff = alloc(MAXPATHL)) == NULL)
+	mch_windexit(0);
+
+#ifdef XTERM_CLIP
+    /*
+     * Get the name of the display, before gui_prepare() removes it from
+     * argv[].  Used for the xterm-clipboard display.
+     */
+    for (i = 0; i < argc; i++)
     {
-	/* Register Vim as an OLE Automation server */
-	if (STRICMP(argv[1] + 1, "register") == 0)
+	if (STRCMP(argv[i], "-display") == 0)
 	{
-	    RegisterMe();
-	    mch_windexit(0);
+	    xterm_display = argv[i + 1];
+	    break;
 	}
-
-	/* Unregister Vim as an OLE Automation server */
-	if (STRICMP(argv[1] + 1, "unregister") == 0)
-	{
-	    UnregisterMe(TRUE);
-	    mch_windexit(0);
-	}
-
-	/* Ignore an -embedding argument. It is only relevant if the
-	 * application wants to treat the case when it is started manually
-	 * differently from the case where it is started via automation (and
-	 * we don't).
-	 */
-	if (STRICMP(argv[1] + 1, "embedding") == 0)
-	    argc = 1;
-    }
-
-    {
-	int	bDoRestart = FALSE;
-
-	InitOLE(&bDoRestart);
-	/* automatically exit after registering */
-	if (bDoRestart)
-	    mch_windexit(0);
     }
 #endif
 
-#ifdef USE_GUI
+#if defined(USE_GUI) && !defined(USE_GUI_MAC)
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
 #endif
 
@@ -380,22 +354,15 @@ main(argc, argv)
     stdout_isatty = (mch_check_win(argc, argv) != FAIL);
 
     /*
-     * allocate the first window and buffer. Can't do anything without it
+     * allocate the first window and buffer. Can't do much without it
      */
-    if ((curwin = win_alloc(NULL)) == NULL ||
-			(curbuf = buflist_new(NULL, NULL, 1L, FALSE)) == NULL)
+    if ((curwin = win_alloc(NULL)) == NULL
+	    || (curbuf = buflist_new(NULL, NULL, 1L, FALSE)) == NULL)
 	mch_windexit(0);
     curwin->w_buffer = curbuf;
     curbuf->b_nwindows = 1;	/* there is one window */
     win_init(curwin);		/* init current window */
     init_yank();		/* init yank buffers */
-
-    /*
-     * Allocate space for the generic buffers (needed for set_init_1()).
-     */
-    if ((IObuff = alloc(IOSIZE)) == NULL ||
-			    (NameBuff = alloc(MAXPATHL)) == NULL)
-	mch_windexit(0);
 
     /*
      * Set the default values for the options.
@@ -442,15 +409,6 @@ main(argc, argv)
 	change_compatible(TRUE);	/* set 'compatible' */
     }
 
-    /*
-     * On some systems, when we compile with the GUI, we always use it.  On Mac
-     * there is no terminal version, and on Windows we can't figure out how to
-     * fork one off with :gui.
-     */
-#ifdef ALWAYS_USE_GUI
-    gui.starting = TRUE;
-#endif
-
     ++argv;
     --argc;
 
@@ -496,11 +454,17 @@ main(argc, argv)
 	    c = argv[0][argv_idx++];
 	    switch (c)
 	    {
-	    case NUL:		/* "-"  read from stdin */
-		if (edit_type != EDIT_NONE)
-		    mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
-		edit_type = EDIT_STDIN;
-		read_cmd_fd = 2;	/* read from stderr instead of stdin */
+	    case NUL:		/* "vim -"  read from stdin */
+				/* "ex -" silent mode */
+		if (exmode_active)
+		    silent_mode = TRUE;
+		else
+		{
+		    if (edit_type != EDIT_NONE)
+			mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
+		    edit_type = EDIT_STDIN;
+		    read_cmd_fd = 2;	/* read from stderr instead of stdin */
+		}
 		argv_idx = -1;		/* skip to next argument */
 		break;
 
@@ -578,6 +542,10 @@ main(argc, argv)
 #endif
 		break;
 
+	    case 'm':		/* "-m"  no writing of files */
+		p_write = FALSE;
+		break;
+
 	    case 'N':		/* "-N"  Nocompatible */
 		change_compatible(FALSE);
 		break;
@@ -644,6 +612,9 @@ main(argc, argv)
 
 	    case 'v':		/* "-v"  Vi-mode (as if called "vi") */
 		exmode_active = FALSE;
+#ifdef USE_GUI
+		gui.starting = FALSE;	/* don't start GUI */
+#endif
 		break;
 
 	    case 'w':		/* "-w{number}"	set window height */
@@ -656,9 +627,11 @@ main(argc, argv)
 		want_argument = TRUE;
 		break;
 
-	    case 'x':	    /* "-x"  use "crypt" for reading/writing files. */
-		/* TODO */
+#ifdef CRYPTV
+	    case 'x':	    /* "-x"  encrypted reading/writing of files */
+		ask_for_key = TRUE;
 		break;
+#endif
 
 	    case 'Z':		/* "-Z"  restricted mode */
 		restricted = TRUE;
@@ -725,7 +698,7 @@ main(argc, argv)
 			mch_errmsg("\"\n");
 			mch_windexit(2);
 		    }
-		    if ((scriptin[0] = fopen(argv[0], READBIN)) == NULL)
+		    if ((scriptin[0] = mch_fopen(argv[0], READBIN)) == NULL)
 		    {
 			mch_errmsg("Cannot open \"");
 			mch_errmsg(argv[0]);
@@ -759,7 +732,9 @@ main(argc, argv)
 		    break;
 
 		case 'U':	/* "-U {gvimrc}" gvim inits file */
+#ifdef USE_GUI
 		    use_gvimrc = (char_u *)argv[0];
+#endif
 		    break;
 
 		case 'w':	/* "-w {scriptout}" append to script file */
@@ -773,7 +748,7 @@ main(argc, argv)
 			mch_errmsg("\"\n");
 			mch_windexit(2);
 		    }
-		    if ((scriptout = fopen(argv[0],
+		    if ((scriptout = mch_fopen(argv[0],
 				    c == 'w' ? APPENDBIN : WRITEBIN)) == NULL)
 		    {
 			mch_errmsg("cannot open \"");
@@ -814,6 +789,25 @@ main(argc, argv)
     }
 
     /*
+     * On some systems, when we compile with the GUI, we always use it.  On Mac
+     * there is no terminal version, and on Windows we can't figure out how to
+     * fork one off with :gui.
+     */
+#ifdef ALWAYS_USE_GUI
+    gui.starting = TRUE;
+#else
+# ifdef USE_GUI_X11
+    /*
+     * Check if the GUI can be started.  reset gui.starting if it not
+     * Can't do this with GTK, need to fork first.
+     * Don't know about other systems, stay on the safe side and don't check.
+     */
+    if (gui.starting && gui_init_check() == FAIL)
+	gui.starting = FALSE;
+# endif
+#endif
+
+    /*
      * May expand wildcards in file names.
      */
     if (arg_file_count > 0)
@@ -823,8 +817,8 @@ main(argc, argv)
 	int	    new_arg_file_count;
 
 	if (expand_wildcards(arg_file_count, arg_files, &new_arg_file_count,
-				    &new_arg_files, EW_FILE|EW_NOTFOUND) == OK
-		&& new_arg_file_count != 0)
+			&new_arg_files, EW_FILE|EW_NOTFOUND|EW_ADDSLASH) == OK
+		&& new_arg_file_count > 0)
 	{
 	    FreeWild(arg_file_count, arg_files);
 	    arg_file_count = new_arg_file_count;
@@ -835,7 +829,7 @@ main(argc, argv)
     }
     if (arg_file_count > 1)
 	printf("%d files to edit\n", arg_file_count);
-#ifdef WIN32
+#ifdef MSWIN
     else if (arg_file_count == 1)
     {
 	/*
@@ -859,9 +853,9 @@ main(argc, argv)
 	want_full_screen = FALSE;
 
     /*
-     * When starting the GUI, don't need to check capabilities of terminal.
+     * When certain to start the GUI, don't check capabilities of terminal.
      */
-#ifdef USE_GUI
+#if defined(ALWAYS_USE_GUI) || defined(USE_GUI_X11)
     if (gui.starting)
 	want_full_screen = FALSE;
 #endif
@@ -884,7 +878,12 @@ main(argc, argv)
 	if (!input_isatty)
 	    silent_mode = TRUE;
     }
-    else if (want_full_screen && (!stdout_isatty || !input_isatty))
+    else if (want_full_screen && (!stdout_isatty || !input_isatty)
+#ifdef USE_GUI
+	    /* don't want the delay when started from the desktop */
+	    && !gui.starting
+#endif
+	    )
     {
 	if (!stdout_isatty)
 	    mch_errmsg("Vim: Warning: Output is not to a terminal\n");
@@ -899,13 +898,13 @@ main(argc, argv)
 				   capabilities (will set full_screen) */
 	screen_start();		/* don't know where cursor is now */
     }
-    screenclear();		/* clear screen (just inits screen structures,
-				    because starting is TRUE) */
 
     /*
      * Set the default values for the options that use Rows and Columns.
      */
+    screenalloc(FALSE);		/* allocate screen buffers */
     ui_get_winsize();		/* inits Rows and Columns */
+    screenalloc(FALSE);		/* may re-allocate screen buffers */
     set_init_2();
 
     firstwin->w_height = Rows - 1;
@@ -916,27 +915,7 @@ main(argc, argv)
     msg_scroll = TRUE;
     no_wait_return = TRUE;
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(macintosh)
-    /*
-     * Default mappings for some often used keys.
-     * Need to put string in allocated memory, because do_map() will modify it.
-     */
-    {
-	char_u *cpo_save = p_cpo;
-
-	p_cpo = (char_u *)"";	/* Allow <> notation */
-	for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
-	{
-	    initstr = vim_strsave(initmappings[i].arg);
-	    if (initstr != NULL)
-	    {
-		do_map(0, initstr, initmappings[i].mode, FALSE);
-		vim_free(initstr);
-	    }
-	}
-	p_cpo = cpo_save;
-    }
-#endif
+    init_mappings();		/* set up initial mappings */
 
     init_highlight(TRUE);	/* set the default highlight groups */
 #ifdef CURSOR_SHAPE
@@ -951,8 +930,10 @@ main(argc, argv)
     {
 	if (STRCMP(use_vimrc, "NONE") == 0)
 	{
+#ifdef USE_GUI
 	    if (use_gvimrc == NULL)	    /* don't load gvimrc either */
 		use_gvimrc = use_vimrc;
+#endif
 	}
 	else
 	{
@@ -966,7 +947,7 @@ main(argc, argv)
 	 * Get system wide defaults, if the file name is defined.
 	 */
 #ifdef SYS_VIMRC_FILE
-	(void)do_source((char_u *)SYS_VIMRC_FILE, TRUE, FALSE);
+	(void)do_source((char_u *)SYS_VIMRC_FILE, FALSE, FALSE);
 #endif
 
 	/*
@@ -979,15 +960,16 @@ main(argc, argv)
 	 * - second user exrc file ($VIM/.exrc for Dos)
 	 * The first that exists is used, the rest is ignored.
 	 */
-	if (process_env((char_u *)"VIMINIT") == OK)
-	    vimrc_found();
-	else
+	if (process_env((char_u *)"VIMINIT", TRUE) != OK)
 	{
 	    if (do_source((char_u *)USR_VIMRC_FILE, TRUE, TRUE) == FAIL
 #ifdef USR_VIMRC_FILE2
 		&& do_source((char_u *)USR_VIMRC_FILE2, TRUE, TRUE) == FAIL
 #endif
-		&& process_env((char_u *)"EXINIT") == FAIL
+#ifdef USR_VIMRC_FILE3
+		&& do_source((char_u *)USR_VIMRC_FILE3, TRUE, TRUE) == FAIL
+#endif
+		&& process_env((char_u *)"EXINIT", FALSE) == FAIL
 		&& do_source((char_u *)USR_EXRC_FILE, FALSE, FALSE) == FAIL)
 	    {
 #ifdef USR_EXRC_FILE2
@@ -1012,7 +994,7 @@ main(argc, argv)
 		struct stat s;
 
 		/* if ".vimrc" file is not owned by user, set 'secure' mode */
-		if (stat(VIMRC_FILE, &s) || s.st_uid != getuid())
+		if (mch_stat(VIMRC_FILE, &s) || s.st_uid != getuid())
 		    secure = p_secure;
 	    }
 #else
@@ -1024,6 +1006,10 @@ main(argc, argv)
 				      (char_u *)VIMRC_FILE, FALSE) != FPC_SAME
 #ifdef USR_VIMRC_FILE2
 		    && fullpathcmp((char_u *)USR_VIMRC_FILE2,
+				      (char_u *)VIMRC_FILE, FALSE) != FPC_SAME
+#endif
+#ifdef USR_VIMRC_FILE3
+		    && fullpathcmp((char_u *)USR_VIMRC_FILE3,
 				      (char_u *)VIMRC_FILE, FALSE) != FPC_SAME
 #endif
 #ifdef SYS_VIMRC_FILE
@@ -1039,7 +1025,7 @@ main(argc, argv)
 		struct stat s;
 
 		/* if ".exrc" is not owned by user set 'secure' mode */
-		if (stat(EXRC_FILE, &s) || s.st_uid != getuid())
+		if (mch_stat(EXRC_FILE, &s) || s.st_uid != getuid())
 		    secure = p_secure;
 		else
 		    secure = 0;
@@ -1108,7 +1094,7 @@ main(argc, argv)
      */
     if (*p_viminfo != NUL)
 	read_viminfo(NULL, TRUE, FALSE, FALSE);
-#endif /* VIMINFO */
+#endif
 
 #ifdef SPAWNO		/* special MSDOS swapping library */
     init_SPAWNO("", SWAP_ANY);
@@ -1141,28 +1127,15 @@ main(argc, argv)
 	++arg_idx;			    /* used first argument name */
     }
 
-    if (window_count == 0)
-	window_count = arg_file_count;
-    if (window_count > 1)
-    {
-	/* Don't change the windows if there was a command in .vimrc that
-	 * already split some windows */
-	if (firstwin->w_next == NULL)
-	    window_count = make_windows(window_count);
-	else
-	    window_count = win_count();
-    }
-    else
-	window_count = 1;
-
     /*
      * Start putting things on the screen.
      * Scroll screen down before drawing over it
      * Clear screen now, so file message will not be cleared.
      */
-    starting = FALSE;
+    starting = NO_BUFFERS;
     no_wait_return = FALSE;
-    msg_scroll = FALSE;
+    if (!exmode_active)
+	msg_scroll = FALSE;
 
 #ifdef USE_GUI
     /*
@@ -1194,6 +1167,7 @@ main(argc, argv)
 	scroll_region_reset();		/* In case Rows changed */
 
     scroll_start();
+
     /*
      * Don't clear the screen when starting in Ex mode, unless using the GUI.
      */
@@ -1206,7 +1180,29 @@ main(argc, argv)
     else
 	screenclear();			/* clear screen */
 
+#ifdef CRYPTV
+    if (ask_for_key)
+	(void)get_crypt_key(TRUE);
+#endif
+
     no_wait_return = TRUE;
+
+    /*
+     * Create the number of windows that was requested.
+     */
+    if (window_count == 0)
+	window_count = arg_file_count;
+    if (window_count > 1)
+    {
+	/* Don't change the windows if there was a command in .vimrc that
+	 * already split some windows */
+	if (firstwin->w_next == NULL)
+	    window_count = make_windows(window_count);
+	else
+	    window_count = win_count();
+    }
+    else
+	window_count = 1;
 
     if (recoverymode)			/* do recover */
     {
@@ -1219,21 +1215,41 @@ main(argc, argv)
     }
     else
     {
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	/* When getting the ATTENTION prompt here, use a dialog */
+	swap_exists_action = SEA_DIALOG;
+#endif
 	/*
 	 * If "-" argument given: read file from stdin.
 	 * Need to stop Raw mode for terminal in case stdin and stderr are the
-	 * same terminal: "cat | vim -".
+	 * same terminal: "cat | vim -".  Not needed for GUI-only versions.
 	 */
 	if (edit_type == EDIT_STDIN)
 	{
+#ifndef ALWAYS_USE_GUI
 	    stoptermcap();
 	    settmode(TMODE_COOK);	/* set to normal mode */
+#endif
 	    (void)open_buffer(TRUE);	/* create memfile and read file */
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	    check_swap_exists_action();
+#endif
+#ifndef ALWAYS_USE_GUI
 	    if (!termcap_active)	/* if readfile() didn't do it already */
 	    {
 		settmode(TMODE_RAW);	/* set to raw mode */
 		starttermcap();
 	    }
+#endif
+#if !(defined(AMIGA) || defined(macintosh))
+	    /*
+	     * Close stdin and dup it from stderr.  Required for GPM to work
+	     * properly, and for running external commands.
+	     * Is there any other system that cannot do this?
+	     */
+	    close(0);
+	    dup(2);
+#endif
 	}
 
 	/*
@@ -1254,6 +1270,9 @@ main(argc, argv)
 	    if (curbuf->b_ml.ml_mfp == NULL)
 	    {
 		(void)open_buffer(FALSE);   /* create memfile and read file */
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+		check_swap_exists_action();
+#endif
 #ifdef AUTOCMD
 		curwin = firstwin;	    /* start again */
 #endif
@@ -1268,6 +1287,9 @@ main(argc, argv)
 #ifdef AUTOCMD
 	--autocmd_no_enter;
 	--autocmd_no_leave;
+#endif
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	swap_exists_action = SEA_NONE;
 #endif
 	curwin = firstwin;
 	curbuf = curwin->w_buffer;
@@ -1315,7 +1337,7 @@ main(argc, argv)
 	    /* edit file from arg list, if there is one */
 	    (void)do_ecmd(0,
 			 arg_idx < arg_file_count ? arg_files[arg_idx] : NULL,
-					  NULL, NULL, (linenr_t)0, ECMD_HIDE);
+					  NULL, NULL, ECMD_LASTL, ECMD_HIDE);
 	    if (arg_idx == arg_file_count - 1)
 		arg_had_last = TRUE;
 	    ++arg_idx;
@@ -1385,6 +1407,7 @@ main(argc, argv)
     RedrawingDisabled = FALSE;
     redraw_later(NOT_VALID);
     no_wait_return = FALSE;
+    starting = 0;
 
     /* start in insert mode */
     if (p_im)
@@ -1407,7 +1430,7 @@ main(argc, argv)
 	if (stuff_empty())
 	{
 	    if (need_check_timestamps)
-		check_timestamps();
+		check_timestamps(FALSE);
 	    if (need_wait_return)	/* if wait_return still needed ... */
 		wait_return(FALSE);	/* ... call it now */
 	    if (need_start_insertmode && goto_im())
@@ -1419,13 +1442,14 @@ main(argc, argv)
 		need_fileinfo = FALSE;
 	    }
 	}
-	dont_wait_return = FALSE;
 	if (got_int && !global_busy)
 	{
-	    (void)vgetc();		/* flush all buffers */
+	    if (!quit_more)
+		(void)vgetc();		/* flush all buffers */
 	    got_int = FALSE;
 	}
-	msg_scroll = FALSE;
+	if (!exmode_active)
+	    msg_scroll = FALSE;
 	quit_more = FALSE;
 
 	/*
@@ -1518,18 +1542,25 @@ get_number_arg(p, idx, def)
  * Returns FAIL if the environment variable was not executed, OK otherwise.
  */
     int
-process_env(env)
+process_env(env, is_viminit)
     char_u	*env;
+    int		is_viminit; /* when TRUE, called for VIMINIT */
 {
     char_u	*initstr;
     char_u	*save_sourcing_name;
+    linenr_t	save_sourcing_lnum;
 
     if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
     {
+	if (is_viminit)
+	    vimrc_found();
 	save_sourcing_name = sourcing_name;
+	save_sourcing_lnum = sourcing_lnum;
 	sourcing_name = env;
+	sourcing_lnum = 0;
 	do_cmdline(initstr, NULL, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
 	sourcing_name = save_sourcing_name;
+	sourcing_lnum = save_sourcing_lnum;
 	return OK;
     }
     return FAIL;

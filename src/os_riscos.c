@@ -374,7 +374,7 @@ mch_delay(msec, ignoreinput)
     void
 mch_suspend()
 {
-    mch_call_shell(NULL, SHELL_COOKED);
+    suspend_shell();
 }
 
     void
@@ -438,6 +438,7 @@ mch_input_isatty()
     return FALSE;
 }
 
+#ifdef WANT_TITLE
     int
 mch_can_restore_title()
 {
@@ -489,6 +490,7 @@ mch_restore_title(which)
 {
     return;
 }
+#endif
 
 /*
  * Insert user name in s[len].
@@ -500,6 +502,7 @@ mch_get_user_name(s, len)
     int	    len;
 {
     /* RISC OS doesn't support user names. */
+    *s = NUL;
     return FAIL;
 }
 
@@ -773,6 +776,7 @@ mch_breakcheck()
 /*
  * Recursively expand one path component into all matching files and/or
  * directories.
+ * "path" has backslashes before chars that are not to be expanded.
  * Return the number of matches found.
  */
     int
@@ -987,7 +991,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 mch_has_wildcard(p)
     char_u  *p;		/* String to check. */
 {
-    if (vim_strpbrk((char_u *)"*#", p))
+    if (vim_strpbrk((char_u *)"*#`", p))
 	return TRUE;
     return FALSE;
 }
@@ -1110,6 +1114,7 @@ ro_buflist_add(old_name)
 
 /* Change the current directory.
  * Strip trailing dots to make it easier to use with filename completion.
+ * Return 0 for success, -1 for failure.
  */
     int
 mch_chdir(dir)
@@ -1134,11 +1139,11 @@ mch_chdir(dir)
     return retval;
 }
 
-/* Examine the named file, and set the 'filetype' option
+/* Examine the named file, and set the 'osfiletype' option
  * (in curbuf) to the file's type.
  */
     void
-ro_read_filetype(file)
+mch_read_filetype(file)
     char_u  *file;
 {
     int	    type;
@@ -1159,12 +1164,12 @@ ro_read_filetype(file)
 	;
     type_string[i] = 0;
 
-    set_string_option_direct("filetype", -1, type_string, TRUE);
+    set_string_option_direct("osfiletype", -1, type_string, TRUE);
     return;
 }
 
     void
-ro_set_filetype(file, type)
+mch_set_filetype(file, type)
     char_u  *file;
     char_u  *type;
 {

@@ -1,29 +1,38 @@
 #
-# Makefile for VMS  VIM 5.2c
+# Makefile for Vim on VMS
 #
 # This has only been tested on VMS 7.1 on DEC Alpha hardware.
 # The following will be built:
-#	vim.exe: standard executable
-#	dvim.exe:	debug executable (probably not too usefull unless
-#		CFLAGS containts '/debug')
+#	vim.exe:	standard
+#		or
+#	dvim.exe:	debug
+#
+# Edit the lines in the Configuration section below to select.
 #
 # To build: use the following command line:
 #
-#      mmk/descrip=os_vms.mms /macro=gui
-# Builds dual mode GUI/Non-GUI executable.
-#      mmk/descrip=os_vms.mms
-# Builds non-GUI executable.
+#   mmk/descrip=os_vms.mms
+#		or
+#	mms/descrip=os_vms.mms
 #
 
 #######################################################################
 # Configuration section.
 #######################################################################
+
+# Comment out if you want just the character terminal mode only.
+GUI = YES
+
+# Uncomment if want a debug version.
+# DEBUG = YES
+
+
 .IFDEF GUI
 #######################################################################
 # X/Motif executable  (also works in terminal mode )
 #######################################################################
 DEFS	= /def=("HAVE_CONFIG_H","USE_GUI_MOTIF")
-LIBS	= ,os_vms.opt/opt
+LIBS	= ,OS_VMS.OPT/OPT
 CONFIG_H = gui_vms_conf.h
 GUI_INC_LOC = decw$include:
 GUI_LIB_LOC = sys$library:
@@ -33,7 +42,7 @@ GUI_OBJ = gui.obj gui_motif.obj gui_x11.obj
 # These may need to be defined if things are not in standard locations:
 X_LIBS_DIR =
 X_PRE_LIBS =
-X_EXTRA_LIBS = 
+X_EXTRA_LIBS =
 X_LIBS =
 #######################################################################
 .ELSE
@@ -51,17 +60,21 @@ CONFIG_H = os_vms_conf.h
 
 CC	= cc/decc
 LD	= link
-#CFLAGS	= /debug/noopt/prefix=all/include=[.proto]
-CFLAGS	= /opt/prefix=all/include=[.proto]
-LDFLAGS	= 
-LIBS	= ,os_vms.opt/opt
 
-
+.IFDEF DEBUG
+TARGET = dvim.exe
+CFLAGS	= /debug/noopt/prefix=all/include=[.proto]
+LDFLAGS	=  /debug
+.ELSE
 TARGET = vim.exe
+CFLAGS	= /opt/prefix=all/include=[.proto]
+LDFLAGS	=
+.ENDIF
+
 
 ### These go into pathdef.c
 VIMLOC = $VIM
-VIM_HLP = $VIM/doc/help.txt
+VIM_HLP = $VIM_DOC:help.txt
 
 
 ###
@@ -114,11 +127,10 @@ clean :
 	del *.obj;*
 	del config.h;*
 
-# Link the target for normal use
+# Link the target
 $(TARGET) : $(OBJ) version.obj
 	$(CC) $(ALL_CFLAGS) version.c
 	$(LD) $(LDFLAGS) /exe=$(TARGET) $+ $(ALL_LIBS)
-	$(LD) $(LDFLAGS)/debug /exe=dvim.exe $+ $(ALL_LIBS)
 
 FILES = *.c *.h os_vms.mms *.in makefile.* *.sh cmdtab.tab tags configure
 

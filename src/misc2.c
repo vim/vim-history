@@ -128,7 +128,7 @@ incl(lp)
 dec_cursor()
 {
 #ifdef MULTI_BYTE
-    return (is_dbcs ? han_dec(&curwin->w_cursor) : dec(&curwin->w_cursor));
+    return (is_dbcs ? mb_dec(&curwin->w_cursor) : dec(&curwin->w_cursor));
 #else
     return dec(&curwin->w_cursor);
 #endif
@@ -191,7 +191,9 @@ check_cursor_col()
 	curwin->w_cursor.col = 0;
     else if (curwin->w_cursor.col >= len)
     {
-	if (State & INSERT || restart_edit)
+	/* Allow cursor past end-of-line in Insert mode, restarting Insert
+	 * mode or when in Visual mode and 'selection' isn't "old" */
+	if (State & INSERT || restart_edit || (VIsual_active && *p_sel != 'o'))
 	    curwin->w_cursor.col = len;
 	else
 	    curwin->w_cursor.col = len - 1;
@@ -208,6 +210,7 @@ adjust_cursor()
     check_cursor_col();
 }
 
+#if defined(TEXT_OBJECTS) || defined(PROTO)
 /*
  * Make sure curwin->w_cursor is not on the NUL at the end of the line.
  * Allow it when in Visual mode and 'selection' is not "old".
@@ -219,6 +222,7 @@ adjust_cursor_col()
 	    && curwin->w_cursor.col && gchar_cursor() == NUL)
 	--curwin->w_cursor.col;
 }
+#endif
 
 /*
  * When curwin->w_leftcol has changed, adjust the cursor position.
@@ -271,6 +275,8 @@ leftcol_changed()
 	}
     }
 
+    if (retval)
+	curwin->w_set_curswant = TRUE;
     redraw_later(NOT_VALID);
     return retval;
 }
@@ -392,7 +398,12 @@ vim_mem_profile_dump()
  * Some memory is reserved for error messages and for being able to
  * call mf_release_all(), which needs some memory for mf_trans_add().
  */
-#define KEEP_ROOM 8192L
+#if defined(MSDOS) && !defined(DJGPP)
+# define SMALL_MEM
+# define KEEP_ROOM 8192L
+#else
+# define KEEP_ROOM (2 * 8192L)
+#endif
 
 static void vim_strup __ARGS((char_u *p));
 
@@ -455,6 +466,10 @@ lalloc_clear(size, message)
     return p;
 }
 
+/*
+ * Low level memory allocation function.
+ * This is used often, KEEP IT FAST!
+ */
     char_u *
 lalloc(size, message)
     long_u	size;
@@ -463,7 +478,11 @@ lalloc(size, message)
     char_u	*p;		    /* pointer to new storage space */
     static int	releasing = FALSE;  /* don't do mf_release_all() recursive */
     int		try_again;
+#if defined(HAVE_AVAIL_MEM) && !defined(SMALL_MEM)
+    static long_u allocated = 0;    /* allocated since last avail check */
+#endif
 
+    /* Safety check for allocating zero bytes */
     if (size <= 0)
     {
 	EMSGN("Internal error: lalloc(%ld, )", size);
@@ -481,24 +500,47 @@ lalloc(size, message)
 #endif
 
     /*
-     * If out of memory, try to release some memfile blocks.
-     * If some blocks are released call malloc again.
+     * Loop when out of memory: Try to release some memfile blocks and
+     * if some blocks are released call malloc again.
      */
     for (;;)
     {
+	/*
+	 * Handle three kind of systems:
+	 * 1. No check for available memory: Just return.
+	 * 2. Slow check for available memory: call mch_avail_mem() after
+	 *    allocating KEEP_ROOM amount of memory.
+	 * 3. Strict check for available memory: call mch_avail_mem()
+	 */
 	if ((p = (char_u *)malloc((size_t)size)) != NULL)
 	{
+#ifndef HAVE_AVAIL_MEM
+	    /* 1. No check for available memory: Just return. */
+	    goto theend;
+#else
+# ifndef SMALL_MEM
+	    /* 2. Slow check for available memory: call mch_avail_mem() after
+	     *    allocating (KEEP_ROOM / 2) amount of memory. */
+	    allocated += size;
+	    if (allocated < KEEP_ROOM / 2)
+		goto theend;
+	    allocated = 0;
+# endif
+	    /* 3. check for available memory: call mch_avail_mem() */
 	    if (mch_avail_mem(TRUE) < KEEP_ROOM && !releasing)
-	    {				    /* System is low... no go! */
-		    vim_free((char *)p);
-		    p = NULL;
+	    {
+		vim_free((char *)p);	/* System is low... no go! */
+		p = NULL;
 	    }
+	    else
+		goto theend;
+#endif
 	}
-    /*
-     * Remember that mf_release_all() is being called to avoid an endless loop,
-     * because mf_release_all() may call alloc() recursively.
-     */
-	if (p != NULL || releasing)
+	/*
+	 * Remember that mf_release_all() is being called to avoid an endless
+	 * loop, because mf_release_all() may call alloc() recursively.
+	 */
+	if (releasing)
 	    break;
 	releasing = TRUE;
 	try_again = mf_release_all();
@@ -510,19 +552,19 @@ lalloc(size, message)
     if (message && p == NULL)
 	do_outofmem_msg();
 
+theend:
 #ifdef MEM_PROFILE
     mem_post_alloc((void **)&p, (size_t)size);
 #endif
-
-    return (p);
+    return p;
 }
 
 #if defined(MEM_PROFILE) || defined(PROTO)
 /*
- * realloc(), with memory profiling.
+ * realloc() with memory profiling.
  */
     void *
-vim_realloc(ptr, size)
+mem_realloc(ptr, size)
     void *ptr;
     size_t size;
 {
@@ -586,6 +628,7 @@ vim_strnsave(string, len)
     return p;
 }
 
+#if 0	/* not used */
 /*
  * like vim_strnsave(), but remove backslashes from the string.
  */
@@ -607,6 +650,7 @@ vim_strnsave_esc(string, len)
     }
     return p1;
 }
+#endif
 
 /*
  * Same as vim_strsave(), but any characters found in esc_chars are preceded
@@ -649,7 +693,8 @@ vim_strsave_escaped(string, esc_chars)
 }
 
 /*
- * like vim_strsave(), but make all characters uppercase.
+ * Like vim_strsave(), but make all characters uppercase.
+ * This uses ASCII lower-to-upper case translation, language independent.
  */
     char_u *
 vim_strsave_up(string)
@@ -663,7 +708,8 @@ vim_strsave_up(string)
 }
 
 /*
- * like vim_strnsave(), but make all characters uppercase.
+ * Like vim_strnsave(), but make all characters uppercase.
+ * This uses ASCII lower-to-upper case translation, language independent.
  */
     char_u *
 vim_strnsave_up(string, len)
@@ -677,6 +723,9 @@ vim_strnsave_up(string, len)
     return p1;
 }
 
+/*
+ * ASCII lower-to-upper case translation, language independent.
+ */
     static void
 vim_strup(p)
     char_u	*p;
@@ -688,33 +737,51 @@ vim_strup(p)
     {
 	p2 = p;
 	while ((c = *p2) != NUL)
-	    *p2++ = TO_UPPER(c);
+	    *p2++ = (c < 'a' || c > 'z') ? c : (c - 0x20);
     }
 }
 
 /*
- * copy a number of spaces
+ * copy a space a number of times
  */
     void
 copy_spaces(ptr, count)
-    char_u  *ptr;
-    size_t  count;
+    char_u	*ptr;
+    size_t	count;
 {
-    size_t  i = count;
-    char_u  *p = ptr;
+    size_t	i = count;
+    char_u	*p = ptr;
 
     while (i--)
 	*p++ = ' ';
 }
+
+#if defined(VISUALEXTRA) || defined(PROTO)
+/*
+ * copy a character a number of times
+ */
+    void
+copy_chars(ptr, count, c)
+    char_u	*ptr;
+    size_t	count;
+    int		c;
+{
+    size_t	i = count;
+    char_u	*p = ptr;
+
+    while (i--)
+	*p++ = c;
+}
+#endif
 
 /*
  * delete spaces at the end of a string
  */
     void
 del_trailing_spaces(ptr)
-    char_u *ptr;
+    char_u	*ptr;
 {
-    char_u  *q;
+    char_u	*q;
 
     q = ptr + STRLEN(ptr);
     while (--q > ptr && vim_iswhite(q[0]) && q[-1] != '\\' &&
@@ -1022,6 +1089,7 @@ ga_clear(gap)
     ga_init(gap);
 }
 
+#if defined(WANT_EVAL) || defined(PROTO)
 /*
  * Clear a growing array that contains a list of strings.
  */
@@ -1035,6 +1103,7 @@ ga_clear_strings(gap)
 	vim_free(((char_u **)(gap->ga_data))[i]);
     ga_clear(gap);
 }
+#endif
 
 /*
  * Initialize a growing array.	Don't forget to set ga_itemsize and
@@ -1061,36 +1130,73 @@ ga_init2(gap, itemsize, growsize)
 }
 
 /*
- * Make room in growing array "ga" for at least "n" items.
+ * Make room in growing array "gap" for at least "n" items.
  * Return FAIL for failure, OK otherwise.
  */
     int
-ga_grow(ga, n)
-    struct growarray	*ga;
+ga_grow(gap, n)
+    struct growarray	*gap;
     int			n;
 {
     size_t	    len;
     char_u	    *pp;
 
-    if (ga->ga_room < n)
+    if (gap->ga_room < n)
     {
-	if (n < ga->ga_growsize)
-	    n = ga->ga_growsize;
-	len = ga->ga_itemsize * (ga->ga_len + n);
+	if (n < gap->ga_growsize)
+	    n = gap->ga_growsize;
+	len = gap->ga_itemsize * (gap->ga_len + n);
 	pp = alloc_clear((unsigned)len);
 	if (pp == NULL)
 	    return FAIL;
-	ga->ga_room = n;
-	if (ga->ga_data != NULL)
+	gap->ga_room = n;
+	if (gap->ga_data != NULL)
 	{
-	    mch_memmove(pp, ga->ga_data,
-				      (size_t)(ga->ga_itemsize * ga->ga_len));
-	    vim_free(ga->ga_data);
+	    mch_memmove(pp, gap->ga_data,
+				      (size_t)(gap->ga_itemsize * gap->ga_len));
+	    vim_free(gap->ga_data);
 	}
-	ga->ga_data = pp;
+	gap->ga_data = pp;
     }
     return OK;
 }
+
+#if defined(WANT_EVAL) || defined(PROTO)
+/*
+ * Concatenate a string to a growarray which contains characters.
+ * Note: Does NOT copy the NUL at the end!
+ */
+    void
+ga_concat(gap, s)
+    struct growarray	*gap;
+    char_u		*s;
+{
+    size_t    len = STRLEN(s);
+
+    if (ga_grow(gap, (int)len) == OK)
+    {
+	mch_memmove((char *)gap->ga_data + gap->ga_len, s, len);
+	gap->ga_len += len;
+	gap->ga_room -= len;
+    }
+}
+
+/*
+ * Append a character to a growarray which contains characters.
+ */
+    void
+ga_append(gap, c)
+    struct growarray	*gap;
+    int			c;
+{
+    if (ga_grow(gap, 1) == OK)
+    {
+	*((char *)gap->ga_data + gap->ga_len) = c;
+	++gap->ga_len;
+	--gap->ga_room;
+    }
+}
+#endif
 
 /************************************************************************
  * functions that use lookup tables for various things, generally to do with
@@ -1155,6 +1261,11 @@ static char_u shifted_keys_table[] =
     '!', '3',			'&', '8',		/* undo */
     KS_EXTRA, (int)KE_S_UP,	'k', 'u',		/* up arrow */
     KS_EXTRA, (int)KE_S_DOWN,	'k', 'd',		/* down arrow */
+
+    KS_EXTRA, (int)KE_S_XF1,	KS_EXTRA, (int)KE_XF1,	/* vt100 F1 */
+    KS_EXTRA, (int)KE_S_XF2,	KS_EXTRA, (int)KE_XF2,
+    KS_EXTRA, (int)KE_S_XF3,	KS_EXTRA, (int)KE_XF3,
+    KS_EXTRA, (int)KE_S_XF4,	KS_EXTRA, (int)KE_XF4,
 
     KS_EXTRA, (int)KE_S_F1,	'k', '1',		/* F1 */
     KS_EXTRA, (int)KE_S_F2,	'k', '2',
@@ -1266,21 +1377,23 @@ static struct key_name_entry
     {K_F34,		(char_u *)"F34"},
     {K_F35,		(char_u *)"F35"},
 
-    {K_XF1,		(char_u *)"F1"},
-    {K_XF2,		(char_u *)"F2"},
-    {K_XF3,		(char_u *)"F3"},
-    {K_XF4,		(char_u *)"F4"},
+    {K_XF1,		(char_u *)"xF1"},
+    {K_XF2,		(char_u *)"xF2"},
+    {K_XF3,		(char_u *)"xF3"},
+    {K_XF4,		(char_u *)"xF4"},
 
     {K_HELP,		(char_u *)"Help"},
     {K_UNDO,		(char_u *)"Undo"},
     {K_INS,		(char_u *)"Insert"},
     {K_INS,		(char_u *)"Ins"},	/* Alternative name */
     {K_HOME,		(char_u *)"Home"},
+    {K_KHOME,		(char_u *)"kHome"},
+    {K_XHOME,		(char_u *)"xHome"},
     {K_END,		(char_u *)"End"},
+    {K_KEND,		(char_u *)"kEnd"},
+    {K_XEND,		(char_u *)"xEnd"},
     {K_PAGEUP,		(char_u *)"PageUp"},
     {K_PAGEDOWN,	(char_u *)"PageDown"},
-    {K_KHOME,		(char_u *)"kHome"},
-    {K_KEND,		(char_u *)"kEnd"},
     {K_KPAGEUP,		(char_u *)"kPageUp"},
     {K_KPAGEDOWN,	(char_u *)"kPageDown"},
     {K_KPLUS,		(char_u *)"kPlus"},
@@ -1293,8 +1406,10 @@ static struct key_name_entry
 
     {K_MOUSE,		(char_u *)"Mouse"},
     {K_LEFTMOUSE,	(char_u *)"LeftMouse"},
+    {K_LEFTMOUSE_NM,	(char_u *)"LeftMouseNM"},
     {K_LEFTDRAG,	(char_u *)"LeftDrag"},
     {K_LEFTRELEASE,	(char_u *)"LeftRelease"},
+    {K_LEFTRELEASE_NM,	(char_u *)"LeftReleaseNM"},
     {K_MIDDLEMOUSE,	(char_u *)"MiddleMouse"},
     {K_MIDDLEDRAG,	(char_u *)"MiddleDrag"},
     {K_MIDDLERELEASE,	(char_u *)"MiddleRelease"},
@@ -1317,8 +1432,14 @@ static struct mousetable
 } mouse_table[] =
 {
     {(int)KE_LEFTMOUSE,		MOUSE_LEFT,	TRUE,	FALSE},
+#ifdef USE_GUI
+    {(int)KE_LEFTMOUSE_NM,	MOUSE_LEFT,	TRUE,	FALSE},
+#endif
     {(int)KE_LEFTDRAG,		MOUSE_LEFT,	FALSE,	TRUE},
     {(int)KE_LEFTRELEASE,	MOUSE_LEFT,	FALSE,	FALSE},
+#ifdef USE_GUI
+    {(int)KE_LEFTRELEASE_NM,	MOUSE_LEFT,	FALSE,	FALSE},
+#endif
     {(int)KE_MIDDLEMOUSE,	MOUSE_MIDDLE,	TRUE,	FALSE},
     {(int)KE_MIDDLEDRAG,	MOUSE_MIDDLE,	FALSE,	TRUE},
     {(int)KE_MIDDLERELEASE,	MOUSE_MIDDLE,	FALSE,	FALSE},
@@ -1349,6 +1470,7 @@ name_to_mod_mask(c)
     return 0x0;
 }
 
+#if 0 /* not used */
 /*
  * Decide whether the given key code (K_*) is a shifted special
  * key (by looking at mod_mask).  If it is, then return the appropriate shifted
@@ -1360,6 +1482,7 @@ check_shifted_spec_key(c)
 {
     return simplify_key(c, &mod_mask);
 }
+#endif
 
 /*
  * Check if if there is a special key code for "key" that includes the
@@ -1709,6 +1832,7 @@ get_special_key_code(name)
     return 0;
 }
 
+#ifdef CMDLINE_COMPL
     char_u *
 get_key_name(i)
     int	    i;
@@ -1717,6 +1841,7 @@ get_key_name(i)
 	return NULL;
     return  key_names_table[i].name;
 }
+#endif
 
 #ifdef USE_MOUSE
 /*
@@ -1759,6 +1884,18 @@ get_pseudo_mouse_code(button, is_click, is_drag)
 	    && is_click == mouse_table[i].is_click
 	    && is_drag == mouse_table[i].is_drag)
 	{
+#ifdef USE_GUI
+	    /* Trick: a non mappable left click and release has mouse_col < 0.
+	     * Used for 'mousefocus' in gui_mouse_moved() */
+	    if (mouse_col < 0)
+	    {
+		mouse_col = 0;
+		if (mouse_table[i].pseudo_code == (int)KE_LEFTMOUSE)
+		    return (int)KE_LEFTMOUSE_NM;
+		if (mouse_table[i].pseudo_code == (int)KE_LEFTRELEASE)
+		    return (int)KE_LEFTRELEASE_NM;
+	    }
+#endif
 	    return mouse_table[i].pseudo_code;
 	}
     return (int)KE_IGNORE;	    /* not recongnized, ignore it */
@@ -1830,14 +1967,18 @@ call_shell(cmd, opt)
     int		opt;
 {
     char_u	*ncmd;
+    int		retval;
 
-#ifdef USE_GUI_WIN32
+#ifdef USE_GUI_MSWIN
     /* Don't hide the pointer while executing a shell command. */
     gui_mch_mousehide(FALSE);
 #endif
+#ifdef USE_GUI
+    ++hold_gui_events;
+#endif
 
     if (cmd == NULL || *p_sxq == NUL)
-	call_shell_retval = mch_call_shell(cmd, opt);
+	retval = mch_call_shell(cmd, opt);
     else
     {
 	ncmd = alloc((unsigned)(STRLEN(cmd) + STRLEN(p_sxq) * 2 + 1));
@@ -1846,13 +1987,20 @@ call_shell(cmd, opt)
 	    STRCPY(ncmd, p_sxq);
 	    STRCAT(ncmd, cmd);
 	    STRCAT(ncmd, p_sxq);
-	    call_shell_retval = mch_call_shell(ncmd, opt);
+	    retval = mch_call_shell(ncmd, opt);
 	    vim_free(ncmd);
 	}
 	else
-	    call_shell_retval = -1;
+	    retval = -1;
     }
-    return call_shell_retval;
+#ifdef USE_GUI
+    --hold_gui_events;
+#endif
+
+#ifdef WANT_EVAL
+    set_vim_var_nr(VV_SHELL_ERROR, (long)retval);
+#endif
+    return retval;
 }
 
 /*
@@ -1872,6 +2020,7 @@ get_real_state()
     return State;
 }
 
+#if defined(MKSESSION) || defined(MSWIN) || defined(PROTO)
 /*
  * Change to a file's directory.
  */
@@ -1892,6 +2041,7 @@ vim_chdirfile(fname)
 
     return mch_chdir((char *)temp_string);
 }
+#endif
 
 #ifdef CURSOR_SHAPE
 
@@ -2078,6 +2228,8 @@ get_cursor_idx()
 	return SHAPE_I;
     if (State == REPLACE)
 	return SHAPE_R;
+    if (State == VREPLACE)
+	return SHAPE_R;
     if (State == CMDLINE)
     {
 	if (cmdline_at_end())
@@ -2099,3 +2251,182 @@ get_cursor_idx()
 }
 
 #endif /* CURSOR_SHAPE */
+
+
+#ifdef CRYPTV
+/*
+ * Optional encryption suypport.
+ * Mohsin Ahmed, mosh@sasi.com, 98-09-24
+ * Based on zip/crypt sources.
+ */
+
+/* from zip.h */
+
+typedef unsigned short ush;	/* unsigned 16-bit value */
+typedef unsigned long  ulg;	/* unsigned 32-bit value */
+
+/*
+ * from util.c
+ * Table of CRC-32's of all single byte values (made by makecrc.c)
+ */
+
+ulg crc_32_tab[] =
+{
+    0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
+    0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
+    0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L,
+    0x90bf1d91L, 0x1db71064L, 0x6ab020f2L, 0xf3b97148L, 0x84be41deL,
+    0x1adad47dL, 0x6ddde4ebL, 0xf4d4b551L, 0x83d385c7L, 0x136c9856L,
+    0x646ba8c0L, 0xfd62f97aL, 0x8a65c9ecL, 0x14015c4fL, 0x63066cd9L,
+    0xfa0f3d63L, 0x8d080df5L, 0x3b6e20c8L, 0x4c69105eL, 0xd56041e4L,
+    0xa2677172L, 0x3c03e4d1L, 0x4b04d447L, 0xd20d85fdL, 0xa50ab56bL,
+    0x35b5a8faL, 0x42b2986cL, 0xdbbbc9d6L, 0xacbcf940L, 0x32d86ce3L,
+    0x45df5c75L, 0xdcd60dcfL, 0xabd13d59L, 0x26d930acL, 0x51de003aL,
+    0xc8d75180L, 0xbfd06116L, 0x21b4f4b5L, 0x56b3c423L, 0xcfba9599L,
+    0xb8bda50fL, 0x2802b89eL, 0x5f058808L, 0xc60cd9b2L, 0xb10be924L,
+    0x2f6f7c87L, 0x58684c11L, 0xc1611dabL, 0xb6662d3dL, 0x76dc4190L,
+    0x01db7106L, 0x98d220bcL, 0xefd5102aL, 0x71b18589L, 0x06b6b51fL,
+    0x9fbfe4a5L, 0xe8b8d433L, 0x7807c9a2L, 0x0f00f934L, 0x9609a88eL,
+    0xe10e9818L, 0x7f6a0dbbL, 0x086d3d2dL, 0x91646c97L, 0xe6635c01L,
+    0x6b6b51f4L, 0x1c6c6162L, 0x856530d8L, 0xf262004eL, 0x6c0695edL,
+    0x1b01a57bL, 0x8208f4c1L, 0xf50fc457L, 0x65b0d9c6L, 0x12b7e950L,
+    0x8bbeb8eaL, 0xfcb9887cL, 0x62dd1ddfL, 0x15da2d49L, 0x8cd37cf3L,
+    0xfbd44c65L, 0x4db26158L, 0x3ab551ceL, 0xa3bc0074L, 0xd4bb30e2L,
+    0x4adfa541L, 0x3dd895d7L, 0xa4d1c46dL, 0xd3d6f4fbL, 0x4369e96aL,
+    0x346ed9fcL, 0xad678846L, 0xda60b8d0L, 0x44042d73L, 0x33031de5L,
+    0xaa0a4c5fL, 0xdd0d7cc9L, 0x5005713cL, 0x270241aaL, 0xbe0b1010L,
+    0xc90c2086L, 0x5768b525L, 0x206f85b3L, 0xb966d409L, 0xce61e49fL,
+    0x5edef90eL, 0x29d9c998L, 0xb0d09822L, 0xc7d7a8b4L, 0x59b33d17L,
+    0x2eb40d81L, 0xb7bd5c3bL, 0xc0ba6cadL, 0xedb88320L, 0x9abfb3b6L,
+    0x03b6e20cL, 0x74b1d29aL, 0xead54739L, 0x9dd277afL, 0x04db2615L,
+    0x73dc1683L, 0xe3630b12L, 0x94643b84L, 0x0d6d6a3eL, 0x7a6a5aa8L,
+    0xe40ecf0bL, 0x9309ff9dL, 0x0a00ae27L, 0x7d079eb1L, 0xf00f9344L,
+    0x8708a3d2L, 0x1e01f268L, 0x6906c2feL, 0xf762575dL, 0x806567cbL,
+    0x196c3671L, 0x6e6b06e7L, 0xfed41b76L, 0x89d32be0L, 0x10da7a5aL,
+    0x67dd4accL, 0xf9b9df6fL, 0x8ebeeff9L, 0x17b7be43L, 0x60b08ed5L,
+    0xd6d6a3e8L, 0xa1d1937eL, 0x38d8c2c4L, 0x4fdff252L, 0xd1bb67f1L,
+    0xa6bc5767L, 0x3fb506ddL, 0x48b2364bL, 0xd80d2bdaL, 0xaf0a1b4cL,
+    0x36034af6L, 0x41047a60L, 0xdf60efc3L, 0xa867df55L, 0x316e8eefL,
+    0x4669be79L, 0xcb61b38cL, 0xbc66831aL, 0x256fd2a0L, 0x5268e236L,
+    0xcc0c7795L, 0xbb0b4703L, 0x220216b9L, 0x5505262fL, 0xc5ba3bbeL,
+    0xb2bd0b28L, 0x2bb45a92L, 0x5cb36a04L, 0xc2d7ffa7L, 0xb5d0cf31L,
+    0x2cd99e8bL, 0x5bdeae1dL, 0x9b64c2b0L, 0xec63f226L, 0x756aa39cL,
+    0x026d930aL, 0x9c0906a9L, 0xeb0e363fL, 0x72076785L, 0x05005713L,
+    0x95bf4a82L, 0xe2b87a14L, 0x7bb12baeL, 0x0cb61b38L, 0x92d28e9bL,
+    0xe5d5be0dL, 0x7cdcefb7L, 0x0bdbdf21L, 0x86d3d2d4L, 0xf1d4e242L,
+    0x68ddb3f8L, 0x1fda836eL, 0x81be16cdL, 0xf6b9265bL, 0x6fb077e1L,
+    0x18b74777L, 0x88085ae6L, 0xff0f6a70L, 0x66063bcaL, 0x11010b5cL,
+    0x8f659effL, 0xf862ae69L, 0x616bffd3L, 0x166ccf45L, 0xa00ae278L,
+    0xd70dd2eeL, 0x4e048354L, 0x3903b3c2L, 0xa7672661L, 0xd06016f7L,
+    0x4969474dL, 0x3e6e77dbL, 0xaed16a4aL, 0xd9d65adcL, 0x40df0b66L,
+    0x37d83bf0L, 0xa9bcae53L, 0xdebb9ec5L, 0x47b2cf7fL, 0x30b5ffe9L,
+    0xbdbdf21cL, 0xcabac28aL, 0x53b39330L, 0x24b4a3a6L, 0xbad03605L,
+    0xcdd70693L, 0x54de5729L, 0x23d967bfL, 0xb3667a2eL, 0xc4614ab8L,
+    0x5d681b02L, 0x2a6f2b94L, 0xb40bbe37L, 0xc30c8ea1L, 0x5a05df1bL,
+    0x2d02ef8dL
+};
+
+#define CRC32(c, b) (crc_32_tab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
+
+
+static ulg keys[3]; /* keys defining the pseudo-random sequence */
+
+/*
+ * Return the next byte in the pseudo-random sequence
+ */
+    int
+decrypt_byte()
+{
+    ush temp;
+
+    temp = (ush)keys[2] | 2;
+    return (int)(((unsigned)(temp * (temp ^ 1)) >> 8) & 0xff);
+}
+
+/*
+ * Update the encryption keys with the next byte of plain text
+ */
+    int
+update_keys(c)
+    int c;			/* byte of plain text */
+{
+    keys[0] = CRC32(keys[0], c);
+    keys[1] += keys[0] & 0xff;
+    keys[1] = keys[1] * 134775813L + 1;
+    keys[2] = CRC32(keys[2], (int)(keys[1] >> 24));
+    return c;
+}
+
+/*
+ * Initialize the encryption keys and the random header according to
+ * the given password.
+ * If "passwd" is NULL or empty, don't do anything.
+ */
+    void
+crypt_init_keys(passwd)
+    char_u *passwd;		/* password string with which to modify keys */
+{
+    if (passwd && *passwd)
+    {
+	keys[0] = 305419896L;
+	keys[1] = 591751049L;
+	keys[2] = 878082192L;
+	while (*passwd != '\0')
+	    update_keys((int)*passwd++);
+    }
+}
+
+/*
+ * Ask the user for a crypt key.
+ * When "store" is TRUE, the new key in stored in the 'key' option, and the
+ * 'key' option value is returned: Don't free it.
+ * When "store" is FALSE, the typed key is returned in allocated memory.
+ * Returns NULL on failure.
+ */
+    char_u *
+get_crypt_key(store)
+    int		store;
+{
+    char_u	*p;
+
+    cmdline_crypt = TRUE;
+    cmdline_row = msg_row;
+    p = getcmdline_prompt(NUL, (char_u *)"Enter encryption key: ", 0);
+    cmdline_crypt = FALSE;
+
+    /* since the user typed this, no need to wait for return */
+    need_wait_return = FALSE;
+    msg_didout = FALSE;
+    if (p != NULL && store)
+    {
+	set_option_value((char_u *)"key", 0L, p);
+	return curbuf->b_p_key;
+    }
+    return p;
+}
+
+#endif /* CRYPTV */
+
+/*
+ * Get user name from machine-specific function and cache it.
+ * Returns the user name in "buf[len]".
+ * Some systems are quite slow in obtaining the user name (Windows NT).
+ * Returns OK or FAIL.
+ */
+    int
+get_user_name(buf, len)
+    char_u	*buf;
+    int		len;
+{
+    static char_u	*name = NULL;
+
+    if (name == NULL)
+    {
+	if (mch_get_user_name(buf, len) == FAIL)
+	    return FAIL;
+	name = vim_strsave(buf);
+    }
+    else
+	STRNCPY(buf, name, len);
+    return OK;
+}

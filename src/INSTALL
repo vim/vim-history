@@ -45,7 +45,7 @@ If you are compiling Vim for several machines, for each machine:
   c.    cd machine_name
   d.    points 1 and 2 above
 
-[don't use a path for machine_name, just a directory name, otherwise the links
+[don't use a path for machine_name, just a directory name, Otherwise the links
 that "make shadow" creates won't work]
 
 GNU Autoconf and a few other tools have been used to make Vim work on many
@@ -58,10 +58,6 @@ of them can't be found, your linker doesn't return an error code for missing
 libraries.  Vim should be linked fine anyway, mostly you can just ignore these
 errors.
 
-On Linux, when using -g to compile (which is default for gcc), the executable
-will probably be statically linked.  If you don't want this, remove the -g
-option from CFLAGS.
-
 If you run configure by hand (not using the Makefile), remember that any
 changes in the Makefile have no influence on configure.  This may be what you
 want, but maybe not!
@@ -72,29 +68,80 @@ to build Vim, without changing the Makefile or feature.h.  Example (using sh):
 	CFLAGS=-DUSE_CSCOPE ./configure --enable-gui=motif
 
 
+Unix: COMPILING WITH/WITHOUT GUI
+
+These configure arguments can be used to select which GUI to use:
+--enable-gui=	gtk, motif, athena or auto
+--disable-gtk-check
+--disable-motif-check
+--disable-athena-check
+
+--enable-gui defaults to "auto", so it will automatically look for a GUI (in
+the order of GTK, Motif, then Athena).  If one is found, then is uses it and
+does not proceed to check any of the remaining ones.  Otherwise, it moves on
+to the next one.
+
+--enable-{gtk,motif,athena}-check all default to "yes", such that if
+--enable-gui is "auto" (which it is by default), GTK, Motif, and Athena will
+be checked for.  If you want to *exclude* a certain check, then you use
+--disable-{gtk,motif,athena}-check.
+
+For example, if --enable-gui is set to "auto", but you don't want it look for
+Motif, you then also specify --disable-motif-check.  This results in only
+checking for GTK and Athena.
+
+Lastly, if you know which one you want to use, then you can just do
+--enable-gui={gtk,motif,athena}.  So if you wanted to only use Motif, then
+you'd specify --enable-gui=motif.  Once you specify what you want, the
+--enable-{gtk,motif,athena}-check options are ignored.
+
+For compiling with the GTK+ GUI, you need a recent version of glib and gtk+.
+Configure checks for at least version 1.1.16.  An older versions is not
+selected automatically.  If you want to use it anyway, run configure with
+"--disable-gtktest".
+GTK requires an ANSI C compiler.  If you fail to compile Vim with GTK+ (it
+is the preferred choice), try selecting another one in the Makefile.
+If you are sure you have GTK installed, but for some reason configure says you
+do not, you may have left-over header files and/or library files from an older
+(and incompatible) version of GTK.  if this is the case, please check
+config.log for any error messages that may give you a hint as to what's
+happening.
+
+Unix: COMPILING WITH MULTI-BYTE
+
+When you want to compile with the multi-byte features enabled, make sure you
+compile on a machine where the locale settings actually work.  otherwise the
+configure tests may fail.
+
+Unix: COMPILING ON LINUX
+
+On Linux, when using -g to compile (which is default for gcc), the executable
+will probably be statically linked.  If you don't want this, remove the -g
+option from CFLAGS.
+
+Unix: PUTTING vimrc IN /etc
+
+Some Linux distributions prefer to put the global vimrc file in /etc, and the
+Vim runtime files in /usr.  This can be done with:
+	./configure --prefix=/usr
+	make VIMRCLOC=/etc VIMRUNTIMEDIR=/usr/share/vim MAKE="make -e"
+
+
 3. RISC OS
 =============
 
 Much file renaming is needed before you can compile anything.
-
-`feature.h' needs to be edited since the defaults don't make sense
-on RISC OS.
-
-I suggest you get the latest version of the specific RISC OS sources and
-use the diffs to find out what to change. You'll need the RISC OS binary
-distribution too.
-
-Try here : http://www.ecs.soton.ac.uk/~tal197
-
-Once you have the RISC OS sources extract them onto a filing system
-which supports long filenames (eg raFS - call the disk VimSrc).
-
-Edit the Makefile to write the binary to the right place.
-
-* dir raFS::VimSrc.riscos
-* make
-
 You'll need UnixLib to link against, GCC and GNU make.
+
+I suggest you get the RISC OS binary distribution, which includes the
+Templates file and the loader.
+
+Try here: http://www.ecs.soton.ac.uk/~tal197
+
+Do
+    :help riscos
+
+within the editor for more information, or read the os_riscos.txt help file.
 
 
 4. Macintosh

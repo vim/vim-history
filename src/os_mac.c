@@ -9,51 +9,49 @@
 /*
  * os_mac.c -- code for the MacOS
  *
- * This file mainly based on os_unix.c.
+ * This file is mainly based on os_unix.c.
  */
 
 #include "vim.h"
 #include "globals.h"
 #include "option.h"
-#include "proto.h"
-
-#define USE_NEW_CODE
 
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
- * in `path'.  Called by expand_wildcards().
+ * in `path'.  Called by mch_expandpath().
+ * "path" has backslashes before chars that are not to be expanded.
  */
     int
 mac_expandpath(
     struct growarray	*gap,
     char_u		*path,
-    int			flags
+    int			flags,
     short		start_at,
     short		as_full)
 {
     /*
      * TODO:
-     *       +Get Volumes (when looking for files in current dir)
-     *       +Make it work when working dir not on select volume
-     *       +Cleanup
+     *		+Get Volumes (when looking for files in current dir)
+     *		+Make it work when working dir not on select volume
+     *		+Cleanup
      */
-    short       index = 1;
-    OSErr       gErr;
-    char_u      dirname[256];
-    char_u      cfilename[256];
+    short	index = 1;
+    OSErr	gErr;
+    char_u	dirname[256];
+    char_u	cfilename[256];
     long	dirID;
-    char_u      *new_name;
-    CInfoPBRec  gMyCPB;
+    char_u	*new_name;
+    CInfoPBRec	gMyCPB;
     HParamBlockRec gMyHPBlock;
-    FSSpec	   usedDir;
+    FSSpec	usedDir;
 
-    char_u	    *buf;
-    char_u	    *p, *s, *e;
-    int		    start_len, c;
-    char	    dummy;
-    char_u	    *pat;
+    char_u	*buf;
+    char_u	*p, *s, *e, dany;
+    int		start_len, c;
+    char	dummy;
+    char_u	*pat;
     vim_regexp	*prog;
-    int		    matches;
+    int		matches;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
@@ -65,7 +63,7 @@ mac_expandpath(
  * Copy it into buf, including the preceding characters.
  */
     p = buf;
-    s = NULL;
+    s = buf;
     e = NULL;
 #if 1
     STRNCPY(buf, path, start_at);
@@ -75,34 +73,37 @@ mac_expandpath(
 
     while (*path)
     {
-	    if (*path == ':')
-	    {
+	if (*path == ':')
+	{
 	    if (e)
-			break;
-		else
-			s = p;
-	    }
-	    /* should use  WILCARDLIST but ehat about ` */
-/*	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)*/
-	    if (vim_strchr((char_u *)WILDCHAR_LIST, *path) != NULL)
-		e = p;
+		break;
+	    else
+		s = p + 1;
+	}
+	/* should use  WILCARDLIST but what about ` */
+	/*	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)*/
+	else if (vim_strchr((char_u *)WILDCHAR_LIST, *path) != NULL)
+	    e = p;
 	*p++ = *path++;
     }
     e = p;
-    if (s != NULL)
-	    s++;
-    else
-	    s = buf;
 
     /* now we have one wildcard component between s and e */
     *e = NUL;
 
+#if 1
+    dany = *s;
+    *s = NUL;
+    backslash_halve(buf);
+    *s = dany;
+#endif
+
     /* convert the file pattern to a regexp pattern */
-    pat = file_pat_to_reg_pat(s, e, NULL);
+    pat = file_pat_to_reg_pat(s, e, NULL, FALSE);
     if (pat == NULL)
     {
-	    vim_free(buf);
-	    return 0;
+	vim_free(buf);
+	return 0;
     }
 
     /* compile the regexp into a program */
@@ -132,8 +133,8 @@ mac_expandpath(
     {
 	if (*buf == ':')  /* relative path */
 	{
-	    (void) mch_dirname (&dirname[1], 254);
-	    new_name=concat_fnames(&dirname[1], buf+1, TRUE);
+	    (void)mch_dirname(&dirname[1], 254);
+	    new_name = concat_fnames(&dirname[1], buf+1, TRUE);
 	    STRCPY(&dirname[1], new_name);
 	    dirname[0] = STRLEN(new_name);
 	    vim_free(new_name);
@@ -141,7 +142,7 @@ mac_expandpath(
 	else
 	{
 	    STRCPY(&dirname[1], buf);
-	    backslash_halve (&dirname[1], TRUE);
+	    backslash_halve(&dirname[1]);
 	    dirname[0] = STRLEN(buf);
 	}
     }
@@ -173,11 +174,12 @@ mac_expandpath(
 	    {
 		if (s[-1] != ':')
 		{
+		    /* TODO: need to copy with cleaned name */
 		    STRCPY(s+1, cfilename);
 		    s[0] = ':';
 		}
 		else
-		{
+		{   /* TODO: need to copy with cleeaned name */
 		    STRCPY(s, cfilename);
 		}
 		start_at = STRLEN(buf);
@@ -223,14 +225,14 @@ mac_expandpath(
 		    STRCPY(s, cfilename);
 		    STRCAT(buf, path);
 		    if (mch_has_wildcard(path))	/* handle more wildcard */
-			(void)mac_expandpath(gap, buf, flags, 0, FALSE);
+			(void)mac_expandpath(gap, s, flags, 0, FALSE);
 		    else
 		    {
     #ifdef DONT_ADD_PATHSEP_TO_DIR
 /*			if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
 */			    STRCAT(buf, PATHSEPSTR);
     #endif
-			addfile(gap, buf, flags);
+			addfile(gap, s, flags);
 		    }
 #if 0
 		    STRCAT(cfilename, PATHSEPSTR);
@@ -245,9 +247,11 @@ mac_expandpath(
 
     return gap->ga_len - start_len;
 }
+
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by expand_wildcards().
+ * "pat" has backslashes before chars that are not to be expanded.
  */
     int
 mch_expandpath(
@@ -259,205 +263,15 @@ mch_expandpath(
     char_u first = *path;
     short  scan_volume;
 
-    slash_n_colon_adjust (path);
+    slash_n_colon_adjust(path);
 
     scan_volume = (first != *path);
 
-    return mac_expandpath (gap, path, flags, 0, scan_volume);
-
-#if 0
-    /*
-     * TODO:
-     *       +Get Volumes (when looking for files in current dir)
-     *       +Make it work when working dir not on select volume
-     *       +Cleanup
-     */
-    short       index = 1;
-    OSErr       gErr;
-    char_u      dirname[256];
-    char_u      cfilename[256];
-    long	dirID;
-    char_u      *new_name;
-    CInfoPBRec  gMyCPB;
-    short       show_volume = 1;
-    HParamBlockRec gMyHPBlock;
-
-    char_u	    *buf;
-    char_u	    *p, *s, *e;
-    int		    start_len, c;
-    char	    dummy;
-    char_u	    *pat;
-    vim_regexp	*prog;
-    int		    matches;
-
-    start_len = gap->ga_len;
-    buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
-    if (buf == NULL)
-	return 0;
-
-/*
- * Find the first part in the path name that contains a wildcard.
- * Copy it into buf, including the preceding characters.
- */
-    p = buf;
-    s = NULL;
-    e = NULL;
-    while (*path)
-    {
-	    if (*path == ':')
-	    {
-	    if (e)
-			break;
-		else
-			s = p;
-	    }
-	    /* should use  WILCARDLIST but ehat about ` */
-	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)
-		e = p;
-	*p++ = *path++;
-    }
-    e = p;
-    if (s != NULL)
-	    s++;
-    else
-	    s = buf;
-
-    /* now we have one wildcard component between s and e */
-    *e = NUL;
-
-    /* convert the file pattern to a regexp pattern */
-    pat = file_pat_to_reg_pat(s, e, NULL);
-    if (pat == NULL)
-    {
-	    vim_free(buf);
-	    return 0;
-    }
-
-    /* compile the regexp into a program */
-    reg_ic = FALSE;				/* Don't ever ignore case */
-    prog = vim_regcomp(pat, TRUE);
-    vim_free(pat);
-
-    if (prog == NULL)
-    {
-	    vim_free(buf);
-	    return 0;
-    }
-
-    /* open the directory for scanning */
-    c = *s;
-    *s = NUL;
-
-    if (*buf == NUL)
-    {
-	(void) mch_dirname (&dirname[1], 254);
-	dirname[0] = STRLEN(&dirname[1]);
-    }
-    else
-    {
-	if (*buf == ':')  /* relative path */
-	{
-	    (void) mch_dirname (&dirname[1], 254);
-	    new_name=concat_fnames(&dirname[1], buf+1, TRUE);
-	    STRCPY(&dirname[1], new_name);
-	    dirname[0] = STRLEN(new_name);
-	    vim_free(new_name);
-	}
-	else
-	{
-		STRCPY(&dirname[1], buf);
-	    backslash_halve (&dirname[1], TRUE);
-	    dirname[0] = STRLEN(buf);
-	}
-    }
-    *s = c;
-
-    gMyCPB.dirInfo.ioNamePtr    = dirname;
-    gMyCPB.dirInfo.ioVRefNum    = 0;
-    gMyCPB.dirInfo.ioFDirIndex  = 0;
-    gMyCPB.dirInfo.ioDrDirID    = 0;
-
-    gErr = PBGetCatInfo(&gMyCPB, false);
-
-    gMyCPB.dirInfo.ioCompletion = NULL;
-    dirID = gMyCPB.dirInfo.ioDrDirID;
-
-    do
-    {
-	gMyCPB.hFileInfo.ioFDirIndex = index;
-	gMyCPB.hFileInfo.ioDirID     = dirID;
-
-	gErr = PBGetCatInfo(&gMyCPB,false);
-
-	if (gErr == noErr)
-	{
-	    STRNCPY (cfilename, &dirname[1], dirname[0]);
-	    cfilename[dirname[0]] = 0;
-	    if (vim_regexec(prog, cfilename, TRUE))
-	    {
-		if (s[-1] != ':')
-		{
-		    STRCPY(s+1, cfilename);
-		    s[0] = ':';
-		}
-		else
-		{
-		    STRCPY(s, cfilename);
-		}
-		STRCAT(buf, path);
-		if (mch_has_wildcard(path))	/* handle more wildcard */
-		    (void)mch_expandpath(gap, buf, flags);
-		else
-		{
-#ifdef DONT_ADD_PATHSEP_TO_DIR
-		    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
-			STRCAT(buf, PATHSEPSTR);
-#endif
-		    addfile(gap, buf, flags);
-		}
-	    }
-	    if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
-	    {
-	    }
-	    else
-	    {
-	    }
-	}
-	index++;
-    }
-    while (gErr == noErr);
-
-    if (show_volume)
-    {
-	index = 1;
-	do
-	{
-	    gMyHPBlock.volumeParam.ioNamePtr = (char_u *) dirname;
-	    gMyHPBlock.volumeParam.ioVRefNum =0;
-	    gMyHPBlock.volumeParam.ioVolIndex = index;
-
-	    gErr = PBHGetVInfo (&gMyHPBlock,false);
-	    if (gErr == noErr)
-	    {
-		STRNCPY (cfilename, &dirname[1], dirname[0]);
-		cfilename[dirname[0]] = 0;
-		if (vim_regexec(prog, cfilename, TRUE))
-		{
-		    STRCAT(cfilename, PATHSEPSTR);
-		    addfile (gap, cfilename, flags);
-		}
-	    }
-	    index++;
-	}
-	while (gErr == noErr);
-    }
-
-    return gap->ga_len - start_len;
-#endif
+    return mac_expandpath(gap, path, flags, 0, scan_volume);
 }
 
     void
-fname_case (name)
+fname_case(name)
     char_u  *name;
 {
     /*
@@ -468,7 +282,7 @@ fname_case (name)
      *       within setfname, fix_fname, do_ecmd
      */
 }
-static char_u	*oldtitle = NULL;
+static char_u	*oldtitle = (char_u *) "gVim";
 
 /*
  * check for an "interrupt signal": CTRL-break or CTRL-C
@@ -581,6 +395,7 @@ mch_input_isatty()
     return OK;
 }
 
+#ifdef WANT_TITLE
 /*
  * Set the window title and icon.
  * (The icon is not taken care of).
@@ -621,35 +436,36 @@ mch_restore_title(which)
 {
     mch_settitle((which & 1) ? oldtitle : NULL, NULL);
 }
+#endif
 
 /*
  * Insert user name in s[len].
  * Return OK if a name found.
  */
-	int
+    int
 mch_get_user_name(s, len)
-	char_u	*s;
-	int		len;
+    char_u	*s;
+    int		len;
 {
-	/*
-	 * TODO: clean up and try getlogin ()
-	 */
+    /*
+     * TODO: clean up and try getlogin ()
+     */
 #if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
-	struct passwd	*pw;
+    struct passwd	*pw;
 #endif
-	uid_t			uid;
+    uid_t		uid;
 
-	uid = getuid();
+    uid = getuid();
 #if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
-	if ((pw = getpwuid(uid)) != NULL &&
-								 pw->pw_name != NULL && *(pw->pw_name) != NUL)
-	{
-		STRNCPY(s, pw->pw_name, len);
-		return OK;
-	}
+    if ((pw = getpwuid(uid)) != NULL
+	    && pw->pw_name != NULL && *(pw->pw_name) != NUL)
+    {
+	STRNCPY(s, pw->pw_name, len);
+	return OK;
+    }
 #endif
-	sprintf((char *)s, "%d", (int)uid);		/* assumes s is long enough */
-	return FAIL;							/* a number is not a name */
+    sprintf((char *)s, "%d", (int)uid);		/* assumes s is long enough */
+    return FAIL;				/* a number is not a name */
 }
 
 /*
@@ -824,7 +640,7 @@ mch_FullName(fname, buf, len, force)
      */
     int		l;
     char_u	olddir[MAXPATHL];
-    char_u   newdir[MAXPATHL];
+    char_u	newdir[MAXPATHL];
     char_u	*p;
     char_u	c;
     int		retval = OK;
@@ -851,9 +667,7 @@ mch_FullName(fname, buf, len, force)
 	 */
 	if ((p = vim_strrchr(fname, ':')) != NULL)
 	{
-#ifdef USE_NEW_CODE
 	    p++;
-#endif
 	    if (mch_dirname(olddir, MAXPATHL) == FAIL)
 	    {
 		p = NULL;		/* can't get current dir: don't chdir */
@@ -866,11 +680,7 @@ mch_FullName(fname, buf, len, force)
 		if (mch_chdir((char *)fname))
 		    retval = FAIL;
 		else
-#ifndef USE_NEW_CODE
-		    fname = p + 1;
-#else
-		fname = p;
-#endif
+		    fname = p; /* + 1;*/
 		*p = c;
 	    }
 	}
@@ -1088,7 +898,7 @@ mch_has_wildcard(p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *) WILDCHAR_LIST, *p) != NULL)
+	else if (vim_strchr((char_u *)WILDCHAR_LIST, *p) != NULL)
 	    return TRUE;
     }
     return FALSE;
@@ -1113,7 +923,7 @@ void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
     theCPB.dirInfo.ioNamePtr = directoryName;
     theCPB.dirInfo.ioDrParID = file.parID;
 
-    if ((file.parID != fsRtDirID) && (file.parID != fsRtParID))
+    if ((TRUE) /*&& (file.parID != fsRtDirID)*/ && (file.parID != fsRtParID))
     do
     {
 	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
@@ -1145,7 +955,224 @@ void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
 
     error = PBGetCatInfo (&theCPB, false);
 
-    if ((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0)
+    if (error)
 	fname[directoryName[0]-1] = 0;
+    if ((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0)
+        fname[directoryName[0]-1] = 0;
+
+}
+
+/*
+ * This procedure duplicate a file, it is used in order to keep
+ * the footprint of the previous file, when some info can be easily
+ * restored with set_perm().
+ *
+ * Return -1 for failure, 0 for success.
+ */
+    int
+mch_copy_file(from, to)
+    char_u *from;
+    char_u *to;
+{
+    char_u  from_str[256];
+    char_u  to_str[256];
+    char_u  to_name[256];
+
+    HParamBlockRec paramBlock;
+    char_u  *char_ptr;
+    int	    len;
+
+    /*
+     * Convert C string to Pascal string
+     */
+     char_ptr = from;
+     len = 1;
+     for (; (*char_ptr != 0) && (len < 255); len++, char_ptr++)
+	from_str[len] = *char_ptr;
+     from_str[0] = len-1;
+
+     char_ptr = to;
+     len = 1;
+     for (; (*char_ptr != 0) && (len < 255); len++, char_ptr++)
+	to_str[len] = *char_ptr;
+     to_str[0] = len-1;
+
+    paramBlock.copyParam.ioCompletion = NULL;
+    paramBlock.copyParam.ioNamePtr    = from_str;
+ /* paramBlock.copyParam.ioVRefnum    =  overided by ioFilename; */
+ /* paramBlock.copyParam.ioDirI       =  overided by ioFilename; */
+
+    paramBlock.copyParam.ioNewName    = to_str;
+    paramBlock.copyParam.ioCopyName   = to_name;     /* NIL */
+ /* paramBlock.copyParam.ioDstVRefNum = overided by ioNewName;   */
+ /* paramBlock.copyParam.ioNewDirID   = overided by ioNewName;   */
+
+
+
+    /*
+     * First delete the "to" file, this is required on some systems to make
+     * the rename() work, on other systems it makes sure that we don't have
+     * two files when the rename() fails.
+     */
+    mch_remove(to);
+
+    /*
+     * First try a normal rename, return if it works.
+     */
+    PBHCopyFile (&paramBlock,false);
+    return 0;
+
+}
+
+    int
+C2PascalString (CString, PascalString)
+    char_u  *CString;
+    Str255  *PascalString;
+{
+    char_u *PascalPtr = (char_u *) PascalString;
+    int    len;
+    int    i;
+
+    PascalPtr[0] = 0;
+    if (CString == NULL)
+	return 0;
+
+    len = STRLEN(CString);
+    if (len > 255)
+	len = 255;
+
+    for (i = 0; i < len; i++)
+	PascalPtr[i+1] = CString[i];
+
+    PascalPtr[0] = len;
+
+    return 0;
+}
+
+    int
+GetFSSpecFromPath (file, fileFSSpec)
+    char_u *file;
+    FSSpec *fileFSSpec;
+{
+    /* From FAQ 8-12 */
+    Str255      filePascal;
+    CInfoPBRec	myCPB;
+    OSErr	err;
+
+    (void) C2PascalString (file, &filePascal);
+
+    myCPB.dirInfo.ioNamePtr   = filePascal;
+    myCPB.dirInfo.ioVRefNum   = 0;
+    myCPB.dirInfo.ioFDirIndex = 0;
+    myCPB.dirInfo.ioDrDirID   = 0;
+
+    err= PBGetCatInfo (&myCPB, false);
+
+    /*    vRefNum, dirID, name */
+    FSMakeFSSpec (0, 0, filePascal, fileFSSpec);
+
+    /* TODO: Use an error code mechanism */
+    return 0;
+}
+
+    int
+mch_copy_file_attribute(from, to)
+    char_u *from;
+    char_u *to;
+{
+    FSSpec  frFSSpec;
+    FSSpec  toFSSpec;
+    FInfo   fndrInfo;
+     Str255	name;
+     ResType	type;
+     ResType	sink;
+     Handle	resource;
+     short	idxTypes;
+     short    nbTypes;
+     short	idxResources;
+     short	nbResources;
+     short	ID;
+    short frRFid;
+    short toRFid;
+    short attrs_orig;
+    short attrs_copy;
+    short temp;
+
+    /* TODO: Handle error */
+    (void) GetFSSpecFromPath (from, &frFSSpec);
+    (void) GetFSSpecFromPath (to  , &toFSSpec);
+
+    /* Copy resource fork */
+    temp = 0;
+
+#if 1
+     frRFid = FSpOpenResFile (&frFSSpec, fsCurPerm);
+
+     if (frRFid != -1)
+     {
+	 FSpCreateResFile(&toFSSpec, 'TEXT', '????', nil);
+	 toRFid = FSpOpenResFile (&toFSSpec, fsRdWrPerm);
+
+	 UseResFile (frRFid);
+
+	 nbTypes = Count1Types();
+
+	 for (idxTypes = 1; idxTypes <= nbTypes; idxTypes++)
+	 {
+	   Get1IndType (&type, idxTypes);
+	   nbResources = Count1Resources(type);
+
+	   for (idxResources = 1; idxResources <= nbResources; idxResources++)
+	   {
+	     attrs_orig = 0; /* in case GetRes fails */
+	     attrs_copy = 0; /* in case GetRes fails */
+	     resource = Get1IndResource(type, idxResources);
+	     GetResInfo (resource, &ID, &sink, name);
+	     HLock (resource);
+	     attrs_orig = GetResAttrs (resource);
+	     DetachResource (resource);
+
+
+	     UseResFile (toRFid);
+	     AddResource (resource, type, ID, name);
+	     attrs_copy = GetResAttrs (resource);
+	     attrs_copy = (attrs_copy & 0x2) | (attrs_orig & 0xFD);
+	     SetResAttrs (resource, attrs_copy);
+	     WriteResource (resource);
+	     UpdateResFile (toRFid);
+
+	     temp = GetResAttrs (resource);
+
+	     /*SetResAttrs (resource, 0);*/
+	     HUnlock(resource);
+	     ReleaseResource (resource);
+	     UseResFile (frRFid);
+	     }
+	 }
+	CloseResFile (toRFid);
+	CloseResFile (frRFid);
+    }
+#endif
+    /* Copy Finder Info */
+    (void) FSpGetFInfo (&frFSSpec, &fndrInfo);
+    (void) FSpSetFInfo (&toFSSpec, &fndrInfo);
+
+    return (temp == attrs_copy);
+}
+
+    int
+mch_has_resource_fork (file)
+    char_u *file;
+{
+    FSSpec  fileFSSpec;
+    short fileRFid;
+
+    /* TODO: Handle error */
+    (void) GetFSSpecFromPath (file, &fileFSSpec);
+    fileRFid = FSpOpenResFile (&fileFSSpec, fsCurPerm);
+    if (fileRFid != -1)
+	CloseResFile (fileRFid);
+
+    return (fileRFid != -1);
 }
 

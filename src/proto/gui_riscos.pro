@@ -7,6 +7,8 @@ void gui_mch_new_colors (void);
 int gui_mch_open (void);
 void gui_mch_exit (int rc);
 void gui_mch_set_winsize (int width, int height, int min_width, int min_height, int base_width, int base_height);
+void gui_mch_get_winpos __ARGS((int *x, int *y));
+void gui_mch_set_winpos __ARGS((int x, int y));
 void gui_mch_get_screen_dimensions (int *screen_w, int *screen_h);
 int gui_mch_init_font (char_u *font_name);
 GuiFont gui_mch_get_font (char_u *name, int giveErrorIfMissing);

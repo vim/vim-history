@@ -11,6 +11,7 @@
 
 #include "vim.h"
 
+static void save_re_pat __ARGS((int idx, char_u *pat, int magic));
 static int inmacro __ARGS((char_u *, char_u *));
 static int check_linecomment __ARGS((char_u *line));
 static int cls __ARGS((void));
@@ -25,7 +26,7 @@ static void show_pat_in_path __ARGS((char_u *, int,
 					 int, int, FILE *, linenr_t *, long));
 #endif
 #ifdef VIMINFO
-static void wvsp_one __ARGS((FILE *fp, int idx, char *s, char *sc));
+static void wvsp_one __ARGS((FILE *fp, int idx, char *s, int sc));
 #endif
 
 static char_u *top_bot_msg = (char_u *)"search hit TOP, continuing at BOTTOM";
@@ -90,6 +91,9 @@ static int last_idx = 0;	/* index in spats[] for RE_LAST */
 /* copy of spats[], for keeping the search patterns while executing autocmds */
 static struct spat  saved_spats[2];
 static int	    saved_last_idx = 0;
+# ifdef EXTRA_SEARCH
+static int	    saved_no_hlsearch = 0;
+# endif
 #endif
 
 static char_u	    *mr_pattern = NULL;	/* pattern used by search_regcomp() */
@@ -157,7 +161,7 @@ search_regcomp(pat, pat_save, pat_use, options)
 	no_smartcase = spats[i].no_scs;
     }
     else if (options & SEARCH_HIS)	/* put new pattern in history */
-	add_to_history(HIST_SEARCH, pat);
+	add_to_history(HIST_SEARCH, pat, TRUE);
 
     mr_pattern = pat;
 
@@ -167,56 +171,44 @@ search_regcomp(pat, pat_save, pat_use, options)
      */
     if (!(options & SEARCH_KEEP))
     {
-	/*
-	 * search or global command
-	 */
+	/* search or global command */
 	if (pat_save == RE_SEARCH || pat_save == RE_BOTH)
-	{
-	    if (spats[RE_SEARCH].pat != pat)
-	    {
-		vim_free(spats[RE_SEARCH].pat);
-		spats[RE_SEARCH].pat = vim_strsave(pat);
-		spats[RE_SEARCH].magic = magic;
-		spats[RE_SEARCH].no_scs = no_smartcase;
-		last_idx = RE_SEARCH;
-		/* If 'hlsearch' set and search pat changed: need redraw. */
-#ifdef EXTRA_SEARCH
-		if (p_hls)
-		    redraw_all_later(NOT_VALID);
-		no_hlsearch = FALSE;
-#endif
-	    }
-	}
-	/*
-	 * substitute or global command
-	 */
+	    save_re_pat(RE_SEARCH, pat, magic);
+	/* substitute or global command */
 	if (pat_save == RE_SUBST || pat_save == RE_BOTH)
-	{
-	    if (spats[RE_SUBST].pat != pat)
-	    {
-		vim_free(spats[RE_SUBST].pat);
-		spats[RE_SUBST].pat = vim_strsave(pat);
-		spats[RE_SUBST].magic = magic;
-		spats[RE_SUBST].no_scs = no_smartcase;
-		last_idx = RE_SUBST;
-		/* If 'hlsearch' set and search pat changed: need redraw. */
-#ifdef EXTRA_SEARCH
-		if (p_hls)
-		    redraw_all_later(NOT_VALID);
-		no_hlsearch = FALSE;
-#endif
-	    }
-	}
+	    save_re_pat(RE_SUBST, pat, magic);
     }
 
     set_reg_ic(pat);		/* tell the vim_regexec routine how to search */
     return vim_regcomp(pat, magic);
 }
 
+    static void
+save_re_pat(idx, pat, magic)
+    int		idx;
+    char_u	*pat;
+    int		magic;
+{
+    if (spats[idx].pat != pat)
+    {
+	vim_free(spats[idx].pat);
+	spats[idx].pat = vim_strsave(pat);
+	spats[idx].magic = magic;
+	spats[idx].no_scs = no_smartcase;
+	last_idx = idx;
+#ifdef EXTRA_SEARCH
+	/* If 'hlsearch' set and search pat changed: need redraw. */
+	if (p_hls)
+	    redraw_all_later(NOT_VALID);
+	no_hlsearch = FALSE;
+#endif
+    }
+}
+
 #if defined(AUTOCMD) || defined(WANT_EVAL) || defined(PROTO)
 /*
  * Save the search patterns, so they can be restored later.
- * Used before/after executing autocommands.
+ * Used before/after executing autocommands and user functions.
  */
 static int save_level = 0;
 
@@ -232,6 +224,9 @@ save_search_patterns()
 	if (spats[1].pat != NULL)
 	    saved_spats[1].pat = vim_strsave(spats[1].pat);
 	saved_last_idx = last_idx;
+# ifdef EXTRA_SEARCH
+	saved_no_hlsearch = no_hlsearch;
+# endif
     }
 }
 
@@ -245,6 +240,9 @@ restore_search_patterns()
 	vim_free(spats[1].pat);
 	spats[1] = saved_spats[1];
 	last_idx = saved_last_idx;
+# ifdef EXTRA_SEARCH
+	no_hlsearch = saved_no_hlsearch;
+# endif
     }
 }
 #endif
@@ -273,6 +271,50 @@ set_reg_ic(pat)
     no_smartcase = FALSE;
 }
 
+    char_u *
+last_search_pat()
+{
+    return spats[last_idx].pat;
+}
+
+#if defined(WANT_EVAL) || defined(VIMINFO)
+/*
+ * Set the last search pattern.  For ":let @/ =" and viminfo.
+ * Also set the saved search pattern, so that this works in an autocommand.
+ */
+    void
+set_last_search_pat(s, idx, magic, setlast)
+    char_u	*s;
+    int		idx;
+    int		magic;
+    int		setlast;
+{
+    vim_free(spats[idx].pat);
+    spats[idx].pat = vim_strsave(s);
+    spats[idx].magic = magic;
+    spats[idx].no_scs = FALSE;
+    spats[idx].off.dir = '/';
+    spats[idx].off.line = FALSE;
+    spats[idx].off.end = FALSE;
+    spats[idx].off.off = 0;
+    if (setlast)
+	last_idx = idx;
+    if (save_level)
+    {
+	vim_free(saved_spats[idx].pat);
+	saved_spats[idx] = spats[0];
+	if (spats[idx].pat != NULL)
+	    saved_spats[idx].pat = vim_strsave(spats[idx].pat);
+	saved_last_idx = last_idx;
+    }
+#ifdef EXTRA_SEARCH
+    /* If 'hlsearch' set and search pat changed: need redraw. */
+    if (p_hls && idx == last_idx && !no_hlsearch)
+	redraw_all_later(NOT_VALID);
+#endif
+}
+#endif
+
 #ifdef EXTRA_SEARCH
 /*
  * Get a regexp program for the last used search pattern.
@@ -285,9 +327,9 @@ last_pat_prog()
 
     if (spats[last_idx].pat == NULL)
 	return NULL;
-    emsg_off = TRUE;	/* So it doesn't beep if bad expr */
+    ++emsg_off;		/* So it doesn't beep if bad expr */
     prog = search_regcomp((char_u *)"", 0, last_idx, SEARCH_KEEP);
-    emsg_off = FALSE;
+    --emsg_off;
     return prog;
 }
 #endif
@@ -633,7 +675,10 @@ do_search(oap, dirc, str, count, options)
     }
 
 #ifdef EXTRA_SEARCH
-    if (no_hlsearch)
+    /*
+     * Turn 'hlsearch' highlighting back on.
+     */
+    if (no_hlsearch && !(options & SEARCH_KEEP))
     {
 	redraw_all_later(NOT_VALID);
 	no_hlsearch = FALSE;
@@ -712,7 +757,7 @@ do_search(oap, dirc, str, count, options)
 	{
 	    msg_start();
 	    msg_putchar(dirc);
-	    msg_outtrans(*searchstr == NUL ? spats[RE_SEARCH].pat : searchstr);
+	    msg_outtrans(*searchstr == NUL ? spats[last_idx].pat : searchstr);
 	    if (spats[0].off.line || spats[0].off.end || spats[0].off.off)
 	    {
 		msg_putchar(dirc);
@@ -729,7 +774,7 @@ do_search(oap, dirc, str, count, options)
 		}
 	    }
 	    msg_clr_eos();
-	    (void)msg_check();
+	    msg_check();
 
 	    gotocmdline(FALSE);
 	    out_flush();
@@ -777,7 +822,7 @@ do_search(oap, dirc, str, count, options)
 		searchstr, count, spats[0].off.end + (options &
 		       (SEARCH_KEEP + SEARCH_HIS + SEARCH_MSG + SEARCH_START +
 			   ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
-		2);
+		RE_LAST);
 	if (dircp != NULL)
 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
 	if (c == FAIL)
@@ -1533,31 +1578,44 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	 *   Skip things in single quotes: 'x' or '\x'.  Be careful for single
 	 *   single quotes, eg jon's.  Things like '\233' or '\x3f' are not
 	 *   skipped, there is never a brace in them.
+	 *   Ignore this when finding matches for `'.
 	 */
 	case '\'':
-	    if (!cpo_match)
+	    if (!cpo_match && initc != '\'' && findc != '\'')
 	    {
 		if (backwards)
 		{
 		    if (pos.col > 1)
 		    {
 			if (linep[pos.col - 2] == '\'')
+			{
 			    pos.col -= 2;
+			    break;
+			}
 			else if (linep[pos.col - 2] == '\\' &&
 				    pos.col > 2 && linep[pos.col - 3] == '\'')
+			{
 			    pos.col -= 3;
+			    break;
+			}
 		    }
 		}
 		else if (linep[pos.col + 1])	/* forward search */
 		{
 		    if (linep[pos.col + 1] == '\\' &&
 			    linep[pos.col + 2] && linep[pos.col + 3] == '\'')
+		    {
 			pos.col += 3;
+			break;
+		    }
 		    else if (linep[pos.col + 2] == '\'')
+		    {
 			pos.col += 2;
+			break;
+		    }
 		}
 	    }
-	    break;
+	    /* FALLTHROUGH */
 
 	default:
 	    /* Check for match outside of quotes, and inside of
@@ -1683,6 +1741,7 @@ findsent(dir, count)
     int		    (*func) __ARGS((FPOS *));
     int		    startlnum;
     int		    noskip = FALSE;	    /* do not skip blanks */
+    int		    cpo_J;
 
     pos = curwin->w_cursor;
     if (dir == FORWARD)
@@ -1695,12 +1754,12 @@ findsent(dir, count)
 	/*
 	 * if on an empty line, skip upto a non-empty line
 	 */
-	if (gchar(&pos) == NUL)
+	if (gchar_pos(&pos) == NUL)
 	{
 	    do
 		if ((*func)(&pos) == -1)
 		    break;
-	    while (gchar(&pos) == NUL);
+	    while (gchar_pos(&pos) == NUL);
 	    if (dir == FORWARD)
 		goto found;
 	}
@@ -1720,7 +1779,7 @@ findsent(dir, count)
 	    decl(&pos);
 
 	/* go back to the previous non-blank char */
-	while ((c = gchar(&pos)) == ' ' || c == '\t' ||
+	while ((c = gchar_pos(&pos)) == ' ' || c == '\t' ||
 	     (dir == BACKWARD && vim_strchr((char_u *)".!?)]\"'", c) != NULL))
 	{
 	    if (decl(&pos) == -1)
@@ -1735,10 +1794,11 @@ findsent(dir, count)
 
 	/* remember the line where the search started */
 	startlnum = pos.lnum;
+	cpo_J = vim_strchr(p_cpo, CPO_ENDOFSENT) != NULL;
 
 	for (;;)		/* find end of sentence */
 	{
-	    c = gchar(&pos);
+	    c = gchar_pos(&pos);
 	    if (c == NUL || (pos.col == 0 && startPS(pos.lnum, NUL, FALSE)))
 	    {
 		if (dir == BACKWARD && pos.lnum != startlnum)
@@ -1751,11 +1811,14 @@ findsent(dir, count)
 		do
 		    if ((c = inc(&tpos)) == -1)
 			break;
-		while (vim_strchr((char_u *)")]\"'", c = gchar(&tpos)) != NULL);
-		if (c == -1  || c == ' ' || c == '\t' || c == NUL)
+		while (vim_strchr((char_u *)")]\"'", c = gchar_pos(&tpos))
+			!= NULL);
+		if (c == -1  || (!cpo_J && (c == ' ' || c == '\t')) || c == NUL
+		    || (cpo_J && (c == ' ' && inc(&tpos) >= 0
+			      && gchar_pos(&tpos) == ' ')))
 		{
 		    pos = tpos;
-		    if (gchar(&pos) == NUL) /* skip NUL at EOL */
+		    if (gchar_pos(&pos) == NUL) /* skip NUL at EOL */
 			inc(&pos);
 		    break;
 		}
@@ -1770,7 +1833,7 @@ findsent(dir, count)
 	}
 found:
 	    /* skip white space */
-	while (!noskip && ((c = gchar(&pos)) == ' ' || c == '\t'))
+	while (!noskip && ((c = gchar_pos(&pos)) == ' ' || c == '\t'))
 	    if (incl(&pos) == -1)
 		break;
     }
@@ -1921,7 +1984,87 @@ cls()
 	return 0;
 #ifdef MULTI_BYTE
     if (is_dbcs && IsLeadByte(c))
+    {
+	/* process code leading/trailing bytes */
+	unsigned char pcode_lb = c & 0xff;
+	unsigned char pcode_tb = (unsigned)c >> 8;
+
+	if (is_dbcs == (int)DBCS_JPN)
+	{
+	    /* JIS code classification */
+	    unsigned char lb;
+	    unsigned char tb;
+
+	    lb = pcode_lb;
+	    tb = pcode_tb;
+	    /* convert process code to JIS */
+#ifdef WIN32
+	    /* process code is SJIS */
+	    if (lb <= 0x9f)
+		lb = (lb - 0x81) * 2 + 0x21;
+	    else
+		lb = (lb - 0xc1) * 2 + 0x21;
+	    if (tb <= 0x7e)
+		tb -= 0x1f;
+	    else if (tb <= 0x9e)
+		tb -= 0x20;
+	    else
+	    {
+		tb -= 0x7e;
+		lb += 1;
+	    }
+#else
+	    /*
+	     * XXX:  Code page identification can not use with all
+	     *       system! So, some other encoding information
+	     *       will be needed.
+	     *       In japanese: SJIS,EUC,UNICODE,(JIS)
+	     *	     Note that JIS-code system don't use as
+	     *       process code in most system because it uses
+	     *       escape sequences(JIS is context depend encoding).
+	     */
+	    /* assume process code is JAPANESE-EUC */
+	    lb &= 0x7f;
+	    tb &= 0x7f;
+#endif
+	    /* exceptions */
+	    switch (lb << 8 | tb)
+	    {
+		case 0x213c: /* prolongedsound handled as KATAKANA */
+		    return 13;
+	    }
+	    /* sieved by KU code */
+	    switch (lb)
+	    {
+		case 0x21:
+		case 0x22:
+		    /* special symbols */
+		    return 10;
+		case 0x23:
+		    /* alpha-numeric */
+		    return 11;
+		case 0x24:
+		    /* hiragana */
+		    return 12;
+		case 0x25:
+		    /* katakana */
+		    return 13;
+		case 0x26:
+		    /* greek */
+		    return 14;
+		case 0x27:
+		    /* russian */
+		    return 15;
+		case 0x28:
+		    /* lines */
+		    return 16;
+		default:
+		    /* kanji */
+		    return 17;
+	    }
+	}
 	return 3;
+    }
 #endif
 
     if (vim_iswordc(c))
@@ -2213,7 +2356,7 @@ find_first_blank(posp)
 
     while (decl(posp) != -1)
     {
-	c = gchar(posp);
+	c = gchar_pos(posp);
 	if (!vim_iswhite(c))
 	{
 	    incl(posp);
@@ -2439,7 +2582,7 @@ extend:
 	    decl(&pos);
 	    while (lt(pos, curwin->w_cursor))
 	    {
-		c = gchar(&pos);
+		c = gchar_pos(&pos);
 		if (!vim_iswhite(c))
 		{
 		    at_start_sent = FALSE;
@@ -2484,7 +2627,7 @@ extend:
 		at_start_sent = FALSE;
 		while (lt(pos, curwin->w_cursor))
 		{
-		    c = gchar(&pos);
+		    c = gchar_pos(&pos);
 		    if (!vim_iswhite(c))
 		    {
 			at_start_sent = TRUE;
@@ -2509,7 +2652,7 @@ extend:
      * If cursor started on blank, check if it is just before the start of the
      * next sentence.
      */
-    while (c = gchar(&pos), vim_iswhite(c))	/* vim_iswhite() is a macro */
+    while (c = gchar_pos(&pos), vim_iswhite(c))	/* vim_iswhite() is a macro */
 	incl(&pos);
     if (equal(pos, curwin->w_cursor))
     {
@@ -2673,6 +2816,8 @@ current_block(oap, count, include, what, other)
 
     if (VIsual_active)
     {
+	if (*p_sel == 'e')
+	    ++curwin->w_cursor.col;
 	VIsual = start_pos;
 	VIsual_mode = 'v';
 	update_curbuf(NOT_VALID);	/* update the inversion */
@@ -2858,8 +3003,10 @@ extend:
 }
 #endif
 
+#if defined(LISPINDENT) || defined(CINDENT) || defined(TEXT_OBJECTS) \
+	|| defined(PROTO)
 /*
- * linewhite -- return TRUE if line 'lnum' is empty or has white chars only.
+ * return TRUE if line 'lnum' is empty or has white chars only.
  */
     int
 linewhite(lnum)
@@ -2870,8 +3017,9 @@ linewhite(lnum)
     p = skipwhite(ml_get(lnum));
     return (*p == NUL);
 }
+#endif
 
-#ifdef FIND_IN_PATH
+#if defined(FIND_IN_PATH) || defined(PROTO)
 /*
  * Find identifiers or defines in included files.
  * if p_ic && (continue_status & CONT_SOL) then ptr must be in lowercase.
@@ -2879,17 +3027,17 @@ linewhite(lnum)
     void
 find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 				    type, count, action, start_lnum, end_lnum)
-    char_u  *ptr;	    /* pointer to search pattern */
-    int	    dir;	    /* direction of expantion */
-    int	    len;	    /* length of search pattern */
-    int	    whole;	    /* match whole words only */
-    int	    skip_comments;  /* don't match inside comments */
-    int	    type;	    /* Type of search; are we looking for a type?  a
-				macro? */
-    long    count;
-    int	    action;	    /* What to do when we find it */
-    linenr_t	start_lnum; /* first line to start searching */
-    linenr_t	end_lnum;   /* last line for searching */
+    char_u	*ptr;		/* pointer to search pattern */
+    int		dir;		/* direction of expantion */
+    int		len;		/* length of search pattern */
+    int		whole;		/* match whole words only */
+    int		skip_comments;	/* don't match inside comments */
+    int		type;		/* Type of search; are we looking for a type?
+				   a macro? */
+    long	count;
+    int		action;		/* What to do when we find it */
+    linenr_t	start_lnum;	/* first line to start searching */
+    linenr_t	end_lnum;	/* last line for searching */
 {
     SearchedFile *files;		/* Stack of included files */
     SearchedFile *bigger;		/* When we need more space */
@@ -3109,7 +3257,7 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 			files = bigger;
 		    }
 		}
-		if ((files[depth + 1].fp = fopen((char *)new_fname, "r"))
+		if ((files[depth + 1].fp = mch_fopen((char *)new_fname, "r"))
 								    == NULL)
 		    vim_free(new_fname);
 		else
@@ -3193,10 +3341,12 @@ search_line:
 		     */
 		    if (!define_matched && skip_comments)
 		    {
+#ifdef COMMENTS
 			fo_do_comments = TRUE;
 			if ((*line != '#' ||
 				STRNCMP(skipwhite(line + 1), "define", 6) != 0)
-				&& get_leader_len(line, NULL))
+				&& get_leader_len(line, NULL, FALSE)
+				)
 			    matched = FALSE;
 
 			/*
@@ -3205,13 +3355,16 @@ search_line:
 			 * * /" when looking for "normal".
 			 */
 			else
+#endif
 			    for (p = line; *p && p < startp; ++p)
 				if (p[0] == '/' && (p[1] == '*' || p[1] == '/'))
 				{
 				    matched = FALSE;
 				    break;
 				}
+#ifdef COMMENTS
 			fo_do_comments = FALSE;
+#endif
 		    }
 		}
 	    }
@@ -3290,7 +3443,7 @@ search_line:
 			goto exit_matched;
 		}
 
-		add_r = add_completion_and_infercase(aux, i,
+		add_r = ins_compl_add_infercase(aux, i,
 			curr_fname == curbuf->b_fname ? NULL : curr_fname,
 			dir, reuse);
 		if (add_r == OK)
@@ -3355,9 +3508,14 @@ search_line:
 			curwin->w_cursor.lnum = lnum;
 		    }
 		    else
+		    {
 			if (getfile(0, files[depth].name, NULL, TRUE,
 						files[depth].lnum, FALSE) > 0)
 			    break;	/* failed to jump to file */
+			/* autocommands may have changed the lnum, we don't
+			 * want that here */
+			curwin->w_cursor.lnum = files[depth].lnum;
+		    }
 		}
 		if (action != ACTION_SHOW)
 		{
@@ -3381,7 +3539,13 @@ exit_matched:
 		goto search_line;
 	}
 	line_breakcheck();
+#ifdef INSERT_EXPAND
+	if (action == ACTION_EXPAND)
+	    ins_compl_check_keys();
+	if (got_int || completion_interrupted)
+#else
 	if (got_int)
+#endif
 	    break;
 	while (depth >= 0 && !already &&
 	       vim_fgets(line = file_line, LSIZE, files[depth].fp))
@@ -3431,7 +3595,11 @@ exit_matched:
 #endif
 						)
     {
+#ifdef INSERT_EXPAND
+	if (got_int || completion_interrupted)
+#else
 	if (got_int)
+#endif
 	    emsg(e_interr);
 	else if (type == FIND_DEFINE)
 	    EMSG("Couldn't find definition");
@@ -3522,35 +3690,77 @@ show_pat_in_path(line, type, did_show, action, fp, lnum, count)
 #ifdef VIMINFO
     int
 read_viminfo_search_pattern(line, fp, force)
-    char_u  *line;
-    FILE    *fp;
-    int	    force;
+    char_u	*line;
+    FILE	*fp;
+    int		force;
 {
-    char_u  *lp;
-    char_u  **pattern;
-    int	    idx;
+    char_u	*lp;
+    int		idx = -1;
+    int		magic = FALSE;
+    int		no_scs = FALSE;
+    int		off_line = FALSE;
+    int		off_end = FALSE;
+    long	off = 0;
+    int		setlast = FALSE;
+    static int	hlsearch_on = FALSE;
 
+    /*
+     * Old line types:
+     * "/pat", "&pat": search/subst. pat
+     * "~/pat", "~&pat": last used search/subst. pat
+     * New line types:
+     * "~h", "~H": hlsearch highlighting off/on
+     * "~<magic><smartcase><line><end><off><last><which>pat"
+     * <magic>: 'm' off, 'M' on
+     * <smartcase>: 's' off, 'S' on
+     * <line>: 'L' line offset, 'l' char offset
+     * <end>: 'E' from end, 'e' from start
+     * <off>: decimal, offset
+     * <last>: '~' last used pattern
+     * <which>: '/' search pat, '&' subst. pat
+     */
     lp = line;
+    if (lp[0] == '~' && (lp[1] == 'm' || lp[1] == 'M'))	/* new line type */
+    {
+	if (lp[1] == 'M')		/* magic on */
+	    magic = TRUE;
+	if (lp[2] == 's')
+	    no_scs = TRUE;
+	if (lp[3] == 'L')
+	    off_line = TRUE;
+	if (lp[4] == 'E')
+	    off_end = TRUE;
+	lp += 5;
+	off = getdigits(&lp);
+    }
     if (lp[0] == '~')		/* use this pattern for last-used pattern */
+    {
+	setlast = TRUE;
 	lp++;
+    }
     if (lp[0] == '/')
 	idx = RE_SEARCH;
-    else
+    else if (lp[0] == '&')
 	idx = RE_SUBST;
-    pattern = &spats[idx].pat;
-    if (force || *pattern == NULL)
-    {
-	vim_free(*pattern);
-	viminfo_readstring(lp);
-	*pattern = vim_strsave(lp + 1);
-	if (line[0] == '~')
-	{
-	    last_idx = idx;
 #ifdef EXTRA_SEARCH
-	    /* If 'hlsearch' set and search pat changed: need redraw. */
-	    if (p_hls)
-		redraw_all_later(NOT_VALID);
-	    no_hlsearch = FALSE;
+    else if (lp[0] == 'h')	/* ~h: 'hlsearch' highlighting off */
+	hlsearch_on = FALSE;
+    else if (lp[0] == 'H')	/* ~H: 'hlsearch' highlighting on */
+	hlsearch_on = TRUE;
+#endif
+    if (idx >= 0)
+    {
+	if (force || spats[idx].pat == NULL)
+	{
+	    viminfo_readstring(lp);
+	    set_last_search_pat(lp + 1, idx, magic, setlast);
+	    spats[idx].no_scs = no_scs;
+	    spats[idx].off.line = off_line;
+	    spats[idx].off.end = off_end;
+	    spats[idx].off.off = off;
+#ifdef EXTRA_SEARCH
+	    if (setlast)
+		no_hlsearch = !hlsearch_on;
 #endif
 	}
     }
@@ -3563,24 +3773,34 @@ write_viminfo_search_pattern(fp)
 {
     if (get_viminfo_parameter('/') != 0)
     {
-	wvsp_one(fp, RE_SEARCH, "", "/");
-	wvsp_one(fp, RE_SUBST, "Substitute ", "&");
+#ifdef EXTRA_SEARCH
+	fprintf(fp, "\n# hlsearch on (H) or off (h):\n~%c",
+	    (no_hlsearch || find_viminfo_parameter('h') != NULL) ? 'h' : 'H');
+#endif
+	wvsp_one(fp, RE_SEARCH, "", '/');
+	wvsp_one(fp, RE_SUBST, "Substitute ", '&');
     }
 }
 
     static void
 wvsp_one(fp, idx, s, sc)
-    FILE    *fp;
-    int	    idx;
-    char    *s;
-    char    *sc;
+    FILE	*fp;	/* file to write to */
+    int		idx;	/* spats[] index */
+    char	*s;	/* search pat */
+    int		sc;	/* dir char */
 {
     if (spats[idx].pat != NULL)
     {
-	fprintf(fp, "\n# Last %sSearch Pattern:\n", s);
-	if (last_idx == idx)
-	    fprintf(fp, "~");
-	fprintf(fp, sc);
+	fprintf(fp, "\n# Last %sSearch Pattern:\n~", s);
+	/* off.dir is not stored, it's reset to forward */
+	fprintf(fp, "%c%c%c%c%ld%s%c",
+		spats[idx].magic    ? 'M' : 'm',	/* magic */
+		spats[idx].no_scs   ? 's' : 'S',	/* smartcase */
+		spats[idx].off.line ? 'L' : 'l',	/* line offset */
+		spats[idx].off.end  ? 'E' : 'e',	/* offset from end */
+		spats[idx].off.off,			/* offset */
+		last_idx == idx	    ? "~" : "",		/* last used pat */
+		sc);
 	viminfo_writestring(fp, spats[idx].pat);
     }
 }

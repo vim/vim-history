@@ -62,13 +62,15 @@ static int mouse_y_div = 8;		/* line   = y coord / mouse_y_div */
 #define BIOSTICK    55		    /* biostime() increases one tick about
 					every 55 msec */
 
+static int orig_attr = 0x0700;		/* video attributes when starting */
+
 #ifdef DJGPP
 /*
  * For DJGPP, use our own functions for fast text screens.  JML 1/18/98
  */
 
 unsigned long	S_ulScreenBase = 0xb8000;
-unsigned short	S_uiAttribute = 7 << 8;
+unsigned short	S_uiAttribute = 0;
 int		S_iCurrentRow = 0;	/* These are 0 offset */
 int		S_iCurrentColumn = 0;
 int		S_iLeft = 0;	/* These are 1 offset */
@@ -107,7 +109,6 @@ myscroll(void)
     static int
 myputch(int iChar)
 {
-    unsigned int *puiLocation;
     unsigned short uiValue;
 
     if (iChar == '\n')
@@ -162,7 +163,6 @@ mytextinit(struct text_info *pTextinfo)
 {
     S_selVideo = __dpmi_segment_to_descriptor(S_ulScreenBase >> 4);
     S_uiAttribute = pTextinfo->normattr << 8;
-    mywindow(1, 1, Columns, Rows);
 }
 
     static void
@@ -180,21 +180,16 @@ get_screenbase(void)
 }
 
     static void
-mynormvideo(void)
-{
-    S_uiAttribute = 0x700;
-    textbackground(0);			/*for delline() etc*/
-}
-
-    static void
 mytextattr(int iAttribute)
 {
     S_uiAttribute = (unsigned short)iAttribute << 8;
-    iAttribute >>= 4;
-    if (iAttribute < 8)
-	textbackground(iAttribute);	/*for delline() etc*/
-    else
-	textbackground(0);
+    textattr(iAttribute);		/* for delline() etc */
+}
+
+    static void
+mynormvideo(void)
+{
+    mytextattr(orig_attr);
 }
 
     static void
@@ -202,7 +197,7 @@ mytextcolor(int iTextColor)
 {
     S_uiAttribute = (unsigned short)((S_uiAttribute & 0xf000)
 					   | (unsigned short)iTextColor << 8);
-    textcolor(iTextColor);		/*for delline() etc*/
+    textattr(S_uiAttribute >> 8);	/* for delline() etc */
 }
 
     static void
@@ -210,10 +205,7 @@ mytextbackground(int iBkgColor)
 {
     S_uiAttribute = (unsigned short)((S_uiAttribute & 0x0f00)
 					 | (unsigned short)(iBkgColor << 12));
-    if (iBkgColor < 8)
-	textbackground(iBkgColor);	/*for delline() etc*/
-    else
-	textbackground(0);
+    textattr(S_uiAttribute >> 8);	/* for delline() etc */
 }
 
 #else
@@ -227,6 +219,93 @@ mytextbackground(int iBkgColor)
 # define mytextbackground textbackground
 #endif
 
+static const struct
+{
+    char_u	scancode;
+    char_u	metakey;
+} altkey_table[] =
+{
+    {0x1e, 0xe1}, /* a */
+    {0x30, 0xe2}, /* b */
+    {0x2e, 0xe3}, /* c */
+    {0x20, 0xe4}, /* d */
+    {0x12, 0xe5}, /* e */
+    {0x21, 0xe6}, /* f */
+    {0x22, 0xe7}, /* g */
+    {0x23, 0xe8}, /* h */
+    {0x17, 0xe9}, /* i */
+    {0x24, 0xea}, /* j */
+    {0x25, 0xeb}, /* k */
+    {0x26, 0xec}, /* l */
+    {0x32, 0xed}, /* m */
+    {0x31, 0xee}, /* n */
+    {0x18, 0xef}, /* o */
+    {0x19, 0xf0}, /* p */
+    {0x10, 0xf1}, /* q */
+    {0x13, 0xf2}, /* r */
+    {0x1f, 0xf3}, /* s */
+    {0x14, 0xf4}, /* t */
+    {0x16, 0xf5}, /* u */
+    {0x2f, 0xf6}, /* v */
+    {0x11, 0xf7}, /* w */
+    {0x2d, 0xf8}, /* x */
+    {0x15, 0xf9}, /* y */
+    {0x2c, 0xfa}, /* z */
+    {0x78, 0xb1}, /* 1 */
+    {0x79, 0xb2}, /* 2 */
+    {0x7a, 0xb3}, /* 3 */
+    {0x7b, 0xb4}, /* 4 */
+    {0x7c, 0xb5}, /* 5 */
+    {0x7d, 0xb6}, /* 6 */
+    {0x7e, 0xb7}, /* 7 */
+    {0x7f, 0xb8}, /* 8 */
+    {0x80, 0xb9}, /* 9 */
+    {0x81, 0xb0}, /* 0 */
+};
+
+/*
+ * Translate extended keycodes into meta-chars where applicable
+ */
+    static int
+translate_altkeys(int rawkey)
+{
+    int i, c;
+
+    if ((rawkey & 0xff) == 0)
+    {
+	c = (rawkey >> 8);
+	for (i = sizeof(altkey_table) / sizeof(altkey_table[0]); --i >= 0; )
+	{
+	    if (c == altkey_table[i].scancode)
+		return (int)altkey_table[i].metakey;
+	}
+    }
+    return rawkey;
+}
+/*
+ * Set normal fg/bg color, based on T_ME.  Called whem t_me has been set.
+ */
+    void
+mch_set_normal_colors()
+{
+    char_u	*p;
+    int		n;
+
+    cterm_normal_fg_color = (orig_attr & 0xf) + 1;
+    cterm_normal_bg_color = ((orig_attr >> 4) & 0xf) + 1;
+    if (T_ME[0] == ESC && T_ME[1] == '|')
+    {
+	p = T_ME + 2;
+	n = getdigits(&p);
+	if (*p == 'm' && n > 0)
+	{
+	    cterm_normal_fg_color = (n & 0xf) + 1;
+	    cterm_normal_bg_color = ((n >> 4) & 0xf) + 1;
+	}
+    }
+}
+
+#if defined(MCH_CURSOR_SHAPE) || defined(PROTO)
 /*
  * Save/restore the shape of the cursor.
  * call with FALSE to save, TRUE to restore
@@ -286,6 +365,7 @@ mch_update_cursor(void)
 	thickness = (7 * cursor_table[idx].percentage + 90) / 100;
     mch_set_cursor_shape(thickness);
 }
+#endif
 
     long_u
 mch_avail_mem(int special)
@@ -301,25 +381,22 @@ mch_avail_mem(int special)
 
 /*
  * Set area where mouse can be moved to: The whole screen.
- * Rows must be valid when calling!
+ * Rows and Columns must be valid when calling!
  */
     static void
 mouse_area(void)
 {
     union REGS	    regs;
-    int		    mouse_y_max;	    /* maximum mouse y coord */
 
     if (mouse_avail)
     {
-	mouse_y_max = Rows * mouse_y_div - 1;
-	if (mouse_y_max < 199)	    /* is this needed? */
-	    mouse_y_max = 199;
 	regs.x.cx = 0;	/* mouse visible between cx and dx */
-	regs.x.dx = 639;
+	regs.x.dx = Columns * mouse_x_div - 1;
 	regs.x.ax = 7;
 	(void)int86(0x33, &regs, &regs);
+
 	regs.x.cx = 0;	/* mouse visible between cx and dx */
-	regs.x.dx = mouse_y_max;
+	regs.x.dx = Rows * mouse_y_div - 1;
 	regs.x.ax = 8;
 	(void)int86(0x33, &regs, &regs);
     }
@@ -339,7 +416,7 @@ show_mouse(int on)
 	 * Careful: Each switch on must be compensated by exactly one switch
 	 * off
 	 */
-	if (on && !was_on || !on && was_on)
+	if ((on && !was_on) || (!on && was_on))
 	{
 	    was_on = on;
 	    regs.x.ax = on ? 1 : 2;
@@ -351,6 +428,60 @@ show_mouse(int on)
 }
 
 #endif
+
+/*
+ * Version of kbhit() and getch() that use direct console I/O.
+ * This avoids trouble with CTRL-P and the like, and should work over a telnet
+ * connection (it works for Xvi).
+ */
+
+static int cons_key = -1;
+
+/*
+ * Try to get one character directly from the console.
+ * If there is a key, it is stored in cons_key.
+ * Only call when cons_key is -1!
+ */
+    static void
+cons_getkey(void)
+{
+    union REGS regs;
+
+    /* call DOS function 6: Direct console I/O */
+    regs.h.ah = 0x06;
+    regs.h.dl = 0xff;
+    (void)intdos(&regs, &regs);
+    if ((regs.x.flags & 0x40) == 0)	/* zero flag not set? */
+	cons_key = (regs.h.al & 0xff);
+}
+
+/*
+ * Return TRUE if a character is available.
+ */
+    static int
+cons_kbhit(void)
+{
+    if (cons_key < 0)
+	cons_getkey();
+    return (cons_key >= 0);
+}
+
+/*
+ * Return a character from the console.
+ * Should only be called when vim_kbhit() returns TRUE.
+ */
+    static int
+cons_getch(void)
+{
+    int	    c = -1;
+
+    if (cons_key < 0)
+	cons_getkey();
+    c = cons_key;
+    cons_key = -1;
+    return c;
+}
+
 
 #ifdef DJGPP
 /*
@@ -371,8 +502,8 @@ vim_kbhit(void)
 #ifdef kbhit
 # undef kbhit	    /* might have been defined in conio.h */
 #endif
-
 #define kbhit()	vim_kbhit()
+
 #endif
 
 /*
@@ -461,7 +592,8 @@ WaitForChar(long msec)
 	}
 #endif
 
-	if ((p_biosk ? bioskey(1) : kbhit()) || cbrk_pressed
+	if ((p_consk ? cons_kbhit() : p_biosk ? bioskey(1) : kbhit())
+		|| cbrk_pressed
 #ifdef USE_MOUSE
 						    || mouse_click >= 0
 #endif
@@ -527,9 +659,10 @@ mch_write(
     char_u	*p;
     int		row, col;
 
-    if (term_console)	    /* translate ESC | sequences into bios calls */
+    if (term_console && full_screen)
 	while (len--)
 	{
+	    /* translate ESC | sequences into bios calls */
 	    if (p_wd)	    /* testing: wait a bit for each char */
 		WaitForChar(p_wd);
 
@@ -630,12 +763,16 @@ mch_inchar(
 {
     int		len = 0;
     int		c;
+    int		tmp_c;
     static int	nextchar = 0;	    /* may keep character when maxlen == 1 */
+#ifdef AUTOCMD
+    static int	once_already = 0;
+#endif
 
-/*
- * if we got a ctrl-C when we were busy, there will be a "^C" somewhere
- * on the sceen, so we need to redisplay it.
- */
+    /*
+     * if we got a ctrl-C when we were busy, there will be a "^C" somewhere
+     * on the sceen, so we need to redisplay it.
+     */
     if (delayed_redraw)
     {
 	delayed_redraw = FALSE;
@@ -663,17 +800,43 @@ mch_inchar(
 #ifdef USE_MOUSE
 	    show_mouse(FALSE);
 #endif
+#ifdef AUTOCMD
+	    once_already = 0;
+#endif
 	    return 0;
 	}
     }
     else    /* time == -1 */
     {
-    /*
-     * If there is no character available within 2 seconds (default)
-     * write the autoscript file to disk
-     */
-	if (WaitForChar(p_ut) == 0)
+#ifdef AUTOCMD
+	if (once_already == 2)
 	    updatescript(0);
+	else if (once_already == 1)
+	{
+	    setcursor();
+	    once_already = 2;
+	    return 0;
+	}
+	else
+#endif
+	/*
+	 * If there is no character available within 2 seconds (default)
+	 * write the autoscript file to disk
+	 */
+	    if (WaitForChar(p_ut) == 0)
+	{
+#ifdef AUTOCMD
+            if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+            {
+                apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+                update_screen(VALID);
+		once_already = 1;
+                return 0;
+            }
+            else
+#endif
+		updatescript(0);
+	}
     }
     WaitForChar(FOREVER);	/* wait for key or mouse click */
 
@@ -705,11 +868,11 @@ mch_inchar(
 #ifdef USE_MOUSE
 	mouse_hidden = TRUE;
 #endif
-	if (p_biosk)
+	if (p_biosk && !p_consk)
 	{
 	    while ((len == 0 || bioskey(1)) && len < maxlen)
 	    {
-		c = bioskey(0);		/* get the key */
+		c = translate_altkeys(bioskey(0));	/* get the key */
 		/*
 		 * translate a few things for inchar():
 		 * 0x0000 == CTRL-break		-> 3	(CTRL-C)
@@ -721,7 +884,8 @@ mch_inchar(
 		    c = 3;
 		else if (c == 0x0300)
 		    c = NUL;
-		else if ((c & 0xff) == 0 || c == K_NUL)
+		else if ((c & 0xff) == 0 || c == K_NUL
+				 || c == 0x4e2b || c == 0x4a2d || c == 0x372a)
 		{
 		    if (c == K_NUL)
 			c = 3;
@@ -742,18 +906,28 @@ mch_inchar(
 	}
 	else
 	{
-	    while ((len == 0 || kbhit()) && len < maxlen)
+	    while ((len == 0 || (p_consk ? cons_kbhit() : kbhit()))
+		    && len < maxlen)
 	    {
-		switch (c = getch())
+		switch (c = (p_consk ? cons_getch() : getch()))
 		{
 		    case 0:
 			/* NUL means that there is another character.
 			 * Get it immediately, because kbhit() doesn't always
 			 * return TRUE for the second character.
 			 */
-			*buf++ = K_NUL;
-			++len;
-			c = getch();
+			if (p_consk)
+			    c = cons_getch();
+			else
+			    c = getch();
+			tmp_c = translate_altkeys(c << 8);
+			if (tmp_c == (c << 8))
+			{
+			    *buf++ = K_NUL;
+			    ++len;
+			}
+			else
+			    c = tmp_c;
 			break;
 		    case K_NUL:
 			*buf++ = K_NUL;
@@ -781,6 +955,9 @@ mch_inchar(
 #endif
 
     beep_count = 0;	    /* may beep again now that we got some chars */
+#ifdef AUTOCMD
+    once_already = 0;
+#endif
     return len;
 }
 
@@ -899,12 +1076,25 @@ extern int _fmode;
 
 /*
  * Prepare window for use by Vim.
- * we do not use windows, there is not much to do here
  */
     void
 mch_windinit(void)
 {
     union REGS regs;
+
+    /*
+     * Get the video attributes at the cursor.  These will be used as the
+     * default attributes.
+     */
+    regs.h.ah = 0x08;
+    regs.h.bh = 0x00;		/* video page 0 */
+    int86(0x10, &regs, &regs);
+    orig_attr = regs.h.ah;
+    mynormvideo();
+    if (cterm_normal_fg_color == 0)
+	cterm_normal_fg_color = (orig_attr & 0xf) + 1;
+    if (cterm_normal_bg_color == 0)
+	cterm_normal_bg_color = ((orig_attr >> 4) & 0xf) + 1;
 
     term_console = TRUE;    /* assume using the console for the things here */
     _fmode = O_BINARY;	    /* we do our own CR-LF translation */
@@ -943,10 +1133,12 @@ mch_windinit(void)
     regs.h.bh = 0x00;
     int86(0x10, &regs, &regs);
 
+#ifdef MCH_CURSOR_SHAPE
     /* Save the old cursor shape */
     mch_restore_cursor_shape(FALSE);
     /* Initialise the cursor shape */
     mch_update_cursor();
+#endif
 }
 
     int
@@ -957,6 +1149,13 @@ mch_check_win(
     /* store argv[0], may be used for $VIM */
     if (*argv[0] != NUL)
 	exe_name = FullName_save((char_u *)argv[0], FALSE);
+
+    /*
+     * Try the DOS search path.  The executable may in
+     * fact be called differently, so try this last.
+     */
+    if (exe_name == NULL || *exe_name == NUL)
+	exe_name = searchpath("vim.exe");
 
     if (isatty(1))
 	return OK;
@@ -974,7 +1173,7 @@ mch_input_isatty(void)
     return FALSE;
 }
 
-#ifdef USE_FNAME_CASE
+#if defined(USE_FNAME_CASE) || defined(PROTO)
 /*
  * fname_case(): Set the case of the file name, if it already exists.
  */
@@ -993,37 +1192,6 @@ fname_case(char_u *name)
     }
 }
 #endif
-
-/*
- * mch_settitle(): set titlebar of our window.
- * Dos console has no title.
- */
-    void
-mch_settitle(
-    char_u *title,
-    char_u *icon)
-{
-}
-
-/*
- * Restore the window/icon title. (which we don't have)
- */
-    void
-mch_restore_title(int which)
-{
-}
-
-    int
-mch_can_restore_title(void)
-{
-    return FALSE;
-}
-
-    int
-mch_can_restore_icon(void)
-{
-    return FALSE;
-}
 
 /*
  * Insert user name in s[len].
@@ -1096,14 +1264,14 @@ change_drive(int drive)
     intdos(&regs, &regs);   /* get default drive */
     if (regs.h.al == drive - 1)
 	return 0;
-    else
-	return -1;
+    return -1;
 }
 
 /*
  * Get absolute file name into buffer 'buf' of length 'len' bytes.
  * All slashes are replaced with backslashes, to avoid trouble when comparing
  * file names.
+ * When 'shellslash' set do it the other way around.
  *
  * return FAIL for failure, OK otherwise
  */
@@ -1127,15 +1295,20 @@ mch_FullName(
 	return OK;
     }
 
-#ifdef __BORLANDC__	/* the old Turbo C does not have this */
+#ifdef __BORLANDC__		/* Only Borland C++ has this */
     if (_fullpath((char *)buf, (char *)fname, len - 1) == NULL)
     {
 	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
 	slash_adjust(buf);
 	return FAIL;
     }
-    if (mch_isdir(fname))
-	STRCAT(buf, "\\");
+    /* Append a backslash after a directory name, unless it's already there */
+    {
+	int	c;
+
+	if (mch_isdir(buf) && (c = buf[STRLEN(buf) - 1]) != '\\' && c != '/')
+	    STRCAT(buf, pseps);
+    }
     slash_adjust(buf);
     return OK;
 #else			/* almost the same as mch_FullName in os_unix.c */
@@ -1168,7 +1341,9 @@ mch_FullName(
 	    }
 	    else
 	    {
-		if ((q + 1) == p)		/* ... c:\foo	    */
+		if (p == fname)			/* /fname	    */
+		    q = p + 1;			/* -> /		    */
+		else if (q + 1 == p)		/* ... c:\foo	    */
 		    q = p + 1;			/* -> c:\	    */
 		else				/* but c:\foo\bar   */
 		    q = p;			/* -> c:\foo	    */
@@ -1186,7 +1361,7 @@ mch_FullName(
 		else
 		{
 		    fname = q;
-		    if (c == '\\')	    /* if we cut the name at a */
+		    if (c == psepc)	    /* if we cut the name at a */
 			fname++;	    /* '\', don't add it again */
 		}
 		*q = c;
@@ -1202,7 +1377,7 @@ mch_FullName(
 	 */
 	l = STRLEN(buf);
 	if (l && buf[l - 1] != '/' && buf[l - 1] != '\\')
-	    strcat(buf, "/");
+	    strcat(buf, pseps);
 	if (p)
 	    mch_chdir(olddir);
 	strcat(buf, fname);
@@ -1219,6 +1394,7 @@ mch_FullName(
  * backslashes, because comparing file names will not work correctly.  The
  * commands that use a file name should try to avoid the need to type a
  * backslash twice.
+ * When 'shellslash' set do it the other way around.
  */
     void
 slash_adjust(char_u *p)
@@ -1237,8 +1413,8 @@ slash_adjust(char_u *p)
 #endif
     while (*p)
     {
-	if (*p == '/')
-	    *p = '\\';
+	if (*p == psepcN)
+	    *p = psepc;
 	++p;
     }
 }
@@ -1292,7 +1468,7 @@ mch_hide(char_u *name)
  * return FALSE if "name" is not a directory
  * return FALSE for error
  *
- * beware of a trailing backslash
+ * beware of a trailing (back)slash
  */
     int
 mch_isdir(char_u *name)
@@ -1303,13 +1479,13 @@ mch_isdir(char_u *name)
     p = name + strlen((char *)name);
     if (p > name)
 	--p;
-    if (*p == '\\')		    /* remove trailing backslash for a moment */
+    if (*p == '\\' || *p == '/')   /* remove trailing (back)slash for now */
 	*p = NUL;
     else
 	p = NULL;
     f = _chmod((char *)name, 0, 0);
     if (p != NULL)
-	*p = '\\';		    /* put back backslash */
+	*p = psepc;		    /* put back (back)slash */
     if (f == -1)
 	return FALSE;		    /* file does not exist at all */
     if ((f & FA_DIREC) == 0)
@@ -1326,11 +1502,14 @@ mch_windexit(int r)
     settmode(TMODE_COOK);
     stoptermcap();
     set_interrupts(FALSE);	    /* restore interrupts */
+    /* Somehow outputting CR-NL causes the original colors to be restored */
     out_char('\r');
     out_char('\n');
     out_flush();
     ml_close_all(TRUE);		    /* remove all memfiles */
+#ifdef MCH_CURSOR_SHAPE
     mch_restore_cursor_shape(TRUE);
+#endif
     exit(r);
 }
 
@@ -1362,7 +1541,7 @@ mch_screenmode(char_u *arg)
     int		    mode;
     int		    i;
     static char	   *(names[]) = {"BW40", "C40", "BW80", "C80", "MONO", "C4350"};
-    static int	    modes[]  = { BW40,	 C40,	BW80,	C80,   MONO,   C4350};
+    static int	    modes[]   = { BW40,	  C40,	 BW80,	 C80,	MONO,	C4350};
 
     mode = -1;
     if (isdigit(*arg))		    /* mode number given */
@@ -1494,7 +1673,9 @@ mch_call_shell(
     int		options)
 {
     int	    x;
+#ifndef DJGPP
     char_u  *newcmd;
+#endif
 
     out_flush();
 
@@ -1548,7 +1729,6 @@ mch_call_shell(
 	MSG_PUTS(" returned\n");
     }
 
-    /* resettitle();		    we don't have titles */
     (void)ui_get_winsize();	    /* display mode may have been changed */
     return x;
 }
@@ -1578,7 +1758,11 @@ pstrcmp(a, b)
     int
 mch_has_wildcard(char_u *s)
 {
+#ifdef VIM_BACKTICK
+    return (vim_strpbrk(s, (char_u *)"?*$~`") != NULL);
+#else
     return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
+#endif
 }
 
     static void
@@ -1599,12 +1783,16 @@ namelowcpy(
 
 /*
  * Recursive function to expand one path section with wildcards.
+ * This only expands '?' and '*'.
  * Return the number of matches found.
+ * "path" has backslashes before chars that are not to be expanded, starting
+ * at "wildc".
  */
-    int
-mch_expandpath(
+    static int
+dos_expandpath(
     struct growarray	*gap,
     char_u		*path,
+    char_u		*wildc,
     int			flags)
 {
     char_u		*buf;
@@ -1612,9 +1800,11 @@ mch_expandpath(
     int			start_len, c;
     struct ffblk	fb;
     int			matches;
+    int			len;
 
     start_len = gap->ga_len;
-    buf = alloc(STRLEN(path) + BASENAMELEN + 5);   /* make room for file name */
+    /* make room for file name */
+    buf = alloc(STRLEN(path) + BASENAMELEN + 5);
     if (buf == NULL)
 	return 0;
 
@@ -1623,35 +1813,34 @@ mch_expandpath(
      * Copy it into buf, including the preceding characters.
      */
     p = buf;
-    s = NULL;
+    s = buf;
     e = NULL;
     while (*path)
     {
-	if (*path == '\\' || *path == ':' || *path == '/')
+	if (path >= wildc && rem_backslash(path))	/* remove a backslash */
+	    ++path;
+	else if (*path == '\\' || *path == ':' || *path == '/')
 	{
-	    if (e)
+	    if (e != NULL)
 		break;
 	    else
-		s = p;
+		s = p + 1;
 	}
-	if (*path == '*' || *path == '?')
+	else if (*path == '*' || *path == '?')
 	    e = p;
 	*p++ = *path++;
     }
     e = p;
-    if (s)
-	s++;
-    else
-	s = buf;
+    *e = NUL;
+    /* now we have one wildcard component between s and e */
 
     /* if the file name ends in "*" and does not contain a ".", addd ".*" */
     if (e[-1] == '*' && vim_strchr(s, '.') == NULL)
     {
 	*e++ = '.';
 	*e++ = '*';
+	*e = NUL;
     }
-    /* now we have one wildcard component between s and e */
-    *e = NUL;
 
     /* If we are expanding wildcards we try both files and directories */
     if ((c = findfirst((char *)buf, &fb,
@@ -1668,11 +1857,23 @@ mch_expandpath(
 	/* ignore "." and ".." */
 	if (*s != '.' || (s[1] != NUL && (s[1] != '.' || s[2] != NUL)))
 	{
-	    STRCAT(buf, path);
+	    len = STRLEN(buf);
+	    STRCPY(buf + len, path);
 	    if (mch_has_wildcard(path))
-		(void)mch_expandpath(gap, buf, flags);
-	    else if (mch_getperm(buf) >= 0)	/* add existing file */
-		addfile(gap, buf, flags);
+	    {
+		/* need to expand another component of the path */
+		/* remove backslashes for the remaining components only */
+		(void)dos_expandpath(gap, buf, buf + len + 1, flags);
+	    }
+	    else
+	    {
+		/* no more wildcards, check if there is a match */
+		/* remove backslashes for the remaining components only */
+		if (*path)
+		    backslash_halve(buf + len + 1);
+		if (mch_getperm(buf) >= 0)	/* add existing file */
+		    addfile(gap, buf, flags);
+	    }
 	}
 	c = findnext(&fb);
     }
@@ -1685,9 +1886,19 @@ mch_expandpath(
     return matches;
 }
 
+    int
+mch_expandpath(
+    struct growarray	*gap,
+    char_u		*path,
+    int			flags)
+{
+    return dos_expandpath(gap, path, path, flags);
+}
+
 /*
- * The normal chdir() does not change the default drive.
- * This one does.
+ * Change directory to "path".
+ * The normal chdir() does not change the default drive.  This one does.
+ * Return 0 for success, -1 for failure.
  */
     int
 mch_chdir(char *path)
@@ -1766,19 +1977,28 @@ mch_rename(const char *OldFile, const char *NewFile)
 #endif
 
 /*
- * Special version of getenv(): use $HOME when $VIM not defined.
+ * Special version of getenv(): Use uppercase name.
  */
     char_u *
-mch_getenv(char_u *var)
+mch_getenv(char_u *name)
 {
-    char_u  *retval;
+    int		i;
+#define MAXENVLEN 50
+    char_u	var_copy[MAXENVLEN + 1];
 
-    retval = (char_u *)getenv((char *)var);
-
-    if (retval == NULL && STRCMP(var, "VIM") == 0)
-	retval = (char_u *)getenv("HOME");
-
-    return retval;
+    /*
+     * Take a copy of the argument, and force it to upper case before passing
+     * to getenv().  On DOS systems, getenv() doesn't like lower-case argument
+     * (unlike Win32 et al.)  If the name is too long, just use it plain.
+     */
+    if (STRLEN(name) < MAXENVLEN)
+    {
+	for (i = 0; name[i] != NUL; ++i)
+	    var_copy[i] = toupper(name[i]);
+	var_copy[i] = NUL;
+	name = var_copy;
+    }
+    return (char_u *)getenv((char *)name);
 }
 
 #ifdef DJGPP

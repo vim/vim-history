@@ -35,8 +35,12 @@
 #  define USR_GVIMRC_FILE2	"$VIM\\_gvimrc"
 # endif
 # ifndef SYS_MENU_FILE
-#  define SYS_MENU_FILE		"$VIM\\menu.vim"
+#  define SYS_MENU_FILE		"$VIMRUNTIME\\menu.vim"
 # endif
+#endif
+
+#ifndef SYS_OPTWIN_FILE
+# define SYS_OPTWIN_FILE	"$VIMRUNTIME\\optwin.vim"
 #endif
 
 #ifdef VIMINFO
@@ -63,11 +67,18 @@
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP	"$VIM\\doc\\help.txt"
+# define VIM_HLP	"$VIMRUNTIME\\doc\\help.txt"
+#endif
+
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	"$VIMRUNTIME\\filetype.vim"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE	"$VIMRUNTIME\\ftoff.vim"
 #endif
 
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIM\\syntax\\%s.vim"
+# define SYNTAX_FNAME	"$VIMRUNTIME\\syntax\\%s.vim"
 #endif
 
 #ifndef DEF_BDIR

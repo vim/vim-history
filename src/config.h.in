@@ -74,6 +74,9 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef gid_t
 
+/* Define to `long' if <sys/types.h> doesn't define.  */
+#undef ino_t
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #undef TIME_WITH_SYS_TIME
 
@@ -85,6 +88,9 @@
 
 /* Define as the command at the end of signal handlers ("" or "return 0;").  */
 #undef SIGRETURN
+
+/* Define if struct sigcontext is present */
+#undef HAVE_SIGCONTEXT
 
 /* Define if touuper/tolower only work on lower/upercase characters */
 #undef BROKEN_TOUPPER
@@ -101,8 +107,14 @@
 /* Define if you have the fchown() function.  */
 #undef HAVE_FCHOWN
 
+/* Define if you have the fseeko() function. */
+#undef HAVE_FSEEKO
+
 /* Define if you have the fsync() function. */
 #undef HAVE_FSYNC
+
+/* Define if you have the ftello() function. */
+#undef HAVE_FTELLO
 
 /* Define if the getcwd() function should not be used.  */
 #undef BAD_GETCWD
@@ -130,6 +142,9 @@
 
 /* Define if you have the memset() function.  */
 #undef HAVE_MEMSET
+
+/* Define if you have the nanosleep() function.  */
+#undef HAVE_NANOSLEEP
 
 /* Define if you have the opendir() function. */
 #undef HAVE_OPENDIR
@@ -187,6 +202,9 @@
 
 /* Define if you have the rename() function. */
 #undef HAVE_RENAME
+
+/* Define if you have the usleep() function.  */
+#undef HAVE_USLEEP
 
 /* Define if you have the utime() function. */
 #undef HAVE_UTIME
@@ -256,6 +274,9 @@
 /* Define if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
+/* Define if strings.h cannot be included when strings.h already is */
+#undef NO_STRINGS_WITH_STRING_H
+
 /* Define if you have the <sys/systeminfo.h> header file. */
 #undef HAVE_SYS_SYSTEMINFO_H
 
@@ -307,5 +328,26 @@
 /* Define if you want to include the Tcl interpreter. */
 #undef HAVE_TCL
 
-/* Define if you want to include the Tcl interpreter. */
+/* Define if you want to add support of GPM (Linux console mouse daemon) */
+#undef HAVE_GPM
+
+/* Define if you want to include the Cscope interface. */
 #undef USE_CSCOPE
+
+/* Define if you want to include multibyte support. */
+#undef MULTI_BYTE
+
+/* Define if you want to include fontset support. */
+#undef USE_FONTSET
+
+/* Define if you want to include XIM support. */
+#undef USE_XIM
+
+/* Define if you want to include Hangul input support. */
+#undef HANGUL_INPUT
+
+/* Define if your libc doesn't work POSIX.2 locale function correctly */
+#undef BROKEN_LOCALE
+
+/* Define if your X has own locale library */
+#undef X_LOCALE

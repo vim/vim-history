@@ -37,7 +37,14 @@
 
 /* This will go away when CMD_KEY fully tested */
 #define USE_CMD_KEY
-
+#if defined (__POWERPC__) /* Got problem trying to use shared library in 68k */
+# undef HAVE_PYTHON
+#else
+# undef HAVE_PYTHON
+#endif
+#define USE_BROWSE
+#define GUI_DIALOGUE
+#define RIGHTLEFT
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
@@ -48,6 +55,7 @@
 #define EOL_DEFAULT EOL_MAC
 #define USE_CR
 #define NO_CONSOLE		    /* don't include console mode */
+#define HAVE_AVAIL_MEM
 
 /* #define SYNC_DUP_CLOSE	    /* sync() a file with dup() and close() */
 #define HAVE_STRING_H
@@ -61,6 +69,9 @@
 #endif
 #define BREAKCHECK_SKIP	    1	    /* call mch_breakcheck() each time, it's
 				       quite fast */
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		    /* internal backtick expansion */
+#endif
 
 #if defined(__POWERPC__) || defined (__fourbyteints__)
 # define SIZEOF_INT 4
@@ -86,7 +97,10 @@
 # define SYS_GVIMRC_FILE "$VIM:gvimrc"
 #endif
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE	"$VIM:menu.vim"
+# define SYS_MENU_FILE	"$VIMRUNTIME:menu.vim"
+#endif
+#ifndef SYS_OPTWIN_FILE
+# define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
 #endif
 
 #ifdef USE_GUI
@@ -114,11 +128,18 @@
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP	"$VIM:doc:help.txt"
+# define VIM_HLP	"$VIMRUNTIME:doc:help.txt"
+#endif
+
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	"$VIMRUNTIME:filetype.vim"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE	"$VIMRUNTIME:ftoff.vim"
 #endif
 
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIM:syntax:%s.vim"
+# define SYNTAX_FNAME	"$VIMRUNTIME:syntax:%s.vim"
 #endif
 
 #ifdef VIMINFO
@@ -145,7 +166,7 @@
 
 #define MAXPATHL    256		/* Limited by the Pascal Strings */
 
-#define BASENAMELEN	(MAXPATHL-5)	/* length of base of filename */
+#define BASENAMELEN	(32-5-1)	/* length of base of filename */
 
 #ifndef MAXMEM
 # define MAXMEM		512	/* use up to  512 Kbyte for buffer */
@@ -160,5 +181,7 @@
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_remove(x) unlink((char *)(x))
 #define mch_chdir(s) chdir(s)
-#define mch_getenv(x) (char_u *)getenv((char *)x)
+/* vim_getenv() is in pty.c */
+#define USE_VIMPTY_GETENV
+#define mch_getenv(x) vimpty_getenv(x)
 #define mch_setenv(name, val, x) setenv(name, val, x)

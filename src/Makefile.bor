@@ -126,7 +126,7 @@ OPT = $(OPT) -vi-
 !endif
 # shouldn't have to change:
 LIB = $(BOR)\lib
-INCLUDE = $(BOR)\include;$(PERLLIB)\core;.;proto 
+INCLUDE = $(BOR)\include;$(PERLLIB)\core;.;proto
 DEFINES = -DWIN32 -DPC
 #
 !ifdef PERL
@@ -254,6 +254,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\mark.obj \
 	$(OBJDIR)\memfile.obj \
 	$(OBJDIR)\memline.obj \
+	$(OBJDIR)\menu.obj \
 	$(OBJDIR)\message.obj \
 	$(OBJDIR)\misc1.obj \
 	$(OBJDIR)\misc2.obj \
@@ -342,7 +343,7 @@ TARGETS = $(TARGETS) $(TARGET)
 vim: dirs $(OBJDIR)\bcc.cfg $(TARGETS)
 	@del $(OBJDIR)\version.obj
 
-dirs: 
+dirs:
     -@md $(OS)
     -@md $(OBJDIR)
 
@@ -350,7 +351,7 @@ all: vim vimrun.exe install.exe xxd ctags
 
 ###########################################################################
 ###### Note well: Before you attempt to make 'xxd' or 'ctags', you will
-###### have to edit their respective makefile.w32 files to work with 
+###### have to edit their respective makefile.w32 files to work with
 ###### Borland C.  It isn't hard, but I can't do it for you!
 ###########################################################################
 xxd:
@@ -469,6 +470,8 @@ $(OBJDIR)\memfile.obj:	memfile.c
 
 $(OBJDIR)\memline.obj:	memline.c
 
+$(OBJDIR)\menu.obj:	menu.c
+
 $(OBJDIR)\message.obj:	message.c
 
 $(OBJDIR)\misc1.obj:  misc1.c
@@ -535,13 +538,13 @@ if_perl.c: if_perl.xs typemap
 
 vim.res: vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
     $(BRC) $(DEFINES) -i $(BOR)\include -32 -r $*.rc
-    
+
 # vimrun.exe:
-vimrun.exe: vimrun.c 
+vimrun.exe: vimrun.c
 !if $d(USEDLL)
 	$(BOR)\BIN\BCC32 -WC -O1 -I$(INCLUDE) -D_RTLDLL vimrun.c cw32mti.lib
 !else
-	$(BOR)\BIN\BCC32 -WC -O1 -I$(INCLUDE) vimrun.c 
+	$(BOR)\BIN\BCC32 -WC -O1 -I$(INCLUDE) vimrun.c
 !endif
 
 

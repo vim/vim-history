@@ -8,6 +8,10 @@
 
 #include "vim.h"
 
+#ifdef LINEBREAK
+static int win_chartabsize __ARGS((WIN *wp, int c, colnr_t col));
+#endif
+
 /*
  * chartab[] is used
  * - to quickly recognize ID characters
@@ -217,6 +221,28 @@ trans_characters(buf, bufsize)
     }
 }
 
+#if defined(WANT_EVAL) || defined(PROTO)
+/*
+ * Translate a string into allocated memory, replacing special chars with
+ * printable chars.  Returns NULL when out of memory.
+ */
+    char_u *
+transstr(s)
+    char_u	*s;
+{
+    char_u	*res;
+
+    res = alloc((unsigned)(vim_strsize(s) + 1));
+    if (res != NULL)
+    {
+	*res = NUL;
+	while (*s)
+	    STRCAT(res, transchar(*s++));
+    }
+    return res;
+}
+#endif
+
 /*
  * Catch 22: chartab[] can't be initialized before the options are
  * initialized, and initializing options may cause transchar() to be called!
@@ -261,6 +287,8 @@ transchar_nonprint(buf, c)
     {
 	if (c == NL)
 	    c = NUL;			/* we use newline in place of a NUL */
+	else if (c == CR && get_fileformat(curbuf) == EOL_MAC)
+	    c = NL;		/* we use CR in place of  NL in this case */
 	buf[0] = '^';
 	buf[1] = c ^ 0x40;		/* DEL displayed as ^? */
 	buf[2] = NUL;
@@ -332,7 +360,8 @@ chartabsize(c, col)
     RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, c, col)
 }
 
-    int
+#ifdef LINEBREAK
+    static int
 win_chartabsize(wp, c, col)
     WIN		*wp;
     int		c;
@@ -340,6 +369,7 @@ win_chartabsize(wp, c, col)
 {
     RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, c, col)
 }
+#endif
 
 /*
  * return the number of characters the string 's' will take on the screen,
@@ -393,6 +423,7 @@ vim_iswordc(c)
     return (c < 0x100 && curbuf->b_chartab[c]);
 }
 
+#if defined(SYNTAX_HL) || defined(PROTO)
     int
 vim_iswordc_buf(c, buf)
     int c;
@@ -400,6 +431,7 @@ vim_iswordc_buf(c, buf)
 {
     return (c < 0x100 && buf->b_chartab[c]);
 }
+#endif
 
 /*
  * return TRUE if 'c' is a valid file-name character
@@ -442,51 +474,61 @@ lbr_chartabsize(s, col)
     unsigned char   *s;
     colnr_t	    col;
 {
+#ifdef LINEBREAK
     if (!curwin->w_p_lbr && *p_sbr == NUL)
     {
+#endif
 	RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, *s, col)
+#ifdef LINEBREAK
     }
-
     return win_lbr_chartabsize(curwin, s, col, NULL);
+#endif
 }
 
 /*
  * This function is used very often, keep it fast!!!!
- * Warning: *head is only set if it's a non-zero value, init to 0 before
- * calling.
+ *
+ * If "head" not NULL, set *head to the size of what we for 'showbreak' string
+ * at start of line.  Warning: *head is only set if it's a non-zero value,
+ * init to 0 before calling.
  */
+/*ARGSUSED*/
     int
 win_lbr_chartabsize(wp, s, col, head)
-    WIN		    *wp;
-    unsigned char   *s;
-    colnr_t	    col;
-    int		    *head;
+    WIN			*wp;
+    unsigned char	*s;
+    colnr_t		col;
+    int			*head;
 {
-    int	    c = *s;
-    int	    size;
-    colnr_t col2;
-    colnr_t colmax;
-    int	    added;
-    int     numberextra;
+    int		c = *s;
+#ifdef LINEBREAK
+    int		size;
+    colnr_t	col2;
+    colnr_t	colmax;
+    int		added;
+    int		numberextra;
 
-/*
- * No 'linebreak' and 'showbreak': return quickly.
- */
+    /*
+     * No 'linebreak' and 'showbreak': return quickly.
+     */
     if (!wp->w_p_lbr && *p_sbr == NUL)
     {
+#endif
 	RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, c, col)
+#ifdef LINEBREAK
     }
 
-/*
- * First get normal size, without 'linebreak'
- */
+    /*
+     * First get normal size, without 'linebreak'
+     */
     size = win_chartabsize(wp, c, col);
-/*
- * If 'linebreak' set check at a blank before a non-blank if the line needs a
- * break here
- */
-    if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(s[1]) &&
-					       !wp->w_p_list && wp->w_p_wrap)
+
+    /*
+     * If 'linebreak' set check at a blank before a non-blank if the line
+     * needs a break here
+     */
+    if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(s[1])
+					     && !wp->w_p_list && wp->w_p_wrap)
     {
 	numberextra = wp->w_p_nu? 8: 0;
 	/* count all characters from first non-blank after a blank up to next
@@ -505,14 +547,14 @@ win_lbr_chartabsize(wp, s, col, head)
 	}
     }
 
-/*
- * May have to add something for 'showbreak' string at start of line
- * Set *head to the size of what we add.
- */
+    /*
+     * May have to add something for 'showbreak' string at start of line
+     * Set *head to the size of what we add.
+     */
     added = 0;
     if (*p_sbr != NUL && wp->w_p_wrap && col)
     {
-	numberextra = wp->w_p_nu? 8: 0;
+	numberextra = wp->w_p_nu ? 8 : 0;
 	col = (col + numberextra) % Columns;
 	if (col == 0 || col + size > (colnr_t)Columns)
 	{
@@ -525,6 +567,7 @@ win_lbr_chartabsize(wp, s, col, head)
     if (head != NULL)
 	*head = added;
     return size;
+#endif
 }
 
 /*
@@ -546,19 +589,29 @@ getvcol(wp, pos, start, cursor, end)
     int		    col;
     colnr_t	    vcol;
     char_u	   *ptr;
+#ifdef MULTI_BYTE
+    char_u	   *bptr;
+#endif
     int		    incr;
     int		    head;
     int		    ts = wp->w_buffer->b_p_ts;
     int		    c;
 
     vcol = 0;
+#ifdef MULTI_BYTE
+    bptr =
+#endif
     ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
 
     /*
      * This function is used very often, do some speed optimizations.
      * When 'list', 'linebreak' and 'showbreak' are not set use a simple loop.
      */
-    if ((!wp->w_p_list || lcs_tab1) && !wp->w_p_lbr && *p_sbr == NUL)
+    if ((!wp->w_p_list || lcs_tab1)
+#ifdef LINEBREAK
+	    && !wp->w_p_lbr && *p_sbr == NUL
+#endif
+       )
     {
 	head = 0;
 	for (col = pos->col; ; --col, ++ptr)
@@ -575,6 +628,14 @@ getvcol(wp, pos, start, cursor, end)
 		incr = ts - (vcol % ts);
 	    else
 		incr = CHARSIZE(c);
+#ifdef MULTI_BYTE
+	    if (wp->w_p_wrap
+		    && is_dbcs
+		    && ptr - bptr > 0
+		    && (int)(vcol % Columns) == (int)Columns - 2
+		    && mb_isbyte1(bptr, (int)(ptr - bptr + 1)))
+		++incr;
+#endif
 
 	    if (col == 0)	/* character at pos.col */
 		break;
@@ -596,6 +657,14 @@ getvcol(wp, pos, start, cursor, end)
 		break;
 	    }
 
+#ifdef MULTI_BYTE
+	    if (wp->w_p_wrap
+		    && is_dbcs
+		    && ptr - bptr > 0
+		    && (int)(vcol % Columns) == (int)Columns - 2
+		    && mb_isbyte1(bptr, (int)(ptr - bptr + 1)))
+		++incr;
+#endif
 	    if (col == 0)	/* character at pos.col */
 		break;
 
@@ -703,7 +772,6 @@ skiptowhite_esc(p)
 
 /*
  * Getdigits: Get a number from a string and skip over it.
- *
  * Note: the argument is a pointer to a char_u pointer!
  */
 
@@ -716,7 +784,9 @@ getdigits(pp)
 
     p = *pp;
     retval = atol((char *)p);
-    p = skipdigits(p);	    /* skip to next non-digit */
+    if (*p == '-')		/* skip negative sign */
+	++p;
+    p = skipdigits(p);		/* skip to next non-digit */
     *pp = p;
     return retval;
 }

@@ -1,4 +1,8 @@
 /* ops.c */
+int get_op_type __ARGS((int char1, int char2));
+int op_on_lines __ARGS((int op));
+int get_op_char __ARGS((int optype));
+int get_extra_op_char __ARGS((int optype));
 void op_shift __ARGS((OPARG *oap, int curs_top, int amount));
 void shift_line __ARGS((int left, int round, int amount));
 void op_reindent __ARGS((OPARG *oap, int (*how)(void)));
@@ -11,8 +15,10 @@ int do_execreg __ARGS((int regname, int colon, int addcr));
 int insert_reg __ARGS((int regname, int literally));
 int cmdline_paste __ARGS((int regname));
 int op_delete __ARGS((OPARG *oap));
+int op_replace __ARGS((OPARG *oap, int c));
 void op_tilde __ARGS((OPARG *oap));
 void swapchar __ARGS((int op_type, FPOS *pos));
+void op_insert __ARGS((OPARG *oap));
 int op_change __ARGS((OPARG *oap));
 void init_yank __ARGS((void));
 int op_yank __ARGS((OPARG *oap, int deleting, int mess));

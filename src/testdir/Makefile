@@ -2,6 +2,8 @@
 # Makefile to run al tests for Vim
 #
 
+# Note: If tests 2, 15 and 26 fail, you probably have 'nocompatible' set.
+
 VIMPROG = ../vim
 
 SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
@@ -10,7 +12,8 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
 		test18.out test19.out test20.out test21.out test22.out \
 		test23.out test24.out test25.out test26.out test27.out \
 		test28.out test29.out test30.out test31.out test32.out \
-		test33.out test34.out test35.out test36.out
+		test33.out test34.out test35.out test36.out test37.out \
+		test38.out test39.out
 
 SCRIPTS_GUI = test16.out
 
@@ -26,11 +29,13 @@ gui:	nolog $(SCRIPTS) $(SCRIPTS_GUI)
 	@cat test.log
 	@echo ALL DONE
 
+$(SCRIPTS) $(SCRIPTS_GUI): $(VIMPROG)
+
 clean:
 	-rm -rf *.out test.log
 
 .in.out:
-	$(VIMPROG) -u vimrc.unix -s dotest.in $*.in
+	$(VIMPROG) -u vimrc.unix -U NONE -s dotest.in $*.in
 	/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
 		else echo $* FAILED >>test.log; \

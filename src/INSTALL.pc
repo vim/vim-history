@@ -26,7 +26,7 @@ make -f Makefile.bor		     32 bit, Borland C++ 5.0 (edit it to
 					     define DOS)
 
 Warning: Be sure to use the right make.exe.  Microsoft C make doesn't work;
-Borland make only works with makefile.bcc, makefile.bor and makefile.dos; 
+Borland make only works with makefile.bcc, makefile.bor and makefile.dos;
 DJGPP/GNU make must be used for makefile.djg.
 
 The Borland C++ compiler has been used to generate the MS-DOS executable; it
@@ -60,19 +60,19 @@ characters at the end of each line.
 ====================================
 
 Summary:
-nmake -f Makefile.w32	   	console   Win32 SDK or Microsoft Visual C++
-nmake -f Makefile.w32 GUI=yes	GUI   	  Microsoft Visual C++
-nmake -f Makefile.w32 OLE=yes	OLE   	  Microsoft Visual C++
+nmake -f Makefile.w32		console   Win32 SDK or Microsoft Visual C++
+nmake -f Makefile.w32 GUI=yes	GUI	  Microsoft Visual C++
+nmake -f Makefile.w32 OLE=yes	OLE	  Microsoft Visual C++
 nmake -f Makefile.w32 PERL=C:\Perl
-				Perl   	  Microsoft Visual C++
+				Perl	  Microsoft Visual C++
 nmake -f Makefile.w32 PYTHON=C:\Python
-				Python 	  Microsoft Visual C++
+				Python	  Microsoft Visual C++
 			(combinations are possible with Makefile.w32)
-make  -f Makefile.bor	   	GUI	  Borland C++ 5.0
-make  -f Makefile.bor	   	console	  Borland C++ 5.0 (change the file)
-nmake -f Gvim_vc.mak	   	GUI    	  Microsoft Visual C++ 4.x or 5.0
-nmake -f if_ole_vc.mak	   	OLE	  Microsoft Visual C++ 4.x or 5.0
-make  -f makefile.cyg	   	console   Cygnus gcc
+make  -f Makefile.bor		GUI	  Borland C++ 5.0
+make  -f Makefile.bor		console	  Borland C++ 5.0 (change the file)
+nmake -f Gvim_vc.mak		GUI	  Microsoft Visual C++ 4.x or 5.0
+nmake -f if_ole_vc.mak		OLE	  Microsoft Visual C++ 4.x or 5.0
+make  -f makefile.cyg		console   Cygnus gcc
 
 See the specific files for comments and options.
 
@@ -95,9 +95,9 @@ For compiling Gvim with IME support on far-east Windows, uncomment the
 MULTI_BYTE_IME define in the src/feature.h file before compiling.
 
 The Win32 console binary was compiled with Visual C++ version 5.0, using
-Makefile.w32 and makefile.bor (Borland C).  Other compilers should also work.  
-If you get all kinds of strange error messages when compiling (you shouldn't 
-with the Microsoft or Borland 32-bit compilers), try adding <CR> characters 
+Makefile.w32 and makefile.bor (Borland C).  Other compilers should also work.
+If you get all kinds of strange error messages when compiling (you shouldn't
+with the Microsoft or Borland 32-bit compilers), try adding <CR> characters
 at the end of each line.
 
 You probably need to run "vcvars32" before using "nmake".

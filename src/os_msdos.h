@@ -16,15 +16,13 @@
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
 #define NO_COOKED_INPUT		/* mch_inchar() doesn't return whole lines */
 #define SYNC_DUP_CLOSE		/* sync() a file with dup() and close() */
+#define USE_TERM_CONSOLE
 #ifdef DJGPP
 # include <fcntl.h>		/* defines _USE_LFN */
 # define USE_LONG_FNAME _USE_LFN    /* decide at run time */
 # define USE_FNAME_CASE
 #else
 # define SHORT_FNAME		/* always 8.3 file name */
-#endif
-#ifdef DOS_MOUSE
-# define USE_MOUSE		/* include mouse support */
 #endif
 #define HAVE_STDLIB_H
 #define HAVE_STRING_H
@@ -39,12 +37,21 @@
 # define HAVE_DATE_TIME
 #endif
 #define BREAKCHECK_SKIP	    1	/* call mch_breakcheck() each time, it's fast */
+#define HAVE_AVAIL_MEM
+
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		/* internal backtick expansion */
+#endif
 
 #ifdef DJGPP
-# define SIZEOF_INT 4		/* 32 bit ints */
+# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
+#  define SIZEOF_INT 4		/* 32 bit ints */
+# endif
 # define DOS32
 #else
-# define SIZEOF_INT 2		/* 16 bit ints */
+# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
+#  define SIZEOF_INT 2		/* 16 bit ints */
+# endif
 # define SMALL_MALLOC		/* 16 bit storage allocation */
 # define DOS16
 #endif

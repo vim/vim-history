@@ -2,17 +2,31 @@
  *
  * if_sniff.c Interface between Vim and SNiFF+
  *
- * $Id: if_sniff.c,v 1.6 1998/01/26 14:46:48 toni Exp $
+ * $Id: if_sniff.c,v 1.4 1999/05/19 08:10:10 toni Exp $
  */
 
 #include "vim.h"
-#include "os_unixx.h"
+
+#ifdef WIN32
+# include <windows.h>
+# include <stdio.h>
+# include <fcntl.h>
+# include <io.h>
+# include <process.h>
+# include <string.h>
+# include <assert.h>
+#else
+# ifdef USE_GUI_X11
+#  include "gui_x11.pro"
+# endif
+#  include "os_unixx.h"
+#endif
 
 int sniffemacs_pid;
 int fd_from_sniff;
-int sniff_connected;
-int sniff_request_waiting=0;
-int want_sniff_request=0;
+int sniff_connected = 0;
+int sniff_request_waiting = 0;
+int want_sniff_request = 0;
 
 #define NEED_SYMBOL	2
 #define EMPTY_SYMBOL	4
@@ -40,33 +54,35 @@ struct sn_cmd
 
 static struct sn_cmd sniff_cmds[] =
 {
-    { "toggle",       'e', "Toggle implementation/definition",	RQ_SCONTEXT },
-    { "superclass",   's', "Show base class of",		RQ_CONTEXT },
-    { "overridden",   'm', "Show overridden member function",	RQ_SCONTEXT },
-    { "retrieve",     'r', "Retrieve",				RQ_CONTEXT },
-    { "retrieve-next",'R', "Retrieve next symbol",		RQ_NOSYMBOL },
-    { "goto-symbol",  'g', "Show source of",			RQ_CONTEXT },
-    { "find-symbol",  'f', "Find symbol",			RQ_CONTEXT },
-    { "browse-class", 'w', "Browse class",			RQ_CONTEXT },
-    { "hierarchy",    't', "Show class in hierarchy",		RQ_CONTEXT },
-    { "restr-hier",   'T', "Show class in restricted hierarchy",RQ_CONTEXT },
-    { "xref-to",      'x', "Xref refers to",			RQ_CONTEXT },
-    { "xref-by",      'X', "Xref referred by",			RQ_CONTEXT },
-    { "xref-has",     'c', "Xref has a",			RQ_CONTEXT },
-    { "xref-used-by", 'C', "Xref used by",			RQ_CONTEXT },
-    { "show-docu",    'd', "Show docu of",			RQ_CONTEXT },
-    { "gen-docu",     'D', "Generate docu for",			RQ_CONTEXT },
-    { "connect",      'y', NULL,				RQ_CONNECT },
-    { "disconnect",   'q', NULL,				RQ_DISCONNECT },
-    { "font-info",    'z', NULL,				RQ_SILENT },
-    { "update",       'u', NULL,				RQ_SILENT },
-    { NULL,	     '\0', NULL, 0}
+    { "toggle",		'e', "Toggle implementation/definition",RQ_SCONTEXT },
+    { "superclass",	's', "Show base class of",		RQ_CONTEXT },
+    { "overridden",	'm', "Show overridden member function",	RQ_SCONTEXT },
+    { "retrieve-file",	'r', "Retrieve from file",		RQ_CONTEXT },
+    { "retrieve-project",'p', "Retrieve from project",		RQ_CONTEXT },
+    { "retrieve-all-projects",
+			'P', "Retrieve from all projects",	RQ_CONTEXT },
+    { "retrieve-next",	'R', "Retrieve next symbol",		RQ_CONTEXT },
+    { "goto-symbol",	'g', "Show source of",			RQ_CONTEXT },
+    { "find-symbol",	'f', "Find symbol",			RQ_CONTEXT },
+    { "browse-class",	'w', "Browse class",			RQ_CONTEXT },
+    { "hierarchy",	't', "Show class in hierarchy",		RQ_CONTEXT },
+    { "restr-hier",	'T', "Show class in restricted hierarchy",RQ_CONTEXT },
+    { "xref-to",	'x', "Xref refers to",			RQ_CONTEXT },
+    { "xref-by",	'X', "Xref referred by",		RQ_CONTEXT },
+    { "xref-has",	'c', "Xref has a",			RQ_CONTEXT },
+    { "xref-used-by",	'C', "Xref used by",			RQ_CONTEXT },
+    { "show-docu",	'd', "Show docu of",			RQ_CONTEXT },
+    { "gen-docu",	'D', "Generate docu for",		RQ_CONTEXT },
+    { "connect",	'y', NULL,				RQ_CONNECT },
+    { "disconnect",	'q', NULL,				RQ_DISCONNECT },
+    { "font-info",	'z', NULL,				RQ_SILENT },
+    { "update",		'u', NULL,				RQ_SILENT },
+    { NULL,		'\0', NULL, 0}
 };
 
 static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
-static int sniff_will_connect = 0;
 static char msg_sniff_disconnect[] = "aCannot connect to SNiFF+. Check environment.\n";
 /* Initializing vim commands
  * executed each time vim connects to Sniff
@@ -114,6 +130,257 @@ static void vi_exec_cmd __ARGS((char *));
 static void vi_set_cursor_pos __ARGS((long char_nr));
 static long vi_cursor_pos __ARGS((void));
 
+/*-------- Windows Only Declarations -----------------------------*/
+#ifdef WIN32
+
+#define READTHREADMAX 256
+
+int  sniff_request_processed=1;
+HANDLE sniffemacs_handle;
+HANDLE handle_to_sniff;
+HANDLE handle_from_sniff;
+
+struct sniffBufNode {
+    struct sniffBufNode *next;
+    int    bufLen;
+    char   buf[READTHREADMAX];
+};
+struct sniffBufNode *sniffBufStart=NULL;
+struct sniffBufNode *sniffBufEnd=NULL;
+HANDLE hBufferMutex;
+
+# ifdef USE_GUI_WIN32
+    extern HWND s_hwnd;       /* gvim's Window handle */
+# else
+    extern HANDLE g_hConIn;   /* handle of Console Input */
+    static struct _INPUT_RECORD sniff_ir;
+    DWORD keys_written;
+# endif
+
+/*
+ * some helper functions for Windows port only
+ */
+
+    static HANDLE
+ExecuteDetachedProgram(char *szBinary, char *szCmdLine,
+    HANDLE hStdInput, HANDLE hStdOutput)
+{
+    BOOL bResult;
+    DWORD nError;
+    PROCESS_INFORMATION aProcessInformation;
+    PROCESS_INFORMATION *pProcessInformation= &aProcessInformation;
+    STARTUPINFO aStartupInfo;
+    STARTUPINFO *pStartupInfo= &aStartupInfo;
+    DWORD dwCreationFlags= CREATE_NEW_CONSOLE;
+    char szPath[512];
+    HINSTANCE hResult;
+
+    hResult = FindExecutable(szBinary, ".", szPath);
+    if((int)hResult <= 32) {
+	/* can't find the exe file */
+	return NULL;
+    }
+
+    ZeroMemory(pStartupInfo, sizeof(*pStartupInfo));
+    pStartupInfo->dwFlags= STARTF_USESHOWWINDOW;
+    if(hStdInput) {
+	pStartupInfo->hStdInput = hStdInput;
+	pStartupInfo->dwFlags |=  STARTF_USESTDHANDLES;
+    }
+    if(hStdOutput) {
+	pStartupInfo->hStdOutput = hStdOutput;
+	pStartupInfo->dwFlags |=  STARTF_USESTDHANDLES;
+    }
+    pStartupInfo->wShowWindow= SW_HIDE;
+    pStartupInfo->cb = sizeof(STARTUPINFO);
+
+    bResult= CreateProcess(
+	szPath,
+	szCmdLine,
+	NULL,    /* security attr for process */
+	NULL,    /* security attr for primary thread */
+	TRUE,    /* DO inherit stdin and stdout */
+	dwCreationFlags, /* creation flags */
+	NULL,    /* environment */
+	".",    /* current directory */
+	pStartupInfo,   /* startup info: NULL crashes  */
+	pProcessInformation /* process information: NULL crashes */
+    );
+    nError= GetLastError();
+    if ( bResult ) {
+	CloseHandle(pProcessInformation->hThread);
+	return(pProcessInformation->hProcess);
+    } else {
+	return(NULL);
+    }
+}
+
+/*
+ * write to the internal Thread / Thread communications buffer.
+ * Return TRUE if successful, FALSE else.
+ */
+    BOOL
+writeToBuffer(char *msg, int len)
+{
+    DWORD dwWaitResult;     /* Request ownership of mutex. */
+    struct sniffBufNode *bn;
+    int bnSize;
+
+    bnSize = sizeof(struct sniffBufNode) - READTHREADMAX + len + 1;
+    if(bnSize < 128) bnSize = 128; /* minimum length to avoid fragmentation */
+    bn = (struct sniffBufNode *)malloc(bnSize);
+    if(!bn)
+	return FALSE;
+
+    memcpy(bn->buf, msg, len);
+    bn->buf[len]='\0';    /* terminate CString for added safety */
+    bn->next = NULL;
+    bn->bufLen = len;
+    /* now, acquire a Mutex for adding the string to our linked list */
+    dwWaitResult = WaitForSingleObject(
+	hBufferMutex,   /* handle of mutex */
+	1000L);   /* one-second time-out interval */
+    if(dwWaitResult == WAIT_OBJECT_0)
+    {
+	/* The thread got mutex ownership. */
+	if(sniffBufEnd) {
+	    sniffBufEnd->next = bn;
+	    sniffBufEnd = bn;
+	}
+	else {
+	    assert(sniffBufStart == NULL);
+	    sniffBufStart = sniffBufEnd = bn;
+	}
+	/* Release ownership of the mutex object. */
+	if (! ReleaseMutex(hBufferMutex)) {
+	    /* Deal with error. */
+	}
+	return TRUE;
+    }
+
+    /* Cannot get mutex ownership due to time-out or mutex object abandoned. */
+    free(bn);
+    return FALSE;
+}
+
+/*
+ * read from the internal Thread / Thread communications buffer.
+ * Return TRUE if successful, FALSE else.
+ */
+    static int
+ReadFromBuffer(char *buf, int maxlen)
+{
+    DWORD dwWaitResult;     /* Request ownership of mutex. */
+    int   theLen;
+    struct sniffBufNode *bn;
+
+    dwWaitResult = WaitForSingleObject(
+	hBufferMutex,   /* handle of mutex */
+	1000L);		/* one-second time-out interval */
+    if(dwWaitResult == WAIT_OBJECT_0)
+    {
+	if(!sniffBufStart) {
+	    /* all pending Requests Processed */
+	    sniff_request_processed = 1;
+	    theLen = 0;
+	}
+	else {
+	    bn = sniffBufStart;
+	    theLen = bn->bufLen;
+	    if(theLen >= maxlen) {
+		/* notify the user of buffer overflow? */
+		theLen = maxlen-1;
+	    }
+	    memcpy(buf, bn->buf, theLen);
+	    buf[theLen] = '\0';
+	    if (! (sniffBufStart = bn->next)) {
+		sniffBufEnd = NULL;
+	    }
+	    free(bn);
+	}
+	if (! ReleaseMutex(hBufferMutex)) {
+	    /* Deal with error. */
+	}
+	return theLen;
+    }
+
+    /* Cannot get mutex ownership due to time-out or mutex object abandoned. */
+    return -1;
+}
+
+/* on Win32, a separate Thread reads the input pipe. get_request is not needed here. */
+    void __cdecl
+SniffEmacsReadThread(void *dummy)
+{
+    static char ReadThreadBuffer[READTHREADMAX];
+    int  ReadThreadLen=0;
+    int  result;
+    int  msgLen=0;
+    char *msgStart, *msgCur;
+
+    /* Read from the pipe to SniffEmacs */
+    while(sniff_connected) {
+	if (! ReadFile(handle_from_sniff,
+		ReadThreadBuffer + ReadThreadLen,    /* acknowledge rest in buffer */
+		READTHREADMAX - ReadThreadLen,
+		&result,
+		NULL))
+	{
+	    DWORD err = GetLastError();
+	    result = -1;
+	}
+
+	if(result == 0) continue;
+	if(result < 0) {
+	    /* probably sniffemacs died... log the Error? */
+	    sniff_disconnect(1);
+	}
+
+	ReadThreadLen += result-1;   /* total length of valid chars */
+	for(msgCur=msgStart=ReadThreadBuffer; ReadThreadLen > 0; msgCur++, ReadThreadLen--)
+	{
+	    switch(*msgCur) {
+		case '\0':
+		case '\r':
+		case '\n':
+		    msgLen = msgCur-msgStart; /* don't add the CR/LF chars */
+		    if(msgLen > 0) {
+			writeToBuffer(msgStart, msgLen);
+		    }
+		    msgStart = msgCur + 1; /* over-read single CR/LF chars */
+		    break;
+	    }
+	}
+
+	/* move incomplete message to beginning of buffer */
+	ReadThreadLen = msgCur - msgStart;
+	assert(ReadThreadLen >=0);
+	if(ReadThreadLen > 0) {
+	    memmove(ReadThreadBuffer, msgStart, ReadThreadLen);
+	}
+
+	if(sniff_request_processed) {
+	    /* notify others that new data has arrived */
+	    sniff_request_processed = 0;
+	    sniff_request_waiting = 1;
+#ifdef USE_GUI_WIN32
+	    PostMessage(s_hwnd, WM_USER, (WPARAM)0, (LPARAM)0);
+#else
+	    /* simulate an Escape key pressed */
+	    sniff_ir.EventType = KEY_EVENT;
+	    sniff_ir.Event.KeyEvent.bKeyDown = TRUE;
+	    sniff_ir.Event.KeyEvent.wRepeatCount = 1;
+	    sniff_ir.Event.KeyEvent.wVirtualKeyCode = 0;
+	    sniff_ir.Event.KeyEvent.wVirtualScanCode;
+	    sniff_ir.Event.KeyEvent.uChar.AsciiChar = '\33';
+	    sniff_ir.Event.KeyEvent.dwControlKeyState = 0;
+	    WriteConsoleInput(g_hConIn, &sniff_ir, 1, &keys_written);
+#endif
+	}
+    }
+}
+#endif /* WIN32 */
+/*-------- End of Windows Only Declarations ------------------------*/
 
 
 /* ProcessSniffRequests
@@ -127,7 +394,11 @@ void ProcessSniffRequests()
 
     while (sniff_connected)
     {
+#ifdef WIN32
+	len = ReadFromBuffer(buf, sizeof(buf));
+#else
 	len = get_request(fd_from_sniff, buf, sizeof(buf));
+#endif
 	if (len<0)
 	{
 	    vi_error_msg("Sniff: Error during read. Disconnected");
@@ -234,6 +505,10 @@ sniff_connect()
 sniff_disconnect(immediately)
     int immediately;
 {
+#ifdef WIN32
+    /* int termstat; */
+#endif
+
     if (!sniff_connected)
 	return;
     if (immediately)
@@ -245,19 +520,32 @@ sniff_disconnect(immediately)
 	sniff_connected = 0;
 	want_sniff_request = 0;
 	sniff_will_disconnect = 0;
-	sniff_will_connect = 0;
 #ifdef USE_GUI
 	if (gui.in_use)
 	    gui_mch_wait_for_chars(0L);
 #endif
+#ifdef WIN32
+	CloseHandle(handle_to_sniff);
+	/* This one's already closed by the dying process
+	 * CloseHandle(handle_from_sniff);
+	 * _cwait(&termstat, sniffemacs_pid, _WAIT_CHILD);
+	 * wait maximum 1 second
+	 */
+	WaitForSingleObject(sniffemacs_handle, 1000L);
+#else
 	close(fd_to_sniff);
 	close(fd_from_sniff);
 	wait(NULL);
+#endif
     }
     else
     {
 	sniff_will_disconnect = 1;  /* We expect disconnect msg in 2 secs */
+#ifdef WIN32
+	_sleep(2);
+#else
 	sleep(2);		    /* Incoming msg could disturb edit */
+#endif
     }
 }
 
@@ -268,6 +556,42 @@ sniff_disconnect(immediately)
     static int
 ConnectToSniffEmacs()
 {
+#ifdef WIN32		/* Windows Version of the Code */
+    HANDLE ToSniffEmacs[2], FromSniffEmacs[2];
+    SECURITY_ATTRIBUTES sa;
+
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    if(! CreatePipe(&ToSniffEmacs[0], &ToSniffEmacs[1], &sa, 512))
+	return 1;
+    if(! CreatePipe(&FromSniffEmacs[0], &FromSniffEmacs[1], &sa, 512))
+	return 1;
+
+    sniffemacs_handle = ExecuteDetachedProgram(SniffEmacs[0], SniffEmacs[0],
+	ToSniffEmacs[0], FromSniffEmacs[1]);
+
+    if(sniffemacs_handle) {
+	handle_to_sniff  = ToSniffEmacs[1];
+	handle_from_sniff = FromSniffEmacs[0];
+	sniff_connected = 1;
+	hBufferMutex = CreateMutex(
+	    NULL,			/* no security attributes */
+	    FALSE,			/* initially not owned */
+	    "SniffReadBufferMutex");    /* name of mutex */
+	if (hBufferMutex == NULL) {
+	    /* Check for error. */
+	}
+	_beginthread(SniffEmacsReadThread, 0, NULL);
+	return 0;
+    }
+    else {
+	/* error in spawn() */
+	return 1;
+    }
+
+#else		/* UNIX Version of the Code */
     int ToSniffEmacs[2], FromSniffEmacs[2];
 
     pipe(ToSniffEmacs);
@@ -304,14 +628,13 @@ ConnectToSniffEmacs()
 	}
 	return 1;
     }
-    else if (sniffemacs_pid>0)
+    else if (sniffemacs_pid > 0)
     {
 	/* parent process */
 	close(ToSniffEmacs[0]);
 	fd_to_sniff  = ToSniffEmacs[1];
 	close(FromSniffEmacs[1]);
 	fd_from_sniff = FromSniffEmacs[0];
-	sniff_will_connect = 1;
 	sniff_connected = 1;
 	return 0;
     }
@@ -319,6 +642,7 @@ ConnectToSniffEmacs()
     {
 	return 1;
     }
+#endif		/* UNIX Version of the Code */
 }
 
 
@@ -350,13 +674,18 @@ HandleSniffRequest(buffer)
     {
 	case 'o' :  /* visit file at char pos */
 	case 'O' :  /* visit file at line number */
-#ifdef USE_GUI
+#if defined(USE_GUI_X11) || defined(USE_GUI_WIN32)
 	    if (gui.in_use && !gui.in_focus)  /* Raise Vim Window */
 	    {
+# ifdef USE_GUI_WIN32
+		SetActiveWindow(s_hwnd);
+# else
 		extern Widget vimShell;
+
 		XSetInputFocus(gui.dpy, XtWindow(vimShell), RevertToNone,
 			CurrentTime);
 		XRaiseWindow(gui.dpy, XtWindow(vimShell));
+# endif
 	    }
 #endif
 	    sscanf(arguments, "%s %d %d", file, &position, &writable);
@@ -430,7 +759,6 @@ HandleSniffRequest(buffer)
 
 	case 'A' :  /* Warning/Info msg */
 	    vi_msg(arguments);
-
 	    if (!strncmp(arguments, "Discon", 6)) /* "Disconnected ..." */
 		sniff_disconnect(1);	/* unexpected disconnection */
 	    break;
@@ -438,8 +766,6 @@ HandleSniffRequest(buffer)
 	    vi_error_msg(arguments);
 	    if (!strncmp(arguments, "Cannot", 6)) /* "Cannot connect ..." */
 		sniff_disconnect(1);
-	    if (sniff_will_connect)
-		sniff_will_connect = 0;
 	    break;
 
 	case '\0':
@@ -452,6 +778,7 @@ HandleSniffRequest(buffer)
 }
 
 
+#ifndef WIN32
 /* get_request
  * read string from fd up to next newline (excluding the nl),
  * returns  length of string
@@ -508,7 +835,7 @@ get_request(fd, buf, maxlen)
     buf[len] = '\0';
     return len;
 }
-
+#endif     /* WIN32 */
 
 
     static void
@@ -585,7 +912,14 @@ WriteToSniff(str)
     char *str;
 {
     int bytes;
+#ifdef WIN32
+    if (! WriteFile(handle_to_sniff, str, strlen(str), &bytes, NULL)) {
+	DWORD err=GetLastError();
+	bytes = -1;
+    }
+#else
     bytes = write(fd_to_sniff, str, strlen(str));
+#endif
     if (bytes<0)
     {
 	vi_msg("Sniff: Error during write. Disconnected");
@@ -616,8 +950,7 @@ vi_open_file(fname)
     char *fname;
 {
     ++no_wait_return;
-    do_ecmd(0, (char_u *)fname, NULL, NULL, (linenr_t)1,
-	    ECMD_HIDE+ECMD_OLDBUF);
+    do_ecmd(0, (char_u *)fname, NULL, NULL, ECMD_ONE, ECMD_HIDE+ECMD_OLDBUF);
     curbuf->b_sniff = TRUE;
     --no_wait_return;					/* [ex_docmd.c] */
 }
@@ -676,7 +1009,7 @@ vi_set_cursor_pos(char_pos)
     long char_pos;
 {
     linenr_t	lnum;
-    long	char_count=1;  /* first position = 1 */
+    long	char_count = 1;  /* first position = 1 */
     int		line_size;
     int		eol_size;
 

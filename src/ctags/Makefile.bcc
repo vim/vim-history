@@ -1,7 +1,8 @@
 # Simple makefile for Borland C++ 3.1
 # 4.0 can also be used, although the executable will be much bigger!
 
-SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
+SOURCES	= eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
+	parse.c read.c sort.c vstring.c
 
 # Adjust the paths to your location of the borland C files
 BCCLOC  = c:\borlandc
@@ -21,15 +22,15 @@ OPTIMIZE= -1- -Ox
 CFLAGS	= -DMSDOS -mc -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
 LFLAGS	= $(LIB) $(EXTRA)
 
-ctags.exe: $(SOURCES) respfile
-	$(CC) $(OPTIMIZE) -e$@ @respfile
+ctags.exe: $(SOURCES) respbcc
+	$(CC) $(OPTIMIZE) -e$@ @respbcc
 
 debug: dctags.exe
 
-dctags.exe: $(SOURCES) respfile debug.c
-	$(CC) -DDEBUG -v -e$@ @respfile debug.c
+dctags.exe: $(SOURCES) respbcc debug.c
+	$(CC) -DDEBUG -v -e$@ @respbcc debug.c
 
-respfile: makefile.bcc
+respbcc: makefile.bcc
 	echo $(CFLAGS) > $@
 	echo $(LFLAGS) >> $@
 	echo $(SOURCES) >> $@
@@ -37,5 +38,5 @@ respfile: makefile.bcc
 clean:
 	del *.exe
 	del *.obj
-	del respfile
+	del respbcc
 	del tags

@@ -22,6 +22,14 @@
 #undef STRLEN
 #undef FF
 #undef OP_DELETE
+#undef OP_JOIN
+/* remove MAX and MIN, included by glib.h, redefined by sys/param.h */
+#ifdef MAX
+# undef MAX
+#endif
+#ifdef MIN
+# undef MIN
+#endif
 
 #include <EXTERN.h>
 #include <perl.h>

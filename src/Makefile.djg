@@ -16,7 +16,7 @@ CC = gcc
 ###########################################################################
 
 INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_msdos.h structs.h
-CFLAGS = -O4 -DMSDOS -Iproto $(DEFINES) -Dinterrupt= -Dfar= -DMAXMEM=512 -D_NAIVE_DOS_REGS
+CFLAGS = -O4 -DMSDOS -Iproto $(DEFINES) -Wall -Dinterrupt= -Dfar= -DMAXMEM=512 -D_NAIVE_DOS_REGS
 
 OBJ = \
 	obj/buffer.o \
@@ -33,6 +33,7 @@ OBJ = \
 	obj/mark.o \
 	obj/memfile.o \
 	obj/memline.o \
+	obj/menu.o \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
@@ -53,7 +54,7 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe ctags/ctags.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
@@ -132,6 +133,9 @@ obj/memfile.o:	memfile.c $(INCL)
 
 obj/memline.o:	memline.c $(INCL)
 	$(CC) -c $(CFLAGS) memline.c -o obj/memline.o
+
+obj/menu.o:	menu.c $(INCL)
+	$(CC) -c $(CFLAGS) menu.c -o obj/menu.o
 
 obj/message.o:	message.c $(INCL)
 	$(CC) -c $(CFLAGS) message.c -o obj/message.o

@@ -14,19 +14,7 @@ void gui_mac_do_key __PARMS((EventRecord *theEvent));
 void gui_mac_handle_menu __PARMS((long menuChoice));
 void gui_mac_focus_change __PARMS((EventRecord *event));
 void gui_mac_update __PARMS((EventRecord *event));
-short gui_mch_get_mac_menu_item_index __PARMS((GuiMenu *menu, GuiMenu *parent));
-/*void gui_mch_create_widgets __PARMS((void));
-
-int gui_mch_get_winsize __PARMS((void));
-void gui_mch_add_menu __PARMS((GuiMenu *menu, GuiMenu *parent));
-void gui_mch_add_menu_item __PARMS((GuiMenu *menu, GuiMenu *parent));
-void gui_mch_destroy_menu __PARMS((GuiMenu *menu));
-void gui_mch_create_which_components __PARMS((void));
-void gui_mch_update_scrollbars __PARMS((int worst_update, int which_sb));
-void gui_mch_reorder_scrollbars __PARMS((int which_sb));
-void gui_mch_update_horiz_scrollbar __PARMS((int value, int size, int max));*/
-/* Window gui_mch_get_wid __PARMS((void));
-*/
+short gui_mch_get_mac_menu_item_index __PARMS((VimMenu *menu, VimMenu *parent));
 void gui_mch_set_blinking __PARMS((long wait, long on, long off));
 void gui_mch_stop_blink __PARMS((void));
 void gui_mch_start_blink __PARMS((void));
@@ -39,6 +27,8 @@ void gui_mch_new_colors __PARMS((void));
 int gui_mch_open __PARMS((void));
 void gui_mch_exit __PARMS((int));
 void gui_mch_set_winsize __PARMS((int width, int height, int min_width, int min_height, int base_width, int base_height));
+int gui_mch_get_winpos __ARGS((int *x, int *y));
+void gui_mch_set_winpos __ARGS((int x, int y));
 void gui_mch_get_screen_dimensions __PARMS((int *screen_w, int *screen_h));
 void gui_mch_set_text_area_pos __PARMS((int x, int y, int w, int h));
 void gui_mch_enable_scrollbar __PARMS((GuiScrollbar *sb, int flag));
@@ -72,15 +62,22 @@ void gui_mch_delete_lines __PARMS((int row, int num_lines));
 void gui_mch_insert_lines __PARMS((int row, int num_lines));
 void gui_mch_enable_menu __PARMS((int flag));
 void gui_mch_set_menu_pos __PARMS((int x, int y, int w, int h));
-void gui_mch_add_menu __PARMS((GuiMenu *menu, GuiMenu *parent, int idx));
-void gui_mch_add_menu_item __PARMS((GuiMenu *menu, GuiMenu *parent, int idx));
-void gui_mch_show_popupmenu __PARMS((GuiMenu *menu));
-void gui_mch_destroy_menu __PARMS((GuiMenu *menu));
-void gui_mch_menu_grey __PARMS((GuiMenu *menu, int grey));
-void gui_mch_menu_hidden __PARMS((GuiMenu *menu, int hidden));
+void gui_mch_add_menu __PARMS((VimMenu *menu, VimMenu *parent, int idx));
+void gui_mch_add_menu_item __PARMS((VimMenu *menu, VimMenu *parent, int idx));
+void gui_mch_show_popupmenu __PARMS((VimMenu *menu));
+void gui_mch_destroy_menu __PARMS((VimMenu *menu));
+void gui_mch_menu_grey __PARMS((VimMenu *menu, int grey));
+void gui_mch_menu_hidden __PARMS((VimMenu *menu, int hidden));
 void gui_mch_draw_menubar __PARMS((void));
 int gui_mch_get_lightness __ARGS((GuiColor pixel));
 char_u *gui_mch_get_rgb __ARGS((GuiColor pixel));
+int gui_mch_get_mouse_x __ARGS((void));
+int gui_mch_get_mouse_y __ARGS((void));
+void gui_mch_setmouse __ARGS((int x, int y));
+void gui_mch_show_popupmenu __ARGS((VimMenu *menu));
+int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton));
+char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
+
 
 
 

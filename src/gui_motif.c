@@ -10,10 +10,12 @@
 #include <Xm/Form.h>
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
+#include <Xm/Separator.h>
 #include <Xm/Label.h>
 #include <Xm/CascadeB.h>
 #include <Xm/ScrollBar.h>
 #include <Xm/MenuShell.h>
+#include <Xm/DrawingA.h>
 #if (XmVersion >= 1002)
 # include <Xm/RepType.h>
 #endif
@@ -24,17 +26,21 @@
 
 #include "vim.h"
 
+#define MOTIF_POPUP
+
 extern Widget vimShell;
 
 static Widget vimForm;
 static Widget textArea;
+#ifdef WANT_MENU
+# if (XmVersion >= 1002)
+/* remember the last set value for the tearoff item */
+static int tearoff_val = (int)XmTEAR_OFF_ENABLED;
+# endif
 static Widget menuBar;
+#endif
 
 static void scroll_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
-static void gui_motif_add_actext __ARGS((GuiMenu *menu));
-static void gui_mch_recurse_tearoffs __ARGS((GuiMenu *menu, int val));
-static void gui_mch_compute_menu_height __ARGS((Widget));
-static void gui_mch_submenu_colors __ARGS((GuiMenu *mp));
 
 #if (XmVersion >= 1002)
 # define STRING_TAG  XmFONTLIST_DEFAULT_TAG
@@ -61,7 +67,17 @@ scroll_cb(w, client_data, call_data)
     value = ((XmScrollBarCallbackStruct *)call_data)->value;
     dragging = (((XmScrollBarCallbackStruct *)call_data)->reason ==
 							      (int)XmCR_DRAG);
-    gui_drag_scrollbar(sb, value, dragging);
+    /*
+     * :NOTE: 1998-11-18 09:26:01 EST eralston
+     * pretend we're not dragging whenever scrollbind is active in
+     * the current window, so that the other scrollbind windows
+     * get their scrollbars updated also.
+     */
+    gui_drag_scrollbar(sb, value, dragging
+#ifdef SCROLLBIND
+		    && (!sb->wp || !sb->wp->w_p_scb || (sb->wp != curwin))
+#endif
+		    );
 }
 
 
@@ -89,7 +105,7 @@ gui_x11_create_widgets()
 
     XtInitializeWidgetClass(xmFormWidgetClass);
     XtInitializeWidgetClass(xmRowColumnWidgetClass);
-    XtInitializeWidgetClass(xmPrimitiveWidgetClass);
+    XtInitializeWidgetClass(xmDrawingAreaWidgetClass);
     XtInitializeWidgetClass(xmCascadeButtonWidgetClass);
     XtInitializeWidgetClass(xmMenuShellWidgetClass);
     XtInitializeWidgetClass(xmPushButtonWidgetClass);
@@ -111,7 +127,7 @@ gui_x11_create_widgets()
 	NULL);
 
     textArea = XtVaCreateManagedWidget("textArea",
-	xmPrimitiveWidgetClass, vimForm,
+	xmDrawingAreaWidgetClass, vimForm,
 	XmNbackground, gui.back_pixel,
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNtopAttachment, XmATTACH_FORM,
@@ -127,25 +143,42 @@ gui_x11_create_widgets()
 	XmNshadowThickness, 0,
 	NULL);
 
+#ifdef WANT_MENU
     menuBar = XtVaCreateManagedWidget("menuBar",
 	xmRowColumnWidgetClass, vimForm,
-#if (XmVersion >= 1002)
-	XmNtearOffModel, XmTEAR_OFF_ENABLED,
-#endif
 	XmNrowColumnType, XmMENU_BAR,
 	XmNforeground, gui.menu_fg_pixel,
 	XmNbackground, gui.menu_bg_pixel,
+#if (XmVersion >= 1002)
+	XmNtearOffModel, tearoff_val,
+#endif
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNtopAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
 	XmNbottomAttachment, XmATTACH_OPPOSITE_FORM,
 	XmNrightOffset, 0,	/* Always stick to rigth hand side */
 	NULL);
+#endif
 
     /*
      * Install the callbacks.
      */
     gui_x11_callbacks(textArea, vimForm);
+
+    /* Pretend we don't have input focus, we will get an event if we do. */
+    gui.in_focus = FALSE;
+}
+
+/*
+ * Called when the GUI is not going to start after all.
+ */
+    void
+gui_x11_destroy_widgets()
+{
+    textArea = NULL;
+#ifdef WANT_MENU
+    menuBar = NULL;
+#endif
 }
 
     void
@@ -167,23 +200,52 @@ gui_mch_set_text_area_pos(x, y, w, h)
 gui_x11_set_back_color()
 {
     if (textArea != NULL)
+#if (XmVersion >= 1002)
+	XmChangeColor(textArea, gui.back_pixel);
+#else
 	XtVaSetValues(textArea,
 		  XmNbackground, gui.back_pixel,
 		  NULL);
+#endif
 }
 
+#if defined(WANT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
+
+static void gui_motif_add_actext __ARGS((VimMenu *menu));
+#if (XmVersion >= 1002)
+static void toggle_tearoff __ARGS((Widget wid));
+static void gui_mch_recurse_tearoffs __ARGS((VimMenu *menu));
+#endif
+static void gui_mch_compute_menu_height __ARGS((Widget));
+static void gui_mch_submenu_colors __ARGS((VimMenu *mp));
+
+static void do_set_mnemonics __ARGS((int enable));
+static int mnemonics_enabled = TRUE;
+static int menu_enabled = TRUE;
 
     void
 gui_mch_enable_menu(flag)
     int	    flag;
 {
+    menu_enabled = flag;
+
+    /*
+     * Must disable menu mnemonics when the menu bar is disabled, Lesstif
+     * crashes when using a mnemonic then.
+     */
     if (flag)
+    {
 	XtManageChild(menuBar);
+	do_set_mnemonics(mnemonics_enabled);
+    }
     else
+    {
 	XtUnmanageChild(menuBar);
+	do_set_mnemonics(FALSE);
+    }
 }
 
 /* ARGSUSED */
@@ -208,9 +270,23 @@ gui_mch_set_menu_pos(x, y, w, h)
 gui_motif_set_mnemonics(enable)
     int		enable;
 {
-    GuiMenu	*menu;
+    mnemonics_enabled = enable;
+    /*
+     * Don't enable menu mnemonics when the menu bar is disabled, Lesstif
+     * crashes when using a mnemonic then.
+     */
+    if (!menu_enabled)
+	enable = FALSE;
+    do_set_mnemonics(enable);
+}
 
-    for (menu = gui.root_menu; menu != NULL; menu = menu->next)
+    static void
+do_set_mnemonics(enable)
+    int		enable;
+{
+    VimMenu	*menu;
+
+    for (menu = root_menu; menu != NULL; menu = menu->next)
 	if (menu->id != (Widget)0)
 	    XtVaSetValues(menu->id,
 		    XmNmnemonic, enable ? menu->mnemonic : NUL,
@@ -219,37 +295,27 @@ gui_motif_set_mnemonics(enable)
 
     void
 gui_mch_add_menu(menu, parent, idx)
-    GuiMenu	*menu;
-    GuiMenu	*parent;
+    VimMenu	*menu;
+    VimMenu	*parent;
     int		idx;
 {
-#if (XmVersion >= 1002)
-    Widget	widget;
-#endif
     XmString	label;
     Widget	shell;
 
 #ifdef MOTIF_POPUP
-    if (gui_popup_menu(menu->name))
+    if (popup_menu(menu->name))
     {
-	shell = XtVaCreateWidget("subMenuShell",
-		xmMenuShellWidgetClass, vimShell,
-		XmNwidth, 1,
-		XmNheight, 1,
-		XmNforeground, gui.menu_fg_pixel,
-		XmNbackground, gui.menu_bg_pixel,
-		NULL);
-	menu->id = shell;
-	menu->submenu_id = XtVaCreateWidget("rowColumnMenu",
-		xmRowColumnWidgetClass, shell,
-		XmNrowColumnType, XmMENU_POPUP,
-		XmNpopupEnabled, False,
-		NULL);
+	Arg arg[2];
+
+	XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel);
+	XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel);
+	menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu", arg, 2);
+	menu->id = XtParent(menu->submenu_id);;
 	return;
     }
 #endif
 
-    if (!gui_menubar_menu(menu->name)
+    if (!menubar_menu(menu->name)
 	    || (parent != NULL && parent->submenu_id == (Widget)0))
 	return;
 
@@ -264,7 +330,9 @@ gui_mch_add_menu(menu, parent, idx)
 	    XmNbackground, gui.menu_bg_pixel,
 	    XmNmnemonic, p_wak[0] == 'n' ? NUL : menu->mnemonic,
 #if (XmVersion >= 1002)
-	    XmNpositionIndex, idx,
+	    /* count the tearoff item (neede for LessTif) */
+	    XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
+								     ? 1 : 0),
 #endif
 	    NULL);
     XmStringFree(label);
@@ -285,9 +353,8 @@ gui_mch_add_menu(menu, parent, idx)
     menu->submenu_id = XtVaCreateWidget("rowColumnMenu",
 	xmRowColumnWidgetClass, shell,
 	XmNrowColumnType, XmMENU_PULLDOWN,
-#if (XmVersion >= 1002)
-	XmNtearOffModel, XmTEAR_OFF_ENABLED,
-#endif
+	XmNforeground, gui.menu_fg_pixel,
+	XmNbackground, gui.menu_bg_pixel,
 	NULL);
 
     if (menu->submenu_id == (Widget)0)		/* failed */
@@ -295,11 +362,7 @@ gui_mch_add_menu(menu, parent, idx)
 
 #if (XmVersion >= 1002)
     /* Set the colors for the tear off widget */
-    if ((widget = XmGetTearOffControl(menu->submenu_id)) != (Widget)0)
-	XtVaSetValues(widget,
-	    XmNforeground, gui.menu_fg_pixel,
-	    XmNbackground, gui.menu_bg_pixel,
-	    NULL);
+    toggle_tearoff(menu->submenu_id);
 #endif
 
     XtVaSetValues(menu->id,
@@ -328,7 +391,7 @@ gui_mch_add_menu(menu, parent, idx)
  */
     static void
 gui_motif_add_actext(menu)
-    GuiMenu	*menu;
+    VimMenu	*menu;
 {
     XmString	label;
 
@@ -347,32 +410,59 @@ gui_motif_add_actext(menu)
 gui_mch_toggle_tearoffs(enable)
     int		enable;
 {
-    int		val;
-
+#if (XmVersion >= 1002)
     if (enable)
-	val = (int)XmTEAR_OFF_ENABLED;
+	tearoff_val = (int)XmTEAR_OFF_ENABLED;
     else
-	val = (int)XmTEAR_OFF_DISABLED;
-    XtVaSetValues(menuBar, XmNtearOffModel, val, NULL);
-    gui_mch_recurse_tearoffs(gui.root_menu, val);
+	tearoff_val = (int)XmTEAR_OFF_DISABLED;
+    toggle_tearoff(menuBar);
+    gui_mch_recurse_tearoffs(root_menu);
+#endif
+}
+
+#if (XmVersion >= 1002)
+/*
+ * Set the tearoff for one menu widget on or off, and set the color of the
+ * tearoff widget.
+ */
+    static void
+toggle_tearoff(wid)
+    Widget	wid;
+{
+    Widget	w;
+
+    XtVaSetValues(wid, XmNtearOffModel, tearoff_val, NULL);
+    if (tearoff_val == (int)XmTEAR_OFF_ENABLED
+	    && (w = XmGetTearOffControl(wid)) != (Widget)0)
+    {
+#if (XmVersion>=1002)
+	XmChangeColor(w, gui.menu_bg_pixel);
+#endif
+	XtVaSetValues(w,
+	    XmNforeground, gui.menu_fg_pixel,
+#if (XmVersion<1002)
+	    XmNbackground, gui.menu_bg_pixel,
+#endif
+	    NULL);
+    }
 }
 
     static void
-gui_mch_recurse_tearoffs(menu, val)
-    GuiMenu	*menu;
-    int		val;
+gui_mch_recurse_tearoffs(menu)
+    VimMenu	*menu;
 {
     while (menu != NULL)
     {
-	if (!gui_popup_menu(menu->name))
+	if (!popup_menu(menu->name))
 	{
 	    if (menu->submenu_id != (Widget)0)
-		XtVaSetValues(menu->submenu_id, XmNtearOffModel, val, NULL);
-	    gui_mch_recurse_tearoffs(menu->children, val);
+		toggle_tearoff(menu->submenu_id);
+	    gui_mch_recurse_tearoffs(menu->children);
 	}
 	menu = menu->next;
     }
 }
+#endif
 
 /*
  * Compute the height of the menu bar.
@@ -385,7 +475,7 @@ gui_mch_compute_menu_height(id)
 {
     Dimension	y, maxy;
     Dimension	margin, shadow;
-    GuiMenu	*mp;
+    VimMenu	*mp;
     static Dimension	height = 21;	/* normal height of a menu item */
 
     /* Don't update the menu height when it was set at a fixed value */
@@ -402,8 +492,8 @@ gui_mch_compute_menu_height(id)
 
     /* Find any menu Widget, to be able to call XtManageChild() */
     else
-	for (mp = gui.root_menu; mp != NULL; mp = mp->next)
-	    if (mp->id != (Widget)0)
+	for (mp = root_menu; mp != NULL; mp = mp->next)
+	    if (mp->id != (Widget)0 && menubar_menu(mp->name))
 	    {
 		id = mp->id;
 		break;
@@ -420,9 +510,9 @@ gui_mch_compute_menu_height(id)
      * Now find the menu item that is the furthest down, and get it's position.
      */
     maxy = 0;
-    for (mp = gui.root_menu; mp != NULL; mp = mp->next)
+    for (mp = root_menu; mp != NULL; mp = mp->next)
     {
-	if (mp->id != (Widget)0)
+	if (mp->id != (Widget)0 && menubar_menu(mp->name))
 	{
 	    XtVaGetValues(mp->id, XmNy, &y, NULL);
 	    if (y > maxy)
@@ -451,8 +541,8 @@ gui_mch_compute_menu_height(id)
 
     void
 gui_mch_add_menu_item(menu, parent, idx)
-    GuiMenu	*menu;
-    GuiMenu	*parent;
+    VimMenu	*menu;
+    VimMenu	*parent;
     int		idx;
 {
     XmString	label;
@@ -461,10 +551,27 @@ gui_mch_add_menu_item(menu, parent, idx)
     if (parent->submenu_id == (Widget)0)
 	return;
 
+    menu->submenu_id = (Widget)0;
+
+    /* Add menu separator */
+    if (is_menu_separator(menu->name))
+    {
+	menu->id = XtVaCreateWidget("subMenu",
+		xmSeparatorWidgetClass, parent->submenu_id,
+		XmNforeground, gui.menu_fg_pixel,
+		XmNbackground, gui.menu_bg_pixel,
+#if (XmVersion >= 1002)
+		/* count the tearoff item (neede for LessTif) */
+		XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
+								     ? 1 : 0),
+#endif
+		NULL);
+	return;
+    }
+
     label = XmStringCreate((char *)menu->dname, STRING_TAG);
     if (label == NULL)
 	return;
-    menu->submenu_id = (Widget)0;
     menu->id = XtVaCreateWidget("subMenu",
 	xmPushButtonWidgetClass, parent->submenu_id,
 	XmNlabelString, label,
@@ -472,7 +579,9 @@ gui_mch_add_menu_item(menu, parent, idx)
 	XmNbackground, gui.menu_bg_pixel,
 	XmNmnemonic, menu->mnemonic,
 #if (XmVersion >= 1002)
-	XmNpositionIndex, idx,
+	/* count the tearoff item (neede for LessTif) */
+	XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
+								     ? 1 : 0),
 #endif
 	NULL);
     XmStringFree(label);
@@ -491,38 +600,48 @@ gui_mch_new_menu_colors()
 {
     if (menuBar == NULL)
 	return;
+#if (XmVersion >= 1002)
+    XmChangeColor(menuBar, gui.menu_bg_pixel);
+#endif
     XtVaSetValues(menuBar,
 	XmNforeground, gui.menu_fg_pixel,
+#if (XmVersion <1002)
 	XmNbackground, gui.menu_bg_pixel,
+#endif
 	NULL);
 
-    gui_mch_submenu_colors(gui.root_menu);
+    gui_mch_submenu_colors(root_menu);
 }
 
     static void
 gui_mch_submenu_colors(mp)
-    GuiMenu	*mp;
+    VimMenu	*mp;
 {
     while (mp != NULL)
     {
 	if (mp->id != (Widget)0)
+	{
+#if (XmVersion >= 1002)
+	    XmChangeColor(mp->id, gui.menu_bg_pixel);
+#endif
 	    XtVaSetValues(mp->id,
 		    XmNforeground, gui.menu_fg_pixel,
+#if (XmVersion <1002)
 		    XmNbackground, gui.menu_bg_pixel,
+#endif
 		    NULL);
+	}
 
 	if (mp->children != NULL)
 	{
 #if (XmVersion >= 1002)
-	    Widget	widget;
-
 	    /* Set the colors for the tear off widget */
-	    if (mp->submenu_id != (Widget)0
-	       && (widget = XmGetTearOffControl(mp->submenu_id)) != (Widget)0)
-		XtVaSetValues(widget,
-			XmNforeground, gui.menu_fg_pixel,
-			XmNbackground, gui.menu_bg_pixel,
-			NULL);
+	    if (mp->submenu_id != (Widget)0)
+	    {
+		XmChangeColor(mp->submenu_id, gui.menu_bg_pixel);
+		XtVaSetValues(mp->submenu_id, XmNforeground, gui.menu_fg_pixel, NULL);
+		toggle_tearoff(mp->submenu_id);
+	    }
 #endif
 	    /* Set the colors for the children */
 	    gui_mch_submenu_colors(mp->children);
@@ -536,7 +655,7 @@ gui_mch_submenu_colors(mp)
  */
     void
 gui_mch_destroy_menu(menu)
-    GuiMenu *menu;
+    VimMenu *menu;
 {
     Widget  parent;
 
@@ -570,6 +689,19 @@ gui_mch_destroy_menu(menu)
 	    gui_mch_compute_menu_height((Widget)0);
     }
 }
+
+/* ARGSUSED */
+    void
+gui_mch_show_popupmenu(menu)
+    VimMenu *menu;
+{
+#ifdef MOTIF_POPUP
+    XmMenuPosition(menu->submenu_id, gui_x11_get_last_mouse_event());
+    XtManageChild(menu->submenu_id);
+#endif
+}
+
+#endif /* WANT_MENU */
 
 
 /*
@@ -630,6 +762,11 @@ gui_mch_create_scrollbar(sb, orient)
 	    XmNtopAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_OPPOSITE_FORM,
 	    XmNbottomAttachment, XmATTACH_OPPOSITE_FORM,
+	    /* Use dummy offsets to avoid a warning for Lesstif */
+	    XmNleftOffset, 2,
+	    XmNtopOffset, 2,
+	    XmNrightOffset, -4,
+	    XmNbottomOffset, -4,
 	    NULL);
     if (sb->id != (Widget)0)
     {
@@ -654,11 +791,18 @@ gui_mch_set_scrollbar_colors(sb)
     GuiScrollbar    *sb;
 {
     if (sb->id != NULL)
+    {
+#if (XmVersion>=1002)
+	XmChangeColor(sb->id, gui.scroll_bg_pixel);
+#endif
 	XtVaSetValues(sb->id,
 	    XmNforeground, gui.scroll_fg_pixel,
+#if (XmVersion<1002)
 	    XmNbackground, gui.scroll_fg_pixel,
 	    XmNtroughColor, gui.scroll_bg_pixel,
+#endif
 	    NULL);
+    }
 }
 
 /*
@@ -746,6 +890,10 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 
     XtAddCallback(dialog_wgt, XmNokCallback, DialogAcceptCB, (XtPointer)0);
     XtAddCallback(dialog_wgt, XmNcancelCallback, DialogCancelCB, (XtPointer)0);
+    /* We have no help in this window, so hide help button */
+    XtUnmanageChild(XmFileSelectionBoxGetChild(dialog_wgt,
+					(unsigned char)XmDIALOG_HELP_BUTTON));
+
     XtManageChild(dialog_wgt);
 
     /* sit in a loop until the dialog box has gone away */
@@ -973,34 +1121,3 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     return dialogStatus;
 }
 #endif /* GUI_DIALOG */
-
-/* ARGSUSED */
-    void
-gui_mch_show_popupmenu(menu)
-    GuiMenu *menu;
-{
-#ifdef MOTIF_POPUP
-    int		rootx, rooty, winx, winy;
-    Window	root, child;
-    unsigned int mask;
-
-    /* Position the popup menu at the pointer */
-    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
-		&rootx, &rooty, &winx, &winy, &mask))
-    {
-	rootx -= 30;
-	if (rootx < 0)
-	    rootx = 0;
-	rooty -= 5;
-	if (rooty < 0)
-	    rooty = 0;
-	XtVaSetValues(menu->id,
-		XmNx, rootx,
-		XmNy, rooty,
-		NULL);
-    }
-
-    /* This causes a lockup.  How do we popup the menu? */
-    XtPopupSpringLoaded(menu->id);
-#endif
-}

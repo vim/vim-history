@@ -147,7 +147,11 @@ static XtAppContext SFapp;
 
 static int	SFpathScrollWidth, SFvScrollHeight, SFhScrollWidth;
 
+#ifdef USE_FONTSET
+static char	SFtextBuffer[MAXPATHL*sizeof(wchar_t)];
+#else
 static char	SFtextBuffer[MAXPATHL];
+#endif
 
 static int	SFbuttonPressed = 0;
 
@@ -782,6 +786,18 @@ SFupdatePath()
 	}
 }
 
+#ifdef XtNinternational
+    static int
+WcsLen(p)
+    wchar_t *p;
+{
+    int i = 0;
+    while (*p++ != 0)
+	i++;
+    return i;
+}
+#endif
+
     static void
 SFsetText(path)
     char	*path;
@@ -793,10 +809,27 @@ SFsetText(path)
     text.ptr = path;
     text.format = FMT8BIT;
 
+#ifdef XtNinternational
+    if (_XawTextFormat((TextWidget)selFileField) == XawFmtWide)
+    {
+	XawTextReplace(selFileField, (XawTextPosition)0,
+				    (XawTextPosition)WcsLen((wchar_t *)&SFtextBuffer[0]), &text);
+	XawTextSetInsertionPoint(selFileField,
+					   (XawTextPosition)WcsLen((wchar_t *)&SFtextBuffer[0]));
+    }
+    else
+    {
+	XawTextReplace(selFileField, (XawTextPosition)0,
+				    (XawTextPosition)strlen(SFtextBuffer), &text);
+	XawTextSetInsertionPoint(selFileField,
+					   (XawTextPosition)strlen(SFtextBuffer));
+    }
+#else
     XawTextReplace(selFileField, (XawTextPosition)0,
 				(XawTextPosition)strlen(SFtextBuffer), &text);
     XawTextSetInsertionPoint(selFileField,
 				       (XawTextPosition)strlen(SFtextBuffer));
+#endif
 }
 
 /* ARGSUSED */
@@ -842,7 +875,7 @@ SFcheckDir(n, dir)
     struct stat	statBuf;
     int		i;
 
-    if ((!stat(".", &statBuf)) && (statBuf.st_mtime != dir->mtime))
+    if ((!mch_stat(".", &statBuf)) && (statBuf.st_mtime != dir->mtime))
     {
 	/*
 	 * If the pointer is currently in the window that we are about
@@ -925,7 +958,7 @@ SFcheckFiles(dir)
 	last = strlen(str) - 1;
 	old = str[last];
 	str[last] = 0;
-	if (stat(str, &statBuf))
+	if (mch_stat(str, &statBuf))
 	    new = ' ';
 	else
 	    new = SFstatChar(&statBuf);
@@ -1005,7 +1038,11 @@ SFstatChar(statBuf)
 
 #include <X11/Xaw/Cardinals.h>
 
+#ifdef USE_FONTSET
+#define SF_DEFAULT_FONT "-misc-fixed-medium-r-normal--14-*"
+#else
 #define SF_DEFAULT_FONT "9x15"
+#endif
 
 #ifdef ABS
 # undef ABS
@@ -1015,17 +1052,26 @@ SFstatChar(statBuf)
 typedef struct
 {
     char *fontname;
-} TextData, *textPtr;
+} TextData;
 
 static GC SFlineGC, SFscrollGC, SFinvertGC, SFtextGC;
 
 static XtResource textResources[] =
 {
+#ifdef USE_FONTSET
+	{XtNfontSet, XtCFontSet, XtRString, sizeof (char *),
+		XtOffsetOf(TextData, fontname), XtRString, SF_DEFAULT_FONT},
+#else
 	{XtNfont, XtCFont, XtRString, sizeof (char *),
-		XtOffset(textPtr, fontname), XtRString, SF_DEFAULT_FONT},
+		XtOffsetOf(TextData, fontname), XtRString, SF_DEFAULT_FONT},
+#endif
 };
 
+#ifdef USE_FONTSET
+static XFontSet SFfont;
+#else
 static XFontStruct *SFfont;
+#endif
 
 static int SFcurrentListY;
 
@@ -1037,16 +1083,31 @@ static void SFinitFont __ARGS((void));
 SFinitFont()
 {
     TextData	*data;
+#ifdef USE_FONTSET
+    XFontSetExtents *extents;
+    char **missing, *def_str;
+    int  num_missing;
+#endif
 
     data = XtNew(TextData);
 
     XtGetApplicationResources(selFileForm, (XtPointer) data, textResources,
 	    XtNumber(textResources), (Arg *) NULL, ZERO);
 
+#ifdef USE_FONTSET
+    SFfont = XCreateFontSet(SFdisplay, data->fontname,
+			    &missing, &num_missing, &def_str);
+#else
     SFfont = XLoadQueryFont(SFdisplay, data->fontname);
+#endif
     if (!SFfont)
     {
+#ifdef USE_FONTSET
+	SFfont = XCreateFontSet(SFdisplay, SF_DEFAULT_FONT,
+					    &missing, &num_missing, &def_str);
+#else
 	SFfont = XLoadQueryFont(SFdisplay, SF_DEFAULT_FONT);
+#endif
 	if (!SFfont)
 	{
 	    char	sbuf[256];
@@ -1057,9 +1118,16 @@ SFinitFont()
 	}
     }
 
+#ifdef USE_FONTSET
+    extents = XExtentsOfFontSet(SFfont);
+    SFcharWidth = extents->max_logical_extent.width;
+    SFcharAscent = -extents->max_logical_extent.y;
+    SFcharHeight = extents->max_logical_extent.height;
+#else
     SFcharWidth = (SFfont->max_bounds.width + SFfont->min_bounds.width) / 2;
     SFcharAscent = SFfont->max_bounds.ascent;
     SFcharHeight = SFcharAscent + SFfont->max_bounds.descent;
+#endif
 }
 
 static void SFcreateGC __ARGS((void));
@@ -1093,12 +1161,18 @@ SFcreateGC()
 
     gcValues.foreground = SFfore;
     gcValues.background = SFback;
+#ifndef USE_FONTSET
     gcValues.font = SFfont->fid;
+#endif
 
     SFtextGC = XCreateGC(
 	    SFdisplay,
 	    XtWindow(selFileLists[0]),
+#ifdef USE_FONTSET
+	    (unsigned long)GCForeground | GCBackground,
+#else
 	    (unsigned long)GCForeground | GCBackground | GCFont,
+#endif
 	    &gcValues);
 
     rectangles[0].x = SFlineToTextH + SFbesideText;
@@ -1241,9 +1315,9 @@ SFstatAndCheck(dir, entry)
 	last = strlen(entry->real) - 1;
 	entry->real[last] = 0;
 	entry->statDone = 1;
-	if ((!stat(entry->real, &statBuf))
+	if ((!mch_stat(entry->real, &statBuf))
 #ifdef S_IFLNK
-		|| (!lstat(entry->real, &statBuf))
+		|| (!mch_lstat(entry->real, &statBuf))
 #endif /* ndef S_IFLNK */
 	   )
 	{
@@ -1312,6 +1386,17 @@ SFdrawStrings(w, dir, from, to)
 		continue;
 	    }
 	}
+#ifdef USE_FONTSET
+	XmbDrawImageString(
+		SFdisplay,
+		w,
+		SFfont,
+		SFtextGC,
+		x,
+		SFtextYoffset + i * SFentryHeight,
+		entry->shown,
+		strlen(entry->shown));
+#else
 	XDrawImageString(
 		SFdisplay,
 		w,
@@ -1320,6 +1405,7 @@ SFdrawStrings(w, dir, from, to)
 		SFtextYoffset + i * SFentryHeight,
 		entry->shown,
 		strlen(entry->shown));
+#endif
 	if (dir->vOrigin + i == dir->beginSelection)
 	{
 	    XDrawLine(
@@ -1373,6 +1459,17 @@ SFdrawList(n, doScroll)
     {
 	dir = &(SFdirs[SFdirPtr + n]);
 	w = XtWindow(selFileLists[n]);
+#ifdef USE_FONTSET
+	XmbDrawImageString(
+		SFdisplay,
+		w,
+		SFfont,
+		SFtextGC,
+		SFtextX - dir->hOrigin * SFcharWidth,
+		SFlineToTextV + SFaboveAndBelowText + SFcharAscent,
+		dir->dir,
+		strlen(dir->dir));
+#else
 	XDrawImageString(
 		SFdisplay,
 		w,
@@ -1381,6 +1478,7 @@ SFdrawList(n, doScroll)
 		SFlineToTextV + SFaboveAndBelowText + SFcharAscent,
 		dir->dir,
 		strlen(dir->dir));
+#endif
 	SFdrawStrings(w, dir, 0, SFlistSize - 1);
     }
 }
@@ -1912,7 +2010,7 @@ SFgetDir(dir)
     if (!dirp)
 	return 1;
 
-    (void) stat(".", &statBuf);
+    (void)mch_stat(".", &statBuf);
     dir->mtime = statBuf.st_mtime;
 
     while ((dp = readdir(dirp)))
@@ -2362,7 +2460,26 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
     static void
 SFtextChanged()
 {
+#if defined(USE_FONTSET) && defined(XtNinternational)
+    if (_XawTextFormat((TextWidget)selFileField) == XawFmtWide)
+    {
+	wchar_t *wcbuf=(wchar_t *)SFtextBuffer;
 
+	if ((wcbuf[0] == L'/') || (wcbuf[0] == L'~'))
+	{
+	    (void) wcstombs(SFcurrentPath, wcbuf, MAXPATHL);
+	    SFtextPos = XawTextGetInsertionPoint(selFileField);
+	}
+	else
+	{
+	    strcpy(SFcurrentPath, SFstartDir);
+	    (void) wcstombs(SFcurrentPath + strlen(SFcurrentPath), wcbuf, MAXPATHL);
+
+	    SFtextPos = XawTextGetInsertionPoint(selFileField) + strlen(SFstartDir);
+	}
+    }
+    else
+#endif
     if ((SFtextBuffer[0] == '/') || (SFtextBuffer[0] == '~'))
     {
 	(void) strcpy(SFcurrentPath, SFtextBuffer);
@@ -2387,6 +2504,23 @@ SFtextChanged()
     static char *
 SFgetText()
 {
+#if defined(USE_FONTSET) && defined(XtNinternational)
+    char *buf;
+
+    if (_XawTextFormat((TextWidget)selFileField) == XawFmtWide)
+    {
+	wchar_t *wcbuf;
+	int mbslength;
+
+	XtVaGetValues(selFileField,
+	    XtNstring, &wcbuf,
+	NULL);
+	mbslength = wcstombs(NULL, wcbuf, 0);
+	buf=(char *)XtMalloc(mbslength + 1);
+	wcstombs(buf, wcbuf, mbslength +1);
+	return buf;
+    }
+#endif
     return (char *)vim_strsave((char_u *)SFtextBuffer);
 }
 

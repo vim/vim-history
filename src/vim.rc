@@ -9,7 +9,13 @@
 //   Icon and version information for the Win32 version of Vim
 //   Must be in DOS format <CR><NL>!
 
-#include <winver.h>
+#ifdef MING
+# include <windows.h>
+# define VS_FFI_FILEFLAGSMASK    0x0000003FL
+# define VOS__WINDOWS32          0x00000004L
+#else
+# include <winver.h>
+#endif
 #include "version.h"
 #include "gui_w32_rc.h"
 
@@ -74,8 +80,8 @@ BEGIN
 	VALUE "FileDescription",	"Vi Improved - A Text Editor\0"
 	VALUE "FileVersion",		VIM_VERSION_MAJOR_STR ", " VIM_VERSION_MINOR_STR ", " VIM_VERSION_BUILD_STR ", " VIM_VERSION_PATCHLEVEL_STR  "\0"
 	VALUE "InternalName",		"VIM\0"
-	VALUE "LegalCopyright",		"Copyright \251 1996,1997\0"
-	VALUE "LegalTrademarks",	"\0"
+	VALUE "LegalCopyright",		"Copyright \251 1996-1999\0"
+	VALUE "LegalTrademarks",	"Vim\0"
 	VALUE "OriginalFilename",	"VIM.EXE\0"
 	VALUE "ProductName",		"Vim\0"
 	VALUE "ProductVersion",		VIM_VERSION_MAJOR_STR ", " VIM_VERSION_MINOR_STR ", " VIM_VERSION_BUILD_STR ", " VIM_VERSION_PATCHLEVEL_STR "\0"

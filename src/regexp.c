@@ -245,13 +245,12 @@ static int myisxdigit(c) int c; { return isxdigit(c); }
 /*
  * Utility definitions.
  */
-#ifndef CHARBITS
-# define UCHARAT(p)	((int)*(unsigned char *)(p))
-#else
-# define UCHARAT(p)	((int)*(p)&CHARBITS)
-#endif
+#define UCHARAT(p)	((int)*(unsigned char *)(p))
 
-#define EMSG_RETURN(m) { emsg(m); rc_did_emsg = TRUE; return NULL; }
+/* Used for an error (down from) vim_regcomp(): give the error message, set
+ * rc_did_emsg and return NULL */
+#define EMSG_RET_NULL(m) { EMSG(m); rc_did_emsg = TRUE; return NULL; }
+#define EMSG_RET_FAIL(m) { EMSG(m); rc_did_emsg = TRUE; return FAIL; }
 
 #define MAX_LIMIT	32767
 
@@ -303,6 +302,10 @@ static char_u REGEXP_ABBR[] = "rteb";
 
 static int	backslash_trans __ARGS((int c));
 static int	my_isblank __ARGS((int c));
+static int	my_istab __ARGS((int c));
+static int	my_isbspace __ARGS((int c));
+static int	my_isreturn __ARGS((int c));
+static int	my_isesc __ARGS((int c));
 static int	(* skip_class_name __ARGS((char_u **pp)))__ARGS((int));
 static char_u * skip_range __ARGS((char_u *p));
 static void	init_class_tab __ARGS((void));
@@ -316,7 +319,7 @@ backslash_trans(c)
 	case 'r':   return CR;
 	case 't':   return TAB;
 	case 'e':   return ESC;
-	case 'b':   return Ctrl('H');
+	case 'b':   return BS;
     }
     return c;
 }
@@ -332,19 +335,33 @@ my_isblank(c)
 }
 
 /*
+ * Simplistic functions to recognize a single character.  It's a bit slow...
+ */
+static int my_istab(c) int c; { return c == TAB; }
+static int my_isbspace(c) int c; { return c == BS; }
+static int my_isreturn(c) int c; { return c == CR; }
+static int my_isesc(c) int c; { return c == ESC; }
+
+/*
  * Check for a character class name.  "pp" is at the '['.
  * If not: NULL is returned; If so, a function of the sort is* is returned and
  * the name is skipped.
  */
+#if defined(macintosh) || defined(__BEOS__)
+/* the compiler doesn't understand the other one */
+    static int (*
+skip_class_name(char_u **pp))__ARGS((int))
+#else
     static int (*
 skip_class_name(pp))__ARGS((int))
     char_u	**pp;
+#endif
 {
     typedef struct
     {
 	size_t	    len;
 	int	    (*func)__ARGS((int));
-	char_u	    name[sizeof("xdigit:]")];
+	char_u	    name[sizeof("backspace:]")];
     } namedata_t;
 
 #define t(n, func) { sizeof(n) - 1, func, n }
@@ -355,7 +372,9 @@ skip_class_name(pp))__ARGS((int))
 	t("digit:]", isdigit),		t("graph:]", isgraph),
 	t("lower:]", islower),		t("print:]", vim_isprintc),
 	t("punct:]", ispunct),		t("space:]", vim_isspace),
-	t("upper:]", isupper),		t("xdigit:]", isxdigit)
+	t("upper:]", isupper),		t("xdigit:]", isxdigit),
+	t("tab:]",   my_istab),		t("return:]", my_isreturn),
+	t("backspace:]", my_isbspace),	t("escape:]", my_isesc)
     };
 #undef t
 
@@ -366,7 +385,7 @@ skip_class_name(pp))__ARGS((int))
     for (   np = class_names;
 	    np < class_names + sizeof(class_names) / sizeof(*class_names);
 	    np++)
-	if (STRNCMP(*pp+2, np->name, np->len) == 0)
+	if (STRNCMP(*pp + 2, np->name, np->len) == 0)
 	{
 	    *pp += np->len + 2;
 	    return np->func;
@@ -481,7 +500,9 @@ static char_u	**regendp;	/* Pointer to endp array */
 static int	brace_min[10];	/* Minimums for complex brace repeats */
 static int	brace_max[10];	/* Maximums for complex brace repeats */
 static int	brace_count[10]; /* Current counts for complex brace repeats */
+#if defined(SYNTAX_HL) || defined(PROTO)
 static int	had_eol;	/* TRUE when EOL found by vim_regcomp() */
+#endif
 static int	reg_magic;	/* p_magic passed to vim_regexec() */
 
 /*
@@ -560,8 +581,8 @@ skip_regexp(p, dirc, magic)
  * of the structure of the compiled regexp.
  */
     vim_regexp *
-vim_regcomp(exp, magic)
-    char_u	*exp;
+vim_regcomp(expr, magic)
+    char_u	*expr;
     int		magic;
 {
     vim_regexp	*r;
@@ -570,20 +591,22 @@ vim_regcomp(exp, magic)
     int		len;
     int		flags;
 
-    if (exp == NULL)
-	EMSG_RETURN(e_null);
+    if (expr == NULL)
+	EMSG_RET_NULL(e_null);
 
     reg_magic = magic;
     init_class_tab();
 
     /* First pass: determine size, legality. */
-    initchr((char_u *)exp);
+    initchr((char_u *)expr);
     num_complex_braces = 0;
     regnpar = 1;
     regsize = 0L;
     regcode = JUST_CALC_SIZE;
     regendp = NULL;
+#if defined(SYNTAX_HL) || defined(PROTO)
     had_eol = FALSE;
+#endif
     regc(MAGIC);
     if (reg(0, &flags) == NULL)
 	return NULL;
@@ -591,7 +614,7 @@ vim_regcomp(exp, magic)
     /* Small enough for pointer-storage convention? */
 #ifdef SMALL_MALLOC		/* 16 bit storage allocation */
     if (regsize >= 65536L - 256L)
-	EMSG_RETURN(e_toolong);
+	EMSG_RET_NULL(e_toolong);
 #endif
 
     /* Allocate space. */
@@ -600,7 +623,7 @@ vim_regcomp(exp, magic)
 	return NULL;
 
     /* Second pass: emit code. */
-    initchr((char_u *)exp);
+    initchr((char_u *)expr);
     num_complex_braces = 0;
     regnpar = 1;
     regcode = r->program;
@@ -661,11 +684,12 @@ vim_regcomp(exp, magic)
 	}
     }
 #ifdef DEBUG
-    regdump(exp, r);
+    regdump(expr, r);
 #endif
     return r;
 }
 
+#if defined(SYNTAX_HL) || defined(PROTO)
 /*
  * Check if during the previous call to vim_regcomp the EOL item "$" has been
  * found.  This is messy, but it works fine.
@@ -675,6 +699,7 @@ vim_regcomp_had_eol()
 {
     return had_eol;
 }
+#endif
 
 /*
  * reg - regular expression, i.e. main body or parenthesized thing
@@ -702,7 +727,7 @@ reg(paren, flagp)
     if (paren)
     {
 	if (regnpar >= NSUBEXP)
-	    EMSG_RETURN(e_toombra);
+	    EMSG_RET_NULL(e_toombra);
 	parno = regnpar;
 	regnpar++;
 	ret = regnode(MOPEN + parno);
@@ -745,13 +770,13 @@ reg(paren, flagp)
 
     /* Check for proper termination. */
     if (paren && getchr() != Magic(')'))
-	EMSG_RETURN(e_toombra)
+	EMSG_RET_NULL(e_toombra)
     else if (!paren && peekchr() != '\0')
     {
 	if (PeekChr() == Magic(')'))
-	    EMSG_RETURN(e_toomket)
+	    EMSG_RET_NULL(e_toomket)
 	else
-	    EMSG_RETURN(e_trailing)	/* "Can't happen". */
+	    EMSG_RET_NULL(e_trailing)	/* "Can't happen". */
 	/* NOTREACHED */
     }
     /*
@@ -831,7 +856,7 @@ regpiece(flagp)
 	return ret;
     }
     if (!(flags & HASWIDTH) && op != Magic('='))
-	EMSG_RETURN((char_u *)"*, \\+, or \\{ operand could be empty");
+	EMSG_RET_NULL("*, \\+, or \\{ operand could be empty");
     *flagp = (WORST | SPSTART);		    /* default flags */
 
     skipchr();
@@ -884,7 +909,7 @@ regpiece(flagp)
 	if (!read_limits('{', '}', &minval, &maxval))
 	    return NULL;
 	if (num_complex_braces >= 10)
-	    EMSG_RETURN((char_u *)"Too many complex \\{...}s");
+	    EMSG_RET_NULL("Too many complex \\{...}s");
 	reginsert(BRACE_COMPLEX + num_complex_braces, ret);
 	regoptail(ret, regnode(BACK));
 	regoptail(ret, ret);
@@ -894,7 +919,7 @@ regpiece(flagp)
 	++num_complex_braces;
     }
     if (re_ismult(peekchr()))
-	EMSG_RETURN((char_u *)"Nested *, \\=, \\+, or \\{");
+	EMSG_RET_NULL("Nested *, \\=, \\+, or \\{");
 
     return ret;
 }
@@ -924,7 +949,9 @@ regatom(flagp)
 	break;
       case Magic('$'):
 	ret = regnode(EOL);
+#if defined(SYNTAX_HL) || defined(PROTO)
 	had_eol = TRUE;
+#endif
 	break;
       case Magic('<'):
 	ret = regnode(BOW);
@@ -1049,22 +1076,22 @@ regatom(flagp)
       case '\0':
       case Magic('|'):
       case Magic(')'):
-	EMSG_RETURN(e_internal)	    /* Supposed to be caught earlier. */
+	EMSG_RET_NULL(e_internal)	    /* Supposed to be caught earlier. */
 	/* NOTREACHED */
       case Magic('='):
-	EMSG_RETURN((char_u *)"\\= follows nothing")
+	EMSG_RET_NULL("\\= follows nothing")
 	/* NOTREACHED */
       case Magic('+'):
-	EMSG_RETURN((char_u *)"\\+ follows nothing")
+	EMSG_RET_NULL("\\+ follows nothing")
 	/* NOTREACHED */
       case Magic('{'):
-	EMSG_RETURN((char_u *)"\\{ follows nothing")
+	EMSG_RET_NULL("\\{ follows nothing")
 	/* NOTREACHED */
       case Magic('*'):
 	if (reg_magic)
-	    EMSG_RETURN((char_u *)"* follows nothing")
+	    EMSG_RET_NULL("* follows nothing")
 	else
-	    EMSG_RETURN((char_u *)"\\* follows nothing")
+	    EMSG_RET_NULL("\\* follows nothing")
 	/* break; Not Reached */
       case Magic('~'):		/* previous substitute pattern */
 	    if (reg_prev_sub)
@@ -1086,7 +1113,7 @@ regatom(flagp)
 		}
 	    }
 	    else
-		EMSG_RETURN(e_nopresub);
+		EMSG_RET_NULL(e_nopresub);
 	    break;
       case Magic('1'):
       case Magic('2'):
@@ -1115,7 +1142,7 @@ regatom(flagp)
 		(regendp == NULL || regendp[refnum] != NULL))
 		ret = regnode(BACKREF + refnum);
 	    else
-		EMSG_RETURN((char_u *)"Illegal back reference");
+		EMSG_RET_NULL("Illegal back reference");
 	}
 	break;
       case Magic('['):
@@ -1156,7 +1183,7 @@ regatom(flagp)
 			    cclass = UCHARAT(regparse - 2) + 1;
 			    cclassend = UCHARAT(regparse);
 			    if (cclass > cclassend + 1)
-				EMSG_RETURN(e_invrange);
+				EMSG_RET_NULL(e_invrange);
 			    for (; cclass <= cclassend; cclass++)
 				regc(cclass);
 			    regparse++;
@@ -1193,7 +1220,7 @@ regatom(flagp)
 		}
 		regc('\0');
 		if (*regparse != ']')
-		    EMSG_RETURN(e_toomsbra);
+		    EMSG_RET_NULL(e_toomsbra);
 		skipchr();	    /* let's be friends with the lexer again */
 		*flagp |= HASWIDTH | SIMPLE;
 		break;
@@ -1221,7 +1248,7 @@ regatom(flagp)
 	    }
 #ifdef DEBUG
 	    if (len == 0)
-		 EMSG_RETURN((char_u *)"Unexpected magic character; check META.");
+		 EMSG_RET_NULL("Unexpected magic character; check META.");
 #endif
 	    /*
 	     * If there is a following *, \+ or \= we need the character
@@ -1462,14 +1489,20 @@ peekchr()
 		curchr = Magic('*');
 	    break;
 	case '^':
-	    /* ^ is only magic as the very first character */
-	    if (at_start)
+	    /* '^' is only magic as the very first character and if it's after
+	     * either "\(" or "\|" */
+	    if (at_start || prevchr == Magic('(') || prevchr == Magic('|'))
+	    {
 		curchr = Magic('^');
+		at_start = TRUE;
+		prev_at_start = FALSE;
+	    }
 	    break;
 	case '$':
-	    /* $ is only magic as the very last char and in front of '\|' */
-	    if (regparse[1] == NUL
-			       || (regparse[1] == '\\' && regparse[2] == '|'))
+	    /* '$' is only magic as the very last char and if it's in front of
+	     * either "\|" or "\)" */
+	    if (regparse[1] == NUL || (regparse[1] == '\\'
+			       && (regparse[2] == '|' || regparse[2] == ')')))
 		curchr = Magic('$');
 	    break;
 	case '\\':
@@ -1595,9 +1628,7 @@ read_limits(start, end, minval, maxval)
 	    || (*maxval == 0 && *minval == 0))
     {
 	sprintf((char *)IObuff, "Syntax error in \\%c...%c", start, end);
-	emsg(IObuff);
-	rc_did_emsg = TRUE;
-	return FAIL;
+	EMSG_RET_FAIL(IObuff);
     }
 
     /*
@@ -1655,14 +1686,12 @@ vim_regexec(prog, string, at_bol)
     if (prog == NULL || string == NULL)
     {
 	emsg(e_null);
-	rc_did_emsg = TRUE;
 	return 0;
     }
     /* Check validity of program. */
     if (UCHARAT(prog->program) != MAGIC)
     {
 	emsg(e_re_corr);
-	rc_did_emsg = TRUE;
 	return 0;
     }
     /* If there is a "must appear" string, look for it. */
@@ -1773,6 +1802,13 @@ regmatch(prog)
     char_u	    *next;	/* Next node. */
     int		    minval = -1;
     int		    maxval = -1;
+    static int	    break_count = 0;
+
+    /* Some patterns my cause a long time to match, even though they are not
+     * illegal.  E.g., "\([a-z]\+\)\+Q".  Allow breaking them with CTRL-C.
+     * But don't check too often, that could be slow. */
+    if ((++break_count & 0xfff) == 0)
+	ui_breakcheck();
 
     scan = prog;
 #ifdef DEBUG
@@ -1784,6 +1820,8 @@ regmatch(prog)
 #endif
     while (scan != NULL)
     {
+	if (got_int)
+	    return 0;
 #ifdef DEBUG
 	if (regnarrate)
 	{
@@ -3060,6 +3098,7 @@ exit:
     return (int)((dst - dest) + 1);
 }
 
+#if 0 /* not used */
 /*
  * Return TRUE if "c" is a wildcard character.  Depends on 'magic'.
  */
@@ -3069,3 +3108,4 @@ vim_iswildc(c)
 {
     return vim_strchr((char_u *)(p_magic ? ".*~[^$\\" : "^$\\"), c) != NULL;
 }
+#endif

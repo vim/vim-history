@@ -1,8 +1,10 @@
 # Makefile for ctags on the Amiga, using Aztec/Manx C 5.0 or later
 #
 
-SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
-OBJECTS	= entry.o get.o main.o options.o parse.o read.o sort.o
+SOURCES	= eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
+	parse.c read.c sort.c vstring.c
+OBJECTS	= eiffel.o entry.o fortran.o get.o keyword.o main.o options.o \
+	parse.o read.o sort.o vstring.o
 CC	= cc
 
 #>>>>> choose between debugging (-bs) or optimizing (-so)

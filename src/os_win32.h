@@ -16,6 +16,7 @@
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
 #define NO_COOKED_INPUT		/* mch_inchar() doesn't return whole lines */
 #define SYNC_DUP_CLOSE		/* sync() a file with dup() and close() */
+#define USE_TERM_CONSOLE
 #define HAVE_STRING_H
 #define HAVE_STRCSPN
 #ifndef __GNUC__
@@ -29,9 +30,6 @@
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
 #define USE_FNAME_CASE		/* adjust case of file names */
-#ifdef DOS_MOUSE
-# define USE_MOUSE		/* include mouse support */
-#endif
 #ifndef USE_CLIPBOARD
 # define USE_CLIPBOARD		/* include clipboard support */
 #endif
@@ -40,6 +38,15 @@
 #endif
 #ifndef USE_GUI_WIN32		/* GUI works different */
 # define BREAKCHECK_SKIP    1	/* call mch_breakcheck() each time, it's fast */
+#endif
+#define HAVE_AVAIL_MEM
+
+#ifdef __BORLANDC__
+# define HAVE_PUTENV		/* at least Bcc 5.2 has it */
+#endif
+
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		/* internal backtick expansion */
 #endif
 
 #ifdef USE_GUI_WIN32
@@ -145,3 +152,4 @@ Trace(char *pszFormat, ...);
     ASSERT(((p) == NULL)  ||  IsValidAddress((p), sizeof(type), FALSE))
 
 #define mch_setenv(name, val, x) setenv(name, val, x)
+#define mch_getenv(x) (char_u *)getenv((char *)(x))

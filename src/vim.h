@@ -19,24 +19,29 @@
 #ifdef HAVE_CONFIG_H	/* GNU autoconf (or something else) was here */
 # include "config.h"
 # define HAVE_PATHDEF
+
+/*
+ * Check if configure correcly managed to find sizeof(int).  If this failed,
+ * it becomes zero.  This is likely a problem of not being able to run the
+ * test program.  Other items from configure may also be wrong then!
+ */
+# if (SIZEOF_INT == 0)
+    Error: configure did not run properly.  Check config.log.
+# endif
 #endif
 
 #ifdef __EMX__		/* hand-edited config.h for OS/2 with EMX */
 # include "os_os2_cfg.h"
 #endif
 
-/*
- * This is a bit of a wishlist.  Currently we only have a few GUIs.
- */
 #if defined macintosh
 # define USE_GUI_MAC	    /* mandatory */
 #endif
 #if defined(USE_GUI_MOTIF) \
+    || defined(USE_GUI_GTK) \
     || defined(USE_GUI_ATHENA) \
     || defined(USE_GUI_MAC) \
-    || defined(USE_GUI_WIN16) \
     || defined(USE_GUI_WIN32) \
-    || defined(USE_GUI_OS2) \
     || defined(USE_GUI_BEOS) \
     || defined(USE_GUI_AMIGA)
 # ifndef USE_GUI
@@ -44,12 +49,11 @@
 # endif
 #endif
 
-/*
- * NextStep has a problem with configure, undefine a few things:
- */
-#ifdef NeXT
-# undef HAVE_UTIME
-# undef HAVE_SYS_UTSNAME_H
+#if defined(USE_GUI_WIN32) || defined(USE_GUI_WIN16)
+# define USE_GUI_MSWIN
+#endif
+#if defined(WIN32) || defined(WIN16)
+# define MSWIN
 #endif
 
 #include "feature.h"	/* #defines for optionals and features */
@@ -120,6 +124,10 @@
 # include "os_msdos.h"
 #endif
 
+#ifdef WIN16
+# include "os_win16.h"
+#endif
+
 #ifdef WIN32
 # include "os_win32.h"
 #endif
@@ -160,16 +168,8 @@ typedef unsigned int	int_u;
 typedef unsigned long	long_u;
 
 #ifndef UNIX		    /* For Unix this is included in os_unix.h */
-#include <stdio.h>
-#include <ctype.h>
-#endif
-
-#if defined(HAVE_STRING_H)
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
+# include <stdio.h>
+# include <ctype.h>
 #endif
 
 #include "ascii.h"
@@ -184,12 +184,23 @@ typedef unsigned long	long_u;
 #ifdef _DCC
 # include <sys/stat.h>
 #endif
-#if defined MSDOS  ||  defined WIN32
+#if defined MSDOS  ||  defined MSWIN
 # include <sys/stat.h>
 #endif
 
-/* allow other (non-unix) systems to configure themselves now */
+/*
+ * Allow other (non-unix) systems to configure themselves now
+ * These are also in os_unix.h, because osdef.sh needs them there.
+ */
 #ifndef UNIX
+/* Note: Some systems need both string.h and strings.h (Savage).  If the
+ * system can't handle this, define NO_STRINGS_WITH_STRING_H. */
+# ifdef HAVE_STRING_H
+#  include <string.h>
+# endif
+# if defined(HAVE_STRINGS_H) && !defined(NO_STRINGS_WITH_STRING_H)
+#   include <strings.h>
+# endif
 # ifdef HAVE_STAT_H
 #  include <stat.h>
 # endif
@@ -230,6 +241,9 @@ typedef unsigned long	long_u;
 #define HL_STANDOUT		0x10
 #define HL_ALL			0x1f
 
+/* special attribute addition: Put message in history */
+#define MSG_HIST		0x1000
+
 /*
  * values for State
  *
@@ -247,6 +261,7 @@ typedef unsigned long	long_u;
 
 #define NORMAL_BUSY	(0x100 + NORMAL) /* Normal mode, busy with a command */
 #define REPLACE		(0x200 + INSERT) /* Replace mode */
+#define VREPLACE	(0x300 + INSERT) /* Virtual replace mode */
 #define HITRETURN	(0x600 + NORMAL) /* waiting for return or command */
 #define ASKMORE		0x700	/* Asking if you want --more-- */
 #define SETWSIZE	0x800	/* window size has changed */
@@ -258,19 +273,28 @@ typedef unsigned long	long_u;
 /* directions */
 #define FORWARD			1
 #define BACKWARD		(-1)
-#define BOTH_DIRECTIONS		2
+#define FORWARD_FILE		3
 
 /* return values for functions */
 #define OK			1
 #define FAIL			0
 
 /* flags for b_flags */
-#define BF_RECOVERED		1   /* buffer has been recovered */
-#define BF_CHECK_RO		2   /* need to check readonly when loading
-				       file into buffer (set by ":e", may be
-				       reset by ":buf" */
-#define BF_NEVERLOADED		4   /* file has never been loaded into buffer,
-				       many variables still need to be set */
+#define BF_RECOVERED	0x01	/* buffer has been recovered */
+#define BF_CHECK_RO	0x02	/* need to check readonly when loading file
+				   into buffer (set by ":e", may be reset by
+				   ":buf" */
+#define BF_NEVERLOADED	0x04	/* file has never been loaded into buffer,
+				   many variables still need to be set */
+#define BF_NOTEDITED	0x08	/* Set when file name is changed after
+				   starting to edit, reset when file is
+				   written out. */
+#define BF_NEW		0x10	/* file didn't exist when editing started */
+#define BF_NEW_W	0x20	/* Warned for BF_NEW and file created */
+#define BF_READERR	0x40	/* got errors while reading the file */
+
+/* Mask to check for flags that prevent normal writing */
+#define BF_WRITE_MASK	(BF_NOTEDITED + BF_NEW + BF_READERR)
 
 /*
  * values for command line completion
@@ -293,6 +317,16 @@ typedef unsigned long	long_u;
 #define EXPAND_HIGHLIGHT	13
 #define EXPAND_AUGROUP		14
 #define EXPAND_USER_VARS	15
+#define EXPAND_MAPPINGS		16
+#define EXPAND_TAGS_LISTFILES	17
+#define EXPAND_FUNCTIONS	18
+#define EXPAND_USER_FUNC	19
+#define EXPAND_EXPRESSION	20
+#define EXPAND_MENUNAMES	21
+#define EXPAND_USER_COMMANDS	22
+#define EXPAND_USER_CMD_FLAGS	23
+#define EXPAND_USER_NARGS	24
+#define EXPAND_USER_COMPLETE	25
 
 /* Values for nextwild() and ExpandOne().  See ExpandOne() for meaning. */
 #define WILD_FREE		1
@@ -307,11 +341,15 @@ typedef unsigned long	long_u;
 #define WILD_HOME_REPLACE	2
 #define WILD_USE_NL		4	/* separate names with '\n' */
 #define WILD_NO_BEEP		8	/* don't beep for multiple matches */
+#define WILD_ADD_SLASH		16	/* add slash after directory name */
+#define WILD_KEEP_ALL		32	/* keep all matches */
 
 /* Flags for expand_wildcards() */
 #define EW_DIR		1	/* include directory names */
 #define EW_FILE		2	/* include file names */
 #define EW_NOTFOUND	4	/* include not found names */
+#define EW_ADDSLASH	8	/* append slash to directory name */
+#define EW_KEEPALL	16	/* keep all matches */
 #ifdef NO_EXPANDPATH
 # define gen_expand_wildcards mch_expand_wildcards
 #endif
@@ -354,6 +392,7 @@ typedef unsigned long	long_u;
 /* Values for buflist_getfile() */
 #define GETF_SETMARK	0x01	/* set pcmark before jumping */
 #define GETF_ALT	0x02	/* jumping to alternate file (not buf num) */
+#define GETF_SWITCH	0x04	/* respect 'switchbuf' settings when jumping */
 
 /* Values for in_indentkeys() */
 #define KEY_OPEN_FORW	0x101
@@ -386,6 +425,8 @@ typedef unsigned long	long_u;
 #define DOBUF_SPLIT	1	/* split window and go to specified buffer */
 #define DOBUF_UNLOAD	2	/* unload specified buffer(s) */
 #define DOBUF_DEL	3	/* delete specified buffer(s) */
+#define DOBUF_SWITCH	4	/* switch to open window containing buffer  */
+				/* or split current window and go to buffer */
 
 /* Values for start argument for do_buffer() */
 #define DOBUF_CURRENT	0	/* "count" buffer from current buffer */
@@ -416,6 +457,11 @@ typedef unsigned long	long_u;
 #define ECMD_FORCEIT	0x08	/* ! used in Ex command */
 #define ECMD_ADDBUF	0x10	/* don't edit, just add to buffer list */
 
+/* for lnum argument in do_ecmd() */
+#define ECMD_LASTL	(linenr_t)0	/* use last position in loaded file */
+#define ECMD_LAST	(linenr_t)-1	/* use last position in all files */
+#define ECMD_ONE	(linenr_t)1	/* use first line */
+
 /* flags for do_cmdline() */
 #define DOCMD_VERBOSE	0x01	/* included command in error message */
 #define DOCMD_NOWAIT	0x02	/* don't call wait_return() and friends */
@@ -442,13 +488,13 @@ typedef unsigned long	long_u;
 #define PUT_CURSEND	2	/* leave cursor after end of new text */
 
 /*
- * There are three history tables:
+ * There are four history tables:
  */
-#define HIST_CMD    0	    /* colon commands */
-#define HIST_SEARCH 1	    /* search commands */
-#define HIST_EXPR   2	    /* expressions (from entering | register) */
-#define HIST_INPUT  3	    /* input() lines */
-#define HIST_COUNT  4	    /* number of history tables */
+#define HIST_CMD    0		/* colon commands */
+#define HIST_SEARCH 1		/* search commands */
+#define HIST_EXPR   2		/* expressions (from entering = register) */
+#define HIST_INPUT  3		/* input() lines */
+#define HIST_COUNT  4		/* number of history tables */
 
 /*
  * Flags for chartab[].
@@ -483,6 +529,9 @@ typedef unsigned long	long_u;
 # define TAG_CSCOPE	16	/* cscope tag */
 #endif
 #define TAG_VERBOSE	32	/* message verbosity */
+#define TAG_INS_COMP	64	/* Currently doing insert completion */
+#define TAG_MANY	200	/* When finding many tags (for completion),
+				   find up to this many tags */
 
 /*
  * Types of dialogs passed to do_vim_dialog().
@@ -508,12 +557,24 @@ typedef unsigned long	long_u;
 #define DLG_BUTTON_SEP	'\n'
 #define DLG_HOTKEY_CHAR	'&'
 
+/* Values for "starting" */
+#define NO_SCREEN	2	/* no screen updating yet */
+#define NO_BUFFERS	1	/* not all buffers loaded yet */
+/*			0	   not starting anymore */
+
+/* Values for swap_exists_action: what to do when swap file already exists */
+#define SEA_NONE	0	/* don't use dialog */
+#define SEA_DIALOG	1	/* use dialog when */
+#define SEA_QUIT	2	/* quit editing the file */
+#define SEA_RECOVER	3	/* recover the file */
+
 /*
  * Events for autocommands.
  */
 enum auto_event
 {
-    EVENT_BUFDELETE = 0,	/* just before deleting a buffer */
+    EVENT_BUFCREATE = 0,	/* just after creating a buffer */
+    EVENT_BUFDELETE,		/* just before deleting a buffer */
     EVENT_BUFENTER,		/* after entering a buffer */
     EVENT_BUFFILEPOST,		/* after renaming a buffer */
     EVENT_BUFFILEPRE,		/* before renaming a buffer */
@@ -522,6 +583,7 @@ enum auto_event
     EVENT_BUFREADPOST,		/* after reading a buffer */
     EVENT_BUFREADPRE,		/* before reading a buffer */
     EVENT_BUFUNLOAD,		/* just before unloading a buffer */
+    EVENT_BUFHIDDEN,		/* just after buffer becomes hidden */
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
     EVENT_FILEAPPENDPOST,	/* after appending to a file */
@@ -529,14 +591,19 @@ enum auto_event
     EVENT_FILECHANGEDSHELL,	/* after shell command that changed file */
     EVENT_FILEREADPOST,		/* after reading a file */
     EVENT_FILEREADPRE,		/* before reading a file */
+    EVENT_FILETYPE,		/* new file type detected (user defined) */
     EVENT_FILEWRITEPOST,	/* after writing a file */
     EVENT_FILEWRITEPRE,		/* before writing a file */
     EVENT_FILTERREADPOST,	/* after reading from a filter */
     EVENT_FILTERREADPRE,	/* before reading from a filter */
     EVENT_FILTERWRITEPOST,	/* after writing to a filter */
     EVENT_FILTERWRITEPRE,	/* before writing to a filter */
+    EVENT_FOCUSGAINED,		/* got the focus */
+    EVENT_FOCUSLOST,		/* lost the focus to another app */
+    EVENT_GUIENTER,		/* after starting the GUI */
     EVENT_STDINREADPOST,	/* after reading from stdin */
     EVENT_STDINREADPRE,		/* before reading from stdin */
+    EVENT_SYNTAX,		/* syntax selected */
     EVENT_TERMCHANGED,		/* after changing 'term' */
     EVENT_USER,			/* user defined autocommand */
     EVENT_VIMENTER,		/* after starting Vim */
@@ -545,6 +612,7 @@ enum auto_event
     EVENT_WINENTER,		/* after entering a window */
     EVENT_WINLEAVE,		/* before leaving a window */
     EVENT_FILEENCODING,		/* after changing the file-encoding (set fe=) */
+    EVENT_CURSORHOLD,
     NUM_EVENTS			/* MUST be the last one */
 };
 
@@ -571,9 +639,15 @@ enum hlf_value
     HLF_SNC,	    /* status lines of not-current windows */
     HLF_T,	    /* Titles for output from ":set all", ":autocmd" etc. */
     HLF_V,	    /* Visual mode */
+    HLF_VNC,	    /* Visual mode, autoselecting and not clipboard owner */
     HLF_W,	    /* warning messages */
+    HLF_WM,	    /* Wildmenu highlight */
     HLF_COUNT	    /* MUST be the last one */
 };
+
+/* the HL_FLAGS must be in the same order as the HLF_ enums! */
+#define HL_FLAGS {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M', \
+		  'n', 'r', 's', 'S', 't', 'v', 'V', 'w', 'W'}
 
 /*
  * Boolean constants
@@ -589,22 +663,27 @@ enum hlf_value
 #define RET_ERROR		(-1)
 
 /*
- * Operator IDs; The order must correspond to op_chars[] in normal.c!
+ * Operator IDs; The order must correspond to opchars[] in ops.c!
  */
-#define OP_NOP	    0		/* no pending operation */
-#define OP_DELETE   1		/* "d"  delete operator */
-#define OP_YANK	    2		/* "y"  yank operator */
-#define OP_CHANGE   3		/* "c"  change operator */
-#define OP_LSHIFT   4		/* "<"  left shift operator */
-#define OP_RSHIFT   5		/* ">"  right shift operator */
-#define OP_FILTER   6		/* "!"  filter operator */
-#define OP_TILDE    7		/* "g~" switch case operator */
-#define OP_INDENT   8		/* "="  indent operator */
-#define OP_FORMAT   9		/* "gq" format operator */
-#define OP_COLON    10		/* ":"  colon operator */
-#define OP_UPPER    11		/* "gU" make upper case operator */
-#define OP_LOWER    12		/* "gu" make lower case operator */
-#define DO_JOIN	    13		/* "J"  join operator, only for visual mode */
+#define OP_NOP		0	/* no pending operation */
+#define OP_DELETE	1	/* "d"  delete operator */
+#define OP_YANK		2	/* "y"  yank operator */
+#define OP_CHANGE	3	/* "c"  change operator */
+#define OP_LSHIFT	4	/* "<"  left shift operator */
+#define OP_RSHIFT	5	/* ">"  right shift operator */
+#define OP_FILTER	6	/* "!"  filter operator */
+#define OP_TILDE	7	/* "g~" switch case operator */
+#define OP_INDENT	8	/* "="  indent operator */
+#define OP_FORMAT	9	/* "gq" format operator */
+#define OP_COLON	10	/* ":"  colon operator */
+#define OP_UPPER	11	/* "gU" make upper case operator */
+#define OP_LOWER	12	/* "gu" make lower case operator */
+#define OP_JOIN		13	/* "J"  join operator, only for Visual mode */
+#define OP_JOIN_NS	14	/* "gJ"  join operator, only for Visual mode */
+#define OP_ROT13	15	/* "g?" rot-13 encoding */
+#define OP_REPLACE	16	/* "r"  replace chars, only for Visual mode */
+#define OP_INSERT	17	/* "I"  Insert column, only for Visual mode */
+#define OP_APPEND	18	/* "A"  Append column, only for Visual mode */
 
 /*
  * Motion types, used for operators and for yank/delete registers.
@@ -723,6 +802,7 @@ typedef unsigned    colnr_t;	    /* column number type */
 #endif
 
 #define SHOWCMD_COLS 10		    /* columns needed by shown command */
+#define STL_MAX_ITEM 50		    /* max count of %<flag> in statusline*/
 
 /*
  * Include a prototype for mch_memmove(), it may not be in alloc.pro.
@@ -742,8 +822,13 @@ void mch_memmove __ARGS((void *, void *, size_t));
  * thus it is not 100% accurate!)
  */
 #ifdef CASE_INSENSITIVE_FILENAME
-# define fnamecmp(x, y) STRICMP((x), (y))
-# define fnamencmp(x, y, n) STRNICMP((x), (y), (n))
+# ifdef BACKSLASH_IN_FILENAME
+#  define fnamecmp(x, y) vim_fnamecmp((x), (y))
+#  define fnamencmp(x, y, n) vim_fnamencmp((x), (y), (size_t)(n))
+# else
+#  define fnamecmp(x, y) STRICMP((x), (y))
+#  define fnamencmp(x, y, n) STRNICMP((x), (y), (n))
+# endif
 #else
 # define fnamecmp(x, y) strcmp((char *)(x), (char *)(y))
 # define fnamencmp(x, y, n) strncmp((char *)(x), (char *)(y), (size_t)(n))
@@ -778,11 +863,6 @@ int vim_memcmp __ARGS((void *, void *, size_t));
  */
 #define vim_iswhite(x)	((x) == ' ' || (x) == '\t')
 
-/* GUI and MSDOS can change the shape of the cursor */
-#if defined(USE_GUI) || defined(MSDOS) || (defined(WIN32) && !defined(USE_GUI_WIN32))
-# define CURSOR_SHAPE
-#endif
-
 /* Note that gui.h is included by structs.h */
 
 #include "regexp.h"	    /* for struct regexp */
@@ -800,6 +880,7 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define MOUSE_CTRL	0x10
 
 /* 0x20 is reserved by xterm */
+# define MOUSE_DRAG_XTERM   0x40
 
 # define MOUSE_DRAG	(0x40 | MOUSE_RELEASE)
 
@@ -819,6 +900,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define IN_BUFFER	2
 # define IN_STATUS_LINE	3	    /* Or in command line */
 # define CURSOR_MOVED	0x100
+/* In addition get_fpos_of_mouse() may specify these */
+# define BEFORE_TEXTLINE	0x200
+# define AFTER_TEXTLINE		0x300
 
 /* flags for jump_to_mouse() */
 # define MOUSE_FOCUS		0x01	/* need to stay in this window */
@@ -832,6 +916,17 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 /* defines for eval_vars() */
 #define VALID_PATH		1
 #define VALID_HEAD		2
+
+/* defines for Vim variables (don't change them!) */
+#define VV_COUNT	0
+#define VV_COUNT1	1
+#define VV_ERRMSG	2
+#define VV_WARNINGMSG	3
+#define VV_STATUSMSG	4
+#define VV_SHELL_ERROR	5
+#define VV_THIS_SESSION	6
+#define VV_VERSION	7
+#define VV_LEN		8	/* number of v: vars */
 
 #ifdef USE_CLIPBOARD
 
@@ -870,10 +965,17 @@ typedef struct VimClipboard
     short_u	state;		    /* Current selection state */
     short_u	mode;		    /* Select by char, word, or line. */
 
-# ifdef USE_GUI_X11
-    Atom	atom;		    /* Vim's own special selection format */
+# if defined(USE_GUI_X11) || defined(XTERM_CLIP)
+    Atom	xatom;		    /* Vim's own special selection format */
+    Atom	xa_targets;
+    Atom	xa_text;
+    Atom	xa_compound_text;
 # endif
-# ifdef WIN32
+
+# ifdef USE_GUI_GTK
+    GdkAtom	atom;		    /* Vim's own special selection format */
+# endif
+# ifdef MSWIN
     int_u	format;		    /* Vim's own special clipboard format */
 # endif
 # ifdef USE_GUI_BEOS
@@ -903,9 +1005,9 @@ typedef struct VimClipboard
  * been seen at that stage.
  */
 #if !defined(USE_GUI_WIN32) && !defined(macintosh)
-# define mch_errmsg(str)	fprintf(stderr, (str))
+# define mch_errmsg(str)	fprintf(stderr, "%s", (str))
 # define mch_display_error()	fflush(stderr)
-# define mch_msg(str)		printf((str))
+# define mch_msg(str)		printf("%s", (str))
 #else
 # define mch_msg(str)		mch_errmsg((str))
 #endif
@@ -940,7 +1042,9 @@ typedef struct VimClipboard
 # pragma option -p.
 #endif
 
-#if !defined(MEM_PROFILE) && !defined(PROTO)
+#if defined(MEM_PROFILE)
+# define vim_realloc(ptr, size)  mem_realloc((ptr), (size))
+#else
 # define vim_realloc(ptr, size)  realloc((ptr), (size))
 #endif
 

@@ -58,6 +58,19 @@ typedef struct ucmd
 struct growarray ucmds = { 0, 0, sizeof(UCMD), 4, NULL };
 
 #define USER_CMD(i) (&((UCMD *)(ucmds.ga_data))[i])
+
+static void do_ucmd __ARGS((UCMD *cmd, EXARG *eap));
+static void do_command __ARGS((EXARG *eap));
+static void do_comclear __ARGS((void));
+static void do_delcommand __ARGS((EXARG *eap));
+# ifdef CMDLINE_COMPL
+static char_u * get_user_command_name __ARGS((int idx));
+# endif
+
+#endif
+
+#ifndef WANT_EVAL
+static int	if_level = 0;		/* depth in :if */
 #endif
 
 #ifdef WANT_EVAL
@@ -66,8 +79,7 @@ static char_u	*do_one_cmd __ARGS((char_u **, int, struct condstack *, char_u *(*
 #else
 static char_u	*do_one_cmd __ARGS((char_u **, int, char_u *(*getline)(int, void *, int), void *cookie));
 #endif
-static int	buf_write_all __ARGS((BUF *));
-static int	do_write __ARGS((EXARG *eap));
+static void	goto_buffer __ARGS((EXARG *eap, int start, int dir, int count));
 static char_u	*getargcmd __ARGS((char_u **));
 static char_u	*skip_cmd_arg __ARGS((char_u *p));
 #ifdef QUICKFIX
@@ -76,44 +88,42 @@ static char_u	*get_mef_name __ARGS((int newname));
 static void	do_cfile __ARGS((EXARG *eap));
 #endif
 static int	do_arglist __ARGS((char_u *));
-static int	rem_backslash __ARGS((char_u *str));
-static int	check_readonly __ARGS((int *forceit));
-static int	check_changed __ARGS((BUF *, int, int, int, int));
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-static void	dialog_changed __ARGS((BUF *buf, int checkall));
-#endif
 #if defined(USE_BROWSE) && (defined(GUI_DIALOG) || defined(CON_DIALOG))
 static void	browse_save_fname __ARGS((BUF *buf));
 #endif
 static int	check_more __ARGS((int, int));
 static linenr_t get_address __ARGS((char_u **, int skip));
-static char_u *	invalid_range __ARGS((EXARG *eap));
+static char_u	*invalid_range __ARGS((EXARG *eap));
 static void	correct_range __ARGS((EXARG *eap));
+static char_u	*repl_cmdline __ARGS((EXARG *eap, char_u *src, int srclen, char_u *repl, char_u **cmdlinep));
 static void	do_quit __ARGS((EXARG *eap));
 static void	do_quit_all __ARGS((int forceit));
-static void	do_close __ARGS((EXARG *eap));
+static void	do_close __ARGS((EXARG *eap, WIN *win));
+static void	do_pclose __ARGS((EXARG *eap));
 static void	do_suspend __ARGS((int forceit));
 static void	do_exit __ARGS((EXARG *eap));
-static void	do_wqall __ARGS((EXARG *eap));
 static void	do_print __ARGS((EXARG *eap));
-static void	do_argfile __ARGS((EXARG *eap, int argn));
 static void	do_next __ARGS((EXARG *eap));
 static void	do_recover __ARGS((EXARG *eap));
 static void	do_args __ARGS((EXARG *eap));
-static void	do_wnext __ARGS((EXARG *eap));
 static void	do_resize __ARGS((EXARG *eap));
 static void	do_splitview __ARGS((EXARG *eap));
+static void	do_find __ARGS((EXARG *eap));
 static void	do_exedit __ARGS((EXARG *eap, WIN *old_curwin));
 #ifdef USE_GUI
 static void	do_gui __ARGS((EXARG *eap));
 #endif
 static void	do_swapname __ARGS((void));
+static void	do_syncbind __ARGS((void));
 static void	do_read __ARGS((EXARG *eap));
 static void	do_cd __ARGS((EXARG *eap));
 static void	do_pwd __ARGS((void));
 static void	do_sleep __ARGS((EXARG *eap));
 static void	do_exmap __ARGS((EXARG *eap, int isabbrev));
 static void	do_winsize __ARGS((char_u *arg));
+#if defined(USE_GUI) || defined(UNIX)
+static void	do_winpos __ARGS((char_u *arg));
+#endif
 static void	do_exops __ARGS((EXARG *eap));
 static void	do_copymove __ARGS((EXARG *eap));
 static void	do_exjoin __ARGS((EXARG *eap));
@@ -129,7 +139,7 @@ static void	do_normal __ARGS((EXARG *eap));
 #ifdef FIND_IN_PATH
 static char_u	*do_findpat __ARGS((EXARG *eap, int action));
 #endif
-static void	do_ex_tag __ARGS((EXARG *eap, int dt));
+static void	do_ex_tag __ARGS((EXARG *eap, int dt, int preview));
 #ifdef WANT_EVAL
 static char_u	*do_if __ARGS((EXARG *eap, struct condstack *cstack));
 static char_u	*do_else __ARGS((EXARG *eap, struct condstack *cstack));
@@ -140,24 +150,19 @@ static char_u	*do_endwhile __ARGS((struct condstack *cstack));
 static int	has_while_cmd __ARGS((char_u *p));
 static int	did_endif = FALSE;	/* just had ":endif" */
 #endif
+#ifdef MKSESSION
 static int	makeopens __ARGS((FILE *fd));
-static int	put_eol __ARGS((FILE *fd));
+static int	ses_fname_line __ARGS((FILE *fd, char *cmd, linenr_t lnum, BUF *buf));
+static int	ses_fname __ARGS((FILE *fd, BUF *buf));
+#endif
 static void	cmd_source __ARGS((char_u *fname, int forceit));
-#ifdef USER_COMMANDS
-static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int compl, int force));
-static void	uc_list __ARGS((char_u *name, size_t name_len));
-static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *compl));
-static void	do_command __ARGS((EXARG *eap));
-static void	do_comclear __ARGS((void));
-static void	do_delcommand __ARGS((EXARG *eap));
-static char_u	*uc_split_args __ARGS((char_u *arg, size_t *lenp));
-static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, UCMD *cmd, EXARG *eap, char_u **split_buf, size_t *split_len));
-static void	do_ucmd __ARGS((UCMD *cmd, EXARG *eap));
-#endif
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-static void	dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
-#endif
 static void	ex_behave __ARGS((char_u *arg));
+#ifdef AUTOCMD
+static void	ex_filetype __ARGS((char_u *arg));
+#endif
+#if defined(WANT_EVAL) && defined(AUTOCMD)
+static void	ex_options __ARGS((void));
+#endif
 
 /*
  * Table used to quickly search for a command, based on its first character.
@@ -190,7 +195,7 @@ CMDIDX cmdidxs[27] =
 	CMD_xit,
 	CMD_yank,
 	CMD_z,
-	CMD_Next
+	CMD_bang
 };
 
 /*
@@ -211,11 +216,15 @@ do_exmode()
 
     State = NORMAL;
     exmode_active = TRUE;
+#ifdef USE_GUI
+    /* Ignore scrollbar and mouse events in Ex mode */
+    ++hold_gui_events;
+#endif
 #ifdef USE_SNIFF
     want_sniff_request = 0;    /* No K_SNIFF wanted */
 #endif
 
-    MSG("Entering Ex mode.  Type \"visual\" to get out.");
+    MSG("Entering Ex mode.  Type \"visual\" to go to Normal mode.");
     while (exmode_active)
     {
 
@@ -249,6 +258,9 @@ do_exmode()
 	    EMSG("At end-of-file");
     }
 
+#ifdef USE_GUI
+    --hold_gui_events;
+#endif
     settmode(TMODE_RAW);
     --RedrawingDisabled;
     --no_wait_return;
@@ -591,7 +603,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 	    msg_didany = FALSE;		/* don't wait when restarting edit */
 	    redraw_later(NOT_VALID);
 	}
-	else if ((need_wait_return || (msg_check() && !dont_wait_return)))
+	else if (need_wait_return)
 	{
 	    /*
 	     * The msg_start() above clears msg_didout. The wait_return we do
@@ -608,6 +620,14 @@ do_cmdline(cmdline, getline, cookie, flags)
 #endif
 #if defined(GUI_DIALOG) || defined(CON_DIALOG)
     confirm = save_confirm;
+#endif
+
+#ifndef WANT_EVAL
+    /*
+     * Reset if_level, in case a sourced script file contains more ":if" than
+     * ":endif" (could be ":if x | foo | endif").
+     */
+    if_level = 0;
 #endif
 
     return retval;
@@ -642,6 +662,13 @@ free_cmdlines(gap)
  *
  * This function may be called recursively!
  */
+#if (_MSC_VER == 1200)
+/*
+ * Optimisation bug in VC++ version 6.0
+ * TODO: check this is still present after each service pack
+ */
+#pragma optimize( "g", off )
+#endif
     static char_u *
 do_one_cmd(cmdlinep, sourcing,
 #ifdef WANT_EVAL
@@ -691,7 +718,7 @@ do_one_cmd(cmdlinep, sourcing,
     ea.skip = did_emsg || (cstack->cs_idx >= 0
 			 && !(cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE));
 #else
-    ea.skip = FALSE;
+    ea.skip = (if_level > 0);
 #endif
 
 /*
@@ -735,9 +762,7 @@ do_one_cmd(cmdlinep, sourcing,
 		FPOS	    *fp;
 
 		++ea.cmd;
-#ifdef WANT_EVAL
 		if (!ea.skip)
-#endif
 		{
 		    fp = getmark('<', FALSE);
 		    if (check_mark(fp) == FAIL)
@@ -757,9 +782,7 @@ do_one_cmd(cmdlinep, sourcing,
 
 	if (*ea.cmd == ';')
 	{
-#ifdef WANT_EVAL
 	    if (!ea.skip)
-#endif
 		curwin->w_cursor.lnum = ea.line2;
 	}
 	else if (*ea.cmd != ',')
@@ -803,10 +826,8 @@ do_one_cmd(cmdlinep, sourcing,
 	 * ":3|..."	prints line 3
 	 * ":|"		prints current line
 	 */
-#ifdef WANT_EVAL
 	if (ea.skip)	    /* skip this if inside :if */
 	    goto doend;
-#endif
 	if (*ea.cmd == '|')
 	{
 	    ea.cmdidx = CMD_print;
@@ -819,7 +840,9 @@ do_one_cmd(cmdlinep, sourcing,
 	}
 	else if (ea.addr_count != 0)
 	{
-	    if (ea.line2 == 0)
+	    if (ea.line2 < 0)
+		errormsg = invalid_range(&ea);
+	    else if (ea.line2 == 0)
 		curwin->w_cursor.lnum = 1;
 	    else if (ea.line2 > curbuf->b_ml.ml_line_count)
 		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
@@ -875,42 +898,70 @@ do_one_cmd(cmdlinep, sourcing,
 
 #ifdef USER_COMMANDS
 	/* Look for a user defined command as a last resort */
-	if (ea.cmdidx == CMD_SIZE)
+	if (ea.cmdidx == CMD_SIZE && *ea.cmd >= 'A' && *ea.cmd <= 'Z')
 	{
 	    UCMD    *cmd = USER_CMD(0);
-	    int	    j;
-	    int	    found = FALSE;
+	    int	    j, k, matchlen = 0;
+	    int	    found = FALSE, possible = FALSE;
+	    char_u  *cp, *np;	/* Pointers into typed cmd and test name */
+
+	    /* User defined commands may contain numbers */
+	    while (isalnum(*p))
+		++p;
+	    i = (int)(p - ea.cmd);
 
 	    for (j = 0; j < ucmds.ga_len; ++j, ++cmd)
 	    {
-		if (STRNCMP(cmd->uc_name, (char *)ea.cmd, (size_t)i) == 0)
+		cp = ea.cmd;
+		np = cmd->uc_name;
+		k = 0;
+		while (k < i && *np != NUL && *cp++ == *np++)
+		    k++;
+		if (k == i || (*np == NUL && isdigit(ea.cmd[k])))
 		{
-		    if (found)
+		    if (k == i && found)
 		    {
 			errormsg = (char_u *)"Ambiguous use of user-defined command";
 			goto doend;
 		    }
 
-		    found = TRUE;
-		    ea.cmdidx = CMD_USER;
-		    ea.argt = cmd->uc_argt;
-		    ea.useridx = j;
+		    if (!found)
+		    {
+			/* If we matched up to a digit, then there could be
+			 * another command including the digit that we should
+			 * use instead.
+			 */
+			if (k == i)
+			    found = TRUE;
+			else
+			    possible = TRUE;
 
-		    /* Do not search for further abbreviations
-		     * if this is an exact match
-		     */
-		    if ((size_t)i == STRLEN(cmd->uc_name))
-			break;
+			ea.cmdidx = CMD_USER;
+			ea.argt = cmd->uc_argt;
+			ea.useridx = j;
+
+			matchlen = k;
+
+			/* Do not search for further abbreviations
+			 * if this is an exact match
+			 */
+			if (k == i && *np == NUL)
+			    break;
+		    }
 		}
 	    }
+
+	    /* The match we found may be followed immediately by a
+	     * number.  Move *p back to point to it.
+	     */
+	    if (found || possible)
+		p += matchlen - i;
 	}
 #endif
 
 	if (i == 0 || ea.cmdidx == CMD_SIZE)
 	{
-#ifdef WANT_EVAL
 	    if (!ea.skip)
-#endif
 	    {
 		STRCPY(IObuff, "Not an editor command");
 		if (!sourcing)
@@ -923,6 +974,22 @@ do_one_cmd(cmdlinep, sourcing,
 	    goto doend;
 	}
     }
+
+#ifndef WANT_EVAL
+    /*
+     * When the expression evaluation is disabled, recognize the ":if" and
+     * ":endif" commands and ignore everything in between it.
+     */
+    if (ea.cmdidx == CMD_if)
+	++if_level;
+    if (if_level)
+    {
+	if (ea.cmdidx == CMD_endif)
+	    --if_level;
+	goto doend;
+    }
+
+#endif
 
     if (*p == '!' && ea.cmdidx != CMD_substitute)    /* forced commands */
     {
@@ -987,22 +1054,49 @@ do_one_cmd(cmdlinep, sourcing,
 
 #ifdef QUICKFIX
     /*
-     * For the :make command we insert the 'makeprg' option here,
-     * so things like % get expanded.
+     * For the :make and :grep commands we insert the 'makeprg'/'grepprg'
+     * option here, so things like % get expanded.
      */
     if (ea.cmdidx == CMD_make || ea.cmdidx == CMD_grep)
     {
 	char_u		*new_cmdline;
 	char_u		*program;
+	char_u		*pos;
+	char_u		*ptr;
+	int		len;
 
 	program = (ea.cmdidx == CMD_grep) ? p_gp : p_mp;
+	p = skipwhite(p);
 
-	new_cmdline = alloc((int)(STRLEN(program) + STRLEN(p) + 2));
-	if (new_cmdline == NULL)
-	    goto doend;		    /* out of memory */
-	STRCPY(new_cmdline, program);
-	STRCAT(new_cmdline, " ");
-	STRCAT(new_cmdline, p);
+	if ((pos = (char_u *)strstr((char *)program, "$*")) != NULL)
+	{				/* replace $* by given arguments */
+	    i = 1;
+	    while ((pos = (char_u *)strstr((char *)pos + 2, "$*")) != NULL)
+		++i;
+	    len = STRLEN(p);
+	    new_cmdline = alloc((int)(STRLEN(program) + i * (len - 2) + 1));
+	    if (new_cmdline == NULL)
+		goto doend;		    /* out of memory */
+	    ptr = new_cmdline;
+	    while ((pos = (char_u *)strstr((char *)program, "$*")) != NULL)
+	    {
+		i = (int)(pos - program);
+		STRNCPY(ptr, program, i);
+		STRCPY(ptr += i, p);
+		ptr += len;
+		program = pos + 2;
+	    }
+	    STRCPY(ptr, program);
+	}
+	else
+	{
+	    new_cmdline = alloc((int)(STRLEN(program) + STRLEN(p) + 2));
+	    if (new_cmdline == NULL)
+		goto doend;		    /* out of memory */
+	    STRCPY(new_cmdline, program);
+	    STRCAT(new_cmdline, " ");
+	    STRCAT(new_cmdline, p);
+	}
 	msg_make(p);
 	/* 'ea.cmd' is not set here, because it is not used at CMD_make */
 	vim_free(*cmdlinep);
@@ -1177,8 +1271,8 @@ do_one_cmd(cmdlinep, sourcing,
 
     if (ea.argt & XFILE)
     {
-	 if (expand_filename(&ea, cmdlinep, &errormsg) == FAIL)
-	     goto doend;
+	if (expand_filename(&ea, cmdlinep, &errormsg) == FAIL)
+	    goto doend;
     }
 
 #ifdef WANT_EVAL
@@ -1273,7 +1367,11 @@ do_one_cmd(cmdlinep, sourcing,
 		break;
 
 	case CMD_close:
-		do_close(&ea);
+		do_close(&ea, curwin);
+		break;
+
+	case CMD_pclose:
+		do_pclose(&ea);
 		break;
 
 	case CMD_hide:
@@ -1337,7 +1435,11 @@ do_one_cmd(cmdlinep, sourcing,
 	case CMD_sprevious:
 	case CMD_Next:
 	case CMD_sNext:
-		do_argfile(&ea, curwin->w_arg_idx - (int)ea.line2);
+		/* If past the last one already, go to the last one. */
+		if (curwin->w_arg_idx - (int)ea.line2 >= arg_file_count)
+		    do_argfile(&ea, arg_file_count - 1);
+		else
+		    do_argfile(&ea, curwin->w_arg_idx - (int)ea.line2);
 		break;
 
 	case CMD_rewind:
@@ -1373,46 +1475,37 @@ do_one_cmd(cmdlinep, sourcing,
 		else
 		{
 		    if (ea.addr_count == 0)	/* default is current buffer */
-			(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT
-						       : DOBUF_GOTO,
-				       DOBUF_CURRENT, FORWARD, 0, ea.forceit);
+			goto_buffer(&ea, DOBUF_CURRENT, FORWARD, 0);
 		    else
-			(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT
-						       : DOBUF_GOTO,
-			     DOBUF_FIRST, FORWARD, (int)ea.line2, ea.forceit);
+			goto_buffer(&ea, DOBUF_FIRST, FORWARD, (int)ea.line2);
 		}
 		break;
 
 	case CMD_bmodified:	/* :[N]bmod [N]		to next mod. buffer */
 	case CMD_sbmodified:	/* :[N]sbmod [N]	to next mod. buffer */
-		(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
-			       DOBUF_MOD, FORWARD, (int)ea.line2, ea.forceit);
+		goto_buffer(&ea, DOBUF_MOD, FORWARD, (int)ea.line2);
 		break;
 
 	case CMD_bnext:		/* :[N]bnext [N]	to next buffer */
 	case CMD_sbnext:	/* :[N]sbnext [N]	to next buffer */
-		(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
-			   DOBUF_CURRENT, FORWARD, (int)ea.line2, ea.forceit);
+		goto_buffer(&ea, DOBUF_CURRENT, FORWARD, (int)ea.line2);
 		break;
 
 	case CMD_bNext:		/* :[N]bNext [N]	to previous buffer */
 	case CMD_bprevious:	/* :[N]bprevious [N]	to previous buffer */
 	case CMD_sbNext:	/* :[N]sbNext [N]	to previous buffer */
 	case CMD_sbprevious:	/* :[N]sbprevious [N]	to previous buffer */
-		(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
-			  DOBUF_CURRENT, BACKWARD, (int)ea.line2, ea.forceit);
+		goto_buffer(&ea, DOBUF_CURRENT, BACKWARD, (int)ea.line2);
 		break;
 
 	case CMD_brewind:	/* :brewind		to first buffer */
 	case CMD_sbrewind:	/* :sbrewind		to first buffer */
-		(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
-					 DOBUF_FIRST, FORWARD, 0, ea.forceit);
+		goto_buffer(&ea, DOBUF_FIRST, FORWARD, 0);
 		break;
 
 	case CMD_blast:		/* :blast		to last buffer */
 	case CMD_sblast:	/* :sblast		to last buffer */
-		(void)do_buffer(*ea.cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
-					  DOBUF_LAST, FORWARD, 0, ea.forceit);
+		goto_buffer(&ea, DOBUF_LAST, FORWARD, 0);
 		break;
 
 	case CMD_bunload:	/* :[N]bunload[!] [N] [bufname] unload buffer */
@@ -1471,6 +1564,7 @@ do_one_cmd(cmdlinep, sourcing,
 	case CMD_sview:
 	case CMD_split:
 	case CMD_new:
+	case CMD_sfind:
 		do_splitview(&ea);
 		break;
 
@@ -1482,23 +1576,41 @@ do_one_cmd(cmdlinep, sourcing,
 		do_exedit(&ea, NULL);
 		break;
 
-#ifdef USE_GUI
+	case CMD_find:
+		do_find(&ea);
+		break;
+
 	/*
 	 * Change from the terminal version to the GUI version.  File names
 	 * may be given to redefine the args list -- webb
 	 */
 	case CMD_gvim:
 	case CMD_gui:
+#ifdef USE_GUI
 		do_gui(&ea);
-		break;
+#else
+		emsg(e_nogvim);
 #endif
-#ifdef USE_GUI_WIN32
+		break;
+#if defined(USE_GUI_WIN32) && defined(WANT_MENU)
 	case CMD_tearoff:
 		gui_make_tearoff(ea.arg);
 		break;
 #endif
+	case CMD_exemenu:
+#ifdef WANT_MENU
+		execute_menu(ea.arg);
+#endif
+		break;
+
 	case CMD_behave:
 		ex_behave(ea.arg);
+		break;
+
+	case CMD_filetype:
+#ifdef AUTOCMD
+		ex_filetype(ea.arg);
+#endif
 		break;
 
 	case CMD_browse:
@@ -1509,15 +1621,23 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 		ea.nextcmd = ea.arg;
 		break;
-#ifdef USE_GUI_WIN32
+#ifdef USE_GUI_MSWIN
 	case CMD_simalt:
 		gui_simulate_alt_key(ea.arg);
 		break;
+#endif
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_GTK)
 	case CMD_promptfind:
-		gui_mch_find_dialog(ea.arg);
+#ifndef ALWAYS_USE_GUI
+		if (gui.in_use)
+#endif
+		    gui_mch_find_dialog(ea.arg);
 		break;
 	case CMD_promptrepl:
-		gui_mch_replace_dialog(ea.arg);
+#ifndef ALWAYS_USE_GUI
+		if (gui.in_use)
+#endif
+		    gui_mch_replace_dialog(ea.arg);
 		break;
 #endif
 	case CMD_confirm:
@@ -1533,6 +1653,10 @@ do_one_cmd(cmdlinep, sourcing,
 
 	case CMD_swapname:
 		do_swapname();
+		break;
+
+	case CMD_syncbind:
+		do_syncbind();
 		break;
 
 	case CMD_read:
@@ -1566,6 +1690,12 @@ do_one_cmd(cmdlinep, sourcing,
 		do_print(&ea);
 		break;
 
+#ifdef BYTE_OFFSET
+	case CMD_goto:
+		goto_byte(ea.line2);
+		break;
+#endif
+
 	case CMD_shell:
 		do_shell(NULL, 0);
 		break;
@@ -1574,6 +1704,9 @@ do_one_cmd(cmdlinep, sourcing,
 		do_sleep(&ea);
 		break;
 
+	case CMD_ptag:
+		g_do_tagpreview = p_pvh; /* postponed_split will be ignored */
+		/*FALLTHROUGH*/
 	case CMD_stag:
 		postponed_split = -1;
 		/*FALLTHROUGH*/
@@ -1587,6 +1720,9 @@ do_one_cmd(cmdlinep, sourcing,
 			ea.addr_count ? (int)ea.line2 : 1, ea.forceit, TRUE);
 		break;
 
+	case CMD_ptselect:
+		g_do_tagpreview = p_pvh; /* postponed_split will be ignored */
+		/*FALLTHROUGH*/
 	case CMD_stselect:
 		postponed_split = -1;
 		/*FALLTHROUGH*/
@@ -1594,6 +1730,9 @@ do_one_cmd(cmdlinep, sourcing,
 		do_tag(ea.arg, DT_SELECT, 0, ea.forceit, TRUE);
 		break;
 
+	case CMD_ptjump:
+		g_do_tagpreview = p_pvh; /* postponed_split will be ignored */
+		/*FALLTHROUGH*/
 	case CMD_stjump:
 		postponed_split = -1;
 		/*FALLTHROUGH*/
@@ -1601,12 +1740,19 @@ do_one_cmd(cmdlinep, sourcing,
 		do_tag(ea.arg, DT_JUMP, 0, ea.forceit, TRUE);
 		break;
 
-	case CMD_pop:		do_ex_tag(&ea, DT_POP); break;
-	case CMD_tnext:		do_ex_tag(&ea, DT_NEXT); break;
+	case CMD_pop:		do_ex_tag(&ea, DT_POP, FALSE); break;
+	case CMD_tnext:		do_ex_tag(&ea, DT_NEXT, FALSE); break;
 	case CMD_tNext:
-	case CMD_tprevious:	do_ex_tag(&ea, DT_PREV); break;
-	case CMD_trewind:	do_ex_tag(&ea, DT_FIRST); break;
-	case CMD_tlast:		do_ex_tag(&ea, DT_LAST); break;
+	case CMD_tprevious:	do_ex_tag(&ea, DT_PREV, FALSE); break;
+	case CMD_trewind:	do_ex_tag(&ea, DT_FIRST, FALSE); break;
+	case CMD_tlast:		do_ex_tag(&ea, DT_LAST, FALSE); break;
+
+	case CMD_ppop:		do_ex_tag(&ea, DT_POP, TRUE); break;
+	case CMD_ptnext:	do_ex_tag(&ea, DT_NEXT, TRUE); break;
+	case CMD_ptNext:
+	case CMD_ptprevious:	do_ex_tag(&ea, DT_PREV, TRUE); break;
+	case CMD_ptrewind:	do_ex_tag(&ea, DT_FIRST, TRUE); break;
+	case CMD_ptlast:	do_ex_tag(&ea, DT_LAST, TRUE); break;
 
 	case CMD_tags:
 		do_tags();
@@ -1651,7 +1797,12 @@ do_one_cmd(cmdlinep, sourcing,
 		break;
 
 	case CMD_set:
-		(void)do_set(ea.arg);
+#if defined(WANT_EVAL) && defined(AUTOCMD) && defined(USE_BROWSE)
+		if (browse)
+		    ex_options();
+		else
+#endif
+		    (void)do_set(ea.arg, FALSE);
 		break;
 
 	case CMD_fixdel:
@@ -1750,7 +1901,7 @@ do_one_cmd(cmdlinep, sourcing,
 		map_clear(ea.cmd, TRUE, TRUE);
 		break;
 
-#ifdef USE_GUI
+#ifdef WANT_MENU
 	case CMD_menu:	    case CMD_noremenu:	    case CMD_unmenu:
 	case CMD_amenu:	    case CMD_anoremenu:	    case CMD_aunmenu:
 	case CMD_nmenu:	    case CMD_nnoremenu:	    case CMD_nunmenu:
@@ -1776,9 +1927,23 @@ do_one_cmd(cmdlinep, sourcing,
 		do_version(ea.arg);
 		break;
 
+	case CMD_history:
+		do_history(ea.arg);
+		break;
+
+	case CMD_messages:
+		ex_messages();
+		break;
+
 	case CMD_winsize:
 		do_winsize(ea.arg);
 		break;
+
+#if defined(USE_GUI) || defined(UNIX)
+	case CMD_winpos:
+		do_winpos(ea.arg);
+		break;
+#endif
 
 	case CMD_delete:
 	case CMD_yank:
@@ -1868,7 +2033,7 @@ do_one_cmd(cmdlinep, sourcing,
 		    }
 		    break;
 		}
-#endif /* USE_BROWSE */
+#endif
 		if (*ea.arg == NUL)
 		    emsg(e_argreq);
 		else
@@ -1892,15 +2057,17 @@ do_one_cmd(cmdlinep, sourcing,
 		write_viminfo(ea.arg, ea.forceit);
 		p_viminfo = p;
 		break;
-#endif /* VIMINFO */
+#endif
 
 	case CMD_redir:
 		do_redir(&ea);
 		break;
 
+#ifdef MKSESSION
 	case CMD_mksession:
 		do_mkrc(&ea, (char_u *)SESSION_FILE);
 		break;
+#endif
 
 	case CMD_mkvimrc:
 		do_mkrc(&ea, (char_u *)VIMRC_FILE);
@@ -1920,7 +2087,7 @@ do_one_cmd(cmdlinep, sourcing,
 		break;
 
 	case CMD_clist:
-		qf_list(ea.forceit);
+		qf_list(ea.arg, ea.forceit);
 		break;
 
 	case CMD_crewind:
@@ -1933,6 +2100,11 @@ do_one_cmd(cmdlinep, sourcing,
 
 	case CMD_cnext:
 		qf_jump(FORWARD, ea.addr_count ? (int)ea.line2 : 1, ea.forceit);
+		break;
+
+	case CMD_cnfile:
+		qf_jump(FORWARD_FILE, ea.addr_count ? (int)ea.line2 : 1,
+								  ea.forceit);
 		break;
 
 	case CMD_colder:
@@ -2109,17 +2281,35 @@ do_one_cmd(cmdlinep, sourcing,
 #endif /* WANT_EVAL */
 
 	case CMD_insert:
-		do_append(ea.line2 - 1, getline, cookie);
+		do_append(ea.line2 - 1, getline, cookie,
+#ifdef WANT_EVAL
+			cstack->cs_whilelevel > 0
+#else
+			FALSE
+#endif
+			);
 		ex_no_reprint = TRUE;
 		break;
 
 	case CMD_append:
-		do_append(ea.line2, getline, cookie);
+		do_append(ea.line2, getline, cookie,
+#ifdef WANT_EVAL
+			cstack->cs_whilelevel > 0
+#else
+			FALSE
+#endif
+			);
 		ex_no_reprint = TRUE;
 		break;
 
 	case CMD_change:
-		do_change(ea.line1, ea.line2, getline, cookie);
+		do_change(ea.line1, ea.line2, getline, cookie,
+#ifdef WANT_EVAL
+			cstack->cs_whilelevel > 0
+#else
+			FALSE
+#endif
+			);
 		ex_no_reprint = TRUE;
 		break;
 
@@ -2179,6 +2369,30 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 		break;
 
+	case CMD_startinsert:
+		if (ea.forceit)
+		{
+		    coladvance(MAXCOL);
+		    curwin->w_curswant = MAXCOL;
+		}
+		restart_edit = 'i';
+		break;
+
+#ifdef CRYPTV
+	case CMD_X:
+		(void)get_crypt_key(TRUE);
+		break;
+#endif
+#ifdef USE_GUI_GTK
+	case CMD_helpfind:
+		do_helpfind();
+		break;
+#endif
+#if defined(WANT_EVAL) && defined(AUTOCMD)
+	case CMD_options:
+		ex_options();
+		break;
+#endif
 	default:
 		/* Illegal commands have already been handled */
 		errormsg = (char_u *)"Sorry, this command is not implemented";
@@ -2191,16 +2405,70 @@ doend:
 
     if (errormsg != NULL && *errormsg != NUL && !did_emsg)
     {
-	emsg(errormsg);
 	if (sourcing)
 	{
-	    MSG_PUTS(": ");
-	    msg_outtrans(*cmdlinep);
+	    if (errormsg != IObuff)
+	    {
+		STRCPY(IObuff, errormsg);
+		errormsg = IObuff;
+	    }
+	    STRCAT(errormsg, ": ");
+	    STRNCAT(errormsg, *cmdlinep, IOSIZE - STRLEN(IObuff));
 	}
+	emsg(errormsg);
     }
     if (ea.nextcmd && *ea.nextcmd == NUL)	/* not really a next command */
 	ea.nextcmd = NULL;
     return ea.nextcmd;
+}
+#if (_MSC_VER == 1200)
+#pragma optimize( "", on )
+#endif
+
+/*
+ * Go to another buffer.  Handles the result of the ATTENTION dialog.
+ */
+    static void
+goto_buffer(eap, start, dir, count)
+    EXARG	*eap;
+    int		start;
+    int		dir;
+    int		count;
+{
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+    BUF		*old_curbuf = curbuf;
+
+    swap_exists_action = SEA_DIALOG;
+#endif
+    (void)do_buffer(*eap->cmd == 's' ? DOBUF_SPLIT : DOBUF_GOTO,
+					     start, dir, count, eap->forceit);
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+    if (swap_exists_action == SEA_QUIT)
+    {
+	/* User selected Quit at ATTENTION prompt.  Go back to
+	 * previous buffer.  If that buffer is gone or the same as the
+	 * current one, open a new, empty buffer. */
+	if (*eap->cmd == 's')
+	    close_window(curwin, TRUE);
+	else
+	{
+	    swap_exists_action = SEA_NONE;	/* don't want it again */
+	    close_buffer(curwin, curbuf, TRUE, FALSE);
+	    if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
+		old_curbuf = buflist_new(NULL, NULL, 1L, TRUE);
+	    enter_buffer(old_curbuf);
+	}
+    }
+    else if (swap_exists_action == SEA_RECOVER)
+    {
+	/* User selected Recover at ATTENTION prompt. */
+	ml_recover();
+	MSG_PUTS("\n");	/* don't overwrite the last message */
+	cmdline_row = msg_row;
+	do_modelines();
+    }
+    swap_exists_action = SEA_NONE;
+#endif
 }
 
 /*
@@ -2320,13 +2588,22 @@ set_one_cmd_context(buff)
 					   cmdidx = (CMDIDX)((int)cmdidx + 1))
 	    if (STRNCMP(cmdnames[(int)cmdidx].cmd_name, cmd, (size_t)i) == 0)
 		break;
+#ifdef USER_COMMANDS
+
+	if (cmd[0] >= 'A' && cmd[0] <= 'Z')
+	{
+	    while (isalnum(*p) || *p == '*')	/* Allow * wild card */
+		++p;
+	    i = (int)(p - cmd);
+	}
+#endif
     }
 
     /*
-     * If the cursor is touching the command, and it ends in an alphabetic
+     * If the cursor is touching the command, and it ends in an alpha-numeric
      * character, complete the command name.
      */
-    if (*p == NUL && isalpha(p[-1]))
+    if (*p == NUL && isalnum(p[-1]))
 	return NULL;
 
     if (cmdidx == CMD_SIZE)
@@ -2336,45 +2613,69 @@ set_one_cmd_context(buff)
 	    cmdidx = CMD_substitute;
 	    p = cmd + 1;
 	}
-	else
-	{
 #ifdef USER_COMMANDS
+	else if (cmd[0] >= 'A' && cmd[0] <= 'Z')
+	{
 	    /* Look for a user defined command as a last resort */
 	    UCMD *c = USER_CMD(0);
-	    int j;
-	    int found = FALSE;
+	    int j, k, matchlen = 0;
+	    int found = FALSE, possible = FALSE;
+	    char_u *cp, *np;	/* Pointers into typed cmd and test name */
 
 	    for (j = 0; j < ucmds.ga_len; ++j, ++c)
 	    {
-		if (STRNCMP(c->uc_name, cmd, (size_t)i) == 0)
+		cp = cmd;
+		np = c->uc_name;
+		k = 0;
+		while (k < i && *np != NUL && *cp++ == *np++)
+		    k++;
+		if (k == i || (*np == NUL && isdigit(cmd[k])))
 		{
-		    if (found)
+		    if (k == i && found)
 		    {
 			/* Ambiguous abbreviation */
 			expand_context = EXPAND_UNSUCCESSFUL;
 			return NULL;
 		    }
-		    found = TRUE;
-		    cmdidx = CMD_USER;
-		    argt = c->uc_argt;
-		    compl = c->uc_compl;
+		    if (!found)
+		    {
+			/* If we matched up to a digit, then there could be
+			 * another command including the digit that we should
+			 * use instead.
+			 */
+			if (k == i)
+			    found = TRUE;
+			else
+			    possible = TRUE;
 
-		    /* Do not search for further abbreviations
-		     * if this is an exact match
-		     */
-		    if ((size_t)i == STRLEN(c->uc_name))
-			break;
+			cmdidx = CMD_USER;
+			argt = c->uc_argt;
+			compl = c->uc_compl;
+
+			matchlen = k;
+
+			/* Do not search for further abbreviations
+			 * if this is an exact match
+			 */
+			if (k == i && *np == NUL)
+			    break;
+		    }
 		}
 	    }
 
-	    if (!found)
-#endif
-	    {
-		/* Not still touching the command and it was an illegal one */
-		expand_context = EXPAND_UNSUCCESSFUL;
-		return NULL;
-	    }
+	    /* The match we found may be followed immediately by a
+	     * number.  Move *p back to point to it.
+	     */
+	    if (found || possible)
+		p += matchlen - i;
 	}
+#endif
+    }
+    if (cmdidx == CMD_SIZE)
+    {
+	/* Not still touching the command and it was an illegal one */
+	expand_context = EXPAND_UNSUCCESSFUL;
+	return NULL;
     }
 
     expand_context = EXPAND_NOTHING; /* Default now that we're past command */
@@ -2539,12 +2840,74 @@ set_one_cmd_context(buff)
 	case CMD_chdir:
 	    expand_context = EXPAND_DIRECTORIES;
 	    break;
+	case CMD_help:
+	    expand_context = EXPAND_HELP;
+	    expand_pattern = arg;
+	    break;
+#ifdef USER_COMMANDS
+	case CMD_command:
+	    /* Check for attributes */
+	    while (*arg == '-')
+	    {
+		arg++;	    /* Skip "-" */
+		p = skiptowhite(arg);
+		if (*p == NUL)
+		{
+		    /* Cursor is still in the attribute */
+		    p = vim_strchr(arg, '=');
+		    if (p == NULL)
+		    {
+			/* No "=", so complete attribute names */
+			expand_context = EXPAND_USER_CMD_FLAGS;
+			expand_pattern = arg;
+			return NULL;
+		    }
+
+		    /* For the -complete and -nargs attributes, we complete
+		     * their arguments as well.
+		     */
+		    if (STRNICMP(arg, "complete", p - arg) == 0)
+		    {
+			expand_context = EXPAND_USER_COMPLETE;
+			expand_pattern = p + 1;
+			return NULL;
+		    }
+		    else if (STRNICMP(arg, "nargs", p - arg) == 0)
+		    {
+			expand_context = EXPAND_USER_NARGS;
+			expand_pattern = p + 1;
+			return NULL;
+		    }
+		    return NULL;
+		}
+		arg = skipwhite(p);
+	    }
+
+	    /* After the attributes comes the new command name */
+	    p = skiptowhite(arg);
+	    if (*p == NUL)
+	    {
+		expand_context = EXPAND_USER_COMMANDS;
+		expand_pattern = arg;
+		break;
+	    }
+
+	    /* And finally comes a normal command */
+	    return skipwhite(p);
+
+	case CMD_delcommand:
+	    expand_context = EXPAND_USER_COMMANDS;
+	    expand_pattern = arg;
+	    break;
+#endif
+
 #ifdef USE_BROWSE
 	case CMD_browse:
 #endif
 	case CMD_confirm:
 	    return arg;
 
+#ifdef CMDLINE_COMPL
 	case CMD_global:
 	case CMD_vglobal:
 	    delim = *arg;	    /* get the delimiter */
@@ -2619,15 +2982,14 @@ set_one_cmd_context(buff)
 	    break;
 	case CMD_tag:
 	case CMD_stag:
+	case CMD_ptag:
 	case CMD_tselect:
 	case CMD_stselect:
+	case CMD_ptselect:
 	case CMD_tjump:
 	case CMD_stjump:
+	case CMD_ptjump:
 	    expand_context = EXPAND_TAGS;
-	    expand_pattern = arg;
-	    break;
-	case CMD_help:
-	    expand_context = EXPAND_HELP;
 	    expand_pattern = arg;
 	    break;
 	case CMD_augroup:
@@ -2640,10 +3002,28 @@ set_one_cmd_context(buff)
 	    break;
 #endif
 #ifdef WANT_EVAL
+	case CMD_let:
+	case CMD_if:
+	case CMD_elseif:
+	case CMD_while:
+	case CMD_echo:
+	case CMD_echon:
+	case CMD_execute:
+	case CMD_call:
+	case CMD_return:
+	    set_context_for_expression(arg, cmdidx);
+	    break;
+
 	case CMD_unlet:
 	    while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
 		arg = expand_pattern + 1;
 	    expand_context = EXPAND_USER_VARS;
+	    expand_pattern = arg;
+	    break;
+
+	case CMD_function:
+	case CMD_delfunction:
+	    expand_context = EXPAND_USER_FUNC;
 	    expand_pattern = arg;
 	    break;
 
@@ -2666,12 +3046,13 @@ set_one_cmd_context(buff)
 	    break;
 #ifdef USER_COMMANDS
 	case CMD_USER:
-	    if (compl != EXPAND_NOTHING)
+	    /* XFILE: file names are handled above */
+	    if (compl != EXPAND_NOTHING && !(argt & XFILE))
 	    {
-#ifdef USE_GUI
+# ifdef WANT_MENU
 		if (compl == EXPAND_MENUS)
-		    return gui_set_context_in_menu_cmd(cmd, arg, forceit);
-#endif
+		    return set_context_in_menu_cmd(cmd, arg, forceit);
+# endif
 		if (compl == EXPAND_COMMANDS)
 		    return arg;
 		while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
@@ -2681,8 +3062,29 @@ set_one_cmd_context(buff)
 	    }
 	    break;
 #endif
-
-#ifdef USE_GUI
+	case CMD_map:	    case CMD_noremap:
+	case CMD_nmap:	    case CMD_nnoremap:
+	case CMD_vmap:	    case CMD_vnoremap:
+	case CMD_omap:	    case CMD_onoremap:
+	case CMD_imap:	    case CMD_inoremap:
+	case CMD_cmap:	    case CMD_cnoremap:
+	    return set_context_in_map_cmd(cmd, arg, forceit, FALSE, FALSE, cmdidx);
+	case CMD_unmap:
+	case CMD_nunmap:
+	case CMD_vunmap:
+	case CMD_ounmap:
+	case CMD_iunmap:
+	case CMD_cunmap:
+	    return set_context_in_map_cmd(cmd, arg, forceit, FALSE, TRUE, cmdidx);
+	case CMD_abbreviate:	case CMD_noreabbrev:
+	case CMD_cabbrev:	case CMD_cnoreabbrev:
+	case CMD_iabbrev:	case CMD_inoreabbrev:
+	    return set_context_in_map_cmd(cmd, arg, forceit, TRUE, FALSE, cmdidx);
+	case CMD_unabbreviate:
+	case CMD_cunabbrev:
+	case CMD_iunabbrev:
+	    return set_context_in_map_cmd(cmd, arg, forceit, TRUE, TRUE, cmdidx);
+#ifdef WANT_MENU
 	case CMD_menu:	    case CMD_noremenu:	    case CMD_unmenu:
 	case CMD_amenu:	    case CMD_anoremenu:	    case CMD_aunmenu:
 	case CMD_nmenu:	    case CMD_nnoremenu:	    case CMD_nunmenu:
@@ -2691,9 +3093,12 @@ set_one_cmd_context(buff)
 	case CMD_imenu:	    case CMD_inoremenu:	    case CMD_iunmenu:
 	case CMD_cmenu:	    case CMD_cnoremenu:	    case CMD_cunmenu:
 	case CMD_tmenu:				    case CMD_tunmenu:
-	case CMD_tearoff:
-	    return gui_set_context_in_menu_cmd(cmd, arg, forceit);
+	case CMD_tearoff:   case CMD_exemenu:
+	    return set_context_in_menu_cmd(cmd, arg, forceit);
 #endif
+
+#endif /* CMDLINE_COMPL */
+
 	default:
 	    break;
     }
@@ -2743,7 +3148,9 @@ get_address(ptr, skip)
 			    cmd = NULL;
 			    goto error;
 			}
-			if (!skip)
+			if (skip)
+			    ++cmd;
+			else
 			{
 			    fp = getmark(*cmd, FALSE);
 			    ++cmd;
@@ -2927,9 +3334,6 @@ expand_filename(eap, cmdlinep, errormsgp)
     char_u	*repl;
     int		srclen;
     char_u	*p;
-    char_u	*new_cmdline;
-    int		len;
-    int		i;
     int		n;
 
     /*
@@ -2942,6 +3346,7 @@ expand_filename(eap, cmdlinep, errormsgp)
     {
 	/*
 	 * Quick check if this cannot be the start of a special string.
+	 * Also removes backslash before '%', '#' and '<'.
 	 */
 	if (vim_strchr((char_u *)"%#<", *p) == NULL)
 	{
@@ -2961,46 +3366,10 @@ expand_filename(eap, cmdlinep, errormsgp)
 	    continue;
 	}
 
-	/*
-	 * The new command line is build in new_cmdline[].
-	 * First allocate it.
-	 */
-	len = STRLEN(repl);
-	i = STRLEN(*cmdlinep) + len + 3;
-	if (eap->nextcmd)
-	    i += STRLEN(eap->nextcmd);	/* add space for next command */
-	if ((new_cmdline = alloc(i)) == NULL)
-	{
-	    vim_free(repl);
-	    return FAIL;		/* out of memory! */
-	}
-
-	/*
-	 * Copy the stuff before the expanded part.
-	 * Copy the expanded stuff.
-	 * Copy what came after the expanded part.
-	 * Copy the next commands, if there are any.
-	 */
-	i = p - *cmdlinep;		    /* length of part before match */
-	mch_memmove(new_cmdline, *cmdlinep, (size_t)i);
-	mch_memmove(new_cmdline + i, repl, (size_t)len);
+	p = repl_cmdline(eap, p, srclen, repl, cmdlinep);
 	vim_free(repl);
-	i += len;			    /* remember the end of the string */
-	STRCPY(new_cmdline + i, p + srclen);
-	p = new_cmdline + i;	    /* remember where to continue */
-
-	if (eap->nextcmd)		    /* append next command */
-	{
-	    i = STRLEN(new_cmdline) + 1;
-	    STRCPY(new_cmdline + i, eap->nextcmd);
-	    eap->nextcmd = new_cmdline + i;
-	}
-	eap->cmd = new_cmdline + (eap->cmd - *cmdlinep);
-	eap->arg = new_cmdline + (eap->arg - *cmdlinep);
-	if (eap->do_ecmd_cmd != NULL)
-	    eap->do_ecmd_cmd = new_cmdline + (eap->do_ecmd_cmd - *cmdlinep);
-	vim_free(*cmdlinep);
-	*cmdlinep = new_cmdline;
+	if (p == NULL)
+	    return FAIL;
     }
 
     /*
@@ -3042,14 +3411,19 @@ expand_filename(eap, cmdlinep, errormsgp)
 #endif
 
 		/*
-		 * halve the number of backslashes (this is Vi compatible)
+		 * Halve the number of backslashes (this is Vi compatible).
+		 * For Unix and OS/2, when wildcards are expanded, this is
+		 * done by ExpandOne() below.
 		 */
-		backslash_halve(eap->arg, has_wildcards);
+#if defined(UNIX) || defined(OS2)
+		if (!has_wildcards)
+#endif
+		    backslash_halve(eap->arg);
 #ifdef macintosh
 		/*
 		 * translate unix-like path components
 		 */
-		slash_n_colon_adjust (eap->arg);
+		slash_n_colon_adjust(eap->arg);
 #endif
 	    }
 
@@ -3064,7 +3438,8 @@ expand_filename(eap, cmdlinep, errormsgp)
 		     * After expanding environment variables, check again
 		     * if there are still wildcards present.
 		     */
-		    if (vim_strchr(eap->arg, '$') || vim_strchr(eap->arg, '~'))
+		    if (vim_strchr(eap->arg, '$') != NULL
+			    || vim_strchr(eap->arg, '~') != NULL)
 		    {
 			expand_env(eap->arg, NameBuff, MAXPATHL);
 			has_wildcards = mch_has_wildcard(NameBuff);
@@ -3075,36 +3450,15 @@ expand_filename(eap, cmdlinep, errormsgp)
 		}
 		else /* n == 2 */
 		{
-		    if ((p = ExpandOne(eap->arg, NULL, WILD_LIST_NOTFOUND,
-					       WILD_EXPAND_FREE)) == NULL)
+		    if ((p = ExpandOne(eap->arg, NULL,
+					    WILD_LIST_NOTFOUND|WILD_ADD_SLASH,
+						   WILD_EXPAND_FREE)) == NULL)
 			return FAIL;
 		}
 		if (p != NULL)
 		{
-		    /*
-		     * The tricky bit here is to replace the argument,
-		     * while keeping the "eap->cmd" and "eap->nextcmd" the
-		     * pointers correct.
-		     */
-		    len = eap->arg - *cmdlinep;
-		    i = STRLEN(p) + len;
-		    if (eap->nextcmd)
-			i += STRLEN(eap->nextcmd);
-		    if ((new_cmdline = alloc((unsigned)i + 2)) != NULL)
-		    {
-			STRNCPY(new_cmdline, *cmdlinep, len);
-			STRCPY(new_cmdline + len, p);
-			if (eap->nextcmd)	    /* append next command */
-			{
-			    i = STRLEN(new_cmdline) + 1;
-			    STRCPY(new_cmdline + i, eap->nextcmd);
-			    eap->nextcmd = new_cmdline + i;
-			}
-			eap->cmd = new_cmdline + (eap->cmd - *cmdlinep);
-			eap->arg = new_cmdline + len;
-			vim_free(*cmdlinep);
-			*cmdlinep = new_cmdline;
-		    }
+		    (void)repl_cmdline(eap, eap->arg, (int)STRLEN(eap->arg),
+								 p, cmdlinep);
 		    if (n == 2)	/* p came from ExpandOne() */
 			vim_free(p);
 		}
@@ -3112,6 +3466,66 @@ expand_filename(eap, cmdlinep, errormsgp)
 	}
     }
     return OK;
+}
+
+/*
+ * Replace part of the command line, keeping eap->cmd, eap->arg and
+ * eap->nextcmd correct.
+ * "at" points to the part that is to be replaced, of lenght "srclen".
+ * "repl" is the replacement string.
+ * Returns a pointer to the character after the replaced string.
+ * Returns NULL for failure.
+ */
+    static char_u *
+repl_cmdline(eap, src, srclen, repl, cmdlinep)
+    EXARG	*eap;
+    char_u	*src;
+    int		srclen;
+    char_u	*repl;
+    char_u	**cmdlinep;
+{
+    int		len;
+    int		i;
+    char_u	*new_cmdline;
+
+    /*
+     * The new command line is build in new_cmdline[].
+     * First allocate it.
+     */
+    len = STRLEN(repl);
+    i = STRLEN(*cmdlinep) + len + 3;
+    if (eap->nextcmd)
+	i += STRLEN(eap->nextcmd);	/* add space for next command */
+    if ((new_cmdline = alloc((unsigned)i)) == NULL)
+	return NULL;			/* out of memory! */
+
+    /*
+     * Copy the stuff before the expanded part.
+     * Copy the expanded stuff.
+     * Copy what came after the expanded part.
+     * Copy the next commands, if there are any.
+     */
+    i = src - *cmdlinep;		/* length of part before match */
+    mch_memmove(new_cmdline, *cmdlinep, (size_t)i);
+    mch_memmove(new_cmdline + i, repl, (size_t)len);
+    i += len;				/* remember the end of the string */
+    STRCPY(new_cmdline + i, src + srclen);
+    src = new_cmdline + i;		/* remember where to continue */
+
+    if (eap->nextcmd)			/* append next command */
+    {
+	i = STRLEN(new_cmdline) + 1;
+	STRCPY(new_cmdline + i, eap->nextcmd);
+	eap->nextcmd = new_cmdline + i;
+    }
+    eap->cmd = new_cmdline + (eap->cmd - *cmdlinep);
+    eap->arg = new_cmdline + (eap->arg - *cmdlinep);
+    if (eap->do_ecmd_cmd != NULL)
+	eap->do_ecmd_cmd = new_cmdline + (eap->do_ecmd_cmd - *cmdlinep);
+    vim_free(*cmdlinep);
+    *cmdlinep = new_cmdline;
+
+    return src;
 }
 
 /*
@@ -3134,7 +3548,11 @@ separate_nextcmd(eap)
 	    if (*p == NUL)		/* stop at NUL after CTRL-V */
 		break;
 	}
-	else if ((*p == '"' && !(eap->argt & NOTRLCOM))
+	/* Check for '"': start of comment or '|': next command */
+	/* :@" and :*" do not start a comment! */
+	else if ((*p == '"' && !(eap->argt & NOTRLCOM)
+		    && ((eap->cmdidx != CMD_at && eap->cmdidx != CMD_star)
+			|| p != eap->arg))
 		|| *p == '|' || *p == '\n')
 	{
 	    /*
@@ -3169,7 +3587,7 @@ autowrite(buf, forceit)
     BUF	    *buf;
     int	    forceit;
 {
-    if (!p_aw || (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
+    if (!p_aw || !p_write || (!forceit && buf->b_p_ro) || buf->b_ffname == NULL)
 	return FAIL;
     return buf_write_all(buf);
 }
@@ -3182,7 +3600,7 @@ autowrite_all()
 {
     BUF	    *buf;
 
-    if (!p_aw)
+    if (!p_aw || !p_write)
 	return;
     for (buf = firstbuf; buf; buf = buf->b_next)
 	if (buf_changed(buf) && !buf->b_p_ro)
@@ -3196,41 +3614,11 @@ autowrite_all()
 	}
 }
 
-    static int
-check_readonly(forceit)
-    int	    *forceit;
-{
-    if (!*forceit && curbuf->b_p_ro)
-    {
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	if ((p_confirm || confirm) && curbuf->b_fname != NULL)
-	{
-	    char_u	buff[IOSIZE];
-
-	    dialog_msg(buff, "'readonly' option is set for \"%.*s\".\nDo you wish to override it?",
-		    curbuf->b_fname);
-
-	    if (vim_dialog_yesno(VIM_QUESTION, NULL, buff, 0) == VIM_YES)
-	    {
-		/* Set forceit, to force the writing of a readonly file */
-		*forceit = TRUE;
-		return FALSE;
-	    }
-	    else
-		return TRUE;
-	}
-	else
-#endif
-	    emsg(e_readonly);
-	return TRUE;
-    }
-    return FALSE;
-}
-
 /*
  * return TRUE if buffer was changed and cannot be abandoned.
  */
-    static int
+/*ARGSUSED*/
+    int
 check_changed(buf, checkaw, mult_win, forceit, allbuf)
     BUF		*buf;
     int		checkaw;	/* do autowrite if buffer was changed */
@@ -3244,7 +3632,7 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 	    && (!checkaw || autowrite(buf, forceit) == FAIL))
     {
 #if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	if (p_confirm || confirm)
+	if ((p_confirm || confirm) && p_write)
 	{
 	    BUF		*buf2;
 	    int		count = 0;
@@ -3268,11 +3656,11 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
     return FALSE;
 }
 
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+#if defined(GUI_DIALOG) || defined(CON_DIALOG) || defined(PROTO)
 /*
  * Ask the user what to do when abondoning a changed buffer.
  */
-    static void
+    void
 dialog_changed(buf, checkall)
     BUF		*buf;
     int		checkall;	/* may abandon all changed buffers */
@@ -3373,8 +3761,8 @@ browse_save_fname(buf)
  */
     int
 can_abandon(buf, forceit)
-    BUF	    *buf;
-    int	    forceit;
+    BUF		*buf;
+    int		forceit;
 {
     return (	   p_hid
 		|| !buf_changed(buf)
@@ -3473,7 +3861,7 @@ check_fname()
  *
  * return FAIL for failure, OK otherwise
  */
-    static int
+    int
 buf_write_all(buf)
     BUF	    *buf;
 {
@@ -3541,18 +3929,20 @@ skip_cmd_arg(p)
  * Return TRUE if "str" starts with a backslash that should be removed.
  * For MS-DOS, WIN32 and OS/2 this is only done when the character after the
  * backslash is not a normal file name character.
- * Although '$' is a valid file name character, we remove the backslash before
- * it, to be able to disginguish between a file name that starts with '$' and
- * the name of an environment variable.
+ * '$' is a valid file name character, we don't remove the backslash before
+ * it.  This means it is not possible to use an environment variable after a
+ * backslash.  "C:\$VIM\doc" is taken literally, only "$VIM\doc" works.
+ * Although "\ name" is valid, the backslash in "Program\ files" must be
+ * removed.  Assume a file name doesn't start with a space.
  * Make sure that "\\mch\file" isn't translated into "\mch\file".
  */
-    static int
+    int
 rem_backslash(str)
     char_u  *str;
 {
 #ifdef BACKSLASH_IN_FILENAME
     return (str[0] == '\\'
-	    && (str[1] == '$'
+	    && (str[1] == ' '
 		|| (str[1] != NUL
 		    && str[1] != '*'
 		    && str[1] != '?'
@@ -3566,577 +3956,30 @@ rem_backslash(str)
  * Halve the number of backslashes in a file name argument.
  * For MS-DOS we only do this if the character after the backslash
  * is not a normal file character.
- * For Unix, when wildcards are going to be expanded, don't remove
- * backslashes before special characters.
  */
     void
-backslash_halve(p, has_wildcards)
-    char_u  *p;
-    int	    has_wildcards;	/* going to expand wildcards later */
+backslash_halve(p)
+    char_u	*p;
 {
     for ( ; *p; ++p)
-	if (rem_backslash(p)
-#if defined(UNIX) || defined(OS2)
-		&& !(has_wildcards &&
-			vim_strchr((char_u *)" *?[{`'~$\\", p[1]) != NULL)
-#endif
-					       )
+	if (rem_backslash(p))
 	    STRCPY(p, p + 1);
 }
 
 /*
- * write current buffer to file 'eap->arg'
- * if 'eap->append' is TRUE, append to the file
- *
- * if *eap->arg == NUL write to current file
- * if b_notedited is TRUE, check for overwriting current file
- *
- * return FAIL for failure, OK otherwise
+ * backslash_halve() plus save the result in allocated memory.
  */
-    static int
-do_write(eap)
-    EXARG	*eap;
+    char_u *
+backslash_halve_save(p)
+    char_u	*p;
 {
-    int	    other;
-    char_u  *fname = NULL;		/* init to shut up gcc */
-    char_u  *ffname;
-    int	    retval = FAIL;
-    char_u  *free_fname = NULL;
-#ifdef USE_BROWSE
-    char_u  *browse_file = NULL;
-#endif
+    char_u	*res;
 
-    ffname = eap->arg;
-#ifdef USE_BROWSE
-    if (browse)
-    {
-	browse_file = do_browse(TRUE, (char_u *)"Save As", NULL,
-						  NULL, ffname, NULL, curbuf);
-	if (browse_file == NULL)
-	    goto theend;
-	ffname = browse_file;
-    }
-#endif
-    if (*ffname == NUL)
-	other = FALSE;
-    else
-    {
-	fname = ffname;
-	free_fname = fix_fname(ffname);
-	/*
-	 * When out-of-memory, keep unexpanded file name, because we MUST be
-	 * able to write the file in this situation.
-	 */
-	if (free_fname != NULL)
-	    ffname = free_fname;
-	other = otherfile(ffname);
-    }
-
-    /*
-     * If we have a new file, name put it in the list of alternate file names.
-     */
-    if (other && vim_strchr(p_cpo, CPO_ALTWRITE) != NULL)
-	setaltfname(ffname, fname, (linenr_t)1);
-
-    /*
-     * writing to the current file is not allowed in readonly mode
-     * and need a file name
-     */
-    if (!other && (check_readonly(&eap->forceit) || check_fname() == FAIL))
-	goto theend;
-
-    if (!other)
-    {
-	ffname = curbuf->b_ffname;
-	fname = curbuf->b_fname;
-	/*
-	 * Not writing the whole file is only allowed with '!'.
-	 */
-	if (	   (eap->line1 != 1
-		    || eap->line2 != curbuf->b_ml.ml_line_count)
-		&& !eap->forceit
-		&& !eap->append
-		&& !p_wa)
-	{
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	    if (p_confirm || confirm)
-	    {
-		if (vim_dialog_yesno(VIM_QUESTION, NULL,
-			       (char_u *)"Write partial file?", 2) != VIM_YES)
-		    goto theend;
-		eap->forceit = TRUE;
-		dont_wait_return = FALSE;	/* show write message */
-	    }
-	    else
-#endif
-	    {
-		EMSG("Use ! to write partial buffer");
-		goto theend;
-	    }
-	}
-    }
-
-    /*
-     * write to other file or b_notedited set or not writing the whole file:
-     * overwriting only allowed with '!'
-     */
-    if (       (other
-		|| curbuf->b_notedited)
-	    && !eap->forceit
-	    && !eap->append
-	    && !p_wa
-	    && vim_fexists(ffname))
-    {
-#ifdef UNIX
-	    /* with UNIX it is possible to open a directory */
-	if (mch_isdir(ffname))
-	{
-	    EMSG2("\"%s\" is a directory", ffname);
-	    goto theend;
-	}
-	else
-#endif
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	     if (p_confirm || confirm)
-	{
-	    char_u	buff[IOSIZE];
-
-	    dialog_msg(buff, "Overwrite existing file \"%.*s\"?", fname);
-	    if (vim_dialog_yesno(VIM_QUESTION, NULL, buff, 2) != VIM_YES)
-		goto theend;
-	    eap->forceit = TRUE;
-	    dont_wait_return = FALSE;	/* show write message */
-	}
-	else
-#endif
-	{
-	    emsg(e_exists);
-	    goto theend;
-	}
-    }
-    retval = (buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
-				     eap->append, eap->forceit, TRUE, FALSE));
-theend:
-#ifdef USE_BROWSE
-    vim_free(browse_file);
-#endif
-    vim_free(free_fname);
-    return retval;
-}
-
-/*
- * try to abandon current file and edit a new or existing file
- * 'fnum' is the number of the file, if zero use ffname/sfname
- *
- * return 1 for "normal" error, 2 for "not written" error, 0 for success
- * -1 for succesfully opening another file
- * 'lnum' is the line number for the cursor in the new file (if non-zero).
- */
-    int
-getfile(fnum, ffname, sfname, setpm, lnum, forceit)
-    int		fnum;
-    char_u	*ffname;
-    char_u	*sfname;
-    int		setpm;
-    linenr_t	lnum;
-    int		forceit;
-{
-    int		other;
-    int		retval;
-    char_u	*free_me = NULL;
-
-    if (fnum == 0)
-    {
-	fname_expand(&ffname, &sfname);	/* make ffname full path, set sfname */
-	other = otherfile(ffname);
-	free_me = ffname;		/* has been allocated, free() later */
-    }
-    else
-	other = (fnum != curbuf->b_fnum);
-
-    if (other)
-	++no_wait_return;	    /* don't wait for autowrite message */
-    if (other && !forceit && curbuf->b_nwindows == 1 && !p_hid
-		    && curbuf_changed() && autowrite(curbuf, forceit) == FAIL)
-    {
-	if (other)
-	    --no_wait_return;
-	emsg(e_nowrtmsg);
-	retval = 2;	/* file has been changed */
-	goto theend;
-    }
-    if (other)
-	--no_wait_return;
-    if (setpm)
-	setpcmark();
-    if (!other)
-    {
-	if (lnum != 0)
-	    curwin->w_cursor.lnum = lnum;
-	check_cursor_lnum();
-	beginline(BL_SOL | BL_FIX);
-	retval = 0;	/* it's in the same file */
-    }
-    else if (do_ecmd(fnum, ffname, sfname, NULL, lnum,
-		(p_hid ? ECMD_HIDE : 0) + (forceit ? ECMD_FORCEIT : 0)) == OK)
-	retval = -1;	/* opened another file */
-    else
-	retval = 1;	/* error encountered */
-
-theend:
-    vim_free(free_me);
-    return retval;
-}
-
-/*
- * start editing a new file
- *
- *     fnum: file number; if zero use ffname/sfname
- *   ffname: the file name
- *		- full path if sfname used,
- *		- any file name if sfname is NULL
- *		- empty string to re-edit with the same file name (but may be
- *		    in a different directory)
- *		- NULL to start an empty buffer
- *   sfname: the short file name (or NULL)
- *  command: the command to be executed after loading the file
- *  newlnum: put cursor on this line number (if possible)
- *    flags:
- *	   ECMD_HIDE: if TRUE don't free the current buffer
- *     ECMD_SET_HELP: set b_help flag of (new) buffer before opening file
- *	 ECMD_OLDBUF: use existing buffer if it exists
- *	ECMD_FORCEIT: ! used for Ex command
- *	ECMD_ADDBUF : don't edit, just add to buffer list
- *
- * return FAIL for failure, OK otherwise
- */
-    int
-do_ecmd(fnum, ffname, sfname, command, newlnum, flags)
-    int		fnum;
-    char_u	*ffname;
-    char_u	*sfname;
-    char_u	*command;
-    linenr_t	newlnum;
-    int		flags;
-{
-    int		other_file;		/* TRUE if editing another file */
-    int		oldbuf;			/* TRUE if using existing buffer */
-#ifdef AUTOCMD
-    int		auto_buf = FALSE;	/* TRUE if autocommands brought us
-					   into the buffer unexpectedly */
-#endif
-    BUF		*buf;
-    char_u	*free_fname = NULL;
-#ifdef USE_BROWSE
-    char_u	*browse_file = NULL;
-#endif
-    int		retval = FAIL;
-    long	n;
-
-    if (fnum != 0)
-    {
-	if (fnum == curbuf->b_fnum)	/* file is already being edited */
-	    return OK;			/* nothing to do */
-	other_file = TRUE;
-    }
-    else
-    {
-#ifdef USE_BROWSE
-	if (browse)
-	{
-	    browse_file = do_browse(FALSE, (char_u *)"Edit File", NULL,
-						  NULL, ffname, NULL, curbuf);
-	    if (browse_file == NULL)
-		goto theend;
-	    ffname = browse_file;
-	}
-#endif
-	    /* if no short name given, use ffname for short name */
-	if (sfname == NULL)
-	    sfname = ffname;
-#ifdef USE_FNAME_CASE
-# ifdef USE_LONG_FNAME
-	if (USE_LONG_FNAME)
-# endif
-	    fname_case(sfname);	    /* set correct case for short file name */
-#endif
-
-	if ((flags & ECMD_ADDBUF) && (ffname == NULL || *ffname == NUL))
-	    goto theend;
-
-	if (ffname == NULL)
-	    other_file = TRUE;
-					    /* there is no file name */
-	else if (*ffname == NUL && curbuf->b_ffname == NULL)
-	    other_file = FALSE;
-	else
-	{
-	    if (*ffname == NUL)		    /* re-edit with same file name */
-	    {
-		ffname = curbuf->b_ffname;
-		sfname = curbuf->b_fname;
-	    }
-	    free_fname = fix_fname(ffname); /* may expand to full path name */
-	    if (free_fname != NULL)
-		ffname = free_fname;
-	    other_file = otherfile(ffname);
-	}
-    }
-/*
- * if the file was changed we may not be allowed to abandon it
- * - if we are going to re-edit the same file
- * - or if we are the only window on this file and if ECMD_HIDE is FALSE
- */
-    if (  ((!other_file && !(flags & ECMD_OLDBUF))
-	    || (curbuf->b_nwindows == 1
-		&& !(flags & (ECMD_HIDE | ECMD_ADDBUF))))
-	&& check_changed(curbuf, FALSE, !other_file,
-					(flags & ECMD_FORCEIT), FALSE))
-    {
-	if (fnum == 0 && other_file && ffname != NULL)
-	    setaltfname(ffname, sfname, newlnum);
-	goto theend;
-    }
-
-/*
- * End Visual mode before switching to another buffer, so the text can be
- * copied into the GUI selection buffer.
- */
-    if (VIsual_active)
-    {
-	end_visual_mode();
-	VIsual_reselect = FALSE;
-    }
-
-/*
- * If we are starting to edit another file, open a (new) buffer.
- * Otherwise we re-use the current buffer.
- */
-    if (other_file)
-    {
-	if (!(flags & ECMD_ADDBUF))
-	{
-	    curwin->w_alt_fnum = curbuf->b_fnum;
-	    buflist_altfpos();
-	}
-
-	if (fnum)
-	    buf = buflist_findnr(fnum);
-	else
-	{
-	    if (flags & ECMD_ADDBUF)
-	    {
-		linenr_t	tlnum = 1L;
-
-		if (command != NULL)
-		{
-		    tlnum = atol((char *)command);
-		    if (tlnum <= 0)
-			tlnum = 1L;
-		}
-		(void)buflist_new(ffname, sfname, tlnum, FALSE);
-		goto theend;
-	    }
-	    else
-		buf = buflist_new(ffname, sfname, 1L, TRUE);
-	}
-	if (buf == NULL)
-	    goto theend;
-	if (buf->b_ml.ml_mfp == NULL)		/* no memfile yet */
-	{
-	    oldbuf = FALSE;
-	    buf->b_nwindows = 0;
-	}
-	else					/* existing memfile */
-	{
-	    oldbuf = TRUE;
-	    buf_check_timestamp(buf);
-	}
-
-	/*
-	 * Make the (new) buffer the one used by the current window.
-	 * If the old buffer becomes unused, free it if ECMD_HIDE is FALSE.
-	 * If the current buffer was empty and has no file name, curbuf
-	 * is returned by buflist_new().
-	 */
-	if (buf != curbuf)
-	{
-#ifdef AUTOCMD
-	    BUF	    *old_curbuf;
-	    char_u  *new_name = NULL;
-
-	    /*
-	     * Be careful: The autocommands may delete any buffer and change
-	     * the current buffer.
-	     * - If the buffer we are going to edit is deleted, give up.
-	     * - If we ended up in the new buffer already, need to skip a few
-	     *	 things, set auto_buf.
-	     */
-	    old_curbuf = curbuf;
-	    if (buf->b_fname != NULL)
-		new_name = vim_strsave(buf->b_fname);
-	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
-	    if (!buf_valid(buf))	/* new buffer has been deleted */
-	    {
-		EMSG2("Autocommands unexpectedly deleted new buffer %s",
-			new_name == NULL ? (char_u *)"" : new_name);
-		vim_free(new_name);
-		goto theend;
-	    }
-	    vim_free(new_name);
-	    if (buf == curbuf)		/* already in new buffer */
-		auto_buf = TRUE;
-	    else
-	    {
-		if (curbuf == old_curbuf)
-#endif
-		    buf_copy_options(curbuf, buf, BCO_ENTER);
-		close_buffer(curwin, curbuf, !(flags & ECMD_HIDE), FALSE);
-		curwin->w_buffer = buf;
-		curbuf = buf;
-		++curbuf->b_nwindows;
-		/* set 'fileformat' */
-		if (*p_ffs && !oldbuf)
-		    set_fileformat(default_fileformat());
-#ifdef AUTOCMD
-	    }
-#endif
-	}
-	else
-	    ++curbuf->b_nwindows;
-
-	curwin->w_pcmark.lnum = 1;
-	curwin->w_pcmark.col = 0;
-    }
-    else
-    {
-	if ((flags & ECMD_ADDBUF) || check_fname() == FAIL)
-	    goto theend;
-	oldbuf = (flags & ECMD_OLDBUF);
-    }
-
-/*
- * If we get here we are sure to start editing
- */
-    /* don't redraw until the cursor is in the right line */
-    ++RedrawingDisabled;
-    if (flags & ECMD_SET_HELP)
-    {
-	curbuf->b_help = TRUE;
-	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
-    }
-
-/*
- * other_file	oldbuf
- *  FALSE	FALSE	    re-edit same file, buffer is re-used
- *  FALSE	TRUE	    re-edit same file, nothing changes
- *  TRUE	FALSE	    start editing new file, new buffer
- *  TRUE	TRUE	    start editing in existing buffer (nothing to do)
- */
-    if (!other_file && !oldbuf)		/* re-use the buffer */
-    {
-	if (newlnum == 0)
-	    newlnum = curwin->w_cursor.lnum;
-	buf_freeall(curbuf, FALSE);	/* free all things for buffer */
-	buf_clear(curbuf);
-	curbuf->b_op_start.lnum = 0;	/* clear '[ and '] marks */
-	curbuf->b_op_end.lnum = 0;
-    }
-
-    /*
-     * Reset cursor position, could be used by autocommands.
-     */
-    adjust_cursor();
-
-    /*
-     * Check if we are editing the w_arg_idx file in the argument list.
-     */
-    check_arg_idx();
-
-#ifdef AUTOCMD
-    if (!auto_buf)
-#endif
-    {
-	/*
-	 * Set cursor and init window before reading the file and executing
-	 * autocommands.  This allows for the autocommands to position the
-	 * cursor.
-	 */
-	win_init(curwin);
-
-	/*
-	 * Careful: open_buffer() and apply_autocmds() may change the current
-	 * buffer and window.
-	 */
-	if (!oldbuf)			    /* need to read the file */
-	{
-	    curbuf->b_flags |= BF_CHECK_RO; /* set/reset 'ro' flag */
-	    (void)open_buffer(FALSE);
-	}
-#ifdef AUTOCMD
-	else
-	    apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
-	check_arg_idx();
-#endif
-	maketitle();
-    }
-
-    if (command == NULL)
-    {
-	if (newlnum)
-	{
-	    curwin->w_cursor.lnum = newlnum;
-	    check_cursor_lnum();
-	    beginline(BL_SOL | BL_FIX);
-	}
-	else
-	{
-	    if (exmode_active)
-	    {
-		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-		check_cursor_lnum();
-	    }
-	    beginline(BL_WHITE | BL_FIX);
-	}
-    }
-
-    /* Check if cursors in other windows on the same buffer are still valid */
-    check_lnums(FALSE);
-
-    /*
-     * Did not read the file, need to show some info about the file.
-     * Do this after setting the cursor.
-     */
-    if (oldbuf
-#ifdef AUTOCMD
-		&& !auto_buf
-#endif
-			    )
-	fileinfo(FALSE, TRUE, FALSE);
-
-    if (command != NULL)
-	do_cmdline(command, NULL, NULL, DOCMD_VERBOSE);
-    --RedrawingDisabled;
-    if (!skip_redraw)
-    {
-	n = p_so;
-	if (command == NULL)
-	    p_so = 999;			/* force cursor halfway the window */
-	update_topline();
-	p_so = n;
-	update_curbuf(NOT_VALID);	/* redraw now */
-    }
-
-    if (p_im)
-	need_start_insertmode = TRUE;
-    retval = OK;
-
-theend:
-#ifdef USE_BROWSE
-    vim_free(browse_file);
-#endif
-    vim_free(free_fname);
-    return retval;
+    res = vim_strsave(p);
+    if (res == NULL)
+	return p;
+    backslash_halve(res);
+    return res;
 }
 
 #ifdef QUICKFIX
@@ -4258,14 +4101,16 @@ do_cfile(eap)
 do_arglist(str)
     char_u *str;
 {
-    int	    new_count = 0;
-    char_u  **new_files = NULL;
-    int	    exp_count;
-    char_u  **exp_files;
-    char_u  **t;
-    char_u  *p;
-    int	    inquote;
-    int	    i;
+    int		new_count = 0;
+    char_u	**new_files = NULL;
+    int		exp_count;
+    char_u	**exp_files;
+    char_u	**t;
+    char_u	*p;
+    int		inquote;
+    int		inbacktick;
+    int		i;
+    WIN		*win;
 
     while (*str)
     {
@@ -4284,9 +4129,11 @@ do_arglist(str)
 	new_files[new_count++] = str;
 
 	/*
-	 * isolate one argument, taking quotes
+	 * Isolate one argument, taking quotes and backticks.
+	 * Quotes are removed, backticks remain.
 	 */
 	inquote = FALSE;
+	inbacktick = FALSE;
 	for (p = str; *str; ++str)
 	{
 	    /*
@@ -4297,9 +4144,12 @@ do_arglist(str)
 		*p++ = *++str;
 	    else
 	    {
-		if (!inquote && vim_isspace(*str))
+		/* An item ends at a space not in quotes or backticks */
+		if (!inquote && !inbacktick && vim_isspace(*str))
 		    break;
-		if (*str == '"')
+		if (!inquote && *str == '`')
+		    inbacktick ^= TRUE;
+		if (!inbacktick && *str == '"')
 		    inquote ^= TRUE;
 		else
 		    *p++ = *str;
@@ -4310,7 +4160,7 @@ do_arglist(str)
     }
 
     i = expand_wildcards(new_count, new_files, &exp_count, &exp_files,
-						  EW_DIR|EW_FILE|EW_NOTFOUND);
+				      EW_DIR|EW_FILE|EW_ADDSLASH|EW_NOTFOUND);
     vim_free(new_files);
     if (i == FAIL)
 	return FAIL;
@@ -4330,6 +4180,12 @@ do_arglist(str)
     for (i = 0; i < arg_file_count; ++i)
 	(void)buflist_add(arg_files[i]);
 
+    /*
+     * Check the validity of the arg_idx for each other window.
+     */
+    for (win = firstwin; win != NULL; win = win->w_next)
+	check_arg_idx(win);
+
     return OK;
 }
 
@@ -4337,25 +4193,27 @@ do_arglist(str)
  * Check if we are editing the w_arg_idx file in the argument list.
  */
     void
-check_arg_idx()
+check_arg_idx(win)
+    WIN		*win;
 {
     if (arg_file_count > 1
-	    && (curbuf->b_ffname == NULL
-		|| curwin->w_arg_idx >= arg_file_count
-		|| !(fullpathcmp(arg_files[curwin->w_arg_idx],
-					 curbuf->b_ffname, TRUE) & FPC_SAME)))
-	curwin->w_arg_idx_invalid = TRUE;
+	    && (win->w_buffer->b_ffname == NULL
+		|| win->w_arg_idx >= arg_file_count
+		|| !(fullpathcmp(arg_files[win->w_arg_idx],
+				  win->w_buffer->b_ffname, TRUE) & FPC_SAME)))
+	win->w_arg_idx_invalid = TRUE;
     else
-	curwin->w_arg_idx_invalid = FALSE;
+	win->w_arg_idx_invalid = FALSE;
 }
 
     int
 ends_excmd(c)
     int	    c;
 {
-    return (c == NUL || c == '|' || c == '\"' || c == '\n');
+    return (c == NUL || c == '|' || c == '"' || c == '\n');
 }
 
+#if defined(SYNTAX_HL) || defined(PROTO)
 /*
  * Return the next command, after the first '|' or '\n'.
  * Return NULL if not found.
@@ -4372,6 +4230,7 @@ find_nextcmd(p)
     }
     return (p + 1);
 }
+#endif
 
 /*
  * Check if *p is a separator between Ex commands.
@@ -4437,11 +4296,14 @@ check_more(message, forceit)
 struct source_cookie
 {
     FILE	*fp;		/* opened file for sourcing */
-#ifdef USE_CRNL
+    char_u      *nextline;      /* if not NULL: line that was read ahead */
+#if defined (USE_CRNL) || defined (USE_CR)
     int		fileformat;	/* EOL_UNKNOWN, EOL_UNIX or EOL_DOS */
     int		error;		/* TRUE if LF found after CR-LF */
 #endif
 };
+
+static char_u *get_one_sourceline __ARGS((struct source_cookie *sp));
 
 /*
  * do_source: Read the file "fname" and execute its lines as EX commands.
@@ -4476,7 +4338,7 @@ do_source(fname, check_other, is_vimrc)
 #ifdef macintosh
     slash_n_colon_adjust(fname_exp);
 #endif
-    cookie.fp = fopen((char *)fname_exp, READBIN);
+    cookie.fp = mch_fopen((char *)fname_exp, READBIN);
     if (cookie.fp == NULL && check_other)
     {
 	/*
@@ -4493,7 +4355,7 @@ do_source(fname, check_other, is_vimrc)
 		*p = '.';
 	    else
 		*p = '_';
-	    cookie.fp = fopen((char *)fname_exp, READBIN);
+	    cookie.fp = mch_fopen((char *)fname_exp, READBIN);
 	}
     }
 
@@ -4524,8 +4386,19 @@ do_source(fname, check_other, is_vimrc)
     cookie.error = FALSE;
 #endif
 
+#ifdef USE_CR
+    /* If no automatic file format: Set default to CR. */
+    if (*p_ffs == NUL)
+	cookie.fileformat = EOL_MAC;
+    else
+	cookie.fileformat = EOL_UNKNOWN;
+    cookie.error = FALSE;
+#endif
+
+    cookie.nextline = NULL;
+
     /*
-     * Keep the sourcing name, for recursive calls.
+     * Keep the sourcing name/lnum, for recursive calls.
      */
     save_sourcing_name = sourcing_name;
     save_sourcing_lnum = sourcing_lnum;
@@ -4545,6 +4418,7 @@ do_source(fname, check_other, is_vimrc)
 
     retval = OK;
     fclose(cookie.fp);
+    vim_free(cookie.nextline);
     if (got_int)
 	emsg(e_interr);
     sourcing_name = save_sourcing_name;
@@ -4552,15 +4426,47 @@ do_source(fname, check_other, is_vimrc)
 #ifdef WANT_EVAL
     restore_funccal(save_funccalp);
 #endif
+    if (p_verbose > 0)
+	smsg((char_u *)"finished sourcing \"%s\"", fname);
 
 theend:
     vim_free(fname_exp);
     return retval;
 }
 
+#if defined(USE_CR) || defined(PROTO)
+    char *
+fgets_cr(s, n, stream)
+    char	*s;
+    int		n;
+    FILE	*stream;
+{
+    int	character = 0;
+    int char_read = 0;
+    while (!feof(stream) && character != '\r' && character != '\n'
+							   && char_read < n-1)
+    {
+	character = fgetc(stream);
+	s[char_read++] = character;
+    }
+
+    if (char_read > n - 2)
+	s[char_read] = 0;
+
+    s[char_read] = 0;
+    if (char_read == 0)
+	return NULL;
+
+    if (feof(stream) && char_read == 1)
+	return NULL;
+
+    return s;
+}
+#endif
+
 /*
  * Get one full line from a sourced file.
- * Called by do_source() and do_cmdline().
+ * Called by do_cmdline() when it's called from do_source().
  *
  * Return a pointer to the line in allocated memory.
  * Return NULL for end-of-file or some error.
@@ -4568,18 +4474,69 @@ theend:
 /* ARGSUSED */
     char_u *
 getsourceline(c, cookie, indent)
-    int	    c;		    /* not used */
-    void    *cookie;
-    int	    indent;	    /* not used */
+    int		c;		/* not used */
+    void	*cookie;
+    int		indent;		/* not used */
 {
-    struct source_cookie    *sp = (struct source_cookie *)cookie;
-    struct growarray	    ga;
-    int			    len;
-    char_u		    *buf;
+    struct source_cookie *sp = (struct source_cookie *)cookie;
+    char_u		*line;
+    char_u		*p, *s;
+
+    /*
+     * Get current line.  If there is a read-ahead line, use it, otherwise get
+     * one now.
+     */
+    if (sp->nextline == NULL)
+    {
+	line = get_one_sourceline(sp);
+	--sourcing_lnum;
+    }
+    else
+    {
+	line = sp->nextline;
+	sp->nextline = NULL;
+    }
+
+    /* concatenate lines that start with a backslash */
+    if (line != NULL)
+    {
+	for (;;)
+	{
+	    sp->nextline = get_one_sourceline(sp);
+	    if (sp->nextline == NULL)
+		break;
+	    p = skipwhite(sp->nextline);
+	    if (*p != '\\')
+		break;
+	    s = alloc((int)(STRLEN(line) + STRLEN(p)));
+	    if (s == NULL)	/* out of memory */
+		break;
+	    STRCPY(s, line);
+	    STRCAT(s, p + 1);
+	    vim_free(line);
+	    line = s;
+	    vim_free(sp->nextline);
+	}
+    }
+
+    return line;
+}
+
+    static char_u *
+get_one_sourceline(sp)
+    struct source_cookie    *sp;
+{
+    struct growarray	ga;
+    int			len;
+    int			c;
+    char_u		*buf;
 #ifdef USE_CRNL
-    int			    has_cr;	    /* CR-LF found */
+    int			has_cr;		/* CR-LF found */
 #endif
-    int			    have_read = FALSE;
+#ifdef USE_CR
+    char_u		*scan;
+#endif
+    int			have_read = FALSE;
 
     /* use a growarray to store the sourced line */
     ga_init2(&ga, 1, 200);
@@ -4595,10 +4552,18 @@ getsourceline(c, cookie, indent)
 	    break;
 	buf = (char_u *)ga.ga_data;
 
-	if (fgets((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
-								   || got_int)
-	    break;
-
+#ifdef USE_CR
+	if (sp->fileformat == EOL_MAC)
+	{
+	    if (fgets_cr((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
+		    || got_int)
+		break;
+	}
+	else
+#endif
+	    if (fgets((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
+		    || got_int)
+		break;
 	len = STRLEN(buf);
 #ifdef USE_CRNL
 	/* Ignore a trailing CTRL-Z, when in Dos mode.	Only recognize the
@@ -4611,6 +4576,35 @@ getsourceline(c, cookie, indent)
 	    break;
 	}
 #endif
+
+#ifdef USE_CR
+	/* If the read doesn't stop on a new line, and there's
+	 * some CR then we assume a Mac format */
+	if (sp->fileformat == EOL_UNKNOWN)
+	{
+	    if (buf[len - 1] != '\n' && vim_strchr(buf, '\r') != NULL)
+		sp->fileformat = EOL_MAC;
+	    else
+		sp->fileformat = EOL_UNIX;
+	}
+
+	if (sp->fileformat == EOL_MAC)
+	{
+	    scan = vim_strchr(buf, '\r');
+
+	    if (scan != NULL)
+	    {
+		*scan = '\n';
+		if (*(scan + 1) != 0)
+		{
+		    *(scan + 1) = 0;
+		    fseek(sp->fp, (long)(scan - buf - len + 1), SEEK_CUR);
+		}
+	    }
+	    len = STRLEN(buf);
+	}
+#endif
+
 	have_read = TRUE;
 	ga.ga_room -= len - ga.ga_len;
 	ga.ga_len = len;
@@ -4677,6 +4671,7 @@ getsourceline(c, cookie, indent)
     return NULL;
 }
 
+#ifdef CMDLINE_COMPL
 /*
  * Function given to ExpandGeneric() to obtain the list of command names.
  */
@@ -4684,2050 +4679,23 @@ getsourceline(c, cookie, indent)
 get_command_name(idx)
     int		idx;
 {
-#ifdef USER_COMMANDS
     if (idx >= (int)CMD_SIZE)
-    {
-	int	i = idx - (int)CMD_SIZE;
-
-	if (i >= ucmds.ga_len)
-	    return NULL;
-	return USER_CMD(i)->uc_name;
-    }
-#else
-    if (idx >= (int)CMD_SIZE)
+# ifdef USER_COMMANDS
+	return get_user_command_name(idx);
+# else
 	return NULL;
-#endif
+# endif
     return cmdnames[idx].cmd_name;
 }
-
-/*
- * Call this function if we thought we were going to exit, but we won't
- * (because of an error).  May need to restore the terminal mode.
- */
-    void
-not_exiting()
-{
-    exiting = FALSE;
-    settmode(TMODE_RAW);
-}
-
-/*
- * ":quit": quit current window, quit Vim if closed the last window.
- */
-    static void
-do_quit(eap)
-    EXARG	*eap;
-{
-    /*
-     * If there are more files or windows we won't exit.
-     */
-    if (check_more(FALSE, eap->forceit) == OK && only_one_window())
-	exiting = TRUE;
-    if ((!p_hid && check_changed(curbuf, FALSE, FALSE, eap->forceit, FALSE))
-	    || check_more(TRUE, eap->forceit) == FAIL
-	    || (only_one_window() && check_changed_any(eap->forceit)))
-    {
-	not_exiting();
-    }
-    else
-    {
-	if (only_one_window())	    /* quit last window */
-	    getout(0);
-#ifdef USE_GUI
-	need_mouse_correct = TRUE;
-#endif
-	close_window(curwin, !p_hid || eap->forceit); /* may free buffer */
-    }
-}
-
-/*
- * ":qall": try to quit all windows
- */
-    static void
-do_quit_all(forceit)
-    int		forceit;
-{
-    exiting = TRUE;
-    if (forceit || !check_changed_any(FALSE))
-	getout(0);
-    not_exiting();
-}
-
-/*
- * ":close": close current window, unless it is the last one
- */
-    static void
-do_close(eap)
-    EXARG	*eap;
-{
-    int	    need_hide;
-
-    need_hide = (buf_changed(curbuf) && curbuf->b_nwindows <= 1);
-    if (need_hide && !p_hid && !eap->forceit)
-    {
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
-	if (p_confirm || confirm)
-	{
-	    dialog_changed(curbuf, FALSE);
-	    if (buf_changed(curbuf))
-		return;
-	}
-	else
-#endif
-	{
-	    emsg(e_nowrtmsg);
-	    return;
-	}
-    }
-
-#ifdef USE_GUI
-    need_mouse_correct = TRUE;
-#endif
-    close_window(curwin, !need_hide);	    /* may free buffer */
-}
-
-/*
- * ":stop" and ":suspend": Suspend Vim.
- */
-    static void
-do_suspend(forceit)
-    int		forceit;
-{
-    /*
-     * Disallow suspending for "rvim".
-     */
-    if (!check_restricted()
-#ifdef WIN32
-	/*
-	 * Check if external commands are allowed now.
-	 */
-	&& can_end_termcap_mode(TRUE)
-#endif
-					)
-    {
-	if (!forceit)
-	    autowrite_all();
-	windgoto((int)Rows - 1, 0);
-	out_char('\n');
-	out_flush();
-	stoptermcap();
-	mch_restore_title(3);	/* restore window titles */
-	ui_suspend();		/* call machine specific function */
-	maketitle();
-	starttermcap();
-	scroll_start();		/* scroll screen before redrawing */
-	must_redraw = CLEAR;
-	set_winsize(0, 0, FALSE); /* May have resized window */
-    }
-}
-
-/*
- * ":exit", ":xit" and ":wq": Write file and exit Vim.
- */
-    static void
-do_exit(eap)
-    EXARG	*eap;
-{
-    /*
-     * if more files or windows we won't exit
-     */
-    if (check_more(FALSE, eap->forceit) == OK && only_one_window())
-	exiting = TRUE;
-    if (       ((eap->cmdidx == CMD_wq
-		    || curbuf_changed())
-		&& do_write(eap) == FAIL)
-	    || check_more(TRUE, eap->forceit) == FAIL
-	    || (only_one_window() && check_changed_any(eap->forceit)))
-    {
-	not_exiting();
-    }
-    else
-    {
-	if (only_one_window())	    /* quit last window, exit Vim */
-	    getout(0);
-#ifdef USE_GUI
-	need_mouse_correct = TRUE;
-#endif
-	close_window(curwin, !p_hid); /* quit current window, may free buffer */
-    }
-}
-
-/*
- * ":wall", ":wqall" and ":xall": Write all changed files (and exit).
- */
-    static void
-do_wqall(eap)
-    EXARG	*eap;
-{
-    BUF	    *buf;
-    int	    error = 0;
-
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-    {
-	if (buf_changed(buf))
-	{
-	    if (buf->b_ffname == NULL)
-	    {
-		emsg(e_noname);
-		++error;
-	    }
-	    else if (!eap->forceit && buf->b_p_ro)
-	    {
-		EMSG2("\"%s\" is readonly, use ! to write anyway",
-								buf->b_fname);
-		++error;
-	    }
-	    else
-	    {
-		if (buf_write_all(buf) == FAIL)
-		    ++error;
-#ifdef AUTOCMD
-		/* an autocommand may have deleted the buffer */
-		if (!buf_valid(buf))
-		    buf = firstbuf;
-#endif
-	    }
-	}
-    }
-    if (exiting)
-    {
-	if (!error)
-	    getout(0);		/* exit Vim */
-	not_exiting();
-    }
-}
-
-    static void
-do_print(eap)
-    EXARG	*eap;
-{
-    for ( ;!got_int; ui_breakcheck())
-    {
-	print_line(eap->line1,
-		   (eap->cmdidx == CMD_number || eap->cmdidx == CMD_pound));
-	if (++eap->line1 > eap->line2)
-	    break;
-	out_flush();	    /* show one line at a time */
-    }
-    setpcmark();
-    /* put cursor at last line */
-    curwin->w_cursor.lnum = eap->line2;
-    beginline(BL_SOL | BL_FIX);
-
-    ex_no_reprint = TRUE;
-}
-
-/*
- * Edit file "argn" from the arguments.
- */
-    static void
-do_argfile(eap, argn)
-    EXARG   *eap;
-    int	    argn;
-{
-    int		other;
-    char_u	*p;
-    char_u	*ffname;
-    BUF		*buf;
-
-    if (argn < 0 || argn >= arg_file_count)
-    {
-	if (arg_file_count <= 1)
-	    EMSG("There is only one file to edit");
-	else if (argn < 0)
-	    EMSG("Cannot go before first file");
-	else
-	    EMSG("Cannot go beyond last file");
-    }
-    else
-    {
-	setpcmark();
-#ifdef USE_GUI
-	need_mouse_correct = TRUE;
 #endif
 
-	if (*eap->cmd == 's')	    /* split window first */
-	{
-	    if (win_split(0, FALSE, FALSE) == FAIL)
-		return;
-	}
-	else
-	{
-	    /*
-	     * if 'hidden' set, only check for changed file when re-editing
-	     * the same buffer
-	     */
-	    other = TRUE;
-	    if (p_hid)
-	    {
-		p = fix_fname(arg_files[argn]);
-		other = otherfile(p);
-		vim_free(p);
-	    }
-	    if ((!p_hid || !other)
-		  && check_changed(curbuf, TRUE, !other, eap->forceit, FALSE))
-		return;
-	}
+#if defined(USER_COMMANDS) || defined(PROTO)
+static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, long argt, long def, int compl, int force));
+static void	uc_list __ARGS((char_u *name, size_t name_len));
+static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *compl));
+static char_u	*uc_split_args __ARGS((char_u *arg, size_t *lenp));
+static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, UCMD *cmd, EXARG *eap, char_u **split_buf, size_t *split_len));
 
-	curwin->w_arg_idx = argn;
-	if (argn == arg_file_count - 1)
-	    arg_had_last = TRUE;
-
-	/*
-	 * If no line number given, use the last known line number.
-	 */
-	if (eap->do_ecmd_lnum == 0)
-	{
-	    ffname = fix_fname(arg_files[curwin->w_arg_idx]);
-	    if (ffname != NULL)
-	    {
-		buf = buflist_findname(ffname);
-		if (buf != NULL)
-		    eap->do_ecmd_lnum = buflist_findlnum(buf);
-		vim_free(ffname);
-	    }
-	}
-
-	(void)do_ecmd(0, arg_files[curwin->w_arg_idx],
-		      NULL, eap->do_ecmd_cmd, eap->do_ecmd_lnum,
-		      (p_hid ? ECMD_HIDE : 0) +
-					   (eap->forceit ? ECMD_FORCEIT : 0));
-    }
-}
-
-/*
- * Do ":next" command, and commands that behave like it.
- */
-    static void
-do_next(eap)
-    EXARG	*eap;
-{
-    int	    i;
-
-    /*
-     * check for changed buffer now, if this fails the argument list is not
-     * redefined.
-     */
-    if (       p_hid
-	    || eap->cmdidx == CMD_snext
-	    || !check_changed(curbuf, TRUE, FALSE, eap->forceit, FALSE))
-    {
-	if (*eap->arg != NUL)		    /* redefine file list */
-	{
-	    if (do_arglist(eap->arg) == FAIL)
-		return;
-	    i = 0;
-	}
-	else
-	    i = curwin->w_arg_idx + (int)eap->line2;
-	do_argfile(eap, i);
-    }
-}
-
-#if defined(USE_GUI_WIN32) || defined(USE_GUI_BEOS) || defined(PROTO) || defined(macintosh)
-/*
- * Handle a file drop. The code is here because a drop is *nearly* like an
- * :args command, but not quite (we have a list of exact filenames, so we
- * don't want to (a) parse a command line, or (b) expand wildcards. So the
- * code is very similar to :args and hence needs access to a lot of the static
- * functions in this file.
- *
- * Arguments:
- *	FILEC => the number of files dropped
- *	FILEV => the list of files dropped
- *
- * The list should be allocated using vim_alloc(), as should each item in the
- * list. This function takes over responsibility for freeing the list.
- *
- * XXX The list is made into the arg_files list. This is freed using
- * FreeWild(), which does a series of vim_free() calls, unless the two defines
- * __EMX__ and __ALWAYS_HAS_TRAILING_NUL_POINTER are set. In this case, a
- * routine _fnexplodefree() is used. This may cause problems, but as the drop
- * file functionality is (currently) Win32-specific (where these defines are
- * not set), this is not presently a problem.
- */
-
-void
-handle_drop(filec, filev)
-    int		filec;
-    char_u	**filev;
-{
-    EXARG	ea;
-    int		i;
-    int		split = FALSE;
-
-    /* Check whether the current buffer is changed. If so, we will need
-     * to split the current window or data could be lost.
-     * We don't need to check if the 'hidden' option is set, as in this
-     * case the buffer won't be lost.
-     */
-    if (!p_hid)
-    {
-	int old_emsg = emsg_off;
-
-	emsg_off = TRUE;
-	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
-	emsg_off = old_emsg;
-    }
-
-    /*
-     * Set up the new argument list.
-     * This code is copied from the tail end of do_arglist()
-     */
-    FreeWild(arg_file_count, arg_files);
-    arg_file_count = filec;
-    arg_files = filev;
-    arg_had_last = FALSE;
-
-    for (i = 0; i < arg_file_count; ++i)
-	if (arg_files[i] != NULL)
-	    (void)buflist_add(arg_files[i]);
-
-    /*
-     * Move to the first file.
-     */
-
-    /* Fake up a minimal "[s]next" command for do_argfile() */
-    ea.cmd = (char_u *)(split ? "snext" : "next");
-    ea.forceit = FALSE;
-    ea.do_ecmd_cmd = NULL;
-    ea.do_ecmd_lnum = 0;
-
-    do_argfile(&ea, 0);
-}
-#endif
-
-/*
- * Handle ":recover" command.
- */
-    static void
-do_recover(eap)
-    EXARG	*eap;
-{
-    recoverymode = TRUE;
-    if (!check_changed(curbuf, FALSE, TRUE, eap->forceit, FALSE)
-		&& (*eap->arg == NUL || setfname(eap->arg, NULL, TRUE) == OK))
-	ml_recover();
-    recoverymode = FALSE;
-}
-
-/*
- * Handle ":args" command.
- */
-    static void
-do_args(eap)
-    EXARG	*eap;
-{
-    int	    i;
-
-    /* ":args file": handle like :next */
-    if (!ends_excmd(*eap->arg))
-	do_next(eap);
-    else
-    {
-	if (arg_file_count == 0)	    /* no file name list */
-	{
-	    if (check_fname() == OK)	    /* check for no file name */
-		smsg((char_u *)"[%s]", curbuf->b_ffname);
-	}
-	else
-	{
-	    /*
-	     * Overwrite the command, in most cases there is no scrolling
-	     * required and no wait_return().
-	     */
-	    gotocmdline(TRUE);
-	    for (i = 0; i < arg_file_count; ++i)
-	    {
-		if (i == curwin->w_arg_idx)
-		    msg_putchar('[');
-		msg_outtrans(arg_files[i]);
-		if (i == curwin->w_arg_idx)
-		    msg_putchar(']');
-		msg_putchar(' ');
-	    }
-	}
-    }
-}
-
-/*
- * Handle ":wnext", ":wNext" and ":wprevious" commands.
- */
-    static void
-do_wnext(eap)
-    EXARG	*eap;
-{
-    int		i;
-
-    if (eap->cmd[1] == 'n')
-	i = curwin->w_arg_idx + (int)eap->line2;
-    else
-	i = curwin->w_arg_idx - (int)eap->line2;
-    eap->line1 = 1;
-    eap->line2 = curbuf->b_ml.ml_line_count;
-    if (do_write(eap) != FAIL)
-	do_argfile(eap, i);
-}
-
-/*
- * :sview [+command] file   split window with new file, read-only
- * :split [[+command] file] split window with current or new file
- * :new [[+command] file]   split window with no or new file
- */
-    static void
-do_splitview(eap)
-    EXARG	*eap;
-{
-    WIN		*old_curwin;
-#ifdef USE_BROWSE
-    char_u	*browseFile = NULL;
-#endif
-
-    old_curwin = curwin;
-#ifdef USE_GUI
-    need_mouse_correct = TRUE;
-#endif
-
-#ifdef USE_BROWSE
-    if (browse && eap->cmdidx != CMD_new)
-    {
-	browseFile = do_browse(FALSE, (char_u *)"Edit File in new window",
-					  NULL, NULL, eap->arg, NULL, curbuf);
-	if (browseFile == NULL)
-	    goto theend;
-	eap->arg = browseFile;
-    }
-#endif
-    if (win_split(eap->addr_count ? (int)eap->line2 : 0, FALSE, FALSE) != FAIL)
-	do_exedit(eap, old_curwin);
-
-#ifdef USE_BROWSE
-theend:
-    vim_free(browseFile);
-#endif
-}
-
-/*
- * Handle ":resize" command.
- * set, increment or decrement current window height
- */
-    static void
-do_resize(eap)
-    EXARG	*eap;
-{
-    int		n;
-
-#ifdef USE_GUI
-    need_mouse_correct = TRUE;
-#endif
-    n = atol((char *)eap->arg);
-    if (*eap->arg == '-' || *eap->arg == '+')
-	n += curwin->w_height;
-    else if (n == 0)	    /* default is very high */
-	n = 9999;
-    win_setheight((int)n);
-}
-
-    static void
-do_exedit(eap, old_curwin)
-    EXARG	*eap;
-    WIN		*old_curwin;
-{
-    int	    n;
-
-    /*
-     * ":vi" command ends Ex mode.
-     */
-    if (exmode_active && (eap->cmdidx == CMD_visual || eap->cmdidx == CMD_view))
-    {
-	exmode_active = FALSE;
-	if (*eap->arg == NUL)
-	    return;
-    }
-
-    if ((eap->cmdidx == CMD_new) && *eap->arg == NUL)
-    {
-	setpcmark();
-	(void)do_ecmd(0, NULL, NULL, eap->do_ecmd_cmd, (linenr_t)1,
-			       ECMD_HIDE + (eap->forceit ? ECMD_FORCEIT : 0));
-    }
-    else if (eap->cmdidx != CMD_split || *eap->arg != NUL
-#ifdef USE_BROWSE
-	    || browse
-#endif
-	    )
-    {
-	n = readonlymode;
-	if (eap->cmdidx == CMD_view || eap->cmdidx == CMD_sview)
-	    readonlymode = TRUE;
-	setpcmark();
-	(void)do_ecmd(0, eap->arg, NULL, eap->do_ecmd_cmd, eap->do_ecmd_lnum,
-		      (p_hid ? ECMD_HIDE : 0) +
-		      (eap->forceit ? ECMD_FORCEIT : 0) +
-		      (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 ));
-	readonlymode = n;
-    }
-    else
-    {
-	if (eap->do_ecmd_cmd != NULL)
-	    do_cmdline(eap->do_ecmd_cmd, NULL, NULL, DOCMD_VERBOSE);
-	update_screen(NOT_VALID);
-    }
-
-    /*
-     * if ":split file" worked, set alternate file name in old window to new
-     * file
-     */
-    if (       (eap->cmdidx == CMD_new
-		|| eap->cmdidx == CMD_split)
-	    && *eap->arg != NUL
-	    && curwin != old_curwin
-	    && win_valid(old_curwin)
-	    && old_curwin->w_buffer != curbuf)
-	old_curwin->w_alt_fnum = curbuf->b_fnum;
-
-    ex_no_reprint = TRUE;
-}
-
-#ifdef USE_GUI
-/*
- * Handle ":gui" or ":gvim" command.
- */
-    static void
-do_gui(eap)
-    EXARG	*eap;
-{
-    /*
-     * Check for "-f" argument: foreground, don't fork.
-     */
-    if (eap->arg[0] == '-' && eap->arg[1] == 'f' &&
-			     (eap->arg[2] == NUL || vim_iswhite(eap->arg[2])))
-    {
-	gui.dofork = FALSE;
-	eap->arg = skipwhite(eap->arg + 2);
-    }
-    else
-	gui.dofork = TRUE;
-    if (!gui.in_use)
-    {
-	/* Clear the command.  Needed for when forking+exiting, to avoid part
-	 * of the argument ending up after the shell prompt. */
-	msg_clr_eos();
-	gui_start();
-    }
-    if (!ends_excmd(*eap->arg))
-	do_next(eap);
-}
-#endif
-
-    static void
-do_swapname()
-{
-    if (curbuf->b_ml.ml_mfp == NULL || curbuf->b_ml.ml_mfp->mf_fname == NULL)
-	MSG("No swap file");
-    else
-	msg(curbuf->b_ml.ml_mfp->mf_fname);
-}
-
-    static void
-do_read(eap)
-    EXARG	*eap;
-{
-    int	    i;
-
-    if (eap->usefilter)			/* :r!cmd */
-	do_bang(1, eap->line1, eap->line2, FALSE, eap->arg, FALSE, TRUE);
-    else
-    {
-	if (u_save(eap->line2, (linenr_t)(eap->line2 + 1)) == FAIL)
-	    return;
-
-#ifdef USE_BROWSE
-	if (browse)
-	{
-	    char_u *browseFile;
-
-	    browseFile = do_browse(FALSE, (char_u *)"Append File", NULL,
-						NULL, eap->arg, NULL, curbuf);
-	    if (browseFile != NULL)
-	    {
-		i = readfile(browseFile, NULL,
-			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
-		vim_free(browseFile);
-	    }
-	    else
-		i = OK;
-	}
-	else
-#endif
-	     if (*eap->arg == NUL)
-	{
-	    if (check_fname() == FAIL)	/* check for no file name */
-		return;
-	    i = readfile(curbuf->b_ffname, curbuf->b_fname,
-			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
-	}
-	else
-	{
-	    if (vim_strchr(p_cpo, CPO_ALTREAD) != NULL)
-		setaltfname(eap->arg, eap->arg, (linenr_t)1);
-	    i = readfile(eap->arg, NULL,
-			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
-
-	}
-	if (i == FAIL)
-	    emsg2(e_notopen, eap->arg);
-	else
-	    update_screen(NOT_VALID);
-    }
-}
-
-    static void
-do_cd(eap)
-    EXARG	*eap;
-{
-#ifdef UNIX
-    /*
-     * for UNIX ":cd" means: go to home directory
-     */
-    if (*eap->arg == NUL)    /* use NameBuff for home directory name */
-    {
-	expand_env((char_u *)"$HOME", NameBuff, MAXPATHL);
-	eap->arg = NameBuff;
-    }
-#endif
-    if (*eap->arg == NUL)
-	do_pwd();
-    else
-    {
-	if (mch_chdir((char *)eap->arg))
-	    emsg(e_failed);
-	else
-	    shorten_fnames();
-    }
-}
-
-    static void
-do_pwd()
-{
-    if (mch_dirname(NameBuff, MAXPATHL) == OK)
-	msg(NameBuff);
-    else
-	emsg(e_unknown);
-}
-
-    static void
-do_sleep(eap)
-    EXARG	*eap;
-{
-    int	    n;
-
-    if (cursor_valid())
-    {
-	n = curwin->w_winpos + curwin->w_wrow - msg_scrolled;
-	if (n >= 0)
-	    windgoto((int)n, curwin->w_wcol);
-    }
-    cursor_on();
-    out_flush();
-    ui_delay(eap->line2 * (*eap->arg == 'm' ? 1L : 1000L), TRUE);
-}
-
-    static void
-do_exmap(eap, isabbrev)
-    EXARG	*eap;
-    int		isabbrev;
-{
-    int	    mode;
-    char_u  *cmdp;
-
-    cmdp = eap->cmd;
-    mode = get_map_mode(&cmdp, eap->forceit || isabbrev);
-
-    switch (do_map((*cmdp == 'n') ? 2 : (*cmdp == 'u'),
-						    eap->arg, mode, isabbrev))
-    {
-	case 1: emsg(e_invarg);
-		break;
-	case 2: emsg(e_nomap);
-		break;
-	case 3: emsg(e_ambmap);
-		break;
-    }
-}
-
-/*
- * ":winsize" command (obsolete).
- */
-    static void
-do_winsize(arg)
-    char_u	*arg;
-{
-    int	    w, h;
-
-    w = getdigits(&arg);
-    arg = skipwhite(arg);
-    h = getdigits(&arg);
-    set_winsize(w, h, TRUE);
-}
-
-/*
- * Handle command that work like operators: ":delete", ":yank", ":>" and ":<".
- */
-    static void
-do_exops(eap)
-    EXARG	*eap;
-{
-    OPARG	oa;
-
-    clear_oparg(&oa);
-    oa.regname = eap->regname;
-    oa.start.lnum = eap->line1;
-    oa.end.lnum = eap->line2;
-    oa.line_count = eap->line2 - eap->line1 + 1;
-    oa.motion_type = MLINE;
-    if (eap->cmdidx != CMD_yank)	/* position cursor for undo */
-    {
-	setpcmark();
-	curwin->w_cursor.lnum = eap->line1;
-	beginline(BL_SOL | BL_FIX);
-    }
-
-    switch (eap->cmdidx)
-    {
-	case CMD_delete:
-	    oa.op_type = OP_DELETE;
-	    op_delete(&oa);
-	    break;
-
-	case CMD_yank:
-	    oa.op_type = OP_YANK;
-	    (void)op_yank(&oa, FALSE, TRUE);
-	    break;
-
-	default:    /* CMD_rshift or CMD_lshift */
-	    if ((eap->cmdidx == CMD_rshift)
-#ifdef RIGHTLEFT
-				    ^ curwin->w_p_rl
-#endif
-						    )
-		oa.op_type = OP_RSHIFT;
-	    else
-		oa.op_type = OP_LSHIFT;
-	    op_shift(&oa, FALSE, eap->amount);
-	    break;
-    }
-}
-
-/*
- * Handle ":copy" and ":move".
- */
-    static void
-do_copymove(eap)
-    EXARG	*eap;
-{
-    long	n;
-
-    n = get_address(&eap->arg, FALSE);
-    if (eap->arg == NULL)	    /* error detected */
-    {
-	eap->nextcmd = NULL;
-	return;
-    }
-
-    /*
-     * move or copy lines from 'eap->line1'-'eap->line2' to below line 'n'
-     */
-    if (n == MAXLNUM || n < 0 || n > curbuf->b_ml.ml_line_count)
-    {
-	emsg(e_invaddr);
-	return;
-    }
-
-    if (eap->cmdidx == CMD_move)
-    {
-	if (do_move(eap->line1, eap->line2, n) == FAIL)
-	    return;
-    }
-    else
-	do_copy(eap->line1, eap->line2, n);
-    u_clearline();
-    beginline(BL_SOL | BL_FIX);
-    update_screen(NOT_VALID);
-}
-
-/*
- * Handle ":join" command.
- */
-    static void
-do_exjoin(eap)
-    EXARG	*eap;
-{
-    curwin->w_cursor.lnum = eap->line1;
-    if (eap->line1 == eap->line2)
-    {
-	if (eap->addr_count >= 2)   /* :2,2join does nothing */
-	    return;
-	if (eap->line2 == curbuf->b_ml.ml_line_count)
-	{
-	    beep_flush();
-	    return;
-	}
-	++eap->line2;
-    }
-    do_do_join(eap->line2 - eap->line1 + 1, !eap->forceit, FALSE);
-    beginline(BL_WHITE | BL_FIX);
-}
-
-/*
- * Handle ":@" or ":*" command, execute from register.
- */
-    static void
-do_exat(eap)
-    EXARG	*eap;
-{
-    int		c;
-
-    curwin->w_cursor.lnum = eap->line2;
-
-#ifdef USE_GUI_WIN32
-    dont_scroll = TRUE;		/* disallow scrolling here */
-#endif
-
-    /* get the register name.  No name means to use the previous one */
-    c = *eap->arg;
-    if (c == NUL || c == '*')
-	c = '@';
-    /* put the register in mapbuf */
-    if (do_execreg(c, TRUE, vim_strchr(p_cpo, CPO_EXECBUF) != NULL) == FAIL)
-	beep_flush();
-    else
-    {
-	/* execute from the mapbuf */
-	while (vpeekc() == ':')
-	{
-	    (void)vgetc();
-	    (void)do_cmdline(NULL, getexline, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
-	}
-    }
-}
-
-/*
- * Handle ":redir" command, start/stop redirection.
- */
-    static void
-do_redir(eap)
-    EXARG	*eap;
-{
-    char	*mode;
-#ifdef USE_BROWSE
-    char_u	*browseFile = NULL;
-#endif
-
-    if (STRICMP(eap->arg, "END") == 0)
-	close_redir();
-    else
-    {
-	if (*eap->arg == '>')
-	{
-	    ++eap->arg;
-	    if (*eap->arg == '>')
-	    {
-		++eap->arg;
-		mode = "a";
-	    }
-	    else
-		mode = "w";
-	    eap->arg = skipwhite(eap->arg);
-
-	    close_redir();
-#ifdef USE_BROWSE
-	    if (browse)
-	    {
-		browseFile = do_browse(TRUE, (char_u *)"Save Redirection",
-		       NULL, NULL, eap->arg, BROWSE_FILTER_ALL_FILES, curbuf);
-		if (browseFile == NULL)
-		    return;		/* operation cancelled */
-		eap->arg = browseFile;
-		eap->forceit = TRUE;	/* since dialog already asked */
-	    }
-#endif /* USE_BROWSE */
-
-	    redir_fd = open_exfile(eap, mode);
-
-#ifdef USE_BROWSE
-	    vim_free(browseFile);
-#endif
-	}
-
-	/* TODO: redirect to a buffer */
-
-	/* TODO: redirect to an internal variable */
-
-	else
-	    EMSG(e_invarg);
-    }
-}
-
-    static void
-close_redir()
-{
-    if (redir_fd != NULL)
-    {
-	fclose(redir_fd);
-	redir_fd = NULL;
-    }
-}
-
-/*
- * Handle ":mkexrc", ":mkvimrc" and ":mksession" commands.
- */
-    static void
-do_mkrc(eap, defname)
-    EXARG	*eap;
-    char_u	*defname;	/* default file name */
-{
-    FILE	*fd;
-    int		failed;
-#ifdef USE_BROWSE
-    char_u	*browseFile = NULL;
-#endif
-
-    if (*eap->arg == NUL)
-	eap->arg = defname;
-
-#ifdef USE_BROWSE
-    if (browse)
-    {
-	browseFile = do_browse(TRUE,
-		STRCMP(defname, SESSION_FILE) == 0 ? (char_u *)"Save Session"
-						   : (char_u *)"Save Setup",
-		NULL, (char_u *)"vim", eap->arg, BROWSE_FILTER_MACROS, curbuf);
-	if (browseFile == NULL)
-	    return;		/* operation cancelled */
-	eap->arg = browseFile;
-	eap->forceit = TRUE;	/* since dialog already asked */
-    }
-#endif /* USE_BROWSE */
-
-    fd = open_exfile(eap, WRITEBIN);
-    if (fd != NULL)
-    {
-	/* Write the version command for :mkvimrc and :mksession */
-	if (eap->cmdidx == CMD_mkvimrc || eap->cmdidx == CMD_mksession)
-	{
-	    fprintf(fd, "version 5.0");
-	    (void)put_eol(fd);
-	}
-
-	/* Write setting 'compatible' first, because it has side effects */
-	if (p_cp)
-	    fprintf(fd, "set compatible");
-	else
-	    fprintf(fd, "set nocompatible");
-	(void)put_eol(fd);
-
-	if ((eap->cmdidx != CMD_mksession)
-		|| (vim_strchr(p_sessopt, 'o') != NULL))	/* "options" */
-	    failed = (makemap(fd) == FAIL || makeset(fd) == FAIL);
-	else
-	    failed = FALSE;
-
-	if (eap->cmdidx == CMD_mksession && !failed)
-	{
-	    /* save current dir*/
-	    char_u dirnow[MAXPATHL];
-
-	    if (mch_dirname(dirnow, MAXPATHL) == FAIL)
-		*dirnow = NUL;
-
-	    /*
-	     * Change to session file's dir.
-	     */
-	    (void)vim_chdirfile(eap->arg);
-	    shorten_fnames();
-
-	    failed |= (makeopens(fd) == FAIL);
-
-	    /* restore original dir */
-	    if (*dirnow)
-	    {
-		(void)mch_chdir((char *)dirnow);
-		shorten_fnames();
-	    }
-	}
-	failed |= fclose(fd);
-
-	if (failed)
-	    emsg(e_write);
-#ifdef WANT_EVAL
-	else if (eap->cmdidx == CMD_mksession)
-	{
-	    /* successful session write - set this_session var */
-	    char_u	tbuf[MAXPATHL];
-
-	    if (mch_FullName(eap->arg, tbuf, MAXPATHL, FALSE) == OK)
-		set_internal_string_var((char_u *)"this_session", tbuf);
-	}
-#endif
-    }
-#ifdef USE_BROWSE
-    vim_free(browseFile);
-#endif
-}
-
-/*
- * Open a file for writing for an Ex command, with some checks.
- * Return file descriptor, or NULL on failure.
- */
-    static FILE	*
-open_exfile(eap, mode)
-    EXARG	*eap;
-    char	*mode;	    /* "w" for create new file or "a" for append */
-{
-    FILE	*fd;
-
-#ifdef UNIX
-    /* with Unix it is possible to open a directory */
-    if (mch_isdir(eap->arg))
-    {
-	EMSG2("\"%s\" is a directory", eap->arg);
-	return NULL;
-    }
-#endif
-    if (!eap->forceit && *mode != 'a' && vim_fexists(eap->arg))
-    {
-	EMSG2("\"%s\" exists (use ! to override)", eap->arg);
-	return NULL;
-    }
-
-    if ((fd = fopen((char *)eap->arg, mode)) == NULL)
-	EMSG2("Cannot open \"%s\" for writing", eap->arg);
-
-    return fd;
-}
-
-/*
- * Handle ":mark" or ":k" command.
- */
-    static void
-do_setmark(eap)
-    EXARG	*eap;
-{
-    FPOS	pos;
-
-    pos = curwin->w_cursor;	    /* save curwin->w_cursor */
-    curwin->w_cursor.lnum = eap->line2;
-    beginline(BL_WHITE | BL_FIX);
-    (void)setmark(*eap->arg);	    /* set mark */
-    curwin->w_cursor = pos;	    /* restore curwin->w_cursor */
-}
-
-#ifdef EX_EXTRA
-/*
- * Handle ":normal[!] {commands}" - execute normal mode commands
- * Often used for ":autocmd".
- */
-    static void
-do_normal(eap)
-    EXARG	*eap;
-{
-    OPARG	oa;
-    int		len;
-    int		save_msg_scroll = msg_scroll;
-    int		save_restart_edit = restart_edit;
-    int		save_msg_didout = msg_didout;
-    static int	depth = 0;
-
-    if (depth >= p_mmd)
-    {
-	EMSG("Recursive use of :normal too deep");
-	return;
-    }
-    ++depth;
-    msg_scroll = FALSE;	    /* no msg scrolling in Normal mode */
-    restart_edit = 0;	    /* don't go to Insert mode */
-
-    /*
-     * Repeat the :normal command for each line in the range.  When no range
-     * given, execute it just once, without positioning the cursor first.
-     */
-    do
-    {
-	clear_oparg(&oa);
-	if (eap->addr_count != 0)
-	{
-	    curwin->w_cursor.lnum = eap->line1++;
-	    curwin->w_cursor.col = 0;
-	}
-
-	/*
-	 * Stuff the argument into the typeahead buffer.
-	 * Execute normal_cmd() until there is no more
-	 * typeahead than there was before this command.
-	 */
-	len = typelen;
-	ins_typebuf(eap->arg, eap->forceit ? -1 : 0, 0, TRUE);
-	while (	   (!stuff_empty()
-			|| (!typebuf_typed()
-			    && typelen > len))
-		&& !got_int)
-	{
-	    adjust_cursor();		/* put cursor on valid line */
-	    /* Make sure w_topline and w_leftcol are correct. */
-	    update_topline();
-	    if (!curwin->w_p_wrap)
-		validate_cursor();
-	    update_curswant();
-
-	    normal_cmd(&oa, FALSE);	/* execute a Normal mode cmd */
-	}
-    }
-    while (eap->addr_count > 0 && eap->line1 <= eap->line2 && !got_int);
-
-    --depth;
-    msg_scroll = save_msg_scroll;
-    restart_edit = save_restart_edit;
-    msg_didout |= save_msg_didout;	/* don't reset msg_didout now */
-}
-#endif
-
-#ifdef FIND_IN_PATH
-    static char_u *
-do_findpat(eap, action)
-    EXARG	*eap;
-    int		action;
-{
-    int		whole = TRUE;
-    long	n;
-    char_u	*p;
-    char_u	*errormsg = NULL;
-
-    n = 1;
-    if (isdigit(*eap->arg))	/* get count */
-    {
-	n = getdigits(&eap->arg);
-	eap->arg = skipwhite(eap->arg);
-    }
-    if (*eap->arg == '/')   /* Match regexp, not just whole words */
-    {
-	whole = FALSE;
-	++eap->arg;
-	p = skip_regexp(eap->arg, '/', p_magic);
-	if (*p)
-	{
-	    *p++ = NUL;
-	    p = skipwhite(p);
-
-	    /* Check for trailing illegal characters */
-	    if (!ends_excmd(*p))
-		errormsg = e_trailing;
-	    else
-		eap->nextcmd = check_nextcmd(p);
-	}
-    }
-    if (!eap->skip)
-	find_pattern_in_path(eap->arg, 0, (int)STRLEN(eap->arg),
-			    whole, !eap->forceit,
-			    *eap->cmd == 'd' ?	FIND_DEFINE : FIND_ANY,
-			    n, action, eap->line1, eap->line2);
-
-    return errormsg;
-}
-#endif
-
-    static void
-do_ex_tag(eap, dt)
-    EXARG	*eap;
-    int		dt;
-{
-    do_tag((char_u *)"", dt, eap->addr_count ? (int)eap->line2
-					     : 1, eap->forceit, TRUE);
-}
-
-#ifdef WANT_EVAL
-
-    static char_u *
-do_if(eap, cstack)
-    EXARG		*eap;
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-    int		error;
-    int		skip;
-    int		result;
-
-    if (cstack->cs_idx == CSTACK_LEN - 1)
-	errormsg = (char_u *)":if nesting too deep";
-    else
-    {
-	++cstack->cs_idx;
-	cstack->cs_flags[cstack->cs_idx] = 0;
-
-	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
-	 */
-	skip = (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-	if (skip)
-	    ++emsg_off;
-	result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
-	if (skip)
-	    --emsg_off;
-
-	if (!skip)
-	{
-	    if (result)
-		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
-	    if (error)
-		--cstack->cs_idx;
-	}
-    }
-
-    return errormsg;
-}
-
-/*
- * Handle ":else" and ":elseif" commands.
- */
-    static char_u *
-do_else(eap, cstack)
-    EXARG		*eap;
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-    int		error;
-    int		skip;
-    int		result;
-
-    if (cstack->cs_idx < 0 || (cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-    {
-	if (eap->cmdidx == CMD_else)
-	    errormsg = (char_u *)":else without :if";
-	else
-	    errormsg = (char_u *)":elseif without :if";
-    }
-    else
-    {
-	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
-	 */
-	skip = (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-	if (!skip)
-	{
-	    /* if the ":if" was TRUE, reset active, otherwise set it */
-	    if (cstack->cs_flags[cstack->cs_idx] & CSF_TRUE)
-		cstack->cs_flags[cstack->cs_idx] = CSF_TRUE;
-	    else
-		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE;
-	}
-
-	if (eap->cmdidx == CMD_elseif)
-	{
-	    if (skip)
-		++emsg_off;
-	    result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
-	    if (skip)
-		--emsg_off;
-
-	    if (!skip && (cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE))
-	    {
-		if (result)
-		    cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
-		else
-		    cstack->cs_flags[cstack->cs_idx] = 0;
-		if (error)
-		    --cstack->cs_idx;
-	    }
-	}
-    }
-
-    return errormsg;
-}
-
-/*
- * Handle ":while".
- */
-    static char_u *
-do_while(eap, cstack)
-    EXARG		*eap;
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-    int		error;
-    int		skip;
-    int		result;
-
-    if (cstack->cs_idx == CSTACK_LEN - 1)
-	errormsg = (char_u *)":while nesting too deep";
-    else
-    {
-	/*
-	 * cs_had_while is set when we have jumped back from the matching
-	 * ":endwhile".  When not set, need to init this cstack entry.
-	 */
-	if (!cstack->cs_had_while)
-	{
-	    ++cstack->cs_idx;
-	    ++cstack->cs_whilelevel;
-	}
-	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
-
-	/*
-	 * Don't do something when there is a surrounding conditional and it
-	 * was not active.
-	 */
-	skip = (cstack->cs_idx > 0
-		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
-	if (skip)
-	    ++emsg_off;
-	result = eval_to_bool(eap->arg, &error, &eap->nextcmd);
-	if (skip)
-	    --emsg_off;
-
-	if (!skip)
-	{
-	    if (result)
-		cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
-	    if (error)
-		--cstack->cs_idx;
-	    else
-		/*
-		 * Set cs_had_while flag, so do_cmdline() will set the line
-		 * number in cs_line[].
-		 */
-		cstack->cs_had_while = TRUE;
-	}
-    }
-
-    return errormsg;
-}
-
-/*
- * Handle ":continue".
- */
-    static char_u *
-do_continue(cstack)
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	errormsg = (char_u *)":continue without :while";
-    else
-    {
-	/* Find the matching ":while". */
-	while (cstack->cs_idx > 0
-		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-	    --cstack->cs_idx;
-
-	/*
-	 * Set cs_had_continue, so do_cmdline() will jump back to the matching
-	 * ":while".
-	 */
-	cstack->cs_had_continue = TRUE;	    /* let do_cmdline() handle it */
-    }
-
-    return errormsg;
-}
-
-/*
- * Handle ":break".
- */
-    static char_u *
-do_break(cstack)
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-    int		idx;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	errormsg = (char_u *)":break without :while";
-    else
-    {
-	/* Find the matching ":while". */
-	for (idx = cstack->cs_idx; idx >= 0; --idx)
-	{
-	    cstack->cs_flags[idx] &= ~CSF_ACTIVE;
-	    if (cstack->cs_flags[idx] & CSF_WHILE)
-		break;
-	}
-    }
-
-    return errormsg;
-}
-
-/*
- * Handle ":endwhile".
- */
-    static char_u *
-do_endwhile(cstack)
-    struct condstack	*cstack;
-{
-    char_u	*errormsg = NULL;
-
-    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
-	errormsg = (char_u *)":endwhile without :while";
-    else
-    {
-	if (!(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-	{
-	    errormsg = (char_u *)":endwhile without :while";
-	    while (cstack->cs_idx > 0
-		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
-		--cstack->cs_idx;
-	}
-	/*
-	 * Set cs_had_endwhile, so do_cmdline() will jump back to the matching
-	 * ":while".
-	 */
-	cstack->cs_had_endwhile = TRUE;
-    }
-
-    return errormsg;
-}
-
-/*
- * Return TRUE if the string "p" looks like a ":while" command.
- */
-    static int
-has_while_cmd(p)
-    char_u	*p;
-{
-    p = skipwhite(p);
-    while (*p == ':')
-	++p;
-    p = skipwhite(p);
-    if (p[0] == 'w' && p[1] == 'h')
-	return TRUE;
-    return FALSE;
-}
-
-#endif /* WANT_EVAL */
-
-/*
- * Evaluate cmdline variables.
- *
- * change '%'	    to curbuf->b_ffname
- *	  '#'	    to curwin->w_altfile
- *	  '<cword>' to word under the cursor
- *	  '<cWORD>' to WORD under the cursor
- *	  '<cfile>' to path name under the cursor
- *	  '<sfile>" to sourced file name"
- *	  '<afile>' to file name for autocommand
- *	  '<abuf>'  to buffer number for autocommand
- *
- * When an error is detected, "errormsg" is set to a non-NULL pointer (may be
- * "" for error without a message) and NULL is returned.
- * Returns an allocated string if a valid match was found.
- * Returns NULL if no match was found.	"usedlen" then still contains the
- * number of characters to skip.
- */
-    char_u *
-eval_vars(src, usedlen, lnump, errormsg, srcstart)
-    char_u	*src;		/* pointer into commandline */
-    int		*usedlen;	/* characters after src that are used */
-    linenr_t	*lnump;		/* line number for :e command, or NULL */
-    char_u	**errormsg;	/* error message, or NULL */
-    char_u	*srcstart;	/* beginning of valid memory for src */
-{
-    int		i;
-    char_u	*s;
-    char_u	*result;
-    char_u	*resultbuf = NULL;
-    int		resultlen;
-    BUF		*buf;
-    int		valid = VALID_HEAD + VALID_PATH;    /* assume valid result */
-    int		spec_idx;
-    static char *(spec_str[]) =
-		{
-		    "%",
-#define SPEC_PERC   0
-		    "#",
-#define SPEC_HASH   1
-		    "<cword>",		/* cursor word */
-#define SPEC_CWORD  2
-		    "<cWORD>",		/* cursor WORD */
-#define SPEC_CCWORD 3
-		    "<cfile>",		/* cursor path name */
-#define SPEC_CFILE  4
-		    "<sfile>",		/* ":so" file name */
-#define SPEC_SFILE  5
-#ifdef AUTOCMD
-		    "<afile>",		/* autocommand file name */
-# define SPEC_AFILE 6
-		    "<abuf>"		/* autocommand buffer number */
-# define SPEC_ABUF  7
-#endif
-		};
-#define SPEC_COUNT  (sizeof(spec_str) / sizeof(char *))
-
-#ifdef AUTOCMD
-    char_u	abuf_nr[30];
-#endif
-
-    *errormsg = NULL;
-
-    /*
-     * Check if there is something to do.
-     */
-    for (spec_idx = 0; spec_idx < SPEC_COUNT; ++spec_idx)
-    {
-	*usedlen = strlen(spec_str[spec_idx]);
-	if (STRNCMP(src, spec_str[spec_idx], *usedlen) == 0)
-	    break;
-    }
-    if (spec_idx == SPEC_COUNT)	    /* no match */
-    {
-	*usedlen = 1;
-	return NULL;
-    }
-
-    /*
-     * Skip when preceded with a backslash "\%" and "\#".
-     * Note: In "\\%" the % is also not recognized!
-     */
-    if ((src > srcstart) && (*(src - 1) == '\\'))
-    {
-	*usedlen = 0;
-	STRCPY(src - 1, src);		/* remove backslash */
-	return NULL;
-    }
-
-    /*
-     * word or WORD under cursor
-     */
-    if (spec_idx == SPEC_CWORD || spec_idx == SPEC_CCWORD)
-    {
-	resultlen = find_ident_under_cursor(&result, spec_idx == SPEC_CWORD ?
-				      (FIND_IDENT|FIND_STRING) : FIND_STRING);
-	if (resultlen == 0)
-	{
-	    *errormsg = (char_u *)"";
-	    return NULL;
-	}
-    }
-
-    /*
-     * '#': Alternate file name
-     * '%': Current file name
-     *	    File name under the cursor
-     *	    File name for autocommand
-     *	and following modifiers
-     */
-    else
-    {
-	switch (spec_idx)
-	{
-	case SPEC_PERC:		/* '%': current file */
-		if (curbuf->b_fname == NULL)
-		{
-		    result = (char_u *)"";
-		    valid = 0;	    /* Must have ":p:h" to be valid */
-		}
-		else
-#ifdef RISCOS
-		    /* Always use the full path for RISC OS if possible. */
-		    result = curbuf->b_ffname;
-		    if (result == NULL)
-			result = curbuf->b_fname;
-#else
-		    result = curbuf->b_fname;
-#endif
-		break;
-
-	case SPEC_HASH:		/* '#' or "#99": alternate file */
-		s = src + 1;
-		i = (int)getdigits(&s);
-		*usedlen = s - src;	/* length of what we expand */
-
-		buf = buflist_findnr(i);
-		if (buf == NULL)
-		{
-		    *errormsg = (char_u *)"No alternate file name to substitute for '#'";
-		    return NULL;
-		}
-		if (lnump != NULL)
-		    *lnump = buflist_findlnum(buf);
-		if (buf->b_fname == NULL)
-		{
-		    result = (char_u *)"";
-		    valid = 0;	    /* Must have ":p:h" to be valid */
-		}
-		else
-		    result = buf->b_fname;
-		break;
-
-#ifdef FILE_IN_PATH
-	case SPEC_CFILE:	/* file name under cursor */
-		result = file_name_at_cursor(FNAME_MESS|FNAME_HYP, 1L);
-		if (result == NULL)
-		{
-		    *errormsg = (char_u *)"";
-		    return NULL;
-		}
-		resultbuf = result;	    /* remember allocated string */
-		break;
-#endif
-
-#ifdef AUTOCMD
-	case SPEC_AFILE:	/* file name for autocommand */
-		result = autocmd_fname;
-		if (result == NULL)
-		{
-		    *errormsg = (char_u *)"no autocommand file name to substitute for \"<afile>\"";
-		    return NULL;
-		}
-		break;
-
-	case SPEC_ABUF:		/* buffer number for autocommand */
-		if (autocmd_bufnr <= 0)
-		{
-		    *errormsg = (char_u *)"no autocommand buffer number to substitute for \"<abuf>\"";
-		    return NULL;
-		}
-		sprintf((char *)abuf_nr, "%d", autocmd_bufnr);
-		result = abuf_nr;
-		break;
-#endif
-	case SPEC_SFILE:	/* file name for ":so" command */
-		result = sourcing_name;
-		if (result == NULL)
-		{
-		    *errormsg = (char_u *)"no :source file name to substitute for \"<sfile>\"";
-		    return NULL;
-		}
-		break;
-	}
-
-	resultlen = STRLEN(result);	/* length of new string */
-	if (src[*usedlen] == '<')	/* remove the file name extension */
-	{
-	    ++*usedlen;
-#ifdef RISCOS
-	    if ((s = vim_strrchr(result, '/')) != NULL && s >= gettail(result))
-#else
-	    if ((s = vim_strrchr(result, '.')) != NULL && s >= gettail(result))
-#endif
-		resultlen = s - result;
-	}
-#ifdef WANT_MODIFY_FNAME
-	else
-	{
-	    valid |= modify_fname(src, usedlen, &result, &resultbuf,
-								  &resultlen);
-	    if (result == NULL)
-	    {
-		*errormsg = (char_u *)"";
-		return NULL;
-	    }
-	}
-#endif
-    }
-
-    if (resultlen == 0 || valid != VALID_HEAD + VALID_PATH)
-    {
-	if (valid != VALID_HEAD + VALID_PATH)
-	    *errormsg = (char_u *)"Empty file name for '%' or '#', only works with \":p:h\"";
-	else
-	    *errormsg = (char_u *)"Evaluates to an empty string";
-	result = NULL;
-    }
-    else
-	result = vim_strnsave(result, resultlen);
-    vim_free(resultbuf);
-    return result;
-}
-
-/*
- * Expand the <sfile> string in "arg".
- *
- * Returns an allocated string, or NULL for any error.
- */
-    char_u *
-expand_sfile(arg)
-    char_u	*arg;
-{
-    char_u	*errormsg;
-    int		len;
-    char_u	*result;
-    char_u	*newres;
-    char_u	*repl;
-    int		srclen;
-    char_u	*p;
-    linenr_t	dummy;
-
-    result = vim_strsave(arg);
-    if (result == NULL)
-	return NULL;
-
-    for (p = result; *p; )
-    {
-	if (STRNCMP(p, "<sfile>", 7))
-	    ++p;
-	else
-	{
-	    /* replace "<sfile>" with the sourced file name, and do ":" stuff */
-	    repl = eval_vars(p, &srclen, &dummy, &errormsg, result);
-	    if (errormsg != NULL)
-	    {
-		if (*errormsg)
-		    emsg(errormsg);
-		vim_free(result);
-		return NULL;
-	    }
-	    if (repl == NULL)		/* no match (cannot happen) */
-	    {
-		p += srclen;
-		continue;
-	    }
-	    len = STRLEN(result) - srclen + STRLEN(repl) + 1;
-	    newres = alloc(len);
-	    if (newres == NULL)
-	    {
-		vim_free(repl);
-		vim_free(result);
-		return NULL;
-	    }
-	    mch_memmove(newres, result, (size_t)(p - result));
-	    STRCPY(newres + (p - result), repl);
-	    len = STRLEN(newres);
-	    STRCAT(newres, p + srclen);
-	    vim_free(result);
-	    result = newres;
-	    p = newres + len;		/* continue after the match */
-	}
-    }
-
-    return result;
-}
-
-/*
- * Write openfile commands for the current buffers to an .exrc file.
- * Return FAIL on error, OK otherwise.
- */
-    static int
-makeopens(fd)
-    FILE	*fd;
-{
-
-    BUF		*buf;
-
-    /*
-     * Begin by setting the this_session variable.
-     */
-#ifdef WANT_EVAL
-    if (fprintf(fd, "let this_session=expand(\"<sfile>:p\")") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-#endif
-
-    /*
-     * Next a command to unload current buffers.
-     */
-    if (fprintf(fd, "1,999bd") < 0 || put_eol(fd) == FAIL)
-	return FAIL;
-
-    /*
-     * Now a :cd command to the current directory
-     */
-    if (fprintf(fd, "execute \"cd \" . expand(\"<sfile>:p:h\")") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-
-    /*
-     * Now save the current files, current buffer first.
-     */
-    if (fprintf(fd, "let shmsave = &shortmess | set shortmess=aoO") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-
-    if (curbuf->b_fname != NULL)
-    {
-	/* current buffer - must load */
-	if (fprintf(fd, "e +%ld ", curwin->w_cursor.lnum ) < 0)
-	    return FAIL;
-	if (fprintf(fd, (curbuf->b_sfname != NULL)
-		    ?  (char *)curbuf->b_sfname
-		    : (char *)curbuf->b_ffname) < 0
-		|| put_eol(fd) == FAIL)
-	    return FAIL;
-    }
-
-    /* Now put the other buffers into the buffer list */
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-	if (buf->b_fname != NULL && buf != curbuf)
-	{
-	    if (fprintf(fd, "badd +%ld ", buf->b_winfpos->wl_fpos.lnum) < 0)
-		return FAIL;
-	    if (fprintf(fd, (buf->b_sfname != NULL)
-			?  (char *)buf->b_sfname
-			: (char *)buf->b_ffname) < 0
-		    || put_eol(fd) == FAIL)
-		return FAIL;
-	}
-
-    if (vim_strchr(p_sessopt, 'r') != NULL)	/* "resize" */
-    {
-	/* Note: after the restore we still check it worked!*/
-	if (fprintf(fd, "set lines=%ld" , Rows) < 0 || put_eol(fd) == FAIL)
-	    return FAIL;
-	if (fprintf(fd, "set columns=%ld" , Columns) < 0 || put_eol(fd) == FAIL)
-	    return FAIL;
-    }
-
-    /*
-     * Save current windows and cursor pos
-     */
-    if (vim_strchr(p_sessopt, 'w') != NULL)	/* "winsize" */
-    {
-	int	nr = 0;
-	int	cnr = 0;
-	WIN	*wp;
-
-	if (fprintf(fd, "let sbsave = &splitbelow | set splitbelow") < 0
-		|| put_eol(fd) == FAIL)
-	    return FAIL;
-	for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	{
-	    ++nr;
-	    if (wp->w_buffer->b_fname == NULL)
-	    {
-		/* create new, empty window, except for first window */
-		if (nr != 1 && fprintf(fd, "new") < 0)
-		    return FAIL;
-	    }
-	    else
-	    {
-		if (nr == 1)
-		{
-		    /* First window, i.e. already exists*/
-		    if (fprintf(fd, "b ") < 0)
-			return FAIL;
-		}
-		else
-		{
-		    /* create a new window */
-		    if (fprintf(fd, "sb ") < 0)
-			return FAIL;
-		}
-
-		if (wp->w_buffer->b_sfname)
-		{
-		    if (fprintf(fd, (char *)wp->w_buffer->b_sfname) < 0)
-			return FAIL;
-		}
-		else if (wp->w_buffer->b_ffname)
-		{
-		    if (fprintf(fd, (char *)wp->w_buffer->b_ffname) < 0)
-			return FAIL;
-		}
-	    }
-	    if (put_eol(fd) == FAIL)
-		return FAIL;
-
-	    if (wp->w_buffer->b_fname != NULL
-		    && (fprintf(fd, "normal %ldG%d|zz", (long)wp->w_cursor.lnum,
-			    wp->w_cursor.col + 1) < 0
-		    || put_eol(fd) == FAIL))
-		return FAIL;
-
-	    if (curwin == wp)
-		cnr = nr;
-	}
-	if (fprintf(fd, "let &splitbelow = sbsave") <0 || put_eol(fd) == FAIL)
-	    return FAIL;
-
-	/*
-	 * if more than one window, see if sizes can be restored
-	 */
-	if (nr > 1)
-	{
-	    if (fprintf(fd,
-		"if (&lines == %ld)" , Rows) < 0 || put_eol(fd) == FAIL)
-		return FAIL;
-	    if (fprintf(fd, "  normal \027t") < 0 || put_eol(fd) == FAIL)
-		return FAIL;
-
-	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	    {
-
-		if (fprintf(fd, "  resize %ld", (long)wp->w_height) < 0
-		    || put_eol(fd) == FAIL)
-		    return FAIL;
-
-		if (fprintf(fd, "  normal zz\027j") < 0 || put_eol(fd) == FAIL)
-		    return FAIL;
-	    }
-
-	    if (fprintf(fd, "else") < 0 || put_eol(fd) == FAIL)
-		return FAIL;
-	    if (fprintf(fd, "  normal \027=") < 0 || put_eol(fd) == FAIL)
-		return FAIL;
-	    if (fprintf(fd, "endif") < 0 || put_eol(fd) == FAIL)
-		return FAIL;
-	}
-
-	if (fprintf(fd, "normal %d\027w", cnr) < 0 || put_eol(fd) == FAIL)
-	    return FAIL;
-    }
-
-    if (fprintf(fd, "let &shortmess = shmsave") < 0 || put_eol(fd) == FAIL)
-	return FAIL;
-
-    /*
-     * Lastly, execute the x.vim file if it exists.
-     */
-    if (fprintf(fd, "let sessionextra=expand(\"<sfile>:p:r\").\"x.vim\"") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-
-    if (fprintf(fd, "if file_readable(sessionextra)") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-
-    if (fprintf(fd, "\texecute \"source \" . sessionextra") < 0
-	    || put_eol(fd) == FAIL)
-	return FAIL;
-
-    if (fprintf(fd, "endif") < 0 || put_eol(fd) == FAIL)
-	return FAIL;
-
-    return OK;
-}
-
-    static int
-put_eol(fd)
-    FILE	*fd;
-{
-    if
-#ifdef USE_CRNL
-	((putc('\r', fd) < 0) ||
-#endif
-	(putc('\n', fd) < 0)
-#ifdef USE_CRNL
-	)
-#endif
-	return FAIL;
-    return OK;
-}
-
-    static void
-cmd_source(fname, forceit)
-    char_u	*fname;
-    int		forceit;
-{
-    if (forceit)		/* :so! read vi commands */
-	(void)openscript(fname);
-			    /* :so read ex commands */
-    else if (do_source(fname, FALSE, FALSE) == FAIL)
-	emsg2(e_notopen, fname);
-}
-
-#ifdef USER_COMMANDS
     static int
 uc_add_command(name, name_len, rep, argt, def, compl, force)
     char_u	*name;
@@ -6862,7 +4830,7 @@ uc_list(name, name_len)
 	len = 0;
 
 	/* Arguments */
-	switch (a & (EXTRA|NOSPC|NEEDARG))
+	switch ((int)(a & (EXTRA|NOSPC|NEEDARG)))
 	{
 	case 0:			    IObuff[len++] = '0'; break;
 	case (EXTRA):		    IObuff[len++] = '*'; break;
@@ -6914,6 +4882,7 @@ uc_list(name, name_len)
 	    case EXPAND_MENUS:		s = "menu"; break;
 	    case EXPAND_SETTINGS:	s = "option"; break;
 	    case EXPAND_TAGS:		s = "tag"; break;
+	    case EXPAND_TAGS_LISTFILES:	s = "tag_listfiles"; break;
 	    case EXPAND_USER_VARS:	s = "var"; break;
 	    default:			s = NULL; break;
 	}
@@ -7066,9 +5035,14 @@ invalid_count:
 	    else if (STRNCMP(val, "command", vallen) == 0)
 		*compl = EXPAND_COMMANDS;
 	    else if (STRNCMP(val, "dir", vallen) == 0)
+	    {
+		*argt |= XFILE;
 		*compl = EXPAND_DIRECTORIES;
+	    }
 	    else if (STRNCMP(val, "event", vallen) == 0)
 		*compl = EXPAND_EVENTS;
+	    else if (STRNCMP(val, "expression", vallen) == 0)
+		*compl = EXPAND_EXPRESSION;
 	    else if (STRNICMP(val, "file", vallen) == 0)
 	    {
 		*argt |= XFILE;
@@ -7084,6 +5058,8 @@ invalid_count:
 		*compl = EXPAND_SETTINGS;
 	    else if (STRNCMP(val, "tag", vallen) == 0)
 		*compl = EXPAND_TAGS;
+	    else if (STRNCMP(val, "tag_listfiles", vallen) == 0)
+		*compl = EXPAND_TAGS_LISTFILES;
 	    else if (STRNCMP(val, "var", vallen) == 0)
 		*compl = EXPAND_USER_VARS;
 	    else
@@ -7131,8 +5107,9 @@ do_command(eap)
 
     /* Get the name (if any) and skip to the following argument */
     name = p;
-    while (isalpha(*p))
-	++p;
+    if (isalpha(*p))
+	while (isalnum(*p))
+	    ++p;
     if (!ends_excmd(*p) && !vim_iswhite(*p))
     {
 	EMSG("Invalid command name");
@@ -7531,10 +5508,2486 @@ do_ucmd(cmd, eap)
     vim_free(buf);
     vim_free(split_buf);
 }
+
+# if defined(CMDLINE_COMPL) || defined(PROTO)
+    static char_u *
+get_user_command_name(idx)
+    int		idx;
+{
+    int	i = idx - (int)CMD_SIZE;
+
+    if (i >= ucmds.ga_len)
+	return NULL;
+    return USER_CMD(i)->uc_name;
+}
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of user command names.
+ */
+    char_u *
+get_user_commands(idx)
+    int		idx;
+{
+    if (idx >= ucmds.ga_len)
+	return NULL;
+    return USER_CMD(idx)->uc_name;
+}
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of user command
+ * attributes.
+ */
+    char_u *
+get_user_cmd_flags(idx)
+    int		idx;
+{
+    static char *user_cmd_flags[] = {"nargs", "complete", "range", "count",
+				     "bang", "register"};
+    if (idx >= sizeof(user_cmd_flags) / sizeof(user_cmd_flags[0]))
+	return NULL;
+    return (char_u *)user_cmd_flags[idx];
+}
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of values for -nargs.
+ */
+    char_u *
+get_user_cmd_nargs(idx)
+    int		idx;
+{
+    static char *user_cmd_nargs[] = {"0", "1", "*", "?", "+"};
+
+    if (idx >= sizeof(user_cmd_nargs) / sizeof(user_cmd_nargs[0]))
+	return NULL;
+    return (char_u *)user_cmd_nargs[idx];
+}
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of values for -complete.
+ */
+    char_u *
+get_user_cmd_complete(idx)
+    int		idx;
+{
+    static char *user_cmd_complete[] =
+	{"augroup", "buffer", "command", "dir", "event", "file", "help",
+	 "highlight", "menu", "option", "tag", "tag_listfiles", "var"};
+
+    if (idx >= sizeof(user_cmd_complete) / sizeof(user_cmd_complete[0]))
+	return NULL;
+    return (char_u *)user_cmd_complete[idx];
+}
+# endif /* CMDLINE_COMPL */
+
+#endif	/* USER_COMMANDS */
+
+
+/*
+ * Call this function if we thought we were going to exit, but we won't
+ * (because of an error).  May need to restore the terminal mode.
+ */
+    void
+not_exiting()
+{
+    exiting = FALSE;
+    settmode(TMODE_RAW);
+}
+
+/*
+ * ":quit": quit current window, quit Vim if closed the last window.
+ */
+    static void
+do_quit(eap)
+    EXARG	*eap;
+{
+    /*
+     * If there are more files or windows we won't exit.
+     */
+    if (check_more(FALSE, eap->forceit) == OK && only_one_window())
+	exiting = TRUE;
+    if ((!p_hid && check_changed(curbuf, FALSE, FALSE, eap->forceit, FALSE))
+	    || check_more(TRUE, eap->forceit) == FAIL
+	    || (only_one_window() && check_changed_any(eap->forceit)))
+    {
+	not_exiting();
+    }
+    else
+    {
+	if (only_one_window())	    /* quit last window */
+	    getout(0);
+#ifdef USE_GUI
+	need_mouse_correct = TRUE;
+#endif
+	close_window(curwin, !p_hid || eap->forceit); /* may free buffer */
+    }
+}
+
+/*
+ * ":qall": try to quit all windows
+ */
+    static void
+do_quit_all(forceit)
+    int		forceit;
+{
+    exiting = TRUE;
+    if (forceit || !check_changed_any(FALSE))
+	getout(0);
+    not_exiting();
+}
+
+/*
+ * ":close": close current window, unless it is the last one
+ */
+    static void
+do_close(eap, win)
+    EXARG	*eap;
+    WIN		*win;
+{
+    int		need_hide;
+    BUF		*buf = win->w_buffer;
+
+    need_hide = (buf_changed(buf) && buf->b_nwindows <= 1);
+    if (need_hide && !p_hid && !eap->forceit)
+    {
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	if ((p_confirm || confirm) && p_write)
+	{
+	    dialog_changed(buf, FALSE);
+	    if (buf_changed(buf))
+		return;
+	}
+	else
+#endif
+	{
+	    emsg(e_nowrtmsg);
+	    return;
+	}
+    }
+
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
+    close_window(win, (!need_hide) && (!p_hid));    /* may free buffer */
+}
+
+/*
+ * ":pclose": Close any preview window.
+ */
+    static void
+do_pclose(eap)
+    EXARG	*eap;
+{
+    WIN		*win;
+
+    for (win = firstwin; win != NULL; win = win->w_next)
+    {
+	if (win->w_preview)
+	{
+	    do_close(eap, win);
+	    break;
+	}
+    }
+}
+
+/*
+ * ":stop" and ":suspend": Suspend Vim.
+ */
+    static void
+do_suspend(forceit)
+    int		forceit;
+{
+    /*
+     * Disallow suspending for "rvim".
+     */
+    if (!check_restricted()
+#ifdef WIN32
+	/*
+	 * Check if external commands are allowed now.
+	 */
+	&& can_end_termcap_mode(TRUE)
+#endif
+					)
+    {
+	if (!forceit)
+	    autowrite_all();
+	windgoto((int)Rows - 1, 0);
+	out_char('\n');
+	out_flush();
+	stoptermcap();
+	out_flush();		/* needed for SUN to restore xterm buffer */
+#ifdef WANT_TITLE
+	mch_restore_title(3);	/* restore window titles */
+#endif
+	ui_suspend();		/* call machine specific function */
+#ifdef WANT_TITLE
+	maketitle();
+	resettitle();		/* force updating the title */
+#endif
+	starttermcap();
+	scroll_start();		/* scroll screen before redrawing */
+	must_redraw = CLEAR;
+	set_winsize(0, 0, FALSE); /* May have resized window */
+    }
+}
+
+/*
+ * ":exit", ":xit" and ":wq": Write file and exit Vim.
+ */
+    static void
+do_exit(eap)
+    EXARG	*eap;
+{
+    /*
+     * if more files or windows we won't exit
+     */
+    if (check_more(FALSE, eap->forceit) == OK && only_one_window())
+	exiting = TRUE;
+    if (       ((eap->cmdidx == CMD_wq
+		    || curbuf_changed())
+		&& do_write(eap) == FAIL)
+	    || check_more(TRUE, eap->forceit) == FAIL
+	    || (only_one_window() && check_changed_any(eap->forceit)))
+    {
+	not_exiting();
+    }
+    else
+    {
+	if (only_one_window())	    /* quit last window, exit Vim */
+	    getout(0);
+#ifdef USE_GUI
+	need_mouse_correct = TRUE;
+#endif
+	close_window(curwin, !p_hid); /* quit current window, may free buffer */
+    }
+}
+
+    static void
+do_print(eap)
+    EXARG	*eap;
+{
+    for ( ;!got_int; ui_breakcheck())
+    {
+	print_line(eap->line1,
+		   (eap->cmdidx == CMD_number || eap->cmdidx == CMD_pound));
+	if (++eap->line1 > eap->line2)
+	    break;
+	out_flush();	    /* show one line at a time */
+    }
+    setpcmark();
+    /* put cursor at last line */
+    curwin->w_cursor.lnum = eap->line2;
+    beginline(BL_SOL | BL_FIX);
+
+    ex_no_reprint = TRUE;
+}
+
+/*
+ * Edit file "argn" from the arguments.
+ */
+    void
+do_argfile(eap, argn)
+    EXARG   *eap;
+    int	    argn;
+{
+    int		other;
+    char_u	*p;
+    char_u	*ffname;
+    BUF		*buf;
+
+    if (argn < 0 || argn >= arg_file_count)
+    {
+	if (arg_file_count <= 1)
+	    EMSG("There is only one file to edit");
+	else if (argn < 0)
+	    EMSG("Cannot go before first file");
+	else
+	    EMSG("Cannot go beyond last file");
+    }
+    else
+    {
+	setpcmark();
+#ifdef USE_GUI
+	need_mouse_correct = TRUE;
 #endif
 
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	if (*eap->cmd == 's')	    /* split window first */
+	{
+	    if (win_split(0, FALSE, FALSE) == FAIL)
+		return;
+	}
+	else
+	{
+	    /*
+	     * if 'hidden' set, only check for changed file when re-editing
+	     * the same buffer
+	     */
+	    other = TRUE;
+	    if (p_hid)
+	    {
+		p = fix_fname(arg_files[argn]);
+		other = otherfile(p);
+		vim_free(p);
+	    }
+	    if ((!p_hid || !other)
+		  && check_changed(curbuf, TRUE, !other, eap->forceit, FALSE))
+		return;
+	}
+
+	curwin->w_arg_idx = argn;
+	if (argn == arg_file_count - 1)
+	    arg_had_last = TRUE;
+
+	/*
+	 * If no line number given, use the last known line number.
+	 */
+	if (eap->do_ecmd_lnum == 0)
+	{
+	    ffname = fix_fname(arg_files[curwin->w_arg_idx]);
+	    if (ffname != NULL)
+	    {
+		buf = buflist_findname(ffname);
+		if (buf != NULL)
+		    eap->do_ecmd_lnum = buflist_findlnum(buf);
+		vim_free(ffname);
+	    }
+	}
+
+	(void)do_ecmd(0, arg_files[curwin->w_arg_idx],
+		      NULL, eap->do_ecmd_cmd, eap->do_ecmd_lnum,
+		      (p_hid ? ECMD_HIDE : 0) +
+					   (eap->forceit ? ECMD_FORCEIT : 0));
+    }
+}
+
+/*
+ * Do ":next" command, and commands that behave like it.
+ */
     static void
+do_next(eap)
+    EXARG	*eap;
+{
+    int	    i;
+
+    /*
+     * check for changed buffer now, if this fails the argument list is not
+     * redefined.
+     */
+    if (       p_hid
+	    || eap->cmdidx == CMD_snext
+	    || !check_changed(curbuf, TRUE, FALSE, eap->forceit, FALSE))
+    {
+	if (*eap->arg != NUL)		    /* redefine file list */
+	{
+	    if (do_arglist(eap->arg) == FAIL)
+		return;
+	    i = 0;
+	}
+	else
+	    i = curwin->w_arg_idx + (int)eap->line2;
+	do_argfile(eap, i);
+    }
+}
+
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_BEOS) || defined(macintosh) || defined(PROTO)
+/*
+ * Handle a file drop. The code is here because a drop is *nearly* like an
+ * :args command, but not quite (we have a list of exact filenames, so we
+ * don't want to (a) parse a command line, or (b) expand wildcards. So the
+ * code is very similar to :args and hence needs access to a lot of the static
+ * functions in this file.
+ *
+ * Arguments:
+ *	FILEC => the number of files dropped
+ *	FILEV => the list of files dropped
+ *
+ * The list should be allocated using vim_alloc(), as should each item in the
+ * list. This function takes over responsibility for freeing the list.
+ *
+ * XXX The list is made into the arg_files list. This is freed using
+ * FreeWild(), which does a series of vim_free() calls, unless the two defines
+ * __EMX__ and __ALWAYS_HAS_TRAILING_NUL_POINTER are set. In this case, a
+ * routine _fnexplodefree() is used. This may cause problems, but as the drop
+ * file functionality is (currently) Win32-specific (where these defines are
+ * not set), this is not presently a problem.
+ */
+
+    void
+handle_drop(filec, filev, split)
+    int		filec;
+    char_u	**filev;
+    int		split;		/* force splitting the window */
+{
+    EXARG	ea;
+    int		i;
+
+    /* Check whether the current buffer is changed. If so, we will need
+     * to split the current window or data could be lost.
+     * We don't need to check if the 'hidden' option is set, as in this
+     * case the buffer won't be lost.
+     */
+    if (!p_hid && !split)
+    {
+	int old_emsg = emsg_off;
+
+	emsg_off = TRUE;
+	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
+	emsg_off = old_emsg;
+    }
+
+    /*
+     * Set up the new argument list.
+     * This code is copied from the tail end of do_arglist()
+     */
+    FreeWild(arg_file_count, arg_files);
+    arg_file_count = filec;
+    arg_files = filev;
+    arg_had_last = FALSE;
+
+    for (i = 0; i < arg_file_count; ++i)
+	if (arg_files[i] != NULL)
+	    (void)buflist_add(arg_files[i]);
+
+    /*
+     * Move to the first file.
+     */
+
+    /* Fake up a minimal "[s]next" command for do_argfile() */
+    ea.cmd = (char_u *)(split ? "snext" : "next");
+    ea.forceit = FALSE;
+    ea.do_ecmd_cmd = NULL;
+    ea.do_ecmd_lnum = 0;
+
+    do_argfile(&ea, 0);
+}
+#endif
+
+/*
+ * Handle ":recover" command.
+ */
+    static void
+do_recover(eap)
+    EXARG	*eap;
+{
+    if (!check_changed(curbuf, FALSE, TRUE, eap->forceit, FALSE)
+		&& (*eap->arg == NUL || setfname(eap->arg, NULL, TRUE) == OK))
+	ml_recover();
+}
+
+/*
+ * Handle ":args" command.
+ */
+    static void
+do_args(eap)
+    EXARG	*eap;
+{
+    int	    i;
+
+    /* ":args file": handle like :next */
+    if (!ends_excmd(*eap->arg))
+	do_next(eap);
+    else
+    {
+	if (arg_file_count == 0)	    /* no file name list */
+	{
+	    if (check_fname() == OK)	    /* check for no file name */
+		smsg((char_u *)"[%s]", curbuf->b_ffname);
+	}
+	else
+	{
+	    /*
+	     * Overwrite the command, in most cases there is no scrolling
+	     * required and no wait_return().
+	     */
+	    gotocmdline(TRUE);
+	    for (i = 0; i < arg_file_count; ++i)
+	    {
+		if (i == curwin->w_arg_idx)
+		    msg_putchar('[');
+		msg_outtrans(arg_files[i]);
+		if (i == curwin->w_arg_idx)
+		    msg_putchar(']');
+		msg_putchar(' ');
+	    }
+	}
+    }
+}
+
+/*
+ * :sview [+command] file   split window with new file, read-only
+ * :split [[+command] file] split window with current or new file
+ * :new [[+command] file]   split window with no or new file
+ * :sfind [+command] file  split window with file in 'path'
+ */
+    static void
+do_splitview(eap)
+    EXARG	*eap;
+{
+    WIN		*old_curwin;
+#if defined(FILE_IN_PATH) || defined(USE_BROWSE)
+    char_u	*fname = NULL;
+#endif
+
+    old_curwin = curwin;
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
+
+#ifdef FILE_IN_PATH
+    if (eap->cmdidx == CMD_sfind)
+    {
+	fname = find_file_in_path(eap->arg, (int)STRLEN(eap->arg),
+							      FNAME_MESS, 1L);
+	if (fname == NULL)
+	    goto theend;
+	eap->arg = fname;
+    }
+# ifdef USE_BROWSE
+    else
+# endif
+#endif
+#ifdef USE_BROWSE
+    if (browse && eap->cmdidx != CMD_new)
+    {
+	fname = do_browse(FALSE, (char_u *)"Edit File in new window",
+					  NULL, NULL, eap->arg, NULL, curbuf);
+	if (fname == NULL)
+	    goto theend;
+	eap->arg = fname;
+    }
+#endif
+    if (win_split(eap->addr_count ? (int)eap->line2 : 0, FALSE, FALSE) != FAIL)
+	do_exedit(eap, old_curwin);
+
+#if defined(FILE_IN_PATH) || defined(USE_BROWSE)
+theend:
+    vim_free(fname);
+#endif
+}
+
+/*
+ * Handle ":resize" command.
+ * set, increment or decrement current window height
+ */
+    static void
+do_resize(eap)
+    EXARG	*eap;
+{
+    int		n;
+
+#ifdef USE_GUI
+    need_mouse_correct = TRUE;
+#endif
+    n = atol((char *)eap->arg);
+    if (*eap->arg == '-' || *eap->arg == '+')
+	n += curwin->w_height;
+    else if (n == 0)	    /* default is very high */
+	n = 9999;
+    win_setheight((int)n);
+}
+
+/*
+ * ":find [+command] <file>" command.
+ */
+    static void
+do_find(eap)
+    EXARG	*eap;
+{
+#ifdef FILE_IN_PATH
+    char_u	*fname;
+
+    fname = find_file_in_path(eap->arg, (int)STRLEN(eap->arg), FNAME_MESS, 1L);
+    if (fname != NULL)
+    {
+	eap->arg = fname;
+#endif
+	do_exedit(eap, NULL);
+#ifdef FILE_IN_PATH
+	vim_free(fname);
+    }
+#endif
+}
+
+/*
+ * ":edit <file>" command and alikes.
+ */
+    static void
+do_exedit(eap, old_curwin)
+    EXARG	*eap;
+    WIN		*old_curwin;
+{
+    int		n;
+    int		need_hide;
+
+    /*
+     * ":vi" command ends Ex mode.
+     */
+    if (exmode_active && (eap->cmdidx == CMD_visual || eap->cmdidx == CMD_view))
+    {
+	exmode_active = FALSE;
+	if (*eap->arg == NUL)
+	    return;
+    }
+
+    if (eap->cmdidx == CMD_new && *eap->arg == NUL)
+    {
+	setpcmark();
+	(void)do_ecmd(0, NULL, NULL, eap->do_ecmd_cmd, ECMD_ONE,
+			       ECMD_HIDE + (eap->forceit ? ECMD_FORCEIT : 0));
+    }
+    else if (eap->cmdidx != CMD_split || *eap->arg != NUL
+#ifdef USE_BROWSE
+	    || browse
+#endif
+	    )
+    {
+	n = readonlymode;
+	if (eap->cmdidx == CMD_view || eap->cmdidx == CMD_sview)
+	    readonlymode = TRUE;
+	setpcmark();
+	if (do_ecmd(0, eap->arg, NULL, eap->do_ecmd_cmd, eap->do_ecmd_lnum,
+		      (p_hid ? ECMD_HIDE : 0) +
+		      (eap->forceit ? ECMD_FORCEIT : 0) +
+		      (eap->cmdidx == CMD_badd ? ECMD_ADDBUF : 0 )) == FAIL
+		&& eap->cmdidx == CMD_split)
+	{
+	    /* If editing failed after a split command, close the window */
+	    need_hide = (buf_changed(curwin->w_buffer)
+					&& curwin->w_buffer->b_nwindows <= 1);
+	    if (!need_hide || p_hid)
+	    {
+#ifdef USE_GUI
+		need_mouse_correct = TRUE;
+#endif
+		close_window(curwin, !need_hide && !p_hid);
+	    }
+	}
+	readonlymode = n;
+    }
+    else
+    {
+	if (eap->do_ecmd_cmd != NULL)
+	    do_cmdline(eap->do_ecmd_cmd, NULL, NULL, DOCMD_VERBOSE);
+#ifdef WANT_TITLE
+	n = curwin->w_arg_idx_invalid;
+#endif
+	check_arg_idx(curwin);
+#ifdef WANT_TITLE
+	if (n != curwin->w_arg_idx_invalid)
+	    maketitle();
+#endif
+	update_screen(NOT_VALID);
+    }
+
+    /*
+     * if ":split file" worked, set alternate file name in old window to new
+     * file
+     */
+    if (       (eap->cmdidx == CMD_new
+		|| eap->cmdidx == CMD_split)
+	    && *eap->arg != NUL
+	    && curwin != old_curwin
+	    && win_valid(old_curwin)
+	    && old_curwin->w_buffer != curbuf)
+	old_curwin->w_alt_fnum = curbuf->b_fnum;
+
+    ex_no_reprint = TRUE;
+}
+
+#ifdef USE_GUI
+/*
+ * Handle ":gui" or ":gvim" command.
+ */
+    static void
+do_gui(eap)
+    EXARG	*eap;
+{
+    char_u	*arg = eap->arg;
+
+    /*
+     * Check for "-f" argument: foreground, don't fork.
+     * Also don't fork when started with "gvim -f".
+     * Do fork when using "gui -b".
+     */
+    if (arg[0] == '-'
+	    && (arg[1] == 'f' || arg[1] == 'b')
+	    && (arg[2] == NUL || vim_iswhite(arg[2])))
+    {
+	gui.dofork = (arg[1] == 'b');
+	eap->arg = skipwhite(eap->arg + 2);
+    }
+    if (!gui.in_use)
+    {
+	/* Clear the command.  Needed for when forking+exiting, to avoid part
+	 * of the argument ending up after the shell prompt. */
+	msg_clr_eos();
+	gui_start();
+    }
+    if (!ends_excmd(*eap->arg))
+	do_next(eap);
+}
+#endif
+
+    static void
+do_swapname()
+{
+    if (curbuf->b_ml.ml_mfp == NULL || curbuf->b_ml.ml_mfp->mf_fname == NULL)
+	MSG("No swap file");
+    else
+	msg(curbuf->b_ml.ml_mfp->mf_fname);
+}
+
+/*
+ * ":syncbind" forces all 'scrollbind' windows to have the same relative
+ * offset.
+ * (1998-11-02 16:21:01  R. Edward Ralston <eralston@computer.org>)
+ */
+    static void
+do_syncbind()
+{
+#ifdef SCROLLBIND
+    WIN		*wp;
+    long	topline;
+    long	y;
+    linenr_t	old_linenr = curwin->w_cursor.lnum;
+
+    setpcmark();
+
+    /*
+     * determine max topline
+     */
+    if (curwin->w_p_scb)
+    {
+	topline = curwin->w_topline;
+	for (wp = firstwin; wp; wp = wp->w_next)
+	{
+	    if (wp->w_p_scb && wp->w_buffer)
+	    {
+		y = wp->w_buffer->b_ml.ml_line_count - p_so;
+		if (topline > y)
+		    topline = y;
+	    }
+	}
+	if (topline < 1)
+	    topline = 1;
+    }
+    else
+    {
+	topline = 1;
+    }
+
+
+    /*
+     * set all scrollbind windows to the same topline
+     */
+    wp = curwin;
+    for (curwin = firstwin; curwin; curwin = curwin->w_next)
+    {
+	if (curwin->w_p_scb)
+	{
+	    y = topline - curwin->w_topline;
+	    if (y > 0)
+		scrollup(y);
+	    else
+		scrolldown(-y);
+	    curwin->w_scbind_pos = topline;
+	    redraw_later(VALID);
+	    cursor_correct();
+	    curwin->w_redr_status = TRUE;
+	}
+    }
+    curwin = wp;
+    if (curwin->w_p_scb)
+    {
+	did_syncbind = TRUE;
+	checkpcmark();
+	if (old_linenr != curwin->w_cursor.lnum)
+	{
+	    char_u ctrl_o[2];
+
+	    ctrl_o[0] = Ctrl('O');
+	    ctrl_o[1] = 0;
+	    ins_typebuf(ctrl_o, -1, 0, TRUE);
+	}
+    }
+#endif
+}
+
+
+    static void
+do_read(eap)
+    EXARG	*eap;
+{
+    int	    i;
+
+    if (eap->usefilter)			/* :r!cmd */
+	do_bang(1, eap->line1, eap->line2, FALSE, eap->arg, FALSE, TRUE);
+    else
+    {
+	if (u_save(eap->line2, (linenr_t)(eap->line2 + 1)) == FAIL)
+	    return;
+
+#ifdef USE_BROWSE
+	if (browse)
+	{
+	    char_u *browseFile;
+
+	    browseFile = do_browse(FALSE, (char_u *)"Append File", NULL,
+						NULL, eap->arg, NULL, curbuf);
+	    if (browseFile != NULL)
+	    {
+		i = readfile(browseFile, NULL,
+			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
+		vim_free(browseFile);
+	    }
+	    else
+		i = OK;
+	}
+	else
+#endif
+	     if (*eap->arg == NUL)
+	{
+	    if (check_fname() == FAIL)	/* check for no file name */
+		return;
+	    i = readfile(curbuf->b_ffname, curbuf->b_fname,
+			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
+	}
+	else
+	{
+	    if (vim_strchr(p_cpo, CPO_ALTREAD) != NULL)
+		setaltfname(eap->arg, eap->arg, (linenr_t)1);
+	    i = readfile(eap->arg, NULL,
+			       eap->line2, (linenr_t)0, (linenr_t)MAXLNUM, 0);
+
+	}
+	if (i == FAIL)
+	    emsg2(e_notopen, eap->arg);
+	else
+	    update_screen(NOT_VALID);
+    }
+}
+
+    static void
+do_cd(eap)
+    EXARG	*eap;
+{
+    static char_u   *prev_dir = NULL;
+    char_u	    *new_dir;
+    char_u	    *tofree;
+
+    new_dir = eap->arg;
+#ifndef UNIX
+    /* for non-UNIX ":cd" means: print current directory */
+    if (*new_dir == NUL)
+	do_pwd();
+    else
+#endif
+    {
+	/* ":cd -": Change to previous directory */
+	if (STRCMP(eap->arg, "-") == 0)
+	{
+	    if (prev_dir == NULL)
+	    {
+		EMSG("No previous directory");
+		return;
+	    }
+	    new_dir = prev_dir;
+	}
+
+	/* Save current directory for next ":cd -" */
+	tofree = prev_dir;
+	if (mch_dirname(NameBuff, MAXPATHL) == OK)
+	    prev_dir = vim_strsave(NameBuff);
+	else
+	    prev_dir = NULL;
+
+#ifdef UNIX
+	/* for UNIX ":cd" means: go to home directory */
+	if (*new_dir == NUL)
+	{
+	    /* use NameBuff for home directory name */
+	    expand_env((char_u *)"$HOME", NameBuff, MAXPATHL);
+	    new_dir = NameBuff;
+	}
+#endif
+	if (new_dir == NULL || mch_chdir((char *)new_dir))
+	    emsg(e_failed);
+	else
+	    shorten_fnames();
+	vim_free(tofree);
+    }
+}
+
+    static void
+do_pwd()
+{
+    if (mch_dirname(NameBuff, MAXPATHL) == OK)
+	msg(NameBuff);
+    else
+	emsg(e_unknown);
+}
+
+    static void
+do_sleep(eap)
+    EXARG	*eap;
+{
+    int	    n;
+
+    if (cursor_valid())
+    {
+	n = curwin->w_winpos + curwin->w_wrow - msg_scrolled;
+	if (n >= 0)
+	    windgoto((int)n, curwin->w_wcol);
+    }
+    cursor_on();
+    out_flush();
+    ui_delay(eap->line2 * (*eap->arg == 'm' ? 1L : 1000L), TRUE);
+}
+
+    static void
+do_exmap(eap, isabbrev)
+    EXARG	*eap;
+    int		isabbrev;
+{
+    int	    mode;
+    char_u  *cmdp;
+#ifdef CMDLINE_COMPL
+    char_u  *ambigstr;
+#endif
+
+    cmdp = eap->cmd;
+    mode = get_map_mode(&cmdp, eap->forceit || isabbrev);
+
+    switch (do_map((*cmdp == 'n') ? 2 : (*cmdp == 'u'),
+					eap->arg, mode, isabbrev,
+#ifdef CMDLINE_COMPL
+					&ambigstr
+#else
+					NULL
+#endif
+					))
+    {
+	case 1: emsg(e_invarg);
+		break;
+	case 2: emsg(isabbrev ? e_noabbr : e_nomap);
+		break;
+	case 3:
+#ifdef CMDLINE_COMPL
+		ambigstr = translate_mapping(ambigstr, FALSE);
+		if (ambigstr == NULL)
+#endif
+		    EMSG("Ambiguous mapping");
+#ifdef CMDLINE_COMPL
+		else
+		    EMSG2("Ambiguous mapping, conflicts with \"%s\"", ambigstr);
+		vim_free(ambigstr);
+#endif
+    }
+}
+
+/*
+ * ":winsize" command (obsolete).
+ */
+    static void
+do_winsize(arg)
+    char_u	*arg;
+{
+    int	    w, h;
+
+    w = getdigits(&arg);
+    arg = skipwhite(arg);
+    h = getdigits(&arg);
+    set_winsize(w, h, TRUE);
+}
+
+#if defined(USE_GUI) || defined(UNIX)
+/*
+ * ":winpos" command.
+ */
+    static void
+do_winpos(arg)
+    char_u	*arg;
+{
+    int		x, y;
+
+    if (*arg == NUL)
+    {
+# ifdef USE_GUI
+	if (gui.in_use && gui_mch_get_winpos(&x, &y) != FAIL)
+	{
+	    sprintf((char *)IObuff, "Window position: X %d, Y %d", x, y);
+	    msg(IObuff);
+	}
+	else
+# endif
+	    EMSG("Obtaining window position not implemented for this platform");
+    }
+    else
+    {
+	x = getdigits(&arg);
+	arg = skipwhite(arg);
+	y = getdigits(&arg);
+# ifdef USE_GUI
+	if (gui.in_use)
+	    gui_mch_set_winpos(x, y);
+#  ifdef HAVE_TGETENT
+	else
+#  endif
+# endif
+# ifdef HAVE_TGETENT
+	if (*T_CWP)
+	    term_set_winpos(x, y);
+# endif
+    }
+}
+#endif
+
+/*
+ * Handle command that work like operators: ":delete", ":yank", ":>" and ":<".
+ */
+    static void
+do_exops(eap)
+    EXARG	*eap;
+{
+    OPARG	oa;
+
+    clear_oparg(&oa);
+    oa.regname = eap->regname;
+    oa.start.lnum = eap->line1;
+    oa.end.lnum = eap->line2;
+    oa.line_count = eap->line2 - eap->line1 + 1;
+    oa.motion_type = MLINE;
+    if (eap->cmdidx != CMD_yank)	/* position cursor for undo */
+    {
+	setpcmark();
+	curwin->w_cursor.lnum = eap->line1;
+	beginline(BL_SOL | BL_FIX);
+    }
+
+    switch (eap->cmdidx)
+    {
+	case CMD_delete:
+	    oa.op_type = OP_DELETE;
+	    op_delete(&oa);
+	    break;
+
+	case CMD_yank:
+	    oa.op_type = OP_YANK;
+	    (void)op_yank(&oa, FALSE, TRUE);
+	    break;
+
+	default:    /* CMD_rshift or CMD_lshift */
+	    if ((eap->cmdidx == CMD_rshift)
+#ifdef RIGHTLEFT
+				    ^ curwin->w_p_rl
+#endif
+						    )
+		oa.op_type = OP_RSHIFT;
+	    else
+		oa.op_type = OP_LSHIFT;
+	    op_shift(&oa, FALSE, eap->amount);
+	    break;
+    }
+}
+
+/*
+ * Handle ":copy" and ":move".
+ */
+    static void
+do_copymove(eap)
+    EXARG	*eap;
+{
+    long	n;
+
+    n = get_address(&eap->arg, FALSE);
+    if (eap->arg == NULL)	    /* error detected */
+    {
+	eap->nextcmd = NULL;
+	return;
+    }
+
+    /*
+     * move or copy lines from 'eap->line1'-'eap->line2' to below line 'n'
+     */
+    if (n == MAXLNUM || n < 0 || n > curbuf->b_ml.ml_line_count)
+    {
+	emsg(e_invaddr);
+	return;
+    }
+
+    if (eap->cmdidx == CMD_move)
+    {
+	if (do_move(eap->line1, eap->line2, n) == FAIL)
+	    return;
+    }
+    else
+	do_copy(eap->line1, eap->line2, n);
+    u_clearline();
+    beginline(BL_SOL | BL_FIX);
+    update_screen(NOT_VALID);
+}
+
+/*
+ * Handle ":join" command.
+ */
+    static void
+do_exjoin(eap)
+    EXARG	*eap;
+{
+    curwin->w_cursor.lnum = eap->line1;
+    if (eap->line1 == eap->line2)
+    {
+	if (eap->addr_count >= 2)   /* :2,2join does nothing */
+	    return;
+	if (eap->line2 == curbuf->b_ml.ml_line_count)
+	{
+	    beep_flush();
+	    return;
+	}
+	++eap->line2;
+    }
+    do_do_join(eap->line2 - eap->line1 + 1, !eap->forceit, FALSE);
+    beginline(BL_WHITE | BL_FIX);
+}
+
+/*
+ * Handle ":@" or ":*" command, execute from register.
+ */
+    static void
+do_exat(eap)
+    EXARG	*eap;
+{
+    int		c;
+
+    curwin->w_cursor.lnum = eap->line2;
+
+#ifdef USE_ON_FLY_SCROLL
+    dont_scroll = TRUE;		/* disallow scrolling here */
+#endif
+
+    /* get the register name.  No name means to use the previous one */
+    c = *eap->arg;
+    if (c == NUL || (c == '*' && *eap->cmd == '*'))
+	c = '@';
+    /* put the register in mapbuf */
+    if (do_execreg(c, TRUE, vim_strchr(p_cpo, CPO_EXECBUF) != NULL) == FAIL)
+	beep_flush();
+    else
+    {
+	/* execute from the mapbuf */
+	while (vpeekc() == ':')
+	{
+	    (void)vgetc();
+	    (void)do_cmdline(NULL, getexline, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
+	}
+    }
+}
+
+/*
+ * Handle ":redir" command, start/stop redirection.
+ */
+    static void
+do_redir(eap)
+    EXARG	*eap;
+{
+    char	*mode;
+#ifdef USE_BROWSE
+    char_u	*browseFile = NULL;
+#endif
+
+    if (STRICMP(eap->arg, "END") == 0)
+	close_redir();
+    else
+    {
+	if (*eap->arg == '>')
+	{
+	    ++eap->arg;
+	    if (*eap->arg == '>')
+	    {
+		++eap->arg;
+		mode = "a";
+	    }
+	    else
+		mode = "w";
+	    eap->arg = skipwhite(eap->arg);
+
+	    close_redir();
+
+#ifdef USE_BROWSE
+	    if (browse)
+	    {
+		browseFile = do_browse(TRUE, (char_u *)"Save Redirection",
+		       NULL, NULL, eap->arg, BROWSE_FILTER_ALL_FILES, curbuf);
+		if (browseFile == NULL)
+		    return;		/* operation cancelled */
+		eap->arg = browseFile;
+		eap->forceit = TRUE;	/* since dialog already asked */
+	    }
+#endif
+
+	    redir_fd = open_exfile(eap, mode);
+
+#ifdef USE_BROWSE
+	    vim_free(browseFile);
+#endif
+	}
+#ifdef WANT_EVAL
+	else if (*eap->arg == '@')
+	{
+	    /* redirect to a register a-z (resp. A-Z for appending) */
+	    close_redir();
+	    if (isalpha(*++eap->arg))
+	    {
+		if (islower(*eap->arg))		/* make register empty */
+		    write_reg_contents(*eap->arg, (char_u *)"");
+		redir_reg = toupper(*eap->arg);
+	    }
+	    else
+		EMSG(e_invarg);
+	}
+#endif
+
+	/* TODO: redirect to a buffer */
+
+	/* TODO: redirect to an internal variable */
+
+	else
+	    EMSG(e_invarg);
+    }
+}
+
+    static void
+close_redir()
+{
+    if (redir_fd != NULL)
+    {
+	fclose(redir_fd);
+	redir_fd = NULL;
+    }
+#ifdef WANT_EVAL
+    redir_reg = 0;
+#endif
+}
+
+#if defined(MKSESSION) && defined(USE_CRNL)
+# define MKSESSION_NL
+static int mksession_nl = FALSE;    /* use NL only in put_eol() */
+#endif
+
+/*
+ * Handle ":mkexrc", ":mkvimrc" and ":mksession" commands.
+ */
+    static void
+do_mkrc(eap, defname)
+    EXARG	*eap;
+    char_u	*defname;	/* default file name */
+{
+    FILE	*fd;
+    int		failed;
+#ifdef USE_BROWSE
+    char_u	*browseFile = NULL;
+#endif
+
+    if (*eap->arg == NUL)
+	eap->arg = defname;
+
+#ifdef USE_BROWSE
+    if (browse)
+    {
+	browseFile = do_browse(TRUE,
+		STRCMP(defname, SESSION_FILE) == 0 ? (char_u *)"Save Session"
+						   : (char_u *)"Save Setup",
+		NULL, (char_u *)"vim", eap->arg, BROWSE_FILTER_MACROS, curbuf);
+	if (browseFile == NULL)
+	    return;		/* operation cancelled */
+	eap->arg = browseFile;
+	eap->forceit = TRUE;	/* since dialog already asked */
+    }
+#endif
+
+    fd = open_exfile(eap, WRITEBIN);
+    if (fd != NULL)
+    {
+#ifdef MKSESSION_NL
+	/* "unix" in 'sessionoptions': use NL line separator */
+	if (eap->cmdidx == CMD_mksession && vim_strchr(p_sessopt, 'x') != NULL)
+	    mksession_nl = TRUE;
+#endif
+
+	/* Write the version command for :mkvimrc and :mksession */
+	if (eap->cmdidx == CMD_mkvimrc
+#ifdef MKSESSION
+		|| eap->cmdidx == CMD_mksession
+#endif
+		)
+	{
+	    fputs("version 5.0", fd);
+	    (void)put_eol(fd);
+	}
+
+	/* Write setting 'compatible' first, because it has side effects */
+	if (p_cp)
+	    fputs("set compatible", fd);
+	else
+	    fputs("set nocompatible", fd);
+	(void)put_eol(fd);
+
+	failed = FALSE;
+
+#ifdef MKSESSION
+	if ((eap->cmdidx != CMD_mksession)
+		|| (vim_strchr(p_sessopt, 't') != NULL))	/* "options" */
+#endif
+	    failed = (makemap(fd) == FAIL || makeset(fd) == FAIL);
+
+#ifdef MKSESSION
+	if (eap->cmdidx == CMD_mksession && !failed)
+	{
+	    /* save current dir*/
+	    char_u dirnow[MAXPATHL];
+
+	    if (mch_dirname(dirnow, MAXPATHL) == FAIL)
+		*dirnow = NUL;
+
+	    /*
+	     * Change to session file's dir.
+	     */
+	    (void)vim_chdirfile(eap->arg);
+	    shorten_fnames();
+
+	    failed |= (makeopens(fd) == FAIL);
+
+	    /* restore original dir */
+	    if (*dirnow)
+	    {
+		(void)mch_chdir((char *)dirnow);
+		shorten_fnames();
+	    }
+	}
+#endif
+	failed |= fclose(fd);
+
+	if (failed)
+	    emsg(e_write);
+#if defined(WANT_EVAL) && defined(MKSESSION)
+	else if (eap->cmdidx == CMD_mksession)
+	{
+	    /* successful session write - set this_session var */
+	    char_u	tbuf[MAXPATHL];
+
+	    if (mch_FullName(eap->arg, tbuf, MAXPATHL, FALSE) == OK)
+		set_vim_var_string(VV_THIS_SESSION, tbuf);
+	}
+#endif
+#ifdef MKSESSION_NL
+	mksession_nl = FALSE;
+#endif
+    }
+#ifdef USE_BROWSE
+    vim_free(browseFile);
+#endif
+}
+
+/*
+ * Open a file for writing for an Ex command, with some checks.
+ * Return file descriptor, or NULL on failure.
+ */
+    static FILE	*
+open_exfile(eap, mode)
+    EXARG	*eap;
+    char	*mode;	    /* "w" for create new file or "a" for append */
+{
+    FILE	*fd;
+
+#ifdef UNIX
+    /* with Unix it is possible to open a directory */
+    if (mch_isdir(eap->arg))
+    {
+	EMSG2("\"%s\" is a directory", eap->arg);
+	return NULL;
+    }
+#endif
+    if (!eap->forceit && *mode != 'a' && vim_fexists(eap->arg))
+    {
+	EMSG2("\"%s\" exists (use ! to override)", eap->arg);
+	return NULL;
+    }
+
+    if ((fd = mch_fopen((char *)eap->arg, mode)) == NULL)
+	EMSG2("Cannot open \"%s\" for writing", eap->arg);
+
+    return fd;
+}
+
+/*
+ * Handle ":mark" or ":k" command.
+ */
+    static void
+do_setmark(eap)
+    EXARG	*eap;
+{
+    FPOS	pos;
+
+    if (*eap->arg == NUL)		/* No argument? */
+	EMSG(e_argreq);
+    else if (eap->arg[1] != NUL)	/* more than one character? */
+	EMSG(e_trailing);
+    else
+    {
+	pos = curwin->w_cursor;		/* save curwin->w_cursor */
+	curwin->w_cursor.lnum = eap->line2;
+	beginline(BL_WHITE | BL_FIX);
+	if (setmark(*eap->arg) == FAIL)	/* set mark */
+	    EMSG("Argument must be a letter or forward/backward quote");
+	curwin->w_cursor = pos;		/* restore curwin->w_cursor */
+    }
+}
+
+#ifdef EX_EXTRA
+/*
+ * Handle ":normal[!] {commands}" - execute normal mode commands
+ * Often used for ":autocmd".
+ */
+    static void
+do_normal(eap)
+    EXARG	*eap;
+{
+    OPARG	oa;
+    int		len;
+    int		save_msg_scroll = msg_scroll;
+    int		save_restart_edit = restart_edit;
+    int		save_msg_didout = msg_didout;
+    static int	depth = 0;
+
+    if (depth >= p_mmd)
+    {
+	EMSG("Recursive use of :normal too deep");
+	return;
+    }
+    /* Using ":normal" from a CursorHold autocommand event doesn't work,
+     * because vgetc() can't be used recursively. */
+    if (vgetc_busy)
+    {
+	EMSG("Cannot use :normal from event handler");
+	return;
+    }
+    ++depth;
+    msg_scroll = FALSE;	    /* no msg scrolling in Normal mode */
+    restart_edit = 0;	    /* don't go to Insert mode */
+
+    /*
+     * Repeat the :normal command for each line in the range.  When no range
+     * given, execute it just once, without positioning the cursor first.
+     */
+    do
+    {
+	clear_oparg(&oa);
+	if (eap->addr_count != 0)
+	{
+	    curwin->w_cursor.lnum = eap->line1++;
+	    curwin->w_cursor.col = 0;
+	}
+
+	/*
+	 * Stuff the argument into the typeahead buffer.
+	 * Execute normal_cmd() until there is no more
+	 * typeahead than there was before this command.
+	 */
+	len = typelen;
+	ins_typebuf(eap->arg, eap->forceit ? -1 : 0, 0, TRUE);
+	while (	   (!stuff_empty()
+			|| (!typebuf_typed()
+			    && typelen > len))
+		&& !got_int)
+	{
+	    adjust_cursor();		/* put cursor on valid line */
+	    /* Make sure w_topline and w_leftcol are correct. */
+	    update_topline();
+	    if (!curwin->w_p_wrap)
+		validate_cursor();
+	    update_curswant();
+
+	    normal_cmd(&oa, FALSE);	/* execute a Normal mode cmd */
+	}
+    }
+    while (eap->addr_count > 0 && eap->line1 <= eap->line2 && !got_int);
+
+    --depth;
+    msg_scroll = save_msg_scroll;
+    restart_edit = save_restart_edit;
+    msg_didout |= save_msg_didout;	/* don't reset msg_didout now */
+}
+#endif
+
+#ifdef FIND_IN_PATH
+    static char_u *
+do_findpat(eap, action)
+    EXARG	*eap;
+    int		action;
+{
+    int		whole = TRUE;
+    long	n;
+    char_u	*p;
+    char_u	*errormsg = NULL;
+
+    n = 1;
+    if (isdigit(*eap->arg))	/* get count */
+    {
+	n = getdigits(&eap->arg);
+	eap->arg = skipwhite(eap->arg);
+    }
+    if (*eap->arg == '/')   /* Match regexp, not just whole words */
+    {
+	whole = FALSE;
+	++eap->arg;
+	p = skip_regexp(eap->arg, '/', p_magic);
+	if (*p)
+	{
+	    *p++ = NUL;
+	    p = skipwhite(p);
+
+	    /* Check for trailing illegal characters */
+	    if (!ends_excmd(*p))
+		errormsg = e_trailing;
+	    else
+		eap->nextcmd = check_nextcmd(p);
+	}
+    }
+    if (!eap->skip)
+	find_pattern_in_path(eap->arg, 0, (int)STRLEN(eap->arg),
+			    whole, !eap->forceit,
+			    *eap->cmd == 'd' ?	FIND_DEFINE : FIND_ANY,
+			    n, action, eap->line1, eap->line2);
+
+    return errormsg;
+}
+#endif
+
+    static void
+do_ex_tag(eap, dt, preview)
+    EXARG	*eap;
+    int		dt;
+    int		preview;
+{
+    if (preview)
+	g_do_tagpreview = p_pvh;
+    do_tag((char_u *)"", dt, eap->addr_count ? (int)eap->line2
+					     : 1, eap->forceit, TRUE);
+}
+
+#ifdef WANT_EVAL
+
+    static char_u *
+do_if(eap, cstack)
+    EXARG		*eap;
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+    int		error;
+    int		skip;
+    int		result;
+
+    if (cstack->cs_idx == CSTACK_LEN - 1)
+	errormsg = (char_u *)":if nesting too deep";
+    else
+    {
+	++cstack->cs_idx;
+	cstack->cs_flags[cstack->cs_idx] = 0;
+
+	/*
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
+	 */
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+
+	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
+
+	if (!skip)
+	{
+	    if (result)
+		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
+	    if (error)
+		--cstack->cs_idx;
+	}
+    }
+
+    return errormsg;
+}
+
+/*
+ * Handle ":else" and ":elseif" commands.
+ */
+    static char_u *
+do_else(eap, cstack)
+    EXARG		*eap;
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+    int		error;
+    int		skip;
+    int		result;
+
+    if (cstack->cs_idx < 0 || (cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
+    {
+	if (eap->cmdidx == CMD_else)
+	    errormsg = (char_u *)":else without :if";
+	else
+	    errormsg = (char_u *)":elseif without :if";
+    }
+    else
+    {
+	/*
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
+	 */
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+	if (!skip)
+	{
+	    /* if the ":if" was TRUE, reset active, otherwise set it */
+	    if (cstack->cs_flags[cstack->cs_idx] & CSF_TRUE)
+	    {
+		cstack->cs_flags[cstack->cs_idx] = CSF_TRUE;
+		skip = TRUE;	/* don't evaluate an ":elseif" */
+	    }
+	    else
+		cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE;
+	}
+
+	if (eap->cmdidx == CMD_elseif)
+	{
+	    result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
+
+	    if (!skip && (cstack->cs_flags[cstack->cs_idx] & CSF_ACTIVE))
+	    {
+		if (result)
+		    cstack->cs_flags[cstack->cs_idx] = CSF_ACTIVE | CSF_TRUE;
+		else
+		    cstack->cs_flags[cstack->cs_idx] = 0;
+		if (error)
+		    --cstack->cs_idx;
+	    }
+	}
+    }
+
+    return errormsg;
+}
+
+/*
+ * Handle ":while".
+ */
+    static char_u *
+do_while(eap, cstack)
+    EXARG		*eap;
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+    int		error;
+    int		skip;
+    int		result;
+
+    if (cstack->cs_idx == CSTACK_LEN - 1)
+	errormsg = (char_u *)":while nesting too deep";
+    else
+    {
+	/*
+	 * cs_had_while is set when we have jumped back from the matching
+	 * ":endwhile".  When not set, need to init this cstack entry.
+	 */
+	if (!cstack->cs_had_while)
+	{
+	    ++cstack->cs_idx;
+	    ++cstack->cs_whilelevel;
+	}
+	cstack->cs_flags[cstack->cs_idx] = CSF_WHILE;
+
+	/*
+	 * Don't do something when there is a surrounding conditional and it
+	 * was not active.
+	 */
+	skip = (cstack->cs_idx > 0
+		&& !(cstack->cs_flags[cstack->cs_idx - 1] & CSF_ACTIVE));
+	result = eval_to_bool(eap->arg, &error, &eap->nextcmd, skip);
+
+	if (!skip)
+	{
+	    if (result)
+		cstack->cs_flags[cstack->cs_idx] |= CSF_ACTIVE | CSF_TRUE;
+	    if (error)
+		--cstack->cs_idx;
+	    else
+		/*
+		 * Set cs_had_while flag, so do_cmdline() will set the line
+		 * number in cs_line[].
+		 */
+		cstack->cs_had_while = TRUE;
+	}
+    }
+
+    return errormsg;
+}
+
+/*
+ * Handle ":continue".
+ */
+    static char_u *
+do_continue(cstack)
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+
+    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
+	errormsg = (char_u *)":continue without :while";
+    else
+    {
+	/* Find the matching ":while". */
+	while (cstack->cs_idx > 0
+		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
+	    --cstack->cs_idx;
+
+	/*
+	 * Set cs_had_continue, so do_cmdline() will jump back to the matching
+	 * ":while".
+	 */
+	cstack->cs_had_continue = TRUE;	    /* let do_cmdline() handle it */
+    }
+
+    return errormsg;
+}
+
+/*
+ * Handle ":break".
+ */
+    static char_u *
+do_break(cstack)
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+    int		idx;
+
+    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
+	errormsg = (char_u *)":break without :while";
+    else
+    {
+	/* Find the matching ":while". */
+	for (idx = cstack->cs_idx; idx >= 0; --idx)
+	{
+	    cstack->cs_flags[idx] &= ~CSF_ACTIVE;
+	    if (cstack->cs_flags[idx] & CSF_WHILE)
+		break;
+	}
+    }
+
+    return errormsg;
+}
+
+/*
+ * Handle ":endwhile".
+ */
+    static char_u *
+do_endwhile(cstack)
+    struct condstack	*cstack;
+{
+    char_u	*errormsg = NULL;
+
+    if (cstack->cs_whilelevel <= 0 || cstack->cs_idx < 0)
+	errormsg = (char_u *)":endwhile without :while";
+    else
+    {
+	if (!(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
+	{
+	    errormsg = (char_u *)":endwhile without :while";
+	    while (cstack->cs_idx > 0
+		    && !(cstack->cs_flags[cstack->cs_idx] & CSF_WHILE))
+		--cstack->cs_idx;
+	}
+	/*
+	 * Set cs_had_endwhile, so do_cmdline() will jump back to the matching
+	 * ":while".
+	 */
+	cstack->cs_had_endwhile = TRUE;
+    }
+
+    return errormsg;
+}
+
+/*
+ * Return TRUE if the string "p" looks like a ":while" command.
+ */
+    static int
+has_while_cmd(p)
+    char_u	*p;
+{
+    p = skipwhite(p);
+    while (*p == ':')
+	++p;
+    p = skipwhite(p);
+    if (p[0] == 'w' && p[1] == 'h')
+	return TRUE;
+    return FALSE;
+}
+
+#endif /* WANT_EVAL */
+
+/*
+ * Evaluate cmdline variables.
+ *
+ * change '%'	    to curbuf->b_ffname
+ *	  '#'	    to curwin->w_altfile
+ *	  '<cword>' to word under the cursor
+ *	  '<cWORD>' to WORD under the cursor
+ *	  '<cfile>' to path name under the cursor
+ *	  '<sfile>' to sourced file name
+ *	  '<afile>' to file name for autocommand
+ *	  '<abuf>'  to buffer number for autocommand
+ *	  '<amatch>' to matching name for autocommand
+ *
+ * When an error is detected, "errormsg" is set to a non-NULL pointer (may be
+ * "" for error without a message) and NULL is returned.
+ * Returns an allocated string if a valid match was found.
+ * Returns NULL if no match was found.	"usedlen" then still contains the
+ * number of characters to skip.
+ */
+    char_u *
+eval_vars(src, usedlen, lnump, errormsg, srcstart)
+    char_u	*src;		/* pointer into commandline */
+    int		*usedlen;	/* characters after src that are used */
+    linenr_t	*lnump;		/* line number for :e command, or NULL */
+    char_u	**errormsg;	/* pointer to error message */
+    char_u	*srcstart;	/* beginning of valid memory for src */
+{
+    int		i;
+    char_u	*s;
+    char_u	*result;
+    char_u	*resultbuf = NULL;
+    int		resultlen;
+    BUF		*buf;
+    int		valid = VALID_HEAD + VALID_PATH;    /* assume valid result */
+    int		spec_idx;
+    static char *(spec_str[]) =
+		{
+		    "%",
+#define SPEC_PERC   0
+		    "#",
+#define SPEC_HASH   1
+		    "<cword>",		/* cursor word */
+#define SPEC_CWORD  2
+		    "<cWORD>",		/* cursor WORD */
+#define SPEC_CCWORD 3
+		    "<cfile>",		/* cursor path name */
+#define SPEC_CFILE  4
+		    "<sfile>",		/* ":so" file name */
+#define SPEC_SFILE  5
+#ifdef AUTOCMD
+		    "<afile>",		/* autocommand file name */
+# define SPEC_AFILE 6
+		    "<abuf>",		/* autocommand buffer number */
+# define SPEC_ABUF  7
+		    "<amatch>"		/* autocommand match name */
+# define SPEC_AMATCH 8
+#endif
+		};
+#define SPEC_COUNT  (sizeof(spec_str) / sizeof(char *))
+
+#ifdef AUTOCMD
+    char_u	abuf_nr[30];
+#endif
+
+    *errormsg = NULL;
+
+    /*
+     * Check if there is something to do.
+     */
+    for (spec_idx = 0; spec_idx < SPEC_COUNT; ++spec_idx)
+    {
+	*usedlen = strlen(spec_str[spec_idx]);
+	if (STRNCMP(src, spec_str[spec_idx], *usedlen) == 0)
+	    break;
+    }
+    if (spec_idx == SPEC_COUNT)	    /* no match */
+    {
+	*usedlen = 1;
+	return NULL;
+    }
+
+    /*
+     * Skip when preceded with a backslash "\%" and "\#".
+     * Note: In "\\%" the % is also not recognized!
+     */
+    if (src > srcstart && src[-1] == '\\')
+    {
+	*usedlen = 0;
+	STRCPY(src - 1, src);		/* remove backslash */
+	return NULL;
+    }
+
+    /*
+     * word or WORD under cursor
+     */
+    if (spec_idx == SPEC_CWORD || spec_idx == SPEC_CCWORD)
+    {
+	resultlen = find_ident_under_cursor(&result, spec_idx == SPEC_CWORD ?
+				      (FIND_IDENT|FIND_STRING) : FIND_STRING);
+	if (resultlen == 0)
+	{
+	    *errormsg = (char_u *)"";
+	    return NULL;
+	}
+    }
+
+    /*
+     * '#': Alternate file name
+     * '%': Current file name
+     *	    File name under the cursor
+     *	    File name for autocommand
+     *	and following modifiers
+     */
+    else
+    {
+	switch (spec_idx)
+	{
+	case SPEC_PERC:		/* '%': current file */
+		if (curbuf->b_fname == NULL)
+		{
+		    result = (char_u *)"";
+		    valid = 0;	    /* Must have ":p:h" to be valid */
+		}
+		else
+#ifdef RISCOS
+		    /* Always use the full path for RISC OS if possible. */
+		    result = curbuf->b_ffname;
+		    if (result == NULL)
+			result = curbuf->b_fname;
+#else
+		    result = curbuf->b_fname;
+#endif
+		break;
+
+	case SPEC_HASH:		/* '#' or "#99": alternate file */
+		s = src + 1;
+		i = (int)getdigits(&s);
+		*usedlen = s - src;	/* length of what we expand */
+
+		buf = buflist_findnr(i);
+		if (buf == NULL)
+		{
+		    *errormsg = (char_u *)"No alternate file name to substitute for '#'";
+		    return NULL;
+		}
+		if (lnump != NULL)
+		    *lnump = buflist_findlnum(buf);
+		if (buf->b_fname == NULL)
+		{
+		    result = (char_u *)"";
+		    valid = 0;	    /* Must have ":p:h" to be valid */
+		}
+		else
+		    result = buf->b_fname;
+		break;
+
+#ifdef FILE_IN_PATH
+	case SPEC_CFILE:	/* file name under cursor */
+		result = file_name_at_cursor(FNAME_MESS|FNAME_HYP, 1L);
+		if (result == NULL)
+		{
+		    *errormsg = (char_u *)"";
+		    return NULL;
+		}
+		resultbuf = result;	    /* remember allocated string */
+		break;
+#endif
+
+#ifdef AUTOCMD
+	case SPEC_AFILE:	/* file name for autocommand */
+		result = autocmd_fname;
+		if (result == NULL)
+		{
+		    *errormsg = (char_u *)"no autocommand file name to substitute for \"<afile>\"";
+		    return NULL;
+		}
+		break;
+
+	case SPEC_ABUF:		/* buffer number for autocommand */
+		if (autocmd_bufnr <= 0)
+		{
+		    *errormsg = (char_u *)"no autocommand buffer number to substitute for \"<abuf>\"";
+		    return NULL;
+		}
+		sprintf((char *)abuf_nr, "%d", autocmd_bufnr);
+		result = abuf_nr;
+		break;
+
+	case SPEC_AMATCH:	/* match name for autocommand */
+		result = autocmd_match;
+		if (result == NULL)
+		{
+		    *errormsg = (char_u *)"no autocommand match name to substitute for \"<amatch>\"";
+		    return NULL;
+		}
+		break;
+
+#endif
+	case SPEC_SFILE:	/* file name for ":so" command */
+		result = sourcing_name;
+		if (result == NULL)
+		{
+		    *errormsg = (char_u *)"no :source file name to substitute for \"<sfile>\"";
+		    return NULL;
+		}
+		break;
+	}
+
+	resultlen = STRLEN(result);	/* length of new string */
+	if (src[*usedlen] == '<')	/* remove the file name extension */
+	{
+	    ++*usedlen;
+#ifdef RISCOS
+	    if ((s = vim_strrchr(result, '/')) != NULL && s >= gettail(result))
+#else
+	    if ((s = vim_strrchr(result, '.')) != NULL && s >= gettail(result))
+#endif
+		resultlen = s - result;
+	}
+#ifdef WANT_MODIFY_FNAME
+	else
+	{
+	    valid |= modify_fname(src, usedlen, &result, &resultbuf,
+								  &resultlen);
+	    if (result == NULL)
+	    {
+		*errormsg = (char_u *)"";
+		return NULL;
+	    }
+	}
+#endif
+    }
+
+    if (resultlen == 0 || valid != VALID_HEAD + VALID_PATH)
+    {
+	if (valid != VALID_HEAD + VALID_PATH)
+	    *errormsg = (char_u *)"Empty file name for '%' or '#', only works with \":p:h\"";
+	else
+	    *errormsg = (char_u *)"Evaluates to an empty string";
+	result = NULL;
+    }
+    else
+	result = vim_strnsave(result, resultlen);
+    vim_free(resultbuf);
+    return result;
+}
+
+#if defined(AUTOCMD) || defined(PROTO)
+/*
+ * Expand the <sfile> string in "arg".
+ *
+ * Returns an allocated string, or NULL for any error.
+ */
+    char_u *
+expand_sfile(arg)
+    char_u	*arg;
+{
+    char_u	*errormsg;
+    int		len;
+    char_u	*result;
+    char_u	*newres;
+    char_u	*repl;
+    int		srclen;
+    char_u	*p;
+    linenr_t	dummy;
+
+    result = vim_strsave(arg);
+    if (result == NULL)
+	return NULL;
+
+    for (p = result; *p; )
+    {
+	if (STRNCMP(p, "<sfile>", 7))
+	    ++p;
+	else
+	{
+	    /* replace "<sfile>" with the sourced file name, and do ":" stuff */
+	    repl = eval_vars(p, &srclen, &dummy, &errormsg, result);
+	    if (errormsg != NULL)
+	    {
+		if (*errormsg)
+		    emsg(errormsg);
+		vim_free(result);
+		return NULL;
+	    }
+	    if (repl == NULL)		/* no match (cannot happen) */
+	    {
+		p += srclen;
+		continue;
+	    }
+	    len = STRLEN(result) - srclen + STRLEN(repl) + 1;
+	    newres = alloc(len);
+	    if (newres == NULL)
+	    {
+		vim_free(repl);
+		vim_free(result);
+		return NULL;
+	    }
+	    mch_memmove(newres, result, (size_t)(p - result));
+	    STRCPY(newres + (p - result), repl);
+	    len = STRLEN(newres);
+	    STRCAT(newres, p + srclen);
+	    vim_free(repl);
+	    vim_free(result);
+	    result = newres;
+	    p = newres + len;		/* continue after the match */
+	}
+    }
+
+    return result;
+}
+#endif
+
+#ifdef MKSESSION
+/*
+ * Write openfile commands for the current buffers to an .exrc file.
+ * Return FAIL on error, OK otherwise.
+ */
+    static int
+makeopens(fd)
+    FILE	*fd;
+{
+    BUF		*buf;
+    int		dont_save_help = FALSE;
+    int		only_save_windows = TRUE;
+    int		nr = 0;
+    int		cnr = 0;
+    int		restore_size = TRUE;
+    WIN		*wp;
+
+
+    if (strstr((char *)p_sessopt, "he") == NULL)	/* "help" */
+	dont_save_help = TRUE;
+
+    if (vim_strchr(p_sessopt, 'f') != NULL)	/* "buffers" */
+	only_save_windows = FALSE;		/* Save ALL buffers */
+
+    /*
+     * Begin by setting the this_session variable, and then other
+     * sessionable variables.
+     */
+#ifdef WANT_EVAL
+    if (fputs("let v:this_session=expand(\"<sfile>:p\")", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+    if (vim_strchr(p_sessopt, 'g') != NULL)	/* "globals" */
+	if (store_session_globals(fd) == FAIL)
+	    return FAIL;
+#endif
+
+    /*
+     * Next a command to unload current buffers.
+     */
+    if (fputs("1,9999bd", fd) < 0 || put_eol(fd) == FAIL)
+	return FAIL;
+
+    /*
+     * Now a :cd command to the current directory
+     */
+    if (fputs("execute \"cd \" . expand(\"<sfile>:p:h\")", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+
+    /*
+     * Now save the current files, current buffer first.
+     */
+    if (fputs("let shmsave = &shortmess | set shortmess=aoO", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+
+    if (curbuf->b_fname != NULL)
+    {
+	/* current buffer - must load */
+	if (ses_fname_line(fd, "e", curwin->w_cursor.lnum, curbuf) == FAIL)
+	    return FAIL;
+    }
+
+    /* Now put the other buffers into the buffer list */
+    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+    {
+	if (only_save_windows && buf->b_nwindows == 0)
+	    continue;
+
+	if (buf->b_help && dont_save_help)
+	    continue;
+
+	if (buf->b_fname != NULL && buf != curbuf)
+	{
+	    if (ses_fname_line(fd, "badd", buf->b_winfpos->wl_fpos.lnum, buf)
+								      == FAIL)
+		return FAIL;
+	}
+    }
+
+    if (strstr((char *)p_sessopt, "re") != NULL)	/* "resize" */
+    {
+	/* Note: after the restore we still check it worked!*/
+	if (fprintf(fd, "set lines=%ld" , Rows) < 0 || put_eol(fd) == FAIL)
+	    return FAIL;
+	if (fprintf(fd, "set columns=%ld" , Columns) < 0 || put_eol(fd) == FAIL)
+	    return FAIL;
+    }
+
+#ifdef USE_GUI
+    if (gui.in_use && strstr((char *)p_sessopt, "np") != NULL)	/* "winpos" */
+    {
+	int	x, y;
+
+	if (gui_mch_get_winpos(&x, &y) == OK)
+	{
+	    /* Note: after the restore we still check it worked!*/
+	    if (fprintf(fd, "winpos %d %d", x, y) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+	}
+    }
+#endif
+
+    /*
+     * Save current windows.
+     */
+    if (fputs("let sbsave = &splitbelow | set splitbelow", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    {
+	++nr;
+	if (wp->w_buffer->b_fname == NULL)
+	{
+	    if (vim_strchr(p_sessopt, 'k') == NULL)	/* "blank" */
+	    {
+		restore_size = FALSE;
+		--nr;    /*skip this window*/
+		continue;
+	    }
+	    /* create new, empty window, except for first window */
+	    else if (nr != 1 && fputs("new", fd) < 0)
+		return FAIL;
+	}
+	else if ((wp->w_buffer->b_help) && dont_save_help)
+	{
+	    restore_size = FALSE;
+	    --nr;    /*skip this window*/
+	    continue;
+	}
+	else
+	{
+	    if (nr == 1)
+	    {
+		/* First window, i.e. already exists*/
+		if (fputs("b ", fd) < 0)
+		    return FAIL;
+	    }
+	    else
+	    {
+		/* create a new window */
+		if (fputs("sb ", fd) < 0)
+		    return FAIL;
+	    }
+
+	    if (wp->w_buffer->b_ffname != NULL)
+	    {
+		if (ses_fname(fd, wp->w_buffer) == FAIL)
+		    return FAIL;
+	    }
+	}
+	if (put_eol(fd) == FAIL)
+	    return FAIL;
+
+	/*
+	 * Make window as big as possible so that we have lots of room to split
+	 * off other windows.
+	 */
+	if (nr > 1 && wp->w_next != NULL
+		&& (fputs("normal \027_", fd) < 0 || put_eol(fd) == FAIL))
+	    return FAIL;
+
+	if (curwin == wp)
+	    cnr = nr;
+    }
+    if (fputs("let &splitbelow = sbsave", fd) < 0 || put_eol(fd) == FAIL)
+	return FAIL;
+
+    /*
+     * If more than one window, see if sizes can be restored.
+     */
+    if (nr > 1)
+    {
+	if (restore_size
+		&& strstr((char *)p_sessopt, "nsi") != NULL)	/* "winsize" */
+	{
+	    if (fprintf(fd, "if (&lines == %ld)" , Rows) < 0
+						       || put_eol(fd) == FAIL)
+		return FAIL;
+	    if (fputs("  normal \027t", fd) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+
+	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	    {
+		if (wp != firstwin && (fputs("  normal \027j", fd) < 0
+						      || put_eol(fd) == FAIL))
+		    return FAIL;
+
+		if (fprintf(fd, "  resize %ld", (long)wp->w_height) < 0
+						       || put_eol(fd) == FAIL)
+		    return FAIL;
+	    }
+
+	    if (fputs("else", fd) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+	    if (fputs("  normal \027=", fd) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+	    if (fputs("endif", fd) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+	}
+	else
+	{
+	    /* Just equalise window sizes */
+	    if (fputs("normal \027=", fd) < 0 || put_eol(fd) == FAIL)
+		return FAIL;
+	}
+    }
+
+    /*
+     * Set the topline of each window, and the current line and column.
+     */
+    if (fputs("normal \027t", fd) < 0)
+	return FAIL;
+
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    {
+	if (wp != firstwin && fputs("normal \027j", fd) < 0)
+	    return FAIL;
+
+	if (wp->w_buffer->b_fname != NULL)
+	{
+	    if (fprintf(fd, "%ldGzt%ldG0", (long)wp->w_topline,
+						 (long)wp->w_cursor.lnum) < 0)
+		return FAIL;
+	    if (wp->w_cursor.col > 0
+		    && fprintf(fd, "%dl", wp->w_cursor.col) < 0)
+		return FAIL;
+	}
+	if (put_eol(fd) == FAIL)
+	    return FAIL;
+    }
+
+    /*
+     * Restore cursor to the window it was in before.
+     */
+    if (nr > 1 && (fprintf(fd, "normal %d\027w", cnr) < 0
+						      || put_eol(fd) == FAIL))
+	return FAIL;
+
+    if (fputs("let &shortmess = shmsave", fd) < 0 || put_eol(fd) == FAIL)
+	return FAIL;
+
+    /*
+     * Lastly, execute the x.vim file if it exists.
+     */
+    if (fputs("let sessionextra=expand(\"<sfile>:p:r\").\"x.vim\"", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+
+    if (fputs("if file_readable(sessionextra)", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+
+    if (fputs("\texecute \"source \" . sessionextra", fd) < 0
+	    || put_eol(fd) == FAIL)
+	return FAIL;
+
+    if (fputs("endif", fd) < 0 || put_eol(fd) == FAIL)
+	return FAIL;
+
+    return OK;
+}
+
+    static int
+ses_fname_line(fd, cmd, lnum, buf)
+    FILE	*fd;
+    char	*cmd;	    /* command: "e" or "badd" */
+    linenr_t	lnum;	    /* line number for cursor */
+    BUF		*buf;	    /* use fname from this buffer */
+{
+    if (fprintf(fd, "%s +%ld ", cmd, lnum ) < 0)
+	return FAIL;
+    if (ses_fname(fd, buf) == FAIL || put_eol(fd) == FAIL)
+	return FAIL;
+    return OK;
+}
+
+/*
+ * Write a file name to the session file.
+ * Takes care of the "slash" option in 'sessionoptions'.
+ * Returns FAIL if writing fails.
+ */
+    static int
+ses_fname(fd, buf)
+    FILE	*fd;
+    BUF		*buf;
+{
+    int		c;
+    char_u	*name;
+
+    if (buf->b_sfname != NULL)
+	name = buf->b_sfname;
+    else
+	name = buf->b_ffname;
+    if (strstr((char *)p_sessopt, "sl") != NULL)	/* "slash" */
+    {
+	while (*name)
+	{
+	    c = *name++;
+	    if (c == '\\')
+		c = '/';
+	    if (putc(c, fd) != c)
+		return FAIL;
+	}
+    }
+    else if (fputs((char *)name, fd) < 0)
+	return FAIL;
+    return OK;
+}
+#endif /* MKSESSION */
+
+/*
+ * Write end-of-line character(s) for ":mkexrc", ":mkvimrc" and ":mksession".
+ */
+    int
+put_eol(fd)
+    FILE	*fd;
+{
+    if (
+#ifdef USE_CRNL
+	    (
+# ifdef MKSESSION_NL
+	     !mksession_nl &&
+# endif
+	     (putc('\r', fd) < 0)) ||
+#endif
+	    (putc('\n', fd) < 0))
+	return FAIL;
+    return OK;
+}
+
+    static void
+cmd_source(fname, forceit)
+    char_u	*fname;
+    int		forceit;
+{
+    if (forceit)		/* :so! read vi commands */
+	(void)openscript(fname);
+				/* :so read ex commands */
+    else if (do_source(fname, FALSE, FALSE) == FAIL)
+	emsg2(e_notopen, fname);
+}
+
+#if defined(GUI_DIALOG) || defined(CON_DIALOG) || defined(PROTO)
+    void
 dialog_msg(buff, format, fname)
     char_u	*buff;
     char	*format;
@@ -7577,3 +8030,30 @@ ex_behave(arg)
     else
 	EMSG2(e_invarg2, arg);
 }
+
+#ifdef AUTOCMD
+/*
+ * ":filetype {on,off}"
+ * on: Load the filetype.vim file to install autocommands for file types.
+ * off: Remove all "filetype" group autocommands.
+ */
+    static void
+ex_filetype(arg)
+    char_u	*arg;
+{
+    if (STRCMP(arg, "on") == 0)
+	(void)do_source((char_u *)FILETYPE_FILE, FALSE, FALSE);
+    else if (STRCMP(arg, "off") == 0)
+	(void)do_source((char_u *)FTOFF_FILE, FALSE, FALSE);
+    else
+	EMSG2(e_invarg2, arg);
+}
+#endif
+
+#if defined(WANT_EVAL) && defined(AUTOCMD)
+    static void
+ex_options()
+{
+    cmd_source((char_u *)SYS_OPTWIN_FILE, FALSE);
+}
+#endif

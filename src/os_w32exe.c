@@ -15,7 +15,16 @@
 #include <windows.h>
 
 /* cproto doesn't create a prototype for main() */
-int _cdecl main __ARGS((int argc, char **argv));
+#ifdef __MINGW32__
+# define _cdecl
+#endif
+int _cdecl
+#if defined(USE_GUI_WIN32)
+VimMain
+#else
+ main
+#endif
+__ARGS((int argc, char **argv));
 int (_cdecl *pmain)(int, char **);
 
 #ifndef PROTO
@@ -166,10 +175,23 @@ WinMain(
 #ifdef USE_GUI
 	pSaveInst = SaveInst;
 #endif
-	pmain = main;
+	pmain =
+#if defined(USE_GUI_WIN32)
+	    //&& defined(__MINGW32__)
+	    VimMain
+#else
+	    main
+#endif
+	    ;
 #endif
 #ifdef USE_GUI
-	pSaveInst(hInstance);
+	pSaveInst(
+#ifdef __MINGW32__
+		GetModuleHandle(NULL)
+#else
+		hInstance
+#endif
+		);
 #endif
 	pmain (argc, argv);
 

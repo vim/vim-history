@@ -52,6 +52,7 @@ EXE_dependencies =  \
  mark.obj \
  memfile.obj \
  memline.obj \
+ menu.obj \
  message.obj \
  misc1.obj \
  misc2.obj \
@@ -94,6 +95,7 @@ main.obj+
 mark.obj+
 memfile.obj+
 memline.obj+
+menu.obj+
 message.obj+
 misc1.obj+
 misc2.obj+
@@ -173,6 +175,8 @@ mark.obj: mark.c
 memfile.obj: memfile.c
 
 memline.obj: memline.c
+
+menu.obj: menu.c
 
 message.obj: message.c
 

@@ -3,6 +3,8 @@ vim_regexp *search_regcomp __ARGS((char_u *pat, int pat_save, int pat_use, int o
 void save_search_patterns __ARGS((void));
 void restore_search_patterns __ARGS((void));
 void set_reg_ic __ARGS((char_u *pat));
+char_u *last_search_pat __ARGS((void));
+void set_last_search_pat __ARGS((char_u *s, int idx, int magic, int setlast));
 vim_regexp *last_pat_prog __ARGS((void));
 int searchit __ARGS((BUF *buf, FPOS *pos, int dir, char_u *str, long count, int options, int pat_use));
 int do_search __ARGS((OPARG *oap, int dirc, char_u *str, long count, int options));

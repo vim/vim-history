@@ -38,7 +38,6 @@ int mch_has_wildcard __ARGS((char_u *p));
 int mch_remove __ARGS((char_u *file));
 
 char_u *mch_munge_fname(char_u *fname);
-void ro_read_filetype(char_u *file);
-void ro_set_filetype(char_u *file, char_u *type);
-void ro_remove_menu(int *menu);
+void mch_read_filetype(char_u *file);
+void mch_set_filetype(char_u *file, char_u *type);
 int mch_check_filetype(char_u *fname, char_u *type);

@@ -8,20 +8,23 @@
  */
 
 #define USE_AEVENT
-#define USE_OFFSETED_WINDOW
+/*#define USE_OFFSETED_WINDOW*/
 #define USE_VIM_CREATOR_ID
 
+#include <Devices.h> /* included first to avoid CR problems */
 #include "vim.h"
 #include "globals.h"
-#include "proto.h"
 #include "option.h"
-
+#include <Menus.h>
+#include <Resources.h>
+#include <StandardFile.h>
+#include <Traps.h>
 #ifdef USE_AEVENT
 # include <AppleEvents.h>
 #endif
 
 #define kNothing 0
-#define kCreateEmpty 1
+#define kCreateEmpty 2 /*1*/
 #define kCreateRect 2
 #define kDestroy 3
 
@@ -148,7 +151,7 @@ static struct
 };
 
 
-short gui_mac_get_menu_item_index (GuiMenu *menu, GuiMenu *parent);
+short gui_mac_get_menu_item_index (VimMenu *menu, VimMenu *parent);
 GuiFont gui_mac_find_font (char_u *font_name);
 #ifdef USE_AEVENT
 OSErr HandleUnusedParms (AppleEvent *theAEvent);
@@ -161,36 +164,62 @@ static int gui_argc = 0;
 static char **gui_argv = NULL;
 
 	short
-gui_mac_get_menu_item_index (menu, parent)
-	GuiMenu *menu;
-	GuiMenu *parent;
+gui_mac_get_menu_item_index (pMenu, pElderMenu)
+	VimMenu *pMenu;
+	VimMenu *pElderMenu;
 {
-	GuiMenu *brothers  = parent->children;
-	short	 itemIndex =1;
+	/* pMenu is the one we inquiries */
+	/* pElderMenu the menu where we start looking for */
 
-	for (; brothers != NULL; brothers = brothers->next, itemIndex++)
-		if (brothers == menu)
-			break;
+	short   itemIndex = -1;
+	short	index;
+	VimMenu *pChildren = pElderMenu->children;;
 
-/*  if (brothers == NULL)
-		TODO: flag an error		  */
+	while ((pElderMenu != NULL) && (itemIndex == -1))
+	{
+		pChildren = pElderMenu->children;
 
-	return (itemIndex);
+		if (pChildren)
+		{
+			if (pChildren->menu_id == pMenu->menu_id)
+			{
+				for (index = 1;(pChildren != pMenu) && (pChildren != NULL);index++)
+					pChildren = pChildren->next;
+				if (pChildren == pMenu)
+					itemIndex = index;
+			}
+			else
+			{
+				itemIndex = gui_mac_get_menu_item_index (pMenu, pChildren);
+			}
+		}
+		pElderMenu = pElderMenu->next;
+	}
+
+	return itemIndex;
 }
 
-	static GuiMenu *
+	static VimMenu *
 gui_mac_get_vim_menu (menuID, itemIndex, pMenu)
 	short	menuID;
 	short	itemIndex;
-	GuiMenu *pMenu;
+	VimMenu *pMenu;
 {
 	short	index;
-	GuiMenu *pChildMenu;
+	VimMenu *pChildMenu;
 
-	while (pMenu)
+	/* pMenu is the first menu of the level (no next point to it) */
+	/* TODO: Help menu would be tricky */
+
+	if (pMenu->menu_id == menuID)
 	{
-		if ((pMenu->menu_id == menuID) && (pMenu->index == itemIndex))
-			break;
+		for (index = 1; (index != itemIndex) && (pMenu != NULL); index++)
+			pMenu = pMenu->next;
+	}
+    else
+	{
+		for (; pMenu != NULL; pMenu = pMenu->next)
+		{
 		if (pMenu->children != NULL)
 		{
 			pChildMenu = gui_mac_get_vim_menu
@@ -201,10 +230,14 @@ gui_mac_get_vim_menu (menuID, itemIndex, pMenu)
 				break;
 			}
 		}
-		pMenu = pMenu->next;
+		}
 	}
 	return pMenu;
 }
+
+/*
+ * Handle the Update Event
+ */
 
 	void
 gui_mac_update(event)
@@ -215,6 +248,8 @@ gui_mac_update(event)
 	RgnHandle	updateRgn;
 	Rect		*updateRect;
 	Rect		rc;
+	Rect		growRect;
+	RgnHandle	saveRgn;
 
 	GetPort (&savePort);
 	whichWindow = (WindowPtr) event->message;
@@ -230,27 +265,36 @@ gui_mac_update(event)
 		  gui_mch_set_bg_color(gui.back_pixel);
 		  if (updateRect->left < FILL_X(0))
 		  {
-			SetRect (&rc, 0, 0, FILL_X(0), 0);
+			SetRect (&rc, 0, 0, FILL_X(0), FILL_Y(Rows));
 			EraseRect (&rc);
 		  }
-		  if (updateRect->right < FILL_Y(0))
+		  if (updateRect->top < FILL_Y(0))
 		  {
-			SetRect (&rc, 0, 0, 0, FILL_Y(0));
+			SetRect (&rc, 0, 0, FILL_X(Columns), FILL_Y(0));
 			EraseRect (&rc);
 		  }
-		  if (updateRect->left > FILL_X(Columns))
+		  if (updateRect->right > FILL_X(Columns))
 		  {
-			SetRect (&rc, FILL_X(Columns), 0, FILL_X(Columns), 0);
+			SetRect (&rc, FILL_X(Columns), 0, FILL_X(Columns)+gui.border_offset, FILL_Y(Rows));
 			EraseRect (&rc);
 		  }
-		  if (updateRect->right > FILL_Y(Rows))
+		  if (updateRect->bottom > FILL_Y(Rows))
 		  {
-			SetRect (&rc, 0, FILL_Y(Rows), 0, FILL_Y(Rows));
+			SetRect (&rc, 0, FILL_Y(Rows), FILL_X(Columns)+gui.border_offset, FILL_Y(Rows)+gui.border_offset);
 			EraseRect (&rc);
 		  }
 		HUnlock ((Handle) updateRgn);
 		DrawControls (whichWindow);
+		/* FAQ 33-27 */
+		growRect = whichWindow->portRect;
+		growRect.top  = growRect.bottom - 15;
+		growRect.left = growRect.right  - 15;
+		saveRgn = NewRgn();
+		GetClip (saveRgn);
+		ClipRect (&growRect);
 		DrawGrowIcon (whichWindow);
+		SetClip (saveRgn);
+		DisposeRgn (saveRgn);
 	  EndUpdate (whichWindow);
 	SetPort (savePort);
 }
@@ -272,15 +316,24 @@ gui_mac_handle_menu(menuChoice)
 {
 	short	 menu		 = HiWord(menuChoice);
 	short	 item		 = LoWord(menuChoice);
-	GuiMenu  *theVimMenu = gui.root_menu;
+	VimMenu  *theVimMenu = root_menu;
+	MenuHandle	appleMenu;
+	Str255		itemName;
 
 	if (menu == 256)  /* TODO: use constant or gui.xyz */
 	{
-		SysBeep(1); /* TODO: handled apple menu properly */
+		if (item == 1)
+			SysBeep(1); /* TODO: Popup dialog or do :intro */
+		else
+		{
+			appleMenu = GetMenuHandle (menu);
+			GetMenuItemText (appleMenu, item, itemName);
+			(void) OpenDeskAcc (itemName);
+		}
 	}
 	else if (item != 0)
 	{
-		theVimMenu = gui_mac_get_vim_menu(menu, item, gui.root_menu);
+		theVimMenu = gui_mac_get_vim_menu(menu, item, root_menu);
 
 		if (theVimMenu)
 			gui_menu_cb(theVimMenu);
@@ -315,6 +368,8 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 	long		value;
 	int			page;
 	int			dragging = FALSE;
+    WIN		*wp;
+    int		sb_num;
 
 	sb = gui_find_scrollbar((long) GetControlReference (theControl));
 
@@ -360,6 +415,21 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 
 	out_flush();
 	gui_mch_set_scrollbar_thumb(sb, value, sb_info->size, sb_info->max);
+
+/*  if (sb_info->wp != NULL)
+    {
+		sb_num = 0;
+		for (wp = firstwin; wp != sb->wp && wp != NULL; wp = wp->w_next)
+		sb_num++;
+
+		if (wp != NULL)
+	    {
+			current_scrollbar = sb_num;
+			scrollbar_value = value;
+			gui_do_scroll();
+	        gui_mch_set_scrollbar_thumb(sb, value, sb_info->size, sb_info->max);
+		}
+	}*/
 }
 
 /*
@@ -395,6 +465,11 @@ gui_mch_prepare(argc, argv)
     (void) InstallAEHandlers();
 #endif
 
+#if 0
+    /* TODO: had the ge.. */
+	(void) InitContextualMenus();
+#endif
+
 #ifndef USE_OFFSETED_WINDOW
 	SetRect (&windRect, 10, 48, 10+80*7 + 16, 48+24*11);
 #else
@@ -415,11 +490,12 @@ gui_mch_prepare(argc, argv)
 	gui.in_focus = TRUE; /* For the moment -> syn. of front application */
 
 	gScrollAction = NewControlActionProc (gui_mac_scroll_action);
+    gScrollDrag   = NewControlActionProc (gui_mac_drag_thumb);
 
 	pomme = NewMenu (256, "\p\024"); /* 0x14= = Apple Menu */
 	InsertMenu (pomme, 0);
 
-	AppendMenu (pomme, "\pAbout VIMŠ");
+	AppendMenu (pomme, "\pAbout VIM");
 	AppendMenu (pomme, "\p-");
 	AppendResMenu (pomme, 'DRVR');
 
@@ -452,6 +528,9 @@ gui_mch_init()
 	GuiColor tmp_pixel;
 
 
+    /* Display any pending error messages */
+    mch_display_error();
+
 	/* Get background/foreground colors from system */
 	/* TODO: do the approriate call to get real defaults */
 	gui.norm_pixel = 0x00000000;
@@ -476,7 +555,9 @@ gui_mch_init()
 	/*
 	 * Setting the gui constants
 	 */
+#ifdef WANT_MENU
 	gui.menu_height = 0;
+#endif
 	gui.scrollbar_height = gui.scrollbar_width = 15; /* cheat 1 overlap */
 	gui.border_offset = gui.border_width = 2;
 
@@ -511,6 +592,26 @@ gui_mch_exit()
 	/* Exit to shell? */
 }
 
+/*
+ * Get the position of the top left corner of the window.
+ */
+    int
+gui_mch_get_winpos(int *x, int *y)
+{
+    /* TODO */
+	return FAIL;
+}
+
+/*
+ * Set the position of the top left corner of the window to the given
+ * coordinates.
+ */
+    void
+gui_mch_set_winpos(int x, int y)
+{
+    /* TODO */
+}
+
 	void
 gui_mch_set_winsize(width, height, min_width, min_height,
 					base_width, base_height)
@@ -523,7 +624,7 @@ gui_mch_set_winsize(width, height, min_width, min_height,
 {
 	if (gui.which_scrollbars[SBAR_LEFT])
 	{
-		gui.VimWindow->portRect.left = -gui.scrollbar_width + 1;
+		gui.VimWindow->portRect.left = -gui.scrollbar_width; /* + 1;*/
 	}
 	else
 	{
@@ -599,7 +700,7 @@ gui_mac_find_font (font_name)
 	char_u		pFontName[256];
 	Str255		systemFontname;
     short       font_id;
-    short       size;
+    short       size=9;
     GuiFont     font;
 
     for (p = font_name; ((*p != 0) && (*p != ':')); p++)
@@ -738,6 +839,7 @@ gui_mch_set_font(font)
 	TextFont (font & 0xFFFF);
 }
 
+#if 0 /* not used */
 /*
  * Return TRUE if the two fonts given are equivalent.
  */
@@ -748,6 +850,7 @@ gui_mch_same_font(f1, f2)
 {
 	return f1 == f2;
 }
+#endif
 
 /*
  * If a font is not going to be used, free its structure.
@@ -862,7 +965,56 @@ gui_mch_get_color(name)
 				return table[i].color;
 	}
 
-	return 0;
+
+    /*
+     * Last attempt. Look in the file "$VIM/rgb.txt".
+     */
+    {
+#define LINE_LEN 100
+		FILE	*fd;
+		char	line[LINE_LEN];
+		char_u	*fname;
+
+		fname = expand_env_save((char_u *)"$VIM:rgb.txt");
+		if (fname == NULL)
+			return (GuiColor)-1;
+
+		fd = fopen((char *)fname, "rt");
+		vim_free(fname);
+		if (fd == NULL)
+			return (GuiColor)-1;
+
+		while (!feof(fd))
+		{
+			int	    len;
+			int	    pos;
+			char    *color;
+			int		dummy;
+
+			fgets(line, LINE_LEN, fd);
+			len = strlen(line);
+
+			if (len <= 1 || line[len-1] != '\n')
+				continue;
+
+			line[len-1] = '\0';
+
+			i = sscanf(line, "%d %d %d %n", &r, &g, &b, &pos);
+			if (i != 3)
+				continue;
+
+			color = line + pos;
+
+			if (STRICMP(color, name) == 0)
+			{
+				fclose(fd);
+				return (GuiColor) RGB(r,g,b);
+			}
+		}
+		fclose(fd);
+    }
+
+	return -1;
 }
 
 /*
@@ -1059,7 +1211,7 @@ gui_mch_draw_part_cursor(w, h, color)
 gui_mac_do_key(EventRecord *theEvent)
 {
 	/* TODO: add support for COMMAND KEY */
-
+	long				menu;
 	unsigned char		string[3], string2[3];
 	short				num, i;
 	KeySym				key_sym;
@@ -1077,6 +1229,17 @@ gui_mac_do_key(EventRecord *theEvent)
 	if (theEvent->modifiers & cmdKey)
 		if (string[0] == '.')
 			got_int = TRUE;
+
+	if (theEvent->modifiers & cmdKey)
+	  if ((theEvent->modifiers & (~(cmdKey | btnState | alphaLock))) == 0)
+	  {
+		menu = MenuKey(string[0]);
+		if (HiWord(menu))
+		{
+			gui_mac_handle_menu(menu);
+			return;
+		}
+	  }
 
 #if 0
 	if	(!(theEvent->modifiers & (cmdKey | controlKey | rightControlKey)))
@@ -1152,7 +1315,7 @@ gui_mac_doMouseDown (theEvent)
 		case (inDesk):  /* TODO: what to do? */
 			break;
 		case (inMenuBar):
-			gui_mac_handle_menu (MenuSelect (theEvent->where));
+			gui_mac_handle_menu(MenuSelect (theEvent->where));
 			break;
 
 		case (inContent):
@@ -1213,8 +1376,17 @@ gui_mac_doMouseDown (theEvent)
 	sizeRect.left = 100;
 	newSize = GrowWindow(whichWindow, theEvent->where, &sizeRect);
 	if (newSize != 0) {
-		SizeWindow(whichWindow, newSize & 0x0000FFFF, newSize >> 16, true);
+
+		gui_mch_set_bg_color(gui.back_pixel);
+
 		gui_resize_window(newSize & 0x0000FFFF, newSize >> 16);
+/*		if ((gui.right_sbar_x + gui.scrollbar_width) != (newSize & 0x0000FFFF))
+		 newSize=gui.right_sbar_x + gui.scrollbar_width + (newSize & 0xFFFF0000);
+		if ((gui.right_sbar_x + gui.scrollbar_width) != (newSize & 0x0000FFFF))
+		 newSize=gui.right_sbar_x + gui.scrollbar_width + (newSize & 0xFFFF0000);
+		gui_resize_window(newSize & 0x0000FFFF, newSize >> 16);
+		SizeWindow(whichWindow, newSize & 0x0000FFFF, newSize >> 16, true);*/
+		gui_set_winsize(FALSE);
 /*		SetPort(wp);
 		InvalRect(&wp->portRect);
 		if (isUserWindow(wp)) {
@@ -1242,6 +1414,13 @@ gui_mac_handle_event (event)
 	int_u		vimModifier;
 
 	char		touche;
+
+#if 0
+	/*
+	 * if (IsShowContextualMenuClick(event))
+	 *   do context
+	 */
+#endif
 
 	switch (event->what)
 	{
@@ -1304,6 +1483,9 @@ gui_mac_handle_event (event)
 				if (event->modifiers & (optionKey | rightOptionKey))
 					vimModifier |= MOUSE_ALT;
 
+				if (!Button())
+					gui_mouse_moved (thePoint.v);
+				else
 				gui_send_mouse_event(MOUSE_DRAG, thePoint.h, thePoint.v,
 									 FALSE, vimModifier);
 
@@ -1364,6 +1546,8 @@ gui_mch_update()
 	Boolean
 WaitNextEventWrp (EventMask eventMask, EventRecord *theEvent, UInt32 sleep, RgnHandle mouseRgn)
 {
+	if (((long) sleep) < -1)
+	  sleep = 32767;
 	return WaitNextEvent(eventMask, theEvent, sleep, mouseRgn);
 }
 
@@ -1394,12 +1578,12 @@ gui_mch_wait_for_chars(wtime)
 
 	do
 	{
-			if (dragRectControl == kCreateEmpty)
+/*			if (dragRectControl == kCreateEmpty)
 			{
 				dragRgn = NULL;
 				dragRectControl = kNothing;
 			}
-			else if (dragRectControl == kCreateRect)
+			else*/ if (dragRectControl == kCreateRect)
 			{
 				dragRgn = cursorRgn;
 				RectRgn (dragRgn, &dragRect);
@@ -1482,9 +1666,9 @@ gui_mch_clear_all()
 
 	gui_mch_set_bg_color(gui.back_pixel);
 	EraseRect(&rc);
-	gui_mch_set_fg_color(gui.norm_pixel);
+/*	gui_mch_set_fg_color(gui.norm_pixel);
 	FrameRect(&rc);
-
+*/
 }
 
 /*
@@ -1691,7 +1875,7 @@ gui_mch_set_text_area_pos(x, y, w, h)
 	int		w;
 	int		h;
 {
-	HideWindow (gui.VimWindow);
+/*	HideWindow (gui.VimWindow); */
 	if (gui.which_scrollbars[SBAR_LEFT])
 		gui.VimWindow->portRect.left = -gui.scrollbar_width + 1;
 	else
@@ -1734,8 +1918,8 @@ gui_mch_set_menu_pos(x, y, w, h)
  */
 	void
 gui_mch_add_menu(menu, parent, idx)
-	GuiMenu		*menu;
-	GuiMenu		*parent;
+	VimMenu		*menu;
+	VimMenu		*parent;
 	int			idx;
 {
 	/*
@@ -1747,8 +1931,8 @@ gui_mch_add_menu(menu, parent, idx)
 	long		len;
 	short		index;
 
-    if (!gui_menubar_menu(menu->name)
-			|| (parent != NULL && parent->submenu_id == 0))
+    if (/* !menubar_menu(menu->name)
+			|| */ (parent != NULL && parent->submenu_id == 0))
 		return;
 
 	if (next_avail_id == 1024)
@@ -1768,8 +1952,13 @@ gui_mch_add_menu(menu, parent, idx)
 	{
 		menu->menu_id = 0;
 		menu->menu_handle = NULL;
+/*
 		menu->index = 0;
-		InsertMenu (menu->submenu_handle, 0);
+*/
+        if (menubar_menu(menu->name))
+			InsertMenu (menu->submenu_handle, 0); /* before */
+		else
+			InsertMenu (menu->submenu_handle, hierMenu); /* before */
 #if 1
 		DrawMenuBar();
 #endif
@@ -1778,15 +1967,19 @@ gui_mch_add_menu(menu, parent, idx)
 	{
 		menu->menu_id = parent->submenu_id;
 		menu->menu_handle = parent->submenu_handle;
-		menu->index = gui_mac_get_menu_item_index (menu, parent);
-
-		AppendMenu(menu->menu_handle, name);
-		SetItemCmd(menu->menu_handle, menu->index, 0x1B);
-		SetItemMark(menu->menu_handle, menu->index, menu->submenu_id);
-		InsertMenu(menu->submenu_handle, -1);
+		index = gui_mac_get_menu_item_index (menu, parent);
+/*
+		menu->index = index;
+*/
+/*		AppendMenu(menu->menu_handle, name); */
+		InsertMenuItem(menu->menu_handle, "\p ", idx); /*afterItem */
+		SetMenuItemText(menu->menu_handle, idx+1, name);
+		SetItemCmd(menu->menu_handle, idx+1, 0x1B);
+		SetItemMark(menu->menu_handle, idx+1, menu->submenu_id);
+		InsertMenu(menu->submenu_handle, hierMenu);
 	}
 
-	vim_free(name);
+	vim_free (name);
 	next_avail_id++;
 
 #if 0
@@ -1799,8 +1992,8 @@ gui_mch_add_menu(menu, parent, idx)
  */
 	void
 gui_mch_add_menu_item(menu, parent, idx)
-	GuiMenu		*menu;
-	GuiMenu		*parent;
+	VimMenu		*menu;
+	VimMenu		*parent;
 	int			idx;
 {
 	char_u		*name;
@@ -1809,6 +2002,10 @@ gui_mch_add_menu_item(menu, parent, idx)
 	if (parent->submenu_id == 0)
 		return;
 
+	/* Don't add menu separator */
+/*	if (is_menu_separator(menu->name))
+		return;
+*/
 	len = STRLEN(menu->dname);
 	name = alloc(len + 1);
 	if (name == NULL)
@@ -1820,13 +2017,16 @@ gui_mch_add_menu_item(menu, parent, idx)
 	menu->submenu_id = 0;
 	menu->menu_handle = parent->submenu_handle;
 	menu->submenu_handle = NULL;
+/*
 	menu->index = gui_mac_get_menu_item_index(menu, parent);
-
-	AppendMenu(menu->menu_handle, name);
+*/
+	/* AppendMenu(menu->menu_handle, name); */
+	InsertMenuItem(menu->menu_handle, "\p ", idx); /*afterItem */
+	SetMenuItemText(menu->menu_handle, idx+1, name);
 #if 0
 	DrawMenuBar();
 #endif
-
+	/* TODO: Can name be freed? */
 	vim_free(name);
 }
 
@@ -1842,20 +2042,21 @@ gui_mch_toggle_tearoffs(enable)
  */
 	void
 gui_mch_destroy_menu(menu)
-	GuiMenu	*menu;
+	VimMenu	*menu;
 {
-	short index;
-	GuiMenu *brother;
-
-	if (menu->index != 0)
+	short   index = gui_mac_get_menu_item_index (menu, root_menu);
+	VimMenu *brother;
+/*
+	index = menu->index;
+*/
+	if (index != 0)
 	{
 		/* Scroll all index number */
-		index = menu->index;
-
+/*
 		for (brother = menu->next; brother != NULL; brother = brother->next, index++)
 			brother->index = index;
-
-		DeleteMenuItem (menu->menu_handle, menu->index);
+*/
+		DeleteMenuItem (menu->menu_handle, index);
 
 		if (menu->submenu_id != 0)
 		{
@@ -1876,23 +2077,27 @@ gui_mch_destroy_menu(menu)
  */
 	void
 gui_mch_menu_grey(menu, grey)
-	GuiMenu	*menu;
+	VimMenu	*menu;
 	int		grey;
 {
 	/* TODO: Check if menu really exists */
+	short index = gui_mac_get_menu_item_index (menu, root_menu);
+/*
+	index = menu->index;
+*/
 	if (grey)
 	{
 		if (menu->children)
-			DisableItem(menu->submenu_handle, menu->index);
+			DisableItem(menu->submenu_handle, index);
 		if (menu->menu_handle)
-			DisableItem(menu->menu_handle, menu->index);
+			DisableItem(menu->menu_handle, index);
 	}
 	else
 	{
 		if (menu->children)
-			EnableItem(menu->submenu_handle, menu->index);
+			EnableItem(menu->submenu_handle, index);
 		if (menu->menu_handle)
-			EnableItem(menu->menu_handle, menu->index);
+			EnableItem(menu->menu_handle, index);
 	}
 }
 
@@ -1901,10 +2106,14 @@ gui_mch_menu_grey(menu, grey)
  */
 	void
 gui_mch_menu_hidden(menu, hidden)
-	GuiMenu	*menu;
+	VimMenu	*menu;
 	int		hidden;
 {
 	/* TODO: Check if menu really exists */
+	short index = gui_mac_get_menu_item_index (menu, root_menu);
+/*
+	index = menu->index;
+*/
 	if (hidden)
 	{
 		if (menu->children)
@@ -1915,9 +2124,9 @@ gui_mch_menu_hidden(menu, hidden)
 	else
 	{
 		if (menu->children)
-			EnableItem(menu->submenu_handle, menu->index);
+			EnableItem(menu->submenu_handle, index);
 		if (menu->menu_handle)
-			EnableItem(menu->menu_handle, menu->index);
+			EnableItem(menu->menu_handle, index);
 	}
 }
 
@@ -1966,16 +2175,27 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 	int				w;
 	int				h;
 {
-	if (gui.which_scrollbars[SBAR_LEFT])
+	gui_mch_set_bg_color(gui.back_pixel);
+/*	if (gui.which_scrollbars[SBAR_LEFT])
 	{
-		MoveControl (sb->id, x-16, y-1);
+		MoveControl (sb->id, x-16, y);
 		SizeControl	(sb->id, w + 1, h);
 	}
 	else
 	{
-		MoveControl (sb->id, x, y-1);
+		MoveControl (sb->id, x, y);
 		SizeControl	(sb->id, w + 1, h);
-	}
+	}*/
+	if (sb == &gui.bottom_sbar)
+		h += 1;
+	else
+		w += 1;
+
+	if (gui.which_scrollbars[SBAR_LEFT])
+		x -= 15;
+
+	MoveControl (sb->id, x, y);
+	SizeControl (sb->id, w, h);
 }
 
 	void
@@ -2005,6 +2225,7 @@ gui_mch_create_scrollbar(sb, orient)
 gui_mch_destroy_scrollbar(sb)
 	GuiScrollbar	*sb;
 {
+	gui_mch_set_bg_color(gui.back_pixel);
 	DisposeControl (sb->id);
 }
 
@@ -2071,6 +2292,7 @@ gui_mch_get_lightness(pixel)
 	return (Red(pixel)*3 + Green(pixel)*6 + Blue(pixel)) / 10;
 }
 
+#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  */
@@ -2084,7 +2306,200 @@ gui_mch_get_rgb(pixel)
 		Red(pixel), Green(pixel), Blue(pixel));
 	return retval;
 }
+#endif
 
+#ifdef USE_BROWSE
+
+/*
+ * Pop open a file browser and return the file selected, in allocated memory,
+ * or NULL if Cancel is hit.
+ *  saving  - TRUE if the file will be saved to, FALSE if it will be opened.
+ *  title   - Title message for the file browser dialog.
+ *  dflt    - Default name of file.
+ *  ext     - Default extension to be added to files without extensions.
+ *  initdir - directory in which to open the browser (NULL = current dir)
+ *  filter  - Filter for matched files to choose from.
+ *	Has a format like this:
+ *	"C Files (*.c)\0*.c\0"
+ *	"All Files\0*.*\0\0"
+ *	If these two strings were concatenated, then a choice of two file
+ *	filters will be selectable to the user.  Then only matching files will
+ *	be shown in the browser.  If NULL, the default allows all files.
+ *
+ *	*NOTE* - the filter string must be terminated with TWO nulls.
+ */
+    char_u *
+gui_mch_browse(
+	int saving,
+	char_u *title,
+	char_u *dflt,
+	char_u *ext,
+	char_u *initdir,
+	char_u *filter)
+{
+	SFTypeList			fileTypes;
+	StandardFileReply	reply;
+	Str255				Prompt;
+	Str255				DefaultName;
+	Str255				Directory;
+	char_u				fname[256];
+
+	/* TODO: split dflt in path and filename */
+
+	(void) C2PascalString (title,   &Prompt);
+	(void) C2PascalString (dflt,    &DefaultName);
+	(void) C2PascalString (initdir, &Directory);
+
+	if (saving)
+	{
+		/* Use a custon filter instead of nil FAQ 9-4 */
+		StandardPutFile (Prompt, DefaultName,  &reply);
+		if (!reply.sfGood)
+			return NULL;
+	}
+	else
+	{
+		StandardGetFile (nil, -1, fileTypes, &reply);
+		if (!reply.sfGood)
+			return NULL;
+	}
+
+	GetFullPathFromFSSpec ((char_u *) &fname, reply.sfFile);
+	/* Work fine but append a : for new file */
+
+	return vim_strsave(fname);
+
+	/* Shorten the file name if possible */
+/*    mch_dirname(IObuff, IOSIZE);
+    p = shorten_fname(fileBuf, IObuff);
+    if (p == NULL)
+	p = fileBuf;
+    return vim_strsave(p);
+*/
+}
+
+#endif /* USE_BROWSE */
+
+#ifdef GUI_DIALOG
+/*
+ * stuff for dialogues
+ */
+
+/*
+ * Create a dialogue dynamically from the parameter strings.
+ * type       = type of dialogue (question, alert, etc.)
+ * title      = dialogue title. may be NULL for default title.
+ * message    = text to display. Dialogue sizes to accommodate it.
+ * buttons    = '\n' separated list of button captions, default first.
+ * dfltbutton = number of default button.
+ *
+ * This routine returns 1 if the first button is pressed,
+ *			2 for the second, etc.
+ *
+ *			0 indicates Esc was pressed.
+ *			-1 for unexpected error
+ *
+ * If stubbing out this fn, return 1.
+ */
+
+    int
+gui_mch_dialog(
+    int		 type,
+    char_u	*title,
+    char_u	*message,
+    char_u	*buttons,
+    int		 dfltbutton)
+{
+	Handle	  buttonDITL;
+	Handle    iconDITL;
+	Handle    messageDITL;
+	Handle		itemHandle;
+	Handle      iconHandle;
+	DialogPtr	theDialog;
+	char_u		len;
+	char_u		name[256];
+	GrafPtr		oldPort;
+    short		itemHit;
+	char_u      *buttonChar;
+	char_u      *messageChar;
+	Rect		box;
+	short		button;
+	short		itemType;
+	short		useIcon;
+	short       appendWhere;
+
+	theDialog = GetNewDialog (129, nil, (WindowRef) -1);
+    /*	SetTitle (title); */
+
+	buttonDITL = GetResource ('DITL', 130);
+	buttonChar = buttons;
+	button = 0;
+
+	for (;*buttonChar != 0;)
+	{
+	    button++;
+		len = 0;
+		for (;((*buttonChar != DLG_BUTTON_SEP) && (*buttonChar != 0) && (len < 255)); buttonChar++)
+		{
+			if (*buttonChar != DLG_HOTKEY_CHAR)
+				name[++len] = *buttonChar;
+		}
+		if (*buttonChar != 0)
+		  buttonChar++;
+		name[0] = len;
+
+		AppendDITL (theDialog, buttonDITL, appendDITLRight);
+	    GetDialogItem (theDialog, button, &itemType, &itemHandle, &box);
+		SetControlTitle ((ControlRef) itemHandle, name);
+		SetDialogItem (theDialog, button, itemType, itemHandle, &box);
+	}
+	ReleaseResource (buttonDITL);
+
+	iconDITL = GetResource ('DITL', 131);
+	switch (type)
+	{
+		case VIM_GENERIC:  useIcon = kNoteIcon;
+		case VIM_ERROR:    useIcon = kStopIcon;
+		case VIM_WARNING:  useIcon = kCautionIcon;
+		case VIM_INFO:     useIcon = kNoteIcon;
+		case VIM_QUESTION: useIcon = kNoteIcon;
+		default:      useIcon = kStopIcon;
+	};
+	AppendDITL (theDialog, iconDITL, overlayDITL);
+	ReleaseResource (iconDITL);
+	GetDialogItem (theDialog, button + 1, &itemType, &itemHandle, &box);
+	/* Should the item be freed */
+	iconHandle = GetIcon (useIcon);
+	SetDialogItem (theDialog, button + 1, itemType, (Handle) iconHandle, &box);
+
+
+	messageDITL = GetResource ('DITL', 132);
+	AppendDITL (theDialog, iconDITL, overlayDITL);
+	ReleaseResource (iconDITL);
+	GetDialogItem (theDialog, button + 2, &itemType, &itemHandle, &box);
+	messageChar = message;
+	len = 1;
+	for (; (*messageChar != 0) && (len <255); len++, messageChar++)
+	{
+		name[len] = *messageChar;
+	}
+	name[0] = len;
+
+	SetDialogItemText (itemHandle, name);
+
+    SetDialogDefaultItem (theDialog, dfltbutton);
+	SetDialogCancelItem (theDialog, 0);
+
+	GetPort (&oldPort);
+	SetPort (theDialog);
+
+	ModalDialog (nil, &itemHit);
+	SetPort (oldPort);
+	DisposeDialog (theDialog);
+
+	return itemHit;
+}
+#endif /* GUI_DIALOGUE */
 /*
  * Apple Event Handling procedure
  *
@@ -2151,6 +2566,31 @@ pascal OSErr HandleODocAE (AppleEvent *theAEvent, AppleEvent *theReply, long ref
 		return(error);
 	}
 
+/*
+    error = AEGetParamDesc(theAEvent, keyAEPosition, typeChar, &thePosition);
+
+	struct SelectionRange // 68k alignement
+	{
+	short unused1; // 0 (not used)
+	short lineNum; // line to select (<0 to specify range)
+	long startRange; // start of selection range (if line < 0)
+	long endRange; // end of selection range (if line < 0)
+	long unused2; // 0 (not used)
+	long theDate; // modification date/time
+	};
+
+	if (^error) then
+	{
+		if (thePosition.lineNum >= 0)
+		{
+		  // Goto this line
+		}
+		else
+		{
+		  // Set the range char wise
+		}
+	}
+ */
     error = HandleUnusedParms (theAEvent);
 	if (error)
 	{
@@ -2168,6 +2608,7 @@ pascal OSErr HandleODocAE (AppleEvent *theAEvent, AppleEvent *theReply, long ref
     if (VIsual_active)
     {
 		end_visual_mode();
+		/* TODO: verify below */
 		VIsual_reselect = FALSE;
 		update_curbuf(NOT_VALID);	/* delete the inversion */
     }
@@ -2195,8 +2636,8 @@ pascal OSErr HandleODocAE (AppleEvent *theAEvent, AppleEvent *theReply, long ref
 	}
 
 
-    /* Handle the drop, by resetting the :args list */
-    handle_drop(numFiles, fnames);
+    /* Handle the drop, :edit to get to the file */
+    handle_drop(numFiles, fnames, FALSE);
 
     /* Update the screen display */
     update_screen(NOT_VALID);
@@ -2312,15 +2753,21 @@ mch_display_error()
     int
 gui_mch_get_mouse_x()
 {
-    /* TODO */
-    return -1;
+	Point where;
+
+	GetMouse(&where);
+
+    return (where.h);
 }
 
     int
 gui_mch_get_mouse_y()
 {
-    /* TODO */
-    return -1;
+    Point where;
+
+	GetMouse(&where);
+
+    return (where.v);
 }
 
     void
@@ -2329,11 +2776,59 @@ gui_mch_setmouse(x, y)
     int		y;
 {
     /* TODO */
+#if 0
+    /* From FAQ 3-11 */
+
+	CursorDevicePtr	myMouse;
+	Point           where;
+
+	if (   NGetTrapAddress (_CursorDeviceDispatch, ToolTrap)
+	    != NGetTrapAddress (_Unimplemented,   ToolTrap) )
+	{
+		/* New way */
+
+		/*
+		 * Get first devoice with one button.
+		 * This will probably be the standad mouse
+		 * startat head of cursor dev list
+		 *
+		 */
+
+		myMouse = nil;
+
+		do
+		{
+			/* Get the next cursor device */
+			CursorDeviceNextDevice(&myMouse);
+		}
+		while ( (myMouse != nil) && (myMouse->cntButtons != 1) );
+
+		CursorDeviceMoveTo (myMouse, x, y);
+	}
+	else
+	{
+		/* Old way */
+		where.h = x;
+		where.v = y;
+
+		*(Point *)RawMouse = where;
+		*(Point *)MTemp    = where;
+		*(Ptr)    CrsrNew  = 0xFFFF;
+	}
+#endif
 }
 
     void
 gui_mch_show_popupmenu(menu)
-	GuiMenu *menu;
+	VimMenu *menu;
 {
-    /* TODO */
+    /* TODO: Need new Header files */
+#if 0
+	/*
+	 * InsertMenu (POPUP)
+	 * need help text (separted)
+	 * need a selection object
+	 *
+	 */
+#endif
 }

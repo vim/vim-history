@@ -13,58 +13,69 @@ static char THIS_FILE[] = __FILE__;
 // This is called when the user first loads the add-in, and on start-up
 //  of each subsequent Developer Studio session
 STDMETHODIMP CDSAddIn::OnConnection (IApplication * pApp, VARIANT_BOOL bFirstTime,
-		                   long dwCookie, VARIANT_BOOL * OnConnection)
+				     long dwCookie, VARIANT_BOOL * OnConnection)
 {
 	AFX_MANAGE_STATE (AfxGetStaticModuleState ());
+	*OnConnection = VARIANT_FALSE;
 
 	// Store info passed to us
 	IApplication *pApplication = NULL;
+	HRESULT hr;
 
-	if (FAILED (pApp->QueryInterface (IID_IApplication, (void **) &pApplication))
-	    || pApplication == NULL)
+	hr = pApp->QueryInterface (IID_IApplication, (void **) &pApplication);
+	if (FAILED (hr))
 	{
-		*OnConnection = VARIANT_FALSE;
-		return S_OK;
+		ReportLastError (hr);
+		return E_UNEXPECTED;
+	}
+	if (pApplication == NULL)
+	{
+		ReportInternalError ("IApplication::QueryInterface");
+		return E_UNEXPECTED;
 	}
 
 	m_dwCookie = dwCookie;
 
 	// Create command dispatch, send info back to DevStudio
 	CCommandsObj::CreateInstance (&m_pCommands);
+	if (! m_pCommands)
+	{
+		ReportInternalError ("CCommandsObj::CreateInstance");
+		return E_UNEXPECTED;
+	}
 	m_pCommands->AddRef ();
 
 	// The QueryInterface above AddRef'd the Application object.  It will
 	// be Release'd in CCommand's destructor.
 	m_pCommands->SetApplicationObject (pApplication);
 
-	// (see stdafx.h for the definition of VERIFY_OK)
-
-	VERIFY_OK (pApplication->SetAddInInfo ((long) AfxGetInstanceHandle (),
+	hr = pApplication->SetAddInInfo ((long) AfxGetInstanceHandle (),
 		(LPDISPATCH) m_pCommands, IDR_TOOLBAR_MEDIUM, IDR_TOOLBAR_LARGE,
-		m_dwCookie));
+		m_dwCookie);
+	if (FAILED (hr))
+	{
+		ReportLastError (hr);
+		return E_UNEXPECTED;
+	}
 
 	// Inform DevStudio of the commands we implement
 	if (! AddCommand (pApplication, "VisVimDialog", "VisVimDialogCmd",
 			  IDS_CMD_DIALOG, 0, bFirstTime))
-		goto Error;
+		return E_UNEXPECTED;
 	if (! AddCommand (pApplication, "VisVimEnable", "VisVimEnableCmd",
 			  IDS_CMD_ENABLE, 1, bFirstTime))
-		goto Error;
+		return E_UNEXPECTED;
 	if (! AddCommand (pApplication, "VisVimDisable", "VisVimDisableCmd",
 			  IDS_CMD_DISABLE, 2, bFirstTime))
-		goto Error;
+		return E_UNEXPECTED;
 	if (! AddCommand (pApplication, "VisVimToggle", "VisVimToggleCmd",
 			  IDS_CMD_TOGGLE, 3, bFirstTime))
-		goto Error;
+		return E_UNEXPECTED;
 	if (! AddCommand (pApplication, "VisVimLoad", "VisVimLoadCmd",
 			  IDS_CMD_LOAD, 4, bFirstTime))
-		goto Error;
+		return E_UNEXPECTED;
 
 	*OnConnection = VARIANT_TRUE;
-	return S_OK;
-
-   Error:
-	*OnConnection = VARIANT_FALSE;
 	return S_OK;
 }
 
@@ -101,12 +112,17 @@ bool CDSAddIn::AddCommand (IApplication* pApp, char* MethodName, char* CmdName,
 	CComBSTR bszMethod (MethodName);
 	CComBSTR bszCmdName (CmdName);
 
+	// (see stdafx.h for the definition of VERIFY_OK)
+
 	VARIANT_BOOL bRet;
 	VERIFY_OK (pApp->AddCommand (bszCmdString, bszMethod, GlyphIndex,
 				     m_dwCookie, &bRet));
 	if (bRet == VARIANT_FALSE)
+	{
 		// AddCommand failed because a command with this name already exists.
+		ReportInternalError ("IApplication::AddCommand");
 		return FALSE;
+	}
 
 	// Add toolbar buttons only if this is the first time the add-in
 	// is being loaded.  Toolbar buttons are automatically remembered
@@ -117,3 +133,28 @@ bool CDSAddIn::AddCommand (IApplication* pApp, char* MethodName, char* CmdName,
 
 	return TRUE;
 }
+
+void ReportLastError (HRESULT Err)
+{
+	char *Buf = NULL;
+	char Msg[512];
+
+	FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+		       NULL, Err,
+		       MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+		       Buf, 400, NULL);
+	sprintf (Msg, "Unexpected error (Error code: %lx)\n%s", Err, Buf);
+
+	::MessageBox (NULL, Msg, "VisVim", MB_OK | MB_ICONSTOP);
+	if (Buf)
+		LocalFree (Buf);
+}
+
+void ReportInternalError (char* Fct)
+{
+	char Msg[512];
+
+	sprintf (Msg, "Unexpected error\n%s failed", Fct);
+	::MessageBox (NULL, Msg, "VisVim", MB_OK | MB_ICONSTOP);
+}
+

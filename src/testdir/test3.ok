@@ -439,6 +439,41 @@ main()
 				|| row > clipboard.start.lnum))
 }
 
+{
+	if (1) {i += 4;}
+	where_am_i;
+	return 0;
+}
+
+{
+	{
+	} // sdf(asdf
+	if (asdf)
+		asd;
+}
+
+{
+label1:
+label2:
+}
+
+{
+	int fooRet = foo(pBar1, false /*fKB*/,
+			true /*fPTB*/, 3 /*nT*/, false /*fDF*/);
+	f() {
+		for ( i = 0;
+				i < m;
+				/* c */ i++ ) {
+			a = b;
+		}
+	}
+}
+
+{
+	f1(/*comment*/);
+	f2();
+}
+
 /* end of AUTO */
 
 STARTTEST
@@ -589,6 +624,23 @@ void f()
 }
 
 STARTTEST
+:set cino={s,e-s
+]]=][
+ENDTEST
+
+void f()
+	{
+	if ( k() )
+		{
+		l();
+		} else { /* Start (two words) end */
+		m();
+		}
+	n();	/* should be under the if () */
+}
+
+STARTTEST
+:set cino=
 /while
 ohere
 ENDTEST
@@ -602,6 +654,25 @@ a()
   here
     if ( a )
       a;
+}
+
+STARTTEST
+:set cino= com=
+/comment
+olabel2: b();label3 /* post */:/* pre */ label4:f(/*com*/);if (/*com*/)cmd();
+ENDTEST
+
+a()
+{
+label1:
+            /* hmm */
+            // comment
+label2: b();
+label3 /* post */:
+/* pre */ label4:
+		f(/*com*/);
+		if (/*com*/)
+			cmd();
 }
 
 STARTTEST

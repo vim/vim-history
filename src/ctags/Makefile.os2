@@ -1,8 +1,7 @@
-# A Makefile for OS/2 using EMX gcc 0.9
+# A Makefile for OS/2 using gcc (EMX 0.9)
 #
 # Provided and supported by Alexander Mai
-#   <st002279@hrzpub.tu-darmstadt.de> or
-#   <am@os-2.de>
+#   <st002279@hrzpub.tu-darmstadt.de>
 
 default:
 	@echo "Enter $(MAKE) -f makefile.os2 target"
@@ -13,24 +12,24 @@ default:
 	@echo "   clean    (remove all files built)"
 
 # Use this to create a small binary
-# (which requires EMX runtime)  
-small: 
+# (which requires EMX runtime)
+small:
 	$(MAKE) -f makefile.os2 ctags                         \
 	CC="gcc"                                              \
 	CFLAGS="-O2 -Wall -fno-strength-reduce -DOS2"         \
 	LFLAGS="-Zcrtdll -s"
 
 # Use this to create a binary for debugging purposes
-# (which requires EMX runtime)  
-debug: 
+# (which requires EMX runtime)
+debug:
 	$(MAKE) -f makefile.os2 ctags                         \
 	CC="gcc"                                              \
-	CFLAGS="-O0 -Wall fno-strength-reduce -DOS2 -g"       \
+	CFLAGS="-O0 -Wall -fno-strength-reduce -DOS2 -g"      \
 	LFLAGS="-Zcrtdll -g"
 
 # Use this to create a stand-alone binary for distribution
 # (requires link386 for linking but no EMX runtime)
-release: 
+release:
 	$(MAKE) -f makefile.os2 ctags                         \
 	CC="gcc"                                              \
 	CFLAGS="-O2 -Wall -fno-strength-reduce -DOS2 -Zomf"   \
@@ -39,13 +38,20 @@ release:
 
 # General rules and definitions
 
-SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
-OBJECTS = entry.o get.o main.o options.o parse.o read.o sort.o
+SOURCES	= eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
+	parse.c read.c sort.c vstring.c
+OBJECTS	= eiffel.o entry.o fortran.o get.o keyword.o main.o options.o \
+	parse.o read.o sort.o vstring.o
+
 
 ctags: ctags.exe
+etags: etags.exe
 
 ctags.exe: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $^
+
+etags.exe: ctags.exe
+	@copy $< $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -53,5 +59,6 @@ ctags.exe: $(OBJECTS)
 # Delete all files that are not part of the source distribution
 clean:
 	@if exist ctags.exe del ctags.exe
+	@if exist etags.exe del etags.exe
 	@if exist *.obj     del *.obj
 	@if exist *.o       del *.o

@@ -36,7 +36,7 @@ OST
 :se cpt=u nohid
 oOEN
 unl
-:se cpt=t,d def=^\\k* tags=Xtestfile
+:se cpt=t,d def=^\\k* tags=Xtestfile notagbsearch
 O
 a
 :!rm Xtestfile

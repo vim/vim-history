@@ -12,7 +12,7 @@
  */
 
 #include <float.h>
-//#include <termios.h>
+#include <termios.h>
 #include <kernel/OS.h>
 #include "vim.h"
 

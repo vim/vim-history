@@ -40,6 +40,7 @@ SRC = \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -74,6 +75,7 @@ OBJ =	o/buffer.o \
 	o/mark.o \
 	o/memfile.o \
 	o/memline.o \
+	o/menu.o \
 	o/message.o \
 	o/misc1.o \
 	o/misc2.o \
@@ -140,6 +142,8 @@ o/mark.o: mark.c	$(SYMS)
 o/memfile.o:	memfile.c  $(SYMS)
 
 o/memline.o:	memline.c  $(SYMS)
+
+o/menu.o:	menu.c  $(SYMS)
 
 o/message.o:	message.c  $(SYMS)
 

@@ -1,14 +1,14 @@
 ===============================
-Visual Studio - VIM Integration
+Visual Studio - Vim Integration
 ===============================
 
 Copyright (C) 1997 Heiko Erhardt
 
-VisVim is a Visual Studio Add-In that allows VIM to be integrated
+VisVim is a Visual Studio Add-In that allows Vim to be integrated
 as the default text editor. It will be used instead of the Visual
 Studio built-in editor when you double-click on a file or press F4
-after compiling (it will go to the proper line in the VIM buffer).
-The file can be loaded exclusively by VIM or additionally to the
+after compiling (it will go to the proper line in the Vim buffer).
+The file can be loaded exclusively by Vim or additionally to the
 builtin Visual Studio editor (this option can be set in the VisVim
 configuration dialog inside Visual Studio).
 Vim does not replace the Visual Studio editor, it still runs in its
@@ -48,10 +48,12 @@ VisVim needs DevStudio 5.0 or higher. It does not work with DevStudio 4.2.
 Installation
 ------------
 
-1) Copy VisVim.dll into a convenient directory like \vim,
+1) Close running instances of DevStudio.
+
+2) Copy VisVim.dll into a convenient directory like \vim,
    \vim\lib, or \vim\addin
 
-2) Register the DLL using regsvr32.exe ... for example:
+3) Register the DLL using regsvr32.exe ... for example:
    > cd \vim\addin
    > regsvr32 VisVim.dll
    On NT, you should do this from an administrator account.
@@ -60,14 +62,14 @@ Installation
    > regsvr32 -unregister VisVim.dll
    The batch files register.bat and unregister.bat can do that for you.
 
-3) Start Visual Studio and go to:
+4) Start Visual Studio and go to:
       Tools
          Customize...
             Add-Ins and Macro Files
 
-4) Click on Browse, and point Visual Studio to your VisVim.dll file.
+5) Click on Browse, and point Visual Studio to your VisVim.dll file.
 
-5) Click the checkbox to indicate that you want to use the Add-In, and
+6) Click the checkbox to indicate that you want to use the Add-In, and
    Close the Customize dialog box.
 
 7) You should notice the VisVim Toolbar with the Vim Icon.
@@ -221,7 +223,7 @@ Change history
   done to the source file's directory or it's parent directory.
 - Added some explanations to the error message for the CO_E_CLASSSTRING error
   ("Use OLE Vim and make sure to register...").
-  
+ 
 1.0 to 1.1a
 -----------
 
@@ -234,9 +236,36 @@ Change history
 -----------
 
 - Extended the VisVim toolbar to have multiple buttons instead of one.
-- Moved the enable/disable function from the settings dialog to the toolbar.
+- Moved the enable/disable commands from the settings dialog to the toolbar.
 - Added the toggle enable/disable command
 - Added the 'load current file' command.
+
+1.1b to 1.2
+-----------
+
+No new features, just some fine tuning:
+
+- Changed the GUID of the VisVim OLE interface to avoid conflicts with a
+  version of VisEmacs or VisVile on the same computer (Guy Gascoigne)
+- Fixed a bug caused by a bug in the Developer Studio add-in code generator
+  (Clark Morgan)
+- Fixed a memory leak (Clark Morgan)
+- Added an option in the VisVim dialog to prepend ESC before the first command
+  that is sent to Vim. This will avoid inserting the command as text when Vim
+  is still in insert mode.
+- An :update command is sent to Vim before any other command to update the
+  current file if it is modified, or else the following :cd or :e command will fail.
+
+1.2 to 1.3a
+-----------
+
+- Fixed a bug caused by a missing EnableModeless() function call in VimLoad().
+  This seems to reduce VisVim crashing DevStudio on some systems (it
+  occasionally still seems to happen, but it's more stable now).
+  (Vince Negri)
+- Added support for the new CTRL-\ CTRL-N command of Vim 5.4a.
+  This prevents Vim from beeping when a VisVim command is executed an Vim is
+  not in insert mode.
 
 
 ToDo List
@@ -248,16 +277,28 @@ P9  Switching to DevStudio using ALT-TAB may get annoying. Would be nice to
     have the option to map ActivateApplication("Visual Studio") in Vim.
     Vim DLLs would solve that problem.
 
-P6  Provide an option to open the current file in VisVim in
-    Visual Studio editor
-    Same as above message. A kind of two way OLE automation would have to be
-    established between VisVim and Vim. Also a 'Debug' highligh group and a
-    command to highlight a certain line would be necessary.
+P8  Execute :tag command in Vim for word under cursor in DevStudio
 
 P7  Controlling the Visual Studio Debugger from inside Vim
     See message above. Also a 'Debug' highligh group and a
     command to highlight a certain line would be necessary.
 
+P6  Provide an option to open the current file in VisVim in
+    Visual Studio editor
+    Same as above message. A kind of two way OLE automation would have to be
+    established between VisVim and Vim. Also a 'Debug' highlight group and a
+    command to highlight a certain line would be necessary.
+
+
+Known Problems
+--------------
+
+- Occasional memory corruptions in DevStudio may appear on some systems.
+  Reinstalling DevStudio helped in some cases.
+  The cause of these crashes is unclear; there is no way to debug this.
+  Recompiling VisVim with DevStudio SP3 didn't help.
+  I assume it's a problem deep inside the DevStudio add-in OLE interfaces.
+  This will hopefully be fixed with DevStudio 6.
 
 
 Have fun!

@@ -39,7 +39,7 @@
 /*
  * On some systems toupper()/tolower() only work on lower/uppercase characters
  */
-#ifdef WIN32
+#ifdef MSWIN
 #  define TO_UPPER(c)	toupper_tab[(c) & 255]
 #  define TO_LOWER(c)	tolower_tab[(c) & 255]
 #else
@@ -74,3 +74,50 @@
  * it work fast.
  */
 #define vim_isbreak(c) (breakat_flags[(char_u)(c)])
+
+/*
+ * On VMS file names are different and require a translation.
+ * On the Mac open() has only two arguments.
+ */
+#ifdef VMS
+# define mch_access(n, p) access(vms_fixfilename(n), (p))
+# define mch_fopen(n, p)  fopen(vms_fixfilename(n), (p))
+# define mch_fstat(n, p)  fstat(vms_fixfilename(n), (p))
+# define mch_lstat(n, p)  lstat(vms_fixfilename(n), (p))
+# define mch_stat(n, p)   stat(vms_fixfilename(n), (p))
+#else
+# define mch_access(n, p) access((n), (p))
+# define mch_fopen(n, p)  fopen((n), (p))
+# define mch_fstat(n, p)  fstat((n), (p))
+# define mch_lstat(n, p)  lstat((n), (p))
+# define mch_stat(n, p)   stat((n), (p))
+#endif
+
+#ifdef macintosh
+# define mch_open(n, m, p) open((n), (m))
+#else
+# ifdef VMS
+#  define mch_open(n, m, p) open(vms_fixfilename(n), (m), (p))
+# else
+#  define mch_open(n, m, p) open((n), (m), (p))
+# endif
+#endif
+
+/*
+ * Encryption macros.  Mohsin Ahmed, mosh@sasi.com 98-09-24
+ * Based on zip/crypt sources.
+ */
+
+#ifdef CRYPTV
+
+#ifndef __MINGW32__
+# define PWLEN 80
+#endif
+
+/* encode byte c, using temp t.  Warning: c must not have side effects. */
+# define zencode(c, t)  (t = decrypt_byte(), update_keys(c), t^(c))
+
+/* decode byte c in place */
+# define zdecode(c)   update_keys(c ^= decrypt_byte())
+
+#endif

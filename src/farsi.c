@@ -211,11 +211,11 @@ toF_TyA(c)
 */
     static int
 F_is_TyB_TyC_TyD(src, offset)
-    int	    src,    offset;
+    int		src, offset;
 {
-int	c;
+    int		c;
 
-    if ( src == SRC_EDT)
+    if (src == SRC_EDT)
 	c = gchar_cursor();
     else
 	c = cmd_gchar(AT_CURSOR+offset);
@@ -2252,7 +2252,7 @@ F_isalpha(c)
 F_isdigit(c)
     int	    c;
 {
-    return (( c >= FARSI_0 && c <= FARSI_9 ));
+    return (c >= FARSI_0 && c <= FARSI_9);
 }
 
 /*
@@ -2262,7 +2262,7 @@ F_isdigit(c)
 F_ischar(c)
     int	    c;
 {
-    return (( c >= TEE_ && c <= YE_));
+    return (c >= TEE_ && c <= YE_);
 }
 
     void

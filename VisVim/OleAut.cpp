@@ -144,7 +144,7 @@ DISPID COleAutomationControl::GetDispatchId (char* Name)
 //            R = VT_R4
 //            c = VT_CY
 //            s = VT_BSTR (string pointer can be passed,
-//               	BSTR will be allocated by this function).
+//			BSTR will be allocated by this function).
 //            e = VT_ERROR
 //            d = VT_DATE
 //            v = VT_VARIANT. Use this to pass data types that are not described
@@ -292,7 +292,7 @@ bool COleAutomationControl::Invoke (WORD Flags, DISPID DispatchId,
 				break;
 			    case VT_BSTR:
 				V_BSTR (p) = SysAllocString (va_arg (ArgList,
-								OLECHAR*));
+								     OLECHAR*));
 				if (! p->bstrVal)
 				{
 					m_hResult = ResultFromScode (E_OUTOFMEMORY);
@@ -686,7 +686,7 @@ static bool CountArgsInFormat (LPCTSTR Format, UINT* pArgCount)
 		    case 'v':
 		    case 'D':
 		    case 'U':
-			++*pArgCount;
+			++ (*pArgCount);
 			Format++;
 			break;
 		    case '\0':

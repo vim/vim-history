@@ -24,7 +24,7 @@ static int	digraphcount = 0;	    /* number of added digraphs */
  * Note: Characters marked with XX are not included literally, because some
  * compilers cannot handle them (Amiga SAS/C is the most picky one).
  */
-#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(USE_GUI_WIN32)
+#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(USE_GUI_MSWIN)
 char_u	digraphdefault[][3] =	    /* standard MSDOS digraphs */
        {{'C', ',', 128},	/* ~@ XX */
 	{'u', '"', 129},	/* Å */

@@ -33,19 +33,19 @@
  * For Acorn we use a dot.
  */
 #ifdef BACKSLASH_IN_FILENAME
-# define PATHSEP '\\'
-# define PATHSEPSTR "\\"
+# define PATHSEP	psepc
+# define PATHSEPSTR	pseps
 #else
 # ifdef COLON_AS_PATHSEP
-#  define PATHSEP ':'
-#  define PATHSEPSTR ":"
+#  define PATHSEP	':'
+#  define PATHSEPSTR	":"
 # else
 #  ifdef RISCOS
-#   define PATHSEP '.'
-#   define PATHSEPSTR "."
+#   define PATHSEP	'.'
+#   define PATHSEPSTR	"."
 #  else
-#   define PATHSEP '/'
-#   define PATHSEPSTR "/"
+#   define PATHSEP	'/'
+#   define PATHSEPSTR	"/"
 #  endif
 # endif
 #endif

@@ -16,8 +16,14 @@
 
 #define CASE_INSENSITIVE_FILENAME
 #define WANT_MODIFY_FNAME
-#define WANT_FILETYPE
-#define FT_DFLT "Text"
+#define WANT_OSFILETYPE
+#define OFT_DFLT "Text"
+#define USE_TERM_CONSOLE
+#define HAVE_AVAIL_MEM
+
+#ifndef MIN_FEAT
+# define VIM_BACKTICK		/* internal backtick expansion */
+#endif
 
 /* 10, but 4 char margin for extension. */
 #ifndef BASENAMELEN
@@ -89,6 +95,15 @@
 #endif
 #ifndef SYS_MENU_FILE
 # define SYS_MENU_FILE	    "Vim:Menu"
+#endif
+#ifndef SYS_OPTWIN_FILE
+# define SYS_OPTWIN_FILE    "Vim:Optwin"
+#endif
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	    "Vim:Filetype"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE	    "Vim:Ftoff"
 #endif
 
 #define ERRORFILE	"errors/vim"

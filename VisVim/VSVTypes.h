@@ -1,14 +1,21 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
-/* File created by MIDL compiler version 3.01.75 */
-/* at Fri Mar 27 01:42:59 1998
+/* File created by MIDL compiler version 3.03.0110 */
+/* at Mon Feb 01 19:13:42 1999
  */
 /* Compiler settings for D:\Src2\VisVim\VisVim.odl:
     Os (OptLev=s), W1, Zp8, env=Win32, ms_ext, c_ext
     error checks: none
 */
 //@@MIDL_FILE_HEADING(  )
+
+
+/* verify that the <rpcndr.h> version is high enough to compile this file*/
+#ifndef __REQUIRED_RPCNDR_H_VERSION__
+#define __REQUIRED_RPCNDR_H_VERSION__ 440
+#endif
+
 #include "rpc.h"
 #include "rpcndr.h"
 
@@ -17,14 +24,14 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
-/* Forward Declarations */ 
+/* Forward Declarations */
 
 #ifndef __ICommands_FWD_DEFINED__
 #define __ICommands_FWD_DEFINED__
 typedef interface ICommands ICommands;
-#endif 	/* __ICommands_FWD_DEFINED__ */
+#endif	/* __ICommands_FWD_DEFINED__ */
 
 
 #ifndef __Commands_FWD_DEFINED__
@@ -36,7 +43,7 @@ typedef class Commands Commands;
 typedef struct Commands Commands;
 #endif /* __cplusplus */
 
-#endif 	/* __Commands_FWD_DEFINED__ */
+#endif	/* __Commands_FWD_DEFINED__ */
 
 
 #ifndef __ApplicationEvents_FWD_DEFINED__
@@ -48,7 +55,7 @@ typedef class ApplicationEvents ApplicationEvents;
 typedef struct ApplicationEvents ApplicationEvents;
 #endif /* __cplusplus */
 
-#endif 	/* __ApplicationEvents_FWD_DEFINED__ */
+#endif	/* __ApplicationEvents_FWD_DEFINED__ */
 
 
 #ifndef __DebuggerEvents_FWD_DEFINED__
@@ -60,11 +67,11 @@ typedef class DebuggerEvents DebuggerEvents;
 typedef struct DebuggerEvents DebuggerEvents;
 #endif /* __cplusplus */
 
-#endif 	/* __DebuggerEvents_FWD_DEFINED__ */
+#endif	/* __DebuggerEvents_FWD_DEFINED__ */
 
 
 void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
-void __RPC_USER MIDL_user_free( void __RPC_FAR * ); 
+void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 
 #ifndef __VisVim_LIBRARY_DEFINED__
@@ -72,10 +79,10 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 /****************************************
  * Generated header for library: VisVim
- * at Fri Mar 27 01:42:59 1998
- * using MIDL 3.01.75
+ * at Mon Feb 01 19:13:42 1999
+ * using MIDL 3.03.0110
  ****************************************/
-/* [helpstring][version][uuid] */ 
+/* [helpstring][version][uuid] */
 
 
 
@@ -86,69 +93,69 @@ DEFINE_GUID(LIBID_VisVim,0xAC726707,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,
 
 /****************************************
  * Generated header for interface: ICommands
- * at Fri Mar 27 01:42:59 1998
- * using MIDL 3.01.75
+ * at Mon Feb 01 19:13:42 1999
+ * using MIDL 3.03.0110
  ****************************************/
-/* [object][dual][oleautomation][uuid] */ 
+/* [object][dual][oleautomation][uuid] */
 
 
 
 DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,0x07,0x80);
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    interface DECLSPEC_UUID("AC726703-2977-11D1-B2F3-006008040780")
+
+    MIDL_INTERFACE("AC726703-2977-11D1-B2F3-006008040780")
     ICommands : public IDispatch
     {
     public:
         virtual /* [id] */ HRESULT STDMETHODCALLTYPE VisVimDialog( void) = 0;
-        
+
         virtual HRESULT STDMETHODCALLTYPE VisVimEnable( void) = 0;
-        
+
         virtual HRESULT STDMETHODCALLTYPE VisVimDisable( void) = 0;
-        
+
         virtual HRESULT STDMETHODCALLTYPE VisVimToggle( void) = 0;
-        
+
         virtual HRESULT STDMETHODCALLTYPE VisVimLoad( void) = 0;
-        
+
     };
-    
-#else 	/* C style interface */
+
+#else	/* C style interface */
 
     typedef struct ICommandsVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             ICommands __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             ICommands __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             ICommands __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfoCount )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfoCount )(
             ICommands __RPC_FAR * This,
             /* [out] */ UINT __RPC_FAR *pctinfo);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfo )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetTypeInfo )(
             ICommands __RPC_FAR * This,
             /* [in] */ UINT iTInfo,
             /* [in] */ LCID lcid,
             /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetIDsOfNames )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetIDsOfNames )(
             ICommands __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [size_is][in] */ LPOLESTR __RPC_FAR *rgszNames,
             /* [in] */ UINT cNames,
             /* [in] */ LCID lcid,
             /* [size_is][out] */ DISPID __RPC_FAR *rgDispId);
-        
-        /* [local] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Invoke )( 
+
+        /* [local] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Invoke )(
             ICommands __RPC_FAR * This,
             /* [in] */ DISPID dispIdMember,
             /* [in] */ REFIID riid,
@@ -158,22 +165,22 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
             /* [out] */ VARIANT __RPC_FAR *pVarResult,
             /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
             /* [out] */ UINT __RPC_FAR *puArgErr);
-        
-        /* [id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDialog )( 
+
+        /* [id] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDialog )(
             ICommands __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimEnable )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimEnable )(
             ICommands __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDisable )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimDisable )(
             ICommands __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimToggle )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimToggle )(
             ICommands __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimLoad )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *VisVimLoad )(
             ICommands __RPC_FAR * This);
-        
+
         END_INTERFACE
     } ICommandsVtbl;
 
@@ -182,7 +189,7 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
         CONST_VTBL struct ICommandsVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -228,11 +235,11 @@ DEFINE_GUID(IID_ICommands,0xAC726703,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif	/* C style interface */
 
 
 
-/* [id] */ HRESULT STDMETHODCALLTYPE ICommands_VisVimDialog_Proxy( 
+/* [id] */ HRESULT STDMETHODCALLTYPE ICommands_VisVimDialog_Proxy(
     ICommands __RPC_FAR * This);
 
 
@@ -243,7 +250,7 @@ void __RPC_STUB ICommands_VisVimDialog_Stub(
     DWORD *_pdwStubPhase);
 
 
-HRESULT STDMETHODCALLTYPE ICommands_VisVimEnable_Proxy( 
+HRESULT STDMETHODCALLTYPE ICommands_VisVimEnable_Proxy(
     ICommands __RPC_FAR * This);
 
 
@@ -254,7 +261,7 @@ void __RPC_STUB ICommands_VisVimEnable_Stub(
     DWORD *_pdwStubPhase);
 
 
-HRESULT STDMETHODCALLTYPE ICommands_VisVimDisable_Proxy( 
+HRESULT STDMETHODCALLTYPE ICommands_VisVimDisable_Proxy(
     ICommands __RPC_FAR * This);
 
 
@@ -265,7 +272,7 @@ void __RPC_STUB ICommands_VisVimDisable_Stub(
     DWORD *_pdwStubPhase);
 
 
-HRESULT STDMETHODCALLTYPE ICommands_VisVimToggle_Proxy( 
+HRESULT STDMETHODCALLTYPE ICommands_VisVimToggle_Proxy(
     ICommands __RPC_FAR * This);
 
 
@@ -276,7 +283,7 @@ void __RPC_STUB ICommands_VisVimToggle_Stub(
     DWORD *_pdwStubPhase);
 
 
-HRESULT STDMETHODCALLTYPE ICommands_VisVimLoad_Proxy( 
+HRESULT STDMETHODCALLTYPE ICommands_VisVimLoad_Proxy(
     ICommands __RPC_FAR * This);
 
 
@@ -288,25 +295,28 @@ void __RPC_STUB ICommands_VisVimLoad_Stub(
 
 
 
-#endif 	/* __ICommands_INTERFACE_DEFINED__ */
+#endif	/* __ICommands_INTERFACE_DEFINED__ */
 
+
+DEFINE_GUID(CLSID_Commands,0xAC726704,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,0x07,0x80);
 
 #ifdef __cplusplus
-DEFINE_GUID(CLSID_Commands,0xAC726704,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,0x07,0x80);
 
 class DECLSPEC_UUID("AC726704-2977-11D1-B2F3-006008040780")
 Commands;
 #endif
 
-#ifdef __cplusplus
 DEFINE_GUID(CLSID_ApplicationEvents,0xAC726705,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,0x07,0x80);
+
+#ifdef __cplusplus
 
 class DECLSPEC_UUID("AC726705-2977-11D1-B2F3-006008040780")
 ApplicationEvents;
 #endif
 
-#ifdef __cplusplus
 DEFINE_GUID(CLSID_DebuggerEvents,0xAC726706,0x2977,0x11D1,0xB2,0xF3,0x00,0x60,0x08,0x04,0x07,0x80);
+
+#ifdef __cplusplus
 
 class DECLSPEC_UUID("AC726706-2977-11D1-B2F3-006008040780")
 DebuggerEvents;

@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: main.c,v 6.23 1998/08/18 04:26:50 darren Exp $
+*   $Id: main.c,v 8.5 1999/06/22 02:29:38 darren Exp $
 *
-*   Copyright (c) 1996-1998, Darren Hiebert
+*   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   Author: Darren Hiebert <darren@hiebert.com>, <darren@hiwaay.net>
 *           http://darren.hiebert.com
@@ -14,90 +14,33 @@
 *   provide a fully featured ctags program which is free of the limitations
 *   which most (all?) others are subject to.
 *
-*   It is derived from and inspired by the ctags program by Steve Kirkendall
-*   (kirkenda@cs.pdx.edu) that comes with the Elvis vi clone (though almost
-*   none of the original code remains). This, too, was freely available.
-*
-*   This program provides the following features:
-*
-*   Support for both K&R style and new ANSI style function definitions.
-*
-*   Generates tags for the following objects:
-*	- macro definitions
-*	- enumeration values
-*	- function definitions (and C++ methods)
-*	- function declarations (optional)
-*	- enum, struct and union tags and C++ class names
-*	- typedefs
-*	- variables
-*
 *   This module contains top level start-up and portability functions.
 *****************************************************************************/
 
 /*============================================================================
 =   Include files
 ============================================================================*/
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include "general.h"
 
-#if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
-# define ENABLE_STDARG
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>		/* to declare malloc(), realloc() */
 #endif
+#include <string.h>
+#include <errno.h>
 
-#if defined(MSDOS) || defined(WIN32)
-# define HAVE_DOS_H
-# define HAVE_IO_H
-# define HAVE_TIME_H
-# define HAVE_CLOCK
-# define HAVE_CHSIZE
-# define HAVE_STRERROR
-# define HAVE_FINDNEXT
-# ifdef __BORLANDC__
-#  define HAVE_DIR_H
-#  define HAVE_DIRENT_H
-#  define HAVE_FINDFIRST
-# else
-#  ifdef _MSC_VER
-#   define HAVE__FINDFIRST
-#  endif
+#ifndef HAVE_FGETPOS
+# include <stdio.h>		/* to declare SEEK_SET (hopefully) */
+# if defined(HAVE_UNISTD_H)
+#  include <unistd.h>		/* to declare SEEK_SET on SunOS 4.1.x */
 # endif
 #endif
 
-#ifdef DJGPP
-# define HAVE_DIR_H
-# define HAVE_UNISTD_H
-# define HAVE_FINDFIRST
-# define HAVE_TRUNCATE
-#endif
-
-#if defined(OS2)
-# define HAVE_DIRENT_H
-# define HAVE_TIME_H
-# define HAVE_IO_H
-# define HAVE_CLOCK
-# define HAVE_CHSIZE
-# define HAVE_OPENDIR
-# define HAVE_STRERROR
-#endif
-
 #ifdef AMIGA
-# define HAVE_TIME_H
-# define HAVE_SYS_STAT_H
-# define HAVE_CLOCK
-# define HAVE_STRERROR
-# define PATH_MAX 255
 # include <dos/dosasl.h>	/* for struct AnchorPath */
 # include <clib/dos_protos.h>	/* function prototypes */
 # define ANCHOR_BUF_SIZE (512)
 # define ANCHOR_SIZE (sizeof(struct AnchorPath) + ANCHOR_BUF_SIZE)
 #endif
-
-#if defined(HAVE_UNISTD_H)
-# include <unistd.h>	/* to declare close(), ftruncate(), truncate() */
-#endif
-
-#include <errno.h>
 
 #ifdef ENABLE_STDARG
 # include <stdarg.h>
@@ -114,6 +57,8 @@
 # include <sys/stat.h>
 #endif
 
+/*  To provide directory searching for recursion feature.
+ */
 #ifdef HAVE_DIRENT_H
 # ifdef __BORLANDC__
 #  define boolean BORLAND_boolean
@@ -121,34 +66,14 @@
 # include <dirent.h>
 # undef boolean
 #endif
-
-/*  These header files provide for the functions necessary to do file
- *  truncation.
- */
-#include <fcntl.h>
-#ifdef HAVE_IO_H
-# include <io.h>
-#endif
 #ifdef HAVE_DOS_H
-# include <dos.h>
+# include <dos.h>	/* to declare FA_DIREC */
 #endif
 #ifdef HAVE_DIR_H
-# include <dir.h>
+# include <dir.h>	/* to declare findfirst() and findnext() */
 #endif
-
-/*  To define the maximum path length
- */
-#include <limits.h>			/* to define PATH_MAX (hopefully) */
-#ifndef PATH_MAX
-# ifdef MAXNAMLEN
-#  define PATH_MAX MAXNAMLEN
-# endif
-#endif
-#if !defined(PATH_MAX) && defined(MAXPATH)	/* found in Borland C <dir.h> */
-# define PATH_MAX MAXPATH
-#endif
-#ifndef PATH_MAX
-# define PATH_MAX 127			/* ultimate fall-back */
+#ifdef HAVE_IO_H
+# include <io.h>	/* to declare _finddata_t in MSVC++ 4.x */
 #endif
 
 /*  To provide timings features if available.
@@ -165,27 +90,38 @@
 # endif
 #endif
 
-#ifdef DEBUG
-# include <assert.h>
-#endif
-
 #include "ctags.h"
+#include "debug.h"
+#include "entry.h"
+#include "keyword.h"
+#include "main.h"
+#include "options.h"
+#include "parse.h"
+#include "read.h"
+#include "vstring.h"
 
 /*============================================================================
 =   Defines
 ============================================================================*/
 
 /*----------------------------------------------------------------------------
+ *  Miscellaneous defines
+ *--------------------------------------------------------------------------*/
+#define selected(var,feature)	(((int)(var) & (int)(feature)) == (int)feature)
+
+#define plural(value)		(((unsigned long)(value) == 1L) ? "" : "s")
+
+/*----------------------------------------------------------------------------
  *  Portability defines
  *--------------------------------------------------------------------------*/
-#if !defined(HAVE_TRUNCATE) && !defined(HAVE_FTRUNCATE) && !defined(HAVE_CHSIZE)
-# define USE_REPLACEMENT_TRUNCATE
-#endif
-
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
-# define PATH_SEPARATOR	'\\'
+# define PATH_SEPARATOR '\\'
 #else
-# define PATH_SEPARATOR	'/'
+# ifdef QDOS
+#  define PATH_SEPARATOR '_'
+# else
+#  define PATH_SEPARATOR '/'
+# endif
 #endif
 
 /*  File type tests.
@@ -217,45 +153,22 @@
 /*  Hack for rediculous practice of Microsoft Visual C++.
  */
 #if defined(WIN32) && defined(_MSC_VER)
-# define chsize		_chsize
-# define open		_open
-# define close		_close
-# define stat		_stat
-# define O_RDWR 	_O_RDWR
+# define stat	_stat
 #endif
-
-/*----------------------------------------------------------------------------
- *  Miscellaneous defines
- *--------------------------------------------------------------------------*/
-#ifndef ETAGS
-# define ETAGS	"etags"		/* name which causes default use of to -e */
-#endif
-
-#define selected(var,feature)	(((int)(var) & (int)(feature)) == (int)feature)
-
-#define plural(value)		(((unsigned long)(value) == 1L) ? "" : "s")
 
 /*============================================================================
 =   Data definitions
 ============================================================================*/
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
-static const char DosPathDelimiters[] = ":/\\";
+static const char PathDelimiters[] = ":/\\";
+#endif
+#ifdef __vms
+static const char PathDelimiters[] = ":]>";
 #endif
 
 static const char *ExecutableName = NULL;
 
 static struct { long files, lines, bytes; } Totals = { 0, 0, 0 };
-
-tagFile TagFile = {
-    NULL,		/* file name */
-    NULL,		/* file pointer */
-    { 0, 0 },		/* numTags */
-    { 0, 0, 0 },	/* max */
-    { "", NULL },	/* etags */
-    { 0, NULL }		/* line */
-};
-
-memberInfo NoClass = { MEMBER_NONE, VIS_UNDEFINED, FALSE, "" };
 
 /*============================================================================
 =   Function prototypes
@@ -263,37 +176,20 @@ memberInfo NoClass = { MEMBER_NONE, VIS_UNDEFINED, FALSE, "" };
 #ifdef NEED_PROTO_STAT
 extern int stat __ARGS((const char *, struct stat *));
 #endif
-
-#ifdef NEED_PROTO_TRUNCATE
-extern int truncate __ARGS((const char *path, off_t length));
+#ifdef NEED_PROTO_LSTAT
+extern int lstat __ARGS((const char *, struct stat *));
 #endif
 
-#ifdef NEED_PROTO_FTRUNCATE
-extern int ftruncate __ARGS((int fd, off_t length));
+# if defined(MSDOS) || defined(WIN32) || defined(AMIGA)
+static boolean createTagsForMatchingEntries __ARGS((char *const pattern));
 #endif
 
-static const char *baseFilename __ARGS((const char *const path));
-static boolean isAbsolutePath __ARGS((const char *const path));
-static void combinePathAndFile __ARGS((char *const filePath, const char *const path, const char *const file));
-
-static const char *findExtension __ARGS((const char *const fileName));
-static boolean isFileHeader __ARGS((const char *const FileName));
-static boolean isExtensionInList __ARGS((const char *const extension, const char *const *const list));
-static langType getExtensionLanguage __ARGS((const char *const extension));
-static langType getFileLanguage __ARGS((const char *const FileName));
-
-static boolean isValidTagAddress __ARGS((const char *const tag));
-static boolean isCtagsLine __ARGS((const char *const tag));
-static boolean isEtagsLine __ARGS((const char *const tag));
-static boolean isTagFile __ARGS((const char *const filename));
-static void openTagFile __ARGS((const boolean toStdout));
-static void closeTagFile __ARGS((const boolean resize));
-
-static void beginEtagsFile __ARGS((void));
-static void endEtagsFile __ARGS((const char *const name));
-static boolean createTagsForFile __ARGS((const char *const filePath, const langType language));
-static const char *getNextListFile __ARGS((FILE *const fp));
-static const char *sourceFilePath __ARGS((const char *const file));
+static boolean isSymbolicLink __ARGS((const char *const name));
+static boolean isNormalFile __ARGS((const char *const name));
+static boolean isDirectory __ARGS((const char *const name));
+static boolean createTagsForFile __ARGS((const char *const filePath, const langType language, const unsigned int passCount));
+static vString *getNextListFile __ARGS((FILE *const fp));
+static vString *sourceFilePath __ARGS((const char *const file));
 static boolean createTagsWithFallback __ARGS((const char *const fileName, const langType language));
 static boolean createTagsForDirectory __ARGS((const char *const dirName));
 static boolean createTagsForEntry __ARGS((const char *const entryName));
@@ -301,13 +197,7 @@ static boolean createTagsForList __ARGS((const char *const listFile));
 static boolean createTagsForArgs __ARGS((const char *const *const argList));
 static void printTotals __ARGS((const clock_t *const timeStamps));
 static void makeTags __ARGS((const char *const *const argList));
-
 static void setExecutableName __ARGS((const char *const path));
-static void setDefaultTagFileName __ARGS((void));
-static void setOptionDefaults __ARGS((void));
-static void testEtagsInvocation __ARGS((void));
-
-extern int main __ARGS((int argc, char **argv));
 
 /*============================================================================
 =   Function definitions
@@ -348,6 +238,49 @@ extern void error( va_alist )
 	exit(1);
 }
 
+extern boolean strequiv( s1, s2 )
+    const char *const s1;
+    const char *const s2;
+{
+    boolean equivalent = TRUE;
+    const char *p1 = s1;
+    const char *p2 = s2;
+
+    do
+    {
+	if (toupper((int)*p1) != toupper((int)*p2))
+	{
+	    equivalent = FALSE;
+	    break;
+	}
+    } while (*p1++ != '\0'  &&  *p2++ != '\0');
+
+    return equivalent;
+}
+
+extern void *eMalloc( size )
+    const size_t size;
+{
+    void *buffer = malloc(size);
+
+    if (buffer == NULL)
+	error(FATAL | PERROR, "out of memory");
+
+    return buffer;
+}
+
+extern void *eRealloc( ptr, size )
+    void *const ptr;
+    const size_t size;
+{
+    void *buffer = realloc(ptr, size);
+
+    if (buffer == NULL)
+	error(FATAL | PERROR, "out of memory");
+
+    return buffer;
+}
+
 extern unsigned long getFileSize( name )
     const char *const __unused__ name;
 {
@@ -360,26 +293,41 @@ extern unsigned long getFileSize( name )
     return size;
 }
 
-extern boolean isNormalFile( name )
+static boolean isSymbolicLink( name )
+    const char *const name;
+{
+#if defined(__vms) || defined(MSDOS) || defined(WIN32) || defined(__EMX__) || defined(AMIGA)
+    return FALSE;
+#else
+    struct stat fileStatus;
+    boolean isLink = FALSE;
+
+    if (lstat(name, &fileStatus) == 0)
+	isLink = (boolean)(S_ISLNK(fileStatus.st_mode));
+
+    return isLink;
+#endif
+}
+
+static boolean isNormalFile( name )
     const char *const name;
 {
     struct stat fileStatus;
     boolean isNormal = FALSE;
 
     if (stat(name, &fileStatus) == 0)
-	isNormal = (boolean)(S_ISLNK(fileStatus.st_mode) ||
-			     S_ISREG(fileStatus.st_mode)  );
+	isNormal = (boolean)(S_ISREG(fileStatus.st_mode));
 
     return isNormal;
 }
 
-extern boolean isDirectory( name )
+static boolean isDirectory( name )
     const char *const name;
 {
     boolean isDir = FALSE;
 #ifdef AMIGA
     struct FileInfoBlock *const fib = (struct FileInfoBlock *)
-					malloc(sizeof(struct FileInfoBlock));
+					eMalloc(sizeof(struct FileInfoBlock));
 
     if (fib != NULL)
     {
@@ -410,6 +358,30 @@ extern boolean doesFileExist( fileName )
     return (boolean)(stat(fileName, &fileStatus) == 0);
 }
 
+#ifndef HAVE_FGETPOS
+
+extern int fgetpos( stream, pos )
+    FILE *const stream;
+    fpos_t *const pos;
+{
+    int result = 0;
+
+    *pos = ftell(stream);
+    if (*pos == -1L)
+	result = -1;
+
+    return result;
+}
+
+extern int fsetpos( stream, pos )
+    FILE *const stream;
+    fpos_t *const pos;
+{
+    return fseek(stream, *pos, SEEK_SET);
+}
+
+#endif
+
 extern void addTotals( files, lines, bytes )
     const unsigned int files;
     const unsigned long lines;
@@ -420,22 +392,42 @@ extern void addTotals( files, lines, bytes )
     Totals.bytes += bytes;
 }
 
+extern boolean isDestinationStdout()
+{
+    boolean toStdout = FALSE;
+
+    if (Option.xref  ||  strcmp(Option.tagFileName, "-") == 0
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+	/* nothing else special needed here */
+#else
+# ifdef __vms
+    || strncasecmp(Option.tagFileName, "sys$output", sizeof("sys$output")) == 0
+# else
+    || strcmp(Option.tagFileName, "/dev/stdout") == 0
+# endif
+#endif
+	)
+	toStdout = TRUE;
+
+    return toStdout;
+}
+
 /*----------------------------------------------------------------------------
  *  Pathname manipulation (O/S dependent!!!)
  *--------------------------------------------------------------------------*/
 
-static const char *baseFilename( filePath )
+extern const char *baseFilename( filePath )
     const char *const filePath;
 {
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__vms)
     const char *tail = NULL;
     unsigned int i;
 
     /*  Find whichever of the path delimiters is last.
      */
-    for (i = 0  ;  i < strlen(DosPathDelimiters)  ;  ++i)
+    for (i = 0  ;  i < strlen(PathDelimiters)  ;  ++i)
     {
-	const char *sep = strrchr(filePath, DosPathDelimiters[i]);
+	const char *sep = strrchr(filePath, PathDelimiters[i]);
 
 	if (sep > tail)
 	    tail = sep;
@@ -451,503 +443,175 @@ static const char *baseFilename( filePath )
     return tail;
 }
 
-static boolean isAbsolutePath( path )
+extern boolean isAbsolutePath( path )
     const char *const path;
 {
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
-    return (strchr(DosPathDelimiters, path[0]) != NULL);
+    return (strchr(PathDelimiters, path[0]) != NULL  ||
+	    (isalpha(path[0])  &&  path[1] == ':'));
 #else
+# ifdef __vms
+    return (boolean)strchr(path, ':');
+# else
     return (boolean)(path[0] == PATH_SEPARATOR);
+# endif
 #endif
 }
 
-static void combinePathAndFile( filePath, path, file )
-    char *const filePath;
+extern vString *combinePathAndFile( path, file )
     const char *const path;
     const char *const file;
 {
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
-    if (strchr(DosPathDelimiters, path[strlen(path)-1]) != NULL)
-	sprintf(filePath, "%s%s", path, file);
-    else
-	sprintf(filePath, "%s%c%s", path, PATH_SEPARATOR, file);
-#else
-    if ((path[strlen(path) - 1]) == PATH_SEPARATOR)
-	sprintf(filePath, "%s%s", path, file);
-    else
-	sprintf(filePath, "%s%c%s", path, PATH_SEPARATOR, file);
-#endif
-}
+    vString *const filePath = vStringNew();
+#ifdef __vms
+    const char *const directoryId = strstr(file, ".DIR;1");
 
-/*----------------------------------------------------------------------------
- *  File extension and language handling
- *--------------------------------------------------------------------------*/
-
-static const char *findExtension( fileName )
-    const char *const fileName;
-{
-    const char *extension;
-    const char *const start = strrchr(fileName, '.');	/* find last '.' */
-
-    if (start == NULL)
-	extension = "";
-    else
-	extension = start + 1;		/* skip to character after '.' */
-
-    return extension;
-}
-
-/*  Determines whether the specified file name is considered to be a header
- *  file for the purposes of determining whether enclosed tags are global or
- *  static.
- */
-static boolean isFileHeader( fileName )
-    const char *const fileName;
-{
-    const char *const extension = findExtension(fileName);
-    boolean header = FALSE;		    /* default unless match found */
-    int i;
-
-    for (i = 0 ; Option.headerExt[i] != NULL ; ++i)
+    if (directoryId == NULL)
     {
-	if (strcmp(Option.headerExt[i], extension) == 0)
-	{
-	    header = TRUE;		    /* found in list */
-	    break;
-	}
+    	const char *const versionId = strchr(file, ';');
+
+	vStringCopyS(filePath, path);
+	if (versionId == NULL)
+	    vStringCatS(filePath, file);
+	else
+	    vStringNCatS(filePath, file, versionId - file);
+	vStringCopyToLower(filePath, filePath);
     }
-    return header;
-}
-
-static boolean isExtensionInList( extension, list )
-    const char *const extension;
-    const char *const *const list;
-{
-    boolean isKnown = FALSE;
-
-    if (list != NULL)
-    {
-	const char *const *pExtension = list;
-
-	while (! isKnown  &&  *pExtension != NULL)
-	{
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
-	    if (strequiv(extension, *pExtension))
-#else
-	    if (strcmp(extension, *pExtension) == 0)
-#endif
-		isKnown = TRUE;
-	    ++pExtension;
-	}
-    }
-    return isKnown;
-}
-
-static langType getExtensionLanguage( extension )
-    const char *const extension;
-{
-    unsigned int i;
-    langType language = LANG_IGNORE;
-
-    for (i = 0  ;  i < (int)LANG_COUNT  ;  ++i)
-    {
-	if (isExtensionInList(extension, Option.langMap[i]))
-	{
-	    language = (langType)i;
-	    break;
-	}
-    }
-    return language;
-}
-
-static langType getFileLanguage( fileName )
-    const char *const fileName;
-{
-    const char *const extension = findExtension(fileName);
-    langType language;
-
-    if (Option.language != LANG_AUTO)
-	language = Option.language;
-    else if (isFileHeader(fileName))
-	language = LANG_CPP;
-    else if (extension[0] == '\0')
-	language = LANG_IGNORE;		/* ignore files with no extension */
-    else
-	language = getExtensionLanguage(extension);
-
-    return language;
-}
-
-/*----------------------------------------------------------------------------
- *  Tag file management
- *--------------------------------------------------------------------------*/
-
-static boolean isValidTagAddress( excmd )
-    const char *const excmd;
-{
-    boolean isValid = FALSE;
-
-    if (strchr("/?", excmd[0]) != NULL)
-	isValid = TRUE;
     else
     {
-	char *address = (char *)malloc(strlen(excmd) + 1);
-
-	if (address != NULL)
-	{
-	    if (sscanf(excmd, "%[^;\n]", address) == 1  &&
-		strspn(address,"0123456789") == strlen(address))
-		    isValid = TRUE;
-	    free(address);
-	}
-    }
-    return isValid;
-}
-
-static boolean isCtagsLine( line )
-    const char *const line;
-{
-    enum fieldList { TAG, TAB1, SRC_FILE, TAB2, EXCMD, NUM_FIELDS };
-    boolean ok = FALSE;			/* we assume not unless confirmed */
-    const size_t fieldLength = strlen(line) + 1;
-    char *const fields = (char *)malloc((size_t)NUM_FIELDS * fieldLength);
-
-    if (fields == NULL)
-	error(FATAL, "Cannot analyze tag file");
-    else
-    {
-#define field(x)	(fields + ((size_t)(x) * fieldLength))
-
-	const int numFields = sscanf(line, "%[^\t]%[\t]%[^\t]%[\t]%[^\n]",
-				     field(TAG), field(TAB1), field(SRC_FILE),
-				     field(TAB2), field(EXCMD));
-
-	/*  There must be exactly five fields: two tab fields containing
-	 *  exactly one tab each, the tag must not begin with "#", and the
-	 *  file name should not end with ";", and the excmd must be
-	 *  accceptable.
-	 *
-	 *  These conditions will reject tag-looking lines like:
-	 *      int	a;	<C-comment>
-	 *      #define	LABEL	<C-comment>
+    	/*  File really is a directory; append it to the path.
+	 *  Gotcha: doesn't work with logical names.
 	 */
-	if (numFields == NUM_FIELDS   &&
-	    strlen(field(TAB1)) == 1  &&
-	    strlen(field(TAB2)) == 1  &&
-	    field(TAG)[0] != '#'      &&
-	    field(SRC_FILE)[strlen(field(SRC_FILE)) - 1] != ';'  &&
-	    isValidTagAddress(field(EXCMD)))
-		ok = TRUE;
-
-	free(fields);
-    }
-    return ok;
-}
-
-static boolean isEtagsLine( line )
-    const char *const line;
-{
-    const char *const magic = "\f\n";
-
-    return (boolean)(strncmp(line, magic, strlen(magic)) == 0);
-}
-
-static boolean isTagFile( filename )
-    const char *const filename;
-{
-    boolean ok = FALSE;			/* we assume not unless confirmed */
-    FILE *const fp = fopen(filename, "r");
-
-    if (fp == NULL  &&  errno == ENOENT)
-	ok = TRUE;
-    else if (fp != NULL)
-    {
-	const char *line = readLine(&TagFile.line, fp);
-
-	if (line == NULL)
-	    ok = TRUE;
-	else if (Option.etags)		/* check for etags magic number */
-	    ok = isEtagsLine(line);
+    	vStringNCopyS(filePath, path, strlen(path) - 1);
+    	vStringPut(filePath, '.');
+    	vStringNCatS(filePath, file, directoryId - file);
+    	if (strchr(path, '[') != NULL)
+	    vStringPut(filePath, ']');
 	else
-	    ok = isCtagsLine(line);
-	fclose(fp);
+	    vStringPut(filePath, '>');
+	vStringTerminate(filePath);
     }
-    return ok;
-}
-
-static void openTagFile( toStdout )
-    const boolean toStdout;
-{
-    static char tempName[L_tmpnam];
-
-    /*  Open the tags File.
-     */
-    if (toStdout)
-    {
-	TagFile.name = tmpnam(tempName);
-	TagFile.fp = fopen(TagFile.name, "w");
-    }
-    else
-    {
-	const char *const fname  = Option.tagFileName;
-	const boolean fileExists = doesFileExist(fname);
-
-	TagFile.name = fname;
-	if (fileExists  &&  ! isTagFile(fname))
-	    error(FATAL,
-	      "\"%s\" doesn't look like a tag file; I refuse to overwrite it.",
-		  fname);
-	if (Option.append  &&  fileExists)
-	{
-	    TagFile.fp = fopen(fname, "r+");
-	    if (TagFile.fp != NULL)
-	    {
-		TagFile.numTags.prev = updatePseudoTags();
-		fseek(TagFile.fp, 0L, SEEK_END);
-	    }
-	}
-	else
-	{
-	    TagFile.fp = fopen(fname, "w");
-	    if (TagFile.fp != NULL)
-		addPseudoTags();
-	}
-    }
-    if (TagFile.fp == NULL)
-    {
-	error(FATAL | PERROR, "cannot open tag file");
-	exit(1);
-    }
-}
-
-#ifdef USE_REPLACEMENT_TRUNCATE
-
-static int copyChars __ARGS((FILE *const fpFrom, FILE *const fpTo, const off_t size));
-static int copyFile __ARGS((const char *const from, const char *const to, const off_t size));
-static int replacementTruncate __ARGS((const char *const name, const off_t size));
-
-static int copyChars( fpFrom, fpTo, size )
-    FILE *const fpFrom;
-    FILE *const fpTo;
-    const off_t size;
-{
-    off_t count;
-    int result = -1;
-
-    for (count = 0  ;  count < size  ;  ++count)
-    {
-	const int c = getc(fpFrom);
-
-	if (c == EOF  ||  putc(c, fpTo) == EOF)
-	    break;
-    }
-    if (count == size)
-	result = 0;
-    return result;
-}
-
-static int copyFile( from, to, size )
-    const char *const from;
-    const char *const to;
-    const off_t size;
-{
-    int result = -1;
-    FILE *const fpFrom = fopen(from, "r");
-
-    if (fpFrom != NULL)
-    {
-	FILE *const fpTo = fopen(to, "w");
-
-	if (fpFrom != NULL)
-	{
-	    result = copyChars(fpFrom, fpTo, size);
-	    if (result == 0)
-		result = fclose(fpTo);
-	}
-	if (result == 0)
-	    result = fclose(fpFrom);
-    }
-    return result;
-}
-
-/*  Replacement for missing library function.
- */
-static int replacementTruncate( name, size )
-    const char *const name;
-    const off_t size;
-{
-    char tempName[L_tmpnam];
-    int result = -1;
-
-    if (tmpnam(tempName) != NULL)
-    {
-	result = copyFile(name, tempName, size);
-	if (result == 0)
-	    result = copyFile(tempName, name, size);
-	if (result == 0)
-	    result = remove(tempName);
-    }
-    return result;
-}
-
-#endif
-
-static void closeTagFile( resize )
-    const boolean resize;
-{
-    const long __unused__ size = ftell(TagFile.fp);
-
-    fclose(TagFile.fp);
-    if (resize)
-    {
-	int __unused__ result = 0;
-
-#ifdef USE_REPLACEMENT_TRUNCATE
-	result = replacementTruncate(TagFile.name, (off_t)size);
 #else
-# ifdef HAVE_TRUNCATE
-	result = truncate(TagFile.name, (off_t)size);
+    const int lastChar = path[strlen(path) - 1];
+# if defined(MSDOS) || defined(WIN32) || defined(OS2)
+    boolean terminated = (boolean)(strchr(PathDelimiters, lastChar) != NULL);
 # else
-	const int fd = open(TagFile.name, O_RDWR);
-
-	if (fd != -1)
-	{
-#  ifdef HAVE_FTRUNCATE
-	    result = ftruncate(fd, (off_t)size);
-#  else
-#   ifdef HAVE_CHSIZE
-	    result = chsize(fd, size);
-#   endif
-#  endif
-	    close(fd);
-	}
+    boolean terminated = (boolean)(lastChar == PATH_SEPARATOR);
 # endif
-#endif
-	if (result == -1)
-	    fprintf(errout, "Cannot shorten tag file: errno = %d\n", errno);
+
+    vStringCopyS(filePath, path);
+    if (! terminated)
+    {
+	vStringPut(filePath, PATH_SEPARATOR);
+	vStringTerminate(filePath);
     }
+    vStringCatS(filePath, file);
+#endif
+
+    return filePath;
 }
 
 /*----------------------------------------------------------------------------
  *	Create tags
  *--------------------------------------------------------------------------*/
 
-static void beginEtagsFile()
-{
-    tmpnam(TagFile.etags.name);
-    TagFile.etags.fp = fopen(TagFile.etags.name, "w+b");
-    if (TagFile.etags.fp == NULL)
-	error(FATAL | PERROR, "cannot open \"%s\"", TagFile.etags.name);
-    TagFile.etags.byteCount = 0;
-}
-
-static void endEtagsFile( name )
-    const char *const name;
-{
-    const char *line;
-
-    fprintf(TagFile.fp, "\f\n%s,%ld\n", name, (long)TagFile.etags.byteCount);
-    if (TagFile.etags.fp != NULL)
-    {
-	rewind(TagFile.etags.fp);
-	while ((line = readLine(&TagFile.line, TagFile.etags.fp)) != NULL)
-	    fputs(line, TagFile.fp);
-	fclose(TagFile.etags.fp);
-	remove(TagFile.etags.name);
-    }
-    TagFile.etags.name[0] = '\0';
-}
-
-static boolean createTagsForFile( filePath, language )
+static boolean createTagsForFile( filePath, language, passCount )
     const char *const filePath;
     const langType language;
+    const unsigned int passCount;
 {
-    boolean ok;
+    boolean retry = FALSE;
 
-    if (filePath == NULL)
-	ok = FALSE;
-    else
+    if (Option.etags)
+	beginEtagsFile();
+
+    if (fileOpen(filePath, language))
     {
-	const boolean isHeader = isFileHeader(filePath);
-
-	ok = TRUE;
-	if (Option.etags)
-	    beginEtagsFile();
-	if (cppOpen(filePath, language, isHeader))
+	if (Option.include.fileNames)
 	{
-	    tagInfo tag;
+	    tagEntryInfo tag;
 
-	    DebugStatement( clearString(tag.name, MaxNameLength); )
-	    strcpy(tag.name, baseFilename(filePath));
-	    tag.location   = 0;
-	    tag.lineNumber = 1;
+	    initTagEntry(&tag, baseFilename(filePath));
 
-	    makeTag(&tag, &NoClass, SCOPE_GLOBAL, TAG_SOURCE_FILE);
-	    ok = createTags(0, NULL);
-	    cppClose();
+	    tag.isFileEntry	= TRUE;
+	    tag.lineNumberEntry = TRUE;
+	    tag.lineNumber	= 1;
+	    tag.kindName	= "file";
+	    tag.kind		= 'F';
+
+	    makeTagEntry(&tag);
 	}
-	if (Option.etags)
-	    endEtagsFile(filePath);
+
+	if (language == LANG_EIFFEL)
+	    retry = createEiffelTags();
+	else if (language == LANG_FORTRAN)
+	    retry = createFortranTags(passCount);
+	else
+	    retry = createCTags(passCount);
+	fileClose();
     }
-    return ok;
+
+    if (Option.etags)
+	endEtagsFile(filePath);
+
+    return retry;
 }
 
-static const char *getNextListFile( fp )
+static vString *getNextListFile( fp )
     FILE *const fp;
 {
-    static char fileName[PATH_MAX + 1];
-    const char *const buf = fgets(fileName, PATH_MAX + 1, fp);
+    vString *fileName = NULL;
+    int c;
 
-    if (buf != NULL)
+    do
     {
-	char *const newline = strchr(fileName, '\n');
+	c = fgetc(fp);
+	while (c != '\n'  &&  c != EOF)
+	{
+	    if (fileName == NULL)
+		fileName = vStringNew();
+	    vStringPut(fileName, c);
+	    c = fgetc(fp);
+	}
+	if (fileName != NULL)
+	    vStringTerminate(fileName);
+    } while (fileName == NULL  &&  c != EOF);
 
-	if (newline == NULL)
-	    fileName[PATH_MAX] = '\0';
-	else
-	    *newline = '\0';
-    }
-    return buf;
+    return fileName;
 }
 
-static const char *sourceFilePath( file )
+static vString *sourceFilePath( file )
     const char *const file;
 {
-    const char *result = NULL;
+    vString *filePath;
 
     if (Option.path == NULL  ||  isAbsolutePath(file))
-	result = file;
-    else if (strlen(Option.path) + strlen(file) < (size_t)PATH_MAX)
     {
-	static char filePath[PATH_MAX + 1];
-
-	combinePathAndFile(filePath, Option.path, file);
-	result = filePath;
+	filePath = vStringNew();
+	vStringCopyS(filePath, file);
     }
-    return result;
+    else
+	filePath = combinePathAndFile(Option.path, file);
+
+    return filePath;
 }
 
 static boolean createTagsWithFallback( fileName, language )
     const char *const fileName;
     const langType language;
 {
-    const char *const filePath	= sourceFilePath(fileName);
     const unsigned long numTags	= TagFile.numTags.added;
-    const long tagFilePosition	= ftell(TagFile.fp);
+    fpos_t tagFilePosition;
     boolean resize = FALSE;
+    unsigned int passCount = 0;
 
-    if (! createTagsForFile(filePath, language))
+    fgetpos(TagFile.fp, &tagFilePosition);
+    while (createTagsForFile(fileName, language, ++passCount))
     {
 	/*  Restore prior state of tag file.
 	 */
-	fseek(TagFile.fp, tagFilePosition, SEEK_SET);
+	fsetpos(TagFile.fp, &tagFilePosition);
 	TagFile.numTags.added = numTags;
-	DebugStatement( debugPrintf(DEBUG_STATUS,
-				"%s: formatting error; retrying\n", fileName); )
-
-	Option.braceFormat = TRUE;
-	    createTagsForFile(filePath, language);
-	Option.braceFormat = FALSE;
 	resize = TRUE;
     }
     return resize;
@@ -955,14 +619,12 @@ static boolean createTagsWithFallback( fileName, language )
 
 # if defined(MSDOS) || defined(WIN32)
 
-static boolean createTagsForMatchingEntries __ARGS((char *const pattern));
-
 static boolean createTagsForMatchingEntries( pattern )
     char *const pattern;
 {
     boolean resize = FALSE;
-    const size_t tailIndex = baseFilename(pattern) - (const char *)pattern;
-    char *const tail = pattern + tailIndex;
+    const size_t dirLength = baseFilename(pattern) - (char *)pattern;
+    vString *const filePath = vStringNew();
 #ifdef HAVE_FINDFIRST
     struct ffblk fileInfo;
     int result = findfirst(pattern, &fileInfo, FA_DIREC);
@@ -975,8 +637,9 @@ static boolean createTagsForMatchingEntries( pattern )
 	 */
 	if (strcmp(entryName, ".") != 0  &&  strcmp(entryName, "..") != 0)
 	{
-	    strcpy(tail, entryName);
-	    resize |= createTagsForEntry(pattern);
+	    vStringNCopyS(filePath, pattern, dirLength);
+	    vStringCatS(filePath, entryName);
+	    resize |= createTagsForEntry(vStringValue(filePath));
 	}
 	result = findnext(&fileInfo);
     }
@@ -995,21 +658,22 @@ static boolean createTagsForMatchingEntries( pattern )
 	     */
 	    if (strcmp(entryName, ".") != 0  &&  strcmp(entryName, "..") != 0)
 	    {
-		strcpy(tail, entryName);
-		resize |= createTagsForEntry(pattern);
+		vStringNCopyS(filePath, pattern, dirLength);
+		vStringCatS(filePath, entryName);
+		resize |= createTagsForEntry(vStringValue(filePath));
 	    }
 	} while (_findnext(hFile, &fileInfo) == 0);
 	_findclose(hFile);
     }
-# endif		/* HAVE__FINDFIRST */
-#endif		/* HAVE_FINDFIRST */
+# endif	/* HAVE__FINDFIRST */
+#endif	/* HAVE_FINDFIRST */
+
+    vStringDelete(filePath);
     return resize;
 }
 
 #else
 # ifdef AMIGA
-
-static boolean createTagsForMatchingEntries __ARGS((char *const pattern));
 
 static boolean createTagsForMatchingEntries( pattern )
     char *const pattern;
@@ -1055,59 +719,50 @@ static boolean createTagsForDirectory( dirName )
     DIR *const dir = opendir(dirName);
 
     if (dir == NULL)
-	error(WARNING, "");
+	error(WARNING | PERROR, "Cannot recurse into directory %s", dirName);
     else
     {
 	struct dirent *entry;
 
-	DebugStatement( debugPrintf(DEBUG_STATUS, "RECURSING into %s%c\n",
-				    dirName, PATH_SEPARATOR); )
+	if (Option.verbose)
+	    printf("RECURSING into directory %s\n", dirName);
 	while ((entry = readdir(dir)) != NULL)
 	{
 	    const char *const entryName = entry->d_name;
 
-	    if (strcmp(entryName, ".")    != 0  &&
-		strcmp(entryName, "..")   != 0  &&
-		strcmp(entryName, "SCCS") != 0   )
+	    if (strcmp(entryName, ".")      != 0  &&
+		strcmp(entryName, "..")     != 0  &&
+		strcmp(entryName, "SCCS")   != 0  &&
+		strcmp(entryName, "EIFGEN") != 0)
 	    {
-		char filePath[PATH_MAX + 1];
-
-		combinePathAndFile(filePath, dirName, entryName);
-		resize |= createTagsForEntry(filePath);
+		vString *const filePath = combinePathAndFile(dirName,entryName);
+		resize |= createTagsForEntry(vStringValue(filePath));
+		vStringDelete(filePath);
 	    }
 	}
 	closedir(dir);
     }
     return resize;
 #else
-# if defined(MSDOS) || defined(WIN32)
-    char pattern[PATH_MAX + 1];
+# if defined(AMIGA) || defined(MSDOS) || defined(WIN32)
+    vString *const pattern = vStringNew();
     boolean resize;
 
-    DebugStatement( debugPrintf(DEBUG_STATUS, "RECURSING into %s%c\n",
-				dirName, PATH_SEPARATOR); )
-    strcpy(pattern, dirName);
-    strcat(pattern, "\\*.*");
-    resize = createTagsForMatchingEntries(pattern);
+    if (Option.verbose)
+	printf("RECURSING into directory %s\n", dirName);
+
+    vStringCopyS(pattern, dirName);
+#  ifdef AMIGA
+    vStringCatS(pattern, "/#?");
+#  else
+    vStringCatS(pattern, "\\*.*");
+#  endif
+    resize = createTagsForMatchingEntries(vStringValue(pattern));
+    vStringDelete(pattern);
 
     return resize;
 # else
-#  ifdef AMIGA
-    char pattern[PATH_MAX + 1];
-    boolean resize = FALSE;
-
-    DebugStatement( debugPrintf(DEBUG_STATUS, "RECURSING into %s%c\n",
-				dirName, PATH_SEPARATOR); )
-    strcpy(pattern, dirName);
-    if (pattern[0] != '\0')
-	strcat(pattern, "/");     /* "/#?" searches one directory upwards */
-    strcat(pattern, "#?");
-    resize = createTagsForMatchingEntries(pattern);
-
-    return resize;
-#  else /* !AMIGA */
     return FALSE;
-#  endif
 # endif
 #endif	/* HAVE_OPENDIR */
 }
@@ -1120,24 +775,32 @@ static boolean createTagsForEntry( entryName )
 
     if (! doesFileExist(entryName))
 	error(WARNING | PERROR, "cannot open \"%s\"", entryName);
+    else if (isSymbolicLink(entryName)  &&  ! Option.followLinks)
+    {
+	if (Option.verbose)
+	    printf("  ignoring %s (symbolic link)\n", entryName);
+    }
     else if (isDirectory(entryName))
     {
 	if (Option.recurse)
 	    resize = createTagsForDirectory(entryName);
 	else
 	{
-	    DebugStatement( debugPrintf(DEBUG_STATUS,"  no recurse into %s%c\n",
-					entryName, PATH_SEPARATOR) );
+	    if (Option.verbose)
+		printf("  no recurse into directory %s\n", entryName);
 	    resize = FALSE;
 	}
     }
     else if (! isNormalFile(entryName))
     {
-	DebugStatement( if (debug(DEBUG_STATUS))
-			printf("  ignoring %s (special file)\n", entryName) );
+	if (Option.verbose)
+	    printf("  ignoring %s (special file)\n", entryName);
     }
     else if ((language = getFileLanguage(entryName)) == LANG_IGNORE)
-	DebugStatement( debugOpen(entryName, FALSE, language) );
+    {
+	if (Option.verbose)
+	    printf("  ignoring %s (unknown extension)\n", entryName);
+    }
     else
     {
 	resize = createTagsWithFallback(entryName, language);
@@ -1159,21 +822,25 @@ static boolean createTagsForArgs( argList )
 	const char *arg = *pArg;
 
 #if defined(MSDOS) || defined(WIN32)
-	char pattern[PATH_MAX + 1];
+	vString *const pattern = sourceFilePath(arg);
+	char *patternS = vStringValue(pattern);
 
-	strcpy(pattern, arg);
+	vStringCopyS(pattern, arg);
 
 	/*  We must transform the "." and ".." forms into something that can
 	 *  be expanded by the MSDOS/Windows functions.
 	 */
 	if (Option.recurse  &&
-	    (strcmp(pattern, ".") == 0  ||  strcmp(pattern, "..") == 0))
+	    (strcmp(patternS, ".") == 0  ||  strcmp(patternS, "..") == 0))
 	{
-	    strcat(pattern, "\\*.*");
+	    vStringCatS(pattern, "\\*.*");
 	}
-	resize |= createTagsForMatchingEntries(pattern);
+	resize |= createTagsForMatchingEntries(patternS);
+	vStringDelete(pattern);
 #else
-	resize |= createTagsForEntry(arg);
+	vString *const argPath = sourceFilePath(arg);
+	resize |= createTagsForEntry(vStringValue(argPath));
+	vStringDelete(argPath);
 #endif
     }
 
@@ -1193,12 +860,15 @@ static boolean createTagsForList( listFile )
 	error(FATAL | PERROR, "cannot open \"%s\"", listFile);
     else
     {
-	const char *fileName = getNextListFile(fp);
+	vString *fileName;
 
-	while (fileName != NULL  &&  fileName[0] != '\0')
+	while ((fileName = getNextListFile(fp)) != NULL)
 	{
-	    resize |= createTagsForEntry(fileName);
-	    fileName = getNextListFile(fp);
+	    vString *const filePath = sourceFilePath(vStringValue(fileName));
+
+	    resize |= createTagsForEntry(vStringValue(filePath));
+	    vStringDelete(fileName);
+	    vStringDelete(filePath);
 	}
 	if (fp != stdin)
 	    fclose(fp);
@@ -1262,7 +932,7 @@ static void printTotals( timeStamps )
 	fprintf(errout, "%lu tag%s sorted", totalTags, plural(totalTags));
 #ifdef CLOCK_AVAILABLE
 	fprintf(errout, " in %.02f seconds",
-		((double)(timeStamps[3] - timeStamps[2])) / CLOCKS_PER_SEC);
+		((double)(timeStamps[2] - timeStamps[1])) / CLOCKS_PER_SEC);
 #endif
 	fputc('\n', errout);
     }
@@ -1276,50 +946,27 @@ static void printTotals( timeStamps )
 static void makeTags( argList )
     const char *const *const argList;
 {
-    boolean toStdout = FALSE;
     boolean resize = FALSE;
-    clock_t timeStamps[4];
+    clock_t timeStamps[3];
+#define timeStamp(n) timeStamps[(n)] = (Option.printTotals ? clock():(clock_t)0)
 
-    if (Option.xref  ||  strcmp(Option.tagFileName, "-") == 0
-#if !defined(MSDOS) && !defined(WIN32) && !defined(OS2)
-	|| strcmp(Option.tagFileName, "/dev/stdout") == 0
-#endif
-	)
-	toStdout = TRUE;
+    timeStamp(0);
 
-    openTagFile(toStdout);
-
-    if (Option.printTotals) timeStamps[0] = clock();
+    openTagFile();
 
     if (Option.fileList != NULL)
 	resize = createTagsForList(Option.fileList);
     resize = (boolean)(createTagsForArgs(argList) || resize);
 
-    if (Option.printTotals) timeStamps[1] = clock();
+    timeStamp(1);
 
     closeTagFile(resize);
-    freeIgnoreList();
 
-    if (TagFile.numTags.added + TagFile.numTags.prev > 0L)
-    {
-	if (Option.sorted)
-	{
-	    if (Option.printTotals) timeStamps[2] = clock();
-#ifdef EXTERNAL_SORT
-	    externalSortTags(toStdout);
-#else
-	    internalSortTags(toStdout);
-#endif
-	    if (Option.printTotals) timeStamps[3] = clock();
-	}
-	else if (toStdout)
-	    catFile(TagFile.name);
-    }
-    if (toStdout)
-	remove(TagFile.name);		/* remove temporary file */
+    timeStamp(2);
 
     if (Option.printTotals)
 	printTotals(timeStamps);
+#undef timeStamp
 }
 
 /*----------------------------------------------------------------------------
@@ -1335,34 +982,6 @@ static void setExecutableName( path )
 extern const char *getExecutableName()
 {
     return ExecutableName;
-}
-
-static void setDefaultTagFileName()
-{
-    if (Option.tagFileName != NULL)
-	;		/* accept given name */
-    else if (Option.etags)
-	Option.tagFileName = ETAGS_FILE;
-    else
-	Option.tagFileName = CTAGS_FILE;
-}
-
-static void setOptionDefaults()
-{
-    if (Option.xref)
-	Option.include.sourceFiles = FALSE;
-
-    setDefaultTagFileName();
-}
-
-static void testEtagsInvocation()
-{
-    if (strncmp(getExecutableName(), ETAGS, strlen(ETAGS)) == 0)
-    {
-	Option.startedAsEtags	= TRUE;
-	Option.etags		= TRUE;
-	Option.sorted		= FALSE;
-    }
 }
 
 extern int main( argc, argv )
@@ -1381,10 +1000,10 @@ extern int main( argc, argv )
 
     /*  Parse options.
      */
+    initOptions();
     envArgList = parseEnvironmentOptions();
     fileList = (const char *const *)parseOptions(argv);
     setOptionDefaults();
-    buildKeywordHash();
 
     /*	Generate tags if there is at least one source file or a file list.
      */
@@ -1403,9 +1022,13 @@ extern int main( argc, argv )
 
     /*  Post tag generation clean-up.
      */
-    freeLineBuffer(&TagFile.line);
     if (envArgList != NULL)
 	free(envArgList);
+    freeKeywordTable();
+    freeSourceFileResources();
+    freeTagFileResources();
+    freeOptionResources();
+
     exit(0);
     return 0;
 }

@@ -49,7 +49,7 @@ TERMLIB =
 # profiling
 # don't switch on debugging when generating proto files, it crashes the
 # compiler.
-DBG = NODEBUG 
+DBG = NODEBUG
 #DBG = DBG=FULLFLUSH
 #DBG = DBG=LINE
 
@@ -61,14 +61,14 @@ DBG = NODEBUG
 #	OptimizerComplexity=10 OptimizerDepth=10 OptimizerRecurDepth=10 \
 #	OptimizerInLocal OPTPEEP
 OPTIMIZE=OPT  OPTIMIZERTIME NoOPTIMIZERALIAS \
- 	OptimizerComplexity=10 OptimizerDepth=10 OptimizerRecurDepth=10 \
+	OptimizerComplexity=10 OptimizerDepth=10 OptimizerRecurDepth=10 \
 	OptimizerInLocal OPTPEEP
 #OPTIMIZE = NOOPT
 
 # no optimization, (works on all platforms)
 #OPTIMIZE=NOOPT
 
-#generate code for your processor - note however, that the 060 selection will work for 040's 
+#generate code for your processor - note however, that the 060 selection will work for 040's
 # as well.
 #CPU=68000
 #CPU=68020
@@ -77,13 +77,13 @@ OPTIMIZE=OPT  OPTIMIZERTIME NoOPTIMIZERALIAS \
 CPU=68060
 
 
-#Error reporting - I use rexx for reporting, but console reporting may be more 
+#Error reporting - I use rexx for reporting, but console reporting may be more
 #useful for some people.
 #ERROR = ERRORCONSOLE ERRORSOURCE ERRORHIGHLIGHT
 ERROR = ERRORREXX ERRORCONSOLE ERRORSOURCE ERRORHIGHLIGHT
 
 
-#memory types, if you have fast use it :->, 
+#memory types, if you have fast use it :->,
 #	ANY = will work on all machines
 #	FAST = this is the best option, for speed
 #	CHIP = not necessary for this application.
@@ -93,24 +93,24 @@ MEMORYTYPE=ANY
 #MEMSIZE - this is for compile time only for speed of compilation
 #default is LARGE
 MEMSIZE=HUGE
-#MEMSIZE=LARGE 
-#MEMSIZE=SMALL 
+#MEMSIZE=LARGE
+#MEMSIZE=SMALL
 
 #>>>>> end of choices
 ###########################################################################
 
 CC = sc
 
-GST=vim.gst 
+GST=vim.gst
 DEP = $(GST)
 
 
-CFLAGS = NOLINK $(DBG)  CPU=$(CPU) NOSTACKCHECK 
+CFLAGS = NOLINK $(DBG)  CPU=$(CPU) NOSTACKCHECK
 CFLAGS2 = $(OPTIMIZE) $(ERROR) GSTIMMEDIATE GST=$(GST)
 CFLAGS3 =NOSINT SCODE SDATA STRINGMERGE MEMSIZE=$(MEMSIZE)
 CFLAGS4 = $(DEFINES) DATAMEMORY=$(MEMORYTYPE)
 
-PROPT = DEF=PROTO GPROTO GPPARM MAXIMUMERRORS=999 GENPROTOSTATICS GENPROTOPARAMETERS 
+PROPT = DEF=PROTO GPROTO GPPARM MAXIMUMERRORS=999 GENPROTOSTATICS GENPROTOPARAMETERS
 
 SRC = \
 	buffer.c \
@@ -127,6 +127,7 @@ SRC = \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -149,7 +150,7 @@ SRC = \
 	gui.c
 
 OBJ = buffer.o charset.o digraph.o edit.o eval.o ex_cmds.o ex_docmd.o ex_getln.o \
-	fileio.o getchar.o main.o mark.o memfile.o memline.o message.o misc1.o misc2.o \
+	fileio.o getchar.o main.o mark.o memfile.o memline.o menu.o message.o misc1.o misc2.o \
 	normal.o ops.o option.o os_amiga.o quickfix.o regexp.o screen.o search.o syntax.o \
 	tag.o term.o ui.o undo.o window.o gui_amiga.o gui.o  $(TERMLIB)
 
@@ -168,6 +169,7 @@ PRO = \
 	mark.pro \
 	memfile.pro \
 	memline.pro \
+	menu.pro \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
@@ -196,12 +198,12 @@ all:
 	@echo "$(BCOL2)building vim production version$(ANSIOFF)"
 	@smake vim
 
-Vim: scoptions proto $(OBJ) version.c version.h 
+Vim: scoptions proto $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c
 	$(CC) LINK $(OPT) $(COPTS) $(OBJ) version.o $(DBG) PNAME=Vim
 
 debug: scoption protos $(OBJ) version.c version.h
-	$(CC) $(CFLAGS) version.c 
+	$(CC) $(CFLAGS) version.c
 	$(CC) LINK $(COPTS) $(OBJ) version.o $(DBG) PNAME=Vim
 
 proto: $(PRO)
@@ -241,8 +243,8 @@ scoptions: smakefile
 #that it does not handle nested makefiles properly in this stage.
 $(GST): scoptions vim.h keymap.h macros.h ascii.h term.h structs.h gui.h gui_amiga.h
 	@echo "$(BCOL2)Generating Global Symbol Table $(ANSIOFF)$(FCOL4) $(GST) $(ANSIOFF)"
-	$(CC) PREPROCESSORONLY gui_amiga.h  objectname pre.h 
-	$(CC)  MGST=$(GST) pre.h ignore=105,316 
+	$(CC) PREPROCESSORONLY gui_amiga.h  objectname pre.h
+	$(CC)  MGST=$(GST) pre.h ignore=105,316
 	del pre.h
 
 
@@ -250,9 +252,9 @@ $(GST): scoptions vim.h keymap.h macros.h ascii.h term.h structs.h gui.h gui_ami
 
 .c.o:
 	@echo "$(BCOL2)Generating object for $(ANSIOFF)$(FCOL4) $*.c -> $@$(ANSIOFF)"
-	$(CC) $*.c 
+	$(CC) $*.c
 
-.c.pro: 
+.c.pro:
 	@echo "$(BCOL2)Generating prototypes for $(ANSIOFF)$(FCOL4) $*.c -> $@$(ANSIOFF)"
 	@$(CC) NOERRORREXX GPFILE=$*.pro $(PROPT) $*.c ignore=306,316,317,304
 
@@ -288,6 +290,8 @@ memfile.o:	memfile.c  $(DEP)
 memfile.pro:	memfile.c $(DEP)
 memline.o:	memline.c  $(DEP)
 memline.pro:	memline.c $(DEP)
+menu.o:		menu.c  $(DEP)
+menu.pro:	menu.c $(DEP)
 message.o:	message.c  $(DEP)
 message.pro:	message.c $(DEP)
 misc1.o:	misc1.c  $(DEP)
@@ -325,9 +329,9 @@ undo.pro:	undo.c  $(DEP)
 window.o:	window.c   $(DEP)
 window.pro:	window.c  $(DEP)
 gui_amiga.o:	gui_amiga.c $(DEP) amiga.h
-#gui_amiga.pro: 	gui_amiga.c $(DEP) amiga.h
-amiga.o: 	amiga.c $(DEP) amiga.h
-amiga.pro: 	amiga.c $(DEP) amiga.h
+#gui_amiga.pro:	gui_amiga.c $(DEP) amiga.h
+amiga.o:	amiga.c $(DEP) amiga.h
+amiga.pro:	amiga.c $(DEP) amiga.h
 gui.o:		gui.c   $(DEP)
 gui.pro:	gui.c  $(DEP)
 

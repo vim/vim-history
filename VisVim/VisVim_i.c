@@ -4,8 +4,8 @@
 /* link this file in with the server and any clients */
 
 
-/* File created by MIDL compiler version 3.01.75 */
-/* at Fri Mar 27 01:42:59 1998
+/* File created by MIDL compiler version 3.03.0110 */
+/* at Mon Feb 01 19:13:42 1999
  */
 /* Compiler settings for D:\Src2\VisVim\VisVim.odl:
     Os (OptLev=s), W1, Zp8, env=Win32, ms_ext, c_ext

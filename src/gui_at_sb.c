@@ -602,7 +602,7 @@ SetValues(current, request, desired, args, num_args)
 }
 
     static void
-Resize (w)
+Resize(w)
     Widget w;
 {
     /* ForgetGravity has taken care of background, but thumb may
@@ -733,7 +733,7 @@ ExtractPosition(event, x, y, state)
     Position	    *x, *y;	/* RETURN */
     unsigned int    *state;	/* RETURN */
 {
-    switch( event->type )
+    switch (event->type)
     {
 	case MotionNotify:
 	    *x = event->xmotion.x;
@@ -779,7 +779,7 @@ HandleThumb(w, event, params, num_params)
     Position x, y, loc;
     ScrollbarWidget sbw = (ScrollbarWidget) w;
 
-    ExtractPosition(event, &x, &y, NULL);
+    ExtractPosition(event, &x, &y, (unsigned int *)NULL);
     loc = PICKLENGTH(sbw, x, y);
     /* if the motion event puts the pointer in thumb, call Move and Notify */
     /* also call Move and Notify if we're already in continuous scroll mode */
@@ -1047,7 +1047,7 @@ MoveThumb(w, event, params, num_params)
     if (!event->xmotion.same_screen)
 	return;
 
-    ExtractPosition(event, &x, &y, NULL);
+    ExtractPosition(event, &x, &y, (unsigned int *)NULL);
 
     top = FractionLoc(sbw, x, y);
 
@@ -1212,5 +1212,5 @@ vim_XawScrollbarSetThumb(w, top, shown, max)
     sbw->scrollbar.shown = (shown > 1.0) ? 1.0 :
 		(shown >= 0.0) ? shown : sbw->scrollbar.shown;
 
-    PaintThumb (sbw);
+    PaintThumb(sbw);
 }

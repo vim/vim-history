@@ -11,18 +11,18 @@
 #include	"vim.h"
 #include	"globals.h"
 #include	"option.h"
-#include	"proto.h"
+
 #ifndef VAX
-#undef O_RDWR
-#undef AF_OSI
-#include	"xti.h"
-#define		select	t_select
-#endif /*!VAX*/
+# undef O_RDWR
+# undef AF_OSI
+# include	"xti.h"
+# define	select	t_select
+#endif
 
 #define EFN	0			/* Event flag */
 
 #ifdef PROTO
-# define DESC int
+ typedef int DESC;
 #endif
 
 static void	vms_flushbuf(void);
@@ -84,13 +84,20 @@ Window		x11_window = 0;
 Display		*x11_display = NULL;
 int		got_x_error = FALSE;
 
+# ifdef WANT_TITLE
 static int	get_x11_windis __ARGS((void));
-static void set_x11_title __ARGS((char_u *));
-static void set_x11_icon __ARGS((char_u *));
+static void	set_x11_title __ARGS((char_u *));
+static void	set_x11_icon __ARGS((char_u *));
+# endif
 #endif
 
+#ifdef WANT_TITLE
 static int	get_x11_title __ARGS((int));
 static int	get_x11_icon __ARGS((int));
+static char_u	*oldtitle = NULL;
+static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
+static char_u	*oldicon = NULL;
+#endif
 
 static void	may_core_dump __ARGS((void));
 
@@ -106,9 +113,6 @@ static int	have_wildcard __ARGS((int, char_u **));
 static int	have_dollars __ARGS((int, char_u **));
 
 static int	do_resize = FALSE;
-static char_u	*oldtitle = NULL;
-static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
-static char_u	*oldicon = NULL;
 static char_u	*extra_shell_arg = NULL;
 static int	show_shell_mess = TRUE;
 static int	core_dump = FALSE;	/* core dump in mch_windexit() */
@@ -206,9 +210,6 @@ static short	iosb[4];		/* IO status block */
 static int	owidth = 80;
 static int	opage = 24;
 
-/*
- * mch_write()
- */
     void
 mch_write(char_u *s, int len)
 {
@@ -229,15 +230,14 @@ mch_write(char_u *s, int len)
 }
 
 /*
- *	mch_inchar()	low level input funcion.
+ * low level input funcion.
  *
- *	Get a characters from the keyboard.
- *	Return the number of characters that are available.
- *	If wtime == 0 do not wait for characters.
- *	If wtime == n wait a short time for characters.
- *	If wtime == -1 wait forever for characters.
+ * Get a characters from the keyboard.
+ * Return the number of characters that are available.
+ * If wtime == 0 do not wait for characters.
+ * If wtime == n wait a short time for characters.
+ * If wtime == -1 wait forever for characters.
  */
-
     int
 mch_inchar(char_u *buf, int maxlen, long wtime)
 {
@@ -248,15 +248,14 @@ mch_inchar(char_u *buf, int maxlen, long wtime)
     {
 	if (!gui_wait_for_chars(wtime))
 	    return 0;
-	return read_from_input_buf(buf,(long)maxlen);
+	return read_from_input_buf(buf, (long)maxlen);
     }
 #endif
     /* first check to see if any characters read by
      * mch_breakcheck(), mch_delay() or mch_char_avail()
      */
-    if( ! vim_is_input_buf_empty() ) {
-	return read_from_input_buf(buf,(long)maxlen);
-    }
+    if (!vim_is_input_buf_empty())
+	return read_from_input_buf(buf, (long)maxlen);
 
     vms_flushbuf();
     if (wtime == -1)
@@ -272,9 +271,8 @@ mch_inchar(char_u *buf, int maxlen, long wtime)
 }
 
 /*
- *	mch_char_avail	return non-zero if a character is available
+ * return non-zero if a character is available
  */
-
     int
 mch_char_avail(void)
 {
@@ -282,42 +280,22 @@ mch_char_avail(void)
     if (gui.in_use)
     {
 	gui_mch_update();
-	return(!vim_is_input_buf_empty());
+	return !vim_is_input_buf_empty();
     }
 #endif
-    return(WaitForChar(0L));
+    return WaitForChar(0L);
 }
-
-/*
- *	mch_avail_mem		always on VMS
- */
-
-    long
-mch_avail_mem(int special)
-{
-	return 0x7fffffff;		/* virtual memory eh */
-}
-
-/*
- *	mch_delay
- */
 
     void
 mch_delay(long msec, int ignoreinput)
 {
-	if (ignoreinput)
-	{
-	    sleep(msec/1000);  /* as good as it gets for VMS? */
-	}
-	else
-	{
-	    WaitForChar(msec);
-	}
+    if (ignoreinput)
+	sleep(msec/1000);  /* as good as it gets for VMS? */
+    else
+	WaitForChar(msec);
 }
 
 /*
- *	sig_winch
- *
  * We need correct potatotypes, otherwise mean compilers will barf when
  * the second argument to signal() is ``wrong''.
  * Let me try it with a few tricky defines from my own osdef.h	(jw).
@@ -327,21 +305,17 @@ mch_delay(long msec, int ignoreinput)
 sig_winch SIGDEFARG(sigarg)
 {
 #if defined(SIGWINCH)
-	/* this is not required on all systems, but it doesn't hurt anybody */
-	signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
+    /* this is not required on all systems, but it doesn't hurt anybody */
+    signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
 #endif
-	do_resize = TRUE;
-	SIGRETURN;
+    do_resize = TRUE;
+    SIGRETURN;
 }
 
-/*
- *	mch_resize
- */
-
-	void
+    void
 mch_resize(void)
 {
-	do_resize = TRUE;
+    do_resize = TRUE;
 }
 
 /*
@@ -425,6 +399,7 @@ mch_suspend(void)
     vms_flushbuf();	/* needed to disable mouse on some systems */
     kill(0, SIGTSTP);	/* send ourselves a STOP signal */
 
+# ifdef WANT_TITLE
     /*
      * Set oldtitle to NULL, so the current title is obtained again.
      */
@@ -433,19 +408,20 @@ mch_suspend(void)
 	vim_free(oldtitle);
 	oldtitle = NULL;
     }
+# endif
     settmode(TMODE_RAW);
 #else
     if (!sw_detached)
     {
-	OUT_STR("new shell started\n");
-	(void)mch_call_shell(NULL, SHELL_COOKED);
+	suspend_shell();
 	return;
     }
     vms_flushbuf();
     settmode(TMODE_COOK);		/* set to cooked mode */
 
     sprintf(symstr, "%08X", pid);
-    mch_setenv("VIMPID", symstr);
+    /* added 3rd parameter SK 980904 */
+    mch_setenv("VIMPID", symstr, 1);
 
     /* windgoto(wins[cw].rows-1,0);	*/
     /* putchar('\r');	*/
@@ -456,8 +432,8 @@ mch_suspend(void)
     res = lib$attach(&ppid);
     if (!(res & 1))
     {
-	OUT_STR("\nDetach failed, new shell started\n");
-	(void)mch_call_shell(NULL, SHELL_COOKED);
+	OUT_STR("\nDetach failed");
+	suspend_shell();
     }
 
     /* set_tty(P(P_LI), P(P_CO));*/
@@ -465,7 +441,9 @@ mch_suspend(void)
     /* updatescreen();*/
 
     settmode(TMODE_RAW);		/* set to raw mode */
+#ifdef WANT_TITLE
     resettitle();
+#endif
 #endif
     need_check_timestamps = TRUE;
 }
@@ -528,6 +506,8 @@ mch_check_input(void)
 	return FAIL;
 }
 
+#ifdef WANT_TITLE
+
 #if defined(HAVE_X11) && defined(WANT_X11)
 
 /*
@@ -558,6 +538,8 @@ x_error_check(Display *dpy, XErrorEvent *error_event)
  *	get_x11_windis		try to get x11 window and display
  *
  *	return FAIL for failure, OK otherwise
+ *	FIXME: Include changes that were made to the Unix version of this
+ *	function that apply here too.
  */
 
     static int
@@ -585,7 +567,8 @@ get_x11_windis(void)
 	    x11_display = NULL;
 	    x11_display_opened_here = FALSE;
 	}
-	return gui_get_x11_windis(&x11_window, &x11_display);
+	gui_get_x11_windis(&x11_window, &x11_display);
+	return OK;
     }
 #endif
 
@@ -889,6 +872,21 @@ mch_settitle(char_u *title, char_u *icon)
     }
 }
 
+/*
+ * Restore the window/icon title.
+ * which is one of:
+ * 1  Just restore title
+ * 2  Just restore icon
+ * 3  Restore title and icon
+ */
+    void
+mch_restore_title(int which)
+{
+    mch_settitle((which & 1) ? oldtitle : NULL, (which & 2) ? oldicon : NULL);
+}
+
+#endif /* WANT_TITLE */
+
     int
 vim_is_xterm(char_u *name)
 {
@@ -923,19 +921,6 @@ is_fastterm(char_u *name)
 }
 
 /*
- * Restore the window/icon title.
- * which is one of:
- *	1  Just restore title
- *  2  Just restore icon
- *	3  Restore title and icon
- */
-    void
-mch_restore_title(int which)
-{
-    mch_settitle((which & 1) ? oldtitle : NULL, (which & 2) ? oldicon : NULL);
-}
-
-/*
  * Insert user name in s[len].
  * Return OK if a name found.
  */
@@ -943,7 +928,7 @@ mch_restore_title(int which)
 mch_get_user_name(char_u *s, int len)
 {
     strncpy((char *)s, cuserid(NULL), len);
-    return(OK);
+    return OK;
 }
 
 /*
@@ -953,7 +938,15 @@ mch_get_user_name(char_u *s, int len)
     void
 mch_get_host_name(char_u *s, int len)
 {
+#if defined(__DECC) && defined(__STDC__)
+    extern char_u *sys_hostname;
+
+    /* presumably compiled with /decc */
+    strcpy((char *)s, (char *)sys_hostname);
+#else
+    /* presumably compiled with /standard=vaxc */
     gethostname((char *)s, len);
+#endif
 }
 
 /*
@@ -1060,7 +1053,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
 	if (p)
 	    mch_chdir((char *)olddir);
     }
-    STRCAT(buf, fname);
+    STRCAT(buf, vms_fixfilename(fname));
     return(retval);
 }
 
@@ -1071,7 +1064,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int
 mch_isFullName(char_u *fname)
 {
-    if(fname[0] == '/' || strchr((char *)fname, ':'))
+    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'['))
 	return 1;
     else
 	return 0;
@@ -1086,7 +1079,7 @@ getperm(char_u *name)
 {
 	struct stat statb;
 
-	if (stat((char *)name, &statb))
+	if (mch_stat((char *)name, &statb))
 		return -1;
 	return statb.st_mode;
 }
@@ -1120,7 +1113,7 @@ mch_isdir(char_u *name)
 {
 	struct stat statb;
 
-	if (stat((char *)name, &statb))
+	if (mch_stat((char *)name, &statb))
 		return FALSE;
 #ifdef _POSIX_SOURCE
 	return (S_ISDIR(statb.st_mode) ? TRUE : FALSE);
@@ -1132,7 +1125,9 @@ mch_isdir(char_u *name)
     void
 mch_windexit(int r)
 {
+#ifdef WANT_TITLE
     mch_settitle(oldtitle, oldicon);	/* restore xterm title */
+#endif
     settmode(TMODE_COOK);
     exiting = TRUE;
     stoptermcap();
@@ -1425,15 +1420,15 @@ mch_set_winsize(void)
 /*
  *	options		SHELL_FILTER	if called by do_filter()
  *			SHELL_COOKED	if term needs cooked mode
- *			SHELL_EXPAND	if called by
- *					mch_expand_wildcards()
+ *			SHELL_EXPAND	if called by mch_expand_wildcards()
  */
 
     int
 mch_call_shell(char_u *cmd, int options)
 {
     int		x;
-    char	*ifn, *ofn;
+    char	*ifn = NULL;
+    char	*ofn = NULL;
 
     vms_flushbuf();
     if (options & SHELL_COOKED)
@@ -1448,8 +1443,8 @@ mch_call_shell(char_u *cmd, int options)
 	    *ifn++ = '\0';
 	    /* chop off any trailing spaces */
 	    p = strchr(ifn,' ');
-	    if( p ) *p = '\0';
-
+	    if (p)
+		*p = '\0';
 	}
 	if (ofn)
 	    x = vms_sys((char *)cmd, ofn, ifn);
@@ -1467,7 +1462,9 @@ mch_call_shell(char_u *cmd, int options)
 	OUT_STR(" returned\n");
     }
     settmode(TMODE_RAW);			/* set to raw mode */
+#ifdef WANT_TITLE
     resettitle();
+#endif
     return x;
 }
 
@@ -1509,12 +1506,14 @@ mch_breakcheck(void)
  * When a GUI is being used, this will never get called -- webb
  */
 
-    int
+    static int
 WaitForChar(long msec)
 {
-    if (vim_is_input_buf_empty()) {
-	if(RealWaitForChar(0,msec)) {
-	    add_to_input_buf((char_u *)ibuf,1);
+    if (vim_is_input_buf_empty())
+    {
+	if (RealWaitForChar(0, msec))
+	{
+	    add_to_input_buf((char_u *)ibuf, 1);
 	    return 1;
 	}
 	else
@@ -1568,11 +1567,11 @@ vms_wproc( char *name, int type )
     char xname[MAXPATHL];
     int i;
 
-    if(vms_match_num == 0) {
+    if (vms_match_num == 0) {
 	/* first time through, setup some things */
-	if(NULL == vms_fmatch) {
+	if (NULL == vms_fmatch) {
 	    vms_fmatch = (char_u **)alloc(EXPL_ALLOC_INC * sizeof(char *));
-	    if( ! vms_fmatch )
+	    if (!vms_fmatch)
 		return 0;
 	    vms_match_alloced = EXPL_ALLOC_INC;
 	    vms_match_free = EXPL_ALLOC_INC;
@@ -1584,14 +1583,17 @@ vms_wproc( char *name, int type )
     }
     /* remove version from filename (if it exists) */
     strcpy(xname,name);
-    { char *cp = strchr(xname,';');
-	if(cp) *cp = '\0';
+    {
+	char *cp = strchr(xname,';');
+
+	if (cp)
+	    *cp = '\0';
 	/* also may have the form: filename.ext.ver */
 	cp = strchr(xname,'.');
-	if(cp) {
+	if (cp) {
 	   ++cp;
 	   cp = strchr(cp,'.');
-	   if(cp)
+	   if (cp)
 		*cp = '\0';
 	}
     }
@@ -1599,21 +1601,21 @@ vms_wproc( char *name, int type )
     strcpy(xname,decc$translate_vms(xname));
 
     /* if name already exists, don't add it */
-    for(i = 0; i<vms_match_num; i++) {
-	if( 0 == STRCMP((char_u *)xname,vms_fmatch[i]) )
+    for (i = 0; i<vms_match_num; i++) {
+	if (0 == STRCMP((char_u *)xname,vms_fmatch[i]))
 	    return 1;
     }
-    if(--vms_match_free == 0) {
+    if (--vms_match_free == 0) {
 	/* add more space to store matches */
 	vms_match_alloced += EXPL_ALLOC_INC;
 	vms_fmatch = (char_u **)realloc(vms_fmatch,
 		sizeof(char **) * vms_match_alloced);
-	if( ! vms_fmatch )
+	if (!vms_fmatch)
 	    return 0;
 	vms_match_free = EXPL_ALLOC_INC;
     }
 #ifdef APPEND_DIR_SLASH
-    if( type == DECC$K_DIRECTORY ) {
+    if (type == DECC$K_DIRECTORY) {
 	STRCAT(xname,"/");
 	vms_fmatch[vms_match_num] = vim_strsave((char_u *)xname);
     }
@@ -1657,11 +1659,13 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
     files_alloced = EXPL_ALLOC_INC;
     files_free = EXPL_ALLOC_INC;
     *file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
-    if (*file == NULL ){
+    if (*file == NULL)
+    {
 	*num_file = 0;
 	return FAIL;
     }
-    for (i=0; i<num_pat; i++) {
+    for (i = 0; i < num_pat; i++)
+    {
 	/* expand environment var or home dir */
 	if (vim_strchr(pat[i],'$') || vim_strchr(pat[i],'~'))
 	    expand_env(pat[i],buf,MAXPATHL);
@@ -1670,25 +1674,26 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 
 	vms_match_num = 0; /* reset collection counter */
 	cnt = decc$to_vms((char *)buf,vms_wproc,1,0);
-	if(cnt > 0) cnt = vms_match_num;
+	if (cnt > 0)
+	    cnt = vms_match_num;
 
-	if(cnt < 1)
+	if (cnt < 1)
 	    continue;
 
-	for( i = 0; i<cnt; i++ ) {
+	for (i = 0; i<cnt; i++) {
 	    /* files should exist if expanding interactively */
-	    if (expand_interactively && mch_getperm(vms_fmatch[i]) < 0 )
+	    if (expand_interactively && mch_getperm(vms_fmatch[i]) < 0)
 		continue;
 	    /* check if this entry should be included */
 	    dir = (mch_isdir(vms_fmatch[i]));
 	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
 		continue;
 	    /* allocate memory for pointers */
-	    if(--files_free < 1 ) {
+	    if (--files_free < 1) {
 		files_alloced += EXPL_ALLOC_INC;
 		*file = (char_u **)realloc(*file,
 		    sizeof(char_u **) * files_alloced);
-		if( *file == NULL ) {
+		if (*file == NULL) {
 		    *file = (char_u **)"";
 		    *num_file = 0;
 		    return(FAIL);
@@ -1702,10 +1707,10 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
     }
     return(OK);
 }
+
 /*
  *	mch_has_wildcard
  */
-
     int
 mch_has_wildcard(char_u *p)
 {
@@ -1713,7 +1718,13 @@ mch_has_wildcard(char_u *p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-	else if (vim_strchr((char_u *)"*%$~", *p) != NULL)
+	else if (vim_strchr((char_u *)
+#ifdef VIM_BACKTICK
+	    "*%$~`"
+#else
+	    "*%$~"
+#endif
+	    , *p) != NULL)
 	    return TRUE;
     }
     return FALSE;
@@ -1780,6 +1791,7 @@ mch_getenv(char_u *lognam)
     unsigned long	attrib;
     int			lengte = 0, dum = 0, idx = 0;
     ITMLST2		itmlst;
+    char		*sbuf = NULL;
 
     vul_desc(&d_lognam, (char *)lognam);
     vul_desc(&d_file_dev, "LNM$FILE_DEV");
@@ -1793,6 +1805,14 @@ mch_getenv(char_u *lognam)
 	if (cp = (char_u *)alloc((unsigned)(lengte+1)))
 	    strcpy((char *)cp, buffer);
 	return(cp);
+    }
+    else if ((sbuf = getenv((char *)lognam)))
+    {
+	lengte = strlen(sbuf) + 1;
+	cp = (char_u *)malloc((size_t)lengte);
+	if (cp)
+	    strcpy((char *)cp, sbuf);
+	return cp;
     }
     else
 	return(NULL);
@@ -1856,20 +1876,23 @@ vms_x(unsigned int fun)
 
 
     static int
-vms_sys(char *cmd, char *log, char *inp)
+vms_sys(char *cmd, char *out, char *inp)
 {
-    DESC	cdsc, ldsc, idsc;
+    DESC	cdsc, odsc, idsc;
     long	status, substatus;
 
     if (cmd)
 	vul_desc(&cdsc, cmd);
-    if (log)
-	vul_desc(&ldsc, log);
+    if (out)
+	vul_desc(&odsc, out);
     if (inp)
 	vul_desc(&idsc, inp);
 
-    status = lib$spawn(cmd ? &cdsc : NULL, inp ? &idsc : NULL,
-	    log ? &ldsc : NULL, 0, 0, 0, &substatus, 0, 0, 0);
+    status = lib$spawn(
+	    cmd ? &cdsc : NULL,		/* command string */
+	    inp ? &idsc : NULL,		/* input file */
+	    out ? &odsc : NULL,		/* output file */
+	    0, 0, 0, &substatus, 0, 0, 0, 0, 0, 0);
     if (status != SS$_NORMAL)
 	substatus = status;
     if ((substatus&STS$M_SUCCESS) == 0)     /* Command failed.	    */
@@ -1908,7 +1931,7 @@ mch_getperm(char_u *name)
 {
     struct stat	statb;
 
-    if (stat((char *)name, &statb))
+    if (mch_stat((char *)name, &statb))
 	return(-1);
     return(statb.st_mode);
 }
@@ -1939,14 +1962,110 @@ mch_expandpath(struct growarray *gap, char_u *path, int flags)
     char	*cp;
 
     vms_match_num = 0;
-    cnt = decc$to_vms((char *)path,vms_wproc,1,0);
-    if(cnt > 0) cnt = vms_match_num;
-    for(i=0;i<cnt;i++) {
+    cnt = decc$to_vms((char *)path, vms_wproc, 1, 0);
+    if (cnt > 0)
+	cnt = vms_match_num;
+    for (i = 0; i < cnt; i++)
+    {
 	if (mch_getperm(vms_fmatch[i]) >= 0) /* add existing file */
-	{
 	    addfile(gap, vms_fmatch[i], flags);
-	}
-
     }
     return cnt;
+}
+
+/*
+ * change '/' to '.' (or ']' for the last one)
+ */
+    void *
+vms_fixfilename(void *instring)
+{
+    char		*b;
+    char		*colon = NULL;
+    char		*s;
+    char		*fname;
+    char		*lastdot;
+    static char		*buf = NULL;
+    static size_t	buflen = 0;
+    size_t		len;
+
+    /* get a big-enough buffer */
+    len = strlen(instring) + 1;
+    if (len > buflen)
+    {
+	buflen = len + 128;
+	if (buf)
+	    buf = (char *)realloc(buf, buflen);
+	else
+	    buf = (char *)calloc(buflen, sizeof(char));
+    }
+
+    /* determine fname: ...[last ]/ ]xxx.sfx;version
+     *				    |fname	    |
+     */
+    for (fname = ((char *)instring) + len - 2;
+       fname > ((char *)instring) && *fname != ']' && *fname != '/'; --fname)
+	;
+    ++fname;
+
+    /* copy device name into buffer */
+    s = instring;
+    if (*s == '/')
+	++s;
+    for (b = buf; *s && s < fname; ++s)
+    {
+	if (*s == '/' || *s == ':')
+	    break;
+	*b++ = *s;
+    }
+    *b = '\0';
+
+    if (s + 1 == fname)
+    {
+	*b++ = ':';
+	++s;
+    }
+
+    else if (*s == '/')
+    {
+	*b++ = ':';
+	*b++ = '[';
+	++s;
+    }
+
+    else if (*s == ':')
+    {
+	*b++ = ':';
+	*b++ = '[';
+	if (*++s == '[')
+	    ++s;
+    }
+
+    /* copy rest of instring (prior to fname) into buffer */
+    for (lastdot = NULL; *s && s < fname; ++s)
+    {
+	if (*s == '/' || *s == '.' || *s == ']')
+	{
+	    lastdot = b;
+	    *b++ = '.';
+	}
+	else
+	    *b++ = *s;
+    }
+
+    /* convert lastdot to ']' */
+    if (lastdot)
+	*lastdot = ']';
+    *b = '\0';
+
+    /* copy fname onto end of buffer */
+    strcpy(b,fname);
+    if (!strchr(fname, '.') && !strchr(fname, ';'))
+    {
+	/* append a '.' to files missing suffix */
+	b += strlen(b);
+	*b++ = '.';
+	*b = '\0';
+    }
+
+    return buf;
 }

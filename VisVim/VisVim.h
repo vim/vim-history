@@ -24,6 +24,8 @@ HKEY GetAppKey (char* AppName);
 HKEY GetSectionKey (HKEY hAppKey, LPCTSTR Section);
 int GetRegistryInt (HKEY hSectionKey, LPCTSTR Entry, int Default);
 bool WriteRegistryInt (HKEY hSectionKey, char* Entry, int nValue);
+void ReportLastError (HRESULT Err);
+void ReportInternalError (char* Fct);
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

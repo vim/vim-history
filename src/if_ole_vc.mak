@@ -70,6 +70,7 @@ CLEAN :
 	-@erase "$(INTDIR)\mark.obj"
 	-@erase "$(INTDIR)\memfile.obj"
 	-@erase "$(INTDIR)\memline.obj"
+	-@erase "$(INTDIR)\menu.obj"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
@@ -143,6 +144,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -220,6 +222,8 @@ CLEAN :
 	-@erase "$(INTDIR)\memfile.sbr"
 	-@erase "$(INTDIR)\memline.obj"
 	-@erase "$(INTDIR)\memline.sbr"
+	-@erase "$(INTDIR)\menu.obj"
+	-@erase "$(INTDIR)\menu.sbr"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\message.sbr"
 	-@erase "$(INTDIR)\misc1.obj"
@@ -304,6 +308,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\mark.sbr" \
 	"$(INTDIR)\memfile.sbr" \
 	"$(INTDIR)\memline.sbr" \
+	"$(INTDIR)\menu.sbr" \
 	"$(INTDIR)\message.sbr" \
 	"$(INTDIR)\misc1.sbr" \
 	"$(INTDIR)\misc2.sbr" \
@@ -355,6 +360,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -415,6 +421,7 @@ CLEAN :
 	-@erase "$(INTDIR)\mark.obj"
 	-@erase "$(INTDIR)\memfile.obj"
 	-@erase "$(INTDIR)\memline.obj"
+	-@erase "$(INTDIR)\menu.obj"
 	-@erase "$(INTDIR)\message.obj"
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
@@ -485,6 +492,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\mark.obj" \
 	"$(INTDIR)\memfile.obj" \
 	"$(INTDIR)\memline.obj" \
+	"$(INTDIR)\menu.obj" \
 	"$(INTDIR)\message.obj" \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
@@ -830,6 +838,64 @@ BuildCmds= \
 # SUBTRACT CPP /Fr /YX
 
 "$(INTDIR)\memline.obj" : $(SOURCE) $(DEP_CPP_MEMLI) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\menu.c
+DEP_CPP_MENU=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_MENU=\
+	
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MENU) "$(INTDIR)"
+   $(CPP) /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "USE_GUI_WIN32"\
+ /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)\\" /FD /c $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+
+BuildCmds= \
+	$(CPP) /nologo /MT /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D\
+ "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /FR"$(INTDIR)/" /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE) \
+	
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MENU) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\menu.sbr" : $(SOURCE) $(DEP_CPP_MENU) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+# SUBTRACT BASE CPP /Fr /YX
+# SUBTRACT CPP /Fr /YX
+
+"$(INTDIR)\menu.obj" : $(SOURCE) $(DEP_CPP_MENU) "$(INTDIR)"
    $(CPP) /nologo /MT /W3 /Gm /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D\
  "USE_GUI_WIN32" /D "HAVE_OLE" /Iproto /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /FD /c $(SOURCE)
 

@@ -23,10 +23,17 @@
 #  include "os_amiga.pro"
 # endif
 # if defined(UNIX) || defined(__EMX__)
+#  if (!defined(HAVE_X11) || !defined(WANT_X11)) && !defined(USE_GUI_GTK)
+#   define Display int	/* avoid errors in function prototypes */
+#   define Widget int
+#  endif
 #  include "os_unix.pro"
 # endif
 # ifdef MSDOS
 #  include "os_msdos.pro"
+# endif
+# ifdef WIN16
+#  include "os_win16.pro"
 # endif
 # ifdef WIN32
 #  include "os_win32.pro"
@@ -57,6 +64,9 @@
 # include "ex_getln.pro"
 # include "fileio.pro"
 # include "getchar.pro"
+# ifdef HANGUL_INPUT
+#  include "hangulin.pro"
+# endif
 # include "main.pro"
 # include "mark.pro"
 # ifndef MESSAGE_FILE
@@ -73,13 +83,16 @@ smsg_attr __ARGS((int, char_u *, ...));
 # endif
 # include "memfile.pro"
 # include "memline.pro"
+# ifdef WANT_MENU
+#  include "menu.pro"
+# endif
 # include "message.pro"
 # include "misc1.pro"
 # include "misc2.pro"
 #ifndef HAVE_STRPBRK	    /* not generated automatically from misc2.c */
 char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 #endif
-# ifdef MULTI_BYTE
+# if defined(MULTI_BYTE) || defined(USE_XIM)
 #  include "multbyte.pro"
 # endif
 # include "normal.pro"
@@ -110,11 +123,25 @@ char_u *vim_strpbrk __ARGS((char_u *s, char_u *charset));
 
 # ifdef USE_GUI
 #  include "gui.pro"
+#  include "pty.pro"
+#  if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV)
+extern int putenv __ARGS((const char *string));		/* from pty.c */
+#   ifdef USE_VIMPTY_GETENV
+extern char_u *vimpty_getenv __ARGS((const char_u *string));	/* from pty.c */
+#   endif
+#  endif
+#  ifdef USE_GUI_WIN16
+#   include "gui_w16.pro"
+#  endif
 #  ifdef USE_GUI_WIN32
 #   include "gui_w32.pro"
 #   ifdef HAVE_OLE
 #    include "if_ole.pro"
 #   endif
+#  endif
+#  ifdef USE_GUI_GTK
+#   include "gui_gtk.pro"
+#   include "gui_gtk_x11.pro"
 #  endif
 #  ifdef USE_GUI_MOTIF
 #   include "gui_motif.pro"
@@ -130,12 +157,9 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
 #  endif
 #  ifdef USE_GUI_MAC
 #   include "gui_mac.pro"
-extern int putenv __ARGS((const char *string));		/* from pty.c */
-extern int OpenPTY __ARGS((char **ttyn));		/* from pty.c */
 #  endif
 #  ifdef USE_GUI_X11
 #   include "gui_x11.pro"
-extern int OpenPTY __ARGS((char **ttyn));	/* from pty.c */
 #  endif
 #  if defined(USE_GUI_AMIGA)
 #    include "gui_amiga.pro"

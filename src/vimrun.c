@@ -10,6 +10,8 @@
 /*
  * vimrun.c - Tiny Win32 program to safely run an external command in a
  *	      DOS console.
+ *	      This program is required to avoid that typing CTRL-C in the DOS
+ *	      console kills Vim.  Now it only kills vimrun.
  */
 
 #include <stdio.h>
@@ -25,7 +27,11 @@ _oscmd;
 # define _kbhit kbhit
 # define _getch getch
 #else
+#ifdef __MINGW32__
+# include <windows.h>
+#else
 extern char *_acmdln;
+#endif
 #endif
 
     int
@@ -37,11 +43,13 @@ main(void)
 
 #ifdef __BORLANDC__
     p = _oscmd;
+#elif defined(__MINGW32__)
+    p = (const char *) GetCommandLine();
 #else
     p = _acmdln;
 #endif
     /*
-     * Skip the executable name
+     * Skip the executable name, which might be in "".
      */
     while (*p)
     {

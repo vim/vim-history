@@ -6,6 +6,18 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+/*
+ * NextStep has a problem with configure, undefine a few things:
+ */
+#ifdef NeXT
+# ifdef HAVE_UTIME
+#  undef HAVE_UTIME
+# endif
+# ifdef HAVE_SYS_UTSNAME_H
+#  undef HAVE_SYS_UTSNAME_H
+# endif
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/types.h>
@@ -13,6 +25,10 @@
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
+#endif
+
+#ifdef __EMX__
+# define HAVE_AVAIL_MEM
 #endif
 
 /* On AIX 4.2 there is a conflicting prototype for ioctl() in stropts.h and
@@ -72,13 +88,10 @@
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
  * have an argument??? */
-/* #if defined(SVR4) || (defined(SYSV) && defined(ISC)) || defined(_AIX) || defined(__linux__) || defined(ultrix) || defined(__386BSD__) || defined(__FreeBSD__) || defined(__bsdi__) || defined(POSIX) || defined(NeXT)  || defined(__alpha) || defined(apollo) */
-#if !defined(SOME_SYSTEM)
-# define SIGHASARG
-#endif
+#define SIGHASARG
 
 /* List 3 arg systems here. I guess __sgi, please test and correct me. jw. */
-#if defined(__sgi)
+#if defined(__sgi) && defined(HAVE_SIGCONTEXT)
 # define SIGHAS3ARGS
 #endif
 
@@ -98,7 +111,7 @@
 # define SIGDUMMYARG
 #endif
 
-#if HAVE_DIRENT_H
+#ifdef HAVE_DIRENT_H
 # include <dirent.h>
 # ifndef NAMLEN
 #  define NAMLEN(dirent) strlen((dirent)->d_name)
@@ -174,8 +187,17 @@
 #ifndef SYS_GVIMRC_FILE
 # define SYS_GVIMRC_FILE "$VIM/gvimrc"
 #endif
+#ifndef VIM_HLP
+# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
+#endif
+#ifndef FILETYPE_FILE
+# define FILETYPE_FILE	"$VIMRUNTIME/filetype.vim"
+#endif
+#ifndef FTOFF_FILE
+# define FTOFF_FILE	"$VIMRUNTIME/ftoff.vim"
+#endif
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE "$VIM/menu.vim"
+# define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
 #endif
 
 #ifndef USR_EXRC_FILE
@@ -183,6 +205,11 @@
 #endif
 #ifndef USR_VIMRC_FILE
 # define USR_VIMRC_FILE	"$HOME/.vimrc"
+#endif
+#ifdef OS2
+# ifndef USR_VIMRC_FILE2
+#  define USR_VIMRC_FILE2 "$VIM/.vimrc"
+# endif
 #endif
 #ifndef USR_GVIMRC_FILE
 # define USR_GVIMRC_FILE "$HOME/.gvimrc"
@@ -208,12 +235,8 @@
 # endif
 #endif
 
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIM/doc/help.txt"
-#endif
-
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIM/syntax/%s.vim"
+# define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
 #endif
 
 #ifndef DEF_BDIR
@@ -247,8 +270,9 @@
 # define TEMPNAME	"v?XXXXXX"
 # define TEMPNAMELEN	128
 #else
-# define TEMPNAME	"/tmp/v?XXXXXX"
-# define TEMPNAMELEN	15
+# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ""
+# define TEMPNAME	"v?XXXXXX"
+# define TEMPNAMELEN	256
 #endif
 
 /* Special wildcards that need to be handled by the shell */
@@ -266,9 +290,6 @@
 
 #define CHECK_INODE		/* used when checking if a swap file already
 				    exists for a file */
-#ifndef USE_MOUSE
-# define USE_MOUSE		/* include mouse support */
-#endif
 
 #ifndef MAXMEM
 # define MAXMEM		(5*1024)    /* use up to 5 Mbyte for a buffer */
@@ -290,7 +311,7 @@
 #  ifdef USEMEMCPY
 #   define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
-#   define VIM_MEMMOVE	    /* found in alloc.c */
+#   define VIM_MEMMOVE	    /* found in misc2.c */
 #  endif
 # endif
 #endif
@@ -301,7 +322,7 @@
 int mch_rename __ARGS((const char *src, const char *dest));
 #endif
 #define mch_chdir(s) chdir(s)
-#define mch_getenv(x) (char_u *)getenv((char *)x)
+#define mch_getenv(x) (char_u *)getenv((char *)(x))
 #define mch_setenv(name, val, x) setenv(name, val, x)
 
 #if !defined(S_ISDIR) && defined(S_IFDIR)
@@ -315,4 +336,13 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #endif
 #if !defined(S_ISFIFO) && defined(S_IFIFO)
 # define	S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
+#endif
+
+/* Note: Some systems need both string.h and strings.h (Savage).  However,
+ * some systems can't handle both, only use string.h in that case. */
+#ifdef HAVE_STRING_H
+# include <string.h>
+#endif
+#if defined(HAVE_STRINGS_H) && !defined(NO_STRINGS_WITH_STRING_H)
+# include <strings.h>
 #endif

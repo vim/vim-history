@@ -1,4 +1,5 @@
 /* os_msdos.c */
+void mch_set_normal_colors __ARGS((void));
 void mch_update_cursor __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 void mch_delay __ARGS((long msec, int ignoreinput));
@@ -10,10 +11,7 @@ void mch_suspend __ARGS((void));
 void mch_windinit __ARGS((void));
 int mch_check_win __ARGS((int argc, char **argv));
 int mch_input_isatty __ARGS((void));
-void mch_settitle __ARGS((char_u *title, char_u *icon));
-void mch_restore_title __ARGS((int which));
-int mch_can_restore_title __ARGS((void));
-int mch_can_restore_icon __ARGS((void));
+void fname_case __ARGS((char_u *name));
 int mch_get_user_name __ARGS((char_u *s, int len));
 void mch_get_host_name __ARGS((char_u *s, int len));
 long mch_get_pid __ARGS((void));
@@ -37,4 +35,4 @@ void mch_breakcheck __ARGS((void));
 int mch_has_wildcard __ARGS((char_u *s));
 int mch_expandpath __ARGS((struct growarray *gap, char_u *path, int flags));
 int mch_chdir __ARGS((char *path));
-char_u *mch_getenv __ARGS((char_u *var));
+char_u *mch_getenv __ARGS((char_u *name));

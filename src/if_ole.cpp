@@ -127,7 +127,7 @@ CVim *CVim::Create(int* pbDoRestart)
 	    MessageBox(0, "You must restart Vim in order for the registration to take effect.", "Vim Initialisation", 0);
 	    *pbDoRestart = TRUE;
 	}
-	return NULL; 
+	return NULL;
     }
 
     // Get the type info of the vtable interface
@@ -180,7 +180,6 @@ CVim::Release()
     // the running instance, not by its reference count.
     if (ref > 0)
 	--ref;
-
     return ref;
 }
 
@@ -417,12 +416,11 @@ CVimCF::AddRef()
 STDMETHODIMP_(ULONG)
 CVimCF::Release()
 {
-    if (--ref == 0)
-    {
-	delete this;
-	return 0;
-    }
-
+    // Don't delete the object when the reference count reaches zero, as there
+    // is only a single application object, and its lifetime is controlled by
+    // the running instance, not by its reference count.
+    if (ref > 0)
+	--ref;
     return ref;
 }
 
@@ -485,12 +483,12 @@ extern "C" void RegisterMe()
     SetKeyAndValue(Key, "TypeLib", libid);
 
     // Add the version-independent ProgID subkey under HKEY_CLASSES_ROOT
-    SetKeyAndValue(MYVIPROGID, NULL, MYNAME); 
+    SetKeyAndValue(MYVIPROGID, NULL, MYNAME);
     SetKeyAndValue(MYVIPROGID, "CLSID", clsid);
     SetKeyAndValue(MYVIPROGID, "CurVer", MYPROGID);
 
     // Add the versioned ProgID subkey under HKEY_CLASSES_ROOT
-    SetKeyAndValue(MYPROGID, NULL, MYNAME); 
+    SetKeyAndValue(MYPROGID, NULL, MYNAME);
     SetKeyAndValue(MYPROGID, "CLSID", clsid);
 
     wchar_t w_module[MAX_PATH];
@@ -712,10 +710,9 @@ extern "C" void UninitOLE()
 	CoRevokeClassObject(cf_id);
 	cf_id = 0;
     }
-
-    // Delete the class factory
-    if (cf)
+    else if (cf)
     {
+	// Delete the class factory
 	delete cf;
 	cf = NULL;
     }

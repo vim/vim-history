@@ -53,6 +53,34 @@
 # include <sys/termios.h>
 #endif
 
+#if HAVE_SYS_IOCTL_H
+# include <sys/ioctl.h>
+#endif
+
+#if HAVE_STROPTS_H
+#include <sys/types.h>
+#include <stropts.h>
+# ifdef sun
+#  include <sys/conf.h>
+# endif
+#endif
+
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+#if HAVE_TERMIO_H
+# include <termio.h>
+#endif
+
+#if HAVE_SYS_STREAM_H
+# include <sys/stream.h>
+#endif
+
+#if HAVE_SYS_PTEM_H
+# include <sys/ptem.h>
+#endif
+
 #if !defined(sun) && !defined(VMS) && !defined(macintosh)
 # include <sys/ioctl.h>
 #endif
@@ -203,13 +231,11 @@ OpenPTY(ttyn)
     int		f;
     struct stat buf;
     /* used for opening a new pty-pair: */
-    static char PtyName[32];
     static char TtyName[32];
 
-    strcpy(PtyName, "/dev/ptc");
-    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_NONBLOCK | O_EXTRA, 0)) < 0)
+    if ((f = open("/dev/ptc", O_RDWR | O_NOCTTY | O_NONBLOCK | O_EXTRA, 0)) < 0)
 	return -1;
-    if (fstat(f, &buf) < 0)
+    if (mch_fstat(f, &buf) < 0)
     {
 	close(f);
 	return -1;
@@ -222,6 +248,8 @@ OpenPTY(ttyn)
 #endif
 
 #if defined(SVR4) && !defined(PTY_DONE)
+
+/* NOTE: Even though HPUX can have /dev/ptmx, the code below doesn't work! */
 #define PTY_DONE
     int
 OpenPTY(ttyn)
@@ -232,11 +260,9 @@ OpenPTY(ttyn)
     int unlockpt __ARGS((int)), grantpt __ARGS((int));
     RETSIGTYPE (*sigcld)__ARGS(SIGPROTOARG);
     /* used for opening a new pty-pair: */
-    static char PtyName[32];
     static char TtyName[32];
 
-    strcpy(PtyName, "/dev/ptmx");
-    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
+    if ((f = open("/dev/ptmx", O_RDWR | O_NOCTTY | O_EXTRA, 0)) == -1)
 	return -1;
 
     /*
@@ -271,15 +297,13 @@ OpenPTY(ttyn)
 {
     int		f;
     /* used for opening a new pty-pair: */
-    static char PtyName[32];
     static char TtyName[32];
 
     /* a dumb looking loop replaced by mycrofts code: */
-    strcpy (PtyName, "/dev/ptc");
-    if ((f = open (PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) < 0)
+    if ((f = open ("/dev/ptc", O_RDWR | O_NOCTTY | O_EXTRA)) < 0)
 	return -1;
     strncpy(TtyName, ttyname(f), sizeof(TtyName));
-    if (geteuid() && access(TtyName, R_OK | W_OK))
+    if (geteuid() && mch_access(TtyName, R_OK | W_OK))
     {
 	close(f);
 	return -1;
@@ -331,7 +355,7 @@ OpenPTY(ttyn)
 	    q[0] = *l;
 	    q[1] = *d;
 #ifndef macintosh
-	    if (geteuid() && access(TtyName, R_OK | W_OK))
+	    if (geteuid() && mch_access(TtyName, R_OK | W_OK))
 	    {
 		close(f);
 		continue;
@@ -360,6 +384,34 @@ OpenPTY(ttyn)
     return -1;
 }
 #endif
+
+/*
+ * This causes a hang on some systems, but is required for a properly working
+ * pty on others.  Needs to be tuned...
+ */
+#if defined(SVR4) && !defined(__sgi) && !defined(_AIX) && !defined(SCO)
+# define USE_USG_PTYS
+#endif
+
+/*ARGSUSED*/
+    int
+SetupSlavePTY(fd)
+    int fd;
+{
+#if defined(USE_USG_PTYS) && defined(I_PUSH)
+# if HAVE_SYS_PTEM_H
+    if (ioctl(fd, I_PUSH, "ptem") < 0)
+	return -1;
+# endif
+    if (ioctl(fd, I_PUSH, "ldterm") < 0)
+	return -1;
+# ifdef SVR4
+    if (ioctl(fd, I_PUSH, "ttcompat") < 0)
+	return -1;
+# endif
+#endif
+    return 0;
+}
 
 /* putenv.c */
 
@@ -394,9 +446,9 @@ extern
 #endif
        char **environ;		/* the global which is your env. */
 
-static int  findenv();		/* look for a name in the env. */
-static int  newenv();		/* copy env. from stack to heap */
-static int  moreenv();		/* incr. size of env. */
+static int  findenv __ARGS((char *name)); /* look for a name in the env. */
+static int  newenv __ARGS((void));	/* copy env. from stack to heap */
+static int  moreenv __ARGS((void));	/* incr. size of env. */
 
     int
 putenv(string)
@@ -411,7 +463,7 @@ putenv(string)
 	    return -1;
     }
 
-    i = findenv(string);	/* look for name in environment */
+    i = findenv((char *)string); /* look for name in environment */
 
     if (i < 0)
     {				/* name must be added */
@@ -466,13 +518,19 @@ newenv()
     char    **env, *elem;
     int	    i, esize;
 
+#ifdef macintosh
+    /* for Mac a new, empty environment is created */
+    i = 0;
+#else
     for (i = 0; environ[i]; i++)
 	;
+#endif
     esize = i + EXTRASIZE + 1;
     env = (char **)alloc((unsigned)(esize * sizeof (elem)));
     if (env == NULL)
 	return -1;
 
+#ifndef macintosh
     for (i = 0; environ[i]; i++)
     {
 	elem = (char *)alloc((unsigned)(strlen(environ[i]) + 1));
@@ -481,6 +539,7 @@ newenv()
 	env[i] = elem;
 	strcpy(elem, environ[i]);
     }
+#endif
 
     env[i] = 0;
     environ = env;
@@ -502,5 +561,26 @@ moreenv()
     envsize = esize;
     return 0;
 }
+
+# ifdef USE_VIMPTY_GETENV
+    char_u *
+vimpty_getenv(string)
+    const char *string;
+{
+    int i;
+    char_u *p;
+
+    if (envsize < 0)
+	return NULL;
+
+    i = findenv((char *)string);
+
+    if (i < 0)
+	return NULL;
+
+    p = vim_strchr((char_u *)environ[i], '=');
+    return (p + 1);
+}
+# endif
 
 #endif /* !defined(HAVE_SETENV) && !defined(HAVE_PUTENV) */

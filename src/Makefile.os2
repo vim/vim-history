@@ -10,7 +10,7 @@
 ### compile and run without problems.
 ### Just to show that this is just like the Unix version!
 
-#system:              configurations:    	     version (*) tested by:
+#system:              configurations:		     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
 #OS/2 Warp HPFS       gcc-2.7.2+emx-0.9b -GUI           4.5      Paul Slootman
 #OS/2 FAT             gcc-2.6.3+emx      -GUI           4.5      Karsten Sievert
@@ -53,6 +53,7 @@ OBJ = \
 	mark.o \
 	memfile.o \
 	memline.o \
+	menu.o \
 	message.o \
 	misc1.o \
 	misc2.o \
@@ -92,6 +93,9 @@ xxd/xxd.exe: xxd/xxd.c
 tee/tee.exe: tee/tee.c
 	cd tee & $(MAKE) -f Makefile
 
+test:
+	cd testdir & $(MAKE) -f Makefile.os2
+
 clean:
 	-del *.o
 	-del *.exe
@@ -117,6 +121,7 @@ main.o:		main.c  $(INCL)
 mark.o:		mark.c  $(INCL)
 memfile.o:	memfile.c  $(INCL)
 memline.o:	memline.c  $(INCL)
+menu.o:		menu.c  $(INCL)
 message.o:	message.c  $(INCL)
 misc1.o:	misc1.c  $(INCL)
 misc2.o:	misc2.c  $(INCL)

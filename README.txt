@@ -1,4 +1,4 @@
-README.txt for version 5.3 of Vim: Vi IMproved.
+README.txt for version 5.4 of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -13,8 +13,8 @@ All commands are given with normal keyboard characters, so those who can type
 with ten fingers can work very fast.  Additionally, function keys can be
 defined by the user, and the mouse can be used.
 
-Vim currently runs under Amiga DOS, MS-DOS, Windows NT, Windows 95, Atari
-MiNT, Macintosh, VMS, RISC OS, OS/2 and almost all flavours of UNIX.
+Vim currently runs under Amiga DOS, MS-DOS, MS-Windows 95/98/NT, Atari MiNT,
+Macintosh, BeOS, VMS, RISC OS, OS/2 and almost all flavours of UNIX.
 Porting to other systems should not be very difficult.
 
 
@@ -25,8 +25,8 @@ This README.txt file comes with the runtime archive.  It includes the
 documentation, syntax files and other files that are used at runtime.  To run
 Vim you must get either one of the binary archives or a source archive.
 Which one you need depends on the system you want to run it on and whether you
-want or must compile it yourself.  Check the ftp site for an overview of
-currently available distributions.
+want or must compile it yourself.  Check "ftp://ftp.vim.org/pub/vim" for an
+overview of currently available distributions.
 
 
 DOCUMENTATION
@@ -47,41 +47,80 @@ If you include Vim on a CD-ROM, I would like to receive a copy.  Just so I
 know which Vim distributions exists in the world (and to show off to my
 friends :-)).
 
-There are no restrictions on distributing an unmodified copy of Vim on a
-CD-ROM or in any other way.  You are also allowed to include executables, made
-from the unmodified Vim sources.
+There are no restrictions on distributing an unmodified copy of Vim.  Parts of
+Vim may also be distributed, but this text must always be included.  You are
+allowed to include executables that you made from the unmodified Vim sources,
+your own usage examples and Vim scripts.
 
-If you distribute a modified version of Vim, you must send the maintainer a
-copy of the source code.  Or make it available to the maintainer through ftp;
-let him know where It can be found.  If the number of changes is small (e.g.,
-a modified Makefile) e-mailing the diffs will do.  The maintainer preserves
-the right to include any changes in the official version of Vim.  It is not
-allowed to distribute a modified version of Vim without making the source code
-available to the maintainer.  The current maintainer is Bram Moolenaar
-(Bram@vim.org).  If this changes, it will be announced in appropriate places
-(most likely www.vim.org and comp.editors).
+If you distribute a modified version of Vim, you are encouraged to send the
+maintainer a copy, including the source code.  Or make it available to the
+maintainer through ftp; let him know where it can be found.  If the number of
+changes is small (e.g., a modified Makefile) e-mailing the diffs will do.
+When the maintainer asks for it (in any way) you must make your changes,
+including source code, available to him.
+
+The maintainer reserves the right to include any changes in the official
+version of Vim.  This is negotiable.  You are not allowed to distribute a
+modified version of Vim when you are not willing to make the source code
+available to the maintainer.
+
+The current maintainer is Bram Moolenaar <Bram@vim.org>.  If this changes, it
+will be announced in appropriate places (most likely www.vim.org and
+comp.editors).  When it is completely impossible to contact the maintainer,
+the obligation to send him modified source code is dropped.
+
 It is not allowed to remove these restrictions from the distribution of the
-Vim sources.
+Vim sources or parts of it.  These restrictions may also be used for previous
+Vim releases instead of the text that was included with it.
 
 
 COMPILING
 
-All stuff for compiling Vim is in the "src" directory.  See src/INSTALL for
-instructions.
+If you obtained a binary distribution you don't need to compile Vim.  If you
+obtained a source distribution, all the stuff for compiling Vim is in the
+"src" directory.  See src/INSTALL for instructions.
+
+
+INSTALLATION
+
+First check for a "README_xxx.txt" file for specific instructions for your
+system.
+
+For Unix, when you use the source distribution, "make install" is used to
+install Vim.  See src/INSTALL.  If you use a compiled package, follow the
+instructions for the package.
+
+For most other systems, unpack the distributed files in the place where you
+want to keep them.  It is wise to have a "vim" directory to keep your vimrc
+file and any other files you change.  The distributed files go into a
+subdirectory.  This way you can easily upgrade to a new version.  For example:
+  dh0:editors/vim		contains your vimrc and modified files
+  dh0:editors/vim/vim54		contains the Vim version 5.4 distributed files
+  dh0:editors/vim/vim55		contains the Vim version 5.5 distributed files
+
+Set the $VIM environment variable to point to the top directory of your Vim
+files.  For the above example:
+  set VIM=dh0:editors/vim
+Vim version 5.4 will look for your vimrc file in $VIM, and for the runtime
+files in $VIM/vim54.  See ":help $VIM" for more information.
+
+Make sure the Vim executable is in your search path.  Either copy the Vim
+executable to a directory that is in your search path, or (preferred) modify
+the search path to include the directory where the Vim executable is.
 
 
 INFORMATION
 
 The latest news about Vim can be found on the Vim home page:
-	<URL:http://www.vim.org/>
+	http://www.vim.org/
 
 If you have problems, have a look at the Vim FAQ:
-	<URL:http://www.vim.org/faq/>
+	http://www.vim.org/faq/
 
 Send bug reports to:
 	Bram Moolenaar <Bram@vim.org>
 
-There are three mailing lists for Vim:
+There are four mailing lists for Vim:
 <vim@vim.org>
 	For discussions about using existing versions of Vim: Useful mappings,
 	questions, answers, where to get a specific version, etc.
@@ -91,13 +130,16 @@ There are three mailing lists for Vim:
 <vim-announce@vim.org>
 	Announcements about new versions of Vim; also beta-test versions and
 	ports to different systems.
+<vim-multibyte@vim.org>
+	For discussions about using and improving the multi-byte aspects of
+	Vim: XIM, Hangul, fontset, etc.
 
-See <URL:http://www.vim.org/mail.html>.
+See "http://www.vim.org/mail.html"
 
 NOTE:
 - You can only send messages to these lists if you have subscribed!
 - You need to send the messages from the same location as where you subscribed
-  from (to avoid spam mails).
+  from (to avoid spam mail).
 - Maximum message size is 40000 characters.
 
 If you want to join, send a message to
@@ -112,5 +154,5 @@ Send any other comments, patches, pizza and suggestions to:
 
 	Bram Moolenaar		E-mail:	Bram@vim.org
 	Clematisstraat 30
-	5925 BE  Venlo		Fax: +31 77 3595473
+	5925 BE  Venlo		Fax: +31 20 8823205
 	The Netherlands		Tel: +31 77 3872340

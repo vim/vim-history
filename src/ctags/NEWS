@@ -1,4 +1,140 @@
-Current Version: 2.3
+Current Version: 3.2.4
+
+ctags-3.2.4 (Thu Jul 01 1999)
+* Changed name of macro in Makefile.in to avoid being overriden by CTAGS
+  environment variable.
+
+
+ctags-3.2.3 (Mon Jun 21 1999)
+* Small portability change for EMX compiler on OS/2.
+* Slight change to W32 and BCC makefiles.
+
+
+ctags-3.2.2 (Sat May 29 1999)
+* Fixed endless error loop in the case of unreadable file.
+* Fixed redundant include entries in TAGS file when using --etags-include.
+
+
+ctags-3.2.1 (Wed May 09 1999)
+* Fixed problem reading -I token list from file.
+* Fixed with "using" declarations which corrupted tag file [C++].
+* Fixed configure.in to more reliably recognize existing prototypes.
+* Added ability to ignore preprocessor directives in Fortran files.
+* Added support for egcs/MingW32 compiler [Win32].
+
+
+ctags-3.2 (Wed Mar 03 1999)
+* Fixed spurious tags related to export specifiers of feature clauses [Eiffel].
+* Fixed problem with template in ctor-initialer [C++].
+* Fixed typo causing compiler error [MSVC].
+* Extended -I option to allow token replacement [thanks to Flemming Madsen].
+* Added --etags-include option to support TAGS file includes.
+* Added support for QDOS [thanks to Thierry Godefroy].
+
+
+ctags-3.1.2 (Tue Jan 26 1999)
+* Changed extension flags to eliminate space between label and value to remain
+  true to the intent of the agreement on the extended format made with editor
+  authors.
+* Added --links option to permit ignoring symbolic links.
+* Fixed missing tags upon ANSI style variable function argument lists.
+* Fixed missing tags for methods with fully qualified type names in argument
+  list [Java].
+* Fixed double tags generated for enumerators followed by comma.
+* Fixed missing path prefix for -p option [Win 95/NT].
+
+
+ctags-3.1 (Wed Jan 20 1999)
+* Changed -h and -langmap options to accept a plus sign as the first character
+  of their arguments to indicate that arguments should be added to current.
+* Changed default for member tags to 'on' [C/C++].
+* Changed default for local entities to 'off' [Eiffel].
+* Added tags for forward class/struct/union/enum declarations when using
+  -c-types=+x [C/C++].
+* Fixed memory overwrite bug causing general protection fault [Win 95/NT].
+* Fixed missing tags for methods with throws clause [Java].
+* Fixed bad tags generated for null macro names [C].
+* Fixed spurious tag for features and entities of BIT type [Eiffel].
+* Fixed spurious tags when local entity declaration list was empty [Eiffel].
+* Fixed missing tags for contructors and destructors [C++].
+* Fixed failure to recognize function when declaration for first argument
+  was of template type [C++].
+
+
+ctags-3.0.3 (Mon Dec 21 1998)
+* Fixed mistake made in previous version which caused macro tags to be missed.
+* Fixed parsing of --langmap option.
+
+
+ctags-3.0.2 (Mon Dec 21 1998)
+* Added tags for names undefined with #undef [C/C++].
+* Added tags for renamed features (Eiffel).
+* Improved Emacs-style tag file contents (per Ian Zimmerman).
+* Fixed problem handling deferred, external, once, obsolete features in Eiffel.
+* Fixed porting problem [OSF1 V4.0].
+
+
+ctags-3.0.1 (Sat Dec 12 1998)
+* Fixed problem with certain macros and functions with no declared return type.
+* Fixed problem causing endless loop on MSDOS/Win32 by restoring use of binary
+  mode on opening of source files.
+* Fixed porting problems [SunOS 4.1.x and MSVC++ 5.0].
+
+
+ctags-3.0 (Sun Dec 06 1998)
+* Added support for the Eiffel language (everyone should learn Eiffel).
+* Added support for the Fortran language.
+* Added --c-types option to specify tag types to be included for C/C++.
+* Added --eiffel-types option to specify tag types to be included for Eiffel.
+* Added --fortran-types option to specify tag types to be included for Fortran.
+* Added --file-scope option to place verbose tag description into tag file.
+* Added --file-tags option to place tags for source file names into tag file.
+* Added --java-types option to specify tag types to be included for Java.
+* Added --kind-long option to place verbose tag description into tag file.
+* Added --linedirectives option to enable processing of #line directives so
+  that running ctags on preprocessor output can generate line numbers and file
+  names which correspond to the original source files.
+* Added -V option to enable verbose message for each file considered.
+* Added special handling for macros of form "INIT(= value)".
+* Added ability to suffix an ignored identifier (-I option) with the '+'
+  character, thus instructing ctags to also ignore any argument list which
+  may follow the identifier.
+* Changed the -i option, moving Java language options to the new --java-types
+  option. The -i option is now deprecated in favor of the new language
+  specific tag type options.
+* Changed behavior of handling of ignored identifiers (-I option) to still
+  generate a tag for any macro definition for that identifier.
+* Changed handling of -h option so that include files are no longer assumed to
+  be C++ files.
+* Changed tags for operators to always precede the operator with the string
+  "operator ", thus making it consistent for all operators. [C++]
+* Changed C/C++ parsing, catching many more tricky constructs.
+* Changed extension flags to place a space between the label and the value for
+  readability.
+* Fixed core dump which occurred when using -iF (now --file-tags) together
+  with -e (etags) on a zero-length file.
+* Fixed missing or incorrect tags for conversions operators or operator "()".
+* Fixed incorrect parent class in extension flags for type declarations of the
+  form "class Bar { OtherClass::sometype foo; }".
+* Fixed missing tags for "friend" and "static" prototypes in header files.
+* Fixed problem of external "sort" reporting locale not available on HPUX.
+* Fixed -p option.
+* Fixed VMS support. It should now work for any source file type.
+
+
+ctags-2.3.2 (Wed Sep 09 1998)
+* Fixed -h option; broken since version 1.7, yet only just reported.
+
+
+ctags-2.3.1 (Sun Aug 30 1998)
+* Fixed improper handling of derived structs.
+* Fixed wrong class name tag when a nested-name-specifier was present in class
+  declaration.
+* Added parent information into tag extension flags for data structures to
+  match that already present for members.
+* Add missing documentation for --langmap option in the --help output.
+* Eliminated compiler warning [gcc 2.8.1].
+
 
 ctags-2.3 (Thu Aug 20 1998)
 * Eliminated compiler warnings [SGI MIPSpro].
@@ -9,10 +145,10 @@ ctags-2.2.7 (Mon Aug 17 1998)
 
 
 ctags-2.2.6 (Wed Aug 12 1998)
-* Added directory recursion support for Amiga.
 * Fixed core dump encountered on some platforms when the CTAGS environment
   variable was set but empty.
 * Fixed porting problem [MSVC].
+* Added directory recursion support for Amiga.
 
 
 ctags-2.2.3 (Sun Aug 02 1998)
@@ -165,7 +301,7 @@ ctags-1.7 (Mon Oct 13 1997)
 * Improvements to Win32 portability with changes to Makefile.w32.
 
 
-ctags-1.6 (Tue May 13 1998)
+ctags-1.6 (Tue May 13 1997)
 * Now using GNU autoconf to permit automatic host configuration.
 * Added the -e option to generate Emacs style tag files
 * Added ETAGS environment variable to be used when -e option is in effect.
@@ -207,7 +343,7 @@ ctags-1.5 (Sat Oct 5 1996)
 * Redirected error messages to stdout for MSDOS version.
 
 
-ctags-1.4 (Sun Aug 18 1998)
+ctags-1.4 (Sun Aug 18 1996)
 * Added recursive parsing of class/struct/enum blocks to look for
   class/struct/enum tags and enumeration values.
 * Added the -I option to specify keywords to ignore in the source files.
@@ -217,18 +353,18 @@ ctags-1.4 (Sun Aug 18 1998)
   declarations.
 
 
-ctags-1.3 (Sun Jun 16 1998)
+ctags-1.3 (Sun Jun 16 1996)
 * Fixed problem problem which caused "struct tag;" to be misinterpreted as a
   variable definition.
 * Added the -n option to use line numbers in the tag file instead of patterns.
 * Added the -? option as an alternative for the --help option.
 
 
-ctags-1.2 (Wed Jun 5 1998)
+ctags-1.2 (Wed Jun 5 1996)
 * Fixed a problem caused by an unitialized variable.
 
 
-ctags-1.1 (Tue Jun 4 1998)
+ctags-1.1 (Tue Jun 4 1996)
 * Fixed problem reading parameter list to the -h option.
 
 

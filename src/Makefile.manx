@@ -48,6 +48,7 @@ SRC =	buffer.c \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -84,6 +85,7 @@ OBJ =	obj/buffer.o \
 	obj/mark.o \
 	obj/memfile.o \
 	obj/memline.o \
+	obj/menu.o \
 	obj/message.o \
 	obj/misc1.o \
 	obj/misc2.o \
@@ -118,6 +120,7 @@ PRO =	proto/buffer.pro \
 	proto/mark.pro \
 	proto/memfile.pro \
 	proto/memline.pro \
+	proto/menu.pro \
 	proto/message.pro \
 	proto/misc1.pro \
 	proto/misc2.pro \
@@ -229,6 +232,9 @@ obj/memfile.o:	memfile.c
 
 obj/memline.o:	memline.c
 	$(CCSYM) $@ memline.c
+
+obj/menu.o:	menu.c
+	$(CCSYM) $@ menu.c
 
 # Don't use $(SYMS) here, because message.c defines MESSAGE_FILE
 obj/message.o:	message.c

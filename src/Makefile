@@ -21,7 +21,7 @@
 #	the first column of a line is removed.
 #	- If you want a version of Vim that is small and starts up quickly,
 #	  you might want to disable the GUI, X11, Perl, Python and Tcl.
-#	- Uncomment the line with --enable-gui=no if you have Motif and/or
+#	- Uncomment the line with --disable-gui if you have Motif, GTK and/or
 #	  Athena but don't want to make gvim (the GUI version of Vim with nice
 #	  menus and scrollbars, but makes Vim bigger and startup slower).
 #	- Uncomment the line "CONF_OPT_X = --without-x" if you have X11 but
@@ -38,6 +38,8 @@
 #	- Uncomment the line with --enable-max-features to enable many
 #	  features (but not the interfaces just mentioned).
 #	- Uncomment the line with --enable-min-features to exclude features.
+#	- Uncomment the line with --disable-gpm to disable gpm support
+#	  even though you have gpm libraries and includes
 #	- Uncomment one of the lines with CFLAGS and/or CC if you have
 #	  something very special or want to tune the optimizer.
 #	- Search for the name of your system to see if it needs anything
@@ -102,9 +104,10 @@
 #	"/usr/local".  Change "prefix" below to change the location.
 #	"pathdef.c" will be compiled again after changing this to make the
 #	executable know where the help files are located.
-#	Note that any existing executable and documentation is removed or
-#	overwritten.  If you want to keep it you will have to make a backup
-#	copy first.
+#	Note that any existing executable is removed or overwritten.  If you
+#	want to keep it you will have to make a backup copy first.
+#	The runtime files are in a different directory for each version.  You
+#	might want to delete an older version.
 #	If you don't want to install everything, there are other targets:
 #		make installvim		only installs Vim, not the tools
 #		make installvimbin	only installs the Vim executable
@@ -112,7 +115,24 @@
 #		make installlinks	only installs the Vim binary links
 #		make installhelplinks	only installs the Vim manpage links
 #		make installmacros	only installs the Vim macros
+#		make installtutor	only installs the Vim tutor
 #		make installtools	only installs the tools ctags and xxd
+#
+# 6. Use Vim until a new version comes out.
+#
+# 7. "make uninstall_runtime"
+#	Will remove the runtime files for the current version.  This is safe
+#	to use while another version is being used, only version-specific
+#	files will be deleted.
+#	To remove the runtime files of another version:
+#		make uninstall_runtime VIMRTDIR=/vim54x
+#	If you want to delete all installed files, use:
+#		make uninstall
+#	Note that this will delete files have the same name for any version,
+#	thus you might need to do a "make install" soon after this.
+#	Be careful not to remove a version of Vim that is still being used!
+#	To find out which files and directories will be deleted, use:
+#		make -n uninstall
 
 ### This Makefile has been succesfully tested on these systems.
 ### Check the (*) column for remarks, listed below.
@@ -124,60 +144,69 @@
 #AIX 3.2.5	      cc (not gcc)   -			4.5  (M) Will Fiveash
 #AIX 4		      cc	     +X11 -GUI		3.27 (4) Axel Kielhorn
 #AIX 4.1.4	      cc	     +X11 +GUI		4.5  (5) Nico Bakker
-#AIX_4.1              gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
+#AIX_4.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
 #AIX 4.1.1	      cc	     +X11 +GUI		5.0c	 Jeff Walker
-#AIX 4.2              gcc 2.7.2.1    +X11 +GUI_Motif    5.2      D. Rothkamp
-#AIX 4.2.1            cc                                5.2k (C) Will Fiveash
+#AIX 4.2	      gcc 2.7.2.1    +X11 +GUI_Motif	5.2	 D. Rothkamp
+#AIX 4.2.1	      cc				5.2k (C) Will Fiveash
+#AIX 4.3	      cc	     +X11 +GUI_Athena	5.3      Glauber Ribeiro
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
-#BeOS PR	      mwcc DR3                        	5.0n (T) Olaf Seibert
+#BeOS PR	      mwcc DR3				5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
-#CYGWIN32_NT 19.3     egcs-2.90.27 -X11 -GUI            5.2      D. Rothkamp
-#DG/UX 5.4*           gcc 2.5.8      GUI                5.0e (H) Jonas Schlein
-#DG/UX 5.4R4.20       gcc 2.7.2      GUI                5.0s (H) Rocky Olive
+#CYGWIN32_NT 19.3     egcs-2.90.27 -X11 -GUI		5.2	 D. Rothkamp
+#DG/UX 5.4*	      gcc 2.5.8      GUI		5.0e (H) Jonas Schlein
+#DG/UX 5.4R4.20       gcc 2.7.2      GUI		5.0s (H) Rocky Olive
 #HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
-#HP-UX_9.04           cc             +X11 +Motif        5.0  (2) Carton Lao
-#HP-UX_10.01          gcc 2.7.2      +X11 -GUI          5.2      D. Rothkamp
-#HP-UX_10.20          gcc 2.7.2.1    +X11 +Motif        5.0s     Karsten Sievert
-#HP-UX_10.20          gcc 2.7.2.1    +X11R6 +Motif      5.1      Kayhan Demirel
+#HP-UX_9.04	      cc	     +X11 +Motif	5.0  (2) Carton Lao
+#HP-UX_10.01	      gcc 2.7.2      +X11 -GUI		5.2	 D. Rothkamp
+#HP-UX_10.20	      gcc 2.7.2.1    +X11 +Motif	5.0s	 Karsten Sievert
+#HP-UX_10.20	      gcc 2.7.2.1    +X11R6 +Motif	5.1	 Kayhan Demirel
+#HP-UX 11.00 64 bit   egcs 1.1.1     -X11		5.4c     Heiko Nardmann
 #Irix 6.3 (O2)	      cc	     ?			4.5  (L) Edouard Poor
-#Irix 6.4             cc             ?                  5.0m (S) Rick Sayre
+#Irix 6.4	      cc	     ?			5.0m (S) Rick Sayre
+#Irix 6.5	      cc	     ?			5.3  (S) David Harrison
 #Irix 64 bit						4.5  (K) Jon Wright
 #FreeBSD 2.1.6	      gcc-2.6.3      X11R6 Moo-Tiff	5.0c	 Bram Moolenaar
 #FreeBSD 2.1.6	      gcc-2.6.3      +X11 -GUI Athena	5.0c	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.1	 Bram Moolenaar
-#FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.1	 Bram Moolenaar
+#FreeBSD 2.2.5	      gcc-2.7.2.1    X11R6 Moo-Tiff	5.4d	 Bram Moolenaar
+#FreeBSD 2.2.5	      gcc-2.7.2.1    +X11 -GUI Athena	5.4d	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 GTK 1.2.3	5.4	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Athena	5.4	 Bram Moolenaar
+#FreeBSD 3.0	      gcc-2.7.2.1    +X11 Lesstif0.88.1 5.4	 Bram Moolenaar
 #Linux 2.0	      gcc-2.7.2      Infomagic Motif	4.3  (3) Ronald Rietman
-#Linux 2.0.29	      gcc-2.7.2.1    +X11 +GUI Athena	5.0x     Ant. Colombo
-#Linux 2.0.31         gcc            +X11 +GUI Athena   5.0w (U) Darren Hiebert
+#Linux 2.0.31	      gcc	     +X11 +GUI Athena	5.0w (U) Darren Hiebert
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
-#Linux 2.0.34         gcc-2.90.29    +X11 +GUI Motif    5.2i     Ant. Colombo
-#LynxOS 2.5.0         gcc-2.7-96q1   +X11 +GUI Athena   5.0  (O) Lorenz Hahn
-#LynxOS 2.5.0         gcc-2.7-96q1   +X11 -GUI Athena   5.0  (O) Lorenz Hahn
+#Linux 2.0.34         gcc-2.90.29    +X11 +GTK 1.2.2    5.4m     Ant. Colombo
+#LynxOS 2.5.0	      gcc-2.7-96q1   +X11 +GUI Athena	5.0  (O) Lorenz Hahn
+#LynxOS 2.5.0	      gcc-2.7-96q1   +X11 -GUI Athena	5.0  (O) Lorenz Hahn
+#MacOS	         CodeWarrior Pro 2   -			5.4i     Axel Kielhorn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
 #NetBSD 1.0A	      gcc-2.4.5      -X11 -GUI		3.21 (X) Juergen Weigert
-#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Athena	5.0n     Olaf Seibert
-#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Lesstiff	5.0n     Olaf Seibert
+#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Athena	5.0n	 Olaf Seibert
+#NetBSD 1.2.1	      gcc-2.7.2.2    +X11 +GUI Lesstiff	5.0n	 Olaf Seibert
 #QNX 4.2	      wcc386-10.6    -X11		4.2  (D) G.F. Desrochers
 #QNX 4.23	      Watcom	     -X11		4.2  (F) John Oleynick
 #SCO Unix v3.2.5      cc	     +X11 Motif		3.27 (C) M. Kuperblum
-#SCO Open Server 5		     +X11 +GUI Motif	3.28 (A) J.C. van Winkel
-#SINIX-N 5.43 RM400 R4000   cc       +X11 +GUI          5.0l (I) Martin Furter
+#SCO Open Server 5    gcc 2.7.2.3    +X11 +GUI Motif	5.3  (A) Glauber Ribeiro
+#SINIX-N 5.43 RM400 R4000   cc	     +X11 +GUI		5.0l (I) Martin Furter
+#SINIX-Z 5.42 i386    gcc 2.7.2.3    +X11 +GUI Motif	5.1  (I) Joachim Fehn
+#SINIX-Y 5.43 RM600 R4000  gcc 2.7.2.3 +X11 +GUI Motif	5.1  (I) Joachim Fehn
 #SNI Targon31 TOS 4.1.11 gcc-2.4.5   +X11 -GUI		4.6c (B) Paul Slootman
-#Solaris 2.3 (sun4m)  cc             +X11 +GUI Athena   5.0w     Darren Hiebert
+#Solaris 2.3 (sun4m)  cc	     +X11 +GUI Athena	5.0w	 Darren Hiebert
 #Solaris 2.4 (Sparc)  cc	     +X11 +GUI		3.29 (9) Glauber
 #Solaris 2.4/2.5      clcc	     +X11 -GUI openwin	3.20 (7) Robert Colon
 #Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)	4.6b (E) Andrew Large
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
-#Solaris 2.5          gcc 2.5.6      +X11 Motif         5.0m (R) Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    5.2i     Ant. Colombo
-#Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif    5.2      D. Rothkamp
-#Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v     Andrew Large
-#SunOS_5.5.1          gcc 2.7.2      +X11 +Motif        5.0s     Karsten Sievert
+#Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
+#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif    5.4m     Ant. Colombo
+#Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
+#Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
+#Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
+#SunOS_5.5.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
-#SunOS 4.1.3_U1 (sun4c) gcc          +X11 +GUI Athena   5.0w (J) Darren Hiebert
+#SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
-#Unisys 6035	      cc	     +X11 Motif		3.29 (8) Glauber
+#Unisys 6035	      cc	     +X11 Motif		5.3  (8) Glauber Ribeiro
 
 # (*)  Remarks:
 #
@@ -192,12 +221,14 @@
 # (7)  See below for lines which enable the use of clcc
 # (8)  Needs some EXTRA_LIBS, search for Unisys below
 # (9)  Needs an extra compiler flag to compile gui_at_sb.c, see below.
-# (A)  needs EXTRA_LIBS, see below
+# (A)  May need EXTRA_LIBS, see below
 # (B)  Can't compile GUI because there is no waitpid()...  Disable GUI below.
 # (C)  Force the use of curses instead of termcap, see below.
 # (D)  Uncomment lines below for QNX
 # (E)  You might want to use termlib instead of termcap, see below.
 # (F)  See below for instructions.
+# (G)  Using ncursus version 4.2 has reported to cause a crash.  Use the
+#      Sun cursus library instead.
 # (H)  See line for EXTRA_LIBS below.
 # (I)  SINIX-N 5.42 and 5.43 need some EXTRA_LIBS
 # (J)  If you get undefined symbols, see below for a solution.
@@ -210,7 +241,7 @@
 # (P)  For SuperUX 6.2 on NEC SX-4 see a few lines below to uncomment.
 # (Q)  For UNIXSVR 4.2MP on NEC UP4800 see below for lines to uncomment.
 # (R)  For Solaris 2.5 (or 2.5.1) with gcc > 2.5.6, uncomment line below.
-# (S)  For Irix 6.4, use -OPT:Olimit.  See line below.
+# (S)  For Irix 6.x with MipsPro compiler, use -OPT:Olimit.  See line below.
 # (T)  See ../doc/os_beos.txt.
 # (U)  Must uncomment CONF_OPT_PYTHON option below to disable Python
 #      detection, since the configure script runs into an error when it
@@ -218,6 +249,7 @@
 # (X)  Need to use the .include "config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
+
 
 #DO NOT CHANGE the next line, we need it for configure to find the compiler
 #instead of using the default from the "make" program.
@@ -261,21 +293,28 @@ include config.mk
 # just an example:
 #CONF_ARGS = --exec-prefix=/usr
 
-# GUI - For creating Vim with GUI (gvim)
-# Uncomment the first line when you don't want to get the GUI version,
-# although you have Motif and/or Athena. (B)
-# When using "yes" configure will use Motif if it can be found, otherwise use
-# Athena when it can be found (this is the default).
-# If the Motif and Athena files are not found, the GUI is disabled automatically
-#CONF_OPT_GUI = --enable-gui=no
+# GUI - For creating Vim with GUI (gvim) (B)
+# Uncomment this line when you don't want to get the GUI version, although you
+# have GTK, Motif and/or Athena.  Also use --without-x if you don't want X11
+# at all.
+#CONF_OPT_GUI = --disable-gui
+
+# Uncomment one of these lines if you have that GUI but don't want to use it.
+# The automatic check will use another one that can be found
+#CONF_OPT_GUI = --disable-gtk-check
+#CONF_OPT_GUI = --disable-motif-check
+#CONF_OPT_GUI = --disable-athena-check
+
+# Uncomment one of these lines to select a specific GUI to use.
+# When using "yes" or nothing, configure will use the first one found: GTK+,
+# Motif or Athena.
+# Use "--disable-gtktest" to allow an older GTK version.
+# If the selected GUI isn't found, the GUI is disabled automatically
+#CONF_OPT_GUI = --enable-gui=gtk
+#CONF_OPT_GUI = --enable-gui=gtk --disable-gtktest
 #CONF_OPT_GUI = --enable-gui=motif
 #CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
-
-# For testing with Lesstif
-#CONF_OPT_GUI = --enable-gui=motif
-#GUI_LIB_LOC = /home/mool/src/lesstif/lib
-#GUI_INC_LOC = /home/mool/src/lesstif/include
 
 # PERL - For creating Vim with Perl interface
 # Uncomment this when you want to include the Perl interface.
@@ -298,6 +337,29 @@ include config.mk
 # CSCOPE - For creating Vim with Cscope interface
 # Uncomment this when you want to include the Cscope interface.
 #CONF_OPT_CSCOPE = --enable-cscope
+
+# MULTIBYTE - To edit multi-byte characters.  Well, actually only two-byte
+# characters at the moment.
+# Uncomment this when you want to edit a multibyte language.
+# Note: Compile on a machine where setlocale() actually works, otherwise the
+# configure tests may fail.
+#CONF_OPT_MULTIBYTE = --enable-multibyte
+
+# XIM - X Input Method.  Special character input support for X11 (chinese,
+# japanese, special symbols, etc).
+# HANGUL - Input Hangul (korean) language using internal routines.
+# Uncomment one of these when you want to input a multibyte language.
+#CONF_OPT_INPUT = --enable-xim
+#CONF_OPT_INPUT = --enable-hangulinput
+
+# FONTSET - X fontset support for output of special languages.
+# Uncomment this when you want to output a multibyte language.
+#CONF_OPT_OUTPUT = --enable-fontset
+
+# gpm - For mouse support on Linux console via gpm
+# Uncomment this when you do not want to include gpm support, even
+# though you have gpm libraries and includes
+#CONF_OPT_GPM = --disable-gpm
 
 # MAXIMAL FEATURES - For creating Vim with many features
 # Uncomment this when you want to include many features
@@ -342,21 +404,23 @@ include config.mk
 
 # Often used for GCC: mixed optimizing, lot of optimizing, debugging
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
+#CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
 
 # Used for debugging memory allocation
 #CFLAGS = -g -O2 -DMEM_PROFILE -Wall -Wshadow -Wmissing-prototypes
 
-# EFENCE - Electric-Fence malloc debugging - catches memory accesses beyond
-# allocated memory.  Electric Fence is free (search ftp sites).
+# EFENCE - Electric-Fence malloc debugging: catches memory accesses beyond
+# allocated memory (and makes every malloc()/free() very slow).
+# Electric Fence is free (search ftp sites).
 #EXTRA_LIBS = /usr/local/lib/libefence.a
 
 # PURIFY - remove the # to use the "purify" program (hoi Nia++!)
 #PURIFY = purify
 
 # LINT - for running lint
-LINT_OPTIONS = -bepruxzF
+LINT_OPTIONS = -beprxzF
 
 # PROFILING - Uncomment the next three lines to do profiling with gcc and
 # gprof.  Only works when using termcap library.  Doesn't work with GUI or
@@ -397,7 +461,7 @@ LINT_OPTIONS = -bepruxzF
 ###	After changing this do "touch digraph.c; make".
 #EXTRA_DEFS = -DHPUX_DIGRAPHS
 
-### (2) For HP-UX: 9.04 cpp default macro definition table of 128000 bytes 
+### (2) For HP-UX: 9.04 cpp default macro definition table of 128000 bytes
 ###     is too small to compile many routines.  It produces too much defining
 ###     and no space errors.
 ###     Uncomment the following to specify a larger macro definition table.
@@ -419,8 +483,7 @@ LINT_OPTIONS = -bepruxzF
 #X_LIBS_DIR = -L/usr/openwin/lib -R/usr/openwin/lib
 #CFLAGS = -O
 
-### (8) Unisys 6035 (use the first with GUI, the second without)
-#EXTRA_LIBS = -lsocket -lgen
+### (8) Unisys 6035 (Glauber Ribeiro)
 #EXTRA_LIBS = -lnsl -lsocket -lgen
 
 ### (9) Solaris 2.x with cc (SunPro), using Athena.
@@ -437,10 +500,6 @@ LINT_OPTIONS = -bepruxzF
 #EXTRA_DEFS = -DDOMAIN
 #CFLAGS= -O -A systype,bsd4.3
 
-### Irix 4.0 & 5.2 (Silicon Graphics Machines, __sgi will be defined)
-# Not needed for Irix 5.3, Ives Aerts reported
-#EXTRA_LIBS = -lmalloc -lc_s
-
 ### Coherent 4.2.10 on Intel 386 platform
 #EXTRA_DEFS = -Dvoid=int
 #EXTRA_LIBS = -lterm -lsocket
@@ -450,6 +509,10 @@ LINT_OPTIONS = -bepruxzF
 
 ### Solaris 2.3 with X11 and specific cc
 #CC=/opt/SUNWspro/bin/cc -O -Xa -v -R/usr/openwin/lib
+
+### Solaris with /usr/ucb/cc (it is rejected by autoconf as "cc")
+#CC	    = /usr/ucb/cc
+#EXTRA_LIBS = -R/usr/ucblib
 
 ### UTS2 for Amdahl UTS 2.1.x
 #EXTRA_DEFS = -DUTS2
@@ -472,7 +535,7 @@ LINT_OPTIONS = -bepruxzF
 #CFLAGS= -O2
 #EXTRA_LIBS = -lposix -lbsd -ltermcap -lX11
 
-### (A)  SCO Open Server 5 (Jan Christiaan van Winkel)
+### (A)  Some versions of SCO Open Server 5 (Jan Christiaan van Winkel)
 ###	 Also use the CONF_TERM_LIB below!
 #EXTRA_LIBS = -lgen
 
@@ -495,27 +558,10 @@ LINT_OPTIONS = -bepruxzF
 ### (H)  for Data general DG/UX 5.4.2 and 5.4R3.10 (Jonas J. Schlein)
 #EXTRA_LIBS = -lgen
 
-### (I) SINIX-N 5.42 or 5.43 RM400 R4000
+### (I) SINIX-N 5.42 or 5.43 RM400 R4000 (also SINIX-Y and SINIX-Z)
 #EXTRA_LIBS = -lgen -lnsl
-
-### (K)  for SGI Irix machines with 64 bit pointers ("uname -s" says IRIX64)
-###	 suggested by Jon Wright <jon@gate.sinica.edu.tw>
-###	 tested on R8000 IRIX6.1 Power Indigo2
-# either (for 64 bit pointers) uncomment the following line
-#GUI_LIB_LOC = /usr/lib64
-# then
-# 1) make config
-# 2) edit config.mk and delete the -lelf entry in the LIBS line
-# 3) make
-#
-# or (for 32bit pointers) uncomment the following line
-#EXTRA_DEFS = -n32
-#GUI_LIB_LOC = /usr/lib32
-# then
-# 1) make config
-# 2) edit config.mk, add -n32 to LDFLAGS
-# 3) make
-###
+###   For SINIX-Y this is needed for the right prototype of gettimeofday()
+#CFLAGS = $(CFLAGS) -D_XPG_IV
 
 ### (P)  SCO 3.2.42, with different termcap names for some useful keys DJB
 #EXTRA_DEFS = -DSCOKEYS -DNETTERM_MOUSE -DDEC_MOUSE -DXTERM_MOUSE -DHAVE_GETTIMEOFDAY
@@ -536,8 +582,47 @@ LINT_OPTIONS = -bepruxzF
 ### (R) for Solaris 2.5 (or 2.5.1) with gcc > 2.5.6 you might need this:
 #LDFLAGS = -lw -ldl
 
-### (S) Irix 6.4 (and later?): Uses different Olimit flag:
+### Irix 4.0 & 5.2 (Silicon Graphics Machines, __sgi will be defined)
+# Not needed for Irix 5.3, Ives Aerts reported
+#EXTRA_LIBS = -lmalloc -lc_s
+# Irix 4.0, when regexp and regcmp cannot be found when linking:
+#EXTRA_LIBS = -lmalloc -lc_s -lPW
+
+### (S) Irix 6.x (MipsPro compiler): Uses different Olimit flag:
+# Note:	This newer option style is used with the MipsPro compilers ONLY if
+#	you are compiling an "n32" or "64" ABI binary (use either a -n32
+#	flag or a -64 flag for CFLAGS).  If you explicitly use a -o32 flag,
+#	then the CFLAGS option format will be the typical style (i.e.
+#	-Olimit 3000).
 #CFLAGS = -OPT:Olimit=3000 -O
+
+### (S) Irix 6.5 with MipsPro C compiler.  Try this as a test to see new
+#	compiler features!  Beware, the optimization is EXTREMELY thorough
+#	and takes quite a long time.
+# Note: See the note above.  Here, the -mips3 option automatically
+#	enables either the "n32" or "64" ABI, depending on what machine you
+#	are compiling on (n32 is explicitly enabled here, just to make sure).
+#CFLAGS = -OPT:Olimit=3500 -O -n32 -mips3 -IPA:aggr_cprop=ON -INLINE:dfe=ON:list=ON:must=screen_char,out_char,ui_write,out_flush
+#LDFLAGS= -OPT:Olimit=3500 -O -n32 -mips3 -IPA:aggr_cprop=ON -INLINE:dfe=ON:list=ON:must=screen_char,out_char,ui_write,out_flush
+
+### (K) for SGI Irix machines with 64 bit pointers ("uname -s" says IRIX64)
+###	suggested by Jon Wright <jon@gate.sinica.edu.tw>
+###	tested on R8000 IRIX6.1 Power Indigo2
+# either (for 64 bit pointers) uncomment the following line
+#GUI_LIB_LOC = /usr/lib64
+# then
+# 1) make config
+# 2) edit config.mk and delete the -lelf entry in the LIBS line
+# 3) make
+#
+# or (for 32bit pointers) uncomment the following line
+#EXTRA_DEFS = -n32
+#GUI_LIB_LOC = /usr/lib32
+# then
+# 1) make config
+# 2) edit config.mk, add -n32 to LDFLAGS
+# 3) make
+###
 
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,
 ###	 which is found by configure, doesn't work correctly.  Symptom is the
@@ -606,41 +691,81 @@ TOOLS = ctags/ctags xxd/xxd
 ### Location of man page
 MANSUBDIR = $(MANDIR)/man1
 
-### Location of Vim files (should not need to be changed)
+### Location of Vim files (should not need to be changed, and some things
+### might not work when they are changed!)
 VIMDIR = /vim
+VIMRTDIR = /vim54
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros
+TOOLSSUBDIR = /tools
+TUTORSUBDIR = /tutor
 
-### VIMLOC	common root of the Vim files
+### VIMLOC	common root of the Vim files (all versions)
+### VIMRTLOC	common root of the runtime Vim files (this version)
+### VIMRCLOC	compiled-in location for global [g]vimrc files (all versions)
+### VIMRUNTIMEDIR  compiled-in location for runtime files (optional)
 ### HELPSUBLOC	location for help files
 ### SYNSUBLOC	location for syntax files
 ### MACROSUBLOC	location for macro files
-### SCRIPTLOC	location for script files (menu.vim, bugreport.vim)
+### TOOLSSUBLOC	location for tools files
+### TUTORSUBLOC	location for tutor files
+### SCRIPTLOC	location for script files (menu.vim, bugreport.vim, ..)
 ### You can override these if you want to install them somewhere else.
 ### Edit feature.h for compile-time settings.
 VIMLOC		= $(DATADIR)$(VIMDIR)
-HELPSUBLOC	= $(VIMLOC)$(HELPSUBDIR)
-SCRIPTLOC	= $(VIMLOC)
-SYNSUBLOC	= $(VIMLOC)$(SYNSUBDIR)
-MACROSUBLOC	= $(VIMLOC)$(MACROSUBDIR)
+VIMRTLOC	= $(DATADIR)$(VIMDIR)$(VIMRTDIR)
+VIMRCLOC	= $(VIMLOC)
+HELPSUBLOC	= $(VIMRTLOC)$(HELPSUBDIR)
+SYNSUBLOC	= $(VIMRTLOC)$(SYNSUBDIR)
+MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
+TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
+TUTORSUBLOC	= $(VIMRTLOC)$(TUTORSUBDIR)
+SCRIPTLOC	= $(VIMRTLOC)
+
+### Only set VIMRUNTIMEDIR when VIMRCLOC is set to a different location and
+### the runtime directory is not below it.
+#VIMRUNTIMEDIR = $(VIMRTLOC)
 
 ### Added for the Debian GNU/Linux packaged version of Vim, to get around
 ### some sed trickery. (the files are installed into a temporary directory
 ### for building the package, but they eventually end up in /usr/... . This
 ### ensures that the correct path is put into the man page.)
+VIMRCENDLOC = $(VIMRCLOC)
+#VIMRCENDLOC = /etc
 HELPENDLOC = $(HELPSUBLOC)
 #HELPENDLOC = /usr/doc/vim
 SYNTAXENDLOC = $(SYNSUBLOC)
 #SYNTAXENDLOC = /usr/lib/vim/syntax
 SCRIPTENDLOC = $(SCRIPTLOC)
 #SCRIPTENDLOC = /etc
+TUTORENDLOC = $(TUTORSUBLOC)
+#TUTORENDLOC = /usr/lib/vim/tutor
 
 ### Name of the menu file target.
 SYS_MENU_FILE	= $(SCRIPTLOC)/menu.vim
 
 ### Name of the bugreport file target.
 SYS_BUGR_FILE	= $(SCRIPTLOC)/bugreport.vim
+
+### Name of the file type detection file target.
+SYS_FILETYPE_FILE = $(SCRIPTLOC)/filetype.vim
+
+### Name of the file type detection file target.
+SYS_FTOFF_FILE	= $(SCRIPTLOC)/ftoff.vim
+
+### Name of the file type detection script file target.
+SYS_SCRIPTS_FILE = $(SCRIPTLOC)/scripts.vim
+
+### Name of the option window script file target.
+SYS_OPTWIN_FILE = $(SCRIPTLOC)/optwin.vim
+
+# Program to install the program in the target directory.  Could also be "mv".
+INSTALL_PROG	= cp
+
+# Program to install the data in the target directory.  Cannot be "mv"!
+INSTALL_DATA	= cp
+INSTALL_DATA_R	= cp -r
 
 ### Program to run on installed binary
 #STRIP = strip
@@ -654,30 +779,39 @@ MANMOD = 644
 ### Permissions for help files
 HELPMOD = 644
 
-### Permission for script files (menu.vim, bugreport.vim)
+### Permissions for Perl scripts
+PERLMOD = 755
+
+### Permission for script files (menu.vim, bugreport.vim, ..)
 SCRIPTMOD = 644
 
 ### Permissions for bin/man/help directories that are created
 DIRMOD = 755
 
 # Where to copy the man and help files from
-HELPSOURCE = ../doc
+HELPSOURCE = ../runtime/doc
 
 # Where to copy the script files from (menu, bugreport)
-SCRIPTSOURCE = ..
+SCRIPTSOURCE = ../runtime
 
 # Where to copy the syntax files from
-SYNSOURCE = ../syntax
+SYNSOURCE = ../runtime/syntax
 
 # Where to copy the macro files from
-MACROSOURCE = ../macros
+MACROSOURCE = ../runtime/macros
+
+# Where to copy the tools files from
+TOOLSSOURCE = ../runtime/tools
+
+# Where to copy the tutor files from
+TUTORSOURCE = ../runtime/tutor
 
 # If you are using Linux, you might want to use this to make vim the
 # default vi editor, it will create a link from vi to Vim when doing
 # "make install".  An existing file will be overwritten!
 # When not using it, some make programs can't handle an undefined $(LINKIT).
 #LINKIT = -ln -f -s $(BINDIR)/$(VIMTARGET) /usr/bin/vi
-LINKIT = echo >/dev/null
+LINKIT = @echo >/dev/null
 
 ###
 ### GRAPHICAL USER INTERFACE (GUI).
@@ -697,6 +831,25 @@ LINKIT = echo >/dev/null
 #GUI_TARGETS	= $(NONE_TARGETS)
 #GUI_MAN_TARGETS= $(NONE_MAN_TARGETS)
 #GUI_TESTTARGET = $(NONE_TESTTARGET)
+
+### GTK GUI interface.
+GTK_INCL	= gui.h gui_gtk_f.h
+GTK_SRC		= gui.c gui_gtk.c gui_gtk_x11.c pty.c gui_gtk_f.c
+GTK_OBJ		= gui.o gui_gtk.o gui_gtk_x11.o pty.o gui_gtk_f.o
+GTK_DEFS	= -DUSE_GUI_GTK $(NARROW_PROTO)
+GTK_IPATH	= $(GUI_INC_LOC)
+GTK_LIBS_DIR	= $(GUI_LIB_LOC)
+GTK_LIBS1	=
+GTK_LIBS2	= $(GTK_LIBNAME)
+GTK_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
+			$(BINDIR)/$(GVIEWTARGET) \
+			$(BINDIR)/$(RGVIMTARGET) \
+			$(BINDIR)/$(RGVIEWTARGET)
+GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
+			$(MANSUBDIR)/$(GVIEWTARGET).1 \
+			$(MANSUBDIR)/$(RGVIMTARGET).1 \
+			$(MANSUBDIR)/$(RGVIEWTARGET).1
+GTK_TESTTARGET = gui
 
 ### Motif GUI interface.
 MOTIF_INCL	= gui.h
@@ -769,7 +922,7 @@ BEOSGUI_OBJ	= gui.o gui_beos.o  pty.o
 BEOSGUI_DEFS	= -DUSE_GUI_BEOS
 BEOSGUI_IPATH	=
 BEOSGUI_LIBS_DIR =
-BEOSGUI_LIBS1	=
+BEOSGUI_LIBS1	= -lbe -lroot
 BEOSGUI_LIBS2	=
 BEOSGUI_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
 			$(BINDIR)/$(GVIEWTARGET) \
@@ -782,9 +935,9 @@ BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMTARGET).1 \
 BEOSGUI_TESTTARGET = gui
 
 # GUI files used for making ctags
-ALL_GUI_INCL = gui.h gui_at_sb.h
-ALL_GUI_SRC  = gui.c gui_motif.c gui_athena.c gui_x11.c gui_at_sb.c gui_at_fs.c
-ALL_GUI_PRO  = gui.pro gui_motif.pro gui_athena.pro gui_x11.pro gui_w32.pro gui_amiga.pro
+ALL_GUI_INCL = gui.h gui_at_sb.h gui_gtk_f.h
+ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
+ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w32.pro gui_amiga.pro
 
 ### our grand parent directory should know who we are...
 ### only used for "make tar"
@@ -827,13 +980,14 @@ POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DE
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
 
-LINT_CFLAGS = -DLINT $(PRE_DEFS) $(POST_DEFS)
+# Glib has an include file in a very unusual place...
+LINT_CFLAGS = -DLINT $(PRE_DEFS) $(POST_DEFS) -I/usr/X11R6/include -I/usr/local/lib/glib/include -Dinline=
 
-DEPEND_CFLAGS = -DPROTO -DUSE_GUI $(LINT_CFLAGS)
+DEPEND_CFLAGS = -DPROTO -DDEPEND -DUSE_GUI $(LINT_CFLAGS)
 
 PFLAGS = $(PROTO_FLAGS) -DPROTO $(LINT_CFLAGS)
 
-ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(PYTHON_LIBS) $(TCL_LIBS) $(EXTRA_LIBS)
+ALL_LIBS = $(GUI_LIBS_DIR) $(X_LIBS_DIR) $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS)
 
 #     BASIC_INCL and BASIC_SRC: files that are always used
 #	  GUI_INCL and GUI_SRC: extra GUI files for current configuration
@@ -851,7 +1005,7 @@ BASIC_INCL = ascii.h ex_cmds.h config.h feature.h globals.h \
 
 INCL = $(BASIC_INCL) $(GUI_INCL)
 
-TAGS_INCL = $(BASIC_INCL) $(ALL_GUI_INCL) if_perl.xs farsi.h
+TAGS_INCL = *.h
 
 BASIC_SRC = \
 	buffer.c \
@@ -869,6 +1023,7 @@ BASIC_SRC = \
 	mark.c \
 	memfile.c \
 	memline.c \
+	menu.c \
 	message.c \
 	misc1.c \
 	misc2.c \
@@ -883,7 +1038,6 @@ BASIC_SRC = \
 	screen.c \
 	search.c \
 	syntax.c \
-	$(SNIFF_SRC) \
 	tag.c \
 	term.c \
 	ui.c \
@@ -892,12 +1046,21 @@ BASIC_SRC = \
 	window.c \
 	$(OS_EXTRA_SRC)
 
-SRC =	$(BASIC_SRC) $(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC)
+SRC =	$(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
 
-TAGS_SRC = $(SRC) farsi.c
+TAGS_SRC = *.c *.cpp if_perl.xs
 
-ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) if_perl.c if_perlsfio.c \
-	if_python.c if_tcl.c if_sniff.c
+EXTRA_SRC = hangulin.c if_perl.c if_perlsfio.c if_python.c if_tcl.c if_sniff.c
+
+# All sources, also the ones that are not configured
+ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
+
+# Which files to check with lint.  Select one of these three lines.  ALL_SRC
+# checks more, but may not work well for checking a GUI that wasn't configured.
+# The perl sources also don't work well with lint.
+LINT_SRC = $(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC)
+#LINT_SRC = $(SRC)
+#LINT_SRC = $(ALL_SRC)
 
 OBJ = \
 	buffer.o \
@@ -910,11 +1073,13 @@ OBJ = \
 	ex_getln.o \
 	fileio.o \
 	getchar.o \
+	$(HANGULIN_OBJ) \
 	if_cscope.o \
 	main.o \
 	mark.o \
 	memfile.o \
 	memline.o \
+	menu.o \
 	message.o \
 	misc1.o \
 	misc2.o \
@@ -952,11 +1117,13 @@ PRO_AUTO = \
 	ex_getln.pro \
 	fileio.pro \
 	getchar.pro \
+	hangulin.pro \
 	if_cscope.pro \
 	main.pro \
 	mark.pro \
 	memfile.pro \
 	memline.pro \
+	menu.pro \
 	message.pro \
 	misc1.pro \
 	misc2.pro \
@@ -988,14 +1155,23 @@ all: $(VIMTARGET) $(TOOLS)
 
 tools: $(TOOLS)
 
-# Run ./configure with all the setting above.
-config config.h: configure
+# Run ./configure with all the setting from above.
+#
+# Note: config.h doesn't depend on configure, because running configure
+# doesn't always update config.h.  The timestamp isn't changed if the file
+# contents didn't change (to avoid recompiling everything).  Including a
+# dependency on config.h would cause running configure each time when config.h
+# isn't updated.  The dependency on config.mk should make sure configure is
+# run when it's needed.
+#
+config config.mk: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CFLAGS="$(CFLAGS)" \
 	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
 	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
-	$(CONF_OPT_CSCOPE) $(CONF_OPT_MAX) $(CONF_OPT_MIN) \
-	$(CONF_TERM_LIB) $(CONF_ARGS)
+	$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
+	$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) \
+	$(CONF_OPT_MAX) $(CONF_OPT_MIN) $(CONF_TERM_LIB) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure
 # If you don't have autoconf, use the configure that's there
@@ -1011,10 +1187,10 @@ myself:
 
 # Link the target for normal use or debugging.
 # A shell script is used to try linking without unneccesary libraries.
-$(VIMTARGET): $(OBJ) version.c version.h
+$(VIMTARGET): config.mk $(OBJ) version.c version.h
 	$(CC) -c $(ALL_CFLAGS) version.c
 	@LINK="$(PURIFY) $(SHRPENV) $(CC) $(LDFLAGS) -o $(VIMTARGET) $(OBJ) version.o $(ALL_LIBS)" \
-		sh $(srcdir)/link.sh
+		MAKE="$(MAKE)" sh $(srcdir)/link.sh
 
 CTAGSFILES =	ctags/entry.c ctags/main.c ctags/parse.c ctags/sort.c \
 		ctags/get.c ctags/options.c ctags/read.c ctags/strstr.c \
@@ -1023,7 +1199,7 @@ CTAGSFILES =	ctags/entry.c ctags/main.c ctags/parse.c ctags/sort.c \
 ctags/ctags: ctags/Makefile $(CTAGSFILES)
 	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile
 
-ctags/Makefile: ctags/Makefile.in
+ctags/Makefile ctags/config.h: ctags/Makefile.in
 	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
 
 xxd/xxd: xxd/xxd.c
@@ -1063,7 +1239,7 @@ os_vms.pro: os_vms.c
 # must use os_vms_conf.h for config.h
 	mv config.h config.h.save
 	cp os_vms_conf.h config.h
-	cproto $(PFLAGS) -DVMS -UUSE_GUI_ATHENA -UUSE_GUI_MOTIF os_vms.c > proto/os_vms.pro
+	cproto $(PFLAGS) -DVMS -UUSE_GUI_ATHENA -UUSE_GUI_MOTIF -UUSE_GUI_GTK os_vms.c > proto/os_vms.pro
 	rm config.h
 	mv config.h.save config.h
 
@@ -1092,7 +1268,7 @@ types.vim: $(TAGS_SRC) $(TAGS_INCL)
 # a "test99.ok" file.
 # If everything is allright, the final message will be "ALL DONE".
 #
-test:
+test check:
 	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET)
 
 testclean:
@@ -1109,61 +1285,103 @@ testclean:
 #
 install: installvim installtools
 
-installvim: installvimbin installvimhelp installlinks installhelplinks installmacros
+installvim: installvimbin installvimhelp installlinks installhelplinks installmacros installtutor
 
 installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
-	-mv -f $(BINDIR)/$(VIMTARGET)$(SUFFIX) $(BINDIR)/$(VIMTARGET).rm
-	-rm -f $(BINDIR)/$(VIMTARGET).rm
-	cp $(VIMTARGET)$(SUFFIX) $(BINDIR)
+	-if test -f $(BINDIR)/$(VIMTARGET)$(SUFFIX); then \
+	  mv -f $(BINDIR)/$(VIMTARGET)$(SUFFIX) $(BINDIR)/$(VIMTARGET).rm; \
+	  rm -f $(BINDIR)/$(VIMTARGET).rm; \
+	fi
+	$(INSTALL_PROG) $(VIMTARGET)$(SUFFIX) $(BINDIR)
 	$(STRIP) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
 	chmod $(BINMOD) $(BINDIR)/$(VIMTARGET)$(SUFFIX)
 # may create a link to the new executable from /usr/bin/vi
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
-installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC)
-	sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
+installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(TUTORSUBLOC)
+	@echo generating $(MANSUBDIR)/$(VIMTARGET).1
+	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
 		-e s+$(VIMLOC)/syntax+$(SYNTAXENDLOC)+ \
-		-e s+$(VIMLOC)/vimrc+$(SCRIPTENDLOC)/vimrc+ \
-		-e s+$(VIMLOC)/gvimrc+$(SCRIPTENDLOC)/gvimrc+ \
+		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
+		-e s+$(VIMLOC)/vimrc+$(VIMRCENDLOC)/vimrc+ \
+		-e s+$(VIMLOC)/gvimrc+$(VIMRCENDLOC)/gvimrc+ \
 		-e s+$(VIMLOC)/menu.vim+$(SCRIPTENDLOC)/menu.vim+ \
 		-e s+$(VIMLOC)/bugreport.vim+$(SCRIPTENDLOC)/bugreport.vim+ \
+		-e s+$(VIMLOC)/filetype.vim+$(SCRIPTENDLOC)/filetype.vim+ \
+		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTENDLOC)/ftoff.vim+ \
+		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTENDLOC)/scripts.vim+ \
+		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTENDLOC)/optwin.vim+ \
 		$(HELPSOURCE)/vim.1 > $(MANSUBDIR)/$(VIMTARGET).1
 	chmod $(MANMOD) $(MANSUBDIR)/$(VIMTARGET).1
-	cp $(HELPSOURCE)/*.txt $(HELPSOURCE)/tags $(HELPSUBLOC)
-	chmod $(HELPMOD) $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags
+	@echo generating $(MANSUBDIR)/$(VIMTARGET)tutor.1
+	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
+		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
+		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMTARGET)tutor.1
+	chmod $(MANMOD) $(MANSUBDIR)/$(VIMTARGET)tutor.1
+	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
+	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
+	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
+	chmod $(PERLMOD) $(HELPSUBLOC)/*.pl
 # install the menu file
-	cp $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
 	chmod $(SCRIPTMOD) $(SYS_MENU_FILE)
 # install the bugreport file
-	cp $(SCRIPTSOURCE)/bugreport.vim $(SYS_BUGR_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/bugreport.vim $(SYS_BUGR_FILE)
 	chmod $(SCRIPTMOD) $(SYS_BUGR_FILE)
+# install the example vimrc files
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/vimrc_example.vim $(SCRIPTLOC)
+	chmod $(SCRIPTMOD) $(SCRIPTLOC)/vimrc_example.vim
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/gvimrc_example.vim $(SCRIPTLOC)
+	chmod $(SCRIPTMOD) $(SCRIPTLOC)/gvimrc_example.vim
+# install the file type detection files
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/filetype.vim $(SYS_FILETYPE_FILE)
+	chmod $(SCRIPTMOD) $(SYS_FILETYPE_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/ftoff.vim $(SYS_FTOFF_FILE)
+	chmod $(SCRIPTMOD) $(SYS_FTOFF_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/scripts.vim $(SYS_SCRIPTS_FILE)
+	chmod $(SCRIPTMOD) $(SYS_SCRIPTS_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
+	chmod $(SCRIPTMOD) $(SYS_OPTWIN_FILE)
 # install the syntax files
-	cp $(SYNSOURCE)/*.vim $(SYNSUBLOC)
-	chmod $(HELPMOD) $(SYNSUBLOC)/*.vim
+	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim $(SYNSUBLOC)
+	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim
 
-installmacros: $(MACROSOURCE) $(VIMLOC) $(MACROSUBLOC)
-	cp -r $(MACROSOURCE)/* $(MACROSUBLOC)
+installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
+	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(MACROSUBLOC)
+
+# install the tutor files
+installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
+	$(INSTALL_DATA) vimtutor $(BINDIR)
+	chmod $(BINMOD) $(BINDIR)/vimtutor
+	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
+	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
 # install helper programs ctags and xxd
-installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR)
+installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
+		$(TOOLSSOURCE) $(VIMLOC) $(VIMRTLOC) $(TOOLSSUBLOC)
 	cd ctags; mandir="$(MANDIR)" exec_prefix="$(exec_prefix)" \
 		bindir="$(BINDIR)" $(MAKE) -e -f Makefile install
-	-mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm
-	-rm -f $(BINDIR)/xxd.rm
-	cp xxd/xxd$(SUFFIX) $(BINDIR)
+	if test -f $(BINDIR)/xxd$(SUFFIX); then \
+	  mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm; \
+	  rm -f $(BINDIR)/xxd.rm; \
+	fi
+	$(INSTALL_PROG) xxd/xxd$(SUFFIX) $(BINDIR)
 	$(STRIP) $(BINDIR)/xxd$(SUFFIX)
 	chmod $(BINMOD) $(BINDIR)/xxd$(SUFFIX)
-	cp $(HELPSOURCE)/xxd.1 $(MANSUBDIR)
+	$(INSTALL_DATA) $(HELPSOURCE)/xxd.1 $(MANSUBDIR)
 	chmod $(MANMOD) $(MANSUBDIR)/xxd.1
+# install the runtime tools
+	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(TOOLSSUBLOC)
 
-$(HELPSOURCE)/vim.1 $(MACROSOURCE):
+$(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo Runtime files not found.
 	@echo You need to unpack the runtime archive before running "make install".
 	test -f error
 
-$(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(MACROSUBLOC):
+$(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
+		$(SYNSUBLOC) $(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC):
 	-ctags/mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
@@ -1223,24 +1441,31 @@ $(MANSUBDIR)/$(RGVIMTARGET).1:
 $(MANSUBDIR)/$(RGVIEWTARGET).1:
 	cd $(MANSUBDIR); ln -s $(VIMTARGET).1 $(RGVIEWTARGET).1
 
-uninstall:
+uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(VIMTARGET)$(SUFFIX)
+	-rm -f $(MANSUBDIR)/$(VIMTARGET).1 $(MANSUBDIR)/$(VIMTARGET)tutor.1
+	-rm -f $(BINDIR)/vimtutor
+	-rm -f $(BINDIR)/ctags$(SUFFIX) $(MANSUBDIR)/ctags.1
+	-rm -f $(BINDIR)/xxd$(SUFFIX) $(MANSUBDIR)/xxd.1
 	-rm -f $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET)
 	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
 	-rm -f $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
 	-rm -f $(BINDIR)/$(RGVIMTARGET) $(BINDIR)/$(RGVIEWTARGET)
-	-rm -f $(BINDIR)/xxd $(MANSUBDIR)/xxd.1
-	-rm -f $(BINDIR)/ctags $(MANSUBDIR)/ctags.1
-	-rm -f $(MANSUBDIR)/$(VIMTARGET).1
 	-rm -f $(MANSUBDIR)/$(EXTARGET).1 $(MANSUBDIR)/$(VIEWTARGET).1
 	-rm -f $(MANSUBDIR)/$(GVIMTARGET).1 $(MANSUBDIR)/$(GVIEWTARGET).1
 	-rm -f $(MANSUBDIR)/$(RVIMTARGET).1 $(MANSUBDIR)/$(RVIEWTARGET).1
 	-rm -f $(MANSUBDIR)/$(RGVIMTARGET).1 $(MANSUBDIR)/$(RGVIEWTARGET).1
-	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags
-	-rm -f $(SYNSUBLOC)/*.vim
-	-rm -rf $(MACROSUBLOC)
+
+uninstall_runtime:
+	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags $(HELPSUBLOC)/*.pl
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
-	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(VIMLOC)
+	-rm -f $(SCRIPTLOC)/gvimrc_example.vim $(SCRIPTLOC)/vimrc_example.vim
+	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
+	-rm -f $(SYS_OPTWIN_FILE) $(SYNSUBLOC)/*.vim
+	-rm -rf $(MACROSUBLOC)
+	-rm -rf $(TUTORSUBLOC)
+	-rm -rf $(TOOLSSUBLOC)
+	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(VIMRTLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
@@ -1252,9 +1477,9 @@ clean celan: testclean
 		cd ctags; $(MAKE) -f Makefile clean; \
 	fi
 
-shadow:	doc menu.vim bugreport.vim syntax macros
+shadow:	runtime pixmaps
 	mkdir shadow
-	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../configure .
+	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../configure ../vimtutor .
 	cd shadow; rm -f osdef.h config.h pathdef.c link.sed
 	cp Makefile shadow
 	echo "the first targets to make vim are: scratch config myself" > shadow/config.mk
@@ -1271,21 +1496,13 @@ shadow:	doc menu.vim bugreport.vim syntax macros
 				 ../../testdir/*.in \
 				 ../../testdir/*.ok .
 
-# Links needed for doing "make install" in a shadow directory.
-doc:
-	-ln -s ../doc .
+# Link needed for doing "make install" in a shadow directory.
+runtime:
+	-ln -s ../runtime .
 
-menu.vim:
-	-ln -s ../menu.vim .
-
-bugreport.vim:
-	-ln -s ../bugreport.vim .
-
-syntax:
-	-ln -s ../syntax .
-
-macros:
-	-ln -s ../macros .
+# Link needed for doing "make" using GTK in a shadow directory.
+pixmaps:
+	-ln -s ../pixmaps .
 
 # Start configure from scratch
 scrub scratch:
@@ -1304,9 +1521,6 @@ tar: clean
 	  gzip -nf $$VIMVERSION.tar || gzip -f $$VIMVERSION.tar
 
 dist: distclean tar
-
-check:
-	@echo "check what?"
 
 mdepend:
 	-@rm -f Makefile~
@@ -1332,7 +1546,7 @@ depend:
 	mv tmp_make Makefile
 
 lint:
-	lint $(LINT_OPTIONS) $(LINT_CFLAGS) -DUSE_SNIFF $(ALL_SRC)
+	lint $(LINT_OPTIONS) $(LINT_CFLAGS) -DUSE_SNIFF -DHANGUL_INPUT $(LINT_SRC)
 
 ###########################################################################
 
@@ -1348,8 +1562,11 @@ lint:
 #	$(CC) -c -I$(srcdir) $(ALL_CFLAGS) $(*F).c -o $@
 
 if_perl.c: if_perl.xs
+	$(PERL) -MConfig -e 'unless (exists $$Config{apiversion} && \
+	    $$Config{apiversion} >= 5.005) { for (qw(na defgv errgv)) { \
+		print "#define PL_$$_ $$_\n" }} ' > $@
 	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
-	    $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+	    $(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@
 
 # used when python is being built
 py_getpath.o: $(PYTHON_CONFDIR)/getpath.c
@@ -1372,9 +1589,16 @@ pathdef.c: Makefile config.mk
 	-@echo '/* This file is automatically created by Makefile' >> pathdef.c
 	-@echo ' * DO NOT EDIT!  Change Makefile only. */' >> pathdef.c
 	-@echo '#include "vim.h"' >> pathdef.c
-	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMLOC)";' >> pathdef.c
+	-@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> pathdef.c
+	-@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> pathdef.c
 	-@echo 'char_u *all_cflags = (char_u *)"$(CC) -c -I$(srcdir) $(ALL_CFLAGS)";' >> pathdef.c
 	-@echo 'char_u *all_lflags = (char_u *)"$(CC) $(LDFLAGS) -o $(VIMTARGET) $(ALL_LIBS)";' >> pathdef.c
+	-@echo 'char_u *compiled_user = (char_u *)"' | tr -d \\012 >>pathdef.c
+	-@whoami | tr -d \\012 >>pathdef.c
+	-@echo '";' >>pathdef.c
+	-@echo 'char_u *compiled_sys = (char_u *)"' | tr -d \\012 >>pathdef.c
+	-@hostname | tr -d \\012 >>pathdef.c
+	-@echo '";' >>pathdef.c
 	-@sh $(srcdir)/pathdef.sh
 
 Makefile:
@@ -1397,7 +1621,7 @@ edit.o: edit.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
  option.h ex_cmds.h proto.h
 eval.o: eval.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
  keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
- option.h ex_cmds.h proto.h
+ option.h ex_cmds.h proto.h version.h
 ex_cmds.o: ex_cmds.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
@@ -1428,12 +1652,15 @@ memfile.o: memfile.c vim.h config.h feature.h os_unix.h osdef.h \
 memline.o: memline.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
+menu.o: menu.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
 message.o: message.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
 misc1.o: misc1.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
  keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
- option.h ex_cmds.h proto.h
+ option.h ex_cmds.h proto.h version.h
 misc2.o: misc2.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
  keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
  option.h ex_cmds.h proto.h
@@ -1491,12 +1718,37 @@ window.o: window.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
 gui.o: gui.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
  keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
  option.h ex_cmds.h proto.h
+gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h config.h feature.h os_unix.h \
+ osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
+ globals.h farsi.h option.h ex_cmds.h proto.h ../pixmaps/alert.xpm \
+ ../pixmaps/error.xpm ../pixmaps/generic.xpm ../pixmaps/info.xpm \
+ ../pixmaps/quest.xpm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
+ ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
+ ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
+ ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
+ ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
+ ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
+ ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
+ ../pixmaps/tb_macro.xpm ../pixmaps/tb_make.xpm \
+ ../pixmaps/tb_save_all.xpm ../pixmaps/tb_jump.xpm \
+ ../pixmaps/tb_ctags.xpm ../pixmaps/tb_load_session.xpm \
+ ../pixmaps/tb_save_session.xpm ../pixmaps/tb_new_session.xpm \
+ ../pixmaps/tb_blank.xpm ../pixmaps/tb_maximize.xpm \
+ ../pixmaps/tb_split.xpm ../pixmaps/tb_minimize.xpm \
+ ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm
+gui_gtk_f.o: gui_gtk_f.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h
 gui_motif.o: gui_motif.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h
 gui_athena.o: gui_athena.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+gui_gtk_x11.o: gui_gtk_x11.c vim.h config.h feature.h os_unix.h \
+ osdef.h ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h \
+ globals.h farsi.h option.h ex_cmds.h proto.h gui_gtk_f.h \
+ ../runtime/vim32x32.xpm
 gui_x11.o: gui_x11.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h vim_icon.xbm vim_mask.xbm
@@ -1506,6 +1758,12 @@ gui_at_sb.o: gui_at_sb.c vim.h config.h feature.h os_unix.h osdef.h \
 gui_at_fs.o: gui_at_fs.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h gui_at_sb.h
+pty.o: pty.c vim.h config.h feature.h os_unix.h osdef.h ascii.h \
+ keymap.h term.h macros.h regexp.h structs.h gui.h globals.h farsi.h \
+ option.h ex_cmds.h proto.h
+hangulin.o: hangulin.c vim.h config.h feature.h os_unix.h osdef.h \
+ ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
+ farsi.h option.h ex_cmds.h proto.h
 if_perl.o: if_perl.c vim.h config.h feature.h os_unix.h osdef.h \
  ascii.h keymap.h term.h macros.h regexp.h structs.h gui.h globals.h \
  farsi.h option.h ex_cmds.h proto.h

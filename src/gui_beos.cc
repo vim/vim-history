@@ -11,6 +11,8 @@
  *
  * GUI support for the Buzzword Enhanced Operating System.
  *
+ * Ported to R4 by Richard Offer <richard@whitequeen.com> Jul 99
+ *
  */
 
 /*
@@ -94,6 +96,7 @@ extern "C" {
 #include <be/storage/Path.h>
 #include <be/storage/Directory.h>
 #include <be/app/Application.h>
+#include <be/support/Debug.h>
 
 /*
  * The macro B_PIXEL_ALIGNMENT shows us which version
@@ -303,7 +306,7 @@ struct VimScrollBarMsg {
 };
 
 struct VimMenuMsg {
-    GuiMenu	*guiMenu;
+    VimMenu	*guiMenu;
 };
 
 struct VimMouseMsg {
@@ -464,7 +467,7 @@ RefsReceived(BMessage *m, bool changedir)
 	    goto bad;
 	if (changedir) {
 	    char *dirname;
-	    if (m->FindString("cwd", &dirname) == B_OK) {
+	    if (m->FindString("cwd", (const char **) &dirname) == B_OK) {
 		chdir(dirname);
 		do_cmdline((char_u *)"cd .", NULL, 0, DOCMD_NOWAIT);
 	    }
@@ -534,7 +537,7 @@ RefsReceived(BMessage *m, bool changedir)
 	{
 	    char *fname;
 
-	    if (m->FindString("argv", i, &fname) == B_OK) {
+	    if (m->FindString("argv", i, (const char **) &fname) == B_OK) {
 		fnames[fname_index++] = vim_strsave((char_u *)fname);
 	    }
 	}
@@ -546,9 +549,9 @@ RefsReceived(BMessage *m, bool changedir)
 
     delete m;
 
-    /* Handle the drop, by resetting the :args list */
+    /* Handle the drop, :edit to get to the file */
     if (fname_index > 0) {
-	handle_drop(fname_index, fnames);
+	handle_drop(fname_index, fnames, FALSE);
 
 	/* Update the screen display */
 	update_screen(NOT_VALID);
@@ -605,7 +608,7 @@ VimApp::RefsReceived(BMessage *m)
      */
     int limit = 15;
     while (--limit >= 0 && (!curbuf || !curbuf->b_start_ffc))
-	snooze(0.1e6);    // 0.1 s
+	snooze(100000);    // 0.1 s
     if (gui.vimWindow)
 	gui.vimWindow->Minimize(false);
     DetachCurrentMessage();
@@ -677,6 +680,10 @@ VimWindow::DispatchMessage(BMessage *m, BHandler *h)
     switch (m->what) {
     case B_MOUSE_UP:
 	// if (!h) h = PreferredHandler();
+// gcc isn't happy without this extra set of braces, complains about
+// jump to case label crosses init of 'class BView * v'
+// richard@whitequeen.com jul 99
+	{
 	BView *v = dynamic_cast<BView *>(h);
 	if (v) {
 	    //m->PrintToStream();
@@ -685,6 +692,7 @@ VimWindow::DispatchMessage(BMessage *m, BHandler *h)
 	    v->MouseUp(where);
 	} else {
 	    Inherited::DispatchMessage(m, h);
+	}
 	}
 	break;
     default:
@@ -733,7 +741,11 @@ VimFormView::~VimFormView()
 {
     if (menuBar) {
 	RemoveChild(menuBar);
+#ifdef never
+	// deleting the menuBar leads to SEGV on exit
+	// richard@whitequeen.com Jul 99
 	delete menuBar;
+#endif
     }
     if (textArea) {
 	RemoveChild(textArea);
@@ -779,7 +791,10 @@ VimFormView::AllAttached()
 	textArea->ResizeTo(remaining.Width(), remaining.Height());
 	textArea->MoveTo(remaining.left, remaining.top);
 
-	gui.menu_height = remaining.top;
+#ifdef WANT_MENU
+	menuBar->ResizeTo(remaining.right, remaining.top);
+	gui.menu_height = (int) remaining.top;
+#endif
     }
     Inherited::AllAttached();
 }
@@ -821,8 +836,8 @@ VimFormView::FrameResized(float new_width, float new_height)
 #endif
 
     struct VimResizeMsg sm;
-    sm.width = new_width;
-    sm.height = new_height;
+    sm.width = (int) new_width;
+    sm.height = (int) new_height;
 
     write_port(gui.vdcmp, VimMsg::Resize, &sm, sizeof(sm));
     // calls gui_resize_window(new_width, new_height);
@@ -882,8 +897,8 @@ VimTextAreaView::Draw(BRect updateRect)
      *  No need to use gui.vimWindow->Lock(): we are locked already.
      *  However, it would not hurt.
      */
-    gui_redraw(updateRect.left, updateRect.top,
-	    updateRect.Width() + PEN_WIDTH, updateRect.Height() + PEN_WIDTH);
+    gui_redraw((int) updateRect.left, (int) updateRect.top,
+	    (int) (updateRect.Width() + PEN_WIDTH), (int) (updateRect.Height() + PEN_WIDTH));
 
     /* Clear the border areas if needed */
     rgb_color rgb = GUI_TO_RGB(gui.back_pixel);
@@ -1224,7 +1239,7 @@ VimTextAreaView::MessageReceived(BMessage *m)
 	{
 	    VimMenuMsg mm;
 	    mm.guiMenu = NULL;	/* in case no pointer in msg */
-	    m->FindPointer("GuiMenu", (void **)&mm.guiMenu);
+	    m->FindPointer("VimMenu", (void **)&mm.guiMenu);
 
 	    write_port(gui.vdcmp, VimMsg::Menu, &mm, sizeof(mm));
 	}
@@ -1522,7 +1537,7 @@ VimScrollBar::ValueChanged(float newValue)
     struct VimScrollBarMsg sm;
 
     sm.sb = this;
-    sm.value = newValue;
+    sm.value = (long) newValue;
     sm.stillDragging = TRUE;
 
     write_port(gui.vdcmp, VimMsg::ScrollBar, &sm, sizeof(sm));
@@ -1548,7 +1563,7 @@ VimScrollBar::MouseUp(BPoint where)
     struct VimScrollBarMsg sm;
 
     sm.sb = this;
-    sm.value = Value();
+    sm.value = (long) Value();
     sm.stillDragging = FALSE;
 
     write_port(gui.vdcmp, VimMsg::ScrollBar, &sm, sizeof(sm));
@@ -1837,6 +1852,16 @@ gui_mch_prepare(
 }
 
 /*
+ * Check if the GUI can be started.  Called before gvimrc is sourced.
+ * Return OK or FAIL.
+ */
+    int
+gui_mch_init_check(void)
+{
+    return OK;		/* TODO: GUI can always be started? */
+}
+
+/*
  * Initialise the GUI.  Create all the windows, set up all the call-backs
  * etc.
  */
@@ -1848,10 +1873,12 @@ gui_mch_init()
     gui.norm_pixel = gui.def_norm_pixel;
     gui.back_pixel = gui.def_back_pixel;
 
-    gui.scrollbar_width = B_V_SCROLL_BAR_WIDTH;
-    gui.scrollbar_height = B_H_SCROLL_BAR_HEIGHT;
+    gui.scrollbar_width = (int) B_V_SCROLL_BAR_WIDTH;
+    gui.scrollbar_height = (int) B_H_SCROLL_BAR_HEIGHT;
+#ifdef WANT_MENU
     gui.menu_height = 19;	// initial guess -
 				// correct for my default settings
+#endif
     gui.border_offset = 3;	// coordinates are inside window borders
 
     if (gui.vdcmp < B_OK)
@@ -1963,6 +1990,26 @@ gui_mch_exit(int vim_exitcode)
 }
 
 /*
+ * Get the position of the top left corner of the window.
+ */
+    int
+gui_mch_get_winpos(int *x, int *y)
+{
+    /* TODO */
+    return FAIL;
+}
+
+/*
+ * Set the position of the top left corner of the window to the given
+ * coordinates.
+ */
+    void
+gui_mch_set_winpos(int x, int y)
+{
+    /* TODO */
+}
+
+/*
  * Set the size of the window to the given width and height in pixels.
  */
     void
@@ -2033,8 +2080,12 @@ gui_mch_get_screen_dimensions(
     }
 
     /* XXX approximations... */
-    *screen_w = frame.right - 2 * gui.scrollbar_width - 20;
-    *screen_h = frame.bottom - gui.scrollbar_height - gui.menu_height - 30;
+    *screen_w = (int) frame.right - 2 * gui.scrollbar_width - 20;
+    *screen_h = (int) frame.bottom - gui.scrollbar_height
+#ifdef WANT_MENU
+	- gui.menu_height
+#endif
+	- 30;
 }
 
     void
@@ -2259,7 +2310,7 @@ gui_mch_get_font(
     int			giveErrorIfMissing)
 {
     VimFont		*font = 0;
-    static VimFont *fontList;
+    static VimFont *fontList = NULL;
 
     if (!gui.in_use)		    /* can't do this when GUI not running */
 	return (GuiFont)0;
@@ -2292,9 +2343,13 @@ gui_mch_get_font(
     int len;
     char_u *end;
 
-    /* Replace underscores with spaces */
+#ifdef never
+    // This leads to SEGV/BUS on R4+
+    // Replace underscores with spaces, and I can't see why ?
+    // richard@whitequeen.com jul 99
     while (end = (char_u *)strchr((char *)name, '_'))
 	*end = ' ';
+#endif
     /*
      *  Parse font names as Family/Style/Size.
      *  On errors, just keep the be_fixed_font.
@@ -2344,16 +2399,17 @@ gui_mch_set_font(
 
 	gui.vimTextArea->SetFont(vf);
 
-	gui.char_width = vf->StringWidth("n");
+	gui.char_width = (int) vf->StringWidth("n");
 	font_height fh;
 	vf->GetHeight(&fh);
-	gui.char_height = fh.ascent + fh.descent + fh.leading + 0.5;
-	gui.char_ascent = fh.ascent + 0.5;
+	gui.char_height = (int) (fh.ascent + fh.descent + fh.leading + 0.5);
+	gui.char_ascent = (int) (fh.ascent + 0.5);
 
 	gui.vimWindow->Unlock();
     }
 }
 
+#if 0 /* not used */
 /*
  * Return TRUE if the two fonts given are equivalent.
  */
@@ -2369,6 +2425,7 @@ gui_mch_same_font(
 	    (vf1->FamilyAndStyle() == vf2->FamilyAndStyle() &&
 	     vf1->Size() == vf2->Size());
 }
+#endif
 
 /* XXX TODO This is apparently never called... */
     void
@@ -2668,8 +2725,6 @@ gui_mch_settitle(
     char_u	*title,
     char_u	*icon)
 {
-    // XXX currently not called
-    fprintf(stderr, "gui_mch_settitle %s %s\n", title, icon);
     if (gui.vimWindow->Lock()) {
 	gui.vimWindow->SetTitle((char *)title);
 	gui.vimWindow->Unlock();
@@ -2883,7 +2938,7 @@ gui_mch_insert_lines(
     gui.vimTextArea->mchInsertLines(row, num_lines);
 }
 
-
+#if defined(WANT_MENU) || defined(PROTO)
 /*
  * Menu stuff.
  */
@@ -2914,66 +2969,62 @@ gui_mch_set_menu_pos(
  */
     void
 gui_mch_add_menu(
-    GuiMenu	*menu,
-    GuiMenu	*parent
+    VimMenu	*menu,
+    VimMenu	*parent,
     int		idx)
 {
-    if (!gui_menubar_menu(menu->name)
+    if (!menubar_menu(menu->name)
 	    || (parent != NULL && parent->submenu_id == NULL))
 	return;
 
-    /* TODO: use menu->mnemonic and menu->actext */
     if (gui.vimWindow->Lock())
     {
-	BMenu *bmenu = new BMenu((char *)menu->dname);
-	BMenuItem *bmenuitem = new BMenuItem(bmenu);
+/* Major re-write of the menu code, it was failing with memory corruption when
+ * we started loading multiple files (the Buffer menu)
+ *
+ * Note we don't use the preference values yet, all are inserted into the
+ * menubar on a first come-first served basis...
+ *
+ * richard@whitequeen.com jul 99
+ */
 
-	menu->id = bmenuitem;
-	menu->submenu_id = bmenu;
+	BMenu *tmp;
 
-	if (parent)
-	{
-	     parent->submenu_id->AddItem(bmenuitem);
-	}
+	if ( parent )
+	    tmp = parent->submenu_id;
 	else
-	{
-	    /*
-	     * Find out where to insert this menu by looking through
-	     * the root menu to find the current one.
-	     */
-	    int pos = 0;
+	    tmp = gui.vimForm->MenuBar();
+// make sure we don't try and add the same menu twice. The Buffers menu tries to
+// do this and Be starts to crash...
 
-	    for (GuiMenu *gm = gui.root_menu;
-		    gm && gm != menu;
-		    gm = gm->next, pos++)
-		;
-	    /*
-	     * Detach the menu bar from the VimFormView in order
-	     * to allow it to auto-size.
-	     */
-	    BMenuBar *menubar = gui.vimForm->MenuBar();
-	    menubar->RemoveSelf();
-	    menubar->AddItem(bmenuitem, pos);
-	    gui.vimForm->AddChild(menubar);
-	    gui.menu_height = gui.vimForm->MenuHeight();
+	if ( ! tmp->FindItem((const char *) menu->dname)) {
+
+	    BMenu *bmenu = new BMenu((char *)menu->dname);
+
+	    menu->submenu_id = bmenu;
+
+// when we add a BMenu to another Menu, it creates the interconnecting BMenuItem
+	    tmp->AddItem(bmenu);
+
+// Now its safe to query the menu for the associated MenuItem....
+	    menu->id = tmp->FindItem((const char *) menu->dname);
+
 	}
-
 	gui.vimWindow->Unlock();
     }
 }
 
     void
-gui_mch_toggle_tearoffs(enable)
-    int		enable;
+gui_mch_toggle_tearoffs(int enable)
 {
     /* no tearoff menus */
 }
 
     static BMessage *
-MenuMessage(GuiMenu *menu)
+MenuMessage(VimMenu *menu)
 {
     BMessage *m = new BMessage('menu');
-    m->AddPointer("GuiMenu", (void *)menu);
+    m->AddPointer("VimMenu", (void *)menu);
 
     return m;
 }
@@ -2983,23 +3034,47 @@ MenuMessage(GuiMenu *menu)
  */
     void
 gui_mch_add_menu_item(
-    GuiMenu	*menu,
-    GuiMenu	*parent
+    VimMenu	*menu,
+    VimMenu	*parent,
     int		idx)
 {
     int		mnemonic = 0;
-
     if (parent->submenu_id == NULL)
 	return;
 
-    /* TODO: use menu->mnemonic and menu->actext */
+#ifdef never
+    /* why not add separators ?
+     * richard
+     */
+    /* Don't add menu separator */
+    if (is_menu_separator(menu->name))
+	return;
+#endif
+
+    /* TODO: use menu->actext */
+    /* This is difficult, since on Be, an accelerator must be a single char
+     * and a lot of Vim ones are the standard VI commands.
+     *
+     * Punt for Now...
+     * richard@whiequeen.com jul 99
+     */
     if (gui.vimWindow->Lock())
     {
-	BMenuItem *item = new BMenuItem((char *)menu->dname, MenuMessage(menu));
-	item->SetTarget(gui.vimTextArea);
-	parent->submenu_id->AddItem(item);
-	menu->id = item;
-	menu->submenu_id = NULL;
+	if ( is_menu_separator(menu->name)) {
+	    BSeparatorItem *item = new BSeparatorItem();
+	    parent->submenu_id->AddItem(item);
+	    menu->id = item;
+	    menu->submenu_id = NULL;
+	}
+	else {
+	    BMenuItem *item = new BMenuItem((char *)menu->dname,
+		    MenuMessage(menu));
+	    item->SetTarget(gui.vimTextArea);
+	    item->SetTrigger((char) menu->mnemonic);
+	    parent->submenu_id->AddItem(item);
+	    menu->id = item;
+	    menu->submenu_id = NULL;
+	}
 	gui.vimWindow->Unlock();
     }
 }
@@ -3009,7 +3084,7 @@ gui_mch_add_menu_item(
  */
     void
 gui_mch_destroy_menu(
-    GuiMenu	*menu)
+    VimMenu	*menu)
 {
     if (gui.vimWindow->Lock())
     {
@@ -3038,7 +3113,7 @@ gui_mch_destroy_menu(
 	menu->id = NULL;
 	menu->submenu_id = NULL;
 
-	gui.menu_height = gui.vimForm->MenuHeight();
+	gui.menu_height = (int) gui.vimForm->MenuHeight();
 	gui.vimWindow->Unlock();
     }
 }
@@ -3048,7 +3123,7 @@ gui_mch_destroy_menu(
  */
     void
 gui_mch_menu_grey(
-    GuiMenu	*menu,
+    VimMenu	*menu,
     int		grey)
 {
     if (menu->id != NULL)
@@ -3060,7 +3135,7 @@ gui_mch_menu_grey(
  */
     void
 gui_mch_menu_hidden(
-    GuiMenu	*menu,
+    VimMenu	*menu,
     int		hidden)
 {
     if (menu->id != NULL)
@@ -3075,6 +3150,8 @@ gui_mch_draw_menubar()
 {
     /* Nothing to do in BeOS */
 }
+
+#endif /* WANT_MENU */
 
 /* Mouse stuff */
 
@@ -3099,8 +3176,8 @@ clip_mch_request_selection()
 	ssize_t stringlen = -1;
 
 	if (m->FindData(textplain, B_MIME_TYPE,
-		(void **)&string, &stringlen) == B_OK ||
-	    m->FindString("text", (char **)&string) == B_OK) {
+		(const void **)&string, &stringlen) == B_OK ||
+	    m->FindString("text", (const char **)&string) == B_OK) {
 
 	    if (stringlen == -1)
 		stringlen = STRLEN(string);
@@ -3113,7 +3190,7 @@ clip_mch_request_selection()
 	     * Try to get the special vim selection type first
 	     */
 	    if (m->FindData(vimselectiontype, B_MIME_TYPE,
-		    (void **)&seltype, &seltypelen) == B_OK) {
+		    (const void **)&seltype, &seltypelen) == B_OK) {
 		switch (*seltype)
 		{
 		    default:
@@ -3211,6 +3288,7 @@ gui_mch_get_lightness(
     return (int)(rgb.red * 3 + rgb.green * 6 + rgb.blue) / 10;
 }
 
+#if (defined(SYNTAX_HL) && defined(WANT_EVAL)) || defined(PROTO)
 /*
  * Return the RGB value of a pixel as "#RRGGBB".
  */
@@ -3224,19 +3302,35 @@ gui_mch_get_rgb(
     sprintf((char *)retval, "#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
     return retval;
 }
+#endif
 
     void
 gui_mch_setmouse(int x, int y)
 {
+    TRACE();
     /* TODO */
 }
 
     void
-gui_mch_show_popupmenu(GuiMenu *menu)
+gui_mch_show_popupmenu(VimMenu *menu)
 {
+    TRACE();
     /* TODO */
 }
 
+int
+gui_mch_get_mouse_x()
+{
+    TRACE();
+    return 0;
+}
+
+
+int
+gui_mch_get_mouse_y()
+{
+    TRACE();
+    return 0;
+}
 
 } /* extern "C" */
-

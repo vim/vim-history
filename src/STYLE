@@ -60,16 +60,31 @@ tm_.*		POSIX, time.h
 c_.*		POSIX, termios.h
 MAX.*		POSIX, limits.h
 __.*		POSIX, system
-_[A-Z].*    	POSIX, system
+_[A-Z].*	POSIX, system
 E[A-Z0-9]*	POSIX, errno.h
 
 wait		don't use as argument to a function, conflicts with types.h
+index		shadows global declaration
+time		shadows global declaration
 new		C++ reserved keyword
 try		Borland C++ doesn't like it to be used as a variable.
 
 basename()	GNU string function
 dirname()	GNU string function
 get_env_value()	Linux system function
+
+
+VARIOUS
+
+Don't use '\"', some compilers can't handle it.  '"' works fine.
+
+Don't use:
+    #if HAVE_SOME
+Some compilers can't handle that and complain that "HAVE_SOME" is not defined.
+Use
+    #ifdef HAVE_SOME
+or
+    #if defined(HAVE_SOME)
 
 
 STYLE
@@ -104,8 +119,12 @@ OK:	/*
 	 */
 	    int
 	function_name(arg1, arg2)
-	    int	    arg1;	    /* short comment about arg1 */
-	    int	    arg2;	    /* short comment about arg2 */
+	    int		arg1;		/* short comment about arg1 */
+	    int		arg2;		/* short comment about arg2 */
+	{
+	    int		local;		/* comment about local */
+
+	    local = arg1 * arg2;
 
 NOTE: Don't use ANSI style function declarations.  Some people still have to
 use compilers that don't support it.
