@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.2e.  Last change: 2003 May 11
+*syntax.txt*    For Vim version 6.2f.  Last change: 2003 May 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1417,7 +1417,7 @@ If you don't want to highlight these errors, leave it unset.
 NROFF						*nroff.vim* *nroff-syntax*
 
 The nroff syntax file works with AT&T n/troff out of the box, but you
-will notice that GNU groff's highlighting does not.  You will need to
+will notice that GNU groff's highlighting does not.  You need to
 activate the extra features included in the syntax file.
 
 If you are using GNU groff, which is the case in all distributions of
@@ -1444,21 +1444,33 @@ interferes with the line breaking algorithm. Unlike TeX, troff fills
 text line-by-line, not paragraph-by-paragraph and furthermore, it does
 not have a concept of glue or stretch, all space input will be output
 as is, thus you should be careful of not using more space between
-sentences than you intend to have in your final document.  To mark
-trailing spaces as an error, use: >
+sentences than you intend to have in your final document.  For
+this reason, the common practice is to insert a carriage return
+immediately after all punctuation marks. If you want more "even" text,
+you need to take care of maintaining regular spacing.  To mark
+both trailing spaces and two or more spaces after a punctuation
+as an error, use: >
 
   :let nroff_space_errors = 1
 
-If you want to mark all the spaces in your text, to detect where you
-have inserted two spaces after a period instead of one, and other
-errors that will interfere with correct typesetting of your file,
-you could use an eye-catching highliting definition for the syntax
-groups nroffDefinition and nroffDefSpecial in your configuration
+Another technique to detect extra spacing and other errors that
+will interfere with correct typesetting of your file, is to define
+an eye-catching highliting definition for the syntax groups 
+nroffDefinition and nroffDefSpecial in your configuration
 files. For example: >
 
   hi def nroffDefinition term=italic cterm=italic gui=reverse
   hi def nroffDefSpecial term=italic,bold cterm=italic,bold
 			 \ gui=reverse,bold
+
+If you want to navigate to preprocessor entries in your source
+file, as easily as to section markers, you can activate the following
+option in your .vimrc file: >
+
+	let b:preprocs_as_sections = 1
+
+As well, the syntax file adds an extra paragraph marker for the
+exdented paragraph macro (.XP) in the ms package.
 
 Finally, there is a |groff.vim| syntax file that can be used for
 enabling groff syntax highlighting globally by default.

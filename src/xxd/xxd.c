@@ -70,7 +70,7 @@
 #if !defined(OS2) && defined(__EMX__)
 # define OS2
 #endif
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__BORLANDC__)
 # include <io.h>	/* for setmode() */
 #else
 # ifdef UNIX
@@ -187,7 +187,8 @@ char osver[] = "";
 #endif
 
 #ifndef __P
-# if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
+# if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2) \
+		|| defined(__BORLANDC__)
 #  define __P(a) a
 # else
 #  define __P(a) ()

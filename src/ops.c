@@ -1641,9 +1641,12 @@ op_delete(oap)
 	 */
 	if (!did_yank)
 	{
+	    int msg_silent_save = msg_silent;
+
 	    msg_silent = 0;	/* must display the prompt */
-	    if (ask_yesno((char_u *)_("cannot yank; delete anyway"), TRUE)
-								       != 'y')
+	    n = ask_yesno((char_u *)_("cannot yank; delete anyway"), TRUE);
+	    msg_silent = msg_silent_save;
+	    if (n != 'y')
 	    {
 		EMSG(_(e_abort));
 		return FAIL;

@@ -548,6 +548,19 @@ typedef struct argentry
 #define WARGCOUNT(wp)	(ALIST(wp)->al_ga.ga_len)
 
 /*
+ * A list used for saving values of "emsg_silent".  Used by ex_try() to save the
+ * value of "emsg_silent" if it was non-zero.  When this is done, the CSF_SILENT
+ * flag below is set.
+ */
+
+typedef struct eslist_elem eslist_T;
+struct eslist_elem
+{
+    int		saved_emsg_silent;	/* saved value of "emsg_silent" */
+    eslist_T	*next;			/* next element on the list */
+};
+
+/*
  * For conditional commands a stack is kept of nested conditionals.
  * When cs_idx < 0, there is no conditional command.
  */
@@ -565,6 +578,7 @@ struct condstack
     int		cs_idx;			/* current entry, or -1 if none */
     int		cs_whilelevel;		/* number of nested ":while"s */
     int		cs_trylevel;		/* number of nested ":try"s */
+    eslist_T	*cs_emsg_silent_list;	/* saved values of "emsg_silent" */
     char	cs_had_while;		/* just found ":while" */
     char	cs_had_continue;	/* just found ":continue" */
     char	cs_had_endwhile;	/* just found ":endwhile" */
@@ -581,6 +595,9 @@ struct condstack
 # define CSF_FINALLY	32	/* ":finally" has been passed */
 # define CSF_THROWN	64	/* exception thrown to this try conditional */
 # define CSF_CAUGHT	128	/* exception caught by this try conditional */
+# define CSF_SILENT	4	/* "emsg_silent" reset by ":try" */
+/* Note that CSF_ELSE is only used when CSF_TRY and CSF_WHILE are unset
+ * (an ":if"), and CSF_SILENT is only used when CSF_TRY is set. */
 
 /*
  * What's pending for being reactivated at the ":endtry" of this try

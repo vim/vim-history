@@ -806,21 +806,21 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 	    if (command == DOBUF_UNLOAD)
 	    {
 		if (deleted == 1)
-		    smsg((char_u *)_("1 buffer unloaded"));
+		    MSG(_("1 buffer unloaded"));
 		else
 		    smsg((char_u *)_("%d buffers unloaded"), deleted);
 	    }
 	    else if (command == DOBUF_DEL)
 	    {
 		if (deleted == 1)
-		    smsg((char_u *)_("1 buffer deleted"));
+		    MSG(_("1 buffer deleted"));
 		else
 		    smsg((char_u *)_("%d buffers deleted"), deleted);
 	    }
 	    else
 	    {
 		if (deleted == 1)
-		    smsg((char_u *)_("1 buffer wiped out"));
+		    MSG(_("1 buffer wiped out"));
 		else
 		    smsg((char_u *)_("%d buffers wiped out"), deleted);
 	    }
@@ -4836,7 +4836,16 @@ sign_list_placed(rbuf)
     {
 	if (buf->b_signlist != NULL)
 	{
-	    sprintf(lbuf, _("Signs for %s:"), buf->b_fname);
+#ifdef HAVE_SNPRINTF
+	    snprintf
+#else
+	    sprintf
+#endif
+		(lbuf,
+#ifdef HAVE_SNPRINTF
+		 BUFSIZ,
+#endif
+		    _("Signs for %s:"), buf->b_fname);
 	    MSG_PUTS_ATTR(lbuf, hl_attr(HLF_D));
 	    msg_putchar('\n');
 	}

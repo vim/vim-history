@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2e.  Last change: 2003 May 15
+*eval.txt*      For Vim version 6.2f.  Last change: 2003 May 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -272,7 +272,7 @@ Note the difference between "+" and ".":
 "123" + "456" = 579
 "123" . "456" = "123456"
 
-When the righthand side of '/' is zero, the result is 0xfffffff.
+When the righthand side of '/' is zero, the result is 0x7fffffff.
 When the righthand side of '%' is zero, the result is 0.
 
 
@@ -3173,6 +3173,10 @@ This would call the function "my_func_whizz(parameter)".
 		:catch /.*/			" catch everything
 		:catch				" same as /.*/
 <
+			Another character can be used instead of / around the
+			{pattern}, so long as it does not have a special
+			meaning (e.g., '|' or '"') and doesn't occur inside
+			{pattern}.
 			NOTE: It is not reliable to ":catch" the TEXT of
 			an error message because it may vary in different
 			locales.

@@ -2569,7 +2569,7 @@ gui_mch_settitle(
 	WCHAR	*wbuf;
 
 	/* Convert the title from 'encoding' to ucs2. */
-	wbuf = enc_to_ucs2(title, NULL);
+	wbuf = (WCHAR *)enc_to_ucs2(title, NULL);
 	if (wbuf != NULL)
 	{
 	    SetWindowTextW(s_hwnd, wbuf);
@@ -2831,7 +2831,7 @@ _OnDropFiles(
 	{
 	    if (mch_chdir(fnames[0]) == 0)
 	    {
-		smsg((char_u *)":cd %s", fnames[0]);
+		msg_str((char_u *)":cd %s", fnames[0]);
 		vim_free(fnames[0]);
 		fnames[0] = NULL;
 		redo_dirs = TRUE;

@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.2e.  Last change: 2003 May 17
+*if_cscop.txt*  For Vim version 6.2f.  Last change: 2003 May 24
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -98,7 +98,7 @@ command does the same and also splits the window (short: "scs").
 The available subcommands are:
 
 			*E563* *E564* *E566* *E568* *E569* *E622* *E623*
-			*E625* *E626*
+			*E625* *E626* *E609*
     add   : Add a new cscope database/connection.
 
 	USAGE	:cs add {file|dir} [pre-path] [flags]

@@ -8,6 +8,5 @@ void mch_delay __ARGS((long msec, int ignoreinput));
 void mch_breakcheck __ARGS((void));
 long_u mch_avail_mem __ARGS((int special));
 int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
-char_u *mch_getenv __ARGS((char_u *var));
 char *default_shell __ARGS((void));
 /* vim: set ft=c : */

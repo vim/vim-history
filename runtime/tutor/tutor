@@ -210,7 +210,7 @@ NOTE:  For the adventurous, pressing just the object while in Normal mode
 
 	       ** Type	 dd   to delete a whole line. **
 
-  Due to the frequency of whole line deletion, the designers of Vim decided
+  Due to the frequency of whole line deletion, the designers of Vi decided
   it would be easier to simply type two d's in a row to delete a line.
 
   1. Move the cursor to the second line in the phrase below.
@@ -428,10 +428,10 @@ Now go on to the next lesson.
   4. If you want to search for a phrase in the backwards direction, use the
      command  ?  instead of /.
 
----> When the search reaches the end of the file it will continue at the start.
+---> "errroor" is not the way to spell error;  errroor is an error.
 
-  "errroor" is not the way to spell error;  errroor is an error.
-
+Note: When the search reaches the end of the file it will continue at the
+      start.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -519,9 +519,9 @@ Note: This is very useful in debugging a program with unmatched parentheses!
      will show you a listing of your directory, just as if you were at the
      shell prompt.  Or use   :!dir  if ls doesn't work.
 
----> Note:  It is possible to execute any external command this way.
+Note:  It is possible to execute any external command this way.
 
----> Note:  All  :  commands must be finished by hitting <ENTER>
+Note:  All  :  commands must be finished by hitting <ENTER>
 
 
 
@@ -542,11 +542,11 @@ Note: This is very useful in debugging a program with unmatched parentheses!
   4. This saves the whole file	(Vim Tutor)  under the name TEST.
      To verify this, type    :!dir   again to see your directory
 
----> Note that if you were to exit Vim and enter again with the filename TEST,
-     the file would be an exact copy of the tutor when you saved it.
+Note: If you were to exit Vim and enter again with the filename TEST, the file
+      would be an exact copy of the tutor when you saved it.
 
   5. Now remove the file by typing (MS-DOS):    :!del TEST
-
+                                or (Unix):      :!rm TEST
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -601,9 +601,10 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
   1.  :!command  executes an external command.
 
-      Some useful examples are (MS-DOS):
-	  :!dir			-  shows a directory listing.
-	  :!del FILENAME	-  removes file FILENAME.
+      Some useful examples are:
+         (MS-DOS)         (Unix)
+	  :!dir		   :!ls		   -  shows a directory listing.
+	  :!del FILENAME   :!rm FILENAME   -  removes file FILENAME.
 
   2.  :w FILENAME  writes the current Vim file to disk with name FILENAME.
 
@@ -611,7 +612,6 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
   4.  :r FILENAME  retrieves disk file FILENAME and inserts it into the
       current file following the cursor position.
-
 
 
 
@@ -690,9 +690,7 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			    Lesson 6.4: SET OPTION
 
-
 	  ** Set an option so a search or substitute ignores case **
-
 
   1. Search for 'ignore' by entering:
      /ignore
@@ -710,6 +708,8 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   5. Now enter the search command again, and see what happens:
      /ignore
 
+  6. To remove the highlighting of matches, type:
+     :nohlsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			       LESSON 6 SUMMARY
 

@@ -12,7 +12,7 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 2e
+!define VER_MINOR 2f
 !define VER_MAJOR 6
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"

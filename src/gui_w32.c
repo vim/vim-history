@@ -1221,7 +1221,7 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
     LRESULT lResult = 0;
     HIMC hImc;
 
-    if (!pImmGetContext || !(hImc = pImmGetContext(hWnd)))
+    if (!pImmGetContext || (hImc = pImmGetContext(hWnd)) == (HIMC)0)
 	return lResult;
     switch (dwCommand)
     {
@@ -1346,7 +1346,7 @@ GetResultStr(HWND hwnd, int GCS, int *lenp)
     short_u	*buf = NULL;
     char_u	*convbuf = NULL;
 
-    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
+    if (!pImmGetContext || (hIMC = pImmGetContext(hwnd)) == (HIMC)0)
 	return NULL;
 
     /* Reads in the composition string. */

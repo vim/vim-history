@@ -110,18 +110,25 @@ do_cscope(eap)
     if ((cmdp = cs_lookup_cmd(eap)) == NULL)
     {
 	cs_help(eap);
+#ifdef FEAT_WINDOWS
 	postponed_split = 0;
+#endif
 	return;
     }
 
-    if (postponed_split && !cmdp->cansplit) {
+#ifdef FEAT_WINDOWS
+    if (postponed_split && !cmdp->cansplit)
+    {
 	(void)MSG_PUTS(_("This cscope command does not support splitting the window.\n"));
 	postponed_split = 0;
 	return;
     }
+#endif
 
     cmdp->func(eap);
+#ifdef FEAT_WINDOWS
     postponed_split = 0; /* restore state */
+#endif
 } /* do_cscope */
 
 /*
@@ -133,7 +140,9 @@ do_cscope(eap)
 do_scscope(eap)
     exarg_T *eap;
 {
+#ifdef FEAT_WINDOWS
     postponed_split = -1;
+#endif
     do_cscope(eap);
 }
 
@@ -328,17 +337,19 @@ cs_connection(num, dbpath, ppath)
 		return TRUE;
 	    break;
 	case 3:
-	    if (strstr(csinfo[i].fname, (char *)dbpath) &&
-		((!ppath && !csinfo[i].ppath) ||
-		 (ppath && csinfo[i].ppath &&
-		  strstr(csinfo[i].ppath, (char *)ppath))))
+	    if (strstr(csinfo[i].fname, (char *)dbpath)
+		    && ((!ppath && !csinfo[i].ppath)
+			|| (ppath
+			    && csinfo[i].ppath
+			    && strstr(csinfo[i].ppath, (char *)ppath))))
 		return TRUE;
 	    break;
 	case 4:
-	    if ((strcmp(csinfo[i].fname, (char *)dbpath) == 0) &&
-		 ((!ppath && !csinfo[i].ppath) ||
-		  (ppath && csinfo[i].ppath &&
-		   (strcmp(csinfo[i].ppath, (char *)ppath) == 0))))
+	    if ((strcmp(csinfo[i].fname, (char *)dbpath) == 0)
+		    && ((!ppath && !csinfo[i].ppath)
+			|| (ppath
+			    && csinfo[i].ppath
+			    && (strcmp(csinfo[i].ppath, (char *)ppath) == 0))))
 		return TRUE;
 	    break;
 	}
@@ -497,9 +508,10 @@ staterr:
 
     if (i != -1)
     {
-	if (cs_create_connection(i) == CSCOPE_FAILURE)
-	    return CSCOPE_FAILURE;
-	(void)cs_read_prompt(i);
+	if (cs_create_connection(i) == CSCOPE_FAILURE
+		|| cs_read_prompt(i) == CSCOPE_FAILURE)
+	    goto add_err;
+
 	if (p_csverbose)
 	{
 	    msg_clr_eos();
@@ -669,7 +681,7 @@ cs_create_cmd(csoption, pattern)
 	return NULL;
     }
 
-    if ((cmd = (char *) alloc(strlen(pattern) + 2)) == NULL)
+    if ((cmd = (char *)alloc(strlen(pattern) + 2)) == NULL)
 	return NULL;
 
     (void)sprintf(cmd, "%d%s", search, pattern);
@@ -1053,7 +1065,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	if (strchr(CSQF_FLAGS, *qfpos) == NULL)
 	{
 	    char *nf = _("E469 invalid cscopequickfix flag %c for %c");
-	    char *buf = (char*) alloc(strlen(nf));
+	    char *buf = (char *)alloc(strlen(nf));
 
 	    /* strlen will be enough because we use chars */
 	    if (buf != NULL)
@@ -1165,7 +1177,7 @@ clear_csinfo(i)
 }
 
 #ifndef UNIX
-    static char*
+    static char *
 GetWin32Error()
 {
     char *msg = NULL;
@@ -1348,9 +1360,8 @@ cs_kill(eap)
     }
 
     /* only single digit positive and negative integers are allowed */
-    if ((strlen(stok) < 2 && isdigit((int)(stok[0]))) ||
-	(strlen(stok) < 3 && stok[0] == '-' && isdigit((int)(stok[1])))
-       )
+    if ((strlen(stok) < 2 && isdigit((int)(stok[0])))
+	    || (strlen(stok) < 3 && stok[0] == '-' && isdigit((int)(stok[1]))))
 	i = atoi(stok);
     else
     {
@@ -1555,7 +1566,7 @@ cs_manage_matches(matches, contexts, totmatches, cmd)
  *
  * parse cscope output
  */
-    static char*
+    static char *
 cs_parse_results(cnumber, buf, bufsize, context, linenumber, search)
     int cnumber;
     char *buf;
@@ -1956,17 +1967,38 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 cs_read_prompt(i)
     int i;
 {
-    int ch;
+    int		ch;
+    char	*buf = NULL; /* buffer for possible error message from cscope */
+    int		bufpos = 0;
+    static char	*cs_emsg = N_("E609 Cscope error: %s");
+		/* maximum allowed len for Cscope error message */
+    int		maxlen = IOSIZE - strlen(_(cs_emsg));
 
     for (;;)
     {
 	while ((ch = getc(csinfo[i].fr_fp)) != EOF && ch != CSCOPE_PROMPT[0])
-	    ;
+	    /* if verbose, have space and char is printable */
+	    if (p_csverbose && bufpos < maxlen - 1 && vim_isprintc(ch))
+	    {
+		if (buf == NULL) /* lazy buffer allocation */
+		    buf = (char *)alloc(maxlen);
+
+		if (buf != NULL) /* append character to a string */
+		{
+		    buf[bufpos++] = ch;
+		    buf[bufpos] = NUL;
+		}
+	    }
 
 	if (ch == EOF)
 	{
 	    perror("cs_read_prompt EOF(1)");
+	    if (buf != NULL && buf[0] != NUL)
+		(void)EMSG2(_(cs_emsg), buf);
+	    else if (p_csverbose)
+		cs_reading_emsg(i); /* don't have additional information */
 	    cs_release_csp(i, TRUE);
+	    vim_free(buf);
 	    return CSCOPE_FAILURE;
 	}
 
@@ -1983,6 +2015,7 @@ cs_read_prompt(i)
 	    continue;
 	break;
     }
+    vim_free(buf);
     return CSCOPE_SUCCESS;
 } /* cs_read_prompt */
 
@@ -2054,9 +2087,9 @@ cs_reset(eap)
     char buf[8]; /* for sprintf " (#%d)" */
 
     /* malloc our db and ppath list */
-    dblist = (char **) alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
-    pplist = (char **) alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
-    fllist = (char **) alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
+    dblist = (char **)alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
+    pplist = (char **)alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
+    fllist = (char **)alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
     if (dblist == NULL || pplist == NULL || fllist == NULL)
     {
 	vim_free(dblist);

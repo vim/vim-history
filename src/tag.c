@@ -70,7 +70,7 @@ static char_u	*nofile_fname = NULL;	/* fname for NOTAGFILE error */
 static void taglen_advance __ARGS((int l));
 static int get_tagfname __ARGS((int first, char_u *buf));
 
-static int jumpto_tag __ARGS((char_u *lbuf, int forceit));
+static int jumpto_tag __ARGS((char_u *lbuf, int forceit, int keep_help));
 #ifdef FEAT_EMACS_TAGS
 static int parse_tag_line __ARGS((char_u *lbuf, int is_etag, tagptrs_T *tagp));
 #else
@@ -765,7 +765,8 @@ do_tag(tag, type, count, forceit, verbose)
 	     * file didn't exist.  Otherwise an EMSG() is given below.
 	     */
 	    if (nofile_fname != NULL && error_cur_match != cur_match)
-		smsg((char_u *)_("File \"%s\" does not exist"), nofile_fname);
+		msg_str((char_u *)_("File \"%s\" does not exist"),
+								nofile_fname);
 
 
 	    ic = (matches[cur_match][0] & MT_IC_OFF);
@@ -804,7 +805,8 @@ do_tag(tag, type, count, forceit, verbose)
 	    /*
 	     * Jump to the desired match.
 	     */
-	    if (jumpto_tag(matches[cur_match], forceit) == NOTAGFILE)
+	    if (jumpto_tag(matches[cur_match], forceit, type != DT_CSCOPE)
+								 == NOTAGFILE)
 	    {
 		/* File not found: try again with another matching tag */
 		if ((type == DT_PREV && cur_match > 0)
@@ -1195,7 +1197,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	    if ((fp = mch_fopen((char *)tag_fname, "r")) == NULL)
 		continue;
 	    if (p_verbose >= 5)
-		smsg((char_u *)_("Searching tags file %s"), tag_fname);
+		msg_str((char_u *)_("Searching tags file %s"), tag_fname);
 	}
 	did_open = TRUE;    /* remember that we found at least one file */
 
@@ -2416,9 +2418,10 @@ tag_full_fname(tagp)
  * returns OK for success, NOTAGFILE when file not found, FAIL otherwise.
  */
     static int
-jumpto_tag(lbuf, forceit)
+jumpto_tag(lbuf, forceit, keep_help)
     char_u	*lbuf;		/* line from the tags file for this tag */
     int		forceit;	/* :ta with ! */
+    int		keep_help;	/* keep help flag (FALSE for cscope) */
 {
     int		save_secure;
     int		save_magic;
@@ -2555,14 +2558,17 @@ jumpto_tag(lbuf, forceit)
     }
 #endif
 
-    /* A :ta from a help file will keep the b_help flag set.  For ":ptag" we
-     * need to use the flag from the window where we came from. */
+    if (keep_help)
+    {
+	/* A :ta from a help file will keep the b_help flag set.  For ":ptag" we
+	 * need to use the flag from the window where we came from. */
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
-    if (g_do_tagpreview)
-	keep_help_flag = curwin_save->w_buffer->b_help;
-    else
+	if (g_do_tagpreview)
+	    keep_help_flag = curwin_save->w_buffer->b_help;
+	else
 #endif
-	keep_help_flag = curbuf->b_help;
+	    keep_help_flag = curbuf->b_help;
+    }
     getfile_result = getfile(0, fname, NULL, TRUE, (linenr_T)0, forceit);
     keep_help_flag = FALSE;
 

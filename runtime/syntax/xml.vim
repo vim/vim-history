@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Sat, 03 Nov 2001 18:40:11 +0100
+" Last Change:	Sat, 24 May 2003 13:12:45 CEST
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -190,6 +190,7 @@ syn region  xmlComment
     \ end=+>+
     \ contains=xmlCommentPart,xmlCommentError
     \ extend
+    \ fold
 
 syn keyword xmlTodo	    contained TODO FIXME XXX display
 syn match   xmlCommentError contained "[^><!]"

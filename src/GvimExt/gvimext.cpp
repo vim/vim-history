@@ -173,8 +173,8 @@ dyn_libintl_init(char *dir)
     for (i = 0; libintl_entry[i].name != NULL
 					 && libintl_entry[i].ptr != NULL; ++i)
     {
-	if (!(*libintl_entry[i].ptr = GetProcAddress(hLibintlDLL,
-						      libintl_entry[i].name)))
+	if ((*libintl_entry[i].ptr = GetProcAddress(hLibintlDLL,
+					      libintl_entry[i].name)) == NULL)
 	{
 	    dyn_libintl_end();
 	    return 0;
@@ -521,8 +521,6 @@ STDMETHODIMP CShellExt::Initialize(LPCITEMIDLIST pIDFolder,
 				   HKEY hRegKey)
 {
     // Initialize can be called more than once
-	HRESULT hres = 0;
-
     if (m_pDataObj)
 	m_pDataObj->Release();
 
@@ -564,7 +562,6 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 					 UINT uFlags)
 {
     UINT idCmd = idCmdFirst;
-    BOOL bAppendItems=TRUE;
 
     hres = m_pDataObj->GetData(&fmte, &medium);
     if (medium.hGlobal)

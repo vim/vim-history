@@ -2112,7 +2112,13 @@ draw_cmdline(start, len)
 
     if (cmdline_star > 0)
 	for (i = 0; i < len; ++i)
+	{
 	    msg_putchar('*');
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		i += (*mb_ptr2len_check)(ccline.cmdbuff + start + i) - 1;
+# endif
+	}
     else
 #endif
 #ifdef FEAT_ARABIC
@@ -4943,12 +4949,13 @@ ex_window()
 	cmdwin_result = Ctrl_C;
 	EMSG(_("E199: Active window or buffer deleted"));
     }
-# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
-    else if (aborting())    /* autocmds may abort script processing */
-	cmdwin_result = Ctrl_C;
-# endif
     else
     {
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* autocmds may abort script processing */
+	if (aborting() && cmdwin_result != K_IGNORE)
+	    cmdwin_result = Ctrl_C;
+# endif
 	/* Set the new command line from the cmdline buffer. */
 	vim_free(ccline.cmdbuff);
 	if (cmdwin_result == K_XF1)		/* :qa! typed */
@@ -4976,8 +4983,6 @@ ex_window()
 	    {
 		set_cmdspos_cursor();
 		redrawcmd();
-		/* CTRL-C closes the window but doesn't exe the cmdline */
-		got_int = FALSE;
 	    }
 	}
 

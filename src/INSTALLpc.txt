@@ -70,18 +70,19 @@ Summary:
 nmake -f Make_mvc.mak		console   Win32 SDK or Microsoft Visual C++
 nmake -f Make_mvc.mak GUI=yes	GUI	  Microsoft Visual C++
 nmake -f Make_mvc.mak OLE=yes	OLE	  Microsoft Visual C++
-nmake -f Make_mvc.mak PERL=C:\Perl
-				Perl	  Microsoft Visual C++
-nmake -f Make_mvc.mak PYTHON=C:\Python
-				Python	  Microsoft Visual C++
-			(combinations are possible with Make_mvc.mak)
+nmake -f Make_mvc.mak PERL=C:\Perl PYTHON=C:\Python etc.
+				Perl, Python, etc.
+					  Microsoft Visual C++
+
 make  -f Make_bc5.mak		GUI	  Borland C++ 5.x
 make  -f Make_bc5.mak		console	  Borland C++ 5.x (change the file)
 nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim"
 				GUI	  Microsoft Visual C++ 4.x or later
 nmake -f Make_ivc.mak CFG="Vim - Win32 Release gvim OLE"
 				OLE	  Microsoft Visual C++ 4.x or later
-make  -f Make_cyg.mak		console   Cygnus gcc
+
+make  -f Make_cyg.mak		various   Cygnus gcc
+make  -f Make_mingw.mak         various   MingW with gcc
 
 See the specific files for comments and options.
 

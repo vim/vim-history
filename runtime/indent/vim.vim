@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 02
+" Last Change:	2003 May 25
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -46,8 +46,9 @@ function GetVimIndent()
     let ind = ind + &sw
   endif
 
-  " If the previous line contains an "end" following a pipe
-  if getline(lnum) =~ '|\s*\(ene\@!\)'
+  " If the previous line contains an "end" after a pipe, but not in an ":au"
+  " command.
+  if getline(lnum) =~ '|\s*\(ene\@!\)' && getline(lnum) !~ '^\s*au\%[tocmd]'
     let ind = ind - &sw
   endif
 

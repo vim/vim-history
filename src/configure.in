@@ -620,12 +620,12 @@ if test "$enable_workshop" = "yes"; then
   fi
 fi
 
-AC_MSG_CHECKING(--enable-netbeans argument)
+AC_MSG_CHECKING(--disable-netbeans argument)
 AC_ARG_ENABLE(netbeans,
-	[  --enable-netbeans       Include NetBeans integration support.], ,
-	[enable_netbeans="no"])
-AC_MSG_RESULT($enable_netbeans)
-if test "$enable_netbeans" = "yes"; then
+	[  --disable-netbeans      Disable NetBeans integration support.],
+	[disable_netbeans="yes"], [disable_netbeans="no"])
+AC_MSG_RESULT($disable_netbeans)
+if test "$disable_netbeans" = "no"; then
   AC_MSG_CHECKING(whether compiling netbeans integration is possible)
   AC_TRY_COMPILE([
 #include <stdio.h>
@@ -661,9 +661,9 @@ if test "$enable_netbeans" = "yes"; then
 		  (void)connect(1, (struct sockaddr *)&server, sizeof(server));
 	    ],
 	AC_MSG_RESULT(yes),
-	AC_MSG_RESULT(no); enable_netbeans="no")
+	AC_MSG_RESULT(no); disable_netbeans="yes")
 fi
-if test "$enable_netbeans" = "yes"; then
+if test "$disable_netbeans" = "no"; then
   AC_DEFINE(FEAT_NETBEANS_INTG)
   NETBEANS_SRC="netbeans.c"
   AC_SUBST(NETBEANS_SRC)
@@ -1065,7 +1065,11 @@ return 1;
     }
     fi
     if test "x$no_gtk" = x ; then
-      AC_MSG_RESULT(yes; found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
+      if test "x$enable_gtktest" = "xyes"; then
+        AC_MSG_RESULT(yes; found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
+      else
+        AC_MSG_RESULT(found version $gtk_major_version.$gtk_minor_version.$gtk_micro_version)
+      fi
       ifelse([$2], , :, [$2])
     else
     {
@@ -1239,18 +1243,37 @@ if test -z "$SKIP_GTK"; then
     AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
   fi
 
-  dnl We require at least GTK 1.1.16.  1.0.6 doesn't work.  1.1.1 to 1.1.15
-  dnl were test versions.
   if test "x$GTK_CONFIG:$PKG_CONFIG" != "xno:no"; then
-    AM_PATH_GTK(1.1.16,
-		[GTK_LIBNAME="$GTK_LIBS"
-		GUI_INC_LOC="$GTK_CFLAGS"], )
-    if test "x$GTK_CFLAGS" != "x"; then
-      SKIP_ATHENA=YES
-      SKIP_NEXTAW=YES
-      SKIP_MOTIF=YES
-      GUITYPE=GTK
-      AC_SUBST(GTK_LIBNAME)
+    dnl First try finding version 2.2.0 or later.  The 2.0.x series has
+    dnl problems (bold fonts, --remote doesn't work).
+    if test "X$SKIP_GTK2" != "XYES"; then
+      AM_PATH_GTK(2.2.0,
+		  [GTK_LIBNAME="$GTK_LIBS"
+		  GUI_INC_LOC="$GTK_CFLAGS"], )
+      if test "x$GTK_CFLAGS" != "x"; then
+	SKIP_ATHENA=YES
+	SKIP_NEXTAW=YES
+	SKIP_MOTIF=YES
+	GUITYPE=GTK
+	AC_SUBST(GTK_LIBNAME)
+      fi
+    fi
+
+    dnl If there is no 2.2.0 or later try the 1.x.x series.  We require at
+    dnl least GTK 1.1.16.  1.0.6 doesn't work.  1.1.1 to 1.1.15
+    dnl were test versions.
+    if test "x$GUITYPE" != "xGTK"; then
+      SKIP_GTK2=YES
+      AM_PATH_GTK(1.1.16,
+		  [GTK_LIBNAME="$GTK_LIBS"
+		  GUI_INC_LOC="$GTK_CFLAGS"], )
+      if test "x$GTK_CFLAGS" != "x"; then
+	SKIP_ATHENA=YES
+	SKIP_NEXTAW=YES
+	SKIP_MOTIF=YES
+	GUITYPE=GTK
+	AC_SUBST(GTK_LIBNAME)
+      fi
     fi
   fi
   dnl Give a warning if GTK is older than 1.2.3
@@ -1965,8 +1988,8 @@ AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpseudotty \
 	getpwnam getpwuid getrlimit gettimeofday getwd lstat memcmp \
 	memset nanosleep opendir putenv qsort readlink select setenv \
 	setpgid setsid sigaltstack sigstack sigset sigsetjmp sigaction \
-	sigvec strcasecmp strerror strftime stricmp strncasecmp strnicmp \
-	strpbrk strtol tgetent towlower towupper usleep utime utimes)
+	sigvec snprintf strcasecmp strerror strftime stricmp strncasecmp \
+	strnicmp strpbrk strtol tgetent towlower towupper usleep utime utimes)
 
 dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible
 AC_MSG_CHECKING(for st_blksize)
@@ -2103,6 +2126,30 @@ if test "$enable_gpm" = "yes"; then
 else
   AC_MSG_RESULT(yes)
 fi
+
+AC_MSG_CHECKING(for vsnprintf())
+AC_TRY_RUN([
+#include <stdio.h>
+#include <stdarg.h>
+	/* Check use of vsnprintf() */
+	void warn(char *fmt, ...);
+	void warn(char *fmt, ...)
+	{
+	  va_list ap; char buf[20];
+	  va_start(ap, fmt);
+	  vsnprintf(buf, 20, fmt, ap);
+	  va_end(ap);
+	}
+	main()
+	{
+	warn("testing %s\n", "a very long string that won't fit");
+	exit(0);
+	}
+	    ],
+	AC_DEFINE(HAVE_VSNPRINTF) AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no),
+	AC_MSG_ERROR(failed to compile test program))
+
 
 dnl rename needs to be checked separately to work on Nextstep with cc
 AC_MSG_CHECKING(for rename)

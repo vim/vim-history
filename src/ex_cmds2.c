@@ -49,6 +49,7 @@ do_debug(cmd)
 #define CMD_STEP	3
 #define CMD_FINISH	4
 #define CMD_QUIT	5
+#define CMD_INTERRUPT	6
 
 #ifdef ALWAYS_USE_GUI
     /* Can't do this when there is no terminal for input/output. */
@@ -85,7 +86,7 @@ do_debug(cmd)
     if (sourcing_lnum != 0)
 	smsg((char_u *)_("line %ld: %s"), (long)sourcing_lnum, cmd);
     else
-	smsg((char_u *)_("cmd: %s"), cmd);
+	msg_str((char_u *)_("cmd: %s"), cmd);
 
     /*
      * Repeat getting a command and executing it.
@@ -143,6 +144,9 @@ do_debug(cmd)
 		    case 'q': last_cmd = CMD_QUIT;
 			      tail = "uit";
 			      break;
+		    case 'i': last_cmd = CMD_INTERRUPT;
+			      tail = "nterrupt";
+			      break;
 		    default: last_cmd = 0;
 		}
 		if (last_cmd != 0)
@@ -180,6 +184,12 @@ do_debug(cmd)
 		    case CMD_QUIT:
 			got_int = TRUE;
 			debug_break_level = -1;
+			break;
+		    case CMD_INTERRUPT:
+			got_int = TRUE;
+			debug_break_level = 9999;
+			/* Do not repeat ">interrupt" cmd, continue stepping. */
+			last_cmd = CMD_STEP;
 			break;
 		}
 		break;
@@ -1850,9 +1860,9 @@ do_in_runtimepath(name, all, callback)
 								       "\t ");
 
 		    if (p_verbose > 2)
-			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
-		    /* Expand wildcards and source each match. */
+			msg_str((char_u *)_("Searching for \"%s\""), buf);
 
+		    /* Expand wildcards and source each match. */
 		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
 							       EW_FILE) == OK)
 		    {
@@ -1871,7 +1881,7 @@ do_in_runtimepath(name, all, callback)
 	vim_free(buf);
     }
     if (p_verbose > 0 && !did_one)
-	smsg((char_u *)_("not found in 'runtimepath': \"%s\""), name);
+	msg_str((char_u *)_("not found in 'runtimepath': \"%s\""), name);
 
 #ifdef AMIGA
     proc->pr_WindowPtr = save_winptr;
@@ -2056,7 +2066,7 @@ do_source(fname, check_other, is_vimrc)
 #endif
     if (mch_isdir(fname_exp))
     {
-	smsg((char_u *)_("Cannot source a directory: \"%s\""), fname);
+	msg_str((char_u *)_("Cannot source a directory: \"%s\""), fname);
 	goto theend;
     }
 
@@ -2086,7 +2096,7 @@ do_source(fname, check_other, is_vimrc)
 	if (p_verbose > 0)
 	{
 	    if (sourcing_name == NULL)
-		smsg((char_u *)_("could not source \"%s\""), fname);
+		msg_str((char_u *)_("could not source \"%s\""), fname);
 	    else
 		smsg((char_u *)_("line %ld: could not source \"%s\""),
 			sourcing_lnum, fname);
@@ -2102,7 +2112,7 @@ do_source(fname, check_other, is_vimrc)
     if (p_verbose > 1)
     {
 	if (sourcing_name == NULL)
-	    smsg((char_u *)_("sourcing \"%s\""), fname);
+	    msg_str((char_u *)_("sourcing \"%s\""), fname);
 	else
 	    smsg((char_u *)_("line %ld: sourcing \"%s\""),
 		    sourcing_lnum, fname);
@@ -2229,12 +2239,16 @@ do_source(fname, check_other, is_vimrc)
 #endif
     if (p_verbose > 1)
     {
-	smsg((char_u *)_("finished sourcing %s"), fname);
+	msg_str((char_u *)_("finished sourcing %s"), fname);
 	if (sourcing_name != NULL)
-	    smsg((char_u *)_("continuing in %s"), sourcing_name);
+	    msg_str((char_u *)_("continuing in %s"), sourcing_name);
     }
 #ifdef STARTUPTIME
+# ifdef HAVE_SNPRINTF
+    snprintf(IObuff, IOSIZE, "sourcing %s", fname);
+# else
     sprintf(IObuff, "sourcing %s", fname);
+# endif
     time_msg(IObuff, &tv_start);
     time_pop(&tv_rel);
 #endif
@@ -2299,9 +2313,28 @@ get_scriptname(id)
 #endif
 
 #if defined(USE_CR) || defined(PROTO)
+
+# if defined(__MSL__) && (__MSL__ >= 22)
+/*
+ * Newer version of the Metrowerks library handle DOS and UNIX files
+ * without help.
+ * Test with earlier versions, MSL 2.2 is the library supplied with
+ * Codewarrior Pro 2.
+ */
+    char *
+fgets_cr(s, n, stream)
+    char	*s;
+    int		n;
+    FILE	*stream;
+{
+    return fgets(s, n, stream);
+}
+# else
 /*
  * Version of fgets() which also works for lines ending in a <CR> only
  * (Macintosh format).
+ * For older versions of the Metrowerks library.
+ * At least CodeWarrior 9 needed this code.
  */
     char *
 fgets_cr(s, n, stream)
@@ -2335,6 +2368,7 @@ fgets_cr(s, n, stream)
 
     return s;
 }
+# endif
 #endif
 
 /*

@@ -1,8 +1,8 @@
 " VIM syntax file
-" Language:	  nroff/groff
-" Maintainer:	  Alejandro López-Valencia <dradul@yahoo.com>
-" URL:		  http://dradul.tripod.com/vim
-" Last Change:	  2003-04-27-08:39:43 GMT-5.
+" Language:	nroff/groff
+" Maintainer:	Alejandro López-Valencia <dradul@yahoo.com>
+" URL:		http://dradul.tripod.com/vim
+" Last Change:	2003 May 24
 "
 " {{{1 Acknowledgements
 "
@@ -16,11 +16,9 @@
 "
 " TODO:
 "
-" * Add syntax error highlighting for other spacing errors to
-"	'nroff_spacing_errors'. See |syntax.txt| for details.
-"
 " * Write syntax highlighting files for the preprocessors,
 "	and integrate with nroff.vim.
+"
 "
 " {{{1 Start syntax highlighting.
 "
@@ -33,8 +31,27 @@ elseif exists("b:current_syntax")
 	finish
 endif
 
+"
+" {{{1 plugin settings...
+"
+" {{{2 enable spacing error highlighting
+"
 if exists("nroff_space_errors")
 	syn match nroffError /\s\+$/
+	syn match nroffSpaceError /[.,:;!?]\s\{2,}/
+endif
+"
+"
+" {{{1 Special file settings
+"
+" {{{2  ms exdented paragraphs are not in the default paragraphs list.
+"
+setlocal paragraphs+=XP
+"
+" {{{2 Activate navigation to preporcessor sections.
+"
+if exists("b:preprocs_as_sections")
+	setlocal sections=EQTSPS[\ G1GS
 endif
 
 " {{{1 Escape sequences
@@ -113,7 +130,7 @@ else
 	syn match nroffReqName /[^\t \\\[?]\{1,2}/ contained nextgroup=nroffReqArg
 endif
 
-syn region roffReqArg start=/\S/ skip=/\\$/ end=/$/ contained contains=nroffEscape,@nroffSpecial,nroffString,nroffError,nroffNumBlock,nroffComment
+syn region roffReqArg start=/\S/ skip=/\\$/ end=/$/ contained contains=nroffEscape,@nroffSpecial,nroffString,nroffError,nroffSpaceError,nroffNumBlock,nroffComment
 
 " {{{2 Conditional: .if .ie .el
 syn match nroffReqName /\(if\|ie\)/ contained nextgroup=nroffCond skipwhite
@@ -151,12 +168,12 @@ endif
 " XXX: write proper syntax highlight for eqn / tbl / pic ?
 " <jp />
 
-syn region nroffEquation start=/^\.\s*EQ/ end=/^\.\s*EN/
-syn region nroffTable start=/^\.\s*TS/ end=/^\.\s*TE/
-syn region nroffPicture start=/^\.\s*PS/ end=/^\.\s*PE/
-syn region nroffRefer start=/^\.\s*\[/ end=/^\.\s*\]/
-syn region nroffGrap start=/^\.\s*G1/ end=/^\.\s*G2/
-syn region nroffGremlin start=/^\.\s*GS/ end=/^\.\s*GE|GF/
+syn region nroffEquation start=/^\.\s*EQ\>/ end=/^\.\s*EN\>/
+syn region nroffTable start=/^\.\s*TS\>/ end=/^\.\s*TE\>/
+syn region nroffPicture start=/^\.\s*PS\>/ end=/^\.\s*PE\>/
+syn region nroffRefer start=/^\.\s*\[\>/ end=/^\.\s*\]\>/
+syn region nroffGrap start=/^\.\s*G1\>/ end=/^\.\s*G2\>/
+syn region nroffGremlin start=/^\.\s*GS\>/ end=/^\.\s*GE|GF\>/
 
 " {{{1 Comments
 " ------------------------------------------------------------
@@ -225,6 +242,7 @@ if version >= 508 || !exists("did_nroff_syn_inits")
 
 	HiLink nroffNumber Number
 	HiLink nroffBadChar nroffError
+	HiLink nroffSpaceError nroffError
 	HiLink nroffError Error
 
 	HiLink nroffPreserve String

@@ -975,7 +975,7 @@ crnl_to_nl(const char_u *str, int *size)
  * the result.
  * Returns NULL when out of memory.
  */
-    WCHAR *
+    short_u *
 enc_to_ucs2(char_u *str, int *lenp)
 {
     vimconv_T	conv;
@@ -1022,7 +1022,7 @@ enc_to_ucs2(char_u *str, int *lenp)
     }
 
     *lenp = length;
-    return ret;
+    return (short_u *)ret;
 }
 
 /*
@@ -1267,7 +1267,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 
 	/* Convert the text to UCS-2. This is put on the clipboard as
 	 * CF_UNICODETEXT. */
-	out = enc_to_ucs2(str, &len);
+	out = (WCHAR *)enc_to_ucs2(str, &len);
 	if (out != NULL)
 	{
 	    WCHAR *lpszMemW;

@@ -235,6 +235,7 @@ else
 OPTFLAG = -O2
 endif
 endif
+INCLUDES += -s
 
 endif
 
@@ -349,7 +350,7 @@ all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe GvimExt/gvimext.dll
 # linking unless calling ld directly.
 # See /usr/doc/cygwin-doc-1.2/html/faq_toc.html#TOC93 for more information.
 $(EXE): $(OUTDIR) $(OBJ)
-	$(CC) $(CFLAGS) -s -o $(EXE) $(OBJ) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)
+	$(CC) $(CFLAGS) -o $(EXE) $(OBJ) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
 	$(MAKE) -C xxd -f Make_cyg.mak USEDLL=$(USEDLL)
@@ -358,13 +359,13 @@ GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
 	$(MAKE) -C GvimExt -f Make_ming.mak
 
 vimrun.exe: vimrun.c
-	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  $(LIBS)
+	$(CC) $(CFLAGS) -o vimrun.exe vimrun.c  $(LIBS)
 
 install.exe: dosinst.c
-	$(CC) $(CFLAGS) -s -o install.exe dosinst.c  $(LIBS) -luuid -lole32
+	$(CC) $(CFLAGS) -o install.exe dosinst.c  $(LIBS) -luuid -lole32
 
 uninstal.exe: uninstal.c
-	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIBS)
+	$(CC) $(CFLAGS) -o uninstal.exe uninstal.c $(LIBS)
 
 $(OUTDIR):
 	mkdir $(OUTDIR)

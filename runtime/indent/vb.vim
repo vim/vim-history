@@ -2,7 +2,7 @@
 " Language:	VisualBasic (ft=vb) / Basic (ft=basic) / SaxBasic (ft=vb)
 " Author:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/vb.vim
-" Last Change:	Tue, 11 Dec 2001 09:38:33 W. Europe Standard Time
+" Last Change:	Sat, 24 May 2003 13:32:30 CEST
 
 if exists("b:did_indent")
     finish
@@ -11,7 +11,7 @@ let b:did_indent = 1
 
 setlocal indentexpr=VbGetIndent(v:lnum)
 setlocal indentkeys&
-setlocal indentkeys+==~else,=~end,=~wend,=~case,=~next,=~select,~=loop,<:>
+setlocal indentkeys+==~else,=~elseif,=~end,=~wend,=~case,=~next,=~select,~=loop,<:>
 
 " Only define the function once.
 if exists("*VbGetIndent")
@@ -45,7 +45,7 @@ fun! VbGetIndent(lnum)
     let ind = indent(lnum)
 
     " Add
-    if previous_line =~? '^\s*\<\(begin\|\%(\%(private\|public\|friend\)\s\+\)\=\%(function\|sub\|property\)\|select\|case\|default\|if\>.\{-}\<then\|else\|elseif\|do\|for\|while\|enum\|with\)\>'
+    if previous_line =~? '^\s*\<\(begin\|\%(\%(private\|public\|friend\)\s\+\)\=\%(function\|sub\|property\)\|select\|case\|default\|if\>.\{-}\<then\>\s*$\|else\|elseif\|do\|for\|while\|enum\|with\)\>'
 	let ind = ind + &sw
     endif
 

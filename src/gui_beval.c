@@ -35,6 +35,13 @@
 
 #ifndef FEAT_GUI_GTK
 extern Widget vimShell;
+
+/*
+ * Currently, we assume that there can be only one BalloonEval showing
+ * on-screen at any given moment.  This variable will hold the currently
+ * showing BalloonEval or NULL if none is showing.
+ */
+static BalloonEval *current_beval = NULL;
 #endif
 
 #ifdef FEAT_GUI_GTK
@@ -174,6 +181,20 @@ gui_mch_disable_beval_area(beval)
 	removeEventHandler(beval);
 }
 
+#if defined(FEAT_BEVAL_TIP) || defined(PROTO)
+/*
+ * This function returns the BalloonEval * associated with the currently
+ * displayed tooltip.  Returns NULL if there is no tooltip currently showing.
+ *
+ * Assumption: Only one tooltip can be shown at a time.
+ */
+    BalloonEval *
+gui_mch_currently_showing_beval()
+{
+    return current_beval;
+}
+#endif
+
 #if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) || defined(PROTO)
 /*
  * Get the text and position to be evaluated for "beval".
@@ -197,7 +218,7 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
     row = Y_2_ROW(beval->y);
     col = X_2_COL(beval->x);
     wp = mouse_find_win(&row, &col);
-    if (wp != NULL && row < wp->w_height && col < wp->w_width)
+    if (wp != NULL && row < wp->w_height && col < W_WIDTH(wp))
     {
 	/* Found a window and the cursor is in the text.  Now find the line
 	 * number. */
@@ -292,6 +313,18 @@ gui_mch_post_balloon(beval, mesg)
 	drawBalloon(beval);
     else
 	undrawBalloon(beval);
+}
+#endif
+
+#if defined(FEAT_BEVAL_TIP) || defined(PROTO)
+/*
+ * Hide the given balloon.
+ */
+    void
+gui_mch_unpost_balloon(beval)
+    BalloonEval	*beval;
+{
+    undrawBalloon(beval);
 }
 #endif
 
@@ -654,6 +687,11 @@ pointerEvent(beval, event)
 	    }
 	    break;
 
+	/*
+	 * Motif and Athena version: Keystrokes will be caught by the "textArea"
+	 *                           widget, and handled in
+	 *                           gui_x11_key_hit_cb().
+	 */
 	case KeyPress:
 	    if (beval->showState == ShS_SHOWING && beval->msgCB != NULL)
 	    {
@@ -1139,6 +1177,8 @@ drawBalloon(beval)
 	XtPopup(beval->balloonShell, XtGrabNone);
 
 	beval->showState = ShS_SHOWING;
+
+	current_beval = beval;
     }
 }
 
@@ -1152,6 +1192,8 @@ undrawBalloon(beval)
     if (beval->balloonShell != (Widget)0)
 	XtPopdown(beval->balloonShell);
     beval->showState = ShS_NEUTRAL;
+
+    current_beval = NULL;
 }
 
     static void

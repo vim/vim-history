@@ -555,94 +555,15 @@ update_screen(type)
 #endif
 }
 
-#if defined(FEAT_SIGNS) || defined(PROTO)
-    void
-update_debug_sign(buf, lnum)
-    buf_T	*buf;
-    linenr_T	lnum;
-{
-    win_T	*wp;
-    int		row;
-    int		j;
+#if defined(FEAT_SIGNS) || defined(FEAT_GUI)
+static void update_prepare __ARGS((void));
+static void update_finish __ARGS((void));
 
-# ifdef FEAT_FOLDING
-    win_foldinfo.fi_level = 0;
-# endif
-    updating_screen = TRUE;
-
-# ifdef FEAT_GUI
-    /* Remove the cursor before starting to do anything, because scrolling may
-     * make it difficult to redraw the text under it. */
-    if (gui.in_use)
-	gui_undraw_cursor();
-# endif
-    if (buf != NULL && lnum > 0)
-    {
-	/* update/delete a specific mark */
-	FOR_ALL_WINDOWS(wp)
-	{
-	    if (wp->w_buffer == buf && lnum >= wp->w_topline
-						      && lnum < wp->w_botline)
-	    {
-		row = 0;
-		for (j = 0; j < wp->w_lines_valid; ++j)
-		{
-		    if (lnum == wp->w_lines[j].wl_lnum)
-		    {
-# ifdef FEAT_FOLDING
-			/* Ignore folding, a closed fold with a sign doesn't
-			 * need updating. */
-			if (!wp->w_lines[j].wl_folded)
-# endif
-			{
-			    screen_start();	/* not sure of screen cursor */
-			    win_line(wp, lnum, row,
-						row + wp->w_lines[j].wl_size);
-			}
-			break;
-		    }
-		    row += wp->w_lines[j].wl_size;
-		}
-	    }
-	}
-    }
-    else
-    {
-	/* update all windows (signs deleted) */
-# ifdef FEAT_WINDOWS
-	for (wp = firstwin; wp; wp = wp->w_next)
-	    win_update(wp);
-# else
-	    win_update(curwin);
-# endif
-    }
-# ifdef FEAT_GUI
-    /* Redraw the cursor and update the scrollbars when all screen updating is
-     * done. */
-    if (gui.in_use)
-    {
-	out_flush();	/* required before updating the cursor */
-	gui_update_cursor(FALSE, FALSE);
-	gui_update_scrollbars(FALSE);
-    }
-# endif
-
-    updating_screen = FALSE;
-# ifdef FEAT_GUI
-    gui_may_resize_shell();
-# endif
-}
-#endif
-
-
-#ifdef FEAT_GUI
 /*
- * Update a single window, its status line and maybe the command line msg.
- * Used for the GUI scrollbar.
+ * Prepare for updating one or more windows.
  */
-    void
-updateWindow(wp)
-    win_T	*wp;
+    static void
+update_prepare()
 {
     cursor_off();
     updating_screen = TRUE;
@@ -655,6 +576,107 @@ updateWindow(wp)
 #ifdef FEAT_SEARCH_EXTRA
     start_search_hl();
 #endif
+}
+
+/*
+ * Finish updating one or more windows.
+ */
+    static void
+update_finish()
+{
+    if (redraw_cmdline)
+	showmode();
+
+# ifdef FEAT_SEARCH_EXTRA
+    end_search_hl();
+# endif
+
+    updating_screen = FALSE;
+
+# ifdef FEAT_GUI
+    gui_may_resize_shell();
+
+    /* Redraw the cursor and update the scrollbars when all screen updating is
+     * done. */
+    if (gui.in_use)
+    {
+	out_flush();	/* required before updating the cursor */
+	gui_update_cursor(FALSE, FALSE);
+	gui_update_scrollbars(FALSE);
+    }
+# endif
+}
+#endif
+
+#if defined(FEAT_SIGNS) || defined(PROTO)
+    void
+update_debug_sign(buf, lnum)
+    buf_T	*buf;
+    linenr_T	lnum;
+{
+    win_T	*wp;
+    int		doit = FALSE;
+
+# ifdef FEAT_FOLDING
+    win_foldinfo.fi_level = 0;
+# endif
+
+    /* update/delete a specific mark */
+    FOR_ALL_WINDOWS(wp)
+    {
+	if (buf != NULL && lnum > 0)
+	{
+	    if (wp->w_buffer == buf && lnum >= wp->w_topline
+						      && lnum < wp->w_botline)
+	    {
+		if (wp->w_redraw_top == 0 || wp->w_redraw_top > lnum)
+		    wp->w_redraw_top = lnum;
+		if (wp->w_redraw_bot == 0 || wp->w_redraw_bot < lnum)
+		    wp->w_redraw_bot = lnum;
+		redraw_win_later(wp, VALID);
+	    }
+	}
+	else
+	    redraw_win_later(wp, VALID);
+	if (wp->w_redr_type != 0)
+	    doit = TRUE;
+    }
+
+    if (!doit)
+	return;
+
+    /* update all windows that need updating */
+    update_prepare();
+
+# ifdef FEAT_WINDOWS
+    for (wp = firstwin; wp; wp = wp->w_next)
+    {
+	if (wp->w_redr_type != 0)
+	    win_update(wp);
+	if (wp->w_redr_status)
+	    win_redr_status(wp);
+    }
+# else
+    if (curwin->w_redr_type != 0)
+	win_update(curwin);
+# endif
+
+    update_finish();
+}
+#endif
+
+
+#if defined(FEAT_GUI) || defined(PROTO)
+/*
+ * Update a single window, its status line and maybe the command line msg.
+ * Used for the GUI scrollbar.
+ */
+    void
+updateWindow(wp)
+    win_T	*wp;
+{
+    update_prepare();
+
 #ifdef FEAT_CLIPBOARD
     /* When Visual area changed, may have to update selection. */
     if (clip_star.available && clip_isautosel())
@@ -672,24 +694,8 @@ updateWindow(wp)
 	    )
 	win_redr_status(wp);
 #endif
-    if (redraw_cmdline)
-	showmode();
-#ifdef FEAT_SEARCH_EXTRA
-    end_search_hl();
-#endif
-    updating_screen = FALSE;
-    gui_may_resize_shell();
 
-#ifdef FEAT_GUI
-    /* Redraw the cursor and update the scrollbars when all screen updating is
-     * done. */
-    if (gui.in_use)
-    {
-	out_flush();	/* required before updating the cursor */
-	gui_update_cursor(FALSE, FALSE);
-	gui_update_scrollbars(FALSE);
-    }
-#endif
+    update_finish();
 }
 #endif
 
@@ -816,7 +822,7 @@ win_update(wp)
     {
 	/*
 	 * When there are both inserted/deleted lines and specific lines to be
-	 * redrawn,, w_redraw_top and w_redraw_bot may be invalid, just redraw
+	 * redrawn, w_redraw_top and w_redraw_bot may be invalid, just redraw
 	 * everything (only happens when redrawing is off for while).
 	 */
 	type = NOT_VALID;
@@ -4219,7 +4225,7 @@ screen_line(row, coloff, endcol, clear_width
     clip_may_clear_selection(row, row);
 # endif
 
-    off_from = (unsigned) (current_ScreenLine - ScreenLines);
+    off_from = (unsigned)(current_ScreenLine - ScreenLines);
     off_to = LineOffset[row] + coloff;
 
 #ifdef FEAT_RIGHTLEFT
@@ -6909,8 +6915,7 @@ windgoto(row, col)
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
-		    /* Don't use an UTF-8 char for positioning, it's slow. And
-		     * check for composing characters. */
+		    /* Don't use an UTF-8 char for positioning, it's slow. */
 		    for (i = wouldbe_col; i < col; ++i)
 			if (ScreenLinesUC[LineOffset[row] + i] != 0)
 			{

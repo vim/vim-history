@@ -1,4 +1,4 @@
-*hangulin.txt*  For Vim version 6.2e.  Last change: 2001 Sep 03
+*hangulin.txt*  For Vim version 6.2f.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Chi-Deok Hwang and Sung-Hyun Nam

@@ -2,7 +2,7 @@
 " Language:	occam
 " Copyright:	Fred Barnes <frmb2@kent.ac.uk>, Mario Schweigler <ms44@kent.ac.uk>
 " Maintainer:	Mario Schweigler <ms44@kent.ac.uk>
-" Last Change:	07 May 2003
+" Last Change:	24 May 2003
 
 if version < 600
   syntax clear
@@ -24,13 +24,13 @@ setlocal iskeyword+=.
 
 syn case match
 
-syn keyword occamType		BYTE BOOL REAL INT INT16 INT32 INT64 REAL32 REAL64
+syn keyword occamType		BYTE BOOL INT INT16 INT32 INT64 REAL32 REAL64 ANY
 syn keyword occamType		CHAN DATA OF TYPE TIMER INITIAL VAL PORT MOBILE PLACED
-syn keyword occamType		PACKED RECORD PROTOCOL SHARED
+syn keyword occamType		PROCESSOR PACKED RECORD PROTOCOL SHARED ROUND TRUNC
 
-syn keyword occamStructure	SEQ PAR IF ALT PRI FORKING
+syn keyword occamStructure	SEQ PAR IF ALT PRI FORKING PLACE AT
 
-syn keyword occamKeyword	PROC IS TRUE FALSE SIZE AND OR XOR NOT RECURSIVE REC
+syn keyword occamKeyword	PROC IS TRUE FALSE SIZE RECURSIVE REC
 syn keyword occamKeyword	RETYPES RESHAPES STEP FROM FOR RESCHEDULE STOP SKIP FORK
 syn keyword occamKeyword	FUNCTION VALOF RESULT ELSE CLONE CLAIM
 syn keyword occamBoolean	TRUE FALSE
@@ -38,10 +38,15 @@ syn keyword occamRepeat		WHILE
 syn keyword occamConditional	CASE
 syn keyword occamConstant	MOSTNEG MOSTPOS
 
-syn keyword occamOperator	AFTER TIMES MINUS PLUS INITIAL
+syn match occamBrackets		/\[\|\]/
+syn match occamParantheses	/(\|)/
 
-syn match occamOperator		/::\|:=\|?\|??\|!/
+syn keyword occamOperator	AFTER TIMES MINUS PLUS INITIAL REM AND OR XOR NOT
+syn keyword occamOperator	BITAND BITOR BITNOT BYTESIN OFFSETOF
+
+syn match occamOperator		/::\|:=\|?\|!/
 syn match occamOperator		/<\|>\|+\|-\|\*\|\/\|\\\|=\|\~/
+syn match occamOperator		/@\|\$\$\|%\|&&\|<&\|&>\|<\]\|\[>\|\^/
 
 syn match occamSpecialChar	/\M**\|*'\|*"\|*#\(\[0-9A-F\]\+\)/ contained
 syn match occamChar		/\M\L\='\[^*\]'/
@@ -61,20 +66,25 @@ syn match occamCommentTitle	/--\s*\(KROC-OPTIONS:\|RUN-PARAMETERS:\)/hs=s+2 cont
 syn match occamIdentifier	/\<[A-Z.][A-Z.0-9]*\>/
 syn match occamFunction		/\<[A-Za-z.][A-Za-z0-9.]*\>/ contained
 
+syn match occamPPIdentifier	/##.\{-}\>/
+
 syn region occamString		start=/"/ skip=/\M*"/ end=/"/ contains=occamSpecialChar
 syn region occamCharString	start=/'/ end=/'/ contains=occamSpecialChar
 
-syn match occamNumber		/\<\d\+\(\.\d\+\)\=/
-syn match occamNumber		/-\d\+\(\.\d\+\)\=/
+syn match occamNumber		/\<\d\+\(\.\d\+\(E\(+\|-\)\d\+\)\=\)\=/
+syn match occamNumber		/-\d\+\(\.\d\+\(E\(+\|-\)\d\+\)\=\)\=/
 syn match occamNumber		/#\(\d\|[A-F]\)\+/
 syn match occamNumber		/-#\(\d\|[A-F]\)\+/
 
-syn keyword occamCDstr		SHARED EXTERNAL DEFINED NOALIAS NOUSAGE contained
+syn keyword occamCDString	SHARED EXTERNAL DEFINED NOALIAS NOUSAGE NOT contained
+syn keyword occamCDString	FILE LINE PROCESS.PRIORITY OCCAM2.5 contained
+syn keyword occamCDString	USER.DEFINED.OPERATORS INITIAL.DECL MOBILES contained
+syn keyword occamCDString	BLOCKING.SYSCALLS VERSION NEED.QUAD.ALIGNMENT contained
+syn keyword occamCDString	TARGET.CANONICAL TARGET.CPU TARGET.OS TARGET.VENDOR contained
+syn keyword occamCDString	TRUE FALSE AND OR contained
+syn match occamCDString		/<\|>\|=\|(\|)/ contained
 
-syn region occamCDirective	start=/^\s*#\(USE\|INCLUDE\|PRAGMA\|DEFINE\|UNDEF\|IF\|ELIF\|ELSE\|ENDIF\|WARNING\|ERROR\)\>/ end=/$/ contains=occamString,occamComment,occamCDStr
-
-syn match occamBrackets		/\[\|\]/
-syn match occamParantheses	/(\|)/
+syn region occamCDirective	start=/#\(USE\|INCLUDE\|PRAGMA\|DEFINE\|UNDEFINE\|UNDEF\|IF\|ELIF\|ELSE\|ENDIF\|WARNING\|ERROR\|RELAX\)\>/ end=/$/ contains=occamString,occamComment,occamCDString
 
 if version >= 508 || !exists("did_occam_syn_inits")
   if version < 508
@@ -94,6 +104,8 @@ if version >= 508 || !exists("did_occam_syn_inits")
   HiLink occamCharString String
   HiLink occamNumber Number
   HiLink occamCDirective PreProc
+  HiLink occamCDString String
+  HiLink occamPPIdentifier PreProc
   HiLink occamBoolean Boolean
   HiLink occamSpecialChar SpecialChar
   HiLink occamChar Character
@@ -101,7 +113,6 @@ if version >= 508 || !exists("did_occam_syn_inits")
   HiLink occamIdentifier Identifier
   HiLink occamConstant Constant
   HiLink occamOperator Operator
-  HiLink occamCDStr String
   HiLink occamFunction Ignore
   HiLink occamRepeat Repeat
   HiLink occamConditional Conditional

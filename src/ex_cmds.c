@@ -1299,10 +1299,17 @@ read_viminfo(file, want_info, want_marks, forceit)
     fp = mch_fopen((char *)fname, READBIN);
 
     if (p_verbose > 0)
-	smsg((char_u *)_("Reading viminfo file \"%s\"%s%s%s"), fname,
+    {
+	char_u	*s;
+
+	s = fname;
+	if (STRLEN(fname) > IOSIZE - 100)
+	    s = fname + STRLEN(fname) - (IOSIZE - 100);
+	smsg((char_u *)_("Reading viminfo file \"%s\"%s%s%s"), s,
 		    want_info ? _(" info") : "",
 		    want_marks ? _(" marks") : "",
 		    fp == NULL ? _(" FAILED") : "");
+    }
 
     vim_free(fname);
     if (fp == NULL)
@@ -1526,7 +1533,7 @@ write_viminfo(file, forceit)
     }
 
     if (p_verbose > 0)
-	smsg((char_u *)_("Writing viminfo file \"%s\""), fname);
+	msg_str((char_u *)_("Writing viminfo file \"%s\""), fname);
 
     viminfo_errcnt = 0;
     do_viminfo(fp_in, fp_out, !forceit, !forceit, FALSE);
@@ -4325,9 +4332,9 @@ ex_global(eap)
     else if (ndone == 0)
     {
 	if (type == 'v')
-	    smsg((char_u *)_("Pattern found in every line: %s"), pat);
+	    msg_str((char_u *)_("Pattern found in every line: %s"), pat);
 	else
-	    smsg((char_u *)_(e_patnotf2), pat);
+	    msg_str((char_u *)_(e_patnotf2), pat);
     }
     else
 	global_exe(cmd);
@@ -4553,7 +4560,8 @@ ex_help(eap)
 	     */
 	    if ((helpfd = mch_fopen((char *)p_hf, READBIN)) == NULL)
 	    {
-		smsg((char_u *)_("Sorry, help file \"%s\" not found"), p_hf);
+		msg_str((char_u *)_("Sorry, help file \"%s\" not found"),
+									p_hf);
 		goto erret;
 	    }
 	    fclose(helpfd);

@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.2e.  Last change: 2003 May 04
+*os_390.txt*    For Vim version 6.2f.  Last change: 2003 May 24
 
 
 		  VIM REFERENCE MANUAL	  by Ralf Schandl
@@ -17,25 +17,22 @@ This file contains the particulars for the z/OS UNIX version of Vim.
 9. Changes				|zOS-changes|
 
 DISCLAIMER:~
-We are IBM employees, but IBM is not responsible for this port. This is
-our private fun, and is provided in the hopes that it may be useful to
-others.
+We are IBM employees, but IBM is not responsible for this port. This is our
+private fun, and is provided in the hopes that it may be useful to others.
 
-If you have problems with this port, contact Anthony Giorgio
-<agiorgio@us.ibm.com>.
-
-Please note that this software has NOT been submitted to any formal IBM testing
-and is published AS IS. Please do not contact IBM for support for this
-software, as it is not an official component of any IBM product. IT IS
-NOT SUPPORTED, GUARANTEED, OR RELATED WHATSOEVER TO IBM.
+Please note that this software has NOT been submitted to any formal IBM
+testing and is published AS IS. Please do not contact IBM for support for this
+software, as it is not an official component of any IBM product. IT IS NOT
+SUPPORTED, GUARANTEED, OR RELATED WHATSOEVER TO IBM.
 
 Contributors: ~
-The port to z/OS UNIX was done by Ralf Schandl for the Redbook mentioned below.
+The port to z/OS UNIX was done by Ralf Schandl for the Redbook mentioned
+below.
 
 Changes, bug-reports, or both by:
 
 	David Moore
-	Anthony Giorgio <agiorgio@us.ibm.com>
+	Anthony Giorgio <agiorgio@fastmail.fm>
 	and others
 
 This document was written by Ralf Schandl and revised by Anthony Giorgio.

@@ -626,7 +626,7 @@ clean:
 
 test:
 	cd testdir
-	$(MAKE) /NOLOGO -f Make_dos.mak
+	$(MAKE) /NOLOGO -f Make_dos.mak win32
 	cd ..
 
 ###########################################################################

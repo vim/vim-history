@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2003 May 11
+" Last Change:	2003 May 20
 " Version:	$Id$
 " Look for the latest version at http://vim.sourceforge.net/
 "
@@ -173,8 +173,16 @@ function GetAdaIndent()
    " Now check what's on the previous line
    if line =~ s:AdaBlockStart  ||  line =~ '(\s*$'
       " Check for false matches to AdaBlockStart
-      if line !~ '^\s*package\>.*\<is\s*new\>'
-	 " Move indent in
+      let false_match = 0
+      if line =~ '^\s*\(procedure\|function\|package\)\>.*\<is\s*new\>'
+	 " Generic instantiation
+	 let false_match = 1
+      elseif line =~ ')\s*;\s*$'  ||  line =~ '^\([^(]*([^)]*)\)*[^(]*;\s*$'
+	 " forward declaration
+	 let false_match = 1
+      endif
+      " Move indent in
+      if ! false_match
 	 let ind = ind + &sw
       endif
    elseif line =~ '^\s*\(case\|exception\)\>'
