@@ -106,7 +106,7 @@ aborting()
 should_abort(retcode)
     int		retcode;
 {
-    return ((retcode == FAIL && trylevel != 0) || aborting());
+    return ((retcode == FAIL && trylevel != 0 && !emsg_silent) || aborting());
 }
 
 /*
