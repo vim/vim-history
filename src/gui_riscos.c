@@ -14,6 +14,7 @@
  * gui_riscos.c
  *
  * Thomas Leonard <tal197@ecs.soton.ac.uk>
+ * Updated by Andy Wingate <andy@sparse.net>
  */
 
 extern int time_of_last_poll;
@@ -1786,7 +1787,7 @@ ro_mouse(block)
 	modifiers ^= MOUSE_SHIFT;
 	if (modifiers && MOUSE_SHIFT)
 	{
-	    VimMenu	main;
+	    vimmenu_T	main;
 	    /* Shift was NOT pressed - show menu */
 	    main.dname = (char_u *) "Vim";
 	    main.children = root_menu;
@@ -2562,11 +2563,11 @@ gui_mch_clear_all(void)
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
-
     int top_from = -row - num_lines;
     int bot_from = -gui.scroll_region_bot - 1;
     int bot_to   = bot_from + num_lines;
+
+    swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
 
     /* Changed without checking! */
     swi(Wimp_BlockCopy, gui.window_handle,
@@ -2591,11 +2592,11 @@ gui_mch_delete_lines(int row, int num_lines)
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
-
     int top_from = -row;
     int bot_to   = -gui.scroll_region_bot - 1;
     int bot_from = bot_to + num_lines;
+
+    swi(ColourTrans_SetGCOL, gui.back_pixel << 8, 0, 0, 0x80, 0);
 
     swi(Wimp_BlockCopy, gui.window_handle,
 			    gui.scroll_region_left * gui.char_width,

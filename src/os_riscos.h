@@ -46,7 +46,7 @@
 #endif
 
 #ifndef DFLT_VDIR
-# define DFLT_VDIR	"Choices:Vim.vimfiles/view"	/* default for 'viewdir' */
+# define DFLT_VDIR	"Choices:Vim.view"	/* default for 'viewdir' */
 #endif
 
 #ifndef TERMCAPFILE
@@ -130,7 +130,7 @@
 #endif
 
 #define DFLT_ERRORFILE		"errors/vim"
-#define DFLT_RUNTIMEPATH	"Choices:Vim.vimfiles,$VIMRUNTIME,Choices:Vim.vimfiles/after"
+#define DFLT_RUNTIMEPATH	"Choices:Vim,Vim:,Choices:Vim.after"
 
 /*
  * RISC PCs have plenty of memory, use large buffers
