@@ -1598,8 +1598,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_SYN)
 	cd $(DEST_SYN); chmod $(HELPMOD) *.vim README.txt
 # install the indent files
-	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(DEST_IND)
-	cd $(DEST_IND); chmod $(HELPMOD) *.vim
+	cd $(INDSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_IND)
+	cd $(DEST_IND); chmod $(HELPMOD) *.vim README.txt
 # install the standard plugin files
 	cd $(PLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_PLUG)
 	cd $(DEST_PLUG); chmod $(HELPMOD) *.vim README.txt
@@ -1615,12 +1615,17 @@ installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
 	chmod $(DIRMOD) `find $(DEST_MACRO) -type d -print`
 	chmod $(FILEMOD) `find $(DEST_MACRO) -type f -print`
 	chmod $(SCRIPTMOD) $(DEST_MACRO)/less.sh
+	# When using CVS some CVS directories might have been copied.
+	cvs=`find $(DEST_MACRO) -name CVS -print`; \
+	      if test -n "$$cvs"; then \
+	         rm -rf $$cvs; \
+	      fi
 
 # install the tutor files
 installtutor: $(TUTORSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TUTOR)
 	$(INSTALL_DATA) vimtutor $(DEST_BIN)/$(VIMNAME)tutor
 	chmod $(SCRIPTMOD) $(DEST_BIN)/$(VIMNAME)tutor
-	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(DEST_TUTOR)
+	-$(INSTALL_DATA) $(TUTORSOURCE)/README* $(TUTORSOURCE)/tutor* $(DEST_TUTOR)
 	chmod $(HELPMOD) $(DEST_TUTOR)/*
 
 # install helper program xxd
@@ -1637,6 +1642,11 @@ installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 	chmod $(MANMOD) $(DEST_MAN)/xxd.1
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
+	# When using CVS some CVS directories might have been copied.
+	cvs=`find $(DEST_TOOLS) -name CVS -print`; \
+	      if test -n "$$cvs"; then \
+	         rm -rf $$cvs; \
+	      fi
 	-chmod $(FILEMOD) $(DEST_TOOLS)/*
 # replace the path in some tools
 	perlpath=`./which.sh perl` && sed -e "s+/usr/bin/perl+$$perlpath+" $(TOOLSSOURCE)/efm_perl.pl >$(DEST_TOOLS)/efm_perl.pl
@@ -1823,7 +1833,8 @@ uninstall_runtime:
 	-rm -f $(SYS_OPTWIN_FILE) $(SYS_PROCSET_FILE)
 	-rm -f $(SYS_EVISO_FILE) $(SYS_EVEBCDIC_FILE)
 	-rm -f $(DEST_COL)/*.vim $(DEST_COL)/README.txt
-	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt $(DEST_IND)/*.vim
+	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt
+	-rm -f $(DEST_IND)/*.vim $(DEST_IND)/README.txt
 	-rm -rf $(DEST_MACRO)
 	-rm -rf $(DEST_TUTOR)
 	-rm -rf $(DEST_TOOLS)
