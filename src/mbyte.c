@@ -4275,6 +4275,8 @@ string_convert(vcp, ptr, lenp)
 	len = (int)STRLEN(ptr);
     else
 	len = *lenp;
+    if (len == 0)
+	return vim_strsave((char_u *)"");
 
     switch (vcp->vc_type)
     {
