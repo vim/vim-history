@@ -5261,6 +5261,12 @@ buf_check_timestamp(buf, focus)
 #endif
     }
 
+#ifdef FEAT_GUI
+    /* reset this in case an autocommand has set it; it would break
+     * 'mousefocus' */
+    need_mouse_correct = FALSE;
+#endif
+
     return retval;
 }
 
