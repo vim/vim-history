@@ -3743,7 +3743,6 @@ mch_call_shell(cmd, options)
 			if (has_mbyte)
 			{
 			    int		l;
-			    char_u	*p;
 
 			    /* Check if the last character in buffer[] is
 			     * incomplete, keep these bytes for the next
@@ -4309,12 +4308,12 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	if (msec > 0)
 	{
 # ifdef USE_START_TV
-	    struct timeval  tv;
+	    struct timeval  mtv;
 
 	    /* Compute remaining wait time. */
-	    gettimeofday(&tv, NULL);
-	    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
-				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
+	    gettimeofday(&mtv, NULL);
+	    msec -= (mtv.tv_sec - start_tv.tv_sec) * 1000L
+				   + (mtv.tv_usec - start_tv.tv_usec) / 1000L;
 # else
 	    /* Guess we got interrupted halfway. */
 	    msec = msec / 2;

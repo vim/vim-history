@@ -2045,7 +2045,7 @@ collection:
 		    if (enc_utf8)
 		    {
 			int	off;
-			int	len;
+			int	l;
 
 			/* Need to get composing character too, directly
 			 * access regparse for that, because skipchr() skips
@@ -2057,11 +2057,11 @@ collection:
 			    off = 0;
 			for (;;)
 			{
-			    len = utf_ptr2len_check(regparse + off);
+			    l = utf_ptr2len_check(regparse + off);
 			    if (!UTF_COMPOSINGLIKE(regparse + off,
-							regparse + off + len))
+							  regparse + off + l))
 				break;
-			    off += len;
+			    off += l;
 			    regmbc(utf_ptr2char(regparse + off));
 			}
 			skipchr();

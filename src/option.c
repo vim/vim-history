@@ -4975,14 +4975,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (gvarp == &p_mps)
     {
 	/* Check for "x:y,x:y" */
-	for (p = *varp; *p; p += 4)
+	for (p = *varp; *p != NUL; p += 4)
 	{
-	    if (!p[0] || p[1] != ':' || !p[2] || (p[3] && p[3] != ','))
+	    if (p[1] != ':' || p[2] == NUL || (p[3] != NUL && p[3] != ','))
 	    {
 		errmsg = e_invarg;
 		break;
 	    }
-	    if (!p[3])
+	    if (p[3] == NUL)
 		break;
 	}
     }
@@ -5629,8 +5629,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (p_csqf != NULL)
 	{
-	    char_u *p = p_csqf;
-
+	    p = p_csqf;
 	    while (*p != NUL)
 	    {
 		if (vim_strchr((char_u *)CSQF_CMDS, *p) == NULL
@@ -6308,7 +6307,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     else if ((int *)varp == &p_acd)
     {
 	if (p_acd && curbuf->b_ffname != NULL
-		&& vim_chdirfile(curbuf->b_ffname) == OK)
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	    shorten_fnames(TRUE);
     }
 #endif
@@ -6765,7 +6764,8 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     {
 	if (errbuf != NULL)
 	{
-	    sprintf((char *)errbuf, _("E593: Need at least %d lines"), min_rows());
+	    sprintf((char *)errbuf, _("E593: Need at least %d lines"),
+								  min_rows());
 	    errmsg = errbuf;
 	}
 	Rows = min_rows();
@@ -6774,7 +6774,8 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     {
 	if (errbuf != NULL)
 	{
-	    sprintf((char *)errbuf, _("E594: Need at least %d columns"), MIN_COLUMNS);
+	    sprintf((char *)errbuf, _("E594: Need at least %d columns"),
+								 MIN_COLUMNS);
 	    errmsg = errbuf;
 	}
 	Columns = MIN_COLUMNS;

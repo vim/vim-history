@@ -1273,7 +1273,7 @@ setManualFold(lnum, opening, recurse, donep)
     if (foldmethodIsDiff(curwin) && curwin->w_p_scb)
     {
 	win_T	    *wp;
-	linenr_T    lnum;
+	linenr_T    dlnum;
 
 	/*
 	 * Do the same operation in other windows in diff mode.  Calculate the
@@ -1283,9 +1283,9 @@ setManualFold(lnum, opening, recurse, donep)
 	{
 	    if (wp != curwin && foldmethodIsDiff(wp) && wp->w_p_scb)
 	    {
-		lnum = diff_lnum_win(curwin->w_cursor.lnum, wp);
-		if (lnum != 0)
-		    (void)setManualFoldWin(wp, lnum, opening, recurse, NULL);
+		dlnum = diff_lnum_win(curwin->w_cursor.lnum, wp);
+		if (dlnum != 0)
+		    (void)setManualFoldWin(wp, dlnum, opening, recurse, NULL);
 	    }
 	}
     }
