@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0au.  Last change: 2001 Aug 25
+*mlang.txt*     For Vim version 6.0av.  Last change: 2001 Sep 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -199,4 +199,4 @@ a message adapt to language preferences of the user, >
 	:endif
 <
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

@@ -2366,6 +2366,9 @@ onepage(dir, count)
 	    if (n <= curwin->w_height)		    /* at begin of file */
 	    {
 		curwin->w_topline = 1;
+#ifdef FEAT_DIFF
+		max_topfill();
+#endif
 		curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
 	    }
 	    else

@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.0au.  Last change: 2001 Aug 27
+*usr_29.txt*	For Vim version 6.0av.  Last change: 2001 Sep 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -42,7 +42,7 @@ jump to it by using the following command: >
 
 	:tag startlist
 
-This command will find the function "startlist" even if it is another file.
+This command will find the function "startlist" even if it is in another file.
    The CTRL-] command jumps to the tag of the word that is under the cursor.
 This makes it easy to explore a tangle of C code.  Suppose, for example, that
 you are in the function "write_block".  You can see that it calls
@@ -610,4 +610,4 @@ forward for the identifier.  Example (cursor on "idx"):
 
 Next chapter: |usr_30.txt|  Editing programs
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

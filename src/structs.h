@@ -988,7 +988,8 @@ struct file_buffer
     int		b_may_swap;
     int		b_did_warn;	/* Set to 1 if user has been warned on first
 				   change of a read-only file */
-    int		b_help;		/* buffer for help file */
+    int		b_help;		/* buffer for help file (when set b_p_bt is
+				   "help") */
 
 #ifndef SHORT_FNAME
     int		b_shortname;	/* this file has an 8.3 file name */

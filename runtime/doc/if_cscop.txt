@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 6.0au.  Last change: 2001 Jul 23
+*if_cscop.txt*  For Vim version 6.0av.  Last change: 2001 Sep 05
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -400,4 +400,4 @@ bit of code) was adapted from the cscope interface in nvi.  Please report
 any problems, suggestions, patches, et al., you have for the usage of
 cscope within Vim to him.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

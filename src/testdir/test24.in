@@ -1,7 +1,7 @@
 Tests for regexp with backslash and other special characters inside []
 
 STARTTEST
-:set nocompatible
+:set nocompatible viminfo+=nviminfo
 /[\x]
 x/[\t\]]
 x/[]y]

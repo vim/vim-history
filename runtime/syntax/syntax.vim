@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Sep 04
 
 " This file is used for ":syntax on".
 " It installs the autocommands and starts highlighting for all buffers.
@@ -35,8 +35,9 @@ augroup END
 
 " Execute the syntax autocommands for the each buffer.
 " If the filetype wasn't detected yet, do that now.
-if s:did_ft
-  doautoall syntaxset FileType
-else
+" Always do the syntaxset autocommands, for buffers where the 'filetype'
+" already was set manually (e.g., help buffers).
+doautoall syntaxset FileType
+if !s:did_ft
   doautoall filetypedetect BufRead
 endif

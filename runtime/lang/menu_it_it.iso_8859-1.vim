@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Sep 02
+" Last Change:	2001 Sep 05
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -38,7 +38,7 @@ menut Split\ Patched\ &By\.\.\.	Finestra\ Patc&hes\ da\.\.\.
 
 " Edit menu
 " menutrans &Edit			&Edit
-menut &Undo<Tab>u			&Disfa<Tab>u
+menut &Undo<Tab>u			&Annulla<Tab>u
 menut &Redo<Tab>^R			Ri&fai<Tab>^R
 menut Rep&eat<Tab>\.		&Ripeti \ultimo \comando<Tab>\.
 menut Cu&t<Tab>"+x			T&aglia<Tab>"+x
@@ -61,7 +61,7 @@ menut Qwestion			Domanda
 " Edit/Global Settings
 menut &Global\ Settings	Impostazioni\ &Globali
 menut Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	&Evidenzia\ ricerche\ Sì/No<Tab>:set\ hls!
-menut Toggle\ &Ignore-case<Tab>:set\ ic!	&Ignora\ maius\.-minusc\.\ Sì/No<Tab>:set\ ic!
+menut Toggle\ &Ignore-case<Tab>:set\ ic!	&Ignora\ maiusc\.-minusc\.\ Sì/No<Tab>:set\ ic!
 menut Toggle\ &Showmatch<Tab>:set\ sm!	Indica\ &Corrispondente\ Sì/No<Tab>:set\ sm!
 menut &Context\ lines	&Linee\ di\ contesto
 menut &Virtual\ Edit		&Edit\ Virtuale
@@ -74,12 +74,34 @@ menut Toggle\ Insert\ &Mode<Tab>:set\ im!	&Modalità\ Inserimento\ Sì/No<Tab>:set
 menut Search\ &Path\.\.\.	Ca&mmino\ di\ ricerca\.\.\.
 menut Ta&g\ Files\.\.\.		File\ Ta&g\.\.\.
 menut C&olor\ Scheme		Schema\ C&olori
-menut default		per\ difetto
+menut default		normale
+menut DEFAULT		NORMALE
 menut evening		notturno
+menut EVENING		NOTTURNO
 menut morning		diurno
+menut MORNING		DIURNO
 menut shine		brillante
-menut peachpuff		alla\ pesca
+menut SHINE		BRILLANTE
+menut peachpuff		pesca
+menut PEACHPUF		PESCA
+
 menut &Keymap				&Mappa\ tastiera
+menut None		nessuna
+menut accents		accenti
+menut ACCENTS		ACCENTI
+menut hebrew		ebraico
+menut HEBREW		EBRAICO
+menut hebrew_iso-8859-8 ebraico_iso-8859-8
+menut hebrew_cp1255	ebraico_cp1255
+menut hebrew_utf-8	ebraico_utf-8
+menut hebrewp_iso-8859-8 ebraico_p_iso-8859-8
+menut HEBREW-		EBRAICO+
+menut hebrewp		EBRAICOP
+menut HEBREWP		EBRAICOP
+menut russian-jcuken	cirillico-jcuken
+menut russian-jcukenwin	cirillico-jcuken-win
+menut RUSSIAN		CIRILLICO
+menut RUSSIAN-		CIRILLICO-
 
 " Edit/File Settings
 
@@ -198,7 +220,7 @@ menut Rotate\ &Down<Tab>^Wr		Ruota\ verso\ il\ &basso<Tab>^Wr
 menut Select\ Fo&nt\.\.\.		Scegli\ &Font\.\.\.
 
 " The popup menu
-menut &Undo			&Disfa
+menut &Undo			&Annulla
 menut Cu&t			&Taglia
 menut &Copy			C&opia
 menut &Paste		I&ncolla
@@ -215,7 +237,7 @@ menut Open		Apri
 menut Save		Salva
 menut SaveAll	SalvaTutto
 menut Print		Stampa
-menut Undo		Disfa
+menut Undo		Annulla
 menut Redo		Rifai
 menut Cut		Taglia
 menut Copy		Copia
@@ -244,7 +266,7 @@ if has("toolbar")
     tmenu ToolBar.Save		Salva
     tmenu ToolBar.SaveAll	SalvaTutto
     tmenu ToolBar.Print		Stampa
-    tmenu ToolBar.Undo		Disfa
+    tmenu ToolBar.Undo		Annulla
     tmenu ToolBar.Redo		Rifai
     tmenu ToolBar.Cut		Taglia
     tmenu ToolBar.Copy		Copia

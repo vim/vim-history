@@ -1,12 +1,12 @@
 " Vim syntax file
 " Language:	SPECMAN E-LANGUAGE
-" Maintainer:	Or Freund <or@mobilian.com ; sorfreun@t2.technion.ac.il>
-" Last Update:	6-7-2001
+" Maintainer:	Or Freund <or@mobilian.com ;omf@gmx.co.uk>
+" Last Update: Wed Sep 5 2001
 
 "---------------------------------------------------------
 "| If anyone found an error or fix the parenthesis part  |
 "| I will be happy to hear about it			 |
-"| Thanks Or.                                            |
+"| Thanks Or.						 |
 "---------------------------------------------------------
 
 " Remove any old syntax stuff hanging around
@@ -22,8 +22,8 @@ syn keyword  specmanTodo	contained TODO todo ToDo FIXME XXX
 
 syn keyword specmanStatement   var instance on compute start event expect check that routine
 syn keyword specmanStatement   specman is also first only with like
-syn keyword specmanStatement   list of first all radix hex bin ignore illegal
-syn keyword specmanStatement  traceable untraceable
+syn keyword specmanStatement   list of all radix hex dec bin ignore illegal
+syn keyword specmanStatement   traceable untraceable
 syn keyword specmanStatement   cover using count_only trace_only at_least transition item ranges
 syn keyword specmanStatement   cross text call task within
 
@@ -33,14 +33,14 @@ syn keyword specmanMethod      post_generate pre_generate setup_test finalize_te
 syn keyword specmanMethod      init run copy as_a set_config dut_error add clear lock quit
 syn keyword specmanMethod      lock unlock release swap quit to_string value stop_run
 syn keyword specmanMethod      crc_8 crc_32 crc_32_flip get_config add0 all_indices and_all
-syn keyword specmanMethod      apply average count delete exists first first_index get_indices
+syn keyword specmanMethod      apply average count delete exists first_index get_indices
 syn keyword specmanMethod      has insert is_a_permutation is_empty key key_exists key_index
 syn keyword specmanMethod      last last_index max max_index max_value min min_index
 syn keyword specmanMethod      min_value or_all pop pop0 push push0 product resize reverse
-syn keyword specmanMethod      size( sort split sum top top0 unique clear is_all_iterations
+syn keyword specmanMethod      sort split sum top top0 unique clear is_all_iterations
 syn keyword specmanMethod      get_enclosing_unit hdl_path exec deep_compare deep_compare_physical
-syn keyword specmanMethod      pack unpack
-
+syn keyword specmanMethod      pack unpack warning error fatal
+syn match   specmanMethod      "size()"
 syn keyword specmanPacking     packing low high
 syn keyword specmanType        locker address
 syn keyword specmanType        body code vec chars
@@ -50,7 +50,9 @@ syn keyword specmanBoolean     TRUE FALSE
 syn keyword specmanPreCondit   #ifdef #ifndef #else
 
 syn keyword specmanConditional choose matches
-syn keyword specmanConditional if then else when
+syn keyword specmanConditional if then else when try
+
+
 
 syn keyword specmanLabel  case casex casez default
 
@@ -62,6 +64,7 @@ syn keyword specmanRepeat      index it me in new return result select
 
 syn keyword specmanTemporal    cycle sample events forever
 syn keyword specmanTemporal    wait  change  negedge rise fall delay sync sim true detach eventually emit
+
 syn keyword specmanConstant    MAX_INT MIN_INT NULL UNDEF
 
 syn keyword specmanDefine       define as computed type extend
@@ -177,4 +180,3 @@ if version >= 508 || !exists("did_specman_syn_inits")
 endif
 
 let b:current_syntax = "specman"
-

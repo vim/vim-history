@@ -152,6 +152,7 @@
 #define BRACE_LIMITS	17	/* nr nr  define the min & max for BRACE_SIMPLE
 				 *	and BRACE_COMPLEX. */
 #define NEWL		18	/*	Match line-break */
+#define BHPOS		19	/*	End position for BEHIND or NOBEHIND */
 
 
 /* character classes: 20-48 normal, 50-78 include a line-break */
@@ -1266,6 +1267,9 @@ regpiece(flagp)
 		if (lop == END)
 		    EMSG_M_RET_NULL("E59: invalid character after %s@",
 						      reg_magic == MAGIC_ALL);
+		/* Look behind must match with behind_pos. */
+		if (lop == BEHIND || lop == NOBEHIND)
+		    regtail(ret, regnode(BHPOS));
 		regtail(ret, regnode(END)); /* operand ends */
 		reginsert(lop, ret);
 		break;
@@ -2602,6 +2606,8 @@ reg_getline(lnum)
 	return NULL;
     return ml_get_buf(reg_buf, reg_firstlnum + lnum, FALSE);
 }
+
+static regsave_T behind_pos;
 
 #ifdef FEAT_SYN_HL
 static char_u	*reg_startzp[NSUBEXP];	/* Workspace to mark beginning */
@@ -3963,7 +3969,8 @@ regmatch(scan)
 	  case BEHIND:
 	  case NOBEHIND:
 	    {
-		regsave_T	save_before, save_after, save_start;
+		regsave_T	save_after, save_start;
+		regsave_T	save_behind_pos;
 		int		needmatch = (op == BEHIND);
 		long		col;
 
@@ -3974,7 +3981,7 @@ regmatch(scan)
 		 * First check if the next item matches, that's probably
 		 * faster.
 		 */
-		reg_save(&save_before);
+		reg_save(&save_start);
 		if (regmatch(next))
 		{
 		    /* save the position after the found match for next */
@@ -3983,14 +3990,18 @@ regmatch(scan)
 		    /* start looking for a match with operand at the current
 		     * postion.  Go back one character until we find the
 		     * result, hitting the start of the line or the previous
-		     * line (for multi-line matching).  */
-		    save_start = save_before;
+		     * line (for multi-line matching).
+		     * Set behind_pos to where the match should end, BHPOS
+		     * will match it. */
+		    save_behind_pos = behind_pos;
+		    behind_pos = save_start;
 		    for (col = 0; ; ++col)
 		    {
 			reg_restore(&save_start);
 			if (regmatch(OPERAND(scan))
-				&& reg_save_equal(&save_before))
+				&& reg_save_equal(&behind_pos))
 			{
+			    behind_pos = save_behind_pos;
 			    /* found a match that ends where "next" started */
 			    if (needmatch)
 			    {
@@ -4008,7 +4019,7 @@ regmatch(scan)
 			    if (save_start.rs_u.pos.col == 0)
 			    {
 				if (save_start.rs_u.pos.lnum
-						< save_before.rs_u.pos.lnum
+						< behind_pos.rs_u.pos.lnum
 					|| reg_getline(
 					    --save_start.rs_u.pos.lnum) == NULL)
 				    break;
@@ -4026,7 +4037,9 @@ regmatch(scan)
 			    --save_start.rs_u.ptr;
 			}
 		    }
+
 		    /* NOBEHIND succeeds when no match was found */
+		    behind_pos = save_behind_pos;
 		    if (!needmatch)
 		    {
 			reg_restore(&save_after);
@@ -4035,6 +4048,17 @@ regmatch(scan)
 		}
 		return FALSE;
 	    }
+
+	  case BHPOS:
+	    if (REG_MULTI)
+	    {
+		if (behind_pos.rs_u.pos.col != (colnr_T)(reginput - regline)
+			|| behind_pos.rs_u.pos.lnum != reglnum)
+		    return FALSE;
+	    }
+	    else if (behind_pos.rs_u.ptr != reginput)
+		return FALSE;
+	    break;
 
 	  case NEWL:
 	    if (c != NUL || reglnum == reg_maxline)

@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0au.  Last change: 2001 Aug 27
+*pi_expl.txt*    For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -195,4 +195,4 @@ separator line between the groups, you can set the option >
   let g:explUseSeparators=0    " Don't use separator lines
 
 ==============================================================================
- vim:tw=78:noet
+ vim:tw=78:noet:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*gui_w16.txt*   For Vim version 6.0au.  Last change: 2001 Jul 28
+*gui_w16.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,4 +183,4 @@ a block cursor over a pipe character '|', the cursor is drawn in the wrong
 size and bits get left behind. This is a bug in the Win3.1x GDI, it doesn't
 happen if you run the exe under 95/NT.
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

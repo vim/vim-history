@@ -672,13 +672,8 @@ set_b0_fname(b0p, buf)
 #ifdef CHECK_INODE
 	    long_to_char((long)st.st_ino, b0p->b0_ino);
 #endif
-	    buf->b_mtime = buf->b_mtime_read = (long)st.st_mtime;
-	    buf->b_orig_size = (size_t)st.st_size;
-#ifdef HAVE_ST_MODE
-	    buf->b_orig_mode = (int)st.st_mode;
-#else
-	    buf->b_orig_mode = mch_getperm(buf->b_ffname);
-#endif
+	    buf_store_time(buf, &st, buf->b_ffname);
+	    buf->b_mtime_read = buf->b_mtime;
 	}
 	else
 	{
@@ -1760,6 +1755,7 @@ ml_preserve(buf, message)
     linenr_T	lnum;
     memfile_T	*mfp = buf->b_ml.ml_mfp;
     int		status;
+    int		got_int_save = got_int;
 
     if (mfp == NULL || mfp->mf_fname == NULL)
     {
@@ -1767,6 +1763,10 @@ ml_preserve(buf, message)
 	    EMSG(_("E313: Cannot preserve, there is no swap file"));
 	return;
     }
+
+    /* We only want to stop when interrupted here, not when interrupted
+     * before. */
+    got_int = FALSE;
 
     ml_flush_line(buf);				    /* flush buffered line */
     (void)ml_find_line(buf, (linenr_T)0, ML_FLUSH); /* flush locked block */
@@ -1787,7 +1787,7 @@ ml_preserve(buf, message)
      * ml_find_line() does the work by translating the negative block numbers
      * when getting the first line of each data block.
      */
-    if (mf_need_trans(mfp))
+    if (mf_need_trans(mfp) && !got_int)
     {
 	lnum = 1;
 	while (mf_need_trans(mfp) && lnum <= buf->b_ml.ml_line_count)
@@ -1808,6 +1808,8 @@ ml_preserve(buf, message)
 	buf->b_ml.ml_stack_top = 0;	    /* stack is invalid now */
     }
 theend:
+    got_int |= got_int_save;
+
     if (message)
     {
 	if (status == OK)

@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:		2001 Aug 31
+" Last Change:	06 Sep 2001 	
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -253,7 +253,7 @@ menutrans &Convert\ to\ HTML	Przetwórz\ na\ &HTML
 " dialog texts
 let menutrans_no_file = "[Brak pliku]"
 let menutrans_help_dialog = "Wprowad¼ komendê lub s³owo, aby otrzymaæ pomoc o:\n\nPrzedrostek i_ oznacza komendê trybu Wprowadzania (np. i_CTRL-X)\nPrzedrostek c_ oznacza komendê edycji wiersza komend (np. c_<Del>)\nPrzedrostek ' oznacza nazwê opcji (np. 'shiftwidth')"
-let g:menutrans_path_dialog = "Proszê wprowadziæ ¶cie¿kê poszukiwania plików.\nProszê rozdzielaæ nazwy katalogów przecinkiem."
-let g:menutrans_tags_dialog = "Proszê podaæ nazwy plików tagów.\nProszê rozdzielaæ nazwy przecinkiem."
-let g:menutrans_textwidth_dialog = "Proszê wprowadziæ now± szeroko¶æ tekstu (0 wy³±cza przewijanie): "
-let g:menutrans_fileformat_dialog = "Proszê wybraæ format w którym ten plik ma byæ zapisany"
+let g:menutrans_path_dialog = "Wprowad¼ ¶cie¿kê poszukiwania plików.\nProszê rozdzielaæ nazwy katalogów przecinkiem."
+let g:menutrans_tags_dialog = "Podaj nazwy plików tagów.\nProszê rozdzielaæ nazwy przecinkiem."
+let g:menutrans_textwidth_dialog = "Wprowad¼ now± szeroko¶æ tekstu (0 wy³±cza przewijanie): "
+let g:menutrans_fileformat_dialog = "Wybierz format w którym ten plik ma byæ zapisany"

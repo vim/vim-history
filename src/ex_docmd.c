@@ -62,6 +62,7 @@ static char_u	*do_one_cmd __ARGS((char_u **, int, struct condstack *, char_u *(*
 static char_u	*do_one_cmd __ARGS((char_u **, int, char_u *(*getline)(int, void *, int), void *cookie));
 static int	if_level = 0;		/* depth in :if */
 #endif
+static int	checkforcmd __ARGS((char_u **pp, char *cmd, int len));
 static char_u	*find_command __ARGS((exarg_T *eap, int *full));
 
 static void	ex_abbreviate __ARGS((exarg_T *eap));
@@ -175,13 +176,7 @@ static void	ex_recover __ARGS((exarg_T *eap));
 # define ex_listdo		ex_ni
 #endif
 static void	ex_mode __ARGS((exarg_T *eap));
-static void	ex_browse __ARGS((exarg_T *eap));
-static void	ex_confirm __ARGS((exarg_T *eap));
-static void	ex_vertical __ARGS((exarg_T *eap));
-static void	ex_aboveleft __ARGS((exarg_T *eap));
-static void	ex_belowright __ARGS((exarg_T *eap));
-static void	ex_topleft __ARGS((exarg_T *eap));
-static void	ex_botright __ARGS((exarg_T *eap));
+static void	ex_wrongmodifier __ARGS((exarg_T *eap));
 static void	ex_find __ARGS((exarg_T *eap));
 static void	ex_edit __ARGS((exarg_T *eap));
 #if !defined(FEAT_GUI) && !defined(FEAT_CLIENTSERVER)
@@ -380,8 +375,6 @@ static void	ex_match __ARGS((exarg_T *eap));
 # define ex_nohlsearch		ex_ni
 # define ex_match		ex_ni
 #endif
-static void	ex_silent __ARGS((exarg_T *eap));
-static void	ex_verbose __ARGS((exarg_T *eap));
 #ifdef FEAT_CRYPT
 static void	ex_X __ARGS((exarg_T *eap));
 #else
@@ -595,7 +588,6 @@ do_cmdline(cmdline, getline, cookie, flags)
     int		count = 0;		/* line number count */
     int		did_inc = FALSE;	/* incremented RedrawingDisabled */
     int		retval = OK;
-    cmdmod_T	save_cmdmod;
 #ifdef FEAT_EVAL
     struct condstack cstack;		/* conditional stack */
     garray_T	lines_ga;		/* keep lines for ":while" */
@@ -620,13 +612,6 @@ do_cmdline(cmdline, getline, cookie, flags)
     cstack.cs_had_continue = FALSE;
     ga_init2(&lines_ga, (int)sizeof(wcmd_T), 10);
 #endif
-
-    /*
-     * Reset browse, confirm, etc..  They are restored when returning, for
-     * recursive calls.
-     */
-    save_cmdmod = cmdmod;
-    vim_memset(&cmdmod, 0, sizeof(cmdmod));
 
     /*
      * "did_emsg" will be set to TRUE when emsg() is used, in which case we
@@ -975,8 +960,6 @@ do_cmdline(cmdline, getline, cookie, flags)
 	}
     }
 
-    cmdmod = save_cmdmod;
-
 #ifndef FEAT_EVAL
     /*
      * Reset if_level, in case a sourced script file contains more ":if" than
@@ -1008,7 +991,8 @@ free_cmdlines(gap)
  *
  * If 'sourcing' is TRUE, the command will be included in the error message.
  *
- * 2. skip comment lines and leading space
+ * 1. skip comment lines and leading space
+ * 2. handle command modifiers
  * 3. parse range
  * 4. parse command
  * 5. parse arguments
@@ -1044,6 +1028,11 @@ do_one_cmd(cmdlinep, sourcing,
     long		n;
     char_u		*errormsg = NULL;	/* error message */
     exarg_T		ea;			/* Ex command arguments */
+    long		verbose_save = -1;
+    int			save_msg_scroll = 0;
+    int			did_silent = 0;
+    int			did_esilent = 0;
+    cmdmod_T		save_cmdmod;
 
     vim_memset(&ea, 0, sizeof(ea));
     ea.line1 = 1;
@@ -1060,23 +1049,143 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 	    )
 	--quitmore;
-/*
- * 2. skip comment lines and leading space and colons
- */
-    for (ea.cmd = *cmdlinep; *ea.cmd == ' ' || *ea.cmd == '\t'
-						  || *ea.cmd == ':'; ea.cmd++)
-	;
 
-    /* in ex mode, an empty line works like :+ */
-    if (*ea.cmd == NUL && exmode_active
-			&& (getline == getexmodeline || getline == getexline))
+    /*
+     * Reset browse, confirm, etc..  They are restored when returning, for
+     * recursive calls.
+     */
+    save_cmdmod = cmdmod;
+    vim_memset(&cmdmod, 0, sizeof(cmdmod));
+
+    /*
+     * Repeat until no more command modifiers are found.
+     */
+    ea.cmd = *cmdlinep;
+    for (;;)
     {
-	ea.cmd = (char_u *)"+";
-	ex_pressedreturn = TRUE;
-    }
+/*
+ * 1. skip comment lines and leading white space and colons
+ */
+	while (*ea.cmd == ' ' || *ea.cmd == '\t' || *ea.cmd == ':')
+	    ++ea.cmd;
 
-    if (*ea.cmd == '"' || *ea.cmd == NUL)   /* ignore comment and empty lines */
-	goto doend;
+	/* in ex mode, an empty line works like :+ */
+	if (*ea.cmd == NUL && exmode_active
+			&& (getline == getexmodeline || getline == getexline))
+	{
+	    ea.cmd = (char_u *)"+";
+	    ex_pressedreturn = TRUE;
+	}
+
+	/* ignore comment and empty lines */
+	if (*ea.cmd == '"' || *ea.cmd == NUL)
+	    goto doend;
+
+/*
+ * 2. handle command modifiers.
+ */
+	p = ea.cmd;
+	if (isdigit(*ea.cmd))
+	    p = skipwhite(skipdigits(ea.cmd));
+	switch (*p)
+	{
+	    case 'a':	if (!checkforcmd(&ea.cmd, "aboveleft", 3))
+			    break;
+#ifdef FEAT_WINDOWS
+			cmdmod.split |= WSP_ABOVE;
+#endif
+			continue;
+
+	    case 'b':	if (checkforcmd(&ea.cmd, "belowright", 3))
+			{
+#ifdef FEAT_WINDOWS
+			    cmdmod.split |= WSP_BELOW;
+#endif
+			    continue;
+			}
+			if (checkforcmd(&ea.cmd, "browse", 3))
+			{
+#ifdef FEAT_BROWSE
+			    cmdmod.browse = TRUE;
+#endif
+			    continue;
+			}
+			if (!checkforcmd(&ea.cmd, "botright", 2))
+			    break;
+#ifdef FEAT_WINDOWS
+			cmdmod.split |= WSP_BOT;
+#endif
+			continue;
+
+	    case 'c':	if (!checkforcmd(&ea.cmd, "confirm", 4))
+			    break;
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+			cmdmod.confirm = TRUE;
+#endif
+			continue;
+
+			/* ":hide" and ":hide | cmd" are not modifiers */
+	    case 'h':	if (p != ea.cmd || !checkforcmd(&p, "hide", 3)
+					       || *p == NUL || ends_excmd(*p))
+			    break;
+			ea.cmd = p;
+			cmdmod.hide = TRUE;
+			continue;
+
+	    case 'l':	if (!checkforcmd(&ea.cmd, "leftabove", 5))
+			    break;
+#ifdef FEAT_WINDOWS
+			cmdmod.split |= WSP_ABOVE;
+#endif
+			continue;
+
+	    case 'r':	if (!checkforcmd(&ea.cmd, "rightbelow", 6))
+			    break;
+#ifdef FEAT_WINDOWS
+			cmdmod.split |= WSP_BELOW;
+#endif
+			continue;
+
+	    case 's':	if (!checkforcmd(&ea.cmd, "silent", 3))
+			    break;
+			++did_silent;
+			++msg_silent;
+			save_msg_scroll = msg_scroll;
+			if (*ea.cmd == '!' && !vim_iswhite(ea.cmd[-1]))
+			{
+			    /* ":silent!", but not "silent !cmd" */
+			    ea.cmd = skipwhite(ea.cmd + 1);
+			    ++emsg_silent;
+			    ++did_esilent;
+			}
+			continue;
+
+	    case 't':	if (!checkforcmd(&ea.cmd, "topleft", 2))
+			    break;
+#ifdef FEAT_WINDOWS
+			cmdmod.split |= WSP_TOP;
+#endif
+			continue;
+
+	    case 'v':	if (checkforcmd(&ea.cmd, "vertical", 4))
+			{
+#ifdef FEAT_VERTSPLIT
+			    cmdmod.split |= WSP_VERT;
+#endif
+			    continue;
+			}
+			if (!checkforcmd(&p, "verbose", 4))
+			    break;
+			if (verbose_save < 0)
+			    verbose_save = p_verbose;
+			p_verbose = atoi((char *)ea.cmd);
+			if (p_verbose == 0)
+			    p_verbose = 1;
+			ea.cmd = p;
+			continue;
+	}
+	break;
+    }
 
 #ifdef FEAT_EVAL
     ea.skip = did_emsg || (cstack->cs_idx >= 0
@@ -1649,8 +1758,16 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_function:
 				break;
 
-	    /* commands that handle '|' themselves */
+	    /* Commands that handle '|' themselves.  Check: A command should
+	     * either have the TRLBAR flag, appear in this list or appear in
+	     * the list at ":help :bar". */
+	    case CMD_aboveleft:
+	    case CMD_and:
+	    case CMD_belowright:
+	    case CMD_botright:
+	    case CMD_browse:
 	    case CMD_call:
+	    case CMD_confirm:
 	    case CMD_djump:
 	    case CMD_dlist:
 	    case CMD_dsearch:
@@ -1661,20 +1778,26 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_echon:
 	    case CMD_execute:
 	    case CMD_help:
+	    case CMD_hide:
 	    case CMD_ijump:
-	    case CMD_psearch:
 	    case CMD_ilist:
 	    case CMD_isearch:
 	    case CMD_isplit:
+	    case CMD_leftabove:
 	    case CMD_let:
 	    case CMD_match:
+	    case CMD_psearch:
 	    case CMD_return:
-	    case CMD_substitute:
+	    case CMD_rightbelow:
+	    case CMD_silent:
 	    case CMD_smagic:
 	    case CMD_snomagic:
+	    case CMD_substitute:
 	    case CMD_syntax:
-	    case CMD_and:
 	    case CMD_tilde:
+	    case CMD_topleft:
+	    case CMD_verbose:
+	    case CMD_vertical:
 				break;
 
 	    default:		goto doend;
@@ -1757,6 +1880,26 @@ doend:
     if (curwin->w_cursor.lnum == 0)	/* can happen with zero line number */
 	curwin->w_cursor.lnum = 1;
 
+    if (verbose_save >= 0)
+	p_verbose = verbose_save;
+
+    cmdmod = save_cmdmod;
+
+    if (did_silent > 0)
+    {
+	/* messages could be enabled for a serious error, need to check if the
+	 * counters don't become negative */
+	msg_silent -= did_silent;
+	if (msg_silent < 0)
+	    msg_silent = 0;
+	emsg_silent -= did_esilent;
+	if (emsg_silent < 0)
+	    emsg_silent = 0;
+	/* Restore msg_scroll, it's set by file I/O commands, even when no
+	 * message is actually displayed. */
+	msg_scroll = save_msg_scroll;
+    }
+
     if (errormsg != NULL && *errormsg != NUL && !did_emsg)
     {
 	if (sourcing)
@@ -1783,6 +1926,29 @@ doend:
 #if (_MSC_VER == 1200)
 #pragma optimize( "", on )
 #endif
+
+/*
+ * Check for a command modifier command with optional tail.
+ * If there is a match advance "pp" to the argument and return TRUE.
+ */
+    static int
+checkforcmd(pp, cmd, len)
+    char_u	**pp;		/* start of command line */
+    char	*cmd;		/* name of command */
+    int		len;		/* required length */
+{
+    int		i;
+
+    for (i = 0; cmd[i] != NUL; ++i)
+	if (cmd[i] != (*pp)[i])
+	    break;
+    if (i >= len && !isalpha((*pp)[i]))
+    {
+	*pp = skipwhite(*pp + i);
+	return TRUE;
+    }
+    return FALSE;
+}
 
 /*
  * Find an Ex command by its name, either built-in or user.
@@ -2353,17 +2519,20 @@ set_one_cmd_context(xp, buff)
 	    break;
 
 	/* Command modifiers: return the argument. */
-	case CMD_browse:
-	case CMD_confirm:
-	case CMD_vertical:
 	case CMD_aboveleft:
 	case CMD_belowright:
-	case CMD_topleft:
 	case CMD_botright:
-	case CMD_silent:
-	case CMD_verbose:
-	case CMD_folddoopen:
+	case CMD_browse:
+	case CMD_confirm:
 	case CMD_folddoclosed:
+	case CMD_folddoopen:
+	case CMD_hide:
+	case CMD_leftabove:
+	case CMD_rightbelow:
+	case CMD_silent:
+	case CMD_topleft:
+	case CMD_verbose:
+	case CMD_vertical:
 	    return arg;
 
 #ifdef FEAT_SEARCH_EXTRA
@@ -4874,20 +5043,19 @@ ex_hide(eap)
     exarg_T	*eap;
 {
     if (*eap->arg != NUL && check_nextcmd(eap->arg) == NULL)
-    {
-	/* ":hide cmd": execute "cmd" with 'hidden' set */
-	cmdmod.hide = TRUE;
-	eap->nextcmd = eap->arg;
-    }
+	eap->errmsg = e_invarg;
     else
     {
-#ifdef FEAT_WINDOWS
 	/* ":hide" or ":hide | cmd": hide current window */
 	eap->nextcmd = check_nextcmd(eap->arg);
+#ifdef FEAT_WINDOWS
+	if (!eap->skip)
+	{
 # ifdef FEAT_GUI
-	need_mouse_correct = TRUE;
+	    need_mouse_correct = TRUE;
 # endif
-	win_close(curwin, FALSE);	/* don't free buffer */
+	    win_close(curwin, FALSE);	/* don't free buffer */
+	}
 #endif
     }
 }
@@ -5263,7 +5431,9 @@ alist_add(al, fname, set_fnum)
 alist_slash_adjust()
 {
     int		i;
+# ifdef FEAT_WINDOWS
     win_T	*wp;
+# endif
 
     for (i = 0; i < GARGCOUNT; ++i)
 	if (GARGLIST[i].ae_fname != NULL)
@@ -5302,140 +5472,14 @@ ex_recover(eap)
 }
 
 /*
- * Command modifiers: The argument is another command.
- */
-/*
- * ":browse".
+ * Command modifier used in a wrong way.
  */
     static void
-ex_browse(eap)
+ex_wrongmodifier(eap)
     exarg_T	*eap;
 {
-#ifdef FEAT_BROWSE
-    cmdmod.browse = TRUE;
-#endif
-    eap->nextcmd = eap->arg;
+    eap->errmsg = e_invcmd;
 }
-
-/*
- * ":confirm".
- */
-    static void
-ex_confirm(eap)
-    exarg_T	*eap;
-{
-#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-    cmdmod.confirm = TRUE;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":vertical".
- */
-    static void
-ex_vertical(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_VERTSPLIT
-    cmdmod.split |= WSP_VERT;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":rightbelow" and ":belowright".
- */
-    static void
-ex_belowright(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_WINDOWS
-    cmdmod.split |= WSP_BELOW;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":leftabove" and ":aboveleft".
- */
-    static void
-ex_aboveleft(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_WINDOWS
-    cmdmod.split |= WSP_ABOVE;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":topleft".
- */
-    static void
-ex_topleft(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_WINDOWS
-    cmdmod.split |= WSP_TOP;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":botright".
- */
-    static void
-ex_botright(eap)
-    exarg_T	*eap;
-{
-#ifdef FEAT_WINDOWS
-    cmdmod.split |= WSP_BOT;
-#endif
-    eap->nextcmd = eap->arg;
-}
-
-/*
- * ":silent": Execute a command silently.
- */
-    static void
-ex_silent(eap)
-    exarg_T	*eap;
-{
-    int		save_msg_scroll = msg_scroll;
-
-    ++msg_silent;
-    if (eap->forceit)
-	++emsg_silent;
-    do_cmdline(eap->arg, eap->getline, eap->cookie, DOCMD_VERBOSE+DOCMD_NOWAIT);
-    /* messages could be enabled for a serious error, need to check if the
-     * counters have not been reset */
-    if (msg_silent > 0)
-	--msg_silent;
-    if (eap->forceit && emsg_silent > 0)
-	--emsg_silent;
-    /* Restore msg_scroll, it's set by file I/O commands, even when no message
-     * is actually displayed. */
-    msg_scroll = save_msg_scroll;
-}
-
-/*
- * ":verbose": Execute a command with 'verbose' set.
- */
-    static void
-ex_verbose(eap)
-    exarg_T	*eap;
-{
-    int		verbose_save = p_verbose;
-
-    p_verbose = eap->line2;
-    do_cmdline(eap->arg, eap->getline, eap->cookie, DOCMD_VERBOSE+DOCMD_NOWAIT);
-    p_verbose = verbose_save;
-}
-
-/*
- * End of command modifiers.
- */
 
 #ifdef FEAT_WINDOWS
 /*

@@ -22,6 +22,7 @@
 #define ROT13(c, a)	(((((c) - (a)) + 13) % 26) + (a))
 
 #define NUL		'\000'
+#define BELL		'\007'
 #define BS		'\010'
 #define TAB		'\011'
 #define NL		'\012'
@@ -105,6 +106,7 @@
 #define ROT13(c, a)  (isupper(c) ? toupper(R13_(CharOrdUp(c))) : R13_(CharOrdLow(c)))
 
 #define NUL		'\000'
+#define BELL		'\x2f'
 #define BS		'\x16'
 #define TAB		'\x05'
 #define NL		'\x15'

@@ -90,7 +90,7 @@ static int  set_group_colors __ARGS((char_u *name, guicolor_T *fgp, guicolor_T *
 static guicolor_T color_name2handle __ARGS((char_u *name));
 static GuiFont font_name2handle __ARGS((char_u *name));
 # ifdef FEAT_XFONTSET
-static GuiFontset fontset_name2handle __ARGS((char_u *name));
+static GuiFontset fontset_name2handle __ARGS((char_u *name, int fixed_width));
 # endif
 static void hl_do_font __ARGS((int idx, char_u *arg, int do_normal, int do_menu, int do_tooltip));
 #endif
@@ -940,12 +940,13 @@ syn_update_ends(startofline)
 
     if (startofline)
     {
-	/* A match carried over from a previous line must have a contained
-	 * region.  The match ends as soon as the region ends. */
+	/* Check for a match carried over from a previous line with a
+	 * contained region.  The match ends as soon as the region ends. */
 	for (i = 0; i < current_state.ga_len; ++i)
 	{
 	    cur_si = &CUR_STATE(i);
-	    if ((SYN_ITEMS(syn_buf)[cur_si->si_idx]).sp_type == SPTYPE_MATCH)
+	    if ((SYN_ITEMS(syn_buf)[cur_si->si_idx]).sp_type == SPTYPE_MATCH
+		    && cur_si->si_m_endpos.lnum < current_lnum)
 	    {
 		cur_si->si_flags |= HL_MATCHCONT;
 		cur_si->si_m_endpos.lnum = 0;
@@ -7053,13 +7054,14 @@ font_name2handle(name)
  * Returns NOFONTSET when failed.
  */
     static GuiFontset
-fontset_name2handle(name)
-    char_u  *name;
+fontset_name2handle(name, fixed_width)
+    char_u	*name;
+    int		fixed_width;
 {
     if (STRCMP(name, "NONE") == 0)
 	return NOFONTSET;
 
-    return gui_mch_get_fontset(name, TRUE);
+    return gui_mch_get_fontset(name, TRUE, fixed_width);
 }
 # endif
 
@@ -7087,7 +7089,14 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	|| do_tooltip
 #  endif
 	    )
-	HL_TABLE()[idx].sg_fontset = fontset_name2handle(arg);
+	HL_TABLE()[idx].sg_fontset = fontset_name2handle(arg, 0
+#  ifdef FONTSET_ALWAYS
+		|| do_menu
+#  endif
+#  ifdef FEAT_BEVAL
+		|| do_tooltip
+#  endif
+		);
     if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
     {
 	/* If it worked and it's the Normal group, use it as the

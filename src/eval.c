@@ -2383,7 +2383,7 @@ static struct fst
     {"remote_expr",	2, 3, f_remote_expr},
     {"remote_peek",	1, 2, f_remote_peek},
     {"remote_read",	1, 1, f_remote_read},
-    {"remote_send",	2, 2, f_remote_send},
+    {"remote_send",	2, 3, f_remote_send},
     {"rename",		2, 2, f_rename},
     {"resolve",		1, 1, f_resolve},
     {"search",		1, 2, f_search},

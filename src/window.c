@@ -915,8 +915,8 @@ win_split_ins(size, flags, newwin, dir)
 	    if (flags & WSP_BOT)
 		frame_add_vsep(curfrp);
 	    /* Set width of neighbor frame */
-	    frame_new_width(curfrp, curfrp->fr_width - (new_size + 1),
-							     flags & WSP_TOP);
+	    frame_new_width(curfrp, curfrp->fr_width
+		    - (new_size + ((flags & WSP_TOP) != 0)), flags & WSP_TOP);
 	}
 	else
 	    oldwin->w_width -= new_size + 1;
@@ -3505,18 +3505,22 @@ frame_setheight(curfrp, height)
 	    /*NOTREACHED*/
 	}
 
-#ifdef FEAT_QUICKFIX
-	/* If there is not enough room, also reduce the height of quickfix and
-	 * preview window. */
-	if (height > room + room_cmdline - room_reserved)
-	    room_reserved = room + room_cmdline - height;
-#endif
-
 	/*
 	 * Compute the number of lines we will take from others frames (can be
 	 * negative!).
 	 */
 	take = height - curfrp->fr_height;
+
+#ifdef FEAT_QUICKFIX
+	/* If there is not enough room, also reduce the height of quickfix and
+	 * preview window. */
+	if (height > room + room_cmdline - room_reserved)
+	    room_reserved = room + room_cmdline - height;
+	/* If there is only a quickfix or preview window and making the
+	 * window smaller, need to make the other window taller. */
+	if (take < 0 && room - curfrp->fr_height < room_reserved)
+	    room_reserved = 0;
+#endif
 
 	if (take > 0 && room_cmdline > 0)
 	{

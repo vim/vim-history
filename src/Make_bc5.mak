@@ -55,7 +55,7 @@
 # CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
 # CPU		1 through 6: select CPU to compile for (3)
 # USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
-#		For USEDLL=1 the cc3250.dll is required to run Vim.
+#		For USEDLL=yes the cc3250.dll is required to run Vim.
 # VIMDLL	no or yes: create vim32.dll, and stub (g)vim.exe (no)
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
 # FASTCALL	no or yes: set to yes to use register-based function protocol (yes)
@@ -145,9 +145,9 @@ ALIGN = 4
 	("$(PERL)"=="") && \
 	("$(TCL)"=="") && \
 	("$(RUBY)"=="") && \
-	("$(ICONV)"=="") && \
-	("$(MBYTE)"=="")
-FASTCALL = 1
+	("$(ICONV)"!="yes") && \
+	("$(MBYTE)"!="yes")
+FASTCALL = yes
 !endif
 #
 ### OPTIMIZE: SPEED to optimize for speed, SPACE otherwise (SPEED RECOMMENDED)

@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0au.  Last change: 2001 Aug 07
+*usr_28.txt*	For Vim version 6.0av.  Last change: 2001 Sep 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -382,7 +382,7 @@ For more details see |fold-diff|.
 *28.10* Which fold method to use?
 
 All these possibilities makes you wonder which method you should chose.
-Unfortunately, there is not golden rule.  Here are some hints.
+Unfortunately, there is no golden rule.  Here are some hints.
 
 If there is a syntax file with folding for the language you are editing, that
 is probably the best choice.  If there isn't one, you might try to write it.
@@ -415,4 +415,4 @@ the defined folds.  Then you can delete or add folds manually.
 
 Next chapter: |usr_29.txt|  Moving through programs
 
-Copyright: see |manual-copyright|  vim:tw=78:
+Copyright: see |manual-copyright|  vim:tw=78:ts=8:ft=help:norl:

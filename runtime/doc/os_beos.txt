@@ -1,4 +1,4 @@
-*os_beos.txt*	For Vim version 6.0au.  Last change: 2001 Aug 23
+*os_beos.txt*	For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -343,4 +343,4 @@ it is about 1191K.
 <rhialto@polder.ubc.kun.nl>
 http://polder.ubc.kun.nl/~rhialto/be
 
- vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":
+ vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:

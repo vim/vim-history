@@ -1714,7 +1714,7 @@ gui_mch_init_font(font_name, do_fontset)
 	 * they were fontsets, and 'guifontset' becomes the default. */
 	if (font_name != NULL)
 	{
-	    fontset = (XFontSet)gui_mch_get_fontset(font_name, FALSE);
+	    fontset = (XFontSet)gui_mch_get_fontset(font_name, FALSE, TRUE);
 	    if (fontset == NULL)
 		return FAIL;
 	}
@@ -1964,9 +1964,10 @@ gui_mch_free_fontset(fontset)
  * Return a reference to the fontset, or NOFONTSET when failing.
  */
     GuiFontset
-gui_mch_get_fontset(name, giveErrorIfMissing)
+gui_mch_get_fontset(name, giveErrorIfMissing, fixed_width)
     char_u	*name;
     int		giveErrorIfMissing;
+    int		fixed_width;
 {
     XFontSet	fontset;
     char	**missing, *def_str;
@@ -1997,7 +1998,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
 	return NOFONTSET;
     }
 
-    if (check_fontset_sanity(fontset) == FAIL)
+    if (fixed_width && check_fontset_sanity(fontset) == FAIL)
     {
 	XFreeFontSet(gui.dpy, fontset);
 	return NOFONTSET;
@@ -2005,6 +2006,9 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
     return (GuiFontset)fontset;
 }
 
+/*
+ * Check if fontset "fs" is fixed width.
+ */
     static int
 check_fontset_sanity(fs)
     XFontSet fs;
@@ -3571,7 +3575,11 @@ createXpmImages(path, xpm, sen, insen)
 	XFreePixmap(gui.dpy, map);
     }
     else
-	*insen = *sen = 0;
+    {
+	*sen = 0;
+	if (insen != NULL)
+	    *insen = 0;
+    }
 
     XpmFreeAttributes(&attrs);
 }

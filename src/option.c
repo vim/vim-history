@@ -2282,7 +2282,7 @@ static char *(p_debug_values[]) = {"msg", NULL};
 static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 #endif
 #if defined(FEAT_QUICKFIX)
-static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", NULL};
+static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", "help", NULL};
 static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
@@ -2312,6 +2312,9 @@ static void set_string_option_global __ARGS((int opt_idx, char_u **varp));
 static void set_string_option __ARGS((int opt_idx, char_u *value, int opt_flags));
 static char_u *did_set_string_option __ARGS((int opt_idx, char_u **varp, int new_value_alloced, char_u *oldval, char_u *errbuf, int opt_flags));
 static char_u *set_chars_option __ARGS((char_u **varp));
+#ifdef FEAT_CLIPBOARD
+static char_u *check_clipboard_option __ARGS((void));
+#endif
 static char_u *set_bool_option __ARGS((int opt_idx, char_u *varp, int value, int opt_flags));
 static char_u *set_num_option __ARGS((int opt_idx, char_u *varp, long value, char_u *errbuf, int opt_flags));
 static void check_redraw __ARGS((long_u flags));
@@ -2320,7 +2323,7 @@ static int find_key_option __ARGS((char_u *));
 static void showoptions __ARGS((int all, int opt_flags));
 static int optval_default __ARGS((struct vimoption *, char_u *varp));
 static void showoneopt __ARGS((struct vimoption *, int opt_flags));
-static int put_setstring __ARGS((FILE *fd, char *cmd, char *name, char_u **valuep));
+static int put_setstring __ARGS((FILE *fd, char *cmd, char *name, char_u **valuep, int expand));
 static int put_setnum __ARGS((FILE *fd, char *cmd, char *name, long *valuep));
 static int put_setbool __ARGS((FILE *fd, char *cmd, char *name, int value));
 static int  istermoption __ARGS((struct vimoption *));
@@ -2496,13 +2499,18 @@ set_init_1()
 
 #ifdef FEAT_POSTSCRIPT
     /* 'printexpr' must be allocated to be able to evaluate it. */
-# ifndef MSWIN
     set_string_default("pexpr",
-	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error");
+# ifdef MSWIN
+	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)"
 # else
-    set_string_default("pexpr",
-	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)");
+#  ifdef VMS
+	    (char_u *)"system('print' . (&printdevice == '' ? '' : ' /queue=' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)"
+
+#  else
+	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error"
+#  endif
 # endif
+	    );
 #endif
 
     /*
@@ -2570,6 +2578,11 @@ set_init_1()
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     /* Parse default for 'fillchars'. */
     (void)set_chars_option(&p_fcs);
+#endif
+
+#ifdef FEAT_CLIPBOARD
+    /* Parse default for 'clipboard' */
+    (void)check_clipboard_option();
 #endif
 
 #ifdef FEAT_MBYTE
@@ -4877,58 +4890,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #ifdef FEAT_CLIPBOARD
     /* 'clipboard' */
     else if (varp == &p_cb)
-    {
-	int		new_unnamed = FALSE;
-	int		new_autoselect = FALSE;
-	int		new_autoselectml = FALSE;
-	regprog_T	*new_exclude_prog = NULL;
-
-	for (p = p_cb; *p != NUL; )
-	{
-	    if (STRNCMP(p, "unnamed", 7) == 0 && (p[7] == ',' || p[7] == NUL))
-	    {
-		new_unnamed = TRUE;
-		p += 7;
-	    }
-	    else if (STRNCMP(p, "autoselect", 10) == 0
-					    && (p[10] == ',' || p[10] == NUL))
-	    {
-		new_autoselect = TRUE;
-		p += 10;
-	    }
-	    else if (STRNCMP(p, "autoselectml", 12) == 0
-					    && (p[12] == ',' || p[12] == NUL))
-	    {
-		new_autoselectml = TRUE;
-		p += 12;
-	    }
-	    else if (STRNCMP(p, "exclude:", 8) == 0)
-	    {
-		p += 8;
-		new_exclude_prog = vim_regcomp(p, TRUE);
-		if (new_exclude_prog == NULL)
-		    errmsg = e_invarg;
-		break;
-	    }
-	    else
-	    {
-		errmsg = e_invarg;
-		break;
-	    }
-	    if (*p == ',')
-		++p;
-	}
-	if (errmsg == NULL)
-	{
-	    clip_unnamed = new_unnamed;
-	    clip_autoselect = new_autoselect;
-	    clip_autoselectml = new_autoselectml;
-	    vim_free(clip_exclude_prog);
-	    clip_exclude_prog = new_exclude_prog;
-	}
-    }
+	errmsg = check_clipboard_option();
 #endif
-
 
 #ifdef FEAT_AUTOCMD
 # ifdef FEAT_SYN_HL
@@ -4970,6 +4933,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		redraw_later(VALID);
 	    }
 # endif
+	    curbuf->b_help = (curbuf->b_p_bt[0] == 'h');
 	}
     }
 #endif
@@ -5426,6 +5390,70 @@ check_stl_option(s)
     if (groupdepth != 0)
 	return (char_u *)N_("unbalanced groups");
     return NULL;
+}
+#endif
+
+#ifdef FEAT_CLIPBOARD
+/*
+ * Extract the items in the 'clipboard' option and set global values.
+ */
+    static char_u *
+check_clipboard_option()
+{
+    int		new_unnamed = FALSE;
+    int		new_autoselect = FALSE;
+    int		new_autoselectml = FALSE;
+    regprog_T	*new_exclude_prog = NULL;
+    char_u	*errmsg = NULL;
+    char_u	*p;
+
+    for (p = p_cb; *p != NUL; )
+    {
+	if (STRNCMP(p, "unnamed", 7) == 0 && (p[7] == ',' || p[7] == NUL))
+	{
+	    new_unnamed = TRUE;
+	    p += 7;
+	}
+	else if (STRNCMP(p, "autoselect", 10) == 0
+					&& (p[10] == ',' || p[10] == NUL))
+	{
+	    new_autoselect = TRUE;
+	    p += 10;
+	}
+	else if (STRNCMP(p, "autoselectml", 12) == 0
+					&& (p[12] == ',' || p[12] == NUL))
+	{
+	    new_autoselectml = TRUE;
+	    p += 12;
+	}
+	else if (STRNCMP(p, "exclude:", 8) == 0 && new_exclude_prog == NULL)
+	{
+	    p += 8;
+	    new_exclude_prog = vim_regcomp(p, TRUE);
+	    if (new_exclude_prog == NULL)
+		errmsg = e_invarg;
+	    break;
+	}
+	else
+	{
+	    errmsg = e_invarg;
+	    break;
+	}
+	if (*p == ',')
+	    ++p;
+    }
+    if (errmsg == NULL)
+    {
+	clip_unnamed = new_unnamed;
+	clip_autoselect = new_autoselect;
+	clip_autoselectml = new_autoselectml;
+	vim_free(clip_exclude_prog);
+	clip_exclude_prog = new_exclude_prog;
+    }
+    else
+	vim_free(new_exclude_prog);
+
+    return errmsg;
 }
 #endif
 
@@ -6682,8 +6710,8 @@ makeset(fd, opt_flags, local_only)
 				|| put_eol(fd) < 0)
 			    return FAIL;
 		    }
-		    if (put_setstring(fd, cmd, p->fullname, (char_u **)varp)
-								      == FAIL)
+		    if (put_setstring(fd, cmd, p->fullname, (char_u **)varp,
+					  (p->flags & P_EXPAND) != 0) == FAIL)
 			return FAIL;
 		    if (p->indir == PV_SYN || p->indir == PV_FT)
 		    {
@@ -6705,12 +6733,15 @@ makeset(fd, opt_flags, local_only)
 makefoldset(fd)
     FILE	*fd;
 {
-    if (put_setstring(fd, "setlocal", "fdm", &curwin->w_p_fdm) == FAIL
+    if (put_setstring(fd, "setlocal", "fdm", &curwin->w_p_fdm, FALSE) == FAIL
 # ifdef FEAT_EVAL
-	    || put_setstring(fd, "setlocal", "fde", &curwin->w_p_fde) == FAIL
+	    || put_setstring(fd, "setlocal", "fde", &curwin->w_p_fde, FALSE)
+								       == FAIL
 # endif
-	    || put_setstring(fd, "setlocal", "fmr", &curwin->w_p_fmr) == FAIL
-	    || put_setstring(fd, "setlocal", "fdi", &curwin->w_p_fdi) == FAIL
+	    || put_setstring(fd, "setlocal", "fmr", &curwin->w_p_fmr, FALSE)
+								       == FAIL
+	    || put_setstring(fd, "setlocal", "fdi", &curwin->w_p_fdi, FALSE)
+								       == FAIL
 	    || put_setnum(fd, "setlocal", "fdl", &curwin->w_p_fdl) == FAIL
 	    || put_setnum(fd, "setlocal", "fml", &curwin->w_p_fml) == FAIL
 	    || put_setnum(fd, "setlocal", "fdn", &curwin->w_p_fdn) == FAIL
@@ -6723,13 +6754,15 @@ makefoldset(fd)
 #endif
 
     static int
-put_setstring(fd, cmd, name, valuep)
+put_setstring(fd, cmd, name, valuep, expand)
     FILE	*fd;
     char	*cmd;
     char	*name;
     char_u	**valuep;
+    int		expand;
 {
     char_u	*s;
+    char_u	buf[MAXPATHL];
 
     if (fprintf(fd, "%s %s=", cmd, name) < 0)
 	return FAIL;
@@ -6744,6 +6777,12 @@ put_setstring(fd, cmd, name, valuep)
 	    while (*s != NUL)
 		if (fputs((char *)str2special(&s, FALSE), fd) < 0)
 		    return FAIL;
+	}
+	else if (expand)
+	{
+	    home_replace(NULL, *valuep, buf, MAXPATHL, FALSE);
+	    if (put_escstr(fd, buf, 2) == FAIL)
+		return FAIL;
 	}
 	else if (put_escstr(fd, *valuep, 2) == FAIL)
 	    return FAIL;
@@ -7455,6 +7494,10 @@ buf_copy_options(buf, flags)
 		did_isk = TRUE;
 		buf->b_p_ts = p_ts;
 		buf->b_help = FALSE;
+#ifdef FEAT_QUICKFIX
+		if (buf->b_p_bt[0] == 'h')
+		    clear_string_option(&buf->b_p_bt);
+#endif
 		buf->b_p_ma = p_ma;
 	    }
 	}

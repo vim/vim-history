@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0au.  Last change: 2001 Aug 28
+*diff.txt*      For Vim version 6.0av.  Last change: 2001 Sep 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -314,7 +314,7 @@ When 'patchexpr' is empty, Vim will call the "patch" program like this: >
 	patch -o outfile origfile < patchfile
 
 This should work fine with most versions of the "patch" program.  Note that a
-CR halfway a line may cause problems, it is seen as a line break.
+CR in the middle of a line may cause problems, it is seen as a line break.
 
 If the default doesn't work for you, set the 'patchexpr' to an expression that
 will have the same effect.  These variables are set to the file names used:
@@ -328,7 +328,7 @@ Example (this does the same as 'patchexpr' being empty): >
 	let patchexpr=MyPatch
 	function MyPatch
 	   :call system("patch -o " . v:fname_out . " " . v:fname_in .
-	   \  " < " . v:fname_diff
+	   \  " < " . v:fname_diff)
 	endfunction
 
 Make sure that using the "patch" program doesn't have unwanted side effects.
@@ -339,4 +339,4 @@ evaluating 'patchexpr'.  This hopefully avoids that files in the current
 directory are accidentally patched.  Vim will also delete files starting with
 v:fname_in and ending in ".rej" and ".orig".
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

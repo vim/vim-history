@@ -131,6 +131,32 @@ dnl If we have EBCDIC we most likley have OS390 Unix, let's test it!
 AC_MSG_CHECKING(for OS/390 Unix)
 case `uname` in
     OS/390)	OS390Unix="yes";
+		dnl If using cc the environment variable _CC_CCMODE must be
+		dnl set to "1", so that some compiler extensions are enabled.
+		dnl If using c89 the environment variable is named _CC_C89MODE.
+		dnl Note: compile with c89 never tested.
+		if test "$CC" = "cc"; then
+		  ccm="$_CC_CCMODE"
+		  ccn="CC"
+		else
+		  if test "$CC" = "c89"; then
+		    ccm="$_CC_C89MODE"
+		    ccn="C89"
+		  else
+		    ccm=1
+		  fi
+		fi
+		if test "$ccm" != "1"; then
+		  echo "" 
+		  echo "------------------------------------------"
+		  echo " On OS/390 Unix, the environment variable"
+		  echo " __CC_${ccn}MODE must be set to \"1\"!"
+		  echo " Do:"
+		  echo "    export _CC_${ccn}MODE=1"
+		  echo " and then call configure again."
+		  echo "------------------------------------------"
+		  exit 1
+		fi
 		CFLAGS="$CFLAGS -D_ALL_SOURCE"; LDFLAGS="$LDFLAGS -Wl,EDIT=NO"
 		AC_MSG_RESULT(yes)
 		;;
@@ -588,9 +614,11 @@ else
 
   dnl On OS390Unix the X libraries are DLLs. To use them the code must
   dnl be compiled with a special option.
+  dnl Also add SM, ICE and Xmu to X_EXTRA_LIBS.
   if test "$OS390Unix" = "yes"; then
     CFLAGS="$CFLAGS -W c,dll"
     LDFLAGS="$LDFLAGS -W l,dll"
+    X_EXTRA_LIBS="$X_EXTRA_LIBS -lSM -lICE -lXmu"
   fi
 
   dnl On my HPUX system the X include dir is found, but the lib dir not.

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
+*gui_x11.txt*   For Vim version 6.0av.  Last change: 2001 Sep 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -295,8 +295,10 @@ If a name is used that exists on other systems, but not in X11, the default
 
 The GTK version of the GUI works a little bit different.
 
-GTK does _not_ obey many of the traditional X resource settings (e.g., stuff
-like -bg, -fg, etc).  The ones that are supported are:
+GTK does _not_ use the traditional X resource settings.  Thus items in your
+~/.Xdefaults or app-defaults files are not used.
+Many of the traditional X command line arguments are not supported.  (e.g.,
+stuff like -bg, -fg, etc).  The ones that are supported are:
 
     command line argument   resource name	meaning ~
     -fn  or  -font	    .font		font name for the text
@@ -506,4 +508,4 @@ and use CLIPBOARD ("+) for cut/copy/paste operations.  You thus have access to
 both by choosing to use either of the "* or "+ registers.
 
 
- vim:tw=78:sw=4
+ vim:tw=78:sw=4:ts=8:ft=help:norl:

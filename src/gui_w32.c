@@ -140,12 +140,6 @@
 #endif /* __MINGW32__ */
 
 
-/*
- * Use the system font for dialogs and tear-off menus.  Remove this line to
- * use DLG_FONT_NAME.
- */
-#define USE_SYSMENU_FONT
-
 /* Some parameters for tearoff menus.  All in pixels. */
 #define TEAROFF_PADDING_X	2
 #define TEAROFF_BUTTON_PAD_X	8
@@ -164,6 +158,12 @@
 
 #ifdef FEAT_MENU
 static UINT	s_menu_id = 100;
+
+/*
+ * Use the system font for dialogs and tear-off menus.  Remove this line to
+ * use DLG_FONT_NAME.
+ */
+# define USE_SYSMENU_FONT
 #endif
 
 
@@ -172,12 +172,9 @@ static UINT	s_menu_id = 100;
 
 static OSVERSIONINFO os_version;    /* like it says.  Init in gui_mch_init() */
 
-/* ron: No need to be stingy on Win32. Make it 16K - s/b big enough for
- * everyone!
- * I have had problems with the original 1000 byte, and with 2 or 5 K.  But
- * 16K should be good for all but the biggest.  Anyway, we free the memory
- * right away.
- */
+/* Initial size for the dialog template.  For gui_mch_dialog() it's fixed,
+ * thus there should be room for every dialog.  For tearoffs it's made bigger
+ * when needed. */
 #define DLG_ALLOC_SIZE 16 * 1024
 
 /*
@@ -1081,21 +1078,22 @@ gui_mch_init(void)
 #endif
 
     /* Create the text area window */
-    if (GetClassInfo(s_hinst, szTextAreaClass, &wndclass) == 0) {
-    wndclass.style = CS_OWNDC;
-    wndclass.lpfnWndProc = _TextAreaWndProc;
-    wndclass.cbClsExtra = 0;
-    wndclass.cbWndExtra = 0;
-    wndclass.hInstance = s_hinst;
-    wndclass.hIcon = NULL;
-    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wndclass.hbrBackground = NULL;
-    wndclass.lpszMenuName = NULL;
-    wndclass.lpszClassName = szTextAreaClass;
+    if (GetClassInfo(s_hinst, szTextAreaClass, &wndclass) == 0)
+    {
+	wndclass.style = CS_OWNDC;
+	wndclass.lpfnWndProc = _TextAreaWndProc;
+	wndclass.cbClsExtra = 0;
+	wndclass.cbWndExtra = 0;
+	wndclass.hInstance = s_hinst;
+	wndclass.hIcon = NULL;
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndclass.hbrBackground = NULL;
+	wndclass.lpszMenuName = NULL;
+	wndclass.lpszClassName = szTextAreaClass;
 
-    if (RegisterClass(&wndclass) == 0)
-	return FAIL;
-	}
+	if (RegisterClass(&wndclass) == 0)
+	    return FAIL;
+    }
     s_textArea = CreateWindowEx(
 	WS_EX_CLIENTEDGE,
 	szTextAreaClass, "Vim text area",
@@ -1117,7 +1115,9 @@ gui_mch_init(void)
     SetBkMode(s_hdc, OPAQUE);
 #endif
 
+#ifdef FEAT_WINDOWS
     DragAcceptFiles(s_hwnd, TRUE);
+#endif
 
     /* Do we need to bother with this? */
     /* m_fMouseAvail = GetSystemMetrics(SM_MOUSEPRESENT); */
@@ -1434,8 +1434,10 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 
 		    curbuf->b_p_iminsert = B_IMODE_IM;
 
-		    // It appears this makes -- REPLACE -- appear for "r"
-		    // showmode();
+		    // This must be called here before status_redraw_curbuf(),
+		    // otherwise the mode message may appear in the wrong
+		    // position.
+		    showmode();
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 		    /* Show/unshow value of 'keymap' in status lines. */
@@ -3014,6 +3016,7 @@ gui_mch_tearoff(
     int		initY)
 {
     WORD	*p, *pdlgtemplate, *pnumitems, *ptrueheight;
+    int		template_len;
     int		nchar, textWidth, submenuWidth;
     DWORD	lStyle;
     DWORD	lExtendedStyle;
@@ -3058,9 +3061,9 @@ gui_mch_tearoff(
     if (*title == MNU_HIDDEN_CHAR)
 	title++;
 
-    /* allocate some memory to play with  */
-    /* TODO should compute this really    */
-    pdlgtemplate = p = (PWORD)LocalAlloc(LPTR,  DLG_ALLOC_SIZE);
+    /* Allocate some memory to play with.  It's made bigger when needed. */
+    template_len = DLG_ALLOC_SIZE;
+    pdlgtemplate = p = (WORD *)LocalAlloc(LPTR, template_len);
     if (p == NULL)
 	return;
 
@@ -3205,6 +3208,26 @@ gui_mch_tearoff(
 	    continue;
 	}
 
+	/* Check if there still is plenty of room in the template.  Make it
+	 * larger when needed. */
+	if (((char *)p - (char *)pdlgtemplate) + 1000 > template_len)
+	{
+	    WORD    *newp;
+
+	    newp = (WORD *)LocalAlloc(LPTR, template_len + 4096);
+	    if (newp != NULL)
+	    {
+		template_len += 4096;
+		mch_memmove(newp, pdlgtemplate,
+					    (char *)p - (char *)pdlgtemplate);
+		p = newp + (p - pdlgtemplate);
+		pnumitems = newp + (pnumitems - pdlgtemplate);
+		ptrueheight = newp + (ptrueheight - pdlgtemplate);
+		LocalFree(LocalHandle(pdlgtemplate));
+		pdlgtemplate = newp;
+	    }
+	}
+
 	/* Figure out length of this menu label */
 	len = (int)STRLEN(menu->dname);
 	end = menu->dname + STRLEN(menu->dname);
@@ -3266,15 +3289,15 @@ gui_mch_tearoff(
 	 * BS_LEFT will just be ignored on Win32s/NT3.5x - on
 	 * W95/NT4 it makes the tear-off look more like a menu.
 	 */
-	    p = add_dialog_element(p,
-		    BS_PUSHBUTTON|BS_LEFT,
+	p = add_dialog_element(p,
+		BS_PUSHBUTTON|BS_LEFT,
 		(WORD)PixelToDialogX(TEAROFF_PADDING_X),
-		    (WORD)(sepPadding + 1 + 13 * (*pnumitems)),
+		(WORD)(sepPadding + 1 + 13 * (*pnumitems)),
 		(WORD)PixelToDialogX(dlgwidth - 2 * TEAROFF_PADDING_X),
 		(WORD)12,
 		menuID, (WORD)0x0080, label);
 	vim_free(label);
-	    (*pnumitems)++;
+	(*pnumitems)++;
     }
 
     *ptrueheight = (WORD)(sepPadding + 1 + 13 * (*pnumitems));

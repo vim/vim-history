@@ -946,6 +946,7 @@ diff_win_options(wp, addbuf)
 	wp->w_p_fdc = 2;
 	wp->w_p_fen = TRUE;
 	wp->w_p_fdl = 0;
+	foldUpdateAll(wp);
     }
 # endif
     if (addbuf)

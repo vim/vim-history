@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 6.0au.  Last change: 2000 Jul 31
+*quotes.txt*    For Vim version 6.0av.  Last change: 2001 Sep 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -33,7 +33,7 @@ the same everywhere, that's completely reliable, so I can ignore it and think
 about other things. (Pete Schaeffer)
 
 Having recently succeeded in running vim via telnet through a Nokia
-Cowmunicator, I can now report that it works nicely on a Palm Pilot too.
+Communicator, I can now report that it works nicely on a Palm Pilot too.
 (Allan Kelly, Scotland)
 
 You've done a tremendous job with 'VIM', Bram!  The more I use it, the more
@@ -45,7 +45,7 @@ replace 'emacs' as the standard for top editors.  (Bo Thide', Sweden)
 I love and use VIM heavily too. (Larry Wall)
 
 Vi is like a Ferrari, if you're a beginner, it handles like a bitch, but once
-you get the hang of it, its small, powerfull and FAST! (Unknown)
+you get the hang of it, its small, powerful and FAST! (Unknown)
 VIM is like a new model Ferrari, and sounds like one too - "VIIIIIIMMM!"
 (Stephen Riehm, Germany)
 
@@ -66,8 +66,8 @@ ever seen in a product -- even better than most commercial products.
 (Gautam Mudunuri)
 
 VIM 4.5 is really a fantastic editor.  It has sooooo many features and more
-importantly, the defaults are so well thought out that you really dont have to
-change anything!!  Words cannot express my amazement and gratitude to the
+importantly, the defaults are so well thought out that you really don't have
+to change anything!!  Words cannot express my amazement and gratitude to the
 creators of VIM.  Keep it up.  (Vikas, USA)
 
 I wonder how long it will be before people will refer to other Vi editors as
@@ -246,4 +246,4 @@ In summary:
 	     ___) || | | |_| |	_| |  _| |_|_|
 	    |____/ |_|	\___/|_|   |_|	 (_|_)	      (Tony Nugent, Australia)
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

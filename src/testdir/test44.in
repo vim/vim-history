@@ -2,7 +2,7 @@ Tests for regexp with multi-byte encoding and various magic settings.
 
 STARTTEST
 :so mbyte.vim
-:set nocompatible encoding=utf-8 termencoding=latin1
+:set nocompatible encoding=utf-8 termencoding=latin1 viminfo+=nviminfo
 /^1
 /a*b\{2}c\+/e
 x/\Md\*e\{2}f\+/e

@@ -2,7 +2,7 @@
 " Language:	Perl
 " Author:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/indent/perl.vim
-" Last Change:	2001 Apr 09
+" Last Change:	2001 Sep 03
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -47,10 +47,6 @@ function GetPerlIndent()
     let line = getline(lnum)
     let ind = indent(lnum)
   endif
-  " Don't indent comments
-  if line =~ '^\s*#'
-    return ind
-  endif
   " Indent blocks enclosed by {} or ()
   if line =~ '[{(]\s*\(#[^)}]*\)\=$'
     let ind = ind + &sw
@@ -65,6 +61,10 @@ function GetPerlIndent()
     endif
   elseif line =~ '^\s*\(or\|and\)\>'
     let ind = ind - &sw
+  endif
+  " Don't indent comments
+  if line =~ '^\s*#'
+    return ind
   endif
 
   return ind

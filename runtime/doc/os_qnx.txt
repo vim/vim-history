@@ -1,4 +1,4 @@
-*os_qnx.txt*  For Vim version 6.0au.  Last change: 2001 Jul 28
+*os_qnx.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid
@@ -130,4 +130,4 @@ Todo:
 	- Replace usage of fork() with spawn() when launching external
 	  programs.
 
- vim:tw=78:sw=4:ts=8
+ vim:tw=78:sw=4:ts=8:ts=8:ft=help:norl:

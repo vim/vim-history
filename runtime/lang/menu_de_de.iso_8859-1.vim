@@ -1,7 +1,8 @@
 " Menu Translations:	German
 " Maintainer:		Johannes Zellner <johannes@zellner.org>
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	Sam, 25 Nov 2000 02:54:50 +0100
+" Last Change:	Son, 09 Sep 2001 15:43:32 +0200
+" vim:set foldmethod=marker:
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -11,74 +12,172 @@ let did_menu_trans = 1
 
 scriptencoding iso-8859-1
 
-" Help menu
-menutrans &Help			&Hilfe
-menutrans &Overview<Tab><F1>	&Überblick<Tab><F1>
-menutrans &How-to\ links	&How-to\ Index
-menutrans &GUI			&Graphische\ Oberfläche
-menutrans &Credits		&Autoren
-menutrans Co&pying		&Copyright	" Urheberrecht ?
-menutrans &Find\.\.\.		&Suchen\.\.\.	" conflicts with Edit.Find
-menutrans &Version		&Version
-menutrans &About		&Titelseite
-
-" File menu
+" {{{ FILE / DATEI
 menutrans &File				&Datei
 menutrans &Open\.\.\.<Tab>:e		&Öffnen\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	In\ geteiltem\ &Fenster\ Öffnen\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Neue\ Datei<Tab>:enew
-menutrans &Close<Tab>:close		Sch&liessen<Tab>:close
+menutrans &Close<Tab>:close		S&chliessen<Tab>:close
 menutrans &Save<Tab>:w			&Speichern<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:w	Speichern\ &Als\.\.\.<Tab>:w
+menutrans Save\ &As\.\.\.<Tab>:sav	Speichern\ &Als\.\.\.<Tab>
 menutrans &Print			&Drucken
-menutrans Sa&ve-Exit<Tab>:wqa		Sp&eichern\ und\ Beenden<Tab>:wqa
+menutrans Sa&ve-Exit<Tab>:wqa		Speichern\ und\ Be&enden<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Beenden<Tab>:qa
 
-" Edit menu
+if has("diff")
+    menutrans Split\ &Diff\ with\.\.\.	D&ifferenz\ in\ geteiltem\ Fenster\ mit\.\.\.
+    menutrans Split\ Patched\ &By\.\.\.	&Patch\ in\ geteiltem\ Fenster\ mit\.\.\.
+endif
+" }}} FILE / DATEI
+
+" {{{ EDIT / EDITIEREN
 menutrans &Edit				&Editieren
 menutrans &Undo<Tab>u			Z&urück<Tab>u
 menutrans &Redo<Tab>^R			Vo&r<Tab>^R
 menutrans Rep&eat<Tab>\.		&Wiederholen<Tab>\.
 menutrans Cu&t<Tab>"+x			&Ausschneiden<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopieren<Tab>"+y
-menutrans &Paste<Tab>"+p		Ein&fügen<Tab>"+p
+menutrans &Paste<Tab>"+P		Ein&fügen<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Da&vor\ Einfügen<Tab>[p
 menutrans Put\ &After<Tab>]p		Da&nach\ Einfügen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markieren<Tab>ggVG
 menutrans &Find\.\.\.			&Suchen\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.	Suchen\ und\ &Ersetzen\.\.\.
-menutrans Options\.\.\.			Einstellungen\.\.\.
 
-" Programming menu
-menutrans &Tools			&Werkzeuge
-menutrans &Jump\ to\ this\ tag<Tab>g^]	&Springe\ zum\ Tag<Tab>g^]
-menutrans Jump\ &back<Tab>^T		Springe\ &Zurück<Tab>^T
-menutrans Build\ &Tags\ File		Erstelle\ &Tags\ Datei
-menutrans &Make<Tab>:make		&Erstellen<Tab>:make
-menutrans &List\ Errors<Tab>:cl		&Fehler\ Anzeigen<Tab>:cl
-menutrans L&ist\ Messages<Tab>:cl!	&Hinweise\ Anzeigen<Tab>:cl!
-menutrans &Next\ Error<Tab>:cn		Zum\ &Nächsten\ Fehler<Tab>:cn
-menutrans &Previous\ Error<Tab>:cp	Zum\ &Vorherigen\ Fehler<Tab>:cp
-menutrans &Older\ List<Tab>:cold	&Ältere\ Liste<Tab>:cold
-menutrans N&ewer\ List<Tab>:cnew	&Neuere\ Liste<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin	Feh&ler-Fenster<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!xxd	Wandle\ nach\ HEX<Tab>:%!xxd
-menutrans Convert\ to\ HEX<Tab>:%!mc\ vim:xxd	Wandle\ nach\ HEX<Tab>:%!ms\ vim:xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	Wandle\ zurück<Tab>:%!xxd\ -r
-menutrans Convert\ back<Tab>:%!mc\ vim:xxd\ -r	Wandle\ zurück<Tab>:%!mc\ vim:xxd\ -r
+" [-- SETTINGS --]
+" XXX &E would conflict with 'Suchen\ und\ &Ersetzen', see above
+menutrans Settings\ &Window				Einstellungen\.\.\.
+menutrans &Global\ Settings				&Globale\ Einstellungen
 
-" Names for buffer menu.
-menutrans &Buffers	&Puffer
-menutrans Refresh	Aktualisieren
-menutrans Delete	Löschen
-menutrans Alternate	Wechseln
-menutrans [No\ File]	[Keine\ Datei]
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	&Hervorhebungen\ ein-\ und\ ausschalten<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Großschreibung\ &ignorieren\ oder\ benutzen<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Anzeige\ des\ passenden\ &Symbols\ ein-\ und\ ausschalten<Tab>:set\ sm!
 
-" Window menu
+menutrans &Context\ lines				&Zusammenhang
+
+menutrans &Virtual\ Edit				&Virtueller\ Editier-Modus
+menutrans Never						Nie
+menutrans Block\ Selection				Block-Auswahl
+menutrans Insert\ mode					Einfüge-Modus
+menutrans Block\ and\ Insert				Block-\ und\ Einfüge-Modus
+menutrans Always					Immer
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!		Einfüge-&Modus\ ein-\ und\ ausschalten<Tab>:set\ im!
+
+menutrans Search\ &Path\.\.\.				Such-&Pfad\.\.\.
+menutrans Ta&g\ Files\.\.\.				Ta&g-Dateien\.\.\.
+
+menutrans Toggle\ &Toolbar				Werkzeugleiste\ ein-\ und\ ausschalten
+menutrans Toggle\ &Bottom\ Scrollbar			Unteren\ Rollbalken\ ein-\ und\ ausschalten
+menutrans Toggle\ &Left\ Scrollbar			Linken\ Rollbalken\ ein-\ und\ ausschalten
+menutrans Toggle\ &Right\ Scrollbar			Rechten\ Rollbalken\ ein-\ und\ ausschalten
+
+" Edit/File Settings
+menutrans F&ile\ Settings				&Datei\ Einstellungen
+
+" Boolean options
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Anzeige\ der\ Zeilen&nummer\ ein-\ und\ ausschalten<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!		&List-Modus\ ein-\ und\ ausschalten<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		&Zeilenumbruch\ ein-\ und\ ausschalten<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Umbruch\ an\ &Wortgrenzen\ ein-\ und\ ausschalten<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		&Erweiterung\ von\ Tabulatoren\ ein-\ und\ ausschalten<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!		&Automatische\ Einrückung\ ein-\ und\ ausschalten<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!		&C-Einrückung\ ein-\ und\ ausschalten<Tab>:set\ cin!
+
+" other options
+menutrans &Shiftwidth					&Schiebeweite
+menutrans Soft\ &Tabstop				&Tabulator
+menutrans Te&xt\ Width\.\.\.				Te&xt\ Breite\.\.\.
+menutrans &File\ Format\.\.\.				&Datei\ Format\.\.\.
+menutrans C&olor\ Scheme				F&arb-Schema\.\.\.
+menutrans &Keymap					&Tastatur-Belegung
+" }}} EDIT / EDITIEREN
+
+" {{{  TOOLS / WERKZEUGE
+if has("folding")
+  menutrans &Folding					Fa&ltung
+  " open close folds
+  menutrans &Enable/Disable\ folds<Tab>zi		&Ein-\ und\ ausschalten<Tab>zi
+  menutrans &View\ Cursor\ Line<Tab>zv			Momentane\ &Position\ anzeigen<Tab>zv
+  menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx		&Ausschließlich\ momentane\ Position\ anzeigen<Tab>zMzx
+  menutrans C&lose\ more\ folds<Tab>zm			Faltungen\ &schließen<Tab>zm
+  menutrans &Close\ all\ folds<Tab>zM			Alle\ Faltungen\ schließen<Tab>zM
+  menutrans O&pen\ more\ folds<Tab>zr			Faltungen\ &öffnen<Tab>zr
+  menutrans &Open\ all\ folds<Tab>zR			Alle\ Faltungen\ öffnen<Tab>zR
+  " fold method
+  menutrans Fold\ Met&hod				Faltungs-&Methode
+  menutrans M&anual					&Manuell
+  menutrans I&ndent					&Einrückungen
+  menutrans E&xpression					&Ausdruck
+  menutrans S&yntax					&Syntax
+  menutrans &Diff					&Differenz
+  menutrans Ma&rker					Ma&rkierungen
+  " create and delete folds
+  " TODO accelerators
+  menutrans Create\ &Fold<Tab>zf			Faltung\ Erzeugen<Tab>zf
+  menutrans &Delete\ Fold<Tab>zd			Faltung\ Löschen<Tab>zd
+  menutrans Delete\ &All\ Folds<Tab>zD			Alle\ Faltungen\ Löschen<Tab>zD
+  " moving around in folds
+  menutrans Fold\ column\ &width			&Breite\ der\ Faltungs-Spalte
+endif  " has folding
+
+if has("diff")
+  menutrans &Diff					&Differenz
+  menutrans &Update					&Aktualisieren
+  menutrans &Get\ Block					Block\ &Einfügen
+  menutrans &Put\ Block					Block\ &Übertragen
+endif
+
+menutrans &Tools					&Werkzeuge
+menutrans &Jump\ to\ this\ tag<Tab>g^]			&Springe\ zum\ Tag<Tab>g^]
+menutrans Jump\ &back<Tab>^T				Springe\ &Zurück<Tab>^T
+menutrans Build\ &Tags\ File				Erstelle\ &Tags\ Datei
+menutrans &Make<Tab>:make				&Erstellen<Tab>:make
+menutrans &List\ Errors<Tab>:cl				&Fehler\ Anzeigen<Tab>:cl
+menutrans L&ist\ Messages<Tab>:cl!			&Hinweise\ Anzeigen<Tab>:cl!
+menutrans &Next\ Error<Tab>:cn				Zum\ &Nächsten\ Fehler<Tab>:cn
+menutrans &Previous\ Error<Tab>:cp			Zum\ &Vorherigen\ Fehler<Tab>:cp
+menutrans &Older\ List<Tab>:cold			&Ältere\ Liste<Tab>:cold
+menutrans N&ewer\ List<Tab>:cnew			&Neuere\ Liste<Tab>:cnew
+
+menutrans Error\ &Window				Feh&ler-Fenster
+menutrans &Set\ Compiler				&Compiler
+menutrans &Update<Tab>:cwin				&Aktualisieren<Tab>:cwin
+menutrans &Open<Tab>:copen				&Öffnen<Tab>:copen
+menutrans &Close<Tab>:cclose 				&Schließen<Tab>:cclose
+
+menutrans &Convert\ to\ HEX<Tab>:%!xxd			Nach\ HE&X\ konvertieren<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r			Zurück\ konvertieren<Tab>:%!xxd\ -r
+" }}}  TOOLS / WERKZEUGE
+
+" {{{ SYNTAX / SYNTAX
+menutrans &Syntax				&Syntax
+menutrans Set\ '&syntax'\ only			Nur\ '&syntax'\ Setzen
+menutrans Set\ '&filetype'\ too			Auch\ '&filetype'\ Setzen
+menutrans &Off					&Aus
+menutrans &Manual				&Manuell
+menutrans A&utomatic				A&utomatisch
+menutrans on/off\ for\ &This\ file		An/Aus (diese\ &Datei)
+menutrans Co&lor\ test				Test\ der\ Farben
+menutrans &Highlight\ test			Test\ der\ Un&terstreichungen
+menutrans &Convert\ to\ HTML			Konvertieren\ nach\ &HTML
+" }}} SYNTAX / SYNTAX
+
+" {{{ BUFFERS / PUFFER
+menutrans &Buffers					&Puffer
+menutrans &Refresh\ menu				&Aktualisieren
+menutrans Delete					Löschen
+menutrans &Alternate					&Wechseln
+menutrans &Next						&Nächster
+menutrans &Previous					&Vorheriger
+menutrans [No\ File]					[Keine\ Datei]
+" }}} BUFFERS / PUFFER
+
+" {{{ WINDOW / ANSICHT
 menutrans &Window			&Ansicht
 menutrans &New<Tab>^Wn			&Neu<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Aufs&palten<Tab>^Ws
 menutrans Split\ &Vertically<Tab>^Wv	&Vertikal\ Aufspalten<Tab>^Ws
+menutrans Split\ File\ E&xplorer	Ver&zeichnis
 menutrans Sp&lit\ To\ #<Tab>^W^^	Aufspa&lten\ in\ #<Tab>^W^^
 menutrans &Close<Tab>^Wc		&Schliessen<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	&Andere\ Schliessen<Tab>^Wo
@@ -86,26 +185,46 @@ menutrans Ne&xt<Tab>^Ww			N&ächstes<Tab>^Ww
 menutrans P&revious<Tab>^WW		Vor&heriges<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=		&Gleiche\ Höhen<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maximale\ Höhe<Tab>^W_
-menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ Höhe<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		Maximale\ Breite<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		Minimale\ Breite<Tab>^W1\|
+menutrans M&in\ Height<Tab>^W1_		M&inimale\ Höhe<Tab>^W1_
+menutrans Max\ &Width<Tab>^W\|		Maximale\ &Breite<Tab>^W\|
+menutrans Min\ Widt&h<Tab>^W1\|		Minimale\ Brei&te<Tab>^W1\|
+menutrans Move\ &To			V&erschiebe\ nach
+menutrans &Top<Tab>^WK			&Oben<Tab>^WK
+menutrans &Bottom<Tab>^WJ		&Unten<Tab>^WJ
+menutrans &Left\ side<Tab>^WH		&Links<Tab>^WH
+menutrans &Right\ side<Tab>^WL		&Rechts<Tab>^WL
 menutrans Rotate\ &Up<Tab>^WR		Rotiere\ nach\ &oben<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotiere\ nach\ &unten<Tab>^Wr
 menutrans Select\ Fo&nt\.\.\.		Auswahl\ der\ Schriftart\.\.\.
+" }}} WINDOW / ANSICHT
 
-" The popup menu
-menutrans &Undo			&Zurück
-menutrans Cu&t			Aus&schneiden
-menutrans &Copy			&Kopieren
-menutrans &Paste		&Einfügen
-menutrans &Delete		&Löschen
-menutrans Select\ Blockwise	Auswahl\ Blockartig
-menutrans Select\ &Word		Auswahl\ des\ &Wortes
-menutrans Select\ &Line		Auswahl\ der\ &Zeile
-menutrans Select\ &Block	Auswahl\ des\ &Blocks
-menutrans Select\ &All		&Alles\ Auswählen
+" {{{ HELP / HILFE
+menutrans &Help			&Hilfe
+menutrans &Overview<Tab><F1>	&Überblick<Tab><F1>
+menutrans &User\ Manual		&Handbuch
+menutrans &How-to\ links	How-to\ &Index
+menutrans &GUI			&Graphische\ Oberfläche
+menutrans &Credits		&Autoren
+menutrans Co&pying		&Copyright	" Urheberrecht ?
+menutrans &Find\.\.\.		&Suchen\.\.\.	" conflicts with Edit.Find
+menutrans &Version		&Version
+menutrans &About		&Titelseite
+" }}} HELP / HILFE
 
-" The GUI toolbar
+" {{{ POPUP
+menutrans &Undo				&Zurück
+menutrans Cu&t				Aus&schneiden
+menutrans &Copy				&Kopieren
+menutrans &Paste			&Einfügen
+menutrans &Delete			&Löschen
+menutrans Select\ Blockwise		Auswahl\ Blockartig
+menutrans Select\ &Word			Auswahl\ des\ &Wortes
+menutrans Select\ &Line			Auswahl\ der\ &Zeile
+menutrans Select\ &Block		Auswahl\ des\ &Blocks
+menutrans Select\ &All			&Alles\ Auswählen
+" }}} POPUP
+
+" {{{ TOOLBAR
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
@@ -134,7 +253,7 @@ if has("toolbar")
     tmenu ToolBar.LoadSesn	Sitzung Laden
     tmenu ToolBar.SaveSesn	Sitzung Speichern
     tmenu ToolBar.RunScript	Vim Skript Ausführen
-    tmenu ToolBar.Make		Make Ausführen
+    tmenu ToolBar.Make		Erstellen
     tmenu ToolBar.Shell		Shell Starten
     tmenu ToolBar.RunCtags	Erstelle Tags Datei
     tmenu ToolBar.TagJump	Springe zum Tag
@@ -142,16 +261,5 @@ if has("toolbar")
     tmenu ToolBar.FindHelp	Hilfe Durchsuchen...
   endfun
 endif
+" }}} TOOLBAR
 
-" Syntax menu
-menutrans &Syntax		&Syntax
-menutrans Set\ 'syntax'\ only	Nur\ 'syntax'\ Setzen
-menutrans Set\ 'filetype'\ too	Auch\ 'filetype'\ Setzen
-menutrans &Off			&Aus
-menutrans &Manual		&Manuell
-menutrans A&utomatic		A&utomatisch
-menutrans o&n\ (this\ file)	A&n\ (diese\ Datei)
-menutrans o&ff\ (this\ file)	Au&s\ (diese\ Datei)
-menutrans Co&lor\ test		Test\ der\ &Farben
-menutrans &Highlight\ test	Test\ der\ Un&terstreichungen
-menutrans &Convert\ to\ HTML	Konvertieren\ nach\ &HTML

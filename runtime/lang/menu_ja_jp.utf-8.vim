@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (UTF-8)
 " Translated By:	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		13-Jul-2001.
+" Last Change:		05-Sep-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -20,7 +20,9 @@ menutrans &How-to\ links	&How-toリンク
 menutrans &Credits		クレジット(&C)
 menutrans Co&pying		著作権情報(&P)
 menutrans &Version		バージョン情報(&V)
-" menutrans &About		&About
+menutrans &About		Vimについて(&A)
+
+let g:menutrans_help_dialog = "ヘルプを検索したいコマンドもしくは単語を入力してください:\n\n挿入モードのコマンドには i_ を先頭に付加します. (例: i_CTRL-X)\nコマンドライン編集コマンドには c_ を先頭に付加します. (例: c_<Del>)\nオプションの名前には ' を付加します. (例: 'shiftwidth')"
 
 " File menu
 menutrans &File				ファイル(&F)
@@ -79,6 +81,9 @@ menutrans Toggle\ &Bottom\ Scrollbar	スクロールバー(下)表示切替(&B)
 menutrans Toggle\ &Left\ Scrollbar	スクロールバー(左)表示切替(&L)
 menutrans Toggle\ &Right\ Scrollbar	スクロールバー(右)表示切替(&R)
 
+let g:menutrans_path_dialog = "ファイルの検索パスを入力してください:\nディレクトリ名はカンマ ( , ) で区切ってください."
+let g:menutrans_tags_dialog = "タグファイルの名前を入力してください:\n名前はカンマ ( , ) で区切ってください."
+
 " Edit/File Settings
 
 " Boolean options
@@ -103,6 +108,10 @@ menutrans &Shiftwidth			シフト幅(&S)
 menutrans Soft\ &Tabstop		ソフトウェアタブ幅(&T)
 menutrans Te&xt\ Width\.\.\.		テキスト幅(&X)\.\.\.
 menutrans &File\ Format\.\.\.		改行記号選択(&F)\.\.\.
+
+let g:menutrans_textwidth_dialog = "テキストの幅('textwidth')を設定してください (0で整形を無効化):"
+let g:menutrans_fileformat_dialog = "ファイル出力の際の改行記号の形式を選んでください."
+
 menutrans C&olor\ Scheme		色テーマ選択(&O)
 menutrans &Keymap			キーマップ(&K)
 menutrans None				なし
@@ -175,10 +184,10 @@ menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&V)<Tab>^Wv
 menutrans Split\ File\ E&xplorer	ファイルエクスプローラ(&X)
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
 menutrans Move\ &To			移動(&T)
-menutrans &Top<Tab>^WK			先頭(&T)
-menutrans &Bottom<Tab>^WJ		末尾(&B)
-menutrans &Left\ side<Tab>^WH		左(&L)
-menutrans &Right\ side<Tab>^WL		右(&R)
+menutrans &Top<Tab>^WK			上(&T)<Tab>^WK
+menutrans &Bottom<Tab>^WJ		下(&B)<Tab>^WJ
+menutrans &Left\ side<Tab>^WH		左(&L)<Tab>^WH
+menutrans &Right\ side<Tab>^WL		右(&R)<Tab>^WL
 menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww
 menutrans P&revious<Tab>^WW		前へ(&R)<Tab>^WW

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0au.  Last change: 2001 Aug 21
+*tags.txt*     For Vim version 6.0av.  Last change: 2001 Sep 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -502,7 +502,7 @@ below, for how static tags are used.
 
 The third format is new.  It includes additional information in optional
 fields at the end of each line.  It is backwards compatible with Vi.  It is
-only supported by new versions of ctags (like the one that comes with Vim).
+only supported by new versions of ctags (such as Exuberant ctags).
 
 {tagname}	The identifier.  Normally the name of a function, but it can
 		be any identifier.  It cannot contain a <Tab>.
@@ -873,4 +873,4 @@ this use of ":grep" and "colder" to browse all the locations in a tree-like
 way.  If you do this consistently, you will find all locations without the
 need to write down a "todo" list.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -4,7 +4,7 @@ Test for 'cindent'
 
 STARTTEST
 :so small.vim
-:set nocompatible
+:set nocompatible viminfo+=nviminfo
 :edit                " read modeline
 /start of AUTO
 =/end of AUTO

@@ -1,48 +1,47 @@
 " Vim syntax file
-" Language:	ncf NCF Batch File
-" Maintainer:	Jonathan J. Miner <jon.miner@doit.wisc.edu>
-" Last Change:  Friday 21 January 2000 09:25 Central Standard Time
+" Language:     Novell "NCF" Batch File
+" Maintainer:   Jonathan J. Miner <miner@doit.wisc.edu>
+" Last Change:	Tue, 04 Sep 2001 16:20:33 CDT
 " $Id$
 
-" For version 5.x: Clear all syntax items
-" For version 6.x: Quit when a syntax file was already loaded
+" Remove any old syntax stuff hanging around
 if version < 600
-  syntax clear
+    syn clear
 elseif exists("b:current_syntax")
-  finish
+    finish
 endif
 
 syn case ignore
 
-syn keyword ncfCommands		mount load unload
-syn keyword ncfBoolean		on off
-syn keyword ncfCommands		set nextgroup=ncfSetCommands
-syn keyword ncfTimeTypes	Reference Primary Secondary Single
-syn match ncfLoad	"\(unl\|l\)oad .*"lc=4 contains=ALLBUT,Error
-syn match ncfMount	"mount .*"lc=5 contains=ALLBUT,Error
+syn keyword ncfCommands         mount load unload
+syn keyword ncfBoolean          on off
+syn keyword ncfCommands         set nextgroup=ncfSetCommands
+syn keyword ncfTimeTypes        Reference Primary Secondary Single
+syn match ncfLoad       "\(unl\|l\)oad .*"lc=4 contains=ALLBUT,Error
+syn match ncfMount      "mount .*"lc=5 contains=ALLBUT,Error
 
-syn match ncfComment	"^\ *rem.*$"
-syn match ncfComment	"^\ *;.*$"
-syn match ncfComment	"^\ *#.*$"
+syn match ncfComment    "^\ *rem.*$"
+syn match ncfComment    "^\ *;.*$"
+syn match ncfComment    "^\ *#.*$"
 
-syn match ncfSearchPath	"search \(add\|del\) " nextgroup=ncfPath
-syn match ncfPath	"\<[^: ]\+:\([A-Za-z0-9._]\|\\\)*\>"
-syn match ncfServerName	"^file server name .*$"
-syn match ncfIPXNet	"^ipx internal net"
+syn match ncfSearchPath "search \(add\|del\) " nextgroup=ncfPath
+syn match ncfPath       "\<[^: ]\+:\([A-Za-z0-9._]\|\\\)*\>"
+syn match ncfServerName "^file server name .*$"
+syn match ncfIPXNet     "^ipx internal net"
 
 " String
-syn region ncfString	start=+"+  end=+"+
-syn match ncfContString	"= \(\(\.\{0,1}\(OU=\|O=\)\{0,1}[A-Z_]\+\)\+;\{0,1}\)\+"lc=2
+syn region ncfString    start=+"+  end=+"+
+syn match ncfContString "= \(\(\.\{0,1}\(OU=\|O=\)\{0,1}[A-Z_]\+\)\+;\{0,1}\)\+"lc=2
 
-syn match ncfHexNumber	"\<\d\(\d\+\|[A-F]\+\)*\>"
-syn match ncfNumber	"\<\d\+\.\{0,1}\d*\>"
-syn match ncfIPAddr	"\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}"
-syn match ncfTime	"\(+|=\)\{0,1}\d\{1,2}:\d\{1,2}:\d\{1,2}"
-syn match ncfDSTTime	"([^ ]\+ [^ ]\+ \(FIRST\|LAST\)\s*\d\{1,2}:\d\{1,2}:\d\{1,2} \(AM\|PM\))"
-syn match ncfTimeZone	"[A-Z]\{3}\d[A-Z]\{3}"
+syn match ncfHexNumber  "\<\d\(\d\+\|[A-F]\+\)*\>"
+syn match ncfNumber     "\<\d\+\.\{0,1}\d*\>"
+syn match ncfIPAddr     "\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}"
+syn match ncfTime       "\(+|=\)\{0,1}\d\{1,2}:\d\{1,2}:\d\{1,2}"
+syn match ncfDSTTime    "([^ ]\+ [^ ]\+ \(FIRST\|LAST\)\s*\d\{1,2}:\d\{1,2}:\d\{1,2} \(AM\|PM\))"
+syn match ncfTimeZone   "[A-Z]\{3}\d[A-Z]\{3}"
 
-syn match ncfLogins	"^\([Dd]is\|[Ee]n\)able login[s]*"
-syn match ncfScript	"[^ ]*\.ncf"
+syn match ncfLogins     "^\([Dd]is\|[Ee]n\)able login[s]*"
+syn match ncfScript     "[^ ]*\.ncf"
 
 "  SET Commands that take a Number following
 syn match ncfSetCommandsNum "\(Alert Message Nodes\)\s*="
@@ -218,45 +217,42 @@ if exists("ncf_highlight_unknowns")
     syn match Error "[^ \t]*" contains=ALL
 endif
 
-" Define the default highlighting.
-" For version 5.7 and earlier: only when not done already
-" For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_ncf_syntax_inits")
-  if version < 508
-    let did_ncf_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
+    if version < 508
+        let did_ncf_syntax_inits = 1
+        command -nargs=+ HiLink hi link <args>
+    else
+        command -nargs=+ HiLink hi def link <args>
+    endif
 
-	HiLink ncfCommands	Statement
-	HiLink ncfSetCommands	ncfCommands
-	HiLink ncfLogins	ncfCommands
-	HiLink ncfString	String
-	HiLink ncfContString	ncfString
-	HiLink ncfComment	Comment
-	HiLink ncfImplicit	Type
-	HiLink ncfBoolean	Boolean
-	HiLink ncfScript	Identifier
-	HiLink ncfNumber	Number
-	HiLink ncfIPAddr	ncfNumber
-	HiLink ncfHexNumber	ncfNumber
-	HiLink ncfTime		ncfNumber
-	HiLink ncfDSTTime	ncfNumber
-	HiLink ncfPath		Constant
-	HiLink ncfServerName	Special
-	HiLink ncfIPXNet	ncfServerName
-	HiLink ncfTimeTypes	Constant
-	HiLink ncfSetCommandsNum	ncfSetCommands
-	HiLink ncfSetCommandsBool	ncfSetCommands
-	HiLink ncfSetCommandsStr	ncfSetCommands
-	HiLink ncfSetCommandsTime	ncfSetCommands
-	HiLink ncfSetCommandsTimeDate	ncfSetCommands
-	HiLink ncfSetCommandsBindCon	ncfSetCommands
+    " The default methods for highlighting.  Can be overridden later
+    HiLink ncfCommands     Statement
+    HiLink ncfSetCommands  ncfCommands
+    HiLink ncfLogins       ncfCommands
+    HiLink ncfString       String
+    HiLink ncfContString   ncfString
+    HiLink ncfComment      Comment
+    HiLink ncfImplicit     Type
+    HiLink ncfBoolean      Boolean
+    HiLink ncfScript       Identifier
+    HiLink ncfNumber       Number
+    HiLink ncfIPAddr       ncfNumber
+    HiLink ncfHexNumber    ncfNumber
+    HiLink ncfTime         ncfNumber
+    HiLink ncfDSTTime      ncfNumber
+    HiLink ncfPath         Constant
+    HiLink ncfServerName   Special
+    HiLink ncfIPXNet       ncfServerName
+    HiLink ncfTimeTypes    Constant
+    HiLink ncfSetCommandsNum       ncfSetCommands
+    HiLink ncfSetCommandsBool      ncfSetCommands
+    HiLink ncfSetCommandsStr       ncfSetCommands
+    HiLink ncfSetCommandsTime      ncfSetCommands
+    HiLink ncfSetCommandsTimeDate  ncfSetCommands
+    HiLink ncfSetCommandsBindCon   ncfSetCommands
 
-	delcommand HiLink
+    delcommand HiLink
+
 endif
 
 let b:current_syntax = "ncf"
-
-" vim: ts=8

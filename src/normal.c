@@ -829,6 +829,9 @@ getcount:
 	int	lit = FALSE;	/* get extra character literally */
 	int	langmap_active = FALSE;    /* using :lmap mappings */
 	int	lang;		/* getting a text character */
+#ifdef USE_IM_CONTROL
+	int	save_smd;	/* saved value of p_smd */
+#endif
 
 	++no_mapping;
 	++allow_keys;		/* no mapping for nchar, but allow key codes */
@@ -885,6 +888,8 @@ getcount:
 		langmap_active = TRUE;
 	    }
 #ifdef USE_IM_CONTROL
+	    save_smd = p_smd;
+	    p_smd = FALSE;	/* Don't let the IM code show the mode here */
 	    if (lang && curbuf->b_p_iminsert == B_IMODE_IM)
 		im_set_active(TRUE);
 #endif
@@ -904,6 +909,7 @@ getcount:
 		im_save_status(&curbuf->b_p_iminsert);
 		im_set_active(FALSE);
 	    }
+	    p_smd = save_smd;
 #endif
 #ifdef CURSOR_SHAPE
 	    State = NORMAL_BUSY;
@@ -1232,10 +1238,10 @@ do_pending_operator(cap, old_col, gui_yank)
     if (clip_star.available
 	    && oap->op_type != OP_NOP
 	    && !gui_yank
-#ifdef FEAT_VISUAL
+# ifdef FEAT_VISUAL
 	    && VIsual_active
 	    && !redo_VIsual_busy
-#endif
+# endif
 	    && oap->regname == 0)
 	clip_auto_select();
 #endif

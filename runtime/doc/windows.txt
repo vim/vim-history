@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0au.  Last change: 2001 Aug 01
+*windows.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1102,4 +1102,4 @@ unlisted	The buffer is not in the buffer list.  It is not used for
 			:set nobuflisted
 <
 
- vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":
+ vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:

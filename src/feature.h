@@ -908,8 +908,6 @@
 
 /*
  * +mouse_xterm		Unix only: Include code for xterm mouse handling.
- * +xterm_clipboard	Unix only: Include code for handling the clipboard
- *			like in gui mode
  * +mouse_dec		idem, for Dec mouse handling.
  * +mouse_jsbterm	idem, for Jsbterm mouse handling.
  * +mouse_netterm	idem, for Netterm mouse handling.
@@ -938,7 +936,25 @@
 # endif
 #endif
 
-/* In the GUI we always have the clipboard and the mouse */
+#if defined(FEAT_NORMAL) && defined(HAVE_GPM)
+# define FEAT_MOUSE_GPM
+#endif
+/* Define FEAT_MOUSE when any of the above is defined or FEAT_GUI. */
+#if !defined(FEAT_MOUSE_TTY) && (defined(FEAT_MOUSE_XTERM) \
+	|| defined(FEAT_MOUSE_NET) || defined(FEAT_MOUSE_DEC) \
+	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM) \
+	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_MOUSE_PTERM))
+# define FEAT_MOUSE_TTY		/* include non-GUI mouse support */
+#endif
+#if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_TTY) || defined(FEAT_GUI))
+# define FEAT_MOUSE		/* include generic mouse support */
+#endif
+
+/*
+ * +clipboard		Clipboard support.  Always used for the GUI.
+ * +xterm_clipboard	Unix only: Include code for handling the clipboard
+ *			in an xterm like in the GUI.
+ */
 #ifdef FEAT_GUI
 # ifndef FEAT_CLIPBOARD
 #  define FEAT_CLIPBOARD
@@ -956,23 +972,13 @@
 #  define FEAT_CLIPBOARD
 # endif
 #endif
-#if defined(WIN32) || defined(FEAT_XCLIPBOARD)
-/* +clientserver	Remote control via the remote_send() function
-			and the --remote argument */
+
+/*
+ * +clientserver	Remote control via the remote_send() function
+ *			and the --remote argument
+ */
+#if (defined(WIN32) || defined(FEAT_XCLIPBOARD)) && defined(FEAT_EVAL)
 # define FEAT_CLIENTSERVER
-#endif
-#if defined(FEAT_NORMAL) && defined(HAVE_GPM)
-# define FEAT_MOUSE_GPM
-#endif
-/* Define FEAT_MOUSE when any of the above is defined */
-#if !defined(FEAT_MOUSE_TTY) && (defined(FEAT_MOUSE_XTERM) \
-	|| defined(FEAT_MOUSE_NET) || defined(FEAT_MOUSE_DEC) \
-	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM) \
-	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_MOUSE_PTERM))
-# define FEAT_MOUSE_TTY		/* include non-GUI mouse support */
-#endif
-#if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_TTY) || defined(FEAT_GUI))
-# define FEAT_MOUSE		/* include generic mouse support */
 #endif
 
 /*

@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0au.  Last change: 2001 Aug 30
+*sign.txt*     For Vim version 6.0av.  Last change: 2001 Sep 04
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -101,6 +101,7 @@ PLACING SIGNS						*:sign-place* *E158*
 		The file {fname} must already be loaded in a buffer.  The
 		exact file name must be used, wildcards, $ENV and ~ are not
 		expanded.
+
 		The sign is remembered under {id}, this can be used for
 		further manipulation.  {id} must be a number.
 		It's up to the user to make sure the {id} is used only once in
@@ -108,17 +109,26 @@ PLACING SIGNS						*:sign-place* *E158*
 		to be done several times and making changes may not work as
 		expected).
 
+:sign place {id} line={lnum} name={name} buffer={nr}
+		Same, but use buffer {nr}.
+
 :sign place {id} name={name} file={fname}
 		Change the placed sign {id} in file {fname} to use the defined
-		sign {name}.  This can be used to change the displayed sign
-		without moving it (e.g., when the debugger has stopped at a
-		breakpoint).
+		sign {name}.  
+		This can be used to change the displayed sign without moving
+		it (e.g., when the debugger has stopped at a breakpoint).
+
+:sign place {id} name={name} buffer={nr}
+		Same, but use buffer {nr}.
 
 
 REMOVING SIGNS						*:sign-unplace* *E159*
 
 :sign unplace {id} file={fname}
 		Remove the previously placed sign {id} from file {fname}.
+
+:sign unplace {id} buffer={nr}
+		Same, but use buffer {nr}.
 
 :sign unplace {id}
 		Remove the previously placed sign {id} from all files it
@@ -136,6 +146,9 @@ LISTING PLACED SIGNS
 :sign place file={fname}
 		List signs placed in file {fname}.
 
+:sign place buffer={nr}
+		List signs placed in buffer {nr}.
+
 :sign place	List placed signs in all files.
 
 
@@ -147,4 +160,7 @@ JUMPING TO A SIGN					*:sign-jump* *E157*
 		If the file isn't displayed in window and the current file can
 		not be |abandon|ed this fails.
 
- vim:tw=78:
+:sign jump {id} buffer={nr}
+		Same, but use buffer {nr}.
+
+ vim:tw=78:ts=8:ft=help:norl:

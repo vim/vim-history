@@ -525,12 +525,17 @@ mf_sync(mfp, flags)
 #if defined(SYNC_DUP_CLOSE) && !defined(MSDOS)
     int		fd;
 #endif
+    int		got_int_save = got_int;
 
     if (mfp->mf_fd < 0)	    /* there is no file, nothing to do */
     {
 	mfp->mf_dirty = FALSE;
 	return FAIL;
     }
+
+    /* Only a CTRL-C while writing will break us here, not one typed
+     * previously. */
+    got_int = FALSE;
 
     /*
      * sync from last to first (may reduce the probability of an inconsistent
@@ -553,8 +558,15 @@ mf_sync(mfp, flags)
 		    break;
 		status = FAIL;
 	    }
-	    /* Stop when char available now */
-	    if ((flags & MFS_STOP) && ui_char_avail())
+	    if (flags & MFS_STOP)
+	    {
+		/* Stop when char available now. */
+		if (ui_char_avail())
+		    break;
+	    }
+	    else
+		ui_breakcheck();
+	    if (got_int)
 		break;
 	}
 
@@ -644,6 +656,8 @@ mf_sync(mfp, flags)
 # endif
 #endif /* AMIGA */
     }
+
+    got_int |= got_int_save;
 
     return status;
 }

@@ -1,6 +1,6 @@
 " Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
 " URL		: http://www.pcppopper.org/
-" Revised on	: Sat, 01 Sep 2001 21:32:55 +0200
+" Revised on	: Sun, 02 Sep 2001 17:11:08 +0200
 " Language	: readline configuration file
 " Variables	:
 "   readline_has_bash - if defined add support for bash specific
@@ -40,6 +40,13 @@ syn case match
 
 syn match   readlineKeysTwo	contained +\\\([CM]-\|[e\\"'abdfnrtv]\|\o\{3}\|x\x\{3}\)+
 
+" keymaps
+syn match   readlineKeymaps	contained "emacs\(-standard\|-meta\|-ctlx\)\="
+syn match   readlineKeymaps	contained "vi\(-move\|-command\|-insert\)\="
+
+" bell styles
+syn keyword readlineBellStyles	contained audible visible none
+
 " numbers
 syn match   readlineNumber	contained "\<\d\+\>"
 
@@ -49,18 +56,23 @@ syn keyword readlineBoolean	contained on off
 syn case match
 
 " conditionals
-syn match   readlineConditional	"^\s*$\(if\|else\|endif\)\>"
+syn keyword readlineIfOps	contained mode term
+
+syn region  readlineConditional display oneline transparent matchgroup=readlineConditional start="^\s*$if" end="$" contains=readlineIfOps,readlineKeymaps
+syn match   readlineConditional	"^\s*$\(else\|endif\)\>"
 
 " include
 syn match   readlineInclude	"^\s*$include\>"
 
 " settings
-syn region  readlineSet		display oneline transparent matchgroup=readlineKeyword start="^\s*set\>" end="$" contains=readlineNumber,readlineBoolean,readlineSettings
+
+syn region  readlineSet		display oneline transparent matchgroup=readlineKeyword start="^\s*set\>" end="$"me=e-1 contains=readlineNumber,readlineBoolean,readlineKeymaps,readlineBellStyles,readlineSettings
 
 syn keyword readlineSettings	contained bell-style comment-begin completion-ignore-case completion-ignore-case
-syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad
-syn keyword readlineSettings	contained expand-tilde horizontal-scroll-mode keymap mark-directories mark-modified-lines meta-flag
+syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad 
+syn keyword readlineSettings	contained expand-tilde horizontal-scroll-mode mark-directories keymap mark-modified-lines meta-flag
 syn keyword readlineSettings	contained input-meta output-meta print-completions-horizontally show-all-if-ambiguous visible-stats
+syn keyword readlineSettings	contained prefer-visible-bell blink-matching-paren
 
 " bash extensions
 if exists("readline_has_bash")
@@ -78,6 +90,7 @@ syn match   readlineFunctions	contained "\<yank-\(nth\|last\)-arg\>"
 syn match   readlineFunctions	contained "\<\(backward-\)\=kill-\(\(whole-\)\=line\|word\)\>"
 syn match   readlineFunctions	contained "\<\(start\|end\|call-last\)-kbd-macro\>"
 syn match   readlineFunctions	contained "\<dump-\(functions\|variables\|macros\)\>"
+syn match   readlineFunctions	contained "\<non-incremental-\(reverse\|forward\)-search-history-again\>"
 syn keyword readlineFunctions	contained clear-screen redraw-current-line accept-line delete-char backward-delete-char quoted-insert tab-insert
 syn keyword readlineFunctions	contained self-insert transpose-chars transpose-words downcase-word capitalize-word unix-word-rubout
 syn keyword readlineFunctions	contained delete-horizontal-space kill-region copy-region-as-kill copy-backward-word copy-forward-word yank yank-pop
@@ -88,7 +101,8 @@ syn keyword readlineFunctions	contained unix-line-discard upcase-word backward-d
 syn keyword readlineFunctions	contained vi-complete vi-char-search vi-redo vi-search vi-arg-digit vi-append-eol vi-prev-word vi-change-to vi-delete-to
 syn keyword readlineFunctions	contained vi-end-word vi-fetch-history vi-insert-beg vi-search-again vi-put vi-replace vi-subst vi-yank-to vi-first-print
 syn keyword readlineFunctions	contained vi-yank-arg vi-goto-mark vi-append-mode vi-insertion-mode prev-history vi-set-mark vi-search-again vi-put vi-change-char
-syn keyword readlineFunctions	contained vi-subst vi-delete vi-yank-to vi-column vi-change-case
+syn keyword readlineFunctions	contained vi-subst vi-delete vi-yank-to vi-column vi-change-case vi-overstrike vi-overstrike-delete
+syn keyword readlineFunctions	contained do-lowercase-version delete-char-or-list tty-status arrow-key-prefix
 
 " bash extensions
 if exists("readline_has_bash")
@@ -115,8 +129,11 @@ if version >= 508 || !exists("did_readline_syn_inits")
     HiLink readlineString	String
     HiLink readlineKeys		SpecialChar
     HiLink readlineKeysTwo	SpecialChar
+    HiLink readlineKeymaps	Constant
+    HiLink readlineBellStyles	Constant
     HiLink readlineNumber	Number
     HiLink readlineBoolean	Boolean
+    HiLink readlineIfOps	Type
     HiLink readlineConditional	Conditional
     HiLink readlineInclude	Include
     HiLink readlineKeyword	Keyword

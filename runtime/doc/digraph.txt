@@ -1,4 +1,4 @@
-*digraph.txt*   For Vim version 6.0au.  Last change: 2001 Jul 28
+*digraph.txt*   For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -104,7 +104,7 @@ line in your .cshrc: >
 Vim comes with a set of default digraphs.  Check the output of ":digraphs" to
 see them.
 
-On most sytems Vim uses the same digraphs.  They work for the Unicode and
+On most systems Vim uses the same digraphs.  They work for the Unicode and
 ISO-8859-1 character sets.  These default digraphs are taken from the RFC1345
 mnemonics.  To make it easy to remember the mnemonic, the second character has
 a standard meaning:
@@ -319,4 +319,4 @@ $	DO	0x24	 36	DOLLAR SIGN
 þ	th	0xfe	254	LATIN SMALL LETTER THORN (Icelandic)
 ÿ	y:	0xff	255	LATIN SMALL LETTER Y WITH DIAERESIS
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

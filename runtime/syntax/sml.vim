@@ -1,13 +1,12 @@
 " Vim syntax file
-" Language:      SML
-" Filenames:     *.sml *.sig
-" Maintainers:   Markus Mottl            <mottl@miss.wu-wien.ac.at>
-"                Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
-" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/sml.vim
-" Last Change:   2001 May 10
-"                2000 Oct 01 - integrated Fabrizio's syntax file and
-"                              cleaned up for distribution
-"                2000 Feb 24 - structures and signatures improved
+" Language:     SML
+" Filenames:    *.sml *.sig
+" Maintainers:  Markus Mottl            <markus@oefai.at>
+"               Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
+" URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/sml.vim
+" Last Change:  2001 Aug 29 - Removed small highlighting bug  (MM)
+"               2001 Aug 28 - Upgraded URL & mail address  (MM)
+"               2001 Apr 26 - Upgraded for new Vim version  (MM)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -63,15 +62,16 @@ syn keyword  smlTodo contained TODO FIXME XXX
 " let
 syn region   smlEnd matchgroup=smlKeyword start="\<let\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
 
-
 " local
 syn region   smlEnd matchgroup=smlKeyword start="\<local\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
 
-" Blocks
-" "begin"
+" abstype
+syn region   smlNone matchgroup=smlKeyword start="\<abstype\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+
+" begin
 syn region   smlEnd matchgroup=smlKeyword start="\<begin\>" matchgroup=smlKeyword end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
 
-" "if"
+" if
 syn region   smlNone matchgroup=smlKeyword start="\<if\>" matchgroup=smlKeyword end="\<then\>" contains=ALLBUT,@smlContained,smlThenErr
 
 
@@ -115,7 +115,7 @@ syn region   smlWithRest start="[^)]" end=")"me=e-1 contained contains=ALLBUT,@s
 syn region   smlKeyword start="\<signature\>" matchgroup=smlModule end="\<\w\(\w\|'\)*\>" contains=smlComment skipwhite skipempty nextgroup=smlMTDef
 syn match    smlMTDef "=\s*\w\(\w\|'\)*\>"hs=s+1,me=s
 
-syn keyword  smlKeyword  abstype and andalso case
+syn keyword  smlKeyword  and andalso case
 syn keyword  smlKeyword  datatype else eqtype
 syn keyword  smlKeyword  exception fn fun handle
 syn keyword  smlKeyword  in infix infixl infixl

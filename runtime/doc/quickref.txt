@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0au.  Last change: 2001 Aug 08
+*quickref.txt*  For Vim version 6.0av.  Last change: 2001 Sep 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -713,7 +713,7 @@ Short explanation of each option:		*option-list*
 |'isprint'|	  |'isp'|    printable characters
 |'joinspaces'|	  |'js'|     two spaces after a period with a join command
 |'key'|			     encryption key
-|'keymap'|	  |'kmp'|    name of a keyboard mappping
+|'keymap'|	  |'kmp'|    name of a keyboard mapping
 |'keymodel'|	  |'km'|     enable starting/stopping selection with keys
 |'keywordprg'|	  |'kp'|     program to use for the "K" command
 |'langmap'|	  |'lmap'|   alphabetic characters for other language mode
@@ -1300,4 +1300,4 @@ Context-sensitive completion on the command-line:
 |zN|		zN			fold normal set 'foldenable'
 |zi|		zi			invert 'foldenable'
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

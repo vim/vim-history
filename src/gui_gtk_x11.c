@@ -1612,30 +1612,34 @@ mainwin_realize(GtkWidget *widget)
     XIconSize		*size;
     int			number_sizes;
 
-    /*
-     * Adjust the icon to the preferences of the actual window manager.
-     * This is once again a workaround for a defficiency in GTK+.
-     */
-    root_window = XRootWindow(GDK_DISPLAY(), DefaultScreen(GDK_DISPLAY()));
-    if (XGetIconSizes(GDK_DISPLAY(), root_window,
-		&size, &number_sizes) != 0)
+    if (vim_strchr(p_go, GO_ICON) != NULL)
     {
-
-	if (number_sizes > 0)
+	/*
+	 * Add an icon to the main window. For fun and convenience of the
+	 * user.
+	 * Adjust the icon to the preferences of the actual window manager.
+	 * This is once again a workaround for a defficiency in GTK+.
+	 */
+	root_window = XRootWindow(GDK_DISPLAY(), DefaultScreen(GDK_DISPLAY()));
+	if (XGetIconSizes(GDK_DISPLAY(), root_window,
+						   &size, &number_sizes) != 0)
 	{
-	    if (size->max_height >= 48 && size->max_height >= 48)
-		magick = vim48x48;
-	    else if (size->max_height >= 32 && size->max_height >= 32)
-		magick = vim32x32;
-	    else if (size->max_height >= 16 && size->max_height >= 16)
-		magick = vim16x16;
+	    if (number_sizes > 0)
+	    {
+		if (size->max_height >= 48 && size->max_height >= 48)
+		    magick = vim48x48;
+		else if (size->max_height >= 32 && size->max_height >= 32)
+		    magick = vim32x32;
+		else if (size->max_height >= 16 && size->max_height >= 16)
+		    magick = vim16x16;
+	    }
 	}
-    }
 
-    if (!icon)
-	icon = gdk_pixmap_create_from_xpm_d(gui.mainwin->window,
-						    &icon_mask, NULL, magick);
-    gdk_window_set_icon(gui.mainwin->window, NULL, icon, icon_mask);
+	if (!icon)
+	    icon = gdk_pixmap_create_from_xpm_d(gui.mainwin->window,
+		    &icon_mask, NULL, magick);
+	gdk_window_set_icon(gui.mainwin->window, NULL, icon, icon_mask);
+    }
 
 #if 0
     /* Setup to indicate to the window manager that we want to catch the
@@ -1774,11 +1778,8 @@ gui_mch_init()
     (void)gtk_signal_connect(GTK_OBJECT(gui.mainwin), "delete_event",
 			     GTK_SIGNAL_FUNC(delete_event_cb), NULL);
 
-    /* Add an icon to the main window. For fun and convenience of the user. */
-    if (vim_strchr(p_go, GO_ICON) != NULL)
-	gtk_signal_connect(GTK_OBJECT(gui.mainwin), "realize",
+    gtk_signal_connect(GTK_OBJECT(gui.mainwin), "realize",
 				      GTK_SIGNAL_FUNC(mainwin_realize), NULL);
-
 
     /* FIXME: this should eventually get the accelgroup of the gui.mainwin */
     gui.accel_group = gtk_accel_group_get_default();
@@ -2377,8 +2378,9 @@ gui_mch_adjust_charsize(void)
 /*
  * Try to load the requested fontset.
  */
+/*ARGSUSED*/
     GuiFontset
-gui_mch_get_fontset(char_u *name, int report_error)
+gui_mch_get_fontset(char_u *name, int report_error, int fixed_width)
 {
     GdkFont *font;
 
@@ -2393,6 +2395,7 @@ gui_mch_get_fontset(char_u *name, int report_error)
 	    EMSG2(_("E234: Unknown fontset: %s"), name);
 	return NOFONT;
     }
+    /* TODO: check if the font is fixed width. */
 
     /* reference this font as beeing in use */
     gdk_font_ref(font);
@@ -2567,7 +2570,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
 #ifdef FEAT_XFONTSET
     /* Try loading a fontset.  If this fails we try loading a normal font. */
     if (fontset && font_name != NULL)
-	font = gui_mch_get_fontset(font_name, TRUE);
+	font = gui_mch_get_fontset(font_name, TRUE, TRUE);
 
     if (font == NULL)
 #endif

@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0au.  Last change: 2001 Aug 29
+*if_pyth.txt*   For Vim version 6.0av.  Last change: 2001 Sep 05
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -261,4 +261,4 @@ The height attribute is writable only if the screen is split horizontally.
 The width attribute is writable only if the screen is split vertically.
 
 ==============================================================================
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

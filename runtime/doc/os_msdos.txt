@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 6.0au.  Last change: 2001 Aug 27
+*os_msdos.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -267,4 +267,4 @@ To copy something from the Vim window to the clipboard,
    include anything in the VIM window: the output of a :!dir, for
    example.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 18
+" Last Change:	2001 Sep 03
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -134,6 +134,18 @@ syn keyword	cType		signed unsigned float double
 if !exists("c_no_ansi") || exists("c_ansi_typedefs")
   syn keyword   cType		size_t wchar_t ptrdiff_t sig_atomic_t fpos_t
   syn keyword   cType		clock_t time_t va_list jmp_buf FILE DIR div_t ldiv_t
+  syn keyword   cType		mbstate_t wctrans_t wint_t wctype_t
+endif
+if !exists("c_no_c99") " ISO C99
+  syn keyword	cType		bool complex
+  syn keyword	cType		int8_t int16_t int32_t int64_t
+  syn keyword	cType		uint8_t uint16_t uint32_t uint64_t
+  syn keyword	cType		int_least8_t int_least16_t int_least32_t int_least64_t
+  syn keyword	cType		uint_least8_t uint_least16_t uint_least32_t uint_least64_t
+  syn keyword	cType		int_fast8_t int_fast16_t int_fast32_t int_fast64_t
+  syn keyword	cType		uint_fast8_t uint_fast16_t uint_fast32_t uint_fast64_t
+  syn keyword	cType		intptr_t uintptr_t
+  syn keyword	cType		intmax_t uintmax_t
 endif
 if exists("c_gnu")
   syn keyword	cType		__label__ __complex__ __volatile__
@@ -167,22 +179,35 @@ if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   syn keyword cConstant DBL_MIN_10_EXP DBL_MAX_10_EXP
   syn keyword cConstant LDBL_MIN LDBL_MAX LDBL_MIN_EXP LDBL_MAX_EXP
   syn keyword cConstant LDBL_MIN_10_EXP LDBL_MAX_10_EXP
-  syn keyword cConstant HUGE_VAL EDOM ERANGE CLOCKS_PER_SEC NULL
+  syn keyword cConstant HUGE_VAL CLOCKS_PER_SEC NULL
   syn keyword cConstant LC_ALL LC_COLLATE LC_CTYPE LC_MONETARY
   syn keyword cConstant LC_NUMERIC LC_TIME
   syn keyword cConstant SIG_DFL SIG_ERR SIG_IGN
   syn keyword cConstant SIGABRT SIGFPE SIGILL SIGHUP SIGINT SIGSEGV SIGTERM
   " Add POSIX signals as well...
-  syn keyword cConstant SIGQUIT SIGTRAP SIGKILL SIGUSR1 SIGUSR2 SIGPIPE
-  syn keyword cConstant SIGALRM SIGCHLD SIGCONT SIGSTOP SIGTSTP SIGTTIN SIGTTOU
+  syn keyword cConstant SIGABRT SIGALRM SIGCHLD SIGCONT SIGFPE SIGHUP
+  syn keyword cConstant SIGILL SIGINT SIGKILL SIGPIPE SIGQUIT SIGSEGV
+  syn keyword cConstant SIGSTOP SIGTERM SIGTRAP SIGTSTP SIGTTIN SIGTTOU
+  syn keyword cConstant SIGUSR1 SIGUSR2
   syn keyword cConstant _IOFBF _IOLBF _IONBF BUFSIZ EOF
   syn keyword cConstant FOPEN_MAX FILENAME_MAX L_tmpnam
   syn keyword cConstant SEEK_CUR SEEK_END SEEK_SET
   syn keyword cConstant TMP_MAX stderr stdin stdout
   syn keyword cConstant EXIT_FAILURE EXIT_SUCCESS RAND_MAX
+  " Add POSIX errors as well
+  syn keyword cConstant E2BIG EACCES EAGAIN EBADF EBADMSG EBUSY
+  syn keyword cConstant ECANCELED ECHILD EDEADLK EDOM EEXIST EFAULT
+  syn keyword cConstant EFBIG EILSEQ EINPROGRESS EINTR EINVAL EIO EISDIR
+  syn keyword cConstant EMFILE EMLINK EMSGSIZE ENAMETOOLONG ENFILE ENODEV
+  syn keyword cConstant ENOENT ENOEXEC ENOLCK ENOMEM ENOSPC ENOSYS
+  syn keyword cConstant ENOTDIR ENOTEMPTY ENOTSUP ENOTTY ENXIO EPERM
+  syn keyword cConstant EPIPE ERANGE EROFS ESPIPE ESRCH ETIMEDOUT EXDEV
   " math.h
   syn keyword cConstant M_E M_LOG2E M_LOG10E M_LN2 M_LN10 M_PI M_PI_2 M_PI_4
   syn keyword cConstant M_1_PI M_2_PI M_2_SQRTPI M_SQRT2 M_SQRT1_2
+endif
+if !exists("c_no_c99") " ISO C99
+  syn keyword cConstant true false
 endif
 
 syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError

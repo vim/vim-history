@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0au.  Last change: 2001 Aug 30
+*eval.txt*      For Vim version 6.0av.  Last change: 2001 Sep 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -170,10 +170,10 @@ expr2 and expr3						*expr2* *expr3*
 The "||" and "&&" operators take one argument on each side.  The arguments
 are (converted to) Numbers.  The result is:
 
- input				 output		    ~
-n1		n2		n1 || n2	n1 && n2    ~
-zero	zero		zero		zero
-zero	non-zero	non-zero	zero
+ input				 output ~
+n1		n2		n1 || n2	n1 && n2 ~
+zero		zero		zero		zero
+zero		non-zero	non-zero	zero
 non-zero	zero		non-zero	zero
 non-zero	non-zero	non-zero	non-zero
 
@@ -807,7 +807,7 @@ remote_expr( {server}, {string} [, {idvar}])
 remote_peek( {serverid} [, {retvar}])
 				Number	check for reply string
 remote_read( {serverid})	String	read reply string
-remote_send( {server}, {string})
+remote_send( {server}, {string} [, {idvar}])
 				String	send key sequence
 rename( {from}, {to})		Number  rename (move) file from {from} to {to}
 resolve( {filename})		String  get filename a shortcut points to
@@ -2379,6 +2379,7 @@ diff			Compiled with |vimdiff| and 'diff' support.
 digraphs		Compiled with support for digraphs.
 dos32			32 bits DOS (DJGPP) version of Vim.
 dos16			16 bits DOS version of Vim.
+ebcdic			Compiled on a machine with ebcdic character set.
 emacs_tags		Compiled with support for Emacs tags.
 eval			Compiled with expression evaluation support.  Always
 			true, of course!
@@ -3089,4 +3090,4 @@ These items are not allowed in the sandbox:
 	- reading or writing a file
 	- jumping to another buffer or editing a file
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

@@ -3200,7 +3200,7 @@ may_req_termresponse()
     int
 swapping_screen()
 {
-    return (*T_TI != NUL);
+    return (full_screen && *T_TI != NUL);
 }
 
 #ifdef FEAT_MOUSE

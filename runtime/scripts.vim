@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 24
+" Last change:	2001 Sep 05
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -88,6 +88,10 @@ elseif s:line1 =~ '^#!.*[/\\]bc\>'
 " sed
 elseif s:line1 =~ '^#!.*sed\>'
   set ft=sed
+
+" OCaml-scripts
+elseif s:line1 =~ '^#!.*[/\\][^/\\]*ocaml[^/\\]*\>'
+  set ft=ocaml
 
 " Vim scripts (must have '" vim' as the first line to trigger this)
 elseif s:line1 =~ '^" *[vV]im$'

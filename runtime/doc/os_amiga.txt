@@ -1,4 +1,4 @@
-*os_amiga.txt*  For Vim version 6.0au.  Last change: 2000 Jul 07
+*os_amiga.txt*  For Vim version 6.0av.  Last change: 2001 Sep 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -75,4 +75,4 @@ Commands that accept a single file name allow for embedded spaces in the file
 name. However, when using commands that accept several file names, embedded
 spaces need to be escaped with a backslash.
 
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

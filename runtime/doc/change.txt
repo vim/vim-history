@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0au.  Last change: 2001 Aug 28
+*change.txt*    For Vim version 6.0av.  Last change: 2001 Sep 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -514,7 +514,7 @@ not recognize a comment (starting with '"') after the ":!" command.
 			may add extra flags (see |:s_flags|).
 			Note that after ":substitute" the '&' flag can't be
 			used, it's recognized as a pattern separator.
-			The space betwen ":substitute" and the 'c', 'g' and
+			The space between ":substitute" and the 'c', 'g' and
 			'r' flags isn't required, but in scripts it's a good
 			idea to keep it to avoid confusion.
 
@@ -552,7 +552,7 @@ The flags that you can use for the substitute commands:
 <	Note that ":s" and ":&" don't keep the flags.
 	{not in Vi}
 
-[c]	Confirm each substitution.  Vim highlighs the matching string (with
+[c]	Confirm each substitution.  Vim highlights the matching string (with
 	|hl-IncSearch|).  You can type:				*:s_c*
 	    'y'	    to substitute this match
 	    'l'	    to substitute this match and then quit ("last")
@@ -708,14 +708,15 @@ either the first or second pattern in parentheses did not match, so either
 <
 						*:pro* *:promptfind*
 :promptf[ind] [string]
-			Win32 GUI only: Put up a Search dialog.  When [string]
-			is given, it is used as the initial search string.
+			Put up a Search dialog.  When [string] is given, it is
+			used as the initial search string.
+			{only for Win32, Motif and GTK GUI}
 
 						*:promptr* *:promptrepl*
 :promptr[epl] [string]
-			Win32 GUI only: Put up a Search/Replace dialog.  When
-			[string] is given, it is used as the initial search
-			string.
+			Put up a Search/Replace dialog.  When [string] is
+			given, it is used as the initial search string.
+			{only for Win32, Motif and GTK GUI}
 
 							*:ret* *:retab*
 :[range]ret[ab][!] [new_tabstop]
@@ -1298,4 +1299,4 @@ Some examples:
 < for Mail/news	(format all, don't start comment with "o" command): >
 	:set fo=tcrq
 <
- vim:tw=78:
+ vim:tw=78:ts=8:ft=help:norl:

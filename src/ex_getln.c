@@ -1468,6 +1468,8 @@ returncmd:
 	{
 	    vim_free(ccline.cmdbuff);
 	    ccline.cmdbuff = NULL;
+	    if (msg_scrolled == 0)
+		compute_cmdrow();
 	    MSG("");
 	    redraw_cmdline = TRUE;
 	}

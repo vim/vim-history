@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ABEL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	2001 Apr 25
+" Last Change:	2001 Sep 2
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -112,6 +112,10 @@ syn match abelConstant "\.sv[2-9]\."
 
 " one-line comments
 syn region abelComment start=+"+ end=+"\|$+ contains=abelNumber,abelTodo
+" option to prevent C++ style comments
+if !exists("abel_cpp_comments_illegal")
+  syn region abelComment start=+//+ end=+$+ contains=abelNumber,abelTodo
+endif
 
 syn sync minlines=1
 
