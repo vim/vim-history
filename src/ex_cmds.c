@@ -5064,7 +5064,7 @@ fix_help_buffer()
 		    copy_option_part(&p, NameBuff, MAXPATHL, ",");
 		    mustfree = FALSE;
 		    rt = vim_getenv((char_u *)"VIMRUNTIME", &mustfree);
-		    if (fnamecmp(NameBuff, rt) != 0)
+		    if (fullpathcmp(rt, NameBuff, FALSE) != FPC_SAME)
 		    {
 			int	fcount;
 			char_u	**fnames;
