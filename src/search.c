@@ -2351,6 +2351,12 @@ findpar(oap, dir, count, what, both)
     linenr_T	curr;
     int		did_skip;   /* TRUE after separating lines have been skipped */
     int		first;	    /* TRUE on first line */
+#ifdef FEAT_FOLDING
+    linenr_T	fold_first; /* first line of a closed fold */
+    linenr_T	fold_last;  /* last line of a closed fold */
+    int		fold_skipped; /* TRUE if a closed fold was skipped this
+				 iteration */
+#endif
 
     curr = curwin->w_cursor.lnum;
 
@@ -2362,9 +2368,23 @@ findpar(oap, dir, count, what, both)
 	    if (*ml_get(curr) != NUL)
 		did_skip = TRUE;
 
+#ifdef FEAT_FOLDING
+	    /* skip folded lines */
+	    fold_skipped = FALSE;
+	    while (hasFolding(curr, &fold_first, &fold_last))
+	    {
+		curr = ((dir > 0) ? fold_last : fold_first) + dir;
+		fold_skipped = TRUE;
+	    }
+#endif
+
 	    if (!first && did_skip && startPS(curr, what, both))
 		break;
 
+#ifdef FEAT_FOLDING
+	    if (fold_skipped)
+		curr -= dir;
+#endif
 	    if ((curr += dir) < 1 || curr > curbuf->b_ml.ml_line_count)
 	    {
 		if (count)
