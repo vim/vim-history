@@ -29,7 +29,6 @@ void do_put __ARGS((int regname, int dir, long count, int flags));
 int preprocs_left __ARGS((void));
 int get_register_name __ARGS((int num));
 void ex_display __ARGS((exarg_T *eap));
-void dis_msg __ARGS((char_u *p, int skip_esc));
 void do_do_join __ARGS((long count, int insert_space));
 int do_join __ARGS((int insert_space));
 void op_format __ARGS((oparg_T *oap));
