@@ -1727,6 +1727,8 @@ do_pending_operator(cap, old_col, gui_yank)
 	    else
 	    {
 		(void)op_delete(oap);
+		if (oap->motion_type == MLINE && has_format_option(FO_AUTO))
+		    u_save_cursor();	    /* cursor line wasn't saved yet */
 		auto_format();
 	    }
 	    break;

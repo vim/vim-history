@@ -4200,6 +4200,7 @@ format_lines(line_count)
 		    (void)set_indent(get_indent(), SIN_CHANGED);
 
 		/* put cursor on last non-space */
+		State = NORMAL;	/* don't go past end-of-line */
 		coladvance((colnr_T)MAXCOL);
 		while (curwin->w_cursor.col && vim_isspace(gchar_cursor()))
 		    dec_cursor();
