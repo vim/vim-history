@@ -1352,6 +1352,12 @@ set_cmdspos_cursor()
 	else
 #endif
 	    c = charsize(ccline.cmdbuff[i]);
+#ifdef MULTI_BYTE
+	/* multibyte wrap */
+	if (is_dbcs && IsLeadByte(ccline.cmdbuff[i])
+				 && (ccline.cmdspos % Columns + c == Columns))
+	    ccline.cmdspos++;
+#endif
 	/* If the cmdline doesn't fit, put cursor on last visible char. */
 	if ((ccline.cmdspos += c) >= m)
 	{
@@ -1687,6 +1693,7 @@ put_on_cmdline(str, len, redraw)
     int		retval;
     int		i;
     int		m;
+    int		c;
 
     if (len < 0)
 	len = STRLEN(str);
@@ -1735,19 +1742,25 @@ put_on_cmdline(str, len, redraw)
 		m = Columns * Rows;
 	    else
 		m = MAXCOL;
-	    while (len--)
+	    for (i = 0; i < len; ++i)
 	    {
 #ifdef CRYPTV
 		if (cmdline_crypt)
-		    i = 1;
+		    c = 1;
 		else
 #endif
-		    i = charsize(str[len]);
+		    c = charsize(str[i]);
+#ifdef MULTI_BYTE
+		/* multibyte wrap */
+		if (is_dbcs && IsLeadByte(str[i])
+				   && ccline.cmdspos % Columns + c == Columns)
+		    ccline.cmdspos++;
+#endif
 		/* Stop cursor at the end of the screen */
-		if (ccline.cmdspos + i >= m)
+		if (ccline.cmdspos + c >= m)
 		    break;
 		++ccline.cmdpos;
-		ccline.cmdspos += i;
+		ccline.cmdspos += c;
 	    }
 	}
     }

@@ -857,6 +857,21 @@ msg_outtrans_len_attr(str, len, attr)
 
     while (--len >= 0)
     {
+#ifdef MULTI_BYTE
+	/* check multibyte */
+	if (is_dbcs && *(str + 1) != NUL && IsLeadByte(*str))
+	{
+	    char_u buf[3];
+
+	    buf[0] = *str++;
+	    buf[1] = *str++;
+	    buf[2] = NUL;
+	    msg_puts_attr(buf, attr);
+	    retval += 2;
+	    --len;
+	    continue;
+	}
+#endif
 	msg_puts_attr(transchar(*str), attr);
 	retval += charsize(*str);
 	++str;
@@ -1229,8 +1244,14 @@ msg_puts_attr(s, attr)
 	 *   (some terminals scroll automatically, some don't. To avoid
 	 *   problems we scroll ourselves)
 	 */
-	if (msg_row >= Rows - 1 && (*s == '\n' || msg_col >= Columns - 1 ||
-			      (*s == TAB && msg_col >= ((Columns - 1) & ~7))))
+	if (msg_row >= Rows - 1
+		&& (*s == '\n'
+		    || msg_col >= Columns - 1
+		    || (*s == TAB && msg_col >= ((Columns - 1) & ~7))
+#ifdef MULTI_BYTE
+		    || (is_dbcs && IsLeadByte(*s) && msg_col >= Columns - 2)
+#endif
+		    ))
 	{
 	    /* When no more prompt an no more room, truncate here */
 	    if (msg_no_more && lines_left == 0)
@@ -1373,6 +1394,31 @@ msg_puts_attr(s, attr)
 		msg_screen_putchar(' ', attr);
 	    while (msg_col & 7);
 	}
+#ifdef MULTI_BYTE
+	else if (is_dbcs && *(s + 1) != NUL && IsLeadByte(*s))
+	{
+	    if (msg_col % Columns == Columns - 1)
+	    {
+		msg_screen_putchar('>', hl_attr(HLF_AT));
+		continue;
+	    }
+	    else
+	    {
+		char_u mbyte[3]; /* only for dbcs */
+
+		mbyte[0] = *s;
+		mbyte[1] = *(s + 1);
+		mbyte[2] = NUL;
+		screen_puts(mbyte, msg_row, msg_col, attr);
+		if ((msg_col += 2) >= Columns)
+		{
+		    msg_col = 0;
+		    ++msg_row;
+		}
+		++s;
+	    }
+	}
+#endif
 	else
 	    msg_screen_putchar(*s, attr);
 	++s;
