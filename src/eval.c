@@ -5140,7 +5140,7 @@ f_histadd(argvars, retvar)
 	str = get_var_string_buf(&argvars[1], buf);
 	if (*str != NUL)
 	{
-	    add_to_history(histype, str, FALSE);
+	    add_to_history(histype, str, FALSE, NUL);
 	    retvar->var_val.var_number = TRUE;
 	    return;
 	}

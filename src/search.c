@@ -172,7 +172,7 @@ search_regcomp(pat, pat_save, pat_use, options, regmatch)
     }
 #ifdef FEAT_CMDHIST
     else if (options & SEARCH_HIS)	/* put new pattern in history */
-	add_to_history(HIST_SEARCH, pat, TRUE);
+	add_to_history(HIST_SEARCH, pat, TRUE, NUL);
 #endif
 
 #ifdef FEAT_RIGHTLEFT

@@ -42,7 +42,7 @@ static int	cmd_showtail;		/* Only show path tail in lists ? */
 typedef struct hist_entry
 {
     int		hisnum;		/* identifying number */
-    char_u	*hisstr;	/* actual entry */
+    char_u	*hisstr;	/* actual entry, separator char after the NUL */
 } histentry_T;
 
 static histentry_T *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL, NULL};
@@ -1286,6 +1286,8 @@ getcmdline(firstc, count, indent)
 		if (hiscnt != i)	/* jumped to other entry */
 		{
 		    char_u	*p;
+		    int		len;
+		    int		old_firstc;
 
 		    vim_free(ccline.cmdbuff);
 		    if (hiscnt == hislen)
@@ -1293,10 +1295,59 @@ getcmdline(firstc, count, indent)
 		    else
 			p = history[histype][hiscnt].hisstr;
 
-		    alloc_cmdbuff((int)STRLEN(p));
-		    if (ccline.cmdbuff == NULL)
-			goto returncmd;
-		    STRCPY(ccline.cmdbuff, p);
+		    if (histype == HIST_SEARCH
+			    && p != lookfor
+			    && (old_firstc = p[STRLEN(p) + 1]) != firstc)
+		    {
+			/* Correct for the separator character used when
+			 * adding the history entry vs the one used now.
+			 * First loop: count length.
+			 * Second loop: copy the characters. */
+			for (i = 0; i <= 1; ++i)
+			{
+			    len = 0;
+			    for (j = 0; p[j] != NUL; ++j)
+			    {
+				/* Replace old sep with new sep, unless it is
+				 * escaped. */
+				if (p[j] == old_firstc
+					      && (j == 0 || p[j - 1] != '\\'))
+				{
+				    if (i > 0)
+					ccline.cmdbuff[len] = firstc;
+				}
+				else
+				{
+				    /* Escape new sep, unless it is already
+				     * escaped. */
+				    if (p[j] == firstc
+					      && (j == 0 || p[j - 1] != '\\'))
+				    {
+					if (i > 0)
+					    ccline.cmdbuff[len] = '\\';
+					++len;
+				    }
+				    if (i > 0)
+					ccline.cmdbuff[len] = p[j];
+				}
+				++len;
+			    }
+			    if (i == 0)
+			    {
+				alloc_cmdbuff(len);
+				if (ccline.cmdbuff == NULL)
+				    goto returncmd;
+			    }
+			}
+			ccline.cmdbuff[len] = NUL;
+		    }
+		    else
+		    {
+			alloc_cmdbuff((int)STRLEN(p));
+			if (ccline.cmdbuff == NULL)
+			    goto returncmd;
+			STRCPY(ccline.cmdbuff, p);
+		    }
 
 		    ccline.cmdpos = ccline.cmdlen = (int)STRLEN(ccline.cmdbuff);
 		    redrawcmd();
@@ -1556,7 +1607,8 @@ returncmd:
 	if (ccline.cmdlen && firstc != NUL
 		&& (some_key_typed || histype == HIST_SEARCH))
 	{
-	    add_to_history(histype, ccline.cmdbuff, TRUE);
+	    add_to_history(histype, ccline.cmdbuff, TRUE,
+				       histype == HIST_SEARCH ? firstc : NUL);
 	    if (firstc == ':')
 	    {
 		vim_free(new_last_cmdline);
@@ -4185,12 +4237,14 @@ static int	last_maptick = -1;	/* last seen maptick */
  * values.
  */
     void
-add_to_history(histype, new_entry, in_map)
+add_to_history(histype, new_entry, in_map, sep)
     int		histype;
     char_u	*new_entry;
     int		in_map;		/* consider maptick when inside a mapping */
+    int		sep;		/* separator character used (search hist) */
 {
     histentry_T	*hisptr;
+    int		len;
 
     if (hislen == 0)		/* no history */
 	return;
@@ -4221,7 +4275,13 @@ add_to_history(histype, new_entry, in_map)
 	    hisidx[histype] = 0;
 	hisptr = &history[histype][hisidx[histype]];
 	vim_free(hisptr->hisstr);
-	hisptr->hisstr = vim_strsave(new_entry);
+
+	/* Store the separator after the NUL of the string. */
+	len = STRLEN(new_entry);
+	hisptr->hisstr = vim_strnsave(new_entry, len + 2);
+	if (hisptr->hisstr != NULL)
+	    hisptr->hisstr[len + 1] = sep;
+
 	hisptr->hisnum = ++hisnum[histype];
 	if (histype == HIST_SEARCH && in_map)
 	    last_maptick = maptick;
@@ -4586,7 +4646,7 @@ ex_history(eap)
 		if (i == hislen)
 		    i = 0;
 		if (hist[i].hisstr != NULL
-		    && hist[i].hisnum >= j && hist[i].hisnum <= k)
+			&& hist[i].hisnum >= j && hist[i].hisnum <= k)
 		{
 		    msg_putchar('\n');
 		    sprintf((char *)IObuff, "%c%6d  %s", i == idx ? '>' : ' ',
@@ -4682,16 +4742,39 @@ read_viminfo_history(virp)
     vir_T	*virp;
 {
     int		type;
+    int		sep;
+    int		len;
     char_u	*val;
 
     type = hist_char2type(virp->vir_line[0]);
     if (viminfo_hisidx[type] < viminfo_hislen[type])
     {
-	val = viminfo_readstring(virp, 1, TRUE);
+	/* Use a zero offset, so that we have some extra space in the
+	 * allocated memory for the separator. */
+	val = viminfo_readstring(virp, 0, TRUE);
 	if (val != NULL)
 	{
 	    if (!in_history(type, val, viminfo_add_at_front))
+	    {
+		len = STRLEN(val);
+		if (type == HIST_SEARCH)
+		{
+		    /* Search entry: Move the separator from the second column
+		     * to after the NUL. */
+		    sep = val[1];
+		    --len;
+		    mch_memmove(val, val + 2, (size_t)len);
+		    val[len + 1] = (sep == ' ' ? NUL : sep);
+		}
+		else
+		{
+		    /* Not a search entry: No separator in the viminfo file,
+		     * add a NUL separator. */
+		    mch_memmove(val, val + 1, (size_t)len);
+		    val[len + 1] = NUL;
+		}
 		viminfo_history[type][viminfo_hisidx[type]++] = val;
+	    }
 	    else
 		vim_free(val);
 	}
@@ -4757,6 +4840,8 @@ write_viminfo_history(fp)
     int	    i;
     int	    type;
     int	    num_saved;
+    char_u  *p;
+    int	    c;
 
     init_history();
     if (hislen == 0)
@@ -4779,10 +4864,18 @@ write_viminfo_history(fp)
 	if (i >= 0)
 	    while (num_saved--)
 	    {
-		if (history[type][i].hisstr != NULL)
+		p = history[type][i].hisstr;
+		if (p != NULL)
 		{
 		    putc(hist_type2char(type, TRUE), fp);
-		    viminfo_writestring(fp, history[type][i].hisstr);
+		    /* For the search history: put the separator in the second
+		     * column; use a space if there isn't one. */
+		    if (type == HIST_SEARCH)
+		    {
+			c = p[STRLEN(p) + 1];
+			putc(c == NUL ? ' ' : c, fp);
+		    }
+		    viminfo_writestring(fp, p);
 		}
 		if (--i < 0)
 		    i = hislen - 1;
