@@ -1611,12 +1611,9 @@ op_replace(oap, c)
 	    /* insert pre-spaces */
 	    copy_spaces(newp + bd.textcol, (size_t)bd.startspaces);
 	    /* insert replacement chars CHECK FOR ALLOCATED SPACE */
-	    if (bd.is_short)
-		copy_chars(newp + STRLEN(newp), (size_t)bd.textlen, c);
-	    else
+	    copy_chars(newp + STRLEN(newp), (size_t)bd.textlen, c);
+	    if (!bd.is_short)
 	    {
-		copy_chars(newp + STRLEN(newp),
-			    (size_t)(oap->end_vcol - oap->start_vcol + 1), c);
 		/* insert post-spaces */
 		copy_spaces(newp + STRLEN(newp), (size_t)bd.endspaces);
 		/* copy the part after the changed part */
