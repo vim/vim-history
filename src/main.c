@@ -2185,6 +2185,10 @@ getout(exitval)
 #endif
 	windgoto((int)Rows - 1, 0);
 
+#ifdef FEAT_GUI
+    msg_didany = FALSE;
+#endif
+
 #ifdef FEAT_AUTOCMD
     /* Trigger BufWinLeave for all windows, but only once per buffer. */
     for (wp = firstwin; wp != NULL; )
@@ -2214,21 +2218,26 @@ getout(exitval)
 
 #ifdef FEAT_VIMINFO
     if (*p_viminfo != NUL)
-    {
 	/* Write out the registers, history, marks etc, to the viminfo file */
-	msg_didany = FALSE;
 	write_viminfo(NULL, FALSE);
-	if (msg_didany)		/* make the user read the error message */
-	{
-	    no_wait_return = FALSE;
-	    wait_return(FALSE);
-	}
-    }
-#endif /* FEAT_VIMINFO */
+#endif
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_VIMLEAVE, NULL, NULL, FALSE, curbuf);
+#endif
 
+    if (did_emsg
+#ifdef FEAT_GUI
+	    || (gui.in_use && msg_didany && p_verbose > 0)
+#endif
+	    )
+    {
+	/* give the user a chance to read the (error) message */
+	no_wait_return = FALSE;
+	wait_return(FALSE);
+    }
+
+#ifdef FEAT_AUTOCMD
     /* Position the cursor again, the autocommands may have moved it */
 # ifdef FEAT_GUI
     if (!gui.in_use)
