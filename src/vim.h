@@ -1714,4 +1714,50 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 # define nbdebug(a)
 #endif
 
+#ifdef IN_PERL_FILE
+  /*
+   * Avoid clashes between Perl and Vim namespace.
+   */
+# undef NORMAL
+# undef STRLEN
+# undef FF
+# undef OP_DELETE
+# undef OP_JOIN
+# ifdef __BORLANDC__
+#  define NOPROTO 1
+# endif
+  /* remove MAX and MIN, included by glib.h, redefined by sys/param.h */
+# ifdef MAX
+#  undef MAX
+# endif
+# ifdef MIN
+#  undef MIN
+# endif
+  /* We use _() for gettext(), Perl uses it for function prototypes... */
+# ifdef _
+#  undef _
+# endif
+# ifdef DEBUG
+#  undef DEBUG
+# endif
+# ifdef _DEBUG
+#  undef _DEBUG
+# endif
+# ifdef instr
+#  undef instr
+# endif
+# ifdef bool
+#  undef bool
+# endif
+
+# ifdef __BORLANDC__
+  /* Borland has the structure stati64 but not _stati64 */
+#  define _stati64 stati64
+# endif
+
+# include <EXTERN.h>
+# include <perl.h>
+# include <XSUB.h>
+#endif
+
 #endif /* VIM__H */
