@@ -207,13 +207,13 @@ update_topline()
 		check_topline = TRUE;
 	    else if (check_top_offset())
 		check_topline = TRUE;
+	}
 #ifdef FEAT_DIFF
 	    /* Check if there are more filler lines than allowed. */
-	    else if (curwin->w_topfill > diff_check_fill(curwin,
+	if (!check_topline && curwin->w_topfill > diff_check_fill(curwin,
 							   curwin->w_topline))
-		check_topline = TRUE;
+	    check_topline = TRUE;
 #endif
-	}
 
 	if (check_topline)
 	{
@@ -746,7 +746,7 @@ curs_rows(wp, do_botline)
 #ifdef FEAT_DIFF
 		if (lnum == wp->w_topline)
 		    wp->w_cline_row += plines_win_nofill(wp, lnum++, TRUE)
-			+ wp->w_topfill;
+							      + wp->w_topfill;
 		else
 #endif
 		    wp->w_cline_row += plines_win(wp, lnum++, TRUE);

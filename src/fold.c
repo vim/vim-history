@@ -837,7 +837,7 @@ foldUpdate(wp, top, bot)
 
 /* foldUpdateAll() {{{2 */
 /*
- * Update all lines in the current window for folding.
+ * Update all lines in a window for folding.
  * Used when a fold setting changes or after reloading the buffer.
  * The actual updating is postponed until fold info is used, to avoid doing
  * every time a setting is changed or a syntax item is added.
@@ -847,7 +847,7 @@ foldUpdateAll(win)
     win_T	*win;
 {
     win->w_foldinvalid = TRUE;
-    redraw_later(NOT_VALID);
+    redraw_win_later(win, NOT_VALID);
 }
 
 /* foldMoveTo() {{{2 */
