@@ -4742,42 +4742,43 @@ read_viminfo_history(virp)
     vir_T	*virp;
 {
     int		type;
-    int		sep;
-    int		len;
+    long_u	len;
     char_u	*val;
+    char_u	*p;
 
     type = hist_char2type(virp->vir_line[0]);
     if (viminfo_hisidx[type] < viminfo_hislen[type])
     {
-	/* Use a zero offset, so that we have some extra space in the
-	 * allocated memory for the separator. */
-	val = viminfo_readstring(virp, 0, TRUE);
-	if (val != NULL)
+	val = viminfo_readstring(virp, 1, TRUE);
+	if (val != NULL && *val != NUL)
 	{
-	    if (!in_history(type, val, viminfo_add_at_front))
+	    if (!in_history(type, val + (type == HIST_SEARCH),
+							viminfo_add_at_front))
 	    {
+		/* Need to re-allocate to append the separator byte. */
 		len = STRLEN(val);
-		if (type == HIST_SEARCH)
+		p = lalloc(len + 2, TRUE);
+		if (p != NULL)
 		{
-		    /* Search entry: Move the separator from the second column
-		     * to after the NUL. */
-		    sep = val[1];
-		    --len;
-		    mch_memmove(val, val + 2, (size_t)len);
-		    val[len] = (sep == ' ' ? NUL : sep);
+		    if (type == HIST_SEARCH)
+		    {
+			/* Search entry: Move the separator from the first
+			 * column to after the NUL. */
+			mch_memmove(p, val + 1, (size_t)len);
+			p[len] = (*val == ' ' ? NUL : *val);
+		    }
+		    else
+		    {
+			/* Not a search entry: No separator in the viminfo
+			 * file, add a NUL separator. */
+			mch_memmove(p, val, (size_t)len + 1);
+			p[len + 1] = NUL;
+		    }
+		    viminfo_history[type][viminfo_hisidx[type]++] = p;
 		}
-		else
-		{
-		    /* Not a search entry: No separator in the viminfo file,
-		     * add a NUL separator. */
-		    mch_memmove(val, val + 1, (size_t)len);
-		    val[len] = NUL;
-		}
-		viminfo_history[type][viminfo_hisidx[type]++] = val;
 	    }
-	    else
-		vim_free(val);
 	}
+	vim_free(val);
     }
     return viminfo_readline(virp);
 }
