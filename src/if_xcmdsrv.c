@@ -21,6 +21,11 @@
 #  include <X11/Xatom.h>
 # endif
 
+# if defined(HAVE_SYS_SELECT_H) && \
+	(!defined(HAVE_SYS_TIME_H) || defined(SYS_SELECT_WITH_SYS_TIME))
+#  include <sys/select.h>
+# endif
+
 /*
  * This file provides procedures that implement the command server functionality
  * of Vim when in contact with an X11 server.
