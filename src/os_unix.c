@@ -412,10 +412,10 @@ mch_char_avail()
 # ifdef HAVE_SYS_RESOURCE_H
 #  include <sys/resource.h>
 # endif
-# ifdef HAVE_SYS_SYSCTL_H
+# if defined(HAVE_SYS_SYSCTL_H) && defined(HAVE_SYSCTL)
 #  include <sys/sysctl.h>
 # endif
-# ifdef HAVE_SYS_SYSINFO_H
+# if defined(HAVE_SYS_SYSINFO_H) && defined(HAVE_SYSINFO)
 #  include <sys/sysinfo.h>
 # endif
 
