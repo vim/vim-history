@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.2.  Last change: 2003 Jun 02
+*insert.txt*    For Vim version 6.2.  Last change: 2003 Oct 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -350,14 +350,27 @@ CTRL-G CTRL-J	cursor one line down, insert start column    *i_CTRL-G_CTRL-J*
 <MouseUp>	scroll three lines up			     *i_<MouseUp>*
 <S-MouseUp>	scroll a full page up			     *i_<S-MouseUp>*
 CTRL-O		execute one command, return to Insert mode   *i_CTRL-O*
+CTRL-G u	break undo sequence, start new change	     *i_CTRL-G_u*
 -----------------------------------------------------------------------
 
 Note: If the cursor keys take you out of Insert mode, check the 'noesckeys'
 option.
 
-The CTRL-O command sometimes has one side effect: If the cursor was beyond the
+The CTRL-O command sometimes has a side effect: If the cursor was beyond the
 end of the line, it will be put on the last character in the line.
 The shifted cursor keys are not available on all terminals.
+
+Another side effect is that a count specified before the "i" or "a" command is
+ignored.  That is because repeating the effect of the command after CTRL-O is
+too complicated.
+
+An example for using CTRL-G u: >
+
+	:inoremap <C-H> <C-G>u<C-H>
+
+This redefines the backspace key to start a new undo sequence.  You can now
+undo the effect of the backspace key, without changing what you typed before
+that, with CTRL-O u.
 
 When the 'whichwrap' option is set appropriately, the <Left> and <Right>
 keys on the first/last character in the line make the cursor wrap to the
