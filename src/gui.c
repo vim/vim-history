@@ -4013,8 +4013,9 @@ no_console_input()
 }
 #endif
 
-#if defined(FEAT_GUI_GTK) || defined(FEAT_SUN_WORKSHOP) \
-	|| defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
+	|| defined(MSWIN_FIND_REPLACE) || defined(FEAT_SUN_WORKSHOP) \
+	|| defined(PROTO)
 /*
  * Update the current window and the screen.
  */
@@ -4031,16 +4032,20 @@ gui_update_screen()
 }
 #endif
 
-#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
+	|| defined(MSWIN_FIND_REPLACE) || defined(PROTO)
+static void concat_esc __ARGS((garray_T *gap, char_u *text, int what));
+
 /*
  * Get the text to use in a find/replace dialog.  Uses the last search pattern
  * if the argument is empty.
  * Returns an allocated string.
  */
     char_u *
-get_find_dialog_text(arg, wordp)
+get_find_dialog_text(arg, wwordp, mcasep)
     char_u	*arg;
-    int		*wordp;		/* return: TRUE if \< \> found */
+    int		*wwordp;	/* return: TRUE if \< \> found */
+    int		*mcasep;	/* return: TRUE if \C found */
 {
     char_u	*text;
 
@@ -4062,18 +4067,54 @@ get_find_dialog_text(arg, wordp)
 		len -= 2;
 	    }
 
+	    /* Recognize "\c" and "\C" and remove. */
+	    if (len >= 2 && *text == '\\' && (text[1] == 'c' || text[1] == 'C'))
+	    {
+		*mcasep = (text[1] == 'C');
+		mch_memmove(text, text + 2, (size_t)(len - 1));
+		len -= 2;
+	    }
+
 	    /* Recognize "\<text\>" and remove. */
 	    if (len >= 4
 		    && STRNCMP(text, "\\<", 2) == 0
 		    && STRNCMP(text + len - 2, "\\>", 2) == 0)
 	    {
-		*wordp = TRUE;
+		*wwordp = TRUE;
 		mch_memmove(text, text + 2, (size_t)(len - 4));
 		text[len - 4] = NUL;
 	    }
+
 	}
     }
     return text;
+}
+
+/*
+ * Concatenate "text" to grow array "gap", escaping "what" with a backslash.
+ */
+    static void
+concat_esc(gap, text, what)
+    garray_T	*gap;
+    char_u	*text;
+    int		what;
+{
+    while (*text != NUL)
+    {
+#ifdef FEAT_MBYTE
+	int l = (*mb_ptr2len_check)(text);
+	if (l > 1)
+	{
+	    while (--l >= 0)
+		ga_append(gap, *text++);
+	    continue;
+	}
+#endif
+	if (*text == what)
+	    ga_append(gap, '\\');
+	ga_append(gap, *text);
+	++text;
+    }
 }
 
 /*
@@ -4081,42 +4122,62 @@ get_find_dialog_text(arg, wordp)
  * Return TRUE when something was added to the input buffer.
  */
     int
-gui_do_findrepl(flags, find_text, repl_text, down, exact)
-    int		flags;		/* one of FR_REPLACE, FR_FINDNEXT, etc. */
+gui_do_findrepl(flags, find_text, repl_text, down)
+    int		flags;		/* one of FRD_REPLACE, FRD_FINDNEXT, etc. */
     char_u	*find_text;
     char_u	*repl_text;
     int		down;		/* Search downwards. */
-    int		exact;		/* Exact word match. */
 {
     garray_T	ga;
     int		i;
+    int		type = (flags & FRD_TYPE_MASK);
+    char_u	*p;
 
     ga_init2(&ga, 1, 100);
 
-    if (flags == FR_REPLACE)
+    if (type == FRD_REPLACE)
     {
 	/* Do the replacement when the text under the cursor matches. */
-	if (STRNCMP(ml_get_cursor(), find_text, STRLEN(find_text)) == 0
+	i = STRLEN(find_text);
+	p = ml_get_cursor();
+	if (((flags & FRD_MATCH_CASE)
+		    ? STRNCMP(p, find_text, i) == 0
+		    : STRNICMP(p, find_text, i) == 0)
 		&& u_save_cursor() == OK)
 	{
-	    del_bytes((long)STRLEN(find_text), FALSE);
+	    /* A button was pressed thus undo should be synced. */
+	    if (no_u_sync == 0)
+		u_sync();
+
+	    del_bytes((long)i, FALSE);
 	    ins_str(repl_text);
 	}
     }
-    else if (flags == FR_REPLACEALL)
+    else if (type == FRD_REPLACEALL)
 	ga_concat(&ga, (char_u *)"%s/");
 
     ga_concat(&ga, (char_u *)"\\V");
-    if (exact)
+    if (flags & FRD_MATCH_CASE)
+	ga_concat(&ga, (char_u *)"\\C");
+    else
+	ga_concat(&ga, (char_u *)"\\c");
+    if (flags & FRD_WHOLE_WORD)
 	ga_concat(&ga, (char_u *)"\\<");
-    ga_concat(&ga, find_text);
-    if (exact)
+    if (type == FRD_REPLACEALL || down)
+	concat_esc(&ga, find_text, '/');	/* escape slashes */
+    else
+	concat_esc(&ga, find_text, '?');	/* escape '?' */
+    if (flags & FRD_WHOLE_WORD)
 	ga_concat(&ga, (char_u *)"\\>");
 
-    if (flags == FR_REPLACEALL)
+    if (type == FRD_REPLACEALL)
     {
+	/* A button was pressed, thus undo should be synced. */
+	if (no_u_sync == 0)
+	    u_sync();
+
 	ga_concat(&ga, (char_u *)"/");
-	ga_concat(&ga, repl_text);
+	concat_esc(&ga, repl_text, '/');	/* escape slashes */
 	ga_concat(&ga, (char_u *)"/g");
 	do_cmdline_cmd(ga.ga_data);
     }

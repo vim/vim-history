@@ -119,7 +119,8 @@ static void entry_activate_cb(GtkWidget *widget, GtkWidget *with);
 static void entry_changed_cb(GtkWidget *entry, GtkWidget *dialog);
 static void find_direction_cb(GtkWidget *widget, gpointer data);
 static void find_replace_cb(GtkWidget *widget, unsigned int flags);
-static void exact_match_cb(GtkWidget *widget, gpointer data);
+static void wword_match_cb(GtkWidget *widget, gpointer data);
+static void mcase_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
 /*
@@ -1474,7 +1475,8 @@ gui_mch_show_popupmenu(vimmenu_T *menu)
 typedef struct _SharedFindReplace
 {
     GtkWidget *dialog;	/* the main dialog widget */
-    GtkWidget *exact;	/* 'Exact match' check button */
+    GtkWidget *wword;	/* 'Whole word only' check button */
+    GtkWidget *mcase;	/* 'Match case' check button */
     GtkWidget *up;	/* search direction 'Up' radio button */
     GtkWidget *down;    /* search direction 'Down' radio button */
     GtkWidget *what;	/* 'Find what' entry text widget */
@@ -1533,12 +1535,13 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gboolean	sensitive;
     SharedFindReplace *frdp;
     char_u	*entry_text;
-    int		exact_word = FALSE;
+    int		wword = FALSE;
+    int		mcase = !p_ic;
 
     frdp = (do_replace) ? (&repl_widgets) : (&find_widgets);
 
     /* Get the search string to use. */
-    entry_text = get_find_dialog_text(arg, &exact_word);
+    entry_text = get_find_dialog_text(arg, &wword, &mcase);
 
     /*
      * If the dialog already exists, just raise it.
@@ -1560,8 +1563,10 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	if (entry_text != NULL)
 	{
 	    gtk_entry_set_text(GTK_ENTRY(frdp->what), (char *)entry_text);
-	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact),
-							(gboolean)exact_word);
+	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->wword),
+							     (gboolean)wword);
+	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->mcase),
+							     (gboolean)mcase);
 	}
 	gdk_window_raise(frdp->dialog->window);
 
@@ -1626,7 +1631,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	frdp->with = gtk_entry_new();
 	gtk_signal_connect(GTK_OBJECT(frdp->with), "activate",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_R_FINDNEXT);
+			   (gpointer) FRD_R_FINDNEXT);
 	gtk_signal_connect_after(GTK_OBJECT(frdp->with), "key_press_event",
 				 GTK_SIGNAL_FUNC(find_key_press_event),
 				 (gpointer) frdp);
@@ -1647,20 +1652,33 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	 */
 	gtk_signal_connect(GTK_OBJECT(frdp->what), "activate",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_FINDNEXT);
+			   (gpointer) FRD_FINDNEXT);
     }
 
-    /* exact match only button */
-    frdp->exact = gtk_check_button_new_with_label(_("Match exact word only"));
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact),
-							(gboolean)exact_word);
-    gtk_signal_connect(GTK_OBJECT(frdp->exact), "clicked",
-		       GTK_SIGNAL_FUNC(exact_match_cb), NULL);
+    /* whole word only button */
+    frdp->wword = gtk_check_button_new_with_label(_("Match whole word only"));
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->wword),
+							(gboolean)wword);
+    gtk_signal_connect(GTK_OBJECT(frdp->wword), "clicked",
+		       GTK_SIGNAL_FUNC(wword_match_cb), NULL);
     if (do_replace)
-	gtk_table_attach(GTK_TABLE(table), frdp->exact, 0, 1023, 3, 4,
+	gtk_table_attach(GTK_TABLE(table), frdp->wword, 0, 1023, 2, 3,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
     else
-	gtk_table_attach(GTK_TABLE(table), frdp->exact, 0, 1023, 2, 3,
+	gtk_table_attach(GTK_TABLE(table), frdp->wword, 0, 1023, 1, 2,
+			 GTK_FILL, GTK_EXPAND, 2, 2);
+
+    /* match case button */
+    frdp->mcase = gtk_check_button_new_with_label(_("Match case"));
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->mcase),
+							     (gboolean)mcase);
+    gtk_signal_connect(GTK_OBJECT(frdp->mcase), "clicked",
+		       GTK_SIGNAL_FUNC(mcase_match_cb), NULL);
+    if (do_replace)
+	gtk_table_attach(GTK_TABLE(table), frdp->mcase, 0, 1023, 3, 4,
+			 GTK_FILL, GTK_EXPAND, 2, 2);
+    else
+	gtk_table_attach(GTK_TABLE(table), frdp->mcase, 0, 1023, 2, 3,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
 
     tmp = gtk_frame_new(_("Direction"));
@@ -1706,11 +1724,11 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     if (do_replace)
 	gtk_signal_connect(GTK_OBJECT(frdp->find), "clicked",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_R_FINDNEXT);
+			   (gpointer) FRD_R_FINDNEXT);
     else
 	gtk_signal_connect(GTK_OBJECT(frdp->find), "clicked",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_FINDNEXT);
+			   (gpointer) FRD_FINDNEXT);
     GTK_WIDGET_SET_FLAGS(frdp->find, GTK_CAN_DEFAULT);
     gtk_box_pack_start(GTK_BOX(actionarea), frdp->find, FALSE, FALSE, 0);
     gtk_widget_grab_default(frdp->find);
@@ -1724,7 +1742,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	gtk_box_pack_start(GTK_BOX(actionarea), frdp->replace, FALSE, FALSE, 0);
 	gtk_signal_connect(GTK_OBJECT(frdp->replace), "clicked",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_REPLACE);
+			   (gpointer) FRD_REPLACE);
 
 	/* 'Replace All' button */
 	frdp->all = gtk_button_new_with_label(_("Replace All"));
@@ -1733,7 +1751,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	gtk_box_pack_start(GTK_BOX(actionarea), frdp->all, FALSE, FALSE, 0);
 	gtk_signal_connect(GTK_OBJECT(frdp->all), "clicked",
 			   GTK_SIGNAL_FUNC(find_replace_cb),
-			   (gpointer) FR_REPLACEALL);
+			   (gpointer) FRD_REPLACEALL);
     }
 
     /* 'Cancel' button */
@@ -1841,11 +1859,10 @@ find_replace_cb(GtkWidget *widget, unsigned int flags)
 {
     char	*find_text, *repl_text;
     gboolean	direction_down = TRUE;
-    gboolean	exact_match = FALSE;
     SharedFindReplace *sfr;
 
     /* Get the search/replace strings from the dialog */
-    if (flags == FR_FINDNEXT)
+    if (flags == FRD_FINDNEXT)
     {
 	repl_text = NULL;
 	sfr = &find_widgets;
@@ -1857,10 +1874,13 @@ find_replace_cb(GtkWidget *widget, unsigned int flags)
     }
     find_text = gtk_entry_get_text(GTK_ENTRY(sfr->what));
     direction_down = GTK_TOGGLE_BUTTON(sfr->down)->active;
-    exact_match = GTK_TOGGLE_BUTTON(sfr->exact)->active;
+    if (GTK_TOGGLE_BUTTON(sfr->wword)->active)
+	flags |= FRD_WHOLE_WORD;
+    if (GTK_TOGGLE_BUTTON(sfr->mcase)->active)
+	flags |= FRD_MATCH_CASE;
 
     if (gui_do_findrepl((int)flags, (char_u *)find_text, (char_u *)repl_text,
-				       (int)direction_down, (int)exact_match))
+							 (int)direction_down))
 	if (gtk_main_level() > 0)
 	    gtk_main_quit();	/* make sure cmd will be handled immediately */
 }
@@ -1912,16 +1932,30 @@ repl_dir_cb(GtkWidget *widget, gpointer data)
 
 /*ARGSUSED*/
     static void
-exact_match_cb(GtkWidget * widget, gpointer data)
+wword_match_cb(GtkWidget * widget, gpointer data)
 {
-    gboolean exact_match = GTK_TOGGLE_BUTTON(widget)->active;
+    gboolean active = GTK_TOGGLE_BUTTON(widget)->active;
 
     if (find_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(find_widgets.exact),
-				    exact_match);
+	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(find_widgets.wword),
+				    active);
     if (repl_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(repl_widgets.exact),
-				    exact_match);
+	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(repl_widgets.wword),
+				    active);
+}
+
+/*ARGSUSED*/
+    static void
+mcase_match_cb(GtkWidget * widget, gpointer data)
+{
+    gboolean active = GTK_TOGGLE_BUTTON(widget)->active;
+
+    if (find_widgets.dialog)
+	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(find_widgets.mcase),
+				    active);
+    if (repl_widgets.dialog)
+	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(repl_widgets.mcase),
+				    active);
 }
 
     static void
