@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2002 Mar 19
+" Last Change:	2003 Jan 21
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -13,10 +13,23 @@
 let s:ext = ""
 if strlen($xx) > 1
   let s:ext = "." . $xx
-elseif exists("v:lang") && v:lang != "C"
-  let s:ext = "." . strpart(v:lang, 0, 2)
-elseif strlen($LANG) > 0 && $LANG != "C"
-  let s:ext = "." . strpart($LANG, 0, 2)
+else
+  let s:lang = ""
+  if exists("v:lang") && v:lang != "C"
+    let s:lang = v:lang
+  elseif strlen($LANG) > 0 && $LANG != "C"
+    let s:lang = $LANG
+  endif
+  if s:lang != ""
+    " Remove "@euro" (ignoring case), it may be at the end
+    s:lang = substitute(s:lang, '\c@euro', '', '')
+    " On MS-Windows it may be German_Germany.1252.  How about other languages?
+    if s:lang =~ "German"
+      let s:ext = ".de"
+    else
+      let s:ext = "." . strpart(s:lang, 0, 2)
+    endif
+  endif
 endif
 
 " The japanese tutor is available in two encodings, guess which one to use
@@ -43,6 +56,16 @@ endif
 " The Polish tutor is available in two encodings, guess which one to use
 if s:ext =~? '\.pl' && &enc =~ 1250
   let s:ext = s:ext . ".cp1250"
+endif
+
+" The Greek tutor is available in two encodings, guess which one to use
+if s:ext =~? '\.gr' && &enc =~ 737
+  let s:ext = s:ext . ".cp737"
+endif
+
+" Somehow ".ge" (Germany) is sometimes used for ".de" (Deutsch).
+if s:ext =~? '\.ge'
+  let s:ext = ".de"
 endif
 
 if s:ext =~? '\.en'
