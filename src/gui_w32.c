@@ -1313,11 +1313,12 @@ GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *lenp)
 
     if (ret > 0)
     {
-	wbuf = (LPWSTR)alloc(ret * sizeof(WCHAR));
+	/* Allocate the requested buffer plus space for the NUL character. */
+	wbuf = (LPWSTR)alloc(ret + sizeof(WCHAR));
 	if (wbuf != NULL)
 	{
 	    pImmGetCompositionStringW(hIMC, GCS, wbuf, ret);
-	    *lenp = ret;
+	    *lenp = ret / sizeof(WCHAR);
 	}
 	return (short_u *)wbuf;
     }
