@@ -3,7 +3,7 @@
 "		File manager macros for Vim 5	(UNIX only)
 "
 "	 Author:  Ra'ul Segura Acevedo <raul@turing.iquimica.unam.mx>
-" Last modified:  971219  (1997 Dec 19)
+" Last modified:  991221  (1999 Dec 21)
 "    Suggestion:  Add the command "so filename" in your ~/.vimrc
 "		  (where filename is the name of this file).
 "
@@ -461,5 +461,6 @@ if has("syntax")
       hi LsExe	start=<Esc>[35m stop=<Esc>[m ctermfg=magenta guifg=Magenta
     en
   let b:current_syntax = "ls"
+  en
 endif
 aug END
