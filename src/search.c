@@ -808,10 +808,10 @@ searchit(win, buf, pos, dir, pat, count, options, pat_use)
 	    at_first_line = FALSE;
 
 	    /*
-	     * stop the search if wrapscan isn't set, after an interrupt and
-	     * after a match
+	     * Stop the search if wrapscan isn't set, after an interrupt,
+	     * after a match and after looping twice.
 	     */
-	    if (!p_ws || got_int || called_emsg || break_loop || found)
+	    if (!p_ws || got_int || called_emsg || break_loop || found || loop)
 		break;
 
 	    /*
