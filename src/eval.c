@@ -4573,7 +4573,7 @@ f_has(argvars, retvar)
     if (n == FALSE)
     {
 	if (STRNICMP(name, "patch", 5) == 0)
-	    n = has_patch(atoi(name + 5));
+	    n = has_patch(atoi((char *)name + 5));
 	else if (STRICMP(name, "vim_starting") == 0)
 	    n = (starting != 0);
 #ifdef DYNAMIC_TCL
