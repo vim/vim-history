@@ -217,7 +217,7 @@ enc_canon_table[] =
 #define IDX_CP1251	35
     {"cp1251",		ENC_8BIT,		1251},
 #define IDX_MACROMAN	36
-    {"macroman",	ENC_8BIT,		0},
+    {"macroman",	ENC_8BIT + ENC_MACROMAN, 0},
 #define IDX_COUNT	37
 };
 
@@ -5132,6 +5132,25 @@ convert_setup(vcp, from, to)
 	vcp->vc_cpto = (to_prop & ENC_UNICODE) ? 0 : encname2codepage(to);
     }
 #endif
+#ifdef MACOS_X
+    else if ((from_prop & ENC_MACROMAN) && (to_prop & ENC_LATIN1))
+    {
+	vcp->vc_type = CONV_MAC_LATIN1;
+    }
+    else if ((from_prop & ENC_MACROMAN) && (to_prop & ENC_UNICODE))
+    {
+	vcp->vc_type = CONV_MAC_UTF8;
+	vcp->vc_factor = 2;	/* up to twice as long */
+    }
+    else if ((from_prop & ENC_LATIN1) && (to_prop & ENC_MACROMAN))
+    {
+	vcp->vc_type = CONV_LATIN1_MAC;
+    }
+    else if ((from_prop & ENC_UNICODE) && (to_prop & ENC_MACROMAN))
+    {
+	vcp->vc_type = CONV_UTF8_MAC;
+    }
+#endif
 # ifdef USE_ICONV
     else
     {
@@ -5176,6 +5195,83 @@ convert_input(ptr, len, maxlen)
     }
     return dlen;
 }
+
+#if defined(MACOS_X)
+static char_u *mac_string_convert __ARGS((char_u *ptr, int len, int *lenp, CFStringEncoding from, CFStringEncoding to));
+
+/*
+ * A Mac version of string_convert() for special cases.
+ */
+    static char_u *
+mac_string_convert(ptr, len, lenp, from, to)
+    char_u		*ptr;
+    int			len;
+    int			*lenp;
+    CFStringEncoding	from;
+    CFStringEncoding	to;
+{
+    char_u		*retval, *d;
+    CFStringRef		cfstr;
+    int			buflen, in, out, l, i;
+
+    cfstr = CFStringCreateWithBytes(NULL, ptr, len, from, 0);
+    if (cfstr == NULL)
+	return NULL;
+    if (to == kCFStringEncodingUTF8)
+	buflen = len * 6 + 1;
+    else
+	buflen = len + 1;
+    retval = alloc(buflen);
+    if (retval == NULL)
+    {
+	CFRelease(cfstr);
+	return NULL;
+    }
+    if (!CFStringGetCString(cfstr, retval, buflen, to))
+    {
+	CFRelease(cfstr);
+	/* conversion failed for the whole string, but maybe it will work
+	 * for each character */
+	for (d = retval, in = 0, out = 0; in < len && out < buflen - 1;)
+	{
+	    if (from == kCFStringEncodingUTF8)
+		l = utf_ptr2len_check(ptr + in);
+	    else
+		l = 1;
+	    cfstr = CFStringCreateWithBytes(NULL, ptr + in, l, from, 0);
+	    if (cfstr == NULL)
+	    {
+		*d++ = '?';
+		out++;
+	    }
+	    else
+	    {
+		if (!CFStringGetCString(cfstr, d, buflen - out, to))
+		{
+		    *d++ = '?';
+		    out++;
+		}
+		else
+		{
+		    i = strlen(d);
+		    d += i;
+		    out += i;
+		}
+		CFRelease(cfstr);
+	    }
+	    in += l;
+	}
+	*d = NUL;
+	if (lenp != NULL)
+	    *lenp = out;
+	return retval;
+    }
+    CFRelease(cfstr);
+    if (lenp != NULL)
+	*lenp = strlen(retval);
+    return retval;
+}
+#endif
 
 /*
  * Convert text "ptr[*lenp]" according to "vcp".
@@ -5256,6 +5352,32 @@ string_convert(vcp, ptr, lenp)
 	    if (lenp != NULL)
 		*lenp = (int)(d - retval);
 	    break;
+
+# ifdef MACOS_X
+	case CONV_MAC_LATIN1:
+	    retval = mac_string_convert(ptr, len, lenp,
+					kCFStringEncodingMacRoman,
+					kCFStringEncodingISOLatin1);
+	    break;
+
+	case CONV_LATIN1_MAC:
+	    retval = mac_string_convert(ptr, len, lenp,
+					kCFStringEncodingISOLatin1,
+					kCFStringEncodingMacRoman);
+	    break;
+
+	case CONV_MAC_UTF8:
+	    retval = mac_string_convert(ptr, len, lenp,
+					kCFStringEncodingMacRoman,
+					kCFStringEncodingUTF8);
+	    break;
+
+	case CONV_UTF8_MAC:
+	    retval = mac_string_convert(ptr, len, lenp,
+					kCFStringEncodingUTF8,
+					kCFStringEncodingMacRoman);
+	    break;
+# endif
 
 # ifdef USE_ICONV
 	case CONV_ICONV:	/* conversion with output_conv.vc_fd */

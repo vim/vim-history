@@ -832,6 +832,12 @@ typedef struct
 #ifdef WIN3264
 # define CONV_CODEPAGE		4	/* codepage -> codepage */
 #endif
+#ifdef MACOS_X
+# define CONV_MAC_LATIN1	5
+# define CONV_LATIN1_MAC	6
+# define CONV_MAC_UTF8		7
+# define CONV_UTF8_MAC		8
+#endif
 
 /*
  * Structure used for mappings and abbreviations.
