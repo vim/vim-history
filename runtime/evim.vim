@@ -1,6 +1,6 @@
 " Vim script for Evim key bindings
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 18
+" Last Change:	2002 Mar 04
 
 " Don't use Vi-compatible mode.
 set nocompatible
@@ -17,6 +17,14 @@ set hidden
 " Make cursor keys ignore wrapping
 inoremap <Down> <C-O>gj
 inoremap <Up> <C-O>gk
+
+" CTRL-F does Find dialog instead of page forward
+noremap <C-F> :promptfind<CR>
+vnoremap <C-F> y:promptfind <C-R>"<CR>
+onoremap <C-F> <C-C>:promptfind<CR>
+inoremap <C-F> <C-O>:promptfind<CR>
+cnoremap <C-F> <C-C>:promptfind<CR>
+
 
 set backspace=2		" allow backspacing over everything in insert mode
 set autoindent		" always set autoindenting on
