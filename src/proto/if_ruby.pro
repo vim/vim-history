@@ -1,5 +1,5 @@
 /* if_ruby.c */
-int ruby_enabled __ARGS((void));
+int ruby_enabled __ARGS((int verbose));
 void ruby_end __ARGS((void));
 void ex_ruby __ARGS((exarg_T *eap));
 void ex_rubydo __ARGS((exarg_T *eap));

@@ -180,17 +180,21 @@ static struct {
  * 3. Repeat 2, until get all functions will be used.
  *
  * Parameter 'libname' provides name of DLL.
- * Succeeded in load, return 1.  Failed, return zero.
+ * Return OK or FAIL.
  */
     static int
-tcl_runtime_link_init(char *libname)
+tcl_runtime_link_init(char *libname, int verbose)
 {
     int i;
 
     if (hTclLib)
-	return 1;
+	return OK;
     if (!(hTclLib = LoadLibraryEx(libname, NULL, 0)))
-	return 0;
+    {
+	if (verbose)
+	    EMSG2(_("E370: Could not load library %s"), libname);
+	return FAIL;
+    }
     for (i = 0; tcl_funcname_table[i].ptr; ++i)
     {
 	if (!(*tcl_funcname_table[i].ptr = GetProcAddress(hTclLib,
@@ -198,10 +202,13 @@ tcl_runtime_link_init(char *libname)
 	{
 	    FreeLibrary(hTclLib);
 	    hTclLib = NULL;
-	    return 0;
+	    if (verbose)
+		EMSG2(_("E448: Could not load library function %s"),
+						  tcl_funcname_table[i].name);
+	    return FAIL;
 	}
     }
-    return 1;
+    return OK;
 }
 #endif /* defined(DYNAMIC_TCL) || defined(PROTO) */
 
@@ -221,13 +228,17 @@ tcl_init(arg)
 }
 
 #if defined(DYNAMIC_TCL) || defined(PROTO)
+/*
+ * Return TRUE if the TCL interface can be used.
+ */
     int
-tcl_enabled()
+tcl_enabled(verbose)
+    int		verbose;
 {
-    static int stubs_initialized = 0;
+    static int stubs_initialized = FALSE;
 
-    if (!stubs_initialized && find_executable_arg
-	    && tcl_runtime_link_init(DYNAMIC_TCL_DLL))
+    if (!stubs_initialized && find_executable_arg != NULL
+	    && tcl_runtime_link_init(DYNAMIC_TCL_DLL, verbose) == OK)
     {
 	Tcl_Interp *interp;
 
@@ -237,7 +248,7 @@ tcl_enabled()
 	    {
 		Tcl_FindExecutable(find_executable_arg);
 		Tcl_DeleteInterp(interp);
-		stubs_initialized = 1;
+		stubs_initialized = TRUE;
 	    }
 	    /* FIXME: When Tcl_InitStubs() was failed, how delete interp? */
 	}
@@ -1708,7 +1719,7 @@ tclinit(eap)
     char *name;
 
 #ifdef DYNAMIC_TCL
-    if (!tcl_enabled())
+    if (!tcl_enabled(TRUE))
     {
 	EMSG(_("Sorry, this command is disabled: the Tcl library could not be loaded."));
 	return FAIL;
@@ -2068,7 +2079,7 @@ tcl_buffer_free(buf)
     struct ref *reflist;
 
 #ifdef DYNAMIC_TCL
-    if (!tcl_enabled())
+    if (!tcl_enabled(TRUE))
 	return;
 #endif
 
@@ -2089,7 +2100,7 @@ tcl_window_free(win)
     struct ref *reflist;
 
 #ifdef DYNAMIC_TCL
-    if (!tcl_enabled())
+    if (!tcl_enabled(TRUE))
 	return;
 #endif
 

@@ -1,5 +1,5 @@
 /* auto/if_perl.c */
-int perl_enabled __ARGS((void));
+int perl_enabled __ARGS((int verbose));
 void perl_end __ARGS((void));
 void msg_split __ARGS((char_u *s, int attr));
 void perl_win_free __ARGS((win_T *wp));

@@ -242,21 +242,24 @@ end_dynamic_ruby()
 }
 
 /*
- * Load library and get all pointers.  If failed, function returns 0.
- * Succeeded 1.
- *
+ * Load library and get all pointers.
  * Parameter 'libname' provides name of DLL.
+ * Return OK or FAIL.
  */
     static int
-ruby_runtime_link_init(char* libname)
+ruby_runtime_link_init(char *libname, int verbose)
 {
     int i;
 
     if (hinstRuby)
-	return 1;
+	return OK;
     hinstRuby = LoadLibrary(libname);
     if (!hinstRuby)
-	return 0;
+    {
+	if (verbose)
+	    EMSG2(_("E370: Could not load library %s"), libname);
+	return FAIL;
+    }
 
     for (i = 0; ruby_funcname_table[i].ptr; ++i)
     {
@@ -265,20 +268,24 @@ ruby_runtime_link_init(char* libname)
 	{
 	    FreeLibrary(hinstRuby);
 	    hinstRuby = 0;
-	    return 0;
+	    if (verbose)
+		EMSG2(_("E448: Could not load library function %s"),
+						 ruby_funcname_table[i].name);
+	    return FAIL;
 	}
     }
-    return 1;
+    return OK;
 }
 
 /*
- * If ruby is enabled (there is installed ruby on Windows system) return 1,
- * else 0.
+ * If ruby is enabled (there is installed ruby on Windows system) return TRUE,
+ * else FALSE.
  */
     int
-ruby_enabled()
+ruby_enabled(verbose)
+    int		verbose;
 {
-    return ruby_runtime_link_init(DYNAMIC_RUBY_DLL);
+    return ruby_runtime_link_init(DYNAMIC_RUBY_DLL, verbose) == OK;
 }
 #endif /* defined(DYNAMIC_RUBY) || defined(PROTO) */
 
@@ -379,7 +386,7 @@ static int ensure_ruby_initialized(void)
     if (!ruby_initialized)
     {
 #ifdef DYNAMIC_RUBY
-	if (ruby_enabled())
+	if (ruby_enabled(TRUE))
 	{
 #endif
 	    ruby_init();

@@ -228,21 +228,24 @@ end_dynamic_python()
 }
 
 /*
- * Load library and get all pointers.  If failed, function returns 0.
- * Succeeded 1.
- *
+ * Load library and get all pointers.
  * Parameter 'libname' provides name of DLL.
+ * Return OK or FAIL.
  */
     static int
-python_runtime_link_init(char* libname)
+python_runtime_link_init(char *libname, int verbose)
 {
     int i;
 
     if (hinstPython)
-	return 1;
+	return OK;
     hinstPython = LoadLibrary(libname);
     if (!hinstPython)
-	return 0;
+    {
+	if (verbose)
+	    EMSG2(_("E370: Could not load library %s"), libname);
+	return FAIL;
+    }
 
     for (i = 0; python_funcname_table[i].ptr; ++i)
     {
@@ -251,20 +254,24 @@ python_runtime_link_init(char* libname)
 	{
 	    FreeLibrary(hinstPython);
 	    hinstPython = 0;
-	    return 0;
+	    if (verbose)
+		EMSG2(_("E448: Could not load library function %s"),
+					       python_funcname_table[i].name);
+	    return FAIL;
 	}
     }
-    return 1;
+    return OK;
 }
 
 /*
  * If python is enabled (there is installed python on Windows system) return
- * 1, else 0.
+ * TRUE, else FALSE.
  */
     int
-python_enabled()
+python_enabled(verbose)
+    int		verbose;
 {
-    return python_runtime_link_init(DYNAMIC_PYTHON_DLL);
+    return python_runtime_link_init(DYNAMIC_PYTHON_DLL, verbose) == OK;
 }
 
 /* Load the standard Python exceptions - don't import the symbols from the
@@ -371,7 +378,7 @@ Python_Init(void)
     if (!initialised)
     {
 #ifdef DYNAMIC_PYTHON
-	if (!python_enabled())
+	if (!python_enabled(TRUE))
 	{
 	    EMSG(_("E263: Sorry, this command is disabled, the Python library could not be loaded."));
 	    goto fail;
