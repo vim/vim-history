@@ -2262,6 +2262,7 @@ peekchr()
 	     * "\(", "\|", "\&' or "\n" */
 	    if (reg_magic >= MAGIC_OFF
 		    && (at_start
+			|| reg_magic == MAGIC_ALL
 			|| prevchr == Magic('(')
 			|| prevchr == Magic('|')
 			|| prevchr == Magic('&')
@@ -2288,7 +2289,8 @@ peekchr()
 		if (p[0] == NUL
 			|| (p[0] == '\\'
 			    && (p[1] == '|' || p[1] == '&' || p[1] == ')'
-				|| p[1] == 'n')))
+				|| p[1] == 'n'))
+			|| reg_magic == MAGIC_ALL)
 		    curchr = Magic('$');
 	    }
 	    break;
