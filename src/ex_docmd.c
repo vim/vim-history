@@ -4375,7 +4375,6 @@ do_source(fname, check_other, is_vimrc)
     if (is_vimrc)
 	vimrc_found();
 
-
 #ifdef USE_CRNL
     /* If no automatic file format: Set default to CR-NL. */
     if (*p_ffs == NUL)
@@ -4486,19 +4485,20 @@ getsourceline(c, cookie, indent)
      * one now.
      */
     if (sp->nextline == NULL)
-    {
 	line = get_one_sourceline(sp);
-	--sourcing_lnum;
-    }
     else
     {
 	line = sp->nextline;
 	sp->nextline = NULL;
+	++sourcing_lnum;
     }
 
-    /* concatenate lines that start with a backslash */
-    if (line != NULL)
+    /* Only concatenate lines starting with a \ when 'cpoptions' doesn't
+     * contain the 'C' flag. */
+    if (line != NULL && (vim_strchr(p_cpo, CPO_CONCAT) == NULL))
     {
+	/* compensate for the one line read-ahead */
+	--sourcing_lnum;
 	for (;;)
 	{
 	    sp->nextline = get_one_sourceline(sp);
