@@ -5919,7 +5919,7 @@ f_resolve(argvars, retvar)
 		{
 		    vim_free(p);
 		    vim_free(remain);
-		    EMSG(_("E655: Too much symbolic links (cycle?)"));
+		    EMSG(_("E655: Too many symbolic links (cycle?)"));
 		    retvar->var_val.var_string = NULL;
 		    goto fail;
 		}
