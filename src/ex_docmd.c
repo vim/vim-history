@@ -8912,6 +8912,12 @@ ex_match(eap)
 	    return;
 	}
 	end = skip_regexp(p + 1, *p, TRUE, NULL);
+	if (*end != NUL && !ends_excmd(*skipwhite(end + 1)))
+	{
+	    eap->errmsg = e_trailing;
+	    return;
+	}
+
 	if (!eap->skip)
 	{
 	    c = *end;
