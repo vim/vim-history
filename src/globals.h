@@ -608,6 +608,12 @@ EXTERN int	can_si INIT(= FALSE);
 EXTERN int	can_si_back INIT(= FALSE);
 #endif
 
+EXTERN pos_T	saved_cursor		/* w_cursor before formatting text. */
+# ifdef DO_INIT
+	= INIT_POS_T
+# endif
+	;
+
 /*
  * Stuff for insert mode.
  */

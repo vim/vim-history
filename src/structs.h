@@ -32,6 +32,12 @@ typedef struct
 #endif
 } pos_T;
 
+#ifdef FEAT_VIRTUALEDIT
+# define INIT_POS_T {0, 0, 0}
+#else
+# define INIT_POS_T {0, 0}
+#endif
+
 /*
  * Same, but without coladd.
  */

@@ -95,7 +95,8 @@ set_indent(size, flags)
     int		flags;
 {
     char_u	*p;
-    char_u	*line;
+    char_u	*newline;
+    char_u	*oldline;
     char_u	*s;
     int		todo;
     int		ind_len;
@@ -110,7 +111,7 @@ set_indent(size, flags)
      */
     todo = size;
     ind_len = 0;
-    p = ml_get_curline();
+    p = oldline = ml_get_curline();
 
     /* Calculate the buffer size for the new indent, and check to see if it
      * isn't already set */
@@ -188,16 +189,16 @@ set_indent(size, flags)
 
     /* Allocate memory for the new line. */
     if (flags & SIN_INSERT)
-	p = ml_get_curline();
+	p = oldline;
     else
 	p = skipwhite(p);
     line_len = (int)STRLEN(p) + 1;
-    line = alloc(ind_len + line_len);
-    if (line == NULL)
+    newline = alloc(ind_len + line_len);
+    if (newline == NULL)
 	return FALSE;
 
     /* Put the characters in the new line. */
-    s = line;
+    s = newline;
     todo = size;
     /* if 'expandtab' isn't set: use TABs */
     if (!curbuf->b_p_et)
@@ -206,7 +207,7 @@ set_indent(size, flags)
 	 * the existing indent structure for the new indent */
 	if (!(flags & SIN_INSERT) && curbuf->b_p_pi)
 	{
-	    p = ml_get_curline();
+	    p = oldline;
 	    ind_done = 0;
 
 	    while (todo > 0 && vim_iswhite(*p))
@@ -256,12 +257,16 @@ set_indent(size, flags)
     /* Replace the line (unless undo fails). */
     if (!(flags & SIN_UNDO) || u_savesub(curwin->w_cursor.lnum) == OK)
     {
-	ml_replace(curwin->w_cursor.lnum, line, FALSE);
+	ml_replace(curwin->w_cursor.lnum, newline, FALSE);
 	if (flags & SIN_CHANGED)
 	    changed_bytes(curwin->w_cursor.lnum, 0);
+	/* Correct saved cursor position if it's after the indent. */
+	if (saved_cursor.lnum == curwin->w_cursor.lnum
+				&& saved_cursor.col >= (colnr_T)(p - oldline))
+	    saved_cursor.col += ind_len - (p - oldline);
     }
     else
-	vim_free(line);
+	vim_free(newline);
 
     curwin->w_cursor.col = ind_len;
     return TRUE;
@@ -373,7 +378,7 @@ copy_indent(size, src)
 
 /*
  * Return the indent of the current line after a number.  Return -1 if no
- * number was found.  Used for '1' in 'formatoptions': numbered list.
+ * number was found.  Used for 'n' in 'formatoptions': numbered list.
  */
     int
 get_number_indent(lnum)
@@ -449,18 +454,24 @@ cin_is_cinword(line)
  * Caller must take care of undo.  Since VREPLACE may affect any number of
  * lines however, it may call u_save_cursor() again when starting to change a
  * new line.
+ * "flags": OPENLINE_DELSPACES	delete spaces after cursor
+ *	    OPENLINE_DO_COM	format comments
+ *	    OPENLINE_KEEPTRAIL	keep trailing spaces
+ *	    OPENLINE_MARKFIX	adjust mark positions after the line break
  *
  * Return TRUE for success, FALSE for failure
  */
     int
 open_line(dir, flags, old_indent)
     int		dir;		/* FORWARD or BACKWARD */
-    int		flags;		/* OPENLINE_DELSPACES and OPENLINE_DO_COM */
+    int		flags;
     int		old_indent;	/* indent for after ^^D in Insert mode */
 {
     char_u	*saved_line;		/* copy of the original line */
     char_u	*next_line = NULL;	/* copy of the next line */
     char_u	*p_extra = NULL;	/* what goes to next line */
+    int		less_cols = 0;		/* less columns for mark in new line */
+    int		less_cols_off = 0;	/* columns to skip for mark adjust */
     pos_T	old_cursor;		/* old cursor position */
     int		newcol = 0;		/* new cursor column */
     int		newindent = 0;		/* auto-indent of the new line */
@@ -1138,10 +1149,14 @@ open_line(dir, flags, old_indent)
 		if (REPLACE_NORMAL(State))
 		    replace_push(*p_extra);
 		++p_extra;
+		++less_cols_off;
 	    }
 	}
 	if (*p_extra != NUL)
 	    did_ai = FALSE;	    /* append some text, don't truncate now */
+
+	/* columns for marks adjusted for removed columns */
+	less_cols = (int)(p_extra - saved_line);
     }
 
     if (p_extra == NULL)
@@ -1154,6 +1169,7 @@ open_line(dir, flags, old_indent)
 	STRCAT(leader, p_extra);
 	p_extra = leader;
 	did_ai = TRUE;	    /* So truncating blanks works with comments */
+	less_cols -= lead_len;
     }
     else
 	end_comment_pending = NUL;  /* turns out there was no leader */
@@ -1225,6 +1241,7 @@ open_line(dir, flags, old_indent)
 	}
 	else
 	    (void)set_indent(newindent, SIN_INSERT);
+	less_cols -= curwin->w_cursor.col;
 
 	ai_col = curwin->w_cursor.col;
 
@@ -1270,6 +1287,12 @@ open_line(dir, flags, old_indent)
 		changed_lines(curwin->w_cursor.lnum, curwin->w_cursor.col,
 					       curwin->w_cursor.lnum + 1, 1L);
 		did_append = FALSE;
+
+		/* Move marks after the line break to the new line. */
+		if (flags & OPENLINE_MARKFIX)
+		    mark_col_adjust(curwin->w_cursor.lnum,
+					 curwin->w_cursor.col + less_cols_off,
+							1L, (long)-less_cols);
 	    }
 	    else
 		changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
@@ -2309,10 +2332,10 @@ skip_to_option_part(p)
     void
 changed()
 {
-    int	    save_msg_scroll = msg_scroll;
-
     if (!curbuf->b_changed)
     {
+	int	save_msg_scroll = msg_scroll;
+
 	change_warning(0);
 	/* Create a swap file if that is wanted.
 	 * Don't do this for "nofile" and "nowrite" buffer types. */

@@ -122,9 +122,6 @@ static void ins_ctrl_v __ARGS((void));
 static void undisplay_dollar __ARGS((void));
 static void insert_special __ARGS((int, int, int));
 static void check_auto_format __ARGS((int));
-#ifdef FEAT_COMMENTS
-static int  cmplen __ARGS((char_u *s1, char_u *s2));
-#endif
 static void redo_literal __ARGS((int c));
 static void start_arrow __ARGS((pos_T *end_insert_pos));
 static void stop_insert __ARGS((pos_T *end_insert_pos, int esc));
@@ -874,7 +871,7 @@ doESCkey:
 	/* insert the contents of a register */
 	case Ctrl_R:
 	    ins_reg();
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -969,7 +966,7 @@ doESCkey:
 	    }
 # endif
 	    ins_shift(c, lastc);
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -977,26 +974,26 @@ doESCkey:
 	case K_DEL:
 	case K_KDEL:
 	    ins_del();
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    break;
 
 	/* delete character before the cursor */
 	case K_BS:
 	case Ctrl_H:
 	    did_backspace = ins_bs(c, BACKSPACE_CHAR, &inserted_space);
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    break;
 
 	/* delete word before the cursor */
 	case Ctrl_W:
 	    did_backspace = ins_bs(c, BACKSPACE_WORD, &inserted_space);
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    break;
 
 	/* delete all inserted text in current line */
 	case Ctrl_U:
 	    did_backspace = ins_bs(c, BACKSPACE_LINE, &inserted_space);
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -1119,7 +1116,7 @@ doESCkey:
 	    inserted_space = FALSE;
 	    if (ins_tab())
 		goto normalchar;	/* insert TAB as a normal char */
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    break;
 
 	case K_KENTER:
@@ -1146,7 +1143,7 @@ doESCkey:
 #endif
 	    if (ins_eol(c) && !p_im)
 		goto doESCkey;	    /* out of memory */
-	    auto_format(FALSE);
+	    auto_format(FALSE, FALSE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -1260,7 +1257,7 @@ docomplete:
 		    revins_legal++;
 #endif
 		    c = Ctrl_V;	/* pretend CTRL-V is last character */
-		    auto_format(FALSE);
+		    auto_format(FALSE, TRUE);
 		}
 	    }
 	    break;
@@ -1307,7 +1304,7 @@ normalchar:
 #endif
 	    }
 
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 
 #ifdef FEAT_FOLDING
 	    /* When inserting a character the cursor line must never be in a
@@ -1767,8 +1764,7 @@ change_indent(type, amount, round, replaced)
     if (State & VREPLACE_FLAG)
     {
 	/* If orig_line didn't allocate, just return.  At least we did the job,
-	 * even if you can't backspace.
-	 */
+	 * even if you can't backspace. */
 	if (orig_line == NULL)
 	    return;
 
@@ -2509,7 +2505,7 @@ ins_compl_prep(c)
 		curwin->w_cursor.col++;
 	    }
 
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 
 	    ins_compl_free();
 	    started_completion = FALSE;
@@ -4114,7 +4110,7 @@ insertchar(c, flags, second_indent)
 	     * Split the line just before the margin.
 	     * Only insert/delete lines, but don't really redraw the window.
 	     */
-	    open_line(FORWARD, OPENLINE_DELSPACES
+	    open_line(FORWARD, OPENLINE_DELSPACES + OPENLINE_MARKFIX
 		    + (fo_white_par ? OPENLINE_KEEPTRAIL : 0)
 #ifdef FEAT_COMMENTS
 		    + (do_comments ? OPENLINE_DO_COM : 0)
@@ -4366,12 +4362,13 @@ insertchar(c, flags, second_indent)
  * saved here.
  */
     void
-auto_format(trailblank)
+auto_format(trailblank, prev_line)
     int		trailblank;	/* when TRUE also format with trailing blank */
+    int		prev_line;	/* may start in previous line */
 {
     pos_T	pos;
     colnr_T	len;
-    char_u	*old, *pold;
+    char_u	*old;
     char_u	*new, *pnew;
     int		wasatend;
 
@@ -4413,78 +4410,59 @@ auto_format(trailblank)
 	return;
 #endif
 
-    old = vim_strsave(old);
-    format_lines((linenr_T)-1);
-
-    /* Advance to the same text position again.  This is tricky, indents
-     * may have changed and comment leaders may have been inserted. */
-    curwin->w_cursor.lnum = pos.lnum;
-    curwin->w_cursor.col = 0;
-    pold = old;
-    while (1)
+    /*
+     * May start formatting in a previous line, so that after "x" a word is
+     * moved to the previous line if it fits there now.  Only when this is not
+     * the start of a paragraph.
+     */
+    if (prev_line && !paragraph_start(curwin->w_cursor.lnum))
     {
-	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-	{
-	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-	    curwin->w_cursor.col = MAXCOL;
-	    break;
-	}
-	/* Make "pold" and "pnew" point to the start of the line, ignoring
-	 * indent and comment leader. */
-	pold = skipwhite(pold);
-	new = ml_get_curline();
-	pnew = skipwhite(new);
-#ifdef FEAT_COMMENTS
-	len = get_leader_len(new, NULL, FALSE);
-	if (len > 0)
-	{
-	    char_u	*p;
-
-	    /* Skip the leader if the old text matches after it, ignoring
-	     * white space.  Keep in mind that the leader may appear in
-	     * the text! */
-	    p = skipwhite(new + len);
-	    if (cmplen(pold, pnew) < cmplen(pold, p))
-		pnew = p;
-	}
-#endif
-
-	len = (colnr_T)STRLEN(pnew);
-	if ((pold - old) + len >= pos.col)
-	{
-	    if (pos.col <= (colnr_T)(pold - old))
-		curwin->w_cursor.col = (pnew - new);
-	    else
-		curwin->w_cursor.col = pos.col - (pold - old) + (pnew - new);
-
-	    /* Insert mode: If the cursor is now after the end of the line
-	     * while it previously wasn't, the line was broken.  Because of
-	     * the rule above we need to add a space when 'w' is in
-	     * 'formatoptions' to keep a paragraph formatted. */
-	    if (!wasatend && has_format_option(FO_WHITE_PAR))
-	    {
-		len = STRLEN(new);
-		if (curwin->w_cursor.col == len)
-		{
-		    pnew = vim_strnsave(new, len + 2);
-		    pnew[len] = ' ';
-		    pnew[len + 1] = NUL;
-		    ml_replace(curwin->w_cursor.lnum, pnew, FALSE);
-		    /* remove the space later */
-		    did_add_space = TRUE;
-		}
-		else
-		    /* may remove added space */
-		    check_auto_format(FALSE);
-	    }
-	    break;
-	}
-	/* Cursor wraps to next line */
-	++curwin->w_cursor.lnum;
-	pold += len;
+	--curwin->w_cursor.lnum;
+	if (u_save_cursor() == FAIL)
+	    return;
     }
+
+    /*
+     * Do the formatting and restore the cursor position.  "saved_cursor" will
+     * be adjusted for the text formatting.
+     */
+    saved_cursor = pos;
+    format_lines((linenr_T)-1);
+    curwin->w_cursor = saved_cursor;
+    saved_cursor.lnum = 0;
+
+    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+    {
+	/* "cannot happen" */
+	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	coladvance((colnr_T)MAXCOL);
+    }
+    else
+	check_cursor_col();
+
+    /* Insert mode: If the cursor is now after the end of the line while it
+     * previously wasn't, the line was broken.  Because of the rule above we
+     * need to add a space when 'w' is in 'formatoptions' to keep a paragraph
+     * formatted. */
+    if (!wasatend && has_format_option(FO_WHITE_PAR))
+    {
+	new = ml_get_curline();
+	len = STRLEN(new);
+	if (curwin->w_cursor.col == len)
+	{
+	    pnew = vim_strnsave(new, len + 2);
+	    pnew[len] = ' ';
+	    pnew[len + 1] = NUL;
+	    ml_replace(curwin->w_cursor.lnum, pnew, FALSE);
+	    /* remove the space later */
+	    did_add_space = TRUE;
+	}
+	else
+	    /* may remove added space */
+	    check_auto_format(FALSE);
+    }
+
     check_cursor();
-    vim_free(old);
 }
 
 /*
@@ -4521,32 +4499,12 @@ check_auto_format(end_insert)
     }
 }
 
-#ifdef FEAT_COMMENTS
-/*
- * Return the number of bytes for which strings "s1" and "s2" are equal.
- */
-    static int
-cmplen(s1, s2)
-    char_u	*s1;
-    char_u	*s2;
-{
-    char_u	*p1 = s1, *p2 = s2;
-
-    while (*p1 == *p2 && *p1 != NUL)
-    {
-	++p1;
-	++p2;
-    }
-    return (int)(p1 - s1);
-}
-#endif
-
 /*
  * Find out textwidth to be used for formatting:
  *	if 'textwidth' option is set, use it
  *	else if 'wrapmargin' option is set, use W_WIDTH(curwin) - 'wrapmargin'
  *	if invalid value, use 0.
- *	Set default to window width (maximum 79) for "Q" command.
+ *	Set default to window width (maximum 79) for "gq" operator.
  */
     int
 comp_textwidth(ff)
@@ -4694,7 +4652,24 @@ stop_insert(end_insert_pos, esc)
 	 * a line and having it end in a space.  But only do it when something
 	 * was actually inserted, otherwise undo won't work. */
 	if (!ins_need_undo)
-	    auto_format(TRUE);
+	{
+	    /* When the cursor is at the end of the line after a space the
+	     * formatting will move it to the following word.  Avoid that by
+	     * moving the cursor onto the space. */
+	    cc = 'x';
+	    if (curwin->w_cursor.col > 0 == NUL && gchar_cursor())
+	    {
+		dec_cursor();
+		cc = gchar_cursor();
+		if (!vim_iswhite(cc))
+		    inc_cursor();
+	    }
+
+	    auto_format(TRUE, FALSE);
+
+	    if (vim_iswhite(cc) && gchar_cursor() != NUL)
+		inc_cursor();
+	}
 
 	/* If a space was inserted for auto-formatting, remove it now. */
 	check_auto_format(TRUE);

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.2.  Last change: 2003 May 24
+*change.txt*    For Vim version 6.2.  Last change: 2004 Mar 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1104,7 +1104,13 @@ gqq			Format the current line.  {not in Vi}
 {Visual}gq		Format the highlighted text.  (for {Visual} see
 			|Visual-mode|).  {not in Vi}
 
-Example: To format the current paragraph use: >
+							*gw*
+gw{motion}		Format the lines that {motion} moves over.  Similar to
+			|gq| but puts the cursor back at the same position in
+			the text.  However, 'formatprg' is not used.
+			{not in Vi}
+
+Example: To format the current paragraph use:			*gqap*  >
 	gqap
 
 The "gq" command leaves the cursor in the line where the motion command takes
@@ -1112,6 +1118,11 @@ the cursor.  This allows you to repeat formatting repeated with ".".  This
 works well with "gqj" (format current and next line) and "gq}" (format until
 end of paragraph).  Note: When 'formatprg' is set, "gq" leaves the cursor on
 the first formatted line (as with using a filter command).
+
+If you want to format the current paragraph and continue where you were, use: >
+	gwap
+If you always want to keep paragraphs formatted you may want to add the 'a'
+flag to 'formatoptions'.  See |auto-format|.
 
 If the 'autoindent' option is on, Vim uses the indent of the first line for
 the following lines.
