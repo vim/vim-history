@@ -418,7 +418,6 @@ static void call_user_func __ARGS((ufunc_T *fp, int argcount, VAR argvars, VAR r
 static char_u * make_expanded_name __ARGS((char_u *in_start,  char_u *expr_start,  char_u *expr_end,  char_u *in_end));
 #endif
 
-#if defined(FEAT_STL_OPT) || defined(PROTO)
 /*
  * Set an internal variable to a string value. Creates the variable if it does
  * not already exist.
@@ -442,7 +441,6 @@ set_internal_string_var(name, value)
 	}
     }
 }
-#endif
 
 # if defined(FEAT_MBYTE) || defined(PROTO)
     int
