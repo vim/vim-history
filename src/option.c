@@ -24,6 +24,10 @@
  * - Add documentation!  One line in doc/help.txt, full description in
  *   options.txt, and any other related places.
  * - Add an entry in runtime/optwin.vim.
+ * When making changes:
+ * - Adjust the help for the option in doc/option.txt.
+ * - When an entry has the P_VIM flag, or is lacking the P_VI_DEF flag, add a
+ *   comment at the help for the 'compatible' option.
  */
 
 #include "vim.h"
@@ -556,9 +560,6 @@ static struct vimoption options[] =
 			    (char_u *)&p_hl,
 			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu",
 				(char_u *)0L}},
-    {"hlsearch",    "hls",  P_BOOL|P_VI_DEF|P_VIM|P_RALL,
-			    (char_u *)&p_hls,
-			    {(char_u *)FALSE, (char_u *)0L}},
     {"history",	    "hi",   P_NUM|P_VIM,
 			    (char_u *)&p_hi,
 			    {(char_u *)0L, (char_u *)20L}},
@@ -575,6 +576,9 @@ static struct vimoption options[] =
 #else
 			    (char_u *)NULL,
 #endif
+			    {(char_u *)FALSE, (char_u *)0L}},
+    {"hlsearch",    "hls",  P_BOOL|P_VI_DEF|P_VIM|P_RALL,
+			    (char_u *)&p_hls,
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"icon",	    NULL,   P_BOOL|P_VI_DEF,
 #ifdef WANT_TITLE
@@ -1243,7 +1247,7 @@ static struct vimoption options[] =
 #endif
 			    {(char_u *)"", (char_u *)0L}},
 #if defined(USE_GUI_GTK) && defined(USE_TOOLBAR)
-    {"toolbar",     "tb",   P_STRING|P_COMMA|P_VI_DEF|P_VIM,
+    {"toolbar",     "tb",   P_STRING|P_COMMA|P_VI_DEF,
 			    (char_u *)&p_toolbar,
 			    {(char_u *)"icons,tooltips", (char_u *)0L}},
 #endif
