@@ -1230,6 +1230,9 @@ endfunction
 " Required for "vim -o filename dirname"
 "
 function! s:EditAll()
+  if winbufnr(2) == -1
+    return
+  endif
   let t = winnr()
   while 1
     wincmd w
