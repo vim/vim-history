@@ -5477,7 +5477,45 @@ ex_language(eap)
 		if (what == LC_ALL)
 		    vim_setenv((char_u *)"LANG", name);
 		if (what != LC_CTYPE)
+		{
+#ifdef WIN32
+		    char_u	*mname = name;
+		    int		i;
+		    static char *(mtable[]) = {
+					"afrikaans",	"af",
+					"czech",	"cs",
+					"german",	"de",
+					"english_united kingdom", "en_gb",
+					"spanish",	"es",
+					"french",	"fr",
+					"italian",	"it",
+					"japanese",	"ja",
+					"korean",	"ko",
+					"norwegian",	"no",
+					"polish",	"pl",
+					"russian",	"ru",
+					"slovak",	"sk",
+					"swedish",	"sv",
+					"ukrainian",	"uk",
+					"chinese_china", "zh_cn",
+					"chinese_taiwan", "zh_tw",
+					NULL};
+
+		    /* On MS-Windows locale names are strings like
+		     * "German_Germany.1252", but gettext expects "de".  Try
+		     * to translate one into another here for a few supported
+		     * languages. */
+		    for (i = 0; mtable[i] != NULL; i += 2)
+			if (STRNICMP(mtable[i], name, STRLEN(mtable[i])) == 0)
+			{
+			    mname = mtable[i + 1];
+			    break;
+			}
+		    vim_setenv((char_u *)"LC_MESSAGES", mname);
+#else
 		    vim_setenv((char_u *)"LC_MESSAGES", name);
+#endif
+		}
 
 		/* Set $LC_CTYPE, because it overrules $LANG, and
 		 * gtk_set_locale() calls setlocale() again.  gnome_init()
