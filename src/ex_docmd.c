@@ -6446,9 +6446,7 @@ ex_redir(eap)
     exarg_T	*eap;
 {
     char	*mode;
-#ifdef FEAT_BROWSE
-    char_u	*browseFile = NULL;
-#endif
+    char_u	*fname;
 
     if (STRICMP(eap->arg, "END") == 0)
 	close_redir();
@@ -6468,23 +6466,27 @@ ex_redir(eap)
 
 	    close_redir();
 
+	    /* Expand environment variables and "~/". */
+	    fname = expand_env_save(eap->arg);
+	    if (fname == NULL)
+		return;
 #ifdef FEAT_BROWSE
 	    if (cmdmod.browse)
 	    {
+		char_u	*browseFile;
+
 		browseFile = do_browse(TRUE, (char_u *)_("Save Redirection"),
-		       eap->arg, NULL, NULL, BROWSE_FILTER_ALL_FILES, curbuf);
+		       fname, NULL, NULL, BROWSE_FILTER_ALL_FILES, curbuf);
 		if (browseFile == NULL)
 		    return;		/* operation cancelled */
-		eap->arg = browseFile;
+		vim_free(fname);
+		fname = browseFile;
 		eap->forceit = TRUE;	/* since dialog already asked */
 	    }
 #endif
 
-	    redir_fd = open_exfile(eap->arg, eap->forceit, mode);
-
-#ifdef FEAT_BROWSE
-	    vim_free(browseFile);
-#endif
+	    redir_fd = open_exfile(fname, eap->forceit, mode);
+	    vim_free(fname);
 	}
 #ifdef FEAT_EVAL
 	else if (*eap->arg == '@')
