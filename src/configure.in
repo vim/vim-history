@@ -85,7 +85,7 @@ if test "`(uname) 2>/dev/null`" = Darwin; then
   MACOSX=yes
   OS_EXTRA_SCR="os_macosx.c"; 
   OS_EXTRA_OBJ="objects/os_macosx.o"
-  CFLAGS="$CFLAGS -DMACOS_X_UNIX"
+  CFLAGS="$CFLAGS -DMACOS_X_UNIX -no-cpp-precomp"
 
   dnl If Carbon is found, assume we don't want X11
   dnl unless it was specifically asked for (--with-x)
@@ -298,10 +298,10 @@ if test "$enable_perlinterp" = "yes"; then
 	PERL_CFLAGS="$perlcppflags"
       fi
       dnl Remove "-lc", it breaks on FreeBSD when using "-pthread".
-      perllibs=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
+      PERL_LIBS=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
 		sed -e '/Warning/d' -e '/Note (probably harmless)/d' \
 			-e 's/-bE:perl.exp//' -e 's/-lc //'`
-      AC_SUBST(perllibs)
+      AC_SUBST(PERL_LIBS)
       dnl Don't add perl lib to $LIBS: if it's not in LD_LIBRARY_PATH
       dnl a test in configure may fail because of that.
       perlldflags=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed \
@@ -339,7 +339,7 @@ if test "$enable_perlinterp" = "yes"; then
       PERL_DIR=$dir
       PERL_CFLAGS=-DFEAT_PERL -I$darwindir/CORE
       PERL_OBJ=if_perl.o if_perlsfio.o $darwindir/auto/DynaLoader/DynaLoader.a
-      PERL_LIBS=-lperl -L$darwindir/CORE
+      PERL_LIBS=-L$darwindir/CORE -lperl
     fi
   fi
 fi
@@ -432,14 +432,19 @@ eof
 	    dnl -- delete the lines from make about Entering/Leaving directory
 	    eval "`cd ${PYTHON_CONFDIR} && make -f ${tmp_mkf} __ | sed '/ directory /d'`"
 	    rm -f ${tmp_mkf}
-	    if test "${vi_cv_var_python_version}" = "1.4"; then
-		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libModules.a ${PYTHON_CONFDIR}/libPython.a ${PYTHON_CONFDIR}/libObjects.a ${PYTHON_CONFDIR}/libParser.a"
+	    if test "x$MACOSX" = "xyes" && ${vi_cv_path_python} -c \
+		"import sys; sys.exit(${vi_cv_var_python_version} < 2.3)"; then
+	      vi_cv_path_python_plibs="-framework Python"
 	    else
-		vi_cv_path_python_plibs="-L${PYTHON_CONFDIR} -lpython${vi_cv_var_python_version}"
+	      if test "${vi_cv_var_python_version}" = "1.4"; then
+		  vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libModules.a ${PYTHON_CONFDIR}/libPython.a ${PYTHON_CONFDIR}/libObjects.a ${PYTHON_CONFDIR}/libParser.a"
+	      else
+		  vi_cv_path_python_plibs="-L${PYTHON_CONFDIR} -lpython${vi_cv_var_python_version}"
+	      fi
+	      vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS} ${python_LINKFORSHARED}"
+	      dnl remove -ltermcap, it can conflict with an earlier -lncurses
+	      vi_cv_path_python_plibs=`echo $vi_cv_path_python_plibs | sed s/-ltermcap//`
 	    fi
-	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS} ${python_LINKFORSHARED}"
-	    dnl remove -ltermcap, it can conflict with an earlier -lncurses
-	    vi_cv_path_python_plibs=`echo $vi_cv_path_python_plibs | sed s/-ltermcap//`
 	])
 
 	PYTHON_LIBS="${vi_cv_path_python_plibs}"
@@ -2510,6 +2515,14 @@ elif test x${DLL} = xdl.h; then
 		  LIBS=$olibs))
 fi
 AC_CHECK_HEADERS(setjmp.h)
+
+if test "x$MACOSX" = "xyes" -a -n "$PERL"; then
+  dnl -ldl must come after DynaLoader.a
+  if echo $LIBS | grep -e '-ldl' >/dev/null; then
+    LIBS=`echo $LIBS | sed s/-ldl//`
+    PERL_LIBS="$PERL_LIBS -ldl"
+  fi
+fi
 
 dnl write output files
 AC_OUTPUT(auto/config.mk:config.mk.in)
