@@ -3,9 +3,18 @@
 # Last change:	2004 May 02
 
 # WARNING: if you make changes to this script, look out for $0 to be valid,
-# because this line is very dangerous:		RMDir /r $0
+# because uninstall deletes most files in $0.
 
-# comment next line if you don't have UPX.
+# Location of gvim_ole.exe, vimd32.exe, GvimExt/*, etc.
+!define VIMSRC "..\src"
+
+# Location of runtime files
+!define VIMRT ".."
+
+# Location of extra tools: diff.exe
+!define VIMTOOLS ..\..
+
+# Comment the next line if you don't have UPX.
 # Get it at http://upx.sourceforge.net
 !define HAVE_UPX
 
@@ -14,6 +23,10 @@
 
 !define VER_MINOR 2
 !define VER_MAJOR 6
+
+# ----------- No configurable settings below this line -----------
+
+!include UpgradeDLL.nsh		# for VisVim.dll
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"
 OutFile gvim${VER_MAJOR}${VER_MINOR}.exe
@@ -31,14 +44,14 @@ UninstallText "This will uninstall Vim ${VER_MAJOR}.${VER_MINOR} from your syste
 UninstallIcon icons\vim_uninst_16c.ico
 BGGradient 004000 008200 FFFFFF
 LicenseText "You should read the following before installing:"
-LicenseData ..\doc\uganda.nsis.txt
+LicenseData ${VIMRT}\doc\uganda.nsis.txt
 
 !ifdef HAVE_UPX
   !packhdr temp.dat "upx --best --compress-icons=1 temp.dat"
 !endif
 
 # This adds '\vim' to the user choice automagically.
-InstallDir $PROGRAMFILES\Vim
+InstallDir "$PROGRAMFILES\Vim"
 
 # Types of installs we can perform:
 InstType Typical
@@ -59,7 +72,7 @@ Function .onInit
 
   # run the install program to check for already installed versions
   SetOutPath $TEMP
-  File /oname=install.exe ..\src\installw32.exe
+  File /oname=install.exe ${VIMSRC}\installw32.exe
   ExecWait "$TEMP\install.exe -uninstall-check"
   Delete $TEMP\install.exe
 
@@ -153,48 +166,48 @@ Section "Vim executables and runtime files"
 	StrCpy $0 "$INSTDIR\vim${VER_MAJOR}${VER_MINOR}"
 
 	SetOutPath $0
-	File /oname=gvim.exe ..\src\gvim_ole.exe
-	File /oname=install.exe ..\src\installw32.exe
-	File /oname=uninstal.exe ..\src\uninstalw32.exe
-	File ..\src\vimrun.exe
-	File /oname=xxd.exe ..\src\xxdw32.exe
-	File ..\..\diff.exe
-	File ..\vimtutor.bat
-	File ..\README.txt
+	File /oname=gvim.exe ${VIMSRC}\gvim_ole.exe
+	File /oname=install.exe ${VIMSRC}\installw32.exe
+	File /oname=uninstal.exe ${VIMSRC}\uninstalw32.exe
+	File ${VIMSRC}\vimrun.exe
+	File /oname=xxd.exe ${VIMSRC}\xxdw32.exe
+	File ${VIMTOOLS}\diff.exe
+	File ${VIMRT}\vimtutor.bat
+	File ${VIMRT}\README.txt
 	File ..\uninstal.txt
-	File ..\*.vim
-	File ..\rgb.txt
+	File ${VIMRT}\*.vim
+	File ${VIMRT}\rgb.txt
 
 	SetOutPath $0\colors
-	File ..\colors\*.*
+	File ${VIMRT}\colors\*.*
 
 	SetOutPath $0\compiler
-	File ..\compiler\*.*
+	File ${VIMRT}\compiler\*.*
 
 	SetOutPath $0\doc
-	File ..\doc\*.txt
-	File ..\doc\tags
+	File ${VIMRT}\doc\*.txt
+	File ${VIMRT}\doc\tags
 
 	SetOutPath $0\ftplugin
-	File ..\ftplugin\*.*
+	File ${VIMRT}\ftplugin\*.*
 
 	SetOutPath $0\indent
-	File ..\indent\*.*
+	File ${VIMRT}\indent\*.*
 
 	SetOutPath $0\macros
-	File ..\macros\*.*
+	File ${VIMRT}\macros\*.*
 
 	SetOutPath $0\plugin
-	File ..\plugin\*.*
+	File ${VIMRT}\plugin\*.*
 
 	SetOutPath $0\syntax
-	File ..\syntax\*.*
+	File ${VIMRT}\syntax\*.*
 
 	SetOutPath $0\tools
-	File ..\tools\*.*
+	File ${VIMRT}\tools\*.*
 
 	SetOutPath $0\tutor
-	File ..\tutor\*.*
+	File ${VIMRT}\tutor\*.*
 SectionEnd
 
 ##########################################################
@@ -206,13 +219,20 @@ Section "Vim console program (vim.exe)"
 	   "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
 	IfErrors 0 lbl_winnt
 	    # Windows 95/98/ME
-	    File /oname=vim.exe ..\src\vimd32.exe
+	    File /oname=vim.exe ${VIMSRC}\vimd32.exe
 	    Goto lbl_done
 	lbl_winnt:
 	    # Windows NT/2000/XT
-	    File /oname=vim.exe ..\src\vimw32.exe
+	    File /oname=vim.exe ${VIMSRC}\vimw32.exe
 	lbl_done:
 	StrCpy $2 "$2 vim view vimdiff"
+SectionEnd
+
+##########################################################
+Section "Create .bat files for command line use"
+	SectionIn 3
+
+	StrCpy $1 "$1 -create-batfiles $2"
 SectionEnd
 
 ##########################################################
@@ -233,9 +253,32 @@ SectionEnd
 Section "Add an Edit-with-Vim context menu entry"
 	SectionIn 1 3
 
+	# Be aware of this sequence of events:
+	# - user uninstalls Vim, gvimext.dll can't be removed (it's in use) and
+	#   is scheduled to be removed at next reboot.
+	# - user installs Vim in same directory, gvimext.dll still exists.
+	# If we now skip installing gvimext.dll, it will disappear at the next
+	# reboot.  Thus when copying gvimext.dll fails always schedule it to be
+	# installed at the next reboot.  Can't use UpgradeDLL!
+	# We don't ask the user to reboot, the old dll will keep on working.
 	SetOutPath $0
-	File ..\src\GvimExt\gvimext.dll
-	StrCpy $1 "$1 -install-popup"
+	ClearErrors
+	SetOverwrite try
+	File /oname=gvimext.dll ${VIMSRC}\GvimExt\gvimext.dll
+	IfErrors 0 GvimExtDone
+
+	# Can't copy gvimext.dll, create it under another name and rename it on
+	# next reboot.
+	GetTempFileName $3 $0
+	File /oname=$3 ${VIMSRC}\GvimExt\gvimext.dll
+	Rename /REBOOTOK $3 $0\gvimext.dll
+
+	GvimExtDone:
+	SetOverwrite lastused
+
+	# We don't have a separate entry for the "Open With..." menu, assume
+	# the user wants either both or none.
+	StrCpy $1 "$1 -install-popup -install-openwith"
 SectionEnd
 
 ##########################################################
@@ -243,13 +286,6 @@ Section "Create a _vimrc if it doesn't exist"
 	SectionIn 1 3
 
 	StrCpy $1 "$1 -create-vimrc"
-SectionEnd
-
-##########################################################
-Section "Create .bat files for command line use"
-	SectionIn 3
-
-	StrCpy $1 "$1 -create-batfiles $2"
 SectionEnd
 
 ##########################################################
@@ -271,9 +307,8 @@ Section "VisVim Extension for MS Visual Studio"
 	SectionIn 3
 
 	SetOutPath $0
-	File ..\src\VisVim\VisVim.dll
-	File ..\src\VisVim\README_VisVim.txt
-	ExecWait "regsvr32.exe /s $0\VisVim.dll"
+	!insertmacro UpgradeDLL "${VIMSRC}\VisVim\VisVim.dll" "$0\VisVim.dll" "$0"
+	File ${VIMSRC}\VisVim\README_VisVim.txt
 SectionEnd
 
 ##########################################################
@@ -282,12 +317,12 @@ SectionEnd
 		SectionIn 1 3
 
 		SetOutPath $0\lang
-		File /r ..\lang\*.*
+		File /r ${VIMRT}\lang\*.*
 		SetOutPath $0\keymap
-		File ..\keymap\README.txt
-		File ..\keymap\*.vim
+		File ${VIMRT}\keymap\README.txt
+		File ${VIMRT}\keymap\*.vim
 		SetOutPath $0
-		File ..\libintl.dll
+		File ${VIMRT}\libintl.dll
 	SectionEnd
 !endif
 
@@ -308,7 +343,7 @@ Section Uninstall
 	# created.  Thus the "vim61" directory is included in it.
 	StrCpy $0 "$INSTDIR"
 
-	# If VisVim was installed, unregister the DLL
+	# If VisVim was installed, unregister the DLL.
 	IfFileExists "$0\VisVim.dll" Has_VisVim No_VisVim
 	Has_VisVim:
 	   ExecWait "regsvr32.exe /u /s $0\VisVim.dll"
@@ -326,15 +361,37 @@ Section Uninstall
 	  "Would you like to delete $0?$\n \
 	   $\nIt contains the Vim executables and runtime files." IDNO NoRemoveExes
 
-	Delete /REBOOTOK $0\gvimext.dll
+	Delete /REBOOTOK $0\*.dll
 	ClearErrors
-	RMDir /r $0
+	# Remove everything but *.dll files.  Avoids that
+	# a lot remains when gvimext.dll cannot be deleted.
+	RMDir /r $0\colors
+	RMDir /r $0\compiler
+	RMDir /r $0\doc
+	RMDir /r $0\ftplugin
+	RMDir /r $0\indent
+	RMDir /r $0\macros
+	RMDir /r $0\plugin
+	RMDir /r $0\syntax
+	RMDir /r $0\tools
+	RMDir /r $0\tutor
+	RMDir /r $0\VisVim
+	RMDir /r $0\lang
+	RMDir /r $0\keymap
+	Delete $0\*.exe
+	Delete $0\*.bat
+	Delete $0\*.vim
+	Delete $0\*.txt
 
 	IfErrors ErrorMess NoErrorMess
 	  ErrorMess:
 	    MessageBox MB_OK|MB_ICONEXCLAMATION \
 	      "Some files in $0 have not been deleted!$\nYou must do it manually."
 	  NoErrorMess:
+
+	# No error message if the "vim62" directory can't be removed, the
+	# gvimext.dll may still be there.
+	RMDir $0
 
 	NoRemoveExes:
 	# get the parent dir of the installation

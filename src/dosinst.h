@@ -213,16 +213,29 @@ get_shell_folder_path(
     /*
      * The following code was successfully built with make_mvc.mak.
      * The resulting executable worked on Windows 95, Millennium Edition, and
-     * 2000 Professional.
+     * 2000 Professional.  But it was changed after testing...
      */
-    LPITEMIDLIST pidl = 0; /* Pointer to an Item ID list allocated below */
-    LPMALLOC pMalloc; /* Pointer to an IMalloc interface */
-    int csidl;
+    LPITEMIDLIST    pidl = 0; /* Pointer to an Item ID list allocated below */
+    LPMALLOC	    pMalloc;  /* Pointer to an IMalloc interface */
+    int		    csidl;
+    int		    alt_csidl = -1;
+    static int	    desktop_csidl = -1;
+    static int	    programs_csidl = -1;
+    int		    *pcsidl;
+    int		    r;
 
     if (strcmp(shell_folder_name, "desktop") == 0)
-	csidl = CSIDL_DESKTOP;
+    {
+	pcsidl = &desktop_csidl;
+	csidl = CSIDL_COMMON_DESKTOPDIRECTORY;
+	alt_csidl = CSIDL_DESKTOP;
+    }
     else if (strncmp(shell_folder_name, "Programs", 8) == 0)
-	csidl = CSIDL_PROGRAMS;
+    {
+	pcsidl = &programs_csidl;
+	csidl = CSIDL_COMMON_PROGRAMS;
+	alt_csidl = CSIDL_PROGRAMS;
+    }
     else
     {
 	printf("\nERROR (internal) unrecognised shell_folder_name: \"%s\"\n\n",
@@ -230,6 +243,14 @@ get_shell_folder_path(
 	return FAIL;
     }
 
+    /* Did this stuff before, use the same ID again. */
+    if (*pcsidl >= 0)
+    {
+	csidl = *pcsidl;
+	alt_csidl = -1;
+    }
+
+retry:
     /* Initialize pointer to IMalloc interface */
     if (NOERROR != SHGetMalloc(&pMalloc))
     {
@@ -241,25 +262,67 @@ get_shell_folder_path(
     /* Get an ITEMIDLIST corresponding to the folder code */
     if (NOERROR != SHGetSpecialFolderLocation(0, csidl, &pidl))
     {
-	printf("\nERROR getting ITEMIDLIST for shell_folder_name: \"%s\"\n\n",
+	if (alt_csidl < 0 || NOERROR != SHGetSpecialFolderLocation(0,
+							    alt_csidl, &pidl))
+	{
+	    printf("\nERROR getting ITEMIDLIST for shell_folder_name: \"%s\"\n\n",
 							   shell_folder_name);
-	return FAIL;
+	    return FAIL;
+	}
+	csidl = alt_csidl;
+	alt_csidl = -1;
     }
 
     /* Translate that ITEMIDLIST to a string */
-    if (!SHGetPathFromIDList(pidl, shell_folder_path))
-    {
-	printf("\nERROR translating ITEMIDLIST for shell_folder_name: \"%s\"\n\n",
-							   shell_folder_name);
-	pMalloc->lpVtbl->Free(pMalloc, pidl);
-	pMalloc->lpVtbl->Release(pMalloc);
-	return FAIL;
-    }
+    r = SHGetPathFromIDList(pidl, shell_folder_path);
 
     /* Free the data associated with pidl */
     pMalloc->lpVtbl->Free(pMalloc, pidl);
     /* Release the IMalloc interface */
     pMalloc->lpVtbl->Release(pMalloc);
+
+    if (!r)
+    {
+	if (alt_csidl >= 0)
+	{
+	    /* We probably get here for Windows 95: the "all users"
+	     * desktop/start menu entry doesn't exist. */
+	    csidl = alt_csidl;
+	    alt_csidl = -1;
+	    goto retry;
+	}
+	printf("\nERROR translating ITEMIDLIST for shell_folder_name: \"%s\"\n\n",
+							   shell_folder_name);
+	return FAIL;
+    }
+
+    /* If there is an alternative: verify we can write in this directory.
+     * This should cause a retry when the "all users" directory exists but we
+     * are a normal user and can't write there. */
+    if (alt_csidl >= 0)
+    {
+	char tbuf[BUFSIZE];
+	FILE *fd;
+
+	strcpy(tbuf, shell_folder_path);
+	strcat(tbuf, "\\vim write test");
+	fd = fopen(tbuf, "w");
+	if (fd == NULL)
+	{
+	    csidl = alt_csidl;
+	    alt_csidl = -1;
+	    goto retry;
+	}
+	fclose(fd);
+	unlink(tbuf);
+    }
+
+    /*
+     * Keep the found csidl for next time, so that we don't have to do the
+     * write test every time.
+     */
+    if (*pcsidl < 0)
+	*pcsidl = csidl;
 
     if (strncmp(shell_folder_name, "Programs\\", 9) == 0)
 	strcat(shell_folder_path, shell_folder_name + 8);
