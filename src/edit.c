@@ -1240,7 +1240,13 @@ normalchar:
 		    Insstart_blank_vcol = get_nolist_virtcol();
 	    }
 
-	    if (vim_iswordc(c) || !echeck_abbr(c))
+	    if (vim_iswordc(c) || !echeck_abbr(
+#ifdef FEAT_MBYTE
+			/* Add ABBR_OFF for characters above 0x100, this is
+			 * what check_abbr() expects. */
+			(has_mbyte && c >= 0x100) ? (c + ABBR_OFF) :
+#endif
+			c))
 	    {
 		insert_special(c, FALSE, FALSE);
 #ifdef FEAT_RIGHTLEFT
