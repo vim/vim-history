@@ -33,8 +33,8 @@ ui_write(s, len)
     }
 #endif
 #ifndef NO_CONSOLE
-    /* Don't output anything in silent mode ("ex -s") */
-    if (!silent_mode)
+    /* Don't output anything in silent mode ("ex -s") unless 'verbose' set */
+    if (!(silent_mode && p_verbose == 0))
     {
 #ifdef FEAT_MBYTE
 	char_u	*tofree = NULL;
