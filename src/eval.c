@@ -966,6 +966,8 @@ ex_call(eap)
 
     name = arg;
     len = get_func_len(&arg, &alias);
+    if (len == 0)
+	goto end;
     if (alias != NULL)
 	name = alias;
 
@@ -1019,7 +1021,6 @@ ex_call(eap)
 end:
     if (alias != NULL)
 	vim_free(alias);
-
 }
 
 /*
@@ -1939,7 +1940,9 @@ eval7(arg, retvar, evaluate)
 		if (alias != NULL)
 		    s = alias;
 
-		if (len != 0)
+		if (len == 0)
+		    ret = FAIL;
+		else
 		{
 		    if (**arg == '(')		/* recursive! */
 			ret = get_func_var(s, len, retvar, arg,
@@ -1948,8 +1951,6 @@ eval7(arg, retvar, evaluate)
 		    else if (evaluate)
 			ret = get_var_var(s, len, retvar);
 		}
-		else
-		    ret = FAIL;
 
 		if (alias != NULL)
 		    vim_free(alias);
@@ -2648,7 +2649,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	    break;
 	if (eval1(&argp, &argvars[argcount], evaluate) == FAIL)
 	{
-	    error = ERROR_OTHER;
+	    error = ERROR_INVARG;
 	    break;
 	}
 	++argcount;
@@ -6679,16 +6680,19 @@ get_func_len(arg, alias)
 	 * Thus the -len here.
 	 */
 	temp_string = make_expanded_name(*arg - len, expr_start, expr_end, p);
-	if (temp_string != NULL)
-	{
-	    *alias = temp_string;
-	    *arg = skipwhite(p);
-	    return (int)STRLEN(temp_string);
-	}
+	if (temp_string == NULL)
+	    return 0;
+	*alias = temp_string;
+	*arg = skipwhite(p);
+	return (int)STRLEN(temp_string);
     }
 #endif
 
-    return get_id_len(arg) + len;
+    len += get_id_len(arg);
+    if (len == 0)
+	EMSG2(_(e_invexpr2), *arg);
+
+    return len;
 }
 
     static char_u *
