@@ -943,8 +943,18 @@ else
   ac_cv_prog_CPP="$CPP"
 fi
 echo "$ac_t""$CPP" 1>&6
-	echo $ac_n "checking for POSIXized ISC""... $ac_c" 1>&6
-echo "configure:944: checking for POSIXized ISC" >&5
+	cat > conftest.$ac_ext <<EOF
+#line 948 "configure"
+#include "confdefs.h"
+
+EOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  egrep "" >/dev/null 2>&1; then
+  :
+fi
+rm -f conftest*
+ echo $ac_n "checking for POSIXized ISC""... $ac_c" 1>&6
+echo "configure:958: checking for POSIXized ISC" >&5
 if test -d /etc/conf/kconfig.d &&
   grep _POSIX_VERSION /usr/include/sys/unistd.h >/dev/null 2>&1
 then
