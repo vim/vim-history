@@ -5558,13 +5558,16 @@ in_id_list(cur_si, list, ssp, contained)
     /* If spp has a "containedin" list and "cur_si" is in it, return TRUE. */
     if (cur_si != NULL && ssp->cont_in_list != NULL)
     {
-	/* Ignore transparent items without a contains argument. */
-	while (cur_si->si_flags & HL_TRANS_CONT)
+	/* Ignore transparent items without a contains argument.  Double check
+	 * that we don't go back past the first one. */
+	while ((cur_si->si_flags & HL_TRANS_CONT)
+		&& cur_si > (stateitem_T *)(current_state.ga_data))
 	    --cur_si;
-	if (in_id_list(NULL, ssp->cont_in_list,
+	/* cur_si->si_idx is -1 for keywords, these never contain anything. */
+	if (cur_si->si_idx >= 0 && in_id_list(NULL, ssp->cont_in_list,
 		&(SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_syn),
 		  SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_flags & HL_CONTAINED))
-	return TRUE;
+	    return TRUE;
     }
 
     if (list == NULL)
