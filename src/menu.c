@@ -761,7 +761,7 @@ show_menus_recursive(menu, modes, depth)
 	    MSG_PUTS(" ");
 	}
 				/* Same highlighting as for directories!? */
-	msg_puts_attr(menu->name, hl_attr(HLF_D));
+	msg_outtrans_attr(menu->name, hl_attr(HLF_D));
     }
 
     if (menu != NULL && menu->children == NULL)
