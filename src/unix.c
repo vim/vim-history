@@ -400,6 +400,8 @@ deathtrap SIGDEFARG(sigarg)
 	deadly_signal = sigarg;
 #endif
 
+	full_screen = FALSE;		/* don't write message to the GUI, it might be
+								 * part of the problem... */
 	/*
 	 * If something goes wrong after entering here, we may get here again.
 	 * When this happens, give a message and try to exit nicely (resetting the
@@ -998,7 +1000,7 @@ mch_get_user_name(s, len)
 	uid = getuid();
 #if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
 	if ((pw = getpwuid(uid)) != NULL &&
-								   pw->pw_name != NULL && *pw->pw_name != NUL)
+								 pw->pw_name != NULL && *(pw->pw_name) != NUL)
 	{
 		STRNCPY(s, pw->pw_name, len);
 		return OK;
@@ -1361,7 +1363,7 @@ mch_settmode(raw)
 		 */
 		tnew.c_iflag &= ~ICRNL;
 		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE
-# if defined(IEXTEN) && !defined(MINT)
+# if defined(IEXTEN) && !defined(__MINT__)
 					| IEXTEN		/* IEXTEN enables typing ^V on SOLARIS */
 									/* but it breaks function keys on MINT */
 # endif
@@ -1669,7 +1671,7 @@ call_shell(cmd, options)
 	if (cmd == NULL)
 		x = system("");	/* this starts an interactive shell in emx */
 	else
-		x = system(cmd);
+		x = system((char *)cmd);
 	if (x == -1) /* system() returns -1 when error occurs in starting shell */
 	{
 		MSG_OUTSTR("\nCannot execute shell ");
@@ -1678,14 +1680,14 @@ call_shell(cmd, options)
 	}
 #else /* not __EMX__ */
 	if (cmd == NULL)
-		x = system(p_sh);
+		x = system((char *)p_sh);
 	else
 	{
-		sprintf(newcmd, "%s %s %s \"%s\"", p_sh,
+		sprintf((char *)newcmd, "%s %s %s \"%s\"", p_sh,
 					extra_shell_arg == NULL ? "" : (char *)extra_shell_arg,
 					(char *)p_shcf,
 					(char *)cmd);
-		x = system(newcmd);
+		x = system((char *)newcmd);
 	}
 	if (x == 127)
 	{
@@ -2457,6 +2459,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int		i;
 	size_t	len;
 	char_u	*p;
+	int		dir;
 #ifdef __EMX__
 # define EXPL_ALLOC_INC	16
 	char_u	**expl_files;
@@ -2490,6 +2493,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		has_wildcard = mch_has_wildcard(buf);  /* (still) wildcards in there? */
 		if (has_wildcard)   /* yes, so expand them */
 			expl_files = (char_u **)_fnexplode(buf);
+
         /*
          * return value of buf if no wildcards left,
          * OR if no match AND list_notfound is true.
@@ -2512,14 +2516,18 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		 */
 		if (expl_files)
 		{
-			for (i = 0; (p = expl_files[i]) != NULL; i++, (*num_file)++)
+			for (i = 0; (p = expl_files[i]) != NULL; i++)
 			{
+                dir = mch_isdir(p);
+                if (files_only && dir)  /* we don't want dirs and this is one */
+                    continue;
+
 				if (--files_free == 0)
 				{
 					/* need more room in table of pointers */
 					files_alloced += EXPL_ALLOC_INC;
 					*file = (char_u **) realloc(*file,
-												sizeof(char_u **) * files_alloced);
+										   sizeof(char_u **) * files_alloced);
 					if (*file == NULL)
 					{
 						emsg(e_outofmem);
@@ -2529,7 +2537,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 					files_free = EXPL_ALLOC_INC;
 				}
 				slash_adjust(p);
-				if (mch_isdir(p))
+				if (dir)
 				{
 					len = strlen(p);
 					if (((*file)[*num_file] = alloc(len + 2)) != NULL)
@@ -2550,6 +2558,7 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 				 */
 				if ((*file)[*num_file] == NULL)
 					break;
+                (*num_file)++;
 			}
 		_fnexplodefree((char **)expl_files);
 		}
@@ -2558,12 +2567,14 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 
 #else /* __EMX__ */
 
-	int		dir;
 	char_u	*tempname;
 	char_u	*command;
 	FILE	*fd;
 	char_u	*buffer;
-	int		use_glob = FALSE;
+#define STYLE_ECHO	0		/* use "echo" to expand */
+#define STYLE_GLOB	1		/* use "glob" to expand, for csh */
+#define STYLE_PRINT	2		/* use "print -N" to expand, for zsh */
+	int		shell_style = STYLE_ECHO;
 
 	*num_file = 0;		/* default: no files found */
 	*file = (char_u **)"";
@@ -2596,11 +2607,17 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	}
 
 /*
- * let the shell expand the patterns and write the result into the temp file
+ * Let the shell expand the patterns and write the result into the temp file.
  * If we use csh, glob will work better than echo.
+ * If we use zsh, print -N will work better than glob.
  */
-	if ((len = STRLEN(p_sh)) >= 3 && STRCMP(p_sh + len - 3, "csh") == 0)
-		use_glob = TRUE;
+	if ((len = STRLEN(p_sh)) >= 3)
+	{
+		if (STRCMP(p_sh + len - 3, "csh") == 0)
+			shell_style = STYLE_GLOB;
+		else if (STRCMP(p_sh + len - 3, "zsh") == 0)
+			shell_style = STYLE_PRINT;
+	}
 
 	len = STRLEN(tempname) + 12;
 	for (i = 0; i < num_pat; ++i)		/* count the length of the patterns */
@@ -2611,10 +2628,16 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		vim_free(tempname);
 		return FAIL;
 	}
-	if (use_glob)
-		STRCPY(command, "glob >");		/* build the shell command */
+
+	/*
+	 * build the shell command
+	 */
+	if (shell_style == STYLE_GLOB)
+		STRCPY(command, "glob >");
+	else if (shell_style == STYLE_PRINT)
+		STRCPY(command, "print -N >");
 	else
-		STRCPY(command, "echo >");		/* build the shell command */
+		STRCPY(command, "echo >");
 	STRCAT(command, tempname);
 	for (i = 0; i < num_pat; ++i)
 	{
@@ -2629,17 +2652,29 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	}
 	if (expand_interactively)
 		show_shell_mess = FALSE;
+
+	/*
+	 * Using zsh -G: If a pattern has no matches, it is just deleted from
+	 * the argument list, otherwise zsh gives an error message and doesn't
+	 * expand any other pattern.
+	 */
+	if (shell_style == STYLE_PRINT)
+		extra_shell_arg = (char_u *)"-G";	/* Use zsh NULL_GLOB option */
+
 	/*
 	 * If we use -f then shell variables set in .cshrc won't get expanded.
 	 * vi can do it, so we will too, but it is only necessary if there is a "$"
 	 * in one of the patterns, otherwise we can still use the fast option.
 	 */
-	if (use_glob && !have_dollars(num_pat, pat))	/* Use csh fast option */
-		extra_shell_arg = (char_u *)"-f";
-	i = call_shell(command, SHELL_EXPAND);		/* execute it */
-	extra_shell_arg = NULL;
+	else if (shell_style == STYLE_GLOB && !have_dollars(num_pat, pat))
+		extra_shell_arg = (char_u *)"-f";	 /* Use csh fast option */
+
+	i = call_shell(command, SHELL_EXPAND);	/* execute it */
+
+	extra_shell_arg = NULL;					/* cleanup */
 	show_shell_mess = TRUE;
 	vim_free(command);
+
 	if (i == FAIL)							/* call_shell failed */
 	{
 		vim_remove(tempname);
@@ -2693,9 +2728,16 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	}
 	vim_free(tempname);
 
-	if (use_glob)		/* file names are separated with NUL */
+	if (shell_style != STYLE_ECHO)		/* file names are separated with NUL */
 	{
-		buffer[len] = NUL;				/* make sure the buffers ends in NUL */
+		/*
+		 * Make sure the buffer ends with a NUL.  For STYLE_PRINT there
+		 * already is one, for STYLE_GLOB it needs to be added.
+		 */
+		if (len && buffer[len - 1] == NUL)
+			--len;
+		else
+			buffer[len] = NUL;
 		i = 0;
 		for (p = buffer; p < buffer + len; ++p)
 			if (*p == NUL)				/* count entry */
@@ -2741,13 +2783,13 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	for (i = 0; i < *num_file; ++i)
 	{
 		(*file)[i] = p;
-		if (use_glob)
+		if (shell_style != STYLE_ECHO)			/* NUL separates */
 		{
 			while (*p && p < buffer + len)		/* skip entry */
 				++p;
 			++p;								/* skip NUL */
 		}
-		else
+		else									/* '\n' separates */
 		{
 			while (*p != ' ' && *p != '\n')		/* skip entry */
 				++p;
@@ -2813,10 +2855,15 @@ mch_has_wildcard(p)
 {
 	for ( ; *p; ++p)
 	{
+#ifdef OS2
+		if (vim_strchr((char_u *)"*?~$", *p) != NULL)
+			return TRUE;
+#else
 		if (*p == '\\' && p[1] != NUL)
 			++p;
 		else if (vim_strchr((char_u *)"*?[{`~$", *p) != NULL)
 			return TRUE;
+#endif
 	}
 	return FALSE;
 }

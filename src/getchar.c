@@ -1062,7 +1062,15 @@ vgetorpeek(advance)
 
 			for (;;)
 			{
-				mch_breakcheck();			/* check for CTRL-C */
+				/*
+				 * mch_breakcheck() is slow, don't use it too often when
+				 * inside a mapping.  But call it each time for typed
+				 * characters.
+				 */
+				if (typemaplen)
+					line_breakcheck();
+				else
+					mch_breakcheck();			/* check for CTRL-C */
 				if (got_int)
 				{
 					c = inchar(typebuf, MAXMAPLEN, 0L);	/* flush all input */
@@ -1425,7 +1433,7 @@ vgetorpeek(advance)
 	 *   if we return an ESC to exit insert mode, the message is deleted
 	 *   if we don't return an ESC but deleted the message before, redisplay it
 	 */
-	if (p_smd && (State & INSERT))
+	if (advance && p_smd && (State & INSERT))
 	{
 		if (c == ESC && !mode_deleted && !no_mapping)
 			delmode();

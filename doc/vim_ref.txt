@@ -1,4 +1,4 @@
-*vim_ref.txt*   For Vim version 4.5.  Last modification: 1996 Oct 2
+*vim_ref.txt*   For Vim version 4.6.  Last modification: 1997 Mar 12
 
 
 			     VIM REFERENCE MANUAL
@@ -7,7 +7,7 @@
 
 
 
-There is a contents listing at the end of this document.
+There is a contents listing at the end of this document. |reference_contents|
 
 This manual mostly assumes that there is only one window.  The commands and
 options for multiple windows and buffers are explained in |vim_win.txt|.
@@ -17,7 +17,7 @@ emulator in a window.  See |vim_gui.txt| for the GUI version.
 
 You can use tags to jump to the explanation of a subject.  Position the cursor
 on an item name between bars (e.g., |intro|) or an option name in single
-quotes (e.g., 'textwidth' ) and hit CTRL-].  This mostly also works on a
+quotes (e.g., 'textwidth') and hit CTRL-].  This mostly also works on a
 command in double quotes (e.g., ":buf").  Three special characters in the
 names of the tags are not allowed.  They have been replaced with letters:
 "bar" for '|', "star" for '*', and "quote" for '"'.
@@ -75,7 +75,7 @@ to the name of the help file, so you can put it in any place you like.
 
 []		Characters in square brackets are optional.
 
-							*count*
+							*count* *[count]*
 [count]		An optional number that may precede the command to multiply
 		or iterate the command.  If no number is given, a count of one
 		is used, unless otherwise noted.  Note that in this manual the
@@ -86,6 +86,7 @@ to the name of the help file, so you can put it in any place you like.
 		bottom of the window.  You can use <Del> to erase the last
 		digit (|N<Del>|).
 
+							*[quotex]*
 ["x]		An optional register designation where text can be stored.
 		See |registers|.  The x is a single character between 'a' and
 		'z' or 'A' and 'Z' or '"', and in some cases (with the put
@@ -96,6 +97,7 @@ to the name of the help file, so you can put it in any place you like.
 		previous register contents.  Without the ""x" or with """",
 		the stored text is put into the unnamed register.
 
+							*{}*
 {}		Curly braces denote parts of the command which must appear,
 		but which can take a number of different values.  The
 		differences between Vim and Vi are also given in curly braces
@@ -118,39 +120,44 @@ to the name of the help file, so you can put it in any place you like.
 		that is to be operated upon.  See the chapter on Visual mode
 		|Visual_mode|.
 
+							*<character>*
 <character>	A special character from the table below or a single ASCII
 		character.
 
+							*'character'*
 'character'	A single ASCII character.
 
+							*<char1-char2>*
 <char1-char2>	A single character from the range <char1> to <char2>.  For
 		example: <a-z> is a lowercase letter.  Multiple ranges may be
 		concatenated.  For example, <a-zA-Z0-9> is any alphanumeric
 		character.
 
+							*CTRL-{char}*
 CTRL-{char}	{char} typed as a control character; that is, typing {char}
 		while holding the CTRL key down.  The case of {char} does not
 		matter; thus CTRL-A and CTRL-a are equivalent.  But on some
 		terminals, using the SHIFT key will produce another code,
 		don't use it then.
 
+							*'option'*
 'option'	An option, or parameter, that can be set to a value, is
 		enclosed in single quotes.  See chapter 19, |options|.
 
+							*quotecommandquote*
 "command"	In examples, the commands you can type are enclosed in double
 		quotes.
 
-								*key_notation*
+							*key_notation*
 notation	meaning		    equivalent	decimal value(s)
 -----------------------------------------------------------------------
-<Nul>		zero			CTRL-@	  0 (stored as 10)
+<Nul>		zero			CTRL-@	  0 (stored as 10) *<Nul>*
 <BS>		backspace		CTRL-H	  8	*backspace*
 <Tab>		tab			CTRL-I	  9	*tab*
 							*linefeed*
 <NL>		linefeed		CTRL-J	 10 (used for <Nul>)
-							*carriage return*
-<CR>		carriage return		CTRL-M	 13
-<Esc>		escape			CTRL-[	 27	*escape*
+<CR>		carriage return		CTRL-M	 13	*carriage_return*
+<Esc>		escape			CTRL-[	 27	*escape* *<Esc>*
 <Space>		space				 32	*space*
 <Del>		delete				127
 
@@ -163,7 +170,7 @@ notation	meaning		    equivalent	decimal value(s)
 <S-Left>	shift-cursor-left
 <S-Right>	shift-cursor-right
 <F1> - <F12>	function keys 1 to 12		*function_key* *function-key*
-<S-F1> - <S-F12> shift-function keys 1 to 12
+<S-F1> - <S-F12> shift-function keys 1 to 12	*<S-F1>*
 <Help>		help key
 <Undo>		undo key
 <Insert>	insert key
@@ -562,10 +569,18 @@ accordingly.  Vim proceeds in this order:
 	This means that Vim will figure out the values of 'shellpipe' and
 	'shellredir' for you, unless you have set them yourself.
 
-5. Read the viminfo file
+5. GUI initializations
+	Only when starting "gvim", the GUI initializations will be done.  See
+	|gui_init|.
+
+6. Read the viminfo file
 	If the 'viminfo' option is not empty, the viminfo file is read.  The
 	default is empty, so 'viminfo' must have been set by one of the
 	previous initializations.  See |viminfo_file|.
+
+7. Set binary options.
+	If the "-b" flag was given to Vim, the options for binary editing will
+	be set now.  See |-b|.
 
 Some hints on using initializations:
 
@@ -605,7 +620,7 @@ version 5.0) are not recognized.
 
 MS-DOS line separators:
 On MS-DOS-like systems (MS-DOS itself, Win32, and OS/2), Vim assumes that all
-the vimrc files have <CR><NL> pairs as line separators.  This will give
+the vimrc files have <CR> <NL> pairs as line separators.  This will give
 problems if you have a file with only <NL>s and have a line like
 ":map xx yy^M".  The trailing ^M will be ignored.
 
@@ -679,17 +694,33 @@ The viminfo file is used to store:
 
 The viminfo file is only supported when Vim has been compiled with VIMINFO
 defined.  If the output of ":version" contains "+viminfo" then it was; if it
-contains "-viminfo" then it wasn't.  By default, VIMINFO is defined.
+contains "-viminfo" then it wasn't.  By default, VIMINFO is defined in
+feature.h.
 
+							*viminfo_read*
 When Vim is started and the 'viminfo' option is non-empty, the contents of
 the viminfo file are read and the info can be used in the appropriate places.
 The marks are not read in at startup (but file marks are).  See
 |initialization| for how to set the 'viminfo' option upon startup.
 
-When Vim is exited and 'viminfo' is non-empty, the info is stored in the
-viminfo file (it's actually merged with the existing one, if one exists).  The
+							*viminfo_write*
+When Vim exits and 'viminfo' is non-empty, the info is stored in the viminfo
+file (it's actually merged with the existing one, if one exists).  The
 'viminfo' option is a string containing information about what info should be
 stored, and contains limits on how much should be stored (see 'viminfo').
+
+Notes for Unix:
+- The file protection for the viminfo file will be set to prevent other users
+  from being able to read it, because it may contain any text or commands that
+  you have worked with.
+- If you want to share the viminfo file with other users (e.g. when you "su"
+  to another user), you can make the file writable for the group or everybody.
+  Vim will preserve this when writing new viminfo files.  Be careful, don't
+  allow just anybody to read and write your viminfo file!
+- Vim will not overwrite a viminfo file that is not writable by the current
+  "real" user.  This helps for when you did "su" to become root, but your
+  $HOME is still set to a normal user's home directory.  Otherwise Vim would
+  create a viminfo file owned by root that nobody else can read.
 
 Marks are stored for each file separately.  When a file is read and 'viminfo'
 is non-empty, the marks for that file are read from the viminfo file.  NOTE:
@@ -713,12 +744,16 @@ cursor position is already present in '0 to '9, it is moved to '0, to avoid
 having the same position twice.  The result is that with "'0", you can jump
 back to the file and line where you exited Vim.
 
-The default name of the viminfo file is "$HOME/.viminfo" for Unix,
-"s:.viminfo" for Amiga, "$VIM\viminfo" for MS-DOS and Win32.  The "-i" Vim
-argument can be used to set another file name, |-i|.  For the commands below,
-another file name can be given, overriding the default and the name given with
-"-i".  When the file name given with the "-i" Vim argument is "NONE"
-(all uppercase), no viminfo file is ever read or written.
+Viminfo file name:
+- The default name of the viminfo file is "$HOME/.viminfo" for Unix,
+  "s:.viminfo" for Amiga, "$VIM\viminfo" for MS-DOS and Win32.
+- The 'n' flag in the 'viminfo' option can be used to specify another viminfo
+  filename |'viminfo'|.
+- The "-i" Vim argument can be used to set another file name, |-i|.  When the
+  file name given is "NONE" (all uppercase), no viminfo file is ever read or
+  written.  Also not for the commands below!
+- For the commands below, another file name can be given, overriding the
+  default and the name given with 'viminfo' or "-i" (unless it's NONE).
 
 Two commands can be used to read and write the viminfo file manually.  This
 can be used to exchange registers between two running Vim programs: First
@@ -1067,7 +1102,7 @@ char		action
 <PageUp>	move window one page up			     *i_<PageUp>*
 <S-Down>	move window one page down		     *i_<S-Down>*
 <PageDown>	move window one page down		     *i_<PageDown>*
-CTRL-O		execute one command and return to Insert mode*i_CTRL-O*
+CTRL-O		execute one command, return to Insert mode   *i_CTRL-O*
 -----------------------------------------------------------------------
 
 The CTRL-O command sometimes has one side effect: If the cursor was beyond the
@@ -1256,7 +1291,7 @@ If the only match in the file is an exact match, where no extra characters
 would be typed, then the message 'Exact match only' is given (this is also
 useful for checking that you typed the word correctly).
 
-The mode (-- INSERT --) is shown, unless there is another more important
+The mode "-- INSERT --" is shown, unless there is another more important
 message (e.g., "Pattern not found").  This other message will stay until
 another key is hit, and then the mode is shown again.
 
@@ -1319,7 +1354,7 @@ CTRL-X CTRL-]		Search for the first tag that starts with the same
 			inserted in front of the cursor.  Alphabetic
 			characters and characters in 'iskeyword' are used
 			to decide which characters are included in the tag
-			name (same as for a keyword).
+			name (same as for a keyword).  See also |CTRL-]|.
 	CTRL-]	or
 	CTRL-N		Search forwards for next matching tag.  This tag
 			replaces the previous matching tag.
@@ -1421,9 +1456,9 @@ CTRL-Q		Same as CTRL-V.
 							*c_<Right>*
 <Right>		cursor right
 							*c_<S-Left>*
-<S-Left>	cursor one word left
+<S-Left>	cursor one WORD left
 							*c_<S-Right>*
-<S-Right>	cursor one word right
+<S-Right>	cursor one WORD right
 CTRL-B or <Home>					*c_CTRL-B* *c_<Home>*
 		cursor to beginning of command line
 CTRL-E or <End>						*c_CTRL-E* *c_<End>*
@@ -1568,7 +1603,7 @@ exactly one character.
 
 If you like tcsh's autolist completion, you can use this mapping:
 	:cnoremap X <C-L><C-D>
-(Where X is the command key to use, <C-L> is CTRL-L and <C-D> is CTRL-L)
+(Where X is the command key to use, <C-L> is CTRL-L and <C-D> is CTRL-D)
 This will find the longest match and then list all matching files.
 
 							*suffixes*
@@ -1618,7 +1653,7 @@ argument.
 
 							*:bar*
 '|' can be used to separate commands, so you can give multiple commands in one
-line.  The commands ":global", "vglobal", ":!", ":r !", ":w !", ":help" and
+line.  The commands ":global", ":vglobal", ":!", ":r !", ":w !", ":help" and
 ":autocmd" see the '|' as their argument, and can therefore not be followed by
 another command.  If you want '|' to be included in one of the other commands,
 precede it with '\'.  Note that this is confusing (inherited from Vi).   With
@@ -1679,15 +1714,26 @@ argument for the command, which has a different meaning.  For example:
 			"name"
 
 
-4.4.4 Ex command line ranges				*cmdline_ranges*
+4.4.4 Ex command line ranges			*cmdline_ranges* *[range]*
 
 Some Ex commands accept a line range in front of them.  This is noted as
 [range].  It consists of one or more line specifiers, separated with ',' or
-';'.  When separated with ';' the cursor position will be set to that line
-before interpreting the next line specifier.  The default line specifier for
-most commands is the cursor position, but the commands ":write" and
-":global" have the whole file (1,$) as default.  If more line specifiers are
-given than required for the command, the first one(s) will be ignored.
+';'.
+
+						*:,* *:;*
+When separated with ';' the cursor position will be set to that line
+before interpreting the next line specifier.  This doesn't happen for ','.
+Examples:
+	4,/this line/		from line 4 till match with "this line" after
+				the cursor line.
+	5;/that line/		from line 5 till match with "that line" after
+				line 5.
+
+The default line specifier for most commands is the cursor position, but the
+commands ":write" and ":global" have the whole file (1,$) as default.
+
+If more line specifiers are given than required for the command, the first
+one(s) will be ignored.
 
 Line numbers may be specified with:			*:range*
 	{number}	an absolute line number
@@ -1709,9 +1755,16 @@ Each may be followed (several times) by '+' or '-' and an optional number.
 This number is added or subtracted from the preceding line number.  If the
 number is omitted, 1 is used.
 
+The "/" and "?" after {pattern} are required to separate the pattern from
+anything that follows.
+
 The "/" and "?" may be preceded with another address.  The search starts from
-there.  The "/" and "?" after {pattern} are required to separate the pattern
-from anything that follows.
+there.  The difference from using ';' is that the cursor isn't moved.
+Examples:
+	/pat1//pat2/	Find line containing "pat2" after line containing
+			"pat1", without moving the cursor.
+	7;/pat2/	Find line containing "pat2", after line 7, leaving
+			the cursor in line 7.
 
 The {number} must be between 0 and the number of lines in the file.  A 0 is
 interpreted as a 1, except with the commands tag, pop and read.
@@ -1755,22 +1808,29 @@ three lines:
 4.4.5 Ex special characters				*cmdline_special*
 
 In Ex commands, at places where a file name can be used, the following
-characters have a special meaning.  To avoid the special meaning of '%' and
-'#' insert a backslash before it.
+characters have a special meaning.
 	%	   is replaced with the current filename		*:_%*
 	#	   is replaced with the alternate filename		*:_#*
 	#n	   (where n is a number) is replaced with the filename of
 		   buffer n.  "#0" is the same as "#"
 
+To avoid the special meaning of '%' and '#' insert a backslash before it.
+Detail: The special meaning is always escaped when there is a backslash before
+it, no matter how many backslashes.
+	you type:		result
+	   #			alternate.file
+	   \#			#
+	   \\#			\#
+
+	       *:<cword>* *:<cWORD>* *:<cfile>* *:<afile>* *<afile>* *<cfile>*
 Note: the next four are typed literally, these are not special keys!
-			       *:<cword>* *:<cWORD>* *:<cfile>* *:<afile>*
 	<cword>    is replaced with the word under the cursor
 	<cWORD>    is replaced with the WORD under the cursor (see |WORD|)
 	<cfile>    is replaced with the path name under the cursor
 	<afile>    when executing autocommands, is replaced with the file name
 		   for a file read or write
 
-					*:_%:* *::p* *::h* *::t* *::r* *::e*
+		*filename_modifiers* *:_%:* *::p* *::h* *::t* *::r* *::e*
 After "%", "#", "#n", "<cfile>" or "<afile>" modifiers can be given (in this
 order):
 	:p	   Make file name a full path.  Must be the first modifier.
@@ -1817,7 +1877,7 @@ Examples, when the file name is "src/version.c.gz":
 	:r:r                      src/version
 	:r:r:r                    src/version
 
-								*:_%<*
+					*extension_removal* *:_%<*
 If a "<" is appended to "%", "#", "#n" or "CTRL-V p" the extension of the file
 name is removed (everything after and including the last '.' in the file
 name).  This is included for backwards compatibility with version 3.0, the
@@ -1835,14 +1895,37 @@ name).  This is included for backwards compatibility with version 3.0, the
 	<cfile><	idem, without extension
 
 Note: Where a file name is expected wildcards expansion is done.  On Unix the
-shell is used for this.  Backticks also work, like in ":n `echo *.c`".
+shell is used for this.  Backticks also work, like in 
+	:n `echo *.c`
 But expansion is only done if there are any wildcards before expanding the
-'%', '#', etc..  This avoids expanding wildcards inside a file name.
+'%', '#', etc..  This avoids expanding wildcards inside a file name.  If you
+want to expand the result of <cfile>, add a wildcard character to it.
 Examples: (alternate filename is "?readme?")
 	command		expands to
 	:e #		:e ?readme?
 	:e `ls #`	:e {files matching "?readme?"}
 	:e #.*		:e {files matching "?readme?.*"}
+	:cd <cfile>	:cd {filename under cursor}
+	:cd <cfile>*	:cd {filename under cursor plus "*" and then expanded}
+
+							*filename_backslash*
+For filesystems that use a backslash as directory separator (MS-DOS, Windows,
+OS/2), it's a bit difficult to recognize a backslash that is used to escape
+the special meaning of the next character.  The general rule is: If the
+backslash is followed by a normal filename character, it does not have a
+special meaning.  Therefore "\file\foo" is a valid file name, you don't have
+to type the backslash twice.
+
+And exception is the '$' sign.  It is a valid character in a filename.  But to
+avoid a filename like "$home" to be interpreted as an environment variable, it
+needs to be preceded by a backslash.  Therefore you need to use "/\$home" for
+the file "$home" in the root directory.  A few examples:
+
+	filename	interpreted as
+	$home		expanded to value of environment var $home
+	\$home		file "$home" in current directory
+	/\$home		file "$home" in root directory
+	\\$home		file "\\", followed by expanded $home
 
 
 4.5 The window contents					*window_contents*
@@ -2186,7 +2269,7 @@ Insert mode.  After leaving the Insert mode everything is fine.  Also fmt
 removes all characters with ascii > 128 from the text being formated.
 On some Unix systems this means you have to define the environment-variable
 LC_CTYPE.  If you are using csh then put in your .cshrc following line:
-	setenv LC_CTYPE=iso_8859_1
+	setenv LC_CTYPE iso_8859_1
 
 
 4.8 Using the mouse					*mouse_using*
@@ -2253,9 +2336,9 @@ Copy/paste in xterm with (current mode NOT included in 'mouse'):
 (The same can be done with anything in 'mouse' if you keep the shift key
 pressed while using the mouse)
 
-Note: if you loose the 8th bit when pasting (special characters are translated
-into other characters), you may have to do "stty cs8 -istrip" in your shell
-before starting Vim.
+Note: if you lose the 8th bit when pasting (special characters are translated
+into other characters), you may have to do "stty cs8 -istrip -parenb" in your
+shell before starting Vim.
 
 Thus in an xterm the shift and ctrl keys cannot be used with the mouse.  To
 make it possible to do the mouse commands that require the ctrl modifier, the
@@ -2386,7 +2469,7 @@ To swap the meaning of the left and right mouse buttons:
 			already, use that one.  {not in Vi}
 
 :h[elp] {subject}	Like ":help", additionally jump to the tag
-			{subject}.  {subject} can be a regular expression.
+			{subject}.  {subject} can be a pattern |pattern|.
 			   :help z.	jump to help for any "z" command
 			   :help z\.	jump to the help for "z."
 			If there is no full match for the pattern, or there
@@ -2585,7 +2668,8 @@ the string "[Modified]" if the buffer has been changed.
 			buffer.
 
 :e[dit] #[count]	Edit the [count]th alternate filename (as shown by
-			:files).  This command does the same as [count] CTRL-^.
+			:files).  This command does the same as
+			[count] CTRL-^.
 
 							*:ex*
 :ex [+cmd] [file]	Same as :edit.  {Vi: go from visual to Ex mode}
@@ -2617,6 +2701,7 @@ gf			Edit the file whose name is under or after the
 			name is a hypertext link, that looks like
 			"type://machine/path", only "/path" is used.  For Unix
 			the '~' character is expanded, like in "~user/file".
+			Environment variables are expanded too |expand_env|.
 			{not in Vi}
 
 							*:cd*
@@ -2686,34 +2771,34 @@ The [+cmd] can be used to position the cursor in the newly opened file:
 							*textmode_io*
 When reading a file when the 'textmode' option is off (default for
 non-MS-DOS) the <NL> character is interpreted as end-of-line.  If 'textmode'
-is on (default for MS-DOS), <CR><NL> is also interpreted as end-of-line.
+is on (default for MS-DOS), <CR> <NL> is also interpreted as end-of-line.
 Also see |textmode_read|.
 
 When writing a file when the 'textmode' option is off a <NL> character is
-used to separate lines.  When the 'textmode' option is on <CR><NL> is used.
+used to separate lines.  When the 'textmode' option is on <CR> <NL> is used.
 Also see |textmode_write|.
 
 You can read a file with 'textmode' set and write it with 'textmode' reset.
-This will replace all <CR><NL> pairs by <NL>.  If you read a file with
+This will replace all <CR> <NL> pairs by <NL>.  If you read a file with
 'textmode' reset and write with 'textmode' set, all <NL> characters will be
-replaced with <CR><NL>.
+replaced with <CR> <NL>.
 
 If you start editing a new file and the 'textauto' option is on (which is the
 default), Vim will try to detect whether the lines in the file are separated
-by a single <NL> (as used on Unix and Amiga) or by a <CR><NL> pair (MS-DOS).
-Only when ALL lines end in <CR><NL> the 'textmode' option is set, otherwise it
-is reset.  If the 'textmode' option is set on non-MS-DOS systems the message
-"[textmode]" is shown to remind you that something unusual is happening.  On
-MS-DOS systems you get the message "[notextmode]" if the 'textmode' option is
-not set.
+by a single <NL> (as used on Unix and Amiga) or by a <CR> <NL> pair (MS-DOS).
+Only when ALL lines end in <CR> <NL> the 'textmode' option is set, otherwise
+it is reset.  If the 'textmode' option is set on non-MS-DOS systems the
+message "[textmode]" is shown to remind you that something unusual is
+happening.  On MS-DOS systems you get the message "[notextmode]" if the
+'textmode' option is not set.
 
 If the 'textauto' option is off and 'textmode' is on, but while reading a file
-some lines did not end in <CR><NL>, "[CR missing]" will be included in the
+some lines did not end in <CR> <NL>, "[CR missing]" will be included in the
 file message.
 
 Before editing binary, executable or Vim script files you should set the
 'textmode' and 'textauto' options off.  With 'textmode' on you risk that
-single <NL> characters are unexpectedly replaced with <CR><NL>.  A simple way
+single <NL> characters are unexpectedly replaced with <CR> <NL>.  A simple way
 to do this is by starting Vim with the "-b" option.
 
 
@@ -2868,8 +2953,10 @@ fourth file in the argument list.  This happens when you do ":e file".
 			the previous command |:!|.
 
 The default [range] for the ":w" command is the whole buffer (1,$).
-If a file name is give with ":w" it becomes the alternate file.  This can be
-used when the write fails and you want to try again later with ":w #".
+If a file name is given with ":w" it becomes the alternate file.  This can be
+used, for example, when the write fails and you want to try again later with
+":w #".  This can be switched off by removing the 'A' flag from the
+'cpoptions' option.
 
 
 							*:q* *:quit*
@@ -2981,7 +3068,7 @@ original file fails, there will be an error message telling you that you
 lost the original file.
 
 							*textmode_write*
-If the 'textmode' option is on <CR><NL> is used for end-of-line.  This is
+If the 'textmode' option is on <CR> <NL> is used for end-of-line.  This is
 default for MS-DOS, Win32 and OS/2.  On other systems the message "[textmode]"
 is shown to remind you that an usual end-of-line marker was used.  If the
 'textmode' is not set NL is used for end-of-line.  On MS-DOS, Win32 and OS/2
@@ -3211,8 +3298,8 @@ There are a few things to remember when editing binary files:
   when reading the file.  It is also possible that you get an "out of memory"
   error when reading the file.
 - Make sure the 'textmode' and 'textauto' options are off before loading the
-  file.  In 'textmode' both <CR><NL> and <NL> are considered to end a line
-  and when the file is written the <NL> will be replaced with <CR><NL>.  The
+  file.  In 'textmode' both <CR> <NL> and <NL> are considered to end a line
+  and when the file is written the <NL> will be replaced with <CR> <NL>.  The
   'modelines' option should also be off, because there may be a string like
   ":vi:" in the file that would give unpredictable results.
 - <Nul> characters are shown on the screen as ^@.  You can enter them with
@@ -3299,8 +3386,15 @@ considered part of the command.
 			This can be used when the current file name does not
 			match the right pattern, after changing settings, or
 			to execute autocommands for a certain event.
+			It's possible to use this inside an autocommand too,
+			so you can base the autocommands for one extension on
+			another extension.  Example:
+				:au Bufenter *.cpp so ~/.vimrc_cpp
+				:au Bufenter *.cpp doau BufEnter x.c
+			Be careful for endless loops.  The nesting is limited
+			to 10 levels.
 
-							*autocommand-events*
+					*autocommand-events* *{event}*
 These events are recognized.  Case is ignored, for example "BUFread" and
 "bufread" can be used instead of "BufRead".
 
@@ -3393,9 +3487,10 @@ BufReadPre	BufReadPost	starting to edit an existing file
 FilterReadPre	FilterReadPost	read the temp file with filter output
 FileReadPre	FileReadPost	any other file read
 
-Note that the autocommands for the *ReadPre and *Filter* events are not
-allowed to change the current buffer.  You will get an error message if this
-happens anyway.  This is to prevent the file to be read into the wrong buffer.
+Note that the autocommands for the *ReadPre events and all the Filter events
+are not allowed to change the current buffer.  You will get an error message
+if this happens anyway.  This is to prevent the file to be read into the wrong
+buffer.
 
 Before the *ReadPre event the '[ mark is set to the line just above where the
 new lines will be inserted.
@@ -3442,6 +3537,7 @@ Careful: '[ and '] will change when using commands that change the buffer.
 where a file name is expected (where you can also use "%" for the current file
 name) |:<afile>|.
 
+							*gzip-example*
 Examples for writing compressed files:
   :autocmd! BufWritePost,FileWritePost	*.gz !mv <afile> <afile>:r
   :autocmd  BufWritePost,FileWritePost	*.gz !gzip <afile>:r
@@ -3551,7 +3647,7 @@ the file name (without its leading directory path), but if a path separator
 character (eg '/' on Unix) appears in the pattern, then it will be tested
 against the full file name.  For example:
 
-  :autocmd BufRead */vim/src/*	set wrap
+  :autocmd BufRead */vim/src/*.c	set wrap
 
 Note that using ~ in a file name (for home directory) doesn't work.  Use a
 pattern that matches the full path name, for example "*home/user/.cshrc".
@@ -3647,7 +3743,7 @@ l		or					*l*
 			moving up or down, stay in same screen column (if
 			possible).
 
-							*<Home>*
+							*<Home>* *<kHome>*
 <Home>			To the first character of the line (exclusive).  When
 			moving up or down, stay in same text column (if
 			possible).  Works like "1|", which differs from "0"
@@ -3657,7 +3753,7 @@ l		or					*l*
 ^			To the first non-blank character of the line
 			(exclusive).
 
-							*$* *<End>*
+							*$* *<End>* *<kEnd>*
 $  or <End>		To the end of line and [count - 1] lines downward
 			(inclusive).
 
@@ -3877,7 +3973,7 @@ A sentence is defined as ending at a '.', '!' or '?' followed by either the
 end of a line, or by a space.  {Vi: two spaces} Any number of closing ')',
 ']', '"' and ''' characters my appear after the '.', '!' or '?' before the
 spaces or end of line.  A paragraph and section boundary is also a sentence
-boundary.
+boundary.  The definition of a sentence cannot be changed.
 
 							*paragraph*
 A paragraph begins after each empty line, and also at each of a set of
@@ -4058,7 +4154,8 @@ gD			Goto global Declaration.  When the cursor is on a
 			always starts in line 1.  {not in Vi}
 
 							*CTRL-C*
-CTRL-C			Interrupt current (search) command.
+CTRL-C			Interrupt current (search) command.  Use CTRL-Break on
+			MS-DOS |CTRL-Break|.
 
 While typing the search pattern the current match will be shown if the
 'incsearch' option is on.  Remember that you still have to finish the search
@@ -4069,7 +4166,7 @@ These commands search for the specified pattern.  With "/" and "?" an
 additional offset may be given.  There are two types of offsets: line offsets
 and character offsets.  {the character offsets are not in Vi}
 
-							*search_offset*
+					*search_offset* *{offset}*
 The offset gives the cursor position relative to the found match:
     [num]	[num] lines downwards, in column 1
     +[num]	[num] lines downwards, in column 1
@@ -4159,7 +4256,8 @@ the "#" is under your left hand middle finger (search to the left and up) and
 the "*" is under your right hand middle finger (search to the right and down).
 
 
-The definition of a pattern:				*search_pattern*
+The definition of a pattern:		*search_pattern* *pattern* *[pattern]*
+					*regular_expression*
 
 Patterns may contain special characters, depending on the setting of the
 'magic' option.
@@ -4223,28 +4321,46 @@ Patterns may contain special characters, depending on the setting of the
 			character
 	[]	\[]	A range. This is a sequence of characters	*/[]*
 			enclosed in "[]" or "\[]".  It matches any	*/\[]*
-			single character from the sequence.  If the
-			sequence begins with "^", it matches any
-			single character NOT in the sequence.  If two
-			characters in the sequence are separated by '-', this
-			is shorthand for the full list of ASCII characters
-			between them.  E.g., "[0-9]" matches any decimal
-			digit.  To include a literal "]" in the sequence, make
-			it the first character (following a possible "^").
-			E.g., "[]xyz]" or "[^]xyz]".  To include a literal
-			'-', make it the first or last character.
+			single character from the sequence.  E.g., "[xyz]"
+			matches any 'x', 'y' or 'z'.
+			- If the sequence begins with "^", it matches any
+			  single character NOT in the sequence: "[^xyz]"
+			  matches anything but 'x', 'y' and 'z'.
+			- If two characters in the sequence are separated by
+			  '-', this is shorthand for the full list of ASCII
+			  characters between them.  E.g., "[0-9]" matches any
+			  decimal digit.
+			- To include a literal ']', '^', '-' or '\' in the
+			  sequence, put a backslash before it: "[xyz\]]",
+			  "[\^xyz]", "[xy\-z]" and "[xyz\\]".
+			  For ']' you can also make it the first character
+			  (following a possible "^"):  "[]xyz]" or "[^]xyz]"
+			  {not in Vi}.
+			  For '-' you can also make it the first or last
+			  character: "[-xyz]", "[^-xyz]" or "[xyz-]".
+			  For '\' you can also let it be followed by any
+			  character that's not in "^]-\etrb".  "[\xyz]"
+			  matches '\', 'x', 'y' and 'z'.  It's better to use
+			  "\\" though, future expansions may use other
+			  characters after '\'.
+			- The following translations are accepted when the 'l'
+			  flag is not included in 'cpoptions' {not in Vi}:
+				\e	<Esc>
+				\t	<Tab>
+				\r	<CR>
+				\b	<BS>
 
 If the 'ignorecase' option is on, the case of letters is ignored.
 
-It is impossible to have a pattern that contains a line break.
+It is impossible to have a pattern that contains a line break (Sorry!).
 
 Examples:
 ^beep(			Probably the start of the C function "beep".
 
 [a-zA-Z]$		Any alphabetic character at the end of a line.
 
-\<\I\i		or
-\(^\|[^a-zA-Z0-9_]\)[a-zA-Z_]\+[a-zA-Z0-9_]*
+\<\I\i*		or
+\(^\|[^a-zA-Z0-9_]\)[a-zA-Z_][a-zA-Z0-9_]*
 			A C identifier (will stop in front of it).
 
 \(\.$\|\. \)		A period followed by end-of-line or a space.
@@ -4385,12 +4501,12 @@ operator or put command has been used yet in the current file.
 							*``*
 ``			To the position before latest jump (exclusive).
 
-							*'"*
+							*'quote*
 '"			To the first non-blank character of the line where
 			the cursor was the last time the current buffer was
 			exited (linewise).  {not in Vi}.
 
-							*`"*
+							*`quote*
 `"			To the cursor position when last exiting the current
 			buffer (exclusive).  {not in Vi}.
 
@@ -4566,8 +4682,8 @@ CTRL-D			Scroll window Downwards in the buffer.  The number of
 			lines, instead of file lines; makes a difference when
 			lines wrap}
 
-<S-Down>	or					*<S-Down>*
-<PageDown>	or					*<PageDown>* *CTRL-F*
+<S-Down>	or				*<S-Down>* *<kPageDown>*
+<PageDown>	or				*<PageDown>* *CTRL-F*
 CTRL-F			Scroll window [count] pages Forwards (downwards) in
 			the buffer.  See also 'startofline' option.
 
@@ -4591,7 +4707,7 @@ CTRL-U			Scroll window Upwards in the buffer.  The number of
 			lines, instead of file lines; makes a difference when
 			lines wrap}
 
-<S-Up>		or					*<S-Up>*
+<S-Up>		or					*<S-Up>* *<kPageUp>*
 <PageUp>	or					*<PageUp>* *CTRL-B*
 CTRL-B			Scroll window [count] pages Backwards (upwards) in the
 			buffer.  See also 'startofline' option.
@@ -4652,12 +4768,12 @@ For these two commands the cursor follows the screen.  If the character that
 the cursor is on is moved off the screen, the cursor is moved to the closest
 character that is on the screen.  The value of 'sidescroll' is not used.
 
-							*zs*
+						*zs*
 zs			Scroll the screen horizontally to position the cursor
 			at the start (left side) of the screen.  This only
 			works when 'wrap' is off.  {not in Vi}
 
-							*ze*
+						*ze*
 ze			Scroll the screen horizontally to position the cursor
 			at the end (right side) of the screen.  This only
 			works when 'wrap' is off.  {not in Vi}
@@ -4701,6 +4817,7 @@ CTRL-T			Jump to [count] older entry in the tag stack
 :tags			Show the contents of the tag stack.  The active
 			entry is marked with a '>'.  {not in Vi}
 
+							*tags*
 A tag is an identifier that appears in the "tags" file.  It is a sort of label
 that can be jumped to.  For example: In C programs each function name can be
 used as a tag.
@@ -4709,6 +4826,14 @@ With the ":tag" command the cursor will be positioned on the tag.  With the
 CTRL-] command, the keyword on which the cursor is standing is used as the
 tag.  If the cursor is not on a keyword, the first keyword to the right of the
 cursor is used.
+
+							*telnet-CTRL-]*
+CTRL-] is the the default telnet escape key.  When you type CTRL-] to jump to
+a tag, you will get the telnet prompt instead.  Most versions of telnet allow
+changing or disabling the default escape key.  See the telnet man page.  You
+can 'telnet -E <Hostname>' to disable the escape character, or 'telnet -e
+<EscapeCharacter> <Hostname>' to specify another escape character.  If
+possible, try to use "rsh" instead of "telnet" to avoid this problem.
 
 							*tag_priority*
 When there are multiple matches for a tag, this priority is used:
@@ -4773,45 +4898,69 @@ A tags file can be created with the external command 'ctags'.  It will
 contain a tag for each function.  Some versions of 'ctags' will also make a
 tag for each "#defined" macro.
 
-The lines in the tags file should have this format:
+The lines in the tags file must have one of these two formats:
 
 	{tag}{separator}{filename}{separator}{command}
+	{filename}:{tag}{separator}{filename}{separator}{command}
 
-{tag}		the identifier
-{separator}	one or more <Tab> or space characters
-{filename}	the file that contains the definition of {tag}
-{command}	the Ex command that positions the cursor on the tag.
+The first is a normal tag, the second is a static tag.  A normal tag is often
+used for functions that are global, also referenced in other files.  A static
+tag is often used for functions that are local, only referenced in the file
+{filename}.  Note that for the static tag, the two occurances of {filename}
+must be exactly the same.  Also see |tags_option| below, for how static tags
+are used.
 
-The identifier normally is the name of a function, but it can be any
-identifier.  There is one special form for local (static) functions:
-{filename}:{identifier}.  Some ctags programs make use of this to separate
-local (static) functions from global functions.
-(Detail: Vim compares only the last part of the filename and ignores any
-path before it).
+{tag}		The identifier.  Normally the name of a function, but it can
+		be any identifier.  It cannot contain white space.
+{separator}	One or more <Tab> or space characters.
+{filename}	The file that contains the definition of {tag}.  It may
+		contain environment variables and wildcards (although the use
+		of wildcards is doubtful).
+{command}	The Ex command that positions the cursor on the tag.
 
 							*tag_search*
-The command can be any Ex command, but normally it is a search command like
-	"/^main(argc, argv)"
-If it is a search command, and the search fails, another try is done ignoring
-case.  If that fails too, a search is done for:
-	"^main[ \t]*("
-(the tag with '^' prepended and "[ \t]*(" appended).  When using function
-names, this will find the function name when it is in column 0.  This will
-help when the arguments to the function have changed since the tags file was
-made.  If this search also fails another search is done with:
-	"^[#a-zA-Z_].*main[ \t]*("
-This means: A line starting with '#' or an identifier and containing the tag
-followed by white space and a '('.  This will find macro names and function
-names with a type prepended.  {the extra searches are not in Vi}.
+The command can be any Ex command, but often it is a search command.
+Examples:
+	tag1	file1	/^main(argc, argv)/
+	tag2	file2	108
 
+The command is always executed with 'magic' not set.  The only special
+characters in a search pattern are "^" (begin-of-line) and "$" (end-of-line).
+See |search_pattern|.  Note that you must put a backslash before each
+backslash in the search text.  This is for backwards compatibility with Vi.
+
+If the command is a normal search command (it starts end ends with "/" or
+"?"), some special handling is done:
+- Searching starts on the current line of the current file, unless the tag is
+  in another file, in which case the search starts in line 1 of that file.
+  The direction of the search is forward for "/", backward for "?".
+- If the search fails, another try is done ignoring case.  If that fails too,
+  a search is done for:
+	"^tagname[ \t]*("
+  (the tag with '^' prepended and "[ \t]*(" appended).  When using function
+  names, this will find the function name when it is in column 0.  This will
+  help when the arguments to the function have changed since the tags file was
+  made.  If this search also fails another search is done with:
+	"^[#a-zA-Z_].*tagname[ \t]*("
+  This means: A line starting with '#' or an identifier and containing the tag
+  followed by white space and a '('.  This will find macro names and function
+  names with a type prepended.  {the extra searches are not in Vi}.
+
+							*tag_security*
 Note that Vim forbids some commands, for security reasons.  This works like
 using the 'secure' option for exrc/vimrc files in the current directory.  See
-|trojan_horse|. {this security prevention is not present in Vi}.
+|trojan_horse|.
+When the {command} changes a buffer, you will get a warning message:
+	"WARNING: tag command changed a buffer!!!"
+In a future version changing the buffer will be impossible.  All this for
+security reasons: Somebody might hide a nasty command in the tags file, which
+would otherwise go unnoticed.  Example: ":$d|/tag-function-name/".
+{this security prevention is not present in Vi}.
 
 In Vi the ":tag" command sets the last search pattern when the tag is searched
 for.  In Vim this is not done, the previous search pattern is still remembered,
 unless the 't' flag is present in 'cpoptions'.  The search pattern is always
-put in the search history.
+put in the search history, so you can modify it if searching fails.
 
 							*emacs_tags*
 Emacs style tag files are supported if Vim was compiled with EMACS_TAGS
@@ -4849,6 +4998,11 @@ In this example the tag will first be searched for in the file "tags" in the
 directory where the current file is.  Next the "tags" file in the current
 directory.  If it is not found there, then the file "/home/user/commontags"
 will be searched for the tag.
+
+This can be switched off by including the 'd' flag in 'cpoptions', to make
+it Vi compatible.  "./tags" will than be the tags file in the current
+directory, instead of the tags file in the directory where the current file
+is.
 
 Instead of the comma a space may be used.  Then a backslash is required for
 the space to be included in the string option:
@@ -4965,7 +5119,8 @@ matches the pattern "^# *define" it is not considered to be a comment.
 			under the cursor.  The search starts at the beginning
 			of the file.  Lines that look like a comment are
 			ignored (see 'comments' option).  If a count is given,
-			the count'th matching line is displayed.  {not in Vi}
+			the count'th matching line is displayed, and comment
+			lines are not ignored.  {not in Vi}
 
 							*]i*
 ]i			like "[i", but start at the current cursor position.
@@ -5002,7 +5157,8 @@ matches the pattern "^# *define" it is not considered to be a comment.
 			under the cursor.  The search starts at the beginning
 			of the file.  Lines that look like a comment are
 			ignored (see 'comments' option).  If a count is given,
-			the count'th matching line is jumped to.  {not in Vi}
+			the count'th matching line is jumped to, and comment
+			lines are not ignored.  {not in Vi}
 
 							*]_CTRL-I*
 ] CTRL-I		like "[ CTRL-I", but start at the current cursor
@@ -5022,7 +5178,8 @@ CTRL-W i		Open a new window, with the cursor on the first line
 			search starts at the beginning of the file.  Lines
 			that look like a comment line are ignored (see
 			'comments' option).  If a count is given, the count'th
-			matching line is jumped to.  {not in Vi}
+			matching line is jumped to, and comment lines are not
+			ignored.  {not in Vi}
 
 							*:isp* *:isplit*
 :[range]isp[lit][!] [count] [/]pattern[/]
@@ -5124,7 +5281,7 @@ A			Append text at the end of the line [count] times.
 i			Insert text before the cursor [count] times.
 
 							*I*
-I			Insert text before the first CHAR on the line
+I			Insert text before the first non-blank in the line
 			[count] times.
 
 							*gI*
@@ -5173,6 +5330,10 @@ into the buffer.  They can be undone.  They cannot be repeated with the "."
 command.  They work on a line basis, insertion starts below the line in which
 the cursor is, or below the specified line.  To insert text above the first
 line use the command ":0r {name}".
+
+If a file name is given with ":r", it becomes the alternate file.  This can be
+used, for example, when you want to edit that file instead: ":e! #".  This can
+be switched off by removing the 'a' flag from the 'cpoptions' option.
 
 							*textmode_read*
 The <NL> character is recognized as end-of-line marker.  If the 'textmode'
@@ -5565,22 +5726,25 @@ with ".".  There cannot be a comment (with '"') after the ":!" command.
 						*:s* *:substitute*
 :[range]s[ubstitute]/{pattern}/{string}/[g][c][r][p] [count]
 			For each line in [range] replace {pattern} with
-			{string}.  See below for the flags.
+			{string}.  See |:s_flags| for the [g], [c], [r] and
+			[p] flags.
 
 :[range]s[ubstitute] [g][c][r] [count]
 :[range]&[g][c][r] [count]			*:&*
 			Repeat last :substitute with same search pattern and
-			substitute string.  The flags may be different (see
-			below).
+			substitute string.  The flags [g], [c] and [r] may be
+			different (see |:s_flags|).
 
 :[range]~[g][c][r] [count]			*:~*
 			Repeat last substitute with same substitute string
 			but with last used search pattern.  This is like
-			"&r".  See explanation for [r] below.
+			"&r".  See explanation for [r], [c] and [g] below
+			|:s_flags|.
 
 						*&*
 &			Synonym for ":s//~/" (repeat last substitute).
 
+							*:s_flags*
 The arguments that can be given to the substitute commands:
 [g]	All occurrences in the line are replaced.  Otherwise only the first
 	occurrence in the line is replaced.  If the 'edcompatible' option is
@@ -5617,8 +5781,8 @@ For compatibility with Vi these two execptions are allowed:
 "\&{string}&" does the same as "//{string}/".
 
 Instead of the '/' which surrounds the pattern and replacement string, you
-can use any other character, but not an alphanumeric character, '"' or '|'
-or '#'.  This is useful if you want to include a '/' in the search pattern or
+can use any other character, but not an alphanumeric character, '\', '"' or
+'|'.  This is useful if you want to include a '/' in the search pattern or
 replacement string.  Example: ":s+/+//+"
 
 For the definition of a pattern see 6.6, "Pattern searches" |search_pattern|.
@@ -5784,10 +5948,10 @@ example, to include both "-" and "->", use
 	:set comments=f:->,f:-
 
 A three-piece comment must always be given as start-middle-end, with no other
-parts in between.  An example of a three-piece comment is "sr:/*,mb:*,el:*/" for
-C-comments.  To avoid recognizing "*ptr" the 'b' flag is included for the
+parts in between.  An example of a three-piece comment is "sr:/*,mb:*,el:*/"
+for C-comments.  To avoid recognizing "*ptr" the 'b' flag is included for the
 middle.  For three-piece comments the text after the start and middle is
-checked for the appearance of the end.  If it is, the comment will not
+checked for the appearance of the end.  If it is found, the comment will not
 continue below.  The middle part must be present, because otherwise Vim can't
 recognize the middle lines.
 
@@ -6303,7 +6467,7 @@ The next three commands always work on whole lines.
 			given by {address}.
 
 
-13. Visual mode						*Visual_mode*
+13. Visual mode					*Visual_mode* *visual_mode*
 ===============
 
 Visual mode is a flexible and easy way to select a piece of text for an
@@ -6431,7 +6595,7 @@ If you want to highlight exactly the same area as the last time, you can use
 "gv" |gv| |v_gv|.
 
 The operators that can be used are:
-	~	switch case					|v_tilde|
+	~	switch case					|v_~|
 	d	delete						|v_d|
 	c	change						|v_c|
 	y	yank						|v_y|
@@ -6439,12 +6603,12 @@ The operators that can be used are:
 	<	shift left (1)(*)				|v_<|
 	!	filter through external command (1)		|v_!|
 	=	filter through 'equalprg' option command (1)	|v_=|
-	Q	format lines to 'textwidth' length (1)(obsolete)|v_Q|
+	Q	format lines to 'textwidth' length (1)(obsolete) |v_Q|
 	gq	format lines to 'textwidth' length (1)		|v_gq|
 
 The objects that can be used are:
 	a	word						|v_a|
-	A	WORD (see |WORD|)				|v_A|
+	A	WORD						|v_A|
 	s	sentence					|v_s|
 	p	paragraph					|v_p|
 	P	block						|v_P|
@@ -6497,7 +6661,7 @@ it.  In a future release ":" may work on partial lines.
 
 Here is an example, to replace the selected text with the output of "date":
 
-:vmap _a <Esc>a<CR><Esc>`\<i<CR><Esc>!!date<CR>kJJ
+	:vmap _a <Esc>a<CR><Esc>`\<i<CR><Esc>!!date<CR>kJJ
 
 (In the <> notation |<>|, when typing it you should type it literally; you
 need to remove the 'B' and '<' flags from 'cpoptions')
@@ -6509,6 +6673,17 @@ a<CR><Esc>	break the line after the Visual area
 i<CR><Esc>	break the line before the Visual area
 !!date<CR>	filter the Visual text through date
 kJJ		Join the lines again
+
+							*visual_search*
+Here is an idea for a mapping that makes it possible to do a search for the
+selected text:
+
+	:vmap X y/<C-R>"<CR>
+
+(In the <> notation |<>|, when typing it you should type it literally; you
+need to remove the 'B' and '<' flags from 'cpoptions')
+
+Note that special characters (like '.' and '*') will cause problems.
 
 
 14. Various commands					*various*
@@ -6568,15 +6743,18 @@ ga			Print the ascii value of the character under the
 
 :norm[al][!] {commands}					*:norm* *:normal*
 			Execute Normal mode commands {commands}.  This makes
-			it possible to execute normal mode commands typed on
+			it possible to execute Normal mode commands typed on
 			the command line.  {commands} is executed like it is
 			typed.  For undo all commands are undone together.  If
-			the [!] is given, mappings will not be used.  If
+			the [!] is given, mappings will not be used.
+			{commands} should be a complete command.  If
 			{commands} does not finish a command, more characters
-			need to be typed.  Mostly useful for autocommands.
-			This command cannot be followed by another command,
-			since any '|' is considered part of the command.
-			{not in vi}
+			need to be typed, but the display isn't updated while
+			doing this.
+			Mostly useful for autocommands.  This command cannot
+			be followed by another command, since any '|' is
+			considered part of the command.  {not in vi, of
+			course}
 
 							*:sh* *:shell*
 :sh[ell]		Escape to a shell (name from 'shell' option).
@@ -6609,9 +6787,9 @@ ga			Print the ascii value of the character under the
 :endif			Every Ex command in between the ":if" and ":endif" is
 			ignored.  These two commands are just to allow for
 			future expansions in a backwards compatible way.
-			Nesting is allowed.  In Vim version 5 you are expected
-			to be able to do something like
-				:if version >= "5.0"
+			Nesting is allowed.  In Vim version 5 you will be able
+			to use this:
+				:if version >= 500
 				:  version-5-specific-command
 				:endif
 			{not in Vi}
@@ -6638,7 +6816,7 @@ K			Run a program to lookup the keyword under the
 
 [N]gs							*gs* *:sl* *:sleep*
 :[N]sl[eep] [N]		Do nothing for [N] seconds.  Can be interrupted with
-			CTRL-C (CTRL-break on MS-DOS).  "gs" stands for "goto
+			CTRL-C (CTRL-Break on MS-DOS).  "gs" stands for "goto
 			sleep".  While sleeping the cursor is positioned in
 			the text (if visible).  {not in Vi}
 
@@ -6685,12 +6863,11 @@ changed or deleted its mark disappears.  The default for [range] is the whole
 buffer (1,$).  Use "CTRL-C" to interrupt the command.  If an error message is
 given for a line the global command aborts.
 
-To repeat a non-Ex command, you will have to put the command in a file and
-use "source!".  For example:
-	:g/pat/so! scriptfile
-Make sure that the scriptfile ends with a whole command, otherwise Vim will
-wait for you to type the rest of the command for each match.  The screen will
-not have been updated, so you don't know what you are doing.
+To repeat a non-Ex command, you can use the ":normal" command:
+	:g/pat/normal {commands}
+Make sure that {commands} ends with a whole command, otherwise Vim will wait
+for you to type the rest of the command for each match.  The screen will not
+have been updated, so you don't know what you are doing.  See |:normal|.
 
 The undo/redo command will undo/redo the whole global command at once.
 The previous context mark will only be set once (with "''" you go back to
@@ -6734,9 +6911,9 @@ q			Stops recording.  (Implementation note: The 'q' that
 			some versions} Future: Will execute the register for
 			each line in the address range.
 
-:[addr]@:		Repeat last command line [count] times.  First set
-			cursor at line [addr] (default is current line).
-			{Vi: only in some versions}
+							*:@:*
+:[addr]@:		Repeat last command line.  First set cursor at line
+			[addr] (default is current line).  {not in Vi}
 
 							*:@@*
 :[addr]@@		Repeat the previous :@<0-9a-z">.  First set cursor at
@@ -6838,6 +7015,9 @@ be confusing.  Try it out to get used to it.
 
 When all changes have been undone the buffer is not considered to be changed.
 Vim can then be exit with ":q" instead of ":q!".  {this is not in Vi}
+Note that this is relative to the last write of the file.  Typing "u" after
+":w" actually changes the buffer, compared to what was written, so the buffer
+is considered changed then.
 
 The numbered registers can also be used for undoing deletes.  Each time you
 delete text, it is put into register "1.  The contents of register "1 are
@@ -6953,7 +7133,7 @@ and display mappings for both.  In Vim you can use the ":nmap", "vmap",
 ":cmap" and ":imap" commands to enter mappings for each mode separately.
 When listing mappings the character in column 1 is
 
-	char		mode
+	CHAR		MODE
 	<Space>		Normal and Visual
 	 n		Normal
 	 v		Visual
@@ -6961,7 +7141,9 @@ When listing mappings the character in column 1 is
 	 i		Insert
 	 c		Command-line
 
-Note: When using mappings for Visual mode, you can use the '<' mark, which
+A "*" just before the {rhs} indicates that it is non-remappable.
+
+Note: When using mappings for Visual mode, you can use the "'<" mark, which
 is the start of the last selected Visual area |'<|.
 
 Everything from the first non-blank after {lhs} up to the end of the line
@@ -6974,6 +7156,9 @@ and abbreviations.  When 'cpoptions' does not contain 'B', a backslash can
 also be used like CTRL-V.  The <> notation can be fully used then |<>|.  But
 you cannot use "<C-V>" like CTRL-V to escape the special meaning of what
 follows.
+							*map_CTRL_C*
+It's not possible to use a CTRL-C in the {lhs}.  You just can't map CTRL-C.
+The reason is that CTRL-C must always be available to break a running command.
 
 							*map_space_in_lhs*
 To include a space in {lhs} precede it with a CTRL-V (type two CTRL-Vs for
@@ -7019,12 +7204,27 @@ and CTRL-X is not mapped.  This was done to be able to use all the named
 registers and marks, even when the command with the same name has been
 mapped.
 
-Some examples (given as you type them; e.g., the "^V" is CTRL-V which you
-type, but will not show up on the screen):
+							*map-which-keys*
+If you are going to map something, you will need to choose which key(s) to use
+for the {lhs}.  You will have to avoid keys that are used for Vim commands,
+otherwise you would not be able to use those commands anymore.  Here are a few
+suggestions:
+- Function keys <F2>, <F3>, etc..  Also the shifted function keys.  Note that
+  <F1> is already used for the help command.
+- Meta-keys (with the ALT key pressed).
+- Use the "_" character and then any other character.  The "_" command does
+  exist in Vim (see |_|), but you probably never use it.
 
-	:map g /foo^V^Mcwbar^V^[	(replace next "foo" with "bar")
-	:map! qq quadrillion questions
+							*map-examples*
+A few examples (given as you type them, for "<CR>" you type four characters;
+the '<' flag must not be present in 'cpoptions' for this to work).
 
+	:map <F3>  o#include 
+	:map <M-g> /foo<CR>cwbar<Esc>
+	:map _x    d/END/e<CR>
+	:map! qq   quadrillion questions
+
+							*map-typing*
 Vim will compare what you type with the start of a mapped sequence.  If there
 is an incomplete match, it will get more characters until there either is a
 complete match or until there is no match at all.  Example: If you map! "qq",
@@ -7139,12 +7339,12 @@ You can see the name of the current swap file being used with the command:
 	:sw[apname]					*:sw* *:swapname*
 
 The name of the swap file is normally the same as the file you are editing,
-with the extension ".swp".  On MS-DOS and Win32 machines and when the
-'shortname' option is on, any '.' in the original file name is replaced with
-'_'.  If this file already exists (e.g., when you are recovering from a crash)
-a warning is given and another extension is used, ".swo", ".swn", etc.  An
-existing file will never be overwritten.  The swap file is deleted as soon as
-Vim stops editing the file.
+with the extension ".swp".  On MS-DOS machines and when the 'shortname' option
+is on, any '.' in the original file name is replaced with '_'.  If this file
+already exists (e.g., when you are recovering from a crash) a warning is given
+and another extension is used, ".swo", ".swn", etc.  An existing file will
+never be overwritten.  The swap file is deleted as soon as Vim stops editing
+the file.
 
 Technical: The replacement of '.' with '_' is done to avoid problems with
 	   MS-DOS compatible filesystems (e.g., crossdos, multidos).  If Vim
@@ -7271,6 +7471,12 @@ This is also handy when the swap file is in another directory than expected.
 If this still does not work, see what file names Vim reports and rename the
 files accordingly.  Check the 'directory' option to see where Vim may have
 put the swap file.
+
+Note: Vim tries to find the swap file by searching the directories in the
+'dir' option, looking for files that match "filename.sw?".  If wildcard
+expansion doesn't work (e.g., when the 'shell' option is invalid), Vim does a
+desparate try to find the file "filename.swp".  If that fails too, you will
+have to give the name of the swapfile itself to be able to recover the file.
 
 Another way to do recovery is to start Vim and use the ":recover" command.
 This is easy when you start Vim to edit a file and you get the "ATTENTION:
@@ -7399,7 +7605,7 @@ at the end of the list.  The number of options is quite large.  The output of
 "set all" probably does not fit on the screen, causing Vim to give the
 "--more--" message.  See the 'more' option.
 
-							*:set_env*
+						*:set_env* *expand_env*
 Environment variables in most string options will be expanded.  If the
 environment variable exists the '$' and the following environment variable
 name is replaced with its value.  If it does not exist the '$' and the name
@@ -7411,6 +7617,13 @@ appended to the value of the environment variable.  Examples:
 
 Using "~" is like using "$HOME", but it is only recognized at the start of an
 option and after a space or comma.
+
+On Unix systems the form "${HOME}" can be used too.  The name between {} can
+contain non-id characters then.  Note that if you want to use this for the
+"gf" command, you need to add the '{' and '}' characters to 'isfname'.
+
+Note the maximum lenght of an expanded option is limited.  How much depends on
+the system, mostly it is something like 256 or 1024 characters.
 
 							*option_backslash*
 To include white space in a string option value it has to be preceded with a
@@ -7761,7 +7974,7 @@ comments (com)		string	(default
 				"sr:/*,mb:*,el:*/,://,b:#,:%,:XCOMM,n:>,fb:-")
 			local to buffer
 			{not in Vi}
-	A comma separated list of patterns that can start a comment line.  See
+	A comma separated list of strings that can start a comment line.  See
 	|format_comments|.  See |option_backslash| about using backslashes to
 	insert a space.
 
@@ -7779,7 +7992,7 @@ compatible (cp)		toggle	(default off, on when compiled with COMPATIBLE
 	backspace	0		normal backspace
 	backup		off		no backup file
 	cindent		off		no C code indentation
-	cpoptions	"bBcefFkmorsStwx$!%<"	vi-compatible flags
+	cpoptions	"aAbBcdefFklmorsStwx$!%<"	vi-compatible flags
 	digraph		off		no digraphs
 	esckeys		off		no <Esc>-keys in Insert mode
 	expandtab	off		tabs not expanded to spaces
@@ -7815,7 +8028,7 @@ compatible (cp)		toggle	(default off, on when compiled with COMPATIBLE
 	writebackup	off		no backup file written
 
 						*'cpoptions'* *'cpo'*
-cpoptions (cpo)		string	(default "BceFs", unless compiled with
+cpoptions (cpo)		string	(default "aABceFs", unless compiled with
 				COMPATIBLE defined, then all flags are
 				included)
 			global
@@ -7826,6 +8039,12 @@ cpoptions (cpo)		string	(default "BceFs", unless compiled with
 	for 'compatibleoptions'.  Commas can be added for readability.
 
 	    contains	behaviour
+		a	When included, a ":read" command with a file name
+			argument will set the alternate filename for the
+			current window.
+		A	When included, a ":write" command with a file name
+			argument will set the alternate filename for the
+			current window.
 		b	"\|" in a ":map" command is recognized as the end of
 			the map command.  The '\' is included in the mapping,
 			the text after the '|' is interpreted as the next
@@ -7854,6 +8073,9 @@ cpoptions (cpo)		string	(default "BceFs", unless compiled with
 			one character from the cursor position.  With 'c'
 			"abababababab" only gets three matches when repeating
 			"/abab", without 'c' there are five matches.
+		d	Using "./" in the 'tags' option doesn't mean to use
+			the tags file relative to the current file, but the
+			tags file in the current directory.
 		e	When executing a register with ":@r", always add a
 			<CR> to the last line, also when the register is not
 			linewise.  If this flag is not present, the register
@@ -7874,6 +8096,10 @@ cpoptions (cpo)		string	(default "BceFs", unless compiled with
 				'k' included:   "^[OA"   (3 characters)
 				'k' excluded:   "<Key>"  (one key code)
 			Also see the '<' flag above.
+		l	Backslash in a [] range in a search pattern is taken
+			literally, only "\]" is special  See |/[]|
+			   'l' included: "/[ \t]"  finds <Space>, '\' and 't'
+			   'l' excluded: "/[ \t]"  finds <Space> and <Tab>
 		m	When included, a showmatch will always wait half a
 			second.  When not included, a showmatch will wait half
 			a second or until a character is typed.  |'showmatch'|
@@ -8080,8 +8306,8 @@ expandtab (et)		toggle	(default off)
 	on, use CTRL-V<Tab>.  See also ":retab" command in 11.3 |:retab|
 	and section 4.3.4 |ins_expandtab|.
 
-						*'exrc'* *'noexrc'*
-exrc			toggle (default off)
+					*'exrc'* *'ex'* *'noexrc'* *'noex'*
+exrc (ex)		toggle (default off)
 			global
 			{not in Vi}
 	Enables the reading of .vimrc, .exrc and .gvimrc in the current
@@ -8386,6 +8612,9 @@ isident (isi)	string	(default for MS-DOS, Win32 and OS/2:
 	Identifiers are used in recognizing environment variables and after
 	a match of the 'define' option.  See 'isfname' for a description of
 	the format of this option.
+	Careful: If you change this option, it might break expanding
+	environment variables.  E.g., when '/' is included and Vim tries to
+	expand "$HOME/.viminfo".  Maybe you should change 'iskeyword' instead.
 
 						*'iskeyword'* *'isk'*
 iskeyword (isk)	     string (default for MS-DOS and Win32:
@@ -8603,7 +8832,7 @@ more			toggle	(default on, off when compiled with COMPATIBLE
 	     <CR> or <NL>   for one more line.
 	     <Space>        for the next page.
 	     'd'            for down half a page.
-	     'q' or CTRL-C  to stop the listing.
+	     'q', <Esc> or CTRL-C  to stop the listing.
 	     ':'            to stop the listing and enter a command line.
 	Any other key causes the meaning of the keys to be displayed.
 	When this option is off there are no pauses, the listing continues
@@ -8729,6 +8958,8 @@ path (pa)		string	(default on Unix: ".,/usr/include,,"
 		:set path=.,c:/include
 	Don't forget "." or files won't even be found in the same directory as
 	the file!
+	The maximum lenght is limited.  How much depends on the system, mostly
+	it is something like 256 or 1024 characters.
 
 				   *'readonly'* *'ro'* *'noreadonly'* *'noro'*
 readonly (ro)		toggle	(default off)
@@ -8887,6 +9118,11 @@ shellpipe (sp)		string	(default ">", "| tee", "|& tee" or "2>&1| tee")
 	and the other initializations, so that when the 'shell' option is set
 	there, the 'shellpipe' option changes automatically, unless it was
 	explicitly set before.
+	When 'shellpipe' is set to an empty string, no redirection of the
+	":make" output will be done.  This is useful if you use a 'makeprg'
+	that writes to 'errorfile' by itself.  If you want no piping, but do
+	want to include the 'errorfile', set 'shellpipe' to a single space.
+	Don't forget to precede the space with a backslash: ":set sp=\ ".
 	In the future pipes may be used for filtering and this option will
 	become obsolete (at least for Unix).
 
@@ -8958,44 +9194,45 @@ shortmess (shm)		string	(default "")
 	file messages, for example  with CTRL-G, and to avoid some other
 	messages.  It is a list of flags:
 	 flag	meaning when present
-	  l	use "999L, 888C" instead of "999 lines, 888 characters"
-	  m	use "[+]" instead of "[Modified]"
-	  r	use "[RO]" instead of "[readonly]"
-	  x	use "[tx]" instead of "[textmode]" and "[notx]" instead of
-		"[notextmode]"
 	  f	use "(3 of 5)" instead of "(file 3 of 5)"
 	  i	use "[noeol]" instead of "[Incomplete last line]"
+	  l	use "999L, 888C" instead of "999 lines, 888 characters"
+	  m	use "[+]" instead of "[Modified]"
 	  n	use "[New]" instead of "[New File]"
+	  r	use "[RO]" instead of "[readonly]"
 	  w	use "[w]" instead of "written" for file write message.
+	  x	use "[tx]" instead of "[textmode]" and "[notx]" instead of
+		"[notextmode]"
 	  a	all of the above abbreviations
 
 	  o	overwrite message for writing a file with subsequent message
 		for reading a file (useful for ":wn" or when 'autowrite' on)
-	  W	don't give "written" or "[w]" when writing a file
 	  s	don't give "search hit BOTTOM, continuing at TOP" or "search
 		hit TOP, continuing at BOTTOM" messages
 	  t	trunctate file message at the start if it is too long to fit
 		on the command line, "<" will appear in the left most column.
+	  W	don't give "written" or "[w]" when writing a file
+
 	This gives you the opportunity to avoid that a change between buffers
 	requires you to hit return, but still gives as useful a message as
 	possible for the space available.  To get the whole message that you
 	would have got with 'shm' empty, use ":file!"
 	Useful values:
-	    shm=	-- No abbreviation of message.
-	    shm=a	-- Abbreviation, but no loss of information.
-	    shm=at	-- Abbreviation, and truncate message when necessary.
+	    shm=	No abbreviation of message.
+	    shm=a	Abbreviation, but no loss of information.
+	    shm=at	Abbreviation, and truncate message when necessary.
 
 				 *'shortname'* *'sn'* *'noshortname'* *'nosn'*
 shortname (sn)		toggle	(default off)
 			local to buffer
-			{not in Vi}
+			{not in Vi, not in MS-DOS versions}
 	Filenames are assumed to be 8 characters plus one extension of 3
 	characters.  Multiple dots in file names are not allowed.  When this
 	option is on, dots in filenames are replaced with underscores when
 	adding an extension (".~" or ".swp").  This option is not available
-	for MS-DOS and Win32, because then it would always be on.  This option
-	is useful when editing files on an MS-DOS compatible filesystem, e.g.,
-	messydos or crossdos.
+	for MS-DOS, because then it would always be on.  This option is useful
+	when editing files on an MS-DOS compatible filesystem, e.g., messydos
+	or crossdos.
 
 						*'showbreak'* *'sbr'*
 showbreak (sbr)		string	(default "")
@@ -9157,8 +9394,9 @@ tags (tag)		string	(default "./tags,tags", when compiled with
 	include a space or comma in a filename, precede it with a backslash
 	(see |option_backslash| about including spaces and backslashes).
 	When a file name starts with "./", the '.' is replaced with the path
-	of the current file.  Environment variables are expanded |:set_env|.
-	Also see |tags_option|.
+	of the current file.  But only when the 'd' flag is not included in
+	'cpoptions'.  Environment variables are expanded |:set_env|.  Also see
+	|tags_option|.
 	When Vim was compiled with EMACS_TAGS defined Emacs-style tag files
 	are also supported.  They are automatically recognized.  The default
 	value becomes "./tags,./TAGS,tags,TAGS".  If ":version" shows
@@ -9194,7 +9432,7 @@ textauto (ta)		toggle	(default on, off when compiled with COMPATIBLE
 			global
 			{not in Vi}
 	When starting to edit a file a check is done for the line separator.
-	If all lines end in <CR><NL> 'textmode' is set, otherwise 'textmode'
+	If all lines end in <CR> <NL> 'textmode' is set, otherwise 'textmode'
 	is reset.  When reading a file, the same is done, but this happens
 	like 'textmode' has been set appropriately for that file only, the
 	option is not changed.  See |textmode_io|.
@@ -9204,7 +9442,7 @@ textmode (tx)		toggle	(MS-DOS, Win32 and OS/2: default on, others:
 				default off)
 			local to buffer
 			{not in Vi}
-	When off, <NL> separates lines.  When on, <CR><NL> separates lines
+	When off, <NL> separates lines.  When on, <CR> <NL> separates lines
 	and CTRL-Z at end of file is ignored.  Only used when reading and
 	writing files.  Set automatically when starting to edit a file and
 	'textauto' is on.  See |textmode_io|.
@@ -9383,7 +9621,7 @@ viminfo (vi)		string	(default "")
 			global
 			{not in Vi}
 			{only included when Vim was compiled with VIMINFO
-			defined, use ":version" to check this}
+			defined.  ":version" shows "+viminfo" if it was}
 	When non-empty, the viminfo file is read upon startup and written
 	when exiting Vim (see |viminfo_file|).  The string should be a comma
 	separated list of parameters, each consisting of a single character
@@ -9406,25 +9644,33 @@ viminfo (vi)		string	(default "")
 			will be stored.  This is to avoid removable media.
 			For MS-DOS you could use "ra:,rb:", for Amiga
 			"rdf0:,rdf1:,rdf2:".  Case is ignored.  Maximum length
-			is 50 characters.
+			of each 'r' argument is 50 characters.
 		 "	Maximum number of lines saved for each register.  If
-			zero then registers are not saved.  If no number given
+			zero then registers are not saved.  When not included,
 			all lines are saved.  Dont forget to put a backslash
 			before the ", otherwise it will be recognized as the
 			start of a comment!
 		 :	Maximum number of items in the command line history to
-			be saved.  Default: value of 'history'.
+			be saved.  When not included, the value of 'history'
+			is used.
 		 /	Maximum number of items in the search pattern history
 			to be saved.  If non-zero, then the previous search
-			and substitute patterns are also saved.  Default:
-			value of 'history'.
+			and substitute patterns are also saved.  When not
+			included, the value of 'history' is used.
+		 n	Name of the viminfo file.  The name must immediately
+			follow the 'n'.  Must be the last one!  If the "-i"
+			argument was given when starting Vim, that filename
+			overrides the one given here with 'viminfo'.
+			Environment variables are expanded when opening the
+			file, not when setting the option.
 	Example:
-		:set viminfo='50,\"1000,:0
+		:set viminfo='50,\"1000,:0,n~/vim/viminfo
 	means that marks will be remembered for the last 50 files you edited,
 	contents of registers (up to 1000 lines each) will be remembered,
 	command line history will not be saved, and since '/' is not
 	specified, the default will be used, that is, save all of the search
 	history, and also the previous search and substitute patterns.
+	And the name of the file to use is "~/vim/viminfo".
 
 			*'visualbell'* *'vb'* *'novisualbell'* *'novb'* *beep*
 visualbell (vb)		toggle	(default off)
@@ -9612,6 +9858,12 @@ into the mode it was before Vim started.  The strings defined with 't_te' and
 an external command (e.g., "!!") the terminal will be put into Normal mode for
 a moment.  This means that you can stop the output to the screen by hitting a
 printing key.  Output resumes when you hit <BS>.
+
+							*cs7-problem*
+Note: If the terminal settings are changed after running Vim, you might have
+an illegal combination of settings.  This has been reported on Solaris 2.5
+with "stty cs8 parenb", which is restored as "stty cs7 parenb".  Use
+"stty cs8 -parenb -istrip" instead, this is restored correctly.
 
 Some termcap entries are wrong in the sense that after sending 't_ks' the
 cursor keys send codes different from the codes defined in the termcap.  To
@@ -9917,6 +10169,26 @@ reason, try (re)setting some options:
 					slows down screen updating a lot
 
 
+20.5 Settings depending on terminal		*term_dependent_settings*
+
+If you want to set options or mappings, depending on the terminal name, you
+can do this best before starting Vim.  Use commands in your .login or .cshrc
+to change the behaviour of Vim.  The most easy way is to change the VIMINIT
+environment variable, depending on the value of $TERM.  Example:
+
+case "$TERM" in
+	console) export VIMINIT="so ~/.vimrc.con"
+	  xterm) export VIMINIT="so ~/.vimrc.X"
+	vt[12]*) export VIMINIT="so ~/.vimrc.dec"
+	      *) export VIMINIT="so ~/.vimrc.common"
+esac
+
+These commands need to be adjusted for the shell you are using.
+
+The "~/.vimrc.con", "~/.vimrc.X" and "~/.vimrc.doc" files can contain a line
+"so ~/.vimrc.common", to include the common settings for all terminals.
+
+
 21. Differences from Vi and Ex				*vi_differences*
 ==============================
 
@@ -9981,10 +10253,14 @@ Maximum line length	   On machines with 16-bit ints (Amiga and MS-DOS real
 Maximum number of lines	   2147483647 lines.
 Maximum file size	   Only limited by available disk space for the swap
 			   file.
-Length of a file name	   Unix and Win32: 1024 characters, otherwise 128
+Length of a file name	   Unix and Win32: 1024 characters, otherwise 256
 			   characters.
+Length of an expanded string option
+			   Unix and Win32: 1024 characters, otherwise 256
+			   characters
 Maximum display width	   Unix and Win32: 1024 characters, otherwise 255
 			   characters
+Maximum lhs of a mapping   50 characters.
 
 Information for undo and registers are kept in memory, thus when making (big)
 changes the amount of (virtual) memory available limits the number of undo
@@ -10077,6 +10353,7 @@ a different file, see |vim_win.txt|]
 	20.2 Terminal options			|terminal_options|
 	20.3 Window size			|window_size|
 	20.4 Slow and fast terminals		|slow_fast_terminal|
+	20.5 Settings depending on terminal	|term_dependent_settings|
 21. Differences from Vi and Ex		|vi_differences|
 	21.1 Missing commands			|missing_commands|
 	21.2 Missing options			|missing_options|

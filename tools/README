@@ -2,6 +2,8 @@ Some tools that can be used with Vim:
 
 efm_filt.er:	Perl script to filter error messages
 
+pltags.pl:	Perl script to create a tags file from a Perl script
+
 ref:		shell script for the K command
 
 remote: 	mapping and shell script to read a file from a remote machine

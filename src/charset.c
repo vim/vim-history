@@ -324,10 +324,25 @@ win_chartabsize(wp, c, col)
 linetabsize(s)
 	char_u		*s;
 {
-	colnr_t	col = 0;
+	colnr_t		col = 0;
 
 	while (*s != NUL)
 		col += lbr_chartabsize(s++, col);
+	return (int)col;
+}
+
+/*
+ * Like linetabsize(), but for a given window instead of the current one.
+ */
+	int
+win_linetabsize(wp, s)
+	WIN			*wp;
+	char_u		*s;
+{
+	colnr_t		col = 0;
+
+	while (*s != NUL)
+		col += win_lbr_chartabsize(wp, s++, col, NULL);
 	return (int)col;
 }
 

@@ -15,6 +15,7 @@
 #include "proto.h"
 #include "option.h"
 
+static int linelen __ARGS((int *has_tab));
 static void do_filter __ARGS((linenr_t line1, linenr_t line2,
 									char_u *buff, int do_in, int do_out));
 #ifdef VIMINFO
@@ -74,9 +75,7 @@ do_align(start, end, width, type)
 	int		len;
 	int		indent = 0;
 	int		new_indent = 0;			/* init for GCC */
-	char_u	*first;
-	char_u	*last;
-	int		save;
+	int		has_tab;
 
 #ifdef RIGHTLEFT
 	if (curwin->w_p_rl)
@@ -109,26 +108,44 @@ do_align(start, end, width, type)
 	for (curwin->w_cursor.lnum = start;
 						curwin->w_cursor.lnum <= end; ++curwin->w_cursor.lnum)
 	{
-			/* find the first non-blank character */
-		first = skipwhite(ml_get_curline());
-			/* find the character after the last non-blank character */
-		for (last = first + STRLEN(first);
-								last > first && vim_iswhite(last[-1]); --last)
-			;
-		save = *last;
-		*last = NUL;
-		len = linetabsize(first);					/* get line length */
-		*last = save;
-		if (len == 0)								/* skip blank lines */
-			continue;
-		switch (type)
+		if (type == -1)							/* left align */
+			new_indent = indent;
+		else
 		{
-			case -1:	new_indent = indent;			/* left align */
-						break;
-			case 0:		new_indent = (width - len) / 2;	/* center */
-						break;
-			case 1:		new_indent = width - len;		/* right align */
-						break;
+			len = linelen(type == 1 ? &has_tab : NULL) - get_indent();
+
+			if (len <= 0)						/* skip blank lines */
+				continue;
+
+			if (type == 0)						/* center */
+				new_indent = (width - len) / 2;
+			else
+			{
+				new_indent = width - len;		/* right align */
+
+				/*
+				 * Make sure that embedded TABs don't make the text go too far
+				 * to the right.
+				 */
+				if (has_tab)
+					while (new_indent > 0)
+					{
+						set_indent(new_indent, TRUE);	/* set indent */
+						if (linelen(NULL) <= width)
+						{
+							/*
+							 * Now try to move the line as much as possible to
+							 * the right.  Stop when it moves too far.
+							 */
+							do
+								set_indent(++new_indent, TRUE);	/* set indent */
+							while (linelen(NULL) <= width);
+							--new_indent;
+							break;
+						}
+						--new_indent;
+					}
+			}
 		}
 		if (new_indent < 0)
 			new_indent = 0;
@@ -137,6 +154,37 @@ do_align(start, end, width, type)
 	curwin->w_cursor = pos;
 	beginline(TRUE);
 	updateScreen(NOT_VALID);
+}
+
+/*
+ * Get the length of the current line, excluding trailing white space.
+ */
+	static int
+linelen(has_tab)
+	int		*has_tab;
+{
+	char_u	*line;
+	char_u	*first;
+	char_u	*last;
+	int		save;
+	int		len;
+
+	/* find the first non-blank character */
+	line = ml_get_curline();
+	first = skipwhite(line);
+
+	/* find the character after the last non-blank character */
+	for (last = first + STRLEN(first);
+								last > first && vim_iswhite(last[-1]); --last)
+		;
+	save = *last;
+	*last = NUL;
+	len = linetabsize(line);			/* get line length */
+	if (has_tab != NULL)				/* check for embedded TAB */
+		*has_tab = (vim_strrchr(first, TAB) != NULL);
+	*last = save;
+
+	return len;
 }
 
 	void
@@ -619,19 +667,33 @@ do_shell(cmd)
 #endif
 	{
 		/*
-		 * If K_TI is defined, we assume that we switch screens when
-		 * starttermcap() is called. In that case we really want to wait for
-		 * "hit return to continue".
+		 * For ":sh" there is no need to call wait_return(), just redraw.
+		 * Otherwise there is probably text on the screen that the user wants
+		 * to read before redrawing, so call wait_return().
 		 */
-		save_nwr = no_wait_return;
-		if (*T_TI != NUL)
-			no_wait_return = FALSE;
+		if (cmd == NULL)
+		{
+			must_redraw = CLEAR;
+			need_wait_return = FALSE;
+			dont_wait_return = TRUE;
+		}
+		else
+		{
+			/*
+			 * If K_TI is defined, we assume that we switch screens when
+			 * starttermcap() is called. In that case we really want to wait
+			 * for "hit return to continue".
+			 */
+			save_nwr = no_wait_return;
+			if (*T_TI != NUL)
+				no_wait_return = FALSE;
 #ifdef AMIGA
-		wait_return(term_console ? -1 : TRUE);		/* see below */
+			wait_return(term_console ? -1 : TRUE);		/* see below */
 #else
-		wait_return(TRUE);
+			wait_return(TRUE);
 #endif
-		no_wait_return = save_nwr;
+			no_wait_return = save_nwr;
+		}
 		starttermcap();		/* start termcap if not done by wait_return() */
 
 		/*
@@ -972,23 +1034,165 @@ write_viminfo(file, forceit)
 	char_u	*file;
 	int		forceit;
 {
-	FILE	*fp_in = NULL;
-	FILE	*fp_out = NULL;
-	char_u	*tempname = NULL;
+	FILE			*fp_in = NULL;		/* input viminfo file, if any */
+	FILE			*fp_out = NULL;		/* output viminfo file */
+	char_u			*tempname = NULL;	/* name of temp viminfo file */
+	struct stat		st_new;				/* stat() of potential new file */
+	char_u			*wp;
+#ifdef UNIX
+	int				shortname = FALSE;	/* use 8.3 filename */
+	mode_t			umask_save;
+	struct stat 	st_old;				/* stat() of existing viminfo file */
+#endif
 
 	if (no_viminfo())
 		return;
 
 	file = viminfo_filename(file);		/* may set to default if NULL */
 	file = strsave(file);				/* make a copy, don't want NameBuff */
+
 	if (file != NULL)
 	{
 		fp_in = fopen((char *)file, READBIN);
 		if (fp_in == NULL)
+		{
+#ifdef UNIX
+			/*
+			 * For Unix we create the .viminfo non-accessible for others,
+			 * because it may contain text from non-accessible documents.
+			 */
+			umask_save = umask(077);
+#endif
 			fp_out = fopen((char *)file, WRITEBIN);
-		else if ((tempname = vim_tempname('o')) != NULL)
-			fp_out = fopen((char *)tempname, WRITEBIN);
+#ifdef UNIX
+			(void)umask(umask_save);
+#endif
+		}
+		else
+		{
+			/*
+			 * There is an existing viminfo file.  Create a temporary file to
+			 * write the new viminfo into, in the same directory as the
+			 * existing viminfo file, which will be renamed later.
+			 */
+#ifdef UNIX
+			/*
+			 * For Unix we check the owner of the file.  It's not very nice to
+			 * overwrite a user's viminfo file after a "su root", with a
+			 * viminfo file that the user can't read.
+			 */
+			st_old.st_dev = st_old.st_ino = 0;
+			st_old.st_mode = 0600;
+			if (stat((char *)file, &st_old) == 0 &&
+					!(st_old.st_uid == getuid()
+							? (st_old.st_mode & 0200)
+							: (st_old.st_gid == getgid()
+									? (st_old.st_mode & 0020)
+					 				: (st_old.st_mode & 0002))))
+			{
+				EMSG2("Viminfo file is not writable: %s", file);
+				goto end;
+			}
+#endif
+
+			/*
+			 * Make tempfile name.
+			 * May try twice: Once normal and once with shortname set, just in
+			 * case somebody puts his viminfo file in an 8.3 filesystem.
+			 */
+			for (;;)
+			{
+				tempname = buf_modname(
+#ifdef UNIX
+										shortname,
+#else
+# ifdef SHORT_FNAME
+										TRUE,
+# else
+										FALSE,
+# endif
+#endif
+													file, (char_u *)".tmp");
+				if (tempname == NULL)			/* out of memory */
+					break;
+
+				/*
+				 * Check if tempfile already exists.  Never overwrite an
+				 * existing file!
+				 */
+				if (stat((char *)tempname, &st_new) == 0)
+				{
+#ifdef UNIX
+					/*
+					 * Check if tempfile is same as original file.  May happen
+					 * when modname gave the same file back.  E.g.  silly
+					 * link, or filename-length reached.  Try again with
+					 * shortname set.
+					 */
+					if (!shortname && st_new.st_dev == st_old.st_dev &&
+							st_new.st_ino == st_old.st_ino)
+					{
+						vim_free(tempname);
+						tempname = NULL;
+						shortname = TRUE;
+						continue;
+					}
+#endif
+					/*
+					 * Try another name.  Change one character, just before
+					 * the extension.  This should also work for an 8.3
+					 * filename, when after adding the extension it still is
+					 * the same file as the original.
+					 */
+					wp = tempname + STRLEN(tempname) - 5;
+					if (wp < gettail(tempname))		/* empty file name? */
+						wp = gettail(tempname);
+					for (*wp = 'z'; stat((char *)tempname, &st_new) == 0; --*wp)
+					{
+						/*
+						 * They all exist?  Must be something wrong! Don't
+						 * write the viminfo file then.
+						 */
+						if (*wp == 'a')
+						{
+							vim_free(tempname);
+							tempname = NULL;
+							break;
+						}
+					}
+				}
+				break;
+			}
+
+			if (tempname != NULL)
+			{
+				fp_out = fopen((char *)tempname, WRITEBIN);
+
+				/*
+				 * If we can't create in the same directory, try creating a
+				 * "normal" temp file.
+				 */
+				if (fp_out == NULL)
+				{
+					vim_free(tempname);
+					if ((tempname = vim_tempname('o')) != NULL)
+						fp_out = fopen((char *)tempname, WRITEBIN);
+				}
+#ifdef UNIX
+				/*
+				 * Set file protection same as original file, but strip s-bit
+				 * and make sure the owner can read/write it.
+				 */
+				if (fp_out != NULL)
+					(void)setperm(tempname, (st_old.st_mode & 0777) | 0600);
+#endif
+			}
+		}
 	}
+	
+	/*
+	 * Check if the new viminfo file can be written to.
+	 */
 	if (file == NULL || fp_out == NULL)
 	{
 		EMSG2("Can't write viminfo file %s!", file == NULL ? (char_u *)"" :
@@ -1016,14 +1220,24 @@ end:
 	vim_free(tempname);
 }
 
+/*
+ * Get the viminfo filename to use.
+ * If "file" is given and not empty, use it (has already been expanded by
+ * cmdline functions).
+ * Otherwise use "-i filename", value from 'viminfo' or the default, and
+ * expand environment variables.
+ */
 	static char_u *
 viminfo_filename(file)
 	char_u		*file;
 {
 	if (file == NULL || *file == NUL)
 	{
-		expand_env(use_viminfo == NULL ? (char_u *)VIMINFO_FILE : use_viminfo,
-														  NameBuff, MAXPATHL);
+		if (use_viminfo != NULL)
+			file = use_viminfo;
+		else if ((file = find_viminfo_parameter('n')) == NULL || *file == NUL)
+			file = (char_u *)VIMINFO_FILE;
+		expand_env(file, NameBuff, MAXPATHL);
 		return NameBuff;
 	}
 	return file;
@@ -1092,10 +1306,21 @@ read_viminfo_up_to_marks(line, fp, forceit)
 	{
 		switch (line[0])
 		{
+				/* Characters reserved for future expansion, ignored now */
+			case '+': /* "+40 /path/dir file", for running vim without args */
+			case '=': /* to be defined */
+			case '-': /* to be defined */
+			case '!': /* to be defined */
+			case '@': /* to be defined */
+			case '%': /* to be defined */
+			case '^': /* to be defined */
+			case '*': /* to be defined */
+			case '|': /* expression history */
+				/* A comment */
 			case NUL:
 			case '\r':
 			case '\n':
-			case '#':		/* A comment */
+			case '#':
 				eof = vim_fgets(line, LSIZE, fp);
 				break;
 			case '"':
@@ -1119,12 +1344,6 @@ read_viminfo_up_to_marks(line, fp, forceit)
 				 */
 				eof = read_viminfo_filemark(line, fp, forceit);
 				break;
-#if 0
-			case '+':
-				/* eg: "+40 /path/dir file", for running vim with no args */
-				eof = vim_fgets(line, LSIZE, fp);
-				break;
-#endif
 			default:
 				if (viminfo_error("Illegal starting char", line))
 					eof = TRUE;

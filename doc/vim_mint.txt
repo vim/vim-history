@@ -1,4 +1,4 @@
-*vim_mint.txt*  For Vim version 4.5.  Last modification 1996 June 11
+*vim_mint.txt*  For Vim version 4.6.  Last modification 1996 Dec 9
 
 This file contains the particularities for the Atari MiNT version of Vim.
 
@@ -29,4 +29,4 @@ also want to set 'ttyfast'.
 
 Send bug reports to
 
-	Jens M. Felderhoff, e-mail: jmf@infko.uni-koblenz.de
+	Jens M. Felderhoff, e-mail: <jmf@infko.uni-koblenz.de>

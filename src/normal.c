@@ -1351,13 +1351,12 @@ docsearch:
 		}
 		/*
 		 * Replacing with a TAB is done by edit(), because it is complicated
-		 * when 'expandtab' is set.
+		 * when 'expandtab' or 'smarttab' is set.
 		 * Other characters are done below to avoid problems with things like
 		 * CTRL-V 048 (for edit() this would be R CTRL-V 0 ESC).
 		 */
-		if (nchar == '\t' && curbuf->b_p_et)
+		if (nchar == '\t' && (curbuf->b_p_et || p_sta))
 		{
-			prep_redo(Prenum1, NUL, 'r', '\t', NUL);
 			stuffnumReadbuff(Prenum1);
 			stuffcharReadbuff('R');
 			stuffcharReadbuff('\t');
@@ -1372,11 +1371,10 @@ docsearch:
 		}
 		else
 			c = NUL;
-		prep_redo(Prenum1, NUL, 'r', c, nchar);
 		if (u_save_cursor() == FAIL)		/* save line for undo */
 			break;
 		/*
-		 * Replace characters by a newline.
+		 * Replace character(s) by a single newline.
 		 * Strange vi behaviour: Only one newline is inserted.
 		 * Delete the characters here.
 		 * Insert the newline with an insert command, takes care of
@@ -1384,21 +1382,18 @@ docsearch:
 		 */
 		if (c != Ctrl('V') && (nchar == '\r' || nchar == '\n'))
 		{
-			while (Prenum1--)					/* delete the characters */
+			for (n = Prenum1; n > 0; --n)		/* delete the characters */
 				delchar(FALSE);
-				/* replacing the last character of a line is different */
-			if (curwin->w_cursor.col > 0 && gchar_cursor() == NUL)
-			{
-				--curwin->w_cursor.col;
-				stuffcharReadbuff('a');
-			}
-			else
-				stuffcharReadbuff('i');
 			stuffcharReadbuff('\r');
 			stuffcharReadbuff(ESC);
+			/*
+			 * Give 'r' to edit(), to get the redo command right.
+			 */
+			command_busy = edit('r', FALSE, Prenum1);
 		}
 		else
 		{
+			prep_redo(Prenum1, NUL, 'r', c, nchar);
 			while (Prenum1--)					/* replace the characters */
 			{
 				/*
@@ -1414,11 +1409,11 @@ docsearch:
 				++curwin->w_cursor.col;
 			}
 			--curwin->w_cursor.col;		/* cursor on the last replaced char */
+			curwin->w_set_curswant = TRUE;
+			updateline();
+			set_last_insert(nchar);
 		}
-		curwin->w_set_curswant = TRUE;
 		CHANGED;
-		updateline();
-		set_last_insert(nchar);
 		break;
 
 	  case 'J':
@@ -2392,6 +2387,10 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 				curbuf->b_op_start.col = 0;
 		}
 
+		/*
+		 * Set b_op_start to the first position of the operated text, b_op_end
+		 * to the end of the operated text.  w_cursor is equal to b_op_start.
+		 */
 		if (lt(curbuf->b_op_start, curwin->w_cursor))
 		{
 			curbuf->b_op_end = curwin->w_cursor;
@@ -2412,15 +2411,6 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 
 				op_block_mode = TRUE;
 
-				/* make the start the upper left corner of the block */
-				if (curbuf->b_op_start.col > curbuf->b_op_end.col)
-				{
-					int t;
-
-					t = curbuf->b_op_start.col;
-					curbuf->b_op_start.col = curbuf->b_op_end.col;
-					curbuf->b_op_end.col = t;
-				}
 				getvcol(curwin, &(curbuf->b_op_start),
 										  &op_start_vcol, NULL, &op_end_vcol);
 				if (!redo_VIsual_busy)
@@ -2445,11 +2435,19 @@ do_pending_operator(c, nchar, finish_op, searchbuff, command_busy,
 						if (end > op_end_vcol)
 							op_end_vcol = end;
 					}
-					curwin->w_cursor = curbuf->b_op_start;
 				}
 				else if (redo_VIsual_busy)
 					op_end_vcol = op_start_vcol + redo_VIsual_col - 1;
+				/*
+				 * Correct b_op_end.col and b_op_start.col to be the
+				 * upper-left and lower-right corner of the block area.
+				 */
+				curwin->w_cursor.lnum = curbuf->b_op_end.lnum;
+				coladvance(op_end_vcol);
+				curbuf->b_op_end = curwin->w_cursor;
+				curwin->w_cursor = curbuf->b_op_start;
 				coladvance(op_start_vcol);
+				curbuf->b_op_start = curwin->w_cursor;
 			}
 
 			if (!redo_VIsual_busy)
@@ -3022,6 +3020,16 @@ do_mouse(c, dir, count, fix_indent)
 	 */
 	else if (moved)
 		cursupdate();
+
+	/*
+	 * When the cursor has moved in insert mode, and something was inserted,
+	 * and there are several windows, need to redraw.
+	 */
+	if (moved && (State & INSERT) && modified && firstwin->w_next != NULL)
+	{
+		update_curbuf(NOT_VALID);
+		modified = FALSE;
+	}
 
 	/*
 	 * Middle mouse click: Put text before cursor.

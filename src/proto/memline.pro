@@ -23,4 +23,4 @@ void ml_setmarked __PARMS((linenr_t lnum));
 linenr_t ml_firstmarked __PARMS((void));
 int ml_has_mark __PARMS((linenr_t lnum));
 void ml_clearmarked __PARMS((void));
-char_u *get_file_in_dir __PARMS((char_u *fname, char_u *dirname));
+char_u *get_file_in_dir __PARMS((char_u *fname, char_u *dname));

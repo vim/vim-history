@@ -1,4 +1,4 @@
-*vim_40.txt*    For Vim version 4.5.  Last modification: 1996 Sep 1
+*vim_40.txt*    For Vim version 4.6.  Last modification: 1997 Feb 19
 
 
 Welcome to Vim Version 4.0!
@@ -56,8 +56,8 @@ VI COMPATIBILITY IMPROVEMENTS				|vi_compat|
 BUG FIXES						|bug_fixes|
 
 
-VERSION WARNING MESSAGE					*version*
-=======================					*version_warning*
+VERSION WARNING MESSAGE				*version* *version_warning*
+=======================
 
 If you got the message
 
@@ -66,6 +66,9 @@ If you got the message
 when you started Vim, you should add this line to your vimrc:
 
 	version 4.0					|:version|
+
+(Vim doesn't make a difference between 4.0, 4.1, etc. yet.  In later versions
+the version number in your .vimrc will be used to make upgrading more easy).
 
 But read the information below first!
 
@@ -567,7 +570,7 @@ The search can be done for identifiers with "[i" or defines with "[d".  Use
 A jump to the first found match can be done with "[ CTRL-I" or "[ CTRL-D".
 This is very useful to jump to the definition of a variable.  |[_CTRL-I|
 
-Added ":isearch", ":ilist", ":ijump", ":isplit", ":dsearch, etc.  Allows for
+Added ":isearch", ":ilist", ":ijump", ":isplit", ":dsearch", etc.  Allows for
 an identifier to be found that is not in the text yet.	|:isearch|
 
 
@@ -919,7 +922,7 @@ file with a different path name (over a network).	|swap_file|
 Give more information about the swap file with the "swap file exists" message
 and when recovering.
 
-Added 'swapsync' option: When empty swap files are not synced (for busy Unix
+Added 'swapsync' option: When empty, swap files are not synced (for busy Unix
 systems).  When set to "sync", sync() is used; when set to "fsync", fsync() is
 used.  Makes it possible to fix complaints about pauses.  The default is
 "fsync".						|'swapsync'|
@@ -1390,7 +1393,7 @@ and ":e `echo hi`^I" expand correctly by not adding a "*" in these cases.
 
 Command-line expansion: Command after '+' will be expanded; e.g., in
 ":e +s^D".  Where file names may be expanded, support for back-quotes has been
-added.							|+cmd|
+added.							|:+cmd|
 
 Set '[ and '] marks to start and end of undone/redone lines.
 Set '[ and '] to start/end of inserted text after inserting text. |'[|
@@ -1432,7 +1435,7 @@ just use the last match found.  Makes "99[{" go to the start of a function.
 							|[{|
 
 Added commands to search for #if/#endif and start/end of comment: "[#", "]#",
-"[*", "[/", "]*" and "]/".				|[#| |[*| |[/"
+"[*", "[/", "]*" and "]/".				|[#| |[star| |[/|
 
 Added break checking to do_do_join(); makes it possible to use CTRL-C when
 joining lots of lines.					|J|

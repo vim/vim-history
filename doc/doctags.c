@@ -49,21 +49,27 @@ main(argc, argv)
 					for (p = p1 + 1; p < p2; ++p)
 						if (*p == ' ' || *p == '\t' || *p == '|')
 							break;
-					if (p == p2)				/* if it is all valid
-													characters */
+					/*
+					 * Only accept a *tag* when it consists of valid
+					 * characters and is followed by a white character or
+					 * end-of-line.
+					 */
+					if (p == p2 && 
+							(strchr(" \t\n\r", p[1]) != NULL || p[1] == '\0'))
 					{
 						*p2 = '\0';
 						++p1;
-						printf("%s\t%s\t/\\*", p1, argv[0]);
+						printf("%s\t%s\t/*", p1, argv[0]);
 						while (*p1)
 						{
-							if (*p1 == '\\')	/* insert backslash */
+							/* insert backslash before '\\' and '/' */
+							if (*p1 == '\\' || *p1 == '/')
 								putchar('\\');
 							putchar(*p1);
 							++p1;
 						}
-						printf("\\*\n");
-						p2 = strchr(p2 + 1, '*');
+						printf("*\n");
+						p2 = strchr(p2 + 1, '*');		/* find next '*' */
 					}
 				}
 				p1 = p2;

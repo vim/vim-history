@@ -789,13 +789,15 @@ get_tagfname(first, buf)
 			/*
 			 * Tag file name starting with "./": Replace '.' with path of
 			 * current file.
+			 * Only do this when 't' flag not included in 'cpo'.
 			 */
-			if (buf[0] == '.' && ispathsep(buf[1]))
+			if (buf[0] == '.' && ispathsep(buf[1]) &&
+										vim_strchr(p_cpo, CPO_DOTTAG) == NULL)
 			{
-				if (curbuf->b_filename == NULL)	/* skip if no filename */
+				if (curbuf->b_xfilename == NULL)	/* skip if no filename */
 					continue;
 
-				path_len = gettail(curbuf->b_filename) - curbuf->b_filename;
+				path_len = gettail(curbuf->b_xfilename) - curbuf->b_xfilename;
 				fname = buf + 1;
 				while (ispathsep(*fname))		/* skip '/' and the like */
 					++fname;
@@ -803,7 +805,7 @@ get_tagfname(first, buf)
 				if (fname_len + path_len + 1 > LSIZE)
 					continue;
 				vim_memmove(buf + path_len, fname, fname_len + 1);
-				vim_memmove(buf, curbuf->b_filename, path_len);
+				vim_memmove(buf, curbuf->b_xfilename, path_len);
 			}
 
 			/*
@@ -894,10 +896,16 @@ parse_tag_line(lbuf,
 		p_7f = vim_strchr(lbuf, 0x7f);
 		if (p_7f == NULL)
 			return FAIL;
-										/* find start of line number */
-		for (p = p_7f + 1; *p < '0' || *p > '9'; ++p)
-			if (*p == NUL)
-				return FAIL;
+
+		/* Find ^A.  If not found the line number is after the 0x7f */
+		p = vim_strchr(p_7f, Ctrl('A'));
+		if (p == NULL)
+			p = p_7f + 1;
+		else
+			++p;
+
+		if (!isdigit(*p))				/* check for start of line number */
+			return FAIL;
 		if (command != NULL)
 			*command = p;
 
@@ -911,12 +919,11 @@ parse_tag_line(lbuf,
 								/* second format: isolate tagname */
 		{
 			/* find end of tagname */
-			for (p = p_7f - 1; *p == ' ' || *p == '\t' || 
-												  *p == '(' || *p == ';'; --p)
+			for (p = p_7f - 1; !iswordchar(*p); --p)
 				if (p == lbuf)
 					return FAIL;
 			*tagname_end = p + 1;
-			while (p >= lbuf && *p != ' ' && *p != '\t')
+			while (p >= lbuf && iswordchar(*p))
 				--p;
 			*tagname = p + 1;
 		}
@@ -1003,11 +1010,13 @@ jumpto_tag(lbuf,
 	int			forceit;		/* :ta with ! */
 {
 	int			save_secure;
+	int			save_magic;
 	int			save_p_ws, save_p_scs, save_p_ic;
 	char_u		*str;
 	char_u		*pbuf;					/* search pattern buffer */
-	char_u		*p;
+	char_u		*pbuf_end;
 	char_u		*expanded_fname = NULL;
+	char_u		*other_fname = NULL;
 	char_u		*tagname, *tagname_end;
 	char_u		*fname, *fname_end;
 	char_u		*orig_fname;
@@ -1042,76 +1051,16 @@ jumpto_tag(lbuf,
 #endif
 		*fname_end = NUL;
 
-	/*
-	 * If the command is a string like "/^function fname"
-	 * scan through the search string. If we see a magic
-	 * char, we have to quote it. This lets us use "real"
-	 * implementations of ctags.
-	 */
-	if (*str == '/' || *str == '?')
+	/* copy the command to pbuf[], remove trailing CR/NL */
+	for (pbuf_end = pbuf; *str && *str != '\n' && *str != '\r'; )
 	{
-		p = pbuf;
-		*p++ = *str++;			/* copy the '/' or '?' */
-		if (*str == '^')
-			*p++ = *str++;			/* copy the '^' */
-
-		while (*str)
-		{
-			switch (*str)
-			{
-						/* Always remove '\' before '('.
-						 * Remove a '\' befor '*' if 'nomagic'.
-						 * Otherwise just copy the '\' and don't look at the
-						 * next character
-						 */
-			case '\\':	if (str[1] == '(' || (!p_magic && str[1] == '*'))
-							++str;
-						else
-							*p++ = *str++;
-						break;
-
-			case '\r':
-			case '\n':	*str = pbuf[0];	/* copy '/' or '?' */
-						str[1] = NUL;	/* delete NL after CR */
-						break;
-
-						/*
-						 * if string ends in search character: skip it
-						 * else escape it with '\'
-						 */
-			case '/':
-			case '?':	if (*str != pbuf[0])	/* not the search char */
-							break;
-												/* last char */
-						if (str[1] == '\n' || str[1] == '\r')
-						{
-							++str;
-							continue;
-						}
-			case '[':
-						if (!p_magic)
-							break;
-			case '^':
-			case '*':
-			case '~':
-			case '.':	*p++ = '\\';
-						break;
-			}
-			*p++ = *str++;
-		}
-	}
-	else		/* not a search command, just copy it */
-	{
-		for (p = pbuf; *str && *str != '\n' && *str != '\r'; )
-		{
 #ifdef EMACS_TAGS
-			if (is_etag && *str == ',')		/* stop at ',' after line number */
-				break;
+		if (is_etag && *str == ',')		/* stop at ',' after line number */
+			break;
 #endif
-			*p++ = *str++;
-		}
+		*pbuf_end++ = *str++;
 	}
-	*p = NUL;
+	*pbuf_end = NUL;
 
 	/*
 	 * expand filename (for environment variables)
@@ -1125,6 +1074,13 @@ jumpto_tag(lbuf,
 	 * if 'tagrelative' option set, may change file name
 	 */
 	fname = expand_rel_name(fname, tag_fname);
+
+	/*
+	 * We don't want Namebuff for fname, will give problems with getfile().
+	 * Hack around it...
+	 */
+	if (fname == NameBuff && (other_fname = strsave(fname)) != NULL)
+		fname = other_fname;
 
 	/*
 	 * check if file for tag exists before abandoning current file
@@ -1154,6 +1110,10 @@ jumpto_tag(lbuf,
 
 		save_secure = secure;
 		secure = 1;
+		save_magic = p_magic;
+		p_magic = FALSE;		/* always execute with 'nomagic' */
+		tag_modified = FALSE;
+
 		/*
 		 * If 'cpoptions' contains 't', store the search pattern for the "n"
 		 * command.  If 'cpoptions' does not contain 't', the search pattern
@@ -1165,7 +1125,7 @@ jumpto_tag(lbuf,
 			search_options = SEARCH_KEEP;
 
 		/*
-		 * if the command is a search, try here
+		 * If the command is a search, try here.
 		 *
 		 * Rather than starting at line one, just turn wrap-scan
 		 * on temporarily, this ensures that tags on line 1 will
@@ -1173,8 +1133,13 @@ jumpto_tag(lbuf,
 		 * whole file when repeated -- webb.
 		 * Also reset 'smartcase' for the search, since the search
 		 * pattern was not typed by the user.
+		 * Only use do_search() when there is a full search command, without
+		 * anything following.
 		 */
+		str = pbuf;
 		if (pbuf[0] == '/' || pbuf[0] == '?')
+			str = skip_regexp(pbuf + 1, pbuf[0]);
+		if (str >= pbuf_end - 1)	/* search command with nothing following */
 		{
 			save_p_ws = p_ws;
 			save_p_ic = p_ic;
@@ -1188,7 +1153,7 @@ jumpto_tag(lbuf,
 				retval = OK;
 			else
 			{
-				register int notfound = FALSE;
+				register int found = 1;
 
 				/*
 				 * try again, ignore case now
@@ -1199,28 +1164,36 @@ jumpto_tag(lbuf,
 					/*
 					 * Failed to find pattern, take a guess: "^func  ("
 					 */
+					found = 2;
 					(void)test_for_static(&tagname, tagname_end,
 														orig_fname, fname_end);
 					*tagname_end = NUL;
-					sprintf((char *)pbuf, "^%s[ \t]*(", tagname);
+					sprintf((char *)pbuf, "^%s\\[ \t]\\*(", tagname);
 					if (!do_search('/', pbuf, (long)1, search_options))
 					{
 						/* Guess again: "^char * func  (" */
-						sprintf((char *)pbuf, "^[#a-zA-Z_].*%s[ \t]*(",
-																	 tagname);
+						sprintf((char *)pbuf,
+								 "^\\[#a-zA-Z_]\\.\\*%s\\[ \t]\\*(", tagname);
 						if (!do_search('/', pbuf, (long)1, search_options))
-							notfound = TRUE;
+							found = 0;
 					}
 				}
-				if (notfound)
+				if (found == 0)
 					EMSG("Can't find tag pattern");
 				else
 				{
-					MSG("Couldn't find tag, just guessing!");
-					if (!msg_scrolled)
+					/*
+					 * Only give a message when really guessed, not when 'ic'
+					 * is set and match found while ignoring case.
+					 */
+					if (found == 2 || !save_p_ic)
 					{
-						flushbuf();
-						mch_delay(1000L, TRUE);
+						MSG("Couldn't find tag, just guessing!");
+						if (!msg_scrolled)
+						{
+							flushbuf();
+							mch_delay(1000L, TRUE);
+						}
 					}
 					retval = OK;
 				}
@@ -1236,9 +1209,19 @@ jumpto_tag(lbuf,
 			retval = OK;
 		}
 
+		/*
+		 * When the command has set the b_changed flag, give a warning to the
+		 * user about this.
+		 */
+		if (tag_modified)
+		{
+			secure = 2;
+			EMSG("WARNING: tag command changed a buffer!!!");
+		}
 		if (secure == 2)			/* done something that is not allowed */
 			wait_return(TRUE);
 		secure = save_secure;
+		p_magic = save_magic;
 
 		/*
 		 * Print the file message after redraw if jumped to another file.
@@ -1277,6 +1260,7 @@ jumpto_tag(lbuf,
 
 erret:
 	vim_free(pbuf);
+	vim_free(other_fname);
 	vim_free(expanded_fname);
 
 	return retval;

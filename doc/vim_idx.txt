@@ -1,4 +1,4 @@
-*vim_idx.txt*   For Vim version 4.5.  Last modification: 1996 Sep 16
+*vim_idx.txt*   For Vim version 4.6.  Last modification: 1996 Dec 4
 
 This file contains a list of all commands for each mode, with a tag and a
 short description.  The list is sorted on ASCII value.
@@ -78,7 +78,7 @@ tag		char		action
 		CTRL-\		not used
 		CTRL-]		not used
 		CTRL-^		not used
-|i_CTRL-_|	CTRL-_		change languate (RIGHTLEFT)
+|i_CTRL-_|	CTRL-_		change language (RIGHTLEFT)
 
 		<Space> to '~'	not used, except '0' and '^' followed by
 				CTRL-D
@@ -374,7 +374,7 @@ tag		char	      note action in Normal mode
 				   characters to the right
 |~|		~{motion}	   'tildeop' on: switch case of Nmove text
 |<C-LeftMouse>|	<C-LeftMouse>	   ":ta" to the keyword at the mouse click
-|<C-RightMouse>|<C-RightMouse>     same as "CTRL-T"
+|<C-RightMouse>| <C-RightMouse>	   same as "CTRL-T"
 |<Del>|		["x]<Del>	2  same as "x"
 |N<Del>|	{count}<Del>	   remove the last digit from {count}
 |<Down>|	<Down>		1  same as "j"

@@ -944,7 +944,7 @@ plines_win(wp, p)
 	if (*s == NUL)				/* empty line */
 		return 1;
 
-	col = linetabsize(s);
+	col = win_linetabsize(wp, s);
 
 	/*
 	 * If list mode is on, then the '$' at the end of the line takes up one
@@ -1394,6 +1394,7 @@ set_Changed()
 		check_status(curbuf);
 	}
 	modified = TRUE;				/* used for redrawing */
+	tag_modified = TRUE;			/* used for tag searching check */
 }
 
 /*
@@ -1581,11 +1582,7 @@ vim_beep()
 {
 	if (p_vb)
 	{
-#ifdef DJGPP
-		ScreenVisualBell();
-#else
 		outstr(T_VB);
-#endif
 	}
 	else
 	{
@@ -1693,15 +1690,29 @@ expand_env(src, dst, dstlen)
 				tail = src + 1;
 				var = dst;
 				c = dstlen - 1;
-				while (c-- > 0 && *tail && isidchar(*tail))
-#ifdef OS2
-				{	/* env vars only in uppercase */
-					*var++ = toupper(*tail);	/* toupper() may be a macro! */
-					tail++;
+
+#ifdef UNIX
+				/* Unix has ${var-name} type environment vars */
+				if (*tail == '{' && !isidchar('{'))
+				{
+					tail++;		/* ignore '{' */
+					while (c-- > 0 && *tail && *tail != '}')
+						*var++ = *tail++;
+					tail++;		/* ignore '}' */
 				}
-#else
-					*var++ = *tail++;
+				else
 #endif
+				{
+					while (c-- > 0 && *tail && isidchar(*tail))
+#ifdef OS2
+					{	/* env vars only in uppercase */
+						*var++ = toupper(*tail);
+						tail++;	    /* toupper() may be a macro! */
+					}
+#else
+						*var++ = *tail++;
+#endif
+				}
 				*var = NUL;
 #if defined(OS2) || defined(MSDOS) || defined(WIN32)
 				/* use "C:/" when $HOME is not set */
@@ -2033,19 +2044,19 @@ ispathsep(c)
 	int c;
 {
 #ifdef UNIX
-	return (c == PATHSEP);		/* UNIX has ':' inside file names */
+	return (c == '/');		/* UNIX has ':' inside file names */
 #else
 # ifdef BACKSLASH_IN_FILENAME
-	return (c == ':' || c == PATHSEP || c == '\\');
-# else
-	return (c == ':' || c == PATHSEP);
+	return (c == ':' || c == '/' || c == '\\');
+# else	/* Amiga */
+	return (c == ':' || c == '/');
 # endif
 #endif
 }
 
 /*
  * Concatenate filenames fname1 and fname2 into allocated memory.
- * Only add a '/' when 'sep' is TRUE and it is neccesary.
+ * Only add a '/' or '\\' when 'sep' is TRUE and it is neccesary.
  */
 	char_u	*
 concat_fnames(fname1, fname2, sep)
@@ -2918,6 +2929,14 @@ get_c_indent()
 				if (ispreproc(l))			/* ignore #defines, #if, etc. */
 					continue;
 				curwin->w_cursor.lnum = lnum;
+
+				/* Skip a comment. XXX */
+				if ((trypos = find_start_comment(ind_maxcomment)) != NULL)
+				{
+					lnum = trypos->lnum + 1;
+					continue;
+				}
+
 				/* XXX */
 				if ((trypos = find_match_paren(ind_maxparen,
 												   ind_maxcomment)) != NULL &&
@@ -3362,13 +3381,14 @@ get_c_indent()
 						/*
 						 * When searching for a terminated line, don't use the
 						 * one between the "if" and the "else".
+						 * Need to use the scope of this "else".  XXX 
 						 */
-						if (iselse(l))
-						{
-							if (find_match(LOOKFOR_IF, ourscope,
-										ind_maxparen, ind_maxcomment) == FAIL)
-								break;
-						}
+						if (iselse(l) &&
+								((trypos = find_start_brace(ind_maxcomment))
+																	== NULL ||
+								find_match(LOOKFOR_IF, trypos->lnum,
+										ind_maxparen, ind_maxcomment) == FAIL))
+							break;
 					}
 
 					/* 
@@ -3440,6 +3460,20 @@ get_c_indent()
 				 */
 				else
 				{
+					/*
+					 * Handle "do {" line.
+					 */
+					if (whilelevel > 0)
+					{
+						l = skipwhite(ml_get_curline());
+						if (isdo(l))
+						{
+							amount = get_indent();		/* XXX */
+							--whilelevel;
+							continue;
+						}
+					}
+
 					/*
 					 * Found a terminated line above an unterminated line. Add
 					 * the amount for a continuation line.
@@ -3519,6 +3553,7 @@ term_again:
 						 * If we're at the end of a block, skip to the start of
 						 * that block.
 						 */
+						curwin->w_cursor.col = 0;
 						if (*skipwhite(l) == '}' &&
 								   (trypos = find_start_brace(ind_maxcomment))
 															!= NULL) /* XXX */
@@ -3951,7 +3986,7 @@ FreeWild(num, file)
 		return;
 #if defined(__EMX__) && defined(__ALWAYS_HAS_TRAILING_NULL_POINTER) /* XXX */
 	/*
-	 * Is this still OK for when other functions thatn ExpandWildCards() have
+	 * Is this still OK for when other functions than ExpandWildCards() have
 	 * been used???
 	 */
 	_fnexplodefree((char **)file);

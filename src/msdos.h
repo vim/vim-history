@@ -20,7 +20,8 @@
 #define USE_MOUSE				/* include mouse support */
 #define SYNC_DUP_CLOSE			/* sync() a file with dup() and close() */
 #ifdef DJGPP
-# define USE_LONG_FNAME _use_lfn()	/* decide at run time */
+# include <fcntl.h>				/* defines _USE_LFN */
+# define USE_LONG_FNAME _USE_LFN	/* decide at run time */
 # define USE_FNAME_CASE
 #else
 # define SHORT_FNAME				/* always 8.3 filename */
@@ -109,9 +110,9 @@ typedef long off_t;
 #endif
 
 #ifdef DJGPP
-# define BASENAMELEN  (_use_lfn()?250:8)	/* length of base of file name */
+# define BASENAMELEN  (_USE_LFN?250:8)	/* length of base of file name */
 #else
-# define BASENAMELEN		8				/* length of base of file name */
+# define BASENAMELEN		8			/* length of base of file name */
 #endif
 
 /* codes for msdos mouse event */

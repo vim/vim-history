@@ -1,4 +1,4 @@
-*vim_unix.txt*  For Vim version 4.5.  Last modification: 1996 Sep 20
+*vim_unix.txt*  For Vim version 4.6.  Last modification: 1996 Sep 20
 
 This file contains the particularities for the Unix version of Vim.
 

@@ -136,10 +136,12 @@ updateScreen(type)
 	if (type == CURSUPD)		/* update cursor and then redraw NOT_VALID */
 	{
 		curwin->w_lsize_valid = 0;
-		cursupdate();			/* will call updateScreen() */
-		return;
+		cursupdate();					/* may call updateScreen() */
+		if (curwin->w_lsize_valid != 0)	/* did call updateScreen() */
+			return;
+		type = NOT_VALID;
 	}
-	if (curwin->w_lsize_valid == 0 && type < NOT_VALID)
+	else if (curwin->w_lsize_valid == 0 && type < NOT_VALID)
 		type = NOT_VALID;
 
  	if (RedrawingDisabled)
@@ -1596,15 +1598,26 @@ screenalloc(clear)
 	int				len;
 	char_u			*new_NextScreen;
 	char_u			**new_LinePointers;
+	static int		entered = FALSE;			/* avoid recursiveness */
 
 	/*
 	 * Allocation of the screen buffers is done only when the size changes
-	 * and when Rows and Columns have been set and we are doing full screen
-	 * stuff.
+	 * and when Rows and Columns have been set and we have started doing full
+	 * screen stuff.
 	 */
-	if ((NextScreen != NULL && Rows == screen_Rows && Columns == screen_Columns)
-							|| Rows == 0 || Columns == 0 || !full_screen)
+	if ((NextScreen != NULL &&
+						  Rows == screen_Rows && Columns == screen_Columns) ||
+			Rows == 0 || Columns == 0 || (!full_screen && NextScreen == NULL))
 		return;
+
+	/*
+	 * It's possible that we produce an out-of-memory message below, which
+	 * will cause this function to be called again.  To break the loop, just
+	 * return here.
+	 */
+	if (entered)
+		return;
+	entered = TRUE;
 
 	comp_col();			/* recompute columns for shown command and ruler */
 
@@ -1614,6 +1627,10 @@ screenalloc(clear)
 	 * - Move lines from the old arrays into the new arrays, clear extra
 	 *   lines (unless the screen is going to be cleared).
 	 * - Free the old arrays.
+	 *
+	 * If anything fails, make NextScreen NULL, so we don't do anything!
+	 * Continuing with the old NextScreen may result in a crash, because the
+	 * size is wrong.
 	 */
 	for (wp = firstwin; wp; wp = wp->w_next)
 		win_free_lsize(wp);
@@ -1635,6 +1652,8 @@ screenalloc(clear)
 		do_outofmem_msg();
 		vim_free(new_NextScreen);
 		new_NextScreen = NULL;
+		vim_free(new_LinePointers);
+		new_LinePointers = NULL;
 	}
 	else
 	{
@@ -1695,6 +1714,7 @@ screenalloc(clear)
 
 	screen_Rows = Rows;
 	screen_Columns = Columns;
+	entered = FALSE;
 }
 
 	void
@@ -1801,6 +1821,7 @@ cursupdate()
 	else if (curwin->w_cursor.lnum < curwin->w_topline + p_so &&
 														curwin->w_topline > 1)
 	{
+		lnum = curwin->w_topline;
 		temp = curwin->w_height / 2 - 1;
 		if (temp < 2)
 			temp = 2;
@@ -1809,7 +1830,9 @@ cursupdate()
 			scroll_cursor_halfway(FALSE);
 		else
 			scroll_cursor_top((int)p_sj, FALSE);
-		updateScreen(VALID);
+		/* redraw when scrolled or windows contents has changed */
+		if (lnum != curwin->w_topline || must_redraw > INVERTED)
+			updateScreen(VALID);
 	}
 
 	/*
@@ -1823,12 +1846,15 @@ cursupdate()
 	else if ((long)curwin->w_cursor.lnum >= (long)curwin->w_botline - p_so &&
 								curwin->w_botline <= curbuf->b_ml.ml_line_count)
 	{
+		lnum = curwin->w_topline;
 		line_count = curwin->w_cursor.lnum - curwin->w_botline + 1 + p_so;
 		if (line_count <= curwin->w_height + 1)
 			scroll_cursor_bot((int)p_sj, FALSE);
 		else
 			scroll_cursor_halfway(FALSE);
-		updateScreen(VALID);
+		/* redraw when scrolled or windows contents has changed */
+		if (lnum != curwin->w_topline || must_redraw > INVERTED)
+			updateScreen(VALID);
 	}
 
 	/*
@@ -3094,8 +3120,26 @@ win_redr_ruler(wp, always)
 	char_u			buffer[30];
 	int				row;
 	int				fillchar;
+	int				empty_line = FALSE;
 
-	if (p_ru && (redraw_cmdline || always ||
+	if (!p_ru)		/* 'ruler' off, don't do anything */
+		return;
+
+	/*
+	 * Check if cursor.lnum is valid, since win_redr_ruler() may be called
+	 * after deleting lines, before cursor.lnum is corrected.
+	 */
+	if (wp->w_cursor.lnum > wp->w_buffer->b_ml.ml_line_count)
+		return;
+
+	/*
+	 * Need to update on an empty line always, since we don't know if there
+	 * was a character previously (changing column "1" to "0-1").
+	 */
+	if (*ml_get_buf(wp->w_buffer, wp->w_cursor.lnum, FALSE) == NUL)
+		empty_line = TRUE;
+
+	if ((redraw_cmdline || always || empty_line ||
 				wp->w_cursor.lnum != old_lnum || wp->w_virtcol != old_col))
 	{
 		cursor_off();
@@ -3119,22 +3163,15 @@ win_redr_ruler(wp, always)
 		 * Some sprintfs return the length, some return a pointer.
 		 * To avoid portability problems we use strlen() here.
 		 */
-		
 		sprintf((char *)buffer, "%ld,",
-				(wp->w_buffer->b_ml.ml_flags & ML_EMPTY) ?
-					0L :
-					(long)(wp->w_cursor.lnum));
-		/*
-		 * Check if cursor.lnum is valid, since win_redr_ruler() may be called
-		 * after deleting lines, before cursor.lnum is corrected.
-		 */
-		if (wp->w_cursor.lnum <= wp->w_buffer->b_ml.ml_line_count)
-			col_print(buffer + STRLEN(buffer),
-				!(State & INSERT) &&
-				*ml_get_buf(wp->w_buffer, wp->w_cursor.lnum, FALSE) == NUL ?
-					0 :
-					(int)wp->w_cursor.col + 1,
-					(int)wp->w_virtcol + 1);
+				(wp->w_buffer->b_ml.ml_flags & ML_EMPTY)
+					? 0L
+					: (long)(wp->w_cursor.lnum));
+		col_print(buffer + STRLEN(buffer),
+				!(State & INSERT) && empty_line
+					? 0
+					: (int)wp->w_cursor.col + 1,
+				(int)wp->w_virtcol + 1);
 
 		screen_msg(buffer, row, ru_col);
 		screen_fill(row, row + 1, ru_col + (int)STRLEN(buffer),

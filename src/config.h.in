@@ -140,6 +140,9 @@
 /* Define if you have the fchdir() function. */
 #undef HAVE_FCHDIR
 
+/* Define if you have the lstat() function. */
+#undef HAVE_LSTAT
+
 /* Define if you have the setenv() function. */
 #undef HAVE_SETENV
 

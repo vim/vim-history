@@ -57,7 +57,7 @@
 #    - If you have --enable-gui=motif and have Motif on your system, but
 #      configure reports "checking for location of gui... <not found>", you
 #      have to set GUI_INC_LOC and GUI_LIB_LOC below.
-#    If you changed something do this to run configure again:
+#    If you changed something, do this to run configure again:
 #		make distclean
 #		make config
 #		make
@@ -94,58 +94,56 @@
 
 #system:              configurations:    	     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
-#AIX 3                cc             +X11 +GUI -GUI     3.19     Ali Albayrak
 #AIX 3                cc gcc         +X11 +GUI -GUI     4.0      Stephen Riehm
+#AIX 3.2.5	      cc (not gcc)   -                  4.5  (M) Will Fiveash
 #AIX 4                cc             +X11 -GUI          3.27 (4) Axel Kielhorn
 #AIX 4.0              gcc 2.7.2      +X11 -GUI          4.4      Axel Kielhorn
-#AIX_4.1              gcc            +X11R6 -GUI        4.5      Karsten Sievert
+#AIX_4.1              gcc            +X11R6 -GUI        4.6c     Karsten Sievert
 #AIX 4.1.4            cc             +X11 +GUI          4.2      Joey Joosten
+#AIX 4.1.4            cc             +X11 +GUI          4.5  (5) Nico Bakker
 #A/UX 3.1.1           gcc            +X11               4.5  (6) Jim Jagielski
 #Alpha OSF1           cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
 #Alpha OSF1 V3.2      cc             +X11               3.22     Heiko Nardmann
+#Alpha OSF1 V4.0      gcc            +GUI_Motif         4.6c     Heiko Nardmann
 #Apollo               cc             -X11 -GUI          3.23     Robert Webb
-#BSDI 2.01 (x86)      cc gcc-2.6.3   X11R6              3.17     Eric Fischer
-#BSDI 2.01 (x86)      shlicc2 gcc-2.6.3 noX X11R6       3.19     Jos Backus
-#BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 noX X11R6       3.23 (1) Jos Backus
+#BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 noX X11R6       4.5  (1) Jos Backus
+#BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 noX X11R6         4.6c (1) Jos Backus
 #ConvexOS                cc          +X11 Motif Athena  3.29     Lennart Schultz
 #dynix/ptx 1.4.0      cc             -X11 -GUI          3.21     Juergen Weigert
 #FreeBSD 2.0.5           gcc-2.6.3   X11R6              3.17     Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   X11R6 +Moo-Tiff    4.5      Bram Moolenaar
-#FreeBSD 2.1.0           gcc-2.6.3   +X11 -GUI +Athena  4.5      Bram Moolenaar
+#FreeBSD 2.1.6           gcc-2.6.3   X11R6 +Moo-Tiff    4.6b     Bram Moolenaar
+#FreeBSD 2.1.6           gcc-2.6.3   +X11 -GUI +Athena  4.6b     Bram Moolenaar
 #HP-UX 9.00           c89 cc         X11R5 Motif 1.2    3.24 (2) Bram Moolenaar
-#HP-UX 9.01 (700)     gcc            +X11 +GUI          4.5      Mun Johl
-#HP-UX 9.01 (400)     gcc 2.7.2      +X11 -GUI          4.4      Axel Kielhorn
 #HP-UX 9.01 (400)     gcc 2.7.2     +X11 +Athena +Motif 4.4      Axel Kielhorn
 #HP-UX 9.01 (400)     cc89           +X11 +Motif 1.2    3.27     Axel Kielhorn
-#HP-UX 9.01 (700)     gcc 2.7.2      +X11 -GUI          4.4      Axel Kielhorn
+#HP-UX 9.01 (700)     gcc            +X11 +GUI          4.6b     Mun Johl
 #HP-UX 9.01 (700)     gcc 2.7.2     +X11 +Athena +Motif 4.4      Axel Kielhorn
 #HP-UX 9.01 (700)     cc89          +X11 +Athena +Motif 3.27     Axel Kielhorn
 #HP-UX A.09.03U (SPP1000) gcc-2.5.8  +X11 Motif         3.29     Lennart Schultz
 #HP-UX 9.04E          cc gcc-2.6.3   X11R5 Motif 1.2    4.3      Kayhan Demirel
-#HP-UX 9.04E          cc             +X11 +GUI  Motif   3.27     Bill Foster
-#HP-UX 9.05           cc             -X11 -GUI          3.27     Juergen Weigert
-#HP-UX 9.05           cc             +X11 -GUI  X11R5   3.25     Robert Colon
-#HP-UX 9.05	      c89 gcc-2.7.2 (HP 700)            3.18 (Y) Axel Kielhorn
 #HP-UX 9.05           gcc-2.7.2      +X11R6.1 Athena3d  4.4      L.  Duperval
-#HP-UX 9.05           gcc-2.7.2      +X11 -GUI          4.4      L.  Duperval
-#HP-UX 9.05 (700)     cc             X11R5 Motif 1.2    4.5      Bram Moolenaar
-#HP-UX 9.05           gcc            +X11R6 +GUI Motif  4.5      Karsten Sievert
+#HP-UX 9.05 (700)     cc gcc c89     X11R5 Motif 1.2    4.6b (Y) Bram Moolenaar
+#HP-UX_9.05           gcc            +X11R6 +GUI Motif  4.6c     Karsten Sievert
 #HP-UX 9.07           c89            X11R5 Motif 1.2    3.23 (Y) Nikhil Patel
 #HP-UX 10.01A         cc gcc-2.6.3   X11R5 Motif 1.2    4.3      Kayhan Demirel
 #HP-UX 10.01          cc             X11R6  -GUI        3.20     Jiwei Wang
 #HP-UX 10.01          cc             -X11 -GUI          3.27     Juergen Weigert
-#HP-UX 10.10          cc             X11R5 Motif 1.2    3.22     Nikhil Patel
 #HP-UX 10.10          c89            X11R5 Motif 1.2    3.23 (Z) Nikhil Patel
 #HP-UX 10.10          cc             X11R5 Motif 1.2    4.0      Stephen Riehm
+#HP-UX_10.20          cc             +X11R6 +GUI Motif  4.6b (Z) Karsten Sievert
+#HP-UX_10.20          gcc            +X11R6 +GUI Motif  4.6c     Karsten Sievert
+#HP SPP2000 HP-UX B.10.01  cc        -X11               4.6b     Lennart Schultz
 #Irix 5.2/5.3         cc gcc-2.6.3   +X11 +GUI          3.22     Robert Webb
 #Irix 5.3             cc             -X11 -GUI          3.27     Juergen Weigert
 #Irix 5.3             cc gcc-2.7.2   +X11 +Motif        4.4      Ives Aerts
 #Irix-5.3 (IP22 mips)    gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
-#IRIX 5.3                gcc-2.6.3   +X11 +GUI Motif    4.2      Eric Fischer
+#Irix 5.3                gcc-2.6.3   +X11 +GUI Motif    4.2      Eric Fischer
+#Irix 6.3 (O2)        cc             ?                  4.5  (L) Edouard Poor
 #Irix 6.2             cc             +X11 +GUI (Motif)  3.24     Bruce Templeton
+#Irix 64 bit                                            4.5  (K) Jon Wright
 #KSR OS R1.2.2        cc             -X11 -GUI          3.21     Juergen Weigert
 #Linux/LST            gcc            +X11R6 +GUI=Athena 3.27     Juergen Weigert
-#Linux 1.2.13 (x86,ELF)  gcc-2.7.2)  +X11 +GUI Athena   4.1      Eric Fischer
+#Linux 1.2.13 (x86,ELF)  gcc-2.7.2   +X11 +GUI Athena   4.1      Eric Fischer
 #Linux 1.2.13-ELF        gcc-2.7.0   X11R6 +GUI         3.29     Tony Nugent
 #Linux 1.2.13            gcc-2.7.0   +X11 -GUI X11R6    3.25     Robert Colon
 #Linux 1.2.13-ELF        gcc-2.7.0   -X11 -GUI          3.21     Juergen Weigert
@@ -160,11 +158,15 @@
 #Linux 2.0               gcc-2.7.2   Infomagic Motif    4.3  (3) Ronald Rietman
 #Linux 2.0.10            gcc-2.7.0   +X11 +GUI Athena   4.4      Paul Slootman
 #Linux 2.0.22	         gcc-2.7.2.1 +X11 +GUI Athena	4.5	 Tony Nugent
+#Linux 2.0.28 (Alpha)    gcc-2.7.2   +X11 +GUI Athena   4.6c     Paul Slootman
+#Linux 2.0.29            gcc-2.7.0   +X11 +GUI Athena   4.6c     Paul Slootman
 #mot88 R32V3          cc             -X11 -GUI          3.21     Juergen Weigert
 #NCR Tower 32/450 SVR3   cc          -X11               3.22     Paul Slootman
 #NCR Tower 32/450 SVR3   gcc-2.4.3   -X11               3.22     Paul Slootman
+#NEC UP4800 UNIX_SV 4.2MP  cc      +X11R6 Motif,Athena  4.6b (Q) Lennart Schultz
 #NetBSD 1.0A             gcc-2.4.5   -X11 -GUI          3.21 (X) Juergen Weigert
 #NetBSD 1.1A             gcc-2.7.2   +X11 +GUI  Athena  3.27     Bill Foster
+#NetBSD 1.2 (i386)       gcc-2.7.2   +X11 -GUI          4.6c     Paul Slootman
 #NeXTstep 3.0 (68k)      gcc-2.6.3   +X11 +GUI Athena   4.2      Eric Fischer
 #QNX 4.2                 wcc386-10.6 noX                4.2  (D) G.F. Desrochers
 #QNX 4.23                Watcom      -X11               4.2  (F) John Oleynick
@@ -174,9 +176,9 @@
 #SCO 4.0 level 3.2.4                 -X11               3.19     Glauber
 #SCO Open Server 5                   +X11 +GUI Motif    3.28 (A) J.C. van Winkel
 #Sequent/ptx V1.4.0   cc gcc-2.2.2   +X11R5 -GUI        3.27     Juergen Weigert
-#Sinix 5.41 (x86 SVR4)   gcc-2.4.3   -X11               4.4      Paul Slootman
+#Sinix 5.41 (x86 SVR4)   gcc-2.4.3   -X11               4.6c     Paul Slootman
 #SNI Targon31 TOS 4.1.11 cc          -X11               3.22     Paul Slootman
-#SNI Targon31 TOS 4.1.11 gcc-2.4.5   +X11 -GUI          3.29 (B) Paul Slootman
+#SNI Targon31 TOS 4.1.11 gcc-2.4.5   +X11 -GUI          4.6c (B) Paul Slootman
 #Solaris 2.3 (SunOS 5.3) gcc-2.6.3   X openwin          3.18     Aswin Kumar
 #Solaris 2.3          gcc            +X11R5 +GUI Athena 4.5      Karsten Sievert
 #Solaris 2.4 (x86)       gcc-2.6.0   -X11               3.29     Paul Slootman
@@ -193,35 +195,36 @@
 #Solaris 2.5          cc             -X11 -GUI          3.27     Juergen Weigert
 #Solaris 2.5          cc        +X11=openwin +GUI=Motif 3.27     Juergen Weigert
 #Solaris 2.5          gcc-2.7.2      +X11 +GUI Motif    3.26     Iva Cabric
-#Solaris 2.5 (sun4m)  gcc 2.7.2.1    +X11R6 +GUI        4.4      Renate Schmidt
-#Solaris 2.5 (sun4m)     gcc-2.7.2   +X11R6 +GUI (CDE)  4.5      Andrew Large
-#Solaris 2.5 (sun4m)   cc (SC4.0)    +X11R6 +GUI (CDE)  4.5  (E) Andrew Large
-#Solaris 2.5 (sun4u)     gcc-2.7.2   +X11 Motif Athena  3.29     Lennart Schultz
-#Solaris 2.5         cc              +X11 +GUI Athena   4.2  (9) Sonia Heimann
-#Solaris 2.5          gcc            +X11R5 +GUI Motif  4.5      Karsten Sievert
-#SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0      L.  Duperval
-#SunOS 4.1.1 (sun4c)     cc          -X11               3.29     Lennart Schultz
-#SunOS 4.1.2 (sun4c)     cc          -X11               3.29     Lennart Schultz
-#SunOS 4.1.2 (sun4)   gcc 2.7.2      +X11R6 -GUI        4.1      Renate Schmidt
-#SunOS 4.1.3 (sun4c)     cc          -X11               3.29     Lennart Schultz
-#SunOS4.1.3_U1           gcc-2.3.3   X11 openwin Motif  3.18     Ashwin Kumar
-#SunOS4.1.3u1            gcc-2.7.0   ?X openwin         3.16     Bob Cmelik
-#SunOs 4.1.3/4        cc             +X11 -GUI  openwin 3.25     Robert Colon
-#SunOS 4.1.3          cc gcc-2.7.0   -X11 -GUI          3.27     Juergen Weigert
-#SunOS 4.1.3          cc gcc-2.7.0   +X11R5 +GUI=Athena 3.27     Juergen Weigert
-#SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23     Robert Webb
-#SunOS 4.1.4 (sparc)  cc gcc-2.6.3       openwin        3.17     Eric Fischer
-#SunOS 4.1.4 (sun4c)     gcc-2.7.2   +X11 Athena        3.29     Lennart Schultz
-#SunOS 4.1.3/4        gcc            +X11R5 +GUI Athena 4.5      Karsten Sievert
-#SUPER-UX 6.1.r1 (SX-4)   cc         +X11 Motif         3.29     Lennart Schultz
+#Solaris 2.5.1(sun4m) gcc 2.7.2.2.f.1+X11R6 +GUI        4.6a     Renate Schmidt
+#Solaris 2.5 (sun4m)  gcc-2.7.2      +X11R6 +GUI (CDE)  4.6b     Andrew Large
+#Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)  4.6b (E) Andrew Large
+#Solaris 2.5 (sun4u)  gcc-2.7.2      +X11 Motif Athena  3.29     Lennart Schultz
+#Solaris 2.5          cc             +X11 +GUI Athena   4.2  (9) Sonia Heimann
+#Solaris 2.5.1        gcc            +X11R6 +GUI Motif  4.6c     Karsten Sievert
+#Solaris 2.5.1 (sun4m) gcc (2.7.2.1) +GUI_Motif +X11R6  4.6c     J.M. Felderhoff
+#Solaris 2.5.1 (x86)  gcc-2.7.2      -X11               4.6c     Paul Slootman
+#SunOS 4.1.1          gcc 2.7.2      +X11 -GUI          4.0  (J) L.  Duperval
+#SunOS 4.1.1 (sun4c)  cc             -X11               3.29 (J) Lennart Schultz
+#SunOS 4.1.2 (sun4c)  cc             -X11               3.29 (J) Lennart Schultz
+#SunOS 4.1.2 (sun4)   gcc 2.7.2      +X11R6 -GUI        4.1  (J) Renate Schmidt
+#SunOS 4.1.3 (sun4c)  cc             -X11               3.29 (J) Lennart Schultz
+#SunOs 4.1.3/4        cc             +X11 -GUI  openwin 3.25 (J) Robert Colon
+#SunOS 4.1.3          cc gcc-2.7.0   -X11 -GUI          3.27 (J) Juergen Weigert
+#SunOS 4.1.3          cc gcc-2.7.0   +X11R5 +GUI=Athena 3.27 (J) Juergen Weigert
+#SunOS 4.1.3 (sun4c)  gcc (2.7.2.1)  +GUI_Motif +X11R6  4.6c     J.M. Felderhoff
+#SunOS 4.1.4          cc gcc-2.6.3   +X11 +GUI          3.23 (J) Robert Webb
+#SunOS 4.1.4 (sun4c)  gcc-2.7.2      +X11 Athena        3.29 (J) Lennart Schultz
+#SunOS 4.1.3/4        gcc            +X11R5 +GUI Athena 4.5  (J) Karsten Sievert
+#SunOS_4.1.3          acc            -GUI               4.6b     Karsten Sievert
+#SunOS 4.1.3          gcc            +X11R6 +GUI Athena 4.6c     Karsten Sievert
+#SUPER-UX 6.2 (NEC SX-4)   cc      +X11R6 Motif,Athena  4.6b (P) Lennart Schultz
 #Ultrix               cc             -X11 +X11          4.3      Bram Moolenaar
 #Ultrix 4.2           cc             -X11 +X11          4.4  (H) Darren Hiebert
-#Unisys 6035          cc                 X11 Motif      3.29 (8) Glauber
-#UnixWare 4.2         cc gcc-2.6.3       X11            3.19     Robert Webb
+#Unisys 6035          cc              X11 Motif         3.29 (8) Glauber
+#UnixWare 4.2         cc gcc-2.6.3    X11               3.19     Robert Webb
 #UnixWare             cc             +X11 -GUI          3.23     Robert Webb
 #UnixWare             cc             +X11R5 +GUI Motif  3.23     Thanh Ma
 #UnixWare             cc             +X11R5 +GUI Athena 3.24     Thanh Ma
-
 
 # (*)  Remarks:
 #
@@ -231,6 +234,7 @@
 #      And add "-lXpm" to GUI_LIBS.
 # (4)  For cc the optimizer must be disabled (use CFLAGS= after running
 #      configure) (symptom: ":set termcap" output looks weird).
+# (5)  Compiler may need -qmaxmem argument, see below.
 # (6)  See below for a few lines to uncomment
 # (7)  See below for lines which enable the use of clcc
 # (8)  Needs some EXTRA_LIBS, search for Unisys below
@@ -243,9 +247,16 @@
 # (F)  See below for instructions.
 # (G)  See line for GUI_LIBS below.
 # (H)  Need to compile normal.c without optimizer, otherwise compiler hangs.
+# (J)  If you get undefined symbols, see below for a solution.
+# (K)  See lines to uncomment below for machines with 64 bit pointers.
+# (L)  For Silicon Graphics O2 workstations remove "-lnsl" from config.mk
+# (M)  gcc version cygnus-2.0.1 does NOT work (symptom: "dl" deletes two
+#      characters instead of one).
+# (P)  For SuperUX 6.2 on NEC SX-4 see a few lines below to uncomment.
+# (Q)  For UNIXSVR 4.2MP on NEC UP4800 see below for lines to uncomment.
 # (X)  Need to use the .include "config.mk" line below
 # (Y)  See line with c89 below
-# (Z)  See line with c89 below
+# (Z)  See lines with cc or c89 below
 
 #DO NOT CHANGE the next line, we need it for configure to find the compiler
 #instead of using the default from the "make" program.
@@ -340,7 +351,7 @@ CONF_OPT_GUI = --enable-gui=yes
 ### It's better to adjust configure.in and run autoconf, if you can!
 ### Then send the required changes to configure.in to the bugs list.
 
-### (1) BSD/OS 2.0.1 or 2.1 with the shared library version of gcc-2.6.3
+### (1) BSD/OS 2.0.1, 2.1 or 3.0 using shared libraries
 ###
 #CC = shlicc2
 #CFLAGS = -O2 -g -m486 -Wall -Wshadow -Wmissing-prototypes -fno-builtin
@@ -352,6 +363,22 @@ CONF_OPT_GUI = --enable-gui=yes
 ### (Z) HP-UX 10.10 with the ANSI compiler
 ###     Will you gues at HP finally decide which options should be used?!?!
 #CC = c89 -D_INCLUDE_HPUX_SOURCE -D_INCLUDE_XOPEN_SOURCE -D_INCLUDE_XOPEN_SOURCE_EXTENDED
+
+### (Z) HP-UX 10.20 with the ANSI compiler
+###	Both of these lines probably work the same.
+###	Maybe this works for all HP-UX 9.xx and 10.xx systems?
+#CC = cc -Aa -D_HPUX_SOURCE
+#CC = c89 -D_HPUX_SOURCE
+
+###     For HP-UX: Disable the use of a different set of digraphs (when
+###     _INCLUDE_HPUX_SOURCE is defined), or force the use of a different set
+###	of digraphs).  Uncomment ONE of these lines.  After changing this do
+###	"touch digraph.c; make".
+#EXTRA_DEFS = -DNO_HPUX_DIGRAPHS
+#EXTRA_DEFS = -DHPUX_DIGRAPHS
+
+### (5) AIX 4.1.4 with cc
+#CFLAGS = -O -qmaxmem=8092
 
 ### (7) Solaris 2.4/2.5 with Centerline compiler
 #CC = clcc
@@ -431,6 +458,37 @@ CONF_OPT_GUI = --enable-gui=yes
 # 4. edit config.h and add #define USE_TMPNAM
 # 5. add termlib.o to OBJ
 # 6. make
+
+### (K)  for SGI Irix machines with 64 bit pointers ("uname -s" says IRIX64)
+###      suggested by Jon Wright <jon@gate.sinica.edu.tw>
+###      tested on R8000 IRIX6.1 Power Indigo2
+# either (for 64 bit pointers) uncomment the following line
+#GUI_LIB_LOC = /usr/lib64
+# then
+# 1) make config
+# 2) edit config.mk and delete the -lelf entry in the LIBS line
+# 3) make
+#
+# or (for 32bit pointers) uncomment the following line
+#EXTRA_DEFS = -n32
+#GUI_LIB_LOC = /usr/lib32
+# then
+# 1) make config
+# 2) edit config.mk, add -n32 to LDFLAGS
+# 3) make
+###
+
+### (P)  SuperUX 6.2 on NEC SX-4 (Lennart Schultz)
+#GUI_INC_LOC = /usr/include
+#GUI_LIB_LOC = /usr/lib
+#EXTRA_LIBS = -lgen
+
+### (Q) UNIXSVR 4.2MP on NEC UP4800 (Lennart Schultz)
+#GUI_INC_LOC = /usr/necccs/include
+#GUI_LIB_LOC = /usr/necccs/lib/X11R6
+#XROOT = /usr/necccs
+#CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib/X11R6
+#EXTRA_LIBS = -lsocket -lgen
 
 ### (C)  On SCO Unix v3.2.5 (and probably other versions) the termcap library,
 ###      which is found by configure, doesn't work correctly.  Symptom is the
@@ -552,6 +610,14 @@ $(ATHENA_COMMENT)GUI_IPATH = -I$(GUI_INC_LOC)
 $(ATHENA_COMMENT)GUI_LIBS_DIR = -L$(GUI_LIB_LOC)
 $(ATHENA_COMMENT)GUI_LIBS  = $(XAW_LIB) -lXt -lXmu
 $(ATHENA_COMMENT)LINKGVIM = -rm -f $(BINLOC)/$(GTARGET); cd $(BINLOC); ln -s $(TARGET) $(GTARGET)
+
+### (J)  Sun OpenWindows 3.2 (SunOS 4.1.x) or earlier that produce these ld
+#	 errors:  ld: Undefined symbol
+#		      _get_wmShellWidgetClass
+#		      _get_applicationShellWidgetClass
+# then you need to get patches 100512-02 and 100573-03 from Sun.  In the
+# meantime, uncomment the following GUI_LIBS definition as a workaround:
+#GUI_LIBS = -lXaw -Bstatic -lXmu -Bdynamic -lXt
 
 # GUI files used for making ctags
 ALL_GUI_INCL = gui.h gui_at_sb.h
@@ -677,12 +743,12 @@ myself:
 
 
 # Link the target for normal use
-$(TARGET): $(OBJ) version.c
+$(TARGET): $(OBJ) version.c version.h
 	$(CC) -c $(ALL_CFLAGS) version.c
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJ) version.o $(ALL_LIBS)
 
 # Link the target for debugging
-debug: $(OBJ) version.c
+debug: $(OBJ) version.c version.h
 	$(CC) -c $(ALL_CFLAGS) version.c
 	$(CC) $(LDFLAGS) -o $(TARGET) -g $(OBJ) version.o $(ALL_LIBS) 
 

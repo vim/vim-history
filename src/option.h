@@ -37,13 +37,17 @@
 #define FO_ALL			"tcroq2vlb,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
+#define CPO_ALTREAD		'a'		/* ":read" sets alternate filename */
+#define CPO_ALTWRITE	'A'		/* ":write" sets alternate filename */
 #define CPO_BAR			'b'		/* "\|" ends a mapping */
 #define CPO_BSLASH		'B'		/* backslash in mapping is not special */
 #define CPO_SEARCH		'c'
+#define CPO_DOTTAG		'd'		/* "./tags" in 'tags' is in current dir */
 #define CPO_EXECBUF		'e'
 #define CPO_FNAMER		'f'		/* set file name for ":r file" */
 #define CPO_FNAMEW		'F'		/* set file name for ":w file" */
 #define CPO_KEYCODE		'k'		/* don't recognize raw key code in mappings */
+#define CPO_LITERAL		'l'		/* take char after backslash in [] literal */
 #define CPO_SHOWMATCH	'm'
 #define CPO_LINEOFF		'o'
 #define CPO_REDO		'r'
@@ -56,8 +60,8 @@
 #define CPO_FILTER		'!'
 #define CPO_MATCH		'%'
 #define CPO_SPECI		'<'		/* don't recognize <> in mappings */
-#define CPO_DEFAULT		"BceFs"
-#define CPO_ALL			"bBcefFkmorsStwx$!%<"
+#define CPO_DEFAULT		"aABceFs"
+#define CPO_ALL			"aAbBcdefFklmorsStwx$!%<"
 
 /* characters for p_ww option: */
 #define WW_ALL			"bshl<>[],"

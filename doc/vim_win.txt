@@ -1,4 +1,4 @@
-*vim_win.txt*   For Vim version 4.5.  Last modification: 1996 Aug 6
+*vim_win.txt*   For Vim version 4.6.  Last modification: 1997 Feb 7
 
 Editing with multiple windows and buffers.
 
@@ -417,7 +417,7 @@ Be careful: there may be more hidden, modified buffers!
 		indicates the alternate buffer for ":e #" or CTRL-^.  '+'
 		indicates a modified buffer.
 
-:[N]bd[elete]					*:bd* *:bdelete*
+:[N]bd[elete]					*:bd* *:bdel* *:bdelete*
 :bd[elete] [N]
 		Unload buffer [N] (default: current buffer) and delete it from
 		the buffer list.  If the buffer was changed, this fails.  The

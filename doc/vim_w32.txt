@@ -1,4 +1,4 @@
-*vim_w32.txt*   For Vim version 4.5.  Last modification: 1996 Sep 30
+*vim_w32.txt*   For Vim version 4.6.  Last modification: 1997 Feb 8
 
 This file documents the idiosyncrasies of the Win32 version of Vim.
 
@@ -170,7 +170,7 @@ e.g., ":cd \\server\share\dir".				|:cd|
 
 INTERRUPTING
 
-Use CTRL-BREAK instead of CTRL-C to interrupt searches.  The CTRL-C is not
+Use CTRL-Break instead of CTRL-C to interrupt searches.  The CTRL-C is not
 detected until a key is read.
 
 
@@ -352,6 +352,37 @@ A. On Unix, Vim is prepared for links (symbolic or hard).  A backup copy of
    properly when working on an NFS-mounted file system where links and other
    things exist.  The only way to fix this in the current version is not
    making a backup file, by ":set nobackup nowritebackup"     |'writebackup'|
+
+Q. How do I get to see the output of ":make" while it's running?
+A. Basically what you need is to put a tee program that will copy its input
+   (the output from make) to both stdout and to the errorfile.  You can find a
+   copy of tee (and a number of other GNU tools tools) at
+   ftp://ftp.cc.utexas.edu/microlib/nt/gnu  Alternatively, try the more recent
+   Cygnus version of the GNU tools at http://www.cygnus.com/misc/gnu-win32
+   You might also find useful stuff at Chris Szurgot's Virtual Unix site,
+   http://www.itribe.net/virtunix  And Microsoft has some Unix-style tools at
+   http://www.microsoft.com/ntserver/tools/Maintnce.htm
+   When you do get a copy of tee, you'll need to add
+     set shellpipe=\|\ tee
+   to your _vimrc.
+
+Q. I'm storing files on a remote machine that works with VisionFS, and files
+   disappear!
+A. VisionFS can't handle certain dot (.) three letter extension file names.
+   SCO declares this behavior required for backwards compatibility with 16bit
+   DOS/Windows environments.  The two commands below demonstrate the behavior:
+
+        echo Hello > file.bat~ 
+       dir > file.bat
+
+   The result is that the "dir" command updates the "file.bat~" file, instead
+   of creating a new "file.bat" file. This same behavior is exhibited in VIM
+   when editing an existing file named "foo.bat" because the default behavior
+   of VIM is to create a temporary file with a '~' character appended to the
+   name.  When the file is written, it winds up being deleted.
+
+   Solution: Add this command to your _vimrc file:
+        set backupext=.temporary
 
 
  vim:ts=8:sw=8:js:tw=78:fo=tcq2:

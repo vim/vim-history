@@ -213,6 +213,72 @@ char_u		   *reg_prev_sub;
 #endif
 
 /*
+ * REGEXP_INRANGE contains all characters which are always special in a []
+ * range after '\'.
+ * REGEXP_ABBR contains all characters which act as abbreviations after '\'.
+ * These are:
+ *	\r	- New line (CR).
+ *	\t	- Tab (TAB).
+ *	\e	- Escape (ESC).
+ *	\b	- Backspace (Ctrl('H')).
+ */
+static char_u REGEXP_INRANGE[] = "]^-\\";
+static char_u REGEXP_ABBR[] = "rteb";
+
+static int		backslash_trans __ARGS((int c));
+static char_u * skip_range __ARGS((char_u *p));
+
+	static int
+backslash_trans(c)
+	int		c;
+{
+	switch (c)
+	{
+		case 'r':	return CR;
+		case 't':	return TAB;
+		case 'e':	return ESC;
+		case 'b':	return Ctrl('H');
+	}
+	return c;
+}
+
+/*
+ * Skip over a "[]" range.
+ * "p" must point to the character after the '['.
+ * The returned pointer is on the matching ']', or the terminating NUL.
+ */
+	static char_u *
+skip_range(p)
+	char_u		*p;
+{
+	int				cpo_lit;		/* 'cpoptions' contains 'l' flag */
+
+	cpo_lit = (vim_strchr(p_cpo, CPO_LITERAL) != NULL);
+
+	if (*p == '^') 	/* Complement of range. */
+		++p;
+	if (*p == ']' || *p == '-')
+		++p;
+	while (*p != NUL && *p != ']')
+	{
+		if (*p == '-')
+		{
+			++p;
+			if (*p != ']' && *p != '\0')
+				++p;
+		}
+		else if (*p == '\\' &&
+				 (vim_strchr(REGEXP_INRANGE, p[1]) != NULL ||
+				  (!cpo_lit && vim_strchr(REGEXP_ABBR, p[1]) != NULL)))
+			p += 2;
+		else
+			++p;
+	}
+
+	return p;
+}
+
+/*
  * Global work variables for vim_regcomp().
  */
 
@@ -242,16 +308,6 @@ static char_u   **regendp;		/* Ditto for endp. */
        static char_u META[] = ".[()|=+*<>iIkKfFpP";
 # endif
 #endif
-
-/*
- * REGEXP_ABBR contains all characters which act as abbreviations after '\'.
- * These are:
- *	\r	- New line (CR).
- *	\t	- Tab (TAB).
- *	\e	- Escape (ESC).
- *	\b	- Backspace (Ctrl('H')).
- */
-static char_u REGEXP_ABBR[] = "rteb";
 
 /*
  * Forward declarations for vim_regcomp()'s friends.
@@ -290,28 +346,15 @@ skip_regexp(p, dirc)
 	char_u	*p;
 	int		dirc;
 {
-	int		in_range = FALSE;
-
 	for (; p[0] != NUL; ++p)
 	{
-		if (p[0] == dirc && !in_range)		/* found end of regexp */
+		if (p[0] == dirc)		/* found end of regexp */
 			break;
-		if (!in_range && ((p[0] == '[' && p_magic) ||
-								   (p[0] == '\\' && p[1] == '[' && !p_magic)))
-		{
-			in_range = TRUE;
-			if (p[0] == '\\')
-				++p;
-								/* "[^]" and "[]" are not the end of a range */
-			if (p[1] == '^')
-				++p;
-			if (p[1] == ']')
-				++p;
-		}
+		if ((p[0] == '[' && p_magic) ||
+				(p[0] == '\\' && p[1] == '[' && !p_magic))
+			p = skip_range(p + 1);
 		else if (p[0] == '\\' && p[1] != NUL)
 			++p;	/* skip next character */
-		else if (p[0] == ']')
-			in_range = FALSE;
 	}
 	return p;
 }
@@ -635,8 +678,10 @@ regatom(flagp)
 {
 	register char_u  *ret;
 	int 			flags;
+	int				cpo_lit;		/* 'cpoptions' contains 'l' flag */
 
 	*flagp = WORST; 			/* Tentatively. */
+	cpo_lit = (vim_strchr(p_cpo, CPO_LITERAL) != NULL);
 
 	switch (getchr()) {
 	  case Magic('^'):
@@ -769,24 +814,7 @@ regatom(flagp)
 			 * If there is no matching ']', we assume the '[' is a normal
 			 * character. This makes ":help [" work.
 			 */
-			p = regparse;
-			if (*p == '^') 	/* Complement of range. */
-				++p;
-			if (*p == ']' || *p == '-')
-				++p;
-			while (*p != '\0' && *p != ']')
-			{
-				if (*p == '-')
-				{
-					++p;
-					if (*p != ']' && *p != '\0')
-						++p;
-				}
-				else if (*p == '\\' && p[1] != '\0')
-					p += 2;
-				else
-					++p;
-			}
+			p = skip_range(regparse);
 			if (*p == ']')		/* there is a matching ']' */
 			{
 				/*
@@ -800,7 +828,8 @@ regatom(flagp)
 					ret = regnode(ANYOF);
 				if (*regparse == ']' || *regparse == '-')
 					regc(*regparse++);
-				while (*regparse != '\0' && *regparse != ']') {
+				while (*regparse != '\0' && *regparse != ']')
+				{
 					if (*regparse == '-') {
 						regparse++;
 						if (*regparse == ']' || *regparse == '\0')
@@ -817,9 +846,20 @@ regatom(flagp)
 								regc(cclass);
 							regparse++;
 						}
-					} else if (*regparse == '\\' && regparse[1]) {
+					}
+
+					/*
+					 * Only "\]", "\^", "\]" and "\\" are special in Vi.  Vim
+					 * accepts "\t", "\e", etc., but only when the 'l' flag in
+					 * 'cpoptions' is not included.
+					 */
+					else if (*regparse == '\\' &&
+							(vim_strchr(REGEXP_INRANGE, regparse[1]) != NULL ||
+							 (!cpo_lit &&
+							   vim_strchr(REGEXP_ABBR, regparse[1]) != NULL)))
+					{
 						regparse++;
-						regc(*regparse++);
+						regc(backslash_trans(*regparse++));
 					} else
 						regc(*regparse++);
 				}
@@ -1056,7 +1096,10 @@ peekchr()
 		case '\\':
 			regparse++;
 			if (regparse[0] == NUL)
+			{
 				curchr = '\\';	/* trailing '\' */
+				--regparse;		/* there is no extra character to skip */
+			}
 			else if (vim_strchr(META, regparse[0]))
 			{
 				/*
@@ -1075,13 +1118,7 @@ peekchr()
 				/*
 				 * Handle abbreviations, like "\t" for TAB -- webb
 				 */
-				switch (regparse[0])
-				{
-					case 'r':	curchr = CR;		break;
-					case 't':	curchr = TAB;		break;
-					case 'e':	curchr = ESC;		break;
-					case 'b':	curchr = Ctrl('H');	break;
-				}
+				curchr = backslash_trans(regparse[0]);
 			}
 			else
 			{

@@ -455,16 +455,6 @@ main(argc, argv)
 		}
 	}
 
-	/* note that we may use mch_windexit() before mch_windinit()! */
-	mch_windinit();				/* inits Rows and Columns */
-/*
- * Set the default values for the options that use Rows and Columns.
- */
-	set_init_2();
-
-	firstwin->w_height = Rows - 1;
-	cmdline_row = Rows - 1;
-
 	/*
 	 * Process the other command line arguments.
 	 * -e[errorfile]	quickfix mode
@@ -576,6 +566,22 @@ main(argc, argv)
 	if (gui.starting)
 		full_screen = FALSE;
 #endif
+
+	/*
+	 * mch_windinit() sets up the terminal (window) for use.  This must be
+	 * done after resetting full_screen, otherwise it may move the cursor
+	 * (MSDOS).
+	 * Note that we may use mch_windexit() before mch_windinit()!
+	 */
+	mch_windinit();				/* inits Rows and Columns */
+
+	/*
+	 * Set the default values for the options that use Rows and Columns.
+	 */
+	set_init_2();
+
+	firstwin->w_height = Rows - 1;
+	cmdline_row = Rows - 1;
 
 	/*
 	 * Now print a warning if stdout is not a terminal.
@@ -706,8 +712,11 @@ main(argc, argv)
 #endif
 					)
 				i = do_source((char_u *)VIMRC_FILE, TRUE);
+
+			if (i != FAIL)
+				check_version = TRUE;
 #ifdef UNIX
-			if (i == FAIL)
+			else
 			{
 				struct stat s;
 
@@ -717,13 +726,14 @@ main(argc, argv)
 				else
 					secure = 0;
 			}
-			else
-				check_version = TRUE;
 #endif
 			if (i == FAIL && fullpathcmp((char_u *)USR_EXRC_FILE,
 											 (char_u *)EXRC_FILE) != FPC_SAME)
 				(void)do_source((char_u *)EXRC_FILE, FALSE);
 		}
+		if (secure == 2)
+			need_wait_return = TRUE;
+		secure = 0;
 	}
 
 	/*
@@ -745,10 +755,7 @@ main(argc, argv)
 
 #ifdef USE_GUI
 	if (gui.starting)
-	{
-		gui_start();
-		full_screen = TRUE;
-	}
+		gui_start();			/* will set full_screen to TRUE */
 #endif
 
 	/*
@@ -757,8 +764,8 @@ main(argc, argv)
 	 */
 	if (check_version && found_version == 0)
 	{
-		MSG("This is Vim version 4.0.");
-		MSG("No \":version 4.0\" command found in any .vimrc.");
+		smsg((char_u *)"This is Vim version %s.", Version);
+		MSG("No \":version 4.x\" command found in any .vimrc.");
 		MSG("Use \":help version\" for info about this new version.");
 	}
 
@@ -839,7 +846,7 @@ main(argc, argv)
  * by termcapinit and redifined in .exrc.
  */
 	settmode(1);
-	if (secure == 2 || need_wait_return || msg_didany)
+	if (need_wait_return || msg_didany)
 		wait_return(TRUE);
 
 	starttermcap();			/* start termcap if not done by wait_return() */
@@ -848,8 +855,6 @@ main(argc, argv)
 #endif
 	if (scroll_region)
 		scroll_region_reset();			/* In case Rows changed */
-
-	secure = 0;
 
 	scroll_start();
 	screenclear();						/* clear screen */
@@ -905,7 +910,7 @@ main(argc, argv)
 	}
 
 #ifdef AUTOCMD
-	apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 #endif
 	setpcmark();
 
@@ -1098,7 +1103,7 @@ getout(r)
 		windgoto((int)Rows - 1, 0);
 
 #ifdef AUTOCMD
-	apply_autocmds(EVENT_VIMLEAVE, NULL, NULL);
+	apply_autocmds(EVENT_VIMLEAVE, NULL, NULL, FALSE);
 
 	/* Position the cursor again, the autocommands may have moved it */
 # ifdef USE_GUI

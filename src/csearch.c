@@ -204,9 +204,9 @@ do_sub(lp, up, cmd, nextcommand, use_old)
 	 * check for trailing '|', '"' or '\n'
 	 */
 	cmd = skipwhite(cmd);
-	if (*cmd)
+	if (*cmd && *cmd != '\"')
 	{
-		if (vim_strchr((char_u *)"|\"\n", *cmd) == NULL)
+		if (vim_strchr((char_u *)"|\n", *cmd) == NULL)
 		{
 			emsg(e_trailing);
 			return;

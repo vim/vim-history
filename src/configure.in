@@ -136,7 +136,7 @@ dnl The LAST one found is used, this makes the highest version to be used,
 dnl e.g. when Motif1.2 and Motif2.0 are both present.
 
 if test -z "$MOTIF_COMMENT"; then
-  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
+  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/X11*/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
   AC_MSG_CHECKING(for location of Motif GUI includes)
   GUI_INC_LOC=
   for try in $gui_includes; do
@@ -159,7 +159,7 @@ dnl The LAST one found is used, this makes the highest version to be used,
 dnl e.g. when Motif1.2 and Motif2.0 are both present.
 
 if test -z "$MOTIF_COMMENT"; then
-  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
+  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
   AC_MSG_CHECKING(for location of Motif GUI libs)
   GUI_LIB_LOC=
   for try in $gui_libs; do
@@ -414,7 +414,7 @@ main()
 	AC_MSG_ERROR(failed to compile test program))
 
 AC_CHECK_FUNCS(sigset getcwd getwd select strcspn strtol setsid setpgid)
-AC_CHECK_FUNCS(tgetent memset strerror fchown fsync fchdir)
+AC_CHECK_FUNCS(tgetent memset strerror fchown fsync fchdir lstat)
 AC_CHECK_FUNCS(setenv putenv gettimeofday getpwuid getpwnam qsort)
 
 dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible
@@ -472,7 +472,7 @@ dnl Check how we can run ctags
 dnl -t for typedefs (many ctags have this)
 dnl -s for static functions (Elvis ctags only?)
 dnl -v for variables. Dangerous, most ctags take this for 'vgrind style'.
-dnl -i+t to test for Darren Hiebert's ctags (no arguments really needed)
+dnl -i+P to test for Darren Hiebert's ctags (no arguments really needed)
 AC_MSG_CHECKING(how to create tags)
 test -f tags && mv tags tags.save
 (eval etags       /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="etags"
@@ -481,7 +481,7 @@ test -f tags && mv tags tags.save
 (eval ctags -t    /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -t"
 (eval ctags -ts   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -ts"
 (eval ctags -tvs  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -tvs"
-(eval ctags -i+t  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -i+t"
+(eval ctags -i+P  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -i+P"
 test -f tags.save && mv tags.save tags
 AC_MSG_RESULT($CTAGS) AC_SUBST(CTAGS)
 

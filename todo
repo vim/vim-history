@@ -1,14 +1,22 @@
+The main changes expected for version 5.0:
+- The last few big things for Vi compatibility (Ex mode, "Q", ":append")
+- Syntax coloring/highlighting, configurable for different languages.
+- Add scripting language support (probably Perl).
+- Add ":if" command.
+- GUI version for Windows (3.1/95/NT).
+- VINE (Vim Is Not Emacs): Keep it small!
+
 Known problems and priority improvements:
 
+Unix:
+- When the value of $MAKE contains a path, configure can't handle this.  It's
+  an autoconf bug.  Remove the path from $MAKE to work around it.
+
 Small problems:
-- When trying to recover a file, when 'shell' is ksh version "PD KSH v4.9
-  93/09/29", this fails because the shell crashes (not a Vim problem).
-  Try recovering by giving the swap file name: "vim -r file.swp".
 - CTRL-F at the end of the file, when 'so' is set, redraws twice.  When the
   window is small (< 2 * 'so') it behaves differently.
 - CTRL-E and CTRL-Y in a small windows, with 'so' set, sometimes doesn't
   scroll, because getting the context scrolls the screen back.
-- in configure, put termlib before termcap?
 - tilde_replace() can only handle "~/", should also do "~user/".
 - "1000ii<Esc>" takes an awful long time.
 - If writing to the swap file fails, should try to open one in another
@@ -27,11 +35,16 @@ Small problems:
      sometimes with <Esc> the text is scrolled up and down whitout stop!!!!
 
 Vi incompatibility:
+- "yw" on the last char in the file doesn't work (Trapp).
 - CTRL-T in insert mode inserts 'shiftwidth' of spaces at the cursor.
 - CTRL-L is not the end of a section?  It is for Posix!  Make it an option.
 - "0;/pat" starts searching in line 2 instead of line 1.
 - "z3<CR>" should still use the whole window, but only redisplay 3 lines.
+- text is put in register 1 when using "c" and "d" with a motion character:
+      <control-A>   %   (   ) `<character>   /   ?   N n   {   }
 - After ":cd", meaning of file names for existing buffers changes.
+- Always catch SIGINT, don't let it kill us?
+- ":n" and ":rew" keep the old cursor position of the file.
 
 GUI:
 - Motif: Scrollbar for cmdline disappears with ":set go=", ":set go=lbrm".
@@ -45,6 +58,7 @@ GUI:
 MSDOS:
 - Hitting CTRL-P twice quickly (e.g. in keyword completion) on a 8088 machine,
   starts printer echo! (John Mullin).
+- Completion on ":source $VIM/_vim<Tab>" doesn't work (Webb).
 
 Windows 95:
 - When 'lines' is set in _vimrc or columns is not 80, executing external
@@ -63,7 +77,7 @@ Windows 95:
 AIX 4:
 - After running Vim tty setting "cs8" is not restored, it becomes "cs5".  This
   causes 8 bit characters to loose their 8th bit.  Only with AIX 4, AIX 3 is
-  fine. (Albayrak)
+  fine. (Albayrak)  Maybe caused by invalid combination of tty settings?
 
 hpterm: Highlighting isn't always correct.  Could use 'weirdinvert', but that
 	slows down screen updating too much.
@@ -104,14 +118,6 @@ MSDOS: When using smardrive with write-back buffering, writing to a readonly
 When doing a CTRL-Z and typing a command for the shell, while Vim is busy
 	(e.g. writing a file), the command for the shell is sometimes eaten by
 	Vim, because the terminal mode is changed from RAW to CBREAK.
-
-
-Main changes for version 5.0:
-- The last few big things for Vi compatibility (Ex mode, "Q", ":append")
-- Syntax coloring/highlighting, configurable for different languages.
-- Add scripting language support (probably Perl).
-- GUI version for Windows (3.1/95/NT).
-- VINE (Vim Is Not Emacs): Keep it small!
 
 
 Further extentions and improvements:

@@ -383,6 +383,7 @@ qf_jump(dir, errornr, forceit)
 	static char_u	*e_no_more_errors = (char_u *)"No more errors";
 	char_u			*err = e_no_more_errors;
 	linenr_t		i;
+	BUF				*old_curbuf;
 
 	if (qf_count == 0)
 	{
@@ -462,9 +463,14 @@ qf_jump(dir, errornr, forceit)
 	 * If there is a file name, 
 	 * read the wanted file if needed, and check autowrite etc.
 	 */
+	old_curbuf = curbuf;
 	if (qf_ptr->qf_fnum == 0 || buflist_getfile(qf_ptr->qf_fnum,
 									(linenr_t)1, GETF_SETMARK, forceit) == OK)
 	{
+		/* When not switched to another buffer, still need to set pc mark */
+		if (curbuf == old_curbuf)
+			setpcmark();
+
 		/*
 		 * Go to line with error, unless qf_lnum is 0.
 		 */

@@ -87,7 +87,8 @@
 
 #system:              configurations:    	     version (*) tested by:
 #-------------        ------------------------       -------  -  ----------
-#MiNT 1.12.5             gcc gcc-2.6.1		     	3.29 (M) Jens Felderhoff
+#MiNT 1.12.5          gcc gcc-2.6.1                     3.29 (M) Jens Felderhoff
+#MiNT 1.12.6          gcc gcc-2.6.1       -GUI          4.6b (M) Jens Felderhoff
 
 
 # (*)  Remarks:
@@ -159,7 +160,6 @@ CONF_OPT_X = --without-x
 ### (M)  MiNT with gcc 2.6.1 and gdb 3.5
 CC = gcc -mint
 CFLAGS = -g -O
-EXTRA_DEFS = -DMINT
 POSTPROCESS = fixstk 20k $(TARGET)
 DBGLDFLAGS = -B/gnu/bin/sym-
 DBGTARGET = $(TARGET).sym

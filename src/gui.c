@@ -58,13 +58,25 @@ gui_start()
 	/*
 	 * Set_termname() will call gui_init() to start the GUI.
 	 * Set the "starting" flag, to indicate that the GUI will start.
+	 *
+	 * We don't want to open the GUI window until after we've read .gvimrc,
+	 * otherwise we don't know what font we will use, and hence we don't know
+	 * what size the window should be.  So if there are errors in the .gvimrc
+	 * file, they will have to go to the terminal: Set full_screen to FALSE.
 	 */
+	settmode(0);							/* stop RAW mode */
 	gui.starting = TRUE;
+	full_screen = FALSE;
 	termcapinit((char_u *)"builtin_gui");
 	gui.starting = FALSE;
 
 	if (!gui.in_use)						/* failed to start GUI */
-		termcapinit(old_term);
+	{
+		termcapinit(old_term);				/* back to old term settings */
+		full_screen = TRUE;
+		settmode(1);						/* restart RAW mode */
+	}
+	full_screen = TRUE;
 
 	vim_free(old_term);
 
@@ -276,6 +288,10 @@ gui_init()
 #endif
 				)
 			i = do_source((char_u *)GVIMRC_FILE, FALSE);
+
+		if (secure == 2)
+			need_wait_return = TRUE;
+		secure = 0;
 	}
 
 	/*
@@ -1760,11 +1776,9 @@ gui_update_scrollbars()
 		if (size > max)					/* just in case */
 			size = max;
 		if (val > max - size + 1)
-		{
 			val = max - size + 1;
-			if (val < 1)				/* minimal value is 1 */
-				val = 1;
-		}
+		if (val < 1)					/* minimal value is 1 */
+			val = 1;
 #endif
 		if (size < 1 || wp->w_botline - 1 > max)
 		{
@@ -1949,27 +1963,31 @@ gui_update_horiz_scrollbar()
 	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 		return;
 
+	size = Columns;
 	if (curwin->w_p_wrap)
 	{
 		value = 0;
-		size = Columns;
 #ifdef SCROLL_PAST_END
-		max = 0;
+		max = 1;
 #else
-		max = Columns - 1;
+		max = Columns;
 #endif
 	}
 	else
 	{
 		value = curwin->w_leftcol;
-		size = Columns;
 #ifdef SCROLL_PAST_END
-		max = gui_get_max_horiz_scroll();
+		max = gui_get_max_horiz_scroll() + 1;
 #else
-		max = gui_get_max_horiz_scroll() + Columns - 1;
+		max = gui_get_max_horiz_scroll() + Columns;
 #endif
 	}
-	gui_mch_update_horiz_scrollbar(value, size, max + 1);
+
+#ifndef SCROLL_PAST_END
+	if (value + size > max)
+		value = max - size;		/* limit the value to allowable range */
+#endif
+	gui_mch_update_horiz_scrollbar(value, size, max);
 	gui.prev_wrap = curwin->w_p_wrap;
 }
 

@@ -222,7 +222,7 @@ mch_get_pid()
  * Return non-zero for success.
  */
 	int 
-dirname(buf, len)
+mch_dirname(buf, len)
 	char *buf;
 	int len;
 {

@@ -158,6 +158,8 @@ edit(initstr, startln, count)
 		AppendCharToRedobuff(initstr);
 		if (initstr == 'g')					/* "gI" command */
 			AppendCharToRedobuff('I');
+		else if (initstr == 'r')			/* "r<CR>" command */
+			count = 1;						/* insert only one <CR> */
 	}
 
 	if (initstr == 'R')
@@ -303,13 +305,6 @@ edit(initstr, startln, count)
 		emsg_on_display = FALSE;		/* may remove error message now */
 
 		c = vgetc();
-
-		/*
-		 * Ignore got_int when CTRL-C was typed here.
-		 * Don't ignore it in :global, we really need to break then.
-		 */
-		if (c == Ctrl('C') && !global_busy)
-			got_int = FALSE;
 
 #ifdef RIGHTLEFT
 		if (p_hkmap && KeyTyped)
@@ -562,7 +557,22 @@ doESCkey:
 				temp = curwin->w_cursor.col;
 				if (!arrow_used)
 				{
-					AppendToRedobuff(ESC_STR);
+					/*
+					 * Don't append the ESC for "r<CR>".
+					 */
+					if (initstr != 'r')
+						AppendToRedobuff(ESC_STR);
+
+					/*
+					 * Repeating insert may take a long time.  Check for
+					 * interrupt now and then.
+					 */
+					if (count)
+					{
+						line_breakcheck();
+						if (got_int)
+							count = 0;
+					}
 
 					if (--count > 0)		/* repeat what was typed */
 					{
@@ -715,6 +725,17 @@ doESCkey:
 				{
 					--curwin->w_cursor.col;
 					(void)delchar(FALSE);			/* delete the '^' or '0' */
+					/*
+					 * In Replace mode, restore the character that '^' or '0'
+					 * replaced.
+					 */
+					if (State == REPLACE && (i = replace_pop()) >= 0)
+					{
+						State = INSERT;
+						ins_char(i);
+						--curwin->w_cursor.col;
+						State = REPLACE;
+					}
 					if (lastc == '^')
 						old_indent = get_indent();	/* remember curr. indent */
 					change_indent(INDENT_SET, 0, TRUE);
@@ -1219,6 +1240,15 @@ redraw:
 
 				if (p_sta && i)					/* insert tab in indent */
 				{
+					if (State == REPLACE)		/* delete a char first */
+					{
+						i = gchar_cursor();
+						if (i)
+						{
+							replace_push(i);
+							delchar(FALSE);
+						}
+					}
 					change_indent(INDENT_INC, 0, p_sr);
 					goto redraw;
 				}
@@ -1711,9 +1741,16 @@ docomplete:
 
 				if (mesg != NULL)
 				{
+					if (dollar_vcol)
+						curs_columns(FALSE);
+					updateline();
+					need_redraw = FALSE;
 					(void)set_highlight('r');
 					msg_highlight = TRUE;
 					msg(mesg);
+					cursupdate();
+					setcursor();
+					flushbuf();
 					mch_delay(2000L, FALSE);
 				}
 				if (edit_submode_extra != NULL)
@@ -1945,6 +1982,7 @@ change_indent(type, amount, round)
 	int			i;
 	char_u		*ptr;
 	int			save_p_list;
+	int			start_col;
 
 	/* for the following tricks we don't want list mode */
 	save_p_list = curwin->w_p_list;
@@ -1954,6 +1992,13 @@ change_indent(type, amount, round)
         curs_columns(FALSE);			/* recompute w_virtcol */
     }
 	vcol = curwin->w_virtcol;
+
+	/*
+	 * For Replace mode we need to fix the replace stack later, which is only
+	 * possible when the cursor is in the indent.  Remember the number of
+	 * characters before the cursor if it's possible.
+	 */
+	start_col = curwin->w_cursor.col;
 
 	/* determine offset from first non-blank */
 	new_cursor_col = curwin->w_cursor.col;
@@ -1968,6 +2013,9 @@ change_indent(type, amount, round)
 	 */
 	if (new_cursor_col < 0)
 		vcol = get_indent() - vcol;
+
+	if (new_cursor_col > 0)			/* can't fix replace stack */
+		start_col = -1;
 
 	/*
 	 * Set the new indent.  The cursor will be put on the first non-blank.
@@ -2058,6 +2106,27 @@ change_indent(type, amount, round)
 			Insstart.col = 0;
 		else
 			Insstart.col -= insstart_less;
+	}
+
+	/*
+	 * May have to fix the replace stack, if it's possible.
+	 * If the number of characters before the cursor decreased, need to pop a
+	 * few characters from the replace stack.
+	 * If the number of characters before the cursor increased, need to push a
+	 * few NULs onto the replace stack.
+	 */
+	if (State == REPLACE && start_col >= 0)
+	{
+		while (start_col > (int)curwin->w_cursor.col)
+		{
+			(void)replace_pop();
+			--start_col;
+		}
+		while (start_col < (int)curwin->w_cursor.col)
+		{
+			replace_push(NUL);
+			++start_col;
+		}
 	}
 }
 
@@ -3104,9 +3173,14 @@ onepage(dir, count)
 	linenr_t		lp;
 	long			n;
 	int				off;
+	int				retval = OK;
 
 	if (curbuf->b_ml.ml_line_count == 1)	/* nothing to do */
+	{
+		beep_flush();
 		return FAIL;
+	}
+
 	for ( ; count > 0; --count)
 	{
 		/*
@@ -3121,7 +3195,8 @@ onepage(dir, count)
 				: (curwin->w_topline == 1))
 		{
 			beep_flush();
-			return FAIL;
+			retval = FAIL;
+			break;
 		}
 		if (dir == FORWARD)
 		{
@@ -3196,7 +3271,7 @@ onepage(dir, count)
 	if (dir == FORWARD && curwin->w_cursor.lnum < curwin->w_topline + p_so)
 		scroll_cursor_top(1, FALSE);
 	updateScreen(VALID);
-	return OK;
+	return retval;
 }
 
 /* #define KEEP_SCREEN_LINE */

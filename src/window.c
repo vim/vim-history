@@ -257,8 +257,9 @@ new_win:
 
 				if ((len = find_ident_under_cursor(&ptr, FIND_IDENT)) == 0)
 					break;
-				find_pattern_in_path(ptr, len, TRUE, TRUE, type,
-					   Prenum1, ACTION_SPLIT, (linenr_t)1, (linenr_t)MAXLNUM);
+				find_pattern_in_path(ptr, len, TRUE,
+						Prenum == 0 ? TRUE : FALSE, type,
+						Prenum1, ACTION_SPLIT, (linenr_t)1, (linenr_t)MAXLNUM);
 				curwin->w_set_curswant = TRUE;
 				break;
 
@@ -437,6 +438,8 @@ win_split(new_height, redraw)
 
 	if (redraw)
 		updateScreen(NOT_VALID);
+	else
+		redraw_later(NOT_VALID);
 
 	return OK;
 }
@@ -805,11 +808,11 @@ close_window(win, free_buf)
 		if (wp->w_buffer != curbuf)
 		{
 			other_buffer = TRUE;
-			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
 			if (!win_valid(win))
 				return;
 		}
-		apply_autocmds(EVENT_WINLEAVE, NULL, NULL);
+		apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE);
 		if (!win_valid(win))
 			return;
 	}
@@ -848,7 +851,7 @@ close_window(win, free_buf)
 #ifdef AUTOCMD
 		if (other_buffer)
 			/* careful: after this wp and win may be invalid! */
-			apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+			apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 #endif
 	}
 
@@ -969,12 +972,12 @@ win_enter(wp, undo_sync)
 		 */
 		if (wp->w_buffer != curbuf)
 		{
-			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
 			other_buffer = TRUE;
 			if (!win_valid(wp))
 				return;
 		}
-		apply_autocmds(EVENT_WINLEAVE, NULL, NULL);
+		apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE);
 		if (!win_valid(wp))
 			return;
 	}
@@ -992,9 +995,9 @@ win_enter(wp, undo_sync)
 	curbuf = wp->w_buffer;
 
 #ifdef AUTOCMD
-	apply_autocmds(EVENT_WINENTER, NULL, NULL);
+	apply_autocmds(EVENT_WINENTER, NULL, NULL, FALSE);
 	if (other_buffer)
-		apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+		apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 #endif
 
 	maketitle();
@@ -1124,8 +1127,6 @@ win_alloc_lsize(wp)
 	if (wp->w_lsize_lnum == NULL || wp->w_lsize == NULL)
 	{
 		win_free_lsize(wp);		/* one of the two may have worked */
-		wp->w_lsize_lnum = NULL;
-		wp->w_lsize = NULL;
 		return FAIL;
 	}
 	return OK;
@@ -1140,6 +1141,8 @@ win_free_lsize(wp)
 {
 	vim_free(wp->w_lsize_lnum);
 	vim_free(wp->w_lsize);
+	wp->w_lsize_lnum = NULL;
+	wp->w_lsize = NULL;
 }
 
 /*
@@ -1294,7 +1297,8 @@ win_setheight(height)
  * If there is extra space created between the last window and the command line,
  * clear it.
  */
-	screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ');
+	if (full_screen)
+		screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ');
 	cmdline_row = row;
 
 	updateScreen(NOT_VALID);
@@ -1408,24 +1412,30 @@ win_comp_scroll(wp)
  * command_height: called whenever p_ch has been changed
  */
 	void
-command_height()
+command_height(old_p_ch)
+	long	old_p_ch;
 {
-	int		current;
-
-	current = Rows - cmdline_row;
-	if (p_ch > current)				/* p_ch got bigger */
+	if (!starting)
 	{
-		if (lastwin->w_height - (p_ch - current) < MIN_ROWS)
+		cmdline_row = Rows - p_ch;
+		if (p_ch > old_p_ch)				/* p_ch got bigger */
 		{
-			emsg(e_noroom);
-			p_ch = lastwin->w_height - MIN_ROWS + current;
+			if (lastwin->w_height - (p_ch - old_p_ch) < MIN_ROWS)
+			{
+				emsg(e_noroom);
+				p_ch = lastwin->w_height - MIN_ROWS + old_p_ch;
+			}
+			/* clear the lines added to cmdline */
+			if (full_screen)
+				screen_fill((int)(cmdline_row), (int)Rows, 0,
+														(int)Columns, ' ', ' ');
+			msg_row = cmdline_row;
 		}
-		/* clear the lines added to cmdline */
-		screen_fill((int)(Rows - p_ch), (int)Rows, 0, (int)Columns, ' ', ' ');
+		else if (msg_row < cmdline_row)
+			msg_row = cmdline_row;
+		redraw_cmdline = TRUE;
 	}
-	win_new_height(lastwin, lastwin->w_height + current - (int)p_ch);
-	cmdline_row = Rows - p_ch;
-	redraw_cmdline = TRUE;
+	win_new_height(lastwin, (int)(lastwin->w_height + old_p_ch - p_ch));
 }
 
 	void

@@ -8,10 +8,11 @@ maze	Macros that solve a maze (amazing!).
 urm	Macros that simulate a simple computer: "Universal Register Machine"
 
 
-The other files contain some handy utilities:
+The other files contain some handy utilities.  They also serve as examples for
+how to use Vi and Vim functionality.
 
 dvorak:	     for when you use a Dvorak keyboard
-file_select: macros that make a handy file selector
+file_select: macros that make a handy file selector (Unix only)
 html:	     macros for editing HTML files
 rot13:	     code/decode the buffer for rot13
 shell.gui:   menus for editing shell scripts in the GUI version

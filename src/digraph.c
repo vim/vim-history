@@ -23,6 +23,17 @@ static void printdigraph __ARGS((char_u *));
 static char_u	(*digraphnew)[3];			/* pointer to added digraphs */
 static int		digraphcount = 0;			/* number of added digraphs */
 
+/*
+ * Some HPUX machines use a different character set by default.  I don't know
+ * which ones and how to check for it, but since my workstation has it, I use
+ * the different character set when _INCLUDE_HPUX_SOURCE is defined (until
+ * somebody tells me what the correct use is!).  If you want to enable or
+ * disable this, change a line in the Makefile.
+ */
+#if !defined(NO_HPUX_DIGRAPHS) && !defined(HPUX_DIGRAPHS) && defined(_INCLUDE_HPUX_SOURCE)
+# define HPUX_DIGRAPHS
+#endif
+
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 char_u	digraphdefault[][3] = 		/* standard MSDOS digraphs */
 	   {{'C', ',', 128},	/* ~@ (SAS C can't handle the real char) */
@@ -88,7 +99,7 @@ char_u	digraphdefault[][3] = 		/* standard MSDOS digraphs */
 		};
 
 #else	/* !MSDOS && !WIN32 */
-# ifdef MINT
+# ifdef __MINT__
 char_u	digraphdefault[][3] = 		/* standard ATARI digraphs */
 	   {{'C', ',', 128},	/* ~@ */
 		{'u', '"', 129},	/* Å */
@@ -150,8 +161,8 @@ char_u	digraphdefault[][3] = 		/* standard ATARI digraphs */
 		{NUL, NUL, NUL}
 		};
 
-# else	/* !MINT */
-#  ifdef _INCLUDE_HPUX_SOURCE
+# else	/* !__MINT__ */
+#  ifdef HPUX_DIGRAPHS
 
 char_u	digraphdefault[][3] = 		/* default HPUX digraphs */
 	   {{'A', '`', 161},	/* ° */
@@ -252,7 +263,7 @@ char_u	digraphdefault[][3] = 		/* default HPUX digraphs */
 		{NUL, NUL, NUL}
 		};
 
-#  else	/* _INCLUDE_HPUX_SOURCE */
+#  else	/* HPUX_DIGRAPHS */
 
 char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
 	   {{'~', '!', 161},	/* ° */
@@ -353,8 +364,8 @@ char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
 		{NUL, NUL, NUL}
 		};
 
-#  endif	/* _INCLUDE_HPUX_SOURCE */
-# endif	/* !MINT */
+#  endif	/* HPUX_DIGRAPHS */
+# endif	/* !__MINT__ */
 #endif	/* !MSDOS && !WIN32 */
  
 /*

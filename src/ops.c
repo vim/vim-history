@@ -950,7 +950,10 @@ do_change()
 	if (op_motion_type == MLINE)
 	{
 		l = 0;
-		can_si = TRUE;		/* It's like opening a new line, do si */
+#ifdef SMARTINDENT
+		if (curbuf->b_p_si)
+			can_si = TRUE;		/* It's like opening a new line, do si */
+#endif
 	}
 
 	if (!op_empty)
@@ -959,13 +962,18 @@ do_change()
 	if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum))
 		inc_cursor();
 
-#ifdef LISPINDENT
+#if defined(LISPINDENT) || defined(CINDENT)
 	if (op_motion_type == MLINE)
 	{
+# ifdef LISPINDENT
 		if (curbuf->b_p_lisp && curbuf->b_p_ai)
 			fixthisline(get_lisp_indent);
+# endif
+# if defined(LISPINDENT) && defined(CINDENT)
+		else
+# endif
 # ifdef CINDENT
-		else if (curbuf->b_p_cin)
+		if (curbuf->b_p_cin)
 			fixthisline(get_c_indent);
 # endif
 	}
@@ -1211,8 +1219,8 @@ success:
 	}
 	if (mess)					/* Display message about yank? */
 	{
-		if (yanktype == MCHAR && !op_block_mode)
-			--yanklines;
+		if (yanktype == MCHAR && !op_block_mode && yanklines == 1)
+			yanklines = 0;
 		if (yanklines > p_report)
 		{
 			cursupdate();		/* redisplay now, so message is not deleted */

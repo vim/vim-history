@@ -336,6 +336,8 @@ getcmdline(firstc, count)
 		if (c == '\n' || c == '\r' || (c == ESC && (!KeyTyped || 
 										 vim_strchr(p_cpo, CPO_ESC) != NULL)))
 		{
+			gotesc = FALSE;		/* Might have typed ESC previously, don't
+								   truncate the cmdline now. */
 			if (ccheck_abbr(c + ABBR_OFF))
 				goto cmdline_changed;
 			outchar('\r');		/* show that we got the return */
@@ -2496,6 +2498,8 @@ donextfile:		if (i < 0 || i >= arg_count)
 				}
 				else
 				{
+					if (vim_strchr(p_cpo, CPO_ALTREAD) != NULL)
+						setaltfname(arg, arg, (linenr_t)1);
 					i = readfile(arg, NULL,
 									line2, FALSE, (linenr_t)0, MAXLNUM, FALSE);
 				}
@@ -3253,7 +3257,7 @@ do_write(fname, line1, line2, append, forceit)
 	/*
 	 * if we have a new file name put it in the list of alternate file names
 	 */
-	if (other)
+	if (other && vim_strchr(p_cpo, CPO_ALTWRITE) != NULL)
 		setaltfname(fname, sfname, (linenr_t)1);
 
 	/*
@@ -3439,7 +3443,7 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
 			old_curbuf = curbuf;
 			if (buf->b_xfilename != NULL)
 				new_name = strsave(buf->b_xfilename);
-			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
 			if (!buf_valid(buf))		/* new buffer has been deleted */
 			{
 				EMSG2("Autocommands unexpectedly deleted new buffer %s",
@@ -3454,12 +3458,7 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
 			{
 				if (curbuf == old_curbuf)
 #endif
-				{
-#ifdef VIMINFO
-					curbuf->b_last_cursor = curwin->w_cursor;
-#endif
 					buf_copy_options(curbuf, buf, TRUE, FALSE);
-				}
 				close_buffer(curwin, curbuf, !(flags & ECMD_HIDE), FALSE);
 				curwin->w_buffer = buf;
 				curbuf = buf;
@@ -3521,6 +3520,13 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
 #endif
 	{
 		/*
+		 * Set cursor and init window before reading the file and executing
+		 * autocommands.  This allows for the autocommands to position the
+		 * cursor.
+		 */
+		win_init(curwin);
+
+		/*
 		 * Careful: open_buffer() and apply_autocmds() may change the current
 		 * buffer and window.
 		 */
@@ -3528,10 +3534,9 @@ do_ecmd(fnum, fname, sfname, command, newlnum, flags)
 			(void)open_buffer();
 #ifdef AUTOCMD
 		else
-			apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+			apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 		check_arg_idx();
 #endif
-		win_init(curwin);
 		maketitle();
 	}
 
@@ -3636,7 +3641,19 @@ do_make(arg)
 	autowrite_all();
 	vim_remove(p_ef);
 
-	sprintf((char *)IObuff, "%s%s%s %s %s", p_shq, arg, p_shq, p_sp, p_ef);
+	/*
+	 * If 'shellpipe' empty: don't redirect to 'errorfile'.
+	 */
+	if (*p_sp == NUL)
+		sprintf((char *)IObuff, "%s%s%s", p_shq, arg, p_shq);
+	else
+		sprintf((char *)IObuff, "%s%s%s %s %s", p_shq, arg, p_shq, p_sp, p_ef);
+	/*
+	 * Output a newline if there's something else than the :make command that
+	 * was typed (in which case the cursor is in column 0).
+	 */
+	if (msg_col != 0)
+		msg_outchar('\n');
 	MSG_OUTSTR(":!");
 	msg_outtrans(IObuff);				/* show what we are doing */
 	do_shell(IObuff);
@@ -3743,14 +3760,18 @@ do_arglist(str)
  * Return TRUE if "str" starts with a backslash that should be removed.
  * For MS-DOS, WIN32 and OS/2 this is only done when the character after the
  * backslash is not a normal file name character.
+ * Although '$' is a valid filename character, we remove the backslash before
+ * it, to be able to disginguish between a filename that starts with '$' and
+ * the name of an environment variable.
  */
 	static int
 is_backslash(str)
 	char_u	*str;
 {
 #ifdef BACKSLASH_IN_FILENAME
-	return (str[0] == '\\' && str[1] != NUL && str[1] != '*' && str[1] != '?'
-						&& !(isfilechar(str[1]) && str[1] != '\\'));
+	return (str[0] == '\\' && (str[1] == '$' ||
+			(str[1] != NUL && str[1] != '*' && str[1] != '?'
+						&& !(isfilechar(str[1]) && str[1] != '\\'))));
 #else
 	return (str[0] == '\\' && str[1] != NUL);
 #endif
@@ -4641,6 +4662,11 @@ do_source(fname, check_other)
 	while (fgets((char *)IObuff + len, IOSIZE - len, fp) != NULL && !got_int)
 	{
 		len = STRLEN(IObuff) - 1;
+#ifdef USE_CRNL
+		/* Ignore a trailing CTRL-Z, when in textmode */
+		if (len == 0 && textmode == 1 && IObuff[0] == Ctrl('Z'))
+			break;
+#endif
 		if (len >= 0 && IObuff[len] == '\n')	/* remove trailing newline */
 		{
 #ifdef USE_CRNL
@@ -4655,7 +4681,7 @@ do_source(fname, check_other)
 
 			if (textmode)
 			{
-				if (has_cr) 		/* remove trailing CR-LF */
+				if (has_cr) 		/* remove trailing CR */
 					--len;
 				else		/* lines like ":map xx yy^M" will have failed */
 				{
@@ -4697,12 +4723,13 @@ do_source(fname, check_other)
  * 
  * Set ptr to the next character after the part that was interpreted.
  * Set ptr to NULL when an error is encountered.
+ *
+ * Return MAXLNUM when no Ex address was found.
  */
 	static linenr_t
 get_address(ptr)
 	char_u		**ptr;
 {
-	linenr_t	cursor_lnum = curwin->w_cursor.lnum;
 	int			c;
 	int			i;
 	long		n;
@@ -4719,7 +4746,7 @@ get_address(ptr)
 		{
 			case '.': 						/* '.' - Cursor position */
 						++cmd;
-						lnum = cursor_lnum;
+						lnum = curwin->w_cursor.lnum;
 						break;
 
 			case '$': 						/* '$' - last line */
@@ -4738,16 +4765,22 @@ get_address(ptr)
 			case '?':						/* '/' or '?' - search */
 						c = *cmd++;
 						pos = curwin->w_cursor;		/* save curwin->w_cursor */
-						if (c == '/')	/* forward search, start on next line */
-						{
-							++curwin->w_cursor.lnum;
-							curwin->w_cursor.col = 0;
-						}
-						else		   /* backward search, start on prev line */
-						{
-							--curwin->w_cursor.lnum;
+						/*
+						 * When '/' or '?' follows another address, start from
+						 * there.
+						 */
+						if (lnum != MAXLNUM)
+							curwin->w_cursor.lnum = lnum;
+						/*
+						 * Start a forward search at the end of the line.
+						 * Start a backward search at the start of the line.
+						 * This makes sure we never match in the current line,
+						 * and can match anywhere in the next/previous line.
+						 */
+						if (c == '/')
 							curwin->w_cursor.col = MAXCOL;
-						}
+						else
+							curwin->w_cursor.col = 0;
 						searchcmdlen = 0;
 						if (!do_search(c, cmd, 1L,
 									  SEARCH_HIS + SEARCH_MSG + SEARCH_START))
@@ -4775,18 +4808,22 @@ get_address(ptr)
 							goto error;
 						}
 
-									/* forward search, start on next line */
+						/*
+						 * When search follows another address, start from
+						 * there.
+						 */
+						if (lnum != MAXLNUM)
+							pos.lnum = lnum;
+						else
+							pos.lnum = curwin->w_cursor.lnum;
+
+						/*
+						 * Start the search just like for the above do_search().
+						 */
 						if (*cmd != '?')
-						{
-							pos.lnum = curwin->w_cursor.lnum + 1;
-							pos.col = 0;
-						}
-									/* backward search, start on prev line */
-						else		
-						{
-							pos.lnum = curwin->w_cursor.lnum - 1;
 							pos.col = MAXCOL;
-						}
+						else		
+							pos.col = 0;
 						if (searchit(&pos, *cmd == '?' ? BACKWARD : FORWARD,
 															 (char_u *)"", 1L,
 										  SEARCH_MSG + SEARCH_START, i) == OK)
@@ -4811,7 +4848,7 @@ get_address(ptr)
 				break;
 
 			if (lnum == MAXLNUM)
-				lnum = cursor_lnum;		/* "+1" is same as ".+1" */
+				lnum = curwin->w_cursor.lnum;	/* "+1" is same as ".+1" */
 			if (isdigit(*cmd))
 				i = '+';				/* "number" is same as "+number" */
 			else
@@ -4825,7 +4862,6 @@ get_address(ptr)
 			else
 				lnum += n;
 		}
-		cursor_lnum = lnum;
 	} while (*cmd == '/' || *cmd == '?');
 
 error:

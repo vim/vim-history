@@ -145,6 +145,10 @@ mch_write(s, len)
 			{
 				switch (s[2])
 				{
+#ifdef DJGPP
+				case 'B':	ScreenVisualBell();
+							goto got3;
+#endif
 				case 'J':	clrscr();
 							goto got3;
 
@@ -206,6 +210,29 @@ got3:						s += 3;
 	else
 		write(1, s, (unsigned)len);
 }
+
+#ifdef DJGPP
+/*
+ * DJGPP provides a kbhit() function that goes to the BIOS instead of DOS.
+ * This doesn't work for terminals connected to a serial port.
+ * Redefine kbhit() here to make it work.
+ */
+	static int
+vim_kbhit(void)
+{
+	union REGS regs;
+
+	regs.h.ah = 0x0b;
+	(void)intdos(&regs, &regs);
+	return regs.h.al;
+}
+
+#ifdef kbhit
+# undef kbhit		/* might have been defined in conio.h */
+#endif
+
+#define kbhit()	vim_kbhit()
+#endif
 
 /*
  * Simulate WaitForChar() by slowly polling with bioskey(1) or kbhit().
@@ -914,11 +941,21 @@ mch_windexit(r)
 	exit(r);
 }
 
+#ifdef DJGPP
+# define INT_ARG	int
+#else
+# define INT_ARG
+#endif
+
 /*
  * function for ctrl-break interrupt
  */
-	void interrupt
+	static void interrupt
+#ifdef DJGPP
+catch_cbrk(int a)
+#else
 catch_cbrk()
+#endif
 {
 	cbrk_pressed = TRUE;
 	ctrlc_pressed = TRUE;
@@ -944,7 +981,7 @@ cbrk_handler()
  * For DOS 1 and 2 return 0 (Ignore).
  * For DOS 3 and later return 3 (Fail)
  */
-	void interrupt
+	static void interrupt
 catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
 	unsigned bp, di, si, ds, es, dx, cx, bx, ax;
 {
@@ -958,9 +995,6 @@ catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)
  *
  * Does not change the tty, as bioskey() and kbhit() work raw all the time.
  */
-
-extern void interrupt CINT_FUNC();
-
 	void
 mch_settmode(raw)
 	int  raw;
@@ -969,14 +1003,14 @@ mch_settmode(raw)
 #ifndef DJGPP
 	static void interrupt (*old_cint)();
 #endif
-	static void interrupt (*old_cbrk)();
+	static void interrupt (*old_cbrk)(INT_ARG);
 
 	if (raw)
 	{
 		saved_cbrk = getcbrk();			/* save old ctrl-break setting */
 		setcbrk(0);						/* do not check for ctrl-break */
 #ifdef DJGPP
-		old_cbrk = signal(SIGINT,catch_cbrk);	/* critical error interrupt */
+		old_cbrk = signal(SIGINT, catch_cbrk);	/* critical error interrupt */
 #else
 		old_cint = getvect(0x24); 		/* save old critical error interrupt */
 		setvect(0x24, catch_cint);		/* install our critical error interrupt */
@@ -1136,10 +1170,6 @@ mch_set_winsize()
 #endif
 }
 
-#ifdef DJGPP
-# include <libc/system.h>		/* for __system_flags and __system_redirect */
-#endif
-
 /*
  * call shell, return FAIL for failure, OK otherwise
  */
@@ -1152,14 +1182,6 @@ call_shell(cmd, options)
 {
 	int		x;
 	char_u	*newcmd;
-
-#ifdef DJGPP
-	/*
-	 * Disable the redirection done by DJGPP's system(), because it eats file
-	 * descriptors.
-	 */
-	__system_flags &= ~__system_redirect;
-#endif
 
 	flushbuf();
 
@@ -1465,7 +1487,7 @@ djgpp_rename(const char *OldFile, const char *NewFile)
 	int		fd;
 
 	/* rename() works correctly without long file names, so use that */
-	if (!_use_lfn())
+	if (!_USE_LFN)
 		return rename(OldFile, NewFile);
 
 	if ((TempFile = alloc((unsigned)(STRLEN(OldFile) + 13))) == NULL)

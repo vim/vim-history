@@ -27,6 +27,7 @@ extern unsigned int	alarm __ARGS((unsigned int));
 extern int   chdir __ARGS((char *));
 extern int   fchdir __ARGS((int));
 extern int   stat __ARGS((char *, struct stat *));
+extern int	 lstat __ARGS((char *, struct stat *));
 extern int   fstat __ARGS((int, struct stat *));
 extern int   open __ARGS((char *, int, ...));
 extern int   close __ARGS((int));

@@ -269,7 +269,7 @@ readfile(fname, sfname, from, newfile, lines_to_skip, lines_to_read, filtering)
 				{
 					filemess(curbuf, fname, (char_u *)"[New File]");
 #ifdef AUTOCMD
-					apply_autocmds(EVENT_BUFNEWFILE, fname, fname);
+					apply_autocmds(EVENT_BUFNEWFILE, fname, fname, FALSE);
 #endif
 					return OK;		/* a new file is not an error */
 				}
@@ -325,11 +325,11 @@ readfile(fname, sfname, from, newfile, lines_to_skip, lines_to_read, filtering)
 		 */
 		msg_scroll = TRUE;
 		if (filtering)
-			apply_autocmds(EVENT_FILTERREADPRE, NULL, fname);
+			apply_autocmds(EVENT_FILTERREADPRE, NULL, fname, FALSE);
 		else if (newfile)
-			apply_autocmds(EVENT_BUFREADPRE, NULL, fname);
+			apply_autocmds(EVENT_BUFREADPRE, NULL, fname, FALSE);
 		else
-			apply_autocmds(EVENT_FILEREADPRE, fname, fname);
+			apply_autocmds(EVENT_FILEREADPRE, fname, fname, FALSE);
 		if (msg_scrolled == n)
 			msg_scroll = m;
 
@@ -644,6 +644,13 @@ retry:
 	}
 	msg_scroll = msg_save;
 
+#ifdef VIMINFO
+	/*
+	 * Get the marks before executing autocommands, so they can be used there.
+	 */
+	check_marks_read();
+#endif /* VIMINFO */
+
 #ifdef AUTOCMD
 	{
 		int	m = msg_scroll;
@@ -663,19 +670,15 @@ retry:
 		 */
 		msg_scroll = TRUE;
 		if (filtering)
-			apply_autocmds(EVENT_FILTERREADPOST, NULL, fname);
+			apply_autocmds(EVENT_FILTERREADPOST, NULL, fname, FALSE);
 		else if (newfile)
-			apply_autocmds(EVENT_BUFREADPOST, NULL, fname);
+			apply_autocmds(EVENT_BUFREADPOST, NULL, fname, FALSE);
 		else
-			apply_autocmds(EVENT_FILEREADPOST, fname, fname);
+			apply_autocmds(EVENT_FILEREADPOST, fname, fname, FALSE);
 		if (msg_scrolled == n)
 			msg_scroll = m;
 	}
 #endif
-
-#ifdef VIMINFO
-	check_marks_read();
-#endif /* VIMINFO */
 
 	if (recoverymode && error)
 		return FAIL;
@@ -833,13 +836,13 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
 	curbuf = buf;
 	curwin->w_buffer = buf;
 	if (append)
-		apply_autocmds(EVENT_FILEAPPENDPRE, fname, fname);
+		apply_autocmds(EVENT_FILEAPPENDPRE, fname, fname, FALSE);
 	else if (filtering)
-		apply_autocmds(EVENT_FILTERWRITEPRE, NULL, fname);
+		apply_autocmds(EVENT_FILTERWRITEPRE, NULL, fname, FALSE);
 	else if (reset_changed && whole)
-		apply_autocmds(EVENT_BUFWRITEPRE, fname, fname);
+		apply_autocmds(EVENT_BUFWRITEPRE, fname, fname, FALSE);
 	else
-		apply_autocmds(EVENT_FILEWRITEPRE, fname, fname);
+		apply_autocmds(EVENT_FILEWRITEPRE, fname, fname, FALSE);
 	/*
 	 * If the autocommands deleted or unloaded the buffer, give an error
 	 * message.
@@ -1012,7 +1015,13 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
 				/*
 				 * Make backup file name.
 				 */
-				backup = buf_modname(buf, rootname, backup_ext);
+				backup = buf_modname(
+#ifdef SHORT_FNAME
+										TRUE,
+#else
+										(buf->b_p_sn || buf->b_shortname),
+#endif
+														rootname, backup_ext);
 				if (backup == NULL)
 				{
 					some_error = TRUE;			/* out of memory */
@@ -1107,7 +1116,7 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
 #ifdef HAVE_FCHOWN	/* sequent-ptx lacks fchown() */
 										  fchown(bfd, -1, st_old.st_gid) != 0)
 #else
-										chown(backup, -1, st_old.st_gid) != 0)
+								chown((char *)backup, -1, st_old.st_gid) != 0)
 #endif
 						setperm(backup, (perm & 0707) | ((perm & 07) << 3));
 
@@ -1188,7 +1197,13 @@ nobackup:
 				backup = NULL;
 			else
 			{
-				backup = buf_modname(buf, rootname, backup_ext);
+				backup = buf_modname(
+#ifdef SHORT_FNAME
+										TRUE,
+#else
+										(buf->b_p_sn || buf->b_shortname),
+#endif
+														rootname, backup_ext);
 				vim_free(rootname);
 			}
 
@@ -1528,7 +1543,13 @@ nobackup:
 	 */
 	if (*p_pm)
 	{
-	    char *org = (char *)buf_modname(buf, fname, p_pm);
+	    char *org = (char *)buf_modname(
+#ifdef SHORT_FNAME
+										TRUE,
+#else
+										(buf->b_p_sn || buf->b_shortname),
+#endif
+																 fname, p_pm);
 
 		if (backup != NULL)
 		{
@@ -1620,13 +1641,13 @@ nofail:
 	curbuf = buf;
 	curwin->w_buffer = buf;
 	if (append)
-		apply_autocmds(EVENT_FILEAPPENDPOST, fname, fname);
+		apply_autocmds(EVENT_FILEAPPENDPOST, fname, fname, FALSE);
 	else if (filtering)
-		apply_autocmds(EVENT_FILTERWRITEPOST, NULL, fname);
+		apply_autocmds(EVENT_FILTERWRITEPOST, NULL, fname, FALSE);
 	else if (reset_changed && whole)
-		apply_autocmds(EVENT_BUFWRITEPOST, fname, fname);
+		apply_autocmds(EVENT_BUFWRITEPOST, fname, fname, FALSE);
 	else
-		apply_autocmds(EVENT_FILEWRITEPOST, fname, fname);
+		apply_autocmds(EVENT_FILEWRITEPOST, fname, fname, FALSE);
 	/*
 	 * If the autocommands didn't change the current buffer, go back to the
 	 * original current buffer, if it still exists.
@@ -1750,13 +1771,19 @@ write_buf(fd, buf, len)
 modname(fname, ext)
 	char_u *fname, *ext;
 {
-	return buf_modname(curbuf, fname, ext);
+	return buf_modname(
+#ifdef SHORT_FNAME
+						TRUE,
+#else
+						(curbuf->b_p_sn || curbuf->b_shortname),
+#endif
+																  fname, ext);
 }
 
 	char_u *
-buf_modname(buf, fname, ext)
-	BUF		*buf;
-	char_u *fname, *ext;
+buf_modname(shortname, fname, ext)
+	int		shortname;				/* use 8.3 filename */
+	char_u	*fname, *ext;
 {
 	char_u				*retval;
 	register char_u 	*s;
@@ -1806,10 +1833,10 @@ buf_modname(buf, fname, ext)
 	{
 		if (*ext == '.'
 #ifdef USE_LONG_FNAME
-					&& (!USE_LONG_FNAME || buf->b_p_sn || buf->b_shortname)
+					&& (!USE_LONG_FNAME || shortname)
 #else
 # ifndef SHORT_FNAME
-					&& (buf->b_p_sn || buf->b_shortname)
+					&& shortname
 # endif
 #endif
 																)
@@ -1832,10 +1859,10 @@ buf_modname(buf, fname, ext)
 	 * For 8.3 filenames we may have to reduce the length.
 	 */
 #ifdef USE_LONG_FNAME
-	if (!USE_LONG_FNAME || buf->b_p_sn || buf->b_shortname)
+	if (!USE_LONG_FNAME || shortname)
 #else
 # ifndef SHORT_FNAME
-	if (buf->b_p_sn || buf->b_shortname)
+	if (shortname)
 # endif
 #endif
 	{
@@ -2095,7 +2122,9 @@ vim_tempname(extra_char)
 #else
 	char_u			itmp[TEMPNAMELEN];
 #endif
+#if defined(TEMPDIRNAMES) || !defined(USE_TMPNAM)
 	char_u			*p;
+#endif
 
 #if defined(TEMPDIRNAMES)
 	static char		*(tempdirs[]) = {TEMPDIRNAMES};
@@ -2117,15 +2146,19 @@ vim_tempname(extra_char)
 			if (first_try)
 				first_dir = i;			/* start here next time */
 			first_try = FALSE;
-#ifdef BACKSLASH_IN_FILENAME
+#ifdef __EMX__
 			/*
-			 * really want a backslash here, because the filename will
-			 * probably be used in a command line
+			 * if $TMP contains a forward slash (perhaps because we're using
+			 * bash or tcsh, right Stefan?), don't add a backslash to the
+			 * directory before tacking on the filename; use a forward slash!
+			 * I first tried adding 2 backslashes, but somehow that didn't
+			 * work (something in the EMX system() ate them, I think).
 			 */
-			STRCAT(itmp, "\\");	
-#else
-			STRCAT(itmp, PATHSEPSTR);
+			if (vim_strchr(itmp, '/'))
+				STRCAT(itmp, "/");
+			else
 #endif
+				STRCAT(itmp, PATHSEPSTR);
 			STRCAT(itmp, TEMPNAME);
 			if ((p = vim_strchr(itmp, '?')) != NULL)
 				*p = extra_char;

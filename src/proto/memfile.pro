@@ -12,4 +12,3 @@ blocknr_t mf_trans_del __PARMS((MEMFILE *mfp, blocknr_t old_nr));
 void mf_set_xfname __PARMS((MEMFILE *mfp));
 void mf_fullname __PARMS((MEMFILE *mfp));
 int mf_need_trans __PARMS((MEMFILE *mfp));
-void mf_statistics __PARMS((void));

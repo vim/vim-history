@@ -1441,7 +1441,7 @@ fi
 
 
 if test -z "$MOTIF_COMMENT"; then
-  gui_includes="`echo $x_includes|sed 's%/^/^/*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
+  gui_includes="`echo $x_includes|sed 's%/^/^/*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/X11*/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
   echo $ac_n "checking for location of Motif GUI includes""... $ac_c" 1>&6
   GUI_INC_LOC=
   for try in $gui_includes; do
@@ -1461,7 +1461,7 @@ fi
 
 
 if test -z "$MOTIF_COMMENT"; then
-  gui_libs="`echo $x_libraries|sed 's%/^/^/*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
+  gui_libs="`echo $x_libraries|sed 's%/^/^/*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
   echo $ac_n "checking for location of Motif GUI libs""... $ac_c" 1>&6
   GUI_LIB_LOC=
   for try in $gui_libs; do
@@ -3029,7 +3029,7 @@ else
 fi
 done
 
-for ac_func in tgetent memset strerror fchown fsync fchdir
+for ac_func in tgetent memset strerror fchown fsync fchdir lstat
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
@@ -3302,7 +3302,7 @@ test -f tags && mv tags tags.save
 (eval ctags -t    /dev/null) < /dev/null 1>&5 2>&1 && CTAGS="ctags -t"
 (eval ctags -ts   /dev/null) < /dev/null 1>&5 2>&1 && CTAGS="ctags -ts"
 (eval ctags -tvs  /dev/null) < /dev/null 1>&5 2>&1 && CTAGS="ctags -tvs"
-(eval ctags -i+t  /dev/null) < /dev/null 1>&5 2>&1 && CTAGS="ctags -i+t"
+(eval ctags -i+P  /dev/null) < /dev/null 1>&5 2>&1 && CTAGS="ctags -i+P"
 test -f tags.save && mv tags.save tags
 echo "$ac_t""$CTAGS" 1>&6 
 

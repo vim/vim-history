@@ -1,4 +1,4 @@
-" *vim_menu.txt*   For Vim version 4.5.  Last modification: 1996 Oct 12
+" *vim_menu.txt*   For Vim version 4.6.  Last modification: 1996 Oct 12
 "
 " These menu commands should recreate the default Vim menus.
 " You can use this as a start for your own set of menus.

@@ -192,7 +192,7 @@ static struct option options[] =
 							(char_u *)"%f>%l:%c:%t:%n:%m,%f:%l: %t%*[^0123456789]%n: %m,%f %l %t%*[^0123456789]%n: %m,%*[^\"]\"%f\"%*[^0123456789]%l: %m,%f:%l:%m"},
 #else
 # if defined MSDOS  ||  defined WIN32
-							(char_u *)"%*[^\"]\"%f\"%*[^0-9]%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"},
+							(char_u *)"%f(%l) : %t%*[^0-9]%n: %m,%*[^\"]\"%f\"%*[^0-9]%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"},
 # else
 #  if defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
 							(char_u *)"%f:%l:%m,%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f(%l:%c) : %m"},
@@ -213,7 +213,7 @@ static struct option options[] =
 #endif
 	{"expandtab",	"et",	P_BOOL|P_IND,		(char_u *)PV_ET,
 							(char_u *)FALSE},
-	{"exrc",		NULL,	P_BOOL,				(char_u *)&p_exrc,
+	{"exrc",		"ex",	P_BOOL,				(char_u *)&p_exrc,
 							(char_u *)FALSE},
 	{"flash",		"fl",	P_BOOL,				(char_u *)NULL,
 							(char_u *)FALSE},
@@ -994,47 +994,57 @@ set_init_3()
 	do_srr = !(options[idx2].flags & P_WAS_SET);
 
 	/*
-	 * Default for p_sp is "| tee", for p_srr is ">".
-	 * For known shells it is changed here to include stderr.
+	 * Isolate the name of the shell:
+	 * - Skip beyond any path.  E.g., "/usr/bin/csh -f" -> "csh -f".
+	 * - Remove any argument.  E.g., "csh -f" -> "csh".
 	 */
 	p = gettail(p_sh);
-	if (	fnamecmp(p, "csh") == 0 ||
-			fnamecmp(p, "tcsh") == 0
+	p = strnsave(p, skiptowhite(p) - p);
+	if (p != NULL)
+	{
+		/*
+		 * Default for p_sp is "| tee", for p_srr is ">".
+		 * For known shells it is changed here to include stderr.
+		 */
+		if (	fnamecmp(p, "csh") == 0 ||
+				fnamecmp(p, "tcsh") == 0
 # ifdef OS2			/* also check with .exe extension */
-			|| fnamecmp(p, "csh.exe") == 0
-			|| fnamecmp(p, "tcsh.exe") == 0
+				|| fnamecmp(p, "csh.exe") == 0
+				|| fnamecmp(p, "tcsh.exe") == 0
 # endif
-											)
-	{
-		if (do_sp)
+		   )
 		{
-			p_sp = (char_u *)"|& tee";
-			options[idx1].def_val = p_sp;
+			if (do_sp)
+			{
+				p_sp = (char_u *)"|& tee";
+				options[idx1].def_val = p_sp;
+			}
+			if (do_srr)
+			{
+				p_srr = (char_u *)">&";
+				options[idx2].def_val = p_srr;
+			}
 		}
-		if (do_srr)
-		{
-			p_srr = (char_u *)">&";
-			options[idx2].def_val = p_srr;
-		}
-	}
-	else
+		else
 # ifndef OS2	/* Always use bourne shell style redirection if we reach this */
-		if (	STRCMP(p, "sh") == 0 ||
-				STRCMP(p, "ksh") == 0 ||
-				STRCMP(p, "zsh") == 0 ||
-				STRCMP(p, "bash") == 0)
+			if (	STRCMP(p, "sh") == 0 ||
+					STRCMP(p, "ksh") == 0 ||
+					STRCMP(p, "zsh") == 0 ||
+					STRCMP(p, "bash") == 0)
 # endif
-	{
-		if (do_sp)
-		{
-			p_sp = (char_u *)"2>&1| tee";
-			options[idx1].def_val = p_sp;
-		}
-		if (do_srr)
-		{
-			p_srr = (char_u *)">%s 2>&1";
-			options[idx2].def_val = p_srr;
-		}
+			{
+				if (do_sp)
+				{
+					p_sp = (char_u *)"2>&1| tee";
+					options[idx1].def_val = p_sp;
+				}
+				if (do_srr)
+				{
+					p_srr = (char_u *)">%s 2>&1";
+					options[idx2].def_val = p_srr;
+				}
+			}
+		vim_free(p);
 	}
 #endif
 
@@ -1667,23 +1677,27 @@ do_set(arg)
 							for (s = p_viminfo; *s;)
 							{
 								/* Check it's a valid character */
-								if (vim_strchr((char_u *)"\"'fr:/", *s) == NULL)
+								if (vim_strchr((char_u *)"\"'frn:/", *s)
+																	  == NULL)
 								{
 									illegal_char(errbuf, *s);
 									errmsg = errbuf;
 									break;
 								}
-								if (*s == 'r')
+								if (*s == 'n')	/* name is always last one */
+								{
+									break;
+								}
+								else if (*s == 'r')	/* skip until next ',' */
 								{
 									while (*++s && *s != ',')
 										;
 								}
-								else
+								else			/* must have a number */
 								{
 									while (isdigit(*++s))
 										;
 
-									/* Must be a number after the character */
 									if (!isdigit(*(s - 1)))
 									{
 										sprintf((char *)errbuf,
@@ -1960,7 +1974,7 @@ skip:
 		ml_open_files();
 
 	if (p_ch != oldch)				/* p_ch changed value */
-		command_height();
+		command_height(oldch);
 #ifdef USE_MOUSE
 	if (*p_mouse == NUL)
 		mch_setmouse(FALSE);		/* switch mouse off */
@@ -2036,8 +2050,9 @@ set_options_bin(oldval, newval)
 #ifdef VIMINFO
 /*
  * Find the parameter represented by the given character (eg ', :, ", or /),
- * and return its associated value in the 'viminfo' string.  If the parameter
- * is not specified in the string, return -1.
+ * and return its associated value in the 'viminfo' string.
+ * Only works for number parameters, not for 'r' or 'n'.
+ * If the parameter is not specified in the string, return -1.
  */
 	int
 get_viminfo_parameter(type)
@@ -2045,10 +2060,34 @@ get_viminfo_parameter(type)
 {
 	char_u	*p;
 
-	p = vim_strchr(p_viminfo, type);
-	if (p != NULL && isdigit(*++p))
-		return (int)atol((char *)p);
+	p = find_viminfo_parameter(type);
+	if (p != NULL && isdigit(*p))
+		return atoi((char *)p);
 	return -1;
+}
+
+/*
+ * Find the parameter represented by the given character (eg ', :, ", or /) in
+ * the 'viminfo' option and return a pointer to the string after it.
+ * Return NULL if the parameter is not specified in the string.
+ */
+	char_u *
+find_viminfo_parameter(type)
+	int		type;
+{
+	char_u	*p;
+
+	for (p = p_viminfo; *p; ++p)
+	{
+		if (*p == type)
+			return p + 1;
+		if (*p == 'n')				/* 'n' is always the last one */
+			break;
+		p = vim_strchr(p, ',');		/* skip until next ',' */
+		if (p == NULL)				/* hit the end without finding parameter */
+			break;
+	}
+	return NULL;
 }
 #endif
 
@@ -3723,6 +3762,17 @@ do_doautocmd(arg)
 {
 	char_u		*fname;
 	int			nothing_done = TRUE;
+	static int	nesting = 0;
+
+	/*
+	 * Allow nesting of autocommands, but restrict the depth, because it's
+	 * possible to create an endless loop.
+	 */
+	if (nesting == 10)
+	{
+		EMSG(":doautocmd nesting too deep");
+		return;
+	}
 
 	if (*arg == '*')
 	{
@@ -3740,15 +3790,17 @@ do_doautocmd(arg)
 
 	fname = skipwhite(fname);
 
+	++nesting;
 	/*
 	 * Loop over the events.
 	 */
 	while (*arg && !vim_iswhite(*arg))
-		if (apply_autocmds(event_name2nr(arg, &arg), fname, NULL))
+		if (apply_autocmds(event_name2nr(arg, &arg), fname, NULL, TRUE))
 			nothing_done = FALSE;
 
 	if (nothing_done)
 		MSG("No matching autocommands");
+	--nesting;
 }
 
 /*
@@ -3756,10 +3808,11 @@ do_doautocmd(arg)
  * Return TRUE if some commands were executed.
  */
 	int
-apply_autocmds(event, fname, fname_io)
+apply_autocmds(event, fname, fname_io, force)
 	int				event;
 	char_u			*fname;		/* NULL or empty means use actual file name */
 	char_u			*fname_io;	/* fname to use for "^Vf" on cmdline */
+	int				force;		/* when TRUE, ignore autocmd_busy */
 {
 	struct regexp	*prog;
 	char_u			*tail;
@@ -3772,7 +3825,7 @@ apply_autocmds(event, fname, fname_io)
 	char_u			*full_fname = NULL;
 	int				retval = FALSE;
 
-	if (autocmd_busy)			/* no nesting allowed */
+	if (autocmd_busy && !force)			/* no nesting allowed */
 		return retval;
 	/*
 	 * Check if these autocommands are disabled.  Used when doing ":all" or

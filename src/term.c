@@ -148,6 +148,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CZR,		"\033|4H"},		/* 4  = HL_ITAL,		H = off */
 	{KS_CZH,		"\033|4h"},		/* 4  = HL_ITAL,		h = on */
 	{KS_VB,			"\033|f"},
+	{KS_MS,			"y"},
 # ifdef TERMINFO
 	{KS_CM,			"\033|%p1%d;%p2%dM"},
 # else
@@ -190,7 +191,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_UE,			"\033[0m"},
 	{KS_CZH,		"\033[3m"},
 	{KS_CZR,		"\033[0m"},
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -264,7 +265,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CL,			"\033[H\033[2J"},
 	{KS_ME,			"\033[0m"},
 	{KS_MR,			"\033[7m"},
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -295,7 +296,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CL,			"\033[2J"},
 	{KS_ME,			"\033[0m"},
 	{KS_MR,			"\033[7m"},
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -368,12 +369,15 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CZR,		"\033|0m"},		/* italic mode end */
 	{KS_US,			"\033|67m"},	/* underscore mode: cyan text on red */
 	{KS_UE,			"\033|0m"},		/* underscore mode end */
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033|%i%p1%d;%p2%dH"},
 #  else
 	{KS_CM,			"\033|%i%d;%dH"},
 #  endif
+#ifdef DJGPP
+	{KS_VB,			"\033|B"},		/* visual bell */
+#endif
 	{K_UP,			"\316H"},
 	{K_DOWN,		"\316P"},
 	{K_LEFT,		"\316K"},
@@ -453,7 +457,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_US,			"\033|67m"},	/* underscore mode: cyan text on red */
 	{KS_UE,			"\033|0m"},		/* underscore mode end */
 
-	{KS_MS,			"\001"},		/* save to move cur in reverse mode */
+	{KS_MS,			"y"},			/* save to move cur in reverse mode */
 #  ifdef TERMINFO
 	{KS_CM,			"\033|%i%p1%d;%p2%dH"},	/* cursor motion */
 #  else
@@ -505,7 +509,7 @@ struct builtin_term builtin_termcaps[] =
 	{K_PAGEUP,		"\316I"},
 # endif
 
-# if defined(ALL_BUILTIN_TCAPS) || defined(MINT)
+# if defined(ALL_BUILTIN_TCAPS) || defined(__MINT__)
 /*
  * Ordinary vt52
  */
@@ -513,7 +517,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CE,			"\033K"},
 	{KS_CD,			"\033J"},
 	{KS_CM,			"\033Y%+ %+ "},
-#  ifdef MINT
+#  ifdef __MINT__
 	{KS_AL,			"\033L"},
 	{KS_DL,			"\033M"},
 	{KS_CL,			"\033E"},
@@ -560,7 +564,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_CL,			"\033H\033J"},
 	{KS_ME,			"\033SO"},
 	{KS_MR,			"\033S2"},
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  endif
 # endif
 
@@ -595,7 +599,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_MD,			"\033[1m"},
 	{KS_UE,			"\033[m"},
 	{KS_US,			"\033[4m"},
-	{KS_MS,			"\001"},
+	{KS_MS,			"y"},
 #  ifdef TERMINFO
 	{KS_CM,			"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -693,7 +697,7 @@ struct builtin_term builtin_termcaps[] =
 	{KS_MD,			"\033[1m"},
 	{KS_UE,			"\033[m"},
 	{KS_US,			"\033[4m"},
-	{KS_MS,			"\001"}, /* does this really work? */
+	{KS_MS,			"y"}, 		/* does this really work? */
 #  ifdef TERMINFO
 	{KS_CM,			"\033[%i%p1%d;%p2%dH"},
 #  else
@@ -880,13 +884,13 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"pcterm"
 #endif /* MSDOS */
 
-#if defined(UNIX) && !defined(MINT)
+#if defined(UNIX) && !defined(__MINT__)
 # define DEFAULT_TERM	(char_u *)"ansi"
 #endif /* UNIX */
 
-#ifdef MINT
+#ifdef __MINT__
 # define DEFAULT_TERM	(char_u *)"vt52"
-#endif /* MINT */
+#endif /* __MINT__ */
 
 #ifdef __EMX__
 # define DEFAULT_TERM	(char_u *)"os2ansi"
@@ -1066,11 +1070,11 @@ set_termname(term)
 				}
 
 				if ((T_MS == NULL || T_MS == empty_option) && tgetflag("ms"))
-					T_MS = (char_u *)"yes";
+					T_MS = (char_u *)"y";
 				if ((T_DB == NULL || T_DB == empty_option) && tgetflag("db"))
-					T_DB = (char_u *)"yes";
+					T_DB = (char_u *)"y";
 				if ((T_DA == NULL || T_DA == empty_option) && tgetflag("da"))
-					T_DA = (char_u *)"yes";
+					T_DA = (char_u *)"y";
 
 
 			/* get key codes */
@@ -1182,10 +1186,7 @@ set_termname(term)
 			if (STRCMP(term, "gui") == 0)
 			{
 				flushbuf();
-				settmode(0);
 				gui_init();
-				if (!gui.in_use)		/* failed to start GUI */
-					settmode(1);
 			}
 #endif /* USE_GUI */
 		}
@@ -2842,51 +2843,57 @@ replace_termcodes(from, bufp, from_part)
 					if (bp >= last_dash)
 					{
 						/*
-						 * Modifier with single letter
+						 * Modifier with single letter, or special key name.
 						 */
 						if (modifiers != 0 && last_dash[2] == '>')
-						{
 							key = last_dash[1];
-							if (modifiers & MOD_MASK_SHIFT)
-								key = TO_UPPER(key);
-							if (modifiers & MOD_MASK_CTRL)
-								key &= 0x1f;
-							if (modifiers & MOD_MASK_ALT)
-								key |= 0x80;
-							src = end_of_name;
-							result[dlen++] = key;
-							continue;
-						}
-
+						else
+							key = get_special_key_code(last_dash + 1);
+						
 						/*
-						 * Key name with or without modifier.
+						 * get_special_key_code() may return NUL for invalid
+						 * special key name.
 						 */
-						else if ((key = get_special_key_code(last_dash + 1))
-																		 != 0)
+						if (key != NUL)
 						{
-							/* Put the appropriate modifier in a string */
-							if (modifiers != 0)
-							{
-								result[dlen++] = K_SPECIAL;
-								result[dlen++] = KS_MODIFIER;
-								result[dlen++] = modifiers;
-								/*
-								 * Special trick: for <S-TAB>  K_TAB is used
-								 * instead of TAB (there are two keys for the
-								 * same thing).
-								 */
-								if (key == TAB)
-									key = K_TAB;
-							}
+							/*
+							 * Special trick: for <S-TAB>  K_TAB is used
+							 * instead of TAB (there are two codes for the
+							 * same thing).
+							 */
+							if (key == TAB && modifiers == MOD_MASK_SHIFT)
+								key = K_TAB;
 
+							/*
+							 * Special Key name with or without modifier.
+							 */
 							if (IS_SPECIAL(key))
 							{
+								/* Put the appropriate modifier in a string */
+								if (modifiers != 0)
+								{
+									result[dlen++] = K_SPECIAL;
+									result[dlen++] = KS_MODIFIER;
+									result[dlen++] = modifiers;
+								}
 								result[dlen++] = K_SPECIAL;
 								result[dlen++] = KEY2TERMCAP0(key);
 								result[dlen++] = KEY2TERMCAP1(key);
 							}
+
+							/*
+							 * Normal Key with or without modifier.
+							 */
 							else
-								result[dlen++] = key;		/* only modifiers */
+							{
+								if (modifiers & MOD_MASK_SHIFT)
+									key = TO_UPPER(key);
+								if (modifiers & MOD_MASK_CTRL)
+									key &= 0x1f;
+								if (modifiers & MOD_MASK_ALT)
+									key |= 0x80;
+								result[dlen++] = key;
+							}
 							src = end_of_name;
 							continue;
 						}

@@ -1,4 +1,4 @@
-*vim_help.txt*	For Vim version 4.5.  Last modification: 1996 Sep 30
+*vim_help.txt*	For Vim version 4.6.  Last modification: 1997 Feb 7
 
 			VIM help file
 
@@ -133,6 +133,7 @@ speedup edit-compile-edit cycle	or compile
 
 set options					|options|
 set options automatically			|auto_setting|
+set options depending on terminal name		|term_dependent_settings|
 save settings					|save_settings|
 comment my exrc/vimrc/gvimrc files		|:quote|
 change the default help height			|'helpheight'|
@@ -211,9 +212,9 @@ N is used to indicate an optional count that can be given before the command.
 |][|	N  ][		N sections forward, at end of section
 |[]|	N  []		N sections backward, at end of section
 |[(|	N  [(		N times back to unclosed '('
-|[(|	N  [{		N times back to unclosed '{'
+|[{|	N  [{		N times back to unclosed '{'
 |])|	N  ])		N times forward to unclosed ')'
-|])|	N  ]}		N times forward to unclosed '}'
+|]}|	N  ]}		N times forward to unclosed '}'
 |[#|	N  [#		N times back to unclosed "#if" or "#else"
 |]#|	N  ]#		N times forward to unclosed "#else" or "#endif"
 |[star|	N  [*		N times back to start of comment "/*"
@@ -286,7 +287,7 @@ matches 1 or more of the preceding atom      \+		  \+
 |`A|	   `<A-Z>	go to mark <A-Z> in any file
 |`0|	   `<0-9>	go to the position where Vim was last exited
 |``|	   ``		go to the position before the last jump
-|`"|	   `"		go to the position when last editing this file
+|`quote|   `"		go to the position when last editing this file
 |`[|	   `[		go to the start of the previously operated or put text
 |`]|	   `]		go to the end of the previously operated or put text
 |`<|	   `<		go to the start of the (previous) Visual area
@@ -556,7 +557,7 @@ matches 1 or more of the preceding atom      \+		  \+
 				     Command-line mode.
 |:map_l|     :ma[p] [lhs]	  List mappings (starting with [lhs]) for
 				     Normal and Visual mode.
-|:map_l!     :ma[p]! [lhs]	  List mappings (starting with [lhs]) for
+|:map_l!|    :ma[p]! [lhs]	  List mappings (starting with [lhs]) for
 				     Insert and Command-line mode.
 |:cmap|	     :cmap/:cunmap/:cnoremap
 				  like ":map!"/":unmap!"/":noremap!" but for
@@ -644,7 +645,7 @@ Short explanation of each option:		*option_list*
 |'errorformat'|    |'efm'|	description of the lines in the error file
 |'esckeys'|	   |'ek'|	recognize function keys in Insert mode
 |'expandtab'|	   |'et'|	use spaces when <Tab> is inserted
-|'exrc'|			read .vimrc and .exrc in the current directory
+|'exrc'|	   |'ex'|	read .vimrc and .exrc in the current directory
 |'formatoptions'|  |'fo'|	how automatic formatting is to be done
 |'formatprg'|	   |'fp'|	name of external program used with "gq" command
 |'gdefault'|	   |'gd'|	the ":substitute" flag 'g' is default on
@@ -795,8 +796,8 @@ Short explanation of each option:		*option_list*
 				   decimal, hex, and octal
 |g_CTRL-G|	   g CTRL-G	show cursor column, line, and character
 				   position
-|CTRL-C|	   CTRL-C	during searches: interrupt the search
-|CTRL-BREAK|	   CTRL-BREAK	MS-DOS: during searches: interrupt the search
+|CTRL-C|	   CTRL-C	during searches: Interrupt the search
+|CTRL-Break|	   CTRL-Break	MS-DOS: during searches: Interrupt the search
 |<Del>|		   <Del>	while entering a count: delete last character
 |:version|	:ve[rsion]	show exact version number of this Vim
 |:mode|		:mode N		MS-DOS: set screen mode to N (number, C80,
@@ -1093,6 +1094,7 @@ can use CTRL-T, g<RightMouse>, or <C-RightMouse> to go back to where you were.
 ------------------------------------------------------------------------------
 
 			*www* *faq* *FAQ* *ftp* *distribution* *download*
+
 The Vim pages contain the most recent information about Vim.  They also
 contains links to the most recent version of Vim.  The FAQ is a list of
 Frequently Asked Questions, read this if you have problems.
@@ -1143,6 +1145,7 @@ An archive is kept at:
 <URL:ftp://ftp.ii.uib.no/pub/vim/mail-archive/vim/maillist.html>
 <URL:ftp://ftp.ii.uib.no/pub/vim/mail-archive/vimdev/maillist.html>
 <URL:ftp://ftp.ii.uib.no/pub/vim/mail-archive/vimannounce/maillist.html>
+<URL:http://www.findmail.com/listsaver/vimannounce.html>
 
 *credits* *author*
 

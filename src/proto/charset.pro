@@ -8,6 +8,7 @@ int strsize __PARMS((register char_u *s));
 int chartabsize __PARMS((register int c, colnr_t col));
 int win_chartabsize __PARMS((register WIN *wp, register int c, colnr_t col));
 int linetabsize __PARMS((char_u *s));
+int win_linetabsize __PARMS((WIN *wp, char_u *s));
 int isidchar __PARMS((int c));
 int iswordchar __PARMS((int c));
 int isfilechar __PARMS((int c));

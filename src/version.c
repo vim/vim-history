@@ -19,6 +19,191 @@
  * interesting.  Differences between version 3.0 and 4.x can be found in
  * "../doc/vim_40.txt".
  *
+ * Changes between version 4.6c BETA and 4.6 RELEASE:
+ * - Changed "dirname" to "dname" in memline.c, to avoid a warning for Alpha.
+ * - Fixed: Cursor wasn't positioned correctly after ":new|r !ls", and
+ *   possibly with other commands.
+ * - A couple of changes to get rid of compiler warning messages.
+ *
+ * Changes between version 4.6b BETA and 4.6c BETA:
+ * - Fixed: ":.,/^$/d" would delete more than two lines, when the line under
+ *   the cursor is empty.
+ * - Fixed: In OS/2 version filtering would not work with 'shell' set to tcsh
+ *   or bash.
+ * - Fixed: b_p_si undefined when SMARTINDENT disabled.
+ * - When writing a new viminfo file in the same directory as the original
+ *   doesn't work, try creating it in a temp directory.
+ * - Fixed: cindenting could get into an endless loop on a line that starts
+ *   with a '}' and contains a set of matching braces.
+ * - Fixed: cinindenting didn't work correctly when a line "do {" was found.
+ * - Fixed: was not possible to position the cursor with an autocommand when
+ *   starting to edit a file.
+ * - Fixed: For named file marks, the short filename could be wrong.  E.g., if
+ *   the current directory is "/dir" and the filename starts with "/dir1".
+ * - Fixed: When using "./tags" in 'tags' option, use short filename when
+ *   possbile, avoid long filenames.
+ * - Fixed: Could not exit from the "--more--" prompt with ESC.
+ * - Fixed: When jumping to tag, could get a buffer where the filename has not
+ *   been expanded to a full path.
+ * - Atari Mint: Changed "MINT" to "__MINT__", removed -DMINT from makefile.
+ * - Fixed: Repeating "r<CR>" with "." didn't work correctly.
+ * - Fixed: When an argument like "-f" was included in 'shell', 'shellredir'
+ *   and 'shellpipe' would not be set correctly.
+ * - Included tools/pltags.pl: create tags file for Perl script.
+ *
+ * Changes between version 4.6a BETA and 4.6b BETA:
+ * - Fixed typo in memline.c: S_IFLINK should be S_IFLNK.
+ * - Changed name of tempfile for writing viminfo file, put it in the same
+ *   directory as the viminfo file, so it doesn't need to be copied.  Preserve
+ *   protection of old viminfo file.  Improved check for permission to
+ *   overwrite existing viminfo file.
+ * - Fixed: When writing viminfo, file names were expanded.  Besides taking a
+ *   lot of time, this caused the floppy drive to be accessed, if you had
+ *   previously edited a file on it.
+ * - Fixed: Filename expansion found an extra file if shell is "zsh".
+ * - Fixed: With some versions of Motif, a window resize would not redraw.
+ * - Fixed: ":help" gave BOTTOM-TOP warning message.
+ * - Fixed: Gave warning message for guessing tag search, when just ignoring
+ *   case while 'ignorecase' set.
+ * - Fixed: CTRL-B with a large count, hitting the start of the file, didn't
+ *   update the screen.
+ * - Fixed: When '$' is included in 'cpoptions', CTRL-X CTRL-F in Replace mode
+ *   didn't update correctly.
+ * - OS/2: "[" isn't supported by wildcard expansion, removed from
+ *   mch_has_wildcards().
+ * - Added 'a' and 'A' flags to 'cpoptions', included by default.  Allows
+ *   setting of alternate filename by ":read" and ":write" to be disabled.
+ * - Fixed: When 'wildchar' was set to <Esc>, and using <Esc> to complete a
+ *   filename, hitting <CR> next abandoned the commandline.
+ * - Fixed: When running out of memory, a screen resize resulted in an endless
+ *   loop, finally crashing Vim.
+ * - Fixed: "0^D" in Replace mode didn't put the character back that '0'
+ *   replaced.
+ * - Fixed: 'cindent' in Replace mode, when inserting a CR and then
+ *   backspacing, didn't put the correct number of characters back.
+ * - Fixed: ":gui" would crash when the geometry from .Xdefaults has more
+ *   lines than the terminal window.
+ * - Ignore certain lines in viminfo, allowing for future expansion.
+ *
+ * Changes between version 4.5 and 4.6a BETA:
+ * - Fixed: When using ":gui" with both 'exrc' and 'secure' set, it was
+ *   impossible to use "unsecure" commands in gvim!
+ * - Fixed: When moving the cursor with the mouse in Insert mode, other
+ *   windows on the same buffer were not updated.
+ * - Made Win32 version expand environment variables in file names (just like
+ *   MS-DOS version already did).
+ * - Fixed cindenting for multi-line comment in declaration (Mukhin).
+ * - Added support for expanding "${HOME}" type of environment variables for
+ *   Unix (Acevedo).  Useful for "gf" when '{' and '}' added to 'isfname'.
+ * - Fixed: Would sometimes do smart-indenting, even though 'smartindent'
+ *   isn't set.  E.g. with "2cc#".
+ * - Fixed: For MS-DOS-like filenames, "\$home" was interpreted as the file
+ *   "$home" in the root directory.  Now "\$home" means the file "$home" in
+ *   the current directory.
+ * - Fixed: File name expansion with "zsh" didn't work if there is an entry
+ *   without a match (e.g. when expanding the names for the swap file).
+ *   (Acevedo)
+ * - Fixed: Number of lines reported for a yank was one too few when yanking
+ *   characterwise (Chan).
+ * - MS-DOS and Win32: Improved errorformat default for MicroSoft compilers.
+ * - Win32: Worked around a bug in Windows NT 4.0 console handler for dead
+ *   keys (Reilly).
+ * - Fixed: When deleting the last char on a line, the ruler was not adjusted
+ *   from ",1" to ",0-1".
+ * - Fixed: When the ":version" command was not in your .vimrc, Vim would
+ *   report version number 4.0.
+ * - Upgraded cproto from version 3.7 to 4.5b (used to generate prototypes).
+ * - DJPGG: Use version 2.1 instead of 2.0.  Include CWSDPMI v3 instead of v1.
+ * - Added "ex" as an abbreviation for the 'exrc' option (some versions of vi
+ *   have it).
+ * - Unix: Made use of viminfo file more secure: umask is set to 077 (so
+ *   others can't read it) and owner is checked (so you don't overwrite
+ *   somebody else's viminfo file).
+ * - Win32: Fixed reported bug that on a Novell filesystem the temp files for
+ *   renaming are left lying around. (Reilly)
+ * - Fixed: When 'smarttab' and 'expandtab' on, "r<Tab>" on the first
+ *   non-blank in a line didn't delete that character.
+ * - Fixed: When 'smarttab' on and 'expandtab' off, "r<Tab>" didn't insert
+ *   the correct amount of blank space.
+ * - When 'shellpipe' is empty, don't redirect the output of ":make" into
+ *   'errorfile' (for programs that write to 'errorfile' directly).
+ * - Allow execution of ":doautocmd" while executing autocommands.
+ * - Fixed: Blockwise Visual mode would work on the wrong area when there is a
+ *   (big) difference in use of TABs in first and last line.
+ * - DJGPP: small changes for version 2.01.  Fixed kbhit() using BIOS function
+ *   instead of DOS call, was unable to use terminal on serial port.
+ * - Fixed getting a wrong error message when using ":b f" and there is more
+ *   than one match.
+ * - Fixed: "3[<C-I>" didn't find the same match as "3<C-W><C-I>".
+ * - Fixed: OS/2 version now skips directory names when expanding a file name
+ *   and only files are wanted.
+ * - Fixed: under DJGPP it was not possible to switch off the visual bell.
+ * - Fixed: "/[\x]" should match both '\' and 'x', not just 'x'.  In Vi only
+ *   ']', '^', '-' and '\' are special after a backslash.
+ * - Fixed: "\t" didn't work inside "[]" in regexp patterns.  Added 'l' flag
+ *   in 'cpoptions' to switch this off again.
+ * - Fixed: "imap <M-Tab>" and ":imap ~I" produced two mappings, the first
+ *   one didn't work.  Now any mapping in <C-M-S-key> form is translated into
+ *   it's 8-bit ASCII equivalent when possible, instead of using a separate
+ *   modifier.  Also makes things like <M-CR> work where <M-^M> worked.
+ * - Fixed: filename used after 'r' flag in 'viminfo' would confuse settings
+ *   for other flags.
+ * - Added 'n' flag to 'viminfo': set name for viminfo filename.
+ * - Fixed doc/doctags.c to avoid producing a few bogus tags.
+ * - Included new "macros/file_select" from Raul Segura Acevedo.
+ * - Fixed: screenalloc() didn't handle out-of-memory situations correctly.
+ * - Fixed: "10000ibug<Esc>" could not be interrupted.
+ * - Fixed: Emacs tags parsing didn't handle identifier names with digits and
+ *   non-white characters before define/typedef names.
+ * - Fixed: ":cn" that stays within a file, didn't set '' mark.
+ * - Fixed: CTRL-X commands in insert mode that showed a message and delayed
+ *   for two seconds now update the screen before the delay.
+ * - Adjusted the characters that are recognized as wildcards for OS/2.
+ * - When finding a swap file from Vim 3.0 (contains "VIM 3.0"), give a
+ *   meaningful error message.
+ * - Configure: Also check "/usr/X11* /include" and "/usr/X11* /lib" for Motif
+ *   files.
+ * - Fixed: Changing 'cmdheight' in an autocommand didn't work properly.
+ * - Set 't_ms' for GUI, can move cursor while highlighting.
+ * - Fixed: Comment after ":s" was executed as if it were a command.
+ * - Don't call mch_breakcheck() for each mapped character.  Speeds up
+ *   executing macros quite a bit.
+ * - Fixed: When using ":gui" to start the GUI, error messages caused by
+ *   .gvimrc were messed up.  Things like "16H" are also gone now.
+ * - Fixed: When trying to recover a file and wildcard expansion fails (e.g.
+ *   when 'shell' is invalid), could not find the swapfile.  Now try finding a
+ *   swapfile by simply adding ".swp" to the file name.
+ * - Fixed: When setting 'cmdheight' in .vimrc, messages for loading files
+ *   could be printed over each other.
+ * - Fixed: ":wall | make" wrote the "make" message after the file message.
+ * - Fixed: ":ri" didn't handle TABs in the middle of text correctly.
+ * - Fixed: "gvim +help" produced warning messages for scrollbar value.
+ * - Fixed: ":source" command didn't ignore a trailing CTRL-Z in textmode.
+ * - Changed directory separator for MS-DOS, Win32 and OS/2 to backslash,
+ *   because a slash sometimes gives problems (in a command name), and the
+ *   backslash was used in most situations already anyway.
+ * - Fixed: "vP" would have a wrong end pos when it is a single "}" on a line.
+ * - Fixed: "vim -r" in MS-DOS version would put cursor at top of screen.
+ *   Moved mch_windinit() down to after "full_screen = FALSE".
+ * - Fixed: ":/pat1//pat2/" didn't work.
+ * - Fixed: "/\" didn't always work (problem with trailing backslash).
+ * - Added a warning message for when a command from a tags file changes a
+ *   buffer (this is a security leak!).
+ * - Added 'd' flag to 'cpoptions': Using "./tags" in 'tags' option uses tags
+ *   file in current directory, instead of relative to current file.
+ * - Fixed: Executing the command from a tags file was not done with 'magic'
+ *   off.  Removed checking the search pattern, to make this Vi compatible.
+ *   The program generating the tags file should only escape backslash
+ *   characters and '/'.  Fixed doctags.c to use "*" instead of "\*".
+ * - Fixed: 'cindent' was wrong for skipping from an "else" to the matching
+ *   "if", when inside {}.
+ * - Fixed: ":sp file" was setting '" mark for current buffer.
+ * - Fixed: ":sh" doesn't need to wait for return when finished.
+ * - Fixed: ":r file" didn't set alternate filename.
+ * - Fixed: Redo of "a)<Esc>" would stay in insert mode when 'showmatch' set
+ *   and there is no match.  Don't flush input when there is no match.
+ * - Makefile for Unix didn't recompile when version.h was changed.
+ *
  * Changes between version 4.4 BETA and 4.5:
  * - Ignore CR in line from tags file, also when there is no search command.
  * - Fixed small cindent problem, when using 'cino' with non-zero after '}'.
@@ -105,7 +290,7 @@
  * Changes between version 4.2 and 4.3 BETA:
  * - Moved ctags, tee and xxd sources from the binary to the source archive.
  * - OS/2: Adjusted ExpandWildCards again, fixed alloc/free error.
- * - Fixed: "Nothing in register ^@", ^@ for buffer 0 is now "
+ * - Fixed: "Nothing in register ^@", ^@ for buffer 0 is now ""
  * - Fixed: Was outputting CR CR LF instead of CR LF for termios.
  * - Fixed: cindent didn't handle "} else" and "} while (cond);".
  * - Fixed: Was using killpg(0, SIGINT) to interrupt external commands in the
@@ -199,7 +384,7 @@
  *   autocommands and set the previous context mark.
  * - Fixed: "*``" moved the cursor back to the start of the word, instead of
  *   where the cursor was within or before the word.
- * - Fixed: ":e %:p:h" removed the head of the path ("/" for unix, "d:\" for
+ * - Fixed: ":e %:p:h" removed the head of the path ("/" for unix, "d:\\" for
  *   DOS, "drive:" for Amiga.
  * - Fixed: for the Win32 version, 'term' must be "win32", don't init it with
  *   $TERM.
@@ -328,18 +513,18 @@
  */
 
 /*
- * Version[] is copied into the swap file (max. length is 10 chars).
+ * Version[] is copied into the swap file (max. length is 6 chars).
  * longVersion[] is used for the ":version" command and "Vim -h".
  * Don't forget to update the numbers in version.h for Win32!!!
  */
 
 #include "version.h"
 
-char		   *Version = "VIM 4.5";
+char		   *Version = "4.6";
 #ifdef HAVE_DATE_TIME
-char		   *longVersion = "VIM - Vi IMproved 4.5 (1996 Oct 12, compiled " __DATE__ " " __TIME__ ")";
+char		   *longVersion = "VIM - Vi IMproved 4.6 (1997 Mar 13, compiled " __DATE__ " " __TIME__ ")";
 #else
-char		   *longVersion = "VIM - Vi IMproved 4.5 (1996 Oct 12)";
+char		   *longVersion = "VIM - Vi IMproved 4.6 (1997 Mar 13)";
 #endif
 
 static void version_msg __ARGS((char *s));

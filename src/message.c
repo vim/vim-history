@@ -515,11 +515,10 @@ msg_outtrans_special(str, all)
 		}
 		if ((c & 0x80) && all)
 		{
+			string = get_special_key_name((c & 0x7f), MOD_MASK_ALT);
 			start_highlight();
-			MSG_OUTSTR("<M-");
-			msg_outstr(transchar(c & 0x7f));
-			retval += 2 + charsize(c & 0x7f);
-			MSG_OUTSTR(">");
+			msg_outstr(string);
+			retval += STRLEN(string);
 			stop_highlight();
 		}
 		else
@@ -680,6 +679,7 @@ msg_outstr(s)
 						/*FALLTHROUGH*/
 					case 'q':			/* quit */
 					case Ctrl('C'):
+					case ESC:
 						got_int = TRUE;
 						quit_more = TRUE;
 						break;
@@ -774,6 +774,8 @@ msg_moremsg(full)
 /*
  * msg_check_screen - check if the screen is initialized.
  * Also check msg_row and msg_col, if they are too big it may cause a crash.
+ * While starting the GUI the terminal codes will be set for the GUI, but the
+ * output goes to the terminal.  Don't use the terminal codes then.
  */
 	static int
 msg_check_screen()

@@ -805,10 +805,7 @@ gui_mch_init()
 
 	if (gui.dpy == NULL)
 	{
-		x = full_screen;
-		full_screen = FALSE;			/* use fprintf() */
 		EMSG("cannot open display");
-		full_screen = x;
 		return FAIL;
 	}
 

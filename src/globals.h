@@ -69,6 +69,8 @@ EXTERN int		redraw_cmdline INIT(= FALSE);	/* cmdline must be redrawn */
 EXTERN int		clear_cmdline INIT(= FALSE);	/* cmdline must be cleared */
 EXTERN int		modified INIT(= FALSE);			/* buffer was modified since
 													last redraw */
+EXTERN int		tag_modified INIT(= FALSE);		/* buffer was modified since
+													start of tag command */
 EXTERN int		screen_cleared INIT(= FALSE);	/* screen has been cleared */
 
 /*

@@ -1457,7 +1457,7 @@ showmatch()
 	colnr_t			vcol;
 
 	if ((lpos = findmatch(NUL)) == NULL)		/* no match, so beep */
-		beep_flush();
+		vim_beep();
 	else if (lpos->lnum >= curwin->w_topline)
 	{
 		if (!curwin->w_p_wrap)
@@ -2350,7 +2350,7 @@ current_block(what, count)
 		old_pos = curwin->w_cursor;
 		decl(&curwin->w_cursor);
 		if (what == '{')
-			while (inindent(0))
+			while (inindent(1))
 				if (decl(&curwin->w_cursor) != 0)
 					break;
 		if (!lt(start_pos, old_start) && !lt(old_end, curwin->w_cursor))

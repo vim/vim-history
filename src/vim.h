@@ -105,7 +105,7 @@
 # include "win32.h"
 #endif
 
-#ifdef MINT
+#ifdef __MINT__
 # include "mint.h"
 #endif
 

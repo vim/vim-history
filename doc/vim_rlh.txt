@@ -1,10 +1,10 @@
-*vim_rlh.txt*   For Vim version 4.5.  Last modification: 1996 June 11
+*vim_rlh.txt*   For Vim version 4.6.  Last modification: 1996 Dec 9
 
 Right to Left and Hebrew Mapping for Vim		*hebrew*
 ========================================
 
 These functions have been made by Avner Lottem
-E-mail: lottem@tx.technion.ac.il
+E-mail: <lottem@tx.technion.ac.il>
 Phone:  +972-4-8307322
 
 

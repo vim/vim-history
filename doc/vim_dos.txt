@@ -1,4 +1,6 @@
-*vim_dos.txt*   For Vim version 4.5.  Last modification: 1996 Sep 29
+*vim_dos.txt*   For Vim version 4.6.  Last modification: 1997 Mar 8
+
+*dos* *msdos* *ms-dos*
 
 This file contains the particularities for the MS-DOS version of Vim.
 
@@ -7,30 +9,31 @@ THREE VERSIONS FOR MS-DOS
 
 There are Three versions of Vim that can be used with MS-DOS machines:
 
-16-bit version	Can be used on any MS-DOS system, only uses up to
+Dos16 version	Can be used on any MS-DOS system, only uses up to
 		640 Kbyte of memory.  Also runs on OS/2, Windows 95, and NT.
 		Recommended for use on pre-386 machines.
-32-bit version  Requires 386 processor and a DPMI driver, uses all
-		available memory.  Supports long file names where available.
-		Recommended for MS-DOS, Windows 3.1 and Windows 95.
+Dos32 version	Requires 386 processor and a DPMI driver, uses all
+		available memory.  Supports long file names, but NOT on
+		Windows NT.  Recommended for MS-DOS, Windows 3.1 and Windows
+		95.
 Win32 version   Requires Windows 95 or Windows NT, uses all available
 		memory, supports long file names, etc.  Has some problems on
 		Windows 95.  Recommended for Windows NT.  See |vim_w32.txt|
 
-It is recommended to use the 32-bit or Win32 version.  Although the 16-bit
+It is recommended to use the Dos32 or Win32 version.  Although the Dos16
 version is able to edit very big files, it quickly runs out of memory when
 making big changes.  Disabling undo helps: ":set ul=-1".  The screen updating
-of the 16-bit version is the fastest of the three on DOS or Windows 95; on
+of the Dos16 version is the fastest of the three on DOS or Windows 95; on
 Windows NT, the Win32 version is just as fast.
 
-For the 32-bit version, you may need a DPMI driver when running in MS-DOS.  If
+								*DPMI*
+For the Dos32 version, you may need a DPMI driver when running in MS-DOS.  If
 you are running Windows or installed a clever memory manager, it will probably
-run already.  If you get the message "No DPMI", you need to install a DPMI
-driver.  Such a driver is included with the executable.  The latest version of
-"CWSDPMI.ZIP" can be obtained from: "ftp.neosoft.com:pub/users/s/sandmann".
-
-If the 32-bit DOS version is run on Windows 95 or Windows NT, it can use long
-filenames, as can the Win32 version.
+work already.  If you get the message "No DPMI", you need to install a DPMI
+driver.  Such a driver is included with the executable in CSDPMI3b.zip.  Run
+"cwsdpmi" just before starting Vim each time.  Or you might want to include
+"cwsdpmi -p" in your autoexec.bat to make it resident.  The latest version of
+"CSDPMI*.ZIP" can be obtained from: "ftp.neosoft.com:pub/users/s/sandmann".
 
 
 KNOWN PROBLEMS
@@ -43,15 +46,22 @@ KNOWN PROBLEMS
   CTRL-ALT-DEL will not get you out of this.  This is really a problem of
   smartdrive, not Vim.  Smartdrive works fine otherwise.  If this bothers you,
   don't use the write-behind caching.
-- The 16 bits MS-DOS version can only have about 10 files open (in a window or
-  hidden) at one time.  With more files you will get error messages when
-  trying to read or write a file, and for filter commands.
-- The 32 bit version can work with long filenames.  When doing filename
+- Vim can't read swapfiles that have been opened already, unless the "share"
+  command has been used.  If you see stray warnings for existing swap files,
+  include the "share" command in your config.sys or autoexec.bat (see your
+  MSDOS documentation).
+- The Dos16 version can only have about 10 files open (in a window or hidden)
+  at one time.  With more files you will get error messages when trying to
+  read or write a file, and for filter commands.  Or Vim runs out of memory,
+  and random problems may result.
+- The Dos32 version can only have about 15 files open (in a window or hidden)
+  at one time.  With more files, shell commands may cause a crash!
+- The Dos32 version can work with long filenames.  When doing filename
   completion, matches for the short filename will also be found.  But this
   will result in the corresponding long filename.  For example, if you have
   the long file name "this_is_a_test" with the short filename "this_i~1", the
   command ":e *1" will start editing "this_is_a_test".
-- When using the 32 bit version and you run into problems with DPMI support,
+- When using the Dos32 version and you run into problems with DPMI support,
   check if there is a program in your config.sys that eats resources.  One
   program known to cause this problem is "netx", which says "NetWare v. 3.26
   Workstation shell".  Replace it with version 3.32 to fix the problem.
@@ -93,6 +103,18 @@ when a backslash is used before a special character (space, comma, backslash,
 etc.), it is removed.  Use slashes to avoid problems: ":e c:/foo/bar" works
 fine.  Vim will replace the slashes with backslashes internally, to avoid
 problems with some MS-DOS programs.
+
+
+DISABLING LONG FILENAMES IN THE Dos32 VERSION
+
+If the Dos32 version is run on Windows 95, it can use long filenames.  It will
+work by default.  If you want to disable this, use this setting:
+	set LFN=N
+You can put this in your autoexec.bat file.
+
+Note: If you have installed DJGPP on your machine, you probably have a
+"djgpp.env" file, which contains "LFN=n".  You need to use "LFN=Y" to switch
+on using long filenames then.
 
 
 SCREEN OUTPUT AND COLORS
@@ -228,9 +250,9 @@ drive.  Use ":cd c:" to make drive C the active drive.  Use ":cd d:\dos" to go
 to the directory "dos" in the root of drive D.	|:cd|
 
 
-INTERRUPTING
+INTERRUPTING						*CTRL-Break*
 
-Use CTRL-break instead of CTRL-C to interrupt searches.  The CTRL-C is not
+Use CTRL-Break instead of CTRL-C to interrupt searches.  The CTRL-C is not
 detected until a key is read.
 
 
@@ -294,7 +316,7 @@ MEMORY USAGE and LIMITATIONS
 
 A swap file is used to store most of the text.  You should be able to edit
 very large files.  However, memory is used for undo and other things.  If you
-delete a lot of text, you can still run out of memory in the 16-bit version.
+delete a lot of text, you can still run out of memory in the Dos16 version.
 
 If Vim gives an "Out of memory" warning, you should stop editing.  The result
 of further editing actions is unpredictable.  Setting 'undolevels' to 0 saves
@@ -302,9 +324,9 @@ some memory.  Running the maze macros on a big maze is guaranteed to run out
 of memory, because each change is remembered for undo.  In this case set
 'undolevels' to a negative number.  This will switch off undo completely.
 
-In the 32-bit version, extended memory is used to avoid these problems.
+In the Dos32 version, extended memory is used to avoid these problems.
 
-In the 16-bit version the line length is limited to about 32000 characters.
+In the Dos16 version the line length is limited to about 32000 characters.
 When reading a file the lines are automatically split.  But editing a line
 in such a way that it becomes too long may give unexpected results.
 
@@ -333,22 +355,22 @@ HOW TO COPY/PASTE TEXT FROM/TO VIM IN A DOS BOX
    In the properties dialog box for the MS-DOS window, go to "MS-DOS
    Prompt/Misc/Fast pasting" and make sure that it is NOT checked.
 
-2) To paste something *into* vim, put vim in insert mode.
+2) To paste something _into_ Vim, put Vim in insert mode.
 
 3) put the text you want to paste on the windows clipboard.
 
-4) Click the control box in the upper left of the vim window. (This looks 
+4) Click the control box in the upper left of the Vim window. (This looks 
    like a big minus sign). If you don't want to use the mouse, you can get
    this with alt+spacebar. 
 5) on the resulting dropdown menu choose 'Edit'
 6) on the child dropdown menu choose 'Paste'
 
-To copy something from the vim window to the clipboard,
+To copy something from the Vim window to the clipboard,
 
 1) select the control box to get the control drop down menu.
 2) select 'Edit.'
 3) select 'Mark'
-4) using either the the keys or the mouse, select the part of the vim window
+4) using either the the keys or the mouse, select the part of the Vim window
    that you want to copy. To use the keys, use the arrow keys, and hold down
    shift to extend the selection.
 5) when you've completed your selection, press 'enter.' The selection

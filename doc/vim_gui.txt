@@ -1,4 +1,4 @@
-*vim_gui.txt*   For Vim version 4.5.  Last modification: 1996 Oct 12
+*vim_gui.txt*   For Vim version 4.6.  Last modification: 1997 Feb 17
 
 
 		       Vim's Graphical User Interface
@@ -44,6 +44,9 @@ When the GUI starts up initializations are carried out, in this order:
   is sourced, if it exist and isn't the same file as the system or user
   gvimrc file.  If this file is not owned by you, some security restrictions
   apply.
+
+When starting "gvim", all this happens AFTER the normal Vim initializations,
+like reading your .vimrc file.  See |initialization|.
 
 You can use the gvimrc files to set up your own customised menus (see |:menu|)
 and initialise other things that you may want to set up differently from the
@@ -433,23 +436,30 @@ may even hang and need to be killed from another terminal.  So be careful!
 
 There are two ways to do the I/O with a shell command: Pipes and a
 pseudo-tty.  The default is to use pipes.  This should work on any Unix
-system.  The disadvantage is that some shell commands will notice that a
-pipe is being used and behave differently.  The ":sh" command won't show a
-prompt, although it will sort of work.  ":!ls" will list the files in one
-column.
+system.  Some of the disadvantage are:
+- Some shell commands will notice that a pipe is being used and behave
+  differently.
+- The ":sh" command won't show a prompt, although it will sort of work.
+- ":!ls" will list the files in one column.
+- When using ":make" it's not possible to interrupt with a CTRL-C.
+- Typehead is often lost.
 
 Alternatively a pseudo-tty can be used.  Unfortunately, the implementation of
 this is different on every Unix system.  And many systems require root
-permission.  Still this might work better than pipes on some systems.  To
-see if this works better for you set the 'guipty' option on.  Be prepared to
-"kill" the started command or Vim, commands like ":r !cat" may hang!
+permission.  But if it works, it often works better than pipes.  To see if
+this works for you set the 'guipty' option on:
+
+	:set guipty
+
+Be prepared to "kill" the started command or Vim.  Commands like ":r !cat"
+may hang!
 
 
 	8. Compiling					*gui_compiling*
 
 You need at least Motif version 1.2 and/or X11R5.  Motif 2.0 and X11R6 are
-OK.  Motif 1.1 and X11R4 don't work properly (but you might make it work
-with a bit of work).
+OK.  Motif 1.1 and X11R4 don't work properly (but you might make it compile
+and run with a bit of work, please send me the patches if you do).
 
 By default the Makefile tries to compile Vim with the GUI.  When the Motif
 files cannot be found the Athena files will be searched for.  When both of

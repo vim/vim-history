@@ -107,7 +107,7 @@ open_buffer()
 		UNCHANGED(curbuf);
 
 #ifdef AUTOCMD
-	apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 #endif
 
 	if (retval != FAIL)
@@ -511,7 +511,7 @@ do_buffer(action, start, dir, count, forceit)
 	delbuf = curbuf;
 
 #ifdef AUTOCMD
-	apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+	apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE);
 	if (buf_valid(delbuf))
 #endif
 	{
@@ -547,7 +547,7 @@ enter_buffer(buf)
 		need_fileinfo = TRUE;			/* display file info after redraw */
 		buf_check_timestamp(curbuf);	/* check if file has changed */
 #ifdef AUTOCMD
-		apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+		apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE);
 #endif
 	}
 	buflist_getlnum();					/* restore curpos.lnum */
@@ -856,7 +856,7 @@ buflist_findpat(pattern, pattern_end)
 
 	if (fnum == -2)
 		EMSG2("More than one match for %s", pattern);
-	if (fnum < 1)
+	else if (fnum < 1)
 		EMSG2("No matching buffer for %s", pattern);
 	return fnum;
 }
@@ -1231,7 +1231,7 @@ setfname(fname, sfname, message)
 /*
  * set alternate file name for current window
  *
- * used by dowrite() and do_ecmd()
+ * Used by do_one_cmd(), do_write() and do_ecmd().
  */
 	void
 setaltfname(fname, sfname, lnum)

@@ -332,8 +332,11 @@ gui_mch_set_winsize()
 	/*
 	 * Need to unmanage vimForm here for a moment, to avoid an error message
 	 * when .gvimrc contains ":set guioptions=r".
+	 * Only do this when sourcing, otherwise the screen won't get updated with
+	 * some versions of Motif.
 	 */
-	XtUnmanageChild(vimForm);
+	if (sourcing_name != NULL)
+		XtUnmanageChild(vimForm);
 	XtVaSetValues(vimShell,
 #ifdef XmNbaseWidth
 		XmNbaseWidth, base_width,
@@ -346,7 +349,8 @@ gui_mch_set_winsize()
 		XmNwidth,	  base_width  + Columns * gui.char_width,
 		XmNheight,	  base_height + Rows * gui.char_height,
 		NULL);
-	XtManageChild(vimForm);
+	if (sourcing_name != NULL)
+		XtManageChild(vimForm);
 }
 
 /*

@@ -338,7 +338,8 @@ ml_open()
 	b0p->b0_magic_short = (short)B0_MAGIC_SHORT;
 	b0p->b0_magic_char = B0_MAGIC_CHAR;
 
-	STRNCPY(b0p->b0_version, Version, 10);
+	STRNCPY(b0p->b0_version, "VIM ", 4);
+	STRNCPY(b0p->b0_version + 4, Version, 6);
 	set_b0_fname(b0p, curbuf);
 	long_to_char((long)mfp->mf_page_size, b0p->b0_page_size);
 	(void)mch_get_user_name(b0p->b0_uname, B0_UNAME_SIZE);
@@ -829,6 +830,16 @@ ml_recover()
 		goto theend;
 	}
 	b0p = (ZERO_BL *)(hp->bh_data);
+	if (STRNCMP(b0p->b0_version, "VIM 3.0", 7) == 0)
+	{
+		msg_start();
+		MSG_OUTSTR("The file ");
+		msg_outtrans(mfp->mf_fname);
+		MSG_OUTSTR(" cannot be used with this version of Vim.\n");
+		MSG_OUTSTR("Use Vim version 3.0.\n");
+		msg_end();
+		goto theend;
+	}
 	if (b0p->b0_id[0] != BLOCK0_ID0 || b0p->b0_id[1] != BLOCK0_ID1)
 	{
 		EMSG2("%s is not a swap file", mfp->mf_fname);
@@ -1236,6 +1247,34 @@ recover_names(fname, list, nr)
 			MSG_OUTSTR(files);		/* print error message */
 			num_files = 0;
 		}
+
+		/*
+		 * When no swap file found, wildcard expansion might have failed (e.g.
+		 * not able to execute the shell).
+		 * Try finding a swap file by simply adding ".swp" to the file name.
+		 */
+		if (file_count == 0 && fname != NULL && *fname != NULL)
+		{
+			struct stat		st;
+			char_u			*swapname;
+
+			swapname = modname(*fname, (char_u *)".swp");
+			if (swapname != NULL)
+			{
+				if (stat((char *)swapname, &st) != -1)		/* It exists! */
+				{
+					files = (char_u **)alloc((unsigned)sizeof(char_u *));
+					if (files != NULL)
+					{
+						files[0] = swapname;
+						swapname = NULL;
+						num_files = 1;
+					}
+				}
+				vim_free(swapname);
+			}
+		}
+
 		/*
 		 * remove swapfile name of the current buffer, it must be ignored
 		 */
@@ -1333,9 +1372,15 @@ swapfile_info(fname)
 	{
 		if (read(fd, (char *)&b0, sizeof(b0)) == sizeof(b0))
 		{
-			if (b0.b0_id[0] != BLOCK0_ID0 ||
+			if (STRNCMP(b0.b0_version, "VIM 3.0", 7) == 0)
+			{
+				MSG_OUTSTR("         [from Vim version 3.0]");
+			}
+			else if (b0.b0_id[0] != BLOCK0_ID0 ||
 								b0.b0_id[1] != BLOCK0_ID1)
+			{
 				MSG_OUTSTR("         [is not a swap file]");
+			}
 			else
 			{
 				MSG_OUTSTR("         file name: ");
@@ -2912,17 +2957,17 @@ makeswapname(buf, dir_name)
 /*
  * Get file name to use for swap file or backup file.
  * Use the name of the edited file "fname" and an entry in the 'dir' or 'bdir'
- * option "dirname".
- * - If "dirname" is ".", return "fname".
- * - If "dirname" starts with "./", insert "dirname" in "fname".
- * - Otherwise, prepend "dirname" to the tail of "fname".
+ * option "dname".
+ * - If "dname" is ".", return "fname".
+ * - If "dname" starts with "./", insert "dname" in "fname".
+ * - Otherwise, prepend "dname" to the tail of "fname".
  *
  * The return value is an allocated string and can be NULL.
  */
 	char_u *
-get_file_in_dir(fname, dirname)
+get_file_in_dir(fname, dname)
 	char_u	*fname;
-	char_u	*dirname;
+	char_u	*dname;		/* don't use "dirname", it is a global for Alpha */
 {
 	char_u		*t;
 	char_u		*tail;
@@ -2931,17 +2976,17 @@ get_file_in_dir(fname, dirname)
 
 	tail = gettail(fname);
 
-	if (dirname[0] == '.' && dirname[1] == NUL)
+	if (dname[0] == '.' && dname[1] == NUL)
 		retval = strsave(fname);
-	else if (dirname[0] == '.' && ispathsep(dirname[1]))
+	else if (dname[0] == '.' && ispathsep(dname[1]))
 	{
 		if (tail == fname)			/* no path before file name */
-			retval = concat_fnames(dirname + 2, tail, TRUE);
+			retval = concat_fnames(dname + 2, tail, TRUE);
 		else
 		{
 			save_char = *tail;
 			*tail = NUL;
-			t = concat_fnames(fname, dirname + 2, TRUE);
+			t = concat_fnames(fname, dname + 2, TRUE);
 			*tail = save_char;
 			if (t == NULL)			/* out of memory */
 				retval = NULL;
@@ -2953,7 +2998,7 @@ get_file_in_dir(fname, dirname)
 		}
 	}
 	else
-		retval = concat_fnames(dirname, tail, TRUE);
+		retval = concat_fnames(dname, tail, TRUE);
 
 	return retval;
 }
@@ -2990,10 +3035,25 @@ findswapname(buf, dirp, old_fname)
  * compatible filesystem, it is possible that the file "test.doc.swp" which we
  * create will be exactly the same file. To avoid this problem we temporarily
  * create "test.doc".
+ * Don't do this for a symbolic link to a file that doesn't exist yet,
+ * because the link would be deleted further on!
  */
 	if (!(buf->b_p_sn || buf->b_shortname) && buf->b_xfilename &&
 												getperm(buf->b_xfilename) < 0)
-		dummyfd = fopen((char *)buf->b_xfilename, "w");
+	{
+# if defined(HAVE_LSTAT) && ((defined(S_IFMT) && defined(S_IFLNK)) || defined(S_ISLNK))
+		struct stat	st;
+
+		if (lstat((char *)buf->b_xfilename, &st) == -1 ||
+#  if defined(S_IFMT) && defined(S_IFLNK)
+				(st.st_mode & S_IFMT) != S_IFLNK
+#  else
+				!S_ISLNK(st.st_mode)
+#  endif
+													)
+# endif
+			dummyfd = fopen((char *)buf->b_xfilename, "w");
+	}
 #endif
 
 /*

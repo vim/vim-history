@@ -18,7 +18,7 @@ void screen_new_rows __PARMS((void));
 void win_setheight __PARMS((int height));
 void win_drag_status_line __PARMS((int offset));
 void win_comp_scroll __PARMS((WIN *wp));
-void command_height __PARMS((void));
+void command_height __PARMS((long old_p_ch));
 void last_status __PARMS((void));
 char_u *file_name_at_cursor __PARMS((int options));
 char_u *get_file_name_in_path __PARMS((char_u *ptr, int col, int options));

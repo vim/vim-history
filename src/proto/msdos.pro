@@ -23,8 +23,6 @@ long getperm __PARMS((char_u *name));
 int setperm __PARMS((char_u *name, long perm));
 int mch_isdir __PARMS((char_u *name));
 void mch_windexit __PARMS((int r));
-void interrupt catch_cbrk __PARMS((void));
-void interrupt catch_cint __PARMS((unsigned bp, unsigned di, unsigned si, unsigned ds, unsigned es, unsigned dx, unsigned cx, unsigned bx, unsigned ax));
 void mch_settmode __PARMS((int raw));
 void mch_setmouse __PARMS((int on));
 int mch_screenmode __PARMS((char_u *arg));

@@ -79,7 +79,20 @@ FILE* fdDump = NULL;
 # define WINAPI
 # define CONSOLE_CURSOR_INFO int
 # define LPCSTR char_u *
+# define WINBASEAPI 
 #endif
+
+/* Undocumented API in kernel32.dll needed to work around dead key bug in
+ * console-mode applications in NT 4.0.  If you switch keyboard layouts
+ * in a console app to a layout that includes dead keys and then hit a
+ * dead key, a call to ToAscii will trash the stack.  My thanks to Ian James
+ * and Michael Dietrich for helping me figure out this workaround.
+ */
+
+/* WINBASEAPI BOOL WINAPI GetConsoleKeyboardLayoutNameA(LPSTR); */
+typedef WINBASEAPI BOOL (*PFNGCKLN)(LPSTR);
+static PFNGCKLN	s_pfnGetConsoleKeyboardLayoutName = NULL;
+
 
 /* Win32 Console handles for input and output */
 static HANDLE g_hConIn  = INVALID_HANDLE_VALUE;
@@ -543,7 +556,11 @@ const static struct {
 };
 
 
-static BOOL g_fJustGotFocus = FALSE;
+// The ToAscii bug destroys several registers.  Need to turn off optimization
+// or the GetConsoleKeyboardLayoutName hack will fail in non-debug versions
+
+#pragma optimize("", off)
+
 
 /* The return code indicates key code size. */
 	static int
@@ -567,9 +584,20 @@ win32_kbd_patch_key(
 	
 	memset(abKeystate, 0, sizeof (abKeystate));
 
+	// Should only be non-NULL on NT 4.0
+	if (s_pfnGetConsoleKeyboardLayoutName != NULL)
+	{
+		CHAR szKLID[KL_NAMELENGTH];
+		
+		if (s_pfnGetConsoleKeyboardLayoutName(szKLID))
+		{
+			HKL hkl = LoadKeyboardLayout(szKLID, KLF_ACTIVATE);
+		}
+	}
+
 	/* Clear any pending dead keys */
 	ToAscii(VK_SPACE, MapVirtualKey(VK_SPACE, 0), abKeystate, awAnsiCode, 0);
-	
+
 	if (uMods & SHIFT_PRESSED) 
 		abKeystate[VK_SHIFT] = 0x80;
 	if (uMods & CAPSLOCK_ON) 
@@ -591,6 +619,7 @@ win32_kbd_patch_key(
 }
 
 
+static BOOL g_fJustGotFocus = FALSE;
   
 /*
  * Decode a KEY_EVENT into one or two keystrokes
@@ -754,6 +783,8 @@ decode_key_event(
 
 	return (*pch != NUL);
 }
+
+#pragma optimize("", on)
 
 
 #ifdef USE_MOUSE
@@ -1385,6 +1416,10 @@ mch_windinit()
 	keyboard_init();
 #endif
 
+	/* This will be NULL on anything but NT 4.0 */
+	s_pfnGetConsoleKeyboardLayoutName =
+		(PFNGCKLN) GetProcAddress(GetModuleHandle("kernel32.dll"),
+								  "GetConsoleKeyboardLayoutNameA");
 	/*
 	 * We don't really want to jump to our own screen yet; do that after
 	 * starttermcap().  This flashes the window, sorry about that, but
@@ -2127,9 +2162,9 @@ mch_has_wildcard(
 	char_u *s)
 {
     for ( ;  *s;  ++s)
-        if (*s == '?' || *s == '*')
-            return 1;
-    return 0;
+        if (*s == '?' || *s == '*' || *s == '$')
+            return TRUE;
+    return FALSE;
 }
 
 
@@ -2289,19 +2324,37 @@ ExpandWildCards(
     int files_only,
 	int list_notfound)
 {
-    int             i,
-                    r = 0;
-    FileList        f;
+	int				i,
+					r = 0;
+	FileList		f;
+	char_u			*p;
 
-    f.file = NULL;
-    f.nfiles = 0;
+	f.file = NULL;
+	f.nfiles = 0;
 
     for (i = 0; i < num_pat; i++)
 	{
-        if (!mch_has_wildcard(pat[i]))
-            addfile(&f, pat[i], files_only ? FALSE : mch_isdir(pat[i]));
+		/*
+		 * First expand environment variables.
+		 */
+		if (vim_strchr(pat[i], '$') != NULL)
+		{
+			p = alloc(MAXPATHL);
+			if (p != NULL)
+				expand_env(pat[i], p, MAXPATHL);
+			else
+				p = pat[i];
+		}
+		else
+			p = pat[i];
+
+        if (!mch_has_wildcard(p))
+            addfile(&f, p, files_only ? FALSE : mch_isdir(p));
         else
-            r |= expandpath(&f, pat[i], files_only, 0, list_notfound);
+            r |= expandpath(&f, p, files_only, 0, list_notfound);
+
+		if (p != pat[i])
+			vim_free(p);
     }
 
 	*num_file = f.nfiles;
@@ -3291,6 +3344,9 @@ win95rename(
 	if (! MoveFile(szTempFile, pszNewFile))
 		return -7;
 
+	/* Seems to be left around on Novell filesystems */
+	DeleteFile(szTempFile);
+	
 	/* finally, remove the empty old file */
 	if (! DeleteFile(pszOldFile))
 		return -8;

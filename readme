@@ -1,4 +1,4 @@
-README for version 4.5 of Vim: Vi IMproved.
+README for version 4.6 of Vim: Vi IMproved.
 
 Vim is an almost compatible version of the UNIX editor vi.  Only the "Q"
 command is missing.  Many new features have been added: multi level undo,
@@ -7,7 +7,7 @@ also a Graphical User Interface (GUI) available.  See doc/vim_diff.doc.
 
 This editor is very useful for editing programs and other plain ASCII files.
 All commands are given with normal keyboard characters, so those who can type
-with ten fingers can work very fast.  Additionally function keys can be
+with ten fingers can work very fast.  Additionally, function keys can be
 defined by the user.
 
 Vim currently runs under Amiga DOS, MS-DOS, Windows NT, Windows 95, Atari

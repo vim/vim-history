@@ -1,4 +1,9 @@
-" An example for a .vimrc file
+" An example for a vimrc file.
+"
+" To use it, copy it to
+"     for Unix and OS/2:  ~/.vimrc
+"             for Amiga:  s:.vimrc
+"  for MS-DOS and Win32:  $VIM\_vimrc
 
 version 4.0		" avoid warning for wrong version
 

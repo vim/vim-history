@@ -265,6 +265,8 @@ getmark(c, changefile)
 				p = NameBuff + len;
 				if (ispathsep(*p))
 					++p;
+				else			/* dirname is shorter, not a match */
+					p = NULL;
 			}
 			else
 				p = NULL;
@@ -871,7 +873,10 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	char_u		*str;
 	int			i;
 	char_u		*p;
+	char_u		*name_buf;
 
+	if ((name_buf = alloc(LSIZE)) == NULL)
+		return;
 	num_marked_files = get_viminfo_parameter('\'');
 	while (!eof && (count < num_marked_files || fp_out == NULL))
 	{
@@ -880,7 +885,7 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 			if (line[0] != '\n' && line[0] != '\r' && line[0] != '#')
 			{
 				if (viminfo_error("Missing '>'", line))
-					return;		/* too many errors, return now */
+					break;		/* too many errors, return now */
 			}
 			eof = vim_fgets(line, LSIZE, fp_in);
 			continue;			/* Skip this dud line */
@@ -906,17 +911,23 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 		load_marks = copy_marks_out = FALSE;
 		if (fp_out == NULL)
 		{
-			if (curbuf->b_filename != NULL &&
-							 fullpathcmp(str, curbuf->b_filename) == FPC_SAME)
-				load_marks = TRUE;
+			if (curbuf->b_filename != NULL)
+			{
+				home_replace(NULL, curbuf->b_filename, name_buf, LSIZE);
+				if (fnamecmp(str, name_buf) == 0)
+					load_marks = TRUE;
+			}
 		}
 		else /* fp_out != NULL */
 		{
 			/* This is slow if there are many buffers!! */
 			for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-				if (buf->b_filename != NULL &&
-								fullpathcmp(str, buf->b_filename) == FPC_SAME)
-					break;
+				if (buf->b_filename != NULL)
+				{
+					home_replace(NULL, buf->b_filename, name_buf, LSIZE);
+					if (fnamecmp(str, name_buf) == 0)
+						break;
+				}
 
 			/*
 			 * copy marks if the buffer has not been loaded
@@ -947,7 +958,8 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 				fputs((char *)line, fp_out);
 		}
 		if (load_marks)
-			return;
+			break;
 	}
+	vim_free(name_buf);
 }
 #endif /* VIMINFO */
