@@ -2020,18 +2020,55 @@ gui_mch_add_menu(
 	}
 	else
 	{
-	    MENUITEMINFO	info;
+#ifdef FEAT_MBYTE
+	    WCHAR	*wn = NULL;
+	    int		n;
 
-	    info.cbSize = sizeof(info);
-	    info.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID | MIIM_SUBMENU;
-	    info.dwItemData = (DWORD)menu;
-	    info.wID = menu->id;
-	    info.fType = MFT_STRING;
-	    info.dwTypeData = (LPTSTR)menu->name;
-	    info.cch = (UINT)STRLEN(menu->name);
-	    info.hSubMenu = menu->submenu_id;
-	    InsertMenuItem((parent == NULL) ? s_menuBar : parent->submenu_id,
-		    (UINT)pos, TRUE, &info);
+	    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+	    {
+		/* 'encoding' differs from active codepage: convert menu name
+		 * and use wide function */
+		wn = enc_to_ucs2(menu->name, NULL);
+		if (wn != NULL)
+		{
+		    MENUITEMINFOW	infow;
+
+		    infow.cbSize = sizeof(infow);
+		    infow.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID
+							       | MIIM_SUBMENU;
+		    infow.dwItemData = (DWORD)menu;
+		    infow.wID = menu->id;
+		    infow.fType = MFT_STRING;
+		    infow.dwTypeData = wn;
+		    infow.cch = wcslen(wn);
+		    infow.hSubMenu = menu->submenu_id;
+		    n = InsertMenuItemW((parent == NULL)
+					    ? s_menuBar : parent->submenu_id,
+					    (UINT)pos, TRUE, &infow);
+		    vim_free(wn);
+		    if (n == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+			/* Failed, try using non-wide function. */
+			wn = NULL;
+		}
+	    }
+
+	    if (wn == NULL)
+#endif
+	    {
+		MENUITEMINFO	info;
+
+		info.cbSize = sizeof(info);
+		info.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID | MIIM_SUBMENU;
+		info.dwItemData = (DWORD)menu;
+		info.wID = menu->id;
+		info.fType = MFT_STRING;
+		info.dwTypeData = (LPTSTR)menu->name;
+		info.cch = (UINT)STRLEN(menu->name);
+		info.hSubMenu = menu->submenu_id;
+		InsertMenuItem((parent == NULL)
+					? s_menuBar : parent->submenu_id,
+					(UINT)pos, TRUE, &info);
+	    }
 	}
     }
 
@@ -2137,7 +2174,30 @@ gui_mch_add_menu_item(
     else
 #endif
     {
-	InsertMenu(parent->submenu_id, (UINT)idx,
+#ifdef FEAT_MBYTE
+	WCHAR	*wn = NULL;
+	int	n;
+
+	if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+	{
+	    /* 'encoding' differs from active codepage: convert menu item name
+	     * and use wide function */
+	    wn = enc_to_ucs2(menu->name, NULL);
+	    if (wn != NULL)
+	    {
+		n = InsertMenuW(parent->submenu_id, (UINT)idx,
+			(menu_is_separator(menu->name)
+				 ? MF_SEPARATOR : MF_STRING) | MF_BYPOSITION,
+			(UINT)menu->id, wn);
+		vim_free(wn);
+		if (n == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+		    /* Failed, try using non-wide function. */
+		    wn = NULL;
+	    }
+	}
+	if (wn == NULL)
+#endif
+	    InsertMenu(parent->submenu_id, (UINT)idx,
 		(menu_is_separator(menu->name) ? MF_SEPARATOR : MF_STRING)
 							      | MF_BYPOSITION,
 		(UINT)menu->id, (LPCTSTR)menu->name);
@@ -2875,17 +2935,30 @@ nCopyAnsiToWideChar(
     LPWORD lpWCStr,
     LPSTR lpAnsiIn)
 {
-    int nChar = 0;
-
+    int		nChar = 0;
 #ifdef FEAT_MBYTE
-    int len = lstrlen(lpAnsiIn) + 1;	/* include NUL character */
-    int i;
+    int		len = lstrlen(lpAnsiIn) + 1;	/* include NUL character */
+    int		i;
+    WCHAR	*wn;
 
-    nChar = MultiByteToWideChar(
-	    CP_ACP,
-	    MB_PRECOMPOSED,
-	    lpAnsiIn, len,
-	    lpWCStr, len);
+    if (enc_codepage == 0 && (int)GetACP() != enc_codepage)
+    {
+	/* Not a codepage, use our own conversion function. */
+	wn = enc_to_ucs2(lpAnsiIn, NULL);
+	if (wn != NULL)
+	{
+	    wcscpy(lpWCStr, wn);
+	    nChar = wcslen(wn) + 1;
+	    vim_free(wn);
+	}
+    }
+    if (nChar == 0)
+	/* Use Win32 conversion function. */
+	nChar = MultiByteToWideChar(
+		enc_codepage > 0 ? enc_codepage : CP_ACP,
+		MB_PRECOMPOSED,
+		lpAnsiIn, len,
+		lpWCStr, len);
     for (i = 0; i < nChar; ++i)
 	if (lpWCStr[i] == (WORD)'\t')	/* replace tabs with spaces */
 	    lpWCStr[i] = (WORD)' ';
@@ -3128,7 +3201,7 @@ gui_mch_tearoff(
 	    text = (col == 0) ? pmenu->dname : pmenu->actext;
 	    if (text != NULL && *text != NUL)
 	    {
-		textWidth = GetTextWidth(hdc, text, (int)STRLEN(text));
+		textWidth = GetTextWidthEnc(hdc, text, (int)STRLEN(text));
 		if (textWidth > columnWidths[col])
 		    columnWidths[col] = textWidth;
 	    }
@@ -3161,7 +3234,7 @@ gui_mch_tearoff(
 					  (int)STRLEN(TEAROFF_SUBMENU_LABEL));
 	textWidth += submenuWidth;
     }
-    dlgwidth = GetTextWidth(hdc, title, (int)STRLEN(title));
+    dlgwidth = GetTextWidthEnc(hdc, title, (int)STRLEN(title));
     if (textWidth > dlgwidth)
 	dlgwidth = textWidth;
     dlgwidth += 2 * TEAROFF_PADDING_X + TEAROFF_BUTTON_PAD_X;
@@ -3265,7 +3338,7 @@ gui_mch_tearoff(
 	 * actual text, "dname" for estimating the displayed size.  "name"
 	 * has "&a" for mnemonic and includes the accelerator. */
 	len = nameLen = (int)STRLEN(menu->name);
-	padding0 = (columnWidths[0] - GetTextWidth(hdc, menu->dname,
+	padding0 = (columnWidths[0] - GetTextWidthEnc(hdc, menu->dname,
 				      (int)STRLEN(menu->dname))) / spaceWidth;
 	len += padding0;
 
@@ -3273,7 +3346,7 @@ gui_mch_tearoff(
 	{
 	    acLen = (int)STRLEN(menu->actext);
 	    len += acLen;
-	    textWidth = GetTextWidth(hdc, menu->actext, acLen);
+	    textWidth = GetTextWidthEnc(hdc, menu->actext, acLen);
 	}
 	else
 	    textWidth = 0;

@@ -1959,6 +1959,39 @@ GetTextWidth(HDC hdc, char_u *str, int len)
     return size.cx;
 }
 
+#ifdef FEAT_MBYTE
+/*
+ * Return the width in pixels of the given text in the given DC, taking care
+ * of 'encoding' to active codepage conversion.
+ */
+    static int
+GetTextWidthEnc(HDC hdc, char_u *str, int len)
+{
+    SIZE	size;
+    WCHAR	*wstr;
+    int		n;
+    int		wlen = len;
+
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    {
+	/* 'encoding' differs from active codepage: convert text and use wide
+	 * function */
+	wstr = enc_to_ucs2(str, &wlen);
+	if (wstr != NULL)
+	{
+	    n = GetTextExtentPointW(hdc, wstr, wlen, &size);
+	    vim_free(wstr);
+	    if (n)
+		return size.cx;
+	}
+    }
+
+    return GetTextWidth(hdc, str, len);
+}
+#else
+# define GetTextWidthEnc(h, s, l) GetTextWidth((h), (s), (l))
+#endif
+
 /*
  * A quick little routine that will center one window over another, handy for
  * dialog boxes.  Taken from the Win32SDK samples.
