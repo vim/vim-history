@@ -2776,6 +2776,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	curbuf->b_p_ma = FALSE;
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
 	curwin->w_p_nu = 0;		/* no line numbers */
+#ifdef FEAT_SCROLLBIND
+	curwin->w_p_scb = FALSE;	/* no scroll binding */
+#endif
 #ifdef FEAT_RIGHTLEFT
 	curwin->w_p_rl = 0;		/* help window is left-to-right */
 #endif
