@@ -323,7 +323,7 @@ function! s:EditDir()
   nnoremap <buffer> i    :call <SID>ToggleLongList()<cr>
   nnoremap <buffer> s    :call <SID>SortSelect()<cr>
   nnoremap <buffer> r    :call <SID>SortReverse()<cr>
-  nnoremap <buffer> c    :exec ("cd ".b:completePathEsc)<cr>
+  nnoremap <buffer> c    :exec "cd ".b:completePathEsc<cr>
   nnoremap <buffer> <2-leftmouse> :call <SID>DoubleClick()<cr>
   let &cpo = cpo_save
 
@@ -536,6 +536,13 @@ endfunction
 function! s:SetSuffixesLast()
   let b:suffixesRegexp = '\(' . substitute(escape(&suffixes,s:escregexp),',','\\|','g') . '\)$'
   let b:suffixesHighlight = '^[^"].*\(' . substitute(escape(&suffixes,s:escregexp),',','\\|','g') . '\)\( \|$\)'
+  if has("fname_case")
+    let b:suffixesRegexp = '\C' . b:suffixesRegexp
+    let b:suffixesHighlight = '\C' . b:suffixesHighlight
+  else
+    let b:suffixesRegexp = '\c' . b:suffixesRegexp
+    let b:suffixesHighlight = '\c' . b:suffixesHighlight
+  endif
   if g:explSuffixesLast > 0 && &suffixes != ""
     let b:suffixeslast=" (" . &suffixes . " at end of list)"
   elseif g:explSuffixesLast < 0 && &suffixes != ""
@@ -943,9 +950,9 @@ endfunction
 function! s:GetSection()
   let fn=s:GetFileName()
   let section="file"
-  if (fn =~ '/$')
+  if fn =~ '/$'
     let section="directory"
-  elseif (fn =~ b:suffixesRegexp)
+  elseif fn =~ b:suffixesRegexp
     let section="suffixes"
   endif
   return section
