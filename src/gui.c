@@ -171,6 +171,7 @@ gui_start()
     if (gui.in_use)
 	apply_autocmds(EVENT_GUIENTER, NULL, NULL, FALSE, curbuf);
 #endif
+
     --recursive;
 }
 

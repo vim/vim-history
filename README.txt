@@ -14,9 +14,9 @@ All commands are given with normal keyboard characters, so those who can type
 with ten fingers can work very fast.  Additionally, function keys can be
 defined by the user, and the mouse can be used.
 
-Vim currently runs under Amiga DOS, MS-DOS, MS-Windows 95/98/NT, Atari MiNT,
-Macintosh, BeOS, VMS, RISC OS, OS/2 and almost all flavours of UNIX.
-Porting to other systems should not be very difficult.
+Vim currently runs under Amiga DOS, MS-DOS, MS-Windows 95/98/Me/NT/2000/XP,
+Atari MiNT, Macintosh, BeOS, VMS, RISC OS, OS/2 and almost all flavours of
+UNIX.  Porting to other systems should not be very difficult.
 
 
 DISTRIBUTION
@@ -45,33 +45,13 @@ COPYING
 
 Vim is Charityware.  You can use and copy it as much as you like, but you are
 encouraged to make a donation to orphans in Uganda.  Please read the file
-"runtime/doc/uganda.txt" for details.
+"runtime/doc/uganda.txt" for details (do ":help uganda" inside Vim).
 
-There are no restrictions on distributing an unmodified copy of Vim.  Parts of
-Vim may also be distributed, but this text must always be included.  You are
-allowed to include executables that you made from the unmodified Vim sources,
-your own usage examples and Vim scripts.
-
-If you distribute a modified version of Vim, you are encouraged to send the
-maintainer a copy, including the source code.  Or make it available to the
-maintainer through ftp; let him know where it can be found.  If the number of
-changes is small (e.g., a modified Makefile) e-mailing the diffs will do.
-When the maintainer asks for it (in any way) you must make your changes,
-including source code, available to him.
-
-The maintainer reserves the right to include any changes in the official
-version of Vim.  This is negotiable.  You are not allowed to distribute a
-modified version of Vim when you are not willing to make the source code
-available to the maintainer.
-
-The current maintainer is Bram Moolenaar <Bram@vim.org>.  If this changes, it
-will be announced in appropriate places (most likely www.vim.org and
-comp.editors).  When it is completely impossible to contact the maintainer,
-the obligation to send him modified source code ceases.
-
-It is not allowed to remove these restrictions from the distribution of the
-Vim sources or parts of it.  These restrictions may also be used for previous
-Vim releases instead of the text that was included with it.
+Summary of the license: There are no restrictions on using or distributing an
+unmodified copy of Vim.  Parts of Vim may also be distributed, but the license
+text must always be included.  For modified versions a few restrictions apply.
+The license is GPL compatible, you may compile Vim with GPL libraries and
+distribute it.
 
 
 COMPILING

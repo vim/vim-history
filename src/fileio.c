@@ -5520,7 +5520,7 @@ buf_check_timestamp(buf, focus)
 		if (savebuf == NULL || saved == FAIL
 					  || move_lines(buf, savebuf) == FAIL)
 		{
-		    EMSG2(_("E461: Could not prepare for reloading \"%s\""),
+		    EMSG2(_("E462: Could not prepare for reloading \"%s\""),
 								buf->b_fname);
 		    saved = FAIL;
 		}

@@ -8008,7 +8008,7 @@ nv_put(cap)
     cmdarg_T  *cap;
 {
 #ifdef FEAT_VISUAL
-    int		regname;
+    int		regname = 0;
     void	*reg1 = NULL, *reg2 = NULL;
 #endif
     int		dir;

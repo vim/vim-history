@@ -1,15 +1,23 @@
 Tests for :right on text with embedded TAB.
 Also test formatting a paragraph.
+Also test undo after ":%s" and formatting.
 
 STARTTEST
 :so small.vim
 :set tw=65
 
-:/test for :left/,/test for :center/ left
-:/test for :center/,/test for :right/ center
-:/test for :right/,/^xxx/-1 right
+:/^\s*test for :left/,/^\s*test for :center/ left
+:/^\s*test for :center/,/^\s*test for :right/ center
+:/^\s*test for :right/,/^xxx/-1 right
 :set fo+=tcroql tw=72
-Ggq6kk
+/xxxxxxxx$
+0gq6kk
+:set nocp
+:" undo/redo here to make the next undo only work on the following changes
+u
+:map gg :.,.+2s/^/x/<CR>kk:set tw=3<CR>gqq
+/^aa
+ggu
 :?test for :left?,$w! test.out
 :qa!
 ENDTEST
@@ -122,3 +130,7 @@ xx xxxxxxx. xxxx xxxx.
 
 > xx xx, xxxx xxxx xxx xxxx xxx xxxxx xxx xxx xxxxxxx xxx xxxxx
 > xxxxxx xxxxxxx: xxxx xxxxxxx, xx xxxxxx xxxx xxxxxxxxxx
+
+aa aa aa aa
+bb bb bb bb
+cc cc cc cc

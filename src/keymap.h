@@ -30,13 +30,16 @@
 
 /*
  * Positive characters are "normal" characters.
- * Characters 0x0100 - 0x01ff are sometimes used for abbreviations.
  * Negative characters are special key codes.  Only characters below -0x200
  * are used to so that the absolute value can't be mistaken for a single-byte
  * character.
  */
 #define IS_SPECIAL(c)		((c) < 0)
-#define IS_ABBR(c)		((c) >= 0x100 && (c) < 0x200)
+
+/*
+ * Characters 0x0100 - 0x01ff have a special meaning for abbreviations.
+ * Multi-byte characters also have ABBR_OFF added, thus are above 0x0200.
+ */
 #define ABBR_OFF		0x100
 
 /*

@@ -297,13 +297,9 @@ getmark(c, changefile)
 	startp = &curbuf->b_visual_start;
 	endp = &curbuf->b_visual_end;
 	if ((c == '<') == lt(*startp, *endp))
-	{
 	    posp = startp;
-	}
 	else
-	{
 	    posp = endp;
-	}
 	/*
 	 * For Visual line mode, set mark at begin or end of line
 	 */

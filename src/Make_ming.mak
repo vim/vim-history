@@ -324,6 +324,9 @@ else
 	-$(DEL) xxd\*.exe
 endif
 	-$(DEL) dyn-ming.h
+ifdef PERL
+	-$(DEL) if_perl.c
+endif
 
 ###########################################################################
 vimres.res: vim.rc

@@ -7850,6 +7850,7 @@ syn_check_group(pp, len)
 syn_add_group(name)
     char_u		*name;
 {
+    /* TODO: check that the name is ASCII letters, digits and underscore. */
     /*
      * First call for this growarray: init growing array.
      */

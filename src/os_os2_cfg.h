@@ -20,18 +20,6 @@
 /* Define unless no X support found */
 #undef HAVE_X11
 
-/* Define when curses library found */
-#undef HAVE_LIBCURSES
-
-/* Define when termcap library found */
-#define HAVE_LIBTERMCAP 1
-
-/* Define when termlib library found */
-#undef HAVE_LIBTERMLIB
-
-/* Define when ncurses library found */
-#undef HAVE_LIBNCURSES
-
 /* Define when terminfo support found */
 #undef TERMINFO
 

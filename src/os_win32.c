@@ -2808,6 +2808,8 @@ mch_system(char *cmd, int options)
     if (g_PlatformId != VER_PLATFORM_WIN32s)
     {
 #ifdef FEAT_GUI
+	int	    delay = 1;
+
 	/* Keep updating the window while waiting for the shell to finish. */
 	for (;;)
 	{
@@ -2818,8 +2820,14 @@ mch_system(char *cmd, int options)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	    }
-	    if (WaitForSingleObject(pi.hProcess, 100) != WAIT_TIMEOUT)
+	    if (WaitForSingleObject(pi.hProcess, delay) != WAIT_TIMEOUT)
 		break;
+
+	    /* We start waiting for a very short time and then increase it, so
+	     * that we respond quickly when the process is quick, and don't
+	     * consume too much overhead when it's slow. */
+	    if (delay < 50)
+		delay += 10;
 	}
 #else
 	WaitForSingleObject(pi.hProcess, INFINITE);
@@ -2851,7 +2859,7 @@ mch_system(char *cmd, int options)
     CloseHandle(pi.hProcess);
 
     /* Try to get input focus back.  Doesn't always work though. */
-    SetFocus(hwnd);
+    PostMessage(hwnd, WM_SETFOCUS, 0, 0);
 
     return ret;
 }

@@ -124,7 +124,7 @@ do_scscope(eap)
 {
     postponed_split = -1;
     do_cscope(eap);
-} /* do_scscope */
+}
 
 /*
  * PUBLIC: do_cstag
@@ -223,7 +223,7 @@ cs_fgets(buf, size)
     if ((p = cs_manage_matches(NULL, NULL, -1, Get)) == NULL)
 	return TRUE;
 
-    if (strlen(p) > size)
+    if ((int)strlen(p) > size)
     {
 	strncpy((char *)buf, p, size - 1);
 	buf[size] = '\0';

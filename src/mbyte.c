@@ -2425,6 +2425,7 @@ enc_alias_search(name)
 
 /*
  * Set the default value for 'encoding' (p_enc).
+ * This must be called only once.
  * Returns OK when successful, FAIL when not.
  */
     int

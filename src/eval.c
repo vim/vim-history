@@ -232,8 +232,8 @@ static void f_getchar __ARGS((VAR argvars, VAR retvar));
 static void f_getcharmod __ARGS((VAR argvars, VAR retvar));
 static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
-static void f_getftime __ARGS((VAR argvars, VAR retvar));
 static void f_getfsize __ARGS((VAR argvars, VAR retvar));
+static void f_getftime __ARGS((VAR argvars, VAR retvar));
 static void f_getline __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
 static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
@@ -3826,6 +3826,7 @@ f_foreground(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    retvar->var_val.var_number = 0;
 #ifdef FEAT_GUI
     if (gui.in_use)
 	gui_mch_set_foreground();
@@ -3975,25 +3976,6 @@ f_getcwd(argvars, retvar)
 }
 
 /*
- * "getftime({fname})" function
- */
-    static void
-f_getftime(argvars, retvar)
-    VAR		argvars;
-    VAR		retvar;
-{
-    char_u	*fname;
-    struct stat	st;
-
-    fname = get_var_string(&argvars[0]);
-
-    if (mch_stat((char *)fname, &st) >= 0)
-	retvar->var_val.var_number = (varnumber_T)st.st_mtime;
-    else
-	retvar->var_val.var_number = -1;
-}
-
-/*
  * "getfsize({fname})" function
  */
     static void
@@ -4017,6 +3999,25 @@ f_getfsize(argvars, retvar)
     }
     else
 	  retvar->var_val.var_number = -1;
+}
+
+/*
+ * "getftime({fname})" function
+ */
+    static void
+f_getftime(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*fname;
+    struct stat	st;
+
+    fname = get_var_string(&argvars[0]);
+
+    if (mch_stat((char *)fname, &st) >= 0)
+	retvar->var_val.var_number = (varnumber_T)st.st_mtime;
+    else
+	retvar->var_val.var_number = -1;
 }
 
 /*
@@ -4728,13 +4729,15 @@ f_histget(argvars, retvar)
     int		idx;
 
     type = get_histtype(get_var_string(&argvars[0]));
-    retvar->var_type = VAR_STRING;
     if (argvars[1].var_type == VAR_UNKNOWN)
 	idx = get_history_idx(type);
     else
 	idx = (int)get_var_number(&argvars[1]);
     retvar->var_val.var_string = vim_strsave(get_history_entry(type, idx));
+#else
+    retvar->var_val.var_string = NULL;
 #endif
+    retvar->var_type = VAR_STRING;
 }
 
 /*

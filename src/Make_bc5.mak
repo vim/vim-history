@@ -57,7 +57,7 @@
 # DEBUG		no or yes: set to yes if you wish a DEBUGging build (no)
 # CODEGUARD	no or yes: set to yes if you want to use CODEGUARD (no)
 # CPUNR		1 through 6: select -CPU argument to compile with (3)
-#               3 for 386, 4 for 486, 5 for pentium, 6 for pentium pro.
+#		3 for 386, 4 for 486, 5 for pentium, 6 for pentium pro.
 # USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
 #		For USEDLL=yes the cc3250.dll is required to run Vim.
 # VIMDLL	no or yes: create vim32.dll, and stub (g)vim.exe (no)
@@ -829,7 +829,7 @@ $(OBJDIR)\pathdef.obj:	auto\pathdef.c
 # the preprocessor directive.
 auto\pathdef.c::
 	@echo creating auto/pathdef.c
-        @copy &&|
+	@copy &&|
 /* pathdef.c */
 /*"*/#include "vim.h"/*"*/
 

@@ -5288,7 +5288,7 @@ ex_shell(eap)
  * code is very similar to :args and hence needs access to a lot of the static
  * functions in this file.
  *
- * The list should be allocated using vim_alloc(), as should each item in the
+ * The list should be allocated using alloc(), as should each item in the
  * list. This function takes over responsibility for freeing the list.
  *
  * XXX The list is made into the arggument list. This is freed using
@@ -7541,8 +7541,7 @@ has_while_cmd(p)
 {
     p = skipwhite(p);
     while (*p == ':')
-	++p;
-    p = skipwhite(p);
+	p = skipwhite(p + 1);
     if (p[0] == 'w' && p[1] == 'h')
 	return TRUE;
     return FALSE;

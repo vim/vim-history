@@ -1467,7 +1467,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     if (dialog_status != 1 && textfield != NULL)
 	*textfield = NUL;	/* dialog was cancelled */
 
-    /* let the garbage collector know that we don't need it anylonger */
+    /* let the garbage collector know that we don't need it any longer */
     gtk_accel_group_unref(accel_group);
 
     vim_free(button);

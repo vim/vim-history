@@ -1528,10 +1528,10 @@ undisplay_dollar()
  */
     void
 change_indent(type, amount, round, replaced)
-    int	    type;
-    int	    amount;
-    int	    round;
-    int	    replaced;		/* replaced character, put on replace stack */
+    int		type;
+    int		amount;
+    int		round;
+    int		replaced;	/* replaced character, put on replace stack */
 {
     int		vcol;
     int		last_vcol;
@@ -2305,7 +2305,7 @@ ins_compl_prep(c)
     /* Forget any previous 'special' messages if this is actually
      * a ^X mode key - bar ^R, in which case we wait to see what it gives us.
      */
-    if (c != Ctrl_R  &&  vim_is_ctrl_x_key(c))
+    if (c != Ctrl_R && vim_is_ctrl_x_key(c))
 	edit_submode_extra = NULL;
 
     /* Ignore end of Select mode mapping */

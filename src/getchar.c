@@ -1144,7 +1144,7 @@ gotchars(s, len)
 may_sync_undo()
 {
     if ((!(State & (INSERT + CMDLINE)) || arrow_used)
-	    && scriptin[curscript] == NULL && !no_u_sync)
+	    && scriptin[curscript] == NULL && no_u_sync == 0)
 	u_sync();
 }
 
