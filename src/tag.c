@@ -1676,44 +1676,55 @@ line_read_in:
 	     */
 	    if (match)
 	    {
-		/* Decide in which array to store this match. */
-		is_current = test_for_current(
-#ifdef FEAT_EMACS_TAGS
-			is_etag,
-#endif
-				 tagp.fname, tagp.fname_end, tag_fname);
-#ifdef FEAT_EMACS_TAGS
-		is_static = FALSE;
-		if (!is_etag)	/* emacs tags are never static */
-#endif
+#ifdef FEAT_CSCOPE
+		if (use_cscope)
 		{
-#ifdef FEAT_TAG_OLDSTATIC
-		    if (tagp.tagname != lbuf)	/* detected static tag before */
-			is_static = TRUE;
-		    else
-#endif
-			is_static = test_for_static(&tagp);
-		}
-
-		/* decide in which of the six table to store this match */
-		if (is_static)
-		{
-		    if (is_current)
-			mtt = MT_ST_CUR;
-		    else
-			mtt = MT_ST_OTH;
+		    /* Don't change the ordering, always use the same table. */
+		    mtt = MT_GL_OTH;
 		}
 		else
+#endif
 		{
-		    if (is_current)
-			mtt = MT_GL_CUR;
+		    /* Decide in which array to store this match. */
+		    is_current = test_for_current(
+#ifdef FEAT_EMACS_TAGS
+			    is_etag,
+#endif
+				     tagp.fname, tagp.fname_end, tag_fname);
+#ifdef FEAT_EMACS_TAGS
+		    is_static = FALSE;
+		    if (!is_etag)	/* emacs tags are never static */
+#endif
+		    {
+#ifdef FEAT_TAG_OLDSTATIC
+			if (tagp.tagname != lbuf)
+			    is_static = TRUE;	/* detected static tag before */
+			else
+#endif
+			    is_static = test_for_static(&tagp);
+		    }
+
+		    /* decide in which of the sixteen tables to store this
+		     * match */
+		    if (is_static)
+		    {
+			if (is_current)
+			    mtt = MT_ST_CUR;
+			else
+			    mtt = MT_ST_OTH;
+		    }
 		    else
-			mtt = MT_GL_OTH;
+		    {
+			if (is_current)
+			    mtt = MT_GL_CUR;
+			else
+			    mtt = MT_GL_OTH;
+		    }
+		    if (regmatch.rm_ic && !match_no_ic)
+			mtt += MT_IC_OFF;
+		    if (match_re)
+			mtt += MT_RE_OFF;
 		}
-		if (regmatch.rm_ic && !match_no_ic)
-		    mtt += MT_IC_OFF;
-		if (match_re)
-		    mtt += MT_RE_OFF;
 
 		if (ga_grow(&ga_match[mtt], 1) == OK)
 		{
