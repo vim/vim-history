@@ -3029,7 +3029,9 @@ extend:
 	if (start_blank)
 	{
 	    find_first_blank(&curwin->w_cursor);
-	    decl(&curwin->w_cursor);
+	    c = gchar_pos(&curwin->w_cursor);	/* vim_iswhite() is a macro */
+	    if (vim_iswhite(c))
+		decl(&curwin->w_cursor);
 	}
 	else if (c = gchar_cursor(), !vim_iswhite(c))
 	    find_first_blank(&start_pos);
