@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2.  Last change: 2003 May 27
+*motion.txt*    For Vim version 6.2.  Last change: 2004 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -700,6 +700,11 @@ unrelated.
 Lowercase marks 'a to 'z are remembered as long as the file remains in the
 buffer list.  If you remove the file from the buffer list, all its marks are
 lost.  If you delete a line that contains a mark, that mark is erased.
+
+To delete a mark: Create a new line, position the mark there, delete the line.
+E.g.: "o<Esc>mxdd".  This does change the file though.  Using "u" won't work,
+it also restores marks.
+
 Lowercase marks can be used in combination with operators.  For example: "d't"
 deletes the lines from the cursor position to mark 't'.  Hint: Use mark 't' for
 Top, 'b' for Bottom, etc..  Lowercase marks are restored when using undo and
@@ -810,6 +815,47 @@ These commands are not marks themselves, but jump to a mark:
 							*[`*
 [`			[count] times to lowercase mark before the cursor.
 			{not in Vi}
+
+
+:loc[kmarks] {command}					*:loc* *:lockmarks*
+			Execute {command} without adjusting marks.  This is
+			useful when changing text in a way that the line count
+			will be the same when the change has completed.
+			WARNING: When the line count does change, marks below
+			the change will keep their line number, thus move to
+			another text line.
+			These items will not be adjusted for deleted/inserted
+			lines:
+			- lower case letter marks 'a - 'z
+			- upper case letter marks 'A - 'Z
+			- numbered marks '0 - '9
+			- last insert position '^
+			- last change position '.
+			- the Visual area '< and '>
+			- line numbers in placed signs
+			- line numbers in quickfix positions
+			- positions in the |jumplist|
+			- positions in the |tagstack|
+			These items will still be adjusted:
+			- previous context mark ''
+			- the cursor position
+			- the view of a window on a buffer
+			- folds
+			- diffs
+
+:kee[pmarks] {command}					*:kee* *:keepmarks*
+			Currently only has effect for the filter command
+			|:range!|:
+			- When the number of lines after filtering is equal to
+			  or larger than before, all marks are kept at the
+			  same line number.
+			- When the number of lines decreases, the marks in the
+			  ilnes that disappeared are deleted.
+			In any case the marks below the filtered text have
+			their line numbers adjusted, thus stick to the text,
+			as usual.
+			When the 'R' flag is missing from 'cpoptions' this has
+			the same effect as using ":keepmarks".
 
 ==============================================================================
 8. Jumps					*jump-motions*

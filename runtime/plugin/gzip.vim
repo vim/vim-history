@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Dec 22
+" Last Change: 2004 Jan 12
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -73,13 +73,22 @@ fun s:read(cmd)
   call system(a:cmd . " " . tmpe)
   " delete the compressed lines; remember the line number
   let l = line("'[") - 1
-  '[,']d
+  if exists(":lockmarks")
+    lockmarks '[,']d _
+  else
+    '[,']d _
+  endif
   " read in the uncompressed lines "'[-1r tmp"
   setlocal nobin
-  execute "silent " . l . "r " . tmp
+  if exists(":lockmarks")
+    execute "silent lockmarks " . l . "r " . tmp
+  else
+    execute "silent " . l . "r " . tmp
+  endif
+
   " if buffer became empty, delete trailing blank line
   if empty
-    silent $delete
+    silent $delete _
     1
   endif
   " delete the temp file and the used buffers

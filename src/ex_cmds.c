@@ -746,6 +746,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     char_u	*itmp = NULL;
     char_u	*otmp = NULL;
     linenr_T	linecount;
+    linenr_T	read_linecount;
     pos_T	cursor_save;
     char_u	*cmd_buf;
 #ifdef FEAT_AUTOCMD
@@ -858,6 +859,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 	if (u_save((linenr_T)(line2), (linenr_T)(line2 + 1)) == FAIL)
 	    goto error;
 	redraw_curbuf_later(VALID);
+	read_linecount = curbuf->b_ml.ml_line_count;
 	if (readfile(otmp, NULL, line2, (linenr_T)0, (linenr_T)MAXLNUM, eap,
 							 READ_FILTER) == FAIL)
 	{
@@ -877,6 +879,22 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 
 	if (do_in)
 	{
+	    if (cmdmod.keepmarks || vim_strchr(p_cpo, CPO_REMMARK) == NULL)
+	    {
+		read_linecount = curbuf->b_ml.ml_line_count - read_linecount;
+		if (read_linecount >= linecount)
+		    /* move all marks from old lines to new lines */
+		    mark_adjust(line1, line2, linecount, 0L);
+		else
+		{
+		    /* move marks from old lines to new lines, delete marks
+		     * that are in deleted lines */
+		    mark_adjust(line1, line1 + read_linecount - 1,
+								linecount, 0L);
+		    mark_adjust(line1 + read_linecount, line2, MAXLNUM, 0L);
+		}
+	    }
+
 	    /*
 	     * Put cursor on first filtered line for ":range!cmd".
 	     * Adjust '[ and '] (set by buf_write()).
