@@ -532,8 +532,9 @@ pixmap_create_by_dir(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
 	STRCAT(full_pathname, name);
 	STRCAT(full_pathname, ".xpm");
 	if (mch_access((const char *)full_pathname, F_OK) == 0)
-	    *pixmap = gdk_pixmap_create_from_xpm(
-				    gui.mainwin->window,
+	    *pixmap = gdk_pixmap_colormap_create_from_xpm(
+				    NULL,
+				    gtk_widget_get_colormap(gui.mainwin),
 				    mask,
 				    &gui.mainwin->style->bg[GTK_STATE_NORMAL],
 				    (const char *)full_pathname);
