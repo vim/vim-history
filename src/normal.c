@@ -1360,6 +1360,9 @@ do_pending_operator(cap, old_col, gui_yank)
 	    curbuf->b_visual_start = VIsual;
 	    curbuf->b_visual_end = curwin->w_cursor;
 	    curbuf->b_visual_mode = VIsual_mode;
+# ifdef FEAT_EVAL
+	    curbuf->b_visual_mode_eval = VIsual_mode;
+# endif
 	    curbuf->b_visual_curswant = curwin->w_curswant;
 
 	    /* In Select mode, a linewise selection is operated upon like a
@@ -2906,6 +2909,9 @@ end_visual_mode()
 
     /* Save the current VIsual area for '< and '> marks, and "gv" */
     curbuf->b_visual_mode = VIsual_mode;
+#ifdef FEAT_EVAL
+    curbuf->b_visual_mode_eval = VIsual_mode;
+#endif
     curbuf->b_visual_start = VIsual;
     curbuf->b_visual_end = curwin->w_cursor;
     curbuf->b_visual_curswant = curwin->w_curswant;
@@ -6697,6 +6703,9 @@ nv_g_cmd(cap)
 		i = VIsual_mode;
 		VIsual_mode = curbuf->b_visual_mode;
 		curbuf->b_visual_mode = i;
+# ifdef FEAT_EVAL
+		curbuf->b_visual_mode_eval = i;
+# endif
 		i = curwin->w_curswant;
 		curwin->w_curswant = curbuf->b_visual_curswant;
 		curbuf->b_visual_curswant = i;

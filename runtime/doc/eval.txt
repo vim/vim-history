@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2003 Jan 05
+*eval.txt*      For Vim version 6.1.  Last change: 2003 Jan 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -865,7 +865,7 @@ tolower( {expr})		String	the String {expr} switched to lowercase
 toupper( {expr})		String	the String {expr} switched to uppercase
 type( {name})			Number	type of variable {name}
 virtcol( {expr})		Number	screen column of cursor or mark
-visualmode()			String	last visual mode used
+visualmode( [expr])		String	last visual mode used
 winbufnr( {nr})			Number	buffer number of window {nr}
 wincol()			Number	window column of the cursor
 winheight( {nr})		Number	height of window {nr}
@@ -2391,7 +2391,7 @@ virtcol({expr})						*virtcol()*
   virtcol("'t")    with text "    there", with 't at 'h', returns 6
 <		The first column is 1.  0 is returned for an error.
 
-visualmode()						*visualmode()*
+visualmode([expr])						*visualmode()*
 		The result is a String, which describes the last Visual mode
 		used.  Initially it returns an empty string, but once Visual
 		mode has been used, it returns "v", "V", or "<CTRL-V>" (a
@@ -2402,6 +2402,11 @@ visualmode()						*visualmode()*
 <		This enters the same Visual mode as before.  It is also useful
 		in scripts if you wish to act differently depending on the
 		Visual mode that was used.
+
+		If an expression is supplied that results in a non-zero number
+		or a non-empty string, then the Visual mode will be cleared
+		and the old value is returned.  Note that " " and "0" are also
+		non-empty strings, thus cause the mode to be cleared.
 
 							*winbufnr()*
 winbufnr({nr})	The result is a Number, which is the number of the buffer

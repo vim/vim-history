@@ -819,6 +819,9 @@ struct file_buffer
     pos_T	b_visual_start;	/* start pos of last VIsual */
     pos_T	b_visual_end;	/* end position of last VIsual */
     int		b_visual_mode;	/* VIsual_mode of last VIsual */
+# ifdef FEAT_EVAL
+    int		b_visual_mode_eval;  /* b_visual_mode for visualmode() */
+# endif
     colnr_T	b_visual_curswant;   /* MAXCOL from w_curswant */
 #endif
 
