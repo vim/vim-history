@@ -123,7 +123,7 @@ static int	getargopt __ARGS((exarg_T *eap));
 #endif
 
 static int	check_more __ARGS((int, int));
-static linenr_T get_address __ARGS((char_u **, int skip));
+static linenr_T get_address __ARGS((char_u **, int skip, int otherfile));
 static char_u	*invalid_range __ARGS((exarg_T *eap));
 static void	correct_range __ARGS((exarg_T *eap));
 static char_u	*repl_cmdline __ARGS((exarg_T *eap, char_u *src, int srclen, char_u *repl, char_u **cmdlinep));
@@ -1229,7 +1229,7 @@ do_one_cmd(cmdlinep, sourcing,
 	ea.line1 = ea.line2;
 	ea.line2 = curwin->w_cursor.lnum;   /* default is current line number */
 	ea.cmd = skipwhite(ea.cmd);
-	lnum = get_address(&ea.cmd, ea.skip);
+	lnum = get_address(&ea.cmd, ea.skip, ea.addr_count == 0);
 	if (ea.cmd == NULL)		    /* error detected */
 	    goto doend;
 	if (lnum == MAXLNUM)
@@ -2936,9 +2936,10 @@ skip_range(cmd, ctx)
  * Return MAXLNUM when no Ex address was found.
  */
     static linenr_T
-get_address(ptr, skip)
+get_address(ptr, skip, otherfile)
     char_u	**ptr;
     int		skip;	    /* only skip the address, don't use it */
+    int		otherfile;  /* flag: may jump to other file */
 {
     int		c;
     int		i;
@@ -2974,14 +2975,22 @@ get_address(ptr, skip)
 			    ++cmd;
 			else
 			{
-			    fp = getmark(*cmd, FALSE);
+			    /* Only accept a mark in another file when it is
+			     * used by itself: ":'M". */
+			    fp = getmark(*cmd, otherfile && cmd[1] == NUL);
 			    ++cmd;
-			    if (check_mark(fp) == FAIL)
+			    if (fp == (pos_T *)-1)
+				/* Jumped to another file. */
+				lnum = curwin->w_cursor.lnum;
+			    else
 			    {
-				cmd = NULL;
-				goto error;
+				if (check_mark(fp) == FAIL)
+				{
+				    cmd = NULL;
+				    goto error;
+				}
+				lnum = fp->lnum;
 			    }
-			    lnum = fp->lnum;
 			}
 			break;
 
@@ -6369,7 +6378,7 @@ ex_copymove(eap)
 {
     long	n;
 
-    n = get_address(&eap->arg, FALSE);
+    n = get_address(&eap->arg, FALSE, FALSE);
     if (eap->arg == NULL)	    /* error detected */
     {
 	eap->nextcmd = NULL;
