@@ -683,6 +683,7 @@ serverGetVimNames(dpy)
     }
     if (regProp != empty_prop)
 	XFree(regProp);
+    ga_append(&ga, NUL);
     return ga.ga_data;
 }
 

@@ -5472,6 +5472,7 @@ script_get(eap, cmd)
 	ga_append(&ga, '\n');
 	vim_free(theline);
     }
+    ga_append(&ga, NUL);
 
     return (char_u *)ga.ga_data;
 }
