@@ -944,7 +944,7 @@ win_update(wp)
 #endif
 	    )
     {
-	if (buf->b_mod_set && wp->w_topline == mod_top)
+	if (mod_top != 0 && wp->w_topline == mod_top)
 	{
 	    /*
 	     * w_topline is the first changed line, the scrolling will be done
