@@ -2323,13 +2323,16 @@ mch_isdir(char_u *name)
 
 /*
  * Return TRUE if file or directory "name" is writable (not readonly).
+ * Strange semantics of Win32: a readonly directory is writable, but you can't
+ * delete a file.  Let's say this means it is writable.
  */
     int
 mch_writable(char_u *name)
 {
     int perm = mch_getperm(name);
 
-    return (perm != -1 && !(perm & FILE_ATTRIBUTE_READONLY));
+    return (perm != -1 && (!(perm & FILE_ATTRIBUTE_READONLY)
+				       || (perm & FILE_ATTRIBUTE_DIRECTORY)));
 }
 
 #if defined(FEAT_EVAL) || defined(PROTO)
@@ -4021,15 +4024,55 @@ mch_access(char *n, int p)
     HANDLE  hFile;
     DWORD am;
 
-    /* Trying to open the file for the required access does ACL, read-only
-     * network share, and file attribute checks.
-     */
-    am = ((p & W_OK) ? GENERIC_WRITE : 0)
-	    | ((p & R_OK) ? GENERIC_READ : 0);
-    hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return -1;
-    CloseHandle(hFile);
+    if (mch_isdir(n))
+    {
+	char TempName[_MAX_PATH + 16] = "";
+
+	if (p & R_OK)
+	{
+	    /* Read check is performed by seeing if we can do a find file on
+	     * the directory for any file
+	     */
+	    char *pch;
+	    WIN32_FIND_DATA d;
+
+	    STRNCPY(TempName, n, _MAX_PATH);
+	    pch = TempName + STRLEN(TempName) - 1;
+	    if (*pch != '\\' && *pch != '/')
+		*pch++ = '\\';
+	    *pch++ = '*';
+	    *pch = NUL;
+
+	    hFile = FindFirstFile(TempName, &d);
+	    if (hFile == INVALID_HANDLE_VALUE)
+		return -1;
+	    (void)FindClose(hFile);
+	}
+
+	if (p & W_OK)
+	{
+	    /* Trying to create a temporary file in the directory should catch
+	     * directories on read-only network shares.  However, in
+	     * directories whose ACL allows writes but denies deletes will end
+	     * up keeping the temporary file :-(
+	     */
+	    if (!GetTempFileName(n, "VIM", 0, TempName))
+		return -1;
+	    mch_remove((char_u *)TempName);
+	}
+    }
+    else
+    {
+	/* Trying to open the file for the required access does ACL, read-only
+	 * network share, and file attribute checks.
+	 */
+	am = ((p & W_OK) ? GENERIC_WRITE : 0)
+		| ((p & R_OK) ? GENERIC_READ : 0);
+	hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+	    return -1;
+	CloseHandle(hFile);
+    }
     return 0;
 }
 
