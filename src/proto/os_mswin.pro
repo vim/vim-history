@@ -47,7 +47,7 @@ char_u *serverGetVimNames __ARGS((void));
 int serverSendReply __ARGS((char_u *name, char_u *reply));
 int serverSendToVim __ARGS((char_u *name, char_u *cmd, char_u **result, void *ptarget, int asExpr));
 void serverForeground __ARGS((char_u *name));
-char_u *serverGetReply __ARGS((HWND server, int expr, int remove, int wait));
+char_u *serverGetReply __ARGS((HWND server, int *expr_res, int remove, int wait));
 void serverProcessPendingMessages __ARGS((void));
 char *charset_id2name __ARGS((int id));
 int get_logfont __ARGS((LOGFONT *lf, char_u *name, HDC printer_dc));

@@ -32,19 +32,24 @@
 #define __ARGS(x) x
 
 /* Client API */
-char * sendToVim __ARGS((Display *dpy, char *name, char *cmd, int asKeys));
+char * sendToVim __ARGS((Display *dpy, char *name, char *cmd, int asKeys, int *code));
 
 #ifdef MAIN
 /* A sample program */
 main(int argc, char **argv)
 {
-    char *res;
+    char    *res;
+    int	    code;
 
     if (argc == 4)
     {
-	if ((res = sendToVim(XOpenDisplay(NULL),
-			     argv[2], argv[3], argv[1][0] != 'e')) != NULL)
+	if ((res = sendToVim(XOpenDisplay(NULL), argv[2], argv[3],
+			     argv[1][0] != 'e', &code)) != NULL)
+	{
+	    if (code)
+		printf("Error code returned: %d\n", code);
 	    puts(res);
+	}
 	exit(0);
     }
     else
@@ -72,7 +77,7 @@ static Window	LookupName __ARGS((Display *dpy, char *name,
 		    int delete, char **loose));
 static int	SendInit __ARGS((Display *dpy));
 static char	*SendEventProc __ARGS((Display *dpy, XEvent *eventPtr,
-				      int expect));
+				      int expect, int *code));
 static int	IsSerialName __ARGS((char *name));
 
 /* Private variables */
@@ -91,11 +96,12 @@ static int	got_x_error = FALSE;
  */
 
     char *
-sendToVim(dpy, name, cmd, asKeys)
+sendToVim(dpy, name, cmd, asKeys, code)
     Display	*dpy;			/* Where to send. */
     char	*name;			/* Where to send. */
     char	*cmd;			/* What to send. */
     int		asKeys;			/* Interpret as keystrokes or expr ? */
+    int		*code;			/* Return code. 0 => OK */
 {
     Window	    w;
     Atom	    *plist;
@@ -225,7 +231,7 @@ sendToVim(dpy, name, cmd, asKeys)
 	{
 	    XNextEvent(dpy, &event);
 	    if (event.type == PropertyNotify && e->window == commWindow)
-		if ((result = SendEventProc(dpy, &event, serial)) != NULL)
+		if ((result = SendEventProc(dpy, &event, serial, code)) != NULL)
 		    return result;
 	}
     }
@@ -335,7 +341,7 @@ LookupName(dpy, name, delete, loose)
 	entry = p;
 	while ((*p != 0) && (!isspace(*p)))
 	    p++;
-	if ((*p != 0) && (strcmp(name, p + 1) == 0))
+	if ((*p != 0) && (strcasecmp(name, p + 1) == 0))
 	{
 	    sscanf(entry, "%x", (uint*) &returnValue);
 	    break;
@@ -392,14 +398,16 @@ LookupName(dpy, name, delete, loose)
 }
 
     static char *
-SendEventProc(dpy, eventPtr, expected)
+SendEventProc(dpy, eventPtr, expected, code)
     Display	   *dpy;
     XEvent	    *eventPtr;		/* Information about event. */
     int		    expected;		/* The one were waiting for */
+    int		    *code;              /* Return code. 0 => OK */
 {
     unsigned char   *propInfo;
     unsigned char   *p;
     int		    result, actualFormat;
+    int		    retCode;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
 
@@ -469,6 +477,7 @@ SendEventProc(dpy, eventPtr, expected)
 	    p += 2;
 	    gotSerial = 0;
 	    res = "";
+	    retCode = 0;
 	    while (((p-propInfo) < numItems) && (*p == '-'))
 	    {
 		switch (p[1])
@@ -481,6 +490,10 @@ SendEventProc(dpy, eventPtr, expected)
 			if (sscanf(p + 2, " %d", &serial) == 1)
 			    gotSerial = 1;
 			break;
+		    case 'c':
+			if (sscanf(p + 2, " %d", &retCode) != 1)
+			    retCode = 0;
+			break;
 		}
 		while (*p != 0)
 		    p++;
@@ -490,6 +503,8 @@ SendEventProc(dpy, eventPtr, expected)
 	    if (!gotSerial)
 		continue;
 
+	    if (code != NULL)
+		*code = retCode;
 	    return serial == expected ? strdup(res) : NULL;
 	}
 	else
@@ -556,23 +571,14 @@ x_error_check(dpy, error_event)
 }
 
 /*
- * Check if name looks like it had a 3 digit serial number appended
+ * Check if "str" looks like it had a serial number appended.
+ * Actually just checks if the name ends in a digit.
  */
     static int
 IsSerialName(str)
-    char	*str;
+    char   *str;
 {
-    if (strlen(str) < 5)
-	return FALSE;
-    str = str + strlen(str) - 4;
-    if (*str++ != '-')
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
+    int len = strlen(str);
 
-    return TRUE;
+    return (len > 1 && isdigit(str[len - 1]));
 }
