@@ -3540,7 +3540,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
     {
 #ifdef BACKSLASH_IN_FILENAME
 	/* "c:dir" needs "c:" to be expanded, otherwise use current dir */
-	if (path[1] == ':')
+	if (*path != NUL && path[1] == ':')
 	{
 	    char_u  drive[3];
 
@@ -4974,12 +4974,15 @@ vim_chdir(new_dir)
     return mch_chdir((char *)new_dir);
 #else
     char_u	*dir_name;
+    int		r;
 
     dir_name = find_directory_in_path(new_dir, (int)STRLEN(new_dir),
 						FNAME_MESS, curbuf->b_ffname);
     if (dir_name == NULL)
 	return -1;
-    return mch_chdir((char *)dir_name);
+    r = mch_chdir((char *)dir_name);
+    vim_free(dir_name);
+    return r;
 #endif
 }
 
