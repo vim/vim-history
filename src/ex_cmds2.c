@@ -1863,7 +1863,7 @@ do_in_runtimepath(name, all, callback)
 		    if (p_verbose > 2)
 			msg_str((char_u *)_("Searching for \"%s\""), buf);
 
-		    /* Expand wildcards and source each match. */
+		    /* Expand wildcards, invoke the callback for each match. */
 		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
 							       EW_FILE) == OK)
 		    {
@@ -5301,10 +5301,8 @@ mch_print_set_fg(fgcol)
 # endif /*FEAT_POSTSCRIPT*/
 #endif /*FEAT_PRINTER*/
 
-
-#ifdef FEAT_EVAL
-
-# if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+#if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
+	&& (defined(FEAT_EVAL) || defined(FEAT_MULTI_LANG))
 static char *get_locale_val __ARGS((int what));
 
     static char *
@@ -5317,7 +5315,7 @@ get_locale_val(what)
      * redefined and it doesn't use the arguments. */
     loc = setlocale(what, NULL);
 
-#  if defined(__BORLANDC__)
+# if defined(__BORLANDC__)
     if (loc != NULL)
     {
 	char_u	*p;
@@ -5339,11 +5337,86 @@ get_locale_val(what)
 	    }
 	}
     }
-#  endif
+# endif
 
     return loc;
 }
+#endif
+
+
+#ifdef WIN32
+/*
+ * On MS-Windows locale names are strings like "German_Germany.1252", but
+ * gettext expects "de".  Try to translate one into another here for a few
+ * supported languages.
+ */
+    static char_u *
+gettext_lang(char_u *name)
+{
+    int		i;
+    static char *(mtable[]) = {
+			"afrikaans",	"af",
+			"czech",	"cs",
+			"dutch",	"nl",
+			"german",	"de",
+			"english_united kingdom", "en_GB",
+			"spanish",	"es",
+			"french",	"fr",
+			"italian",	"it",
+			"japanese",	"ja",
+			"korean",	"ko",
+			"norwegian",	"no",
+			"polish",	"pl",
+			"russian",	"ru",
+			"slovak",	"sk",
+			"swedish",	"sv",
+			"ukrainian",	"uk",
+			"chinese_china", "zh_CN",
+			"chinese_taiwan", "zh_TW",
+			NULL};
+
+    for (i = 0; mtable[i] != NULL; i += 2)
+	if (STRNICMP(mtable[i], name, STRLEN(mtable[i])) == 0)
+	    return mtable[i + 1];
+    return name;
+}
+#endif
+
+#if defined(FEAT_MULTI_LANG) || defined(PROTO)
+/*
+ * Obtain the current messages language.  Used to set the default for
+ * 'helplang'.  May return NULL or an empty string.
+ */
+    char_u *
+get_mess_lang()
+{
+    char_u *p;
+
+# if (defined(HAVE_LOCALE_H) || defined(X_LOCALE))
+#  if defined(LC_MESSAGES)
+    p = (char_u *)get_locale_val(LC_MESSAGES);
+#  else
+    /* This is necessary for Win32, where LC_MESSAGES is not defined and $LANG
+     * may be set to the LCID number. */
+    p = (char_u *)get_locale_val(LC_ALL);
+#  endif
+# else
+    p = mch_getenv((char_u *)"LC_ALL");
+    if (p == NULL || *p == NUL)
+    {
+	p = mch_getenv((char_u *)"LC_MESSAGES");
+	if (p == NULL || *p == NUL)
+	    p = mch_getenv((char_u *)"LANG");
+    }
 # endif
+# ifdef WIN32
+    p = gettext_lang(p);
+# endif
+    return p;
+}
+#endif
+
+#if defined(FEAT_EVAL) || defined(PROTO)
 
 /*
  * Set the "v:lang" variable according to the current locale setting.
@@ -5475,42 +5548,15 @@ ex_language(eap)
 		    vim_setenv((char_u *)"LANG", name);
 		if (what != LC_CTYPE)
 		{
+		    char_u	*mname;
 #ifdef WIN32
-		    char_u	*mname = name;
-		    int		i;
-		    static char *(mtable[]) = {
-					"afrikaans",	"af",
-					"czech",	"cs",
-					"german",	"de",
-					"english_united kingdom", "en_gb",
-					"spanish",	"es",
-					"french",	"fr",
-					"italian",	"it",
-					"japanese",	"ja",
-					"korean",	"ko",
-					"norwegian",	"no",
-					"polish",	"pl",
-					"russian",	"ru",
-					"slovak",	"sk",
-					"swedish",	"sv",
-					"ukrainian",	"uk",
-					"chinese_china", "zh_cn",
-					"chinese_taiwan", "zh_tw",
-					NULL};
-
-		    /* On MS-Windows locale names are strings like
-		     * "German_Germany.1252", but gettext expects "de".  Try
-		     * to translate one into another here for a few supported
-		     * languages. */
-		    for (i = 0; mtable[i] != NULL; i += 2)
-			if (STRNICMP(mtable[i], name, STRLEN(mtable[i])) == 0)
-			{
-			    mname = mtable[i + 1];
-			    break;
-			}
-		    vim_setenv((char_u *)"LC_MESSAGES", mname);
+		    mname = gettext_lang(name);
 #else
-		    vim_setenv((char_u *)"LC_MESSAGES", name);
+		    mname = name;
+#endif
+		    vim_setenv((char_u *)"LC_MESSAGES", mname);
+#ifdef FEAT_MULTI_LANG
+		    set_helplang_default(mname);
 #endif
 		}
 

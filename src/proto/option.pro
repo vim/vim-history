@@ -4,6 +4,7 @@ void set_string_default __ARGS((char *name, char_u *val));
 void set_number_default __ARGS((char *name, long val));
 void set_init_2 __ARGS((void));
 void set_init_3 __ARGS((void));
+void set_helplang_default __ARGS((char_u *lang));
 void init_gui_options __ARGS((void));
 void set_title_defaults __ARGS((void));
 int do_set __ARGS((char_u *arg, int opt_flags));

@@ -1057,6 +1057,15 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)20L, (char_u *)0L}},
+    {"helplang",    "hlg",  P_STRING|P_VI_DEF|P_COMMA,
+#ifdef FEAT_MULTI_LANG
+			    (char_u *)&p_hlg, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+    },
     {"hidden",	    "hid",  P_BOOL|P_VI_DEF,
 			    (char_u *)&p_hid, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -2802,6 +2811,11 @@ set_init_1()
 	}
     }
 #endif
+
+#ifdef FEAT_MULTI_LANG
+    /* Set the default for 'helplang'. */
+    set_helplang_default(get_mess_lang());
+#endif
 }
 
 /*
@@ -3114,6 +3128,34 @@ set_init_3()
     set_title_defaults();
 #endif
 }
+
+#if defined(FEAT_MULTI_LANG) || defined(PROTO)
+/*
+ * When 'helplang' is still at its default value, set it to "lang".
+ * Only the first two characters of "lang" are used.
+ */
+    void
+set_helplang_default(lang)
+    char_u	*lang;
+{
+    int		idx;
+
+    if (lang == NULL || STRLEN(lang) < 2)	/* safety check */
+	return;
+    idx = findoption((char_u *)"hlg");
+    if (!(options[idx].flags & P_WAS_SET))
+    {
+	if (options[idx].flags & P_ALLOCED)
+	    free_string_option(p_hlg);
+	p_hlg = vim_strsave(lang);
+	if (p_hlg == NULL)
+	    p_hlg = empty_option;
+	else
+	    p_hlg[2] = NUL;
+	options[idx].flags |= P_ALLOCED;
+    }
+}
+#endif
 
 #ifdef FEAT_GUI
 static char_u *gui_bg_default __ARGS((void));
@@ -4590,6 +4632,24 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    didset_vimruntime = FALSE;
 	}
     }
+
+#ifdef FEAT_MULTI_LANG
+    /* 'helplang' */
+    else if (varp == &p_hlg)
+    {
+	/* Check for "", "ab", "ab,cd", etc. */
+	for (s = p_hlg; *s != NUL; s += 3)
+	{
+	    if (s[1] == NUL || ((s[2] != ',' || s[3] == NUL) && s[2] != NUL))
+	    {
+		errmsg = e_invarg;
+		break;
+	    }
+	    if (s[2] == NUL)
+		break;
+	}
+    }
+#endif
 
     /* 'highlight' */
     else if (varp == &p_hl)

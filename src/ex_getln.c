@@ -3592,6 +3592,39 @@ expand_cmdline(xp, str, col, matchcount, matches)
     return EXPAND_OK;
 }
 
+#ifdef FEAT_MULTI_LANG
+/*
+ * Cleanup matches for help tags: remove "@en" if "en" is the only language.
+ */
+static void	cleanup_help_tags __ARGS((int num_file, char_u **file));
+
+    static void
+cleanup_help_tags(num_file, file)
+    int		num_file;
+    char_u	**file;
+{
+    int		i, j;
+    int		len;
+
+    for (i = 0; i < num_file; ++i)
+    {
+	len = (int)STRLEN(file[i]) - 3;
+	if (len > 0 && STRCMP(file[i] + len, "@en") == 0)
+	{
+	    /* Sorting on priority means the same item in another language may
+	     * be anywhere.  Search all items for a match up to the "@en". */
+	    for (j = 0; j < num_file; ++j)
+		if (j != i
+			&& (int)STRLEN(file[j]) == len + 3
+			&& STRNCMP(file[i], file[j], len + 1) == 0)
+		    break;
+	    if (j == num_file)
+		file[i][len] = NUL;
+	}
+    }
+}
+#endif
+
 /*
  * Do the expansion based on xp->xp_context and "pat".
  */
@@ -3660,7 +3693,16 @@ ExpandFromContext(xp, pat, num_file, file, options)
     *file = (char_u **)"";
     *num_file = 0;
     if (xp->xp_context == EXPAND_HELP)
-	return find_help_tags(pat, num_file, file);
+    {
+	if (find_help_tags(pat, num_file, file, FALSE) == OK)
+	{
+#ifdef FEAT_MULTI_LANG
+	    cleanup_help_tags(*num_file, *file);
+#endif
+	    return OK;
+	}
+	return FAIL;
+    }
 
 #ifndef FEAT_CMDL_COMPL
     return FAIL;

@@ -39,7 +39,7 @@ void write_viminfo_sub_string __ARGS((FILE *fp));
 void prepare_tagpreview __ARGS((void));
 void ex_help __ARGS((exarg_T *eap));
 int help_heuristic __ARGS((char_u *matched_string, int offset, int wrong_case));
-int find_help_tags __ARGS((char_u *arg, int *num_matches, char_u ***matches));
+int find_help_tags __ARGS((char_u *arg, int *num_matches, char_u ***matches, int keep_lang));
 void fix_help_buffer __ARGS((void));
 void ex_helptags __ARGS((exarg_T *eap));
 void ex_sign __ARGS((exarg_T *eap));

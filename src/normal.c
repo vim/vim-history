@@ -4880,7 +4880,7 @@ nv_ident(cap)
 
 	case 'K':
 	    if (kp_help)
-		STRCPY(buf, ":he ");
+		STRCPY(buf, "he! ");
 	    else
 	    {
 		/* When a count is given, turn it into a range.  Is this
@@ -4915,7 +4915,7 @@ nv_ident(cap)
 
 	default:
 	    if (curbuf->b_help)
-		STRCPY(buf, "he ");
+		STRCPY(buf, "he! ");
 	    else if (g_cmd)
 		STRCPY(buf, "tj ");
 	    else

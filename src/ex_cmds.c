@@ -4533,18 +4533,23 @@ ex_help(eap)
     exarg_T	*eap;
 {
     char_u	*arg;
+    char_u	*tag;
     FILE	*helpfd;	/* file descriptor of help file */
     int		n;
+    int		i;
 #ifdef FEAT_WINDOWS
     win_T	*wp;
 #endif
     int		num_matches;
     char_u	**matches;
-    int		need_free = FALSE;
     char_u	*p;
     int		empty_fnum = 0;
     int		alt_fnum = 0;
     buf_T	*buf;
+#ifdef FEAT_MULTI_LANG
+    int		len;
+    char_u	*lang = NULL;
+#endif
 
     if (eap != NULL)
     {
@@ -4564,34 +4569,70 @@ ex_help(eap)
 	}
 	arg = eap->arg;
 
+	if (eap->forceit && *arg == NUL)
+	{
+	    EMSG(_("E478: Don't panic!"));
+	    return;
+	}
+
 	if (eap->skip)	    /* not executing commands */
 	    return;
     }
     else
 	arg = (char_u *)"";
 
-    /*
-     * If an argument is given, check if there is a match for it.
-     */
-    if (*arg != NUL)
+    /* remove trailing blanks */
+    p = arg + STRLEN(arg) - 1;
+    while (p > arg && vim_iswhite(*p) && p[-1] != '\\')
+	*p-- = NUL;
+
+#ifdef FEAT_MULTI_LANG
+    /* Check for a specified language */
+    len = STRLEN(arg);
+    if (len >= 3 && arg[len - 3] == '@' && ASCII_ISALPHA(arg[len - 2])
+					       && ASCII_ISALPHA(arg[len - 1]))
     {
-	/* remove trailing blanks */
-	p = arg + STRLEN(arg) - 1;
-	while (p > arg && vim_iswhite(*p) && p[-1] != '\\')
-	    *p-- = NUL;
-
-	n = find_help_tags(arg, &num_matches, &matches);
-	if (num_matches == 0 || n == FAIL)
-	{
-	    EMSG2(_("E149: Sorry, no help for %s"), arg);
-	    return;
-	}
-
-	/* The first match is the best match. */
-	arg = vim_strsave(matches[0]);
-	need_free = TRUE;
-	FreeWild(num_matches, matches);
+	lang = arg + len - 2;
+	lang[-1] = NUL;		/* remove the '@' */
     }
+#endif
+
+    /* When no argument given go to the index. */
+    if (*arg == NUL)
+	arg = (char_u *)"help.txt";
+
+    /*
+     * Check if there is a match for the argument.
+     */
+    n = find_help_tags(arg, &num_matches, &matches,
+						 eap != NULL && eap->forceit);
+
+    i = 0;
+#ifdef FEAT_MULTI_LANG
+    if (n != FAIL && lang != NULL)
+	/* Find first item with the requested language. */
+	for (i = 0; i < num_matches; ++i)
+	{
+	    len = STRLEN(matches[i]);
+	    if (len > 3 && matches[i][len - 3] == '@'
+				  && STRICMP(matches[i] + len - 2, lang) == 0)
+		break;
+	}
+#endif
+    if (i >= num_matches || n == FAIL)
+    {
+#ifdef FEAT_MULTI_LANG
+	if (lang != NULL)
+	    EMSG3(_("E661: Sorry, no '%s' help for %s"), lang, arg);
+	else
+#endif
+	    EMSG2(_("E149: Sorry, no help for %s"), arg);
+	return;
+    }
+
+    /* The first match (in the requested language) is the best match. */
+    tag = vim_strsave(matches[i]);
+    FreeWild(num_matches, matches);
 
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
@@ -4660,12 +4701,8 @@ ex_help(eap)
     if (!p_im)
 	restart_edit = 0;	    /* don't want insert mode in help file */
 
-    if (arg == NULL || *arg == NUL)
-    {
-	arg = (char_u *)"help.txt";	    /* go to the index */
-	need_free = FALSE;
-    }
-    do_tag(arg, DT_HELP, 1, FALSE, TRUE);
+    if (tag != NULL)
+	do_tag(tag, DT_HELP, 1, FALSE, TRUE);
 
     /* Delete the empty buffer if we're not using it. */
     if (empty_fnum != 0 && curbuf->b_fnum != empty_fnum)
@@ -4680,8 +4717,7 @@ ex_help(eap)
 	curwin->w_alt_fnum = alt_fnum;
 
 erret:
-    if (need_free)
-	vim_free(arg);
+    vim_free(tag);
 }
 
 
@@ -4757,12 +4793,14 @@ help_compare(s1, s2)
  * Find all help tags matching "arg", sort them and return in matches[], with
  * the number of matches in num_matches.
  * The matches will be sorted with a "best" match algorithm.
+ * When "keep_lang" is TRUE try keeping the language of the current buffer.
  */
     int
-find_help_tags(arg, num_matches, matches)
+find_help_tags(arg, num_matches, matches, keep_lang)
     char_u	*arg;
     int		*num_matches;
     char_u	***matches;
+    int		keep_lang;
 {
     char_u	*s, *d;
     int		i;
@@ -4778,6 +4816,7 @@ find_help_tags(arg, num_matches, matches)
 			       "/\\\\?", "/\\\\z(\\\\)",
 			       "\\[count]", "\\[quotex]", "\\[range]",
 			       "\\[pattern]", "\\\\bar", "/\\\\%\\$"};
+    int flags;
 
     d = IObuff;		    /* assume IObuff is long enough! */
 
@@ -4909,15 +4948,15 @@ find_help_tags(arg, num_matches, matches)
 
     *matches = (char_u **)"";
     *num_matches = 0;
-    if (find_tags(IObuff, num_matches, matches,
-	TAG_HELP | TAG_REGEXP | TAG_NAMES | TAG_VERBOSE, (int)MAXCOL) == OK)
-	/*
-	 * Sort the matches found on the heuristic number that is after the
-	 * tag name.
-	 */
+    flags = TAG_HELP | TAG_REGEXP | TAG_NAMES | TAG_VERBOSE;
+    if (keep_lang)
+	flags |= TAG_KEEP_LANG;
+    if (find_tags(IObuff, num_matches, matches, flags, (int)MAXCOL) == OK
+	    && *num_matches > 0)
+	/* Sort the matches found on the heuristic number that is after the
+	 * tag name. */
 	qsort((void *)*matches, (size_t)*num_matches,
-					      sizeof(char_u *), help_compare)
-	;
+					      sizeof(char_u *), help_compare);
     return OK;
 }
 
@@ -5081,12 +5120,123 @@ fix_help_buffer()
 }
 
 #if defined(FEAT_EX_EXTRA) || defined(PROTO)
+static void helptags_one __ARGS((char_u *dir, char_u *ext, char_u *lang));
+
 /*
  * ":helptags"
  */
     void
 ex_helptags(eap)
     exarg_T	*eap;
+{
+    garray_T	ga;
+    int		i, j;
+    int		len;
+    char_u	lang[2];
+    char_u	ext[5];
+    char_u	fname[8];
+    int		filecount;
+    char_u	**files;
+
+    if (!mch_isdir(eap->arg))
+    {
+	EMSG2(_("E150: Not a directory: %s"), eap->arg);
+	return;
+    }
+
+#ifdef FEAT_MULTI_LANG
+    /* Get a list of all files in the directory. */
+    STRCPY(NameBuff, eap->arg);
+    add_pathsep(NameBuff);
+    STRCAT(NameBuff, "*");
+    if (gen_expand_wildcards(1, &NameBuff, &filecount, &files,
+						    EW_FILE|EW_SILENT) == FAIL
+	    || filecount == 0)
+    {
+	EMSG2("E151: No match: %s", NameBuff);
+	return;
+    }
+
+    /* Go over all files in the directory to find out what languages are
+     * present. */
+    ga_init2(&ga, 1, 10);
+    for (i = 0; i < filecount; ++i)
+    {
+	len = STRLEN(files[i]);
+	if (len > 4)
+	{
+	    if (STRICMP(files[i] + len - 4, ".txt") == 0)
+	    {
+		/* ".txt" -> language "en" */
+		lang[0] = 'e';
+		lang[1] = 'n';
+	    }
+	    else if (files[i][len - 4] == '.'
+		    && ASCII_ISALPHA(files[i][len - 3])
+		    && ASCII_ISALPHA(files[i][len - 2])
+		    && TOLOWER_ASC(files[i][len - 1]) == 'x')
+	    {
+		/* ".abx" -> language "ab" */
+		lang[0] = TOLOWER_ASC(files[i][len - 3]);
+		lang[1] = TOLOWER_ASC(files[i][len - 2]);
+	    }
+	    else
+		continue;
+
+	    /* Did we find this language already? */
+	    for (j = 0; j < ga.ga_len; j += 2)
+		if (STRNCMP(lang, ((char_u *)ga.ga_data) + j, 2) == 0)
+		    break;
+	    if (j == ga.ga_len)
+	    {
+		/* New language, add it. */
+		if (ga_grow(&ga, 2) == FAIL)
+		    break;
+		((char_u *)ga.ga_data)[ga.ga_len++] = lang[0];
+		((char_u *)ga.ga_data)[ga.ga_len++] = lang[1];
+		ga.ga_room -= 2;
+	    }
+	}
+    }
+
+    /*
+     * Loop over the found languages to generate a tags file for each one.
+     */
+    for (j = 0; j < ga.ga_len; j += 2)
+    {
+	STRCPY(fname, "tags-xx");
+	fname[5] = ((char_u *)ga.ga_data)[j];
+	fname[6] = ((char_u *)ga.ga_data)[j + 1];
+	if (fname[5] == 'e' && fname[6] == 'n')
+	{
+	    /* English is an exception: use ".txt" and "tags". */
+	    fname[4] = NUL;
+	    STRCPY(ext, ".txt");
+	}
+	else
+	{
+	    /* Language "ab" uses ".abx" and "tags-ab". */
+	    STRCPY(ext, ".xxx");
+	    ext[1] = fname[5];
+	    ext[2] = fname[6];
+	}
+	helptags_one(eap->arg, ext, fname);
+    }
+
+    ga_clear(&ga);
+    FreeWild(filecount, files);
+
+#else
+    /* No language support, just use "*.txt" and "tags". */
+    helptags_one(eap->arg, (char_u *)".txt", (char_u *)"tags");
+#endif
+}
+
+    static void
+helptags_one(dir, ext, tagfname)
+    char_u	*dir;	    /* doc directory */
+    char_u	*ext;	    /* suffix, ".txt", ".itx", ".frx", etc. */
+    char_u	*tagfname;    /* "tags" for English, "tags-it" for Italian. */
 {
     FILE	*fd_tags;
     FILE	*fd;
@@ -5099,18 +5249,13 @@ ex_helptags(eap)
     int		i;
     char_u	*fname;
 
-    if (!mch_isdir(eap->arg))
-    {
-	EMSG2(_("E150: Not a directory: %s"), eap->arg);
-	return;
-    }
-
     /*
      * Find all *.txt files.
      */
-    STRCPY(NameBuff, eap->arg);
+    STRCPY(NameBuff, dir);
     add_pathsep(NameBuff);
-    STRCAT(NameBuff, "*.txt");
+    STRCAT(NameBuff, "*");
+    STRCAT(NameBuff, ext);
     if (gen_expand_wildcards(1, &NameBuff, &filecount, &files,
 						    EW_FILE|EW_SILENT) == FAIL
 	    || filecount == 0)
@@ -5123,9 +5268,9 @@ ex_helptags(eap)
      * Open the tags file for writing.
      * Do this before scanning through all the files.
      */
-    STRCPY(NameBuff, eap->arg);
+    STRCPY(NameBuff, dir);
     add_pathsep(NameBuff);
-    STRCAT(NameBuff, "tags");
+    STRCAT(NameBuff, tagfname);
     fd_tags = fopen((char *)NameBuff, "w");
     if (fd_tags == NULL)
     {
@@ -5138,17 +5283,18 @@ ex_helptags(eap)
      * If generating tags for "$VIMRUNTIME/doc" add the "help-tags" tag.
      */
     ga_init2(&ga, (int)sizeof(char_u *), 100);
-    if (fullpathcmp((char_u *)"$VIMRUNTIME/doc", eap->arg, FALSE) == FPC_SAME)
+    if (fullpathcmp((char_u *)"$VIMRUNTIME/doc", dir, FALSE) == FPC_SAME)
     {
 	if (ga_grow(&ga, 1) == FAIL)
 	    got_int = TRUE;
 	else
 	{
-	    s = vim_strsave((char_u *)"help-tags\ttags\t1\n");
+	    s = alloc(30);
 	    if (s == NULL)
 		got_int = TRUE;
 	    else
 	    {
+		sprintf((char *)s, "help-tags\t%s\t1\n", tagfname);
 		((char_u **)ga.ga_data)[ga.ga_len] = s;
 		++ga.ga_len;
 		--ga.ga_room;
@@ -5260,7 +5406,7 @@ ex_helptags(eap)
 	for (i = 0; i < ga.ga_len; ++i)
 	{
 	    s = ((char_u **)ga.ga_data)[i];
-	    if (STRNCMP(s, "help-tags\t", 10) == 0)
+	    if (STRNCMP(s, "help-tags", 9) == 0)
 		/* help-tags entry was added in formatted form */
 		fprintf(fd_tags, (char *)s);
 	    else

@@ -893,6 +893,8 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #endif
 #define TAG_VERBOSE	32	/* message verbosity */
 #define TAG_INS_COMP	64	/* Currently doing insert completion */
+#define TAG_KEEP_LANG	128	/* keep current language */
+
 #define TAG_MANY	200	/* When finding many tags (for completion),
 				   find up to this many tags */
 
@@ -1234,6 +1236,7 @@ enum hlf_value
 #define MSG_ATTR(s, attr)	    msg_attr((char_u *)(s), (attr))
 #define EMSG(s)			    emsg((char_u *)(s))
 #define EMSG2(s, p)		    emsg2((char_u *)(s), (char_u *)(p))
+#define EMSG3(s, p, q)		    emsg3((char_u *)(s), (char_u *)(p), (char_u *)(q))
 #define EMSGN(s, n)		    emsgn((char_u *)(s), (long)(n))
 #define OUT_STR(s)		    out_str((char_u *)(s))
 #define OUT_STR_NF(s)		    out_str_nf((char_u *)(s))
