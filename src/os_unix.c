@@ -2869,7 +2869,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 # ifdef XTERM_CLIP
-	if (xterm_Shell != (Widget)0 && (fds[xterm_idx] & POLLIN))
+	if (xterm_Shell != (Widget)0 && (fds[xterm_idx].revents & POLLIN))
 	{
 	    xterm_update();      /* Maybe we should hand out clipboard */
 	    if (vim_is_input_buf_empty())
@@ -2879,7 +2879,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 # ifdef GPM_MOUSE
-	if (gpm_idx >= 0 && (fds[gpm_idx] & POLLIN))
+	if (gpm_idx >= 0 && (fds[gpm_idx].revents & POLLIN))
 	{
 	    *check_for_gpm = 1;
 	    ret--;
