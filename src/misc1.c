@@ -2949,7 +2949,7 @@ vim_fnamencmp(x, y, len)
 {
     while (len > 0 && *x && *y)
     {
-	if (tolower(*x) != tolower(*y)
+	if (TO_LOWER(*x) != TO_LOWER(*y)
 		&& !(*x == '/' && *y == '\\')
 		&& !(*x == '\\' && *y == '/'))
 	    break;

@@ -3085,7 +3085,7 @@ get_literal()
 	    {
 		if (!vim_isdigit(nc) && !isxdigit(nc))
 		    break;
-		nc = tolower(nc);
+		nc = TO_LOWER(nc);
 		if (nc >= 'a')
 		    nc = 10 + nc - 'a';
 		else
@@ -4394,7 +4394,7 @@ hkmap(c)
 	     (char_u)AIN  /*y*/, (char_u)ZADI /*z*/};
 
 	if (c == 'N' || c == 'M' || c == 'P' || c == 'C' || c == 'Z')
-	    return (int)(map[tolower(c) - 'a'] - 1 + p_aleph);/* '-1'='sofit' */
+	    return (int)(map[TO_LOWER(c) - 'a'] - 1 + p_aleph);/* '-1'='sofit' */
 	else if (c == 'x')
 	    return 'X';
 	else if (c == 'q')

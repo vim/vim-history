@@ -6796,7 +6796,7 @@ do_redir(eap)
 	    {
 		if (islower(*eap->arg))		/* make register empty */
 		    write_reg_contents(*eap->arg, (char_u *)"");
-		redir_reg = toupper(*eap->arg);
+		redir_reg = TO_UPPER(*eap->arg);
 	    }
 	    else
 		EMSG(e_invarg);

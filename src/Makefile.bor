@@ -14,6 +14,10 @@
 # It builds on Windows 95 and NT-Intel, producing the same binary in either
 # case.  To build using Microsoft Visual C++, use Makefile.w32.
 #
+# This should work with the free Borland command line compiler, version 5.5.
+# Use a command like this:
+# <path>\bin\make /f Makefile.bor BOR=<path> LINK=<path>\bin\ilink32
+#
 
 # let the make utility do the hard work:
 .AUTODEPEND
@@ -33,7 +37,9 @@
 #   OS	    -	DOS16 or WIN32
 #
 # Change this to point to the root of *your* BC installation:
+!if ("$(BOR)"=="")
 BOR = c:\bc5
+!endif
 #
 # PERL STUFF
 # 'USEDLL' doesn't seem to work with perl, don't know why.
@@ -42,13 +48,17 @@ BOR = c:\bc5
 PERLLIB=c:\perl\lib
 #
 # OS Target - can be DOS16 or WIN32
+!if ("$(OS)"=="")
 OS = WIN32
+!endif
 #
 # Uncomment to make an executable for debugging:
 #DEBUG = -v
 #
 # Comment out to make a console-mode only version:
+!if ("$(GUI)"=="")
 GUI = 1
+!endif
 #
 # Uncomment to make an OLE-capable version:
 #OLE = 1
@@ -201,14 +211,18 @@ OBJDIR	= $(OS)\obj
 ##### BASE COMPILER/TOOLS RULES #####
 !if ($(OS)==DOS16)
 BRC =
+!if ("$(LINK)"=="")
 LINK	= $(BOR)\BIN\TLink
+!endif
 CC   = $(BOR)\BIN\Bcc
 LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  =
 CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -H- -P- $(HEADERS)
 !else
 BRC = brc32
+!if ("$(LINK)"=="")
 LINK	= $(BOR)\BIN\TLink32
+!endif
 CC   = $(BOR)\BIN\Bcc32
 LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG) $(LINK2)
 LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG) $(LINK2)
