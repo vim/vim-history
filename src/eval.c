@@ -3027,9 +3027,10 @@ f_cindent(argvars, retvar)
     VAR		retvar;
 {
 #ifdef FEAT_CINDENT
-    pos_T	pos = curwin->w_cursor;
+    pos_T	pos;
     linenr_T	lnum;
 
+    pos = curwin->w_cursor;
     lnum = get_var_lnum(argvars);
     if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
     {
@@ -4793,9 +4794,10 @@ f_lispindent(argvars, retvar)
     VAR		retvar;
 {
 #ifdef FEAT_LISP
-    pos_T	pos = curwin->w_cursor;
+    pos_T	pos;
     linenr_T	lnum;
 
+    pos = curwin->w_cursor;
     lnum = get_var_lnum(argvars);
     if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
     {
