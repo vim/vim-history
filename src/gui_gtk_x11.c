@@ -480,7 +480,7 @@ gui_mch_prepare(int *argc, char **argv)
 		    break;
 #ifdef FEAT_NETBEANS_INTG
 		/* darn, -nb has non-standard syntax */
-		if (vim_strchr(":=", argv[i][len]) != NULL
+		if (vim_strchr((char_u *)":=", argv[i][len]) != NULL
 			&& (option->flags & ARG_INDEX_MASK) == ARG_NETBEANS)
 		    break;
 #endif
