@@ -3096,6 +3096,33 @@ server_to_input_buf(str)
 }
 
 /*
+ * Evaluate an expression that the client sent to a string.
+ * Handles disabling error messages and disables debugging, otherwise Vim
+ * hangs, waiting for "cont" to be typed.
+ */
+    char_u *
+eval_client_expr_to_string(expr)
+    char_u *expr;
+{
+    char_u	*res;
+    int		save_dbl = debug_break_level;
+    int		save_ro = redir_off;
+
+    debug_break_level = -1;
+    redir_off = 0;
+    ++emsg_skip;
+
+    res = eval_to_string(expr, NULL);
+
+    debug_break_level = save_dbl;
+    redir_off = save_ro;
+    --emsg_skip;
+
+    return res;
+}
+
+
+/*
  * Make our basic server name: use the specified "arg" if given, otherwise use
  * the tail of the command "cmd" we were started with.
  * Return the name in allocated memory.  This doesn't include a serial number.

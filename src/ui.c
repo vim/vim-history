@@ -105,12 +105,18 @@ ui_inchar_undo(s, len)
  * If "wtime" == 0 do not wait for characters.
  * If "wtime" == -1 wait forever for characters.
  * If "wtime" > 0 wait "wtime" milliseconds for a character.
+ *
+ * "tb_change_cnt" is the value of typebuf.tb_change_cnt if "buf" points into
+ * it.  When typebuf.tb_change_cnt changes (e.g., when a message is received
+ * from a remote client) "buf" can no longer be used.  "tb_change_cnt" is NULL
+ * otherwise.
  */
     int
-ui_inchar(buf, maxlen, wtime)
+ui_inchar(buf, maxlen, wtime, tb_change_cnt)
     char_u	*buf;
     int		maxlen;
     long	wtime;	    /* don't use "time", MIPS cannot handle it */
+    int		tb_change_cnt;
 {
     int		retval = 0;
 
@@ -143,8 +149,8 @@ ui_inchar(buf, maxlen, wtime)
 	static int count = 0;
 
 # ifndef NO_CONSOLE
-	retval = mch_inchar(buf, maxlen, 10L);
-	if (retval > 0)
+	retval = mch_inchar(buf, maxlen, 10L, tb_change_cnt);
+	if (retval > 0 || typebuf_changed(tb_change_cnt))
 	    return retval;
 # endif
 	if (wtime == -1 && ++count == 1000)
@@ -162,7 +168,7 @@ ui_inchar(buf, maxlen, wtime)
 #ifdef FEAT_GUI
     if (gui.in_use)
     {
-	if (gui_wait_for_chars(wtime))
+	if (gui_wait_for_chars(wtime) && !typebuf_changed(tb_change_cnt))
 	    retval = read_from_input_buf(buf, (long)maxlen);
     }
 #endif
@@ -170,7 +176,7 @@ ui_inchar(buf, maxlen, wtime)
 # ifdef FEAT_GUI
     else
 # endif
-	retval = mch_inchar(buf, maxlen, wtime);
+	retval = mch_inchar(buf, maxlen, wtime, tb_change_cnt);
 #endif
 
     ctrl_c_interrupts = TRUE;

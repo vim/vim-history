@@ -1834,7 +1834,7 @@ getexmodeline(c, dummy, indent)
 	p = (char_u *)line_ga.ga_data + line_ga.ga_len;
 
 	/* Get one character (inchar gets a third of maxlen characters!) */
-	len = inchar(p + off, 3, -1L);
+	len = inchar(p + off, 3, -1L, 0);
 	if (len < 0)
 	    continue;	    /* end of input script reached */
 	/* for a special character, we need at least three characters */

@@ -388,9 +388,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop, silent)
 	{
 	    char_u *ret;
 
-	    ++emsg_skip;
-	    ret = eval_to_string(cmd, NULL);
-	    --emsg_skip;
+	    ret = eval_client_expr_to_string(cmd);
 	    if (result != NULL)
 	    {
 		if (ret == NULL)
@@ -1238,11 +1236,7 @@ serverEventProc(dpy, eventPtr)
 		if (asKeys)
 		    server_to_input_buf(script);
 		else
-		{
-		    ++emsg_skip;
-		    res = eval_to_string(script, NULL);
-		    --emsg_skip;
-		}
+		    res = eval_client_expr_to_string(script);
 	    }
 	    if (resWindow != None)
 	    {

@@ -433,7 +433,8 @@ flush_buffers(typeahead)
 	 * of an escape sequence.
 	 * In an xterm we get one char at a time and we have to get them all.
 	 */
-	while (inchar(typebuf.tb_buf, typebuf.tb_buflen - 1, 10L) != 0)
+	while (inchar(typebuf.tb_buf, typebuf.tb_buflen - 1, 10L,
+						  typebuf.tb_change_cnt) != 0)
 	    ;
 	typebuf.tb_off = MAXMAPLEN;
 	typebuf.tb_len = 0;
@@ -860,7 +861,7 @@ stop_redo_ins()
 
 /*
  * Initialize typebuf.tb_buf to point to typebuf_init.
- * Alloc() cannot be used here: In out-of-memory situations it would
+ * alloc() cannot be used here: In out-of-memory situations it would
  * be impossible to type anything.
  */
     static void
@@ -873,6 +874,7 @@ init_typebuf()
 	typebuf.tb_buflen = TYPELEN_INIT;
 	typebuf.tb_len = 0;
 	typebuf.tb_off = 0;
+	typebuf.tb_change_cnt = 1;
     }
 }
 
@@ -910,6 +912,8 @@ ins_typebuf(str, noremap, offset, nottyped, silent)
     int		nrm;
 
     init_typebuf();
+    if (++typebuf.tb_change_cnt == 0)
+	typebuf.tb_change_cnt = 1;
 
     addlen = (int)STRLEN(str);
     /*
@@ -1013,6 +1017,25 @@ ins_typebuf(str, noremap, offset, nottyped, silent)
 }
 
 /*
+ * Return TRUE if the typeahead buffer was changed (while waiting for a
+ * character to arrive).  Happens when a message was received from a client.
+ * But check in a more generic way to avoid trouble: When "typebuf.tb_buf"
+ * changed it was reallocated and the old pointer can no longer be used.
+ * Or "typebuf.tb_off" may have been changed and we would overwrite characters
+ * that was just added.
+ */
+    int
+typebuf_changed(tb_change_cnt)
+    int		tb_change_cnt;	/* old value of typebuf.tb_change_cnt */
+{
+    return (tb_change_cnt != 0 && (typebuf.tb_change_cnt != tb_change_cnt
+#ifdef FEAT_CLIENTSERVER
+	    || received_from_client
+#endif
+	   ));
+}
+
+/*
  * Return TRUE if there are no characters in the typeahead buffer that have
  * not been typed (result from a mapping or come from ":normal").
  */
@@ -1106,6 +1129,8 @@ del_typebuf(len, offset)
      * typeahead buffer. */
     received_from_client = FALSE;
 #endif
+    if (++typebuf.tb_change_cnt == 0)
+	typebuf.tb_change_cnt = 1;
 }
 
 /*
@@ -1185,6 +1210,8 @@ alloc_typebuf()
     typebuf.tb_maplen = 0;
     typebuf.tb_silent = 0;
     typebuf.tb_no_abbr_cnt = 0;
+    if (++typebuf.tb_change_cnt == 0)
+	typebuf.tb_change_cnt = 1;
     return OK;
 }
 
@@ -1769,9 +1796,10 @@ vgetorpeek(advance)
 		if (got_int)
 		{
 		    /* flush all input */
-		    c = inchar(typebuf.tb_buf, typebuf.tb_buflen - 1, 0L);
+		    c = inchar(typebuf.tb_buf, typebuf.tb_buflen - 1, 0L,
+						       typebuf.tb_change_cnt);
 		    /*
-		     * If inchar returns TRUE (script file was active) or we
+		     * If inchar() returns TRUE (script file was active) or we
 		     * are inside a mapping, get out of insert mode.
 		     * Otherwise we behave like having gotten a CTRL-C.
 		     * As a result typing CTRL-C in insert mode will
@@ -2235,8 +2263,8 @@ vgetorpeek(advance)
 			&& (State & INSERT)
 			&& (p_timeout || (keylen == KL_PART_KEY && p_ttimeout))
 			&& (c = inchar(typebuf.tb_buf + typebuf.tb_off
-						    + typebuf.tb_len, 3, 25L))
-									 == 0)
+						     + typebuf.tb_len, 3, 25L,
+						 typebuf.tb_change_cnt)) == 0)
 		{
 		    colnr_T	col = 0, vcol;
 		    char_u	*ptr;
@@ -2466,7 +2494,7 @@ vgetorpeek(advance)
 				    ? -1L
 				    : ((keylen == KL_PART_KEY && p_ttm >= 0)
 					    ? p_ttm
-					    : p_tm)));
+					    : p_tm)), typebuf.tb_change_cnt);
 
 #ifdef FEAT_CMDL_INFO
 		if (i != 0)
@@ -2549,9 +2577,14 @@ vgetorpeek(advance)
  *	1. a scriptfile
  *	2. the keyboard
  *
- *  As much characters as we can get (upto 'maxlen') are put in buf and
+ *  As much characters as we can get (upto 'maxlen') are put in "buf" and
  *  NUL terminated (buffer length must be 'maxlen' + 1).
- *  Minimum for 'maxlen' is 3!!!!
+ *  Minimum for "maxlen" is 3!!!!
+ *
+ *  "tb_change_cnt" is the value of typebuf.tb_change_cnt if "buf" points into
+ *  it.  When typebuf.tb_change_cnt changes (e.g., when a message is received
+ *  from a remote client) "buf" can no longer be used.  "tb_change_cnt" is 0
+ *  otherwise.
  *
  *  If we got an interrupt all input is read until none is available.
  *
@@ -2562,12 +2595,12 @@ vgetorpeek(advance)
  *  Return the number of obtained characters.
  *  Return -1 when end of input script reached.
  */
-
     int
-inchar(buf, maxlen, wait_time)
+inchar(buf, maxlen, wait_time, tb_change_cnt)
     char_u	*buf;
     int		maxlen;
     long	wait_time;	    /* milli seconds */
+    int		tb_change_cnt;
 {
     int		len = 0;	    /* init for GCC */
     int		retesc = FALSE;	    /* return ESC with gotint */
@@ -2648,7 +2681,7 @@ inchar(buf, maxlen, wait_time)
 
 	    for (;;)
 	    {
-		len = ui_inchar(dum, DUM_LEN, 0L);
+		len = ui_inchar(dum, DUM_LEN, 0L, 0);
 		if (len == 0 || (len == 1 && dum[0] == 3))
 		    break;
 	    }
@@ -2665,8 +2698,11 @@ inchar(buf, maxlen, wait_time)
 	 * Fill up to a third of the buffer, because each character may be
 	 * tripled below.
 	 */
-	len = ui_inchar(buf, maxlen / 3, wait_time);
+	len = ui_inchar(buf, maxlen / 3, wait_time, tb_change_cnt);
     }
+
+    if (typebuf_changed(tb_change_cnt))
+	return 0;
 
     return fix_input_buffer(buf, len, script_char >= 0);
 }

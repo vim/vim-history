@@ -776,10 +776,11 @@ typedef struct
     char_u	*tb_noremap;	/* mapping flags for characters in tb_buf[] */
     int		tb_buflen;	/* size of tb_buf[] */
     int		tb_off;		/* current position in tb_buf[] */
-    int		tb_len;		/* number of valid chars in tb_buf[] */
-    int		tb_maplen;	/* nr of mapped characters in tb_buf[] */
-    int		tb_silent;	/* nr of silently mapped chars in tb_buf[] */
-    int		tb_no_abbr_cnt; /* nr of chars without abbrev. in tb_buf[] */
+    int		tb_len;		/* number of valid bytes in tb_buf[] */
+    int		tb_maplen;	/* nr of mapped bytes in tb_buf[] */
+    int		tb_silent;	/* nr of silently mapped bytes in tb_buf[] */
+    int		tb_no_abbr_cnt; /* nr of bytes without abbrev. in tb_buf[] */
+    int		tb_change_cnt;	/* nr of time tb_buf was changed; never zero */
 } typebuf_T;
 
 /* Struct to hold the saved typeahead for save_typeahead(). */
