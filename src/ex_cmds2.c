@@ -4756,6 +4756,8 @@ get_lang_arg(xp, idx)
 	return (char_u *)"messages";
     if (idx == 1)
 	return (char_u *)"ctype";
+    if (idx == 2)
+	return (char_u *)"time";
     return NULL;
 }
 # endif
