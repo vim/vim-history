@@ -1167,7 +1167,7 @@ ga_grow(gap, n)
     return OK;
 }
 
-#if defined(WANT_EVAL) || defined(PROTO)
+#if defined(WANT_EVAL) || defined(CMDLINE_COMPL) || defined(PROTO)
 /*
  * Concatenate a string to a growarray which contains characters.
  * Note: Does NOT copy the NUL at the end!
