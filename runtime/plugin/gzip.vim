@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2002 Oct 01
+" Last Change: 2003 Apr 06
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -103,9 +103,9 @@ endfun
 fun s:write(cmd)
   " don't do anything if the cmd is not supported
   if s:check(a:cmd)
-    " Rename to a weird name to avoid the risk of overwriting another file
+    " Rename the file before compressing it.
     let nm = expand("<afile>")
-    let nmt = expand("<afile>:p:h") . "/X~=@l9q5"
+    let nmt = s:tempname(nm)
     if rename(nm, nmt) == 0
       call system(a:cmd . " " . nmt)
       call rename(nmt . "." . expand("<afile>:e"), nm)
@@ -132,6 +132,17 @@ fun s:appre(cmd)
       call rename(nmt, nm)
     endif
   endif
+endfun
+
+" find a file name for the file to be compressed.  Use "name" without an
+" extension if possible.  Otherwise use a weird name to avoid overwriting an
+" existing file.
+fun s:tempname(name)
+  let fn = fnamemodify(a:name, ":r")
+  if !filereadable(fn) && !isdirectory(fn)
+    return fn
+  endif
+  return fnamemodify(a:name, ":p:h") . "/X~=@l9q5"
 endfun
 
 " vim: set sw=2 :
