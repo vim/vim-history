@@ -3710,7 +3710,9 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 		    ptr++;
 		preedit_buf_len++;
 	    }
+#ifdef FEAT_MBYTE
 	    vim_free(buf);
+#endif
 	}
     }
     if (text != NULL || draw_data->chg_length > 0)
