@@ -1867,6 +1867,18 @@ do_one_cmd(cmdlinep, sourcing,
     else
 	ea.arg = skipwhite(p);
 
+    /*
+     * Check for "++opt=val" argument.
+     * Must be first, allow ":w ++enc=utf8 !cmd"
+     */
+    if (ea.argt & ARGOPT)
+	while (ea.arg[0] == '+' && ea.arg[1] == '+')
+	    if (getargopt(&ea) == FAIL && !ni)
+	    {
+		errormsg = (char_u *)_(e_invarg);
+		goto doend;
+	    }
+
     if (ea.cmdidx == CMD_write || ea.cmdidx == CMD_update)
     {
 	if (*ea.arg == '>')			/* append */
@@ -1910,17 +1922,6 @@ do_one_cmd(cmdlinep, sourcing,
 	}
 	ea.arg = skipwhite(ea.arg);
     }
-
-    /*
-     * Check for "++opt=val" argument.
-     */
-    if (ea.argt & ARGOPT)
-	while (ea.arg[0] == '+' && ea.arg[1] == '+')
-	    if (getargopt(&ea) == FAIL && !ni)
-	    {
-		errormsg = (char_u *)_(e_invarg);
-		goto doend;
-	    }
 
     /*
      * Check for "+command" argument, before checking for next command.
