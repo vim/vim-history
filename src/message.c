@@ -1435,7 +1435,7 @@ msg_prt_line(s)
 
     /* output a space for an empty line, otherwise the line will be
      * overwritten */
-    if (*s == NUL && !curwin->w_p_list)
+    if (*s == NUL && !(curwin->w_p_list && lcs_eol != NUL))
 	msg_putchar(' ');
 
     for (;;)
@@ -1479,7 +1479,7 @@ msg_prt_line(s)
 		    attr = hl_attr(HLF_8);
 		}
 	    }
-	    else if (c == NUL && curwin->w_p_list && lcs_eol)
+	    else if (c == NUL && curwin->w_p_list && lcs_eol != NUL)
 	    {
 		p_extra = (char_u *)"";
 		c_extra = NUL;
