@@ -1157,24 +1157,21 @@ WaitForChar(long msec)
 
 	if (cRecords > 0)
 	{
-#ifdef FEAT_MBYTE_IME
-	    /* Windows IME sends two '\n's with only one 'ENTER'.
-	       first, wVirtualKeyCode == 13. second, wVirtualKeyCode == 0 */
 	    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
 	    {
+#ifdef FEAT_MBYTE_IME
+		/* Windows IME sends two '\n's with only one 'ENTER'.  First:
+		 * wVirtualKeyCode == 13. second: wVirtualKeyCode == 0 */
 		if (ir.Event.KeyEvent.uChar.UnicodeChar == 0
 			&& ir.Event.KeyEvent.wVirtualKeyCode == 13)
 		{
 		    ReadConsoleInput(g_hConIn, &ir, 1, &cRecords);
 		    continue;
 		}
-		return decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE);
-	    }
-#else
-	    if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown
-		    && decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE))
-		return TRUE;
 #endif
+		if (decode_key_event(&ir.Event.KeyEvent, &ch, &ch2, FALSE))
+		    return TRUE;
+	    }
 
 	    ReadConsoleInput(g_hConIn, &ir, 1, &cRecords);
 
