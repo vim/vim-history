@@ -673,6 +673,14 @@ vim_strsave_escaped(string, esc_chars)
     length = 1;				/* count the trailing '/' and NUL */
     for (p = string; *p; p++)
     {
+#ifdef MULTI_BYTE
+	if (is_dbcs && *(p + 1) != NUL && IsLeadByte(*p))
+	{
+	    length += 2;
+	    ++p;	/* skip multibyte */
+	    continue;
+	}
+#endif
 	if (vim_strchr(esc_chars, *p) != NULL)
 	    ++length;			/* count a backslash */
 	++length;			/* count an ordinary char */
@@ -683,6 +691,14 @@ vim_strsave_escaped(string, esc_chars)
 	p2 = escaped_string;
 	for (p = string; *p; p++)
 	{
+#ifdef MULTI_BYTE
+	    if (is_dbcs && *(p + 1) != NUL && IsLeadByte(*p))
+	    {
+		*p2++ = *p++;	/* skip multibyte lead  */
+		*p2++ = *p;	/* skip multibyte trail */
+		continue;
+	    }
+#endif
 	    if (vim_strchr(esc_chars, *p) != NULL)
 		*p2++ = '\\';
 	    *p2++ = *p;

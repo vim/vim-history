@@ -3211,22 +3211,55 @@ screen_puts(text, row, col, attr)
     int	    attr;
 {
     char_u  *screenp;
+#ifdef MULTI_BYTE
+    int	    is_mbyte;
+#endif
 
     if (NextScreen != NULL && row < Rows)	    /* safety check */
     {
 	screenp = LinePointers[row] + col;
 	while (*text && col < Columns)
 	{
-	    if (*screenp != *text || *(screenp + Columns) != attr ||
-								exmode_active)
+#ifdef MULTI_BYTE
+	    /* check if this is the first byte of a multibyte */
+	    if (is_dbcs && text[1] != NUL && IsLeadByte(*text))
+		is_mbyte = 1;
+	    else
+		is_mbyte = 0;
+#endif
+	    if (*screenp != *text
+#ifdef MULTI_BYTE
+		    || (is_mbyte && screenp[1] != text[1])
+#endif
+		    || *(screenp + Columns) != attr
+		    || exmode_active)
 	    {
 		*screenp = *text;
 		*(screenp + Columns) = attr;
 		screen_char(screenp, row, col);
+#ifdef MULTI_BYTE
+		if (is_mbyte)
+		{
+		    screenp[1] = text[1];
+		    screenp[Columns + 1] = attr;
+		    screen_char(screenp + 1, row, col + 1);
+		}
+#endif
 	    }
-	    ++screenp;
-	    ++col;
-	    ++text;
+#ifdef MULTI_BYTE
+	    if (is_mbyte)
+	    {
+		screenp += 2;
+		col += 2;
+		text += 2;
+	    }
+	    else
+#endif
+	    {
+		++screenp;
+		++col;
+		++text;
+	    }
 	}
     }
 }
