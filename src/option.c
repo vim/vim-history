@@ -6021,7 +6021,8 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    curbuf->b_p_iminsert = B_IMODE_NONE;
 	}
 	p_iminsert = curbuf->b_p_iminsert;
-	showmode();
+	if (termcap_active)	/* don't do this in the alternate screen */
+	    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	/* Show/unshow value of 'keymap' in status lines. */
 	status_redraw_curbuf();
