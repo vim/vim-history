@@ -2536,6 +2536,7 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
     int		retval = 0;
     char_u	*hotkeys;
     int		c;
+    int		i;
 
 #ifndef NO_CONSOLE
     /* Don't output anything in silent mode ("ex -s") */
@@ -2579,23 +2580,33 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
 	    case NL:
 		retval = dfltbutton;
 		break;
-	    case Ctrl_C:		/* User aborts/cancels */
+	    case Ctrl_C:	/* User aborts/cancels */
 	    case ESC:
 		retval = 0;
 		break;
 	    default:		/* Could be a hotkey? */
-		if (c > 255)	/* special keys are ignored here */
+		if (c < 0)	/* special keys are ignored here */
 		    continue;
-		for (retval = 0; hotkeys[retval]; retval++)
+		/* Make the character lowercase, as chars in "hotkeys" are. */
+		c = MB_TOLOWER(c);
+		retval = 1;
+		for (i = 0; hotkeys[i]; ++i)
 		{
-		    if (hotkeys[retval] == TOLOWER_LOC(c))
-			break;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+		    {
+			if ((*mb_ptr2char)(hotkeys + i) == c)
+			    break;
+			i += (*mb_ptr2len_check)(hotkeys + i) - 1;
+		    }
+		    else
+#endif
+			if (hotkeys[i] == c)
+			    break;
+		    ++retval;
 		}
-		if (hotkeys[retval])
-		{
-		    retval++;
+		if (hotkeys[i])
 		    break;
-		}
 		/* No hotkey match, so keep waiting */
 		continue;
 	    }
@@ -2615,14 +2626,55 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
     return retval;
 }
 
+static int copy_char __ARGS((char_u *from, char_u *to, int lowercase));
+
+/*
+ * Copy one character from "*from" to "*to", taking care of multi-byte
+ * characters.  Return the length of the character in bytes.
+ */
+    static int
+copy_char(from, to, lowercase)
+    char_u	*from;
+    char_u	*to;
+    int		lowercase;	/* make character lower case */
+{
+#ifdef FEAT_MBYTE
+    int		len;
+    int		c;
+
+    if (has_mbyte)
+    {
+	if (lowercase)
+	{
+	    c = MB_TOLOWER((*mb_ptr2char)(from));
+	    return (*mb_char2bytes)(c, to);
+	}
+	else
+	{
+	    len = (*mb_ptr2len_check)(from);
+	    mch_memmove(to, from, (size_t)len);
+	    return len;
+	}
+    }
+    else
+#endif
+    {
+	if (lowercase)
+	    *to = (char_u)TOLOWER_LOC(*from);
+	else
+	    *to = *from;
+	return 1;
+    }
+}
+
 /*
  * Format the dialog string, and display it at the bottom of
  * the screen. Return a string of hotkey chars (if defined) for
- * each 'button'. If a button has no hotkey defined, the string
- * has the buttons first letter.
+ * each 'button'. If a button has no hotkey defined, the first character of
+ * the button is used.
+ * The hotkeys can be multi-byte characters, but without combining chars.
  *
- * Returns allocated array, or NULL for error.
- *
+ * Returns an allocated string with hotkeys, or NULL for error.
  */
     static char_u *
 msg_show_console_dialog(message, buttons, dfltbutton)
@@ -2631,96 +2683,159 @@ msg_show_console_dialog(message, buttons, dfltbutton)
     int		dfltbutton;
 {
     int		len = 0;
-    int		lenhotkey = 1;	/*first button*/
-    char_u	*hotk;
-    char_u	*p;
-    char_u	*q;
+#ifdef FEAT_MBYTE
+# define HOTK_LEN (has_mbyte ? MB_MAXBYTES : 1)
+#else
+# define HOTK_LEN 1
+#endif
+    int		lenhotkey = HOTK_LEN;	/* count first button */
+    char_u	*hotk = NULL;
+    char_u	*msgp = NULL;
+    char_u	*hotkp = NULL;
     char_u	*r;
+    int		copy;
+#define HAS_HOTKEY_LEN 30
+    char_u	has_hotkey[HAS_HOTKEY_LEN];
+    int		first_hotkey = FALSE;	/* first char of button is hotkey */
+    int		idx;
+
+    has_hotkey[0] = FALSE;
 
     /*
-     * First compute how long a string we need to allocate for the message.
+     * First loop: compute the size of memory to allocate.
+     * Second loop: copy to the allocated memory.
      */
-    r = buttons;
-    while (*r)
+    for (copy = 0; copy <= 1; ++copy)
     {
-	if (*r == DLG_BUTTON_SEP)
+	r = buttons;
+	idx = 0;
+	while (*r)
 	{
-	    len++;	    /* '\n' -> ', ' */
-	    lenhotkey++;    /* each button needs a hotkey */
-	}
-	else if (*r == DLG_HOTKEY_CHAR)
-	{
-	    len++;	    /* '&a' -> '[a]' */
-	}
-	r++;
-    }
+	    if (*r == DLG_BUTTON_SEP)
+	    {
+		if (copy)
+		{
+		    *msgp++ = ',';
+		    *msgp++ = ' ';	    /* '\n' -> ', ' */
 
-    len += STRLEN(message)
-	    + 2			/* for the NL's */
-	    + STRLEN(buttons)
-	    + 3;		/* for the ": " and NUL */
+		    /* advance to next hotkey and set default hotkey */
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			hotkp += (*mb_ptr2len_check)(hotkp);
+		    else
+#endif
+			++hotkp;
+		    (void)copy_char(r + 1, hotkp, TRUE);
+		    if (dfltbutton)
+			--dfltbutton;
 
-    lenhotkey++;		/* for the NUL */
+		    /* If no hotkey is specified first char is used. */
+		    if (idx < HAS_HOTKEY_LEN - 1 && !has_hotkey[++idx])
+			first_hotkey = TRUE;
+		}
+		else
+		{
+		    len += 3;		    /* '\n' -> ', '; 'x' -> '(x)' */
+		    lenhotkey += HOTK_LEN;  /* each button needs a hotkey */
+		    if (idx < HAS_HOTKEY_LEN - 1)
+			has_hotkey[++idx] = FALSE;
+		}
+	    }
+	    else if (*r == DLG_HOTKEY_CHAR || first_hotkey)
+	    {
+		if (*r == DLG_HOTKEY_CHAR)
+		    ++r;
+		first_hotkey = FALSE;
+		if (copy)
+		{
+		    if (*r == DLG_HOTKEY_CHAR)		/* '&&a' -> '&a' */
+			*msgp++ = *r;
+		    else
+		    {
+			/* '&a' -> '[a]' */
+			*msgp++ = (dfltbutton == 1) ? '[' : '(';
+			msgp += copy_char(r, msgp, FALSE);
+			*msgp++ = (dfltbutton == 1) ? ']' : ')';
 
-    /*
-     * Now allocate and load the strings
-     */
-    vim_free(confirm_msg);
-    confirm_msg = alloc(len);
-    if (confirm_msg == NULL)
-	return NULL;
-    *confirm_msg = NUL;
-    hotk = alloc(lenhotkey);
-    if (hotk == NULL)
-	return NULL;
-
-    *confirm_msg = '\n';
-    STRCPY(confirm_msg + 1, message);
-
-    p = confirm_msg + 1 + STRLEN(message);
-    q = hotk;
-    r = buttons;
-    *q = (char_u)TOLOWER_LOC(*r);	/* define lowercase hotkey */
-
-    /* Remember where the choices start, displaying starts here when "q" typed
-     * at the more prompt. */
-    confirm_msg_tail = p;
-    *p++ = '\n';
-
-    while (*r)
-    {
-	if (*r == DLG_BUTTON_SEP)
-	{
-	    *p++ = ',';
-	    *p++ = ' ';	    /* '\n' -> ', ' */
-	    *(++q) = (char_u)TOLOWER_LOC(*(r + 1)); /* next hotkey */
-	    if (dfltbutton)
-		--dfltbutton;
-	}
-	else if (*r == DLG_HOTKEY_CHAR)
-	{
-	    r++;
-	    if (*r == DLG_HOTKEY_CHAR)		/* '&&a' -> '&a' */
-		*p++ = *r;
+			/* redefine hotkey */
+			(void)copy_char(r, hotkp, TRUE);
+		    }
+		}
+		else
+		{
+		    ++len;	    /* '&a' -> '[a]' */
+		    if (idx < HAS_HOTKEY_LEN - 1)
+			has_hotkey[idx] = TRUE;
+		}
+	    }
 	    else
 	    {
-		/* '&a' -> '[a]' */
-		*p++ = (dfltbutton == 1) ? '[' : '(';
-		*p++ = *r;
-		*p++ = (dfltbutton == 1) ? ']' : ')';
-		*q = (char_u)TOLOWER_LOC(*r);	/* define lowercase hotkey */
+		/* everything else copy literally */
+		if (copy)
+		    msgp += copy_char(r, msgp, FALSE);
 	    }
+
+	    /* advance to the next character */
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		r += (*mb_ptr2len_check)(r);
+	    else
+#endif
+		++r;
+	}
+
+	if (copy)
+	{
+	    *msgp++ = ':';
+	    *msgp++ = ' ';
+	    *msgp = NUL;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		hotkp += (*mb_ptr2len_check)(hotkp);
+	    else
+#endif
+		++hotkp;
+	    *hotkp = NUL;
 	}
 	else
 	{
-	    *p++ = *r;	    /* everything else copy literally */
+	    len += STRLEN(message)
+		    + 2			/* for the NL's */
+		    + STRLEN(buttons)
+		    + 3;		/* for the ": " and NUL */
+	    lenhotkey++;		/* for the NUL */
+
+	    /*
+	     * Now allocate and load the strings
+	     */
+	    vim_free(confirm_msg);
+	    confirm_msg = alloc(len);
+	    if (confirm_msg == NULL)
+		return NULL;
+	    *confirm_msg = NUL;
+	    hotk = alloc(lenhotkey);
+	    if (hotk == NULL)
+		return NULL;
+
+	    *confirm_msg = '\n';
+	    STRCPY(confirm_msg + 1, message);
+
+	    msgp = confirm_msg + 1 + STRLEN(message);
+	    hotkp = hotk;
+
+	    /* define first default hotkey */
+	    (void)copy_char(buttons, hotkp, TRUE);
+
+	    /* If no hotkey is specified first char is used. */
+	    if (!has_hotkey[0])
+		first_hotkey = TRUE;
+
+	    /* Remember where the choices start, displaying starts here when
+	     * "hotkp" typed at the more prompt. */
+	    confirm_msg_tail = msgp;
+	    *msgp++ = '\n';
 	}
-	r++;
     }
-    *p++ = ':';
-    *p++ = ' ';
-    *p = NUL;
-    *(++q) = NUL;
 
     display_confirm_msg();
     return hotk;
