@@ -399,12 +399,6 @@ gtk_form_size_request(GtkWidget * widget,
 
     requisition->width = form->width;
     requisition->height = form->height;
-#ifdef USE_XIM
-    /*
-     * FIXME: This isn't the proper place to do this!
-     */
-    requisition->height += xim_get_status_area_height();
-#endif
 
     tmp_list = form->children;
 
@@ -798,10 +792,6 @@ gtk_form_send_configure(GtkForm *form)
     event.y = widget->allocation.y;
     event.width = widget->allocation.width;
     event.height = widget->allocation.height;
-
-#ifdef USE_XIM
-    event.height -= xim_get_status_area_height();
-#endif
 
     gtk_widget_event (widget, (GdkEvent*) &event);
 }

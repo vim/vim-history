@@ -397,19 +397,19 @@ xim_set_status_area()
 	    return;
 
 	attr = xic_attr;
-	widget = gui.drawarea;
 	attrmask = 0;
 	style = gdk_ic_get_style(xic);
 	if ((style & GDK_IM_STATUS_MASK) == GDK_IM_STATUS_AREA)
 	{
 	    if (gui.fontset && gui.fontset->type == GDK_FONT_FONTSET)
 	    {
+		widget = gui.mainwin;
 		gdk_window_get_size(widget->window, &width, &height);
 
 		attrmask |= GDK_IC_STATUS_AREA;
-		attr->status_area.x = gui.border_offset;
-		attr->status_area.y = height - gui.char_height - gui.border_offset;
-		attr->status_area.width = width - 2 * gui.border_offset;
+		attr->status_area.x = 0;
+		attr->status_area.y = height - gui.char_height - 1;
+		attr->status_area.width = width;
 		attr->status_area.height = gui.char_height;
 	    }
 	}
@@ -815,7 +815,7 @@ xim_init()
 
     if (!gdk_im_ready())
     {
-	EMSG("Your GTK+ does not support XIM");
+	EMSG("Input Method Server is not running");
 	return;
     }
     if ((xic_attr = gdk_ic_attr_new()) != NULL)
@@ -828,7 +828,7 @@ xim_init()
 	GtkWidget *widget = gui.drawarea;
 
 	attr->style = xim_input_style;
-	attr->client_window = widget->window;
+	attr->client_window = gui.mainwin->window;
 
 	if ((colormap = gtk_widget_get_colormap(widget)) !=
 	    gtk_widget_get_default_colormap())
@@ -871,13 +871,13 @@ xim_init()
 	    }
 	    else
 	    {
+		gdk_window_get_size(gui.mainwin->window, &width, &height);
 		attrmask |= GDK_IC_STATUS_AREA_REQ;
-		attr->status_area.x = gui.border_offset;
-		attr->status_area.y = height - gui.char_height - gui.border_offset;
-		attr->status_area.width = width - 2*gui.border_offset;
+		attr->status_area.x = 0;
+		attr->status_area.y = height - gui.char_height - 1;
+		attr->status_area.width = width;
 		attr->status_area.height = gui.char_height;
 		attr->status_fontset = gui.fontset;
-		attr->preedit_area.height -= gui.char_height;
 	    }
 	}
 #endif

@@ -1614,6 +1614,17 @@ gui_mch_init_font(char_u * font_name)
     /* Adjust input management behaviour to the capabilities of the new
      * fontset */
     xim_decide_input_style();
+    if (xim_get_status_area_height())
+    {
+	/* Status area is required.  Just create the empty label so that
+	 * mainwin will allocate the extra space for status area. */
+	GtkWidget *label = gtk_label_new("       ");
+
+	gtk_widget_set_usize(label, 20, gui.char_height + 2);
+	gtk_box_pack_end(GTK_BOX(GTK_BIN(gui.mainwin)->child), label,
+							     FALSE, FALSE, 0);
+	gtk_widget_show(label);
+    }
 #endif
 
     /* Preserve the logical dimensions of the screen. */
