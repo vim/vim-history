@@ -939,6 +939,7 @@ struct exarg
     int		usefilter;	/* TRUE with ":w !command" and ":r!command" */
     int		amount;		/* number of '>' or '<' for shift command */
     int		regname;	/* register name (NUL if none) */
+    int		force_bin;	/* 0, FORCE_BIN or FORCE_NOBIN */
     int		force_ff;	/* forced 'fileformat' (index in cmd[]) */
 #ifdef FEAT_MBYTE
     int		force_enc;	/* forced 'encoding' (index in cmd[]) */
@@ -953,4 +954,8 @@ struct exarg
     struct condstack *cstack;	/* condition stack for ":if" etc. */
 #endif
 };
+
+#define FORCE_BIN 1		/* ":edit ++bin file" */
+#define FORCE_NOBIN 2		/* ":edit ++nobin file" */
+
 #endif

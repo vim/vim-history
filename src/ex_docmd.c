@@ -4220,6 +4220,22 @@ getargopt(eap)
     char_u	*p;
 #endif
 
+    /* ":edit ++[no]bin[ary] file" */
+    if (STRNCMP(arg, "bin", 3) == 0 || STRNCMP(arg, "nobin", 5) == 0)
+    {
+	if (*arg == 'n')
+	{
+	    arg += 2;
+	    eap->force_bin = FORCE_NOBIN;
+	}
+	else
+	    eap->force_bin = FORCE_BIN;
+	if (!checkforcmd(&arg, "binary", 3))
+	    return FAIL;
+	eap->arg = skipwhite(arg);
+	return OK;
+    }
+
     if (STRNCMP(arg, "ff", 2) == 0)
     {
 	arg += 2;
@@ -6057,14 +6073,8 @@ handle_drop(filec, filev, split)
      * Move to the first file.
      */
     /* Fake up a minimal "next" command for do_argfile() */
+    vim_memset(&ea, 0, sizeof(ea));
     ea.cmd = (char_u *)"next";
-    ea.forceit = FALSE;
-    ea.do_ecmd_cmd = NULL;
-    ea.do_ecmd_lnum = 0;
-    ea.force_ff = 0;
-# ifdef FEAT_MBYTE
-    ea.force_enc = 0;
-# endif
     do_argfile(&ea, 0);
 
     /* do_ecmd() may set need_start_insertmode, but since we never left Insert

@@ -409,6 +409,15 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    set_fileformat(default_fileformat(), OPT_LOCAL);
     }
 
+    /* set or reset 'binary' */
+    if (eap != NULL && eap->force_bin != 0)
+    {
+	int	oldval = curbuf->b_p_bin;
+
+	curbuf->b_p_bin = (eap->force_bin == FORCE_BIN);
+	set_options_bin(oldval, curbuf->b_p_bin, OPT_LOCAL);
+    }
+
     /*
      * When opening a new file we take the readonly flag from the file.
      * Default is r/w, can be set to r/o below.
@@ -2420,6 +2429,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #endif
     int		    attr;
     int		    fileformat;
+    int		    write_bin;
     struct bw_info  write_info;		/* info for buf_write_bytes() */
 #ifdef FEAT_MBYTE
     int		    converted = FALSE;
@@ -3593,11 +3603,17 @@ restore_backup:
     write_info.bw_buf = buffer;
     nchars = 0;
 
+    /* use "++bin", "++nobin" or 'binary' */
+    if (eap != NULL && eap->force_bin != 0)
+	write_bin = (eap->force_bin == FORCE_BIN);
+    else
+	write_bin = buf->b_p_bin;
+
 #ifdef FEAT_MBYTE
     /*
      * The BOM is written just after the encryption magic number.
      */
-    if (buf->b_p_bomb && !buf->b_p_bin)
+    if (buf->b_p_bomb && !write_bin)
     {
 	write_info.bw_len = make_bom(buffer, fenc);
 	if (write_info.bw_len > 0)
@@ -3649,7 +3665,7 @@ restore_backup:
 	/* write failed or last line has no EOL: stop here */
 	if (end == 0
 		|| (lnum == end
-		    && buf->b_p_bin
+		    && write_bin
 		    && (lnum == write_no_eol_lnum
 			|| (lnum == buf->b_ml.ml_line_count && !buf->b_p_eol))))
 	{

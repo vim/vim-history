@@ -2488,7 +2488,8 @@ get_fileformat_force(buf, eap)
 	c = eap->cmd[eap->force_ff];
     else
     {
-	if (buf->b_p_bin)
+	if ((eap != NULL && eap->force_bin != 0)
+			       ? (eap->force_bin == FORCE_BIN) : buf->b_p_bin)
 	    return EOL_UNIX;
 	c = *buf->b_p_ff;
     }

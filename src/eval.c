@@ -7887,21 +7887,32 @@ set_cmdarg(eap, oldarg)
     oldval = vimvars[VV_CMDARG].val;
     if (eap != NULL)
     {
-	if (eap->force_ff != 0)
-	    len = (unsigned)STRLEN(eap->cmd + eap->force_ff) + 6;
+	if (eap->force_bin == FORCE_BIN)
+	    len = 6;
+	else if (eap->force_bin == FORCE_NOBIN)
+	    len = 8;
 	else
 	    len = 0;
+	if (eap->force_ff != 0)
+	    len += (unsigned)STRLEN(eap->cmd + eap->force_ff) + 6;
 # ifdef FEAT_MBYTE
 	if (eap->force_enc != 0)
 	    len += (unsigned)STRLEN(eap->cmd + eap->force_enc) + 7;
 # endif
+
 	newval = alloc(len + 1);
 	if (newval == NULL)
 	    return NULL;
-	if (eap->force_ff != 0)
-	    sprintf((char *)newval, " ++ff=%s", eap->cmd + eap->force_ff);
+
+	if (eap->force_bin == FORCE_BIN)
+	    sprintf((char *)newval, " ++bin");
+	else if (eap->force_bin == FORCE_NOBIN)
+	    sprintf((char *)newval, " ++nobin");
 	else
 	    *newval = NUL;
+	if (eap->force_ff != 0)
+	    sprintf((char *)newval + STRLEN(newval), " ++ff=%s",
+						    eap->cmd + eap->force_ff);
 # ifdef FEAT_MBYTE
 	if (eap->force_enc != 0)
 	    sprintf((char *)newval + STRLEN(newval), " ++enc=%s",
