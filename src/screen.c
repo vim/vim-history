@@ -2509,6 +2509,8 @@ win_redr_custom(wp, Ruler)
 	    attr = 0;
 	}
     }
+    if (maxlen >= sizeof(buf))
+	maxlen = sizeof(buf) - 1;
 
     len = build_stl_str_hl(wp, buf, p, fillchar, maxlen, hl);
 
