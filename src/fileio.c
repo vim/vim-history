@@ -3802,6 +3802,19 @@ restore_backup:
 	nchars += len;
     }
 
+#if defined(UNIX) && defined(HAVE_FSYNC)
+    /* On many journalling file systems there is a bug that causes both the
+     * original and the backup file to be lost when halting the system right
+     * after writing the file.  That's because only the meta-data is
+     * journalled.  Syncing the file slows down the system, but assures it has
+     * been written to disk and we don't lose it. */
+    if (fsync(fd) != 0)
+    {
+	errmsg = (char_u *)_("E667: Fsync failed");
+	end = 0;
+    }
+#endif
+
     if (close(fd) != 0)
     {
 	errmsg = (char_u *)_("E512: Close failed");
