@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.2.  Last change: 2003 Mar 15
+*usr_05.txt*	For Vim version 6.2.  Last change: 2003 Aug 13
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -406,6 +406,7 @@ Further reading:
 |write-plugin|		How to write a plugin script.
 |plugin-details|	For more information about using plugins or when your
 			plugin doesn't work.
+|new-filetype|		How to detect a new file type.
 
 ==============================================================================
 *05.5*	Adding a help file		*add-local-help* *matchit-install*

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Jul 23
+" Last Change:	2003 Aug 17
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -1551,6 +1551,10 @@ au BufNewFile,BufRead,StdinReadPost *
 	\	|| getline(4) =~ '^#' || getline(5) =~ '^#') |
 	\   setf conf |
 	\ endif
+
+" Use the plugin-filetype checks last, they may overrule any of the previously
+" detected filetypes.
+runtime! ftdetect/*.vim
 
 augroup END
 
