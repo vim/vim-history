@@ -59,6 +59,7 @@ void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, long val, long size, l
 void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));
+unsigned short *GetCompositionString_inUCS2 __ARGS((HIMC hIMC, DWORD GCS, int *len));
 void im_set_font __ARGS((LOGFONT *lf));
 void im_set_position __ARGS((int row, int col));
 void im_set_active __ARGS((int active));

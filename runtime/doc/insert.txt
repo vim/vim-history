@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0.  Last change: 2001 Sep 16
+*insert.txt*    For Vim version 6.1a.  Last change: 2002 Feb 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -34,7 +34,8 @@ In Insert and Replace mode, the following characters have a special meaning;
 other characters are inserted directly.  To insert one of these special
 characters into the buffer, precede it with CTRL-V.  To insert a <Nul>
 character use "CTRL-V CTRL-@" or "CTRL-V 000".  On some systems, you have to
-use "CTRL-V 003" to insert a CTRL-C.
+use "CTRL-V 003" to insert a CTRL-C.  Note: When CTRL-V is mapped you can
+often use CTRL-Q instead |i_CTRL-Q|.
 
 If you are working in a special language mode when inserting text, see the
 'langmap' option, |'langmap'|, on how to avoid switching this mode on and off
@@ -83,7 +84,8 @@ CTRL-U		Delete all entered characters in the current line (see
 						*i_CTRL-I* *i_<Tab>* *i_Tab*
 <Tab> or CTRL-I Insert a tab.  If the 'expandtab' option is on, the
 		equivalent number of spaces is inserted (use CTRL-V <Tab> to
-		avoid the expansion).  See also the 'smarttab' option and
+		avoid the expansion; use CTRL-Q <Tab> if CTRL-V is mapped
+		|i_CTRL-Q|).  See also the 'smarttab' option and
 		|ins-expandtab|.
 						*i_CTRL-J* *i_<NL>*
 <NL> or CTRL-J	Begin new line.
@@ -100,7 +102,7 @@ CTRL-K {char1} [char2]
 CTRL-N		Find next keyword (see |i_CTRL-N|).  {not in Vi}
 CTRL-P		Find previous keyword (see |i_CTRL-P|).  {not in Vi}
 
-CTRL-R {0-9a-z"%#*:.-=}					*i_CTRL-R*
+CTRL-R {0-9a-z"%#*+:.-=}					*i_CTRL-R*
 		Insert the contents of a register.  Between typing CTRL-R and
 		the second character, '"' will be displayed to indicate that
 		you are expected to enter the name of a register.
@@ -114,7 +116,8 @@ CTRL-R {0-9a-z"%#*:.-=}					*i_CTRL-R*
 				the last delete or yank
 			'%'	the current file name
 			'#'	the alternate file name
-			'*'	the clipboard contents
+			'*'	the clipboard contents (X11: primary selection)
+			'+'	the clipboard contents
 			'/'	the last search pattern
 			':'	the last command-line
 			'.'	the last inserted text
@@ -123,7 +126,7 @@ CTRL-R {0-9a-z"%#*:.-=}					*i_CTRL-R*
 				enter an expression (see |expression|)
 		See |registers| about registers.  {not in Vi}
 
-CTRL-R CTRL-R {0-9a-z"%#*/:.-=}				*i_CTRL-R_CTRL-R*
+CTRL-R CTRL-R {0-9a-z"%#*+/:.-=}			*i_CTRL-R_CTRL-R*
 		Insert the contents of a register.  Works like using a single
 		CTRL-R, but the text is inserted literally, not as if typed.
 		This differs when the register contains characters like <BS>.
@@ -135,7 +138,7 @@ CTRL-R CTRL-R {0-9a-z"%#*/:.-=}				*i_CTRL-R_CTRL-R*
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
 
-CTRL-R CTRL-O {0-9a-z"%#*/:.-=}				*i_CTRL-R_CTRL-O*
+CTRL-R CTRL-O {0-9a-z"%#*+/:.-=}			*i_CTRL-R_CTRL-O*
 		Insert the contents of a register literally and don't
 		auto-indent.  Does the same as pasting with the mouse
 		|<MiddleMouse>|.
@@ -143,7 +146,7 @@ CTRL-R CTRL-O {0-9a-z"%#*/:.-=}				*i_CTRL-R_CTRL-O*
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
 
-CTRL-R CTRL-P {0-9a-z"%#*/:.-=}				*i_CTRL-R_CTRL-P*
+CTRL-R CTRL-P {0-9a-z"%#*+/:.-=}			*i_CTRL-R_CTRL-P*
 		Insert the contents of a register literally and fix the
 		indent, like |[<MiddleMouse>|.
 		Does not replace characters!
@@ -174,12 +177,13 @@ CTRL-V		Insert next non-digit literally.  For special keys, the
 		|i_CTRL-V_digit|.
 		The characters typed right after CTRL-V are not considered for
 		mapping.  {Vi: no decimal byte entry}
-		Note: Under Windows CTRL-V is often mapped to paste text.
-		Then use CTRL-Q instead.
+		Note: When CTRL-V is mapped (e.g., to paste text) you can
+		often use CTRL-Q instead |i_CTRL-Q|.
 
 						*i_CTRL-Q*
 CTRL-Q		Same as CTRL-V.
-		Note: Some terminal connections may eat CTRL-Q.
+		Note: Some terminal connections may eat CTRL-Q, it doesn't
+		work then.  It does work in the GUI.
 
 CTRL-X		Enter CTRL-X mode.  This is a sub-mode where commands can
 		be given to complete words or scroll the window. See
@@ -417,7 +421,8 @@ mode: hit "v", move to the end of the block, and type "gq".  See also |gq|.
 4. 'expandtab', 'smarttab' and 'softtabstop' options	*ins-expandtab*
 
 If the 'expandtab' option is on, spaces will be used to fill the amount of
-whitespace of the tab.  If you want to enter a real <Tab>, type CTRL-V first.
+whitespace of the tab.  If you want to enter a real <Tab>, type CTRL-V first
+(use CTRL-Q when CTRL-V is mapped |i_CTRL-Q|).
 The 'expandtab' option is off by default.  Note that in Replace mode, a single
 character is replaced with several spaces.  The result of this is that the
 number of characters in the line increases.  Backspacing will delete one
@@ -549,6 +554,7 @@ Also see the 'infercase' option if you want to adjust the case of the match.
 Note: The keys that are valid in CTRL-X mode are not mapped.  This allows for
 ":map ^F ^X^F" to work (where ^F is CTRL-F and ^X is CTRL-X).  The key that
 ends CTRL-X mode (any key that is not a valid CTRL-X mode command) is mapped.
+Also, when doing completion with 'complete' mappings apply as usual.
 
 The following mappings are suggested to make typing the completion commands
 a bit easier (although they will hide other commands):
@@ -814,6 +820,8 @@ completes an Ex command as well as its arguments.
 							*i_CTRL-X_CTRL-V*
 CTRL-X CTRL-V		Guess what kind of item is in front of the cursor and
 			find the first match for it.
+			Note: When CTRL-V is mapped you can often use CTRL-Q
+			instead |i_CTRL-Q|.
 	CTRL-V	or
 	CTRL-N		Search forwards for next match.  This match replaces
 			the previous one.
@@ -920,6 +928,8 @@ too long when appending characters a line break is automatically inserted.
 These two commands will keep on asking for lines, until you type a line
 containing only a ".".  Watch out for lines starting with a backslash, see
 |line-continuation|.
+NOTE: ":append" and ":insert" don't work properly in between ":if" and
+":endif".
 
 							*:start* *:startinsert*
 :star[tinsert][!]	Start Insert mode just after executing this command.

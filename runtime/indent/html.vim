@@ -1,7 +1,7 @@
 " Description:	html indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/html.vim
-" Last Change:	Tue, 25 Sep 2001 13:22:27 +0200
+" Last Change:	Thu, 10 Jan 2002 22:00:55 +0100
 " Globals:	g:html_indent_tags         -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
@@ -46,6 +46,7 @@ call <SID>HtmlIndentPush('caption')
 call <SID>HtmlIndentPush('center')
 call <SID>HtmlIndentPush('cite')
 call <SID>HtmlIndentPush('code')
+call <SID>HtmlIndentPush('colgroup')
 call <SID>HtmlIndentPush('del')
 call <SID>HtmlIndentPush('dfn')
 call <SID>HtmlIndentPush('dir')
@@ -121,16 +122,16 @@ set cpo-=C
 " [-- count indent-increasing tags of line a:lnum --]
 fun! <SID>HtmlIndentOpen(lnum)
     let s = substitute('x'.getline(a:lnum),
-    \ '.\{-}\(\(<\)\('.g:html_indent_tags.'\)\>\)', '§', 'g')
-    let s = substitute(s, '[^§].*$', '', '')
+    \ '.\{-}\(\(<\)\('.g:html_indent_tags.'\)\>\)', "\1", 'g')
+    let s = substitute(s, "[^\1].*$", '', '')
     return strlen(s)
 endfun
 
 " [-- count indent-decreasing tags of line a:lnum --]
 fun! <SID>HtmlIndentClose(lnum)
     let s = substitute('x'.getline(a:lnum),
-    \ '.\{-}\(\(<\)/\('.g:html_indent_tags.'\)\>>\)', '§', 'g')
-    let s = substitute(s, '[^§].*$', '', '')
+    \ '.\{-}\(\(<\)/\('.g:html_indent_tags.'\)\>>\)', "\1", 'g')
+    let s = substitute(s, "[^\1].*$", '', '')
     return strlen(s)
 endfun
 

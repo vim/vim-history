@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0.  Last change: 2001 Sep 19
+*editing.txt*   For Vim version 6.1a.  Last change: 2002 Feb 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -227,7 +227,7 @@ If you want to keep the changed buffer without saving it, switch on the
 :{count}fin[d][!] [++opt] [+cmd] {file}
 			Just like ":find", but use the {count} match in
 			'path'.  Thus ":2find file" will find the second
-			"file" found in 'path'.  When there are less matches
+			"file" found in 'path'.  When there are fewer matches
 			for the file in 'path' than asked for, you get an
 			error message.
 
@@ -302,7 +302,11 @@ is opened depends on the current directory, see |:cd|.
 See |read-messages| for an explanation of the message that is given after the
 file has been read.
 
-							*:filename*
+You can use the ":e!" command if you messed up the buffer and want to start
+all over again.  The ":e" command is only useful if you have changed the
+current file name.
+
+							*:filename* *{file}*
 Note for systems other than Unix and MS-DOS: When using a command that
 accepts a single file name (like ":edit file") spaces in the file name are
 allowed, but trailing spaces are ignored.  This is useful on systems that
@@ -311,9 +315,15 @@ allow file names with embedded spaces (like the Amiga).  Example: The command
 command that accepts more than one file name (like ":next file1 file2")
 embedded spaces must be escaped with a backslash.
 
-You can use the ":e!" command if you messed up the buffer and want to start
-all over again.  The ":e" command is only useful if you have changed the
-current file name.
+Wildcards in {file} are expanded.  Which wildcards are supported depends on
+the system.  These are the common ones:
+	*	matches anything, including nothing
+	?	matches one character
+	[abc]	match 'a', 'b' or 'c'
+To avoid the special meaning of the wildcards prepend a backslash.  However,
+on MS-Windows the backslash is a path separator and "path\[abc]" is still seen
+as a wildcard when "[" is in the 'isfname' option.  A simple way to avoid this
+is to use "path\[[]abc]".  Then the file "path[abc]" literally.
 
 					*backtick-expansion* *`-expansion*
 On Unix you can also use backticks in the file name, for example: >
@@ -945,7 +955,21 @@ flag is used for the ":substitute" command to avoid an error for files where
 Note: When the 'write' option is off, you are not able to write any file.
 
 							*:w* *:write*
-:[range]w[rite][!]	Write the specified lines to the current file.
+:w[rite]		Write the whole buffer to the current file.  This is
+			the normal way to save changes to a file.  It fails
+			when the 'readonly' option is set or when there is
+			another reason why the file can't be written.
+
+:w[rite]!		Like ":write", but forcefully write when 'readonly' is
+			set or there is another reason why writing was
+			refused.
+			Note: This may change the permission and ownership of
+			the file and break (symbolic) links.  Add the 'W' flag
+			to 'cpoptions' to avoid this.
+
+:[range]w[rite][!]	Write the specified lines to the current file.  This
+			is unusual, because the file will not contain all
+			lines in the buffer.
 
 							*:w_f* *:write_f*
 :[range]w[rite]	{file}	Write the specified lines to {file}, unless it
@@ -1164,7 +1188,7 @@ MULTIPLE WINDOWS AND BUFFERS				*window-exit*
 :wqa[ll]					*:wqa* *:wqall* *:xa* *:xall*
 :xa[ll]		Write all changed buffers and exit Vim.  If there are buffers
 		without a file name, which are readonly or which cannot be
-		written for another reason, Vim is not quit. {not in Vi}
+		written for another reason, Vim will not quit. {not in Vi}
 
 :conf[irm] wqa[ll]
 :conf[irm] xa[ll]
@@ -1175,7 +1199,7 @@ MULTIPLE WINDOWS AND BUFFERS				*window-exit*
 :wqa[ll]!
 :xa[ll]!	Write all changed buffers, even the ones that are readonly,
 		and exit Vim.  If there are buffers without a file name or
-		which cannot be written for another reason, Vim is not quit.
+		which cannot be written for another reason, Vim will not quit.
 		{not in Vi}
 
 ==============================================================================

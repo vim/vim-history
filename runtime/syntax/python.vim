@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Python
 " Maintainer:	Neil Schemenauer <nas@python.ca>
-" Updated:	2001-05-13
+" Updated:	2002-01-22
 "
 " There are four options to control Python syntax highlighting.
 "
@@ -37,7 +37,7 @@ syn keyword pythonStatement	except exec finally
 syn keyword pythonStatement	pass print raise
 syn keyword pythonStatement	return try
 syn keyword pythonStatement	global assert
-syn keyword pythonStatement	lambda
+syn keyword pythonStatement	lambda yield
 syn keyword pythonStatement	def class nextgroup=pythonFunction skipwhite
 syn match   pythonFunction	"[a-zA-Z_][a-zA-Z0-9_]*" contained
 syn keyword pythonRepeat	for while
@@ -48,17 +48,18 @@ syn match   pythonComment	"#.*$" contains=pythonTodo
 syn keyword pythonTodo		contained TODO FIXME XXX
 
 " strings
-syn region pythonString		matchgroup=Normal start=+'+  end=+'+ skip=+\\\\\|\\'+ contains=pythonEscape
-syn region pythonString		matchgroup=Normal start=+"+  end=+"+ skip=+\\\\\|\\"+ contains=pythonEscape
-syn region pythonString		matchgroup=Normal start=+"""+  end=+"""+ contains=pythonEscape
-syn region pythonString		matchgroup=Normal start=+'''+  end=+'''+ contains=pythonEscape
-syn region pythonRawString	matchgroup=Normal start=+[rR]'+ end=+'+ skip=+\\\\\|\\'+
-syn region pythonRawString	matchgroup=Normal start=+[rR]"+    end=+"+ skip=+\\\\\|\\"+
-syn region pythonRawString	matchgroup=Normal start=+[rR]"""+ end=+"""+
-syn region pythonRawString	matchgroup=Normal start=+[rR]'''+ end=+'''+
+syn region pythonString		matchgroup=Normal start=+[uU]\='+ end=+'+ skip=+\\\\\|\\'+ contains=pythonEscape
+syn region pythonString		matchgroup=Normal start=+[uU]\="+ end=+"+ skip=+\\\\\|\\"+ contains=pythonEscape
+syn region pythonString		matchgroup=Normal start=+[uU]\="""+ end=+"""+ contains=pythonEscape
+syn region pythonString		matchgroup=Normal start=+[uU]\='''+ end=+'''+ contains=pythonEscape
+syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]'+ end=+'+ skip=+\\\\\|\\'+
+syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]"+ end=+"+ skip=+\\\\\|\\"+
+syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]"""+ end=+"""+
+syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]'''+ end=+'''+
 syn match  pythonEscape		+\\[abfnrtv'"\\]+ contained
 syn match  pythonEscape		"\\\o\o\=\o\=" contained
 syn match  pythonEscape		"\\x\x\+" contained
+syn match  pythonEscape		"\(\\u\x\{4}\|\\U\x\{8}\)" contained
 syn match  pythonEscape		"\\$"
 
 if exists("python_highlight_all")
@@ -77,29 +78,33 @@ if exists("python_highlight_numbers")
 endif
 
 if exists("python_highlight_builtins")
-  " builtin functions, not really part of the syntax
-  syn keyword pythonBuiltin	abs apply callable chr cmp coerce
-  syn keyword pythonBuiltin	compile complex delattr dir divmod
-  syn keyword pythonBuiltin	eval execfile filter float getattr
-  syn keyword pythonBuiltin	globals hasattr hash hex id input
-  syn keyword pythonBuiltin	int intern isinstance issubclass
-  syn keyword pythonBuiltin	len list locals long map max min
-  syn keyword pythonBuiltin	oct open ord pow range raw_input
-  syn keyword pythonBuiltin	reduce reload repr round setattr
-  syn keyword pythonBuiltin	slice str tuple type vars xrange
+  " builtin functions, types and objects, not really part of the syntax
+  syn keyword pythonBuiltin	Ellipsis None NotImplemented __import__ abs
+  syn keyword pythonBuiltin	apply buffer callable chr classmethod cmp
+  syn keyword pythonBuiltin	coerce compile complex delattr dict dir divmod
+  syn keyword pythonBuiltin	eval execfile file filter float getattr globals
+  syn keyword pythonBuiltin	hasattr hash hex id input int intern isinstance
+  syn keyword pythonBuiltin	issubclass iter len list locals long map max
+  syn keyword pythonBuiltin	min object oct open ord pow property range
+  syn keyword pythonBuiltin	raw_input reduce reload repr round setattr
+  syn keyword pythonBuiltin	slice staticmethod str super tuple type unichr
+  syn keyword pythonBuiltin	unicode vars xrange zip
 endif
 
 if exists("python_highlight_exceptions")
-  " builtin exceptions
-  syn keyword pythonException	ArithmeticError AssertionError
-  syn keyword pythonException	AttributeError EOFError EnvironmentError
+  " builtin exceptions and warnings
+  syn keyword pythonException	ArithmeticError AssertionError AttributeError
+  syn keyword pythonException	DeprecationWarning EOFError EnvironmentError
   syn keyword pythonException	Exception FloatingPointError IOError
-  syn keyword pythonException	ImportError IndexError KeyError
-  syn keyword pythonException	KeyboardInterrupt LookupError
+  syn keyword pythonException	ImportError IndentiationError IndexError
+  syn keyword pythonException	KeyError KeyboardInterrupt LookupError
   syn keyword pythonException	MemoryError NameError NotImplementedError
-  syn keyword pythonException	OSError OverflowError RuntimeError
-  syn keyword pythonException	StandardError SyntaxError SystemError
-  syn keyword pythonException	SystemExit TypeError ValueError
+  syn keyword pythonException	OSError OverflowError OverflowWarning
+  syn keyword pythonException	ReferenceError RuntimeError RuntimeWarning
+  syn keyword pythonException	StandardError StopIteration SyntaxError
+  syn keyword pythonException	SyntaxWarning SystemError SystemExit TabError
+  syn keyword pythonException	TypeError UnboundLocalError UnicodeError
+  syn keyword pythonException	UserWarning ValueError Warning WindowsError
   syn keyword pythonException	ZeroDivisionError
 endif
 

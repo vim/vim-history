@@ -4056,25 +4056,51 @@ default_shell()
     static int
 do_acl_check(char *n)
 {
+    char_u	buf[MAXPATHL];
     DWORD	max_comp_len;
     DWORD	file_sys_flags;
-    static char *file_root = NULL;
-    static int	file_root_len = -1;
-    int		new_file_root_len;
+    int		i;
+    int		first;
+
+    /* Expand "n" to full path, use current dir if this fails. */
+    if (mch_isFullName(n))
+    {
+	STRNCPY(buf, n, MAXPATHL);
+	buf[MAXPATHL - 1] = NUL;
+    }
+    else if (mch_FullName((char_u *)n, buf, MAXPATHL, FALSE) == FAIL
+		&& mch_dirname(buf, MAXPATHL) == FAIL)
+	return FALSE;
 
     /* Extract file root path */
-    new_file_root_len = gettail(n) - n;
-    if (new_file_root_len > file_root_len)
+    if ((buf[0] == '/' || buf[0] == '\\') && (buf[1] == '/' || buf[1] == '\\'))
     {
-        vim_free(file_root);
-        file_root = (char *)alloc(new_file_root_len + 1);
-        file_root_len = new_file_root_len;
+	/* "//computer/share" kind of name, truncate after "share". */
+	first = TRUE;
+	for (i = 2; buf[i] != NUL; ++i)
+	{
+	    if (buf[i] == '/' || buf[i] == '\\')
+	    {
+		if (first)
+		    first = FALSE;
+		else
+		    break;
+	    }
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		i += (*mb_ptr2len_check)(buf + i) - 1;
+#endif
+	}
     }
-    STRNCPY(file_root, n, new_file_root_len);
-    file_root[new_file_root_len] = NUL;
+    else
+    {
+	/* "c:/dir" kind of name, truncate after first slash. */
+	i = 3;
+    }
+    buf[i] = NUL;
 
     /* Check #1 - can we get volume information in the first place? */
-    if (!GetVolumeInformation(file_root, NULL, 0, NULL, &max_comp_len,
+    if (!GetVolumeInformation((char *)buf, NULL, 0, NULL, &max_comp_len,
 						    &file_sys_flags, NULL, 0))
         return FALSE;
 

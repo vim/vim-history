@@ -800,7 +800,7 @@ _WndProc(
 	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	break;
     case WM_IME_COMPOSITION:
-    	if (!_OnImeComposition(hwnd, wParam, lParam))
+	if (!_OnImeComposition(hwnd, wParam, lParam))
 	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	break;
 #endif

@@ -877,7 +877,6 @@ gui_mch_browse(int saving,
 	fs = GTK_FILE_SELECTION(gui.filedlg);
 
 	gtk_container_border_width(GTK_CONTAINER(fs), 4);
-	gtk_file_selection_hide_fileop_buttons(fs);
 
 	gtk_signal_connect(GTK_OBJECT(fs->ok_button),
 		"clicked", GTK_SIGNAL_FUNC(browse_ok_cb), &gui);

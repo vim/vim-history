@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Don, 13 Sep 2001 01:33:20 +0200
+" Last Change:	Sat, 03 Nov 2001 18:40:11 +0100
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -79,10 +79,51 @@ syn match   xmlAttrib
     \ display
 
 
+" namespace spec
+"
+" PROVIDES: @xmlNamespaceHook
+"
+" EXAMPLE:
+"
+" <xsl:for-each select = "lola">
+"  ^^^
+"
+if exists("g:xml_namespace_transparent")
+syn match   xmlNamespace
+    \ +\(<\|</\)\@<=[^ /!?<>"':]\+[:]\@=+
+    \ contained
+    \ contains=@xmlNamespaceHook
+    \ transparent
+    \ display
+else
+syn match   xmlNamespace
+    \ +\(<\|</\)\@<=[^ /!?<>"':]\+[:]\@=+
+    \ contained
+    \ contains=@xmlNamespaceHook
+    \ display
+endif
+
+
+" tag name
+"
+" PROVIDES: @xmlTagHook
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = "value">
+"  ^^^
+"
+syn match   xmlTagName
+    \ +[<]\@<=[^ /!?<>"']\++
+    \ contained
+    \ contains=xmlNamespace,xmlAttribPunct,@xmlTagHook
+    \ display
+
+
 " start tag
 " use matchgroup=xmlTag to skip over the leading '<'
 "
-" PROVIDES: @xmlTagHook
+" PROVIDES: @xmlStartTagHook
 "
 " EXAMPLE:
 "
@@ -93,7 +134,7 @@ syn region   xmlTag
     \ matchgroup=xmlTag start=+<[^ /!?<>"']\@=+
     \ matchgroup=xmlTag end=+>+
     \ contained
-    \ contains=xmlError,xmlAttrib,xmlEqual,xmlString,@xmlTagHook
+    \ contains=xmlError,xmlTagName,xmlAttrib,xmlEqual,xmlString,@xmlStartTagHook
 
 
 " highlight the end tag
@@ -109,7 +150,7 @@ syn region   xmlTag
 syn match   xmlEndTag
     \ +</[^ /!?<>"']\+>+
     \ contained
-    \ contains=@xmlTagHook
+    \ contains=xmlNamespace,xmlAttribPunct,@xmlTagHook
 
 
 " tag elements with syntax-folding.
@@ -144,10 +185,19 @@ syn match   xmlEntityPunct  contained "[&.;]"
 
 " The real comments (this implements the comments as defined by xml,
 " but not all xml pages actually conform to it. Errors are flagged.
-syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo,@xmlCommentHook extend
+syn region  xmlComment
+    \ start=+<!+
+    \ end=+>+
+    \ contains=xmlCommentPart,xmlCommentError
+    \ extend
+
 syn keyword xmlTodo         contained TODO FIXME XXX display
 syn match   xmlCommentError contained "[^><!]"
-syn region  xmlCommentPart  contained start=+--+        end=+--+
+syn region  xmlCommentPart
+    \ start=+--+
+    \ end=+--+
+    \ contained
+    \ contains=xmlTodo,@xmlCommentHook
 
 
 " CData sections
@@ -200,7 +250,11 @@ syn sync minlines=100
 " The default highlighting.
 hi def link xmlTodo		Todo
 hi def link xmlTag		Function
+hi def link xmlTagName		Function
 hi def link xmlEndTag		Identifier
+if !exists("g:xml_namespace_transparent")
+    hi def link xmlNamespace	Tag
+endif
 hi def link xmlEntity		Statement
 hi def link xmlEntityPunct	Type
 

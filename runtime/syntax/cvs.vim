@@ -1,7 +1,8 @@
 " Vim syntax file
-" Language: CVS commit file
-" Maintainer:  Matt Dunford (zoot@zotikos.com)
-" Last Change: Thu Apr 26 13:17:53 CEST 2001
+" Language:	CVS commit file
+" Maintainer:	Matt Dunford (zoot@zotikos.com)
+" URL:		http://www.zotikos.com/downloads/cvs.vim
+" Last Change:	Sat Nov 24 23:25:11 CET 2001
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -11,10 +12,12 @@ elseif exists("b:current_syntax")
 	finish
 endif
 
-syn region cvsLine  start="^CVS:" end="$" contains=cvsFile,cvsDir,cvsFiles
-syn match cvsFile contained "\s\t.*"
-syn match cvsDir  contained "Committing in.*$"
-syn match cvsFiles contained "\S\+ Files:"
+syn region cvsLine start="^CVS: " end="$" contains=cvsFile,cvsCom,cvsFiles,cvsTag
+syn match cvsFile  contained " \t\(\(\S\+\) \)\+"
+syn match cvsTag   contained " Tag:"
+syn match cvsFiles contained "\(Added\|Modified\|Removed\) Files:"
+syn region cvsCom start="Committing in" end="$" contains=cvsDir contained extend keepend
+syn match cvsDir   contained "\S\+$"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -28,9 +31,11 @@ if version >= 508 || !exists("did_cvs_syn_inits")
 	endif
 
 	HiLink cvsLine		Comment
-	HiLink cvsFile		Identifier
-	HiLink cvsFiles		cvsDir
-	HiLink cvsDir		Statement
+	HiLink cvsDir		cvsFile
+	HiLink cvsFile		Constant
+	HiLink cvsFiles		cvsCom
+	HiLink cvsTag		cvsCom
+	HiLink cvsCom		Statement
 
 	delcommand HiLink
 endif

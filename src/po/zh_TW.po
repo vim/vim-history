@@ -2059,8 +2059,8 @@ msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "搜尋及取代字串 (使用 '\\\\' 來表示 '\\')"
 
 #: gui_x11.c:1414
-msgid "Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"
-msgstr "Vim: (ec1) 無法配置 color map 項目，有些顏色看起來會怪怪的"
+msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
+msgstr "Vim E458: 無法配置 color map 項目，有些顏色看起來會怪怪的"
 
 #: gui_x11.c:1987
 #, c-format

@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0.  Last change: 2001 Sep 18
+*version5.txt*  For Vim version 6.1a.  Last change: 2001 Sep 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -4197,7 +4197,7 @@ all together.  Cleaned up the code for using select() too.
 When executing external commands from the GUI, some typeahead was lost.  Added
 some code to regain as much typeahead as possible.
 
-When the window height is 5 lines or less, <PageDown> didn't use a one-line
+When the window height is 5 lines or fewer, <PageDown> didn't use a one-line
 overlap, while <PageUp> does.  Made sure that <PageUp> uses the same overlap
 as <PageDown>, so that using them both always displays the same lines.
 

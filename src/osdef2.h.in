@@ -35,7 +35,6 @@ extern off_t	lseek __ARGS((int, off_t, int));
 extern void	sync __ARGS((void));
 extern uid_t	getuid __ARGS((void));
 extern gid_t	getgid __ARGS((void));
-extern int	creat __ARGS((char *, int));
 extern void	qsort __ARGS((void *, size_t, size_t, int (*)(const void *, const void *)));
 
 extern int	isatty __ARGS((int));

@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0.  Last change: 2001 Sep 18
+*usr_41.txt*	For Vim version 6.1a.  Last change: 2001 Oct 26
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -1391,7 +1391,7 @@ A filetype plugin is like a global plugin, except that it sets options and
 defines mappings for the current buffer only.  See |add-filetype-plugin| for
 how this type of plugin is used.
 
-First read the section on global plugins above |41.7|.  All that is said there
+First read the section on global plugins above |41.9|.  All that is said there
 also applies to filetype plugins.  There are a few extras, which are explained
 here.  The essential thing is that a filetype plugin should only have an
 effect on the current buffer.

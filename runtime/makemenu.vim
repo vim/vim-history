@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Jan 15
+" Last Change:	2002 Feb 18
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -55,6 +55,7 @@ SynMenu AB.Ada:ada
 SynMenu AB.Aflex:aflex
 SynMenu AB.AHDL:ahdl
 SynMenu AB.Amiga\ DOS:amiga
+SynMenu AB.AMPL\ DOS:ampl
 SynMenu AB.Ant:ant
 SynMenu AB.Antlr:antlr
 SynMenu AB.Apache\ config:apache
@@ -227,6 +228,7 @@ SynMenu Me-NO.Natural:natural
 SynMenu Me-NO.Novell\ batch:ncf
 SynMenu Me-NO.Not\ Quite\ C:nqc
 SynMenu Me-NO.Nroff:nroff
+SynMenu Me-NO.NSIS:nsis
 SynMenu Me-NO.Objective\ C:objc
 SynMenu Me-NO.OCAML:ocaml
 SynMenu Me-NO.Omnimark:omnimark
@@ -274,6 +276,7 @@ SynMenu R-Sg.Renderman\ Shader\ Lang:sl
 SynMenu R-Sg.Rexx:rexx
 SynMenu R-Sg.Robots\.txt:robots
 SynMenu R-Sg.Rpcgen:rpcgen
+SynMenu R-Sg.RPL/2:rpl
 SynMenu R-Sg.RTF:rtf
 SynMenu R-Sg.Ruby:ruby
 SynMenu R-Sg.S-lang:slang
@@ -281,6 +284,7 @@ SynMenu R-Sg.Samba\ config:samba
 SynMenu R-Sg.SAS:sas
 SynMenu R-Sg.Sather:sather
 SynMenu R-Sg.Scheme:scheme
+SynMenu R-Sg.Scilab:scilab
 SynMenu R-Sg.Screen\ RC:screen
 SynMenu R-Sg.SDL:sdl
 SynMenu R-Sg.Sed:sed
@@ -314,8 +318,9 @@ SynMenu Sh-S.Spice:spice
 SynMenu Sh-S.Speedup:spup
 SynMenu Sh-S.Splint:splint
 SynMenu Sh-S.Squid:squid
-SynMenu Sh-S.SQL:sql
-SynMenu Sh-S.SQL\ Forms:sqlforms
+SynMenu Sh-S.SQL.SQL:sql
+SynMenu Sh-S.SQL.SQL\ Forms:sqlforms
+SynMenu Sh-S.SQL.SQLJ:sqlj
 SynMenu Sh-S.SQR:sqr
 SynMenu Sh-S.Standard\ ML:sml
 SynMenu Sh-S.Stored\ Procedures:stp
@@ -366,10 +371,12 @@ SynMenu WXYZ.X\ Keyboard\ Extension:xkb
 SynMenu WXYZ.X\ Pixmap:xpm
 SynMenu WXYZ.X\ Pixmap\ (2):xpm2
 SynMenu WXYZ.X\ resources:xdefaults
+SynMenu WXYZ.Xmodmap:xmodmap
 SynMenu WXYZ.Xmath:xmath
 SynMenu WXYZ.XML:xml
 SynMenu WXYZ.Xslt:xslt
 SynMenu WXYZ.XXD\ hex\ dump:xxd
+SynMenu WXYZ.XFree86\ Config:xf86conf
 SynMenu WXYZ.Yacc:yacc
 SynMenu WXYZ.Zsh\ shell\ script:zsh
 

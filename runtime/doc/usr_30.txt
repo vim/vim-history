@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_30.txt*	For Vim version 6.1a.  Last change: 2001 Oct 23
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -130,7 +130,7 @@ character expands to the name of the current file.  So if you execute the
 command: >
 	:set makeprg=make\ %
 
-When you are editing main,c, then ":make" executes the following command: >
+When you are editing main.c, then ":make" executes the following command: >
 
 	make main.c
 

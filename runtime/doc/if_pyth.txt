@@ -1,4 +1,4 @@
-*if_pyth.txt*   For Vim version 6.0.  Last change: 2001 Sep 05
+*if_pyth.txt*   For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -28,6 +28,9 @@ The Python interface is available only when Vim was compiled with the
 {script}
 {endmarker}
 			Execute Python script {script}.
+			Note: This command doesn't work when the Python
+			feature wasn't compiled in.  To avoid errors, see
+			|script-here|.
 
 {endmarker} must NOT be preceded by any white space.  If {endmarker} is
 omitted from after the "<<", a dot '.' must be used after {script}, like
@@ -37,13 +40,15 @@ in Vim scripts.
 
 Example: >
 	function! IcecreamInitialize()
-	    python << EOF
-	    class StrawberryIcecream:
+	python << EOF
+	class StrawberryIcecream:
 		def __call__(self):
-		    print 'EAT ME'
+			print 'EAT ME'
 	EOF
 	endfunction
 <
+Note: Python is very sensitive to the indenting.  Also make sure the "class"
+line and "EOF" do not have any indent.
 
 							*:pyfile* *:pyf*
 :[range]pyf[ile] {file}	Execute the Python script in {file}.  {not in Vi}
@@ -217,7 +222,7 @@ Examples (assume b is the current buffer) >
 	b[0] = "hello!!!"	# replace the top line
 	b[:] = None		# delete the whole buffer
 	del b[:]		# delete the whole buffer (same as above)
-	b[0:0] = "add a line"	# add a line at the top
+	b[0:0] = [ "a line" ]	# add a line at the top
 	del b[2]		# delete a line (the third)
 	b.append("bottom")	# add a line at the bottom
 	n = len(b)		# number of lines

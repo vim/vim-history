@@ -1,8 +1,8 @@
 " Menu Translations:	German / Deutsch
 " Maintainer:		Johannes Zellner <johannes@zellner.org>
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	Sat, 15 Sep 2001 18:17:41 +0200
-" vim:set foldmethod=marker:
+" Last Change:	Mon, 22 Oct 2001 08:47:52 W. Europe Standard Time
+" vim:set foldmethod=marker tabstop=8:
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -17,9 +17,9 @@ menutrans &File				&Datei
 menutrans &Open\.\.\.<Tab>:e		&Öffnen\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	In\ geteiltem\ &Fenster\ Öffnen\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Neue\ Datei<Tab>:enew
-menutrans &Close<Tab>:close		S&chliessen<Tab>:close
+menutrans &Close<Tab>:close		S&chließen<Tab>:close
 menutrans &Save<Tab>:w			&Speichern<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:sav	Speichern\ &Als\.\.\.<Tab>
+menutrans Save\ &As\.\.\.<Tab>:sav	Speichern\ &Als\.\.\.<Tab>:sav
 menutrans &Print			&Drucken
 menutrans Sa&ve-Exit<Tab>:wqa		Speichern\ und\ Be&enden<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Beenden<Tab>:qa
@@ -46,7 +46,7 @@ menutrans Find\ and\ Rep&lace\.\.\.	Suchen\ und\ &Ersetzen\.\.\.
 
 " [-- SETTINGS --]
 " XXX &E would conflict with 'Suchen\ und\ &Ersetzen', see above
-menutrans Settings\ &Window				Einstellungen\.\.\.
+menutrans Settings\ &Window				E&instellungen\.\.\.
 menutrans &Global\ Settings				&Globale\ Einstellungen
 
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	&Hervorhebungen\ ein-\ und\ ausschalten<Tab>:set\ hls!
@@ -72,7 +72,7 @@ menutrans Toggle\ &Left\ Scrollbar			Linken\ Rollbalken\ ein-\ und\ ausschalten
 menutrans Toggle\ &Right\ Scrollbar			Rechten\ Rollbalken\ ein-\ und\ ausschalten
 
 " Edit/File Settings
-menutrans F&ile\ Settings				&Datei\ Einstellungen
+menutrans F&ile\ Settings				&Datei-Einstellungen
 
 " Boolean options
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Anzeige\ der\ Zeilen&nummer\ ein-\ und\ ausschalten<Tab>:set\ nu!
@@ -88,7 +88,7 @@ menutrans &Shiftwidth					&Schiebeweite
 menutrans Soft\ &Tabstop				&Tabulator
 menutrans Te&xt\ Width\.\.\.				Te&xt\ Breite\.\.\.
 menutrans &File\ Format\.\.\.				&Datei\ Format\.\.\.
-menutrans C&olor\ Scheme				F&arb-Schema\.\.\.
+menutrans C&olor\ Scheme				F&arbschema\.\.\.
 menutrans &Keymap					&Tastatur-Belegung
 " }}} EDIT / EDITIEREN
 
@@ -179,8 +179,8 @@ menutrans S&plit<Tab>^Ws		Aufs&palten<Tab>^Ws
 menutrans Split\ &Vertically<Tab>^Wv	&Vertikal\ Aufspalten<Tab>^Ws
 menutrans Split\ File\ E&xplorer	Ver&zeichnis
 menutrans Sp&lit\ To\ #<Tab>^W^^	Aufspa&lten\ in\ #<Tab>^W^^
-menutrans &Close<Tab>^Wc		&Schliessen<Tab>^Wc
-menutrans Close\ &Other(s)<Tab>^Wo	&Andere\ Schliessen<Tab>^Wo
+menutrans &Close<Tab>^Wc		&Schließen<Tab>^Wc
+menutrans Close\ &Other(s)<Tab>^Wo	&Andere\ Schließen<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			N&ächstes<Tab>^Ww
 menutrans P&revious<Tab>^WW		Vor&heriges<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=		&Gleiche\ Höhen<Tab>^W=
@@ -248,11 +248,11 @@ if has("toolbar")
       tmenu ToolBar.WinSplit	Ansicht Aufspalten
       tmenu ToolBar.WinMax	Ansicht Maximale Höhen
       tmenu ToolBar.WinMin	Ansicht Minimale Höhen
-      tmenu ToolBar.WinClose	Ansicht Schliessen
+      tmenu ToolBar.WinClose	Ansicht Schließen
     endif
     tmenu ToolBar.LoadSesn	Sitzung Laden
     tmenu ToolBar.SaveSesn	Sitzung Speichern
-    tmenu ToolBar.RunScript	Vim Skript Ausführen
+    tmenu ToolBar.RunScript	Vim-Skript Ausführen
     tmenu ToolBar.Make		Erstellen
     tmenu ToolBar.Shell		Shell Starten
     tmenu ToolBar.RunCtags	Erstelle Tags Datei

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0.  Last change: 2001 Sep 15
+*various.txt*   For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -215,7 +215,7 @@ g8			Print the hex values of the bytes used in the
 			   N	normal
 			   B	big
 			   H	huge
-			   m	manually enabled
+			   m	manually enabled or depends on other features
 			 (none) system dependent
 			Thus if a feature is marked with "N", it is included
 			in the normal, big and huge versions of Vim.
@@ -333,7 +333,7 @@ N  *+xterm_clipboard*	Unix only: xterm clipboard handling
 m  *+xterm_save*	save and restore xterm screen |xterm-screens|
 N  *+X11*		Unix only: can restore window title |X11|
 
-								*/dyn*
+							*/dyn* *E370*
 			To some of the features "/dyn" is added when the
 			feature is only available when the related library can
 			be dynamically loaded.
@@ -350,6 +350,9 @@ N  *+X11*		Unix only: can restore window title |X11|
 			shown on the screen.  When [!] is included, an
 			existing file is overwritten.  When [!] is omitted,
 			and {file} exists, this command fails.
+			Only one ":redir" can be active at a time.  Calls to
+			":redir" will close any active redirection before
+			starting redirection to the new target.
 			To stop the messages and commands from being echoed to
 			the screen, put the commands in a function and call it
 			with ":silent call Function()".
@@ -726,7 +729,7 @@ There are three available versions:
 - GNU Ghostscript which is available under the GNU General Public License.  It
   can be obtained from:
 
-    ftp://mirror.cs.wisc.edu/pub/mirrors/ghost/gnu/ 
+    ftp://mirror.cs.wisc.edu/pub/mirrors/ghost/gnu/
 
 - A commercial version for inclusion in commercial products.
 
@@ -750,19 +753,19 @@ X11
 
 - Ghostview.  Obtainable from:
 
-    http://www.cs.wisc.edu/~ghost/gv/ 
+    http://www.cs.wisc.edu/~ghost/gv/
 
 - gv.  Derived from Ghostview.  Obtainable from:
 
-    http://wwwthep.physik.uni-mainz.de/~plass/gv/ 
-  
+    http://wwwthep.physik.uni-mainz.de/~plass/gv/
+
   Copies (possibly not the most recent) can be found at:
 
     http://www.cs.wisc.edu/~ghost/gv/
 
 OpenVMS
 
-- gv-vms.  A port of gv to OpenVMS.  Obtainable from:	
+- gv-vms.  A port of gv to OpenVMS.  Obtainable from:
 
     ftp://axp.psl.ku.dk/decwindows/xaw3d/
     ftp://ftp.wku.edu/vms/fileserv/x11kit.zip
@@ -771,26 +774,26 @@ Windows and OS/2
 
 - GSview.  Obtainable from:
 
-    http://www.cs.wisc.edu/~ghost/gsview/ 
+    http://www.cs.wisc.edu/~ghost/gsview/
 
 DOS
 
 - ps_view.  Obtainable from:
 
     ftp://ftp.pg.gda.pl/pub/TeX/support/ps_view/
-    ftp://ftp.dante.de/tex-archive/support/ps_view/ 
+    ftp://ftp.dante.de/tex-archive/support/ps_view/
 
 Linux
 
 - GSview.  Linux version of the popular Windows and OS/2 previewer.
   Obtainable from:
 
-    http://www.cs.wisc.edu/~ghost/gsview/ 
+    http://www.cs.wisc.edu/~ghost/gsview/
 
-- BMV.  Different to Ghostview and gv in that it doesn't use X but svgalib.
+- BMV.  Different from Ghostview and gv in that it doesn't use X but svgalib.
   Obtainable from:
 
-    ftp://sunsite.unc.edu/pub/Linux/apps/graphics/viewers/svga/bmv-1.2.tgz 
+    ftp://sunsite.unc.edu/pub/Linux/apps/graphics/viewers/svga/bmv-1.2.tgz
 
 
 3.3.3 PSUtils
@@ -799,7 +802,7 @@ PSUtils is a collection of utility programs for manipulating PostScript
 documents.  Binary distributions are available for many platforms, as well as
 the full source.  PSUtils can be found at:
 
-  http://www.dcs.ed.ac.uk/home/ajcd/psutils/
+  http://www.tardis.ed.ac.uk/~ajcd/psutils/index.html
 
 The utilities of interest include:
 

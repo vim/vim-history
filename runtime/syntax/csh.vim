@@ -1,8 +1,9 @@
 " Vim syntax file
 " Language:	C-shell (csh)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Version:	1.02
-" Last Change:	September 19, 2000
+" Version:	1.04
+" Last Change:	Dec 10, 2001
+" Latest:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -83,13 +84,13 @@ syn match cshRedir	">>&!\|>&!\|>>&\|>>!\|>&\|>!\|>>\|<<\|>\|<"
 
 " Handle set expressions
 syn keyword cshSetStmt	contained set unset
-syn region  cshSetExpr	transparent start="set\|unset" end="$\|;" contains=cshSetVariables,cshSetStmt,@cshQuoteList
+syn region  cshSetExpr	transparent start="set\|unset" end="$\|;" contains=cshSetVariables,cshSetStmt,@cshQuoteList,cshComment
 
 " Operators and Expression-Using constructs
 syn keyword cshExprUsing	contained if while exit then
 syn match   cshOperator	contained "\(&&\|!\~\|!=\|<<\|<=\|==\|=\~\|>=\|>>\|\*\|\^\|\~\|||\|!\|\|%\|&\|+\|-\|/\|<\|>\||\)"
 syn match   cshOperator	contained "[(){}]"
-syn region  cshTest	transparent start="if\|while\|exit" skip="\\$" end="$\|;\|then" contains=cshOperator,cshExprUsing,@cshQuoteList
+syn region  cshTest	transparent start="if\|while\|exit" skip="\\$" end="$\|;\|then" contains=cshOperator,cshExprUsing,@cshQuoteList,cshComment
 
 
 " Highlight special characters (those which have a backslash) differently

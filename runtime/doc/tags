@@ -1027,13 +1027,16 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 --	starting.txt	/*--*
 ---	starting.txt	/*---*
 --cmd	starting.txt	/*--cmd*
+--echo-wid	starting.txt	/*--echo-wid*
 --help	starting.txt	/*--help*
 --literal	starting.txt	/*--literal*
 --noplugin	starting.txt	/*--noplugin*
 --remote	remote.txt	/*--remote*
 --remote-expr	remote.txt	/*--remote-expr*
 --remote-send	remote.txt	/*--remote-send*
+--remote-silent	remote.txt	/*--remote-silent*
 --remote-wait	remote.txt	/*--remote-wait*
+--remote-wait-silent	remote.txt	/*--remote-wait-silent*
 --serverlist	remote.txt	/*--serverlist*
 --servername	remote.txt	/*--servername*
 --socketid	starting.txt	/*--socketid*
@@ -1318,6 +1321,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 12.5	usr_12.txt	/*12.5*
 12.6	usr_12.txt	/*12.6*
 12.7	usr_12.txt	/*12.7*
+12.8	usr_12.txt	/*12.8*
 2/sys/	editing.txt	/*2\/sys\/*
 20.1	usr_20.txt	/*20.1*
 20.2	usr_20.txt	/*20.2*
@@ -2257,6 +2261,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-sync-ccomment	syntax.txt	/*:syn-sync-ccomment*
 :syn-sync-first	syntax.txt	/*:syn-sync-first*
 :syn-sync-fourth	syntax.txt	/*:syn-sync-fourth*
+:syn-sync-linebreaks	syntax.txt	/*:syn-sync-linebreaks*
 :syn-sync-maxlines	syntax.txt	/*:syn-sync-maxlines*
 :syn-sync-minlines	syntax.txt	/*:syn-sync-minlines*
 :syn-sync-second	syntax.txt	/*:syn-sync-second*
@@ -2421,6 +2426,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 <CSI>	intro.txt	/*<CSI>*
 <Char->	map.txt	/*<Char->*
 <Char>	map.txt	/*<Char>*
+<D-	intro.txt	/*<D-*
 <Del>	change.txt	/*<Del>*
 <Down>	motion.txt	/*<Down>*
 <EOL>	intro.txt	/*<EOL>*
@@ -2858,7 +2864,6 @@ E218	autocmd.txt	/*E218*
 E219	message.txt	/*E219*
 E22	message.txt	/*E22*
 E220	message.txt	/*E220*
-E221	options.txt	/*E221*
 E222	message.txt	/*E222*
 E223	options.txt	/*E223*
 E224	map.txt	/*E224*
@@ -2879,9 +2884,8 @@ E237	various.txt	/*E237*
 E238	various.txt	/*E238*
 E239	sign.txt	/*E239*
 E24	message.txt	/*E24*
-E240	eval.txt	/*E240*
+E240	remote.txt	/*E240*
 E241	eval.txt	/*E241*
-E242	syntax.txt	/*E242*
 E243	if_ole.txt	/*E243*
 E244	options.txt	/*E244*
 E245	options.txt	/*E245*
@@ -3020,7 +3024,9 @@ E365	options.txt	/*E365*
 E366	options.txt	/*E366*
 E367	autocmd.txt	/*E367*
 E368	eval.txt	/*E368*
+E369	pattern.txt	/*E369*
 E37	message.txt	/*E37*
+E370	various.txt	/*E370*
 E371	various.txt	/*E371*
 E372	quickfix.txt	/*E372*
 E373	quickfix.txt	/*E373*
@@ -3105,6 +3111,8 @@ E444	windows.txt	/*E444*
 E445	windows.txt	/*E445*
 E446	editing.txt	/*E446*
 E447	editing.txt	/*E447*
+E448	options.txt	/*E448*
+E449	eval.txt	/*E449*
 E45	message.txt	/*E45*
 E450	os_msdos.txt	/*E450*
 E451	os_msdos.txt	/*E451*
@@ -3114,6 +3122,7 @@ E454	os_msdos.txt	/*E454*
 E455	various.txt	/*E455*
 E456	various.txt	/*E456*
 E457	various.txt	/*E457*
+E458	message.txt	/*E458*
 E46	message.txt	/*E46*
 E47	message.txt	/*E47*
 E48	eval.txt	/*E48*
@@ -3240,7 +3249,9 @@ NL-used-for-Nul	pattern.txt	/*NL-used-for-Nul*
 NetBSD-backspace	options.txt	/*NetBSD-backspace*
 Normal	intro.txt	/*Normal*
 Normal-mode	intro.txt	/*Normal-mode*
+Nread	pi_netrw.txt	/*Nread*
 Nvi	intro.txt	/*Nvi*
+Nwrite	pi_netrw.txt	/*Nwrite*
 O	insert.txt	/*O*
 OS/2	os_os2.txt	/*OS\/2*
 OS2	os_os2.txt	/*OS2*
@@ -3487,6 +3498,8 @@ abbreviations	map.txt	/*abbreviations*
 abel-syntax	syntax.txt	/*abel-syntax*
 abel.vim	syntax.txt	/*abel.vim*
 active-buffer	windows.txt	/*active-buffer*
+ada-syntax	syntax.txt	/*ada-syntax*
+ada.vim	syntax.txt	/*ada.vim*
 add-filetype-plugin	usr_05.txt	/*add-filetype-plugin*
 add-global-plugin	usr_05.txt	/*add-global-plugin*
 add-local-help	usr_05.txt	/*add-local-help*
@@ -3500,6 +3513,7 @@ added-5.5	version5.txt	/*added-5.5*
 added-5.6	version5.txt	/*added-5.6*
 added-5.7	version5.txt	/*added-5.7*
 added-5.8	version5.txt	/*added-5.8*
+added-6.1	version6.txt	/*added-6.1*
 added-BeOS	version5.txt	/*added-BeOS*
 added-Mac	version5.txt	/*added-Mac*
 added-VMS	version5.txt	/*added-VMS*
@@ -3513,6 +3527,8 @@ alt	intro.txt	/*alt*
 alt-input	debugger.txt	/*alt-input*
 alternate-file	editing.txt	/*alternate-file*
 amiga-window	starting.txt	/*amiga-window*
+ant-syntax	syntax.txt	/*ant-syntax*
+ant.vim	syntax.txt	/*ant.vim*
 ap	motion.txt	/*ap*
 append()	eval.txt	/*append()*
 argc()	eval.txt	/*argc()*
@@ -3701,6 +3717,7 @@ changed-5.5	version5.txt	/*changed-5.5*
 changed-5.6	version5.txt	/*changed-5.6*
 changed-5.7	version5.txt	/*changed-5.7*
 changed-5.8	version5.txt	/*changed-5.8*
+changed-6.1	version6.txt	/*changed-6.1*
 changetick	eval.txt	/*changetick*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
@@ -3808,6 +3825,7 @@ curly-braces-names	eval.txt	/*curly-braces-names*
 curpos-visual	version6.txt	/*curpos-visual*
 current-directory	editing.txt	/*current-directory*
 current-file	editing.txt	/*current-file*
+cursor()	eval.txt	/*cursor()*
 cursor-blinking	options.txt	/*cursor-blinking*
 cursor-down	intro.txt	/*cursor-down*
 cursor-left	intro.txt	/*cursor-left*
@@ -3911,9 +3929,9 @@ drag-n-drop-win32	gui_w32.txt	/*drag-n-drop-win32*
 drag-status-line	term.txt	/*drag-status-line*
 dtd-syntax	syntax.txt	/*dtd-syntax*
 dtd.vim	syntax.txt	/*dtd.vim*
+dying-variable	eval.txt	/*dying-variable*
 e	motion.txt	/*e*
 easy	starting.txt	/*easy*
-ec1	message.txt	/*ec1*
 edit-a-file	editing.txt	/*edit-a-file*
 edit-binary	editing.txt	/*edit-binary*
 edit-dialogs	editing.txt	/*edit-dialogs*
@@ -3971,7 +3989,6 @@ exists()	eval.txt	/*exists()*
 expand()	eval.txt	/*expand()*
 expand-env	options.txt	/*expand-env*
 expand-environment-var	options.txt	/*expand-environment-var*
-expandpath()	eval.txt	/*expandpath()*
 expl-starting	pi_expl.txt	/*expl-starting*
 explorer-delete	pi_expl.txt	/*explorer-delete*
 explorer-rename	pi_expl.txt	/*explorer-rename*
@@ -4075,6 +4092,7 @@ fixed-5.5	version5.txt	/*fixed-5.5*
 fixed-5.6	version5.txt	/*fixed-5.6*
 fixed-5.7	version5.txt	/*fixed-5.7*
 fixed-5.8	version5.txt	/*fixed-5.8*
+fixed-6.1	version6.txt	/*fixed-6.1*
 fname_diff-variable	eval.txt	/*fname_diff-variable*
 fname_in-variable	eval.txt	/*fname_in-variable*
 fname_new-variable	eval.txt	/*fname_new-variable*
@@ -4123,7 +4141,7 @@ fortran-syntax	syntax.txt	/*fortran-syntax*
 fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
 frombook	usr_01.txt	/*frombook*
-ftp	intro.txt	/*ftp*
+ftp	pi_netrw.txt	/*ftp*
 ftplugin	usr_41.txt	/*ftplugin*
 ftplugin-docs	filetype.txt	/*ftplugin-docs*
 ftplugin-overrule	filetype.txt	/*ftplugin-overrule*
@@ -4520,6 +4538,7 @@ indent.txt	indent.txt	/*indent.txt*
 indentkeys-format	indent.txt	/*indentkeys-format*
 index	index.txt	/*index*
 index.txt	index.txt	/*index.txt*
+info-message	starting.txt	/*info-message*
 inform-syntax	syntax.txt	/*inform-syntax*
 inform.vim	syntax.txt	/*inform.vim*
 initialization	starting.txt	/*initialization*
@@ -4541,6 +4560,7 @@ insert_expand	insert.txt	/*insert_expand*
 inserting	insert.txt	/*inserting*
 inserting-ex	insert.txt	/*inserting-ex*
 inserting-file	insert.txt	/*inserting-file*
+install	usr_90.txt	/*install*
 install-home	usr_90.txt	/*install-home*
 install-registry	gui_w32.txt	/*install-registry*
 intel-itanium	syntax.txt	/*intel-itanium*
@@ -4561,6 +4581,7 @@ java-cinoptions	indent.txt	/*java-cinoptions*
 java-indenting	indent.txt	/*java-indenting*
 java-syntax	syntax.txt	/*java-syntax*
 java.vim	syntax.txt	/*java.vim*
+jsbterm-mouse	options.txt	/*jsbterm-mouse*
 jtags	tagsrch.txt	/*jtags*
 jump-motions	motion.txt	/*jump-motions*
 jumplist	motion.txt	/*jumplist*
@@ -4573,6 +4594,7 @@ key-mapping	map.txt	/*key-mapping*
 key-notation	intro.txt	/*key-notation*
 keycodes	intro.txt	/*keycodes*
 keymap-file-format	mbyte.txt	/*keymap-file-format*
+keymap-hebrew	mbyte.txt	/*keymap-hebrew*
 keypad-0	intro.txt	/*keypad-0*
 keypad-9	intro.txt	/*keypad-9*
 keypad-divide	intro.txt	/*keypad-divide*
@@ -4603,6 +4625,7 @@ lex-syntax	syntax.txt	/*lex-syntax*
 lex.vim	syntax.txt	/*lex.vim*
 libcall()	eval.txt	/*libcall()*
 libcallnr()	eval.txt	/*libcallnr()*
+license	uganda.txt	/*license*
 lid	tagsrch.txt	/*lid*
 limits	vi_diff.txt	/*limits*
 line()	eval.txt	/*line()*
@@ -4716,6 +4739,8 @@ modeless-selection	gui.txt	/*modeless-selection*
 modeline	options.txt	/*modeline*
 modeline-local	options.txt	/*modeline-local*
 modeline-version	options.txt	/*modeline-version*
+moo-syntax	syntax.txt	/*moo-syntax*
+moo.vim	syntax.txt	/*moo.vim*
 more-compatible	version5.txt	/*more-compatible*
 more-prompt	message.txt	/*more-prompt*
 motion.txt	motion.txt	/*motion.txt*
@@ -4948,6 +4973,7 @@ progress-syntax	syntax.txt	/*progress-syntax*
 progress.vim	syntax.txt	/*progress.vim*
 ptcap-syntax	syntax.txt	/*ptcap-syntax*
 ptcap.vim	syntax.txt	/*ptcap.vim*
+pterm-mouse	options.txt	/*pterm-mouse*
 put	change.txt	/*put*
 put-Visual-mode	change.txt	/*put-Visual-mode*
 python	if_pyth.txt	/*python*
@@ -5091,6 +5117,7 @@ sandbox	eval.txt	/*sandbox*
 save-file	editing.txt	/*save-file*
 save-settings	starting.txt	/*save-settings*
 scp	pi_netrw.txt	/*scp*
+script-here	if_perl.txt	/*script-here*
 script-local	map.txt	/*script-local*
 script-variable	eval.txt	/*script-variable*
 scriptout-changed	version4.txt	/*scriptout-changed*
@@ -5550,6 +5577,7 @@ v:cmdarg	eval.txt	/*v:cmdarg*
 v:count	eval.txt	/*v:count*
 v:count1	eval.txt	/*v:count1*
 v:ctype	eval.txt	/*v:ctype*
+v:dying	eval.txt	/*v:dying*
 v:errmsg	eval.txt	/*v:errmsg*
 v:fname_diff	eval.txt	/*v:fname_diff*
 v:fname_in	eval.txt	/*v:fname_in*
@@ -5680,6 +5708,7 @@ version-5.5	version5.txt	/*version-5.5*
 version-5.6	version5.txt	/*version-5.6*
 version-5.7	version5.txt	/*version-5.7*
 version-5.8	version5.txt	/*version-5.8*
+version-6.1	version6.txt	/*version-6.1*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*
@@ -5836,6 +5865,9 @@ xfree-xterm	syntax.txt	/*xfree-xterm*
 xim	mbyte.txt	/*xim*
 xim-input-style	mbyte.txt	/*xim-input-style*
 xiterm	syntax.txt	/*xiterm*
+xml-folding	syntax.txt	/*xml-folding*
+xml-syntax	syntax.txt	/*xml-syntax*
+xml.vim	syntax.txt	/*xml.vim*
 xpm-syntax	syntax.txt	/*xpm-syntax*
 xpm.vim	syntax.txt	/*xpm.vim*
 xterm-8-bit	term.txt	/*xterm-8-bit*
@@ -5904,8 +5936,10 @@ zx	fold.txt	/*zx*
 zz	scroll.txt	/*zz*
 {	motion.txt	/*{*
 {Visual}	intro.txt	/*{Visual}*
+{address}	cmdline.txt	/*{address}*
 {char1-char2}	intro.txt	/*{char1-char2}*
 {event}	autocmd.txt	/*{event}*
+{file}	editing.txt	/*{file}*
 {lhs}	map.txt	/*{lhs}*
 {motion}	intro.txt	/*{motion}*
 {move-around}	visual.txt	/*{move-around}*

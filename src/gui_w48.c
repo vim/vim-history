@@ -88,7 +88,7 @@ typedef int LOGFONT[];
 # define CONST
 # define CALLBACK
 # define WORD		int
-# define DWORD		int
+typedef int DWORD;
 # define HBITMAP	int
 # define HDROP		int
 # define BOOL		int
@@ -113,6 +113,7 @@ typedef int LOGFONT[];
 # define LPCSTR		int
 # undef MSG
 # define MSG		int
+typedef void *HIMC;
 #endif
 
 #ifndef GET_X_LPARAM
@@ -246,7 +247,7 @@ static struct
     {VK_NUMPAD6,	'K', 'I'},
     {VK_NUMPAD7,	'K', 'J'},
     {VK_NUMPAD8,	'K', 'K'},
-    {VK_NUMPAD0,	'K', 'L'},
+    {VK_NUMPAD9,	'K', 'L'},
 
     /* Keys that we want to be able to use any modifier with: */
     {VK_SPACE,		' ', NUL},
@@ -2491,7 +2492,6 @@ gui_mch_init_font(char_u *font_name, int fontset)
 {
     LOGFONT	lf;
     GuiFont	font = NOFONT;
-    char	*p;
 
     /* Load the font */
     if (get_logfont(&lf, font_name, NULL))
@@ -2511,43 +2511,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
     current_font_height = lf.lfHeight;
     GetFontSize(font);
     hl_set_font_name(lf.lfFaceName);
-    if (STRCMP(font_name, "*") == 0)
-    {
-	char	    *charset_name;
 
-	charset_name = charset_id2name((int)lf.lfCharSet);
-	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
-		    + (charset_name == NULL ? 0 : strlen(charset_name) + 2)));
-	if (p != NULL)
-	{
-	    /* make a normal font string out of the lf thing:*/
-	    sprintf(p, "%s:h%d", lf.lfFaceName, pixels_to_points(
-			 lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight, TRUE));
-	    vim_free(p_guifont);
-	    p_guifont = p;
-	    while (*p)
-	    {
-		if (*p == ' ')
-		    *p = '_';
-		++p;
-	    }
-#ifndef MSWIN16_FASTTEXT
-	    if (lf.lfItalic)
-		strcat(p, ":i");
-	    if (lf.lfWeight >= FW_BOLD)
-		strcat(p, ":b");
-#endif
-	    if (lf.lfUnderline)
-		strcat(p, ":u");
-	    if (lf.lfStrikeOut)
-		strcat(p, ":s");
-	    if (charset_name != NULL)
-	    {
-		strcat(p, ":c");
-		strcat(p, charset_name);
-	    }
-	}
-    }
 #ifndef MSWIN16_FASTTEXT
     if (!lf.lfItalic)
     {

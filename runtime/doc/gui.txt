@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0.  Last change: 2001 Sep 18
+*gui.txt*       For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -198,19 +198,16 @@ scrollbar-thumb size is such that the text of the current cursor line may be
 scrolled as far as possible left and right.
 
 							*athena-intellimouse*
-If you have an Intellimouse and are running Linux  and have the proper
-patches in your X server to use the wheel, then you can use the wheel to
-scroll the text up and down in gvim.  At the moment, it only works with the
-athena version.
+If you have an Intellimouse and an X server that supports using the wheel,
+then you can use the wheel to scroll the text up and down in gvim.  This works
+with XFree86 4.0 and later, and with some older versions when you add patches.
+See |scroll-mouse-wheel|.
 
-In order to use this you must have a patched X server.  The following page has
-a bit of information about using the Intellimouse on Linux as well as links to
-the patches and X server binaries (may not have the one you need though):
+For older versions of XFree86 you must patch your X server.  The following
+page has a bit of information about using the Intellimouse on Linux as well as
+links to the patches and X server binaries (may not have the one you need
+though):
     http://www.inria.fr/koala/colas/mouse-wheel-scroll/
-
-To use the wheel, put the cursor in the scrollbar area and move the wheel up
-or down.  This will scroll the text one line up or down.  If you hold down the
-shift key, it will scroll a page at a time.
 
 ==============================================================================
 3. Mouse Control					*gui-mouse*
@@ -254,7 +251,7 @@ For scrolling with a wheel on a mouse, see |scroll-mouse-wheel|.
 
 Click the left mouse button somewhere in a text buffer where you want the
 cursor to go, and it does!
-This works in	    when 'mouse contains ~
+This works in	    when 'mouse' contains ~
 Normal mode	    'n' or 'a'
 Visual mode	    'v' or 'a'
 Insert mode	    'i' or 'a'
@@ -457,7 +454,7 @@ This does require the |+menu| feature enabled at compile time.
 							*tear-off-menus*
 GTK+ and Motif support Tear-off menus.  These are sort of sticky menus or
 pop-up menus that are present all the time.  If the resizing does not work
-correctly, this may be caused by using something like "Vim*geometry" in de
+correctly, this may be caused by using something like "Vim*geometry" in the
 defaults.  Use "Vim.geometry" instead.
 
 The Win32 GUI version emulates Motif's tear-off menus.  Actually, a Motif user
@@ -477,7 +474,7 @@ create floating menus that do not appear on the main menu bar.
 				*:cme* *:cmenu* *:cnoreme* *:cnoremenu*
 				*E330* *E327* *E331* *E336* *E333*
 				*E328* *E329* *E337*
-To create a new menu item, use the ":menu" commands.  They are exactly like
+To create a new menu item, use the ":menu" commands.  They are mostly like
 the ":map" set of commands but the first argument is a menu item name, given
 as a path of menus and submenus with a '.' between them. eg: >
 
@@ -637,7 +634,8 @@ level.  Vim interprets the items in this menu as follows:
     A space in the file name must be escaped with a backslash.
 2)  An item called 'BuiltIn##', where ## is a number, is taken as number ## of
     the built-in bitmaps available in Vim. Currently there are 31 numbered
-    from 0 to 30 which cover most common editing operations |builtin-tools|.
+    from 0 to 30 which cover most common editing operations |builtin-tools|. >
+	:amenu ToolBar.BuiltIn22 :call SearchNext("back")<CR>
 3)  An item with another name is first searched for in the directory
     "bitmaps" in 'runtimepath'.  If found, the bitmap file is used as the
     toolbar button image.  Note that the exact filename is OS-specific: For
@@ -646,6 +644,9 @@ level.  Vim interprets the items in this menu as follows:
 <   would find the file 'hello.bmp'.  Under GTK+/X11 it is 'Hello.xpm'.
     For MS-Windows the bitmap is scaled to fit the button.
     For others the size of the default pixmaps used is 20 by 20 pixels.
+    For MS-Windows the bitmap should have 16 colors with the standard pallete.
+    The light grey pixels will be changed to the Window frame color and the
+    dark grey pixels to the window shadow color.
 4)  If the bitmap is still not found, Vim checks for a match against its list
     of built-in names.  Each built-in button image has a name.
     So the command >
@@ -719,7 +720,7 @@ be used to complete the name of the menu item.
 5.4 Executing Menus					*execute-menus*
 
 						*:em*  *:emenu* *E334* *E335*
-:[range]em[eenu] {menu}		Execute {menu} from the command line.
+:[range]em[enu] {menu}		Execute {menu} from the command line.
 				The default is to execute the Normal mode
 				menu.  If a range is specified, it executes
 				the Visual mode menu.
@@ -840,7 +841,10 @@ a menu item - you don't need to do a :tunmenu as well.
 5.8 Popup Menus
 
 In the win32 gui, you can cause a menu to popup at the cursor.  This behaves
-similarly to the PopUp menus except that any menu tree can be popped up
+similarly to the PopUp menus except that any menu tree can be popped up.
+
+This command is for backwards compatibility, using it is discouraged, because
+it behaves in a strange way.
 
 							*:popup* *:popu*
 :pop[up] {name}			Popup the menu {name}.  The menu named must
@@ -850,7 +854,7 @@ similarly to the PopUp menus except that any menu tree can be popped up
 
 Example: >
 	:popup File
-will make the "File" menu (if there is one) appear at the cursor. >
+will make the "File" menu (if there is one) appear at the text cursor. >
 
 	:amenu ]Toolbar.Make	:make<CR>
 	:popup ]Toolbar

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Debian control files
 " Maintainer:	Wichert Akkerman <wakkerma@debian.org>
-" Last Change:	July 15 2001
+" Last Change:	October 28, 2001
 
 " Standard syntax initialization
 if version < 600
@@ -39,7 +39,7 @@ syn region debcontrolStrictField start="^Section" end="$" contains=debcontrolKey
 
 " Catch-all for the other legal fields
 syn region debcontrolField start="^\(Maintainer\|Build-Depends\|Build-Conflicts\|Build-Depends-Indep\|Build-Conflicts-Indep\|Standards-Version\|Pre-Depends\|Depends\|Recommends\|Suggests\|Provides\|Replaces\|Conflicts\|Essential\|Bugs\|Origin\):" end="$" contains=debcontrolKey,debcontrolVariable,debcontrolEmail oneline
-syn region debcontrolMultiField start="^\(Uploaders\|Description\):" skip="^ " end="^$"me=s-1 end="^[^ ]"me=s-1 contains=debcontrolKey,debcontrolEmail
+syn region debcontrolMultiField start="^\(Uploaders\|Description\):" skip="^ " end="^$"me=s-1 end="^[^ ]"me=s-1 contains=debcontrolKey,debcontrolEmail,debcontrolVariable
 
 " Associate our matches and regions with pretty colours
 if version >= 508 || !exists("did_debcontrol_syn_inits")

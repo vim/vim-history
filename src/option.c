@@ -4699,7 +4699,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		    if (errbuf != NULL)
 		    {
 			sprintf((char *)errbuf, _("Missing number after <%s>"),
-							 transchar(*(s - 1)));
+						    transchar_byte(*(s - 1)));
 			errmsg = errbuf;
 		    }
 		    else
@@ -5170,8 +5170,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'commentstring' */
     else if (gvarp == &p_cms)
     {
-	if (**varp != NUL
-		&& strstr((char *)*varp, "%s") == NULL)
+	if (**varp != NUL && strstr((char *)*varp, "%s") == NULL)
 	    errmsg = (char_u *)N_("'commentstring' must be empty or contain %s");
     }
     /* 'foldopen' */

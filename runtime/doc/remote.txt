@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0.  Last change: 2001 Sep 17
+*remote.txt*    For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,13 +24,20 @@ The following command line arguments are available:
     argument			meaning	~
 
    --remote [+{cmd}] {file} ...					*--remote*
-				Open the file list in a remote
-				Vim. The rest of the command line
-				is taken as the file list.  Thus any
-				non-file arguments must come before this.
+				Open the file list in a remote Vim.  When
+				there is no Vim server, execute locally.
+				The rest of the command line is taken as the
+				file list.  Thus any non-file arguments must
+				come before this.
+   --remote-silent [+{cmd}] {file} ...			*--remote-silent*
+				As above, but don't complain if there is no
+				server.
    --remote-wait [+{cmd}] {file} ...				*--remote-wait*
-				As above, but wait for files to
-				complete (unload) in remote Vim.
+				As --remote, but wait for files to complete
+				(unload) in remote Vim.
+   --remote-wait-silent [+{cmd}] {file} ...		*--remote-wait-silent*
+				As --remote-wait, but don't complain if there
+				is no server.
 								*--servername*
    --servername {name}		Send to or become the server {name}
 								*--remote-send*
@@ -86,7 +93,7 @@ You can not put options there!
 
 
 FUNCTIONS
-
+								*E240*
 There are a number of VimL functions for scripting the command server.  See
 the description in |eval.txt| or use CTRL-] on the function name to jump to
 the full explanation.

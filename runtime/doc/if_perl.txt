@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0.  Last change: 2001 Sep 03
+*if_perl.txt*   For Vim version 6.1a.  Last change: 2001 Oct 25
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -62,6 +62,10 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 			like for the |:append| and |:insert| commands.  This
 			form of the |:perl| command is mainly useful for
 			including perl code in vim scripts.
+			Note: This command doesn't work when the Perl feature
+			wasn't compiled in.  To avoid errors, see
+			|script-here|.
+
 
 Example vim script: >
 
@@ -228,5 +232,25 @@ $main::curwin
 $main::curbuf
 			The current buffer object.
 
+
+							*script-here*
+When using a script language in-line, you might want to skip this when the
+language isn't supported.  But this mechanism doesn't work: >
+   if has('perl')
+     perl << EOF
+       this will NOT work!
+   EOF
+   endif
+Instead, put the Perl/Python/Ruby/etc. command in a function and call that
+function: >
+    if has('perl')
+      function DefPerl()
+	perl << EOF
+	  this works
+    EOF
+      endfunction
+      call DefPerl()
+    endif
+Note that "EOF" must be at the start of the line.
 
  vim:tw=78:ts=8:ft=help:norl:

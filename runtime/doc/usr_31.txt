@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_31.txt*	For Vim version 6.1a.  Last change: 2001 Nov 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -114,9 +114,10 @@ This will produce a dialog when the current buffer was changed.  Then it will
 pop up a file browser to select the file to edit.
 
 	Note:
-	In the dialog you can use the keyboard to select the choice.  Mostly
-	the <Tab> key and the cursor keys change the choice.  Pressing <Enter>
-	selects the choice.  This depends on the system though.
+	In the dialog you can use the keyboard to select the choice.
+	Typically the <Tab> key and the cursor keys change the choice.
+	Pressing <Enter> selects the choice.  This depends on the system
+	though.
 
 When you are not using the GUI, the ":confirm" command works as well.  Instead
 of popping up a dialog, Vim will print the message at the bottom of the Vim

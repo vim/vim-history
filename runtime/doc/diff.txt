@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0.  Last change: 2001 Sep 18
+*diff.txt*      For Vim version 6.1a.  Last change: 2001 Nov 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -138,9 +138,9 @@ edited in a window first for this to be possible.
 
 Since 'diff' is a window-local option, it's possible to view the same buffer
 in diff mode in one window and "normal" in another window.  It is also
-possible to view the changes you made to a buffer, but since Vim doesn't allow
-having two buffers for he same file, you need to make a copy the original file
-and diff with that.  For example: >
+possible to view the changes you have made to a buffer, but since Vim doesn't
+allow having two buffers for the same file, you need to make a copy the
+original file and diff with that.  For example: >
 	:!cp % tempfile
 	:diffsplit tempfile
 

@@ -2,6 +2,8 @@
 # ** DO NOT EDIT **
 #
 # Make_ivc.mak Makefile to build vim in both IDE and nmake.
+# This file can be imported as a workspace into Visual Studio.  It must be in
+# DOS fileformat then!
 #
 # It is worth making the file read-only as the VC4 IDE will try to overwrite
 # it with a HUGELY expanded clone of itself.

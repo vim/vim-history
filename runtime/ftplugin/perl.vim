@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Perl
-" Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Wed, 19 Sep 2001 16:29:01 Eastern Daylight Time
+" Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
+" Last Change:	Sun, 07 Oct 2001 21:39:27 Eastern Daylight Time
 " Current version is at http://sites.netscape.net/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
@@ -34,12 +34,18 @@ setlocal define=[^A-Za-z_]
 
 " Set this once, globally.
 if !exists("perlpath")
-  if &shellxquote != '"'
-    let perlpath = system('perl -e "print join(q/,/,@INC)"')
-  else
-    let perlpath = system("perl -e 'print join(q/,/,@INC)'")
-  endif
-  let perlpath = substitute(perlpath,',.$',',,','')
+    if executable("perl")
+	if &shellxquote != '"'
+	    let perlpath = system('perl -e "print join(q/,/,@INC)"')
+	else
+	    let perlpath = system("perl -e 'print join(q/,/,@INC)'")
+	endif
+	let perlpath = substitute(perlpath,',.$',',,','')
+    else
+	" If we can't call perl to get its path, just default to using the
+	" current directory and the directory of the current file.
+	let perlpath = ".,,"
+    endif
 endif
 
 let &l:path=perlpath

@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.0.  Last change: 2001 Sep 24
+*mbyte.txt*     For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -236,7 +236,7 @@ don't matter when using Vim.  "codeset" is another similar name.
 Each characters is encoded as one or more bytes.  When all characters are
 encoded with one byte, we call this a single-byte encoding.  The most often
 used one is called "latin1".  This limits the number of characters to 256.
-Some of these are control characters, thus even less can be used for text.
+Some of these are control characters, thus even fewer can be used for text.
 
 When some characters use two or more bytes, we call this a multi-byte
 encoding.  This allows using much more than 256 characters, which is required
@@ -522,7 +522,7 @@ Each field means:
 - WEIGHT:   WEIGHT_NAME field.  How thick the letters are.  (light, medium,
 	    bold, etc)
 - SLANT:    SLANT field.
-		r:  Roman (no slant
+		r:  Roman (no slant)
 		i:  Italic
 		o:  Oblique
 		ri: Reverse Italic
@@ -1026,6 +1026,137 @@ If you write a keymap file that will be useful for others, consider submitting
 it to the Vim maintainer for inclusion in the distribution:
 <maintainer@vim.org>
 
+
+HEBREW KEYMAP						*keymap-hebrew*
+
+This file explains what characters are available in UTF-8 and CP1255 encodings,
+and what the keymaps are to get those characters:
+
+glyph   encoding	   keymap ~
+Char   utf-8 cp1255  hebrew  hebrewp  name ~
+א    0x5d0  0xe0     t        a     'alef
+ב    0x5d1  0xe1     c        b     bet
+ג    0x5d2  0xe2     d        g     gimel
+ד    0x5d3  0xe3     s        d     dalet
+ה    0x5d4  0xe4     v        h     he
+ו    0x5d5  0xe5     u        v     vav
+ז    0x5d6  0xe6     z        z     zayin
+ח    0x5d7  0xe7     j        j     het
+ט    0x5d8  0xe8     y        T     tet
+י    0x5d9  0xe9     h        y     yod
+ך    0x5da  0xea     l        K     kaf sofit
+כ    0x5db  0xeb     f        k     kaf
+ל    0x5dc  0xec     k        l     lamed
+ם    0x5dd  0xed     o        M     mem sofit
+מ    0x5de  0xee     n        m     mem
+ן    0x5df  0xef     i        N     nun sofit
+נ    0x5e0  0xf0     b        n     nun
+ס    0x5e1  0xf1     x        s     samech
+ע    0x5e2  0xf2     g        u     `ayin
+ף    0x5e3  0xf3     ;        P     pe sofit
+פ    0x5e4  0xf4     p        p     pe
+ץ    0x5e5  0xf5     .        X     tsadi sofit
+צ    0x5e6  0xf6     m        x     tsadi
+ק    0x5e7  0xf7     e        q     qof
+ר    0x5e8  0xf8     r        r     resh
+ש    0x5e9  0xf9     a        w     shin
+ת    0x5ea  0xfa     ,        t     tav
+
+Vowel marks and special punctuation:
+הְ    0x5b0  0xc0     A:      A:   sheva
+הֱ    0x5b1  0xc1     HE      HE   hataf segol
+הֲ    0x5b2  0xc2     HA      HA   hataf patah
+הֳ    0x5b3  0xc3     HO      HO   hataf qamats
+הִ    0x5b4  0xc4     I       I    hiriq
+הֵ    0x5b5  0xc5     AY      AY   tsere
+הֶ    0x5b6  0xc6     E       E    segol
+הַ    0x5b7  0xc7     AA      AA   patah
+הָ    0x5b8  0xc8     AO      AO   qamats
+הֹ    0x5b9  0xc9     O       O    holam
+הֻ    0x5bb  0xcb     U       U    qubuts
+כּ    0x5bc  0xcc     D       D    dagesh
+הֽ    0x5bd  0xcd     ]T      ]T   meteg
+ה־   0x5be  0xce     ]Q      ]Q   maqaf
+בֿ    0x5bf  0xcf     ]R      ]R   rafe
+ב׀   0x5c0  0xd0     ]p      ]p   paseq
+שׁ    0x5c1  0xd1     SR      SR   shin-dot
+שׂ    0x5c2  0xd2     SL      SL   sin-dot
+׃    0x5c3  0xd3     ]P      ]P   sof-pasuq
+װ    0x5f0  0xd4     VV      VV   double-vav
+ױ    0x5f1  0xd5     VY      VY   vav-yod
+ײ    0x5f2  0xd6     YY      YY   yod-yod
+
+The following are only available in utf-8
+
+Cantillation marks:
+glyph
+Char utf-8 hebrew name
+ב֑    0x591   C:   etnahta
+ב֒    0x592   Cs   segol
+ב֓    0x593   CS   shalshelet
+ב֔    0x594   Cz   zaqef qatan
+ב֕    0x595   CZ   zaqef gadol
+ב֖    0x596   Ct   tipeha
+ב֗    0x597   Cr   revia
+ב֘    0x598   Cq   zarqa
+ב֙    0x599   Cp   pashta
+ב֚    0x59a   C!   yetiv
+ב֛    0x59b   Cv   tevir
+ב֜    0x59c   Cg   geresh
+ב֝    0x59d   C*   geresh qadim
+ב֞    0x59e   CG   gershayim
+ב֟    0x59f   CP   qarnei-parah
+ב֪    0x5aa   Cy   yerach-ben-yomo
+ב֫    0x5ab   Co   ole
+ב֬    0x5ac   Ci   iluy
+ב֭    0x5ad   Cd   dehi
+ב֮    0x5ae   Cn   zinor
+ב֯    0x5af   CC   masora circle
+
+Combining forms:
+ﬠ    0xfb20  X`   Alternative `ayin
+ﬡ    0xfb21  X'   Alternative 'alef
+ﬢ    0xfb22  X-d  Alternative dalet
+ﬣ    0xfb23  X-h  Alternative he
+ﬤ    0xfb24  X-k  Alternative kaf
+ﬥ    0xfb25  X-l  Alternative lamed
+ﬦ    0xfb26  X-m  Alternative mem-sofit
+ﬧ    0xfb27  X-r  Alternative resh
+ﬨ    0xfb28  X-t  Alternative tav
+﬩    0xfb29  X-+  Alternative plus
+שׁ    0xfb2a  XW   shin+shin-dot
+שׂ    0xfb2b  Xw   shin+sin-dot
+שּׁ    0xfb2c  X..W  shin+shin-dot+dagesh
+שּׂ    0xfb2d  X..w  shin+sin-dot+dagesh
+אַ    0xfb2e  XA   alef+patah
+אָ    0xfb2f  XO   alef+qamats
+אּ    0xfb30  XI   alef+hiriq (mapiq)
+בּ    0xfb31  X.b  bet+dagesh
+גּ    0xfb32  X.g  gimel+dagesh
+דּ    0xfb33  X.d  dalet+dagesh
+הּ    0xfb34  X.h  he+dagesh
+וּ    0xfb35  Xu  vav+dagesh
+זּ    0xfb36  X.z  zayin+dagesh
+טּ    0xfb38  X.T  tet+dagesh
+יּ    0xfb39  X.y  yud+dagesh
+ךּ    0xfb3a  X.K  kaf sofit+dagesh
+כּ    0xfb3b  X.k  kaf+dagesh
+לּ    0xfb3c  X.l  lamed+dagesh
+מּ    0xfb3e  X.m  mem+dagesh
+נּ    0xfb40  X.n  nun+dagesh
+סּ    0xfb41  X.s  samech+dagesh
+ףּ    0xfb43  X.P  pe sofit+dagesh
+פּ    0xfb44  X.p  pe+dagesh
+צּ    0xfb46  X.x  tsadi+dagesh
+קּ    0xfb47  X.q  qof+dagesh
+רּ    0xfb48  X.r  resh+dagesh
+שּ    0xfb49  X.w  shin+dagesh
+תּ    0xfb4a  X.t  tav+dagesh
+וֹ    0xfb4b  Xo   vav+holam
+בֿ    0xfb4c  XRb  bet+rafe
+כֿ    0xfb4d  XRk  kaf+rafe
+פֿ    0xfb4e  XRp  pe+rafe
+ﭏ    0xfb4f  Xal  alef-lamed
 ==============================================================================
 10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*
 								*Unicode*

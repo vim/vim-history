@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
-" Last Change:	Thu Sep 20 11:18:13 CST 2001
+" Last Change:	Wed Oct 31 16:16:19 CST 2001
 " URL:		http://larc.ee.nthu.edu.tw/~cthuang/vim/ftplugin/verilog.vim
 
 " Only do this when not done yet for this buffer
@@ -35,11 +35,11 @@ if exists("loaded_matchit")
   let b:match_ignorecase=0
   let b:match_words=
     \ '\<begin\>:\<end\>,' .
+    \ '\<case\>\|\<casex\>\|\<casez\>:\<endcase\>,' .
     \ '\<module\>:\<endmodule\>,' .
     \ '\<if\>:\<else\>,' .
-    \ '\<case\>:\<endcase\>,' .
     \ '\<function\>:\<endfunction\>,' .
+    \ '`ifdef\>:`else\>:`endif\>,' .
     \ '\<task\>:\<endtask\>,' .
-    \ '\<specify\>:\<endspecify\>,' .
-	\ '(:),[:],{:}'
+    \ '\<specify\>:\<endspecify\>'
 endif

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0
+MINOR = 1a
 
 # CHECKLIST for creating a new version:
 #
@@ -99,9 +99,9 @@ MINOR = 0
 # - "make unixall", "make extra", "make lang", "make html"
 #
 # Amiga:
-# - "make amisrc", move the archive to the Amiga and compile the Amiga version
-#   with "big" features.  Place the executables Vim and Xxd in this
-#   directory (set the executable flag).
+# - "make amisrc", move the archive to the Amiga and compile (will use "big"
+#   features by default).  Place the executables Vim and Xxd in this directory
+#   (set the executable flag).
 # - "make amirt", "make amibin".
 #
 # PC:
@@ -124,13 +124,13 @@ MINOR = 0
 # - "nmake -f Make_mvc.mak"
 # - "rm testdir/*.out", "nmake -f Make_mvc.mak test" and check the output.
 # - Rename the executables to "vimw32.exe", "xxdw32.exe".
-# - Delete vimrun.exe, install.exe and uninstall.exe.
+# - Delete vimrun.exe, install.exe and uninstal.exe.
 # Win32 GUI version:
 # - "nmake -f Make_mvc.mak GUI=yes.
 # - move "gvim.exe" to here (otherwise the OLE version will overwrite it).
 # - Delete vimrun.exe, install.exe and uninstall.exe.
 # Win32 GUI version with OLE, PERL, TCL, PYTHON and dynamic IME:
-# - "nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes ...
+# - Run src/bigvim.bat ("nmake -f Make_mvc.mak GUI=yes OLE=yes IME=yes)
 # - Rename "gvim.exe" to "gvim_ole.exe".
 # - Delete vimrun.exe, install.exe and uninstall.exe.
 # Produce Gvimext.dll:
@@ -158,8 +158,7 @@ MINOR = 0
 # - rename xxdw32.exe to xxd/xxd.exe
 # - put gvimext.dll in GvimExt and VisVim.dll in VisVim (get them from a binary
 #   archive or build them)
-# - do "make uganda.nsis.txt" in runtime/doc (requires sed; when producing it
-#   on Unix don't forget to make it dos fileformat).
+# - make sure there is a diff.exe two levels up
 # - go to ../nsis and do "makensis gvim.nsi".
 # - Copy gvim##.exe to the dist directory.
 #
@@ -311,7 +310,6 @@ SRC_UNIX =	\
 		src/hangulin.c \
 		src/if_cscope.c \
 		src/if_cscope.h \
-		src/if_ruby.c \
 		src/if_xcmdsrv.c \
 		src/integration.c \
 		src/integration.h \
@@ -332,7 +330,6 @@ SRC_UNIX =	\
 		src/proto/gui_x11.pro \
 		src/proto/hangulin.pro \
 		src/proto/if_cscope.pro \
-		src/proto/if_ruby.pro \
 		src/proto/if_xcmdsrv.pro \
 		src/proto/os_unix.pro \
 		src/proto/pty.pro \
@@ -356,10 +353,12 @@ SRC_DOS_UNIX =	\
 		src/if_perl.xs \
 		src/if_perlsfio.c \
 		src/if_python.c \
+		src/if_ruby.c \
 		src/if_tcl.c \
 		src/proto/if_perl.pro \
 		src/proto/if_perlsfio.pro \
 		src/proto/if_python.pro \
+		src/proto/if_ruby.pro \
 		src/proto/if_tcl.pro \
 		src/typemap \
 
@@ -379,6 +378,7 @@ SRC_DOS =	\
 		src/Make_mvc.mak \
 		src/Make_tcc.mak \
 		src/Make_w16.mak \
+		src/bigvim.bat \
 		src/dimm.idl \
 		src/dlldata.c \
 		src/dosinst.c \
@@ -428,9 +428,6 @@ SRC_DOS =	\
 		nsis/gvim.nsi \
 		nsis/README.txt \
 		uninstal.txt \
-
-# source files for DOS without CR/LF translation (also in the extra archive)
-SRC_DOS_BIN =	\
 		VisVim/Commands.cpp \
 		VisVim/Commands.h \
 		VisVim/DSAddIn.cpp \
@@ -440,7 +437,6 @@ SRC_DOS_BIN =	\
 		VisVim/README.txt \
 		VisVim/Reg.cpp \
 		VisVim/Register.bat \
-		VisVim/Res \
 		VisVim/Resource.h \
 		VisVim/StdAfx.cpp \
 		VisVim/StdAfx.h \
@@ -452,6 +448,10 @@ SRC_DOS_BIN =	\
 		VisVim/VisVim.odl \
 		VisVim/VisVim.rc \
 		VisVim/VsReadMe.txt \
+
+# source files for DOS without CR/LF translation (also in the extra archive)
+SRC_DOS_BIN =	\
+		VisVim/Res \
 		src/tearoff.bmp \
 		src/tools.bmp \
 		src/tools16.bmp \
@@ -784,6 +784,7 @@ LANG_GEN = \
 		runtime/keymap/*.vim \
 		runtime/tutor/tutor.?? \
 		runtime/tutor/tutor.ja.* \
+		runtime/tutor/tutor.zh.* \
 
 # all files for lang archive
 LANG_SRC = \
@@ -813,6 +814,8 @@ dist/comment:
 	mkdir dist/comment
 
 COMMENT_RT = comment/$(VERSION)-rt
+COMMENT_RT1 = comment/$(VERSION)-rt1
+COMMENT_RT2 = comment/$(VERSION)-rt2
 COMMENT_D16 = comment/$(VERSION)-bin-d16
 COMMENT_D32 = comment/$(VERSION)-bin-d32
 COMMENT_W32 = comment/$(VERSION)-bin-w32
@@ -827,6 +830,12 @@ COMMENT_LANG = comment/$(VERSION)-lang
 
 dist/$(COMMENT_RT): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) runtime files for MS-DOS and MS-Windows" > dist/$(COMMENT_RT)
+
+dist/$(COMMENT_RT1): dist/comment
+	echo "Vim - Vi IMproved - v$(VDOT) runtime files (PART 1) for MS-DOS and MS-Windows" > dist/$(COMMENT_RT1)
+
+dist/$(COMMENT_RT2): dist/comment
+	echo "Vim - Vi IMproved - v$(VDOT) runtime files (PART 2) for MS-DOS and MS-Windows" > dist/$(COMMENT_RT2)
 
 dist/$(COMMENT_D16): dist/comment
 	echo "Vim - Vi IMproved - v$(VDOT) binaries for MS-DOS 16 bit real mode" > dist/$(COMMENT_D16)
@@ -946,9 +955,10 @@ lang: dist prepare
 		$(LANG_SRC) \
 		| (cd dist/$(VIMRTDIR); tar xvf -)
 # Make sure ja.sjis.po is newer than ja.po to avoid it being regenerated.
-# Same for cs.cp1250.po.
+# Same for cs.cp1250.po and sk.cp1250.po.
 	touch dist/$(VIMRTDIR)/src/po/ja.sjis.po
 	touch dist/$(VIMRTDIR)/src/po/cs.cp1250.po
+	touch dist/$(VIMRTDIR)/src/po/sk.cp1250.po
 	cd dist && tar cvf $(VIMVER)-lang.tar $(VIMRTDIR)
 	gzip -9 dist/$(VIMVER)-lang.tar
 
@@ -1012,7 +1022,7 @@ amisrc: dist prepare
 no_title.vim: Makefile
 	echo "set notitle noicon nocp nomodeline viminfo=" >no_title.vim
 
-dosrt: dist no_title.vim dist/$(COMMENT_RT)
+dosrt: dist prepare no_title.vim dist/$(COMMENT_RT)
 	-rm -rf dist/vim$(VERSION)rt.zip
 	-rm -rf dist/vim
 	mkdir dist/vim
@@ -1032,7 +1042,27 @@ dosrt: dist no_title.vim dist/$(COMMENT_RT)
 	cp $(RT_DOS_BIN) dist/vim/$(VIMRTDIR)
 	cd dist && zip -9 -rD -z vim$(VERSION)rt.zip vim <$(COMMENT_RT)
 
-dosbin: dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole dosbin_s
+dosrtsplit: dist prepare dist/$(COMMENT_RT1) dist/$(COMMENT_RT2)
+	-rm -rf dist/vim$(VERSION)rt1.zip
+	-rm -rf dist/vim$(VERSION)rt2.zip
+	-rm -rf dist/vim
+	-rm -rf dist/vimsyntax
+	-rm -rf dist/vimindent
+	-rm -rf dist/vimftplugin
+	cd dist && unzip vim$(VERSION)rt.zip
+	mv dist/vim/$(VIMRTDIR)/syntax dist/vimsyntax
+	mv dist/vim/$(VIMRTDIR)/indent dist/vimindent
+	mv dist/vim/$(VIMRTDIR)/ftplugin dist/vimftplugin
+	cd dist && zip -9 -rD -z vim$(VERSION)rt1.zip vim <$(COMMENT_RT1)
+	-rm -rf dist/vim
+	mkdir dist/vim
+	mkdir dist/vim/$(VIMRTDIR)
+	mv dist/vimsyntax dist/vim/$(VIMRTDIR)/syntax
+	mv dist/vimindent dist/vim/$(VIMRTDIR)/indent
+	mv dist/vimftplugin dist/vim/$(VIMRTDIR)/ftplugin
+	cd dist && zip -9 -rD -z vim$(VERSION)rt2.zip vim <$(COMMENT_RT2)
+
+dosbin: prepare dosbin_gvim dosbin_w32 dosbin_d32 dosbin_d16 dosbin_ole dosbin_s
 
 # make Win32 gvim
 dosbin_gvim: dist no_title.vim dist/$(COMMENT_GVIM)
@@ -1109,6 +1139,7 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	mkdir dist/vim/$(VIMRTDIR)
 	tar cf - \
 		$(BIN_DOS) \
+		VisVim/README.txt \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	cp gvim_ole.exe dist/vim/$(VIMRTDIR)/gvim.exe
@@ -1118,8 +1149,6 @@ dosbin_ole: dist no_title.vim dist/$(COMMENT_OLE)
 	cp uninstalw32.exe dist/vim/$(VIMRTDIR)/uninstal.exe
 	cp gvimext.dll dist/vim/$(VIMRTDIR)/gvimext.dll
 	cp README_ole.txt dist/vim/$(VIMRTDIR)
-	mkdir dist/vim/$(VIMRTDIR)/VisVim
-	cp VisVim/README.txt dist/vim/$(VIMRTDIR)/VisVim
 	cp VisVim/VisVim.dll dist/vim/$(VIMRTDIR)/VisVim
 	cd dist && zip -9 -rD -z gvim$(VERSION)ole.zip vim <$(COMMENT_OLE)
 
@@ -1141,20 +1170,22 @@ dosbin_s: dist no_title.vim dist/$(COMMENT_W32S)
 	cd dist && zip -9 -rD -z gvim$(VERSION)_s.zip vim <$(COMMENT_W32S)
 
 # make Win32 lang archive
-doslang: dist no_title.vim dist/$(COMMENT_LANG)
+doslang: dist prepare no_title.vim dist/$(COMMENT_LANG)
 	-rm -rf dist/vim$(VERSION)lang.zip
 	-rm -rf dist/vim
 	mkdir dist/vim
 	mkdir dist/vim/$(VIMRTDIR)
+	cd src && $(MAKE) languages
 	tar cf - \
 		$(LANG_GEN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xvf -)
 	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 # Add the message translations.  Trick: skip ja.mo and use ja.sjis.mo instead.
-# Same for cs.mo / cs.cp1250.mo and zh_CN.mo / zh_CN.cp936.mo.
+# Same for cs.mo / cs.cp1250.mo, sk.mo / sk.cp1250.mo and zh_CN.mo /
+# zh_CN.cp936.mo.
 	for i in $(LANG_DOS); do \
-	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo" -a "$$i" != "src/po/zh_CN.mo"; then \
+	      if test "$$i" != "src/po/ja.mo" -a "$$i" != "src/po/cs.mo" -a "$$i" != "src/po/sk.mo" -a "$$i" != "src/po/zh_CN.mo"; then \
 		n=`echo $$i | sed -e "s+src/po/\([-a-zA-Z0-9_]*\(.UTF-8\)*\)\(.sjis\)*\(.cp1250\)*\(.cp936\)*.mo+\1+"`; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n; \
 		mkdir dist/vim/$(VIMRTDIR)/lang/$$n/LC_MESSAGES; \
@@ -1165,7 +1196,7 @@ doslang: dist no_title.vim dist/$(COMMENT_LANG)
 	cd dist && zip -9 -rD -z vim$(VERSION)lang.zip vim <$(COMMENT_LANG)
 
 # MS-DOS sources
-dossrc: dist no_title.vim dist/$(COMMENT_SRC)
+dossrc: dist no_title.vim dist/$(COMMENT_SRC) runtime/doc/uganda.nsis.txt
 	-rm -rf dist/vim$(VERSION)src.zip
 	-rm -rf dist/vim
 	mkdir dist/vim
@@ -1176,12 +1207,18 @@ dossrc: dist no_title.vim dist/$(COMMENT_SRC)
 		$(SRC_DOS) \
 		$(SRC_AMI_DOS) \
 		$(SRC_DOS_UNIX) \
+		runtime/doc/uganda.nsis.txt \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
+	mv dist/vim/$(VIMRTDIR)/runtime/* dist/vim/$(VIMRTDIR)
+	rmdir dist/vim/$(VIMRTDIR)/runtime
 	find dist/vim/$(VIMRTDIR) -type f -exec $(VIM) -u no_title.vim -c ":set tx|wq" {} \;
 	tar cf - \
 		$(SRC_DOS_BIN) \
 		| (cd dist/vim/$(VIMRTDIR); tar xf -)
 	cd dist && zip -9 -rD -z vim$(VERSION)src.zip vim <$(COMMENT_SRC)
+
+runtime/doc/uganda.nsis.txt: runtime/doc/uganda.txt
+	cd runtime/doc && $(MAKE) uganda.nsis.txt
 
 os2bin: dist no_title.vim dist/$(COMMENT_OS2)
 	-rm -rf dist/vim$(VERSION)os2.zip

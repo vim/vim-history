@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0.  Last change: 2001 Sep 12
+*indent.txt*    For Vim version 6.1a.  Last change: 2001 Nov 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -464,6 +464,11 @@ indenting width (default is 'shiftwidth'): >
 
   let b:verilog_indent_width = 4
   let b:verilog_indent_width = &sw * 2
-<
+
+In addition, you can turn the verbose mode for debug issue: >
+
+  let b:verilog_indent_verbose = 1
+
+Make sure to do ":set cmdheight=2" first to allow the display of the message.
 
  vim:tw=78:ts=8:ft=help:norl:

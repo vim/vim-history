@@ -1,6 +1,6 @@
 " Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
 " URL		: http://www.pcppopper.org/
-" Revised on	: Sun, 02 Sep 2001 17:11:08 +0200
+" Revised on	: Sat, 02 Feb 2002 14:35:55 +0100
 " Language	: readline configuration file
 " Variables	:
 "   readline_has_bash - if defined add support for bash specific
@@ -68,15 +68,16 @@ syn match   readlineInclude	"^\s*$include\>"
 
 syn region  readlineSet		display oneline transparent matchgroup=readlineKeyword start="^\s*set\>" end="$"me=e-1 contains=readlineNumber,readlineBoolean,readlineKeymaps,readlineBellStyles,readlineSettings
 
-syn keyword readlineSettings	contained bell-style comment-begin completion-ignore-case completion-ignore-case
+syn keyword readlineSettings	contained bell-style comment-begin completion-ignore-case
 syn keyword readlineSettings	contained completion-query-items convert-meta disable-completion editing-mode enable-keypad 
 syn keyword readlineSettings	contained expand-tilde horizontal-scroll-mode mark-directories keymap mark-modified-lines meta-flag
 syn keyword readlineSettings	contained input-meta output-meta print-completions-horizontally show-all-if-ambiguous visible-stats
 syn keyword readlineSettings	contained prefer-visible-bell blink-matching-paren
+syn keyword readlineSettings	contained match-hidden-files history-preserve-point isearch-terminators
 
 " bash extensions
 if exists("readline_has_bash")
-    syn keyword readlineSettings	contained isearch-terminators
+    "syn keyword readlineSettings	contained
 endif
 
 " key bindings
@@ -103,6 +104,7 @@ syn keyword readlineFunctions	contained vi-end-word vi-fetch-history vi-insert-b
 syn keyword readlineFunctions	contained vi-yank-arg vi-goto-mark vi-append-mode vi-insertion-mode prev-history vi-set-mark vi-search-again vi-put vi-change-char
 syn keyword readlineFunctions	contained vi-subst vi-delete vi-yank-to vi-column vi-change-case vi-overstrike vi-overstrike-delete
 syn keyword readlineFunctions	contained do-lowercase-version delete-char-or-list tty-status arrow-key-prefix
+syn keyword readlineFunctions	contained vi-back-to-indent vi-bword vi-bWord vi-eword vi-eWord vi-fword vi-fWord vi-next-word
 
 " bash extensions
 if exists("readline_has_bash")

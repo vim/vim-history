@@ -2045,8 +2045,8 @@ msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "検索・置換 ('\\' を検索するには '\\\\')"
 
 #: gui_x11.c:1414
-msgid "Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"
-msgstr "Vim: (ec1) 色指定が正しくないのでエントリを割り当てられません"
+msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
+msgstr "Vim E458: 色指定が正しくないのでエントリを割り当てられません"
 
 #: gui_x11.c:1987
 #, c-format

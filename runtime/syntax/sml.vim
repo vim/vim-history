@@ -4,9 +4,9 @@
 " Maintainers:  Markus Mottl            <markus@oefai.at>
 "               Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/sml.vim
-" Last Change:  2001 Aug 29 - Removed small highlighting bug  (MM)
+" Last Change:  2001 Nov 20 - Fixed small highlighting bug with modules (MM)
+"               2001 Aug 29 - Fixed small highlighting bug  (MM)
 "               2001 Aug 28 - Upgraded URL & mail address  (MM)
-"               2001 Apr 26 - Upgraded for new Vim version  (MM)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -99,12 +99,12 @@ syn region   smlMPRestr start=":" end="."me=e-1 contained contains=@smlComment s
 syn region   smlMPRestr1 matchgroup=smlModule start="\ssig\s\=" matchgroup=smlModule end="\<end\>" contained contains=ALLBUT,@smlContained,smlEndErr,smlModule
 syn region   smlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=smlKeyword end="->" contained contains=@smlAllErrs,smlComment,smlModParam skipwhite skipempty nextgroup=smlFuncWith
 syn match    smlMPRestr3 "\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*" contained
-syn match  smlModPreRHS "=" contained skipwhite skipempty nextgroup=smlModParam,smlFullMod
-syn region  smlModRHS start="." end=".\w\|([^*]"me=e-2 contained contains=smlComment skipwhite skipempty nextgroup=smlModParam,smlFullMod
-syn match   smlFullMod "\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*" contained skipwhite skipempty nextgroup=smlFuncWith
+syn match    smlModPreRHS "=" contained skipwhite skipempty nextgroup=smlModParam,smlFullMod
+syn region   smlModRHS start="." end=".\w\|([^*]"me=e-2 contained contains=smlComment skipwhite skipempty nextgroup=smlModParam,smlFullMod
+syn match    smlFullMod "\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*" contained skipwhite skipempty nextgroup=smlFuncWith
 
-syn region  smlFuncWith start="("me=e-1 end=")" contained contains=smlComment,smlWith,smlFuncStruct
-syn region  smlFuncStruct matchgroup=smlModule start="[^a-zA-Z]struct\>"hs=s+1 matchgroup=smlModule end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
+syn region   smlFuncWith start="([^*]"me=e-1 end=")" contained contains=smlComment,smlWith,smlFuncStruct
+syn region   smlFuncStruct matchgroup=smlModule start="[^a-zA-Z]struct\>"hs=s+1 matchgroup=smlModule end="\<end\>" contains=ALLBUT,@smlContained,smlEndErr
 
 syn match    smlModTypeRestr "\<\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*\>" contained
 syn region   smlModTRWith start=":\s*("hs=s+1 end=")" contained contains=@smlAENoParen,smlWith

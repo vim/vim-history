@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0.  Last change: 2001 Sep 16
+*visual.txt*    For Vim version 6.1a.  Last change: 2001 Dec 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -204,10 +204,14 @@ The objects that can be used are:
 	is	inner sentence					|v_is|
 	ap	a paragraph (with white space)			|v_ap|
 	ip	inner paragraph					|v_ip|
-	ab	a () block (with braces)			|v_ab|
+	ab	a () block (with parenthesis)			|v_ab|
 	ib	inner () block					|v_ib|
-	aB	a {} block (with brackets)			|v_aB|
+	aB	a {} block (with braces)			|v_aB|
 	iB	inner {} block					|v_iB|
+	a<	a <> block (with <>)				|v_a<|
+	i<	inner <> block					|v_i<|
+	a[	a [] block (with [])				|v_a[|
+	i[	inner [] block					|v_i[|
 
 Additionally the following commands can be used:
 	:	start ex command for highlighted lines (1)	|v_:|

@@ -3677,7 +3677,7 @@ WaitForChar(msec)
 	  );
 
 #else
-    avail =  RealWaitForChar(read_cmd_fd, msec, NULL);
+    avail = RealWaitForChar(read_cmd_fd, msec, NULL);
 #endif
     return avail;
 }
@@ -5228,6 +5228,7 @@ do_xterm_trace()
     return TRUE;
 }
 
+# if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Destroy the display, window and app_context.  Required for GTK.
  */
@@ -5258,6 +5259,7 @@ clear_xterm_clip()
     }
 #endif
 }
+# endif
 
 /*
  * Catch up with any queued X events.  This may put keyboard input into the

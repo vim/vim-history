@@ -1,36 +1,36 @@
 " Vim Keymap file for hebrew
 " Maintainer  : Ron Aaron <ron@mossbayeng.com>
-" Last Updated: Wed 28 Feb 2001 21:28:51
+" Last Updated: Sun 10 Feb 2002 11:50:56
 " This is my version of a phonetic Hebrew
 
 " Use this short name in the status line.
 let b:keymap_name = "hebp"
 
 loadkeymap
-A	<char-242>	" ò - ayin
-K	<char-234>	" ê - final kaf
-M	<char-237>	" í - final mem
-N	<char-239>	" ï - final nun
-P	<char-243>	" ó - final pe
-S	<char-245>	" õ - final tsadi
-a	<char-224>	" à - alef
-b	<char-225>	" á - bet
-d	<char-227>	" ã - dalet
-g	<char-226>	" â - gimel
-h	<char-228>	" ä - he
-H	<char-231>	" ç - het
-k	<char-235>	" ë - kaf
-l	<char-236>	" ì - lamed
-m	<char-238>	" î - mem
-n	<char-240>	" ð - nun
-o	<char-241>	" ñ - samekh
-p	<char-244>	" ô - pe
-q	<char-247>	" ÷ - qof
-r	<char-248>	" ø - resh
-s	<char-246>	" ö - tsadi
-t	<char-250>	" ú - tav
-u	<char-232>	" è - tet
-v	<char-229>	" å - vav
-w	<char-249>	" ù - shin
-y	<char-233>	" é - yod
-z	<char-230>	" æ - zayin
+K	<char-234>	" final kaf
+M	<char-237>	" final mem
+N	<char-239>	" final nun
+P	<char-243>	" final pe
+T	<char-232>	" tet
+X	<char-245>	" final tsadi
+a	<char-224>	" alef
+b	<char-225>	" bet
+d	<char-227>	" dalet
+g	<char-226>	" gimel
+h	<char-228>	" he
+j	<char-231>	" het
+k	<char-235>	" kaf
+l	<char-236>	" lamed
+m	<char-238>	" mem
+n	<char-240>	" nun
+s	<char-241>	" samekh
+p	<char-244>	" pe
+q	<char-247>	" qof
+r	<char-248>	" resh
+t	<char-250>	" tav
+u	<char-242>	" ayin
+v	<char-229>	" vav
+w	<char-249>	" shin
+x	<char-246>	" tsadi
+y	<char-233>	" yod
+z	<char-230>	" zayin

@@ -1,7 +1,7 @@
 " Language:	xml
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/xml.vim
-" Last Change:	Mon, 27 Aug 2001 23:39:17 +0200
+" Last Change:	Thu, 10 Jan 2002 22:00:51 +0100
 " Notes:	1) does not indent pure non-xml code (e.g. embedded scripts)
 "		2) will be confused by unbalanced tags in comments
 "		or CDATA sections.
@@ -35,8 +35,8 @@ endif
 if exists('*XmlIndentGet') | finish | endif
 
 fun! <SID>XmlIndentWithPattern(line, pat)
-    let s = substitute('x'.a:line, a:pat, '§', 'g')
-    return strlen(substitute(s, '[^§].*$', '', ''))
+    let s = substitute('x'.a:line, a:pat, "\1", 'g')
+    return strlen(substitute(s, "[^\1].*$", '', ''))
 endfun
 
 " [-- check if it's xml --]

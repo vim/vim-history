@@ -1,4 +1,4 @@
-.TH VIM 1 "2001 March 30"
+.TH VIM 1 "2002 Feb 22"
 .SH NAME
 vim \- Vi IMproved, a programmers text editor
 .SH SYNOPSIS
@@ -30,9 +30,8 @@ vim \- Vi IMproved, a programmers text editor
 .SH DESCRIPTION
 .B Vim
 is a text editor that is upwards compatible to Vi.
-It can be used to edit any ASCII text.
-It is especially useful for editing
-programs.
+It can be used to edit all kinds of plain text.
+It is especially useful for editing programs.
 .PP
 There are a lot of enhancements above Vi: multi level undo,
 multi windows and buffers, syntax highlighting, command line
@@ -353,6 +352,9 @@ This can be used to edit a filename that starts with a '-'.
 --help
 Give a help message and exit, just like "-h".
 .TP
+--version
+Print version information and exit.
+.TP
 --remote
 Connect to a Vim server and make it edit the files given in the rest of the
 arguments.
@@ -367,8 +369,11 @@ Use {name} as the server name.  Used for the current Vim, unless used with a
 --serversend {keys}
 Connect to a Vim server and send {keys} to it.
 .TP
---version
-Print version information and exit.
+--socketid {id}
+GTK GUI only: Use the GtkPlug mechanism to run gvim in another window.
+.TP
+--echo-wid
+GTK GUI only: Echo the Window ID on stdout
 .SH ON-LINE HELP
 Type ":help" in
 .B Vim

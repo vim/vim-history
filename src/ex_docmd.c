@@ -8480,13 +8480,11 @@ ses_put_fname(fd, name, flagp)
 	if (c == '\\' && (*flagp & SSOP_SLASH))
 	    /* change a backslash to a forward slash */
 	    c = '/';
-	else if (vim_strchr(escape_chars, c) != NULL
+	else if ((vim_strchr(escape_chars, c) != NULL
 #ifdef BACKSLASH_IN_FILENAME
-		&& c != '\\'
+		    && c != '\\'
 #endif
-		|| c == '#'
-		|| c == '%'
-		)
+		 ) || c == '#' || c == '%')
 	{
 	    /* escape a special character with a backslash */
 	    if (putc('\\', fd) != '\\')

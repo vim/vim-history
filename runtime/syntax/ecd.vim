@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	ecd (Embedix Component Description) files
-" Maintainer:	John Beppu <beppu@lineo.com>
+" Maintainer:	John Beppu <beppu@opensource.lineo.com>
 " URL:		http://opensource.lineo.com/~beppu/prose/ecd_vim.html
-" Last Change:	2001 May 10
+" Last Change:	2001 Sep 27
 
 " An ECD file contains meta-data for packages in the Embedix Linux distro.
 " This syntax file was derived from apachestyle.vim

@@ -1284,6 +1284,7 @@ set_context_in_menu_cmd(xp, cmd, arg, forceit)
  * Function given to ExpandGeneric() to obtain the list of (sub)menus (not
  * entries).
  */
+/*ARGSUSED*/
     char_u *
 get_menu_name(xp, idx)
     expand_T	*xp;
@@ -1320,6 +1321,7 @@ get_menu_name(xp, idx)
  * Function given to ExpandGeneric() to obtain the list of menus and menu
  * entries.
  */
+/*ARGSUSED*/
     char_u *
 get_menu_names(xp, idx)
     expand_T	*xp;

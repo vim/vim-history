@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0.  Last change: 2002 Feb 18
+*motion.txt*    For Vim version 6.1a.  Last change: 2002 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -176,10 +176,13 @@ l		or					*l*
 			|exclusive| motion.
 
 							*$* *<End>* *<kEnd>*
-$  or <End>		To the end of the line and [count - 1] lines downward
-			(inclusive).  When 'virtualedit' is active, "$" may
-			move the cursor back from past the end of the line to
-			the last character in the line.
+$  or <End>		To the end of the line.  When a count is given also go
+			[count - 1] lines downward (inclusive).
+			In Visual mode the cursor goes to just after the last
+			character in the line.
+			When 'virtualedit' is active, "$" may move the cursor
+			back from past the end of the line to the last
+			character in the line.
 
 							*g_*
 g_			To the last non-blank character of the line and
@@ -320,7 +323,7 @@ gg			Goto line [count], default first line, on the first
 
 :[range]go[to] [count]					*:go* *:goto* *go*
 [count]go		Go to {count} byte in the buffer.  Default [count] is
-			zero, start of the file.  When giving [range], the
+			one, start of the file.  When giving [range], the
 			last number in it used.  End-of-line characters are
 			counted depending on the current 'fileformat' setting.
 			{not in Vi}
@@ -409,19 +412,19 @@ between Vi and Vim.
 							*]]*
 ]]			[count] sections forward or to the next '{' in the
 			first column.  When used after an operator, then the
-			'}' in the first column.  (linewise).
+			'}' in the first column.  |linewise|
 
 							*][*
 ][			[count] sections forward or to the next '}' in the
-			first column (linewise).
+			first column.  |linewise|
 
 							*[[*
 [[			[count] sections backward or to the previous '{' in
-			the first column (linewise).
+			the first column.  |linewise|
 
 							*[]*
 []			[count] sections backward or to the previous '}' in
-			the first column (linewise).
+			the first column.  |linewise|
 
 These commands move over three kinds of text objects.
 
@@ -764,7 +767,7 @@ was made yet in the current file.
 			{not in Vi}
 
 							*'(* *`(*
-'(  `(			To the start of the current paragraph, like the |(|
+'(  `(			To the start of the current sentence, like the |(|
 			command.  {not in Vi}
 
 							*')* *`)*
@@ -894,8 +897,8 @@ stored in the viminfo file and restored when starting Vim.
 
 							*%*
 %			Find the next item in this line after or under the
-			cursor and jump to its match (inclusive).  Items can
-			be:
+			cursor and jump to its match. |inclusive| motion.
+			Items can be:
 			([{}])		parenthesis or (curly/square) brackets
 					(this can be changed with the
 					'matchpairs' option)
@@ -916,16 +919,20 @@ stored in the viminfo file and restored when starting Vim.
 			#if/#else/#endif makes the movement linewise.
 
 						*[(*
-[(			go to [count] previous unmatched '('.  {not in Vi}
+[(			go to [count] previous unmatched '('.
+			|exclusive| motion. {not in Vi}
 
 						*[{*
-[{			go to [count] previous unmatched '{'.  {not in Vi}
+[{			go to [count] previous unmatched '{'.
+			|exclusive| motion. {not in Vi}
 
 						*])*
-])			go to [count] next unmatched ')'.  {not in Vi}
+])			go to [count] next unmatched ')'.
+			|exclusive| motion. {not in Vi}
 
 						*]}*
-]}			go to [count] next unmatched '}'.  {not in Vi}
+]}			go to [count] next unmatched '}'.
+			|exclusive| motion. {not in Vi}
 
 The above four commands can be used to go to the start or end of the current
 code block.  It is like doing "%" on the '(', ')', '{' or '}' at the other
@@ -938,25 +945,25 @@ bring you back to the switch statement.
 			similar structured language).  When not before the
 			start of a method, jump to the start or end of the
 			class.  When no '{' is found after the cursor, this is
-			an error.  {not in Vi}
+			an error.  |exclusive| motion. {not in Vi}
 						*]M*
 ]M			Go to [count] next end of a method (for Java or
 			similar structured language).  When not before the end
 			of a method, jump to the start or end of the class.
 			When no '}' is found after the cursor, this is an
-			error. {not in Vi}
+			error. |exclusive| motion. {not in Vi}
 						*[m*
 [m			Go to [count] previous start of a method (for Java or
 			similar structured language).  When not after the
 			start of a method, jump to the start or end of the
 			class.  When no '{' is found before the cursor this is
-			an error. {not in Vi}
+			an error. |exclusive| motion. {not in Vi}
 						*[M*
 [M			Go to [count] previous end of a method (for Java or
 			similar structured language).  When not after the
 			end of a method, jump to the start or end of the
 			class.  When no '}' is found before the cursor this is
-			an error. {not in Vi}
+			an error. |exclusive| motion. {not in Vi}
 
 The above two commands assume that the file contains a class with methods.
 The class definition is surrounded in '{' and '}'.  Each method in the class
@@ -979,23 +986,23 @@ Using "3[m" will jump to the start of the class.
 
 						*[#*
 [#			go to [count] previous unmatched "#if" or "#else".
-			{not in Vi}
+			|exclusive| motion. {not in Vi}
 
 						*]#*
-]#			go to [count] next unmatched "#else" or "#endif".  {not
-			in Vi}
+]#			go to [count] next unmatched "#else" or "#endif".
+			|exclusive| motion. {not in Vi}
 
 These two commands work in C programs that contain #if/#else/#endif
 constructs.  It brings you to the start or end of the #if/#else/#endif where
 the current line is included.  You can then use "%" to go to the matching line.
 
 						*[star* *[/*
-[*  or  [/		go to [count] previous start of a C comment "/*".  {not
-			in Vi}
+[*  or  [/		go to [count] previous start of a C comment "/*".
+			|exclusive| motion. {not in Vi}
 
 						*]star* *]/*
-]*  or  ]/		go to [count] next end of a C comment "*/".  {not
-			in Vi}
+]*  or  ]/		go to [count] next end of a C comment "*/".
+			|exclusive| motion. {not in Vi}
 
 
 						*H*

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0.  Last change: 2001 Sep 16
+*cmdline.txt*   For Vim version 6.1a.  Last change: 2002 Jan 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -78,7 +78,8 @@ CTRL-V		Insert next non-digit literally.  Up to three digits form the
 		Note: Under Windows CTRL-V is often mapped to paste text.
 		Use CTRL-Q instead then.
 							*c_CTRL-Q*
-CTRL-Q		Same as CTRL-V.
+CTRL-Q		Same as CTRL-V.  But with some terminals it is used for
+		control flow, it doesn't work then.
 
 							*c_<Left>*
 <Left>		cursor left
@@ -547,7 +548,7 @@ commands ":write" and ":global" have the whole file (1,$) as default.
 If more line specifiers are given than required for the command, the first
 one(s) will be ignored.
 
-Line numbers may be specified with:			*:range* *E14*
+Line numbers may be specified with:		*:range* *E14* *{address}*
 	{number}	an absolute line number
 	.		the current line			  *:.*
 	$		the last line in the file		  *:$*
@@ -677,8 +678,12 @@ The file name modifiers can be used after "%", "#", "#n", "<cfile>", "<sfile>",
 These are not available when Vim has been compiled without the |+modify_fname|
 feature.
 These modifiers can be given, in this order:
-	:p	Make file name a full path.  Must be the first modifier.  If
-		the name is a directory a path separator is added at the end.
+	:p	Make file name a full path.  Must be the first modifier.  Also
+		changes "~/" (and "~user/" for Unix and VMS) to the path for
+		the home directory.  If the name is a directory a path
+		separator is added at the end.  For a file name that does not
+		exist and does not have an absolute path the result is
+		unpredictable.
 	:~	Reduce file name to be relative to the home directory, if
 		possible.  File name is unmodified if it is not below the home
 		directory.

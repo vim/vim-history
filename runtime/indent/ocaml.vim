@@ -3,7 +3,8 @@
 " Maintainers:  Mike Leary    <leary@nwlink.com>
 "               Markus Mottl  <markus@oefai.at>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/indent/ocaml.vim
-" Last Change:  2001 Sep 02 - set option 'expandtab'  (MM)
+" Last Change:  2001 Oct 03 - minor addition  (MM)
+"               2001 Sep 02 - set option 'expandtab'  (MM)
 "               2001 Aug 29 - revised all rules  (MM)
 
 " Only load this indent file when no other was loaded.
@@ -42,7 +43,7 @@ function GetOCamlIndent()
   endif
 
   " Add a 'shiftwidth' after lines ending with:
-  if lline =~ '\(:\|=\|->\|(\|[\|{\|[|\|[<\|(\*\|\<\(begin\|struct\|sig\|functor\|object\|try\|do\|if\|then\|else\|fun\|function\|parser\)\>\)\s*$'
+  if lline =~ '\(:\|=\|->\|<-\|(\|[\|{\|[|\|[<\|(\*\|\<\(begin\|struct\|sig\|functor\|object\|try\|do\|if\|then\|else\|fun\|function\|parser\)\>\)\s*$'
     let ind = ind + &sw
   endif
 

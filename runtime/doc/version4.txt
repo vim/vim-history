@@ -1,4 +1,4 @@
-*version4.txt*  For Vim version 6.0.  Last change: 2001 Sep 03
+*version4.txt*  For Vim version 6.1a.  Last change: 2001 Dec 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -76,7 +76,7 @@ recover the file---don't use 4.0.			|swap-file|
 "vim -w scriptout" used to append to the scriptout file.  Since this was
 illogical, it now creates a new file.  An existing file is not overwritten
 (to avoid destroying an existing file for those who rely on the appending).
-							|-w|
+[This was removed again later]					|-w|
 
 
 Backspace and Delete keys				*backspace-delete*

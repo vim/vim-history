@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0.  Last change: 2001 Sep 03
+*term.txt*      For Vim version 6.1a.  Last change: 2002 Feb 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,7 +182,7 @@ proper key code, add these lines to your ~/.Xdefaults file:
 		<Key>End: string("0x1b") string("[8~")
 
 						*xterm-8bit* *xterm-8-bit*
-Xterm can be run in a mode where it uses 8-bit escape sequences.  The CSI ode
+Xterm can be run in a mode where it uses 8-bit escape sequences.  The CSI code
 is used instead of <Esc>[.  The advantage is that an <Esc> can quickly be
 recognized in Insert mode, because it can't be confused with the start of a
 special key.

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0.  Last change: 2001 Sep 16
+*pattern.txt*   For Vim version 6.1a.  Last change: 2002 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,6 +68,7 @@ N			Repeat the latest "/" or "?" [count] times in
 				   in the current line
 			Only whole keywords are searched for, like with the
 			command "/\<keyword\>".  (exclusive)  {not in Vi}
+			'ignorecase' is used, 'smartcase' is not.
 
 							*#*
 #			Same as "*", but search backward.  The pound sign
@@ -99,6 +100,8 @@ gd			Goto local Declaration.  When the cursor is on a local
 			really check the syntax, it only searches for a match
 			with the keyword.  If included files also need to be
 			searched use the commands listed in |include-search|.
+			After this command |n| searches forward for the next
+			match (not backward).
 			{not in Vi}
 
 							*gD*
@@ -356,9 +359,9 @@ More explanation and examples below, follow the links.
 |/\%^|	\%^	\%^	beginning of file |/zero-width|		*E71*
 |/\%$|	\%$	\%$	end of file |/zero-width|
 |/\%#|	\%#	\%#	cursor position |/zero-width|
-|/\%l|	\%23l	\%23l	line number |/zero-width|
-|/\%c|	\%23c	\%23c	column number |/zero-width|
-|/\%v|	\%23v	\%23v	virtual column number |/zero-width|
+|/\%l|	\%23l	\%23l	in line 23 |/zero-width|
+|/\%c|	\%23c	\%23c	in column 23 |/zero-width|
+|/\%v|	\%23v	\%23v	in virtual column 23 |/zero-width|
 
 Character classes {not in Vi}:
 |/\i|	\i	\i	identifier character (see 'isident' option)
@@ -551,6 +554,8 @@ endless loop.  If you try it, you will get this error message: >
 	a[bc]\{-}[cd]		"abc" in "abcd"
 	a[bc]*[cd]		"abcd" in "abcd"
 
+	The } may optionally be preceded with a backslash: \{n,m\}.
+
 							*/\@=*
 \@=	Matches the preceding atom with zero width. {not in Vi}
 	Like '(?=pattern)" in Perl.
@@ -565,8 +570,9 @@ endless loop.  If you try it, you will get this error message: >
 	"foobarfoo", because it tries match "foo" in the same position where
 	"bar" matched.
 
-	Note that using "\&" works exactly the same as using "\@=": "foo\&.."
-	is the same as "\(foo\)\@=..".  But using "\&" is easier.
+	Note that using "\&" works the same as using "\@=": "foo\&.." is the
+	same as "\(foo\)\@=..".  But using "\&" is easier, you don't need the
+	braces.
 
 
 							*/\@!*
@@ -647,8 +653,9 @@ An ordinary atom can be:
 			start-of-line
 
 							*/$*
-$	At end of pattern or in front of "\|" or "\)": matches end-of-line
-	<EOL>; at other positions, matches literal '$'. |/zero-width|
+$	At end of pattern or in front of "\|" or "\)" ("|" or ")" after "\v"):
+	matches end-of-line <EOL>; at other positions, matches literal '$'.
+	|/zero-width|
 
 							*/\$*
 \$	At any position, matches literal '$'.
@@ -927,7 +934,7 @@ x	A single character, with no special meaning, matches itself
 	  Use one of the other atoms above when possible.  Example: "\d" is
 	  much faster than "[0-9]" and matches the same characters.
 
-						*/\%[]* *E69* *E70*
+						*/\%[]* *E69* *E70* *E369*
 \%[]	A list of optionally matched atoms.  This always matches.
 	It matches as much of the list of atoms it contains as possible.  Thus
 	it stops at the first atom that doesn't match.  For example: >

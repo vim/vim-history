@@ -2023,9 +2023,9 @@ msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "Szukanie i Zamiana (u¿yj '\\\\' do szukania '\\')"
 
 #: gui_x11.c:1419
-msgid "Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"
+msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr ""
-"Vim: (ec1) Nie mogê zarezerwowaæ sk³adu za³o¿yæ mapy kolorów, pewne kolory "
+"Vim E458: Nie mogê zarezerwowaæ sk³adu za³o¿yæ mapy kolorów, pewne kolory "
 "mog± byæ niezgodne"
 
 #: gui_x11.c:1971

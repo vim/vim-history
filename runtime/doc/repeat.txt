@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0.  Last change: 2001 Sep 13
+*repeat.txt*    For Vim version 6.1a.  Last change: 2001 Dec 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -55,7 +55,7 @@ The global commands work by first scanning through the [range] lines and
 marking each line where a match occurs (for a multi-line pattern, only the
 start of the match matters).
 In a second scan the [cmd] is executed for each marked line with its line
-number prepended.  If a line is changed or deleted its mark disappears.
+number prepended.  If a line is deleted its mark disappears.
 The default for [range] is the whole buffer (1,$).  Use "CTRL-C" to interrupt
 the command.  If an error message is given for a line, the command for that
 line is aborted and the global command continues with the next matching line.
@@ -138,7 +138,12 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 
 :so[urce]! {file}	Read Vim commands from {file}.  These are commands
 			that are executed from Normal mode, like you type
-			them.  {not in Vi}
+			them.
+			When used after |:global|, |:argdo|, |:windo|,
+			|:bufdo|, in a loop or when another command follows
+			the display won't be updated while executing the
+			commands.
+			{not in Vi}
 
 							*:ru* *:runtime*
 :ru[ntime][!] {file} ..

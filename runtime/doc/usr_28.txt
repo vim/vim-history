@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0.  Last change: 2001 Sep 04
+*usr_28.txt*	For Vim version 6.1a.  Last change: 2001 Oct 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -140,10 +140,14 @@ use Visual selection:
 It is sometimes difficult to see or remember where a fold is located, thus
 where a |zo| command would actually work.  To see the defined folds: >
 
-	:set foldcolumn
+	:set foldcolumn=4
 
 This will show a small column on the left of the window to indicate folds.
-A "-" is shown at the start of each fold.  A number indicates the fold level.
+A "+" is shown for a closed fold.  A "-" is shown at the start of each open
+fold and "|" at following lines of the fold.
+
+You can use the mouse to open a fold by clicking on the "+" in the foldcolumn.
+Clicking on the "-" or a "|" below it will close an open fold.
 
 To open all folds at the cursor line use |zO|.
 To close all folds at the cursor line use |zC|.

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0.  Last change: 2001 Sep 19
+*syntax.txt*    For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -407,6 +407,72 @@ abel_obsolete_ok		obsolete keywords are statements, not errors
 abel_cpp_comments_illegal	do not interpret '//' as inline comment leader
 
 
+ADA							*ada.vim* *ada-syntax*
+
+This mode is designed for the 1995 edition of Ada ("Ada95"), which
+includes support for objected-programming, protected types, and so on.
+It handles code written for the original Ada language
+("Ada83" or "Ada87") as well, though Ada83 code which uses Ada95-only
+keywords will be wrongly colored (such code should be fixed anyway).
+For more information about Ada, see http://www.adapower.com.
+
+The Ada mode handles a number of situations cleanly.
+For example, it knows that the "-" in "-5" is a number, but the same
+character in "A-5" is an operator.  Normally, a "with" or "use" clause
+referencing another compilation unit is colored the same way as C's
+"#include" is colored.  If you have "Conditional" or "Repeat"
+groups colored differently, then "end if" and "end loop" will be
+colored as part of those respective groups.
+You can set these to different colors using vim's "highlight" command
+(e.g., to change how loops are displayed, enter the command
+":hi Repeat" followed by the color specification; on simple terminals
+the color specification ctermfg=White often shows well).
+
+There are several options you can select in this Ada mode.
+To enable them, assign a value to the option.  For example, to turn one on:
+   let ada_standard_types = 1
+To disable them use ":unlet".  Example:
+   unlet ada_standard_types = 1
+You can just use ":" and type these into the command line to set these
+temporarily before loading an Ada file.  You can make these option settings
+permanent by adding the "let" command(s), without a colon,
+to your "~/.vimrc" file.
+
+Here are the Ada mode options:
+
+Variable                 Action
+ada_standard_types       Highlight types in package Standard (e.g., "Float")
+ada_space_errors         Highlight extraneous errors in spaces...
+ada_no_trail_space_error   but ignore trailing spaces at the end of a line
+ada_no_tab_space_error     but ignore tabs after spaces
+ada_withuse_ordinary     Show "with" and "use" as ordinary keywords
+                           (when used to reference other compilation units
+                           they're normally highlighted specially).
+ada_begin_preproc        Show all begin-like keywords using the coloring
+                           of C preprocessor commands.
+
+Even on a slow (90Mhz) PC this mode works quickly, but if you find
+the performance unnacceptable, turn on ada_withuse_ordinary.
+
+
+ANT						*ant.vim* *ant-syntax*
+
+The ant syntax file provides syntax highlighting for javascript and python
+by default. Syntax highlighting for other script languages can be installed
+by the function AntSyntaxScript(), which takes the tag name as first argument
+and the script syntax file name as second argument. Example: >
+
+	:call AntSyntaxScript('perl', 'perl.vim')
+
+will install syntax perl highlighting for the following ant code >
+
+	<script language = 'perl'><![CDATA[
+	    # everything inside is highlighted as perl
+	]]></script>
+
+See |mysyntaxfile-add| for installing script languages permanently.
+
+
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
 ASSEMBLY	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
 		*asm68k-syntax*
@@ -673,10 +739,13 @@ The erlang highlighting supports Erlang (ERicsson LANGuage).
 Erlang is case sensitive and default extension is ".erl".
 
 If you want to disable keywords highlighting, put in your .vimrc: >
-	:let erlang_keywords=1
+	:let erlang_keywords = 1
+If you want to disable built-in-functions highlighting, put in your
+.vimrc file: >
+	:let erlang_functions = 1
 If you want to disable special characters highlighting, put in
 your .vimrc: >
-	:let erlang_characters=1
+	:let erlang_characters = 1
 
 
 FORM						*form.vim* *form-syntax*
@@ -1156,6 +1225,42 @@ $VIMRUNTIME/syntax/syntax.vim).
   mv_combstruct mv_liesymm	mv_plots	mv_tensor
   mv_difforms	 mv_linalg	mv_plottools	mv_totorder
   mv_finance	 mv_logic	mv_powseries
+
+
+MOO						*moo.vim* *moo-syntax*
+
+If you use C-style comments inside expressions and find it mangles your
+highlighting, you may want to use extended (slow!) matches for C-style
+comments: >
+
+	:let moo_extended_cstyle_comments = 1
+
+To disable highlighting of pronoun substitution patterns inside strings: >
+
+	:let moo_no_pronoun_sub = 1
+
+To disable highlighting of the regular expression operator '%|', and matching
+'%(' and '%)' inside strings: >
+
+	:let moo_no_regexp = 1
+
+Unmatched double quotes can be recognized and highlighted as errors: >
+
+	:let moo_unmatched_quotes = 1
+
+To highlight builtin properties (.name, .location, .programmer etc.): >
+
+	:let moo_builtin_properties = 1
+
+Unknown builtin functions can be recognized and highlighted as errors. If you
+use this option, add your own extensions to the mooKnownBuiltinFunction group.
+To enable this option: >
+
+	:let moo_unknown_builtin_functions = 1
+
+An example of adding sprintf() to the list of known builtin functions: >
+
+	:syn keyword mooKnownBuiltinFunction sprintf contained
 
 
 MSQL						*msql.vim* *msql-syntax*
@@ -1747,6 +1852,19 @@ For syncing, minlines defaults to 100.  If you prefer another value, you can
 set "tf_minlines" to the value you desire.  Example: >
 
 	:let tf_minlines = your choice
+
+XML						*xml.vim* *xml-syntax*
+
+Xml namespaces are highlighted by default. This can be inhibited by
+setting a global variable: >
+
+	:let g:xml_namespace_transparent=1
+<
+							*xml-folding*
+The xml syntax file provides syntax |folding| (see |:syn-fold|) between
+start and end tags. This can be turned on by >
+
+	:set foldmethod=syntax
 
 
 X Pixmaps (XPM)					*xpm.vim* *xpm-syntax*
@@ -3058,7 +3176,7 @@ guibg={color-name}					*highlight-guibg*
 	Example: >
 	    :hi comment guifg='salmon pink'
 <
-							*gui-colors* *E242*
+							*gui-colors*
 	Suggested color names (these are available on most systems):
 	    Red		LightRed	DarkRed
 	    Green	LightGreen	DarkGreen	SeaGreen
@@ -3367,7 +3485,10 @@ Note: Do these settings BEFORE doing ":syntax on".  Otherwise the colors may
 be wrong.
 							*xiterm* *rxvt*
 The above settings have been mentioned to work for xiterm and rxvt too.
-
+But for using 16 colors in an rxvt these should work with terminfo: >
+	:set t_AB=<Esc>[%?%p1%{8}%<%t25;%p1%{40}%+%e5;%p1%{32}%+%;%dm
+	:set t_AF=<Esc>[%?%p1%{8}%<%t22;%p1%{30}%+%e1;%p1%{22}%+%;%dm
+<
 							*colortest.vim*
 To test your color setup, a file has been included in the Vim distribution.
 To use it, execute these commands: >

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 sep 09
+" Last Change:	2001 Dec 22
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -14,13 +14,13 @@ scriptencoding iso-8859-1
 menutrans &Help			&Help
 menutrans &Overview<Tab><F1>	&Overzicht<Tab><F1>
 menutrans &How-to\ links	&Hoe-doe-ik\ lijst
-menutrans &User\ Manual		Gebruikers\ handleiding
+menutrans &User\ Manual		Gebruikershandleiding
 "menutrans &GUI			&GUI
 menutrans &Credits		&Met\ dank\ aan
 menutrans Co&pying		&Copyright
 menutrans &Find\.\.\.		&Zoeken\.\.\.
 menutrans &Version		&Versie
-menutrans &About		&Introductie\ scherm
+menutrans &About		&Introductiescherm
 
 " File menu
 menutrans &File				&Bestand
@@ -33,7 +33,7 @@ menutrans Save\ &As\.\.\.<Tab>:sav	Bewaren\ als\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	Toon\ diff\ met\.\.\.
 menutrans Split\ Patched\ &By\.\.\.	Toon\ gewijzigd\ door\.\.\.
 menutrans &Print			Af&drukken
-menutrans Sa&ve-Exit<Tab>:wqa		Bewaren\ en\ Afluiten<Tab>:wqa
+menutrans Sa&ve-Exit<Tab>:wqa		Bewaren\ en\ Afsluiten<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Afsluiten<Tab>:qa
 
 " Edit menu
@@ -53,56 +53,56 @@ menutrans Find\ and\ Rep&lace\.\.\.	Zoeken\ en\ &Vervangen\.\.\.
 menutrans Find\ and\ Rep&lace<Tab>:%s	Zoeken\ en\ &Vervangen<Tab>:%s
 menutrans Find\ and\ Rep&lace		Zoeken\ en\ &Vervangen
 menutrans Find\ and\ Rep&lace<Tab>:s	Zoeken\ en\ &Vervangen<Tab>:s
-menutrans Settings\ &Window		Opties\ Venster
+menutrans Settings\ &Window		Optievenster
 menutrans &Global\ Settings		Globale\ Opties
-menutrans F&ile\ Settings		Bestand\ Opties
-menutrans C&olor\ Scheme		Kleuren\ Schema
-menutrans &Keymap			Toetsenbord\ Indeling
+menutrans F&ile\ Settings		Bestandopties
+menutrans C&olor\ Scheme		Kleurenschema
+menutrans &Keymap			Toetsenbordindeling
 
 " Edit.Global Settings
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Flip\ Patroon\ Kleuring<Tab>:set\ hls!
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Flip\ Patroonkleuring<Tab>:set\ hls!
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic!	Flip\ Negeren\ hoofd/kleine\ letters<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!	Flip\ Showmatch<Tab>:set\ sm!
-menutrans &Context\ lines		Context\ regels
+menutrans &Context\ lines		Contextregels
 menutrans &Virtual\ Edit		Virtueel\ positioneren
 menutrans Never				Nooit
-menutrans Block\ Selection		Bij\ Blok\ Selectie
-menutrans Insert\ mode			In\ Invoeg\ mode
-menutrans Block\ and\ Insert		Bij\ Blok\ Selectie\ en\ Invoeg\ mode
+menutrans Block\ Selection		Bij\ Blokselectie
+menutrans Insert\ mode			In\ Invoegmode
+menutrans Block\ and\ Insert		Bij\ Blokselectie\ en\ Invoegmode
 menutrans Always			Altijd
-menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Flip\ Invoeg\ Mode<Tab>:set\ im!
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Flip\ Invoegmode<Tab>:set\ im!
 menutrans Search\ &Path\.\.\.		Zoekpad\.\.\.
 menutrans Ta&g\ Files\.\.\.		Tag\ Bestanden\.\.\.
-menutrans Toggle\ &Toolbar		Toon/verberg\ Knoppen\ balk
+menutrans Toggle\ &Toolbar		Toon/verberg\ Knoppenbalk
 menutrans Toggle\ &Bottom\ Scrollbar	Toon/verberg\ onderste\ schuifbalk
 menutrans Toggle\ &Left\ Scrollbar	Toon/verberg\ linker\ schuifbalk
 menutrans Toggle\ &Right\ Scrollbar	Toon/verberg\ rechter\ schuifbalk
 menutrans None				Geen
 
 " Edit.File Settings
-menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Flip\ regel\ nummers<Tab>:set\ nu!
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Flip\ regelnummers<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Flip\ list\ mode<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Flip\ regel\ afbreken<Tab>:set\ wrap!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Flip\ regelafbreken<Tab>:set\ wrap!
 menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Flip\ afbreken\ op\ woordgrens<tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et!		Flip\ tabs\ expanderen<Tab>:set\ et!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Flip\ tabexpansie<Tab>:set\ et!
 menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Flip\ automatisch\ indenteren<Tab>:set\ ai!
 menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Flip\ C-indenteren<Tab>:set\ cin!
-menutrans Te&xt\ Width\.\.\.				Tekst\ breedte\.\.\.
-menutrans &File\ Format\.\.\.				Bestands\ formaat\.\.\.
+menutrans Te&xt\ Width\.\.\.				Tekstbreedte\.\.\.
+menutrans &File\ Format\.\.\.				Bestandsformaat\.\.\.
 
 " Tools menu
 menutrans &Tools			&Gereedschap
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Spring\ naar\ Tag<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Spring\ &Terug<Tab>^T
-menutrans Build\ &Tags\ File		Genereer\ &Tags\ Bestand
+menutrans Build\ &Tags\ File		Genereer\ &Tagsbestand
 menutrans &Make<Tab>:make		&Make\ uitvoeren<Tab>:make
-menutrans &List\ Errors<Tab>:cl		&Fouten\ lijst<Tab>:cl
-menutrans L&ist\ Messages<Tab>:cl!	&Berichten\ lijst<Tab>:cl!
+menutrans &List\ Errors<Tab>:cl		&Foutenlijst<Tab>:cl
+menutrans L&ist\ Messages<Tab>:cl!	&Berichtenlijst<Tab>:cl!
 menutrans &Next\ Error<Tab>:cn		Volgende\ Fout<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	Vorige\ Fout<Tab>:cp
 menutrans &Older\ List<Tab>:cold	&Oudere\ Lijst<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	&Nieuwere\ Lijst<Tab>:cnew
-menutrans Error\ &Window		Fouten\ Venster
+menutrans Error\ &Window		Foutenvenster
 menutrans &Update<Tab>:cwin		&Aanpassen<Tab>:cwin
 menutrans &Open<Tab>:copen		&Openen<Tab>:copen
 menutrans &Close<Tab>:cclose		&Sluiten<Tab>:cclose
@@ -112,20 +112,20 @@ menutrans &Set\ Compiler		Kies\ Compiler
 
 " Tools.Folding
 menutrans &Enable/Disable\ folds<Tab>zi	Flip\ tonen\ folds<Tab>zi
-menutrans &View\ Cursor\ Line<Tab>zv	Toon\ cursor\ regel<Tab>zv
-menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	Toon\ alleen\ cursor\ regel<Tab>zMzx
+menutrans &View\ Cursor\ Line<Tab>zv	Toon\ cursorregel<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	Toon\ alleen\ cursorregel<Tab>zMzx
 menutrans C&lose\ more\ folds<Tab>zm	Sluit\ meer\ folds<Tab>zm
 menutrans &Close\ all\ folds<Tab>zM	Sluit\ alle\ folds<Tab>zM
 menutrans O&pen\ more\ folds<Tab>zr	Open\ meer\ folds<Tab>zr
 menutrans &Open\ all\ folds<Tab>zR	Open\ alle\ folds<Tab>zR
-menutrans Fold\ Met&hod			Fold\ wijze
+menutrans Fold\ Met&hod			Foldwijze
 menutrans M&anual			Handmatig
-menutrans I&ndent			Kantlijn
+menutrans I&ndent			Inspringing
 menutrans E&xpression			Expressie
 menutrans S&yntax			Syntax
 menutrans &Diff				Wijzigingen
 menutrans Ma&rker			Markeringen
-menutrans Create\ &Fold<Tab>zf		creëer\ Fold<Tab>zf
+menutrans Create\ &Fold<Tab>zf		maak\ Fold<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		verwijder\ Fold<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	verwijder\ alle\ Folds<Tab>zD
 menutrans Fold\ column\ &width		Fold\ kolom\ breedte
@@ -149,9 +149,9 @@ menutrans &New<Tab>^Wn			&Nieuw<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Splitsen<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	Splits\ naar\ #<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	Splits\ &Vertikaal<Tab>^Wv
-menutrans Split\ File\ E&xplorer	Splits\ Bestand\ verkenner
+menutrans Split\ File\ E&xplorer	Splits\ Bestandverkenner
 menutrans &Close<Tab>^Wc		&Sluiten<Tab>^Wc
-menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ alle\ anderen<Tab>^Wo
+menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ alle\ andere<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Volgende<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Vorige<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=		&Gelijke\ afmetingen<Tab>^W=

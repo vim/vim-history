@@ -1,10 +1,10 @@
-*gui_w32.txt*   For Vim version 6.0.  Last change: 2001 Sep 10
+*gui_w32.txt*   For Vim version 6.1a.  Last change: 2002 Feb 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Vim's Graphical User Interface				*gui-w32* *win32-gui*
+Vim's Win32 Graphical User Interface			*gui-w32* *win32-gui*
 
 1. Starting the GUI		|gui-w32-start|
 2. Vim as default editor	|vim-default-editor|
@@ -38,7 +38,7 @@ fonts that have the same point size don't have the same pixel size!
 Additionally, the positioning of the fonts must be the same (ascent and
 descent).
 
-The Win32 GUI has an extra menu item:  "Window/Select Font".  It brings up the
+The Win32 GUI has an extra menu item:  "Edit/Select Font".  It brings up the
 standard Windows font selector.
 
 Setting the menu height doesn't work for the Win32 GUI.
@@ -197,7 +197,8 @@ cancel an operation.  Use CTRL-Break for that.
 							*CTRL-V-alternative*
 Since CTRL-V is used to paste, you can't use it to start a blockwise Visual
 selection.  You can use CTRL-Q instead.  You can also use CTRL-Q in Insert
-mode and Command-line mode to get the old meaning of CTRL-V.
+mode and Command-line mode to get the old meaning of CTRL-V.  But CTRL-Q
+doesn't work for terminals when it's used for control flow.
 
 NOTE: The clipboard support still has a number of bugs.  See |todo|.
 
@@ -304,7 +305,8 @@ as the traditional interface shared with the console version.
 
 The dialogs displayed by the "confirm" family (i.e. the 'confirm' option,
 |:confirm| command and |confirm()| function are GUI-based rather than the
-console-based ones used by other versions.  There is no option to change this.
+console-based ones used by other versions.  The 'c' flag in 'guioptions'
+changes this.
 
 
 6.2 File Browsers

@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_05.txt*	For Vim version 6.1a.  Last change: 2001 Nov 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -111,7 +111,7 @@ file will have the same name as the original file with "~" added.  See |07.4|
 	set history=50
 
 Keep 50 commands and 50 search patterns in the history.  Use another number if
-you want to remember less or more lines.
+you want to remember fewer or more lines.
 >
 
 	set ruler
@@ -261,7 +261,7 @@ example: >
 You need to type the \ and the p quickly after another, so that Vim knows they
 belong together.
 
-The ":map" command (with no arguments) lists out your current mappings.  At
+The ":map" command (with no arguments) lists your current mappings.  At
 least the ones for Normal mode.  More about mappings in section |40.1|.
 
 ==============================================================================
@@ -353,7 +353,7 @@ plugins are in $VIMRUNTIME/ftplugin.
 
 USING A FILETYPE PLUGIN
 
-You can add a filetype plugins by dropping it in the right directory.  The
+You can add a filetype plugin by dropping it in the right directory.  The
 name of this directory is in the same directory mentioned above for global
 plugins, but the last part is "ftplugin".  Suppose you have found a plugin for
 the "stuff" filetype, and you are on Unix.  Then you can move this file to the

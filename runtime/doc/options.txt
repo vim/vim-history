@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0.  Last change: 2002 Feb 18
+*options.txt*   For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -43,7 +43,7 @@ achieve special effects.  These options come in three forms:
 :se[t] inv{option}	Toggle option: Invert value. {not in Vi}
 
 				*:set-default* *:set-&* *:set-&vi* *:set-&vim*
-:se[t] {option}&	Reset option to its default value.  May Depend on the
+:se[t] {option}&	Reset option to its default value.  May depend on the
 			current value of 'compatible'. {not in Vi}
 :se[t] {option}&vi	Reset option to its Vi default value. {not in Vi}
 :se[t] {option}&vim	Reset option to its Vim default value. {not in Vi}
@@ -247,7 +247,9 @@ You will not get back the 'list' value as it was the last time you edited
 
 							*:setl* *:setlocal*
 :setl[ocal] ...		Like ":set" but set only the value local to the
-			current buffer or window (if there is one).
+			current buffer or window.  Not all options have a
+			local value.  If the option does not have a local
+			value the global value is set.
 			With the "all" argument: display all local option's
 			local values.
 			Without argument: Display all local option's local
@@ -395,7 +397,7 @@ the system, mostly it is something like 256 or 1024 characters.
 <
 							*NetBSD-backspace*
 			Note about NetBSD: If your backspace doesn't produce
-			the right code, try this this: >
+			the right code, try this: >
 				xmodmap -e "keycode 22 = BackSpace"
 <			If this works, add this in your .Xmodmap file: >
 				keysym 22 = BackSpace
@@ -856,7 +858,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to buffer
 			{not in Vi}
 	This option should be set before editing a binary file.  You can also
-	use the "-b" Vim argument.  When this option is switched on a few
+	use the |-b| Vim argument.  When this option is switched on a few
 	options will be changed (also when it already was on):
 		'textwidth'  will be set to 0
 		'wrapmargin' will be set to 0
@@ -1220,7 +1222,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|format-comments|.  See |option-backslash| about using backslashes to
 	insert a space.
 
-						*'commentstring'* *'cms'* *E221*
+						*'commentstring'* *'cms'*
 'commentstring' 'cms'	string	(default "/*%s*/")
 			local to buffer
 			{not in Vi}
@@ -2071,6 +2073,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				Vim+Vi	MS-DOS, MS-Windows OS/2: "dos,unix",
 				Vim	Unix: "unix,dos",
 				Vim	Mac: "mac,unix,dos",
+				Vi	Cygwin: "unix,dos",
 				Vi	others: "")
 			global
 			{not in Vi}
@@ -2088,7 +2091,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  edit a file, a check is done for the <EOL>:
 	  1. If all lines end in <CR><NL>, and 'fileformats' includes "dos",
 	     'fileformat' is set to "dos".
-	  2. If a <NL> is found and 'fileformats' includes "unix, 'fileformat'
+	  2. If a <NL> is found and 'fileformats' includes "unix", 'fileformat'
 	     is set to "unix".  Note that when a <NL> is found without a
 	     preceding <CR>, "unix" is preferred over "dos".
 	  3. If 'fileformats' includes "mac", 'fileformat' is set to "mac".
@@ -2251,7 +2254,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			feature}
 	Sets the fold level: Folds with a higher level will be closed.
 	Setting this option to zero will close all folds.  Higher numbers will
-	close less folds.
+	close fewer folds.
 	This option is set by commands like |zm|, |zM| and |zR|.
 	See |fold-foldlevel|.
 
@@ -2980,7 +2983,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	mode.
 	Note that this option changes when using CTRL-^ in Insert mode
 	|i_CTRL-^|.
-	The value is set to 1 when defining a new |:lmap| mapping.
+	The value is set to 1 when setting 'keymap' to a valid keymap name.
 	It is also used for the argument of commands like "r" and "f".
 	The value 0 may not work correctly with Athena and Motif with some XIM
 	methods.  Use 'imdisable' to disable XIM then.
@@ -2998,7 +3001,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 		2	:lmap is off and IM is ON
 	Note that this option changes when using CTRL-^ in Insert mode
 	|c_CTRL-^|.
-	The value is set to 1 when defining a new |:lmap| mapping.
+	The value is set to 1 when it is not -1 and setting the 'keymap'
+	option to a valid keymap name.
 	The value 0 may not work correctly with Athena and Motif with some XIM
 	methods.  Use 'imdisable' to disable XIM then.
 
@@ -3070,7 +3074,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	cursor position is always restored, thus the cursor may be moved.
 	Normally this option would be set to call a function: >
 		:set indentexpr=GetMyIndent()
-<	Error messages will be surpressed, unless the 'debug' option contains
+<	Error messages will be suppressed, unless the 'debug' option contains
 	"msg".
 	See |indent-expression|.  Also see |eval-sandbox|.
 	NOTE: This option is made empty when 'compatible' is set.
@@ -3138,8 +3142,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The characters specified by this option are included in file names and
 	path names.  Filenames are used for commands like "gf", "[i" and in
 	the tags file.  It is also used for "\f" in a |pattern|.
-	Characters that are defined by the C function isalpha() are also
-	always included (this depends on the character set and "locale").
 	Multi-byte characters 256 and above are always included, only the
 	characters up to 255 are specified with this option.
 	For UTF-8 the characters 0xa0 to 0xff are included as well.
@@ -3147,10 +3149,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Note that on systems using a backslash as path separator, Vim tries to
 	do its best to make it work as you would expect.  That is a bit
 	tricky, since Vi originally used the backslash to escape special
-	characters.  Vim on will not remove a backslash in front of a normal
-	file name character on these systems, but it will on Unix and alikes.
-	The '&' and '^' are not included by default, because these are special
-	for cmd.exe.
+	characters.  Vim will not remove a backslash in front of a normal file
+	name character on these systems, but it will on Unix and alikes.  The
+	'&' and '^' are not included by default, because these are special for
+	cmd.exe.
 
 	The format of this option is a list of parts, separated with commas.
 	Each part can be a single character number or a range.  A range is two
@@ -3274,6 +3276,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{only available when compiled with the |+keymap|
 			feature}
 	Name of a keyboard mapping.  See |mbyte-keymap|.
+	Setting this option to a valid keymap name has the side effect of
+	setting 'iminsert' to one, so that the keymap becomes effective.
+	'imsearch' is also set to one, unless it was -1
 
 					*'keymodel'* *'km'*
 'keymodel' 'km'		string	(default "")
@@ -3711,7 +3716,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	a pointer transit may activate a window unintentionally.
 
 			*'mousehide'* *'mh'* *'nomousehide'* *'nomh'*
-'mousehide' 'mh'	boolean	(default on
+'mousehide' 'mh'	boolean	(default on)
 			global
 			{not in Vi}
 			{only works in the GUI}
@@ -4093,7 +4098,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	On VMS machines the default is to send the file to either the default
 	or currently specified printdevice: >
 
-	    system('print' . (&printdevice == '' ? '' : ' /queue=' . 
+	    system('print' . (&printdevice == '' ? '' : ' /queue=' .
                         &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)
 <
 	If you change this option, using a function is an easy way to avoid
@@ -4118,7 +4123,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	call fails.
 	This option cannot be set from a |modeline|, for security reasons.
 
-						*'printfont'* *'pfn'*
+						*'printfont'* *'pfn'* *E448*
 'printfont' 'pfn'	string	(default "courier")
 			global
 			{not in Vi}
@@ -4416,15 +4421,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This option cannot be set from a |modeline|, for security reasons.
 
 						*'scroll'* *'scr'*
-'scroll' 'scr'		number	(default 'lines' / 2)
+'scroll' 'scr'		number	(default: half the window height)
 			local to window
 	Number of lines to scroll with CTRL-U and CTRL-D commands.  Will be
 	set to half the number of lines in the window when the window size
 	changes.  If you give a count to the CTRL-U or CTRL-D command it will
-	be used as the new value for 'scroll'.  Reset to 'lines' / 2 with
-	":set scroll=0".   {Vi is a bit different: 'scroll' gives the number
-	of screen lines instead of file lines, makes a difference when lines
-	wrap}
+	be used as the new value for 'scroll'.  Reset to half the window
+	height with ":set scroll=0".   {Vi is a bit different: 'scroll' gives
+	the number of screen lines instead of file lines, makes a difference
+	when lines wrap}
 
 			*'scrollbind'* *'scb'* *'noscrollbind'* *'noscb'*
 'scrollbind' 'scb'	boolean  (default off)
@@ -4918,9 +4923,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	Example: Try this together with 'sidescroll' and 'listchars' as
 		 in the following example to never allow the cursor to move
-		 onto the 'extends' character:
+		 onto the "extends" character:
 
-		 :set nowrap sidescroll=1 listchars=extends:>,frontextends:<
+		 :set nowrap sidescroll=1 listchars=extends:>,precedes:<
 		 :set sidescrolloff=1
 
 
@@ -5087,7 +5092,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	      Mnemonic: Offset from start of file (with one added)
 	      {not available when compiled without |+byte_offset| feature}
 	O N   As above, in hexadecimal.
-	N N   Printer page number. (Only of use in the 'printheader' option.)
+	N N   Printer page number. (Only works in the 'printheader' option.)
 	l N   Line number.
 	L N   Number of lines in buffer.
 	c N   Column number.
@@ -5713,6 +5718,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 							*dec-mouse*
 	   dec		DEC terminal mouse handling.  The mouse generates a
 			rather complex sequence, starting with "<Esc>[".
+							*jsbterm-mouse*
+	   jsbterm	JSB term mouse handling.
+							*pterm-mouse*
+	   pterm	QNX pterm mouse handling.
 
 	The mouse handling must be enabled at compile time |+mouse_xterm|
 	|+mouse_dec| |+mouse_netterm|.
@@ -6153,7 +6162,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not available when compiled without the +windows
 			feature}
 	Minimal number of lines for the current window.  This is not a hard
-	minimum, Vim will use less lines if there is not enough room.  If the
+	minimum, Vim will use fewer lines if there is not enough room.  If the
 	current window is smaller, its size is increased, at the cost of the
 	height of other windows.  Set it to 999 to make the current window
 	always fill the screen.  Set it to a small number for normal editing.
@@ -6202,9 +6211,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not available when compiled without the +vertsplit
 			feature}
 	Minimal number of columns for the current window.  This is not a hard
-	minimum, Vim will use less columns if there is not enough room.  If the
-	current window is smaller, its size is increased, at the cost of the
-	width of other windows.  Set it to 999 to make the current window
+	minimum, Vim will use fewer columns if there is not enough room.  If
+	the current window is smaller, its size is increased, at the cost of
+	the width of other windows.  Set it to 999 to make the current window
 	always fill the screen.  Set it to a small number for normal editing.
 	The width is not adjusted after one of the commands to change the
 	width of the current window.
@@ -6222,6 +6231,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	and only part of long lines will be displayed.  When the cursor is
 	moved to a part that is not shown, the screen will scroll
 	horizontally.
+	The line will be broken in the middle of a word if necessary.  See
+	'linebreak' to get the break at a word boundary.
 	To make scrolling horizontally a bit more useful, try this: >
 		:set sidescroll=5
 		:set listchars+=precedes:<,extends:>
@@ -6234,7 +6245,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	starts.  When typing text beyond this limit, an <EOL> will be inserted
 	and inserting continues on the next line.  When 'textwidth' is
 	non-zero, this option is not used.  See also 'formatoptions' and
-	|ins-textwidth|.  {Vi: works differently and less useful}
+	|ins-textwidth|.  {Vi: works differently and less usefully}
 
 				   *'wrapscan'* *'ws'* *'nowrapscan'* *'nows'*
 'wrapscan' 'ws'		boolean	(default on)			*E384* *E385*

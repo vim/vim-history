@@ -1,5 +1,5 @@
 # NSIS file to create a self-installing exe for Vim.
-# It needs NSIS version 1.59 or later.
+# It needs NSIS version 1.80 or later.
 # Last modification:	2001 Oct 31
 
 # WARNING: if you make changes to this script, look out for $0 to be valid,
@@ -12,7 +12,7 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 0
+!define VER_MINOR 1a
 !define VER_MAJOR 6
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"
@@ -22,8 +22,9 @@ ComponentText "This will install Vim ${VER_MAJOR}.${VER_MINOR} on your computer.
 DirText "Choose a directory to install Vim (must end in 'vim')"
 SetDatablockOptimize on
 Icon icons\vim_16c.ico
+EnabledBitmap icons\enabled.bmp
+DisabledBitmap icons\disabled.bmp
 UninstallText "This will uninstall Vim ${VER_MAJOR}.${VER_MINOR} from your system."
-UninstallExeName vim${VER_MAJOR}${VER_MINOR}\uninstall-gui.exe
 UninstallIcon icons\vim_uninst_16c.ico
 BGGradient 004000 008200 ffffff
 LicenseText "You should read the following before installing:"
@@ -105,6 +106,7 @@ Function .onVerifyInstDir
 FunctionEnd
 
 Function .onInstSuccess
+  WriteUninstaller vim${VER_MAJOR}${VER_MINOR}\uninstall-gui.exe
   MessageBox MB_YESNO|MB_ICONQUESTION \
 	"The installation process has been successfull. Happy Vimming! \
 	$\n$\n Do you want to see the README file now?" IDNO NoReadme

@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_25.txt*	For Vim version 6.1a.  Last change: 2002 Feb 24
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -397,6 +397,55 @@ the cursor keys: >
 
 	:map <Up> gk
 	:map <Down> gj
+
+
+TURNING A PARAGRAPH INTO ONE LINE
+
+If you want to import text into a program like MS-Word, each paragraph should
+be a single line.  If your paragraphs are currently separated with empty
+lines, this is how you turn each paragraph into a single line: >
+
+	:g/./,/^$/join
+
+That looks complicated.  Let's break it up in pieces:
+
+	:g/./		A ":global" command that finds all lines that contain
+			at least one character.
+	     ,/^$/	A range, starting from the current line (the non-empty
+			line) until an empty line.
+		  join	The ":join" command joins the range of lines together
+			into one line.
+
+Starting with this text, containing eight lines broken at column 30:
+
+	+----------------------------------+
+	|A letter generation program	   |
+	|for a bank.  They wanted to	   |
+	|send out a special,		   |
+	|personalized letter.		   |
+	|				   |
+	|To their richest 1000		   |
+	|customers.  Unfortunately for	   |
+	|the programmer,		   |
+	+----------------------------------+
+
+You end up with two lines:
+
+	+----------------------------------+
+	|A letter generation program for a |
+	|bank.	They wanted to send out a s|
+	|pecial, personalized letter.	   |
+	|To their richest 1000 customers.  |
+	|Unfortunately for the programmer, |
+	+----------------------------------+
+
+Note that this doesn't work when the separating line is blank but not empty;
+when it contains spaces and/or tabs.  This command does work with blank lines:
+>
+	:g/\S/,/^\s*$/join
+
+This still requires a blank or empty line at the end of the file for the last
+paragraph to be joined.
 
 ==============================================================================
 *25.5*	Editing tables

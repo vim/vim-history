@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0.  Last change: 2001 Sep 03
+*windows.txt*   For Vim version 6.1a.  Last change: 2002 Jan 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -138,6 +138,8 @@ CTRL-W v						*CTRL-W_v*
 		Like |:split|, but split vertically.  If 'equalalways' is set
 		and 'eadirection' isn't "ver" the windows will be spread out
 		horizontally, unless a width was specified.
+		Note: In other places CTRL-Q does the same as CTRL-V, but here
+		it doesn't!
 
 CTRL-W n						*CTRL-W_n*
 CTRL-W CTRL_N						*CTRL-W_CTRL-N*
@@ -898,8 +900,9 @@ list of buffers. |unlisted-buffer|
 		will be displayed instead.  This is the most recent entry in
 		the jump list that points into a loaded buffer.
 		Actually, the buffer isn't completely deleted, it is removed
-		from the buffer list |unlisted-buffer|.  Option values and
-		local variables are cleared.
+		from the buffer list |unlisted-buffer|.  Option values,
+		variables and mappings/abbreviations for the buffer are
+		cleared.
 
 :bdelete[!] {bufname}						*E93* *E94*
 		Like ":bdelete[!] [N]", but buffer given by name.  Note that a

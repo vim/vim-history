@@ -15,10 +15,10 @@ menutrans &Help			Ay&uda
 menutrans &Overview<Tab><F1>	&Principal<Tab><F1>
 menutrans &User\ Manual		&Manual\ del\ usuario
 menutrans &How-to\ links	&Enlaces\ a\ ¿Cómo\.\.\.?
-menutrans &GUI			&Interfaz\ gráfica
-menutrans &Credits		&Reconocimientos
-menutrans Co&pying		&Copyright
 menutrans &Find\.\.\.		&Buscar\.\.\.
+menutrans &Credits		&Reconocimientos
+menutrans O&rphans		&Huérfanos
+menutrans Co&pying		&Copyright
 menutrans &Version		&Versión
 menutrans &About		&Acerca\ de\.\.\.
 
@@ -75,6 +75,7 @@ menutrans Block\ and\ Insert		Bloque\ e\ insertar
 menutrans Always			Siempre
 
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Activar/Desactivar\ modo\ de\ in&serción<Tab>:set\ im!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	Activar/Desactivar\ compatiblidad\ con\ Vi<Tab>:set\ cp!
 
 menutrans Search\ &Path\.\.\.		Ruta\ de\ &búsqueda\.\.\.
 

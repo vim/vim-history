@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0.  Last change: 2001 Sep 21
+*usr_toc.txt*	For Vim version 6.1a.  Last change: 2001 Oct 23
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -47,9 +47,9 @@ Making Vim Run
 |usr_90.txt|  Installing Vim
 
 
-The user manual is availble as a single, ready to print HTML file here:
-
-	http://www.erebus.demon.nl/vim/
+The user manual is available as a single, ready to print HTML and PDF file
+here:
+	http://vimdoc.sf.net
 	
 ==============================================================================
 Getting Started ~
@@ -159,10 +159,11 @@ Read this from start to end to learn the essential commands.
 		|12.1|	Replace a word
 		|12.2|	Change "Last, First" to "First Last"
 		|12.3|	Sort a list
-		|12.4|	Count words
-		|12.5|	Find a man page
-		|12.6|	Trim blanks
-		|12.7|	Find where a word is used
+		|12.4|	Reverse line order
+		|12.5|	Count words
+		|12.6|	Find a man page
+		|12.7|	Trim blanks
+		|12.8|	Find where a word is used
 
 ==============================================================================
 Editing Effectively ~

@@ -393,7 +393,7 @@ gtk_form_draw(GtkWidget * widget, GdkRectangle * area)
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
-    if (GTK_WIDGET_DRAWABLE (widget))
+    if (GTK_WIDGET_DRAWABLE(widget))
     {
 	form = GTK_FORM(widget);
 
@@ -404,7 +404,7 @@ gtk_form_draw(GtkWidget * widget, GdkRectangle * area)
 	    child = children->data;
 
 	    if (GTK_WIDGET_DRAWABLE(child->widget)
-		    && gtk_widget_intersect (child->widget, area, &child_area))
+		    && gtk_widget_intersect(child->widget, area, &child_area))
 		gtk_widget_draw(child->widget, &child_area);
 
 	    children = children->next;

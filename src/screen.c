@@ -4085,8 +4085,11 @@ screen_line(row, coloff, endcol, clear_width
 	    if (enc_utf8)
 	    {
 		ScreenLinesUC[off_to] = ScreenLinesUC[off_from];
-		ScreenLinesC1[off_to] = ScreenLinesC1[off_from];
-		ScreenLinesC2[off_to] = ScreenLinesC2[off_from];
+		if (ScreenLinesUC[off_from] != 0)
+		{
+		    ScreenLinesC1[off_to] = ScreenLinesC1[off_from];
+		    ScreenLinesC2[off_to] = ScreenLinesC2[off_from];
+		}
 	    }
 	    if (char_cells == 2)
 		ScreenLines[off_to + 1] = ScreenLines[off_from + 1];
@@ -4249,6 +4252,7 @@ status_redraw_all()
 	}
 }
 
+# if defined(FEAT_KEYMAP) || defined(PROTO)
 /*
  * mark all status lines of the current buffer for redraw
  */
@@ -4264,6 +4268,7 @@ status_redraw_curbuf()
 	    redraw_later(VALID);
 	}
 }
+# endif
 
 /*
  * Redraw all status lines that need to be redrawn.

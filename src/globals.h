@@ -396,7 +396,8 @@ EXTERN int	ru_wid;		/* 'rulerfmt' width of ruler when non-zero */
 EXTERN int	sc_col;		/* column for shown command */
 
 #ifdef TEMPDIRNAMES
-EXTERN char_u	*vim_tempdir INIT(= NULL); /* Name of Vim's own temp dir. */
+EXTERN char_u	*vim_tempdir INIT(= NULL); /* Name of Vim's own temp dir.
+					      Ends in a slash. */
 #endif
 
 /*
