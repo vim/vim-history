@@ -28,6 +28,7 @@ void mch_settmode __ARGS((int tmode));
 void mch_setmouse __ARGS((int on));
 int mch_screenmode __ARGS((char_u *arg));
 int mch_get_winsize __ARGS((void));
+void mch_check_columns __ARGS((void));
 void set_window __ARGS((void));
 void mch_set_winsize __ARGS((void));
 int mch_call_shell __ARGS((char_u *cmd, int options));
