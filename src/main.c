@@ -17,6 +17,11 @@
 # include <spawno.h>		/* special MSDOS swapping library */
 #endif
 
+#ifdef HAVE_TCL
+# undef EXTERN			/* redefined in tcl.h */
+# include <tcl.h>
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -296,6 +301,10 @@ main
 #ifdef RISCOS
     /* Turn off all the horrible filename munging in UnixLib. */
     __uname_control = __UNAME_NO_PROCESS;
+#endif
+
+#ifdef HAVE_TCL
+    Tcl_FindExecutable(argv[0]);
 #endif
 
 #ifdef MEM_PROFILE
