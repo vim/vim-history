@@ -965,6 +965,7 @@ EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 
 #ifdef FEAT_GUI_GTK
 EXTERN guint32	gtk_socket_id INIT(= 0);
+EXTERN int	echo_wid_arg INIT(= FALSE);	/* --echo-wid argument */
 #endif
 
 #ifdef FEAT_CLIENTSERVER

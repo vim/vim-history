@@ -1632,6 +1632,13 @@ mainwin_realize(GtkWidget *widget)
     XIconSize		*size;
     int			number_sizes;
 
+    /* When started with "--echo-wid" argument, write window ID on stdout. */
+    if (echo_wid_arg)
+    {
+	printf("WID: %ld\n", (long)GDK_WINDOW_XWINDOW(gui.mainwin->window));
+	fflush(stdout);
+    }
+
     if (vim_strchr(p_go, GO_ICON) != NULL)
     {
 	/*

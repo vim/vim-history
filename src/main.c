@@ -292,6 +292,8 @@ main
 		mainerr(ME_INVALID_ARG, (char_u *)argv[i]);
 	    i++;
 	}
+	else if (STRICMP(argv[i], "--echo-wid") == 0)
+	    echo_wid_arg = TRUE;
 # endif
     }
 #endif
@@ -563,6 +565,10 @@ main
 			--argc;
 			++argv;
 		    }
+		}
+		else if (STRNICMP(argv[0] + argv_idx, "echo-wid", 8) == 0)
+		{
+		    /* already processed, skip */
 		}
 #endif
 		else
