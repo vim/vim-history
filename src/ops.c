@@ -2614,12 +2614,19 @@ op_yank(oap, deleting, mess)
 			if (virtual_active())
 			{
 			    getvcol(curwin, &oap->end, &cs, NUL, &ce);
-			    if (p[endcol] == NUL || cs + oap->end.coladd < ce)
+			    if (p[endcol] == NUL || (cs + oap->end.coladd < ce
+# ifdef FEAT_MBYTE
+					/* Don't add space for double-wide
+					 * char; endcol will be on last byte
+					 * of multi-byte char. */
+					&& (*mb_head_off)(p, p + endcol) == 0
+# endif
+					))
 			    {
-				/* Special case: inside a single char */
 				if (oap->start.lnum == oap->end.lnum
 					    && oap->start.col == oap->end.col)
 				{
+				    /* Special case: inside a single char */
 				    is_oneChar = TRUE;
 				    bd.startspaces = oap->end.coladd
 					 - oap->start.coladd + oap->inclusive;
