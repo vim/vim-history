@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Mar 24
+" Last change:	2002 Apr 23
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -335,8 +335,11 @@ au BufNewFile,BufRead *.si			setf cuplsim
 " Debian Control
 au BufNewFile,BufRead */debian/control		setf debcontrol
 
+" ROCKLinux package description
+au BufNewFile,BufRead *.desc			setf desc
+
 " Diff files
-au BufNewFile,BufRead *.diff,*.rej		setf diff
+au BufNewFile,BufRead *.diff,*.rej,*.patch	setf diff
 
 " Diva (with Skill) or InstallShield
 au BufNewFile,BufRead *.rul
