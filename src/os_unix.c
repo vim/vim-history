@@ -3328,8 +3328,11 @@ mch_call_shell(cmd, options)
 	    {
 #define BUFLEN 100		/* length for buffer, pseudo tty limit is 128 */
 		char_u	    buffer[BUFLEN + 1];
+#ifdef FEAT_MBYTE
+		int	    buffer_off = 0;	/* valid bytes in buffer[] */
+#endif
 		char_u	    ta_buf[BUFLEN + 1];	/* TypeAHead */
-		int	    ta_len = 0;		/* valid chars in ta_buf[] */
+		int	    ta_len = 0;		/* valid bytes in ta_buf[] */
 		int	    len;
 		int	    p_more_save;
 		int	    old_State;
@@ -3432,6 +3435,10 @@ mch_call_shell(cmd, options)
 			    }
 			    else if (ta_buf[i] == '\r')
 				ta_buf[i] = '\n';
+#ifdef FEAT_MBYTE
+			    if (has_mbyte)
+				i += (*mb_ptr2len_check)(ta_buf + i) - 1;
+#endif
 			}
 
 			/*
@@ -3441,10 +3448,21 @@ mch_call_shell(cmd, options)
 			if (pty_master_fd < 0)
 			{
 			    for (i = ta_len; i < ta_len + len; ++i)
+			    {
 				if (ta_buf[i] == '\n' || ta_buf[i] == '\b')
 				    msg_putchar(ta_buf[i]);
+#ifdef FEAT_MBYTE
+				else if (has_mbyte)
+				{
+				    int l = (*mb_ptr2len_check)(ta_buf + i);
+
+				    msg_outtrans_len(ta_buf + i, l);
+				    i += l - 1;
+				}
+#endif
 				else
 				    msg_outtrans_len(ta_buf + i, 1);
+			    }
 			    windgoto(msg_row, msg_col);
 			    out_flush();
 			}
@@ -3478,12 +3496,67 @@ mch_call_shell(cmd, options)
 		     */
 		    while (RealWaitForChar(fromshell_fd, 10L, NULL))
 		    {
-			len = read(fromshell_fd, (char *)buffer,
-							      (size_t)BUFLEN);
+			len = read(fromshell_fd, (char *)buffer
+#ifdef FEAT_MBYTE
+				+ buffer_off, (size_t)(BUFLEN - buffer_off)
+#else
+				, (size_t)BUFLEN
+#endif
+				);
 			if (len <= 0)		    /* end of file or error */
 			    goto finished;
+#ifdef FEAT_MBYTE
+			len += buffer_off;
 			buffer[len] = NUL;
-			msg_puts(buffer);
+			if (has_mbyte)
+			{
+			    int		l;
+			    char_u	*p;
+
+			    /* Check if the last character in buffer[] is
+			     * incomplete, keep these bytes for the next
+			     * round. */
+			    for (p = buffer; p < buffer + len; p += l)
+			    {
+				if (enc_utf8)	/* exclude composing chars */
+				    l = utf_ptr2len_check(p);
+				else
+				    l = (*mb_ptr2len_check)(p);
+				if (l == 0)
+				    l = 1;  /* NUL byte? */
+				else if (MB_BYTE2LEN(*p) != l)
+				    break;
+			    }
+			    if (p == buffer)	/* no complete character */
+			    {
+				/* avoid getting stuck at an illegal byte */
+				if (len >= 12)
+				    ++p;
+				else
+				{
+				    buffer_off = len;
+				    continue;
+				}
+			    }
+			    c = *p;
+			    *p = NUL;
+			    msg_puts(buffer);
+			    if (p < buffer + len)
+			    {
+				*p = c;
+				buffer_off = (buffer + len) - p;
+				mch_memmove(buffer, p, buffer_off);
+				continue;
+			    }
+			    buffer_off = 0;
+			}
+			else
+#endif
+			{
+			    buffer[len] = NUL;
+			    msg_puts(buffer);
+			}
+
 			windgoto(msg_row, msg_col);
 			cursor_on();
 			out_flush();
