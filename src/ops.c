@@ -779,7 +779,7 @@ get_yank_register(regname, writing)
     int	    i;
 
     y_append = FALSE;
-    if (((regname == 0 && !writing) || regname == '"') && y_previous != NULL)
+    if ((regname == 0 || regname == '"') && !writing && y_previous != NULL)
     {
 	y_current = y_previous;
 	return;
@@ -1144,9 +1144,14 @@ stuffescaped(arg, literally)
     while (*arg != NUL)
     {
 	/* Stuff a sequence of normal ASCII characters, that's fast.  Also
-	 * stuff K_SPECIAL to get the effect of a special key when  */
+	 * stuff K_SPECIAL to get the effect of a special key when "literally"
+	 * is TRUE. */
 	start = arg;
-	while ((*arg >= ' ' && *arg < DEL)	/* TODO: EBCDIC */
+	while ((*arg >= ' '
+#ifndef EBCDIC
+		    && *arg < DEL /* EBCDIC: chars above space are normal */
+#endif
+		    )
 		|| (*arg == K_SPECIAL && !literally))
 	    ++arg;
 	if (arg > start)
@@ -1380,6 +1385,12 @@ op_delete(oap)
     /* Nothing to delete, return here.	Do prepare undo, for op_change(). */
     if (oap->empty)
 	return u_save_cursor();
+
+    if (!curbuf->b_p_ma)
+    {
+	EMSG(_(e_modifiable));
+	return FAIL;
+    }
 
 #ifdef FEAT_CLIPBOARD
     /* If no reg. specified, and "unnamed" is in 'clipboard', use '*' reg. */
@@ -2749,7 +2760,7 @@ do_put(regname, dir, count, flags)
 
     if (y_size == 0 || y_array == NULL)
     {
-	EMSG2(_("(pe7) Nothing in register %s"),
+	EMSG2(_("E353: Nothing in register %s"),
 		  regname == 0 ? (char_u *)"\"" : transchar(regname));
 	goto end;
     }
@@ -4858,7 +4869,7 @@ write_reg_contents(name, str, must_append)
 
     if (!valid_yank_reg(name, TRUE))	    /* check for valid reg name */
     {
-	EMSG2(_("(pe8) Invalid register name: '%s'"), transchar(name));
+	EMSG2(_("E354: Invalid register name: '%s'"), transchar(name));
 	return;
     }
 
@@ -4896,7 +4907,9 @@ write_reg_contents(name, str, must_append)
     }
 #endif
 
-    y_previous = old_y_previous;
+    /* ':let @" = "val"' should change the meaning of the "" register */
+    if (name != '"')
+	y_previous = old_y_previous;
     y_current = old_y_current;
 }
 #endif	/* FEAT_EVAL */

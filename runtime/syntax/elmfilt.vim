@@ -3,8 +3,11 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	November 11, 1998
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -20,16 +23,29 @@ syn keyword	elmfiltRule	if then
 syn region	elmfiltString	start='"' skip='"\(\\\\\)*\\"' end='"'	contains=elmfiltArg
 syn match	elmfiltComment	"^#.*$"
 
-" The default highlighting.
-hi def link elmfiltAction	Statement
-hi def link elmfiltArg	Special
-hi def link elmfiltComment	Comment
-hi def link elmfiltCond	Type
-hi def link elmfiltMatch	Special
-hi def link elmfiltNumber	Number
-hi def link elmfiltOper	Operator
-hi def link elmfiltRule	Statement
-hi def link elmfiltString	String
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_elmfilt_syntax_inits")
+  if version < 508
+    let did_elmfilt_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink elmfiltAction	Statement
+  HiLink elmfiltArg	Special
+  HiLink elmfiltComment	Comment
+  HiLink elmfiltCond	Type
+  HiLink elmfiltMatch	Special
+  HiLink elmfiltNumber	Number
+  HiLink elmfiltOper	Operator
+  HiLink elmfiltRule	Statement
+  HiLink elmfiltString	String
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "elmfilt"
 " vim: ts=9

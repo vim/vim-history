@@ -2,7 +2,7 @@
 " Language:	Windows Registry export with regedit (*.reg)
 " Maintainer:	Dominique Stéphan (stephan@my-deja.com)
 " URL: http://www.mggen.com/vim/syntax/registry.zip
-" Last change:	2000 Mai 2
+" Last change:	2001 May 10
 
 " clear any unwanted syntax defs
 " For version 5.x: Clear all syntax items
@@ -62,18 +62,18 @@ syn match  registrySubKey	        "^\@="
 
 " Numbers
 
-" Hex or Binary 
+" Hex or Binary
 " The format can be precised between () :
-" 0    REG_NONE                            
-" 1    REG_SZ                          
+" 0    REG_NONE
+" 1    REG_SZ
 " 2    REG_EXPAND_SZ
-" 3    REG_BINARY                          
+" 3    REG_BINARY
 " 4    REG_DWORD, REG_DWORD_LITTLE_ENDIAN
 " 5    REG_DWORD_BIG_ENDIAN
 " 6    REG_LINK
 " 7    REG_MULTI_SZ
 " 8    REG_RESOURCE_LIST
-" 9    REG_FULL_RESOURCE_DESCRIPTOR 
+" 9    REG_FULL_RESOURCE_DESCRIPTOR
 " 10   REG_RESOURCE_REQUIREMENTS_LIST
 " The value can take several lines, if \ ends the line
 syn match registryHex		"hex\(([0-9]\{0,2})\)\=:\([0-9a-fA-F]\{2},\)*\([0-9a-fA-F]\{2}\|\\\)$" contains=registrySpecial

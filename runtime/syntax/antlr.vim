@@ -1,7 +1,7 @@
 " Vim syntax file
 " Antlr:	ANTLR, Another Tool For Language Recognition <www.antlr.org>
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" LastChange:	02 May 2001 
+" LastChange:	02 May 2001
 " Original:	Comes from JavaCC.vim
 
 " For version 5.x: Clear all syntax items
@@ -27,14 +27,14 @@ endif
 
 "remove catching errors caused by wrong parenthesis (does not work in antlr
 "files) (first define them in case they have not been defined in java)
-syn match 	javaParen "--"
-syn match 	javaParenError "--"
-syn match 	javaInParen "--"
-syn match 	javaError2 "--"
+syn match	javaParen "--"
+syn match	javaParenError "--"
+syn match	javaInParen "--"
+syn match	javaError2 "--"
 syn clear	javaParen
 syn clear	javaParenError
-syn clear 	javaInParen
-syn clear 	javaError2
+syn clear	javaInParen
+syn clear	javaError2
 
 " remove function definitions (they look different) (first define in
 " in case it was not defined in java.vim)

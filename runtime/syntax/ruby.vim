@@ -1,14 +1,17 @@
 " Vim syntax file
 " Language:     Ruby
 " Maintainer:   Mirko Nasato
-" Last Change:  2001 Jan 15
+" Last Change:  2001 May 10
 " Location:     http://altern.org/mn/ruby/ruby.vim
 
 " See http://altern.org/mn/ruby/vim.html for documentation.
 " Thanks to perl.vim authors, and to Reimer Behrends. :-)
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -25,7 +28,7 @@ syn match   rubyNumber  "?\(\\M-\\C-\|\\c\|\\C-\|\\M-\)\=\(\\\o\{3}\|\\x\x\{2}\|
 if !exists("ruby_no_identifiers")
   syn match   rubyIdentifier  "\<\u\w*"
   syn match   rubyIdentifier  "@\h\w*"
-  syn match   rubyIdentifier  "$\h\w*"  
+  syn match   rubyIdentifier  "$\h\w*"
   syn match   rubyIdentifier  "\s:\h\w*"
   syn match   rubyIdentifier  "|[ ,a-zA-Z0-9_*]\+|"
   syn match   rubyIdentifier  "$[\\\"/:'&`+*.,;=~!?@$<>0-9]"
@@ -64,32 +67,32 @@ syn region rubyString matchgroup=rubyStringDelimit start="%r\[" end="\][iopx]*" 
 syn region rubyString matchgroup=rubyStringDelimit start="%r(" end=")[iopx]*" skip="\\\\\|\\)" contains=rubyExprSubst
 
 " Generalized Single Quoted String and Array of Strings:
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]!" end="!" skip="\\\\\|\\!" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\"" end="\"" skip="\\\\\|\\\"" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]#" end="#" skip="\\\\\|\\#" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\$" end="\$" skip="\\\\\|\\\$" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]%" end="%" skip="\\\\\|\\%" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]&" end="&" skip="\\\\\|\\&" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]'" end="'" skip="\\\\\|\\'" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\*" end="\*" skip="\\\\\|\\\*" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]+" end="+" skip="\\\\\|\\+" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]-" end="-" skip="\\\\\|\\-" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\." end="\." skip="\\\\\|\\\." 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]/" end="/" skip="\\\\\|\\/" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]:" end=":" skip="\\\\\|\\:" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq];" end=";" skip="\\\\\|\\;" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]=" end="=" skip="\\\\\|\\=" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]?" end="?" skip="\\\\\|\\?" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]@" end="@" skip="\\\\\|\\@" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\\" end="\\"  
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\^" end="\^" skip="\\\\\|\\\^" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]`" end="`" skip="\\\\\|\\`" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]|" end="|" skip="\\\\\|\\|" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\~" end="\~" skip="\\\\\|\\\~" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]{" end="}" skip="\\\\\|\\}" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]<" end=">" skip="\\\\\|\\>" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\[" end="\]" skip="\\\\\|\\\]" 
-syn region rubyString matchgroup=rubyStringDelimit start="%[wq](" end=")" skip="\\\\\|\\)" 
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]!" end="!" skip="\\\\\|\\!"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\"" end="\"" skip="\\\\\|\\\""
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]#" end="#" skip="\\\\\|\\#"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\$" end="\$" skip="\\\\\|\\\$"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]%" end="%" skip="\\\\\|\\%"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]&" end="&" skip="\\\\\|\\&"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]'" end="'" skip="\\\\\|\\'"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\*" end="\*" skip="\\\\\|\\\*"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]+" end="+" skip="\\\\\|\\+"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]-" end="-" skip="\\\\\|\\-"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\." end="\." skip="\\\\\|\\\."
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]/" end="/" skip="\\\\\|\\/"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]:" end=":" skip="\\\\\|\\:"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq];" end=";" skip="\\\\\|\\;"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]=" end="=" skip="\\\\\|\\="
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]?" end="?" skip="\\\\\|\\?"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]@" end="@" skip="\\\\\|\\@"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\\" end="\\"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\^" end="\^" skip="\\\\\|\\\^"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]`" end="`" skip="\\\\\|\\`"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]|" end="|" skip="\\\\\|\\|"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\~" end="\~" skip="\\\\\|\\\~"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]{" end="}" skip="\\\\\|\\}"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]<" end=">" skip="\\\\\|\\>"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq]\[" end="\]" skip="\\\\\|\\\]"
+syn region rubyString matchgroup=rubyStringDelimit start="%[wq](" end=")" skip="\\\\\|\\)"
 
 " Generalized Double Quoted String and Shell Command Output:
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=!" end="!" skip="\\\\\|\\!" contains=rubyExprSubst
@@ -121,7 +124,7 @@ syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=(" end=")" skip
 
 " Normal String and Shell Command Output:
 syn region rubyString matchgroup=rubyStringDelimit start="\"" end="\"" skip="\\\\\|\\\"" contains=rubyExprSubst
-syn region rubyString matchgroup=rubyStringDelimit start="'" end="'" skip="\\\\\|\\'" 
+syn region rubyString matchgroup=rubyStringDelimit start="'" end="'" skip="\\\\\|\\'"
 syn region rubyString matchgroup=rubyStringDelimit start="`" end="`" skip="\\\\\|\\`" contains=rubyExprSubst
 "
 " END Autogenerated Stuff
@@ -152,7 +155,7 @@ if !exists("ruby_no_expensive")
   syn region  rubyNoDoBlock  matchgroup=rubyControl start="\<\(case\|begin\)\>" start="^\s*\(if\|unless\)\>" start=";\s*\(if\|unless\)\>"hs=s+1 end="\<end\>" contains=ALLBUT,rubyExprSubst,rubyTodo
   " statement with optional *do*
   syn region  rubyOptDoBlock matchgroup=rubyControl start="\<for\>" start="^\s*\(while\|until\)\>" start=";\s*\(while\|until\)\>"hs=s+1 end="\<end\>" contains=ALLBUT,rubyExprSubst,rubyTodo,rubyDoBlock
-  
+
   if !exists("ruby_minlines")
     let ruby_minlines = 50
   endif
@@ -179,27 +182,37 @@ syn match   rubyComment  "#.*" contains=rubyTodo
 syn match   rubySharpBang  "#!.*"
 syn region  rubyDocumentation  start="^=begin" end="^=end.*$" contains=rubyTodo
 
-" Do it
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ruby_syntax_inits")
+  if version < 508
+    let did_ruby_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
-hi def link rubyDefine          Define
-hi def link rubyFunction        Function
-hi def link rubyControl         Statement
-hi def link rubyInclude         Include
-hi def link rubyNumber          Number
-hi def link rubyBoolean         Boolean
-hi def link rubyException       Exception
-hi def link rubyClassOrModule   Type
-hi def link rubyIdentifier      Special
-hi def link rubySharpBang       PreProc
-  
-hi def link rubyString          String
-hi def link rubyStringDelimit   Delimiter
-hi def link rubyExprSubst       Special
-  
-hi def link rubyComment         Comment
-hi def link rubyDocumentation   Comment
-hi def link rubyTodo            Todo
+  HiLink rubyDefine          Define
+  HiLink rubyFunction        Function
+  HiLink rubyControl         Statement
+  HiLink rubyInclude         Include
+  HiLink rubyNumber          Number
+  HiLink rubyBoolean         Boolean
+  HiLink rubyException       Exception
+  HiLink rubyClassOrModule   Type
+  HiLink rubyIdentifier      Special
+  HiLink rubySharpBang       PreProc
+
+  HiLink rubyString          String
+  HiLink rubyStringDelimit   Delimiter
+  HiLink rubyExprSubst       Special
+
+  HiLink rubyComment         Comment
+  HiLink rubyDocumentation   Comment
+  HiLink rubyTodo            Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "ruby"
-

@@ -1,14 +1,17 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
 " Maintainer:	Jody Goldberg <jgoldberg@home.com>
-" Last Change:	2001 Mar 19
+" Last Change:	2001 May 09
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
 " is large and somewhat repetative but seems to work.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -125,62 +128,75 @@ syn keyword idlUnion		union				skipempty skipwhite nextgroup=idlUnionName
 
 syn sync lines=200
 
-" The default highlighting.
-hi def link idlInclude		Include
-hi def link idlPreProc		PreProc
-hi def link idlPreCondit	PreCondit
-hi def link idlDefine		Macro
-hi def link idlIncluded		String
-hi def link idlString		String
-hi def link idlComment		Comment
-hi def link idlTodo		Todo
-hi def link idlLiteral		Number
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_idl_syntax_inits")
+  if version < 508
+    let did_idl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link idlModule		Keyword
-hi def link idlInterface	Keyword
-hi def link idlEnum		Keyword
-hi def link idlStruct		Keyword
-hi def link idlUnion		Keyword
-hi def link idlTypedef		Keyword
-hi def link idlException	Keyword
+  HiLink idlInclude		Include
+  HiLink idlPreProc		PreProc
+  HiLink idlPreCondit		PreCondit
+  HiLink idlDefine		Macro
+  HiLink idlIncluded		String
+  HiLink idlString		String
+  HiLink idlComment		Comment
+  HiLink idlTodo		Todo
+  HiLink idlLiteral		Number
 
-hi def link idlModuleName	Typedef
-hi def link idlInterfaceName	Typedef
-hi def link idlEnumName		Typedef
-hi def link idlStructName	Typedef
-hi def link idlUnionName	Typedef
+  HiLink idlModule		Keyword
+  HiLink idlInterface		Keyword
+  HiLink idlEnum		Keyword
+  HiLink idlStruct		Keyword
+  HiLink idlUnion		Keyword
+  HiLink idlTypedef		Keyword
+  HiLink idlException		Keyword
 
-hi def link idlBaseTypeInt	idlType
-hi def link idlBaseType		idlType
-hi def link idlSeqType		idlType
-hi def link idlD1		Paren
-hi def link idlD2		Paren
-hi def link idlD3		Paren
-hi def link idlD4		Paren
-"hi def link idlArraySize	Paren
-"hi def link idlArraySize1	Paren
-hi def link idlModuleContent	Paren
-hi def link idlUnionContent	Paren
-hi def link idlStructContent	Paren
-hi def link idlEnumContents	Paren
-hi def link idlInterfaceContent	Paren
+  HiLink idlModuleName		Typedef
+  HiLink idlInterfaceName	Typedef
+  HiLink idlEnumName		Typedef
+  HiLink idlStructName		Typedef
+  HiLink idlUnionName		Typedef
 
-hi def link idlSimpDecl		Identifier
-hi def link idlROAttr		StorageClass
-hi def link idlAttr		Keyword
-hi def link idlConst		StorageClass
+  HiLink idlBaseTypeInt		idlType
+  HiLink idlBaseType		idlType
+  HiLink idlSeqType		idlType
+  HiLink idlD1			Paren
+  HiLink idlD2			Paren
+  HiLink idlD3			Paren
+  HiLink idlD4			Paren
+  "HiLink idlArraySize		Paren
+  "HiLink idlArraySize1		Paren
+  HiLink idlModuleContent	Paren
+  HiLink idlUnionContent	Paren
+  HiLink idlStructContent	Paren
+  HiLink idlEnumContents	Paren
+  HiLink idlInterfaceContent	Paren
 
-hi def link idlOneWayOp		StorageClass
-hi def link idlOp		idlType
-hi def link idlParmType		idlType
-hi def link idlOpName		Function
-hi def link idlOpParms		StorageClass
-hi def link idlParmName		Identifier
-hi def link idlInheritFrom	Identifier
+  HiLink idlSimpDecl		Identifier
+  HiLink idlROAttr		StorageClass
+  HiLink idlAttr		Keyword
+  HiLink idlConst		StorageClass
 
-hi def link idlId		Constant
-"hi def link idlCase		Keyword
-hi def link idlCaseLabel	Constant
+  HiLink idlOneWayOp		StorageClass
+  HiLink idlOp			idlType
+  HiLink idlParmType		idlType
+  HiLink idlOpName		Function
+  HiLink idlOpParms		StorageClass
+  HiLink idlParmName		Identifier
+  HiLink idlInheritFrom		Identifier
+
+  HiLink idlId			Constant
+  "HiLink idlCase		Keyword
+  HiLink idlCaseLabel		Constant
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "idl"
 

@@ -616,6 +616,11 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define GETF_ALT	0x02	/* jumping to alternate file (not buf num) */
 #define GETF_SWITCH	0x04	/* respect 'switchbuf' settings when jumping */
 
+/* Values for buflist_new() flags */
+#define BLN_CURBUF	1	/* May re-use curbuf for new buffer */
+#define BLN_LISTED	2	/* Put new buffer in buffer list */
+#define BLN_DUMMY	4	/* Allocating dummy buffer */
+
 /* Values for in_cinkeys() */
 #define KEY_OPEN_FORW	0x101
 #define KEY_OPEN_BACK	0x102
@@ -645,6 +650,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define READ_FILTER	0x02	/* read filter output */
 #define READ_STDIN	0x04	/* read from stdin */
 #define READ_BUFFER	0x08	/* read from curbuf (converting stdin) */
+#define READ_DUMMY	0x10	/* reading into a dummy buffer */
 
 /* Values for change_indent() */
 #define INDENT_SET	1	/* set indent */
@@ -1291,8 +1297,7 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 #define VV_FOLDSTART	22
 #define VV_FOLDEND	23
 #define VV_FOLDDASHES	24
-#define VV_ALL_COLORS	25
-#define VV_LEN		26	/* number of v: vars */
+#define VV_LEN		25	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

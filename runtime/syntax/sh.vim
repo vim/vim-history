@@ -16,8 +16,11 @@
 "
 " This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -163,7 +166,7 @@ if exists("b:is_bash")
  syn keyword bashStatement		clear	find	less	rmdir	strip
  syn keyword bashStatement		du	gnufind	ls	rpm	tail
  syn keyword bashStatement		egrep	gnugrep	mkdir	sed	touch
- syn keyword bashStatement		expr	grep	mv	sleep
+ syn keyword bashStatement		expr	grep	mv	sleep	complete
  syn keyword bashAdminStatement	daemon	killproc	reload	start	stop
  syn keyword bashAdminStatement	killall	nice	restart	status
 endif

@@ -2,7 +2,7 @@
 " Language:     DNS/BIND Zone File
 " Maintainer:   jehsom@jehsom.com
 " URL:          http://scripts.jehsom.com
-" Last Change:  2001 Apr 29
+" Last Change:  2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -31,7 +31,7 @@ if version >= 508 || !exists("did_dns_syntax_inits")
     else
         command -nargs=+ HiLink hi def link <args>
     endif
-    
+
     HiLink dnsComment     Comment
     HiLink dnsDataFQDN    Identifier
     HiLink dnsPreProc     PreProc

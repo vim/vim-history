@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 Apr 27
+" Last Change:  2001 May 10
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -240,7 +240,7 @@ if exists("java_highlight_debug")
     JavaHiLink javaDebugSpecialCharacter DebugSpecial
     JavaHiLink javaDebugCharacter        DebugString
     JavaHiLink javaDebugParen            Debug
-  
+
     JavaHiLink DebugString               String
     JavaHiLink DebugSpecial              Special
     JavaHiLink DebugBoolean              Boolean
@@ -300,15 +300,15 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaConstant		javaBoolean
   JavaHiLink javaTypedef			Typedef
   JavaHiLink javaTodo			Todo
-  
+
   JavaHiLink javaCommentTitle		SpecialComment
   JavaHiLink javaDocTags			Special
   JavaHiLink javaDocParam		Function
   JavaHiLink javaCommentStar		javaComment
-  
+
   JavaHiLink javaType			Type
   JavaHiLink javaExternal		Include
-  
+
   JavaHiLink htmlComment			Special
   JavaHiLink htmlCommentPart		Special
   JavaHiLink javaSpaceError		Error

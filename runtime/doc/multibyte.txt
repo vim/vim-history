@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ae.  Last change: 2001 May 05
+*multibyte.txt* For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -601,7 +601,7 @@ fonts directory (e.g., /usr/X11R6/lib/X11/fonts/).  For example: >
 
  :set guifontset=k14,r14
 <
-							*oe2*
+							*E253*
 Note that in East Asian fonts, the standard character cell is square.  When
 mixing a Latin font and an East Asian font, the East Asian font width should
 be twice the Latin font width.
@@ -775,8 +775,8 @@ Wnn 4.2 can be found at:
     window specific to the input method.
 
 
-USING XIM 			*multibyte-input* *ex2* *ex3* *ex4* *ex5* *ex6*
-				*ex7* *ex8* *ex9* *ex0* *ez3* *ez4*
+USING XIM 			*multibyte-input* *E284* *E286* *E287* *E288* *E289*
+				*E285* *E291* *E292* *E290* *ez4*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display
@@ -931,7 +931,7 @@ use a brightly colored cursor: >
 	:highlight Cursor guifg=NONE guibg=Green
 	:highlight lCursor guifg=NONE guibg=Cyan
 <
-			*keymap-file-format* *:loadk* *:loadkeymap* *ek1*
+			*keymap-file-format* *:loadk* *:loadkeymap* *E105*
 The keymap file looks something like this: >
 
 	" Maintainer:	name <email@address>

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Rich Text Format
-" 		"*.rtf" files 
-" 
+"		"*.rtf" files
+"
 " The Rich Text Format (RTF) Specification is a method of encoding formatted
 " text and graphics for easy transfer between applications.
 " .hlp (windows help files) use compiled rtf files

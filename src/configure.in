@@ -544,13 +544,6 @@ AC_ARG_ENABLE(hangulinput,
 	[  --enable-hangulinput    Include Hangul input support.], ,
 	[enable_hangulinput="no"])
 AC_MSG_RESULT($enable_hangulinput)
-if test "$enable_hangulinput" = "yes"; then
-  AC_DEFINE(FEAT_HANGULIN)
-  HANGULIN_SRC=hangulin.c
-  AC_SUBST(HANGULIN_SRC)
-  HANGULIN_OBJ=objects/hangulin.o
-  AC_SUBST(HANGULIN_OBJ)
-fi
 
 AC_MSG_CHECKING(--enable-xim argument)
 AC_ARG_ENABLE(xim,
@@ -1255,6 +1248,20 @@ if test "$enable_xim" = "yes"; then
 fi
 if test "$enable_fontset" = "yes"; then
   AC_DEFINE(FEAT_XFONTSET)
+fi
+
+dnl Only really enable hangul input when GUI and XFONTSET are available
+if test "$enable_hangulinput" = "yes"; then
+  if test "x$GUITYPE" = "xNONE"; then
+    AC_MSG_RESULT(no GUI selected; hangul input has been disabled)
+    enable_hangulinput=no
+  else
+    AC_DEFINE(FEAT_HANGULIN)
+    HANGULIN_SRC=hangulin.c
+    AC_SUBST(HANGULIN_SRC)
+    HANGULIN_OBJ=objects/hangulin.o
+    AC_SUBST(HANGULIN_OBJ)
+  fi
 fi
 
 dnl Checks for libraries and include files.

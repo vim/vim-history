@@ -1670,7 +1670,7 @@ foldCreateMarkers(start, end)
     }
     if (*curbuf->b_p_cms == NUL)
     {
-	EMSG(_("(ef6) 'commentstring' is empty"));
+	EMSG(_("E221: 'commentstring' is empty"));
 	return;
     }
     parseMarker(curwin);
@@ -2334,6 +2334,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		    }
 		    else
 			fp->fd_flags = (fp - 1)->fd_flags;
+		    fp->fd_small = MAYBE;
 		    /* If using the "marker", "expr" or "syntax" method, we
 		     * need to continue until the end of the fold is found. */
 		    if (getlevel == foldlevelMarker
@@ -2763,6 +2764,10 @@ foldlevelDiff(flp)
 foldlevelExpr(flp)
     fline_T	*flp;
 {
+#ifndef FEAT_EVAL
+    flp->start = FALSE;
+    flp->lvl = 0;
+#else
     win_T	*win;
     int		n;
     int		c;
@@ -2843,6 +2848,7 @@ foldlevelExpr(flp)
 
     curwin = win;
     curbuf = curwin->w_buffer;
+#endif
 }
 
 /* parseMarker() {{{2 */
@@ -2949,6 +2955,10 @@ foldlevelMarker(flp)
 foldlevelSyntax(flp)
     fline_T	*flp;
 {
+#ifndef FEAT_SYN_HL
+    flp->start = FALSE;
+    flp->lvl = 0;
+#else
     linenr_T	lnum = flp->lnum + flp->off;
     int		n;
 
@@ -2964,6 +2974,7 @@ foldlevelSyntax(flp)
 	    flp->lvl = n;
 	}
     }
+#endif
 }
 
 /* functions for storing the fold state in a View {{{1 */

@@ -198,7 +198,7 @@ do_window(nchar, Prenum)
 		    if (wp->w_p_pvw)
 			break;
 		if (wp == NULL)
-		    EMSG(_("(pe1) There is no preview window"));
+		    EMSG(_("E441: There is no preview window"));
 		else
 		    win_goto(wp);
 		break;
@@ -565,7 +565,7 @@ win_split(size, flags)
     flags |= cmdmod.split;
     if ((flags & WSP_TOP) && (flags & WSP_BOT))
     {
-	EMSG(_("(we1) Can't split topleft and botright at the same time"));
+	EMSG(_("E442: Can't split topleft and botright at the same time"));
 	return FAIL;
     }
 
@@ -1296,7 +1296,7 @@ win_rotate(upwards, count)
 							   frp = frp->fr_next)
 	if (frp->fr_win == NULL)
 	{
-	    EMSG(_("(we2) Cannot rotate when another window is split"));
+	    EMSG(_("E443: Cannot rotate when another window is split"));
 	    return;
 	}
 #endif
@@ -1761,7 +1761,7 @@ win_close(win, free_buf)
 
     if (lastwin == firstwin)
     {
-	EMSG(_("(we3) Cannot close last window"));
+	EMSG(_("E444: Cannot close last window"));
 	return;
     }
 
@@ -2423,7 +2423,7 @@ close_others(message, forceit)
      * remove the status line.
      */
     if (lastwin != firstwin)
-	EMSG(_("(we4) Other window contains changes"));
+	EMSG(_("E445: Other window contains changes"));
 }
 
 #endif /* FEAT_WINDOWS */
@@ -2470,7 +2470,7 @@ win_init(wp)
 win_alloc_first()
 {
     curwin = win_alloc(NULL);
-    curbuf = buflist_new(NULL, NULL, 1L, FALSE, TRUE);
+    curbuf = buflist_new(NULL, NULL, 1L, BLN_LISTED);
     if (curwin == NULL || curbuf == NULL)
 	mch_windexit(0);
     curwin->w_buffer = curbuf;
@@ -4224,7 +4224,7 @@ file_name_in_line(line, col, options, count)
     if (*ptr == NUL)		/* nothing found */
     {
 	if (options & FNAME_MESS)
-	    EMSG(_("(fe5) No file name under cursor"));
+	    EMSG(_("E446: No file name under cursor"));
 	return NULL;
     }
 
@@ -4232,10 +4232,19 @@ file_name_in_line(line, col, options, count)
      * Search backward for first char of the file name.
      * Go one char back to ":" before "//" even when ':' is not in 'isfname'.
      */
-    while (ptr > line
-	    && (vim_isfilec(ptr[-1])
-		|| ((options & FNAME_HYP) && path_is_url(ptr - 1))))
-	--ptr;
+    while (ptr > line)
+    {
+#ifdef FEAT_MBYTE
+	if (has_mbyte && (len = (*mb_head_off)(line, ptr - 1)) > 0)
+	    ptr -= len + 1;
+	else
+#endif
+	if (vim_isfilec(ptr[-1])
+		|| ((options & FNAME_HYP) && path_is_url(ptr - 1)))
+	    --ptr;
+	else
+	    break;
+    }
 
     /*
      * Search forward for the last char of the file name.
@@ -4332,7 +4341,7 @@ find_file_name_in_path(ptr, len, options, count)
 	{
 	    c = ptr[len];
 	    ptr[len] = NUL;
-	    EMSG2(_("(ce0) Can't find file \"%s\" in path"), ptr);
+	    EMSG2(_("E447: Can't find file \"%s\" in path"), ptr);
 	    ptr[len] = c;
 	}
 

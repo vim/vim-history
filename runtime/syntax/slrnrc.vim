@@ -3,8 +3,11 @@
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
 " Last Change:	Fri Apr  3 11:09:41 1998
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -153,34 +156,47 @@ syn match   slrnrcUnsetkey	'^\s*unsetkey\s\+\("\)\=\(article\|group\|readline\)\
 "syn keyword slrnrcObsolete	ccfollowup_string decode_directory editor_command followup
 "syn keyword slrnrcObsolete	organization quote_string realname replyto signature username
 
-" The default highlighting.
-hi def link slrnrcTodo		Todo
-hi def link slrnrcSpaceError	Error
-hi def link slrnrcNumber	Number
-hi def link slrnrcSpecKey	SpecialChar
-hi def link slrnrcKey		String
-hi def link slrnrcSpecChar	SpecialChar
-hi def link slrnrcString	String
-hi def link slangPreCondit	Special
-hi def link slrnrcComment	Comment
-hi def link slrnrcVarInt	Identifier
-hi def link slrnrcVarStr	Identifier
-hi def link slrnrcCmd		slrnrcSet
-hi def link slrnrcSet		Operator
-hi def link slrnrcColor		Keyword
-hi def link slrnrcColorObj	Identifier
-hi def link slrnrcColorVal	String
-hi def link slrnrcMono		Keyword
-hi def link slrnrcMonoObj	Identifier
-hi def link slrnrcMonoVal	String
-hi def link slrnrcFunArt	Macro
-hi def link slrnrcFunGroup	Macro
-hi def link slrnrcFunRead	Macro
-hi def link slrnrcSetkeyObj	Identifier
-hi def link slrnrcSetkey	Keyword
-hi def link slrnrcUnsetkey	slrnrcSetkey
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_slrnrc_syntax_inits")
+  if version < 508
+    let did_slrnrc_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-"hi def link slrnrcObsolete	Special
+  HiLink slrnrcTodo		Todo
+  HiLink slrnrcSpaceError	Error
+  HiLink slrnrcNumber		Number
+  HiLink slrnrcSpecKey		SpecialChar
+  HiLink slrnrcKey		String
+  HiLink slrnrcSpecChar	SpecialChar
+  HiLink slrnrcString		String
+  HiLink slangPreCondit	Special
+  HiLink slrnrcComment		Comment
+  HiLink slrnrcVarInt		Identifier
+  HiLink slrnrcVarStr		Identifier
+  HiLink slrnrcCmd		slrnrcSet
+  HiLink slrnrcSet		Operator
+  HiLink slrnrcColor		Keyword
+  HiLink slrnrcColorObj	Identifier
+  HiLink slrnrcColorVal	String
+  HiLink slrnrcMono		Keyword
+  HiLink slrnrcMonoObj		Identifier
+  HiLink slrnrcMonoVal		String
+  HiLink slrnrcFunArt		Macro
+  HiLink slrnrcFunGroup	Macro
+  HiLink slrnrcFunRead		Macro
+  HiLink slrnrcSetkeyObj	Identifier
+  HiLink slrnrcSetkey		Keyword
+  HiLink slrnrcUnsetkey	slrnrcSetkey
+
+  "HiLink slrnrcObsolete	Special
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "slrnrc"
 

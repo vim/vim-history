@@ -317,7 +317,7 @@ trans_characters(buf, bufsize)
 }
 #endif
 
-#if defined(FEAT_EVAL) || defined(PROTO)
+#if defined(FEAT_EVAL) || defined(FEAT_TITLE) || defined(PROTO)
 /*
  * Translate a string into allocated memory, replacing special chars with
  * printable chars.  Returns NULL when out of memory.

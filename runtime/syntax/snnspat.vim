@@ -31,7 +31,7 @@ syn match	snnspatNoHeader	"No\. of variable input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"No\. of variable output dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum input dimensions\s*:\s*" contained
 syn match	snnspatNoHeader	"Maximum output dimensions\s*:\s*" contained
-syn match 	snnspatGen	"generated at.*" contained contains=snnspatNumbers
+syn match	snnspatGen	"generated at.*" contained contains=snnspatNumbers
 syn match	snnspatGen	"SNNS pattern definition file [Vv]\d\.\d" contained contains=snnspatNumbers
 
 " the header, what is not an accepted field, is an error

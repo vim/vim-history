@@ -13,6 +13,10 @@
 # it's just run out of memory or something.  Run again, and it will continue
 # with 'xxd'.
 #
+# "make upx" makes *compressed* versions of the GUI and console EXEs, using the
+# excellent UPX compressor:
+#     http://upx.tsx.org/
+#
 # Maintained by Ron Aaron <ron@mossbayeng.com>
 # updated 2000 Oct 16
 

@@ -5,25 +5,46 @@
 " $Revision$
 " Stolen from: Bram Moolenaar's C language file
 " Newest version at: http://www.hec.utah.edu/~karger/vim/syntax/tads.vim
+" History info at the bottom of the file
 
 " TODO lots more keywords
-" global?
+" global, self, etc. are special *objects*, not functions. They should
+" probably be a different color than the special functions
+" Actually, should cvtstr etc. be functions?! (change tadsFunction)
+" Make global etc. into Identifiers, since we don't have regular variables?
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 " A bunch of useful keywords
-syn keyword tadsStatement	goto break return continue
+syn keyword tadsStatement	goto break return continue pass
 syn keyword tadsLabel		case default
 syn keyword tadsConditional	if else switch
 syn keyword tadsRepeat		while for do
-syn keyword tadsStorageClass	local
+syn keyword tadsStorageClass	local compoundWord formatstring specialWords
 syn keyword tadsBoolean         nil true
 
 " TADS keywords
 syn keyword tadsKeyword         replace modify
+syn keyword tadsKeyword         global self inherited
+" builtin functions
+syn keyword tadsKeyword         cvtstr cvtnum caps lower upper substr
+syn keyword tadsKeyword         say length
+syn keyword tadsKeyword         setit setscore
+syn keyword tadsKeyword         datatype proptype
+syn keyword tadsKeyword         car cdr
+syn keyword tadsKeyword         defined isclass
+syn keyword tadsKeyword         find firstobj nextobj
+syn keyword tadsKeyword         getarg argcount
+syn keyword tadsKeyword         input yorn askfile
+syn keyword tadsKeyword         rand randomize
+syn keyword tadsKeyword         restart restore quit save undo
+syn keyword tadsException       abort exit exitobj
 
 syn keyword tadsTodo contained	TODO FIXME XXX
 
@@ -33,7 +54,7 @@ syn match tadsSpecial contained	"\\."
 syn region tadsDoubleString		start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=tadsSpecial,tadsEmbedded
 syn region tadsSingleString		start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=tadsSpecial
 " Embedded expressions in strings
-syn region tadsEmbedded contained       start="<<" end=">>"
+syn region tadsEmbedded contained       start="<<" end=">>" contains=tadsKeyword
 
 " TADS doesn't have \xxx, right?
 "syn match cSpecial contained	"\\[0-7][0-7][0-7]\=\|\\."
@@ -66,8 +87,9 @@ syn region tadsPreCondit	start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\
 syn region tadsIncluded contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match tadsIncluded contained "<[^>]*>"
 syn match tadsInclude		"^\s*#\s*include\>\s*["<]" contains=tadsIncluded
-syn region tadsDefine		start="^\s*#\s*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,tadsPreCondit,tadsIncluded,tadsInclude,tadsDefine,tadsInBrace
-syn region tadsPreProc		start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,tadsPreCondit,tadsIncluded,tadsInclude,tadsDefine,tadsInParen
+syn region tadsDefine		start="^\s*#\s*\(define\>\|undef\>\)" skip="\\$" end="$" contains=ALLBUT,tadsPreCondit,tadsIncluded,tadsInclude,tadsDefine,tadsInBrace,tadsIdentifier
+
+syn region tadsPreProc start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" contains=ALLBUT,tadsPreCondit,tadsIncluded,tadsInclude,tadsDefine,tadsInParen,tadsIdentifier
 
 " Highlight User Labels
 " TODO labels for gotos?
@@ -89,49 +111,74 @@ syn keyword tadsFunction contained function
 syn match tadsFunctionDef        "\<[a-zA-Z][a-zA-Z0-9_$]*\s*:\s*function[^{]*" contains=tadsFunction
 "syn region tadsObject            transparent start = '[a-zA-Z][\i$]\s*:\s*' end=";" contains=tadsBrace,tadsObjectDef
 
+" How far back do we go to find matching groups
 if !exists("tads_minlines")
   let tads_minlines = 15
 endif
 exec "syn sync ccomment tadsComment minlines=" . tads_minlines
+if !exists("tads_sync_dist")
+  let tads_sync_dist = 100
+endif
+execute "syn sync maxlines=" . tads_sync_dist
 
-" The default highlighting.
-hi def link tadsFunctionDef	Function
-hi def link tadsFunction	Structure
-hi def link tadsClass		Structure
-hi def link tadsClassDef	Identifier
-hi def link tadsObjectDef	Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tads_syn_inits")
+  if version < 508
+    let did_tads_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default methods for highlighting.  Can be overridden later
+  HiLink tadsFunctionDef Function
+  HiLink tadsFunction  Structure
+  HiLink tadsClass     Structure
+  HiLink tadsClassDef  Identifier
+  HiLink tadsObjectDef Identifier
 " no highlight for tadsEmbedded, so it prints as normal text w/in the string
 
-hi def link tadsOperator	Operator
-hi def link tadsStructure	Structure
-hi def link tadsTodo		Todo
-hi def link tadsLabel		Label
-hi def link tadsConditional	Conditional
-hi def link tadsRepeat		Repeat
-hi def link tadsStatement	Statement
-hi def link tadsStorageClass	StorageClass
-hi def link tadsKeyWord		Keyword
-hi def link tadsSpecial		SpecialChar
-hi def link tadsNumber		Number
-hi def link tadsBoolean		Boolean
-hi def link tadsDoubleString	tadsString
-hi def link tadsSingleString	tadsString
+  HiLink tadsOperator	Operator
+  HiLink tadsStructure	Structure
+  HiLink tadsTodo	Todo
+  HiLink tadsLabel	Label
+  HiLink tadsConditional	Conditional
+  HiLink tadsRepeat	Repeat
+  HiLink tadsException	Exception
+  HiLink tadsStatement	Statement
+  HiLink tadsStorageClass	StorageClass
+  HiLink tadsKeyWord   Keyword
+  HiLink tadsSpecial	SpecialChar
+  HiLink tadsNumber	Number
+  HiLink tadsBoolean	Boolean
+  HiLink tadsDoubleString	tadsString
+  HiLink tadsSingleString	tadsString
 
-hi def link tadsOctalError	tadsError
-hi def link tadsCommentError	tadsError
-hi def link tadsBraceError	tadsError
-hi def link tadsInBrace		tadsError
-hi def link tadsError		Error
+  HiLink tadsOctalError	tadsError
+  HiLink tadsCommentError	tadsError
+  HiLink tadsBraceError	tadsError
+  HiLink tadsInBrace	tadsError
+  HiLink tadsError	Error
 
-hi def link tadsInclude		Include
-hi def link tadsPreProc		PreProc
-hi def link tadsDefine		Macro
-hi def link tadsIncluded	tadsString
-hi def link tadsPreCondit	PreCondit
+  HiLink tadsInclude	Include
+  HiLink tadsPreProc	PreProc
+  HiLink tadsDefine	Macro
+  HiLink tadsIncluded	tadsString
+  HiLink tadsPreCondit	PreCondit
 
-hi def link tadsString		String
-hi def link tadsComment		Comment
+  HiLink tadsString	String
+  HiLink tadsComment	Comment
+
+  delcommand HiLink
+endif
+
 
 let b:current_syntax = "tads"
 
+" Changes:
+" 11/18/99 Added a bunch of TADS functions, tadsException
+" 10/22/99 Misspelled Moolenaar (sorry!), c_minlines to tads_minlines
+"
 " vim: ts=8

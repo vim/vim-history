@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	gp (version 2.1)
 " Maintainer:	Karim Belabas <Karim.Belabas@math.u-psud.fr>
-" Last change:	2001 Apr 17
+" Last change:	2001 May 10
 
 if version < 600
   syntax clear
@@ -67,7 +67,7 @@ if version >= 508 || !exists("did_gp_syn_inits")
   HiLink gpInput		Type
   HiLink gpInterfaceKey		Statement
   HiLink gpFunction		Function
-  HiLink gpScope 		Type
+  HiLink gpScope		Type
   " contained ones
   HiLink gpSpecial		Special
   HiLink gpTodo			Todo

@@ -3,8 +3,11 @@
 " Maintainer:	Rafal Sulejman <rms@poczta.onet.pl>
 " Last change:	21 Jun 2000
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -13,12 +16,12 @@ syntax case ignore
 syn match snobol4Label	"^[^ \t]*"
 syn keyword snobol4Statement	OUTPUT TERMINAL SCREEN INPUT
 syn keyword snobol4Function	ARB ARBNO POS RPOS TAB TRIM SIZE
-syn keyword snobol4Function	RTAB REPLACE DUPL DATATYPE CONVERT	
+syn keyword snobol4Function	RTAB REPLACE DUPL DATATYPE CONVERT
 syn keyword snobol4Function	LEN DEFINE TRACE STOPTR CODE REM
 syn keyword snobol4Function	DIFFER IDENT ARRAY TABLE
 syn keyword snobol4Function	GT GE LE EQ LT NE LGT
 syn keyword snobol4Function	ANY NOTANY BREAK SPAN DATE
-syn keyword snobol4Function	SUBSTR OPSYN INTEGER REMDR BAL 
+syn keyword snobol4Function	SUBSTR OPSYN INTEGER REMDR BAL
 syn keyword snobol4Todo contained	TODO
 syn match snobol4Keyword		"&TRIM\|&FULLSCAN\|&MAXLNGTH\|&ANCHOR\|&ERRLIMIT\|&ERRTEXT"
 syn match snobol4Keyword		"&ALPHABET\|&LCASE\|&UCASE\|&DUMP\|&TRACE"
@@ -30,26 +33,39 @@ syn match  snobol4Number		"\<\d\+\.\d*\>"
 syn match  snobol4Number		"\.\d\+\>"
 
 " String and Character contstants
-syn region  snobol4String		  start=+"+  skip=+\\\\\|\\"+  end=+"+  
-syn region  snobol4String		  start=+[^a-zA-Z0-9]'+  skip=+\\\\\|\\"+  end=+'+  
+syn region  snobol4String		  start=+"+  skip=+\\\\\|\\"+  end=+"+
+syn region  snobol4String		  start=+[^a-zA-Z0-9]'+  skip=+\\\\\|\\"+  end=+'+
 
 syn match   snobol4MathsOperator   "-\|=\|[:<>+\*^/\\]\||\|"
 syn match  snobol4Comment     "^\*.*$"
 
-" The default highlighting.
-hi def link snobol4Label	Label
-hi def link snobol4Conditional	Conditional
-hi def link snobol4Repeat	Repeat
-hi def link snobol4Number	Number
-hi def link snobol4Error	Error
-hi def link snobol4Statement	Statement
-hi def link snobol4String	String
-hi def link snobol4Comment	Comment
-hi def link snobol4Special	Special
-hi def link snobol4Todo		Todo
-hi def link snobol4Function	Identifier
-hi def link snobol4Keyword	Keyword
-hi def link snobol4MathsOperator Operator
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_snobol4_syntax_inits")
+  if version < 508
+    let did_snobol4_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink snobol4Label		Label
+  HiLink snobol4Conditional	Conditional
+  HiLink snobol4Repeat		Repeat
+  HiLink snobol4Number		Number
+  HiLink snobol4Error		Error
+  HiLink snobol4Statement	Statement
+  HiLink snobol4String		String
+  HiLink snobol4Comment	Comment
+  HiLink snobol4Special	Special
+  HiLink snobol4Todo		Todo
+  HiLink snobol4Function	Identifier
+  HiLink snobol4Keyword	Keyword
+  HiLink snobol4MathsOperator	Operator
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "snobol4"
 " vim: ts=8

@@ -2158,7 +2158,7 @@ putdigraph(str)
 	    return;
 	if (char1 == ESC || char2 == ESC)
 	{
-	    EMSG(_("(ed1) Escape not allowed in digraph"));
+	    EMSG(_("E104: Escape not allowed in digraph"));
 	    return;
 	}
 	str = skipwhite(str);
@@ -2358,7 +2358,7 @@ ex_loadkeymap(eap)
 
     if (eap->getline != getsourceline)
     {
-	EMSG(_("(ek1) Using :loadkeymap not in a sourced file"));
+	EMSG(_("E105: Using :loadkeymap not in a sourced file"));
 	return;
     }
 

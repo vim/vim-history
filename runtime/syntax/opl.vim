@@ -5,8 +5,11 @@
 
 " Open Psion Language... (EPOC16/EPOC32)
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -67,13 +70,26 @@ syn region  OPLString	        start=+"+   end=+"+
 syn region  OPLComment	        start="REM[\t ]" end="$"
 syn match   OPLMathsOperator    "-\|=\|[:<>+\*^/\\]"
 
-" The default highlighting.
-hi def link OPLStatement	Statement
-hi def link OPLNumber		Number
-hi def link OPLString		String
-hi def link OPLComment		Comment
-hi def link OPLMathsOperator    Conditional
-"hi def link OPLError		Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_OPL_syntax_inits")
+  if version < 508
+    let did_OPL_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink OPLStatement		Statement
+  HiLink OPLNumber		Number
+  HiLink OPLString		String
+  HiLink OPLComment		Comment
+  HiLink OPLMathsOperator	Conditional
+"  HiLink OPLError		Error
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "opl"
 

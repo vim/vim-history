@@ -2,7 +2,7 @@
 " Copyright by Jan-Oliver Wagner
 " Language:	avenue
 " Maintainer:	Jan-Oliver Wagner <Jan-Oliver.Wagner@intevation.de>
-" Last change:	2001 April 27
+" Last change:	2001 May 10
 
 " Avenue is the ArcView built-in language. ArcView is
 " a desktop GIS by ESRI. Though it is a built-in language
@@ -14,7 +14,7 @@
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
-  syntax clear  
+  syntax clear
 elseif exists("b:current_syntax")
   finish
 endif
@@ -68,7 +68,7 @@ if version >= 508 || !exists("did_ave_syn_inits")
   else
 	command -nargs=+ HiLink hi def link <args>
   endif
-  
+
   HiLink aveStatement		Statement
 
   HiLink aveString		String

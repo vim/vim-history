@@ -2,11 +2,11 @@
 " Language:	Modsim III, by compuware corporation (www.compuware.com)
 " Maintainer:	Philipp Jocham <flip@sbox.tu-graz.ac.at>
 " Extension:	*.mod
-" Last Change:	2001 March 24
+" Last Change:	2001 May 10
 "
-" 2001 March 24: 
+" 2001 March 24:
 "  - Modsim III is a registered trademark from compuware corporation
-"  - made compatible with Vim 6.0 
+"  - made compatible with Vim 6.0
 "
 " 1999 Apr 22 : Changed modsim3Literal from region to match
 "
@@ -83,7 +83,7 @@ if version >= 508 || !exists("did_modsim3_syntax_inits")
   if version < 508
     let did_modsim3_syntax_inits = 1
     command -nargs=+ HiLink hi link <args>
-  else 
+  else
     command -nargs=+ HiLink hi def link <args>
   endif
 
@@ -99,6 +99,8 @@ if version >= 508 || !exists("did_modsim3_syntax_inits")
   HiLink modsim3ParenError	Error
   HiLink modsim3Builtin	Function
   HiLink modsim3BuiltinNoParen	Function
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "modsim3"

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 25
+" Last Change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -239,8 +239,8 @@ if version >= 508 || !exists("did_c_syn_inits")
 
   HiLink cFormat		cSpecial
   HiLink cCppString		cString
-  HiLink cCommentL 		cComment
-  HiLink cCommentStart 		cComment
+  HiLink cCommentL		cComment
+  HiLink cCommentStart		cComment
   HiLink cLabel			Label
   HiLink cUserLabel		Label
   HiLink cConditional		Conditional

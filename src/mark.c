@@ -482,7 +482,7 @@ fname2fnum(fm)
 	p = shorten_fname(NameBuff, IObuff);
 
 	/* buflist_new() will call fmarks_check_names() */
-	(void)buflist_new(NameBuff, p, (linenr_T)1, FALSE, FALSE);
+	(void)buflist_new(NameBuff, p, (linenr_T)1, 0);
     }
 }
 
@@ -710,7 +710,7 @@ show_one_mark(c, arg, p, name, current)
 	    if (arg == NULL)
 		MSG(_("No marks set"));
 	    else
-		EMSG2(_("(me1) No marks matching \"%s\""), arg);
+		EMSG2(_("E283: No marks matching \"%s\""), arg);
 	}
     }
     /* don't output anything if 'q' typed at --more-- prompt */

@@ -177,7 +177,7 @@ do_cstag(eap)
 
     if (!ret)
     {
-	(void)EMSG(_("(et6) cstag: tag not found"));
+	(void)EMSG(_("E257: cstag: tag not found"));
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	g_do_tagpreview = 0;
 #endif
@@ -833,7 +833,7 @@ cs_find_common(opt, pat, forceit, verbose)
 
     if (totmatches == 0)
     {
-	char *nf = _("(eo1) no matches found in cscope connections");
+	char *nf = _("E258: no matches found in cscope connections");
 	char *buf;
 
 	if (!verbose)
@@ -844,7 +844,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	    (void)EMSG(nf);
 	else
 	{
-	    sprintf(buf, _("(eo2) no matches found for cscope query %s of %s"),
+	    sprintf(buf, _("E259: no matches found for cscope query %s of %s"),
 		opt, pat);
 	    (void)EMSG(buf);
 	    vim_free(buf);
@@ -1081,10 +1081,10 @@ cs_kill(eap)
 	if (p_csverbose)
 	{
 	    if (printbuf == NULL)
-		(void)EMSG(_("(eo3) cscope connection not found"));
+		(void)EMSG(_("E260: cscope connection not found"));
 	    else
 	    {
-		sprintf(printbuf, _("(eo4) cscope connection %s not found"), stok);
+		sprintf(printbuf, _("E261: cscope connection %s not found"), stok);
 		(void)EMSG(printbuf);
 	    }
 	}
@@ -1320,7 +1320,7 @@ cs_parse_results(tagstr, totmatches, nummatches_a, matches_p, cntxts_p, matched)
 	    {
 		if (feof(csinfo[i].fr_fp))
 		    errno = EIO;
-		(void)sprintf(buf, _("(eo5) error reading cscope connection %d"), i);
+		(void)sprintf(buf, _("E262: error reading cscope connection %d"), i);
 		(void)EMSG(buf);
 		goto parse_out;
 	    }

@@ -1,9 +1,9 @@
 " Interactive Data Language syntax file (IDL, too :-)
-" located at http://www.creaso.com 
+" located at http://www.creaso.com
 " Maintainer:	Hermann.Rochholz@gmx.de
-" Last Change:	1999 Jun 14
+" Last Change:	2001 May 10
 " Cleaned a little bit up  April 2001
-" Update to vim V6.xx 2001 May 
+" Update to vim V6.xx 2001 May
 " Preliminary, because I do not use higher language elements of IDL until now.
 
 " Remove any old syntax stuff hanging around

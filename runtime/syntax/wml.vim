@@ -22,7 +22,12 @@ endif
 
 
 " A lot of the web stuff looks like HTML so we load that first
-so $VIMRUNTIME/syntax/html.vim
+if version < 600
+  so <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
+unlet b:current_syntax
 
 if !exists("main_syntax")
   let main_syntax = 'wml'
@@ -34,25 +39,25 @@ syn region  htmlTag  start=+<[^/<]+ end=+>+  contains=htmlTagN,htmlString,htmlAr
 
 "
 " Add in extra Arguments used by wml
-syn keyword htmlTagName contained gfont imgbg imgdot lowsrc 
+syn keyword htmlTagName contained gfont imgbg imgdot lowsrc
 syn keyword htmlTagName contained navbar:define navbar:header
 syn keyword htmlTagName contained navbar:footer navbar:prolog
 syn keyword htmlTagName contained navbar:epilog navbar:button
 syn keyword htmlTagName contained navbar:filter navbar:debug
 syn keyword htmlTagName contained navbar:render
-syn keyword htmlTagName contained preload rollover 
+syn keyword htmlTagName contained preload rollover
 syn keyword htmlTagName contained space hspace vspace over
 syn keyword htmlTagName contained ps ds pi ein big sc spaced headline
 syn keyword htmlTagName contained ue subheadline zwue verbcode
 syn keyword htmlTagName contained isolatin pod sdf text url verbatim
 syn keyword htmlTagName contained xtable
-syn keyword htmlTagName contained csmap fsview import box 
+syn keyword htmlTagName contained csmap fsview import box
 syn keyword htmlTagName contained case:upper case:lower
 syn keyword htmlTagName contained grid cell info lang: logo page
 syn keyword htmlTagName contained set-var restore
 syn keyword htmlTagName contained array:push array:show set-var ifdef
 syn keyword htmlTagName contained say m4 symbol dump enter divert
-syn keyword htmlTagName contained toc 
+syn keyword htmlTagName contained toc
 syn keyword htmlTagName contained wml card do refresh oneevent catch spawn
 
 "
@@ -96,13 +101,17 @@ syn region  htmlTagName    start="\<\(define-tag\|define-region\)" end="\>" cont
 " The perl include stuff
 if main_syntax != 'perl'
   " Perl script
-  syn include @wmlPerlScript $VIMRUNTIME/syntax/perl.vim
+  if version < 600
+    syn include @wmlPerlScript <sfile>:p:h/perl.vim
+  else
+    syn include @wmlPerlScript syntax/perl.vim
+  endif
   syn region perlScript   start=+<perl>+ keepend end=+</perl>+ contains=@wmlPerlScript,wmlPerlTag
 " eperl between '<:' and ':>'  -- Alfie [1999-12-26]
   syn region perlScript   start=+<:+ keepend end=+:>+ contains=@wmlPerlScript,wmlPerlTag
   syn match    wmlPerlTag  contained "</*perl>" contains=wmlPerlTagN
   "syn match   wmlPerlTag  contained "</perl>" contains=wmlPerlTagN
-  syn keyword  wmlPerlTagN contained perl 
+  syn keyword  wmlPerlTagN contained perl
 
   hi link   wmlPerlTag  htmlTag
   hi link   wmlPerlTagN htmlStatement

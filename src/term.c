@@ -2230,7 +2230,7 @@ add_termcap_entry(name, force)
 	    EMSG(error_msg);
 	else
 #endif
-	    EMSG2(_("(ye1) No \"%s\" entry in termcap"), name);
+	    EMSG2(_("E436: No \"%s\" entry in termcap"), name);
     }
     return FAIL;
 }
@@ -2691,7 +2691,7 @@ ttest(pairs)
      * MUST have "cm": cursor motion.
      */
     if (*T_CM == NUL)
-	EMSG(_("(te9) terminal capability \"cm\" required"));
+	EMSG(_("E437: terminal capability \"cm\" required"));
 
     /*
      * if "cs" defined, use a scroll region, it's faster.
@@ -4804,14 +4804,14 @@ gather_termleader()
     void
 show_termcodes()
 {
-    int		    col;
-    int		    *items;
-    int		    item_count;
-    int		    run;
-    int		    row, rows;
-    int		    cols;
-    int		    i;
-    int		    len;
+    int		col;
+    int		*items;
+    int		item_count;
+    int		run;
+    int		row, rows;
+    int		cols;
+    int		i;
+    int		len;
 
 #define INC 27	    /* try to make three columns */
 #define GAP 2	    /* spaces between columns */

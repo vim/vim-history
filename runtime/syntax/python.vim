@@ -23,8 +23,11 @@
 "    let python_highlight_all = 1
 "
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -109,26 +112,39 @@ syn sync match pythonSync grouphere NONE "):$"
 syn sync maxlines=100
 "syn sync minlines=2000
 
-" The default highlighting.
-hi def link pythonStatement	Statement
-hi def link pythonFunction	Function
-hi def link pythonConditional	Conditional
-hi def link pythonRepeat	Repeat
-hi def link pythonString	String
-hi def link pythonRawString	String
-hi def link pythonEscape	Special
-hi def link pythonOperator	Operator
-hi def link pythonPreCondit	PreCondit
-hi def link pythonComment	Comment
-hi def link pythonTodo		Todo
-if exists("python_highlight_numbers")
-  hi def link pythonNumber	Number
-endif
-if exists("python_highlight_builtins")
-  hi def link pythonBuiltin	Function
-endif
-if exists("python_highlight_exceptions")
-  hi def link pythonException	Exception
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_python_syntax_inits")
+  if version < 508
+    let did_python_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink pythonStatement	Statement
+  HiLink pythonFunction	Function
+  HiLink pythonConditional	Conditional
+  HiLink pythonRepeat		Repeat
+  HiLink pythonString		String
+  HiLink pythonRawString	String
+  HiLink pythonEscape		Special
+  HiLink pythonOperator	Operator
+  HiLink pythonPreCondit	PreCondit
+  HiLink pythonComment		Comment
+  HiLink pythonTodo		Todo
+  if exists("python_highlight_numbers")
+    HiLink pythonNumber	Number
+  endif
+  if exists("python_highlight_builtins")
+    HiLink pythonBuiltin	Function
+  endif
+  if exists("python_highlight_exceptions")
+    HiLink pythonException	Exception
+  endif
+
+  delcommand HiLink
 endif
 
 let b:current_syntax = "python"

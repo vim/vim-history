@@ -40,6 +40,12 @@
 #endif
 #include <windows.h>
 
+#ifdef FEAT_PRINTER
+# include <dlgs.h>
+# include <winspool.h>
+# include <commdlg.h>
+#endif
+
 #undef chdir
 #ifdef __GNUC__
 # ifndef __MINGW32__
@@ -117,6 +123,12 @@ FILE* fdDump = NULL;
 # define PACL int
 # define HICON int
 # define HINSTANCE int
+# define HFONT int
+# define PRINTDLG int
+# define TEXTMETRIC int
+# define COLORREF int
+# define HDC int
+# define LOGFONT int
 #endif
 
 #ifndef FEAT_GUI_W32
@@ -2829,7 +2841,7 @@ mch_call_shell(
 		{
 		    x = -1;
 #ifdef FEAT_GUI_W32
-		    EMSG(_("(eq6) Command not found"));
+		    EMSG(_("E371: Command not found"));
 #endif
 		}
 		/* Close the handles to the subprocess, so that it goes away */
@@ -3984,3 +3996,395 @@ default_shell()
 
     return psz;
 }
+
+#ifdef FEAT_PRINTER
+/*=================================================================
+ * Win32 printer stuff
+ */
+
+static HFONT	    prt_font_handles[2][2][2];
+static PRINTDLG	    s_pd;
+static const int    boldface[2] = {  FW_REGULAR , FW_BOLD  };
+static TEXTMETRIC   s_tm;
+static int s_left_margin;
+static int s_right_margin;
+static int s_top_margin;
+
+/*
+ * Convert BGR to RGB for Windows GDI calls
+ */
+static COLORREF swap_me(COLORREF *colorref)
+{
+    int temp;
+    char *ptr = (char *)colorref;
+
+    temp = *(ptr);
+    *(ptr ) = *(ptr + 2);
+    *(ptr + 2) = temp;
+    return *colorref;
+}
+
+#ifndef FEAT_GUI
+/*
+ * Showing the printer dialog is tricky since we have no GUI
+ * window to parent it. The following routines are needed to
+ * get the window parenting and Z-order to work properly.
+ */
+
+HWND GetConsoleHwnd(void)
+{
+#define MY_BUFSIZE 1024 // Buffer size for console window titles.
+
+    char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated WindowTitle.
+    char pszOldWindowTitle[MY_BUFSIZE]; // Contains original WindowTitle.
+    HANDLE hwndFound ;
+
+    GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+
+    wsprintf(pszNewWindowTitle, "%s/%d/%d",
+	    pszOldWindowTitle,
+	    GetTickCount(),
+	    GetCurrentProcessId());
+
+    SetConsoleTitle(pszNewWindowTitle);
+
+    Sleep(40);
+
+    hwndFound = FindWindow(NULL, pszNewWindowTitle);
+
+    SetConsoleTitle(pszOldWindowTitle);
+
+    return(hwndFound);
+}
+
+
+UINT CALLBACK PrintHookProc(
+	HWND hDlg,	// handle to dialog box
+	UINT uiMsg,	// message identifier
+	WPARAM wParam,	// message parameter
+	LPARAM lParam	// message parameter
+	)
+{
+    PRINTDLG  *pPD;
+
+    switch (uiMsg)
+    {
+	case WM_INITDIALOG :
+	    /*  tackle the printdlg copiesctrl problem */
+	    pPD = (PRINTDLG *)lParam;
+	    pPD->nCopies = (WORD)pPD->lCustData;
+	    SetDlgItemInt(hDlg, edt3, pPD->nCopies, FALSE);
+            /*  Bring the window to top */
+	    BringWindowToTop(GetParent(hDlg));
+	    SetForegroundWindow(hDlg);
+	    return 0;
+    }
+    return FALSE;
+}
+#endif
+
+    void
+mch_print_cleanup(void)
+{
+    int pifItalic;
+    int pifBold;
+    int pifUnderline;
+
+    for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
+	for (pifItalic = 0 ; pifItalic <= 1; pifItalic++)
+	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
+		DeleteObject(prt_font_handles[pifBold][pifItalic][pifUnderline]);
+
+    if (s_pd.hDC != NULL)
+	DeleteDC(s_pd.hDC);
+}
+
+#ifdef FEAT_GUI
+/*<VN> need to rearrange win32 code so we can call get_logfont*/
+extern int get_logfont( LOGFONT *lf, char_u  *namei, HDC printer_dc);
+extern HWND s_hwnd;
+#endif
+
+    static int
+to_device_units(int idx, int dpi, int physsize, int offset)
+{
+    int ret;
+
+    if (printer_opts[idx].string[0] == 'i')
+	ret = (printer_opts[idx].number * dpi);
+    else if (printer_opts[idx].string[0] == 'm')
+	ret = (printer_opts[idx].number * 10 * dpi) / 254;
+    else
+	ret = (physsize * printer_opts[idx].number) / 100;
+
+    if (ret < offset)
+	return 0;
+    else
+	return ret - offset;
+}
+
+    static int
+mch_print_get_cpl(int *yChar_out, int *number_width_out)
+{
+    int cpl;
+    int hr;
+    int phyw;
+    int dvoff;
+    int rev_offset;
+    int dpi;
+
+    GetTextMetrics(s_pd.hDC, &s_tm);
+    *yChar_out = s_tm.tmHeight + s_tm.tmExternalLeading;
+
+    hr	    = GetDeviceCaps(s_pd.hDC, HORZRES);
+    phyw    = GetDeviceCaps(s_pd.hDC, PHYSICALWIDTH);
+    dvoff   = GetDeviceCaps(s_pd.hDC, PHYSICALOFFSETX);
+    dpi	    = GetDeviceCaps(s_pd.hDC, LOGPIXELSY);
+
+    rev_offset = phyw - (dvoff + hr);
+
+    s_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
+    if (printer_opts[OPT_PRINT_NUMBER].present)
+    {
+	*number_width_out = 8 * s_tm.tmAveCharWidth;
+	s_left_margin += *number_width_out;
+    }
+
+    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw, rev_offset);
+
+    cpl	= (s_right_margin - s_left_margin) / s_tm.tmAveCharWidth ;
+
+    return cpl;
+}
+
+    static int
+mch_print_get_lpp(int yCharsize)
+{
+    int vr;
+    int phyw;
+    int dvoff;
+    int rev_offset;
+    int	bottom_margin;
+    int	dpi;
+
+    vr	    = GetDeviceCaps(s_pd.hDC, VERTRES);
+    phyw    = GetDeviceCaps(s_pd.hDC, PHYSICALHEIGHT);
+    dvoff   = GetDeviceCaps(s_pd.hDC, PHYSICALOFFSETY);
+    dpi	    = GetDeviceCaps(s_pd.hDC, LOGPIXELSY);
+
+    rev_offset = phyw - (dvoff + vr);
+
+    s_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
+
+
+    /* adjust top margin if there is a header */
+    if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
+	s_top_margin += (yCharsize * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+
+    bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
+
+
+    return (bottom_margin - s_top_margin) / yCharsize ;
+}
+
+    int
+mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
+{
+    static HGLOBAL stored_dm	= NULL;
+    static HGLOBAL stored_devn	= NULL;
+    static int  stored_nCopies	= 1;
+    static int  stored_nFlags	= 0;
+
+    LOGFONT  fLogFont;
+    int pifItalic;
+    int pifBold;
+    int pifUnderline;
+
+    LPVOID mem = NULL;
+
+    memset(&s_pd, 0, sizeof(PRINTDLG));
+    s_pd.lStructSize = sizeof(PRINTDLG);
+#ifdef FEAT_GUI
+    s_pd.hwndOwner = s_hwnd;
+#else
+    s_pd.hwndOwner = GetConsoleHwnd();
+#endif
+    s_pd.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
+    s_pd.hDevMode = stored_dm;
+    s_pd.hDevNames = stored_devn;
+    s_pd.lCustData = stored_nCopies; /* work around bug in print dialogue */
+#ifndef FEAT_GUI
+    /*
+     * Use hook to prevent console window being sent to back
+     */
+    s_pd.lpfnPrintHook	= PrintHookProc ;
+    s_pd.Flags		|= PD_ENABLEPRINTHOOK;
+#endif
+    s_pd.Flags |= stored_nFlags;
+    /*
+     * If bang present, return default printer setup with no dialogue
+     */
+    if (forceit)
+	s_pd.Flags |= PD_RETURNDEFAULT;
+
+    if (PrintDlg(&s_pd) != 0)
+    {
+	if (s_pd.hDC == NULL)
+	{
+	    mch_print_cleanup();
+	    return FALSE;
+	}
+    }
+    else
+    {
+	mch_print_cleanup();
+	return FALSE;
+    }
+    /*
+     * keep the previous driver context
+     */
+    stored_dm = s_pd.hDevMode;
+    stored_devn = s_pd.hDevNames;
+    stored_nFlags = s_pd.Flags;
+    stored_nCopies = s_pd.nCopies;
+
+    /*
+     * On some windows systems the nCopies parameter is not
+     * passed back correctly. It must be retrieved from the
+     * hDevMode struct.
+     */
+    mem = GlobalLock(s_pd.hDevMode);
+    if(mem != NULL && (((DEVMODE *)mem)->dmCopies != 1))
+	stored_nCopies = ((DEVMODE *)mem)->dmCopies;
+    GlobalUnlock(s_pd.hDevMode);
+
+    memset(&fLogFont, 0, sizeof(fLogFont));
+    /*
+     * Initialise the font according to 'printerfont'
+     */
+#ifdef FEAT_GUI
+    if (!get_logfont(&fLogFont, p_prtfont, s_pd.hDC))
+	return FALSE;
+#else
+    /*<VN> need to rearrange win32 code so we can call get_logfont*/
+    STRCPY(fLogFont.lfFaceName, "Courier New");
+#endif
+
+    for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
+	for (pifItalic = 0 ; pifItalic <= 1; pifItalic++)
+	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
+	    {
+		fLogFont.lfWeight =  boldface[pifBold];
+		fLogFont.lfCharSet = DEFAULT_CHARSET;
+		fLogFont.lfItalic = pifItalic;
+		fLogFont.lfUnderline = pifUnderline;
+		prt_font_handles[pifBold][pifItalic][pifUnderline] =  CreateFontIndirect(&fLogFont);
+	    }
+
+    SetBkMode(s_pd.hDC , OPAQUE);
+    SelectObject(s_pd.hDC , prt_font_handles[0][0][0]);
+
+    /*
+     * Fill in the settings struct
+     */
+    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height, &psettings->number_width);
+    psettings->lines_per_page = mch_print_get_lpp(psettings->line_height);
+    psettings->n_collated_copies =  (s_pd.Flags & PD_COLLATE) ? s_pd.nCopies : 1;
+    psettings->n_uncollated_copies =  (s_pd.Flags & PD_COLLATE) ? 1 : s_pd.nCopies;
+
+    if (psettings->n_collated_copies == 0)
+	    psettings->n_collated_copies = 1;
+
+    if (psettings->n_uncollated_copies == 0)
+	    psettings->n_uncollated_copies = 1;
+
+    psettings->jobname = jobname;
+
+    return TRUE;
+}
+
+
+    int
+mch_print_begin(prt_settings_T *psettings)
+{
+    int ret;
+    static DOCINFO  di;
+    memset(&di, 0, sizeof (DOCINFO));
+    di.cbSize = sizeof (DOCINFO);
+    di.lpszDocName = psettings->jobname;
+    ret = StartDoc (s_pd.hDC, &di);
+
+    return (ret > 0);
+}
+
+    void
+mch_print_end(void)
+{
+    EndDoc (s_pd.hDC) ;
+}
+
+    int
+mch_print_end_page(void)
+{
+    return (EndPage(s_pd.hDC) > 0);
+}
+
+    int
+mch_print_begin_page(void)
+{
+    int ret = StartPage(s_pd.hDC);
+    if (ret > 0)
+	return TRUE;
+    else
+    {
+	ret = GetLastError();
+	return FALSE;
+    }
+}
+
+    int
+mch_print_text_out(int x, int y, char_u *p, int len, int *must_break)
+{
+    SIZE	    sz;
+    int		    step;
+    TextOut (s_pd.hDC, x + s_left_margin, y + s_top_margin, p, len);
+    GetTextExtentPoint32(s_pd.hDC, p, len , &sz);
+    step = (sz.cx - s_tm.tmOverhang);
+#ifndef FEAT_PROPORTIONAL_FONTS
+    *must_break = ((x + s_left_margin + step + s_tm.tmAveCharWidth
+					     + s_tm.tmOverhang)
+			> s_right_margin);
+#else
+    if (*(p+len) == NUL)
+	*must_break = FALSE;
+    else
+    {
+	GetTextExtentPoint32(s_pd.hDC, p + len, 1 , &sz);
+	*must_break = ((x + s_left_margin + step + sz.cx)
+			> s_right_margin);
+    }
+#endif
+    return step;
+}
+
+    void
+mch_print_setfont(int iBold, int iItalic, int iUnderline)
+{
+    SelectObject(s_pd.hDC , prt_font_handles[iBold][iItalic][iUnderline]);
+}
+
+    void
+mch_print_set_bg(long bgcol)
+{
+    swap_me(&bgcol);
+    SetBkColor(s_pd.hDC, bgcol);
+}
+    void
+mch_print_set_fg(long fgcol)
+{
+    swap_me(&fgcol);
+    SetTextColor(s_pd.hDC, fgcol);
+}
+
+
+#endif /*FEAT_PRINTER*/

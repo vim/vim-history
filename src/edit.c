@@ -4221,7 +4221,7 @@ set_last_insert(c)
     if (last_insert != NULL)
     {
 	s = last_insert;
-	/* Use the CTRL-V only when entering a special char (TODO: EBCDIC) */
+	/* Use the CTRL-V only when entering a special char */
 	if (c < ' ' || c == DEL)
 	    *s++ = Ctrl_V;
 	s = add_char2buf(c, s);
@@ -4953,9 +4953,11 @@ in_cinkeys(keytyped, when, line_is_empty)
     int		icase;
     int		i;
 
+#ifdef FEAT_EVAL
     if (*curbuf->b_p_inde != NUL)
 	look = curbuf->b_p_indk;	/* 'indentexpr' set: use 'indentkeys' */
     else
+#endif
 	look = curbuf->b_p_cink;	/* 'indentexpr' empty: use 'cinkeys' */
     while (*look)
     {

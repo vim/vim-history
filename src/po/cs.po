@@ -1978,8 +1978,8 @@ msgid "writelines() requires list of strings"
 msgstr "writelines() vy¾aduje seznam øetìzcù"
 
 #: globals.h:927 if_python.c:672
-msgid "(em4) Out of memory!"
-msgstr "(em4) Nedostatek pamìti!"
+msgid "E41: Out of memory!"
+msgstr "E41: Nedostatek pamìti!"
 
 #: if_python.c:757
 msgid "Python: Error initialising I/O objects"
@@ -4192,8 +4192,8 @@ msgstr "Syntaktická sestava %s neexistuje"
 
 #: syntax.c:3106 syntax.c:3281
 #, c-format
-msgid "(eh3) No such highlight group name: %s"
-msgstr "(eh3) Skupina zvýraznìní %s neexistuje"
+msgid "E28: No such highlight group name: %s"
+msgstr "E28: Skupina zvýraznìní %s neexistuje"
 
 #: syntax.c:3217
 msgid "No Syntax items defined for this buffer"
@@ -4558,8 +4558,8 @@ msgid "Vim: Error reading input, exiting...\n"
 msgstr "Vim: chyba pøi ètení vstupu, konèím...\n"
 
 #: undo.c:165
-msgid "(ec5) Cannot make changes, 'modifiable' is off"
-msgstr "(ec5) Nelze mìnit, je nastavena volba 'modifiable'"
+msgid "E21: Cannot make changes, 'modifiable' is off"
+msgstr "E21: Nelze mìnit, je nastavena volba 'modifiable'"
 
 #: undo.c:332
 msgid "No undo possible; continue anyway"
@@ -4859,17 +4859,17 @@ msgid "Argument required"
 msgstr "Je vy¾adován argument"
 
 #: globals.h:867
-msgid "(eb1) \\ should be followed by /, ? or &"
-msgstr "(eb1) po \\ by mìl následovat /. ? nebo &"
+msgid "E10: \\ should be followed by /, ? or &"
+msgstr "E10: po \\ by mìl následovat /. ? nebo &"
 
 #: globals.h:868
-msgid "(ea2) Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr "(ea2) "
+msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr "E12: "
 "Pøíkaz není z exrc/vimrc v aktuálním adresáøi èi pøi hledání tagu povolen."
 
 #: globals.h:869
-msgid "(ee2) File exists (use ! to override)"
-msgstr "(ee2) Soubor existuje (pou¾ijte ! pro vynucení)"
+msgid "E13: File exists (use ! to override)"
+msgstr "E13: Soubor existuje (pou¾ijte ! pro vynucení)"
 
 #: globals.h:870
 msgid "Command failed"
@@ -4884,8 +4884,8 @@ msgid "Interrupted"
 msgstr "Pøeru¹eno"
 
 #: globals.h:873
-msgid "(er3) Invalid address"
-msgstr "(er3) Chybný adresa"
+msgid "E14: Invalid address"
+msgstr "E14: Chybný adresa"
 
 #: globals.h:874
 msgid "Invalid argument"
@@ -4898,72 +4898,72 @@ msgstr "Chybný argument: %s"
 
 #: globals.h:877
 #, c-format
-msgid "(ee3) Invalid expression: %s"
-msgstr "(ee3) Chybný výraz: %s"
+msgid "E15: Invalid expression: %s"
+msgstr "E15: Chybný výraz: %s"
 
 #: globals.h:879
-msgid "(er4) Invalid range"
-msgstr "(er4) Chybný rozsah"
+msgid "E16: Invalid range"
+msgstr "E16: Chybný rozsah"
 
 #: globals.h:880
 msgid "Invalid command"
 msgstr "Chybný pøíkaz"
 
 #: globals.h:882
-msgid "(el1) Unexpected characters before '='"
-msgstr "(el1) Neoèekávané znaky pøed '='"
+msgid "E18: Unexpected characters before '='"
+msgstr "E18: Neoèekávané znaky pøed '='"
 
 #: globals.h:884
-msgid "(em1) Mark has invalid line number"
-msgstr "(em1) Znaèka má chybné èíslo øádku"
+msgid "E19: Mark has invalid line number"
+msgstr "E19: Znaèka má chybné èíslo øádku"
 
 #: globals.h:885
-msgid "(em5) Mark not set"
-msgstr "(em5) Znaèka není nastavena"
+msgid "E20: Mark not set"
+msgstr "E20: Znaèka není nastavena"
 
 #: globals.h:887
 msgid "GUI is not running"
 msgstr "GUI není spu¹tìno"
 
 #: globals.h:889
-msgid "(es4) Scripts nested too deep"
-msgstr "(es4) Skript vnoøen pøíli¹ hluboko"
+msgid "E22: Scripts nested too deep"
+msgstr "E22: Skript vnoøen pøíli¹ hluboko"
 
 #: globals.h:890
-msgid "(en2) No alternate file"
-msgstr "(en2) ®ádný alternativní soubor"
+msgid "E23: No alternate file"
+msgstr "E23: ®ádný alternativní soubor"
 
 #: globals.h:891
-msgid "(ea2) No such abbreviation"
-msgstr "(ea2) Taková zkratka neexistuje"
+msgid "E12: No such abbreviation"
+msgstr "E12: Taková zkratka neexistuje"
 
 #: globals.h:892
 msgid "No ! allowed"
 msgstr "! není povoleno"
 
 #: globals.h:894
-msgid "(eg1) GUI cannot be used: Not enabled at compile time"
-msgstr "(eg1) Nelze pou¾ít GUI: nebylo zapnuto pøi pøekladu programu"
+msgid "E25: GUI cannot be used: Not enabled at compile time"
+msgstr "E25: Nelze pou¾ít GUI: nebylo zapnuto pøi pøekladu programu"
 
 #: globals.h:897
-msgid "(eh2) Hebrew cannot be used: Not enabled at compile time\n"
-msgstr "(eh2) nelze pou¾ít hebrejský re¾im:  nebyl zapnut pøi pøekladu programu\n"
+msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
+msgstr "E26: nelze pou¾ít hebrejský re¾im:  nebyl zapnut pøi pøekladu programu\n"
 
 #: globals.h:900
-msgid "(ef3) Farsi cannot be used: Not enabled at compile time\n"
-msgstr "(ef3) Nelze pou¾ít farsi re¾im:  nebyl zapnut pøi pøekladu programu\n"
+msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
+msgstr "E27: Nelze pou¾ít farsi re¾im:  nebyl zapnut pøi pøekladu programu\n"
 
 #: globals.h:902
-msgid "(ei1) No inserted text yet"
-msgstr "(ei1) Zatím není ¾ádný vlo¾ený text"
+msgid "E29: No inserted text yet"
+msgstr "E29: Zatím není ¾ádný vlo¾ený text"
 
 #: globals.h:903
-msgid "(ec6) No previous command line"
-msgstr "(ec6) ®ádná pøedchozí pøíkazová øádka"
+msgid "E30: No previous command line"
+msgstr "E30: ®ádná pøedchozí pøíkazová øádka"
 
 #: globals.h:904
-msgid "(em3) No such mapping"
-msgstr "(em3) ®ádné takové mapování"
+msgid "E31: No such mapping"
+msgstr "E31: ®ádné takové mapování"
 
 #: globals.h:905
 msgid "No match"
@@ -4975,28 +4975,28 @@ msgid "No match: %s"
 msgstr "®ádná shoda: %s"
 
 #: globals.h:907
-msgid "(ef1) No file name"
-msgstr "(ef1) ®ádný název souboru"
+msgid "E32: No file name"
+msgstr "E32: ®ádný název souboru"
 
 #: globals.h:908
-msgid "(es3) No previous substitute regular expression"
-msgstr "(es3) "
+msgid "E33: No previous substitute regular expression"
+msgstr "E33: "
 
 #: globals.h:909
-msgid "(ep3) No previous command"
-msgstr "(ep3) ®ádný pøedchozí pøíkaz"
+msgid "E34: No previous command"
+msgstr "E34: ®ádný pøedchozí pøíkaz"
 
 #: globals.h:910
-msgid "(ep1) No previous regular expression"
-msgstr "(ep1) ¾ádný pøedchozí regulární výraz"
+msgid "E35: No previous regular expression"
+msgstr "E35: ¾ádný pøedchozí regulární výraz"
 
 #: globals.h:911
 msgid "No range allowed"
 msgstr "Rozsah není povolen"
 
 #: globals.h:913
-msgid "(er5) Not enough room"
-msgstr "(er5) Nedostatek místa"
+msgid "E36: Not enough room"
+msgstr "E36: Nedostatek místa"
 
 #: globals.h:915
 #, c-format
@@ -5018,107 +5018,107 @@ msgid "Can't read file %s"
 msgstr "Nelze èíst soubor %s"
 
 #: globals.h:919
-msgid "(ew2) No write since last change (use ! to override)"
-msgstr "(ew2) Neulo¾ené zmìny (pou¾ijte ! pro vynucení)"
+msgid "E37: No write since last change (use ! to override)"
+msgstr "E37: Neulo¾ené zmìny (pou¾ijte ! pro vynucení)"
 
 #: globals.h:920
-msgid "(en5) Null argument"
-msgstr "(en5) Nulový argument"
+msgid "E38: Null argument"
+msgstr "E38: Nulový argument"
 
 #: globals.h:922
-msgid "(ed1) Number expected"
-msgstr "(ed1) Oèekáváno èíslo"
+msgid "E104: Number expected"
+msgstr "E104: Oèekáváno èíslo"
 
 #: globals.h:925
 #, c-format
-msgid "(ee1) Can't open errorfile %s"
-msgstr "(ee1) Nelze otevøít chybový soubor %s"
+msgid "E40: Can't open errorfile %s"
+msgstr "E40: Nelze otevøít chybový soubor %s"
 
 #: globals.h:929
-msgid "(ep2) Pattern not found"
-msgstr "(ep2) Vzor nenalezen"
+msgid "Pattern not found"
+msgstr "Vzor nenalezen"
 
 #: globals.h:931
 #, c-format
-msgid "(ep2) Pattern not found: %s"
-msgstr "(ep2) Vzor nenalezen: %s"
+msgid "Pattern not found: %s"
+msgstr "Vzor nenalezen: %s"
 
 #: globals.h:932
 msgid "Argument must be positive"
 msgstr "Argument musí být kladný"
 
 #: globals.h:934
-msgid "(ee4) No Errors"
-msgstr "(ee4) ®ádné chyby"
+msgid "E42: No Errors"
+msgstr "E42: ®ádné chyby"
 
 #: globals.h:936
-msgid "(ed2) Damaged match string"
-msgstr "(ed2) Po¹kozený øetìzec pro vyhledávání"
+msgid "E43: Damaged match string"
+msgstr "E43: Po¹kozený øetìzec pro vyhledávání"
 
 #: globals.h:937
-msgid "(ed2) Corrupted regexp program"
-msgstr "(ed2) po¹kozený regexp program"
+msgid "E43: Corrupted regexp program"
+msgstr "E43: po¹kozený regexp program"
 
 #: globals.h:938
-msgid "(er1) 'readonly' option is set (use ! to override)"
-msgstr "(er1) 'nastavena volba 'readonly' (pou¾ijte ! pro vynucení)"
+msgid "E45: 'readonly' option is set (use ! to override)"
+msgstr "E45: 'nastavena volba 'readonly' (pou¾ijte ! pro vynucení)"
 
 #: globals.h:940
 #, c-format
-msgid "(er6) Cannot set read-only variable \"%s\""
-msgstr "(er6) Nelze nastavit pouze_pro_ètení promìnnou \"%s\""
+msgid "E46: Cannot set read-only variable \"%s\""
+msgstr "E46: Nelze nastavit pouze_pro_ètení promìnnou \"%s\""
 
 #: globals.h:943
-msgid "(er2) Error while reading errorfile"
-msgstr "(er2) Chyba pøi ètení chybového souboru"
+msgid "E47: Error while reading errorfile"
+msgstr "E47: Chyba pøi ètení chybového souboru"
 
 #: globals.h:946
-msgid "(es5) Not allowed in sandbox"
-msgstr "(es5) Není v bezpeènostní schránce povoleno"
+msgid "E48: Not allowed in sandbox"
+msgstr "E48: Není v bezpeènostní schránce povoleno"
 
 #: globals.h:948
-msgid "(es2) Invalid scroll size"
-msgstr "(es2) Chybná hodnota promìnné 'scroll'"
+msgid "E49: Invalid scroll size"
+msgstr "E49: Chybná hodnota promìnné 'scroll'"
 
 #: globals.h:949
-msgid "(et1) tag stack empty"
-msgstr "(et1) seznam tagù je prázdný"
+msgid "E73: tag stack empty"
+msgstr "E73: seznam tagù je prázdný"
 
 #: globals.h:950
-msgid "(ec3) Command too complex"
-msgstr "(ec3) Pøíkaz je pøíli¹ slo¾itý"
+msgid "E74: Command too complex"
+msgstr "E74: Pøíkaz je pøíli¹ slo¾itý"
 
 #: globals.h:951
-msgid "(en1) Name too long"
-msgstr "(en1) Název je pøíli¹ dlouhý"
+msgid "E75: Name too long"
+msgstr "E75: Název je pøíli¹ dlouhý"
 
 #: globals.h:952
-msgid "(ep4) Too many ["
-msgstr "(ep4) pøíli¹ mnoho ["
+msgid "E76: Too many ["
+msgstr "E76: pøíli¹ mnoho ["
 
 #: globals.h:954
 msgid "Command too long"
 msgstr "pøíkaz je pøíli¹ dlouhý"
 
 #: globals.h:956
-msgid "(et3) Too many file names"
-msgstr "(et3) Pøíli¹ mnoho názvù souborù"
+msgid "E77: Too many file names"
+msgstr "E77: Pøíli¹ mnoho názvù souborù"
 
 #: globals.h:958
-msgid "(em6) Unknown mark"
-msgstr "(em6) Neznámá znaèka"
+msgid "E78: Unknown mark"
+msgstr "E78: Neznámá znaèka"
 
 #: globals.h:959
 msgid "Unknown"
 msgstr "Neznámý"
 
 #: globals.h:960
-msgid "(ew3) Cannot expand wildcards"
-msgstr "(ew3) Nelze expandovat ¾olíkové znaky"
+msgid "E79: Cannot expand wildcards"
+msgstr "E79: Nelze expandovat ¾olíkové znaky"
 
 #: globals.h:961
-msgid "(ew4) Error while writing"
-msgstr "(ew4) Chyba pøi ukládání"
+msgid "E80: Error while writing"
+msgstr "E80: Chyba pøi ukládání"
 
 #: globals.h:962
 msgid "Zero count"

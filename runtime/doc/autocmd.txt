@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
+*autocmd.txt*   For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -28,7 +28,7 @@ for files matching *.c.  You can also use autocommands to implement advanced
 features, such as editing compressed files (see |gzip-example|).  The usual
 place to put autocommands is in your .vimrc or .exrc file.
 
-							*ew0* *el2* *ae1*
+							*E203* *E204* *E143*
 WARNING: Using autocommands is very powerful, and may lead to unexpected side
 effects.  Be careful not to destroy your text.
 - It's a good idea to do some testing on an expendable copy of a file first.
@@ -144,7 +144,7 @@ If you provide the [group] argument, Vim lists only the autocommands for
 argument behavior differs from that for defining and removing autocommands.
 
 ==============================================================================
-5. Events					*autocmd-events* *ae2* *ae3*
+5. Events					*autocmd-events* *E215* *E216*
 
 					*autocommand-events* *{event}*
 Vim recognizes the following events.  Vim ignores the case of event names
@@ -154,7 +154,7 @@ Vim recognizes the following events.  Vim ignores the case of event names
 BufNewFile			When starting to edit a file that doesn't
 				exist.  Can be used to read in a skeleton
 				file.
-						*BufReadPre* *ea9* *ea0*
+						*BufReadPre* *E200* *E201*
 BufReadPre			When starting to edit a new buffer, before
 				reading the file into the buffer.  Not used
 				if the file doesn't exist.
@@ -184,7 +184,7 @@ FileReadPost			After reading a file with a ":read" command.
 							*FileReadCmd*
 FileReadCmd			Before reading a file with a ":read" command.
 				Should do the reading of the file. |Cmd-event|
-							*FilterReadPre* *ef4*
+							*FilterReadPre* *E135*
 FilterReadPre			Before reading a file from a filter command.
 				Vim checks the pattern against the name of
 				the current buffer, not the name of the
@@ -611,7 +611,7 @@ have changed autocommands, or when Vim has executed the wrong autocommands
 Note that the 'eventignore' option applies here too.  Events listed in this
 option will not cause any commands to be executed.
 
-						*:do* *:doautocmd* *ex1*
+						*:do* *:doautocmd* *E217*
 :do[autocmd] [group] {event} [fname]
 			Apply the autocommands matching [fname] (default:
 			current file name) for {event} to the current buffer.
@@ -722,7 +722,7 @@ If you want the buffer to be unmodified after changing it, reset the
 'modified' option.  This makes it possible to exit the buffer with ":q"
 instead of ":q!".
 
-							*autocmd-nested* *en6*
+							*autocmd-nested* *E218*
 By default, autocommands do not nest.  If you use ":e" or ":w" in an
 autocommand, Vim does not execute the BufRead and BufWrite autocommands for
 those commands.  If you do want this, use the "nested" flag for those commands

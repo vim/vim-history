@@ -741,7 +741,7 @@ gui_mch_add_menu_item(menu, idx)
     if (menu_is_toolbar(parent->name))
     {
 	WidgetClass	type;
-	XmString	xms;	    /* fallback label if pixmap not found */
+	XmString	xms = NULL;    /* fallback label if pixmap not found */
 	int		n;
 	Arg		args[15];
 
@@ -813,6 +813,8 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	    XtSetValues(menu->id, args, n);
+	if (xms != NULL)
+	    XmStringFree(xms);
 
 #ifdef FEAT_BEVAL
 	gui_mch_menu_set_tip(menu);
@@ -1906,20 +1908,15 @@ gui_mch_show_toolbar(int showit)
 			    (*action)(cur->tip);
 			if (!menu_is_separator(cur->name))
 			{
-			    if (text == 1)
-			    {
+			    if (text == 1 || cur->image == 0)
 				XtSetArg(args[n], XmNlabelType, XmSTRING);
-				n++;
-			    }
 			    else
-			    {
 				XtSetArg(args[n], XmNlabelType, XmPIXMAP);
-				n++;
-			    }
+			    n++;
 			    if (cur->id != NULL)
 			    {
 				XtUnmanageChild(cur->id);
-				XtSetValues(cur->id,args,n);
+				XtSetValues(cur->id, args, n);
 				XtManageChild(cur->id);
 			    }
 			}

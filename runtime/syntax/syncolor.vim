@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 28
+" Last Change:	2001 May 08
 
 " This file sets up the default methods for highlighting.
 " It is loaded from "synload.vim" and from Vim for ":syntax reset".

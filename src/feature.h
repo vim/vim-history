@@ -146,6 +146,13 @@
 #endif
 
 /*
+ * +printer		":harcopy" command
+ */
+#if defined(FEAT_NORMAL) && defined(WIN32)
+# define FEAT_PRINTER
+#endif
+
+/*
  * +digraphs		Digraphs.
  *			In insert mode and on the command line you will be
  *			able to use digraphs. The CTRL-K command will work.
@@ -446,7 +453,7 @@
 
 /*
  * +syntax		syntax highlighting.  When using this, it's a good
- *			idea to have +autocmd too.
+ *			idea to have +autocmd and +eval too.
  */
 #if defined(FEAT_NORMAL) || defined(PROTO)
 # define FEAT_SYN_HL
@@ -589,8 +596,11 @@
 # define ESC_CHG_TO_ENG_MODE		/* if defined, when ESC pressed,
 					 * turn to english mode
 					 */
+# if !defined(FEAT_XFONTSET) && defined(HAVE_X11)
+#  define FEAT_XFONTSET			/* Hangul input requires xfontset */
+# endif
 # if defined(FEAT_XIM) && !defined(LINT)
-	Error: You should select only ONE of XIM and FEAT_HANGULIN
+	Error: You should select only ONE of XIM and HANGUL INPUT
 # endif
 #endif
 #if defined(FEAT_HANGULIN) || defined(FEAT_XIM)

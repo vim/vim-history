@@ -2,7 +2,7 @@
 "
 " Language:	papp
 " Maintainer:	Marc Lehmann <pcg@goof.com>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 10
 " Filenames:    *.papp *.pxml *.pxsl
 " URL:		http://papp.plan9.de/
 
@@ -14,22 +14,36 @@
 
 " pod is, btw, allowed everywhere, which is actually wrong :(
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 " source is basically xml, with included html (this is common) and perl bits
-runtime! syntax/xml.vim
+if version < 600
+  so <sfile>:p:h/xml.vim
+else
+  runtime! syntax/xml.vim
+endif
 unlet b:current_syntax
 
 if exists("papp_include_html")
-   syn include @PAppHtml <sfile>:p:h/html.vim
-   unlet b:current_syntax
+  if version < 600
+    syn include @PAppHtml <sfile>:p:h/html.vim
+  else
+    syn include @PAppHtml syntax/html.vim
+  endif
+  unlet b:current_syntax
 endif
 
-syn include @PAppPerl <sfile>:p:h/perl.vim
-unlet b:current_syntax
+if version < 600
+  syn include @PAppPerl <sfile>:p:h/perl.vim
+else
+  syn include @PAppPerl syntax/perl.vim
+endif
 
 if v:version >= 600
    syn cluster xmlFoldCluster add=papp_perl,papp_xperl,papp_phtml,papp_pxml,papp_perlPOD
@@ -71,11 +85,8 @@ syn sync maxlines=300
 syn sync minlines=5
 
 " The default highlighting.
-hi def link papp_perl	NONE
-hi def link papp_xperl	NONE
-hi def link papp_phtml	NONE
 
-hi def link papp_prep	preCondit
+hi def link papp_prep		preCondit
 hi def link papp_gettext	String
- 
+
 let b:current_syntax = "papp"

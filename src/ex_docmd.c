@@ -19,6 +19,11 @@
 
 static int	quitmore = 0;
 static int	ex_pressedreturn = FALSE;
+#ifdef FEAT_PRINTER
+static void ex_hardcopy __ARGS((exarg_T *eap));
+#else
+# define ex_hardcopy ex_ni
+#endif
 
 #ifdef FEAT_USR_CMDS
 typedef struct ucmd
@@ -455,6 +460,8 @@ cmdidx_T cmdidxs[27] =
 	CMD_bang
 };
 
+static char_u dollar_command[2] = {'$', 0};
+
 /*
  * do_exmode(): Repeatedly get commands for the "Ex" mode, until the ":vi"
  * command is given.
@@ -599,7 +606,7 @@ do_cmdline(cmdline, getline, cookie, flags)
      * here.  The value of 200 allows nested function calls, ":source", etc. */
     if (call_depth == 200)
     {
-	EMSG(_("(er8) Command too recursive"));
+	EMSG(_("E169: Command too recursive"));
 	return FAIL;
     }
     ++call_depth;
@@ -915,9 +922,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 		|| (getline == get_func_line && !func_has_ended(cookie))))
     {
 	if (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
-	    EMSG(_("(ee6) Missing :endwhile"));
+	    EMSG(_("E170: Missing :endwhile"));
 	else
-	    EMSG(_("(ee7) Missing :endif"));
+	    EMSG(_("E171: Missing :endif"));
     }
 
     /*
@@ -1289,6 +1296,12 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 #endif
+    if (!curbuf->b_p_ma && (ea.argt & MODIFY))
+    {
+	/* Command not allowed in non-'modifiable' buffer */
+	errormsg = (char_u *)_(e_modifiable);
+	goto doend;
+    }
 #ifdef FEAT_CMDWIN
     if (cmdwin_type != 0 && !(ea.argt & CMDWIN))
     {
@@ -2889,7 +2902,11 @@ invalid_range(eap)
 	    || eap->line1 > eap->line2
 	    || ((eap->argt & RANGE)
 		&& !(eap->argt & NOTADR)
-		&& eap->line2 > curbuf->b_ml.ml_line_count))
+		&& eap->line2 > curbuf->b_ml.ml_line_count
+#ifdef FEAT_DIFF
+			+ (eap->cmdidx == CMD_diffget)
+#endif
+		))
 	return (char_u *)_(e_invrange);
     return NULL;
 }
@@ -3039,7 +3056,7 @@ expand_filename(eap, cmdlinep, errormsgp)
 			    ++p;
 			else if (vim_iswhite(*p))
 			{
-			    *errormsgp = (char_u *)_("(ef2) Only one file name allowed");
+			    *errormsgp = (char_u *)_("E172: Only one file name allowed");
 			    return FAIL;
 			}
 		    }
@@ -3158,7 +3175,7 @@ repl_cmdline(eap, src, srclen, repl, cmdlinep)
     }
     eap->cmd = new_cmdline + (eap->cmd - *cmdlinep);
     eap->arg = new_cmdline + (eap->arg - *cmdlinep);
-    if (eap->do_ecmd_cmd != NULL)
+    if (eap->do_ecmd_cmd != NULL && eap->do_ecmd_cmd != dollar_command)
 	eap->do_ecmd_cmd = new_cmdline + (eap->do_ecmd_cmd - *cmdlinep);
     vim_free(*cmdlinep);
     *cmdlinep = new_cmdline;
@@ -3236,7 +3253,7 @@ getargcmd(argp)
     {
 	++arg;
 	if (vim_isspace(*arg))
-	    command = (char_u *)"$";
+	    command = dollar_command;
 	else
 	{
 	    command = arg;
@@ -3527,7 +3544,7 @@ ends_excmd(c)
     return (c == NUL || c == '|' || c == '"' || c == '\n');
 }
 
-#if defined(FEAT_SYN_HL) || defined(PROTO)
+#if defined(FEAT_SYN_HL) || defined(FEAT_SEARCH_EXTRA) || defined(PROTO)
 /*
  * Return the next command, after the first '|' or '\n'.
  * Return NULL if not found.
@@ -3593,7 +3610,7 @@ check_more(message, forceit)
 		return FAIL;
 	    }
 #endif
-	    EMSGN(_("(be5) %ld more files to edit"), n);
+	    EMSGN(_("E173: %ld more files to edit"), n);
 	    quitmore = 2;	    /* next try to quit is allowed */
 	}
 	return FAIL;
@@ -3687,7 +3704,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
 	{
 	    if (!force)
 	    {
-		EMSG(_("(ec7) Command already exists: use ! to redefine"));
+		EMSG(_("E174: Command already exists: use ! to redefine"));
 		goto fail;
 	    }
 
@@ -3725,7 +3742,9 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     cmd->uc_argt = argt;
     cmd->uc_def = def;
     cmd->uc_compl = compl;
+#ifdef FEAT_EVAL
     cmd->uc_scriptID = current_SID;
+#endif
 
     return OK;
 
@@ -3910,7 +3929,7 @@ uc_scan_attr(attr, len, argt, def, flags, compl)
 
     if (len == 0)
     {
-	EMSG(_("(ec8) No attribute specified"));
+	EMSG(_("E175: No attribute specified"));
 	return FAIL;
     }
 
@@ -3962,7 +3981,7 @@ uc_scan_attr(attr, len, argt, def, flags, compl)
 	    else
 	    {
 wrong_nargs:
-		EMSG(_("(ec9) Invalid number of arguments"));
+		EMSG(_("E176: Invalid number of arguments"));
 		return FAIL;
 	    }
 	}
@@ -3977,7 +3996,7 @@ wrong_nargs:
 		if (*def >= 0)
 		{
 two_count:
-		    EMSG(_("(ec0) Count cannot be specified twice"));
+		    EMSG(_("E177: Count cannot be specified twice"));
 		    return FAIL;
 		}
 
@@ -3987,7 +4006,7 @@ two_count:
 		if (p != val + vallen)
 		{
 invalid_count:
-		    EMSG(_("(ed7) Invalid default value for count"));
+		    EMSG(_("E178: Invalid default value for count"));
 		    return FAIL;
 		}
 	    }
@@ -4015,7 +4034,7 @@ invalid_count:
 	{
 	    if (val == NULL)
 	    {
-		EMSG(_("(ea6) argument required for complete"));
+		EMSG(_("E179: argument required for complete"));
 		return FAIL;
 	    }
 
@@ -4034,7 +4053,7 @@ invalid_count:
 
 	    if (command_complete[i].expand == 0)
 	    {
-		EMSG2(_("(ea7) Invalid complete value: %s"), val);
+		EMSG2(_("E180: Invalid complete value: %s"), val);
 		return FAIL;
 	    }
 	}
@@ -4042,7 +4061,7 @@ invalid_count:
 	{
 	    char_u ch = attr[len];
 	    attr[len] = '\0';
-	    EMSG2(_("(ea8) Invalid attribute: %s"), attr);
+	    EMSG2(_("E181: Invalid attribute: %s"), attr);
 	    attr[len] = ch;
 	    return FAIL;
 	}
@@ -4083,7 +4102,7 @@ ex_command(eap)
 	    ++p;
     if (!ends_excmd(*p) && !vim_iswhite(*p))
     {
-	EMSG(_("(ei2) Invalid command name"));
+	EMSG(_("E182: Invalid command name"));
 	return;
     }
     end = p;
@@ -4098,7 +4117,7 @@ ex_command(eap)
     }
     else if (!ASCII_ISUPPER(*name))
     {
-	EMSG(_("(ei3) User defined commands must start with an uppercase letter"));
+	EMSG(_("E183: User defined commands must start with an uppercase letter"));
 	return;
     }
     else
@@ -4153,23 +4172,21 @@ ex_delcommand(eap)
     for (;;)
     {
 	cmd = USER_CMD_GA(gap, 0);
-	while (i < gap->ga_len)
+	for (i = 0; i < gap->ga_len; ++i)
 	{
 	    cmp = STRCMP(eap->arg, cmd->uc_name);
 	    if (cmp <= 0)
 		break;
-
-	    ++i;
 	    ++cmd;
 	}
-	if (gap == &ucmds || i < gap->ga_len)
+	if (gap == &ucmds || cmp == 0)
 	    break;
 	gap = &ucmds;
     }
 
     if (cmp != 0)
     {
-	EMSG2(_("(de6) No such user-defined command: %s"), eap->arg);
+	EMSG2(_("E184: No such user-defined command: %s"), eap->arg);
 	return;
     }
 
@@ -4464,7 +4481,9 @@ do_ucmd(eap)
     size_t	split_len = 0;
     char_u	*split_buf = NULL;
     ucmd_T	*cmd;
+#ifdef FEAT_EVAL
     scid_T	save_current_SID = current_SID;
+#endif
 
     if (eap->cmdidx == CMD_USER)
 	cmd = USER_CMD(eap->useridx);
@@ -4526,10 +4545,14 @@ do_ucmd(eap)
 	}
     }
 
+#ifdef FEAT_EVAL
     current_SID = cmd->uc_scriptID;
+#endif
     (void)do_cmdline(buf, eap->getline, eap->cookie,
 				   DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
+#ifdef FEAT_EVAL
     current_SID = save_current_SID;
+#endif
     vim_free(buf);
     vim_free(split_buf);
 }
@@ -4614,7 +4637,7 @@ ex_colorscheme(eap)
     exarg_T	*eap;
 {
     if (load_colors(eap->arg) == FAIL)
-	EMSG2(_("(ce1) Cannot find color scheme %s"), eap->arg);
+	EMSG2(_("E185: Cannot find color scheme %s"), eap->arg);
 }
 
     static void
@@ -5190,7 +5213,7 @@ alist_add(al, fname, set_fnum)
     AARGLIST(al)[al->al_ga.ga_len].ae_fname = fname;
     if (set_fnum > 0)
 	AARGLIST(al)[al->al_ga.ga_len].ae_fnum =
-				      buflist_add(fname, set_fnum == 2, TRUE);
+	    buflist_add(fname, BLN_LISTED | (set_fnum == 2 ? BLN_CURBUF : 0));
     ++al->al_ga.ga_len;
     --al->al_ga.ga_room;
 }
@@ -5829,7 +5852,7 @@ ex_cd(eap)
 	{
 	    if (prev_dir == NULL)
 	    {
-		EMSG(_("(ed8) No previous directory"));
+		EMSG(_("E186: No previous directory"));
 		return;
 	    }
 	    new_dir = prev_dir;
@@ -5902,7 +5925,7 @@ ex_pwd(eap)
     if (mch_dirname(NameBuff, MAXPATHL) == OK)
 	msg(NameBuff);
     else
-	EMSG(_("(eu1) Unknown"));
+	EMSG(_("E187: Unknown"));
 }
 
 /*
@@ -6025,7 +6048,7 @@ ex_winpos(eap)
 	}
 	else
 # endif
-	    EMSG(_("(ew8) Obtaining window position not implemented for this platform"));
+	    EMSG(_("E188: Obtaining window position not implemented for this platform"));
     }
     else
     {
@@ -6568,12 +6591,12 @@ open_exfile(fname, forceit, mode)
 #endif
     if (!forceit && *mode != 'a' && vim_fexists(fname))
     {
-	EMSG2(_("(we9) \"%s\" exists (use ! to override)"), fname);
+	EMSG2(_("E189: \"%s\" exists (use ! to override)"), fname);
 	return NULL;
     }
 
     if ((fd = mch_fopen((char *)fname, mode)) == NULL)
-	EMSG2(_("(we0) Cannot open \"%s\" for writing"), fname);
+	EMSG2(_("E190: Cannot open \"%s\" for writing"), fname);
 
     return fd;
 }
@@ -6597,7 +6620,7 @@ ex_mark(eap)
 	curwin->w_cursor.lnum = eap->line2;
 	beginline(BL_WHITE | BL_FIX);
 	if (setmark(*eap->arg) == FAIL)	/* set mark */
-	    EMSG(_("(em8) Argument must be a letter or forward/backward quote"));
+	    EMSG(_("E191: Argument must be a letter or forward/backward quote"));
 	curwin->w_cursor = pos;		/* restore curwin->w_cursor */
     }
 }
@@ -6624,7 +6647,7 @@ ex_normal(eap)
 
     if (ex_normal_busy >= p_mmd)
     {
-	EMSG(_("(en4) Recursive use of :normal too deep"));
+	EMSG(_("E192: Recursive use of :normal too deep"));
 	return;
     }
     ++ex_normal_busy;
@@ -7216,7 +7239,7 @@ ex_endwhile(eap)
 ex_endfunction(eap)
     exarg_T	*eap;
 {
-    EMSG(_("(ee8) :endfunction not inside a function"));
+    EMSG(_("E193: :endfunction not inside a function"));
 }
 
 /*
@@ -7392,7 +7415,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		buf = buflist_findnr(i);
 		if (buf == NULL)
 		{
-		    *errormsg = (char_u *)_("(en3) No alternate file name to substitute for '#'");
+		    *errormsg = (char_u *)_("E194: No alternate file name to substitute for '#'");
 		    return NULL;
 		}
 		if (lnump != NULL)
@@ -8396,7 +8419,7 @@ ex_viminfo(eap)
     if (eap->cmdidx == CMD_rviminfo)
     {
 	if (read_viminfo(eap->arg, TRUE, TRUE, eap->forceit) == FAIL)
-	    EMSG(_("(ev0) Cannot open viminfo file for reading"));
+	    EMSG(_("E195: Cannot open viminfo file for reading"));
     }
     else
 	write_viminfo(eap->arg, eap->forceit);
@@ -8717,7 +8740,7 @@ ex_digraphs(eap)
     else
 	listdigraphs();
 #else
-    EMSG(_("(ed9) No digraphs in this version"));
+    EMSG(_("E196: No digraphs in this version"));
 #endif
 }
 
@@ -9002,7 +9025,7 @@ ex_language(eap)
     {
 	loc = setlocale(what, (char *)name);
 	if (loc == NULL)
-	    EMSG2(_("(le4) Cannot set language to \"%s\""), name);
+	    EMSG2(_("E197: Cannot set language to \"%s\""), name);
 	else
 	{
 	    /* Reset $LC_ALL, otherwise it would overrule everyting. */
@@ -9062,3 +9085,577 @@ get_lang_arg(xp, idx)
 # endif
 
 #endif
+
+
+
+#ifdef FEAT_PRINTER
+/*
+ * Printing code (Machine-independent.)
+ * To implement printing on a platform, the following functions must be
+ * defined:
+ *
+ * int mch_print_init(prt_settings_T *settings)
+ * Called once. Code should display printer dialogue (if appropriate) and
+ * determine printer font and margin settings.
+ * Return FALSE to abort.
+ *
+ * int mch_print_begin(prt_settings_T *settings)
+ * Called once. Start print job.
+ * Return FALSE to abort.
+ *
+ * int mch_print_begin_page()
+ * Called at the start of each page. If you want to do a header, do it
+ * here.
+ * Return FALSE to abort.
+ *
+ * int mch_print_end_page()
+ * Called at the end of each page. Do a footer here!
+ * Return FALSE to abort.
+ *
+ * void mch_print_end()
+ * Called at end of print job
+ *
+ * void mch_print_cleanup()
+ * Called if print job is abandoned. Free any memory, close devices and
+ * handles.
+ *
+ * void mch_print_setfont(int iBold, int iItalic, int iUnderline);
+ * Called whenever the font style changes.
+ *
+ * void mch_print_set_bg(long bgcol);
+ * Called whenever the background colour changes. Parameter is an RGB
+ * value.
+ *
+ * void mch_print_set_fg(long fgcol);
+ * Called whenever the foreground colour changes. Parameter is an RGB
+ * value.
+ *
+ * int mch_print_text_out(int x, int y, char_u *p, int len, int *must_break);
+ * Output text 'p' of length 'len' at position x,y in device units.
+ * set 'must_break' to TRUE if there is not room for another character after
+ * the string printed. Return the width of the string 'p' printed in device
+ * units.
+ * x = 0 is the left margin.
+ *
+ * Note that the generic code has no idea of margins. The machine code should
+ * simply make the page look smaller!
+ *
+ */
+
+#ifdef FEAT_SYN_HL
+static const unsigned long  cterm_color[2][16] = {
+    0x808080,
+    0xff6060,
+    0x00ff00,
+    0xffff00,
+    0x8080ff,
+    0xff40ff,
+    0x00ffff,
+    0xffffff,
+    0, 0, 0, 0, 0, 0, 0, 0,
+
+    0x000000,
+    0xc00000,
+    0x008000,
+    0x804000,
+    0x0000c0,
+    0xc000c0,
+    0x008080,
+    0xc0c0c0,
+    0x808080,
+    0xff6060,
+    0x00ff00,
+    0xffff00,
+    0x8080ff,
+    0xff40ff,
+    0x00ffff,
+    0xffffff,
+};
+
+static int		curr_italic;
+static int		curr_bold;
+static int		curr_underline;
+static unsigned long	current_bg;
+static unsigned long	current_fg;
+static int		current_id;
+#endif
+
+    static unsigned long
+darken_rgb(rgb)
+    unsigned long	rgb;
+{
+    return	((rgb >> 17) << 16)
+	    +	(((rgb & 0xff00) >> 9) << 8)
+	    +	((rgb & 0xff) >> 1);
+}
+
+    static void
+ex_print_number(offset, y_pos, line_num, format)
+    int	    offset;
+    int	    y_pos;
+    int	    line_num;
+    int	    format;
+{
+    /*
+     * A simple header for demos
+     */
+    int	x_pos = 0 - (offset);
+    char_u tbuf[8];
+    int needbreak;
+
+    sprintf(tbuf, "%6.ld", line_num);
+
+#ifdef FEAT_SYN_HL
+    if (format)
+    {
+	current_fg = 0x808080UL;
+	current_bg = 0xFFFFFFUL;
+	mch_print_set_fg(current_fg);
+	mch_print_set_bg(current_bg);
+
+#ifdef FEAT_GUI
+	curr_underline = FALSE;
+	curr_italic = TRUE;
+	curr_bold = FALSE;
+	mch_print_setfont(FALSE, TRUE, FALSE);
+#endif
+	current_id = -1;
+    }
+#endif /*FEAT_SYN_HL*/
+
+    x_pos += mch_print_text_out(x_pos, y_pos,
+	    tbuf,
+	    6,
+	    &needbreak);
+}
+
+    static void
+ex_print_header(offset, headertext, pagenum, format)
+    int	    offset;
+    char_u  *headertext;
+    int	    pagenum;
+    int	    format;
+{
+    /*
+     * A simple header for demos
+     */
+    int	needbreak;
+    int	x_pos = 0;
+    int	y_pos = 0 - (offset * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+    char_u *tbuf;
+    char_u *p;
+    /* Assumes %ld won't format to > 8 chars */
+    p = tbuf = alloc(STRLEN(headertext) + 8 + 8 + 1);
+
+    if (p == NULL)
+	return;
+
+    sprintf(tbuf, "Page %ld - %s", pagenum, headertext);
+
+#ifdef FEAT_SYN_HL
+    if (format)
+    {
+	current_fg = 0;
+	current_bg = 0xFFFFFFUL;
+	mch_print_set_fg(current_fg);
+	mch_print_set_bg(current_bg);
+
+#ifdef FEAT_GUI
+	curr_underline = FALSE;
+	curr_italic = FALSE;
+	curr_bold = TRUE;
+	mch_print_setfont(TRUE, FALSE, FALSE);
+#endif
+	current_id = -1;
+    }
+#endif /*FEAT_SYN_HL*/
+
+    /*
+     * We can print to a -ve offset since the top margin
+     * has been moved down 2 lines from the printable area
+     * extent
+     */
+    while(*p)
+    {
+	x_pos += mch_print_text_out(x_pos, y_pos,
+		p,
+		1,
+		&needbreak);
+	if(needbreak)
+	{
+	    y_pos += offset;
+	    x_pos = 0;
+
+	    if (y_pos >= 0) /* out of room in header */
+		break;
+	}
+	p++;
+    }
+
+    vim_free(tbuf);
+}
+
+#define APPROXIMATE_COUNT
+
+    static void
+ex_hardcopy(eap)
+    exarg_T	*eap;
+{
+    int			no_lines;
+#ifdef COMPUTE_NUM_PAGES
+    int			num_lines = 0;
+    int			num_pages;
+#endif
+    int			page_count;
+    int			collated_copies, uncollated_copies;
+    char_u		*start_line;
+    prt_settings_T	settings;
+#ifdef FEAT_SYN_HL
+    char		modec;
+    int			darken_colours = FALSE;
+    unsigned long	this_colour;
+    int			mono = FALSE;
+#endif
+    int			x_position = 0;
+    unsigned long	total_charcount = 0;
+    unsigned long	no_filechars  = 0;
+    unsigned long	print_pos = 0;
+    int			tab_spaces = 0;
+    int			ts = curbuf->b_p_ts;
+    int			need_break = FALSE;
+
+#ifdef FEAT_SYN_HL
+# ifdef  FEAT_GUI
+    if (!gui.in_use)
+# endif
+    {
+	if (t_colors > 1)
+	    modec = 'c';
+	else
+	    modec = 't';
+    }
+
+    /*
+     * If using a dark background, the colours will probably
+     * be too bright to show up well on white paper, so reduce
+     * their brightness.
+     */
+    if (STRCMP(p_bg, "dark") == 0)
+	darken_colours = TRUE;
+
+    if (    printer_opts[OPT_PRINT_MONO].present
+	&&  printer_opts[OPT_PRINT_MONO].string[0] == 'y')
+    {
+	mono = TRUE;
+    }
+
+#endif
+
+    /*
+     * Initialise printer. The mch_ code should set up margins
+     * if applicable. (It may not be a real printer - for example
+     * the engine might generate HTML or PS.)
+     */
+    if (!mch_print_init(&settings,
+			curbuf->b_fname == NULL
+			    ? buf_spname(curbuf)
+			    : curbuf->b_sfname == NULL
+				? (char *)curbuf->b_fname
+				: (char *)curbuf->b_sfname,
+			eap->forceit))
+	return;
+
+    /*
+     * Estimate the total lines to be printed
+     */
+    for(no_lines = eap->line1; no_lines <= eap->line2; no_lines++)
+    {
+	no_filechars += STRLEN(ml_get(no_lines));
+#ifdef COMPUTE_NUM_PAGES
+# ifdef APPROXIMATE_COUNT
+	if(STRLEN(ml_get(no_lines)) % settings.chars_per_line)
+	    num_lines += (STRLEN(ml_get(no_lines)) / settings.chars_per_line) + 1;
+	else
+	    num_lines += STRLEN(ml_get(no_lines)) / settings.chars_per_line;
+# else
+    /*<TODO> ? */
+# endif
+#endif
+    }
+
+#ifdef COMPUTE_NUM_PAGES
+# ifdef APPROXIMATE_COUNT
+
+    num_pages   = (num_lines + settings.lines_per_page - 1)
+			/ settings.lines_per_page ;
+# else
+    /*<TODO> ? */
+# endif
+#endif
+
+#ifdef FEAT_SYN_HL
+    curr_italic = FALSE;
+    curr_bold = FALSE;
+    curr_underline = FALSE;
+    current_bg = 0xffffffffUL;
+    current_fg = 0xffffffffUL;
+    current_id = -1;
+#endif
+
+    if (!mch_print_begin(&settings))
+	goto print_fail_no_begin;
+
+    /*
+     * Collation requires this loop and uncollated_copies
+     */
+    for (   collated_copies = 0;
+	    collated_copies < settings.n_collated_copies;
+	    collated_copies++)
+    {
+	char_u *p1 = NULL;
+	char_u *p = NULL;
+	char_u *prevp = p;
+	int file_line = eap->line1;
+	int prev_line = file_line;
+	int prev_charcount = 0;
+	total_charcount = 0;
+	for (page_count = 0 ; total_charcount < no_filechars ; page_count++)
+	{
+	    for (   uncollated_copies = 0;
+		    uncollated_copies < settings.n_uncollated_copies;
+		    uncollated_copies++)
+	    {
+		int page_line;
+		p = prevp;
+		file_line = prev_line;
+		total_charcount = prev_charcount;
+
+		/*
+		 * Check for interrupt character every page
+		 */
+		ui_breakcheck();
+
+		if (got_int || !mch_print_begin_page())
+		    goto print_fail;
+
+		sprintf((char *)IObuff, _("Printing: %s page %ld (%ld%%)"),
+			settings.jobname,
+			page_count + 1,
+			(total_charcount * 100) / no_filechars);
+
+		/*
+		 * <VN> Is there a cleaner way of doing this? The
+		 * messages get added to the history as well which isn't
+		 * very useful.
+		 */
+		msg_scroll = FALSE;
+		msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
+		msg_scroll = TRUE;
+
+		/*
+		 * Output header if required
+		 */
+		if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
+		    ex_print_header(    settings.line_height,
+					settings.jobname,
+					page_count + 1,
+					!mono);
+
+		for (page_line = 0 ; page_line < settings.lines_per_page ;)
+		{
+		    /*
+		     * vipin: In case  of a line wrapping out of the page
+		     * then continue from the point
+		     * get the line corresponding to the line number
+		     */
+
+		    if (file_line >= eap->line1 && file_line <= eap->line2)
+		    {
+			if(!p)
+			{
+			    start_line = p = ml_get(file_line);
+			    p1 = p;
+			    file_line++;
+			    print_pos = 0;
+			}
+		    }
+		    else
+			break;
+
+		    if (printer_opts[OPT_PRINT_NUMBER].present)
+			ex_print_number(settings.number_width,
+					settings.line_height * page_line,
+					file_line - 1,
+					!mono);
+		    /*
+		     * loop through the wrapped line so that it gets printed on
+		     * multiple	lines
+		     */
+
+		    while (TRUE)
+		    {
+			x_position = 0;
+			need_break = FALSE;
+			/*
+			 * syntax highlighting stuff, need to move it into a function.
+			 */
+			for(; *p && !need_break; p++)
+			{
+#ifdef FEAT_SYN_HL
+			    if (!mono)
+			    {
+
+			    int colourindex;
+			    char *color;
+
+
+			    int id = syn_get_id(file_line - 1 , p - start_line, 1);
+			    if (id > 0)
+				id = syn_get_final_id(id);
+			    else
+				id = 0;
+
+			    if (id != current_id)
+			    {
+				current_id = id;
+#ifdef	FEAT_GUI
+			    if (gui.in_use)
+			    {
+				int ifItalic = (highlight_has_attr(id, HL_ITALIC, 'g')) ? 1 : 0;
+				int ifBold = (highlight_has_attr(id, HL_BOLD, 'g')) ? 1 : 0;
+				int ifUnderline = (highlight_has_attr(id, HL_UNDERLINE, 'g')) ? 1 : 0;
+				if (curr_underline != ifUnderline || curr_bold != ifBold || curr_italic != ifItalic)
+				{
+				    curr_underline = ifUnderline;
+				    curr_italic = ifItalic;
+				    curr_bold = ifBold;
+				    mch_print_setfont(curr_bold, curr_italic, curr_underline);
+				}
+
+				this_colour = highlight_gui_color_rgb(id, FALSE);
+				if (this_colour == 0)
+				    this_colour = 0xffffff;
+
+				if (this_colour != current_bg)
+				{
+				    current_bg = this_colour;
+				    mch_print_set_bg(this_colour);
+				}
+
+				this_colour = highlight_gui_color_rgb(id, TRUE);
+				if (this_colour == 0xffffff)
+				    this_colour = 0;
+				else if (darken_colours)
+				    this_colour = darken_rgb(this_colour);
+
+				if (this_colour != current_fg)
+				{
+				    current_fg = this_colour;
+				    mch_print_set_fg(this_colour);
+				}
+
+			    }
+			    else
+#endif /*FEAT_GUI*/
+			    {
+				color = highlight_color(id, "fg", modec);
+
+				if (color == NULL)
+				    colourindex = 0;
+				else
+				    colourindex = atoi(color);
+
+				if (colourindex >= 0 && colourindex < t_colors)
+				{
+				    this_colour = cterm_color[(t_colors - 1) >> 3][colourindex];
+				    if (this_colour == 0xffffff)
+					this_colour = 0;
+				    else if (darken_colours)
+					this_colour = darken_rgb(this_colour);
+
+				    if (this_colour != current_fg)
+				    {
+					current_fg = this_colour;
+					mch_print_set_fg(this_colour);
+				    }
+				}
+			    }
+
+			    }
+			    }
+#endif /*FEAT_SYN_HL*/
+			    /*
+			     * Appropriately expand any tabs to spaces.
+			     */
+			    if ((ts) && (*p == TAB || tab_spaces != 0))
+			    {
+				if (tab_spaces == 0)
+				    tab_spaces = ts - (print_pos % ts);
+
+				while (tab_spaces)
+				{
+				    x_position += mch_print_text_out(x_position,
+							settings.line_height * page_line,
+							" ",
+							1,
+							&need_break);
+				    print_pos++;
+				    tab_spaces--;
+				    if (need_break)
+					break;
+				}
+			    }
+			    else
+			    {
+				x_position += mch_print_text_out(x_position,
+						settings.line_height * page_line,
+						p,
+						1,
+						&need_break);
+
+				print_pos++;
+			    }
+			    total_charcount++;
+			}
+
+			/*
+			 * Allow that tab expansion can cause more lines to be
+			 * output than originally estimated
+			 */
+
+			if (++page_line == settings.lines_per_page || *p == NUL)
+			    break;
+		    }
+		    /*
+		     * Break out if you need to start on the next page
+		     */
+		    if (*p == NUL)
+			p = NULL;
+
+		    if (page_line == settings.lines_per_page)
+			break;
+		}
+
+
+		if (!mch_print_end_page())
+		    goto print_fail;
+	    }
+	    prevp = p;
+	    prev_line = file_line;
+	    prev_charcount = total_charcount;
+	}
+	sprintf((char *)IObuff, _("Printed: %s"), settings.jobname);
+	msg_scroll = FALSE;
+	msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
+	msg_scroll = TRUE;
+    }
+
+print_fail:
+
+    mch_print_end();
+
+print_fail_no_begin:
+    mch_print_cleanup();
+}
+
+#endif /*FEAT_PRINTER*/

@@ -11,8 +11,11 @@
 " I think some of these things should get different hilights -
 "  should MODIFY commands look different than TABLE?
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -65,20 +68,33 @@ syn match   focexecNumber	"\<\d\+\.\d*\>"
 
 syn match   focexecComment	"-\*.*"
 
-" The default highlighting.
-hi def link focexecString1	String
-hi def link focexecString2	String
-hi def link focexecNumber	Number
-hi def link focexecComment	Comment
-hi def link focexecTable	Keyword
-hi def link focexecModify	Keyword
-hi def link focexecNormal	Keyword
-hi def link focexecSet		Keyword
-hi def link focexecDash		Keyword
-hi def link focexecFileDef	Keyword
-hi def link focexecJoin		Keyword
-hi def link focexecAmperVar	Identifier
-hi def link focexecFuse		Function
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_focexec_syntax_inits")
+  if version < 508
+    let did_focexec_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink focexecString1		String
+  HiLink focexecString2		String
+  HiLink focexecNumber		Number
+  HiLink focexecComment		Comment
+  HiLink focexecTable		Keyword
+  HiLink focexecModify		Keyword
+  HiLink focexecNormal		Keyword
+  HiLink focexecSet		Keyword
+  HiLink focexecDash		Keyword
+  HiLink focexecFileDef		Keyword
+  HiLink focexecJoin		Keyword
+  HiLink focexecAmperVar	Identifier
+  HiLink focexecFuse		Function
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "focexec"
 

@@ -184,6 +184,7 @@ filemess(buf, name, s, attr)
  * READ_STDIN	read from stdin instead of a file
  * READ_BUFFER	read from curbuf instead of a file (converting after reading
  *		stdin)
+ * READ_DUMMY	read into a dummy buffer (to check if file contents changed)
  *
  * return FAIL for failure, OK otherwise
  */
@@ -278,8 +279,11 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      * Don't do this for a read from a filter.
      * Only do this when 'cpoptions' contains the 'f' flag.
      */
-    if (curbuf->b_ffname == NULL && !filtering && fname != NULL
-				     && vim_strchr(p_cpo, CPO_FNAMER) != NULL)
+    if (curbuf->b_ffname == NULL
+	    && !filtering
+	    && fname != NULL
+	    && vim_strchr(p_cpo, CPO_FNAMER) != NULL
+	    && !(flags & READ_DUMMY))
     {
 	if (setfname(fname, sfname, FALSE) == OK)
 	    curbuf->b_flags |= BF_NOTEDITED;
@@ -611,9 +615,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    --no_wait_return;
 	    msg_scroll = msg_save;
 	    if (fd < 0)
-		EMSG(_("(ea9) *ReadPre autocommands made the file unreadable"));
+		EMSG(_("E200: *ReadPre autocommands made the file unreadable"));
 	    else
-		EMSG(_("(ea0) *ReadPre autocommands must not change current buffer"));
+		EMSG(_("E201: *ReadPre autocommands must not change current buffer"));
 	    return FAIL;
 	}
     }
@@ -622,7 +626,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     /* Autocommands may add lines to the file, need to check if it is empty */
     wasempty = (curbuf->b_ml.ml_flags & ML_EMPTY);
 
-    if (!recoverymode && !filtering)
+    if (!recoverymode && !filtering && !(flags & READ_DUMMY))
     {
 	/*
 	 * Show the user that we are busy reading the input.  Sometimes this
@@ -846,7 +850,7 @@ retry:
 		    if (fd < 0)
 		    {
 			/* Re-opening the original file failed! */
-			EMSG(_("(eu3) Conversion made file unreadable!"));
+			EMSG(_("E202: Conversion made file unreadable!"));
 			error = TRUE;
 			goto failed;
 		    }
@@ -1679,7 +1683,8 @@ failed:
 
 	if (got_int)
 	{
-	    filemess(curbuf, sfname, (char_u *)_(e_interr), 0);
+	    if (!(flags & READ_DUMMY))
+		filemess(curbuf, sfname, (char_u *)_(e_interr), 0);
 	    msg_scroll = msg_save;
 #ifdef FEAT_VIMINFO
 	    check_marks_read();
@@ -1687,7 +1692,7 @@ failed:
 	    return OK;		/* an interrupt isn't really an error */
 	}
 
-	if (!filtering)
+	if (!filtering && !(flags & READ_DUMMY))
 	{
 	    msg_add_fname(curbuf, sfname);   /* fname in IObuff with quotes */
 	    c = FALSE;
@@ -2342,7 +2347,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		}
 		return OK;
 	    }
-	    EMSG(_("(ew0) Autocommands deleted or unloaded buffer to be written"));
+	    EMSG(_("E203: Autocommands deleted or unloaded buffer to be written"));
 	    return FAIL;
 	}
 
@@ -2365,7 +2370,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		{
 		    --no_wait_return;
 		    msg_scroll = msg_save;
-		    EMSG(_("(el2) Autocommand changed number of lines in unexpected way"));
+		    EMSG(_("E204: Autocommand changed number of lines in unexpected way"));
 		    return FAIL;
 		}
 	    }
@@ -3517,7 +3522,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	     * the current backup file becomes the original file
 	     */
 	    if (org == NULL)
-		EMSG(_("(ep7) Patchmode: can't save original file"));
+		EMSG(_("E205: Patchmode: can't save original file"));
 	    else if (mch_stat(org, &st) < 0)
 	    {
 		vim_rename(backup, (char_u *)org);
@@ -3539,7 +3544,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    if (org == NULL
 		    || (empty_fd = mch_open(org, O_CREAT | O_EXTRA | O_EXCL,
 								   0666)) < 0)
-	      EMSG(_("(ee9) patchmode: can't touch empty original file"));
+	      EMSG(_("E206: patchmode: can't touch empty original file"));
 	    else
 	      close(empty_fd);
 	}
@@ -3554,7 +3559,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * Remove the backup unless 'backup' option is set
      */
     if (!p_bk && backup != NULL && mch_remove(backup) != 0)
-	EMSG(_("(ee0) Can't delete backup file"));
+	EMSG(_("E207: Can't delete backup file"));
 
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
@@ -4705,17 +4710,17 @@ vim_rename(from, to)
     while ((n = read(fd_in, buffer, (size_t)BUFSIZE)) > 0)
 	if (write(fd_out, buffer, (size_t)n) != n)
 	{
-	    errmsg = _("(re8) Error writing to \"%s\"");
+	    errmsg = _("E208: Error writing to \"%s\"");
 	    break;
 	}
 
     vim_free(buffer);
     close(fd_in);
     if (close(fd_out) < 0)
-	errmsg = _("(re9) Error closing \"%s\"");
+	errmsg = _("E209: Error closing \"%s\"");
     if (n < 0)
     {
-	errmsg = _("(re0) Error reading \"%s\"");
+	errmsg = _("E210: Error reading \"%s\"");
 	to = from;
     }
     if (errmsg != NULL)
@@ -4727,9 +4732,7 @@ vim_rename(from, to)
     return 0;
 }
 
-#if !defined(FEAT_CON_DIALOG) && !defined(FEAT_GUI_DIALOG)
 static int already_warned = FALSE;
-#endif
 
 /*
  * Check if any not hidden buffer has been changed.
@@ -4756,9 +4759,7 @@ check_timestamps(focus)
     else
     {
 	++no_wait_return;
-#if !defined(FEAT_CON_DIALOG) && !defined(FEAT_GUI_DIALOG)
 	already_warned = FALSE;
-#endif
 	for (buf = firstbuf; buf != NULL; )
 	{
 	    /* Only check buffers in a window. */
@@ -4813,8 +4814,14 @@ buf_check_timestamp(buf, focus)
     int		can_reload = FALSE;
 #endif
 
-    /* If there is no file name or the buffer is not loaded, ignore it */
-    if (buf->b_ffname == NULL || buf->b_ml.ml_mfp == NULL)
+    /* If there is no file name, the buffer is not loaded, or 'buftype' is
+     * set: ignore this buffer. */
+    if (buf->b_ffname == NULL
+	    || buf->b_ml.ml_mfp == NULL
+#if defined(FEAT_QUICKFIX)
+	    || *buf->b_p_bt != NUL
+#endif
+	    )
 	return 0;
 
     if (       !(buf->b_flags & BF_NOTEDITED)
@@ -4830,7 +4837,8 @@ buf_check_timestamp(buf, focus)
 	else
 	    buf->b_mtime = st.st_mtime;
 
-	/* Don't do anything for a directory. */
+	/* Don't do anything for a directory.  Might contain the file
+	 * explorer. */
 	if (mch_isdir(buf->b_fname))
 	    ;
 
@@ -4854,16 +4862,22 @@ buf_check_timestamp(buf, focus)
 #endif
 	    {
 		if (stat_res < 0)
-		    mesg = _("Warning wa1: File \"%s\" no longer available");
+		    mesg = _("E211: Warning: File \"%s\" no longer available");
 		else
 		{
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 		    can_reload = TRUE;
 #endif
+		    /*
+		     * Check if the file contents really changed to avoid
+		     * giving a warning when only the timestamp was set (e.g.,
+		     * checked out of CVS).  Always warn when the buffer was
+		     * changed.
+		     */
 		    if (bufIsChanged(buf))
-			mesg = _("Warning wc3: File \"%s\" has changed and the buffer was changed in Vim as well");
-		    else
-			mesg = _("Warning wc2: File \"%s\" has changed since editing started");
+			mesg = _("W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as well");
+		    else if (buf_contents_changed(buf))
+			mesg = _("W11: Warning: File \"%s\" has changed since editing started");
 		}
 	    }
 	}
@@ -4872,7 +4886,8 @@ buf_check_timestamp(buf, focus)
     else if ((buf->b_flags & BF_NEW) && !(buf->b_flags & BF_NEW_W)
 						&& vim_fexists(buf->b_ffname))
     {
-	mesg = _("Warning wc4: File \"%s\" has been created after editing started");
+	retval = 1;
+	mesg = _("W13: Warning: File \"%s\" has been created after editing started");
 	buf->b_flags |= BF_NEW_W;
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 	can_reload = TRUE;
@@ -4887,11 +4902,14 @@ buf_check_timestamp(buf, focus)
 	    tbuf = alloc((unsigned)(STRLEN(path) + STRLEN(mesg)));
 	    sprintf((char *)tbuf, mesg, path);
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
-	    if (do_dialog(VIM_WARNING, (char_u *)_("Warning"), tbuf,
-			    can_reload ? (char_u *)_("&OK\n&Load File")
-				    : (char_u *)_("&OK"), 1, NULL) == 2)
-		reload = TRUE;
-#else
+	    if (can_reload)
+	    {
+		if (do_dialog(VIM_WARNING, (char_u *)_("Warning"), tbuf,
+				(char_u *)_("&OK\n&Load File"), 1, NULL) == 2)
+		    reload = TRUE;
+	    }
+	    else
+#endif
 	    if (State > NORMAL_BUSY || (State & CMDLINE) || already_warned)
 	    {
 		EMSG(tbuf);
@@ -4926,7 +4944,6 @@ buf_check_timestamp(buf, focus)
 		already_warned = TRUE;
 # endif
 	    }
-#endif
 
 	    vim_free(path);
 	    vim_free(tbuf);
@@ -5653,7 +5670,7 @@ find_end_event(arg)
     {
 	if (arg[1] && !vim_iswhite(arg[1]))
 	{
-	    EMSG2(_("(ae2) Illegal character after *: %s"), arg);
+	    EMSG2(_("E215: Illegal character after *: %s"), arg);
 	    return NULL;
 	}
 	pat = arg + 1;
@@ -5664,7 +5681,7 @@ find_end_event(arg)
 	{
 	    if ((int)event_name2nr(pat, &p) >= (int)NUM_EVENTS)
 	    {
-		EMSG2(_("(ae3) No such event: %s"), pat);
+		EMSG2(_("E216: No such event: %s"), pat);
 		return NULL;
 	    }
 	}
@@ -6077,7 +6094,7 @@ do_doautocmd(arg, do_msg)
 
     if (*arg == '*')
     {
-	EMSG(_("(ex1) Can't execute autocommands for ALL events"));
+	EMSG(_("E217: Can't execute autocommands for ALL events"));
 	return FAIL;
     }
 
@@ -6372,7 +6389,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      */
     if (nesting == 10)
     {
-	EMSG(_("(en6) autocommand nesting too deep"));
+	EMSG(_("E218: autocommand nesting too deep"));
 	return retval;
     }
 
@@ -7227,9 +7244,9 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     if (nested != 0)
     {
 	if (nested < 0)
-	    EMSG(_("(em9) Missing {."));
+	    EMSG(_("E219: Missing {."));
 	else
-	    EMSG(_("(em0) Missing }."));
+	    EMSG(_("E220: Missing }."));
 	vim_free(reg_pat);
 	reg_pat = NULL;
     }

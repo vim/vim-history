@@ -368,7 +368,7 @@ Python_Init(void)
 #ifdef DYNAMIC_PYTHON
 	if (!python_enabled())
 	{
-	    EMSG(_("(ep8) Sorry, this command is disabled, the Python library could not be loaded."));
+	    EMSG(_("E263: Sorry, this command is disabled, the Python library could not be loaded."));
 	    goto fail;
 	}
 #endif
@@ -762,7 +762,7 @@ PythonIO_Init(void)
 
     if (PyErr_Occurred())
     {
-	EMSG(_("(ep7) Python: Error initialising I/O objects"));
+	EMSG(_("E264: Python: Error initialising I/O objects"));
 	return -1;
     }
 

@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -57,29 +60,43 @@ syn match asmDirective		"\.[a-z][a-z]\+"
 
 syn case match
 
-" The default highlighting.
-hi def link asmSection		Special
-hi def link asmLabel		Label
-hi def link asmComment		Comment
-hi def link asmDirective	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_asm_syntax_inits")
+  if version < 508
+    let did_asm_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link asmInclude		Include
-hi def link asmCond		PreCondit
-hi def link asmMacro		Macro
+  " The default methods for highlighting.  Can be overridden later
+  HiLink asmSection	Special
+  HiLink asmLabel	Label
+  HiLink asmComment	Comment
+  HiLink asmDirective	Statement
 
-hi def link hexNumber		Number
-hi def link decNumber		Number
-hi def link octNumber		Number
-hi def link binNumber		Number
+  HiLink asmInclude	Include
+  HiLink asmCond	PreCondit
+  HiLink asmMacro	Macro
 
-hi def link asmSpecialComment	Comment
-hi def link asmIdentifier	Identifier
-hi def link asmType		Type
+  HiLink hexNumber	Number
+  HiLink decNumber	Number
+  HiLink octNumber	Number
+  HiLink binNumber	Number
 
-" My default color overrides:
-" hi def asmSpecialComment ctermfg=red
-" hi def asmIdentifier ctermfg=lightcyan
-" hi def asmType ctermbg=black ctermfg=brown
+  HiLink asmSpecialComment Comment
+  HiLink asmIdentifier Identifier
+  HiLink asmType	Type
+
+  " My default color overrides:
+  " hi asmSpecialComment ctermfg=red
+  " hi asmIdentifier ctermfg=lightcyan
+  " hi asmType ctermbg=black ctermfg=brown
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "asm"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 16:08:57 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.tak
 " URL:          http://www.naglenet.org/vim/syntax/tak.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -37,7 +37,7 @@ endif
 unlet b:current_syntax
 
 " Delete fortran syntax definition for line error format.
-syn clear fortranCommentError
+"syn clear fortranCommentError
 
 
 

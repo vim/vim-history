@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:    erlang (ERicsson LANGuage) 
+" Language:    erlang (ERicsson LANGuage)
 "              http://www.erlang.se
 "              http://www.erlang.org
 " Maintainer:  Kre¹imir Mar¾iæ (Kresimir Marzic) <kmarzic@fly.srk.fer.hr>
@@ -54,21 +54,21 @@ if ! exists ("erlang_characters")
 endif
 
 if ! exists ("erlang_functions")
-	syn keyword erlangFunction  abs append apply atom_to_list binary 
+	syn keyword erlangFunction  abs append apply atom_to_list binary
 	syn keyword erlangFunction  concat_binary binary_to_list binary_to_term
 	syn keyword erlangFunction  concat_binary date element erase exit float
 	syn keyword erlangFunction  float_to_list get get_keys group_leader halt
 	syn keyword erlangFunction  hash hd integer_to_list length link
 	syn keyword erlangFunction  list_to_atom list_to_binary list_to_float
 	syn keyword erlangFunction  list_to_integer list_to_pid list_to_touple
-	syn keyword erlangFunction  make_ref now open_port pid_to_list 
+	syn keyword erlangFunction  make_ref now open_port pid_to_list
 	syn keyword erlangFunction  process_flag process_info processes put
 	syn keyword erlangFunction  register registered round self send
 	syn keyword erlangFunction  setelement size spawn spawn_link split_binary
 	syn keyword erlangFunction  throw time tl trunc tuple_to_list unlink
 	syn keyword erlangFunction  unregister whereis
 
-	syn keyword erlangGuard  atom constant float integer list number pid 
+	syn keyword erlangGuard  atom constant float integer list number pid
 	syn keyword erlangGuard  port reference tuple binary
 
 	syn keyword erlangBif  element float hd length round self size
@@ -101,7 +101,7 @@ if version >= 508 || !exists ("did_erlang_inits")
 	else
 		command -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink erlangComment Comment
 	HiLink erlangModifier Special
 	HiLink erlangOperator Operator
@@ -120,7 +120,7 @@ if version >= 508 || !exists ("did_erlang_inits")
 	HiLink erlangConstant Type
 	HiLink erlangKeyword Keyword
 	HiLink erlangCondition Conditional
-	
+
 	delcommand HiLink
 endif
 

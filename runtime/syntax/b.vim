@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	B (A Formal Method with refinement and mathematical proof)
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" LastChange:	25 Apr 2001 
+" LastChange:	25 Apr 2001
 
 
 " For version 5.x: Clear all syntax items
@@ -15,7 +15,7 @@ endif
 
 " A bunch of useful B keywords
 syn keyword bStatement	MACHINE SEES OPERATIONS INCLUDES DEFINITIONS CONSTRAINTS CONSTANTS VARIABLES CONCRETE_CONSTANTS CONCRETE_VARIABLES ABSTRACT_CONSTANTS ABSTRACT_VARIABLES HIDDEN_CONSTANTS HIDDEN_VARIABLES ASSERT ASSERTIONS  EXTENDS IMPLEMENTATION REFINEMENT IMPORTS USES INITIALISATION INVARIANT PROMOTES PROPERTIES REFINES SETS VALUES VARIANT VISIBLE_CONSTANTS VISIBLE_VARIABLES THEORY
-syn keyword bLabel		CASE IN EITHER OR CHOICE DO OF 
+syn keyword bLabel		CASE IN EITHER OR CHOICE DO OF
 syn keyword bConditional	IF ELSE SELECT ELSIF THEN WHEN
 syn keyword bRepeat		WHILE FOR
 syn keyword bOps		bool card conc closure closure1 dom first fnc front not or id inter iseq iseq1 iterate last max min mod perm pred prj1 prj2 ran rel rev seq seq1 size skip succ tail union
@@ -70,7 +70,7 @@ else
 endif
 syntax match bCommentError	"\*/"
 
-syn keyword bType		INT INTEGER BOOL NAT NATURAL NAT1 NATURAL1 
+syn keyword bType		INT INTEGER BOOL NAT NATURAL NAT1 NATURAL1
 
 syn region bPreCondit	start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)" skip="\\$" end="$" contains=bComment,bString,bCharacter,bNumber,bCommentError
 syn region bIncluded contained start=+"+ skip=+\\\\\|\\"+ end=+"+

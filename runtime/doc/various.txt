@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
+*various.txt*   For Vim version 6.0af.  Last change: 2001 May 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -55,6 +55,7 @@ g8			Print the hex values of the bytes used in the
 			Note: If you are looking for a way to print your text
 			file, you need an external program for that.  In the
 			GUI you can use the File.Print menu entry.
+			(For printing on paper see |:hardcopy|)
 
 :[range]p[rint] {count}
 			Print {count} lines, starting with [range] (default
@@ -78,7 +79,7 @@ g8			Print the hex values of the bytes used in the
 							*:#*
 :[range]# [count]	synonym for :number.
 
-							*:z* *ez2*
+							*:z* *E144*
 :{range}z[+-^.=]{count}	Display several lines of text surrounding the line
 			specified with {range}, or around the current line
 			if there is no {range}.  If there is a {count}, that's
@@ -141,17 +142,17 @@ g8			Print the hex values of the bytes used in the
 			Not available when |+ex_extra| feature was disabled at
 			compile time.
 
-							*:sh* *:shell* *eq6*
+							*:sh* *:shell* *E371*
 :sh[ell]		This command starts a shell.  When the shell exits
 			(after the "exit" command) you return to Vim.  The
 			name for the shell command comes from 'shell' option.
-							*et0*
+							*E360*
 			Note: This doesn't work when Vim on the Amiga was
 			started in QuickFix mode from a compiler, because the
 			compiler will have set stdin to a non-interactive
 			mode.
 
-							*:!cmd* *:!* *ep3*
+							*:!cmd* *:!* *E34*
 :!{cmd}			Execute {cmd} with the shell.  See also the 'shell'
 			and 'shelltype' option.
 			Any '!' in {cmd} is replaced with the previous
@@ -214,7 +215,7 @@ N  *+dialog_gui*	Support for |:confirm| with GUI dialog.
 N  *+dialog_con*	Support for |:confirm| with console dialog.
 N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
 N  *+diff*		|vimdiff| and 'diff'
-N  *+digraphs*		|digraphs| *ed9*
+N  *+digraphs*		|digraphs| *E196*
 B  *+emacs_tags*	|emacs-tags| files
 N  *+eval*		expression evaluation |eval.txt|
 N  *+ex_extra*		Vim's extra Ex commands: |:center|, |:left|,
@@ -262,6 +263,7 @@ m  *+ole*		Win32 GUI only: |ole-interface|
 			checking in automatic commands.  |autocmd-osfiletypes|
 N  *+path_extra*	Up/downwards search in 'path' and 'tags'
 m  *+perl*		Perl interface |perl|
+N  *+printer*		|:hardcopy|
 m  *+python*		Python interface |python|
 N  *+quickfix*		|:make| and |quickfix| commands
 B  *+rightleft*		Right to left typing |'rightleft'|
@@ -410,6 +412,38 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			(which is very rare): print memory usage statistics.
 			Only useful for debugging Vim.
 
+							*:ha* *:hardcopy*
+:[range]ha[hardcopy][!]
+			Send [range] lines (default whole file) to the
+			printer.
+			On some platforms a dialog is displayed to allow
+			selection of printer, paper size etc. To skip the
+			dialogue and immediately print to the system default
+			printer, use the bang.  (!)
+
+			Progress is displayed during printing as a page number
+			and a percentage.  To abort printing use the interrupt
+			key (CTRL-C or, on MS-systems, CTRL-BREAK.)
+			
+			Printer output is controlled by the 'printerfont' and
+			'printersettings' options.
+
+			The printed file is always line wrapped to the
+			selected margins irrespective of the current window's
+			'wrap' or 'linebreak' settings. The current
+			highlighting colours are used in the printout, with
+			the following considerations:
+			1) The normal background is always rendered as white
+			   (i.e. blank paper.)
+			2) White text or the default foreground is rendered as
+			   black, so that it shows up!
+			3) If 'background' is "dark", then the colours are
+			   darkened to compensate for the fact that otherwise
+			   they would be too bright to show up clearly on
+			   white paper.
+			{not in Vi}
+			{only available when compiled with |+printer| feature}
+
 ==============================================================================
 2. Online help						*online-help*
 
@@ -424,7 +458,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			the very top.
 			{not in Vi}
 
-							*{subject}* *he4*
+							*{subject}* *E149*
 :h[elp] {subject}	Like ":help", additionally jump to the tag {subject}.
 			{subject} can include wildcards like "*", "?" and
 			"[a-z]":
@@ -516,7 +550,7 @@ command:
 			ToolBar.HelpFind menu entry instead of using a builtin
 			dialog.  {only when compiled with |+GUI_GTK|}
 
-			*:helpt* *:helptags* *et5* *he5* *he6* *he7* *he8*
+			*:helpt* *:helptags* *E154* *E150* *E151* *E152* *E153*
 :helpt[ags] {dir}	Generate the help tags file for directory {dir}.  All
 			"*.txt" files in the directory are scanned for a help
 			tag definition in between stars.  The generated tags

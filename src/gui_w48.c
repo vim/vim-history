@@ -1206,7 +1206,7 @@ get_font_handle(LOGFONT *lf)
  * calculation is for a vertical (height) size or a horizontal (width) one.
  */
     static int
-points_to_pixels(char_u *str, char_u **end, int vertical)
+points_to_pixels(char_u *str, char_u **end, int vertical, HDC printer_dc)
 {
     int		pixels;
     int		points = 0;
@@ -1236,14 +1236,20 @@ points_to_pixels(char_u *str, char_u **end, int vertical)
     if (divisor == 0)
 	divisor = 1;
 
-    hwnd = GetDesktopWindow();
-    hdc = GetWindowDC(hwnd);
+    if (printer_dc == NULL)
+    {
+	hwnd = GetDesktopWindow();
+	hdc = GetWindowDC(hwnd);
+    }
+    else
+	hdc = printer_dc;
 
     pixels = MulDiv(points,
 		    GetDeviceCaps(hdc, vertical ? LOGPIXELSY : LOGPIXELSX),
 		    72 * divisor);
 
-    ReleaseDC(hwnd, hdc);
+    if (printer_dc == NULL)
+	ReleaseDC(hwnd, hdc);
 
     *end = str;
     return pixels;
@@ -1287,9 +1293,11 @@ font_enumproc(
 
     LOGFONT *lf = (LOGFONT *)(lparam);
 
+#ifndef FEAT_PROPORTIONAL_FONTS
     /* Ignore non-monospace fonts without further ado */
     if ((ntm->tmPitchAndFamily & 1) != 0)
 	return 1;
+#endif
 
     /* Remember this LOGFONT as a "possible" */
     *lf = elf->elfLogFont;
@@ -1336,10 +1344,11 @@ init_logfont(LOGFONT *lf)
     return OK;
 }
 
-    static int
+    int
 get_logfont(
     LOGFONT *lf,
-    char_u  *name)
+    char_u  *name,
+    HDC printer_dc)
 {
     char_u	*p;
     CHOOSEFONT	cf;
@@ -1411,10 +1420,10 @@ get_logfont(
 	switch (*p++)
 	{
 	    case 'h':
-		lf->lfHeight = - points_to_pixels(p, &p, TRUE);
+		lf->lfHeight = - points_to_pixels(p, &p, TRUE, printer_dc);
 		break;
 	    case 'w':
-		lf->lfWidth = points_to_pixels(p, &p, FALSE);
+		lf->lfWidth = points_to_pixels(p, &p, FALSE, printer_dc);
 		break;
 	    case 'b':
 #ifndef MSWIN16_FASTTEXT
@@ -1445,7 +1454,7 @@ get_logfont(
 			}
 		    if (cp->name == NULL)
 		    {
-			sprintf((char *)IObuff, _("(en7) Illegal charset name \"%s\" in font name \"%s\""), p, name);
+			sprintf((char *)IObuff, _("E244: Illegal charset name \"%s\" in font name \"%s\""), p, name);
 			EMSG(IObuff);
 			break;
 		    }
@@ -1453,7 +1462,7 @@ get_logfont(
 		}
 	    default:
 		sprintf((char *)IObuff,
-			_("(en8) Illegal char '%c' in font name \"%s\""),
+			_("E245: Illegal char '%c' in font name \"%s\""),
 			p[-1], name);
 		EMSG(IObuff);
 		break;
@@ -1479,10 +1488,10 @@ gui_mch_get_font(
     LOGFONT	lf;
     GuiFont	font;
 
-    get_logfont(&lf, name);
+    get_logfont(&lf, name, NULL);
     font = get_font_handle(&lf);
     if (font == NOFONT && giveErrorIfMissing)
-	EMSG2(_("(fe0) Unknown font: %s"), name);
+	EMSG2(_("E235: Unknown font: %s"), name);
     return font;
 }
     void
@@ -2211,6 +2220,17 @@ gui_mch_get_rgb(
     return retval;
 }
 #endif
+#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
+/*
+ * Return the RGB value of a pixel as long.
+ */
+    unsigned long
+gui_mch_get_rgb_long(
+    guicolor_T	pixel)
+{
+    return (GetRValue(pixel) << 16) + (GetGValue(pixel) << 8) + GetBValue(pixel);
+}
+#endif
 
 #if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 /* Convert pixels in X to dialog units */
@@ -2819,7 +2839,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
     char	*p;
 
     /* Load the font */
-    if (get_logfont(&lf, font_name))
+    if (get_logfont(&lf, font_name, NULL))
 	font = get_font_handle(&lf);
     if (font == NOFONT)
 	return FAIL;

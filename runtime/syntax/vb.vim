@@ -1,14 +1,17 @@
 " Vim syntax file
 " Language:	Visual Basic
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
 " Send comments, suggestions and requests to the maintainer.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -158,18 +161,31 @@ syn region  vbComment   start="'"   end="$" contains=vbTodo
 syn region  vbLineNumber	start="^\d" end="\s"
 syn match   vbTypeSpecifier  "[a-zA-Z0-9][\$%&!#]"ms=s+1
 
-" The default highlighting.
-hi def link vbLineNumber	Comment
-hi def link vbNumber		Number
-hi def link vbError		Error
-hi def link vbStatement	        Statement
-hi def link vbString		String
-hi def link vbComment		Comment
-hi def link vbTodo		Todo
-hi def link vbFunction		Identifier
-hi def link vbMethods           PreProc
-hi def link vbEvents            Special
-hi def link vbTypeSpecifier     Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_vb_syntax_inits")
+  if version < 508
+    let did_vb_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink vbLineNumber	        Comment
+  HiLink vbNumber		Number
+  HiLink vbError		Error
+  HiLink vbStatement	        Statement
+  HiLink vbString		String
+  HiLink vbComment		Comment
+  HiLink vbTodo		Todo
+  HiLink vbFunction		Identifier
+  HiLink vbMethods             PreProc
+  HiLink vbEvents              Special
+  HiLink vbTypeSpecifier       Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "vb"
 

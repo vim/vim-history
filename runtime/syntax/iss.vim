@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inno Setup File (iss file) and My InnoSetup extension
 " Maintainer:	Dominique Stéphan (dominique@mggen.com)
-" Last change:	2001 Mai 2
+" Last change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -45,30 +45,30 @@ syn match  issFolder		"{[^{]*}"
 syn region issString	start=+"+  end=+"+ contains=issFolder
 
 " [Dirs]
-syn keyword issDirsFlags deleteafterinstall uninsalwaysuninstall uninsneveruninstall 
+syn keyword issDirsFlags deleteafterinstall uninsalwaysuninstall uninsneveruninstall
 
 " [Files]
-syn keyword issFilesCopyMode normal onlyifdoesntexist alwaysoverwrite alwaysskipifsameorolder 
+syn keyword issFilesCopyMode normal onlyifdoesntexist alwaysoverwrite alwaysskipifsameorolder
 syn keyword issFilesAttribs readonly hidden system
-syn keyword issFilesFlags comparetimestampalso confirmoverwrite deleteafterinstall 
-syn keyword issFilesFlags external fontisnttruetype isreadme overwritereadonly 
-syn keyword issFilesFlags regserver regtypelib restartreplace 
-syn keyword issFilesFlags sharedfile skipifsourcedoesntexist uninsneveruninstall 
+syn keyword issFilesFlags comparetimestampalso confirmoverwrite deleteafterinstall
+syn keyword issFilesFlags external fontisnttruetype isreadme overwritereadonly
+syn keyword issFilesFlags regserver regtypelib restartreplace
+syn keyword issFilesFlags sharedfile skipifsourcedoesntexist uninsneveruninstall
 
 " [Icons]
-syn keyword issIconsFlags createonlyiffileexists runminimized uninsneveruninstall useapppaths 
+syn keyword issIconsFlags createonlyiffileexists runminimized uninsneveruninstall useapppaths
 
 " [INI]
-syn keyword issINIFlags createkeyifdoesntexist uninsdeleteentry uninsdeletesection uninsdeletesectionifempty 
+syn keyword issINIFlags createkeyifdoesntexist uninsdeleteentry uninsdeletesection uninsdeletesectionifempty
 
-" [Registry] 
+" [Registry]
 syn keyword issRegRootKey   HKCR HKCU HKLM HKU HKCC
-syn keyword issRegValueType none string expandsz multisz dword binary 
-syn keyword issRegFlags createvalueifdoesntexist deletekey deletevalue preservestringtype 
-syn keyword issRegFlags uninsclearvalue uninsdeletekey uninsdeletekeyifempty uninsdeletevalue 
+syn keyword issRegValueType none string expandsz multisz dword binary
+syn keyword issRegFlags createvalueifdoesntexist deletekey deletevalue preservestringtype
+syn keyword issRegFlags uninsclearvalue uninsdeletekey uninsdeletekeyifempty uninsdeletevalue
 
 " [Run] and [UninstallRun]
-syn keyword issRunFlags nowait shellexec skipifdoesntexist runminimized waituntilidle 
+syn keyword issRunFlags nowait shellexec skipifdoesntexist runminimized waituntilidle
 syn keyword issRunFlags postinstall unchecked showcheckbox
 
 " [Types]
@@ -78,7 +78,7 @@ syn keyword issTypesFlags iscustom
 syn keyword issComponentsFlags fixed restart disablenouninstallwarning
 
 " [UninstallDelete] and [InstallDelete]
-syn keyword issInstallDeleteType files filesandordirs dirifempty 
+syn keyword issInstallDeleteType files filesandordirs dirifempty
 
 
 " Define the default highlighting.
@@ -103,9 +103,9 @@ if version >= 508 || !exists("did_iss_syntax_inits")
    HiLink issURL	Include
 
    HiLink issDirsFlags		Keyword
-   HiLink issFilesCopyMode 	Keyword
-   HiLink issFilesAttribs 	Keyword
-   HiLink issFilesFlags 	Keyword
+   HiLink issFilesCopyMode	Keyword
+   HiLink issFilesAttribs	Keyword
+   HiLink issFilesFlags		Keyword
    HiLink issIconsFlags		Keyword
    HiLink issINIFlags		Keyword
    HiLink issRegRootKey		Keyword

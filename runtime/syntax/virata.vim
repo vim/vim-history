@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Virata Configuration Script
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2001 Jan 15
+" Last Change:	2001-05-07
 " Vim URL:	http://www.vim.org/lang.html
 " Virata URL:	http://www.virata.com/
 
@@ -11,12 +11,13 @@
 "                        2) The word "Virata" in the first 5 lines
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Setup Syntax:
+if version < 600
+  "  Clear old syntax settings
+  syn clear
+elseif exists("b:current_syntax")
   finish
 endif
-
-" Setup Syntax:
 "  Virata syntax is case insensetive (mostly)
 syn case ignore
 
@@ -24,11 +25,11 @@ syn case ignore
 
 " Comments:
 " Virata comments start with %, but % is not a keyword character
-syn region  virataComment	start="^\s*%" keepend end="$" contains=@virataGrpInComments
-syn region  virataSpclComment	start="^\s*%%" keepend end="$" contains=@virataGrpInComments
+syn region  virataComment	start="^\s*%" start="\s%" keepend end="$" contains=@virataGrpInComments
+syn region  virataSpclComment	start="^\s*%%" start="\s%%" keepend end="$" contains=@virataGrpInComments
 syn keyword virataInCommentTodo	contained TODO FIXME XXX[XXXXX] REVIEW
 syn cluster virataGrpInComments	contains=virataInCommentTodo
-syn cluster virataGrpComments	contains=@virataGrpInCommenta,virataComment,virataSpclComment
+syn cluster virataGrpComments	contains=@virataGrpInComments,virataComment,virataSpclComment
 
 
 " Constants:
@@ -54,9 +55,10 @@ syn match   virataIdentifier	contained "\<\I\i\{-}\(\-\i\{-1,}\)\{-}\>"
 
 " Statements:
 syn match   virataStatement	"^\s*Config\(\.hs\=\)\=\>"
+syn match   virataStatement	"^\s*Undefine\>"
 syn match   virataStatement	"^\s*Make\.\I\i\{-}\(\-\i\{-1}\)\{-}\>"
 syn match   virataStatement	"^\s*Make\.c\(at\)\=++\s"me=e-1
-syn match   virataStatement	"^\s*\(Architecture\|Colour\|Hardware\|ModuleSource\|NoInit\|Path\|Reserved\|SysLink\)\>"
+syn match   virataStatement	"^\s*\(Architecture\|Colour\|DefaultPri\(ority\)\=\|Hardware\|ModuleSource\|NoInit\|Path\|Reserved\|SysLink\)\>"
 
 " Import (Package <exec>|Module <name> from <dir>)
 syn region  virataImportDef	transparent matchgroup=virataStatement start="^\s*Import\>" keepend end="$" contains=virataInImport,virataModuleDef,virataNumberError,virataStringError,virataDefSubst
@@ -127,52 +129,64 @@ syn cluster virataGrpPreProcs	contains=virataDefine,virataDefSubst,virataPreConD
 
 " Synchronize Syntax:
 syn sync clear
-syn sync minlines=50		"for multiple if region nesting
+syn sync minlines=50		"for multiple region nesting
 
 
-" The default highlighting.
 
-" Sub Links:
-hi def link virataDefSubst	virataPreProc
-hi def link virataInAlter	virataOperator
-hi def link virataInExec	virataOperator
-hi def link virataInExport	virataOperator
-hi def link virataInImport	virataOperator
-hi def link virataInInstance	virataOperator
-hi def link virataInMake	virataOperator
-hi def link virataInModule	virataOperator
-hi def link virataInProcess	virataOperator
-hi def link virataInMacAddr	virataHexNumber
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later  : only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_virata_syntax_inits")
+  if version < 508
+    let did_virata_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
+  " Sub Links:
+  HiLink virataDefSubst		virataPreProc
+  HiLink virataInAlter		virataOperator
+  HiLink virataInExec		virataOperator
+  HiLink virataInExport		virataOperator
+  HiLink virataInImport		virataOperator
+  HiLink virataInInstance	virataOperator
+  HiLink virataInMake		virataOperator
+  HiLink virataInModule		virataOperator
+  HiLink virataInProcess	virataOperator
+  HiLink virataInMacAddr	virataHexNumber
 
-" Comment Group:
-hi def link virataComment	Comment
-hi def link virataSpclComment	SpecialComment
-hi def link virataInCommentTodo	Todo
+  " Comment Group:
+  HiLink virataComment		Comment
+  HiLink virataSpclComment	SpecialComment
+  HiLink virataInCommentTodo	Todo
 
-" Constant Group:
-hi def link virataString	String
-hi def link virataStringError	Error
-hi def link virataCharacter	Character
-hi def link virataSpclChar	Special
-hi def link virataDecNumber	Number
-hi def link virataHexNumber	Number
-hi def link virataSizeNumber	Number
-hi def link virataNumberError	Error
+  " Constant Group:
+  HiLink virataString		String
+  HiLink virataStringError	Error
+  HiLink virataCharacter	Character
+  HiLink virataSpclChar		Special
+  HiLink virataDecNumber	Number
+  HiLink virataHexNumber	Number
+  HiLink virataSizeNumber	Number
+  HiLink virataNumberError	Error
 
-" PreProc Group:
-hi def link virataPreProc	PreProc
-hi def link virataDefine	Define
-hi def link virataInclude	Include
-hi def link virataPreCondit	PreCondit
-hi def link virataPreProcError	Error
-hi def link virataPreProcWarn	Todo
+  " PreProc Group:
+  HiLink virataPreProc		PreProc
+  HiLink virataDefine		Define
+  HiLink virataInclude		Include
+  HiLink virataPreCondit	PreCondit
+  HiLink virataPreProcError	Error
+  HiLink virataPreProcWarn	Todo
 
-" Directive Group:
-hi def link virataStatement	Statement
-hi def link virataCfgStatement	Statement
-hi def link virataOperator	Operator
-hi def link virataDirective	Keyword
+  " Directive Group:
+  HiLink virataStatement	Statement
+  HiLink virataCfgStatement	Statement
+  HiLink virataOperator		Operator
+  HiLink virataDirective	Keyword
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "virata"
 

@@ -16,8 +16,11 @@ elseif exists("b:current_syntax")
 endif
 
 " Use all the stuff from the original html syntax file.
-runtime! syntax/html.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
 
 " Tag names.
 syn keyword cfTagName contained cfabort cfapplet cfapplication cfassociate
@@ -136,7 +139,7 @@ if version >= 508 || !exists("did_cf_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink cfTagName Statement 
+  HiLink cfTagName Statement
   HiLink cfArg Type
   HiLink cfFunctionName Function
 

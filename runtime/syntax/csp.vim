@@ -96,7 +96,7 @@ syn match cspAssert		"\[FD="
 syn match cspAssert		"\[FD\]"
 syn match cspAssert		"\[F\]"
 
-" Types and Sets 
+" Types and Sets
 " (first char a capital, later at least one lower case, no trailing underscore):
 syn match cspType     "\<_*[A-Z][A-Z_0-9]*[a-z]\(\|[A-Za-z_0-9]*[A-Za-z0-9]\)\>"
 

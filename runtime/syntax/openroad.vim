@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		CA-OpenROAD
 " Maintainer:	Luis Moreno <lmoreno@eresmas.net>
-" Last change:	2001 May 02 
+" Last change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -94,10 +94,10 @@ if exists("openroad_comment_strings")
 	syntax match openroadCommentSkip	contained "^\s*\*\($\|\s\+\)"
 	syntax region openroadCommentString	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end="$"
 	syntax region openroadComment		start="/\*" end="\*/" contains=openroadCommentString,openroadCharacter,openroadNumber
-	syntax match openroadComment 		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
+	syntax match openroadComment		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
 else
-	syn region openroadComment     		start="/\*" end="\*/"
-	syn match openroadComment      		"//.*"
+	syn region openroadComment		start="/\*" end="\*/"
+	syn match openroadComment		"//.*"
 endif
 
 " Define the default highlighting.

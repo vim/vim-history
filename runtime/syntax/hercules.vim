@@ -20,7 +20,7 @@ syn match   herculesType        "^\s*\t*header"
 syn match   herculesType        "^\s*\t*options"
 syn match   herculesType        "^\s*\t*alias"
 syn match   herculesType        "^\s*\t*assign"
-syn match   herculesType        "^\s*\t*assign_property" 
+syn match   herculesType        "^\s*\t*assign_property"
 syn match   herculesType        "^\s*\t*waiver"
 syn match   herculesType        "^\s*\t*.*_options"
 syn match   herculesType        "^\s*\t*check_point"
@@ -68,8 +68,8 @@ syn match   herculesstatement   "^ *\(classify_edges\|write_extract_view\)"
 
 " Hercules commands and keywords
 syn keyword herculesStatement   black_box_file block compare_dir equivalence
-syn keyword herculesStatement   format gdsin_dir group_dir group_dir_usage 
-syn keyword herculesStatement   inlib layout_path outlib output_format 
+syn keyword herculesStatement   format gdsin_dir group_dir group_dir_usage
+syn keyword herculesStatement   inlib layout_path outlib output_format
 syn keyword herculesStatement   output_layout_path schematic schematic_format
 syn keyword herculesStatement   scheme_file output_block else
 syn keyword herculesstatement   and or not xor andoverlap inside outside by to

@@ -1,21 +1,32 @@
 " Vim syntax file
-" Language:	Lout
-" Maintainer:	Christian V. J. Bruessow <cvjb@bigfoot.de>
-" Last Change:	Fre 18 Jun 1999 13:42:06 MEST
+" Language   : Lout
+" Maintainer : Christian V. J. Brüssow <cvjb@bigfoot.de>
+" Last change: Son 06 Mai 2001 20:33:13 CEST
 
 " Lout: Basser Lout document formatting system.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+	syntax clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
 " Lout is case sensitive
 syn case match
 
-" Synchronization
+" Synchronization, I know it is a huge number, but normal texts can be
+" _very_ long ;-)
 syn sync lines=1000
-setlocal iskeyword=@,48-57,.,@-@,_,192-255
+
+" Characters allowed in keywords
+" I don't know if 128-255 are allowed in ANS-FORHT
+if version >= 600
+	setlocal iskeyword=@,48-57,.,@-@,_,192-255
+else
+	set iskeyword=@,48-57,.,@-@,_,192-255
+endif
 
 " Some special keywords
 syn keyword loutTodo contained TODO lout Lout LOUT
@@ -80,29 +91,46 @@ syn match loutBoldItalic '@BI\s\+\k\+'
 syn region loutBoldItalic matchgroup=loutBIBraces start='@BI\s*{' matchgroup=loutBIBraces end='}' contains=ALLBUT,loutBraceError
 syn region loutHeadings matchgroup=loutHeads start='@\(\(Title\)\|\(Caption\)\)\s*{' matchgroup=loutHeads end='}' contains=ALLBUT,loutBraceError
 
-" The default highlighting.
-hi def link loutTodo Todo
-hi def link loutDefine Define
-hi def link loutEOmlDef Define
-hi def link loutFunction Function
-hi def link loutBraceError Error
-hi def link loutNULL Special
-hi def link loutComment Comment
-hi def link loutSpecial Special
-hi def link loutSymbols Character
-hi def link loutInclude Include
-hi def link loutKeyword Keyword
-hi def link loutTag Tag
-hi def link loutMath Number
-hi def link loutMBraces loutMath
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_lout_syn_inits")
+	if version < 508
+		let did_lout_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-hi def loutItalic term=italic cterm=italic gui=italic
-hi def link loutIBraces loutItalic
-hi def loutBold term=bold cterm=bold gui=bold
-hi def link loutBBraces loutBold
-hi def loutBoldItalic term=bold,italic cterm=bold,italic gui=bold,italic
-hi def link loutBIBraces loutBoldItalic
-hi def loutHeadings term=bold cterm=bold guifg=indianred
-hi def link loutHeads loutHeadings
+	" The default methods for highlighting. Can be overrriden later.
+	HiLink loutTodo Todo
+	HiLink loutDefine Define
+	HiLink loutEOmlDef Define
+	HiLink loutFunction Function
+	HiLink loutBraceError Error
+	HiLink loutNULL Special
+	HiLink loutComment Comment
+	HiLink loutSpecial Special
+	HiLink loutSymbols Character
+	HiLink loutInclude Include
+	HiLink loutKeyword Keyword
+	HiLink loutTag Tag
+	HiLink loutMath Number
+
+	" HiLink Not really needed here, but I think it is more consistent.
+	HiLink loutMBraces loutMath
+	hi loutItalic term=italic cterm=italic gui=italic
+	HiLink loutIBraces loutItalic
+	hi loutBold term=bold cterm=bold gui=bold
+	HiLink loutBBraces loutBold
+	hi loutBoldItalic term=bold,italic cterm=bold,italic gui=bold,italic
+	HiLink loutBIBraces loutBoldItalic
+	hi loutHeadings term=bold cterm=bold guifg=indianred
+	HiLink loutHeads loutHeadings
+
+	delcommand HiLink
+endif
 
 let b:current_syntax = "lout"
+
+" vim:ts=3:sw=3:

@@ -17,14 +17,14 @@ else
   set iskeyword=@,48-57,_,-
 endif
 
-" A bunch of useful jam keywords 
+" A bunch of useful jam keywords
 syn keyword	jamStatement	break call dbms flush global include msg parms proc public receive return send unload vars
 syn keyword	jamConditional	if else
 syn keyword	jamRepeat	for while next step
 
 syn keyword	jamTodo		contained TODO FIXME XXX
 syn keyword	jamDBState1	alias binary catquery close close_all_connections column_names connection continue continue_bottom continue_down continue_top continue_up
-syn keyword 	jamDBState2          cursor declare engine execute format occur onentry onerror onexit sql start store unique with
+syn keyword	jamDBState2          cursor declare engine execute format occur onentry onerror onexit sql start store unique with
 syn keyword	jamSQLState1	all alter and any avg between by count create current data database delete distinct drop exists fetch from grant group
 syn keyword	jamSQLState2	having index insert into like load max min of open order revoke rollback runstats select set show stop sum synonym table to union update values view where bundle
 
@@ -154,7 +154,7 @@ if exists("jam_comment_strings")
   syntax region jamComment	start="/\*" end="\*/" contains=@jamCommentGroup,jamCommentString,jamCharacter,jamNumbersCom,jamSpaceError
 else
   syn region	jamCommentL	start="//" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamSpaceError
-  syn region   	jamCommentL2      start="^\#\|^\s\+\#" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamSpaceError
+  syn region	jamCommentL2      start="^\#\|^\s\+\#" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamSpaceError
   syn region	jamComment	start="/\*" end="\*/" contains=@jamCommentGroup,jamSpaceError
 endif
 
@@ -169,9 +169,9 @@ syntax match    jamOperator3Error   "*/"
 if version >= 508 || !exists("did_jam_syn_inits")
   if version < 508
     let did_jam_syn_inits = 1
-    command -nargs=+ HiLink hi link <args>     
+    command -nargs=+ HiLink hi link <args>
   else
-    command -nargs=+ HiLink hi def link <args> 
+    command -nargs=+ HiLink hi def link <args>
   endif
 
     HiLink jamCommentL            jamComment

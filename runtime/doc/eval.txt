@@ -1,10 +1,10 @@
-*eval.txt*      For Vim version 6.0ae.  Last change: 2001 May 05
+*eval.txt*      For Vim version 6.0af.  Last change: 2001 May 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Expression evaluation			*expression* *expr* *ee3* *eval*
+Expression evaluation			*expression* *expr* *E15* *eval*
 
 Note: Expression evaluation can be disabled at compile time.  If this has been
 done, the features in this document are not available.  See |+eval| and the
@@ -137,7 +137,7 @@ Example: >
 All expressions within one level are parsed from left to right.
 
 
-expr1							*expr1* *ev1*
+expr1							*expr1* *E109*
 -----
 
 expr2 ? expr1 : expr1
@@ -293,7 +293,7 @@ These three can be repeated and mixed.  Examples:
 
 expr8							*expr8*
 -----
-expr9[expr1]		index in String		*expr-[]* *ev3*
+expr9[expr1]		index in String		*expr-[]* *E111*
 
 This results in a String that contains the expr1'th single character from
 expr9.  expr9 is used as a String, expr1 as a Number.
@@ -314,7 +314,7 @@ number			number constant		*expr-number*
 Decimal, Hexadecimal (starting with 0x or 0X), or Octal (starting with 0).
 
 
-string							*expr-string* *ve6*
+string							*expr-string* *E114*
 ------
 "string"		string constant		*expr-quote*
 
@@ -341,7 +341,7 @@ A string constant accepts these special characters:
 Note that "\000" and "\x00" force the end of the string.
 
 
-literal-string						*literal-string* *ve7*
+literal-string						*literal-string* *E115*
 ---------------
 'string'		literal string constant		*expr-'*
 
@@ -352,7 +352,7 @@ meaning.  A literal-string cannot contain a single quote.  Use a normal string
 for that.
 
 
-option						*expr-option* *ve4* *ve5*
+option						*expr-option* *E112* *E113*
 ------
 &option			option value
 
@@ -370,7 +370,7 @@ register use @@.  The '=' register can not be used here.  See |registers| for
 an explanation of the available registers.
 
 
-nesting							*expr-nesting* *ev2*
+nesting							*expr-nesting* *E110*
 -------
 (expr1)			nested expression
 
@@ -400,14 +400,14 @@ variable		internal variable
 See below |internal-variables|.
 
 
-function call			*expr-function* *fe1* *fe2* *fe3* *fe4* *fe6* 
+function call			*expr-function* *E116* *E117* *E118* *E119* *E120* 
 -------------
 function(expr1, ...)	function call
 See below |functions|.
 
 
 ==============================================================================
-3. Internal variable				*internal-variables* *ve8*
+3. Internal variable				*internal-variables* *E121*
 
 An internal variable name can be made up of letters, digits and '_'.  But it
 cannot start with a digit.  It's also possible to use curly braces, see
@@ -805,7 +805,9 @@ type( {name})			Number	type of variable {name}
 virtcol( {expr})		Number	screen column of cursor or mark
 visualmode()			String	last visual mode used
 winbufnr( {nr})			Number	buffer number of window {nr}
+wincol()			Number	window column of the cursor
 winheight( {nr})		Number	height of window {nr}
+winline()			Number	window line of the cursor
 winnr()				Number	number of current window
 winwidth( {nr})			Number	width of window {nr}
 
@@ -1570,7 +1572,7 @@ isdirectory({directory})				*isdirectory()*
 		exist, or isn't a directory, the result is FALSE.  {directory}
 		is any expression, which is used as a String.
 
-						*libcall()* *eq5* *ge6*
+						*libcall()* *E364* *E368*
 libcall({libname}, {funcname}, {argument})
 		Call function {funcname} in the run-time library {libname}
 		with single argument {argument}.
@@ -2157,6 +2159,11 @@ winbufnr({nr})	The result is a Number, which is the number of the buffer
 		Example: >
   :echo "The file in the current window is " . bufname(winbufnr(0))
 <
+							*wincol()*
+wincol()	The result is a Number, which is the virtual column of the
+		cursor in the window.  This is counting screen cells from the
+		left side of the window.  The leftmost column is one.
+
 winheight({nr})						*winheight()*
 		The result is a Number, which is the height of window {nr}.
 		When {nr} is zero, the height of the current window is
@@ -2165,6 +2172,11 @@ winheight({nr})						*winheight()*
 		Examples: >
   :echo "The current window has " . winheight(0) . " lines."
 <
+							*winline()*
+winline()	The result is a Number, which is the screen line of the cursor
+		in the window.  This is counting screen lines from the top of
+		the window.  The first line is one.
+
 							*winnr()*
 winnr()		The result is a Number, which is the number of the current
 		window.  The top window has number 1.
@@ -2274,6 +2286,7 @@ os2			OS/2 version of Vim.
 osfiletype		Compiled with support for osfiletypes |+osfiletype|
 path_extra		Compiled with up/downwards search in 'path' and 'tags'
 perl			Compiled with Perl interface.
+printer			Compiled with |:hardcopy| support.
 python			Compiled with Python interface.
 qnx			QNX version of vim.
 quickfix		Compiled with |quickfix| support.
@@ -2367,11 +2380,11 @@ and autocommands defined in the script.  It is also possible to call the
 function from a mappings defined in the script, but then |<SID>| must be used
 instead of "s:" when the mapping is expanded outside of the script.
 
-					*:fu* *:function* *ev5* *ev6* *ve9*
+					*:fu* *:function* *E128* *E129* *E123*
 :fu[nction]		List all functions and their arguments.
 
 :fu[nction] {name}	List function {name}.
-							*ve0* *iv1*
+							*E124* *E125*
 :fu[nction][!] {name}([arguments]) [range] [abort]
 			Define a new function by the name {name}.  The name
 			must be made of alphanumeric characters and '_', and
@@ -2395,7 +2408,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 			The body of the function follows in the next lines,
 			until the matching |:endfunction|.  It is allowed to
 			define another function inside a function body.
-								*fe7* *fe8*
+								*E127* *E122*
 			When a function by this name already exists and [!] is
 			not used an error message is given.  When [!] is used,
 			an existing function is silently replaced.
@@ -2410,13 +2423,13 @@ instead of "s:" when the mapping is expanded outside of the script.
 			The last used search pattern and the redo command "."
 			will not be changed by the function.
 
-					*:endf* *:endfunction* *ev4* *ee8*
+					*:endf* *:endfunction* *E126* *E193*
 :endf[unction]		The end of a function definition.
 
-					*:delf* *:delfunction* *fd1* *fd2*
+					*:delf* *:delfunction* *E130* *E131*
 :delf[unction] {name}	Delete function {name}.
 
-							*:retu* *:return* *ev9*
+							*:retu* *:return* *E133*
 :retu[rn] [expr]	Return from a function.  When "[expr]" is given, it is
 			evaluated and returned as the result of the function.
 			If "[expr]" is not given, the number 0 is returned.
@@ -2475,7 +2488,7 @@ with local variables in a calling function.  Example: >
 The names "lnum" and "col" could also be passed as argument to Bar(), to allow
 the caller to set the names.
 
-							*:cal* *:call* *ve2*
+							*:cal* *:call* *E107*
 :[range]cal[l] {name}([arguments])
 		Call a function.  The name of the function and its arguments
 		are as specified with |:function|.  Up to 20 arguments can be
@@ -2510,7 +2523,7 @@ the caller to set the names.
 		This function inserts the continuation character "\" in front
 		of all the lines in the range, except the first one.
 
-								*ev8*
+								*E132*
 The recursiveness of user functions is restricted with the |'maxfuncdepth'|
 option.
 
@@ -2567,7 +2580,7 @@ This would call the function "my_func_whizz(parameter)"
 ==============================================================================
 7. Commands						*expression-commands*
 
-:let {var-name} = {expr1}				*:let* *el1*
+:let {var-name} = {expr1}				*:let* *E18*
 			Set internal variable {var-name} to the result of the
 			expression {expr1}.  The variable will get the type
 			from the {expr}.  if {var-name} didn't exist yet, it
@@ -2607,20 +2620,20 @@ This would call the function "my_func_whizz(parameter)"
 			Like above, but only set the global value of an option
 			(if there is one).  Works like |:setglobal|.
 
-							*ve1*
+							*E106*
 :let {var-name}	..	List the value of variable {var-name}.  Several
 			variable names may be given.
 
 :let			Liset the values of all variables.
 
-							*:unlet* *:unl* *ve3*
+							*:unlet* *:unl* *E108*
 :unl[et][!] {var-name} ...
 			Remove the internal variable {var-name}.  Several
 			variable names can be given, they are all removed.
 			With [!] no error message is given for non-existing
 			variables.
 
-:if {expr1}					*:if* *:endif* *:en* *ee7*
+:if {expr1}					*:if* *:endif* *:en* *E171*
 :en[dif]		Execute the commands until the next matching ":else"
 			or ":endif" if {expr1} evaluates to non-zero.
 
@@ -2646,7 +2659,7 @@ This would call the function "my_func_whizz(parameter)"
 :elsei[f] {expr1}	Short for ":else" ":if", with the addition that there
 			is no extra ":endif".
 
-:wh[ile] {expr1}		*:while* *:endwhile* *:wh* *:endw* *ee6*
+:wh[ile] {expr1}		*:while* *:endwhile* *:wh* *:endw* *E170*
 :endw[hile]		Repeat the commands between ":while" and ":endwhile",
 			as long as {expr1} evaluates to non-zero.
 			When an error is detected from a command inside the
@@ -2895,7 +2908,7 @@ missing: >
 	:endif
 <
 ==============================================================================
-10. The sandbox					*eval-sandbox* *sandbox* *es5*
+10. The sandbox					*eval-sandbox* *sandbox* *E48*
 
 The 'foldexpr', 'includeexpr', 'indentexpr', 'statusline' and 'foldtext'
 options are evaluated in a sandbox.  This means that you are protected from

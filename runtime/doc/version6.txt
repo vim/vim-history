@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ae.  Last change: 2001 May 06
+*version6.txt*  For Vim version 6.0af.  Last change: 2001 May 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -47,6 +47,7 @@ Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
 Buffer types				|new-buftype|
+Printing				|new-printing|
 Ports					|ports-6|
 Quickfix extended			|quickfix-6|
 Operator modifiers			|new-operator-mod|
@@ -327,6 +328,17 @@ mode menus.  This generally works better and allows using the "Copy" menu to
 produce CTRL-Y to copy the modeless selection.
 
 Moved the font selection to the Edit menu, together with the other settings.
+
+The default values for 'isfname' include more characters to make "gf" work
+better.
+
+Changed the license for the documentation to the Open Publication License.
+This seemed fair, considering the inclusion of parts of the Vim book, which is
+also published under the OPL.  The downside is that we can't force someone who
+would sell copies of the manual to contribute to Uganda.
+
+After  "ayy  don't let  ""yy  or  :let @" = val overwrite the "a register.
+Use the unnamed register instead. 
 
 ==============================================================================
 NEW FEATURES
@@ -789,6 +801,13 @@ have different kinds of buffers.  For example:
 'bufhidden' can be used to overrule the 'hidden' option for one buffer.
 
 
+Printing						*new-printing*
+--------
+
+Win32: Included first implementation of the ":hardcopy" command for printing
+to paper. (Vince Negri, vipin aravind)
+
+
 Ports							*ports-6*
 -----
 
@@ -1092,7 +1111,10 @@ strridx()	Search for last occurrence of one string in another.
 tolower()	Convert string to all-lower case.
 toupper()	Convert string to all-upper case.
 type()		Check the type of an expression.
+wincol()	window column of the cursor
 winwidth()	Width of a window. (Johannes Zellner)
+winline()	window line of the cursor
+
 
 Added expansion of curly braces in variable and function names.  This can be
 used for variable names that include the value of the an option.  Or a
@@ -1613,6 +1635,9 @@ the user can use a slash when typing the command.
 When a buffer was changed outside of Vim and regaining focus, give a dialog to
 allow the user to reload the file.  Now also for other GUIs than MS-Windows.
 And also used in the console, when compiled with dialog support.
+Inspect the file contents to find out if it really changed, ignore situations
+where only the time stamp changed (e.g., checking the file out from CVS).
+Don't give a warning for a changed or deleted file when 'buftype' is set.
 
 Mapping <M-A> when 'encoding' is "latin1" and then setting 'encoding' to
 "utf-8" causes the first byte of a multi-byte to be mapped.  Can cause very
@@ -1653,6 +1678,9 @@ Motif.  Adjusted the meaning of GUI_INC_LOC and GUI_LIB_LOC to be consistent
 over different GUIs.
 
 Added src/README.txt to give an overview of the main parts of the source code.
+
+The Unix Makefile now fully supports using $(DESTDIR) to install to a specific
+location.  Replaces the manual setting of *ENDLOC variables.
 
 Added the possibility for a maintainer of a binary version to include his
 e-mail address with the --with-compiledby configure argument.
@@ -2314,6 +2342,8 @@ Multi-byte:
   included the character after the word.
 - When using a double-byte encoding and there is a lead byte at the end of the
   line, the preceding line would be displayed.  "ga" also showed wrong info.
+- "gf" didn't include multi-byte characters before the cursor properly.
+  (Muraoka Taro)
 
 GUI: The cursor was sometimes not removed when scrolling.  Changed the policy
 from redrawing the cursor after each call to gui_write() to only update it at
@@ -2447,5 +2477,20 @@ Had to hit return after selecting an entry for ":ts".
 
 The message from ":cn" message was sometimes cleared.  Now display it after
 redrawing if it doesn't cause a scroll (truncated when necessary).
+
+hangulin.c didn't compile when the GUI was disabled.  Disable it when it won't
+work.
+
+When setting a termcap option like "t_CO", the value could be displayed as
+being for a normal key with a modifier, like "<M-=>".
+
+When expanding the argument list, entries which are a directory name did not
+get included.  This stopped "vim c:/" from opening the file explorer.
+
+":syn match sd "^" nextgroup=asdf" skipped the first column and matched the
+nextgroup in the second column.
+
+GUI: When 'lazyredraw' is set, 'showmatch' didn't work.  Required flushing
+the output.
 
  vim:tw=78:

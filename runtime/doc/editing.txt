@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
+*editing.txt*   For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -174,7 +174,7 @@ Examples: >
 
 If you want to always use ":confirm", set the 'confirm' option.
 
-							*:browse* *:bro* *ez5*
+							*:browse* *:bro* *E338*
 :bro[wse] {command}	Open a file selection dialog for an argument to
 			{command}.  At present this works for ":e", ":w",
 			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
@@ -318,7 +318,7 @@ difficult to start editing a file of a different type.
 [count]]f						*]f* *[f*
 [count][f		Same as "gf".  Deprecated.
 
-							*gf* *fe5* *ce0*
+							*gf* *E446* *E447*
 [count]gf		Edit the file whose name is under or after the cursor.
 			Mnemonic: "goto file".
 			Uses the 'isfname' option to find out which characters
@@ -595,7 +595,7 @@ also makes a difference for executing external commands, e.g. ":!ls".
 			the |arglist| may change though!
 			On MS-DOS this also changes the active drive.
 
-							*:cd-* *ed8*
+							*:cd-* *E186*
 :cd -			Change to the previous current directory (before the
 			previous ":cd {path}" command). {not in Vi}
 
@@ -610,7 +610,7 @@ also makes a difference for executing external commands, e.g. ":!ls".
 							*:lch* *:lchdir*
 :lch[dir]		Same as |:lcd|. {not in Vi}
 
-							*:pw* *:pwd* *eu1*
+							*:pw* *:pwd* *E187*
 :pw[d]			Print the current directory name.  {Vi: no pwd}
 			Also see |getcwd()|.
 
@@ -742,7 +742,7 @@ list of the current window.
 			{not in Vi} {not available when compiled without the
 			|+listcmds| feature}
 
-:[count]n[ext] [++opt] [+cmd]			*:n* *:ne* *:next* *ea5* *ea3*
+:[count]n[ext] [++opt] [+cmd]			*:n* *:ne* *:next* *E165* *E163*
 			Edit [count] next file.  This fails when changes have
 			been made and Vim does not want to |abandon| the
 			current buffer.  Also see |++opt| and |+cmd|.  {Vi: no
@@ -759,7 +759,7 @@ list of the current window.
 :n[ext]! [++opt] [+cmd] {arglist}
 			Same as |:args_f!|.
 
-:[count]N[ext] [count] [++opt] [+cmd]			*:Next* *:N* *ea4*
+:[count]N[ext] [count] [++opt] [+cmd]			*:Next* *:N* *E164*
 			Edit [count] previous file in argument list.  This
 			fails when changes have been made and Vim does not
 			want to |abandon| the current buffer.
@@ -996,7 +996,7 @@ Writing with multiple buffers				*buffer-write*
 Vim will warn you if you try to overwrite a file that has been changed
 elsewhere.  See |timestamp|.
 
-							*backup* *ee0*
+							*backup* *E207*
 If you write to an existing file (but do not append) while the 'backup',
 'writebackup' or 'patchmode' option is on, a backup of the original file is
 made.  The file is either copied or renamed (see 'backupcopy').  After the
@@ -1286,7 +1286,7 @@ This is used to avoid that you have two different versions of the same file
 After a shell command is run (|:!cmd| |suspend| |:read!| |K|) timestamps are
 compared for all buffers in a window.   Vim will run any associated
 |FileChangedShell| autocommands or display a warning for any files that have
-changed.
+changed.  In the GUI this happens when Vim regains input focus.
 
 If you want to automatically reload a file when it has been changed outside of
 Vim, set the 'autoread' option.  This doesn't work at the moment you write the
@@ -1298,6 +1298,12 @@ warning message or prompt.  The autocommand is expected to handle this.
 There is no warning for a directory (e.g., in the |file-explorer|).  But you
 do get warned if you started editing a new file and it was created as a
 directory later.
+
+When Vim notices the timestamp of a file has changed, and the file is being
+edited in a buffer but has not changed, Vim checks if the contents of the file
+is equal.  This is done by reading the file again (into a hidden buffer, which
+is immediately deleted again) and comparing the text.  If the text is equal,
+you will get no warning.
 
 If you don't get warned often enough you can use the following command.
 

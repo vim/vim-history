@@ -430,7 +430,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
     {
 	if ((options & SEARCH_MSG) && !rc_did_emsg)
-	    EMSG2(_("(ie1) Invalid search string: %s"), mr_pattern);
+	    EMSG2(_("E383: Invalid search string: %s"), mr_pattern);
 	return FAIL;
     }
 
@@ -737,9 +737,9 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 	    if (p_ws)
 		EMSG2(_(e_patnotf2), mr_pattern);
 	    else if (lnum == 0)
-		EMSG2(_("(se6) search hit TOP without match for: %s"), mr_pattern);
+		EMSG2(_("E384: search hit TOP without match for: %s"), mr_pattern);
 	    else
-		EMSG2(_("(se7) search hit BOTTOM without match for: %s"), mr_pattern);
+		EMSG2(_("E385: search hit BOTTOM without match for: %s"), mr_pattern);
 	}
 	return FAIL;
     }
@@ -1097,7 +1097,7 @@ do_search(oap, dirc, str, count, options)
 	if (dirc != '?' && dirc != '/')
 	{
 	    retval = 0;
-	    EMSG(_("(se8) Expected '?' or '/'  after ';'"));
+	    EMSG(_("E386: Expected '?' or '/'  after ';'"));
 	    goto end_do_search;
 	}
 	++str;
@@ -1993,6 +1993,13 @@ showmatch()
 	    setcursor();
 	    cursor_on();		/* make sure that the cursor is shown */
 	    out_flush();
+#ifdef FEAT_GUI
+	    if (gui.in_use)
+	    {
+		gui_update_cursor(TRUE, FALSE);
+		gui_mch_flush();
+	    }
+#endif
 
 	    /*
 	     * brief pause, unless 'm' is present in 'cpo' and a character is
@@ -3785,7 +3792,7 @@ search_line:
 						      && g_do_tagpreview == 0
 #endif
 						      )
-		    EMSG(_("(se9) Match is on current line"));
+		    EMSG(_("E387: Match is on current line"));
 		else if (action == ACTION_SHOW)
 		{
 		    show_pat_in_path(line, type, did_show, action,
@@ -3943,9 +3950,9 @@ exit_matched:
 #endif
 	    EMSG(_(e_interr));
 	else if (type == FIND_DEFINE)
-	    EMSG(_("(de1) Couldn't find definition"));
+	    EMSG(_("E388: Couldn't find definition"));
 	else
-	    EMSG(_("(de2) Couldn't find pattern"));
+	    EMSG(_("E389: Couldn't find pattern"));
     }
     if (action == ACTION_SHOW || action == ACTION_SHOW_ALL)
 	msg_end();

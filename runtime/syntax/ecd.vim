@@ -2,10 +2,10 @@
 " Language:	ecd (Embedix Component Description) files
 " Maintainer:	John Beppu <beppu@lineo.com>
 " URL:		http://opensource.lineo.com/~beppu/prose/ecd_vim.html
-" Last Change:	2001 May 05
+" Last Change:	2001 May 10
 
 " An ECD file contains meta-data for packages in the Embedix Linux distro.
-" This syntax file was derived from apachestyle.vim 
+" This syntax file was derived from apachestyle.vim
 " by Christian Hammers <ch@westend.com>
 
 " Quit when a syntax file was already loaded
@@ -40,7 +40,7 @@ if version >= 508 || !exists("did_ecd_syn_inits")
   else
     command -nargs=+ HiLink hi def link <args>
   endif
-  
+
   HiLink ecdComment	Comment
   HiLink ecdAttr	Type
   HiLink ecdAttrN	Statement
@@ -48,7 +48,7 @@ if version >= 508 || !exists("did_ecd_syn_inits")
   HiLink ecdTag		Function
   HiLink ecdTagN	Statement
   HiLink ecdTagError	Error
-  
+
   delcommand HiLink
 endif
 

@@ -7,7 +7,7 @@
 " Contributors:         Chris Ruprecht		<chrup@mac.com>
 "						Philip Uren			<philu@computer.org>
 "						Mikhail Kuperblum	<mikhail@whasup.com>
-" URL: 					http://www.zeta.org.au/~philu/vim/progress.vim
+" URL:					http://www.zeta.org.au/~philu/vim/progress.vim
 " Last Change:			Thu May  3 08:49:47 EST 2001
 
 " For version 5.x: Clear all syntax items
@@ -72,7 +72,7 @@ syn keyword ProgressReserved	stream-io string-xref system-dialog table term term
 syn keyword ProgressReserved	to today top-only trans trans[action] trigger triggers trim true underl[ine] undo unform[atted] union unique unix up update
 syn keyword ProgressReserved	use-index use-revvideo use-underline user user[id] using v6frame value values view view-as vms wait-for web-con[text]
 syn keyword ProgressReserved	window window-maxim[ized] window-minim[ized] window-normal with work-tab[le] workfile write xcode xref yes _cbit
-syn keyword ProgressReserved	_control _list _memory _msg _pcontrol _serial[-num] _trace 
+syn keyword ProgressReserved	_control _list _memory _msg _pcontrol _serial[-num] _trace
 
 " Strings. Handles embedded quotes.
 " Note that, for some reason, Progress doesn't use the backslash, "\"
@@ -184,27 +184,27 @@ if version >= 508 || !exists("did_progress_syntax_inits")
   HiLink ProgressFor				Repeat
   HiLink ProgressFunction			Procedure
   HiLink ProgressInclude			Include
-  HiLink ProgressLabel		    	Label
+  HiLink ProgressLabel				Label
   HiLink ProgressMatrixDelimiter	Identifier
-  HiLink ProgressModifier	    	Type
+  HiLink ProgressModifier			Type
   HiLink ProgressNumber				Number
-  HiLink ProgressOperator    		Function
+  HiLink ProgressOperator			Function
   HiLink ProgressPreProc			PreProc
   HiLink ProgressProcedure			Procedure
   HiLink ProgressQuote				Delimiter
   HiLink ProgressRepeat				Repeat
   HiLink ProgressReserved			Identifier
   HiLink ProgressString				String
-  HiLink ProgressStructure	    	Structure
+  HiLink ProgressStructure			Structure
   HiLink ProgressSubstitute			PreProc
-  HiLink ProgressTodo		    	Todo
-  HiLink ProgressType		    	Statement
+  HiLink ProgressTodo				Todo
+  HiLink ProgressType				Statement
   HiLink ProgressUnclassified		Statement
 
   " Optional highlighting
   " HiLink ProgressDelimiter		Identifier
   " HiLink ProgressShowTab			Error
-  " HiLink ProgressShowTabc	    	Error
+  " HiLink ProgressShowTabc			Error
   " HiLink ProgressIdentifier		Identifier
 
   delcommand HiLink

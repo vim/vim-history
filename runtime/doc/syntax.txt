@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
+*syntax.txt*    For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1705,7 +1705,7 @@ It will look much better with a font in a quadratic cell size, e.g. for X: >
 	:set guifont=-*-clean-medium-r-*-*-8-*-*-*-*-80-*
 
 ==============================================================================
-5. Defining a syntax					*:syn-define* *sy3*
+5. Defining a syntax					*:syn-define* *E410*
 
 Vim understands three types of syntax items:
 1. A keyword.  It can only contain keyword characters, according to the
@@ -1740,7 +1740,7 @@ match or region.  And a keyword with matching case always goes before a
 keyword with ignoring case.
 
 
-DEFINING CASE						*:syn-case* *ce4*
+DEFINING CASE						*:syn-case* *E390*
 
 :sy[ntax] case [match|ignore]
 	This defines if the following ":syntax" commands will work with
@@ -1820,7 +1820,7 @@ DEFINING MATCHES					*:syn-match*
 <
 
 DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
-							*ce8* *ce9*
+							*E398* *E399*
 :sy[ntax] region {group-name} [{options}]
 		[matchgroup={group_name}]
 		[keepend]
@@ -1944,11 +1944,11 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 
 							*:syn-excludenl*
 	When a pattern for a match or end pattern of a region includes a '$'
-	to match the end-of-line, it will make an item that it is contained in
-	continue on the next line.  For example, a match with "\\$" (backslash
-	at the end of the line) can make a match continue that would normally
-	stop at the end of the line.  This is the default behavior.  If this
-	is not wanted, there are two ways to avoid it:
+	to match the end-of-line, it will make a region item that it is
+	contained in continue on the next line.  For example, a match with
+	"\\$" (backslash at the end of the line) can make a region continue
+	that would normally stop at the end of the line.  This is the default
+	behavior.  If this is not wanted, there are two ways to avoid it:
 	1. Use "keepend" for the containing item.  This will keep all
 	   contained matches from extending the match or region.  It can be
 	   used when all contained items must not extend the containing item.
@@ -1991,7 +1991,7 @@ and may be mixed with patterns.
 
 Not all commands accept all arguments.  This table shows which arguments
 can not be used for all commands:
-							*sx2* *sx3*
+							*E395* *E396*
 		    contains  oneline	fold  display  extend~
 :syntax keyword		 -	 -	 -	 -	 -
 :syntax match		yes	 -	yes	yes	yes
@@ -2122,7 +2122,7 @@ The 'foldnestmax' option limits the nesting of syntax folds.
 {not available when Vim was compiled without |+folding| feature}
 
 
-				*:syn-contains* *sx8* *sx9* *sx0* *sy1* *sy2*
+				*:syn-contains* *E405* *E406* *E407* *E408* *E409*
 contains={groupname},..
 
 The "contains" argument is followed by a list of syntax group names.  These
@@ -2261,7 +2261,7 @@ Note that this example doesn't work for nested "if"s.  You need to add
 example).
 
 ==============================================================================
-7. Syntax patterns				*:syn-pattern* *pe9* *pe0*
+7. Syntax patterns				*:syn-pattern* *E401* *E402*
 
 In the syntax commands, a pattern must be surrounded by two identical
 characters.  This is like it works for the ":s" command.  The most common to
@@ -2397,12 +2397,12 @@ External matches					*:syn-ext-match*
 
 These extra regular expression items are available in region patterns:
 
-							*/\z(* */\z(\)*
+						*/\z(* */\z(\)* *E50* *E52*
     \z(\)	Marks the sub-expression as "external", meaning that it is can
 		be accessed from another pattern match.  Currently only usable
 		in defining a syntax region start pattern.
 
-    \z1  ...  \z9					*/\z1* */\z2* *\z9*
+    \z1  ...  \z9				*/\z1* */\z2* *\z9* *E66* *E67*
 		Matches the same string that was matched by the corresponding
 		sub-expression in a previous start pattern match.
 
@@ -2433,7 +2433,7 @@ Note that only matches within a single line can be used.  Multi-line matches
 cannot be referred to.
 
 ==============================================================================
-8. Syntax clusters					*:syn-cluster* *sx5*
+8. Syntax clusters					*:syn-cluster* *E400*
 
 :sy[ntax] cluster {cluster-name} [contains={group-name}..]
 				 [add={group-name}..]
@@ -2475,7 +2475,7 @@ This also has implications for nested clusters: >
    :syntax cluster SmallGroup remove=B  " now bbb isn't matched within Stuff
 
 ==============================================================================
-9. Including syntax files				*:syn-include* *sx4*
+9. Including syntax files				*:syn-include* *E397*
 
 It is often useful for one language's syntax file to include a syntax file for
 a related language.  Depending on the exact relationship, this can be done in
@@ -2504,15 +2504,16 @@ two different ways:
    :syntax include @Pod <sfile>:p:h/pod.vim
    :syntax region perlPOD start="^=head" end="^=cut" contains=@Pod
 <
-   	  When {file-name} is an absolute path (starts with "/", "c:" or
-	  "<sfile>") that file is sourced.  When it is a relative path (e.g.,
-	  "syntax/pod.vim") the file is searched for in 'runtimepath'.  All
-	  matching files are loaded.  Using a relative path is recommended,
-	  because it allows a user to replace the included file with his own
-	  version, without replacing the file that does the ":syn include".
+	  When {file-name} is an absolute path (starts with "/", "c:", "$VAR"
+	  or "<sfile>") that file is sourced.  When it is a relative path
+	  (e.g., "syntax/pod.vim") the file is searched for in 'runtimepath'.
+	  All matching files are loaded.  Using a relative path is
+	  recommended, because it allows a user to replace the included file
+	  with his own version, without replacing the file that does the ":syn
+	  include".
 
 ==============================================================================
-10. Synchronizing					*:syn-sync* *sx6* *sx7*
+10. Synchronizing					*:syn-sync* *E403* *E404*
 
 Vim wants to be able to start redrawing in any position in the document.  To
 make this possible it needs to know the syntax item at the position where
@@ -2645,7 +2646,7 @@ search for the sync point can be much simpler than figuring out the
 highlighting.  The reduced number of patterns means it will go (much)
 faster.]
 
-					    *syn-sync-grouphere* *sx1* *ce7*
+					    *syn-sync-grouphere* *E393* *E394*
     :syntax sync match {sync-group-name} grouphere {group-name} "pattern" ..
 
 	Define a match that is used for syncing.  {group-name} is the
@@ -2702,7 +2703,7 @@ To show the syntax items for one syntax group: >
 
     :sy[ntax] list {group-name}
 
-To list the syntax groups in one cluster:			*ce6*  >
+To list the syntax groups in one cluster:			*E392*  >
 
     :sy[ntax] list @{cluster-name}
 
@@ -2712,7 +2713,7 @@ Note that the ":syntax" command can be abbreviated to ":sy", although ":syn"
 is mostly used, because it looks better.
 
 ==============================================================================
-12. Highlight command			*:highlight* *:hi* *eh3* *he9* *hl3*
+12. Highlight command			*:highlight* *:hi* *E28* *E411* *E415*
 
 There are three types of highlight groups:
 - The ones used for specific languages.  For these the name starts with the
@@ -2726,7 +2727,7 @@ You can see all the groups currently active with this command: >
 This will open a new window containing all highlight group names, displayed
 in their own color.
 
-						*:colo* *:colorscheme* *ce1*
+						*:colo* *:colorscheme* *E185*
 :colo[rscheme] {name}	Load color scheme {name}.  This searches 'runtimepath'
 			for the file "colors/{name}.vim.  The first one that
 			is found is loaded.
@@ -2772,7 +2773,7 @@ specified field is used, and settings are merged with previous ones.  So, the
 result is like this single command has been used: >
    :hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff gui=bold
 <
-					    *highlight-args* *hl4* *hl5* *hl6*
+					    *highlight-args* *E416* *E417* *E423*
 There are three types of terminals for highlighting:
 term	a normal terminal (vt100, xterm)
 cterm	a color terminal (MS-DOS console, color-xterm, these have the "Co"
@@ -2784,7 +2785,7 @@ the same syntax file on all terminals, and use the optimal highlighting.
 
 1. highlight arguments for normal terminals
 
-term={attr-list}			*attr-list* *highlight-term* *hl9*
+term={attr-list}			*attr-list* *highlight-term* *E418*
 	attr-list is a comma separated list (without spaces) of the
 	following items (in any order):
 		bold
@@ -2798,7 +2799,7 @@ term={attr-list}			*attr-list* *highlight-term* *hl9*
 	Note that "bold" can be used here and by using a bold font.  They
 	have the same effect.
 
-start={term-list}				*highlight-start* *hl7*
+start={term-list}				*highlight-start* *E422*
 stop={term-list}				*term-list* *highlight-stop*
 	These lists of terminal codes can be used to get
 	non-standard attributes on a terminal.
@@ -2837,7 +2838,7 @@ cterm={attr-list}					*highlight-cterm*
 	Note: Many terminals (e.g., DOS console) can't mix these attributes
 	with coloring.  Use only one of "cterm=" OR "ctermfg=" OR "ctermbg=".
 
-ctermfg={color-nr}				*highlight-ctermfg* *hl8*
+ctermfg={color-nr}				*highlight-ctermfg* *E421*
 ctermbg={color-nr}				*highlight-ctermbg*
 	The {color-nr} argument is a color number.  Its range is zero to
 	(not including) the number given by the termcap entry "Co".
@@ -2910,7 +2911,7 @@ ctermbg={color-nr}				*highlight-ctermbg*
 	needs to reset the color when exiting.  This is done with the "op"
 	termcap entry |t_op|.  If this doesn't work correctly, try setting the
 	't_op' option in your .vimrc.
-							*he2* *he3*
+							*E419* *E420*
 	When Vim knows the normal foreground and background colors, "fg" and
 	"bg" can be used as color names.  This only works after setting the
 	colors for the Normal group and for the MS-DOS console.  Example, for
@@ -2958,7 +2959,7 @@ guibg={color-name}					*highlight-guibg*
 	Example: >
 	    :hi comment guifg='salmon pink'
 <
-							*gui-colors* *ce2*
+							*gui-colors* *E242*
 	Suggested color names (these are available on most systems):
 	    Red		LightRed	DarkRed
 	    Green	LightGreen	DarkGreen	SeaGreen
@@ -3062,7 +3063,7 @@ scrollbars.  They don't have defaults.  This doesn't work for the Win32 GUI.
     Scrollbar						    *hl-Scrollbar*
 
 ==============================================================================
-13. Linking groups		*:hi-link* *:highlight-link* *hl1* *hl2*
+13. Linking groups		*:hi-link* *:highlight-link* *E412* *E413*
 
 When you want to use the same highlighting for several syntax groups, you
 can do this more easily by linking the groups into one common highlight
@@ -3076,7 +3077,7 @@ To remove a link:
 
     :hi[ghlight][!] [default] link {from-group} NONE
 
-Notes:							*he1*
+Notes:							*E414*
 - If the {from-group} and/or {to-group} doesn't exist, it is created.  You
   don't get an error message for a non-existing group.
 - As soon as you use a ":highlight" command for a linked group, the link is
@@ -3100,7 +3101,7 @@ Without the "default" in the C syntax file, the highlighting would be
 overruled when the syntax file is loaded.
 
 ==============================================================================
-14. Cleaning up						*:syn-clear* *ce5*
+14. Cleaning up						*:syn-clear* *E391*
 
 If you want to clear the syntax stuff for the current buffer, you can use this
 command: >

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	WinBatch/Webbatch (*.wbt, *.web)
 " Maintainer:	dominique@mggen.com
-" URL: 		http://www.mggen.com/vim/syntax/winbatch.zip
-" Last change:	2001 Mai 02
+" URL:		http://www.mggen.com/vim/syntax/winbatch.zip
+" Last change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -85,7 +85,7 @@ syn keyword winbatchImplicit fileitemize filelocate filemapname filemove filenam
 syn keyword winbatchImplicit filenameeval2 filenamelong filenameshort fileopen filepath
 syn keyword winbatchImplicit fileread filerename fileroot filesize filetimecode filetimeget
 syn keyword winbatchImplicit filetimeset filetimetouch fileverinfo filewrite fileymdhms
-syn keyword winbatchImplicit findwindow floor getexacttime gettickcount 
+syn keyword winbatchImplicit findwindow floor getexacttime gettickcount
 syn keyword winbatchImplicit iconarrange iconreplace ignoreinput inidelete inideletepvt
 syn keyword winbatchImplicit iniitemize iniitemizepvt iniread inireadpvt iniwrite iniwritepvt
 syn keyword winbatchImplicit installfile int intcontrol isdefined isfloat isint iskeydown

@@ -2,10 +2,13 @@
 " Language:	Z shell (zsh)
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
 " Heavily based on sh.vim by Lennart Schultz
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -73,29 +76,42 @@ syn match zshTestOpr	"-\<[oeaznlg][tfqet]\=\>\|!\==\|-\<[b-gkLprsStuwjxOG]\>"
 "syn region zshTest           start="\[" skip="\\$" end="\]" contains=zshString,zshTestOpr,zshDerefIdentifier,zshDerefOpr
 syn region  zshString	start=+"+  skip=+\\"+  end=+"+  contains=zshSpecial,zshOperator,zshDerefIdentifier,zshDerefOpr,zshSpecialShellVar,zshSinglequote,zshCommandSub
 
-" The default highlighting.
-hi def link zshSinglequote	zshString
-hi def link zshConditional	zshStatement
-hi def link zshRepeat		zshStatement
-hi def link zshFunctionName	zshFunction
-hi def link zshCommandSub	zshOperator
-hi def link zshRedir		zshOperator
-hi def link zshSetVariables	zshShellVariables
-hi def link zshSpecialShellVar	zshShellVariables
-hi def link zshTestOpr		zshOperator
-hi def link zshDerefOpr		zshSpecial
-hi def link zshDerefIdentifier	zshShellVariables
-hi def link zshOperator		Operator
-hi def link zshStatement	Statement
-hi def link zshNumber		Number
-hi def link zshString		String
-hi def link zshComment		Comment
-hi def link zshSpecial		Special
-hi def link zshTodo		Todo
-hi def link zshShellVariables	Special
-"  hi def zshOperator		term=underline ctermfg=6 guifg=Purple gui=bold
-"  hi def zshShellVariables	term=underline ctermfg=2 guifg=SeaGreen gui=bold
-"  hi def zshFunction		term=bold ctermbg=1 guifg=Red
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_zsh_syntax_inits")
+  if version < 508
+    let did_zsh_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink zshSinglequote		zshString
+  HiLink zshConditional		zshStatement
+  HiLink zshRepeat		zshStatement
+  HiLink zshFunctionName	zshFunction
+  HiLink zshCommandSub		zshOperator
+  HiLink zshRedir		zshOperator
+  HiLink zshSetVariables	zshShellVariables
+  HiLink zshSpecialShellVar	zshShellVariables
+  HiLink zshTestOpr		zshOperator
+  HiLink zshDerefOpr		zshSpecial
+  HiLink zshDerefIdentifier	zshShellVariables
+  HiLink zshOperator		Operator
+  HiLink zshStatement		Statement
+  HiLink zshNumber		Number
+  HiLink zshString		String
+  HiLink zshComment		Comment
+  HiLink zshSpecial		Special
+  HiLink zshTodo		Todo
+  HiLink zshShellVariables	Special
+"  hi zshOperator		term=underline ctermfg=6 guifg=Purple gui=bold
+"  hi zshShellVariables	term=underline ctermfg=2 guifg=SeaGreen gui=bold
+"  hi zshFunction		term=bold ctermbg=1 guifg=Red
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "zsh"
 

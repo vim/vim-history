@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ae.  Last change: 2001 May 05
+*starting.txt*  For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -195,7 +195,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		so that writing files is disabled.  The 'write' option can be
 		set to enable writing again.
 
-						*-Z* *restricted-mode* *er7*
+						*-Z* *restricted-mode* *E145*
 -Z		Restricted mode.  All commands that make use of an external
 		shell are disabled.  This includes suspending with CTRL-Z,
 		":sh", filtering, the system() function, backtick expansion,
@@ -344,7 +344,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		but "-fg" is used to specify the foreground color.  {not in
 		Vi} |gui-fork|
 
-							*-u* *ce3*
+							*-u* *E282*
 -u {vimrc}	The file {vimrc} is read for initializations.  Other
 		initializations are skipped; see |initialization|.  This can
 		be used to start Vim in a special mode, with special
@@ -363,7 +363,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		unexpected effects.  See |'compatible'|.
 		{not in Vi}
 
-							*-U* *ge5*
+							*-U* *E230*
 -U {gvimrc}	The file "gvimrc" is read for initializations when the GUI
 		starts.  Other GUI initializations are skipped. When {gvimrc}
 		is equal to "NONE", no file is read for initializations at
@@ -1374,7 +1374,7 @@ To automatically save and restore views for *.c files: >
 	au BufWinEnter *.c silent loadview
 
 ==============================================================================
-10. The viminfo file				*viminfo* *viminfo-file* *et4*
+10. The viminfo file				*viminfo* *viminfo-file* *E136*
 
 If you exit Vim and later start it again, you would normally lose a lot of
 information.  The viminfo file can be used to remember that information, which
@@ -1518,13 +1518,13 @@ that!).  If you want to overwrite a viminfo file with an error in it, you will
 either have to fix the error, or delete the file (while Vim is running, so
 most of the information will be restored).
 
-						   *:rv* *:rviminfo* *ev0*
+						   *:rv* *:rviminfo* *E195*
 :rv[iminfo][!] [file]	Read from viminfo file [file] (default: see above).
 			If [!] is given, then any information that is
 			already set (registers, marks, etc.) will be
 			overwritten.  {not in Vi}
 
-					   *:wv* *:wviminfo* *we5* *we6*
+					   *:wv* *:wviminfo* *E137* *E138*
 :wv[iminfo][!] [file]	Write to viminfo file [file] (default: see above).
 			The information in the file is first read in to make
 			a merge between old and new info.  When [!] is used,

@@ -85,34 +85,10 @@ if version >= 508 || !exists("did_psf_syntax_inits")
 
   HiLink psfObject       Statement
   HiLink psfAttrib       Type
-  " hi     psfUnquotString NONE
   HiLink psfQuotString   String
   HiLink psfObjTag       Identifier
   HiLink psfAttAbbrev    PreProc
   HiLink psfObjTags      Identifier
-  " hi     psfNumber       NONE
-  " hi     psfFloat        NONE
-  " hi     psfLongDate     NONE
-  " hi     psfState        NONE
-  " hi     psfBoolean      NONE
-
-  " The psfAtt* regions are given no highlighting because the start of
-  " each region is highlighted as psfAttrib using matchgroup=, and the
-  " body of each region is highlighted as psfObjTag, psfNumber,
-  " psfComment, etc.  In other words there is no need to give the
-  " psfAtt* regions their own highlighting because everything is already
-  " pretty much covered.
-  " hi     psfAttUnquotString NONE
-  " hi     psfAttQuotString   NONE
-  " hi     psfAttTag          NONE
-  " hi     psfAttSpec         NONE
-  " hi     psfAttTags         NONE
-  " hi     psfAttNumber       NONE
-  " hi     psfAttTime         NONE
-  " hi     psfAttFloat        NONE
-  " hi     psfAttLongDate     NONE
-  " hi     psfAttState        NONE
-  " hi     psfAttBoolean      NONE
 
   HiLink psfComment      Comment
 

@@ -4,8 +4,11 @@
 " URL:		http://aquila.rezel.enst.fr/thomas/vim/kscript.vim
 " CVS:		$Id$
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -19,7 +22,7 @@ syn keyword	kscriptFunction		class struct enum
 syn keyword	kscriptConst		FALSE TRUE false true
 syn keyword	kscriptStatement	return delete
 syn keyword	kscriptLabel		case default
-syn keyword	kscriptStorageClass	const 
+syn keyword	kscriptStorageClass	const
 syn keyword	kscriptType		in out inout var
 
 syn keyword	kscriptTodo		contained TODO FIXME XXX
@@ -33,21 +36,34 @@ syn region	kscriptString		start=+"+  end=+"+ skip=+\\\\\|\\"+
 syn region	kscriptString		start=+"""+  end=+"""+
 syn region	kscriptString		start=+'''+  end=+'''+
 
-" The default highlighting.
-hi def link kscriptConditional		Conditional
-hi def link kscriptRepeat		Repeat
-hi def link kscriptExceptions		Statement
-hi def link kscriptFunction		Function	
-hi def link kscriptConst		Constant
-hi def link kscriptStatement		Statement
-hi def link kscriptLabel		Label
-hi def link kscriptStorageClass		StorageClass
-hi def link kscriptType			Type
-hi def link kscriptTodo			Todo
-hi def link kscriptComment		Comment
-hi def link kscriptString		String
-hi def link kscriptPreCondit		PreCondit
-hi def link kscriptHardCoded		Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_kscript_syntax_inits")
+  if version < 508
+    let did_kscript_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink kscriptConditional		Conditional
+  HiLink kscriptRepeat			Repeat
+  HiLink kscriptExceptions		Statement
+  HiLink kscriptFunction		Function
+  HiLink kscriptConst			Constant
+  HiLink kscriptStatement		Statement
+  HiLink kscriptLabel			Label
+  HiLink kscriptStorageClass		StorageClass
+  HiLink kscriptType			Type
+  HiLink kscriptTodo			Todo
+  HiLink kscriptComment		Comment
+  HiLink kscriptString			String
+  HiLink kscriptPreCondit		PreCondit
+  HiLink kscriptHardCoded		Statement
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "kscript"
 

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0ae.  Last change: 2001 mei 04
+*fold.txt*      For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -117,7 +117,7 @@ be visible then.
 Note: Since the expression has to be evaluated for every line, this fold
 method can be very slow!
 
-Try to avoid the "=", "a" and "s" return values, since Vim has to search
+Try to avoid the "=", "a" and "s" return values, since Vim oten has to search
 backwards for a line for which the fold level is defined.  Using foldlevel()
 can help here.  Example: >
 	" extra is level compared to previous line
@@ -255,7 +255,7 @@ All folding commands start with "z".  Hint: the "z" looks like a folded piece
 of paper, if you look at it from the side.
 
 CREATING AND DELETING FOLDS ~
-							*zf* *ef9*
+							*zf* *E350*
 zf{motion}  or
 {Visual}zf	Operator to create a fold.
 		This only works when 'foldmethod' is "manual" or "marker".
@@ -269,7 +269,7 @@ zF		Create a fold for N lines.  Works like "zf".
 :{range}fo[ld]						*:fold* *:fo*
 		Create a fold for the lines in {range}.  Works like "zf".
 
-							*zd* *ef0*
+							*zd* *E351*
 zd		Delete one fold at the cursor.  When the cursor is on folded
 		line, that fold is deleted.  Nested folds are moved one level
 		up.  In Visual mode all folds (partially) in the selected area
@@ -285,7 +285,7 @@ zD		Delete folds recursively at the cursor.  In Visual mode all
 		This only works when 'foldmethod' is "manual" or "marker".
 		Also see |fold-delete-marker|.
 
-							*zE* *ez6*
+							*zE* *E352*
 zE		Eliminate all folds in the window.
 		This only works when 'foldmethod' is "manual" or "marker".
 		Also see |fold-delete-marker|.

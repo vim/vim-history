@@ -6,8 +6,11 @@
 " URL:		http://bigfoot.com/~johnh51/vim/syntax/gnuplot.vim
 "
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -15,7 +18,7 @@ endif
 
 " commands
 syn keyword gnuplotStatement	cd call clear exit set plot splot help
-syn keyword gnuplotStatement	load pause quit fit rep[lot] quit if 
+syn keyword gnuplotStatement	load pause quit fit rep[lot] quit if
 syn keyword gnuplotStatement	FIT_LIMIT FIT_MAXITER FIT_START_LAMBDA FIT_LAMBDA_FACTOR FIT_LOG FIT_SCRIPT
 syn keyword gnuplotStatement	print pwd reread reset save show test !  functions var
 syn keyword gnuplotConditional	if
@@ -51,27 +54,27 @@ syn keyword gnuplotType		abs acos acosh arg asin asinh atan atanh atan2 besj0 be
 
 syn keyword gnuplotType		ceil column cos cosh erf erfc exp floor gamma
 syn keyword gnuplotType		ibeta inverf igamma imag invnorm int lgamma
-syn keyword gnuplotType		log log10 norm rand real sgn sin sinh sqrt tan 
+syn keyword gnuplotType		log log10 norm rand real sgn sin sinh sqrt tan
 syn keyword gnuplotType		tanh valid
 " set vars
 "   comment out items rarely used - if they slow you up too much.
 syn keyword gnuplotType		xdata timefmt grid noytics ytics fs
-syn keyword gnuplotType		logscale time notime mxtics style 
+syn keyword gnuplotType		logscale time notime mxtics style
 syn keyword gnuplotType		axes x1y2 unique acsplines
 syn keyword gnuplotType		size origin multiplot xtics xra[nge] yra[nge] square nosquare
-syn keyword gnuplotType		binary matrix index every thru using smooth 
+syn keyword gnuplotType		binary matrix index every thru using smooth
 syn keyword gnuplotType		angles degrees arrow noarrow autoscale noautoscale radians
 " autoscale args = x y xy z t ymin ... - too much?
 syn keyword gnuplotType		linear  cubicspline  bspline order level[s] auto disc[rete] incr[emental] from to head nohead graph nocontour base both nosurface table out[put] data
-syn keyword gnuplotType		bar border noborder boxwidth 
+syn keyword gnuplotType		bar border noborder boxwidth
 syn keyword gnuplotType		clabel noclabel clip noclip cntrp[aram] contour
-syn keyword gnuplotType		dgrid3d nodgrid3d dummy encoding format 
+syn keyword gnuplotType		dgrid3d nodgrid3d dummy encoding format
 syn keyword gnuplotType		function grid hidden[3d] isosample[s] key nokey nohidden[3d]
 syn keyword gnuplotType		defaults offset nooffset trianglepattern undefined noundefined altdiagonal bentover noaltdiagonal nobentover nogrid
 syn keyword gnuplotType		left right top bottom outside below samplen spacing width box nobox linestyle ls linetype lt linewidth lw
 syn keyword gnuplotType		label nolabel logscale nolog[scale] missing center font locale
 syn keyword gnuplotType		mapping margin bmargin lmargin rmargin tmargin spherical cylindrical cartesian
-syn keyword gnuplotType		linestyle nolinestyle linetype lt linewidth lw pointtype pt pointsize ps 
+syn keyword gnuplotType		linestyle nolinestyle linetype lt linewidth lw pointtype pt pointsize ps
 syn keyword gnuplotType		nooffsets data candlesticks financebars linespoints lp vector nosurface
 syn keyword gnuplotType		term[inal] linux aed767 aed512 gpic
 syn keyword gnuplotType		regis tek410x tek40 vttek kc-tek40xx
@@ -84,7 +87,7 @@ syn keyword gnuplotType		tgif tkcanvas epson-180dpi epson-60dpi
 syn keyword gnuplotType		epson-lx800 nec-cp6 okidata starc
 syn keyword gnuplotType		tandy-60dpi latex emtex pslatex pstex
 syn keyword gnuplotType		eepic tpic pstricks texdraw mf metafont
-syn keyword gnuplotType		timestamp notimestamp 
+syn keyword gnuplotType		timestamp notimestamp
 syn keyword gnuplotType		variables version
 syn keyword gnuplotType		x2data y2data ydata zdata
 syn keyword gnuplotType		reverse writeback noreverse nowriteback
@@ -92,10 +95,10 @@ syn keyword gnuplotType		axis mirror autofreq nomirror rotate autofreq norotate
 syn keyword gnuplotType		update
 syn keyword gnuplotType		multiplot nomultiplot mxtics nomxtics mytics
 
-syn keyword gnuplotType		nomytics mztics nomztics mx2tics nomx2tics 
-syn keyword gnuplotType		my2tics nomy2tics offsets origin output 
+syn keyword gnuplotType		nomytics mztics nomztics mx2tics nomx2tics
+syn keyword gnuplotType		my2tics nomy2tics offsets origin output
 syn keyword gnuplotType		para[metric] nopara[metric] pointsize polar nopolar
-syn keyword gnuplotType		xrange yrange zrange x2range y2range rrange 
+syn keyword gnuplotType		xrange yrange zrange x2range y2range rrange
 syn keyword gnuplotType		trange urange vrange sample[s] size
 syn keyword gnuplotType		bezier boxerrorbars boxes bargraph bar[s]
 syn keyword gnuplotType		boxxyerrorbars csplines dots fsteps histeps impulses
@@ -116,18 +119,31 @@ syn keyword gnuplotType		noxzeroaxis yzeroaxis noyzeroaxis x2zeroaxis
 syn keyword gnuplotType		nox2zeroaxis y2zeroaxis noy2zeroaxis angles
 
 " comments + strings
-syn region gnuplotComment	start="#" end="$" 
+syn region gnuplotComment	start="#" end="$"
 syn region gnuplotComment	start=+"+ skip=+\\"+ end=+"+
 syn region gnuplotComment	start=+'+            end=+'+
 
-" The default highlighting.
-hi def link gnuplotStatement	Statement
-hi def link gnuplotConditional	Conditional
-hi def link gnuplotNumber	Number
-hi def link gnuplotFloat	Float
-hi def link gnuplotOctalError	Error
-hi def link gnuplotType		Type
-hi def link gnuplotComment	Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_gnuplot_syntax_inits")
+  if version < 508
+    let did_gnuplot_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink gnuplotStatement	Statement
+  HiLink gnuplotConditional	Conditional
+  HiLink gnuplotNumber		Number
+  HiLink gnuplotFloat		Float
+  HiLink gnuplotOctalError	Error
+  HiLink gnuplotType		Type
+  HiLink gnuplotComment	Comment
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "gnuplot"
 

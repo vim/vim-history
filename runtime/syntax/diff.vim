@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 03
+" Last Change:	2001 May 10
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -35,7 +35,7 @@ syn match diffLine	"^\d\+\(,\d\+\)\=[cda]\d\+\>.*"
 syn match diffFile	"^diff.*"
 syn match diffFile	"^+++ .*"
 syn match diffFile	"^Index: .*$"
-syn match diffFile 	"^==== .*$"
+syn match diffFile	"^==== .*$"
 syn match diffOldFile	"^\*\*\* .*"
 syn match diffNewFile	"^--- .*"
 

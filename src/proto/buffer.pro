@@ -10,7 +10,7 @@ char_u *do_bufdel __ARGS((int command, char_u *arg, int addr_count, int start_bn
 int do_buffer __ARGS((int action, int start, int dir, int count, int forceit));
 void set_curbuf __ARGS((buf_T *buf, int action));
 void enter_buffer __ARGS((buf_T *buf));
-buf_T *buflist_new __ARGS((char_u *ffname, char_u *sfname, linenr_T lnum, int use_curbuf, int listed));
+buf_T *buflist_new __ARGS((char_u *ffname, char_u *sfname, linenr_T lnum, int flags));
 void free_buf_options __ARGS((buf_T *buf, int free_p_ff));
 int buflist_getfile __ARGS((int n, linenr_T lnum, int options, int forceit));
 void buflist_getfpos __ARGS((void));
@@ -28,7 +28,7 @@ int setfname __ARGS((char_u *ffname, char_u *sfname, int message));
 void buf_name_changed __ARGS((void));
 buf_T *setaltfname __ARGS((char_u *ffname, char_u *sfname, linenr_T lnum));
 char_u *getaltfname __ARGS((int errmsg));
-int buflist_add __ARGS((char_u *fname, int use_curbuf, int listed));
+int buflist_add __ARGS((char_u *fname, int flags));
 void buflist_slash_adjust __ARGS((void));
 void buflist_altfpos __ARGS((void));
 int otherfile __ARGS((char_u *ffname));
@@ -56,4 +56,5 @@ int buf_findsign __ARGS((buf_T *buf, int id));
 int buf_findsign_id __ARGS((buf_T *buf, linenr_T lnum));
 void buf_delete_all_signs __ARGS((void));
 void set_buflisted __ARGS((int on));
+int buf_contents_changed __ARGS((buf_T *buf));
 /* vim: set ft=c : */

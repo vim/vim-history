@@ -7,8 +7,11 @@
 " VHSIC Hardware Description Language
 " Very High Scale Integrated Circuit
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -147,21 +150,34 @@ syn match vhdlTime "\<\d\+\.\d\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>
 syn match vhdlComment "--.*$"
 " syn match vhdlGlobal "[\'$#~!%@?\^\[\]{}\\]"
 
-" The default highlighting.
-hi def link cDefine       PreProc
-hi def link vhdlSpecial   Special
-hi def link vhdlStatement Statement
-hi def link vhdlCharacter String
-hi def link vhdlString    String
-hi def link vhdlVector    String
-hi def link vhdlBoolean   String
-hi def link vhdlComment   Comment
-hi def link vhdlNumber    String
-hi def link vhdlTime      String
-hi def link vhdlType      Type
-hi def link vhdlOperator  Type
-hi def link vhdlGlobal    Error
-hi def link vhdlAttribute Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_vhdl_syntax_inits")
+  if version < 508
+    let did_vhdl_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cDefine       PreProc
+  HiLink vhdlSpecial   Special
+  HiLink vhdlStatement Statement
+  HiLink vhdlCharacter String
+  HiLink vhdlString    String
+  HiLink vhdlVector    String
+  HiLink vhdlBoolean   String
+  HiLink vhdlComment   Comment
+  HiLink vhdlNumber    String
+  HiLink vhdlTime      String
+  HiLink vhdlType      Type
+  HiLink vhdlOperator  Type
+  HiLink vhdlGlobal    Error
+  HiLink vhdlAttribute Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "vhdl"
 

@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www.isp.de/data/php.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2001 Mai 02
+" Last Change:	2001 May 10
 "
 " Options	php_sql_query = 1  for SQL syntax highligthing inside strings
 "               php_htmlInStrings = 1  for HTML syntax highligthing inside strings
@@ -28,9 +28,9 @@ endif
 
 if version < 600
   so <sfile>:p:h/html.vim
-else 
+else
   runtime! syntax/html.vim
-  unlet b:current_syntax  
+  unlet b:current_syntax
 endif
 
 syn cluster htmlPreproc add=phpRegion,phpDoubleString
@@ -235,9 +235,9 @@ if exists("php_parentError")
 
   if exists("php_noShortTags")
     syn region	 phpRegion	keepend matchgroup=Delimiter start="<?php" skip=+".\{-}?>.\{-}"\|'.\{-}?>.\{-}'\|/\*.\{-}?>.\{-}\*/+ end="?>" contains=@phpTop
-  else  
+  else
     syn region	 phpRegion	keepend matchgroup=Delimiter start="<?\(php\)\=" skip=+".\{-}?>.\{-}"\|'.\{-}?>.\{-}'\|/\*.\{-}?>.\{-}\*/+ end="?>" contains=@phpTop
-  endif  
+  endif
   syn region	 phpRegion	 keepend matchgroup=Delimiter start=+<script language="php">+ skip=+".\{-}</script>.\{-}"\|'.\{-}</script>.\{-}'\|/\*.\{-}</script>.\{-}\*/+ end=+</script>+ contains=@phpTop
   if exists("php_asp_tags")
     syn region	 phpRegion	keepend matchgroup=Delimiter start="<%\(=\)\=" skip=+".\{-}%>.\{-}"\|'.\{-}%>.\{-}'\|/\*.\{-}%>.\{-}\*/+ end="%>" contains=@phpTop

@@ -1,14 +1,14 @@
 " Vim syntax file
 " Language:     Cynlib(C++)
-" Maintainer:   Phil Derrick <phild@forteds.com>  
-" Last change:  2001 May 02
+" Maintainer:   Phil Derrick <phild@forteds.com>
+" Last change:  2001 May 10
 " URL http://www.derrickp.freeserve.co.uk/vim/syntax/cynlib.vim
 "
 " Language Information
 "
 "               Cynlib is a library of C++ classes to allow hardware
-"               modelling in C++. Combined with a simulation kernel, 
-"               the compiled and linked executable forms a hardware 
+"               modelling in C++. Combined with a simulation kernel,
+"               the compiled and linked executable forms a hardware
 "               simulation of the described design.
 "
 "               Further information can be found from www.forteds.com
@@ -38,9 +38,9 @@ unlet b:current_syntax
 syn keyword     cynlibMacro        Default CYNSCON
 syn keyword     cynlibMacro        Case CaseX EndCaseX
 syn keyword     cynlibType         CynData CynSignedData CynTime
-syn keyword     cynlibType         In Out InST OutST 
+syn keyword     cynlibType         In Out InST OutST
 syn keyword     cynlibType         Struct
-syn keyword     cynlibType         Int Uint Const 
+syn keyword     cynlibType         Int Uint Const
 syn keyword     cynlibType         Long Ulong
 syn keyword     cynlibType         OneHot
 syn keyword     cynlibType         CynClock Cynclock0
@@ -49,9 +49,9 @@ syn keyword     cynlibFunction     CynModule epilog execute_on
 syn keyword     cynlibFunction     my_name
 syn keyword     cynlibFunction     CynBind bind
 syn keyword     cynlibFunction     CynWait CynEvent
-syn keyword     cynlibFunction     CynSetName 
+syn keyword     cynlibFunction     CynSetName
 syn keyword     cynlibFunction     CynTick CynRun
-syn keyword     cynlibFunction     CynFinish 
+syn keyword     cynlibFunction     CynFinish
 syn keyword     cynlibFunction     Cynprintf CynSimTime
 syn keyword     cynlibFunction     CynVcdFile
 syn keyword     cynlibFunction     CynVcdAdd CynVcdRemove

@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www.isp.de/data/tf.vim
 " Email:	send syntax_vim.tgz
-" Last Change:	2001 Mai 01
+" Last Change:	2001 May 10
 "
 " Options	lite_minlines = x     to sync at least x lines backwards
 
@@ -170,7 +170,7 @@ if version >= 508 || !exists("did_tf_syn_inits")
   else
     command -nargs=+ HiLink hi def link <args>
   endif
-  
+
   HiLink tfComment		Comment
   HiLink tfString		String
   HiLink tfNumber		Number

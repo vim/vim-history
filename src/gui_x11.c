@@ -1156,7 +1156,7 @@ gui_mch_init_check()
     if (app_context == NULL || gui.dpy == NULL)
     {
 	gui.dying = TRUE;
-	EMSG(_("(eg6) cannot open display"));
+	EMSG(_("E233: cannot open display"));
 	return FAIL;
     }
     return OK;
@@ -1641,7 +1641,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (font == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("(fe0) Unknown font: %s"), name);
+	    EMSG2(_("E235: Unknown font: %s"), name);
 	return NOFONT;
     }
 
@@ -1665,7 +1665,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
 
     if (font->max_bounds.width != font->min_bounds.width)
     {
-	EMSG2(_("(ne1) Font \"%s\" is not fixed-width"), name);
+	EMSG2(_("E236: Font \"%s\" is not fixed-width"), name);
 	XFreeFont(gui.dpy, font);
 	return NOFONT;
     }
@@ -1794,8 +1794,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
 
 	if (giveErrorIfMissing)
 	{
-	    EMSG2(_("(ef7) During loading fontset %s"), name);
-	    EMSG(_("Font(s) for the following character sets are missing:"));
+	    EMSG2(_("E250: Fonts for the following charsets are missing in fontset %s:"), name);
 	    for (i = 0; i < num_missing; i++)
 		EMSG2("%s", missing[i]);
 	}
@@ -1805,7 +1804,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
     if (fontset == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("(fe9) Unknown fontset: %s"), name);
+	    EMSG2(_("E234: Unknown fontset: %s"), name);
 	return NOFONTSET;
     }
 
@@ -1835,7 +1834,7 @@ check_fontset_sanity(fs)
     {
 	if (xfs[i]->max_bounds.width != xfs[i]->min_bounds.width)
 	{
-	    EMSG2(_("(ef8) Fontset name: %s"), base_name);
+	    EMSG2(_("E252: Fontset name: %s"), base_name);
 	    EMSG2(_("Font '%s' is not fixed-width"), font_name[i]);
 	    return FAIL;
 	}
@@ -1855,7 +1854,7 @@ check_fontset_sanity(fs)
 	if (	   xfs[i]->max_bounds.width != 2 * min_width
 		&& xfs[i]->max_bounds.width != min_width)
 	{
-	    EMSG2(_("(oe2) Fontset name: %s\n"), base_name);
+	    EMSG2(_("E253: Fontset name: %s\n"), base_name);
 	    EMSG2(_("Font0: %s\n"), font_name[min_font_idx]);
 	    EMSG2(_("Font1: %s\n"), font_name[i]);
 	    EMSGN(_("Font%d width is not twice that of font0\n"), i);
@@ -1965,7 +1964,7 @@ gui_mch_get_color(reqname)
 	    }
 	}
     }
-    EMSG2(_("(ec2) Cannot allocate color %s"), reqname);
+    EMSG2(_("E254: Cannot allocate color %s"), reqname);
 
     return (guicolor_T)-1;
 }
@@ -3016,7 +3015,7 @@ gui_mch_register_sign(signfile)
 	    {
 		vim_free(sign);
 		sign = NULL;
-		EMSG(_("(es0) Couldn't read in sign data!"));
+		EMSG(_("E255: Couldn't read in sign data!"));
 	    }
 	    vim_free((char *) attrs.colorsymbols);
 	}

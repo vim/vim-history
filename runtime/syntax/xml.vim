@@ -122,7 +122,7 @@ syn match   xmlEndTag
 "   <another.tag/>
 "   some data
 " </tag>
-" 
+"
 syn region   xmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^>]*[^/!?]>\)\|\_[>]\)+
     \ end=+</\z1>+
@@ -192,7 +192,7 @@ syn region  xmlDocType matchgroup=xmlDocTypeDecl
     \ contains=xmlDocTypeKeyword,xmlInlineDTD,xmlString
 syn keyword xmlDocTypeKeyword contained DOCTYPE PUBLIC SYSTEM
 syn region  xmlInlineDTD contained matchgroup=xmlDocTypeDecl start="\[" end="]" contains=@xmlDTD
-syn include @xmlDTD <sfile>:p:h/dtd.vim
+syn include @xmlDTD syntax/dtd.vim
 unlet b:current_syntax
 
 

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
+*options.txt*   For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -535,7 +535,7 @@ is entered, this is almost like having global options.  If 's' and 'S' are not
 present, the options are copied from the currently active buffer when the
 buffer is created.
 
-							*oe3*
+							*E355*
 A jump table for the options with a short description can be found at |Q_op|.
 
 					*'aleph'* *'al'* *aleph* *Aleph*
@@ -924,7 +924,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This option is used together with 'buftype' and 'swapfile' to specify
 	special kinds of buffers.   See |special-buffers|.
 
-						*'buflisted'* *'bl'* *eb5*
+						*'buflisted'* *'bl'* *E85*
 'buflisted' 'bl'	boolean (default: on)
 			local to buffer
 			{not in Vi}
@@ -934,7 +934,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	a file name or marks.  Vim sets it when starting to edit a buffer.
 	But not when moving to a buffer with ":buffer".
 
-						*'buftype'* *'bt'* *ey7*
+						*'buftype'* *'bt'* *E382*
 'buftype' 'bt'		string (default: "")
 			local to buffer
 			{not in Vi}
@@ -968,7 +968,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			file name.  It is not modified in response to a |:cd|
 			command.
 
-						*'cdpath'* *'cd'* *pe3* *pe5*
+						*'cdpath'* *'cd'* *E344* *E346*
 'cdpath' 'cd'		string	(default: equivalent to $CDPATH or ",,")
 			global
 			{not in Vi}
@@ -1053,7 +1053,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
 	 not set yet, the default for 'fileencodings' is changed.
 
-					*'charconvert'* *'ccv'* *eu3*
+					*'charconvert'* *'ccv'* *E202*
 'charconvert' 'ccv'	string (default "")
 			global
 			{only available when compiled with the |+multi_byte|
@@ -1238,7 +1238,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|format-comments|.  See |option-backslash| about using backslashes to
 	insert a space.
 
-						*'commentstring'* *'cms'* *ef6*
+						*'commentstring'* *'cms'* *E221*
 'commentstring' 'cms'	string	(default "/*%s*/")
 			local to buffer
 			{not in Vi}
@@ -2139,7 +2139,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  diff:c	DiffDelete		|hl-DiffDelete|
 
 					*'fkmap'* *'fk'* *'nofkmap'* *'nofk'*
-'fkmap' 'fk'		boolean (default off)			*ep6*
+'fkmap' 'fk'		boolean (default off)			*E198*
 			global
 			{not in Vi}
 			{only available when compiled with the |+rightleft|
@@ -2188,7 +2188,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			local to window
 			{not in Vi}
 			{not available when compiled without the |+folding|
-			feature}
+			or |+eval| feature}
 	The expression used for when 'foldmethod' is "expr".  It is evaluated
 	for each line to obtain its fold level.  See |fold-expr|.  Also see
 	|eval-sandbox|.
@@ -2463,7 +2463,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	changed.  This can be done by specifying a block cursor, or a
 	percentage for a vertical or horizontal cursor.
 
-						*'guifont'* *'gfn'* *fe0*
+						*'guifont'* *'gfn'* *E235*
 'guifont' 'gfn'		string	(default "")
 			global
 			{not in Vi}
@@ -2481,7 +2481,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	    :set guifont=Screen15,\ 7x13,font\\,with\\,commas
 <	will make vim try to use the font "Screen15" first, and if it fails it
 	will try to use "7x13" and then "font,with,commas" instead.
-								*ne1*
+								*E236*
 	Note that the fonts must be mono-spaced (all characters have the same
 	width).
 	To preview a font on X11, you might be able to use the "xfontsel"
@@ -2495,7 +2495,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	will try some builtin default which should always be there ("7x13" in
 	the case of X).  The font names given should be "normal" fonts.  Vim
 	will try to find the related bold and italic fonts.
-	For the Win32 GUI					*en7* *en8*
+	For the Win32 GUI					*E244* *E245*
 	- takes these options in the font name:
 		hXX - height is XX (points)
 		wXX - width is XX (points)
@@ -2517,7 +2517,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	mono-spaced fonts and comments on them.
 	See also |font-sizes|.
 
-				*'guifontset'* *'gfs'* *ef7* *ef8* *fe9*
+				*'guifontset'* *'gfs'* *E250* *E252* *E234*
 'guifontset' 'gfs'	string	(default "")
 			global
 			{not in Vi}
@@ -2540,7 +2540,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This example works on many X11 systems: >
 		:set guifontset=-*-*-medium-r-normal--16-*-*-*-c-*-*-*
 <
-						*'guifontwide'* *'gfw'* *eg5*
+						*'guifontwide'* *'gfw'* *E231*
 'guifontwide' 'gfw'	string	(default "")
 			global
 			{not in Vi}
@@ -2966,9 +2966,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 						*'isfname'* *'isf'*
 'isfname' 'isf'		string	(default for MS-DOS, Win32 and OS/2:
-					   "@,48-57,/,\,.,-,_,+,,,#,$,%,:,@-@,!"
-				for AMIGA: "@,48-57,/,.,-,_,+,,,$,:"
-				otherwise: "@,48-57,/,.,-,_,+,,,#,$,%,~")
+			     "@,48-57,/,\,.,-,_,+,,,#,$,%,{,},[,],:,@-@,!,~,="
+			    for AMIGA: "@,48-57,/,.,-,_,+,,,$,:"
+			    for VMS: "@,48-57,/,.,-,_,+,,,#,$,%,<,>,[,],:,;,~"
+			    for OS/390: "@,240-249,/,.,-,_,+,,,#,$,%,~,="
+			    otherwise: "@,48-57,/,.,-,_,+,,,#,$,%,~,=")
 			global
 			{not in Vi}
 	The characters specified by this option are included in file names and
@@ -3138,7 +3140,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:set keywordprg=man\ -s
 <	This option cannot be set from a |modeline|, for security reasons.
 
-					*'langmap'* *'lmap'* *le5* *le6*
+					*'langmap'* *'lmap'* *E357* *E358*
 'langmap' 'lmap'	string	(default "")
 			global
 			{not in Vi}
@@ -3403,7 +3405,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	more memory, there is the danger of failing when memory is exhausted.
 	See also |:function|.
 
-						*'maxmapdepth'* *'mmd'* *er9*
+						*'maxmapdepth'* *'mmd'* *E223*
 'maxmapdepth' 'mmd'	number	(default 1000)
 			global
 			{not in Vi}
@@ -3460,7 +3462,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				 *'modifiable'* *'ma'* *'nomodifiable'* *'noma'*
 'modifiable' 'ma'	boolean	(default on)
 			local to buffer
-			{not in Vi}		*ec5*
+			{not in Vi}		*E21*
 	When off the buffer contents cannot be changed.  The 'fileformat' and
 	'fileencoding' options also can't be changed.
 
@@ -3677,7 +3679,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	characters are put before the number.
 	See |hl-LineNr| for the highlighting used for the number.
 
-					*'osfiletype'* *'oft'* *eq4*
+					*'osfiletype'* *'oft'* *E366*
 'osfiletype' 'oft'	string (RISC-OS default: "Text",
 				others default: "")
 			local to buffer
@@ -3769,7 +3771,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Expression which is evaluated to apply a patch to a file and generate
 	the resulting new version of the file.  See |diff-patchexpr|.
 
-						*'patchmode'* *'pm'* *ee9*
+						*'patchmode'* *'pm'* *E206*
 'patchmode' 'pm'	string	(default "")
 			global
 			{not in Vi}
@@ -3786,7 +3788,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	created.
 	When the 'backupskip' pattern matches, a patchmode file is not made.
 
-					*'path'* *'pa'* *pe2* *pe4* *pe6*
+					*'path'* *'pa'* *E343* *E345* *E347*
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
 				   on OS/2:       ".,/emx/include,,"
 				   other systems: ".,,")
@@ -3869,6 +3871,36 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Identifies the preview window.  Only one window can have this option
 	set.  It's normally not set directly, but by using one of the commands
 	|:ptag|, |:pedit|, etc.
+
+						*'printerfont'* *'pfn'*
+'printerfont' 'pfn'		string	(default "courier")
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			feature}
+	This is the name of the font that will be used for the |:hardcopy|
+	command's output.  It has the same format as the 'guifont' option,
+	except that only one font may be named, and the special "guifont=*"
+	syntax is not available.
+
+						*'printersettings'* *'pst'*
+'printersettings' 'pst'	string (default "left:10pc,right:5pc,
+						 top:5pc,bottom:5pc,header:2")
+			global
+			{not in Vi}
+			{only available when compiled with |+printer| feature}
+	This is a comma-separated list of options that control the format of
+	the output of |:hardcopy|.
+	The "left", "right", "top", and "bottom" settings control the margin.
+	The margin may be specified in inches (in), millimetres (mm), or as a
+	percentage of media size (pc).
+	The "header" setting controls how many lines high the header is. If
+	"header" is omitted, no header is printed. The header is of fixed
+	format and shows the page number and buffer name.
+	If "mono:y" is included, plain text monochrome output is used. This is
+	faster and thus useful when printing large files.
+	If "number:y" is included, line numbers are included in the printed
+	output.
 
 				   *'readonly'* *'ro'* *'noreadonly'* *'noro'*
 'readonly' 'ro'		boolean	(default off)
@@ -4214,7 +4246,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	with Unix.  The Unix version of Vim cannot source dos format scripts,
 	but the Windows version of Vim can source unix format scripts.
 
-						*'shell'* *'sh'* *es1*
+						*'shell'* *'sh'* *E91*
 'shell' 'sh'		string	(default $SHELL or "sh",
 					MS-DOS and Win32: "command.com" or
 					"cmd.exe", OS/2: "cmd")
@@ -4964,7 +4996,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
-						*'tags'* *'tag'* *te6*
+						*'tags'* *'tag'* *E433*
 'tags' 'tag'		string	(default "./tags,tags", when compiled with
 				|+emacs_tags|: "./tags,./TAGS,tags,TAGS")
 			global or local to buffer |global-local|
@@ -5855,7 +5887,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|ins-textwidth|.  {Vi: works differently and less useful}
 
 				   *'wrapscan'* *'ws'* *'nowrapscan'* *'nows'*
-'wrapscan' 'ws'		boolean	(default on)			*se6* *se7*
+'wrapscan' 'ws'		boolean	(default on)			*E384* *E385*
 			global
 	Searches wrap around the end of the file.
 

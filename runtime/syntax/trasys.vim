@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TRASYS input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 16:09:31 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.inp
 " URL:          http://www.naglenet.org/vim/syntax/trasys.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -27,7 +27,7 @@ endif
 unlet b:current_syntax
 
 " Delete fortran syntax for line format error
-syn clear fortranCommentError
+"syn clear fortranCommentError
 
 
 
@@ -39,7 +39,7 @@ syn case ignore
 " Define keywords for TRASYS
 syn keyword trasysOptions    model rsrec info maxfl nogo dmpdoc
 syn keyword trasysOptions    rsi rti rso rto bcdou cmerg emerg
-syn keyword trasysOptions    user1 nnmin erplot 
+syn keyword trasysOptions    user1 nnmin erplot
 
 syn keyword trasysSurface    icsn tx ty tz rotx roty rotz inc bcsn
 syn keyword trasysSurface    nnx nny nnz nnax nnr nnth unnx
@@ -51,14 +51,14 @@ syn keyword trasysSurface    refno posit com dupbcs dimensions
 syn keyword trasysSurface    dimension position prop surfn
 
 syn keyword trasysSurfaceType rect trap disk cyl cone sphere parab
-syn keyword trasysSurfaceType box5 box6 shpero tor ogiv elem tape poly 
+syn keyword trasysSurfaceType box5 box6 shpero tor ogiv elem tape poly
 
 syn keyword trasysSurfaceArgs ff di top bottom in out both no only
 
 syn keyword trasysArgs       fig smn nodea zero only ir sol
 syn keyword trasysArgs       both wband stepn initl
 
-syn keyword trasysOperations orbgen build 
+syn keyword trasysOperations orbgen build
 
 "syn keyword trasysSubRoutine call
 syn keyword trasysSubRoutine chgblk ndata ndatas odata odatas

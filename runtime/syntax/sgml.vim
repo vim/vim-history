@@ -6,10 +6,17 @@
 " URL:		http://www.zellner.org/vim/syntax/sgml.vim
 " $Id$
 
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 let s:sgml_cpo_save = &cpo
 set cpo&vim
 
-syn clear
 syn case match
 
 " mark illegal characters
@@ -146,7 +153,7 @@ syn match   sgmlAbbrRegion
 " compared to xmlRegion:
 "   - removed folding
 "   - added a single '/'in the start pattern
-" 
+"
 syn region   sgmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^/>]*[^/!?]>\)\|>\)+
     \ end=+</\z1>+

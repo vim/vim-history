@@ -345,7 +345,6 @@ gui_x11_set_back_color()
  */
 
 static char_u *make_pull_name __ARGS((char_u * name));
-static void gui_athena_reorder_menus	__ARGS((void));
 static Widget get_popup_entry __ARGS((Widget w));
 static void gui_mch_submenu_change __ARGS((vimmenu_T *mp, int colors));
 static void gui_athena_menu_font __ARGS((Widget id));
@@ -518,8 +517,6 @@ gui_mch_add_menu(menu, idx)
 			NULL);
 		gui.menu_height = height + 2 * (space + border);
 	    }
-
-	    gui_athena_reorder_menus();
 	}
     }
     else if (parent->submenu_id != (Widget)0)
@@ -1093,50 +1090,6 @@ gui_mch_destroy_menu(menu)
 	XtDestroyWidget(menu->submenu_id);
 	menu->submenu_id = (Widget)0;
     }
-}
-
-/*
- * Reorder the menus to make them appear in the right order.
- * (This doesn't work for me...).
- */
-    static void
-gui_athena_reorder_menus()
-{
-    Widget	*children;
-    Widget	swap_widget;
-    int		num_children;
-    int		to, from;
-    vimmenu_T	*menu;
-
-    XtVaGetValues(menuBar,
-	    XtNchildren,    &children,
-	    XtNnumChildren, &num_children,
-	    NULL);
-
-    XtUnmanageChildren(children, num_children);
-
-    menu = root_menu;
-    for (to = 0; to < num_children - 1; ++to)
-    {
-	for (from = to; from < num_children; ++from)
-	{
-	    if (strcmp((char *)XtName(children[from]),
-						    (char *)menu->dname) == 0)
-	    {
-		if (to != from)		/* need to move this one */
-		{
-		    swap_widget = children[to];
-		    children[to] = children[from];
-		    children[from] = swap_widget;
-		}
-		break;
-	    }
-	}
-	menu = menu->next;
-	if (menu == NULL)	/* cannot happen */
-	    break;
-    }
-    XtManageChildren(children, num_children);
 }
 
 /* ARGSUSED */

@@ -1709,6 +1709,7 @@ win_update(wp)
 		    W_WINROW(wp) + wp->w_height,
 		    (int)W_ENDCOL(wp) - 3, (int)W_ENDCOL(wp),
 		    '@', '@', hl_attr(HLF_AT));
+	    set_empty_rows(wp, srow);
 	    wp->w_botline = lnum;
 	}
 	else
@@ -1891,14 +1892,12 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     int		row;
 {
     char_u	buf[51];
-    char_u	dashes[51];
     pos_T	*top, *bot;
     linenr_T	lnume = lnum + fold_count - 1;
     int		len;
     char_u	*p;
     char_u	*text = NULL;
     int		fdc;
-    win_T	*save_curwin;
     int		level;
     int		col;
     int		txtcol;
@@ -1992,8 +1991,12 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     /*
      * 4. Compose the folded-line string with 'foldtext', if set.
      */
+#ifdef FEAT_EVAL
     if (*wp->w_p_fdt != NUL)
     {
+	char_u	dashes[51];
+	win_T	*save_curwin;
+
 	/* Set "v:foldstart" and "v:foldend". */
 	set_vim_var_nr(VV_FOLDSTART, lnum);
 	set_vim_var_nr(VV_FOLDEND, lnume);
@@ -2042,6 +2045,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	}
     }
     if (text == NULL)
+#endif
     {
 	sprintf((char *)buf, _("+--%3ld lines folded "), fold_count);
 	text = buf;
@@ -5326,7 +5330,7 @@ reset_cterm_colors()
     if (t_colors > 1)
     {
 	/* set Normal cterm colors */
-	if (cterm_normal_fg_color || cterm_normal_bg_color)
+	if (cterm_normal_fg_color > 0 || cterm_normal_bg_color > 0)
 	    out_str(T_OP);
 	if (cterm_normal_fg_bold)
 	    out_str(T_ME);

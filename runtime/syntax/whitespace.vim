@@ -1,7 +1,6 @@
 " Simplistic way to make spaces and Tabs visible
 
 " This can be added to an already active syntax.
-"syn clear
 
 syn match Space " "
 syn match Tab "\t"

@@ -44,8 +44,8 @@ endif
 
 " the following line makes the opening <! and
 " closing > highlighted using 'dtdFunction'.
-syn region dtdTag matchgroup=dtdFunction 
-    \ start=+<!+ end=+>+ matchgroup=NONE 
+syn region dtdTag matchgroup=dtdFunction
+    \ start=+<!+ end=+>+ matchgroup=NONE
     \ contains=dtdTag,dtdTagName,dtdError,dtdComment,dtdString,dtdAttrType,dtdAttrDef,dtdEnum,dtdParamEntityInst,dtdParamEntityDecl,dtdCard
 
 if !exists("dtd_no_tag_errors")
@@ -91,10 +91,10 @@ if !exists("dtd_no_param_entities")
     " is optional.
 
     " instances
-    syn region dtdParamEntityInst oneline matchgroup=dtdParamEntityPunct 
-	\ start="%[-_a-zA-Z0-9.]\+"he=s+1,rs=s+1 
-	\ skip=+[-_a-zA-Z0-9.]+ 
-	\ end=";\|\>" 
+    syn region dtdParamEntityInst oneline matchgroup=dtdParamEntityPunct
+	\ start="%[-_a-zA-Z0-9.]\+"he=s+1,rs=s+1
+	\ skip=+[-_a-zA-Z0-9.]+
+	\ end=";\|\>"
 	\ matchgroup=NONE contains=dtdParamEntityPunct
     syn match  dtdParamEntityPunct contained "\."
 

@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Smalltalk
 " Maintainer:	Arndt Hesse <hesse@self.de>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 May 09
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -63,24 +66,37 @@ syn match  stBlockError	"\]"
 syn region stSet	transparent start='{' end='}' contains=ALLBUT,stSetError
 syn match  stSetError	"}"
 
+hi link stParenError stError
+hi link stSetError stError
+hi link stBlockError stError
+
 " synchronization for syntax analysis
 syn sync minlines=50
 
-" The default highlighting.
-hi def link stParenError	stError
-hi def link stSetError		stError
-hi def link stBlockError	stError
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_st_syntax_inits")
+  if version < 508
+    let did_st_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link stKeyword		Statement
-hi def link stMethod		Statement
-hi def link stComment		Comment
-hi def link stCharacter		Constant
-hi def link stString		Constant
-hi def link stSymbol		Special
-hi def link stNumber		Type
-hi def link stFloat		Type
-hi def link stError		Error
-hi def link stLocalVariables	Identifier
-hi def link stBlockVariable	Identifier
+  HiLink stKeyword		Statement
+  HiLink stMethod		Statement
+  HiLink stComment		Comment
+  HiLink stCharacter		Constant
+  HiLink stString		Constant
+  HiLink stSymbol		Special
+  HiLink stNumber		Type
+  HiLink stFloat		Type
+  HiLink stError		Error
+  HiLink stLocalVariables	Identifier
+  HiLink stBlockVariable	Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "st"

@@ -818,8 +818,14 @@ static struct vimoption
 			    (char_u *)VAR_WIN, PV_FEN,
 			    {(char_u *)TRUE, (char_u *)0L}},
     {"foldexpr",    "fde",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
+# ifdef FEAT_EVAL
 			    (char_u *)VAR_WIN, PV_FDE,
-			    {(char_u *)"0", (char_u *)NULL}},
+			    {(char_u *)"0", (char_u *)NULL}
+# else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+# endif
+			    },
     {"foldignore",  "fdi",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_FDI,
 			    {(char_u *)"#", (char_u *)NULL}},
@@ -847,8 +853,14 @@ static struct vimoption
 		    {(char_u *)"block,hor,mark,percent,quickfix,search,tag",
 							       (char_u *)0L}},
     {"foldtext",    "fdt",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
+# ifdef FEAT_EVAL
 			    (char_u *)VAR_WIN, PV_FDT,
-			    {(char_u *)"foldtext()", (char_u *)NULL}},
+			    {(char_u *)"foldtext()", (char_u *)NULL}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
 #endif
     {"formatoptions","fo",  P_STRING|P_ALLOCED|P_VIM|P_FLAGLIST,
 			    (char_u *)&p_fo, PV_FO,
@@ -1461,6 +1473,32 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"printerfont", "pfn",  P_STRING|P_VI_DEF,
+#ifdef FEAT_PRINTER
+			    (char_u *)&p_prtfont, PV_NONE,
+			    {
+# ifdef MSWIN
+				(char_u *)"Courier_New:h10",
+# else
+				(char_u *)"courier",
+# endif
+				(char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+				    },
+    {"printersettings", "pset",  P_STRING|P_VI_DEF,
+#ifdef FEAT_PRINTER
+			    (char_u *)&p_prtsettings, PV_NONE,
+			    {
+				(char_u *)"left:10pc,right:5pc,top:5pc,bottom:5pc,header:2",
+				(char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+				    },
     {"prompt",	    NULL,   P_BOOL|P_VI_DEF,
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -4539,6 +4577,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 #endif
 
+#ifdef FEAT_PRINTER
+    else if (varp == &p_prtsettings)
+	errmsg = parse_list_options(p_prtsettings, printer_opts, OPT_PRINT_NUM_OPTIONS);
+#endif
+
 #ifdef FEAT_LANGMAP
     /* 'langmap' */
     else if (varp == &p_langmap)
@@ -4895,12 +4938,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	else
 	    foldUpdateAll(curwin);
     }
+# ifdef FEAT_EVAL
     /* 'foldexpr' */
     else if (varp == &curwin->w_p_fde)
     {
 	if (foldmethodIsExpr(curwin))
 	    foldUpdateAll(curwin);
     }
+# endif
     /* 'foldmarker' */
     else if (gvarp == &curwin->w_allbuf_opt.wo_fmr)
     {
@@ -6078,7 +6123,7 @@ set_option_value(name, number, string, opt_flags)
 
     opt_idx = findoption(name);
     if (opt_idx == -1)
-	EMSG2(_("(oe3) Unknown option: %s"), name);
+	EMSG2(_("E355: Unknown option: %s"), name);
     else if (options[opt_idx].flags & P_STRING)
 	set_string_option(opt_idx, string, opt_flags);
     else
@@ -6448,7 +6493,9 @@ makefoldset(fd)
     FILE	*fd;
 {
     if (put_setstring(fd, "setlocal", "fdm", &curwin->w_p_fdm) == FAIL
+# ifdef FEAT_EVAL
 	    || put_setstring(fd, "setlocal", "fde", &curwin->w_p_fde) == FAIL
+# endif
 	    || put_setstring(fd, "setlocal", "fmr", &curwin->w_p_fmr) == FAIL
 	    || put_setstring(fd, "setlocal", "fdi", &curwin->w_p_fdi) == FAIL
 	    || put_setnum(fd, "setlocal", "fdl", &curwin->w_p_fdl) == FAIL
@@ -6749,13 +6796,15 @@ get_varp(p)
 #ifdef FEAT_FOLDING
 	case PV_FDC:	return (char_u *)&(curwin->w_p_fdc);
 	case PV_FEN:	return (char_u *)&(curwin->w_p_fen);
-	case PV_FDE:	return (char_u *)&(curwin->w_p_fde);
 	case PV_FDI:	return (char_u *)&(curwin->w_p_fdi);
 	case PV_FDL:	return (char_u *)&(curwin->w_p_fdl);
 	case PV_FDM:	return (char_u *)&(curwin->w_p_fdm);
 	case PV_FML:	return (char_u *)&(curwin->w_p_fml);
 	case PV_FDN:	return (char_u *)&(curwin->w_p_fdn);
+# ifdef FEAT_EVAL
+	case PV_FDE:	return (char_u *)&(curwin->w_p_fde);
 	case PV_FDT:	return (char_u *)&(curwin->w_p_fdt);
+# endif
 	case PV_FMR:	return (char_u *)&(curwin->w_p_fmr);
 #endif
 	case PV_NU:	return (char_u *)&(curwin->w_p_nu);
@@ -6860,7 +6909,7 @@ get_varp(p)
 #ifdef FEAT_KEYMAP
 	case PV_KMAP:	return (char_u *)&(curbuf->b_p_keymap);
 #endif
-	default:	EMSG(_("(eq3) get_varp ERROR"));
+	default:	EMSG(_("E356: get_varp ERROR"));
     }
     /* always return a valid pointer to avoid a crash! */
     return (char_u *)&(curbuf->b_p_wm);
@@ -6927,13 +6976,15 @@ copy_winopt(from, to)
 #ifdef FEAT_FOLDING
     to->wo_fdc = from->wo_fdc;
     to->wo_fen = from->wo_fen;
-    to->wo_fde = vim_strsave(from->wo_fde);
     to->wo_fdi = vim_strsave(from->wo_fdi);
     to->wo_fml = from->wo_fml;
     to->wo_fdl = from->wo_fdl;
     to->wo_fdm = vim_strsave(from->wo_fdm);
     to->wo_fdn = from->wo_fdn;
+# ifdef FEAT_EVAL
+    to->wo_fde = vim_strsave(from->wo_fde);
     to->wo_fdt = vim_strsave(from->wo_fdt);
+# endif
     to->wo_fmr = vim_strsave(from->wo_fmr);
 #endif
     check_winopt(to);		/* don't want NULL pointers */
@@ -6959,10 +7010,12 @@ check_winopt(wop)
     winopt_T	*wop;
 {
 #ifdef FEAT_FOLDING
-    check_string_option(&wop->wo_fde);
     check_string_option(&wop->wo_fdi);
     check_string_option(&wop->wo_fdm);
+# ifdef FEAT_EVAL
+    check_string_option(&wop->wo_fde);
     check_string_option(&wop->wo_fdt);
+# endif
     check_string_option(&wop->wo_fmr);
 #endif
 }
@@ -6976,10 +7029,12 @@ clear_winopt(wop)
     winopt_T	*wop;
 {
 #ifdef FEAT_FOLDING
-    clear_string_option(&wop->wo_fde);
     clear_string_option(&wop->wo_fdi);
     clear_string_option(&wop->wo_fdm);
+# ifdef FEAT_EVAL
+    clear_string_option(&wop->wo_fde);
     clear_string_option(&wop->wo_fdt);
+# endif
     clear_string_option(&wop->wo_fmr);
 #endif
 }
@@ -7734,7 +7789,7 @@ langmap_set()
 	    }
 	    if (to == NUL)
 	    {
-		EMSG2(_("(le5) 'langmap': Matching character missing for %s"),
+		EMSG2(_("E357: 'langmap': Matching character missing for %s"),
 							     transchar(from));
 		return;
 	    }
@@ -7768,7 +7823,7 @@ langmap_set()
 		    {
 			if (p[0] != ',')
 			{
-			    EMSG2(_("(le6) 'langmap': Extra characters after semicolon: %s"), p);
+			    EMSG2(_("E358: 'langmap': Extra characters after semicolon: %s"), p);
 			    return;
 			}
 			++p;

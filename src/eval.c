@@ -171,7 +171,6 @@ struct vimvar
     {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
     {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
     {"folddashes", sizeof("folddashes") - 1, NULL, VAR_STRING, VV_RO},
-    {"all_colors", sizeof("all_colors") - 1, NULL, VAR_NUMBER, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -292,7 +291,9 @@ static void f_type __ARGS((VAR argvars, VAR retvar));
 static void f_virtcol __ARGS((VAR argvars, VAR retvar));
 static void f_visualmode __ARGS((VAR argvars, VAR retvar));
 static void f_winbufnr __ARGS((VAR argvars, VAR retvar));
+static void f_wincol __ARGS((VAR argvars, VAR retvar));
 static void f_winheight __ARGS((VAR argvars, VAR retvar));
+static void f_winline __ARGS((VAR argvars, VAR retvar));
 static void f_winnr __ARGS((VAR argvars, VAR retvar));
 static void f_winwidth __ARGS((VAR argvars, VAR retvar));
 static win_T *find_win_by_nr __ARGS((VAR vp));
@@ -676,7 +677,7 @@ ex_let(eap)
 		    {
 			varp = find_var(arg, FALSE);
 			if (varp == NULL)
-			    EMSG2(_("(ve1) Unknown variable: \"%s\""), arg);
+			    EMSG2(_("E106: Unknown variable: \"%s\""), arg);
 			else
 			{
 			    name = vim_strchr(arg, ':');
@@ -955,7 +956,7 @@ ex_call(eap)
 
     if (*startarg != '(')
     {
-	EMSG2(_("(ve2) Missing braces: %s"), name);
+	EMSG2(_("E107: Missing braces: %s"), name);
 	goto end;
     }
 
@@ -1023,7 +1024,7 @@ ex_unlet(eap)
 	if (do_unlet(arg) == FAIL && !eap->forceit)
 	{
 	    *name_end = cc;
-	    EMSG2(_("(ve3) No such variable: \"%s\""), arg);
+	    EMSG2(_("E108: No such variable: \"%s\""), arg);
 	    break;
 	}
 
@@ -1264,7 +1265,7 @@ eval1(arg, retvar, evaluate)
 	 */
 	if ((*arg)[0] != ':')
 	{
-	    EMSG(_("(ev1) Missing ':' after '?'"));
+	    EMSG(_("E109: Missing ':' after '?'"));
 	    return FAIL;
 	}
 
@@ -1878,7 +1879,7 @@ eval7(arg, retvar, evaluate)
 		    ++*arg;
 		else if (ret == OK)
 		{
-		    EMSG(_("(ev2) Missing ')'"));
+		    EMSG(_("E110: Missing ')'"));
 		    ret = FAIL;
 		}
 		break;
@@ -1928,7 +1929,7 @@ eval7(arg, retvar, evaluate)
 	/* Check for the ']'. */
 	if (**arg != ']')
 	{
-	    EMSG(_("(ev3) Missing ']'"));
+	    EMSG(_("E111: Missing ']'"));
 	    clear_var(retvar);
 	    return FAIL;
 	}
@@ -2003,7 +2004,7 @@ get_option_var(arg, retvar, evaluate)
     if (option_end == NULL)
     {
 	if (retvar != NULL)
-	    EMSG2(_("(ve4) Option name missing: %s"), *arg);
+	    EMSG2(_("E112: Option name missing: %s"), *arg);
 	return FAIL;
     }
 
@@ -2021,7 +2022,7 @@ get_option_var(arg, retvar, evaluate)
     if (opt_type == -3)			/* invalid name */
     {
 	if (retvar != NULL)
-	    EMSG2(_("(ve5) Unknown option: %s"), *arg);
+	    EMSG2(_("E113: Unknown option: %s"), *arg);
 	ret = FAIL;
     }
     else if (retvar != NULL)
@@ -2083,7 +2084,7 @@ get_string_var(arg, retvar, evaluate)
 	}
     if (*p != '"')
     {
-	EMSG2(_("(ve6) Missing quote: %s"), *arg);
+	EMSG2(_("E114: Missing quote: %s"), *arg);
 	return FAIL;
     }
 
@@ -2200,7 +2201,7 @@ get_lit_string_var(arg, retvar, evaluate)
     p = vim_strchr(*arg + 1, '\'');
     if (p == NULL)
     {
-	EMSG2(_("(ve7) Missing quote: %s"), *arg);
+	EMSG2(_("E115: Missing quote: %s"), *arg);
 	return FAIL;
     }
 
@@ -2388,7 +2389,9 @@ static struct fst
     {"virtcol",		1, 1, f_virtcol},
     {"visualmode",	0, 0, f_visualmode},
     {"winbufnr",	1, 1, f_winbufnr},
+    {"wincol",		0, 0, f_wincol},
     {"winheight",	1, 1, f_winheight},
+    {"winline",		0, 0, f_winline},
     {"winnr",		0, 0, f_winnr},
     {"winwidth",	1, 1, f_winwidth},
 };
@@ -2504,11 +2507,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     var		argvars[MAX_FUNC_ARGS];	/* vars for arguments */
     int		argcount = 0;		/* number of arguments found */
     static char *errors[] =
-		{N_("(fe1) Invalid arguments for function %s"),
-		 N_("(fe2) Unknown function: %s"),
-		 N_("(fe3) Too many arguments for function: %s"),
-		 N_("(fe4) Not enough arguments for function: %s"),
-		 N_("(fe6) Using <SID> not in a script context: %s"),
+		{N_("E116: Invalid arguments for function %s"),
+		 N_("E117: Unknown function: %s"),
+		 N_("E118: Too many arguments for function: %s"),
+		 N_("E119: Not enough arguments for function: %s"),
+		 N_("E120: Using <SID> not in a script context: %s"),
 		};
 #define ERROR_INVARG	0
 #define ERROR_UNKNOWN	1
@@ -4068,6 +4071,9 @@ f_has(argvars, retvar)
 	"python",
 #endif
 #endif
+#ifdef FEAT_PRINTER
+	"printer",
+#endif
 #ifdef FEAT_QUICKFIX
 	"quickfix",
 #endif
@@ -4985,7 +4991,6 @@ f_searchpair(argvars, retvar)
 	    firstpos = pos;
 
 	/* If the skip pattern matches, ignore this match. */
-	curwin->w_cursor = pos;
 	if (*skip != NUL && (eval_to_bool(skip, &err, NULL, FALSE) || err))
 	{
 	    if (err)
@@ -5768,6 +5773,19 @@ f_winbufnr(argvars, retvar)
 }
 
 /*
+ * "wincol()" function
+ */
+/*ARGSUSED*/
+    static void
+f_wincol(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    validate_cursor();
+    retvar->var_val.var_number = curwin->w_wcol + 1;
+}
+
+/*
  * "winheight(nr)" function
  */
     static void
@@ -5782,6 +5800,19 @@ f_winheight(argvars, retvar)
 	retvar->var_val.var_number = -1;
     else
 	retvar->var_val.var_number = wp->w_height;
+}
+
+/*
+ * "winline()" function
+ */
+/*ARGSUSED*/
+    static void
+f_winline(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    validate_cursor();
+    retvar->var_val.var_number = curwin->w_wrow + 1;
 }
 
 /*
@@ -6226,7 +6257,7 @@ get_var_var(name, len, retvar)
     if (type == VAR_UNKNOWN)
     {
 	if (retvar != NULL)
-	    EMSG2(_("(ve8) Undefined variable: %s"), name);
+	    EMSG2(_("E121: Undefined variable: %s"), name);
 	ret = FAIL;
     }
     else if (retvar != NULL)
@@ -6924,7 +6955,7 @@ ex_function(eap)
     int		indent;
     int		nesting;
     int		in_append = FALSE;
-    static char_u e_funcexts[] = N_("(fe8) Function %s already exists, use ! to replace");
+    static char_u e_funcexts[] = N_("E122: Function %s already exists, use ! to replace");
 
     /*
      * ":function" without argument: list functions.
@@ -6966,7 +6997,7 @@ ex_function(eap)
 		MSG("   endfunction");
 	    }
 	    else
-		EMSG2(_("(ve9) Undefined function: %s"), eap->arg);
+		EMSG2(_("E123: Undefined function: %s"), eap->arg);
 	}
 	goto erret_name;
     }
@@ -6979,10 +7010,12 @@ ex_function(eap)
     {
 	if (!eap->skip)
 	{
-	    EMSG2(_("(ve0) Missing '(': %s"), eap->arg);
+	    EMSG2(_("E124: Missing '(': %s"), eap->arg);
 	    goto erret_name;
 	}
-	p = vim_strchr(p, '(');
+	/* attempt to continue by skipping some text */
+	if (vim_strchr(p, '(') != NULL)
+	    p = vim_strchr(p, '(');
     }
     p = skipwhite(p + 1);
 
@@ -7009,7 +7042,7 @@ ex_function(eap)
 	    {
 		if (eap->skip)
 		    break;
-		EMSG2(_("(iv1) Illegal argument: %s"), arg);
+		EMSG2(_("E125: Illegal argument: %s"), arg);
 		goto erret;
 	    }
 	    if (ga_grow(&newargs, 1) == FAIL)
@@ -7095,7 +7128,7 @@ ex_function(eap)
 	    lines_left = Rows - 1;
 	if (theline == NULL)
 	{
-	    EMSG(_("(ev4) Missing :endfunction"));
+	    EMSG(_("E126: Missing :endfunction"));
 	    goto erret;
 	}
 
@@ -7174,7 +7207,7 @@ ex_function(eap)
 	}
 	if (fp->calls)
 	{
-	    EMSG2(_("(fe7) Cannot redefine function %s: It is in use"), name);
+	    EMSG2(_("E127: Cannot redefine function %s: It is in use"), name);
 	    goto erret;
 	}
 	/* redefine existing function */
@@ -7231,13 +7264,13 @@ trans_function_name(pp)
 	start += lead;
     else if (!ASCII_ISUPPER(*start))
     {
-	EMSG2(_("(ev5) Function name must start with a capital: %s"), start);
+	EMSG2(_("E128: Function name must start with a capital: %s"), start);
 	return NULL;
     }
     end = find_name_end(start, &expr_start, &expr_end);
     if (end == start)
     {
-	EMSG(_("(ev6) Function name required"));
+	EMSG(_("E129: Function name required"));
 	return NULL;
     }
     if (expr_start != NULL)
@@ -7445,12 +7478,12 @@ ex_delfunction(eap)
 
     if (fp == NULL)
     {
-	EMSG2(_("(fd1) Undefined function: %s"), eap->arg);
+	EMSG2(_("E130: Undefined function: %s"), eap->arg);
 	return;
     }
     if (fp->calls)
     {
-	EMSG2(_("(fd2) Cannot delete function %s: It is in use"), eap->arg);
+	EMSG2(_("E131: Cannot delete function %s: It is in use"), eap->arg);
 	return;
     }
 
@@ -7497,7 +7530,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     /* If depth of calling is getting too high, don't execute the function */
     if (depth >= p_mfd)
     {
-	EMSG(_("(ev8) Function call depth is higher than 'maxfuncdepth'"));
+	EMSG(_("E132: Function call depth is higher than 'maxfuncdepth'"));
 	retvar->var_type = VAR_NUMBER;
 	retvar->var_val.var_number = -1;
 	return;
@@ -7627,7 +7660,7 @@ ex_return(eap)
 
     if (current_funccal == NULL)
     {
-	EMSG(_("(ev9) :return not inside a function"));
+	EMSG(_("E133: :return not inside a function"));
 	return;
     }
 

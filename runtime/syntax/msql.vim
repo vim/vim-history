@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www.isp.de/data/msql.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Mai 02
+" Last Change:	2001 May 10
 "
 " Options	msql_sql_query = 1 for SQL syntax highligthing inside strings
 "		msql_minlines = x     to sync at least x lines backwards
@@ -22,9 +22,9 @@ endif
 
 if version < 600
   so <sfile>:p:h/html.vim
-else 
+else
   runtime! syntax/html.vim
-  unlet b:current_syntax  
+  unlet b:current_syntax
 endif
 
 syn cluster htmlPreproc add=msqlRegion

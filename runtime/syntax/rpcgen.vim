@@ -4,14 +4,20 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	April 23, 1999
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 " Read the C syntax to start with
-runtime! syntax/c.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/c.vim
+else
+  runtime! syntax/c.vim
+endif
 
 syn keyword rpcProgram	program				skipnl skipwhite nextgroup=rpcProgName
 syn match   rpcProgName	contained	"\<\i\I*\>"	skipnl skipwhite nextgroup=rpcProgZone
@@ -24,19 +30,32 @@ syn match   rpcProcNmbr	contained	"=\s*\d\+;"me=e-1
 syn match   rpcProgNmbrErr contained	"=\s*0x[^23]\x*"ms=s+1
 syn match   rpcPassThru			"^\s*%.*$"
 
-" The default highlighting.
-hi def link rpcProgName		rpcName
-hi def link rpcProgram		rpcStatement
-hi def link rpcVersName		rpcName
-hi def link rpcVersion		rpcStatement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_rpcgen_syntax_inits")
+  if version < 508
+    let did_rpcgen_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link rpcDecl		cType
-hi def link rpcPassThru		cComment
+  HiLink rpcProgName	rpcName
+  HiLink rpcProgram	rpcStatement
+  HiLink rpcVersName	rpcName
+  HiLink rpcVersion	rpcStatement
 
-hi def link rpcName		Special
-hi def link rpcProcNmbr		Delimiter
-hi def link rpcProgNmbrErr	Error
-hi def link rpcStatement	Statement
+  HiLink rpcDecl	cType
+  HiLink rpcPassThru	cComment
+
+  HiLink rpcName	Special
+  HiLink rpcProcNmbr	Delimiter
+  HiLink rpcProgNmbrErr	Error
+  HiLink rpcStatement	Statement
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "rpcgen"
 

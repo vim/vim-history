@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran95 (and Fortran90, Fortran77, F and elf90)
 " Version:	0.80
-" Last Change:	2001 Apr 30
+" Last Change:	2001 May 10
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " For instructions on use, do :help fortran from vim
@@ -288,7 +288,7 @@ if b:fortran_dialect != "f77"
 endif
 
 syn match   fortranConditional	"\<end\s*if"
-syn match   fortranIO        	contains=fortranOperator "\<e\(nd\|rr\)\s*=\s*\d\+"
+syn match   fortranIO		contains=fortranOperator "\<e\(nd\|rr\)\s*=\s*\d\+"
 syn match   fortranConditional	"\<else\s*if"
 
 syn keyword fortranUnitHeaderR	entry

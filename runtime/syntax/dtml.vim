@@ -1,7 +1,7 @@
 " DTML syntax file
 " Language:	        Zope's Dynamic Template Markup Language
 " Maintainer:	    Jean Jordaan <jean@mosaicsoftware.com> (njj)
-" Last change:	    2001 Jan 15
+" Last change:	    2001 May 10
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -9,20 +9,27 @@
 " hacked out of the Zope Quick Reference in case someone finds something
 " sensible to do with them. I certainly haven't.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 " First load the HTML syntax
-runtime! syntax/html.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
 
 syn case match
 
-if !exists("main_syntax")
-  let main_syntax = 'dtml'
-endif
+" This doesn't have any effect.  Does it need to be moved to above/
+" if !exists("main_syntax")
+"   let main_syntax = 'dtml'
+" endif
 
 " dtml attributes
 syn keyword dtmlAttribute ac_inherited_permissions access_debug_info contained
@@ -103,7 +110,7 @@ syn keyword dtmlAttribute update_data upper uppercase url url_quote URLn user_na
 syn keyword dtmlAttribute userdefined_roles valid_property_id valid_roles validate_roles contained
 syn keyword dtmlAttribute validClipData validRoles values variance- variance-n- view_image_or_file contained
 syn keyword dtmlAttribute where whitespace whrandom xml_namespace zclass_candidate_view_actions contained
-syn keyword dtmlAttribute ZClassBaseClassNames ziconImage ZopeFind ZQueryIds contained 
+syn keyword dtmlAttribute ZClassBaseClassNames ziconImage ZopeFind ZQueryIds contained
 
 syn keyword dtmlMethod abs absolute_url ac_inherited_permissions aCommon contained
 syn keyword dtmlMethod aCommonZ acos acquiredRolesAreUsedBy aDay addPropertySheet aMonth AMPM contained
@@ -181,17 +188,30 @@ syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,ja
 syn match   htmlTagN     contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 syn match   htmlTagN     contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,dtmlIsTag,dtmlAttribute,dtmlMethod,@htmlTagNameCluster
 
-" The default highlighting.
-hi def link dtmlIsTag		PreProc
-hi def link dtmlAttribute	Identifier
-hi def link dtmlMethod		Function
-hi def link dtmlComment		Comment
-hi def link dtmlTODO		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_dtml_syntax_inits")
+  if version < 508
+    let did_dtml_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink dtmlIsTag			PreProc
+  HiLink dtmlAttribute		Identifier
+  HiLink dtmlMethod			Function
+  HiLink dtmlComment		Comment
+  HiLink dtmlTODO			Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "dtml"
 
-if main_syntax == 'dtml'
-  unlet main_syntax
-endif
+" if main_syntax == 'dtml'
+"   unlet main_syntax
+" endif
 
 " vim: ts=4

@@ -27,6 +27,9 @@
 # include <fcntl.h>
 #endif
 
+#if defined(UNIX) || defined(VMS)
+static int file_owned __ARGS((char *fname));
+#endif
 static void mainerr __ARGS((int, char_u *));
 static void main_msg __ARGS((char *s));
 static void usage __ARGS((void));
@@ -947,6 +950,9 @@ scripterror:
 #ifdef FEAT_MOUSESHAPE
     parse_shape_opt(SHAPE_MOUSE);  /* set mouse shapes from 'mouseshape' */
 #endif
+#ifdef FEAT_PRINTER
+    parse_list_options(p_prtsettings, printer_opts, OPT_PRINT_NUM_OPTIONS);
+#endif
 
     /*
      * For "evim" source evim.vim first of all, so that the user can overrule
@@ -976,7 +982,7 @@ scripterror:
 	else
 	{
 	    if (do_source(use_vimrc, FALSE, FALSE) != OK)
-		EMSG2(_("(ce3) Cannot read from \"%s\""), use_vimrc);
+		EMSG2(_("E282: Cannot read from \"%s\""), use_vimrc);
 	}
     }
     else if (!silent_mode)
@@ -1036,23 +1042,10 @@ scripterror:
 	if (p_exrc)
 	{
 #if defined(UNIX) || defined(VMS)
-	    {
-		struct stat s;
-
-		/* if ".vimrc" file is not owned by user, set 'secure' mode */
-
-		if (mch_stat(VIMRC_FILE, &s) || s.st_uid !=
-# ifdef UNIX
-				getuid()
-# else	 /* VMS */
-				((getgid() << 16) | getuid())
-# endif
-		    )
-		    secure = p_secure;
-	    }
-#else
-	    secure = p_secure;
+	    /* If ".vimrc" file is not owned by user, set 'secure' mode. */
+	    if (!file_owned(VIMRC_FILE))
 #endif
+		secure = p_secure;
 
 	    i = FAIL;
 	    if (fullpathcmp((char_u *)USR_VIMRC_FILE,
@@ -1075,16 +1068,8 @@ scripterror:
 	    if (i == FAIL)
 	    {
 #if defined(UNIX) || defined(VMS)
-		struct stat s;
-
 		/* if ".exrc" is not owned by user set 'secure' mode */
-		if (mch_stat(EXRC_FILE, &s) || s.st_uid !=
-# ifdef UNIX
-				getuid()
-# else	 /* VMS */
-				((getgid() << 16) | getuid())
-# endif
-		    )
+		if (!file_owned(EXRC_FILE))
 		    secure = p_secure;
 		else
 		    secure = 0;
@@ -1865,6 +1850,28 @@ process_env(env, is_viminit)
     }
     return FAIL;
 }
+
+#if defined(UNIX) || defined(VMS)
+/*
+ * Return TRUE if we are certain the user owns the file "fname".
+ * Used for ".vimrc" and ".exrc".
+ * Use both stat() and lstat() for extra security.
+ */
+    static int
+file_owned(fname)
+    char	*fname;
+{
+    struct stat s;
+# ifdef UNIX
+    uid_t	uid = getuid();
+# else	 /* VMS */
+    uid_t	uid = ((getgid() << 16) | getuid());
+# endif
+
+    return !(mch_lstat(fname, &s) != 0 || s.st_uid != uid
+	    || mch_stat(fname, &s) != 0 || s.st_uid != uid);
+}
+#endif
 
 /*
  * Give an error message main_errors["n"] and exit.

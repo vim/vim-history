@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Optics
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 10:17:25 Mountain Daylight Time
+" Last Change:  2001 May 10
 " Filenames:    *.tssop
 " URL:          http://www.naglenet.org/vim/syntax/tssop.vim
 " MAIN URL:     http://www.naglenet.org/vim/

@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0ae.  Last change: 2001 May 05
+*sign.txt*     For Vim version 6.0af.  Last change: 2001 May 12
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -16,7 +16,7 @@ Sign Support Features				*sign-support*
 1. Introduction					*sign-intro*
 
 When a debugger or other IPE tool is driving an editor it needs to be able
-to give specific highlights which quickly tell the user usefull information
+to give specific highlights which quickly tell the user useful information
 about the file. One example of this would be a debugger which had an icon
 in the left-hand column denoting a breakpoint. Another example might be an
 arrow representing the Program Counter (PC). The sign features allow both
@@ -26,7 +26,7 @@ is most likely only feasible in gvim (although Sun Microsystem's dtterm
 does support this its the only terminal emulator I know of which does).
 The highlight should be feasible in any color terminal emulator.
 
-Signs and highlights are not usefull just for debuggers. Sun's Visual
+Signs and highlights are not useful just for debuggers. Sun's Visual
 WorkShop uses signs and highlights to mark build errors and SourceBrowser
 hits. Additionally, the debugger supports 8 to 10 different signs and
 highlight colors.
@@ -40,12 +40,12 @@ and manipulate signs within a buffer or file.
 ==============================================================================
 2. Commands					*sign-commands*
 
-			*:sig* *:sign* *es7* *es8* *es9* *es0* *le1* *le2*
+			*:sig* *:sign* *E155* *E156* *E159* *E255* *E157* *E158*
 :sig[n] id linenum index file		Create a new sign
 :sig[n] id index file			Change sign types
 :sig[n] id file			Jump to sign
 :signs					Display all signs
-						*:uns* *:unsign* *le3*
+						*:uns* *:unsign* *E160*
 :uns[ign] id file			Delete a sign
 
 Where:

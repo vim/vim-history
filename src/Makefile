@@ -116,6 +116,8 @@
 #		make installmacros	only installs the Vim macros
 #		make installtutor	only installs the Vim tutor
 #		make installtools	only installs xxd
+#	If you install Vim not to install for real but to prepare a package or
+#	RPM, set DESTDIR to the root of the tree.
 #
 # 6. Use Vim until a new version comes out.  {{{1
 #
@@ -749,7 +751,7 @@ RGVIMNAME	= r$(GVIMNAME)
 RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
 RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
-VIMDIFFNAME	= vimdiff
+VIMDIFFNAME	= $(VIMNAME)diff
 GVIMDIFFNAME	= g$(VIMDIFFNAME)
 VIMDIFFTARGET	= $(VIMDIFFNAME)$(SUFFIX)
 GVIMDIFFTARGET	= $(GVIMDIFFNAME)$(SUFFIX)
@@ -787,13 +789,17 @@ TOOLS = xxd/xxd$(SUFFIX)
 # Uncomment the next line to install Vim help files in "/usr/share/vim"
 #DATADIR  = /usr/share
 
-### Location of man page
+### DESTDIR	root of the installation tree.  This is prepended to the other
+#		directories.  This directory must exist.
+#DESTDIR  = ~/pkg/vim
+
+### Location of man pages
 MANSUBDIR = $(MANDIR)/man1
 
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ae
+VIMRTDIR = /vim60af
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -845,62 +851,39 @@ SCRIPTLOC	= $(VIMRTLOC)
 ### the runtime directory is not below it.
 #VIMRUNTIMEDIR = $(VIMRTLOC)
 
-### Added for the Debian GNU/Linux packaged version of Vim, to get around
-### some sed trickery. (the files are installed into a temporary directory
-### for building the package, but they eventually end up in /usr/... . This
-### ensures that the correct path is put into the man page.)
-VIMRCENDLOC = $(VIMRCLOC)
-#VIMRCENDLOC = /etc
-HELPENDLOC = $(HELPSUBLOC)
-#HELPENDLOC = /usr/doc/vim
-SYNTAXENDLOC = $(SYNSUBLOC)
-#SYNTAXENDLOC = /usr/lib/vim/syntax
-PLUGINFTENDLOC = $(PLUGSUBLOC)
-#PLUGINFTENDLOC = /usr/lib/vim/plugin
-FTPLUGINFTENDLOC = $(FTPLUGSUBLOC)
-#FTPLUGINFTENDLOC = /usr/lib/vim/ftplugin
-LANGENDLOC = $(LANGSUBLOC)
-#LANGENDLOC = /usr/share/locale/vim
-KMAPENDLOC = $(KMAPSUBLOC)
-#KMAPENDLOC = /usr/lib/vim/keymap
-SCRIPTENDLOC = $(SCRIPTLOC)
-#SCRIPTENDLOC = /etc
-TUTORENDLOC = $(TUTORSUBLOC)
-#TUTORENDLOC = /usr/lib/vim/tutor
-
 ### Name of the evim file target.
-EVIM_FILE	= $(SCRIPTLOC)/evim.vim
-MSWIN_FILE	= $(SCRIPTLOC)/mswin.vim
+EVIM_FILE	= $(DESTDIR)$(SCRIPTLOC)/evim.vim
+MSWIN_FILE	= $(DESTDIR)$(SCRIPTLOC)/mswin.vim
 
 ### Name of the menu file target.
-SYS_MENU_FILE	= $(SCRIPTLOC)/menu.vim
+SYS_MENU_FILE	= $(DESTDIR)$(SCRIPTLOC)/menu.vim
 
 ### Name of the bugreport file target.
-SYS_BUGR_FILE	= $(SCRIPTLOC)/bugreport.vim
+SYS_BUGR_FILE	= $(DESTDIR)$(SCRIPTLOC)/bugreport.vim
 
 ### Name of the file type detection file target.
-SYS_FILETYPE_FILE = $(SCRIPTLOC)/filetype.vim
+SYS_FILETYPE_FILE = $(DESTDIR)$(SCRIPTLOC)/filetype.vim
 
 ### Name of the file type detection file target.
-SYS_FTOFF_FILE	= $(SCRIPTLOC)/ftoff.vim
+SYS_FTOFF_FILE	= $(DESTDIR)$(SCRIPTLOC)/ftoff.vim
 
 ### Name of the file type detection script file target.
-SYS_SCRIPTS_FILE = $(SCRIPTLOC)/scripts.vim
+SYS_SCRIPTS_FILE = $(DESTDIR)$(SCRIPTLOC)/scripts.vim
 
 ### Name of the ftplugin-on file target.
-SYS_FTPLUGIN_FILE = $(SCRIPTLOC)/ftplugin.vim
+SYS_FTPLUGIN_FILE = $(DESTDIR)$(SCRIPTLOC)/ftplugin.vim
 
 ### Name of the ftplugin-off file target.
-SYS_FTPLUGOF_FILE = $(SCRIPTLOC)/ftplugof.vim
+SYS_FTPLUGOF_FILE = $(DESTDIR)$(SCRIPTLOC)/ftplugof.vim
 
 ### Name of the indent-on file target.
-SYS_INDENT_FILE = $(SCRIPTLOC)/indent.vim
+SYS_INDENT_FILE = $(DESTDIR)$(SCRIPTLOC)/indent.vim
 
 ### Name of the indent-off file target.
-SYS_INDOFF_FILE = $(SCRIPTLOC)/indoff.vim
+SYS_INDOFF_FILE = $(DESTDIR)$(SCRIPTLOC)/indoff.vim
 
 ### Name of the option window script file target.
-SYS_OPTWIN_FILE = $(SCRIPTLOC)/optwin.vim
+SYS_OPTWIN_FILE = $(DESTDIR)$(SCRIPTLOC)/optwin.vim
 
 # Program to install the program in the target directory.  Could also be "mv".
 INSTALL_PROG	= cp
@@ -1140,6 +1123,24 @@ PFLAGS = $(PROTO_FLAGS) -DPROTO $(LINT_CFLAGS)
 
 ALL_LIB_DIRS = $(GUI_LIBS_DIR) $(X_LIBS_DIR)
 ALL_LIBS = $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS) $(RUBY_LIBS)
+
+# abbreviations
+DEST_BIN = $(DESTDIR)$(BINDIR)
+DEST_VIM = $(DESTDIR)$(VIMLOC)
+DEST_RT = $(DESTDIR)$(VIMRTLOC)
+DEST_HELP = $(DESTDIR)$(HELPSUBLOC)
+DEST_COL = $(DESTDIR)$(COLSUBLOC)
+DEST_SYN = $(DESTDIR)$(SYNSUBLOC)
+DEST_IND = $(DESTDIR)$(INDSUBLOC)
+DEST_PLUG = $(DESTDIR)$(PLUGSUBLOC)
+DEST_FTP = $(DESTDIR)$(FTPLUGSUBLOC)
+DEST_LANG = $(DESTDIR)$(LANGSUBLOC)
+DEST_KMAP = $(DESTDIR)$(KMAPSUBLOC)
+DEST_MACRO = $(DESTDIR)$(MACROSUBLOC)
+DEST_TOOLS = $(DESTDIR)$(TOOLSSUBLOC)
+DEST_TUTOR = $(DESTDIR)$(TUTORSUBLOC)
+DEST_SCRIPT = $(DESTDIR)$(SCRIPTLOC)
+DEST_MAN = $(DESTDIR)$(MANSUBDIR)
 
 #	     BASIC_SRC: files that are always used
 #	       GUI_SRC: extra GUI files for current configuration
@@ -1388,12 +1389,12 @@ xxd/xxd$(SUFFIX): xxd/xxd.c
 # build the language specific files if they were unpacked
 languages:
 	if test -n "$(MAKEMO)"; then \
-		cd $(PODIR); $(MAKE) prefix=$(prefix); \
+		cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix); \
 	fi
 
 # Update the *.po files for changes in the sources.  Only run manually.
 update-po:
-	cd $(PODIR); $(MAKE) prefix=$(prefix) update-po
+	cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix) update-po
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
@@ -1496,51 +1497,51 @@ install: installvim installtools install-languages
 
 installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor $(INSTALLVIMDIFF)
 
-installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
-	-if test -f $(BINDIR)/$(VIMTARGET); then \
-	  mv -f $(BINDIR)/$(VIMTARGET) $(BINDIR)/$(VIMNAME).rm; \
-	  rm -f $(BINDIR)/$(VIMNAME).rm; \
+installvimbin: $(VIMTARGET) $(DESTDIR)$(exec_prefix) $(DEST_BIN)
+	-if test -f $(DEST_BIN)/$(VIMTARGET); then \
+	  mv -f $(DEST_BIN)/$(VIMTARGET) $(DEST_BIN)/$(VIMNAME).rm; \
+	  rm -f $(DEST_BIN)/$(VIMNAME).rm; \
 	fi
-	$(INSTALL_PROG) $(VIMTARGET) $(BINDIR)
-	$(STRIP) $(BINDIR)/$(VIMTARGET)
-	chmod $(BINMOD) $(BINDIR)/$(VIMTARGET)
+	$(INSTALL_PROG) $(VIMTARGET) $(DEST_BIN)
+	$(STRIP) $(DEST_BIN)/$(VIMTARGET)
+	chmod $(BINMOD) $(DEST_BIN)/$(VIMTARGET)
 # may create a link to the new executable from /usr/bin/vi
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
-installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
-		$(HELPSUBLOC) $(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) \
-		$(FTPLUGSUBLOC) $(PLUGSUBLOC) $(TUTORSUBLOC)
-	@echo generating $(MANSUBDIR)/$(VIMNAME).1
+installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
+		$(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND) \
+		$(DEST_FTP) $(DEST_PLUG) $(DEST_TUTOR)
+	@echo generating $(DEST_MAN)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
-		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
-		-e s+$(VIMLOC)/syntax+$(SYNTAXENDLOC)+ \
-		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
-		-e s+$(VIMLOC)/vimrc+$(VIMRCENDLOC)/vimrc+ \
-		-e s+$(VIMLOC)/gvimrc+$(VIMRCENDLOC)/gvimrc+ \
-		-e s+$(VIMLOC)/menu.vim+$(SCRIPTENDLOC)/menu.vim+ \
-		-e s+$(VIMLOC)/bugreport.vim+$(SCRIPTENDLOC)/bugreport.vim+ \
-		-e s+$(VIMLOC)/filetype.vim+$(SCRIPTENDLOC)/filetype.vim+ \
-		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTENDLOC)/ftoff.vim+ \
-		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTENDLOC)/scripts.vim+ \
-		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTENDLOC)/optwin.vim+ \
-		$(HELPSOURCE)/vim.1 > $(MANSUBDIR)/$(VIMNAME).1
-	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME).1
-	@echo generating $(MANSUBDIR)/$(VIMNAME)tutor.1
+		-e s+$(VIMLOC)/doc+$(HELPSUBLOC)+ \
+		-e s+$(VIMLOC)/syntax+$(SYNSUBLOC)+ \
+		-e s+$(VIMLOC)/tutor+$(TUTORSUBLOC)+ \
+		-e s+$(VIMLOC)/vimrc+$(VIMRCLOC)/vimrc+ \
+		-e s+$(VIMLOC)/gvimrc+$(VIMRCLOC)/gvimrc+ \
+		-e s+$(VIMLOC)/menu.vim+$(SCRIPTLOC)/menu.vim+ \
+		-e s+$(VIMLOC)/bugreport.vim+$(SCRIPTLOC)/bugreport.vim+ \
+		-e s+$(VIMLOC)/filetype.vim+$(SCRIPTLOC)/filetype.vim+ \
+		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTLOC)/ftoff.vim+ \
+		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTLOC)/scripts.vim+ \
+		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTLOC)/optwin.vim+ \
+		$(HELPSOURCE)/vim.1 > $(DEST_MAN)/$(VIMNAME).1
+	chmod $(MANMOD) $(DEST_MAN)/$(VIMNAME).1
+	@echo generating $(DEST_MAN)/$(VIMNAME)tutor.1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
-		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
-		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMNAME)tutor.1
-	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME)tutor.1
-	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(MANSUBDIR)/$(VIMDIFFNAME).1
-	chmod $(MANMOD) $(MANSUBDIR)/$(VIMDIFFNAME).1
-	@echo generating $(MANSUBDIR)/$(EVIMNAME).1
+		-e s+$(VIMLOC)/tutor+$(TUTORSUBLOC)+ \
+		$(HELPSOURCE)/vimtutor.1 > $(DEST_MAN)/$(VIMNAME)tutor.1
+	chmod $(MANMOD) $(DEST_MAN)/$(VIMNAME)tutor.1
+	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(DEST_MAN)/$(VIMDIFFNAME).1
+	chmod $(MANMOD) $(DEST_MAN)/$(VIMDIFFNAME).1
+	@echo generating $(DEST_MAN)/$(EVIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
-		$(HELPSOURCE)/evim.1 > $(MANSUBDIR)/$(EVIMNAME).1
-	chmod $(MANMOD) $(MANSUBDIR)/$(EVIMNAME).1
-	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
-	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
-	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
-	chmod $(SCRIPTMOD) $(HELPSUBLOC)/*.pl
+		$(HELPSOURCE)/evim.1 > $(DEST_MAN)/$(EVIMNAME).1
+	chmod $(MANMOD) $(DEST_MAN)/$(EVIMNAME).1
+	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(DEST_HELP)
+	cd $(DEST_HELP); chmod $(HELPMOD) *.txt tags
+	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(DEST_HELP)
+	chmod $(SCRIPTMOD) $(DEST_HELP)/*.pl
 # install the menu file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_MENU_FILE)
@@ -1553,10 +1554,10 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/bugreport.vim $(SYS_BUGR_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_BUGR_FILE)
 # install the example vimrc files
-	$(INSTALL_DATA) $(SCRIPTSOURCE)/vimrc_example.vim $(SCRIPTLOC)
-	chmod $(VIMSCRIPTMOD) $(SCRIPTLOC)/vimrc_example.vim
-	$(INSTALL_DATA) $(SCRIPTSOURCE)/gvimrc_example.vim $(SCRIPTLOC)
-	chmod $(VIMSCRIPTMOD) $(SCRIPTLOC)/gvimrc_example.vim
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/vimrc_example.vim $(DEST_SCRIPT)
+	chmod $(VIMSCRIPTMOD) $(DEST_SCRIPT)/vimrc_example.vim
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/gvimrc_example.vim $(DEST_SCRIPT)
+	chmod $(VIMSCRIPTMOD) $(DEST_SCRIPT)/gvimrc_example.vim
 # install the file type detection files
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/filetype.vim $(SYS_FILETYPE_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_FILETYPE_FILE)
@@ -1575,63 +1576,63 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
 # install the colorscheme files
-	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(COLSUBLOC)
-	cd $(COLSUBLOC); chmod $(HELPMOD) *.vim README.txt
+	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_COL)
+	cd $(DEST_COL); chmod $(HELPMOD) *.vim README.txt
 # install the syntax files
-	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim README.txt $(SYNSUBLOC)
-	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim README.txt
+	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_SYN)
+	cd $(DEST_SYN); chmod $(HELPMOD) *.vim README.txt
 # install the indent files
-	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(INDSUBLOC)
-	cd $(INDSUBLOC); chmod $(HELPMOD) *.vim
+	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(DEST_IND)
+	cd $(DEST_IND); chmod $(HELPMOD) *.vim
 # install the standard plugin files
-	cd $(PLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(PLUGSUBLOC)
-	cd $(PLUGSUBLOC); chmod $(HELPMOD) *.vim README.txt
+	cd $(PLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_PLUG)
+	cd $(DEST_PLUG); chmod $(HELPMOD) *.vim README.txt
 # install the ftplugin files
-	cd $(FTPLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(FTPLUGSUBLOC)
-	cd $(FTPLUGSUBLOC); chmod $(HELPMOD) *.vim README.txt
+	cd $(FTPLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_FTP)
+	cd $(DEST_FTP); chmod $(HELPMOD) *.vim README.txt
 
-installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
-	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(MACROSUBLOC)
-	chmod $(DIRMOD) `find $(MACROSUBLOC) -type d -print`
-	chmod $(FILEMOD) `find $(MACROSUBLOC) -type f -print`
+installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
+	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(DEST_MACRO)
+	chmod $(DIRMOD) `find $(DEST_MACRO) -type d -print`
+	chmod $(FILEMOD) `find $(DEST_MACRO) -type f -print`
 
 # install the tutor files
-installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
-	$(INSTALL_DATA) vimtutor $(BINDIR)/$(VIMNAME)tutor
-	chmod $(SCRIPTMOD) $(BINDIR)/$(VIMNAME)tutor
-	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
-	chmod $(HELPMOD) $(TUTORSUBLOC)/*
+installtutor: $(TUTORSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TUTOR)
+	$(INSTALL_DATA) vimtutor $(DEST_BIN)/$(VIMNAME)tutor
+	chmod $(SCRIPTMOD) $(DEST_BIN)/$(VIMNAME)tutor
+	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(DEST_TUTOR)
+	chmod $(HELPMOD) $(DEST_TUTOR)/*
 
 # install helper program xxd
-installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
-		$(TOOLSSOURCE) $(VIMLOC) $(VIMRTLOC) $(TOOLSSUBLOC)
-	if test -f $(BINDIR)/xxd$(SUFFIX); then \
-	  mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm; \
-	  rm -f $(BINDIR)/xxd.rm; \
+installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
+		$(TOOLSSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TOOLS)
+	if test -f $(DEST_BIN)/xxd$(SUFFIX); then \
+	  mv -f $(DEST_BIN)/xxd$(SUFFIX) $(DEST_BIN)/xxd.rm; \
+	  rm -f $(DEST_BIN)/xxd.rm; \
 	fi
-	$(INSTALL_PROG) xxd/xxd$(SUFFIX) $(BINDIR)
-	$(STRIP) $(BINDIR)/xxd$(SUFFIX)
-	chmod $(BINMOD) $(BINDIR)/xxd$(SUFFIX)
-	$(INSTALL_DATA) $(HELPSOURCE)/xxd.1 $(MANSUBDIR)
-	chmod $(MANMOD) $(MANSUBDIR)/xxd.1
+	$(INSTALL_PROG) xxd/xxd$(SUFFIX) $(DEST_BIN)
+	$(STRIP) $(DEST_BIN)/xxd$(SUFFIX)
+	chmod $(BINMOD) $(DEST_BIN)/xxd$(SUFFIX)
+	$(INSTALL_DATA) $(HELPSOURCE)/xxd.1 $(DEST_MAN)
+	chmod $(MANMOD) $(DEST_MAN)/xxd.1
 # install the runtime tools
-	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(TOOLSSUBLOC)
-	-chmod $(FILEMOD) $(TOOLSSUBLOC)/*
-	-chmod $(SCRIPTMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
+	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
+	-chmod $(FILEMOD) $(DEST_TOOLS)/*
+	-chmod $(SCRIPTMOD) `grep -l "^#!" $(DEST_TOOLS)/*`
 
 # install the language specific files, if they were unpacked
-install-languages: languages $(LANGSUBLOC) $(KMAPSUBLOC)
+install-languages: languages $(DEST_LANG) $(DEST_KMAP)
 	if test -n "$(MAKEMO)"; then \
-	   cd $(PODIR); $(MAKE) prefix=$(prefix) LOCALEDIR=$(LANGSUBLOC) \
+	   cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix) LOCALEDIR=$(DEST_LANG) \
 	   INSTALL_DATA=$(INSTALL_DATA) FILEMOD=$(FILEMOD) install; \
 	fi
 	if test -d $(LANGSOURCE); then \
-	   $(INSTALL_DATA) $(LANGSOURCE)/README.txt $(LANGSOURCE)/*.vim $(LANGSUBLOC); \
-	   chmod $(FILEMOD) $(LANGSUBLOC)/*.vim; \
+	   $(INSTALL_DATA) $(LANGSOURCE)/README.txt $(LANGSOURCE)/*.vim $(DEST_LANG); \
+	   chmod $(FILEMOD) $(DEST_LANG)/*.vim; \
 	fi
 	if test -d $(KMAPSOURCE); then \
-	   $(INSTALL_DATA) $(KMAPSOURCE)/README.txt $(KMAPSOURCE)/*.vim $(KMAPSUBLOC); \
-	   chmod $(FILEMOD) $(KMAPSUBLOC)/*.vim; \
+	   $(INSTALL_DATA) $(KMAPSOURCE)/README.txt $(KMAPSOURCE)/*.vim $(DEST_KMAP); \
+	   chmod $(FILEMOD) $(DEST_KMAP)/*.vim; \
 	fi
 
 
@@ -1640,149 +1641,152 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo You need to unpack the runtime archive before running "make install".
 	test -f error
 
-$(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
-		$(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) \
-		$(LANGSUBLOC) $(KMAPSUBLOC) \
-		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC) $(PLUGSUBLOC):
+$(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) $(DEST_VIM) $(DEST_RT) $(DEST_HELP) \
+		$(DEST_COL) $(DEST_SYN) $(DEST_IND) $(DEST_FTP) \
+		$(DEST_LANG) $(DEST_KMAP) \
+		$(DEST_MACRO) $(DEST_TOOLS) $(DEST_TUTOR) $(DEST_PLUG):
 	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
 # create links from various names to vim.  This is only done when the links
 # (or executables with the same name) don't exist yet.
 installlinks: $(GUI_TARGETS) \
-			$(BINDIR)/$(EXTARGET) \
-			$(BINDIR)/$(VIEWTARGET) \
-			$(BINDIR)/$(RVIMTARGET) \
-			$(BINDIR)/$(RVIEWTARGET)
+			$(DEST_BIN)/$(EXTARGET) \
+			$(DEST_BIN)/$(VIEWTARGET) \
+			$(DEST_BIN)/$(RVIMTARGET) \
+			$(DEST_BIN)/$(RVIEWTARGET)
 
-installglinks: $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET) \
-			$(BINDIR)/$(EVIMTARGET) \
-			$(BINDIR)/$(EVIEWTARGET)
+installglinks: $(DEST_BIN)/$(GVIMTARGET) \
+			$(DEST_BIN)/$(GVIEWTARGET) \
+			$(DEST_BIN)/$(RGVIMTARGET) \
+			$(DEST_BIN)/$(RGVIEWTARGET) \
+			$(DEST_BIN)/$(EVIMTARGET) \
+			$(DEST_BIN)/$(EVIEWTARGET)
 
-installvimdiff: $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
+installvimdiff: $(DEST_BIN)/$(VIMDIFFTARGET) $(DEST_BIN)/$(GVIMDIFFTARGET)
 
-$(BINDIR)/$(EXTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(EXTARGET)
+$(DEST_BIN)/$(EXTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(EXTARGET)
 
-$(BINDIR)/$(VIEWTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(VIEWTARGET)
+$(DEST_BIN)/$(VIEWTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(VIEWTARGET)
 
-$(BINDIR)/$(GVIMTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(GVIMTARGET)
+$(DEST_BIN)/$(GVIMTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(GVIMTARGET)
 
-$(BINDIR)/$(GVIEWTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(GVIEWTARGET)
+$(DEST_BIN)/$(GVIEWTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(GVIEWTARGET)
 
-$(BINDIR)/$(RVIMTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(RVIMTARGET)
+$(DEST_BIN)/$(RVIMTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(RVIMTARGET)
 
-$(BINDIR)/$(RVIEWTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(RVIEWTARGET)
+$(DEST_BIN)/$(RVIEWTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(RVIEWTARGET)
 
-$(BINDIR)/$(RGVIMTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(RGVIMTARGET)
+$(DEST_BIN)/$(RGVIMTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(RGVIMTARGET)
 
-$(BINDIR)/$(RGVIEWTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(RGVIEWTARGET)
+$(DEST_BIN)/$(RGVIEWTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(RGVIEWTARGET)
 
-$(BINDIR)/$(VIMDIFFTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(VIMDIFFTARGET)
+$(DEST_BIN)/$(VIMDIFFTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(VIMDIFFTARGET)
 
-$(BINDIR)/$(GVIMDIFFTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(GVIMDIFFTARGET)
+$(DEST_BIN)/$(GVIMDIFFTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(GVIMDIFFTARGET)
 
-$(BINDIR)/$(EVIMTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(EVIMTARGET)
+$(DEST_BIN)/$(EVIMTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(EVIMTARGET)
 
-$(BINDIR)/$(EVIEWTARGET):
-	cd $(BINDIR); ln -s $(VIMTARGET) $(EVIEWTARGET)
+$(DEST_BIN)/$(EVIEWTARGET):
+	cd $(DEST_BIN); ln -s $(VIMTARGET) $(EVIEWTARGET)
 
 # create links for the manual pages with various names to vim.	This is only
 # done when the links (or manpages with the same name) don't exist yet.
 installhelplinks: $(GUI_MAN_TARGETS) \
-			$(MANSUBDIR)/$(EXNAME).1 \
-			$(MANSUBDIR)/$(VIEWNAME).1 \
-			$(MANSUBDIR)/$(RVIMNAME).1 \
-			$(MANSUBDIR)/$(RVIEWNAME).1
+			$(DEST_MAN)/$(EXNAME).1 \
+			$(DEST_MAN)/$(VIEWNAME).1 \
+			$(DEST_MAN)/$(RVIMNAME).1 \
+			$(DEST_MAN)/$(RVIEWNAME).1
 
-installghelplinks: $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1 \
-			$(MANSUBDIR)/$(GVIMDIFFNAME).1 \
-			$(MANSUBDIR)/$(EVIEWNAME).1
+installghelplinks: $(DEST_MAN)/$(GVIMNAME).1 \
+			$(DEST_MAN)/$(GVIEWNAME).1 \
+			$(DEST_MAN)/$(RGVIMNAME).1 \
+			$(DEST_MAN)/$(RGVIEWNAME).1 \
+			$(DEST_MAN)/$(GVIMDIFFNAME).1 \
+			$(DEST_MAN)/$(EVIEWNAME).1
 
-$(MANSUBDIR)/$(EXNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(EXNAME).1
+$(DEST_MAN)/$(EXNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(EXNAME).1
 
-$(MANSUBDIR)/$(VIEWNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(VIEWNAME).1
+$(DEST_MAN)/$(VIEWNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(VIEWNAME).1
 
-$(MANSUBDIR)/$(GVIMNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(GVIMNAME).1
+$(DEST_MAN)/$(GVIMNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(GVIMNAME).1
 
-$(MANSUBDIR)/$(GVIEWNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(GVIEWNAME).1
+$(DEST_MAN)/$(GVIEWNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(GVIEWNAME).1
 
-$(MANSUBDIR)/$(RVIMNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RVIMNAME).1
+$(DEST_MAN)/$(RVIMNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(RVIMNAME).1
 
-$(MANSUBDIR)/$(RVIEWNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RVIEWNAME).1
+$(DEST_MAN)/$(RVIEWNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(RVIEWNAME).1
 
-$(MANSUBDIR)/$(RGVIMNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RGVIMNAME).1
+$(DEST_MAN)/$(RGVIMNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(RGVIMNAME).1
 
-$(MANSUBDIR)/$(RGVIEWNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RGVIEWNAME).1
+$(DEST_MAN)/$(RGVIEWNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMNAME).1 $(RGVIEWNAME).1
 
-$(MANSUBDIR)/$(GVIMDIFFNAME).1:
-	cd $(MANSUBDIR); ln -s $(VIMDIFFNAME).1 $(GVIMDIFFNAME).1
+$(DEST_MAN)/$(GVIMDIFFNAME).1:
+	cd $(DEST_MAN); ln -s $(VIMDIFFNAME).1 $(GVIMDIFFNAME).1
 
-$(MANSUBDIR)/$(EVIEWNAME).1:
-	cd $(MANSUBDIR); ln -s $(EVIMNAME).1 $(EVIEWNAME).1
+$(DEST_MAN)/$(EVIEWNAME).1:
+	cd $(DEST_MAN); ln -s $(EVIMNAME).1 $(EVIEWNAME).1
 
 uninstall: uninstall_runtime
-	-rm -f $(BINDIR)/$(VIMTARGET)
-	-rm -f $(MANSUBDIR)/$(VIMNAME).1 $(MANSUBDIR)/$(VIMNAME)tutor.1
-	-rm -f $(BINDIR)/vimtutor
-	-rm -f $(BINDIR)/xxd$(SUFFIX) $(MANSUBDIR)/xxd.1
-	-rm -f $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET)
-	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
-	-rm -f $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
-	-rm -f $(BINDIR)/$(RGVIMTARGET) $(BINDIR)/$(RGVIEWTARGET)
-	-rm -f $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
-	-rm -f $(BINDIR)/$(EVIMTARGET) $(BINDIR)/$(EVIEWTARGET)
-	-rm -f $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1
-	-rm -f $(MANSUBDIR)/$(GVIMNAME).1 $(MANSUBDIR)/$(GVIEWNAME).1
-	-rm -f $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
-	-rm -f $(MANSUBDIR)/$(RGVIMNAME).1 $(MANSUBDIR)/$(RGVIEWNAME).1
-	-rm -f $(MANSUBDIR)/$(VIMDIFFNAME).1 $(MANSUBDIR)/$(GVIMDIFFNAME).1
-	-rm -f $(MANSUBDIR)/$(EVIMNAME).1 $(MANSUBDIR)/$(EVIEWNAME).1
+	-rm -f $(DEST_BIN)/$(VIMTARGET)
+	-rm -f $(DEST_MAN)/$(VIMNAME).1 $(DEST_MAN)/$(VIMNAME)tutor.1
+	-rm -f $(DEST_BIN)/vimtutor
+	-rm -f $(DEST_BIN)/xxd$(SUFFIX) $(DEST_MAN)/xxd.1
+	-rm -f $(DEST_BIN)/$(EXTARGET) $(DEST_BIN)/$(VIEWTARGET)
+	-rm -f $(DEST_BIN)/$(GVIMTARGET) $(DEST_BIN)/$(GVIEWTARGET)
+	-rm -f $(DEST_BIN)/$(RVIMTARGET) $(DEST_BIN)/$(RVIEWTARGET)
+	-rm -f $(DEST_BIN)/$(RGVIMTARGET) $(DEST_BIN)/$(RGVIEWTARGET)
+	-rm -f $(DEST_BIN)/$(VIMDIFFTARGET) $(DEST_BIN)/$(GVIMDIFFTARGET)
+	-rm -f $(DEST_BIN)/$(EVIMTARGET) $(DEST_BIN)/$(EVIEWTARGET)
+	-rm -f $(DEST_MAN)/$(EXNAME).1 $(DEST_MAN)/$(VIEWNAME).1
+	-rm -f $(DEST_MAN)/$(GVIMNAME).1 $(DEST_MAN)/$(GVIEWNAME).1
+	-rm -f $(DEST_MAN)/$(RVIMNAME).1 $(DEST_MAN)/$(RVIEWNAME).1
+	-rm -f $(DEST_MAN)/$(RGVIMNAME).1 $(DEST_MAN)/$(RGVIEWNAME).1
+	-rm -f $(DEST_MAN)/$(VIMDIFFNAME).1 $(DEST_MAN)/$(GVIMDIFFNAME).1
+	-rm -f $(DEST_MAN)/$(EVIMNAME).1 $(DEST_MAN)/$(EVIEWNAME).1
 
 # Note: the "rmdir" will fail if any files were added after "make install"
 uninstall_runtime:
-	-rm -f $(HELPSUBLOC)/*.txt $(HELPSUBLOC)/tags $(HELPSUBLOC)/*.pl
+	-rm -f $(DEST_HELP)/*.txt $(DEST_HELP)/tags $(DEST_HELP)/*.pl
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
-	-rm -f $(SCRIPTLOC)/gvimrc_example.vim $(SCRIPTLOC)/vimrc_example.vim
+	-rm -f $(EVIM_FILE) $(MSWIN_FILE)
+	-rm -f $(DEST_SCRIPT)/gvimrc_example.vim $(DEST_SCRIPT)/vimrc_example.vim
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
 	-rm -f $(SYS_OPTWIN_FILE)
-	-rm -f $(COLSUBLOC)/*.vim $(COLSUBLOC)/README.txt
-	-rm -f $(SYNSUBLOC)/*.vim $(SYNSUBLOC)/README.txt $(INDSUBLOC)/*.vim
-	-rm -rf $(MACROSUBLOC)
-	-rm -rf $(TUTORSUBLOC)
-	-rm -rf $(TOOLSSUBLOC)
-	-rm -rf $(LANGSUBLOC)
-	-rm -rf $(KMAPSUBLOC)
-	-rmdir $(HELPSUBLOC) $(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
-	-rm -rf $(FTPLUGSUBLOC)/*.vim $(FTPLUGSUBLOC)/README.txt
-	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
-	-rmdir $(FTPLUGSUBLOC) $(PLUGSUBLOC) $(VIMRTLOC)
+	-rm -f $(DEST_COL)/*.vim $(DEST_COL)/README.txt
+	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt $(DEST_IND)/*.vim
+	-rm -rf $(DEST_MACRO)
+	-rm -rf $(DEST_TUTOR)
+	-rm -rf $(DEST_TOOLS)
+	-rm -rf $(DEST_LANG)
+	-rm -rf $(DEST_KMAP)
+	-rmdir $(DEST_HELP) $(DEST_COL) $(DEST_SYN) $(DEST_IND)
+	-rm -rf $(DEST_FTP)/*.vim $(DEST_FTP)/README.txt
+	-rm -f $(DEST_PLUG)/*.vim $(DEST_PLUG)/README.txt
+	-rmdir $(DEST_FTP) $(DEST_PLUG) $(DEST_RT)
+# 	This will fail when other Vim versions are installed, no worries.
+	-rmdir $(DEST_VIM)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
@@ -1791,7 +1795,7 @@ clean celan: testclean
 	-rm -f $(TOOLS) auto/osdef.h auto/pathdef.c auto/if_perl.c
 	-rm -f conftest* *~ auto/link.sed
 	if test -d $(PODIR); then \
-		cd $(PODIR); $(MAKE) prefix=$(prefix) clean; \
+		cd $(PODIR); $(MAKE) prefix=$(DESTDIR)$(prefix) clean; \
 	fi
 
 # Make a shadow directory for compilation on another system or with different

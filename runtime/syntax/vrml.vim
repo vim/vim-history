@@ -3,10 +3,13 @@
 " Modified from: VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
 " Maintainer:	 Gregory Seidman <gseidman@acm.org>
 " URL:		 http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
-" Last Change:	 2001 Jan 15
+" Last Change:	 2001 May 09
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -185,24 +188,37 @@ syn sync minlines=1
 syn match   VRMLBraces         "[{}]"
 syn match   VRMLBrackets       "[\[\]]"
 
-" The default highlighting.
-hi def link VRMLCharacter	VRMLString
-hi def link VRMLSpecialCharacter VRMLSpecial
-hi def link VRMLNumber		VRMLString
-hi def link VRMLValues		VRMLString
-hi def link VRMLString		String
-hi def link VRMLSpecial		Special
-hi def link VRMLComment		Comment
-hi def link VRMLNodes		Statement
-hi def link VRMLFields		Type
-hi def link VRMLEvents		Type
-hi def VRMLfTypes		ctermfg=6 guifg=Brown
-hi def link VRMLInstances	PreCondit
-hi def link VRMLRoutes		PreCondit
-hi def link VRMLProtos		PreProc
-hi def link VRMLRouteNode	Identifier
-hi def link VRMLInstName	Identifier
-hi def link VRMLTypes		Identifier
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_VRML_syntax_inits")
+  if version < 508
+    let did_VRML_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink VRMLCharacter  VRMLString
+  HiLink VRMLSpecialCharacter VRMLSpecial
+  HiLink VRMLNumber     VRMLString
+  HiLink VRMLValues     VRMLString
+  HiLink VRMLString     String
+  HiLink VRMLSpecial    Special
+  HiLink VRMLComment    Comment
+  HiLink VRMLNodes      Statement
+  HiLink VRMLFields     Type
+  HiLink VRMLEvents     Type
+  HiLink VRMLfTypes     ctermfg=6 guifg=Brown
+  HiLink VRMLInstances  PreCondit
+  HiLink VRMLRoutes     PreCondit
+  HiLink VRMLProtos     PreProc
+  HiLink VRMLRouteNode  Identifier
+  HiLink VRMLInstName   Identifier
+  HiLink VRMLTypes      Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "vrml"
 

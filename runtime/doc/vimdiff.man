@@ -30,7 +30,9 @@ DESCRIPTION
        The 'wrap' and 'scrollbind' options are set  to  make  the
        text look good.
        The  'foldmethod'  option  is  set  to  "diff", which puts
-       ranges of lines without changes in a fold.  them.
+       ranges of lines without changes in a  fold.   'foldcolumn'
+       is  set  to two to make it easy to spot the folds and open
+       or close them.
 
 OPTIONS
        Vertical splits are used to align the  lines,  as  if  the
@@ -45,8 +47,6 @@ SEE ALSO
 AUTHOR
        Most of Vim was made by Bram Moolenaar, with a lot of help
        from others.  See ":help credits" in Vim.
-
-
 
 
 
