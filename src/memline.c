@@ -3727,9 +3727,9 @@ findswapname(buf, dirp, old_fname)
 					: name,
 # if defined(UNIX) || defined(__EMX__) || defined(VMS)
 				    process_still_running
-					? (char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit") :
+					? (char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Abort") :
 # endif
-					(char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Delete it"), 1, NULL))
+					(char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Abort\n&Delete it"), 1, NULL))
 			{
 			    case 1:
 				buf->b_p_ro = TRUE;
@@ -3743,6 +3743,10 @@ findswapname(buf, dirp, old_fname)
 				swap_exists_action = SEA_QUIT;
 				break;
 			    case 5:
+				swap_exists_action = SEA_QUIT;
+				got_int = TRUE;
+				break;
+			    case 6:
 				mch_remove(fname);
 				break;
 			}
