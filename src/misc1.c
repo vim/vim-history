@@ -1354,6 +1354,10 @@ ins_char(c)
 	extra = 1;
     else
 	extra = 0;
+#ifdef MULTI_BYTE
+    if (is_dbcs && State == REPLACE && IsLeadByte(c))
+	extra = 1;
+#endif
 
     /*
      * A character has to be put on the replace stack if there is a
@@ -1410,7 +1414,18 @@ ins_char(c)
 	curwin->w_p_list = old_list;
     }
 
-    newp = alloc_check((unsigned)(oldlen + extra));
+#ifdef MULTI_BYTE
+    if (State == REPLACE && is_dbcs)
+    {
+	/* For multi-byte add one byte when new char is multi-byte, subtract
+	 * one byte when old char was multi-byte. */
+	newp = alloc_check((unsigned)(oldlen + extra
+		    + (IsLeadByte(c) ? 1 : 0)
+		    - (IsLeadByte(oldp[col]) ? 1 : 0)));
+    }
+    else
+#endif
+	newp = alloc_check((unsigned)(oldlen + extra));
     if (newp == NULL)
 	return;
     if (col > 0)
@@ -1422,17 +1437,16 @@ ins_char(c)
 	mch_memmove(p + 1, oldp + i, (size_t)(oldlen - i));
     }
     else
-	mch_memmove(p + extra, oldp + col, (size_t)(oldlen - col));
-
+    {
 #ifdef MULTI_BYTE
-    /*
-     * We define that "[]" is a multi-byte character.  For example, if
-     * replace(R) is done over "a[]" with "[]".  Finally, "[]]" is
-     * constructed, but the following line replaces "[]]" with "[] ".
-     */
-    if (is_dbcs && State == REPLACE && IsLeadByte(*p) && p[1] != NUL)
-	p[1] = ' ';
+	/* if oldp have multi-byte, don't move old trail byte */
+	if (is_dbcs && State == REPLACE && IsLeadByte(oldp[col]))
+	    mch_memmove(p + extra, oldp + col + 1, (size_t)(oldlen - col - 1));
+	else
 #endif
+	    mch_memmove(p + extra, oldp + col, (size_t)(oldlen - col));
+    }
+
     *p = c;
     ml_replace(lnum, newp, FALSE);
 
