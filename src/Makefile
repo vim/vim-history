@@ -2346,7 +2346,8 @@ ICONS = $(RESDIR)/$(ICON_APP)
 install_macosx: bundle-dir bundle-executable bundle-info bundle-resource \
 	bundle-language
 
-bundle-dir: $(APPDIR)/Contents
+bundle-dir: $(APPDIR)/Contents $(VIMTARGET)
+	-@srcdir=`pwd`; cd $(HELPSOURCE); $(MAKE) VIMEXE=$$srcdir/$(VIMTARGET) vimtags
 	cp -R ../runtime $(APPDIR)
 
 bundle-executable: $(VIMTARGET)
