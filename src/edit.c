@@ -1611,7 +1611,19 @@ change_indent(type, amount, round, replaced)
     if (type == INDENT_SET)
 	(void)set_indent(amount, SIN_CHANGED);
     else
+    {
+#ifdef FEAT_VREPLACE
+	int	save_State = State;
+
+	/* Avoid being called recursively. */
+	if (State & VREPLACE_FLAG)
+	    State = INSERT;
+#endif
 	shift_line(type == INDENT_DEC, round, 1);
+#ifdef FEAT_VREPLACE
+	State = save_State;
+#endif
+    }
     insstart_less -= curwin->w_cursor.col;
 
     /*
