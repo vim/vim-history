@@ -381,18 +381,27 @@ eof
 	fi
 	PYTHON_GETPATH_CFLAGS="-DPYTHONPATH='\"${vi_cv_path_pythonpath}\"' -DPREFIX='\"${vi_cv_path_python_pfx}\"' -DEXEC_PREFIX='\"${vi_cv_path_python_epfx}\"'"
 
-	dnl On FreeBSD "-pthread" is required to use threads.
+	dnl On FreeBSD linking with "-pthread" is required to use threads.
 	dnl _THREAD_SAFE must be used for compiling then.
 	dnl The "-pthread" is added to $LIBS, so that the following check for
 	dnl sigaltstack() will look in libc_r (it's there in libc!).
+	dnl Otherwise, when using GCC, try adding -pthread to $CFLAGS.  GCC
+	dnl will then define target-specific defines, e.g., -D_REENTRANT.
 	AC_MSG_CHECKING([if -pthread should be used])
+	threadsafe_flag=
+	thread_lib=
+	test "$GCC" = yes && threadsafe_flag="-pthread"
 	if test "`(uname) 2>/dev/null`" = FreeBSD; then
+	  threadsafe_flag="-D_THREAD_SAFE"
+	  thread_lib="-pthread"
+	fi
+	if test -n "$threadsafe_flag"; then
 	  cflags_save=$CFLAGS
 	  libs_save=$LIBS
-	  CFLAGS="$CFLAGS -D_THREAD_SAFE"
-	  LIBS="$LIBS -pthread"
+	  CFLAGS="$CFLAGS $threadsafe_flag"
+	  LIBS="$LIBS $thread_lib"
 	  AC_TRY_LINK(,[ ],
-	     AC_MSG_RESULT(yes); PYTHON_CFLAGS="$PYTHON_CFLAGS -D_THREAD_SAFE",
+	     AC_MSG_RESULT(yes); PYTHON_CFLAGS="$PYTHON_CFLAGS $threadsafe_flag",
 	     AC_MSG_RESULT(no); LIBS=$libs_save
 	     )
 	  CFLAGS=$cflags_save
