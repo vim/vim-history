@@ -62,6 +62,11 @@ struct PyMethodDef { int a; };
 #define file_input	257
 #define eval_input	258
 
+#if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x020300F0
+  /* Python 2.3: can invoke ":python" recursively. */
+# define PY_CAN_RECURSE
+#endif
+
 #if defined(DYNAMIC_PYTHON) || defined(PROTO)
 # ifndef DYNAMIC_PYTHON
 #  define HINSTANCE int		/* for generating prototypes */
@@ -82,6 +87,10 @@ struct PyMethodDef { int a; };
 # define PyEval_InitThreads dll_PyEval_InitThreads
 # define PyEval_RestoreThread dll_PyEval_RestoreThread
 # define PyEval_SaveThread dll_PyEval_SaveThread
+# ifdef PY_CAN_RECURSE
+#  define PyGILState_Ensure dll_PyGILState_Ensure
+#  define PyGILState_Release dll_PyGILState_Release
+# endif
 # define PyInt_AsLong dll_PyInt_AsLong
 # define PyInt_FromLong dll_PyInt_FromLong
 # define PyInt_Type (*dll_PyInt_Type)
@@ -132,6 +141,10 @@ static void(*dll_PyErr_SetString)(PyObject *, const char *);
 static void(*dll_PyEval_InitThreads)(void);
 static void(*dll_PyEval_RestoreThread)(PyThreadState *);
 static PyThreadState*(*dll_PyEval_SaveThread)(void);
+# ifdef PY_CAN_RECURSE
+static PyGILState_STATE	(*dll_PyGILState_Ensure)(void);
+static void (*dll_PyGILState_Release)(PyGILState_STATE);
+#endif
 static long(*dll_PyInt_AsLong)(PyObject *);
 static PyObject*(*dll_PyInt_FromLong)(long);
 static PyTypeObject* dll_PyInt_Type;
@@ -204,6 +217,10 @@ static struct
     {"PyEval_InitThreads", (PYTHON_PROC*)&dll_PyEval_InitThreads},
     {"PyEval_RestoreThread", (PYTHON_PROC*)&dll_PyEval_RestoreThread},
     {"PyEval_SaveThread", (PYTHON_PROC*)&dll_PyEval_SaveThread},
+# ifdef PY_CAN_RECURSE
+    {"PyGILState_Ensure", (PYTHON_PROC*)&dll_PyGILState_Ensure},
+    {"PyGILState_Release", (PYTHON_PROC*)&dll_PyGILState_Release},
+# endif
     {"PyInt_AsLong", (PYTHON_PROC*)&dll_PyInt_AsLong},
     {"PyInt_FromLong", (PYTHON_PROC*)&dll_PyInt_FromLong},
     {"PyInt_Type", (PYTHON_PROC*)&dll_PyInt_Type},
@@ -363,10 +380,7 @@ static int initialised = 0;
 typedef PyObject PyThreadState;
 #endif /* Python 1.4 */
 
-#if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x020300F0
-  /* Python 2.3: can invoke ":python" recursively. */
-# define PY_CAN_RECURSE
-#else
+#ifndef PY_CAN_RECURSE
 static PyThreadState* saved_python_thread = NULL;
 
 /*
