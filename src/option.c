@@ -5577,7 +5577,7 @@ check_clipboard_option()
 	else if (STRNCMP(p, "exclude:", 8) == 0 && new_exclude_prog == NULL)
 	{
 	    p += 8;
-	    new_exclude_prog = vim_regcomp(p, TRUE);
+	    new_exclude_prog = vim_regcomp(p, RE_MAGIC);
 	    if (new_exclude_prog == NULL)
 		errmsg = e_invarg;
 	    break;

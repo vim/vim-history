@@ -7710,11 +7710,11 @@ match_file_pat(pattern, fname, sfname, tail, allow_dirs)
 	    no_pattern = TRUE;	/* Always matches - don't check pat. */
 	}
 	else
-	    regmatch.regprog = vim_regcomp(pattern + 1, TRUE);
+	    regmatch.regprog = vim_regcomp(pattern + 1, RE_MAGIC);
     }
     else
 #endif
-	regmatch.regprog = vim_regcomp(pattern, TRUE);
+	regmatch.regprog = vim_regcomp(pattern, RE_MAGIC);
 
     /*
      * Try for a match with the pattern with:

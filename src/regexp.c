@@ -632,6 +632,9 @@ static int	reg_magic;	/* magicness of the pattern: */
 #define MAGIC_ON	3	/* "\m" or 'magic' */
 #define MAGIC_ALL	4	/* "\v" very magic */
 
+static int	reg_string;	/* matching with a string instead of a buffer
+				   line */
+
 /*
  * META contains all characters that may be magic, except '^' and '$'.
  */
@@ -675,7 +678,7 @@ static void	skipchr_keepstart __ARGS((void));
 static int	peekchr __ARGS((void));
 static void	skipchr __ARGS((void));
 static void	ungetchr __ARGS((void));
-static void	regcomp_start __ARGS((char_u *expr, int magic));
+static void	regcomp_start __ARGS((char_u *expr, int flags));
 static char_u	*reg __ARGS((int, int *));
 static char_u	*regbranch __ARGS((int *flagp));
 static char_u	*regconcat __ARGS((int *flagp));
@@ -790,11 +793,12 @@ skip_regexp(startp, dirc, magic, newp)
  *
  * Beware that the optimization-preparation code in here knows about some
  * of the structure of the compiled regexp.
+ * "re_flags": RE_MAGIC and/or RE_STRING.
  */
     regprog_T *
-vim_regcomp(expr, magic)
+vim_regcomp(expr, re_flags)
     char_u	*expr;
-    int		magic;
+    int		re_flags;
 {
     regprog_T	*r;
     char_u	*scan;
@@ -810,7 +814,7 @@ vim_regcomp(expr, magic)
     /*
      * First pass: determine size, legality.
      */
-    regcomp_start(expr, magic);
+    regcomp_start(expr, re_flags);
     regcode = JUST_CALC_SIZE;
     regc(REGMAGIC);
     if (reg(REG_NOPAREN, &flags) == NULL)
@@ -830,7 +834,7 @@ vim_regcomp(expr, magic)
     /*
      * Second pass: emit code.
      */
-    regcomp_start(expr, magic);
+    regcomp_start(expr, re_flags);
     regcode = r->program;
     regc(REGMAGIC);
     if (reg(REG_NOPAREN, &flags) == NULL)
@@ -924,15 +928,17 @@ vim_regcomp(expr, magic)
  * Setup to parse the regexp.  Used once to get the length and once to do it.
  */
     static void
-regcomp_start(expr, magic)
+regcomp_start(expr, re_flags)
     char_u	*expr;
-    int		magic;
+    int		re_flags;	    /* see vim_regcomp() */
 {
     initchr(expr);
-    if (magic)
+    if (re_flags & RE_MAGIC)
 	reg_magic = MAGIC_ON;
     else
 	reg_magic = MAGIC_OFF;
+    reg_string = (re_flags & RE_STRING);
+
     num_complex_braces = 0;
     regnpar = 1;
     vim_memset(had_endbrace, 0, sizeof(had_endbrace));
@@ -1463,8 +1469,20 @@ regatom(flagp)
 	break;
 
       case Magic('n'):
-	ret = regnode(NEWL);
-	*flagp |= HASWIDTH | HASNL;
+	if (reg_string)
+	{
+	    /* In a string "\n" matches a newline character. */
+	    ret = regnode(EXACTLY);
+	    regc(NL);
+	    regc(NUL);
+	    *flagp |= HASWIDTH | SIMPLE;
+	}
+	else
+	{
+	    /* In buffer text "\n" matches the end of a line. */
+	    ret = regnode(NEWL);
+	    *flagp |= HASWIDTH | HASNL;
+	}
 	break;
 
       case Magic('('):
@@ -2340,11 +2358,13 @@ peekchr()
 
 		if (c == NUL)
 		    curchr = '\\';	/* trailing '\' */
+		else if (
 #ifdef EBCDIC
-		else if (vim_strchr(META, c))
+			vim_strchr(META, c)
 #else
-		else if (c <= '~' && META_flags[c])
+			c <= '~' && META_flags[c]
 #endif
+			)
 		{
 		    /*
 		     * META contains everything that may be magic sometimes,

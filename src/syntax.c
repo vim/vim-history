@@ -5102,7 +5102,7 @@ get_syn_pattern(arg, ci)
     /* Make 'cpoptions' empty, to avoid the 'l' flag */
     cpo_save = p_cpo;
     p_cpo = (char_u *)"";
-    ci->sp_prog = vim_regcomp(ci->sp_pattern, TRUE);
+    ci->sp_prog = vim_regcomp(ci->sp_pattern, RE_MAGIC);
     p_cpo = cpo_save;
 
     if (ci->sp_prog == NULL)
@@ -5283,7 +5283,7 @@ syn_cmd_sync(eap, syncing)
 		cpo_save = p_cpo;
 		p_cpo = (char_u *)"";
 		curbuf->b_syn_linecont_prog =
-				vim_regcomp(curbuf->b_syn_linecont_pat, TRUE);
+			    vim_regcomp(curbuf->b_syn_linecont_pat, RE_MAGIC);
 		p_cpo = cpo_save;
 
 		if (curbuf->b_syn_linecont_prog == NULL)
@@ -5435,7 +5435,7 @@ get_id_list(arg, keylen, list)
 		     */
 		    *name = '^';
 		    STRCAT(name, "$");
-		    regmatch.regprog = vim_regcomp(name, TRUE);
+		    regmatch.regprog = vim_regcomp(name, RE_MAGIC);
 		    if (regmatch.regprog == NULL)
 		    {
 			failed = TRUE;

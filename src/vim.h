@@ -766,6 +766,10 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define RE_BOTH		2	/* save pat in both patterns */
 #define RE_LAST		2	/* use last used pattern if "pat" is NULL */
 
+/* Second argument for vim_regcomp(). */
+#define RE_MAGIC	1	/* 'magic' option */
+#define RE_STRING	2	/* match in string instead of buffer text */
+
 #ifdef FEAT_SYN_HL
 /* values for reg_do_extmatch */
 # define REX_SET	1	/* to allow \z\(...\), */

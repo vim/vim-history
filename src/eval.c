@@ -1669,7 +1669,8 @@ eval4(arg, retvar, evaluate)
 			    /* avoid 'l' flag in 'cpoptions' */
 			    save_cpo = p_cpo;
 			    p_cpo = (char_u *)"";
-			    regmatch.regprog = vim_regcomp(s2, TRUE);
+			    regmatch.regprog = vim_regcomp(s2,
+							RE_MAGIC + RE_STRING);
 			    regmatch.rm_ic = ic;
 			    if (regmatch.regprog != NULL)
 			    {
@@ -5251,7 +5252,7 @@ find_some_match(argvars, retvar, type)
 	str += start;
     }
 
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    regmatch.regprog = vim_regcomp(pat, RE_MAGIC + RE_STRING);
     if (regmatch.regprog != NULL)
     {
 	regmatch.rm_ic = p_ic;
@@ -9236,7 +9237,7 @@ do_string_sub(str, pat, sub, flags)
     do_all = (flags[0] == 'g');
 
     regmatch.rm_ic = p_ic;
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    regmatch.regprog = vim_regcomp(pat, RE_MAGIC + RE_STRING);
     if (regmatch.regprog != NULL)
     {
 	tail = str;

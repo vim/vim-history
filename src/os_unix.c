@@ -4210,7 +4210,7 @@ unix_expandpath(gap, path, wildoff, flags)
 #else
     regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
 #endif
-    regmatch.regprog = vim_regcomp(pat, TRUE);
+    regmatch.regprog = vim_regcomp(pat, RE_MAGIC);
     vim_free(pat);
 
     if (regmatch.regprog == NULL)

@@ -402,7 +402,7 @@ qf_init(efile, errorformat, newlist)
 	}
 	*ptr++ = '$';
 	*ptr = NUL;
-	if ((fmt_ptr->prog = vim_regcomp(fmtstr, TRUE)) == NULL)
+	if ((fmt_ptr->prog = vim_regcomp(fmtstr, RE_MAGIC + RE_STRING)) == NULL)
 	    goto error2;
 	/*
 	 * Advance to next part
