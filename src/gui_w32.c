@@ -1611,6 +1611,57 @@ im_get_status()
 }
 #endif
 
+
+#ifdef FEAT_RIGHTLEFT
+/*
+ * What is this for?  In the case where you are using Win98 or Win2K or later,
+ * and you are using a Hebrew font (or Arabic!), Windows does you a favor and
+ * reverses the string sent to the TextOut... family.  This sucks, because we
+ * go to a lot of effort to do the right thing, and there doesn't seem to be a
+ * way to tell Windblows not to do this!
+ *
+ * The short of it is that this 'RevOut' only gets called if you are running
+ * one of the new, "improved" MS OSes, and only if you are running in
+ * 'rightleft' mode.  It makes display take *slightly* longer, but not
+ * noticeably so.
+ */
+    static void
+RevOut( HDC s_hdc,
+	int col,
+	int row,
+	UINT foptions,
+	CONST RECT *pcliprect,
+	LPCTSTR text,
+	UINT len,
+	CONST INT *padding)
+{
+    int		ix;
+    static int	special = -1;
+
+    if (special == -1)
+    {
+	/* Check windows version: special treatment is needed if it is NT 5 or
+	 * Win98 or higher. */
+	if  ((os_version.dwPlatformId == VER_PLATFORM_WIN32_NT
+		    && os_version.dwMajorVersion >= 5)
+		|| (os_version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS
+		    && (os_version.dwMajorVersion > 4
+			|| (os_version.dwMajorVersion == 4
+			    && os_version.dwMinorVersion > 0))))
+	    special = 1;
+	else
+	    special = 0;
+    }
+
+    if (special)
+	for (ix = 0; ix < (int)len; ++ix)
+	    ExtTextOut(s_hdc, col + TEXT_X(ix), row, foptions,
+					    pcliprect, text + ix, 1, padding);
+    else
+	ExtTextOut(s_hdc, col, row, foptions, pcliprect, text, len, padding);
+}
+#endif
+
     void
 gui_mch_draw_string(
     int		row,
@@ -1795,9 +1846,13 @@ gui_mch_draw_string(
 		i += utfc_ptr2len_check_len(text + i, len - i);
 		++clen;
 	    }
-	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-			ETO_IGNORELANGUAGE | foptions, pcliprect,
-						      unicodebuf, clen, NULL);
+	    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+				 foptions | ETO_IGNORELANGUAGE,
+					   pcliprect, unicodebuf, clen, NULL);
+	    else
+		ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+				 foptions, pcliprect, unicodebuf, clen, NULL);
 	    len = cells;	/* used for underlining */
 	}
 	else if (is_funky_dbcs)
@@ -1811,16 +1866,28 @@ gui_mch_draw_string(
 			    (char *)text, len,
 			    (LPWSTR)unicodebuf, unibuflen)))
 		    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-				ETO_IGNORELANGUAGE | foptions, pcliprect,
-						       unicodebuf, len, NULL);
+				  foptions, pcliprect, unicodebuf, len, NULL);
 	    }
 	}
 	else
 #endif
 	{
-	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			ETO_IGNORELANGUAGE | foptions, pcliprect,
-						  (char *)text, len, padding);
+#ifdef FEAT_RIGHTLEFT
+	    /* ron: fixed Hebrew on Win98/Win2000 */
+	    if (curwin->w_p_rl)
+	    {
+		if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions | ETO_IGNORELANGUAGE,
+				       pcliprect, (char *)text, len, padding);
+		else
+		    RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions, pcliprect, (char *)text, len, padding);
+	    }
+	    else
+#endif
+		ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions, pcliprect, (char *)text, len, padding);
 	}
     }
 
