@@ -3407,12 +3407,12 @@ f_filewritable(argvars, retvar)
 {
     char_u	*p;
     int		retval = 0;
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
     int		perm = 0;
 #endif
 
     p = get_var_string(&argvars[0]);
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
     perm = mch_getperm(p);
 #endif
 #ifndef MACOS_CLASSIC /* TODO: get either mch_writable or mch_access */
@@ -3420,7 +3420,7 @@ f_filewritable(argvars, retvar)
 # ifdef WIN3264
 	    mch_writable(p)
 # else
-#  ifdef UNIX
+# if defined(UNIX) || defined(VMS)
 	    (perm & 0222)
 #  endif
 # endif
