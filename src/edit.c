@@ -3803,13 +3803,14 @@ oneright()
 #ifdef MULTI_BYTE
     if (is_dbcs)
     {
-	/* if the character on the current cursor is a multi-byte character,
-	   move two characters right */
-	char_u *base;
-
-	base = ml_get(curwin->w_cursor.lnum);
-	if (*(ptr+1) != NUL && IsTrailByte(base, ptr))
+	/* If the character under the cursor is a multi-byte character, move
+	 * two bytes right. */
+	if (IsTrailByte(ml_get(curwin->w_cursor.lnum), ptr))
+	{
+	    if (*(ptr + 1) == NUL)
+		return FAIL;
 	    ++curwin->w_cursor.col;
+	}
     }
 #endif
     curwin->w_set_curswant = TRUE;

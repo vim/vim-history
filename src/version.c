@@ -263,15 +263,15 @@ static char *(features[]) =
 #else
 	"-perl",
 #endif
-#ifdef QUICKFIX
-	"+quickfix",
-#else
-	"-quickfix",
-#endif
 #ifdef HAVE_PYTHON
 	"+python",
 #else
 	"-python",
+#endif
+#ifdef QUICKFIX
+	"+quickfix",
+#else
+	"-quickfix",
 #endif
 #ifdef RIGHTLEFT
 	"+rightleft",
@@ -418,6 +418,8 @@ static char *(features[]) =
 
 static int included_patches[] =
 {   /* Add new patch number below this line */
+/**/
+    14,
 /**/
     13,
 /**/
