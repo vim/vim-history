@@ -1442,6 +1442,7 @@ nb_do_cmd(
 	else if (streq((char *)cmd, "insert"))
 	{
 	    pos_T	*pos;
+	    pos_T	mypos;
 	    char_u	*to_free;
 	    char_u	*nl;
 	    int		lnum;
@@ -1509,10 +1510,14 @@ nb_do_cmd(
 		else
 		{
 		    /* if the given position is not found, assume we want
-		     * the end of the file.  See setLocAndSize HACK.
-		     */
+		     * the end of the file.  See setLocAndSize HACK. */
+		    pos = &mypos;
+		    pos->col = 0;
+#ifdef FEAT_VIRTUALEDIT
+		    pos->coladd = 0;
+#endif
 		    pos->lnum = buf->bufp->b_ml.ml_line_count;
-		    nbdebug(("    POSITION: line = %d (EOF)\n",pos->lnum));
+		    nbdebug(("    POSITION: line = %d (EOF)\n", pos->lnum));
 		}
 		lnum = pos->lnum;
 		old_w_cursor = curwin->w_cursor;
