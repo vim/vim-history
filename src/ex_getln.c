@@ -3722,6 +3722,7 @@ calc_hist_idx(histype, num)
 {
     int		i;
     histentry_T	*hist;
+    int		wrapped = FALSE;
 
     if (hislen == 0 || histype < 0 || histype >= HIST_COUNT
 		    || (i = hisidx[histype]) < 0 || num == 0)
@@ -3732,9 +3733,13 @@ calc_hist_idx(histype, num)
     {
 	while (hist[i].hisnum > num)
 	    if (--i < 0)
+	    {
+		if (wrapped)
+		    break;
 		i += hislen;
-	if (hist[i].hisnum == num
-		&& hist[i].hisstr != NULL)
+		wrapped = TRUE;
+	    }
+	if (hist[i].hisnum == num && hist[i].hisstr != NULL)
 	    return i;
     }
     else if (-num <= hislen)
