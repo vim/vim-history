@@ -2906,8 +2906,9 @@ win_line(wp, lnum, startrow, endrow)
 #  endif
 			    char_attr = icon_sign;
 			}
-			else if (text_sign != 0)
+			else
 # endif
+			    if (text_sign != 0)
 			{
 			    p_extra = sign_get_text(text_sign);
 			    if (p_extra != NULL)
