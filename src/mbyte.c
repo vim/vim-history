@@ -940,7 +940,7 @@ utf_char2cells(c)
     }
 
     /* Characters below 0x100 are influenced by 'isprint' option */
-    else if (!vim_isprintc(c))
+    else if (c >= 0x80 && !vim_isprintc(c))
 	return 4;		/* unprintable, displays <xx> */
 
     return 1;
