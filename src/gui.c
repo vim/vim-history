@@ -133,6 +133,11 @@ gui_start()
 		close(pipefd[0]);
 	    }
 
+	    /* When swapping screens we may need to go to the next line, e.g.,
+	     * after a hit-enter prompt and using ":gui". */
+	    if (newline_on_exit)
+		mch_errmsg("\r\n");
+
 	    /*
 	     * The parent must skip the normal exit() processing, the child
 	     * will do it.  For example, GTK messes up signals when exiting.
