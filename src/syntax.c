@@ -1088,7 +1088,7 @@ syn_stack_alloc()
 	{
 	    /* When shrinking the array, cleanup the existing stack.
 	     * Make sure that all valid entries fit in the new array. */
-	    while (syn_buf->b_sst_len - syn_buf->b_sst_freecount + 2> len
+	    while (syn_buf->b_sst_len - syn_buf->b_sst_freecount + 2 > len
 		    && syn_stack_cleanup())
 		;
 	    if (len < syn_buf->b_sst_len - syn_buf->b_sst_freecount + 2)
@@ -1322,14 +1322,18 @@ store_current_state(sp)
     {
 	if (sp != NULL)
 	{
-	    /* find the entry just before this one */
-	    for (p = syn_buf->b_sst_first; p != NULL; p = p->sst_next)
-		if (p->sst_next == sp)
-		    break;
-	    if (p != NULL)
-		p->sst_next = sp->sst_next;
-	    else
+	    /* find "sp" in the list and remove it */
+	    if (syn_buf->b_sst_first == sp)
+		/* it's the first entry */
 		syn_buf->b_sst_first = sp->sst_next;
+	    else
+	    {
+		/* find the entry just before this one to adjust sst_next */
+		for (p = syn_buf->b_sst_first; p != NULL; p = p->sst_next)
+		    if (p->sst_next == sp)
+			break;
+		p->sst_next = sp->sst_next;
+	    }
 	    syn_stack_free_entry(syn_buf, sp);
 	    sp = NULL;
 	}
@@ -1341,7 +1345,11 @@ store_current_state(sp)
 	 */
 	/* If no free items, cleanup the array first. */
 	if (syn_buf->b_sst_freecount == 0)
+	{
 	    (void)syn_stack_cleanup();
+	    /* "sp" may have been moved to the freelist now */
+	    sp = syn_stack_find_entry(current_lnum);
+	}
 	/* Still no free items?  Must be a strange problem... */
 	if (syn_buf->b_sst_freecount == 0)
 	    sp = NULL;
