@@ -654,7 +654,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #endif
 #ifdef FEAT_GUI
 	    /* Also write a message in the GUI window, if there is one. */
-	    if (gui.in_use)
+	    if (gui.in_use && !gui.dying && !gui.starting)
 	    {
 		p = (char_u *)_("Reading from stdin...");
 		gui_write(p, (int)STRLEN(p));
