@@ -467,10 +467,17 @@ check_cursor_moved(wp)
     void
 changed_window_setting()
 {
-    curwin->w_lines_valid = 0;
-    changed_line_abv_curs();
-    curwin->w_valid &= ~(VALID_BOTLINE|VALID_BOTLINE_AP|VALID_TOPLINE);
-    redraw_later(NOT_VALID);
+    changed_window_setting_win(curwin);
+}
+
+    void
+changed_window_setting_win(wp)
+    win_T	*wp;
+{
+    wp->w_lines_valid = 0;
+    changed_line_abv_curs_win(wp);
+    wp->w_valid &= ~(VALID_BOTLINE|VALID_BOTLINE_AP|VALID_TOPLINE);
+    redraw_win_later(wp, NOT_VALID);
 }
 
 /*

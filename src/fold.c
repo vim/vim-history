@@ -43,12 +43,14 @@ typedef struct
 #define MAX_LEVEL	20	/* maximum fold depth */
 
 /* static functions {{{2 */
+static void newFoldLevelWin __ARGS((win_T *wp));
 static int checkCloseRec __ARGS((garray_T *gap, linenr_T lnum, int level));
 static int foldFind __ARGS((garray_T *gap, linenr_T lnum, fold_T **fpp));
 static int foldLevelWin __ARGS((win_T *wp, linenr_T lnum));
 static void checkupdate __ARGS((win_T *wp));
 static void setFoldRepeat __ARGS((linenr_T lnum, long count, int open));
 static linenr_T setManualFold __ARGS((linenr_T lnum, int opening, int recurse, int *donep));
+static linenr_T setManualFoldWin __ARGS((win_T *wp, linenr_T lnum, int opening, int recurse, int *donep));
 static void foldOpenNested __ARGS((fold_T *fpr));
 static void deleteFoldEntry __ARGS((garray_T *gap, int idx, int recursive));
 static void foldMarkAdjustRecurse __ARGS((garray_T *gap, linenr_T line1, linenr_T line2, long amount, long amount_after));
@@ -486,21 +488,47 @@ foldOpenCursor()
     void
 newFoldLevel()
 {
+    newFoldLevelWin(curwin);
+
+#ifdef FEAT_DIFF
+    if (foldmethodIsDiff(curwin) && curwin->w_p_scb)
+    {
+	win_T	    *wp;
+
+	/*
+	 * Set the same foldlevel in other windows in diff mode.
+	 */
+	FOR_ALL_WINDOWS(wp)
+	{
+	    if (wp != curwin && foldmethodIsDiff(wp) && wp->w_p_scb)
+	    {
+		wp->w_p_fdl = curwin->w_p_fdl;
+		newFoldLevelWin(wp);
+	    }
+	}
+    }
+#endif
+}
+
+    static void
+newFoldLevelWin(wp)
+    win_T	*wp;
+{
     fold_T	*fp;
     int		i;
 
-    checkupdate(curwin);
-    if (curwin->w_fold_manual)
+    checkupdate(wp);
+    if (wp->w_fold_manual)
     {
 	/* Set all flags for the first level of folds to FD_LEVEL.  Following
 	 * manual open/close will then change the flags to FD_OPEN or
 	 * FD_CLOSED for those folds that don't use 'foldlevel'. */
-	fp = (fold_T *)curwin->w_folds.ga_data;
-	for (i = 0; i < curwin->w_folds.ga_len; ++i)
+	fp = (fold_T *)wp->w_folds.ga_data;
+	for (i = 0; i < wp->w_folds.ga_len; ++i)
 	    fp[i].fd_flags = FD_LEVEL;
-	curwin->w_fold_manual = FALSE;
+	wp->w_fold_manual = FALSE;
     }
-    changed_window_setting();
+    changed_window_setting_win(wp);
 }
 
 /* foldCheckClose() {{{2 */
@@ -1232,15 +1260,53 @@ setFoldRepeat(lnum, count, open)
 /* setManualFold() {{{2 */
 /*
  * Open or close the fold in the current window which contains "lnum".
+ * Also does this for other windows in diff mode when needed.
+ */
+    static linenr_T
+setManualFold(lnum, opening, recurse, donep)
+    linenr_T	lnum;
+    int		opening;    /* TRUE when opening, FALSE when closing */
+    int		recurse;    /* TRUE when closing/opening recursive */
+    int		*donep;
+{
+#ifdef FEAT_DIFF
+    if (foldmethodIsDiff(curwin) && curwin->w_p_scb)
+    {
+	win_T	    *wp;
+	linenr_T    lnum;
+
+	/*
+	 * Do the same operation in other windows in diff mode.  Calculate the
+	 * line number from the diffs.
+	 */
+	FOR_ALL_WINDOWS(wp)
+	{
+	    if (wp != curwin && foldmethodIsDiff(wp) && wp->w_p_scb)
+	    {
+		lnum = diff_lnum_win(curwin->w_cursor.lnum, wp);
+		if (lnum != 0)
+		    (void)setManualFoldWin(wp, lnum, opening, recurse, NULL);
+	    }
+	}
+    }
+#endif
+
+    return setManualFoldWin(curwin, lnum, opening, recurse, donep);
+}
+
+/* setManualFoldWin() {{{2 */
+/*
+ * Open or close the fold in window "wp" which contains "lnum".
  * "donep", when not NULL, points to flag that is set to DONE_FOLD when some
  * fold was found and to DONE_ACTION when some fold was opened or closed.
  * When "donep" is NULL give an error message when no fold was found for
- * "lnum".
+ * "lnum", but only if "wp" is "curwin".
  * Return the line number of the next line that could be closed.
  * It's only valid when "opening" is TRUE!
  */
     static linenr_T
-setManualFold(lnum, opening, recurse, donep)
+setManualFoldWin(wp, lnum, opening, recurse, donep)
+    win_T	*wp;
     linenr_T	lnum;
     int		opening;    /* TRUE when opening, FALSE when closing */
     int		recurse;    /* TRUE when closing/opening recursive */
@@ -1258,12 +1324,12 @@ setManualFold(lnum, opening, recurse, donep)
     linenr_T	off = 0;
     int		done = 0;
 
-    checkupdate(curwin);
+    checkupdate(wp);
 
     /*
      * Find the fold, open or close it.
      */
-    gap = &curwin->w_folds;
+    gap = &wp->w_folds;
     for (;;)
     {
 	if (!foldFind(gap, lnum, &fp))
@@ -1285,7 +1351,7 @@ setManualFold(lnum, opening, recurse, donep)
 	if (use_level || fp->fd_flags == FD_LEVEL)
 	{
 	    use_level = TRUE;
-	    if (level >= curwin->w_p_fdl)
+	    if (level >= wp->w_p_fdl)
 		fp->fd_flags = FD_CLOSED;
 	    else
 		fp->fd_flags = FD_OPEN;
@@ -1331,12 +1397,12 @@ setManualFold(lnum, opening, recurse, donep)
 	    found->fd_flags = FD_CLOSED;
 	    done |= DONE_ACTION;
 	}
-	curwin->w_fold_manual = TRUE;
+	wp->w_fold_manual = TRUE;
 	if (done & DONE_ACTION)
-	    changed_window_setting();
+	    changed_window_setting_win(wp);
 	done |= DONE_FOLD;
     }
-    else if (donep == NULL)
+    else if (donep == NULL && wp == curwin)
 	EMSG(_(e_nofold));
 
     if (donep != NULL)
