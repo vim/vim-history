@@ -3460,8 +3460,8 @@ do_set(arg, opt_flags)
 			    {
 				s = option_expand(opt_idx, newval);
 				if (s == NULL)
-				    s = vim_strsave(newval);
-				newval = s;
+				    s = newval;
+				newval = vim_strsave(s);
 			    }
 			    new_value_alloced = TRUE;
 			}
@@ -3955,7 +3955,7 @@ find_viminfo_parameter(type)
  * Expand environment variables for some string options.
  * These string options cannot be indirect!
  * If "val" is NULL expand the current value of the option.
- * Return pointer to allocated memory, or NULL when not expanded.
+ * Return pointer to NameBuff, or NULL when not expanded.
  */
     static char_u *
 option_expand(opt_idx, val)
@@ -3967,7 +3967,7 @@ option_expand(opt_idx, val)
 	return NULL;
 
     /* If val is longer than MAXPATHL no meaningful expansion can be done,
-     * expand_env would truncate the string. */
+     * expand_env() would truncate the string. */
     if (val != NULL && STRLEN(val) > MAXPATHL)
 	return NULL;
 
@@ -3981,7 +3981,7 @@ option_expand(opt_idx, val)
     if (STRCMP(NameBuff, val) == 0)   /* they are the same */
 	return NULL;
 
-    return vim_strsave(NameBuff);
+    return NameBuff;
 }
 
 /*
