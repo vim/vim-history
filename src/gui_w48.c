@@ -3102,10 +3102,9 @@ _OnDropFiles(
 # define DRAGQVAL 0xFFFF
 #endif
 #ifdef FEAT_MBYTE
-    WCHAR    szFile[BUFPATHLEN];
-#else
-    char    szFile[BUFPATHLEN];
+    WCHAR   wszFile[BUFPATHLEN];
 #endif
+    char    szFile[BUFPATHLEN];
     UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, NULL, 0);
     UINT    i;
     char_u  **fnames;
@@ -3128,8 +3127,8 @@ _OnDropFiles(
 	for (i = 0; i < cFiles; ++i)
 	{
 #ifdef FEAT_MBYTE
-	    if (DragQueryFileW(hDrop, i, szFile, BUFPATHLEN) > 0)
-		fnames[i] = ucs2_to_enc(szFile, NULL);
+	    if (DragQueryFileW(hDrop, i, wszFile, BUFPATHLEN) > 0)
+		fnames[i] = ucs2_to_enc(wszFile, NULL);
 	    else
 #endif
 	    {
