@@ -1159,17 +1159,17 @@ have_local_include=''
 have_local_lib=''
 if test "$GCC" = yes; then
   echo 'void f(){}' > conftest.c
-  have_local_include=`$CC -c -v conftest.c 2>&1 | grep '/usr/local/include'`
+  have_local_include=`${CC-cc} -c -v conftest.c 2>&1 | grep '/usr/local/include'`
   have_local_lib=`${CC-cc} -c -v conftest.c 2>&1 | grep '/usr/local/lib'`
   rm -f conftest.c conftest.o
 fi
-if test -z "$have_local_include" -a -d /usr/local/lib; then
+if test -z "$have_local_lib" -a -d /usr/local/lib; then
   tt=`echo "$LDFLAGS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
   if test "$tt" = "$LDFLAGS"; then
     LDFLAGS="$LDFLAGS -L/usr/local/lib"
   fi
 fi
-if test -z "$have_local_lib" -a -d /usr/local/include; then
+if test -z "$have_local_include" -a -d /usr/local/include; then
   tt=`echo "$CPPFLAGS" | sed -e 's+-I/usr/local/include ++g' -e 's+-I/usr/local/include$++g'`
   if test "$tt" = "$CPPFLAGS"; then
     CPPFLAGS="$CPPFLAGS -I/usr/local/include"
