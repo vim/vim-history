@@ -5043,6 +5043,51 @@ check_timestamps(focus)
 }
 
 /*
+ * Move all the lines from buffer "frombuf" to buffer "tobuf".
+ * Return OK or FAIL.  When FAIL "tobuf" is incomplete and/or "frombuf" is not
+ * empty.
+ */
+    static int
+move_lines(frombuf, tobuf)
+    buf_T	*frombuf;
+    buf_T	*tobuf;
+{
+    buf_T	*tbuf = curbuf;
+    int		retval = OK;
+    linenr_T	lnum;
+    char_u	*p;
+
+    /* Copy the lines in "frombuf" to "tobuf". */
+    curbuf = tobuf;
+    for (lnum = 1; lnum <= frombuf->b_ml.ml_line_count; ++lnum)
+    {
+	p = vim_strsave(ml_get_buf(frombuf, lnum, FALSE));
+	if (p == NULL || ml_append(lnum - 1, p, 0, FALSE) == FAIL)
+	{
+	    retval = FAIL;
+	    break;
+	}
+    }
+
+    /* Delete all the lines in "frombuf". */
+    if (retval != FAIL)
+    {
+	curbuf = frombuf;
+	while (!bufempty())
+	    if (ml_delete(curbuf->b_ml.ml_line_count, FALSE) == FAIL)
+	    {
+		/* Oops!  We could try putting back the saved lines, but that
+		 * might fail again... */
+		retval = FAIL;
+		break;
+	    }
+    }
+
+    curbuf = tbuf;
+    return retval;
+}
+
+/*
  * Check if buffer "buf" has been changed.
  * Also check if the file for a new buffer unexpectedly appeared.
  * return 1 if a changed buffer was found.
@@ -5230,11 +5275,12 @@ buf_check_timestamp(buf, focus)
 
     if (reload)
     {
-	linenr_T	old_line_count = buf->b_ml.ml_line_count;
 	exarg_T		ea;
 	pos_T		old_cursor;
 	linenr_T	old_topline;
 	int		old_ro = curbuf->b_p_ro;
+	buf_T		*savebuf;
+	int		saved = OK;
 #ifdef FEAT_AUTOCMD
 	aco_save_T	aco;
 
@@ -5254,26 +5300,72 @@ buf_check_timestamp(buf, focus)
 	{
 	    old_cursor = curwin->w_cursor;
 	    old_topline = curwin->w_topline;
+
+	    /*
+	     * To behave like when a new file is edited (matters for
+	     * BufReadPost autocommands) we first need to delete the current
+	     * buffer contents.  But if reading the file fails we should keep
+	     * the old contents.  Can't use memory only, the file might be
+	     * too big.  Use a hidden buffer to move the buffer contents to.
+	     */
 	    if (bufempty())
-		old_line_count = 0;
-	    curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
-#ifdef FEAT_AUTOCMD
-	    keep_filetype = TRUE;		/* don't detect 'filetype' */
-#endif
-	    if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0, (linenr_T)0,
-			(linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
-		EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
+		savebuf = NULL;
 	    else
 	    {
-		/* Delete the old lines. */
-		while (old_line_count-- > 0)
-		    ml_delete(buf->b_ml.ml_line_count, FALSE);
-		/* Mark the buffer as unmodified and free undo info. */
-		unchanged(buf, TRUE);
-		u_blockfree(buf);
-		u_clearall(buf);
+		/* Allocate a buffer without putting it in the buffer list. */
+		savebuf = buflist_new(NULL, NULL, (linenr_T)1, BLN_DUMMY);
+		if (savebuf != NULL)
+		{
+		    /* Open the memline. */
+		    curbuf = savebuf;
+		    curwin->w_buffer = savebuf;
+		    saved = ml_open();
+		    curbuf = buf;
+		    curwin->w_buffer = buf;
+		}
+		if (savebuf == NULL || saved == FAIL
+					  || move_lines(buf, savebuf) == FAIL)
+		{
+		    EMSG2(_("E461: Could not prepare for reloading \"%s\""),
+								buf->b_fname);
+		    saved = FAIL;
+		}
+	    }
+
+	    if (saved == OK)
+	    {
+		curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
+#ifdef FEAT_AUTOCMD
+		keep_filetype = TRUE;		/* don't detect 'filetype' */
+#endif
+		if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0,
+			    (linenr_T)0,
+			    (linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
+		{
+		    EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
+		    if (savebuf != NULL)
+		    {
+			/* Put the text back from the save buffer.  First
+			 * delete any lines that readfile() added. */
+			while (!bufempty())
+			    if (ml_delete(curbuf->b_ml.ml_line_count, FALSE)
+								      == FAIL)
+				break;
+			(void)move_lines(savebuf, buf);
+		    }
+		}
+		else
+		{
+		    /* Mark the buffer as unmodified and free undo info. */
+		    unchanged(buf, TRUE);
+		    u_blockfree(buf);
+		    u_clearall(buf);
+		}
 	    }
 	    vim_free(ea.cmd);
+
+	    if (savebuf != NULL)
+		wipe_buffer(savebuf, FALSE);
 
 #ifdef FEAT_DIFF
 	    /* Invalidate diff info if necessary. */
@@ -5313,7 +5405,6 @@ buf_check_timestamp(buf, focus)
 #ifdef FEAT_AUTOCMD
 	/* restore curwin/curbuf and a few other things */
 	aucmd_restbuf(&aco);
-
 	/* Careful: autocommands may have made "buf" invalid! */
 #else
 	curwin->w_buffer = save_curbuf;
@@ -6820,9 +6911,10 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 #endif
 
     /*
-     * Quickly return if there are no autocommands for this event.
+     * Quickly return if there are no autocommands for this event or
+     * autocommands are blocked.
      */
-    if (first_autopat[(int)event] == NULL)
+    if (first_autopat[(int)event] == NULL || autocmd_block > 0)
 	return retval;
 
     /*
