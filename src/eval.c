@@ -7481,7 +7481,7 @@ ex_execute(eap)
     if (ret != FAIL && ga.ga_data != NULL)
     {
 	if (eap->cmdidx == CMD_echomsg)
-	    MSG((char_u *)ga.ga_data);
+	    MSG_ATTR((char_u *)ga.ga_data, echo_attr);
 	else if (eap->cmdidx == CMD_echoerr)
 	{
 	    /* We don't want to abort following commands, restore did_emsg. */
