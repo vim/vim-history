@@ -1,6 +1,6 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
-# Last updated by Dan Sharp.  Last Change: 2004 Jan 03
+# Last updated by Dan Sharp.  Last Change: 2004 Feb 03
 #
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
@@ -296,7 +296,7 @@ endif
 ifeq (yes, $(NETBEANS))
 DEFINES += -DFEAT_NETBEANS_INTG
 EXTRA_OBJS += $(OUTDIR)/netbeans.o $(OUTDIR)/gui_beval.o
-EXTRA_LIBS += -lws2_32
+EXTRA_LIBS += -lwsock32
 
 ifeq (yes, $(DEBUG))
 DEFINES += -DNBDEBUG
