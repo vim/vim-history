@@ -1951,7 +1951,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
 	    /* print the string so far if it's the last character or there is
 	     * a composing character. */
-	    if (i + cl >= len || (comping && i > start)
+	    if (i + cl >= len || (comping && i > start) || dowide
 #if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
 		    || (cn > 1
 # ifdef FEAT_XFONTSET
