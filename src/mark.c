@@ -705,7 +705,7 @@ ex_jumps(eap)
     cleanup_jumplist();
     /* Highlight title */
     MSG_PUTS_TITLE(_("\n jump line  col file/text"));
-    for (i = 0; i < curwin->w_jumplistlen; ++i)
+    for (i = 0; i < curwin->w_jumplistlen && !got_int; ++i)
     {
 	if (curwin->w_jumplist[i].fmark.mark.lnum != 0)
 	{
@@ -716,6 +716,8 @@ ex_jumps(eap)
 		continue;
 
 	    msg_putchar('\n');
+	    if (got_int)
+		break;
 	    sprintf((char *)IObuff, "%c %2d %5ld %4d ",
 		i == curwin->w_jumplistidx ? '>' : ' ',
 		i > curwin->w_jumplistidx ? i - curwin->w_jumplistidx
@@ -727,6 +729,7 @@ ex_jumps(eap)
 			    curwin->w_jumplist[i].fmark.fnum == curbuf->b_fnum
 							? hl_attr(HLF_D) : 0);
 	    vim_free(name);
+	    ui_breakcheck();
 	}
 	out_flush();
     }
