@@ -3,21 +3,9 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Daniel Amyot <damyot@site.uottawa.ca>
-" Last Change:	Mon, 21 May 2001 13:13:43 +0200
+" Last Change:	Wed, 06 Jun 2001 14:07:20 +0200
 " Filenames:	*.dtd
 " URL:		http://www.zellner.org/vim/syntax/dtd.vim
-" $Id$
-"
-"
-" CREDITS:
-" - original note of Daniel Amyot <damyot@site.uottawa.ca>:
-"   This file is an adaptation of pascal.vim by Mario Eusebio
-"   I'm not sure I understand all of the syntax highlight language,
-"   but this file seems to do the job for simple DTD in XML.
-"   This would have to be extended to cover the whole of SGML DTDs though.
-"   Unfortunately, I don't know enough about the somewhat complex SGML
-"   to do it myself. Volunteers are most welcomed!
-"
 "
 " REFERENCES:
 "   http://www.w3.org/TR/html40/
@@ -26,13 +14,17 @@
 " TODO:
 "   - improve synchronizing.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+if version < 600
+    syntax clear
+    let __dtd_cpo_save__ = &cpo
+    set cpo&
+else
+    if exists("b:current_syntax")
+	finish
+    endif
+    let s:dtd_cpo_save = &cpo
+    set cpo&vim
 endif
-
-let s:dtd_cpo_save = &cpo
-set cpo&vim
 
 if !exists("dtd_ignore_case")
     " I prefer having the case takes into consideration.
@@ -134,32 +126,51 @@ syn keyword dtdTodo contained TODO FIXME XXX
 
 syn sync lines=250
 
-" The default highlighting.
-hi def link dtdFunction		Function
-hi def link dtdTag		Normal
-hi def link dtdType		Type
-hi def link dtdAttrType		dtdType
-hi def link dtdAttrDef		dtdType
-hi def link dtdConstant		Constant
-hi def link dtdString		dtdConstant
-hi def link dtdEnum		dtdConstant
-hi def link dtdCard		dtdFunction
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_dtd_syn_inits")
+    if version < 508
+	let did_dtd_syn_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
 
-hi def link dtdEntity		Statement
-hi def link dtdEntityPunct	dtdType
-hi def link dtdParamEntityInst	dtdConstant
-hi def link dtdParamEntityPunct	dtdType
-hi def link dtdParamEntityDecl	dtdType
-hi def link dtdParamEntityDPunct dtdComment
+    " The default highlighting.
+    HiLink dtdFunction		Function
+    HiLink dtdTag		Normal
+    HiLink dtdType		Type
+    HiLink dtdAttrType		dtdType
+    HiLink dtdAttrDef		dtdType
+    HiLink dtdConstant		Constant
+    HiLink dtdString		dtdConstant
+    HiLink dtdEnum		dtdConstant
+    HiLink dtdCard		dtdFunction
 
-hi def link dtdComment		Comment
-hi def link dtdTagName		Statement
-hi def link dtdError		Error
-hi def link dtdTodo		Todo
+    HiLink dtdEntity		Statement
+    HiLink dtdEntityPunct	dtdType
+    HiLink dtdParamEntityInst	dtdConstant
+    HiLink dtdParamEntityPunct	dtdType
+    HiLink dtdParamEntityDecl	dtdType
+    HiLink dtdParamEntityDPunct dtdComment
+
+    HiLink dtdComment		Comment
+    HiLink dtdTagName		Statement
+    HiLink dtdError		Error
+    HiLink dtdTodo		Todo
+
+    delcommand HiLink
+endif
+
+if version < 600
+    let &cpo = __dtd_cpo_save__
+    unlet __dtd_cpo_save__
+else
+    let &cpo = s:dtd_cpo_save
+    unlet s:dtd_cpo_save
+endif
 
 let b:current_syntax = "dtd"
-
-let &cpo = s:dtd_cpo_save
-unlet s:dtd_cpo_save
 
 " vim: ts=8
