@@ -881,7 +881,7 @@ ml_recover()
      */
     if (mfp->mf_page_size != (unsigned)char_to_long(b0p->b0_page_size))
     {
-	mfp->mf_page_size = (unsigned)char_to_long(b0p->b0_page_size);
+	mf_new_page_size(mfp, (unsigned)char_to_long(b0p->b0_page_size));
 	if ((size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	    mfp->mf_blocknr_max = 0;	    /* no file or empty file */
 	else
