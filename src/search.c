@@ -3531,7 +3531,7 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 			i = old_files;
 		    if (i == max_path_depth)
 			break;
-		    if (STRCMP(new_fname, files[i].name) == 0)
+		    if (fullpathcmp(new_fname, files[i].name, TRUE) & FPC_SAME)
 		    {
 			if (type != CHECK_PATH &&
 				action == ACTION_SHOW_ALL && files[i].matched)
