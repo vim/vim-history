@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0.  Last change: 2001 Sep 20
+*starting.txt*  For Vim version 6.0.  Last change: 2002 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -122,10 +122,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 --help							*-h* *--help*
 -h		Give usage (help) message and exit.  {not in Vi}
+		See |info-message| about capturing the text.
 
 							*--version*
 --version	Print version information and exit.  Same output as for
 		|:version| command.  {not in Vi}
+		See |info-message| about capturing the text.
 
 							*--noplugin*
 --noplugin	Skip loading plugins.  Resets the 'loadplugins' option.
@@ -860,6 +862,29 @@ those who don't know what Vim is).  It is removed as soon as the display is
 redrawn in any way.  To see the message again, use the ":intro" command (if
 there is not enough room, you will see only part of it).
    To avoid the intro message on startup, add the 'I' flag to 'shortmess'.
+
+							*info-message*
+The |--help| and |--version| arguments cause Vim to print a message and then
+exit.  Normally the message is send to stdout, thus can be redirected to a
+file with: >
+
+	vim --help >file
+
+From inside Vim: >
+
+	:read !vim --help
+
+When using gvim, it detects that it might have been started from the desktop,
+without a terminal to show messages on.  This is detected when both stdout and
+stderr are not a tty.  This breaks the ":read" command, as used in the example
+above.  To make it work again, set 'shellredir' to ">" instead of the default
+">&": >
+
+	:set shellredir=>
+	:read !gvim --help
+
+This still won't work for systems where gvim does not use stdout at all
+though.
 
 ==============================================================================
 5. $VIM and $VIMRUNTIME
