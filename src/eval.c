@@ -1004,6 +1004,15 @@ ex_let(eap)
 		    i = find_vim_var(arg, arg_len);
 		    if (i >= 0)
 			list_vim_var(i);
+		    else if (STRCMP("b:changedtick", arg) == 0)
+		    {
+			char_u	numbuf[NUMBUFLEN];
+
+			sprintf((char *)numbuf, "%ld",
+						 (long)curbuf->b_changedtick);
+			list_one_var_a((char_u *)"b:", (char_u *)"changedtick",
+							  VAR_NUMBER, numbuf);
+		    }
 		    else
 		    {
 			varp = find_var(arg, FALSE);
@@ -1148,6 +1157,8 @@ ex_let(eap)
 
 		if (*skipwhite(p) != '=')
 		    EMSG(_(e_letunexp));
+		else if (STRNCMP(arg, "b:changedtick", p - arg) == 0)
+		    EMSG2(_(e_readonlyvar), arg);
 #ifdef FEAT_MAGIC_BRACES
 		else if (expr_start != NULL)
 		{
