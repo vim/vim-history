@@ -3712,7 +3712,24 @@ finished:
 	     */
 	    while (wait_pid != pid)
 	    {
+#ifdef _THREAD_SAFE
+		/* Ugly hack: when compiled with Python threads are probably
+		 * used, in which case wait() sometimes hangs for no obvious
+		 * reason.  Use waitpid() instead and loop (like the GUI). */
+#  ifdef __NeXT__
+		wait_pid = wait4(pid, &status, WNOHANG, (struct rusage *)0);
+#  else
+		wait_pid = waitpid(pid, &status, WNOHANG);
+#  endif
+		if (wait_pid == 0)
+		{
+		    /* Wait for 1/100 sec before trying again. */
+		    mch_delay(10L, TRUE);
+		    continue;
+		}
+#else
 		wait_pid = wait(&status);
+#endif
 		if (wait_pid <= 0
 # ifdef ECHILD
 			&& errno == ECHILD
