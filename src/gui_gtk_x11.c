@@ -2445,65 +2445,60 @@ gui_mch_get_fontset(char_u *name, int report_error, int fixed_width)
 #endif
 
 /*
- * Try to load the requested single font.
+ * Put up a font dialog and return the selected font name in allocated memory.
+ * "oldval" is the previous value.
+ * Return NULL when cancelled.
  */
-    static GuiFont
-get_font(char_u *font_name)
+    char_u *
+gui_mch_font_dialog(char_u *oldval)
 {
-    if (STRCMP(font_name, "*") == 0)
+    if (!gui.fontdlg)
     {
-	/* Request for a font handling dialog.
-	 */
+	GtkFontSelectionDialog	*fsd = NULL;
 
-	if (!gui.fontdlg)
-	{
-	    GtkFontSelectionDialog	*fsd = NULL;
-
-	    gui.fontdlg = gtk_font_selection_dialog_new(_("Font Selection"));
-	    fsd = GTK_FONT_SELECTION_DIALOG(gui.fontdlg);
-	    if (p_guifont != NULL)
-		gtk_font_selection_dialog_set_font_name(fsd,
-			(char *)p_guifont);
-	    gtk_window_set_modal(GTK_WINDOW(gui.fontdlg), TRUE);
-	    gtk_window_set_transient_for(GTK_WINDOW(gui.fontdlg),
-		    GTK_WINDOW(gui.mainwin));
-	    gtk_signal_connect(GTK_OBJECT(gui.fontdlg), "destroy",
-		    GTK_SIGNAL_FUNC(font_sel_destroy), &gui);
-	    gtk_signal_connect(GTK_OBJECT(fsd->ok_button), "clicked",
-		    GTK_SIGNAL_FUNC(font_sel_ok), &gui);
-	    gtk_signal_connect(GTK_OBJECT(fsd->cancel_button), "clicked",
-		    GTK_SIGNAL_FUNC(font_sel_cancel), &gui);
-	}
-	if (gui.fontname)
-	{
-	    g_free(gui.fontname);
-	    gui.fontname = NULL;
-	}
-	gtk_window_position(GTK_WINDOW(gui.fontdlg), GTK_WIN_POS_MOUSE);
-	gtk_widget_show(gui.fontdlg);
-	{
-	    static gchar		*spacings[] = {"c", "m", NULL};
-
-	    /* In GTK 1.2.3 this must be after the gtk_widget_show() call,
-	     * otherwise everything is blocked for ten seconds. */
-	    gtk_font_selection_dialog_set_filter(
-		    GTK_FONT_SELECTION_DIALOG(gui.fontdlg),
-		    GTK_FONT_FILTER_BASE,
-		    GTK_FONT_ALL, NULL, NULL,
-		    NULL, NULL, spacings, NULL);
-	}
-
-	while (gui.fontdlg && GTK_WIDGET_VISIBLE(gui.fontdlg))
-	    gtk_main_iteration_do(TRUE);
-
-	if (gui.fontname == NULL)
-	    return NOFONT;
-	vim_free(p_guifont);
-	p_guifont = vim_strsave(gui.fontname);
-	font_name = p_guifont;
+	gui.fontdlg = gtk_font_selection_dialog_new(_("Font Selection"));
+	fsd = GTK_FONT_SELECTION_DIALOG(gui.fontdlg);
+	gtk_window_set_modal(GTK_WINDOW(gui.fontdlg), TRUE);
+	gtk_window_set_transient_for(GTK_WINDOW(gui.fontdlg),
+		GTK_WINDOW(gui.mainwin));
+	gtk_signal_connect(GTK_OBJECT(gui.fontdlg), "destroy",
+		GTK_SIGNAL_FUNC(font_sel_destroy), &gui);
+	gtk_signal_connect(GTK_OBJECT(fsd->ok_button), "clicked",
+		GTK_SIGNAL_FUNC(font_sel_ok), &gui);
+	gtk_signal_connect(GTK_OBJECT(fsd->cancel_button), "clicked",
+		GTK_SIGNAL_FUNC(font_sel_cancel), &gui);
     }
 
-    return gui_mch_get_font(font_name, FALSE);
+    if (oldval != NULL && *oldval != NUL)
+	gtk_font_selection_dialog_set_font_name(
+		GTK_FONT_SELECTION_DIALOG(gui.fontdlg), (char *)oldval);
+
+    if (gui.fontname)
+    {
+	g_free(gui.fontname);
+	gui.fontname = NULL;
+    }
+    gtk_window_position(GTK_WINDOW(gui.fontdlg), GTK_WIN_POS_MOUSE);
+    gtk_widget_show(gui.fontdlg);
+    {
+	static gchar	*spacings[] = {"c", "m", NULL};
+
+	/* In GTK 1.2.3 this must be after the gtk_widget_show() call,
+	 * otherwise everything is blocked for ten seconds. */
+	gtk_font_selection_dialog_set_filter(
+		GTK_FONT_SELECTION_DIALOG(gui.fontdlg),
+		GTK_FONT_FILTER_BASE,
+		GTK_FONT_ALL, NULL, NULL,
+		NULL, NULL, spacings, NULL);
+    }
+
+    /* Wait for the font dialog to be closed. */
+    while (gui.fontdlg && GTK_WIDGET_VISIBLE(gui.fontdlg))
+	gtk_main_iteration_do(TRUE);
+
+    if (gui.fontname == NULL)
+	return NULL;
+    return vim_strsave(gui.fontname);
 }
 
 /*
@@ -2619,7 +2614,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
 	 * be present on all X11 servers. */
 	if (font_name == NULL)
 	    font_name = (char_u *)DFLT_FONT;
-	font = get_font(font_name);
+	font = gui_mch_get_font(font_name, FALSE);
     }
 
     if (font == NULL)
