@@ -5093,6 +5093,9 @@ fix_help_buffer()
 					    && (s = vim_strchr(IObuff + 1, '*'))
 								      != NULL)
 				    {
+#ifdef FEAT_MBYTE
+					int	this_utf = MAYBE;
+#endif
 					/* Change tag definition to a
 					 * reference and remove <CR>/<NL>. */
 					IObuff[0] = '|';
@@ -5101,15 +5104,32 @@ fix_help_buffer()
 					{
 					    if (*s == '\r' || *s == '\n')
 						*s = NUL;
+#ifdef FEAT_MBYTE
+					    /* The text is utf-8 when a byte
+					     * above 127 is found and no
+					     * illegal byte sequence is found.
+					     */
+					    if (*s >= 0x80 && this_utf != FALSE)
+					    {
+						int	l;
+
+						this_utf = TRUE;
+						l = utf_ptr2len_check(s);
+						if (l == 1)
+						    this_utf = FALSE;
+						s += l - 1;
+					    }
+#endif
 					    ++s;
 					}
 #ifdef FEAT_MBYTE
-					/* Assume the help file is latin1 and
+					/* The help file is latin1 or utf-8;
 					 * conversion to the current
 					 * 'encoding' may be required. */
 					vc.vc_type = CONV_NONE;
-					convert_setup(&vc,
-						   (char_u *)"latin1", p_enc);
+					convert_setup(&vc, (char_u *)(
+						    this_utf == TRUE ? "utf-8"
+							  : "latin1"), p_enc);
 					if (vc.vc_type == CONV_NONE)
 					    /* No conversion needed. */
 					    cp = IObuff;
