@@ -1067,7 +1067,7 @@ write_viminfo_filemarks(fp)
     buf_T	*buf;
     xfmark_T	*fm;
 
-    if (get_viminfo_parameter('\'') == 0)
+    if (get_viminfo_parameter('f') == 0)
 	return;
 
     fprintf(fp, _("\n# File marks:\n"));
