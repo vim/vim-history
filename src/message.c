@@ -846,6 +846,7 @@ wait_return(redraw)
 #endif
 
     need_wait_return = FALSE;
+    did_wait_return = TRUE;
     emsg_on_display = FALSE;	/* can delete error message now */
     lines_left = -1;		/* reset lines_left at next msg_start() */
     reset_last_sourcing();
@@ -1564,6 +1565,7 @@ msg_puts_attr(s, attr)
     }
 
     msg_didany = TRUE;		/* remember that something was outputted */
+    did_wait_return = FALSE;
     while (*s)
     {
 	/*

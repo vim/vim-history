@@ -5851,6 +5851,7 @@ check_for_delay(check_msg_scroll)
     int	    check_msg_scroll;
 {
     if ((emsg_on_display || (check_msg_scroll && msg_scroll))
+	    && !did_wait_return
 	    && emsg_silent == 0)
     {
 	out_flush();
