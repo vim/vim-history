@@ -10,7 +10,7 @@
 /*
  * eval.c: Expression evaluation.
  */
-#if defined(MSDOS) || defined(MSWIN32) || defined(WIN16) || defined(_WIN64)
+#if defined(MSDOS) || defined(MSWIN)
 # include <io.h>	/* for mch_open(), must be before vim.h */
 #endif
 
@@ -3850,7 +3850,12 @@ f_getcwd(argvars, retvar)
     if (mch_dirname(cwd, MAXPATHL) == FAIL)
 	retvar->var_val.var_string = NULL;
     else
+    {
 	retvar->var_val.var_string = vim_strsave(cwd);
+#ifdef BACKSLASH_IN_FILENAME
+	slash_adjust(retvar->var_val.var_string);
+#endif
+    }
 }
 
 /*
