@@ -4771,7 +4771,7 @@ read_viminfo_history(virp)
 		    /* Not a search entry: No separator in the viminfo file,
 		     * add a NUL separator. */
 		    mch_memmove(val, val + 1, (size_t)len);
-		    val[len + 1] = NUL;
+		    val[len] = NUL;
 		}
 		viminfo_history[type][viminfo_hisidx[type]++] = val;
 	    }
