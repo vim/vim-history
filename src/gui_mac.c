@@ -1831,7 +1831,55 @@ gui_mac_doInGrowClick(where, whichWindow)
     };
 #endif
 
-};
+}
+
+/*
+ * Handle the click in the zoom box
+ */
+#ifdef USE_CARBONIZED
+    static void
+gui_mac_doInZoomClick(theEvent, whichWindow)
+    EventRecord	*theEvent;
+    WindowPtr	whichWindow;
+{
+    Rect	r;
+    Point	p;
+    short	thePart;
+
+    /* ideal width is current */
+    p.h = Columns * gui.char_width + 2 * gui.border_offset;
+    if (gui.which_scrollbars[SBAR_LEFT])
+	p.h += gui.scrollbar_width;
+    if (gui.which_scrollbars[SBAR_RIGHT])
+	p.h += gui.scrollbar_width;
+    /* ideal height is as heigh as we can get */
+    p.v = 15 * 1024;
+
+    thePart = IsWindowInStandardState(whichWindow, &p, &r)
+						       ? inZoomIn : inZoomOut;
+
+    if (!TrackBox(whichWindow, theEvent->where, thePart))
+	return;
+
+    /* use returned width */
+    p.h = r.right - r.left;
+    /* adjust returned height */
+    p.v = r.bottom - r.top - 2 * gui.border_offset;
+    if (gui.which_scrollbars[SBAR_BOTTOM])
+	p.v -= gui.scrollbar_height;
+    p.v -= p.v % gui.char_height;
+    p.v += 2 * gui.border_width;
+    if (gui.which_scrollbars[SBAR_BOTTOM]);
+	p.v += gui.scrollbar_height;
+
+    ZoomWindowIdeal(whichWindow, thePart, &p);
+
+    GetWindowBounds(whichWindow, kWindowContentRgn, &r);
+    gui_resize_shell(r.right - r.left, r.bottom - r.top);
+    gui_mch_set_bg_color(gui.back_pixel);
+    gui_set_shellsize(TRUE, FALSE);
+}
+#endif /* defined(USE_CARBONIZED) */
 
 /*
  * ------------------------------------------------------------
@@ -2184,10 +2232,16 @@ gui_mac_doMouseDownEvent (theEvent)
 	    gui_mac_doInGrowClick (theEvent->where, whichWindow);
 	    break;
 
-	case (inGoAway):  /* TODO */
+	case (inGoAway):
+	    if (TrackGoAway(whichWindow, theEvent->where))
+		gui_shell_closed();
+	    break;
+
 	case (inZoomIn):
 	case (inZoomOut):
-	    /* For now the window doesn't have a GoAway and Zoom */
+#ifdef USE_CARBONIZED
+	    gui_mac_doInZoomClick(theEvent, whichWindow);
+#endif
 	    break;
     }
 }
@@ -2861,8 +2915,13 @@ gui_mch_init()
     SetRect (&windRect, 300, 40, 300+80*7 + 16, 40+24*11);
 #endif
 
-    gui.VimWindow = NewCWindow(nil, &windRect, "\pgVim on Macintosh", true, documentProc,
-			(WindowPtr) -1L, false, 0);
+    gui.VimWindow = NewCWindow(nil, &windRect, "\pgVim on Macintosh", true,
+#ifdef USE_CARBONIZED
+			zoomDocProc,
+#else
+			documentProc,
+#endif
+			(WindowPtr)-1L, true, 0);
     InstallReceiveHandler((DragReceiveHandlerUPP)receiveHandler,
 	    gui.VimWindow, NULL);
 #ifdef USE_CARBONIZED

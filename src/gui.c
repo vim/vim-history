@@ -572,7 +572,7 @@ gui_exit(rc)
 }
 
 #if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11) || defined(FEAT_GUI_MSWIN) \
-	|| defined(FEAT_GUI_PHOTON) || defined(PROTO)
+	|| defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC) || defined(PROTO)
 /*
  * Called when the GUI shell is closed by the user.  If there are no changed
  * files Vim exits, otherwise there will be a dialog to ask the user what to
